@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { generateMap, MAP_H, MAP_W } from '../../src/sim/mapgen';
+import {
+  generateMap,
+  generateTerrain,
+  meetsPostconditions,
+  MAP_H,
+  MAP_W,
+} from '../../src/sim/mapgen';
 import {
   createWorld,
   tileAt,
@@ -26,6 +32,19 @@ describe('generateMap', () => {
       expect(count(m.terrain, 'mountain')).toBeGreaterThanOrEqual(10);
       expect(m.seedUsed).toBeGreaterThanOrEqual(s);
     }
+  });
+  it('retries with seed + i and round-trips the used seed', () => {
+    let s = 1;
+    while (s <= 200 && meetsPostconditions(generateTerrain(s, MAP_W, MAP_H), MAP_W, MAP_H)) s++;
+    if (s > 200) {
+      throw new Error('no seed in 1..200 fails the postconditions; retry path is untested');
+    }
+    const m = generateMap(s);
+    expect(m.seedUsed).toBeGreaterThan(s);
+    expect(createWorld(m.seedUsed).tiles).toEqual(createWorld(s).tiles);
+  });
+  it('round-trips the seed of a created world', () => {
+    expect(createWorld(createWorld(5).seed).tiles).toEqual(createWorld(5).tiles);
   });
   it('keeps the border water', () => {
     const m = generateMap(5);
@@ -77,5 +96,16 @@ describe('world helpers', () => {
     const near = tilesInRadius(w, 0, 0, 3);
     expect(near.every((p) => p.x >= 0 && p.y >= 0 && p.x < w.width && p.y < w.height)).toBe(true);
     expect(near).toContainEqual({ x: 0, y: 0 });
+  });
+  it('tilesInRadius is symmetric around a tile centre', () => {
+    const w = createWorld(3);
+    const set = new Set(tilesInRadius(w, 10.5, 10.5, 2).map((p) => `${p.x - 10},${p.y - 10}`));
+    expect(set.has('0,0')).toBe(true);
+    for (const k of set) {
+      const [dx, dy] = k.split(',').map(Number) as [number, number];
+      expect(set.has(`${-dx},${-dy}`)).toBe(true);
+      expect(set.has(`${-dx},${dy}`)).toBe(true);
+    }
+    expect(set.has('-2,0') && set.has('2,0')).toBe(true);
   });
 });

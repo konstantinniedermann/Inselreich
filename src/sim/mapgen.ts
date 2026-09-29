@@ -78,6 +78,19 @@ export function findKontorSite(
   return best;
 }
 
+export function meetsPostconditions(terrain: Terrain[], w: number, h: number): boolean {
+  let land = 0;
+  let forest = 0;
+  let mountain = 0;
+  for (const t of terrain) {
+    if (isLand(t)) land++;
+    if (t === 'forest') forest++;
+    else if (t === 'mountain') mountain++;
+  }
+  if (land < 800 || forest < 40 || mountain < 10) return false;
+  return findKontorSite(terrain, w, h) !== null;
+}
+
 export function generateMap(seed: number): {
   terrain: Terrain[];
   kontor: { x: number; y: number };
@@ -86,15 +99,7 @@ export function generateMap(seed: number): {
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
     const seedUsed = seed + i;
     const terrain = generateTerrain(seedUsed, MAP_W, MAP_H);
-    let land = 0;
-    let forest = 0;
-    let mountain = 0;
-    for (const t of terrain) {
-      if (isLand(t)) land++;
-      if (t === 'forest') forest++;
-      else if (t === 'mountain') mountain++;
-    }
-    if (land < 800 || forest < 40 || mountain < 10) continue;
+    if (!meetsPostconditions(terrain, MAP_W, MAP_H)) continue;
     const kontor = findKontorSite(terrain, MAP_W, MAP_H);
     if (kontor) return { terrain, kontor, seedUsed };
   }
