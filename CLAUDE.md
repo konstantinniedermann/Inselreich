@@ -16,16 +16,16 @@ eigene Grafik, eigene Spielwerte (ADR-004).
 
 ## Test-Strategie
 
-Vitest gegen `src/sim/`. Renderer und UI werden manuell im Browser geprüft.
+Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer und UI werden manuell im Browser geprüft.
 
 ## Context-Scopes
 
-| Scope       | Pfade                                    | Wann verwenden                            |
-| ----------- | ---------------------------------------- | ----------------------------------------- |
-| Sim         | `src/sim/`, `tests/`                     | Spielregeln, Balancing, Bugs in der Logik |
-| Render      | `src/render/`, `src/sim/types.ts`        | Darstellung, Kamera                       |
-| UI          | `src/ui/`, `index.html`, `src/style.css` | Bedienung, Layout                         |
-| Vollständig | alles                                    | Architektur, Querschnitt                  |
+| Scope       | Pfade                                                                                      | Wann verwenden                            |
+| ----------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
+| Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
+| UI          | `src/ui/`, `index.html`, `src/style.css`                                                   | Bedienung, Layout                         |
+| Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 
 ## Dokumentation
 
