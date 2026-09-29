@@ -1,11 +1,11 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { START_MONEY, START_STOCK } from './defs/goods';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
-import type { Building, BuildingDef, BuildingDefId, Terrain, Tile, World } from './types';
+import type { Building, BuildingDef, BuildingDefId, Tile, World } from './types';
 
 export type Pos = { x: number; y: number };
 
-export const isLand = (t: Terrain): boolean => t === 'sand' || t === 'grass' || t === 'forest';
+export { isLand } from './mapgen';
 
 export const idx = (world: World, x: number, y: number): number => y * world.width + x;
 

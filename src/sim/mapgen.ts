@@ -6,8 +6,8 @@ export const MAP_H = 64;
 
 const MAX_ATTEMPTS = 50;
 
-// Bewusst lokal (statt aus world.ts): world.ts importiert mapgen.ts, ein Import zurück wäre ein Zyklus.
-const isLandTerrain = (t: Terrain | undefined): boolean =>
+// Hier definiert (nicht in world.ts): world.ts importiert mapgen.ts, ein Import zurück wäre ein Zyklus.
+export const isLand = (t: Terrain | undefined): boolean =>
   t === 'sand' || t === 'grass' || t === 'forest';
 
 export function generateTerrain(seed: number, w: number, h: number): Terrain[] {
@@ -52,7 +52,7 @@ export function findKontorSite(
       let allLand = true;
       for (let dy = 0; dy < 2 && allLand; dy++)
         for (let dx = 0; dx < 2; dx++)
-          if (!isLandTerrain(at(x + dx, y + dy))) {
+          if (!isLand(at(x + dx, y + dy))) {
             allLand = false;
             break;
           }
@@ -90,7 +90,7 @@ export function generateMap(seed: number): {
     let forest = 0;
     let mountain = 0;
     for (const t of terrain) {
-      if (isLandTerrain(t)) land++;
+      if (isLand(t)) land++;
       if (t === 'forest') forest++;
       else if (t === 'mountain') mountain++;
     }

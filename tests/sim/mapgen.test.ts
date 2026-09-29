@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { generateMap, MAP_H, MAP_W } from '../../src/sim/mapgen';
-import { createWorld, tileAt, adjacentOf, isLand } from '../../src/sim/world';
+import {
+  createWorld,
+  tileAt,
+  adjacentOf,
+  isLand,
+  footprint,
+  tilesInRadius,
+} from '../../src/sim/world';
 
 const count = (t: string[], k: string) => t.filter((x) => x === k).length;
 
@@ -46,5 +54,28 @@ describe('createWorld', () => {
     expect(w.money).toBe(5000);
     expect(w.stock.wood).toBe(40);
     expect(w.seed).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('world helpers', () => {
+  it('footprint of a 2x2 def returns 4 positions', () => {
+    expect(footprint(BUILDING_DEFS.market, 5, 7)).toHaveLength(4);
+  });
+  it('adjacentOf a 2x2 returns the 8 edge neighbours, no corners, none inside', () => {
+    const w = createWorld(3);
+    const adj = adjacentOf(w, 10, 10, 2, 2);
+    expect(adj).toHaveLength(8);
+    for (const p of adj) {
+      const inside = p.x >= 10 && p.x <= 11 && p.y >= 10 && p.y <= 11;
+      const corner = (p.x === 9 || p.x === 12) && (p.y === 9 || p.y === 12);
+      expect(inside).toBe(false);
+      expect(corner).toBe(false);
+    }
+  });
+  it('tilesInRadius stays in bounds and includes the centre tile', () => {
+    const w = createWorld(3);
+    const near = tilesInRadius(w, 0, 0, 3);
+    expect(near.every((p) => p.x >= 0 && p.y >= 0 && p.x < w.width && p.y < w.height)).toBe(true);
+    expect(near).toContainEqual({ x: 0, y: 0 });
   });
 });
