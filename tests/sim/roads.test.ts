@@ -8,20 +8,10 @@ import {
   recomputeConnectivity,
 } from '../../src/sim/roads';
 import type { Building, World } from '../../src/sim/types';
+import { prepareEast } from './helpers';
 
 let w: World;
 let k: Building;
-
-/** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
-function prepareEast(world: World, kontor: Building): void {
-  for (let i = 0; i < 6; i++) {
-    const t = world.tiles[idx(world, kontor.x + 2 + i, kontor.y)]!;
-    t.terrain = 'grass';
-    t.buildingId = null;
-    t.road = false;
-  }
-  world.tiles[idx(world, kontor.x + 2 + 4, kontor.y - 1)]!.terrain = 'forest';
-}
 
 beforeEach(() => {
   w = createWorld(3);
