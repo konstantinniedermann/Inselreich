@@ -11,7 +11,7 @@ import { prepareEast } from './helpers';
 let w: World;
 let nextTestId = 9000;
 
-/** Legt ein Gebäude direkt an und setzt connected (Anbindung ist in roads.test.ts getestet). */
+/** Legt ein Gebäude direkt an und setzt connected (Anbindung ist in roads.test.ts getestet); bewusst ohne Kacheln. */
 function connectedBuilding(world: World, defId: BuildingDefId): Building {
   const b: Building = {
     id: nextTestId++,
@@ -78,7 +78,11 @@ describe('tickProduction', () => {
     expect(w.stock.cloth).toBe(1);
     expect(wv.progress).toBe(0);
 
-    // Reconnect-Regel aus Task 2 setzt 'ok'; der nächste Tick leitet waitingInput neu ab.
+    // Verbindung verlieren, dann wieder anbinden (Reconnect-Regel setzt 'ok'); Wolle fehlt weiter.
+    wv.connected = false;
+    ticks(w, 1);
+    expect(wv.state).toBe('notConnected');
+    wv.connected = true;
     wv.state = 'ok';
     ticks(w, 1);
     expect(wv.state).toBe('waitingInput');
