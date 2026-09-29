@@ -1,8 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { canPlace, canPlaceRoad } from './placement';
-import type { Building, BuildingDefId, Result } from './types';
+import type { Building, BuildingDefId, Result, World } from './types';
 import { fail, ok } from './types';
-import type { World } from './types';
 import { footprint, tileAt } from './world';
 
 // Keine Kosten in M1 — Bezahlen und Refund kommen mit M2.

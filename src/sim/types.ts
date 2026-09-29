@@ -97,6 +97,6 @@ export interface World {
   stats: { taxes: number; upkeep: number };
   won: boolean;
 }
-export type Result = { ok: true } | { ok: false; reason: string };
-export const ok: Result = { ok: true };
+export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
+export const ok: Result = Object.freeze({ ok: true as const });
 export const fail = (reason: string): Result => ({ ok: false, reason });
