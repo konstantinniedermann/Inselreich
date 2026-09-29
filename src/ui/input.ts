@@ -98,6 +98,8 @@ export function bindInput(
       const t = screenToTile(state.cam, p.sx, p.sy);
       drag.lastTile = `${t.x},${t.y}`;
       tileAction(p.sx, p.sy, false);
+      pointer = p;
+      updateHover();
     }
   });
 
@@ -180,7 +182,15 @@ export function bindInput(
     { passive: false },
   );
 
+  const isFormControl = (t: EventTarget | null): boolean =>
+    t instanceof HTMLInputElement ||
+    t instanceof HTMLTextAreaElement ||
+    t instanceof HTMLSelectElement ||
+    t instanceof HTMLButtonElement ||
+    (t instanceof HTMLElement && t.isContentEditable);
+
   window.addEventListener('keydown', (e) => {
+    if (isFormControl(e.target)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'escape') {
@@ -194,6 +204,7 @@ export function bindInput(
     }
   });
   window.addEventListener('keyup', (e) => {
+    if (isFormControl(e.target)) return;
     const k = e.key.toLowerCase();
     if (k === ' ') spaceDown = false;
     keys.delete(k);
