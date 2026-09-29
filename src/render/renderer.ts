@@ -95,7 +95,13 @@ export function render(
       ctx.strokeRect(p.x + 0.5, p.y + 0.5, s - 1, s - 1);
     } else {
       const def = hover.tool.kind === 'build' ? BUILDING_DEFS[hover.tool.defId] : null;
-      const cells = def ? footprint(def, hover.x, hover.y) : [{ x: hover.x, y: hover.y }];
+      let cells = [{ x: hover.x, y: hover.y }];
+      if (def) cells = footprint(def, hover.x, hover.y);
+      else if (hover.tool.kind === 'demolish') {
+        const id = tileAt(world, hover.x, hover.y)?.buildingId;
+        const b = id != null ? world.buildings[id] : undefined;
+        if (b) cells = footprint(BUILDING_DEFS[b.defId], b.x, b.y);
+      }
       ctx.fillStyle = hover.ok ? 'rgba(0,255,0,.35)' : 'rgba(255,0,0,.35)';
       for (const c of cells) {
         const cp = tileToScreen(cam, c.x, c.y);
