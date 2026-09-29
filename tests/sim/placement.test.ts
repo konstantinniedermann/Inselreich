@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { createWorld, idx, tileAt } from '../../src/sim/world';
+import { createWorld, idx, isLand, tileAt } from '../../src/sim/world';
 import { canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { placeBuilding, placeRoad, removeRoad, demolish } from '../../src/sim/build';
 import type { World } from '../../src/sim/types';
@@ -84,12 +84,27 @@ describe('site rules', () => {
   });
   it('house needs kontor or market within radius 8', () => {
     const k = w.buildings[w.kontorId]!;
-    // o liegt möglicherweise nahe am Kontor; wähle eine Kachel garantiert weit weg
-    const far = { x: k.x > 32 ? o.x : o.x + 6, y: o.y + 6 };
-    const dist = Math.hypot(far.x + 0.5 - (k.x + 1), far.y + 0.5 - (k.y + 1));
-    const res = canPlace(w, 'house', far.x, far.y);
-    if (dist > 8) expect(res).toEqual({ ok: false, reason: 'Ausserhalb der Versorgung' });
-    else expect(res.ok).toBe(true);
+    const kx = k.x + 1;
+    const ky = k.y + 1;
+    const findFree = (pred: (dist: number) => boolean): { x: number; y: number; dist: number } => {
+      for (let y = 0; y < w.height; y++)
+        for (let x = 0; x < w.width; x++) {
+          const t = tileAt(w, x, y)!;
+          const dist = Math.hypot(x + 0.5 - kx, y + 0.5 - ky);
+          if (isLand(t.terrain) && t.buildingId === null && !t.road && pred(dist))
+            return { x, y, dist };
+        }
+      throw new Error('no tile found');
+    };
+    const far = findFree((d) => d > 8);
+    expect(far.dist).toBeGreaterThan(8);
+    expect(canPlace(w, 'house', far.x, far.y)).toEqual({
+      ok: false,
+      reason: 'Ausserhalb der Versorgung',
+    });
+    const near = findFree((d) => d <= 8);
+    expect(near.dist).toBeLessThanOrEqual(8);
+    expect(canPlace(w, 'house', near.x, near.y).ok).toBe(true);
     expect(placeBuilding(w, 'market', o.x, o.y).ok).toBe(true);
     expect(canPlace(w, 'house', o.x + 3, o.y + 3).ok).toBe(true);
   });
@@ -112,12 +127,19 @@ describe('build/demolish', () => {
     expect(demolish(w, 999)).toEqual({ ok: false, reason: 'Gebäude nicht gefunden' });
   });
   it('creates house state', () => {
-    const r = placeBuilding(w, 'house', w.buildings[w.kontorId]!.x + 3, w.buildings[w.kontorId]!.y);
-    if (r.ok)
-      expect(w.buildings[(r as { id: number }).id]!.house).toMatchObject({
-        tier: 1,
-        inhabitants: 1,
-      });
+    expect(placeBuilding(w, 'market', o.x, o.y).ok).toBe(true);
+    const r = placeBuilding(w, 'house', o.x + 3, o.y + 3);
+    expect(r.ok).toBe(true);
+    const b = w.buildings[r.id!]!;
+    expect(b).toMatchObject({ defId: 'house', connected: false, progress: 0, state: 'ok' });
+    expect(b.house).toMatchObject({
+      tier: 1,
+      inhabitants: 1,
+      demand: {},
+      satisfied: {},
+      satisfiedSince: 0,
+      supplied: false,
+    });
   });
   it('roads add and remove', () => {
     expect(placeRoad(w, o.x, o.y).ok).toBe(true);
