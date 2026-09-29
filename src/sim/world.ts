@@ -41,7 +41,7 @@ export function tilesInRadius(world: World, cx: number, cy: number, r: number): 
   const y1 = Math.ceil(cy + r);
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
-      if (inBounds(world, x, y) && Math.hypot(x - cx, y - cy) <= r) out.push({ x, y });
+      if (inBounds(world, x, y) && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) out.push({ x, y });
     }
   }
   return out;

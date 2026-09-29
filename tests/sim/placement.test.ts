@@ -65,6 +65,13 @@ describe('site rules', () => {
     w.tiles[idx(w, o.x + 6, o.y + 4)]!.terrain = 'forest';
     expect(canPlace(w, 'lumberjack', o.x + 4, o.y + 4).ok).toBe(true);
   });
+  it('lumberjack radius is symmetric (dx=-2 ok, dx=-3 rejected)', () => {
+    w.tiles[idx(w, o.x + 1, o.y + 4)]!.terrain = 'forest';
+    expect(canPlace(w, 'lumberjack', o.x + 4, o.y + 4).ok).toBe(false);
+    w.tiles[idx(w, o.x + 1, o.y + 4)]!.terrain = 'grass';
+    w.tiles[idx(w, o.x + 2, o.y + 4)]!.terrain = 'forest';
+    expect(canPlace(w, 'lumberjack', o.x + 4, o.y + 4).ok).toBe(true);
+  });
   it('quarry needs mountain adjacent', () => {
     expect(canPlace(w, 'quarry', o.x + 4, o.y + 4)).toEqual({
       ok: false,
@@ -125,6 +132,12 @@ describe('build/demolish', () => {
       reason: 'Kontor kann nicht abgerissen werden',
     });
     expect(demolish(w, 999)).toEqual({ ok: false, reason: 'Gebäude nicht gefunden' });
+  });
+  it('allows re-placing on the same spot after demolish', () => {
+    const r = placeBuilding(w, 'chapel', o.x, o.y);
+    expect(r.ok).toBe(true);
+    expect(demolish(w, (r as { id: number }).id).ok).toBe(true);
+    expect(placeBuilding(w, 'chapel', o.x, o.y).ok).toBe(true);
   });
   it('creates house state', () => {
     expect(placeBuilding(w, 'market', o.x, o.y).ok).toBe(true);
