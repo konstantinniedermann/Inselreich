@@ -14,17 +14,19 @@ aufsteigen lassen, Geld über Steuern verdienen, Waren handeln, Spielstand speic
 **Nicht-Ziele (Backlog, nicht MVP):** Isometrie, Schiffe/Navigation, mehrere Inseln,
 KI-Gegner, Piraten, Feuer/Pest, Sound, Militär, Multiplayer.
 
-**Rechtliches:** Nur die *Mechanik* ist inspiriert. Keine Original-Grafiken, -Sounds,
+**Rechtliches:** Nur die _Mechanik_ ist inspiriert. Keine Original-Grafiken, -Sounds,
 -Texte oder -Balancingtabellen. Eigener Titel („Inselreich"), eigene, prozedural
 gezeichnete Grafik, eigene Zahlen.
 
 ## 2. Spielkonzept
 
 ### 2.1 Zeit
+
 - 1 Tick = 100 ms Simulationszeit bei Geschwindigkeit 1×. Geschwindigkeiten: Pause, 1×, 2×, 4×.
 - Alle Raten in der Spec sind „pro 100 Ticks" (= 10 s bei 1×), sofern nicht anders angegeben.
 
 ### 2.2 Karte
+
 - 64×64 Kacheln, eine Insel, umgeben von Wasser. Seed-basiert, deterministisch.
 - Terrain: `water`, `sand` (Küste), `grass`, `forest`, `mountain`.
 - Generator: eigenes Value-Noise + radiale Inselmaske; Nachbedingung: ≥ 800 Landkacheln,
@@ -32,39 +34,41 @@ gezeichnete Grafik, eigene Zahlen.
 - Das **Kontor** (2×2) wird beim Start automatisch an einer Landposition mit Wasserkontakt gesetzt.
 
 ### 2.3 Güter
-| id | Name | Kauf | Verkauf |
-|---|---|---|---|
-| wood | Holz | 10 | 4 |
-| tools | Werkzeug | 40 | 15 |
-| stone | Stein | 15 | 6 |
-| food | Nahrung | 8 | 3 |
-| wool | Wolle | 12 | 5 |
-| cloth | Stoff | 30 | 12 |
-| cane | Zuckerrohr | 12 | 5 |
-| rum | Rum | 40 | 18 |
+
+| id    | Name       | Kauf | Verkauf |
+| ----- | ---------- | ---- | ------- |
+| wood  | Holz       | 10   | 4       |
+| tools | Werkzeug   | 40   | 15      |
+| stone | Stein      | 15   | 6       |
+| food  | Nahrung    | 8    | 3       |
+| wool  | Wolle      | 12   | 5       |
+| cloth | Stoff      | 30   | 12      |
+| cane  | Zuckerrohr | 12   | 5       |
+| rum   | Rum        | 40   | 18      |
 
 - Zentrales Lager im Kontor, Kapazität **100 je Gut**. Bei vollem Lager verfällt Produktion.
 - Handel: Am Kontor jederzeit kaufen/verkaufen (Stückzahlen 1 / 10) zu Fixpreisen. Werkzeug
   ist im MVP nur durch Kauf erhältlich (wie das frühe Anno-Spiel).
 
 ### 2.4 Gebäude
+
 Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 
-| id | Name | Grösse | Kosten | Unterhalt | Produziert | Verbraucht | Zyklus (Ticks) | Standortregel |
-|---|---|---|---|---|---|---|---|---|
-| kontor | Kontor | 2×2 | — | 0 | — | — | — | automatisch, Küste |
-| road | Weg | 1×1 | 5/0/0/0 | 0 | — | — | — | Land |
-| market | Marktplatz | 2×2 | 200/10/3/0 | 10 | Versorgungsradius 8 | — | — | Land |
-| house | Wohnhaus | 1×1 | 50/3/0/0 | 0 | Steuern | Bedürfnisse | — | Land, im Radius von Kontor oder angebundenem Markt |
-| fisher | Fischerhütte | 1×1 | 100/5/2/0 | 5 | food 1 | — | 40 | Land, mind. 1 Wasserkachel angrenzend |
-| lumberjack | Holzfäller | 1×1 | 50/0/1/0 | 5 | wood 1 | — | 30 | Land, mind. 1 Waldkachel im Radius 2 |
-| quarry | Steinbruch | 1×1 | 150/10/3/0 | 10 | stone 1 | — | 60 | Land, mind. 1 Gebirgskachel angrenzend |
-| sheepfarm | Schäferei | 2×2 | 150/10/2/0 | 10 | wool 1 | — | 50 | Land, mind. 4 Graskacheln im Radius 2 |
-| weaver | Weberei | 2×2 | 200/15/3/0 | 15 | cloth 1 | wool 1 | 50 | Land |
-| canefarm | Zuckerrohrplantage | 2×2 | 150/10/2/0 | 10 | cane 1 | — | 50 | Land, mind. 4 Graskacheln im Radius 2 |
-| distillery | Brennerei | 2×2 | 250/15/4/5 | 20 | rum 1 | cane 1 | 50 | Land |
-| chapel | Kapelle | 2×2 | 300/20/5/10 | 15 | Dienst `faith`, Radius 10 | — | — | Land |
-| school | Schule | 2×2 | 400/25/8/15 | 25 | Dienst `school`, Radius 10 | — | — | Land |
+| id         | Name               | Grösse | Kosten      | Unterhalt | Produziert                 | Verbraucht  | Zyklus (Ticks) | Standortregel                                      |
+| ---------- | ------------------ | ------ | ----------- | --------- | -------------------------- | ----------- | -------------- | -------------------------------------------------- |
+| kontor     | Kontor             | 2×2    | —           | 0         | —                          | —           | —              | automatisch, Küste                                 |
+| road       | Weg                | 1×1    | 5/0/0/0     | 0         | —                          | —           | —              | Land                                               |
+| market     | Marktplatz         | 2×2    | 200/10/3/0  | 10        | Versorgungsradius 8        | —           | —              | Land                                               |
+| house      | Wohnhaus           | 1×1    | 50/3/0/0    | 0         | Steuern                    | Bedürfnisse | —              | Land, im Radius von Kontor oder angebundenem Markt |
+| fisher     | Fischerhütte       | 1×1    | 100/5/2/0   | 5         | food 1                     | —           | 40             | Land, mind. 1 Wasserkachel angrenzend              |
+| lumberjack | Holzfäller         | 1×1    | 50/0/1/0    | 5         | wood 1                     | —           | 30             | Land, mind. 1 Waldkachel im Radius 2               |
+| quarry     | Steinbruch         | 1×1    | 150/10/3/0  | 10        | stone 1                    | —           | 60             | Land, mind. 1 Gebirgskachel angrenzend             |
+| sheepfarm  | Schäferei          | 2×2    | 150/10/2/0  | 10        | wool 1                     | —           | 50             | Land, mind. 4 Graskacheln im Radius 2              |
+| weaver     | Weberei            | 2×2    | 200/15/3/0  | 15        | cloth 1                    | wool 1      | 50             | Land                                               |
+| canefarm   | Zuckerrohrplantage | 2×2    | 150/10/2/0  | 10        | cane 1                     | —           | 50             | Land, mind. 4 Graskacheln im Radius 2              |
+| distillery | Brennerei          | 2×2    | 250/15/4/5  | 20        | rum 1                      | cane 1      | 50             | Land                                               |
+| chapel     | Kapelle            | 2×2    | 300/20/5/10 | 15        | Dienst `faith`, Radius 10  | —           | —              | Land                                               |
+| school     | Schule             | 2×2    | 400/25/8/15 | 25        | Dienst `school`, Radius 10 | —           | —              | Land                                               |
 
 - „Land" = `sand`, `grass` oder `forest` ohne Gebäude. Gebirge und Wasser sind unbebaubar.
 - „angrenzend" = 4er-Nachbarschaft des Footprints. „Radius r" = euklidischer Abstand ≤ r
@@ -72,6 +76,7 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 - **Abriss:** 50 % der Geld-/Materialkosten zurück (abgerundet). Kontor nicht abreissbar.
 
 ### 2.5 Wegenetz und Anbindung
+
 - Produktionsgebäude, Weberei, Brennerei, Markt, Kapelle, Schule gelten als **angebunden**,
   wenn mindestens eine Wegkachel an ihren Footprint grenzt und diese Wegkachel per
   4er-Nachbarschaft über Wege mit einer Kachel verbunden ist, die an das Kontor grenzt.
@@ -81,6 +86,7 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 - Die Anbindung wird nur bei Änderungen am Wegenetz/Gebäudebestand neu berechnet (BFS).
 
 ### 2.6 Produktion
+
 - Ein angebundenes Gebäude zählt jeden Tick einen Fortschrittszähler hoch. Erreicht er den
   Zyklus, wird 1 Output ins Lager gelegt, sofern (a) Lager nicht voll und (b) der Input
   (falls vorhanden) am Zyklusbeginn entnommen werden konnte.
@@ -88,13 +94,14 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
   Einheit verloren (Zustand `storageFull`).
 
 ### 2.7 Bevölkerung
+
 Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 
-| tier | Name | max. Einwohner | Bedürfnisse (Güter, Verbrauch je Einwohner pro 100 Ticks) | Dienste | Steuer je Einwohner pro 100 Ticks | Aufstiegskosten (G/H/W/S) |
-|---|---|---|---|---|---|---|
-| 1 | Pioniere | 4 | food 0.5 | — | 2 | → 2: 100/5/2/0 |
-| 2 | Siedler | 8 | food 0.5, cloth 0.25 | faith | 3 | → 3: 300/10/5/5 |
-| 3 | Bürger | 15 | food 0.5, cloth 0.25, rum 0.25 | faith, school | 5 | — |
+| tier | Name     | max. Einwohner | Bedürfnisse (Güter, Verbrauch je Einwohner pro 100 Ticks) | Dienste       | Steuer je Einwohner pro 100 Ticks | Aufstiegskosten (G/H/W/S) |
+| ---- | -------- | -------------- | --------------------------------------------------------- | ------------- | --------------------------------- | ------------------------- |
+| 1    | Pioniere | 4              | food 0.5                                                  | —             | 2                                 | → 2: 100/5/2/0            |
+| 2    | Siedler  | 8              | food 0.5, cloth 0.25                                      | faith         | 3                                 | → 3: 300/10/5/5           |
+| 3    | Bürger   | 15             | food 0.5, cloth 0.25, rum 0.25                            | faith, school | 5                                 | —                         |
 
 - Ein neues Haus startet mit 1 Einwohner, tier 1.
 - **Verbrauch:** Jedes Haus führt je Gut einen Bedarfsakkumulator (Einwohner × Rate / 100 pro
@@ -109,6 +116,7 @@ Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 - **Versorgungsbedingung** (Radius, 2.5) unerfüllt → alle Güterbedürfnisse gelten als unerfüllt.
 
 ### 2.8 Wirtschaft
+
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
 - Steuern: je Haus Einwohner × Steuersatz, voll bei erfüllten Bedürfnissen, sonst 50 %.
 - Unterhalt: Summe der Gebäude-Unterhalte (auch nicht angebundene).
@@ -116,11 +124,13 @@ Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 - HUD zeigt die Bilanz pro 100 Ticks (Steuern − Unterhalt).
 
 ### 2.9 Sieg
+
 - Sobald die Summe der Einwohner in Bürger-Häusern ≥ 50: Banner „Ziel erreicht", Spiel läuft weiter.
 
 ## 3. Architektur
 
 ### 3.1 Grundprinzip
+
 Strikte Trennung **Simulation** (reine TypeScript-Logik, kein DOM, deterministisch, testbar)
 und **Darstellung/UI** (Canvas + DOM). Die Welt ist ein **einfaches, serialisierbares
 Datenobjekt** (keine Klassen, keine Zyklen) – Speichern ist `JSON.stringify`.
@@ -137,6 +147,7 @@ flowchart LR
 ```
 
 ### 3.2 Module
+
 ```
 src/
   sim/                 reine Logik, kein DOM
@@ -174,37 +185,63 @@ src/
 ```
 
 ### 3.3 Datenmodell (Kern)
+
 ```ts
 type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
-interface Tile { terrain: Terrain; buildingId: number | null; road: boolean }
+interface Tile {
+  terrain: Terrain;
+  buildingId: number | null;
+  road: boolean;
+}
 interface Building {
-  id: number; defId: BuildingDefId; x: number; y: number;     // Ursprung oben links
+  id: number;
+  defId: BuildingDefId;
+  x: number;
+  y: number; // Ursprung oben links
   connected: boolean;
-  progress: number; state: 'ok' | 'waitingInput' | 'storageFull' | 'notConnected';
-  house?: { tier: 1 | 2 | 3; inhabitants: number; demand: Record<GoodId, number>;
-            satisfied: Record<GoodId, boolean>; satisfiedSince: number; supplied: boolean };
+  progress: number;
+  state: 'ok' | 'waitingInput' | 'storageFull' | 'notConnected';
+  house?: {
+    tier: 1 | 2 | 3;
+    inhabitants: number;
+    demand: Record<GoodId, number>;
+    satisfied: Record<GoodId, boolean>;
+    satisfiedSince: number;
+    supplied: boolean;
+  };
 }
 interface World {
-  version: 1; seed: number; width: number; height: number; tick: number;
-  tiles: Tile[];                              // index = y * width + x
-  buildings: Record<number, Building>; nextBuildingId: number; kontorId: number;
-  stock: Record<GoodId, number>; money: number;
-  stats: { taxes: number; upkeep: number };   // gleitend pro 100 Ticks
+  version: 1;
+  seed: number;
+  width: number;
+  height: number;
+  tick: number;
+  tiles: Tile[]; // index = y * width + x
+  buildings: Record<number, Building>;
+  nextBuildingId: number;
+  kontorId: number;
+  stock: Record<GoodId, number>;
+  money: number;
+  stats: { taxes: number; upkeep: number }; // gleitend pro 100 Ticks
   won: boolean;
 }
 ```
+
 Wege sind ein Tile-Flag, kein Building (billiger, kein Id-Verbrauch).
 
 ### 3.4 Game-Loop
+
 `requestAnimationFrame`; Akkumulator mit fixem Schritt 100 ms × Geschwindigkeit; max. 20
 Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualisiert.
 
 ### 3.5 Fehlerbehandlung
+
 - Alle Aktionen liefern `{ ok: true } | { ok: false, reason: string }` – kein `throw` im Sim-Pfad.
 - Ungültiger Spielstand (Version/Struktur) → Meldung, neues Spiel; nichts überschreiben.
 - Laufzeitfehler im Loop → Loop stoppt, Meldung im UI (kein stilles Weiterlaufen).
 
 ### 3.6 Darstellung
+
 - Canvas 2D, Top-down, 32 px Kacheln, Zoom 0.5–2, Pan per Drag/WASD/Pfeiltasten.
 - Terrain einmal in Offscreen-Canvas gezeichnet; Gebäude als Code-gezeichnete Formen mit
   Farbcode je Kategorie und Kurzsymbol. Hover: Kachelrahmen; Platzierung: grün/rot-Vorschau.
@@ -212,10 +249,12 @@ Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualis
   bzw. auf schmalen Screens unten). UI-Sprache Deutsch (CH).
 
 ### 3.7 Persistenz
+
 - `localStorage` Schlüssel `inselreich.save.v1`; Buttons Speichern / Laden / Neu.
 - Serialisierung = World-Objekt als JSON, Deserialisierung validiert Version und Kachelanzahl.
 
 ## 4. Tests (Vitest, nur `sim/`)
+
 - mapgen: gleicher Seed → gleiche Karte; Nachbedingungen (2.2) erfüllt; Kontor an Küste.
 - placement: jede Standortregel positiv + negativ; Überlappung; Geldmangel.
 - roads: Anbindung über Weg zum Kontor, Unterbrechung → nicht angebunden.
@@ -227,6 +266,7 @@ Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualis
 - smoke: 3000 Ticks mit skriptgesteuertem Aufbau → Siedler erreicht, kein Fehler.
 
 ## 5. Meilensteine
+
 1. **Fundament** – Scaffold (Vite, TS, Vitest, ESLint, Prettier, Makefile, CI), Sim-Typen und
    Def-Tabellen, RNG/Noise/Mapgen, Renderer, Kamera, Eingabe, Platzieren von Wegen/Gebäuden
    mit Standortregeln (noch ohne Wirtschaft).
@@ -236,5 +276,6 @@ Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualis
    Deploy-Workflow (GitHub Pages).
 
 ## 6. Offene Entscheidungen für den Nutzer
+
 - Repo öffentlich machen? (GitHub Pages braucht bei kostenlosen Konten ein öffentliches Repo.)
 - Isometrische Darstellung als späteres Upgrade – Renderer ist dafür isoliert.

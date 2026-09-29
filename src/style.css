@@ -1,0 +1,63 @@
+:root {
+  --bg: #1e2a38;
+  --card: #2b3a4d;
+  --text: #e8eef5;
+  --accent: #e0a940;
+  --danger: #d9534f;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.4 system-ui,
+    sans-serif;
+}
+#app {
+  display: grid;
+  height: 100%;
+  gap: 8px;
+  padding: 8px;
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-areas: 'hud' 'game' 'panel' 'buildbar';
+}
+#hud {
+  grid-area: hud;
+}
+#game {
+  grid-area: game;
+  position: relative;
+  min-height: 300px;
+}
+#panel {
+  grid-area: panel;
+}
+#buildbar {
+  grid-area: buildbar;
+}
+#canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 8px;
+  touch-action: none;
+}
+.card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 8px;
+}
+@media (min-width: 900px) {
+  #app {
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'hud hud' 'game panel' 'buildbar panel';
+  }
+}
