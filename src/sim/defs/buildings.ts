@@ -153,3 +153,4 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
 };
 export const BUILDING_IDS = Object.keys(BUILDING_DEFS) as BuildingDefId[];
 export const ROAD_COST = 5;
+export const ROAD_COST_OBJ: Cost = { money: ROAD_COST, wood: 0, tools: 0, stone: 0 };

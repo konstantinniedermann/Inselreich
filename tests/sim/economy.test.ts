@@ -26,6 +26,17 @@ describe('stock', () => {
     expect(w.stock.wood).toBe(100);
     expect(addStock(w, 'wood', 1)).toBe(0);
   });
+  it('adds zero and fills exactly to the cap', () => {
+    expect(addStock(w, 'wood', 0)).toBe(0);
+    w.stock.wood = 90;
+    expect(addStock(w, 'wood', 10)).toBe(10);
+    expect(w.stock.wood).toBe(100);
+  });
+  it('refuses negative takes', () => {
+    w.stock.food = 3;
+    expect(takeStock(w, 'food', -1)).toBe(false);
+    expect(w.stock.food).toBe(3);
+  });
   it('takes only if enough', () => {
     w.stock.food = 3;
     expect(takeStock(w, 'food', 4)).toBe(false);
@@ -58,6 +69,10 @@ describe('afford/pay/refund', () => {
       reason: 'Kein Geld',
     });
   });
+  it('reports Kein Geld before cost checks when money is negative', () => {
+    w.money = -5;
+    expect(checkAfford(w, cost)).toEqual({ ok: false, reason: 'Kein Geld' });
+  });
   it('pays and refunds half rounded down, capped by storage', () => {
     pay(w, cost);
     expect(w.money).toBe(4900);
@@ -77,8 +92,7 @@ describe('afford/pay/refund', () => {
 
 describe('upkeep', () => {
   it('sums building upkeep and books it every 100 ticks', () => {
-    const k = w.buildings[w.kontorId]!;
-    // Kapelle irgendwo auf Gras platzieren (Kosten in Task 2 — hier noch ohne)
+    // Kapelle irgendwo auf Gras platzieren
     const spot = findGrass(w);
     expect(placeBuilding(w, 'chapel', spot.x, spot.y).ok).toBe(true);
     expect(totalUpkeep(w)).toBe(15);
@@ -93,7 +107,6 @@ describe('upkeep', () => {
     w.tick = 0;
     tickEconomy(w);
     expect(w.money).toBe(m0 - 15); // Tick 0 bucht nicht
-    void k;
   });
 });
 

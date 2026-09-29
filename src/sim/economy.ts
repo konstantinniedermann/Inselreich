@@ -14,7 +14,7 @@ export function addStock(world: World, good: GoodId, n: number): number {
 
 /** Entnimmt n; bei zu wenig Bestand false und keine Änderung. */
 export function takeStock(world: World, good: GoodId, n: number): boolean {
-  if (world.stock[good] < n) return false;
+  if (n < 0 || world.stock[good] < n) return false;
   world.stock[good] -= n;
   return true;
 }

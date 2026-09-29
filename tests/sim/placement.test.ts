@@ -134,6 +134,7 @@ describe('build/demolish', () => {
     expect(demolish(w, 999)).toEqual({ ok: false, reason: 'Gebäude nicht gefunden' });
   });
   it('allows re-placing on the same spot after demolish', () => {
+    w.stock.stone = 20; // Kapelle kostet 10 Stein, Refund gibt nur 5 zurück
     const r = placeBuilding(w, 'chapel', o.x, o.y);
     expect(r.ok).toBe(true);
     expect(demolish(w, (r as { id: number }).id).ok).toBe(true);
@@ -159,5 +160,32 @@ describe('build/demolish', () => {
     expect(tileAt(w, o.x, o.y)!.road).toBe(true);
     expect(removeRoad(w, o.x, o.y).ok).toBe(true);
     expect(removeRoad(w, o.x, o.y)).toEqual({ ok: false, reason: 'Kein Weg' });
+  });
+});
+
+describe('costs', () => {
+  it('charges costs and refunds half on demolish', () => {
+    const m0 = w.money;
+    const wood0 = w.stock.wood;
+    const r = placeBuilding(w, 'weaver', o.x, o.y);
+    expect(w.money).toBe(m0 - 200);
+    expect(w.stock.wood).toBe(wood0 - 15);
+    expect(w.stock.tools).toBe(20 - 3);
+    demolish(w, (r as { id: number }).id);
+    expect(w.money).toBe(m0 - 100);
+    expect(w.stock.wood).toBe(wood0 - 15 + 7);
+    expect(w.stock.tools).toBe(20 - 3 + 1);
+  });
+  it('rejects unaffordable builds with the reason and leaves the map untouched', () => {
+    w.money = 10;
+    expect(placeBuilding(w, 'weaver', o.x, o.y)).toEqual({ ok: false, reason: 'Zu wenig Geld' });
+    expect(tileAt(w, o.x, o.y)!.buildingId).toBeNull();
+    expect(w.money).toBe(10);
+    expect(placeRoad(w, o.x, o.y)).toEqual({ ok: true });
+    expect(placeRoad(w, o.x + 1, o.y)).toEqual({ ok: true });
+    expect(placeRoad(w, o.x + 2, o.y)).toEqual({ ok: false, reason: 'Zu wenig Geld' });
+    expect(tileAt(w, o.x + 2, o.y)!.road).toBe(false);
+    expect(removeRoad(w, o.x, o.y).ok).toBe(true);
+    expect(w.money).toBe(2);
   });
 });
