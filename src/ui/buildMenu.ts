@@ -39,7 +39,10 @@ export function renderBuildMenu(
       small.textContent = sub;
       btn.appendChild(small);
     }
-    btn.addEventListener('click', () => onSelect(tool));
+    btn.addEventListener('click', () => {
+      btn.blur();
+      onSelect(tool);
+    });
     parent.appendChild(btn);
   };
 

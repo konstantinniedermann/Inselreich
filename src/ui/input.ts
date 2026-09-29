@@ -118,8 +118,16 @@ export function bindInput(
         const t = screenToTile(state.cam, p.sx, p.sy);
         const key = `${t.x},${t.y}`;
         if (key !== drag.lastTile) {
+          const from = drag.lastTile?.split(',').map(Number) ?? [t.x, t.y];
+          let cx = from[0] ?? t.x;
+          let cy = from[1] ?? t.y;
+          // Kachelweise von der letzten zur neuen Kachel laufen, damit keine Lücken entstehen
+          while (cx !== t.x || cy !== t.y) {
+            if (Math.abs(t.x - cx) >= Math.abs(t.y - cy)) cx += Math.sign(t.x - cx);
+            else cy += Math.sign(t.y - cy);
+            onAction({ type: 'tile', x: cx, y: cy, dragging: true });
+          }
           drag.lastTile = key;
-          tileAction(p.sx, p.sy, true);
         }
       }
       drag.lastX = p.sx;
@@ -153,6 +161,7 @@ export function bindInput(
   canvas.addEventListener(
     'wheel',
     (e) => {
+      if (e.deltaY === 0) return;
       e.preventDefault();
       const p = local(e);
       pointer = p;
@@ -172,6 +181,7 @@ export function bindInput(
   );
 
   window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'escape') {
       onAction({ type: 'cancel' });

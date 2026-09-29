@@ -20,6 +20,7 @@ export function updateHud(header: HTMLElement, state: GameState): void {
       btn.textContent = s.label;
       btn.dataset.speed = String(s.value);
       btn.addEventListener('click', () => {
+        btn.blur();
         state.speed = s.value;
         updateHud(header, state);
       });

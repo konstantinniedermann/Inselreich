@@ -134,7 +134,9 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       frame += 1;
       requestAnimationFrame(loop);
     } catch (err) {
-      showMessage(err instanceof Error ? err.message : String(err), 'error');
+      console.error(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      showMessage(`Spiel angehalten: ${msg}`, 'error', true);
     }
   };
   updateHud(hudEl, state);
