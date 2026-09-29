@@ -7,7 +7,8 @@ ausdrückliche Zustimmung des Nutzers.
 ---
 
 ## 2026-09-29 · dep-guard-Hook (`~/.claude/hooks/dep_guard.py`) · Fehlalarm bei Heredoc-Text
-**Beobachtung:** Ein Bash-Aufruf, der Dateien per Heredoc anlegte *und* danach `npm install -D …` ausführte,
+
+**Beobachtung:** Ein Bash-Aufruf, der Dateien per Heredoc anlegte _und_ danach `npm install -D …` ausführte,
 wurde blockiert, weil der Hook Wörter aus dem Heredoc (README-/Makefile-Text) als Paketnamen gelesen hat.
 **Ursprung:** Task 1 (Scaffold), Implementierer-Bericht. Workaround: Dateianlage und Install getrennt ausführen.
 **Einschätzung:** Falsch-positiv durch Tokenisierung des gesamten Kommandos statt nur der Install-Zeile.
