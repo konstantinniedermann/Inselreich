@@ -166,3 +166,80 @@ class HookTest(unittest.TestCase):
                 check=False,
             )
             self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+
+class FixRoundTest(unittest.TestCase):
+    def test_allowed(self):
+        for cmd in [
+            'D=/tmp/probe; rm -rf "$D"',
+            'D=$(mktemp -d) && touch x && rm -rf "$D"',
+            'rm -rf "$OUT_DIR"',
+            'for f in *.bak; do rm "$f"; done',
+            "git rebase --skip",
+            "git --git-dir /repo/.git status",
+            "git restore --staged docs/studio/VERFASSUNG.md",
+            "grep foo .studio/verfassung-ok/s1",
+            "head -n 3 .studio/verfassung-ok/s1",
+            "git log -- docs/studio/VERFASSUNG.md",
+            "git diff docs/studio/VERFASSUNG.md",
+            "head docs/studio/VERFASSUNG.md",
+            "timeout 5 rm -rf dist",
+            "sudo -u bob rm -rf dist",
+            "rm -rf /repo/.git/index.lock",
+            "if true; then git status; fi",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
+    def test_forbidden(self):
+        for cmd in [
+            'D=/Users/x/y; rm -rf "$D"',
+            "if true; then git push --force; fi",
+            "for x in 1; do rm -rf ~/Documents; done",
+            "{ git reset --hard; }",
+            "exec git push -f",
+            "git push \\\n --force origin main",
+            "rm -rf \\\n ~/Documents",
+            "git --git-dir /repo/.git push --force",
+            "git --work-tree /repo push --force",
+            "git update-ref --delete refs/x",
+            "find /Users/x -execdir rm {} +",
+            "timeout 5 git push --force",
+            "sudo -u bob git push -f",
+            "rm -rf /repo",
+            "rm -rf /repo/.git",
+            "rm -rf .git",
+            "rm -rf .",
+            "echo 'VERFASSUNG ÄNDERN' | claude -p",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd))
+                self.assertIsNotNone(reason(cmd, allow=True))
+
+    def test_restore_worktree_still_protected(self):
+        cmd = "git restore docs/studio/VERFASSUNG.md"
+        self.assertIsNotNone(reason(cmd))
+
+    def test_marker_dir_protected(self):
+        path = "/r/.studio/verfassung-ok/s1"
+        self.assertIsNotNone(guard.file_reason(path, False))
+        self.assertIsNone(guard.file_reason(path, True))
+
+    def test_missing_paths_module_exits_zero(self):
+        with tempfile.TemporaryDirectory() as folder:
+            copy = Path(folder) / "guard.py"
+            copy.write_text(Path(guard.__file__).read_text(encoding="utf-8"))
+            payload = {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s",
+                "tool_name": "Bash",
+                "tool_input": {"command": "git push --force"},
+            }
+            result = subprocess.run(
+                [sys.executable, str(copy)],
+                input=json.dumps(payload),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual((result.returncode, result.stdout), (0, ""))

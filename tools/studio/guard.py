@@ -13,15 +13,20 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from paths import repo_root, studio_home
-
 CONSTITUTION = "docs/studio/VERFASSUNG.md"
 GUARD_FILE = "tools/studio/guard.py"
 APPROVAL_PHRASE = "VERFASSUNG ÄNDERN"
 AGENT_MESSAGE_PREFIXES = ("<task-notification>", "<agent-message")
 FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 SEPARATORS = {";", "&&", "||", "|", "&", ";;"}
-PREFIXES = {"sudo", "env", "command", "nohup", "time"}
+PREFIXES = {"sudo", "env", "command", "nohup", "time", "timeout"}
+KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "!", "exec"}
+VALUE_OPTIONS = {
+    "sudo": {"-u", "-g", "-h", "-p", "-C", "-U", "-D", "-R", "-T"},
+    "timeout": {"-s", "-k"},
+}
+MARKER_PART = "/.studio/verfassung-ok/"
+READ_GIT = {"log", "show", "diff", "status"}
 TEMP_ROOTS = ("/tmp", "/private/tmp", "/var/folders", "/private/var/folders")
 MAX_DEPTH = 3
 HEREDOC = re.compile(r"(?<!<)<<-?\s*['\"]?(\w+)['\"]?")
@@ -31,7 +36,7 @@ SESSION_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 FORBIDDEN = "Irreversible Aktion ist verboten"
 PROTECTED = "Verfassung und Guard ändert nur der Nutzer (Vorschlag einreihen)"
 SUFFIX = " (Verfassung §6)"
-READ_ONLY = {"ls", "cat", "test", "["}
+READ_ONLY = {"ls", "cat", "test", "[", "grep", "rg", "head", "tail", "wc"}
 
 
 def strip_heredocs(command: str) -> str:
@@ -53,16 +58,19 @@ def _is_punctuation(token: str) -> bool:
     return bool(token) and all(char in "();<>|&" for char in token)
 
 
-def segments(command: str) -> list[tuple[list[str], list[str], list[str]]]:
-    """Zerlegt in Segmente: (Wörter ohne Umleitungen, alle Tokens, Schreibziele)."""
+Segment = tuple[list[str], list[str], list[str], list[str]]
+
+
+def segments(command: str) -> list[Segment]:
+    """Segmente: (Wörter, alle Tokens, Schreibziele, führende Zuweisungen)."""
     lexer = shlex.shlex(
-        strip_heredocs(command).replace("\n", " ; "),
+        strip_heredocs(command.replace("\\\n", " ")).replace("\n", " ; "),
         posix=True,
         punctuation_chars=True,
     )
     lexer.whitespace_split = True
     tokens = list(lexer)
-    result: list[tuple[list[str], list[str], list[str]]] = []
+    result: list[Segment] = []
     words: list[str] = []
     raw: list[str] = []
     writes: list[str] = []
@@ -70,13 +78,26 @@ def segments(command: str) -> list[tuple[list[str], list[str], list[str]]]:
     def flush() -> None:
         nonlocal words, raw, writes
         clean = list(words)
-        while clean and (ASSIGNMENT.match(clean[0]) or clean[0] in PREFIXES):
-            was_prefix = clean[0] in PREFIXES
-            clean = clean[1:]
-            while was_prefix and clean and clean[0].startswith("-"):
+        assigns: list[str] = []
+        while clean:
+            word = clean[0]
+            if ASSIGNMENT.match(word) or word in KEYWORDS:
+                if ASSIGNMENT.match(word):
+                    assigns.append(word)
                 clean = clean[1:]
+            elif word in PREFIXES:
+                clean = clean[1:]
+                while clean and clean[0].startswith("-"):
+                    option = clean[0]
+                    clean = clean[1:]
+                    if option in VALUE_OPTIONS.get(word, ()) and clean:
+                        clean = clean[1:]
+                if word == "timeout" and clean:
+                    clean = clean[1:]
+            else:
+                break
         if raw:
-            result.append((clean, raw, writes))
+            result.append((clean, raw, writes, assigns))
         words, raw, writes = [], [], []
 
     index = 0
@@ -133,13 +154,15 @@ def _expand(arg: str, env: Mapping[str, str]) -> str:
     return VARIABLE.sub(lambda m: env.get(m.group(1) or m.group(2), m.group(0)), arg)
 
 
-def _outside(arg: str, root: Path, cwd: Path, env: Mapping[str, str]) -> bool:
-    expanded = _expand(arg, env)
-    if "$" in expanded or expanded.startswith("~"):
-        return True  # nicht auflösbar → wie ausserhalb behandeln
-    path = os.path.normpath(os.path.join(str(cwd), expanded))
+def _outside(
+    arg: str, root: Path, cwd: Path, env: Mapping[str, str], guard_root: bool = True
+) -> bool:
+    # Unaufgelöstes `$VAR` bleibt wörtlich und zählt als relativer Pfad in cwd.
+    path = os.path.normpath(os.path.join(str(cwd), _expand(arg, env)))
     base = os.path.normpath(str(root))
-    if path == base or path.startswith(base + "/"):
+    if guard_root and (path == base or path == base + "/.git"):
+        return True  # Repo-Wurzel und History nie löschen
+    if path.startswith(base + "/") or (path == base and not guard_root):
         return False
     temps = list(TEMP_ROOTS)
     if env.get("TMPDIR"):
@@ -148,23 +171,35 @@ def _outside(arg: str, root: Path, cwd: Path, env: Mapping[str, str]) -> bool:
 
 
 def _delete_reason(
-    paths: list[str], root: Path, cwd: Path, env: Mapping[str, str], allow: bool
+    paths: list[str],
+    root: Path,
+    cwd: Path,
+    env: Mapping[str, str],
+    allow: bool,
+    guard_root: bool = True,
 ) -> str | None:
     for arg in paths:
-        if _outside(arg, root, cwd, env):
+        if _outside(arg, root, cwd, env, guard_root):
             return f"{FORBIDDEN}: Löschen ausserhalb des Repos ({arg})"
         if not allow and _is_protected(arg, cwd):
             return PROTECTED
     return None
 
 
-def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
+def _git_sub(args: list[str]) -> tuple[str | None, list[str]]:
     index = 0
     while index < len(args) and args[index].startswith("-"):
-        index += 2 if args[index] in ("-C", "-c") else 1
+        with_value = ("-C", "-c", "--git-dir", "--work-tree", "--namespace")
+        index += 2 if args[index] in with_value else 1
     if index >= len(args):
+        return None, []
+    return args[index], args[index + 1 :]
+
+
+def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
+    sub, rest = _git_sub(args)
+    if sub is None:
         return None
-    sub, rest = args[index], args[index + 1 :]
     shorts = _short_flags(rest)
     if sub == "push":
         for arg in rest:
@@ -180,13 +215,13 @@ def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
         if "D" in shorts or (deleting and _has_force(rest)):
             return f"{FORBIDDEN}: git branch erzwingendes Löschen"
     elif sub == "rebase":
-        if not any(arg in ("--abort", "--quit", "--continue") for arg in rest):
+        if not set(rest) & {"--abort", "--quit", "--continue", "--skip"}:
             return f"{FORBIDDEN}: git rebase"
     elif sub == "reset" and "--hard" in rest:
         return f"{FORBIDDEN}: git reset --hard"
     elif sub in ("filter-branch", "filter-repo"):
         return f"{FORBIDDEN}: git {sub}"
-    elif sub == "update-ref" and "-d" in rest:
+    elif sub == "update-ref" and ("-d" in rest or "--delete" in rest):
         return f"{FORBIDDEN}: git update-ref -d"
     elif sub == "reflog" and rest[:1] and rest[0] in ("expire", "delete"):
         return f"{FORBIDDEN}: git reflog {rest[0]}"
@@ -198,7 +233,13 @@ def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
         return f"{FORBIDDEN}: git worktree remove --force"
     elif sub == "gc" and "--prune=now" in rest:
         return f"{FORBIDDEN}: git gc --prune=now"
-    if not allow and sub in ("checkout", "restore", "rm", "mv"):
+    staged_only = (
+        sub == "restore"
+        and ("--staged" in rest or "S" in shorts)
+        and "--worktree" not in rest
+        and "W" not in shorts
+    )
+    if not allow and not staged_only and sub in ("checkout", "restore", "rm", "mv"):
         if any(_is_protected(arg, cwd) for arg in rest):
             return PROTECTED
     return None
@@ -243,10 +284,22 @@ def _check(
     allow: bool,
     depth: int,
 ) -> str | None:
-    for words, raw, writes in segments(command):
+    env = dict(env)
+    parsed = segments(command)
+    has_phrase = any(APPROVAL_PHRASE in t for _, raw, _, _ in parsed for t in raw)
+    if has_phrase and any(
+        words and os.path.basename(words[0]) == "claude" for words, _, _, _ in parsed
+    ):
+        return f"{FORBIDDEN}: Freigabe-Formel darf nicht selbst gesendet werden"
+    for words, raw, writes, assigns in parsed:
         if not words:
             if not allow and any(_is_protected(t, cwd) for t in writes):
                 return PROTECTED
+            for assign in assigns:
+                key, _, value = assign.partition("=")
+                value = _expand(value, env)
+                if "$" not in value:
+                    env[key] = value
             continue
         name = os.path.basename(words[0])
         args = words[1:]
@@ -260,7 +313,10 @@ def _check(
         if not allow:
             if any(_is_protected(t, cwd) for t in writes):
                 return PROTECTED
-            if any("verfassung-ok" in token for token in raw) and name not in READ_ONLY:
+            reading = name in READ_ONLY or (
+                name == "git" and _git_sub(args)[0] in READ_GIT
+            )
+            if any("verfassung-ok" in token for token in raw) and not reading:
                 return PROTECTED
             found = _write_reason(name, args, cwd)
             if found:
@@ -274,14 +330,15 @@ def _check(
             paths = [a for a in before if not a.startswith("-")] + after_dashes
             found = _delete_reason(paths, root, cwd, env, allow)
         elif name == "find" and (
-            "-delete" in args or any(a == "rm" for a in args) and "-exec" in args
+            "-delete" in args
+            or ("rm" in args and ("-exec" in args or "-execdir" in args))
         ):
             paths = []
             for arg in args:
                 if arg.startswith(("-", "(", "!")):
                     break
                 paths.append(arg)
-            found = _delete_reason(paths, root, cwd, env, allow)
+            found = _delete_reason(paths, root, cwd, env, allow, False)
         else:
             text = _shell_text(name, args)
             if text is not None and depth < MAX_DEPTH:
@@ -308,6 +365,8 @@ def file_reason(path: str, allow_constitution: bool) -> str | None:
     text = path.replace("\\", "/")
     if allow_constitution:
         return None
+    if MARKER_PART in text or text.startswith(MARKER_PART[1:]):
+        return PROTECTED
     if text.endswith(CONSTITUTION) or text.endswith(GUARD_FILE):
         return PROTECTED
     return None
@@ -347,6 +406,8 @@ def _record_approval(payload: dict, marker_dir: Path) -> None:
 
 def main() -> int:
     try:
+        from paths import repo_root, studio_home
+
         payload = json.loads(sys.stdin.read())
         marker_dir = studio_home() / "verfassung-ok"
         event = payload.get("hook_event_name")
