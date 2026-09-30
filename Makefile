@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check
+.PHONY: help install dev test lint format build check studio-test
 
 help: ## Alle verfügbaren Befehle anzeigen
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 install: ## Dev-Abhängigkeiten installieren (npm ci)
 	npm ci
@@ -22,4 +22,7 @@ format: ## Code formatieren (Prettier)
 build: ## Typprüfung + Produktions-Build
 	npm run build
 
-check: lint test build ## Gleich wie CI: lint, test, build
+studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
+	python3 -m unittest discover -s tools/studio/tests -t tools/studio
+
+check: lint test studio-test build ## Gleich wie CI: lint, test, studio-test, build
