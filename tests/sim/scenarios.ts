@@ -185,6 +185,30 @@ function auftrag(): World {
   return w;
 }
 
+/** Kleine Kolonie für die Tag-Nacht-Prüfung: sichtbares Gras, Küste, Wald, Wege, Häuser. */
+function tagWelt(): World {
+  const { w, kx, ky } = smallColony();
+  setTerrain(w, kx + 8, ky - 1, 'water');
+  setTerrain(w, kx + 11, ky - 2, 'forest');
+  put(w, 'fisher', kx + 9, ky - 1);
+  put(w, 'lumberjack', kx + 11, ky - 1);
+  put(w, 'house', kx + 3, ky - 2);
+  put(w, 'house', kx + 4, ky - 2);
+  put(w, 'house', kx + 3, ky + 1);
+  return w;
+}
+
+function tag0(): World {
+  return tagWelt();
+}
+
+/** Dieselbe Welt, über `step` auf genau Tick 3000 gebracht (Aufträge und Takte bleiben konsistent). */
+function tag3000(): World {
+  const w = tagWelt();
+  while (w.tick < 3000) step(w);
+  return w;
+}
+
 /** Ein Gebäude jedes Typs, alle angebunden; Sonderfälle nach Vorgabe des Controllers. */
 function galerie(): World {
   const { w, kx, ky } = baseWorld();
@@ -276,6 +300,8 @@ export const SCENARIOS: Record<string, () => World> = {
   auftrag,
   galerie,
   'leistung-50': leistung50,
+  'tag-0': tag0,
+  'tag-3000': tag3000,
 };
 
 /**
