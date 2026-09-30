@@ -1203,6 +1203,16 @@ class BudgetPhaseSessionTest(unittest.TestCase):
         _, rows = self.rows(events)
         self.assertEqual((rows["P1"]["used"], rows["P2"]["used"]), (1, 1))
 
+    def test_start_in_session_without_grant_counts_as_no_grant(self):
+        events = [
+            grant(0, SA, "graph-umsetzung", 32, 2),
+            *lead_node(1, "sc", "LC"),
+            *worker(10, "sc", "LC", "C1", stop_at=15),
+        ]
+        _, rows = self.rows(events)
+        self.assertEqual(rows["ohne Freigabe"]["used"], 1)
+        self.assertEqual(rows["graph-umsetzung"]["used"], 0)
+
 
 class MilestonePerSessionTest(unittest.TestCase):
     def test_running_milestone_only_of_own_session(self):

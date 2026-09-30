@@ -1132,7 +1132,11 @@ class _Builder:
             lead = lead_node["role"]
             for c in lead_node["children"]:
                 child = self.nodes[c]
-                if lead not in granted_leads:
+                if not any(
+                    g["lead"] == lead
+                    and g["session_id"] in ("", lead_node["session_id"])
+                    for g in self.budgets.values()
+                ):
                     group = groups.setdefault(
                         (lead, no_grant["phase"]),
                         {"plan": dict(no_grant, lead=lead), "children": []},
