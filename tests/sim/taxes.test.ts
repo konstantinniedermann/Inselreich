@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import { UPKEEP_INTERVAL, totalUpkeep } from '../../src/sim/economy';
 import { step } from '../../src/sim/tick';
-import { citizens, tickTaxes, totalTaxes } from '../../src/sim/population';
+import { citizens, populationByTier, tickTaxes, totalTaxes } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
 import type { GoodId, Tier, World } from '../../src/sim/types';
 
@@ -93,5 +93,15 @@ describe('citizens', () => {
     addHouse(w, 3, 7, true);
     addHouse(w, 3, 2, false);
     expect(citizens(w)).toBe(9);
+  });
+});
+
+describe('populationByTier', () => {
+  it('sums inhabitants per tier, zero for empty tiers', () => {
+    expect(populationByTier(w)).toEqual({ 1: 0, 2: 0, 3: 0 });
+    addHouse(w, 1, 4, true);
+    addHouse(w, 1, 2, false);
+    addHouse(w, 3, 7, true);
+    expect(populationByTier(w)).toEqual({ 1: 6, 2: 0, 3: 7 });
   });
 });

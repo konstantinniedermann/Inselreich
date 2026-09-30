@@ -18,7 +18,11 @@ import { center } from './world';
 export const GROWTH_INTERVAL = 50;
 /** Ticks ununterbrochener Zufriedenheit, bevor ein Haus aufsteigen darf. */
 export const UPGRADE_WAIT = 300;
-const SERVICE_BUILDING: Record<ServiceId, BuildingDefId> = { faith: 'chapel', school: 'school' };
+/** Gebäude, das einen Dienst erbringt (für Namen in Gründen und Anzeige). */
+export const SERVICE_BUILDING: Record<ServiceId, BuildingDefId> = {
+  faith: 'chapel',
+  school: 'school',
+};
 const SERVICE_IDS: ServiceId[] = ['faith', 'school'];
 /** Toleranz für die Gleitkomma-Summe von 50 × 0.02. */
 const EPSILON = 1e-9;
@@ -164,6 +168,15 @@ export function citizens(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) {
     if (b.house?.tier === 3) sum += b.house.inhabitants;
+  }
+  return sum;
+}
+
+/** Einwohner je Bevölkerungsstufe über alle Häuser. */
+export function populationByTier(world: World): Record<Tier, number> {
+  const sum: Record<Tier, number> = { 1: 0, 2: 0, 3: 0 };
+  for (const b of Object.values(world.buildings)) {
+    if (b.house) sum[b.house.tier] += b.house.inhabitants;
   }
   return sum;
 }
