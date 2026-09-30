@@ -43,10 +43,16 @@ describe('defs', () => {
       needs: { food: 0.5 },
       services: [],
     });
-    expect(TIERS[2]).toMatchObject({ maxInhabitants: 8, tax: 3, services: ['faith'] });
+    expect(TIERS[2]).toMatchObject({
+      maxInhabitants: 8,
+      tax: 7,
+      needs: { food: 0.5, cloth: 0.2 },
+      services: ['faith'],
+    });
     expect(TIERS[3]).toMatchObject({
       maxInhabitants: 15,
-      tax: 5,
+      tax: 14,
+      needs: { food: 0.5, cloth: 0.2, rum: 0.2 },
       services: ['faith', 'school'],
       upgradeCost: null,
     });

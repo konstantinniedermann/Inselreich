@@ -1,7 +1,8 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { UPKEEP_INTERVAL, checkAfford, pay, takeStock } from './economy';
+import { GROWTH_INTERVAL, UPGRADE_WAIT, UPKEEP_INTERVAL } from './defs/timing';
+import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
   BuildingDefId,
@@ -15,10 +16,8 @@ import type {
 import { inSupplyRange } from './supply';
 import { center } from './world';
 
-/** Alle 50 Ticks wächst oder schrumpft ein Haus um einen Einwohner. */
-export const GROWTH_INTERVAL = 50;
-/** Ticks ununterbrochener Zufriedenheit, bevor ein Haus aufsteigen darf. */
-export const UPGRADE_WAIT = 300;
+export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
+
 /** Gebäude, das einen Dienst erbringt (für Namen in Gründen und Anzeige). */
 export const SERVICE_BUILDING: Record<ServiceId, BuildingDefId> = {
   faith: 'chapel',

@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { TICK_MS } from '../sim/defs/timing';
 import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
@@ -8,10 +9,11 @@ import { TILE, clampCamera, createCamera, type Camera } from '../render/camera';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { updateHud } from './hud';
+import { disposeHud, updateHud, type HudActions } from './hud';
 import { bindInput, type InputAction } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
+import { hasSavedGame, loadFromStorage, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -29,7 +31,6 @@ export interface GameState {
   wonShown: boolean;
 }
 
-const TICK_MS = 100;
 const MAX_TICKS_PER_FRAME = 20;
 const HUD_EVERY_FRAMES = 10;
 
@@ -39,16 +40,62 @@ function need<T extends HTMLElement>(root: HTMLElement, selector: string): T {
   return el;
 }
 
-export function startGame(root: HTMLElement, seed?: number): GameState {
+export type RunningGame = GameState & { dispose(): void };
+
+/** Ergebnis von `startGame`: bei einem Startfehler nur ein Stub, dessen `dispose` aufräumt. */
+export interface Startable {
+  dispose(): void;
+}
+
+/** Das laufende Spiel (oder der Fehler-Stub); `restart` beendet es, bevor ein neues startet. */
+let current: Startable | null = null;
+
+/** Beendet das laufende Spiel und startet mit `world` bzw. einer neuen Karte. */
+function restart(root: HTMLElement, world?: World): Startable {
+  current?.dispose();
+  current = null;
+  return startGame(root, world);
+}
+
+/**
+ * Startet ein Spiel mit `world` (geladener Stand) oder einer neuen Karte. Wirft nie: schlägt der
+ * Start fehl (z. B. keine gültige Karte), erscheint ein sticky Toast und `current` zeigt auf einen
+ * Stub, der nur die Meldungsfläche wieder entfernt.
+ */
+export function startGame(root: HTMLElement, loaded?: World): Startable {
+  let unbindMessages = (): void => {};
+  try {
+    const gameEl = need<HTMLElement>(root, '#game');
+    unbindMessages = bindMessages(gameEl);
+    const game = launch(root, gameEl, unbindMessages, loaded);
+    if (!loaded && hasSavedGame()) {
+      showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
+    }
+    return game;
+  } catch (err) {
+    console.error(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    showMessage(`Spiel konnte nicht gestartet werden: ${msg}`, 'error', true);
+    const stub: Startable = { dispose: unbindMessages };
+    current = stub;
+    return stub;
+  }
+}
+
+function launch(
+  root: HTMLElement,
+  gameEl: HTMLElement,
+  unbindMessages: () => void,
+  loaded?: World,
+): RunningGame {
   const canvas = need<HTMLCanvasElement>(root, '#canvas');
-  const gameEl = need<HTMLElement>(root, '#game');
   const hudEl = need<HTMLElement>(root, '#hud');
   const navEl = need<HTMLElement>(root, '#buildbar');
   const panelEl = need<HTMLElement>(root, '#panel');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
-  const world = createWorld(seed ?? Date.now() % 100000);
+  const world = loaded ?? createWorld(Date.now() % 100000);
   const state: GameState = {
     world,
     cam: createCamera(),
@@ -64,7 +111,27 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
   const worldH = world.height * TILE;
   const view = { w: 1, h: 1 };
 
-  bindMessages(gameEl);
+  const actions: HudActions = {
+    save: () => {
+      const r = saveToStorage(world);
+      if (r.ok) showMessage('Gespeichert');
+      else showMessage(r.reason, 'error');
+    },
+    load: () => {
+      // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
+      const r = loadFromStorage();
+      if (!r.ok) {
+        showMessage(r.reason, 'error');
+        return;
+      }
+      restart(root, r.world);
+      showMessage('Spielstand geladen');
+    },
+    hasProgress: () => world.tick > 0,
+    restart: () => {
+      restart(root);
+    },
+  };
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -98,7 +165,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       state.wonShown = true;
       showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
     }
-    updateHud(hudEl, state);
+    updateHud(hudEl, state, actions);
     updateBuildMenu(navEl, world);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
@@ -145,6 +212,10 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       selectTool({ kind: 'select' });
       return;
     }
+    if (a.type === 'dragEnd') {
+      dragMoneyToastShown = false;
+      return;
+    }
     if (!a.dragging) dragMoneyToastShown = false;
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
@@ -165,7 +236,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     }
     refresh();
   };
-  const applyKeys = bindInput(canvas, state, onAction);
+  const input = bindInput(canvas, state, onAction);
 
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   refresh();
@@ -183,7 +254,8 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     view.h = h;
     clampCamera(state.cam, worldW, worldH, w, h);
   };
-  new ResizeObserver(resize).observe(gameEl);
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(gameEl);
   resize();
   if (kontor) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
@@ -195,7 +267,10 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
   let acc = 0;
   let last = performance.now();
   let frame = 0;
+  let disposed = false;
+  let rafId = 0;
   const loop = (now: number): void => {
+    if (disposed) return;
     try {
       const dt = Math.min(now - last, 1000);
       last = now;
@@ -209,17 +284,33 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
         }
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
-      applyKeys();
+      input.applyKeys();
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
-      requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error ? err.message : String(err);
       showMessage(`Spiel angehalten: ${msg}`, 'error', true);
     }
   };
-  requestAnimationFrame(loop);
-  return state;
+  rafId = requestAnimationFrame(loop);
+
+  /** Beendet Loop, Beobachter und Listener und leert das DOM, das dieses Spiel aufgebaut hat. */
+  const dispose = (): void => {
+    if (disposed) return;
+    disposed = true;
+    cancelAnimationFrame(rafId);
+    resizeObserver.disconnect();
+    input.unbind();
+    unbindMessages();
+    disposeHud(hudEl);
+    hudEl.replaceChildren();
+    navEl.replaceChildren();
+    panelEl.replaceChildren();
+  };
+  const game: RunningGame = Object.assign(state, { dispose });
+  current = game;
+  return game;
 }

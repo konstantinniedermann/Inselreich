@@ -1,9 +1,10 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { STORAGE_CAP } from './defs/goods';
+import { UPKEEP_INTERVAL } from './defs/timing';
 import type { Cost, GoodId, Result, World } from './types';
 import { fail, ok } from './types';
 
-export const UPKEEP_INTERVAL = 100;
+export { UPKEEP_INTERVAL } from './defs/timing';
 
 /** Lagert ein und liefert die tatsächlich eingelagerte Menge (Kappung bei STORAGE_CAP). */
 export function addStock(world: World, good: GoodId, n: number): number {

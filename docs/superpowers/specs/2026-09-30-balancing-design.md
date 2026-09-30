@@ -21,25 +21,35 @@ Jede Stufe über Pionier ist dauerhaft defizitär, Werkzeug (nur kaufbar) versch
 | Wert                                     | bisher | neu | Begründung                                    |
 | ---------------------------------------- | ------ | --- | --------------------------------------------- |
 | Steuer Pioniere                          | 2      | 2   | bereits positiv                               |
-| Steuer Siedler                           | 3      | 6   | Stoffkette kostet ~2.5/Einwohner → netto +2.5 |
-| Steuer Bürger                            | 5      | 12  | Stoff + Rum ~5.5/Einwohner → netto +5.5       |
+| Steuer Siedler                           | 3      | 7   | Stoffkette kostet ~2.5/Einwohner → netto +3.5 |
+| Steuer Bürger                            | 5      | 14  | Stoff + Rum ~5.5/Einwohner → netto +7.5       |
 | Verbrauch Stoff je Einwohner / 100 Ticks | 0.25   | 0.2 | weniger Weberei-Paare je Haus (Gebäudezahl)   |
 | Verbrauch Rum je Einwohner / 100 Ticks   | 0.25   | 0.2 | dito für Brennerei-Paare                      |
 
 Rechnung je Einwohner pro 100 Ticks (Unterhalt Kette ÷ versorgte Einwohner):
 Nahrung 5 ÷ 5 = 1.0 · Stoff (10 + 15) × 0.2 ÷ 2 = 2.5 · Rum (10 + 20) × 0.2 ÷ 2 = 3.0.
-Siedler: 6 − 3.5 = **+2.5** · Bürger: 12 − 6.5 = **+5.5** · Pionier: 2 − 1.0 = **+1.0**.
-Beispiel Endzustand 4 Bürgerhäuser (60 Einwohner): +330 − 40 (Kapelle, Schule) = **+290 / 100 Ticks**.
+Siedler: 7 − 3.5 = **+3.5** · Bürger: 14 − 6.5 = **+7.5** · Pionier: 2 − 1.0 = **+1.0**.
+Beispiel Endzustand 4 Bürgerhäuser (60 Einwohner): +450 − 40 (Kapelle, Schule) = **+410 / 100 Ticks**.
 
 Werkzeugpreis bleibt 40: Mit positiver Bilanz amortisiert sich der Kauf; eine Werkzeugproduktion
 ist Backlog (kein neuer Inhalt im MVP).
 
 ## Erfolgskriterium (Test)
 
-`tests/sim/balance.test.ts` baut eine Kolonie gestaffelt (Nahrung → Häuser → Kapelle → Stoffkette →
-Rumkette → Schule, Häuser nachziehen, Werkzeug/Holz kaufen) und verlangt: `citizens ≥ 50` bei
-`tick ≤ 9000` **und** `money > 0` am Ende. Schlägt der Test mit den neuen Werten fehl, gilt die
+`tests/sim/balance.test.ts` baut eine Kolonie skriptgesteuert: alle Wege und 4 Häuser gleich zu
+Beginn (später kommen keine Häuser dazu); danach bauen bedarfsgesteuerte Produzenten (Nahrung,
+Kapelle, Stoffkette, Rumkette, Schule) nach, Werkzeug/Holz/Stein werden zugekauft, Überschüsse
+verkauft. Verlangt: Sieg (`citizens ≥ 50`) bei `tick ≤ 7500`, Lauf höchstens 9000 Ticks **und**
+`money > 0` am Ende. Schlägt der Test mit den neuen Werten fehl, gilt die
 Eskalationsstufe Steuer Siedler 7 / Bürger 14; alles Weitere braucht eine neue Kurz-Spec.
+
+## Entscheid 2026-09-30
+
+Mit den Primärwerten (Steuer 6/12) erreichte die Skript-Kolonie 50 Bürger erst bei Tick 8650, also mit
+nur 350 Ticks Marge und nur dank einer nahezu optimalen Strategie. Für einen neuen Spieler ist das zu
+knapp; die Eskalationsstufe Siedler 7 / Bürger 14 wurde deshalb direkt übernommen (Werte oben).
+Der Balance-Test verlangt seither zusätzlich den Sieg bis Tick 7500.
+Die Eskalationsregel ist damit ausgeschöpft: Weitere Änderungen brauchen eine neue Kurz-Spec.
 
 ## Folgeänderungen
 

@@ -15,13 +15,103 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 4, label: '4×' },
 ];
 
+/** Zahl mit ausdrücklichem Vorzeichen: „+12", „−33", „±0" (typografisches Minus wie beim Unterhalt). */
+function signed(n: number): string {
+  if (n > 0) return `+${n}`;
+  if (n < 0) return `−${-n}`;
+  return '±0';
+}
+
+/** Zeitfenster, in dem ein zweiter Klick auf Neu bzw. Laden bestätigt (Millisekunden). */
+const NEW_CONFIRM_MS = 3000;
+
+/** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
+export interface HudActions {
+  save(): void;
+  load(): void;
+  /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
+  hasProgress(): boolean;
+  restart(): void;
+}
+
+function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    btn.blur();
+    onClick(btn);
+  });
+  return btn;
+}
+
+/** Aufräumfunktionen (Bestätigungs-Timer) je HUD-Element. */
+const cleanups = new WeakMap<HTMLElement, () => void>();
+
+/** Stoppt die Bestätigungs-Timer von Neu und Laden; beim Beenden des Spiels aufrufen. */
+export function disposeHud(header: HTMLElement): void {
+  cleanups.get(header)?.();
+  cleanups.delete(header);
+}
+
+/**
+ * Button mit Zwei-Klick-Bestätigung: der erste Klick zeigt `confirmLabel` für NEW_CONFIRM_MS, der
+ * zweite Klick darin führt `run` aus. Ist `needsConfirm()` falsch, läuft `run` sofort.
+ */
+function confirmButton(
+  label: string,
+  confirmLabel: string,
+  needsConfirm: () => boolean,
+  run: () => void,
+): { btn: HTMLButtonElement; dispose: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const btn = gameButton(label, () => {
+    if (timer === null && needsConfirm()) {
+      btn.textContent = confirmLabel;
+      timer = setTimeout(() => {
+        timer = null;
+        btn.textContent = label;
+      }, NEW_CONFIRM_MS);
+      return;
+    }
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    btn.textContent = label;
+    run();
+  });
+  return {
+    btn,
+    dispose: () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+    },
+  };
+}
+
+/** Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. */
+function renderGameButtons(box: Element, actions: HudActions): () => void {
+  const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, actions.load);
+  const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
+  box.append(
+    gameButton('Speichern', () => actions.save()),
+    load.btn,
+    fresh.btn,
+  );
+  return () => {
+    load.dispose();
+    fresh.dispose();
+  };
+}
+
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
-export function updateHud(header: HTMLElement, state: GameState): void {
+export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
       '<div class="hud-row"><span class="hud-money" data-field="money"></span>' +
-      '<span class="hud-balance" data-field="balance"></span>' +
-      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span></div>' +
+      '<span class="hud-balance"><span data-field="balance"></span> ' +
+      '<span data-field="net"></span></span>' +
+      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
+      '<span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
@@ -52,20 +142,23 @@ export function updateHud(header: HTMLElement, state: GameState): void {
       btn.addEventListener('click', () => {
         btn.blur();
         state.speed = s.value;
-        updateHud(header, state);
+        updateHud(header, state, actions);
       });
       speedBox?.appendChild(btn);
     }
+    const gameBox = header.querySelector('.hud-game');
+    if (gameBox) cleanups.set(header, renderGameButtons(gameBox, actions));
   }
   const { world } = state;
   setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
   const { taxes, upkeep } = world.stats;
   const taxSign = taxes > 0 ? '+' : '';
   const upkeepSign = upkeep > 0 ? '−' : '';
-  setField(
-    header,
-    'balance',
-    `Steuern ${taxSign}${taxes} · Unterhalt ${upkeepSign}${upkeep} / ${UPKEEP_INTERVAL} Ticks`,
+  setField(header, 'balance', `Steuern ${taxSign}${taxes} · Unterhalt ${upkeepSign}${upkeep}`);
+  const net = taxes - upkeep;
+  setField(header, 'net', `= ${signed(net)} / ${UPKEEP_INTERVAL} Ticks`)?.classList.toggle(
+    'negative',
+    net < 0,
   );
   const pop = populationByTier(world);
   for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);

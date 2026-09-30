@@ -17,6 +17,7 @@ eigene Grafik, eigene Spielwerte (ADR-004).
 ## Test-Strategie
 
 Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer und UI werden manuell im Browser geprüft.
+Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die Spielwerte: Jede Änderung in `src/sim/defs/` muss ihn grün lassen.
 
 ## Context-Scopes
 
@@ -24,10 +25,12 @@ Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer
 | ----------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
 | Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
-| UI          | `src/ui/`, `index.html`, `src/style.css`                                                   | Bedienung, Layout                         |
+| UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 
 ## Dokumentation
 
+- Einstieg: `docs/index.md`; Architektur nach arc42 in `docs/arc42.md` — bei Änderungen an Modulen, Tick-Ablauf oder Persistenz mitführen.
 - Spec: `docs/superpowers/specs/`, Pläne: `docs/superpowers/plans/`, ADRs: `docs/adr/`
+- Spielanleitung im `README.md` — bei Änderungen an Bedienung oder Spielwerten mitführen.
 - Befunde ausserhalb des Scopes: `docs/beobachtungen.md`

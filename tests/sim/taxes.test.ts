@@ -52,10 +52,10 @@ describe('totalTaxes', () => {
     addHouse(w, 1, 3, false);
     expect(totalTaxes(w)).toBe(3);
   });
-  it('sums first, floors once (two unsatisfied settler houses: 1.5 + 1.5 = 3, not 2)', () => {
+  it('sums first, floors once (two unsatisfied settler houses: 3.5 + 3.5 = 7, not 6)', () => {
     addHouse(w, 2, 1, false);
     addHouse(w, 2, 1, false);
-    expect(totalTaxes(w)).toBe(3);
+    expect(totalTaxes(w)).toBe(7);
   });
 });
 

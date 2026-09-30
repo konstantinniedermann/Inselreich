@@ -26,9 +26,13 @@ Alle vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbar
 - Abriss-Regel „Gebäude, sonst Weg" steht doppelt (Hover in `input.ts`, Aktion in `app.ts`); Viewgrösse wird doppelt geführt. Beim dritten Aufrufer (Inspect-Panel M2) zusammenziehen.
 - Tastatur-Pan ist framerate-abhängig (16 px/Frame); bei Arbeiten am Loop auf `dt` umstellen.
 - Kein `dispose()` für Listener/ResizeObserver/rAF; relevant sobald `startGame` zweimal läuft („Neu" in M4).
+  **Erledigt in M4:** `startGame` liefert `dispose()` (Loop, ResizeObserver, Listener, Meldungsfläche, HUD-Timer); Laden und Neu rufen es vor dem Neustart auf (`src/ui/app.ts`).
 - Toasts stapeln sich unbegrenzt bei Klick-Spam; Touch-Bedienung nur teilweise (kein Pinch, Werkzeuge ohne Pan).
+  **Toast-Stapel erledigt in M4:** höchstens drei sichtbar, gleiche Meldung innert einer Sekunde nur einmal (`src/ui/messages.ts`). Touch bleibt offen.
 - `#panel` ist bis M2 eine leere Karte.
+  **Erledigt in M2:** Info-Panel und Handelsdialog (`src/ui/inspect.ts`, `src/ui/trade.ts`).
 - `startGame` fängt einen möglichen `throw` aus `createWorld` (50 Seeds ohne gültige Insel) nicht ab; praktisch unerreichbar.
+  **Erledigt in M4:** `startGame` fängt Startfehler ab und zeigt eine bleibende Meldung (`src/ui/app.ts`).
 
 **Simulation / Tests** (`src/sim`, `tests`) — Ursprung: Reviews Task 2–5
 
@@ -47,12 +51,14 @@ Alle vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbar
 Vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbarkeit oder Spec-Konformität.
 
 - **Zeitkonstanten verstreut** (`UPKEEP_INTERVAL` in `economy.ts`, M3 bringt `GROWTH_INTERVAL` und die 300-Tick-Aufstiegswartezeit): nach M3 in ein `defs/timing.ts` zusammenziehen (Regel „Spielwerte nur in defs").
+  **Erledigt in M4:** `src/sim/defs/timing.ts` (`TICK_MS`, `UPKEEP_INTERVAL`, `GROWTH_INTERVAL`, `UPGRADE_WAIT`); alte Exporte als Re-Export.
 - **Handelsbuttons** sind bei Geldmangel nur deaktiviert, ohne Grund; `'Kein Geld'` aus `buy()` ist so vom UI aus unerreichbar. Konsistent zur Bauleiste wäre „klickbar + Toast".
 - **Refund-Text nominal:** zeigt `refundCost`, obwohl `grantRefund` am Lagerlimit kappt; Verlust ist beabsichtigt, Anzeige könnte das andeuten.
 - **BFS-Richtungsarray** wird je Iteration alloziert (`roads.ts`); bei 64×64 unerheblich.
 - **`refresh()` je Weg-Kachel während Drag** (statt 10-Frame-Takt); drei billige textContent-Vergleiche.
 - **`sell` ignoriert Rückgabe von `takeStock`**, `buy` die von `addStock` — nach den Vorprüfungen sicher, per Kommentar dokumentiert.
 - **Nach Deserialisierung (M4)** `recomputeConnectivity` aufrufen statt persistiertem `connected` zu vertrauen.
+  **Erledigt in M4:** `deserialize` ruft `recomputeConnectivity` auf (`src/sim/save.ts`), Test in `tests/sim/save.test.ts`.
 - **Prozess:** Zwei Implementierer-Subagenten blieben nach dem Schreiben der Tests ohne Fortschritt hängen (Watchdog 600 s); Muster: komplexe Einzeiler-Shellbefehle zum Editieren. Gegenmassnahme im Dispatch: Edit/Write-Tools verlangen, Shell kurz halten.
 
 ## 2026-09-30 · M3 Bevölkerung · Balancing-Befund und aufschiebbare Punkte aus dem Gesamt-Review
@@ -73,13 +79,40 @@ Erfolgskriterium der Spec (50 Bürger in einer Sitzung) wirtschaftlich nicht err
 Kurz-Spec geführt (Kandidaten: Steuersätze Siedler/Bürger ×3–5, Verbrauch senken oder Ausstoss erhöhen,
 Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). Spec-Tabellen nachführen.
 
+**Erledigt in M4 Task 3, Werte siehe balancing-design.md** (`docs/superpowers/specs/2026-09-30-balancing-design.md`;
+übernommen: Eskalationsstufe Steuer 7/14, Verbrauch Stoff/Rum 0.2; Nachweis `tests/sim/balance.test.ts`:
+50 Bürger bei Tick 5950, Geld am Ende 176).
+
 **Aufschiebbar (Ursprung: Gesamt-Review M3):**
 
 - Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
   Wachstums-Tick aufsteigen, eines schrumpft danach sofort. Option: `tryUpgrade` entnimmt die Einheit.
 - HUD zeigt Steuern und Unterhalt, aber keine Nettozahl (Spec 2.8 „Bilanz"); M4 Task 4.
+  **Erledigt in M4:** Kopfzeile zeigt „Steuern +T · Unterhalt −U = ±B / 100 Ticks" (eigenes Feld `net`, negativ hervorgehoben; `src/ui/hud.ts`).
 - Spec 3.2 nennt `economy.ts` für Steuern; tatsächlich `population.ts` (ADR-005). Doku-Pass M4.
+  **Erledigt in M4:** Modulliste in Spec 3.2 nachgeführt (inkl. `supply.ts`, `defs/timing.ts`, `ui/storage.ts`).
 - Frisch aufgestiegenes Haus zahlt in derselben 100er-Buchung halbe Steuer (neue Bedürfnisse noch offen).
 - `SERVICE_BUILDING`, `GROWTH_INTERVAL`, `UPGRADE_WAIT` gehören nach `defs/` (M4 `timing.ts`).
+  **Teilweise erledigt in M4:** `GROWTH_INTERVAL` und `UPGRADE_WAIT` liegen in `defs/timing.ts`; `SERVICE_BUILDING` (Zuordnung Dienst → Gebäude, kein Zahlenwert) steht weiter in `population.ts`.
 - MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
   bewusst nicht in M4, Markdown-Doku mit `docs/index.md`. Nachrüsten auf Wunsch trivial.
+
+## 2026-09-30 · `tests/sim/balance.test.ts` · Balancing-Marge und Controller-Empfindlichkeit
+
+**Beobachtung:** Mit den Primärwerten 6/12 erreichte die Skript-Kolonie 50 Bürger erst bei Tick 8650
+(Grenze 9000). Das Ergebnis hing an der Strategie: Überschussverkauf erst ab 90 statt 50 Einheiten → 45 Bürger,
+ohne Schulbau-Budget → 17 Bürger. Deshalb wurde die Eskalationsstufe 7/14 übernommen: Sieg bei Tick 5950, der Test
+verlangt jetzt Sieg bis Tick 7500. Geld-Minimum im Lauf bleibt knapp (2).
+Zweiter Treiber: Zwei Häuser steigen im selben Wachstums-Tick zu Bürgern auf, die Rumkette reicht nur für
+eines; das zweite schrumpft auf 1 Einwohner und bleibt dort lange (siehe Aufstiegs-Reservierung oben).
+**Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer und Review.
+**Einschätzung:** Mit 7/14 erfüllt, Eskalationsregel ausgeschöpft. Beim Playtest beobachten; weitere Änderungen
+nur über eine neue Kurz-Spec.
+
+## 2026-09-30 · M4 Persistenz · Aufschiebbare Befunde aus dem Gesamt-Review
+
+- **Spielstand-Validierung lückenhaft:** `deserialize` prüft weder `seed` noch die `defId` des Kontors noch
+  die Kachelfelder. Nicht fatal, vom Gesamt-Review nachgezeichnet.
+  **Ursprung:** M4 Gesamt-Review. **Einschätzung:** bei Bedarf nachrüsten, etwa wenn Spielstände extern entstehen.
+- **Laden setzt Zustand zurück:** Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu
+  (Nebeneffekt von `restart` → `startGame`). **Ursprung:** M4 Gesamt-Review. **Einschätzung:** kosmetisch.

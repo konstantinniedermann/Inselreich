@@ -100,8 +100,10 @@ Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 | tier | Name     | max. Einwohner | Bedürfnisse (Güter, Verbrauch je Einwohner pro 100 Ticks) | Dienste       | Steuer je Einwohner pro 100 Ticks | Aufstiegskosten (G/H/W/S) |
 | ---- | -------- | -------------- | --------------------------------------------------------- | ------------- | --------------------------------- | ------------------------- |
 | 1    | Pioniere | 4              | food 0.5                                                  | —             | 2                                 | → 2: 100/5/2/0            |
-| 2    | Siedler  | 8              | food 0.5, cloth 0.25                                      | faith         | 3                                 | → 3: 300/10/5/5           |
-| 3    | Bürger   | 15             | food 0.5, cloth 0.25, rum 0.25                            | faith, school | 5                                 | —                         |
+| 2    | Siedler  | 8              | food 0.5, cloth 0.2                                       | faith         | 7                                 | → 3: 300/10/5/5           |
+| 3    | Bürger   | 15             | food 0.5, cloth 0.2, rum 0.2                              | faith, school | 14                                | —                         |
+
+Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-design.md).
 
 - Ein neues Haus startet mit 1 Einwohner, tier 1.
 - **Verbrauch:** Jedes Haus führt je Gut einen Bedarfsakkumulator (Einwohner × Rate / 100 pro
@@ -158,15 +160,17 @@ src/
     defs/goods.ts      Gütertabelle (2.3)
     defs/buildings.ts  Gebäudetabelle (2.4)
     defs/tiers.ts      Bevölkerungsstufen (2.7)
+    defs/timing.ts     Takte: Tick-Dauer, Buchungs-, Wachstums- und Aufstiegstakt
     world.ts           createWorld(seed), Zugriffshelfer (tileAt, buildingsOfType, footprint)
     placement.ts       canPlace(world, defId, x, y) → { ok, reason }
     build.ts           placeBuilding, demolish (Kosten, Refund, Tile-Belegung)
-    roads.ts           recomputeConnectivity(world) → Set<buildingId>
+    roads.ts           recomputeConnectivity(world): setzt connected je Gebäude (BFS über Wege)
+    supply.ts          Versorgungsradius von Kontor und angebundenem Markt
     production.ts      tickProduction
-    population.ts      tickPopulation (Verbrauch, Wachstum, Aufstieg)
-    economy.ts         tickEconomy (Steuern, Unterhalt), canAfford, pay
+    population.ts      tickPopulation (Verbrauch, Wachstum, Aufstieg), tickTaxes (Steuern)
+    economy.ts         Lager (addStock, takeStock), checkAfford, pay, Rückerstattung, tickEconomy (Unterhalt)
     trade.ts           buy, sell
-    tick.ts            step(world): Reihenfolge Produktion → Bevölkerung → Wirtschaft → Sieg
+    tick.ts            step(world): tick += 1, dann Produktion → Bevölkerung → Steuern → Unterhalt → Sieg (ADR-005)
     save.ts            serialize/deserialize mit Versionsfeld
   render/
     camera.ts          Pan/Zoom, Welt↔Bildschirm
@@ -181,8 +185,14 @@ src/
     inspect.ts         Seitenpanel für angeklicktes Gebäude (Status, Abriss)
     trade.ts           Handelsdialog am Kontor
     messages.ts        Hinweise (Fehler bei Platzierung, Sieg)
+    storage.ts         localStorage-Adapter für Speichern/Laden
+    dom.ts             DOM-Helfer (setField, costLine)
   main.ts
 ```
+
+Modulliste nachgeführt im Doku-Pass M4: Steuern liegen in `population.ts` (nicht `economy.ts`),
+dazu `supply.ts`, `defs/timing.ts`, `ui/storage.ts`, `ui/dom.ts` und die Tick-Reihenfolge nach ADR-005.
+Aktuelle Bausteinsicht: [arc42, Abschnitt 5](../../arc42.md#5-bausteinsicht).
 
 ### 3.3 Datenmodell (Kern)
 
