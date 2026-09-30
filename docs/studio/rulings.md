@@ -755,3 +755,19 @@ Warnung) sie von M7 bezieht, statt eigene Grafik festzuschreiben. — Warum: Emp
 durch `m6-werte.md` gedeckt, KISS. — Kosten bei Irrtum: Wert-Anpassung nach Playtest.
 
 Entscheider: L0 · Anlass: Übergabe M6-SPEC
+
+## R75 · 2026-09-30 · Studio
+
+Ruling: Vorschläge der Retro M5 (`retros/2026-09-30-meilenstein-m5.md`): (1) **E-001 angepasst**,
+Hauptgrösse Werkzeugaufrufe, Minuten abgeleitet, Kopfzeile nennt die Tabellenzeile, Schwelle ±50 %
+über ≥ 10 Agenten in M6/M7; (2) **E-003 angenommen** (Zweck-Gegenprobe bei Auslegungen), damit drei
+laufende Experimente; (3) ohne Experiment: kein Report-Dateipfad für Final-Review und Playtests;
+Edit/Write-Regel gilt für Code und Code-nahe Mehrzeiler, reine Textgenerierung in Doku per Skript
+ist ausgenommen; `log.py result --package` als Pflicht **nach** dem Merge von STUDIO-LIMIT
+(gleiche Pfade `tools/studio/`), dann als eigenes Paket. (4) Aufräumen der gemergten
+M5-Worktrees und lokalen Branches (`feat/m5-audio`, `-render`, `-sim`, `-sim-queries`, `-ui`);
+`test/m5-int` ist nicht gemergt und bleibt (§6). Umsetzung Handbuch durch `studio-coach`,
+Aufräumen durch `lead-production`. — Warum: Datenbasis der Retro, offensichtliche Fehler. —
+Kosten bei Irrtum: eine Handbuch-Version zurücknehmen.
+
+Entscheider: L0 · Anlass: Retro M5
