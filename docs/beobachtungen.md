@@ -367,6 +367,23 @@ leer; (4) Hook-Zeile gilt 600 s als frisch, Dashboard 1 h; (5) `renderLimits` oh
 Tooltip mit Reset-Zeiten nur im Code geprüft. **Ursprung:** lead-qa und lead-tech, STUDIO-LIMIT
 (R76, R80). **Einschätzung:** niedrig; bündeln, sobald wieder an `tools/studio/` gearbeitet wird.
 
+### 2026-09-30 · `tools/studio/`, Harness · Starts melden `async_launched` trotz Vordergrund
+
+**Beobachtung:** Alle 25 `spawned`-Events der Session 664ac8d3 (auch 15 Starts von Leads an
+Arbeiter, alle mit `background: false`) und 15 von 15 in 2bf010b4 tragen `status: async_launched`.
+L0 meldet zwei Starts des `production-integrator`, die als Hintergrund liefen. **Ursprung:**
+studio-coach, Retro `docs/studio/retros/2026-09-30-session-664ac8d3.md` B4. **Einschätzung:**
+mittel; per Headless-Probe klären, ob die Laufzeit `run_in_background: false` beachtet und was der
+Status bedeutet, dann Dashboard-Ansicht und ADR-007 prüfen.
+
+### 2026-09-30 · `tools/studio/metrics.py` · Fortgesetzte Agenten verzerren Schätzung und Paket
+
+**Beobachtung:** 9 von 10 verglichenen Agenten wurden per SendMessage fortgesetzt (39
+Fortsetzungen); ihre Schätzung deckt nur den ersten Auftrag, der Datensatz trägt das zuletzt
+geloggte Paket. Werkzeugaufrufe +91 % bei fortgesetzten, −53 % beim einzigen nicht fortgesetzten
+Agenten. **Ursprung:** studio-coach, Retro 664ac8d3 B2. **Einschätzung:** mittel; hängt am
+Vorschlag zu E-001 (Folgeauftrag nennt Schätzung, Auswertung summiert).
+
 ### 2026-09-30 · `.github/workflows/` · `ubuntu-latest` wechselt auf Ubuntu 26
 
 **Beobachtung:** Die CI-Ausgabe (Lauf 36763696005) kündigt an, dass `ubuntu-latest` ab 2026-10-19

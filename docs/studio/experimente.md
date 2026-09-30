@@ -46,7 +46,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Briefing-Standard: Hauptgrösse Tools, Minuten abgeleitet, Kopfzeile nennt Tabellenzeile), `docs/studio/templates/briefing.md` (Kopfzeile und Beispiel), `docs/studio/metriken/richtwerte.md` (Tabelle Rolle × Modell × Plan-Art: Median Minuten und Tools), `docs/studio/CHANGELOG.md`
 - Ruling: R54, angepasst R75
 - Start: Handbuch 1.1, angepasst Handbuch 1.7
-- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`
+- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`. Zwischenstand Session 664ac8d3 (`retros/2026-09-30-session-664ac8d3.md` B2, B3): Anwendung 9 von 15 Starts seit 1.7 (60 %); Werkzeugaufrufe +68 % über 10 Agenten, davon 9 fortgesetzt (+91 %); Vorschlag Messregel für Folgeaufträge, Ruling offen
 
 ## E-002 · laufend · Datei-Eigentum bei parallelen L0-Sessions
 
