@@ -22,6 +22,69 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Persona lead-tech 1.2
+
+- Anlass: Ruling R67 (Abhängigkeiten per L0-Ruling und ADR, Parallelisierung als oberstes Prinzip)
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Laufzeit-Abhängigkeit nur mit ADR und L0-Ruling (Antrag an L0 statt Nutzer-Entscheid); Parallelisierungsprinzip
+
+## 2026-09-30 · Persona lead-art 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Parallelisierungsprinzip als oberstes Arbeitsprinzip
+
+## 2026-09-30 · Persona lead-design 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Parallelisierungsprinzip als oberstes Arbeitsprinzip
+
+## 2026-09-30 · Persona lead-production 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Parallelisierungsprinzip als oberstes Arbeitsprinzip
+
+## 2026-09-30 · Persona lead-qa 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Parallelisierungsprinzip als oberstes Arbeitsprinzip
+
+## 2026-09-30 · Persona qa-code-reviewer 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Laufzeit-Abhängigkeiten nur mit ADR und L0-Ruling
+
+## 2026-09-30 · Persona tech-ui-engineer 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Laufzeit-Abhängigkeiten nur mit ADR und L0-Ruling
+
+## 2026-09-30 · Persona design-spec-author 1.2
+
+- Anlass: Ruling R67
+- Datenbasis: Auftrag STUDIO-R67, `docs/studio/rulings.md`
+- Ruling: R67
+- Änderungen: Laufzeit-Abhängigkeiten nur mit ADR und L0-Ruling
+
+## 2026-09-30 · Handbuch 1.4
+
+- Anlass: Übertragung der Rulings R65 (Tempo), R66 (Übergabe vor Pause) und R67 (Antwort auf N-001); Retro session-25e8352d
+- Datenbasis: `docs/studio/rulings.md` R65–R67, `docs/studio/retros/2026-09-30-session-25e8352d.md`
+- Ruling: R65, R66, R67
+- Änderungen: neuer Abschnitt „Arbeitsprinzipien und Tempo“ (Parallelisieren als oberstes Prinzip, Tempo-Vorgaben); „Autonomie“: Vorbehaltsliste ohne Abhängigkeiten, L0-Ruling plus ADR, `dep-guard` nie umgehen, Beispiele ohne Pfadsuch-Bibliothek, Verweise auf Verfassung 1.1 §5.7/§5.8; Briefing-Vorlage mit neuem §3-Block (Verfassung 1.1); „Session-Start und -Ende“: Schritt 0, `state.md` vor jeder Pause nachführen
+
 ## 2026-09-30 · Handbuch 1.3
 
 - Anlass: Merge S17 (Telemetrie je Session, CI-Reruns, keine Phantom-Knoten); Handbuch beschrieb die alte Zählung (offensichtlicher Fehler, kein Experiment)

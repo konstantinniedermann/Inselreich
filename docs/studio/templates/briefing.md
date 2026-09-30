@@ -25,7 +25,7 @@ Prozessstufe: <leicht|voll>
 
 (Block „Feste Regeln" wörtlich aus VERFASSUNG.md §3)
 Feste Regeln (unverändert, gelten immer):
-- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
+- Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
@@ -64,7 +64,7 @@ Prozessstufe: voll
 8. Logging: siehe unten
 
 Feste Regeln (unverändert, gelten immer):
-- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
+- Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.

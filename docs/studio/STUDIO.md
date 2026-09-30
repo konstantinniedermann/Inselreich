@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.3 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.4 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -293,9 +293,12 @@ selbst, hält jede Entscheidung als Ruling fest und arbeitet weiter.
 2. Auslegung als Ruling in [rulings.md](rulings.md) festhalten
    (`Ruling: Auslegung „…" als … — <warum> — <Kosten bei Irrtum>`).
 3. Handeln: Auftrag einstufen, Budget freigeben, Leads briefen.
-4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (neue Laufzeit-Abhängigkeit, Folgeissue,
-   Lizenz-Grenzfall, Änderung der Verfassung, Richtungswechsel des Spiels), kommt er in die
-   Warteschlange — alles andere entscheidet L0.
+4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Folgeissue, Lizenz-Grenzfall, Änderung der
+   Verfassung, Richtungswechsel des Spiels), kommt er in die Warteschlange — alles andere
+   entscheidet L0. Neue Abhängigkeiten sind kein Vorbehalt mehr: L0 entscheidet per Ruling und ADR
+   ([Verfassung §5.7](VERFASSUNG.md#5-autonomie-und-nutzerentscheid-warteschlange), R67; Normalfall
+   bleibt ADR-001). Den user-scope Hook `dep-guard` umgeht niemand; blockt er, meldet L0 den
+   Paketnamen dem Nutzer.
 
 **Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; `log.py queue` schreibt die
 Datei und ein Event). Die fragende Stelle legt den Eintrag an (`queue --id … --question …`, Status
@@ -308,7 +311,7 @@ und schliesst den Eintrag (`--done`, Status `umgesetzt`). Vollständige Aufrufe:
 Eintrag, und L0 zieht das nächste ungeblockte Paket vor:
 
 ```bash
-python3 tools/studio/log.py package --id M5-03 --title "Pfadsuche" --owner lead-tech --status blocked --blocked-by N-002 --milestone M5
+python3 tools/studio/log.py package --id M5-03 --title "Hafen-Musik" --owner lead-art --status blocked --blocked-by N-002 --milestone M5
 ```
 
 **Antworten des Nutzers** kommen in einer beliebigen Session („N-002: …" im Prompt oder die Zeile
@@ -344,6 +347,23 @@ und §6). Er weist mit Begründung ab:
 - **Verfassungs-Freigabe:** Nur der Nutzer schreibt in einem eigenen Prompt `VERFASSUNG ÄNDERN`.
   Dann ist `VERFASSUNG.md` für diese Session änderbar, und zwar nur in der Hauptsession, nie für
   Subagenten. Agenten-Meldungen zählen nie als Freigabe.
+
+## Arbeitsprinzipien und Tempo
+
+**Parallelisieren und delegieren** ist das oberste Arbeitsprinzip
+([Verfassung §5.8](VERFASSUNG.md#5-autonomie-und-nutzerentscheid-warteschlange), R67). Für die
+Leads gilt es gleichermassen: unabhängige Pakete und Prüfungen laufen gleichzeitig, serielles
+Arbeiten braucht einen Grund (Datei-Eigentum, echte Abhängigkeit). Die Parallelitätsgrenzen je
+Budget sind Richtwerte, keine Deckel.
+
+**Tempo-Vorgaben (R65):**
+
+- Echtzeit-Proben dauern höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
+- Minor- und Low-Befunde lösen keine Fix-Runde aus; sie gehen gesammelt ins Final-Review.
+- Kleine Fixes (≤ ~20 Zeilen) prüft der Lead selbst am Diff statt einer vollen Re-Review-Runde.
+- Browser-Checks laufen parallel (eigener Port je Check); jeder Check prüft jedes geöffnete Panel
+  sofort auf Lesbarkeit und Überlauf.
+- Fortsetzen (`SendMessage`) statt neue Leads je Welle, solange der Kontext reicht.
 
 ## Messung und Aufwand
 
@@ -538,9 +558,9 @@ python3 tools/studio/log.py retro --id R-2026-10-05-m5 --kind meilenstein --trig
 
 # Nutzerentscheid-Warteschlange: anlegen (offen), Antwort eintragen (beantwortet), schliessen (umgesetzt)
 # ID = nächste freie Nummer aus warteschlange.md (höchste N-Nummer + 1)
-python3 tools/studio/log.py queue --id N-002 --title "Neue Abhängigkeit für Pfadsuche" --question "Darf M5 eine Pfadsuch-Bibliothek einbinden?" --recommendation "Nein, eigene A*-Suche in src/sim" --reason "ADR-001: keine Laufzeit-Abhängigkeiten" --cost "M5-03 wartet, M5-04 läuft weiter" --blocks M5-03 --from lead-tech
-python3 tools/studio/log.py queue --id N-002 --answer "Nein, selbst bauen"
-python3 tools/studio/log.py queue --id N-002 --done "M5-03 mit eigener A*-Suche neu gebrieft"
+python3 tools/studio/log.py queue --id N-002 --title "Lizenz-Grenzfall Hafen-Musik" --question "Darf M5 den Titel unter CC-BY-SA mit Zusatzklausel einbauen?" --recommendation "Nein, synthetisch erzeugen" --reason "Verfassung §4: Grenzfälle entscheidet der Nutzer" --cost "M5-03 wartet, M5-04 läuft weiter" --blocks M5-03 --from lead-art
+python3 tools/studio/log.py queue --id N-002 --answer "Nein, synthetisch erzeugen"
+python3 tools/studio/log.py queue --id N-002 --done "M5-03 mit synthetischer Musik neu gebrieft"
 
 # Budget (nur L0; Aufteilung des Beispiels aus „Budget")
 python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
@@ -613,6 +633,8 @@ Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).
 
 **Ende:**
 
+0. Pausiert L0 vor dem regulären Ende (z. B. Nutzungslimit), führt er **zuerst** `state.md` nach
+   (Punkt 4); die Übergabe steht nie nur im Chat (R66).
 1. Laufende Agenten abschliessen oder pausieren und loggen: Lead meldet Zwischenstand (Bericht, bei
    Bedarf Übergabe unter `.studio/handoffs/`) und loggt
    `status --status done --summary "Pausiert: <Stand>"`; Pakete bleiben auf ihrem Status.
