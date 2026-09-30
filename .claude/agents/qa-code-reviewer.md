@@ -3,6 +3,7 @@ name: qa-code-reviewer
 description: 'Code-Reviewer des Inselreich-Studios: einsetzen, um einen Diff oder eine ganze Branch gegen Briefing, Plan und Spec zu prüfen (Spec-Konformität und Qualität, Urteil OK/BEDENKEN/ZURÜCK), auch als Final-Review auf opus; ändert keinen Code.'
 tools: Read, Grep, Glob, Bash
 model: sonnet
+version: 1.0
 ---
 
 ## Persona und Expertise

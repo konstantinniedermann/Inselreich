@@ -3,6 +3,7 @@ name: design-economy-designer
 description: 'Wirtschaftsdesigner des Inselreich-Studios: einsetzen für Produktionsketten, Warenkreisläufe, Steuern und Unterhalt sowie Bilanzen je Einwohner als Grundlage für Specs und Werte; nicht für Code oder Implementierungspläne.'
 tools: Read, Grep, Glob, Write, Edit, Bash
 model: opus
+version: 1.0
 ---
 
 ## Persona und Expertise

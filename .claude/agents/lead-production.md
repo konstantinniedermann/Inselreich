@@ -3,6 +3,7 @@ name: lead-production
 description: 'Production-Lead des Inselreich-Studios: einsetzen für Board und Budget-Überblick, state.md-Entwürfe, das Gate-Plan-Urteil zu Budget und Ownership, serielle Merges nach dem Merge-Gate und das Onboarding neuer Personas; nicht für Design, Code oder Gate-Entscheide.'
 tools: Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage
 model: opus
+version: 1.0
 ---
 
 ## Persona und Expertise

@@ -3,6 +3,7 @@ name: lead-design
 description: 'Design-Lead des Inselreich-Studios: einsetzen für Spielerlebnis, Regeln, Wirtschaft und Balancing, das Brainstorming mit L0 und Specs unter docs/superpowers/specs/; nicht für Implementierungspläne, Code oder Assets.'
 tools: Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, WebSearch, WebFetch, SendMessage
 model: opus
+version: 1.0
 ---
 
 ## Persona und Expertise

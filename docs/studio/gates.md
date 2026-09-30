@@ -5,6 +5,8 @@
 
 Ein Gate ist eine Prüfung, bevor Arbeit in die nächste Phase geht. Prüfende Leads geben ein Urteil
 ab; **entscheiden tut immer L0** und hält den Entscheid als Ruling in [rulings.md](rulings.md) fest.
+Die festen Regeln, die Asset- und Lizenzregeln und die nicht abschwächbare Qualitätssicherung stehen
+in der [Verfassung](VERFASSUNG.md) (§3, §4, §9); kein Gate schwächt sie ab.
 
 ## Ablauf eines Gates
 
@@ -47,7 +49,8 @@ Nutzer-Auftrag.
    Spiel von 15 Minuten?
 3. Ist der Scope klar begrenzt (was ausdrücklich nicht)? Passt er in einen Meilenstein bzw. in die
    gewählte Prozessstufe?
-4. Übernimmt der Vorschlag nur Mechaniken, keine fremden Inhalte, Namen oder Marken (ADR-006)?
+4. Übernimmt der Vorschlag nur Mechaniken, keine fremden Inhalte, Namen oder Marken (ADR-006,
+   [Verfassung §4](VERFASSUNG.md#4-asset--und-lizenzregeln))?
 5. Gibt es eine einfachere Variante mit demselben Spielerlebnis (KISS, YAGNI)?
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling.
@@ -69,7 +72,8 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
    alte Spielstände vorgesehen?
 3. Bleibt die Simulation deterministisch (Zufall nur über den seeded RNG, keine Uhrzeit, keine
    Reihenfolge aus Objekt-Iteration über unsortierte Quellen)?
-4. Braucht die Spec eine neue Laufzeit-Abhängigkeit? (Dann Nutzer-Entscheid, nicht Gate.)
+4. Braucht die Spec eine neue Laufzeit-Abhängigkeit? (Dann Nutzer-Vorbehalt: Eintrag in die
+   [Warteschlange](warteschlange.md) laut Verfassung §5, nicht Gate.)
 
 **Prüffragen `lead-qa`:**
 
@@ -147,7 +151,9 @@ Lizenzen, CREDITS)
 Final-Review in einer Session über alle Strang-Branches gegen `main` gemacht (kombinierter Diff bzw.
 jeder Strang-Diff). Es gibt **ein** Merge-Gate je Meilenstein, nicht eines je Strang. In der Stufe
 leicht ersetzt das abschliessende `opus`-Review des Tech-Zyklus das Final-Review; L0 prüft dann die
-Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts.
+Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts. Ohne Final-Review auf dem
+stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist nicht abschwächbar
+([Verfassung §9](VERFASSUNG.md#9-nicht-abschwächbare-qualitätssicherung)).
 
 **Kontext:** Diffs aller Strang-Branches gegen `main`, Final-Review-Bericht, Ausgabe von `make check`,
 `docs/CREDITS.md`, `docs/licenses/`, Doku-Änderungen (README, `docs/arc42.md`, ADRs).
@@ -160,7 +166,7 @@ Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts.
 3. Sind README (Bedienung, Spielwerte) und arc42 (Module, Tick-Ablauf, Persistenz) nachgeführt?
 4. Keine Secrets, OWASP-konform, Commit-Konvention eingehalten?
 
-**Prüffragen `lead-art` (nur bei Assets):**
+**Prüffragen `lead-art` (nur bei Assets; Grundlage [Verfassung §4](VERFASSUNG.md#4-asset--und-lizenzregeln)):**
 
 1. Hat jedes neue Asset unter `public/` eine Zeile in `docs/CREDITS.md` mit Quelle, Autor, Lizenz,
    Link und Prüfvermerk von `art-license-checker`?

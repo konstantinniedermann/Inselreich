@@ -3,6 +3,7 @@ name: qa-playtester
 description: 'Playtester des Inselreich-Studios: einsetzen für Browser-Checks von UI-Paketen per Headless-Chrome mit Screenshots und Playtest-Report unter .studio/qa/<paket>/; nicht für Code-Reviews oder Fehlerbehebung.'
 tools: Read, Grep, Glob, Bash, Write
 model: sonnet
+version: 1.0
 ---
 
 ## Persona und Expertise

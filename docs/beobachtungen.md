@@ -150,3 +150,10 @@ Brainstorming mit Spec, nicht als Einzelmassnahmen.
   deckt es ab.
 - **Server-Tests brauchen ~5 s:** Jeder Test fährt einen echten Server hoch und herunter.
   **Ursprung:** Task 2. **Einschätzung:** unkritisch; bei Wachstum `poll_interval` beim Herunterfahren senken.
+
+## 2026-09-30 · `docs/studio/gates.md` · Gate Spec ohne Variante für Studio-Specs
+
+**Beobachtung:** Die Prüffragen von Gate Spec sind auf Spielcode zugeschnitten (Balancing,
+Save-Format); für Studio-Specs fehlt eine Variante.
+**Ursprung:** Gate Spec Session 1.5 (`lead-qa`).
+**Einschätzung:** Kandidat für ein Experiment des Studio-Coachs.
