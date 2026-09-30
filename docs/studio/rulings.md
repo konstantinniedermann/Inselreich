@@ -421,3 +421,35 @@ Code-Einwände, Doku nachgeführt, Sieg-Tick unverändert 5950, keine Werte in `
 Save-Format unverändert. — Kosten bei Irrtum: Balancing-Abweichung, fällt im Balancing-Test auf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M5-01
+
+## R49 · 2026-09-30 · M5
+
+Ruling: Gate Brainstorming M5 bestanden, Ansatz B „je Säule ein starker Hebel" (Tiefe:
+Steuerregler; Dynamik: Handelsaufträge und Verkaufssättigung; Ambiente: prozedurale Grafik,
+Animation, synthetischer Ton; Bedienkomfort: belegte UI-Befunde und Anzeigen) — einziger Ansatz,
+der alle vier Playtest-Punkte trifft. Bedenken zum Umfang akzeptiert mit Auflagen: Spec legt
+Datei-Ownership je Strang fest, nennt Kann-Posten mit Streichreihenfolge, Baseline-Neumessung erst
+nach M5-01. — Kosten bei Irrtum: M5 dauert länger; Kann-Posten werden gestrichen.
+
+Entscheider: L0 · Anlass: Designvorschlag lead-design (M5-02)
+
+## R50 · 2026-09-30 · M5
+
+Ruling: Rückfragen des Design-Leads wie empfohlen entschieden — ein M5 (keine Aufteilung);
+Steuerregler mit 3 Stufen und harter Strafe für „hoch"; nur Verkaufssättigung, Kaufpreise fest;
+keine Ereignisse oder Katastrophen in M5; Werkzeugmacher als Kann-Posten, keine Erzkette;
+synthetischer Ton standardmässig an mit persistiertem Stumm-Schalter (nur Web Audio, keine
+Assets); neue Balancing-Baseline mit Szenario-Tests je Mechanik, Grenze 7500 Ticks bleibt, Marge
+unter ~500 Ticks → Kurz-Spec; Dauergewinn aus Verkauf (Holz) als Problem in die Spec. — Kosten bei
+Irrtum: einzelne Werte über eine Kurz-Spec nachjustieren.
+
+Entscheider: L0 · Anlass: Rückfragen-Runde Brainstorming M5
+
+## R51 · 2026-09-30 · Studio
+
+Ruling: Werkzeug-Pakete S17-01 (ci.py erfasst Reruns), S17-02 (Phantom-Knoten aus bind) und S17-03
+(Budgets je Lead und Phase, Sessions getrennt) werden erst nach dem Merge der Prozess-Graph-Arbeit
+umgesetzt — beide Stränge ändern tools/studio/model.py; so gibt es nur einen Merge statt doppelter
+Konflikte. — Kosten bei Irrtum: Dashboard zeigt bis dahin Anzeige-Artefakte (in Retros quittiert).
+
+Entscheider: L0 · Anlass: Ad-hoc-Retros CI-Pages, Inaktiv, Budget
