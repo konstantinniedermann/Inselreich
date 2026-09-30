@@ -3,13 +3,25 @@ import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
-import { effectiveRefund } from '../sim/queries';
+import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
 import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
+}
+
+/** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
+export function diagnosisText(d: Diagnosis): string {
+  switch (d.kind) {
+    case 'supply':
+      return 'nicht versorgt';
+    case 'good':
+      return `${GOODS[d.good].name} fehlt`;
+    case 'service':
+      return `${BUILDING_DEFS[SERVICE_BUILDING[d.service]].name} fehlt`;
+  }
 }
 
 function stateInfo(b: Building): { text: string; ok: boolean } {
@@ -112,6 +124,7 @@ function setList(root: HTMLElement, field: string, items: ListItem[]): void {
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
+  addList(panel, 'reasons', 'diagnosis');
   addList(panel, 'needs', 'needs');
   const upgrade = document.createElement('div');
   upgrade.className = 'upgrade';
@@ -145,6 +158,12 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     needs.push({ text: `${BUILDING_DEFS[SERVICE_BUILDING[s]].name} ${ok ? '✓' : '✗'}`, ok });
   }
   setList(panel, 'needs', needs);
+  // Reihenfolge wie beim Kartensymbol: das erste Element ist das dort gezeigte
+  setList(
+    panel,
+    'diagnosis',
+    houseDiagnosis(world, b).map((d) => ({ text: `Mangel: ${diagnosisText(d)}`, ok: false })),
+  );
 
   const cost = panel.querySelector<HTMLElement>('[data-field="upgrade-cost"]');
   if (tier.upgradeCost === null) {
