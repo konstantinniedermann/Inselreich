@@ -257,7 +257,7 @@ Budgetantrag Umsetzung = Pakete × 2 + QA-Checks + 1 Final-Review, plus 30 % Puf
 - Berichtsweg L2 → L1 → L0. Leads starten Arbeiter **im Vordergrund**; Parallelität über mehrere
   Agent-Aufrufe in einer Nachricht. Arbeiter starten keine Agenten.
 - Querabstimmung: Übergabedokument (`templates/uebergabe.md`) unter `.studio/handoffs/`; Ergebnisse
-  mit Bestand gehören in Spec, Plan oder Ruling. `SendMessage` nur an laufende Agenten.
+  mit Bestand gehören in Spec, Plan oder Ruling. Fix-Runden und Rückfragen setzen denselben Agenten per `SendMessage` fort (auch beendete; Kontext bleibt erhalten).
 - Eskalation: Konflikt zwischen Bereichen → beide Leads melden an L0 → Ruling.
 - Bericht (≤ ~15 Zeilen): Ergebnis · Entscheidungsbedarf mit Empfehlung · Risiken · Befunde
   ausserhalb Scope (→ `docs/beobachtungen.md`) · Budget verbraucht/frei.

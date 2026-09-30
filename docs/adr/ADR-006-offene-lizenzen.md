@@ -1,6 +1,6 @@
 # ADR-006: Eigene oder offen lizenzierte Inhalte mit Nachweis
 
-Status: akzeptiert · Datum: 2026-09-30
+Status: akzeptiert · Datum: 2026-09-30 · löst ADR-004 ab
 
 ## Kontext
 

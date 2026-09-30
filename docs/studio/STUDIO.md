@@ -63,8 +63,8 @@ Wer unsicher ist, ob etwas in seine Befugnis fällt, fragt eine Ebene höher —
   Hintergrund starten. (Ein Lead, der nicht wartet, beendet sich, und der Arbeiterbericht landet
   bei L0 statt beim Lead — siehe ADR-007.)
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
-  [templates/uebergabe.md](templates/uebergabe.md) unter `.studio/handoffs/<datum>-<von>-<an>.md`
-  (gitignored, Arbeitsstand). Ergebnisse mit Bestand gehören in Spec, Plan oder Ruling.
+  [templates/uebergabe.md](templates/uebergabe.md) unter `<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md`
+  (gitignored, Arbeitsstand; nicht im Worktree, Hauptrepo via `git rev-parse --git-common-dir`). Ergebnisse mit Bestand gehören in Spec, Plan oder Ruling.
 - **Fortsetzen statt neu starten:** Fix-Runden und Rückfragen setzen **denselben** Agenten per
   `SendMessage` fort — auch einen bereits beendeten; sein Kontext bleibt vollständig erhalten. Nur
   ein neuer Agent-Start verliert den Kontext und braucht ein vollständiges Briefing. Eine

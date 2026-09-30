@@ -98,3 +98,68 @@ Ruling: Namensschema `lead-<bereich>` (L1) und `<bereich>-<rolle>` (L2); Bereich
 Metadaten. — Umbenennen einer Persona = Datei + Roster.
 
 Entscheider: L0 · Anlass: Studio-Setup · siehe [roster.md](roster.md)
+
+## R12 · 2026-09-30 · Setup-Session
+
+Ruling: Ein Merge-Gate je Meilenstein; Final-Review über alle Stränge gegen main, danach serielle
+Merges — Budgetformel kennt genau ein Final-Review. — Zusätzliches Gate je Strang später.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R13 · 2026-09-30 · Setup-Session
+
+Ruling: Final-Review-Budget an lead-qa, Rest an lead-tech (Stufe voll) — QA verantwortet das
+Final-Review. — Umformulierung in STUDIO.md.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R14 · 2026-09-30 · Setup-Session
+
+Ruling: Leads erhalten SendMessage; Fortsetzen eines Agenten zählt nicht als neuer Start —
+verifiziert: Fortsetzen behält den Kontext und feuert SubagentStart mit derselben agent_id. —
+Leads briefen Arbeiter neu.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R15 · 2026-09-30 · Setup-Session
+
+Ruling: CCGS-MIT-Lizenztext in `docs/studio/CCGS-LICENSE.txt` — Persona-Texte sind aus CCGS
+adaptiert; MIT verlangt den Hinweis. — Eine zusätzliche Datei.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R16 · 2026-09-30 · Setup-Session
+
+Ruling: Dashboard-Rendering in der Umsetzung als Prosa spezifiziert, per Screenshot statt
+Unit-Tests geprüft — UI wird visuell abgenommen. — Eine zusätzliche Fix-Runde.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R17 · 2026-09-30 · Setup-Session
+
+Ruling: Verdrängter, per FIFO falsch zugeordneter Knoten behält alte Attribute, falls sein eigenes
+spawned-Event fehlt (geparkt) — jeder Agent-Aufruf liefert PostToolUse mit tool_use_id, die
+Zustände konvergieren. — Ein Arbeiter zeigt im Dashboard kurz die Aufgabe eines anderen.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R18 · 2026-09-30 · Setup-Session
+
+Ruling: CLAUDE.md behält die Start-/Ende-Routine (Nutzerauftrag) mit Verweis auf STUDIO.md. —
+Zwei Stellen pflegen.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R19 · 2026-09-30 · Setup-Session
+
+Ruling: `log.py budget` verlangt `--phase` — verhindert, dass Freigaben ohne Phase über Sessions
+hinweg addieren. — Ein Argument mehr.
+
+Entscheider: L0 · Anlass: Studio-Setup
+
+## R20 · 2026-09-30 · Setup-Session
+
+Ruling: Heartbeats im Feed serverseitig zusammengefasst, Schalter zum Ausblenden — ohne das
+verdrängen Heartbeats die aussagekräftigen Zeilen. — Weniger Detail im Feed.
+
+Entscheider: L0 · Anlass: Studio-Setup

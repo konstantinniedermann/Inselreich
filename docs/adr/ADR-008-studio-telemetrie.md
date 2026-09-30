@@ -55,3 +55,6 @@ Option 2.
   - Die Datei wächst stetig → Archivieren mit `make studio-archive`.
   - Nur lokal: kein Zugriff von anderen Geräten, keine Mehrbenutzer-Sicht.
   - 2 s Verzögerung im Dashboard.
+  - Datenschutz: `events.jsonl` speichert die erste Zeile von Nutzer-Prompts (≤ 120 Zeichen) und
+    Abschlussmeldungen von Agenten (≤ 600 Zeichen) im Klartext; lokal und gitignored. Archivieren
+    oder löschen mit `make studio-archive`.

@@ -32,5 +32,5 @@ keine Freigaben
 
 ## Nächste Schritte
 
-1. Playtest-Befund nach M4 in `docs/beobachtungen.md` sichten (Skill `beobachtungen-auswerten`).
+1. `lead-production` wertet `docs/beobachtungen.md` mit dem Skill `beobachtungen-auswerten` aus und legt L0 das Ergebnis vor.
 2. Nutzer nach dem nächsten Ziel fragen; daraus Prozessstufe und erstes Design-Budget ableiten.
