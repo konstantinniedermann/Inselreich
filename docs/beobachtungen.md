@@ -111,6 +111,22 @@ Install-Kommandos tokenisieren.
 **Verifiziert:** 2026-09-30 — belegt. `extract_packages` ruft `shlex.split(command)` auf das ganze
 Kommando auf. Das erste Token `install`/`add`/`i` irgendwo im Text schaltet `seen_verb` ein.
 
+### 2026-09-30 · `tools/studio/model.py` / `docs/studio/STUDIO.md` · Nachträge aus dem Final-Review S16
+
+- **Gescheiterter Vordergrund-Agent ohne Stop-Signal:** Scheitert ein eingebauter Vordergrund-Agent,
+  kommt vermutlich kein `spawned`-Event. Er bliebe dann trotz S16-01 als inaktiv stehen. In den
+  Transkripten nicht beobachtet, nur vermutet.
+- **Messdoku:** `STUDIO.md` nennt in der Tabelle „Was wie gemessen wird" (Zeilen „Dauer je Agent",
+  „Inaktiv/gescheitert") noch nicht, dass ein Vordergrund-Agent ohne `SubagentStop` über
+  `status: completed` abgeschlossen wird und sein Lauf aus `totalDurationMs` stammt.
+- **Chronik bei Stop nach spawned:** Kommt `SubagentStop` erst nach `spawned completed` und hat der
+  Knoten einen Auftragstext, steht in der Chronik der Auftragstext statt der Zusammenfassung
+  (`on_spawned`). In der Praxis kommt der Stop zuerst.
+
+**Ursprung:** Final-Review S16 (`qa-code-reviewer`, opus).
+**Einschätzung:** Die Messdoku ist ein kleiner Nachtrag für den nächsten Studio-Strang. Die beiden
+anderen Punkte werden erst relevant, wenn sie beobachtet werden.
+
 ---
 
 ## Ausgewertet 2026-09-30
