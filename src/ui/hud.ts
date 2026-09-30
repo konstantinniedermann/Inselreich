@@ -72,6 +72,7 @@ export interface HudActions {
   settings(): Settings;
   setMuted(muted: boolean): void;
   setVolume(volume: number): void;
+  setDayNight(dayNight: boolean): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
   hasProgress(): boolean;
   restart(): void;
@@ -216,7 +217,22 @@ function renderSoundControls(box: Element, actions: HudActions): void {
   vol.addEventListener('input', () => actions.setVolume(Number(vol.value)));
   // Nach dem Ziehen den Fokus abgeben, damit die Hotkeys wieder greifen
   vol.addEventListener('pointerup', () => vol.blur());
-  box.append(mute, vol);
+  const dayNight = document.createElement('button');
+  dayNight.className = 'btn';
+  dayNight.textContent = 'Tag-Nacht';
+  dayNight.title = 'Tag-Nacht an/aus';
+  const syncDayNight = (on: boolean): void => {
+    dayNight.classList.toggle('active', on);
+    dayNight.setAttribute('aria-pressed', String(on));
+  };
+  syncDayNight(initial.dayNight);
+  dayNight.addEventListener('click', () => {
+    dayNight.blur();
+    const on = !actions.settings().dayNight;
+    actions.setDayNight(on);
+    syncDayNight(on);
+  });
+  box.append(mute, vol, dayNight);
 }
 
 /** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */

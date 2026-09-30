@@ -311,6 +311,7 @@ body {
   display: flex;
   gap: 4px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .hud-sound input[type='range'] {
   width: 80px;

@@ -188,6 +188,10 @@ function launch(
       sound.setVolume(volume);
       saveSettings(settings);
     },
+    setDayNight: (dayNight) => {
+      settings = { ...settings, dayNight };
+      saveSettings(settings);
+    },
     hasProgress: () => world.tick > 0,
     restart: () => {
       restart(root);
@@ -434,6 +438,7 @@ function launch(
       }
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
         timeMs: performance.now(),
+        dayNight: settings.dayNight,
       });
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;

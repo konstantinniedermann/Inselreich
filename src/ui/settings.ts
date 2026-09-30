@@ -3,10 +3,12 @@ import { fail, ok, type Result } from '../sim/types';
 export interface Settings {
   muted: boolean;
   volume: number;
+  /** Tag-Nacht-Tönung der Karte (A4). */
+  dayNight: boolean;
 }
 
 export const SETTINGS_KEY = 'inselreich.settings';
-export const DEFAULT_SETTINGS: Readonly<Settings> = { muted: false, volume: 0.4 };
+export const DEFAULT_SETTINGS: Readonly<Settings> = { muted: false, volume: 0.4, dayNight: true };
 
 /** Zahl -> auf 0…1 geklemmt; alles andere (Text, NaN, ±Infinity, fehlend) -> Standard. */
 function volumeOf(v: unknown): number {
@@ -28,6 +30,7 @@ export function parseSettings(json: string | null): Settings {
   return {
     muted: typeof o.muted === 'boolean' ? o.muted : DEFAULT_SETTINGS.muted,
     volume: volumeOf(o.volume),
+    dayNight: typeof o.dayNight === 'boolean' ? o.dayNight : DEFAULT_SETTINGS.dayNight,
   };
 }
 
@@ -43,7 +46,10 @@ export function loadSettings(): Settings {
 /** Schreibt die Einstellungen; ein Fehler wird gemeldet, nicht geworfen. */
 export function saveSettings(s: Settings): Result {
   try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ muted: s.muted, volume: s.volume }));
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ muted: s.muted, volume: s.volume, dayNight: s.dayNight }),
+    );
     return ok;
   } catch {
     return fail('Einstellungen nicht gespeichert');
