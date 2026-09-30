@@ -12,7 +12,9 @@ import sys
 import studio_docs
 from paths import append_event, docs_dir, now_iso, studio_home
 
-FIELDS = "databaseId,conclusion,status,createdAt,headSha,workflowName,headBranch"
+FIELDS = (
+    "databaseId,conclusion,status,createdAt,headSha,workflowName,headBranch,attempt"
+)
 
 
 def gh_runner() -> list[dict]:
@@ -26,6 +28,22 @@ def gh_runner() -> list[dict]:
     return json.loads(result.stdout)
 
 
+def seen_key(run_id: str, attempt: int) -> str:
+    return f"{run_id}:{attempt}"
+
+
+def normalize_seen(raw) -> set[str]:
+    """Alte Einträge (reine run_id) gelten als Versuch 1 gesehen."""
+    return {str(k) if ":" in str(k) else seen_key(str(k), 1) for k in raw}
+
+
+def _attempt(run: dict) -> int:
+    try:
+        return max(1, int(run.get("attempt") or 1))
+    except (TypeError, ValueError):
+        return 1
+
+
 def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
     """Events für abgeschlossene, noch nicht gesehene Läufe; nie eine Ausnahme."""
     try:
@@ -34,7 +52,11 @@ def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
         for run in runs:
             try:
                 run_id = str(run["databaseId"])
-                if run.get("status") != "completed" or run_id in seen:
+                attempt = _attempt(run)
+                if run.get("status") != "completed" or (
+                    seen_key(run_id, attempt) in seen
+                    or (attempt == 1 and run_id in seen)
+                ):
                     continue
                 events.append(
                     {
@@ -44,8 +66,9 @@ def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
                         "handbook_version": handbook,
                         "kind": "ci",
                         "run_id": run_id,
+                        "attempt": attempt,
                         "conclusion": run.get("conclusion", ""),
-                        "branch": run.get("headBranch", ""),
+                        "branch": run.get("headBranch,attempt", ""),
                         "sha": run.get("headSha", ""),
                         "workflow": run.get("workflowName", ""),
                         "created": run.get("createdAt", ""),
@@ -63,14 +86,14 @@ def main() -> int:
     try:
         seen_file = studio_home() / "ci-seen.json"
         try:
-            seen = set(json.loads(seen_file.read_text(encoding="utf-8")))
+            seen = normalize_seen(json.loads(seen_file.read_text(encoding="utf-8")))
         except (OSError, ValueError):
             seen = set()
         handbook = studio_docs.read_version(docs_dir() / "STUDIO.md")
         events = collect(gh_runner, seen, handbook)
         for event in events:
             append_event(event)
-            seen.add(event["run_id"])
+            seen.add(seen_key(event["run_id"], event["attempt"]))
         if events:
             seen_file.parent.mkdir(parents=True, exist_ok=True)
             seen_file.write_text(json.dumps(sorted(seen)), encoding="utf-8")

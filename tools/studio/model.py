@@ -835,8 +835,16 @@ class _Builder:
         run = str(event.get("run_id") or "")
         if not run:
             return
+        try:
+            attempt = int(event.get("attempt") or 1)
+        except (TypeError, ValueError):
+            attempt = 1
+        known = self.ci.get(run)
+        if known and attempt < known["attempt"]:
+            return
         self.ci[run] = {
             "run_id": run,
+            "attempt": attempt,
             "conclusion": str(event.get("conclusion") or ""),
             "branch": str(event.get("branch") or ""),
             "sha": str(event.get("sha") or ""),

@@ -935,7 +935,7 @@ class MilestoneInheritanceTest(unittest.TestCase):
         self.assertEqual(rec["milestone"], "M7")
 
 
-def ci_event(t, run_id, created=None, conclusion="failure"):
+def ci_event(t, run_id, created=None, conclusion="failure", **extra):
     return ev(
         "ci",
         t,
@@ -947,6 +947,7 @@ def ci_event(t, run_id, created=None, conclusion="failure"):
         branch="main",
         workflow="CI",
         created=ts(created if created is not None else t),
+        **extra,
     )
 
 
@@ -979,6 +980,45 @@ class CiScopeTest(unittest.TestCase):
         only_ci = build([ci_event(10, "9")], now=100)
         self.assertEqual(only_ci["sessions"], [])
         self.assertIsNone(only_ci["session"])
+
+
+class CiRerunTest(unittest.TestCase):
+    def state(self, *events):
+        return build(
+            [ev("session_start", 0, session="s1"), *events, ev("turn_end", 500)],
+            now=1000,
+        )
+
+    def test_green_rerun_closes_incident(self):
+        state = self.state(
+            ci_event(10, "7", attempt=1),
+            ci_event(20, "7", created=10, conclusion="success", attempt=2),
+        )
+        self.assertNotIn("ci:7", [i["id"] for i in state["incidents"]])
+        self.assertEqual(state["quality"]["ci_failures"], 0)
+        self.assertEqual(state["quality"]["ci_runs"], 1)
+
+    def test_older_attempt_does_not_overwrite_newer(self):
+        state = self.state(
+            ci_event(20, "7", created=10, conclusion="success", attempt=2),
+            ci_event(30, "7", created=10, conclusion="failure", attempt=1),
+        )
+        self.assertNotIn("ci:7", [i["id"] for i in state["incidents"]])
+        self.assertEqual(state["quality"]["ci_failures"], 0)
+
+    def test_missing_attempt_counts_as_one(self):
+        state = self.state(
+            ci_event(10, "7"),
+            ci_event(20, "7", created=10, conclusion="success", attempt=2),
+        )
+        self.assertEqual(state["quality"]["ci_failures"], 0)
+
+    def test_equal_attempt_later_wins(self):
+        state = self.state(
+            ci_event(10, "7", conclusion="success"),
+            ci_event(20, "7", created=10, conclusion="failure"),
+        )
+        self.assertEqual(state["quality"]["ci_failures"], 1)
 
 
 class MainDurationTest(unittest.TestCase):
