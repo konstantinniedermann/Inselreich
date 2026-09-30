@@ -12,7 +12,8 @@ export type BuildingDefId =
   | 'canefarm'
   | 'distillery'
   | 'chapel'
-  | 'school';
+  | 'school'
+  | 'toolmaker';
 export type ServiceId = 'faith' | 'school';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {

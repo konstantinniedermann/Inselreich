@@ -48,7 +48,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     btn.title =
       op === 'buy'
         ? `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`
-        : `${n} ${GOODS[good].name} verkaufen für G ${sellPrice(good, n)}`;
+        : `${n} ${GOODS[good].name} verkaufen für G ${sellPrice(world, good, n)}`;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);

@@ -325,8 +325,11 @@ Wartezeit vor dem Aufstieg.
 - Die Karte entsteht aus einem Seed (Value-Noise plus radiale Inselmaske). Erfüllt sie die
   Nachbedingungen nicht, versucht `mapgen` die folgenden Seeds; `world.seed` hält den tatsächlich
   verwendeten Seed fest, das HUD zeigt ihn als «Karte».
-- Die Simulation nutzt keinen Zufall, keine Uhr und kein DOM (ESLint verbietet u. a. `Date`,
-  `performance`, `setTimeout` in `src/sim/**`). Gleiche Welt und gleiche Aktionen ergeben denselben Verlauf.
+- Die Simulation nutzt keine Uhr und kein DOM (ESLint verbietet u. a. `Date`, `performance`,
+  `setTimeout` in `src/sim/**`). Zufall gibt es nur seed-abgeleitet über `rng.ts`: Handelsaufträge ziehen je
+  Periode eine neue RNG-Instanz aus `seed` und Periodennummer ([ADR-010](adr/ADR-010-zufall-je-periode.md));
+  `step()` zieht sonst keine Zufallszahlen, der Save trägt keinen RNG-Zustand. Gleiche Welt und gleiche
+  Aktionen ergeben denselben Verlauf.
 - Nur die UI wählt für ein neues Spiel einen Seed aus der aktuellen Zeit.
 
 ## 9. Architekturentscheidungen

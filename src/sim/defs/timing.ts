@@ -8,3 +8,11 @@ export const GROWTH_INTERVAL = 50;
 export const TAX_SWITCH_LOCK = 300;
 /** Ticks ununterbrochener Zufriedenheit, bevor ein Haus aufsteigen darf. */
 export const UPGRADE_WAIT = 300;
+/** Alle 10 Ticks erholt sich der Verkaufsanteil jedes Guts um einen Prozentpunkt. */
+export const SELL_RECOVERY_INTERVAL = 10;
+/** Tick des ersten Handelsauftrags. */
+export const ORDER_FIRST_TICK = 600;
+/** Abstand zwischen zwei Auftragsperioden (Ticks). */
+export const ORDER_PERIOD = 900;
+/** Laufzeit eines Auftrags ab Angebot (Ticks); kürzer als die Periode. */
+export const ORDER_DURATION = 600;
