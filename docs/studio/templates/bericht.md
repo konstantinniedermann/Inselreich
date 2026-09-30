@@ -1,7 +1,8 @@
 # Vorlage: Bericht
 
 Antwort jedes Agenten an seine Auftraggeber-Ebene. Höchstens 15 Zeilen; Details stehen in Dateien,
-der Bericht nennt die Pfade.
+der Bericht nennt die Pfade. Die Zeile „Aufwand" ist eine Selbstangabe (Schätzung); die
+gemessenen Werte (Dauer, Tool-Aufrufe, Tokens) liefert das Dashboard.
 
 ```text
 Ergebnis: <was erreicht ist, mit Pfaden/Commits>
@@ -9,6 +10,7 @@ Entscheidungsbedarf: <Frage> — Empfehlung: <Option und warum> (oder „keiner"
 Risiken: <was schiefgehen kann> (oder „keine bekannten")
 Befunde ausserhalb Scope: <eingetragen in docs/beobachtungen.md: Titel> (oder „keine")
 Budget: <verbraucht>/<frei> Starts, Parallelität max <k> (Arbeiter: „—")
+Aufwand (Selbstangabe, Schätzung): <Dauer, Tool-Aufrufe> — gemessen wird im Dashboard
 Status: <done|failed|blocked|waiting>
 ```
 
@@ -20,5 +22,6 @@ Entscheidungsbedarf: Radius 6 oder 8 Kacheln? — Empfehlung: 6, hält den Balan
 Risiken: Versorgung iteriert über alle Häuser je Tick; bei > 500 Häusern prüfen.
 Befunde ausserhalb Scope: „Warenanzeige rundet ab" in docs/beobachtungen.md.
 Budget: —
+Aufwand (Selbstangabe, Schätzung): ca. 20 min, 35 Tool-Aufrufe — gemessen wird im Dashboard
 Status: done
 ```

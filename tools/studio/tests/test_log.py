@@ -13,7 +13,15 @@ import log
 class LogTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        env = {"STUDIO_HOME": self.tmp.name, "CLAUDE_CODE_SESSION_ID": "s-1"}
+        self.docs = os.path.join(self.tmp.name, "docs")
+        os.makedirs(self.docs)
+        Path(self.docs, "STUDIO.md").write_text("Version: 1.0\n", "utf-8")
+        Path(self.docs, "warteschlange.md").write_text("# Warteschlange\n", "utf-8")
+        env = {
+            "STUDIO_HOME": self.tmp.name,
+            "STUDIO_DOCS": self.docs,
+            "CLAUDE_CODE_SESSION_ID": "s-1",
+        }
         self.env = mock.patch.dict(os.environ, env)
         self.env.start()
 
@@ -56,7 +64,8 @@ class LogTest(unittest.TestCase):
         self.assertEqual(ev["role"], "lead-qa")
         self.assertEqual(ev["status"], "active")
         self.assertEqual(ev["task"], "Probelauf")
-        self.assertEqual(ev["package"], "P-1")
+        self.assertEqual(ev["package_id"], "P-1")
+        self.assertEqual(ev["handbook_version"], "1.0")
         self.assertEqual(ev["agent_id"], "")
         self.assertIn("ts", ev)
 
@@ -116,13 +125,99 @@ class LogTest(unittest.TestCase):
         )
         self.assertEqual(code, 2)
 
+    def test_result_milestone_retro(self):
+        self.run_log(
+            "result",
+            "--role",
+            "lead-tech",
+            "--package",
+            "M5-02",
+            "--outcome",
+            "nacharbeit",
+            "--review-rounds",
+            "2",
+            "--worker",
+            "tech-sim-engineer",
+        )
+        self.run_log(
+            "milestone", "--id", "M5", "--status", "start", "--title", "Handel"
+        )
+        self.run_log(
+            "retro",
+            "--id",
+            "RETRO-1",
+            "--kind",
+            "adhoc",
+            "--triggers",
+            "ci:1,runden:M5-02",
+        )
+        result, ms, retro = self.events()
+        self.assertEqual(
+            (result["outcome"], result["review_rounds"]), ("nacharbeit", 2)
+        )
+        self.assertEqual(result["package_id"], "M5-02")
+        self.assertEqual(result["handbook_version"], "1.0")
+        self.assertEqual((ms["milestone"], ms["status"]), ("M5", "start"))
+        self.assertEqual(retro["triggers"], ["ci:1", "runden:M5-02"])
+        self.assertEqual(retro["retro_kind"], "adhoc")
+
+    def test_queue_lifecycle(self):
+        code, _, _ = self.run_log(
+            "queue",
+            "--id",
+            "N-001",
+            "--title",
+            "Lib x",
+            "--question",
+            "Darf x rein?",
+            "--recommendation",
+            "Nein",
+            "--reason",
+            "ADR-001",
+            "--cost",
+            "M5-03 wartet",
+            "--blocks",
+            "M5-03",
+            "--from",
+            "lead-tech",
+        )
+        self.assertEqual(code, 0)
+        answer = self.run_log("queue", "--id", "N-001", "--answer", "Nein")
+        self.assertEqual(answer[0], 0)
+        done = self.run_log("queue", "--id", "N-001", "--done", "verworfen")
+        self.assertEqual(done[0], 0)
+        self.assertEqual(self.run_log("queue", "--id", "N-404", "--answer", "x")[0], 2)
+        text = (Path(self.docs) / "warteschlange.md").read_text("utf-8")
+        self.assertIn("## N-001 \u00b7 umgesetzt", text)
+        self.assertIn("- Antwort: Nein", text)
+        events = self.events()
+        self.assertEqual([e["action"] for e in events], ["add", "answer", "done"])
+        self.assertEqual(events[2]["summary"], "verworfen")
+
+    def test_queue_id_format(self):
+        for bad in ("N-", "n-001", "N-001x", "X-1", "N-1 ", "../N-1"):
+            with self.subTest(bad=bad):
+                code, _, err = self.run_log("queue", "--id", bad, "--title", "t")
+                self.assertEqual(code, 2)
+                self.assertIn("N-<Nummer>", err)
+        self.assertEqual(self.events(), [])
+        self.assertEqual(self.run_log("queue", "--id", "N-7", "--title", "t")[0], 0)
+
+    def test_decision_for_user_redirects(self):
+        code, _, err = self.run_log(
+            "decision", "--id", "D-1", "--for", "user", "--question", "x"
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("Warteschlange", err)
+        self.assertEqual(self.events(), [])
+
     def test_decision_open_and_resolved(self):
         self.run_log(
             "decision",
             "--id",
             "D-1",
             "--for",
-            "user",
+            "l0",
             "--question",
             "Neue Dependency?",
             "--recommendation",
@@ -132,7 +227,7 @@ class LogTest(unittest.TestCase):
         )
         self.run_log("decision", "--id", "D-1", "--resolution", "Abgelehnt")
         first, second = self.events()
-        self.assertEqual(first["for"], "user")
+        self.assertEqual(first["for"], "l0")
         self.assertEqual(first["role"], "lead-tech")
         self.assertEqual(second["resolution"], "Abgelehnt")
 
@@ -145,7 +240,8 @@ class LogTest(unittest.TestCase):
         code, out, _ = self.run_log("archive")
         self.assertEqual(code, 0)
         self.assertFalse((Path(self.tmp.name) / "events.jsonl").exists())
-        archived = list((Path(self.tmp.name) / "archive").glob("events-*.jsonl"))
+        folder = Path(self.tmp.name) / "archiv" / "events"
+        archived = list(folder.glob("events-*.jsonl"))
         self.assertEqual(len(archived), 1)
         self.assertIn("archiviert", out)
 
@@ -154,7 +250,8 @@ class LogTest(unittest.TestCase):
             self.run_log("status", "--role", "lead-qa", "--status", "idle")
             code, _, _ = self.run_log("archive")
             self.assertEqual(code, 0)
-        archived = list((Path(self.tmp.name) / "archive").glob("events-*.jsonl"))
+        folder = Path(self.tmp.name) / "archiv" / "events"
+        archived = list(folder.glob("events-*.jsonl"))
         self.assertEqual(len(archived), 2)
 
     def test_archive_without_file(self):

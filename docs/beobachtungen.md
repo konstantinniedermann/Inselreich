@@ -150,3 +150,28 @@ Brainstorming mit Spec, nicht als Einzelmassnahmen.
   deckt es ab.
 - **Server-Tests brauchen ~5 s:** Jeder Test fährt einen echten Server hoch und herunter.
   **Ursprung:** Task 2. **Einschätzung:** unkritisch; bei Wachstum `poll_interval` beim Herunterfahren senken.
+
+## 2026-09-30 · `docs/studio/gates.md` · Gate Spec ohne Variante für Studio-Specs
+
+**Beobachtung:** Die Prüffragen von Gate Spec sind auf Spielcode zugeschnitten (Balancing,
+Save-Format); für Studio-Specs fehlt eine Variante.
+**Ursprung:** Gate Spec Session 1.5 (`lead-qa`).
+**Einschätzung:** Kandidat für ein Experiment des Studio-Coachs.
+
+## 2026-09-30 · Studio-Telemetrie (`tools/studio/model.py`) · inaktiv-Vorfälle abgebrochener Sessions
+
+**Beobachtung:** Endet eine Session ohne SessionEnd-Event (Abbruch, Absturz), bleiben ihre Knoten
+lebend; nach 5 Minuten entstehen `inaktiv:`-Vorfälle, die im nächsten Start-Kontext als fällige
+Retro erscheinen.
+**Ursprung:** Final-Review Session 1.5.
+**Einschätzung:** Vor einem Neustart `make studio-archive` ausführen (steht in der
+state.md-Übergabe); ein automatisches Schliessen verwaister Sessions wäre eine spätere Verbesserung.
+
+## 2026-09-30 · `src/sim/population.ts` `tryUpgrade` · Aufstieg entnimmt die Ware nicht
+
+**Beobachtung:** Beim Aufstieg eines Hauses wird die Ware im Lager nur geprüft, nicht entnommen;
+zwei Häuser können auf dieselbe Einheit aufsteigen.
+**Ursprung:** Probelauf Session 1.5 (autonome Session im isolierten Klon, `lead-tech` M5-01).
+**Einschätzung:** Echter Spiellogik-Fehler. Ein ungeprüfter Fix-Entwurf mit Regressionstest liegt
+lokal unter `.studio/handoffs/2026-09-30-probelauf-m5-01-aufstieg.patch`; Review-Befund dazu: die
+entnommene Einheit als ausgeliefert zählen, sonst doppelter Verbrauch.

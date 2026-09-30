@@ -13,18 +13,24 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 from model import INACTIVE_DEFAULT, EventStore, build_state, read_agent_models
-from paths import agents_dir, events_file
+from paths import agents_dir, archive_dir, docs_dir, events_file
+from studio_docs import bundle
 
 DASHBOARD = Path(__file__).resolve().parent / "dashboard"
 HOST = "127.0.0.1"
+ARCHIVE_SUFFIXES = {".md", ".jsonl", ".txt"}
 
 
 class Handler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, store, agents, inactive_after, dashboard, **kwargs):
+    def __init__(
+        self, *args, store, agents, inactive_after, dashboard, docs, archive, **kwargs
+    ):
         self.store = store
         self.agents = agents
         self.inactive_after = inactive_after
         self.dashboard = dashboard
+        self.docs = docs
+        self.archive = archive
         super().__init__(*args, directory=str(dashboard), **kwargs)
 
     def host_allowed(self) -> bool:
@@ -44,6 +50,9 @@ class Handler(SimpleHTTPRequestHandler):
                 session = query.get("session", ["latest"])[0]
                 heartbeats = query.get("heartbeats", ["1"])[0] != "0"
                 self.send_state(session, heartbeats)
+                return
+            if url.path.startswith("/archiv/"):
+                self.send_archive(unquote(url.path[len("/archiv/") :]))
                 return
             if url.path != "/":
                 target = (self.dashboard / unquote(url.path).lstrip("/")).resolve()
@@ -65,6 +74,26 @@ class Handler(SimpleHTTPRequestHandler):
     def list_directory(self, path):
         self.send_error(404)
 
+    def send_archive(self, rel: str) -> None:
+        """Archivierte Briefings/Berichte als Klartext; nur innerhalb des Archivs."""
+        root = self.archive.resolve()
+        target = (root / rel).resolve()
+        if (
+            root not in target.parents
+            or target.suffix not in ARCHIVE_SUFFIXES
+            or not target.is_file()
+        ):
+            self.send_error(404)
+            return
+        body = target.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+
     def send_state(self, session: str, heartbeats: bool = True) -> None:
         state = build_state(
             self.store.events(),
@@ -74,6 +103,7 @@ class Handler(SimpleHTTPRequestHandler):
             inactive_after=self.inactive_after,
             heartbeats=heartbeats,
         )
+        state["docs"] = bundle(self.docs, self.agents)
         body = json.dumps(state, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -100,6 +130,8 @@ def make_server(
     agents: Path,
     inactive_after: float,
     dashboard: Path = DASHBOARD,
+    docs: Path | None = None,
+    archive: Path | None = None,
 ) -> ThreadingHTTPServer:
     handler = partial(
         Handler,
@@ -107,6 +139,8 @@ def make_server(
         agents=agents,
         inactive_after=inactive_after,
         dashboard=dashboard.resolve(),
+        docs=docs if docs is not None else docs_dir(),
+        archive=archive if archive is not None else archive_dir(),
     )
     return ThreadingHTTPServer((HOST, port), handler)
 

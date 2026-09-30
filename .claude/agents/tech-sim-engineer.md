@@ -3,6 +3,7 @@ name: tech-sim-engineer
 description: 'Simulations-Entwickler des Inselreich-Studios: einsetzen, um Spielregeln laut Plan-Task in src/sim/ testgetrieben umzusetzen, inklusive Save-Versionierung und Migrationen; nicht für UI, Rendering oder Designentscheide.'
 tools: Read, Grep, Glob, Write, Edit, Bash
 model: sonnet
+version: 1.0
 ---
 
 ## Persona und Expertise
@@ -53,4 +54,5 @@ Logging, jeder Aufruf als **eigener** Bash-Befehl:
 - Ende: `python3 tools/studio/log.py status --role tech-sim-engineer --status done --summary "<Ergebnis>" --package <id>`
 - Abbruch: `python3 tools/studio/log.py status --role tech-sim-engineer --status failed --summary "<Grund>" --package <id>`
 
-Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
+Verbindlich sind `docs/studio/VERFASSUNG.md` und das Handbuch `docs/studio/STUDIO.md`; Rangfolge
+Verfassung > Handbuch > Persona > Briefing.

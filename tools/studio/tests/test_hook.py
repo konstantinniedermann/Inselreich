@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import hook
 
@@ -79,7 +80,8 @@ class ToEventTest(unittest.TestCase):
         self.assertEqual(ev["kind"], "spawn")
         self.assertEqual(ev["subagent_type"], "general-purpose")
         self.assertEqual(ev["persona"], "design-genre-researcher")
-        self.assertEqual(ev["package"], "M5-R1")
+        self.assertEqual(ev["package_id"], "M5-R1")
+        self.assertNotIn("package", ev)
         self.assertEqual(ev["model"], "sonnet")
         self.assertLessEqual(len(ev["prompt_head"]), 401)
 
@@ -125,10 +127,312 @@ class ToEventTest(unittest.TestCase):
         self.assertIsNone(hook.to_event(payload("Notification", message="x")))
 
 
+class HeaderTest(unittest.TestCase):
+    def test_header_text_full_value(self):
+        text = "Persona: x\n- **Schätzung:** 20 min, 30 Tools\n"
+        self.assertEqual(hook.header_text(text, "Schätzung"), "20 min, 30 Tools")
+        self.assertEqual(hook.header_text(text, "Fehlt"), "")
+
+    def test_parse_estimate(self):
+        self.assertEqual(
+            hook.parse_estimate("20 min, 30 Tools"), {"minutes": 20, "tools": 30}
+        )
+        self.assertEqual(hook.parse_estimate("15 min"), {"minutes": 15, "tools": None})
+        self.assertIsNone(hook.parse_estimate("unklar"))
+        self.assertIsNone(hook.parse_estimate(""))
+
+    def test_parse_estimate_decimals(self):
+        cases = {
+            "0.6 min": 0.6,
+            "0,6 min": 0.6,
+            "1.5 min, 4 Tools": 1.5,
+            "2 min": 2,
+        }
+        for text, minutes in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(hook.parse_estimate(text)["minutes"], minutes)
+        self.assertIsInstance(hook.parse_estimate("2 min")["minutes"], int)
+        self.assertEqual(hook.parse_estimate("1.5 min, 4 Tools")["tools"], 4)
+
+
+class NewFieldsTest(unittest.TestCase):
+    def test_spawn_fields(self):
+        prompt = "Persona: lead-qa\nPaket: P1\nMeilenstein: M9\nSchätzung: 15 min\nx"
+        ev = hook.to_event(
+            payload(
+                "PreToolUse",
+                tool_name="Agent",
+                tool_use_id="t1",
+                tool_input={"prompt": prompt},
+            ),
+            handbook="1.2",
+            personas={"lead-qa": {"version": "2.0"}},
+        )
+        self.assertEqual(ev["package_id"], "P1")
+        self.assertEqual(ev["milestone"], "M9")
+        self.assertEqual(ev["estimate"], {"minutes": 15, "tools": None})
+        self.assertEqual(ev["persona_version"], "2.0")
+        self.assertEqual(ev["handbook_version"], "1.2")
+
+    def test_agent_events_persona_version(self):
+        personas = {"lead-qa": {"version": "2.0"}}
+        for name, kind in (
+            ("SubagentStart", "agent_start"),
+            ("SubagentStop", "agent_stop"),
+        ):
+            ev = hook.to_event(
+                payload(name, agent_id="a1", agent_type="lead-qa"),
+                handbook="1.2",
+                personas=personas,
+            )
+            self.assertEqual(ev["kind"], kind)
+            self.assertEqual(ev["persona_version"], "2.0")
+
+    def test_spawned_measurements(self):
+        ev = hook.to_event(
+            payload(
+                "PostToolUse",
+                tool_name="Agent",
+                tool_response={
+                    "agentId": "a1",
+                    "totalDurationMs": 5000,
+                    "totalToolUseCount": 7,
+                    "resolvedModel": "claude-opus-5-5",
+                    "totalTokens": 99,
+                },
+            )
+        )
+        self.assertEqual(
+            (ev["duration_ms"], ev["tool_count"], ev["resolved_model"]),
+            (5000, 7, "claude-opus-5-5"),
+        )
+        self.assertNotIn("totalTokens", ev)
+        self.assertNotIn("tokens", ev)
+
+    def test_spawned_from_fixture(self):
+        path = Path(__file__).parent / "fixtures" / "agent_tool_response.json"
+        response = json.loads(path.read_text("utf-8"))
+        ev = hook.to_event(
+            payload("PostToolUse", tool_name="Agent", tool_response=response)
+        )
+        self.assertEqual(ev["child_id"], "a58c1ea80f25eef92")
+        self.assertEqual(ev["tool_count"], 11)
+
+    def test_spawned_without_measurements(self):
+        ev = hook.to_event(
+            payload("PostToolUse", tool_name="Agent", tool_response={"agentId": "c"})
+        )
+        for key in ("duration_ms", "tool_count", "resolved_model"):
+            self.assertNotIn(key, ev)
+
+
+class EnrichTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        old = os.environ.get("STUDIO_HOME")
+        os.environ["STUDIO_HOME"] = self.tmp.name
+        self.addCleanup(
+            lambda: (
+                os.environ.pop("STUDIO_HOME")
+                if old is None
+                else os.environ.__setitem__("STUDIO_HOME", old)
+            )
+        )
+        self.home = Path(self.tmp.name)
+
+    def test_spawn_archives_briefing(self):
+        p = payload(
+            "PreToolUse",
+            tool_name="Agent",
+            tool_use_id="toolu_abcdefgh12345678",
+            tool_input={"prompt": "Persona: lead-qa\nPaket: P1\nVolltext"},
+        )
+        events = hook.enrich(hook.to_event(p), p)
+        self.assertEqual(len(events), 1)
+        rel = events[0]["briefing"]
+        self.assertTrue(rel.startswith("briefings/"))
+        self.assertTrue(rel.endswith("-lead-qa-12345678.md"))
+        self.assertIn("Volltext", (self.home / "archiv" / rel).read_text("utf-8"))
+
+    def test_agent_stop_archives_report_and_usage(self):
+        session = self.home / "abc.jsonl"
+        sub = self.home / "abc" / "subagents"
+        sub.mkdir(parents=True)
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "claude-opus-5-5",
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": 3, "output_tokens": 4},
+            },
+        }
+        (sub / "agent-a1.jsonl").write_text(json.dumps(line) + "\n", "utf-8")
+        p = payload(
+            "SubagentStop",
+            agent_id="a1",
+            agent_type="lead/qa",
+            last_assistant_message="Bericht " + "z" * 900,
+            transcript_path=str(session),
+        )
+        events = hook.enrich(hook.to_event(p), p)
+        ev = events[0]
+        self.assertTrue(ev["report"].startswith("berichte/"))
+        self.assertRegex(ev["report"], r"^berichte/[\w-]+-leadqa-a1\.md$")
+        text = (self.home / "archiv" / ev["report"]).read_text("utf-8")
+        self.assertIn("z" * 900, text)
+        self.assertEqual(ev["usage"]["claude-opus-5-5"]["output"], 4)
+
+    def test_agent_stop_explicit_transcript_path(self):
+        other = self.home / "x.jsonl"
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "m",
+                "stop_reason": "end_turn",
+                "usage": {"output_tokens": 9},
+            },
+        }
+        other.write_text(json.dumps(line) + "\n", "utf-8")
+        p = payload("SubagentStop", agent_id="a2", agent_transcript_path=str(other))
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertEqual(ev["usage"]["m"]["output"], 9)
+
+    def test_agent_stop_without_transcript_has_no_usage_value(self):
+        p = payload("SubagentStop", agent_id="a3", last_assistant_message="x")
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertIsNone(ev["usage"])
+
+    def test_turn_end_adds_usage_event(self):
+        transcript = self.home / "s.jsonl"
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "m",
+                "stop_reason": "end_turn",
+                "usage": {"output_tokens": 5},
+            },
+        }
+        cost = {"type": "cost-state", "totalCostUSD": 1.5, "modelUsage": {}}
+        transcript.write_text(
+            json.dumps(line) + "\n" + json.dumps(cost) + "\n", "utf-8"
+        )
+        p = payload("Stop", transcript_path=str(transcript))
+        events = hook.enrich(hook.to_event(p, "1.3"), p)
+        self.assertEqual([e["kind"] for e in events], ["turn_end", "usage"])
+        self.assertEqual(events[1]["handbook_version"], "1.3")
+        self.assertEqual(events[1]["agent_id"], "main")
+        self.assertEqual(events[1]["usage"]["m"]["output"], 5)
+        self.assertNotIn("session_cost", events[1])
+        end = payload("SessionEnd", transcript_path=str(transcript))
+        events = hook.enrich(hook.to_event(end), end)
+        self.assertEqual(events[1]["session_cost"]["total_usd"], 1.5)
+
+    def test_enrich_never_raises(self):
+        p = payload("Stop", transcript_path=5)
+        self.assertEqual(len(hook.enrich(hook.to_event(p), p)), 1)
+
+
+class SessionStartTest(unittest.TestCase):
+    def test_context_via_subprocess(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {**os.environ, "STUDIO_HOME": tmp, "STUDIO_NO_SERVER": "1"}
+            proc = subprocess.run(
+                [sys.executable, str(HOOK)],
+                input=json.dumps(payload("SessionStart", source="startup")),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        out = json.loads(proc.stdout)
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_incident_notice_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            incidents = [{"id": "ci:1", "kind": "ci", "text": "CI rot", "t": 1.0}]
+            old = os.environ.get("STUDIO_HOME")
+            os.environ["STUDIO_HOME"] = tmp
+            try:
+                p = payload("UserPromptSubmit", prompt="hallo")
+                first = hook.incident_notice(p, incidents)
+                second = hook.incident_notice(p, incidents)
+                sub = hook.incident_notice({**p, "agent_id": "a1"}, incidents)
+            finally:
+                if old is None:
+                    os.environ.pop("STUDIO_HOME")
+                else:
+                    os.environ["STUDIO_HOME"] = old
+        self.assertIn("Ad-hoc-Retro fällig", first)
+        self.assertIn("CI rot", first)
+        self.assertEqual(second, "")
+        self.assertEqual(sub, "")
+
+
+class FixRoundTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        old = os.environ.get("STUDIO_HOME")
+        os.environ["STUDIO_HOME"] = self.tmp.name
+        self.addCleanup(
+            lambda: (
+                os.environ.pop("STUDIO_HOME")
+                if old is None
+                else os.environ.__setitem__("STUDIO_HOME", old)
+            )
+        )
+
+    def test_session_start_marks_listed_incidents(self):
+        incidents = [{"id": "ci:1", "kind": "ci", "text": "CI rot", "t": 1.0}]
+        with mock.patch.object(hook, "open_incidents", return_value=incidents):
+            text = hook.start_context("8765", "s-1")
+            self.assertIn("CI rot", text)
+            self.assertEqual(hook.incident_notice(payload("UserPromptSubmit")), "")
+
+    def test_subagent_notice_does_not_read_events(self):
+        with mock.patch.object(hook, "open_incidents") as opened:
+            out = hook.incident_notice(payload("UserPromptSubmit", agent_id="a1"))
+        self.assertEqual(out, "")
+        opened.assert_not_called()
+
+    def test_no_server_flag_values(self):
+        for value, expected in (
+            ("1", 0),
+            ("true", 0),
+            ("yes", 0),
+            ("0", 2),
+            ("", 2),
+            ("TRUE", 2),
+        ):
+            with mock.patch.object(hook, "launch_detached") as launch:
+                hook.start_background({"STUDIO_NO_SERVER": value})
+            self.assertEqual(launch.call_count, expected, value)
+
+    def test_personas_loaded_only_when_needed(self):
+        calls = []
+        real = hook.studio_docs.persona_meta
+        hook.studio_docs.persona_meta = lambda a: calls.append(a) or {}
+        self.addCleanup(setattr, hook.studio_docs, "persona_meta", real)
+        for p in (
+            payload("PreToolUse", tool_name="Read", tool_input={}),
+            payload("UserPromptSubmit", prompt="x"),
+        ):
+            hook.load_versions(p)
+        self.assertEqual(calls, [])
+        hook.load_versions(payload("PreToolUse", tool_name="Agent", tool_input={}))
+        hook.load_versions(payload("SubagentStart", agent_id="a"))
+        self.assertEqual(len(calls), 2)
+
+
 class MainTest(unittest.TestCase):
     def run_hook(self, stdin):
         with tempfile.TemporaryDirectory() as tmp:
-            env = {**os.environ, "STUDIO_HOME": tmp}
+            env = {**os.environ, "STUDIO_HOME": tmp, "STUDIO_NO_SERVER": "1"}
             proc = subprocess.run(
                 [sys.executable, str(HOOK)],
                 input=stdin,
@@ -151,7 +455,11 @@ class MainTest(unittest.TestCase):
 
     def test_session_start_context_survives_unwritable_home(self):
         with tempfile.NamedTemporaryFile() as blocker:
-            env = {**os.environ, "STUDIO_HOME": str(Path(blocker.name) / "sub")}
+            env = {
+                **os.environ,
+                "STUDIO_HOME": str(Path(blocker.name) / "sub"),
+                "STUDIO_NO_SERVER": "1",
+            }
             proc = subprocess.run(
                 [sys.executable, str(HOOK)],
                 input=json.dumps(payload("SessionStart", source="startup")),
@@ -164,7 +472,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stderr, "")
         out = json.loads(proc.stdout)
-        self.assertIn("STUDIO.md", out["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
 
     def test_session_start_emits_context(self):
         proc, lines = self.run_hook(
@@ -173,7 +481,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         out = json.loads(proc.stdout)
         self.assertEqual(out["hookSpecificOutput"]["hookEventName"], "SessionStart")
-        self.assertIn("STUDIO.md", out["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(len(lines), 1)
 
 
@@ -254,11 +562,26 @@ class SettingsTest(unittest.TestCase):
         path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
         hooks = json.loads(path.read_text())["hooks"]
         self.assertEqual(set(hooks), set(self.EVENTS))
-        for groups in hooks.values():
-            for group in groups:
-                for h in group["hooks"]:
-                    self.assertIn("tools/studio/hook.py", h["command"])
-                    self.assertTrue(h["command"].endswith("|| true"))
+        scripts = ("tools/studio/hook.py", "tools/studio/guard.py")
+        for event, groups in hooks.items():
+            commands = [h["command"] for group in groups for h in group["hooks"]]
+            with self.subTest(event=event):
+                self.assertTrue(any(scripts[0] in c for c in commands))
+                for command in commands:
+                    self.assertTrue(any(s in command for s in scripts))
+                    self.assertTrue(command.endswith("2>/dev/null || true"))
+
+    def test_guard_registered(self):
+        path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
+        hooks = json.loads(path.read_text())["hooks"]
+        first = hooks["PreToolUse"][0]
+        self.assertEqual(
+            set(first["matcher"].split("|")),
+            {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"},
+        )
+        self.assertIn("tools/studio/guard.py", first["hooks"][0]["command"])
+        prompt = [h["command"] for g in hooks["UserPromptSubmit"] for h in g["hooks"]]
+        self.assertTrue(any("tools/studio/guard.py" in c for c in prompt))
 
 
 if __name__ == "__main__":

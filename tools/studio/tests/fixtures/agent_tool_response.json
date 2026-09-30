@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "agentId": "a58c1ea80f25eef92",
+  "agentType": "lead-qa",
+  "resolvedModel": "claude-opus-5-5",
+  "totalDurationMs": 482927,
+  "totalTokens": 44701,
+  "totalToolUseCount": 11
+}

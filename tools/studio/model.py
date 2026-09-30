@@ -13,6 +13,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+import effort
+
 INACTIVE_DEFAULT = 300.0
 BIND_WINDOW = 30.0
 FEED_SIZE = 80
@@ -24,6 +26,7 @@ LIVE = frozenset({"active", "delegated", "waiting", "blocked"})
 FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
 DIRECTOR = "studio-director"
+CI_SESSION = "ci"  # Pseudo-Session der CI-Events (ci.py)
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in hook.py
 PUBLIC = (
     "key",
@@ -37,6 +40,8 @@ PUBLIC = (
     "task",
     "summary",
     "package",
+    "persona_version",
+    "milestone",
     "started",
     "stopped",
     "last_seen",
@@ -51,9 +56,11 @@ def parse_ts(value: object) -> float:
 
 
 def classify(role: str) -> tuple[int, str]:
-    """Ebene und Bereich aus dem Rollennamen (Namensschema, Spec R11)."""
+    """Ebene und Bereich aus dem Rollennamen (Namensschema R11, Stabsstellen R28)."""
     if role in ("main", DIRECTOR):
         return 0, "studio"
+    if role.startswith("studio-"):
+        return 1, "studio"
     if role.startswith("lead-"):
         department = role[len("lead-") :]
         return 1, department if department in DEPARTMENTS else "extern"
@@ -116,6 +123,23 @@ class EventStore:
             return list(self._events)
 
 
+def _package(event: dict) -> str:
+    """Paket-ID; alte Events tragen ``package`` statt ``package_id``."""
+    return str(event.get("package_id") or event.get("package") or "")
+
+
+def _estimate(value: object) -> dict | None:
+    """Schätzung nur mit echten Zahlen (keine Strings, keine Bools)."""
+    if not isinstance(value, dict):
+        return None
+    clean = {
+        k: value[k]
+        for k in ("minutes", "tools")
+        if isinstance(value.get(k), (int, float)) and not isinstance(value[k], bool)
+    }
+    return clean or None
+
+
 def _short(text: object, limit: int = TEXT_MAX) -> str:
     text = " ".join(str(text or "").split())
     return text if len(text) <= limit else text[:limit] + "…"
@@ -136,6 +160,12 @@ class _Builder:
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
         self.feed: list[dict] = []
+        self.results: dict[tuple[str, str], dict] = {}
+        self.timeline: list[tuple[float, str, str]] = []
+        self.retros: list[dict] = []
+        self.ci: dict[str, dict] = {}
+        self.queue: dict[str, dict] = {}
+        self.milestones_by_id: dict[str, dict] = {}
 
     # --- Knoten -------------------------------------------------------------
 
@@ -163,9 +193,22 @@ class _Builder:
                 "task": "",
                 "summary": "",
                 "package": "",
+                "persona_version": "",
+                "handbook_version": "",
+                "milestone": "",
+                "estimate": None,
+                "briefing": "",
+                "report": "",
+                "usage": {},
+                "tool_calls": None,
+                "reported": None,
+                "resumes": 0,
+                "max_gap": 0.0,
+                "delegated_at": None,
                 "started": ts,
                 "stopped": None,
                 "last_seen": ts,
+                "_pulse": ts,
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
@@ -179,8 +222,30 @@ class _Builder:
             if not is_main:
                 self.reparent(node, self.node(sid, "main", ts, touch=False)["key"])
         if touch:
-            node["last_seen"] = max(node["last_seen"], ts)
+            self.touch(node, ts)
         return node
+
+    def touch(self, node: dict, ts: float) -> None:
+        """Lebenszeichen: grösste Lücke merken (nur bei lebendem Status).
+
+        Wartet ein Knoten auf lebende Kinder, gilt keine Lücke; Aktivität eines
+        Kindes zählt als Lebenszeichen der Vorfahren.
+        """
+        waiting = any(
+            self.nodes[c]["status"] in LIVE for c in node["children"] if c in self.nodes
+        )
+        if node["status"] in LIVE and not waiting:
+            since = max(node["last_seen"], node["_pulse"])
+            node["max_gap"] = max(node["max_gap"], ts - since)
+        node["last_seen"] = max(node["last_seen"], ts)
+        ancestor = self.nodes.get(node["parent"] or "")
+        while ancestor is not None:
+            ancestor["_pulse"] = max(ancestor["_pulse"], ts)
+            ancestor = self.nodes.get(ancestor["parent"] or "")
+
+    @staticmethod
+    def count_tool(node: dict) -> None:
+        node["tool_calls"] = (node["tool_calls"] or 0) + 1
 
     def set_role(self, node: dict, role: str) -> None:
         node["role"] = role
@@ -231,19 +296,29 @@ class _Builder:
     def apply(self, event: dict) -> None:
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
-        session = self.sessions.setdefault(
-            sid, {"id": sid, "started": ts, "last": ts, "ended": None}
-        )
-        session["last"] = max(session["last"], ts)
+        # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
+        if event.get("kind") != "ci" and sid != CI_SESSION:
+            session = self.sessions.setdefault(
+                sid, {"id": sid, "started": ts, "last": ts, "ended": None}
+            )
+            session["last"] = max(session["last"], ts)
         handler = getattr(self, "on_" + str(event.get("kind", "")), None)
         if handler is not None:
             handler(event, ts, sid)
         self.add_feed(event, ts, sid)
 
     def agent(self, event: dict, ts: float, sid: str) -> dict:
-        return self.node(
+        node = self.node(
             sid, str(event.get("agent_id") or "main"), ts, event.get("role", "")
         )
+        self.stamp(node, event, ("handbook_version",))
+        return node
+
+    @staticmethod
+    def stamp(node: dict, event: dict, fields: tuple[str, ...]) -> None:
+        for field in fields:
+            if event.get(field):
+                node[field] = str(event[field])
 
     def on_session_start(self, event, ts, sid):
         main = self.node(sid, "main", ts)
@@ -253,6 +328,9 @@ class _Builder:
     def on_prompt(self, event, ts, sid):
         main = self.node(sid, "main", ts)
         main["status"] = "active"
+        # Dauer von L0 = Summe der Turns (Prompt → Turn-Ende); ein offener Turn läuft
+        if not main["_runs"] or main["_runs"][-1][1] is not None:
+            main["_runs"].append([ts, None])
         # Meldungen von Agenten sind kein neuer Auftrag: bisherige Aufgabe behalten.
         if event.get("task") != AGENT_MESSAGE_TASK:
             main["task"] = event.get("task") or main["task"]
@@ -260,6 +338,7 @@ class _Builder:
     def on_turn_end(self, event, ts, sid):
         main = self.node(sid, "main", ts)
         main["status"] = "idle"
+        self.close_run(main, ts)
         main["summary"] = event.get("summary") or main["summary"]
 
     def on_session_end(self, event, ts, sid):
@@ -272,12 +351,19 @@ class _Builder:
 
     def on_spawn(self, event, ts, sid):
         parent = self.agent(event, ts, sid)
+        self.count_tool(parent)
         self.seq += 1
+        estimate = _estimate(event.get("estimate"))
         entry = {
+            "ts": ts,
+            "estimate": estimate,
+            "milestone": str(event.get("milestone") or ""),
+            "briefing": str(event.get("briefing") or ""),
+            "persona_version": str(event.get("persona_version") or ""),
             "parent": parent["key"],
             "type": event.get("subagent_type") or "general-purpose",
             "persona": event.get("persona") or "",
-            "package": event.get("package") or "",
+            "package": _package(event),
             "model": event.get("model") or "",
             "task": event.get("description") or "",
             "tid": str(event.get("tool_use_id") or ""),
@@ -316,6 +402,11 @@ class _Builder:
         self.set_role(node, entry["persona"] or typ)
         node["package"] = entry["package"]
         node["task"] = entry["task"]
+        node["estimate"] = entry["estimate"]
+        node["milestone"] = entry["milestone"]
+        node["briefing"] = entry["briefing"]
+        node["delegated_at"] = entry["ts"]
+        node["persona_version"] = node["persona_version"] or entry["persona_version"]
         node["model"] = (
             entry["model"]
             or self.models.get(node["role"])
@@ -332,6 +423,13 @@ class _Builder:
         child = self.node(sid, child_id, ts, touch=False)
         self.reparent(child, parent["key"])
         child["_confirmed"] = True
+        reported = {
+            "duration_ms": event.get("duration_ms"),
+            "tool_count": event.get("tool_count"),
+            "resolved_model": event.get("resolved_model"),
+        }
+        if any(v is not None for v in reported.values()):
+            child["reported"] = reported
         entry = self.spawns.get((sid, str(event.get("tool_use_id") or "")))
         if entry is not None:
             self.assign(sid, child, entry, reparent=False)
@@ -342,7 +440,10 @@ class _Builder:
         if agent_id == "main":
             return
         node = self.node(sid, agent_id, ts, typ)
+        self.stamp(node, event, ("persona_version", "handbook_version"))
+        node["tool_calls"] = node["tool_calls"] or 0
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
+            node["resumes"] += 1
             node["status"], node["stopped"] = "active", None
             if not node["_runs"] or node["_runs"][-1][1] is not None:
                 node["_runs"].append([ts, None])  # offener Lauf bleibt der einzige
@@ -365,6 +466,10 @@ class _Builder:
 
     def on_agent_stop(self, event, ts, sid):
         node = self.agent(event, ts, sid)
+        self.stamp(node, event, ("persona_version", "handbook_version"))
+        if isinstance(event.get("usage"), dict):
+            node["usage"] = event["usage"]
+        node["report"] = str(event.get("report") or node["report"])
         node["status"] = "failed" if node["status"] == "failed" else "done"
         node["stopped"] = ts
         self.close_run(node, ts)
@@ -374,14 +479,15 @@ class _Builder:
             self.add_chronicle(node, ts, node["summary"] or node["task"])
 
     def on_heartbeat(self, event, ts, sid):
-        self.agent(event, ts, sid)
+        self.count_tool(self.agent(event, ts, sid))
 
     def on_bind(self, event, ts, sid):
         node = self.agent(event, ts, sid)
+        self.count_tool(node)
         role = event.get("role") or ""
         if role:
             self.binds.setdefault(sid, []).append((ts, role, node["key"]))
-        node["package"] = node["package"] or event.get("package") or ""
+        node["package"] = node["package"] or _package(event)
 
     def resolve(self, sid: str, role: str, package: str, ts: float) -> dict:
         if role in (DIRECTOR, "main"):
@@ -408,19 +514,20 @@ class _Builder:
         return self.node(sid, f"log:{role}", ts, role)
 
     def on_status(self, event, ts, sid):
-        node = self.resolve(
-            sid, event.get("role") or "", event.get("package") or "", ts
-        )
-        node["last_seen"] = max(node["last_seen"], ts)
+        node = self.resolve(sid, event.get("role") or "", _package(event), ts)
+        self.touch(node, ts)
+        self.stamp(node, event, ("handbook_version", "milestone"))
         status = event.get("status") or ""
         if status:
             node["status"] = status
             if status in FINAL:
                 node["stopped"] = ts
                 self.close_run(node, ts)
-        for field in ("task", "summary", "package"):
+        for field in ("task", "summary"):
             if event.get(field):
                 node[field] = event[field]
+        if _package(event):
+            node["package"] = _package(event)
         if status == "done" and event.get("summary"):
             self.add_chronicle(node, ts, event["summary"])
 
@@ -445,7 +552,7 @@ class _Builder:
             current["parallel"] = parallel
 
     def on_package(self, event, ts, sid):
-        key = str(event.get("package") or "")
+        key = _package(event)
         item = self.board.setdefault(key, {"id": key})
         for field in ("title", "owner", "status", "milestone"):
             if event.get(field):
@@ -469,9 +576,100 @@ class _Builder:
                 "recommendation": event.get("recommendation") or "",
                 "from": event.get("role") or "",
                 "ts": event.get("ts", ""),
+                "session_id": sid,
                 "resolved": None,
             }
         )
+
+    def on_usage(self, event, ts, sid):
+        node = self.agent(event, ts, sid)
+        if isinstance(event.get("usage"), dict):
+            node["usage"] = event["usage"]
+        if event.get("session_cost") is not None:
+            self.sessions[sid]["cost"] = event["session_cost"]
+
+    def on_result(self, event, ts, sid):
+        try:
+            rounds = int(event.get("review_rounds") or 0)
+        except (TypeError, ValueError):
+            rounds = 0
+        package, worker = _package(event), str(event.get("worker") or "")
+        role = str(event.get("role") or "")
+        self.results[(package, worker or role)] = {
+            "t": ts,
+            "ts": event.get("ts", ""),
+            "session_id": sid,
+            "package": package,
+            "role": role,
+            "worker": worker,
+            "outcome": str(event.get("outcome") or ""),
+            "review_rounds": rounds,
+            "milestone": str(event.get("milestone") or ""),
+        }
+
+    def on_milestone(self, event, ts, sid):
+        ident = str(event.get("milestone") or "")
+        status = str(event.get("status") or "")
+        if not ident or status not in ("start", "done"):
+            return
+        item = self.milestones_by_id.setdefault(
+            ident, {"id": ident, "title": "", "status": "", "started": None}
+        )
+        item["title"] = str(event.get("title") or item["title"])
+        item["status"] = "done" if status == "done" else "running"
+        if status == "start":
+            item["started"] = ts
+        else:
+            item["done"] = ts
+        self.timeline.append((ts, ident, status))
+
+    def on_retro(self, event, ts, sid):
+        triggers = event.get("triggers")
+        triggers = triggers if isinstance(triggers, list) else []
+        self.retros.append(
+            {
+                "id": str(event.get("retro_id") or ""),
+                "kind": str(event.get("retro_kind") or ""),
+                "triggers": [str(t) for t in triggers],
+                "report": str(event.get("report") or ""),
+                "t": ts,
+                "session_id": sid,
+            }
+        )
+
+    def on_ci(self, event, ts, sid):
+        run = str(event.get("run_id") or "")
+        if not run:
+            return
+        self.ci[run] = {
+            "run_id": run,
+            "conclusion": str(event.get("conclusion") or ""),
+            "branch": str(event.get("branch") or ""),
+            "sha": str(event.get("sha") or ""),
+            "workflow": str(event.get("workflow") or ""),
+            "t": parse_ts(event.get("created")) or ts,
+            "session_id": sid,
+        }
+
+    def on_queue(self, event, ts, sid):
+        key = str(event.get("queue_id") or "")
+        if not key:
+            return
+        item = self.queue.setdefault(
+            key, {"id": key, "state": "open", "session_id": sid, "t": ts}
+        )
+        action = event.get("action")
+        if action == "add":
+            item.update(
+                question=str(event.get("question") or ""),
+                blocks=event.get("blocks") or [],
+                role=str(event.get("role") or ""),
+                state="open",
+            )
+        elif action == "answer":
+            item["state"] = "answered"
+        elif action == "done":
+            item["state"] = "done"
 
     def add_feed(self, event: dict, ts: float, sid: str) -> None:
         if event.get("source") == "log" and event.get("role"):
@@ -528,6 +726,7 @@ class _Builder:
         else:
             chosen, scope = session, {session}
 
+        self.finalize()
         views = {
             key: self.view(node, inactive_after) for key, node in self.nodes.items()
         }
@@ -550,6 +749,16 @@ class _Builder:
         counts["inactive"] = sum(1 for v in in_scope if v["inactive"])
         feed = [f for f in self.feed if f["session_id"] in scope]
         chronicle = [c for c in self.chronicle if c["session_id"] in scope]
+        records = [effort.record(n, self.nodes) for n in self.nodes.values()]
+        mine = [r for r in records if r["session_id"] in scope]
+        results = [r for r in self.results.values() if r["session_id"] in scope]
+        ci_runs = self.ci_in_scope(ordered, scope, chosen == "all")
+        escalations = [
+            d
+            for d in self.decisions.values()
+            if d.get("for") == "l0" and d.get("session_id") in scope
+        ] + [q for q in self.queue.values() if q["session_id"] in scope]
+        inactive_keys = [k for k, v in views.items() if v["inactive"]]
         return {
             "now": self.now,
             "session": chosen,
@@ -582,7 +791,76 @@ class _Builder:
             "feed": _collapse_feed(feed, heartbeats)[:FEED_SIZE],
             "pulse": self.pulse(feed),
             "departments": ["studio", *DEPARTMENTS, "extern"],
+            "records": mine,
+            "delegations": effort.delegations(mine, results),
+            "effort": effort.aggregate(mine),
+            "quality": effort.quality(
+                mine, results, ci_runs, escalations, inactive_after
+            ),
+            "incidents": self.incident_list(records, inactive_keys),
+            "milestones": self.milestone_view(),
+            "session_costs": [
+                {"session_id": s["id"], "cost": s["cost"]}
+                for s in ordered
+                if s["id"] in scope and s.get("cost") is not None
+            ],
+            "queue": [q for q in self.queue.values() if q["session_id"] in scope],
         }
+
+    def ci_in_scope(self, sessions: list[dict], scope: set, every: bool) -> list[dict]:
+        """CI-Läufe, deren Zeitpunkt (created, sonst ts) in eine Session fällt."""
+        if every:
+            return list(self.ci.values())
+        windows = [(s["started"], s["last"]) for s in sessions if s["id"] in scope]
+        return [
+            run
+            for run in self.ci.values()
+            if any(start <= run["t"] <= end for start, end in windows)
+        ]
+
+    def finalize(self) -> None:
+        """Meilenstein je Knoten: Kopfzeile, Paket, Vorfahr, laufender Meilenstein."""
+
+        def explicit(node: dict, seen: set[str]) -> str:
+            if node["milestone"]:
+                return node["milestone"]
+            item = self.board.get(node["package"]) or {}
+            if item.get("milestone"):
+                return item["milestone"]
+            parent = self.nodes.get(node["parent"] or "")
+            if parent is None or parent["key"] in seen:
+                return ""
+            return explicit(parent, seen | {node["key"]})
+
+        for node in self.nodes.values():
+            node["milestone"] = explicit(node, set()) or self.running_milestone(
+                node["started"]
+            )
+
+    def running_milestone(self, t: float) -> str:
+        current = ""
+        for stamp, ident, status in self.timeline:
+            if stamp > t:
+                break
+            current = ident if status == "start" else ""
+        return current
+
+    def milestone_view(self) -> list[dict]:
+        return [dict(m) for m in self.milestones_by_id.values()]
+
+    def incident_list(
+        self, records: list[dict], inactive_keys: list[str]
+    ) -> list[dict]:
+        acknowledged = {t for retro in self.retros for t in retro["triggers"]}
+        return effort.incidents(
+            records,
+            list(self.results.values()),
+            list(self.ci.values()),
+            self.budget_view(),
+            self.milestone_view(),
+            acknowledged,
+            inactive_keys,
+        )
 
     def view(self, node: dict, inactive_after: float) -> dict:
         live_children = [c for c in node["children"] if self.nodes[c]["status"] in LIVE]
@@ -742,3 +1020,10 @@ def build_state(
         with contextlib.suppress(Exception):
             builder.apply(event)
     return builder.result(session, inactive_after, heartbeats)
+
+
+def pending_incidents(
+    events: list[dict], now: float, inactive_after: float = INACTIVE_DEFAULT
+) -> list[dict]:
+    """Offene Vorfälle über alle Sessions (ohne erledigte Retro-Auslöser)."""
+    return build_state(events, now, {}, "all", inactive_after, False)["incidents"]

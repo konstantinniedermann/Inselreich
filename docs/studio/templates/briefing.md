@@ -2,10 +2,14 @@
 
 Für jede Delegation (L0 → L1, L1 → L2). Die Kopfzeilen stehen ganz oben im Prompt, weil die
 Telemetrie die ersten 400 Zeichen liest. Regeln: [STUDIO.md](../STUDIO.md), „Briefing-Standard".
+Der Block „Feste Regeln" steht wörtlich so in [VERFASSUNG.md §3](../VERFASSUNG.md#3-feste-regeln)
+und wird unverändert kopiert.
 
 ```text
 Persona: <rolle>
 Paket: <id>
+Meilenstein: <id> (oder „ohne")
+Schätzung: <n> min, <m> Tools (Schätzung für den ganzen Auftrag inkl. aller Unteraufträge)
 Modell: <opus|sonnet|haiku> (nur nennen, wenn abweichend von der Persona; dann auch im Agent-Aufruf)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten")
 Prozessstufe: <leicht|voll>
@@ -19,6 +23,7 @@ Prozessstufe: <leicht|voll>
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>
 8. Logging-Pflicht: siehe Block „Logging"
 
+(Block „Feste Regeln" wörtlich aus VERFASSUNG.md §3)
 Feste Regeln (unverändert, gelten immer):
 - Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
@@ -29,13 +34,14 @@ Feste Regeln (unverändert, gelten immer):
 Logging (jeweils als eigener Bash-Aufruf):
 - Start:     python3 tools/studio/log.py status --role <rolle> --status active --task "<auftrag>" --package <id>
 - Delegiert: python3 tools/studio/log.py status --role <rolle> --status delegated --package <id>   (nur Leads)
+- Ergebnis:  python3 tools/studio/log.py result --role <rolle> --package <id> --worker <arbeiter> --outcome <angenommen|nacharbeit|verworfen> --review-rounds <n>   (nur Leads, einmal je abgenommenem Arbeitsergebnis)
 - Wartet:    python3 tools/studio/log.py status --role <rolle> --status waiting --task "<worauf>" --package <id>
 - Blockiert: python3 tools/studio/log.py status --role <rolle> --status blocked --task "<grund>" --package <id>
 - Fertig:    python3 tools/studio/log.py status --role <rolle> --status done --summary "<ergebnis>" --package <id>
 - Abbruch:   python3 tools/studio/log.py status --role <rolle> --status failed --summary "<grund>" --package <id>
 
 Bericht (≤ 15 Zeilen, docs/studio/templates/bericht.md):
-Ergebnis · Entscheidungsbedarf mit Empfehlung · Risiken · Befunde ausserhalb Scope · Budget verbraucht/frei · Status
+Ergebnis · Entscheidungsbedarf mit Empfehlung · Risiken · Befunde ausserhalb Scope · Budget verbraucht/frei · Aufwand · Status
 ```
 
 ## Beispiel
@@ -43,6 +49,8 @@ Ergebnis · Entscheidungsbedarf mit Empfehlung · Risiken · Befunde ausserhalb 
 ```text
 Persona: tech-sim-engineer
 Paket: M5-02
+Meilenstein: M5
+Schätzung: 25 min, 40 Tools
 Budget: keins, keine Agenten starten
 Prozessstufe: voll
 
@@ -68,3 +76,6 @@ Logging (jeweils als eigener Bash-Aufruf):
 
 Bericht (≤ 15 Zeilen): nach docs/studio/templates/bericht.md
 ```
+
+Nach der Abnahme loggt der Lead (hier `lead-tech`) das Ergebnis mit `log.py result`; Werte und
+Beispiel: [STUDIO.md](../STUDIO.md), Abschnitte „Messung und Aufwand" und „Logging-Pflicht".

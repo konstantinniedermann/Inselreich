@@ -1,136 +1,38 @@
 // Studio-Dashboard: pollt /api/state alle 2 s und zeichnet alle Ansichten neu.
 // Sicherheit: Daten ausschliesslich per textContent/Attribut, nie per innerHTML.
 
+import {
+  DEPARTMENT_LABEL,
+  LEVEL_LABEL,
+  PACKAGE_STATUS,
+  STATUS_LABEL,
+  ago,
+  clock,
+  deptChip,
+  el,
+  empty,
+  knownDepartment,
+  knownStatus,
+  statusBadge,
+  storageGet,
+  storageSet,
+  svg,
+  syncSelect,
+} from './dom.js';
+import {
+  renderDelegation,
+  renderEffort,
+  renderQuality,
+  renderStudio,
+  renderQueue,
+  renderBanner,
+} from './views.js';
+
 const POLL_MS = 2000;
 const FETCH_TIMEOUT_MS = 6000;
 // Periode der Inaktiv-Animation (style.css); Phase an die Uhr gekoppelt, damit
 // das Neuzeichnen alle 2 s die Animation nicht sichtbar neu startet.
 const INACTIVE_PULSE_MS = 2000;
-const SVG_NS = 'http://www.w3.org/2000/svg';
-const STATUS_LABEL = {
-  active: 'aktiv',
-  delegated: 'delegiert',
-  waiting: 'wartet',
-  blocked: 'blockiert',
-  idle: 'bereit',
-  done: 'fertig',
-  failed: 'fehlgeschlagen',
-  ended: 'beendet',
-};
-const PACKAGE_STATUS = {
-  open: { label: 'offen', tone: 'idle' },
-  active: { label: 'in Arbeit', tone: 'active' },
-  review: { label: 'im Review', tone: 'waiting' },
-  blocked: { label: 'blockiert', tone: 'blocked' },
-  done: { label: 'fertig', tone: 'done' },
-};
-const DEPARTMENT_LABEL = {
-  studio: 'Studio',
-  production: 'Produktion',
-  design: 'Design',
-  tech: 'Technik',
-  art: 'Grafik',
-  qa: 'QA',
-  extern: 'Extern',
-};
-const LEVEL_LABEL = ['L0', 'L1', 'L2'];
-
-// --- Hilfen -----------------------------------------------------------------
-
-function el(tag, attrs = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(attrs)) {
-    if (value === undefined || value === null || value === false) continue;
-    if (key === 'class') node.className = value;
-    else node.setAttribute(key, value);
-  }
-  for (const child of children) {
-    if (child === null || child === undefined || child === false) continue;
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  }
-  return node;
-}
-
-function svg(tag, attrs = {}, ...children) {
-  const node = document.createElementNS(SVG_NS, tag);
-  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
-  for (const child of children) {
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
-  }
-  return node;
-}
-
-function ago(seconds) {
-  const s = Math.max(0, Number(seconds) || 0);
-  if (s < 60) return `vor ${Math.round(s)} s`;
-  if (s < 3600) return `vor ${Math.round(s / 60)} min`;
-  return `vor ${Math.round(s / 3600)} h`;
-}
-
-function clock(epochSeconds, withSeconds = true) {
-  const date = new Date(epochSeconds * 1000);
-  return date.toLocaleTimeString('de-CH', {
-    hour: '2-digit',
-    minute: '2-digit',
-    ...(withSeconds ? { second: '2-digit' } : {}),
-  });
-}
-
-function knownStatus(status) {
-  return Object.hasOwn(STATUS_LABEL, status) ? status : 'idle';
-}
-
-function knownDepartment(department) {
-  return Object.hasOwn(DEPARTMENT_LABEL, department) ? department : 'extern';
-}
-
-function statusBadge(status) {
-  const known = Object.hasOwn(STATUS_LABEL, status);
-  return el(
-    'span',
-    { class: `badge st-${known ? status : 'idle'}` },
-    known ? STATUS_LABEL[status] : status || '–',
-  );
-}
-
-function deptChip(department) {
-  const dep = knownDepartment(department);
-  return el('span', { class: `chip dep dep-${dep}` }, DEPARTMENT_LABEL[dep]);
-}
-
-function empty(text) {
-  return el('p', { class: 'empty' }, text);
-}
-
-function storageGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function storageSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* Speicher gesperrt: Einstellung gilt nur bis zum Neuladen */
-  }
-}
-
-// Ein <select> nur neu aufbauen, wenn sich die Optionen ändern (sonst schliesst
-// sich ein offenes Auswahlmenü bei jedem Poll); Auswahl bleibt erhalten.
-function syncSelect(select, options, wanted) {
-  const signature = JSON.stringify(options);
-  if (select.dataset.signature !== signature) {
-    select.replaceChildren(...options.map(([value, label]) => el('option', { value }, label)));
-    select.dataset.signature = signature;
-  }
-  const values = options.map(([value]) => value);
-  const chosen = values.includes(wanted) ? wanted : values[0];
-  if (select.value !== chosen) select.value = chosen;
-  return chosen;
-}
 
 // --- Zustand und Poll-Schleife ---------------------------------------------
 
@@ -192,16 +94,37 @@ function setConn(ok, text) {
   else if (alert.textContent !== text) alert.textContent = text;
 }
 
+// Jede Ansicht in eigenem try/catch: eine kaputte Ansicht verhindert die anderen nicht.
+const VIEWS = [
+  ['sessions', renderSessions],
+  ['org', renderOrg],
+  ['counts', renderCounts],
+  ['decisions', renderDecisions],
+  ['queue', renderQueue],
+  ['budgets', renderBudgets],
+  ['board', renderBoard],
+  ['pulse', renderPulse],
+  ['chronicle', renderChronicle],
+  ['feed', renderFeed],
+  ['banner', renderBanner],
+  ['delegation', renderDelegation],
+  ['effort', renderEffort],
+  ['quality', renderQuality],
+  ['studio', renderStudio],
+];
+
 function render(state) {
-  renderSessions(state);
-  renderOrg(state);
-  renderCounts(state);
-  renderDecisions(state);
-  renderBudgets(state);
-  renderBoard(state);
-  renderPulse(state);
-  renderChronicle(state);
-  renderFeed(state);
+  for (const [id, view] of VIEWS) {
+    try {
+      view(state);
+    } catch (error) {
+      console.error(`Studio-Dashboard: Ansicht ${id} fehlgeschlagen`, error);
+      const target = document.getElementById(id);
+      if (target && id !== 'sessions') {
+        target.replaceChildren(empty(`Ansicht nicht darstellbar (${id})`));
+      }
+    }
+  }
 }
 
 // --- Ansichten --------------------------------------------------------------
@@ -616,5 +539,21 @@ document.getElementById('chron-dept').addEventListener('change', (event) => {
   chronDept = event.target.value;
   if (lastState) renderChronicle(lastState);
 });
+const TABS = ['live', 'delegation', 'aufwand', 'qualitaet', 'studio'];
+
+// Reiter über den URL-Hash; unbekannter Hash fällt auf #live zurück.
+function showTab() {
+  const wanted = window.location.hash.slice(1);
+  const tab = TABS.includes(wanted) ? wanted : 'live';
+  for (const section of document.querySelectorAll('[data-tab]')) {
+    section.hidden = section.dataset.tab !== tab;
+  }
+  for (const link of document.querySelectorAll('.tabs a')) {
+    if (link.getAttribute('href') === `#${tab}`) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+}
+window.addEventListener('hashchange', showTab);
+showTab();
 setupTheme();
 poll();

@@ -3,6 +3,7 @@ name: qa-playtester
 description: 'Playtester des Inselreich-Studios: einsetzen für Browser-Checks von UI-Paketen per Headless-Chrome mit Screenshots und Playtest-Report unter .studio/qa/<paket>/; nicht für Code-Reviews oder Fehlerbehebung.'
 tools: Read, Grep, Glob, Bash, Write
 model: sonnet
+version: 1.0
 ---
 
 ## Persona und Expertise
@@ -56,4 +57,5 @@ Logging, jeder Aufruf als **eigener** Bash-Befehl:
 - Ende: `python3 tools/studio/log.py status --role qa-playtester --status done --summary "<Empfehlung: Kurzgrund>" --package <id>`
 - Abbruch: `python3 tools/studio/log.py status --role qa-playtester --status failed --summary "<Grund>" --package <id>`
 
-Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
+Verbindlich sind `docs/studio/VERFASSUNG.md` und das Handbuch `docs/studio/STUDIO.md`; Rangfolge
+Verfassung > Handbuch > Persona > Briefing.

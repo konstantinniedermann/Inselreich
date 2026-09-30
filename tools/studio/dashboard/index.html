@@ -21,51 +21,127 @@
         ◐
       </button>
     </header>
-    <main class="grid">
-      <section class="card wide" aria-labelledby="h-org">
-        <h2 id="h-org">Organigramm</h2>
-        <div id="org"></div>
-      </section>
-      <section class="card" aria-labelledby="h-counts">
-        <h2 id="h-counts">Status</h2>
-        <div id="counts" class="counts"></div>
-      </section>
-      <section class="card" aria-labelledby="h-decisions">
-        <h2 id="h-decisions">Offene Entscheide</h2>
-        <div id="decisions"></div>
-      </section>
-      <section class="card" aria-labelledby="h-budget">
-        <h2 id="h-budget">Budget je Lead</h2>
-        <div id="budgets"></div>
-      </section>
-      <section class="card wide" aria-labelledby="h-board">
-        <h2 id="h-board">Meilenstein-Board</h2>
-        <div id="board"></div>
-      </section>
-      <section class="card" aria-labelledby="h-pulse">
-        <h2 id="h-pulse">Aktivität (60 min)</h2>
-        <div id="pulse"></div>
-      </section>
-      <section class="card" aria-labelledby="h-chron">
-        <div class="card-head">
-          <h2 id="h-chron">Chronik</h2>
-          <label class="field"
-            >Bereich
-            <select id="chron-dept"></select
-          ></label>
-        </div>
-        <ol id="chronicle" class="list scroll"></ol>
-      </section>
-      <section class="card" aria-labelledby="h-feed">
-        <div class="card-head">
-          <h2 id="h-feed">Live-Feed</h2>
-          <label class="field check">
-            <input id="hide-heartbeats" type="checkbox" />
-            Heartbeats ausblenden
-          </label>
-        </div>
-        <ol id="feed" class="list feed scroll"></ol>
-      </section>
+    <nav class="tabs" aria-label="Ansichten">
+      <a href="#live">Live</a>
+      <a href="#delegation">Delegation</a>
+      <a href="#aufwand">Aufwand</a>
+      <a href="#qualitaet">Qualität</a>
+      <a href="#studio">Studio</a>
+    </nav>
+    <main>
+      <div id="banner" data-tab="live"></div>
+      <div class="grid" data-tab="live">
+        <section class="card wide" aria-labelledby="h-org">
+          <h2 id="h-org">Organigramm</h2>
+          <div id="org"></div>
+        </section>
+        <section class="card" aria-labelledby="h-counts">
+          <h2 id="h-counts">Status</h2>
+          <div id="counts" class="counts"></div>
+        </section>
+        <section class="card" aria-labelledby="h-decisions">
+          <h2 id="h-decisions">Entscheide für L0</h2>
+          <div id="decisions"></div>
+        </section>
+        <section class="card" aria-labelledby="h-queue">
+          <h2 id="h-queue">Nutzerentscheide (Warteschlange)</h2>
+          <div id="queue"></div>
+        </section>
+        <section class="card" aria-labelledby="h-budget">
+          <h2 id="h-budget">Budget je Lead</h2>
+          <div id="budgets"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-board">
+          <h2 id="h-board">Meilenstein-Board</h2>
+          <div id="board"></div>
+        </section>
+        <section class="card" aria-labelledby="h-pulse">
+          <h2 id="h-pulse">Aktivität (60 min)</h2>
+          <div id="pulse"></div>
+        </section>
+        <section class="card" aria-labelledby="h-chron">
+          <div class="card-head">
+            <h2 id="h-chron">Chronik</h2>
+            <label class="field"
+              >Bereich
+              <select id="chron-dept"></select
+            ></label>
+          </div>
+          <ol id="chronicle" class="list scroll"></ol>
+        </section>
+        <section class="card" aria-labelledby="h-feed">
+          <div class="card-head">
+            <h2 id="h-feed">Live-Feed</h2>
+            <label class="field check">
+              <input id="hide-heartbeats" type="checkbox" />
+              Heartbeats ausblenden
+            </label>
+          </div>
+          <ol id="feed" class="list feed scroll"></ol>
+        </section>
+      </div>
+      <div class="grid" data-tab="delegation" hidden>
+        <section class="card wide" aria-labelledby="h-delegation">
+          <h2 id="h-delegation">Delegationen (neueste oben)</h2>
+          <div id="delegation"></div>
+        </section>
+      </div>
+      <div class="grid" data-tab="aufwand" hidden>
+        <section class="card wide" aria-labelledby="h-effort">
+          <div class="card-head">
+            <h2 id="h-effort">Aufwand</h2>
+            <label class="field"
+              >Gruppieren
+              <select id="effort-by"></select
+            ></label>
+          </div>
+          <div id="effort"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-estimate">
+          <h2 id="h-estimate">Schätzung vs. Ist</h2>
+          <div id="estimate"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-costs">
+          <h2 id="h-costs">Sitzungskosten</h2>
+          <div id="costs"></div>
+        </section>
+      </div>
+      <div class="grid" data-tab="qualitaet" hidden>
+        <section class="card wide" aria-labelledby="h-quality">
+          <h2 id="h-quality">Qualität</h2>
+          <div id="quality"></div>
+        </section>
+        <section class="card" aria-labelledby="h-incidents">
+          <h2 id="h-incidents">Offene Vorfälle</h2>
+          <div id="incidents"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-history">
+          <h2 id="h-history">Verlauf je Meilenstein</h2>
+          <div id="history"></div>
+        </section>
+      </div>
+      <div class="grid" data-tab="studio" hidden>
+        <section class="card" aria-labelledby="h-versions">
+          <h2 id="h-versions">Versionen</h2>
+          <div id="versions" class="counts"></div>
+        </section>
+        <section class="card" aria-labelledby="h-experiments">
+          <h2 id="h-experiments">Experimente</h2>
+          <div id="experiments"></div>
+        </section>
+        <section class="card" aria-labelledby="h-changelog">
+          <h2 id="h-changelog">Changelog</h2>
+          <div id="changelog"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-personas">
+          <h2 id="h-personas">Organigramm der Personas</h2>
+          <div id="personas"></div>
+        </section>
+        <section class="card wide" aria-labelledby="h-lernen">
+          <h2 id="h-lernen">Gelerntes (lernen.md)</h2>
+          <div id="lernen"></div>
+        </section>
+      </div>
     </main>
   </body>
 </html>

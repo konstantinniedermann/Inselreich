@@ -165,10 +165,15 @@ Studio-Dashboard (lokal, nicht Teil des Spiels; Python 3, nur Standardbibliothek
 make studio          # Dashboard starten und URL ausgeben
 make studio-stop     # Dashboard stoppen
 make studio-archive  # Events archivieren, Dashboard startet leer
+make studio-metrics  # Aufwand und Qualität der letzten Session nach docs/studio/metriken/ verdichten
 make studio-test     # Tests der Studio-Werkzeuge
 ```
 
 Der Browser öffnet das Dashboard automatisch beim ersten Subagenten-Start einer Session (Opt-out: `STUDIO_NO_BROWSER=1`).
+
+Jede Session in diesem Repo ist der Projektleiter und arbeitet ohne Rückfragen nach der
+[Verfassung](docs/studio/VERFASSUNG.md) (nur du änderst sie). Was nur du entscheiden kannst, steht
+mit Empfehlung in der [Warteschlange](docs/studio/warteschlange.md) — antworte, wann du willst.
 
 ## Dokumentation
 

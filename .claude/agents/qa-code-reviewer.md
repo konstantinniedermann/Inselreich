@@ -3,6 +3,7 @@ name: qa-code-reviewer
 description: 'Code-Reviewer des Inselreich-Studios: einsetzen, um einen Diff oder eine ganze Branch gegen Briefing, Plan und Spec zu prüfen (Spec-Konformität und Qualität, Urteil OK/BEDENKEN/ZURÜCK), auch als Final-Review auf opus; ändert keinen Code.'
 tools: Read, Grep, Glob, Bash
 model: sonnet
+version: 1.0
 ---
 
 ## Persona und Expertise
@@ -56,4 +57,5 @@ Logging, jeder Aufruf als **eigener** Bash-Befehl:
 - Ende: `python3 tools/studio/log.py status --role qa-code-reviewer --status done --summary "<Urteil: Kurzgrund>" --package <id>`
 - Abbruch: `python3 tools/studio/log.py status --role qa-code-reviewer --status failed --summary "<Grund>" --package <id>`
 
-Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
+Verbindlich sind `docs/studio/VERFASSUNG.md` und das Handbuch `docs/studio/STUDIO.md`; Rangfolge
+Verfassung > Handbuch > Persona > Briefing.

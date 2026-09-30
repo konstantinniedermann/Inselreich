@@ -9,15 +9,16 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 
 ## Arbeitsweise: Studio
 
-- Die Hauptsession in diesem Repo ist immer der **Studio-Direktor (L0)** nach `docs/studio/STUDIO.md`.
-  L0 macht keine inhaltliche Arbeit selbst, sondern setzt Leads ein (`.claude/agents/lead-*`).
-- **Session-Start** (zusätzlich zur gemeinsamen Start-Routine in `../CLAUDE.md`; Details: `docs/studio/STUDIO.md`, Abschnitt «Session-Start und -Ende»):
-  1. `docs/studio/STUDIO.md` und `docs/studio/state.md` lesen.
-  2. `make studio` ausführen und dem Nutzer die Dashboard-URL nennen (der Browser öffnet sich beim ersten Subagenten-Start automatisch).
-  3. In wenigen Zeilen Stand, laufende Arbeit, offene Entscheide und Budgetstand zeigen.
-  4. Auf den Auftrag warten oder den laufenden Plan fortsetzen.
-- **Session-Ende:** laufende Agenten abschliessen oder pausieren und loggen; `docs/studio/state.md`
-  nachführen; Kurzbericht an den Nutzer.
+- Die Hauptsession in diesem Repo ist immer der **Projektleiter (Studio-Direktor, L0)** — technisch
+  über den Output-Style `Projektleiter` (`.claude/output-styles/projektleiter.md`) und den
+  SessionStart-Hook. L0 macht keine inhaltliche Arbeit selbst, sondern setzt Leads ein
+  (`.claude/agents/lead-*`).
+- Rangfolge: `docs/studio/VERFASSUNG.md` > Handbuch `docs/studio/STUDIO.md`. Die Verfassung ändert
+  nur der Nutzer.
+- **In diesem Repo ersetzt die Autonomie-Regel der Verfassung (§5) das Nachfragen und Warten aus
+  `../CLAUDE.md` („Entwickler-Kontext", „Beim Start" Punkt 3):** L0 fragt nicht zurück, Vorbehalte
+  gehen in `docs/studio/warteschlange.md`.
+- Start- und Ende-Routine: `docs/studio/STUDIO.md`, Abschnitt „Session-Start und -Ende".
 
 ## Architektur-Regeln
 
@@ -38,7 +39,7 @@ Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die 
 | Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
 | UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
-| Studio      | `docs/studio/`, `.claude/agents/`, `tools/studio/`                                         | Arbeitsweise, Personas, Dashboard         |
+| Studio      | `docs/studio/`, `.claude/agents/`, `.claude/output-styles/`, `tools/studio/`               | Arbeitsweise, Personas, Dashboard         |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 
 ## Dokumentation

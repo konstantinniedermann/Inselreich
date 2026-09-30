@@ -339,6 +339,7 @@ Wartezeit vor dem Aufstieg.
 | Eigene oder offen lizenzierte Inhalte mit Nachweis          | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
 | Studio-Hierarchie                                           | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
 | Studio-Telemetrie                                           | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
+| Studio-Autonomie und Lernen                                 | [ADR-009](adr/ADR-009-studio-autonomie-und-lernen.md)                   |
 | Balancing-Revision (Steuern, Luxusverbrauch)                | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
 
 ## 10. Qualitätsanforderungen
