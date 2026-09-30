@@ -50,14 +50,12 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
   ): void => {
     const btn = document.createElement('button');
     btn.className = 'btn btn-small';
-    btn.textContent = op === 'buy' ? `+${n}` : sellTexts(world, good, n).label;
+    const sellT = op === 'sell' ? sellTexts(world, good, n) : null;
+    btn.textContent = sellT ? sellT.label : `+${n}`;
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
-    btn.title =
-      op === 'buy'
-        ? `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`
-        : sellTexts(world, good, n).title;
+    btn.title = sellT ? sellT.title : `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);

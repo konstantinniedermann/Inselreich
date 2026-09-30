@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatBalance, taxTooltip, trendArrow } from '../../src/ui/hud';
+import { balanceLabel, formatBalance, taxTooltip, trendArrow } from '../../src/ui/hud';
 import { diagnosisText } from '../../src/ui/inspect';
 import { actionSound } from '../../src/ui/soundEvents';
 import { fail, ok } from '../../src/sim/types';
@@ -18,6 +18,14 @@ describe('Warenbilanz (AK-U3-01, AK-U3-07)', () => {
     expect(formatBalance(2.5)).toBe('+2.5');
     expect(formatBalance(0.01)).toBe('±0.0');
     expect(formatBalance(-0.01)).toBe('±0.0');
+  });
+});
+
+describe('balanceLabel (AK-U3-01/07)', () => {
+  it('Pfeil, Leerzeichen, Bilanz', () => {
+    expect(balanceLabel(-5.5)).toBe('↓ −5.5');
+    expect(balanceLabel(0.01)).toBe('→ ±0.0');
+    expect(balanceLabel(2.5)).toBe('↑ +2.5');
   });
 });
 

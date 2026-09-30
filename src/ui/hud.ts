@@ -42,6 +42,11 @@ export function formatBalance(net: number): string {
   return net > 0 ? `+${net.toFixed(1)}` : `−${(-net).toFixed(1)}`;
 }
 
+/** Trendpfeil und Bilanz für den Lager-Chip, z. B. „↓ −5.5". */
+export function balanceLabel(net: number): string {
+  return `${trendArrow(net)} ${formatBalance(net)}`;
+}
+
 const TAX_IDS = Object.keys(TAX_LEVELS) as TaxLevel[];
 
 /** Tooltip einer Steuerstufe: Steuer, Wartezeit bis zum Aufstieg und Belegung (alles aus `TAX_LEVELS`). */
@@ -304,7 +309,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     const chip = setField(
       header,
       `stock-${good}`,
-      `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}${formatBalance(b.net)}`,
+      `${GOODS[good].name} ${world.stock[good]} ${balanceLabel(b.net)}`,
     );
     if (chip) {
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
