@@ -314,3 +314,13 @@ laufender Meilenstein → „ohne" — jeder Aufwand landet ohne Zusatzarbeit in
 Querschnittsaufträge landen evtl. im falschen Meilenstein.
 
 Entscheider: L0 · Anlass: Session 1.5 · siehe STUDIO.md „Messung und Aufwand"
+
+## R38 · 2026-09-30 · Session 1.5
+
+Ruling: Gate Merge Studio 1.5 bestanden — Final-Review (opus) mit Fix-Welle und Re-Review „bereit
+zum Merge", `make check` und `make studio-lint` grün, Probelauf in isolierten Klonen erfüllt alle
+fünf Prüfpunkte (Start-Bericht nach Fix in Lauf 3), `src/`/`tests/`/`public/` unverändert. Keine
+Kurz-Retro für diese Meta-Session, damit das Studio sauber mit Handbuch 1.0 startet. — Kosten bei
+Irrtum: Korrektur-Commits auf main; Rulings der parallelen Prozess-Graph-Session beginnen bei R39.
+
+Entscheider: L0 · Anlass: Session 1.5, Gate Merge
