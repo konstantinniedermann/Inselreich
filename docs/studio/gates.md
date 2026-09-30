@@ -150,7 +150,8 @@ Lizenzen, CREDITS)
 **Auslöser:** Alle Pakete **aller** Stränge des Meilensteins sind abgenommen; der QA-Lead hat das
 Final-Review in einer Session über alle Strang-Branches gegen `main` gemacht (kombinierter Diff bzw.
 jeder Strang-Diff). Es gibt **ein** Merge-Gate je Meilenstein, nicht eines je Strang. In der Stufe
-leicht ersetzt das abschliessende `opus`-Review des Tech-Zyklus das Final-Review; L0 prüft dann die
+leicht ersetzt das abschliessende `opus`-Review des Tech-Zyklus das Final-Review (dieses Review
+gilt als Final-Review im Sinn von Verfassung §9.5); L0 prüft dann die
 Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts. Ohne Final-Review auf dem
 stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist nicht abschwächbar
 ([Verfassung §9](VERFASSUNG.md#9-nicht-abschwächbare-qualitätssicherung)).

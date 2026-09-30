@@ -77,5 +77,5 @@ Logging (jeweils als eigener Bash-Aufruf):
 Bericht (≤ 15 Zeilen): nach docs/studio/templates/bericht.md
 ```
 
-Nach der Abnahme loggt der Lead (hier `lead-tech`) das Ergebnis, z. B. nach einer Fix-Runde:
-`python3 tools/studio/log.py result --role lead-tech --package M5-02 --worker tech-sim-engineer --outcome nacharbeit --review-rounds 2`.
+Nach der Abnahme loggt der Lead (hier `lead-tech`) das Ergebnis mit `log.py result`; Werte und
+Beispiel: [STUDIO.md](../STUDIO.md), Abschnitte „Messung und Aufwand" und „Logging-Pflicht".

@@ -288,19 +288,11 @@ selbst, hält jede Entscheidung als Ruling fest und arbeitet weiter.
    Warteschlange — alles andere entscheidet L0.
 
 **Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; `log.py queue` schreibt die
-Datei und ein Event). Die fragende Stelle legt den Eintrag an und nennt die ID im Bericht; L0 trägt
-Antworten ein und schliesst:
-
-```bash
-# Eintrag anlegen (Status offen)
-python3 tools/studio/log.py queue --id N-002 --title "Neue Abhängigkeit für Pfadsuche" --question "Darf M5 eine Pfadsuch-Bibliothek einbinden?" --recommendation "Nein, eigene A*-Suche in src/sim" --reason "ADR-001: keine Laufzeit-Abhängigkeiten" --cost "M5-03 wartet, M5-04 läuft weiter" --blocks M5-03 --from lead-tech
-
-# Antwort des Nutzers eintragen (Status beantwortet)
-python3 tools/studio/log.py queue --id N-002 --answer "Nein, selbst bauen"
-
-# Antwort umgesetzt, Eintrag schliessen (Status umgesetzt)
-python3 tools/studio/log.py queue --id N-002 --done "M5-03 mit eigener A*-Suche neu gebrieft"
-```
+Datei und ein Event). Die fragende Stelle legt den Eintrag an (`queue --id … --question …`, Status
+`offen`) und nennt die ID im Bericht; L0 trägt die Antwort ein (`--answer`, Status `beantwortet`)
+und schliesst den Eintrag (`--done`, Status `umgesetzt`). Vollständige Aufrufe:
+[Befehlsreferenz](#logging-pflicht). Die ID ist die nächste freie Nummer aus warteschlange.md
+(höchste N-Nummer + 1).
 
 **Um den Punkt herum weiterarbeiten:** Das blockierte Paket geht auf `blocked` mit Verweis auf den
 Eintrag, und L0 zieht das nächste ungeblockte Paket vor:
@@ -366,14 +358,20 @@ Messwerte werden **gemessen, nie geschätzt**; fehlt eine Messung, steht „nich
 
 **Ergebnis loggen (`log.py result`).** Einmal je (Paket, Arbeiter) mit dem **Endurteil**, geloggt
 vom abnehmenden Lead nach jedem Arbeitsergebnis. Auch L0 loggt `result` für jeden Lead-Bericht
-(`--worker` = Lead). Ein späteres Ergebnis für dasselbe Paar ersetzt das frühere.
+(`--worker` = Lead). Ein späteres Ergebnis für dasselbe Paar ersetzt das frühere. `--outcome` und
+`--review-rounds` sind immer Pflicht; vollständiger Aufruf in der
+[Befehlsreferenz](#logging-pflicht).
 
-| Endurteil                                | Aufruf                                                    |
+| Endurteil                                | Werte                                                     |
 | ---------------------------------------- | --------------------------------------------------------- |
 | beim ersten Review angenommen            | `--outcome angenommen --review-rounds 1`                  |
 | nach Fix-Runden angenommen               | `--outcome nacharbeit --review-rounds <Zahl der Reviews>` |
 | verworfen                                | `--outcome verworfen --review-rounds <Zahl der Reviews>`  |
-| ohne Review abgenommen (zählt ungeprüft) | `--review-rounds 0`                                       |
+| ohne Review abgenommen (zählt ungeprüft) | `--outcome angenommen --review-rounds 0`                  |
+
+Für L0 zählt jeder Lead-Bericht als Runde: `--review-rounds` ist die Zahl der Berichte, bis L0 das
+Ergebnis angenommen hat. Erster Bericht angenommen → `--outcome angenommen --review-rounds 1`; nach
+einer Nachbesserung per `SendMessage` → `--outcome nacharbeit --review-rounds 2` usw.
 
 Die **Annahmequote beim ersten Wurf** zählt `angenommen` mit `--review-rounds 1` gegen alle geprüften
 Ergebnisse (`--review-rounds` ≥ 1); `--review-rounds 0` wird separat ausgewiesen und nie als Treffer
@@ -516,10 +514,11 @@ python3 tools/studio/log.py milestone --id M5 --status done
 # Retro (Coach; quittiert die genannten Vorfälle)
 python3 tools/studio/log.py retro --id R-2026-10-05-m5 --kind meilenstein --triggers meilenstein:M5,runden:M5-03 --report docs/studio/retros/2026-10-05-meilenstein-m5.md
 
-# Nutzerentscheid-Warteschlange (anlegen, Antwort eintragen, schliessen)
-python3 tools/studio/log.py queue --id N-002 --title "Neue Abhängigkeit" --question "…" --recommendation "…" --reason "…" --cost "…" --blocks M5-03 --from lead-tech
-python3 tools/studio/log.py queue --id N-002 --answer "…"
-python3 tools/studio/log.py queue --id N-002 --done "…"
+# Nutzerentscheid-Warteschlange: anlegen (offen), Antwort eintragen (beantwortet), schliessen (umgesetzt)
+# ID = nächste freie Nummer aus warteschlange.md (höchste N-Nummer + 1)
+python3 tools/studio/log.py queue --id N-002 --title "Neue Abhängigkeit für Pfadsuche" --question "Darf M5 eine Pfadsuch-Bibliothek einbinden?" --recommendation "Nein, eigene A*-Suche in src/sim" --reason "ADR-001: keine Laufzeit-Abhängigkeiten" --cost "M5-03 wartet, M5-04 läuft weiter" --blocks M5-03 --from lead-tech
+python3 tools/studio/log.py queue --id N-002 --answer "Nein, selbst bauen"
+python3 tools/studio/log.py queue --id N-002 --done "M5-03 mit eigener A*-Suche neu gebrieft"
 
 # Budget (nur L0; Aufteilung des Beispiels aus „Budget")
 python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
