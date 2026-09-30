@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.6 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.7 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -103,15 +103,20 @@ ersten Zeilen sind immer die Kopfzeilen für die Telemetrie (Pflicht bei jeder D
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id>
-Schätzung: <n> min, <m> Tools
+Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)
 ```
 
 - `Meilenstein` ordnet den Aufwand einem Meilenstein zu (ohne laufenden Meilenstein: `ohne`).
 - `Schätzung` ist eine **Schätzung** für den ganzen Auftrag inklusive aller Unteraufträge, kein
   Messwert. Das Dashboard stellt sie der gemessenen Dauer und den Tool-Aufrufen gegenüber.
-- Die Schätzung wird aus den Richtwerten in [metriken/richtwerte.md](metriken/richtwerte.md)
-  abgeleitet (Median je Rolle und Plan-Art, summiert über die geplanten Starts inkl. Review und
-  Fix-Runden), nicht aus Menschenzeit (Experiment E-001).
+- **Hauptgrösse sind die Werkzeugaufrufe.** Sie werden aus den Richtwerten in
+  [metriken/richtwerte.md](metriken/richtwerte.md) abgeleitet (Median je Rolle, Modell und
+  Plan-Art, summiert über die geplanten Starts inkl. Review und Fix-Runden), nicht aus Menschenzeit.
+  Die Minuten sind nur abgeleitet (Tools ÷ 4 bis 8, Richtwert ÷ 6). Experiment E-001.
+- Die Kopfzeile **nennt die verwendete Tabellenzeile** in Klammern (z. B.
+  `(Tabellenzeile: lead-tech opus Spec/offen × 2)`), ohne passende Zeile `(keine Tabellenzeile)`.
+  Die Schätzzahlen stehen vor der Klammer, weil die Telemetrie die jeweils erste Angabe mit „Tools“
+  bzw. „min“ liest.
 
 Pflichtpunkte:
 
@@ -282,6 +287,10 @@ Regeln dazu:
   nicht je Agent. Nie zwei Implementierer gleichzeitig im selben Baum; Fix-Runden laufen im selben
   Baum wie das Paket. Der Plan legt je Strang die **Datei-Ownership** fest; niemand ändert Dateien
   eines anderen Strangs.
+- **Dateien ändern:** Code und Code-nahe Mehrzeiler (Quelltext, Tests, Konfiguration, Code-Blöcke
+  in Doku) ändern Agenten mit Edit/Write, nicht mit Shell-Einzeilern (sed, perl, Heredoc).
+  Ausgenommen ist reine Textgenerierung in Doku per Skript (z. B. viele gleichförmige Tabellen- oder
+  CHANGELOG-Einträge); das Ergebnis prüft der Agent mit `git diff` und nennt das Skript im Bericht.
 - **Je Task:** Implementierer + `qa-code-reviewer` (Spec-Konformität und Qualität, Urteil
   OK/BEDENKEN/ZURÜCK). Der Tech-Lead ist Controller und darf dafür die QA-Arbeiter starten; ihren
   Qualitätsmassstab verantwortet der QA-Lead. Nach der Abnahme loggt der abnehmende Lead das
@@ -292,6 +301,11 @@ Regeln dazu:
 - **Final-Review:** durch QA auf `opus`, einmal je Meilenstein über **alle** Strang-Branches gegen
   `main` in einer Review-Session (kombinierter Diff bzw. jeder Strang-Diff), inkl. Balancing-Test
   und Determinismus (gleicher Seed → gleicher Zustand). Nicht abschwächbar (Verfassung §9).
+- **Report bei Final-Review und Playtests:** Pläne und Briefings verlangen **keinen
+  Report-Dateipfad**. Der Schlussbericht ist der Report und liegt archiviert unter
+  `.studio/archiv/berichte/`; Screenshots und Proben legt der Arbeiter weiter unter
+  `.studio/qa/<paket>/` ab. Wird eine Report-Datei gebraucht, legt sie L0 oder der abnehmende Lead
+  aus dem Schlussbericht ab.
 - **Merge:** nur nach dem einen L0-Merge-Gate des Meilensteins, seriell (ein Strang nach dem
   anderen) durch `production-integrator`: `make check` vor dem ersten Merge; je Strang
   `git merge --no-ff --no-commit`, dann `make check` — grün: Merge committen, rot:
@@ -310,7 +324,8 @@ selbst, hält jede Entscheidung als Ruling fest und arbeitet weiter.
 
 1. Anweisung des Nutzers lesen. Ist sie mehrdeutig, wählt L0 die plausibelste Auslegung.
 2. Auslegung als Ruling in [rulings.md](rulings.md) festhalten
-   (`Ruling: Auslegung „…" als … — <warum> — <Kosten bei Irrtum>`).
+   (`Ruling: Auslegung „…" als … — <warum> — <Kosten bei Irrtum>`), mit Zweck-Gegenprobe:
+   `Zweck der Anweisung: …; Auslegung widerspricht ihm nicht, weil …` (Experiment E-003).
 3. Handeln: Auftrag einstufen, Budget freigeben, Leads briefen.
 4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Folgeissue, Lizenz-Grenzfall, Änderung der
    Verfassung, Richtungswechsel des Spiels), kommt er in die Warteschlange — alles andere

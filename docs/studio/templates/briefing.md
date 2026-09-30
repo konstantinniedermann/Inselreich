@@ -1,7 +1,8 @@
 # Vorlage: Briefing
 
 Für jede Delegation (L0 → L1, L1 → L2). Die Kopfzeilen stehen ganz oben im Prompt, weil die
-Telemetrie die ersten 400 Zeichen liest. Regeln: [STUDIO.md](../STUDIO.md), „Briefing-Standard".
+Telemetrie die ersten 400 Zeichen liest. Hauptgrösse der Schätzung sind die Werkzeugaufrufe; die
+Kopfzeile nennt die verwendete Zeile aus `metriken/richtwerte.md` (Experiment E-001). Regeln: [STUDIO.md](../STUDIO.md), „Briefing-Standard".
 Der Block „Feste Regeln" steht wörtlich so in [VERFASSUNG.md §3](../VERFASSUNG.md#3-feste-regeln)
 und wird unverändert kopiert.
 
@@ -9,7 +10,7 @@ und wird unverändert kopiert.
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
-Schätzung: <n> min, <m> Tools (ganzer Auftrag inkl. aller Unteraufträge; aus docs/studio/metriken/richtwerte.md, nicht Menschenzeit)
+Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, Minuten ≈ Tools ÷ 6, nicht Menschenzeit)
 Modell: <opus|sonnet|haiku> (nur nennen, wenn abweichend von der Persona; dann auch im Agent-Aufruf)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten")
 Prozessstufe: <leicht|voll>
@@ -17,7 +18,7 @@ Prozessstufe: <leicht|voll>
 1. Persona und Expertise: <wer du bist, welche Erfahrung zählt hier>
 2. Ziel: <ein Satz> — Warum fürs Spielerlebnis: <ein Satz>
 3. Kontext (nur diese Dateien lesen): <pfad>, <pfad>
-4. Deliverable: <was> unter <ablageort>
+4. Deliverable: <was> unter <ablageort>   (Final-Review und Playtests: kein Report-Dateipfad, der Schlussbericht ist der Report)
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
 6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>
@@ -50,7 +51,7 @@ Ergebnis · Entscheidungsbedarf mit Empfehlung · Risiken · Befunde ausserhalb 
 Persona: tech-sim-engineer
 Paket: M5-02
 Meilenstein: M5
-Schätzung: 25 min, 40 Tools
+Schätzung: 13 Tools, 2 min (Tabellenzeile: tech-sim-engineer sonnet Spec/offen × 1)
 Budget: keins, keine Agenten starten
 Prozessstufe: voll
 

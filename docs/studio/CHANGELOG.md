@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.7
+
+- Anlass: Retro Meilenstein M5 (Vorschläge 1 bis 3)
+- Datenbasis: `docs/studio/retros/2026-09-30-meilenstein-m5.md` (B2, B4, B5, B6), `docs/studio/metriken/M5.md`
+- Ruling: R75
+- Änderungen: Briefing-Standard — Schätzung mit Werkzeugaufrufen als Hauptgrösse, Minuten abgeleitet, Kopfzeile nennt die Tabellenzeile aus `metriken/richtwerte.md` (E-001 angepasst); Autonomie Schritt 2 — Zweck-Gegenprobe im Auslegungs-Ruling (E-003 laufend); Umsetzungszyklus — kein Report-Dateipfad für Final-Review und Playtests, Edit/Write-Regel für Code und Code-nahe Mehrzeiler mit Ausnahme reiner Textgenerierung in Doku per Skript; `templates/briefing.md` (Kopfzeile, Deliverable-Hinweis, Beispiel); `lernen.md` Edit/Write-Zeile ergänzt
+
 ## 2026-09-30 · Handbuch 1.6
 
 - Anlass: Ruling R71 (Korrektur von R69): Modellwahl nach Aufgabe, kein Limit-Downgrade
