@@ -503,7 +503,7 @@ body[data-stale='true'] .grid {
   padding: 10px 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--st, var(--st-idle));
+  border-left: 4px solid var(--dep, var(--border));
   border-radius: 8px;
   min-width: 0;
 }
@@ -512,32 +512,6 @@ body[data-stale='true'] .grid {
   border-style: dashed;
   border-left-style: dashed;
   opacity: 0.8;
-}
-
-.node-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-}
-
-.node-head .role {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.level {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0 5px;
-  border-radius: 4px;
-  background: var(--text);
-  color: var(--card);
-}
-
-.persona {
-  color: var(--muted);
-  font-style: italic;
 }
 
 .task {
@@ -559,10 +533,6 @@ body[data-stale='true'] .grid {
   gap: 4px 8px;
   color: var(--muted);
   font-size: 0.8rem;
-}
-
-.inactive-note {
-  color: var(--danger);
 }
 
 .node.inactive {
@@ -1239,4 +1209,52 @@ time {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 8px;
+}
+
+/* --- Kacheln: zugeklappt / aufgeklappt (Spec Prozess-Graph, K1–K3) ----------- */
+
+.node > summary {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.node > summary::-webkit-details-marker {
+  display: none;
+}
+
+.node-name {
+  font-weight: 700;
+}
+
+.node[data-level='0'] .node-name,
+.node[data-level='1'] .node-name {
+  font-size: 1.05rem;
+}
+
+.node-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.node-status {
+  font-size: 0.85rem;
+}
+
+.node-details {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.node-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.node.highlight {
+  outline: 3px solid var(--dep, var(--border));
+  outline-offset: 2px;
 }

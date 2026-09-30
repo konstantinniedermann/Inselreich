@@ -3,9 +3,9 @@
 
 import {
   DEPARTMENT_LABEL,
-  LEVEL_LABEL,
+  INACTIVE,
+  STATUS,
   PACKAGE_STATUS,
-  STATUS_LABEL,
   ago,
   clock,
   deptChip,
@@ -14,11 +14,13 @@ import {
   knownDepartment,
   knownStatus,
   statusBadge,
+  statusText,
   storageGet,
   storageSet,
   svg,
   syncSelect,
 } from './dom.js';
+import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
 import {
   renderDelegation,
   renderEffort,
@@ -113,7 +115,17 @@ const VIEWS = [
   ['studio', renderStudio],
 ];
 
+function treeKeys(nodes, keys = new Set()) {
+  for (const node of nodes || []) {
+    keys.add(node.key);
+    treeKeys(node.children, keys);
+  }
+  return keys;
+}
+
 function render(state) {
+  const rowIds = new Set(((state.graph && state.graph.rows) || []).map((r) => r.id));
+  dropMissing(treeKeys(state.tree), rowIds);
   for (const [id, view] of VIEWS) {
     try {
       view(state);
@@ -125,6 +137,7 @@ function render(state) {
       }
     }
   }
+  applyFocus(); // Kacheln und Graph sind neu gezeichnet: Fokus-Klassen wieder setzen
 }
 
 // --- Ansichten --------------------------------------------------------------
@@ -146,42 +159,52 @@ function renderSessions(state) {
   }
 }
 
+// Kachel (K1–K3): zugeklappt Emoji + Name, Titel, Status + Kurzaufgabe; Details aufgeklappt.
 function nodeCard(node, showSession) {
   const status = knownStatus(node.status);
-  const level = LEVEL_LABEL[node.level] ?? `L${node.level}`;
   const idle = Number(node.idle_seconds) || 0;
-  const classes = ['node', `st-${status}`, node.inactive ? 'inactive' : ''].join(' ').trim();
-  const chips = el(
-    'div',
-    { class: 'chips' },
-    deptChip(node.department),
-    node.model ? el('span', { class: 'chip model' }, node.model) : null,
-    node.package ? el('span', { class: 'chip pkg' }, node.package) : null,
-    showSession
-      ? el('span', { class: 'chip' }, `Session ${String(node.session_id).slice(0, 8)}`)
-      : null,
-  );
+  const classes = [
+    'node',
+    `st-${status}`,
+    `dep-${knownDepartment(node.department)}`,
+    node.inactive ? 'inactive' : '',
+  ]
+    .join(' ')
+    .trim();
+  const state = statusText(node.status, node.inactive ? idle : null);
+  const meta = [
+    node.model,
+    node.package,
+    showSession ? `Session ${String(node.session_id).slice(0, 8)}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const card = el(
-    'article',
-    { class: classes, 'data-level': String(node.level) },
+    'details',
+    {
+      class: classes,
+      'data-level': String(node.level),
+      'data-key': node.key,
+      open: openNodes.has(node.key) ? '' : null,
+    },
+    el(
+      'summary',
+      { class: 'node-summary' },
+      el('span', { class: 'node-name' }, `${node.emoji || ''} ${node.name || node.role}`.trim()),
+      el('span', { class: 'node-title' }, node.title || node.role || ''),
+      el(
+        'span',
+        { class: 'node-status' },
+        node.task_short ? `${state} · ${node.task_short}` : state,
+      ),
+    ),
     el(
       'div',
-      { class: 'node-head' },
-      el('span', { class: 'level' }, level),
-      el('span', { class: 'role' }, node.role || 'unbekannt'),
-      statusBadge(node.status),
-    ),
-    node.persona && node.persona !== node.role ? el('p', { class: 'persona' }, node.persona) : null,
-    chips,
-    node.task ? el('p', { class: 'task' }, node.task) : null,
-    node.summary ? el('p', { class: 'summary' }, `Ergebnis: ${node.summary}`) : null,
-    el(
-      'p',
-      { class: 'seen' },
-      `Lebenszeichen ${ago(idle)}`,
-      node.inactive
-        ? el('strong', { class: 'inactive-note' }, `inaktiv seit ${Math.floor(idle / 60)} min`)
-        : null,
+      { class: 'node-details' },
+      meta ? el('p', { class: 'node-meta' }, meta) : null,
+      node.task ? el('p', { class: 'task' }, node.task) : null,
+      node.summary ? el('p', { class: 'summary' }, `Ergebnis: ${node.summary}`) : null,
+      el('p', { class: 'seen' }, `Lebenszeichen ${ago(idle)}`),
     ),
   );
   if (node.inactive) card.style.animationDelay = `-${Date.now() % INACTIVE_PULSE_MS}ms`;
@@ -215,10 +238,12 @@ function renderOrg(state) {
 
 function renderCounts(state) {
   const counts = state.counts || {};
-  const tiles = Object.keys(STATUS_LABEL).map((status) =>
-    countTile(`st-${status}`, STATUS_LABEL[status], counts[status] || 0),
+  const tiles = Object.keys(STATUS).map((status) =>
+    countTile(`st-${status}`, statusText(status), counts[status] || 0),
   );
-  tiles.push(countTile('tile-inactive', 'inaktiv', counts.inactive || 0));
+  tiles.push(
+    countTile('tile-inactive', `${INACTIVE.emoji} ${INACTIVE.label}`, counts.inactive || 0),
+  );
   document.getElementById('counts').replaceChildren(...tiles);
 }
 
@@ -554,6 +579,13 @@ function showTab() {
   }
 }
 window.addEventListener('hashchange', showTab);
+// Kachel-Klick = Agent fokussieren (K5, P28); das native Auf-/Zuklappen übernimmt focus.js.
+document.getElementById('org').addEventListener('click', (event) => {
+  const summary = event.target.closest('summary');
+  if (!summary) return;
+  event.preventDefault();
+  toggleNode(summary.parentElement.dataset.key);
+});
 showTab();
 setupTheme();
 poll();
