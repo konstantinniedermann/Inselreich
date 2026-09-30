@@ -4,7 +4,9 @@ import { TILE, clampCamera, screenToTile, zoomAt } from '../render/camera';
 import type { GameState } from './app';
 
 export type InputAction =
-  { type: 'tile'; x: number; y: number; dragging: boolean } | { type: 'cancel' };
+  | { type: 'tile'; x: number; y: number; dragging: boolean }
+  | { type: 'cancel' }
+  | { type: 'dragEnd' };
 
 const PAN_PER_FRAME = 16;
 const DRAG_THRESHOLD = 4;
@@ -149,12 +151,15 @@ export function bindInput(
     drag = null;
     if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     if (d.panning || d.button !== 0) return;
+    if (state.tool.kind === 'road') onAction({ type: 'dragEnd' });
     // Strassen wurden schon beim Drücken/Ziehen gesetzt
     if (state.tool.kind !== 'road') tileAction(p.sx, p.sy, false);
     updateHover();
   };
   const onPointerCancel = (): void => {
+    const wasRoadDrag = drag !== null && !drag.panning && state.tool.kind === 'road';
     drag = null;
+    if (wasRoadDrag) onAction({ type: 'dragEnd' });
   };
 
   const onPointerLeave = (): void => {

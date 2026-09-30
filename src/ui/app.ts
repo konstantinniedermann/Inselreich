@@ -9,7 +9,7 @@ import { TILE, clampCamera, createCamera, type Camera } from '../render/camera';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { updateHud, type HudActions } from './hud';
+import { disposeHud, updateHud, type HudActions } from './hud';
 import { bindInput, type InputAction } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
@@ -42,20 +42,49 @@ function need<T extends HTMLElement>(root: HTMLElement, selector: string): T {
 
 export type RunningGame = GameState & { dispose(): void };
 
-/** Das laufende Spiel; `restart` beendet es, bevor ein neues startet. */
-let current: RunningGame | null = null;
+/** Ergebnis von `startGame`: bei einem Startfehler nur ein Stub, dessen `dispose` aufräumt. */
+export interface Startable {
+  dispose(): void;
+}
+
+/** Das laufende Spiel (oder der Fehler-Stub); `restart` beendet es, bevor ein neues startet. */
+let current: Startable | null = null;
 
 /** Beendet das laufende Spiel und startet mit `world` bzw. einer neuen Karte. */
-function restart(root: HTMLElement, world?: World): RunningGame {
+function restart(root: HTMLElement, world?: World): Startable {
   current?.dispose();
   current = null;
   return startGame(root, world);
 }
 
-/** Startet ein Spiel mit `world` (geladener Stand) oder einer neuen Karte. */
-export function startGame(root: HTMLElement, loaded?: World): RunningGame {
+/**
+ * Startet ein Spiel mit `world` (geladener Stand) oder einer neuen Karte. Wirft nie: schlägt der
+ * Start fehl (z. B. keine gültige Karte), erscheint ein sticky Toast und `current` zeigt auf einen
+ * Stub, der nur die Meldungsfläche wieder entfernt.
+ */
+export function startGame(root: HTMLElement, loaded?: World): Startable {
+  let unbindMessages = (): void => {};
+  try {
+    const gameEl = need<HTMLElement>(root, '#game');
+    unbindMessages = bindMessages(gameEl);
+    return launch(root, gameEl, unbindMessages, loaded);
+  } catch (err) {
+    console.error(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    showMessage(`Spiel konnte nicht gestartet werden: ${msg}`, 'error', true);
+    const stub: Startable = { dispose: unbindMessages };
+    current = stub;
+    return stub;
+  }
+}
+
+function launch(
+  root: HTMLElement,
+  gameEl: HTMLElement,
+  unbindMessages: () => void,
+  loaded?: World,
+): RunningGame {
   const canvas = need<HTMLCanvasElement>(root, '#canvas');
-  const gameEl = need<HTMLElement>(root, '#game');
   const hudEl = need<HTMLElement>(root, '#hud');
   const navEl = need<HTMLElement>(root, '#buildbar');
   const panelEl = need<HTMLElement>(root, '#panel');
@@ -77,8 +106,6 @@ export function startGame(root: HTMLElement, loaded?: World): RunningGame {
   const worldW = world.width * TILE;
   const worldH = world.height * TILE;
   const view = { w: 1, h: 1 };
-
-  const unbindMessages = bindMessages(gameEl);
 
   const actions: HudActions = {
     save: () => {
@@ -180,6 +207,10 @@ export function startGame(root: HTMLElement, loaded?: World): RunningGame {
       selectTool({ kind: 'select' });
       return;
     }
+    if (a.type === 'dragEnd') {
+      dragMoneyToastShown = false;
+      return;
+    }
     if (!a.dragging) dragMoneyToastShown = false;
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
@@ -269,6 +300,7 @@ export function startGame(root: HTMLElement, loaded?: World): RunningGame {
     resizeObserver.disconnect();
     input.unbind();
     unbindMessages();
+    disposeHud(hudEl);
     hudEl.replaceChildren();
     navEl.replaceChildren();
     panelEl.replaceChildren();

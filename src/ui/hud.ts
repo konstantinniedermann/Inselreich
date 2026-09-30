@@ -36,8 +36,17 @@ function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): H
   return btn;
 }
 
+/** Aufräumfunktionen (Bestätigungs-Timer) je HUD-Element. */
+const cleanups = new WeakMap<HTMLElement, () => void>();
+
+/** Stoppt den Bestätigungs-Timer von „Neu"; beim Beenden des Spiels aufrufen. */
+export function disposeHud(header: HTMLElement): void {
+  cleanups.get(header)?.();
+  cleanups.delete(header);
+}
+
 /** Speichern, Laden und Neu; „Neu" verlangt einen zweiten Klick innert NEW_CONFIRM_MS. */
-function renderGameButtons(box: Element, actions: HudActions): void {
+function renderGameButtons(box: Element, actions: HudActions): () => void {
   let confirmTimer: ReturnType<typeof setTimeout> | null = null;
   const newBtn = gameButton('Neu', (btn) => {
     if (confirmTimer === null) {
@@ -58,6 +67,10 @@ function renderGameButtons(box: Element, actions: HudActions): void {
     gameButton('Laden', () => actions.load()),
     newBtn,
   );
+  return () => {
+    if (confirmTimer !== null) clearTimeout(confirmTimer);
+    confirmTimer = null;
+  };
 }
 
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
@@ -103,7 +116,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       speedBox?.appendChild(btn);
     }
     const gameBox = header.querySelector('.hud-game');
-    if (gameBox) renderGameButtons(gameBox, actions);
+    if (gameBox) cleanups.set(header, renderGameButtons(gameBox, actions));
   }
   const { world } = state;
   setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
