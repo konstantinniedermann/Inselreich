@@ -201,7 +201,8 @@ Ergebnis = floor(acc / 100)
 ```
 
 Gebucht wird genau dieser Betrag, einmal je Verkaufsaktion. **Änderung der Signatur:** bisher
-`sellPrice(good, n)`; alle Aufrufer (`src/ui/trade.ts`, `tests/sim/trade.test.ts`) werden nachgeführt. Der
+`sellPrice(good, n)`; S2 führt alle Aufrufer nach: `tests/sim/trade.test.ts` und als einzige benannte
+Ownership-Ausnahme den einen Aufruf in `src/ui/trade.ts` (Abschnitt 13). Der
 bestehende Testwert `sellPrice('rum', 3) = 54` wird bewusst zu `sellPrice(world, 'rum', 3) = 53`
 (18 × (100 + 99 + 98) / 100 = 53.46).
 
@@ -415,7 +416,10 @@ Grundfarbton je Kategorie (`BUILDING_COLORS`) bleibt; die Kategorie ist am Farbt
 
 Der rote Punkt für „nicht angebunden" bleibt. Die Silhouettentabelle ist als
 `Partial<Record<BuildingDefId, …>>` mit Fallback (Kategorie-Grundform) angelegt, damit ein neuer Gebäudetyp
-aus dem Sim-Strang ohne Renderer-Änderung kompiliert (**Setzung Spec**, betrifft S4).
+aus dem Sim-Strang ohne Renderer-Änderung kompiliert (**Setzung Spec**, betrifft S4). Heute ist
+`BUILDING_ABBR` in `src/render/sprites.ts` ein vollständiges `Record<BuildingDefId, string>`; erweitert S4
+`BuildingDefId`, bricht der Build, solange die Tabelle nicht umgestellt ist. **A1 muss deshalb vor S4 gemergt
+sein** (Abhängigkeit in Abschnitt 13).
 
 ### 9.2 Animationen (A1)
 
@@ -633,13 +637,17 @@ Render-Strang**: Radiusanzeige und Bedarfssymbole zeichnet der Render-Strang (A3
 Sim-Funktionen (S3), Werkzeug und Hover reicht die UI über `Hover` durch (9.8). Die Weg-Nähte
 (`camera.ts`, `sprites.ts`) gehören ebenfalls dem Render-Strang.
 
+**Einzige benannte Ausnahme:** S2 passt in `src/ui/trade.ts` genau den einen Aufruf von `sellPrice` an die neue
+Signatur `sellPrice(world, good, n)` an (nur Signatur, kein UI-Umbau), damit `make check` nach S2 grün ist.
+U1 (Q4) und U3 bearbeiten `src/ui/trade.ts` deshalb erst nach S2.
+
 | Paket       | Inhalt                                                                                     | Strang / Rolle                          | Dateien                                                                                                                                                                                         | hängt ab von                  |
 | ----------- | ------------------------------------------------------------------------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | S1          | Save v2 mit allen neuen Feldern, Migration, Steuerregler                                   | Sim · tech-sim-engineer (+ tech-save-engineer) | `types.ts`, `defs/tiers.ts`, `defs/timing.ts` (`TAX_SWITCH_LOCK`), `world.ts`, `save.ts`, `population.ts`, `tax.ts` (neu), `tests/sim/save.test.ts`, `tests/sim/taxes.test.ts`, `tests/sim/fixtures/save-v1.json` (neu) | Spec, M5-01 gemergt           |
-| S2          | Verkaufssättigung, Handelsaufträge, Tick-Reihenfolge                                       | Sim · tech-sim-engineer                 | `defs/goods.ts`, `defs/timing.ts` (Sättigung, Aufträge), `trade.ts`, `orders.ts` (neu), `tick.ts`, `tests/sim/trade.test.ts`, `tests/sim/orders.test.ts` (neu), `tests/sim/tick.test.ts`          | S1                            |
+| S2          | Verkaufssättigung, Handelsaufträge, Tick-Reihenfolge                                       | Sim · tech-sim-engineer                 | `defs/goods.ts`, `defs/timing.ts` (Sättigung, Aufträge), `trade.ts`, `orders.ts` (neu), `tick.ts`, `tests/sim/trade.test.ts`, `tests/sim/orders.test.ts` (neu), `tests/sim/tick.test.ts`; Ausnahme: ein Aufruf in `src/ui/trade.ts` | S1                            |
 | S3          | Sim-Abfragen (8)                                                                           | Sim · tech-sim-engineer                 | `queries.ts` (neu), `tests/sim/queries.test.ts` (neu)                                                                                                                                           | Spec; `nextOrderTick` nach S2 |
-| S4 (Kann)   | Werkzeugmacher                                                                             | Sim · tech-sim-engineer                 | `types.ts` (`BuildingDefId`), `defs/buildings.ts`, `tests/sim/toolmaker.test.ts` (neu)                                                                                                          | S1                            |
-| U1          | Befunde Q1–Q6                                                                              | UI · tech-ui-engineer                   | `input.ts` (Q1–Q3), `trade.ts` (Q4), `inspect.ts` (Q5), `app.ts` (Q6)                                                                                                                           | Spec; Q5 nach S3              |
+| S4 (Kann)   | Werkzeugmacher                                                                             | Sim · tech-sim-engineer                 | `types.ts` (`BuildingDefId`), `defs/buildings.ts`, `tests/sim/toolmaker.test.ts` (neu)                                                                                                          | S1, A1                        |
+| U1          | Befunde Q1–Q6                                                                              | UI · tech-ui-engineer                   | `input.ts` (Q1–Q3), `trade.ts` (Q4), `inspect.ts` (Q5), `app.ts` (Q6)                                                                                                                           | Spec; Q4 nach S2, Q5 nach S3  |
 | U2          | Tooltips, Hotkeys, Autosave, Einstellungen, Ton-Anbindung, Ton-/Tag-Nacht-Schalter          | UI · tech-ui-engineer                   | `buildMenu.ts`, `input.ts`, `storage.ts`, `settings.ts` (neu), `app.ts`, `hud.ts`, `messages.ts`, `index.html`, `src/style.css`                                                                 | U1 (gleiche Dateien), A2 (Audio-API) |
 | U3          | Warenbilanz, Info-Panel über `houseDiagnosis`, Steuerregler-, Auftrags- und Preis-UI        | UI · tech-ui-engineer                   | `hud.ts`, `inspect.ts`, `trade.ts`, `order.ts` (neu), `app.ts`, `src/style.css`                                                                                                                 | S1, S2, S3, U2                |
 | A1          | Gebäudegrafik, Animationen, Händlerschiff, Weg-Nähte (Q7), `RenderFx`                      | Render · art-rendering-engineer         | `sprites.ts`, `camera.ts`, `renderer.ts`, `terrain.ts`, `tests/render/camera.test.ts`                                                                                                           | Spec; Händlerschiff nach S1 (`order`-Feld) |
@@ -880,7 +888,7 @@ B1 4).
 | Hauptspec 3.7, arc42 8 Persistenz           | ein Speicherplatz                                 | zusätzlich Autosave-Slot; Einstellungen in eigenem Schlüssel            |
 | arc42 8 Determinismus                       | „Die Simulation nutzt keinen Zufall"              | seed-abgeleiteter Zufall je Auftragsperiode über `rng.ts`, ohne gespeicherten Strom |
 | ADR-005                                     | Reihenfolge bis Sieg; Takte `tick % INTERVAL`     | Markt-Erholung und Aufträge vor Sieg; Auftragstakt mit Versatz 600      |
-| `sellPrice`-Signatur                        | `sellPrice(good, n)`                              | `sellPrice(world, good, n)`                                             |
+| `sellPrice`-Signatur                        | `sellPrice(good, n)`                              | `sellPrice(world, good, n)`; S2 passt den Aufruf in `src/ui/trade.ts` als einzige Ownership-Ausnahme an |
 
 Keine Änderung an ADR-001 (keine Abhängigkeit), ADR-002 (Sim bleibt DOM-frei; Render und Audio lesen nur) und
 ADR-006 (keine Assets).
@@ -904,7 +912,7 @@ ADR-006 (keine Assets).
 
 1. **„Niedrig" wirkt im Playtest wertlos.** Solange Geld der Engpass ist, bleibt „niedrig" bewusst schwach.
    *Empfehlung:* nach dem M5-Playtest prüfen; der nächste Hebel ist `upgradeWait` 100, nicht der Steuerfaktor.
-2. **ADR für seed-abgeleiteten Zufall.** Aufträge brauchen erstmals Zufall in der Sim. *Empfehlung:* kurzes ADR-007
+2. **ADR für seed-abgeleiteten Zufall.** Aufträge brauchen erstmals Zufall in der Sim. *Empfehlung:* kurzes ADR-010
   „Zufall je Periode aus Seed statt RNG-Strom im Save" mit S2, damit spätere Ereignisse (M6) denselben Weg nehmen.
 3. **Fixture-Grösse.** `save-v1.json` ist mit 4096 Kacheln etwa 200 KB. *Empfehlung:* akzeptieren; es ist der einzige
    echte Schutz für die Migration. Alternative bei Einwand: v1-Stand im Test aus `createWorld` erzeugen und die neuen Felder entfernen (kleiner, aber schwächer).
