@@ -14,6 +14,8 @@ Stand: 2026-09-30 (Übergabe Session 664ac8d3 bei 77 % Kontext)
   - **M7 „Stimmung"** (lead-art) — Phase Spec; Gate Brainstorming bestanden mit Auflagen (R77):
     Vertical Slice zuerst, Vorher/Nachher-Bilder an den Nutzer.
   - **M6 „Krisen und Stadtdienste"** (lead-design) — Phase Spec; Entscheide R74; K-C → M8.
+- **M9 „Weite Welt"** vorgemerkt (R82): grössere Welt, Grafik und Stimmung Richtung Anno 1602.
+  Start erst nach M7 und nur, wenn keine andere L0-Session läuft; bis dahin kein Paket.
 - **Desktop-first** ist Dauerregel (R78, Projekt-CLAUDE.md); Mobil kein Ziel.
 - Studio: Verfassung 1.1, Handbuch 1.7 (R75: E-001 angepasst, E-003 läuft). Limit-Sensor in
   Betrieb (R80) — Hook-Zeile zeigt Woche/Kontext.

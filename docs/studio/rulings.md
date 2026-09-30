@@ -857,3 +857,20 @@ Warum: M6 bringt Entscheidungsdichte, Fortschrittstiefe fehlt; der Nutzer verlan
 Kosten bei Irrtum: Spec-Arbeit M8 früher als nötig.
 
 Entscheider: L0 · Anlass: Bericht lead-design M6-SPEC
+
+## R82 · 2026-09-30 · M9
+
+Ruling: Nutzeranweisung „nächster Meilenstein: die Welt wird grösser und schöner, Fokus auf
+grafische Elemente und Stimmung; festhalten für später, wenn keine andere Session läuft" wird als
+**M9 „Weite Welt"** vorgemerkt (M8 ist durch R81 belegt). Inhalt (Richtung, keine Spec): grössere
+Karte und mehr Inseln, reichere Grafik (Gebäude, Terrain, Wasser, Vegetation, Figuren) und
+Stimmung auf dem Niveau-Ziel Anno 1602; baut auf dem M7-Vertical-Slice auf. Pflichtfragen fürs
+Brainstorming: Zeichentechnik (Canvas 2D reicht? sonst WebGL als eigener Render-Strang mit ADR),
+Frame-Budget bei grosser Karte (Chunk-Caching, Culling), Asset-Grösse im Repo (ggf. Git LFS),
+Hosting bleibt GitHub Pages bis Verkauf, Online-Funktionen oder Desktop-App. **Start erst, wenn
+keine andere L0-Session läuft** (Tabelle „Parallele Sessions" in state.md leer bzw. nur
+„übergeben") und M7 abgeschlossen ist; bis dahin kein Paket, kein Budget. Lead: lead-art, Prüfer
+lead-design und lead-tech. — Warum: ausdrückliche Anweisung des Nutzers; Parallelbetrieb mit M6–M8
+würde render/ doppelt belegen. — Kosten bei Irrtum: keine, nur Vormerkung.
+
+Entscheider: L0 · Anlass: Nutzeranweisung
