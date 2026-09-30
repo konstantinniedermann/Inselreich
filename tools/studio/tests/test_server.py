@@ -25,8 +25,27 @@ class ServerTest(unittest.TestCase):
         secret = Path(self.tmp.name) / "secret.txt"
         secret.write_text("geheim", "utf-8")
         os.symlink(secret, self.dash / "link.txt")
+        self.docs = Path(self.tmp.name) / "docs"
+        self.docs.mkdir()
+        (self.docs / "STUDIO.md").write_text("Version: 1.0\n", "utf-8")
+        (self.docs / "warteschlange.md").write_text(
+            "# Warteschlange\n\n---\n\n"
+            "## N-001 · offen · 2026-09-30 · Frage\n- Frage: x\n",
+            "utf-8",
+        )
+        self.archive = Path(self.tmp.name) / "archiv"
+        (self.archive / "briefings").mkdir(parents=True)
+        (self.archive / "briefings" / "a.md").write_text("Brief", "utf-8")
+        (self.archive / "briefings" / "b.html").write_text("x", "utf-8")
+        os.symlink(secret, self.archive / "briefings" / "out.md")
         self.httpd = server.make_server(
-            0, events, Path(self.tmp.name), 300.0, dashboard=self.dash
+            0,
+            events,
+            Path(self.tmp.name),
+            300.0,
+            dashboard=self.dash,
+            docs=self.docs,
+            archive=self.archive,
         )
         self.port = self.httpd.server_address[1]
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
@@ -94,6 +113,35 @@ class ServerTest(unittest.TestCase):
             self.assertEqual(status, 403, path)
         ok = self.get("/", headers={"Host": f"localhost:{self.port}"})
         self.assertEqual(ok[0], 200)
+
+    def test_state_contains_docs_and_new_fields(self):
+        state = json.loads(self.get("/api/state")[2])
+        self.assertEqual(state["docs"]["handbook_version"], "1.0")
+        self.assertEqual(len(state["docs"]["queue"]), 1)
+        for key in ("delegations", "effort", "quality", "incidents"):
+            self.assertIn(key, state)
+
+    def test_archive_serves_text(self):
+        status, ctype, body = self.get("/archiv/briefings/a.md")
+        self.assertEqual(status, 200)
+        self.assertTrue(ctype.startswith("text/plain"))
+        self.assertEqual(body, b"Brief")
+
+    def test_archive_rejects_bad_paths(self):
+        for path in (
+            "/archiv/../events.jsonl",
+            "/archiv/%2e%2e/events.jsonl",
+            "/archiv/briefings/b.html",
+            "/archiv/briefings/out.md",
+            "/archiv/briefings",
+            "/archiv/briefings/%00.md",
+            "/archiv/",
+        ):
+            self.assertEqual(self.get(path)[0], 404, path)
+
+    def test_archive_foreign_host_rejected(self):
+        status, _, _ = self.get("/archiv/briefings/a.md", headers={"Host": "evil"})
+        self.assertEqual(status, 403)
 
     def test_internal_error_is_500_and_server_survives(self):
         with mock.patch.object(server, "build_state", side_effect=RuntimeError("x")):
