@@ -196,6 +196,8 @@ def to_event(p: dict, handbook: str = "", personas: dict | None = None) -> dict 
         ):
             if response.get(source) is not None:  # totalTokens bewusst ignoriert
                 event[key] = response[source]
+        if response.get("status") is not None:
+            event["status"] = str(response["status"])
     else:
         return None
     return event

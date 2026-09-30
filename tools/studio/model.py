@@ -433,6 +433,20 @@ class _Builder:
         entry = self.spawns.get((sid, str(event.get("tool_use_id") or "")))
         if entry is not None:
             self.assign(sid, child, entry, reparent=False)
+        # Vordergrund-Agent ohne SubagentStop (z. B. web-fetch): status entscheidet
+        if event.get("status") == "completed" and child["status"] not in (
+            "done",
+            "failed",
+        ):
+            child["status"], child["stopped"] = "done", ts
+            if not child["_runs"]:  # nur Heartbeats: Lauf aus gemeldeter Dauer
+                ms = event.get("duration_ms")
+                begin = ts - ms / 1000 if isinstance(ms, (int, float)) else None
+                child["_runs"].append(
+                    [child["started"] if begin is None else begin, ts]
+                )
+            self.close_run(child, ts)
+            self.add_chronicle(child, ts, child["summary"] or child["task"])
 
     def on_agent_start(self, event, ts, sid):
         typ = event.get("role") or "general-purpose"

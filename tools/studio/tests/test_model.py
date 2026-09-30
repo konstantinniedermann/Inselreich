@@ -648,6 +648,92 @@ class RobustnessTest(unittest.TestCase):
         self.assertEqual(nodes["s1:W1"]["idle_seconds"], 100)
         self.assertEqual(nodes["s1:main"]["idle_seconds"], 598)
 
+    def test_spawned_completed_closes_heartbeat_only_node(self):
+        events = [
+            ev("turn_end", 1, status="idle"),
+            ev("heartbeat", 2, agent_id="W1", tool="WebFetch"),
+            ev("spawned", 5, child_id="W1", status="completed"),
+        ]
+        state = build(events, now=5 + 1000)
+        node = flat(state)["s1:W1"]
+        self.assertEqual(node["status"], "done")
+        self.assertIsNotNone(node["stopped"])
+        self.assertFalse(node["inactive"])
+        self.assertEqual(state["counts"]["inactive"], 0)
+
+    def test_observed_foreground_sequence_ends_at_spawned_ts(self):
+        # Spawn (Vordergrund), 2 Heartbeats des Kindes, spawned nach 31 s
+        events = [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", "web-fetch", tool_use_id="t1", background=False),
+            ev("heartbeat", 3, agent_id="W1", tool="WebFetch"),
+            ev("heartbeat", 20, agent_id="W1", tool="WebFetch"),
+            ev(
+                "spawned",
+                32,
+                child_id="W1",
+                tool_use_id="t1",
+                status="completed",
+                duration_ms=31000,
+            ),
+        ]
+        state = build(events, now=32 + 5000)
+        nodes = flat(state)
+        node = nodes["s1:W1"]
+        self.assertEqual(node["status"], "done")  # Punkt 1: done
+        self.assertEqual(node["stopped"], T0 + 32)  # stopped == ts von spawned
+        self.assertFalse(node["inactive"])  # kein inaktiv-Vorfall
+        self.assertEqual(state["counts"]["inactive"], 0)
+        rows = [d for d in state["delegations"] if d["to"] == "web-fetch"]
+        self.assertEqual(len(rows), 1)  # Dauer endet bei ~31 s, nicht bei now
+        self.assertAlmostEqual(rows[0]["duration_s"], 31.0, delta=1.0)
+
+    def test_spawned_completed_keeps_regular_stop_and_failed(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "L1", "lead-qa"),
+            stop(3, "L1", "lead-qa", summary="fertig"),
+            ev("spawned", 4, child_id="L1", status="completed"),
+        ]
+        node = flat(build(events))["s1:L1"]
+        self.assertEqual(node["status"], "done")
+        self.assertEqual(node["stopped"], T0 + 3)
+
+    def test_spawned_completed_keeps_failed_node(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "a1", "lead-qa"),
+            log_status(3, "lead-qa", "failed"),
+            ev("spawned", 4, child_id="a1", status="completed"),
+        ]
+        node = flat(build(events))["s1:a1"]
+        self.assertEqual(node["status"], "failed")
+        self.assertEqual(node["stopped"], T0 + 3)
+
+    def test_stop_after_spawned_completed_is_done_without_double_chronicle(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            ev("heartbeat", 2, agent_id="W1", tool="WebFetch"),
+            ev("spawned", 5, child_id="W1", status="completed"),
+            stop(6, "W1", "web-fetch", summary="Seite gelesen"),
+        ]
+        state = build(events)
+        node = flat(state)["s1:W1"]
+        self.assertEqual(node["status"], "done")
+        self.assertEqual(node["stopped"], T0 + 6)
+        self.assertEqual([c["text"] for c in state["chronicle"]], ["Seite gelesen"])
+
+    def test_spawned_async_launched_stays_active(self):
+        events = [
+            ev("heartbeat", 2, agent_id="W1", tool="Read"),
+            ev("spawned", 5, child_id="W1", status="async_launched"),
+            ev("spawned", 6, child_id="W2"),
+        ]
+        nodes = flat(build(events, now=10))
+        self.assertIsNone(nodes["s1:W1"]["stopped"])  # Gegenprobe: nicht geschlossen
+        self.assertEqual(nodes["s1:W1"]["status"], "active")
+        self.assertEqual(nodes["s1:W2"]["status"], "active")
+
     def test_blocked_by_string_is_split(self):
         events = [
             ev(
