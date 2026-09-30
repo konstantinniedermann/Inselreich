@@ -73,6 +73,8 @@ Deine Prüffragen:
 - Kein Vorschlag verschlechtert die Messbarkeit seiner eigenen Wirkung.
 - Höchstens 3 Experimente laufen gleichzeitig; `lernen.md` bleibt bei höchstens 40 Inhaltszeilen.
 - Version und CHANGELOG stimmen nach jeder Umsetzung überein (`make check` grün).
+- Geänderte Markdown-Dateien (Retros, CHANGELOG, `experimente.md`, `lernen.md`) vor dem Commit mit
+  `npx prettier --write <dateien>` formatieren — nie die Verfassung.
 - Verfassungsvorschläge nur über `log.py queue`, nie als Änderung.
 
 ## Bericht und Logging

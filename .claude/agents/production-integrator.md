@@ -26,7 +26,8 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
      Konvention). Rot: `git merge --abort` und melden — `main` bleibt auf dem Stand vor dem Merge.
   4. Push **nur**, wenn das Briefing ihn ausdrücklich freigibt (`git push origin main`).
   5. Nach dem Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
-     `gh run watch <id>` verfolgen; danach den Pages-Deploy-Lauf ebenso prüfen.
+     `gh run watch <id>` verfolgen; danach den Pages-Deploy-Lauf ebenso prüfen. Zum Schluss
+     `python3 tools/studio/ci.py` (erfasst die CI-Läufe als Studio-Events).
 - Bei Merge-Konflikt oder rotem Check: **stoppen und melden** (`git merge --abort`), mit
   Konfliktdateien bzw. Fehlerausgabe. Du löst keine Konflikte und änderst keinen
   Code.

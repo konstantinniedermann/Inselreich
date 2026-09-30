@@ -268,7 +268,8 @@ Regeln dazu:
   anderen) durch `production-integrator`: `make check` vor dem ersten Merge; je Strang
   `git merge --no-ff --no-commit`, dann `make check` — grün: Merge committen, rot:
   `git merge --abort` und melden. Push laut Verfassung §7 (`make check` grün vor dem Push), danach
-  CI-Status (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen. CI rot → die Behebung
+  CI-Status (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen und nach jedem Push
+  `python3 tools/studio/ci.py` ausführen (CI-Läufe als Studio-Events). CI rot → die Behebung
   hat Vorrang, der Vorfall löst eine Ad-hoc-Retro aus. Bei Konflikten stoppen und melden; nie
   `--force`, nie `reset --hard` (Verfassung §6).
 
@@ -302,26 +303,33 @@ python3 tools/studio/log.py package --id M5-03 --title "Pfadsuche" --owner lead-
 ```
 
 **Antworten des Nutzers** kommen in einer beliebigen Session („N-002: …" im Prompt oder die Zeile
-„Antwort" in der Datei). L0 setzt sie **in jeder Session zuerst** um: Antwort eintragen
+„Antwort" in der Datei; eine dort eingetragene Antwort gilt auch bei Status `offen`, Start-Kontext
+und Dashboard zeigen sie). L0 setzt sie **in jeder Session zuerst** um: Antwort eintragen
 (`--answer`), umsetzen, schliessen (`--done`), blockiertes Paket wieder freigeben.
 
 **Guard** (`tools/studio/guard.py`, PreToolUse-Hook für L0, Leads und Arbeiter; Verfassung §1.3
 und §6). Er weist mit Begründung ab:
 
-| Verboten                                    | Beispiele                                                                                                          |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Force-Push, Löschen entfernter Branches     | `git push --force`, `-f`, `--mirror`, `--delete`, Refspec mit `+` oder `:`                                         |
-| Löschen von Branches mit ungemergter Arbeit | `git branch -D`, `git branch --delete --force`                                                                     |
-| Umschreiben der History                     | `git rebase` (ausser `--abort`), `git reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`, `stash clear` |
-| Verlust ungesicherter Arbeit                | `git clean -f`, `git worktree remove --force`                                                                      |
-| Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` ausserhalb des Hauptrepos (erlaubt: Temp- und Scratchpad-Ordner)         |
-| Schreiben auf die Verfassung und den Guard  | Edit/Write auf `VERFASSUNG.md` oder `guard.py`, schreibende Bash-Befehle, die sie nennen                           |
+| Verboten                                    | Beispiele                                                                                                                                                         |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Force-Push, Löschen entfernter Branches     | `git push --force`, `-f`, `--mirror`, `--delete`, Refspec mit `+` oder `:`                                                                                        |
+| Löschen von Branches mit ungemergter Arbeit | `git branch -D`, `git branch --delete --force`                                                                                                                    |
+| Umschreiben der History                     | `git rebase` (ausser `--abort`), `git reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`/`reflog delete`, `update-ref -d`/`--delete`, `gc --prune=now` |
+| Verlust ungesicherter Arbeit                | `git clean -f`, `git worktree remove --force`, `git stash drop`, `git stash clear`                                                                                |
+| Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` ausserhalb des Hauptrepos (erlaubt: Temp- und Scratchpad-Ordner)                                                        |
+| Schreiben auf die Verfassung und den Guard  | Edit/Write auf `VERFASSUNG.md` oder `guard.py`, schreibende Bash-Befehle, die sie nennen                                                                          |
 
 - **Bewusst nicht verboten:** Verwerfen ungesicherter Änderungen im Arbeitsbaum
   (`git checkout -- <pfad>`, `git restore`, `git switch --discard-changes`) — das steht nicht auf
   der Liste des Nutzers und wird fürs Aufräumen gebraucht.
+- **Stash:** `git stash push`/`apply` sind erlaubt, `drop` und `clear` verboten. Zum Zwischenparken
+  deshalb einen temporären WIP-Commit statt eines Stash verwenden.
 - **Bekannte Grenzen:** Der Guard erkennt keine Befehle in Backticks bzw. `$(…)`, über `xargs`,
-  über Globs oder in Skripten. Er schützt **gegen Versehen, nicht gegen Absicht**; das Verbot der
+  über Globs oder in Skripten. Er erkennt auch nicht: das Löschen ganzer Ordner, die geschützte
+  Dateien enthalten (`rm -rf docs/studio`, `git rm -r docs/studio`), `rm -rf .worktrees/<x>`
+  (ungesicherte Arbeit im Worktree), Formatierer über `docs/studio/` (`prettier --write .`,
+  `make format`; die Verfassung steht deshalb in `.prettierignore`) sowie `chmod` und `ln -sf` auf
+  geschützte Dateien. Er schützt **gegen Versehen, nicht gegen Absicht**; das Verbot der
   Verfassung gilt auch dort, wo er nichts erkennt. Ein Fehler im Guard lässt die Aktion zu.
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
 - **Verfassungs-Freigabe:** Nur der Nutzer schreibt in einem eigenen Prompt `VERFASSUNG ÄNDERN`.
@@ -335,19 +343,20 @@ Messwerte werden **gemessen, nie geschätzt**; fehlt eine Messung, steht „nich
 
 **Was wie gemessen wird:**
 
-| Grösse                  | Quelle                                                                                                                     | Güte                                                                                                       |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Dauer je Agent          | Summe der Läufe Start→Stop des Subagenten (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs`     | gemessen                                                                                                   |
-| Tool-Aufrufe je Agent   | Zahl der Tool-Aufrufe des Agenten (PreToolUse); bei Vordergrund `totalToolUseCount` zum Abgleich                           | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert                                             |
-| Tokens je Agent/Modell  | Subagent-Transkript, je Message-ID dedupliziert: Input, Cache-Schreiben, Cache-Lesen, Output                               | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen) |
-| Tokens L0               | Haupt-Transkript, inkrementell je Turn                                                                                     | wie oben                                                                                                   |
-| Sitzungssumme           | `cost-state`-Eintrag im Haupt-Transkript nach Session-Ende: Tokens je Modell inkl. Hilfsaufrufe; Kosten                    | Tokens gemessen; Kosten **berechnet** (Listenpreis, keine Abrechnung); nur beendete Sessions               |
-| Schätzung               | Briefing-Kopfzeile `Schätzung:` (ganzer Auftrag inkl. Unteraufträge), verglichen mit Dauer und Tool-Aufrufen des Teilbaums | Schätzung, als solche markiert; fehlt → „keine Schätzung"                                                  |
-| Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead bzw. L0                                                                         | erfasst; fehlt → „nicht erfasst"                                                                           |
-| Fortsetzungen           | erneuter Start derselben Agent-ID (`SendMessage`)                                                                          | gemessen                                                                                                   |
-| CI                      | `tools/studio/ci.py` über `gh run list` (Session-Start, Session-Ende, nach Push)                                           | gemessen; ohne `gh` → „nicht gemessen"                                                                     |
-| Eskalationen            | `decision --for l0` + Warteschlangen-Einträge                                                                              | erfasst                                                                                                    |
-| Inaktiv/gescheitert     | Status `failed`; Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status                                  | Lücke gemessen; „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen)         |
+| Grösse                  | Quelle                                                                                                                                                                                                                                   | Güte                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Dauer je Agent          | Summe der Läufe Start→Stop des Subagenten (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs`                                                                                                                   | gemessen                                                                                                   |
+| Tool-Aufrufe je Agent   | Zahl der Tool-Aufrufe des Agenten (PreToolUse); bei Vordergrund `totalToolUseCount` zum Abgleich                                                                                                                                         | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert                                             |
+| Tokens je Agent/Modell  | Subagent-Transkript, je Message-ID dedupliziert: Input, Cache-Schreiben, Cache-Lesen, Output                                                                                                                                             | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen) |
+| Dauer L0                | Summe der Turns der Hauptsession (Nutzer-Prompt bzw. Agenten-Meldung → Turn-Ende)                                                                                                                                                        | gemessen; Wartezeit auf den Nutzer zählt nicht                                                             |
+| Tokens L0               | Haupt-Transkript, inkrementell je Turn                                                                                                                                                                                                   | wie oben                                                                                                   |
+| Sitzungssumme           | `cost-state`-Eintrag im Haupt-Transkript nach Session-Ende: Tokens je Modell inkl. Hilfsaufrufe; Kosten                                                                                                                                  | Tokens gemessen; Kosten **berechnet** (Listenpreis, keine Abrechnung); nur beendete Sessions               |
+| Schätzung               | Briefing-Kopfzeile `Schätzung:` (ganzer Auftrag inkl. Unteraufträge; Dezimalminuten wie `0.5 min` erlaubt), verglichen mit Dauer und Tool-Aufrufen des Teilbaums; hat ein Vorfahr eine Schätzung, zählt nur dessen (oberste je Teilbaum) | Schätzung, als solche markiert; fehlt → „keine Schätzung"                                                  |
+| Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead bzw. L0                                                                                                                                                                                       | erfasst; fehlt → „nicht erfasst"                                                                           |
+| Fortsetzungen           | erneuter Start derselben Agent-ID (`SendMessage`)                                                                                                                                                                                        | gemessen                                                                                                   |
+| CI                      | `tools/studio/ci.py` über `gh run list` (Session-Start, Session-Ende, nach Push); ein Lauf zählt für die Session, in deren Zeitraum er erstellt wurde                                                                                    | gemessen; ohne `gh` → „nicht gemessen"                                                                     |
+| Eskalationen            | `decision --for l0` + Warteschlangen-Einträge                                                                                                                                                                                            | erfasst                                                                                                    |
+| Inaktiv/gescheitert     | Status `failed`; Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status                                                                                                                                                | Lücke gemessen; „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen)         |
 
 **Nicht messbar** (im Dashboard „nicht gemessen"):
 
@@ -450,10 +459,11 @@ flowchart LR
    Archiv-Berichte.
 3. **Bericht:** Retro-Bericht nach [templates/retro.md](templates/retro.md) unter
    `docs/studio/retros/`, mit Befunden und **höchstens 3 Vorschlägen**, jeder als Experiment nach
-   [templates/experiment.md](templates/experiment.md). Danach
+   [templates/experiment.md](templates/experiment.md), den der Coach gleich mit Status
+   `vorgeschlagen` in experimente.md einträgt. Danach
    `log.py retro --id <id> --kind <art> --triggers <vorfall-ids> --report <pfad>` — das quittiert
    die genannten Vorfälle.
-4. **Entscheid:** L0 entscheidet je Vorschlag per Ruling. Abgelehnt → Eintrag `abgelehnt` in
+4. **Entscheid:** L0 entscheidet je Vorschlag per Ruling. Abgelehnt → Status `abgelehnt` in
    experimente.md.
 5. **Umsetzen und bewerten:** Angenommen → der Coach ändert die Dateien, zählt die Version hoch,
    schreibt den CHANGELOG-Eintrag und setzt das Experiment auf `laufend`. Nach dem Zeitraum
@@ -557,7 +567,8 @@ Wann wer loggt:
 das Dashboard Knoten ohne Lebenszeichen seit 5 Minuten (`STUDIO_INACTIVE_SECONDS`), ausser `idle`
 und Knoten mit aktiven Kindern (R9). Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
 beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`, Metriken
-verdichten mit `make studio-metrics`.
+verdichten mit `make studio-metrics`. Vor Commits an `tools/studio/`: `make studio-lint` (Ruff über
+`uvx`; bewusst nicht Teil von `make check`).
 
 ## Session-Start und -Ende
 
@@ -570,7 +581,9 @@ nachfragen oder warten verlangt; Verfassung §1.4):
 2. `python3 tools/studio/log.py status --role studio-director --status active --task "Session-Start"`.
 3. Dem Nutzer die Dashboard-URL nennen (der Hook hat den Server gestartet; sonst `make studio`).
 4. Bericht in **höchstens 10 Zeilen**: Stand · seit letzter Session erledigt · laufend · offene
-   Nutzerentscheide.
+   Nutzerentscheide. Das ist die erste Textausgabe der Session, auch wenn der erste Prompt bereits
+   einen Auftrag enthält: vor jedem Werkzeug für den Auftrag und vor jeder Delegation (Lesen des
+   Kontexts ist erlaubt).
 5. Weiterarbeiten ohne Rückfrage: Eine neue Anweisung ist der Auftrag (Auslegung als Ruling);
    sonst den Plan aus [state.md](state.md) fortsetzen (pausierte Pakete neu briefen; der Stand
    steht in `state.md` und in den Übergaben unter `.studio/handoffs/`). Beantwortete
@@ -584,8 +597,8 @@ Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).
 1. Laufende Agenten abschliessen oder pausieren und loggen: Lead meldet Zwischenstand (Bericht, bei
    Bedarf Übergabe unter `.studio/handoffs/`) und loggt
    `status --status done --summary "Pausiert: <Stand>"`; Pakete bleiben auf ihrem Status.
-2. `make studio-metrics` (Session); bei Meilenstein-Ende zusätzlich
-   `python3 tools/studio/metrics.py --milestone <id>`.
+2. `python3 tools/studio/ci.py` (CI-Läufe erfassen), dann `make studio-metrics` (Session); bei
+   Meilenstein-Ende zusätzlich `python3 tools/studio/metrics.py --milestone <id>`.
 3. Kurz-Retro durch den Coach (Befunde, ggf. ≤ 3 Experiment-Vorschläge; L0 entscheidet per
    Ruling).
 4. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,

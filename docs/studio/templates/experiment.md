@@ -1,8 +1,9 @@
 # Vorlage: Experiment
 
-Jeder Vorschlag des `studio-coach` ist ein Experiment. Es steht erst im Retro-Bericht, nach dem
-Ruling von L0 als Eintrag in [experimente.md](../experimente.md). Ablauf im Handbuch
-[STUDIO.md](../STUDIO.md), Abschnitt „Verbesserungsschleife".
+Jeder Vorschlag des `studio-coach` ist ein Experiment. Der Coach nennt es im Retro-Bericht und
+trägt es gleich mit Status `vorgeschlagen` in [experimente.md](../experimente.md) ein; nach dem
+Ruling von L0 wird es `laufend` oder `abgelehnt`. Ablauf im Handbuch [STUDIO.md](../STUDIO.md),
+Abschnitt „Verbesserungsschleife".
 
 ```markdown
 ## E-<nnn> · vorgeschlagen · <Kurztitel>
