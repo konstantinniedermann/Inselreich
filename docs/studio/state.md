@@ -14,6 +14,9 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
     Umsetzung bereit.
   - **M7 „Stimmung"** — Spec fertig (R84), **Plan fertig, Gate Plan offen** (R88).
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
+- **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
+  Grafik und Stimmung Richtung Anno 1602. Start erst nach M7 und nur, wenn keine andere L0-Session
+  läuft; bis dahin kein Paket.
 - Dauerregel **Desktop-first** (R78). Studio: Verfassung 1.1, Handbuch 1.8, Limit-Sensor in
   Betrieb (R80).
 
