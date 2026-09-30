@@ -24,6 +24,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
     v: { kind: 'build', defId: 'weaver' },
     z: { kind: 'build', defId: 'canefarm' },
     n: { kind: 'build', defId: 'distillery' },
+    t: { kind: 'build', defId: 'toolmaker' },
   };
 
   it('AK-U2-02: jede Werkzeugtaste aus 10.6 wählt ihr Werkzeug', () => {
@@ -60,14 +61,25 @@ describe('hotkeyAction (AK-U2-02)', () => {
   });
 
   it('AK-U2-02: W/A/S/D, Pfeile, Leertaste, Esc und unbekannte Tasten ergeben null (Pan bleibt)', () => {
-    for (const key of ['w', 'a', 's', 'd', 'W', 'ArrowUp', ' ', 'Escape', 'q', '4', 't', 'Enter']) {
+    for (const key of ['w', 'a', 's', 'd', 'W', 'ArrowUp', ' ', 'Escape', 'q', '4', 'Enter']) {
       expect(hotkeyAction(key, NONE, false)).toBeNull();
     }
   });
 
-  it('AK-U2-02: Tabelle enthält weder Pan-Tasten noch T (nur mit S4)', () => {
-    for (const key of ['w', 'a', 's', 'd', 't', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(13);
+  it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
+    for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(14);
+  });
+
+  it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
+    const tool = { kind: 'tool', tool: { kind: 'build', defId: 'toolmaker' } };
+    expect(hotkeyAction('t', NONE, false)).toEqual(tool);
+    expect(hotkeyAction('T', NONE, false)).toEqual(tool);
+    expect(hotkeyAction('t', { ...NONE, ctrl: true }, false)).toBeNull();
+    expect(hotkeyAction('t', { ...NONE, meta: true }, false)).toBeNull();
+    expect(hotkeyAction('t', { ...NONE, alt: true }, false)).toBeNull();
+    expect(hotkeyAction('t', NONE, true)).toBeNull();
+    expect(hotkeyLabel({ kind: 'build', defId: 'toolmaker' })).toBe('T');
   });
 
   it('AK-U2-01: hotkeyLabel liefert die Taste grossgeschrieben für den Tooltip', () => {

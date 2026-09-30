@@ -1,6 +1,6 @@
 import type { Tool } from '../render/renderer';
 
-/** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken; T nur mit S4. */
+/** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   r: { kind: 'road' },
   x: { kind: 'demolish' },
@@ -15,6 +15,7 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   v: { kind: 'build', defId: 'weaver' },
   z: { kind: 'build', defId: 'canefarm' },
   n: { kind: 'build', defId: 'distillery' },
+  t: { kind: 'build', defId: 'toolmaker' },
 };
 
 const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
