@@ -374,6 +374,12 @@ auf Ubuntu 26 umgestellt wird. **Ursprung:** production-integrator, Merge STUDIO
 **Einschätzung:** niedrig; nur Hinweis, CI und Pages sind grün. Nach dem Wechsel den ersten Lauf
 prüfen; bei Bruch Runner-Version pinnen.
 
+### 2026-09-30 · `src/sim/defs/`, M8-Werte · Steuer „hoch" dominiert auch im Endzustand M8
+
+**Beobachtung:** Mit Stufe 4 (M8) dominiert im Endzustand wieder die Steuer „hoch" (262,5 gegen
+230 je Haus); M8 verschiebt den M5-Befund „hoch nach Sieg dominiert" nur. **Ursprung:**
+lead-design, M8-Designvorschlag (R86). **Einschätzung:** Kandidat für eine Kurz-Spec nach M8.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
