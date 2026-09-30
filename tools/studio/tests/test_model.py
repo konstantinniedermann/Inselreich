@@ -951,6 +951,26 @@ def named(events, **kw):
     return build(events, agent_names=NAMES, **kw)
 
 
+SYMBOL = {"solid": "S", "dashed": "D", "none": "."}
+
+
+def graph_rows(state):
+    """Graph-Zeilen chronologisch (die API liefert neueste zuerst)."""
+    return list(reversed(state["graph"]["rows"]))
+
+
+def ups(row):
+    return "".join(SYMBOL[lane["up"]] for lane in row["lanes"])
+
+
+def downs(row):
+    return "".join(SYMBOL[lane["down"]] for lane in row["lanes"])
+
+
+def bind(t, aid, role, **kw):
+    return ev("bind", t, agent_id=aid, role=role, **kw)
+
+
 PERSONA_NAMES = {
     "lead-production": {
         "name": "Planungs-Paula",
@@ -1010,6 +1030,363 @@ class GraphTest(unittest.TestCase):
         record = next(r for r in state["records"] if r["key"] == "s1:a1")
         self.assertEqual(record["tool_calls"], 1)  # SendMessage zählt als Tool-Aufruf
 
+    def test_message_feed_text(self):
+        events = [
+            *lead(typ="lead-tech"),
+            message(10, "main", "a1", text="Bitte starten"),
+            message(11, "main", "zoll-helfer", text="Wer bist du?"),
+        ]
+        texts = [f["text"] for f in named(events)["feed"] if f["kind"] == "message"]
+        self.assertEqual(
+            texts,
+            ["✉ → ? zoll-helfer: Wer bist du?", "✉ → Technik-Toni: Bitte starten"],
+        )
+
+    def test_graph_only_for_single_session(self):
+        events = [ev("session_start", 0, status="idle"), *lead()]
+        self.assertEqual(named(events, session="s1")["graph"]["session"], "s1")
+        self.assertEqual(named(events)["graph"]["session"], "s1")
+        self.assertIsNone(named(events, session="all")["graph"])
+        self.assertIsNone(named([])["graph"])
+
+    def test_order_row_merges_spawn_and_start(self):
+        rows = graph_rows(named(lead()))
+        self.assertEqual([r["kind"] for r in rows], ["order"])
+        self.assertEqual(rows[0]["t"], T0 + 1)
+        self.assertTrue(rows[0]["id"].startswith("order:s1:main:"))
+        self.assertEqual(rows[0]["label"], "Boss Bruno → Prüf-Peter")
+        self.assertEqual(rows[0]["dot"], 1)
+        self.assertEqual(
+            rows[0]["arrow"], {"from_col": 0, "to_col": 1, "style": "branch"}
+        )
+
+    def test_report_row_ends_lane(self):
+        rows = graph_rows(named([*lead(), stop(5, "a1", "lead-qa", summary="Fertig")]))
+        report = rows[-1]
+        self.assertEqual(report["kind"], "report")
+        self.assertEqual((report["from"], report["to"]), ("s1:a1", "s1:main"))
+        self.assertEqual(
+            report["arrow"], {"from_col": 1, "to_col": 0, "style": "merge"}
+        )
+        self.assertEqual((ups(report), downs(report)), ("S.", "SS"))
+
+    def test_message_to_running_agent(self):
+        row = graph_rows(named([*lead(), message(5, "main", "a1")]))[-1]
+        self.assertEqual(row["to"], "s1:a1")
+        self.assertEqual(row["arrow"], {"from_col": 0, "to_col": 1, "style": "message"})
+        self.assertEqual(row["label"], "Boss Bruno → Prüf-Peter")
+
+    def test_resume_folds_into_message_row(self):
+        events = [
+            *lead(),
+            stop(5, "a1", "lead-qa"),
+            message(10, "main", "a1"),
+            start(20, "a1", "lead-qa"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual([r["kind"] for r in rows], ["order", "report", "message"])
+        self.assertEqual(rows[2]["lanes"][1]["down"], "dashed")
+        self.assertEqual(rows[2]["lanes"][1]["up"], "solid")
+        self.assertEqual(rows[2]["arrow"]["to_col"], 1)
+
+    def test_resume_without_message_has_own_row(self):
+        base = [*lead(), stop(5, "a1", "lead-qa")]
+        rows = graph_rows(named([*base, start(20, "a1", "lead-qa")]))
+        self.assertEqual([r["kind"] for r in rows], ["order", "report", "resume"])
+        self.assertEqual(rows[-1]["text"], "Fortsetzung")
+        late = [*base, message(10, "main", "a1"), start(50, "a1", "lead-qa")]
+        kinds = [r["kind"] for r in graph_rows(named(late))]
+        self.assertEqual(kinds, ["order", "report", "message", "resume"])
+
+    def test_message_to_main(self):
+        row = graph_rows(named([*lead(), message(5, "a1", "main")]))[-1]
+        self.assertEqual(row["to"], "s1:main")
+        self.assertEqual(row["arrow"], {"from_col": 1, "to_col": 0, "style": "message"})
+
+    def test_recipient_bracket_form(self):
+        events = [*lead(typ="lead-tech"), message(5, "main", "a1 [lead-tech]")]
+        self.assertEqual(graph_rows(named(events))[-1]["to"], "s1:a1")
+
+    def test_recipient_by_unique_role_or_name(self):
+        for to in ("lead-tech", "Technik-Toni", "  Technik-Toni  "):
+            events = [*lead(typ="lead-tech"), message(5, "main", to)]
+            self.assertEqual(graph_rows(named(events))[-1]["to"], "s1:a1", to)
+        stop_only = ev("agent_stop", 3, agent_id="h1", status="done", summary="x")
+        events = [start(1, "x1", "Explore"), stop_only, message(5, "main", "Aushilfe")]
+        self.assertEqual(graph_rows(named(events))[-1]["to"], "s1:x1")
+
+    def test_recipient_ambiguous_is_unresolved(self):
+        events = [
+            *lead(typ="lead-tech"),
+            spawn(3, "a1", "tech-sim-engineer", tool_use_id="w1"),
+            start(4, "w1", "tech-sim-engineer"),
+            spawn(5, "a1", "tech-sim-engineer", tool_use_id="w2"),
+            start(6, "w2", "tech-sim-engineer"),
+            message(7, "a1", "tech-sim-engineer"),
+            message(8, "a1", "Logik-Lars"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual([r["to"] for r in rows[-2:]], ["?", "?"])
+
+    def test_unresolvable_recipient_keeps_row(self):
+        row = graph_rows(named([*lead(), message(5, "a1", "zoll-helfer")]))[-1]
+        self.assertEqual((row["kind"], row["to"]), ("message", "?"))
+        self.assertIsNone(row["arrow"]["to_col"])
+        self.assertEqual(row["label"], "Prüf-Peter → ? zoll-helfer")
+
+    def test_empty_recipient_is_unresolved(self):
+        row = graph_rows(named([*lead(), message(5, "a1", "")]))[-1]
+        self.assertEqual(
+            (row["kind"], row["to"], row["label"]), ("message", "?", "Prüf-Peter → ?")
+        )
+
+    def test_message_target_without_lane(self):
+        events = [*lead(), stop(5, "a1", "lead-qa"), message(10, "main", "a1")]
+        row = graph_rows(named(events))[-1]
+        self.assertEqual(row["to"], "s1:a1")
+        self.assertIsNone(row["arrow"]["to_col"])
+        self.assertEqual(row["label"], "Boss Bruno → Prüf-Peter")
+        own = graph_rows(named([*lead(), message(5, "a1", "a1")]))[-1]
+        self.assertIsNone(own["arrow"])
+        self.assertEqual(own["dot"], 1)
+
+    def workers(self, resume):
+        events = [
+            *lead(),
+            spawn(3, "a1", "qa-playtester", tool_use_id="b1"),
+            start(4, "b1", "qa-playtester"),
+            stop(5, "b1", "qa-playtester"),
+            spawn(6, "a1", "qa-code-reviewer", tool_use_id="b2"),
+            start(7, "b2", "qa-code-reviewer"),
+        ]
+        if resume:
+            events += [message(8, "a1", "b1"), start(9, "b1", "qa-playtester")]
+        return graph_rows(named(events))
+
+    def test_column_reuse_after_finish(self):
+        rows = self.workers(resume=False)
+        self.assertEqual(rows[-1]["kind"], "order")
+        self.assertEqual(rows[-1]["dot"], 2)
+
+    def test_reserved_dashed_column_until_resume(self):
+        rows = self.workers(resume=True)
+        order_b2 = rows[3]
+        self.assertEqual((order_b2["kind"], order_b2["dot"]), ("order", 3))
+        self.assertEqual(order_b2["lanes"][2]["key"], "b1")
+        self.assertEqual(order_b2["lanes"][2]["up"], "dashed")
+        self.assertEqual(rows[-1]["lanes"][2]["up"], "solid")
+
+    def test_pause_separator(self):
+        rows = graph_rows(
+            named([*lead(), message(301, "main", "a1"), message(721, "main", "a1")])
+        )
+        self.assertEqual(
+            [r["kind"] for r in rows], ["order", "message", "pause", "message"]
+        )
+        pause = rows[2]
+        self.assertEqual(pause["text"], "… 7 min …")
+        self.assertEqual(
+            (pause["dot"], pause["arrow"], pause["label"]), (None, None, "")
+        )
+        self.assertEqual((ups(pause), downs(pause)), ("SS", "SS"))
+        self.assertTrue(pause["id"].startswith("pause:s1:-:"))
+
+    def test_status_rows_and_done_folding(self):
+        events = [*lead()]
+        for t, status, extra in (
+            (10, "blocked", {"task": "Wartet auf X"}),
+            (20, "waiting", {"task": "Wartet auf Y"}),
+            (30, "active", {"task": "Weiter"}),
+            (40, "failed", {"summary": "Kaputt"}),
+            (50, "done", {"summary": "Zwischenstand"}),
+            (100, "done", {"summary": "Alles fertig"}),
+        ):
+            events += [
+                bind(t - 1, "a1", "lead-qa"),
+                log_status(t, "lead-qa", status, **extra),
+            ]
+        events.append(stop(110, "a1", "lead-qa", summary="Fertig."))
+        rows = graph_rows(named(events))
+        statuses = [r["status"] for r in rows if r["kind"] == "status"]
+        self.assertEqual(statuses, ["blocked", "waiting", "failed", "done"])
+        self.assertEqual(rows[1]["text"], "Wartet auf X")
+        self.assertEqual(
+            (rows[-1]["kind"], rows[-1]["text"]), ("report", "Alles fertig")
+        )
+
+    def test_silent_events_make_no_rows(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            ev("prompt", 1, status="active", task="Los"),
+            ev("heartbeat", 2, tool="Read"),
+            bind(3, "main", "studio-director"),
+            ev("turn_end", 4, status="idle"),
+            spawn(5, "main", "lead-qa", tool_use_id="q"),
+            ev("spawned", 6, child_id="a1", tool_use_id="q"),
+            start(7, "a1", "lead-qa"),
+            ev("heartbeat", 8, agent_id="a1", tool="Grep"),
+        ]
+        self.assertEqual(
+            [r["kind"] for r in graph_rows(named(events))], ["start", "order"]
+        )
+
+    def test_session_end_closes_all_lanes(self):
+        events = [*lead(), ev("session_end", 10, status="ended")]
+        end = graph_rows(named(events))[-1]
+        self.assertEqual(
+            (end["kind"], end["dot"], end["text"]), ("end", 0, "Session beendet")
+        )
+        self.assertEqual((ups(end), downs(end)), ("..", "SS"))
+
+    def test_truncation_keeps_lanes(self):
+        events = [ev("session_start", 0, status="idle"), *lead()]
+        events += [message(3 + i, "a1", "main", text=f"m{i}") for i in range(318)]
+        graph = named(events, now=400)["graph"]
+        self.assertTrue(graph["truncated"])
+        self.assertEqual((graph["columns"], len(graph["rows"])), (2, 300))
+        oldest = graph["rows"][-1]
+        self.assertEqual(oldest["text"], "m18")
+        self.assertEqual((ups(oldest), downs(oldest)), ("SS", "SS"))
+        self.assertTrue(all(len(r["lanes"]) == 2 for r in graph["rows"]))
+
+    def test_row_ids_stable(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            *lead(),
+            message(5, "a1", "main"),
+        ]
+        first = [r["id"] for r in named(events)["graph"]["rows"]]
+        self.assertEqual(first, [r["id"] for r in named(events)["graph"]["rows"]])
+        later = [
+            r["id"] for r in named([*events, message(9, "main", "a1")])["graph"]["rows"]
+        ]
+        self.assertEqual(later[1:], first)
+        self.assertEqual(len(set(later)), len(later))
+
+    def test_row_id_changes_only_by_p34_exceptions(self):
+        events = [
+            *lead(),
+            bind(49, "a1", "lead-qa"),
+            log_status(50, "lead-qa", "done", summary="Gut"),
+        ]
+        before = {r["id"] for r in named(events)["graph"]["rows"]}
+        after = {
+            r["id"]
+            for r in named([*events, stop(60, "a1", "lead-qa")])["graph"]["rows"]
+        }
+        self.assertEqual(len(before - after), 1)
+        self.assertTrue(next(iter(before - after)).startswith("status:s1:a1:"))
+        self.assertTrue(next(iter(after - before)).startswith("report:s1:a1:"))
+
+    def test_late_correction_relayouts(self):
+        events = [
+            *lead(aid="L1"),
+            spawn(3, "main", "lead-tech", tool_use_id="lt"),
+            start(4, "L2", "lead-tech"),
+            spawn(5, "L1", "qa-playtester", description="Eins", tool_use_id="t1"),
+            spawn(6, "L2", "qa-playtester", description="Zwei", tool_use_id="t2"),
+            start(7, "W2", "qa-playtester"),
+            start(8, "W1", "qa-playtester"),
+        ]
+
+        def order(state):
+            return next(r for r in graph_rows(state) if r["text"] == "Eins")
+
+        self.assertEqual(order(named(events))["to"], "s1:W2")
+        fixed = [
+            *events,
+            ev("spawned", 9, agent_id="L2", child_id="W2", tool_use_id="t2"),
+            ev("spawned", 10, agent_id="L1", child_id="W1", tool_use_id="t1"),
+        ]
+        self.assertEqual(order(named(fixed))["to"], "s1:W1")
+
+    def test_log_only_and_startless_lanes(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            log_status(10, "lead-art", "active", task="Assets sichten"),
+            log_status(20, "lead-art", "blocked", task="Lizenz unklar"),
+            log_status(30, "lead-art", "waiting", task="Antwort"),
+            ev("heartbeat", 40, agent_id="x1", tool="Read"),
+            stop(50, "x1", "Explore", summary="Gefunden"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual(
+            [(r["kind"], r["from"]) for r in rows],
+            [
+                ("start", "s1:main"),
+                ("start", "s1:log:lead-art"),
+                ("status", "s1:log:lead-art"),
+                ("status", "s1:log:lead-art"),
+                ("start", "s1:x1"),
+                ("report", "s1:x1"),
+            ],
+        )
+        self.assertEqual(rows[1]["text"], "Assets sichten")
+        self.assertEqual(
+            (rows[1]["lanes"][1]["up"], rows[3]["lanes"][1]["up"]), ("solid", "none")
+        )
+        self.assertEqual(rows[1]["label"], "Pinsel-Pia")
+
+    def test_text_limit_lane_width_json(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            *lead(),
+            message(5, "a1", "main", text="x" * 300),
+        ]
+        graph = named(events)["graph"]
+        self.assertEqual(graph["rows"][0]["text"], "x" * 160 + "…")
+        self.assertTrue(all(len(r["lanes"]) == graph["columns"] for r in graph["rows"]))
+        json.dumps(graph)
+
+    def test_session_restart_resumes_director(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            ev("session_end", 10, status="ended"),
+            ev("session_start", 20, status="idle"),
+            ev("session_start", 30, status="idle"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual([r["kind"] for r in rows], ["start", "end", "resume"])
+        self.assertEqual(rows[1]["lanes"][0]["up"], "dashed")
+        self.assertEqual((rows[2]["dot"], rows[2]["text"]), (0, "Fortsetzung"))
+        self.assertEqual(rows[2]["lanes"][0]["down"], "dashed")
+
+    def test_log_final_status_does_not_end_lane(self):
+        for status in ("done", "failed"):
+            events = [
+                *lead(),
+                bind(39, "a1", "lead-qa"),
+                log_status(40, "lead-qa", status, summary="Ende"),
+                stop(100, "a1", "lead-qa"),
+            ]
+            rows = graph_rows(named(events))
+            self.assertEqual(rows[1]["kind"], "status", status)
+            self.assertEqual(rows[1]["lanes"][1]["up"], "solid", status)
+            self.assertEqual(rows[2]["lanes"][1]["down"], "solid", status)
+
+    def test_duplicate_stop_and_unassigned_spawn_are_quiet(self):
+        events = [
+            *lead(),
+            stop(5, "a1", "lead-qa", summary="Erster Bericht"),
+            stop(6, "a1", "lead-qa", summary="Doppelt"),
+            spawn(7, "main", "qa-playtester", tool_use_id="nie-gestartet"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual([r["kind"] for r in rows], ["order", "report"])
+        self.assertEqual(rows[-1]["text"], "Erster Bericht")
+
+    def test_status_row_uses_event_time_resolution(self):
+        events = [
+            *lead(),
+            bind(9, "a1", "lead-qa"),
+            log_status(10, "lead-qa", "blocked", task="Hängt"),
+            spawn(20, "main", "lead-qa", tool_use_id="q2"),
+            start(21, "a2", "lead-qa"),
+        ]
+        status = next(r for r in graph_rows(named(events)) if r["kind"] == "status")
+        self.assertEqual(status["from"], "s1:a1")
+        self.assertTrue(status["id"].startswith("status:s1:a1:"))
+
 
 HELPER = {"agent_id": "h1", "status": "done", "summary": "Fortschritt: 3 von 5"}
 
@@ -1021,6 +1398,8 @@ class StopOnlyTest(unittest.TestCase):
         )
         self.assertNotIn("s1:h1", flat(state))
         self.assertNotIn("done", state["counts"])
+        self.assertEqual([r["kind"] for r in graph_rows(state)], ["start"])
+        self.assertEqual(state["graph"]["columns"], 1)
 
     def test_role_or_other_event_keeps_node_visible(self):
         with_role = ev("agent_stop", 5, role="Explore", **HELPER)
@@ -1028,6 +1407,7 @@ class StopOnlyTest(unittest.TestCase):
         beat = ev("heartbeat", 4, agent_id="h1", tool="Read")
         state = build([beat, ev("agent_stop", 5, **HELPER)])
         self.assertIn("s1:h1", flat(state))
+        self.assertEqual([r["kind"] for r in graph_rows(state)], ["start", "report"])
 
 
 class NamesTest(unittest.TestCase):

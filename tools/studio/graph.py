@@ -283,6 +283,159 @@ class Layout:
             for key, runs in self.runs.items()
         }
 
+    # --- Durchlauf 2: Spalten, Spuren, Punkte, Pfeile (P5–P7, P23–P25) --------
+
+    def render(self, names: dict[str, str], limit: int = GRAPH_ROWS) -> dict:
+        columns = self._columns()
+        width = max(columns.values(), default=-1) + 1
+        by_column: dict[int, list[str]] = {}
+        for key, col in columns.items():
+            by_column.setdefault(col, []).append(key)
+        out: list[dict] = []
+        seen: dict[str, int] = {}
+        for r, row in enumerate(self.rows):
+            if r and row["t"] - self.rows[r - 1]["t"] > PAUSE_GAP:
+                out.append(self._pause(r - 1, by_column, width, seen))
+            out.append(self._row(r, row, columns, by_column, width, names, seen))
+        out.reverse()
+        return {
+            "session": self.sid,
+            "columns": width,
+            "truncated": len(out) > limit,
+            "rows": out[:limit],
+        }
+
+    def _columns(self) -> dict[str, int]:
+        spans = {k: (runs[0][0], runs[-1][1]) for k, runs in self.runs.items() if runs}
+        columns: dict[str, int] = {}
+        busy: list[int | None] = [None]  # Spalte 0 gehört dem Direktor (P5)
+        if self.main in spans:
+            columns[self.main] = 0
+        others = sorted(
+            (k for k in spans if k != self.main), key=lambda k: (spans[k][0], k)
+        )
+        for key in others:
+            start, end = spans[key]
+            col = next(
+                (
+                    c
+                    for c in range(1, len(busy))
+                    if busy[c] is not None and busy[c] < start
+                ),
+                len(busy),
+            )
+            if col == len(busy):
+                busy.append(end)
+            else:
+                busy[col] = end
+            columns[key] = col
+        return columns
+
+    def _segment(self, key: str, r: int) -> str:
+        """Spurstück zwischen Zeile r und r + 1 (r + 1 ist neuer)."""
+        runs = self.runs[key]
+        if any(a <= r and (b is None or b >= r + 1) for a, b in runs):
+            return "solid"
+        if runs and runs[0][0] <= r and (runs[-1][1] is None or runs[-1][1] >= r + 1):
+            return "dashed"
+        return "none"
+
+    def _occupant(self, keys: list[str], r: int) -> str | None:
+        for key in keys:
+            runs = self.runs[key]
+            if runs[0][0] <= r and (runs[-1][1] is None or runs[-1][1] >= r):
+                return key
+        return None
+
+    def _lane(self, key: str | None, up: str, down: str) -> dict:
+        if key is None:
+            return {"key": None, "department": None, "up": "none", "down": "none"}
+        node = self.info[key]
+        return {
+            "key": node["agent_id"],
+            "department": node["department"],
+            "up": up,
+            "down": down,
+        }
+
+    def _row(self, r, row, columns, by_column, width, names, seen) -> dict:
+        lanes, holders = [], {}
+        for col in range(width):
+            key = self._occupant(by_column.get(col, []), r)
+            if key is not None:
+                holders[key] = col
+                lanes.append(
+                    self._lane(key, self._segment(key, r), self._segment(key, r - 1))
+                )
+            else:
+                lanes.append(self._lane(None, "none", "none"))
+        kind, source, target = row["kind"], row["from"], row["to"]
+        dot = holders.get(target if kind == "order" else source)
+        if kind == "end":
+            dot = 0
+        arrow = None
+        if kind in ("order", "report", "message") and target != source:
+            style = {"order": "branch", "report": "merge", "message": "message"}[kind]
+            if source in holders:
+                arrow = {
+                    "from_col": holders[source],
+                    "to_col": holders.get(target),
+                    "style": style,
+                }
+
+        def name(key: str) -> str:
+            return names.get(key) or self.info[key]["base_name"]
+
+        if kind in ("order", "report", "message"):
+            if target == "?":
+                label = f"{name(source)} → ? {row.get('raw_to', '')}".rstrip()
+            else:
+                label = f"{name(source)} → {name(target)}"
+        else:
+            label = name(source)
+        return {
+            "id": self._id(kind, row["aid"], row["ts"], seen),
+            "t": row["t"],
+            "time": clock(row["t"]),
+            "kind": kind,
+            "from": source,
+            "to": target,
+            "label": label,
+            "text": short(row["text"]),
+            "status": row["status"],
+            "lanes": lanes,
+            "dot": dot,
+            "arrow": arrow,
+        }
+
+    def _pause(self, r, by_column, width, seen) -> dict:
+        lanes = []
+        for col in range(width):
+            key = self._occupant(by_column.get(col, []), r)
+            state = self._segment(key, r) if key is not None else "none"
+            lanes.append(self._lane(key if state != "none" else None, state, state))
+        older = self.rows[r]
+        minutes = int((self.rows[r + 1]["t"] - older["t"]) // 60)
+        return {
+            "id": self._id("pause", "-", older["ts"], seen),
+            "t": older["t"],
+            "time": "",
+            "kind": "pause",
+            "from": None,
+            "to": None,
+            "label": "",
+            "text": f"… {minutes} min …",
+            "status": "",
+            "lanes": lanes,
+            "dot": None,
+            "arrow": None,
+        }
+
+    def _id(self, kind: str, aid: str, ts: str, seen: dict[str, int]) -> str:
+        base = f"{kind}:{self.sid}:{aid}:{ts}"
+        seen[base] = seen.get(base, 0) + 1
+        return base if seen[base] == 1 else f"{base}#{seen[base]}"
+
 
 def instances(info: dict[str, dict], run_times: dict[str, list]) -> dict[str, int]:
     """Feste Instanznummer je Knoten (P9, P21), Läufe nach P37."""

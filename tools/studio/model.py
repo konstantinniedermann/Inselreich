@@ -16,6 +16,7 @@ from pathlib import Path
 import effort
 import graph
 import studio_docs
+from graph import GRAPH_ROWS, MESSAGE_TEXT_MAX, PAUSE_GAP  # noqa: F401
 
 INACTIVE_DEFAULT = 300.0
 BIND_WINDOW = 30.0
@@ -409,6 +410,25 @@ class _Builder:
                     node["name"] = node["_base_name"] + suffix
                 result[sid] = layout
         return result
+
+    def message_texts(self, feed: list[dict], layouts: dict) -> None:
+        """Feed-Zeile „✉ → <Empfänger>: <Text>" (T2)."""
+        for entry in feed:
+            if entry["kind"] != "message" or entry["session_id"] not in layouts:
+                continue
+            target = layouts[entry["session_id"]].resolve(entry.get("_to", ""))
+            who = self.nodes[target]["name"] if target else f"? {entry.get('_to', '')}"
+            entry["text"] = _short(f"✉ → {who.strip()}: {entry.get('_text', '')}", 140)
+
+    def graph_view(self, chosen: str | None, layouts: dict) -> dict | None:
+        if chosen in (None, "all"):
+            return None
+        if chosen not in layouts:
+            return {"session": chosen, "columns": 0, "truncated": False, "rows": []}
+        names = {
+            k: n["name"] for k, n in self.nodes.items() if n["session_id"] == chosen
+        }
+        return layouts[chosen].render(names)
 
     def identities(self) -> None:
         """Name, Titel, Emoji und Kurzaufgabe je sichtbarem Knoten (T3, T6)."""
@@ -870,6 +890,9 @@ class _Builder:
                 "_agent": f"{sid}:{event.get('agent_id') or ''}",
             }
         )
+        if event.get("kind") == "message":  # Text erst im Nachlauf (Namen, P2)
+            self.feed[-1]["_to"] = str(event.get("to") or "")
+            self.feed[-1]["_text"] = str(event.get("text") or "")
 
     # --- Ergebnis -----------------------------------------------------------
 
@@ -887,7 +910,7 @@ class _Builder:
 
         self.finalize()
         self.identities()
-        self.layouts()
+        layouts = self.layouts()
         views = {
             key: self.view(node, inactive_after) for key, node in self.nodes.items()
         }
@@ -914,6 +937,7 @@ class _Builder:
         counts = Counter(v["status"] for v in in_scope)
         counts["inactive"] = sum(1 for v in in_scope if v["inactive"])
         feed = [f for f in self.feed if f["session_id"] in scope]
+        self.message_texts(feed, layouts)
         chronicle = [
             {k: v for k, v in c.items() if k != "_key"}
             for c in self.chronicle
@@ -975,6 +999,7 @@ class _Builder:
                 if s["id"] in scope and s.get("cost") is not None
             ],
             "queue": [q for q in self.queue.values() if q["session_id"] in scope],
+            "graph": self.graph_view(chosen, layouts),
         }
 
     def ci_in_scope(self, sessions: list[dict], scope: set, every: bool) -> list[dict]:
