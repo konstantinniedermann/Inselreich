@@ -130,6 +130,8 @@ Ein Haus steigt beim nächsten Wachstumstakt auf, wenn
 - von jeder neuen Ware der nächsten Stufe mindestens eine Einheit im Lager liegt und
 - die Aufstiegskosten bezahlbar sind (sie werden dann abgezogen).
 
+Beim Aufstieg wird von jeder neuen Ware eine Einheit aus dem Lager entnommen und direkt ans Haus geliefert.
+
 Die Einwohnerzahl bleibt beim Aufstieg erhalten. Das Info-Panel eines Wohnhauses zeigt Einwohner,
 Versorgung, Bedürfnisse mit ✓/✗, jede noch fehlende Aufstiegsbedingung und die Kosten.
 
