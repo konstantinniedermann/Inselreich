@@ -909,3 +909,15 @@ Krisen-Verdrahtung, sobald die M6-Spec nachgezogen ist. ADR-011 (Asset-Laden) al
 vor A2. — Warum: Spec prüfbar, Konflikte mit M6 aufgelöst. — Kosten bei Irrtum: keine besonderen.
 
 Entscheider: L0 · Anlass: Nachprüfung lead-qa M7-SPEC
+
+## R85 · 2026-09-30 · M6/M7
+
+Ruling: M6-Spec-Nachtrag (`docs/m6-spec` @ ab536d1, 77 AK) angenommen; die drei Widersprüche zu
+M7 (M6-Spec §20, Punkte 10–12) nach Empfehlung von lead-design entschieden: (10) M7 §9.4 „nur
+neues Format schreiben" gilt nur für die eigenen M7-Felder; fremde Felder werden durchgereicht;
+M7-U1 übernimmt den gemeinsamen Round-trip-Test (M6 AK-U1-10 = M7 AK-U1-01b). (11) M6-R2
+(`overlays.ts`) läuft nach M7-R1. (12) M7 exportiert `EXTINGUISHED_TICKS`, M6 importiert es.
+Die Specs werden nicht mehr geändert; beide Pläne übernehmen diese Punkte. — Warum: vermeidet
+eine weitere Spec-Runde, Punkte sind klein und eindeutig. — Kosten bei Irrtum: Umordnung im Plan.
+
+Entscheider: L0 · Anlass: Bericht lead-design M6-SPEC-Nachtrag
