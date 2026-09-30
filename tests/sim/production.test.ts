@@ -95,6 +95,12 @@ describe('tickProduction', () => {
     expect(w.stock.wood).toBe(100);
     expect(lj.state).toBe('storageFull');
     expect(lj.progress).toBe(0);
+    ticks(w, 5);
+    expect(lj.state).toBe('storageFull');
+    w.stock.wood = 50;
+    ticks(w, BUILDING_DEFS.lumberjack.cycle!);
+    expect(w.stock.wood).toBe(51);
+    expect(lj.state).toBe('ok');
   });
 });
 

@@ -4,7 +4,8 @@ import type { World } from './types';
 
 /**
  * Ein Produktionsschritt für alle Produktionsgebäude. Input wird einmal pro Zyklus
- * bei progress 0 entnommen; ist das Lager voll, geht die Einheit verloren.
+ * bei progress 0 entnommen; ist das Lager voll, geht die Einheit verloren
+ * und der Zustand storageFull bleibt bis zur nächsten eingelagerten Einheit.
  */
 export function tickProduction(world: World): void {
   for (const b of Object.values(world.buildings)) {
@@ -19,7 +20,7 @@ export function tickProduction(world: World): void {
       continue;
     }
     b.progress += 1;
-    b.state = 'ok';
+    if (b.state !== 'storageFull') b.state = 'ok';
     if (b.progress >= def.cycle) {
       const accepted = addStock(world, def.produces, 1);
       b.state = accepted === 1 ? 'ok' : 'storageFull';
