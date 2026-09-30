@@ -1386,3 +1386,8 @@ time {
     font-size: 0.75rem;
   }
 }
+
+.budget-head .role {
+  flex: 1;
+  min-width: 0;
+}

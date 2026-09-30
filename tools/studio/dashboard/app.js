@@ -333,6 +333,7 @@ function renderBudgets(state) {
             'div',
             { class: 'budget-head' },
             el('span', { class: 'role' }, b.lead),
+            el('span', { class: 'chip' }, b.phase),
             b.overrun ? el('span', { class: 'badge st-failed' }, 'überschritten') : null,
           ),
           el(
@@ -340,7 +341,7 @@ function renderBudgets(state) {
             {
               class: 'bar',
               role: 'meter',
-              'aria-label': `${b.lead}: ${used} von ${granted} Starts`,
+              'aria-label': `${b.lead} (${b.phase}): ${used} von ${granted} Starts`,
               'aria-valuemin': '0',
               'aria-valuemax': String(Math.max(granted, 1)),
               'aria-valuenow': String(Math.min(used, Math.max(granted, 1))),
@@ -352,7 +353,6 @@ function renderBudgets(state) {
             { class: 'budget-text' },
             `${used} / ${granted} Starts · parallel ${b.parallel_used} / `,
             el('span', { title: unlimited ? 'ohne Limit' : null }, parallelMax),
-            ` · ${b.phase}`,
           ),
           mix.length
             ? el(
