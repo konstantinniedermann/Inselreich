@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -114,8 +115,8 @@ def _minutes(seconds: float | None) -> str:
     return NOT_MEASURED if seconds is None else f"{seconds / 60:.1f} min"
 
 
-def _row(row: dict) -> str:
-    cells = [
+def _cells(row: dict) -> list[str]:
+    return [
         row["key"],
         str(row["agents"]),
         _minutes(row["duration_s"]),
@@ -125,10 +126,10 @@ def _row(row: dict) -> str:
         _tokens(row["cache_read"]),
         _tokens(row["output"], row["output_lower_bound"]),
     ]
-    return "| " + " | ".join(cells) + " |"
 
 
 def _table(title: str, rows: list[dict]) -> list[str]:
+    """Markdown-Tabelle in Prettier-Form: Spalten aufgefüllt, Trenner so breit."""
     head = [
         title,
         "Agenten",
@@ -139,13 +140,21 @@ def _table(title: str, rows: list[dict]) -> list[str]:
         "Cache-Read",
         "Output",
     ]
-    lines = ["| " + " | ".join(head) + " |", "|" + " --- |" * len(head)]
-    lines += [_row(r) for r in rows] or ["| – | | | | | | | |"]
-    return lines
+    body = [_cells(r) for r in rows] or [["–"] + [""] * (len(head) - 1)]
+    widths = [max(3, *(len(line[i]) for line in [head, *body])) for i in range(8)]
+
+    def line(cells: list[str]) -> str:
+        return "| " + " | ".join(c.ljust(w) for c, w in zip(cells, widths)) + " |"
+
+    return [line(head), line(["-" * w for w in widths]), *(line(c) for c in body)]
 
 
 def _unit(value: object, unit: str) -> str:
     return NOT_MEASURED if value is None else f"{value} {unit}"
+
+
+def _tenth(value: float | None, unit: str) -> str:
+    return NOT_MEASURED if value is None else f"{round(value, 1)} {unit}"
 
 
 def _share(value: float | None) -> str:
@@ -188,8 +197,8 @@ def render(raw: dict) -> str:
         "Schätzung gegen Ist:",
         "",
         f"- Verglichene Agenten: {est.get('count', 0)}",
-        f"- Geschätzt: {_unit(est.get('estimated_min'), 'min')}, "
-        f"Ist: {_unit(est.get('actual_min'), 'min')}, "
+        f"- Geschätzt: {_tenth(est.get('estimated_min'), 'min')}, "
+        f"Ist: {_tenth(est.get('actual_min'), 'min')}, "
         f"Abweichung: {_unit(est.get('deviation_pct'), '%')}",
         f"- Werkzeugaufrufe geschätzt: {_text(est.get('estimated_tools'))}, "
         f"Ist: {_text(est.get('actual_tools'))}",
@@ -336,8 +345,23 @@ def main(argv: list[str] | None = None) -> int:
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{kennung}.md"
     path.write_text(render(raw), encoding="utf-8")
+    format_markdown(path)
     print(path)
     return 0
+
+
+def format_markdown(path: Path) -> None:
+    """Prettier über die Datei (make check prüft sie); ohne npx bleibt sie, wie sie ist."""
+    try:
+        subprocess.run(
+            ["npx", "--no-install", "prettier", "--write", str(path)],
+            cwd=path.parent,
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
 
 
 if __name__ == "__main__":
