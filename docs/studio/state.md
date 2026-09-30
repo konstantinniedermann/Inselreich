@@ -4,44 +4,53 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-09-30 (Übergabe Session 664ac8d3 bei 77 % Kontext)
+Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich** (Aufbau-Strategiespiel im Browser). M1–M5 fertig und live.
-- **Nutzerauftrag nach M5-Playtest** („mehr Tiefe, bessere Grafik, Ambiente, Musik, die Stimmung
-  muss rüberkommen"): Programm in zwei Strängen (R73):
-  - **M7 „Stimmung"** (lead-art) — Phase Spec; Gate Brainstorming bestanden mit Auflagen (R77):
-    Vertical Slice zuerst, Vorher/Nachher-Bilder an den Nutzer.
-  - **M6 „Krisen und Stadtdienste"** (lead-design) — Phase Spec; Entscheide R74; K-C → M8.
-- **Desktop-first** ist Dauerregel (R78, Projekt-CLAUDE.md); Mobil kein Ziel.
-- Studio: Verfassung 1.1, Handbuch 1.7 (R75: E-001 angepasst, E-003 läuft). Limit-Sensor in
-  Betrieb (R80) — Hook-Zeile zeigt Woche/Kontext.
+- Projekt: **Inselreich**. M1–M5 live. Nutzerauftrag nach M5-Playtest „mehr Tiefe, bessere
+  Grafik, Ambiente, Musik — die Stimmung muss rüberkommen" (R73) läuft als Programm:
+  - **M6 „Krisen und Stadtdienste"** — Spec fertig (R82, R85), **Plan M6-Sim freigegeben (R87)**,
+    Umsetzung bereit.
+  - **M7 „Stimmung"** — Spec fertig (R84), **Plan fertig, Gate Plan offen** (R88).
+  - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
+- Dauerregel **Desktop-first** (R78). Studio: Verfassung 1.1, Handbuch 1.8, Limit-Sensor in
+  Betrieb (R80).
 
 ## Parallele Sessions
 
-| Session         | Stand     | besitzt     | bis |
-| --------------- | --------- | ----------- | --- |
-| 664ac8d3 (R73…) | übergeben | nichts mehr | –   |
+| Session  | Stand         | besitzt     | bis |
+| -------- | ------------- | ----------- | --- |
+| 664ac8d3 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Rulings R73–R80. M5-NACHLESE gemergt (5a710cf), STUDIO-LIMIT gemergt (57d1022), CI/Pages grün.
-- Handbuch 1.7, Personas Desktop-first (tech-ui-engineer 1.5, qa-playtester 1.5).
-- Gemergte M5-Worktrees aufgeräumt; Beobachtungen Mobil und Limit-Restbefunde eingetragen.
+- Rulings R73–R88; M5-NACHLESE und STUDIO-LIMIT gemergt, CI/Pages grün; Worktrees aufgeräumt.
+- Specs M6 (77 AK), M7 (inkl. 22 geprüfter Asset-Quellen, ≈ 11 MB), M8 (68 AK); Pläne M6-Sim
+  und M7 (18 Tasks, ADR-011-Entwurf).
+- Handbuch 1.7/1.8, Personas Desktop-first.
 
-## Pausierte Pakete
+## Pausierte Pakete (Branches, nichts gemergt)
 
-- **M7-SPEC** (lead-art): Vorschlag `.studio/handoffs/2026-09-30-lead-art-l0-m7-vorschlag.md`,
-  Schnittstelle M6 `.studio/handoffs/2026-09-30-lead-art-lead-design.md`, Übergabe
-  `.studio/handoffs/m7-spec.md` (vom Lead beim Pausieren). Auflagen R77 + R78 (Frame-Budget
-  Desktop 1920×1080, ≥ 60 fps Ziel, ≥ 30 fps Untergrenze; kein Mobil-HUD). Nächster Schritt:
-  Spec fertig → Gate Spec (lead-tech, lead-qa) → Plan mit Vertical Slice als erstem Render-Paket.
-- **M6-SPEC** (lead-design): Branch `docs/m6-spec` (`.worktrees/m6-spec`), Übergabe
-  `.studio/handoffs/m6-spec.md` (inkl. Tiefe-Empfehlung M6 vs. M8). Nächster Schritt: Spec fertig
-  → Gate Spec (lead-tech, lead-qa).
-- Nutzer-Spielstand angefragt (Anleitung im Chat): `.studio/playtest/nutzer-save.json` — liegt er
-  vor, an lead-design (Tiefe) und lead-art geben.
+- **M6** — `docs/m6-spec` @ 1d28ba2 (`.worktrees/m6-spec`): Spec + Plan
+  `docs/superpowers/plans/2026-09-30-m6-sim.md`. Übergabe `.studio/handoffs/m6-spec.md`.
+  Nächster Schritt: Budget 17 Starts / Parallelität 2 (lead-tech 16, lead-qa 1) freigeben,
+  Umsetzung M6-Sim (Task 1a/1b Baseline zuerst); Sim-Strang nach eigenem Final-Review und Gate
+  Merge direkt auf main (R82a). Spec/Plan-Branch vorher nach main mergen.
+- **M7** — `docs/m7-spec` @ 7c504e9 (`.worktrees/m7-spec`): Spec, Plan
+  `docs/superpowers/plans/2026-09-30-m7-stimmung.md`, ADR-011. Übergabe
+  `.studio/handoffs/m7-spec.md`, Lizenzurteil `.studio/handoffs/2026-09-30-m7-lizenzpruefung.md`
+  (Dateien nur im Scratchpad — X1 lädt neu und prüft SHA-256). Nächster Schritt: Gate Plan
+  (lead-qa, lead-production), Personas `art-rendering-engineer`/`art-audio-engineer` anlegen
+  (R88), dann Welle 1: R1a → R1b → **Slice-Stopp mit Vorher/Nachher-Bildern an den Nutzer**;
+  parallel R5, A1, X1a, M7-U2. Budgetantrag 64 (lead-art 41/4, lead-tech 23/1, lead-qa 1/1).
+- **M8** — `docs/m8-spec` @ 2a46996 (`.worktrees/m8-spec`): Spec
+  `2026-09-30-m8-kaufleute-design.md`, Übergabe `.studio/handoffs/m8-spec.md`, Werte
+  `m8-werte.md`. Nächster Schritt: Gate Spec (lead-tech, lead-qa); offene Punkte Spec §21
+  (M8-B1/B2 nach M6-B2; M7 AK-R2-03 feste Id-Liste; `buildMenu.ts`/`inspect.ts` nach M7-U2).
+  M8-Sim blocked-by M6-Sim-Merge auf main (R87).
+- Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design (R81: Tick
+  > 8000 → M8 Vorrang).
 
 ## Budget
 
@@ -49,15 +58,12 @@ keine Freigaben (nach Session-Wechsel neu loggen)
 
 ## Offene Entscheide
 
-- L0: Aufräumen Worktrees/Branches `fix/m5-nachlese` und `feat/studio-limit` (gemergt, §6: nur
-  lokal, `-d`); Handbuch „Limits und Sessiongrösse" von „in Arbeit" auf „in Betrieb" (Coach, R80);
-  Paket `log.py result --package` (R75, jetzt frei); Beobachtung „Integrator läuft trotz
-  Vordergrund im Hintergrund" (zweimal in dieser Session) → Coach.
-- Nutzer: keine offenen Warteschlangen-Einträge. Vorher/Nachher-Bilder des Vertical Slice kommen
-  im Bericht (nicht blockierend).
+- L0: Paket lead-production `log.py result --package` (R75) + Folgeaufträge in `metrics.py` (R89); Ad-hoc-Retro „Agent unbekannt inaktiv“ prüfen (vermutlich Messartefakt);
+  Restbefunde Limit-Sensor (beobachtungen.md).
+- Nutzer: keine Warteschlangen-Einträge. Slice-Bilder kommen im Bericht (nicht blockierend).
 
 ## Nächste Schritte
 
-1. Übergaben m7-spec.md und m6-spec.md lesen, beide Leads neu briefen (Budget neu loggen).
-2. Gate Spec für M6 und M7 parallel (lead-tech, lead-qa).
-3. Pläne; M7 startet mit dem Vertical Slice, M6-Sim parallel (R73: M7 Vorrang in render/audio).
+1. Parallel: Umsetzung M6-Sim starten · Gate Plan M7 · Gate Spec M8.
+2. Nach Gate Plan M7: Welle 1 (Vertical Slice) — Bilder an den Nutzer, Slice-Urteil.
+3. Specs/Pläne nach main mergen, sobald die Umsetzung beginnt.

@@ -974,3 +974,14 @@ Warum: Fachnähe der Steuerung, Datei-Ownership eindeutig. — Kosten bei Irrtum
 Paketen zwischen Leads.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M7-PLAN
+
+## R89 · 2026-09-30 · Studio
+
+Ruling: Vorschlag der Kurz-Retro 664ac8d3 angenommen (kein neues Experiment, Messregel zu E-001):
+Folgeaufträge per `SendMessage` mit neuem Paket nennen in der ersten Zeile Paket und Schätzung;
+die Auswertung zählt sie dazu. Das Addieren in `metrics.py` wird ein eigenes Paket für
+lead-production (zusammen mit `log.py result --package`, R75). — Warum: 9 von 10 Agenten wurden
+fortgesetzt; ohne die Regel misst E-001 nicht die Schätzgüte. — Kosten bei Irrtum: eine Zeile
+mehr je Folgeauftrag.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session 664ac8d3
