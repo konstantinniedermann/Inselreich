@@ -2,7 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
-import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
+import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
 import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 
@@ -101,11 +101,12 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
   const tier = TIERS[house.tier];
   setField(panel, 'title', `${BUILDING_DEFS[b.defId].name} — ${tier.name}`);
   setField(panel, 'inhabitants', `Einwohner ${house.inhabitants} / ${tier.maxInhabitants}`);
+  const supplied = isSupplied(world, b);
   setField(
     panel,
     'supplied',
-    house.supplied ? 'Versorgung: ✓ im Radius' : 'Versorgung: ✗ ausserhalb von Kontor/Markt',
-  )?.classList.toggle('negative', !house.supplied);
+    supplied ? 'Versorgung: ✓ im Radius' : 'Versorgung: ✗ ausserhalb von Kontor/Markt',
+  )?.classList.toggle('negative', !supplied);
 
   const needs: ListItem[] = (Object.keys(tier.needs) as GoodId[]).map((g) => {
     const ok = house.satisfied[g] === true;

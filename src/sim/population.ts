@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { TIERS } from './defs/tiers';
+import { TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
 import { GOODS } from './defs/goods';
 import { UPKEEP_INTERVAL, checkAfford, pay, takeStock } from './economy';
 import type {
@@ -12,6 +12,7 @@ import type {
   TierDef,
   World,
 } from './types';
+import { inSupplyRange } from './supply';
 import { center } from './world';
 
 /** Alle 50 Ticks wächst oder schrumpft ein Haus um einen Einwohner. */
@@ -35,11 +36,23 @@ function distance(a: Building, b: Building): number {
 
 /** Versorgt: Kontor im Radius oder ein angebundener Markt im Radius (Mitte zu Mitte). */
 export function isSupplied(world: World, house: Building): boolean {
-  return Object.values(world.buildings).some((b) => {
-    if (b.defId !== 'kontor' && b.defId !== 'market') return false;
-    if (b.defId === 'market' && !b.connected) return false;
-    return distance(house, b) <= (BUILDING_DEFS[b.defId].supplyRadius ?? 0);
-  });
+  const c = center(BUILDING_DEFS[house.defId], house.x, house.y);
+  return inSupplyRange(world, c.cx, c.cy);
+}
+
+/** Neues Haus: Bedarf 1 je Bedarfsgut der Stufe 1, damit die erste Entnahme sofort erfolgt. */
+export function newHouseState(world: World): HouseState {
+  const demand: Partial<Record<GoodId, number>> = {};
+  for (const good of Object.keys(TIERS[1].needs) as GoodId[]) demand[good] = 1;
+  return {
+    tier: 1,
+    inhabitants: 1,
+    demand,
+    satisfied: {},
+    services: {},
+    satisfiedSince: world.tick,
+    supplied: false,
+  };
 }
 
 export function serviceAvailable(world: World, house: Building, service: ServiceId): boolean {
@@ -152,7 +165,7 @@ export function totalTaxes(world: World): number {
     const house = b.house;
     if (!house) continue;
     const tier = TIERS[house.tier];
-    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : 0.5);
+    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : UNSATISFIED_TAX_FACTOR);
   }
   return Math.floor(sum);
 }

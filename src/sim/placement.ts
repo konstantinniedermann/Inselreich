@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { BuildingDefId, Result, SiteRule, Terrain, World } from './types';
 import { fail, ok } from './types';
+import { inSupplyRange } from './supply';
 import { adjacentOf, center, inBounds, isLand, tileAt, tilesInRadius, type Pos } from './world';
 
 // Karte -> Bauland -> frei, für ein w×h-Rechteck ab (x, y).
@@ -50,12 +51,7 @@ function checkRule(
         ? ok
         : fail(radiusReason(rule.terrain));
     case 'supply': {
-      const supplied = Object.values(world.buildings).some((b) => {
-        if (b.defId !== 'kontor' && b.defId !== 'market') return false;
-        const bdef = BUILDING_DEFS[b.defId];
-        const c = center(bdef, b.x, b.y);
-        return Math.hypot(cx - c.cx, cy - c.cy) <= (bdef.supplyRadius ?? 0);
-      });
+      const supplied = inSupplyRange(world, cx, cy);
       return supplied ? ok : fail('Ausserhalb der Versorgung');
     }
   }

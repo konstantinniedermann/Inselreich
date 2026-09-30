@@ -1,5 +1,8 @@
 import type { Tier, TierDef } from '../types';
 
+/** Steuerfaktor, solange nicht alle Bedürfnisse eines Hauses erfüllt sind. */
+export const UNSATISFIED_TAX_FACTOR = 0.5;
+
 export const TIERS: Record<Tier, TierDef> = {
   1: {
     tier: 1,

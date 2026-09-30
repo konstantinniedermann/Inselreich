@@ -1,4 +1,5 @@
-import { placeBuilding, demolish } from '../../src/sim/build';
+import { placeBuilding } from '../../src/sim/build';
+import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, idx } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
@@ -80,36 +81,31 @@ export function houseNearKontor(world: World): Building {
 
 /**
  * Haus mit Mitte-Abstand > 8 vom Kontor, also ausserhalb von dessen Versorgungsradius.
- * Trick: `placeBuilding` verlangt Versorgung. Daher wird kurz ein Markt daneben gebaut,
- * das Haus gesetzt und der Markt wieder abgerissen; Geld und Lager werden danach zurückgesetzt.
+ * Wird direkt eingefügt, ohne `placeBuilding`: die Platzierung verweigert unversorgte Orte zu Recht.
  */
 export function houseFar(world: World): Building {
   const k = world.buildings[world.kontorId]!;
   const kc = center(BUILDING_DEFS.kontor, k.x, k.y);
   const supplyRadius = BUILDING_DEFS.kontor.supplyRadius ?? 0;
-  const money = world.money;
-  const stock = { ...world.stock };
-  for (let y = 0; y < world.height - 2; y++) {
-    for (let x = 0; x < world.width - 3; x++) {
+  for (let y = 0; y < world.height; y++) {
+    for (let x = 0; x < world.width; x++) {
       const h = center(BUILDING_DEFS.house, x, y);
       if (Math.hypot(h.cx - kc.cx, h.cy - kc.cy) <= supplyRadius + 1) continue;
-      // Haus (x, y) plus Markt-Footprint (x+1.., y..y+1)
-      const tiles = [
-        [x, y],
-        [x + 1, y],
-        [x + 2, y],
-        [x + 1, y + 1],
-        [x + 2, y + 1],
-      ] as const;
-      if (!tiles.every(([px, py]) => world.tiles[idx(world, px, py)]!.buildingId === null))
-        continue;
-      for (const [px, py] of tiles) forceGrass(world, px, py);
-      const m = placeBuilding(world, 'market', x + 1, y);
-      if (!m.ok || m.id === undefined) throw new Error('helper market not placed');
-      const house = placedHouse(world, x, y);
-      demolish(world, m.id);
-      world.money = money;
-      world.stock = stock;
+      if (world.tiles[idx(world, x, y)]!.buildingId !== null) continue;
+      forceGrass(world, x, y);
+      const id = world.nextBuildingId++;
+      const house: Building = {
+        id,
+        defId: 'house',
+        x,
+        y,
+        connected: false,
+        progress: 0,
+        state: 'ok',
+        house: newHouseState(world),
+      };
+      world.buildings[id] = house;
+      world.tiles[idx(world, x, y)]!.buildingId = id;
       return house;
     }
   }
