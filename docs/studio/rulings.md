@@ -453,3 +453,24 @@ umgesetzt — beide Stränge ändern tools/studio/model.py; so gibt es nur einen
 Konflikte. — Kosten bei Irrtum: Dashboard zeigt bis dahin Anzeige-Artefakte (in Retros quittiert).
 
 Entscheider: L0 · Anlass: Ad-hoc-Retros CI-Pages, Inaktiv, Budget
+
+## R52 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Eigenentscheide des Tech-Leads in der Umsetzung bestätigt — neuer Task G-6c (per
+`spawned` abgeschlossene Vordergrund-Agenten erzeugen eine Bericht-Zeile, ihre Spur endet dort),
+14 CHANGELOG-Einträge statt einem (einer je Persona, wie Dateiformat und `test_docs` verlangen),
+Playtests aus einer temporären Worktree-Kopie, weil der Server die Persona-Namen aus dem Hauptrepo
+liest (als Beobachtung eingetragen). — Folgen der zwischenzeitlich gemergten Wartung S16 und des
+Handbuchs 1.0, nicht des Designs. — Kosten bei Irrtum: ein Doku-Nachtrag im CHANGELOG.
+
+Entscheider: L0 · Anlass: Bericht lead-tech, Paket G
+
+## R53 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Merge Studio-Graph bestanden — Final-Review (lead-qa, qa-code-reviewer auf opus) OK
+ohne hohe Befunde, Nachtrag der niedrigen Punkte 1–3 vor dem Merge erledigt (Fix mit Test,
+Spec nachgezogen, Befunde in `docs/beobachtungen.md`), `make check` und `make studio-lint` grün,
+`src/`/`tests/` unberührt. Merge durch production-integrator, Push laut Nutzerfreigabe (R40) und
+Verfassung §7.2. — Kosten bei Irrtum: Korrektur-Commit auf main.
+
+Entscheider: L0 · Anlass: Gate Merge
