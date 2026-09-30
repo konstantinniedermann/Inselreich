@@ -229,9 +229,11 @@ Regeln dazu:
   `main` in einer Review-Session (kombinierter Diff bzw. jeder Strang-Diff), inkl. Balancing-Test
   und Determinismus (gleicher Seed → gleicher Zustand).
 - **Merge:** nur nach dem einen L0-Merge-Gate des Meilensteins, seriell (ein Strang nach dem
-  anderen) durch `production-integrator`: `make check` vor dem ersten und nach **jedem** Merge,
-  `git merge --no-ff`, Push nur laut Freigabe im Briefing, danach CI-Status
-  (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen. Bei Konflikten stoppen und melden; nie `--force`, nie `reset --hard`.
+  anderen) durch `production-integrator`: `make check` vor dem ersten Merge; je Strang
+  `git merge --no-ff --no-commit`, dann `make check` — grün: Merge committen, rot:
+  `git merge --abort` und melden. Push nur laut Freigabe im Briefing, danach CI-Status
+  (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen. Bei Konflikten stoppen und
+  melden; nie `--force`, nie `reset --hard`.
 
 ## Feste Regeln
 
