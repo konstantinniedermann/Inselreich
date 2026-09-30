@@ -160,15 +160,17 @@ src/
     defs/goods.ts      Gütertabelle (2.3)
     defs/buildings.ts  Gebäudetabelle (2.4)
     defs/tiers.ts      Bevölkerungsstufen (2.7)
+    defs/timing.ts     Takte: Tick-Dauer, Buchungs-, Wachstums- und Aufstiegstakt
     world.ts           createWorld(seed), Zugriffshelfer (tileAt, buildingsOfType, footprint)
     placement.ts       canPlace(world, defId, x, y) → { ok, reason }
     build.ts           placeBuilding, demolish (Kosten, Refund, Tile-Belegung)
-    roads.ts           recomputeConnectivity(world) → Set<buildingId>
+    roads.ts           recomputeConnectivity(world): setzt connected je Gebäude (BFS über Wege)
+    supply.ts          Versorgungsradius von Kontor und angebundenem Markt
     production.ts      tickProduction
-    population.ts      tickPopulation (Verbrauch, Wachstum, Aufstieg)
-    economy.ts         tickEconomy (Steuern, Unterhalt), canAfford, pay
+    population.ts      tickPopulation (Verbrauch, Wachstum, Aufstieg), tickTaxes (Steuern)
+    economy.ts         Lager (addStock, takeStock), checkAfford, pay, Rückerstattung, tickEconomy (Unterhalt)
     trade.ts           buy, sell
-    tick.ts            step(world): Reihenfolge Produktion → Bevölkerung → Wirtschaft → Sieg
+    tick.ts            step(world): tick += 1, dann Produktion → Bevölkerung → Steuern → Unterhalt → Sieg (ADR-005)
     save.ts            serialize/deserialize mit Versionsfeld
   render/
     camera.ts          Pan/Zoom, Welt↔Bildschirm
@@ -183,8 +185,14 @@ src/
     inspect.ts         Seitenpanel für angeklicktes Gebäude (Status, Abriss)
     trade.ts           Handelsdialog am Kontor
     messages.ts        Hinweise (Fehler bei Platzierung, Sieg)
+    storage.ts         localStorage-Adapter für Speichern/Laden
+    dom.ts             DOM-Helfer (setField, costLine)
   main.ts
 ```
+
+Modulliste nachgeführt im Doku-Pass M4: Steuern liegen in `population.ts` (nicht `economy.ts`),
+dazu `supply.ts`, `defs/timing.ts`, `ui/storage.ts`, `ui/dom.ts` und die Tick-Reihenfolge nach ADR-005.
+Aktuelle Bausteinsicht: [arc42, Abschnitt 5](../../arc42.md#5-bausteinsicht).
 
 ### 3.3 Datenmodell (Kern)
 
