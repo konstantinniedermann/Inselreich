@@ -18,6 +18,7 @@ dieser Tabelle).
 **MIT-Hinweis CCGS:** „Copyright (c) 2026 Donchitos". Die MIT-Lizenz erlaubt Nutzung und
 Bearbeitung mit Nennung des Copyright-Vermerks und des Lizenztexts. Übernommen sind nur
 Struktur und Ideen, auf Deutsch neu formuliert und gekürzt.
+Lizenztext im Wortlaut: [CCGS-LICENSE.txt](CCGS-LICENSE.txt).
 
 **disler:** Ohne Lizenz gilt das volle Urheberrecht. Übernommen ist **nur die Idee, kein Code** —
 die Technik ist bewusst eine andere (siehe [ADR-008](../adr/ADR-008-studio-telemetrie.md)).
