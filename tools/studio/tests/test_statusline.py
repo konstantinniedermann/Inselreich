@@ -4,8 +4,12 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from unittest import mock
+
+import statusline
 
 SCRIPT = Path(__file__).resolve().parents[1] / "statusline.py"
 PAYLOAD = (
@@ -61,6 +65,24 @@ class StatuslineTest(unittest.TestCase):
         self.assertEqual(
             self.run_line(PAYLOAD, self.fake("exit 0\n")).strip(), "5h 42 %"
         )
+
+    def test_quoted_path_with_space(self):
+        folder = Path(self.tmp.name) / "mit leerzeichen"
+        folder.mkdir()
+        script = folder / "s.sh"
+        script.write_text("#!/bin/bash\necho gefunden\n", "utf-8")
+        out = self.run_line(PAYLOAD, f"bash '{script}'")
+        self.assertEqual(out.strip(), "gefunden | 5h 42 %")
+
+    def test_hanging_script_times_out(self):
+        command = self.fake("echo vorab\nexec sleep 30\n").split()
+        with mock.patch.object(statusline, "TIMEOUT_S", 0.5):
+            start = time.monotonic()
+            out = statusline.user_output(
+                b"{}", {"STUDIO_STATUSLINE_CMD": " ".join(command)}
+            )
+        self.assertLess(time.monotonic() - start, 10)
+        self.assertIn(out, ("", "vorab\n"))
 
     def test_user_script_missing(self):
         self.assertEqual(self.run_line(PAYLOAD).strip(), "5h 42 %")

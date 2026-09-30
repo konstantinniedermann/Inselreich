@@ -20,6 +20,7 @@ RED_FROM = 80
 WEEK_HIGH_ABOVE = 80
 CONTEXT_HANDOVER_FROM = 50
 HOOK_MAX_AGE = 600
+RESET_KEYS = ("five_hour_resets_at", "seven_day_resets_at")
 VALUE_KEYS = (
     "five_hour_pct",
     "seven_day_pct",
@@ -102,7 +103,20 @@ def read_fresh(
     ts = _number(data.get("ts"))
     if ts is None or now - ts > max_age:
         return None
-    return data
+    return _sanitized(data, ts)
+
+
+def _sanitized(data: dict, ts: float) -> dict:
+    """Datei ist Fremdinput: nicht-numerische Werte werden ``None``."""
+    clean = dict(data)
+    clean["ts"] = ts
+    session = data.get("session_id")
+    clean["session_id"] = session if isinstance(session, str) else ""
+    for key in VALUE_KEYS:
+        clean[key] = _percent(data.get(key))
+    for key in RESET_KEYS:
+        clean[key] = _reset(data.get(key))
+    return clean
 
 
 def light(five_hour_pct: float | None) -> str | None:
@@ -168,11 +182,11 @@ def _hints(data: dict, lamp: str | None) -> list[str]:
         hints.append("Wochenfenster hoch: Parallelität halbieren")
     context = data.get("context_pct")
     if context is not None and context >= CONTEXT_HANDOVER_FROM:
-        hints.append("Kontext >= 50 %: Übergabe über state.md")
+        hints.append(f"Kontext >= {CONTEXT_HANDOVER_FROM} %: Übergabe über state.md")
     return hints
 
 
-def summary(data: dict, now: float) -> str:
+def summary(data: dict) -> str:
     """Eine Zeile für L0; leer, wenn kein Wert vorhanden ist."""
     parts = _parts(data)
     if not parts:

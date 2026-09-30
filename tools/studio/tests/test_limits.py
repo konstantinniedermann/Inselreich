@@ -121,6 +121,27 @@ class FileTest(unittest.TestCase):
         self.assertIsNone(limits.read_fresh(self.path, now11))
         self.assertIsNotNone(limits.read_fresh(self.path, now11, max_age=3600))
 
+    def test_read_fresh_sanitizes_garbage_values(self):
+        bad = {
+            "ts": 1000.0,
+            "five_hour_pct": "viel",
+            "five_hour_resets_at": "bald",
+            "seven_day_pct": True,
+            "context_pct": 250,
+            "session_id": 7,
+        }
+        self.path.write_text(json.dumps(bad), "utf-8")
+        data = limits.read_fresh(self.path, 1001.0)
+        self.assertIsNone(data["five_hour_pct"])
+        self.assertIsNone(data["five_hour_resets_at"])
+        self.assertIsNone(data["seven_day_pct"])
+        self.assertEqual(data["context_pct"], 100)
+        self.assertEqual(data["session_id"], "")
+        self.assertEqual(
+            limits.summary(data),
+            "Limit: Kontext L0 100 %. Kontext >= 50 %: Übergabe über state.md",
+        )
+
     def test_read_fresh_robust(self):
         self.assertIsNone(limits.read_fresh(self.path, 1.0))
         self.path.write_text("kein json", "utf-8")
@@ -138,7 +159,7 @@ def hhmm(epoch):
 class SummaryTest(unittest.TestCase):
     def test_full_summary(self):
         data = limits.parse(full(), now=1.0)
-        text = limits.summary(data, 1.0)
+        text = limits.summary(data)
         self.assertEqual(
             text,
             f"Limit: 5h 42 % (Reset {hhmm(RESET)}), Woche 31 %, "
@@ -147,19 +168,19 @@ class SummaryTest(unittest.TestCase):
 
     def test_parts_omitted(self):
         data = limits.parse({"context_window": {"used_percentage": 18}})
-        self.assertEqual(limits.summary(data, 1.0), "Limit: Kontext L0 18 %")
-        self.assertEqual(limits.summary(limits.parse({}), 1.0), "")
+        self.assertEqual(limits.summary(data), "Limit: Kontext L0 18 %")
+        self.assertEqual(limits.summary(limits.parse({})), "")
 
     def test_yellow_and_red_hints(self):
         yellow = limits.parse({"rate_limits": {"five_hour": {"used_percentage": 65}}})
-        self.assertIn("Ampel gelb", limits.summary(yellow, 1.0))
+        self.assertIn("Ampel gelb", limits.summary(yellow))
         self.assertIn(
             "herunterfahren: weniger parallel, keine neue Welle, "
             "Angefangenes abschliessen",
-            limits.summary(yellow, 1.0),
+            limits.summary(yellow),
         )
         red = limits.parse({"rate_limits": {"five_hour": {"used_percentage": 85}}})
-        text = limits.summary(red, 1.0)
+        text = limits.summary(red)
         self.assertIn(
             "Session-Ende vorbereiten: abschliessen, state.md, Session beenden", text
         )
@@ -173,18 +194,18 @@ class SummaryTest(unittest.TestCase):
                 {"rate_limits": {"seven_day": {"used_percentage": pct}}}
             )
 
-        self.assertNotIn("Wochenfenster hoch", limits.summary(week(80), 1.0))
+        self.assertNotIn("Wochenfenster hoch", limits.summary(week(80)))
         self.assertIn(
-            "Wochenfenster hoch: Parallelität halbieren", limits.summary(week(81), 1.0)
+            "Wochenfenster hoch: Parallelität halbieren", limits.summary(week(81))
         )
 
     def test_context_hint_from_50(self):
         def ctx(pct):
             return limits.parse({"context_window": {"used_percentage": pct}})
 
-        self.assertNotIn("Übergabe", limits.summary(ctx(49), 1.0))
+        self.assertNotIn("Übergabe", limits.summary(ctx(49)))
         self.assertIn(
-            "Kontext >= 50 %: Übergabe über state.md", limits.summary(ctx(50), 1.0)
+            "Kontext >= 50 %: Übergabe über state.md", limits.summary(ctx(50))
         )
 
     def test_suffix(self):

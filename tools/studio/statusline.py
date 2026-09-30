@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import shlex
 import subprocess
 import sys
 
@@ -35,10 +36,11 @@ def record(raw: bytes) -> dict | None:
 
 def user_command(env: dict) -> list[str]:
     text = env.get("STUDIO_STATUSLINE_CMD") or DEFAULT_CMD
-    return [
-        os.path.expanduser(word) if word.startswith("~") else word
-        for word in text.split()
-    ]
+    try:
+        words = shlex.split(text)
+    except ValueError:
+        return []
+    return [os.path.expanduser(word) for word in words]
 
 
 def user_output(raw: bytes, env: dict) -> str:

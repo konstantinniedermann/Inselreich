@@ -88,6 +88,14 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(state["limits"]["light"], "gelb")
         self.assertAlmostEqual(state["limits"]["age_s"], 1800, delta=30)
 
+    def test_state_survives_garbage_limits(self):
+        data = {"ts": time.time(), "five_hour_pct": "viel", "context_pct": [1]}
+        (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name}):
+            status, _, body = self.get("/api/state?session=all")
+        self.assertEqual(status, 200)
+        self.assertIsNone(json.loads(body)["limits"]["light"])
+
     def test_state_limits_dropped_after_an_hour(self):
         data = {"ts": time.time() - 3700, "five_hour_pct": 65}
         (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")

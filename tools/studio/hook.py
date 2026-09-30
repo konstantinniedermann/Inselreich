@@ -347,7 +347,7 @@ def limits_notice(payload: dict, now: float | None = None) -> str:
         return ""
     now = time.time() if now is None else now
     data = limits.read_fresh(studio_home() / "limits.json", now, limits.HOOK_MAX_AGE)
-    return limits.summary(data, now) if data else ""
+    return limits.summary(data) if data else ""
 
 
 def prompt_context(payload: dict) -> str:
