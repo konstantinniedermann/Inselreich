@@ -53,9 +53,9 @@ def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
             try:
                 run_id = str(run["databaseId"])
                 attempt = _attempt(run)
-                if run.get("status") != "completed" or (
-                    seen_key(run_id, attempt) in seen
-                    or (attempt == 1 and run_id in seen)
+                if (
+                    run.get("status") != "completed"
+                    or seen_key(run_id, attempt) in seen
                 ):
                     continue
                 events.append(

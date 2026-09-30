@@ -836,7 +836,7 @@ class _Builder:
         if not run:
             return
         try:
-            attempt = int(event.get("attempt") or 1)
+            attempt = max(1, int(event.get("attempt") or 1))
         except (TypeError, ValueError):
             attempt = 1
         known = self.ci.get(run)
