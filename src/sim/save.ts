@@ -47,7 +47,7 @@ function isValidOrder(o: unknown): boolean {
 function isValidV2Fields(raw: Record<string, unknown>): boolean {
   const { taxLevel, sellPct } = raw;
   if (typeof taxLevel !== 'string' || !Object.hasOwn(TAX_LEVELS, taxLevel)) return false;
-  if (typeof raw.taxLockedUntil !== 'number') return false;
+  if (!isInt(raw.taxLockedUntil) || raw.taxLockedUntil < 0) return false;
   if (
     !isObject(sellPct) ||
     !GOOD_IDS.every((g) => isInt(sellPct[g]) && sellPct[g] >= SELL_FLOOR && sellPct[g] <= 100)

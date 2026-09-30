@@ -83,6 +83,9 @@ describe('save', () => {
       (r) => delete (r.sellPct as Record<string, number>).rum,
       (r) => (r.order = { period: 0, good: 'tools', amount: 5, reward: 0, due: 1200 }),
       (r) => (r.order = { period: 0, good: 'wood', amount: 0, reward: 0, due: 1200 }),
+      (r) => (r.order = { period: 0, good: 'wood', amount: 5.5, reward: 0, due: 1200 }),
+      (r) => (r.taxLockedUntil = 1.5),
+      (r) => (r.taxLockedUntil = -7),
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
