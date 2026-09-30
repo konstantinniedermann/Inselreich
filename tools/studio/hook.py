@@ -5,6 +5,7 @@ Wirft nie und blockiert nie; Fehler enden still mit Exit 0.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import shlex
 import sys
@@ -143,7 +144,8 @@ def main() -> int:
             return 0
         event = to_event(payload)
         if event:
-            append_event(event)
+            with contextlib.suppress(Exception):  # Kontext trotzdem ausgeben
+                append_event(event)
         if payload["hook_event_name"] == "SessionStart":
             output = {
                 "hookSpecificOutput": {

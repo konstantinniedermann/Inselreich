@@ -145,6 +145,23 @@ class MainTest(unittest.TestCase):
             self.assertEqual(proc.stdout, "", stdin)
             self.assertEqual(lines, [], stdin)
 
+    def test_session_start_context_survives_unwritable_home(self):
+        with tempfile.NamedTemporaryFile() as blocker:
+            env = {**os.environ, "STUDIO_HOME": str(Path(blocker.name) / "sub")}
+            proc = subprocess.run(
+                [sys.executable, str(HOOK)],
+                input=json.dumps(payload("SessionStart", source="startup")),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(proc.stderr, "")
+        out = json.loads(proc.stdout)
+        self.assertIn("STUDIO.md", out["hookSpecificOutput"]["additionalContext"])
+
     def test_session_start_emits_context(self):
         proc, lines = self.run_hook(
             json.dumps(payload("SessionStart", source="startup"))

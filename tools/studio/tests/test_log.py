@@ -149,6 +149,14 @@ class LogTest(unittest.TestCase):
         self.assertEqual(len(archived), 1)
         self.assertIn("archiviert", out)
 
+    def test_archive_twice_keeps_both(self):
+        for _ in range(2):
+            self.run_log("status", "--role", "lead-qa", "--status", "idle")
+            code, _, _ = self.run_log("archive")
+            self.assertEqual(code, 0)
+        archived = list((Path(self.tmp.name) / "archive").glob("events-*.jsonl"))
+        self.assertEqual(len(archived), 2)
+
     def test_archive_without_file(self):
         code, out, _ = self.run_log("archive")
         self.assertEqual(code, 0)

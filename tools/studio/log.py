@@ -121,7 +121,12 @@ def archive() -> int:
         return 0
     target_dir = studio_home() / "archive"
     target_dir.mkdir(parents=True, exist_ok=True)
-    target = target_dir / f"events-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}.jsonl"
+    stamp = f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
+    target = target_dir / f"events-{stamp}.jsonl"
+    counter = 0
+    while target.exists():
+        counter += 1
+        target = target_dir / f"events-{stamp}-{counter}.jsonl"
     source.rename(target)
     print(f"studio-log: archiviert nach {target}")
     return 0
