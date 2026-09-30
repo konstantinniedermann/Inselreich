@@ -335,9 +335,16 @@ def incidents(
                     "t": run.get("t") or 0.0,
                 }
             )
+    reported: set[str] = set()
     for row in budgets:
         granted = row.get("granted") or 0
-        if granted > 0 and row.get("used", 0) > BUDGET_FACTOR * granted:
+        budget_id = f"budget:{row['lead']}:{row['phase']}"
+        if (
+            granted > 0
+            and row.get("used", 0) > BUDGET_FACTOR * granted
+            and budget_id not in reported
+        ):
+            reported.add(budget_id)
             found.append(
                 {
                     "id": f"budget:{row['lead']}:{row['phase']}",

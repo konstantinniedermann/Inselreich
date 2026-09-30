@@ -204,13 +204,13 @@ class _Builder:
         self.trace: dict[str, list[dict]] = {}
         self.index = 0
         self.current_ts = ""
-        self.budgets: dict[tuple[str, str], dict] = {}
+        self.budgets: dict[tuple[str, str, str], dict] = {}
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
         self.feed: list[dict] = []
         self.results: dict[tuple[str, str], dict] = {}
-        self.timeline: list[tuple[float, str, str]] = []
+        self.timeline: list[tuple[float, str, str, str]] = []
         self.retros: list[dict] = []
         self.ci: dict[str, dict] = {}
         self.queue: dict[str, dict] = {}
@@ -734,7 +734,8 @@ class _Builder:
         phase = grant.get("phase") or "Standard"
         granted = int(grant.get("granted") or 0)
         parallel = int(grant.get("parallel") or 0)
-        current = self.budgets.get((lead, phase))
+        key = (lead, phase, str(event.get("session_id") or ""))
+        current = self.budgets.get(key)
         if current is None:
             current = {
                 "lead": lead,
@@ -744,13 +745,13 @@ class _Builder:
                 "since": ts,
                 "session_id": str(event.get("session_id") or ""),
             }
-            self.budgets[(lead, phase)] = current
+            self.budgets[key] = current
         current["granted"] += granted
         if parallel:
             current["parallel"] = parallel
 
-    def budget_phase(self, lead_node: dict, child: dict) -> str | None:
-        """Phase der Freigabe, der ein Start zählt; None = keine Freigabe passt."""
+    def budget_key(self, lead_node: dict, child: dict) -> tuple | None:
+        """Schlüssel der Freigabe, der ein Start zählt; None = keine passt."""
         candidates = [
             g
             for g in self.budgets.values()
@@ -763,8 +764,9 @@ class _Builder:
         names = {child["package"], lead_node["package"]} - {""}
         for grant in candidates:
             if grant["phase"] in names:
-                return grant["phase"]
-        return max(candidates, key=lambda g: g["since"])["phase"]
+                return (grant["lead"], grant["phase"], grant["session_id"])
+        best = max(candidates, key=lambda g: g["since"])
+        return (best["lead"], best["phase"], best["session_id"])
 
     def on_package(self, event, ts, sid):
         key = _package(event)
@@ -1115,10 +1117,10 @@ class _Builder:
         return view
 
     def budget_view(self) -> list[dict]:
-        groups: dict[tuple[str, str], dict] = {
+        groups: dict[tuple[str, str, str], dict] = {
             key: {"plan": plan, "children": []} for key, plan in self.budgets.items()
         }
-        granted_leads = {lead for lead, _ in self.budgets}
+        granted_leads = {lead for lead, _, _ in self.budgets}
         no_grant = {
             "phase": "ohne Freigabe",
             "granted": 0,
@@ -1138,16 +1140,16 @@ class _Builder:
                     for g in self.budgets.values()
                 ):
                     group = groups.setdefault(
-                        (lead, no_grant["phase"]),
+                        (lead, no_grant["phase"], ""),
                         {"plan": dict(no_grant, lead=lead), "children": []},
                     )
                 else:
-                    phase = self.budget_phase(lead_node, child)
-                    group = groups.get((lead, phase)) if phase else None
+                    key = self.budget_key(lead_node, child)
+                    group = groups.get(key) if key else None
                 if group is not None:
                     group["children"].append(child)
         rows = []
-        for (lead, _), group in sorted(groups.items()):
+        for (lead, _, _), group in sorted(groups.items()):
             plan, children = group["plan"], group["children"]
             spans = []
             for c in children:

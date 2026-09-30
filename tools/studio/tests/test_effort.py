@@ -240,6 +240,11 @@ class EffortStateTest(unittest.TestCase):
             {i["id"] for i in out}, {"failed:s:a", "inaktiv:s:b", "runden:P"}
         )
 
+    def test_budget_incident_id_reported_once(self):
+        row = {"lead": "l", "phase": "p", "granted": 2, "used": 9}
+        out = effort.incidents([], [], [], [row, dict(row)], [], set(), [])
+        self.assertEqual([i["id"] for i in out], ["budget:l:p"])
+
     def test_unknown_event_and_legacy_package(self):
         events = [
             ev("gibtsnicht", 1, foo=1),

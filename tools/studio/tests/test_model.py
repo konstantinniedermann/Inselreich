@@ -1203,6 +1203,21 @@ class BudgetPhaseSessionTest(unittest.TestCase):
         _, rows = self.rows(events)
         self.assertEqual((rows["P1"]["used"], rows["P2"]["used"]), (1, 1))
 
+    def test_same_phase_name_in_two_sessions_stays_separate(self):
+        events = []
+        for sess in ("sa", "sb"):
+            events += [
+                grant(0, sess, "Standard", 2, 1, lead="lead-qa"),
+                *lead_node(1, sess, "L", lead="lead-qa"),
+                *worker(10, sess, "L", "W", stop_at=15),
+            ]
+        _, rows = self.rows(events)
+        std = [b for b in self.rows(events)[0]["budgets"] if b["phase"] == "Standard"]
+        self.assertEqual(
+            sorted((b["session_id"], b["used"]) for b in std), [("sa", 1), ("sb", 1)]
+        )
+        self.assertNotIn("ohne Freigabe", rows)
+
     def test_start_in_session_without_grant_counts_as_no_grant(self):
         events = [
             grant(0, SA, "graph-umsetzung", 32, 2),
