@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.2
+
+- Anlass: Retro Meilenstein Studio-Graph, Befund B2 (Basis-Drift durch parallele L0-Sessions)
+- Datenbasis: `docs/studio/retros/2026-09-30-meilenstein-studio-graph.md`, `docs/studio/rulings.md` R43, R52
+- Ruling: R55
+- Änderungen: Abschnitt „Session-Start und -Ende“ um „Parallele L0-Sessions“ ergänzt (Datei-Eigentum und Merge-Reihenfolge in `state.md`, Planung gegen fremde Pfade erst nach deren Merge); `state.md` mit Abschnitt „Parallele Sessions“; Experiment E-002
+
+## 2026-09-30 · Handbuch 1.1
+
+- Anlass: Retro Meilenstein Studio-Graph, Befund B1 (Schätzungen 5- bis 20-fach zu hoch)
+- Datenbasis: `docs/studio/metriken/Studio-Graph.md`, `docs/studio/retros/2026-09-30-meilenstein-studio-graph.md`
+- Ruling: R54
+- Änderungen: Briefing-Standard: Schätzung aus Richtwerten statt Menschenzeit; neu `docs/studio/metriken/richtwerte.md`; Hinweis in `templates/briefing.md`; Experiment E-001
+
 ## 2026-09-30 · Persona art-license-checker 1.1
 
 - Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard

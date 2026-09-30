@@ -474,3 +474,44 @@ Spec nachgezogen, Befunde in `docs/beobachtungen.md`), `make check` und `make st
 Verfassung §7.2. — Kosten bei Irrtum: Korrektur-Commit auf main.
 
 Entscheider: L0 · Anlass: Gate Merge
+
+## R54 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-001 „Schätzung aus Richtwerten statt Menschenzeit“ angenommen — Muster über
+zwei Meilensteine (−93 % bzw. −69 % Abweichung), Änderung ist ein Satz im Handbuch plus
+Richtwert-Tabelle, Messung über die vorhandene Metrik. — Kosten bei Irrtum: Rückfall auf den
+Stand 723aaee, eine Minor-Version.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R55 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-002 „Datei-Eigentum bei parallelen L0-Sessions“ angenommen, Befund B3
+(Meilenstein-Metrik unterscheidet keine Sessions) als Werkzeugfehler an das Paket S17-03 der
+Parallel-Session übergeben — R43 hat sich bewährt und wird Regel; B3 liegt in derselben Funktion
+wie der Budget-Fix. — Kosten bei Irrtum: ein zusätzlicher Pflichtschritt beim Session-Start.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R56 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 — lead-tech und lead-qa BEDENKEN (9 + 7 Punkte), kein ZURÜCK; alle Vorschläge
+werden in die Spec übernommen (u. a. ganzzahlige Steuerformel, `roadPath` als Sim-Teilpaket S3b,
+ADR-010 als Pflicht, reproduzierbare Szenario-Saves für Browser-Checks, Ton per Fake-AudioContext
+in Vitest, „hörbar" und Firefox im Nutzer-Playtest); Test-Strategie und Context-Scopes in
+CLAUDE.md werden um `src/audio/` ergänzt. Gate gilt als bestanden, sobald beide Prüfer ihre Punkte
+in der nachgeführten Spec als erledigt bestätigen. Baseline-Vorlage Sieg-Tick 6050 (gültig nach
+Messung in B1), Aufstiegswartezeit „niedrig" 150 Ticks. — Kosten bei Irrtum: eine weitere
+Spec-Runde.
+
+Entscheider: L0 · Anlass: Gate Spec M5
+
+## R57 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 bestanden — Nachprüfung lead-tech OK (9/9 Punkte), lead-qa BEDENKEN niedrig
+(7/7 Punkte; zwei Abhängigkeiten zu S5/U1a und ein Hotkey im Szenario-Ablauf werden vor dem Plan in
+der Spec nachgetragen). Neue Setzungen übernommen: Münz-Tondrossel 50 ms, `layoutKey` für die
+Versorgungsmaske, Paket S5 für Szenario-Saves. Nächster Schritt: Plan durch lead-tech. — Kosten bei
+Irrtum: Abhängigkeitsfehler fallen spätestens im Gate Plan auf.
+
+Entscheider: L0 · Anlass: Nachprüfung Gate Spec M5

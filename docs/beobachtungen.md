@@ -228,3 +228,12 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
+
+## 2026-09-30 · .prettierignore / Worktrees · Prettier formatiert Worktree-Dateien vom Hauptrepo aus still nicht
+
+**Beobachtung:** Die `.prettierignore` des Hauptrepos schliesst `.worktrees/` aus. `npx prettier --write <worktree-datei>`
+aus dem Hauptrepo heraus lässt die Datei still unverändert; „Prettier gelaufen" war deshalb zweimal falsch gemeldet.
+Im Worktree selbst ausgeführt (mit dem `node_modules` des Hauptrepos) funktioniert es.
+**Ursprung:** lead-design, Spec M5 (Session 2026-09-30).
+**Einschätzung:** Hinweis in Briefings für Worktree-Arbeit („Prettier im Worktree ausführen") und Kandidat für eine
+lernen.md-Zeile durch den studio-coach.

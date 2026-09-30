@@ -16,3 +16,5 @@ committet, damit das Lernen die lokalen Rohdaten überdauert.
   Kennung (idempotent).
 - Fehlt eine Messung, steht im JSON `null` und in der Tabelle „nicht gemessen"; Messwerte werden nie
   geschätzt.
+- **Ausnahme:** [richtwerte.md](richtwerte.md) pflegt der `studio-coach` von Hand (Richtwerte für die
+  Schätzung, Experiment E-001). Sie hat keinen Abschnitt `## Rohwerte` und erscheint deshalb nicht im Verlauf.
