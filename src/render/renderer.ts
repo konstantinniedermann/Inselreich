@@ -10,6 +10,12 @@ export type Tool =
   | { kind: 'road' }
   | { kind: 'demolish' };
 
+/** Darstellungs-Zusatz je Frame; Animation entsteht nur aus `timeMs` und dem Welt-Zustand. */
+export interface RenderFx {
+  timeMs: number;
+  // Tag/Nacht (`dayNight`) kommt erst, wenn A4 beschlossen ist.
+}
+
 export interface Hover {
   x: number;
   y: number;
@@ -29,6 +35,7 @@ export function render(
   hover: Hover | null,
   selectedId: number | null,
   view: { w: number; h: number },
+  fx: RenderFx = { timeMs: 0 },
 ): void {
   ctx.clearRect(0, 0, view.w, view.h);
   const s = TILE * cam.zoom;
@@ -77,7 +84,7 @@ export function render(
     if (b.x > x1 || b.y > y1 || b.x + def.w - 1 < x0 || b.y + def.h - 1 < y0) continue;
     const p = tileToScreen(cam, b.x, b.y);
     const q = tileToScreen(cam, b.x + def.w, b.y + def.h);
-    drawBuilding(ctx, def, b, p.x, p.y, q.x - p.x, q.y - p.y);
+    drawBuilding(ctx, def, b, p.x, p.y, q.x - p.x, q.y - p.y, fx.timeMs);
   }
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];
