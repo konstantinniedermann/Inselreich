@@ -74,7 +74,9 @@ class ContextTest(unittest.TestCase):
                 " · Blockiert: M5-03",
                 text,
             )
-            self.assertIn("- N-002 · offen · Lib y — Empfehlung: E · Blockiert: B", text)
+            self.assertIn(
+                "- N-002 · offen · Lib y — Empfehlung: E · Blockiert: B", text
+            )
             self.assertIn("- N-003 · beantwortet · Lib z — Antwort: Nein", text)
 
     def test_start_report_comes_first(self):

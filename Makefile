@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check studio-test studio studio-stop studio-archive studio-metrics
+.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -24,6 +24,9 @@ build: ## Typprüfung + Produktions-Build
 
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
 	python3 -m unittest discover -s tools/studio/tests -t tools/studio
+
+studio-lint: ## Ruff über tools/studio (via uvx; vor Commits an tools/studio, nicht Teil von check)
+	uvx ruff check tools/studio && uvx ruff format --check tools/studio
 
 studio: ## Studio-Dashboard starten (gibt die URL aus)
 	@bash tools/studio/start.sh

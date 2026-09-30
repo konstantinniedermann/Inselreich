@@ -8,7 +8,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import effort
@@ -181,8 +181,10 @@ def render(raw: dict) -> str:
         "",
         "## Aufwand",
         "",
-        f"- Sessions: {raw['sessions']}, Agenten: {raw['agents']}, "
-        f"Delegationen: {raw['delegations']}",
+        (
+            f"- Sessions: {raw['sessions']}, Agenten: {raw['agents']}, "
+            f"Delegationen: {raw['delegations']}"
+        ),
         f"- Dauer: {_minutes(totals['duration_s'])}",
         f"- Tool-Aufrufe: {_text(totals['tool_calls'])}",
         f"- Input-Tokens: {_tokens(totals['input'])}",
@@ -197,27 +199,41 @@ def render(raw: dict) -> str:
         "Schätzung gegen Ist:",
         "",
         f"- Verglichene Agenten: {est.get('count', 0)}",
-        f"- Geschätzt: {_tenth(est.get('estimated_min'), 'min')}, "
-        f"Ist: {_tenth(est.get('actual_min'), 'min')}, "
-        f"Abweichung: {_unit(est.get('deviation_pct'), '%')}",
-        f"- Werkzeugaufrufe geschätzt: {_text(est.get('estimated_tools'))}, "
-        f"Ist: {_text(est.get('actual_tools'))}",
+        (
+            f"- Geschätzt: {_tenth(est.get('estimated_min'), 'min')}, "
+            f"Ist: {_tenth(est.get('actual_min'), 'min')}, "
+            f"Abweichung: {_unit(est.get('deviation_pct'), '%')}"
+        ),
+        (
+            f"- Werkzeugaufrufe geschätzt: {_text(est.get('estimated_tools'))}, "
+            f"Ist: {_text(est.get('actual_tools'))}"
+        ),
         "",
         "## Qualität",
         "",
-        f"- Ergebnisse: {_plain(qual.get('results'))} "
-        f"(ungeprüft: {_plain(qual.get('unchecked'))})",
+        (
+            f"- Ergebnisse: {_plain(qual.get('results'))} "
+            f"(ungeprüft: {_plain(qual.get('unchecked'))})"
+        ),
         f"- Erstabnahme-Quote: {_share(qual.get('first_pass_rate'))}",
-        f"- Review-Runden im Mittel: {_mean(qual.get('review_rounds_mean'))}, "
-        f"Maximum: {_plain(qual.get('review_rounds_max'))}",
-        f"- Nacharbeit: {_plain(qual.get('rework'))} "
-        f"({_share(qual.get('rework_share'))})",
+        (
+            f"- Review-Runden im Mittel: {_mean(qual.get('review_rounds_mean'))}, "
+            f"Maximum: {_plain(qual.get('review_rounds_max'))}"
+        ),
+        (
+            f"- Nacharbeit: {_plain(qual.get('rework'))} "
+            f"({_share(qual.get('rework_share'))})"
+        ),
         f"- Verworfen: {_plain(qual.get('rejected'))}",
-        f"- CI-Läufe: {_plain(qual.get('ci_runs'))}, "
-        f"Fehlschläge auf main: {_plain(qual.get('ci_failures'))}",
+        (
+            f"- CI-Läufe: {_plain(qual.get('ci_runs'))}, "
+            f"Fehlschläge auf main: {_plain(qual.get('ci_failures'))}"
+        ),
         f"- Eskalationen: {_plain(qual.get('escalations'))}",
-        f"- Gescheiterte Agenten: {_plain(qual.get('failed_agents'))}, "
-        f"Agenten mit Lücke: {_plain(qual.get('gap_agents'))}",
+        (
+            f"- Gescheiterte Agenten: {_plain(qual.get('failed_agents'))}, "
+            f"Agenten mit Lücke: {_plain(qual.get('gap_agents'))}"
+        ),
         "",
         "## Vorfälle",
         "",
@@ -225,8 +241,10 @@ def render(raw: dict) -> str:
         "",
         "## Grenzen der Messung",
         "",
-        "- Output-Tokens mit «≥» sind eine Untergrenze: Nachrichten ohne "
-        "abgeschlossene Zählung fehlen in der Summe.",
+        (
+            "- Output-Tokens mit «≥» sind eine Untergrenze: Nachrichten ohne "
+            "abgeschlossene Zählung fehlen in der Summe."
+        ),
     ]
     cost = raw["session_cost"]
     if cost is None:
@@ -310,7 +328,7 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     models = model.read_agent_models(paths.agents_dir())
     handbook = studio_docs.read_version(paths.docs_dir() / "STUDIO.md")
     created = datetime.now().astimezone().isoformat(timespec="seconds")
-    now = datetime.now().timestamp()
+    now = datetime.now(timezone.utc).timestamp()
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)

@@ -126,14 +126,31 @@ class LogTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
     def test_result_milestone_retro(self):
-        self.run_log("result", "--role", "lead-tech", "--package", "M5-02",
-                     "--outcome", "nacharbeit", "--review-rounds", "2",
-                     "--worker", "tech-sim-engineer")
+        self.run_log(
+            "result",
+            "--role",
+            "lead-tech",
+            "--package",
+            "M5-02",
+            "--outcome",
+            "nacharbeit",
+            "--review-rounds",
+            "2",
+            "--worker",
+            "tech-sim-engineer",
+        )
         self.run_log(
             "milestone", "--id", "M5", "--status", "start", "--title", "Handel"
         )
-        self.run_log("retro", "--id", "RETRO-1", "--kind", "adhoc",
-                     "--triggers", "ci:1,runden:M5-02")
+        self.run_log(
+            "retro",
+            "--id",
+            "RETRO-1",
+            "--kind",
+            "adhoc",
+            "--triggers",
+            "ci:1,runden:M5-02",
+        )
         result, ms, retro = self.events()
         self.assertEqual(
             (result["outcome"], result["review_rounds"]), ("nacharbeit", 2)
@@ -146,9 +163,24 @@ class LogTest(unittest.TestCase):
 
     def test_queue_lifecycle(self):
         code, _, _ = self.run_log(
-            "queue", "--id", "N-001", "--title", "Lib x", "--question", "Darf x rein?",
-            "--recommendation", "Nein", "--reason", "ADR-001", "--cost", "M5-03 wartet",
-            "--blocks", "M5-03", "--from", "lead-tech")
+            "queue",
+            "--id",
+            "N-001",
+            "--title",
+            "Lib x",
+            "--question",
+            "Darf x rein?",
+            "--recommendation",
+            "Nein",
+            "--reason",
+            "ADR-001",
+            "--cost",
+            "M5-03 wartet",
+            "--blocks",
+            "M5-03",
+            "--from",
+            "lead-tech",
+        )
         self.assertEqual(code, 0)
         answer = self.run_log("queue", "--id", "N-001", "--answer", "Nein")
         self.assertEqual(answer[0], 0)
@@ -172,8 +204,9 @@ class LogTest(unittest.TestCase):
         self.assertEqual(self.run_log("queue", "--id", "N-7", "--title", "t")[0], 0)
 
     def test_decision_for_user_redirects(self):
-        code, _, err = self.run_log("decision", "--id", "D-1", "--for", "user",
-                                    "--question", "x")
+        code, _, err = self.run_log(
+            "decision", "--id", "D-1", "--for", "user", "--question", "x"
+        )
         self.assertEqual(code, 2)
         self.assertIn("Warteschlange", err)
         self.assertEqual(self.events(), [])

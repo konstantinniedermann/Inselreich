@@ -228,7 +228,7 @@ def metrics_history(docs: Path) -> list[dict]:
     for path in sorted(folder.glob("*.md")):
         text = read_text(path)
         _, _, tail = text.partition("## Rohwerte")
-        match = re.search(r"```json\n(.*?)\n```", tail, re.S)
+        match = re.search(r"```json\n(.*?)\n```", tail, re.DOTALL)
         if not match:
             continue
         try:

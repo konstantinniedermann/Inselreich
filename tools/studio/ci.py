@@ -52,10 +52,10 @@ def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
                         "source": "ci",
                     }
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001, S112 — ein kaputter Lauf kippt nicht alle
                 continue
         return events
-    except Exception:
+    except Exception:  # noqa: BLE001 — ohne gh oder bei jedem Fehler: keine Events
         return []
 
 
@@ -75,7 +75,7 @@ def main() -> int:
             seen_file.parent.mkdir(parents=True, exist_ok=True)
             seen_file.write_text(json.dumps(sorted(seen)), encoding="utf-8")
         print(f"studio-ci: {len(events)} neue Läufe")
-    except Exception:
+    except Exception:  # noqa: BLE001, S110 — Messung darf nie stören, Exit 0
         pass
     return 0
 

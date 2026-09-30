@@ -151,8 +151,7 @@ def _is_constitution(arg: str, cwd: Path) -> bool:
 
 def _is_protected(arg: str, cwd: Path) -> bool:
     text = arg.replace("\\", "/")
-    if text.startswith("of="):
-        text = text[3:]
+    text = text.removeprefix("of=")
     if _is_constitution(text, cwd):
         return True
     resolved = os.path.normpath(os.path.join(str(cwd), text)).lower()
@@ -275,9 +274,13 @@ def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
         and "--worktree" not in rest
         and "W" not in shorts
     )
-    if not allow and not staged_only and sub in ("checkout", "restore", "rm", "mv"):
-        if any(_is_protected(arg, cwd) for arg in rest):
-            return PROTECTED
+    if (
+        not allow
+        and not staged_only
+        and sub in ("checkout", "restore", "rm", "mv")
+        and any(_is_protected(arg, cwd) for arg in rest)
+    ):
+        return PROTECTED
     return None
 
 
@@ -409,7 +412,7 @@ def file_reason(path: str, allow_constitution: bool) -> str | None:
     text = os.path.normpath(path.replace("\\", "/")).lower()
     if MARKER_PART in text + "/" or (text + "/").startswith(MARKER_PART[1:]):
         return PROTECTED
-    if text.endswith(CONSTITUTION.lower()) or text.endswith(GUARD_FILE):
+    if text.endswith((CONSTITUTION.lower(), GUARD_FILE)):
         return PROTECTED
     return None
 

@@ -129,7 +129,7 @@ def queue_event(args: argparse.Namespace) -> dict | None:
             args.cost,
             args.blocks,
             args.source_role,
-            datetime.now().date().isoformat(),
+            datetime.now().astimezone().date().isoformat(),
         )
         event.update(action="add", question=args.question, blocks=args.blocks)
     return event

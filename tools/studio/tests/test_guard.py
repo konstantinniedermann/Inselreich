@@ -72,7 +72,7 @@ class BashTest(unittest.TestCase):
             "git -C .worktrees/m5 reset --hard",
             "git -c core.x=1 push --force",
             "bash -c 'git push --force'",
-            "sh -c \"rm -rf ~/x\"",
+            'sh -c "rm -rf ~/x"',
             "git status\ngit branch -D x",
             "claude -p 'VERFASSUNG ÄNDERN'",
         ]:
@@ -289,7 +289,7 @@ class FixRound2Test(unittest.TestCase):
 
     def test_forbidden_always(self):
         for cmd in [
-            "export D=/Users/x/y; rm -rf \"$D\"",
+            'export D=/Users/x/y; rm -rf "$D"',
             "declare -x D=/Users/x/y; rm -rf $D",
             "local D=/Users/x/y; rm -rf $D",
             "readonly D=/Users/x/y; rm -rf $D",
