@@ -120,6 +120,18 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     }
   };
 
+  // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; ein Klick (dragging=false) setzt zurück
+  let dragMoneyToastShown = false;
+  const showRoadFailure = (reason: string, dragging: boolean): void => {
+    if (!dragging) {
+      dragMoneyToastShown = false;
+      showMessage(reason, 'error');
+    } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
+      dragMoneyToastShown = true;
+      showMessage(reason, 'error');
+    }
+  };
+
   const onAction = (a: InputAction): void => {
     if (a.type === 'cancel') {
       setPanel({ kind: 'none' });
@@ -135,13 +147,13 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       if (!r.ok) showMessage(r.reason, 'error');
     } else if (tool.kind === 'road') {
       const r = placeRoad(world, a.x, a.y);
-      if (!r.ok && !a.dragging) showMessage(r.reason, 'error');
+      if (!r.ok) showRoadFailure(r.reason, a.dragging);
     } else if (tile?.buildingId != null) {
       const r = demolish(world, tile.buildingId);
       if (!r.ok) showMessage(r.reason, 'error');
     } else {
       const r = removeRoad(world, a.x, a.y);
-      if (!r.ok && !a.dragging) showMessage(r.reason, 'error');
+      if (!r.ok) showRoadFailure(r.reason, a.dragging);
     }
     refresh();
   };
