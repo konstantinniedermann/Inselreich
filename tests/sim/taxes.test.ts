@@ -52,7 +52,7 @@ describe('totalTaxes', () => {
     addHouse(w, 1, 3, false);
     expect(totalTaxes(w)).toBe(3);
   });
-  it('sums first, floors once (two unsatisfied citizen-tier-2 houses: 1.5 + 1.5 = 3, not 2)', () => {
+  it('sums first, floors once (two unsatisfied settler houses: 1.5 + 1.5 = 3, not 2)', () => {
     addHouse(w, 2, 1, false);
     addHouse(w, 2, 1, false);
     expect(totalTaxes(w)).toBe(3);
