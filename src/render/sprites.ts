@@ -22,17 +22,17 @@ export const BUILDING_ABBR: Record<BuildingDefId, string> = {
   school: 'Su',
 };
 
-/** px/py = linke obere Ecke in Bildschirm-Pixeln, s = Kantenlänge einer Kachel in Pixeln. */
+/** px/py = linke obere Ecke, w/h = Grösse in Bildschirm-Pixeln (Differenz gerundeter Kanten, siehe tileToScreen). */
 export function drawBuilding(
   ctx: CanvasRenderingContext2D,
   def: BuildingDef,
   b: Building,
   px: number,
   py: number,
-  s: number,
+  w: number,
+  h: number,
 ): void {
-  const w = def.w * s;
-  const h = def.h * s;
+  const s = w / def.w;
   const inset = Math.max(1, s * 0.06);
   ctx.fillStyle = BUILDING_COLORS[def.category];
   ctx.fillRect(px + inset, py + inset, w - 2 * inset, h - 2 * inset);
@@ -58,11 +58,13 @@ export function drawRoad(
   ctx: CanvasRenderingContext2D,
   px: number,
   py: number,
-  s: number,
+  pw: number,
+  ph: number,
   n: { n: boolean; e: boolean; s: boolean; w: boolean },
 ): void {
   ctx.fillStyle = '#a0865a';
-  ctx.fillRect(px, py, s, s);
+  ctx.fillRect(px, py, pw, ph);
+  const s = pw;
   const c = s / 2;
   ctx.strokeStyle = '#c9b48a';
   ctx.lineWidth = Math.max(2, s * 0.25);
