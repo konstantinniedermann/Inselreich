@@ -16,7 +16,8 @@ QUEUE_SHOWN = ("offen", "beantwortet")
 EXPERIMENT_SHOWN = ("laufend", "vorgeschlagen")
 START_ROUTINE = (
     "Start-Routine: Stand und Warteschlange unten lesen, Dashboard-URL nennen, "
-    "offene Vorfälle sichten, dann auf den Auftrag warten oder den Plan fortsetzen."
+    "offene Vorfälle sichten. Neue Anweisung = Auftrag; sonst den Plan aus state.md "
+    "selbstständig fortsetzen (nie untätig warten)."
 )
 
 
@@ -39,13 +40,17 @@ def _queue_lines(docs: Path) -> list[str]:
         if entry["status"] not in QUEUE_SHOWN:
             continue
         fields = entry["fields"]
-        lines.append(
-            _line(
-                f"- {entry['id']} · {entry['status']} · {entry['title']}"
+        answer = fields.get("Antwort") or "–"
+        # Eine eingetragene Antwort zählt, auch wenn der Status noch «offen» ist
+        if answer != "–":
+            detail = f"beantwortet · {entry['title']} — Antwort: {answer}"
+        else:
+            detail = (
+                f"{entry['status']} · {entry['title']}"
                 f" — Empfehlung: {fields.get('Empfehlung') or '–'}"
-                f" · Blockiert: {fields.get('Blockiert') or '–'}"
             )
-        )
+        blocks = fields.get("Blockiert") or "–"
+        lines.append(_line(f"- {entry['id']} · {detail} · Blockiert: {blocks}"))
     return lines[:LIST_MAX]
 
 

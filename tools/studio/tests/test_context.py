@@ -57,6 +57,31 @@ class ContextTest(unittest.TestCase):
             self.assertIn("V7", text)
             self.assertNotIn("V8", text)
 
+    def test_answer_shown_even_if_status_open(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            docs = Path(tmp)
+            (docs / "warteschlange.md").write_text(
+                "# W\n\n## N-001 · offen · 2026-09-30 · Lib x\n\n- Empfehlung: Nein\n"
+                "- Blockiert: M5-03\n- Antwort: Ja, aber nur x\n\n"
+                "## N-002 · offen · 2026-09-30 · Lib y\n\n- Empfehlung: E\n"
+                "- Blockiert: B\n- Antwort: –\n\n"
+                "## N-003 · beantwortet · 2026-09-30 · Lib z\n\n- Antwort: Nein\n",
+                "utf-8",
+            )
+            text = context.build_context(docs, [], "8765")
+            self.assertIn(
+                "- N-001 · beantwortet · Lib x — Antwort: Ja, aber nur x"
+                " · Blockiert: M5-03",
+                text,
+            )
+            self.assertIn("- N-002 · offen · Lib y — Empfehlung: E · Blockiert: B", text)
+            self.assertIn("- N-003 · beantwortet · Lib z — Antwort: Nein", text)
+
+    def test_start_routine_never_waits(self):
+        self.assertIn("Neue Anweisung = Auftrag", context.START_ROUTINE)
+        self.assertIn("nie untätig warten", context.START_ROUTINE)
+        self.assertNotIn("auf den Auftrag warten", context.START_ROUTINE)
+
     def test_hard_limit_with_huge_inputs(self):
         with tempfile.TemporaryDirectory() as tmp:
             docs = Path(tmp)

@@ -197,8 +197,11 @@ export function renderQueue(state) {
     el(
       'ul',
       { class: 'list' },
-      ...entries.map((q) =>
-        el(
+      ...entries.map((q) => {
+        // Eine eingetragene Antwort zählt, auch wenn der Status noch «offen» ist.
+        const answer = field(q.fields, Q_ANSWER);
+        const status = answer ? 'beantwortet' : q.status;
+        return el(
           'li',
           { class: 'decision' },
           el(
@@ -206,15 +209,15 @@ export function renderQueue(state) {
             { class: 'question' },
             el('span', { class: 'chip id' }, q.id),
             el('strong', {}, q.title),
-            tone(QUEUE_TONE[q.status], q.status),
+            tone(QUEUE_TONE[status], status),
           ),
           row('Frage', field(q.fields, Q_QUESTION)),
           row('Empfehlung', field(q.fields, Q_RECOMMENDATION)),
           row('Kosten des Wartens', field(q.fields, Q_COST)),
           row('Blockiert', field(q.fields, Q_BLOCKS)),
-          q.status === 'beantwortet' ? row('Antwort', field(q.fields, Q_ANSWER)) : null,
-        ),
-      ),
+          row('Antwort', answer),
+        );
+      }),
     ),
   );
 }
