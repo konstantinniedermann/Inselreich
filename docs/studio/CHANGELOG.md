@@ -22,6 +22,83 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.6
+
+- Anlass: Ruling R71 (Korrektur von R69): Modellwahl nach Aufgabe, kein Limit-Downgrade
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Modellstufen-Tabelle (opus/sonnet/haiku nach Aufgabe) wiederhergestellt, Satz zum Nutzungslimit ergänzt; Abschnitt „Limits und Sessiongrösse“ bleibt; `roster.md`: Modelle zurück, Versionsspalte auf aktuelle Persona-Versionen
+
+## 2026-09-30 · Persona lead-art 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Arbeiter-Tabelle auf den Stand vor 83d3f77 (Modell nach Aufgabe)
+
+## 2026-09-30 · Persona lead-design 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Arbeiter-Tabelle auf den Stand vor 83d3f77 (Modell nach Aufgabe)
+
+## 2026-09-30 · Persona lead-production 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Arbeiter-Tabelle auf den Stand vor 83d3f77 (Modell nach Aufgabe)
+
+## 2026-09-30 · Persona lead-qa 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Arbeiter-Tabelle auf den Stand vor 83d3f77 (Modell nach Aufgabe)
+
+## 2026-09-30 · Persona lead-tech 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: Arbeiter-Tabelle auf den Stand vor 83d3f77 (Modell nach Aufgabe)
+
+## 2026-09-30 · Persona qa-code-reviewer 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: `model: opus` → `model: sonnet` (Stand vor 83d3f77)
+
+## 2026-09-30 · Persona tech-ui-engineer 1.4
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: `model: opus` → `model: sonnet` (Stand vor 83d3f77)
+
+## 2026-09-30 · Persona qa-playtester 1.3
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: `model: opus` → `model: sonnet` (Stand vor 83d3f77)
+
+## 2026-09-30 · Persona production-integrator 1.3
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: `model: opus` → `model: sonnet` (Stand vor 83d3f77)
+
+## 2026-09-30 · Persona tech-sim-engineer 1.3
+
+- Anlass: Ruling R71
+- Datenbasis: `docs/studio/rulings.md` R71
+- Ruling: R71
+- Änderungen: `model: opus` → `model: sonnet` (Stand vor 83d3f77)
+
 ## 2026-09-30 · Handbuch 1.5
 
 - Anlass: Übertragung der Rulings R68 und R69; lernen.md geprüft, kein Widerspruch

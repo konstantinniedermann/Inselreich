@@ -3,7 +3,7 @@ name: lead-tech
 description: 'Tech-Lead des Inselreich-Studios: einsetzen für Architektur, Implementierungspläne, Budgetanträge und die Steuerung der Umsetzung in `src/` als Controller im Worktree; nicht für Spieldesign, Asset-Lizenzen oder Merges.'
 tools: Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage
 model: opus
-version: 1.2
+version: 1.4
 studio-name: Technik-Toni
 studio-title: Tech-Chef
 studio-emoji: 🔧

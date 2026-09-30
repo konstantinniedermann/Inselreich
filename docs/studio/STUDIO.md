@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.5 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.6 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -134,14 +134,21 @@ roster.md) — sonst erbt der Agent das Modell der Session.
 
 ## Modellwahl
 
-Aliase statt fester Modell-IDs (R10). **Standard ist `opus` für alle Rollen** (L0, Leads,
-Stabsstellen, Arbeiter; R69). Es gibt keine Einschränkung und kein Downgrade auf `sonnet` oder
-`haiku`, auch nicht bei vollem 5-h-Fenster; der Verbrauch wird über Parallelität, Starts und
-Sessiongrösse gesteuert (siehe „Limits und Sessiongrösse“).
+Modellstufen zentral hier (R10); Aliase statt fester Modell-IDs. Die Wahl richtet sich nach der
+Aufgabe (R71).
 
-Die Persona-Frontmatter legt das Modell fest. Weicht ein Einsatz davon ab (nur auf ausdrückliche
-Anweisung des Nutzers), steht das Modell **explizit im Agent-Aufruf** (`model`) und in der
-Kopfzeile `Modell:` des Briefings.
+| Stufe  | Alias    | Einsatz                                                        |
+| ------ | -------- | -------------------------------------------------------------- |
+| stark  | `opus`   | Leads, Studio-Coach, Design, Lizenzprüfung, Final-Reviews      |
+| mittel | `sonnet` | spezifizierte Umsetzung, Recherche, Task-Reviews               |
+| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen) |
+
+Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Modell; L0 fährt
+stattdessen herunter (R69, R71).
+
+Die Persona-Frontmatter legt das Standardmodell fest. Weicht ein Einsatz davon ab (z. B.
+`qa-code-reviewer` für das Final-Review), steht das Modell **explizit im Agent-Aufruf** (`model`)
+und in der Kopfzeile `Modell:` des Briefings.
 
 ## Limits und Sessiongrösse
 
@@ -154,7 +161,7 @@ Kopfzeile `Modell:` des Briefings.
   weniger parallel, weniger Starts, Angefangenes abschliessen, `state.md` nachführen, Session
   beenden. Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
   Session-Ende-Routine, keine neuen Starts. Wochenfenster über 80 %: Parallelität reduzieren.
-  Modelle bleiben unverändert (`opus`).
+  Die Modelle bleiben unverändert (kein Downgrade, R71).
 - **Sessiongrösse (R68):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). Spätestens
   bei 50 % Kontext übergibt L0 über `state.md` an eine neue Session.
 
