@@ -3,7 +3,7 @@ name: lead-art
 description: 'Art-&-Audio-Lead des Inselreich-Studios: einsetzen für Art Direction, Audio, Asset-Scouting, Lizenzprüfung, CREDITS und das Gate-Merge-Urteil bei Assets; nicht für Spielregeln oder Sim-Code.'
 tools: Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, WebSearch, WebFetch, SendMessage
 model: opus
-version: 1.2
+version: 1.3
 studio-name: Pinsel-Pia
 studio-title: Kunst-Chefin
 studio-emoji: 🎨
@@ -43,12 +43,12 @@ Deine Prüffragen:
 
 ## Deine Arbeiter
 
-| Persona                  | wofür                                                                    | Modell   |
-| ------------------------ | ------------------------------------------------------------------------ | -------- |
-| `art-license-checker`    | Lizenz jeder Quelle prüfen, Veto, CREDITS und Lizenztext eintragen       | `opus`   |
-| `art-asset-scout`        | auf Abruf: offen lizenzierte Assets suchen, Kandidaten mit Lizenzangaben | `sonnet` |
-| `art-rendering-engineer` | auf Abruf: Canvas-2D-Darstellung, prozedurale Grafik, Animation, Wetter  | `sonnet` |
-| `art-audio-engineer`     | auf Abruf: synthetisches Audio, Einbindung lizenzierter Musik und Sounds | `sonnet` |
+| Persona                  | wofür                                                                    | Modell |
+| ------------------------ | ------------------------------------------------------------------------ | ------ |
+| `art-license-checker`    | Lizenz jeder Quelle prüfen, Veto, CREDITS und Lizenztext eintragen       | `opus` |
+| `art-asset-scout`        | auf Abruf: offen lizenzierte Assets suchen, Kandidaten mit Lizenzangaben | `opus` |
+| `art-rendering-engineer` | auf Abruf: Canvas-2D-Darstellung, prozedurale Grafik, Animation, Wetter  | `opus` |
+| `art-audio-engineer`     | auf Abruf: synthetisches Audio, Einbindung lizenzierter Musik und Sounds | `opus` |
 
 - **Briefing:** immer nach `docs/studio/templates/briefing.md`; die ersten Zeilen sind
   `Persona: <rolle>` und `Paket: <id>`. Feste Regeln und Logging-Block wörtlich übernehmen.

@@ -22,6 +22,83 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.5
+
+- Anlass: Übertragung der Rulings R68 und R69; lernen.md geprüft, kein Widerspruch
+- Datenbasis: `docs/studio/rulings.md` R68–R69
+- Ruling: R68, R69
+- Änderungen: „Modellwahl“: Standard opus für alle Rollen, kein Downgrade; neuer Abschnitt „Limits und Sessiongrösse“ (Limit-Sensor beschrieben, Paket STUDIO-LIMIT in Arbeit; Herunterfahren in L0-Verantwortung, Richtwerte 60/80 %; Wochenfenster > 80 %: Parallelität reduzieren; Sessiongrösse ≈ ein Abschnitt, Übergabe spätestens bei 50 % Kontext); `roster.md` auf opus
+
+## 2026-09-30 · Persona lead-tech 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: Arbeiter-Tabelle: Modell opus
+
+## 2026-09-30 · Persona lead-art 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: Arbeiter-Tabelle: Modell opus
+
+## 2026-09-30 · Persona lead-design 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: Arbeiter-Tabelle: Modell opus
+
+## 2026-09-30 · Persona lead-production 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: Arbeiter-Tabelle: Modell opus
+
+## 2026-09-30 · Persona lead-qa 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: Arbeiter-Tabelle: Modell opus
+
+## 2026-09-30 · Persona qa-code-reviewer 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: `model: sonnet` → `model: opus`
+
+## 2026-09-30 · Persona tech-ui-engineer 1.3
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: `model: sonnet` → `model: opus`
+
+## 2026-09-30 · Persona qa-playtester 1.2
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: `model: sonnet` → `model: opus`
+
+## 2026-09-30 · Persona production-integrator 1.2
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: `model: sonnet` → `model: opus`
+
+## 2026-09-30 · Persona tech-sim-engineer 1.2
+
+- Anlass: Ruling R69 (opus für alle Rollen)
+- Datenbasis: `docs/studio/rulings.md` R69
+- Ruling: R69
+- Änderungen: `model: sonnet` → `model: opus`
+
 ## 2026-09-30 · Persona lead-tech 1.2
 
 - Anlass: Ruling R67 (Abhängigkeiten per L0-Ruling und ADR, Parallelisierung als oberstes Prinzip)

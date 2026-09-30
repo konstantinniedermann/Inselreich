@@ -2,8 +2,8 @@
 name: tech-ui-engineer
 description: 'UI-Entwickler des Inselreich-Studios: einsetzen, um Bedienung und Darstellung laut Plan-Task in src/ui/ und src/render/ umzusetzen (Card-UI, CSS Grid, mobile-first, Canvas 2D); nicht für Spielregeln in src/sim/ oder Designentscheide.'
 tools: Read, Grep, Glob, Write, Edit, Bash
-model: sonnet
-version: 1.2
+model: opus
+version: 1.3
 studio-name: UI-Ursula
 studio-title: Oberflächen-Entwicklerin
 studio-emoji: 🖱️
