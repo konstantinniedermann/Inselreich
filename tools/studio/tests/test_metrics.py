@@ -27,11 +27,7 @@ class MetricsTest(unittest.TestCase):
         self.docs = base / "docs"
         self.transcripts = base / "transcripts"
         self.transcripts.mkdir()
-        events = scenario()
-        for event in events:  # der Reviewer gehört ebenfalls zu M9
-            if event.get("subagent_type") == "qa-code-reviewer":
-                event["milestone"] = "M9"
-        write_events(self.home, events)
+        write_events(self.home, scenario())
         patch = mock_env(
             STUDIO_HOME=str(self.home),
             STUDIO_DOCS=str(self.docs),
@@ -55,8 +51,7 @@ class MetricsTest(unittest.TestCase):
         self.assertIn("# Metriken S-2026-09-30-s1", text)
         self.assertIn("## Rohwerte", text)
         self.assertIn("## Grenzen der Messung", text)
-        history = studio_docs.metrics_history(self.out.parent)
-        self.assertEqual(history, [])  # Ordner heisst hier "out", nicht "metriken"
+        self.assertIn("```json", text)
 
     def test_history_reads_file(self):
         self.out = Path(self.tmp.name) / "docs" / "metriken"
@@ -65,7 +60,14 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(raw["kind"], "session")
         self.assertEqual(raw["totals"]["output"], 50)
         self.assertEqual(raw["quality"]["first_pass_rate"], 1.0)
-        self.assertEqual(raw["handbook_version"], "")
+        self.assertIsNone(raw["handbook_version"])
+
+    def test_milestone_without_records_warns(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.run_cli("--milestone", "M404")
+        self.assertIn("M404", err.getvalue())
+        self.assertTrue((self.out / "M404.md").exists())
 
     def test_latest_resolves_session(self):
         self.run_cli("--session", "latest")
@@ -78,7 +80,7 @@ class MetricsTest(unittest.TestCase):
         block = text.split("## Rohwerte")[1].split("```json\n")[1].split("\n```")[0]
         raw = json.loads(block)
         self.assertEqual(raw["kind"], "milestone")
-        self.assertEqual(raw["agents"], 2)
+        self.assertEqual(raw["agents"], 4)
         self.assertEqual(raw["quality"]["first_pass_rate"], 1.0)
         self.assertIsNone(raw["quality"]["ci_runs"])
 

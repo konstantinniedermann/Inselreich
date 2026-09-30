@@ -820,5 +820,17 @@ class StoreAndModelsTest(unittest.TestCase):
             self.assertEqual(model.read_agent_models(folder / "fehlt"), {})
 
 
+class MilestoneInheritanceTest(unittest.TestCase):
+    def test_worker_inherits_from_delegating_ancestor(self):
+        events = [
+            spawn(0, "main", "lead-tech", milestone="M9"),
+            start(1, "a1", "lead-tech"),
+            spawn(2, "a1", "tech-sim-engineer"),
+            start(3, "a2", "tech-sim-engineer"),
+        ]
+        nodes = flat(build(events))
+        self.assertEqual(nodes["s1:a2"]["milestone"], "M9")
+
+
 if __name__ == "__main__":
     unittest.main()

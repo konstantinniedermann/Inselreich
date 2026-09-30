@@ -801,13 +801,23 @@ class _Builder:
         }
 
     def finalize(self) -> None:
-        """Meilenstein je Knoten: Kopfzeile, Paket, laufender Meilenstein."""
+        """Meilenstein je Knoten: Kopfzeile, Paket, Vorfahr, laufender Meilenstein."""
+
+        def explicit(node: dict, seen: set[str]) -> str:
+            if node["milestone"]:
+                return node["milestone"]
+            item = self.board.get(node["package"]) or {}
+            if item.get("milestone"):
+                return item["milestone"]
+            parent = self.nodes.get(node["parent"] or "")
+            if parent is None or parent["key"] in seen:
+                return ""
+            return explicit(parent, seen | {node["key"]})
+
         for node in self.nodes.values():
-            if not node["milestone"]:
-                item = self.board.get(node["package"]) or {}
-                node["milestone"] = item.get("milestone") or self.running_milestone(
-                    node["started"]
-                )
+            node["milestone"] = explicit(node, set()) or self.running_milestone(
+                node["started"]
+            )
 
     def running_milestone(self, t: float) -> str:
         current = ""

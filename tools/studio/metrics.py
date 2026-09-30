@@ -86,7 +86,7 @@ def summarize(
         "kennung": kennung,
         "kind": kind,
         "created": created,
-        "handbook_version": handbook,
+        "handbook_version": handbook or None,
         "sessions": len({r["session_id"] for r in state["records"]}),
         "agents": len(state["records"]),
         "delegations": len(state["delegations"]),
@@ -144,6 +144,10 @@ def _table(title: str, rows: list[dict]) -> list[str]:
     return lines
 
 
+def _unit(value: object, unit: str) -> str:
+    return NOT_MEASURED if value is None else f"{value} {unit}"
+
+
 def _share(value: float | None) -> str:
     return NOT_RECORDED if value is None else f"{value * 100:.0f} %"
 
@@ -164,7 +168,7 @@ def render(raw: dict) -> str:
         "",
         f"- erzeugt: {raw['created']}",
         f"- Art: {art}",
-        f"- Handbuch: {raw['handbook_version'] or NOT_MEASURED}",
+        f"- Handbuch: {_text(raw['handbook_version'])}",
         "",
         "## Aufwand",
         "",
@@ -184,9 +188,9 @@ def render(raw: dict) -> str:
         "Schätzung gegen Ist:",
         "",
         f"- Verglichene Agenten: {est.get('count', 0)}",
-        f"- Geschätzt: {_text(est.get('estimated_min'))} min, "
-        f"Ist: {_text(est.get('actual_min'))} min, "
-        f"Abweichung: {_text(est.get('deviation_pct'))} %",
+        f"- Geschätzt: {_unit(est.get('estimated_min'), 'min')}, "
+        f"Ist: {_unit(est.get('actual_min'), 'min')}, "
+        f"Abweichung: {_unit(est.get('deviation_pct'), '%')}",
         f"- Werkzeugaufrufe geschätzt: {_text(est.get('estimated_tools'))}, "
         f"Ist: {_text(est.get('actual_tools'))}",
         "",
@@ -326,6 +330,8 @@ def main(argv: list[str] | None = None) -> int:
         print("studio-metrics: keine passende Session gefunden", file=sys.stderr)
         return 1
     kennung, raw = result
+    if args.milestone and raw["agents"] == 0:
+        print(f"studio-metrics: keine Datensätze für {kennung}", file=sys.stderr)
     folder = args.out or paths.docs_dir() / "metriken"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{kennung}.md"
