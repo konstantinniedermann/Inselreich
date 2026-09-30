@@ -939,3 +939,22 @@ blocked-by M6-S4/M6-B1. — Warum: Fortschrittstiefe nach dem Sieg war die festg
 Kosten bei Irrtum: Wert-Anpassung nach Playtest.
 
 Entscheider: L0 · Anlass: Designvorschlag lead-design M8
+
+## R87 · 2026-09-30 · M6/M7/M8
+
+Ruling: **Gate Plan M6-Sim bestanden mit Auflagen** (lead-qa OK mit Hinweisen, lead-production
+BEDENKEN). Plan-Nachtrag durch lead-tech vor Umsetzungsstart: (1) Baseline-Schritt Task 2: weicht
+die Messung von 0xbfeac8c6 bzw. den Referenzwerten ab → Stopp und Bericht, nie übernehmen;
+(2) Reviews benennen Tests, die schon vor der Umsetzung grün sein dürfen; (3) SHA-Erlaubnis für
+M7 streichen — M7-R2-FW, M6-R2 und M6-U1 sind **blocked-by M6-Sim-Merge auf main** (kein
+ungeprüfter Sim-Code über M7, R82a); (4) Parallelität zählt alle L2-Starts inkl. Reviewer;
+(5) Task 8 trägt Befunde nicht im Branch in `docs/beobachtungen.md` ein, sondern meldet sie, L0
+trägt sie nach dem Merge auf main ein; Worktree-Aufräumen per Ruling durch lead-production;
+(6) Satz „jeder spätere Branch enthält die früheren" korrigieren. Nachtrag zu R86: **M8-Sim ist
+blocked-by M6-Sim-Merge auf main** (statt M6-S4/B1). Ausnahmen des Plans (Zeile in
+`scenarios.ts` durch S2, eigene `describe('M6 …')`-Blöcke) genehmigt. Budget der Umsetzung
+(17 Starts, Parallelität 2: 16 lead-tech, 1 lead-qa) wird zu Beginn der Umsetzungs-Session
+freigegeben. — Warum: kritischer Pfad sauber, keine Datei-Kollision mit M8. — Kosten bei Irrtum:
+M7-R2-FW und der UI-Strang warten länger auf M6.
+
+Entscheider: L0 · Anlass: Gate-Plan-Berichte lead-qa und lead-production
