@@ -43,21 +43,21 @@ Prüfbar über die Browser-Checks der Pakete R1, R3, R4 und U1 sowie den Nutzer-
 
 ### 2.1 Muss und Kann je Säule
 
-| Säule           | Muss                                                                                                                                                                               | Kann                                                  |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Terrain, Wasser | weiche Küste; Flachwasser-Verlauf; animierter Schaumsaum; Farbvariation bei Gras und Sand; Wald aus Einzelkronen mit Schatten; Felsmassiv; natürlicher Weg (5.1–5.4)               | Glitzern auf dem Wasser (5.2)                         |
-| Gebäude         | alle 13 Typen neu in der Palette; Footprint zu ≥ 80 % gefüllt; Schlagschatten; Dachfamilie je Kategorie; Feuerwache-Silhouette für M6 (5.5)                                        | —                                                     |
-| Leben           | Spaziergänger auf Wegen, Anzahl nach Bevölkerung; Möwen an der Küste; Herdrauch aus Wohnhäusern am Morgen und Abend (5.6)                                                          | Schafe an der Schäferei, Fischerboot am Fischer (5.6) |
-| Licht, Wetter   | Tageslicht-Farbkurve; Fensterlicht nachts; Wetter-Schnittstelle mit Regen und Sturm; Krisen-Effekte Feuer, Warnring und Boom für M6 (Abschnitt 6)                                  | Wolkenschatten; Schattenlänge nach Tageszeit (6.3)    |
-| Umgebungsklang  | drei Busse mit Ducking; Schichten Meer, Wind, Vögel, Möwen, Grillen und Stadt nach Blick; Regen, Sturm und Feuer für M6; Signaltöne `alarm`, `stormWarning`, `boom` (Abschnitt 7)  | einzelne Arbeitsgeräusche aus Betrieben im Blick      |
-| Musik           | mindestens 3 Stücke (2 Tag, 1 Abend/Nacht) mit Pausen und Überblendung; Streaming; Start erst nach der ersten Interaktion (7.4)                                                    | viertes Stück; Stimmungswechsel in der Krise          |
-| UI-Anmutung     | Holz- und Pergament-Stil für Desktop; Serifenschrift; Einstellungs-Karte mit getrennten Reglern; Credits-Dialog; „Bewegung reduzieren"; Ruhe-Ansicht im leeren Panel (Abschnitt 9) | Waren-Symbole statt Textchips                         |
+| Säule           | Muss                                                                                                                                                                                                                                 | Kann                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Terrain, Wasser | weiche Küste; Flachwasser-Verlauf; animierter Schaumsaum; Farbvariation bei Gras und Sand; Wald aus Einzelkronen mit Schatten; Felsmassiv; natürlicher Weg (5.1–5.4)                                                                 | Glitzern auf dem Wasser (5.2)                                                                      |
+| Gebäude         | alle 13 Typen neu in der Palette; Footprint zu ≥ 80 % gefüllt; Schlagschatten; Dachfamilie je Kategorie; Feuerwache-Silhouette für M6 (5.5)                                                                                          | —                                                                                                  |
+| Leben           | Spaziergänger auf Wegen, Anzahl nach Bevölkerung; Möwen an der Küste; Herdrauch aus Wohnhäusern am Morgen und Abend (5.6)                                                                                                            | Schafe an der Schäferei, Fischerboot am Fischer (5.6)                                              |
+| Licht, Wetter   | Tageslicht-Farbkurve; Fensterlicht nachts; Wetter-Schnittstelle mit Regen und Sturm und Wettervorrang; Krisen-Effekte Feuer (mit Rauch-Nachlauf), Warnring und Boom für M6 (Abschnitt 6)                                             | Stimmungswetter mit Wolkenschatten; Schattenlänge nach Tageszeit; Gelöscht-Effekt für M6 (6.3–6.5) |
+| Umgebungsklang  | drei Busse mit Ducking; Schichten Meer, Wind, Vögel, Möwen, Grillen und Stadt nach Blick; Regen, Sturm und Feuer für M6; Signaltöne `alarm`, `stormWarning`, `boom` (Abschnitt 7)                                                    | einzelne Arbeitsgeräusche aus Betrieben im Blick                                                   |
+| Musik           | mindestens 3 Stücke (2 Tag, 1 Abend/Nacht) mit Pausen und Überblendung; Streaming; Start erst nach der ersten Interaktion (7.4)                                                                                                      | viertes Stück; Stimmungswechsel in der Krise                                                       |
+| UI-Anmutung     | Holz- und Pergament-Stil für Desktop; Serifenschrift; Einstellungs-Karte mit getrennten Reglern; Credits-Dialog; „Bewegung reduzieren"; Ruhe-Ansicht im leeren Panel; Klassen für Krisenkarte und Ereignis-Log (M6 D7) (Abschnitt 9) | Waren-Symbole statt Textchips                                                                      |
 
 ### 2.2 Streichreihenfolge der Kann-Posten
 
 Werden Budget oder Zeit knapp, wird in dieser Reihenfolge gestrichen: **1. einzelne Arbeitsgeräusche → 2.
-Schattenlänge → 3. Glitzern → 4. Wolkenschatten → 5. Schafe und Fischerboot → 6. viertes Stück → 7.
-Waren-Symbole → 8. Stimmungswechsel in der Krise.** Das Baum-Wiegen aus dem Vorschlag ist gestrichen: Bäume
+Schattenlänge → 3. Glitzern → 4. Stimmungswetter mit Wolkenschatten → 5. Schafe und Fischerboot → 6. viertes Stück
+→ 7. Waren-Symbole → 8. Gelöscht-Effekt → 9. Stimmungswechsel in der Krise.** Das Baum-Wiegen aus dem Vorschlag ist gestrichen: Bäume
 liegen in der gecachten Terrain-Ebene, die Auflage R77 (2) hat Vorrang. Ein gestrichener Kann-Posten hinterlässt
 keinen toten Code. Seine Teile entfallen vollständig, auch in anderen Paketen (in Abschnitt 13 als „Kann"
 markiert).
@@ -86,7 +86,7 @@ Ohne ein solches Ruling kommt keine fremde Grafik ins Spiel.
 - Kein kosmetischer Regen ohne Sturm: Regen ist dem Sturm vorbehalten und dadurch ein eindeutiges Signal.
 - Keine Mobil-Optimierung (R78). Schmale Fenster müssen nur „stürzt nicht ab, nichts Wesentliches unerreichbar"
   erfüllen.
-- Keine Verdrahtung mit `world.crisis`. Die macht M6 (Abschnitt 11.3), M7 liefert die Darstellung, Töne und die
+- Keine Verdrahtung mit `crisisView`. Die macht M6 (Abschnitt 11.3), M7 liefert die Darstellung, Töne und die
   Dev-Vorschau.
 - Keine neue Laufzeit-Abhängigkeit (ADR-001). Canvas 2D, Web Audio und `HTMLMediaElement` sind Browser-APIs.
   `ffmpeg` dient nur lokal zum Schneiden und Kodieren der Assets und läuft nicht in CI.
@@ -271,7 +271,7 @@ Feuerwache kompiliert also schon, bevor M6 ihre Id einführt):
 
 **Fensteranker:** Jede Silhouette meldet die Lage ihrer Fenster als Rechtecke relativ zum Footprint (für 6.2).
 
-### 5.6 Leben (R3)
+### 5.6 Leben (R4)
 
 Das Leben ist rein kosmetisch und deterministisch aus `timeMs` und dem Welt-Zustand. Es hat keinen eigenen
 Zustand, der gespeichert werden müsste.
@@ -342,7 +342,7 @@ linear interpoliert):
 - **Kann:** Die Schattenlänge folgt der Tageszeit, mit Faktor 1,6 am Abend und Morgen und 1,0 am Tag. Nachts
   gibt es keine Schatten.
 
-### 6.4 Wetter (R4)
+### 6.4 Wetter (R3)
 
 Neues optionales Feld `RenderFx.weather?: { kind: 'clear' | 'cloudy' | 'rain' | 'storm'; w: number }` mit Stärke
 `w ∈ [0, 1]`. Standard ist `clear`.
@@ -356,22 +356,28 @@ Neues optionales Feld `RenderFx.weather?: { kind: 'clear' | 'cloudy' | 'rain' | 
 
 - Die Gesamttönung ist `mul = lightAt(tick).mul ⊙ weatherMul(weather)`, berechnet mit der reinen Funktion
   `gradeAt(tick, weather)`.
-- Der Luma-Faktor bleibt ≥ 0,75 ohne Sturm und ≥ 0,60 mit Sturm (AK-R4-01).
-- M7 selbst setzt `weather` nur über die Dev-Vorschau (9.5). Im normalen Spiel bleibt es `clear`, bis M6 es aus
-  `world.crisis` ableitet (11.3).
+- Der Luma-Faktor bleibt ≥ 0,75 ohne Sturm und ≥ 0,60 mit Sturm (AK-R3-01).
+- **Vorrang:** Die UI wählt je Frame das Wetter mit der reinen Funktion `pickWeather(crisis, mood)`. Ein Krisenwetter
+  aus M6 (11.3) geht immer vor. Ohne Krise gilt das Stimmungswetter, ohne den Kann-Posten `clear`.
+- **Kann: Stimmungswetter** (zusammen mit den Wolkenschatten): `moodWeather(tick, seed)` liefert deterministisch
+  `clear` oder `cloudy` mit **`w ≤ 0,4`**, nie `rain` oder `storm` (**Setzung Spec**, Grenze auf Vorschlag von M6
+  12.3). Die Sturm-Vorwarnung erreicht `w = 1` und bleibt dadurch vom Stimmungswetter unterscheidbar.
+- Ohne M6 setzt M7 `rain` und `storm` nur über die Dev-Vorschau (9.5).
 
-### 6.5 Krisen-Effekte für M6 (R4, R74)
+### 6.5 Krisen-Effekte für M6 (R3, R74)
 
-| Effekt     | Funktion (in `src/render/fx.ts`)                         | Darstellung                                                                                                                                                    | Ebene                                         |
-| ---------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Feuer      | `drawFire(ctx, rect, timeMs, intensity)`                 | bis zu `CAP_FIRE` Flammenzungen (Gelb-Orange-Verlauf, **nicht** `signalWarn`), dunkler Rauch steigt mit Wind nach rechts, Gebäude darunter um 35 % abgedunkelt | Leben (getönt); Glühen im additiven Durchgang |
-| Warnring   | `drawWarnRing(ctx, rect, timeMs)`                        | Rahmen in `signalWarn` mit 2 px Breite und 1,5 px dunklem Umriss, pulsiert mit 1,2 s zwischen 60 % und 100 % Deckkraft                                         | Signal (ungetönt)                             |
-| Boom       | `drawBoomCoin(ctx, rect, timeMs)`                        | Münze mit Glanzbewegung über dem Kontor, weisser Umriss                                                                                                        | Signal (ungetönt)                             |
-| Sturm      | `RenderFx.weather = { kind: 'storm', w }`                | 6.4                                                                                                                                                            | Wetter                                        |
-| Vorwarnung | `RenderFx.weather = { kind: 'cloudy', w }`, `w` steigend | Himmel verdunkelt sich schrittweise, dazu Wind im Ton (7.3)                                                                                                    | Wetter                                        |
-| Feuerwache | Silhouette (5.5)                                         | —                                                                                                                                                              | Gebäude                                       |
+| Effekt                 | Funktion (in `src/render/fx.ts`)                                 | Darstellung                                                                                                                                                                                                                                      | Ebene                                         |
+| ---------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| Feuer                  | `drawFire(ctx, rect, timeMs, { flames, smoke })`                 | bis zu `CAP_FIRE` Flammenzungen (Gelb-Orange-Verlauf, **nicht** `signalWarn`), dunkler Rauch steigt mit Wind nach rechts, Gebäude darunter um 35 % abgedunkelt; `flames` und `smoke` je 0…1 erlauben den Rauch-Nachlauf (M6 D2) mit `flames = 0` | Leben (getönt); Glühen im additiven Durchgang |
+| Warnring               | `drawWarnRing(ctx, rect, timeMs)`                                | Rahmen in `signalWarn` mit 2 px Breite und 1,5 px dunklem Umriss, pulsiert mit 1,2 s zwischen 60 % und 100 % Deckkraft                                                                                                                           | Signal (ungetönt)                             |
+| Gelöscht (Kann, M6 D3) | `drawExtinguished(ctx, rect, timeMs, p)` mit Fortschritt `p` 0…1 | drei helle Dampfwolken in `foam` steigen auf; darüber ein Haken in `signalOk` mit dunklem Umriss, blendet ab `p = 0,7` aus; Dauer **60 Ticks** ab Brandbeginn (**Setzung Spec**: 6 s bei 1×, sichtbar auch bei 4×)                               | Dampf getönt; Haken Signal (ungetönt)         |
+| Boom                   | `drawBoomCoin(ctx, rect, timeMs)`                                | Münze mit Glanzbewegung über dem Kontor, weisser Umriss                                                                                                                                                                                          | Signal (ungetönt)                             |
+| Sturm                  | `RenderFx.weather = { kind: 'storm', w }`                        | 6.4                                                                                                                                                                                                                                              | Wetter                                        |
+| Vorwarnung             | `RenderFx.weather = { kind: 'cloudy', w }`, `w` steigend         | Himmel verdunkelt sich schrittweise, dazu Wind im Ton (7.3)                                                                                                                                                                                      | Wetter                                        |
+| Feuerwache             | Silhouette (5.5)                                                 | —                                                                                                                                                                                                                                                | Gebäude                                       |
 
-Die Signaltöne dazu stehen in 7.5.
+Die Signaltöne dazu stehen in 7.5. Die Dauer der Vorwarnkurve übernimmt M7 aus der M6-Spec 12.3: `w` steigt linear
+von 0 auf 1 über die Vorwarnung.
 
 ## 7. Klang und Musik
 
@@ -437,7 +443,7 @@ Die UI berechnet je Frame, höchstens alle 250 ms, mit der reinen Funktion
 - **Stücke:**
   - Tag: MU1 und MU2.
   - Abend/Nacht: MU3.
-  - Nacht-Ergänzung: MU4, sofern die Lizenzprüfung OK ergibt und die Länge ≥ 1:30 ist; sonst die Reserve MU5.
+  - Kann (viertes Stück): MU5 für die Nacht. MU4 ist mit 0:55 zu kurz und bleibt Reserve.
   - Verbindlich ist die Asset-Liste 7.6.
 - **Ablauf:**
   - Nach `unlock()` (erste Interaktion, Auflage R77 4) wartet der Spieler 5–15 s, dann beginnt das erste Stück
@@ -481,13 +487,58 @@ Urteile von `art-license-checker` (Datei `.studio/handoffs/2026-09-30-m7-lizenzp
 werden eingebaut. Ziel-Pfade liegen unter `public/`, das Format ist MP3 (läuft in allen Zielbrowsern), kodiert mit
 `tools/assets/m7-audio.sh` (Abschnitt 8).
 
-<!-- ASSET-TABELLE: wird nach dem Lizenzurteil gefüllt -->
+**Ergebnis der Prüfung:** 22 Quellen geprüft, **22 OK**, 0 Veto, 0 Grenzfälle, kein Warteschlangen-Eintrag.
+Die Belege stammen aus erster Hand (Roh-HTML der Quellseiten). Gemessen wurde mit `ffprobe`.
+
+| ID  | Posten            | Quelle (Autor)                                                                                  | Lizenz    | Original                | Ziel unter `public/`                                         | Status                                       |
+| --- | ----------------- | ----------------------------------------------------------------------------------------------- | --------- | ----------------------- | ------------------------------------------------------------ | -------------------------------------------- |
+| MU1 | Musik Tag         | „Medieval: The Bard's Tale", opengameart.org (RandomMind)                                       | CC0 1.0   | 2:38,6, MP3 192 kbit/s  | `audio/music/bards-tale.mp3`                                 | **Muss**                                     |
+| MU2 | Musik Tag         | „Medieval: The Old Tower Inn", opengameart.org (RandomMind)                                     | CC0 1.0   | 1:45,5, MP3 192 kbit/s  | `audio/music/old-tower-inn.mp3`                              | **Muss**                                     |
+| MU3 | Musik Abend/Nacht | „If my complaints could passions move" (John Dowland 1597; Einspielung Of Far Different Nature) | CC0 1.0   | 2:41,5, MP3 320 kbit/s  | `audio/music/dowland-complaints.mp3`                         | **Muss**                                     |
+| MU5 | Musik Nacht       | „Little Lullaby", opengameart.org (Alex_089)                                                    | CC BY 4.0 | 2:07,5, MP3 256 kbit/s  | `audio/music/little-lullaby.mp3`                             | Kann (viertes Stück)                         |
+| MU4 | Reserve Nacht     | „Soft Mysterious Harp Loop" (VWolfdog / Jordy Hake)                                             | CC BY 3.0 | **0:54,9**, unter 1:30  | `audio/music/harp-loop.mp3`                                  | Reserve, nur als zweifach gespielte Schleife |
+| MU6 | Reserve Tag       | „Medieval: Market Day" (RandomMind)                                                             | CC0 1.0   | 2:19,6                  | `audio/music/market-day.mp3`                                 | Reserve (lebhaft)                            |
+| AM1 | Meer              | freesound 852826 (kkenny101); Ersatz AM1b 376795 (amholma)                                      | CC0 1.0   | 0:21,8 Mono, Schleife   | `audio/amb/sea.mp3`                                          | Muss                                         |
+| AM2 | Vögel             | freesound 855955 (Nordliecht)                                                                   | CC0 1.0   | 0:35,0                  | `audio/amb/birds.mp3`                                        | Muss                                         |
+| AM3 | Möwen             | freesound 317676 (nikitralala)                                                                  | CC0 1.0   | 1:30,5 binaural         | `audio/amb/gulls.mp3`                                        | Muss; Mono-Mix am Ohr prüfen, sonst Stereo   |
+| AM4 | Grillen           | freesound 857163 (Goldenboy76)                                                                  | CC0 1.0   | 8:55,8 Mono             | `audio/amb/crickets.mp3`                                     | Muss (30-s-Ausschnitt)                       |
+| AM5 | Regen             | freesound 321885 (Talitha5)                                                                     | CC0 1.0   | 0:30,8 MP3              | `audio/amb/rain.mp3`                                         | Muss (für M6)                                |
+| AM6 | Sturm             | freesound 341941 (Qwirkie); Ersatz AM6b 870414 (Borgory)                                        | CC0 1.0   | 0:49,1 MP3              | `audio/amb/storm.mp3`                                        | Muss (für M6); Donner herausschneiden        |
+| AM7 | Feuer             | freesound 564621 (Nox_Sound)                                                                    | CC0 1.0   | 0:11,0, Schleife        | `audio/amb/fire.mp3`                                         | Muss (für M6)                                |
+| SG1 | `alarm`           | freesound 582523 (gsparrysound), Schiffsglocke                                                  | CC0 1.0   | 0:13,4                  | `audio/sfx/bell.mp3`                                         | Muss (3 Schläge)                             |
+| SG2 | `stormWarning`    | freesound 673668 (TomOstepop), Nebelhorn; Ersatz SG2b 539956 (adharca)                          | CC0 1.0   | 0:15,2                  | `audio/sfx/foghorn.mp3`                                      | Muss (2-s-Ausschnitt)                        |
+| FX1 | `boom`            | freesound 847349 (ilyaShevelev), Münzen                                                         | CC0 1.0   | 0:00,23 MP3             | `audio/sfx/coins.mp3`                                        | Muss                                         |
+| FX2 | Stadt: Hammer     | freesound 707864 (L.i.Z.e.L.l.E\_+), Kurzlink `https://freesound.org/s/707864/`                 | CC0 1.0   | 0:02,0                  | `audio/sfx/hammer.mp3`                                       | Muss                                         |
+| FO1 | Schrift           | EB Garamond (The EB Garamond Project Authors; Georg Duffner, Octavio Pardo), google/fonts       | OFL 1.1   | woff2 Latin 400 und 700 | `fonts/eb-garamond-400.woff2`, `-700.woff2`, `fonts/OFL.txt` | Muss                                         |
+| FO2 | Reserve Schrift   | Alegreya (The Alegreya Project Authors)                                                         | OFL 1.1   | woff2 Latin 400         | `fonts/alegreya-400.woff2`                                   | Reserve                                      |
+
+**Pflichten aus dem Urteil** (verbindlich für X1 und U1):
+
+- **Freesound:** Die HQ-Vorschaudateien dürfen statt der Originale verwendet werden (CC0 gilt für das Werk in jedem
+  Format, Freesound-AGB „Outbound"). **Es braucht kein Konto und keinen Nutzervorbehalt.** Die Dateien werden selbst
+  gehostet, ohne Hotlink auf `cdn.freesound.org`. Als Quelle gilt die Sound-Seite.
+- **CC BY (MU5, ggf. MU4):** Genannt werden Urheber, Titel, Link, Lizenzname und Link. Kürzen, Mono und Schleifen-Schnitt
+  sind Änderungen und werden vermerkt („Changes: trimmed, re-encoded"). Der Vermerk steht in NOTICE, CREDITS und im
+  Credits-Dialog. Umkodieren allein ist keine Bearbeitung. Die Nennung darf keine Billigung durch den Urheber
+  andeuten.
+- **OFL:** Die Lizenz und die Copyright-Zeile liegen auch neben den Schriftdateien (`public/fonts/OFL.txt`), weil nur
+  `public/` ausgeliefert wird. Subsetting ist erlaubt. Einen Reserved Font Name gibt es nicht.
+- **Namen:** Der Werktitel „The Bard's Tale" gleicht dem Namen einer kommerziellen Spielreihe. Er steht nur als
+  Werktitel in den Credits und nie als Name im Spiel (ADR-006). Auch der Schiffsname aus der Beschreibung von SG2
+  wird nicht übernommen.
+- **Nachweise:** Die Zeilen und Lizenztexte liegen fertig in `.studio/handoffs/m7-lizenzen/`. Die SHA-256 der
+  geprüften Musikdateien stehen im Anhang des Urteils. X1 prüft sie beim erneuten Laden, weil das Scratchpad nicht
+  dauerhaft ist.
+
+**Grösse** (Musik 128 kbit/s Stereo CBR): MU1 ≈ 2,54 MB, MU2 ≈ 1,69 MB, MU3 ≈ 2,58 MB, MU5 ≈ 2,04 MB. Zusammen
+≈ 8,85 MB (≤ 9 MB). Umgebung und Signale ≈ 1,6–2,1 MB nach Scouting-Schätzung (64 kbit/s Mono, Schleifen 20–30 s),
+Schrift ≈ 49 KB. Gesamt ≈ 11 MB (≤ 12 MB).
 
 ## 8. Assets, Laden und Grössenbudget
 
 - **Ablage:**
-  - `public/audio/music/*.mp3`: Stereo, 128 kbit/s, ≤ 2,5 MB je Stück; längere Stücke werden gekürzt oder
-    umkodiert, sonst gestrichen.
+  - `public/audio/music/*.mp3`: Stereo, 128 kbit/s CBR, ≤ 2,6 MB je Stück (**Setzung Spec**: die Muss-Stücke messen
+    2:38 bzw. 2:41); längere Stücke werden gekürzt, sonst gestrichen.
   - `public/audio/amb/*.mp3`: Mono, 64 kbit/s, 20–40 s.
   - `public/audio/sfx/*.mp3`: Mono, 96 kbit/s, ≤ 6 s.
   - `public/fonts/*.woff2`: Latin-Subset.
@@ -537,6 +588,9 @@ werden eingebaut. Ziel-Pfade liegen unter `public/`, das Format ist MP3 (läuft 
   dunklem Umriss bzw. als Hintergrund mit Tintentext.
 - **Ruhe-Ansicht im Panel:** Ohne Auswahl zeigt das rechte Panel eine Pergamentkarte „Inselchronik" mit Tagesphase
   (Symbol und Wort), Einwohnerzahl und dem Hinweis „Gebäude anklicken für Details" (I9).
+- **Krisenkarte und Ereignis-Log (M6 D7):** `.card--crisis` (Pergamentkarte mit farbiger linker Kante je
+  `data-kind`, Titel in EB Garamond) und `.event-log` (Pergamentliste, einklappbar). Die Klassen stehen in
+  `src/style.css`, die Inhalte liefert M6 (11.3).
 - **Schmale Fenster** (< 900 px): Das bestehende einspaltige Grid bleibt. Geprüft wird nur „stürzt nicht ab,
   nichts Wesentliches unerreichbar" (R78).
 - **Kann:** Waren-Symbole (kleine Canvas- oder SVG-Symbole je Gut) statt Textchips im HUD.
@@ -584,7 +638,8 @@ Beide sind nur im Dev-Build aktiv (`import.meta.env.DEV`). Im Produktions-Build 
   - Sie setzt `RenderFx.weather`, zeichnet Feuer und Warnring am genannten Gebäude bzw. die Boom-Münze und setzt den
     Umgebungseingang `fire`.
   - `signal=` spielt den Ton einmal nach der ersten Interaktion.
-  - Die Vorschau dient den Browser-Checks von R4 und A2, solange M6 fehlt.
+  - `geloescht=<buildingId>` zeigt den Gelöscht-Effekt in einer Schleife von 6 s (nur mit dem Kann-Posten).
+  - Die Vorschau dient den Browser-Checks von R3 und A2, solange M6 fehlt.
 - **Perf-Sonde:** `?perf=1` misst das Frame-Intervall (Abstand der `requestAnimationFrame`-Aufrufe) und die
   Render-Dauer (`performance.now()` um `render()`) über rollende 600 Frames. Sie schreibt
   `window.__inselPerf = { frameMedian, frameP95, renderMedian, renderP95, n }` und alle 5 s eine Zeile per
@@ -606,7 +661,9 @@ interface RenderFx {
   dayNight?: boolean; // wie M5
   weather?: { kind: 'clear' | 'cloudy' | 'rain' | 'storm'; w: number }; // Standard clear
   reduceMotion?: boolean; // Standard false
-  fire?: number[]; // Gebäude-Ids mit Feuer-Effekt und Warnring (M6 bzw. Dev-Vorschau)
+  fire?: { id: number; flames: number; smoke: number }[]; // Feuer, Rauch-Nachlauf, Warnring bei flames > 0
+  extinguished?: { id: number; p: number }[]; // Kann: Gelöscht-Effekt (M6 D3)
+  mood?: boolean; // Kann: Stimmungswetter erlaubt (sonst clear ohne Krise)
   boom?: boolean; // Münze über dem Kontor
 }
 ```
@@ -633,21 +690,41 @@ Neue Methoden:
 erweitert. `AmbienceInput`, `Phase` und `ViewStats` sind strukturgleich als eigene Typen in `src/audio/` definiert,
 ohne Import aus `src/render/`.
 
-### 11.3 M6 → M7 (R74, bestätigt von `lead-design`)
+### 11.3 M6 → M7 (R74; abgestimmt mit `lead-design`, M6-Spec Abschnitt 12)
 
-- M6-Render leitet aus `world.crisis` ab:
-  - `state === 'burning'` → `fire: [id]`
-  - Sturm angekündigt → `cloudy`, `w` steigt linear über die Vorwarnzeit
-  - Sturm aktiv → `storm`, `w = 1`
-  - Boom → `boom: true`
+Die Paket-Kürzel gelten je Meilenstein. Die Render- und Audio-Pakete von M6 heissen hier **M6-R1** und **M6-AU1**.
 
-  M6 zeichnet nichts Eigenes.
-
-- M6-UI löst `alarm` (Brand beginnt), `stormWarning` (Ankündigung) und `boom` (Boom beginnt) über den Frame-Vergleich in
-  `soundEvents.ts` aus. Den Umgebungseingang `fire` setzt sie auf 1, solange ein Gebäude brennt.
-- Das Ereignis-Log bleibt Sache von M6. Der Warnring macht den Ort sichtbar, das Log liefert den Text.
-- Die Feuerwache-Silhouette liefert M7 (5.5). Die Radiusanzeige folgt dem M5-Muster, die M6-Daten liefert die Sim.
-- Die mobilen Restbefunde sind in M6 gestrichen (R77, R78) und in M7 nicht mehr enthalten.
+- **Quelle der Krise** ist die M6-Abfrage `crisisView(world)`. M6-R1 bildet sie auf `RenderFx` ab und zeichnet nichts
+  Eigenes:
+  - Brennendes Gebäude (`b.state === 'burning'`): `fire: [{ id, flames: 1, smoke: 1 }]`.
+  - Rauch-Nachlauf nach Ausfallende (M6 D2): `flames: 0`, `smoke` fällt von 1 auf 0.
+  - Brand gelöscht (`outcome 'extinguished'`, M6 D3, Kann): `extinguished: [{ id: target, p }]` mit
+    `p = (tick − Brandbeginn) / 60`.
+  - Sturm-Vorwarnung: `weather = { kind: 'cloudy', w: 1 − remaining / (STORM_WARNING + 1) }`, linear wie von M6
+    vorgeschlagen.
+  - Sturm aktiv: `weather = { kind: 'storm', w: 1 }`.
+  - Boom: `boom: true`.
+- **Wettervorrang:** `pickWeather` (6.4). Krisenwetter geht immer vor. Stimmungswetter bleibt bei `w ≤ 0,4` und nie
+  bei `rain` oder `storm`.
+- **Klang:**
+  - M6-AU1 bzw. die M6-UI lösen `alarm` (Brand beginnt, `outcome 'burning'`), `stormWarning` (Ankündigung) und
+    `boom` über den Frame-Vergleich in `soundEvents.ts` aus.
+  - Für den **Sturmklang (M6 K3)** braucht M6 keinen eigenen Klang. Die M6-UI gibt dasselbe Wetter, das sie an den
+    Renderer gibt, über `setAmbience({ …, weather })` an den Ton. Die Schichten `wind`, `rain` und `storm` aus 7.3
+    (M7 A2, Muss) tragen Vorwarnung und Sturm. K3 ist damit durch M7 erfüllt.
+  - Den Eingang `fire` setzt die M6-UI auf 1, solange ein Gebäude brennt.
+  - Für „gelöscht" gibt es keinen eigenen Ton. Die Rückmeldung ist sichtbar (Haken) und steht im Ereignis-Log.
+- **Anmutung von Krisenkarte und Ereignis-Log (M6 D7):**
+  - U2 liefert die CSS-Klassen `.card--crisis` mit `data-kind="fire" | "storm" | "boom"` (linke Kante in
+    `signalRed`, `signalWarn` bzw. Gold) und `.event-log` (Pergament, einklappbar über `.event-log--collapsed`).
+  - M6-UI setzt nur diese Klassen und ändert `src/style.css` nicht.
+- **Feuerwache:** Die Silhouette liefert R2 (5.5). Die Radiusanzeige folgt dem M5-Muster.
+- **Reihenfolge:**
+  - A1 liefert die drei Signaltöne früh (sofort startbar), ein synthetischer Rückfall der M6 (AU0) ist also
+    unnötig.
+  - R3 ist direkt nach dem Slice angesetzt, damit M6-R1 bald auf den Effekten aufbauen kann.
+  - Ob M6 eine Minimaldarstellung R0 braucht, entscheidet das Gate Plan nach dem Stand von R3.
+- Die mobilen Restbefunde sind in M6 gestrichen (R77, R78) und in M7 nicht enthalten.
 
 ## 12. Performance-Budget (Auflagen R77 2, R78)
 
@@ -658,7 +735,7 @@ ohne Import aus `src/render/`.
   - Szenario `leistung-50` (58 Gebäude, 14.1), **ganze Insel sichtbar** (Zoom 0,5).
   - Dev-Vorschau `?wetter=sturm&w=1&feuer=<Id eines Betriebs>&perf=1`, Ton an, alle Obergrenzen erreicht.
 - **Grenzen** (gemessen mit der Perf-Sonde nach 30 s Einlaufen):
-  - **Untergrenze (hart):** `frameP95 ≤ 33,3 ms`, also ≥ 30 fps (AK-R4-05).
+  - **Untergrenze (hart):** `frameP95 ≤ 33,3 ms`, also ≥ 30 fps (AK-R4-06).
   - **Ziel:** `frameMedian ≤ 16,7 ms` (60 fps). Ein Verfehlen ist BEDENKEN, kein ZURÜCK.
   - `renderMedian ≤ 8 ms` bei 1280 × 800 und Zoom 1 (Ziel, gemeldet).
 - **Aufbau:** Die Terrain-Ebene braucht einmalig ≤ 1500 ms, die Teil-Neuzeichnung nach einer Bauaktion ≤ 8 ms
@@ -701,20 +778,20 @@ ohne Import aus `src/render/`.
 - `src/render/renderer.ts` ändern nur R1, R3 und R4, in dieser Reihenfolge.
 - `src/audio/sound.ts` ändern nur A1, A2 und A3, in dieser Reihenfolge.
 
-| Paket | Inhalt                                                                                                                                                                                 | Strang                             | Dateien                                                                                                                                                                                                                                                                             | hängt ab von                                                                                 |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| R1    | **Vertical Slice:** Palette, Küstenfeld, Terrain, Wasser mit Schaum, Wohnhaus (3 Stufen), Kontor, Holzfäller mit Schatten, Tageslicht mit Abend, Ebenenordnung, Signale nach dem Licht | Render                             | `palette.ts` (neu), `terrainField.ts` (neu), `terrain.ts`, `water.ts`, `sprites.ts` (nur die 3 Typen und Schatten), `daynight.ts`, `renderer.ts`, `overlays.ts` (nur `signalRed`), `ship.ts` (Schatten); `tests/render/palette.test.ts`, `terrainField.test.ts`, `daynight.test.ts` | Spec; **Urteil Slice** (AK-R1-08) vor R2, R3, R4                                             |
-| R2    | Übrige 10 Gebäudetypen, Feuerwache-Fallback, Fensteranker, Wege                                                                                                                        | Render                             | `sprites.ts`; `tests/render/sprites.test.ts` (neu)                                                                                                                                                                                                                                  | R1 und Slice-Urteil; bei Ruling nach 2.3 neu geschnitten                                     |
-| R3    | Leben: Spaziergänger, Möwen, Herdrauch; Kann: Schafe, Fischerboot                                                                                                                      | Render                             | `life.ts` (neu), `renderer.ts`; `tests/render/life.test.ts` (neu)                                                                                                                                                                                                                   | R1 und Slice-Urteil; parallel zu R2 (keine gemeinsame Datei)                                 |
-| R4    | Fensterlicht, Wetter, Krisen-Effekte, Obergrenzen, `reduceMotion`; Kann: Wolkenschatten, Glitzern, Schattenlänge                                                                       | Render                             | `weather.ts` (neu), `fx.ts` (neu), `daynight.ts`, `water.ts`, `renderer.ts`; `tests/render/weather.test.ts`, `fx.test.ts` (neu)                                                                                                                                                     | R2 (Fensteranker), R3 (`renderer.ts`); Browser-Check nach U1 (Dev-Vorschau)                  |
-| R5    | `viewStats`                                                                                                                                                                            | Render                             | `viewStats.ts` (neu); `tests/render/viewStats.test.ts` (neu)                                                                                                                                                                                                                        | Spec (sofort startbar)                                                                       |
-| A1    | Busse, Ducking, Signaltöne `alarm`/`stormWarning`/`boom` (synthetischer Rückfall), Effekte umgestimmt, `io`-Injektion                                                                  | Audio                              | `sound.ts`, `mix.ts` (neu); `tests/audio/sound.test.ts`, `mix.test.ts` (neu)                                                                                                                                                                                                        | Spec (sofort startbar)                                                                       |
-| A2    | Umgebung: `ambienceMix`, Schleifen-Player mit Überblendung, synthetischer Wind, Gemurmel und Rückfälle, Manifest der Schleifen                                                         | Audio                              | `ambience.ts` (neu), `manifest.ts` (neu), `sound.ts`; `tests/audio/ambience.test.ts` (neu)                                                                                                                                                                                          | A1                                                                                           |
-| A3    | Musik: `nextTrack`, Streaming-Player, Pausen, Überblendung, Manifest der Musik; Kann: Krisen-Stimmung                                                                                  | Audio                              | `music.ts` (neu), `manifest.ts`, `sound.ts`; `tests/audio/music.test.ts` (neu)                                                                                                                                                                                                      | A2                                                                                           |
-| X1    | Assets schneiden, kodieren und ablegen; Nachweise nach `docs/`; Budget- und Nachweis-Test; ADR-011                                                                                     | Assets                             | `public/audio/**`, `public/fonts/**`, `tools/assets/m7-audio.sh` (neu), `docs/CREDITS.md`, `docs/licenses/**`, `tests/assets/assets.test.ts` (neu), `docs/adr/ADR-011-asset-pipeline.md` (neu)                                                                                      | Lizenzurteil; ggf. Nutzervorbehalt Freesound-Konto (16.1); Test grün erst nach A3 (Manifest) |
-| U1    | Einstellungen und Migration, Einstellungs-Karte, Credits-Dialog, Audio-Anbindung (`setAmbience`, `setPhase`, Busse), Dev-Vorschau, Perf-Sonde, `reduceMotion`                          | UI                                 | `settings.ts`, `settingsPanel.ts` (neu), `credits.ts` (neu), `app.ts`, `hud.ts`; `tests/ui/settings.test.ts`, `tests/ui/credits.test.ts` (neu), `tests/ui/devParams.test.ts` (neu)                                                                                                  | A1 (API), R5 (`viewStats`); Browser-Check nach R1                                            |
-| U2    | UI-Anmutung Desktop: Holz und Pergament, Schrift, Buttons, Karten, Ruhe-Ansicht im Panel; Kann: Waren-Symbole                                                                          | UI                                 | `src/style.css`, `index.html`, `buildMenu.ts`, `inspect.ts`, `trade.ts`, `order.ts`, `messages.ts`                                                                                                                                                                                  | Spec (sofort startbar, Schrift-Rückfall `Georgia`); Schrift nach X1                          |
-| D1    | Doku-Pass: arc42, README, Projekt-CLAUDE.md                                                                                                                                            | Doku (`lead-tech` bzw. Doku-Rolle) | `docs/arc42.md`, `README.md`, `CLAUDE.md`                                                                                                                                                                                                                                           | alle Muss-Pakete                                                                             |
+| Paket | Inhalt                                                                                                                                                                                                                              | Strang                             | Dateien                                                                                                                                                                                                                                                                             | hängt ab von                                                                                       |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| R1    | **Vertical Slice:** Palette, Küstenfeld, Terrain, Wasser mit Schaum, Wohnhaus (3 Stufen), Kontor, Holzfäller mit Schatten, Tageslicht mit Abend, Ebenenordnung, Signale nach dem Licht                                              | Render                             | `palette.ts` (neu), `terrainField.ts` (neu), `terrain.ts`, `water.ts`, `sprites.ts` (nur die 3 Typen und Schatten), `daynight.ts`, `renderer.ts`, `overlays.ts` (nur `signalRed`), `ship.ts` (Schatten); `tests/render/palette.test.ts`, `terrainField.test.ts`, `daynight.test.ts` | Spec; **Urteil Slice** (AK-R1-08) vor R2, R3, R4                                                   |
+| R2    | Übrige 10 Gebäudetypen, Feuerwache-Fallback, Fensteranker, Wege                                                                                                                                                                     | Render                             | `sprites.ts`; `tests/render/sprites.test.ts` (neu)                                                                                                                                                                                                                                  | R1 und Slice-Urteil; bei Ruling nach 2.3 neu geschnitten                                           |
+| R3    | **Wetter und Krisen-Effekte** (für M6 vorgezogen): `gradeAt`, `pickWeather`, Regen, Sturm, Wasser im Sturm, Feuer, Warnring, Boom, Obergrenzen, `reduceMotion`; Kann: Gelöscht-Effekt, Stimmungswetter mit Wolkenschatten, Glitzern | Render                             | `weather.ts` (neu), `fx.ts` (neu), `water.ts`, `renderer.ts`; `tests/render/weather.test.ts`, `fx.test.ts` (neu)                                                                                                                                                                    | R1 und Slice-Urteil; parallel zu R2 (keine gemeinsame Datei); Browser-Check nach U1 (Dev-Vorschau) |
+| R4    | **Leben und Fensterlicht:** Spaziergänger, Möwen, Herdrauch, Fensterlicht, Performance-Abnahme; Kann: Schafe, Fischerboot, Schattenlänge                                                                                            | Render                             | `life.ts` (neu), `daynight.ts`, `renderer.ts`; `tests/render/life.test.ts` (neu), `daynight.test.ts`                                                                                                                                                                                | R2 (Fensteranker), R3 (`renderer.ts`)                                                              |
+| R5    | `viewStats`                                                                                                                                                                                                                         | Render                             | `viewStats.ts` (neu); `tests/render/viewStats.test.ts` (neu)                                                                                                                                                                                                                        | Spec (sofort startbar)                                                                             |
+| A1    | Busse, Ducking, Signaltöne `alarm`/`stormWarning`/`boom` (synthetischer Rückfall), Effekte umgestimmt, `io`-Injektion                                                                                                               | Audio                              | `sound.ts`, `mix.ts` (neu); `tests/audio/sound.test.ts`, `mix.test.ts` (neu)                                                                                                                                                                                                        | Spec (sofort startbar)                                                                             |
+| A2    | Umgebung: `ambienceMix`, Schleifen-Player mit Überblendung, synthetischer Wind, Gemurmel und Rückfälle, Manifest der Schleifen                                                                                                      | Audio                              | `ambience.ts` (neu), `manifest.ts` (neu), `sound.ts`; `tests/audio/ambience.test.ts` (neu)                                                                                                                                                                                          | A1                                                                                                 |
+| A3    | Musik: `nextTrack`, Streaming-Player, Pausen, Überblendung, Manifest der Musik; Kann: Krisen-Stimmung                                                                                                                               | Audio                              | `music.ts` (neu), `manifest.ts`, `sound.ts`; `tests/audio/music.test.ts` (neu)                                                                                                                                                                                                      | A2                                                                                                 |
+| X1    | Assets schneiden, kodieren und ablegen; Nachweise nach `docs/`; Budget- und Nachweis-Test; ADR-011                                                                                                                                  | Assets                             | `public/audio/**`, `public/fonts/**`, `tools/assets/m7-audio.sh` (neu), `docs/CREDITS.md`, `docs/licenses/**`, `tests/assets/assets.test.ts` (neu), `docs/adr/ADR-011-asset-pipeline.md` (neu)                                                                                      | Lizenzurteil (liegt vor, 7.6); Test grün erst nach A3 (Manifest)                                   |
+| U1    | Einstellungen und Migration, Einstellungs-Karte, Credits-Dialog, Audio-Anbindung (`setAmbience`, `setPhase`, Busse), Dev-Vorschau, Perf-Sonde, `reduceMotion`                                                                       | UI                                 | `settings.ts`, `settingsPanel.ts` (neu), `credits.ts` (neu), `app.ts`, `hud.ts`; `tests/ui/settings.test.ts`, `tests/ui/credits.test.ts` (neu), `tests/ui/devParams.test.ts` (neu)                                                                                                  | A1 (API), R5 (`viewStats`); Browser-Check nach R1                                                  |
+| U2    | UI-Anmutung Desktop: Holz und Pergament, Schrift, Buttons, Karten, Ruhe-Ansicht im Panel, Klassen `.card--crisis` und `.event-log` für M6; Kann: Waren-Symbole                                                                      | UI                                 | `src/style.css`, `index.html`, `buildMenu.ts`, `inspect.ts`, `trade.ts`, `order.ts`, `messages.ts`                                                                                                                                                                                  | Spec (sofort startbar, Schrift-Rückfall `Georgia`); Schrift nach X1                                |
+| D1    | Doku-Pass: arc42, README, Projekt-CLAUDE.md                                                                                                                                                                                         | Doku (`lead-tech` bzw. Doku-Rolle) | `docs/arc42.md`, `README.md`, `CLAUDE.md`                                                                                                                                                                                                                                           | alle Muss-Pakete                                                                                   |
 
 Pfade ohne Präfix liegen im Ordner des Strangs.
 
@@ -742,8 +819,8 @@ Die M7-Checks nutzen die Szenario-Saves aus M5 (`tests/sim/scenarios.ts`, erzeug
 | Szenario      | genutzt für                                                             |
 | ------------- | ----------------------------------------------------------------------- |
 | `galerie`     | Gebäude bei Zoom 1 (Vergleich mit `ist-01`), AK-R1-08, AK-R2-01         |
-| `leistung-50` | ganze Insel bei Zoom 0,5 (Vergleich mit `ist-02`), Performance AK-R4-05 |
-| `tag-3000`    | Nacht (Vergleich mit `ist-03`), AK-R4-02                                |
+| `leistung-50` | ganze Insel bei Zoom 0,5 (Vergleich mit `ist-02`), Performance AK-R4-06 |
+| `tag-3000`    | Nacht (Vergleich mit `ist-03`), AK-R4-05                                |
 | `bedarf`      | Signale über dem Licht, AK-R1-07                                        |
 
 Tickgenaue Lagen (Abend, Morgen) entstehen über die bestehenden Szenarien mit verändertem `tick` in der JSON. Den Tick
@@ -809,32 +886,37 @@ setzt der Check per CDP vor dem Laden. Einen neuen Sim-Helfer braucht es nicht.
 - **AK-R2-04** (Browser, 1280) Wege sind Erdpfade ohne Balken-Wirkung. Die Nähte bleiben lückenlos bei Zoom 1,1 und
   1,7, wie der Q7-Check aus M5.
 
-### R3 — Leben
+### R3 — Wetter und Krisen-Effekte
 
-- **AK-R3-01** (Vitest) `walkerAt` ist deterministisch. Jede Position liegt auf einer Wegkachel oder zwischen zwei
-  benachbarten. Ohne Weg gibt es 0 Figuren, und nie mehr als `CAP_WALKERS` bzw. den reduzierten Wert.
-- **AK-R3-02** (Vitest) Anzahl nach Bevölkerung: 0 Einwohner ergeben 0 Figuren, 40 Einwohner ergeben 10, 400
-  Einwohner ergeben `CAP_WALKERS`.
-- **AK-R3-03** (Vitest) Herdrauch gibt es nur in den Phasen Morgen und Abend und nur an Häusern mit
-  `inhabitants > 0`. Möwen gibt es nur über Wasser mit `−s < 2` und nicht nachts.
-- **AK-R3-04** (Browser, 1280, `galerie`) Screenshots zu zwei Zeitpunkten 1 s auseinander zeigen bewegte Figuren auf
-  den Wegen und Möwen an der Küste. Betriebe in `waitingInput` bleiben ruhig.
-
-### R4 — Licht, Wetter, Krisen-Effekte
-
-- **AK-R4-01** (Vitest) `gradeAt(tick, weather)`: Der Luma-Faktor ist ≥ 0,75 für `clear`, `cloudy` und `rain` bei
+- **AK-R3-01** (Vitest) `gradeAt(tick, weather)`: Der Luma-Faktor ist ≥ 0,75 für `clear`, `cloudy` und `rain` bei
   jedem Tick und jedem `w`, und ≥ 0,60 für `storm`. `w = 0` gleicht `clear`.
-- **AK-R4-02** (Browser, 1280, `tag-3000`) In der Nacht leuchten Fenster bewohnter Häuser und die Laternen an Kontor
-  und Markt. Ein unbewohntes Haus und ein Betrieb in `waitingInput` bleiben dunkel. Die Nacht ist im Vergleich zu
-  `ist-03` eindeutig als Nacht erkennbar (Urteil `lead-design`).
-- **AK-R4-03** (Vitest) Obergrenzen: Regenschlieren ≤ `w × CAP_RAIN`, Feuerzungen ≤ `CAP_FIRE`. Mit
-  `reduceMotion` gelten die reduzierten Werte aus 12.2.
-- **AK-R4-04** (Browser, 1280, Dev-Vorschau `?wetter=sturm&w=1&feuer=<Id>&boom=1`) Screenshots zeigen:
+- **AK-R3-02** (Vitest) Obergrenzen: Regenschlieren ≤ `w × CAP_RAIN`, Feuerzungen ≤ `CAP_FIRE`, bei `flames = 0`
+  keine Feuerzungen. Mit `reduceMotion` gelten die reduzierten Werte aus 12.2.
+- **AK-R3-03** (Browser, 1280, Dev-Vorschau `?wetter=sturm&w=1&feuer=<Id>&boom=1`) Screenshots zeigen:
   - Sturmtönung, Regen, stärkere Wellen und Schaum
   - Flammen und Rauch am Gebäude und den pulsierenden Warnring (Pixelwerte des Rings entsprechen `signalWarn` ±2,
     also ungetönt)
   - die Boom-Münze über dem Kontor
-- **AK-R4-05** (Browser, **Performance**, Referenz 12.1) `frameP95 ≤ 33,3 ms`. `frameMedian` und `renderMedian`
+- **AK-R3-04** (Vitest) `pickWeather`: Ein Krisenwetter geht immer vor. Ohne Krise und ohne Kann-Posten ergibt sich
+  `clear`. Nur mit dem Kann-Posten gilt: `moodWeather` liefert für alle Ticks eines Tages nur `clear` oder `cloudy`
+  mit `w ≤ 0,4` und ist deterministisch.
+- **AK-R3-05** (Kann, Vitest und Browser mit `?geloescht=<Id>`) `drawExtinguished` zeichnet für `p` ausserhalb
+  von `[0, 1]` nichts. Der Haken erscheint in `signalOk` und ungetönt.
+
+### R4 — Leben und Fensterlicht
+
+- **AK-R4-01** (Vitest) `walkerAt` ist deterministisch. Jede Position liegt auf einer Wegkachel oder zwischen zwei
+  benachbarten. Ohne Weg gibt es 0 Figuren, und nie mehr als `CAP_WALKERS` bzw. den reduzierten Wert.
+- **AK-R4-02** (Vitest) Anzahl nach Bevölkerung: 0 Einwohner ergeben 0 Figuren, 40 Einwohner ergeben 10, 400
+  Einwohner ergeben `CAP_WALKERS`.
+- **AK-R4-03** (Vitest) Herdrauch gibt es nur in den Phasen Morgen und Abend und nur an Häusern mit
+  `inhabitants > 0`. Möwen gibt es nur über Wasser mit `−s < 2` und nicht nachts.
+- **AK-R4-04** (Browser, 1280, `galerie`) Screenshots zu zwei Zeitpunkten 1 s auseinander zeigen bewegte Figuren auf
+  den Wegen und Möwen an der Küste. Betriebe in `waitingInput` bleiben ruhig.
+- **AK-R4-05** (Browser, 1280, `tag-3000`) In der Nacht leuchten Fenster bewohnter Häuser und die Laternen an Kontor
+  und Markt. Ein unbewohntes Haus und ein Betrieb in `waitingInput` bleiben dunkel. Die Nacht ist im Vergleich zu
+  `ist-03` eindeutig als Nacht erkennbar (Urteil `lead-design`).
+- **AK-R4-06** (Browser, **Performance**, Referenz 12.1) `frameP95 ≤ 33,3 ms`. `frameMedian` und `renderMedian`
   werden gemeldet (Ziel ≤ 16,7 ms bzw. ≤ 8 ms). Es gibt keine ungefangenen Fehler in der Konsole.
 
 ### R5 — `viewStats`
@@ -886,7 +968,7 @@ setzt der Check per CDP vor dem Laden. Einen neuen Sim-Helfer braucht es nicht.
 - **AK-X1-02** (Vitest) Jede Datei unter `public/` hat eine Zeile in `docs/CREDITS.md` mit allen Pflichtfeldern, und
   die dort genannte Lizenzdatei existiert in `docs/licenses/`.
 - **AK-X1-03** (Vitest) Grössenbudget aus 8: Gesamt ≤ 12 MB, Musik ≤ 9 MB, Umgebung und Signale ≤ 2,2 MB,
-  Schrift ≤ 150 KB, jedes Musikstück ≤ 2,5 MB.
+  Schrift ≤ 150 KB, jedes Musikstück ≤ 2,6 MB.
 - **AK-X1-04** (Prüfung `art-license-checker`) Die eingebauten Dateien stimmen mit den geprüften Quellen überein
   (Quelle, Schnitt laut `m7-audio.sh`). Es gibt keine Datei ohne OK-Urteil.
 - **AK-X1-05** ADR-011 liegt vor und ist in `docs/adr/` verlinkt.
@@ -920,6 +1002,8 @@ setzt der Check per CDP vor dem Laden. Einen neuen Sim-Helfer braucht es nicht.
 - **AK-U2-03** (Browser, 1280) Ohne Auswahl zeigt das Panel die Ruhe-Ansicht mit Tagesphase und Einwohnern.
 - **AK-U2-04** (Browser, 800 × 900) „Stürzt nicht ab, nichts Wesentliches unerreichbar": Bauen, Handeln, Speichern
   und Einstellungen sind erreichbar (R78).
+- **AK-U2-05** (Browser, 1280, statische Testseite oder Dev-Konsole) Eine `.card--crisis` je `data-kind` und ein
+  `.event-log` mit 10 Einträgen, auf- und zugeklappt, werden lesbar dargestellt. Der Kontrast ist wie in AK-U2-02.
 
 ## 15. Änderungen gegenüber Hauptspec, arc42 und ADRs
 
@@ -944,9 +1028,11 @@ am Save-Format.
 
 ## 16. Offene Punkte mit Empfehlung
 
-1. **Freesound-Downloads.** Siehe Lizenzurteil, Einzelfrage 1. <!-- OFFEN-1: nach Lizenzurteil füllen -->
-2. **Nacht-Musik ist dünn.** Mit MU3 und MU4 bzw. MU5 hat die Nacht höchstens 2 Stücke. _Empfehlung:_ reicht für M7,
-   weil die Pausen und die Nachtgeräusche tragen. Ein viertes Stück ist Kann. Ein zweiter Scouting-Durchgang auf
+1. **Freesound-Downloads** — aufgelöst: Die Vorschaudateien sind zulässig, ein Konto ist nicht nötig (7.6). Nur für den
+   Mono-Mix der binauralen Möwen (AM3) wäre ein verlustfreies Original besser. _Empfehlung:_ erst am Ohr prüfen; bei
+   Phasenproblemen Stereo verwenden (+0,24 MB), statt ein Konto anzulegen.
+2. **Nacht-Musik ist dünn.** Mit MU3 und MU5 (Kann) hat die Nacht höchstens 2 Stücke; MU4 ist mit 0:55 zu kurz.
+   _Empfehlung:_ reicht für M7, weil die Pausen und die Nachtgeräusche tragen. Ein viertes Stück ist Kann. Ein zweiter Scouting-Durchgang auf
    Wikimedia Commons und ccMixter lohnt sich erst nach P-03.
 3. **Stadt-Klang synthetisch.** Es gibt keine saubere CC0-Aufnahme ohne verständliche Sprache. _Empfehlung:_ Gemurmel
    synthetisch plus Hammer-Sample. Klingt es im Playtest (P-02) künstlich, wird die Schicht leiser oder entfällt.
