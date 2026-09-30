@@ -602,6 +602,7 @@ class _Builder:
                 )
             self.close_run(child, ts)
             self.add_chronicle(child, ts, child["summary"] or child["task"])
+            self.record(sid, "agent_stop", ts, child["key"], summary=child["summary"])
 
     def on_agent_start(self, event, ts, sid):
         typ = event.get("role") or "general-purpose"

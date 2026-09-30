@@ -1160,6 +1160,34 @@ class GraphTest(unittest.TestCase):
         )
         self.assertEqual((ups(report), downs(report)), ("S.", "SS"))
 
+    def test_spawned_completed_ends_lane(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            spawn(1, "main", "web-fetch", description="Seite lesen", tool_use_id="w"),
+            ev("heartbeat", 2, agent_id="wf", tool="WebFetch"),
+            ev(
+                "spawned",
+                30,
+                child_id="wf",
+                tool_use_id="w",
+                status="completed",
+                duration_ms=28000,
+            ),
+            message(60, "main", "main"),
+        ]
+        rows = graph_rows(named(events))
+        self.assertEqual(
+            [r["kind"] for r in rows], ["start", "order", "report", "message"]
+        )
+        report = rows[2]
+        self.assertEqual((report["from"], report["to"]), ("s1:wf", "s1:main"))
+        self.assertEqual(report["arrow"]["style"], "merge")
+        self.assertEqual(rows[3]["lanes"][1]["up"], "none")
+        # späterer echter agent_stop: keine zweite report-Zeile
+        late = [*events[:4], stop(40, "wf", "web-fetch"), events[4]]
+        kinds = [r["kind"] for r in graph_rows(named(late))]
+        self.assertEqual(kinds.count("report"), 1)
+
     def test_message_to_running_agent(self):
         row = graph_rows(named([*lead(), message(5, "main", "a1")]))[-1]
         self.assertEqual(row["to"], "s1:a1")
