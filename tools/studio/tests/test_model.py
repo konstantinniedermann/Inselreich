@@ -183,6 +183,13 @@ class StatusTest(unittest.TestCase):
         events = [ev("prompt", 1, status="active"), ev("turn_end", 2, status="idle")]
         self.assertEqual(flat(build(events))["s1:main"]["status"], "idle")
 
+    def test_agent_message_keeps_main_task(self):
+        events = [
+            ev("prompt", 1, status="active", task="Baue M5"),
+            ev("prompt", 2, status="active", task="Meldung eines Agenten"),
+        ]
+        self.assertEqual(flat(build(events))["s1:main"]["task"], "Baue M5")
+
     def test_session_end_marks_ended(self):
         events = [start(1, "a1", "lead-qa"), ev("session_end", 2, status="ended")]
         nodes = flat(build(events))

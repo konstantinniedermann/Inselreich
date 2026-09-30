@@ -24,6 +24,7 @@ LIVE = frozenset({"active", "delegated", "waiting", "blocked"})
 FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
 DIRECTOR = "studio-director"
+AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in hook.py
 PUBLIC = (
     "key",
     "session_id",
@@ -252,7 +253,9 @@ class _Builder:
     def on_prompt(self, event, ts, sid):
         main = self.node(sid, "main", ts)
         main["status"] = "active"
-        main["task"] = event.get("task") or main["task"]
+        # Meldungen von Agenten sind kein neuer Auftrag: bisherige Aufgabe behalten.
+        if event.get("task") != AGENT_MESSAGE_TASK:
+            main["task"] = event.get("task") or main["task"]
 
     def on_turn_end(self, event, ts, sid):
         main = self.node(sid, "main", ts)
