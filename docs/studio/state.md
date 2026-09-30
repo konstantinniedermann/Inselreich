@@ -63,6 +63,8 @@ keine Freigaben (nach Session-Wechsel neu loggen)
 
 - L0: Paket lead-production `log.py result --package` (R75) + Folgeaufträge in `metrics.py` (R89); Ad-hoc-Retro „Agent unbekannt inaktiv“ prüfen (vermutlich Messartefakt);
   Restbefunde Limit-Sensor (beobachtungen.md).
+- E-002-Episode für den Coach: parallele Session 01HkLmgZ schrieb R82 auf main, ohne sich in
+  „Parallele Sessions" einzutragen → Nummernkollision, beim Merge als R90 umnummeriert.
 - Nutzer: keine Warteschlangen-Einträge. Slice-Bilder kommen im Bericht (nicht blockierend).
 
 ## Nächste Schritte
