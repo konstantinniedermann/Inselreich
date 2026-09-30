@@ -566,3 +566,15 @@ Schlüssel = Welt-Identität + `layoutKey` + Art (KISS). Auflage für B1: Änder
 Nacharbeit in B1.
 
 Entscheider: L0 · Anlass: Berichte Welle 2
+
+## R62 · 2026-09-30 · M5
+
+Ruling: Welle 3 abgenommen (S5, U1b, U2-Fix Review-OK; Browser-Checks U1a, U2, A1, A3 OK).
+Übernommen: S5 um die Szenarien `galerie` und `leistung-50` erweitert; U1a-Check parallel zu
+S5/U1b; Ton wird bei `pointerup` freigeschaltet (Touch-Kompatibilität, AK-U2-06). Auflage: Arbeiter
+laden keine Werkzeuge per `npx`, die nicht in `package.json` stehen (ein Reviewer holte `vite-node`
+in den npm-Cache; kein Repo-Schaden) — gehört in jedes Briefing und als Befund in D1. Frame-Zeit
+und 390-px-Ansicht zusätzlich im Nutzer-Playtest auf echtem Gerät. — Kosten bei Irrtum: Maus-Ton
+startet erst beim Loslassen.
+
+Entscheider: L0 · Anlass: Bericht Welle 3
