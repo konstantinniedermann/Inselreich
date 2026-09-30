@@ -8,9 +8,12 @@ Letzte Auswertung: 2026-09-30 (`lead-production`, Paket S16-02) gegen Commit `3b
 Ergebnis: 45 Einzelbefunde. Davon sind 11 erledigt, 22 abgehakt und 12 in sechs Paket-Kandidaten
 gebündelt, die unten offen stehen. Kein Befund war widerlegt, sechs trugen eine falsche Prämisse.
 
-Nachtrag Doku-Pass M5 (D1, 2026-09-30): Zwei Paket-Kandidaten (Bedienkomfort, Spielkonzept) nach „Erledigt"
-verschoben; die gesammelten Befunde der M5-Wellen 1–5 und von lead-art stehen als neue Einträge unter „Offen"
-(gegen `test/m5-int` geprüft, noch nicht ausgewertet).
+Nachtrag Doku-Pass M5 (D1, 2026-09-30): Die Zahlen oben sind der Stand der Auswertung gegen `3b54938`.
+Seither sind zwei Paket-Kandidaten (Bedienkomfort, Spielkonzept) nach „Erledigt" verschoben, vier stehen
+noch offen; die Abgehakt-Zeilen „`createRng` ohne Known-Vector-Test" (Trigger eingetreten, jetzt unter
+„Offen") und „Laden setzt Geschwindigkeit und Kamera zurück" (erledigt) sind entfernt. Die gesammelten
+Befunde der M5-Wellen 1–5 und von lead-art stehen als neue Einträge unter „Offen" (gegen `test/m5-int`
+geprüft, noch nicht ausgewertet).
 
 ---
 
@@ -235,7 +238,8 @@ UI-Pflegepaket; der Rest bei Gelegenheit.
 - **Handelspanel:** „Zurück" ist bei 1280×800 halb abgeschnitten (Panel scrollt).
 - **Start und Laden:** Reload startet immer eine neue Zufallswelt, und das frische Spiel zählt als
   Fortschritt — „Laden" braucht deshalb immer zwei Klicks, mit Autosave-Slot drei Stufen (Bestätigen,
-  Auswahl, Slot). Beim Seitenstart läuft das Spiel sofort mit 1×, während noch der Toast „Spielstand
+  Auswahl, Slot). Laden eines Stands mit demselben Seed behält die aktuelle Kamera, weil der Spielstand
+  keine Kamera enthält (so gewollt nach Spec 10.1 Q6, wirkt aber nach einem Reload zufällig). Beim Seitenstart läuft das Spiel sofort mit 1×, während noch der Toast „Spielstand
   vorhanden" steht.
 - **`favicon.ico`** fehlt (404 im Dev-Server).
 
@@ -296,7 +300,8 @@ Ungültig-Vorschau und die Legende berühren die Lesbarkeit und sind die ersten 
 
 Nur auf einem echten Gerät bzw. hörbar zu beurteilen: 390 px und Ton auf einem Touch-Gerät (P-01…P-04),
 Frame-Zeit mit GPU, Höhe des mobilen HUD, Ton-Hooks (Münze, Auftrag geliefert, Fehler) hörbar, subjektive
-Wirkung der Tag-Nacht-Tönung über einen ganzen Tag (10 min bei 1×), „niedrig" im Steuerregler (Spec 17.1).
+Wirkung der Tag-Nacht-Tönung über einen ganzen Tag (10 min bei 1×), Gefühl von Pinch-Zoom und Zwei-Finger-Pan,
+„niedrig" im Steuerregler (Spec 17.1).
 **Ursprung:** Übergaben Welle 3–5, Spec 14.2.
 **Einschätzung:** Eingabe für den Nutzer-Playtest nach dem Merge von M5, kein Paket.
 

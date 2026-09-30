@@ -295,6 +295,10 @@ Schlüssel (`inselreich.settings`), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-
 - save: Round-trip identisch; kaputter Spielstand → Fehler ohne Exception.
 - smoke: 3000 Ticks mit skriptgesteuertem Aufbau → Siedler erreicht, kein Fehler.
 
+Mit M5 prüft Vitest zusätzlich `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts`
+und reine Helfer in `src/ui/`, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 15 und die
+Test-Strategie in `CLAUDE.md`.
+
 ## 5. Meilensteine
 
 1. **Fundament** – Scaffold (Vite, TS, Vitest, ESLint, Prettier, Makefile, CI), Sim-Typen und

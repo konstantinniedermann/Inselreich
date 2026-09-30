@@ -1,6 +1,7 @@
 # Inselreich — ein Aufbau-Strategiespiel im Stil von Anno 1602
 
-Browser-Spiel (TypeScript + HTML5 Canvas, keine Laufzeit-Abhängigkeiten).
+Browser-Spiel (TypeScript + HTML5 Canvas, keine Laufzeit-Abhängigkeiten, siehe
+[ADR-001](docs/adr/ADR-001-tech-stack.md)).
 Eigene Grafik, eigene Spielwerte — inspiriert von der Mechanik des Klassikers, kein Nachbau von Originalmaterial.
 
 Stand: MVP (Meilensteine 1–4) und M5 „Spielerlebnis" — Insel generieren, Wege und Betriebe bauen,
@@ -89,7 +90,8 @@ synthetisch (Web Audio, keine Tondateien): Klicks beim Bauen und Abreissen, Mün
 Verkauf, Signale für neue und gelieferte Aufträge, Aufstieg, Fehler und Sieg, dazu leises
 Meeresrauschen. Er startet nach dem ersten Klick oder Tastendruck (Regel der Browser) und pausiert,
 solange der Tab verborgen ist. Die Tag-Nacht-Tönung dunkelt die Karte über einen Tag von 6000 Ticks
-(10 Minuten bei 1×) auf höchstens 80 % Helligkeit ab; sie steht bei Pause still. Alle drei
+(10 Minuten bei 1×) um höchstens 20 % ab (die Helligkeit fällt nie unter 80 %); sie steht bei Pause
+still. Alle drei
 Einstellungen bleiben im Browser gespeichert und überstehen «Neu» und «Laden».
 
 ## Wirtschaft
