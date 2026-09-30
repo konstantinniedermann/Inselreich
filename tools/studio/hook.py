@@ -18,6 +18,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import context
+import limits
 import studio_docs
 import usage
 from model import EventStore, pending_incidents
@@ -340,6 +341,26 @@ def incident_notice(payload: dict, incidents: list[dict] | None = None) -> str:
     return "Ad-hoc-Retro fällig (Handbuch, Verbesserungsschleife): " + texts
 
 
+def limits_notice(payload: dict, now: float | None = None) -> str:
+    """Limit-Zeile für L0, nur aus frischer limits.json und nur für die Hauptsession."""
+    if payload.get("agent_id"):
+        return ""
+    now = time.time() if now is None else now
+    data = limits.read_fresh(studio_home() / "limits.json", now, limits.HOOK_MAX_AGE)
+    return limits.summary(data, now) if data else ""
+
+
+def prompt_context(payload: dict) -> str:
+    """Zusatzkontext bei UserPromptSubmit: Vorfall-Hinweis und Limit-Zeile."""
+    lines = []
+    for notice in (incident_notice, limits_notice):
+        with contextlib.suppress(Exception):
+            text = notice(payload)
+            if text:
+                lines.append(text)
+    return "\n".join(lines)
+
+
 def start_context(port: str, sid: str = "") -> str:
     try:
         incidents = open_incidents()
@@ -447,8 +468,7 @@ def main() -> int:
             with contextlib.suppress(Exception):
                 start_background(os.environ)
         elif name == "UserPromptSubmit":
-            with contextlib.suppress(Exception):
-                text = incident_notice(payload)
+            text = prompt_context(payload)
         if text:
             output = {
                 "hookSpecificOutput": {

@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -452,6 +453,61 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn("CI rot", first)
         self.assertEqual(second, "")
         self.assertEqual(sub, "")
+
+
+class LimitsNoticeTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.env = mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name})
+        self.env.start()
+        self.addCleanup(self.env.stop)
+
+    def write(self, ts):
+        data = {"ts": ts, "five_hour_pct": 42, "context_pct": 18}
+        (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")
+
+    def test_fresh_file_gives_summary(self):
+        self.write(1000.0)
+        out = hook.limits_notice(payload("UserPromptSubmit"), now=1000.0 + 9 * 60)
+        self.assertIn("Limit: 5h 42 %", out)
+        self.assertIn("Ampel grün", out)
+
+    def test_stale_or_missing_file_gives_nothing(self):
+        self.assertEqual(hook.limits_notice(payload("UserPromptSubmit"), now=5.0), "")
+        self.write(1000.0)
+        late = 1000.0 + 11 * 60
+        self.assertEqual(hook.limits_notice(payload("UserPromptSubmit"), now=late), "")
+
+    def test_subagent_gets_nothing(self):
+        self.write(1000.0)
+        p = payload("UserPromptSubmit", agent_id="a1")
+        self.assertEqual(hook.limits_notice(p, now=1001.0), "")
+
+    def test_main_joins_with_incident_notice(self):
+        self.write(time.time())
+        incidents = [{"id": "ci:1", "kind": "ci", "text": "CI rot", "t": 1.0}]
+        with mock.patch.object(hook, "open_incidents", return_value=incidents):
+            text = hook.prompt_context(payload("UserPromptSubmit", prompt="x"))
+        first, second = text.split("\n")
+        self.assertIn("Ad-hoc-Retro fällig", first)
+        self.assertIn("Limit: 5h 42 %", second)
+
+    def test_main_output_carries_limits_line(self):
+        self.write(time.time())
+        env = {**os.environ, "STUDIO_NO_SERVER": "1"}
+        proc = subprocess.run(
+            [sys.executable, str(HOOK)],
+            input=json.dumps(payload("UserPromptSubmit", prompt="x")),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        out = json.loads(proc.stdout)["hookSpecificOutput"]
+        self.assertEqual(out["hookEventName"], "UserPromptSubmit")
+        self.assertIn("Limit: 5h 42 %", out["additionalContext"])
 
 
 class FixRoundTest(unittest.TestCase):

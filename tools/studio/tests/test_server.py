@@ -3,6 +3,7 @@ import json
 import os
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -72,6 +73,27 @@ class ServerTest(unittest.TestCase):
         self.assertIn("application/json", ctype)
         state = json.loads(body)
         self.assertEqual(state["tree"][0]["children"][0]["role"], "lead-qa")
+
+    def test_state_limits_null_without_file(self):
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name}):
+            state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertIsNone(state["limits"])
+
+    def test_state_limits_with_age_and_light(self):
+        data = {"ts": time.time() - 1800, "five_hour_pct": 65, "context_pct": 18}
+        (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name}):
+            state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertEqual(state["limits"]["five_hour_pct"], 65)
+        self.assertEqual(state["limits"]["light"], "gelb")
+        self.assertAlmostEqual(state["limits"]["age_s"], 1800, delta=30)
+
+    def test_state_limits_dropped_after_an_hour(self):
+        data = {"ts": time.time() - 3700, "five_hour_pct": 65}
+        (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name}):
+            state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertIsNone(state["limits"])
 
     def test_heartbeats_query_passes_through(self):
         with mock.patch.object(server, "build_state", wraps=server.build_state) as spy:
