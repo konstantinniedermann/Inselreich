@@ -33,3 +33,9 @@ export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundE
   if (cur.won && !prev.won) out.push('win');
   return out;
 }
+
+/**
+ * Ereignisse, die den Ton freischalten. `pointerup` statt `pointerdown`: ein Touch-`pointerdown`
+ * zählt in Chrome nicht als Nutzeraktivierung, `pointerup` gilt für Maus und Touch.
+ */
+export const UNLOCK_EVENTS = ['pointerup', 'keydown'] as const;

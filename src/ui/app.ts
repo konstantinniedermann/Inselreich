@@ -16,7 +16,7 @@ import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
 import { loadSettings, saveSettings } from './settings';
-import { diffSoundEvents, soundSnapshot } from './soundEvents';
+import { UNLOCK_EVENTS, diffSoundEvents, soundSnapshot } from './soundEvents';
 import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
@@ -128,14 +128,13 @@ function launch(
   const unlockSound = (): void => {
     audioUnlockedOnce = true;
     sound.unlock();
-    window.removeEventListener('pointerdown', unlockSound);
-    window.removeEventListener('keydown', unlockSound);
+    removeUnlockListeners();
+  };
+  const removeUnlockListeners = (): void => {
+    for (const ev of UNLOCK_EVENTS) window.removeEventListener(ev, unlockSound);
   };
   if (audioUnlockedOnce) sound.unlock();
-  else {
-    window.addEventListener('pointerdown', unlockSound);
-    window.addEventListener('keydown', unlockSound);
-  }
+  else for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, unlockSound);
   const onVisibility = (): void => sound.setHidden(document.hidden);
   document.addEventListener('visibilitychange', onVisibility);
 
@@ -432,8 +431,7 @@ function launch(
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
     input?.unbind();
-    window.removeEventListener('pointerdown', unlockSound);
-    window.removeEventListener('keydown', unlockSound);
+    removeUnlockListeners();
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
     unbindMessages();

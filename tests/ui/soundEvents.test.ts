@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
-import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
+import { UNLOCK_EVENTS, diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 
 describe('diffSoundEvents (Spec 9.4)', () => {
   it('AK-U2-06: gleicher Zustand ergibt keine Ereignisse', () => {
@@ -67,5 +67,12 @@ describe('diffSoundEvents (Spec 9.4)', () => {
     w.won = true;
     expect(diffSoundEvents(before, soundSnapshot(w))).toEqual(['win']);
     expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
+  });
+});
+
+describe('UNLOCK_EVENTS (AK-U2-06)', () => {
+  it('AK-U2-06: Freischalten auf pointerup und keydown, nicht auf pointerdown (Touch zählt sonst nicht)', () => {
+    expect([...UNLOCK_EVENTS]).toEqual(['pointerup', 'keydown']);
+    expect(UNLOCK_EVENTS).not.toContain('pointerdown');
   });
 });
