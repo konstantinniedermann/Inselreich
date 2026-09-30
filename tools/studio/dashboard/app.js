@@ -23,6 +23,7 @@ import {
 import { renderGraph, setupGraph } from './graph.js';
 import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
 import {
+  NOT_MEASURED,
   renderDelegation,
   renderEffort,
   renderQuality,
@@ -131,9 +132,9 @@ function renderLimits(state) {
   const node = document.getElementById('limits');
   const limits = state.limits;
   const text = limits ? limitsText(limits) : '';
-  node.hidden = !text;
-  node.textContent = text ? `Limit: ${text}` : '';
-  node.dataset.light = (limits && limits.light) || '';
+  node.hidden = false;
+  node.textContent = `Limit: ${text || NOT_MEASURED}`;
+  node.dataset.light = (text && limits.light) || '';
   if (text && resetTitle(limits)) node.title = resetTitle(limits);
   else node.removeAttribute('title');
 }

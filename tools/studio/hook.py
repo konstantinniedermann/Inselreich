@@ -342,12 +342,12 @@ def incident_notice(payload: dict, incidents: list[dict] | None = None) -> str:
 
 
 def limits_notice(payload: dict, now: float | None = None) -> str:
-    """Limit-Zeile für L0, nur aus frischer limits.json und nur für die Hauptsession."""
+    """Limit-Zeile für L0 (Hauptsession); ohne frische Werte „nicht gemessen“."""
     if payload.get("agent_id"):
         return ""
     now = time.time() if now is None else now
     data = limits.read_fresh(studio_home() / "limits.json", now, limits.HOOK_MAX_AGE)
-    return limits.summary(data) if data else ""
+    return (limits.summary(data) if data else "") or limits.NOT_MEASURED_LINE
 
 
 def prompt_context(payload: dict) -> str:

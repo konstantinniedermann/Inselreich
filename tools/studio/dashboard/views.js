@@ -13,7 +13,7 @@ import {
   syncSelect,
 } from './dom.js';
 
-const NOT_MEASURED = 'nicht gemessen';
+export const NOT_MEASURED = 'nicht gemessen';
 const NOT_RECORDED = 'nicht erfasst';
 const EFFORT_GROUPS = [
   ['by_role', 'je Agent'],

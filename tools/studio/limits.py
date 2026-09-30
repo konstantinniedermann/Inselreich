@@ -21,6 +21,7 @@ WEEK_HIGH_ABOVE = 80
 CONTEXT_HANDOVER_FROM = 50
 HOOK_MAX_AGE = 600
 FUTURE_TOLERANCE_S = 60
+NOT_MEASURED_LINE = "Limit: nicht gemessen"
 RESET_KEYS = ("five_hour_resets_at", "seven_day_resets_at")
 VALUE_KEYS = (
     "five_hour_pct",

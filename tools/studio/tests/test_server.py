@@ -96,6 +96,12 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIsNone(json.loads(body)["limits"]["light"])
 
+    def test_state_limits_null_for_broken_file(self):
+        (Path(self.tmp.name) / "limits.json").write_text("{kaputt", "utf-8")
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": self.tmp.name}):
+            state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertIsNone(state["limits"])
+
     def test_state_limits_dropped_after_an_hour(self):
         data = {"ts": time.time() - 3700, "five_hour_pct": 65}
         (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")

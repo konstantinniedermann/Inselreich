@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest import mock
 
 import hook
+import limits
 
 HOOK = Path(__file__).resolve().parents[1] / "hook.py"
 
@@ -473,11 +474,27 @@ class LimitsNoticeTest(unittest.TestCase):
         self.assertIn("Limit: 5h 42 %", out)
         self.assertIn("Ampel grün", out)
 
-    def test_stale_or_missing_file_gives_nothing(self):
-        self.assertEqual(hook.limits_notice(payload("UserPromptSubmit"), now=5.0), "")
+    def test_stale_or_missing_file_says_not_measured(self):
+        main = payload("UserPromptSubmit")
+        self.assertEqual(hook.limits_notice(main, now=5.0), limits.NOT_MEASURED_LINE)
         self.write(1000.0)
         late = 1000.0 + 11 * 60
-        self.assertEqual(hook.limits_notice(payload("UserPromptSubmit"), now=late), "")
+        self.assertEqual(hook.limits_notice(main, now=late), limits.NOT_MEASURED_LINE)
+
+    def test_future_timestamp_says_not_measured(self):
+        self.write(1000.0 + 99999)
+        out = hook.limits_notice(payload("UserPromptSubmit"), now=1000.0)
+        self.assertEqual(out, limits.NOT_MEASURED_LINE)
+
+    def test_garbage_values_say_not_measured(self):
+        data = {"ts": 1000.0, "five_hour_pct": "viel", "context_pct": [1]}
+        (Path(self.tmp.name) / "limits.json").write_text(json.dumps(data), "utf-8")
+        out = hook.limits_notice(payload("UserPromptSubmit"), now=1001.0)
+        self.assertEqual(out, limits.NOT_MEASURED_LINE)
+
+    def test_subagent_gets_nothing_even_when_not_measured(self):
+        p = payload("UserPromptSubmit", agent_id="a1")
+        self.assertEqual(hook.limits_notice(p, now=5.0), "")
 
     def test_subagent_gets_nothing(self):
         self.write(1000.0)
