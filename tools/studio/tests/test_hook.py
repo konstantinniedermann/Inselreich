@@ -31,6 +31,10 @@ class ToEventTest(unittest.TestCase):
         )
         note = hook.to_event(payload("UserPromptSubmit", prompt="<task-notification>x"))
         self.assertEqual(note["task"], "Meldung eines Agenten")
+        msg = hook.to_event(
+            payload("UserPromptSubmit", prompt='<agent-message from="ab68">x')
+        )
+        self.assertEqual(msg["task"], "Meldung eines Agenten")
         stop = hook.to_event(payload("Stop", last_assistant_message="fertig"))
         self.assertEqual(
             (stop["kind"], stop["status"], stop["summary"]),

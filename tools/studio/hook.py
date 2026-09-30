@@ -17,6 +17,7 @@ MESSAGE_MAX = 600
 TASK_MAX = 120
 LOG_MARK = "tools/studio/log.py"
 AGENT_TOOLS = ("Agent", "Task")
+AGENT_MESSAGE_PREFIXES = ("<task-notification>", "<agent-message")
 START_CONTEXT = (
     "Studio-Modus: Diese Hauptsession ist der Studio-Direktor (L0) nach "
     "docs/studio/STUDIO.md. Lies docs/studio/STUDIO.md und docs/studio/state.md; "
@@ -76,7 +77,7 @@ def to_event(p: dict) -> dict | None:
         )
     elif name == "UserPromptSubmit":
         prompt = p.get("prompt") if isinstance(p.get("prompt"), str) else ""
-        if prompt.startswith("<task-notification>"):
+        if prompt.strip().startswith(AGENT_MESSAGE_PREFIXES):
             task = "Meldung eines Agenten"
         else:
             task = cut(prompt.strip().split("\n", 1)[0], TASK_MAX)
