@@ -13,7 +13,7 @@ Inselreich ist ein Aufbau-Strategiespiel im Browser: Der Spieler besiedelt eine 
 verbindet Betriebe per Weg mit dem Kontor, baut Produktionsketten auf, versorgt Wohnhäuser mit Waren
 und Diensten und lässt die Bevölkerung von Pionieren über Siedler zu Bürgern aufsteigen. Geld kommt
 aus Steuern und Handel, Unterhalt kostet laufend. Ziel sind 50 Bürger; der Spielstand lässt sich im
-Browser speichern. Mechanik, Grafik und Zahlen sind eigenständig (ADR-004).
+Browser speichern. Mechanik und Zahlen sind eigenständig, Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 
 ### Qualitätsziele
 
@@ -33,14 +33,14 @@ Browser speichern. Mechanik, Grafik und Zahlen sind eigenständig (ADR-004).
 
 ## 2. Randbedingungen
 
-| Randbedingung                 | Erläuterung                                                                                  |
-| ----------------------------- | -------------------------------------------------------------------------------------------- |
-| Stack                         | TypeScript (strict), Vite, HTML5 Canvas 2D für die Karte, DOM für das UI (ADR-001).          |
-| Keine Laufzeit-Abhängigkeiten | Nur Dev-Abhängigkeiten (Vite, TypeScript, Vitest, ESLint, Prettier samt Plugins).            |
-| Browser                       | Aktueller Desktop-Browser; Spielstand in `localStorage`. Touch-Bedienung nur teilweise.      |
-| Eigene Inhalte                | Eigener Titel, prozedural gezeichnete Grafik, eigene Zahlen; keine fremden Assets (ADR-004). |
-| Werkzeuge                     | Node ≥ 22; `make check` (Lint, Tests, Build) läuft identisch lokal und in der CI.            |
-| Sprache                       | UI und Doku Deutsch (CH, kein ß); Code-Bezeichner Englisch.                                  |
+| Randbedingung                 | Erläuterung                                                                                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| Stack                         | TypeScript (strict), Vite, HTML5 Canvas 2D für die Karte, DOM für das UI (ADR-001).                |
+| Keine Laufzeit-Abhängigkeiten | Nur Dev-Abhängigkeiten (Vite, TypeScript, Vitest, ESLint, Prettier samt Plugins).                  |
+| Browser                       | Aktueller Desktop-Browser; Spielstand in `localStorage`. Touch-Bedienung nur teilweise.            |
+| Eigene Inhalte                | Eigener Titel, eigene Zahlen; Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006). |
+| Werkzeuge                     | Node ≥ 22; `make check` (Lint, Tests, Build) läuft identisch lokal und in der CI.                  |
+| Sprache                       | UI und Doku Deutsch (CH, kein ß); Code-Bezeichner Englisch.                                        |
 
 ## 3. Kontextabgrenzung
 
@@ -334,8 +334,11 @@ Wartezeit vor dem Aufstieg.
 | TypeScript, Vite, Canvas 2D, keine Laufzeit-Abhängigkeiten  | [ADR-001](adr/ADR-001-tech-stack.md)                                    |
 | Simulation als reines Datenmodell, getrennt von Darstellung | [ADR-002](adr/ADR-002-sim-render-trennung.md)                           |
 | Top-down statt Isometrie im MVP                             | [ADR-003](adr/ADR-003-topdown-statt-isometrie.md)                       |
-| Eigener Titel, eigene Grafik, eigene Spielwerte             | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
+| Eigener Titel, eigene Grafik, eigene Spielwerte (abgelöst)  | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
 | Tick-Reihenfolge und Zustandssemantik der Gebäude           | [ADR-005](adr/ADR-005-tick-reihenfolge-und-zustaende.md)                |
+| Eigene oder offen lizenzierte Inhalte mit Nachweis          | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
+| Studio-Hierarchie                                           | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
+| Studio-Telemetrie                                           | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
 | Balancing-Revision (Steuern, Luxusverbrauch)                | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
 
 ## 10. Qualitätsanforderungen
