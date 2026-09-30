@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
 import { checkAfford, grantRefund, pay, refundCost } from './economy';
+import { newHouseState } from './population';
 import { canPlace, canPlaceRoad } from './placement';
 import { recomputeConnectivity } from './roads';
 import type { Building, BuildingDefId, Result, World } from './types';
@@ -40,14 +41,7 @@ export function placeBuilding(
   const id = world.nextBuildingId++;
   const building: Building = { id, defId, x, y, connected: false, progress: 0, state: 'ok' };
   if (defId === 'house') {
-    building.house = {
-      tier: 1,
-      inhabitants: 1,
-      demand: {},
-      satisfied: {},
-      satisfiedSince: 0,
-      supplied: false,
-    };
+    building.house = newHouseState(world);
   }
   world.buildings[id] = building;
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(world, p.x, p.y)!.buildingId = id;

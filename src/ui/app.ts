@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
@@ -24,6 +25,8 @@ export interface GameState {
   selectedId: number | null;
   panel: PanelState;
   terrainLayer: HTMLCanvasElement;
+  /** Siegbanner bereits gezeigt (ein geladener, gewonnener Stand zeigt es nicht erneut). */
+  wonShown: boolean;
 }
 
 const TICK_MS = 100;
@@ -55,6 +58,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     selectedId: null,
     panel: { kind: 'none' },
     terrainLayer: buildTerrainLayer(world),
+    wonShown: world.won,
   };
   const worldW = world.width * TILE;
   const worldH = world.height * TILE;
@@ -90,6 +94,10 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
+    if (world.won && !state.wonShown) {
+      state.wonShown = true;
+      showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
+    }
     updateHud(hudEl, state);
     updateBuildMenu(navEl, world);
     const panel = state.panel;
@@ -120,11 +128,10 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     }
   };
 
-  // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; ein Klick (dragging=false) setzt zurück
+  // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
     if (!dragging) {
-      dragMoneyToastShown = false;
       showMessage(reason, 'error');
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
       dragMoneyToastShown = true;
@@ -138,6 +145,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       selectTool({ kind: 'select' });
       return;
     }
+    if (!a.dragging) dragMoneyToastShown = false;
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
     if (tool.kind === 'select') {

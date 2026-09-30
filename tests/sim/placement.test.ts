@@ -112,7 +112,14 @@ describe('site rules', () => {
     const near = findFree((d) => d <= 8);
     expect(near.dist).toBeLessThanOrEqual(8);
     expect(canPlace(w, 'house', near.x, near.y).ok).toBe(true);
-    expect(placeBuilding(w, 'market', o.x, o.y).ok).toBe(true);
+    const m = placeBuilding(w, 'market', o.x, o.y);
+    expect(m.ok).toBe(true);
+    w.buildings[m.id!]!.connected = false;
+    expect(canPlace(w, 'house', o.x + 3, o.y + 3)).toEqual({
+      ok: false,
+      reason: 'Ausserhalb der Versorgung',
+    });
+    w.buildings[m.id!]!.connected = true;
     expect(canPlace(w, 'house', o.x + 3, o.y + 3).ok).toBe(true);
   });
 });
@@ -141,7 +148,10 @@ describe('build/demolish', () => {
     expect(placeBuilding(w, 'chapel', o.x, o.y).ok).toBe(true);
   });
   it('creates house state', () => {
-    expect(placeBuilding(w, 'market', o.x, o.y).ok).toBe(true);
+    const m = placeBuilding(w, 'market', o.x, o.y);
+    expect(m.ok).toBe(true);
+    w.buildings[m.id!]!.connected = true;
+    w.tick = 7;
     const r = placeBuilding(w, 'house', o.x + 3, o.y + 3);
     expect(r.ok).toBe(true);
     const b = w.buildings[r.id!]!;
@@ -149,9 +159,10 @@ describe('build/demolish', () => {
     expect(b.house).toMatchObject({
       tier: 1,
       inhabitants: 1,
-      demand: {},
+      demand: { food: 1 },
       satisfied: {},
-      satisfiedSince: 0,
+      services: {},
+      satisfiedSince: 7,
       supplied: false,
     });
   });
