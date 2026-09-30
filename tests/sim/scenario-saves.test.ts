@@ -32,6 +32,14 @@ describe('Szenario-Saves', () => {
     }
   });
 
+  it('kein Szenario ist nach dem ersten Tick gewonnen (Sieg-Overlay verfälscht Browser-Checks)', () => {
+    for (const name of Object.keys(SCENARIOS)) {
+      const w = load(name);
+      step(w);
+      expect(w.won, name).toBe(false);
+    }
+  });
+
   it('AK-S5-01 die Szenario-Namen sind genau die vereinbarten', () => {
     expect(Object.keys(SCENARIOS).sort()).toEqual(
       [

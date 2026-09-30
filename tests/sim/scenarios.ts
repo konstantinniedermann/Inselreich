@@ -218,6 +218,7 @@ function galerie(): World {
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;
+  w.stock.food = 100; // Lagerobergrenze; deckt den Verbrauch der drei Häuser weit über 1000 Ticks
   weaver.state = 'waitingInput'; // wie `tickProduction` es beim ersten Tick ohne Wolle setzen würde
   return w;
 }
@@ -230,11 +231,11 @@ function leistung50(): World {
   roadRow(w, kx + 2, kx + 18, ky);
   roadCol(w, kx + 18, ky - 8, ky + 8);
   // 30 Häuser in 6 Reihen à 5 (im Versorgungsradius des Kontors), Stufen wechseln je Haus
-  const tiers: Tier[] = [1, 2, 3];
   let i = 0;
   for (const y of [ky - 3, ky - 2, ky - 1, ky + 1, ky + 2, ky + 3]) {
     for (let x = kx + 2; x <= kx + 6; x++) {
-      const tier = tiers[i % 3]!;
+      // Nur 2 Bürgerhäuser (30 Bürger < WIN_CITIZENS), sonst Stufe 1 und 2 im Wechsel: kein Sieg im ersten Tick
+      const tier: Tier = i < 2 ? 3 : i % 2 === 0 ? 1 : 2;
       setHouse(w, put(w, 'house', x, y), {
         tier,
         inhabitants: TIERS[tier].maxInhabitants,
