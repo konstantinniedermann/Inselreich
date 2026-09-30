@@ -29,7 +29,7 @@ export function forceRect(
   y0: number,
   w: number,
   h: number,
-  terrain: 'grass' | 'water',
+  terrain: 'grass' | 'water' | 'forest',
 ): void {
   for (let y = y0; y < y0 + h; y++) {
     for (let x = x0; x < x0 + w; x++) {
