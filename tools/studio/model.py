@@ -666,6 +666,9 @@ class _Builder:
         self.count_tool(self.agent(event, ts, sid))
 
     def on_bind(self, event, ts, sid):
+        agent_id = str(event.get("agent_id") or "main")
+        if agent_id != "main" and f"{sid}:{agent_id}" not in self.nodes:
+            return  # unbekannte agent_id: kein Phantom-Knoten, kein bind
         node = self.agent(event, ts, sid)
         self.count_tool(node)
         role = event.get("role") or ""

@@ -1101,6 +1101,46 @@ def bind(t, aid, role, **kw):
     return ev("bind", t, agent_id=aid, role=role, **kw)
 
 
+class PhantomBindTest(unittest.TestCase):
+    def lead(self):
+        return [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", "lead-design", package="M5-02"),
+            start(1.5, "L1", "lead-design"),
+            log_status(2, "lead-design", "delegated", package="M5-02"),
+        ]
+
+    def test_bind_without_known_node_makes_no_phantom(self):
+        events = self.lead() + [
+            bind(4, "X9", "lead-design", package="M5-02"),
+            ev("heartbeat", 200, agent_id="L1", tool="Bash"),
+            ev("heartbeat", 400, agent_id="L1", tool="Bash"),
+            ev("heartbeat", 600, agent_id="L1", tool="Bash"),
+        ]
+        state = build(events, now=650)
+        nodes = flat(state)
+        self.assertNotIn("s1:X9", nodes)
+        self.assertEqual(state["counts"]["inactive"], 0)
+        self.assertNotIn("inaktiv:s1:X9", [i["id"] for i in state["incidents"]])
+
+    def test_real_lead_silent_is_still_inactive(self):
+        state = build(self.lead(), now=2 + 400)
+        self.assertTrue(flat(state)["s1:L1"]["inactive"])
+        self.assertIn("inaktiv:s1:L1", [i["id"] for i in state["incidents"]])
+
+    def test_bind_for_known_node_sets_package_and_resolves(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            start(1, "L1", "lead-design"),
+            bind(2, "L1", "lead-design", package="M5-02"),
+            log_status(3, "lead-design", "active", task="x"),
+        ]
+        nodes = flat(build(events))
+        self.assertEqual(nodes["s1:L1"]["package"], "M5-02")
+        self.assertEqual(nodes["s1:L1"]["task"], "x")
+        self.assertNotIn("s1:log:lead-design", nodes)
+
+
 PERSONA_NAMES = {
     "lead-production": {
         "name": "Planungs-Paula",
