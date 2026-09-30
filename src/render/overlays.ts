@@ -36,6 +36,7 @@ export const GOOD_COLORS: Partial<Record<GoodId, string>> = {
 
 // --- Abdeckungs-Cache ---
 interface Entry {
+  world: World;
   key: string;
   mask: boolean[];
   segments?: Array<[number, number, number, number]>;
@@ -73,8 +74,8 @@ export function createCoverageCache(
   const entryFor = (world: World, kind: CoverageKind): Entry => {
     const key = layoutKey(world);
     const hit = entries.get(kind);
-    if (hit && hit.key === key && hit.mask.length === world.width * world.height) return hit;
-    const fresh: Entry = { key, mask: compute(world, kind) };
+    if (hit && hit.world === world && hit.key === key) return hit;
+    const fresh: Entry = { world, key, mask: compute(world, kind) };
     entries.set(kind, fresh);
     return fresh;
   };
