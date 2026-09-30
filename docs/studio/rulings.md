@@ -649,3 +649,21 @@ CLAUDE.md und ADR-001-Nachtrag im Doku-Pass D1. — Kosten bei Irrtum: mehr glei
 mehr Koordinationsaufwand.
 
 Entscheider: L0 · Anlass: Antwort des Nutzers auf N-001
+
+## R68 · 2026-09-30 · Studio
+
+Ruling: Nutzungslimit schonen ohne 5-h-Sperre (Anweisung des Nutzers), gültig ab sofort, bis der
+studio-coach es ins Handbuch überträgt. (1) **Sensor:** Die Statuszeile von Claude Code erhält
+`rate_limits.five_hour.used_percentage`, `seven_day.used_percentage` und
+`context_window.used_percentage`; ein Projekt-Statuszeilen-Wrapper ruft das Nutzer-Skript
+unverändert auf und schreibt die Werte nach `.studio/limits.json`; der Prompt-Hook gibt sie L0 mit,
+das Dashboard zeigt sie (Paket STUDIO-LIMIT). (2) **Ampel 5-h-Fenster:** unter 60 % volle
+Parallelität; 60–80 % keine neuen Wellen, nur Laufendes abschliessen, Arbeiter auf sonnet/haiku;
+ab 80 % Session-Ende-Routine (state.md zuerst), keine neuen Starts. Wochenfenster über 80 %:
+Parallelität halbieren. (3) **Sessiongrösse:** eine Session ≈ ein Meilenstein-Abschnitt (Welle bzw.
+Phase); spätestens bei 50 % Kontext von L0 Übergabe über state.md und neue Session. (4)
+**Modelle:** opus nur für L0, Final-Review und Gate-kritische Designarbeit; Leads und Arbeiter
+standardmässig sonnet, mechanische Arbeiter haiku. — Kosten bei Irrtum: Session endet früher als
+nötig.
+
+Entscheider: L0 · Anlass: Anweisung des Nutzers
