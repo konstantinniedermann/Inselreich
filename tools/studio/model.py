@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import effort
+import graph
 import studio_docs
 
 INACTIVE_DEFAULT = 300.0
@@ -53,6 +54,7 @@ PUBLIC = (
     "name",
     "title",
     "emoji",
+    "instance",
     "task_short",
 )
 
@@ -198,6 +200,9 @@ class _Builder:
         self.spawns: dict[tuple[str, str], dict] = {}
         self.seq = 0
         self.binds: dict[str, list[tuple[float, str, str]]] = {}
+        self.trace: dict[str, list[dict]] = {}
+        self.index = 0
+        self.current_ts = ""
         self.budgets: dict[str, dict] = {}
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
@@ -254,10 +259,12 @@ class _Builder:
                 "name": "",
                 "title": "",
                 "emoji": "",
+                "instance": 1,
                 "task_short": "",
                 "_base_name": "",
                 "_pulse": ts,
                 "_signal": is_main,
+                "_first": (ts, self.current_ts, self.index),
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
@@ -343,6 +350,13 @@ class _Builder:
 
     # --- Events -------------------------------------------------------------
 
+    def record(self, sid: str, kind: str, ts: float, key: str, **fields) -> None:
+        """Ereignisliste für den Graph-Nachlauf (P37)."""
+        self.trace.setdefault(sid, []).append(
+            {"i": self.index, "kind": kind, "t": ts, "ts": self.current_ts, "key": key}
+            | fields
+        )
+
     def signal(self, event: dict, sid: str) -> None:
         """Jedes Event ausser agent_stop ohne Rolle macht einen Knoten sichtbar (P31)."""
         if event.get("source") == "log":
@@ -358,6 +372,42 @@ class _Builder:
         node = self.nodes[key]
         return node["agent_id"] != "main" and not node["_signal"]
 
+    def graph_record(self, record: dict) -> dict:
+        if record["kind"] != "spawn":
+            return record
+        child = record["entry"]["child"]
+        return {k: v for k, v in record.items() if k != "entry"} | {
+            "child": child["key"] if child is not None else None
+        }
+
+    def layouts(self) -> dict[str, graph.Layout]:
+        """Je Session das Graph-Layout; daraus die Instanznummern (P9, P21)."""
+        result: dict[str, graph.Layout] = {}
+        for sid in self.sessions:
+            info = {
+                key: {
+                    "agent_id": node["agent_id"],
+                    "role": node["role"],
+                    "department": node["department"],
+                    "parent": node["parent"],
+                    "base_name": node["_base_name"],
+                    "task": node["task"],
+                    "first": node["_first"],
+                    "log_only": node["agent_id"].startswith("log:"),
+                }
+                for key, node in self.nodes.items()
+                if node["session_id"] == sid and not self.hidden(key)
+            }
+            records = [self.graph_record(r) for r in self.trace.get(sid, [])]
+            layout = graph.Layout(sid, records, info)
+            for key, number in graph.instances(info, layout.run_times()).items():
+                node = self.nodes[key]
+                node["instance"] = number
+                suffix = f" ({number})" if number > 1 else ""
+                node["name"] = node["_base_name"] + suffix
+            result[sid] = layout
+        return result
+
     def identities(self) -> None:
         """Name, Titel, Emoji und Kurzaufgabe je sichtbarem Knoten (T3, T6)."""
         for key, node in self.nodes.items():
@@ -368,6 +418,8 @@ class _Builder:
             node["task_short"] = _short(node["task"], SHORT_TASK)
 
     def apply(self, event: dict) -> None:
+        self.index += 1
+        self.current_ts = str(event.get("ts") or "")
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
         # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
@@ -398,6 +450,7 @@ class _Builder:
     def on_session_start(self, event, ts, sid):
         self.sessions[sid]["ended"] = None  # Neustart: Session läuft wieder
         main = self.node(sid, "main", ts)
+        self.record(sid, "session_start", ts, main["key"])
         main["status"] = "idle"
         main["model"] = event.get("model") or main["model"]
 
@@ -419,7 +472,7 @@ class _Builder:
 
     def on_session_end(self, event, ts, sid):
         self.sessions[sid]["ended"] = ts
-        self.node(sid, "main", ts)
+        self.record(sid, "session_end", ts, self.node(sid, "main", ts)["key"])
         for node in self.nodes.values():
             if node["session_id"] == sid and node["status"] not in FINAL:
                 node["status"], node["stopped"] = "ended", ts
@@ -447,6 +500,9 @@ class _Builder:
             "child": None,
         }
         self.pending.setdefault(sid, []).append(entry)
+        self.record(
+            sid, "spawn", ts, parent["key"], entry=entry, description=entry["task"]
+        )
         if entry["tid"]:
             self.spawns[(sid, entry["tid"])] = entry
 
@@ -519,6 +575,7 @@ class _Builder:
         node = self.node(sid, agent_id, ts, typ)
         self.stamp(node, event, ("persona_version", "handbook_version"))
         node["tool_calls"] = node["tool_calls"] or 0
+        self.record(sid, "agent_start", ts, node["key"], resume=node["_started"])
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
             node["resumes"] += 1
             node["status"], node["stopped"] = "active", None
@@ -543,6 +600,7 @@ class _Builder:
 
     def on_agent_stop(self, event, ts, sid):
         node = self.agent(event, ts, sid)
+        self.record(sid, "agent_stop", ts, node["key"], summary=event.get("summary"))
         self.stamp(node, event, ("persona_version", "handbook_version"))
         if isinstance(event.get("usage"), dict):
             node["usage"] = event["usage"]
@@ -558,6 +616,14 @@ class _Builder:
     def on_message(self, event, ts, sid):
         sender = self.agent(event, ts, sid)  # Lebenszeichen wie ein Heartbeat (T2)
         self.count_tool(sender)  # SendMessage bleibt ein Tool-Aufruf (Aufwand)
+        self.record(
+            sid,
+            "message",
+            ts,
+            sender["key"],
+            to=str(event.get("to") or ""),
+            text=str(event.get("text") or ""),
+        )
 
     def on_heartbeat(self, event, ts, sid):
         self.count_tool(self.agent(event, ts, sid))
@@ -597,6 +663,15 @@ class _Builder:
     def on_status(self, event, ts, sid):
         node = self.resolve(sid, event.get("role") or "", _package(event), ts)
         node["_signal"] = True
+        self.record(
+            sid,
+            "status",
+            ts,
+            node["key"],
+            status=event.get("status") or "",
+            task=event.get("task") or "",
+            summary=event.get("summary") or "",
+        )
         self.touch(node, ts)
         self.stamp(node, event, ("handbook_version", "milestone"))
         status = event.get("status") or ""
@@ -810,6 +885,7 @@ class _Builder:
 
         self.finalize()
         self.identities()
+        self.layouts()
         views = {
             key: self.view(node, inactive_after) for key, node in self.nodes.items()
         }

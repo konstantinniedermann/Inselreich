@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+import graph
 import model
 
 T0 = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc).timestamp()
@@ -1095,6 +1096,53 @@ class NamesTest(unittest.TestCase):
         self.assertEqual(nodes["s1:a1"]["task_short"], exact)
         self.assertEqual(nodes["s1:a2"]["task_short"], "y" * 30 + "…")
         self.assertEqual(nodes["s1:main"]["task_short"], "Erste Zeile des Auftrags")
+
+    def test_fold_window_matches_bind_window(self):
+        self.assertEqual(graph.FOLD_WINDOW, model.BIND_WINDOW)
+
+    def sims(self, *spans):
+        """Je (start, stop) ein tech-sim-engineer-Lauf w1, w2, … (stop None = offen)."""
+        events = []
+        for n, (a, b) in enumerate(spans, 1):
+            events.append(start(a, f"w{n}", "tech-sim-engineer"))
+            if b is not None:
+                events.append(stop(b, f"w{n}", "tech-sim-engineer"))
+        return flat(named(events, now=200))
+
+    def test_second_instance_gets_suffix(self):
+        nodes = self.sims((1, None), (2, None))
+        self.assertEqual(
+            [(nodes[k]["name"], nodes[k]["instance"]) for k in ("s1:w1", "s1:w2")],
+            [("Logik-Lars", 1), ("Logik-Lars (2)", 2)],
+        )
+
+    def test_instance_number_rule(self):
+        nodes = self.sims((1, 10), (2, 30), (20, 40), (50, None))
+        numbers = [nodes[f"s1:w{n}"]["instance"] for n in (1, 2, 3, 4)]
+        self.assertEqual(numbers, [1, 2, 3, 1])
+
+    def test_paused_node_holds_no_instance(self):
+        events = [
+            start(1, "w1", "tech-sim-engineer"),
+            stop(5, "w1", "tech-sim-engineer"),
+            start(10, "w2", "tech-sim-engineer"),
+            message(15, "main", "w1"),
+            start(20, "w1", "tech-sim-engineer"),
+        ]
+        nodes = flat(named(events))
+        self.assertEqual(
+            (nodes["s1:w1"]["instance"], nodes["s1:w2"]["instance"]), (1, 1)
+        )
+
+    def test_log_only_and_foreign_second_instance(self):
+        events = [
+            start(1, "x1", "Explore"),
+            start(2, "x2", "Explore"),
+            log_status(3, "lead-art", "blocked", task="Lizenz"),
+        ]
+        nodes = flat(named(events))
+        self.assertEqual(nodes["s1:x2"]["name"], "Aushilfe (2)")
+        self.assertEqual(nodes["s1:log:lead-art"]["name"], "Pinsel-Pia")
 
 
 class GateSpecFixesTest(unittest.TestCase):
