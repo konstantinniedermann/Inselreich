@@ -2,6 +2,8 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { footprint, tileAt } from '../sim/world';
 import type { BuildingDefId, World } from '../sim/types';
 import { TILE, tileToScreen, type Camera } from './camera';
+import { drawNeedSymbols, drawPlacementOverlay } from './overlays';
+import { drawShip } from './ship';
 import { drawWaves } from './water';
 import { drawBuilding, drawRoad } from './sprites';
 
@@ -67,6 +69,7 @@ export function render(
   const y1 = Math.min(world.height - 1, Math.floor((cam.y + view.h / cam.zoom) / TILE));
 
   drawWaves(ctx, world, cam, { x0, y0, x1, y1 }, fx.timeMs);
+  drawShip(ctx, world, cam, fx.timeMs);
 
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
@@ -82,6 +85,10 @@ export function render(
     }
   }
 
+  if (hover?.tool?.kind === 'build') {
+    drawPlacementOverlay(ctx, world, cam, { x0, y0, x1, y1 }, hover.tool.defId, hover.x, hover.y);
+  }
+
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
     if (b.x > x1 || b.y > y1 || b.x + def.w - 1 < x0 || b.y + def.h - 1 < y0) continue;
@@ -89,6 +96,8 @@ export function render(
     const q = tileToScreen(cam, b.x + def.w, b.y + def.h);
     drawBuilding(ctx, def, b, p.x, p.y, q.x - p.x, q.y - p.y, fx.timeMs);
   }
+
+  drawNeedSymbols(ctx, world, cam, { x0, y0, x1, y1 });
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];
   if (sel) {
