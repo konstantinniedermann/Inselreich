@@ -68,7 +68,7 @@ def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
                         "run_id": run_id,
                         "attempt": attempt,
                         "conclusion": run.get("conclusion", ""),
-                        "branch": run.get("headBranch,attempt", ""),
+                        "branch": run.get("headBranch", ""),
                         "sha": run.get("headSha", ""),
                         "workflow": run.get("workflowName", ""),
                         "created": run.get("createdAt", ""),

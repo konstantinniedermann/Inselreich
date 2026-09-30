@@ -49,6 +49,10 @@ class CiTest(unittest.TestCase):
         events = ci.collect(lambda: runs, set())
         self.assertEqual([e["run_id"] for e in events], ["1"])
 
+    def test_event_takes_branch_from_head_branch(self):
+        events = ci.collect(lambda: RUNS, set())
+        self.assertEqual(events[0]["branch"], "main")
+
     def test_event_carries_attempt_default_one(self):
         events = ci.collect(lambda: RUNS, set())
         self.assertEqual(events[0]["attempt"], 1)
