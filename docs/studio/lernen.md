@@ -8,3 +8,4 @@
 - Implementierer ändern Dateien mit Edit/Write statt mit Shell-Einzeilern (sed, perl, Heredoc); Einzeiler liessen Agenten hängen (Befund M2).
 - Neue Personas lädt die Datei-Überwachung in laufenden Sessions — ausser `.claude/agents/` fehlte beim Session-Start; dann lädt die Session keine Projekt-Personas, auch nicht nach `/clear`. Rückfall: `general-purpose` mit Kopfzeile `Persona:` und dem Persona-Text im Briefing.
 - Die Anzeige „inaktiv" ist bei langen Bash-Aufrufen ohne Lebenszeichen erwartbar (Heuristik, kein Fehler). Eingebaute Agenten (z. B. `web-fetch`) senden kein SubagentStart/-Stop; liegt ein Vordergrund-`spawned` vor, ist „inaktiv" ein Messartefakt (Retro 2026-09-30).
+- Ein roter Pages-Lauf mit „Failed to get ID Token" (`deploy-pages`) ist ein Plattform-Timeout: einmal `gh run rerun`, erst bei Wiederholung untersuchen. `ci.py` sieht den grünen Rerun nicht; bis zum Fix gilt der Vorfall danach als erledigt (Retro 2026-09-30 ci-pages).
