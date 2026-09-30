@@ -13,7 +13,8 @@ Seither sind zwei Paket-Kandidaten (Bedienkomfort, Spielkonzept) nach „Erledig
 noch offen; die Abgehakt-Zeilen „`createRng` ohne Known-Vector-Test" (Trigger eingetreten, jetzt unter
 „Offen") und „Laden setzt Geschwindigkeit und Kamera zurück" (erledigt) sind entfernt. Die gesammelten
 Befunde der M5-Wellen 1–5 und von lead-art stehen als neue Einträge unter „Offen" (gegen `test/m5-int`
-geprüft, noch nicht ausgewertet).
+geprüft, noch nicht ausgewertet). M5-Nachlese (R70) hat die Kann-Befunde aus dem Final-Review M5
+übertragen bzw. behoben (Einträge vom 2026-09-30 am Ende von „Offen“).
 
 ---
 
@@ -186,9 +187,9 @@ Hinweise für Szenario-Autoren.
   `connected`; der Helfer setzt es nur einmal.
 - `tests/sim/save.test.ts` „never throws on garbage input" nutzt `{"version":1}` und läuft seit S1 durch den
   Migrationspfad statt direkt in die Prüfung (Testabsicht verschoben, unproblematisch).
-- `tests/sim/queries.test.ts`: Purity-Test ohne AK-/RF-Präfix (~:412); `directHouse` setzt Flags, die die
-  Abfragen nicht lesen, ohne Kommentar (~:213–235); Setup für AK-S3-07 (Holzfäller) umständlich (~:386–391).
-- `tests/sim/trade.test.ts` bzw. S2-Test AK-S2-09 enthält ein Füll-`expect(GOOD_IDS.length)`.
+- `tests/sim/queries.test.ts`: Purity-Test ohne AK-/RF-Präfix (~:248); `directHouse` setzt Flags, die die
+  Abfragen nicht lesen, ohne Kommentar (~:50–71); Setup für AK-S3-07 (Holzfäller) umständlich (~:222–226).
+- `tests/sim/orders.test.ts` (~:103, AK-S2-09) enthält ein Füll-`expect(GOOD_IDS.length)`.
 - `tests/sim/m5-session.test.ts`: Name des Determinismus-Tests lang.
 - `tests/sim/defs.test.ts:11`: Test für AK-S4-04 heisst „has 13 building defs…" und beginnt nicht mit
   `AK-S4-04` — die AK-Abdeckung per `grep` findet ihn nicht.
@@ -260,7 +261,7 @@ für den nächsten UI-Strang.
   der Weg-Mittelstreifen zeigt bei Zoom ≈ 1.7 eine 1-px-Stufe.
 - `overlays.ts`: `interface Symbol` verdeckt das globale `Symbol` (umbenennen, z. B. `NeedSymbol`);
   `houseDiagnosis` läuft ungecacht je sichtbarem Haus und Frame (gemessen 2.5–3.1 ms je Frame bei 57
-  Gebäuden, unkritisch). Das Symbol „nicht versorgt" hat keine Legende.
+  Gebäuden, unkritisch; auch Final-Review M5, B-F2: Leistung bei grossen Städten). Das Symbol „nicht versorgt" hat keine Legende.
 - `ship.ts`: nicht auf den sichtbaren Ausschnitt begrenzt (vernachlässigbar); bei `timeMs: 0` fester
   Neigungsversatz (~0.05 rad).
 - Vorschau: Ungültig-Vorschau auf Gras bräunlich statt klar rot, auf Wasser violett.
@@ -268,8 +269,8 @@ für den nächsten UI-Strang.
 **Ursprung:** Task-Reviews A1, A3, Silhouette S4 (lead-art); Browser-Checks A1, A3.
 **Einschätzung:** Alles niedrig, Pflege durch lead-art bei der nächsten Render-Arbeit. Die Farbe der
 Ungültig-Vorschau und die Legende berühren die Lesbarkeit und sind die ersten Kandidaten.
-**Erledigt seither:** Die Wellen-Amplitude in `water.ts` ist inzwischen eine benannte Konstante
-(`WAVE_AMPLITUDE`).
+**Erledigt seither (teilweise):** Die Wellen-Amplitude in `water.ts` ist inzwischen eine benannte Konstante
+(`WAVE_AMPLITUDE`); `water.ts:~74` enthält aber noch feste Faktoren (u. a. `sh * 0.1`, `sh * 0.25`, `sw * 0.2`, `sw * 0.8`, `sw * 0.5`).
 
 ### 2026-09-30 · `src/audio/sound.ts` · Befunde lead-art aus A2
 
@@ -304,6 +305,51 @@ Wirkung der Tag-Nacht-Tönung über einen ganzen Tag (10 min bei 1×), Gefühl v
 „niedrig" im Steuerregler (Spec 17.1).
 **Ursprung:** Übergaben Welle 3–5, Spec 14.2.
 **Einschätzung:** Eingabe für den Nutzer-Playtest nach dem Merge von M5, kein Paket.
+
+### 2026-09-30 · `tests/sim/`, `src/sim/` · Final-Review M5: Sim und Tests
+
+- `tests/sim/save.test.ts:63`: AK-S1-02 vergleicht nur die Gebäude-IDs, die Spec verlangt den ganzen
+  Gebäudevergleich (Teststärkung, kein Label).
+- Das Literal 100 (voller Verkaufsanteil) steht dreifach in `src/sim/world.ts`, `trade.ts` und `save.ts`;
+  Refactoring in eine Konstante in `src/sim/defs/`.
+- `citizens()` zählt nur `tier === 3`, und `tryUpgrade` läuft automatisch: Falle für jede künftige vierte Stufe.
+
+**Ursprung:** Final-Review M5 (lead-qa), R70; `citizens()`/`tryUpgrade` aus M6-PREP (design-economy-designer).
+**Einschätzung:** Niedrig; der Sim-Code gehört zu tech-sim-engineer. Die vierte Stufe ist bei K-C zwingend
+mitzuplanen.
+
+### 2026-09-30 · `src/ui/` · Final-Review M5: Bedienung
+
+- **B-F1 (mittel)** `src/ui/app.ts:88-91,116,424-437`: Nach einem Reload überschreibt der Autosave der neuen
+  Zufallswelt nach 120 s den Autosave der vorigen Sitzung. Spec-konform (Spec 10.8), der manuelle Slot bleibt.
+- **B-F6** `src/ui/app.ts:140-142`: Wirft `launch`, bleiben die Listener registriert.
+- **B-F7** `src/ui/input.ts:303-315,328`: Pfeil- und WASD-Tasten wirken bei fokussiertem Button nicht, die
+  Hotkeys schon.
+- **B-F8** `src/ui/buildMenu.ts:144-155,188-191`: Nach einem Langdruck mit Abbruch wird der nächste Klick
+  verschluckt.
+
+**Ursprung:** Final-Review M5 (lead-qa), R70.
+**Einschätzung:** B-F1 ist Eingabe für die M6-Auswahl bzw. den Nutzer-Playtest (R70). B-F6 bis B-F8 sind
+Verhaltensänderungen, niedrig, bei der nächsten UI-Arbeit.
+
+### 2026-09-30 · `src/render/`, `src/audio/` · Final-Review M5: Render und Audio für M7
+
+- **B-F4** `tests/render/ship.test.ts:15-26`: tautologisch (rechnet den Sollwert wie der Code).
+- **B-F5** `src/render/overlays.ts:73-80,123`: Der Cache hält alte Welten fest.
+- **B-F9** `src/audio/sound.ts:192,207-215`: Ein abgelehntes Ton-Resume bekommt keinen zweiten Versuch
+  (ergänzt die `resume()`-Befunde oben).
+
+**Ursprung:** Final-Review M5 (lead-qa), R70.
+**Einschätzung:** Niedrig, bündeln in M7 (Render/Audio, lead-art).
+
+### 2026-09-30 · M5-Spec §4.1, Sim · Design-Befunde für M6/M7
+
+- **Steuer „hoch" nach dem Sieg:** Die Tabelle rechnet „hoch" je Einwohner mitwachsend, den Endzustand mit
+  festem Kettenunterhalt. Wer Ketten auf die kleinere Belegung zurückbaut, fährt nach dem Sieg mit „hoch"
+  dauerhaft besser (Bürgerhaus 129 statt 112.5 je 100 Ticks): drohende dominante Strategie.
+
+**Ursprung:** M6-PREP (design-economy-designer).
+**Einschätzung:** Für lead-design, relevant für M6/M7 (K-C).
 
 ---
 

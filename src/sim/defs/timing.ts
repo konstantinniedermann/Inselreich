@@ -10,6 +10,11 @@ export const TAX_SWITCH_LOCK = 300;
 export const UPGRADE_WAIT = 300;
 /** Alle 10 Ticks erholt sich der Verkaufsanteil jedes Guts um einen Prozentpunkt. */
 export const SELL_RECOVERY_INTERVAL = 10;
+/*
+ * Achtung: ORDER_FIRST_TICK, ORDER_PERIOD und ORDER_DURATION liest die Save-Prüfung (`isValidOrder`).
+ * Eine Änderung lässt Stände mit laufendem Auftrag bei der Prüfung scheitern und braucht eine
+ * Save-Migration (arc42, R61).
+ */
 /** Tick des ersten Handelsauftrags. */
 export const ORDER_FIRST_TICK = 600;
 /** Abstand zwischen zwei Auftragsperioden (Ticks). */

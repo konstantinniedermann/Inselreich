@@ -34,7 +34,7 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 
 ## Test-Strategie
 
-Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer und UI werden manuell im Browser geprüft.
+Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera, Tag-Nacht-Tönung, Schiffsposition). Renderer und UI werden manuell im Browser geprüft.
 Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts` und reine, DOM-freie Helfer in `src/ui/` (`tests/ui/`).
 Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die Spielwerte: Jede Änderung in `src/sim/defs/` muss ihn grün lassen.
 
