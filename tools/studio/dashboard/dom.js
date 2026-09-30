@@ -1,16 +1,18 @@
 // Gemeinsame Hilfen des Studio-Dashboards: sichere DOM-Erzeugung (nur textContent/Attribute).
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
-export const STATUS_LABEL = {
-  active: 'aktiv',
-  delegated: 'delegiert',
-  waiting: 'wartet',
-  blocked: 'blockiert',
-  idle: 'bereit',
-  done: 'fertig',
-  failed: 'fehlgeschlagen',
-  ended: 'beendet',
+// Eine Status-Tabelle für Kacheln, Status-Karte, Feed und Prozess-Graph (Spec Prozess-Graph, K4).
+export const STATUS = {
+  active: { emoji: '🔨', label: 'arbeitet' },
+  delegated: { emoji: '📣', label: 'lässt arbeiten' },
+  waiting: { emoji: '⏳', label: 'wartet' },
+  blocked: { emoji: '🚧', label: 'steckt fest' },
+  idle: { emoji: '☕', label: 'bereit' },
+  done: { emoji: '✅', label: 'fertig' },
+  failed: { emoji: '💥', label: 'gescheitert' },
+  ended: { emoji: '🌙', label: 'Feierabend' },
 };
+export const INACTIVE = { emoji: '💤', label: 'döst' };
 export const PACKAGE_STATUS = {
   open: { label: 'offen', tone: 'idle' },
   active: { label: 'in Arbeit', tone: 'active' },
@@ -27,7 +29,6 @@ export const DEPARTMENT_LABEL = {
   qa: 'QA',
   extern: 'Extern',
 };
-export const LEVEL_LABEL = ['L0', 'L1', 'L2'];
 
 // --- Hilfen -----------------------------------------------------------------
 
@@ -71,7 +72,16 @@ export function clock(epochSeconds, withSeconds = true) {
 }
 
 export function knownStatus(status) {
-  return Object.hasOwn(STATUS_LABEL, status) ? status : 'idle';
+  return Object.hasOwn(STATUS, status) ? status : 'idle';
+}
+
+// „✅ fertig"; mit idleSeconds (inaktiver Knoten) „💤 döst seit n min" (P13).
+export function statusText(status, idleSeconds = null) {
+  if (idleSeconds !== null) {
+    return `${INACTIVE.emoji} ${INACTIVE.label} seit ${Math.floor(idleSeconds / 60)} min`;
+  }
+  if (!Object.hasOwn(STATUS, status)) return status || '–';
+  return `${STATUS[status].emoji} ${STATUS[status].label}`;
 }
 
 export function knownDepartment(department) {
@@ -79,12 +89,7 @@ export function knownDepartment(department) {
 }
 
 export function statusBadge(status) {
-  const known = Object.hasOwn(STATUS_LABEL, status);
-  return el(
-    'span',
-    { class: `badge st-${known ? status : 'idle'}` },
-    known ? STATUS_LABEL[status] : status || '–',
-  );
+  return el('span', { class: `badge st-${knownStatus(status)}` }, statusText(status));
 }
 
 export function deptChip(department) {

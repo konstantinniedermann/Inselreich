@@ -127,6 +127,71 @@ class ToEventTest(unittest.TestCase):
         self.assertIsNone(hook.to_event(payload("Notification", message="x")))
 
 
+class MessageEventTest(unittest.TestCase):
+    def send(self, tool_input, **kw):
+        return hook.to_event(
+            payload("PreToolUse", tool_name="SendMessage", tool_input=tool_input, **kw)
+        )
+
+    def test_send_message_creates_message_event(self):
+        event = self.send(
+            {"to": "g-ts1", "message": "Bitte Befunde beheben", "summary": "Fix"},
+            agent_id="g-lt",
+            agent_type="lead-tech",
+        )
+        self.assertEqual(
+            (
+                event["kind"],
+                event["agent_id"],
+                event["role"],
+                event["to"],
+                event["text"],
+            ),
+            ("message", "g-lt", "lead-tech", "g-ts1", "Bitte Befunde beheben"),
+        )
+        self.assertNotIn("tool", event)
+
+    def test_main_is_sender_without_agent_id(self):
+        self.assertEqual(self.send({"to": "a1", "message": "x"})["agent_id"], "main")
+
+    def test_message_text_collapsed_and_cut_at_160(self):
+        spaced = self.send({"to": "a", "message": "a  b\t c"})["text"]
+        self.assertEqual(spaced, "a b c")
+        long = self.send({"to": "a", "message": "x" * 161})["text"]
+        self.assertEqual(long, "x" * 160 + "…")
+        exact = self.send({"to": "a", "message": "y" * 160})["text"]
+        self.assertEqual(exact, "y" * 160)
+
+    def test_to_cut_at_120_and_stringified(self):
+        self.assertEqual(
+            self.send({"to": "z" * 130, "message": "x"})["to"], "z" * 120 + "…"
+        )
+        self.assertEqual(self.send({"to": 42, "message": "x"})["to"], "42")
+
+    def test_first_line_only_and_summary_not_stored(self):
+        event = self.send({"to": "a", "summary": "Kurzfassung"})
+        self.assertEqual(event["text"], "")
+        self.assertNotIn("summary", event)
+        self.assertNotIn("Kurzfassung", json.dumps(event, ensure_ascii=False))
+        multi = self.send({"to": "a", "message": "\n\n  Erste Zeile\nZweite Zeile"})
+        self.assertEqual(multi["text"], "Erste Zeile")
+
+    def test_malformed_send_message_does_not_raise(self):
+        for tool_input in ({"to": "a", "message": {"typ": "x"}}, None, "text", [1]):
+            with self.subTest(tool_input=tool_input):
+                event = self.send(tool_input)
+                self.assertEqual(event["kind"], "message")
+                if not isinstance(tool_input, dict):
+                    self.assertEqual((event["to"], event["text"]), ("", ""))
+        event = hook.to_event(payload("PreToolUse", tool_name="SendMessage"))
+        self.assertEqual((event["to"], event["text"]), ("", ""))
+
+    def test_other_tools_stay_heartbeat(self):
+        for tool in ("Read", "Grep", "WebFetch", "ListAgents"):
+            event = hook.to_event(payload("PreToolUse", tool_name=tool, tool_input={}))
+            self.assertEqual((event["kind"], event["tool"]), ("heartbeat", tool))
+
+
 class HeaderTest(unittest.TestCase):
     def test_header_text_full_value(self):
         text = "Persona: x\n- **Schätzung:** 20 min, 30 Tools\n"
@@ -462,6 +527,23 @@ class MainTest(unittest.TestCase):
             lines = path.read_text("utf-8").splitlines() if path.exists() else []
         return proc, lines
 
+    def test_main_writes_message_event(self):
+        stdin = json.dumps(
+            payload(
+                "PreToolUse",
+                agent_id="g-lt",
+                tool_name="SendMessage",
+                tool_input={"to": "main", "message": "Fertig"},
+            )
+        )
+        proc, lines = self.run_hook(stdin)
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(len(lines), 1)
+        event = json.loads(lines[0])
+        self.assertEqual(
+            (event["kind"], event["to"], event["text"]), ("message", "main", "Fertig")
+        )
+
     def test_main_survives_garbage(self):
         for stdin in ["", "nicht json", "[1,2]", '{"hook_event_name": 5}']:
             proc, lines = self.run_hook(stdin)
@@ -586,6 +668,17 @@ class SettingsTest(unittest.TestCase):
                 for command in commands:
                     self.assertTrue(any(s in command for s in scripts))
                     self.assertTrue(command.endswith("2>/dev/null || true"))
+
+    def test_pretooluse_matcher_covers_send_message(self):
+        path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
+        groups = json.loads(path.read_text())["hooks"]["PreToolUse"]
+        covering = [
+            g
+            for g in groups
+            if g.get("matcher") == "*"
+            and any("tools/studio/hook.py" in h["command"] for h in g["hooks"])
+        ]
+        self.assertEqual(len(covering), 1)
 
     def test_guard_registered(self):
         path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"

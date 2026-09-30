@@ -106,6 +106,60 @@ Kommando auf. Das erste Token `install`/`add`/`i` irgendwo im Text schaltet `see
 **Einschätzung:** Die Messdoku ist ein kleiner Nachtrag für den nächsten Studio-Strang. Die beiden
 anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 
+### 2026-09-30 · `tools/studio/model.py` · stop-only-Knoten in Aufwand und Qualität
+
+**Beobachtung:** Knoten mit `agent_stop` ohne Rolle (stop-only) zählen in den Reitern Aufwand und Qualität (`records`, `effort`, Vorfälle) weiter, obwohl Graph, Organigramm, Zähler und Chronik sie ausblenden.
+**Ursprung:** Paket G.
+**Einschätzung:** Dasselbe Prädikat `_Builder.hidden()` wäre eine Zeile (L0-Entscheid Gate Plan: Beobachtung).
+
+### 2026-09-30 · `tools/studio/graph.py` · `_row`
+
+**Beobachtung:** Eine order-Zeile, deren Elternknoten in dieser Zeile keine Spur hat, bekommt `arrow = null` (kein Stummel).
+**Ursprung:** Paket G.
+**Einschätzung:** Selten und ungetestet; ein Test genügt, falls es je auftritt.
+
+### 2026-09-30 · `tools/studio/server.py` · `/api/state`
+
+**Beobachtung:** `/api/state` wächst mit dem Graphen: bei 300 Zeilen × 11 Spalten etwa 346 KB je Poll (2 s). Der Client baut nur bei Änderung neu (P35), der Transfer bleibt.
+**Ursprung:** Paket G.
+**Einschätzung:** Lokal unkritisch; relevant, wenn Sessions deutlich länger werden (dann `graph` separat oder inkrementell liefern).
+
+### 2026-09-30 · `tools/studio/model.py` · `layouts`
+
+**Beobachtung:** Schlägt das Graph-Layout einer Session fehl, fällt es still weg (leere Zeilen, Feed ohne Empfängernamen). Ein Log-Hinweis fehlt.
+**Ursprung:** Paket G.
+**Einschätzung:** Eine Logzeile im Fehlerfall würde die Suche abkürzen; klein, aber ohne Anlass bisher nicht nötig.
+
+### 2026-09-30 · `tools/studio/server.py` · `paths.agents_dir`
+
+**Beobachtung:** `server.py` liest Persona-Namen aus dem Hauptrepo (`paths.agents_dir` über `repo_root`). Aus einem Worktree gestartet zeigt das Dashboard die Namen des Hauptrepos.
+**Ursprung:** Paket G.
+**Einschätzung:** Playtests in Worktrees brauchen eine Temp-Kopie des Repos. Erst relevant, wenn Namen im Worktree geändert werden.
+
+### 2026-09-30 · `tools/studio/dashboard/` · Tab-Leiste bei 390 px
+
+**Beobachtung:** Bei 390 px ragt der Reiter „Studio“ bis x=429 hinaus. Die Leiste scrollt intern, die Seite hat keinen waagrechten Scroll.
+**Ursprung:** Paket G.
+**Einschätzung:** Vorbestehend, nicht durch den Graphen verursacht; kosmetisch.
+
+### 2026-09-30 · `tools/studio/dashboard/` · Graph-Karte Layout
+
+**Beobachtung:** Bei 1280×2000 hat die Graph-Karte 60vh (1200 px) Höhe bei etwa 590 px Inhalt, es entsteht eine grosse Leerfläche. Die klebende Kopfzeile überdeckt auf dem Handy die obersten Graph-Zeilen. Labels im Graphen sind bei 390 px stark gekürzt („Prüf-Pe…“).
+**Ursprung:** Playtest Paket G.
+**Einschätzung:** Kosmetisch; Höhe an den Inhalt binden (`max-height` statt fester Höhe) und Scroll-Padding unter der Kopfzeile setzen.
+
+### 2026-09-30 · `tools/studio/tests/`, `graph.py`, `model.py`, Doku · Nachträge
+
+**Beobachtung:** Test T1f (kaputtes SendMessage) prüft nur schwach (kein Vergleich der Felder bei `message` als Objekt). Die Hilfsfunktion `short()` in `graph.py` und `_short()` in `model.py` sind doppelt. Empfängernamen fehlen im Live-Feed, wenn das Graph-Layout einer Session fehlschlägt. Es gibt keinen automatischen Abgleich `roster.md` ↔ Persona-Frontmatter (Name, Titel, Emoji, Version).
+**Ursprung:** Final-Review Paket G.
+**Einschätzung:** Alles klein. Der Roster-Abgleich wäre ein Test in `test_docs`, die übrigen Punkte Aufräumen bei Gelegenheit.
+
+### 2026-09-30 · `tools/studio/model.py` · `build_state` (`on_status`, `view`)
+
+**Beobachtung:** `build_state` bricht bei nicht-textuellen Feldern ab, z. B. bei einem log-`status` mit Liste als Wert (`status in FINAL` in `on_status`, `status in LIVE` in `view`): TypeError, `/api/state` antwortet 500. Besteht auch auf `main`.
+**Ursprung:** Final-Review Paket G (ausserhalb Scope).
+**Einschätzung:** `log.py` validiert die Eingabe, ein Fehler tritt nur bei von Hand geschriebenen Events auf. Härtung per `isinstance(status, str)` wäre eine Zeile je Stelle.
+
 ---
 
 ## Ausgewertet 2026-09-30

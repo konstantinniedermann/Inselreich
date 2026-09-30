@@ -22,6 +22,104 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Persona art-license-checker 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona design-economy-designer 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona design-spec-author 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona lead-art 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona lead-design 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona lead-production 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona lead-qa 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona lead-tech 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona production-integrator 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona qa-code-reviewer 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona qa-playtester 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona studio-coach 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona tech-sim-engineer 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
+## 2026-09-30 · Persona tech-ui-engineer 1.1
+
+- Anlass: Paket G (Prozess-Graph), Anzeige-Namen im Dashboard
+- Datenbasis: Auftrag (Spec 2026-09-30-studio-prozessgraph-design.md, Namensliste T3)
+- Ruling: R43
+- Änderungen: Frontmatter-Felder `studio-name`, `studio-title`, `studio-emoji`; kein Verhalten geändert
+
 ## 2026-09-30 · Handbuch 1.0
 
 - Anlass: Session 1.5 — Trennung Verfassung/Handbuch, Autonomie, Messung, Verbesserungsschleife
