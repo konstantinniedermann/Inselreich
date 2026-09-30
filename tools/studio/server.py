@@ -12,7 +12,13 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from model import INACTIVE_DEFAULT, EventStore, build_state, read_agent_models
+from model import (
+    INACTIVE_DEFAULT,
+    EventStore,
+    build_state,
+    read_agent_models,
+    read_agent_names,
+)
 from paths import agents_dir, archive_dir, docs_dir, events_file
 from studio_docs import bundle
 
@@ -102,6 +108,7 @@ class Handler(SimpleHTTPRequestHandler):
             session=session,
             inactive_after=self.inactive_after,
             heartbeats=heartbeats,
+            agent_names=read_agent_names(self.agents),
         )
         state["docs"] = bundle(self.docs, self.agents)
         body = json.dumps(state, ensure_ascii=False).encode("utf-8")

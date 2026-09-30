@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import effort
+import studio_docs
 
 INACTIVE_DEFAULT = 300.0
 BIND_WINDOW = 30.0
@@ -22,6 +23,10 @@ HEARTBEAT_TOOLS = 4
 PULSE_MINUTES = 60
 CHRONICLE_SIZE = 200
 TEXT_MAX = 160
+SHORT_TASK = 30
+DIRECTOR_NAME = ("Boss Bruno", "Projektleiter", "🎬")
+FOREIGN_NAME = "Aushilfe"
+FOREIGN_EMOJI = "🧑‍🔧"
 LIVE = frozenset({"active", "delegated", "waiting", "blocked"})
 FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
@@ -45,6 +50,10 @@ PUBLIC = (
     "started",
     "stopped",
     "last_seen",
+    "name",
+    "title",
+    "emoji",
+    "task_short",
 )
 
 
@@ -66,6 +75,34 @@ def classify(role: str) -> tuple[int, str]:
         return 1, department if department in DEPARTMENTS else "extern"
     prefix = role.split("-", 1)[0]
     return 2, prefix if prefix in DEPARTMENTS else "extern"
+
+
+def read_agent_names(agents_dir: Path) -> dict[str, dict]:
+    """rolle → {name, title, emoji} aus studio-name/-title/-emoji der Frontmatter."""
+    names: dict[str, dict] = {}
+    for role, meta in studio_docs.persona_meta(agents_dir).items():
+        entry = {
+            field: meta[f"studio_{field}"]
+            for field in ("name", "title", "emoji")
+            if meta.get(f"studio_{field}")
+        }
+        if entry:
+            names[role] = entry
+    return names
+
+
+def identity(role: str, names: dict[str, dict]) -> tuple[str, str, str]:
+    """(Name, Titel, Emoji) einer Rolle; Rückfall je Feld (T3)."""
+    if role in (DIRECTOR, "main"):
+        fallback = DIRECTOR_NAME
+    else:
+        fallback = (FOREIGN_NAME, role, FOREIGN_EMOJI)
+    entry = names.get(role) or {}
+    return (
+        entry.get("name") or fallback[0],
+        entry.get("title") or fallback[1],
+        entry.get("emoji") or fallback[2],
+    )
 
 
 def read_agent_models(agents_dir: Path) -> dict[str, str]:
@@ -146,8 +183,14 @@ def _short(text: object, limit: int = TEXT_MAX) -> str:
 
 
 class _Builder:
-    def __init__(self, agent_models: dict[str, str], now: float) -> None:
+    def __init__(
+        self,
+        agent_models: dict[str, str],
+        now: float,
+        agent_names: dict[str, dict] | None = None,
+    ) -> None:
         self.models = agent_models
+        self.names = agent_names or {}
         self.now = now
         self.nodes: dict[str, dict] = {}
         self.sessions: dict[str, dict] = {}
@@ -208,6 +251,11 @@ class _Builder:
                 "started": ts,
                 "stopped": None,
                 "last_seen": ts,
+                "name": "",
+                "title": "",
+                "emoji": "",
+                "task_short": "",
+                "_base_name": "",
                 "_pulse": ts,
                 "_signal": is_main,
                 "_confirmed": False,
@@ -309,6 +357,15 @@ class _Builder:
         """stop-only-Knoten: nur ein agent_stop ohne Rolle, sonst nichts (P31)."""
         node = self.nodes[key]
         return node["agent_id"] != "main" and not node["_signal"]
+
+    def identities(self) -> None:
+        """Name, Titel, Emoji und Kurzaufgabe je sichtbarem Knoten (T3, T6)."""
+        for key, node in self.nodes.items():
+            if self.hidden(key):
+                continue
+            name, node["title"], node["emoji"] = identity(node["role"], self.names)
+            node["name"] = node["_base_name"] = name
+            node["task_short"] = _short(node["task"], SHORT_TASK)
 
     def apply(self, event: dict) -> None:
         ts = parse_ts(event.get("ts"))
@@ -752,6 +809,7 @@ class _Builder:
             chosen, scope = session, {session}
 
         self.finalize()
+        self.identities()
         views = {
             key: self.view(node, inactive_after) for key, node in self.nodes.items()
         }
@@ -1044,8 +1102,9 @@ def build_state(
     session: str | None = None,
     inactive_after: float = INACTIVE_DEFAULT,
     heartbeats: bool = True,
+    agent_names: dict[str, dict] | None = None,
 ) -> dict:
-    builder = _Builder(agent_models, now)
+    builder = _Builder(agent_models, now, agent_names)
     ordered = sorted(
         (e for e in events if isinstance(e, dict)), key=lambda e: parse_ts(e.get("ts"))
     )

@@ -3,7 +3,10 @@ name: production-integrator
 description: 'Integrator des Inselreich-Studios: einsetzen, um nach dem L0-Merge-Gate freigegebene Branches seriell nach main zu mergen und make check, CI und Pages-Deploy zu prüfen; nicht zum Lösen von Konflikten oder Ändern von Code.'
 tools: Read, Grep, Glob, Bash
 model: sonnet
-version: 1.0
+version: 1.1
+studio-name: Merge-Moritz
+studio-title: Zusammenführer
+studio-emoji: 🔀
 ---
 
 ## Persona und Expertise

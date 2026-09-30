@@ -926,6 +926,79 @@ def lead(t=1, aid="a1", typ="lead-qa", **kw):
     return [spawn(t, "main", typ, description="Auftrag", **kw), start(t + 1, aid, typ)]
 
 
+NAMES = {
+    "lead-qa": {"name": "Prüf-Peter", "title": "QA-Chef", "emoji": "🔍"},
+    "lead-tech": {"name": "Technik-Toni", "title": "Tech-Chef", "emoji": "🔧"},
+    "lead-art": {"name": "Pinsel-Pia", "title": "Kunst-Chefin", "emoji": "🎨"},
+    "tech-sim-engineer": {
+        "name": "Logik-Lars",
+        "title": "Spiellogik-Entwickler",
+        "emoji": "⚙️",
+    },
+    "qa-playtester": {"name": "Zocker-Zoe", "title": "Spieltesterin", "emoji": "🎮"},
+    "qa-code-reviewer": {
+        "name": "Review-Rita",
+        "title": "Code-Prüferin",
+        "emoji": "👓",
+    },
+    "design-genre-researcher": {"name": "Genre-Gina"},
+}
+
+
+def named(events, **kw):
+    return build(events, agent_names=NAMES, **kw)
+
+
+PERSONA_NAMES = {
+    "lead-production": {
+        "name": "Planungs-Paula",
+        "title": "Produktionschefin",
+        "emoji": "📋",
+    },
+    "lead-design": {"name": "Ideen-Ida", "title": "Design-Chefin", "emoji": "💡"},
+    "lead-tech": {"name": "Technik-Toni", "title": "Tech-Chef", "emoji": "🔧"},
+    "lead-art": {"name": "Pinsel-Pia", "title": "Kunst-Chefin", "emoji": "🎨"},
+    "lead-qa": {"name": "Prüf-Peter", "title": "QA-Chef", "emoji": "🔍"},
+    "production-integrator": {
+        "name": "Merge-Moritz",
+        "title": "Zusammenführer",
+        "emoji": "🔀",
+    },
+    "design-spec-author": {
+        "name": "Spec-Sabine",
+        "title": "Spec-Schreiberin",
+        "emoji": "📝",
+    },
+    "design-economy-designer": {
+        "name": "Taler-Theo",
+        "title": "Wirtschaftsplaner",
+        "emoji": "💰",
+    },
+    "tech-sim-engineer": {
+        "name": "Logik-Lars",
+        "title": "Spiellogik-Entwickler",
+        "emoji": "⚙️",
+    },
+    "tech-ui-engineer": {
+        "name": "UI-Ursula",
+        "title": "Oberflächen-Entwicklerin",
+        "emoji": "🖱️",
+    },
+    "art-license-checker": {
+        "name": "Paragraphen-Paul",
+        "title": "Lizenzprüfer",
+        "emoji": "⚖️",
+    },
+    "qa-code-reviewer": {
+        "name": "Review-Rita",
+        "title": "Code-Prüferin",
+        "emoji": "👓",
+    },
+    "qa-playtester": {"name": "Zocker-Zoe", "title": "Spieltesterin", "emoji": "🎮"},
+    "studio-coach": {"name": "Coach-Carla", "title": "Studio-Coach", "emoji": "🧭"},
+}
+
+
 class GraphTest(unittest.TestCase):
     def test_message_is_heartbeat_of_sender(self):
         state = build([*lead(), message(50, "a1", "main")])
@@ -953,6 +1026,75 @@ class StopOnlyTest(unittest.TestCase):
         beat = ev("heartbeat", 4, agent_id="h1", tool="Read")
         state = build([beat, ev("agent_stop", 5, **HELPER)])
         self.assertIn("s1:h1", flat(state))
+
+
+class NamesTest(unittest.TestCase):
+    def test_all_personas_have_names(self):
+        agents = Path(__file__).resolve().parents[3] / ".claude" / "agents"
+        self.assertEqual({p.stem for p in agents.glob("*.md")}, set(PERSONA_NAMES))
+        self.assertEqual(model.read_agent_names(agents), PERSONA_NAMES)
+
+    def test_read_agent_names_from_frontmatter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / "lead-qa.md").write_text(
+                '---\nname: lead-qa\nmodel: opus\nstudio-name: "Prüf-Peter"\n'
+                "studio-title: 'QA-Chef'\n---\nText\n",
+                "utf-8",
+            )
+            (folder / "lead-art.md").write_text("---\nname: lead-art\n---\n", "utf-8")
+            names = model.read_agent_names(folder)
+        self.assertEqual(names, {"lead-qa": {"name": "Prüf-Peter", "title": "QA-Chef"}})
+        node = flat(build(lead(), agent_names=names))["s1:a1"]
+        self.assertEqual(
+            (node["name"], node["title"], node["emoji"]),
+            ("Prüf-Peter", "QA-Chef", model.FOREIGN_EMOJI),
+        )
+
+    def test_director_and_foreign_fallbacks(self):
+        nodes = flat(named([start(1, "x1", "Explore")]))
+        main, helper = nodes["s1:main"], nodes["s1:x1"]
+        self.assertEqual(
+            (main["name"], main["title"], main["emoji"]),
+            ("Boss Bruno", "Projektleiter", "🎬"),
+        )
+        self.assertEqual(
+            (helper["name"], helper["title"], helper["emoji"]),
+            ("Aushilfe", "Explore", "🧑‍🔧"),
+        )
+
+    def test_name_follows_final_role(self):
+        events = [
+            spawn(
+                1,
+                "main",
+                "general-purpose",
+                persona="design-genre-researcher",
+                tool_use_id="t1",
+            ),
+            spawn(2, "main", "general-purpose", tool_use_id="t2"),
+            start(3, "g1", "general-purpose"),
+            start(4, "g2", "general-purpose"),
+            ev("spawned", 5, agent_id="main", child_id="g2", tool_use_id="t1"),
+            ev("spawned", 6, agent_id="main", child_id="g1", tool_use_id="t2"),
+        ]
+        nodes = flat(named(events))
+        self.assertEqual(nodes["s1:g2"]["name"], "Genre-Gina")
+        self.assertEqual(nodes["s1:g1"]["name"], "Aushilfe")
+
+    def test_task_short(self):
+        exact, longer = "x" * 30, "y" * 31
+        events = [
+            ev("prompt", 1, status="active", task="Erste Zeile des Auftrags"),
+            spawn(2, "main", "lead-qa", description=exact),
+            start(3, "a1", "lead-qa"),
+            spawn(4, "main", "lead-tech", description=longer),
+            start(5, "a2", "lead-tech"),
+        ]
+        nodes = flat(named(events))
+        self.assertEqual(nodes["s1:a1"]["task_short"], exact)
+        self.assertEqual(nodes["s1:a2"]["task_short"], "y" * 30 + "…")
+        self.assertEqual(nodes["s1:main"]["task_short"], "Erste Zeile des Auftrags")
 
 
 class GateSpecFixesTest(unittest.TestCase):
