@@ -1,7 +1,9 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from './defs/goods';
+import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { TAX_LEVELS } from './defs/tiers';
 import { MAP_H, MAP_W } from './mapgen';
+import { orderUnitReward } from './orders';
 import { recomputeConnectivity } from './roads';
 import type { World } from './types';
 
@@ -25,21 +27,37 @@ const isValidBuilding = (b: unknown): boolean =>
 
 const isInt = (v: unknown): v is number => Number.isInteger(v);
 
-/** Auftrag: `null` oder ganzzahlige Felder mit einem Gut, das Auftragsdaten hat. */
-function isValidOrder(o: unknown): boolean {
+/**
+ * Auftrag: `null` oder ein Auftrag, der zu den Takt-Konstanten und zum gespeicherten `tick` passt:
+ * `due` ergibt sich aus der Periode, der Auftrag ist schon angeboten (`tick ≥ due − ORDER_DURATION`)
+ * und noch nicht verfallen (`tick ≤ due`, `tickOrders` löscht erst bei `tick > due`); Menge im Bereich
+ * des Guts, Prämie = Menge × Stückprämie.
+ */
+function isValidOrder(o: unknown, tick: unknown): boolean {
   if (o === null) return true;
+  if (
+    !isObject(o) ||
+    !isInt(tick) ||
+    !isInt(o.period) ||
+    o.period < 0 ||
+    !isInt(o.amount) ||
+    !isInt(o.reward) ||
+    !isInt(o.due) ||
+    typeof o.good !== 'string' ||
+    !Object.hasOwn(GOODS, o.good)
+  )
+    return false;
+  const good = o.good as keyof typeof GOODS;
+  const def = GOODS[good].order;
+  if (def === undefined) return false;
+  const offered = ORDER_FIRST_TICK + o.period * ORDER_PERIOD;
   return (
-    isObject(o) &&
-    isInt(o.period) &&
-    o.period >= 0 &&
-    isInt(o.amount) &&
-    o.amount >= 1 &&
-    isInt(o.reward) &&
-    o.reward >= 0 &&
-    isInt(o.due) &&
-    typeof o.good === 'string' &&
-    Object.hasOwn(GOODS, o.good) &&
-    GOODS[o.good as keyof typeof GOODS].order !== undefined
+    o.due === offered + ORDER_DURATION &&
+    tick >= offered &&
+    tick <= o.due &&
+    o.amount >= def.min &&
+    o.amount <= def.max &&
+    o.reward === o.amount * orderUnitReward(good)
   );
 }
 
@@ -53,7 +71,7 @@ function isValidV2Fields(raw: Record<string, unknown>): boolean {
     !GOOD_IDS.every((g) => isInt(sellPct[g]) && sellPct[g] >= SELL_FLOOR && sellPct[g] <= 100)
   )
     return false;
-  return isValidOrder(raw.order);
+  return isValidOrder(raw.order, raw.tick);
 }
 
 /** v1 → v2: neue Felder mit den Werten, die das bisherige Verhalten ergeben; Vorhandenes bleibt unberührt. */
