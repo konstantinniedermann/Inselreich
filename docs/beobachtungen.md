@@ -87,11 +87,13 @@ Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). 
 
 - Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
   Wachstums-Tick aufsteigen, eines schrumpft danach sofort. Option: `tryUpgrade` entnimmt die Einheit.
+  **Erledigt in M5-01:** `tryUpgrade` entnimmt die Einheit und zählt sie als ausgeliefert (Regressionstest in `tests/sim/population.test.ts`).
 - HUD zeigt Steuern und Unterhalt, aber keine Nettozahl (Spec 2.8 „Bilanz"); M4 Task 4.
   **Erledigt in M4:** Kopfzeile zeigt „Steuern +T · Unterhalt −U = ±B / 100 Ticks" (eigenes Feld `net`, negativ hervorgehoben; `src/ui/hud.ts`).
 - Spec 3.2 nennt `economy.ts` für Steuern; tatsächlich `population.ts` (ADR-005). Doku-Pass M4.
   **Erledigt in M4:** Modulliste in Spec 3.2 nachgeführt (inkl. `supply.ts`, `defs/timing.ts`, `ui/storage.ts`).
 - Frisch aufgestiegenes Haus zahlt in derselben 100er-Buchung halbe Steuer (neue Bedürfnisse noch offen).
+  **Erledigt in M5-01:** Die beim Aufstieg entnommene Einheit gilt als erfüllt; volle Steuer im selben Tick (Test in `tests/sim/population.test.ts`).
 - `SERVICE_BUILDING`, `GROWTH_INTERVAL`, `UPGRADE_WAIT` gehören nach `defs/` (M4 `timing.ts`).
   **Teilweise erledigt in M4:** `GROWTH_INTERVAL` und `UPGRADE_WAIT` liegen in `defs/timing.ts`; `SERVICE_BUILDING` (Zuordnung Dienst → Gebäude, kein Zahlenwert) steht weiter in `population.ts`.
 - MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
@@ -175,3 +177,4 @@ zwei Häuser können auf dieselbe Einheit aufsteigen.
 **Einschätzung:** Echter Spiellogik-Fehler. Ein ungeprüfter Fix-Entwurf mit Regressionstest liegt
 lokal unter `.studio/handoffs/2026-09-30-probelauf-m5-01-aufstieg.patch`; Review-Befund dazu: die
 entnommene Einheit als ausgeliefert zählen, sonst doppelter Verbrauch.
+**Erledigt in M5-01:** Branch `fix/m5-01-aufstieg`, Umsetzung nach diesem Review-Befund.
