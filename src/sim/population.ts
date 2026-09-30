@@ -1,11 +1,24 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { TIERS } from './defs/tiers';
-import { takeStock } from './economy';
-import type { Building, GoodId, HouseState, ServiceId, TierDef, World } from './types';
+import { GOODS } from './defs/goods';
+import { checkAfford, pay, takeStock } from './economy';
+import type {
+  Building,
+  BuildingDefId,
+  GoodId,
+  HouseState,
+  ServiceId,
+  Tier,
+  TierDef,
+  World,
+} from './types';
 import { center } from './world';
 
 /** Alle 50 Ticks wächst oder schrumpft ein Haus um einen Einwohner. */
 export const GROWTH_INTERVAL = 50;
+/** Ticks ununterbrochener Zufriedenheit, bevor ein Haus aufsteigen darf. */
+export const UPGRADE_WAIT = 300;
+const SERVICE_BUILDING: Record<ServiceId, BuildingDefId> = { faith: 'chapel', school: 'school' };
 const SERVICE_IDS: ServiceId[] = ['faith', 'school'];
 /** Toleranz für die Gleitkomma-Summe von 50 × 0.02. */
 const EPSILON = 1e-9;
@@ -69,6 +82,47 @@ function consume(world: World, house: HouseState, tier: TierDef): void {
   }
 }
 
+/** Neue Bedarfsgüter der Stufe `next` gegenüber der aktuellen Stufe. */
+function newNeeds(current: TierDef, next: TierDef): GoodId[] {
+  return (Object.keys(next.needs) as GoodId[]).filter((g) => !(g in current.needs));
+}
+
+/** Prüft alle Aufstiegsbedingungen und nennt jede unerfüllte als deutschen Grund. */
+export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons: string[] } {
+  const house = b.house;
+  if (!house) return { ok: false, reasons: ['Kein Wohnhaus'] };
+  const current = TIERS[house.tier];
+  if (current.upgradeCost === null) return { ok: false, reasons: ['Höchste Stufe erreicht'] };
+  const next = TIERS[(house.tier + 1) as Tier];
+  const reasons: string[] = [];
+  if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
+  if (world.tick - house.satisfiedSince < UPGRADE_WAIT)
+    reasons.push(`Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`);
+  for (const s of next.services) {
+    if (!serviceAvailable(world, b, s))
+      reasons.push(`${BUILDING_DEFS[SERVICE_BUILDING[s]].name} fehlt in Reichweite`);
+  }
+  for (const g of newNeeds(current, next)) {
+    if (world.stock[g] < 1) reasons.push(`Kein ${GOODS[g].name} im Lager`);
+  }
+  const afford = checkAfford(world, current.upgradeCost);
+  if (!afford.ok) reasons.push(afford.reason);
+  return { ok: reasons.length === 0, reasons };
+}
+
+/** Steigt das Haus auf, wenn `upgradeStatus` ok meldet; zieht Kosten ab und setzt neuen Bedarf. */
+export function tryUpgrade(world: World, b: Building): boolean {
+  const house = b.house;
+  if (!house || !upgradeStatus(world, b).ok) return false;
+  const current = TIERS[house.tier];
+  const next = TIERS[(house.tier + 1) as Tier];
+  pay(world, current.upgradeCost!);
+  house.tier = next.tier;
+  for (const g of newNeeds(current, next)) house.demand[g] = 1;
+  house.satisfiedSince = world.tick;
+  return true;
+}
+
 export function tickPopulation(world: World): void {
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
@@ -82,7 +136,7 @@ export function tickPopulation(world: World): void {
     if (world.tick % GROWTH_INTERVAL === 0 && world.tick > 0) {
       if (met) house.inhabitants = Math.min(tier.maxInhabitants, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);
-      // Aufstieg (Task 2): hier nach dem Wachstum prüfen.
+      tryUpgrade(world, b);
     }
   }
 }

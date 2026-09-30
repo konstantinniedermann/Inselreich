@@ -14,11 +14,54 @@ export function prepareEast(world: World, kontor: Building): void {
   world.tiles[idx(world, kontor.x + 2 + 4, kontor.y - 1)]!.terrain = 'forest';
 }
 
-function forceGrass(world: World, x: number, y: number): void {
+export function forceGrass(world: World, x: number, y: number): void {
   const t = world.tiles[idx(world, x, y)]!;
   t.terrain = 'grass';
   t.buildingId = null;
   t.road = false;
+}
+
+/** Erzwingt ein w×h-Rechteck aus Gelände `terrain` (frei, ohne Weg), ab (x0, y0). */
+export function forceRect(
+  world: World,
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  terrain: 'grass' | 'water',
+): void {
+  for (let y = y0; y < y0 + h; y++) {
+    for (let x = x0; x < x0 + w; x++) {
+      forceGrass(world, x, y);
+      world.tiles[idx(world, x, y)]!.terrain = terrain;
+    }
+  }
+}
+
+/**
+ * Platziert Kapelle oder Schule auf erzwungenem Gras und setzt `connected` manuell (Anbindung ist
+ * in roads.test.ts getestet). Geld und Lager bleiben unverändert, damit Tests sauber vergleichen.
+ */
+export function placeService(
+  world: World,
+  defId: 'chapel' | 'school',
+  x: number,
+  y: number,
+): Building {
+  const money = world.money;
+  const stock = { ...world.stock };
+  forceRect(world, x, y, BUILDING_DEFS[defId].w, BUILDING_DEFS[defId].h, 'grass');
+  // Ausreichend Mittel für die Baukosten (Schule braucht mehr Stein als das Startlager)
+  world.money = 1_000_000;
+  for (const good of Object.keys(world.stock) as (keyof typeof world.stock)[])
+    world.stock[good] = 100;
+  const r = placeBuilding(world, defId, x, y);
+  if (!r.ok || r.id === undefined) throw new Error(`${defId} not placed`);
+  world.money = money;
+  world.stock = stock;
+  const b = world.buildings[r.id]!;
+  b.connected = true;
+  return b;
 }
 
 function placedHouse(world: World, x: number, y: number): Building {
