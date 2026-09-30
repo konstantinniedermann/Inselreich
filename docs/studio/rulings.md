@@ -878,3 +878,23 @@ zählen, Median von 3 Läufen, Desktop 1920×1080. — Warum: vermeidet Doppelar
 Datei-Konflikte zwischen M6 und M7; macht Abnahme messbar. — Kosten bei Irrtum: Umordnung im Plan.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-tech und lead-qa M6-SPEC
+
+## R83 · 2026-09-30 · M7
+
+Ruling: **Gate Spec M7 bestanden unter Auflage mit Nachprüfung** (lead-tech BEDENKEN B1–B5,
+lead-qa BEDENKEN 1–8, kein ZURÜCK). Spec-Nachtrag durch lead-art vor dem Gate Plan, danach prüft
+lead-qa nur die geänderten Stellen (Muster R76). Muss: QA 1 (AK-R3-01 mit Spec-Werten
+unerfüllbar — Luma-Regel oder Wetterfaktoren anpassen), QA 2 (Kontrast Tinte auf Signalrot
+≥ 4,5 : 1), QA 3 / Tech B4 (**gemeinsames Einstellungsformat** `inselreich.settings` für M6 und
+M7: jede `parseSettings`-Fassung erhält fremde Felder; gemeinsamer Round-trip-Test mit
+`crisisLevel` und Bussen, egal wer zuerst liefert), QA 4 (Vitest SHA-256 für jede Datei unter
+`public/`), Tech B1 (Aufwand der Spaziergänger unabhängig von `timeMs`, mit Test), Tech B3
+(Slice R1 ohne `app.ts`: `scale` optional mit DPR, Teil-Neuzeichnung über `layoutKey`-Cache),
+Tech B5 (R82 einarbeiten: AU1/R0 weg, Frame-Messung nach R82(c), Rauch-Nachlauf in M6-UI, R2
+`blocked-by` M6-S2). Kann als Plan-Auflage: Tech B2 (Terrain gröberes Raster + Interpolation,
+vorskalierte Kopie bei Zoom ≤ 0,5), R1 in R1a/R1b teilen, QA 5–8. ADR-011 (Asset-Laden,
+formatneutral) schreibt lead-tech als Plan-Deliverable vor A2. — Warum: ein unerfüllbares
+Kriterium und eine Datenkollision mit M6 dürfen nicht in den Plan. — Kosten bei Irrtum: eine
+kurze Nachtragsrunde.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-tech und lead-qa M7-SPEC
