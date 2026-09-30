@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-09-30 (Session-Ende 2bf010b4)
+Stand: 2026-09-30 (laufende Session, Auftrag Nutzer-Playtest R73)
 
 ## Aktuelles Projekt und Phase
 
@@ -31,7 +31,11 @@ Stand: 2026-09-30 (Session-Ende 2bf010b4)
 
 ## Laufende Pakete
 
-keine (alle Agenten beendet)
+- **M7-SPEC** (lead-art, M7 „Stimmung", R73): Designvorschlag → Gate Brainstorming (Prüfer lead-design) → Spec auf `docs/m7-spec` (`.worktrees/m7-spec`). Budget 5/2.
+- **M6-SPEC** (lead-design): Spec fertigstellen auf `docs/m6-spec`, Entscheide per R74. Budget 4/2.
+- **STUDIO-LIMIT** (lead-qa): Nachprüfung + Browser-Blick → Urteil für Gate Merge. Budget 2/2.
+- **M5-NACHLESE** (lead-tech): `fix/m5-nachlese` (`.worktrees/m5-nachlese`). Budget 3/1.
+- Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design und lead-art.
 
 ## Pausierte Pakete
 

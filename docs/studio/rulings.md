@@ -721,3 +721,37 @@ nach M5 vor allem „nach dem Sieg passiert nichts" meldet. Kandidaten:
 getauschten Meilenstein.
 
 Entscheider: L0 · Anlass: Bericht lead-design M6-PREP (D-M6-01)
+
+## R73 · 2026-09-30 · Programm
+
+Ruling: Auslegung des Nutzer-Playtests „spielt sich gut, viel Luft nach oben — mehr Tiefe, bessere
+Grafik, Ambiente, Musik, die Stimmung muss rüberkommen": Das ist kein Richtungswechsel (Genre,
+Titel und Kernsäulen bleiben), sondern ein Programm in **zwei parallelen Strängen**.
+(1) **Stimmung** wird neuer Meilenstein **M7 „Stimmung"** (Grafik, Licht und Wetter, Umgebungsklang,
+Musik, UI-Anmutung), Prozessstufe voll. Designvorschlag und Art Direction führt `lead-art`, das
+Gate Brainstorming prüft `lead-design` (Spielgefühl), danach Spec. Erstmals sind offen
+lizenzierte Fremd-Assets ausdrücklich im Scope (ADR-006, Verfassung §4, Veto
+`art-license-checker`); prozedural bleibt der Rückfall. (2) **Tiefe** läuft über M6 „Krisen und
+Stadtdienste" (R72) weiter; K-C „Vierte Stufe und Veredelung" rückt auf M8. Umsetzungsreihenfolge
+entscheidet das Gate Plan nach Datei-Ownership: Sim-Anteile von M6 dürfen parallel zu M7 laufen,
+Render- und Audio-Anteile von M6 (Brand, Sturm) bauen auf der M7-Art-Direction auf. Weil der
+Nutzer die Stimmung betont, hat M7 bei Konflikten in `src/render/` und `src/audio/` Vorrang.
+Der Spielstand des Nutzers wird, sobald er vorliegt, als Playtest-Datenbasis an beide Leads
+gegeben. — Warum: Der Auftrag nennt beide Achsen gleichwertig; getrennte Meilensteine halten
+Specs prüfbar und erlauben Parallelarbeit. — Kosten bei Irrtum: Spec-Arbeit an zwei Strängen
+statt einem; Umordnung beim Gate Plan möglich.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest nach M5
+
+## R74 · 2026-09-30 · M6
+
+Ruling: Die sechs offenen Designentscheide aus `.studio/handoffs/m6-spec.md` werden nach
+Empfehlung des Design-Leads entschieden: (1) Controller nach `tests/sim/controller.ts`, Nachweis
+Baseline 6050; (2) Krisen-Lauf mit eigener Grenze 9000 und `money > 0`, Istwerte werden gemessen;
+(3) `FIRE_OUTAGE` 200 für alle Gebäude, Playtest-Frage; (4) Sturm trifft alle Rohstoffbetriebe,
+Playtest-Frage; (5) migrierte v2-Spielstände mit Krisen `off`; (6) Ereignis-Log nur in der UI.
+Zusätzlich zu R72: Die Spec benennt, welche Krisen-Darstellung (Feuer, Rauch, Sturm, Regen,
+Warnung) sie von M7 bezieht, statt eigene Grafik festzuschreiben. — Warum: Empfehlungen sind
+durch `m6-werte.md` gedeckt, KISS. — Kosten bei Irrtum: Wert-Anpassung nach Playtest.
+
+Entscheider: L0 · Anlass: Übergabe M6-SPEC
