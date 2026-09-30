@@ -3,6 +3,8 @@ import { checkAfford } from '../sim/economy';
 import type { Category, Cost, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
+import { costLine } from './dom';
+import { showMessage } from './messages';
 
 const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -10,15 +12,6 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'production', label: 'Produktion' },
   { id: 'public', label: 'Öffentlich' },
 ];
-
-/** Kosten als Kurztext, z. B. „G 50 · H 3"; Nullwerte ausser Geld entfallen. */
-export function costLine(c: Cost): string {
-  const parts = [`G ${c.money}`];
-  if (c.wood) parts.push(`H ${c.wood}`);
-  if (c.tools) parts.push(`W ${c.tools}`);
-  if (c.stone) parts.push(`S ${c.stone}`);
-  return parts.join(' · ');
-}
 
 function isActive(current: Tool, tool: Tool): boolean {
   if (current.kind !== tool.kind) return false;
@@ -54,6 +47,9 @@ export function renderBuildMenu(
     btn.addEventListener('click', () => {
       btn.blur();
       onSelect(tool);
+      // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
+      const afford = cost ? checkAfford(state.world, cost) : null;
+      if (afford && !afford.ok) showMessage(afford.reason, 'error');
     });
     parent.appendChild(btn);
   };

@@ -1,7 +1,7 @@
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
 import type { GoodId, World } from '../sim/types';
-import { setField } from './inspect';
+import { setField } from './dom';
 import { showMessage } from './messages';
 
 export interface TradeActions {

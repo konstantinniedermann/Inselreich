@@ -3,18 +3,11 @@ import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import type { Building, World } from '../sim/types';
-import { costLine } from './buildMenu';
+import { costLine, setField } from './dom';
 
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
-}
-
-/** Setzt den Text eines `data-field`-Elements, nur wenn er sich geändert hat. */
-export function setField(root: HTMLElement, field: string, text: string): HTMLElement | null {
-  const el = root.querySelector<HTMLElement>(`[data-field="${field}"]`);
-  if (el && el.textContent !== text) el.textContent = text;
-  return el;
 }
 
 function stateInfo(b: Building): { text: string; ok: boolean } {
@@ -24,6 +17,7 @@ function stateInfo(b: Building): { text: string; ok: boolean } {
   if (!def.produces) return { text: 'Angebunden', ok: true };
   switch (b.state) {
     case 'ok':
+    case 'notConnected': // wieder angebunden, `state` folgt erst im nächsten Tick
       return { text: 'In Betrieb', ok: true };
     case 'waitingInput':
       return {
@@ -32,8 +26,6 @@ function stateInfo(b: Building): { text: string; ok: boolean } {
       };
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
-    case 'notConnected':
-      return { text: 'Nicht an Kontor angebunden', ok: false };
   }
 }
 

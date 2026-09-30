@@ -1,6 +1,7 @@
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { UPKEEP_INTERVAL, totalUpkeep } from '../sim/economy';
 import type { GameState } from './app';
+import { setField } from './dom';
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 0, label: '⏸' },
@@ -13,14 +14,16 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
 export function updateHud(header: HTMLElement, state: GameState): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
-      '<div class="hud-row"><span class="hud-money"></span><span class="hud-upkeep"></span>' +
-      '<span class="hud-tick"></span><span class="hud-speed"></span></div>' +
-      '<div class="stock-row"></div><div class="hud-seed"></div>';
+      '<div class="hud-row"><span class="hud-money" data-field="money"></span>' +
+      '<span class="hud-upkeep" data-field="upkeep"></span>' +
+      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span></div>' +
+      '<div class="stock-row"></div><div class="hud-seed" data-field="seed"></div>';
     const stockRow = header.querySelector('.stock-row');
     for (const good of GOOD_IDS) {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.dataset.good = good;
+      chip.dataset.field = `stock-${good}`;
       stockRow?.appendChild(chip);
     }
     const speedBox = header.querySelector('.hud-speed');
@@ -37,19 +40,16 @@ export function updateHud(header: HTMLElement, state: GameState): void {
       speedBox?.appendChild(btn);
     }
   }
-  const set = (sel: string, text: string): void => {
-    const el = header.querySelector(sel);
-    if (el && el.textContent !== text) el.textContent = text;
-  };
   const { world } = state;
-  set('.hud-money', `Geld: ${world.money}`);
-  header.querySelector('.hud-money')?.classList.toggle('negative', world.money < 0);
+  setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
   const upkeep = totalUpkeep(world);
-  set('.hud-upkeep', `Unterhalt ${upkeep > 0 ? '−' : ''}${upkeep} / ${UPKEEP_INTERVAL} Ticks`);
-  for (const good of GOOD_IDS)
-    set(`.chip[data-good="${good}"]`, `${GOODS[good].name} ${world.stock[good]}`);
-  set('.hud-tick', `Tick: ${world.tick}`);
-  set('.hud-seed', `Karte: ${world.seed}`);
+  const sign = upkeep > 0 ? '−' : '';
+  setField(header, 'upkeep', `Unterhalt ${sign}${upkeep} / ${UPKEEP_INTERVAL} Ticks`);
+  for (const good of GOOD_IDS) {
+    setField(header, `stock-${good}`, `${GOODS[good].name} ${world.stock[good]}`);
+  }
+  setField(header, 'tick', `Tick: ${world.tick}`);
+  setField(header, 'seed', `Karte: ${world.seed}`);
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
   }
