@@ -661,6 +661,33 @@ class RobustnessTest(unittest.TestCase):
         self.assertFalse(node["inactive"])
         self.assertEqual(state["counts"]["inactive"], 0)
 
+    def test_observed_foreground_sequence_ends_at_spawned_ts(self):
+        # Spawn (Vordergrund), 2 Heartbeats des Kindes, spawned nach 31 s
+        events = [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", "web-fetch", tool_use_id="t1", background=False),
+            ev("heartbeat", 3, agent_id="W1", tool="WebFetch"),
+            ev("heartbeat", 20, agent_id="W1", tool="WebFetch"),
+            ev(
+                "spawned",
+                32,
+                child_id="W1",
+                tool_use_id="t1",
+                status="completed",
+                duration_ms=31000,
+            ),
+        ]
+        state = build(events, now=32 + 5000)
+        nodes = flat(state)
+        node = nodes["s1:W1"]
+        self.assertEqual(node["status"], "done")  # Punkt 1: done
+        self.assertEqual(node["stopped"], T0 + 32)  # stopped == ts von spawned
+        self.assertFalse(node["inactive"])  # kein inaktiv-Vorfall
+        self.assertEqual(state["counts"]["inactive"], 0)
+        rows = [d for d in state["delegations"] if d["to"] == "web-fetch"]
+        self.assertEqual(len(rows), 1)  # Dauer endet bei ~31 s, nicht bei now
+        self.assertAlmostEqual(rows[0]["duration_s"], 31.0, delta=1.0)
+
     def test_spawned_completed_keeps_regular_stop_and_failed(self):
         events = [
             spawn(1, "main", "lead-qa"),
@@ -679,6 +706,7 @@ class RobustnessTest(unittest.TestCase):
             ev("spawned", 6, child_id="W2"),
         ]
         nodes = flat(build(events, now=10))
+        self.assertIsNone(nodes["s1:W1"]["stopped"])  # Gegenprobe: nicht geschlossen
         self.assertEqual(nodes["s1:W1"]["status"], "active")
         self.assertEqual(nodes["s1:W2"]["status"], "active")
 

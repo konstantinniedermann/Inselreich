@@ -439,6 +439,12 @@ class _Builder:
             "failed",
         ):
             child["status"], child["stopped"] = "done", ts
+            if not child["_runs"]:  # nur Heartbeats: Lauf aus gemeldeter Dauer
+                ms = event.get("duration_ms")
+                begin = ts - ms / 1000 if isinstance(ms, (int, float)) else None
+                child["_runs"].append(
+                    [child["started"] if begin is None else begin, ts]
+                )
             self.close_run(child, ts)
             self.add_chronicle(child, ts, child["summary"] or child["task"])
 
