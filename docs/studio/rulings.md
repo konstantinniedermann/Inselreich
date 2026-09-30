@@ -171,3 +171,146 @@ Auslöser Spawn statt SessionStart, damit reine Wartungssessions kein Browserfen
 Kosten: ein Browser-Tab je Session.
 
 Entscheider: L0 · Anlass: Nutzerwunsch
+
+## R22 · 2026-09-30 · Session 1.5
+
+Ruling: Umsetzungsweg dieser Meta-Session: L0 als SDD-Controller, Implementierer als Persona
+`production-studio-ops` (`general-purpose`), Reviews als `qa-code-reviewer` — die
+Projekt-Personas waren in dieser Session nicht geladen (die Session entstand vor `.claude/agents/`,
+`/clear` lädt nicht nach). — L0-Kontext wird grösser.
+
+Entscheider: L0 · Anlass: Session 1.5 · Spec:
+[Studio 1.5](../superpowers/specs/2026-09-30-studio-autonomie-design.md)
+
+## R23 · 2026-09-30 · Session 1.5
+
+Ruling: Projektleiter als Standard jeder Session über den Output-Style „Projektleiter"
+(`keep-coding-instructions: true`), den SessionStart-Hook ohne Matcher (`startup`, `resume`,
+`clear`, `compact`) und CLAUDE.md; das `"agent"`-Setting bleibt ungenutzt — es ersetzt laut Doku
+den Systemprompt (R4 bestätigt). — Der Nutzer kann den Style per `/output-style` lokal
+überschreiben.
+
+Entscheider: L0 · Anlass: Session 1.5; löst R18 ab (CLAUDE.md verweist nur noch auf STUDIO.md) ·
+ADR: [ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R24 · 2026-09-30 · Session 1.5
+
+Ruling: Verfassungs-Schutz per `tools/studio/guard.py`; Freigabe nur mit der Nutzer-Phrase
+`VERFASSUNG ÄNDERN` und nur für die Hauptsession — Schutz gegen Versehen, nicht gegen Absicht. —
+Eine absichtliche Umgehung bleibt möglich.
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR:
+[ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R25 · 2026-09-30 · Session 1.5
+
+Ruling: Der Guard verbietet irreversible Aktionen statt nachzufragen (Force-Push, Löschen
+entfernter Branches, `branch -D`, Rebase, `reset --hard`, Filter-Werkzeuge, `clean -f`,
+`worktree remove --force`, Löschen ausserhalb des Repos); Verwerfen im Arbeitsbaum bleibt bewusst
+erlaubt — Nutzerauftrag „verboten statt nachgefragt"; Aufräumarbeiten brauchen das Verwerfen. —
+Fehlalarme kosten einen Umweg.
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR:
+[ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R26 · 2026-09-30 · Session 1.5
+
+Ruling: Nutzerentscheid-Warteschlange als committete Datei `docs/studio/warteschlange.md`,
+geschrieben über `log.py queue`; `log.py decision --for user` bricht ab — eine Quelle, die jede
+Session und der Nutzer lesen. — Die Datei kann von Hand kaputt editiert werden (Parser tolerant).
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR:
+[ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R27 · 2026-09-30 · Session 1.5
+
+Ruling: Messmethode: Tokens aus den Transkripten, je Message-ID dedupliziert (Output ggf.
+Untergrenze); Dauer und Tool-Aufrufe aus Hooks und Agent-Ergebnis; Kosten nur als Sitzungssumme
+„berechnet" (`cost-state`); nichts wird geschätzt — Nutzerauftrag „nicht Messbares nie schätzen".
+— Das Transkriptformat kann sich mit Claude-Code-Updates ändern.
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR:
+[ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R28 · 2026-09-30 · Session 1.5
+
+Ruling: Studio-Coach als Stabsstelle `studio-coach` (L1, Bereich `studio`, `opus`, ohne
+Arbeiter); das Namensschema kennt dafür `studio-<rolle>` — unabhängig von Production, damit niemand
+die eigene Arbeitsweise benotet. — Eine Rolle mehr im Budget.
+
+Entscheider: L0 · Anlass: Session 1.5; ergänzt R11 · siehe [roster.md](roster.md)
+
+## R29 · 2026-09-30 · Session 1.5
+
+Ruling: Experimente stehen in `docs/studio/experimente.md`; die Leitplanken (≤ 3 laufend,
+Versionen = CHANGELOG, `lernen.md` ≤ 40 Zeilen, Feste-Regeln-Block = Verfassung §3) prüft ein
+Konsistenztest in `make check` — Leitplanken ohne Test verwässern. — Der Test kann legitime
+Sonderfälle blockieren.
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR:
+[ADR-009](../adr/ADR-009-studio-autonomie-und-lernen.md)
+
+## R30 · 2026-09-30 · Session 1.5
+
+Ruling: Metriken als Markdown mit JSON-Rohwerten, eine Datei je Kennung (Session
+`S-<datum>-<sid8>`, Meilenstein-ID) unter `docs/studio/metriken/` — lesbar für Menschen und
+maschinell für Dashboard und Coach; überdauert das lokale Archiv. — Merge-Konflikte bei
+parallelen Sessions sind selten.
+
+Entscheider: L0 · Anlass: Session 1.5
+
+## R31 · 2026-09-30 · Session 1.5
+
+Ruling: Archiv unter `.studio/archiv/` (`briefings/`, `berichte/`, `events/`); das Event-Archiv
+zieht von `.studio/archive/` um, der alte Ordner wird weiter gelesen — ein Ort für alles, was
+Delegationen nachvollziehbar macht. — Briefings und Berichte liegen lokal im Klartext (Datenschutz,
+ADR-008).
+
+Entscheider: L0 · Anlass: Session 1.5 · ADR: [ADR-008](../adr/ADR-008-studio-telemetrie.md)
+
+## R32 · 2026-09-30 · Session 1.5
+
+Ruling: Dashboard mit fünf Reitern (Live, Delegation, Aufwand, Qualität, Studio) — eine Ansicht
+je Frage des Nutzers statt einer überladenen Seite. — Mehr Code im Dashboard.
+
+Entscheider: L0 · Anlass: Session 1.5
+
+## R33 · 2026-09-30 · Session 1.5
+
+Ruling: Push-Regel als Verfassung §7 (Push auf `main` nach grünem `make check`, danach CI prüfen),
+vorläufig bis zur Bestätigung von N-001 — sonst stockt jede autonome Session beim Merge. — Der
+Nutzer könnte eine strengere Regel wollen.
+
+Entscheider: L0 · Anlass: Session 1.5 · siehe [warteschlange.md](warteschlange.md)
+
+## R34 · 2026-09-30 · Session 1.5
+
+Ruling: Gate Spec bestanden, mit eingearbeiteten Bedenken von `lead-qa` (Guard-Formen, Freigabe
+nur für die Hauptsession, Messbegriffe, Probelauf isoliert). — Restlücken des Guards bleiben.
+
+Entscheider: L0 · Anlass: Session 1.5, Gate Spec · Spec:
+[Studio 1.5](../superpowers/specs/2026-09-30-studio-autonomie-design.md)
+
+## R35 · 2026-09-30 · Session 1.5
+
+Ruling: Gate Plan durch L0 ohne Lead-Urteil — der Plan setzt die geprüfte Spec direkt um;
+Task-Reviews fangen Planfehler. — Eine Fix-Runde mehr.
+
+Entscheider: L0 · Anlass: Session 1.5, Gate Plan
+
+## R36 · 2026-09-30 · Session 1.5
+
+Ruling: `log.py result` einmal je (Paket, Arbeiter) mit Endurteil: `angenommen` beim ersten
+Review, `nacharbeit` nach Fix-Runden, `verworfen`; `review_rounds 0` = ungeprüft; das neueste
+Ergebnis gilt — sonst zählt die Qualitätsquote Zwischenstände doppelt. — Die Semantik muss gelebt
+werden.
+
+Entscheider: L0 · Anlass: Session 1.5 · siehe STUDIO.md „Messung und Aufwand"
+
+## R37 · 2026-09-30 · Session 1.5
+
+Ruling: Meilenstein-Zuordnung in dieser Reihenfolge: Kopfzeile → Paket → delegierender Vorfahre →
+laufender Meilenstein → „ohne" — jeder Aufwand landet ohne Zusatzarbeit in einem Meilenstein. —
+Querschnittsaufträge landen evtl. im falschen Meilenstein.
+
+Entscheider: L0 · Anlass: Session 1.5 · siehe STUDIO.md „Messung und Aufwand"

@@ -125,6 +125,8 @@ Logging, jeder Aufruf als **eigener** Bash-Befehl:
 - Ende: `python3 tools/studio/log.py status --role lead-tech --status done --summary "<Ergebnis>" --package <id>`
 - Abbruch: `python3 tools/studio/log.py status --role lead-tech --status failed --summary "<Grund>" --package <id>`
 - Pakete: `python3 tools/studio/log.py package --id <id> --title "<Titel>" --owner lead-tech --status open|active|review|blocked|done [--blocked-by <A,B>] [--milestone <M>]`
-- Frage an L0 oder Nutzer: `python3 tools/studio/log.py decision --id <D-nnn> --for l0|user --question "<Frage>" --recommendation "<Empfehlung>" --from lead-tech`
+- Frage an L0: `python3 tools/studio/log.py decision --id <D-nnn> --for l0 --question "<Frage>" --recommendation "<Empfehlung>" --from lead-tech`
+- Nutzer-Vorbehalt (Verfassung §5): `python3 tools/studio/log.py queue --id <N-nnn> --title "<Kurztitel>" --question "<Frage>" --recommendation "<Empfehlung>" --reason "<Begründung>" --cost "<Kosten des Wartens>" --blocks <paket> --from lead-tech`
 
-Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
+Verbindlich sind `docs/studio/VERFASSUNG.md` und das Handbuch `docs/studio/STUDIO.md`; Rangfolge
+Verfassung > Handbuch > Persona > Briefing.

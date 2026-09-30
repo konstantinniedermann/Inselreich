@@ -548,11 +548,26 @@ class SettingsTest(unittest.TestCase):
         path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
         hooks = json.loads(path.read_text())["hooks"]
         self.assertEqual(set(hooks), set(self.EVENTS))
-        for groups in hooks.values():
-            for group in groups:
-                for h in group["hooks"]:
-                    self.assertIn("tools/studio/hook.py", h["command"])
-                    self.assertTrue(h["command"].endswith("|| true"))
+        scripts = ("tools/studio/hook.py", "tools/studio/guard.py")
+        for event, groups in hooks.items():
+            commands = [h["command"] for group in groups for h in group["hooks"]]
+            with self.subTest(event=event):
+                self.assertTrue(any(scripts[0] in c for c in commands))
+                for command in commands:
+                    self.assertTrue(any(s in command for s in scripts))
+                    self.assertTrue(command.endswith("2>/dev/null || true"))
+
+    def test_guard_registered(self):
+        path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
+        hooks = json.loads(path.read_text())["hooks"]
+        first = hooks["PreToolUse"][0]
+        self.assertEqual(
+            set(first["matcher"].split("|")),
+            {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"},
+        )
+        self.assertIn("tools/studio/guard.py", first["hooks"][0]["command"])
+        prompt = [h["command"] for g in hooks["UserPromptSubmit"] for h in g["hooks"]]
+        self.assertTrue(any("tools/studio/guard.py" in c for c in prompt))
 
 
 if __name__ == "__main__":

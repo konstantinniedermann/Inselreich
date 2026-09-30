@@ -11,13 +11,20 @@ Einstieg in die Projektdokumentation. Die Spielanleitung und die Entwicklungsbef
 
 Lokal, nicht Teil des Spiels.
 
-- [STUDIO.md](studio/STUDIO.md) — Hierarchie, Ablauf, Regeln für den Studio-Direktor
+- [VERFASSUNG.md](studio/VERFASSUNG.md) — Regeln des Nutzers; nur der Nutzer ändert sie
+- [STUDIO.md](studio/STUDIO.md) — Handbuch: Hierarchie, Ablauf, Autonomie, Messung, Verbesserungsschleife
+- [CHANGELOG.md](studio/CHANGELOG.md) — Versionen von Handbuch und Personas
+- [warteschlange.md](studio/warteschlange.md) — Nutzerentscheid-Warteschlange
+- [experimente.md](studio/experimente.md) — Experimente der Verbesserungsschleife
+- [lernen.md](studio/lernen.md) — kuratierte Erkenntnisse (beim Session-Start geladen)
+- [retros/](studio/retros/README.md) — Retro-Berichte des Studio-Coachs
+- [metriken/](studio/metriken/README.md) — verdichtete Metriken je Session und Meilenstein
 - [gates.md](studio/gates.md) — Freigabe-Gates
-- [roster.md](studio/roster.md) — Personas und Modellstufen
+- [roster.md](studio/roster.md) — Personas, Versionen und Modellstufen
 - [rulings.md](studio/rulings.md) — Entscheide
 - [state.md](studio/state.md) — aktueller Stand
 - [herkunft.md](studio/herkunft.md) — Herkunft und Lizenz übernommener Vorlagen
-- [templates/](studio/templates/) — Vorlagen (Briefing, Bericht, Übergabe, Ruling, Playtest, Budgetantrag, Persona)
+- [templates/](studio/templates/) — Vorlagen (Briefing, Bericht, Übergabe, Ruling, Playtest, Budgetantrag, Persona, Retro, Experiment)
 
 ## Assets
 
@@ -34,12 +41,14 @@ Lokal, nicht Teil des Spiels.
 - [ADR-006 Eigene oder offen lizenzierte Inhalte mit Nachweis](adr/ADR-006-offene-lizenzen.md)
 - [ADR-007 Studio-Hierarchie mit nativen, verschachtelten Subagenten](adr/ADR-007-studio-hierarchie.md)
 - [ADR-008 Studio-Telemetrie über Hooks, JSONL und Dashboard](adr/ADR-008-studio-telemetrie.md)
+- [ADR-009 Studio-Autonomie, Verfassung und Selbstverbesserung](adr/ADR-009-studio-autonomie-und-lernen.md)
 
 ## Specs
 
 - [Design-Spec MVP](superpowers/specs/2026-09-29-inselreich-design.md) — Spielkonzept, Datenmodell, Module
 - [Kurz-Spec Balancing-Revision](superpowers/specs/2026-09-30-balancing-design.md) — Steuern und Luxusverbrauch
 - [Design-Spec Studio](superpowers/specs/2026-09-30-studio-design.md) — Hierarchie, Telemetrie, Dashboard
+- [Design-Spec Studio 1.5](superpowers/specs/2026-09-30-studio-autonomie-design.md) — Projektleiter, Autonomie, Messung, Selbstverbesserung
 
 ## Implementierungspläne
 
@@ -48,6 +57,7 @@ Lokal, nicht Teil des Spiels.
 - [M3 Bevölkerung](superpowers/plans/2026-09-30-m3-bevoelkerung.md)
 - [M4 Persistenz und Feinschliff](superpowers/plans/2026-09-30-m4-persistenz-feinschliff.md)
 - [Studio-Setup](superpowers/plans/2026-09-30-studio-setup.md)
+- [Studio 1.5](superpowers/plans/2026-09-30-studio-autonomie.md)
 
 ## Befunde
 

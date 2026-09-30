@@ -57,4 +57,5 @@ Logging, jeder Aufruf als **eigener** Bash-Befehl:
 - Ende: `python3 tools/studio/log.py status --role qa-playtester --status done --summary "<Empfehlung: Kurzgrund>" --package <id>`
 - Abbruch: `python3 tools/studio/log.py status --role qa-playtester --status failed --summary "<Grund>" --package <id>`
 
-Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
+Verbindlich sind `docs/studio/VERFASSUNG.md` und das Handbuch `docs/studio/STUDIO.md`; Rangfolge
+Verfassung > Handbuch > Persona > Briefing.

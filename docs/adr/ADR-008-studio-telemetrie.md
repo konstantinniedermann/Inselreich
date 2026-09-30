@@ -59,4 +59,16 @@ Option 2.
   - 2 s Verzögerung im Dashboard.
   - Datenschutz: `events.jsonl` speichert die erste Zeile von Nutzer-Prompts (≤ 120 Zeichen) und
     Abschlussmeldungen von Agenten (≤ 600 Zeichen) im Klartext; lokal und gitignored. Archivieren
-    oder löschen mit `make studio-archive`.
+    oder löschen mit `make studio-archive`. Zusätzlich liegen im Archiv (siehe Nachtrag) die
+    **vollen Briefings und Berichte** im Klartext — ebenfalls lokal und gitignored.
+
+## Nachtrag 2026-09-30 (Session 1.5, ADR-009)
+
+- **Archiv-Ordner** `.studio/archiv/` mit `briefings/` (voller Prompt jeder Delegation),
+  `berichte/` (volle Schlussmeldung jedes Agenten) und `events/` (archivierte Event-Dateien). Das
+  Event-Archiv zieht von `.studio/archive/` um; der alte Ordner wird weiter gelesen (R31). Der
+  Server liefert Archivdateien nur lesend unter `/archiv/<pfad>` (Pfad-Traversal abgewiesen).
+- **Messung** von Dauer, Tool-Aufrufen, Tokens je Modell und Sitzungskosten: Methode und Grenzen im
+  Handbuch [STUDIO.md](../studio/STUDIO.md), Abschnitt „Messung und Aufwand" (R27). Verdichtete
+  Metriken werden unter `docs/studio/metriken/` committet (R30); die Rohdaten bleiben lokal.
+- Das Dashboard hat fünf Reiter (Live, Delegation, Aufwand, Qualität, Studio, R32).

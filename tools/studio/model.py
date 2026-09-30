@@ -55,9 +55,11 @@ def parse_ts(value: object) -> float:
 
 
 def classify(role: str) -> tuple[int, str]:
-    """Ebene und Bereich aus dem Rollennamen (Namensschema, Spec R11)."""
+    """Ebene und Bereich aus dem Rollennamen (Namensschema R11, Stabsstellen R28)."""
     if role in ("main", DIRECTOR):
         return 0, "studio"
+    if role.startswith("studio-"):
+        return 1, "studio"
     if role.startswith("lead-"):
         department = role[len("lead-") :]
         return 1, department if department in DEPARTMENTS else "extern"

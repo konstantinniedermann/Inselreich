@@ -157,6 +157,12 @@ class TreeTest(unittest.TestCase):
         node = flat(build([start(1, "x1", "Explore")]))["s1:x1"]
         self.assertEqual((node["level"], node["department"]), (2, "extern"))
 
+    def test_classify_studio_staff(self):
+        self.assertEqual(model.classify("studio-coach"), (1, "studio"))
+        self.assertEqual(model.classify("studio-director"), (0, "studio"))
+        self.assertEqual(model.classify("main"), (0, "studio"))
+        self.assertEqual(model.classify("studio"), (2, "extern"))
+
 
 class StatusTest(unittest.TestCase):
     def test_stop_done_and_chronicle(self):

@@ -33,3 +33,13 @@ die Zeile „Antwort" hier ausfüllen. Der Projektleiter trägt die Antwort ein,
 schliesst den Eintrag.
 
 ---
+
+## N-001 · offen · 2026-09-30 · Verfassung 1.0 bestätigen
+
+- Frage: Bestätigst du die Verfassung 1.0 (docs/studio/VERFASSUNG.md), insbesondere §5 Autonomie mit Vorrang vor ../CLAUDE.md und §7 Push auf main nach grünem Check?
+- Empfehlung: bestätigen
+- Begründung: Nutzerauftrag Session 1.5
+- Kosten des Wartens: keine — gilt vorläufig
+- Blockiert: nichts
+- Von: studio-director
+- Antwort: –
