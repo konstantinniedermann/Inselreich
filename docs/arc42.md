@@ -340,15 +340,15 @@ Wartezeit vor dem Aufstieg.
 
 ## 10. Qualitätsanforderungen
 
-| Szenario                   | Stimulus                                         | Erwartete Reaktion                                                | Nachweis                                     |
-| -------------------------- | ------------------------------------------------ | ----------------------------------------------------------------- | -------------------------------------------- |
-| Determinismus              | Karte zweimal mit gleichem Seed erzeugen         | Identische Karte; `world.seed` erzeugt dieselbe Karte erneut      | `tests/sim/mapgen.test.ts`                   |
-| Save-Round-trip            | Gespielte Welt speichern und laden               | Geladene Welt ist inhaltlich gleich, Sieg bleibt erhalten         | `tests/sim/save.test.ts`                     |
-| Kaputter Spielstand        | Müll, falsche Version oder fehlende Felder laden | Grund statt Exception, laufendes Spiel bleibt unverändert         | `tests/sim/save.test.ts`, manuell (`app.ts`) |
-| Anbindung nach Laden       | Stand mit `connected: true` ohne Weg laden       | Gebäude ist nach dem Laden `notConnected`                         | `tests/sim/save.test.ts`                     |
-| Spielbarkeit               | Skriptgesteuerte Kolonie mit Startkapital        | 50 Bürger spätestens bei Tick 7500, Geld am Ende positiv          | `tests/sim/balance.test.ts`                  |
-| Takt-Vorhersage            | 100 Schritte ab Tick 0 ausführen                 | Steuern und Unterhalt werden genau einmal, bei Tick 100, verbucht | `tests/sim/taxes.test.ts`, ADR-005           |
-| Kein DOM in der Simulation | DOM- oder Zeit-Global in `src/sim/` verwenden    | Lint-Fehler, `make check` schlägt fehl                            | `eslint.config.js`                           |
+| Szenario                   | Stimulus                                         | Erwartete Reaktion                                                                  | Nachweis                                                           |
+| -------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Determinismus              | Karte zweimal mit gleichem Seed erzeugen         | Identische Karte; `world.seed` erzeugt dieselbe Karte erneut                        | `tests/sim/mapgen.test.ts`                                         |
+| Save-Round-trip            | Gespielte Welt speichern und laden               | Geladene Welt ist inhaltlich gleich, Sieg bleibt erhalten                           | `tests/sim/save.test.ts`                                           |
+| Kaputter Spielstand        | Müll, falsche Version oder fehlende Felder laden | Grund statt Exception, laufendes Spiel bleibt unverändert                           | `tests/sim/save.test.ts`, manuell (`app.ts`)                       |
+| Anbindung nach Laden       | Stand mit `connected: true` ohne Weg laden       | Gebäude ist nach dem Laden `notConnected`                                           | `tests/sim/save.test.ts`                                           |
+| Spielbarkeit               | Skriptgesteuerte Kolonie mit Startkapital        | Sieg bis Tick 7500 (Lauf bis 9000), Geld am Ende > 0                                | `tests/sim/balance.test.ts`                                        |
+| Takt-Vorhersage            | 100 bzw. 300 Schritte ab Tick 0 ausführen        | Steuern und Unterhalt genau bei Tick 100, 200, 300 …: 300 Schritte = drei Buchungen | `tests/sim/taxes.test.ts`, `tests/sim/production.test.ts`, ADR-005 |
+| Kein DOM in der Simulation | DOM- oder Zeit-Global in `src/sim/` verwenden    | Lint-Fehler, `make check` schlägt fehl                                              | `eslint.config.js`                                                 |
 
 ## 11. Risiken und technische Schulden
 

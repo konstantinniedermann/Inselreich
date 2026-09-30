@@ -143,7 +143,7 @@ Dienste erfüllt, zahlt es nur die Hälfte.
 - **Laden:** lädt den gespeicherten Stand. Ist er beschädigt oder fehlt er, erscheint eine Meldung und
   das laufende Spiel bleibt unverändert.
 - **Neu:** zweimal klicken — der Button fragt «Wirklich neu?» —, dann entsteht eine neue Insel. Die
-  Nummer der Karte steht unten in der Kopfzeile («Karte»).
+  Nummer der Karte steht als kleine Zeile in der Kopfzeile unter der Lagerleiste («Karte: …»).
 
 ## Entwicklung
 
