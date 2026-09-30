@@ -1255,6 +1255,129 @@ time {
 }
 
 .node.highlight {
-  outline: 3px solid var(--dep, var(--border));
-  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--dep, var(--border)); /* kein outline: .inactive behält seinen roten Rand */
+}
+
+/* --- Prozess-Graph (Spec Prozess-Graph, Abschnitt G) ------------------------ */
+
+.graph-body {
+  position: relative; /* Bezug für offsetTop der Zeilen (Scroll-Anker, P33) */
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.graph-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 20px; /* Platz für Stummel und „?" rechts der letzten Spalte */
+}
+
+.graph-svg {
+  display: block;
+  overflow: visible;
+}
+
+.graph-svg .lane {
+  stroke: var(--dep);
+  stroke-width: 2;
+}
+
+.graph-svg .lane.dashed {
+  stroke-dasharray: 4 3;
+}
+
+.graph-svg .graph-dot {
+  fill: var(--dep);
+}
+
+.graph-svg .arrow {
+  fill: none;
+  stroke: var(--dep);
+  stroke-width: 1.5;
+}
+
+.graph-svg .arrow.message {
+  stroke-dasharray: 1 3;
+}
+
+.graph-svg .graph-arrowhead {
+  fill: var(--muted);
+}
+
+.graph-svg .graph-unknown {
+  fill: var(--text);
+  stroke: none;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.graph-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.graph-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 14rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  height: 28px; /* = GRAPH_ROW_PX */
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.graph-row time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.graph-row .g-label,
+.graph-row .g-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-row .g-label {
+  font-weight: 600;
+}
+
+.graph-row.pause {
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  cursor: default;
+}
+
+.graph-row.focused {
+  background: color-mix(in srgb, var(--dep-studio) 16%, transparent);
+}
+
+.graph-body .dim {
+  opacity: 0.3;
+}
+
+.graph-new {
+  font-size: 0.8rem;
+}
+
+.graph-note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 719.98px) {
+  .graph-lanes {
+    max-width: 120px; /* höchstens 8 Spalten sichtbar (G11, P30) */
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .graph-row {
+    grid-template-columns: 2.6rem minmax(0, 8rem) minmax(0, 1fr);
+    gap: 6px;
+  }
 }

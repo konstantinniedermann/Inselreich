@@ -20,6 +20,7 @@ import {
   svg,
   syncSelect,
 } from './dom.js';
+import { renderGraph, setupGraph } from './graph.js';
 import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
 import {
   renderDelegation,
@@ -100,6 +101,7 @@ function setConn(ok, text) {
 const VIEWS = [
   ['sessions', renderSessions],
   ['org', renderOrg],
+  ['graph', renderGraph],
   ['counts', renderCounts],
   ['decisions', renderDecisions],
   ['queue', renderQueue],
@@ -586,6 +588,7 @@ document.getElementById('org').addEventListener('click', (event) => {
   event.preventDefault();
   toggleNode(summary.parentElement.dataset.key);
 });
+setupGraph();
 showTab();
 setupTheme();
 poll();

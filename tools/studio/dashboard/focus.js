@@ -39,14 +39,15 @@ export function applyFocus() {
   for (const row of document.querySelectorAll('#graph .graph-row')) {
     const hit = rowId !== null && row.dataset.id === rowId;
     row.classList.toggle('focused', hit);
-    if (hit) for (const key of row.dataset.agents.split(' ')) involved.add(key);
+    if (hit)
+      for (const key of (row.dataset.agents || '').split(' ').filter(Boolean)) involved.add(key);
   }
   for (const card of document.querySelectorAll('#org .node')) {
     card.open = openNodes.has(card.dataset.key);
     card.classList.toggle('highlight', involved.has(card.dataset.key));
   }
   for (const item of document.querySelectorAll('#graph [data-agents]')) {
-    const mine = item.dataset.agents.split(' ').includes(agent);
+    const mine = (item.dataset.agents || '').split(' ').filter(Boolean).includes(agent);
     item.classList.toggle('dim', agent !== null && !mine);
   }
 }
