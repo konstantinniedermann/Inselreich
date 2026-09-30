@@ -26,10 +26,12 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 - Sim-Aktionen werfen nicht; sie liefern `{ ok, reason }`.
 - Spielwerte nur in `src/sim/defs/`, nirgends hart im Code.
 - Keine Laufzeit-Abhängigkeiten (ADR-001).
+- `src/render/` liest die Welt nur; `src/audio/` hängt nur vom Browser ab, nicht von `src/sim/` oder `src/ui/`.
 
 ## Test-Strategie
 
 Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer und UI werden manuell im Browser geprüft.
+Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts` und reine, DOM-freie Helfer in `src/ui/` (`tests/ui/`).
 Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die Spielwerte: Jede Änderung in `src/sim/defs/` muss ihn grün lassen.
 
 ## Context-Scopes
@@ -39,6 +41,7 @@ Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die 
 | Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
 | UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
+| Audio       | `src/audio/`, `tests/audio/`                                                               | Ton, Klangereignisse                      |
 | Studio      | `docs/studio/`, `.claude/agents/`, `.claude/output-styles/`, `tools/studio/`               | Arbeitsweise, Personas, Dashboard         |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 

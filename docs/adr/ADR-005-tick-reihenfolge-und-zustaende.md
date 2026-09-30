@@ -1,6 +1,6 @@
 # ADR-005: Tick-Reihenfolge und Zustandssemantik der Gebäude
 
-Status: akzeptiert · Datum: 2026-09-30
+Status: akzeptiert · Datum: 2026-09-30 · Nachtrag M5 (Markt-Erholung, Handelsaufträge): 2026-09-30, siehe unten
 
 ## Kontext
 
