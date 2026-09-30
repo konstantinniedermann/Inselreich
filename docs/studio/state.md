@@ -10,15 +10,27 @@ Stand: 2026-09-30
 
 - Projekt: **Inselreich** (Aufbau-Strategiespiel im Browser).
 - MVP-Meilensteine M1–M4 fertig (Fundament, Wirtschaft, Bevölkerung, Persistenz & Feinschliff).
-- Studio 1.5 in Betrieb: Verfassung 1.0 (vorläufig bis N-001), Handbuch 1.0, Autonomie mit
+- Studio 1.5 in Betrieb: Verfassung 1.0 (vorläufig bis N-001), Handbuch 1.2, Autonomie mit
   Warteschlange, Guard, Aufwandsmessung, Dashboard mit fünf Reitern, Studio-Coach.
-- Parallel: Die Prozess-Graph-Arbeit (Spec `docs/superpowers/specs/2026-09-30-studio-prozessgraph-design.md`)
-  baut auf Studio 1.5 auf; ihre geparkten Rulings liegen unter `.studio/handoffs/` und bekommen die
-  nächsten freien Nummern.
 - Nächster Meilenstein: offen — L0 wählt ihn selbst aus dem Spielkonzept (kein Nutzer-Vorbehalt).
+
+## Parallele Sessions
+
+Datei-Eigentum bei gleichzeitig laufenden L0-Sessions (STUDIO.md, „Session-Start und -Ende“,
+Experiment E-002). Gegen fremde Pfade wird erst nach deren Merge geplant.
+
+| Session                  | Stand         | besitzt                       | bis                 |
+| ------------------------ | ------------- | ----------------------------- | ------------------- |
+| Prozess-Graph (baff17bb) | abgeschlossen | nichts mehr (gemergt 723aaee) | –                   |
+| M5/S17 (25e8352d)        | aktiv         | `tools/studio/`, `src/sim/`   | ihre Merges M5, S17 |
 
 ## Seit letzter Session erledigt
 
+- Meilenstein **Studio-Graph** gemergt (Gate Merge R53, 723aaee): Prozess-Graph im Reiter „Live“
+  (Lebensdauer, Auftrag/Bericht/Nachricht, Hierarchie), vereinfachte Organigramm-Kacheln mit
+  Namen, Rolle und Emoji aus der Persona-Frontmatter, neues Event `message` (ADR-008-Nachtrag).
+  Retro `retros/2026-09-30-meilenstein-studio-graph.md`; Experimente E-001 und E-002 laufen
+  (R54, R55, Handbuch 1.2).
 - Studio 1.5 gemergt (Gate Merge R38): Verfassung, Handbuch 1.0 mit Changelog, Warteschlange,
   Experimenten, `lernen.md`, Retro- und Metrik-Ablage; Guard; Aufwandsmessung; Dashboard-Reiter;
   Probelauf-Protokoll `docs/studio/probelauf/2026-09-30.md`.

@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.0 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.2 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -109,6 +109,9 @@ Schätzung: <n> min, <m> Tools
 - `Meilenstein` ordnet den Aufwand einem Meilenstein zu (ohne laufenden Meilenstein: `ohne`).
 - `Schätzung` ist eine **Schätzung** für den ganzen Auftrag inklusive aller Unteraufträge, kein
   Messwert. Das Dashboard stellt sie der gemessenen Dauer und den Tool-Aufrufen gegenüber.
+- Die Schätzung wird aus den Richtwerten in [metriken/richtwerte.md](metriken/richtwerte.md)
+  abgeleitet (Median je Rolle und Plan-Art, summiert über die geplanten Starts inkl. Review und
+  Fix-Runden), nicht aus Menschenzeit (Experiment E-001).
 
 Pflichtpunkte:
 
@@ -409,13 +412,13 @@ lokale Archiv.
 
 **Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
 
-| Reiter     | Link          | Zeigt                                                                                           |
-| ---------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| Live       | `#live`       | Organigramm, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
-| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                         |
-| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                          |
-| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                    |
-| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen     |
+| Reiter     | Link          | Zeigt                                                                                                          |
+| ---------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
+| Live       | `#live`       | Organigramm, Prozess-Graph, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
+| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                                        |
+| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                                         |
+| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                                   |
+| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen                    |
 
 ## Verbesserungsschleife
 
@@ -588,6 +591,13 @@ nachfragen oder warten verlangt; Verfassung §1.4):
    sonst den Plan aus [state.md](state.md) fortsetzen (pausierte Pakete neu briefen; der Stand
    steht in `state.md` und in den Übergaben unter `.studio/handoffs/`). Beantwortete
    Warteschlangen-Einträge zuerst umsetzen; offene Vorfälle → Ad-hoc-Retro.
+
+**Parallele L0-Sessions** (Experiment E-002): Läuft beim Start bereits eine andere L0-Session
+(Dashboard, Abschnitt „Parallele Sessions" in [state.md](state.md)), trägt L0 dort vor der ersten
+Delegation ein, welche geteilten Pfade (z. B. `tools/studio/`, Handbuch, `src/sim/`) welche Session
+bis zu welchem Merge besitzt und in welcher Reihenfolge gemergt wird, oder übernimmt den
+vorhandenen Eintrag. Gegen Pfade einer anderen Session wird erst nach deren Merge geplant und
+umgesetzt. Nach dem eigenen Merge oder am Session-Ende gibt L0 seine Pfade dort frei.
 
 Das Dashboard öffnet sich beim ersten Subagenten-Start von L0 automatisch im Browser (einmal je
 Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).

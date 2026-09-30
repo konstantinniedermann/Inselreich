@@ -14,6 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import effort
+import graph
+import studio_docs
+from graph import GRAPH_ROWS, MESSAGE_TEXT_MAX, PAUSE_GAP  # noqa: F401
 
 INACTIVE_DEFAULT = 300.0
 BIND_WINDOW = 30.0
@@ -22,6 +25,10 @@ HEARTBEAT_TOOLS = 4
 PULSE_MINUTES = 60
 CHRONICLE_SIZE = 200
 TEXT_MAX = 160
+SHORT_TASK = 30
+DIRECTOR_NAME = ("Boss Bruno", "Projektleiter", "🎬")
+FOREIGN_NAME = "Aushilfe"
+FOREIGN_EMOJI = "🧑‍🔧"
 LIVE = frozenset({"active", "delegated", "waiting", "blocked"})
 FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
@@ -45,6 +52,11 @@ PUBLIC = (
     "started",
     "stopped",
     "last_seen",
+    "name",
+    "title",
+    "emoji",
+    "instance",
+    "task_short",
 )
 
 
@@ -66,6 +78,34 @@ def classify(role: str) -> tuple[int, str]:
         return 1, department if department in DEPARTMENTS else "extern"
     prefix = role.split("-", 1)[0]
     return 2, prefix if prefix in DEPARTMENTS else "extern"
+
+
+def read_agent_names(agents_dir: Path) -> dict[str, dict]:
+    """rolle → {name, title, emoji} aus studio-name/-title/-emoji der Frontmatter."""
+    names: dict[str, dict] = {}
+    for role, meta in studio_docs.persona_meta(agents_dir).items():
+        entry = {
+            field: meta[f"studio_{field}"]
+            for field in ("name", "title", "emoji")
+            if meta.get(f"studio_{field}")
+        }
+        if entry:
+            names[role] = entry
+    return names
+
+
+def identity(role: str, names: dict[str, dict]) -> tuple[str, str, str]:
+    """(Name, Titel, Emoji) einer Rolle; Rückfall je Feld (T3)."""
+    if role in (DIRECTOR, "main"):
+        fallback = DIRECTOR_NAME
+    else:
+        fallback = (FOREIGN_NAME, role, FOREIGN_EMOJI)
+    entry = names.get(role) or {}
+    return (
+        entry.get("name") or fallback[0],
+        entry.get("title") or fallback[1],
+        entry.get("emoji") or fallback[2],
+    )
 
 
 def read_agent_models(agents_dir: Path) -> dict[str, str]:
@@ -146,8 +186,14 @@ def _short(text: object, limit: int = TEXT_MAX) -> str:
 
 
 class _Builder:
-    def __init__(self, agent_models: dict[str, str], now: float) -> None:
+    def __init__(
+        self,
+        agent_models: dict[str, str],
+        now: float,
+        agent_names: dict[str, dict] | None = None,
+    ) -> None:
         self.models = agent_models
+        self.names = agent_names or {}
         self.now = now
         self.nodes: dict[str, dict] = {}
         self.sessions: dict[str, dict] = {}
@@ -155,6 +201,9 @@ class _Builder:
         self.spawns: dict[tuple[str, str], dict] = {}
         self.seq = 0
         self.binds: dict[str, list[tuple[float, str, str]]] = {}
+        self.trace: dict[str, list[dict]] = {}
+        self.index = 0
+        self.current_ts = ""
         self.budgets: dict[str, dict] = {}
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
@@ -208,7 +257,15 @@ class _Builder:
                 "started": ts,
                 "stopped": None,
                 "last_seen": ts,
+                "name": "",
+                "title": "",
+                "emoji": "",
+                "instance": 1,
+                "task_short": "",
+                "_base_name": "",
                 "_pulse": ts,
+                "_signal": is_main,
+                "_first": (ts, self.current_ts, self.index),
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
@@ -288,12 +345,103 @@ class _Builder:
                 "department": node["department"],
                 "role": node["role"],
                 "text": _short(text, 400),
+                "_key": node["key"],
             }
         )
 
     # --- Events -------------------------------------------------------------
 
+    def record(self, sid: str, kind: str, ts: float, key: str, **fields) -> None:
+        """Ereignisliste für den Graph-Nachlauf (P37)."""
+        self.trace.setdefault(sid, []).append(
+            {"i": self.index, "kind": kind, "t": ts, "ts": self.current_ts, "key": key}
+            | fields
+        )
+
+    def signal(self, event: dict, sid: str) -> None:
+        """Jedes Event ausser agent_stop ohne Rolle macht einen Knoten sichtbar (P31)."""
+        if event.get("source") == "log":
+            return
+        if event.get("kind") == "agent_stop" and not event.get("role"):
+            return
+        node = self.nodes.get(f"{sid}:{event.get('agent_id') or 'main'}")
+        if node is not None:
+            node["_signal"] = True
+
+    def hidden(self, key: str) -> bool:
+        """stop-only-Knoten: nur ein agent_stop ohne Rolle, sonst nichts (P31)."""
+        node = self.nodes[key]
+        return node["agent_id"] != "main" and not node["_signal"]
+
+    def graph_record(self, record: dict) -> dict:
+        if record["kind"] != "spawn":
+            return record
+        child = record["entry"]["child"]
+        return {k: v for k, v in record.items() if k != "entry"} | {
+            "child": child["key"] if child is not None else None
+        }
+
+    def layouts(self) -> dict[str, graph.Layout]:
+        """Je Session das Graph-Layout; daraus die Instanznummern (P9, P21)."""
+        result: dict[str, graph.Layout] = {}
+        for sid in self.sessions:
+            info = {
+                key: {
+                    "agent_id": node["agent_id"],
+                    "role": node["role"],
+                    "department": node["department"],
+                    "parent": node["parent"],
+                    "base_name": node["_base_name"],
+                    "task": node["task"],
+                    "first": node["_first"],
+                    "log_only": node["agent_id"].startswith("log:"),
+                }
+                for key, node in self.nodes.items()
+                if node["session_id"] == sid and not self.hidden(key)
+            }
+            with contextlib.suppress(Exception):  # der Graph kippt nie den Zustand
+                records = [self.graph_record(r) for r in self.trace.get(sid, [])]
+                layout = graph.Layout(sid, records, info)
+                numbers = graph.instances(info, layout.run_times())
+                for key, number in numbers.items():
+                    node = self.nodes[key]
+                    node["instance"] = number
+                    suffix = f" ({number})" if number > 1 else ""
+                    node["name"] = node["_base_name"] + suffix
+                result[sid] = layout
+        return result
+
+    def message_texts(self, feed: list[dict], layouts: dict) -> None:
+        """Feed-Zeile „✉ → <Empfänger>: <Text>" (T2)."""
+        for entry in feed:
+            if entry["kind"] != "message" or entry["session_id"] not in layouts:
+                continue
+            target = layouts[entry["session_id"]].resolve(entry.get("_to", ""))
+            who = self.nodes[target]["name"] if target else f"? {entry.get('_to', '')}"
+            entry["text"] = _short(f"✉ → {who.strip()}: {entry.get('_text', '')}", 140)
+
+    def graph_view(self, chosen: str | None, layouts: dict) -> dict | None:
+        if chosen in (None, "all"):
+            return None
+        if chosen not in layouts:
+            return {"session": chosen, "columns": 0, "truncated": False, "rows": []}
+        names = {
+            k: n["name"] for k, n in self.nodes.items() if n["session_id"] == chosen
+        }
+        return layouts[chosen].render(names)
+
+    def identities(self) -> None:
+        """Name, Titel, Emoji und Kurzaufgabe je sichtbarem Knoten (T3, T6)."""
+        for key, node in self.nodes.items():
+            if self.hidden(key):
+                continue
+            name, node["title"], node["emoji"] = identity(node["role"], self.names)
+            node["name"] = node["_base_name"] = name
+            node["task_short"] = _short(node["task"], SHORT_TASK)
+
     def apply(self, event: dict) -> None:
+        self.index += 1
+        self.current_ts = str(event.get("ts") or "")
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
         # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
@@ -305,6 +453,7 @@ class _Builder:
         handler = getattr(self, "on_" + str(event.get("kind", "")), None)
         if handler is not None:
             handler(event, ts, sid)
+        self.signal(event, sid)
         self.add_feed(event, ts, sid)
 
     def agent(self, event: dict, ts: float, sid: str) -> dict:
@@ -321,7 +470,9 @@ class _Builder:
                 node[field] = str(event[field])
 
     def on_session_start(self, event, ts, sid):
+        self.sessions[sid]["ended"] = None  # Neustart: Session läuft wieder
         main = self.node(sid, "main", ts)
+        self.record(sid, "session_start", ts, main["key"])
         main["status"] = "idle"
         main["model"] = event.get("model") or main["model"]
 
@@ -343,7 +494,7 @@ class _Builder:
 
     def on_session_end(self, event, ts, sid):
         self.sessions[sid]["ended"] = ts
-        self.node(sid, "main", ts)
+        self.record(sid, "session_end", ts, self.node(sid, "main", ts)["key"])
         for node in self.nodes.values():
             if node["session_id"] == sid and node["status"] not in FINAL:
                 node["status"], node["stopped"] = "ended", ts
@@ -371,6 +522,9 @@ class _Builder:
             "child": None,
         }
         self.pending.setdefault(sid, []).append(entry)
+        self.record(
+            sid, "spawn", ts, parent["key"], entry=entry, description=entry["task"]
+        )
         if entry["tid"]:
             self.spawns[(sid, entry["tid"])] = entry
 
@@ -423,6 +577,7 @@ class _Builder:
         child = self.node(sid, child_id, ts, touch=False)
         self.reparent(child, parent["key"])
         child["_confirmed"] = True
+        child["_signal"] = True
         reported = {
             "duration_ms": event.get("duration_ms"),
             "tool_count": event.get("tool_count"),
@@ -447,6 +602,7 @@ class _Builder:
                 )
             self.close_run(child, ts)
             self.add_chronicle(child, ts, child["summary"] or child["task"])
+            self.record(sid, "agent_stop", ts, child["key"], summary=child["summary"])
 
     def on_agent_start(self, event, ts, sid):
         typ = event.get("role") or "general-purpose"
@@ -456,6 +612,7 @@ class _Builder:
         node = self.node(sid, agent_id, ts, typ)
         self.stamp(node, event, ("persona_version", "handbook_version"))
         node["tool_calls"] = node["tool_calls"] or 0
+        self.record(sid, "agent_start", ts, node["key"], resume=node["_started"])
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
             node["resumes"] += 1
             node["status"], node["stopped"] = "active", None
@@ -480,6 +637,7 @@ class _Builder:
 
     def on_agent_stop(self, event, ts, sid):
         node = self.agent(event, ts, sid)
+        self.record(sid, "agent_stop", ts, node["key"], summary=event.get("summary"))
         self.stamp(node, event, ("persona_version", "handbook_version"))
         if isinstance(event.get("usage"), dict):
             node["usage"] = event["usage"]
@@ -491,6 +649,18 @@ class _Builder:
             node["summary"] = event.get("summary") or ""
         if not node["_chron"]:
             self.add_chronicle(node, ts, node["summary"] or node["task"])
+
+    def on_message(self, event, ts, sid):
+        sender = self.agent(event, ts, sid)  # Lebenszeichen wie ein Heartbeat (T2)
+        self.count_tool(sender)  # SendMessage bleibt ein Tool-Aufruf (Aufwand)
+        self.record(
+            sid,
+            "message",
+            ts,
+            sender["key"],
+            to=str(event.get("to") or ""),
+            text=str(event.get("text") or ""),
+        )
 
     def on_heartbeat(self, event, ts, sid):
         self.count_tool(self.agent(event, ts, sid))
@@ -529,6 +699,16 @@ class _Builder:
 
     def on_status(self, event, ts, sid):
         node = self.resolve(sid, event.get("role") or "", _package(event), ts)
+        node["_signal"] = True
+        self.record(
+            sid,
+            "status",
+            ts,
+            node["key"],
+            status=str(event.get("status") or ""),
+            task=str(event.get("task") or ""),
+            summary=str(event.get("summary") or ""),
+        )
         self.touch(node, ts)
         self.stamp(node, event, ("handbook_version", "milestone"))
         status = event.get("status") or ""
@@ -725,6 +905,9 @@ class _Builder:
                 "_agent": f"{sid}:{event.get('agent_id') or ''}",
             }
         )
+        if event.get("kind") == "message":  # Text erst im Nachlauf (Namen, P2)
+            self.feed[-1]["_to"] = str(event.get("to") or "")
+            self.feed[-1]["_text"] = str(event.get("text") or "")
 
     # --- Ergebnis -----------------------------------------------------------
 
@@ -741,6 +924,8 @@ class _Builder:
             chosen, scope = session, {session}
 
         self.finalize()
+        self.identities()
+        layouts = self.layouts()
         views = {
             key: self.view(node, inactive_after) for key, node in self.nodes.items()
         }
@@ -748,7 +933,8 @@ class _Builder:
         def tree(key: str) -> dict:
             node = dict(views[key])
             children = sorted(
-                self.nodes[key]["children"], key=lambda k: self.nodes[k]["started"]
+                (k for k in self.nodes[key]["children"] if not self.hidden(k)),
+                key=lambda k: self.nodes[k]["started"],
             )
             node["children"] = [tree(k) for k in children]
             return node
@@ -758,11 +944,20 @@ class _Builder:
             for s in ordered
             if s["id"] in scope and f"{s['id']}:main" in self.nodes
         ]
-        in_scope = [v for v in views.values() if v["session_id"] in scope]
+        in_scope = [
+            v
+            for k, v in views.items()
+            if v["session_id"] in scope and not self.hidden(k)
+        ]
         counts = Counter(v["status"] for v in in_scope)
         counts["inactive"] = sum(1 for v in in_scope if v["inactive"])
         feed = [f for f in self.feed if f["session_id"] in scope]
-        chronicle = [c for c in self.chronicle if c["session_id"] in scope]
+        self.message_texts(feed, layouts)
+        chronicle = [
+            {k: v for k, v in c.items() if k != "_key"}
+            for c in self.chronicle
+            if c["session_id"] in scope and not self.hidden(c["_key"])
+        ]
         records = [effort.record(n, self.nodes) for n in self.nodes.values()]
         mine = [r for r in records if r["session_id"] in scope]
         results = [r for r in self.results.values() if r["session_id"] in scope]
@@ -819,6 +1014,7 @@ class _Builder:
                 if s["id"] in scope and s.get("cost") is not None
             ],
             "queue": [q for q in self.queue.values() if q["session_id"] in scope],
+            "graph": self.graph_view(chosen, layouts),
         }
 
     def ci_in_scope(self, sessions: list[dict], scope: set, every: bool) -> list[dict]:
@@ -1024,8 +1220,9 @@ def build_state(
     session: str | None = None,
     inactive_after: float = INACTIVE_DEFAULT,
     heartbeats: bool = True,
+    agent_names: dict[str, dict] | None = None,
 ) -> dict:
-    builder = _Builder(agent_models, now)
+    builder = _Builder(agent_models, now, agent_names)
     ordered = sorted(
         (e for e in events if isinstance(e, dict)), key=lambda e: parse_ts(e.get("ts"))
     )

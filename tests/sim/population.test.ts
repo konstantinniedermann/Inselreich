@@ -7,6 +7,7 @@ import {
   isSupplied,
   serviceAvailable,
   tickPopulation,
+  totalTaxes,
   tryUpgrade,
   UPGRADE_WAIT,
   upgradeStatus,
@@ -168,7 +169,9 @@ describe('tryUpgrade', () => {
     expect(w.stock.wood).toBe(stock.wood - 5);
     expect(w.stock.tools).toBe(stock.tools - 2);
     expect(w.stock.stone).toBe(stock.stone);
-    expect(house.house!.demand.cloth).toBe(1);
+    expect(house.house!.demand.cloth).toBe(0);
+    expect(house.house!.satisfied.cloth).toBe(true);
+    expect(w.stock.cloth).toBe(0);
     expect(house.house!.satisfiedSince).toBe(w.tick);
   });
 
@@ -240,7 +243,9 @@ describe('tryUpgrade', () => {
     expect(hs.tier).toBe(3);
     expect(w.money).toBe(money - 300);
     expect(w.stock.stone).toBe(stone - 5);
-    expect(hs.demand.rum).toBe(1);
+    expect(hs.demand.rum).toBe(0);
+    expect(hs.satisfied.rum).toBe(true);
+    expect(w.stock.rum).toBe(0);
     expect(hs.satisfiedSince).toBe(w.tick);
   });
 
@@ -259,6 +264,48 @@ describe('tryUpgrade', () => {
     expect(tryUpgrade(w, house)).toBe(false);
     expect(upgradeStatus(w, house)).toEqual({ ok: false, reasons: ['Höchste Stufe erreicht'] });
     expect(house.house!.tier).toBe(3);
+  });
+
+  it('consumes the checked good: two ready houses, one cloth, only one upgrades', () => {
+    const { house, chapel } = readyPioneer();
+    forceGrass(w, house.x, house.y + 1);
+    const r = placeBuilding(w, 'house', house.x, house.y + 1);
+    if (!r.ok || r.id === undefined) throw new Error('second house not placed');
+    chapel.connected = true; // Platzieren berechnet die Anbindung neu und setzt sie zurück
+    const second = w.buildings[r.id]!;
+    second.house = {
+      ...house.house!,
+      demand: { ...house.house!.demand },
+      satisfied: { ...house.house!.satisfied },
+      services: { ...house.house!.services },
+    };
+    w.stock.cloth = 1;
+    const results = [tryUpgrade(w, house), tryUpgrade(w, second)];
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect([house.house!.tier, second.house!.tier].sort()).toEqual([1, 2]);
+    expect(w.stock.cloth).toBe(0);
+  });
+
+  it('does not draw a second unit of the new good on the next tick', () => {
+    const { house } = readyPioneer();
+    w.stock.cloth = 2;
+    expect(tryUpgrade(w, house)).toBe(true);
+    expect(w.stock.cloth).toBe(1);
+    run(w, 1);
+    expect(w.stock.cloth).toBe(1);
+    expect(house.house!.satisfied.cloth).toBe(true);
+  });
+
+  it('taxes a house at the full rate when it upgrades on a booking tick', () => {
+    const { house } = readyPioneer();
+    w.tick = 499;
+    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    step(w);
+    expect(w.tick % 100).toBe(0);
+    expect(house.house!.tier).toBe(2);
+    const full = Math.floor(house.house!.inhabitants * TIERS[2].tax);
+    expect(totalTaxes(w)).toBe(full);
+    expect(w.stats.taxes).toBe(full);
   });
 
   it('is attempted in the growth tick only', () => {

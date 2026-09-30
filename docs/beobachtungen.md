@@ -12,29 +12,8 @@ gebündelt, die unten offen stehen. Kein Befund war widerlegt, sechs trugen eine
 
 ## Offen
 
-Neue Einträge kommen unten dazu. Die sechs Paket-Kandidaten aus der Auswertung stehen hier, bis L0
+Neue Einträge kommen unten dazu. Die noch offenen Paket-Kandidaten aus der Auswertung stehen hier, bis L0
 über sie entschieden hat.
-
-### Paket-Kandidat · `src/sim/population.ts` `tryUpgrade` · Aufstieg entnimmt die Ware nicht
-
-**Beobachtung:** Beim Aufstieg eines Hauses wird die Ware im Lager nur geprüft, nicht entnommen.
-Zwei Häuser können deshalb auf dieselbe Einheit aufsteigen, und eines davon schrumpft danach sofort.
-Das ist zugleich der zweite Treiber der knappen Balancing-Marge: Die Rumkette reicht nur für eines
-der beiden Häuser, das zweite fällt auf 1 Einwohner. Dazu kommt: Fällt der Aufstieg auf einen
-Buchungstick, zahlt das Haus in dieser Buchung halbe Steuer, weil die neuen Bedürfnisse noch als
-unerfüllt gelten.
-**Ursprung:** Gesamt-Review M3, Balancing-Durchlauf M4 Task 3, Probelauf Session 1.5 (`lead-tech` M5-01).
-**Einschätzung:** Echter Spiellogik-Fehler. Ein ungeprüfter Fix-Entwurf mit Regressionstest liegt lokal
-unter `.studio/handoffs/2026-09-30-probelauf-m5-01-aufstieg.patch`. Der Review-Befund dazu: Die
-entnommene Einheit muss als ausgeliefert zählen, sonst wird sie doppelt verbraucht. Die Änderung
-wirkt auf `tests/sim/balance.test.ts`, eine bewusste Wertänderung braucht deshalb ein Ruling.
-**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt.
-
-- Ware wird nur geprüft: `src/sim/population.ts` → `upgradeStatus` (`world.stock[g] < 1`).
-- `tryUpgrade` ruft nur `pay` auf, kein `takeStock`.
-- Halbe Steuer: `GROWTH_INTERVAL` 50 gegenüber `UPKEEP_INTERVAL` 100 (`src/sim/defs/timing.ts`). In
-  `tick.ts` läuft `tickPopulation` vor `tickTaxes`, und `allNeedsMet` sieht `satisfied[neu]` noch
-  nicht gesetzt.
 
 ### Paket-Kandidat · `src/ui` · Bedienkomfort (Quality-of-Life) aus M1–M4
 
@@ -127,6 +106,60 @@ Kommando auf. Das erste Token `install`/`add`/`i` irgendwo im Text schaltet `see
 **Einschätzung:** Die Messdoku ist ein kleiner Nachtrag für den nächsten Studio-Strang. Die beiden
 anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 
+### 2026-09-30 · `tools/studio/model.py` · stop-only-Knoten in Aufwand und Qualität
+
+**Beobachtung:** Knoten mit `agent_stop` ohne Rolle (stop-only) zählen in den Reitern Aufwand und Qualität (`records`, `effort`, Vorfälle) weiter, obwohl Graph, Organigramm, Zähler und Chronik sie ausblenden.
+**Ursprung:** Paket G.
+**Einschätzung:** Dasselbe Prädikat `_Builder.hidden()` wäre eine Zeile (L0-Entscheid Gate Plan: Beobachtung).
+
+### 2026-09-30 · `tools/studio/graph.py` · `_row`
+
+**Beobachtung:** Eine order-Zeile, deren Elternknoten in dieser Zeile keine Spur hat, bekommt `arrow = null` (kein Stummel).
+**Ursprung:** Paket G.
+**Einschätzung:** Selten und ungetestet; ein Test genügt, falls es je auftritt.
+
+### 2026-09-30 · `tools/studio/server.py` · `/api/state`
+
+**Beobachtung:** `/api/state` wächst mit dem Graphen: bei 300 Zeilen × 11 Spalten etwa 346 KB je Poll (2 s). Der Client baut nur bei Änderung neu (P35), der Transfer bleibt.
+**Ursprung:** Paket G.
+**Einschätzung:** Lokal unkritisch; relevant, wenn Sessions deutlich länger werden (dann `graph` separat oder inkrementell liefern).
+
+### 2026-09-30 · `tools/studio/model.py` · `layouts`
+
+**Beobachtung:** Schlägt das Graph-Layout einer Session fehl, fällt es still weg (leere Zeilen, Feed ohne Empfängernamen). Ein Log-Hinweis fehlt.
+**Ursprung:** Paket G.
+**Einschätzung:** Eine Logzeile im Fehlerfall würde die Suche abkürzen; klein, aber ohne Anlass bisher nicht nötig.
+
+### 2026-09-30 · `tools/studio/server.py` · `paths.agents_dir`
+
+**Beobachtung:** `server.py` liest Persona-Namen aus dem Hauptrepo (`paths.agents_dir` über `repo_root`). Aus einem Worktree gestartet zeigt das Dashboard die Namen des Hauptrepos.
+**Ursprung:** Paket G.
+**Einschätzung:** Playtests in Worktrees brauchen eine Temp-Kopie des Repos. Erst relevant, wenn Namen im Worktree geändert werden.
+
+### 2026-09-30 · `tools/studio/dashboard/` · Tab-Leiste bei 390 px
+
+**Beobachtung:** Bei 390 px ragt der Reiter „Studio“ bis x=429 hinaus. Die Leiste scrollt intern, die Seite hat keinen waagrechten Scroll.
+**Ursprung:** Paket G.
+**Einschätzung:** Vorbestehend, nicht durch den Graphen verursacht; kosmetisch.
+
+### 2026-09-30 · `tools/studio/dashboard/` · Graph-Karte Layout
+
+**Beobachtung:** Bei 1280×2000 hat die Graph-Karte 60vh (1200 px) Höhe bei etwa 590 px Inhalt, es entsteht eine grosse Leerfläche. Die klebende Kopfzeile überdeckt auf dem Handy die obersten Graph-Zeilen. Labels im Graphen sind bei 390 px stark gekürzt („Prüf-Pe…“).
+**Ursprung:** Playtest Paket G.
+**Einschätzung:** Kosmetisch; Höhe an den Inhalt binden (`max-height` statt fester Höhe) und Scroll-Padding unter der Kopfzeile setzen.
+
+### 2026-09-30 · `tools/studio/tests/`, `graph.py`, `model.py`, Doku · Nachträge
+
+**Beobachtung:** Test T1f (kaputtes SendMessage) prüft nur schwach (kein Vergleich der Felder bei `message` als Objekt). Die Hilfsfunktion `short()` in `graph.py` und `_short()` in `model.py` sind doppelt. Empfängernamen fehlen im Live-Feed, wenn das Graph-Layout einer Session fehlschlägt. Es gibt keinen automatischen Abgleich `roster.md` ↔ Persona-Frontmatter (Name, Titel, Emoji, Version).
+**Ursprung:** Final-Review Paket G.
+**Einschätzung:** Alles klein. Der Roster-Abgleich wäre ein Test in `test_docs`, die übrigen Punkte Aufräumen bei Gelegenheit.
+
+### 2026-09-30 · `tools/studio/model.py` · `build_state` (`on_status`, `view`)
+
+**Beobachtung:** `build_state` bricht bei nicht-textuellen Feldern ab, z. B. bei einem log-`status` mit Liste als Wert (`status in FINAL` in `on_status`, `status in LIVE` in `view`): TypeError, `/api/state` antwortet 500. Besteht auch auf `main`.
+**Ursprung:** Final-Review Paket G (ausserhalb Scope).
+**Einschätzung:** `log.py` validiert die Eingabe, ein Fehler tritt nur bei von Hand geschriebenen Events auf. Härtung per `isinstance(status, str)` wäre eine Zeile je Stelle.
+
 ---
 
 ## Ausgewertet 2026-09-30
@@ -144,33 +177,34 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 - Spec 3.2 nennt `economy.ts` für Steuern → M4: Modulliste nachgeführt.
 - `GROWTH_INTERVAL` und `UPGRADE_WAIT` nach `defs/` → M4: `defs/timing.ts`. `SERVICE_BUILDING` siehe unten.
 - Implementierer hängen bei Shell-Einzeilern → Regel in `docs/studio/lernen.md` („Edit/Write statt Shell-Einzeiler").
+- Aufstieg entnimmt Ware, volle Steuer im Aufstiegstick → M5-01: `tryUpgrade`, Tests in `tests/sim/population.test.ts`.
 
 ### Abgehakt (bewusst nichts tun, mit Trigger)
 
-| Befund (Fundort)                                                                                                    | Begründung                                                                 | Zurück, wenn …                                                                         |
-| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Abriss-Regel doppelt, Viewgrösse doppelt (`input.ts` `updateHover`, `app.ts`)                                       | Zwei Aufrufer, `inspect.ts` nutzt die Regel nicht                          | ein dritter Aufrufer entsteht                                                          |
-| Gebirgsanteil schwankt stark je Seed (`mapgen.ts`)                                                                  | Nachbedingungen sichern Wald und Land; Balancing-Test läuft auf Seed 3     | ein Playtest eine unspielbare Karte meldet oder der Balancing-Test mehrere Seeds prüft |
-| `adjacentReason`/`radiusReason` leiten die Meldung aus dem Terrain ab (`placement.ts`)                              | Vier Meldungen, überschaubar                                               | eine fünfte Regel dazukommt                                                            |
-| `hash2` mit schwacher Avalanche (`noise.ts`)                                                                        | Keine sichtbaren Muster gemeldet                                           | Karten sichtbare Muster zeigen                                                         |
-| `createRng` ohne Known-Vector-Test (`rng.ts`, in `src/` ungenutzt)                                                  | Nur Tests nutzen ihn                                                       | Sim-Code ihn erstmals nutzt (dann Known-Vector-Test)                                   |
-| `defs.test` prüft nur Stichproben                                                                                   | Voller Tabellenvergleich wäre Duplikation                                  | —                                                                                      |
-| Commit-Präfix `chore:`                                                                                              | Im Studio etabliert (`qa-code-reviewer`, `lead-qa`)                        | die Präfixliste der übergeordneten `CLAUDE.md` überarbeitet wird                       |
-| BFS-Richtungsarray je Iteration (`roads.ts` `reachableRoads`)                                                       | Bei 64×64 unerheblich                                                      | die Karte deutlich wächst                                                              |
-| `refresh()` je Weg-Kachel während Drag (`app.ts` `onAction`)                                                        | Billige Vergleiche                                                         | ein Profiling Ruckler beim Wegziehen zeigt                                             |
-| `sell`/`buy` ignorieren die Rückgabe von `takeStock`/`addStock`                                                     | Nach den Vorprüfungen sicher, kommentiert                                  | die Vorprüfungen sich ändern                                                           |
-| `SERVICE_BUILDING` in `population.ts`                                                                               | Zuordnung, kein Zahlenwert                                                 | ein neuer Dienst dazukommt (dann nach `defs/`)                                         |
-| MkDocs nicht eingesetzt                                                                                             | Würde eine Python-Abhängigkeit bringen; Markdown mit `docs/index.md`       | der Nutzer es wünscht                                                                  |
-| Balancing-Marge knapp (`balance.test.ts`, Sieg ≤ 7500)                                                              | Eskalationsregel ausgeschöpft; zweiter Treiber ist im Aufstiegs-Kandidaten | ein Playtest oder eine `defs/`-Änderung die Marge kippt (neue Kurz-Spec)               |
-| Spielstand-Validierung lückenhaft (`save.ts` `isWellFormed`: kein `seed`, keine Kontor-`defId`, keine Kachelfelder) | Spielstände entstehen nur im eigenen Spiel                                 | Spielstände extern entstehen (Import, Teilen)                                          |
-| Eigene Session im Dashboard als „neueste"                                                                           | So gewollt, `?session=<id>` vorhanden (`dashboard/app.js`)                 | Sessions ohne Leads stören                                                             |
-| bind-Event bei jeder Erwähnung von `log.py` (`hook.py` `log_args`)                                                  | Harmlos, `on_bind` ignoriert leere Rollen                                  | binds mit Rolle falsch zugeordnet werden                                               |
-| Zeitformate: Feed UTC, Chronik lokal                                                                                | Kosmetisch, das Dashboard nutzt `t`                                        | jemand Rohdaten auswertet                                                              |
-| `log.py decision` mit bestehender ID öffnet den Entscheid neu (`model.py` `on_decision`)                            | Akzeptiert                                                                 | es versehentlich passiert                                                              |
-| Verdrängter FIFO-Knoten bei fehlendem `spawned` (R17)                                                               | Tritt nur bei verlorenen Hook-Events auf                                   | verlorene Events beobachtet werden                                                     |
-| Rückfrage eines Leads erscheint als `done`                                                                          | Entscheide laufen über `log.py decision`; Ansicht „Offene Entscheide"      | eine Rückfrage übersehen wird                                                          |
-| Server-Tests langsam (echter Server je Test)                                                                        | Unkritisch                                                                 | die Suite deutlich wächst                                                              |
-| Laden setzt Geschwindigkeit und Kamera zurück                                                                       | Siehe QoL-Kandidat                                                         | —                                                                                      |
+| Befund (Fundort)                                                                                                    | Begründung                                                             | Zurück, wenn …                                                                         |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Abriss-Regel doppelt, Viewgrösse doppelt (`input.ts` `updateHover`, `app.ts`)                                       | Zwei Aufrufer, `inspect.ts` nutzt die Regel nicht                      | ein dritter Aufrufer entsteht                                                          |
+| Gebirgsanteil schwankt stark je Seed (`mapgen.ts`)                                                                  | Nachbedingungen sichern Wald und Land; Balancing-Test läuft auf Seed 3 | ein Playtest eine unspielbare Karte meldet oder der Balancing-Test mehrere Seeds prüft |
+| `adjacentReason`/`radiusReason` leiten die Meldung aus dem Terrain ab (`placement.ts`)                              | Vier Meldungen, überschaubar                                           | eine fünfte Regel dazukommt                                                            |
+| `hash2` mit schwacher Avalanche (`noise.ts`)                                                                        | Keine sichtbaren Muster gemeldet                                       | Karten sichtbare Muster zeigen                                                         |
+| `createRng` ohne Known-Vector-Test (`rng.ts`, in `src/` ungenutzt)                                                  | Nur Tests nutzen ihn                                                   | Sim-Code ihn erstmals nutzt (dann Known-Vector-Test)                                   |
+| `defs.test` prüft nur Stichproben                                                                                   | Voller Tabellenvergleich wäre Duplikation                              | —                                                                                      |
+| Commit-Präfix `chore:`                                                                                              | Im Studio etabliert (`qa-code-reviewer`, `lead-qa`)                    | die Präfixliste der übergeordneten `CLAUDE.md` überarbeitet wird                       |
+| BFS-Richtungsarray je Iteration (`roads.ts` `reachableRoads`)                                                       | Bei 64×64 unerheblich                                                  | die Karte deutlich wächst                                                              |
+| `refresh()` je Weg-Kachel während Drag (`app.ts` `onAction`)                                                        | Billige Vergleiche                                                     | ein Profiling Ruckler beim Wegziehen zeigt                                             |
+| `sell`/`buy` ignorieren die Rückgabe von `takeStock`/`addStock`                                                     | Nach den Vorprüfungen sicher, kommentiert                              | die Vorprüfungen sich ändern                                                           |
+| `SERVICE_BUILDING` in `population.ts`                                                                               | Zuordnung, kein Zahlenwert                                             | ein neuer Dienst dazukommt (dann nach `defs/`)                                         |
+| MkDocs nicht eingesetzt                                                                                             | Würde eine Python-Abhängigkeit bringen; Markdown mit `docs/index.md`   | der Nutzer es wünscht                                                                  |
+| Balancing-Marge knapp (`balance.test.ts`, Sieg ≤ 7500)                                                              | Eskalationsregel ausgeschöpft; zweiter Treiber mit M5-01 behoben       | ein Playtest oder eine `defs/`-Änderung die Marge kippt (neue Kurz-Spec)               |
+| Spielstand-Validierung lückenhaft (`save.ts` `isWellFormed`: kein `seed`, keine Kontor-`defId`, keine Kachelfelder) | Spielstände entstehen nur im eigenen Spiel                             | Spielstände extern entstehen (Import, Teilen)                                          |
+| Eigene Session im Dashboard als „neueste"                                                                           | So gewollt, `?session=<id>` vorhanden (`dashboard/app.js`)             | Sessions ohne Leads stören                                                             |
+| bind-Event bei jeder Erwähnung von `log.py` (`hook.py` `log_args`)                                                  | Harmlos, `on_bind` ignoriert leere Rollen                              | binds mit Rolle falsch zugeordnet werden                                               |
+| Zeitformate: Feed UTC, Chronik lokal                                                                                | Kosmetisch, das Dashboard nutzt `t`                                    | jemand Rohdaten auswertet                                                              |
+| `log.py decision` mit bestehender ID öffnet den Entscheid neu (`model.py` `on_decision`)                            | Akzeptiert                                                             | es versehentlich passiert                                                              |
+| Verdrängter FIFO-Knoten bei fehlendem `spawned` (R17)                                                               | Tritt nur bei verlorenen Hook-Events auf                               | verlorene Events beobachtet werden                                                     |
+| Rückfrage eines Leads erscheint als `done`                                                                          | Entscheide laufen über `log.py decision`; Ansicht „Offene Entscheide"  | eine Rückfrage übersehen wird                                                          |
+| Server-Tests langsam (echter Server je Test)                                                                        | Unkritisch                                                             | die Suite deutlich wächst                                                              |
+| Laden setzt Geschwindigkeit und Kamera zurück                                                                       | Siehe QoL-Kandidat                                                     | —                                                                                      |
 
 ### Falsche Prämissen
 
@@ -182,3 +216,12 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
+
+## 2026-09-30 · .prettierignore / Worktrees · Prettier formatiert Worktree-Dateien vom Hauptrepo aus still nicht
+
+**Beobachtung:** Die `.prettierignore` des Hauptrepos schliesst `.worktrees/` aus. `npx prettier --write <worktree-datei>`
+aus dem Hauptrepo heraus lässt die Datei still unverändert; „Prettier gelaufen" war deshalb zweimal falsch gemeldet.
+Im Worktree selbst ausgeführt (mit dem `node_modules` des Hauptrepos) funktioniert es.
+**Ursprung:** lead-design, Spec M5 (Session 2026-09-30).
+**Einschätzung:** Hinweis in Briefings für Worktree-Arbeit („Prettier im Worktree ausführen") und Kandidat für eine
+lernen.md-Zeile durch den studio-coach.

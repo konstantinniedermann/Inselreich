@@ -503,7 +503,7 @@ body[data-stale='true'] .grid {
   padding: 10px 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--st, var(--st-idle));
+  border-left: 4px solid var(--dep, var(--border));
   border-radius: 8px;
   min-width: 0;
 }
@@ -512,32 +512,6 @@ body[data-stale='true'] .grid {
   border-style: dashed;
   border-left-style: dashed;
   opacity: 0.8;
-}
-
-.node-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-}
-
-.node-head .role {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.level {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0 5px;
-  border-radius: 4px;
-  background: var(--text);
-  color: var(--card);
-}
-
-.persona {
-  color: var(--muted);
-  font-style: italic;
 }
 
 .task {
@@ -559,10 +533,6 @@ body[data-stale='true'] .grid {
   gap: 4px 8px;
   color: var(--muted);
   font-size: 0.8rem;
-}
-
-.inactive-note {
-  color: var(--danger);
 }
 
 .node.inactive {
@@ -1239,4 +1209,180 @@ time {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 8px;
+}
+
+/* --- Kacheln: zugeklappt / aufgeklappt (Spec Prozess-Graph, K1–K3) ----------- */
+
+.node > summary {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.node > summary::-webkit-details-marker {
+  display: none;
+}
+
+.node-name {
+  font-weight: 700;
+}
+
+.node[data-level='0'] .node-name,
+.node[data-level='1'] .node-name {
+  font-size: 1.05rem;
+}
+
+.node-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.node-status {
+  font-size: 0.85rem;
+}
+
+.node-details {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.node-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.node.highlight {
+  box-shadow: 0 0 0 3px var(--dep, var(--border)); /* kein outline: .inactive behält seinen roten Rand */
+}
+
+/* --- Prozess-Graph (Spec Prozess-Graph, Abschnitt G) ------------------------ */
+
+.graph-body {
+  position: relative; /* Bezug für offsetTop der Zeilen (Scroll-Anker, P33) */
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.graph-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 20px; /* Platz für Stummel und „?" rechts der letzten Spalte */
+}
+
+.graph-svg {
+  display: block;
+  overflow: visible;
+}
+
+.graph-svg .lane {
+  stroke: var(--dep);
+  stroke-width: 2;
+}
+
+.graph-svg .lane.dashed {
+  stroke-dasharray: 4 3;
+}
+
+.graph-svg .graph-dot {
+  fill: var(--dep);
+}
+
+.graph-svg .arrow {
+  fill: none;
+  stroke: var(--dep);
+  stroke-width: 1.5;
+}
+
+.graph-svg .arrow.message {
+  stroke-dasharray: 1 3;
+}
+
+.graph-svg .graph-arrowhead {
+  fill: var(--muted);
+}
+
+.graph-svg .graph-unknown {
+  fill: var(--text);
+  stroke: none;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.graph-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.graph-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 14rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  height: 28px; /* = GRAPH_ROW_PX */
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.graph-row time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.graph-row .g-label,
+.graph-row .g-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-row .g-label {
+  font-weight: 600;
+}
+
+.graph-row.pause {
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  cursor: default;
+}
+
+.graph-row.focused {
+  background: color-mix(in srgb, var(--dep-studio) 16%, transparent);
+}
+
+.graph-body .dim {
+  opacity: 0.3;
+}
+
+.graph-new {
+  font-size: 0.8rem;
+}
+
+.graph-note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 719.98px) {
+  .graph-lanes {
+    max-width: 120px; /* höchstens 8 Spalten sichtbar (G11, P30) */
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .graph-grid {
+    column-gap: 8px;
+  }
+
+  .graph-row {
+    grid-template-columns: 2.4rem minmax(0, 2fr) minmax(0, 3fr);
+    gap: 4px;
+    font-size: 0.75rem;
+  }
 }

@@ -421,3 +421,97 @@ Code-Einwände, Doku nachgeführt, Sieg-Tick unverändert 5950, keine Werte in `
 Save-Format unverändert. — Kosten bei Irrtum: Balancing-Abweichung, fällt im Balancing-Test auf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M5-01
+
+## R49 · 2026-09-30 · M5
+
+Ruling: Gate Brainstorming M5 bestanden, Ansatz B „je Säule ein starker Hebel" (Tiefe:
+Steuerregler; Dynamik: Handelsaufträge und Verkaufssättigung; Ambiente: prozedurale Grafik,
+Animation, synthetischer Ton; Bedienkomfort: belegte UI-Befunde und Anzeigen) — einziger Ansatz,
+der alle vier Playtest-Punkte trifft. Bedenken zum Umfang akzeptiert mit Auflagen: Spec legt
+Datei-Ownership je Strang fest, nennt Kann-Posten mit Streichreihenfolge, Baseline-Neumessung erst
+nach M5-01. — Kosten bei Irrtum: M5 dauert länger; Kann-Posten werden gestrichen.
+
+Entscheider: L0 · Anlass: Designvorschlag lead-design (M5-02)
+
+## R50 · 2026-09-30 · M5
+
+Ruling: Rückfragen des Design-Leads wie empfohlen entschieden — ein M5 (keine Aufteilung);
+Steuerregler mit 3 Stufen und harter Strafe für „hoch"; nur Verkaufssättigung, Kaufpreise fest;
+keine Ereignisse oder Katastrophen in M5; Werkzeugmacher als Kann-Posten, keine Erzkette;
+synthetischer Ton standardmässig an mit persistiertem Stumm-Schalter (nur Web Audio, keine
+Assets); neue Balancing-Baseline mit Szenario-Tests je Mechanik, Grenze 7500 Ticks bleibt, Marge
+unter ~500 Ticks → Kurz-Spec; Dauergewinn aus Verkauf (Holz) als Problem in die Spec. — Kosten bei
+Irrtum: einzelne Werte über eine Kurz-Spec nachjustieren.
+
+Entscheider: L0 · Anlass: Rückfragen-Runde Brainstorming M5
+
+## R51 · 2026-09-30 · Studio
+
+Ruling: Werkzeug-Pakete S17-01 (ci.py erfasst Reruns), S17-02 (Phantom-Knoten aus bind) und S17-03
+(Budgets je Lead und Phase, Sessions getrennt) werden erst nach dem Merge der Prozess-Graph-Arbeit
+umgesetzt — beide Stränge ändern tools/studio/model.py; so gibt es nur einen Merge statt doppelter
+Konflikte. — Kosten bei Irrtum: Dashboard zeigt bis dahin Anzeige-Artefakte (in Retros quittiert).
+
+Entscheider: L0 · Anlass: Ad-hoc-Retros CI-Pages, Inaktiv, Budget
+
+## R52 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Eigenentscheide des Tech-Leads in der Umsetzung bestätigt — neuer Task G-6c (per
+`spawned` abgeschlossene Vordergrund-Agenten erzeugen eine Bericht-Zeile, ihre Spur endet dort),
+14 CHANGELOG-Einträge statt einem (einer je Persona, wie Dateiformat und `test_docs` verlangen),
+Playtests aus einer temporären Worktree-Kopie, weil der Server die Persona-Namen aus dem Hauptrepo
+liest (als Beobachtung eingetragen). — Folgen der zwischenzeitlich gemergten Wartung S16 und des
+Handbuchs 1.0, nicht des Designs. — Kosten bei Irrtum: ein Doku-Nachtrag im CHANGELOG.
+
+Entscheider: L0 · Anlass: Bericht lead-tech, Paket G
+
+## R53 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Merge Studio-Graph bestanden — Final-Review (lead-qa, qa-code-reviewer auf opus) OK
+ohne hohe Befunde, Nachtrag der niedrigen Punkte 1–3 vor dem Merge erledigt (Fix mit Test,
+Spec nachgezogen, Befunde in `docs/beobachtungen.md`), `make check` und `make studio-lint` grün,
+`src/`/`tests/` unberührt. Merge durch production-integrator, Push laut Nutzerfreigabe (R40) und
+Verfassung §7.2. — Kosten bei Irrtum: Korrektur-Commit auf main.
+
+Entscheider: L0 · Anlass: Gate Merge
+
+## R54 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-001 „Schätzung aus Richtwerten statt Menschenzeit“ angenommen — Muster über
+zwei Meilensteine (−93 % bzw. −69 % Abweichung), Änderung ist ein Satz im Handbuch plus
+Richtwert-Tabelle, Messung über die vorhandene Metrik. — Kosten bei Irrtum: Rückfall auf den
+Stand 723aaee, eine Minor-Version.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R55 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-002 „Datei-Eigentum bei parallelen L0-Sessions“ angenommen, Befund B3
+(Meilenstein-Metrik unterscheidet keine Sessions) als Werkzeugfehler an das Paket S17-03 der
+Parallel-Session übergeben — R43 hat sich bewährt und wird Regel; B3 liegt in derselben Funktion
+wie der Budget-Fix. — Kosten bei Irrtum: ein zusätzlicher Pflichtschritt beim Session-Start.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R56 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 — lead-tech und lead-qa BEDENKEN (9 + 7 Punkte), kein ZURÜCK; alle Vorschläge
+werden in die Spec übernommen (u. a. ganzzahlige Steuerformel, `roadPath` als Sim-Teilpaket S3b,
+ADR-010 als Pflicht, reproduzierbare Szenario-Saves für Browser-Checks, Ton per Fake-AudioContext
+in Vitest, „hörbar" und Firefox im Nutzer-Playtest); Test-Strategie und Context-Scopes in
+CLAUDE.md werden um `src/audio/` ergänzt. Gate gilt als bestanden, sobald beide Prüfer ihre Punkte
+in der nachgeführten Spec als erledigt bestätigen. Baseline-Vorlage Sieg-Tick 6050 (gültig nach
+Messung in B1), Aufstiegswartezeit „niedrig" 150 Ticks. — Kosten bei Irrtum: eine weitere
+Spec-Runde.
+
+Entscheider: L0 · Anlass: Gate Spec M5
+
+## R57 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 bestanden — Nachprüfung lead-tech OK (9/9 Punkte), lead-qa BEDENKEN niedrig
+(7/7 Punkte; zwei Abhängigkeiten zu S5/U1a und ein Hotkey im Szenario-Ablauf werden vor dem Plan in
+der Spec nachgetragen). Neue Setzungen übernommen: Münz-Tondrossel 50 ms, `layoutKey` für die
+Versorgungsmaske, Paket S5 für Szenario-Saves. Nächster Schritt: Plan durch lead-tech. — Kosten bei
+Irrtum: Abhängigkeitsfehler fallen spätestens im Gate Plan auf.
+
+Entscheider: L0 · Anlass: Nachprüfung Gate Spec M5

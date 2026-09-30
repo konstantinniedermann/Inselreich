@@ -75,6 +75,9 @@ def persona_meta(agents: Path) -> dict[str, dict]:
             "model": meta.get("model") or "inherit",
             "description": meta.get("description", ""),
             "tools": meta.get("tools", ""),
+            "studio_name": meta.get("studio-name", ""),
+            "studio_title": meta.get("studio-title", ""),
+            "studio_emoji": meta.get("studio-emoji", ""),
         }
     return result
 

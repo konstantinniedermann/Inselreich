@@ -9,7 +9,7 @@ und wird unverändert kopiert.
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
-Schätzung: <n> min, <m> Tools (Schätzung für den ganzen Auftrag inkl. aller Unteraufträge)
+Schätzung: <n> min, <m> Tools (ganzer Auftrag inkl. aller Unteraufträge; aus docs/studio/metriken/richtwerte.md, nicht Menschenzeit)
 Modell: <opus|sonnet|haiku> (nur nennen, wenn abweichend von der Persona; dann auch im Agent-Aufruf)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten")
 Prozessstufe: <leicht|voll>
