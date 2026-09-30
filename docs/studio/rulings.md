@@ -602,3 +602,17 @@ Schalter, Hotkey T), deren Checks und D1. — Kosten bei Irrtum: Träger kommen 
 Meilenstein.
 
 Entscheider: L0 · Anlass: Welle 4 abgeschlossen, Plan „Streichreihenfolge"
+
+## R65 · 2026-09-30 · Studio
+
+Ruling: Tempo-Vorgaben auf Anweisung des Nutzers („dauert zu lange"), gültig ab sofort, bis der
+studio-coach sie ins Handbuch überträgt: (1) Echtzeit-Proben höchstens 1 Minute plus ein Lauf bei
+4× Tempo (statt 15 Minuten; gilt für AK-B1-03 und künftige Specs); (2) Minor- und Low-Befunde lösen
+keine Fix-Runde aus, sie gehen gesammelt ins Final-Review; kleine Fixes (≤ ~20 Zeilen) prüft der
+Lead selbst am Diff statt einer vollen Re-Review-Runde; (3) Browser-Checks dürfen parallel laufen
+(eigener Port je Check), und jeder Check prüft jedes geöffnete Panel sofort auf Lesbarkeit und
+Überlauf; (4) keine neuen Leads je Welle, solange der Kontext reicht — Fortsetzen statt Neustart.
+Verfassung §9 bleibt unberührt (unabhängiges Review je Task, Tests, QA-Check je UI-Task,
+Final-Review je Meilenstein). — Kosten bei Irrtum: kleine Fehler fallen erst im Final-Review auf.
+
+Entscheider: L0 · Anlass: Anweisung des Nutzers
