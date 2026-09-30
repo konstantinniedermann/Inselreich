@@ -33,4 +33,16 @@ describe('camera', () => {
     expect(c.zoom).toBe(0.5);
     expect(Number.isNaN(c.x)).toBe(false);
   });
+  it('AK-A1-05 tileToScreen liefert ganze Pixel ohne Lücke oder Überlappung', () => {
+    for (const zoom of [0.5, 0.75, 1.1, 1.33, 1.7, 2]) {
+      const c = { x: 13.7, y: 5.3, zoom }; // gebrochener Kamera-Versatz wie im Spiel
+      for (let n = 0; n < 64; n++) {
+        const a = tileToScreen(c, n, n);
+        const b = tileToScreen(c, n + 1, n + 1);
+        expect(Number.isInteger(a.x) && Number.isInteger(a.y)).toBe(true);
+        expect([Math.floor(32 * zoom), Math.ceil(32 * zoom)]).toContain(b.x - a.x);
+        expect([Math.floor(32 * zoom), Math.ceil(32 * zoom)]).toContain(b.y - a.y);
+      }
+    }
+  });
 });
