@@ -259,3 +259,57 @@ body {
   margin: 0;
   font-size: 13px;
 }
+
+/* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */
+.buildbar-group .btn {
+  position: relative;
+}
+.tooltip {
+  display: none;
+  position: fixed;
+  z-index: 20;
+  max-width: 260px;
+  padding: 6px 10px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  text-align: left;
+  pointer-events: none;
+}
+.tooltip.show {
+  display: block;
+}
+.tooltip .tt-title {
+  display: block;
+  font-weight: 600;
+}
+.tooltip .tt-line,
+.tooltip .tt-reason {
+  display: block;
+  opacity: 1;
+  font-size: 12px;
+}
+.tooltip .tt-reason:empty {
+  display: none;
+}
+.tooltip .tt-reason {
+  color: var(--danger);
+}
+
+/* Ton und Laden-Auswahl im HUD */
+.hud-sound {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.hud-sound input[type='range'] {
+  width: 80px;
+}
+.load-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}

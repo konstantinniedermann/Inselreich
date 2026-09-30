@@ -6,14 +6,18 @@ import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
 import type { World } from '../sim/types';
 import { TILE, clampCamera, createCamera, type Camera } from '../render/camera';
+import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { disposeHud, updateHud, type HudActions } from './hud';
-import { bindInput, type InputAction } from './input';
+import { sameTool, type HotkeyAction } from './hotkeys';
+import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
-import { hasSavedGame, loadFromStorage, saveToStorage } from './storage';
+import { loadSettings, saveSettings } from './settings';
+import { diffSoundEvents, soundSnapshot } from './soundEvents';
+import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -33,6 +37,11 @@ export interface GameState {
 
 const MAX_TICKS_PER_FRAME = 20;
 const HUD_EVERY_FRAMES = 10;
+/** Autosave alle 120 s Echtzeit bei laufendem Spiel (Spec 10.8). */
+const AUTOSAVE_MS = 120000;
+
+/** Ein Nutzer-Klick oder -Tastendruck hat den Ton schon einmal freigeschaltet (überlebt Neustarts). */
+let audioUnlockedOnce = false;
 
 function need<T extends HTMLElement>(root: HTMLElement, selector: string): T {
   const el = root.querySelector<T>(selector);
@@ -74,7 +83,7 @@ export function startGame(root: HTMLElement, loaded?: World, opts?: StartOptions
     const gameEl = need<HTMLElement>(root, '#game');
     unbindMessages = bindMessages(gameEl);
     const game = launch(root, gameEl, unbindMessages, loaded, opts);
-    if (!loaded && hasSavedGame()) {
+    if (!loaded && listSaves().length > 0) {
       showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
     }
     return game;
@@ -114,6 +123,28 @@ function launch(
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
   };
+  let settings = loadSettings();
+  const sound = createSound(settings);
+  const unlockSound = (): void => {
+    audioUnlockedOnce = true;
+    sound.unlock();
+    window.removeEventListener('pointerdown', unlockSound);
+    window.removeEventListener('keydown', unlockSound);
+  };
+  if (audioUnlockedOnce) sound.unlock();
+  else {
+    window.addEventListener('pointerdown', unlockSound);
+    window.addEventListener('keydown', unlockSound);
+  }
+  const onVisibility = (): void => sound.setHidden(document.hidden);
+  document.addEventListener('visibilitychange', onVisibility);
+
+  /** Fehler zeigen und hörbar machen. */
+  const showError = (reason: string): void => {
+    showMessage(reason, 'error');
+    sound.play('error');
+  };
+
   const worldW = world.width * TILE;
   const worldH = world.height * TILE;
   const view = { w: 1, h: 1 };
@@ -124,9 +155,14 @@ function launch(
       if (r.ok) showMessage('Gespeichert');
       else showMessage(r.reason, 'error');
     },
-    load: () => {
+    listSaves,
+    load: (slot) => {
       // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
-      const r = loadFromStorage();
+      if (!slot) {
+        showMessage(noLoadableReason(), 'error');
+        return;
+      }
+      const r = loadSlot(slot);
       if (!r.ok) {
         showMessage(r.reason, 'error');
         return;
@@ -138,11 +174,25 @@ function launch(
       });
       showMessage('Spielstand geladen');
     },
+    settings: () => settings,
+    setMuted: (muted) => {
+      settings = { ...settings, muted };
+      sound.setMuted(muted);
+      saveSettings(settings);
+    },
+    setVolume: (volume) => {
+      settings = { ...settings, volume };
+      sound.setVolume(volume);
+      saveSettings(settings);
+    },
     hasProgress: () => world.tick > 0,
     restart: () => {
       restart(root);
     },
   };
+
+  /** Geld nach dem letzten Frame bzw. Handelsereignis (erkennt Verkäufe für den Münzton). */
+  let lastMoney = world.money;
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -152,8 +202,11 @@ function launch(
       renderInspect(panelEl, world, panel.id, {
         demolish: (id) => {
           const r = demolish(world, id);
-          if (!r.ok) showMessage(r.reason, 'error');
-          else setPanel({ kind: 'none' });
+          if (!r.ok) showError(r.reason);
+          else {
+            sound.play('demolish');
+            setPanel({ kind: 'none' });
+          }
           refresh();
         },
         openTrade: () => setPanel({ kind: 'trade' }),
@@ -162,7 +215,12 @@ function launch(
       state.selectedId = world.kontorId;
       renderTrade(panelEl, world, {
         back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
-        changed: () => refresh(),
+        changed: () => {
+          // Ein Verkauf erhöht das Geld gegenüber dem letzten Frame (kein Tick läuft zwischen den Ereignissen)
+          if (world.money > lastMoney) sound.play('coin');
+          lastMoney = world.money;
+          refresh();
+        },
       });
     } else {
       state.selectedId = null;
@@ -187,7 +245,13 @@ function launch(
     }
   };
 
+  // Erst nach `bindInput` gesetzt; `selectTool` läuft vorher nie (nur die Callback-Registrierung)
+  let input: InputBinding | null = null;
+
+  /** Einzige Stelle für jeden Werkzeugwechsel (Bauleiste, Hotkey, Esc/X, Rechtsklick). */
   const selectTool = (tool: Tool): void => {
+    // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
+    input?.cancelPointerAction();
     state.tool = tool;
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
     state.hover = null;
@@ -210,14 +274,36 @@ function launch(
   let dragMoneyToastShown = false;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
     if (!dragging) {
-      showMessage(reason, 'error');
+      showError(reason);
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
       dragMoneyToastShown = true;
-      showMessage(reason, 'error');
+      showError(reason);
     }
   };
 
+  /** Tempo, das P nach einer Pause fortsetzt. */
+  let lastSpeed: 1 | 2 | 4 = state.speed === 0 ? 1 : state.speed;
+  const onHotkey = (h: HotkeyAction): void => {
+    if (h.kind === 'tool') {
+      // Derselbe Hotkey bei aktivem Werkzeug wechselt zurück zur Auswahl
+      selectTool(sameTool(state.tool, h.tool) ? { kind: 'select' } : h.tool);
+    } else if (h.kind === 'speed') {
+      state.speed = h.speed;
+      lastSpeed = h.speed;
+    } else if (state.speed === 0) {
+      state.speed = lastSpeed;
+    } else {
+      lastSpeed = state.speed;
+      state.speed = 0;
+    }
+    refresh();
+  };
+
   const onAction = (a: InputAction): void => {
+    if (a.type === 'hotkey') {
+      onHotkey(a.action);
+      return;
+    }
     if (a.type === 'cancel') {
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
@@ -234,20 +320,24 @@ function launch(
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
       const r = placeBuilding(world, tool.defId, a.x, a.y);
-      if (!r.ok) showMessage(r.reason, 'error');
+      if (!r.ok) showError(r.reason);
+      else sound.play('build');
     } else if (tool.kind === 'road') {
       const r = placeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
+      else sound.play('build');
     } else if (tile?.buildingId != null) {
       const r = demolish(world, tile.buildingId);
-      if (!r.ok) showMessage(r.reason, 'error');
+      if (!r.ok) showError(r.reason);
+      else sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
+      else sound.play('demolish');
     }
     refresh();
   };
-  const input = bindInput(canvas, state, onAction);
+  input = bindInput(canvas, state, onAction);
 
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   refresh();
@@ -276,6 +366,9 @@ function launch(
   }
 
   let acc = 0;
+  let autoMs = 0;
+  let autoErrorShown = false;
+  let prevSnap = soundSnapshot(world);
   let last = performance.now();
   let frame = 0;
   let disposed = false;
@@ -295,8 +388,27 @@ function launch(
         }
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
-      input.applyKeys(dt);
-      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view);
+      input?.applyKeys(dt);
+      for (const e of diffSoundEvents(prevSnap, soundSnapshot(world))) sound.play(e);
+      prevSnap = soundSnapshot(world);
+      lastMoney = world.money;
+      if (state.speed > 0) {
+        autoMs += dt;
+        if (autoMs >= AUTOSAVE_MS) {
+          autoMs = 0;
+          // Kein Autosave bei Tick 0; ein Schreibfehler wird je laufendem Spiel einmal gemeldet
+          if (world.tick > 0) {
+            const r = saveAuto(world);
+            if (!r.ok && !autoErrorShown) {
+              autoErrorShown = true;
+              showError(r.reason);
+            }
+          }
+        }
+      }
+      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
+        timeMs: performance.now(),
+      });
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -314,7 +426,11 @@ function launch(
     disposed = true;
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
-    input.unbind();
+    input?.unbind();
+    window.removeEventListener('pointerdown', unlockSound);
+    window.removeEventListener('keydown', unlockSound);
+    document.removeEventListener('visibilitychange', onVisibility);
+    sound.dispose();
     unbindMessages();
     disposeHud(hudEl);
     hudEl.replaceChildren();

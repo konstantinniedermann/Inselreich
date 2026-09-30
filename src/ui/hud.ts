@@ -5,6 +5,8 @@ import { citizens, populationByTier } from '../sim/population';
 import type { Tier } from '../sim/types';
 import type { GameState } from './app';
 import { setField } from './dom';
+import type { SaveInfo, Slot } from './storage';
+import type { Settings } from './settings';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -28,7 +30,14 @@ const NEW_CONFIRM_MS = 3000;
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
 export interface HudActions {
   save(): void;
-  load(): void;
+  /** Lädt den Slot; ohne Angabe den einzigen bzw. (bei keinem ladbaren) zeigt den Grund. */
+  load(slot?: Slot): void;
+  /** Ladbare Speicherplätze (kaputte fehlen). */
+  listSaves(): SaveInfo[];
+  /** Aktuelle Einstellungen für die Ton-Regler. */
+  settings(): Settings;
+  setMuted(muted: boolean): void;
+  setVolume(volume: number): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
   hasProgress(): boolean;
   restart(): void;
@@ -88,19 +97,88 @@ function confirmButton(
   };
 }
 
-/** Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. */
+/** Beschriftung eines Speicherplatzes in der Laden-Auswahl. */
+function slotLabel(info: SaveInfo): string {
+  return `${info.slot === 'auto' ? 'Autosave' : 'Gespeichert'} — Tick ${info.tick}`;
+}
+
+/** Zeit, nach der die Laden-Auswahl von selbst wieder verschwindet (Millisekunden). */
+const CHOICE_MS = 10000;
+
+/**
+ * Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. Gibt es zwei
+ * ladbare Speicherplätze, folgt auf „Laden" eine Auswahl mit beiden Ständen.
+ */
 function renderGameButtons(box: Element, actions: HudActions): () => void {
-  const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, actions.load);
+  const choice = document.createElement('span');
+  choice.className = 'load-choice';
+  let choiceTimer: ReturnType<typeof setTimeout> | null = null;
+  const closeChoice = (): void => {
+    if (choiceTimer !== null) clearTimeout(choiceTimer);
+    choiceTimer = null;
+    choice.replaceChildren();
+  };
+  const openChoice = (saves: SaveInfo[]): void => {
+    closeChoice();
+    for (const info of saves) {
+      choice.appendChild(
+        gameButton(slotLabel(info), () => {
+          closeChoice();
+          actions.load(info.slot);
+        }),
+      );
+    }
+    choice.appendChild(gameButton('Abbrechen', closeChoice));
+    choiceTimer = setTimeout(closeChoice, CHOICE_MS);
+  };
+  const runLoad = (): void => {
+    const saves = actions.listSaves();
+    if (saves.length >= 2) openChoice(saves);
+    else actions.load(saves[0]?.slot);
+  };
+  const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, runLoad);
   const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
   box.append(
     gameButton('Speichern', () => actions.save()),
     load.btn,
     fresh.btn,
+    choice,
   );
   return () => {
+    closeChoice();
     load.dispose();
     fresh.dispose();
   };
+}
+
+/** Stumm-Schalter und Lautstärkeregler; Werte kommen aus und gehen an `actions`. */
+function renderSoundControls(box: Element, actions: HudActions): void {
+  const initial = actions.settings();
+  const mute = document.createElement('button');
+  mute.className = 'btn';
+  mute.textContent = 'Stumm';
+  const syncMute = (muted: boolean): void => {
+    mute.classList.toggle('active', muted);
+    mute.setAttribute('aria-pressed', String(muted));
+  };
+  syncMute(initial.muted);
+  mute.addEventListener('click', () => {
+    mute.blur();
+    const muted = !actions.settings().muted;
+    actions.setMuted(muted);
+    syncMute(muted);
+  });
+  const vol = document.createElement('input');
+  vol.type = 'range';
+  vol.min = '0';
+  vol.max = '1';
+  vol.step = '0.05';
+  vol.value = String(initial.volume);
+  vol.setAttribute('aria-label', 'Lautstärke');
+  vol.addEventListener('input', () => actions.setVolume(Number(vol.value)));
+  // Nach dem Ziehen den Fokus abgeben, damit die Hotkeys wieder greifen
+  vol.addEventListener('pointerup', () => vol.blur());
+  box.append(mute, vol);
 }
 
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
@@ -111,7 +189,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-balance"><span data-field="balance"></span> ' +
       '<span data-field="net"></span></span>' +
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
-      '<span class="hud-game"></span></div>' +
+      '<span class="hud-sound"></span><span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
@@ -146,6 +224,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       });
       speedBox?.appendChild(btn);
     }
+    const soundBox = header.querySelector('.hud-sound');
+    if (soundBox) renderSoundControls(soundBox, actions);
     const gameBox = header.querySelector('.hud-game');
     if (gameBox) cleanups.set(header, renderGameButtons(gameBox, actions));
   }
