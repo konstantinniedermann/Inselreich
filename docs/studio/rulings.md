@@ -553,3 +553,16 @@ frischem lead-tech; lead-art wird fortgesetzt (kleiner Kontext). — Kosten bei 
 fühlt sich träger an; Browser-Check in Welle 3 zeigt es.
 
 Entscheider: L0 · Anlass: Berichte Welle 1
+
+## R61 · 2026-09-30 · M5
+
+Ruling: Welle 2 abgenommen (S2, U2, A1-Schiff, A3 — Task-Review OK; Sieg-Tick nach
+Verkaufssättigung 6050, wie von der Spec erwartet). Übernommen: S1 früh in `feat/m5-ui` gemergt
+(Kompilierbarkeit von Spec 9.4); U2 nutzt den Render-Stand mit Schiff und Overlays;
+`isValidOrder` prüft Menge und Prämie nur strukturell, damit alte Spielstände mit laufendem Auftrag
+auch nach B1-Wertänderungen laden (Kosten: manipulierte Prämien laden, kein Absturz); A3-Cache-
+Schlüssel = Welt-Identität + `layoutKey` + Art (KISS). Auflage für B1: Ändert es die Auftragstakte
+(`ORDER_FIRST_TICK`/`PERIOD`/`DURATION`), braucht es eine Save-Migration. — Kosten bei Irrtum:
+Nacharbeit in B1.
+
+Entscheider: L0 · Anlass: Berichte Welle 2
