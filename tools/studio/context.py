@@ -15,9 +15,14 @@ LINE_MAX = 300
 QUEUE_SHOWN = ("offen", "beantwortet")
 EXPERIMENT_SHOWN = ("laufend", "vorgeschlagen")
 START_ROUTINE = (
-    "Start-Routine: Stand und Warteschlange unten lesen, Dashboard-URL nennen, "
-    "offene Vorfälle sichten. Neue Anweisung = Auftrag; sonst den Plan aus state.md "
-    "selbstständig fortsetzen (nie untätig warten)."
+    "Start-Routine: Deine erste Textausgabe ist die Dashboard-URL und der "
+    "Start-Bericht in höchstens 10 Zeilen (Stand, seit letzter Session erledigt, "
+    "laufend, offene Nutzerentscheide) — auch wenn der erste Prompt bereits einen "
+    "Auftrag enthält. Bevor du ein Werkzeug für den Auftrag benutzt oder "
+    "delegierst: zuerst den Start-Bericht als Text ausgeben; Lesen des Kontexts ist "
+    "erlaubt. Stand, Warteschlange und offene Vorfälle stehen unten. Danach: Neue "
+    "Anweisung = Auftrag; sonst den Plan aus state.md selbstständig fortsetzen "
+    "(nie untätig warten)."
 )
 
 

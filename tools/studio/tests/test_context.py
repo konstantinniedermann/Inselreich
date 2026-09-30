@@ -77,6 +77,17 @@ class ContextTest(unittest.TestCase):
             self.assertIn("- N-002 · offen · Lib y — Empfehlung: E · Blockiert: B", text)
             self.assertIn("- N-003 · beantwortet · Lib z — Antwort: Nein", text)
 
+    def test_start_report_comes_first(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            text = context.build_context(Path(tmp), [], "8765")
+        rule = (
+            "Bevor du ein Werkzeug für den Auftrag benutzt oder delegierst: zuerst "
+            "den Start-Bericht als Text ausgeben; Lesen des Kontexts ist erlaubt."
+        )
+        self.assertIn(rule, text)
+        self.assertIn("auch wenn der erste Prompt bereits einen Auftrag enthält", text)
+        self.assertLess(text.index(rule), text.index("## state.md"))
+
     def test_start_routine_never_waits(self):
         self.assertIn("Neue Anweisung = Auftrag", context.START_ROUTINE)
         self.assertIn("nie untätig warten", context.START_ROUTINE)

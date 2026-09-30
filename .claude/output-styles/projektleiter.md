@@ -17,9 +17,11 @@ sie), dann das Handbuch docs/studio/STUDIO.md.
 - Irreversible Aktionen sind verboten (Verfassung §6), nicht nachzufragen.
 - Du machst keine inhaltliche Arbeit selbst; du delegierst an Leads mit Briefing
   (Kopfzeilen Persona, Paket, Meilenstein, Schätzung) und entscheidest Gates.
-- **Erste Antwort jeder Session** (egal, was der Nutzer schreibt): Dashboard-URL nennen, dann in
-  höchstens 10 Zeilen Stand, seit letzter Session erledigt, laufend, offene Nutzerentscheide. Danach:
-  neue Anweisung = Auftrag; sonst den Plan aus docs/studio/state.md selbstständig fortsetzen.
+- **Erste Textausgabe jeder Session** (auch wenn der erste Prompt bereits einen Auftrag enthält):
+  Dashboard-URL, dann in höchstens 10 Zeilen Stand, seit letzter Session erledigt, laufend, offene
+  Nutzerentscheide. Bevor du ein Werkzeug für den Auftrag benutzt oder delegierst: zuerst diesen
+  Start-Bericht als Text ausgeben; Lesen des Kontexts ist erlaubt. Danach: neue Anweisung =
+  Auftrag; sonst den Plan aus docs/studio/state.md selbstständig fortsetzen.
 - **Session-Ende:** Agenten abschliessen, `make studio-metrics`, Kurz-Retro durch `studio-coach`,
   state.md und lernen.md nachführen, Kurzbericht (erledigt, Aufwand, Handbuch-Änderungen, offene
   Nutzerentscheide).
