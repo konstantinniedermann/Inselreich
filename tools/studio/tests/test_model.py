@@ -592,6 +592,72 @@ class RobustnessTest(unittest.TestCase):
         self.assertEqual(build(events)["board"][0]["blocked_by"], ["T1", "T2"])
 
 
+class ResumeTest(unittest.TestCase):
+    def events(self):
+        return [
+            spawn(1, "main", "lead-qa", tool_use_id="q"),
+            start(2, "L1", "lead-qa"),
+            spawn(3, "L1", "qa-playtester", description="Erst", package="P-1"),
+            start(4, "W1", "qa-playtester"),
+            stop(5, "W1", "qa-playtester", summary="fertig eins"),
+            spawn(6, "main", "lead-tech"),
+            start(7, "L2", "lead-tech"),
+            spawn(8, "L2", "qa-playtester", description="Neu", package="P-2"),
+            ev("heartbeat", 9, agent_id="L1", tool="SendMessage"),
+            start(10, "W1", "qa-playtester"),
+        ]
+
+    def test_resume_keeps_identity_and_leaves_pending(self):
+        events = self.events()
+        nodes = flat(build(events))
+        w1 = nodes["s1:W1"]
+        self.assertEqual(w1["status"], "active")
+        self.assertIsNone(w1["stopped"])
+        self.assertEqual((w1["task"], w1["package"]), ("Erst", "P-1"))
+        self.assertEqual([c["key"] for c in nodes["s1:L1"]["children"]], ["s1:W1"])
+        events += [start(11, "W2", "qa-playtester")]
+        nodes = flat(build(events))
+        self.assertEqual(
+            (nodes["s1:W2"]["task"], nodes["s1:W2"]["package"]), ("Neu", "P-2")
+        )
+        self.assertEqual([c["key"] for c in nodes["s1:L2"]["children"]], ["s1:W2"])
+        self.assertEqual(nodes["s1:W1"]["task"], "Erst")
+
+    def test_resume_counts_once_in_budget(self):
+        events = [
+            ev(
+                "budget",
+                0,
+                agent_id="",
+                role="lead-qa",
+                source="log",
+                budget={"granted": 1, "parallel": 1, "phase": "P1"},
+            ),
+            *self.events(),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual(budget["used"], 1)
+        self.assertFalse(budget["overrun"])
+
+    def test_resumed_worker_done_after_second_stop(self):
+        events = self.events() + [
+            stop(11, "W1", "qa-playtester", summary="fertig zwei")
+        ]
+        state = build(events)
+        self.assertEqual(flat(state)["s1:W1"]["status"], "done")
+        texts = [c["text"] for c in state["chronicle"] if c["role"] == "qa-playtester"]
+        self.assertEqual(texts, ["fertig zwei", "fertig eins"])
+
+    def test_implicit_node_still_gets_first_start(self):
+        events = [
+            spawn(1, "main", "qa-playtester", description="T", package="P"),
+            ev("heartbeat", 2, agent_id="W1", tool="Read", role="qa-playtester"),
+            start(3, "W1", "qa-playtester"),
+        ]
+        node = flat(build(events))["s1:W1"]
+        self.assertEqual((node["task"], node["package"]), ("T", "P"))
+
+
 class StoreAndModelsTest(unittest.TestCase):
     def test_event_store_skips_corrupt_and_partial(self):
         with tempfile.TemporaryDirectory() as tmp:

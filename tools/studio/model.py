@@ -167,6 +167,8 @@ class _Builder:
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
+                "_started": False,
+                "_last_text": "",
                 "_entry": None,
             }
             self.nodes[key] = node
@@ -199,8 +201,9 @@ class _Builder:
         self.nodes[parent_key]["children"].append(node["key"])
 
     def add_chronicle(self, node: dict, ts: float, text: str) -> None:
-        if not text:
+        if not text or text == node["_last_text"]:
             return
+        node["_last_text"] = text
         node["_chron"] = True
         self.chronicle.append(
             {
@@ -328,6 +331,11 @@ class _Builder:
         if agent_id == "main":
             return
         node = self.node(sid, agent_id, ts, typ)
+        if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
+            node["status"], node["stopped"] = "active", None
+            node["summary"], node["_chron"] = "", False
+            return
+        node["_started"] = True
         node["status"], node["started"] = "active", ts
         node["_type"] = typ
         if node["_entry"] is not None:
