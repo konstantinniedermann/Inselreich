@@ -54,3 +54,19 @@ export function hotkeyLabel(tool: Tool): string | null {
   }
   return null;
 }
+
+/** Tempo nach einer Änderung: `last` merkt das letzte laufende Tempo (> 0), P setzt es fort. */
+export function withSpeed(
+  speed: 0 | 1 | 2 | 4,
+  last: 1 | 2 | 4,
+): { speed: 0 | 1 | 2 | 4; last: 1 | 2 | 4 } {
+  return { speed, last: speed === 0 ? last : speed };
+}
+
+/** Tempo nach P: pausiert ein laufendes Spiel, setzt sonst das gemerkte Tempo fort. */
+export function afterPause(
+  speed: 0 | 1 | 2 | 4,
+  last: 1 | 2 | 4,
+): { speed: 0 | 1 | 2 | 4; last: 1 | 2 | 4 } {
+  return speed === 0 ? withSpeed(last, last) : withSpeed(0, speed);
+}

@@ -25,6 +25,8 @@ export interface InputBinding {
   applyKeys(dtMs: number): void;
   /** Bricht eine laufende Pointer-Aktion (Ziehen, Touch-Geste) ab, ohne dass etwas gebaut wird. */
   cancelPointerAction(): void;
+  /** Berechnet die Vorschau an der letzten Zeigerposition neu (nach einem Werkzeugwechsel). */
+  refreshHover(): void;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
 }
@@ -387,5 +389,5 @@ export function bindInput(
     }
   };
 
-  return { applyKeys, cancelPointerAction, unbind };
+  return { applyKeys, cancelPointerAction, refreshHover: updateHover, unbind };
 }

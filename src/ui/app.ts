@@ -11,7 +11,7 @@ import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { disposeHud, updateHud, type HudActions } from './hud';
-import { sameTool, type HotkeyAction } from './hotkeys';
+import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
@@ -156,6 +156,7 @@ function launch(
       else showMessage(r.reason, 'error');
     },
     listSaves,
+    setSpeed: (speed) => setSpeed(speed),
     load: (slot) => {
       // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
       if (!slot) {
@@ -254,7 +255,8 @@ function launch(
     input?.cancelPointerAction();
     state.tool = tool;
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
-    state.hover = null;
+    // Vorschau an der letzten Zeigerposition neu (ohne Zeiger: keine); keine hängende Drag-Vorschau
+    input?.refreshHover();
     renderBuildMenu(navEl, state, selectTool);
   };
   renderBuildMenu(navEl, state, selectTool);
@@ -281,20 +283,21 @@ function launch(
     }
   };
 
-  /** Tempo, das P nach einer Pause fortsetzt. */
+  /** Einzige Stelle für jede Tempo-Änderung (HUD, Hotkey); merkt das letzte laufende Tempo für P. */
   let lastSpeed: 1 | 2 | 4 = state.speed === 0 ? 1 : state.speed;
+  const setSpeed = (speed: GameState['speed']): void => {
+    const r = withSpeed(speed, lastSpeed);
+    state.speed = r.speed;
+    lastSpeed = r.last;
+  };
   const onHotkey = (h: HotkeyAction): void => {
     if (h.kind === 'tool') {
       // Derselbe Hotkey bei aktivem Werkzeug wechselt zurück zur Auswahl
       selectTool(sameTool(state.tool, h.tool) ? { kind: 'select' } : h.tool);
     } else if (h.kind === 'speed') {
-      state.speed = h.speed;
-      lastSpeed = h.speed;
-    } else if (state.speed === 0) {
-      state.speed = lastSpeed;
+      setSpeed(h.speed);
     } else {
-      lastSpeed = state.speed;
-      state.speed = 0;
+      setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
     refresh();
   };
@@ -389,8 +392,9 @@ function launch(
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
       input?.applyKeys(dt);
-      for (const e of diffSoundEvents(prevSnap, soundSnapshot(world))) sound.play(e);
-      prevSnap = soundSnapshot(world);
+      const snap = soundSnapshot(world);
+      for (const e of diffSoundEvents(prevSnap, snap)) sound.play(e);
+      prevSnap = snap;
       lastMoney = world.money;
       if (state.speed > 0) {
         autoMs += dt;
@@ -401,7 +405,8 @@ function launch(
             const r = saveAuto(world);
             if (!r.ok && !autoErrorShown) {
               autoErrorShown = true;
-              showError(r.reason);
+              // Normale Meldung, kein Fehlerton (Spiel läuft weiter)
+              showMessage(r.reason, 'error');
             }
           }
         }

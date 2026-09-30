@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { TOOL_HOTKEYS, hotkeyAction, hotkeyLabel } from '../../src/ui/hotkeys';
+import {
+  TOOL_HOTKEYS,
+  afterPause,
+  hotkeyAction,
+  hotkeyLabel,
+  withSpeed,
+} from '../../src/ui/hotkeys';
 
 const NONE = { ctrl: false, meta: false, alt: false };
 
@@ -69,5 +75,18 @@ describe('hotkeyAction (AK-U2-02)', () => {
     expect(hotkeyLabel({ kind: 'road' })).toBe('R');
     expect(hotkeyLabel({ kind: 'select' })).toBe('Esc');
     expect(hotkeyLabel({ kind: 'build', defId: 'kontor' })).toBeNull();
+  });
+});
+
+describe('Tempo merken (AK-U2-02)', () => {
+  it('AK-U2-02: HUD 4x, Pause, P setzt 4x fort', () => {
+    let r = withSpeed(4, 1);
+    r = withSpeed(0, r.last);
+    expect(r).toEqual({ speed: 0, last: 4 });
+    expect(afterPause(r.speed, r.last).speed).toBe(4);
+  });
+
+  it('AK-U2-02: P bei laufendem Spiel pausiert und merkt das Tempo', () => {
+    expect(afterPause(2, 1)).toEqual({ speed: 0, last: 2 });
   });
 });

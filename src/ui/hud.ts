@@ -34,6 +34,8 @@ export interface HudActions {
   load(slot?: Slot): void;
   /** Ladbare Speicherplätze (kaputte fehlen). */
   listSaves(): SaveInfo[];
+  /** Setzt das Tempo (merkt das letzte laufende für die Taste P). */
+  setSpeed(speed: GameState['speed']): void;
   /** Aktuelle Einstellungen für die Ton-Regler. */
   settings(): Settings;
   setMuted(muted: boolean): void;
@@ -219,7 +221,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       btn.dataset.speed = String(s.value);
       btn.addEventListener('click', () => {
         btn.blur();
-        state.speed = s.value;
+        actions.setSpeed(s.value);
         updateHud(header, state, actions);
       });
       speedBox?.appendChild(btn);
