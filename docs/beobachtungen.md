@@ -116,3 +116,11 @@ nur über eine neue Kurz-Spec.
   **Ursprung:** M4 Gesamt-Review. **Einschätzung:** bei Bedarf nachrüsten, etwa wenn Spielstände extern entstehen.
 - **Laden setzt Zustand zurück:** Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu
   (Nebeneffekt von `restart` → `startGame`). **Ursprung:** M4 Gesamt-Review. **Einschätzung:** kosmetisch.
+
+## 2026-09-30 · Playtest des Nutzers (Pages-Build)
+
+**Beobachtung:** Alles funktioniert soweit, Grundlage ist tragfähig. Es fehlen Tiefe, Dynamik, Ambiente und
+Quality-of-Life; das Spielerlebnis soll verbessert werden.
+**Ursprung:** Nutzer-Playtest nach M4.
+**Einschätzung:** Kein Fehler, sondern Richtung für die nächste Phase (M5+): Erlebnis-Design als eigenes
+Brainstorming mit Spec, nicht als Einzelmassnahmen.
