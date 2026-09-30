@@ -322,7 +322,8 @@ linear interpoliert):
 - Die Phasengrenzen gelten für Leben und Klang: Tag `[0, 0,33)` und `[0,84, 1)`, Abend `[0,33, 0,45)`, Nacht
   `[0,45, 0,75)`, Morgen `[0,75, 0,84)`.
 - **Luma-Faktor** `0,299 r + 0,587 g + 0,114 b ≥ 0,75` für jeden Tick (AK-R1-04). Nacht ergibt 0,754.
-- Der M5-Schalter „Tag-Nacht" (`dayNight`) schaltet die ganze Tönung samt Fensterlicht ab. Die Phasen für Leben und
+- Der M5-Schalter „Tag-Nacht" (`dayNight`) schaltet die Tageslicht-Tönung samt Fensterlicht ab. Die Wettertönung (6.4) bleibt, weil sie ein Krisensignal
+  trägt. Die Phasen für Leben und
   Klang laufen trotzdem weiter.
 - `dayNightAlpha` und `NIGHT_COLOR` aus M5 entfallen und werden durch `lightAt` ersetzt. Die Tests in
   `tests/render/daynight.test.ts` werden umgeschrieben.
@@ -854,7 +855,7 @@ setzt der Check per CDP vor dem Laden. Einen neuen Sim-Helfer braucht es nicht.
   Es gilt `lightAt(0).mul = [1, 1, 1]` und `lightAt(t) = lightAt(t + 6000)`. Die Phasen entsprechen den Grenzen
   aus 6.1 an den Ticks 0, 2000, 2700, 4500 und 5100.
 - **AK-R1-05** (Browser, 1920) Die Tönung ist ein einziger Multiply-Durchgang: Ein CDP-Trace bzw. ein Zähler im
-  Dev-Build zeigt je Frame genau einen `fillRect` mit `multiply`. Mit `dayNight: false` gibt es keinen.
+  Dev-Build zeigt je Frame genau einen `fillRect` mit `multiply`. Mit `dayNight: false` und klarem Wetter gibt es keinen.
 - **AK-R1-06** (Browser, 1920) Der Aufbau der Terrain-Ebene dauert ≤ 1500 ms (Perf-Sonde bzw.
   `console.time` im Dev-Build). Nach dem Bau eines Wohnhauses auf einer Waldkachel ist der Baum dort weg, die
   Nachbarkacheln sind unverändert. Die Teil-Neuzeichnung dauert ≤ 8 ms.
