@@ -42,7 +42,7 @@ Deine Prüffragen:
 | `production-integrator`         | serieller Merge nach dem Merge-Gate, `make check`, CI, Pages         | `sonnet` |
 | `production-studio-ops`         | auf Abruf: Studio-Werkzeuge (Dashboard, Hooks, `log.py`, Make-Ziele) | `sonnet` |
 | `production-onboarding-analyst` | auf Abruf: neue Personas und Briefings gegen STUDIO.md prüfen        | `sonnet` |
-| `production-chronist`           | auf Abruf: Meilenstein-Rückblicke und state.md-Entwürfe              | `haiku`  |
+| `production-chronist`           | auf Abruf: Meilenstein-Rückblicke und state.md-Entwürfe              | `sonnet` |
 
 - **Briefing:** immer nach `docs/studio/templates/briefing.md`; die ersten Zeilen sind
   `Persona: <rolle>` und `Paket: <id>`. Feste Regeln und Logging-Block wörtlich übernehmen.

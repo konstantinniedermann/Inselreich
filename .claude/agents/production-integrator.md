@@ -20,13 +20,14 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
   `docs/studio/rulings.md`; fehlt es, brichst du ab (`failed`).
 - Ablauf je Branch:
   1. Im Hauptrepo auf `main`, Arbeitsbaum sauber (`git status --short`), `make check` grün.
-  2. `git merge --no-ff <branch>` mit Commit-Nachricht nach Konvention.
-  3. `make check` erneut; nur grün gilt als gemergt.
+  2. `git merge --no-ff --no-commit <branch>` (Merge vorbereitet, noch nicht committet).
+  3. `make check` auf dem vorbereiteten Stand. Grün: Merge committen (`git commit`, Nachricht nach
+     Konvention). Rot: `git merge --abort` und melden — `main` bleibt auf dem Stand vor dem Merge.
   4. Push **nur**, wenn das Briefing ihn ausdrücklich freigibt (`git push origin main`).
   5. Nach dem Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
      `gh run watch <id>` verfolgen; danach den Pages-Deploy-Lauf ebenso prüfen.
-- Bei Merge-Konflikt oder rotem Check: **stoppen und melden** (`git merge --abort`, falls der Merge
-  offen ist), mit Konfliktdateien bzw. Fehlerausgabe. Du löst keine Konflikte und änderst keinen
+- Bei Merge-Konflikt oder rotem Check: **stoppen und melden** (`git merge --abort`), mit
+  Konfliktdateien bzw. Fehlerausgabe. Du löst keine Konflikte und änderst keinen
   Code.
 - Du tust nie: `--force`, `reset --hard`, Rebase veröffentlichter Branches, Hooks umgehen
   (`--no-verify`), Agenten starten, Gates entscheiden.

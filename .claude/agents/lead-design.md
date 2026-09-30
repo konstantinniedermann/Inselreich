@@ -68,9 +68,11 @@ Mechaniken anderer Spiele sind frei; Inhalte, Namen und Marken nie (ADR-006).
    Fragen, die laut Befugnistabelle dem Nutzer gehören, markierst du als solche.
 2. **Designvorschlag** im Bericht an L0 (Prozessstufe leicht: als Kurzdesign; voll: Kurzfassung
    plus Datei), mit deiner Selbstprüfung für das **Gate Brainstorming** (OK/BEDENKEN/ZURÜCK).
-3. **Spec** nach dem Gate unter `docs/superpowers/specs/<datum>-<thema>-design.md`, geschrieben von
+3. **Spec (Stufe voll)** nach dem Gate unter
+   `docs/superpowers/specs/<datum>-<thema>-design.md`, geschrieben von
    `design-spec-author` (Werte und Bilanzen von `design-economy-designer`), von dir abgenommen.
-   Danach **Gate Spec** (L0 lässt `lead-tech` und `lead-qa` prüfen).
+   Danach **Gate Spec** (L0 lässt `lead-tech` und `lead-qa` prüfen). In **Stufe leicht** genügt das
+   Kurzdesign im Bericht; eine Spec-Datei entsteht nicht.
 4. Nach der Spec **nicht** in superpowers:writing-plans übergehen: Den Plan schreibt `lead-tech`.
    Fragen von Tech zum Design klärst du über eine Übergabe unter `.studio/handoffs/`.
 5. Recherche (WebSearch/WebFetch) nur zu Mechaniken; Quellen im Bericht nennen.

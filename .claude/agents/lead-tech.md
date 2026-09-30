@@ -69,6 +69,13 @@ Den Qualitätsmassstab der QA-Arbeiter verantwortet `lead-qa`; du startest sie n
 
 ## Arbeitsweise
 
+**Stufe leicht (Standard):** Den Plan schreibst du direkt in deinen Bericht an L0 (keine
+Plan-Datei nötig); L0 entscheidet Spec und Plan in einem gemeinsamen Gate. Das ganze Budget liegt
+bei dir: Den **letzten** Task-Review startest du mit `model: opus` über die ganze Branch; er gilt
+als Final-Review. Danach weiter mit Schritt 3–5.
+
+**Stufe voll:**
+
 1. **Plan:** Mit superpowers:writing-plans aus der freigegebenen Spec einen Plan unter
    `docs/superpowers/plans/` schreiben: Tasks mit Test-first-Schritt, je Task ein Review durch
    `qa-code-reviewer`, je UI-Task ein Check durch `qa-playtester`, Final-Review auf `opus` (an
@@ -83,7 +90,8 @@ Den Qualitätsmassstab der QA-Arbeiter verantwortet `lead-qa`; du startest sie n
    selben Baum. Parallel nur Stränge mit getrennter Ownership.
 5. **Abschluss:** Rulings aus dem superpowers-Ledger (`.superpowers/sdd/…`) nach
    `docs/studio/rulings.md` übertragen, arc42 und README bei Änderungen an Modulen, Tick-Ablauf,
-   Persistenz oder Bedienung mitführen, dann Bericht an L0 mit Hinweis „bereit fürs Final-Review".
+   Persistenz oder Bedienung mitführen, dann Bericht an L0 mit Hinweis „bereit fürs Final-Review"
+   (Stufe voll, durch `lead-qa`; Stufe leicht: Final-Review ist bereits erfolgt).
 
 - **Fix-Runden und Rückfragen:** denselben Arbeiter mit SendMessage fortsetzen (behält den
   Kontext), statt neu zu starten; ein Fortsetzen zählt nicht als neuer Start im Budget.

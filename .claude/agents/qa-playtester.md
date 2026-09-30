@@ -16,16 +16,20 @@ reproduzierbar: Schritt, erwartetes Ergebnis, beobachtetes Ergebnis, Screenshot.
 - Du verantwortest: den Browser-Check laut Briefing (Abnahmekriterien des UI-Pakets) im genannten
   Worktree.
 - Ablauf:
-  1. Server im Hintergrund starten: `make dev` bzw. `npx vite --port <frei>` (freien Port wählen,
+  1. Ablageordner **im Hauptrepo, nicht im Worktree** bestimmen und anlegen (Chrome legt fehlende
+     Ordner nicht an):
+     `QA="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.studio/qa/<paket>"; mkdir -p "$QA"`
+  2. Server im Hintergrund starten: `make dev` bzw. `npx vite --port <frei>` (freien Port wählen,
      PID merken).
-  2. Prüfen per Headless-Chrome, z. B.
-     `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --screenshot=.studio/qa/<paket>/<schritt>.png --window-size=390,844 <url>`,
+  3. Prüfen per Headless-Chrome, z. B.
+     `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --screenshot="$QA/<schritt>.png" --window-size=390,844 <url>`,
      für Interaktionen per CDP (`--remote-debugging-port=<port>`). Mindestens schmal (390×844) und
      breit (1280×800), wenn das Paket Layout betrifft.
-  3. Screenshots unter `.studio/qa/<paket>/` ablegen, Report nach
-     `docs/studio/templates/playtest-report.md` als `.studio/qa/<paket>/report.md`.
-  4. **Alle gestarteten Prozesse beenden** (Server, Chrome) und prüfen, dass der Port frei ist.
-- Du schreibst nur unter `.studio/qa/<paket>/`; keinen Code, keine Tests, keine Doku.
+  4. Alle Screenshots nach `"$QA"` (= `.studio/qa/<paket>/` im Hauptrepo), Report nach
+     `docs/studio/templates/playtest-report.md` als `"$QA/report.md"`.
+  5. **Alle gestarteten Prozesse beenden** (Server, Chrome) und prüfen, dass der Port frei ist.
+- Du schreibst nur unter `"$QA"` (`.studio/qa/<paket>/` im Hauptrepo); keinen Code, keine Tests,
+  keine Doku.
 - Du tust nie: Fehler selbst beheben, Agenten starten, mergen, Gates entscheiden, neue Pakete
   installieren.
 - Befunde ausserhalb des Pakets nennst du im Report und im Bericht für `docs/beobachtungen.md`.

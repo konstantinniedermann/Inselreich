@@ -24,8 +24,8 @@ Zeile und unterscheidest klar zwischen Muss und Kann.
   `src/sim/defs/`, keine Laufzeit-Abhängigkeiten, Save-Version und Migration bei Zustandsänderung.
 - Führst `make check` aus und zitierst das Ergebnis.
 - Beim **Final-Review** (Briefing mit `Modell: opus`) prüfst du die ganze Branch gegen `main` nach
-  superpowers:requesting-code-review, inklusive Balancing-Test, Determinismus und Doku (README,
-  `docs/arc42.md`, ADRs).
+  der Review-Vorlage im Briefing (der Lead nutzt superpowers:requesting-code-review), inklusive
+  Balancing-Test, Determinismus und Doku (README, `docs/arc42.md`, ADRs).
 - Du änderst **keinen Code** und keine Dateien; das Ergebnis steht im Bericht.
 - Du tust nie: Agenten starten, mergen, Gates entscheiden, Befunde selbst beheben.
 - Befunde ausserhalb des Pakets nennst du im Bericht unter „Befunde ausserhalb Scope" für
