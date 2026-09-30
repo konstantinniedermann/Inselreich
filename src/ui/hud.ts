@@ -15,13 +15,59 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 4, label: '4×' },
 ];
 
+/** Zeitfenster, in dem ein zweiter Klick auf „Neu" den Neustart bestätigt (Millisekunden). */
+const NEW_CONFIRM_MS = 3000;
+
+/** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
+export interface HudActions {
+  save(): void;
+  load(): void;
+  restart(): void;
+}
+
+function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    btn.blur();
+    onClick(btn);
+  });
+  return btn;
+}
+
+/** Speichern, Laden und Neu; „Neu" verlangt einen zweiten Klick innert NEW_CONFIRM_MS. */
+function renderGameButtons(box: Element, actions: HudActions): void {
+  let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+  const newBtn = gameButton('Neu', (btn) => {
+    if (confirmTimer === null) {
+      btn.textContent = 'Wirklich neu?';
+      confirmTimer = setTimeout(() => {
+        confirmTimer = null;
+        btn.textContent = 'Neu';
+      }, NEW_CONFIRM_MS);
+      return;
+    }
+    clearTimeout(confirmTimer);
+    confirmTimer = null;
+    btn.textContent = 'Neu';
+    actions.restart();
+  });
+  box.append(
+    gameButton('Speichern', () => actions.save()),
+    gameButton('Laden', () => actions.load()),
+    newBtn,
+  );
+}
+
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
-export function updateHud(header: HTMLElement, state: GameState): void {
+export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
       '<div class="hud-row"><span class="hud-money" data-field="money"></span>' +
       '<span class="hud-balance" data-field="balance"></span>' +
-      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span></div>' +
+      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
+      '<span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
@@ -52,10 +98,12 @@ export function updateHud(header: HTMLElement, state: GameState): void {
       btn.addEventListener('click', () => {
         btn.blur();
         state.speed = s.value;
-        updateHud(header, state);
+        updateHud(header, state, actions);
       });
       speedBox?.appendChild(btn);
     }
+    const gameBox = header.querySelector('.hud-game');
+    if (gameBox) renderGameButtons(gameBox, actions);
   }
   const { world } = state;
   setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);

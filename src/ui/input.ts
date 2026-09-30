@@ -10,15 +10,19 @@ const PAN_PER_FRAME = 16;
 const DRAG_THRESHOLD = 4;
 const PAN_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
-/**
- * Bindet Maus und Tastatur. Gibt eine Funktion zurück, die pro Frame aufgerufen wird
- * und die Kamera bei gedrückten Pfeil-/WASD-Tasten verschiebt.
- */
+export interface InputBinding {
+  /** Pro Frame aufrufen: verschiebt die Kamera bei gedrückten Pfeil-/WASD-Tasten. */
+  applyKeys(): void;
+  /** Entfernt alle Listener, die `bindInput` registriert hat. */
+  unbind(): void;
+}
+
+/** Bindet Maus und Tastatur an Canvas und Fenster. */
 export function bindInput(
   canvas: HTMLCanvasElement,
   state: GameState,
   onAction: (action: InputAction) => void,
-): () => void {
+): InputBinding {
   const keys = new Set<string>();
   let spaceDown = false;
   let pointer: { sx: number; sy: number } | null = null;
@@ -73,9 +77,9 @@ export function bindInput(
     onAction({ type: 'tile', x: t.x, y: t.y, dragging });
   };
 
-  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  const onContextMenu = (e: MouseEvent): void => e.preventDefault();
 
-  canvas.addEventListener('pointerdown', (e) => {
+  const onPointerDown = (e: PointerEvent): void => {
     const p = local(e);
     if (e.button === 2) {
       onAction({ type: 'cancel' });
@@ -101,9 +105,9 @@ export function bindInput(
       pointer = p;
       updateHover();
     }
-  });
+  };
 
-  canvas.addEventListener('pointermove', (e) => {
+  const onPointerMove = (e: PointerEvent): void => {
     const p = local(e);
     pointer = p;
     if (drag) {
@@ -136,7 +140,7 @@ export function bindInput(
       drag.lastY = p.sy;
     }
     updateHover();
-  });
+  };
 
   const endDrag = (e: PointerEvent): void => {
     if (!drag || e.button !== drag.button) return;
@@ -149,38 +153,33 @@ export function bindInput(
     if (state.tool.kind !== 'road') tileAction(p.sx, p.sy, false);
     updateHover();
   };
-  canvas.addEventListener('pointerup', endDrag);
-  canvas.addEventListener('pointercancel', () => {
+  const onPointerCancel = (): void => {
     drag = null;
-  });
+  };
 
-  canvas.addEventListener('pointerleave', () => {
+  const onPointerLeave = (): void => {
     if (drag) return; // bei Capture ignorieren
     pointer = null;
     state.hover = null;
-  });
+  };
 
-  canvas.addEventListener(
-    'wheel',
-    (e) => {
-      if (e.deltaY === 0) return;
-      e.preventDefault();
-      const p = local(e);
-      pointer = p;
-      zoomAt(
-        state.cam,
-        e.deltaY < 0 ? 1.1 : 1 / 1.1,
-        p.sx,
-        p.sy,
-        canvas.clientWidth,
-        canvas.clientHeight,
-        state.world.width * TILE,
-        state.world.height * TILE,
-      );
-      updateHover();
-    },
-    { passive: false },
-  );
+  const onWheel = (e: WheelEvent): void => {
+    if (e.deltaY === 0) return;
+    e.preventDefault();
+    const p = local(e);
+    pointer = p;
+    zoomAt(
+      state.cam,
+      e.deltaY < 0 ? 1.1 : 1 / 1.1,
+      p.sx,
+      p.sy,
+      canvas.clientWidth,
+      canvas.clientHeight,
+      state.world.width * TILE,
+      state.world.height * TILE,
+    );
+    updateHover();
+  };
 
   const isFormControl = (t: EventTarget | null): boolean =>
     t instanceof HTMLInputElement ||
@@ -189,7 +188,7 @@ export function bindInput(
     t instanceof HTMLButtonElement ||
     (t instanceof HTMLElement && t.isContentEditable);
 
-  window.addEventListener('keydown', (e) => {
+  const onKeyDown = (e: KeyboardEvent): void => {
     if (isFormControl(e.target)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -202,19 +201,43 @@ export function bindInput(
       keys.add(k);
       e.preventDefault();
     }
-  });
-  window.addEventListener('keyup', (e) => {
+  };
+  const onKeyUp = (e: KeyboardEvent): void => {
     if (isFormControl(e.target)) return;
     const k = e.key.toLowerCase();
     if (k === ' ') spaceDown = false;
     keys.delete(k);
-  });
-  window.addEventListener('blur', () => {
+  };
+  const onBlur = (): void => {
     keys.clear();
     spaceDown = false;
-  });
+  };
 
-  return () => {
+  canvas.addEventListener('contextmenu', onContextMenu);
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', onPointerCancel);
+  canvas.addEventListener('pointerleave', onPointerLeave);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  window.addEventListener('blur', onBlur);
+
+  const unbind = (): void => {
+    canvas.removeEventListener('contextmenu', onContextMenu);
+    canvas.removeEventListener('pointerdown', onPointerDown);
+    canvas.removeEventListener('pointermove', onPointerMove);
+    canvas.removeEventListener('pointerup', endDrag);
+    canvas.removeEventListener('pointercancel', onPointerCancel);
+    canvas.removeEventListener('pointerleave', onPointerLeave);
+    canvas.removeEventListener('wheel', onWheel);
+    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
+    window.removeEventListener('blur', onBlur);
+  };
+
+  const applyKeys = (): void => {
     let dx = 0;
     let dy = 0;
     if (keys.has('a') || keys.has('arrowleft')) dx -= PAN_PER_FRAME;
@@ -228,4 +251,6 @@ export function bindInput(
       updateHover();
     }
   };
+
+  return { applyKeys, unbind };
 }

@@ -1,9 +1,15 @@
 let box: HTMLElement | null = null;
 
-export function bindMessages(container: HTMLElement): void {
-  box = document.createElement('div');
-  box.className = 'messages';
-  container.appendChild(box);
+/** Legt den Meldungsbereich an; die Rückgabe entfernt ihn wieder (beim Neustart). */
+export function bindMessages(container: HTMLElement): () => void {
+  const el = document.createElement('div');
+  el.className = 'messages';
+  container.appendChild(el);
+  box = el;
+  return () => {
+    el.remove();
+    if (box === el) box = null;
+  };
 }
 
 export function showMessage(text: string, kind: 'info' | 'error' = 'info', sticky = false): void {
