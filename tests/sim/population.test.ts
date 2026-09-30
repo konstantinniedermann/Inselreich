@@ -15,7 +15,7 @@ import { buy } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import { TIERS } from '../../src/sim/defs/tiers';
 import type { Building, World } from '../../src/sim/types';
-import { forceRect, houseFar, houseNearKontor, placeService } from './helpers';
+import { forceGrass, forceRect, houseFar, houseNearKontor, placeService } from './helpers';
 
 let w: World;
 
@@ -89,6 +89,7 @@ describe('tickPopulation', () => {
 
   it('market supplies only when connected', () => {
     const far = houseFar(w);
+    forceRect(w, far.x + 1, far.y, 2, 2, 'grass');
     const m = placeBuilding(w, 'market', far.x + 1, far.y);
     expect(m.ok).toBe(true);
     const market: Building = w.buildings[m.id!]!;
@@ -136,7 +137,7 @@ describe('serviceAvailable', () => {
     expect(serviceAvailable(w, h, 'faith')).toBe(false);
   });
 
-  it('is false for a chapel at distance 11', () => {
+  it('is false for a chapel just beyond radius 10', () => {
     const h = houseNearKontor(w);
     placeService(w, 'chapel', h.x + 10, h.y);
     expect(serviceAvailable(w, h, 'faith')).toBe(false);
@@ -269,6 +270,38 @@ describe('tryUpgrade', () => {
     run(w, 1);
     expect(w.tick % GROWTH_INTERVAL).toBe(0);
     expect(house.house!.tier).toBe(2);
+  });
+});
+
+describe('satisfiedSince at build time', () => {
+  it('a house built late must wait the full UPGRADE_WAIT before upgrading', () => {
+    const first = houseNearKontor(w);
+    const chapel = placeService(w, 'chapel', first.x + 5, first.y);
+    w.stock.cloth = 5;
+    w.stock.food = 100;
+    for (let i = 0; i < 400; i++) step(w);
+    expect(w.tick).toBe(400);
+
+    // Zweites Haus, gleiche Kontor-Nähe, andere Kachel; Ressourcen für den Aufstieg bereitstellen
+    forceGrass(w, first.x, first.y + 1);
+    w.money = 1_000_000;
+    for (const good of Object.keys(w.stock) as (keyof typeof w.stock)[]) w.stock[good] = 100;
+    const r = placeBuilding(w, 'house', first.x, first.y + 1);
+    expect(r.ok).toBe(true);
+    // Bauen berechnet die Anbindung neu; die Kapelle hat in diesem Test keinen Weg
+    chapel.connected = true;
+    const second = w.buildings[r.id!]!;
+    expect(second.house!.satisfiedSince).toBe(400);
+
+    for (let i = 0; i < 200; i++) step(w);
+    expect(second.house!.tier).toBe(1);
+    expect(second.house!.inhabitants).toBe(4);
+    expect(upgradeStatus(w, second).reasons).toContain(
+      `Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`,
+    );
+
+    for (let i = 0; i < 200; i++) step(w);
+    expect(second.house!.tier).toBe(2);
   });
 });
 
