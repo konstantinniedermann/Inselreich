@@ -24,7 +24,7 @@ Welt oder im Save.
   Speichern und Laden (Test AK-S2-12).
 - `step()` zieht sonst keinen Zufall; es wird keine bestehende Folge verschoben.
 - Die Höchststufe zum Angebotszeitpunkt ist Teil der Eingabe: ein Aufstieg im selben Tick zählt
-  (Reihenfolge Wirtschaft → Markt → Aufträge, ADR-005 Nachtrag).
+  (Bevölkerung vor Aufträgen, ADR-005 Nachtrag).
 - Die Simulation bleibt ohne Uhr und ohne DOM; arc42 §8 nennt den seed-abgeleiteten Zufall.
 - Wer weiteren Zufall braucht, leitet ihn nach demselben Muster je Ereignis aus Seed und einem
   Zähler ab und legt keinen RNG-Strom in den Save.

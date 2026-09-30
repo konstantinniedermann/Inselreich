@@ -33,5 +33,4 @@ Anlass: Antwort des Nutzers auf N-001 (`docs/studio/warteschlange.md`), umgesetz
   geprüften Alternativen, Lizenz und Grösse. Sie ist kein Nutzer-Vorbehalt mehr.
 - Der user-scope Hook `dep-guard` wird nicht umgangen: Blockt er ein Paket, meldet L0 den
   Paketnamen dem Nutzer zur technischen Freigabe.
-- Bis der Verfassungstext (Version 1.1) nachgeführt ist, gilt R67 vor dem Wortlaut der festen Regel
-  „Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers".
+- Die Verfassung in Version 1.1 (Commit 01f6101) hat den Wortlaut der festen Regel nachgeführt.
