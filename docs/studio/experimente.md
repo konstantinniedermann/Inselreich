@@ -46,7 +46,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Briefing-Standard: ein Satz „Schätzung aus Richtwerten, nicht Menschenzeit“), `docs/studio/templates/briefing.md` (Hinweis an der Kopfzeile), neu `docs/studio/metriken/richtwerte.md` (Tabelle Rolle × Plan-Art: Median Minuten und Tools), `docs/studio/CHANGELOG.md`
 - Ruling: R54
 - Start: Handbuch 1.1
-- Bewertung: –
+- Bewertung: Vorschlag des Coaches (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), aber Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst`: Hauptgrösse Werkzeugaufrufe, Schwelle ±50 % über mindestens 10 Agenten in M6, Kopfzeile nennt die Richtwert-Zeile; Status bis zum Ruling von L0 unverändert `laufend`
 
 ## E-002 · laufend · Datei-Eigentum bei parallelen L0-Sessions
 
@@ -57,4 +57,15 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start: Schritt „andere L0-Session aktiv → Datei-Eigentum und Merge-Reihenfolge in state.md eintragen oder übernehmen“), `docs/studio/state.md` (Abschnitt „Parallele Sessions“), `docs/studio/CHANGELOG.md`
 - Ruling: R55
 - Start: Handbuch 1.2
+- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten
+
+## E-003 · vorgeschlagen · Zweck-Gegenprobe bei Auslegungen
+
+- Hypothese: Wenn L0 bei jeder Auslegung einer Nutzeranweisung (Autonomie, Schritt 2) im Ruling einen Satz „Zweck der Anweisung: …; Auslegung widerspricht ihm nicht, weil …“ festhält, dann werden Auslegungen, die dem erklärten Zweck widersprechen, vor der Umsetzung erkannt, und Korrektur-Rulings wegen Fehlauslegung entfallen.
+- Messgrösse: Anzahl Rulings, die ein früheres Auslegungs-Ruling wegen Fehlauslegung korrigieren (Stichwort „Korrektur von R…“ in `docs/studio/rulings.md`), in den nächsten 3 Sessions: höchstens 0. Ausgangswert: 2 in Session 2bf010b4 (R69 korrigiert R68, R71 korrigiert R69).
+- Zeitraum: die nächsten 3 Sessions mit mindestens einer Nutzeranweisung, die ausgelegt werden muss; Freigabe der Stellenzahl erst wenn E-001 oder E-002 bewertet ist (höchstens 3 laufende Experimente).
+- Rückfall: Handbuch 1.6, Abschnitt „Autonomie“ ohne den Zusatz (`git show fa58e4b:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/STUDIO.md` (Abschnitt „Autonomie“, Ablauf Schritt 2: ein Halbsatz), `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
 - Bewertung: –

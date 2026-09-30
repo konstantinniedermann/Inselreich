@@ -12,3 +12,5 @@
 - Budgetfreigaben gelten nur in der Session, in der L0 sie loggt: nach `/clear` oder Session-Wechsel neu loggen, sonst zählt der Start in keiner Zeile (Retro 2026-09-30 budget-lead-tech, R58).
 - Ein Nutzungslimit beendet die Session ohne Vorwarnung: `state.md` laufend nachführen, nicht erst im Session-Ende; die Übergabe steht nie nur im Chat (Retro session-25e8352d, R66).
 - Fragen zum Verhalten des Harness (z. B. ob Persona-Frontmatter Zusatzfelder toleriert) per Headless-Lauf prüfen statt in einer eigenen Nutzersession — dauerte rund 1 min (Retro Studio-Graph B4).
+- Subagenten legen Dateien, die wie Berichte heissen (`report.md`), oft nicht ab; der Schlussbericht ist der Report und wird ohnehin archiviert. Weder Guard noch Hook verursachen das (Retro M5 B5).
+- Modellwahl nach Aufgabe; ein näher rückendes Limit ist nie ein Grund für ein schwächeres Modell, L0 fährt herunter (R71, Retro M5 B6).
