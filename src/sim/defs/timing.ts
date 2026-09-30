@@ -11,8 +11,8 @@ export const UPGRADE_WAIT = 300;
 /** Alle 10 Ticks erholt sich der Verkaufsanteil jedes Guts um einen Prozentpunkt. */
 export const SELL_RECOVERY_INTERVAL = 10;
 /*
- * Achtung: Die Werte für Aufträge und Takte (Wartezeit, Erholung, Auftragsbeginn, -abstand, -laufzeit)
- * bestimmen den Ablauf gespeicherter Stände. Eine Änderung verschiebt sie und braucht eine
+ * Achtung: ORDER_FIRST_TICK, ORDER_PERIOD und ORDER_DURATION liest die Save-Prüfung (`isValidOrder`).
+ * Eine Änderung lässt Stände mit laufendem Auftrag bei der Prüfung scheitern und braucht eine
  * Save-Migration (arc42, R61).
  */
 /** Tick des ersten Handelsauftrags. */

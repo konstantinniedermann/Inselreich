@@ -261,7 +261,7 @@ für den nächsten UI-Strang.
   der Weg-Mittelstreifen zeigt bei Zoom ≈ 1.7 eine 1-px-Stufe.
 - `overlays.ts`: `interface Symbol` verdeckt das globale `Symbol` (umbenennen, z. B. `NeedSymbol`);
   `houseDiagnosis` läuft ungecacht je sichtbarem Haus und Frame (gemessen 2.5–3.1 ms je Frame bei 57
-  Gebäuden, unkritisch). Das Symbol „nicht versorgt" hat keine Legende.
+  Gebäuden, unkritisch; auch Final-Review M5, B-F2: Leistung bei grossen Städten). Das Symbol „nicht versorgt" hat keine Legende.
 - `ship.ts`: nicht auf den sichtbaren Ausschnitt begrenzt (vernachlässigbar); bei `timeMs: 0` fester
   Neigungsversatz (~0.05 rad).
 - Vorschau: Ungültig-Vorschau auf Gras bräunlich statt klar rot, auf Wasser violett.
@@ -270,7 +270,7 @@ für den nächsten UI-Strang.
 **Einschätzung:** Alles niedrig, Pflege durch lead-art bei der nächsten Render-Arbeit. Die Farbe der
 Ungültig-Vorschau und die Legende berühren die Lesbarkeit und sind die ersten Kandidaten.
 **Erledigt seither (teilweise):** Die Wellen-Amplitude in `water.ts` ist inzwischen eine benannte Konstante
-(`WAVE_AMPLITUDE`); `water.ts:~74` enthält aber noch eine feste Zahl (Kontrollpunkt `sh * 0.1`, Versatz `sh * 0.25`).
+(`WAVE_AMPLITUDE`); `water.ts:~74` enthält aber noch feste Faktoren (u. a. `sh * 0.1`, `sh * 0.25`, `sw * 0.2`, `sw * 0.8`, `sw * 0.5`).
 
 ### 2026-09-30 · `src/audio/sound.ts` · Befunde lead-art aus A2
 
@@ -334,10 +334,7 @@ Verhaltensänderungen, niedrig, bei der nächsten UI-Arbeit.
 
 ### 2026-09-30 · `src/render/`, `src/audio/` · Final-Review M5: Render und Audio für M7
 
-- **B-F2** `src/render/overlays.ts:204-206`: `houseDiagnosis` läuft je Frame ohne Cache (Leistung bei grossen
-  Städten; ergänzt den Eintrag zu `houseDiagnosis` oben).
-- **B-F4** `tests/render/ship.test.ts:15-26`: tautologisch (rechnet den Sollwert wie der Code); der Fall
-  „kein Wasser-Nachbar" fehlt.
+- **B-F4** `tests/render/ship.test.ts:15-26`: tautologisch (rechnet den Sollwert wie der Code).
 - **B-F5** `src/render/overlays.ts:73-80,123`: Der Cache hält alte Welten fest.
 - **B-F9** `src/audio/sound.ts:192,207-215`: Ein abgelehntes Ton-Resume bekommt keinen zweiten Versuch
   (ergänzt die `resume()`-Befunde oben).
