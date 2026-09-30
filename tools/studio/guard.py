@@ -19,14 +19,18 @@ APPROVAL_PHRASE = "VERFASSUNG ÄNDERN"
 AGENT_MESSAGE_PREFIXES = ("<task-notification>", "<agent-message")
 FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 SEPARATORS = {";", "&&", "||", "|", "&", ";;"}
-PREFIXES = {"sudo", "env", "command", "nohup", "time", "timeout"}
-KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "!", "exec"}
+PREFIXES = {"sudo", "env", "command", "nohup", "time", "timeout", "exec"}
+KEYWORDS = {"then", "do", "else", "elif", "if", "while", "until", "{", "!"}
 VALUE_OPTIONS = {
-    "sudo": {"-u", "-g", "-h", "-p", "-C", "-U", "-D", "-R", "-T"},
+    "sudo": {"-u", "-g", "-h", "-p", "-C", "-U", "-D", "-R", "-T"}
+    | {"--user", "--group", "--host", "--prompt"},
     "timeout": {"-s", "-k"},
+    "env": {"-u", "-C"},
+    "exec": {"-a"},
 }
 MARKER_PART = "/.studio/verfassung-ok/"
 READ_GIT = {"log", "show", "diff", "status"}
+DECLARERS = {"export", "declare", "local", "readonly", "typeset"}
 TEMP_ROOTS = ("/tmp", "/private/tmp", "/var/folders", "/private/var/folders")
 MAX_DEPTH = 3
 HEREDOC = re.compile(r"(?<!<)<<-?\s*['\"]?(\w+)['\"]?")
@@ -81,7 +85,9 @@ def segments(command: str) -> list[Segment]:
         assigns: list[str] = []
         while clean:
             word = clean[0]
-            if ASSIGNMENT.match(word) or word in KEYWORDS:
+            if word == "function":
+                clean = clean[2:]
+            elif ASSIGNMENT.match(word) or word in KEYWORDS:
                 if ASSIGNMENT.match(word):
                     assigns.append(word)
                 clean = clean[1:]
@@ -136,7 +142,7 @@ def _has_force(args: list[str]) -> bool:
 
 
 def _is_constitution(arg: str) -> bool:
-    return arg.replace("\\", "/").endswith("VERFASSUNG.md")
+    return arg.replace("\\", "/").lower().endswith("verfassung.md")
 
 
 def _is_protected(arg: str, cwd: Path) -> bool:
@@ -145,7 +151,8 @@ def _is_protected(arg: str, cwd: Path) -> bool:
         text = text[3:]
     if _is_constitution(text):
         return True
-    return os.path.normpath(os.path.join(str(cwd), text)).endswith("/" + GUARD_FILE)
+    resolved = os.path.normpath(os.path.join(str(cwd), text)).lower()
+    return resolved.endswith("/" + GUARD_FILE) or MARKER_PART in resolved + "/"
 
 
 def _expand(arg: str, env: Mapping[str, str]) -> str:
@@ -158,7 +165,10 @@ def _outside(
     arg: str, root: Path, cwd: Path, env: Mapping[str, str], guard_root: bool = True
 ) -> bool:
     # Unaufgelöstes `$VAR` bleibt wörtlich und zählt als relativer Pfad in cwd.
-    path = os.path.normpath(os.path.join(str(cwd), _expand(arg, env)))
+    expanded = _expand(arg, env)
+    if expanded.startswith("~") or "${" in expanded:
+        return True  # nicht auflösbar (~user, ${…}) → wie ausserhalb behandeln
+    path = os.path.normpath(os.path.join(str(cwd), expanded))
     base = os.path.normpath(str(root))
     if guard_root and (path == base or path == base + "/.git"):
         return True  # Repo-Wurzel und History nie löschen
@@ -184,6 +194,24 @@ def _delete_reason(
         if not allow and _is_protected(arg, cwd):
             return PROTECTED
     return None
+
+
+def _apply_assigns(assigns: list[str], env: dict[str, str]) -> None:
+    for assign in assigns:
+        key, _, value = assign.partition("=")
+        value = _expand(value, env)
+        if "$" not in value:
+            env[key] = value
+
+
+def _outputs(args: list[str]) -> list[str]:
+    found = []
+    for index, arg in enumerate(args):
+        if arg.startswith("--output="):
+            found.append(arg.split("=", 1)[1])
+        elif arg == "--output" and index + 1 < len(args):
+            found.append(args[index + 1])
+    return found
 
 
 def _git_sub(args: list[str]) -> tuple[str | None, list[str]]:
@@ -295,32 +323,33 @@ def _check(
         if not words:
             if not allow and any(_is_protected(t, cwd) for t in writes):
                 return PROTECTED
-            for assign in assigns:
-                key, _, value = assign.partition("=")
-                value = _expand(value, env)
-                if "$" not in value:
-                    env[key] = value
+            _apply_assigns(assigns, env)
             continue
         name = os.path.basename(words[0])
         args = words[1:]
+        if name == "claude" and any(APPROVAL_PHRASE in arg for arg in args):
+            return f"{FORBIDDEN}: Freigabe-Formel darf nicht selbst gesendet werden"
+        if not allow:
+            if any(_is_protected(t, cwd) for t in writes + _outputs(args)):
+                return PROTECTED
+            in_marker = MARKER_PART in os.path.normpath(str(cwd)).lower() + "/"
+            reading = name in READ_ONLY or (
+                name == "git" and _git_sub(args)[0] in READ_GIT
+            )
+            touched = in_marker or any("verfassung-ok" in t for t in raw)
+            if touched and not reading:
+                return PROTECTED
+            found = _write_reason(name, args, cwd)
+            if found:
+                return found
         if name == "cd":
             if args:
                 target = os.path.join(str(cwd), _expand(args[0], env))
                 cwd = Path(os.path.normpath(target))
             continue
-        if name == "claude" and any(APPROVAL_PHRASE in arg for arg in args):
-            return f"{FORBIDDEN}: Freigabe-Formel darf nicht selbst gesendet werden"
-        if not allow:
-            if any(_is_protected(t, cwd) for t in writes):
-                return PROTECTED
-            reading = name in READ_ONLY or (
-                name == "git" and _git_sub(args)[0] in READ_GIT
-            )
-            if any("verfassung-ok" in token for token in raw) and not reading:
-                return PROTECTED
-            found = _write_reason(name, args, cwd)
-            if found:
-                return found
+        if name in DECLARERS:
+            _apply_assigns([a for a in args if ASSIGNMENT.match(a)], env)
+            continue
         found = None
         if name == "git":
             found = _git_reason(args, cwd, allow)
@@ -338,6 +367,11 @@ def _check(
                 if arg.startswith(("-", "(", "!")):
                     break
                 paths.append(arg)
+            base = os.path.normpath(str(root))
+            for arg in paths:
+                resolved = os.path.normpath(os.path.join(str(cwd), _expand(arg, env)))
+                if resolved == base + "/.git":
+                    return f"{FORBIDDEN}: Löschen von .git"
             found = _delete_reason(paths, root, cwd, env, allow, False)
         else:
             text = _shell_text(name, args)
@@ -362,12 +396,12 @@ def bash_reason(
 
 
 def file_reason(path: str, allow_constitution: bool) -> str | None:
-    text = path.replace("\\", "/")
     if allow_constitution:
         return None
-    if MARKER_PART in text or text.startswith(MARKER_PART[1:]):
+    text = os.path.normpath(path.replace("\\", "/")).lower()
+    if MARKER_PART in text + "/" or (text + "/").startswith(MARKER_PART[1:]):
         return PROTECTED
-    if text.endswith(CONSTITUTION) or text.endswith(GUARD_FILE):
+    if text.endswith(CONSTITUTION.lower()) or text.endswith(GUARD_FILE):
         return PROTECTED
     return None
 

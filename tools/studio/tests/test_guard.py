@@ -243,3 +243,63 @@ class FixRoundTest(unittest.TestCase):
                 check=False,
             )
             self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+
+class FixRound2Test(unittest.TestCase):
+    def test_allowed(self):
+        for cmd in [
+            "grep x a",
+            "git diff --output=/tmp/d.txt",
+            "rm -rf /repo/.studio/qa/x",
+            "export D=/tmp/x; rm -rf $D",
+            "function f { git status; }",
+            "env -u FOO git status",
+            "sudo --user x rm -rf dist",
+            "exec -a n git status",
+            "cd .studio/qa && touch s1",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
+    def test_forbidden(self):
+        for cmd in [
+            "grep x a > .studio/verfassung-ok/s1",
+            "cat /dev/null > /repo/.studio/verfassung-ok/s1",
+            "git diff --output=/repo/.studio/verfassung-ok/s1",
+            "git log --output docs/studio/VERFASSUNG.md",
+            "git diff --output=docs/studio/VERFASSUNG.md",
+            "cat x > docs/studio/verfassung.md",
+            "cd .studio/verfassung-ok && touch s1",
+            "cd .studio && cd verfassung-ok && touch s1",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd))
+                self.assertIsNone(reason(cmd, allow=True))
+
+    def test_forbidden_always(self):
+        for cmd in [
+            "export D=/Users/x/y; rm -rf \"$D\"",
+            "declare -x D=/Users/x/y; rm -rf $D",
+            "local D=/Users/x/y; rm -rf $D",
+            "readonly D=/Users/x/y; rm -rf $D",
+            "typeset D=/Users/x/y && rm -rf $D",
+            "rm -rf ~bob/x",
+            'rm -rf "${UNKNOWN}/x"',
+            "find .git -delete",
+            "find /repo/.git -exec rm {} +",
+            "function f { git push --force; }",
+            "env -u FOO git push --force",
+            "sudo --user x git push -f",
+            "exec -a n git push -f",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd, allow=True))
+
+    def test_file_reason_normalized(self):
+        for path in [
+            "/r/docs/studio/../studio/VERFASSUNG.md",
+            "/r/docs/studio/verfassung.md",
+            "/r/.studio/x/../verfassung-ok/s1",
+        ]:
+            with self.subTest(path=path):
+                self.assertIsNotNone(guard.file_reason(path, False))
