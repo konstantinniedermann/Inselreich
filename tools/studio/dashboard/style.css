@@ -232,6 +232,28 @@ button {
   background: var(--danger);
 }
 
+.limits {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  border-left: 4px solid var(--st-idle);
+  padding-left: 6px;
+}
+
+.limits[data-light='grün'] {
+  border-left-color: var(--st-active);
+}
+
+.limits[data-light='gelb'] {
+  border-left-color: var(--st-waiting);
+}
+
+.limits[data-light='rot'] {
+  border-left-color: var(--danger);
+  color: var(--danger);
+  font-weight: 600;
+}
+
 #theme {
   margin-left: auto;
 }

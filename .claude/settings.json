@@ -1,5 +1,9 @@
 {
   "outputStyle": "Projektleiter",
+  "statusLine": {
+    "type": "command",
+    "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/statusline.py\""
+  },
   "hooks": {
     "SessionStart": [
       {

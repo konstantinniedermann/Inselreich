@@ -23,6 +23,7 @@ import {
 import { renderGraph, setupGraph } from './graph.js';
 import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
 import {
+  NOT_MEASURED,
   renderDelegation,
   renderEffort,
   renderQuality,
@@ -97,8 +98,50 @@ function setConn(ok, text) {
   else if (alert.textContent !== text) alert.textContent = text;
 }
 
+const LIGHT_LABEL = { grün: 'Ampel grün', gelb: 'Ampel gelb', rot: 'Ampel rot' };
+const LIMITS_STALE_S = 600;
+
+function pct(value) {
+  return `${Math.floor(value)} %`;
+}
+
+function limitsText(limits) {
+  const parts = [];
+  if (typeof limits.five_hour_pct === 'number') parts.push(`5h ${pct(limits.five_hour_pct)}`);
+  if (typeof limits.seven_day_pct === 'number') parts.push(`Woche ${pct(limits.seven_day_pct)}`);
+  if (typeof limits.context_pct === 'number') parts.push(`Kontext ${pct(limits.context_pct)}`);
+  const lamp = LIGHT_LABEL[limits.light];
+  if (lamp) parts.push(lamp);
+  if (limits.age_s > LIMITS_STALE_S) parts.push(`vor ${Math.round(limits.age_s / 60)} min`);
+  return parts.join(' · ');
+}
+
+function resetTitle(limits) {
+  const lines = [];
+  for (const [key, label] of [
+    ['five_hour_resets_at', '5-h-Fenster'],
+    ['seven_day_resets_at', 'Wochenfenster'],
+  ]) {
+    if (typeof limits[key] === 'number') lines.push(`${label}: Reset ${clock(limits[key], false)}`);
+  }
+  return lines.join('\n');
+}
+
+// Nutzungslimit in der Topbar: der Text trägt die Information, die Farbe nur die Ampel.
+function renderLimits(state) {
+  const node = document.getElementById('limits');
+  const limits = state.limits;
+  const text = limits ? limitsText(limits) : '';
+  node.hidden = false;
+  node.textContent = `Limit: ${text || NOT_MEASURED}`;
+  node.dataset.light = (text && limits.light) || '';
+  if (text && resetTitle(limits)) node.title = resetTitle(limits);
+  else node.removeAttribute('title');
+}
+
 // Jede Ansicht in eigenem try/catch: eine kaputte Ansicht verhindert die anderen nicht.
 const VIEWS = [
+  ['limits', renderLimits],
   ['sessions', renderSessions],
   ['org', renderOrg],
   ['graph', renderGraph],

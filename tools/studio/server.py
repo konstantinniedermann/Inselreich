@@ -12,6 +12,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
+import limits
 from model import (
     INACTIVE_DEFAULT,
     EventStore,
@@ -19,12 +20,13 @@ from model import (
     read_agent_models,
     read_agent_names,
 )
-from paths import agents_dir, archive_dir, docs_dir, events_file
+from paths import agents_dir, archive_dir, docs_dir, events_file, studio_home
 from studio_docs import bundle
 
 DASHBOARD = Path(__file__).resolve().parent / "dashboard"
 HOST = "127.0.0.1"
 ARCHIVE_SUFFIXES = {".md", ".jsonl", ".txt"}
+STATE_LIMITS_MAX_AGE = 3600
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -111,6 +113,7 @@ class Handler(SimpleHTTPRequestHandler):
             agent_names=read_agent_names(self.agents),
         )
         state["docs"] = bundle(self.docs, self.agents)
+        state["limits"] = limits_state(time.time())
         body = json.dumps(state, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -129,6 +132,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         return
+
+
+def limits_state(now: float) -> dict | None:
+    """Letzte Limit-Werte mit Alter und Ampel; None, wenn nichts Frisches da ist."""
+    data = limits.read_fresh(studio_home() / "limits.json", now, STATE_LIMITS_MAX_AGE)
+    if not data:
+        return None
+    data["age_s"] = max(0, now - data["ts"])
+    data["light"] = limits.light(data.get("five_hour_pct"))
+    return data
 
 
 def make_server(
