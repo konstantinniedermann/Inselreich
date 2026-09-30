@@ -10,10 +10,15 @@ export interface TradeActions {
 }
 
 /** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
-function sellTexts(world: World, good: GoodId, n: number): { label: string; title: string } {
+function sellTexts(
+  world: World,
+  good: GoodId,
+  n: number,
+): { label: string; price: string; title: string } {
   const price = sellPrice(world, good, n);
   return {
-    label: `−${n} · G ${price}`,
+    label: `−${n}`,
+    price: `G ${price}`,
     title: `${n} ${GOODS[good].name} verkaufen für G ${price}`,
   };
 }
@@ -38,7 +43,6 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
   panel.appendChild(title);
 
   const table = cell(panel, 'trade-table');
-  cell(table, 'trade-head', 'Gut');
   cell(table, 'trade-head', 'Kaufen');
   cell(table, 'trade-head', 'Verkaufen');
 
@@ -52,6 +56,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     btn.className = 'btn btn-small';
     const sellT = op === 'sell' ? sellTexts(world, good, n) : null;
     btn.textContent = sellT ? sellT.label : `+${n}`;
+    if (sellT) btn.appendChild(document.createElement('small'));
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
@@ -69,14 +74,15 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
+    const pct = document.createElement('small');
+    pct.dataset.field = `price-${good}`;
+    name.appendChild(pct);
 
     const buyCell = cell(table, 'trade-cell');
     cell(buyCell, 'trade-price', `G ${GOODS[good].buy}`);
     for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
 
     const sellCell = cell(table, 'trade-cell');
-    const pct = cell(sellCell, 'trade-price');
-    pct.dataset.field = `price-${good}`;
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);
   }
 
@@ -108,7 +114,8 @@ export function updateTrade(panel: HTMLElement, world: World): void {
     btn.classList.toggle('unaffordable', unaffordable);
     if (btn.dataset.op === 'sell') {
       const t = sellTexts(world, good, n);
-      if (btn.textContent !== t.label) btn.textContent = t.label;
+      const price = btn.querySelector('small');
+      if (price && price.textContent !== t.price) price.textContent = t.price;
       if (btn.title !== t.title) btn.title = t.title;
     }
   }
