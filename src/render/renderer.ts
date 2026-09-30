@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { footprint, tileAt } from '../sim/world';
 import type { BuildingDefId, World } from '../sim/types';
 import { TILE, tileToScreen, type Camera } from './camera';
+import { dayNightAlpha, NIGHT_COLOR } from './daynight';
 import { drawNeedSymbols, drawPlacementOverlay } from './overlays';
 import { drawShip } from './ship';
 import { drawWaves } from './water';
@@ -16,7 +17,8 @@ export type Tool =
 /** Darstellungs-Zusatz je Frame; Animation entsteht nur aus `timeMs` und dem Welt-Zustand. */
 export interface RenderFx {
   timeMs: number;
-  // Tag/Nacht (`dayNight`) kommt erst, wenn A4 beschlossen ist.
+  /** Tag-Nacht-Tönung; nur bei explizit `true` (Standard: aus). */
+  dayNight?: boolean;
 }
 
 export interface Hover {
@@ -98,6 +100,15 @@ export function render(
   }
 
   drawNeedSymbols(ctx, world, cam, { x0, y0, x1, y1 });
+
+  // Tönung über der Karte, unter Auswahl und Hover (Bedienung bleibt lesbar); das HUD ist DOM.
+  const night = fx.dayNight === true ? dayNightAlpha(world.tick) : 0;
+  if (night > 0) {
+    ctx.save();
+    ctx.fillStyle = `rgba(${NIGHT_COLOR},${night.toFixed(4)})`;
+    ctx.fillRect(0, 0, view.w, view.h);
+    ctx.restore();
+  }
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];
   if (sel) {
