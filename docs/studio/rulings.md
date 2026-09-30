@@ -693,3 +693,15 @@ statt zwei, und kein Konflikt mit feat/m5-sim. B-F1 (Autosave nach Reload) wird 
 Eingabe für die M6-Auswahl. — Kosten bei Irrtum: ein Label-Fehler steht kurz auf main.
 
 Entscheider: L0 · Anlass: Bericht Final-Review M5
+
+## R71 · 2026-09-30 · Studio
+
+Ruling: Korrektur von R69 (1) auf Klarstellung des Nutzers — R69 hatte „Standard opus" zu weit
+ausgelegt. **Modellwahl nach Aufgabe:** Jede Rolle bekommt das Modell, das zu ihrer Aufgabe passt
+(wieder die Stufen von Handbuch 1.4: opus für Architektur, Design, Gates, Final-Review und L0;
+sonnet für spezifizierte Umsetzung, Task-Reviews, Playtests, Integration; haiku für mechanische
+Prüfungen). **Kein Limit-Downgrade:** Ein näher rückendes Nutzungslimit ist nie ein Grund, ein
+weniger fähiges Modell zu wählen; stattdessen fährt L0 herunter (R69 (2) bleibt). Die Umstellung
+der Personas auf opus (83d3f77) wird zurückgenommen. — Kosten bei Irrtum: keine über 1.4 hinaus.
+
+Entscheider: L0 · Anlass: Klarstellung des Nutzers
