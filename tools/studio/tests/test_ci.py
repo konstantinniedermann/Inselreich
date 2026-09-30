@@ -32,7 +32,7 @@ class CiTest(unittest.TestCase):
         )
         self.assertEqual(events[0]["kind"], "ci")
         self.assertEqual(events[0]["source"], "ci")
-        self.assertEqual(ci.collect(lambda: RUNS, {"1"}), [])
+        self.assertEqual(ci.collect(lambda: RUNS, ci.normalize_seen(["1"])), [])
 
     def test_events_carry_handbook_version(self):
         events = ci.collect(lambda: RUNS, set(), "1.0")
