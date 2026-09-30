@@ -6,10 +6,14 @@ import type { World } from '../sim/types';
 import { TILE, clampCamera, createCamera, type Camera } from '../render/camera';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
-import { renderBuildMenu } from './buildMenu';
+import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { updateHud } from './hud';
 import { bindInput, type InputAction } from './input';
+import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
+import { renderTrade, updateTrade } from './trade';
+
+export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
 
 export interface GameState {
   world: World;
@@ -18,6 +22,7 @@ export interface GameState {
   speed: 0 | 1 | 2 | 4;
   hover: Hover | null;
   selectedId: number | null;
+  panel: PanelState;
   terrainLayer: HTMLCanvasElement;
 }
 
@@ -36,6 +41,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
   const gameEl = need<HTMLElement>(root, '#game');
   const hudEl = need<HTMLElement>(root, '#hud');
   const navEl = need<HTMLElement>(root, '#buildbar');
+  const panelEl = need<HTMLElement>(root, '#panel');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
@@ -47,6 +53,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
     speed: 1,
     hover: null,
     selectedId: null,
+    panel: { kind: 'none' },
     terrainLayer: buildTerrainLayer(world),
   };
   const worldW = world.width * TILE;
@@ -55,24 +62,74 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
 
   bindMessages(gameEl);
 
+  /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
+  const setPanel = (panel: PanelState): void => {
+    state.panel = panel;
+    if (panel.kind === 'inspect') {
+      state.selectedId = panel.id;
+      renderInspect(panelEl, world, panel.id, {
+        demolish: (id) => {
+          const r = demolish(world, id);
+          if (!r.ok) showMessage(r.reason, 'error');
+          else setPanel({ kind: 'none' });
+          refresh();
+        },
+        openTrade: () => setPanel({ kind: 'trade' }),
+      });
+    } else if (panel.kind === 'trade') {
+      state.selectedId = world.kontorId;
+      renderTrade(panelEl, world, {
+        back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
+        changed: () => refresh(),
+      });
+    } else {
+      state.selectedId = null;
+      panelEl.replaceChildren();
+    }
+  };
+
+  /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
+  const refresh = (): void => {
+    updateHud(hudEl, state);
+    updateBuildMenu(navEl, world);
+    const panel = state.panel;
+    if (panel.kind === 'inspect') {
+      if (world.buildings[panel.id]) updateInspect(panelEl, world, panel.id);
+      else setPanel({ kind: 'none' });
+    } else if (panel.kind === 'trade') {
+      updateTrade(panelEl, world);
+    }
+  };
+
   const selectTool = (tool: Tool): void => {
     state.tool = tool;
-    if (tool.kind !== 'select') state.selectedId = null;
+    if (tool.kind !== 'select') setPanel({ kind: 'none' });
     state.hover = null;
     renderBuildMenu(navEl, state, selectTool);
   };
   renderBuildMenu(navEl, state, selectTool);
 
+  const selectBuilding = (id: number | null): void => {
+    const panel = state.panel;
+    if (id === null) {
+      setPanel({ kind: 'none' });
+    } else if (panel.kind === 'trade' && id === world.kontorId) {
+      // Handel bleibt offen, wenn das Kontor erneut angeklickt wird
+    } else if (panel.kind !== 'inspect' || panel.id !== id) {
+      setPanel({ kind: 'inspect', id });
+    }
+  };
+
   const onAction = (a: InputAction): void => {
     if (a.type === 'cancel') {
-      state.selectedId = null;
+      setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
       return;
     }
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
     if (tool.kind === 'select') {
-      state.selectedId = tile?.buildingId ?? null;
+      selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
       const r = placeBuilding(world, tool.defId, a.x, a.y);
       if (!r.ok) showMessage(r.reason, 'error');
@@ -86,8 +143,12 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       const r = removeRoad(world, a.x, a.y);
       if (!r.ok && !a.dragging) showMessage(r.reason, 'error');
     }
+    refresh();
   };
   const applyKeys = bindInput(canvas, state, onAction);
+
+  // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
+  refresh();
 
   // Kamera auf das Kontor zentrieren
   const kontor = world.buildings[world.kontorId];
@@ -130,7 +191,7 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       }
       applyKeys();
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view);
-      if (frame % HUD_EVERY_FRAMES === 0) updateHud(hudEl, state);
+      if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       requestAnimationFrame(loop);
     } catch (err) {
@@ -139,7 +200,6 @@ export function startGame(root: HTMLElement, seed?: number): GameState {
       showMessage(`Spiel angehalten: ${msg}`, 'error', true);
     }
   };
-  updateHud(hudEl, state);
   requestAnimationFrame(loop);
   return state;
 }
