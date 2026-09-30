@@ -1,5 +1,5 @@
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { World } from '../sim/types';
+import type { Result, World } from '../sim/types';
 import type { SoundEvent } from '../audio/sound';
 
 /** Die Grössen, die je Frame verglichen werden (Spec 9.4). */
@@ -39,3 +39,8 @@ export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundE
  * zählt in Chrome nicht als Nutzeraktivierung, `pointerup` gilt für Maus und Touch.
  */
 export const UNLOCK_EVENTS = ['pointerup', 'keydown'] as const;
+
+/** Ton direkt nach einer Sim-Aktion: bei Erfolg der Ton der Aktion (oder keiner), bei Fehlschlag immer `error`. */
+export function actionSound(r: Result, onOk: SoundEvent | null): SoundEvent | null {
+  return r.ok ? onOk : 'error';
+}

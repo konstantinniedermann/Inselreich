@@ -1,12 +1,21 @@
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
-import type { GoodId, World } from '../sim/types';
+import type { GoodId, Result, World } from '../sim/types';
 import { setField } from './dom';
-import { showMessage } from './messages';
 
 export interface TradeActions {
   back(): void;
-  changed(): void;
+  /** Nach jedem Kauf/Verkauf, mit dem Ergebnis der Sim-Aktion (Meldung und Ton macht der Aufrufer). */
+  changed(op: 'buy' | 'sell', result: Result): void;
+}
+
+/** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
+function sellTexts(world: World, good: GoodId, n: number): { label: string; title: string } {
+  const price = sellPrice(world, good, n);
+  return {
+    label: `−${n} · G ${price}`,
+    title: `${n} ${GOODS[good].name} verkaufen für G ${price}`,
+  };
 }
 
 /** Handelsmengen pro Klick (reine Bedienung, keine Spielwerte). */
@@ -41,19 +50,18 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
   ): void => {
     const btn = document.createElement('button');
     btn.className = 'btn btn-small';
-    btn.textContent = op === 'buy' ? `+${n}` : `−${n}`;
+    btn.textContent = op === 'buy' ? `+${n}` : sellTexts(world, good, n).label;
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
     btn.title =
       op === 'buy'
         ? `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`
-        : `${n} ${GOODS[good].name} verkaufen für G ${sellPrice(world, good, n)}`;
+        : sellTexts(world, good, n).title;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);
-      if (!r.ok) showMessage(r.reason, 'error');
-      actions.changed();
+      actions.changed(op, r);
     });
     parent.appendChild(btn);
   };
@@ -69,7 +77,8 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
 
     const sellCell = cell(table, 'trade-cell');
-    cell(sellCell, 'trade-price', `G ${GOODS[good].sell}`);
+    const pct = cell(sellCell, 'trade-price');
+    pct.dataset.field = `price-${good}`;
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);
   }
 
@@ -87,7 +96,10 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
 
 /** Aktualisiert Lagerbestände und dämpft Buttons, die sicher scheitern würden (bleiben klickbar). */
 export function updateTrade(panel: HTMLElement, world: World): void {
-  for (const good of GOOD_IDS) setField(panel, `stock-${good}`, `Lager ${world.stock[good]}`);
+  for (const good of GOOD_IDS) {
+    setField(panel, `stock-${good}`, `Lager ${world.stock[good]}`);
+    setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
+  }
   for (const btn of panel.querySelectorAll<HTMLButtonElement>('button[data-op]')) {
     const good = btn.dataset.good as GoodId;
     const n = Number(btn.dataset.n);
@@ -96,5 +108,10 @@ export function updateTrade(panel: HTMLElement, world: World): void {
         ? buyPrice(good, n) > world.money || world.stock[good] + n > STORAGE_CAP
         : world.stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
+    if (btn.dataset.op === 'sell') {
+      const t = sellTexts(world, good, n);
+      if (btn.textContent !== t.label) btn.textContent = t.label;
+      if (btn.title !== t.title) btn.title = t.title;
+    }
   }
 }
