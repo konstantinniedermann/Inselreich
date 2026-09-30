@@ -843,3 +843,17 @@ abgeschwächt, leere Statuszeile ohne `$CLAUDE_PROJECT_DIR`, Frische 600 s vs. 1
 — Warum: Befunde behoben und nachgeprüft. — Kosten bei Irrtum: gering, nur `tools/studio/`.
 
 Entscheider: L0 · Anlass: Nachprüfung lead-qa STUDIO-LIMIT
+
+## R81 · 2026-09-30 · M6/M8
+
+Ruling: (1) M6-Spec (`docs/m6-spec` @ 87d58e2, 75 Abnahmekriterien) geht ins **Gate Spec**,
+Prüfer lead-tech und lead-qa parallel. (2) Tiefe-Empfehlung von lead-design angenommen: nichts aus
+K-C in M6 holen, dafür **M8 „Vierte Stufe und Veredelung" zeitlich vorziehen** — die M8-Spec
+beginnt nach dem Gate Spec von M6, der M8-Sim-Strang folgt direkt auf den M6-Sim-Strang, parallel
+zu den Render-Paketen von M7. Zeigt der Spielstand des Nutzers Tick > 8000 oder „nach dem Sieg ist
+nichts los", bekommt M8 Vorrang vor M6. (3) Integrationszweig `test/m6-int` und U1 vor M7 in
+`settings.ts`/`hud.ts`/`style.css` (Spec §20, Punkte 5 und 7) entscheidet das Gate Plan. —
+Warum: M6 bringt Entscheidungsdichte, Fortschrittstiefe fehlt; der Nutzer verlangte beides. —
+Kosten bei Irrtum: Spec-Arbeit M8 früher als nötig.
+
+Entscheider: L0 · Anlass: Bericht lead-design M6-SPEC
