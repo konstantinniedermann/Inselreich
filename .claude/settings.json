@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -49,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -60,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/hook.py\" 2>/dev/null || true",
             "timeout": 5
           }
         ]

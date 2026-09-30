@@ -341,7 +341,8 @@ class _Builder:
         node = self.node(sid, agent_id, ts, typ)
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
             node["status"], node["stopped"] = "active", None
-            node["_runs"].append([ts, None])
+            if not node["_runs"] or node["_runs"][-1][1] is not None:
+                node["_runs"].append([ts, None])  # offener Lauf bleibt der einzige
             node["summary"], node["_chron"] = "", False
             return
         node["_started"] = True

@@ -42,7 +42,7 @@ def build_parser() -> argparse.ArgumentParser:
     budget.add_argument("--lead", required=True)
     budget.add_argument("--grant", required=True, type=int)
     budget.add_argument("--parallel", type=int, default=0)
-    budget.add_argument("--phase", default="Standard")
+    budget.add_argument("--phase", required=True)
 
     package = sub.add_parser("package", help="Paket auf dem Meilenstein-Board")
     package.add_argument("--id", required=True)

@@ -173,5 +173,28 @@ class MainTest(unittest.TestCase):
         self.assertEqual(len(lines), 1)
 
 
+class SettingsTest(unittest.TestCase):
+    EVENTS = (
+        "SessionStart",
+        "SessionEnd",
+        "UserPromptSubmit",
+        "Stop",
+        "SubagentStart",
+        "SubagentStop",
+        "PreToolUse",
+        "PostToolUse",
+    )
+
+    def test_hooks_are_failsafe_and_complete(self):
+        path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
+        hooks = json.loads(path.read_text())["hooks"]
+        self.assertEqual(set(hooks), set(self.EVENTS))
+        for groups in hooks.values():
+            for group in groups:
+                for h in group["hooks"]:
+                    self.assertIn("tools/studio/hook.py", h["command"])
+                    self.assertTrue(h["command"].endswith("|| true"))
+
+
 if __name__ == "__main__":
     unittest.main()

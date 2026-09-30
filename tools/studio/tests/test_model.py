@@ -746,6 +746,22 @@ class ParallelRunsTest(unittest.TestCase):
         self.assertEqual((budget["used"], budget["parallel_used"]), (2, 1))
         self.assertFalse(budget["overrun"])
 
+    def test_repeated_start_keeps_single_run(self):
+        events = [
+            self.grant(),
+            start(0.5, "a1", "lead-qa"),
+            spawn(1, "a1", "qa-playtester"),
+            start(1, "W1", "qa-playtester"),
+            start(2, "W1", "qa-playtester"),
+            stop(3, "W1", "qa-playtester"),
+            spawn(4, "a1", "qa-playtester"),
+            start(4, "W2", "qa-playtester"),
+            stop(6, "W2", "qa-playtester"),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual(budget["parallel_used"], 1)
+        self.assertFalse(budget["overrun"])
+
     def test_real_overlap_still_counts(self):
         events = [
             self.grant(),
