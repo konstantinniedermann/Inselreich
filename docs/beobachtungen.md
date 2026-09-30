@@ -166,6 +166,12 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 **Ursprung:** Leads in Paket S17 (lead-production) und zuvor; von L0 weitergegeben.
 **Einschätzung:** ADR-007 und die Handbuch-Regel „Vordergrund-Regel" (STUDIO.md, Personas der Leads) prüfen, ob sie an das tatsächliche Verhalten angepasst werden müssen. Kandidat für `studio-coach`.
 
+### 2026-09-30 · `tools/studio/hook.py` / `model.py` `on_bind` · Herkunft des Phantom-binds offen
+
+**Beobachtung:** S17-02 verwirft ein `bind` für eine unbekannte `agent_id` (Symptomschutz). Woher die fremde `agent_id` a4262c63e036f5c23 stammte, ist weiter offen: Im ganzen Event-Log ist es der einzige solche Fall. Ein verworfener bind zählt ausserdem keinen Tool-Aufruf (`count_tool`). Kommt ein bind zeitgleich mit `agent_start` und wird falsch sortiert, geht die Bindung verloren; `resolve` fällt dann auf Rolle und Paket zurück.
+**Ursprung:** Task-Review S17-02 (Retro ci-pages B3 verlangte „zuerst Ursache klären").
+**Einschätzung:** Harmlos, solange der Fall selten bleibt. Tritt er wieder auf, den Hook-Payload der fremden `agent_id` mitschreiben (z. B. `agent_type`) und die Quelle klären.
+
 ---
 
 ## Ausgewertet 2026-09-30
