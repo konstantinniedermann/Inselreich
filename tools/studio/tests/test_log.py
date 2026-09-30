@@ -129,11 +129,15 @@ class LogTest(unittest.TestCase):
         self.run_log("result", "--role", "lead-tech", "--package", "M5-02",
                      "--outcome", "nacharbeit", "--review-rounds", "2",
                      "--worker", "tech-sim-engineer")
-        self.run_log("milestone", "--id", "M5", "--status", "start", "--title", "Handel")
+        self.run_log(
+            "milestone", "--id", "M5", "--status", "start", "--title", "Handel"
+        )
         self.run_log("retro", "--id", "RETRO-1", "--kind", "adhoc",
                      "--triggers", "ci:1,runden:M5-02")
         result, ms, retro = self.events()
-        self.assertEqual((result["outcome"], result["review_rounds"]), ("nacharbeit", 2))
+        self.assertEqual(
+            (result["outcome"], result["review_rounds"]), ("nacharbeit", 2)
+        )
         self.assertEqual(result["package_id"], "M5-02")
         self.assertEqual(result["handbook_version"], "1.0")
         self.assertEqual((ms["milestone"], ms["status"]), ("M5", "start"))
@@ -146,8 +150,10 @@ class LogTest(unittest.TestCase):
             "--recommendation", "Nein", "--reason", "ADR-001", "--cost", "M5-03 wartet",
             "--blocks", "M5-03", "--from", "lead-tech")
         self.assertEqual(code, 0)
-        self.assertEqual(self.run_log("queue", "--id", "N-001", "--answer", "Nein")[0], 0)
-        self.assertEqual(self.run_log("queue", "--id", "N-001", "--done", "verworfen")[0], 0)
+        answer = self.run_log("queue", "--id", "N-001", "--answer", "Nein")
+        self.assertEqual(answer[0], 0)
+        done = self.run_log("queue", "--id", "N-001", "--done", "verworfen")
+        self.assertEqual(done[0], 0)
         self.assertEqual(self.run_log("queue", "--id", "N-404", "--answer", "x")[0], 2)
         text = (Path(self.docs) / "warteschlange.md").read_text("utf-8")
         self.assertIn("## N-001 \u00b7 umgesetzt", text)
@@ -192,7 +198,8 @@ class LogTest(unittest.TestCase):
         code, out, _ = self.run_log("archive")
         self.assertEqual(code, 0)
         self.assertFalse((Path(self.tmp.name) / "events.jsonl").exists())
-        archived = list((Path(self.tmp.name) / "archiv" / "events").glob("events-*.jsonl"))
+        folder = Path(self.tmp.name) / "archiv" / "events"
+        archived = list(folder.glob("events-*.jsonl"))
         self.assertEqual(len(archived), 1)
         self.assertIn("archiviert", out)
 
@@ -201,7 +208,8 @@ class LogTest(unittest.TestCase):
             self.run_log("status", "--role", "lead-qa", "--status", "idle")
             code, _, _ = self.run_log("archive")
             self.assertEqual(code, 0)
-        archived = list((Path(self.tmp.name) / "archiv" / "events").glob("events-*.jsonl"))
+        folder = Path(self.tmp.name) / "archiv" / "events"
+        archived = list(folder.glob("events-*.jsonl"))
         self.assertEqual(len(archived), 2)
 
     def test_archive_without_file(self):

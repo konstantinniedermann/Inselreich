@@ -31,24 +31,27 @@ def collect(runner, seen: set[str]) -> list[dict]:
         runs = runner()
         events = []
         for run in runs:
-            run_id = str(run["databaseId"])
-            if run.get("status") != "completed" or run_id in seen:
+            try:
+                run_id = str(run["databaseId"])
+                if run.get("status") != "completed" or run_id in seen:
+                    continue
+                events.append(
+                    {
+                        "ts": now_iso(),
+                        "session_id": "ci",
+                        "agent_id": "",
+                        "kind": "ci",
+                        "run_id": run_id,
+                        "conclusion": run.get("conclusion", ""),
+                        "branch": run.get("headBranch", ""),
+                        "sha": run.get("headSha", ""),
+                        "workflow": run.get("workflowName", ""),
+                        "created": run.get("createdAt", ""),
+                        "source": "ci",
+                    }
+                )
+            except Exception:
                 continue
-            events.append(
-                {
-                    "ts": now_iso(),
-                    "session_id": "ci",
-                    "agent_id": "",
-                    "kind": "ci",
-                    "run_id": run_id,
-                    "conclusion": run.get("conclusion", ""),
-                    "branch": run.get("headBranch", ""),
-                    "sha": run.get("headSha", ""),
-                    "workflow": run.get("workflowName", ""),
-                    "created": run.get("createdAt", ""),
-                    "source": "ci",
-                }
-            )
         return events
     except Exception:
         return []

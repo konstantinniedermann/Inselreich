@@ -40,6 +40,11 @@ class CiTest(unittest.TestCase):
 
         self.assertEqual(ci.collect(boom, set()), [])
 
+    def test_bad_record_is_skipped(self):
+        runs = [{"status": "completed"}, "kaputt", RUNS[0]]
+        events = ci.collect(lambda: runs, set())
+        self.assertEqual([e["run_id"] for e in events], ["1"])
+
 
 if __name__ == "__main__":
     unittest.main()
