@@ -44,6 +44,8 @@ Option 2.
 
 - Hooks funktionieren ohne laufenden Server; das Dashboard kann jederzeit nachträglich gestartet
   werden und zeigt die ganze Session.
+- Der Hook startet das Dashboard und öffnet den Browser beim ersten Subagenten-Start von L0
+  (einmal je Session, Marker unter `.studio/opened/`; Opt-out `STUDIO_NO_BROWSER=1`, R21).
 - Keine neuen Pakete; Tests laufen mit `unittest` in `make check` (R8).
 - **Grenzen:**
   - Kein Heartbeat während langer Denkphasen ohne Tool-Aufruf; solche Agenten können nach

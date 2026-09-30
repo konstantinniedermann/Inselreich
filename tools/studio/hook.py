@@ -7,10 +7,15 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
+import re
 import shlex
+import subprocess
 import sys
+from collections.abc import Callable, Mapping
+from pathlib import Path
 
-from paths import append_event, now_iso
+from paths import append_event, now_iso, studio_home
 
 PROMPT_HEAD = 400
 MESSAGE_MAX = 600
@@ -137,6 +142,55 @@ def to_event(p: dict) -> dict | None:
     return event
 
 
+def launch_detached(args: list[str]) -> None:
+    subprocess.Popen(
+        args,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+def maybe_open_dashboard(
+    payload: dict,
+    env: Mapping[str, str],
+    platform: str,
+    launch: Callable[[list[str]], None],
+) -> bool:
+    """Öffnet das Dashboard beim ersten Subagenten-Start der Hauptsession (einmal je Session)."""
+    if (
+        payload.get("hook_event_name") != "PreToolUse"
+        or payload.get("tool_name") not in AGENT_TOOLS
+        or payload.get("agent_id")
+    ):
+        return False
+    if env.get("STUDIO_NO_BROWSER") or env.get("CLAUDE_CODE_ENTRYPOINT", "").startswith(
+        "sdk"
+    ):
+        return False
+    opener = {"darwin": "open", "linux": "xdg-open"}.get(platform)
+    session_id = payload.get("session_id")
+    if not opener or not isinstance(session_id, str):
+        return False
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", session_id):
+        return False
+    marker_dir = studio_home() / "opened"
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        os.close(os.open(marker_dir / session_id, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+    except FileExistsError:
+        return False
+    port = env.get("STUDIO_PORT", "")
+    port = port if port.isascii() and port.isdigit() else "8765"
+    url = f"http://127.0.0.1:{port}/?session={session_id}"
+    start_sh = str(Path(__file__).resolve().parent / "start.sh")
+    launch(
+        ["bash", "-c", 'bash "$1" && "$2" "$3"', "studio-open", start_sh, opener, url]
+    )
+    return True
+
+
 def main() -> int:
     try:
         payload = json.loads(sys.stdin.read() or "null")
@@ -156,6 +210,8 @@ def main() -> int:
                 }
             }
             print(json.dumps(output, ensure_ascii=False))
+        with contextlib.suppress(Exception):
+            maybe_open_dashboard(payload, os.environ, sys.platform, launch_detached)
     except Exception:  # noqa: BLE001 — ein Hook darf die Session nie stören
         return 0
     return 0

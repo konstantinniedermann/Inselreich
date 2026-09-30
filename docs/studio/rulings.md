@@ -163,3 +163,11 @@ Ruling: Heartbeats im Feed serverseitig zusammengefasst, Schalter zum Ausblenden
 verdrängen Heartbeats die aussagekräftigen Zeilen. — Weniger Detail im Feed.
 
 Entscheider: L0 · Anlass: Studio-Setup
+
+## R21 · 2026-09-30 · Setup-Session
+
+Ruling: Dashboard öffnet sich automatisch beim ersten Subagenten-Start von L0 — Nutzerwunsch;
+Auslöser Spawn statt SessionStart, damit reine Wartungssessions kein Browserfenster öffnen. —
+Kosten: ein Browser-Tab je Session.
+
+Entscheider: L0 · Anlass: Nutzerwunsch

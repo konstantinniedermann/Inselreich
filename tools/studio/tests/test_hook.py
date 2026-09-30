@@ -177,6 +177,67 @@ class MainTest(unittest.TestCase):
         self.assertEqual(len(lines), 1)
 
 
+class OpenDashboardTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        old = os.environ.get("STUDIO_HOME")
+        os.environ["STUDIO_HOME"] = self.tmp.name
+        self.addCleanup(
+            lambda: (
+                os.environ.pop("STUDIO_HOME")
+                if old is None
+                else os.environ.__setitem__("STUDIO_HOME", old)
+            )
+        )
+        self.calls = []
+
+    def run_hook(self, p, env=None, platform="darwin"):
+        return hook.maybe_open_dashboard(p, env or {}, platform, self.calls.append)
+
+    def spawn(self, **kw):
+        return payload("PreToolUse", tool_name="Agent", **kw)
+
+    def test_first_main_spawn_launches_once(self):
+        self.assertTrue(self.run_hook(self.spawn()))
+        self.assertEqual(len(self.calls), 1)
+        args = self.calls[0]
+        self.assertEqual(args[0], "bash")
+        self.assertTrue(args[4].endswith("start.sh"))
+        self.assertEqual(args[5], "open")
+        self.assertEqual(args[6], "http://127.0.0.1:8765/?session=s-1")
+        self.assertFalse(self.run_hook(self.spawn()))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_linux_opener_and_port(self):
+        self.run_hook(self.spawn(), {"STUDIO_PORT": "9000"}, "linux")
+        self.assertEqual(self.calls[0][5], "xdg-open")
+        self.assertIn(":9000/", self.calls[0][6])
+
+    def test_bad_port_falls_back(self):
+        self.run_hook(self.spawn(), {"STUDIO_PORT": "9;x"})
+        self.assertIn(":8765/", self.calls[0][6])
+
+    def test_non_triggers(self):
+        self.assertFalse(self.run_hook(self.spawn(agent_id="a1")))
+        self.assertFalse(self.run_hook(payload("PreToolUse", tool_name="Bash")))
+        self.assertFalse(self.run_hook(payload("PostToolUse", tool_name="Agent")))
+        self.assertEqual(self.calls, [])
+
+    def test_skips(self):
+        self.assertFalse(self.run_hook(self.spawn(), {"STUDIO_NO_BROWSER": "1"}))
+        env = {"CLAUDE_CODE_ENTRYPOINT": "sdk-cli"}
+        self.assertFalse(self.run_hook(self.spawn(), env))
+        self.assertFalse(self.run_hook(self.spawn(), platform="win32"))
+        self.assertEqual(self.calls, [])
+
+    def test_malicious_session_id_skips(self):
+        bad = {**self.spawn(), "session_id": "../x"}
+        self.assertFalse(self.run_hook(bad))
+        self.assertEqual(self.calls, [])
+        self.assertFalse((Path(self.tmp.name).parent / "x").exists())
+
+
 class SettingsTest(unittest.TestCase):
     EVENTS = (
         "SessionStart",

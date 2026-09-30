@@ -168,6 +168,8 @@ make studio-archive  # Events archivieren, Dashboard startet leer
 make studio-test     # Tests der Studio-Werkzeuge
 ```
 
+Der Browser öffnet das Dashboard automatisch beim ersten Subagenten-Start einer Session (Opt-out: `STUDIO_NO_BROWSER=1`).
+
 ## Dokumentation
 
 Einstieg: [`docs/index.md`](docs/index.md) — Architektur (arc42), Specs, Pläne, ADRs, Beobachtungen.

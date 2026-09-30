@@ -336,6 +336,9 @@ beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`
 5. Auf den Auftrag warten oder den laufenden Plan fortsetzen (pausierte Pakete neu briefen; der
    Stand steht in `state.md` und in den Übergaben unter `.studio/handoffs/`).
 
+Das Dashboard öffnet sich beim ersten Subagenten-Start von L0 automatisch im Browser (einmal je
+Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).
+
 **Ende:**
 
 1. Laufende Leads abschliessen oder pausieren: Lead meldet Zwischenstand (Bericht, bei Bedarf
