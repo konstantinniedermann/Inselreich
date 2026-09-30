@@ -578,3 +578,27 @@ und 390-px-Ansicht zusätzlich im Nutzer-Playtest auf echtem Gerät. — Kosten 
 startet erst beim Loslassen.
 
 Entscheider: L0 · Anlass: Bericht Welle 3
+
+## R63 · 2026-09-30 · M5
+
+Ruling: Welle 4 abgenommen — alle Muss-Pakete von M5 fertig (U3, B1 Review-OK; Browser-Checks U1b,
+U3, B1 OK; AK-A1-04 vollständig). Balancing-Baseline Sieg-Tick 6050 nach Verkaufssättigung
+(firstSettler 350, firstCitizen 3850, minMoney 57, Endgeld 212; dreimal gemessen), Grenze 7500
+bleibt. Übernommen: U3/B1 parallel mit strikt sequenziellen Checks; B1-Determinismus-Test prüft
+Aktionsergebnisse; Verkaufsbutton „−10 · G 38" mit vollem Text im Tooltip; „Liefern" nur bei
+aktivem Auftrag; Ton-Hooks direkt nach der Sim-Aktion. Lehre für Playtester-Briefings: jedes
+geöffnete Panel auf Lesbarkeit und Überlauf prüfen (erster U3-Check übersah ein gestauchtes Panel).
+— Kosten bei Irrtum: Neumessung der Baseline.
+
+Entscheider: L0 · Anlass: Bericht Welle 4
+
+## R64 · 2026-09-30 · M5
+
+Ruling: Kann-Posten — Tag-Nacht-Tönung (A4) und Werkzeugmacher (S4) werden umgesetzt, Träger (A5)
+samt Wegsuche (S3b) gestrichen — A4 stärkt Ambiente, S4 Tiefe (beides Playtest-Punkte); A5/S3b ist
+der teuerste Posten (7 Starts) und steht zuerst in der Streichreihenfolge. Kein Zusatzbudget: die
+freien Muss-Starts (lead-tech 9, lead-art 7) decken A4, S4, die zugehörigen UI-Teile (Tag-Nacht-
+Schalter, Hotkey T), deren Checks und D1. — Kosten bei Irrtum: Träger kommen in einen späteren
+Meilenstein.
+
+Entscheider: L0 · Anlass: Welle 4 abgeschlossen, Plan „Streichreihenfolge"
