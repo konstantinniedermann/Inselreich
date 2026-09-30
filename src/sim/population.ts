@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
+import { TAX_LEVELS, TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { GROWTH_INTERVAL, UPGRADE_WAIT, UPKEEP_INTERVAL } from './defs/timing';
+import { GROWTH_INTERVAL, UPKEEP_INTERVAL } from './defs/timing';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
@@ -112,8 +112,10 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
   const next = TIERS[(house.tier + 1) as Tier];
   const reasons: string[] = [];
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
-  if (world.tick - house.satisfiedSince < UPGRADE_WAIT)
-    reasons.push(`Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`);
+  const wait = TAX_LEVELS[world.taxLevel].upgradeWait;
+  if (wait === null) reasons.push('Steuer zu hoch');
+  else if (world.tick - house.satisfiedSince < wait)
+    reasons.push(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
   for (const s of next.services) {
     if (!serviceAvailable(world, b, s))
       reasons.push(`${BUILDING_DEFS[SERVICE_BUILDING[s]].name} fehlt in Reichweite`);
@@ -148,6 +150,14 @@ export function tryUpgrade(world: World, b: Building): boolean {
   return true;
 }
 
+/** Zielbelegung eines Hauses: Höchstbelegung × Belegungsanteil der Steuerstufe, mindestens 1. */
+export function houseCap(world: World, house: HouseState): number {
+  return Math.max(
+    1,
+    Math.floor(TIERS[house.tier].maxInhabitants * TAX_LEVELS[world.taxLevel].occupancy),
+  );
+}
+
 export function tickPopulation(world: World): void {
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
@@ -159,14 +169,16 @@ export function tickPopulation(world: World): void {
     const met = allNeedsMet(house, tier);
     if (!met) house.satisfiedSince = world.tick;
     if (world.tick % GROWTH_INTERVAL === 0 && world.tick > 0) {
-      if (met) house.inhabitants = Math.min(tier.maxInhabitants, house.inhabitants + 1);
+      const cap = houseCap(world, house);
+      if (house.inhabitants > cap) house.inhabitants -= 1;
+      else if (met) house.inhabitants = Math.min(cap, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);
       tryUpgrade(world, b);
     }
   }
 }
 
-/** Steuern je Buchungstakt: Einwohner × Steuersatz, halbiert bei unerfüllten Bedürfnissen. Erst summieren, dann einmal abrunden. */
+/** Steuern je Buchungstakt: Einwohner × Steuersatz, halbiert bei unerfüllten Bedürfnissen, dann × Steuerstufe. Erst summieren, dann einmal abrunden. */
 export function totalTaxes(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) {
@@ -175,7 +187,7 @@ export function totalTaxes(world: World): number {
     const tier = TIERS[house.tier];
     sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : UNSATISFIED_TAX_FACTOR);
   }
-  return Math.floor(sum);
+  return Math.floor((sum * TAX_LEVELS[world.taxLevel].pct) / 100);
 }
 
 /** Aktualisiert die Steuerstatistik und bucht sie im selben Takt wie den Unterhalt. */

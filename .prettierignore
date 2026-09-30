@@ -5,3 +5,4 @@ package-lock.json
 .studio
 .worktrees
 docs/studio/VERFASSUNG.md
+tests/sim/fixtures/
