@@ -505,3 +505,13 @@ Messung in B1), Aufstiegswartezeit „niedrig" 150 Ticks. — Kosten bei Irrtum:
 Spec-Runde.
 
 Entscheider: L0 · Anlass: Gate Spec M5
+
+## R57 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 bestanden — Nachprüfung lead-tech OK (9/9 Punkte), lead-qa BEDENKEN niedrig
+(7/7 Punkte; zwei Abhängigkeiten zu S5/U1a und ein Hotkey im Szenario-Ablauf werden vor dem Plan in
+der Spec nachgetragen). Neue Setzungen übernommen: Münz-Tondrossel 50 ms, `layoutKey` für die
+Versorgungsmaske, Paket S5 für Szenario-Saves. Nächster Schritt: Plan durch lead-tech. — Kosten bei
+Irrtum: Abhängigkeitsfehler fallen spätestens im Gate Plan auf.
+
+Entscheider: L0 · Anlass: Nachprüfung Gate Spec M5
