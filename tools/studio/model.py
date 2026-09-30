@@ -204,7 +204,7 @@ class _Builder:
         self.trace: dict[str, list[dict]] = {}
         self.index = 0
         self.current_ts = ""
-        self.budgets: dict[str, dict] = {}
+        self.budgets: dict[tuple[str, str], dict] = {}
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
@@ -734,19 +734,37 @@ class _Builder:
         phase = grant.get("phase") or "Standard"
         granted = int(grant.get("granted") or 0)
         parallel = int(grant.get("parallel") or 0)
-        current = self.budgets.get(lead)
-        if current is None or current["phase"] != phase:
+        current = self.budgets.get((lead, phase))
+        if current is None:
             current = {
                 "lead": lead,
                 "phase": phase,
                 "granted": 0,
                 "parallel": 0,
                 "since": ts,
+                "session_id": str(event.get("session_id") or ""),
             }
-            self.budgets[lead] = current
+            self.budgets[(lead, phase)] = current
         current["granted"] += granted
         if parallel:
             current["parallel"] = parallel
+
+    def budget_phase(self, lead_node: dict, child: dict) -> str | None:
+        """Phase der Freigabe, der ein Start zählt; None = keine Freigabe passt."""
+        candidates = [
+            g
+            for g in self.budgets.values()
+            if g["lead"] == lead_node["role"]
+            and g["session_id"] in ("", lead_node["session_id"])
+            and g["since"] <= child["started"]
+        ]
+        if not candidates:
+            return None
+        names = {child["package"], lead_node["package"]} - {""}
+        for grant in candidates:
+            if grant["phase"] in names:
+                return grant["phase"]
+        return max(candidates, key=lambda g: g["since"])["phase"]
 
     def on_package(self, event, ts, sid):
         key = _package(event)
@@ -818,7 +836,7 @@ class _Builder:
             item["started"] = ts
         else:
             item["done"] = ts
-        self.timeline.append((ts, ident, status))
+        self.timeline.append((ts, ident, status, sid))
 
     def on_retro(self, event, ts, sid):
         triggers = event.get("triggers")
@@ -1055,14 +1073,16 @@ class _Builder:
 
         for node in self.nodes.values():
             node["milestone"] = explicit(node, set()) or self.running_milestone(
-                node["started"]
+                node["started"], node["session_id"]
             )
 
-    def running_milestone(self, t: float) -> str:
+    def running_milestone(self, t: float, sid: str = "") -> str:
         current = ""
-        for stamp, ident, status in self.timeline:
+        for stamp, ident, status, tl_sid in self.timeline:
             if stamp > t:
                 break
+            if sid and tl_sid != sid:
+                continue
             current = ident if status == "start" else ""
         return current
 
@@ -1095,23 +1115,36 @@ class _Builder:
         return view
 
     def budget_view(self) -> list[dict]:
-        leads = set(self.budgets)
-        leads |= {
-            n["role"] for n in self.nodes.values() if n["level"] == 1 and n["children"]
+        groups: dict[tuple[str, str], dict] = {
+            key: {"plan": plan, "children": []} for key, plan in self.budgets.items()
         }
+        granted_leads = {lead for lead, _ in self.budgets}
+        no_grant = {
+            "phase": "ohne Freigabe",
+            "granted": 0,
+            "parallel": 0,
+            "since": 0.0,
+            "session_id": "",
+        }
+        for lead_node in self.nodes.values():
+            if lead_node["level"] != 1 and lead_node["role"] not in granted_leads:
+                continue
+            lead = lead_node["role"]
+            for c in lead_node["children"]:
+                child = self.nodes[c]
+                if lead not in granted_leads:
+                    group = groups.setdefault(
+                        (lead, no_grant["phase"]),
+                        {"plan": dict(no_grant, lead=lead), "children": []},
+                    )
+                else:
+                    phase = self.budget_phase(lead_node, child)
+                    group = groups.get((lead, phase)) if phase else None
+                if group is not None:
+                    group["children"].append(child)
         rows = []
-        for lead in sorted(leads):
-            plan = self.budgets.get(
-                lead,
-                {"phase": "ohne Freigabe", "granted": 0, "parallel": 0, "since": 0.0},
-            )
-            children = [
-                self.nodes[c]
-                for n in self.nodes.values()
-                if n["role"] == lead
-                for c in n["children"]
-                if self.nodes[c]["started"] >= plan["since"]
-            ]
+        for (lead, _), group in sorted(groups.items()):
+            plan, children = group["plan"], group["children"]
             spans = []
             for c in children:
                 if c["_runs"]:
@@ -1128,6 +1161,7 @@ class _Builder:
                 {
                     "lead": lead,
                     "phase": plan["phase"],
+                    "session_id": plan["session_id"],
                     "granted": plan["granted"],
                     "parallel": plan["parallel"],
                     "used": used,

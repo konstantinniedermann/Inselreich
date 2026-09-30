@@ -311,10 +311,11 @@ class BudgetBoardDecisionTest(unittest.TestCase):
             (budget["granted"], budget["used"], budget["overrun"]), (4, 1, False)
         )
         events.append(self.grant(6, "lead-qa", 3, 2, phase="P2"))
-        budget = build(events)["budgets"][0]
+        rows = {b["phase"]: b for b in build(events)["budgets"]}
         self.assertEqual(
-            (budget["phase"], budget["granted"], budget["used"]), ("P2", 3, 0)
-        )
+            (rows["P2"]["granted"], rows["P2"]["used"]), (3, 0)
+        )  # neue Phase ersetzt P1 nicht
+        self.assertEqual((rows["P1"]["granted"], rows["P1"]["used"]), (4, 1))
 
     def test_starts_without_grant_are_overrun(self):
         events = [
@@ -1099,6 +1100,125 @@ def downs(row):
 
 def bind(t, aid, role, **kw):
     return ev("bind", t, agent_id=aid, role=role, **kw)
+
+
+SA, SB = "baff17bb", "25e8352d"
+
+
+def grant(t, session, phase, granted, parallel, lead="lead-tech"):
+    return ev(
+        "budget",
+        t,
+        agent_id="",
+        session=session,
+        role=lead,
+        source="log",
+        budget={"granted": granted, "parallel": parallel, "phase": phase},
+    )
+
+
+def lead_node(t, session, aid="L", lead="lead-tech", **kw):
+    return [
+        spawn(t, "main", lead, session=session),
+        start(t + 0.1, aid, lead, session=session, **kw),
+    ]
+
+
+def worker(t, session, parent, aid, stop_at=None, **kw):
+    out = [
+        spawn(t, parent, "tech-sim-engineer", session=session, **kw),
+        start(t + 0.1, aid, "tech-sim-engineer", session=session),
+    ]
+    if stop_at is not None:
+        out.append(stop(stop_at, aid, "tech-sim-engineer", session=session))
+    return out
+
+
+class BudgetPhaseSessionTest(unittest.TestCase):
+    def two_sessions(self, extra_b=0, parallel_b=False):
+        ev_ = [
+            ev("session_start", 0, session=SA),
+            ev("session_start", 0, session=SB),
+            grant(0, SA, "graph-umsetzung", 32, 2),
+            *lead_node(1, SA, "LA"),
+        ]
+        for i in range(25):  # 19 vor T1=300, 6 danach, nacheinander
+            t = 10 + i * 20 if i < 19 else 400 + i * 20
+            ev_ += worker(t, SA, "LA", f"A{i}", stop_at=t + 5)
+        ev_ += [
+            grant(300, SB, "M5-01", 4, 1),
+            *lead_node(301, SB, "LB", package="M5-01"),
+        ]
+        n = 2 + extra_b
+        for i in range(n):
+            t = 310 + i * 20
+            stop_at = None if parallel_b and i == 0 else t + 5
+            ev_ += worker(t, SB, "LB", f"B{i}", stop_at=stop_at)
+        return ev_
+
+    def rows(self, events):
+        state = build(events, now=2000, session="all")
+        return state, {b["phase"]: b for b in state["budgets"]}
+
+    @staticmethod
+    def budget_incidents(state):
+        return [i["id"] for i in state["incidents"] if i["kind"] == "budget"]
+
+    def test_parallel_sessions_budgets_do_not_mix(self):
+        state, rows = self.rows(self.two_sessions())
+        self.assertEqual((rows["M5-01"]["used"], rows["M5-01"]["granted"]), (2, 4))
+        self.assertEqual(
+            (rows["graph-umsetzung"]["used"], rows["graph-umsetzung"]["granted"]),
+            (25, 32),
+        )
+        self.assertEqual(self.budget_incidents(state), [])
+
+    def test_fifth_start_in_session_b_is_incident(self):
+        state, rows = self.rows(self.two_sessions(extra_b=5))
+        self.assertEqual(rows["M5-01"]["used"], 7)
+        self.assertIn("budget:lead-tech:M5-01", [i["id"] for i in state["incidents"]])
+
+    def test_parallelism_only_counts_within_own_phase(self):
+        events = self.two_sessions()
+        # zwei gleichzeitige in A: kein Vorfall (par 2)
+        events += worker(1500, SA, "LA", "A98") + worker(1501, SA, "LA", "A99")
+        _, rows = self.rows(events)
+        self.assertEqual(rows["graph-umsetzung"]["parallel_used"], 2)
+        self.assertFalse(rows["graph-umsetzung"]["overrun"])
+        # zwei gleichzeitige in B (par 1): Vorfall
+        events = self.two_sessions() + worker(1500, SB, "LB", "B98")
+        events += worker(1501, SB, "LB", "B99")
+        _, rows = self.rows(events)
+        self.assertEqual(rows["M5-01"]["parallel_used"], 2)
+        self.assertTrue(rows["M5-01"]["overrun"])
+
+    def test_two_phases_same_session_by_package_else_newest(self):
+        events = [
+            grant(0, SA, "P1", 5, 2),
+            grant(10, SA, "P2", 5, 2),
+            *lead_node(11, SA, "LA"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="P1"),
+            *worker(30, SA, "LA", "W2", stop_at=35),
+        ]
+        _, rows = self.rows(events)
+        self.assertEqual((rows["P1"]["used"], rows["P2"]["used"]), (1, 1))
+
+
+class MilestonePerSessionTest(unittest.TestCase):
+    def test_running_milestone_only_of_own_session(self):
+        events = [
+            ev(
+                "milestone", 1, session="sa", milestone="M-A", status="start", title="A"
+            ),
+            ev(
+                "milestone", 2, session="sb", milestone="M-B", status="start", title="B"
+            ),
+            start(5, "a1", "lead-tech", session="sa"),
+            start(6, "b1", "lead-tech", session="sb"),
+        ]
+        nodes = flat(build(events, session="all"))
+        self.assertEqual(nodes["sa:a1"]["milestone"], "M-A")
+        self.assertEqual(nodes["sb:b1"]["milestone"], "M-B")
 
 
 class PhantomBindTest(unittest.TestCase):
