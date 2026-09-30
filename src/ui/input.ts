@@ -2,10 +2,12 @@ import { canPlace, canPlaceRoad } from '../sim/placement';
 import { inBounds, tileAt } from '../sim/world';
 import { TILE, clampCamera, screenToTile, zoomAt } from '../render/camera';
 import type { GameState } from './app';
+import { hotkeyAction, type HotkeyAction } from './hotkeys';
 
 export type InputAction =
   | { type: 'tile'; x: number; y: number; dragging: boolean }
   | { type: 'cancel' }
+  | { type: 'hotkey'; action: HotkeyAction }
   | { type: 'dragEnd' };
 
 /** Tastatur-Pan in Bildschirm-Pixeln je Sekunde (= 16 px je Frame bei 60 fps). */
@@ -303,7 +305,24 @@ export function bindInput(
     t instanceof HTMLButtonElement ||
     (t instanceof HTMLElement && t.isContentEditable);
 
+  /** Eingabefelder (ohne Buttons: ein per Tab fokussierter Bauleisten-Button soll Hotkeys erlauben). */
+  const isTextField = (t: EventTarget | null): boolean =>
+    t instanceof HTMLInputElement ||
+    t instanceof HTMLTextAreaElement ||
+    t instanceof HTMLSelectElement ||
+    (t instanceof HTMLElement && t.isContentEditable);
+
   const onKeyDown = (e: KeyboardEvent): void => {
+    const hot = hotkeyAction(
+      e.key,
+      { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
+      isTextField(e.target),
+    );
+    if (hot) {
+      if (!e.repeat) onAction({ type: 'hotkey', action: hot });
+      e.preventDefault();
+      return;
+    }
     if (isFormControl(e.target)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
