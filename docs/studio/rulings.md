@@ -921,3 +921,21 @@ Die Specs werden nicht mehr geändert; beide Pläne übernehmen diese Punkte. �
 eine weitere Spec-Runde, Punkte sind klein und eindeutig. — Kosten bei Irrtum: Umordnung im Plan.
 
 Entscheider: L0 · Anlass: Bericht lead-design M6-SPEC-Nachtrag
+
+## R86 · 2026-09-30 · M8
+
+Ruling: **Gate Brainstorming M8 „Vierte Stufe und Veredelung" bestanden mit Auflage**
+(Selbstprüfung lead-design BEDENKEN). Entscheide 1–5 nach Empfehlung: (1) Stufe 4 (Kaufleute)
+erst nach dem Sieg, `citizens()` zählt Bürger und höher; (2) zweites Ziel „Handelsstadt" bei 60
+Kaufleuten, Rückfallwert 40; (3) Glashütte mit zwei Inputs (Stein, Holz), Streichvariante ein
+Input; (4) Lauf bis zum zweiten Ziel mit Grenze 12 000 Ticks, `balance.test.ts` bitgleich 6050;
+(5) nach dem zweiten Ziel Sandbox ohne Geldsenke. (6) „Steuer hoch dominiert im Endzustand" nach
+`docs/beobachtungen.md`, Kandidat für eine Kurz-Spec nach M8. Auflage (Zweck-Gegenprobe E-003,
+Nutzerzweck „mehr Tiefe"): Die Belohnung darf nicht erst jenseits einer typischen Sitzung kommen —
+die Spec zeigt das neue Ziel schon vor dem Sieg sichtbar an (Vorschau der Stufe 4) und nennt einen
+messbaren Hebel samt Playtest-Frage, falls der erste Kaufmann im Szenario später als Minute 16
+kommt (z. B. Freischaltung an eine Bürgerzahl statt an den Sieg). Die M8-Sim-Pakete sind
+blocked-by M6-S4/M6-B1. — Warum: Fortschrittstiefe nach dem Sieg war die festgestellte Lücke. —
+Kosten bei Irrtum: Wert-Anpassung nach Playtest.
+
+Entscheider: L0 · Anlass: Designvorschlag lead-design M8
