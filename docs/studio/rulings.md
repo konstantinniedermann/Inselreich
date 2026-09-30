@@ -804,3 +804,20 @@ muss rüberkommen" hängt an der Ausführung, der Slice macht das früh prüfbar
 ein Slice-Paket, das bei Misserfolg in fremde Grafik umgelenkt wird.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-design
+
+## R78 · 2026-09-30 · Programm
+
+Ruling: Nutzeranweisung „generell desktop first. auf dem handy ist es momentan unspielbar" gilt
+als Dauerregel für Inselreich und ersetzt hier „Mobile-first" aus `../CLAUDE.md`: **Zielplattform
+ist Desktop** (Maus, Tastatur, Fensterbreite ab 1280 px). Folgen: (1) M7 streicht das kompakte
+mobile HUD (R77) und misst das Frame-Budget auf Desktop (Referenz 1920×1080, ganze Insel, Sturm
+aktiv, ≥ 60 fps angestrebt, ≥ 30 fps Untergrenze); UI-Anmutung wird für Desktop entworfen.
+(2) M6 enthält keine Mobil-Posten. (3) Browser-Checks prüfen Desktop-Breiten (1280 und 1920);
+schmale Fenster nur noch als „stürzt nicht ab, nichts Wesentliches unerreichbar", keine
+Mobil-Optimierung. (4) Mobile Spielbarkeit ist kein Ziel; der Befund „unspielbar auf dem Handy"
+kommt nach `docs/beobachtungen.md`, kein Folgeissue. Personas `tech-ui-engineer` und
+`qa-playtester` sowie Projekt-CLAUDE.md werden angepasst. — Warum: ausdrückliche Anweisung des
+Nutzers; Mobil-Aufwand fliesst in Stimmung und Tiefe. — Kosten bei Irrtum: späteres
+Mobil-Paket, falls der Nutzer das Handy doch will.
+
+Entscheider: L0 · Anlass: Nutzeranweisung

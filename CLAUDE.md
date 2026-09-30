@@ -20,6 +20,10 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
   gehen in `docs/studio/warteschlange.md`.
 - Start- und Ende-Routine: `docs/studio/STUDIO.md`, Abschnitt „Session-Start und -Ende".
 
+## UI-Regel
+
+- **Desktop-first** (Nutzerentscheid, ersetzt hier „Mobile-first" aus `../CLAUDE.md`): Zielplattform ist Desktop mit Maus und Tastatur ab 1280 px; schmale Fenster nur „stürzt nicht ab", keine Mobil-Optimierung.
+
 ## Architektur-Regeln
 
 - `src/sim/` ist DOM-frei und deterministisch; Welt-Zustand ist ein JSON-fähiges Objekt (ADR-002).
