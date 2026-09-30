@@ -7,7 +7,7 @@ import {
   SYMBOL_MIN_ZOOM,
 } from '../../src/render/overlays';
 import { placeRoad } from '../../src/sim/build';
-import { coverageMask } from '../../src/sim/queries';
+import { coverageMask, layoutKey } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 
@@ -35,6 +35,21 @@ describe('overlays', () => {
     expect(calls).toBe(3);
     cache.get(w, 'supply'); // Art getrennt gehalten: kein Neuberechnen
     expect(calls).toBe(3);
+  });
+
+  it('AK-A3-05 Cache rechnet für eine andere Welt mit gleichem layoutKey neu', () => {
+    let calls = 0;
+    const cache = createCoverageCache((world, kind) => {
+      calls += 1;
+      return coverageMask(world, kind);
+    });
+    const a = createWorld(3);
+    const b = createWorld(4);
+    expect(layoutKey(a)).toBe(layoutKey(b));
+    cache.get(a, 'supply');
+    const mb = cache.get(b, 'supply');
+    expect(calls).toBe(2);
+    expect(mb).toEqual(coverageMask(b, 'supply'));
   });
 
   it('AK-A3-05 Umriss-Segmente werden mit der Maske gecacht', () => {
