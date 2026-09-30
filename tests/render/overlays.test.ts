@@ -57,7 +57,7 @@ describe('overlays', () => {
     expect(cache.outline(w, 'supply')).toBe(cache.outline(w, 'supply'));
   });
 
-  it('AK-A3-01 outlineSegments: eine Kachel hat 4 Kanten, zwei Nachbarn 6', () => {
+  it('outlineSegments (Basis für AK-A3-01/02): eine Kachel hat 4 Kanten, zwei Nachbarn 6', () => {
     const m = new Array<boolean>(9).fill(false);
     m[4] = true;
     expect(outlineSegments(m, 3)).toHaveLength(4);
@@ -65,7 +65,7 @@ describe('overlays', () => {
     expect(outlineSegments(m, 3)).toHaveLength(6);
   });
 
-  it('AK-A3-01 outlineSegments: Kartenrand zählt als Aussenkante', () => {
+  it('outlineSegments (Basis für AK-A3-01/02): Kartenrand zählt als Aussenkante', () => {
     expect(outlineSegments([true], 1)).toHaveLength(4);
   });
 
@@ -80,7 +80,7 @@ describe('overlays', () => {
     expect(overlayPlan(w, 'fisher', 5, 5)).toBeNull();
   });
 
-  it('AK-A3-03 symbolFor wählt Zeichen je Diagnose', () => {
+  it('AK-A3-04 symbolFor wählt Zeichen je Diagnose', () => {
     expect(symbolFor({ kind: 'supply' }).shape).toBe('sign');
     expect(symbolFor({ kind: 'good', good: 'food' }).shape).toBe('good');
     expect(symbolFor({ kind: 'service', service: 'faith' }).shape).toBe('bell');

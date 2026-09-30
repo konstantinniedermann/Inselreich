@@ -109,7 +109,7 @@ describe('step order: Markt und Aufträge', () => {
     expect(w.order).toMatchObject({ period: 0, ...orderForPeriod(seed, 0, 2) });
   });
 
-  it('AK-S2-13 tickMarket läuft im Schritt: Erholung nach 10 Ticks', () => {
+  it('AK-S2-03 tickMarket läuft im Schritt: Erholung nach 10 Ticks', () => {
     w.sellPct.wood = 50;
     for (let i = 0; i < 10; i++) step(w);
     expect(w.sellPct.wood).toBe(51);

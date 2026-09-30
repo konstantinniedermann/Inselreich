@@ -3,12 +3,12 @@ import { createWorld } from '../../src/sim/world';
 import { UNLOCK_EVENTS, diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 
 describe('diffSoundEvents (Spec 9.4)', () => {
-  it('AK-U2-06: gleicher Zustand ergibt keine Ereignisse', () => {
+  it('gleicher Zustand ergibt keine Ereignisse', () => {
     const w = createWorld(1);
     expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
   });
 
-  it('AK-U2-06: floor(tick/100) gestiegen ergibt coin, innerhalb des Hunderters nicht', () => {
+  it('floor(tick/100) gestiegen ergibt coin, innerhalb des Hunderters nicht', () => {
     const w = createWorld(1);
     w.tick = 99;
     const before = soundSnapshot(w);
@@ -19,7 +19,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
     expect(diffSoundEvents(b2, soundSnapshot(w))).toEqual([]);
   });
 
-  it('AK-U2-06: neue Auftragsperiode ergibt order; Wechsel auf null nicht', () => {
+  it('neue Auftragsperiode ergibt order; Wechsel auf null nicht', () => {
     const w = createWorld(1);
     const none = soundSnapshot(w);
     w.order = { period: 3, good: 'wood', amount: 20, reward: 100, due: 500 };
@@ -31,7 +31,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
     expect(diffSoundEvents(withOrder, soundSnapshot(w))).toEqual(['order']);
   });
 
-  it('AK-U2-06: Hausaufstieg ergibt upgrade, neues Haus (Stufe 1) nicht', () => {
+  it('Hausaufstieg ergibt upgrade, neues Haus (Stufe 1) nicht', () => {
     const w = createWorld(1);
     w.buildings[50] = {
       id: 50,
@@ -61,7 +61,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
     expect(diffSoundEvents(b2, soundSnapshot(w))).toEqual([]);
   });
 
-  it('AK-U2-06: won neu wahr ergibt win, bereits gewonnen nicht', () => {
+  it('won neu wahr ergibt win, bereits gewonnen nicht', () => {
     const w = createWorld(1);
     const before = soundSnapshot(w);
     w.won = true;
@@ -70,7 +70,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
   });
 });
 
-describe('UNLOCK_EVENTS (AK-U2-06)', () => {
+describe('UNLOCK_EVENTS (AK-U2-06, Browser-Teil)', () => {
   it('AK-U2-06: Freischalten auf pointerup und keydown, nicht auf pointerdown (Touch zählt sonst nicht)', () => {
     expect([...UNLOCK_EVENTS]).toEqual(['pointerup', 'keydown']);
     expect(UNLOCK_EVENTS).not.toContain('pointerdown');

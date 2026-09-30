@@ -59,7 +59,7 @@ describe('sell', () => {
     expect(w.money).toBe(5000);
   });
 
-  it('sells 10 food: money +30, food 10', () => {
+  it('sells 10 food: money +28, food 10', () => {
     expect(sell(w, 'food', 10)).toEqual({ ok: true });
     expect(w.money).toBe(5028); // Abschlag 1: 3 × (100 + … + 91) / 100
     expect(w.stock.food).toBe(10);
