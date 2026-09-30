@@ -134,7 +134,11 @@ function syncSelect(select, options, wanted) {
 
 // --- Zustand und Poll-Schleife ---------------------------------------------
 
-let selectedSession = storageGet('studio.session') || 'latest';
+// ?session=<id|all|latest> verlinkt eine bestimmte Session (hat Vorrang vor der gespeicherten Wahl).
+let selectedSession =
+  new URLSearchParams(window.location.search).get('session') ||
+  storageGet('studio.session') ||
+  'latest';
 let hideHeartbeats = storageGet('studio.hideHeartbeats') === '1';
 let chronDept = 'all';
 let lastState = null;
@@ -244,7 +248,7 @@ function nodeCard(node, showSession) {
       el('span', { class: 'role' }, node.role || 'unbekannt'),
       statusBadge(node.status),
     ),
-    node.persona ? el('p', { class: 'persona' }, node.persona) : null,
+    node.persona && node.persona !== node.role ? el('p', { class: 'persona' }, node.persona) : null,
     chips,
     node.task ? el('p', { class: 'task' }, node.task) : null,
     node.summary ? el('p', { class: 'summary' }, `Ergebnis: ${node.summary}`) : null,
