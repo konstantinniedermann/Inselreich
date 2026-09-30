@@ -41,3 +41,16 @@ Alle vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbar
 **Konventionen** — Ursprung: Gesamt-Review
 
 - Commit-Präfix `chore:` wird verwendet, steht aber nicht in der Präfixliste der übergeordneten `CLAUDE.md`. Entscheid: Liste dort ergänzen oder hier verzichten.
+
+## 2026-09-30 · M2 Wirtschaft · Aufschiebbare Befunde aus Task- und Gesamt-Review
+
+Vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbarkeit oder Spec-Konformität.
+
+- **Zeitkonstanten verstreut** (`UPKEEP_INTERVAL` in `economy.ts`, M3 bringt `GROWTH_INTERVAL` und die 300-Tick-Aufstiegswartezeit): nach M3 in ein `defs/timing.ts` zusammenziehen (Regel „Spielwerte nur in defs").
+- **Handelsbuttons** sind bei Geldmangel nur deaktiviert, ohne Grund; `'Kein Geld'` aus `buy()` ist so vom UI aus unerreichbar. Konsistent zur Bauleiste wäre „klickbar + Toast".
+- **Refund-Text nominal:** zeigt `refundCost`, obwohl `grantRefund` am Lagerlimit kappt; Verlust ist beabsichtigt, Anzeige könnte das andeuten.
+- **BFS-Richtungsarray** wird je Iteration alloziert (`roads.ts`); bei 64×64 unerheblich.
+- **`refresh()` je Weg-Kachel während Drag** (statt 10-Frame-Takt); drei billige textContent-Vergleiche.
+- **`sell` ignoriert Rückgabe von `takeStock`**, `buy` die von `addStock` — nach den Vorprüfungen sicher, per Kommentar dokumentiert.
+- **Nach Deserialisierung (M4)** `recomputeConnectivity` aufrufen statt persistiertem `connected` zu vertrauen.
+- **Prozess:** Zwei Implementierer-Subagenten blieben nach dem Schreiben der Tests ohne Fortschritt hängen (Watchdog 600 s); Muster: komplexe Einzeiler-Shellbefehle zum Editieren. Gegenmassnahme im Dispatch: Edit/Write-Tools verlangen, Shell kurz halten.

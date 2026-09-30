@@ -4,6 +4,7 @@
   --text: #e8eef5;
   --accent: #e0a940;
   --danger: #d9534f;
+  --negative: #ff8a80;
 }
 * {
   box-sizing: border-box;
@@ -97,6 +98,14 @@ body {
 .btn:hover {
   border-color: var(--accent);
 }
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: transparent;
+}
+.btn.unaffordable {
+  opacity: 0.5;
+}
 .btn.active {
   border-color: var(--accent);
   background: var(--accent);
@@ -139,4 +148,79 @@ body {
   font-size: 11px;
   text-transform: uppercase;
   opacity: 0.7;
+}
+.negative {
+  color: var(--negative);
+}
+.stock-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.chip {
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.panel-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.panel-line {
+  margin: 2px 0;
+}
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.progress {
+  height: 8px;
+  margin: 6px 0;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+.trade-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.trade-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.trade-good {
+  overflow-wrap: anywhere;
+}
+.trade-good small {
+  display: block;
+  opacity: 0.8;
+  font-size: 11px;
+}
+.trade-cell {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+.trade-price {
+  min-width: 28px;
+  font-size: 12px;
+}
+.btn-small {
+  padding: 2px 5px;
+  font-size: 12px;
+  text-align: center;
 }

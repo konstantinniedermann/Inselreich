@@ -1,7 +1,10 @@
-import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST } from '../sim/defs/buildings';
-import type { Category, Cost } from '../sim/types';
+import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
+import { checkAfford } from '../sim/economy';
+import type { Category, Cost, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
+import { costLine } from './dom';
+import { showMessage } from './messages';
 
 const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -10,18 +13,13 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'public', label: 'Öffentlich' },
 ];
 
-function costLine(c: Cost): string {
-  const parts = [`G ${c.money}`];
-  if (c.wood) parts.push(`H ${c.wood}`);
-  if (c.tools) parts.push(`W ${c.tools}`);
-  if (c.stone) parts.push(`S ${c.stone}`);
-  return parts.join(' · ');
-}
-
 function isActive(current: Tool, tool: Tool): boolean {
   if (current.kind !== tool.kind) return false;
   return current.kind !== 'build' || (tool.kind === 'build' && current.defId === tool.defId);
 }
+
+/** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
+const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
 /** Baut die Bauleiste neu auf; `onSelect` wird mit dem gewählten Werkzeug aufgerufen. */
 export function renderBuildMenu(
@@ -30,8 +28,15 @@ export function renderBuildMenu(
   onSelect: (tool: Tool) => void,
 ): void {
   nav.replaceChildren();
-  const addButton = (parent: HTMLElement, label: string, tool: Tool, sub?: string): void => {
+  const addButton = (
+    parent: HTMLElement,
+    label: string,
+    tool: Tool,
+    sub?: string,
+    cost?: Cost,
+  ): void => {
     const btn = document.createElement('button');
+    if (cost) buttonCost.set(btn, cost);
     btn.className = 'btn' + (isActive(state.tool, tool) ? ' active' : '');
     btn.textContent = label;
     if (sub) {
@@ -42,6 +47,9 @@ export function renderBuildMenu(
     btn.addEventListener('click', () => {
       btn.blur();
       onSelect(tool);
+      // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
+      const afford = cost ? checkAfford(state.world, cost) : null;
+      if (afford && !afford.ok) showMessage(afford.reason, 'error');
     });
     parent.appendChild(btn);
   };
@@ -49,7 +57,7 @@ export function renderBuildMenu(
   const basics = document.createElement('div');
   basics.className = 'buildbar-group';
   addButton(basics, 'Auswahl', { kind: 'select' });
-  addButton(basics, `Weg (${ROAD_COST})`, { kind: 'road' });
+  addButton(basics, `Weg (${ROAD_COST})`, { kind: 'road' }, undefined, ROAD_COST_OBJ);
   addButton(basics, 'Abriss', { kind: 'demolish' });
   nav.appendChild(basics);
 
@@ -65,8 +73,21 @@ export function renderBuildMenu(
     group.appendChild(heading);
     for (const id of ids) {
       const def = BUILDING_DEFS[id];
-      addButton(group, def.name, { kind: 'build', defId: id }, costLine(def.cost));
+      addButton(group, def.name, { kind: 'build', defId: id }, costLine(def.cost), def.cost);
     }
     nav.appendChild(group);
+  }
+  updateBuildMenu(nav, state.world);
+}
+
+/** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
+export function updateBuildMenu(nav: HTMLElement, world: World): void {
+  for (const btn of nav.querySelectorAll<HTMLButtonElement>('button')) {
+    const cost = buttonCost.get(btn);
+    if (!cost) continue;
+    const r = checkAfford(world, cost);
+    btn.classList.toggle('unaffordable', !r.ok);
+    const title = r.ok ? '' : r.reason;
+    if (btn.title !== title) btn.title = title;
   }
 }
