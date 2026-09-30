@@ -51,10 +51,16 @@ export interface Startable {
 let current: Startable | null = null;
 
 /** Beendet das laufende Spiel und startet mit `world` bzw. einer neuen Karte. */
-function restart(root: HTMLElement, world?: World): Startable {
+function restart(root: HTMLElement, world?: World, opts?: StartOptions): Startable {
   current?.dispose();
   current = null;
-  return startGame(root, world);
+  return startGame(root, world, opts);
+}
+
+/** Übernahme aus dem vorherigen Spiel beim Laden: Tempo und (bei gleichem Seed) Kamera. */
+export interface StartOptions {
+  speed?: GameState['speed'];
+  camera?: Camera;
 }
 
 /**
@@ -62,12 +68,12 @@ function restart(root: HTMLElement, world?: World): Startable {
  * Start fehl (z. B. keine gültige Karte), erscheint ein sticky Toast und `current` zeigt auf einen
  * Stub, der nur die Meldungsfläche wieder entfernt.
  */
-export function startGame(root: HTMLElement, loaded?: World): Startable {
+export function startGame(root: HTMLElement, loaded?: World, opts?: StartOptions): Startable {
   let unbindMessages = (): void => {};
   try {
     const gameEl = need<HTMLElement>(root, '#game');
     unbindMessages = bindMessages(gameEl);
-    const game = launch(root, gameEl, unbindMessages, loaded);
+    const game = launch(root, gameEl, unbindMessages, loaded, opts);
     if (!loaded && hasSavedGame()) {
       showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
     }
@@ -87,6 +93,7 @@ function launch(
   gameEl: HTMLElement,
   unbindMessages: () => void,
   loaded?: World,
+  opts?: StartOptions,
 ): RunningGame {
   const canvas = need<HTMLCanvasElement>(root, '#canvas');
   const hudEl = need<HTMLElement>(root, '#hud');
@@ -98,9 +105,9 @@ function launch(
   const world = loaded ?? createWorld(Date.now() % 100000);
   const state: GameState = {
     world,
-    cam: createCamera(),
+    cam: opts?.camera ? { ...opts.camera } : createCamera(),
     tool: { kind: 'select' },
-    speed: 1,
+    speed: opts?.speed ?? 1,
     hover: null,
     selectedId: null,
     panel: { kind: 'none' },
@@ -124,7 +131,11 @@ function launch(
         showMessage(r.reason, 'error');
         return;
       }
-      restart(root, r.world);
+      // Tempo bleibt; die Kamera nur bei gleicher Karte (gleicher Seed), sonst aufs Kontor zentrieren
+      restart(root, r.world, {
+        speed: state.speed,
+        camera: r.world.seed === world.seed ? state.cam : undefined,
+      });
       showMessage('Spielstand geladen');
     },
     hasProgress: () => world.tick > 0,
@@ -257,7 +268,7 @@ function launch(
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
   resize();
-  if (kontor) {
+  if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
     state.cam.x = c.cx * TILE - view.w / 2 / state.cam.zoom;
     state.cam.y = c.cy * TILE - view.h / 2 / state.cam.zoom;
@@ -284,7 +295,7 @@ function launch(
         }
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
-      input.applyKeys();
+      input.applyKeys(dt);
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
