@@ -118,8 +118,9 @@ Drei Schichten, jede für sich wirksam:
 - **Antwort des Nutzers** in einer beliebigen Session: L0 trägt sie mit `log.py queue --answer` ein,
   setzt sie um, schliesst mit `--done`. Der SessionStart-Kontext listet offene und beantwortete,
   noch nicht umgesetzte Einträge.
-- `log.py decision` bleibt für Entscheide **an L0** (Eskalationen). `--for user` ist veraltet und
-  wird auf die Warteschlange umgelenkt (Meldung, kein Event).
+- `log.py decision` bleibt für Entscheide **an L0** (Eskalationen). `--for user` bricht mit Exit 2
+  und dem Hinweis auf `log.py queue` ab (kein Event, keine stille Umlenkung); Personas und Vorlagen
+  verwenden `--for user` nicht mehr (Konsistenztest).
 
 ### Verbotene irreversible Aktionen — `tools/studio/guard.py`
 
@@ -136,8 +137,15 @@ Teilbefehle an `;`, `&&`, `||`, `|` zerlegt):
 | Verlust ungesicherter Arbeit                | `git clean` mit `-f`, `git worktree remove` mit `--force`/`-f`                                 |
 | Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` mit Ziel ausserhalb der Repo-Wurzel; erlaubt bleiben `/tmp`, `/private/tmp`, `/var/folders`, `$TMPDIR` |
 
-Fehler im Guard lassen die Aktion zu (ein Hook darf die Session nie lahmlegen); das ist eine
-bekannte Grenze, abgesichert durch Tests.
+Zusätzlich: `git`-Optionen vor dem Unterbefehl (`-C`, `-c`, `--git-dir=…`) werden übersprungen,
+der Inhalt von `bash -c`/`sh -c`/`zsh -c`/`eval` wird rekursiv geprüft. „Repo" ist das **Hauptrepo**
+(`paths.repo_root()`, auch aus Worktrees), relative Pfade gelten ab dem `cwd` des Hook-Aufrufs.
+
+**Nicht verboten** (bewusste Grenze, im Handbuch genannt): Verwerfen ungesicherter Änderungen im
+Arbeitsbaum (`git checkout -- <pfad>`, `git restore`, `switch --discard-changes`) — das steht nicht
+auf der Liste des Nutzers und wird für Aufräumarbeiten gebraucht. Fehler im Guard lassen die Aktion
+zu (ein Hook darf die Session nie lahmlegen). Der Guard ist ein **Schutz gegen Versehen, nicht gegen
+Absicht** (z. B. `$(…)`-Konstrukte, Skripte); das steht so in der Verfassung.
 
 ### Verfassungs-Schutz
 
@@ -147,7 +155,15 @@ Bash-Befehle, die die Datei nennen und schreibend wirken (`>`, `tee`, `sed -i`, 
 Nutzer in einem eigenen Prompt die Phrase `VERFASSUNG ÄNDERN`, legt `guard.py` (auch als
 UserPromptSubmit-Hook registriert) die Marke `.studio/verfassung-ok/<session_id>` an; für diese
 Session ist die Datei dann änderbar. Agenten-Meldungen (`<task-notification>`, `<agent-message`)
-zählen nie als Freigabe.
+zählen nie als Freigabe. Die Freigabe gilt nur für die **Hauptsession** (PreToolUse ohne
+`agent_id`), nicht für Subagenten. Mitgeschützt (gleiche Freigabe): `tools/studio/guard.py`, der
+Marken-Ordner `.studio/verfassung-ok/`, und Bash-Aufrufe von `claude` mit der Freigabe-Phrase. Die
+Guard-Einträge in `.claude/settings.json` schützt die Verfassung als Regel (§1), nicht technisch.
+
+**Bestätigung der Verfassung:** L0 schreibt die Verfassung 1.0 als Entwurf und legt den ersten
+Warteschlangen-Eintrag `N-001 · Verfassung 1.0 bestätigen` an. Bis zur Antwort gilt sie vorläufig.
+Betroffen sind auch Punkte, die laut bisheriger Befugnistabelle dem Nutzer gehören (Push-Regel §7,
+Vorrang vor `../CLAUDE.md`).
 
 ## 3. Verfassung, Handbuch, Changelog, Versionen
 
@@ -194,16 +210,16 @@ gelesen). `package` heisst neu `package_id` (Modell liest beide).
 | Grösse                 | Quelle                                                                                           | Güte                                          |
 | ---------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------- |
 | Dauer je Agent         | Summe der Läufe SubagentStart→SubagentStop (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs` | gemessen                                      |
-| Tool-Aufrufe je Agent  | Zahl der PreToolUse-Events des Agenten; bei Vordergrund `totalToolUseCount` zum Abgleich          | gemessen                                      |
+| Tool-Aufrufe je Agent  | Zahl der PreToolUse-Events des Agenten; bei Vordergrund `totalToolUseCount` zum Abgleich (vorhanden im Agent-Ergebnis, am Transkript nachgewiesen) | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert |
 | Tokens je Agent/Modell | Subagent-Transkript `…/<session>/subagents/agent-<id>.jsonl`; je Message-ID dedupliziert (Maximum), getrennt: Input, Cache-Schreiben, Cache-Lesen, Output | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen) |
 | Tokens L0              | Haupt-Transkript (`isSidechain: false`), inkrementell je Turn                                    | wie oben                                       |
-| Sitzungssumme          | `cost-state`-Eintrag im Haupt-Transkript (nach Session-Ende): Tokens und Kosten je Modell, inkl. interner Hilfsaufrufe | gemessen, nur für beendete Sessions             |
-| Schätzung              | Briefing-Kopfzeile `Schätzung:`                                                                  | Schätzung, als solche markiert; fehlt → „keine Schätzung" |
+| Sitzungssumme          | `cost-state`-Eintrag im Haupt-Transkript (nach Session-Ende): Tokens je Modell inkl. interner Hilfsaufrufe; Kosten | Tokens gemessen; Kosten **berechnet** (Listenpreis laut Claude Code, keine Abrechnung); nur beendete Sessions |
+| Schätzung              | Briefing-Kopfzeile `Schätzung:` — meint den **ganzen Auftrag inkl. aller Unteraufträge**; verglichen mit Dauer des Agenten (Wanduhr) und Tool-Aufrufen seines Teilbaums | Schätzung, als solche markiert; fehlt → „keine Schätzung" |
 | Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead                                                      | erfasst; fehlt → „nicht erfasst"               |
 | Fortsetzungen          | erneutes SubagentStart derselben Agent-ID (SendMessage)                                           | gemessen                                      |
 | CI                     | `ci.py` über `gh run list` (SessionStart losgelöst, Session-Ende, nach Push)                       | gemessen; ohne `gh` → „nicht gemessen"          |
 | Eskalationen           | `decision --for l0` + Warteschlangen-Einträge                                                     | erfasst                                       |
-| Inaktiv/gescheitert    | Status `failed`; Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status         | gemessen (Lücken-Heuristik)                    |
+| Inaktiv/gescheitert    | Status `failed` (erfasst); Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status | Lücke gemessen, „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen) |
 
 **Nicht messbar** (im Dashboard „nicht gemessen"): Kosten je Agent (nur Sitzungssumme), Denkzeit
 ohne Tool-Aufruf, Tokens von Hilfsaufrufen je Agent, Aufwand des Nutzers.
@@ -228,8 +244,9 @@ Lücke) und daraus:
   Ist (Dauer, Tools, Tokens), Bericht-Link, Ergebnis.
 - **Aufwand** je Agent-Rolle, Paket, Lead (eigener + Teilbaum), Meilenstein, Modell; Schätzung vs.
   Ist (Summe und Abweichung in %, nur über Delegationen mit Schätzung).
-- **Qualität**: Annahmequote beim ersten Wurf (`angenommen` mit `review_rounds ≤ 1` / alle
-  Ergebnisse), Review-Runden (Mittel, Max), Nacharbeit (Anzahl, Anteil), verworfen, CI-Fehlschläge
+- **Qualität**: Annahmequote beim ersten Wurf (`angenommen` mit `review_rounds == 1` / geprüfte
+  Ergebnisse mit `review_rounds ≥ 1`; `review_rounds == 0` = ungeprüft, wird separat ausgewiesen und
+  nie als Treffer gezählt), Review-Runden (Mittel, Max), Nacharbeit (Anzahl, Anteil), verworfen, CI-Fehlschläge
   auf main, Eskalationen, gescheiterte Agenten, Agenten mit Lücke.
 - **Vorfälle** (Auslöser Ad-hoc-Retro) mit stabiler ID: `failed:<agent>`, `inaktiv:<agent>` (jetzt
   inaktiv), `ci:<run>`, `budget:<lead>:<phase>` (verbraucht > 1,5 × Freigabe), `runden:<paket>`
@@ -301,6 +318,13 @@ Sicherheit wie bisher: nur `textContent`, nur 127.0.0.1, Host-Prüfung, keine sc
 
 ## 7. Probelauf
 
+Eigenes `STUDIO_HOME` (Scratchpad) und eigener Dashboard-Port, damit die Probedaten die echten
+Metriken nicht verfälschen; headless mit `--dangerously-skip-permissions` (lokal, rein lesende
+Aufträge). Das Ergebnis wird als Protokoll mit Screenshots unter `docs/studio/probelauf/`
+committet (Nachweis überdauert das Zurücksetzen). `/clear` und `/compact` deckt headless nicht ab:
+Test, dass der SessionStart-Hook ohne Matcher registriert ist (alle Quellen), plus Prüfpunkt im
+Protokoll.
+
 In einer **neuen, headless** Session (`claude -p`, lädt Output-Style, Hooks, Agents): (1) Start-
 Bericht ohne Rückfrage; (2) L0 → `lead-qa` → `qa-code-reviewer`, rein lesend, mit Schätzung und
 `log.py result`; (3) künstlicher Eintrag `N-900` blockiert `PROBE-B`, `PROBE-C` läuft weiter;
@@ -308,7 +332,8 @@ Bericht ohne Rückfrage; (2) L0 → `lead-qa` → `qa-code-reviewer`, rein lesen
 Handbuch 1.1 + CHANGELOG. Guard-Probe: Versuch, `VERFASSUNG.md` zu ändern, wird abgewiesen.
 Dashboard-Screenshots per Headless-Chrome je Reiter. Danach: Events archivieren, Teständerungen an
 Handbuch, CHANGELOG, Warteschlange, Experimenten, Retros und Metriken per `git checkout`/Löschen der
-Testdateien zurücknehmen; Studio startet mit Handbuch 1.0.
+Testdateien zurücknehmen (die Probe-Änderungen werden nie committet); Studio startet mit Handbuch
+1.0. Nachweis „Spiel unverändert": `git diff main -- src/ tests/ public/` ist leer.
 
 ## Fehlerbehandlung und Tests
 
@@ -326,9 +351,19 @@ Testdateien zurücknehmen; Studio startet mit Handbuch 1.0.
 Spielcode, Projektarbeit, Kostenschätzung in Franken, Mehrbenutzer-Sicht, automatische Retros ohne
 L0-Entscheid, Änderungen an der gemeinsamen `../CLAUDE.md`.
 
+## Gate Spec (lead-qa: BEDENKEN) — eingearbeitet
+
+Guard: Git-Optionen, `bash -c`, Hauptrepo-Wurzel, Positiv-Tests für normale Studio-Arbeit,
+Grenze „Verwerfen im Arbeitsbaum" benannt, Freigabe nur Hauptsession, Mitschutz von `guard.py` und
+Marken, ehrliche Formulierung „gegen Versehen". Verfassung: Bestätigung über N-001. Messung:
+„berechnet", „Heuristik", Untergrenzen, `review_rounds == 0` ungeprüft, Umfang der Schätzung.
+`decision --for user` bricht ab. Probelauf: eigenes `STUDIO_HOME`, Protokoll committet. Die
+Studio-Variante der Gate-Prüffragen fehlt in `gates.md` → `docs/beobachtungen.md`.
+
 ## Rulings dieser Spec
 
 Stehen ab R22 in `docs/studio/rulings.md`: R22 Umsetzungsweg, R23 Projektleiter-Mechanismus, R24
 Verfassungs-Schutz, R25 Guard für irreversible Aktionen, R26 Warteschlange als Datei, R27
 Messmethode, R28 Studio-Coach als Stabsstelle, R29 Experimente und Konsistenztest, R30
-Metrik-Dateiformat, R31 Archiv-Ordner, R32 Dashboard-Reiter, R33 Push-Regel in der Verfassung.
+Metrik-Dateiformat, R31 Archiv-Ordner, R32 Dashboard-Reiter, R33 Push-Regel in der Verfassung,
+R34 Gate Spec bestanden mit eingearbeiteten Bedenken.
