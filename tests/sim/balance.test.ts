@@ -233,6 +233,8 @@ interface Trajectory {
  * 4 Wohnhäuser im Kontor-Radius. Danach baut der Controller alle 100 Ticks nach Bedarf Holzfäller,
  * Fischer, Kapelle, Stoffkette, Schule und Rumkette aus und kauft Holz, Werkzeug und Stein zu.
  * Läuft bis 50 Bürger oder `MAX_TICKS`.
+ * Laufdaten ausgeben: `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance.test.ts`
+ * (Vite reicht nur `VITE_*`-Variablen an `import.meta.env` weiter).
  */
 function buildColony(w: World): Trajectory {
   const layout = prepareLayout(w);
@@ -266,7 +268,8 @@ describe('balance: scripted colony (Kurz-Spec Balancing)', () => {
   it('reaches 50 citizens within 9000 ticks and ends with positive money', () => {
     const w = createWorld(3);
     const t = buildColony(w);
-    if (import.meta.env.BALANCE_LOG) console.log({ ...t, tick: w.tick, citizens: citizens(w) });
+    if (import.meta.env.VITE_BALANCE_LOG)
+      console.log({ ...t, tick: w.tick, citizens: citizens(w) });
 
     expect(citizens(w)).toBeGreaterThanOrEqual(WIN_CITIZENS);
     expect(w.tick).toBeLessThanOrEqual(MAX_TICKS);

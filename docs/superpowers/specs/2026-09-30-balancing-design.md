@@ -36,9 +36,11 @@ ist Backlog (kein neuer Inhalt im MVP).
 
 ## Erfolgskriterium (Test)
 
-`tests/sim/balance.test.ts` baut eine Kolonie gestaffelt (Nahrung → Häuser → Kapelle → Stoffkette →
-Rumkette → Schule, Häuser nachziehen, Werkzeug/Holz kaufen) und verlangt: `citizens ≥ 50` bei
-`tick ≤ 9000` **und** `money > 0` am Ende. Schlägt der Test mit den neuen Werten fehl, gilt die
+`tests/sim/balance.test.ts` baut eine Kolonie skriptgesteuert: alle Wege und 4 Häuser gleich zu
+Beginn (später kommen keine Häuser dazu); danach bauen bedarfsgesteuerte Produzenten (Nahrung,
+Kapelle, Stoffkette, Rumkette, Schule) nach, Werkzeug/Holz/Stein werden zugekauft, Überschüsse
+verkauft. Verlangt: Sieg (`citizens ≥ 50`) bei `tick ≤ 7500`, Lauf höchstens 9000 Ticks **und**
+`money > 0` am Ende. Schlägt der Test mit den neuen Werten fehl, gilt die
 Eskalationsstufe Steuer Siedler 7 / Bürger 14; alles Weitere braucht eine neue Kurz-Spec.
 
 ## Entscheid 2026-09-30

@@ -23,7 +23,7 @@ Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die 
 
 | Scope       | Pfade                                                                                      | Wann verwenden                            |
 | ----------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| Sim         | `src/sim/` (inkl. `src/sim/defs/timing.ts`), `tests/`                                      | Spielregeln, Balancing, Bugs in der Logik |
+| Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
 | UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |

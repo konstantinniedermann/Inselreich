@@ -108,3 +108,11 @@ eines; das zweite schrumpft auf 1 Einwohner und bleibt dort lange (siehe Aufstie
 **Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer und Review.
 **Einschätzung:** Mit 7/14 erfüllt, Eskalationsregel ausgeschöpft. Beim Playtest beobachten; weitere Änderungen
 nur über eine neue Kurz-Spec.
+
+## 2026-09-30 · M4 Persistenz · Aufschiebbare Befunde aus dem Gesamt-Review
+
+- **Spielstand-Validierung lückenhaft:** `deserialize` prüft weder `seed` noch die `defId` des Kontors noch
+  die Kachelfelder. Nicht fatal, vom Gesamt-Review nachgezeichnet.
+  **Ursprung:** M4 Gesamt-Review. **Einschätzung:** bei Bedarf nachrüsten, etwa wenn Spielstände extern entstehen.
+- **Laden setzt Zustand zurück:** Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu
+  (Nebeneffekt von `restart` → `startGame`). **Ursprung:** M4 Gesamt-Review. **Einschätzung:** kosmetisch.
