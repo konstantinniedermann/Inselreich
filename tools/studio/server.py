@@ -20,24 +20,45 @@ HOST = "127.0.0.1"
 
 
 class Handler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, store, agents, inactive_after, **kwargs):
+    def __init__(self, *args, store, agents, inactive_after, dashboard, **kwargs):
         self.store = store
         self.agents = agents
         self.inactive_after = inactive_after
-        super().__init__(*args, directory=str(DASHBOARD), **kwargs)
+        self.dashboard = dashboard
+        super().__init__(*args, directory=str(dashboard), **kwargs)
+
+    def host_allowed(self) -> bool:
+        """DNS-Rebinding-Schutz: nur Host 127.0.0.1/localhost mit eigenem Port."""
+        port = self.server.server_address[1]
+        allowed = {f"127.0.0.1:{port}", f"localhost:{port}"}
+        return self.headers.get("Host", "") in allowed
+
+    def route(self, serve_static) -> None:
+        try:
+            if not self.host_allowed():
+                self.send_error(403)
+                return
+            url = urlparse(self.path)
+            if url.path == "/api/state":
+                session = parse_qs(url.query).get("session", ["latest"])[0]
+                self.send_state(session)
+                return
+            if url.path != "/":
+                target = (self.dashboard / unquote(url.path).lstrip("/")).resolve()
+                if self.dashboard not in target.parents or not target.is_file():
+                    self.send_error(404)
+                    return
+            serve_static()
+        except (ValueError, OSError):
+            self.send_error(404)
+        except Exception:  # noqa: BLE001 — Server muss oben bleiben
+            self.send_error(500)
 
     def do_GET(self):
-        url = urlparse(self.path)
-        if url.path == "/api/state":
-            self.send_state(parse_qs(url.query).get("session", ["latest"])[0])
-            return
-        target = (DASHBOARD / unquote(url.path).lstrip("/")).resolve()
-        if url.path != "/" and (
-            DASHBOARD not in target.parents or not target.is_file()
-        ):
-            self.send_error(404)
-            return
-        super().do_GET()
+        self.route(super().do_GET)
+
+    def do_HEAD(self):
+        self.route(super().do_HEAD)
 
     def list_directory(self, path):
         self.send_error(404)
@@ -71,13 +92,18 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def make_server(
-    port: int, events_path: Path, agents: Path, inactive_after: float
+    port: int,
+    events_path: Path,
+    agents: Path,
+    inactive_after: float,
+    dashboard: Path = DASHBOARD,
 ) -> ThreadingHTTPServer:
     handler = partial(
         Handler,
         store=EventStore(events_path),
         agents=agents,
         inactive_after=inactive_after,
+        dashboard=dashboard.resolve(),
     )
     return ThreadingHTTPServer((HOST, port), handler)
 
