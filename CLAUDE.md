@@ -25,7 +25,7 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 - `src/sim/` ist DOM-frei und deterministisch; Welt-Zustand ist ein JSON-fähiges Objekt (ADR-002).
 - Sim-Aktionen werfen nicht; sie liefern `{ ok, reason }`.
 - Spielwerte nur in `src/sim/defs/`, nirgends hart im Code.
-- Keine Laufzeit-Abhängigkeiten (ADR-001).
+- Laufzeit-Abhängigkeiten nur mit ADR und L0-Ruling (ADR-001, R67).
 - `src/render/` liest die Welt nur; `src/audio/` hängt nur vom Browser ab, nicht von `src/sim/` oder `src/ui/`.
 
 ## Test-Strategie

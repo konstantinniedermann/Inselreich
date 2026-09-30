@@ -41,7 +41,7 @@ Ambiente (gezeichnete Silhouetten, Animationen, synthetischer Ton, Tag-Nacht-Tö
 | Randbedingung                 | Erläuterung                                                                                                                                        |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Stack                         | TypeScript (strict), Vite, HTML5 Canvas 2D für die Karte, DOM für das UI (ADR-001).                                                                |
-| Keine Laufzeit-Abhängigkeiten | Nur Dev-Abhängigkeiten (Vite, TypeScript, Vitest, ESLint, Prettier samt Plugins).                                                                  |
+| Keine Laufzeit-Abhängigkeiten | Nur Dev-Abhängigkeiten (Vite, TypeScript, Vitest, ESLint, Prettier samt Plugins). Ausnahmen nur per L0-Ruling mit eigenem ADR (ADR-001, Nachtrag). |
 | Browser                       | Aktueller Browser mit Canvas 2D und Web Audio; Spielstände und Einstellungen in `localStorage`. Maus, Tastatur und Touch (Pinch, Zwei-Finger-Pan). |
 | Eigene Inhalte                | Eigener Titel, eigene Zahlen; Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).                                                 |
 | Werkzeuge                     | Node ≥ 22; `make check` (Lint, Tests, Build) läuft identisch lokal und in der CI.                                                                  |
@@ -442,20 +442,20 @@ läuft ungecacht je sichtbarem Haus und Frame; gemessen 2.5–3.1 ms Arbeit je F
 
 ## 9. Architekturentscheidungen
 
-| Entscheidung                                                | Dokument                                                                |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| TypeScript, Vite, Canvas 2D, keine Laufzeit-Abhängigkeiten  | [ADR-001](adr/ADR-001-tech-stack.md)                                    |
-| Simulation als reines Datenmodell, getrennt von Darstellung | [ADR-002](adr/ADR-002-sim-render-trennung.md)                           |
-| Top-down statt Isometrie im MVP                             | [ADR-003](adr/ADR-003-topdown-statt-isometrie.md)                       |
-| Eigener Titel, eigene Grafik, eigene Spielwerte (abgelöst)  | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
-| Tick-Reihenfolge und Zustandssemantik der Gebäude           | [ADR-005](adr/ADR-005-tick-reihenfolge-und-zustaende.md)                |
-| Eigene oder offen lizenzierte Inhalte mit Nachweis          | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
-| Studio-Hierarchie                                           | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
-| Studio-Telemetrie                                           | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
-| Studio-Autonomie und Lernen                                 | [ADR-009](adr/ADR-009-studio-autonomie-und-lernen.md)                   |
-| Zufall je Auftragsperiode aus dem Seed statt RNG-Strom      | [ADR-010](adr/ADR-010-zufall-je-periode.md)                             |
-| Balancing-Revision (Steuern, Luxusverbrauch)                | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
-| M5: Steuerregler, Sättigung, Aufträge, Ambiente, Save v2    | [M5-Spec](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md)      |
+| Entscheidung                                                                                     | Dokument                                                                |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| TypeScript, Vite, Canvas 2D, keine Laufzeit-Abhängigkeiten (Ausnahmen nur per ADR und L0-Ruling) | [ADR-001](adr/ADR-001-tech-stack.md)                                    |
+| Simulation als reines Datenmodell, getrennt von Darstellung                                      | [ADR-002](adr/ADR-002-sim-render-trennung.md)                           |
+| Top-down statt Isometrie im MVP                                                                  | [ADR-003](adr/ADR-003-topdown-statt-isometrie.md)                       |
+| Eigener Titel, eigene Grafik, eigene Spielwerte (abgelöst)                                       | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
+| Tick-Reihenfolge und Zustandssemantik der Gebäude                                                | [ADR-005](adr/ADR-005-tick-reihenfolge-und-zustaende.md)                |
+| Eigene oder offen lizenzierte Inhalte mit Nachweis                                               | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
+| Studio-Hierarchie                                                                                | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
+| Studio-Telemetrie                                                                                | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
+| Studio-Autonomie und Lernen                                                                      | [ADR-009](adr/ADR-009-studio-autonomie-und-lernen.md)                   |
+| Zufall je Auftragsperiode aus dem Seed statt RNG-Strom                                           | [ADR-010](adr/ADR-010-zufall-je-periode.md)                             |
+| Balancing-Revision (Steuern, Luxusverbrauch)                                                     | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
+| M5: Steuerregler, Sättigung, Aufträge, Ambiente, Save v2                                         | [M5-Spec](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md)      |
 
 ## 10. Qualitätsanforderungen
 
