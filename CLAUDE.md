@@ -25,11 +25,13 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 - `src/sim/` ist DOM-frei und deterministisch; Welt-Zustand ist ein JSON-fähiges Objekt (ADR-002).
 - Sim-Aktionen werfen nicht; sie liefern `{ ok, reason }`.
 - Spielwerte nur in `src/sim/defs/`, nirgends hart im Code.
-- Keine Laufzeit-Abhängigkeiten (ADR-001).
+- Keine Laufzeit-Abhängigkeiten; Ausnahmen nur per L0-Ruling mit eigenem ADR (ADR-001). Der Hook `dep-guard` wird nie umgangen.
+- `src/render/` schreibt nie in die Welt; `src/audio/` importiert nichts aus `src/sim/` oder `src/ui/`.
 
 ## Test-Strategie
 
 Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera). Renderer und UI werden manuell im Browser geprüft.
+Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts` und reine, DOM-freie Helfer in `src/ui/` (`tests/ui/`).
 Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die Spielwerte: Jede Änderung in `src/sim/defs/` muss ihn grün lassen.
 
 ## Context-Scopes
@@ -39,6 +41,7 @@ Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die 
 | Sim         | `src/sim/`, `tests/`                                                                       | Spielregeln, Balancing, Bugs in der Logik |
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
 | UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
+| Audio       | `src/audio/`, `tests/audio/`                                                               | Ton, Klangereignisse                      |
 | Studio      | `docs/studio/`, `.claude/agents/`, `.claude/output-styles/`, `tools/studio/`               | Arbeitsweise, Personas, Dashboard         |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 

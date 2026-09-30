@@ -8,47 +8,19 @@ Letzte Auswertung: 2026-09-30 (`lead-production`, Paket S16-02) gegen Commit `3b
 Ergebnis: 45 Einzelbefunde. Davon sind 11 erledigt, 22 abgehakt und 12 in sechs Paket-Kandidaten
 gebündelt, die unten offen stehen. Kein Befund war widerlegt, sechs trugen eine falsche Prämisse.
 
+Nachtrag Doku-Pass M5 (D1, 2026-09-30): Die Zahlen oben sind der Stand der Auswertung gegen `3b54938`.
+Seither sind zwei Paket-Kandidaten (Bedienkomfort, Spielkonzept) nach „Erledigt" verschoben, vier stehen
+noch offen; die Abgehakt-Zeilen „`createRng` ohne Known-Vector-Test" (Trigger eingetreten, jetzt unter
+„Offen") und „Laden setzt Geschwindigkeit und Kamera zurück" (erledigt) sind entfernt. Die gesammelten
+Befunde der M5-Wellen 1–5 und von lead-art stehen als neue Einträge unter „Offen" (gegen `test/m5-int`
+geprüft, noch nicht ausgewertet).
+
 ---
 
 ## Offen
 
 Neue Einträge kommen unten dazu. Die noch offenen Paket-Kandidaten aus der Auswertung stehen hier, bis L0
 über sie entschieden hat.
-
-### Paket-Kandidat · `src/ui` · Bedienkomfort (Quality-of-Life) aus M1–M4
-
-Befunde aus den Reviews, die zusammen den QoL-Wunsch aus dem Nutzer-Playtest treffen:
-
-- Die Bau- und Abriss-Aktion wirkt auf die Kachel beim Loslassen, nicht beim Drücken. Ein kleines
-  Verrutschen trifft deshalb den Nachbarn (`src/ui/input.ts` → `endDrag` ruft
-  `tileAction(p.sx, p.sy, …)` mit der Loslass-Position auf).
-- Der Tastatur-Pan ist abhängig von der Framerate (`src/ui/input.ts` → `PAN_PER_FRAME`, `applyKeys`
-  ohne `dt`).
-- Die Touch-Bedienung ist nur teilweise vorhanden: kein Pinch, und die Werkzeuge haben keinen Pan
-  (kein Touch- oder Pinch-Code in `src/ui/`).
-- Die Handelsbuttons werden bei Geldmangel nur deaktiviert, ohne Grund (`src/ui/trade.ts` →
-  `updateTrade`). Die Gründe „Kein Geld" und „Zu wenig Geld" aus `buy()` sind vom UI aus nicht
-  erreichbar. Konsistent zur Bauleiste wäre „klickbar + Toast".
-- Der Rückerstattungstext zeigt den nominalen `refundCost` (`src/ui/inspect.ts`), obwohl
-  `grantRefund` über `addStock` am Lagerlimit kappt.
-- Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu (`src/ui/app.ts` → `restart`
-  → `startGame`, `speed: 1`).
-- Weg-Kacheln können bei fraktionalem Zoom feine Nähte zeigen. `tileToScreen`
-  (`src/render/camera.ts`) und `drawRoad` runden nicht. Nur am Code belegt, im Browser nicht
-  gemessen.
-
-**Ursprung:** Reviews M1 Task 6/7, Gesamt-Reviews M2 und M4, Nutzer-Playtest nach M4.
-**Einschätzung:** Als Paket im nächsten Meilenstein bündeln, nicht einzeln abarbeiten.
-**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt an den genannten Symbolen.
-
-### Paket-Kandidat · Spielkonzept · Richtung nach dem Nutzer-Playtest
-
-**Beobachtung:** Alles funktioniert, die Grundlage ist tragfähig. Es fehlen Tiefe, Dynamik, Ambiente
-und Quality-of-Life.
-**Ursprung:** Nutzer-Playtest nach M4 (Pages-Build).
-**Einschätzung:** Das ist kein Fehler, sondern Eingabe für die Meilenstein-Wahl durch L0
-(`docs/studio/state.md`: „Nächster Meilenstein: offen"). Erlebnis-Design läuft als eigenes
-Brainstorming mit Spec, nicht als Einzelmassnahmen.
 
 ### Paket-Kandidat · `tools/studio/model.py` · inaktiv-Vorfälle abgebrochener Sessions
 
@@ -179,6 +151,160 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 **Stand:** (1)–(3) erledigt mit Handbuch 1.3 und bereinigter `lernen.md` (Ruling R58, Paket S17-05); (4)–(5) bleiben offen.
 **Einschätzung:** (1)–(3) betreffen das Handbuch und gehen an `studio-coach` bzw. über ein L0-Ruling; (1) ist dringend, weil das Handbuch sonst eine überholte Zählung beschreibt. (4)–(5) räumt man bei der nächsten Arbeit an `tools/studio/` mit auf.
 
+### 2026-09-30 · .prettierignore / Worktrees · Prettier formatiert Worktree-Dateien vom Hauptrepo aus still nicht
+
+**Beobachtung:** Die `.prettierignore` des Hauptrepos schliesst `.worktrees/` aus. `npx prettier --write <worktree-datei>`
+aus dem Hauptrepo heraus lässt die Datei still unverändert; „Prettier gelaufen" war deshalb zweimal falsch gemeldet.
+Im Worktree selbst ausgeführt (mit dem `node_modules` des Hauptrepos) funktioniert es.
+**Ursprung:** lead-design, Spec M5 (Session 2026-09-30).
+**Einschätzung:** Hinweis in Briefings für Worktree-Arbeit („Prettier im Worktree ausführen") und Kandidat für eine
+lernen.md-Zeile durch den studio-coach.
+
+### 2026-09-30 · `src/sim/` · Sim und Spielstand nach M5
+
+- **`won` ist ein Latch** (`src/sim/tick.ts` `checkWin`): wird nie zurückgesetzt. Szenarien, die mit ≥ 50
+  Bürgern starten, setzen `won` sofort. So gewollt (Spec 2.9), aber eine Falle für Test-Szenarien.
+- **Auftragstakte in der Save-Prüfung** (`src/sim/save.ts` `isValidOrder`): prüft `due` gegen
+  `ORDER_FIRST_TICK`, `ORDER_PERIOD`, `ORDER_DURATION`. Ändert ein Balancing die Takte, werden Stände mit
+  laufendem Auftrag als „Beschädigter Spielstand" abgewiesen (auch in arc42 §11).
+- **Abgewandelte Szenario-Saves:** Wer in einem Save `tick` ändert, ohne `order.due` anzupassen, bekommt
+  „Beschädigter Spielstand". Die Prüfung ist korrekt; die Falle trifft QA, die Szenarien von Hand abwandelt.
+- **`createRng` ohne Known-Vector-Test** (`src/sim/rng.ts`, `tests/sim/rng.test.ts`): Der Trigger aus der
+  Auswertung ist eingetreten — seit S2 nutzt Sim-Code den Generator (`orderForPeriod`). Die Tests prüfen nur
+  Determinismus und Wertebereich, keinen festen Wert; eine unbemerkte Änderung am Generator würde alle
+  Aufträge verschieben, ohne dass ein Test rot wird.
+
+**Ursprung:** S1-Implementierer und -Reviewer, Lead (S2), Browser-Check A4, Auswertung 2026-09-30.
+**Einschätzung:** Der Known-Vector-Test ist ein Trivial-Test (ein fester Wert für `createRng(1)` und ein
+fester Auftrag für `orderForPeriod(3, 0, 1)`) und gehört ins nächste Sim-Paket. Die Takt-Kopplung wird erst
+relevant, wenn ein Balancing die Auftragstakte ändert (dann Migration, Auflage R61). Die übrigen Punkte sind
+Hinweise für Szenario-Autoren.
+
+### 2026-09-30 · `tests/` · Testqualität aus den M5-Reviews
+
+- `tests/sim/helpers.ts` `placeService`: Kapelle/Schule verlieren beim Platzieren einer weiteren Schule
+  `connected`; der Helfer setzt es nur einmal.
+- `tests/sim/save.test.ts` „never throws on garbage input" nutzt `{"version":1}` und läuft seit S1 durch den
+  Migrationspfad statt direkt in die Prüfung (Testabsicht verschoben, unproblematisch).
+- `tests/sim/queries.test.ts`: Purity-Test ohne AK-/RF-Präfix (~:412); `directHouse` setzt Flags, die die
+  Abfragen nicht lesen, ohne Kommentar (~:213–235); Setup für AK-S3-07 (Holzfäller) umständlich (~:386–391).
+- `tests/sim/trade.test.ts` bzw. S2-Test AK-S2-09 enthält ein Füll-`expect(GOOD_IDS.length)`.
+- `tests/sim/m5-session.test.ts`: Name des Determinismus-Tests lang.
+- `tests/sim/defs.test.ts:11`: Test für AK-S4-04 heisst „has 13 building defs…" und beginnt nicht mit
+  `AK-S4-04` — die AK-Abdeckung per `grep` findet ihn nicht.
+- `tests/ui/soundEvents.test.ts`: Test zu `UNLOCK_EVENTS` prüft nur die Konstante (Wirkung im Browser belegt).
+- `tests/render/overlays.test.ts`: Zoom-Schwellen-Test prüft nur die Konstante `SYMBOL_MIN_ZOOM`, nicht das
+  Ausblenden.
+- `tests/render/ship.test.ts`: kein Test für „kein Wasser-Nachbar → `null`" und für die Reihenfolge bei
+  mehreren Wasser-Nachbarn.
+- `tests/audio/sound.test.ts`: Lücken bei der Verkabelung Meer → Master, der `onended`-Trennung (der Fake
+  ruft `onended` nie), `setMuted(false)` bei verborgenem Tab ohne `resume` und einem abgewiesenen
+  `resume()`-Promise.
+- Szenario `bedarf` verliert über 200 Ticks Bewohner (spielüblich, für Checks beachten).
+- U3: Tests kamen erst im dritten Commit (c3f7366 und e59fbe5 ohne eigene Tests); Rot-zuerst ist nur für
+  `format`, `order` und `balanceLabel` belegt.
+
+**Ursprung:** Task-Reviews S1, S2, S3, S4, B1, U2, A1, A2, A3 (M5).
+**Einschätzung:** Alles niedrig, als Aufräum-Paket „Testpflege" bei der nächsten Arbeit im jeweiligen Strang.
+Hinweis fürs Final-Review: AK-S4-04 ist durch den genannten Test in `defs.test.ts` abgedeckt, auch wenn die
+grep-Liste ihn nicht zeigt.
+
+### 2026-09-30 · `src/ui/` · Code-Befunde aus den M5-Reviews
+
+- `src/ui/app.ts`: Die Autosave-Zeitlogik steht inline im Loop und ist ungetestet; eine reine Funktion
+  (`autosaveDue`) wäre billig testbar.
+- `src/ui/app.ts` / `src/audio/sound.ts` ~:232–238: je Spiel ein neuer `AudioContext` (`dispose()` schliesst
+  ihn) — unkritisch.
+- `src/ui/input.ts`: `onPointerCancel` setzt `gesture` nicht zurück (harmlos). Touch: Der Hover-Rahmen bleibt
+  nach dem Loslassen am letzten Fingerort stehen (kosmetisch).
+- `src/ui/inspect.ts`: `REFUND_GOODS` ist nach `refundText` deklariert. „Mangel: Kapelle fehlt" steht doppelt
+  zur Bedürfnisliste („Kapelle ✗").
+- `src/ui/hud.ts`: Die Klasse `active` heisst beim Tag-Nacht-Schalter „an", beim Stumm-Schalter „stumm"
+  (gleiche Optik, gegensätzliche Bedeutung).
+
+**Ursprung:** Task-Reviews U1a, U1b, U2, U3, U-KANN (M5).
+**Einschätzung:** Niedrig. Die doppelte Mangelzeile und die `active`-Semantik gehören zu einem kleinen
+UI-Pflegepaket; der Rest bei Gelegenheit.
+
+### 2026-09-30 · `src/ui/`, `src/style.css` · Layout und Bedienung (Browser-Checks M5)
+
+- **390 px:** Die Laden-Auswahl streckt Speichern/Laden/Neu auf 148 px Höhe; eine leere Leiste liegt zwischen
+  Canvas und Bauleiste; das Info-Panel liegt unter Karte und Bauleiste und ist nur per Seitenscroll
+  erreichbar, „Abreissen" teils unter dem Falz. Das mobile HUD belegt ~394 px (46 % von 844), die Karte
+  ~300 px.
+- **Tippziele:** Der Tag-Nacht-Button ist 34 px hoch (wie alle HUD-Buttons) — knapp für Touch.
+- **Tooltips:** Der Bauleisten-Tooltip verdeckt Nachbar-Einträge; ein Langdruck-Tooltip verschwand einmal zu
+  früh (nicht reproduzierbar).
+- **Handelspanel:** „Zurück" ist bei 1280×800 halb abgeschnitten (Panel scrollt).
+- **Start und Laden:** Reload startet immer eine neue Zufallswelt, und das frische Spiel zählt als
+  Fortschritt — „Laden" braucht deshalb immer zwei Klicks, mit Autosave-Slot drei Stufen (Bestätigen,
+  Auswahl, Slot). Laden eines Stands mit demselben Seed behält die aktuelle Kamera, weil der Spielstand
+  keine Kamera enthält (so gewollt nach Spec 10.1 Q6, wirkt aber nach einem Reload zufällig). Beim Seitenstart läuft das Spiel sofort mit 1×, während noch der Toast „Spielstand
+  vorhanden" steht.
+- **`favicon.ico`** fehlt (404 im Dev-Server).
+
+**Ursprung:** Browser-Checks U1a, U2, U1b, U3, B1, A4 (M5, headless).
+**Einschätzung:** Kandidat für ein Paket „Mobile-Layout und Startablauf" nach dem Nutzer-Playtest auf einem
+echten Gerät (dort erst entscheiden, ob HUD-Höhe und Tippziele stören). `favicon.ico` ist ein Trivial-Fix
+für den nächsten UI-Strang.
+
+### 2026-09-30 · `src/render/` · Befunde lead-art aus M5
+
+- `sprites.ts` `fallback()`: neue Closure je Zeichnen und `Painter` je Gebäude und Frame; Fallbacks einmal je
+  Kategorie vorab bauen (greift heute nicht, alle Typen haben Silhouetten).
+- `sprites.ts` Werkzeugmacher: Grautöne als Hex-Literale (`#5a5a5a`, `#4a4a4a`, `#b8b8b8`) statt benannter
+  Konstanten.
+- `sprites.ts` Rauch: `SMOKE_ORIGIN` ist eine Konstante für alle Betriebe, nicht je Silhouette; bei
+  1×1-Gebäuden ist der Rauch kaum sichtbar.
+- Terrain-Layer wird ungerundet skaliert gezeichnet, Wege/Gebäude auf gerundeten Pixeln (Versatz ≤ 0.5 px);
+  der Weg-Mittelstreifen zeigt bei Zoom ≈ 1.7 eine 1-px-Stufe.
+- `overlays.ts`: `interface Symbol` verdeckt das globale `Symbol` (umbenennen, z. B. `NeedSymbol`);
+  `houseDiagnosis` läuft ungecacht je sichtbarem Haus und Frame (gemessen 2.5–3.1 ms je Frame bei 57
+  Gebäuden, unkritisch). Das Symbol „nicht versorgt" hat keine Legende.
+- `ship.ts`: nicht auf den sichtbaren Ausschnitt begrenzt (vernachlässigbar); bei `timeMs: 0` fester
+  Neigungsversatz (~0.05 rad).
+- Vorschau: Ungültig-Vorschau auf Gras bräunlich statt klar rot, auf Wasser violett.
+
+**Ursprung:** Task-Reviews A1, A3, Silhouette S4 (lead-art); Browser-Checks A1, A3.
+**Einschätzung:** Alles niedrig, Pflege durch lead-art bei der nächsten Render-Arbeit. Die Farbe der
+Ungültig-Vorschau und die Legende berühren die Lesbarkeit und sind die ersten Kandidaten.
+**Erledigt seither:** Die Wellen-Amplitude in `water.ts` ist inzwischen eine benannte Konstante
+(`WAVE_AMPLITUDE`).
+
+### 2026-09-30 · `src/audio/sound.ts` · Befunde lead-art aus A2
+
+- ~:192/196: `unlock()` ruft `resume()` auch bei verborgenem Tab oder stumm (Risiko gering, `unlock` kommt
+  aus einer Nutzergeste).
+- ~:227: `setHidden(true)` suspendiert auch bei stumm (sinnvoll, ungetestet).
+- ~:208: `play()` prüft `ctx.state` nicht; ungedrosselte Ereignisse (`order`, `orderDone`, `win`) während
+  `suspended` erklingen beim `resume` gebündelt. Bewusst akzeptiert.
+
+**Ursprung:** Task-Review A2 (lead-art).
+**Einschätzung:** Im Nutzer-Playtest beobachten (Rückkehr in einen Tab nach längerer Zeit); sonst nichts tun.
+
+### 2026-09-30 · Studio · Briefing-Nachträge aus M5
+
+- Ein Reviewer lud einmalig `vite-node` per `npx` in den npm-Cache (nichts im Repo). Seit Auflage R62 steht
+  „kein `npx`-Download ausserhalb von `package.json`" im Briefing; eine `lernen.md`-Zeile fehlt.
+- `make test` zeigt Typfehler nicht, erst `make check` (ein `process.env`-Zugriff in einem Sim-Test brach
+  `tsc`, weil der Typ-Shim `process` nicht kennt).
+- Ein Playtest-Erstlauf wertete gestauchte Panel-Screenshots nicht. Playtester-Briefings sollten verlangen,
+  jedes geöffnete Panel auf Lesbarkeit und Überlauf zu prüfen.
+- Canvas-Pixelmessung für Rauch im 1000-ms-Takt trifft die 500-ms-Periode (Messartefakt); Animationen über
+  Screenshots belegen.
+
+**Ursprung:** Übergaben Welle 3 und 4 (lead-tech).
+**Einschätzung:** Kandidat für `studio-coach`: drei Zeilen in `lernen.md` bzw. der Playtest-Vorlage.
+
+### 2026-09-30 · Nutzer-Playtest M5 · offene Punkte (keine Befunde)
+
+Nur auf einem echten Gerät bzw. hörbar zu beurteilen: 390 px und Ton auf einem Touch-Gerät (P-01…P-04),
+Frame-Zeit mit GPU, Höhe des mobilen HUD, Ton-Hooks (Münze, Auftrag geliefert, Fehler) hörbar, subjektive
+Wirkung der Tag-Nacht-Tönung über einen ganzen Tag (10 min bei 1×), Gefühl von Pinch-Zoom und Zwei-Finger-Pan,
+„niedrig" im Steuerregler (Spec 17.1).
+**Ursprung:** Übergaben Welle 3–5, Spec 14.2.
+**Einschätzung:** Eingabe für den Nutzer-Playtest nach dem Merge von M5, kein Paket.
+
 ---
 
 ## Ausgewertet 2026-09-30
@@ -186,7 +312,7 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 ### Erledigt (überholt)
 
 - Kein `dispose()` für Listener, ResizeObserver und rAF → M4: `startGame` liefert `dispose()` (`src/ui/app.ts`).
-- Toast-Stapel bei Klick-Spam → M4: `MAX_TOASTS` 3, `DEDUPE_MS` 1000 (`src/ui/messages.ts`). Touch-Teil siehe QoL-Kandidat.
+- Toast-Stapel bei Klick-Spam → M4: `MAX_TOASTS` 3, `DEDUPE_MS` 1000 (`src/ui/messages.ts`). Touch-Teil → M5 U1a (unten).
 - `#panel` leer → M2: `src/ui/inspect.ts`, `src/ui/trade.ts`.
 - `startGame` fängt einen Startfehler aus `createWorld` nicht ab → M4: Fehler-Stub in `src/ui/app.ts`.
 - Zeitkonstanten verstreut → M4: `src/sim/defs/timing.ts`.
@@ -197,6 +323,16 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 - `GROWTH_INTERVAL` und `UPGRADE_WAIT` nach `defs/` → M4: `defs/timing.ts`. `SERVICE_BUILDING` siehe unten.
 - Implementierer hängen bei Shell-Einzeilern → Regel in `docs/studio/lernen.md` („Edit/Write statt Shell-Einzeiler").
 - Aufstieg entnimmt Ware, volle Steuer im Aufstiegstick → M5-01: `tryUpgrade`, Tests in `tests/sim/population.test.ts`.
+- Paket-Kandidat Bedienkomfort (QoL) aus M1–M4 → M5 (Spec 10.1, Q1–Q7): Aktion auf der Drück-Kachel,
+  Tastatur-Pan mit `dt`, Pinch und Zwei-Finger-Pan (U1a, `src/ui/input.ts`); Handelsbuttons klickbar mit
+  Grund, tatsächliche Rückerstattung (U1b, `src/ui/trade.ts`, `inspect.ts`); Laden behält Tempo und Kamera
+  bei gleicher Karte (U1a, `src/ui/app.ts`); ganzzahlige Kachelkanten gegen Weg-Nähte (A1,
+  `src/render/camera.ts`). Browser-Checks U1a, U1b, A1 OK. Damit auch die Abgehakt-Zeile „Laden setzt
+  Geschwindigkeit und Kamera zurück".
+- Paket-Kandidat Spielkonzept „Tiefe, Dynamik, Ambiente, QoL" (Nutzer-Playtest nach M4) → M5
+  (`docs/superpowers/specs/2026-09-30-m5-spielerlebnis-design.md`).
+- „Verkauf als Dauergewinn" (stapelbarer Gewinn aus Verkauf zu Fixpreisen, Werte-Datei M5, stand nie als
+  eigener Eintrag hier) → M5-S2: Verkaufssättigung (`src/sim/trade.ts`, Spec 5.2), Test AK-S2-01.
 
 ### Abgehakt (bewusst nichts tun, mit Trigger)
 
@@ -206,7 +342,6 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 | Gebirgsanteil schwankt stark je Seed (`mapgen.ts`)                                                                  | Nachbedingungen sichern Wald und Land; Balancing-Test läuft auf Seed 3 | ein Playtest eine unspielbare Karte meldet oder der Balancing-Test mehrere Seeds prüft |
 | `adjacentReason`/`radiusReason` leiten die Meldung aus dem Terrain ab (`placement.ts`)                              | Vier Meldungen, überschaubar                                           | eine fünfte Regel dazukommt                                                            |
 | `hash2` mit schwacher Avalanche (`noise.ts`)                                                                        | Keine sichtbaren Muster gemeldet                                       | Karten sichtbare Muster zeigen                                                         |
-| `createRng` ohne Known-Vector-Test (`rng.ts`, in `src/` ungenutzt)                                                  | Nur Tests nutzen ihn                                                   | Sim-Code ihn erstmals nutzt (dann Known-Vector-Test)                                   |
 | `defs.test` prüft nur Stichproben                                                                                   | Voller Tabellenvergleich wäre Duplikation                              | —                                                                                      |
 | Commit-Präfix `chore:`                                                                                              | Im Studio etabliert (`qa-code-reviewer`, `lead-qa`)                    | die Präfixliste der übergeordneten `CLAUDE.md` überarbeitet wird                       |
 | BFS-Richtungsarray je Iteration (`roads.ts` `reachableRoads`)                                                       | Bei 64×64 unerheblich                                                  | die Karte deutlich wächst                                                              |
@@ -223,7 +358,6 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 | Verdrängter FIFO-Knoten bei fehlendem `spawned` (R17)                                                               | Tritt nur bei verlorenen Hook-Events auf                               | verlorene Events beobachtet werden                                                     |
 | Rückfrage eines Leads erscheint als `done`                                                                          | Entscheide laufen über `log.py decision`; Ansicht „Offene Entscheide"  | eine Rückfrage übersehen wird                                                          |
 | Server-Tests langsam (echter Server je Test)                                                                        | Unkritisch                                                             | die Suite deutlich wächst                                                              |
-| Laden setzt Geschwindigkeit und Kamera zurück                                                                       | Siehe QoL-Kandidat                                                     | —                                                                                      |
 
 ### Falsche Prämissen
 
@@ -235,12 +369,3 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
-
-## 2026-09-30 · .prettierignore / Worktrees · Prettier formatiert Worktree-Dateien vom Hauptrepo aus still nicht
-
-**Beobachtung:** Die `.prettierignore` des Hauptrepos schliesst `.worktrees/` aus. `npx prettier --write <worktree-datei>`
-aus dem Hauptrepo heraus lässt die Datei still unverändert; „Prettier gelaufen" war deshalb zweimal falsch gemeldet.
-Im Worktree selbst ausgeführt (mit dem `node_modules` des Hauptrepos) funktioniert es.
-**Ursprung:** lead-design, Spec M5 (Session 2026-09-30).
-**Einschätzung:** Hinweis in Briefings für Worktree-Arbeit („Prettier im Worktree ausführen") und Kandidat für eine
-lernen.md-Zeile durch den studio-coach.

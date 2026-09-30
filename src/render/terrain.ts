@@ -27,17 +27,8 @@ function drawDetail(
   const py = ty * TILE;
   const r = (k: number): number => hash2(seed + k, tx, ty);
   switch (terrain) {
-    case 'water': {
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-      ctx.lineWidth = 1;
-      const wy = py + 8 + r(1) * 16;
-      const wx = px + 4 + r(2) * 8;
-      ctx.beginPath();
-      ctx.moveTo(wx, wy);
-      ctx.lineTo(wx + 10, wy);
-      ctx.stroke();
-      break;
-    }
+    case 'water':
+      break; // Wellen zeichnet water.ts als bewegte Ebene
     case 'sand': {
       ctx.fillStyle = 'rgba(150,120,60,0.35)';
       for (let i = 0; i < 3; i++) ctx.fillRect(px + r(i + 1) * 28, py + r(i + 10) * 28, 2, 2);
