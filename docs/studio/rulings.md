@@ -771,3 +771,15 @@ Aufräumen durch `lead-production`. — Warum: Datenbasis der Retro, offensichtl
 Kosten bei Irrtum: eine Handbuch-Version zurücknehmen.
 
 Entscheider: L0 · Anlass: Retro M5
+
+## R76 · 2026-09-30 · Studio
+
+Ruling: Gate Merge STUDIO-LIMIT **zurückgestellt** (lead-qa BEDENKEN): Fix-Runde durch lead-tech
+für Befund 1 (fehlende/kaputte/veraltete Messung zeigt „Limit: nicht gemessen" in Dashboard und
+Hook-Zeile, mit Test) und Befund 2 (Zeitstempel > now + 60 s verwerfen, mit Test); danach
+Nachprüfung nur dieser Stellen durch lead-qa. Befund 3 (niedrig) und der Nachtrag STUDIO.md
+„in Arbeit" gehen nach dem Merge von M5-NACHLESE bzw. STUDIO-LIMIT nach `docs/beobachtungen.md`
+bzw. ins Handbuch. — Warum: Verfassung §8.3 verlangt „nicht gemessen"; ein stummer Sensor ist
+schlimmer als keiner. — Kosten bei Irrtum: eine kurze Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa STUDIO-LIMIT
