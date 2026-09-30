@@ -64,6 +64,7 @@ export interface HouseState {
   inhabitants: number;
   demand: Partial<Record<GoodId, number>>;
   satisfied: Partial<Record<GoodId, boolean>>;
+  services: Partial<Record<ServiceId, boolean>>;
   satisfiedSince: number;
   supplied: boolean;
 }

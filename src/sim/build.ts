@@ -1,10 +1,18 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
 import { checkAfford, grantRefund, pay, refundCost } from './economy';
+import { TIERS } from './defs/tiers';
 import { canPlace, canPlaceRoad } from './placement';
 import { recomputeConnectivity } from './roads';
-import type { Building, BuildingDefId, Result, World } from './types';
+import type { Building, BuildingDefId, GoodId, Result, World } from './types';
 import { fail, ok } from './types';
 import { footprint, tileAt } from './world';
+
+/** Neues Haus: Bedarf 1 je Bedarfsgut der Stufe 1, damit die erste Entnahme sofort erfolgt. */
+function initialDemand(): Partial<Record<GoodId, number>> {
+  const demand: Partial<Record<GoodId, number>> = {};
+  for (const good of Object.keys(TIERS[1].needs) as GoodId[]) demand[good] = 1;
+  return demand;
+}
 
 export function placeRoad(world: World, x: number, y: number): Result {
   const res = canPlaceRoad(world, x, y);
@@ -43,8 +51,9 @@ export function placeBuilding(
     building.house = {
       tier: 1,
       inhabitants: 1,
-      demand: {},
+      demand: initialDemand(),
       satisfied: {},
+      services: {},
       satisfiedSince: 0,
       supplied: false,
     };

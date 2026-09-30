@@ -149,8 +149,9 @@ describe('build/demolish', () => {
     expect(b.house).toMatchObject({
       tier: 1,
       inhabitants: 1,
-      demand: {},
+      demand: { food: 1 },
       satisfied: {},
+      services: {},
       satisfiedSince: 0,
       supplied: false,
     });
