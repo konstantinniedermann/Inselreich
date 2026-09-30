@@ -474,3 +474,21 @@ Spec nachgezogen, Befunde in `docs/beobachtungen.md`), `make check` und `make st
 Verfassung §7.2. — Kosten bei Irrtum: Korrektur-Commit auf main.
 
 Entscheider: L0 · Anlass: Gate Merge
+
+## R54 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-001 „Schätzung aus Richtwerten statt Menschenzeit“ angenommen — Muster über
+zwei Meilensteine (−93 % bzw. −69 % Abweichung), Änderung ist ein Satz im Handbuch plus
+Richtwert-Tabelle, Messung über die vorhandene Metrik. — Kosten bei Irrtum: Rückfall auf den
+Stand 723aaee, eine Minor-Version.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R55 · 2026-09-30 · Retro Studio-Graph
+
+Ruling: Experiment E-002 „Datei-Eigentum bei parallelen L0-Sessions“ angenommen, Befund B3
+(Meilenstein-Metrik unterscheidet keine Sessions) als Werkzeugfehler an das Paket S17-03 der
+Parallel-Session übergeben — R43 hat sich bewährt und wird Regel; B3 liegt in derselben Funktion
+wie der Budget-Fix. — Kosten bei Irrtum: ein zusätzlicher Pflichtschritt beim Session-Start.
+
+Entscheider: L0 · Anlass: Retro Studio-Graph
