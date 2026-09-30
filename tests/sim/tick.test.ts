@@ -4,7 +4,10 @@ import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { checkWin, step } from '../../src/sim/tick';
 import { WIN_CITIZENS } from '../../src/sim/defs/tiers';
 import type { Building, World } from '../../src/sim/types';
-import { forceGrass, prepareEast } from './helpers';
+import { orderForPeriod } from '../../src/sim/orders';
+import { UPGRADE_WAIT } from '../../src/sim/population';
+import { TIERS } from '../../src/sim/defs/tiers';
+import { forceGrass, houseNearKontor, placeService, prepareEast } from './helpers';
 
 let w: World;
 let nextTestId = 9000;
@@ -80,5 +83,35 @@ describe('step order', () => {
     expect(w.stats.taxes).toBeGreaterThan(0);
     expect(w.stats.upkeep).toBeGreaterThan(0);
     expect(w.money).toBe(m0 + w.stats.taxes - w.stats.upkeep);
+  });
+});
+
+describe('step order: Markt und Aufträge', () => {
+  it('AK-S2-13 Aufstieg im selben Tick wie das Angebot öffnet den Stufe-2-Pool', () => {
+    let seed = -1;
+    for (let s = 1; s < 500 && seed < 0; s++) {
+      const a = orderForPeriod(s, 0, 2);
+      const b = orderForPeriod(s, 0, 1);
+      if (a.good !== b.good || a.amount !== b.amount) seed = s;
+    }
+    expect(seed).toBeGreaterThan(0);
+    w.seed = seed;
+    const house = houseNearKontor(w);
+    placeService(w, 'chapel', house.x + 9, house.y);
+    w.tick = 599;
+    house.house!.inhabitants = TIERS[1].maxInhabitants;
+    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    w.stock.cloth = 1;
+    expect(w.order).toBeNull();
+    step(w);
+    expect(w.tick).toBe(600);
+    expect(house.house!.tier).toBe(2);
+    expect(w.order).toMatchObject({ period: 0, ...orderForPeriod(seed, 0, 2) });
+  });
+
+  it('AK-S2-13 tickMarket läuft im Schritt: Erholung nach 10 Ticks', () => {
+    w.sellPct.wood = 50;
+    for (let i = 0; i < 10; i++) step(w);
+    expect(w.sellPct.wood).toBe(51);
   });
 });

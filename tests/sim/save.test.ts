@@ -67,6 +67,7 @@ describe('save', () => {
     w.taxLevel = 'high';
     w.taxLockedUntil = 450;
     w.sellPct.wood = 73;
+    w.tick = 700; // ein aktiver Auftrag muss zum Tick passen (isValidOrder)
     w.order = { period: 0, good: 'wood', amount: 25, reward: 175, due: 1200 };
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
@@ -92,6 +93,43 @@ describe('save', () => {
       tampered(w, (r) => (r.version = 3)),
       'Unbekannte Version',
     );
+  });
+
+  it('isValidOrder-Grenzen: Auftrag passt zu Tick und Periode', () => {
+    const order = (tick: number, o: Record<string, unknown>): string =>
+      tampered(w, (r) => {
+        r.tick = tick;
+        r.order = { period: 0, good: 'wood', amount: 25, reward: 175, due: 1200, ...o };
+      });
+    // gültig direkt nach dem Angebot (Tick 600) und am due-Tick (1200)
+    expect(deserialize(order(600, {})).ok).toBe(true);
+    expect(deserialize(order(1200, {})).ok).toBe(true);
+    // Periode 1: Angebot bei 1500, due 2100
+    expect(deserialize(order(1500, { period: 1, due: 2100 })).ok).toBe(true);
+    // knapp daneben: vor dem Angebot, nach due
+    expectFailure(order(599, {}), 'Beschädigter Spielstand');
+    expectFailure(order(1201, {}), 'Beschädigter Spielstand');
+    // due passt nicht zur Periode
+    expectFailure(order(700, { due: 1199 }), 'Beschädigter Spielstand');
+    expectFailure(order(700, { due: 1201 }), 'Beschädigter Spielstand');
+    expectFailure(order(700, { period: 1 }), 'Beschädigter Spielstand');
+    expectFailure(order(700, { period: -1, due: 300 }), 'Beschädigter Spielstand');
+    // Struktur: Menge ganzzahlig >= 1, Prämie ganzzahlig >= 0
+    expectFailure(order(700, { amount: 0, reward: 0 }), 'Beschädigter Spielstand');
+    expectFailure(order(700, { reward: -1 }), 'Beschädigter Spielstand');
+  });
+
+  it('isValidOrder: Prämie und Menge nicht an aktuelle Spielwerte gebunden', () => {
+    const json = tampered(w, (r) => {
+      r.tick = 700;
+      r.order = { period: 0, good: 'wood', amount: 19, reward: 1, due: 1200 };
+    });
+    expect(deserialize(json).ok).toBe(true);
+    const json2 = tampered(w, (r) => {
+      r.tick = 700;
+      r.order = { period: 0, good: 'wood', amount: 41, reward: 9999, due: 1200 };
+    });
+    expect(deserialize(json2).ok).toBe(true);
   });
 
   it('AK-S1-04 Güter tragen die Auftragsdaten (Spec 5.3), SELL_FLOOR ist 30', () => {
