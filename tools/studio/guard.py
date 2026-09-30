@@ -36,6 +36,7 @@ MAX_DEPTH = 3
 HEREDOC = re.compile(r"(?<!<)<<-?\s*['\"]?(\w+)['\"]?")
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 VARIABLE = re.compile(r"\$(?:\{(\w+)\}|(\w+))")
+UNRESOLVED_HEAD = re.compile(r"^\$(\{\w+\}|\w+)/")
 SESSION_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 FORBIDDEN = "Irreversible Aktion ist verboten"
 PROTECTED = "Verfassung und Guard ändert nur der Nutzer (Vorschlag einreihen)"
@@ -141,15 +142,17 @@ def _has_force(args: list[str]) -> bool:
     return "--force" in args or "f" in _short_flags(args)
 
 
-def _is_constitution(arg: str) -> bool:
-    return arg.replace("\\", "/").lower().endswith("verfassung.md")
+def _is_constitution(arg: str, cwd: Path) -> bool:
+    text = arg.replace("\\", "/")
+    resolved = os.path.normpath(os.path.join(str(cwd), text)).lower()
+    return resolved.endswith("/" + CONSTITUTION.lower())
 
 
 def _is_protected(arg: str, cwd: Path) -> bool:
     text = arg.replace("\\", "/")
     if text.startswith("of="):
         text = text[3:]
-    if _is_constitution(text):
+    if _is_constitution(text, cwd):
         return True
     resolved = os.path.normpath(os.path.join(str(cwd), text)).lower()
     return resolved.endswith("/" + GUARD_FILE) or MARKER_PART in resolved + "/"
@@ -166,6 +169,8 @@ def _outside(
 ) -> bool:
     # Unaufgelöstes `$VAR` bleibt wörtlich und zählt als relativer Pfad in cwd.
     expanded = _expand(arg, env)
+    if UNRESOLVED_HEAD.match(expanded):
+        return True  # `$VAR/…` am Anfang: Ziel unbekannt
     if expanded.startswith("~") or "${" in expanded:
         return True  # nicht auflösbar (~user, ${…}) → wie ausserhalb behandeln
     path = os.path.normpath(os.path.join(str(cwd), expanded))
@@ -200,7 +205,9 @@ def _apply_assigns(assigns: list[str], env: dict[str, str]) -> None:
     for assign in assigns:
         key, _, value = assign.partition("=")
         value = _expand(value, env)
-        if "$" not in value:
+        if "$" in value:
+            env.pop(key, None)
+        else:
             env[key] = value
 
 
@@ -336,7 +343,7 @@ def _check(
             reading = name in READ_ONLY or (
                 name == "git" and _git_sub(args)[0] in READ_GIT
             )
-            touched = in_marker or any("verfassung-ok" in t for t in raw)
+            touched = in_marker or any("verfassung-ok" in t.lower() for t in raw)
             if touched and not reading:
                 return PROTECTED
             found = _write_reason(name, args, cwd)

@@ -303,3 +303,32 @@ class FixRound2Test(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertIsNotNone(guard.file_reason(path, False))
+
+
+class FixRound3Test(unittest.TestCase):
+    def test_allowed(self):
+        for cmd in [
+            "echo x > a-verfassung.md",
+            "rm -rf build/$X",
+            'rm -rf "$NOPE"',
+            "D=/Users/x; D=$(mktemp -d); rm -rf $D",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
+    def test_forbidden(self):
+        for cmd in [
+            "touch .studio/Verfassung-OK/s1",
+            "mkdir -p .studio/VERFASSUNG-OK && touch .studio/VERFASSUNG-OK/s1",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd))
+                self.assertIsNone(reason(cmd, allow=True))
+        for cmd in ["rm -rf $NOPE/Users", 'rm -rf "$NOPE"/']:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd, allow=True))
+
+    def test_constitution_in_docs_studio(self):
+        cwd = Path("/repo/docs/studio")
+        self.assertIsNotNone(reason("echo x > VERFASSUNG.md", cwd=cwd))
+        self.assertIsNone(reason("echo x > VERFASSUNG.md", allow=True, cwd=cwd))
