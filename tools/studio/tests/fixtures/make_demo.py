@@ -47,8 +47,8 @@ def log(kind: str, ago: float, sid: str = SESSION, **kw):
     }
 
 
-def agent(parent, child, typ, ago, task, model, tid, package=""):
-    """Spawn, Bestätigung und Start eines Subagenten."""
+def agent(parent, child, typ, ago, task, model, tid, package="", **spawn):
+    """Spawn, Bestätigung und Start eines Subagenten (spawn: estimate, briefing …)."""
     return [
         hook(
             "spawn",
@@ -59,6 +59,7 @@ def agent(parent, child, typ, ago, task, model, tid, package=""):
             model=model,
             package=package,
             tool_use_id=tid,
+            **spawn,
         ),
         hook("spawned", ago - 0.05, parent, child_id=child, tool_use_id=tid),
         hook("agent_start", ago - 0.1, child, role=typ, status="active"),
@@ -177,7 +178,18 @@ def current_session():
             milestone="M5",
         ),
         # Design: Lead plant, Worker schreibt Spec, beide fertig
-        *agent("main", "ad1", "lead-design", 48, "Spec Handelsrouten", "opus", "t1"),
+        *agent(
+            "main",
+            "ad1",
+            "lead-design",
+            48,
+            "Spec Handelsrouten",
+            "opus",
+            "t1",
+            milestone="M5",
+            estimate={"minutes": 12, "tools": 25},
+            briefing="briefings/M5-lead-design.md",
+        ),
         *agent(
             "ad1",
             "de1",
@@ -187,6 +199,9 @@ def current_session():
             "sonnet",
             "t2",
             "M5-00",
+            milestone="M5",
+            estimate={"minutes": 8, "tools": 15},
+            briefing="briefings/M5-00.md",
         ),
         *heartbeats("de1", 45, 36, 1.5, ["Read", "Write", "Edit"]),
         hook(
@@ -196,6 +211,17 @@ def current_session():
             role="design-economy-designer",
             status="done",
             summary="Preistabelle für 8 Waren, Zoll 10 % je Hafen",
+            usage={
+                "claude-sonnet-5-5": {
+                    "input": 1200,
+                    "cache_write": 8000,
+                    "cache_read": 64000,
+                    "output": 3400,
+                    "messages": 18,
+                    "complete": 18,
+                }
+            },
+            report="berichte/M5-00.md",
         ),
         hook(
             "agent_stop",
@@ -204,9 +230,29 @@ def current_session():
             role="lead-design",
             status="done",
             summary="Spec Handelsrouten abgenommen: 3 Routen, Werte in defs",
+            usage={
+                "claude-opus-4-7": {
+                    "input": 400,
+                    "cache_write": 6000,
+                    "cache_read": 20000,
+                    "output": 2100,
+                    "messages": 6,
+                    "complete": 6,
+                }
+            },
         ),
         # Tech: Lead delegiert an zwei Worker
-        *agent("main", "at1", "lead-tech", 32, "M5 technisch umsetzen", "opus", "t3"),
+        *agent(
+            "main",
+            "at1",
+            "lead-tech",
+            32,
+            "M5 technisch umsetzen",
+            "opus",
+            "t3",
+            milestone="M5",
+            briefing="briefings/M5-lead-tech.md",
+        ),
         *agent(
             "at1",
             "ts1",
@@ -216,6 +262,9 @@ def current_session():
             "sonnet",
             "t4",
             "M5-01",
+            milestone="M5",
+            estimate={"minutes": 20, "tools": 40},
+            briefing="briefings/M5-01.md",
         ),
         *heartbeats("ts1", 29, 0.2, 1.25, ["Read", "Edit", "Bash", "Edit"]),
         *agent(
@@ -227,6 +276,8 @@ def current_session():
             "sonnet",
             "t5",
             "M5-02",
+            milestone="M5",
+            briefing="briefings/M5-02.md",
         ),
         *heartbeats("tu1", 27, 10, 2, ["Read", "Grep"]),
         # Review Focus 4: HTML im Task muss als Text erscheinen
@@ -248,6 +299,9 @@ def current_session():
             "Review Spec und Datenmodell",
             "sonnet",
             "t7",
+            milestone="M5",
+            estimate={"minutes": 6},
+            briefing="briefings/M5-review.md",
         ),
         *heartbeats("qr1", 24, 17, 1.5, ["Read", "Grep"]),
         hook(
@@ -257,6 +311,17 @@ def current_session():
             role="qa-code-reviewer",
             status="done",
             summary="Datenmodell ok, zwei Hinweise zu Rundung",
+            usage={
+                "claude-sonnet-5-5": {
+                    "input": 900,
+                    "cache_write": 5000,
+                    "cache_read": 30000,
+                    "output": 1500,
+                    "messages": 10,
+                    "complete": 8,
+                }
+            },
+            report="berichte/M5-review.md",
         ),
         log(
             "status",
@@ -264,6 +329,81 @@ def current_session():
             role="lead-qa",
             status="waiting",
             task="Wartet auf M5-01 für den Playtest",
+        ),
+        # Ergebnisse, CI, Meilensteine, Retro, Sitzungskosten
+        log(
+            "result",
+            34,
+            package="M5-00",
+            worker="design-economy-designer",
+            role="lead-design",
+            outcome="angenommen",
+            review_rounds=1,
+            milestone="M5",
+        ),
+        log(
+            "result",
+            15,
+            package="M5-00",
+            worker="qa-code-reviewer",
+            role="lead-qa",
+            outcome="nacharbeit",
+            review_rounds=2,
+            milestone="M5",
+        ),
+        log(
+            "ci",
+            20,
+            run_id="9001",
+            conclusion="failure",
+            branch="main",
+            sha="a1b2c3d",
+            workflow="CI",
+            created=ts(20),
+        ),
+        log(
+            "ci",
+            10,
+            run_id="9002",
+            conclusion="success",
+            branch="main",
+            sha="d4e5f6a",
+            workflow="CI",
+            created=ts(10),
+        ),
+        log(
+            "milestone", 51, milestone="M5", status="start", title="Handel und Schiffe"
+        ),
+        log(
+            "retro",
+            5,
+            retro_id="R-01",
+            retro_kind="adhoc",
+            triggers=["failed:none"],
+            report="berichte/retro-1.md",
+        ),
+        hook(
+            "usage",
+            3,
+            "main",
+            usage={
+                "claude-opus-4-7": {
+                    "input": 300,
+                    "cache_write": 4000,
+                    "cache_read": 90000,
+                    "output": 2500,
+                    "messages": 12,
+                    "complete": 12,
+                }
+            },
+            session_cost={
+                "total_usd": 4.87,
+                "duration_ms": 3100000,
+                "models": {
+                    "claude-opus-4-7": {"usd": 3.9},
+                    "claude-sonnet-5-5": {"usd": 0.97},
+                },
+            },
         ),
         # Entscheide: einer erledigt, zwei offen
         log(

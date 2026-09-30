@@ -1,0 +1,127 @@
+// Gemeinsame Hilfen des Studio-Dashboards: sichere DOM-Erzeugung (nur textContent/Attribute).
+
+export const SVG_NS = 'http://www.w3.org/2000/svg';
+export const STATUS_LABEL = {
+  active: 'aktiv',
+  delegated: 'delegiert',
+  waiting: 'wartet',
+  blocked: 'blockiert',
+  idle: 'bereit',
+  done: 'fertig',
+  failed: 'fehlgeschlagen',
+  ended: 'beendet',
+};
+export const PACKAGE_STATUS = {
+  open: { label: 'offen', tone: 'idle' },
+  active: { label: 'in Arbeit', tone: 'active' },
+  review: { label: 'im Review', tone: 'waiting' },
+  blocked: { label: 'blockiert', tone: 'blocked' },
+  done: { label: 'fertig', tone: 'done' },
+};
+export const DEPARTMENT_LABEL = {
+  studio: 'Studio',
+  production: 'Produktion',
+  design: 'Design',
+  tech: 'Technik',
+  art: 'Grafik',
+  qa: 'QA',
+  extern: 'Extern',
+};
+export const LEVEL_LABEL = ['L0', 'L1', 'L2'];
+
+// --- Hilfen -----------------------------------------------------------------
+
+export function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value === undefined || value === null || value === false) continue;
+    if (key === 'class') node.className = value;
+    else node.setAttribute(key, value);
+  }
+  for (const child of children) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+export function svg(tag, attrs = {}, ...children) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
+  for (const child of children) {
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+export function ago(seconds) {
+  const s = Math.max(0, Number(seconds) || 0);
+  if (s < 60) return `vor ${Math.round(s)} s`;
+  if (s < 3600) return `vor ${Math.round(s / 60)} min`;
+  return `vor ${Math.round(s / 3600)} h`;
+}
+
+export function clock(epochSeconds, withSeconds = true) {
+  const date = new Date(epochSeconds * 1000);
+  return date.toLocaleTimeString('de-CH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(withSeconds ? { second: '2-digit' } : {}),
+  });
+}
+
+export function knownStatus(status) {
+  return Object.hasOwn(STATUS_LABEL, status) ? status : 'idle';
+}
+
+export function knownDepartment(department) {
+  return Object.hasOwn(DEPARTMENT_LABEL, department) ? department : 'extern';
+}
+
+export function statusBadge(status) {
+  const known = Object.hasOwn(STATUS_LABEL, status);
+  return el(
+    'span',
+    { class: `badge st-${known ? status : 'idle'}` },
+    known ? STATUS_LABEL[status] : status || '–',
+  );
+}
+
+export function deptChip(department) {
+  const dep = knownDepartment(department);
+  return el('span', { class: `chip dep dep-${dep}` }, DEPARTMENT_LABEL[dep]);
+}
+
+export function empty(text) {
+  return el('p', { class: 'empty' }, text);
+}
+
+export function storageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* Speicher gesperrt: Einstellung gilt nur bis zum Neuladen */
+  }
+}
+
+// Ein <select> nur neu aufbauen, wenn sich die Optionen ändern (sonst schliesst
+// sich ein offenes Auswahlmenü bei jedem Poll); Auswahl bleibt erhalten.
+export function syncSelect(select, options, wanted) {
+  const signature = JSON.stringify(options);
+  if (select.dataset.signature !== signature) {
+    select.replaceChildren(...options.map(([value, label]) => el('option', { value }, label)));
+    select.dataset.signature = signature;
+  }
+  const values = options.map(([value]) => value);
+  const chosen = values.includes(wanted) ? wanted : values[0];
+  if (select.value !== chosen) select.value = chosen;
+  return chosen;
+}
