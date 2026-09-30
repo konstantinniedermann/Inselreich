@@ -12,6 +12,8 @@ import { forceRect } from './helpers';
 
 /** Obergrenze der Spielzeit, in der 50 Bürger erreicht sein müssen (Kurz-Spec Balancing). */
 const MAX_TICKS = 9000;
+/** Strengere Grenze für den Sieg nach Übernahme der Eskalationswerte (Entscheid in der Kurz-Spec). */
+const WIN_TICK_LIMIT = 7500;
 /** Der Controller entscheidet alle 100 Ticks, was gebaut oder gekauft wird. */
 const CONTROL_INTERVAL = 100;
 /** Geld, das nach jedem Bau oder Kauf übrig bleiben muss (deckt einen Aufstieg zum Bürger). */
@@ -270,5 +272,7 @@ describe('balance: scripted colony (Kurz-Spec Balancing)', () => {
     expect(w.tick).toBeLessThanOrEqual(MAX_TICKS);
     expect(w.money).toBeGreaterThan(0);
     expect(w.won).toBe(true);
+    expect(t.winTick).not.toBeNull();
+    expect(t.winTick!).toBeLessThanOrEqual(WIN_TICK_LIMIT);
   });
 });

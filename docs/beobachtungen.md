@@ -74,7 +74,8 @@ Kurz-Spec geführt (Kandidaten: Steuersätze Siedler/Bürger ×3–5, Verbrauch 
 Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). Spec-Tabellen nachführen.
 
 **Erledigt in M4 Task 3, Werte siehe balancing-design.md** (`docs/superpowers/specs/2026-09-30-balancing-design.md`;
-Nachweis `tests/sim/balance.test.ts`: 50 Bürger bei Tick 8650, Geld am Ende 364).
+übernommen: Eskalationsstufe Steuer 7/14, Verbrauch Stoff/Rum 0.2; Nachweis `tests/sim/balance.test.ts`:
+50 Bürger bei Tick 5950, Geld am Ende 176).
 
 **Aufschiebbar (Ursprung: Gesamt-Review M3):**
 
@@ -87,14 +88,14 @@ Nachweis `tests/sim/balance.test.ts`: 50 Bürger bei Tick 8650, Geld am Ende 364
 - MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
   bewusst nicht in M4, Markdown-Doku mit `docs/index.md`. Nachrüsten auf Wunsch trivial.
 
-## 2026-09-30 · `tests/sim/balance.test.ts` · Balancing-Marge mit den revidierten Werten knapp
+## 2026-09-30 · `tests/sim/balance.test.ts` · Balancing-Marge und Controller-Empfindlichkeit
 
-**Beobachtung:** Mit Steuer 6/12 und Verbrauch 0.2 erreicht die Skript-Kolonie 50 Bürger bei Tick 8650
-(Grenze 9000, Geld-Minimum 42). Das Ergebnis hängt an der Controller-Strategie: ohne Schulbau-Budget
-(Schule erst, wenn ein Rum-Paar mitbezahlbar ist) 17 Bürger bei Tick 9000; mit Überschussverkauf erst ab
-90 statt 50 Einheiten 45 Bürger. Mit den Eskalationswerten 7/14 Sieg bei Tick 5950.
+**Beobachtung:** Mit den Primärwerten 6/12 erreichte die Skript-Kolonie 50 Bürger erst bei Tick 8650
+(Grenze 9000). Das Ergebnis hing an der Strategie: Überschussverkauf erst ab 90 statt 50 Einheiten → 45 Bürger,
+ohne Schulbau-Budget → 17 Bürger. Deshalb wurde die Eskalationsstufe 7/14 übernommen: Sieg bei Tick 5950, der Test
+verlangt jetzt Sieg bis Tick 7500. Geld-Minimum im Lauf bleibt knapp (2).
 Zweiter Treiber: Zwei Häuser steigen im selben Wachstums-Tick zu Bürgern auf, die Rumkette reicht nur für
-eines; das zweite schrumpft auf 1 Einwohner und bleibt dort ~1000 Ticks (siehe Aufstiegs-Reservierung oben).
-**Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer.
-**Einschätzung:** Spec-Kriterium erfüllt, aber ein weniger geschickter Spieler verfehlt 9000 Ticks deutlich.
-Beim Playtest beobachten; falls zu zäh, Eskalationsstufe 7/14 der Kurz-Spec ist vorbereitet.
+eines; das zweite schrumpft auf 1 Einwohner und bleibt dort lange (siehe Aufstiegs-Reservierung oben).
+**Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer und Review.
+**Einschätzung:** Mit 7/14 erfüllt, Eskalationsregel ausgeschöpft. Beim Playtest beobachten; weitere Änderungen
+nur über eine neue Kurz-Spec.

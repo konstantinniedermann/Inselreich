@@ -19,7 +19,7 @@ export const TIERS: Record<Tier, TierDef> = {
     maxInhabitants: 8,
     needs: { food: 0.5, cloth: 0.2 },
     services: ['faith'],
-    tax: 6,
+    tax: 7,
     upgradeCost: { money: 300, wood: 10, tools: 5, stone: 5 },
   },
   3: {
@@ -28,7 +28,7 @@ export const TIERS: Record<Tier, TierDef> = {
     maxInhabitants: 15,
     needs: { food: 0.5, cloth: 0.2, rum: 0.2 },
     services: ['faith', 'school'],
-    tax: 12,
+    tax: 14,
     upgradeCost: null,
   },
 };

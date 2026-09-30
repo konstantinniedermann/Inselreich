@@ -52,17 +52,10 @@ describe('totalTaxes', () => {
     addHouse(w, 1, 3, false);
     expect(totalTaxes(w)).toBe(3);
   });
-  it('sums first, floors once (two unsatisfied houses at odd tax 3: 1.5 + 1.5 = 3, not 2)', () => {
-    // Alle Steuersätze in defs/ sind gerade; ein ungerader Testsatz macht die Rundung sichtbar.
-    const tax = TIERS[2].tax;
-    TIERS[2].tax = 3;
-    try {
-      addHouse(w, 2, 1, false);
-      addHouse(w, 2, 1, false);
-      expect(totalTaxes(w)).toBe(3);
-    } finally {
-      TIERS[2].tax = tax;
-    }
+  it('sums first, floors once (two unsatisfied settler houses: 3.5 + 3.5 = 7, not 6)', () => {
+    addHouse(w, 2, 1, false);
+    addHouse(w, 2, 1, false);
+    expect(totalTaxes(w)).toBe(7);
   });
 });
 
