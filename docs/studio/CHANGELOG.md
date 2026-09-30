@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Persona qa-playtester 1.5
+
+- Anlass: Angleichung an Handbuch 1.7 (Folgeposten STUDIO-DESKTOP)
+- Datenbasis: `docs/studio/STUDIO.md` Umsetzungszyklus „Report bei Final-Review und Playtests“, Retro M5 B5
+- Ruling: R75
+- Änderungen: kein verpflichtender Report-Dateipfad mehr; der Schlussbericht ist der Report (Gliederung nach `templates/playtest-report.md`); Screenshots weiter unter `.studio/qa/<paket>/`; Beschreibung, Schritt 4, Qualitätsmassstab und Bericht angepasst; `roster.md` Version
+
 ## 2026-09-30 · Persona tech-ui-engineer 1.5
 
 - Anlass: Ruling R78 (Desktop-first, Nutzeranweisung)

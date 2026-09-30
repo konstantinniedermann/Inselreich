@@ -43,7 +43,7 @@ stark = `opus`, mittel = `sonnet`, klein = `haiku`. Einsatzregeln: STUDIO.md, Ab
 | `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    | L2    | tech       | `sonnet` | 1.5     | Setzt Bedienung und Darstellung in `src/ui/`, `src/render/` um (Card-UI, desktop-first)         |
 | `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    | L2    | art        | `opus`   | 1.1     | Prüft jede Asset-Quelle gegen Positiv-/Negativliste, trägt CREDITS ein, hat Veto                |
 | `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    | L2    | qa         | `sonnet` | 1.4     | Prüft Diffs gegen Brief und Spec, Urteil OK/BEDENKEN/ZURÜCK, ändert keinen Code                 |
-| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.4     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                 |
+| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                 |
 
 **Persona-Versionen:** Frontmatter-Feld `version` in `.claude/agents/<name>.md`. Erhöht wird sie nur
 über die Verbesserungsschleife (Handbuch, Abschnitt „Verbesserungsschleife") mit Eintrag in
