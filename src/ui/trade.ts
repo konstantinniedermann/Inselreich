@@ -85,16 +85,16 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
   updateTrade(panel, world);
 }
 
-/** Aktualisiert Lagerbestände und sperrt Buttons, die sicher scheitern würden. */
+/** Aktualisiert Lagerbestände und dämpft Buttons, die sicher scheitern würden (bleiben klickbar). */
 export function updateTrade(panel: HTMLElement, world: World): void {
   for (const good of GOOD_IDS) setField(panel, `stock-${good}`, `Lager ${world.stock[good]}`);
   for (const btn of panel.querySelectorAll<HTMLButtonElement>('button[data-op]')) {
     const good = btn.dataset.good as GoodId;
     const n = Number(btn.dataset.n);
-    const disabled =
+    const unaffordable =
       btn.dataset.op === 'buy'
         ? buyPrice(good, n) > world.money || world.stock[good] + n > STORAGE_CAP
         : world.stock[good] < n;
-    if (btn.disabled !== disabled) btn.disabled = disabled;
+    btn.classList.toggle('unaffordable', unaffordable);
   }
 }
