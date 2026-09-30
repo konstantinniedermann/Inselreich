@@ -958,3 +958,19 @@ freigegeben. — Warum: kritischer Pfad sauber, keine Datei-Kollision mit M8. �
 M7-R2-FW und der UI-Strang warten länger auf M6.
 
 Entscheider: L0 · Anlass: Gate-Plan-Berichte lead-qa und lead-production
+
+## R88 · 2026-09-30 · M7
+
+Ruling: Plan M7 (`docs/m7-spec` @ 7c504e9, 18 Tasks, ADR-011) angenommen zur Vorlage im Gate Plan
+(nächste Session, Prüfer lead-qa und lead-production). Entscheide: (1) **lead-art steuert Render,
+Audio und Assets** (Handbuch Umsetzungszyklus, Spec §13) und legt dafür die Personas
+`art-rendering-engineer` und `art-audio-engineer` an (Onboarding über lead-production); lead-tech
+steuert UI-Strang und Integration. (2) M6-R2 (`overlays.ts`) wird im M7-Render-Strang geplant und
+budgetiert, der M6-Sim-Plan führt es nicht. Setzungen des Plans (Kachelgrenzen-Band 0,25,
+Warnring-Haltephase 0,5 s, Sand als `coast`, `.badge--boom` aus M7-U2) angenommen; das
+Slice-Urteil klärt die Spannung I1 gegen ¼-Kachel-Regel. Budgetantrag 64 Starts (lead-art 41/4,
+lead-tech 23/1, lead-qa 1/1) wird im Gate Plan geprüft und je Session-Welle freigegeben. —
+Warum: Fachnähe der Steuerung, Datei-Ownership eindeutig. — Kosten bei Irrtum: Umhängen von
+Paketen zwischen Leads.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M7-PLAN
