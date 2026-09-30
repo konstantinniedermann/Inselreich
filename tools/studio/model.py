@@ -125,6 +125,18 @@ def _package(event: dict) -> str:
     return str(event.get("package_id") or event.get("package") or "")
 
 
+def _estimate(value: object) -> dict | None:
+    """Schätzung nur mit echten Zahlen (keine Strings, keine Bools)."""
+    if not isinstance(value, dict):
+        return None
+    clean = {
+        k: value[k]
+        for k in ("minutes", "tools")
+        if isinstance(value.get(k), (int, float)) and not isinstance(value[k], bool)
+    }
+    return clean or None
+
+
 def _short(text: object, limit: int = TEXT_MAX) -> str:
     text = " ".join(str(text or "").split())
     return text if len(text) <= limit else text[:limit] + "…"
@@ -145,7 +157,7 @@ class _Builder:
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
         self.feed: list[dict] = []
-        self.results: list[dict] = []
+        self.results: dict[tuple[str, str], dict] = {}
         self.timeline: list[tuple[float, str, str]] = []
         self.retros: list[dict] = []
         self.ci: dict[str, dict] = {}
@@ -185,7 +197,7 @@ class _Builder:
                 "briefing": "",
                 "report": "",
                 "usage": {},
-                "tool_calls": 0,
+                "tool_calls": None,
                 "reported": None,
                 "resumes": 0,
                 "max_gap": 0.0,
@@ -193,6 +205,7 @@ class _Builder:
                 "started": ts,
                 "stopped": None,
                 "last_seen": ts,
+                "_pulse": ts,
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
@@ -209,12 +222,27 @@ class _Builder:
             self.touch(node, ts)
         return node
 
-    @staticmethod
-    def touch(node: dict, ts: float) -> None:
-        """Lebenszeichen: grösste Lücke merken (nur bei lebendem Status)."""
-        if node["status"] in LIVE:
-            node["max_gap"] = max(node["max_gap"], ts - node["last_seen"])
+    def touch(self, node: dict, ts: float) -> None:
+        """Lebenszeichen: grösste Lücke merken (nur bei lebendem Status).
+
+        Wartet ein Knoten auf lebende Kinder, gilt keine Lücke; Aktivität eines
+        Kindes zählt als Lebenszeichen der Vorfahren.
+        """
+        waiting = any(
+            self.nodes[c]["status"] in LIVE for c in node["children"] if c in self.nodes
+        )
+        if node["status"] in LIVE and not waiting:
+            since = max(node["last_seen"], node["_pulse"])
+            node["max_gap"] = max(node["max_gap"], ts - since)
         node["last_seen"] = max(node["last_seen"], ts)
+        ancestor = self.nodes.get(node["parent"] or "")
+        while ancestor is not None:
+            ancestor["_pulse"] = max(ancestor["_pulse"], ts)
+            ancestor = self.nodes.get(ancestor["parent"] or "")
+
+    @staticmethod
+    def count_tool(node: dict) -> None:
+        node["tool_calls"] = (node["tool_calls"] or 0) + 1
 
     def set_role(self, node: dict, role: str) -> None:
         node["role"] = role
@@ -314,12 +342,12 @@ class _Builder:
 
     def on_spawn(self, event, ts, sid):
         parent = self.agent(event, ts, sid)
-        parent["tool_calls"] += 1
+        self.count_tool(parent)
         self.seq += 1
-        estimate = event.get("estimate")
+        estimate = _estimate(event.get("estimate"))
         entry = {
             "ts": ts,
-            "estimate": estimate if isinstance(estimate, dict) else None,
+            "estimate": estimate,
             "milestone": str(event.get("milestone") or ""),
             "briefing": str(event.get("briefing") or ""),
             "persona_version": str(event.get("persona_version") or ""),
@@ -404,6 +432,7 @@ class _Builder:
             return
         node = self.node(sid, agent_id, ts, typ)
         self.stamp(node, event, ("persona_version", "handbook_version"))
+        node["tool_calls"] = node["tool_calls"] or 0
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
             node["resumes"] += 1
             node["status"], node["stopped"] = "active", None
@@ -441,11 +470,11 @@ class _Builder:
             self.add_chronicle(node, ts, node["summary"] or node["task"])
 
     def on_heartbeat(self, event, ts, sid):
-        self.agent(event, ts, sid)["tool_calls"] += 1
+        self.count_tool(self.agent(event, ts, sid))
 
     def on_bind(self, event, ts, sid):
         node = self.agent(event, ts, sid)
-        node["tool_calls"] += 1
+        self.count_tool(node)
         role = event.get("role") or ""
         if role:
             self.binds.setdefault(sid, []).append((ts, role, node["key"]))
@@ -557,19 +586,19 @@ class _Builder:
             rounds = int(event.get("review_rounds") or 0)
         except (TypeError, ValueError):
             rounds = 0
-        self.results.append(
-            {
-                "t": ts,
-                "ts": event.get("ts", ""),
-                "session_id": sid,
-                "package": _package(event),
-                "role": str(event.get("role") or ""),
-                "worker": str(event.get("worker") or ""),
-                "outcome": str(event.get("outcome") or ""),
-                "review_rounds": rounds,
-                "milestone": str(event.get("milestone") or ""),
-            }
-        )
+        package, worker = _package(event), str(event.get("worker") or "")
+        role = str(event.get("role") or "")
+        self.results[(package, worker or role)] = {
+            "t": ts,
+            "ts": event.get("ts", ""),
+            "session_id": sid,
+            "package": package,
+            "role": role,
+            "worker": worker,
+            "outcome": str(event.get("outcome") or ""),
+            "review_rounds": rounds,
+            "milestone": str(event.get("milestone") or ""),
+        }
 
     def on_milestone(self, event, ts, sid):
         ident = str(event.get("milestone") or "")
@@ -715,7 +744,7 @@ class _Builder:
         chronicle = [c for c in self.chronicle if c["session_id"] in scope]
         records = [effort.record(n, self.nodes) for n in self.nodes.values()]
         mine = [r for r in records if r["session_id"] in scope]
-        results = [r for r in self.results if r["session_id"] in scope]
+        results = [r for r in self.results.values() if r["session_id"] in scope]
         ci_runs = [c for c in self.ci.values() if c["session_id"] in scope]
         escalations = [
             d
@@ -757,7 +786,7 @@ class _Builder:
             "departments": ["studio", *DEPARTMENTS, "extern"],
             "records": mine,
             "delegations": effort.delegations(mine, results),
-            "effort": effort.aggregate(mine, results),
+            "effort": effort.aggregate(mine),
             "quality": effort.quality(
                 mine, results, ci_runs, escalations, inactive_after
             ),
@@ -797,7 +826,7 @@ class _Builder:
         acknowledged = {t for retro in self.retros for t in retro["triggers"]}
         return effort.incidents(
             records,
-            self.results,
+            list(self.results.values()),
             list(self.ci.values()),
             self.budget_view(),
             self.milestone_view(),

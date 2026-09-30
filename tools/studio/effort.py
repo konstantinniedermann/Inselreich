@@ -70,7 +70,7 @@ def record(node: dict, nodes: dict[str, dict]) -> dict:
         "stopped": node["stopped"],
         "status": node["status"],
         "duration_s": round(sum(closed), 3) if closed else None,
-        "tool_calls": node.get("tool_calls") or 0,
+        "tool_calls": node.get("tool_calls"),
         "subtree_tool_calls": _subtree_tools(node, nodes),
         "tokens": tokens,
         "output_lower_bound": _lower_bound(tokens),
@@ -97,7 +97,7 @@ def _outcome(rec: dict, results: list[dict]) -> str | None:
         r
         for r in results
         if r.get("package") == rec["package"]
-        and rec["role"] in (r.get("worker"), r.get("role"))
+        and (r.get("worker") or r.get("role")) == rec["role"]
     ]
     return hits[-1].get("outcome") if hits else None
 
@@ -134,12 +134,13 @@ def delegations(records: list[dict], results: list[dict] | None = None) -> list[
 def _row(key: str, recs: list[dict]) -> dict:
     durations = [r["duration_s"] for r in recs if r["duration_s"] is not None]
     measured = [r for r in recs if r["tokens"]]
+    counts = [r["tool_calls"] for r in recs if r["tool_calls"] is not None]
     row = {
         "key": key,
         "agents": len(recs),
         "agents_measured": len(measured),
         "duration_s": round(sum(durations), 3) if durations else None,
-        "tool_calls": sum(r["tool_calls"] for r in recs),
+        "tool_calls": sum(counts) if counts else None,
     }
     for field in TOKEN_FIELDS:
         row[field] = (
@@ -216,7 +217,7 @@ def _estimate_vs_actual(records: list[dict]) -> dict:
     }
 
 
-def aggregate(records: list[dict], results: list[dict] | None = None) -> dict:
+def aggregate(records: list[dict]) -> dict:
     """Aufwand je Rolle, Paket, Lead (Teilbaum), Meilenstein, Modell."""
     return {
         "by_role": _group(records, "role"),

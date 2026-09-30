@@ -252,5 +252,108 @@ class EffortStateTest(unittest.TestCase):
         self.assertEqual(node["package"], "OLD")
 
 
+def result_ev(t, package, worker, outcome, rounds, role="lead-qa"):
+    return ev(
+        "result",
+        t,
+        agent_id="",
+        source="log",
+        role=role,
+        package_id=package,
+        worker=worker,
+        outcome=outcome,
+        review_rounds=rounds,
+    )
+
+
+class FixRoundTest(unittest.TestCase):
+    def state(self, events, now=600):
+        return model.build_state(events, T0 + now, MODELS, session="all")
+
+    def test_results_deduplicated_latest_wins(self):
+        events = [
+            result_ev(1, "P1", "qa-code-reviewer", "nacharbeit", 1),
+            result_ev(2, "P1", "qa-code-reviewer", "angenommen", 5),
+        ]
+        state = self.state(events)
+        self.assertEqual(state["quality"]["results"], 1)
+        self.assertEqual(state["quality"]["rework"], 0)
+        self.assertIn("runden:P1", {i["id"] for i in state["incidents"]})
+
+    def test_waiting_lead_has_no_gap(self):
+        events = [
+            spawn(0, "main", "lead-qa"),
+            start(0, "a1", "lead-qa"),
+            spawn(1, "a1", "qa-code-reviewer"),
+            start(2, "a2", "qa-code-reviewer"),
+        ]
+        events += [
+            ev("heartbeat", t, agent_id="a2", tool="Read") for t in range(50, 600, 50)
+        ]
+        events += [
+            stop(600, "a2", "qa-code-reviewer"),
+            ev("heartbeat", 601, agent_id="a1"),
+        ]
+        state = self.state(events, 700)
+        rec = {r["role"]: r for r in state["records"]}
+        self.assertLess(rec["lead-qa"]["max_gap_s"], 300)
+        self.assertEqual(state["quality"]["gap_agents"], 0)
+
+    def test_outcome_only_for_worker(self):
+        events = [
+            spawn(0, "main", "lead-qa", package_id="P1"),
+            start(1, "a1", "lead-qa"),
+            spawn(2, "a1", "qa-code-reviewer", package_id="P1"),
+            start(3, "a2", "qa-code-reviewer"),
+            result_ev(9, "P1", "qa-code-reviewer", "verworfen", 1),
+        ]
+        by_to = {d["to"]: d for d in self.state(events)["delegations"]}
+        self.assertEqual(by_to["qa-code-reviewer"]["outcome"], "verworfen")
+        self.assertIsNone(by_to["lead-qa"]["outcome"])
+
+    def test_non_numeric_estimate_is_dropped(self):
+        events = [
+            spawn(0, "main", "lead-qa", estimate={"minutes": "10", "tools": True}),
+            start(1, "a1", "lead-qa"),
+            stop(60, "a1", "lead-qa"),
+        ]
+        state = self.state(events)
+        rec = next(r for r in state["records"] if r["role"] == "lead-qa")
+        self.assertIsNone(rec["estimate"])
+        self.assertEqual(state["effort"]["estimate_vs_actual"]["count"], 0)
+        self.assertEqual(model.pending_incidents(events, T0 + 600), [])
+
+    def test_tool_calls_none_without_hook_events(self):
+        events = [log_status(1, "lead-qa", "active")]
+        rec = next(r for r in self.state(events)["records"] if r["role"] == "lead-qa")
+        self.assertIsNone(rec["tool_calls"])
+        rows = self.state(events)["effort"]["by_role"]
+        row = next(r for r in rows if r["key"] == "lead-qa")
+        self.assertIsNone(row["tool_calls"])
+
+    def test_escalations(self):
+        events = [
+            ev(
+                "decision",
+                1,
+                agent_id="",
+                source="log",
+                decision_id="D1",
+                question="q",
+                **{"for": "l0"},
+            ),
+            ev(
+                "queue",
+                2,
+                agent_id="",
+                source="log",
+                queue_id="Q1",
+                action="add",
+                question="q2",
+            ),
+        ]
+        self.assertEqual(self.state(events)["quality"]["escalations"], 2)
+
+
 if __name__ == "__main__":
     unittest.main()
