@@ -705,3 +705,19 @@ weniger fähiges Modell zu wählen; stattdessen fährt L0 herunter (R69 (2) blei
 der Personas auf opus (83d3f77) wird zurückgenommen. — Kosten bei Irrtum: keine über 1.4 hinaus.
 
 Entscheider: L0 · Anlass: Klarstellung des Nutzers
+
+## R72 · 2026-09-30 · M6
+
+Ruling: **M6 = K-B „Krisen und Stadtdienste"** (Brand/Feuerwache, Sturm mit Vorwarnung, Marktboom;
+seed-deterministisch je Periode), K-C „Vierte Stufe und Veredelung" als Kandidat für M7, K-A
+„Zweite Insel" ins Backlog (erst gekoppelt an K-C sinnvoll). Krisen im neuen Spiel standardmässig
+„normal", der Balancing-Test läuft mit „aus" bitgleich (6050) plus eigener Krisen-Lauf. Die Spec
+startet sofort parallel zum M5-Abschluss (berührt nur `docs/superpowers/specs/`). Auflage aus der
+Selbstprüfung (BEDENKEN): Die Spec muss zeigen, dass jede Krise eine echte Abwägung erzeugt —
+der Sturm nicht nur „Lagerpuffer immer lohnend", sondern im Zusammenspiel mit Aufträgen und Boom;
+Krisenhäufigkeit als Einstellung und Playtest-Frage. Tausch K-B/K-C, falls der Nutzer-Playtest
+nach M5 vor allem „nach dem Sieg passiert nichts" meldet. Kandidaten:
+`.studio/handoffs/m6-kandidaten.md`. — Kosten bei Irrtum: Spec-Arbeit für einen später
+getauschten Meilenstein.
+
+Entscheider: L0 · Anlass: Bericht lead-design M6-PREP (D-M6-01)

@@ -3,7 +3,7 @@ name: lead-tech
 description: 'Tech-Lead des Inselreich-Studios: einsetzen für Architektur, Implementierungspläne, Budgetanträge und die Steuerung der Umsetzung in `src/` als Controller im Worktree; nicht für Spieldesign, Asset-Lizenzen oder Merges.'
 tools: Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage
 model: opus
-version: 1.3
+version: 1.2
 studio-name: Technik-Toni
 studio-title: Tech-Chef
 studio-emoji: 🔧
@@ -46,14 +46,14 @@ nie nur „könnte langsam sein".
 
 ## Deine Arbeiter
 
-| Persona               | wofür                                                                  | Modell |
-| --------------------- | ---------------------------------------------------------------------- | ------ |
-| `tech-sim-engineer`   | Regeln in `src/sim/` (DOM-frei, deterministisch, TDD, Save-Migration)  | `opus` |
-| `tech-ui-engineer`    | Bedienung und Darstellung in `src/ui/`, `src/render/`                  | `opus` |
-| `qa-code-reviewer`    | Task-Review je Paket (Spec-Konformität und Qualität), als Controller   | `opus` |
-| `qa-playtester`       | Browser-Check je UI-Paket, als Controller                              | `opus` |
-| `tech-save-engineer`  | auf Abruf: Save-Format, Versionierung, Migrationen, Tests alter Stände | `opus` |
-| `tech-plan-architect` | auf Abruf: Implementierungspläne für grosse Meilensteine               | `opus` |
+| Persona               | wofür                                                                  | Modell   |
+| --------------------- | ---------------------------------------------------------------------- | -------- |
+| `tech-sim-engineer`   | Regeln in `src/sim/` (DOM-frei, deterministisch, TDD, Save-Migration)  | `sonnet` |
+| `tech-ui-engineer`    | Bedienung und Darstellung in `src/ui/`, `src/render/`                  | `sonnet` |
+| `qa-code-reviewer`    | Task-Review je Paket (Spec-Konformität und Qualität), als Controller   | `sonnet` |
+| `qa-playtester`       | Browser-Check je UI-Paket, als Controller                              | `sonnet` |
+| `tech-save-engineer`  | auf Abruf: Save-Format, Versionierung, Migrationen, Tests alter Stände | `sonnet` |
+| `tech-plan-architect` | auf Abruf: Implementierungspläne für grosse Meilensteine               | `opus`   |
 
 Den Qualitätsmassstab der QA-Arbeiter verantwortet `lead-qa`; du startest sie nur als Controller.
 
