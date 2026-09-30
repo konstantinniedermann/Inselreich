@@ -50,6 +50,8 @@ describe('Szenario-Saves', () => {
         'galerie',
         'lager-holz-99',
         'leistung-50',
+        'tag-0',
+        'tag-3000',
       ].sort(),
     );
   });
@@ -123,6 +125,20 @@ describe('Szenario-Saves', () => {
     for (let i = 0; i < 5; i++) step(w);
     expect(w.order).not.toBeNull();
     expect(deliverOrder(w).ok).toBe(true);
+  });
+
+  it('tag-0 und tag-3000: dieselbe Insel und Gebäude, Tick 0 bzw. genau 3000, kein Sieg', () => {
+    const a = load('tag-0');
+    const b = load('tag-3000');
+    expect(a.tick).toBe(0);
+    expect(b.tick).toBe(3000);
+    expect(b.won).toBe(false);
+    expect(b.tiles.map((t) => t.terrain)).toEqual(a.tiles.map((t) => t.terrain));
+    const pos = (w: World): string[] =>
+      Object.values(w.buildings).map((x) => `${x.defId}@${x.x},${x.y}`);
+    expect(pos(b)).toEqual(pos(a));
+    expect(Object.keys(b.buildings).length).toBeGreaterThanOrEqual(5);
+    expect(b.money).toBeGreaterThan(0);
   });
 
   it('galerie: jeder Gebäudetyp, Häuser in drei Stufen, Sonderfälle, gerader Weg ab 10 Kacheln', () => {
