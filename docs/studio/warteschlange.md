@@ -1,7 +1,7 @@
 # Nutzerentscheid-Warteschlange
 
 Hier stehen die Fragen, die laut [Verfassung §5](VERFASSUNG.md#5-autonomie-und-nutzerentscheid-warteschlange)
-nur der Nutzer entscheidet: neue Laufzeit-Abhängigkeiten, Folgeissues, Lizenz-Grenzfälle,
+nur der Nutzer entscheidet: Folgeissues, Lizenz-Grenzfälle,
 Änderungen der Verfassung und ein Richtungswechsel des Spiels. Das Team wartet nicht auf die
 Antwort: Nur das betroffene Paket bleibt zurückgestellt, alles andere läuft weiter.
 
@@ -34,7 +34,7 @@ schliesst den Eintrag.
 
 ---
 
-## N-001 · beantwortet · 2026-09-30 · Verfassung 1.0 bestätigen
+## N-001 · umgesetzt · 2026-09-30 · Verfassung 1.0 bestätigen
 
 - Frage: Bestätigst du die Verfassung 1.0 (docs/studio/VERFASSUNG.md), insbesondere §5 Autonomie mit Vorrang vor ../CLAUDE.md und §7 Push auf main nach grünem Check?
 - Empfehlung: bestätigen

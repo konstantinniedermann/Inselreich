@@ -1,7 +1,7 @@
 # Verfassung des Inselreich-Studios
 
-Version: 1.0 · Stand: 2026-09-30 · Status: vorläufig in Kraft, Bestätigung durch den Nutzer
-ausstehend (Warteschlange N-001)
+Version: 1.1 · Stand: 2026-09-30 · Status: in Kraft, bestätigt durch den Nutzer (Warteschlange
+N-001, mit den Änderungen aus Ruling R67)
 
 Diese Verfassung enthält die Regeln des Nutzers. Das Team (Projektleiter, Leads, Stabsstellen,
 Arbeiter) wendet sie an, ändert sie aber nie. Alles andere regelt das veränderbare Handbuch
@@ -36,7 +36,7 @@ Diesen Block kopiert jede Delegation wörtlich ins Briefing:
 
 ```text
 Feste Regeln (unverändert, gelten immer):
-- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
+- Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
@@ -68,7 +68,6 @@ Grundlage: [ADR-006](../adr/ADR-006-offene-lizenzen.md). Nachweis in
 2. Anweisungen des Nutzers legt der Projektleiter selbst aus. Bei Mehrdeutigkeit wählt er die
    plausibelste Auslegung, hält sie als Ruling fest und handelt.
 3. **Vorbehalte** — nur der Nutzer entscheidet:
-   - neue Laufzeit-Abhängigkeiten,
    - Folgeissues,
    - Lizenz-Grenzfälle,
    - Änderungen dieser Verfassung,
@@ -80,6 +79,15 @@ Grundlage: [ADR-006](../adr/ADR-006-offene-lizenzen.md). Nachweis in
    ungeblockte Paket wird vorgezogen.
 6. Der Nutzer beantwortet Einträge, wann er will, in einer beliebigen Session. Der Projektleiter
    setzt die Antwort um und schliesst den Eintrag.
+7. **Abhängigkeiten** entscheidet der Projektleiter selbst, wenn er die Entscheidung tragen kann und
+   keine Alternative (eigene Umsetzung, vorhandene Mittel) Sinn macht. Jede neue Abhängigkeit
+   bekommt ein Ruling und ein ADR; der Normalfall bleibt „keine" (ADR-001). Technische Sperren des
+   Nutzers (Hook `dep-guard`) werden nie umgangen: Blockt eine, meldet der Projektleiter dem Nutzer
+   den Paketnamen zur Freigabe.
+8. **Parallelisieren und delegieren** ist oberstes Arbeitsprinzip des Projektleiters. Unabhängige
+   Pakete, Prüfungen und Vorbereitungen laufen gleichzeitig in mehreren Leads; serielles Arbeiten
+   braucht einen Grund (Datei-Eigentum, echte Abhängigkeit). Das Studio arbeitet als Team, nicht
+   einer nach dem anderen. §9 bleibt davon unberührt.
 
 ## §6 Verbotene irreversible Aktionen
 
