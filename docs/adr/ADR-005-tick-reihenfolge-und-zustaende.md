@@ -26,3 +26,14 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
 - Tests können Buchungen exakt vorhersagen (300 Schritte = 3 Buchungen).
 - Das Inspect-Panel zeigt Probleme dauerhaft statt nur für einen Tick.
 - Wer neue Takte einführt, orientiert sich an `tick % INTERVAL === 0` mit `tick > 0`.
+
+## Nachtrag M5 (2026-09-30): Markt-Erholung und Handelsaufträge
+
+- Die Reihenfolge lautet jetzt Produktion → Bevölkerung → Steuern → Wirtschaft (Unterhalt) →
+  Markt (`tickMarket`) → Aufträge (`tickOrders`) → Sieg. Aufträge laufen nach der Bevölkerung, damit
+  ein Aufstieg im selben Tick die Höchststufe und damit den Güterpool schon erweitert.
+- `tickMarket` und `tickOrders` verändern kein Geld und keine Lagerbestände.
+- Beide Takte haben einen eigenen Rhythmus, unabhängig vom Buchungstakt (100): Erholung alle 10 Ticks
+  (`tick % 10 === 0`, `tick > 0`); Aufträge ab Tick 600 alle 900 Ticks (Versatz 600, `(tick − 600) %
+900 === 0`), Laufzeit 600. Ein Auftrag ist bis einschliesslich `due` lieferbar und verfällt bei
+  `tick > due`. Der Zufall der Aufträge folgt ADR-010.
