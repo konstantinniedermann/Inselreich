@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.3
+
+- Anlass: Merge S17 (Telemetrie je Session, CI-Reruns, keine Phantom-Knoten); Handbuch beschrieb die alte Zählung (offensichtlicher Fehler, kein Experiment)
+- Datenbasis: `docs/studio/retros/2026-09-30-adhoc-budget-lead-tech.md`, `docs/studio/retros/2026-09-30-adhoc-ci-pages.md`, `docs/studio/retros/2026-09-30-adhoc-inaktiv-web-fetch.md`, `docs/beobachtungen.md` (Nachträge Final-Review S17), `tools/studio/model.py`
+- Ruling: R58
+- Änderungen: „Budget“: Freigabe gilt je Session (nach `/clear` neu loggen), Zählung je Lead, Phase und Session, Start vor der ersten Freigabe zählt nicht, „ohne Freigabe“; Vorfall erst bei > 1,5 × Freigabe, Parallel-Überschreitung nur rot; „Messung“: laufender Meilenstein je Session; „Verbesserungsschleife“: grüner Rerun schliesst `ci:<run>`; „Logging-Pflicht“: `bind` ohne bekannten Agenten erzeugt keinen Knoten, Budgetfreigabe je Session; `lernen.md` bereinigt
+
 ## 2026-09-30 · Handbuch 1.2
 
 - Anlass: Retro Meilenstein Studio-Graph, Befund B2 (Basis-Drift durch parallele L0-Sessions)

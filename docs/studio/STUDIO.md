@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.2 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.3 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -151,6 +151,8 @@ und in der Kopfzeile `Modell:` des Briefings.
 - **Einheit:** Anzahl L2-Starts und maximale Parallelität (gleichzeitig laufende Arbeiter).
 - **Freigabe:** L0 gibt je Lead und Phase frei und loggt sie (`log.py budget`, Beispiel unten).
   Weitere Freigaben derselben Phase addieren sich. Leads verteilen innerhalb ihrer Freigabe selbst.
+  Eine Freigabe gilt für die Session, in der L0 sie loggt; Budgets zählen je Lead, Phase und
+  Session. Nach `/clear` oder einem Session-Wechsel loggt L0 laufende Freigaben neu.
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 = 14,3 → **15**. Der Puffer deckt
   Neustarts und Zusatzprüfungen; Fix-Runden per `SendMessage` zählen nicht als Start. Der Tech-Lead
@@ -169,9 +171,13 @@ und in der Kopfzeile `Modell:` des Briefings.
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
 - **Zählung:** Das Dashboard zählt Starts, Parallelität und Modellmix automatisch über die Hooks
-  und markiert Überschreitungen rot. Leads nennen „verbraucht/frei" trotzdem in jedem Bericht.
-  Verbrauch über 1,5 × Freigabe ist ein Vorfall (`budget:<lead>:<phase>`) und löst eine Ad-hoc-Retro
-  aus.
+  und markiert Überschreitungen rot. Leads nennen „verbraucht/frei" trotzdem in jedem Bericht. Ein
+  Start zählt für eine Freigabe seiner Session: bevorzugt die, deren Phase dem Paketnamen
+  entspricht, sonst die jüngste. Ein Start vor der ersten Freigabe der Session zählt in keiner
+  Zeile; ein Lead ohne Freigabe in seiner Session erscheint als „ohne Freigabe".
+- **Vorfall:** Erst ein Verbrauch über 1,5 × Freigabe ist ein Vorfall (`budget:<lead>:<phase>`) und
+  löst eine Ad-hoc-Retro aus. Mehr parallele Arbeiter als freigegeben färben die Zeile rot, sind
+  aber kein Vorfall.
 
 ## Gates und Dokumentation
 
@@ -391,7 +397,7 @@ gezählt. Mehr als 3 Review-Runden in einem Paket sind ein Vorfall (`runden:<pak
 
 **Meilenstein-Zuordnung** des Aufwands, in dieser Reihenfolge: Kopfzeile `Meilenstein:` im Briefing
 (bzw. `--milestone`) → Meilenstein des Pakets → Meilenstein des delegierenden Vorfahren → der zu
-diesem Zeitpunkt laufende Meilenstein (`log.py milestone`, sessionübergreifend) → „ohne".
+diesem Zeitpunkt in derselben Session laufende Meilenstein (`log.py milestone`) → „ohne".
 
 **Meilensteine:** L0 loggt Start und Ende (`log.py milestone --id M5 --status start --title "…"`
 bzw. `--status done`). Das Ende löst die Pflicht-Retro aus (Vorfall `meilenstein:<id>`).
@@ -439,7 +445,9 @@ selbst um (Verfassung §10).
 Vorfälle mit stabiler ID: `failed:<agent>` (Agent gescheitert), `inaktiv:<agent>` (Agent hängt),
 `ci:<run>` (CI auf `main` rot), `budget:<lead>:<phase>` (mehr als 1,5 × Freigabe verbraucht),
 `runden:<paket>` (mehr als 3 Review-Runden), `meilenstein:<id>` (Meilenstein beendet). Ein Vorfall
-gilt als erledigt, sobald ein `retro`-Event ihn in `--triggers` nennt.
+gilt als erledigt, sobald ein `retro`-Event ihn in `--triggers` nennt. `ci.py` erfasst jeden Versuch
+eines Laufs (`run_id`, `attempt`); ist der neueste Versuch grün (z. B. nach `gh run rerun`), ist
+`ci:<run>` ohne Retro erledigt.
 
 ```mermaid
 flowchart LR
@@ -505,7 +513,8 @@ Coach-Start.
 Dass ein Agent lebt, sieht das Dashboard ohnehin; **was** ein Agent tut, worauf er wartet und was er
 geliefert hat, sieht es nur, wenn er loggt. Die Hooks (`.claude/settings.json` →
 `tools/studio/hook.py`) erfassen **automatisch**: Session-Start/-Ende, Nutzer-Prompts, Turn-Ende,
-Start und Stop jedes Subagenten, Eltern-Kind-Zuordnung, jeden Tool-Aufruf als Lebenszeichen,
+Start und Stop jedes Subagenten, Eltern-Kind-Zuordnung (ein `bind` für einen unbekannten Agenten
+erzeugt keinen Knoten), jeden Tool-Aufruf als Lebenszeichen,
 Briefings und Berichte fürs Archiv sowie den Token-Verbrauch. **Explizit** loggt jeder Agent mit
 `tools/studio/log.py` — immer als eigener Bash-Aufruf, damit der Hook ihn dem richtigen Agenten
 zuordnet.
@@ -562,7 +571,7 @@ Wann wer loggt:
 | Retro abgeschlossen              | `studio-coach`                       | `retro … --triggers …`                                |
 | Nutzer-Vorbehalt                 | fragende Stelle                      | `queue --id … --question …`                           |
 | Antwort des Nutzers / umgesetzt  | L0                                   | `queue --id … --answer …` bzw. `--done …`             |
-| Budgetfreigabe                   | L0                                   | `budget …`                                            |
+| Budgetfreigabe (je Session neu)  | L0                                   | `budget …`                                            |
 | Paket angelegt / Statuswechsel   | L0, zuständiger Lead                 | `package …`                                           |
 | Frage an L0, Entscheid           | fragende Stelle, L0                  | `decision --for l0 …`                                 |
 

@@ -176,6 +176,7 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 
 **Beobachtung:** (1) STUDIO.md, Abschnitt „Budget" (Z. ~152–174) und Z. ~440, beschreibt die neue Zählung nicht: Budgets zählen je Session, ein Start zählt für die Freigabe seiner Session (Paketname bevorzugt, sonst jüngste Freigabe), eine Session ohne Freigabe erscheint als „ohne Freigabe". Es fehlt auch der Satz, dass `ci:<run>` erledigt ist, sobald der neueste Versuch grün ist. (2) Ein Start vor der ersten Freigabe seiner Session zählt in keiner Budget-Zeile. Nach einem Sessionwechsel (z. B. `/clear`) muss L0 die Freigabe neu loggen. (3) Die Zeilen in `lernen.md` zu Phantomknoten, ci-Rerun, Budget-Anzeige und Meilenstein-Metrik sind nach dem Merge von S17 überholt. (4) `budget_view` gibt kein `since` aus, deshalb haben Budget-Vorfälle `t = 0.0` (`effort.py`, bestand schon vorher). (5) DRY, niedrig: `effort.py` baut die Budget-Id doppelt. `budget_view` wiederholt den Kandidatenfilter aus `budget_key`. `attempt` wird in `on_ci` und `ci._attempt` je gleich gelesen.
 **Ursprung:** Final-Review S17 (opus).
+**Stand:** (1)–(3) erledigt mit Handbuch 1.3 und bereinigter `lernen.md` (Ruling R58, Paket S17-05); (4)–(5) bleiben offen.
 **Einschätzung:** (1)–(3) betreffen das Handbuch und gehen an `studio-coach` bzw. über ein L0-Ruling; (1) ist dringend, weil das Handbuch sonst eine überholte Zählung beschreibt. (4)–(5) räumt man bei der nächsten Arbeit an `tools/studio/` mit auf.
 
 ---
