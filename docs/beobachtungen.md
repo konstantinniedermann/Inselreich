@@ -54,3 +54,32 @@ Vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbarkeit 
 - **`sell` ignoriert Rückgabe von `takeStock`**, `buy` die von `addStock` — nach den Vorprüfungen sicher, per Kommentar dokumentiert.
 - **Nach Deserialisierung (M4)** `recomputeConnectivity` aufrufen statt persistiertem `connected` zu vertrauen.
 - **Prozess:** Zwei Implementierer-Subagenten blieben nach dem Schreiben der Tests ohne Fortschritt hängen (Watchdog 600 s); Muster: komplexe Einzeiler-Shellbefehle zum Editieren. Gegenmassnahme im Dispatch: Edit/Write-Tools verlangen, Shell kurz halten.
+
+## 2026-09-30 · M3 Bevölkerung · Balancing-Befund und aufschiebbare Punkte aus dem Gesamt-Review
+
+**Balancing (Ursprung: Gesamt-Review M3, Sonden im Scratchpad):** Mit den aktuellen `defs/`-Werten ist das
+Erfolgskriterium der Spec (50 Bürger in einer Sitzung) wirtschaftlich nicht erreichbar, zeitlich schon
+(Sonde mit unbegrenztem Geld: Sieg bei Tick ~1000).
+
+- Steuer je Einwohner pro 100 Ticks minus Unterhalt der Versorgungskette je Einwohner: Pionier +1.0,
+  Siedler −1.1, Bürger −2.9; dazu Kapelle 15 und Schule 25 fix. Jede Stufe über Pionier ist dauerhaft defizitär.
+- 60 Bürger brauchen ~46 Produktionsgebäude (14 Fischer, 9 Schäferei/Weberei, 9 Zuckerrohr/Brennerei),
+  weil der Verbrauch (0.5/0.25/0.25) hoch ist gegenüber dem Ausstoss (2.5/2/2 je 100 Ticks je Gebäude).
+- Werkzeug ist nur kaufbar (≈6000 Geld für 150 Stück); Startgeld 5000; Sonde mit realem Startgeld war
+  bei Tick ~500 negativ.
+- Einziger positiver Produzent: Holzfäller (Holz verkaufen).
+
+**Einschätzung:** Strukturelle Lücke (~5× Startgeld), kein Sim-Fehler. M4 Task 3 wird als Design-Pass mit
+Kurz-Spec geführt (Kandidaten: Steuersätze Siedler/Bürger ×3–5, Verbrauch senken oder Ausstoss erhöhen,
+Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). Spec-Tabellen nachführen.
+
+**Aufschiebbar (Ursprung: Gesamt-Review M3):**
+
+- Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
+  Wachstums-Tick aufsteigen, eines schrumpft danach sofort. Option: `tryUpgrade` entnimmt die Einheit.
+- HUD zeigt Steuern und Unterhalt, aber keine Nettozahl (Spec 2.8 „Bilanz"); M4 Task 4.
+- Spec 3.2 nennt `economy.ts` für Steuern; tatsächlich `population.ts` (ADR-005). Doku-Pass M4.
+- Frisch aufgestiegenes Haus zahlt in derselben 100er-Buchung halbe Steuer (neue Bedürfnisse noch offen).
+- `SERVICE_BUILDING`, `GROWTH_INTERVAL`, `UPGRADE_WAIT` gehören nach `defs/` (M4 `timing.ts`).
+- MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
+  bewusst nicht in M4, Markdown-Doku mit `docs/index.md`. Nachrüsten auf Wunsch trivial.
