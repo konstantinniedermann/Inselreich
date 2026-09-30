@@ -142,7 +142,7 @@ class SummaryTest(unittest.TestCase):
         self.assertEqual(
             text,
             f"Limit: 5h 42 % (Reset {hhmm(RESET)}), Woche 31 %, "
-            "Kontext L0 18 % → Ampel grün",
+            "Kontext L0 18 % → Ampel grün. volle Parallelität",
         )
 
     def test_parts_omitted(self):
@@ -153,11 +153,19 @@ class SummaryTest(unittest.TestCase):
     def test_yellow_and_red_hints(self):
         yellow = limits.parse({"rate_limits": {"five_hour": {"used_percentage": 65}}})
         self.assertIn("Ampel gelb", limits.summary(yellow, 1.0))
-        self.assertIn("keine neuen Wellen", limits.summary(yellow, 1.0))
+        self.assertIn(
+            "herunterfahren: weniger parallel, keine neue Welle, "
+            "Angefangenes abschliessen",
+            limits.summary(yellow, 1.0),
+        )
         red = limits.parse({"rate_limits": {"five_hour": {"used_percentage": 85}}})
         text = limits.summary(red, 1.0)
-        self.assertIn("keine neuen Starts, Session-Ende-Routine", text)
-        self.assertNotIn("keine neuen Wellen", text)
+        self.assertIn(
+            "Session-Ende vorbereiten: abschliessen, state.md, Session beenden", text
+        )
+        self.assertNotIn("herunterfahren", text)
+        for word in ("sonnet", "haiku"):
+            self.assertNotIn(word, text.lower())
 
     def test_week_hint_only_above_80(self):
         def week(pct):

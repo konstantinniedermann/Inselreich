@@ -97,6 +97,7 @@ Option 2.
 - Der Wrapper schreibt die Werte atomar nach `.studio/limits.json` (lokal, gitignored). Ohne jeden
   Wert bleibt der alte Stand stehen.
 - Der Prompt-Hook gibt der Hauptsession bei `UserPromptSubmit` eine Zeile `Limit: …` mit Ampel und
-  Hinweisen mit, wenn `limits.json` jünger als 10 Minuten ist. `/api/state` liefert das Feld
+  Hinweis mit (grün: volle Parallelität; gelb: herunterfahren; rot: Session-Ende vorbereiten; nie
+  eine Modellempfehlung, R69), wenn `limits.json` jünger als 10 Minuten ist. `/api/state` liefert das Feld
   `limits` (bis 1 Stunde alt, mit `age_s` und `light`); das Dashboard zeigt es in der Topbar.
   Schwellen und Regeln: Ruling R68; Logik in `tools/studio/limits.py`.

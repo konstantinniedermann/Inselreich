@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Richtwerte (R68/R69), nur hier definiert; Hinweise empfehlen nie ein Modell.
 YELLOW_FROM = 60
 RED_FROM = 80
 WEEK_HIGH_ABOVE = 80
@@ -114,6 +115,13 @@ def light(five_hour_pct: float | None) -> str | None:
     return "grün"
 
 
+LAMP_HINTS = {
+    "grün": "volle Parallelität",
+    "gelb": "herunterfahren: weniger parallel, keine neue Welle, Angefangenes abschliessen",
+    "rot": "Session-Ende vorbereiten: abschliessen, state.md, Session beenden",
+}
+
+
 def _pct_text(value: float) -> str:
     return f"{int(value)} %"
 
@@ -153,10 +161,8 @@ def _parts(data: dict) -> list[str]:
 
 def _hints(data: dict, lamp: str | None) -> list[str]:
     hints = []
-    if lamp == "rot":
-        hints.append("keine neuen Starts, Session-Ende-Routine")
-    elif lamp == "gelb":
-        hints.append("keine neuen Wellen")
+    if lamp:
+        hints.append(LAMP_HINTS[lamp])
     week = data.get("seven_day_pct")
     if week is not None and week > WEEK_HIGH_ABOVE:
         hints.append("Wochenfenster hoch: Parallelität halbieren")
