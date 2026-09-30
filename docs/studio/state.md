@@ -35,6 +35,10 @@ Stand: 2026-09-30 (laufende Session, Auftrag Nutzer-Playtest R73)
 - **M6-SPEC** (lead-design): Spec fertigstellen auf `docs/m6-spec`, Entscheide per R74. Budget 4/2.
 - **STUDIO-LIMIT** (lead-qa): Nachprüfung + Browser-Blick → Urteil für Gate Merge. Budget 2/2.
 - **M5-NACHLESE** (lead-tech): `fix/m5-nachlese` (`.worktrees/m5-nachlese`). Budget 3/1.
+- **STUDIO-LIMIT** Fix-Runde (lead-tech, R76), danach Nachprüfung lead-qa, dann Gate Merge.
+- **STUDIO-DESKTOP** (studio-coach): Personas auf Desktop-first (R78).
+- Nach Merge M5-NACHLESE in `docs/beobachtungen.md` nachtragen: „Handy unspielbar" (R78), STUDIO-LIMIT Befund 3 (R76).
+- Gates: M7 Brainstorming bestanden mit Auflagen (R77), Desktop-first (R78).
 - Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design und lead-art.
 
 ## Pausierte Pakete
