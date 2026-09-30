@@ -66,6 +66,21 @@ class ContextTest(unittest.TestCase):
             text = context.build_context(docs, incidents, "8765")
             self.assertLessEqual(len(text), context.LIMIT)
 
+    def test_incidents_survive_long_docs_with_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            docs = Path(tmp)
+            (docs / "state.md").write_text("s" * 50000, "utf-8")
+            (docs / "lernen.md").write_text("l" * 50000, "utf-8")
+            incidents = [
+                {"id": str(i), "text": f"VORFALL{i} " + "v" * 1000} for i in range(30)
+            ]
+            text = context.build_context(docs, incidents, "8765")
+            self.assertLessEqual(len(text), context.LIMIT)
+            self.assertIn("VORFALL7", text)
+            self.assertNotIn("VORFALL8", text)
+            self.assertIn("gekürzt, siehe docs/studio/state.md", text)
+            self.assertIn("gekürzt, siehe docs/studio/lernen.md", text)
+
 
 if __name__ == "__main__":
     unittest.main()

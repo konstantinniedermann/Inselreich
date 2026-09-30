@@ -52,17 +52,6 @@ def cut(text: object, limit: int) -> str:
     return text if len(text) <= limit else text[:limit] + "…"
 
 
-def header_value(text: str, key: str) -> str:
-    """Wert einer Kopfzeile wie 'Persona: x' oder '- **Paket:** M5-T1'."""
-    for raw in text.splitlines():
-        line = raw.strip().lstrip("-*#> ").replace("**", "").strip()
-        name, sep, value = line.partition(":")
-        if sep and name.strip().lower() == key.lower():
-            words = value.strip().strip("`").split()
-            return words[0].strip("`") if words else ""
-    return ""
-
-
 def header_text(text: str, key: str) -> str:
     """Voller Wert einer Kopfzeile wie 'Schätzung: 20 min, 30 Tools'."""
     for raw in text.splitlines():
@@ -71,6 +60,12 @@ def header_text(text: str, key: str) -> str:
         if sep and name.strip().lower() == key.lower():
             return value.strip().strip("`").strip()
     return ""
+
+
+def header_value(text: str, key: str) -> str:
+    """Erstes Wort einer Kopfzeile wie 'Persona: x' oder '- **Paket:** M5-T1'."""
+    words = header_text(text, key).split()
+    return words[0].strip("`") if words else ""
 
 
 def parse_estimate(value: str) -> dict | None:
@@ -288,11 +283,8 @@ def open_incidents() -> list[dict]:
     return pending_incidents(EventStore(events_file()).events(), time.time())
 
 
-def incident_notice(payload: dict, incidents: list[dict]) -> str:
-    """Hinweis auf offene Vorfälle, je Session und Vorfall einmal."""
-    sid = str(payload.get("session_id") or "")
-    if payload.get("agent_id") or not sid or SAFE_RE.sub("", sid) != sid:
-        return ""
+def mark_incidents(sid: str, incidents: list[dict]) -> list[dict]:
+    """Legt Marken an; liefert die Vorfälle, die in dieser Session neu sind."""
     marks = studio_home() / "notified" / sid
     fresh = []
     for incident in incidents:
@@ -302,21 +294,43 @@ def incident_notice(payload: dict, incidents: list[dict]) -> str:
             os.close(os.open(marks / mark, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
         except FileExistsError:
             continue
-        fresh.append(str(incident.get("text", "")))
+        fresh.append(incident)
+    return fresh
+
+
+def valid_session(payload: dict) -> str:
+    sid = str(payload.get("session_id") or "")
+    return sid if sid and SAFE_RE.sub("", sid) == sid else ""
+
+
+def incident_notice(payload: dict, incidents: list[dict] | None = None) -> str:
+    """Hinweis auf offene Vorfälle, je Session und Vorfall einmal."""
+    sid = valid_session(payload)
+    if payload.get("agent_id") or not sid:
+        return ""
+    if incidents is None:
+        incidents = open_incidents()
+    fresh = mark_incidents(sid, incidents)
     if not fresh:
         return ""
-    return "Ad-hoc-Retro fällig (Handbuch, Verbesserungsschleife): " + "; ".join(fresh)
+    texts = "; ".join(str(i.get("text", "")) for i in fresh)
+    return "Ad-hoc-Retro fällig (Handbuch, Verbesserungsschleife): " + texts
 
 
-def start_context(port: str) -> str:
+def start_context(port: str, sid: str = "") -> str:
     try:
-        return context.build_context(docs_dir(), open_incidents(), port)
+        incidents = open_incidents()
+        text = context.build_context(docs_dir(), incidents, port)
     except Exception:  # noqa: BLE001
         return START_CONTEXT
+    if sid:
+        with contextlib.suppress(Exception):  # im Kontext gelistete Vorfälle
+            mark_incidents(sid, incidents[: context.LIST_MAX])
+    return text
 
 
 def start_background(env: Mapping[str, str]) -> None:
-    if env.get("STUDIO_NO_SERVER"):
+    if env.get("STUDIO_NO_SERVER") in ("1", "true", "yes"):
         return
     here = Path(__file__).resolve().parent
     launch_detached(["bash", str(here / "start.sh")])
@@ -372,6 +386,19 @@ def maybe_open_dashboard(
     return True
 
 
+def load_versions(payload: dict) -> tuple[str, dict | None]:
+    """Handbuch-Version immer, Persona-Metadaten nur wo gebraucht."""
+    handbook, personas = "", None
+    with contextlib.suppress(Exception):
+        handbook = studio_docs.read_version(docs_dir() / "STUDIO.md")
+        name = payload.get("hook_event_name")
+        if name in ("SubagentStart", "SubagentStop") or (
+            name == "PreToolUse" and payload.get("tool_name") in AGENT_TOOLS
+        ):
+            personas = studio_docs.persona_meta(agents_dir())
+    return handbook, personas
+
+
 def main() -> int:
     try:
         payload = json.loads(sys.stdin.read() or "null")
@@ -380,11 +407,7 @@ def main() -> int:
         ):
             return 0
         name = payload["hook_event_name"]
-        handbook, personas = "", None
-        with contextlib.suppress(Exception):
-            handbook = studio_docs.read_version(docs_dir() / "STUDIO.md")
-            if name in ("SubagentStart", "SubagentStop", "PreToolUse"):
-                personas = studio_docs.persona_meta(agents_dir())
+        handbook, personas = load_versions(payload)
         event = to_event(payload, handbook, personas)
         if event:
             events = [event]
@@ -397,12 +420,12 @@ def main() -> int:
         port = port if port.isascii() and port.isdigit() else "8765"
         text = ""
         if name == "SessionStart":
-            text = start_context(port)
+            text = start_context(port, valid_session(payload))
             with contextlib.suppress(Exception):
                 start_background(os.environ)
         elif name == "UserPromptSubmit":
             with contextlib.suppress(Exception):
-                text = incident_notice(payload, open_incidents())
+                text = incident_notice(payload)
         if text:
             output = {
                 "hookSpecificOutput": {

@@ -69,13 +69,12 @@ def build_context(docs: Path, incidents: list[dict], port: str) -> str:
         f"Handbuch v{handbook}. Du fragst nicht zurück; Vorbehalte gehören in die "
         "Warteschlange."
     )
-    parts = [
+    fixed = [
         role,
         f"Dashboard: http://127.0.0.1:{port}/",
         START_ROUTINE,
-        "## state.md\n" + shorten(read_text(docs / "state.md"), STATE_MAX, "state.md"),
-        "## lernen.md\n"
-        + shorten(read_text(docs / "lernen.md"), LERNEN_MAX, "lernen.md"),
+    ]
+    lists = [
         _section("Warteschlange", _queue_lines(docs)),
         _section("Laufende Experimente", _experiment_lines(docs)),
         _section(
@@ -83,7 +82,19 @@ def build_context(docs: Path, incidents: list[dict], port: str) -> str:
             [_line(f"- {item.get('text', '')}") for item in incidents[:LIST_MAX]],
         ),
     ]
+    used = len("\n\n".join(fixed + lists))
+    # Rest nach den Listen (samt Überschriften und Trennern) teilen sich state/lernen
+    rest = max(LIMIT - used - 60, 0)
+    lernen_max = min(LERNEN_MAX, rest // 3)
+    state_max = min(STATE_MAX, rest - lernen_max)
+    parts = [
+        *fixed,
+        "## state.md\n" + shorten(read_text(docs / "state.md"), state_max, "state.md"),
+        "## lernen.md\n"
+        + shorten(read_text(docs / "lernen.md"), lernen_max, "lernen.md"),
+        *lists,
+    ]
     text = "\n\n".join(parts)
-    if len(text) > LIMIT:
+    if len(text) > LIMIT:  # Sicherheitsnetz
         text = text[: LIMIT - 1].rstrip() + "…"
     return text

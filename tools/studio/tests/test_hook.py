@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import hook
 
@@ -356,6 +357,62 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn("CI rot", first)
         self.assertEqual(second, "")
         self.assertEqual(sub, "")
+
+
+class FixRoundTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        old = os.environ.get("STUDIO_HOME")
+        os.environ["STUDIO_HOME"] = self.tmp.name
+        self.addCleanup(
+            lambda: (
+                os.environ.pop("STUDIO_HOME")
+                if old is None
+                else os.environ.__setitem__("STUDIO_HOME", old)
+            )
+        )
+
+    def test_session_start_marks_listed_incidents(self):
+        incidents = [{"id": "ci:1", "kind": "ci", "text": "CI rot", "t": 1.0}]
+        with mock.patch.object(hook, "open_incidents", return_value=incidents):
+            text = hook.start_context("8765", "s-1")
+            self.assertIn("CI rot", text)
+            self.assertEqual(hook.incident_notice(payload("UserPromptSubmit")), "")
+
+    def test_subagent_notice_does_not_read_events(self):
+        with mock.patch.object(hook, "open_incidents") as opened:
+            out = hook.incident_notice(payload("UserPromptSubmit", agent_id="a1"))
+        self.assertEqual(out, "")
+        opened.assert_not_called()
+
+    def test_no_server_flag_values(self):
+        for value, expected in (
+            ("1", 0),
+            ("true", 0),
+            ("yes", 0),
+            ("0", 2),
+            ("", 2),
+            ("TRUE", 2),
+        ):
+            with mock.patch.object(hook, "launch_detached") as launch:
+                hook.start_background({"STUDIO_NO_SERVER": value})
+            self.assertEqual(launch.call_count, expected, value)
+
+    def test_personas_loaded_only_when_needed(self):
+        calls = []
+        real = hook.studio_docs.persona_meta
+        hook.studio_docs.persona_meta = lambda a: calls.append(a) or {}
+        self.addCleanup(setattr, hook.studio_docs, "persona_meta", real)
+        for p in (
+            payload("PreToolUse", tool_name="Read", tool_input={}),
+            payload("UserPromptSubmit", prompt="x"),
+        ):
+            hook.load_versions(p)
+        self.assertEqual(calls, [])
+        hook.load_versions(payload("PreToolUse", tool_name="Agent", tool_input={}))
+        hook.load_versions(payload("SubagentStart", agent_id="a"))
+        self.assertEqual(len(calls), 2)
 
 
 class MainTest(unittest.TestCase):
