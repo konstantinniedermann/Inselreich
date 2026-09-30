@@ -740,7 +740,10 @@ def append_g9(path: Path) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
-    if argv[:1] == ["--append-g9"] and len(argv) == 2:
+    if argv[:1] == ["--append-g9"]:
+        if len(argv) != 2:
+            print("Aufruf: make_demo.py --append-g9 <datei>", file=sys.stderr)
+            return 2
         extra = append_g9(Path(argv[1]))
         print(f"{len(extra)} Events an {argv[1]} angehängt")
         return 0

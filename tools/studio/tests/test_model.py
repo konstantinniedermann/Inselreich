@@ -1797,6 +1797,35 @@ class GraphFixtureTest(unittest.TestCase):
             ],
         )
         self.assertEqual([r["kind"] for r in rows[:3]].count("pause"), 0)
+        stamps = [
+            datetime.fromisoformat(e["ts"].replace("Z", "+00:00")).timestamp()
+            for e in events
+        ]
+        latest = max(
+            stamp
+            for stamp, e in zip(stamps[:-2], events[:-2])
+            if e["session_id"] == make_demo.GRAPH
+        )
+        self.assertAlmostEqual(stamps[-2], latest + 20, places=2)
+        self.assertAlmostEqual(stamps[-1], latest + 30, places=2)
+
+    def test_append_g9_needs_file(self):
+        for argv in (["--append-g9"], ["--append-g9", "a.jsonl", "b.jsonl"]):
+            with self.subTest(argv=argv), tempfile.TemporaryDirectory() as tmp:
+                err = io.StringIO()
+                cwd = os.getcwd()
+                os.chdir(tmp)
+                try:
+                    with contextlib.redirect_stderr(err):
+                        code = make_demo.main(argv)
+                    created = os.listdir(tmp)
+                finally:
+                    os.chdir(cwd)
+                self.assertEqual(code, 2)
+                self.assertIn(
+                    "Aufruf: make_demo.py --append-g9 <datei>", err.getvalue()
+                )
+                self.assertEqual(created, [])
 
 
 class GateSpecFixesTest(unittest.TestCase):
