@@ -631,3 +631,21 @@ lead-production 1 für den Integrator). Die vorige Session pausierte wegen Nutzu
 ein Befund aus Welle 5 fällt erst im Final-Review auf.
 
 Entscheider: L0 · Anlass: Übergabe Welle 5 und Session-Wechsel
+
+## R67 · 2026-09-30 · Studio
+
+Ruling: Antwort des Nutzers auf N-001 umgesetzt — Verfassung 1.0 bestätigt mit zwei Änderungen,
+die ab sofort gelten, bis der Verfassungstext (1.1) nach Freigabe `VERFASSUNG ÄNDERN` nachgeführt
+ist: (1) **Abhängigkeiten:** Neue Abhängigkeiten (auch Laufzeit) entscheidet L0 selbst per Ruling
+und ADR, wenn er die Entscheidung tragen kann und keine Alternative (eigene Umsetzung, vorhandene
+Mittel) Sinn macht; sie sind kein Nutzer-Vorbehalt mehr. ADR-001 bleibt der Normalfall
+(„keine, ausser begründet"). Der user-scope Hook `dep-guard` wird nicht umgangen: blockt er, meldet
+L0 den Paketnamen dem Nutzer zur technischen Freigabe. (2) **Parallelisierung:** Möglichst hoch
+parallelisieren und delegieren ist oberstes Arbeitsprinzip von L0 — unabhängige Pakete, Prüfungen
+und Vorbereitungen laufen gleichzeitig in mehreren Leads; serielles Arbeiten braucht einen Grund
+(Datei-Eigentum, echte Abhängigkeit). Die Parallelitätsgrenzen je Budget sind Richtwerte, keine
+Deckel. Verfassung §9 bleibt unberührt. Nachführung: Handbuch und Personas durch den studio-coach,
+CLAUDE.md und ADR-001-Nachtrag im Doku-Pass D1. — Kosten bei Irrtum: mehr gleichzeitige Merges,
+mehr Koordinationsaufwand.
+
+Entscheider: L0 · Anlass: Antwort des Nutzers auf N-001

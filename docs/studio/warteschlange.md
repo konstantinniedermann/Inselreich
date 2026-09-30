@@ -34,7 +34,7 @@ schliesst den Eintrag.
 
 ---
 
-## N-001 · offen · 2026-09-30 · Verfassung 1.0 bestätigen
+## N-001 · beantwortet · 2026-09-30 · Verfassung 1.0 bestätigen
 
 - Frage: Bestätigst du die Verfassung 1.0 (docs/studio/VERFASSUNG.md), insbesondere §5 Autonomie mit Vorrang vor ../CLAUDE.md und §7 Push auf main nach grünem Check?
 - Empfehlung: bestätigen
@@ -42,4 +42,4 @@ schliesst den Eintrag.
 - Kosten des Wartens: keine — gilt vorläufig
 - Blockiert: nichts
 - Von: studio-director
-- Antwort: –
+- Antwort: bestätigt mit zwei Änderungen: (1) §3/§5 — neue Abhängigkeiten darf L0 selbst schaffen, wenn er die Entscheidung tragen kann und keine Alternative Sinn macht; (2) neue Regel: möglichst hoch parallelisieren und delegieren, Effizienz ist oberstes Credo des Projektleiters
