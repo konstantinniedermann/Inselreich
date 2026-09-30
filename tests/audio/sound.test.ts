@@ -1,0 +1,366 @@
+import { describe, expect, it } from 'vitest';
+import { createSound, THROTTLE_MS, type SoundEvent } from '../../src/audio/sound';
+
+// Der Fake bildet nur die Knoten-API nach, die sound.ts nutzt.
+function fakeCtx() {
+  const log = {
+    nodes: 0,
+    resume: 0,
+    suspend: 0,
+    close: 0,
+    bufferStarts: 0,
+    gains: [] as Array<{ gain: { value: number } }>,
+  };
+  const param = () => ({
+    value: 1,
+    setValueAtTime() {},
+    linearRampToValueAtTime() {},
+    exponentialRampToValueAtTime() {},
+  });
+  const node = () => {
+    log.nodes += 1;
+    return {
+      connect() {
+        return this;
+      },
+      disconnect() {},
+      start() {},
+      stop() {},
+      gain: param(),
+      frequency: param(),
+      Q: param(),
+      type: 'sine',
+      buffer: null,
+      loop: false,
+    };
+  };
+  const ctx = {
+    currentTime: 0,
+    state: 'suspended',
+    destination: {},
+    sampleRate: 44100,
+    createGain: () => {
+      const g = node();
+      log.gains.push(g);
+      return g;
+    },
+    createOscillator: node,
+    createBufferSource: () => {
+      const n = node();
+      n.start = () => {
+        log.bufferStarts += 1;
+      };
+      return n;
+    },
+    createBiquadFilter: node,
+    createBuffer: (_c: number, len: number) => ({ getChannelData: () => new Float32Array(len) }),
+    resume() {
+      log.resume += 1;
+      ctx.state = 'running';
+      return Promise.resolve();
+    },
+    suspend() {
+      log.suspend += 1;
+      ctx.state = 'suspended';
+      return Promise.resolve();
+    },
+    close() {
+      log.close += 1;
+      return Promise.resolve();
+    },
+  };
+  return { ctx: ctx as unknown as AudioContext, log };
+}
+
+const setTime = (ctx: AudioContext, t: number) => {
+  (ctx as { currentTime: number }).currentTime = t;
+};
+
+const ALL: SoundEvent[] = [
+  'build',
+  'demolish',
+  'coin',
+  'order',
+  'orderDone',
+  'upgrade',
+  'error',
+  'win',
+];
+
+describe('sound', () => {
+  it('AK-A2-01 Fabrik liefert null: alles fehlerfrei, keine Knoten', () => {
+    const s = createSound({ muted: false, volume: 0.4 }, () => null);
+    expect(() => {
+      s.unlock();
+      ALL.forEach((e) => s.play(e));
+      s.setMuted(true);
+      s.setVolume(0.2);
+      s.setHidden(true);
+      s.setHidden(false);
+      s.dispose();
+    }).not.toThrow();
+  });
+
+  it('AK-A2-01 Fabrik wirft: alles fehlerfrei', () => {
+    const s = createSound({ muted: false, volume: 0.4 }, () => {
+      throw new Error('kein Web Audio');
+    });
+    expect(() => {
+      s.unlock();
+      ALL.forEach((e) => s.play(e));
+      s.setMuted(false);
+      s.setVolume(0.2);
+      s.setHidden(true);
+      s.setHidden(false);
+      s.dispose();
+    }).not.toThrow();
+  });
+
+  it('AK-A2-01 Standardfabrik (node ohne AudioContext) fällt still zurück', () => {
+    const s = createSound({ muted: false, volume: 0.4 });
+    expect(() => {
+      s.unlock();
+      s.play('error');
+      s.setHidden(true);
+      s.dispose();
+    }).not.toThrow();
+  });
+
+  it('AK-A2-01 Fabrik wird erst bei unlock() aufgerufen', () => {
+    let calls = 0;
+    const { ctx } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => {
+      calls += 1;
+      return ctx;
+    });
+    expect(calls).toBe(0);
+    s.unlock();
+    s.unlock();
+    expect(calls).toBe(1);
+  });
+
+  it('AK-A2-02 Master 0.4, setVolume, Stumm und Meeresrauschen 15 % relativ', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const master = log.gains[0]!; // erster Gain: Master
+    const sea = log.gains[1]!; // zweiter Gain: Meeresrauschen, hängt hinter dem Master
+    expect(master.gain.value).toBe(0.4);
+    expect(sea.gain.value).toBe(0.15);
+    s.setVolume(0.1);
+    expect(master.gain.value).toBe(0.1);
+    s.setMuted(true);
+    expect(master.gain.value).toBe(0); // Meeresrauschen hängt am Master, damit auch stumm
+    s.setMuted(false);
+    expect(master.gain.value).toBe(0.1);
+    s.setMuted(true);
+    s.setVolume(0.7); // Lautstärke im Stummzustand wird gemerkt, bleibt aber stumm
+    expect(master.gain.value).toBe(0);
+    s.setMuted(false);
+    expect(master.gain.value).toBe(0.7);
+  });
+
+  it('AK-A2-02 Stumm vor unlock() gilt nach unlock()', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: true, volume: 0.4 }, () => ctx);
+    s.setVolume(0.3);
+    s.unlock();
+    expect(log.gains[0]!.gain.value).toBe(0);
+    s.setMuted(false);
+    expect(log.gains[0]!.gain.value).toBe(0.3);
+  });
+
+  it('AK-A2-02 stumm erzeugt play() keine Stimmen', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: true, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const base = log.nodes;
+    s.play('win');
+    expect(log.nodes).toBe(base);
+    s.setMuted(false);
+    s.play('win');
+    expect(log.nodes).toBeGreaterThan(base);
+  });
+
+  it('AK-A2-03 Drossel je Ereignis misst an currentTime', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const base = log.nodes;
+    const voices = () => log.nodes - base;
+    s.play('build');
+    const one = voices();
+    setTime(ctx, 0.05);
+    s.play('build');
+    expect(voices()).toBe(one); // gedrosselt (< 80 ms)
+    setTime(ctx, 0.09);
+    s.play('build');
+    expect(voices()).toBe(2 * one); // zweite Stimme
+  });
+
+  it('AK-A2-03 coin bei 0 / 0.04 / 0.06', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const base = log.nodes;
+    s.play('coin');
+    const one = log.nodes - base;
+    setTime(ctx, 0.04);
+    s.play('coin');
+    expect(log.nodes - base).toBe(one);
+    setTime(ctx, 0.06);
+    s.play('coin');
+    expect(log.nodes - base).toBe(2 * one);
+  });
+
+  it('AK-A2-03 THROTTLE_MS enthält die Spec-Werte', () => {
+    expect(THROTTLE_MS).toEqual({
+      build: 80,
+      demolish: 80,
+      coin: 50,
+      upgrade: 300,
+      error: 150,
+    });
+  });
+
+  it.each(Object.entries(THROTTLE_MS) as Array<[SoundEvent, number]>)(
+    'AK-A2-03 %s: gedrosselt knapp vor %i ms, erlaubt danach',
+    (e, ms) => {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+      s.unlock();
+      setTime(ctx, 10);
+      const base = log.nodes;
+      s.play(e);
+      const one = log.nodes - base;
+      expect(one).toBeGreaterThan(0);
+      setTime(ctx, 10 + (ms - 1) / 1000);
+      s.play(e);
+      expect(log.nodes - base).toBe(one);
+      setTime(ctx, 10 + (ms + 1) / 1000);
+      s.play(e);
+      expect(log.nodes - base).toBe(2 * one);
+    },
+  );
+
+  it('AK-A2-03 ungedrosselte Ereignisse (order, orderDone, win) spielen jedes Mal', () => {
+    for (const e of ['order', 'orderDone', 'win'] as const) {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+      s.unlock();
+      const base = log.nodes;
+      s.play(e);
+      const one = log.nodes - base;
+      s.play(e);
+      expect(log.nodes - base).toBe(2 * one);
+    }
+  });
+
+  it('AK-A2-03 Drossel gilt je Ereignis, nicht übergreifend', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const base = log.nodes;
+    s.play('build');
+    const one = log.nodes - base;
+    s.play('error');
+    expect(log.nodes - base).toBeGreaterThan(one);
+  });
+
+  it('AK-A2-04 vor unlock() erzeugt play() keine Knoten', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    ALL.forEach((e) => s.play(e));
+    expect(log.nodes).toBe(0);
+  });
+
+  it('AK-A2-04 unlock() ruft resume() und startet das Rauschen genau einmal', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    expect(log.resume).toBe(1);
+    expect(log.bufferStarts).toBe(1);
+    const nodes = log.nodes;
+    s.unlock();
+    expect(log.resume).toBe(1);
+    expect(log.bufferStarts).toBe(1);
+    expect(log.nodes).toBe(nodes);
+  });
+
+  it('AK-A2-05 setHidden(true) ruft suspend(), setHidden(false) resume()', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const r = log.resume;
+    s.setHidden(true);
+    expect(log.suspend).toBe(1);
+    s.setHidden(false);
+    expect(log.resume).toBe(r + 1);
+  });
+
+  it('AK-A2-05 setHidden(false) ohne unlock() ruft kein resume()', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.setHidden(true);
+    s.setHidden(false);
+    expect(log.resume).toBe(0);
+    expect(log.suspend).toBe(0);
+  });
+
+  it('AK-A2-05 setHidden(false) bei stumm ruft kein resume()', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    s.setHidden(true);
+    s.setMuted(true);
+    const r = log.resume;
+    s.setHidden(false);
+    expect(log.resume).toBe(r);
+  });
+
+  it('RF-4a setVolume klemmt ungültige Werte', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    const master = log.gains[0]!;
+    s.setVolume(Number.NaN);
+    expect(master.gain.value).toBe(0.4); // ungültig → Wert bleibt
+    s.setVolume('0.4' as unknown as number);
+    expect(master.gain.value).toBe(0.4);
+    s.setVolume(-1);
+    expect(master.gain.value).toBe(0);
+    s.setVolume(2);
+    expect(master.gain.value).toBe(1);
+  });
+
+  it.each([
+    [Number.NaN, 0.4],
+    [-1, 0],
+    [2, 1],
+    ['0.4' as unknown as number, 0.4],
+  ])('RF-4a Startwert %s ergibt Master %s', (v, expected) => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: v }, () => ctx);
+    s.unlock();
+    expect(log.gains[0]!.gain.value).toBe(expected);
+  });
+
+  it('dispose() stoppt, schliesst den Kontext; danach wirkungslos', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    s.unlock();
+    s.dispose();
+    expect(log.close).toBe(1);
+    const nodes = log.nodes;
+    expect(() => {
+      s.play('win');
+      s.unlock();
+      s.setVolume(0.2);
+      s.setMuted(true);
+      s.setHidden(true);
+      s.dispose();
+    }).not.toThrow();
+    expect(log.nodes).toBe(nodes);
+    expect(log.close).toBe(1);
+  });
+});
