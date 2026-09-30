@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.7 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.8 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
 Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
@@ -157,11 +157,12 @@ und in der Kopfzeile `Modell:` des Briefings.
 
 ## Limits und Sessiongrösse
 
-- **Sensor (R68, Paket STUDIO-LIMIT, in Arbeit):** Die Statuszeile von Claude Code liefert
-  `rate_limits.five_hour.used_percentage`, `seven_day.used_percentage` und
+- **Sensor (R68, Paket STUDIO-LIMIT, in Betrieb seit R80):** Die Statuszeile von Claude Code
+  liefert `rate_limits.five_hour.used_percentage`, `seven_day.used_percentage` und
   `context_window.used_percentage`. Ein Projekt-Wrapper ruft das Nutzer-Skript unverändert auf und
-  schreibt die Werte nach `.studio/limits.json`; der Prompt-Hook gibt sie L0 mit, das Dashboard
-  zeigt sie. Bis zur Fertigstellung liegen keine Werte vor (dann „nicht gemessen“).
+  schreibt die Werte mit `ts` und `session_id` nach `.studio/limits.json`; der Prompt-Hook gibt sie
+  L0 mit, das Dashboard zeigt sie. Fehlt die Datei, steht „nicht gemessen“ da. Veraltete Werte
+  werden noch nicht als solche markiert (`docs/beobachtungen.md`, Restbefunde Limit-Sensor).
 - **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 langsam herunter:
   weniger parallel, weniger Starts, Angefangenes abschliessen, `state.md` nachführen, Session
   beenden. Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %

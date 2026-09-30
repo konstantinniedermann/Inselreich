@@ -13,4 +13,5 @@
 - Ein Nutzungslimit beendet die Session ohne Vorwarnung: `state.md` laufend nachführen, nicht erst im Session-Ende; die Übergabe steht nie nur im Chat (Retro session-25e8352d, R66).
 - Fragen zum Verhalten des Harness (z. B. ob Persona-Frontmatter Zusatzfelder toleriert) per Headless-Lauf prüfen statt in einer eigenen Nutzersession — dauerte rund 1 min (Retro Studio-Graph B4).
 - Subagenten legen Dateien, die wie Berichte heissen (`report.md`), oft nicht ab; der Schlussbericht ist der Report und wird ohnehin archiviert. Weder Guard noch Hook verursachen das (Retro M5 B5).
+- Vor einer Übergabe wegen des Kontextwerts einen einzelnen Sprung einmal gegenprüfen (`ts` und `session_id` in `.studio/limits.json`): Veraltete Werte werden noch nicht markiert, der erste Wert nach dem Merge zeigte 77 %, kurz darauf 17 % (R80, Beobachtung Restbefunde Limit-Sensor).
 - Modellwahl nach Aufgabe; ein näher rückendes Limit ist nie ein Grund für ein schwächeres Modell, L0 fährt herunter (R71, Retro M5 B6).

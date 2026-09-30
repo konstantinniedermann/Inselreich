@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Handbuch 1.8
+
+- Anlass: Merge STUDIO-LIMIT (Gate R80, Merge 57d1022)
+- Datenbasis: `docs/studio/rulings.md` R80, `docs/beobachtungen.md` (Restbefunde Limit-Sensor)
+- Ruling: R80
+- Änderungen: „Limits und Sessiongrösse“: Sensor von „in Arbeit“ auf „in Betrieb“, Felder `ts` und `session_id` genannt, Hinweis auf noch nicht markierte veraltete Werte; `lernen.md`: einzelnen Sprung im Kontextwert vor einer Übergabe gegenprüfen
+
 ## 2026-09-30 · Persona qa-playtester 1.5
 
 - Anlass: Angleichung an Handbuch 1.7 (Folgeposten STUDIO-DESKTOP)
