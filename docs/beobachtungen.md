@@ -124,3 +124,29 @@ Quality-of-Life; das Spielerlebnis soll verbessert werden.
 **Ursprung:** Nutzer-Playtest nach M4.
 **Einschätzung:** Kein Fehler, sondern Richtung für die nächste Phase (M5+): Erlebnis-Design als eigenes
 Brainstorming mit Spec, nicht als Einzelmassnahmen.
+
+## 2026-09-30 · Studio-Setup · Aufschiebbare Befunde aus Reviews und Probelauf
+
+- **Vordergrund-`sleep` gesperrt:** Claude Code blockiert einen nackten Bash-Aufruf `sleep N`
+  („standalone sleep"). Briefings, die Wartezeiten verlangen, brauchen `python3 -c "import time; …"`
+  oder den Monitor-Mechanismus. **Ursprung:** Probelauf 1 (der Arbeiter hat die Sperre korrekt nicht
+  umgangen). **Einschätzung:** Hinweis bei Bedarf in `templates/briefing.md` aufnehmen.
+- **Eigene Session im Dashboard:** Nach dem Merge protokollieren die Hooks jede Session im Repo, auch
+  Setup- oder Wartungssessions; diese erscheinen als „neueste" Session. Mit `?session=<id>` lässt sich
+  eine bestimmte Session verlinken. **Ursprung:** Probelauf 2. **Einschätzung:** so gewollt (jede
+  Hauptsession ist L0); bei Bedarf Filter „nur Sessions mit Leads".
+- **Bind bei jeder Erwähnung von `log.py`:** Der Hook erzeugt ein bind-Event für jeden Bash-Aufruf, der
+  `tools/studio/log.py` enthält (auch `cat`), eine leere Rolle überschreibt dann `agent_type`.
+  **Ursprung:** Review Task 1. **Einschätzung:** harmlos, das Modell ignoriert binds ohne Rolle.
+- **Zeitformate:** Feed-`ts` ist UTC, Chronik-`ts` lokal mit Offset; das Dashboard nutzt überall `t`.
+  **Ursprung:** Review Task 2. **Einschätzung:** kosmetisch.
+- **Entscheid erneut gesendet:** Ein `log.py decision` mit bestehender ID öffnet einen gelösten Entscheid
+  wieder. **Ursprung:** Review Task 2. **Einschätzung:** akzeptiert, bei Bedarf dokumentieren.
+- **Verdrängter FIFO-Knoten (geparkt, R17):** Fehlt das `spawned`-Event eines Arbeiters, behält ein falsch
+  zugeordneter Knoten fremde Attribute. **Ursprung:** Re-Review Task 2. **Einschätzung:** tritt nur bei
+  verlorenen Hook-Events auf.
+- **Rückfrage eines Leads erscheint als „fertig":** Gibt ein Lead Fragen an L0 zurück, endet er (Status
+  `done`) statt `waiting`. **Ursprung:** Review Task 7. **Einschätzung:** die Ansicht „Offene Entscheide"
+  deckt es ab.
+- **Server-Tests brauchen ~5 s:** Jeder Test fährt einen echten Server hoch und herunter.
+  **Ursprung:** Task 2. **Einschätzung:** unkritisch; bei Wachstum `poll_interval` beim Herunterfahren senken.
