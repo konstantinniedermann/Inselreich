@@ -601,7 +601,7 @@ kein Alert, kein <img> im DOM.
 test_hook.py (message-Event, Kürzung, fehlendes message-Feld wirft nicht); Namen aus Frontmatter
 über ein temporäres agents-Verzeichnis wie im bestehenden test_read_agent_models.
 
-**P19 Anzahl Persona-Dateien (Ergänzung):** Die Namensliste hat 14 Einträge; `studio-director` hat
+**P19 Anzahl Persona-Dateien (Ergänzung):** Die Namensliste hat 15 Einträge (14 Personas plus Direktor); `studio-director` hat
 keine Persona-Datei. Frontmatter bekommen also **14 Dateien (inkl. studio-coach)** unter `.claude/agents/`; der Direktor
 erhält seinen Namen ausschliesslich aus `DIRECTOR_NAME` in `model.py` (angepasst nach Schritt 0:
 kein Rückfallweg über `names.json`).

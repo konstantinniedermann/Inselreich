@@ -59,6 +59,7 @@ Lokal, nicht Teil des Spiels.
 - [M4 Persistenz und Feinschliff](superpowers/plans/2026-09-30-m4-persistenz-feinschliff.md)
 - [Studio-Setup](superpowers/plans/2026-09-30-studio-setup.md)
 - [Studio 1.5](superpowers/plans/2026-09-30-studio-autonomie.md)
+- [Studio Prozess-Graph](superpowers/plans/2026-09-30-studio-prozessgraph.md)
 
 ## Befunde
 
