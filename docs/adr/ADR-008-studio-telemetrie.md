@@ -86,3 +86,17 @@ Option 2.
   [Prozess-Graph](../superpowers/specs/2026-09-30-studio-prozessgraph-design.md).
 - **Datenschutz:** unverändert lokal und gitignored; neu im Klartext sind nur Empfänger und die
   erste Nachrichtenzeile (siehe Konsequenzen).
+
+## Nachtrag 2026-09-30 (Nutzungslimit-Sensor)
+
+- Hooks erhalten `rate_limits` und `context_window.used_percentage` nicht, die Statuszeile von
+  Claude Code schon. Deshalb der Umweg: `statusLine` in `.claude/settings.json` ruft den Wrapper
+  `tools/studio/statusline.py`. Er reicht stdin unverändert an `~/.claude/hooks/statusline.sh`
+  durch (überschreibbar per `STUDIO_STATUSLINE_CMD`), gibt dessen Ausgabe aus und hängt ` | 5h 42 %`
+  an die erste Zeile. Fehler werden still geschluckt, Exit immer 0.
+- Der Wrapper schreibt die Werte atomar nach `.studio/limits.json` (lokal, gitignored). Ohne jeden
+  Wert bleibt der alte Stand stehen.
+- Der Prompt-Hook gibt der Hauptsession bei `UserPromptSubmit` eine Zeile `Limit: …` mit Ampel und
+  Hinweisen mit, wenn `limits.json` jünger als 10 Minuten ist. `/api/state` liefert das Feld
+  `limits` (bis 1 Stunde alt, mit `age_s` und `light`); das Dashboard zeigt es in der Topbar.
+  Schwellen und Regeln: Ruling R68; Logik in `tools/studio/limits.py`.
