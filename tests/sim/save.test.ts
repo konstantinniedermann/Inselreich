@@ -77,6 +77,21 @@ describe('save', () => {
     expectFailure(json, 'Beschädigter Spielstand');
   });
 
+  it('rejects a tiles array with a null element', () => {
+    const json = tampered(w, (raw) => {
+      (raw.tiles as unknown[])[0] = null;
+    });
+    expectFailure(json, 'Beschädigter Spielstand');
+  });
+
+  it('rejects a building with an unknown defId', () => {
+    const json = tampered(w, (raw) => {
+      const b = (raw.buildings as Record<string, Building>)[String(w.kontorId)]!;
+      (b as { defId: string }).defId = 'castle';
+    });
+    expectFailure(json, 'Beschädigter Spielstand');
+  });
+
   it('recomputes connectivity instead of trusting the saved flag', () => {
     const lj = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
     expect(lj.ok).toBe(true);
