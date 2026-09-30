@@ -898,3 +898,14 @@ Kriterium und eine Datenkollision mit M6 dürfen nicht in den Plan. — Kosten b
 kurze Nachtragsrunde.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-tech und lead-qa M7-SPEC
+
+## R84 · 2026-09-30 · M7
+
+Ruling: **Gate Spec M7 bestanden** (Nachprüfung lead-qa OK, `docs/m7-spec` @ 2c11a9f). Rest-Auflage
+fürs Gate Plan: Der M6-Plan verweist bei den Einstellungen auf M7 AK-U1-01b (Durchreichen fremder
+Felder). Plan M7 startet jetzt parallel zum Plan M6-Sim; er umfasst die M7-Pakete und den
+gemeinsamen seriellen UI-Strang nach R82(b) inklusive der M6-UI-Pakete und der
+Krisen-Verdrahtung, sobald die M6-Spec nachgezogen ist. ADR-011 (Asset-Laden) als Deliverable
+vor A2. — Warum: Spec prüfbar, Konflikte mit M6 aufgelöst. — Kosten bei Irrtum: keine besonderen.
+
+Entscheider: L0 · Anlass: Nachprüfung lead-qa M7-SPEC
