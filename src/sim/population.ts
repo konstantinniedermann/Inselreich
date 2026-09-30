@@ -126,7 +126,11 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
   return { ok: reasons.length === 0, reasons };
 }
 
-/** Steigt das Haus auf, wenn `upgradeStatus` ok meldet; zieht Kosten ab und setzt neuen Bedarf. */
+/**
+ * Steigt das Haus auf, wenn `upgradeStatus` ok meldet; zieht Kosten ab und entnimmt je neuem
+ * Bedarfsgut genau eine Einheit. Sie gilt als ausgeliefert (`demand` 0, `satisfied` true): so
+ * nehmen zwei Häuser nicht dieselbe Einheit, und das Haus zählt gleich im selben Tick als versorgt.
+ */
 export function tryUpgrade(world: World, b: Building): boolean {
   const house = b.house;
   if (!house || !upgradeStatus(world, b).ok) return false;
@@ -134,7 +138,12 @@ export function tryUpgrade(world: World, b: Building): boolean {
   const next = TIERS[(house.tier + 1) as Tier];
   pay(world, current.upgradeCost!);
   house.tier = next.tier;
-  for (const g of newNeeds(current, next)) house.demand[g] = 1;
+  for (const g of newNeeds(current, next)) {
+    // Rückgabewert ignoriert: upgradeStatus hat ≥ 1 geprüft, und pay zieht die neuen Bedarfsgüter nicht ab.
+    takeStock(world, g, 1);
+    house.demand[g] = 0;
+    house.satisfied[g] = true;
+  }
   house.satisfiedSince = world.tick;
   return true;
 }

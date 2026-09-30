@@ -291,7 +291,9 @@ Jedes Haus führt je Bedarfsgut einen Akkumulator `demand`. Pro Tick wächst er 
 Einwohner × Rate / 100. Erreicht er 1, wird eine Einheit aus dem Lager entnommen und der Rest bleibt
 stehen. Gelingt die Entnahme, gilt das Bedürfnis als erfüllt, sonst als unerfüllt, jeweils bis zum
 nächsten Entnahmeversuch. Ein neues Haus startet mit Bedarf 1, damit die erste Einheit sofort
-entnommen wird; beim Aufstieg erhalten die neuen Güter ebenfalls Bedarf 1. Der Zeitpunkt
+entnommen wird. Beim Aufstieg entnimmt `tryUpgrade` je neuem Bedarfsgut sofort eine Einheit und
+zählt sie als ausgeliefert (Bedarf 0, erfüllt); so können zwei Häuser nicht auf dieselbe Einheit
+aufsteigen, und das Haus zahlt schon in einer Buchung im selben Tick den vollen Steuersatz. Der Zeitpunkt
 `satisfiedSince` wird bei jedem Tick mit unerfüllten Bedürfnissen neu gesetzt und steuert die
 Wartezeit vor dem Aufstieg.
 
@@ -365,8 +367,6 @@ Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. 
 - **Werkzeug nur kaufbar:** Es gibt keine Werkzeugproduktion; der Zukauf ist ein fester Kostenblock.
 - **Balancing-Marge:** Der Balancing-Test hängt an einer guten Ausbaustrategie; die Eskalationsregel der
   Kurz-Spec ist ausgeschöpft, weitere Änderungen brauchen eine neue Kurz-Spec.
-- **Aufstieg ohne Reservierung:** Zwei Häuser können im selben Takt aufsteigen, obwohl die Ware nur für
-  eines reicht; das zweite schrumpft danach.
 - **Ein Speicherplatz, Version 1:** Kein Migrationspfad für ein späteres Format; ein neues Format
   braucht eine neue Version und einen neuen Schlüssel oder eine Migration.
 
