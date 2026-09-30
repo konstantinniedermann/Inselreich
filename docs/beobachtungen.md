@@ -127,6 +127,42 @@ Kommando auf. Das erste Token `install`/`add`/`i` irgendwo im Text schaltet `see
 **Einschätzung:** Die Messdoku ist ein kleiner Nachtrag für den nächsten Studio-Strang. Die beiden
 anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 
+### 2026-09-30 · `tools/studio/model.py` · stop-only-Knoten in Aufwand und Qualität
+
+**Beobachtung:** Knoten mit `agent_stop` ohne Rolle (stop-only) zählen in den Reitern Aufwand und Qualität (`records`, `effort`, Vorfälle) weiter, obwohl Graph, Organigramm, Zähler und Chronik sie ausblenden.
+**Ursprung:** Paket G.
+**Einschätzung:** Dasselbe Prädikat `_Builder.hidden()` wäre eine Zeile (L0-Entscheid Gate Plan: Beobachtung).
+
+### 2026-09-30 · `tools/studio/graph.py` · `_row`
+
+**Beobachtung:** Eine order-Zeile, deren Elternknoten in dieser Zeile keine Spur hat, bekommt `arrow = null` (kein Stummel).
+**Ursprung:** Paket G.
+**Einschätzung:** Selten und ungetestet; ein Test genügt, falls es je auftritt.
+
+### 2026-09-30 · `tools/studio/server.py` · `/api/state`
+
+**Beobachtung:** `/api/state` wächst mit dem Graphen: bei 300 Zeilen × 11 Spalten etwa 346 KB je Poll (2 s). Der Client baut nur bei Änderung neu (P35), der Transfer bleibt.
+**Ursprung:** Paket G.
+**Einschätzung:** Lokal unkritisch; relevant, wenn Sessions deutlich länger werden (dann `graph` separat oder inkrementell liefern).
+
+### 2026-09-30 · `tools/studio/model.py` · `layouts`
+
+**Beobachtung:** Schlägt das Graph-Layout einer Session fehl, fällt es still weg (leere Zeilen, Feed ohne Empfängernamen). Ein Log-Hinweis fehlt.
+**Ursprung:** Paket G.
+**Einschätzung:** Eine Logzeile im Fehlerfall würde die Suche abkürzen; klein, aber ohne Anlass bisher nicht nötig.
+
+### 2026-09-30 · `tools/studio/server.py` · `paths.agents_dir`
+
+**Beobachtung:** `server.py` liest Persona-Namen aus dem Hauptrepo (`paths.agents_dir` über `repo_root`). Aus einem Worktree gestartet zeigt das Dashboard die Namen des Hauptrepos.
+**Ursprung:** Paket G.
+**Einschätzung:** Playtests in Worktrees brauchen eine Temp-Kopie des Repos. Erst relevant, wenn Namen im Worktree geändert werden.
+
+### 2026-09-30 · `tools/studio/dashboard/` · Tab-Leiste bei 390 px
+
+**Beobachtung:** Bei 390 px ragt der Reiter „Studio“ bis x=429 hinaus. Die Leiste scrollt intern, die Seite hat keinen waagrechten Scroll.
+**Ursprung:** Paket G.
+**Einschätzung:** Vorbestehend, nicht durch den Graphen verursacht; kosmetisch.
+
 ---
 
 ## Ausgewertet 2026-09-30

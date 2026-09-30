@@ -10,6 +10,9 @@ name: <bereich>-<rolle>
 description: '<Rolle> des Inselreich-Studios: einsetzen für <Aufgaben>; nicht für <Abgrenzung>.'
 tools: <Read, Grep, Glob, Write, Edit, Bash …>
 model: <opus|sonnet|haiku>
+studio-name: <Alliteration, z. B. Merge-Moritz>
+studio-title: <Titel, z. B. Zusammenführer>
+studio-emoji: <ein Emoji>
 ---
 
 ## Persona und Expertise

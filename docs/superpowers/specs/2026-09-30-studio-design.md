@@ -106,23 +106,23 @@ tools/studio/tests/                unittest (model, hook, log, server)
 
 Pflichtfelder des Nutzer-Prompts plus `kind`/`source`:
 
-| Feld                                | Bedeutung                                                                                                                                                                                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ts`                                | ISO-8601 UTC mit Millisekunden                                                                                                                                                                                                                          |
-| `session_id`                        | Claude-Code-Session (Hook-Payload bzw. `CLAUDE_CODE_SESSION_ID`)                                                                                                                                                                                        |
-| `agent_id`                          | Subagent-ID; `main` für die Hauptsession; bei `log.py` leer (Zuordnung siehe unten)                                                                                                                                                                     |
-| `parent_id`                         | nur wo bekannt (bei `spawn`/`spawned`)                                                                                                                                                                                                                  |
-| `level`, `role`, `persona`, `model` | soweit beim Schreiben bekannt; sonst leitet `model.py` sie ab                                                                                                                                                                                           |
-| `status`                            | `active`, `delegated`, `waiting`, `blocked`, `idle`, `done`, `failed`, `ended`                                                                                                                                                                          |
-| `task`, `summary`                   | ein Satz bzw. Ergebnis high level                                                                                                                                                                                                                       |
-| `budget`                            | optional `{granted, parallel, phase}`                                                                                                                                                                                                                   |
-| `kind`                              | `session_start`, `session_end`, `prompt`, `turn_end`, `agent_start`, `agent_stop`, `spawn` (PreToolUse Agent), `spawned` (PostToolUse Agent), `heartbeat` (PreToolUse sonst), `bind` (log.py-Aufruf gesehen), `status`, `budget`, `package`, `decision` |
-| `source`                            | `hook` oder `log`                                                                                                                                                                                                                                       |
+| Feld                                | Bedeutung                                                                                                                                                                                                                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ts`                                | ISO-8601 UTC mit Millisekunden                                                                                                                                                                                                                                                              |
+| `session_id`                        | Claude-Code-Session (Hook-Payload bzw. `CLAUDE_CODE_SESSION_ID`)                                                                                                                                                                                                                            |
+| `agent_id`                          | Subagent-ID; `main` für die Hauptsession; bei `log.py` leer (Zuordnung siehe unten)                                                                                                                                                                                                         |
+| `parent_id`                         | nur wo bekannt (bei `spawn`/`spawned`)                                                                                                                                                                                                                                                      |
+| `level`, `role`, `persona`, `model` | soweit beim Schreiben bekannt; sonst leitet `model.py` sie ab                                                                                                                                                                                                                               |
+| `status`                            | `active`, `delegated`, `waiting`, `blocked`, `idle`, `done`, `failed`, `ended`                                                                                                                                                                                                              |
+| `task`, `summary`                   | ein Satz bzw. Ergebnis high level                                                                                                                                                                                                                                                           |
+| `budget`                            | optional `{granted, parallel, phase}`                                                                                                                                                                                                                                                       |
+| `kind`                              | `session_start`, `session_end`, `prompt`, `turn_end`, `agent_start`, `agent_stop`, `spawn` (PreToolUse Agent), `spawned` (PostToolUse Agent), `heartbeat` (PreToolUse sonst), `bind` (log.py-Aufruf gesehen), `status`, `budget`, `package`, `decision`, `message` (PreToolUse SendMessage) |
+| `source`                            | `hook` oder `log`                                                                                                                                                                                                                                                                           |
 
 Weitere Felder je `kind`: `tool` (heartbeat), `subagent_type`/`description`/`prompt_head`
 (spawn: erste 400 Zeichen, daraus `Persona:`- und `Paket:`-Zeile), `child_id` (spawned),
 `package`, `title`, `owner`, `blocked_by`, `milestone` (package), `decision_id`, `for`
-(`l0`|`user`), `question`, `recommendation`, `resolution` (decision).
+(`l0`|`user`), `question`, `recommendation`, `resolution` (decision), `to`/`text` (message, siehe [Prozess-Graph](2026-09-30-studio-prozessgraph-design.md)).
 
 ### Zuordnungsregeln (`model.py`)
 
@@ -200,7 +200,8 @@ Validiert Status und Pflichtfelder (Exit 2 mit Meldung bei Fehlern), setzt `ts`,
   hervorgehoben; (2) Zähler je Status; (3) Chronik je Bereich mit Session-Filter; (4) Budget je
   Lead (Balken frei vs. verbraucht, rot bei Überschreitung, Modellmix); (5) Meilenstein-Board;
   (6) Offene Entscheide (L0 / Nutzer); (7) Live-Feed; (8) Aktivitäts-Puls. Kopfzeile: Session-
-  Auswahl, Zeit des letzten Events, Verbindungsstatus.
+  Auswahl, Zeit des letzten Events, Verbindungsstatus. Der Prozess-Graph im Reiter Live ergänzt die
+  Ansichten, siehe [Prozess-Graph-Spec](2026-09-30-studio-prozessgraph-design.md).
 - Nicht Teil des Spiels: liegt unter `tools/`, nicht in `vite`-Build, nicht auf Pages.
 
 ### Make-Ziele

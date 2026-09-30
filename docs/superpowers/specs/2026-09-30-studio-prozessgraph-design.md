@@ -117,7 +117,7 @@ Beispielzeile in `.studio/events.jsonl`:
   Anführungszeichen (`"…"`, `'…'`) werden entfernt (P10).
 - `build_state(..., agent_names: dict[str, dict] | None = None)` als neuer optionaler Parameter;
   `server.py` liest die Namen bei jeder Anfrage wie heute die Modelle (P20).
-- Rückfallwerte als Konstanten in `model.py`: `DIRECTOR_NAME` = („Boss Bruno", „Studio-Direktor",
+- Rückfallwerte als Konstanten in `model.py`: `DIRECTOR_NAME` = („Boss Bruno", „Projektleiter" (L0-Entscheid Gate Plan),
   „🎬"); `FOREIGN_NAME` = „Aushilfe", `FOREIGN_EMOJI` = „🧑‍🔧", Titel = Rollenname. Fehlt nur ein
   Feld, gilt der Rückfallwert nur für dieses Feld.
 - Instanznummer nach P9, berechnet im Nachlauf nach P21. Öffentliche Knotenfelder (P10 mit P20):
@@ -126,22 +126,23 @@ Beispielzeile in `.studio/events.jsonl`:
 
 Namensliste (verbindlich):
 
-| Rolle                     | Name             | Titel                    | Emoji |
-| ------------------------- | ---------------- | ------------------------ | ----- |
-| `studio-director`         | Boss Bruno       | Studio-Direktor          | 🎬    |
-| `lead-production`         | Planungs-Paula   | Produktionschefin        | 📋    |
-| `lead-design`             | Ideen-Ida        | Design-Chefin            | 💡    |
-| `lead-tech`               | Technik-Toni     | Tech-Chef                | 🔧    |
-| `lead-art`                | Pinsel-Pia       | Kunst-Chefin             | 🎨    |
-| `lead-qa`                 | Prüf-Peter       | QA-Chef                  | 🔍    |
-| `production-integrator`   | Merge-Moritz     | Zusammenführer           | 🔀    |
-| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin         | 📝    |
-| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner        | 💰    |
-| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler    | ⚙️    |
-| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    |
-| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    |
-| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    |
-| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    |
+| Rolle                     | Name             | Titel                                  | Emoji |
+| ------------------------- | ---------------- | -------------------------------------- | ----- |
+| `studio-director`         | Boss Bruno       | Projektleiter (L0-Entscheid Gate Plan) | 🎬    |
+| `lead-production`         | Planungs-Paula   | Produktionschefin                      | 📋    |
+| `lead-design`             | Ideen-Ida        | Design-Chefin                          | 💡    |
+| `lead-tech`               | Technik-Toni     | Tech-Chef                              | 🔧    |
+| `lead-art`                | Pinsel-Pia       | Kunst-Chefin                           | 🎨    |
+| `lead-qa`                 | Prüf-Peter       | QA-Chef                                | 🔍    |
+| `production-integrator`   | Merge-Moritz     | Zusammenführer                         | 🔀    |
+| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin                       | 📝    |
+| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner                      | 💰    |
+| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler                  | ⚙️    |
+| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin               | 🖱️    |
+| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer                           | ⚖️    |
+| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin                          | 👓    |
+| `qa-playtester`           | Zocker-Zoe       | Spieltesterin                          | 🎮    |
+| `studio-coach`            | Coach-Carla      | Studio-Coach                           | 🧭    |
 
 Namensregel für künftige Rollen: Alliteration, das Präfix ist direkt das Arbeitswort der Rolle.
 `studio-director` hat keine Persona-Datei; sein Name kommt aus `DIRECTOR_NAME` (P19).
@@ -601,7 +602,7 @@ test_hook.py (message-Event, Kürzung, fehlendes message-Feld wirft nicht); Name
 über ein temporäres agents-Verzeichnis wie im bestehenden test_read_agent_models.
 
 **P19 Anzahl Persona-Dateien (Ergänzung):** Die Namensliste hat 14 Einträge; `studio-director` hat
-keine Persona-Datei. Frontmatter bekommen also **13** Dateien unter `.claude/agents/`; der Direktor
+keine Persona-Datei. Frontmatter bekommen also **14 Dateien (inkl. studio-coach)** unter `.claude/agents/`; der Direktor
 erhält seinen Namen ausschliesslich aus `DIRECTOR_NAME` in `model.py` (angepasst nach Schritt 0:
 kein Rückfallweg über `names.json`).
 

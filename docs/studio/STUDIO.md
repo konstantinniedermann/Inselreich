@@ -409,13 +409,13 @@ lokale Archiv.
 
 **Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
 
-| Reiter     | Link          | Zeigt                                                                                           |
-| ---------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| Live       | `#live`       | Organigramm, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
-| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                         |
-| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                          |
-| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                    |
-| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen     |
+| Reiter     | Link          | Zeigt                                                                                                          |
+| ---------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
+| Live       | `#live`       | Organigramm, Prozess-Graph, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
+| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                                        |
+| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                                         |
+| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                                   |
+| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen                    |
 
 ## Verbesserungsschleife
 

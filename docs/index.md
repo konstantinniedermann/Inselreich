@@ -49,6 +49,7 @@ Lokal, nicht Teil des Spiels.
 - [Kurz-Spec Balancing-Revision](superpowers/specs/2026-09-30-balancing-design.md) — Steuern und Luxusverbrauch
 - [Design-Spec Studio](superpowers/specs/2026-09-30-studio-design.md) — Hierarchie, Telemetrie, Dashboard
 - [Design-Spec Studio 1.5](superpowers/specs/2026-09-30-studio-autonomie-design.md) — Projektleiter, Autonomie, Messung, Selbstverbesserung
+- [Design-Spec Prozess-Graph](superpowers/specs/2026-09-30-studio-prozessgraph-design.md) — Graph im Reiter Live, Namen, Nachrichten
 
 ## Implementierungspläne
 

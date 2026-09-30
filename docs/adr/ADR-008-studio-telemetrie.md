@@ -59,7 +59,9 @@ Option 2.
   - 2 s Verzögerung im Dashboard.
   - Datenschutz: `events.jsonl` speichert die erste Zeile von Nutzer-Prompts (≤ 120 Zeichen) und
     Abschlussmeldungen von Agenten (≤ 600 Zeichen) im Klartext; lokal und gitignored. Archivieren
-    oder löschen mit `make studio-archive`. Zusätzlich liegen im Archiv (siehe Nachtrag) die
+    oder löschen mit `make studio-archive`. Dazu kommt das `message`-Event (siehe zweiter Nachtrag):
+    Empfänger (≤ 120 Zeichen) und erste Zeile der Nachricht (≤ 160 Zeichen) im Klartext, ebenfalls
+    lokal und gitignored. Zusätzlich liegen im Archiv (siehe Nachtrag) die
     **vollen Briefings und Berichte** im Klartext — ebenfalls lokal und gitignored.
 
 ## Nachtrag 2026-09-30 (Session 1.5, ADR-009)
@@ -72,3 +74,15 @@ Option 2.
   Handbuch [STUDIO.md](../studio/STUDIO.md), Abschnitt „Messung und Aufwand" (R27). Verdichtete
   Metriken werden unter `docs/studio/metriken/` committet (R30); die Rohdaten bleiben lokal.
 - Das Dashboard hat fünf Reiter (Live, Delegation, Aufwand, Qualität, Studio, R32).
+
+## Nachtrag 2026-09-30 (Prozess-Graph)
+
+- **Event `message`** aus `PreToolUse(SendMessage)`: trägt `to` (Empfänger, ≤ 120 Zeichen) und `text`
+  (nur die erste Zeile der Nachricht, ≤ 160 Zeichen). Das Feld `summary` des Werkzeugs wird nie
+  gespeichert. Das Event gilt auch als Lebenszeichen des Absenders.
+- Der **Prozess-Graph** im Reiter Live zeichnet aus diesen Events und den Knoten je Session Spalten
+  je Persona, Spuren, Pfeile für Delegationen und Nachrichten sowie Pausen. `/api/state` liefert ihn
+  im Feld `graph`; die Berechnung liegt im reinen Modul `tools/studio/graph.py`. Spec:
+  [Prozess-Graph](../superpowers/specs/2026-09-30-studio-prozessgraph-design.md).
+- **Datenschutz:** unverändert lokal und gitignored; neu im Klartext sind nur Empfänger und die
+  erste Nachrichtenzeile (siehe Konsequenzen).
