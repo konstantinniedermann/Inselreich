@@ -42,11 +42,18 @@ export interface BuildingDef {
   supplyRadius?: number;
   site: SiteRule[];
 }
+export interface OrderDef {
+  tier: Tier;
+  min: number;
+  max: number;
+}
 export interface GoodDef {
   id: GoodId;
   name: string;
   buy: number;
   sell: number;
+  /** Fehlt: kein Auftragsgut. */
+  order?: OrderDef;
 }
 export type Tier = 1 | 2 | 3;
 export interface TierDef {
@@ -83,8 +90,26 @@ export interface Tile {
   buildingId: number | null;
   road: boolean;
 }
+export type TaxLevel = 'low' | 'normal' | 'high';
+export interface TaxLevelDef {
+  name: string;
+  /** Steuer in % der Grundsteuer (ganzzahlig). */
+  pct: number;
+  /** Ticks ununterbrochener Zufriedenheit bis zum Aufstieg; `null` sperrt den Aufstieg. */
+  upgradeWait: number | null;
+  /** Anteil der Höchstbelegung, auf den ein Haus zielt. */
+  occupancy: number;
+}
+export interface Order {
+  period: number;
+  good: GoodId;
+  amount: number;
+  reward: number;
+  /** Letzter Tick, an dem geliefert werden kann. */
+  due: number;
+}
 export interface World {
-  version: 1;
+  version: 2;
   seed: number;
   width: number;
   height: number;
@@ -97,6 +122,10 @@ export interface World {
   money: number;
   stats: { taxes: number; upkeep: number };
   won: boolean;
+  taxLevel: TaxLevel;
+  taxLockedUntil: number;
+  sellPct: Record<GoodId, number>;
+  order: Order | null;
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

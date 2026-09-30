@@ -1,7 +1,8 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { START_MONEY, START_STOCK } from './defs/goods';
+import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
+import { DEFAULT_TAX_LEVEL } from './defs/tiers';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
-import type { Building, BuildingDef, BuildingDefId, Tile, World } from './types';
+import type { Building, BuildingDef, BuildingDefId, GoodId, Tile, World } from './types';
 
 export type Pos = { x: number; y: number };
 
@@ -59,7 +60,7 @@ export function createWorld(seed: number): World {
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 1,
+    version: 2,
     seed: seedUsed,
     width: MAP_W,
     height: MAP_H,
@@ -72,6 +73,10 @@ export function createWorld(seed: number): World {
     money: START_MONEY,
     stats: { taxes: 0, upkeep: 0 },
     won: false,
+    taxLevel: DEFAULT_TAX_LEVEL,
+    taxLockedUntil: 0,
+    sellPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
+    order: null,
   };
   world.buildings[1] = {
     id: 1,
