@@ -324,3 +324,65 @@ Kurz-Retro für diese Meta-Session, damit das Studio sauber mit Handbuch 1.0 sta
 Irrtum: Korrektur-Commits auf main; Rulings der parallelen Prozess-Graph-Session beginnen bei R39.
 
 Entscheider: L0 · Anlass: Session 1.5, Gate Merge
+
+## R39 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Brainstorming „Prozess-Graph und vereinfachte Organigramm-Kacheln“ bestanden,
+Prozessstufe voll — Nutzer hat alle drei Designabschnitte bestätigt; voll, weil das
+Telemetrie-Format (ADR-008) um das Event `message` wächst. — Kosten bei Irrtum: eine Spec-Runde
+zu viel für eine reine Dashboard-Änderung.
+
+Entscheider: L0 · Anlass: Nutzerauftrag
+
+## R40 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Nutzer erteilt Zustimmung zu Spec, Plan und Umsetzung im Voraus sowie Commit und Push am
+Ende; L0 entscheidet die Gates Spec, Plan und Merge stellvertretend und hält jedes als Ruling fest
+— Nutzer will nicht je Gate gefragt werden, die Phasen laufen trotzdem vollständig. — Kosten bei
+Irrtum: Nacharbeit nach dem Push, falls ein Gate-Entscheid nicht in seinem Sinn war.
+
+Entscheider: Nutzer · Anlass: Freigabe im Chat
+
+## R41 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Spec BEDENKEN (lead-tech, lead-qa) → Spec wird ohne Designänderung ergänzt; zusätzlich
+filtert P31 stop-only-Knoten auch im Organigramm; Namen stehen in der Persona-Frontmatter
+(Headless-Probe: Zusatzfelder werden toleriert) — in echten Sessions sind zwei Drittel der
+Agenten-Stopps Fortschritts-Helfer ohne Rolle, die Graph und Organigramm fluten würden. — Kosten
+bei Irrtum: ein echter Agent ohne Start-Event verschwindet aus der Übersicht.
+
+Entscheider: L0 · Anlass: Gate Spec
+
+## R42 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Spec OK nach Einarbeitung aller BEDENKEN (Spec-Commit „docs: Spec Prozess-Graph nach
+Gate-Spec-Bedenken"); die zwei Randbefunde des Spec-Autors (Session bleibt nach Neustart
+„beendet", stop-only-Knoten in der Chronik) werden als Trivial-Fixes im selben Plan erledigt —
+gleiche Datei, gleicher Filter, kein eigener Testaufwand. — Kosten bei Irrtum: Plan wird eine
+Aufgabe grösser.
+
+Entscheider: L0 · Anlass: Gate Spec
+
+## R43 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Gate Plan OK unter Auflage — lead-qa OK, lead-production BEDENKEN (Basis-Drift). Auflage:
+lead-tech führt den Plan nach dem Merge von feat/studio-autonomie gegen den dann gültigen main-Stand
+nach (inkl. make studio-lint in der DoD je Task), erst dann Budgetfreigabe. Budget 32 Starts an
+lead-tech (Parallelität 2) und 1 an lead-qa für das Final-Review, wie im Handbuch für Stufe voll.
+Übertragungen: Ü3/Ü4 (dom.js, focus.js, graph.js, graph.py) bestätigt; Ü5 studio-coach heisst
+„Coach-Carla / Studio-Coach / 🧭“; Ü6 neue Frontmatter-Felder mit Minor-Versionserhöhung je Persona und CHANGELOG-Eintrag (Handbuch 1.0, Versionierung);
+Ü8 Direktor-Titel „Projektleiter“ passend zum neuen Handbuch; Ü11 stop-only-Knoten in den Reitern
+Aufwand/Qualität als Beobachtung, nicht in diesem Plan. Paket G hängt am Merge-Paket AUT-merge. —
+Nachführen gegen einen noch beweglichen Branch wäre doppelte Arbeit; das Final-Review bleibt vom
+Controller unabhängig. — Kosten bei Irrtum: ein zusätzlicher Nachführ-Durchgang des Plans.
+
+Entscheider: L0 · Anlass: Gate Plan
+
+## R44 · 2026-09-30 · Dashboard-Prozessgraph
+
+Ruling: Ad-hoc-Vorfall „inaktiv: web-fetch" wird nicht sofort mit einem Coach-Start behandelt,
+sondern in der Session-Retro am Ende dieser Session quittiert — der Agent stammt nicht aus dem
+laufenden Auftrag, und ein eigener Coach-Start mitten in der Umsetzung kostet mehr, als er nützt.
+— Kosten bei Irrtum: ein hängender Agent bleibt bis Session-Ende sichtbar.
+
+Entscheider: L0 · Anlass: Hook-Hinweis „Ad-hoc-Retro fällig"
