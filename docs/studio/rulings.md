@@ -680,3 +680,16 @@ R68 (60 / 80 %) bleiben Richtwerte, keine starren Grenzen; Sensor (R68 1) und Se
 bleiben. — Kosten bei Irrtum: höherer Verbrauch je Session, dafür frühere Session-Enden.
 
 Entscheider: L0 · Anlass: Anweisung des Nutzers
+
+## R70 · 2026-09-30 · M5
+
+Ruling: **Gate Merge M5 bestanden** (Final-Review lead-qa auf opus: OK, kein Muss-Fix; make check grün,
+Sieg-Tick 6050, Determinismus 17/17; Report `.studio/qa/M5-FR/report.md`). Merge aller sechs
+Stränge nach main über `lead-production`/`production-integrator` laut Plan (Merge-Prüfungen), dann
+Push nach §7. Die Kann-Befunde (A-1…A-5, B-F2…B-F9, D-1…D-5) werden nicht vor dem Merge behoben,
+sondern direkt danach in einem Sammel-Commit auf main (Labels, Namen, Doku; ohne Verhaltensänderung,
+Lead prüft am Diff nach R65) zusammen mit dem Übertrag nach `docs/beobachtungen.md` — ein Durchgang
+statt zwei, und kein Konflikt mit feat/m5-sim. B-F1 (Autosave nach Reload) wird Beobachtung und
+Eingabe für die M6-Auswahl. — Kosten bei Irrtum: ein Label-Fehler steht kurz auf main.
+
+Entscheider: L0 · Anlass: Bericht Final-Review M5
