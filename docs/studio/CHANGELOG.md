@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-09-30 · Persona tech-ui-engineer 1.5
+
+- Anlass: Ruling R78 (Desktop-first, Nutzeranweisung)
+- Datenbasis: `docs/studio/rulings.md` R78
+- Ruling: R78
+- Änderungen: mobile-first → desktop-first ab 1280 px (Beschreibung, Persona, Regeln); Qualitätsmassstab: bedienbar bei 1280 und 1920 px, schmale Fenster nur „stürzt nicht ab, nichts Wesentliches unerreichbar“; `roster.md` Zweck und Version
+
+## 2026-09-30 · Persona qa-playtester 1.4
+
+- Anlass: Ruling R78 (Desktop-first, Nutzeranweisung)
+- Datenbasis: `docs/studio/rulings.md` R78
+- Ruling: R78
+- Änderungen: Standard-Fenstergrössen 1280×800 und 1920×1080, schmales Fenster nur als Absturzprobe; `templates/playtest-report.md` Beispiel auf 1280×800; `roster.md` Version
+
 ## 2026-09-30 · Handbuch 1.7
 
 - Anlass: Retro Meilenstein M5 (Vorschläge 1 bis 3)

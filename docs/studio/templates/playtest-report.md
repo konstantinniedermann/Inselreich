@@ -49,7 +49,7 @@ deutlich · **niedrig** = Kosmetik. Befunde ausserhalb des Pakets gehen nach
 ```markdown
 # Playtest M5-03
 
-Datum: 2026-10-02 · Build/Commit: a1b2c3d (.worktrees/m5-ui) · Server: http://127.0.0.1:5174/ · Fenster: 390×844
+Datum: 2026-10-02 · Build/Commit: a1b2c3d (.worktrees/m5-ui) · Server: http://127.0.0.1:5174/ · Fenster: 1280×800
 
 ## Szenario
 
