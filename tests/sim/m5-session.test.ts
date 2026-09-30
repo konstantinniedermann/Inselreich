@@ -62,7 +62,13 @@ describe('M5 15-Minuten-Nachweis', () => {
       const a = run(false);
       const b = run(true);
       const c = run(false);
-      expect(a.log).toHaveLength(SCRIPT.length);
+      expect(a.log.map((e) => [e.tick, e.ok, e.reason])).toEqual([
+        [600, true, null],
+        [700, true, null],
+        [750, true, null],
+        [1100, true, null],
+        [1600, false, 'Nicht genug Ware'],
+      ]);
       expect(b.log).toEqual(a.log);
       expect(b.json).toBe(a.json);
       expect(c.log).toEqual(a.log);
