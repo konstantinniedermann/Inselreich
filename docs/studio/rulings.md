@@ -542,3 +542,14 @@ Lead-Berichte; Paket D1 überträgt sie gesammelt nach `docs/beobachtungen.md` (
 Befunde erscheinen verzögert im Posteingang.
 
 Entscheider: L0 · Anlass: Gate Plan M5
+
+## R60 · 2026-09-30 · M5
+
+Ruling: Welle 1 abgenommen (S1, S3, U1a, A1 ohne Schiff, A2 — alle Task-Review OK; Sieg-Tick
+unverändert 5950). Übernommen aus lead-tech: Auf Touch setzt das Weg-Werkzeug die erste Kachel erst
+beim Ziehen bzw. Loslassen (sonst baut der erste Finger einer Zwei-Finger-Geste, AK-U1a-03);
+Zeitkappe beim Tastatur-Pan bleibt 1000 ms (engere Kappe bricht AK-U1a-02). Welle 2 startet mit
+frischem lead-tech; lead-art wird fortgesetzt (kleiner Kontext). — Kosten bei Irrtum: Touch-Bauen
+fühlt sich träger an; Browser-Check in Welle 3 zeigt es.
+
+Entscheider: L0 · Anlass: Berichte Welle 1
