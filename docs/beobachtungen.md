@@ -367,6 +367,13 @@ leer; (4) Hook-Zeile gilt 600 s als frisch, Dashboard 1 h; (5) `renderLimits` oh
 Tooltip mit Reset-Zeiten nur im Code geprüft. **Ursprung:** lead-qa und lead-tech, STUDIO-LIMIT
 (R76, R80). **Einschätzung:** niedrig; bündeln, sobald wieder an `tools/studio/` gearbeitet wird.
 
+### 2026-09-30 · `.github/workflows/` · `ubuntu-latest` wechselt auf Ubuntu 26
+
+**Beobachtung:** Die CI-Ausgabe (Lauf 36763696005) kündigt an, dass `ubuntu-latest` ab 2026-10-19
+auf Ubuntu 26 umgestellt wird. **Ursprung:** production-integrator, Merge STUDIO-LIMIT.
+**Einschätzung:** niedrig; nur Hinweis, CI und Pages sind grün. Nach dem Wechsel den ersten Lauf
+prüfen; bei Bruch Runner-Version pinnen.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
