@@ -44,6 +44,8 @@ export function bindInput(
     lastY: number;
     panning: boolean;
     lastTile: string | null;
+    /** Werkzeug war beim Drücken "Weg" (unabhängig von späteren Werkzeugwechseln). */
+    road: boolean;
     pointerId: number;
     /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
     touch: boolean;
@@ -96,7 +98,7 @@ export function bindInput(
 
   /** Bricht Ein-Zeiger-Aktion ab; eine Weg-Zug-Serie wird mit `dragEnd` sauber beendet. */
   const cancelPointerAction = (): void => {
-    const wasRoadDrag = drag !== null && !drag.panning && state.tool.kind === 'road';
+    const wasRoadDrag = drag !== null && !drag.panning && drag.road;
     drag = null;
     gesture = null;
     if (wasRoadDrag) onAction({ type: 'dragEnd' });
@@ -152,12 +154,14 @@ export function bindInput(
       lastY: p.sy,
       panning: wantsPan,
       lastTile: null,
+      road: !wantsPan && state.tool.kind === 'road',
       pointerId: e.pointerId,
       touch: isTouch,
       downTile: screenToTile(state.cam, p.sx, p.sy),
     };
     if (wantsPan) return;
-    if (state.tool.kind === 'road') {
+    if (drag.road && !isTouch) {
+      // Maus: erste Weg-Kachel sofort; Touch wartet auf Ziehen oder Loslassen (Zwei-Finger-Geste baut nichts)
       drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
       tileAction(p.sx, p.sy, false);
       pointer = p;
@@ -206,7 +210,18 @@ export function bindInput(
         state.cam.x -= (p.sx - drag.lastX) / state.cam.zoom;
         state.cam.y -= (p.sy - drag.lastY) / state.cam.zoom;
         clamp();
-      } else if (state.tool.kind === 'road') {
+      } else if (drag.road) {
+        if (drag.touch && drag.lastTile === null) {
+          // Touch: erst über der Zieh-Schwelle beginnt die Serie auf der Drück-Kachel
+          if (Math.hypot(p.sx - drag.startX, p.sy - drag.startY) <= DRAG_THRESHOLD) {
+            drag.lastX = p.sx;
+            drag.lastY = p.sy;
+            updateHover();
+            return;
+          }
+          drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
+          tileAction(drag.startX, drag.startY, false);
+        }
         const t = screenToTile(state.cam, p.sx, p.sy);
         const key = `${t.x},${t.y}`;
         if (key !== drag.lastTile) {
@@ -238,7 +253,11 @@ export function bindInput(
     const d = drag;
     drag = null;
     if (d.panning || d.button !== 0) return;
-    if (state.tool.kind === 'road') {
+    if (d.road) {
+      // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
+      if (d.touch && d.lastTile === null) {
+        onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+      }
       onAction({ type: 'dragEnd' });
     } else if (d.touch) {
       // Touch: Aktion beim Loslassen, aber auf der Drück-Kachel
