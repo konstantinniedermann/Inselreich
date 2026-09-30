@@ -1,0 +1,89 @@
+"""Start-Kontext für die Hauptsession (SessionStart-Hook): kompakt, hart begrenzt."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from studio_docs import experiments as read_experiments
+from studio_docs import queue_entries, read_text, read_version
+
+LIMIT = 9500
+STATE_MAX = 3500
+LERNEN_MAX = 2500
+LIST_MAX = 8
+LINE_MAX = 300
+QUEUE_SHOWN = ("offen", "beantwortet")
+EXPERIMENT_SHOWN = ("laufend", "vorgeschlagen")
+START_ROUTINE = (
+    "Start-Routine: Stand und Warteschlange unten lesen, Dashboard-URL nennen, "
+    "offene Vorfälle sichten, dann auf den Auftrag warten oder den Plan fortsetzen."
+)
+
+
+def shorten(text: str, limit: int, name: str) -> str:
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    note = f"… (gekürzt, siehe docs/studio/{name})"
+    return text[: max(limit - len(note), 0)].rstrip() + note
+
+
+def _line(text: str) -> str:
+    text = " ".join(str(text).split())
+    return text if len(text) <= LINE_MAX else text[: LINE_MAX - 1] + "…"
+
+
+def _queue_lines(docs: Path) -> list[str]:
+    lines = []
+    for entry in queue_entries(docs):
+        if entry["status"] not in QUEUE_SHOWN:
+            continue
+        fields = entry["fields"]
+        lines.append(
+            _line(
+                f"- {entry['id']} · {entry['status']} · {entry['title']}"
+                f" — Empfehlung: {fields.get('Empfehlung') or '–'}"
+                f" · Blockiert: {fields.get('Blockiert') or '–'}"
+            )
+        )
+    return lines[:LIST_MAX]
+
+
+def _experiment_lines(docs: Path) -> list[str]:
+    return [
+        _line(f"- {e['id']} · {e['status']} · {e['title']}")
+        for e in read_experiments(docs)
+        if e["status"] in EXPERIMENT_SHOWN
+    ][:LIST_MAX]
+
+
+def _section(title: str, lines: list[str]) -> str:
+    return f"## {title}\n" + ("\n".join(lines) if lines else "- keine")
+
+
+def build_context(docs: Path, incidents: list[dict], port: str) -> str:
+    constitution = read_version(docs / "VERFASSUNG.md") or "?"
+    handbook = read_version(docs / "STUDIO.md") or "?"
+    role = (
+        f"Du bist der Projektleiter (L0) des Studios. Verfassung v{constitution}, "
+        f"Handbuch v{handbook}. Du fragst nicht zurück; Vorbehalte gehören in die "
+        "Warteschlange."
+    )
+    parts = [
+        role,
+        f"Dashboard: http://127.0.0.1:{port}/",
+        START_ROUTINE,
+        "## state.md\n" + shorten(read_text(docs / "state.md"), STATE_MAX, "state.md"),
+        "## lernen.md\n"
+        + shorten(read_text(docs / "lernen.md"), LERNEN_MAX, "lernen.md"),
+        _section("Warteschlange", _queue_lines(docs)),
+        _section("Laufende Experimente", _experiment_lines(docs)),
+        _section(
+            "Fällige Retros",
+            [_line(f"- {item.get('text', '')}") for item in incidents[:LIST_MAX]],
+        ),
+    ]
+    text = "\n\n".join(parts)
+    if len(text) > LIMIT:
+        text = text[: LIMIT - 1].rstrip() + "…"
+    return text

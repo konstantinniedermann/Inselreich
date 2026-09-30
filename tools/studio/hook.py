@@ -6,16 +6,30 @@ Wirft nie und blockiert nie; Fehler enden still mit Exit 0.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import re
 import shlex
 import subprocess
 import sys
+import time
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from paths import append_event, now_iso, studio_home
+import context
+import studio_docs
+import usage
+from model import EventStore, pending_incidents
+from paths import (
+    agents_dir,
+    append_event,
+    archive_dir,
+    docs_dir,
+    events_file,
+    now_iso,
+    studio_home,
+)
 
 PROMPT_HEAD = 400
 MESSAGE_MAX = 600
@@ -24,6 +38,7 @@ LOG_MARK = "tools/studio/log.py"
 AGENT_TOOLS = ("Agent", "Task")
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in model.py
 AGENT_MESSAGE_PREFIXES = ("<task-notification>", "<agent-message")
+SAFE_RE = re.compile(r"[^A-Za-z0-9_-]")
 START_CONTEXT = (
     "Studio-Modus: Diese Hauptsession ist der Studio-Direktor (L0) nach "
     "docs/studio/STUDIO.md. Lies docs/studio/STUDIO.md und docs/studio/state.md; "
@@ -48,6 +63,27 @@ def header_value(text: str, key: str) -> str:
     return ""
 
 
+def header_text(text: str, key: str) -> str:
+    """Voller Wert einer Kopfzeile wie 'Schätzung: 20 min, 30 Tools'."""
+    for raw in text.splitlines():
+        line = raw.strip().lstrip("-*#> ").replace("**", "").strip()
+        name, sep, value = line.partition(":")
+        if sep and name.strip().lower() == key.lower():
+            return value.strip().strip("`").strip()
+    return ""
+
+
+def parse_estimate(value: str) -> dict | None:
+    minutes = re.search(r"(\d+)\s*min", value, re.IGNORECASE)
+    tools = re.search(r"(\d+)\s*(?:tools?|werkzeug)", value, re.IGNORECASE)
+    if not minutes and not tools:
+        return None
+    return {
+        "minutes": int(minutes.group(1)) if minutes else None,
+        "tools": int(tools.group(1)) if tools else None,
+    }
+
+
 def log_args(command: str) -> dict:
     try:
         words = shlex.split(command)
@@ -60,16 +96,22 @@ def log_args(command: str) -> dict:
     return found
 
 
-def to_event(p: dict) -> dict | None:
+def to_event(p: dict, handbook: str = "", personas: dict | None = None) -> dict | None:
     name = p.get("hook_event_name")
     event = {
         "ts": now_iso(),
         "session_id": str(p.get("session_id") or ""),
         "agent_id": str(p.get("agent_id") or "main"),
         "source": "hook",
+        "handbook_version": handbook,
     }
     if p.get("agent_type"):
         event["role"] = str(p["agent_type"])
+
+    def persona_version(role: str) -> str:
+        info = (personas or {}).get(role)
+        return str(info.get("version", "")) if isinstance(info, dict) else ""
+
     tool = p.get("tool_name", "")
     tool_input = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
 
@@ -95,12 +137,17 @@ def to_event(p: dict) -> dict | None:
             summary=cut(p.get("last_assistant_message"), MESSAGE_MAX),
         )
     elif name == "SubagentStart":
-        event.update(kind="agent_start", status="active")
+        event.update(
+            kind="agent_start",
+            status="active",
+            persona_version=persona_version(event.get("role", "")),
+        )
     elif name == "SubagentStop":
         event.update(
             kind="agent_stop",
             status="done",
             summary=cut(p.get("last_assistant_message"), MESSAGE_MAX),
+            persona_version=persona_version(event.get("role", "")),
         )
     elif name == "PreToolUse" and tool in AGENT_TOOLS:
         prompt = (
@@ -108,13 +155,17 @@ def to_event(p: dict) -> dict | None:
             if isinstance(tool_input.get("prompt"), str)
             else ""
         )
+        persona = header_value(prompt, "Persona")
         event.update(
             kind="spawn",
             subagent_type=str(tool_input.get("subagent_type") or "general-purpose"),
             description=cut(tool_input.get("description"), TASK_MAX),
             prompt_head=cut(prompt, PROMPT_HEAD),
-            persona=header_value(prompt, "Persona"),
-            package=header_value(prompt, "Paket"),
+            persona=persona,
+            package_id=header_value(prompt, "Paket"),
+            milestone=header_value(prompt, "Meilenstein"),
+            estimate=parse_estimate(header_text(prompt, "Schätzung")),
+            persona_version=persona_version(persona),
             model=str(tool_input.get("model") or ""),
             tool_use_id=str(p.get("tool_use_id") or ""),
             background=bool(tool_input.get("run_in_background")),
@@ -137,9 +188,139 @@ def to_event(p: dict) -> dict | None:
             child_id=str(child),
             tool_use_id=str(p.get("tool_use_id") or ""),
         )
+        for key, source in (
+            ("duration_ms", "totalDurationMs"),
+            ("tool_count", "totalToolUseCount"),
+            ("resolved_model", "resolvedModel"),
+        ):
+            if response.get(source) is not None:  # totalTokens bewusst ignoriert
+                event[key] = response[source]
     else:
         return None
     return event
+
+
+def safe_name(value: object, fallback: str = "x") -> str:
+    return SAFE_RE.sub("", str(value or ""))[:60] or fallback
+
+
+def archive_text(folder: str, filename: str, text: str) -> str:
+    """Schreibt nach archiv/<folder>/<filename>; liefert den Pfad ab archiv/."""
+    target = archive_dir() / folder / filename
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    return f"{folder}/{filename}"
+
+
+def stamp() -> str:
+    return time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+
+
+def _spawn_extras(event: dict, payload: dict) -> None:
+    tool_input = payload.get("tool_input")
+    prompt = tool_input.get("prompt") if isinstance(tool_input, dict) else None
+    if not isinstance(prompt, str) or not prompt:
+        return
+    who = safe_name(event.get("persona") or event.get("subagent_type"), "agent")
+    tail = safe_name(str(event.get("tool_use_id", ""))[-8:], "0")
+    event["briefing"] = archive_text("briefings", f"{stamp()}-{who}-{tail}.md", prompt)
+
+
+def _stop_extras(event: dict, payload: dict) -> None:
+    agent = safe_name(payload.get("agent_id"), "agent")
+    role = safe_name(event.get("role"), "agent")
+    message = payload.get("last_assistant_message")
+    if isinstance(message, str) and message:
+        with contextlib.suppress(Exception):
+            event["report"] = archive_text(
+                "berichte", f"{stamp()}-{role}-{agent}.md", message
+            )
+    try:
+        explicit = payload.get("agent_transcript_path")
+        if isinstance(explicit, str) and explicit:
+            path = Path(explicit)
+        else:
+            path = usage.subagent_transcript(payload["transcript_path"], agent)
+        event["usage"] = usage.transcript_usage(path) or None
+    except Exception:  # noqa: BLE001 — Messung darf den Hook nie kippen
+        event["usage"] = None
+
+
+def _usage_event(event: dict, payload: dict) -> dict | None:
+    sid = str(payload.get("session_id") or "")
+    transcript = payload.get("transcript_path")
+    if SAFE_RE.sub("", sid) != sid or not sid or not isinstance(transcript, str):
+        return None
+    cache = studio_home() / "usage" / f"{sid}.json"
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    extra: dict = {
+        "ts": now_iso(),
+        "session_id": sid,
+        "agent_id": "main",
+        "source": "hook",
+        "kind": "usage",
+        "usage": usage.incremental_usage(transcript, cache),
+    }
+    if payload.get("hook_event_name") == "SessionEnd":
+        extra["session_cost"] = usage.session_cost(transcript)
+    return extra
+
+
+def enrich(event: dict, payload: dict) -> list[dict]:
+    """Ergänzt Archiv-Verweise und Messwerte; jede Teiloperation einzeln abgesichert."""
+    events = [event]
+    kind = event.get("kind")
+    if kind == "spawn":
+        with contextlib.suppress(Exception):
+            _spawn_extras(event, payload)
+    elif kind == "agent_stop" and payload.get("agent_id"):
+        with contextlib.suppress(Exception):
+            _stop_extras(event, payload)
+    elif kind in ("turn_end", "session_end") and not payload.get("agent_id"):
+        with contextlib.suppress(Exception):
+            extra = _usage_event(event, payload)
+            if extra:
+                events.append(extra)
+    return events
+
+
+def open_incidents() -> list[dict]:
+    return pending_incidents(EventStore(events_file()).events(), time.time())
+
+
+def incident_notice(payload: dict, incidents: list[dict]) -> str:
+    """Hinweis auf offene Vorfälle, je Session und Vorfall einmal."""
+    sid = str(payload.get("session_id") or "")
+    if payload.get("agent_id") or not sid or SAFE_RE.sub("", sid) != sid:
+        return ""
+    marks = studio_home() / "notified" / sid
+    fresh = []
+    for incident in incidents:
+        mark = hashlib.sha1(str(incident.get("id")).encode("utf-8")).hexdigest()[:12]
+        try:
+            marks.mkdir(parents=True, exist_ok=True)
+            os.close(os.open(marks / mark, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+        except FileExistsError:
+            continue
+        fresh.append(str(incident.get("text", "")))
+    if not fresh:
+        return ""
+    return "Ad-hoc-Retro fällig (Handbuch, Verbesserungsschleife): " + "; ".join(fresh)
+
+
+def start_context(port: str) -> str:
+    try:
+        return context.build_context(docs_dir(), open_incidents(), port)
+    except Exception:  # noqa: BLE001
+        return START_CONTEXT
+
+
+def start_background(env: Mapping[str, str]) -> None:
+    if env.get("STUDIO_NO_SERVER"):
+        return
+    here = Path(__file__).resolve().parent
+    launch_detached(["bash", str(here / "start.sh")])
+    launch_detached([sys.executable, str(here / "ci.py")])
 
 
 def launch_detached(args: list[str]) -> None:
@@ -198,15 +379,35 @@ def main() -> int:
             payload.get("hook_event_name"), str
         ):
             return 0
-        event = to_event(payload)
+        name = payload["hook_event_name"]
+        handbook, personas = "", None
+        with contextlib.suppress(Exception):
+            handbook = studio_docs.read_version(docs_dir() / "STUDIO.md")
+            if name in ("SubagentStart", "SubagentStop", "PreToolUse"):
+                personas = studio_docs.persona_meta(agents_dir())
+        event = to_event(payload, handbook, personas)
         if event:
-            with contextlib.suppress(Exception):  # Kontext trotzdem ausgeben
-                append_event(event)
-        if payload["hook_event_name"] == "SessionStart":
+            events = [event]
+            with contextlib.suppress(Exception):
+                events = enrich(event, payload)
+            for item in events:
+                with contextlib.suppress(Exception):  # Kontext trotzdem ausgeben
+                    append_event(item)
+        port = os.environ.get("STUDIO_PORT", "")
+        port = port if port.isascii() and port.isdigit() else "8765"
+        text = ""
+        if name == "SessionStart":
+            text = start_context(port)
+            with contextlib.suppress(Exception):
+                start_background(os.environ)
+        elif name == "UserPromptSubmit":
+            with contextlib.suppress(Exception):
+                text = incident_notice(payload, open_incidents())
+        if text:
             output = {
                 "hookSpecificOutput": {
-                    "hookEventName": "SessionStart",
-                    "additionalContext": START_CONTEXT,
+                    "hookEventName": name,
+                    "additionalContext": text,
                 }
             }
             print(json.dumps(output, ensure_ascii=False))

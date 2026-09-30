@@ -79,7 +79,8 @@ class ToEventTest(unittest.TestCase):
         self.assertEqual(ev["kind"], "spawn")
         self.assertEqual(ev["subagent_type"], "general-purpose")
         self.assertEqual(ev["persona"], "design-genre-researcher")
-        self.assertEqual(ev["package"], "M5-R1")
+        self.assertEqual(ev["package_id"], "M5-R1")
+        self.assertNotIn("package", ev)
         self.assertEqual(ev["model"], "sonnet")
         self.assertLessEqual(len(ev["prompt_head"]), 401)
 
@@ -125,10 +126,242 @@ class ToEventTest(unittest.TestCase):
         self.assertIsNone(hook.to_event(payload("Notification", message="x")))
 
 
+class HeaderTest(unittest.TestCase):
+    def test_header_text_full_value(self):
+        text = "Persona: x\n- **Schätzung:** 20 min, 30 Tools\n"
+        self.assertEqual(hook.header_text(text, "Schätzung"), "20 min, 30 Tools")
+        self.assertEqual(hook.header_text(text, "Fehlt"), "")
+
+    def test_parse_estimate(self):
+        self.assertEqual(
+            hook.parse_estimate("20 min, 30 Tools"), {"minutes": 20, "tools": 30}
+        )
+        self.assertEqual(hook.parse_estimate("15 min"), {"minutes": 15, "tools": None})
+        self.assertIsNone(hook.parse_estimate("unklar"))
+        self.assertIsNone(hook.parse_estimate(""))
+
+
+class NewFieldsTest(unittest.TestCase):
+    def test_spawn_fields(self):
+        prompt = "Persona: lead-qa\nPaket: P1\nMeilenstein: M9\nSchätzung: 15 min\nx"
+        ev = hook.to_event(
+            payload(
+                "PreToolUse",
+                tool_name="Agent",
+                tool_use_id="t1",
+                tool_input={"prompt": prompt},
+            ),
+            handbook="1.2",
+            personas={"lead-qa": {"version": "2.0"}},
+        )
+        self.assertEqual(ev["package_id"], "P1")
+        self.assertEqual(ev["milestone"], "M9")
+        self.assertEqual(ev["estimate"], {"minutes": 15, "tools": None})
+        self.assertEqual(ev["persona_version"], "2.0")
+        self.assertEqual(ev["handbook_version"], "1.2")
+
+    def test_agent_events_persona_version(self):
+        personas = {"lead-qa": {"version": "2.0"}}
+        for name, kind in (
+            ("SubagentStart", "agent_start"),
+            ("SubagentStop", "agent_stop"),
+        ):
+            ev = hook.to_event(
+                payload(name, agent_id="a1", agent_type="lead-qa"),
+                handbook="1.2",
+                personas=personas,
+            )
+            self.assertEqual(ev["kind"], kind)
+            self.assertEqual(ev["persona_version"], "2.0")
+
+    def test_spawned_measurements(self):
+        ev = hook.to_event(
+            payload(
+                "PostToolUse",
+                tool_name="Agent",
+                tool_response={
+                    "agentId": "a1",
+                    "totalDurationMs": 5000,
+                    "totalToolUseCount": 7,
+                    "resolvedModel": "claude-opus-5-5",
+                    "totalTokens": 99,
+                },
+            )
+        )
+        self.assertEqual(
+            (ev["duration_ms"], ev["tool_count"], ev["resolved_model"]),
+            (5000, 7, "claude-opus-5-5"),
+        )
+        self.assertNotIn("totalTokens", ev)
+        self.assertNotIn("tokens", ev)
+
+    def test_spawned_from_fixture(self):
+        path = Path(__file__).parent / "fixtures" / "agent_tool_response.json"
+        response = json.loads(path.read_text("utf-8"))
+        ev = hook.to_event(
+            payload("PostToolUse", tool_name="Agent", tool_response=response)
+        )
+        self.assertEqual(ev["child_id"], "a58c1ea80f25eef92")
+        self.assertEqual(ev["tool_count"], 11)
+
+    def test_spawned_without_measurements(self):
+        ev = hook.to_event(
+            payload("PostToolUse", tool_name="Agent", tool_response={"agentId": "c"})
+        )
+        for key in ("duration_ms", "tool_count", "resolved_model"):
+            self.assertNotIn(key, ev)
+
+
+class EnrichTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        old = os.environ.get("STUDIO_HOME")
+        os.environ["STUDIO_HOME"] = self.tmp.name
+        self.addCleanup(
+            lambda: (
+                os.environ.pop("STUDIO_HOME")
+                if old is None
+                else os.environ.__setitem__("STUDIO_HOME", old)
+            )
+        )
+        self.home = Path(self.tmp.name)
+
+    def test_spawn_archives_briefing(self):
+        p = payload(
+            "PreToolUse",
+            tool_name="Agent",
+            tool_use_id="toolu_abcdefgh12345678",
+            tool_input={"prompt": "Persona: lead-qa\nPaket: P1\nVolltext"},
+        )
+        events = hook.enrich(hook.to_event(p), p)
+        self.assertEqual(len(events), 1)
+        rel = events[0]["briefing"]
+        self.assertTrue(rel.startswith("briefings/"))
+        self.assertTrue(rel.endswith("-lead-qa-12345678.md"))
+        self.assertIn("Volltext", (self.home / "archiv" / rel).read_text("utf-8"))
+
+    def test_agent_stop_archives_report_and_usage(self):
+        session = self.home / "abc.jsonl"
+        sub = self.home / "abc" / "subagents"
+        sub.mkdir(parents=True)
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "claude-opus-5-5",
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": 3, "output_tokens": 4},
+            },
+        }
+        (sub / "agent-a1.jsonl").write_text(json.dumps(line) + "\n", "utf-8")
+        p = payload(
+            "SubagentStop",
+            agent_id="a1",
+            agent_type="lead/qa",
+            last_assistant_message="Bericht " + "z" * 900,
+            transcript_path=str(session),
+        )
+        events = hook.enrich(hook.to_event(p), p)
+        ev = events[0]
+        self.assertTrue(ev["report"].startswith("berichte/"))
+        self.assertRegex(ev["report"], r"^berichte/[\w-]+-leadqa-a1\.md$")
+        text = (self.home / "archiv" / ev["report"]).read_text("utf-8")
+        self.assertIn("z" * 900, text)
+        self.assertEqual(ev["usage"]["claude-opus-5-5"]["output"], 4)
+
+    def test_agent_stop_explicit_transcript_path(self):
+        other = self.home / "x.jsonl"
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "m",
+                "stop_reason": "end_turn",
+                "usage": {"output_tokens": 9},
+            },
+        }
+        other.write_text(json.dumps(line) + "\n", "utf-8")
+        p = payload("SubagentStop", agent_id="a2", agent_transcript_path=str(other))
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertEqual(ev["usage"]["m"]["output"], 9)
+
+    def test_agent_stop_without_transcript_has_no_usage_value(self):
+        p = payload("SubagentStop", agent_id="a3", last_assistant_message="x")
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertIsNone(ev["usage"])
+
+    def test_turn_end_adds_usage_event(self):
+        transcript = self.home / "s.jsonl"
+        line = {
+            "type": "assistant",
+            "message": {
+                "id": "m1",
+                "model": "m",
+                "stop_reason": "end_turn",
+                "usage": {"output_tokens": 5},
+            },
+        }
+        cost = {"type": "cost-state", "totalCostUSD": 1.5, "modelUsage": {}}
+        transcript.write_text(
+            json.dumps(line) + "\n" + json.dumps(cost) + "\n", "utf-8"
+        )
+        p = payload("Stop", transcript_path=str(transcript))
+        events = hook.enrich(hook.to_event(p), p)
+        self.assertEqual([e["kind"] for e in events], ["turn_end", "usage"])
+        self.assertEqual(events[1]["agent_id"], "main")
+        self.assertEqual(events[1]["usage"]["m"]["output"], 5)
+        self.assertNotIn("session_cost", events[1])
+        end = payload("SessionEnd", transcript_path=str(transcript))
+        events = hook.enrich(hook.to_event(end), end)
+        self.assertEqual(events[1]["session_cost"]["total_usd"], 1.5)
+
+    def test_enrich_never_raises(self):
+        p = payload("Stop", transcript_path=5)
+        self.assertEqual(len(hook.enrich(hook.to_event(p), p)), 1)
+
+
+class SessionStartTest(unittest.TestCase):
+    def test_context_via_subprocess(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {**os.environ, "STUDIO_HOME": tmp, "STUDIO_NO_SERVER": "1"}
+            proc = subprocess.run(
+                [sys.executable, str(HOOK)],
+                input=json.dumps(payload("SessionStart", source="startup")),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        out = json.loads(proc.stdout)
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_incident_notice_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            incidents = [{"id": "ci:1", "kind": "ci", "text": "CI rot", "t": 1.0}]
+            old = os.environ.get("STUDIO_HOME")
+            os.environ["STUDIO_HOME"] = tmp
+            try:
+                p = payload("UserPromptSubmit", prompt="hallo")
+                first = hook.incident_notice(p, incidents)
+                second = hook.incident_notice(p, incidents)
+                sub = hook.incident_notice({**p, "agent_id": "a1"}, incidents)
+            finally:
+                if old is None:
+                    os.environ.pop("STUDIO_HOME")
+                else:
+                    os.environ["STUDIO_HOME"] = old
+        self.assertIn("Ad-hoc-Retro fällig", first)
+        self.assertIn("CI rot", first)
+        self.assertEqual(second, "")
+        self.assertEqual(sub, "")
+
+
 class MainTest(unittest.TestCase):
     def run_hook(self, stdin):
         with tempfile.TemporaryDirectory() as tmp:
-            env = {**os.environ, "STUDIO_HOME": tmp}
+            env = {**os.environ, "STUDIO_HOME": tmp, "STUDIO_NO_SERVER": "1"}
             proc = subprocess.run(
                 [sys.executable, str(HOOK)],
                 input=stdin,
@@ -151,7 +384,11 @@ class MainTest(unittest.TestCase):
 
     def test_session_start_context_survives_unwritable_home(self):
         with tempfile.NamedTemporaryFile() as blocker:
-            env = {**os.environ, "STUDIO_HOME": str(Path(blocker.name) / "sub")}
+            env = {
+                **os.environ,
+                "STUDIO_HOME": str(Path(blocker.name) / "sub"),
+                "STUDIO_NO_SERVER": "1",
+            }
             proc = subprocess.run(
                 [sys.executable, str(HOOK)],
                 input=json.dumps(payload("SessionStart", source="startup")),
@@ -164,7 +401,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(proc.stderr, "")
         out = json.loads(proc.stdout)
-        self.assertIn("STUDIO.md", out["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
 
     def test_session_start_emits_context(self):
         proc, lines = self.run_hook(
@@ -173,7 +410,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         out = json.loads(proc.stdout)
         self.assertEqual(out["hookSpecificOutput"]["hookEventName"], "SessionStart")
-        self.assertIn("STUDIO.md", out["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("Projektleiter", out["hookSpecificOutput"]["additionalContext"])
         self.assertEqual(len(lines), 1)
 
 
