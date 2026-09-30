@@ -121,6 +121,16 @@ class FileTest(unittest.TestCase):
         self.assertIsNone(limits.read_fresh(self.path, now11))
         self.assertIsNotNone(limits.read_fresh(self.path, now11, max_age=3600))
 
+    def test_read_fresh_tolerates_small_clock_skew_only(self):
+        now = 5000.0
+        tol = limits.FUTURE_TOLERANCE_S
+        limits.write_atomic(self.path, limits.parse(full(), now=now + tol - 1))
+        self.assertIsNotNone(limits.read_fresh(self.path, now))
+        limits.write_atomic(self.path, limits.parse(full(), now=now + tol + 1))
+        self.assertIsNone(limits.read_fresh(self.path, now))
+        limits.write_atomic(self.path, limits.parse(full(), now=now + 99999))
+        self.assertIsNone(limits.read_fresh(self.path, now))
+
     def test_read_fresh_sanitizes_garbage_values(self):
         bad = {
             "ts": 1000.0,

@@ -20,6 +20,7 @@ RED_FROM = 80
 WEEK_HIGH_ABOVE = 80
 CONTEXT_HANDOVER_FROM = 50
 HOOK_MAX_AGE = 600
+FUTURE_TOLERANCE_S = 60
 RESET_KEYS = ("five_hour_resets_at", "seven_day_resets_at")
 VALUE_KEYS = (
     "five_hour_pct",
@@ -93,7 +94,7 @@ def write_atomic(path: Path | str, data: dict) -> None:
 def read_fresh(
     path: Path | str, now: float, max_age: float = HOOK_MAX_AGE
 ) -> dict | None:
-    """Liest die Datei; ``None`` bei Fehlern oder wenn ``ts`` älter als ``max_age`` ist."""
+    """Liest die Datei; ``None`` bei Fehlern, zu altem ``ts`` oder ``ts`` weit in der Zukunft."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -101,7 +102,7 @@ def read_fresh(
     if not isinstance(data, dict):
         return None
     ts = _number(data.get("ts"))
-    if ts is None or now - ts > max_age:
+    if ts is None or now - ts > max_age or ts - now > FUTURE_TOLERANCE_S:
         return None
     return _sanitized(data, ts)
 
