@@ -1376,8 +1376,13 @@ time {
     overflow-y: hidden;
   }
 
+  .graph-grid {
+    column-gap: 8px;
+  }
+
   .graph-row {
-    grid-template-columns: 2.6rem minmax(0, 8rem) minmax(0, 1fr);
-    gap: 6px;
+    grid-template-columns: 2.4rem minmax(0, 2fr) minmax(0, 3fr);
+    gap: 4px;
+    font-size: 0.75rem;
   }
 }
