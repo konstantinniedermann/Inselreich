@@ -215,6 +215,16 @@ const distillery: SilhouetteFn = (p, base) => {
   p.line(0.72, 0.74, 0.92, 0.74, OUTLINE);
 };
 
+const toolmaker: SilhouetteFn = (p, base) => {
+  p.rect(0.08, 0.38, 0.84, 0.54, base); // flache Werkstatt
+  p.rect(0.04, 0.3, 0.92, 0.12, roofOf(base)); // Pultdach
+  p.rect(0.66, 0.08, 0.1, 0.26, '#5a5a5a'); // Schornstein über dem Rauchursprung
+  p.rect(0.14, 0.55, 0.22, 0.37, DOOR, false); // Tor
+  p.rect(0.5, 0.76, 0.3, 0.1, '#4a4a4a'); // Amboss
+  p.line(0.58, 0.72, 0.72, 0.52, WOOD); // Hammerstiel
+  p.rect(0.68, 0.46, 0.14, 0.1, '#b8b8b8'); // Hammerkopf
+};
+
 const chapel: SilhouetteFn = (p, base) => {
   hut(p, base, 0.1, 0.4, 0.8, 0.54);
   p.rect(0.4, 0.14, 0.2, 0.42, base); // Turm
@@ -262,6 +272,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   distillery,
   chapel,
   school,
+  toolmaker,
 };
 
 /** Aufsteigende Rauchwölkchen; nur aus Zeit und Gebäude-ID (deterministisch). */
