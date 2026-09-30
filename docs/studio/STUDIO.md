@@ -65,7 +65,10 @@ Wer unsicher ist, ob etwas in seine Befugnis fällt, fragt eine Ebene höher —
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
   [templates/uebergabe.md](templates/uebergabe.md) unter `.studio/handoffs/<datum>-<von>-<an>.md`
   (gitignored, Arbeitsstand). Ergebnisse mit Bestand gehören in Spec, Plan oder Ruling.
-  `SendMessage` nur an laufende Agenten; ein beendeter Agent wird neu gestartet und gebrieft.
+- **Fortsetzen statt neu starten:** Fix-Runden und Rückfragen setzen **denselben** Agenten per
+  `SendMessage` fort — auch einen bereits beendeten; sein Kontext bleibt vollständig erhalten. Nur
+  ein neuer Agent-Start verliert den Kontext und braucht ein vollständiges Briefing. Eine
+  Fortsetzung zählt im Budget nicht als neuer Start.
 - **Eskalation:** Konflikt zwischen Bereichen → beide Leads melden ihre Sicht an L0 → L0 entscheidet
   und schreibt ein Ruling. Ein Arbeiter eskaliert nur an seinen Lead.
 - **Bericht** (≤ ~15 Zeilen, [templates/bericht.md](templates/bericht.md)): Ergebnis ·
@@ -95,8 +98,10 @@ Pflichtpunkte:
 8. Logging-Pflicht
 
 Die festen Regeln stehen in jedem Briefing wörtlich (Block aus [Feste Regeln](#feste-regeln)).
-Für Rollen „auf Abruf" ohne Persona-Datei: `general-purpose` starten, `Persona:`-Kopfzeile setzen
-und den Persona-Text aus roster.md ins Briefing schreiben.
+Für Rollen „auf Abruf" ohne Persona-Datei: `general-purpose` starten, `Persona:`-Kopfzeile setzen,
+den Einzeiler aus roster.md zu den Abschnitten von [templates/persona.md](templates/persona.md)
+ausbauen und ins Briefing schreiben. Das Modell **explizit im Agent-Aufruf** setzen (Vorschlag in
+roster.md) — sonst erbt der Agent das Modell der Session.
 
 ## Modellwahl
 
@@ -115,13 +120,22 @@ und in der Kopfzeile `Modell:` des Briefings.
 ## Budget
 
 - **Einheit:** Anzahl L2-Starts und maximale Parallelität (gleichzeitig laufende Arbeiter).
-- **Freigabe:** L0 gibt je Lead und Phase frei und loggt sie:
-  `python3 tools/studio/log.py budget --lead lead-tech --grant 15 --parallel 2 --phase M5-umsetzung`.
+- **Freigabe:** L0 gibt je Lead und Phase frei und loggt sie (`log.py budget`, Beispiel unten).
   Weitere Freigaben derselben Phase addieren sich. Leads verteilen innerhalb ihrer Freigabe selbst.
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 = 14,3 → **15**. Der Puffer deckt
-  Fix-Runden. Der Tech-Lead stellt den Antrag für die ganze Umsetzungsphase; L0 teilt die
-  Freigabe auf (Final-Review an `lead-qa`, Rest an `lead-tech`).
+  Neustarts und Zusatzprüfungen; Fix-Runden per `SendMessage` zählen nicht als Start. Der Tech-Lead
+  stellt den Antrag für die ganze Umsetzungsphase; L0 teilt die Freigabe auf (Stufe voll:
+  Final-Review an `lead-qa`, Rest an `lead-tech`):
+
+  ```bash
+  python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
+  python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-umsetzung
+  ```
+
+  In der Stufe leicht startet der Tech-Lead auch das abschliessende `opus`-Review; die ganze
+  Freigabe geht an `lead-tech`.
+
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
 - **Zählung:** Das Dashboard zählt Starts, Parallelität und Modellmix automatisch über die Hooks
@@ -129,14 +143,16 @@ und in der Kopfzeile `Modell:` des Briefings.
 
 ## Gates und Dokumentation
 
-Vier Gates, jeweils von L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
+Vier Gates in der Stufe voll, zwei in der Stufe leicht (kombiniertes Gate und Merge), jeweils von
+L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 
-| Gate          | Nach                              | Prüfen                           |
-| ------------- | --------------------------------- | -------------------------------- |
-| Brainstorming | Designvorschlag des Design-Leads  | `lead-design`                    |
-| Spec          | Spec in `docs/superpowers/specs/` | `lead-tech`, `lead-qa`           |
-| Plan          | Plan in `docs/superpowers/plans/` | `lead-qa`, `lead-production`     |
-| Merge         | Final-Review der Umsetzung        | `lead-qa`, bei Assets `lead-art` |
+| Gate                                | Nach                                              | Prüfen                                                       |
+| ----------------------------------- | ------------------------------------------------- | ------------------------------------------------------------ |
+| Brainstorming                       | Designvorschlag des Design-Leads                  | `lead-design`                                                |
+| Spec                                | Spec in `docs/superpowers/specs/`                 | `lead-tech`, `lead-qa`                                       |
+| Plan                                | Plan in `docs/superpowers/plans/`                 | `lead-qa`, `lead-production`                                 |
+| Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten              | `lead-qa`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
+| Merge                               | Final-Review aller Stränge (eines je Meilenstein) | `lead-qa`, bei Assets `lead-art`                             |
 
 Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumentiert:
 
@@ -155,7 +171,8 @@ L0 stuft jeden Auftrag ein (R2) und nennt die Stufe im Briefing. Hochstufen ist 
 
 - **leicht (Standard):** Auftrag ≤ 1 Session, ≤ 3 Pakete, keine Architekturänderung. Brainstorming
   als Kurzdesign im Bericht des Design-Leads, Plan im Tech-Bericht, dann Umsetzung mit Review je
-  Paket. Gates Spec und Plan fallen zu einem Gate zusammen.
+  Paket. Gates Brainstorming, Spec und Plan fallen zu **einem** kombinierten Gate zusammen. Ablauf:
+  [Umsetzungszyklus](#umsetzungszyklus).
 - **voll:** neue Systeme, Save-Format, Architektur, Meilensteine. superpowers-Ablauf komplett:
   brainstorming → Spec (`docs/superpowers/specs/`) → writing-plans (`docs/superpowers/plans/`) →
   subagent-driven-development → Final-Review.
@@ -168,6 +185,10 @@ Ablauf eines Meilensteins (Stufe voll):
 
 1. Nutzer-Auftrag → L0 gibt Design ein Budget frei → Design-Lead (superpowers:brainstorming, L0 ist
    der Gesprächspartner) → Bericht mit Designvorschlag → **Gate Brainstorming** (L0).
+   Rückfragen-Runde: Der Design-Lead bündelt seine Fragen im Bericht, je Frage mit Empfehlung. L0
+   beantwortet sie per `SendMessage` an denselben Lead (Kontext bleibt erhalten); Fragen, die laut
+   [Befugnistabelle](#entscheidungsbefugnisse) dem Nutzer gehören, legt L0 dem Nutzer vor und
+   reicht die Antwort weiter. Das wiederholt sich, bis der Designvorschlag steht.
 2. Design-Lead schreibt Spec → **Gate Spec** (L0, Prüfung nach gates.md, Tech-Lead und QA-Lead
    geben ihr Urteil ab).
 3. Tech-Lead schreibt Plan (superpowers:writing-plans) inkl. Datei-Ownership und Budgetantrag →
@@ -175,9 +196,22 @@ Ablauf eines Meilensteins (Stufe voll):
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
-5. QA-Lead: Final-Review (`opus`) + Determinismus/Regression → Bericht.
-6. **Gate Merge** (L0) → Production-Lead lässt `production-integrator` seriell mergen, CI und Pages
-   prüfen.
+5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
+6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
+   Stränge seriell mergen, CI und Pages prüfen.
+
+Ablauf eines Auftrags (Stufe leicht):
+
+1. L0 gibt Design und Tech gemeinsam ein kleines Budget frei (je `log.py budget`).
+2. `lead-design` liefert ein Kurzdesign im Bericht (Rückfragen wie oben per `SendMessage`).
+3. `lead-tech` liefert den Plan im Bericht: Pakete, Datei-Ownership, Budgetantrag.
+4. **Ein kombiniertes Gate Spec/Plan** durch L0 (Prüfung nach [gates.md](gates.md), Abschnitt
+   „Kombiniertes Gate (Stufe leicht)"); danach Umsetzungsbudget freigeben.
+5. Umsetzung: je Paket Implementierer + `qa-code-reviewer`, UI-Pakete zusätzlich `qa-playtester`.
+   Ein Worktree genügt.
+6. Kein separates Final-Review: Der letzte Task-Review läuft auf `opus` über die ganze Branch und
+   zählt als Final-Review (im Budget das „+1").
+7. **Gate Merge** durch L0 → `production-integrator` merged.
 
 Regeln dazu:
 
@@ -188,14 +222,16 @@ Regeln dazu:
 - **Je Task:** Implementierer + `qa-code-reviewer` (Spec-Konformität und Qualität, Urteil
   OK/BEDENKEN/ZURÜCK). Der Tech-Lead ist Controller und darf dafür die QA-Arbeiter starten; ihren
   Qualitätsmassstab verantwortet der QA-Lead.
-- **Je UI-Task:** zusätzlich `qa-playtester` (Browser-Check, Screenshots unter `.studio/qa/<paket>/`,
-  Bericht nach [templates/playtest-report.md](templates/playtest-report.md)).
-- **Final-Review:** durch QA auf `opus` über die ganze Branch, inkl. Balancing-Test und
-  Determinismus (gleicher Seed → gleicher Zustand).
-- **Merge:** nur nach dem L0-Merge-Gate, seriell (ein Strang nach dem anderen) durch
-  `production-integrator`: `make check` vor und nach dem Merge, `git merge --no-ff`, Push nur laut
-  Freigabe im Briefing, danach CI-Status (`gh run list --branch main --limit 3`) und
-  Pages-Deploy prüfen. Bei Konflikten stoppen und melden; nie `--force`, nie `reset --hard`.
+- **Je UI-Task:** zusätzlich `qa-playtester` (Browser-Check, Screenshots im **Hauptrepo** unter
+  `<Hauptrepo>/.studio/qa/<paket>/`, nicht im Worktree; Bericht nach
+  [templates/playtest-report.md](templates/playtest-report.md)).
+- **Final-Review:** durch QA auf `opus`, einmal je Meilenstein über **alle** Strang-Branches gegen
+  `main` in einer Review-Session (kombinierter Diff bzw. jeder Strang-Diff), inkl. Balancing-Test
+  und Determinismus (gleicher Seed → gleicher Zustand).
+- **Merge:** nur nach dem einen L0-Merge-Gate des Meilensteins, seriell (ein Strang nach dem
+  anderen) durch `production-integrator`: `make check` vor dem ersten und nach **jedem** Merge,
+  `git merge --no-ff`, Push nur laut Freigabe im Briefing, danach CI-Status
+  (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen. Bei Konflikten stoppen und melden; nie `--force`, nie `reset --hard`.
 
 ## Feste Regeln
 
@@ -203,7 +239,7 @@ Diesen Block wörtlich in jedes Briefing kopieren:
 
 ```text
 Feste Regeln (unverändert, gelten immer):
-- Keine neuen Laufzeit-Abhängigkeiten ohne Nutzer-Freigabe (Assets sind keine Dependencies).
+- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
@@ -227,7 +263,7 @@ Grundlage: [ADR-006](../adr/ADR-006-offene-lizenzen.md). Nachweis in
 
 ## Logging-Pflicht
 
-Wer lebt, sieht das Dashboard ohnehin; **was** ein Agent tut, worauf er wartet und was er
+Dass ein Agent lebt, sieht das Dashboard ohnehin; **was** ein Agent tut, worauf er wartet und was er
 geliefert hat, sieht es nur, wenn er loggt. Die Hooks (`.claude/settings.json` →
 `tools/studio/hook.py`) erfassen **automatisch**: Session-Start/-Ende, Nutzer-Prompts, Turn-Ende,
 Start und Stop jedes Subagenten, Eltern-Kind-Zuordnung und jeden Tool-Aufruf als Lebenszeichen.
@@ -241,11 +277,12 @@ Befehlsreferenz:
 python3 tools/studio/log.py status --role lead-tech --status active --task "Plan M5 schreiben" --package M5-plan
 python3 tools/studio/log.py status --role tech-sim-engineer --status done --summary "Warenfluss-Test grün" --package M5-02
 
-# Budget (nur L0)
-python3 tools/studio/log.py budget --lead lead-tech --grant 15 --parallel 2 --phase M5-umsetzung
+# Budget (nur L0; Aufteilung des Beispiels aus „Budget")
+python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
+python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-umsetzung
 
 # Paket (Status: open, active, review, blocked, done)
-python3 tools/studio/log.py package --id M5-02 --title "Warenfluss" --owner lead-tech --status active --blocked-by M5-01 --milestone M5
+python3 tools/studio/log.py package --id M5-02 --title "Warenfluss" --owner lead-tech --status blocked --blocked-by M5-01 --milestone M5
 
 # Entscheid öffnen und lösen
 python3 tools/studio/log.py decision --id D-012 --for l0 --question "Budget +4 für Fix-Runden?" --recommendation "Ja, 2 Reviews ZURÜCK" --from lead-tech

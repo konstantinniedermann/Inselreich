@@ -20,7 +20,7 @@ Prozessstufe: <leicht|voll>
 8. Logging-Pflicht: siehe Block „Logging"
 
 Feste Regeln (unverändert, gelten immer):
-- Keine neuen Laufzeit-Abhängigkeiten ohne Nutzer-Freigabe (Assets sind keine Dependencies).
+- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
@@ -56,7 +56,11 @@ Prozessstufe: voll
 8. Logging: siehe unten
 
 Feste Regeln (unverändert, gelten immer):
-- … (Block wörtlich wie oben)
+- Keine neuen Laufzeit-Abhängigkeiten ohne Freigabe des Nutzers — vorschlagen, begründen, warten. Assets sind keine Dependencies.
+- `src/sim` DOM-frei, Zufall nur über den seeded RNG.
+- Save-Format versionieren und migrieren, mit Test für alte Spielstände.
+- Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
+- Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
 
 Logging (jeweils als eigener Bash-Aufruf):
 - Start: python3 tools/studio/log.py status --role tech-sim-engineer --status active --task "Marktplatz-Versorgung" --package M5-02

@@ -36,3 +36,10 @@ Bisher frei/verbraucht: —
 Begründung Mehrbedarf: —
 Beantragt: 15 Starts, Parallelität 2 (davon 1 Final-Review an lead-qa)
 ```
+
+Freigabe durch L0 (Aufteilung, Stufe voll):
+
+```bash
+python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
+python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-umsetzung
+```

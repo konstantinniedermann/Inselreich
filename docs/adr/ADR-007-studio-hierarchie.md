@@ -23,6 +23,8 @@ Event) ergaben:
   und Agents; Steuerung, Berichtsweg und Kosten sind aber schwerer zu kontrollieren.
 - **Agent Teams** (experimentell) kennen keine verschachtelten Teams und passen nicht zu drei
   Ebenen.
+- **Fortsetzen geht.** `SendMessage` an einen bereits beendeten Subagenten setzt ihn mit vollem
+  Kontext fort (in der Setup-Session für Fix-Runden genutzt).
 - Die Hauptsession als eigener Agent (`"agent"` in settings) ersetzt den Standard-Systemprompt von
   Claude Code (R4) — L0 wird deshalb über `CLAUDE.md` und `docs/studio/STUDIO.md` geführt.
 
@@ -52,7 +54,11 @@ Personas, Briefing-Standard und Telemetrie bleiben dabei unverändert; nur der S
 - Parallelität gibt es nur innerhalb eines Leads per Mehrfachaufruf; ein Lead blockiert, bis alle
   seine Arbeiter fertig sind. Parallele Leads startet L0.
 - Der Kontext von L0 bleibt klein, weil nur Lead-Berichte (≤ ~15 Zeilen) zurückkommen.
-- Querabstimmung zwischen Leads läuft über Übergabedokumente, weil beendete Agenten keine
-  Nachrichten mehr empfangen.
+- Ein beendeter Agent lässt sich per `SendMessage` fortsetzen; sein Kontext bleibt vollständig
+  erhalten (in der Setup-Session für Fix-Runden erprobt). Fix-Runden und Rückfragen — auch der
+  Brainstorming-Dialog zwischen L0 und Design-Lead — laufen deshalb als Fortsetzung desselben
+  Agenten; nur ein neuer Agent-Start verliert den Kontext.
+- Querabstimmung zwischen Leads läuft über Übergabedokumente, damit Ergebnisse unabhängig vom
+  Kontext eines einzelnen Agenten nachlesbar bleiben.
 - Das Verhalten hängt an Claude-Code-Interna (Hintergrund-Standard, Tiefenlimit). Nach Updates den
   Berichtsweg im Dashboard prüfen; bei Bruch greift Rückfall B.

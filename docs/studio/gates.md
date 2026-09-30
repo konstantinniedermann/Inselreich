@@ -22,8 +22,9 @@ ab; **entscheiden tut immer L0** und hält den Entscheid als Ruling in [rulings.
 4. Ruling schreiben (`Ruling: Gate <name> <id> bestanden — <warum> — <Kosten bei Irrtum>`),
    Paketstatus nachführen.
 
-In der Prozessstufe **leicht** fallen Gate Spec und Gate Plan zusammen: Tech-Lead und QA-Lead
-prüfen Kurzdesign und Plan in einem Durchgang mit den Fragen beider Abschnitte (nur die zutreffenden).
+In der Prozessstufe **leicht** fallen Gate Brainstorming, Spec und Plan zu einem Gate zusammen
+(Abschnitt [Kombiniertes Gate (Stufe leicht)](#kombiniertes-gate-stufe-leicht)). Gate Merge gibt es
+in beiden Stufen genau einmal je Meilenstein bzw. Auftrag.
 
 ## Gate Brainstorming
 
@@ -107,15 +108,48 @@ Ownership, Parallelität)
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach
 Budgetfreigabe (`log.py budget`) und Pakete anlegen (`log.py package`).
 
+## Kombiniertes Gate (Stufe leicht)
+
+Prüfen: `lead-qa` (`opus`, Testbarkeit, Review- und Testabdeckung) · **L0 selbst** (Ownership,
+Budget, Abhängigkeiten). Der Tech-Lead prüft seinen eigenen Plan nicht; der Design-Lead liefert zum
+Kurzdesign seine Selbstprüfung nach den Fragen des Gates Brainstorming mit.
+
+**Auslöser:** Kurzdesign (Bericht `lead-design`) und Plan (Bericht `lead-tech`: Pakete,
+Datei-Ownership, Budgetantrag) liegen vor.
+
+**Kontext:** beide Berichte, betroffene Dateien laut Plan, `tests/sim/balance.test.ts`,
+[state.md](state.md).
+
+**Prüffragen `lead-qa`:**
+
+1. Ist jedes Abnahmekriterium des Kurzdesigns prüfbar (Vitest-Test oder beschriebener
+   Browser-Check), und hat jedes Paket einen Test-first-Schritt oder Browser-Check?
+2. Ist je Paket ein Review durch `qa-code-reviewer`, je UI-Paket ein `qa-playtester`-Check und am
+   Schluss ein Review auf `opus` über die ganze Branch eingeplant?
+3. Berührt der Auftrag den Balancing-Test, Determinismus oder das Save-Format? Wenn ja: Ist das
+   abgedeckt — oder gehört der Auftrag in die Stufe voll?
+
+**Prüffragen L0 (aus dem Plan):**
+
+1. Hat jede Datei genau einen Owner, und genügt ein Worktree?
+2. Stimmt der Budgetantrag mit der Formel, und sind die Abhängigkeiten zwischen Paketen vollständig?
+3. Bleibt der Auftrag leicht (≤ 1 Session, ≤ 3 Pakete, keine Architekturänderung)? Sonst hochstufen.
+
+**Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach
+Budgetfreigabe und Pakete anlegen.
+
 ## Gate Merge
 
 Prüfen: `lead-qa` (`opus`, Final-Review, CI) · `lead-art` (`opus`, nur wenn Assets betroffen:
 Lizenzen, CREDITS)
 
-**Auslöser:** Alle Pakete eines Strangs sind abgenommen; der QA-Lead hat das Final-Review über die
-ganze Branch gemacht.
+**Auslöser:** Alle Pakete **aller** Stränge des Meilensteins sind abgenommen; der QA-Lead hat das
+Final-Review in einer Session über alle Strang-Branches gegen `main` gemacht (kombinierter Diff bzw.
+jeder Strang-Diff). Es gibt **ein** Merge-Gate je Meilenstein, nicht eines je Strang. In der Stufe
+leicht ersetzt das abschliessende `opus`-Review des Tech-Zyklus das Final-Review; L0 prüft dann die
+Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts.
 
-**Kontext:** Diff der Branch gegen `main`, Final-Review-Bericht, Ausgabe von `make check`,
+**Kontext:** Diffs aller Strang-Branches gegen `main`, Final-Review-Bericht, Ausgabe von `make check`,
 `docs/CREDITS.md`, `docs/licenses/`, Doku-Änderungen (README, `docs/arc42.md`, ADRs).
 
 **Prüffragen `lead-qa`:**
@@ -134,4 +168,5 @@ ganze Branch gemacht.
 3. Ist die Gesamtgrösse der Assets vertretbar?
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach Auftrag an
-`lead-production` zum seriellen Merge durch `production-integrator`.
+`lead-production`: `production-integrator` merged die Stränge seriell, mit `make check` nach jedem
+Merge.

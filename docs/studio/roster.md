@@ -44,7 +44,7 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
 | ------------------------------- | ----------------- | ------------------ | -------------------------------------------------------------------------------------- |
 | `production-studio-ops`         | `lead-production` | `sonnet`           | Wartet die Studio-Werkzeuge (Dashboard, Hooks, `log.py`, Make-Ziele)                   |
 | `production-onboarding-analyst` | `lead-production` | `sonnet`           | Prüft neue Personas und Briefings auf Vollständigkeit gegen STUDIO.md                  |
-| `production-chronist`           | `lead-production` | `haiku`            | Fasst Chronik, Rulings und Pakete zu Meilenstein-Rückblicken und state.md-Entwürfen    |
+| `production-chronist`           | `lead-production` | `sonnet`           | Fasst Chronik, Rulings und Pakete zu Meilenstein-Rückblicken und state.md-Entwürfen    |
 | `design-genre-researcher`       | `lead-design`     | `sonnet`           | Recherchiert Mechaniken vergleichbarer Aufbauspiele (nur Mechaniken, ADR-006)          |
 | `design-balancing-analyst`      | `lead-design`     | `sonnet`           | Rechnet und simuliert Balancing-Szenarien, schlägt Werte für `src/sim/defs/` vor       |
 | `tech-save-engineer`            | `lead-tech`       | `sonnet`           | Save-Format: Versionierung, Migrationen, Tests für alte Spielstände                    |
@@ -63,4 +63,6 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
    „Aktive Personas", führt Organigramm und Lead-Tabelle in STUDIO.md nach (keine Regeländerung) und committet
    (`docs: Persona <name>`).
 3. Claude Code lädt neue Agent-Dateien erst in der **nächsten Session**. Bis dahin startet der Lead
-   `general-purpose` mit der Kopfzeile `Persona: <name>` und dem Persona-Text im Briefing.
+   `general-purpose` mit der Kopfzeile `Persona: <name>`, dem zu den Abschnitten von
+   [templates/persona.md](templates/persona.md) ausgebauten Persona-Text im Briefing und dem Modell
+   explizit im Agent-Aufruf (sonst erbt der Agent das Modell der Session).

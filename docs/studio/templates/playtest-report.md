@@ -1,7 +1,8 @@
 # Vorlage: Playtest-Report
 
 Bericht von `qa-playtester` nach einem Browser-Check (Idee: CCGS-Playtest-Report, siehe
-[herkunft.md](../herkunft.md)). Ablage neben den Screenshots unter `.studio/qa/<paket>/report.md`;
+[herkunft.md](../herkunft.md)). Ablage neben den Screenshots im **Hauptrepo** (nicht im Worktree) unter
+`<Hauptrepo>/.studio/qa/<paket>/report.md`;
 die Kurzfassung geht als Bericht an den Lead.
 
 ```markdown
