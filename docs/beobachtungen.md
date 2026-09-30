@@ -160,6 +160,12 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 **Ursprung:** Final-Review Paket G (ausserhalb Scope).
 **Einschätzung:** `log.py` validiert die Eingabe, ein Fehler tritt nur bei von Hand geschriebenen Events auf. Härtung per `isinstance(status, str)` wäre eine Zeile je Stelle.
 
+### 2026-09-30 · `docs/adr/ADR-007-studio-hierarchie.md` / `docs/studio/STUDIO.md` · Vordergrund-Regel
+
+**Beobachtung:** Leads melden: Das Agent-Tool in Subagenten hat keinen Parameter `run_in_background`; alle Arbeiter-Starts laufen asynchron trotz Vordergrund-Regel (ADR-007). Leads warten trotzdem auf das Ergebnis (Abschlussmeldung).
+**Ursprung:** Leads in Paket S17 (lead-production) und zuvor; von L0 weitergegeben.
+**Einschätzung:** ADR-007 und die Handbuch-Regel „Vordergrund-Regel" (STUDIO.md, Personas der Leads) prüfen, ob sie an das tatsächliche Verhalten angepasst werden müssen. Kandidat für `studio-coach`.
+
 ---
 
 ## Ausgewertet 2026-09-30
