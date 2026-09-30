@@ -6,7 +6,7 @@ Eigene Grafik, eigene Spielwerte — inspiriert von der Mechanik des Klassikers,
 Stand: MVP (Meilensteine 1–4) — Insel generieren, Wege und Betriebe bauen, Produktionsketten, Handel am
 Kontor, Bevölkerung mit drei Stufen, Steuern und Unterhalt, Siegziel, Speichern und Laden im Browser.
 
-**Online spielen:** GitHub Pages: wird aktiviert, sobald das Repo öffentlich ist (Free-Plan).
+**Online spielen:** GitHub Pages: https://konstantinniedermann.github.io/anno-clone/.
 
 ## Ziel
 
