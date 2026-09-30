@@ -59,7 +59,7 @@ Option 2.
   - 2 s Verzögerung im Dashboard.
   - Datenschutz: `events.jsonl` speichert die erste Zeile von Nutzer-Prompts (≤ 120 Zeichen) und
     Abschlussmeldungen von Agenten (≤ 600 Zeichen) im Klartext; lokal und gitignored. Archivieren
-    oder löschen mit `make studio-archive`. Dazu kommt das `message`-Event (siehe zweiter Nachtrag):
+    oder löschen mit `make studio-archive`. Dazu kommt das `message`-Event (siehe „Nachtrag 2026-09-30 (Prozess-Graph)“):
     Empfänger (≤ 120 Zeichen) und erste Zeile der Nachricht (≤ 160 Zeichen) im Klartext, ebenfalls
     lokal und gitignored. Zusätzlich liegen im Archiv (siehe Nachtrag) die
     **vollen Briefings und Berichte** im Klartext — ebenfalls lokal und gitignored.
