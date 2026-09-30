@@ -2,9 +2,63 @@
 <html lang="de">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>Studio-Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
   </head>
   <body>
-    <p>Studio-Dashboard (Platzhalter)</p>
+    <header class="topbar">
+      <h1>Inselreich-Studio</h1>
+      <label class="field"
+        >Session
+        <select id="session"></select
+      ></label>
+      <span id="conn" class="conn" role="status">verbinde …</span>
+      <button id="theme" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel">
+        ◐
+      </button>
+    </header>
+    <main class="grid">
+      <section class="card wide" aria-labelledby="h-org">
+        <h2 id="h-org">Organigramm</h2>
+        <div id="org"></div>
+      </section>
+      <section class="card" aria-labelledby="h-counts">
+        <h2 id="h-counts">Status</h2>
+        <div id="counts" class="counts"></div>
+      </section>
+      <section class="card" aria-labelledby="h-decisions">
+        <h2 id="h-decisions">Offene Entscheide</h2>
+        <div id="decisions"></div>
+      </section>
+      <section class="card" aria-labelledby="h-budget">
+        <h2 id="h-budget">Budget je Lead</h2>
+        <div id="budgets"></div>
+      </section>
+      <section class="card wide" aria-labelledby="h-board">
+        <h2 id="h-board">Meilenstein-Board</h2>
+        <div id="board"></div>
+      </section>
+      <section class="card" aria-labelledby="h-pulse">
+        <h2 id="h-pulse">Aktivität (60 min)</h2>
+        <div id="pulse"></div>
+      </section>
+      <section class="card" aria-labelledby="h-chron">
+        <div class="card-head">
+          <h2 id="h-chron">Chronik</h2>
+          <label class="field"
+            >Bereich
+            <select id="chron-dept"></select
+          ></label>
+        </div>
+        <ol id="chronicle" class="list scroll"></ol>
+      </section>
+      <section class="card" aria-labelledby="h-feed">
+        <h2 id="h-feed">Live-Feed</h2>
+        <ol id="feed" class="list feed scroll"></ol>
+      </section>
+    </main>
   </body>
 </html>
