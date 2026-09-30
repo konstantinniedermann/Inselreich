@@ -2,19 +2,31 @@ import { canPlace, canPlaceRoad } from '../sim/placement';
 import { inBounds, tileAt } from '../sim/world';
 import { TILE, clampCamera, screenToTile, zoomAt } from '../render/camera';
 import type { GameState } from './app';
+import { hotkeyAction, type HotkeyAction } from './hotkeys';
 
 export type InputAction =
   | { type: 'tile'; x: number; y: number; dragging: boolean }
   | { type: 'cancel' }
+  | { type: 'hotkey'; action: HotkeyAction }
   | { type: 'dragEnd' };
 
-const PAN_PER_FRAME = 16;
+/** Tastatur-Pan in Bildschirm-Pixeln je Sekunde (= 16 px je Frame bei 60 fps). */
+export const PAN_PX_PER_S = 960;
 const DRAG_THRESHOLD = 4;
 const PAN_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
+/** Weltpixel, um die die Kamera bei gedrückter Pan-Taste in `dtMs` wandert (unabhängig von der Framerate). */
+export function panDelta(dtMs: number, zoom: number): number {
+  return (PAN_PX_PER_S * dtMs) / 1000 / zoom;
+}
+
 export interface InputBinding {
-  /** Pro Frame aufrufen: verschiebt die Kamera bei gedrückten Pfeil-/WASD-Tasten. */
-  applyKeys(): void;
+  /** Pro Frame aufrufen (`dtMs` = Frame-Dauer): verschiebt die Kamera bei gedrückten Pfeil-/WASD-Tasten. */
+  applyKeys(dtMs: number): void;
+  /** Bricht eine laufende Pointer-Aktion (Ziehen, Touch-Geste) ab, ohne dass etwas gebaut wird. */
+  cancelPointerAction(): void;
+  /** Berechnet die Vorschau an der letzten Zeigerposition neu (nach einem Werkzeugwechsel). */
+  refreshHover(): void;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
 }
@@ -36,7 +48,16 @@ export function bindInput(
     lastY: number;
     panning: boolean;
     lastTile: string | null;
+    /** Werkzeug war beim Drücken "Weg" (unabhängig von späteren Werkzeugwechseln). */
+    road: boolean;
+    pointerId: number;
+    /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
+    touch: boolean;
+    downTile: { x: number; y: number };
   } | null = null;
+  /** Aktive Finger (nur Touch). Bei zwei Fingern läuft eine Pinch-/Pan-Geste. */
+  const touches = new Map<number, { sx: number; sy: number }>();
+  let gesture: { dist: number; mx: number; my: number } | null = null;
 
   const local = (e: MouseEvent): { sx: number; sy: number } => {
     const r = canvas.getBoundingClientRect();
@@ -79,10 +100,48 @@ export function bindInput(
     onAction({ type: 'tile', x: t.x, y: t.y, dragging });
   };
 
+  /** Bricht Ein-Zeiger-Aktion ab; eine Weg-Zug-Serie wird mit `dragEnd` sauber beendet. */
+  const cancelPointerAction = (): void => {
+    const wasRoadDrag = drag !== null && !drag.panning && drag.road;
+    drag = null;
+    gesture = null;
+    if (wasRoadDrag) onAction({ type: 'dragEnd' });
+    updateHover();
+  };
+
+  const twoFingers = (): [{ sx: number; sy: number }, { sx: number; sy: number }] | null => {
+    const it = touches.values();
+    const a = it.next().value;
+    const b = it.next().value;
+    return a && b ? [a, b] : null;
+  };
+  const gestureOf = (): { dist: number; mx: number; my: number } | null => {
+    const two = twoFingers();
+    if (!two) return null;
+    const [a, b] = two;
+    return {
+      dist: Math.hypot(a.sx - b.sx, a.sy - b.sy),
+      mx: (a.sx + b.sx) / 2,
+      my: (a.sy + b.sy) / 2,
+    };
+  };
+
   const onContextMenu = (e: MouseEvent): void => e.preventDefault();
 
   const onPointerDown = (e: PointerEvent): void => {
     const p = local(e);
+    const isTouch = e.pointerType === 'touch';
+    if (isTouch) {
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      touches.set(e.pointerId, p);
+      if (touches.size >= 2) {
+        // Zweiter Finger: Ein-Finger-Aktion abbrechen, Geste starten
+        cancelPointerAction();
+        gesture = gestureOf();
+        return;
+      }
+    }
     if (e.button === 2) {
       onAction({ type: 'cancel' });
       return;
@@ -99,10 +158,20 @@ export function bindInput(
       lastY: p.sy,
       panning: wantsPan,
       lastTile: null,
+      road: !wantsPan && state.tool.kind === 'road',
+      pointerId: e.pointerId,
+      touch: isTouch,
+      downTile: screenToTile(state.cam, p.sx, p.sy),
     };
-    if (!wantsPan && state.tool.kind === 'road') {
-      const t = screenToTile(state.cam, p.sx, p.sy);
-      drag.lastTile = `${t.x},${t.y}`;
+    if (wantsPan) return;
+    if (drag.road && !isTouch) {
+      // Maus: erste Weg-Kachel sofort; Touch wartet auf Ziehen oder Loslassen (Zwei-Finger-Geste baut nichts)
+      drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
+      tileAction(p.sx, p.sy, false);
+      pointer = p;
+      updateHover();
+    } else if (!isTouch) {
+      // Maus: Bau, Abriss und Auswahl wirken sofort auf der Drück-Kachel
       tileAction(p.sx, p.sy, false);
       pointer = p;
       updateHover();
@@ -111,8 +180,31 @@ export function bindInput(
 
   const onPointerMove = (e: PointerEvent): void => {
     const p = local(e);
+    if (e.pointerType === 'touch' && touches.has(e.pointerId)) {
+      touches.set(e.pointerId, p);
+      if (touches.size >= 2) {
+        const g = gestureOf();
+        if (g && gesture && gesture.dist > 0 && g.dist > 0) {
+          state.cam.x -= (g.mx - gesture.mx) / state.cam.zoom;
+          state.cam.y -= (g.my - gesture.my) / state.cam.zoom;
+          zoomAt(
+            state.cam,
+            g.dist / gesture.dist,
+            g.mx,
+            g.my,
+            canvas.clientWidth,
+            canvas.clientHeight,
+            state.world.width * TILE,
+            state.world.height * TILE,
+          );
+          clamp();
+        }
+        gesture = g;
+        return;
+      }
+    }
     pointer = p;
-    if (drag) {
+    if (drag && drag.pointerId === e.pointerId) {
       if (!drag.panning && state.tool.kind === 'select') {
         if (Math.hypot(p.sx - drag.startX, p.sy - drag.startY) > DRAG_THRESHOLD) {
           drag.panning = true;
@@ -122,7 +214,18 @@ export function bindInput(
         state.cam.x -= (p.sx - drag.lastX) / state.cam.zoom;
         state.cam.y -= (p.sy - drag.lastY) / state.cam.zoom;
         clamp();
-      } else if (state.tool.kind === 'road') {
+      } else if (drag.road) {
+        if (drag.touch && drag.lastTile === null) {
+          // Touch: erst über der Zieh-Schwelle beginnt die Serie auf der Drück-Kachel
+          if (Math.hypot(p.sx - drag.startX, p.sy - drag.startY) <= DRAG_THRESHOLD) {
+            drag.lastX = p.sx;
+            drag.lastY = p.sy;
+            updateHover();
+            return;
+          }
+          drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
+          tileAction(drag.startX, drag.startY, false);
+        }
         const t = screenToTile(state.cam, p.sx, p.sy);
         const key = `${t.x},${t.y}`;
         if (key !== drag.lastTile) {
@@ -145,21 +248,32 @@ export function bindInput(
   };
 
   const endDrag = (e: PointerEvent): void => {
-    if (!drag || e.button !== drag.button) return;
-    const p = local(e);
+    if (e.pointerType === 'touch') {
+      touches.delete(e.pointerId);
+      gesture = null;
+    }
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    if (!drag || drag.pointerId !== e.pointerId || e.button !== drag.button) return;
     const d = drag;
     drag = null;
-    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     if (d.panning || d.button !== 0) return;
-    if (state.tool.kind === 'road') onAction({ type: 'dragEnd' });
-    // Strassen wurden schon beim Drücken/Ziehen gesetzt
-    if (state.tool.kind !== 'road') tileAction(p.sx, p.sy, false);
+    if (d.road) {
+      // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
+      if (d.touch && d.lastTile === null) {
+        onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+      }
+      onAction({ type: 'dragEnd' });
+    } else if (d.touch) {
+      // Touch: Aktion beim Loslassen, aber auf der Drück-Kachel
+      onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+    }
+    // Maus: Aktion lief schon beim Drücken; Strassen beim Drücken/Ziehen
     updateHover();
   };
-  const onPointerCancel = (): void => {
-    const wasRoadDrag = drag !== null && !drag.panning && state.tool.kind === 'road';
-    drag = null;
-    if (wasRoadDrag) onAction({ type: 'dragEnd' });
+  const onPointerCancel = (e: PointerEvent): void => {
+    if (e.pointerType === 'touch') touches.delete(e.pointerId);
+    if (drag && drag.pointerId !== e.pointerId) return;
+    cancelPointerAction();
   };
 
   const onPointerLeave = (): void => {
@@ -193,7 +307,24 @@ export function bindInput(
     t instanceof HTMLButtonElement ||
     (t instanceof HTMLElement && t.isContentEditable);
 
+  /** Eingabefelder (ohne Buttons: ein per Tab fokussierter Bauleisten-Button soll Hotkeys erlauben). */
+  const isTextField = (t: EventTarget | null): boolean =>
+    t instanceof HTMLInputElement ||
+    t instanceof HTMLTextAreaElement ||
+    t instanceof HTMLSelectElement ||
+    (t instanceof HTMLElement && t.isContentEditable);
+
   const onKeyDown = (e: KeyboardEvent): void => {
+    const hot = hotkeyAction(
+      e.key,
+      { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
+      isTextField(e.target),
+    );
+    if (hot) {
+      if (!e.repeat) onAction({ type: 'hotkey', action: hot });
+      e.preventDefault();
+      return;
+    }
     if (isFormControl(e.target)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -242,13 +373,14 @@ export function bindInput(
     window.removeEventListener('blur', onBlur);
   };
 
-  const applyKeys = (): void => {
+  const applyKeys = (dtMs: number): void => {
+    const step = panDelta(Math.max(0, dtMs), 1);
     let dx = 0;
     let dy = 0;
-    if (keys.has('a') || keys.has('arrowleft')) dx -= PAN_PER_FRAME;
-    if (keys.has('d') || keys.has('arrowright')) dx += PAN_PER_FRAME;
-    if (keys.has('w') || keys.has('arrowup')) dy -= PAN_PER_FRAME;
-    if (keys.has('s') || keys.has('arrowdown')) dy += PAN_PER_FRAME;
+    if (keys.has('a') || keys.has('arrowleft')) dx -= step;
+    if (keys.has('d') || keys.has('arrowright')) dx += step;
+    if (keys.has('w') || keys.has('arrowup')) dy -= step;
+    if (keys.has('s') || keys.has('arrowdown')) dy += step;
     if (dx !== 0 || dy !== 0) {
       state.cam.x += dx / state.cam.zoom;
       state.cam.y += dy / state.cam.zoom;
@@ -257,5 +389,5 @@ export function bindInput(
     }
   };
 
-  return { applyKeys, unbind };
+  return { applyKeys, cancelPointerAction, refreshHover: updateHover, unbind };
 }

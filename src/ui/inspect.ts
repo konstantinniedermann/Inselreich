@@ -3,12 +3,25 @@ import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
-import type { Building, GoodId, Tier, World } from '../sim/types';
+import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
+import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
+}
+
+/** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
+export function diagnosisText(d: Diagnosis): string {
+  switch (d.kind) {
+    case 'supply':
+      return 'nicht versorgt';
+    case 'good':
+      return `${GOODS[d.good].name} fehlt`;
+    case 'service':
+      return `${BUILDING_DEFS[SERVICE_BUILDING[d.service]].name} fehlt`;
+  }
 }
 
 function stateInfo(b: Building): { text: string; ok: boolean } {
@@ -39,10 +52,37 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
   return p;
 }
 
-function addButton(parent: HTMLElement, label: string, onClick: () => void): void {
+/** Rückerstattungstext: tatsächlicher Betrag, je Gut mit Verfall-Hinweis (nur wenn etwas verfällt). */
+export function refundText(nominal: Cost, effective: Cost): string {
+  const parts = [`Geld ${effective.money}`];
+  for (const [key, label] of REFUND_GOODS) {
+    if (!nominal[key]) continue;
+    const lost = nominal[key] - effective[key];
+    parts.push(
+      lost > 0
+        ? `${label} ${effective[key]} (${lost} verfallen – Lager voll)`
+        : `${label} ${effective[key]}`,
+    );
+  }
+  return parts.join(' · ');
+}
+
+const REFUND_GOODS = [
+  ['wood', GOODS.wood.name],
+  ['tools', GOODS.tools.name],
+  ['stone', GOODS.stone.name],
+] as const;
+
+function demolishLabel(world: World, b: Building): string {
+  const nominal = refundCost(BUILDING_DEFS[b.defId].cost);
+  return `Abreissen (Rückerstattung ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))})`;
+}
+
+function addButton(parent: HTMLElement, label: string, onClick: () => void, field?: string): void {
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.textContent = label;
+  if (field) btn.dataset.field = field;
   btn.addEventListener('click', () => {
     btn.blur();
     onClick();
@@ -84,6 +124,7 @@ function setList(root: HTMLElement, field: string, items: ListItem[]): void {
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
+  addList(panel, 'reasons', 'diagnosis');
   addList(panel, 'needs', 'needs');
   const upgrade = document.createElement('div');
   upgrade.className = 'upgrade';
@@ -117,6 +158,12 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     needs.push({ text: `${BUILDING_DEFS[SERVICE_BUILDING[s]].name} ${ok ? '✓' : '✗'}`, ok });
   }
   setList(panel, 'needs', needs);
+  // Reihenfolge wie beim Kartensymbol: das erste Element ist das dort gezeigte
+  setList(
+    panel,
+    'diagnosis',
+    houseDiagnosis(world, b).map((d) => ({ text: `Mangel: ${diagnosisText(d)}`, ok: false })),
+  );
 
   const cost = panel.querySelector<HTMLElement>('[data-field="upgrade-cost"]');
   if (tier.upgradeCost === null) {
@@ -181,8 +228,7 @@ export function renderInspect(
       }
       addLine(panel, `Unterhalt ${def.upkeep} / ${UPKEEP_INTERVAL} Ticks`);
     }
-    const refund = costLine(refundCost(def.cost));
-    addButton(buttons, `Abreissen (Rückerstattung ${refund})`, () => actions.demolish(id));
+    addButton(buttons, demolishLabel(world, b), () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
   updateInspect(panel, world, id);
@@ -194,6 +240,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (!b) return;
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
+  setField(panel, 'demolish', demolishLabel(world, b));
   const info = stateInfo(b);
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');

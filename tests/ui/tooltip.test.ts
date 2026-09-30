@@ -1,0 +1,27 @@
+import { describe, expect, it } from 'vitest';
+import { tooltipLines } from '../../src/ui/buildMenu';
+
+describe('tooltipLines (AK-U2-01)', () => {
+  it('AK-U2-01: Holzfäller zeigt Taste, Kosten, Unterhalt, Erzeugung und Standort', () => {
+    const lines = tooltipLines({ kind: 'build', defId: 'lumberjack' });
+    expect(lines[0]).toBe('Holzfäller (L)');
+    expect(lines).toContain('Kosten: Geld 50 · Werkzeug 1');
+    expect(lines).toContain('Unterhalt: 5 je 100 Ticks');
+    expect(lines).toContain('Erzeugt: Holz 3.3 je 100 Ticks');
+    expect(lines).toContain('Standort: Wald im Radius 2');
+  });
+
+  it('AK-U2-01: Weberei nennt den Input, Kapelle den Wirkungsradius', () => {
+    const weaver = tooltipLines({ kind: 'build', defId: 'weaver' });
+    expect(weaver).toContain('Erzeugt: Stoff 2 je 100 Ticks');
+    expect(weaver).toContain('Braucht: Wolle 2 je 100 Ticks');
+    const chapel = tooltipLines({ kind: 'build', defId: 'chapel' });
+    expect(chapel).toContain('Radius: 10');
+  });
+
+  it('AK-U2-01: Werkzeuge ohne Gebäudedefinition haben Name und Taste', () => {
+    expect(tooltipLines({ kind: 'road' })[0]).toBe('Weg (R)');
+    expect(tooltipLines({ kind: 'demolish' })[0]).toBe('Abriss (X)');
+    expect(tooltipLines({ kind: 'select' })[0]).toBe('Auswahl (Esc)');
+  });
+});
