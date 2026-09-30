@@ -386,3 +386,38 @@ laufenden Auftrag, und ein eigener Coach-Start mitten in der Umsetzung kostet me
 — Kosten bei Irrtum: ein hängender Agent bleibt bis Session-Ende sichtbar.
 
 Entscheider: L0 · Anlass: Hook-Hinweis „Ad-hoc-Retro fällig"
+
+## R45 · 2026-09-30 · S16 Wartung
+
+Ruling: Gate Merge S16 bestanden (Messfehler „Vordergrund-Agent ohne Stop-Signal bleibt aktiv"
+behoben, Beobachtungen ausgewertet) — Task-Review und Final-Review (opus) OK, `make check` und
+`make studio-lint` grün; Merge `--no-ff` statt des vom Lead vorgeschlagenen Rebase (Verfassung §6.3).
+— Kosten bei Irrtum: ein Korrektur-Commit.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-S16
+
+## R46 · 2026-09-30 · M5
+
+Ruling: Nächster Meilenstein M5 „Spielerlebnis: Tiefe, Dynamik, Ambiente, Bedienkomfort",
+Prozessstufe voll, Start mit Design-Brainstorming (lead-design, L0 als Gesprächspartner) — folgt
+direkt aus dem Playtest des Nutzers (docs/beobachtungen.md), daher kein Richtungswechsel und kein
+Nutzer-Vorbehalt. — Kosten bei Irrtum: Brainstorming-Aufwand; der Nutzer kann die Richtung
+jederzeit per Anweisung ändern.
+
+Entscheider: L0 · Anlass: Plan aus state.md
+
+## R47 · 2026-09-30 · M5
+
+Ruling: Aufstiegsfehler als M5-01 vorgezogen, Prozessstufe leicht, parallel zum Brainstorming —
+echter Spiellogik-Fehler (Ware nicht entnommen, halbe Steuer am Buchungstick), unabhängig vom
+Design. — Kosten bei Irrtum: keine, der Fix ist in jedem Design nötig.
+
+Entscheider: L0 · Anlass: Auswertung S16-02
+
+## R48 · 2026-09-30 · M5
+
+Ruling: Gate Merge M5-01 bestanden — 5 Regressionstests (vor dem Fix rot), Final-Review opus ohne
+Code-Einwände, Doku nachgeführt, Sieg-Tick unverändert 5950, keine Werte in `defs/` geändert,
+Save-Format unverändert. — Kosten bei Irrtum: Balancing-Abweichung, fällt im Balancing-Test auf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M5-01

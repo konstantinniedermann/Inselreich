@@ -225,6 +225,22 @@ class NewFieldsTest(unittest.TestCase):
         for key in ("duration_ms", "tool_count", "resolved_model"):
             self.assertNotIn(key, ev)
 
+    def test_spawned_takes_status_as_str(self):
+        ev = hook.to_event(
+            payload(
+                "PostToolUse",
+                tool_name="Agent",
+                tool_response={"agentId": "c", "status": "completed"},
+            )
+        )
+        self.assertEqual(ev["status"], "completed")
+
+    def test_spawned_without_status_has_no_field(self):
+        ev = hook.to_event(
+            payload("PostToolUse", tool_name="Agent", tool_response={"agentId": "c"})
+        )
+        self.assertNotIn("status", ev)
+
 
 class EnrichTest(unittest.TestCase):
     def setUp(self):
