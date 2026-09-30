@@ -57,21 +57,30 @@ keine Verbesserung der Arbeitsweise belegen lässt.
 
 - **Projektleiter:** Output-Style „Projektleiter" (Option 3) plus SessionStart-Hook ohne Matcher
   (alle Quellen) plus Dauerregel in CLAUDE.md — drei Schichten, jede für sich wirksam (R23). Das
-  `"agent"`-Setting bleibt ungenutzt (R4).
+  `"agent"`-Setting bleibt ungenutzt (R4). Weil nur der Output-Style den Systemprompt ergänzt statt
+  ersetzt, ohne Startoption des Nutzers automatisch greift und die Rolle dauerhaft hält — das
+  `"agent"`-Setting ersetzt den Systemprompt, `--append-system-prompt` wirkt nur beim Start mit
+  Option, und ein Hook allein liefert nur einmaligen Kontext.
 - **Verfassung** `docs/studio/VERFASSUNG.md` mit den Nutzerregeln; Rangfolge: Verfassung vor
   Handbuch vor Persona vor Briefing. In diesem Repo ersetzt ihre Autonomie-Regel (§5) das Nachfragen und Warten
   aus `../CLAUDE.md`. Nutzer-Vorbehalte gehen in die committete Warteschlange
   `docs/studio/warteschlange.md` (R26); die Verfassung selbst wartet dort als N-001 auf die
-  Bestätigung und gilt bis dahin vorläufig (R33).
+  Bestätigung und gilt bis dahin vorläufig (R33). Weil nur eine getrennte, vom Team nicht
+  änderbare Datei die Nutzerregeln vor der Selbstverbesserung des Handbuchs schützt.
 - **Schutz:** Guard-Hook `tools/studio/guard.py` (Option 2) für die Verfassung (Freigabe nur mit
-  `VERFASSUNG ÄNDERN`, nur Hauptsession, R24) und für irreversible Aktionen (R25).
+  `VERFASSUNG ÄNDERN`, nur Hauptsession, R24) und für irreversible Aktionen (R25). Weil eine reine
+  Konvention genau bei einem Versehen versagt, das sie verhindern soll; der Guard fängt die
+  häufigen Formen ab, bevor Schaden entsteht.
 - **Messung:** Transkripte und Hooks (Option 2, R27); Kosten nur als berechnete Sitzungssumme.
   Verdichtete Metriken werden je Session und Meilenstein als Markdown mit JSON-Rohwerten committet
-  (R30).
+  (R30). Weil Transkripte und Hooks lokal ohne neue Abhängigkeit vorliegen und echte Messwerte
+  liefern — OpenTelemetry bräuchte einen Collector, und eine Schätzung ist kein Messwert.
 - **Selbstverbesserung:** Das Handbuch `docs/studio/STUDIO.md` und die Personas tragen Versionen
   mit CHANGELOG. Ein unabhängiger `studio-coach` (Stabsstelle, R28) wertet aus, moderiert Retros und
   schlägt Experimente vor; L0 entscheidet je Vorschlag per Ruling. Leitplanken prüft ein
-  Konsistenztest in `make check` (R29).
+  Konsistenztest in `make check` (R29). Weil nur eine Stelle ausserhalb der Produktion die
+  Arbeitsweise unbefangen bewertet, und Versionen mit CHANGELOG jede Änderung einer Datenbasis und
+  einem Ruling zuordnen.
 
 ## Konsequenzen
 
@@ -80,7 +89,8 @@ keine Verbesserung der Arbeitsweise belegen lässt.
 - Der Guard ist ein **Schutz gegen Versehen, nicht gegen Absicht**: Konstrukte wie `$(…)` oder
   Skripte erkennt er nicht; Fehler im Guard lassen die Aktion zu, damit ein Hook die Session nie
   lahmlegt. Das Verwerfen ungesicherter Änderungen im Arbeitsbaum bleibt bewusst erlaubt.
-- Die Guard-Einträge in `.claude/settings.json` schützt die Verfassung als Regel, nicht technisch.
+- Die Guard-Einträge in `.claude/settings.json` schützt die Verfassung als Regel (§1.3), nicht
+  technisch.
 - Der Nutzer kann den Output-Style lokal per `/output-style` überschreiben; dann tragen nur noch
   Hook und CLAUDE.md die Rolle.
 - Die Messung hängt am Transkriptformat von Claude Code; nach Updates kann sie ausfallen und zeigt

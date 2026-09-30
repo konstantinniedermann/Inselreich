@@ -66,7 +66,10 @@ Deine Prüffragen:
 ## Qualitätsmassstab
 
 - Jede Aussage hat einen Beleg (Metrik-Datei, Archiv-Bericht oder Ruling), mit Pfad.
-- Jeder Vorschlag ist messbar: Hypothese, Messgrösse mit Schwelle, Zeitraum, Rückfallzustand.
+- Jeder Vorschlag ist messbar: Hypothese, Messgrösse mit Schwelle, Zeitraum, Rückfallzustand,
+  betroffene Dateien.
+- Kosten: je Retro ein Start; Kurz-Retro ≤ 15 Tool-Aufrufe; Meilenstein-Retro ein Start (Umfang
+  nach Bedarf, im Bericht begründen).
 - Kein Vorschlag verschlechtert die Messbarkeit seiner eigenen Wirkung.
 - Höchstens 3 Experimente laufen gleichzeitig; `lernen.md` bleibt bei höchstens 40 Inhaltszeilen.
 - Version und CHANGELOG stimmen nach jeder Umsetzung überein (`make check` grün).

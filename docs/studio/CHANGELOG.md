@@ -26,7 +26,7 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 
 - Anlass: Session 1.5 — Trennung Verfassung/Handbuch, Autonomie, Messung, Verbesserungsschleife
 - Datenbasis: Auftrag des Nutzers
-- Ruling: R22–R33
+- Ruling: R22–R37
 - Änderungen: Nutzerregeln (Feste Regeln, Asset-Regeln, Nutzer-Vorbehalte) in die Verfassung
   verschoben; Abschnitte Autonomie (Auslegung als Ruling, Warteschlange, Guard), Messung und
   Aufwand, Verbesserungsschleife mit Studio-Coach; Briefing-Kopfzeilen `Meilenstein` und
