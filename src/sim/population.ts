@@ -139,6 +139,7 @@ export function tryUpgrade(world: World, b: Building): boolean {
   pay(world, current.upgradeCost!);
   house.tier = next.tier;
   for (const g of newNeeds(current, next)) {
+    // Rückgabewert ignoriert: upgradeStatus hat ≥ 1 geprüft, und pay zieht die neuen Bedarfsgüter nicht ab.
     takeStock(world, g, 1);
     house.demand[g] = 0;
     house.satisfied[g] = true;
