@@ -104,3 +104,38 @@ class UsageTest(unittest.TestCase):
         self.assertEqual(result["total_usd"], 1.5)
         self.assertEqual(result["models"]["claude-opus-5-5"]["cache_write"], 4)
         self.assertIsNone(usage.session_cost(self.dir / "fehlt.jsonl"))
+
+    def test_broken_acc_in_cache_reparses_from_start(self):
+        path, cache = self.dir / "main.jsonl", self.dir / "cache.json"
+        path.write_text(
+            msg("a", 10, stop="end_turn") + "\n" + msg("b", 5, stop="end_turn") + "\n",
+            "utf-8",
+        )
+        expected = usage.transcript_usage(path, main_only=True)
+        usage.incremental_usage(path, cache)
+        data = json.loads(cache.read_text("utf-8"))
+        data["acc"] = "kaputt"
+        cache.write_text(json.dumps(data), "utf-8")
+        self.assertEqual(usage.incremental_usage(path, cache), expected)
+
+    def test_smaller_file_resets(self):
+        path, cache = self.dir / "main.jsonl", self.dir / "cache.json"
+        path.write_text(
+            msg("a", 10, stop="end_turn") + "\n" + msg("b", 5, stop="end_turn") + "\n",
+            "utf-8",
+        )
+        usage.incremental_usage(path, cache)
+        path.write_text(msg("z", 3, stop="end_turn") + "\n", "utf-8")
+        result = usage.incremental_usage(path, cache)
+        self.assertEqual(result["claude-opus-5-5"]["output"], 3)
+        self.assertEqual(result["claude-opus-5-5"]["messages"], 1)
+
+    def test_half_line_completed_on_third_call(self):
+        path, cache = self.dir / "main.jsonl", self.dir / "cache.json"
+        line = msg("d", 7, stop="end_turn") + "\n"
+        path.write_text(line[:20], "utf-8")
+        self.assertEqual(usage.incremental_usage(path, cache), {})
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(line[20:])
+        result = usage.incremental_usage(path, cache)
+        self.assertEqual(result["claude-opus-5-5"]["output"], 7)

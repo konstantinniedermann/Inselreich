@@ -69,18 +69,23 @@ class Accumulator:
         return {"messages": self.messages}
 
     @classmethod
-    def from_json(cls, data):
+    def _parse(cls, data):
+        """Strikt: wirft bei kaputten Daten."""
         acc = cls()
+        for mid, record in data["messages"].items():
+            acc.messages[mid] = {
+                "model": str(record["model"]),
+                "complete": bool(record["complete"]),
+                **{k: int(record[k]) for k, _ in FIELDS},
+            }
+        return acc
+
+    @classmethod
+    def from_json(cls, data):
         try:
-            for mid, record in data["messages"].items():
-                acc.messages[mid] = {
-                    "model": str(record["model"]),
-                    "complete": bool(record["complete"]),
-                    **{k: int(record[k]) for k, _ in FIELDS},
-                }
+            return cls._parse(data)
         except (KeyError, TypeError, ValueError, AttributeError):
             return cls()
-        return acc
 
 
 def transcript_usage(path, main_only=False):
@@ -97,30 +102,28 @@ def transcript_usage(path, main_only=False):
 def _load_cache(cache):
     try:
         data = json.loads(Path(cache).read_text("utf-8"))
-        return int(data["offset"]), data["inode"], Accumulator.from_json(data["acc"])
-    except (OSError, ValueError, KeyError, TypeError):
+        acc = Accumulator._parse(data["acc"])
+        return int(data["offset"]), data["inode"], acc
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return 0, None, Accumulator()
 
 
 def incremental_usage(path, cache):
-    try:
-        stat = os.stat(path)
-    except OSError:
-        return {}
     offset, inode, acc = _load_cache(cache)
-    if inode != stat.st_ino or stat.st_size < offset:
-        offset, acc = 0, Accumulator()
     try:
         with open(path, "rb") as handle:
+            stat = os.fstat(handle.fileno())
+            if inode != stat.st_ino or stat.st_size < offset:
+                offset, acc = 0, Accumulator()
             handle.seek(offset)
             data = handle.read()
     except OSError:
-        return acc.summary()
+        return {}
     end = data.rfind(b"\n") + 1  # nur vollständige Zeilen
     for line in data[:end].splitlines():
         acc.feed_line(line, main_only=True)
     try:
-        tmp = Path(str(cache) + ".tmp")
+        tmp = Path(f"{cache}.{os.getpid()}.tmp")
         tmp.write_text(
             json.dumps(
                 {"offset": offset + end, "inode": stat.st_ino, "acc": acc.to_json()}
