@@ -492,3 +492,16 @@ Parallel-Session übergeben — R43 hat sich bewährt und wird Regel; B3 liegt i
 wie der Budget-Fix. — Kosten bei Irrtum: ein zusätzlicher Pflichtschritt beim Session-Start.
 
 Entscheider: L0 · Anlass: Retro Studio-Graph
+
+## R56 · 2026-09-30 · M5
+
+Ruling: Gate Spec M5 — lead-tech und lead-qa BEDENKEN (9 + 7 Punkte), kein ZURÜCK; alle Vorschläge
+werden in die Spec übernommen (u. a. ganzzahlige Steuerformel, `roadPath` als Sim-Teilpaket S3b,
+ADR-010 als Pflicht, reproduzierbare Szenario-Saves für Browser-Checks, Ton per Fake-AudioContext
+in Vitest, „hörbar" und Firefox im Nutzer-Playtest); Test-Strategie und Context-Scopes in
+CLAUDE.md werden um `src/audio/` ergänzt. Gate gilt als bestanden, sobald beide Prüfer ihre Punkte
+in der nachgeführten Spec als erledigt bestätigen. Baseline-Vorlage Sieg-Tick 6050 (gültig nach
+Messung in B1), Aufstiegswartezeit „niedrig" 150 Ticks. — Kosten bei Irrtum: eine weitere
+Spec-Runde.
+
+Entscheider: L0 · Anlass: Gate Spec M5
