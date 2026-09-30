@@ -100,8 +100,10 @@ Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 | tier | Name     | max. Einwohner | Bedürfnisse (Güter, Verbrauch je Einwohner pro 100 Ticks) | Dienste       | Steuer je Einwohner pro 100 Ticks | Aufstiegskosten (G/H/W/S) |
 | ---- | -------- | -------------- | --------------------------------------------------------- | ------------- | --------------------------------- | ------------------------- |
 | 1    | Pioniere | 4              | food 0.5                                                  | —             | 2                                 | → 2: 100/5/2/0            |
-| 2    | Siedler  | 8              | food 0.5, cloth 0.25                                      | faith         | 3                                 | → 3: 300/10/5/5           |
-| 3    | Bürger   | 15             | food 0.5, cloth 0.25, rum 0.25                            | faith, school | 5                                 | —                         |
+| 2    | Siedler  | 8              | food 0.5, cloth 0.2                                       | faith         | 6                                 | → 3: 300/10/5/5           |
+| 3    | Bürger   | 15             | food 0.5, cloth 0.2, rum 0.2                              | faith, school | 12                                | —                         |
+
+Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-design.md).
 
 - Ein neues Haus startet mit 1 Einwohner, tier 1.
 - **Verbrauch:** Jedes Haus führt je Gut einen Bedarfsakkumulator (Einwohner × Rate / 100 pro

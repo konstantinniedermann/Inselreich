@@ -73,6 +73,9 @@ Erfolgskriterium der Spec (50 Bürger in einer Sitzung) wirtschaftlich nicht err
 Kurz-Spec geführt (Kandidaten: Steuersätze Siedler/Bürger ×3–5, Verbrauch senken oder Ausstoss erhöhen,
 Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). Spec-Tabellen nachführen.
 
+**Erledigt in M4 Task 3, Werte siehe balancing-design.md** (`docs/superpowers/specs/2026-09-30-balancing-design.md`;
+Nachweis `tests/sim/balance.test.ts`: 50 Bürger bei Tick 8650, Geld am Ende 364).
+
 **Aufschiebbar (Ursprung: Gesamt-Review M3):**
 
 - Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
@@ -83,3 +86,15 @@ Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). 
 - `SERVICE_BUILDING`, `GROWTH_INTERVAL`, `UPGRADE_WAIT` gehören nach `defs/` (M4 `timing.ts`).
 - MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
   bewusst nicht in M4, Markdown-Doku mit `docs/index.md`. Nachrüsten auf Wunsch trivial.
+
+## 2026-09-30 · `tests/sim/balance.test.ts` · Balancing-Marge mit den revidierten Werten knapp
+
+**Beobachtung:** Mit Steuer 6/12 und Verbrauch 0.2 erreicht die Skript-Kolonie 50 Bürger bei Tick 8650
+(Grenze 9000, Geld-Minimum 42). Das Ergebnis hängt an der Controller-Strategie: ohne Schulbau-Budget
+(Schule erst, wenn ein Rum-Paar mitbezahlbar ist) 17 Bürger bei Tick 9000; mit Überschussverkauf erst ab
+90 statt 50 Einheiten 45 Bürger. Mit den Eskalationswerten 7/14 Sieg bei Tick 5950.
+Zweiter Treiber: Zwei Häuser steigen im selben Wachstums-Tick zu Bürgern auf, die Rumkette reicht nur für
+eines; das zweite schrumpft auf 1 Einwohner und bleibt dort ~1000 Ticks (siehe Aufstiegs-Reservierung oben).
+**Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer.
+**Einschätzung:** Spec-Kriterium erfüllt, aber ein weniger geschickter Spieler verfehlt 9000 Ticks deutlich.
+Beim Playtest beobachten; falls zu zäh, Eskalationsstufe 7/14 der Kurz-Spec ist vorbereitet.
