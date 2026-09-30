@@ -36,6 +36,9 @@ MESSAGE_MAX = 600
 TASK_MAX = 120
 LOG_MARK = "tools/studio/log.py"
 AGENT_TOOLS = ("Agent", "Task")
+MESSAGE_TOOL = "SendMessage"
+MESSAGE_TEXT_MAX = 160
+MESSAGE_TO_MAX = 120
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in model.py
 AGENT_MESSAGE_PREFIXES = ("<task-notification>", "<agent-message")
 SAFE_RE = re.compile(r"[^A-Za-z0-9_-]")
@@ -83,6 +86,15 @@ def parse_estimate(value: str) -> dict | None:
         "minutes": _number(minutes.group(1)) if minutes else None,
         "tools": int(tools.group(1)) if tools else None,
     }
+
+
+def message_fields(tool_input: dict) -> dict:
+    """Empfänger und erste Zeile einer SendMessage; ``summary`` wird nie gespeichert."""
+    raw_to = tool_input.get("to")
+    to = "" if raw_to is None else cut(str(raw_to), MESSAGE_TO_MAX)
+    message = tool_input.get("message")
+    first = message.strip().split("\n", 1)[0] if isinstance(message, str) else ""
+    return {"to": to, "text": cut(" ".join(first.split()), MESSAGE_TEXT_MAX)}
 
 
 def log_args(command: str) -> dict:
@@ -177,6 +189,8 @@ def to_event(p: dict, handbook: str = "", personas: dict | None = None) -> dict 
         and LOG_MARK in str(tool_input.get("command", ""))
     ):
         event.update(kind="bind", **log_args(str(tool_input["command"])))
+    elif name == "PreToolUse" and tool == MESSAGE_TOOL:
+        event.update(kind="message", **message_fields(tool_input))
     elif name == "PreToolUse":
         event.update(kind="heartbeat", tool=str(tool))
     elif name == "PostToolUse" and tool in AGENT_TOOLS:
