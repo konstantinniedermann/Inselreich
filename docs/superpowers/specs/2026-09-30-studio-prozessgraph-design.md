@@ -1,7 +1,6 @@
 # Studio-Dashboard: Prozess-Graph und vereinfachte Organigramm-Kacheln — Design-Spec
 
-Datum: 2026-09-30 · Status: von `lead-design` abgenommen; Gate Spec ergab BEDENKEN (`lead-tech`,
-`lead-qa`), in der Fix-Runde eingearbeitet (P31–P39), erneute Prüfung offen · Grundlage: vom Nutzer bestätigtes Design (Gate Brainstorming bestanden, Ruling R22) ·
+Datum: 2026-09-30 · Status: Gate Spec OK, Gate Plan OK, umgesetzt in Paket G · Grundlage: vom Nutzer bestätigtes Design (Gate Brainstorming bestanden, Ruling R22) ·
 Prozessstufe: voll · Paket: G-spec
 
 ## Ziel
@@ -34,11 +33,11 @@ sich an der **Darstellungsidee** von `git log --graph`; übernommen wird kein Co
 - Keine Änderung an den `log.py`-Befehlen und ihrer Validierung.
 - Kein Lesen von `.studio/archive/` (P26); `make studio-archive` behält sein Verhalten.
 - Keine schreibenden Endpunkte, keine WebSockets; Polling bleibt 2 s (R6).
-- Keine Änderung an Chronik, Budget, Board, Entscheiden, Puls (ausser der einheitlichen
-  Status-Beschriftung, wo sie Status-Badges zeigen). Auch der Filter für stop-only-Knoten (P31)
-  gilt nicht für Chronik und Live-Feed.
-- Keine Korrektur von `sessions[].ended` nach einem Neustart der Session (P32 betrifft nur den
-  Graphen).
+- Keine Änderung an Budget, Board, Entscheiden, Puls (ausser der einheitlichen
+  Status-Beschriftung, wo sie Status-Badges zeigen). Der Filter für stop-only-Knoten (P31) gilt
+  per L0-Entscheid Gate Spec auch für die Chronik, nicht für den Live-Feed.
+- Ausnahme per L0-Entscheid Gate Spec: Nach einem Neustart gilt die Session wieder als laufend
+  (`sessions[].ended` wird zurückgenommen, P32).
 - Kein Spielcode unter `src/`; keine Werte in `src/sim/defs/` (Studio-Werkzeug, die Konstanten
   stehen wie bisher als Modulkonstanten in `tools/studio/`). Kein Einfluss auf den
   Balancing-Test.
@@ -687,8 +686,8 @@ spawn-Zuordnung, kein `spawned`, kein `heartbeat`, keine `message`, kein `bind`,
 kein `spawn` mit ihm als Absender. Solche Knoten (Fortschritts-Helfer von Claude Code; in einer
 echten Session 70 von 104 Knoten) erzeugen keine Graph-Zeile und keine Spalte, erscheinen nicht im
 Organigramm (keine Kachel „unbekannt ✅ fertig") und zählen nicht in `counts`; sie zählen auch
-nicht für die Empfänger-Auflösung (P2) und die Instanznummern (P21). Live-Feed und Chronik bleiben
-unverändert (Scope); das Budget ist nicht betroffen, weil solche Knoten unter `main` hängen. Kommt
+nicht für die Empfänger-Auflösung (P2) und die Instanznummern (P21). Der Live-Feed bleibt
+unverändert (Scope), die Chronik blendet sie per L0-Entscheid Gate Spec aus; das Budget ist nicht betroffen, weil solche Knoten unter `main` hängen. Kommt
 später ein weiteres Event desselben Knotens, ist er ab dann ein normaler Knoten.
 
 **P32 Neustart der Session:** Nur das erste `session_start` einer Session ergibt eine
@@ -765,7 +764,7 @@ Texte unverhältnismässig; die Modellseite deckt T4q ab.
 | T2a | `message` berührt `last_seen` des Absenders, ändert keinen Status                                                                                                                                                                             | `GraphTest.test_message_is_heartbeat_of_sender`                                                                                                |
 | T2b | Feed-Zeile „✉ → Technik-Toni: …" bzw. „✉ → ? zoll-helfer: …"                                                                                                                                                                                  | `GraphTest.test_message_feed_text`                                                                                                             |
 | T3a | Namen aus temporärem agents-Verzeichnis, Anführungszeichen entfernt, fehlendes Feld → Rückfall nur für dieses Feld                                                                                                                            | `NamesTest.test_read_agent_names_from_frontmatter`                                                                                             |
-| T3b | Direktor ohne Eintrag → Boss Bruno / Studio-Direktor / 🎬; Explore → Aushilfe / Explore / 🧑‍🔧                                                                                                                                                  | `NamesTest.test_director_and_foreign_fallbacks`                                                                                                |
+| T3b | Direktor ohne Eintrag → Boss Bruno / Projektleiter / 🎬; Explore → Aushilfe / Explore / 🧑‍🔧                                                                                                                                                    | `NamesTest.test_director_and_foreign_fallbacks`                                                                                                |
 | T3c | zwei gleichzeitige tech-sim-engineer → „Logik-Lars", „Logik-Lars (2)", `instance` 1/2                                                                                                                                                         | `NamesTest.test_second_instance_gets_suffix`                                                                                                   |
 | T3d | P9-Regel: A(1) fertig, B(2) läuft, C startet → C = 3; nach Ende aller startet D → 1; Nummer ändert sich nie                                                                                                                                   | `NamesTest.test_instance_number_rule`                                                                                                          |
 | T3e | Zwischen Bericht und Fortsetzung hält ein Knoten keine Nummer (P21)                                                                                                                                                                           | `NamesTest.test_paused_node_holds_no_instance`                                                                                                 |
@@ -847,9 +846,9 @@ Ohne Angabe gilt URL G.
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `docs/adr/ADR-008-studio-telemetrie.md`              | Nachtrag: `message`-Event aus `PreToolUse(SendMessage)`; Datenschutz: nur die erste Zeile der Nachricht (≤ 160 Zeichen) und der Empfänger (≤ 120) im Klartext, `summary` wird nicht gespeichert; lokal, gitignored |
 | `docs/studio/roster.md`                              | Namensspalte (Name, Titel, Emoji) in „Aktive Personas"; Namensregel (Alliteration, Präfix = Arbeitswort); Direktor „Boss Bruno"; Schritt „Namen vergeben" in „Neue Persona anlegen"                                |
-| `docs/studio/STUDIO.md`                              | Onboarding neuer Personas: Name nach Namensregel vergeben (Verweis auf roster.md); keine Regeländerung                                                                                                             |
+| `docs/studio/STUDIO.md`                              | nur Reiter-Tabelle (Live: „Prozess-Graph“); der Onboarding-Hinweis steht in roster.md; keine Regeländerung                                                                                                         |
 | `docs/studio/templates/persona.md`                   | Frontmatter-Vorlage um `studio-name`, `studio-title`, `studio-emoji`                                                                                                                                               |
-| `.claude/agents/*.md`                                | 13 Dateien: drei Frontmatter-Felder laut Namensliste (ohne `studio-director`, P19)                                                                                                                                 |
+| `.claude/agents/*.md`                                | 14 Dateien (inkl. studio-coach): drei Frontmatter-Felder laut Namensliste, `version: 1.1`, je Persona ein CHANGELOG-Eintrag (ohne `studio-director`, P19)                                                          |
 | `docs/superpowers/specs/2026-09-30-studio-design.md` | Verweis auf diese Spec in „Server und Dashboard" (Ansichten) und im Event-Schema (`kind` `message`)                                                                                                                |
 | `docs/index.md`                                      | Eintrag dieser Spec in der Spec-Liste                                                                                                                                                                              |
 | `README.md`                                          | geprüft per grep: beschreibt nur Make-Befehle und das automatische Öffnen, keine Ansichten → **keine Änderung**                                                                                                    |

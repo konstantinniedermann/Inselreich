@@ -142,6 +142,24 @@ anderen Punkte werden erst relevant, wenn sie beobachtet werden.
 **Ursprung:** Paket G.
 **Einschätzung:** Vorbestehend, nicht durch den Graphen verursacht; kosmetisch.
 
+### 2026-09-30 · `tools/studio/dashboard/` · Graph-Karte Layout
+
+**Beobachtung:** Bei 1280×2000 hat die Graph-Karte 60vh (1200 px) Höhe bei etwa 590 px Inhalt, es entsteht eine grosse Leerfläche. Die klebende Kopfzeile überdeckt auf dem Handy die obersten Graph-Zeilen. Labels im Graphen sind bei 390 px stark gekürzt („Prüf-Pe…“).
+**Ursprung:** Playtest Paket G.
+**Einschätzung:** Kosmetisch; Höhe an den Inhalt binden (`max-height` statt fester Höhe) und Scroll-Padding unter der Kopfzeile setzen.
+
+### 2026-09-30 · `tools/studio/tests/`, `graph.py`, `model.py`, Doku · Nachträge
+
+**Beobachtung:** Test T1f (kaputtes SendMessage) prüft nur schwach (kein Vergleich der Felder bei `message` als Objekt). Die Hilfsfunktion `short()` in `graph.py` und `_short()` in `model.py` sind doppelt. Empfängernamen fehlen im Live-Feed, wenn das Graph-Layout einer Session fehlschlägt. Es gibt keinen automatischen Abgleich `roster.md` ↔ Persona-Frontmatter (Name, Titel, Emoji, Version).
+**Ursprung:** Final-Review Paket G.
+**Einschätzung:** Alles klein. Der Roster-Abgleich wäre ein Test in `test_docs`, die übrigen Punkte Aufräumen bei Gelegenheit.
+
+### 2026-09-30 · `tools/studio/model.py` · `build_state` (`on_status`, `view`)
+
+**Beobachtung:** `build_state` bricht bei nicht-textuellen Feldern ab, z. B. bei einem log-`status` mit Liste als Wert (`status in FINAL` in `on_status`, `status in LIVE` in `view`): TypeError, `/api/state` antwortet 500. Besteht auch auf `main`.
+**Ursprung:** Final-Review Paket G (ausserhalb Scope).
+**Einschätzung:** `log.py` validiert die Eingabe, ein Fehler tritt nur bei von Hand geschriebenen Events auf. Härtung per `isinstance(status, str)` wäre eine Zeile je Stelle.
+
 ---
 
 ## Ausgewertet 2026-09-30
