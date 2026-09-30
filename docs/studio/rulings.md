@@ -515,3 +515,15 @@ Versorgungsmaske, Paket S5 für Szenario-Saves. Nächster Schritt: Plan durch le
 Irrtum: Abhängigkeitsfehler fallen spätestens im Gate Plan auf.
 
 Entscheider: L0 · Anlass: Nachprüfung Gate Spec M5
+
+## R58 · 2026-09-30 · Studio
+
+Ruling: Gate Merge S17 bestanden (CI-Reruns je Versuch, keine Phantom-Knoten aus `bind`, Budgets
+und laufender Meilenstein je Session) — opus-Final-Review OK, `make check`/`make studio-lint` grün.
+Budget-Vorfall bleibt bei „verbraucht > 1,5 × Freigabe" (Verfassung §10.2: über 50 %), die
+abweichende Gegenprobe der Retro war falsch gerechnet. Die veralteten Stellen in STUDIO.md (Budget,
+`ci:`-Regel) und lernen.md korrigiert der studio-coach als offensichtlichen Fehler (Handbuch 1.3,
+CHANGELOG), ohne Experiment. Parallel-Überschreitung von lead-production (2 statt 1) wird in der
+Session-Retro betrachtet. — Kosten bei Irrtum: Budget-Vorfälle kommen später als erwartet.
+
+Entscheider: L0 · Anlass: Bericht lead-production S17
