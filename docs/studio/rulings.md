@@ -667,3 +667,16 @@ standardmässig sonnet, mechanische Arbeiter haiku. — Kosten bei Irrtum: Sessi
 nötig.
 
 Entscheider: L0 · Anlass: Anweisung des Nutzers
+
+## R69 · 2026-09-30 · Studio
+
+Ruling: Korrektur von R68 auf Anweisung des Nutzers. (1) **Modelle:** Standard ist opus für alle
+Rollen (L0, Leads, Stabsstellen, Arbeiter); keine Einschränkung und kein Downgrade — auch nicht bei
+vollem 5-h-Fenster. Die Modellstufen-Tabelle im Handbuch (sonnet/haiku nach Aufgabengrösse) und die
+sonnet-Personas werden auf opus umgestellt. R68 (4) entfällt. (2) **Ampel:** Bei steigendem 5-h-
+Fenster fährt L0 in eigener Verantwortung langsam herunter — weniger parallel, weniger Starts,
+Angefangenes zu Ende bringen, dokumentieren (state.md zuerst), Session beenden. Die Schwellen aus
+R68 (60 / 80 %) bleiben Richtwerte, keine starren Grenzen; Sensor (R68 1) und Sessiongrösse (R68 3)
+bleiben. — Kosten bei Irrtum: höherer Verbrauch je Session, dafür frühere Session-Enden.
+
+Entscheider: L0 · Anlass: Anweisung des Nutzers
