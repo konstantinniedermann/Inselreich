@@ -118,16 +118,17 @@ class Layout:
         """status done ≤ 30 s vor dem agent_stop desselben Knotens faltet (P3)."""
         folded: set[int] = set()
         texts: dict[int, str] = {}
+        dones: dict[str, list[dict]] = {}
+        for rec in records:
+            if rec["kind"] == "status" and rec.get("status") == "done":
+                dones.setdefault(rec["key"], []).append(rec)
         for stop in records:
             if stop["kind"] != "agent_stop":
                 continue
             candidates = [
                 r
-                for r in records
-                if r["kind"] == "status"
-                and r["key"] == stop["key"]
-                and r.get("status") == "done"
-                and r["i"] < stop["i"]
+                for r in dones.get(stop["key"], [])
+                if r["i"] < stop["i"]
                 and 0 <= stop["t"] - r["t"] <= FOLD_WINDOW
                 and r["i"] not in folded
             ]
@@ -293,6 +294,8 @@ def instances(info: dict[str, dict], run_times: dict[str, list]) -> dict[str, in
     def holds(key: str, t: float) -> bool:
         return any(a <= t and (b is None or t < b) for a, b in run_times.get(key) or [])
 
+    # Jeder sichtbare Knoten hat mindestens einen Lauf (start-, order-, first- oder
+    # log-only-Zeile); der P21-Rückfall „started bis stopped" entfällt daher.
     numbers: dict[str, int] = {}
     for key in sorted(info, key=lambda k: (first(k), k)):
         if info[key]["agent_id"] == "main":

@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+import unittest.mock
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1143,6 +1144,16 @@ class NamesTest(unittest.TestCase):
         nodes = flat(named(events))
         self.assertEqual(nodes["s1:x2"]["name"], "Aushilfe (2)")
         self.assertEqual(nodes["s1:log:lead-art"]["name"], "Pinsel-Pia")
+
+    def test_layout_error_keeps_state(self):
+        events = [start(1, "w1", "tech-sim-engineer")]
+        with unittest.mock.patch.object(
+            model.graph, "Layout", side_effect=RuntimeError("kaputt")
+        ):
+            nodes = flat(named(events))
+        self.assertEqual(
+            (nodes["s1:w1"]["name"], nodes["s1:w1"]["instance"]), ("Logik-Lars", 1)
+        )
 
 
 class GateSpecFixesTest(unittest.TestCase):

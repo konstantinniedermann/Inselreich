@@ -398,14 +398,16 @@ class _Builder:
                 for key, node in self.nodes.items()
                 if node["session_id"] == sid and not self.hidden(key)
             }
-            records = [self.graph_record(r) for r in self.trace.get(sid, [])]
-            layout = graph.Layout(sid, records, info)
-            for key, number in graph.instances(info, layout.run_times()).items():
-                node = self.nodes[key]
-                node["instance"] = number
-                suffix = f" ({number})" if number > 1 else ""
-                node["name"] = node["_base_name"] + suffix
-            result[sid] = layout
+            with contextlib.suppress(Exception):  # der Graph kippt nie den Zustand
+                records = [self.graph_record(r) for r in self.trace.get(sid, [])]
+                layout = graph.Layout(sid, records, info)
+                numbers = graph.instances(info, layout.run_times())
+                for key, number in numbers.items():
+                    node = self.nodes[key]
+                    node["instance"] = number
+                    suffix = f" ({number})" if number > 1 else ""
+                    node["name"] = node["_base_name"] + suffix
+                result[sid] = layout
         return result
 
     def identities(self) -> None:
