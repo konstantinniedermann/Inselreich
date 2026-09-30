@@ -159,6 +159,15 @@ make dev       # Dev-Server starten
 make check     # Lint, Tests und Build wie in der CI
 ```
 
+Studio-Dashboard (lokal, nicht Teil des Spiels; Python 3, nur Standardbibliothek):
+
+```bash
+make studio          # Dashboard starten und URL ausgeben
+make studio-stop     # Dashboard stoppen
+make studio-archive  # Events archivieren, Dashboard startet leer
+make studio-test     # Tests der Studio-Werkzeuge
+```
+
 ## Dokumentation
 
 Einstieg: [`docs/index.md`](docs/index.md) — Architektur (arc42), Specs, Pläne, ADRs, Beobachtungen.
