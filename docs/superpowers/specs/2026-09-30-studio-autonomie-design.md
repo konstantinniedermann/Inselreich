@@ -70,11 +70,11 @@ flowchart LR
 
 Drei Schichten, jede für sich wirksam:
 
-| Schicht                                                                       | Wirkt                                         | Zweck                                                                |
-| ----------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
-| **Output-Style** `.claude/output-styles/projektleiter.md`, `"outputStyle": "Projektleiter"` in `.claude/settings.json` | Systemprompt der Hauptsession, jede Anfrage   | Rolle, Autonomie, Start- und Ende-Routine in Kurzform               |
-| **SessionStart-Hook** (`startup`, `resume`, `clear`, `compact`)               | Kontext zu Beginn und nach Kompaktierung      | Stand laden: Rolle, Handbuch-Version, state.md, lernen.md, Warteschlange, Experimente, fällige Retros, Dashboard-URL |
-| **CLAUDE.md**                                                                 | immer geladen                                 | Dauerregel „Hauptsession = L0"; Vorrang der Autonomie vor `../CLAUDE.md` |
+| Schicht                                                                                                                | Wirkt                                       | Zweck                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Output-Style** `.claude/output-styles/projektleiter.md`, `"outputStyle": "Projektleiter"` in `.claude/settings.json` | Systemprompt der Hauptsession, jede Anfrage | Rolle, Autonomie, Start- und Ende-Routine in Kurzform                                                                |
+| **SessionStart-Hook** (`startup`, `resume`, `clear`, `compact`)                                                        | Kontext zu Beginn und nach Kompaktierung    | Stand laden: Rolle, Handbuch-Version, state.md, lernen.md, Warteschlange, Experimente, fällige Retros, Dashboard-URL |
+| **CLAUDE.md**                                                                                                          | immer geladen                               | Dauerregel „Hauptsession = L0"; Vorrang der Autonomie vor `../CLAUDE.md`                                             |
 
 - **Output-Style statt `agent`-Setting.** Laut aktueller Doku (code.claude.com/docs/en/sub-agents)
   ersetzt `"agent"` den Standard-Systemprompt vollständig (R4 bleibt). Ein eigener Output-Style mit
@@ -101,6 +101,7 @@ Drei Schichten, jede für sich wirksam:
 
   ```markdown
   ## N-001 · offen · 2026-09-30 · Kurztitel
+
   - Frage: …
   - Empfehlung: …
   - Begründung: …
@@ -113,6 +114,7 @@ Drei Schichten, jede für sich wirksam:
   Status: `offen` → `beantwortet` (Antwort des Nutzers eingetragen) → `umgesetzt`.
   `log.py queue` legt Einträge an, trägt Antworten ein und schliesst sie (schreibt die Datei und ein
   `queue`-Event). Der Nutzer darf die Datei auch von Hand bearbeiten; der Parser ist tolerant.
+
 - **Um den Punkt herum weiterarbeiten:** Das blockierte Paket geht auf `blocked` mit
   `--blocked-by N-001`; L0 zieht das nächste ungeblockte Paket vor.
 - **Antwort des Nutzers** in einer beliebigen Session: L0 trägt sie mit `log.py queue --answer` ein,
@@ -129,13 +131,13 @@ mit `permissionDecision: "deny"` und Begründung (JSON auf stdout, Exit 0 — fu
 `|| true`-Hülle). Gilt für L0, Leads und Arbeiter. Muster (best effort, Befehl per `shlex` in
 Teilbefehle an `;`, `&&`, `||`, `|` zerlegt):
 
-| Verboten                                   | Erkennung                                                                                     |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Force-Push, Löschen entfernter Branches     | `git push` mit `-f`, `--force*`, `--mirror`, `--delete`, `-d`, Refspec mit `+` oder `:`-Präfix |
-| Löschen von Branches mit ungemergter Arbeit | `git branch -D`, `git branch --delete --force`/`-df`                                           |
+| Verboten                                    | Erkennung                                                                                                                                                |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Force-Push, Löschen entfernter Branches     | `git push` mit `-f`, `--force*`, `--mirror`, `--delete`, `-d`, Refspec mit `+` oder `:`-Präfix                                                           |
+| Löschen von Branches mit ungemergter Arbeit | `git branch -D`, `git branch --delete --force`/`-df`                                                                                                     |
 | Umschreiben der History                     | `git rebase` (ausser `--abort`), `git filter-branch`, `git filter-repo`, `git reset --hard`, `git update-ref -d`, `git reflog expire`, `git stash clear` |
-| Verlust ungesicherter Arbeit                | `git clean` mit `-f`, `git worktree remove` mit `--force`/`-f`                                 |
-| Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` mit Ziel ausserhalb der Repo-Wurzel; erlaubt bleiben `/tmp`, `/private/tmp`, `/var/folders`, `$TMPDIR` |
+| Verlust ungesicherter Arbeit                | `git clean` mit `-f`, `git worktree remove` mit `--force`/`-f`                                                                                           |
+| Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` mit Ziel ausserhalb der Repo-Wurzel; erlaubt bleiben `/tmp`, `/private/tmp`, `/var/folders`, `$TMPDIR`         |
 
 Zusätzlich: `git`-Optionen vor dem Unterbefehl (`-C`, `-c`, `--git-dir=…`) werden übersprungen,
 der Inhalt von `bash -c`/`sh -c`/`zsh -c`/`eval` wird rekursiv geprüft. „Repo" ist das **Hauptrepo**
@@ -193,33 +195,33 @@ Vorrang vor `../CLAUDE.md`).
 Alle Events: bisherige Felder + `handbook_version` (aus STUDIO.md-Kopf, vom Hook bzw. `log.py`
 gelesen). `package` heisst neu `package_id` (Modell liest beide).
 
-| Event                     | Neue Felder                                                                                                    |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `spawn` (Delegation)      | `package_id`, `milestone` (Kopfzeile `Meilenstein:`), `estimate` {`minutes`, `tools`} (Kopfzeile `Schätzung: 20 min, 30 Tools`), `persona_version` (Ziel-Persona), `briefing` (Archivpfad) |
-| `spawned` (Agent-Ergebnis) | `duration_ms`, `tool_count`, `resolved_model` aus `tool_response` (nur Vordergrund-Aufrufe)                      |
-| `agent_start`, `agent_stop` | `persona_version`; bei Stop zusätzlich `report` (Archivpfad), `usage` (Tokens je Modell)                        |
-| `usage` (neu)             | L0-Tokens je Modell, kumuliert (Stop- und SessionEnd-Hook); bei SessionEnd zusätzlich `session_cost` aus `cost-state` |
-| `result` (neu, `log.py`)  | `package_id`, `role` (abnehmender Lead), `worker`, `outcome` (`angenommen`/`nacharbeit`/`verworfen`), `review_rounds` |
-| `milestone` (neu)         | `milestone`, `status` (`start`/`done`), `title`                                                                 |
-| `retro` (neu)             | `retro_id`, `kind` (`meilenstein`/`session`/`adhoc`), `triggers` (Vorfall-IDs), `report` (Pfad)               |
-| `queue` (neu)             | `queue_id`, `action` (`add`/`answer`/`done`), `question`, `blocks`                                             |
-| `ci` (neu, `ci.py`)       | `run_id`, `conclusion`, `branch`, `sha`, `workflow`, `created`                                                  |
+| Event                       | Neue Felder                                                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `spawn` (Delegation)        | `package_id`, `milestone` (Kopfzeile `Meilenstein:`), `estimate` {`minutes`, `tools`} (Kopfzeile `Schätzung: 20 min, 30 Tools`), `persona_version` (Ziel-Persona), `briefing` (Archivpfad) |
+| `spawned` (Agent-Ergebnis)  | `duration_ms`, `tool_count`, `resolved_model` aus `tool_response` (nur Vordergrund-Aufrufe)                                                                                                |
+| `agent_start`, `agent_stop` | `persona_version`; bei Stop zusätzlich `report` (Archivpfad), `usage` (Tokens je Modell)                                                                                                   |
+| `usage` (neu)               | L0-Tokens je Modell, kumuliert (Stop- und SessionEnd-Hook); bei SessionEnd zusätzlich `session_cost` aus `cost-state`                                                                      |
+| `result` (neu, `log.py`)    | `package_id`, `role` (abnehmender Lead), `worker`, `outcome` (`angenommen`/`nacharbeit`/`verworfen`), `review_rounds`                                                                      |
+| `milestone` (neu)           | `milestone`, `status` (`start`/`done`), `title`                                                                                                                                            |
+| `retro` (neu)               | `retro_id`, `kind` (`meilenstein`/`session`/`adhoc`), `triggers` (Vorfall-IDs), `report` (Pfad)                                                                                            |
+| `queue` (neu)               | `queue_id`, `action` (`add`/`answer`/`done`), `question`, `blocks`                                                                                                                         |
+| `ci` (neu, `ci.py`)         | `run_id`, `conclusion`, `branch`, `sha`, `workflow`, `created`                                                                                                                             |
 
 ### Messung — was wie gemessen wird
 
-| Grösse                 | Quelle                                                                                           | Güte                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------- |
-| Dauer je Agent         | Summe der Läufe SubagentStart→SubagentStop (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs` | gemessen                                      |
-| Tool-Aufrufe je Agent  | Zahl der PreToolUse-Events des Agenten; bei Vordergrund `totalToolUseCount` zum Abgleich (vorhanden im Agent-Ergebnis, am Transkript nachgewiesen) | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert |
-| Tokens je Agent/Modell | Subagent-Transkript `…/<session>/subagents/agent-<id>.jsonl`; je Message-ID dedupliziert (Maximum), getrennt: Input, Cache-Schreiben, Cache-Lesen, Output | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen) |
-| Tokens L0              | Haupt-Transkript (`isSidechain: false`), inkrementell je Turn                                    | wie oben                                       |
-| Sitzungssumme          | `cost-state`-Eintrag im Haupt-Transkript (nach Session-Ende): Tokens je Modell inkl. interner Hilfsaufrufe; Kosten | Tokens gemessen; Kosten **berechnet** (Listenpreis laut Claude Code, keine Abrechnung); nur beendete Sessions |
-| Schätzung              | Briefing-Kopfzeile `Schätzung:` — meint den **ganzen Auftrag inkl. aller Unteraufträge**; verglichen mit Dauer des Agenten (Wanduhr) und Tool-Aufrufen seines Teilbaums | Schätzung, als solche markiert; fehlt → „keine Schätzung" |
-| Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead                                                      | erfasst; fehlt → „nicht erfasst"               |
-| Fortsetzungen          | erneutes SubagentStart derselben Agent-ID (SendMessage)                                           | gemessen                                      |
-| CI                     | `ci.py` über `gh run list` (SessionStart losgelöst, Session-Ende, nach Push)                       | gemessen; ohne `gh` → „nicht gemessen"          |
-| Eskalationen           | `decision --for l0` + Warteschlangen-Einträge                                                     | erfasst                                       |
-| Inaktiv/gescheitert    | Status `failed` (erfasst); Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status | Lücke gemessen, „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen) |
+| Grösse                  | Quelle                                                                                                                                                                  | Güte                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Dauer je Agent          | Summe der Läufe SubagentStart→SubagentStop (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs`                                                 | gemessen                                                                                                      |
+| Tool-Aufrufe je Agent   | Zahl der PreToolUse-Events des Agenten; bei Vordergrund `totalToolUseCount` zum Abgleich (vorhanden im Agent-Ergebnis, am Transkript nachgewiesen)                      | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert                                                |
+| Tokens je Agent/Modell  | Subagent-Transkript `…/<session>/subagents/agent-<id>.jsonl`; je Message-ID dedupliziert (Maximum), getrennt: Input, Cache-Schreiben, Cache-Lesen, Output               | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen)    |
+| Tokens L0               | Haupt-Transkript (`isSidechain: false`), inkrementell je Turn                                                                                                           | wie oben                                                                                                      |
+| Sitzungssumme           | `cost-state`-Eintrag im Haupt-Transkript (nach Session-Ende): Tokens je Modell inkl. interner Hilfsaufrufe; Kosten                                                      | Tokens gemessen; Kosten **berechnet** (Listenpreis laut Claude Code, keine Abrechnung); nur beendete Sessions |
+| Schätzung               | Briefing-Kopfzeile `Schätzung:` — meint den **ganzen Auftrag inkl. aller Unteraufträge**; verglichen mit Dauer des Agenten (Wanduhr) und Tool-Aufrufen seines Teilbaums | Schätzung, als solche markiert; fehlt → „keine Schätzung"                                                     |
+| Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead                                                                                                                              | erfasst; fehlt → „nicht erfasst"                                                                              |
+| Fortsetzungen           | erneutes SubagentStart derselben Agent-ID (SendMessage)                                                                                                                 | gemessen                                                                                                      |
+| CI                      | `ci.py` über `gh run list` (SessionStart losgelöst, Session-Ende, nach Push)                                                                                            | gemessen; ohne `gh` → „nicht gemessen"                                                                        |
+| Eskalationen            | `decision --for l0` + Warteschlangen-Einträge                                                                                                                           | erfasst                                                                                                       |
+| Inaktiv/gescheitert     | Status `failed` (erfasst); Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status                                                                     | Lücke gemessen, „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen)            |
 
 **Nicht messbar** (im Dashboard „nicht gemessen"): Kosten je Agent (nur Sitzungssumme), Denkzeit
 ohne Tool-Aufruf, Tokens von Hilfsaufrufen je Agent, Aufwand des Nutzers.
@@ -262,7 +264,7 @@ laufende Meilenstein (`milestone start`/`done`, sessionübergreifend) → „ohn
 `make studio-metrics`) liest `events.jsonl` und alle archivierten Event-Dateien, ergänzt beendete
 Sessions um `cost-state` und schreibt `docs/studio/metriken/<kennung>.md`
 (`S-<datum>-<sid8>` bzw. Meilenstein-ID): Tabellen für Menschen und am Ende ein
-```` ```json ```` -Block „Rohwerte" für Dashboard-Verlauf und Coach. Idempotent (überschreibt).
+` ```json ` -Block „Rohwerte" für Dashboard-Verlauf und Coach. Idempotent (überschreibt).
 Diese Dateien werden committet; sie überdauern das lokale Archiv.
 
 ### Dashboard

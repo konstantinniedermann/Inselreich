@@ -36,33 +36,35 @@
 
 ## Dateistruktur
 
-| Datei | Verantwortung |
-| --- | --- |
-| `tools/studio/studio_docs.py` (neu) | Lesen/Schreiben von VERFASSUNG, STUDIO-Version, CHANGELOG, Warteschlange, Experimente, lernen, Metrik-JSON, Persona-Frontmatter |
-| `tools/studio/guard.py` (neu) | PreToolUse-Verbote (irreversibel, Verfassung) und Freigabe-Marke (UserPromptSubmit) |
-| `tools/studio/usage.py` (neu) | Tokens je Modell aus Transkripten, inkrementell; `cost-state` |
-| `tools/studio/context.py` (neu) | SessionStart-Kontext (≤ 9 500 Zeichen) |
-| `tools/studio/effort.py` (neu) | Reine Aggregation: Delegationen, Aufwand, Qualität, Vorfälle |
-| `tools/studio/metrics.py` (neu) | CLI: Verdichtung nach `docs/studio/metriken/<kennung>.md` |
-| `tools/studio/ci.py` (neu) | CLI: CI-Läufe über `gh` als Events |
-| `tools/studio/hook.py` | neue Event-Felder, Archiv, Usage, Kontext, Vorfall-Hinweis |
-| `tools/studio/log.py` | neue Arten `result`, `milestone`, `retro`, `queue`; `package_id`; Archivordner |
-| `tools/studio/model.py` | neue Knotenfelder und Handler; `records` und Effort-Ausgabe |
-| `tools/studio/server.py` | Doku-Bündel, Effort, `/archiv/` |
-| `tools/studio/dashboard/*` | Reiter und neue Ansichten |
-| `docs/studio/*` | Verfassung, Handbuch 1.0, CHANGELOG, Warteschlange, Experimente, lernen, retros/, metriken/, Vorlagen |
-| `.claude/output-styles/projektleiter.md`, `.claude/settings.json` | L0 als Standard, Guard-Hooks |
-| `.claude/agents/*.md` | `version: 1.0`, neue Persona `studio-coach` |
+| Datei                                                             | Verantwortung                                                                                                                   |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `tools/studio/studio_docs.py` (neu)                               | Lesen/Schreiben von VERFASSUNG, STUDIO-Version, CHANGELOG, Warteschlange, Experimente, lernen, Metrik-JSON, Persona-Frontmatter |
+| `tools/studio/guard.py` (neu)                                     | PreToolUse-Verbote (irreversibel, Verfassung) und Freigabe-Marke (UserPromptSubmit)                                             |
+| `tools/studio/usage.py` (neu)                                     | Tokens je Modell aus Transkripten, inkrementell; `cost-state`                                                                   |
+| `tools/studio/context.py` (neu)                                   | SessionStart-Kontext (≤ 9 500 Zeichen)                                                                                          |
+| `tools/studio/effort.py` (neu)                                    | Reine Aggregation: Delegationen, Aufwand, Qualität, Vorfälle                                                                    |
+| `tools/studio/metrics.py` (neu)                                   | CLI: Verdichtung nach `docs/studio/metriken/<kennung>.md`                                                                       |
+| `tools/studio/ci.py` (neu)                                        | CLI: CI-Läufe über `gh` als Events                                                                                              |
+| `tools/studio/hook.py`                                            | neue Event-Felder, Archiv, Usage, Kontext, Vorfall-Hinweis                                                                      |
+| `tools/studio/log.py`                                             | neue Arten `result`, `milestone`, `retro`, `queue`; `package_id`; Archivordner                                                  |
+| `tools/studio/model.py`                                           | neue Knotenfelder und Handler; `records` und Effort-Ausgabe                                                                     |
+| `tools/studio/server.py`                                          | Doku-Bündel, Effort, `/archiv/`                                                                                                 |
+| `tools/studio/dashboard/*`                                        | Reiter und neue Ansichten                                                                                                       |
+| `docs/studio/*`                                                   | Verfassung, Handbuch 1.0, CHANGELOG, Warteschlange, Experimente, lernen, retros/, metriken/, Vorlagen                           |
+| `.claude/output-styles/projektleiter.md`, `.claude/settings.json` | L0 als Standard, Guard-Hooks                                                                                                    |
+| `.claude/agents/*.md`                                             | `version: 1.0`, neue Persona `studio-coach`                                                                                     |
 
 ---
 
 ### Task 1: `studio_docs.py` — Studio-Dokumente lesen und schreiben
 
 **Files:**
+
 - Create: `tools/studio/studio_docs.py`
 - Test: `tools/studio/tests/test_studio_docs.py`
 
 **Interfaces:**
+
 - Produces (alle Pfade als `Path`, `docs` = Verzeichnis `docs/studio`):
   - `read_version(path: Path) -> str` — Wert der Zeile `Version: X.Y` in den ersten 15 Zeilen, sonst `""`.
   - `persona_meta(agents: Path) -> dict[str, dict]` — `name → {"version", "model", "description", "tools"}` aus Frontmatter (fehlende Werte `""`; `model` fehlt → `"inherit"`).
@@ -73,7 +75,7 @@
   - `queue_update(docs, entry_id, *, answer: str | None = None, status: str | None = None) -> bool`.
   - `content_lines(text: str) -> int` — Zeilen, die nicht leer, keine Überschrift (`#`) und kein HTML-Kommentar sind.
   - `read_text(path: Path) -> str` — Inhalt oder `""`.
-  - `metrics_history(docs: Path) -> list[dict]` — JSON-Blöcke aus `docs/metriken/*.md` (Abschnitt `## Rohwerte`, erster ```` ```json ````-Block), sortiert nach `created`.
+  - `metrics_history(docs: Path) -> list[dict]` — JSON-Blöcke aus `docs/metriken/*.md` (Abschnitt `## Rohwerte`, erster ` ```json `-Block), sortiert nach `created`.
   - `bundle(docs: Path, agents: Path) -> dict` — `{"handbook_version", "constitution_version", "changelog", "experiments", "queue", "lernen", "personas", "history"}`; jeder Teil einzeln abgesichert (Fehler → leerer Wert).
   - Konstanten: `QUEUE_STATUSES = ("offen", "beantwortet", "umgesetzt")`, `EXPERIMENT_STATUSES = ("vorgeschlagen", "laufend", "behalten", "angepasst", "zurückgenommen", "abgelehnt")`.
 
@@ -81,6 +83,7 @@ Formate (exakt):
 
 ```markdown
 ## N-001 · offen · 2026-09-30 · Kurztitel
+
 - Frage: …
 - Empfehlung: …
 - Begründung: …
@@ -92,6 +95,7 @@ Formate (exakt):
 
 ```markdown
 ## E-001 · laufend · Kurztitel
+
 - Hypothese: …
 - Messgrösse: …
 - Zeitraum: …
@@ -103,12 +107,13 @@ Formate (exakt):
 
 ```markdown
 ## 2026-09-30 · Handbuch 1.0
+
 ## 2026-10-02 · Persona lead-tech 1.1
 ```
 
 - [ ] **Step 1: Failing tests schreiben** — `tools/studio/tests/test_studio_docs.py`:
 
-```python
+````python
 import json
 import tempfile
 import unittest
@@ -208,13 +213,13 @@ class DocsTest(unittest.TestCase):
         self.assertEqual(data["queue"], [])
         self.assertEqual(data["handbook_version"], "")
         self.assertEqual(data["personas"], [])
-```
+````
 
 - [ ] **Step 2: Tests laufen lassen** — `make studio-test` → FAIL (`No module named 'studio_docs'`).
 
 - [ ] **Step 3: Implementieren** — `tools/studio/studio_docs.py`:
 
-```python
+````python
 """Studio-Dokumente unter docs/studio lesen und schreiben (Formate: STUDIO.md)."""
 
 from __future__ import annotations
@@ -463,7 +468,7 @@ def bundle(docs: Path, agents: Path) -> dict:
         "personas": [{"name": k, **v} for k, v in personas.items()],
         "history": safe(lambda: metrics_history(docs), []),
     }
-```
+````
 
 - [ ] **Step 4: Tests grün** — `make studio-test` → PASS.
 - [ ] **Step 5: Commit** — `git add tools/studio/studio_docs.py tools/studio/tests/test_studio_docs.py && git commit -m "feat: Studio-Dokumente parsen und schreiben (studio_docs.py)"`
@@ -473,11 +478,13 @@ def bundle(docs: Path, agents: Path) -> dict:
 ### Task 2: `guard.py` — verbotene Aktionen und Verfassungs-Schutz
 
 **Files:**
+
 - Create: `tools/studio/guard.py`
 - Modify: `.claude/settings.json` (neue Hook-Einträge)
 - Test: `tools/studio/tests/test_guard.py`
 
 **Interfaces:**
+
 - Consumes: `paths.repo_root()`, `paths.studio_home()`.
 - Produces:
   - `bash_reason(command: str, root: Path, cwd: Path, env: Mapping[str, str], allow_constitution: bool) -> str | None` — Grund bei Verbot, sonst `None`.
@@ -489,7 +496,7 @@ def bundle(docs: Path, agents: Path) -> dict:
 
 Regeln (siehe Spec, Abschnitt „Verbotene irreversible Aktionen" und „Verfassungs-Schutz"):
 
-1. Heredoc-Körper entfernen (`<<-?\s*['"]?(\w+)['"]?` bis zur Zeile, die nur den Begrenzer enthält), Zeilenumbrüche durch ` ; ` ersetzen, dann `shlex.shlex(command, posix=True, punctuation_chars=True)` mit `whitespace_split = True`; bei `ValueError` → `None` (erlauben).
+1. Heredoc-Körper entfernen (`<<-?\s*['"]?(\w+)['"]?` bis zur Zeile, die nur den Begrenzer enthält), Zeilenumbrüche durch `;` ersetzen, dann `shlex.shlex(command, posix=True, punctuation_chars=True)` mit `whitespace_split = True`; bei `ValueError` → `None` (erlauben).
 2. In Segmente an `;`, `&&`, `||`, `|`, `&` zerlegen; führende `VAR=wert`, `sudo`, `env`, `command`, `nohup`, `time` überspringen.
 3. `git`: globale Optionen (`-C <x>`, `-c <x>`, `--git-dir=…`, `--work-tree=…`, `--no-pager`) überspringen; dann je Unterbefehl:
    - `push`: Verbot bei `--force*`, `--mirror`, `--delete`, `-d`, `-f`, Kurzflag-Bündel mit `f` oder `d` (z. B. `-fu`), Argument mit `+`-Präfix oder `:`-Präfix (Länge > 1).
@@ -765,10 +772,12 @@ Weitere Funktionen: `_short_flags(args) -> set[str]` (Buchstaben aller Argumente
 ### Task 3: `usage.py` — Tokens aus Transkripten
 
 **Files:**
+
 - Create: `tools/studio/usage.py`
 - Test: `tools/studio/tests/test_usage.py`
 
 **Interfaces:**
+
 - Produces:
   - `class Accumulator` mit `feed_line(raw: bytes | str, main_only: bool = False) -> None`, `summary() -> dict[str, dict]` (`model → {"input", "cache_write", "cache_read", "output", "messages", "complete"}`), `to_json() -> dict`, `Accumulator.from_json(data) -> Accumulator`. Je Message-ID werden die Maxima der Felder gehalten; `complete` zählt Messages mit `stop_reason`. `main_only=True` überspringt Einträge mit `isSidechain: true`.
   - `transcript_usage(path: Path, main_only: bool = False) -> dict` — ganze Datei; fehlt/kaputt → `{}`.
@@ -898,11 +907,13 @@ class UsageTest(unittest.TestCase):
 ### Task 4: `log.py` erweitern und `ci.py`
 
 **Files:**
+
 - Modify: `tools/studio/log.py`, `tools/studio/paths.py`
 - Create: `tools/studio/ci.py`
 - Test: `tools/studio/tests/test_log.py` (erweitern), `tools/studio/tests/test_ci.py`
 
 **Interfaces:**
+
 - Consumes: `studio_docs.read_version`, `studio_docs.queue_add`, `studio_docs.queue_update`.
 - Produces:
   - `paths.docs_dir() -> Path` — `STUDIO_DOCS` (Env) oder `repo_root()/docs/studio`.
@@ -995,11 +1006,13 @@ class CiTest(unittest.TestCase):
 ### Task 5: `model.py` und `effort.py` — Datensätze, Aufwand, Qualität, Vorfälle
 
 **Files:**
+
 - Create: `tools/studio/effort.py`
 - Modify: `tools/studio/model.py`
 - Test: `tools/studio/tests/test_effort.py`, `tools/studio/tests/test_model.py` (erweitern)
 
 **Interfaces:**
+
 - Consumes: Events aus Task 4 und Task 6 (Felder siehe Spec-Tabelle „Event-Schema").
 - Produces in `model.py`:
   - Knoten zusätzlich: `persona_version`, `handbook_version`, `milestone`, `estimate` (dict oder `None`), `briefing`, `report`, `usage` (dict), `tool_calls` (Zahl der PreToolUse-Events des Agenten: `heartbeat`, `bind`, `spawn`), `reported` (`{"duration_ms", "tool_count", "resolved_model"}` aus `spawned`), `resumes` (erneute Starts), `max_gap` (grösste Lücke zwischen zwei Lebenszeichen, solange der Status in `LIVE` war), `delegated_at`.
@@ -1048,11 +1061,13 @@ Zusätzlich in `test_model.py`: alte Events mit `package` statt `package_id` lan
 ### Task 6: `hook.py` und `context.py` — neue Felder, Archiv, Usage, Start-Kontext
 
 **Files:**
+
 - Create: `tools/studio/context.py`
 - Modify: `tools/studio/hook.py`
 - Test: `tools/studio/tests/test_context.py`, `tools/studio/tests/test_hook.py` (erweitern)
 
 **Interfaces:**
+
 - Consumes: `studio_docs` (Task 1), `usage` (Task 3), `paths.docs_dir()`/`archive_dir()` (Task 4), `model.pending_incidents`, `model.EventStore` (Task 5).
 - Produces:
   - `context.build_context(docs: Path, incidents: list[dict], port: str) -> str` — Abschnitte in dieser Reihenfolge: Rollenzeile (Projektleiter/L0, Verfassung vX, Handbuch vY, „fragt nicht zurück; Vorbehalte → Warteschlange"), `Dashboard: http://127.0.0.1:<port>/`, Start-Routine (eine Zeile), `## state.md` (≤ 3 500 Zeichen), `## lernen.md` (≤ 2 500), `## Warteschlange` (Einträge `offen`/`beantwortet`, je Zeile `- N-001 · offen · Titel — Empfehlung: … · Blockiert: …`, höchstens 8), `## Laufende Experimente` (Status `laufend`/`vorgeschlagen`), `## Fällige Retros` (Vorfälle, höchstens 8). Gekürzte Teile enden mit `… (gekürzt, siehe docs/studio/<datei>)`. Gesamtlänge hart ≤ `LIMIT = 9500`.
@@ -1116,17 +1131,19 @@ In `test_hook.py` ergänzen: `parse_estimate("20 min, 30 Tools") == {"minutes": 
 ### Task 7: `metrics.py` — Verdichtung je Session und Meilenstein
 
 **Files:**
+
 - Create: `tools/studio/metrics.py`
 - Modify: `Makefile` (Ziel `studio-metrics`)
 - Test: `tools/studio/tests/test_metrics.py`
 
 **Interfaces:**
+
 - Consumes: `model.build_state`, `model.read_agent_models`, `usage.session_cost`, `studio_docs.read_version`, `paths.*`.
 - Produces:
   - `load_events(home: Path) -> list[dict]` — `events.jsonl` + `archiv/events/*.jsonl` + `archive/*.jsonl` (alt).
   - `transcript_dir(root: Path) -> Path` — `STUDIO_TRANSCRIPTS` oder `~/.claude/projects/<re.sub(r"[^A-Za-z0-9]", "-", str(root))>`.
   - `summarize(state: dict, kind: str, kennung: str, handbook: str, cost: dict | None, created: str) -> dict` — Rohwerte `{"kennung", "kind", "created", "handbook_version", "sessions", "agents", "delegations", "totals": {"duration_s", "tool_calls", "input", "cache_write", "cache_read", "output", "output_lower_bound"}, "by_lead", "by_model", "estimate_vs_actual", "quality", "incidents_open", "session_cost"}`.
-  - `render(raw: dict) -> str` — Markdown: Titel `# Metriken <kennung>`, Kopfzeile (erzeugt, Art, Handbuch), `## Aufwand` (Summen; Tabelle je Lead; Tabelle je Modell; Schätzung vs. Ist), `## Qualität` (Liste; `None` → „nicht erfasst"), `## Vorfälle`, `## Grenzen der Messung` (Output-Untergrenze, fehlende Sitzungskosten → „nicht gemessen"), `## Rohwerte` mit ```` ```json ```` (eingerückt 2, `ensure_ascii=False`, Schlüssel sortiert).
+  - `render(raw: dict) -> str` — Markdown: Titel `# Metriken <kennung>`, Kopfzeile (erzeugt, Art, Handbuch), `## Aufwand` (Summen; Tabelle je Lead; Tabelle je Modell; Schätzung vs. Ist), `## Qualität` (Liste; `None` → „nicht erfasst"), `## Vorfälle`, `## Grenzen der Messung` (Output-Untergrenze, fehlende Sitzungskosten → „nicht gemessen"), `## Rohwerte` mit ` ```json ` (eingerückt 2, `ensure_ascii=False`, Schlüssel sortiert).
   - CLI: `metrics.py --session <id|latest>` → Kennung `S-<YYYY-MM-DD>-<sid[:8]>` (Datum des Session-Starts, lokal); `metrics.py --milestone <id>` → Kennung = ID, Datensätze mit `milestone == id` über alle Sessions; `--out <verzeichnis>` (Standard `docs_dir()/"metriken"`); druckt den geschriebenen Pfad.
   - Makefile: `studio-metrics: ## Studio-Metriken der letzten Session verdichten` → `@python3 tools/studio/metrics.py --session latest`.
 
@@ -1141,10 +1158,12 @@ In `test_hook.py` ergänzen: `parse_estimate("20 min, 30 Tools") == {"minutes": 
 ### Task 8: `server.py` — Doku-Bündel, Effort, Archiv-Route
 
 **Files:**
+
 - Modify: `tools/studio/server.py`
 - Test: `tools/studio/tests/test_server.py` (erweitern)
 
 **Interfaces:**
+
 - Consumes: `studio_docs.bundle`, `build_state` (mit neuen Feldern), `paths.docs_dir()`, `paths.archive_dir()`.
 - Produces:
   - `make_server(port, events_path, agents, inactive_after, dashboard=DASHBOARD, docs: Path | None = None, archive: Path | None = None)`.
@@ -1162,10 +1181,12 @@ In `test_hook.py` ergänzen: `parse_estimate("20 min, 30 Tools") == {"minutes": 
 ### Task 9: Dashboard — Reiter und neue Ansichten
 
 **Files:**
+
 - Modify: `tools/studio/dashboard/index.html`, `tools/studio/dashboard/app.js`, `tools/studio/dashboard/style.css`
 - Optional: `tools/studio/tests/fixtures/make_demo.py` (Demo-Events um neue Arten ergänzen, damit Screenshots Inhalt zeigen)
 
 **Interfaces:**
+
 - Consumes: `/api/state` (Task 8): `tree`, `counts`, `decisions`, `budgets`, `board`, `pulse`, `chronicle`, `feed`, `records`, `delegations`, `effort`, `quality`, `incidents`, `milestones`, `session_costs`, `docs`.
 
 Vorgaben (Sichtprüfung per Screenshot, R16):
@@ -1189,10 +1210,12 @@ Vorgaben (Sichtprüfung per Screenshot, R16):
 ### Task 10: Verfassung, Handbuch 1.0, Changelog, Warteschlange, Experimente, lernen, Vorlagen, Konsistenztest
 
 **Files:**
+
 - Create: `docs/studio/VERFASSUNG.md`, `docs/studio/CHANGELOG.md`, `docs/studio/warteschlange.md`, `docs/studio/experimente.md`, `docs/studio/lernen.md`, `docs/studio/retros/README.md`, `docs/studio/metriken/README.md`, `docs/studio/templates/retro.md`, `docs/studio/templates/experiment.md`, `tools/studio/tests/test_docs.py`
 - Modify: `docs/studio/STUDIO.md`, `docs/studio/state.md`, `docs/studio/templates/briefing.md`, `docs/studio/templates/bericht.md`, `docs/studio/gates.md` (Verweise)
 
 **Interfaces:**
+
 - Consumes: `studio_docs` (Task 1) im Test.
 - Produces: Dateien in den Formaten aus Task 1; Handbuch `Version: 1.0`.
 
@@ -1328,10 +1351,12 @@ class DocsConsistencyTest(unittest.TestCase):
 ### Task 11: Studio-Coach, Output-Style, CLAUDE.md, Roster, Rulings, ADR, README
 
 **Files:**
+
 - Create: `.claude/agents/studio-coach.md`, `.claude/output-styles/projektleiter.md`, `docs/adr/ADR-009-studio-autonomie-und-lernen.md`
 - Modify: `.claude/settings.json` (`"outputStyle": "Projektleiter"`), `CLAUDE.md`, `docs/studio/roster.md`, `docs/studio/rulings.md`, `docs/adr/ADR-008-studio-telemetrie.md`, `docs/index.md`, `README.md`, `docs/arc42.md` (ADR-Tabelle), `tools/studio/model.py` (`classify`: `studio-<rolle>` ausser Direktor → L1, Bereich `studio`), `tools/studio/tests/test_model.py`, `docs/studio/CHANGELOG.md` (Eintrag `Persona studio-coach 1.0` nicht nötig — Neuanlage steht im Handbuch-1.0-Eintrag)
 
 **Interfaces:**
+
 - Produces: Persona `studio-coach` (Frontmatter: `name: studio-coach`, `description: 'Studio-Coach des Inselreich-Studios: einsetzen für Retros (Meilenstein, Session-Ende, Vorfall), Auswertung der Metriken, Experiment-Vorschläge und -Bewertungen, Pflege von lernen.md und experimente.md und das Umsetzen von L0 angenommener Handbuch-Änderungen; nicht für Spiel, Code oder Projektdoku.'`, `tools: Read, Grep, Glob, Bash, Write, Edit, SendMessage`, `model: opus`, `version: 1.0`).
 
 Inhalte:
@@ -1383,7 +1408,8 @@ sie), dann das Handbuch docs/studio/STUDIO.md.
 }
 ```
 
-  Prüfen: `python3 -c "import json;json.load(open('.claude/settings.json'))"`.
+Prüfen: `python3 -c "import json;json.load(open('.claude/settings.json'))"`.
+
 - **Warteschlange**: Eintrag `N-001 · offen · 2026-09-30 · Verfassung 1.0 bestätigen` per `log.py queue` (Frage: „Bestätigst du die Verfassung 1.0 (docs/studio/VERFASSUNG.md), insbesondere §5 Autonomie mit Vorrang vor ../CLAUDE.md und §7 Push auf main nach grünem Check?"; Empfehlung: bestätigen; Begründung: Nutzerauftrag Session 1.5; Kosten des Wartens: keine — gilt vorläufig; Blockiert: nichts; Von: studio-director). Das Event dieses Aufrufs vorher mit `STUDIO_HOME=<scratchpad>` ins Leere schreiben (nur die Datei zählt).
 - **CLAUDE.md** (Projekt), Abschnitt „Arbeitsweise: Studio" ersetzen durch Dauerregeln: Hauptsession ist immer der Projektleiter (L0) — technisch: Output-Style `Projektleiter` + SessionStart-Hook; Rangfolge Verfassung > Handbuch; **In diesem Repo ersetzt die Autonomie-Regel der Verfassung (§5) das Nachfragen und Warten aus `../CLAUDE.md` („Entwickler-Kontext", „Beim Start" Punkt 3): L0 fragt nicht zurück, Vorbehalte gehen in `docs/studio/warteschlange.md`**; Verfassung nur durch den Nutzer; Start- und Ende-Routine: Verweis auf STUDIO.md (ohne Wiederholung). Context-Scope „Studio" um `.claude/output-styles/` ergänzen.
 - **roster.md**: Namensschema um Stabsstelle `studio-<rolle>` (L1, direkt unter L0, ohne Arbeiter) ergänzen; aktive Personas: Spalte `Version` (alle `1.0`), Zeile `studio-coach`; Hinweis „Claude Code lädt neue Agent-Dateien erst in der nächsten Session" ersetzen durch „Die Datei-Überwachung lädt neue oder geänderte Agent-Dateien nach wenigen Sekunden; nur wenn `.claude/agents/` beim Session-Start fehlte, erst in der nächsten Session (dann Rückfall `general-purpose` mit Persona-Text)"; Persona-Versionierung: Frontmatter `version`, Erhöhung nur über Verbesserungsschleife mit CHANGELOG.
