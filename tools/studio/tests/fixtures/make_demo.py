@@ -441,9 +441,316 @@ def current_session():
     return events
 
 
+GRAPH = "7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
+WIDE = "3e4f5a6b-7c8d-4e9f-a0b1-c2d3e4f5a6b7"
+LANG = (
+    "Bitte die zwei Review-Befunde beheben: erstens die Rundung in trade.ts auf "
+    "ganze Taler umstellen, zweitens einen Test für leere Lager ergänzen; danach "
+    "make check laufen lassen und kurz berichten, welche Tests neu dazugekommen sind."
+)
+
+
+def stamp_at(t: float) -> str:
+    stamp = datetime.fromtimestamp(t, timezone.utc)
+    return stamp.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def graph_session(start: float) -> list[dict]:
+    """Session G „alle Fälle" (Spec Prozess-Graph, Fixture-Tabelle Nr. 1–44)."""
+
+    def at(mmss: str) -> str:
+        minutes, seconds = mmss.split(":")
+        return stamp_at(start + int(minutes) * 60 + int(seconds))
+
+    def h(kind: str, mmss: str, agent: str = "main", **kw) -> dict:
+        return {
+            "ts": at(mmss),
+            "session_id": GRAPH,
+            "agent_id": agent,
+            "source": "hook",
+            "kind": kind,
+            **kw,
+        }
+
+    def lg(mmss: str, **kw) -> dict:
+        return {
+            "ts": at(mmss),
+            "session_id": GRAPH,
+            "agent_id": "",
+            "source": "log",
+            "kind": "status",
+            **kw,
+        }
+
+    def beats(agent: str, first: str, last: str, step: int, tools: list[str]):
+        a, b = (
+            sum(int(x) * f for x, f in zip(v.split(":"), (60, 1)))
+            for v in (first, last)
+        )
+        return [
+            h(
+                "heartbeat",
+                f"{t // 60:02d}:{t % 60:02d}",
+                agent,
+                tool=tools[i % len(tools)],
+            )
+            for i, t in enumerate(range(a, b + 1, step))
+        ]
+
+    def spawn(mmss, agent, typ, desc, tid, **kw):
+        return h(
+            "spawn",
+            mmss,
+            agent,
+            subagent_type=typ,
+            description=desc,
+            tool_use_id=tid,
+            **kw,
+        )
+
+    ts1 = "tech-sim-engineer"
+    return [
+        h("session_start", "00:00", status="idle", model="opus"),
+        h("prompt", "00:05", status="active", task="Handelsrouten umsetzen und prüfen"),
+        spawn(
+            "00:30", "main", "lead-tech", "Handelsrouten umsetzen", "g1", model="opus"
+        ),
+        h("spawned", "00:31", child_id="g-lt", tool_use_id="g1"),
+        h("agent_start", "00:32", "g-lt", role="lead-tech", status="active"),
+        spawn(
+            "01:00",
+            "g-lt",
+            ts1,
+            "Routen-Simulation",
+            "g2",
+            package="G-1",
+            model="sonnet",
+        ),
+        h("spawned", "01:01", "g-lt", child_id="g-ts1", tool_use_id="g2"),
+        h("agent_start", "01:02", "g-ts1", role=ts1, status="active"),
+        spawn(
+            "01:10", "g-lt", ts1, "Zollberechnung", "g3", package="G-2", model="sonnet"
+        ),
+        h("spawned", "01:11", "g-lt", child_id="g-ts2", tool_use_id="g3"),
+        h("agent_start", "01:12", "g-ts2", role=ts1, status="active"),
+        spawn("01:40", "main", "Explore", "Bestehende Handelsdateien suchen", "g4"),
+        h("spawned", "01:41", child_id="g-ex", tool_use_id="g4"),
+        h("agent_start", "01:42", "g-ex", role="Explore", status="active"),
+        *beats("g-ts1", "01:30", "05:30", 30, ["Read", "Edit", "Bash"]),
+        *beats("g-ts2", "01:30", "03:00", 30, ["Read", "Edit"]),
+        *beats("g-ex", "01:50", "02:50", 20, ["Grep", "Glob", "Read"]),
+        h(
+            "agent_stop",
+            "03:00",
+            "g-ex",
+            role="Explore",
+            status="done",
+            summary="3 Dateien gefunden: trade.ts, ships.ts, ports.ts",
+        ),
+        h("bind", "03:30", "g-ts2", role=ts1, package="G-2"),
+        lg(
+            "03:31",
+            role=ts1,
+            status="blocked",
+            task="Zollsatz fehlt in defs",
+            package="G-2",
+        ),
+        h(
+            "message",
+            "04:00",
+            "g-ts2",
+            role=ts1,
+            to="main",
+            text="Zollsatz fehlt in src/sim/defs — 10 % oder 15 %?",
+        ),
+        h(
+            "message",
+            "04:30",
+            to="g-lt [lead-tech]",
+            text="Zoll 10 %, bitte an Logik-Lars (2) weitergeben",
+        ),
+        h("message", "05:00", "g-lt", role="lead-tech", to="zoll-helfer", text=XSS),
+        h("bind", "05:29", "g-ts2", role=ts1, package="G-2"),
+        lg(
+            "05:30",
+            role=ts1,
+            status="failed",
+            summary="Zollberechnung abgebrochen, Werte fehlen",
+            package="G-2",
+        ),
+        h(
+            "agent_stop",
+            "05:40",
+            "g-ts2",
+            role=ts1,
+            status="done",
+            summary="Abgebrochen",
+        ),
+        h("bind", "05:59", "g-ts1", role=ts1, package="G-1"),
+        lg(
+            "06:00",
+            role=ts1,
+            status="done",
+            summary="Routen-Simulation fertig, 12 Tests grün",
+            package="G-1",
+        ),
+        h("agent_stop", "06:10", "g-ts1", role=ts1, status="done", summary="Fertig."),
+        spawn(
+            "06:30",
+            "g-lt",
+            "qa-code-reviewer",
+            "Review Routen-Simulation",
+            "g5",
+            package="G-1",
+            model="sonnet",
+        ),
+        h("spawned", "06:31", "g-lt", child_id="g-qr", tool_use_id="g5"),
+        h("agent_start", "06:32", "g-qr", role="qa-code-reviewer", status="active"),
+        *beats("g-qr", "06:40", "08:50", 30, ["Read", "Grep"]),
+        h("bind", "07:00", "g-lt", role="lead-tech"),
+        lg("07:01", role="lead-tech", status="waiting", task="Wartet auf Review"),
+        h(
+            "agent_stop",
+            "09:00",
+            "g-qr",
+            role="qa-code-reviewer",
+            status="done",
+            summary="2 Befunde: Rundung in trade.ts, fehlender Test",
+        ),
+        h(
+            "agent_stop",
+            "12:00",
+            "g-help",
+            status="done",
+            summary="Fortschritt: 3 von 5 Schritten",
+        ),
+        h("message", "16:00", "g-lt", role="lead-tech", to="g-ts1", text=LANG),
+        h("agent_start", "16:05", "g-ts1", role=ts1, status="active"),
+        *beats("g-ts1", "16:30", "19:00", 30, ["Edit", "Bash"]),
+        h(
+            "agent_stop",
+            "19:30",
+            "g-ts1",
+            role=ts1,
+            status="done",
+            summary="Befunde behoben, 14 Tests grün",
+        ),
+        h("bind", "19:59", "g-lt", role="lead-tech"),
+        lg(
+            "20:00",
+            role="lead-tech",
+            status="done",
+            summary="Handelsrouten umgesetzt und geprüft",
+        ),
+        h(
+            "agent_stop",
+            "21:00",
+            "g-lt",
+            role="lead-tech",
+            status="done",
+            summary="Handelsrouten fertig",
+        ),
+        h("turn_end", "21:10", status="idle", summary="Handelsrouten fertig"),
+    ]
+
+
+def wide_session(start: float) -> list[dict]:
+    """Session W: 10 gleichzeitige Spalten für die Handybreite (P39)."""
+
+    def h(kind: str, seconds: float, agent: str = "main", **kw) -> dict:
+        return {
+            "ts": stamp_at(start + seconds),
+            "session_id": WIDE,
+            "agent_id": agent,
+            "source": "hook",
+            "kind": kind,
+            **kw,
+        }
+
+    events = [
+        h("session_start", 0, status="idle", model="opus"),
+        h("prompt", 5, status="active", task="Grosses Review aller Pakete"),
+        h(
+            "spawn",
+            10,
+            subagent_type="lead-qa",
+            description="Review koordinieren",
+            model="opus",
+            tool_use_id="w0",
+        ),
+        h("spawned", 11, child_id="w-lq", tool_use_id="w0"),
+        h("agent_start", 12, "w-lq", role="lead-qa", status="active"),
+    ]
+    for k in range(1, 9):
+        t = 30 + (k - 1) * 5
+        events += [
+            h(
+                "spawn",
+                t,
+                "w-lq",
+                subagent_type="qa-code-reviewer",
+                description=f"Review Teil {k}",
+                model="sonnet",
+                tool_use_id=f"w{k}",
+            ),
+            h("spawned", t + 1, "w-lq", child_id=f"w-r{k}", tool_use_id=f"w{k}"),
+            h(
+                "agent_start",
+                t + 2,
+                f"w-r{k}",
+                role="qa-code-reviewer",
+                status="active",
+            ),
+        ]
+    return events
+
+
+def append_g9(path: Path) -> list[dict]:
+    """Zwei Nachrichten nach dem jüngsten Event der Session G (G-S9, zeitunabhängig)."""
+    events = [json.loads(line) for line in path.read_text("utf-8").splitlines() if line]
+    latest = max(
+        datetime.fromisoformat(e["ts"].replace("Z", "+00:00")).timestamp()
+        for e in events
+        if e.get("session_id") == GRAPH
+    )
+    extra = [
+        {
+            "ts": stamp_at(latest + 20),
+            "session_id": GRAPH,
+            "agent_id": "main",
+            "source": "hook",
+            "kind": "message",
+            "to": "g-ex",
+            "text": "Danke für die Suche",
+        },
+        {
+            "ts": stamp_at(latest + 30),
+            "session_id": GRAPH,
+            "agent_id": "main",
+            "source": "hook",
+            "kind": "message",
+            "to": "unbekannt-7",
+            "text": "Test",
+        },
+    ]
+    lines = [json.dumps(e, ensure_ascii=False, separators=(",", ":")) for e in extra]
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.writelines(line + "\n" for line in lines)
+    return extra
+
+
 def main(argv: list[str]) -> int:
+    if argv[:1] == ["--append-g9"] and len(argv) == 2:
+        extra = append_g9(Path(argv[1]))
+        print(f"{len(extra)} Events an {argv[1]} angehängt")
+        return 0
     target = Path(argv[0]) if argv else Path(__file__).with_name("demo_events.jsonl")
-    events = old_session() + current_session()
+    events = (
+        old_session()
+        + current_session()
+        + graph_session(NOW - 22 * 60)
+        + wide_session(NOW - 3 * 60)
+    )
     lines = [json.dumps(e, ensure_ascii=False, separators=(",", ":")) for e in events]
     target.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(events)} Events nach {target}")

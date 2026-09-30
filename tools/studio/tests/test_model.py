@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import tempfile
@@ -8,6 +10,8 @@ from pathlib import Path
 
 import graph
 import model
+
+from tests.fixtures import make_demo
 
 T0 = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc).timestamp()
 MODELS = {
@@ -1534,6 +1538,265 @@ class NamesTest(unittest.TestCase):
         self.assertEqual(
             (nodes["s1:w1"]["name"], nodes["s1:w1"]["instance"]), ("Logik-Lars", 1)
         )
+
+
+class GraphFixtureTest(unittest.TestCase):
+    # (kind, label, text, dot, arrow, Spuren oben) laut Spec, Tabelle „Erwartete Graph-Zeilen"
+    REFERENCE = (
+        ("start", "Boss Bruno", "Session beginnt", 0, None, "S...."),
+        (
+            "order",
+            "Boss Bruno → Technik-Toni",
+            "Handelsrouten umsetzen",
+            1,
+            (0, 1, "branch"),
+            "SS...",
+        ),
+        (
+            "order",
+            "Technik-Toni → Logik-Lars",
+            "Routen-Simulation",
+            2,
+            (1, 2, "branch"),
+            "SSS..",
+        ),
+        (
+            "order",
+            "Technik-Toni → Logik-Lars (2)",
+            "Zollberechnung",
+            3,
+            (1, 3, "branch"),
+            "SSSS.",
+        ),
+        (
+            "order",
+            "Boss Bruno → Aushilfe",
+            "Bestehende Handelsdateien suchen",
+            4,
+            (0, 4, "branch"),
+            "SSSSS",
+        ),
+        (
+            "report",
+            "Aushilfe → Boss Bruno",
+            "3 Dateien gefunden: trade.ts, ships.ts, ports.ts",
+            4,
+            (4, 0, "merge"),
+            "SSSS.",
+        ),
+        ("status", "Logik-Lars (2)", "Zollsatz fehlt in defs", 3, None, "SSSS."),
+        (
+            "message",
+            "Logik-Lars (2) → Boss Bruno",
+            "Zollsatz fehlt in src/sim/defs — 10 % oder 15 %?",
+            3,
+            (3, 0, "message"),
+            "SSSS.",
+        ),
+        (
+            "message",
+            "Boss Bruno → Technik-Toni",
+            "Zoll 10 %, bitte an Logik-Lars (2) weitergeben",
+            0,
+            (0, 1, "message"),
+            "SSSS.",
+        ),
+        (
+            "message",
+            "Technik-Toni → ? zoll-helfer",
+            "<img src=x onerror=alert(1)>",
+            1,
+            (1, None, "message"),
+            "SSSS.",
+        ),
+        (
+            "status",
+            "Logik-Lars (2)",
+            "Zollberechnung abgebrochen, Werte fehlen",
+            3,
+            None,
+            "SSSS.",
+        ),
+        (
+            "report",
+            "Logik-Lars (2) → Technik-Toni",
+            "Abgebrochen",
+            3,
+            (3, 1, "merge"),
+            "SSS..",
+        ),
+        (
+            "report",
+            "Logik-Lars → Technik-Toni",
+            "Routen-Simulation fertig, 12 Tests grün",
+            2,
+            (2, 1, "merge"),
+            "SSD..",
+        ),
+        (
+            "order",
+            "Technik-Toni → Review-Rita",
+            "Review Routen-Simulation",
+            3,
+            (1, 3, "branch"),
+            "SSDS.",
+        ),
+        ("status", "Technik-Toni", "Wartet auf Review", 1, None, "SSDS."),
+        (
+            "report",
+            "Review-Rita → Technik-Toni",
+            "2 Befunde: Rundung in trade.ts, fehlender Test",
+            3,
+            (3, 1, "merge"),
+            "SSD..",
+        ),
+        ("pause", "", "… 7 min …", None, None, "SSD.."),
+        ("message", "Technik-Toni → Logik-Lars", None, 1, (1, 2, "message"), "SSS.."),
+        (
+            "report",
+            "Logik-Lars → Technik-Toni",
+            "Befunde behoben, 14 Tests grün",
+            2,
+            (2, 1, "merge"),
+            "SS...",
+        ),
+        (
+            "status",
+            "Technik-Toni",
+            "Handelsrouten umgesetzt und geprüft",
+            1,
+            None,
+            "SS...",
+        ),
+        (
+            "report",
+            "Technik-Toni → Boss Bruno",
+            "Handelsrouten fertig",
+            1,
+            (1, 0, "merge"),
+            "S....",
+        ),
+    )
+
+    def state(self, events, now, session):
+        return model.build_state(
+            events, now, MODELS, session=session, agent_names=self.names()
+        )
+
+    @staticmethod
+    def names():
+        agents = Path(__file__).resolve().parents[3] / ".claude" / "agents"
+        return model.read_agent_names(agents)
+
+    def test_fixture_matches_reference(self):
+        state = self.state(make_demo.graph_session(T0), T0 + 22 * 60, make_demo.GRAPH)
+        graph = state["graph"]
+        self.assertEqual((graph["columns"], graph["truncated"]), (5, False))
+        rows = graph_rows(state)
+        self.assertEqual(len(rows), len(self.REFERENCE))
+        long_text = make_demo.LANG[:160] + "…"
+        for row, (kind, label, text, dot, arrow, lanes) in zip(rows, self.REFERENCE):
+            with self.subTest(row=row["id"]):
+                got_arrow = row["arrow"] and tuple(row["arrow"].values())
+                self.assertEqual(
+                    (
+                        row["kind"],
+                        row["label"],
+                        row["text"],
+                        row["dot"],
+                        got_arrow,
+                        ups(row),
+                    ),
+                    (kind, label, text or long_text, dot, arrow, lanes),
+                )
+        self.assertEqual(rows[9]["to"], "?")
+        self.assertEqual(
+            (rows[17]["lanes"][2]["down"], rows[17]["lanes"][2]["up"]),
+            ("dashed", "solid"),
+        )
+        self.assertEqual(
+            (rows[12]["lanes"][2]["down"], rows[12]["lanes"][2]["up"]),
+            ("solid", "dashed"),
+        )
+        self.assertEqual(rows[13]["lanes"][3]["down"], "none")
+        older_ts = rows[15]["id"].split(":", 3)[3]
+        self.assertEqual(rows[16]["id"], f"pause:{make_demo.GRAPH}:-:{older_ts}")
+
+    def test_fixture_nodes_and_counts(self):
+        state = self.state(make_demo.graph_session(T0), T0 + 22 * 60, make_demo.GRAPH)
+        nodes = flat(state)
+        g = make_demo.GRAPH
+        self.assertNotIn(f"{g}:g-help", nodes)
+        self.assertEqual(state["counts"].get("done"), 4)
+        self.assertEqual(state["counts"].get("failed"), 1)
+        self.assertEqual(state["counts"].get("idle"), 1)
+        main = nodes[f"{g}:main"]
+        self.assertEqual(main["task_short"], "Handelsrouten umsetzen und prü…")
+        ts2 = nodes[f"{g}:g-ts2"]
+        self.assertEqual(
+            (ts2["name"], ts2["status"], ts2["task"]),
+            ("Logik-Lars (2)", "failed", "Zollsatz fehlt in defs"),
+        )
+        self.assertEqual(nodes[f"{g}:g-ex"]["title"], "Explore")
+
+    def test_old_session_retrospective(self):
+        state = self.state(make_demo.old_session(), make_demo.NOW, make_demo.OLD)
+        rows = graph_rows(state)
+        self.assertEqual(
+            [(r["kind"], r["label"], r["text"]) for r in rows],
+            [
+                ("start", "Boss Bruno", "Session beginnt"),
+                ("order", "Boss Bruno → Zocker-Zoe", "Speichern/Laden durchspielen"),
+                ("pause", "", "… 20 min …"),
+                (
+                    "report",
+                    "Zocker-Zoe → Boss Bruno",
+                    "Laden nach Neustart ok, ein Rundungsfehler im Lager",
+                ),
+                ("pause", "", "… 8 min …"),
+                ("end", "Boss Bruno", "Session beendet"),
+            ],
+        )
+        self.assertEqual(ups(rows[-1]), "..")
+
+    def test_wide_session_columns(self):
+        state = self.state(make_demo.wide_session(T0), T0 + 180, make_demo.WIDE)
+        rows = graph_rows(state)
+        self.assertEqual((state["graph"]["columns"], len(rows)), (10, 10))
+        self.assertEqual(ups(rows[-1]), "S" * 10)
+        self.assertEqual(rows[1]["label"], "Boss Bruno → Prüf-Peter")
+        self.assertEqual(
+            [(r["label"], r["text"], r["dot"]) for r in rows[2:4]],
+            [
+                ("Prüf-Peter → Review-Rita", "Review Teil 1", 2),
+                ("Prüf-Peter → Review-Rita (2)", "Review Teil 2", 3),
+            ],
+        )
+        nodes = flat(state)
+        w = make_demo.WIDE
+        self.assertEqual(
+            [nodes[f"{w}:w-r{k}"]["instance"] for k in range(1, 9)], list(range(1, 9))
+        )
+        self.assertEqual(nodes[f"{w}:w-r8"]["name"], "Review-Rita (8)")
+
+    def test_append_g9_adds_two_rows_without_pause(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.jsonl"
+            with contextlib.redirect_stdout(io.StringIO()):
+                make_demo.main([str(path)])
+                make_demo.main(["--append-g9", str(path)])
+            events = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+        state = self.state(events, make_demo.NOW, make_demo.GRAPH)
+        rows = state["graph"]["rows"]
+        self.assertEqual(len(rows), 23)
+        self.assertEqual(
+            [(r["label"], r["to"], r["arrow"]["to_col"]) for r in rows[:2]],
+            [
+                ("Boss Bruno → ? unbekannt-7", "?", None),
+                ("Boss Bruno → Aushilfe", f"{make_demo.GRAPH}:g-ex", None),
+            ],
+        )
+        self.assertEqual([r["kind"] for r in rows[:3]].count("pause"), 0)
 
 
 class GateSpecFixesTest(unittest.TestCase):
