@@ -353,6 +353,20 @@ Verhaltensänderungen, niedrig, bei der nächsten UI-Arbeit.
 
 ---
 
+### 2026-09-30 · Spiel auf dem Handy · Mobil unspielbar
+
+**Beobachtung:** Der Nutzer meldet nach dem M5-Playtest, das Spiel sei „auf dem handy momentan
+unspielbar". **Ursprung:** Nutzer, Ruling R78. **Einschätzung:** Kein Ziel mehr (Desktop-first);
+Trigger für ein Mobil-Paket nur, wenn der Nutzer das Handy wieder will.
+
+### 2026-09-30 · `tools/studio/` · Restbefunde Limit-Sensor
+
+**Beobachtung:** (1) Ampel gelb färbt den Text nicht, nur Leiste und Wort; (2) veraltete Werte
+werden nicht abgeschwächt dargestellt; (3) ohne `$CLAUDE_PROJECT_DIR` bleibt die Statuszeile
+leer; (4) Hook-Zeile gilt 600 s als frisch, Dashboard 1 h; (5) `renderLimits` ohne JS-Test,
+Tooltip mit Reset-Zeiten nur im Code geprüft. **Ursprung:** lead-qa und lead-tech, STUDIO-LIMIT
+(R76, R80). **Einschätzung:** niedrig; bündeln, sobald wieder an `tools/studio/` gearbeitet wird.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
