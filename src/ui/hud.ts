@@ -1,12 +1,14 @@
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
-import { TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { citizens, populationByTier } from '../sim/population';
-import type { Tier } from '../sim/types';
+import { goodsBalance } from '../sim/queries';
+import type { TaxLevel, Tier } from '../sim/types';
 import type { GameState } from './app';
 import { setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
 import type { Settings } from './settings';
+import { renderOrder, updateOrder } from './order';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -22,6 +24,31 @@ function signed(n: number): string {
   if (n > 0) return `+${n}`;
   if (n < 0) return `−${-n}`;
   return '±0';
+}
+
+/** Schwelle, unter der eine Bilanz als „ausgeglichen" gilt (gegen Gleitkomma-Rauschen). */
+const TREND_EPS = 0.05;
+
+/** Trendpfeil zur Bilanz je 100 Ticks. */
+export function trendArrow(net: number): '↑' | '↓' | '→' {
+  if (net >= TREND_EPS) return '↑';
+  if (net <= -TREND_EPS) return '↓';
+  return '→';
+}
+
+/** Bilanz mit einer Nachkommastelle und Vorzeichen (typografisches Minus); im Rauschen „±0.0". */
+export function formatBalance(net: number): string {
+  if (Math.abs(net) < TREND_EPS) return '±0.0';
+  return net > 0 ? `+${net.toFixed(1)}` : `−${(-net).toFixed(1)}`;
+}
+
+const TAX_IDS = Object.keys(TAX_LEVELS) as TaxLevel[];
+
+/** Tooltip einer Steuerstufe: Steuer, Wartezeit bis zum Aufstieg und Belegung (alles aus `TAX_LEVELS`). */
+export function taxTooltip(level: TaxLevel): string {
+  const t = TAX_LEVELS[level];
+  const wait = t.upgradeWait === null ? 'kein Aufstieg' : `Aufstieg nach ${t.upgradeWait} Ticks`;
+  return `Steuer ${t.pct} % · ${wait} · Belegung ${Math.round(t.occupancy * 100)} %`;
 }
 
 /** Zeitfenster, in dem ein zweiter Klick auf Neu bzw. Laden bestätigt (Millisekunden). */
@@ -43,6 +70,10 @@ export interface HudActions {
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
   hasProgress(): boolean;
   restart(): void;
+  /** Schaltet die Steuerstufe; zeigt bei Fehlschlag selbst den Grund. */
+  setTax(level: TaxLevel): void;
+  /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
+  deliverOrder(): void;
 }
 
 function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): HTMLButtonElement {
@@ -183,6 +214,23 @@ function renderSoundControls(box: Element, actions: HudActions): void {
   box.append(mute, vol);
 }
 
+/** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */
+function renderTaxControls(box: Element, actions: HudActions): void {
+  const label = document.createElement('span');
+  label.textContent = 'Steuer';
+  box.appendChild(label);
+  for (const level of TAX_IDS) {
+    const btn = gameButton(TAX_LEVELS[level].name, () => actions.setTax(level));
+    btn.dataset.tax = level;
+    btn.title = taxTooltip(level);
+    box.appendChild(btn);
+  }
+  const lock = document.createElement('span');
+  lock.className = 'tax-lock';
+  lock.dataset.field = 'tax-lock';
+  box.appendChild(lock);
+}
+
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
@@ -193,6 +241,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
       '<span class="hud-sound"></span><span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
+      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
     for (const tier of TIER_IDS) {
@@ -226,6 +275,10 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       });
       speedBox?.appendChild(btn);
     }
+    const taxBox = header.querySelector('.hud-tax');
+    if (taxBox) renderTaxControls(taxBox, actions);
+    const orderEl = header.querySelector<HTMLElement>('.order-card');
+    if (orderEl) renderOrder(orderEl, state.world, { deliver: actions.deliverOrder });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
     const gameBox = header.querySelector('.hud-game');
@@ -245,9 +298,27 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const pop = populationByTier(world);
   for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
   setField(header, 'goal', `Bürger-Ziel ${citizens(world)} / ${WIN_CITIZENS}`);
+  const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
-    setField(header, `stock-${good}`, `${GOODS[good].name} ${world.stock[good]}`);
+    const b = balance[good];
+    const chip = setField(
+      header,
+      `stock-${good}`,
+      `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}${formatBalance(b.net)}`,
+    );
+    if (chip) {
+      chip.classList.toggle('negative', b.net <= -TREND_EPS);
+      const tip = `Erzeugung ${b.produced.toFixed(1)} · Verbrauch ${b.consumed.toFixed(1)} je 100 Ticks`;
+      if (chip.title !== tip) chip.title = tip;
+    }
   }
+  for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-tax .btn')) {
+    btn.classList.toggle('active', btn.dataset.tax === world.taxLevel);
+  }
+  const left = world.taxLockedUntil - world.tick;
+  setField(header, 'tax-lock', left > 0 ? `Sperre noch ${left} Ticks` : '');
+  const orderEl = header.querySelector<HTMLElement>('.order-card');
+  if (orderEl) updateOrder(orderEl, world);
   setField(header, 'tick', `Tick: ${world.tick}`);
   setField(header, 'seed', `Karte: ${world.seed}`);
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {

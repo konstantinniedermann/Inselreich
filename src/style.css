@@ -313,3 +313,21 @@ body {
   flex-wrap: wrap;
   gap: 4px;
 }
+.ctrl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.hud-tax,
+.order-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+}
+.tax-lock {
+  opacity: 0.8;
+}

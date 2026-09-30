@@ -1,6 +1,8 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { WIN_CITIZENS } from '../sim/defs/tiers';
+import { setTaxLevel } from '../sim/tax';
+import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
@@ -14,9 +16,10 @@ import { disposeHud, updateHud, type HudActions } from './hud';
 import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, updateInspect } from './inspect';
+import { orderChange } from './order';
 import { bindMessages, showMessage } from './messages';
 import { loadSettings, saveSettings } from './settings';
-import { UNLOCK_EVENTS, diffSoundEvents, soundSnapshot } from './soundEvents';
+import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
 import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
@@ -189,10 +192,27 @@ function launch(
     restart: () => {
       restart(root);
     },
+    setTax: (level) => {
+      const r = setTaxLevel(world, level);
+      if (!r.ok) showError(r.reason);
+      refresh();
+    },
+    deliverOrder: () => {
+      const r = deliverOrder(world);
+      const ev = actionSound(r, 'orderDone');
+      if (!r.ok) showError(r.reason);
+      else {
+        // Vergleichswert zurücksetzen, damit die Lieferung nicht als „verfallen" gilt
+        prevOrderPeriod = null;
+        showMessage('Auftrag geliefert');
+        if (ev) sound.play(ev);
+      }
+      refresh();
+    },
   };
 
-  /** Geld nach dem letzten Frame bzw. Handelsereignis (erkennt Verkäufe für den Münzton). */
-  let lastMoney = world.money;
+  /** Auftragsperiode im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
+  let prevOrderPeriod: number | null = world.order?.period ?? null;
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -215,10 +235,9 @@ function launch(
       state.selectedId = world.kontorId;
       renderTrade(panelEl, world, {
         back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
-        changed: () => {
-          // Ein Verkauf erhöht das Geld gegenüber dem letzten Frame (kein Tick läuft zwischen den Ereignissen)
-          if (world.money > lastMoney) sound.play('coin');
-          lastMoney = world.money;
+        changed: (op, r) => {
+          if (!r.ok) showError(r.reason);
+          else if (op === 'sell') sound.play('coin');
           refresh();
         },
       });
@@ -394,7 +413,10 @@ function launch(
       const snap = soundSnapshot(world);
       for (const e of diffSoundEvents(prevSnap, snap)) sound.play(e);
       prevSnap = snap;
-      lastMoney = world.money;
+      const change = orderChange(prevOrderPeriod, world.order?.period ?? null);
+      if (change === 'new') showMessage('Neuer Auftrag');
+      else if (change === 'expired') showMessage('Auftrag verfallen');
+      prevOrderPeriod = world.order?.period ?? null;
       if (state.speed > 0) {
         autoMs += dt;
         if (autoMs >= AUTOSAVE_MS) {
