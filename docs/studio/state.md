@@ -4,57 +4,44 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-09-30 (laufende Session, Auftrag Nutzer-Playtest R73)
+Stand: 2026-09-30 (Übergabe Session 664ac8d3 bei 77 % Kontext)
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich** (Aufbau-Strategiespiel im Browser).
-- M1–M5 fertig; **M5 Spielerlebnis gemergt und live** (main 3c292d5, Gate Merge R70, Retro
-  `retros/2026-09-30-meilenstein-m5.md`).
-- Studio: Verfassung 1.1 (vom Nutzer bestätigt, N-001), Handbuch 1.6.
-- Laufender Meilenstein: **M6 Krisen und Stadtdienste** (R72) — Phase Spec.
+- Projekt: **Inselreich** (Aufbau-Strategiespiel im Browser). M1–M5 fertig und live.
+- **Nutzerauftrag nach M5-Playtest** („mehr Tiefe, bessere Grafik, Ambiente, Musik, die Stimmung
+  muss rüberkommen"): Programm in zwei Strängen (R73):
+  - **M7 „Stimmung"** (lead-art) — Phase Spec; Gate Brainstorming bestanden mit Auflagen (R77):
+    Vertical Slice zuerst, Vorher/Nachher-Bilder an den Nutzer.
+  - **M6 „Krisen und Stadtdienste"** (lead-design) — Phase Spec; Entscheide R74; K-C → M8.
+- **Desktop-first** ist Dauerregel (R78, Projekt-CLAUDE.md); Mobil kein Ziel.
+- Studio: Verfassung 1.1, Handbuch 1.7 (R75: E-001 angepasst, E-003 läuft). Limit-Sensor in
+  Betrieb (R80) — Hook-Zeile zeigt Woche/Kontext.
 
 ## Parallele Sessions
 
-| Session                 | Stand         | besitzt     | bis |
-| ----------------------- | ------------- | ----------- | --- |
-| M5 Abschluss (2bf010b4) | abgeschlossen | nichts mehr | –   |
+| Session         | Stand     | besitzt     | bis |
+| --------------- | --------- | ----------- | --- |
+| 664ac8d3 (R73…) | übergeben | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- M5 Welle 6: D1 Doku-Pass, Final-Review OK (opus), Merge und Push, CI und Pages grün (R66, R70).
-- Verfassung 1.1: Abhängigkeiten per L0-Ruling + ADR (§5.7), Parallelisieren als oberstes Prinzip
-  (§5.8) (R67).
-- Nutzungslimit: Modellwahl nach Aufgabe, nie Downgrade wegen Limit, stattdessen herunterfahren;
-  Sessiongrösse ≈ ein Abschnitt, Übergabe spätestens bei 50 % Kontext (R68, R69, R71, Handbuch 1.6).
-- M6 gewählt (R72), Spec-Entwurf begonnen.
-
-## Laufende Pakete
-
-- **M7-SPEC** (lead-art, M7 „Stimmung", R73): Designvorschlag → Gate Brainstorming (Prüfer lead-design) → Spec auf `docs/m7-spec` (`.worktrees/m7-spec`). Budget 5/2.
-- **M6-SPEC** (lead-design): Spec fertigstellen auf `docs/m6-spec`, Entscheide per R74. Budget 4/2.
-- **STUDIO-LIMIT** (lead-qa): Nachprüfung + Browser-Blick → Urteil für Gate Merge. Budget 2/2.
-- **M5-NACHLESE** (lead-tech): `fix/m5-nachlese` (`.worktrees/m5-nachlese`). Budget 3/1.
-- **STUDIO-LIMIT** Fix-Runde (lead-tech, R76), danach Nachprüfung lead-qa, dann Gate Merge.
-- **STUDIO-DESKTOP** (studio-coach): Personas auf Desktop-first (R78).
-- Nach Merge M5-NACHLESE in `docs/beobachtungen.md` nachtragen: „Handy unspielbar" (R78), STUDIO-LIMIT Befund 3 (R76).
-- Gates: M7 Brainstorming bestanden mit Auflagen (R77), Desktop-first (R78).
-- Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design und lead-art.
+- Rulings R73–R80. M5-NACHLESE gemergt (5a710cf), STUDIO-LIMIT gemergt (57d1022), CI/Pages grün.
+- Handbuch 1.7, Personas Desktop-first (tech-ui-engineer 1.5, qa-playtester 1.5).
+- Gemergte M5-Worktrees aufgeräumt; Beobachtungen Mobil und Limit-Restbefunde eingetragen.
 
 ## Pausierte Pakete
 
-- **M6-SPEC** — Entwurf auf `docs/m6-spec` @ 7fed9ed (Worktree `.worktrees/m6-spec`, Basis vor dem
-  M5-Merge). Übergabe `.studio/handoffs/m6-spec.md`, Werte `.studio/handoffs/m6-werte.md` (lokal).
-  Nächster Schritt: main hineinmergen, `design-spec-author` baut die volle Spec, lead-design nimmt
-  ab, dann Gate Spec (lead-tech, lead-qa).
-- **STUDIO-LIMIT** — Limit-Sensor fertig auf `feat/studio-limit` @ 092f171 (Worktree
-  `.worktrees/studio-limit`), make check grün; Review BEDENKEN (niedrig) behoben, aber nicht
-  nachgeprüft; Dashboard nicht im Browser angesehen. Nächster Schritt: Nachprüfung am Diff und
-  Browser-Blick, dann Gate Merge; wirkt erst in der Session nach dem Merge.
-- **M5-NACHLESE** — Sammel-Commit auf main laut R70: Kann-Befunde A-1…A-5, B-F2…B-F9, D-1…D-5 aus
-  `.studio/qa/M5-FR/report.md` (nur Labels, Namen, Doku) und Übertrag nach `docs/beobachtungen.md`
-  inkl. B-F1 (Autosave nach Reload) und der zwei Design-Befunde aus M6-PREP (Steuer „hoch" nach
-  Sieg dominiert; `citizens()` zählt nur Stufe 3 — Falle für eine vierte Stufe).
+- **M7-SPEC** (lead-art): Vorschlag `.studio/handoffs/2026-09-30-lead-art-l0-m7-vorschlag.md`,
+  Schnittstelle M6 `.studio/handoffs/2026-09-30-lead-art-lead-design.md`, Übergabe
+  `.studio/handoffs/m7-spec.md` (vom Lead beim Pausieren). Auflagen R77 + R78 (Frame-Budget
+  Desktop 1920×1080, ≥ 60 fps Ziel, ≥ 30 fps Untergrenze; kein Mobil-HUD). Nächster Schritt:
+  Spec fertig → Gate Spec (lead-tech, lead-qa) → Plan mit Vertical Slice als erstem Render-Paket.
+- **M6-SPEC** (lead-design): Branch `docs/m6-spec` (`.worktrees/m6-spec`), Übergabe
+  `.studio/handoffs/m6-spec.md` (inkl. Tiefe-Empfehlung M6 vs. M8). Nächster Schritt: Spec fertig
+  → Gate Spec (lead-tech, lead-qa).
+- Nutzer-Spielstand angefragt (Anleitung im Chat): `.studio/playtest/nutzer-save.json` — liegt er
+  vor, an lead-design (Tiefe) und lead-art geben.
 
 ## Budget
 
@@ -62,20 +49,15 @@ keine Freigaben (nach Session-Wechsel neu loggen)
 
 ## Offene Entscheide
 
-- L0:
-  - M6-Spec, fünf Entscheide aus `.studio/handoffs/m6-spec.md` (Controller nach
-    `tests/sim/controller.ts`, Krisen-Lauf Grenze 9000, Brand an Diensten, Sturm auf alle
-    Rohstoffbetriebe, v2-Saves mit Krisen „aus") — Empfehlungen des Design-Leads jeweils „ja/so".
-  - Retro M5: E-001 „angepasst" (Werkzeugaufrufe als Hauptgrösse), E-003 Zweck-Gegenprobe bei
-    Auslegungen, drei Handbuch-Korrekturen (kein Report-Dateipfad für Subagenten, `log.py result`
-    mit `--package`, Edit/Write-Regel für Text-Massenänderungen).
-  - Aufräumen der gemergten M5-Worktrees und -Branches (nur gemergte, §6).
-- Nutzer: keine offenen Einträge. Nutzer-Playtest von M5 läuft (390 px und Ton auf Touch,
-  Frame-Zeit, Tag-Nacht über einen Tag, Autosave nach Reload). Meldet er „nach dem Sieg passiert
-  nichts", M6 und M7 tauschen (R72).
+- L0: Aufräumen Worktrees/Branches `fix/m5-nachlese` und `feat/studio-limit` (gemergt, §6: nur
+  lokal, `-d`); Handbuch „Limits und Sessiongrösse" von „in Arbeit" auf „in Betrieb" (Coach, R80);
+  Paket `log.py result --package` (R75, jetzt frei); Beobachtung „Integrator läuft trotz
+  Vordergrund im Hintergrund" (zweimal in dieser Session) → Coach.
+- Nutzer: keine offenen Warteschlangen-Einträge. Vorher/Nachher-Bilder des Vertical Slice kommen
+  im Bericht (nicht blockierend).
 
 ## Nächste Schritte
 
-1. Playtest-Rückmeldung des Nutzers aufnehmen (ggf. Tausch K-B/K-C).
-2. Parallel: M6-SPEC fortsetzen · STUDIO-LIMIT prüfen und mergen · M5-NACHLESE auf main.
-3. L0-Entscheide oben per Ruling.
+1. Übergaben m7-spec.md und m6-spec.md lesen, beide Leads neu briefen (Budget neu loggen).
+2. Gate Spec für M6 und M7 parallel (lead-tech, lead-qa).
+3. Pläne; M7 startet mit dem Vertical Slice, M6-Sim parallel (R73: M7 Vorrang in render/audio).
