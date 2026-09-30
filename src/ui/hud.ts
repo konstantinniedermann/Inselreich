@@ -1,5 +1,5 @@
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
-import { UPKEEP_INTERVAL, totalUpkeep } from '../sim/economy';
+import { UPKEEP_INTERVAL } from '../sim/economy';
 import type { GameState } from './app';
 import { setField } from './dom';
 
@@ -42,7 +42,7 @@ export function updateHud(header: HTMLElement, state: GameState): void {
   }
   const { world } = state;
   setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
-  const upkeep = totalUpkeep(world);
+  const upkeep = world.stats.upkeep;
   const sign = upkeep > 0 ? '−' : '';
   setField(header, 'upkeep', `Unterhalt ${sign}${upkeep} / ${UPKEEP_INTERVAL} Ticks`);
   for (const good of GOOD_IDS) {

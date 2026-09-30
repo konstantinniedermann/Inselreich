@@ -12,45 +12,45 @@ export function sellPrice(good: GoodId, n: number): number {
 }
 
 export function buy(world: World, good: GoodId, n: number): Result {
-  // Check if n is a valid amount (positive integer)
+  // Menge muss eine positive ganze Zahl sein
   if (!Number.isInteger(n) || n < 1) {
     return fail('Ungültige Menge');
   }
 
-  // Check if world has negative money
+  // Bei negativem Kontostand ist kein Kauf möglich
   if (world.money < 0) {
     return fail('Kein Geld');
   }
 
-  // Check if storage would be exceeded
+  // Lagergrenze prüfen
   if (world.stock[good] + n > STORAGE_CAP) {
     return fail('Lager voll');
   }
 
-  // Check if there's enough money
+  // Genug Geld?
   const price = buyPrice(good, n);
   if (world.money < price) {
     return fail('Zu wenig Geld');
   }
 
-  // All checks passed, execute transaction
   world.money -= price;
+  // Rückgabe bewusst ignoriert: nach der Lagergrenzen-Prüfung wird immer die volle Menge eingelagert
   addStock(world, good, n);
   return ok;
 }
 
 export function sell(world: World, good: GoodId, n: number): Result {
-  // Check if n is a valid amount (positive integer)
+  // Menge muss eine positive ganze Zahl sein
   if (!Number.isInteger(n) || n < 1) {
     return fail('Ungültige Menge');
   }
 
-  // Check if there's enough stock
+  // Genug Ware im Lager?
   if (world.stock[good] < n) {
     return fail('Nicht genug Ware');
   }
 
-  // All checks passed, execute transaction
+  // Rückgabe bewusst ignoriert: nach der Bestandsprüfung ist die Entnahme immer erfolgreich
   takeStock(world, good, n);
   world.money += sellPrice(good, n);
   return ok;

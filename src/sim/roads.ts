@@ -50,7 +50,11 @@ export function recomputeConnectivity(world: World): void {
   for (const b of Object.values(world.buildings)) {
     b.connected = isBuildingConnected(world, b, roads);
     const def = BUILDING_DEFS[b.defId];
-    if (!(def.produces || def.service || b.defId === 'market')) continue;
+    const dependsOnConnection =
+      def.produces !== undefined ||
+      def.service !== undefined ||
+      (def.supplyRadius !== undefined && b.defId !== 'kontor');
+    if (!dependsOnConnection) continue;
     if (!b.connected) b.state = 'notConnected';
     else if (b.state === 'notConnected') b.state = 'ok';
   }
