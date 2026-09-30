@@ -527,3 +527,18 @@ CHANGELOG), ohne Experiment. Parallel-Überschreitung von lead-production (2 sta
 Session-Retro betrachtet. — Kosten bei Irrtum: Budget-Vorfälle kommen später als erwartet.
 
 Entscheider: L0 · Anlass: Bericht lead-production S17
+
+## R59 · 2026-09-30 · M5
+
+Ruling: Gate Plan M5 bestanden unter Auflagen — lead-qa (4) und lead-production (8) BEDENKEN, kein
+ZURÜCK; alle Punkte werden vor Umsetzungsbeginn in den Plan eingearbeitet (Render→UI-Abhängigkeit,
+`m5-int` gehört lead-tech mit sequenziellen Checks, Final-Review an feste SHAs gebunden, lange
+Checks im CDP-Skript, Determinismus mit Spieleraktionen, Merge-Reihenfolge mit Vorprüfung, Wellen
+mit frischem lead-tech je Welle). `SELL_FLOOR` bereits in S1 (Abweichung von der Spec) bestätigt.
+Budget gestaffelt: Muss-Pakete 45 Starts (lead-tech 33 parallel 3, lead-art 11 parallel 2, lead-qa
+1), Kann-Posten +13 erst nach L0-Beschluss. Für M5 gehen Befunde von Arbeitern nur in die
+Lead-Berichte; Paket D1 überträgt sie gesammelt nach `docs/beobachtungen.md` (vermeidet Konflikte
+über fünf Worktrees; die Pflicht aus Verfassung §3 bleibt inhaltlich erfüllt). — Kosten bei Irrtum:
+Befunde erscheinen verzögert im Posteingang.
+
+Entscheider: L0 · Anlass: Gate Plan M5
