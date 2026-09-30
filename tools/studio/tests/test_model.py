@@ -1493,6 +1493,24 @@ class GraphTest(unittest.TestCase):
         self.assertEqual([r["kind"] for r in rows], ["order", "report"])
         self.assertEqual(rows[-1]["text"], "Erster Bericht")
 
+    def test_status_with_wrong_type_keeps_graph(self):
+        # nur der Graph-Pfad: build_state selbst scheitert bei Listen-Status in view()
+        events = [
+            *lead(),
+            message(8, "a1", "main"),
+            bind(9, "a1", "lead-qa"),
+            log_status(10, "lead-qa", ["done"], task=["x"], summary={"x": 1}),
+        ]
+        builder = model._Builder(MODELS, T0 + 100, NAMES)
+        for event in events:
+            with contextlib.suppress(Exception):  # wie build_state
+                builder.apply(event)
+        builder.finalize()
+        builder.identities()
+        kinds = [r["kind"] for r in builder.layouts()["s1"].rows]
+        self.assertIn("order", kinds)
+        self.assertIn("message", kinds)
+
     def test_status_row_uses_event_time_resolution(self):
         events = [
             *lead(),

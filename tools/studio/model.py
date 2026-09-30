@@ -705,9 +705,9 @@ class _Builder:
             "status",
             ts,
             node["key"],
-            status=event.get("status") or "",
-            task=event.get("task") or "",
-            summary=event.get("summary") or "",
+            status=str(event.get("status") or ""),
+            task=str(event.get("task") or ""),
+            summary=str(event.get("summary") or ""),
         )
         self.touch(node, ts)
         self.stamp(node, event, ("handbook_version", "milestone"))
