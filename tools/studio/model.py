@@ -16,6 +16,7 @@ from pathlib import Path
 INACTIVE_DEFAULT = 300.0
 BIND_WINDOW = 30.0
 FEED_SIZE = 80
+HEARTBEAT_TOOLS = 4
 PULSE_MINUTES = 60
 CHRONICLE_SIZE = 200
 TEXT_MAX = 160
@@ -494,12 +495,15 @@ class _Builder:
                 "kind": event.get("kind", ""),
                 "status": event.get("status", ""),
                 "text": _short(text, 140),
+                "_agent": f"{sid}:{event.get('agent_id') or ''}",
             }
         )
 
     # --- Ergebnis -----------------------------------------------------------
 
-    def result(self, session: str | None, inactive_after: float) -> dict:
+    def result(
+        self, session: str | None, inactive_after: float, heartbeats: bool = True
+    ) -> dict:
         ordered = sorted(self.sessions.values(), key=lambda s: s["last"], reverse=True)
         if session in (None, "", "latest"):
             chosen = ordered[0]["id"] if ordered else None
@@ -560,7 +564,7 @@ class _Builder:
                 ),
                 key=lambda d: d["ts"],
             ),
-            "feed": sorted(feed, key=lambda f: f["t"], reverse=True)[:FEED_SIZE],
+            "feed": _collapse_feed(feed, heartbeats)[:FEED_SIZE],
             "pulse": self.pulse(feed),
             "departments": ["studio", *DEPARTMENTS, "extern"],
         }
@@ -658,12 +662,57 @@ class _Builder:
         ]
 
 
+def _heartbeat_text(tools: list[str], count: int) -> str:
+    names = ", ".join(tools[:HEARTBEAT_TOOLS])
+    if len(tools) > HEARTBEAT_TOOLS:
+        names += ", …"
+    return f"{names} ×{count}" if count > 1 else names
+
+
+def _collapse_feed(feed: list[dict], heartbeats: bool) -> list[dict]:
+    """Heartbeat-Läufe je Agent zu einer Zeile zusammenfassen, neueste zuerst.
+
+    Ein Lauf endet, sobald derselbe Agent (gleicher Schlüssel oder gleiche Rolle
+    in derselben Session) ein anderes Event erzeugt. Ohne ``heartbeats`` fallen
+    alle Heartbeat-Zeilen weg.
+    """
+    rows: list[dict] = []
+    runs: dict[str, dict] = {}
+    for entry in sorted(feed, key=lambda f: f["t"]):
+        row = {k: v for k, v in entry.items() if not k.startswith("_")}
+        if entry["kind"] != "heartbeat":
+            for key, run in list(runs.items()):
+                if key == entry["_agent"] or (
+                    run["session_id"] == entry["session_id"]
+                    and run["role"] == entry["role"]
+                ):
+                    del runs[key]
+            rows.append(row)
+            continue
+        if not heartbeats:
+            continue
+        run = runs.get(entry["_agent"])
+        if run is None:
+            run = row | {"count": 0, "first_t": entry["t"], "_tools": []}
+            runs[entry["_agent"]] = run
+            rows.append(run)
+        run["count"] += 1
+        run["t"], run["ts"] = entry["t"], entry["ts"]
+        if entry["text"] and entry["text"] not in run["_tools"]:
+            run["_tools"].append(entry["text"])
+        run["text"] = _heartbeat_text(run["_tools"], run["count"])
+    for row in rows:
+        row.pop("_tools", None)
+    return sorted(rows, key=lambda f: f["t"], reverse=True)
+
+
 def build_state(
     events: list[dict],
     now: float,
     agent_models: dict[str, str],
     session: str | None = None,
     inactive_after: float = INACTIVE_DEFAULT,
+    heartbeats: bool = True,
 ) -> dict:
     builder = _Builder(agent_models, now)
     ordered = sorted(
@@ -673,4 +722,4 @@ def build_state(
         # ein kaputtes Event darf nie den ganzen Stand kippen
         with contextlib.suppress(Exception):
             builder.apply(event)
-    return builder.result(session, inactive_after)
+    return builder.result(session, inactive_after, heartbeats)

@@ -421,6 +421,66 @@ class ViewTest(unittest.TestCase):
         self.assertEqual(feed[1]["text"], "Read")
         self.assertEqual(feed[1]["role"], "lead-qa")
 
+    def test_heartbeats_collapse_per_agent_run(self):
+        events = [
+            start(1, "a1", "lead-qa"),
+            start(1.5, "w1", "lead-tech"),
+            ev("heartbeat", 2, agent_id="a1", tool="Read"),
+            ev("heartbeat", 3, agent_id="a1", tool="Edit"),
+            ev("heartbeat", 4, agent_id="a1", tool="Read"),
+            log_status(5, "lead-tech", "active", task="anderer Agent"),
+            ev("heartbeat", 6, agent_id="a1", tool="Bash"),
+            ev("heartbeat", 7, agent_id="a1", tool="Edit"),
+            log_status(8, "lead-qa", "waiting", task="eigenes Event"),
+            ev("heartbeat", 9, agent_id="a1", tool="Grep"),
+        ]
+        feed = build(events)["feed"]
+        beats = [f for f in feed if f["kind"] == "heartbeat"]
+        self.assertEqual(len(beats), 2)
+        last, first = beats
+        self.assertEqual(first["text"], "Read, Edit, Bash ×5")
+        self.assertEqual(first["count"], 5)
+        self.assertEqual(first["first_t"], T0 + 2)
+        self.assertEqual(first["t"], T0 + 7)
+        self.assertEqual((last["text"], last["count"]), ("Grep", 1))
+        self.assertEqual(
+            [f["kind"] for f in feed],
+            [
+                "heartbeat",
+                "status",
+                "heartbeat",
+                "status",
+                "agent_start",
+                "agent_start",
+            ],
+        )
+        self.assertNotIn("_agent", first)
+
+    def test_heartbeat_tool_names_capped_at_four(self):
+        events = [start(1, "a1", "lead-qa")] + [
+            ev("heartbeat", 2 + i, agent_id="a1", tool=tool)
+            for i, tool in enumerate(["A", "B", "C", "D", "E", "F"])
+        ]
+        beat = build(events)["feed"][0]
+        self.assertEqual(beat["text"], "A, B, C, D, … ×6")
+
+    def test_heartbeats_off_and_cap_after_collapse(self):
+        events = [start(1, "a1", "lead-qa"), start(1, "a2", "lead-tech")]
+        for i in range(200):
+            agent = "a1" if i % 2 else "a2"
+            events.append(ev("heartbeat", 2 + i * 0.1, agent_id=agent, tool="Read"))
+            if i % 40 == 0:
+                events.append(log_status(2 + i * 0.1, "lead-art", "active"))
+        meaningful = len(events) - 200
+        hidden = build(events, heartbeats=False)
+        self.assertNotIn("heartbeat", {f["kind"] for f in hidden["feed"]})
+        self.assertEqual(len(hidden["feed"]), meaningful)
+        shown = build(events)
+        kinds = [f["kind"] for f in shown["feed"]]
+        self.assertEqual(len(kinds) - kinds.count("heartbeat"), meaningful)
+        self.assertEqual(sum(f.get("count", 0) for f in shown["feed"]), 200)
+        self.assertEqual(sum(m["total"] for m in shown["pulse"]), len(events))
+
     def test_pulse_has_60_minutes_and_counts(self):
         events = [
             start(1, "a1", "lead-qa"),

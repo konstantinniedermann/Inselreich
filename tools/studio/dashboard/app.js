@@ -3,6 +3,9 @@
 
 const POLL_MS = 2000;
 const FETCH_TIMEOUT_MS = 6000;
+// Periode der Inaktiv-Animation (style.css); Phase an die Uhr gekoppelt, damit
+// das Neuzeichnen alle 2 s die Animation nicht sichtbar neu startet.
+const INACTIVE_PULSE_MS = 2000;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const STATUS_LABEL = {
   active: 'aktiv',
@@ -132,6 +135,7 @@ function syncSelect(select, options, wanted) {
 // --- Zustand und Poll-Schleife ---------------------------------------------
 
 let selectedSession = storageGet('studio.session') || 'latest';
+let hideHeartbeats = storageGet('studio.hideHeartbeats') === '1';
 let chronDept = 'all';
 let lastState = null;
 let timer = null;
@@ -143,28 +147,45 @@ async function poll() {
   clearTimeout(timer);
   timer = null;
   const seq = ++requestSeq;
-  const conn = document.getElementById('conn');
   try {
-    const res = await fetch(`/api/state?session=${encodeURIComponent(selectedSession)}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) throw new Error(String(res.status));
-    const state = await res.json();
+    let state;
+    try {
+      const query = new URLSearchParams({ session: selectedSession });
+      if (hideHeartbeats) query.set('heartbeats', '0');
+      const res = await fetch(`/api/state?${query}`, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      state = await res.json();
+    } catch {
+      if (seq === requestSeq) setConn(false, 'keine Verbindung zum Server');
+      return;
+    }
     if (seq !== requestSeq) return;
     lastState = state;
-    render(state);
-    conn.textContent = `live · ${clock(Date.now() / 1000)}`;
-    conn.dataset.ok = 'true';
-    document.body.dataset.stale = 'false';
-  } catch {
-    if (seq !== requestSeq) return;
-    conn.textContent = 'keine Verbindung zum Server';
-    conn.dataset.ok = 'false';
-    document.body.dataset.stale = 'true';
+    try {
+      render(state);
+      setConn(true, `live · ${clock(Date.now() / 1000)}`);
+    } catch (error) {
+      setConn(false, 'Anzeigefehler');
+      console.error('Studio-Dashboard: Anzeigefehler', error);
+    }
   } finally {
     if (seq === requestSeq) timer = setTimeout(poll, POLL_MS);
   }
+}
+
+// Sichtbarer Zustand in #conn (ohne Ansage); Screenreader hören nur den Wechsel
+// in einen Fehlerzustand über die separate Live-Region #conn-alert.
+function setConn(ok, text) {
+  const conn = document.getElementById('conn');
+  const alert = document.getElementById('conn-alert');
+  conn.textContent = text;
+  conn.dataset.ok = String(ok);
+  document.body.dataset.stale = String(!ok);
+  if (ok) alert.textContent = '';
+  else if (alert.textContent !== text) alert.textContent = text;
 }
 
 function render(state) {
@@ -213,7 +234,7 @@ function nodeCard(node, showSession) {
       ? el('span', { class: 'chip' }, `Session ${String(node.session_id).slice(0, 8)}`)
       : null,
   );
-  return el(
+  const card = el(
     'article',
     { class: classes, 'data-level': String(node.level) },
     el(
@@ -236,6 +257,8 @@ function nodeCard(node, showSession) {
         : null,
     ),
   );
+  if (node.inactive) card.style.animationDelay = `-${Date.now() % INACTIVE_PULSE_MS}ms`;
+  return card;
 }
 
 function orgBranch(node, showSession) {
@@ -543,6 +566,13 @@ function renderFeed(state) {
         el('span', { class: 'chip kind' }, f.kind),
         f.status ? statusBadge(f.status) : null,
         f.text ? el('span', { class: 'text' }, f.text) : null,
+        f.kind === 'heartbeat' && Number(f.count) > 1
+          ? el(
+              'span',
+              { class: 'run', title: `erster Aufruf ${clock(f.first_t)}` },
+              `${f.count} Aufrufe seit ${clock(f.first_t, false)} · zuletzt ${ago(state.now - f.t)}`,
+            )
+          : null,
       );
     }),
   );
@@ -569,6 +599,13 @@ function setupTheme() {
 document.getElementById('session').addEventListener('change', (event) => {
   selectedSession = event.target.value;
   storageSet('studio.session', selectedSession);
+  poll();
+});
+const heartbeatToggle = document.getElementById('hide-heartbeats');
+heartbeatToggle.checked = hideHeartbeats;
+heartbeatToggle.addEventListener('change', (event) => {
+  hideHeartbeats = event.target.checked;
+  storageSet('studio.hideHeartbeats', hideHeartbeats ? '1' : '0');
   poll();
 });
 document.getElementById('chron-dept').addEventListener('change', (event) => {

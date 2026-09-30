@@ -15,7 +15,8 @@
         >Session
         <select id="session"></select
       ></label>
-      <span id="conn" class="conn" role="status">verbinde …</span>
+      <span id="conn" class="conn">verbinde …</span>
+      <span id="conn-alert" class="visually-hidden" role="alert"></span>
       <button id="theme" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel">
         ◐
       </button>
@@ -56,7 +57,13 @@
         <ol id="chronicle" class="list scroll"></ol>
       </section>
       <section class="card" aria-labelledby="h-feed">
-        <h2 id="h-feed">Live-Feed</h2>
+        <div class="card-head">
+          <h2 id="h-feed">Live-Feed</h2>
+          <label class="field check">
+            <input id="hide-heartbeats" type="checkbox" />
+            Heartbeats ausblenden
+          </label>
+        </div>
         <ol id="feed" class="list feed scroll"></ol>
       </section>
     </main>

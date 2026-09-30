@@ -54,6 +54,13 @@ class ServerTest(unittest.TestCase):
         state = json.loads(body)
         self.assertEqual(state["tree"][0]["children"][0]["role"], "lead-qa")
 
+    def test_heartbeats_query_passes_through(self):
+        with mock.patch.object(server, "build_state", wraps=server.build_state) as spy:
+            self.assertEqual(self.get("/api/state?heartbeats=0")[0], 200)
+            self.assertIs(spy.call_args.kwargs["heartbeats"], False)
+            self.assertEqual(self.get("/api/state")[0], 200)
+            self.assertIs(spy.call_args.kwargs["heartbeats"], True)
+
     def test_index_served(self):
         status, _, body = self.get("/")
         self.assertEqual(status, 200)

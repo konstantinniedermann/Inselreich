@@ -40,8 +40,10 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             url = urlparse(self.path)
             if url.path == "/api/state":
-                session = parse_qs(url.query).get("session", ["latest"])[0]
-                self.send_state(session)
+                query = parse_qs(url.query)
+                session = query.get("session", ["latest"])[0]
+                heartbeats = query.get("heartbeats", ["1"])[0] != "0"
+                self.send_state(session, heartbeats)
                 return
             if url.path != "/":
                 target = (self.dashboard / unquote(url.path).lstrip("/")).resolve()
@@ -63,13 +65,14 @@ class Handler(SimpleHTTPRequestHandler):
     def list_directory(self, path):
         self.send_error(404)
 
-    def send_state(self, session: str) -> None:
+    def send_state(self, session: str, heartbeats: bool = True) -> None:
         state = build_state(
             self.store.events(),
             time.time(),
             read_agent_models(self.agents),
             session=session,
             inactive_after=self.inactive_after,
+            heartbeats=heartbeats,
         )
         body = json.dumps(state, ensure_ascii=False).encode("utf-8")
         self.send_response(200)

@@ -151,6 +151,23 @@ button {
   outline-offset: 2px;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.check input {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 /* --- Kopfzeile ------------------------------------------------------------ */
 
 .topbar {
@@ -551,7 +568,7 @@ body[data-stale='true'] .grid {
 .node.inactive {
   outline: 2px solid var(--danger);
   outline-offset: 1px;
-  animation: inactive-pulse 1.8s ease-in-out infinite;
+  animation: inactive-pulse 2s ease-in-out infinite; /* = INACTIVE_PULSE_MS */
 }
 
 @keyframes inactive-pulse {
@@ -927,6 +944,13 @@ time {
 
 .feed-row:last-child {
   border-bottom: 0;
+}
+
+.feed-row .run {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .feed-row .text {

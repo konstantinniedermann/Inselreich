@@ -19,6 +19,7 @@ export default tseslint.config(
         Node: 'readonly',
         AbortSignal: 'readonly',
         URLSearchParams: 'readonly',
+        console: 'readonly',
       },
     },
   },
