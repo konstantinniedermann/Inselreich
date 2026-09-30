@@ -648,6 +648,40 @@ class RobustnessTest(unittest.TestCase):
         self.assertEqual(nodes["s1:W1"]["idle_seconds"], 100)
         self.assertEqual(nodes["s1:main"]["idle_seconds"], 598)
 
+    def test_spawned_completed_closes_heartbeat_only_node(self):
+        events = [
+            ev("turn_end", 1, status="idle"),
+            ev("heartbeat", 2, agent_id="W1", tool="WebFetch"),
+            ev("spawned", 5, child_id="W1", status="completed"),
+        ]
+        state = build(events, now=5 + 1000)
+        node = flat(state)["s1:W1"]
+        self.assertEqual(node["status"], "done")
+        self.assertIsNotNone(node["stopped"])
+        self.assertFalse(node["inactive"])
+        self.assertEqual(state["counts"]["inactive"], 0)
+
+    def test_spawned_completed_keeps_regular_stop_and_failed(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "L1", "lead-qa"),
+            stop(3, "L1", "lead-qa", summary="fertig"),
+            ev("spawned", 4, child_id="L1", status="completed"),
+        ]
+        node = flat(build(events))["s1:L1"]
+        self.assertEqual(node["status"], "done")
+        self.assertEqual(node["stopped"], T0 + 3)
+
+    def test_spawned_async_launched_stays_active(self):
+        events = [
+            ev("heartbeat", 2, agent_id="W1", tool="Read"),
+            ev("spawned", 5, child_id="W1", status="async_launched"),
+            ev("spawned", 6, child_id="W2"),
+        ]
+        nodes = flat(build(events, now=10))
+        self.assertEqual(nodes["s1:W1"]["status"], "active")
+        self.assertEqual(nodes["s1:W2"]["status"], "active")
+
     def test_blocked_by_string_is_split(self):
         events = [
             ev(

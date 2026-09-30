@@ -433,6 +433,14 @@ class _Builder:
         entry = self.spawns.get((sid, str(event.get("tool_use_id") or "")))
         if entry is not None:
             self.assign(sid, child, entry, reparent=False)
+        # Vordergrund-Agent ohne SubagentStop (z. B. web-fetch): status entscheidet
+        if event.get("status") == "completed" and child["status"] not in (
+            "done",
+            "failed",
+        ):
+            child["status"], child["stopped"] = "done", ts
+            self.close_run(child, ts)
+            self.add_chronicle(child, ts, child["summary"] or child["task"])
 
     def on_agent_start(self, event, ts, sid):
         typ = event.get("role") or "general-purpose"
