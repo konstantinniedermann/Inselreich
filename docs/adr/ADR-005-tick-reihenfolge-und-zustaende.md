@@ -34,6 +34,6 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
   ein Aufstieg im selben Tick die Höchststufe und damit den Güterpool schon erweitert.
 - `tickMarket` und `tickOrders` verändern kein Geld und keine Lagerbestände.
 - Beide Takte haben einen eigenen Rhythmus, unabhängig vom Buchungstakt (100): Erholung alle 10 Ticks
-  (`tick % 10 === 0`, `tick > 0`); Aufträge ab Tick 600 alle 900 Ticks (Versatz 600, `(tick − 600) %
-900 === 0`), Laufzeit 600. Ein Auftrag ist bis einschliesslich `due` lieferbar und verfällt bei
-  `tick > due`. Der Zufall der Aufträge folgt ADR-010.
+  (`tick % 10 === 0`, `tick > 0`); Aufträge ab Tick 600 alle 900 Ticks (Versatz 600,
+  `(tick − 600) % 900 === 0`), Laufzeit 600. Ein Auftrag ist bis einschliesslich `due` lieferbar und
+  verfällt bei `tick > due`. Der Zufall der Aufträge folgt ADR-010.

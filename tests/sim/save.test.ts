@@ -95,7 +95,7 @@ describe('save', () => {
     );
   });
 
-  it('isValidOrder-Grenzen: Auftrag passt zu Tick, Periode, Menge und Prämie', () => {
+  it('isValidOrder-Grenzen: Auftrag passt zu Tick und Periode', () => {
     const order = (tick: number, o: Record<string, unknown>): string =>
       tampered(w, (r) => {
         r.tick = tick;
@@ -114,12 +114,22 @@ describe('save', () => {
     expectFailure(order(700, { due: 1201 }), 'Beschädigter Spielstand');
     expectFailure(order(700, { period: 1 }), 'Beschädigter Spielstand');
     expectFailure(order(700, { period: -1, due: 300 }), 'Beschädigter Spielstand');
-    // Menge im Bereich des Guts (Holz 20..40), Prämie = Menge x Stückprämie
-    expect(deserialize(order(700, { amount: 20, reward: 140 })).ok).toBe(true);
-    expect(deserialize(order(700, { amount: 40, reward: 280 })).ok).toBe(true);
-    expectFailure(order(700, { amount: 19, reward: 133 }), 'Beschädigter Spielstand');
-    expectFailure(order(700, { amount: 41, reward: 287 }), 'Beschädigter Spielstand');
-    expectFailure(order(700, { reward: 174 }), 'Beschädigter Spielstand');
+    // Struktur: Menge ganzzahlig >= 1, Prämie ganzzahlig >= 0
+    expectFailure(order(700, { amount: 0, reward: 0 }), 'Beschädigter Spielstand');
+    expectFailure(order(700, { reward: -1 }), 'Beschädigter Spielstand');
+  });
+
+  it('isValidOrder: Prämie und Menge nicht an aktuelle Spielwerte gebunden', () => {
+    const json = tampered(w, (r) => {
+      r.tick = 700;
+      r.order = { period: 0, good: 'wood', amount: 19, reward: 1, due: 1200 };
+    });
+    expect(deserialize(json).ok).toBe(true);
+    const json2 = tampered(w, (r) => {
+      r.tick = 700;
+      r.order = { period: 0, good: 'wood', amount: 41, reward: 9999, due: 1200 };
+    });
+    expect(deserialize(json2).ok).toBe(true);
   });
 
   it('AK-S1-04 Güter tragen die Auftragsdaten (Spec 5.3), SELL_FLOOR ist 30', () => {

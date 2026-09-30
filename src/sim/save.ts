@@ -3,7 +3,6 @@ import { GOODS, GOOD_IDS, SELL_FLOOR } from './defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { TAX_LEVELS } from './defs/tiers';
 import { MAP_H, MAP_W } from './mapgen';
-import { orderUnitReward } from './orders';
 import { recomputeConnectivity } from './roads';
 import type { World } from './types';
 
@@ -30,8 +29,8 @@ const isInt = (v: unknown): v is number => Number.isInteger(v);
 /**
  * Auftrag: `null` oder ein Auftrag, der zu den Takt-Konstanten und zum gespeicherten `tick` passt:
  * `due` ergibt sich aus der Periode, der Auftrag ist schon angeboten (`tick ≥ due − ORDER_DURATION`)
- * und noch nicht verfallen (`tick ≤ due`, `tickOrders` löscht erst bei `tick > due`); Menge im Bereich
- * des Guts, Prämie = Menge × Stückprämie.
+ * und noch nicht verfallen (`tick ≤ due`, `tickOrders` löscht erst bei `tick > due`). Menge und Prämie
+ * werden nur strukturell geprüft, nicht gegen aktuelle Spielwerte (Spielstände bleiben ladbar).
  */
 function isValidOrder(o: unknown, tick: unknown): boolean {
   if (o === null) return true;
@@ -41,24 +40,17 @@ function isValidOrder(o: unknown, tick: unknown): boolean {
     !isInt(o.period) ||
     o.period < 0 ||
     !isInt(o.amount) ||
+    o.amount < 1 ||
     !isInt(o.reward) ||
+    o.reward < 0 ||
     !isInt(o.due) ||
     typeof o.good !== 'string' ||
     !Object.hasOwn(GOODS, o.good)
   )
     return false;
-  const good = o.good as keyof typeof GOODS;
-  const def = GOODS[good].order;
-  if (def === undefined) return false;
+  if (GOODS[o.good as keyof typeof GOODS].order === undefined) return false;
   const offered = ORDER_FIRST_TICK + o.period * ORDER_PERIOD;
-  return (
-    o.due === offered + ORDER_DURATION &&
-    tick >= offered &&
-    tick <= o.due &&
-    o.amount >= def.min &&
-    o.amount <= def.max &&
-    o.reward === o.amount * orderUnitReward(good)
-  );
+  return o.due === offered + ORDER_DURATION && tick >= offered && tick <= o.due;
 }
 
 /** Felder von Save v2: Steuerstufe, Sperre, Verkaufsanteile, Auftrag. */
