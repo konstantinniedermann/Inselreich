@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { TIERS } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { checkAfford, pay, takeStock } from './economy';
+import { UPKEEP_INTERVAL, checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
   BuildingDefId,
@@ -139,4 +139,31 @@ export function tickPopulation(world: World): void {
       tryUpgrade(world, b);
     }
   }
+}
+
+/** Steuern je Buchungstakt: Einwohner × Steuersatz, halbiert bei unerfüllten Bedürfnissen. Erst summieren, dann einmal abrunden. */
+export function totalTaxes(world: World): number {
+  let sum = 0;
+  for (const b of Object.values(world.buildings)) {
+    const house = b.house;
+    if (!house) continue;
+    const tier = TIERS[house.tier];
+    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : 0.5);
+  }
+  return Math.floor(sum);
+}
+
+/** Aktualisiert die Steuerstatistik und bucht sie im selben Takt wie den Unterhalt. */
+export function tickTaxes(world: World): void {
+  world.stats.taxes = totalTaxes(world);
+  if (world.tick > 0 && world.tick % UPKEEP_INTERVAL === 0) world.money += world.stats.taxes;
+}
+
+/** Bürger: Einwohner aller Häuser der Stufe 3. */
+export function citizens(world: World): number {
+  let sum = 0;
+  for (const b of Object.values(world.buildings)) {
+    if (b.house?.tier === 3) sum += b.house.inhabitants;
+  }
+  return sum;
 }
