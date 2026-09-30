@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { footprint, tileAt } from '../sim/world';
 import type { BuildingDefId, World } from '../sim/types';
 import { TILE, tileToScreen, type Camera } from './camera';
+import { drawWaves } from './water';
 import { drawBuilding, drawRoad } from './sprites';
 
 export type Tool =
@@ -64,6 +65,8 @@ export function render(
   const y0 = Math.max(0, Math.floor(cam.y / TILE));
   const x1 = Math.min(world.width - 1, Math.floor((cam.x + view.w / cam.zoom) / TILE));
   const y1 = Math.min(world.height - 1, Math.floor((cam.y + view.h / cam.zoom) / TILE));
+
+  drawWaves(ctx, world, cam, { x0, y0, x1, y1 }, fx.timeMs);
 
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
