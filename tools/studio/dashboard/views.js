@@ -94,8 +94,9 @@ function roleChip(role) {
   return el('span', { class: `chip dep dep-${department}` }, role);
 }
 
-function tile(label, value, options = {}) {
-  const small = typeof value === 'string' && (value === NOT_RECORDED || value === NOT_MEASURED);
+function tile(label, rawValue, options = {}) {
+  const value = String(rawValue);
+  const small = value === NOT_RECORDED || value === NOT_MEASURED;
   return el(
     'div',
     { class: `tile${options.cls ? ` ${options.cls}` : ''}${small ? ' zero' : ''}` },
@@ -150,9 +151,17 @@ function dataTable(columns, rows) {
   );
 }
 
-function field(fields, needle) {
-  const key = Object.keys(fields || {}).find((k) => k.toLowerCase().includes(needle));
-  const value = key ? fields[key] : '';
+// Feldnamen laut studio_docs.py (festes Format von warteschlange.md/experimente.md).
+const Q_QUESTION = 'Frage';
+const Q_RECOMMENDATION = 'Empfehlung';
+const Q_COST = 'Kosten des Wartens';
+const Q_BLOCKS = 'Blockiert';
+const Q_ANSWER = 'Antwort';
+const E_MEASURE = 'Messgrösse';
+const E_PERIOD = 'Zeitraum';
+
+function field(fields, key) {
+  const value = fields ? fields[key] : '';
   return value && value !== '–' ? value : '';
 }
 
@@ -199,11 +208,11 @@ export function renderQueue(state) {
             el('strong', {}, q.title),
             tone(QUEUE_TONE[q.status], q.status),
           ),
-          row('Frage', field(q.fields, 'frage')),
-          row('Empfehlung', field(q.fields, 'empfehlung')),
-          row('Kosten des Wartens', field(q.fields, 'kosten')),
-          row('Blockiert', field(q.fields, 'blockiert')),
-          q.status === 'beantwortet' ? row('Antwort', field(q.fields, 'antwort')) : null,
+          row('Frage', field(q.fields, Q_QUESTION)),
+          row('Empfehlung', field(q.fields, Q_RECOMMENDATION)),
+          row('Kosten des Wartens', field(q.fields, Q_COST)),
+          row('Blockiert', field(q.fields, Q_BLOCKS)),
+          q.status === 'beantwortet' ? row('Antwort', field(q.fields, Q_ANSWER)) : null,
         ),
       ),
     ),
@@ -212,19 +221,25 @@ export function renderQueue(state) {
 
 // --- Delegation -------------------------------------------------------------
 
-function outcomeBadge(outcome) {
-  if (!outcome) return el('span', { class: 'badge st-idle' }, 'kein Ergebnis');
+const LIVE_STATUS = ['active', 'delegated', 'waiting', 'blocked'];
+
+function outcomeBadge(outcome, status) {
+  if (!outcome) {
+    return LIVE_STATUS.includes(status)
+      ? tone('active', 'läuft')
+      : el('span', { class: 'badge st-idle' }, 'kein Ergebnis');
+  }
   return tone(OUTCOME_TONE[outcome] || 'idle', outcome);
 }
 
 function actuals(d) {
   const duration = fmtDuration(d.duration_s);
-  const running = d.status === 'active' || d.status === 'waiting';
+  const running = LIVE_STATUS.includes(d.status);
   return el(
     'p',
     { class: 'actuals' },
-    el('span', {}, duration || (running ? 'läuft' : NOT_MEASURED)),
-    el('span', {}, `${fmtCount(d.tool_calls)} Tool-Aufrufe`),
+    el('span', {}, `Dauer: ${duration || (running ? 'läuft' : NOT_MEASURED)}`),
+    el('span', {}, d.tool_calls === 1 ? '1 Tool-Aufruf' : `${fmtCount(d.tool_calls)} Tool-Aufrufe`),
     isMissing(d.tokens_in) && isMissing(d.tokens_out)
       ? el('span', {}, `Tokens ${NOT_MEASURED}`)
       : el(
@@ -262,11 +277,13 @@ export function renderDelegation(state) {
             el(
               'div',
               { class: 'deleg-head' },
-              el('time', { title: new Date(d.t * 1000).toLocaleString('de-CH') }, clock(d.t)),
+              Number.isFinite(d.t)
+                ? el('time', { title: new Date(d.t * 1000).toLocaleString('de-CH') }, clock(d.t))
+                : el('span', {}, '–'),
               roleChip(d.from),
               el('span', { class: 'arrow', 'aria-label': 'delegiert an' }, '→'),
               roleChip(d.to),
-              outcomeBadge(d.outcome),
+              outcomeBadge(d.outcome, d.status),
             ),
             el(
               'div',
@@ -555,8 +572,8 @@ function experimentList(items) {
           tone(e.status === 'laufend' ? 'active' : 'idle', e.status),
           el('strong', {}, e.title),
         ),
-        el('p', { class: 'meta' }, `Messgrösse: ${field(e.fields, 'messgr') || '–'}`),
-        el('p', { class: 'meta' }, `Zeitraum: ${field(e.fields, 'zeitraum') || '–'}`),
+        el('p', { class: 'meta' }, `Messgrösse: ${field(e.fields, E_MEASURE) || '–'}`),
+        el('p', { class: 'meta' }, `Zeitraum: ${field(e.fields, E_PERIOD) || '–'}`),
       ),
     ),
   );
@@ -595,7 +612,11 @@ function personaCard(p) {
       'div',
       { class: 'chips' },
       el('span', { class: 'chip id' }, p.version ? `v${p.version}` : 'ohne Version'),
-      el('span', { class: 'chip model' }, p.model || 'inherit'),
+      el(
+        'span',
+        { class: 'chip model' },
+        !p.model || p.model === 'inherit' ? 'erbt Modell' : p.model,
+      ),
     ),
   );
 }
