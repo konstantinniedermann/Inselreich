@@ -41,6 +41,13 @@ export function allNeedsMet(house: HouseState, tier: TierDef): boolean {
   );
 }
 
+/**
+ * Verbrauch je Tick. Der Bedarf wächst um inhabitants × rate / 100; bei ≥ 1 wird eine Einheit
+ * entnommen und der Rest bleibt in `demand` (Restregel). Beispiel: 4 Einwohner mit Rate 0.5
+ * bekommen die erste Einheit sofort (Startbedarf 1), die zweite bei Tick 50.
+ * `satisfied` bleibt true, bis der nächste Entnahmeversuch scheitert; dazwischen ändert
+ * sich der Wert nicht.
+ */
 function consume(world: World, house: HouseState, tier: TierDef): void {
   for (const [good, rate] of Object.entries(tier.needs) as [GoodId, number][]) {
     if (!house.supplied) {

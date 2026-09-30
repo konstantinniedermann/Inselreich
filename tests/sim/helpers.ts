@@ -50,22 +50,17 @@ export function houseFar(world: World): Building {
     for (let x = 0; x < world.width - 3; x++) {
       const h = center(BUILDING_DEFS.house, x, y);
       if (Math.hypot(h.cx - kc.cx, h.cy - kc.cy) <= supplyRadius + 1) continue;
-      const free = [
+      // Haus (x, y) plus Markt-Footprint (x+1.., y..y+1)
+      const tiles = [
         [x, y],
         [x + 1, y],
         [x + 2, y],
         [x + 1, y + 1],
         [x + 2, y + 1],
-      ].every(([px, py]) => world.tiles[idx(world, px!, py!)]!.buildingId === null);
-      if (!free) continue;
-      for (const [px, py] of [
-        [x, y],
-        [x + 1, y],
-        [x + 2, y],
-        [x + 1, y + 1],
-        [x + 2, y + 1],
-      ] as const)
-        forceGrass(world, px, py);
+      ] as const;
+      if (!tiles.every(([px, py]) => world.tiles[idx(world, px, py)]!.buildingId === null))
+        continue;
+      for (const [px, py] of tiles) forceGrass(world, px, py);
       const m = placeBuilding(world, 'market', x + 1, y);
       if (!m.ok || m.id === undefined) throw new Error('helper market not placed');
       const house = placedHouse(world, x, y);

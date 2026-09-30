@@ -60,6 +60,8 @@ describe('tickPopulation', () => {
     expect(h.house!.inhabitants).toBe(3);
     run(w, 100);
     expect(h.house!.inhabitants).toBe(4);
+    run(w, 50);
+    expect(h.house!.inhabitants).toBe(4);
     w.stock.food = 0;
     run(w, 400);
     expect(h.house!.inhabitants).toBe(1);
