@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { TICK_MS } from '../sim/defs/timing';
 import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
@@ -29,7 +30,6 @@ export interface GameState {
   wonShown: boolean;
 }
 
-const TICK_MS = 100;
 const MAX_TICKS_PER_FRAME = 20;
 const HUD_EVERY_FRAMES = 10;
 
