@@ -34,6 +34,10 @@ class CiTest(unittest.TestCase):
         self.assertEqual(events[0]["source"], "ci")
         self.assertEqual(ci.collect(lambda: RUNS, {"1"}), [])
 
+    def test_events_carry_handbook_version(self):
+        events = ci.collect(lambda: RUNS, set(), "1.0")
+        self.assertEqual(events[0]["handbook_version"], "1.0")
+
     def test_runner_failure(self):
         def boom():
             raise OSError("gh fehlt")

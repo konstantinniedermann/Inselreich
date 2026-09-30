@@ -186,7 +186,7 @@ class EffortStateTest(unittest.TestCase):
         est = state["effort"]["estimate_vs_actual"]
         self.assertEqual(est["count"], 1)
         self.assertEqual(est["estimated_min"], 10)
-        self.assertEqual(est["actual_min"], round(119 / 60, 2))
+        self.assertEqual(est["actual_min"], round(119 / 60, 1))
         self.assertEqual(est["estimated_tools"], 20)
         self.assertEqual(est["actual_tools"], 7)  # a1: 3 spawn + 1 Heartbeat, a2: 3
 
@@ -322,6 +322,57 @@ class FixRoundTest(unittest.TestCase):
         self.assertIsNone(rec["estimate"])
         self.assertEqual(state["effort"]["estimate_vs_actual"]["count"], 0)
         self.assertEqual(model.pending_incidents(events, T0 + 600), [])
+
+    def test_nested_estimate_counts_only_topmost(self):
+        events = [
+            spawn(0, "main", "lead-qa", estimate={"minutes": 10, "tools": 20}),
+            start(0, "a1", "lead-qa"),
+            spawn(1, "a1", "qa-code-reviewer", estimate={"minutes": 4, "tools": 8}),
+            start(2, "a2", "qa-code-reviewer"),
+            ev("heartbeat", 3, agent_id="a2", tool="Read"),
+            stop(62, "a2", "qa-code-reviewer"),
+            stop(120, "a1", "lead-qa"),
+            spawn(130, "main", "lead-tech", estimate={"minutes": 1.5}),
+            start(130, "a3", "lead-tech"),
+            stop(160, "a3", "lead-tech"),
+        ]
+        est = self.state(events)["effort"]["estimate_vs_actual"]
+        self.assertEqual(est["count"], 2)  # lead-qa und lead-tech, nicht der Arbeiter
+        self.assertEqual(est["estimated_min"], 11.5)
+        self.assertEqual(est["actual_min"], 2.5)  # (120 + 30) s
+        self.assertEqual(est["estimated_tools"], 20)
+        self.assertEqual(est["actual_tools"], 2)  # a1: 1 Spawn, a2: 1 Heartbeat
+
+    def test_estimate_minutes_rounded_to_tenth(self):
+        events = [
+            spawn(0, "main", "lead-qa", estimate={"minutes": 0.6}),
+            start(0, "a1", "lead-qa"),
+            stop(40, "a1", "lead-qa"),
+            spawn(50, "main", "lead-tech", estimate={"minutes": 0.7}),
+            start(50, "a2", "lead-tech"),
+            stop(90, "a2", "lead-tech"),
+        ]
+        est = self.state(events)["effort"]["estimate_vs_actual"]
+        self.assertEqual(est["estimated_min"], 1.3)
+        self.assertEqual(est["actual_min"], 1.3)  # 80 s = 1.33 min
+
+    def test_delegation_tokens_in_includes_cache(self):
+        usage = {"m": {"input": 52, "cache_write": 1000, "cache_read": 20000}}
+        usage["m"]["output"] = 7
+        events = [
+            spawn(0, "main", "lead-qa"),
+            start(1, "a1", "lead-qa"),
+            stop(9, "a1", "lead-qa", usage=usage),
+        ]
+        row = self.state(events)["delegations"][0]
+        self.assertEqual(row["tokens_in"], 21052)
+        self.assertEqual(
+            (row["input"], row["cache_write"], row["cache_read"]), (52, 1000, 20000)
+        )
+        self.assertEqual(row["tokens_out"], 7)
+        empty = self.state([spawn(0, "main", "lead-qa"), start(1, "a1", "lead-qa")])
+        self.assertIsNone(empty["delegations"][0]["tokens_in"])
+        self.assertIsNone(empty["delegations"][0]["cache_read"])
 
     def test_tool_calls_none_without_hook_events(self):
         events = [log_status(1, "lead-qa", "active")]

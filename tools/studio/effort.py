@@ -11,6 +11,7 @@ from __future__ import annotations
 GAP_DEFAULT = 300.0
 DIRECTOR = "studio-director"
 TOKEN_FIELDS = ("input", "cache_write", "cache_read", "output")
+CACHE_FIELDS = ("cache_write", "cache_read")
 ROUNDS_LIMIT = 3
 BUDGET_FACTOR = 1.5
 
@@ -60,6 +61,7 @@ def record(node: dict, nodes: dict[str, dict]) -> dict:
         "level": node["level"],
         "department": node["department"],
         "delegated_by": parent["role"] if parent else "",
+        "parent": parent["key"] if parent else "",
         "lead": _lead(node, nodes),
         "package": node.get("package") or "",
         "milestone": node.get("milestone") or "",
@@ -84,10 +86,10 @@ def record(node: dict, nodes: dict[str, dict]) -> dict:
     }
 
 
-def _sum_tokens(tokens: dict, field: str) -> int | None:
+def _sum_tokens(tokens: dict, *fields: str) -> int | None:
     if not tokens:
         return None
-    return sum(u.get(field) or 0 for u in tokens.values())
+    return sum(u.get(f) or 0 for u in tokens.values() for f in fields)
 
 
 def _outcome(rec: dict, results: list[dict]) -> str | None:
@@ -121,7 +123,11 @@ def delegations(records: list[dict], results: list[dict] | None = None) -> list[
                 "estimate": rec["estimate"],
                 "duration_s": rec["duration_s"],
                 "tool_calls": rec["tool_calls"],
-                "tokens_in": _sum_tokens(rec["tokens"], "input"),
+                # wie im Reiter Aufwand: Input + Cache-Schreiben + Cache-Lesen
+                "tokens_in": _sum_tokens(rec["tokens"], "input", *CACHE_FIELDS),
+                "input": _sum_tokens(rec["tokens"], "input"),
+                "cache_write": _sum_tokens(rec["tokens"], "cache_write"),
+                "cache_read": _sum_tokens(rec["tokens"], "cache_read"),
                 "tokens_out": _sum_tokens(rec["tokens"], "output"),
                 "output_lower_bound": rec["output_lower_bound"],
                 "outcome": _outcome(rec, results or []),
@@ -181,13 +187,27 @@ def _by_model(records: list[dict]) -> list[dict]:
     return rows
 
 
+def _under_estimate(rec: dict, by_key: dict[str, dict]) -> bool:
+    """Hat ein Vorfahr eine Schätzung? Sie umfasst dann diesen Teilbaum."""
+    seen: set[str] = set()
+    parent = by_key.get(rec.get("parent") or "")
+    while parent is not None and parent["key"] not in seen:
+        if parent["estimate"]:
+            return True
+        seen.add(parent["key"])
+        parent = by_key.get(parent.get("parent") or "")
+    return False
+
+
 def _estimate_vs_actual(records: list[dict]) -> dict:
+    by_key = {r["key"]: r for r in records}
     used = [
         r
         for r in records
         if r["estimate"]
         and r["duration_s"] is not None
         and r["estimate"].get("minutes") is not None
+        and not _under_estimate(r, by_key)
     ]
     if not used:
         return {
@@ -203,8 +223,8 @@ def _estimate_vs_actual(records: list[dict]) -> dict:
     with_tools = [r for r in used if r["estimate"].get("tools") is not None]
     return {
         "count": len(used),
-        "estimated_min": estimated,
-        "actual_min": round(actual, 2),
+        "estimated_min": round(estimated, 1),
+        "actual_min": round(actual, 1),
         "deviation_pct": (
             round((actual - estimated) / estimated * 100, 1) if estimated else None
         ),

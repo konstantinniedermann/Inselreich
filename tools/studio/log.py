@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -27,6 +28,7 @@ PACKAGE_STATUSES = ("open", "active", "review", "blocked", "done")
 OUTCOMES = ("angenommen", "nacharbeit", "verworfen")
 MILESTONE_STATUSES = ("start", "done")
 RETRO_KINDS = ("meilenstein", "session", "adhoc")
+QUEUE_ID = re.compile(r"N-[0-9]+")  # mit fullmatch: ^N-\d+$ ohne Zeilenumbruch
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -236,6 +238,8 @@ def main(argv: list[str] | None = None) -> int:
         args.resolution or (args.target and args.question)
     ):
         parser.error("decision braucht --for und --question oder --resolution")
+    if args.kind == "queue" and not QUEUE_ID.fullmatch(args.id):
+        parser.exit(2, f"studio-log: --id {args.id!r} ist keine N-<Nummer>\n")
     event = make_event(args)
     if args.kind == "queue":
         try:

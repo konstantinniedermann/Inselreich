@@ -68,13 +68,19 @@ def header_value(text: str, key: str) -> str:
     return words[0].strip("`") if words else ""
 
 
+def _number(text: str) -> int | float:
+    """'0,6' → 0.6, '20' → 20 (ganze Zahlen bleiben int)."""
+    value = float(text.replace(",", "."))
+    return int(value) if value.is_integer() else value
+
+
 def parse_estimate(value: str) -> dict | None:
-    minutes = re.search(r"(\d+)\s*min", value, re.IGNORECASE)
+    minutes = re.search(r"(\d+(?:[.,]\d+)?)\s*min", value, re.IGNORECASE)
     tools = re.search(r"(\d+)\s*(?:tools?|werkzeug)", value, re.IGNORECASE)
     if not minutes and not tools:
         return None
     return {
-        "minutes": int(minutes.group(1)) if minutes else None,
+        "minutes": _number(minutes.group(1)) if minutes else None,
         "tools": int(tools.group(1)) if tools else None,
     }
 
@@ -253,6 +259,7 @@ def _usage_event(event: dict, payload: dict) -> dict | None:
         "session_id": sid,
         "agent_id": "main",
         "source": "hook",
+        "handbook_version": event.get("handbook_version", ""),
         "kind": "usage",
         "usage": usage.incremental_usage(transcript, cache),
     }

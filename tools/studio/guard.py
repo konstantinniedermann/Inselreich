@@ -41,6 +41,7 @@ SESSION_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 FORBIDDEN = "Irreversible Aktion ist verboten"
 PROTECTED = "Verfassung und Guard ändert nur der Nutzer (Vorschlag einreihen)"
 SUFFIX = " (Verfassung §6)"
+PROTECTED_SUFFIX = " (Verfassung §1.3)"
 READ_ONLY = {"ls", "cat", "test", "[", "grep", "rg", "head", "tail", "wc"}
 
 
@@ -435,6 +436,11 @@ def decide(
     return None
 
 
+def deny_text(found: str) -> str:
+    """Begründung mit Fundstelle: Schutz der Verfassung §1.3, sonst §6."""
+    return found + (PROTECTED_SUFFIX if found == PROTECTED else SUFFIX)
+
+
 def _record_approval(payload: dict, marker_dir: Path) -> None:
     prompt = str(payload.get("prompt", ""))
     session = str(payload.get("session_id", ""))
@@ -463,7 +469,7 @@ def main() -> int:
                             "hookSpecificOutput": {
                                 "hookEventName": "PreToolUse",
                                 "permissionDecision": "deny",
-                                "permissionDecisionReason": found + SUFFIX,
+                                "permissionDecisionReason": deny_text(found),
                             }
                         },
                         ensure_ascii=False,

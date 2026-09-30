@@ -58,6 +58,19 @@ function fmtCount(value, lowerBound = false) {
   return lowerBound ? `≥ ${text}` : text;
 }
 
+// Minuten auf eine Nachkommastelle (Schätzungen wie „0.6 min").
+function fmtMinutes(value) {
+  return (Math.round(Number(value) * 10) / 10).toLocaleString('de-CH');
+}
+
+// Aufteilung der eingehenden Tokens (Tooltip; gleich in Delegation und Aufwand).
+function tokenDetail(row) {
+  return (
+    `Input ${fmtCount(row.input)} + Cache-Schreiben ${fmtCount(row.cache_write)}` +
+    ` + Cache-Lesen ${fmtCount(row.cache_read)}`
+  );
+}
+
 function fmtShare(value) {
   return value === null || value === undefined ? NOT_RECORDED : `${Math.round(value * 100)} %`;
 }
@@ -247,7 +260,7 @@ function actuals(d) {
       ? el('span', {}, `Tokens ${NOT_MEASURED}`)
       : el(
           'span',
-          {},
+          { title: tokenDetail(d) },
           `Tokens ${fmtCount(d.tokens_in)} ein / ${fmtCount(d.tokens_out, d.output_lower_bound)} aus`,
         ),
   );
@@ -256,7 +269,7 @@ function actuals(d) {
 function estimateText(estimate) {
   if (!estimate) return 'keine Schätzung';
   const parts = [];
-  if (!isMissing(estimate.minutes)) parts.push(`${estimate.minutes} min`);
+  if (!isMissing(estimate.minutes)) parts.push(`${fmtMinutes(estimate.minutes)} min`);
   if (!isMissing(estimate.tools)) parts.push(`${estimate.tools} Tools`);
   return parts.length ? `Schätzung ${parts.join(' · ')}` : 'keine Schätzung';
 }
@@ -316,10 +329,7 @@ function inputTotal(row) {
 function inputCell(row) {
   const total = inputTotal(row);
   if (total === null) return NOT_MEASURED;
-  const detail =
-    `Input ${fmtCount(row.input)} + Cache-Schreiben ${fmtCount(row.cache_write)}` +
-    ` + Cache-Lesen ${fmtCount(row.cache_read)}`;
-  return el('span', { title: detail }, fmtCount(total));
+  return el('span', { title: tokenDetail(row) }, fmtCount(total));
 }
 
 function effortTable(rows) {

@@ -26,6 +26,7 @@ LIVE = frozenset({"active", "delegated", "waiting", "blocked"})
 FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
 DIRECTOR = "studio-director"
+CI_SESSION = "ci"  # Pseudo-Session der CI-Events (ci.py)
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in hook.py
 PUBLIC = (
     "key",
@@ -295,10 +296,12 @@ class _Builder:
     def apply(self, event: dict) -> None:
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
-        session = self.sessions.setdefault(
-            sid, {"id": sid, "started": ts, "last": ts, "ended": None}
-        )
-        session["last"] = max(session["last"], ts)
+        # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
+        if event.get("kind") != "ci" and sid != CI_SESSION:
+            session = self.sessions.setdefault(
+                sid, {"id": sid, "started": ts, "last": ts, "ended": None}
+            )
+            session["last"] = max(session["last"], ts)
         handler = getattr(self, "on_" + str(event.get("kind", "")), None)
         if handler is not None:
             handler(event, ts, sid)
@@ -325,6 +328,9 @@ class _Builder:
     def on_prompt(self, event, ts, sid):
         main = self.node(sid, "main", ts)
         main["status"] = "active"
+        # Dauer von L0 = Summe der Turns (Prompt → Turn-Ende); ein offener Turn läuft
+        if not main["_runs"] or main["_runs"][-1][1] is not None:
+            main["_runs"].append([ts, None])
         # Meldungen von Agenten sind kein neuer Auftrag: bisherige Aufgabe behalten.
         if event.get("task") != AGENT_MESSAGE_TASK:
             main["task"] = event.get("task") or main["task"]
@@ -332,6 +338,7 @@ class _Builder:
     def on_turn_end(self, event, ts, sid):
         main = self.node(sid, "main", ts)
         main["status"] = "idle"
+        self.close_run(main, ts)
         main["summary"] = event.get("summary") or main["summary"]
 
     def on_session_end(self, event, ts, sid):
@@ -507,11 +514,9 @@ class _Builder:
         return self.node(sid, f"log:{role}", ts, role)
 
     def on_status(self, event, ts, sid):
-        node = self.resolve(
-            sid, event.get("role") or "", _package(event), ts
-        )
+        node = self.resolve(sid, event.get("role") or "", _package(event), ts)
         self.touch(node, ts)
-        self.stamp(node, event, ("handbook_version",))
+        self.stamp(node, event, ("handbook_version", "milestone"))
         status = event.get("status") or ""
         if status:
             node["status"] = status
@@ -747,7 +752,7 @@ class _Builder:
         records = [effort.record(n, self.nodes) for n in self.nodes.values()]
         mine = [r for r in records if r["session_id"] in scope]
         results = [r for r in self.results.values() if r["session_id"] in scope]
-        ci_runs = [c for c in self.ci.values() if c["session_id"] in scope]
+        ci_runs = self.ci_in_scope(ordered, scope, chosen == "all")
         escalations = [
             d
             for d in self.decisions.values()
@@ -801,6 +806,17 @@ class _Builder:
             ],
             "queue": [q for q in self.queue.values() if q["session_id"] in scope],
         }
+
+    def ci_in_scope(self, sessions: list[dict], scope: set, every: bool) -> list[dict]:
+        """CI-Läufe, deren Zeitpunkt (created, sonst ts) in eine Session fällt."""
+        if every:
+            return list(self.ci.values())
+        windows = [(s["started"], s["last"]) for s in sessions if s["id"] in scope]
+        return [
+            run
+            for run in self.ci.values()
+            if any(start <= run["t"] <= end for start, end in windows)
+        ]
 
     def finalize(self) -> None:
         """Meilenstein je Knoten: Kopfzeile, Paket, Vorfahr, laufender Meilenstein."""

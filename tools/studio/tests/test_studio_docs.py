@@ -100,6 +100,17 @@ class DocsTest(unittest.TestCase):
         self.write("metriken/kaputt.md", "## Rohwerte\n\n```json\n{kaputt\n```\n")
         self.assertEqual([h["kennung"] for h in sd.metrics_history(self.docs)], ["M5"])
 
+    def test_bundle_lernen_without_comments_and_title(self):
+        self.write(
+            "lernen.md",
+            "# Was das Studio gelernt hat\n\n<!-- Kuratiert, höchstens 40 -->\n\n"
+            "- Erste Lehre\n<!-- mehr-\nzeilig -->\n- Zweite Lehre\n## Abschnitt\n",
+        )
+        text = sd.bundle(self.docs, self.agents)["lernen"]
+        self.assertEqual(text, "- Erste Lehre\n- Zweite Lehre\n## Abschnitt")
+        self.write("lernen.md", "# Nur Titel\n<!-- x -->\n")
+        self.assertEqual(sd.bundle(self.docs, self.agents)["lernen"], "")
+
     def test_bundle_tolerates_missing_files(self):
         data = sd.bundle(self.docs, self.agents)
         self.assertEqual(data["queue"], [])

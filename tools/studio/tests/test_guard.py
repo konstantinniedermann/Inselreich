@@ -136,6 +136,17 @@ class HookTest(unittest.TestCase):
             out = self.run_hook(edit, home)
             decision = out["hookSpecificOutput"]
             self.assertEqual(decision["permissionDecision"], "deny")
+            reason = decision["permissionDecisionReason"]
+            self.assertTrue(reason.endswith("(Verfassung §1.3)"), reason)
+            push = {
+                **edit,
+                "tool_name": "Bash",
+                "tool_input": {"command": "git push --force"},
+            }
+            reason = self.run_hook(push, home)["hookSpecificOutput"][
+                "permissionDecisionReason"
+            ]
+            self.assertTrue(reason.endswith("(Verfassung §6)"), reason)
             note = {
                 "hook_event_name": "UserPromptSubmit",
                 "session_id": "s1",

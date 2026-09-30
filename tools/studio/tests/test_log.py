@@ -162,6 +162,15 @@ class LogTest(unittest.TestCase):
         self.assertEqual([e["action"] for e in events], ["add", "answer", "done"])
         self.assertEqual(events[2]["summary"], "verworfen")
 
+    def test_queue_id_format(self):
+        for bad in ("N-", "n-001", "N-001x", "X-1", "N-1 ", "../N-1"):
+            with self.subTest(bad=bad):
+                code, _, err = self.run_log("queue", "--id", bad, "--title", "t")
+                self.assertEqual(code, 2)
+                self.assertIn("N-<Nummer>", err)
+        self.assertEqual(self.events(), [])
+        self.assertEqual(self.run_log("queue", "--id", "N-7", "--title", "t")[0], 0)
+
     def test_decision_for_user_redirects(self):
         code, _, err = self.run_log("decision", "--id", "D-1", "--for", "user",
                                     "--question", "x")

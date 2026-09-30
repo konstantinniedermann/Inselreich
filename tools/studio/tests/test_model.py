@@ -837,6 +837,83 @@ class MilestoneInheritanceTest(unittest.TestCase):
         nodes = flat(build(events))
         self.assertEqual(nodes["s1:a2"]["milestone"], "M9")
 
+    def test_status_log_sets_milestone(self):
+        events = [log_status(1, "lead-qa", "active", milestone="M7")]
+        rec = next(r for r in build(events)["records"] if r["role"] == "lead-qa")
+        self.assertEqual(rec["milestone"], "M7")
+
+
+def ci_event(t, run_id, created=None, conclusion="failure"):
+    return ev(
+        "ci",
+        t,
+        agent_id="",
+        session="ci",
+        source="ci",
+        run_id=run_id,
+        conclusion=conclusion,
+        branch="main",
+        workflow="CI",
+        created=ts(created if created is not None else t),
+    )
+
+
+class CiScopeTest(unittest.TestCase):
+    def events(self):
+        return [
+            ev("session_start", 0, session="s1"),
+            ev("turn_end", 100, session="s1"),
+            ev("session_end", 200, session="s1"),
+            ev("session_start", 300, session="s2"),
+            ev("turn_end", 400, session="s2"),
+            ci_event(150, "1"),  # in s1
+            ci_event(320, "2", created=180),  # erstellt in s1, erfasst in s2
+            ci_event(350, "3"),  # in s2
+            ci_event(900, "4", created=250),  # zwischen den Sessions
+        ]
+
+    def test_ci_counts_for_session_window(self):
+        s1 = build(self.events(), now=1000, session="s1")
+        self.assertEqual(s1["quality"]["ci_runs"], 2)
+        s2 = build(self.events(), now=1000, session="s2")
+        self.assertEqual(s2["quality"]["ci_runs"], 1)
+        every = build(self.events(), now=1000, session="all")
+        self.assertEqual(every["quality"]["ci_runs"], 4)
+
+    def test_ci_is_no_session(self):
+        state = build(self.events(), now=1000)
+        self.assertEqual(state["session"], "s2")
+        self.assertNotIn("ci", [s["id"] for s in state["sessions"]])
+        only_ci = build([ci_event(10, "9")], now=100)
+        self.assertEqual(only_ci["sessions"], [])
+        self.assertIsNone(only_ci["session"])
+
+
+class MainDurationTest(unittest.TestCase):
+    def test_l0_duration_is_sum_of_turns(self):
+        events = [
+            ev("session_start", 0),
+            ev("prompt", 10, status="active", task="Baue M5"),
+            ev("turn_end", 70, status="idle"),
+            ev("prompt", 100, status="active", task="Meldung eines Agenten"),
+            ev("prompt", 110, status="active", task="Meldung eines Agenten"),
+            ev("turn_end", 130, status="idle"),
+        ]
+        rec = next(r for r in build(events)["records"] if r["agent_id"] == "main")
+        self.assertEqual(rec["duration_s"], 90)
+
+    def test_open_turn_closed_by_session_end(self):
+        events = [
+            ev("prompt", 10, status="active", task="x"),
+            ev("session_end", 40, status="ended"),
+        ]
+        rec = next(r for r in build(events)["records"] if r["agent_id"] == "main")
+        self.assertEqual(rec["duration_s"], 30)
+
+    def test_without_turns_not_measured(self):
+        rec = build([ev("session_start", 0)])["records"][0]
+        self.assertIsNone(rec["duration_s"])
+
 
 if __name__ == "__main__":
     unittest.main()

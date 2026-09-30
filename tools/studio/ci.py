@@ -9,7 +9,8 @@ import json
 import subprocess
 import sys
 
-from paths import append_event, now_iso, studio_home
+import studio_docs
+from paths import append_event, docs_dir, now_iso, studio_home
 
 FIELDS = "databaseId,conclusion,status,createdAt,headSha,workflowName,headBranch"
 
@@ -25,7 +26,7 @@ def gh_runner() -> list[dict]:
     return json.loads(result.stdout)
 
 
-def collect(runner, seen: set[str]) -> list[dict]:
+def collect(runner, seen: set[str], handbook: str = "") -> list[dict]:
     """Events für abgeschlossene, noch nicht gesehene Läufe; nie eine Ausnahme."""
     try:
         runs = runner()
@@ -40,6 +41,7 @@ def collect(runner, seen: set[str]) -> list[dict]:
                         "ts": now_iso(),
                         "session_id": "ci",
                         "agent_id": "",
+                        "handbook_version": handbook,
                         "kind": "ci",
                         "run_id": run_id,
                         "conclusion": run.get("conclusion", ""),
@@ -64,7 +66,8 @@ def main() -> int:
             seen = set(json.loads(seen_file.read_text(encoding="utf-8")))
         except (OSError, ValueError):
             seen = set()
-        events = collect(gh_runner, seen)
+        handbook = studio_docs.read_version(docs_dir() / "STUDIO.md")
+        events = collect(gh_runner, seen, handbook)
         for event in events:
             append_event(event)
             seen.add(event["run_id"])

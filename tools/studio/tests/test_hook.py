@@ -141,6 +141,19 @@ class HeaderTest(unittest.TestCase):
         self.assertIsNone(hook.parse_estimate("unklar"))
         self.assertIsNone(hook.parse_estimate(""))
 
+    def test_parse_estimate_decimals(self):
+        cases = {
+            "0.6 min": 0.6,
+            "0,6 min": 0.6,
+            "1.5 min, 4 Tools": 1.5,
+            "2 min": 2,
+        }
+        for text, minutes in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(hook.parse_estimate(text)["minutes"], minutes)
+        self.assertIsInstance(hook.parse_estimate("2 min")["minutes"], int)
+        self.assertEqual(hook.parse_estimate("1.5 min, 4 Tools")["tools"], 4)
+
 
 class NewFieldsTest(unittest.TestCase):
     def test_spawn_fields(self):
@@ -308,8 +321,9 @@ class EnrichTest(unittest.TestCase):
             json.dumps(line) + "\n" + json.dumps(cost) + "\n", "utf-8"
         )
         p = payload("Stop", transcript_path=str(transcript))
-        events = hook.enrich(hook.to_event(p), p)
+        events = hook.enrich(hook.to_event(p, "1.3"), p)
         self.assertEqual([e["kind"] for e in events], ["turn_end", "usage"])
+        self.assertEqual(events[1]["handbook_version"], "1.3")
         self.assertEqual(events[1]["agent_id"], "main")
         self.assertEqual(events[1]["usage"]["m"]["output"], 5)
         self.assertNotIn("session_cost", events[1])

@@ -213,6 +213,13 @@ def content_lines(text: str) -> int:
     return count
 
 
+def lernen_text(text: str) -> str:
+    """lernen.md fürs Dashboard: ohne HTML-Kommentare und ohne H1-Titel."""
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    lines = [line for line in text.splitlines() if not line.startswith("# ")]
+    return "\n".join(line for line in lines if line.strip())
+
+
 def metrics_history(docs: Path) -> list[dict]:
     items: list[dict] = []
     folder = docs / "metriken"
@@ -248,7 +255,7 @@ def bundle(docs: Path, agents: Path) -> dict:
         "changelog": safe(lambda: changelog(docs), []),
         "experiments": safe(lambda: experiments(docs), []),
         "queue": safe(lambda: queue_entries(docs), []),
-        "lernen": safe(lambda: read_text(docs / "lernen.md"), ""),
+        "lernen": safe(lambda: lernen_text(read_text(docs / "lernen.md")), ""),
         "personas": [{"name": k, **v} for k, v in personas.items()],
         "history": safe(lambda: metrics_history(docs), []),
     }
