@@ -783,3 +783,24 @@ bzw. ins Handbuch. — Warum: Verfassung §8.3 verlangt „nicht gemessen"; ein 
 schlimmer als keiner. — Kosten bei Irrtum: eine kurze Fix-Runde.
 
 Entscheider: L0 · Anlass: Bericht lead-qa STUDIO-LIMIT
+
+## R77 · 2026-09-30 · M7
+
+Ruling: **Gate Brainstorming M7 „Stimmung" bestanden mit Auflagen** (lead-design BEDENKEN, kein
+ZURÜCK). Entscheide von lead-art angenommen: lebendiges Top-down (ADR-003 bleibt), Grafik
+prozedural, fremde Assets für Musik, Umgebungsklang und OFL-Schrift, kompaktes mobiles HUD in M7
+(M6-Kann „mobil" gestrichen), Musik standardmässig an (0.5 × Master). Auflagen für die Spec:
+(1) **Vertical Slice zuerst** — erstes Render-Paket: Terrain, Wasser mit Küste, 3 Gebäudetypen,
+Schatten, Abendlicht; Vorher/Nachher auf denselben Ausschnitten wie die Ist-Screenshots; L0,
+lead-art und lead-design urteilen, der Nutzer bekommt die Bilder im Bericht (nicht blockierend).
+Überzeugt der Slice nicht, öffnet ein Ruling fremde CC0-Terrain-/Gebäudegrafik gezielt für die
+schwachen Posten; die Spec nennt diese Tür. (2) Frame-Budget ≥ 30 fps bei 390 px, ganze Insel,
+Zoom 0.5, Sturm aktiv; statische Terrain-Ebene gecacht; Tönung höchstens einmal je Frame;
+Obergrenzen für Figuren und Partikel, „Bewegung reduzieren" senkt sie. (3) Lesbarkeit: 13 Typen
+bei Zoom 1, Kategorien bei Zoom 0.5; Farbabstandscheck Dach/Signalrot und Abendlicht/Warnorange;
+Signale ungetönt nach dem Licht. (4) Musik erst nach erster Interaktion; Stumm und Regler über die
+Einstellungs-Migration erhalten. — Warum: Zweck-Gegenprobe (E-003): Der Nutzerzweck „Stimmung
+muss rüberkommen" hängt an der Ausführung, der Slice macht das früh prüfbar. — Kosten bei Irrtum:
+ein Slice-Paket, das bei Misserfolg in fremde Grafik umgelenkt wird.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-design
