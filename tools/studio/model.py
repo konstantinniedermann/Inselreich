@@ -289,6 +289,7 @@ class _Builder:
                 "department": node["department"],
                 "role": node["role"],
                 "text": _short(text, 400),
+                "_key": node["key"],
             }
         )
 
@@ -777,7 +778,11 @@ class _Builder:
         counts = Counter(v["status"] for v in in_scope)
         counts["inactive"] = sum(1 for v in in_scope if v["inactive"])
         feed = [f for f in self.feed if f["session_id"] in scope]
-        chronicle = [c for c in self.chronicle if c["session_id"] in scope]
+        chronicle = [
+            {k: v for k, v in c.items() if k != "_key"}
+            for c in self.chronicle
+            if c["session_id"] in scope and not self.hidden(c["_key"])
+        ]
         records = [effort.record(n, self.nodes) for n in self.nodes.values()]
         mine = [r for r in records if r["session_id"] in scope]
         results = [r for r in self.results.values() if r["session_id"] in scope]

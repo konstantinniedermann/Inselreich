@@ -965,6 +965,23 @@ class GateSpecFixesTest(unittest.TestCase):
         self.assertIsNone(build(events)["sessions"][0]["ended"])
         self.assertIsNotNone(build(events[:2])["sessions"][0]["ended"])
 
+    def test_chronicle_skips_stop_only_nodes(self):
+        helper = ev(
+            "agent_stop", 5, agent_id="h1", status="done", summary="Fortschritt"
+        )
+        self.assertEqual(build([helper])["chronicle"], [])
+        real = ev(
+            "agent_stop",
+            6,
+            agent_id="x1",
+            role="Explore",
+            status="done",
+            summary="Gefunden",
+        )
+        texts = [c["text"] for c in build([helper, real])["chronicle"]]
+        self.assertEqual(texts, ["Gefunden"])
+        self.assertNotIn("_key", build([real])["chronicle"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
