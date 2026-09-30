@@ -13,6 +13,10 @@ export const GOODS: Record<GoodId, GoodDef> = {
 export const GOOD_IDS = Object.keys(GOODS) as GoodId[];
 /** Untergrenze für den Verkaufsanteil je Gut (in %). */
 export const SELL_FLOOR = 30;
+/** Abschlag je verkaufter Einheit (Prozentpunkte des Verkaufsanteils). */
+export const SELL_DROP = 1;
+/** Stückprämie eines Handelsauftrags: `floor(buy × ORDER_PREMIUM)`. */
+export const ORDER_PREMIUM = 0.75;
 export const STORAGE_CAP = 100;
 export const START_MONEY = 5000;
 export const START_STOCK: Record<GoodId, number> = {
