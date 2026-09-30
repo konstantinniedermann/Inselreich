@@ -15,6 +15,13 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 4, label: '4×' },
 ];
 
+/** Zahl mit ausdrücklichem Vorzeichen: „+12", „−33", „±0" (typografisches Minus wie beim Unterhalt). */
+function signed(n: number): string {
+  if (n > 0) return `+${n}`;
+  if (n < 0) return `−${-n}`;
+  return '±0';
+}
+
 /** Zeitfenster, in dem ein zweiter Klick auf „Neu" den Neustart bestätigt (Millisekunden). */
 const NEW_CONFIRM_MS = 3000;
 
@@ -78,7 +85,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
       '<div class="hud-row"><span class="hud-money" data-field="money"></span>' +
-      '<span class="hud-balance" data-field="balance"></span>' +
+      '<span class="hud-balance"><span data-field="balance"></span> ' +
+      '<span data-field="net"></span></span>' +
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
       '<span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
@@ -123,10 +131,11 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const { taxes, upkeep } = world.stats;
   const taxSign = taxes > 0 ? '+' : '';
   const upkeepSign = upkeep > 0 ? '−' : '';
-  setField(
-    header,
-    'balance',
-    `Steuern ${taxSign}${taxes} · Unterhalt ${upkeepSign}${upkeep} / ${UPKEEP_INTERVAL} Ticks`,
+  setField(header, 'balance', `Steuern ${taxSign}${taxes} · Unterhalt ${upkeepSign}${upkeep}`);
+  const net = taxes - upkeep;
+  setField(header, 'net', `= ${signed(net)} / ${UPKEEP_INTERVAL} Ticks`)?.classList.toggle(
+    'negative',
+    net < 0,
   );
   const pop = populationByTier(world);
   for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);

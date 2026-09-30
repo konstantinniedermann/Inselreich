@@ -88,7 +88,7 @@ Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). 
 - Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
   Wachstums-Tick aufsteigen, eines schrumpft danach sofort. Option: `tryUpgrade` entnimmt die Einheit.
 - HUD zeigt Steuern und Unterhalt, aber keine Nettozahl (Spec 2.8 „Bilanz"); M4 Task 4.
-  **Stand M4:** weiterhin offen — Task 4 war ein reiner Doku-Pass; in arc42 Abschnitt 11 als Schuld geführt.
+  **Erledigt in M4:** Kopfzeile zeigt „Steuern +T · Unterhalt −U = ±B / 100 Ticks" (eigenes Feld `net`, negativ hervorgehoben; `src/ui/hud.ts`).
 - Spec 3.2 nennt `economy.ts` für Steuern; tatsächlich `population.ts` (ADR-005). Doku-Pass M4.
   **Erledigt in M4:** Modulliste in Spec 3.2 nachgeführt (inkl. `supply.ts`, `defs/timing.ts`, `ui/storage.ts`).
 - Frisch aufgestiegenes Haus zahlt in derselben 100er-Buchung halbe Steuer (neue Bedürfnisse noch offen).

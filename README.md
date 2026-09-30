@@ -84,7 +84,8 @@ Kontor anklicken, dann «Handeln»: Waren zu festen Preisen kaufen und verkaufen
 ### Unterhalt und Geld
 
 - Alle 100 Ticks wird der Unterhalt aller Gebäude abgezogen — auch nicht angebundener. Im selben Takt
-  kommen die Steuern herein. Die Kopfzeile zeigt beide Beträge.
+  kommen die Steuern herein. Die Kopfzeile zeigt Steuern, Unterhalt und die Bilanz (Steuern minus
+  Unterhalt) je 100 Ticks; eine negative Bilanz ist hervorgehoben.
 - Geld darf negativ werden. Solange es negativ ist, sind Bauen, Kaufen und Aufstieg gesperrt, bis
   wieder Geld hereinkommt (Verkauf oder Steuern).
 

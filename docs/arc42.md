@@ -133,17 +133,17 @@ flowchart TB
 
 ### Ebene 2: `src/ui/`
 
-| Modul          | Verantwortung                                                                                          |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| `app.ts`       | `startGame`: baut ein Spiel auf, Game-Loop, `onAction`, Panel-Wechsel, Speichern/Laden/Neu, `dispose`. |
-| `input.ts`     | Maus und Tastatur: Kamera (Zoom, Pan), Hover-Prüfung, Kachel-Aktionen, Weg-Ziehen, Abbrechen.          |
-| `hud.ts`       | Kopfzeile: Geld, Steuern und Unterhalt, Tick, Geschwindigkeit, Spielstand-Buttons, Einwohner, Lager.   |
-| `buildMenu.ts` | Bauleiste nach Kategorien mit Kosten; markiert nicht bezahlbare Einträge.                              |
-| `inspect.ts`   | Info-Panel eines Gebäudes: Zustand, Produktion, Unterhalt, Wohnhaus-Details, Abriss, Handel.           |
-| `trade.ts`     | Handelsdialog am Kontor.                                                                               |
-| `messages.ts`  | Meldungen (Toasts), begrenzt und entdoppelt; sticky Meldungen für Sieg und Fehler.                     |
-| `storage.ts`   | Adapter zu `localStorage`; fängt Speicherfehler ab und liefert `Result`.                               |
-| `dom.ts`       | Kleine DOM-Helfer (`setField`, `costLine`).                                                            |
+| Modul          | Verantwortung                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| `app.ts`       | `startGame`: baut ein Spiel auf, Game-Loop, `onAction`, Panel-Wechsel, Speichern/Laden/Neu, `dispose`.       |
+| `input.ts`     | Maus und Tastatur: Kamera (Zoom, Pan), Hover-Prüfung, Kachel-Aktionen, Weg-Ziehen, Abbrechen.                |
+| `hud.ts`       | Kopfzeile: Geld, Steuern, Unterhalt und Bilanz, Tick, Geschwindigkeit, Spielstand-Buttons, Einwohner, Lager. |
+| `buildMenu.ts` | Bauleiste nach Kategorien mit Kosten; markiert nicht bezahlbare Einträge.                                    |
+| `inspect.ts`   | Info-Panel eines Gebäudes: Zustand, Produktion, Unterhalt, Wohnhaus-Details, Abriss, Handel.                 |
+| `trade.ts`     | Handelsdialog am Kontor.                                                                                     |
+| `messages.ts`  | Meldungen (Toasts), begrenzt und entdoppelt; sticky Meldungen für Sieg und Fehler.                           |
+| `storage.ts`   | Adapter zu `localStorage`; fängt Speicherfehler ab und liefert `Result`.                                     |
+| `dom.ts`       | Kleine DOM-Helfer (`setField`, `costLine`).                                                                  |
 
 ## 6. Laufzeitsicht
 
@@ -363,7 +363,6 @@ Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. 
   Kurz-Spec ist ausgeschöpft, weitere Änderungen brauchen eine neue Kurz-Spec.
 - **Aufstieg ohne Reservierung:** Zwei Häuser können im selben Takt aufsteigen, obwohl die Ware nur für
   eines reicht; das zweite schrumpft danach.
-- **HUD ohne Nettobilanz:** Die Kopfzeile zeigt Steuern und Unterhalt getrennt, nicht die Differenz.
 - **Ein Speicherplatz, Version 1:** Kein Migrationspfad für ein späteres Format; ein neues Format
   braucht eine neue Version und einen neuen Schlüssel oder eine Migration.
 
@@ -377,6 +376,6 @@ Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. 
 | Versorgung | Lage eines Wohnhauses im Radius des Kontors oder eines angebundenen Marktplatzes; nur dann erhält es Waren.        |
 | Stufe      | Bevölkerungsstufe eines Wohnhauses: Pioniere, Siedler, Bürger; bestimmt Bedürfnisse, Dienste, Steuer.              |
 | Aufstieg   | Wechsel eines Wohnhauses auf die nächste Stufe, wenn alle Bedingungen erfüllt sind; kostet Geld und Baustoffe.     |
-| Bilanz     | Steuern minus Unterhalt je Buchungstakt (`UPKEEP_INTERVAL`); das HUD zeigt beide Teile.                            |
+| Bilanz     | Steuern minus Unterhalt je Buchungstakt (`UPKEEP_INTERVAL`); das HUD zeigt sie hinter Steuern und Unterhalt.       |
 | Dienst     | Leistung eines öffentlichen Gebäudes im Radius: Glaube (Kapelle), Bildung (Schule).                                |
 | Zyklus     | Anzahl Ticks, bis ein Betrieb eine Einheit erzeugt.                                                                |
