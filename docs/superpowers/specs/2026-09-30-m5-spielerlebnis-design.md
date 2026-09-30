@@ -3,6 +3,10 @@
 Datum: 2026-09-30 · Paket M5-03 · Status: abgenommen durch `lead-design`; Gate Spec (`lead-tech`: Machbarkeit,
 Save v2 · `lead-qa`: Testbarkeit) mit BEDENKEN, Auflagen in Fix-Runde 2 eingearbeitet · Prozessstufe voll
 
+**Umsetzung (Stand Doku-Pass D1):** Alle Muss-Pakete umgesetzt; von den Kann-Posten sind Werkzeugmacher (S4)
+und Tag-Nacht-Tönung (A4) gebaut, Träger (A5) und Wegsuche (S3b) gestrichen (Ruling R64). Balancing-Baseline
+Sieg-Tick 6050 (Ruling R63).
+
 **Entscheide L0 im Gate Spec:** Die Baseline-Vorlage Sieg-Tick 6050 gilt erst nach der Messung in B1. Die
 Aufstiegswartezeit „niedrig" bleibt 150. Die mit „Setzung Spec" markierten Kleinwerte sind im Gate Spec
 übernommen; die Markierung bleibt zur Nachvollziehbarkeit stehen.

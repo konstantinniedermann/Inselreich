@@ -14,6 +14,8 @@ aufsteigen lassen, Geld über Steuern verdienen, Waren handeln, Spielstand speic
 **Nicht-Ziele (Backlog, nicht MVP):** Isometrie, Schiffe/Navigation, mehrere Inseln,
 KI-Gegner, Piraten, Feuer/Pest, Sound, Militär, Multiplayer.
 
+Mit M5 gibt es synthetischen Ton (standardmässig an, abschaltbar), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 9.3.
+
 **Rechtliches:** Nur die _Mechanik_ ist inspiriert. Keine Original-Grafiken, -Sounds,
 -Texte oder -Balancingtabellen. Eigener Titel („Inselreich"), eigene, prozedural
 gezeichnete Grafik, eigene Zahlen.
@@ -49,6 +51,9 @@ gezeichnete Grafik, eigene Zahlen.
 - Zentrales Lager im Kontor, Kapazität **100 je Gut**. Bei vollem Lager verfällt Produktion.
 - Handel: Am Kontor jederzeit kaufen/verkaufen (Stückzahlen 1 / 10) zu Fixpreisen. Werkzeug
   ist im MVP nur durch Kauf erhältlich (wie das frühe Anno-Spiel).
+
+Mit M5 sind die Verkaufspreise gesättigt (Kaufpreise bleiben fest), es gibt Handelsaufträge, und der
+Werkzeugmacher stellt Werkzeug aus Holz her, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 4.2, 5.2 und 5.3.
 
 ### 2.4 Gebäude
 
@@ -117,6 +122,9 @@ Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-
   Aufstiegskosten bezahlbar → Kosten abziehen, tier + 1. Einwohnerzahl bleibt.
 - **Versorgungsbedingung** (Radius, 2.5) unerfüllt → alle Güterbedürfnisse gelten als unerfüllt.
 
+Mit M5 hängen Zielbelegung und Aufstiegs-Wartezeit von der globalen Steuerstufe ab, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md)
+Abschnitt 4.1.
+
 ### 2.8 Wirtschaft
 
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
@@ -124,6 +132,9 @@ Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-
 - Unterhalt: Summe der Gebäude-Unterhalte (auch nicht angebundene).
 - Geld darf negativ werden; bei Geld < 0 sind Bauen, Kaufen und Aufstieg gesperrt.
 - HUD zeigt die Bilanz pro 100 Ticks (Steuern − Unterhalt).
+
+Mit M5 wird die Steuersumme zusätzlich mit dem Prozentsatz der Steuerstufe verrechnet und einmal
+abgerundet („normal" = 100 %, unverändert), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 4.1.
 
 ### 2.9 Sieg
 
@@ -239,6 +250,9 @@ interface World {
 
 Wege sind ein Tile-Flag, kein Building (billiger, kein Id-Verbrauch).
 
+Mit M5 ist `World.version` 2 mit den Feldern `taxLevel`, `taxLockedUntil`, `sellPct` und `order`; v1-Stände
+werden beim Laden migriert, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 6.
+
 ### 3.4 Game-Loop
 
 `requestAnimationFrame`; Akkumulator mit fixem Schritt 100 ms × Geschwindigkeit; max. 20
@@ -258,10 +272,16 @@ Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualis
 - UI als DOM-Overlay: Card-UI, CSS Grid, Mobile-first-Layout (Bauleiste unten, Panel rechts
   bzw. auf schmalen Screens unten). UI-Sprache Deutsch (CH).
 
+Mit M5 zeichnet der Renderer Silhouetten statt Kurzsymbolen, Animationen, ein Händlerschiff, Overlays
+(Radiusanzeige, Bedarfssymbole) und eine Tag-Nacht-Tönung, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 9 und 10.
+
 ### 3.7 Persistenz
 
 - `localStorage` Schlüssel `inselreich.save.v1`; Buttons Speichern / Laden / Neu.
 - Serialisierung = World-Objekt als JSON, Deserialisierung validiert Version und Kachelanzahl.
+
+Mit M5 gibt es zusätzlich einen Autosave-Platz (`inselreich.save.auto`) und Einstellungen in einem eigenen
+Schlüssel (`inselreich.settings`), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 9.7 und 10.8.
 
 ## 4. Tests (Vitest, nur `sim/`)
 
@@ -274,6 +294,10 @@ Ticks pro Frame (Nachholgrenze). Render jeden Frame; HUD alle 10 Frames aktualis
 - trade: Kauf/Verkauf, Kapazität, Geld.
 - save: Round-trip identisch; kaputter Spielstand → Fehler ohne Exception.
 - smoke: 3000 Ticks mit skriptgesteuertem Aufbau → Siedler erreicht, kein Fehler.
+
+Mit M5 prüft Vitest zusätzlich `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts`
+und reine Helfer in `src/ui/`, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 15 und die
+Test-Strategie in `CLAUDE.md`.
 
 ## 5. Meilensteine
 

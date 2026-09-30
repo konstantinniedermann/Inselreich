@@ -46,6 +46,7 @@ export const screenToTile = (c: Camera, sx: number, sy: number): { x: number; y:
 });
 
 export const tileToScreen = (c: Camera, tx: number, ty: number): { x: number; y: number } => ({
-  x: (tx * TILE - c.x) * c.zoom,
-  y: (ty * TILE - c.y) * c.zoom,
+  // Ganze Pixel: Nachbarkacheln teilen sich exakt dieselbe gerundete Kante (keine Nähte bei gebrochenem Zoom).
+  x: Math.round((tx * TILE - c.x) * c.zoom),
+  y: Math.round((ty * TILE - c.y) * c.zoom),
 });

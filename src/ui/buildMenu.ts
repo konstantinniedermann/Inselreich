@@ -1,9 +1,12 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { checkAfford } from '../sim/economy';
-import type { Category, Cost, World } from '../sim/types';
+import { GOODS } from '../sim/defs/goods';
+import { UPKEEP_INTERVAL } from '../sim/defs/timing';
+import type { Category, Cost, GoodId, SiteRule, Terrain, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { costLine } from './dom';
+import { hotkeyLabel, sameTool } from './hotkeys';
 import { showMessage } from './messages';
 
 const CATEGORIES: { id: Category; label: string }[] = [
@@ -13,9 +16,144 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'public', label: 'Öffentlich' },
 ];
 
-function isActive(current: Tool, tool: Tool): boolean {
-  if (current.kind !== tool.kind) return false;
-  return current.kind !== 'build' || (tool.kind === 'build' && current.defId === tool.defId);
+/** Touch-Langdruck, ab dem das Tooltip erscheint (Millisekunden). */
+const LONG_PRESS_MS = 500;
+
+const TERRAIN_NAMES: Record<Terrain, string> = {
+  water: 'Wasser',
+  sand: 'Sand',
+  grass: 'Wiese',
+  forest: 'Wald',
+  mountain: 'Berg',
+};
+
+const SERVICE_NAMES = { faith: 'Glaube', school: 'Bildung' } as const;
+
+/** Zahl mit höchstens einer Nachkommastelle, ohne „.0" („3.3", „2"). */
+function num(n: number): string {
+  return String(Math.round(n * 10) / 10);
+}
+
+function perInterval(cycle: number): string {
+  return `${num(UPKEEP_INTERVAL / cycle)} je ${UPKEEP_INTERVAL} Ticks`;
+}
+
+function siteText(rule: SiteRule): string {
+  switch (rule.kind) {
+    case 'coast':
+      return 'Küste (Wasser angrenzend)';
+    case 'adjacent':
+      return `${TERRAIN_NAMES[rule.terrain]} angrenzend${rule.min > 1 ? ` (mind. ${rule.min})` : ''}`;
+    case 'radius':
+      return `${TERRAIN_NAMES[rule.terrain]} im Radius ${rule.radius}${rule.min > 1 ? ` (mind. ${rule.min})` : ''}`;
+    case 'supply':
+      return 'Im Versorgungsradius von Kontor oder Marktplatz';
+  }
+}
+
+function costText(c: Cost): string {
+  const parts = [`Geld ${c.money}`];
+  const goods = ['wood', 'tools', 'stone'] as const satisfies readonly GoodId[];
+  for (const g of goods) if (c[g]) parts.push(`${GOODS[g].name} ${c[g]}`);
+  return parts.join(' · ');
+}
+
+/** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. */
+export function tooltipLines(tool: Tool): string[] {
+  const key = hotkeyLabel(tool);
+  const withKey = (name: string): string => (key ? `${name} (${key})` : name);
+  if (tool.kind === 'select') return [withKey('Auswahl')];
+  if (tool.kind === 'demolish') return [withKey('Abriss')];
+  if (tool.kind === 'road') {
+    return [withKey('Weg'), `Kosten: Geld ${ROAD_COST}`];
+  }
+  const def = BUILDING_DEFS[tool.defId];
+  const lines = [
+    withKey(def.name),
+    `Kosten: ${costText(def.cost)}`,
+    `Unterhalt: ${def.upkeep} je ${UPKEEP_INTERVAL} Ticks`,
+  ];
+  if (def.produces && def.cycle) {
+    lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
+  }
+  if (def.consumes && def.cycle) {
+    lines.push(`Braucht: ${GOODS[def.consumes].name} ${perInterval(def.cycle)}`);
+  }
+  if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
+  const radius = def.serviceRadius ?? def.supplyRadius;
+  if (radius !== undefined) lines.push(`Radius: ${radius}`);
+  lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
+  return lines;
+}
+
+let tooltipCounter = 0;
+
+/** Zeigt das Tooltip über dem Button; `position: fixed`, damit die scrollende Leiste es nicht abschneidet. */
+function showTooltip(btn: HTMLElement, tip: HTMLElement): void {
+  tip.classList.add('show');
+  const r = btn.getBoundingClientRect();
+  const w = tip.offsetWidth;
+  const h = tip.offsetHeight;
+  const left = Math.max(4, Math.min(r.left, window.innerWidth - w - 4));
+  const top = r.top - h - 6 >= 4 ? r.top - h - 6 : r.bottom + 6;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+}
+
+function hideTooltip(tip: HTMLElement): void {
+  tip.classList.remove('show');
+}
+
+/** Hängt ein Tooltip-Element an den Button: Hover, Tastaturfokus, Touch-Langdruck. */
+function attachTooltip(btn: HTMLButtonElement, tool: Tool, hasCost: boolean): void {
+  const tip = document.createElement('span');
+  tip.className = 'tooltip';
+  tip.id = `tooltip-${(tooltipCounter += 1)}`;
+  tip.setAttribute('role', 'tooltip');
+  tooltipLines(tool).forEach((text, i) => {
+    const line = document.createElement('span');
+    line.className = i === 0 ? 'tt-title' : 'tt-line';
+    line.textContent = text;
+    tip.appendChild(line);
+  });
+  if (hasCost) {
+    const reason = document.createElement('span');
+    reason.className = 'tt-reason';
+    tip.appendChild(reason);
+  }
+  btn.setAttribute('aria-describedby', tip.id);
+  btn.appendChild(tip);
+
+  btn.addEventListener('mouseenter', () => showTooltip(btn, tip));
+  btn.addEventListener('mouseleave', () => hideTooltip(tip));
+  btn.addEventListener('focus', () => showTooltip(btn, tip));
+  btn.addEventListener('blur', () => hideTooltip(tip));
+
+  // Touch-Langdruck: Tooltip nach 500 ms; der folgende Klick wählt dann kein Werkzeug
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const cancelPress = (): void => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    cancelPress();
+    delete btn.dataset.longPress;
+    timer = setTimeout(() => {
+      timer = null;
+      btn.dataset.longPress = '1';
+      showTooltip(btn, tip);
+    }, LONG_PRESS_MS);
+  });
+  btn.addEventListener('pointerup', () => {
+    cancelPress();
+    if (btn.dataset.longPress) setTimeout(() => hideTooltip(tip), 1500);
+  });
+  btn.addEventListener('pointercancel', () => {
+    cancelPress();
+    hideTooltip(tip);
+  });
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 /** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
@@ -37,14 +175,21 @@ export function renderBuildMenu(
   ): void => {
     const btn = document.createElement('button');
     if (cost) buttonCost.set(btn, cost);
-    btn.className = 'btn' + (isActive(state.tool, tool) ? ' active' : '');
-    btn.textContent = label;
+    btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
+    btn.setAttribute('aria-label', label);
+    btn.appendChild(document.createTextNode(label));
     if (sub) {
       const small = document.createElement('small');
       small.textContent = sub;
       btn.appendChild(small);
     }
+    attachTooltip(btn, tool, cost !== undefined);
     btn.addEventListener('click', () => {
+      if (btn.dataset.longPress) {
+        // Langdruck zeigte nur das Tooltip: kein Werkzeugwechsel
+        delete btn.dataset.longPress;
+        return;
+      }
       btn.blur();
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
@@ -87,7 +232,8 @@ export function updateBuildMenu(nav: HTMLElement, world: World): void {
     if (!cost) continue;
     const r = checkAfford(world, cost);
     btn.classList.toggle('unaffordable', !r.ok);
-    const title = r.ok ? '' : r.reason;
-    if (btn.title !== title) btn.title = title;
+    const reason = btn.querySelector('.tt-reason');
+    const text = r.ok ? '' : r.reason;
+    if (reason && reason.textContent !== text) reason.textContent = text;
   }
 }

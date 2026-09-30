@@ -198,7 +198,7 @@ body {
 }
 .trade-table {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 4px 8px;
   align-items: center;
   font-size: 13px;
@@ -209,15 +209,22 @@ body {
   opacity: 0.7;
 }
 .trade-good {
-  overflow-wrap: anywhere;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  align-items: baseline;
+  margin-top: 4px;
+  font-weight: 600;
 }
 .trade-good small {
-  display: block;
+  font-weight: 400;
   opacity: 0.8;
   font-size: 11px;
 }
 .trade-cell {
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
   align-items: center;
 }
@@ -258,4 +265,77 @@ body {
 .upgrade h3 {
   margin: 0;
   font-size: 13px;
+}
+
+/* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */
+.buildbar-group .btn {
+  position: relative;
+}
+.tooltip {
+  display: none;
+  position: fixed;
+  z-index: 20;
+  max-width: 260px;
+  padding: 6px 10px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  text-align: left;
+  pointer-events: none;
+}
+.tooltip.show {
+  display: block;
+}
+.tooltip .tt-title {
+  display: block;
+  font-weight: 600;
+}
+.tooltip .tt-line,
+.tooltip .tt-reason {
+  display: block;
+  opacity: 1;
+  font-size: 12px;
+}
+.tooltip .tt-reason:empty {
+  display: none;
+}
+.tooltip .tt-reason {
+  color: var(--danger);
+}
+
+/* Ton und Laden-Auswahl im HUD */
+.hud-sound {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.hud-sound input[type='range'] {
+  width: 80px;
+}
+.load-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ctrl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.hud-tax,
+.order-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+}
+.tax-lock {
+  opacity: 0.8;
 }

@@ -42,11 +42,13 @@ Lokal, nicht Teil des Spiels.
 - [ADR-007 Studio-Hierarchie mit nativen, verschachtelten Subagenten](adr/ADR-007-studio-hierarchie.md)
 - [ADR-008 Studio-Telemetrie über Hooks, JSONL und Dashboard](adr/ADR-008-studio-telemetrie.md)
 - [ADR-009 Studio-Autonomie, Verfassung und Selbstverbesserung](adr/ADR-009-studio-autonomie-und-lernen.md)
+- [ADR-010 Zufall je Periode aus dem Seed statt RNG-Strom im Save](adr/ADR-010-zufall-je-periode.md)
 
 ## Specs
 
 - [Design-Spec MVP](superpowers/specs/2026-09-29-inselreich-design.md) — Spielkonzept, Datenmodell, Module
 - [Kurz-Spec Balancing-Revision](superpowers/specs/2026-09-30-balancing-design.md) — Steuern und Luxusverbrauch
+- [Design-Spec M5 Spielerlebnis](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md) — Steuerregler, Verkaufssättigung, Aufträge, Ambiente, Bedienkomfort, Save v2
 - [Design-Spec Studio](superpowers/specs/2026-09-30-studio-design.md) — Hierarchie, Telemetrie, Dashboard
 - [Design-Spec Studio 1.5](superpowers/specs/2026-09-30-studio-autonomie-design.md) — Projektleiter, Autonomie, Messung, Selbstverbesserung
 - [Design-Spec Prozess-Graph](superpowers/specs/2026-09-30-studio-prozessgraph-design.md) — Graph im Reiter Live, Namen, Nachrichten
@@ -57,6 +59,7 @@ Lokal, nicht Teil des Spiels.
 - [M2 Wirtschaft](superpowers/plans/2026-09-29-m2-wirtschaft.md)
 - [M3 Bevölkerung](superpowers/plans/2026-09-30-m3-bevoelkerung.md)
 - [M4 Persistenz und Feinschliff](superpowers/plans/2026-09-30-m4-persistenz-feinschliff.md)
+- [M5 Spielerlebnis](superpowers/plans/2026-09-30-m5-spielerlebnis.md)
 - [Studio-Setup](superpowers/plans/2026-09-30-studio-setup.md)
 - [Studio 1.5](superpowers/plans/2026-09-30-studio-autonomie.md)
 - [Studio Prozess-Graph](superpowers/plans/2026-09-30-studio-prozessgraph.md)

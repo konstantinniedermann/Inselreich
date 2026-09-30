@@ -1,4 +1,5 @@
-import type { Tier, TierDef } from '../types';
+import type { TaxLevel, TaxLevelDef, Tier, TierDef } from '../types';
+import { UPGRADE_WAIT } from './timing';
 
 /** Steuerfaktor, solange nicht alle Bedürfnisse eines Hauses erfüllt sind. */
 export const UNSATISFIED_TAX_FACTOR = 0.5;
@@ -33,3 +34,10 @@ export const TIERS: Record<Tier, TierDef> = {
   },
 };
 export const WIN_CITIZENS = 50;
+
+export const TAX_LEVELS: Record<TaxLevel, TaxLevelDef> = {
+  low: { name: 'niedrig', pct: 70, upgradeWait: 150, occupancy: 1 },
+  normal: { name: 'normal', pct: 100, upgradeWait: UPGRADE_WAIT, occupancy: 1 },
+  high: { name: 'hoch', pct: 130, upgradeWait: null, occupancy: 0.75 },
+};
+export const DEFAULT_TAX_LEVEL: TaxLevel = 'normal';

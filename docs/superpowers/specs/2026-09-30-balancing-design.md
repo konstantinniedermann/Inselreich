@@ -34,6 +34,10 @@ Beispiel Endzustand 4 Bürgerhäuser (60 Einwohner): +450 − 40 (Kapelle, Schul
 Werkzeugpreis bleibt 40: Mit positiver Bilanz amortisiert sich der Kauf; eine Werkzeugproduktion
 ist Backlog (kein neuer Inhalt im MVP).
 
+**Nachtrag M5:** Der Werkzeugmacher (Holz → Werkzeug) greift dieses Backlog-Thema auf, siehe
+[M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 4.2. Der Balancing-Test baut ihn nicht und
+bleibt unverändert; die Baseline nach M5 (mit Verkaufssättigung) ist Sieg-Tick 6050 (Ruling R63).
+
 ## Erfolgskriterium (Test)
 
 `tests/sim/balance.test.ts` baut eine Kolonie skriptgesteuert: alle Wege und 4 Häuser gleich zu
