@@ -142,7 +142,9 @@ Dienste erfüllt, zahlt es nur die Hälfte.
 
 - **Speichern:** legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem Browser).
 - **Laden:** lädt den gespeicherten Stand. Ist er beschädigt oder fehlt er, erscheint eine Meldung und
-  das laufende Spiel bleibt unverändert.
+  das laufende Spiel bleibt unverändert. Hat das Spiel schon begonnen, fragt der Button zuerst «Wirklich
+  laden?» (zweimal klicken).
+- **Hinweis beim Start:** liegt ein Spielstand vor, weist eine Meldung auf «Laden» hin.
 - **Neu:** zweimal klicken — der Button fragt «Wirklich neu?» —, dann entsteht eine neue Insel. Die
   Nummer der Karte steht als kleine Zeile in der Kopfzeile unter der Lagerleiste («Karte: …»).
 

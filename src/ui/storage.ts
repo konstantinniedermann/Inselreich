@@ -19,8 +19,17 @@ export function loadFromStorage(): LoadResult {
   try {
     json = localStorage.getItem(SAVE_KEY);
   } catch {
-    return { ok: false, reason: 'Kein Spielstand vorhanden' };
+    return { ok: false, reason: 'Speicher nicht verfügbar' };
   }
   if (json === null) return { ok: false, reason: 'Kein Spielstand vorhanden' };
   return deserialize(json);
+}
+
+/** Prüft billig, ob ein Spielstand liegt; ein gesperrter Speicher zählt als nein. */
+export function hasSavedGame(): boolean {
+  try {
+    return localStorage.getItem(SAVE_KEY) !== null;
+  } catch {
+    return false;
+  }
 }

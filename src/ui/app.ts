@@ -13,7 +13,7 @@ import { disposeHud, updateHud, type HudActions } from './hud';
 import { bindInput, type InputAction } from './input';
 import { renderInspect, updateInspect } from './inspect';
 import { bindMessages, showMessage } from './messages';
-import { loadFromStorage, saveToStorage } from './storage';
+import { hasSavedGame, loadFromStorage, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -67,7 +67,11 @@ export function startGame(root: HTMLElement, loaded?: World): Startable {
   try {
     const gameEl = need<HTMLElement>(root, '#game');
     unbindMessages = bindMessages(gameEl);
-    return launch(root, gameEl, unbindMessages, loaded);
+    const game = launch(root, gameEl, unbindMessages, loaded);
+    if (!loaded && hasSavedGame()) {
+      showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
+    }
+    return game;
   } catch (err) {
     console.error(err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -123,6 +127,7 @@ function launch(
       restart(root, r.world);
       showMessage('Spielstand geladen');
     },
+    hasProgress: () => world.tick > 0,
     restart: () => {
       restart(root);
     },

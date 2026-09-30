@@ -22,13 +22,15 @@ function signed(n: number): string {
   return '±0';
 }
 
-/** Zeitfenster, in dem ein zweiter Klick auf „Neu" den Neustart bestätigt (Millisekunden). */
+/** Zeitfenster, in dem ein zweiter Klick auf Neu bzw. Laden bestätigt (Millisekunden). */
 const NEW_CONFIRM_MS = 3000;
 
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
 export interface HudActions {
   save(): void;
   load(): void;
+  /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
+  hasProgress(): boolean;
   restart(): void;
 }
 
@@ -46,37 +48,58 @@ function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): H
 /** Aufräumfunktionen (Bestätigungs-Timer) je HUD-Element. */
 const cleanups = new WeakMap<HTMLElement, () => void>();
 
-/** Stoppt den Bestätigungs-Timer von „Neu"; beim Beenden des Spiels aufrufen. */
+/** Stoppt die Bestätigungs-Timer von Neu und Laden; beim Beenden des Spiels aufrufen. */
 export function disposeHud(header: HTMLElement): void {
   cleanups.get(header)?.();
   cleanups.delete(header);
 }
 
-/** Speichern, Laden und Neu; „Neu" verlangt einen zweiten Klick innert NEW_CONFIRM_MS. */
-function renderGameButtons(box: Element, actions: HudActions): () => void {
-  let confirmTimer: ReturnType<typeof setTimeout> | null = null;
-  const newBtn = gameButton('Neu', (btn) => {
-    if (confirmTimer === null) {
-      btn.textContent = 'Wirklich neu?';
-      confirmTimer = setTimeout(() => {
-        confirmTimer = null;
-        btn.textContent = 'Neu';
+/**
+ * Button mit Zwei-Klick-Bestätigung: der erste Klick zeigt `confirmLabel` für NEW_CONFIRM_MS, der
+ * zweite Klick darin führt `run` aus. Ist `needsConfirm()` falsch, läuft `run` sofort.
+ */
+function confirmButton(
+  label: string,
+  confirmLabel: string,
+  needsConfirm: () => boolean,
+  run: () => void,
+): { btn: HTMLButtonElement; dispose: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const btn = gameButton(label, () => {
+    if (timer === null && needsConfirm()) {
+      btn.textContent = confirmLabel;
+      timer = setTimeout(() => {
+        timer = null;
+        btn.textContent = label;
       }, NEW_CONFIRM_MS);
       return;
     }
-    clearTimeout(confirmTimer);
-    confirmTimer = null;
-    btn.textContent = 'Neu';
-    actions.restart();
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    btn.textContent = label;
+    run();
   });
+  return {
+    btn,
+    dispose: () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+    },
+  };
+}
+
+/** Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. */
+function renderGameButtons(box: Element, actions: HudActions): () => void {
+  const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, actions.load);
+  const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
   box.append(
     gameButton('Speichern', () => actions.save()),
-    gameButton('Laden', () => actions.load()),
-    newBtn,
+    load.btn,
+    fresh.btn,
   );
   return () => {
-    if (confirmTimer !== null) clearTimeout(confirmTimer);
-    confirmTimer = null;
+    load.dispose();
+    fresh.dispose();
   };
 }
 
