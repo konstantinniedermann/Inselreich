@@ -297,21 +297,21 @@ Parallelität), Merge (QA-Lead: Final-Review, CI; Art-Lead bei Assets: Lizenzen/
 
 Aktiv (Frontmatter: `name`, `description`, `tools`, `model`):
 
-| Name                      | Ebene | Modell | Tools (Kern)                                                           |
-| ------------------------- | ----- | ------ | ---------------------------------------------------------------------- |
-| `lead-production`         | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill                      |
-| `lead-design`             | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, WebSearch, WebFetch |
-| `lead-tech`               | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill                      |
-| `lead-art`                | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, WebSearch, WebFetch |
-| `lead-qa`                 | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill                      |
-| `production-integrator`   | L2    | sonnet | Read, Grep, Glob, Bash                                                 |
-| `design-spec-author`      | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash                                    |
-| `design-economy-designer` | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash                                    |
-| `tech-sim-engineer`       | L2    | sonnet | Read, Grep, Glob, Write, Edit, Bash                                    |
-| `tech-ui-engineer`        | L2    | sonnet | Read, Grep, Glob, Write, Edit, Bash                                    |
-| `art-license-checker`     | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch               |
-| `qa-code-reviewer`        | L2    | sonnet | Read, Grep, Glob, Bash                                                 |
-| `qa-playtester`           | L2    | sonnet | Read, Grep, Glob, Bash, Write                                          |
+| Name                      | Ebene | Modell | Tools (Kern)                                                                        |
+| ------------------------- | ----- | ------ | ----------------------------------------------------------------------------------- |
+| `lead-production`         | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage                      |
+| `lead-design`             | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage, WebSearch, WebFetch |
+| `lead-tech`               | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage                      |
+| `lead-art`                | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage, WebSearch, WebFetch |
+| `lead-qa`                 | L1    | opus   | Agent, Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage                      |
+| `production-integrator`   | L2    | sonnet | Read, Grep, Glob, Bash                                                              |
+| `design-spec-author`      | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash                                                 |
+| `design-economy-designer` | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash                                                 |
+| `tech-sim-engineer`       | L2    | sonnet | Read, Grep, Glob, Write, Edit, Bash                                                 |
+| `tech-ui-engineer`        | L2    | sonnet | Read, Grep, Glob, Write, Edit, Bash                                                 |
+| `art-license-checker`     | L2    | opus   | Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch                            |
+| `qa-code-reviewer`        | L2    | sonnet | Read, Grep, Glob, Bash                                                              |
+| `qa-playtester`           | L2    | sonnet | Read, Grep, Glob, Bash, Write                                                       |
 
 Der Art-&-Audio-Lead heisst technisch `lead-art` (Bereich `art` umfasst Audio). Auf Abruf (im
 Roster mit Einzeiler, Anlage nach `templates/persona.md` durch den zuständigen Lead, verfügbar ab

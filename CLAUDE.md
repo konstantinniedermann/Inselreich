@@ -4,8 +4,8 @@
 
 ## Über das Projekt
 
-Aufbau-Strategiespiel im Stil von Anno 1602 im Browser (TypeScript, Canvas 2D). Eigener Titel,
-eigene Grafik, eigene Spielwerte (ADR-004).
+Aufbau-Strategiespiel im Stil von Anno 1602 im Browser (TypeScript, Canvas 2D). Eigener Titel, eigene Spielwerte;
+Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 
 ## Architektur-Regeln
 

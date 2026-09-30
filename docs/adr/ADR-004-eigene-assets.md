@@ -1,6 +1,6 @@
 # ADR-004: Eigener Titel, eigene Grafik, eigene Spielwerte
 
-Status: akzeptiert · Datum: 2026-09-29
+Status: abgelöst durch [ADR-006](ADR-006-offene-lizenzen.md) · Datum: 2026-09-29
 
 ## Kontext
 
