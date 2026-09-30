@@ -41,6 +41,15 @@ def events_file() -> Path:
     return studio_home() / "events.jsonl"
 
 
+def docs_dir() -> Path:
+    override = os.environ.get("STUDIO_DOCS")
+    return Path(override) if override else repo_root() / "docs" / "studio"
+
+
+def archive_dir() -> Path:
+    return studio_home() / "archiv"
+
+
 def agents_dir() -> Path:
     return repo_root() / ".claude" / "agents"
 
