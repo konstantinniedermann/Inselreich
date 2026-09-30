@@ -915,5 +915,16 @@ class MainDurationTest(unittest.TestCase):
         self.assertIsNone(rec["duration_s"])
 
 
+class GateSpecFixesTest(unittest.TestCase):
+    def test_session_restart_clears_ended(self):
+        events = [
+            ev("session_start", 0, status="idle"),
+            ev("session_end", 10, status="ended"),
+            ev("session_start", 20, status="idle"),
+        ]
+        self.assertIsNone(build(events)["sessions"][0]["ended"])
+        self.assertIsNotNone(build(events[:2])["sessions"][0]["ended"])
+
+
 if __name__ == "__main__":
     unittest.main()

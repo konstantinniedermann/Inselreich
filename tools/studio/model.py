@@ -321,6 +321,7 @@ class _Builder:
                 node[field] = str(event[field])
 
     def on_session_start(self, event, ts, sid):
+        self.sessions[sid]["ended"] = None  # Neustart: Session läuft wieder
         main = self.node(sid, "main", ts)
         main["status"] = "idle"
         main["model"] = event.get("model") or main["model"]
