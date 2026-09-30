@@ -2,176 +2,167 @@
 
 Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschätzung.
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
-ausdrückliche Zustimmung des Nutzers.
+ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
+
+Letzte Auswertung: 2026-09-30 (`lead-production`, Paket S16-02) gegen Commit `3b54938`.
+Ergebnis: 45 Einzelbefunde. Davon sind 11 erledigt, 22 abgehakt und 12 in sechs Paket-Kandidaten
+gebündelt, die unten offen stehen. Kein Befund war widerlegt, sechs trugen eine falsche Prämisse.
 
 ---
 
-## 2026-09-29 · dep-guard-Hook (`~/.claude/hooks/dep_guard.py`) · Fehlalarm bei Heredoc-Text
+## Offen
 
-**Beobachtung:** Ein Bash-Aufruf, der Dateien per Heredoc anlegte _und_ danach `npm install -D …` ausführte,
-wurde blockiert, weil der Hook Wörter aus dem Heredoc (README-/Makefile-Text) als Paketnamen gelesen hat.
-**Ursprung:** Task 1 (Scaffold), Implementierer-Bericht. Workaround: Dateianlage und Install getrennt ausführen.
-**Einschätzung:** Falsch-positiv durch Tokenisierung des gesamten Kommandos statt nur der Install-Zeile.
-Betrifft alle CAS-Projekte (geteilter Baustein). Kandidat für eine kleine Härtung des Hooks: nur die Zeile
-mit dem Install-Kommando tokenisieren.
+Neue Einträge kommen unten dazu. Die sechs Paket-Kandidaten aus der Auswertung stehen hier, bis L0
+über sie entschieden hat.
 
-## 2026-09-29 · M1 Fundament · Aufschiebbare Befunde aus Task- und Gesamt-Review
+### Paket-Kandidat · `src/sim/population.ts` `tryUpgrade` · Aufstieg entnimmt die Ware nicht
 
-Alle vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbarkeit oder Spec-Konformität.
+**Beobachtung:** Beim Aufstieg eines Hauses wird die Ware im Lager nur geprüft, nicht entnommen.
+Zwei Häuser können deshalb auf dieselbe Einheit aufsteigen, und eines davon schrumpft danach sofort.
+Das ist zugleich der zweite Treiber der knappen Balancing-Marge: Die Rumkette reicht nur für eines
+der beiden Häuser, das zweite fällt auf 1 Einwohner. Dazu kommt: Fällt der Aufstieg auf einen
+Buchungstick, zahlt das Haus in dieser Buchung halbe Steuer, weil die neuen Bedürfnisse noch als
+unerfüllt gelten.
+**Ursprung:** Gesamt-Review M3, Balancing-Durchlauf M4 Task 3, Probelauf Session 1.5 (`lead-tech` M5-01).
+**Einschätzung:** Echter Spiellogik-Fehler. Ein ungeprüfter Fix-Entwurf mit Regressionstest liegt lokal
+unter `.studio/handoffs/2026-09-30-probelauf-m5-01-aufstieg.patch`. Der Review-Befund dazu: Die
+entnommene Einheit muss als ausgeliefert zählen, sonst wird sie doppelt verbraucht. Die Änderung
+wirkt auf `tests/sim/balance.test.ts`, eine bewusste Wertänderung braucht deshalb ein Ruling.
+**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt.
 
-**Darstellung / UI** (`src/render`, `src/ui`) — Ursprung: Reviews Task 6/7
+- Ware wird nur geprüft: `src/sim/population.ts` → `upgradeStatus` (`world.stock[g] < 1`).
+- `tryUpgrade` ruft nur `pay` auf, kein `takeStock`.
+- Halbe Steuer: `GROWTH_INTERVAL` 50 gegenüber `UPKEEP_INTERVAL` 100 (`src/sim/defs/timing.ts`). In
+  `tick.ts` läuft `tickPopulation` vor `tickTaxes`, und `allNeedsMet` sieht `satisfied[neu]` noch
+  nicht gesetzt.
 
-- Weg-Kacheln können bei fraktionalem Zoom feine Nähte zeigen (Rundung von Position/Grösse fehlt).
-- Bau-/Abriss-Aktion wirkt auf die Release-, nicht die Press-Kachel; kleines Verrutschen trifft den Nachbarn.
-- Abriss-Regel „Gebäude, sonst Weg" steht doppelt (Hover in `input.ts`, Aktion in `app.ts`); Viewgrösse wird doppelt geführt. Beim dritten Aufrufer (Inspect-Panel M2) zusammenziehen.
-- Tastatur-Pan ist framerate-abhängig (16 px/Frame); bei Arbeiten am Loop auf `dt` umstellen.
-- Kein `dispose()` für Listener/ResizeObserver/rAF; relevant sobald `startGame` zweimal läuft („Neu" in M4).
-  **Erledigt in M4:** `startGame` liefert `dispose()` (Loop, ResizeObserver, Listener, Meldungsfläche, HUD-Timer); Laden und Neu rufen es vor dem Neustart auf (`src/ui/app.ts`).
-- Toasts stapeln sich unbegrenzt bei Klick-Spam; Touch-Bedienung nur teilweise (kein Pinch, Werkzeuge ohne Pan).
-  **Toast-Stapel erledigt in M4:** höchstens drei sichtbar, gleiche Meldung innert einer Sekunde nur einmal (`src/ui/messages.ts`). Touch bleibt offen.
-- `#panel` ist bis M2 eine leere Karte.
-  **Erledigt in M2:** Info-Panel und Handelsdialog (`src/ui/inspect.ts`, `src/ui/trade.ts`).
-- `startGame` fängt einen möglichen `throw` aus `createWorld` (50 Seeds ohne gültige Insel) nicht ab; praktisch unerreichbar.
-  **Erledigt in M4:** `startGame` fängt Startfehler ab und zeigt eine bleibende Meldung (`src/ui/app.ts`).
+### Paket-Kandidat · `src/ui` · Bedienkomfort (Quality-of-Life) aus M1–M4
 
-**Simulation / Tests** (`src/sim`, `tests`) — Ursprung: Reviews Task 2–5
+Befunde aus den Reviews, die zusammen den QoL-Wunsch aus dem Nutzer-Playtest treffen:
 
-- Gebirgsanteil je nach Seed 1–27 % der Insel; Balancing in M4 prüfen.
-- `adjacentReason`/`radiusReason` leiten die Meldung aus dem Terrain ab; bei einer fünften Regel Lookup je Terrain einführen.
-- `hash2` hat schwache Avalanche (eine Multiplikationsrunde); nur relevant, falls Karten sichtbare Muster zeigen.
-- `createRng` (mulberry32) ist angelegt, aber ungenutzt; keine Known-Vector-Prüfung.
-- `defs.test` prüft nur wenige Werte gegen die Spec-Tabellen (voller Tabellenvergleich wäre Duplikation).
+- Die Bau- und Abriss-Aktion wirkt auf die Kachel beim Loslassen, nicht beim Drücken. Ein kleines
+  Verrutschen trifft deshalb den Nachbarn (`src/ui/input.ts` → `endDrag` ruft
+  `tileAction(p.sx, p.sy, …)` mit der Loslass-Position auf).
+- Der Tastatur-Pan ist abhängig von der Framerate (`src/ui/input.ts` → `PAN_PER_FRAME`, `applyKeys`
+  ohne `dt`).
+- Die Touch-Bedienung ist nur teilweise vorhanden: kein Pinch, und die Werkzeuge haben keinen Pan
+  (kein Touch- oder Pinch-Code in `src/ui/`).
+- Die Handelsbuttons werden bei Geldmangel nur deaktiviert, ohne Grund (`src/ui/trade.ts` →
+  `updateTrade`). Die Gründe „Kein Geld" und „Zu wenig Geld" aus `buy()` sind vom UI aus nicht
+  erreichbar. Konsistent zur Bauleiste wäre „klickbar + Toast".
+- Der Rückerstattungstext zeigt den nominalen `refundCost` (`src/ui/inspect.ts`), obwohl
+  `grantRefund` über `addStock` am Lagerlimit kappt.
+- Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu (`src/ui/app.ts` → `restart`
+  → `startGame`, `speed: 1`).
+- Weg-Kacheln können bei fraktionalem Zoom feine Nähte zeigen. `tileToScreen`
+  (`src/render/camera.ts`) und `drawRoad` runden nicht. Nur am Code belegt, im Browser nicht
+  gemessen.
 
-**Konventionen** — Ursprung: Gesamt-Review
+**Ursprung:** Reviews M1 Task 6/7, Gesamt-Reviews M2 und M4, Nutzer-Playtest nach M4.
+**Einschätzung:** Als Paket im nächsten Meilenstein bündeln, nicht einzeln abarbeiten.
+**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt an den genannten Symbolen.
 
-- Commit-Präfix `chore:` wird verwendet, steht aber nicht in der Präfixliste der übergeordneten `CLAUDE.md`. Entscheid: Liste dort ergänzen oder hier verzichten.
+### Paket-Kandidat · Spielkonzept · Richtung nach dem Nutzer-Playtest
 
-## 2026-09-30 · M2 Wirtschaft · Aufschiebbare Befunde aus Task- und Gesamt-Review
-
-Vom Gesamt-Review als „fine to defer" eingestuft; keine betrifft Spielbarkeit oder Spec-Konformität.
-
-- **Zeitkonstanten verstreut** (`UPKEEP_INTERVAL` in `economy.ts`, M3 bringt `GROWTH_INTERVAL` und die 300-Tick-Aufstiegswartezeit): nach M3 in ein `defs/timing.ts` zusammenziehen (Regel „Spielwerte nur in defs").
-  **Erledigt in M4:** `src/sim/defs/timing.ts` (`TICK_MS`, `UPKEEP_INTERVAL`, `GROWTH_INTERVAL`, `UPGRADE_WAIT`); alte Exporte als Re-Export.
-- **Handelsbuttons** sind bei Geldmangel nur deaktiviert, ohne Grund; `'Kein Geld'` aus `buy()` ist so vom UI aus unerreichbar. Konsistent zur Bauleiste wäre „klickbar + Toast".
-- **Refund-Text nominal:** zeigt `refundCost`, obwohl `grantRefund` am Lagerlimit kappt; Verlust ist beabsichtigt, Anzeige könnte das andeuten.
-- **BFS-Richtungsarray** wird je Iteration alloziert (`roads.ts`); bei 64×64 unerheblich.
-- **`refresh()` je Weg-Kachel während Drag** (statt 10-Frame-Takt); drei billige textContent-Vergleiche.
-- **`sell` ignoriert Rückgabe von `takeStock`**, `buy` die von `addStock` — nach den Vorprüfungen sicher, per Kommentar dokumentiert.
-- **Nach Deserialisierung (M4)** `recomputeConnectivity` aufrufen statt persistiertem `connected` zu vertrauen.
-  **Erledigt in M4:** `deserialize` ruft `recomputeConnectivity` auf (`src/sim/save.ts`), Test in `tests/sim/save.test.ts`.
-- **Prozess:** Zwei Implementierer-Subagenten blieben nach dem Schreiben der Tests ohne Fortschritt hängen (Watchdog 600 s); Muster: komplexe Einzeiler-Shellbefehle zum Editieren. Gegenmassnahme im Dispatch: Edit/Write-Tools verlangen, Shell kurz halten.
-
-## 2026-09-30 · M3 Bevölkerung · Balancing-Befund und aufschiebbare Punkte aus dem Gesamt-Review
-
-**Balancing (Ursprung: Gesamt-Review M3, Sonden im Scratchpad):** Mit den aktuellen `defs/`-Werten ist das
-Erfolgskriterium der Spec (50 Bürger in einer Sitzung) wirtschaftlich nicht erreichbar, zeitlich schon
-(Sonde mit unbegrenztem Geld: Sieg bei Tick ~1000).
-
-- Steuer je Einwohner pro 100 Ticks minus Unterhalt der Versorgungskette je Einwohner: Pionier +1.0,
-  Siedler −1.1, Bürger −2.9; dazu Kapelle 15 und Schule 25 fix. Jede Stufe über Pionier ist dauerhaft defizitär.
-- 60 Bürger brauchen ~46 Produktionsgebäude (14 Fischer, 9 Schäferei/Weberei, 9 Zuckerrohr/Brennerei),
-  weil der Verbrauch (0.5/0.25/0.25) hoch ist gegenüber dem Ausstoss (2.5/2/2 je 100 Ticks je Gebäude).
-- Werkzeug ist nur kaufbar (≈6000 Geld für 150 Stück); Startgeld 5000; Sonde mit realem Startgeld war
-  bei Tick ~500 negativ.
-- Einziger positiver Produzent: Holzfäller (Holz verkaufen).
-
-**Einschätzung:** Strukturelle Lücke (~5× Startgeld), kein Sim-Fehler. M4 Task 3 wird als Design-Pass mit
-Kurz-Spec geführt (Kandidaten: Steuersätze Siedler/Bürger ×3–5, Verbrauch senken oder Ausstoss erhöhen,
-Werkzeugproduktion oder billigeres Werkzeug, Unterhalt der Luxusketten senken). Spec-Tabellen nachführen.
-
-**Erledigt in M4 Task 3, Werte siehe balancing-design.md** (`docs/superpowers/specs/2026-09-30-balancing-design.md`;
-übernommen: Eskalationsstufe Steuer 7/14, Verbrauch Stoff/Rum 0.2; Nachweis `tests/sim/balance.test.ts`:
-50 Bürger bei Tick 5950, Geld am Ende 176).
-
-**Aufschiebbar (Ursprung: Gesamt-Review M3):**
-
-- Aufstieg prüft „≥ 1 Einheit im Lager", reserviert sie aber nicht: zwei Häuser können im selben
-  Wachstums-Tick aufsteigen, eines schrumpft danach sofort. Option: `tryUpgrade` entnimmt die Einheit.
-- HUD zeigt Steuern und Unterhalt, aber keine Nettozahl (Spec 2.8 „Bilanz"); M4 Task 4.
-  **Erledigt in M4:** Kopfzeile zeigt „Steuern +T · Unterhalt −U = ±B / 100 Ticks" (eigenes Feld `net`, negativ hervorgehoben; `src/ui/hud.ts`).
-- Spec 3.2 nennt `economy.ts` für Steuern; tatsächlich `population.ts` (ADR-005). Doku-Pass M4.
-  **Erledigt in M4:** Modulliste in Spec 3.2 nachgeführt (inkl. `supply.ts`, `defs/timing.ts`, `ui/storage.ts`).
-- Frisch aufgestiegenes Haus zahlt in derselben 100er-Buchung halbe Steuer (neue Bedürfnisse noch offen).
-- `SERVICE_BUILDING`, `GROWTH_INTERVAL`, `UPGRADE_WAIT` gehören nach `defs/` (M4 `timing.ts`).
-  **Teilweise erledigt in M4:** `GROWTH_INTERVAL` und `UPGRADE_WAIT` liegen in `defs/timing.ts`; `SERVICE_BUILDING` (Zuordnung Dienst → Gebäude, kein Zahlenwert) steht weiter in `population.ts`.
-- MkDocs ist der CAS-Default für Projektdoku, würde hier aber eine Python-Abhängigkeit einführen;
-  bewusst nicht in M4, Markdown-Doku mit `docs/index.md`. Nachrüsten auf Wunsch trivial.
-
-## 2026-09-30 · `tests/sim/balance.test.ts` · Balancing-Marge und Controller-Empfindlichkeit
-
-**Beobachtung:** Mit den Primärwerten 6/12 erreichte die Skript-Kolonie 50 Bürger erst bei Tick 8650
-(Grenze 9000). Das Ergebnis hing an der Strategie: Überschussverkauf erst ab 90 statt 50 Einheiten → 45 Bürger,
-ohne Schulbau-Budget → 17 Bürger. Deshalb wurde die Eskalationsstufe 7/14 übernommen: Sieg bei Tick 5950, der Test
-verlangt jetzt Sieg bis Tick 7500. Geld-Minimum im Lauf bleibt knapp (2).
-Zweiter Treiber: Zwei Häuser steigen im selben Wachstums-Tick zu Bürgern auf, die Rumkette reicht nur für
-eines; das zweite schrumpft auf 1 Einwohner und bleibt dort lange (siehe Aufstiegs-Reservierung oben).
-**Ursprung:** M4 Task 3 (Balancing-Durchlauf), Implementierer und Review.
-**Einschätzung:** Mit 7/14 erfüllt, Eskalationsregel ausgeschöpft. Beim Playtest beobachten; weitere Änderungen
-nur über eine neue Kurz-Spec.
-
-## 2026-09-30 · M4 Persistenz · Aufschiebbare Befunde aus dem Gesamt-Review
-
-- **Spielstand-Validierung lückenhaft:** `deserialize` prüft weder `seed` noch die `defId` des Kontors noch
-  die Kachelfelder. Nicht fatal, vom Gesamt-Review nachgezeichnet.
-  **Ursprung:** M4 Gesamt-Review. **Einschätzung:** bei Bedarf nachrüsten, etwa wenn Spielstände extern entstehen.
-- **Laden setzt Zustand zurück:** Laden stellt die Geschwindigkeit auf 1× und zentriert die Kamera neu
-  (Nebeneffekt von `restart` → `startGame`). **Ursprung:** M4 Gesamt-Review. **Einschätzung:** kosmetisch.
-
-## 2026-09-30 · Playtest des Nutzers (Pages-Build)
-
-**Beobachtung:** Alles funktioniert soweit, Grundlage ist tragfähig. Es fehlen Tiefe, Dynamik, Ambiente und
-Quality-of-Life; das Spielerlebnis soll verbessert werden.
-**Ursprung:** Nutzer-Playtest nach M4.
-**Einschätzung:** Kein Fehler, sondern Richtung für die nächste Phase (M5+): Erlebnis-Design als eigenes
+**Beobachtung:** Alles funktioniert, die Grundlage ist tragfähig. Es fehlen Tiefe, Dynamik, Ambiente
+und Quality-of-Life.
+**Ursprung:** Nutzer-Playtest nach M4 (Pages-Build).
+**Einschätzung:** Das ist kein Fehler, sondern Eingabe für die Meilenstein-Wahl durch L0
+(`docs/studio/state.md`: „Nächster Meilenstein: offen"). Erlebnis-Design läuft als eigenes
 Brainstorming mit Spec, nicht als Einzelmassnahmen.
 
-## 2026-09-30 · Studio-Setup · Aufschiebbare Befunde aus Reviews und Probelauf
-
-- **Vordergrund-`sleep` gesperrt:** Claude Code blockiert einen nackten Bash-Aufruf `sleep N`
-  („standalone sleep"). Briefings, die Wartezeiten verlangen, brauchen `python3 -c "import time; …"`
-  oder den Monitor-Mechanismus. **Ursprung:** Probelauf 1 (der Arbeiter hat die Sperre korrekt nicht
-  umgangen). **Einschätzung:** Hinweis bei Bedarf in `templates/briefing.md` aufnehmen.
-- **Eigene Session im Dashboard:** Nach dem Merge protokollieren die Hooks jede Session im Repo, auch
-  Setup- oder Wartungssessions; diese erscheinen als „neueste" Session. Mit `?session=<id>` lässt sich
-  eine bestimmte Session verlinken. **Ursprung:** Probelauf 2. **Einschätzung:** so gewollt (jede
-  Hauptsession ist L0); bei Bedarf Filter „nur Sessions mit Leads".
-- **Bind bei jeder Erwähnung von `log.py`:** Der Hook erzeugt ein bind-Event für jeden Bash-Aufruf, der
-  `tools/studio/log.py` enthält (auch `cat`), eine leere Rolle überschreibt dann `agent_type`.
-  **Ursprung:** Review Task 1. **Einschätzung:** harmlos, das Modell ignoriert binds ohne Rolle.
-- **Zeitformate:** Feed-`ts` ist UTC, Chronik-`ts` lokal mit Offset; das Dashboard nutzt überall `t`.
-  **Ursprung:** Review Task 2. **Einschätzung:** kosmetisch.
-- **Entscheid erneut gesendet:** Ein `log.py decision` mit bestehender ID öffnet einen gelösten Entscheid
-  wieder. **Ursprung:** Review Task 2. **Einschätzung:** akzeptiert, bei Bedarf dokumentieren.
-- **Verdrängter FIFO-Knoten (geparkt, R17):** Fehlt das `spawned`-Event eines Arbeiters, behält ein falsch
-  zugeordneter Knoten fremde Attribute. **Ursprung:** Re-Review Task 2. **Einschätzung:** tritt nur bei
-  verlorenen Hook-Events auf.
-- **Rückfrage eines Leads erscheint als „fertig":** Gibt ein Lead Fragen an L0 zurück, endet er (Status
-  `done`) statt `waiting`. **Ursprung:** Review Task 7. **Einschätzung:** die Ansicht „Offene Entscheide"
-  deckt es ab.
-- **Server-Tests brauchen ~5 s:** Jeder Test fährt einen echten Server hoch und herunter.
-  **Ursprung:** Task 2. **Einschätzung:** unkritisch; bei Wachstum `poll_interval` beim Herunterfahren senken.
-
-## 2026-09-30 · `docs/studio/gates.md` · Gate Spec ohne Variante für Studio-Specs
-
-**Beobachtung:** Die Prüffragen von Gate Spec sind auf Spielcode zugeschnitten (Balancing,
-Save-Format); für Studio-Specs fehlt eine Variante.
-**Ursprung:** Gate Spec Session 1.5 (`lead-qa`).
-**Einschätzung:** Kandidat für ein Experiment des Studio-Coachs.
-
-## 2026-09-30 · Studio-Telemetrie (`tools/studio/model.py`) · inaktiv-Vorfälle abgebrochener Sessions
+### Paket-Kandidat · `tools/studio/model.py` · inaktiv-Vorfälle abgebrochener Sessions
 
 **Beobachtung:** Endet eine Session ohne SessionEnd-Event (Abbruch, Absturz), bleiben ihre Knoten
-lebend; nach 5 Minuten entstehen `inaktiv:`-Vorfälle, die im nächsten Start-Kontext als fällige
-Retro erscheinen.
+lebend. Nach 5 Minuten entstehen `inaktiv:`-Vorfälle, die im nächsten Start-Kontext als fällige Retro
+erscheinen. Das ist dieselbe Schadensklasse wie der Vorfall zu Vordergrund-Agenten, der in S16-01
+behoben wurde.
 **Ursprung:** Final-Review Session 1.5.
-**Einschätzung:** Vor einem Neustart `make studio-archive` ausführen (steht in der
-state.md-Übergabe); ein automatisches Schliessen verwaister Sessions wäre eine spätere Verbesserung.
+**Einschätzung:** Der Workaround ist `make studio-archive` vor einem Neustart (dokumentiert in
+`docs/studio/STUDIO.md`, nicht in `state.md`). Kandidat für `production-studio-ops`: verwaiste
+Sessions beim Einlesen automatisch schliessen.
+**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt.
 
-## 2026-09-30 · `src/sim/population.ts` `tryUpgrade` · Aufstieg entnimmt die Ware nicht
+- Nur `on_session_end` setzt Knoten auf `ended`.
+- `view` meldet `inactive`, sobald `quiet > inactive_after` (`INACTIVE_DEFAULT` 300 s).
 
-**Beobachtung:** Beim Aufstieg eines Hauses wird die Ware im Lager nur geprüft, nicht entnommen;
-zwei Häuser können auf dieselbe Einheit aufsteigen.
-**Ursprung:** Probelauf Session 1.5 (autonome Session im isolierten Klon, `lead-tech` M5-01).
-**Einschätzung:** Echter Spiellogik-Fehler. Ein ungeprüfter Fix-Entwurf mit Regressionstest liegt
-lokal unter `.studio/handoffs/2026-09-30-probelauf-m5-01-aufstieg.patch`; Review-Befund dazu: die
-entnommene Einheit als ausgeliefert zählen, sonst doppelter Verbrauch.
+### Paket-Kandidat · `docs/studio/` · Nachträge für den Studio-Coach
+
+- **Gate Spec ohne Variante für Studio-Specs:** Die Prüffragen und der Kontext von Gate Spec
+  (`docs/studio/gates.md`) sind auf Spielcode zugeschnitten (Save-Format, `balance.test.ts`). Für
+  Studio-Specs fehlt eine Variante. Ursprung: Gate Spec Session 1.5 (`lead-qa`).
+- **Vordergrund-`sleep` gesperrt:** Claude Code blockiert einen nackten Bash-Aufruf `sleep N`.
+  Briefings, die Wartezeiten verlangen, brauchen `python3 -c "import time; …"` oder Monitor. Der
+  Hinweis fehlt noch in `templates/briefing.md` und `lernen.md`. Ursprung: Probelauf 1.
+
+**Einschätzung:** Zwei kleine Handbuch-Nachträge, gebündelt als Experiment für `studio-coach` in der
+nächsten Verbesserungsschleife.
+**Verifiziert:** 2026-09-30 gegen `3b54938` — belegt. `grep -n "sleep"` über `docs/studio/` ist leer,
+und `gates.md` Abschnitt „Gate Spec" hat keine Studio-Variante.
+
+### Paket-Kandidat (ausserhalb des Repos) · `~/.claude/hooks/dep_guard.py` · Fehlalarm bei Heredoc-Text
+
+**Beobachtung:** Ein Bash-Aufruf, der Dateien per Heredoc anlegte _und_ danach `npm install -D …`
+ausführte, wurde blockiert. Der Hook hat Wörter aus dem Heredoc als Paketnamen gelesen.
+**Ursprung:** M1 Task 1 (Scaffold). Workaround: Dateianlage und Install getrennt ausführen.
+**Einschätzung:** Der Hook ist ein geteilter Baustein aller CAS-Projekte und liegt im User-Scope. Die
+Änderung entscheidet deshalb der Nutzer, nicht das Studio. Härtung: nur das Segment des
+Install-Kommandos tokenisieren.
+**Verifiziert:** 2026-09-30 — belegt. `extract_packages` ruft `shlex.split(command)` auf das ganze
+Kommando auf. Das erste Token `install`/`add`/`i` irgendwo im Text schaltet `seen_verb` ein.
+
+---
+
+## Ausgewertet 2026-09-30
+
+### Erledigt (überholt)
+
+- Kein `dispose()` für Listener, ResizeObserver und rAF → M4: `startGame` liefert `dispose()` (`src/ui/app.ts`).
+- Toast-Stapel bei Klick-Spam → M4: `MAX_TOASTS` 3, `DEDUPE_MS` 1000 (`src/ui/messages.ts`). Touch-Teil siehe QoL-Kandidat.
+- `#panel` leer → M2: `src/ui/inspect.ts`, `src/ui/trade.ts`.
+- `startGame` fängt einen Startfehler aus `createWorld` nicht ab → M4: Fehler-Stub in `src/ui/app.ts`.
+- Zeitkonstanten verstreut → M4: `src/sim/defs/timing.ts`.
+- Nach dem Deserialisieren `recomputeConnectivity` aufrufen → M4: `src/sim/save.ts`, Test in `tests/sim/save.test.ts`.
+- Balancing wirtschaftlich nicht erreichbar → M4 Task 3, `docs/superpowers/specs/2026-09-30-balancing-design.md`.
+- HUD ohne Nettozahl → M4: Feld `net` in `src/ui/hud.ts`.
+- Spec 3.2 nennt `economy.ts` für Steuern → M4: Modulliste nachgeführt.
+- `GROWTH_INTERVAL` und `UPGRADE_WAIT` nach `defs/` → M4: `defs/timing.ts`. `SERVICE_BUILDING` siehe unten.
+- Implementierer hängen bei Shell-Einzeilern → Regel in `docs/studio/lernen.md` („Edit/Write statt Shell-Einzeiler").
+
+### Abgehakt (bewusst nichts tun, mit Trigger)
+
+| Befund (Fundort)                                                                                                    | Begründung                                                                 | Zurück, wenn …                                                                         |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Abriss-Regel doppelt, Viewgrösse doppelt (`input.ts` `updateHover`, `app.ts`)                                       | Zwei Aufrufer, `inspect.ts` nutzt die Regel nicht                          | ein dritter Aufrufer entsteht                                                          |
+| Gebirgsanteil schwankt stark je Seed (`mapgen.ts`)                                                                  | Nachbedingungen sichern Wald und Land; Balancing-Test läuft auf Seed 3     | ein Playtest eine unspielbare Karte meldet oder der Balancing-Test mehrere Seeds prüft |
+| `adjacentReason`/`radiusReason` leiten die Meldung aus dem Terrain ab (`placement.ts`)                              | Vier Meldungen, überschaubar                                               | eine fünfte Regel dazukommt                                                            |
+| `hash2` mit schwacher Avalanche (`noise.ts`)                                                                        | Keine sichtbaren Muster gemeldet                                           | Karten sichtbare Muster zeigen                                                         |
+| `createRng` ohne Known-Vector-Test (`rng.ts`, in `src/` ungenutzt)                                                  | Nur Tests nutzen ihn                                                       | Sim-Code ihn erstmals nutzt (dann Known-Vector-Test)                                   |
+| `defs.test` prüft nur Stichproben                                                                                   | Voller Tabellenvergleich wäre Duplikation                                  | —                                                                                      |
+| Commit-Präfix `chore:`                                                                                              | Im Studio etabliert (`qa-code-reviewer`, `lead-qa`)                        | die Präfixliste der übergeordneten `CLAUDE.md` überarbeitet wird                       |
+| BFS-Richtungsarray je Iteration (`roads.ts` `reachableRoads`)                                                       | Bei 64×64 unerheblich                                                      | die Karte deutlich wächst                                                              |
+| `refresh()` je Weg-Kachel während Drag (`app.ts` `onAction`)                                                        | Billige Vergleiche                                                         | ein Profiling Ruckler beim Wegziehen zeigt                                             |
+| `sell`/`buy` ignorieren die Rückgabe von `takeStock`/`addStock`                                                     | Nach den Vorprüfungen sicher, kommentiert                                  | die Vorprüfungen sich ändern                                                           |
+| `SERVICE_BUILDING` in `population.ts`                                                                               | Zuordnung, kein Zahlenwert                                                 | ein neuer Dienst dazukommt (dann nach `defs/`)                                         |
+| MkDocs nicht eingesetzt                                                                                             | Würde eine Python-Abhängigkeit bringen; Markdown mit `docs/index.md`       | der Nutzer es wünscht                                                                  |
+| Balancing-Marge knapp (`balance.test.ts`, Sieg ≤ 7500)                                                              | Eskalationsregel ausgeschöpft; zweiter Treiber ist im Aufstiegs-Kandidaten | ein Playtest oder eine `defs/`-Änderung die Marge kippt (neue Kurz-Spec)               |
+| Spielstand-Validierung lückenhaft (`save.ts` `isWellFormed`: kein `seed`, keine Kontor-`defId`, keine Kachelfelder) | Spielstände entstehen nur im eigenen Spiel                                 | Spielstände extern entstehen (Import, Teilen)                                          |
+| Eigene Session im Dashboard als „neueste"                                                                           | So gewollt, `?session=<id>` vorhanden (`dashboard/app.js`)                 | Sessions ohne Leads stören                                                             |
+| bind-Event bei jeder Erwähnung von `log.py` (`hook.py` `log_args`)                                                  | Harmlos, `on_bind` ignoriert leere Rollen                                  | binds mit Rolle falsch zugeordnet werden                                               |
+| Zeitformate: Feed UTC, Chronik lokal                                                                                | Kosmetisch, das Dashboard nutzt `t`                                        | jemand Rohdaten auswertet                                                              |
+| `log.py decision` mit bestehender ID öffnet den Entscheid neu (`model.py` `on_decision`)                            | Akzeptiert                                                                 | es versehentlich passiert                                                              |
+| Verdrängter FIFO-Knoten bei fehlendem `spawned` (R17)                                                               | Tritt nur bei verlorenen Hook-Events auf                                   | verlorene Events beobachtet werden                                                     |
+| Rückfrage eines Leads erscheint als `done`                                                                          | Entscheide laufen über `log.py decision`; Ansicht „Offene Entscheide"      | eine Rückfrage übersehen wird                                                          |
+| Server-Tests langsam (echter Server je Test)                                                                        | Unkritisch                                                                 | die Suite deutlich wächst                                                              |
+| Laden setzt Geschwindigkeit und Kamera zurück                                                                       | Siehe QoL-Kandidat                                                         | —                                                                                      |
+
+### Falsche Prämissen
+
+| Befund                                  | Behauptet                                                 | Gemessen                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Gebirgsanteil je Seed                   | 1–27 % der Insel                                          | 0,7–55 % des Landes über die Seeds 1–200 (Median 14 %, Messung per `generateMap`)                              |
+| Handelsbuttons ohne Grund               | „`'Kein Geld'` aus `buy()` unerreichbar"                  | „Kein Geld" gilt für negativen Kontostand; bei zu wenig Geld meldet `buy` „Zu wenig Geld" — beide unerreichbar |
+| inaktiv-Vorfälle abgebrochener Sessions | Workaround „steht in der state.md-Übergabe"               | `state.md` nennt `make studio-archive` nicht, nur `STUDIO.md`                                                  |
+| Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
+| Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
+| Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
