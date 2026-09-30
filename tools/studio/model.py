@@ -169,6 +169,7 @@ class _Builder:
                 "_chron": False,
                 "_type": "",
                 "_started": False,
+                "_runs": [],
                 "_last_text": "",
                 "_entry": None,
             }
@@ -185,6 +186,11 @@ class _Builder:
         node["level"], node["department"] = classify(role)
         if node["agent_id"] != "main":
             node["model"] = self.models.get(role, node["model"] or "inherit")
+
+    @staticmethod
+    def close_run(node: dict, ts: float) -> None:
+        if node["_runs"] and node["_runs"][-1][1] is None:
+            node["_runs"][-1][1] = ts
 
     def reparent(self, node: dict, parent_key: str) -> None:
         if node["agent_id"] == "main" or node["parent"] == parent_key:
@@ -259,6 +265,7 @@ class _Builder:
         for node in self.nodes.values():
             if node["session_id"] == sid and node["status"] not in FINAL:
                 node["status"], node["stopped"] = "ended", ts
+                self.close_run(node, ts)
 
     def on_spawn(self, event, ts, sid):
         parent = self.agent(event, ts, sid)
@@ -334,9 +341,11 @@ class _Builder:
         node = self.node(sid, agent_id, ts, typ)
         if node["_started"]:  # Fortsetzen per SendMessage: kein neuer Start
             node["status"], node["stopped"] = "active", None
+            node["_runs"].append([ts, None])
             node["summary"], node["_chron"] = "", False
             return
         node["_started"] = True
+        node["_runs"].append([ts, None])
         node["status"], node["started"] = "active", ts
         node["_type"] = typ
         if node["_entry"] is not None:
@@ -354,6 +363,7 @@ class _Builder:
         node = self.agent(event, ts, sid)
         node["status"] = "failed" if node["status"] == "failed" else "done"
         node["stopped"] = ts
+        self.close_run(node, ts)
         if not node["summary"]:
             node["summary"] = event.get("summary") or ""
         if not node["_chron"]:
@@ -403,6 +413,7 @@ class _Builder:
             node["status"] = status
             if status in FINAL:
                 node["stopped"] = ts
+                self.close_run(node, ts)
         for field in ("task", "summary", "package"):
             if event.get(field):
                 node[field] = event[field]
@@ -598,10 +609,14 @@ class _Builder:
                 for c in n["children"]
                 if self.nodes[c]["started"] >= plan["since"]
             ]
-            spans = sorted(
-                (c["started"], c["stopped"] if c["stopped"] is not None else self.now)
-                for c in children
-            )
+            spans = []
+            for c in children:
+                if c["_runs"]:
+                    spans += [(a, self.now if b is None else b) for a, b in c["_runs"]]
+                else:
+                    end = c["stopped"] if c["stopped"] is not None else self.now
+                    spans.append((c["started"], end))
+            spans.sort()
             peak = 0
             for start, _ in spans:
                 peak = max(peak, sum(1 for s, e in spans if s <= start < e))

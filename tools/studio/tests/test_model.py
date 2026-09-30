@@ -718,6 +718,50 @@ class ResumeTest(unittest.TestCase):
         self.assertEqual((node["task"], node["package"]), ("T", "P"))
 
 
+class ParallelRunsTest(unittest.TestCase):
+    def grant(self):
+        return ev(
+            "budget",
+            0,
+            agent_id="",
+            role="lead-qa",
+            source="log",
+            budget={"granted": 5, "parallel": 1, "phase": "P1"},
+        )
+
+    def test_resume_gap_is_not_parallel(self):
+        events = [
+            self.grant(),
+            start(0.5, "a1", "lead-qa"),
+            spawn(1, "a1", "qa-playtester"),
+            start(1, "W1", "qa-playtester"),
+            stop(3, "W1", "qa-playtester"),
+            spawn(4, "a1", "qa-playtester"),
+            start(4, "W2", "qa-playtester"),
+            stop(6, "W2", "qa-playtester"),
+            start(7, "W1", "qa-playtester"),
+            stop(9, "W1", "qa-playtester"),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual((budget["used"], budget["parallel_used"]), (2, 1))
+        self.assertFalse(budget["overrun"])
+
+    def test_real_overlap_still_counts(self):
+        events = [
+            self.grant(),
+            start(0.5, "a1", "lead-qa"),
+            spawn(1, "a1", "qa-playtester"),
+            start(1, "W1", "qa-playtester"),
+            spawn(2, "a1", "qa-playtester"),
+            start(2, "W2", "qa-playtester"),
+            stop(3, "W1", "qa-playtester"),
+            stop(4, "W2", "qa-playtester"),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual(budget["parallel_used"], 2)
+        self.assertTrue(budget["overrun"])
+
+
 class StoreAndModelsTest(unittest.TestCase):
     def test_event_store_skips_corrupt_and_partial(self):
         with tempfile.TemporaryDirectory() as tmp:
