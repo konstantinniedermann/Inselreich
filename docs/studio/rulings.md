@@ -821,3 +821,13 @@ Nutzers; Mobil-Aufwand fliesst in Stimmung und Tiefe. — Kosten bei Irrtum: sp�
 Mobil-Paket, falls der Nutzer das Handy doch will.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R79 · 2026-09-30 · M5
+
+Ruling: **Gate Merge M5-NACHLESE bestanden** (Stufe leicht): `fix/m5-nachlese` @ fa58ada, Review
+(opus) nach Nachprüfung OK, make check grün, nur Texte, Kommentare und Testnamen. Die
+Grenzüberschreitung in `CLAUDE.md` (eine Zeile „Test-Strategie", vom Auftrag D-5 verlangt) wird
+nachträglich genehmigt. Merge seriell durch `production-integrator`, danach Push. — Warum:
+Befunde gesichert, keine Verhaltensänderung. — Kosten bei Irrtum: ein Text-Commit.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M5-NACHLESE
