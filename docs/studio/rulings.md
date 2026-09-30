@@ -831,3 +831,15 @@ nachträglich genehmigt. Merge seriell durch `production-integrator`, danach Pus
 Befunde gesichert, keine Verhaltensänderung. — Kosten bei Irrtum: ein Text-Commit.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M5-NACHLESE
+
+## R80 · 2026-09-30 · Studio
+
+Ruling: **Gate Merge STUDIO-LIMIT bestanden** (lead-qa OK nach Fix-Runde R76, make check grün,
+Browser-Check 1280×800). Merge seriell nach M5-NACHLESE durch `production-integrator`. Danach:
+Handbuch „Limits und Sessiongrösse" von „in Arbeit" auf „in Betrieb" (Coach), Paket
+`log.py result --package` (R75) wird frei, Restbefunde (Gelb-Text, veraltete Werte nicht
+abgeschwächt, leere Statuszeile ohne `$CLAUDE_PROJECT_DIR`, Frische 600 s vs. 1 h, kein JS-Test für
+`renderLimits`) nach `docs/beobachtungen.md`. Der Sensor wirkt erst in der Session nach dem Merge.
+— Warum: Befunde behoben und nachgeprüft. — Kosten bei Irrtum: gering, nur `tools/studio/`.
+
+Entscheider: L0 · Anlass: Nachprüfung lead-qa STUDIO-LIMIT
