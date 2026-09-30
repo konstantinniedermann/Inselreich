@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check studio-test studio studio-stop studio-archive
+.PHONY: help install dev test lint format build check studio-test studio studio-stop studio-archive studio-metrics
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -33,5 +33,8 @@ studio-stop: ## Studio-Dashboard stoppen
 
 studio-archive: ## Studio-Events archivieren (Dashboard startet leer)
 	@python3 tools/studio/log.py archive
+
+studio-metrics: ## Studio-Metriken der letzten Session verdichten
+	@python3 tools/studio/metrics.py --session latest
 
 check: lint test studio-test build ## Gleich wie CI: lint, test, studio-test, build
