@@ -161,7 +161,8 @@ def queue_add(
         raise ValueError(f"{entry_id} existiert bereits")
     path = docs / "warteschlange.md"
     values = (question, recommendation, reason, cost, blocks or "nichts", source, "–")
-    lines = [f"## {entry_id} · offen · {date} · {_one_line(title)}"]
+    # Leerzeile nach der Überschrift: Prettier-kompatibel (make check prüft die Datei).
+    lines = [f"## {entry_id} · offen · {date} · {_one_line(title)}", ""]
     lines += [f"- {k}: {_one_line(v)}" for k, v in zip(QUEUE_FIELDS, values)]
     text = read_text(path).rstrip("\n")
     path.write_text(text + "\n\n" + "\n".join(lines) + "\n", encoding="utf-8")
