@@ -42,6 +42,11 @@ und nennt je Task, welcher Test welches AK abdeckt. Test-Namen beginnen mit der 
   Hauptrepo auf Worktree-Pfade: Konfiguration und `.prettierignore` gelten relativ zum Arbeitsbaum, und
   `.worktrees/` ist im Hauptrepo ignoriert (die Dateien würden sonst still übersprungen).
 - Mermaid ohne `\n` in Node-Labels.
+- **Befunde ausserhalb des Scopes** schreiben Arbeiter und Leads während M5 **nicht** nach
+  `docs/beobachtungen.md`, sondern nur in ihren Bericht an den Lead bzw. den Lead-Bericht an L0 (Abschnitt
+  „Befunde ausserhalb Scope"). D1 überträgt sie gesammelt. Ausnahme zu den festen Regeln für diesen
+  Meilenstein (Gate Plan, Ruling durch L0); Grund: `docs/beobachtungen.md` hätte sonst fünf Schreiber in fünf
+  Branches.
 
 ## Review Focus
 
@@ -67,14 +72,14 @@ steht jeweils in der Task, die den Code besitzt:
 
 ### Stränge, Worktrees und Owner
 
-| Strang       | Worktree / Branch                                 | Implementierer (Modell)                  | Controller                      | Pakete (Reihenfolge im Strang) |
-| ------------ | ------------------------------------------------- | ---------------------------------------- | ------------------------------- | ------------------------------ |
-| Sim          | `.worktrees/m5-sim` · `feat/m5-sim`               | `tech-sim-engineer` (sonnet)             | `lead-tech`                     | S1 → S2 → S5 → B1 → (S4) → D1  |
-| Sim-Abfragen | `.worktrees/m5-sim-q` · `feat/m5-sim-queries`     | `tech-sim-engineer` (sonnet)             | `lead-tech`                     | S3 → (S3b)                     |
-| UI           | `.worktrees/m5-ui` · `feat/m5-ui`                 | `tech-ui-engineer` (sonnet)              | `lead-tech`                     | U1a → U2 → U1b → U3            |
-| Render       | `.worktrees/m5-render` · `feat/m5-render`         | `art-rendering-engineer` (sonnet, Abruf) | `lead-art`                      | A1 → A3 → (A4) → (A5)          |
-| Audio        | `.worktrees/m5-audio` · `feat/m5-audio`           | `art-audio-engineer` (sonnet, Abruf)     | `lead-art`                      | A2                             |
-| Integration  | `.worktrees/m5-int` · `test/m5-int` (nur Prüfung) | —                                        | Controller des geprüften Pakets | Browser-Checks                 |
+| Strang       | Worktree / Branch                                 | Implementierer (Modell)                  | Controller          | Pakete (Reihenfolge im Strang) |
+| ------------ | ------------------------------------------------- | ---------------------------------------- | ------------------- | ------------------------------ |
+| Sim          | `.worktrees/m5-sim` · `feat/m5-sim`               | `tech-sim-engineer` (sonnet)             | `lead-tech`         | S1 → S2 → S5 → B1 → (S4) → D1  |
+| Sim-Abfragen | `.worktrees/m5-sim-q` · `feat/m5-sim-queries`     | `tech-sim-engineer` (sonnet)             | `lead-tech`         | S3 → (S3b)                     |
+| UI           | `.worktrees/m5-ui` · `feat/m5-ui`                 | `tech-ui-engineer` (sonnet)              | `lead-tech`         | U1a → U2 → U1b → U3            |
+| Render       | `.worktrees/m5-render` · `feat/m5-render`         | `art-rendering-engineer` (sonnet, Abruf) | `lead-art`          | A1 → A3 → (A4) → (A5)          |
+| Audio        | `.worktrees/m5-audio` · `feat/m5-audio`           | `art-audio-engineer` (sonnet, Abruf)     | `lead-art`          | A2                             |
+| Integration  | `.worktrees/m5-int` · `test/m5-int` (nur Prüfung) | —                                        | `lead-tech` (Owner) | Browser-Checks, nacheinander   |
 
 Klammern = Kann-Posten. Rollen „Abruf" ohne Persona-Datei: `subagent_type: general-purpose`, Kopfzeile
 `Persona: <name>`, Persona-Text aus `docs/studio/roster.md`. Art-Pakete steuert `lead-art` im eigenen Worktree
@@ -122,37 +127,54 @@ den Vorgänger-Branch in den eigenen Worktree: `git -C .worktrees/<eigener> merg
 (kein Rebase). Die Stränge berühren disjunkte Dateien; Konflikte sind nur bei der S2-Ausnahme in
 `src/ui/trade.ts` denkbar und werden durch die Reihenfolge vermieden.
 
-| Paket                                  | blocked-by                               | Merge in den eigenen Worktree vor Start        |
-| -------------------------------------- | ---------------------------------------- | ---------------------------------------------- |
-| S1                                     | —                                        | —                                              |
-| S3                                     | —                                        | —                                              |
-| U1a                                    | —                                        | —                                              |
-| A1                                     | — (Schritt Händlerschiff: S1)            | vor dem Schiff-Schritt: `feat/m5-sim` (S1)     |
-| A2                                     | —                                        | —                                              |
-| S2                                     | S1                                       | (gleicher Strang)                              |
-| U2                                     | U1a, A2                                  | `feat/m5-audio`                                |
-| A3                                     | A1, S3                                   | `feat/m5-sim-queries`                          |
-| S5                                     | S1, S2                                   | (gleicher Strang)                              |
-| U1b                                    | S2, S3, U2 (gleiche Dateien in Folge)    | `feat/m5-sim`, `feat/m5-sim-queries`           |
-| U3                                     | S1, S2, S3, U1b, U2                      | `feat/m5-sim` (neuester Stand)                 |
-| B1                                     | S1, S2, S5                               | (gleicher Strang)                              |
-| S4 (Kann)                              | S1, A1, alle Muss-Pakete OK              | `feat/m5-render` (A1, `BUILDING_ABBR` ersetzt) |
-| A4 (Kann)                              | A1, alle Muss-Pakete OK                  | —                                              |
-| S3b (Kann, nur mit A5)                 | S3, alle Muss-Pakete OK                  | —                                              |
-| A5 (Kann)                              | A1, S3b                                  | `feat/m5-sim-queries` (S3b)                    |
-| D1                                     | alle umgesetzten Pakete OK               | alle Strang-Branches (nur lesen)               |
-| Browser-Checks U1b, U2, U3, A3, A4, B1 | S5, U1a (U1b, A3 ausdrücklich laut Spec) | im Integrations-Worktree                       |
+| Paket                                  | blocked-by                                     | Merge in den eigenen Worktree vor Start                                                                                                  |
+| -------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| S1                                     | —                                              | —                                                                                                                                        |
+| S3                                     | —                                              | —                                                                                                                                        |
+| U1a                                    | —                                              | —                                                                                                                                        |
+| A1                                     | — (Schritt Händlerschiff: S1)                  | vor dem Schiff-Schritt: `feat/m5-sim` (S1); Browser-Check erst nach U2                                                                   |
+| A2                                     | —                                              | —                                                                                                                                        |
+| S2                                     | S1                                             | (gleicher Strang)                                                                                                                        |
+| U2                                     | U1a, A2, A1                                    | `feat/m5-audio`; `feat/m5-render` (nach A1 OK)                                                                                           |
+| A3                                     | A1, S3                                         | `feat/m5-sim-queries`                                                                                                                    |
+| S5                                     | S1, S2                                         | (gleicher Strang)                                                                                                                        |
+| U1b                                    | S2, S3, U2 (gleiche Dateien in Folge)          | `feat/m5-sim`, `feat/m5-sim-queries`                                                                                                     |
+| U3                                     | S1, S2, S3, U1b, U2                            | `feat/m5-sim` (neuester Stand)                                                                                                           |
+| B1                                     | S1, S2, S5                                     | (gleicher Strang)                                                                                                                        |
+| S4 (Kann)                              | S1, A1, alle Muss-Pakete OK                    | `feat/m5-render` (A1, `BUILDING_ABBR` ersetzt); danach `feat/m5-sim` erneut in `feat/m5-render` (Silhouette) und `feat/m5-ui` (Hotkey T) |
+| A4 (Kann)                              | A1, alle Muss-Pakete OK                        | —                                                                                                                                        |
+| S3b (Kann, nur mit A5)                 | S3, alle Muss-Pakete OK                        | —                                                                                                                                        |
+| A5 (Kann)                              | A1, S3b                                        | `feat/m5-sim-queries` (S3b)                                                                                                              |
+| D1                                     | alle umgesetzten Pakete OK                     | alle Strang-Branches (nur lesen)                                                                                                         |
+| Browser-Checks U1b, U2, U3, A3, A4, B1 | S5, U1a (U1b, A3 ausdrücklich laut Spec)       | im Integrations-Worktree                                                                                                                 |
+| Browser-Check A1                       | U2 (UI übergibt erst dann `fx.timeMs`), S2, S5 | im Integrations-Worktree                                                                                                                 |
 
-**Browser-Checks im Integrations-Worktree.** Vor jedem Check führt der Controller die aktuellen OK-Stände
-zusammen und erzeugt die Szenario-Saves:
+**Browser-Checks im Integrations-Worktree.** `.worktrees/m5-int` gehört `lead-tech`; niemand sonst merged
+dort. Checks laufen **strikt nacheinander**, nie zwei Playtester gleichzeitig am Dev-Server.
+
+1. **Anmeldung:** `lead-tech` plant seine Checks selbst ein. `lead-art` meldet einen Check per Handoff-Datei
+   an: `.studio/handoffs/m5-check-<paket>.md` mit Paket, AKs, benötigten Szenarien und den **SHAs mit
+   Review-OK** je betroffenem Branch.
+2. **Integration nur geprüfter Stände:** `lead-tech` merged ausschliesslich SHAs mit Review-Urteil OK (nie
+   einen Branch-Kopf, der gerade in einer Fix-Runde steckt):
 
 ```bash
 cd /Users/KN/CAS/projekte/anno-clone/.worktrees/m5-int
-git merge --no-edit feat/m5-sim feat/m5-sim-queries feat/m5-ui feat/m5-render feat/m5-audio
+git merge --no-edit <sha-sim> <sha-sim-q> <sha-ui> <sha-render> <sha-audio>   # nur vorhandene/geprüfte
 make check
 SCENARIO_OUT=/Users/KN/CAS/projekte/anno-clone/.studio/qa/m5-scenarios npx vitest run tests/sim/scenario-saves.test.ts
 npm run dev -- --port 5180 --strictPort
 ```
+
+3. **Durchführung:** Den Playtester startet der Lead, dem das Paket gehört (Budget des Pakets); bei
+   Art-Paketen antwortet `lead-tech` in der Handoff-Datei „bereit, Stand <int-SHA>", dann startet `lead-art`.
+   Während eines fremden Checks loggt der wartende Lead
+   `python3 tools/studio/log.py status --role <lead> --status waiting --task "m5-int belegt: <paket>" --package M5-<paket>`.
+4. **Bericht:** Der Playtest-Report nennt den `test/m5-int`-SHA und die integrierten Strang-SHAs.
+5. **Lange Echtzeit-Checks** (AK-U2-03, AK-U2-07, AK-U2-08: je 2–3 min; AK-B1-03: 15 min): Wartezeiten
+   liegen im CDP-Skript selbst (Node-Skript mit dem eingebauten `WebSocket` gegen den Debug-Port, Wartezeit
+   per `await new Promise((r) => setTimeout(r, ms))` zwischen den Messpunkten) oder werden auf mehrere
+   Bash-Aufrufe von je höchstens 10 min verteilt, die jeweils einen Messpunkt lesen. Kein nacktes `sleep`.
 
 `test/m5-int` wird nie nach `main` gemergt und nach dem Gate Merge entfernt. Ablauf im Browser nach Spec 14.1
 (⏸ im HUD, per CDP `localStorage.setItem('inselreich.save.v1', <json>)`, „Laden"). Screenshots und Bericht
@@ -183,13 +205,26 @@ flowchart LR
   D1 --> FR["Final-Review opus"]
 ```
 
-- **Welle 1 (sofort, 5 parallel):** S1, S3 (zwei Sim-Worktrees ohne gemeinsame Datei, Spec §13), U1a, A1
-  (ohne Schiff), A2.
-- **Welle 2:** S2, U2, A3, A1-Schiff.
-- **Welle 3:** S5, U1b; danach die Browser-Checks von U1a, A1, U2, A3.
-- **Welle 4:** U3, B1; Browser-Checks U1b, U3, B1.
-- **Welle 5 (nur wenn Budget und Zeit reichen, Streichreihenfolge unten):** A4, S4, S3b → A5.
-- **Welle 6:** D1, dann Final-Review.
+Die Umsetzung ist in Wellen gegliedert. **L0 startet je Welle einen frischen `lead-tech`** (und bei Bedarf
+`lead-art`); der Kontext wandert über das Board und eine Übergabedatei, nicht über lange Lead-Sessions.
+
+| Welle | Pakete (Lead)                                           | Start, wenn                            | Ende, wenn                             |
+| ----- | ------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| 1     | S1, S3, U1a (lead-tech) · A1 ohne Schiff, A2 (lead-art) | Gate Plan und Budget Muss freigegeben  | alle fünf Review-OK                    |
+| 2     | S2, U2 (lead-tech) · A1-Schiff, A3 (lead-art)           | Welle 1 fertig                         | alle Review-OK                         |
+| 3     | S5, U1b (lead-tech) · Browser-Checks U1a, U2, A1, A3    | Welle 2 fertig                         | Pakete Review-OK, Checks abgeschlossen |
+| 4     | U3, B1 (lead-tech) · Browser-Checks U1b, U3, B1         | Welle 3 fertig                         | alle Muss-Pakete abgenommen            |
+| 5     | Kann: A4, A5 (lead-art) · S4, S3b (lead-tech)           | L0-Beschluss Kann-Posten + Kann-Budget | beschlossene Kann-Posten abgenommen    |
+| 6     | D1 (lead-tech) → Final-Review (lead-qa)                 | Welle 4 bzw. 5 fertig                  | Bericht an L0 fürs Gate Merge          |
+
+- **Übergabe je Welle:** Der abgebende Lead führt das Board nach (`log.py package` je Paket) und schreibt
+  `.studio/handoffs/m5-welle-<n>.md`: Paketstände mit SHA je Branch, offene Fix-Runden (Arbeiter, Stand),
+  laufende oder angemeldete Browser-Checks, Befunde ausserhalb Scope (gesammelt für D1), Budget
+  verbraucht/frei, Startbedingungen der nächsten Welle.
+- **Signale zwischen Leads** laufen über den Paketstatus auf dem Board: Ein Paket steht auf `done`, sobald sein
+  Task-Review OK ist (`log.py package --id M5-<paket> … --status done`). Wer auf ein Paket des anderen Leads
+  wartet, prüft dessen Status — A2 → U2, A1 → U2, S1 → A1-Schiff, S3 → A3, S3b → A5 — und merged erst dann
+  den genannten SHA aus der Übergabedatei.
 
 Parallelität: `lead-tech` 3 (Sim, Sim-Abfragen, UI), `lead-art` 2 (Render, Audio). Nie zwei Implementierer im
 selben Worktree.
@@ -215,8 +250,10 @@ siehe dort).
    `SendMessage` an denselben Implementierer (zählt nicht als Start).
 4. Bei Paketen mit Browser-AKs: `qa-playtester` (sonnet) im Integrations-Worktree, sobald die Voraussetzungen
    der Tabelle oben erfüllt sind.
-5. `log.py result … --outcome <angenommen|nacharbeit|verworfen> --review-rounds <n>`, Paket auf `review`.
+5. `log.py result … --outcome <angenommen|nacharbeit|verworfen> --review-rounds <n>`; nach Review-OK Paket auf
+   `done` (Signal für abhängige Pakete, siehe Wellen), SHA in die Übergabedatei.
 6. Sim-Pakete: Sieg-Tick im Bericht.
+7. Befunde ausserhalb Scope nur in den Bericht (Global Constraints), nicht in `docs/beobachtungen.md`.
 
 ---
 
@@ -644,8 +681,9 @@ it('AK-A1-05 tileToScreen liefert ganze Pixel ohne Lücke oder Überlappung', ()
       `world.order !== null` auf der ersten Wasserkachel aus `adjacentOf` des Kontors, leichtes Schaukeln.
 - [ ] **Schritt 6:** `make check`; Commits je Schritt (`feat:` bzw. `fix:` für Q7).
 - [ ] **Review** `qa-code-reviewer` (keine Weltänderung im Renderer, kein Zufall ausser aus Zeit/Welt);
-      **Browser-Check** `qa-playtester` (nach S2 und S5): AK-A1-01 … 04, 06, 07 (Leistung: ohne A3 mit
-      Wohnhaus-Werkzeug; nach A3 im A3-Check wiederholt).
+      **Browser-Check** `qa-playtester` (nach U2, S2 und S5; vorher übergibt die UI kein `fx.timeMs`, die
+      Animation stünde still): AK-A1-01 … 04, 06, 07 (Leistung: mit Wohnhaus-Werkzeug; nach A3 im A3-Check
+      wiederholt). Anmeldung per Handoff an `lead-tech`.
 
 ## Task A2: Synthetischer Ton
 
@@ -959,8 +997,8 @@ export function nextOrderTick(world: World): number {
 
 ## Task U2: Tooltips, Hotkeys, Autosave, Einstellungen, Ton-Anbindung
 
-**Strang:** UI · `.worktrees/m5-ui` · `tech-ui-engineer` (sonnet) · blocked-by: U1a, A2
-(vorher `git merge --no-edit feat/m5-audio`)
+**Strang:** UI · `.worktrees/m5-ui` · `tech-ui-engineer` (sonnet) · blocked-by: U1a, A2, A1
+(vorher `git merge --no-edit <SHA feat/m5-audio mit A2-OK>`)
 
 **Files:** Modify `src/ui/buildMenu.ts`, `src/ui/input.ts`, `src/ui/storage.ts`, `src/ui/app.ts`,
 `src/ui/hud.ts`, `src/ui/messages.ts`, `index.html`, `src/style.css`; Create `src/ui/settings.ts`,
@@ -1005,6 +1043,9 @@ export function hotkeyAction(
       `pointerdown`/`keydown`, `setHidden` bei `visibilitychange`, `dispose()` in `dispose()`, `play()` nach
       Aktionen und per Frame-Vergleich (Spec 9.4: `floor(tick/100)` gestiegen, `order.period` neu — erst
       wirksam, wenn S2 im UI-Branch ist —, Summe der Hausstufen gestiegen, `won` neu wahr).
+- [ ] **Schritt 2b: Render-Anbindung (nach A1 `done`):** `git merge --no-edit <SHA feat/m5-render mit A1-OK>`,
+      dann im Frame-Loop von `app.ts` `render(…, view, { timeMs: performance.now() })` übergeben (mit A4
+      zusätzlich `dayNight` aus den Einstellungen). `make check`.
 - [ ] **Review-Focus 1 (kaputter Autosave):** `listSaves()` liefert nur Slots, die `deserialize` akzeptiert;
       Test mit einem Fake-Storage-Objekt (`listSavesFrom(storage)` als reine Variante), das in `auto`
       Müll enthält → nur `manual` gelistet; Startmeldung ohne Ausnahme.
@@ -1169,6 +1210,14 @@ it('AK-B1-02 genau 10 Aufträge in 9000 Ticks ohne Eingriff', () => {
 });
 ```
 
+- [ ] **Schritt 1b: Determinismus mit Spieleraktionen** (Grundlage fürs Final-Review): Test
+      `Determinismus mit Spieleraktionen` in `tests/sim/m5-session.test.ts`. Start: Szenario `auftrag` aus
+      `tests/sim/scenarios.ts`; ein festes Aktionsskript `[{ tick: 600, deliverOrder }, { tick: 700,
+setTaxLevel 'high' }, { tick: 750, sell wood 10 }, { tick: 1100, setTaxLevel 'normal' }, { tick: 1600,
+deliverOrder }]` läuft bis Tick 3000 zweimal — Lauf A durchgehend, Lauf B mit `serialize`/`deserialize`
+      bei Tick 1000 —, danach `serialize(A) === serialize(B)`; zusätzlich ein dritter Lauf mit gleichem Skript
+      liefert dieselbe Ergebnis-Zeichenkette. Fehlschläge einzelner Aktionen (z. B. `Nicht genug Ware`) sind
+      erlaubt, müssen aber in beiden Läufen gleich sein (Ergebnisse protokollieren und vergleichen).
 - [ ] **Schritt 2: Messung** AK-B1-01 mit dem Befehl aus den Global Constraints; Sieg-Tick, minMoney,
       Endgeld notieren. Sieg ≤ 7000 → Ruling-Vorlage nach Spec §12 („Balancing-Baseline Sieg-Tick <gemessen>
       nach Verkaufssättigung — … — bei Irrtum Neumessung, Grenze 7500 bleibt") im Bericht an `lead-tech`.
@@ -1235,26 +1284,55 @@ und Spielwerte laut Spec §16, nur umgesetzte Kann-Posten), `CLAUDE.md`, Hauptsp
 2.8, 3.3, 3.6, 3.7), Balancing-Kurz-Spec (Hinweis Werkzeugmacher, nur mit S4), `docs/beobachtungen.md`
 (Paket-Kandidat Bedienkomfort und „Verkauf als Dauergewinn" nach „Ausgewertet → Erledigt").
 
-- [ ] **Schritt 1: `CLAUDE.md` — die zwei Zeilen** (Spec §16):
-      Context-Scopes: neue Zeile `| Audio | \`src/audio/\`, \`tests/audio/\` | Ton, Klangereignisse |`;
-Test-Strategie: Satz ergänzen „Vitest zusätzlich gegen `src/audio/` mit Fake-`AudioContext`und gegen
-die Cache-Logik in`src/render/overlays.ts`."
-- [ ] **Schritt 2:** arc42, README, Hauptspec, Beobachtungen nachführen; `npx prettier --write` im Worktree;
+- [ ] **Schritt 1: `CLAUDE.md` — die zwei Zeilen** (Spec §16). Context-Scopes, neue Tabellenzeile:
+
+  ```markdown
+  | Audio | `src/audio/`, `tests/audio/` | Ton, Klangereignisse |
+  ```
+
+  Test-Strategie, Satz anhängen:
+
+  ```markdown
+  Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`) und die Cache-Logik in `src/render/overlays.ts`.
+  ```
+
+- [ ] **Schritt 2:** arc42, README, Hauptspec nachführen; `docs/beobachtungen.md`: die in den
+      Übergabedateien `.studio/handoffs/m5-welle-*.md` und Lead-Berichten gesammelten Befunde als Einträge
+      übertragen (Aufbau laut Datei) und die zwei erledigten Kandidaten verschieben; `npx prettier --write` im Worktree;
       `make check`.
 - [ ] **Schritt 3:** Commit `docs: Doku-Pass M5 (arc42, README, CLAUDE.md, Spec-Verweise)`.
 - [ ] **Review** `qa-code-reviewer` (Doku konsistent mit den gemergten Strang-Ständen; Mermaid ohne `\n`).
 
 ## Final-Review und Übergabe
 
-- **Final-Review** durch `lead-qa` (`opus`, eigene Freigabe) über alle Strang-Branches gegen `main`:
-  kombinierter Stand im Integrations-Worktree nach letztem `git merge` aller Branches, `make check`,
-  Balancing-Messung, Determinismus (AK-S2-12 plus ein Lauf `createWorld(7)` 9000 Ticks zweimal →
-  `serialize` gleich), Save-Kompatibilität (AK-S1-02, AK-S2-10), AK-Abdeckung per
-  `grep -rhoE "AK-[A-Z0-9]+-[0-9]+" tests | sort -u` gegen die 88 AKs der Spec (Browser-AKs aus den
-  Playtest-Berichten), AK-B1-04 (Ruling vorhanden).
-- **Merge-Reihenfolge** für `production-integrator` (Vorschlag, nach Gate Merge): `feat/m5-audio` →
-  `feat/m5-sim-queries` → `feat/m5-sim` → `feat/m5-render` → `feat/m5-ui` (die späteren Branches enthalten
-  frühere bereits; jeder Schritt mit `make check`). `test/m5-int` wird nicht gemergt.
+- **Final-Review** durch `lead-qa` (`opus`) über alle Strang-Branches gegen `main`:
+  1. **Fünf Branch-SHAs festhalten** (`git rev-parse feat/m5-sim feat/m5-sim-queries feat/m5-ui
+feat/m5-render feat/m5-audio`) und im Bericht nennen; geprüft wird genau dieser Stand.
+  2. Diese SHAs in `test/m5-int` mergen (`lead-tech` stellt den Stand bereit), `make check`,
+     Balancing-Messung.
+  3. **Determinismus mit Spieleraktionen:** AK-S2-12 und der B1-Test „Determinismus mit Spieleraktionen"
+     (`setTaxLevel`, `sell`, `deliverOrder` ab Szenario `auftrag`, mit Speichern/Laden) plus ein Lauf
+     `createWorld(7)` 9000 Ticks zweimal → `serialize` gleich.
+  4. Save-Kompatibilität (AK-S1-02, AK-S2-10); AK-Abdeckung per
+     `grep -rhoE "AK-[A-Z0-9]+-[0-9]+" tests | sort -u` gegen die 88 AKs der Spec (Browser-AKs aus den
+     Playtest-Berichten mit ihren SHAs); AK-B1-04 (Ruling vorhanden).
+  5. **1 Start Reserve** fürs Final-Review (Nachprüfung nach einer Fix-Runde): liegt im Puffer von
+     `lead-tech` und wird bei Bedarf von L0 an `lead-qa` umgebucht.
+- **Merge-Reihenfolge** für `production-integrator` (nach Gate Merge): `feat/m5-audio` →
+  `feat/m5-sim-queries` → `feat/m5-sim` → `feat/m5-render` → `feat/m5-ui`.
+  Begründung: Die Stränge haben sich gegenseitig per Merge aufgenommen (U2 enthält Audio und Render, U1b/U3
+  Sim und Sim-Abfragen, A1/A3 Sim und Sim-Abfragen, mit S4 enthält Sim auch Render). Ein späterer Branch in der
+  Liste enthält deshalb **meist**, aber nicht zwingend alle früheren; git übernimmt bereits gemergte Commits
+  nicht doppelt. Die Reihenfolge geht von den Branches ohne fremde Merges (Audio, Sim-Abfragen) zu denen mit
+  den meisten (UI) — so bringt jeder Schritt möglichst wenig Unbekanntes mit. Getestet ist als Ganzes nur
+  der Stand in `test/m5-int`; deshalb die Prüfungen:
+  - vor jedem Schritt: `git merge-base --is-ancestor <strang-SHA> test/m5-int` (nur der im Final-Review
+    geprüfte SHA wird gemergt, Abbruch bei Abweichung);
+  - nach jedem Schritt: `make check` (rot → `git merge --abort`, melden);
+  - nach dem letzten Schritt: `git diff test/m5-int main` ist leer (sonst fehlt oder überzählt ein Stand).
+  - Ist S4 gebaut: `feat/m5-sim` wurde danach erneut in `feat/m5-render` und `feat/m5-ui` gemergt; die
+    Reihenfolge bleibt gleich.
+    `test/m5-int` selbst wird nicht gemergt.
 - Rulings aus dem superpowers-Ledger nach `docs/studio/rulings.md`; `docs/studio/state.md` nachführen.
 
 ## Budgetantrag
@@ -1280,16 +1358,20 @@ Pakete:
 - A5 Träger, Kann (ja, Browser-Check)
 - B1 Balancing + 15 Minuten (ja, Browser-Check AK-B1-03)
 - D1 Doku-Pass (nein; Autor lead-tech, 1 Start Review, 1 Start Puffer)
-Formel: 17 × 2 + 9 + 1 Final-Review = 44 → × 1,3 = 57,2 → aufgerundet 58
+Formel gesamt: 17 × 2 + 9 + 1 Final-Review = 44 → × 1,3 = 57,2 → aufgerundet 58
+Gestaffelt (Gate Plan):
+  Stufe Muss (sofort):  S1 S2 S3 S5 U1a U1b U2 U3 B1 D1 · A1 A2 A3 · Final-Review
+                        13 × 2 + 7 + 1 = 34 → × 1,3 = 44,2 → 45
+    lead-tech 33 (10 × 2 + 5 Checks = 25 × 1,3 = 32,5 → 33), parallel 3 — darin 1 Start Reserve fürs Final-Review
+    lead-art  11 (3 × 2 + 2 Checks = 8 × 1,3 = 10,4 → 11), parallel 2
+    lead-qa    1 (Final-Review opus), parallel 1
+  Stufe Kann (erst nach L0-Beschluss): S3b S4 · A4 A5 = +13
+    lead-tech +5 (S3b, S4: 2 × 2 = 4 × 1,3 = 5,2 → 5)
+    lead-art  +8 (A4, A5: 2 × 2 + 2 Checks = 6 × 1,3 = 7,8 → 8)
 Parallelität: 5 gesamt (lead-tech 3: m5-sim, m5-sim-q, m5-ui · lead-art 2: m5-render, m5-audio)
 Bisher frei/verbraucht: —
 Begründung Mehrbedarf: —
-Beantragt: 58 Starts, Parallelität 5
-Vorschlag Aufteilung:
-  lead-tech  38 (S1 S2 S3 S3b S4 S5 U1a U1b U2 U3 B1 D1: 12 × 2 + 5 Checks = 29 × 1,3 = 37,7 → 38), parallel 3
-  lead-art   19 (A1–A5: 5 × 2 + 4 Checks = 14 × 1,3 = 18,2 → 19), parallel 2
-  lead-qa     1 (Final-Review opus), parallel 1
-Ohne Kann-Posten (A4, A5, S3b, S4 gestrichen): 13 × 2 + 7 + 1 = 34 × 1,3 = 44,2 → 45
+Beantragt: 45 Starts (Muss) sofort, +13 (Kann) nach Beschluss; Parallelität 5
 ```
 
 ## Selbstprüfung (Spec → Task)
