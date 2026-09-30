@@ -699,6 +699,30 @@ class RobustnessTest(unittest.TestCase):
         self.assertEqual(node["status"], "done")
         self.assertEqual(node["stopped"], T0 + 3)
 
+    def test_spawned_completed_keeps_failed_node(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "a1", "lead-qa"),
+            log_status(3, "lead-qa", "failed"),
+            ev("spawned", 4, child_id="a1", status="completed"),
+        ]
+        node = flat(build(events))["s1:a1"]
+        self.assertEqual(node["status"], "failed")
+        self.assertEqual(node["stopped"], T0 + 3)
+
+    def test_stop_after_spawned_completed_is_done_without_double_chronicle(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            ev("heartbeat", 2, agent_id="W1", tool="WebFetch"),
+            ev("spawned", 5, child_id="W1", status="completed"),
+            stop(6, "W1", "web-fetch", summary="Seite gelesen"),
+        ]
+        state = build(events)
+        node = flat(state)["s1:W1"]
+        self.assertEqual(node["status"], "done")
+        self.assertEqual(node["stopped"], T0 + 6)
+        self.assertEqual([c["text"] for c in state["chronicle"]], ["Seite gelesen"])
+
     def test_spawned_async_launched_stays_active(self):
         events = [
             ev("heartbeat", 2, agent_id="W1", tool="Read"),
