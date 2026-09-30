@@ -8,8 +8,8 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(8);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 12 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(12);
+  it('has 13 building defs whose goods exist', () => {
+    expect(BUILDING_IDS).toHaveLength(13);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -31,6 +31,18 @@ describe('defs', () => {
       consumes: 'cane',
       produces: 'rum',
       cost: { money: 250, wood: 15, tools: 4, stone: 5 },
+    });
+    expect(BUILDING_DEFS.toolmaker).toMatchObject({
+      name: 'Werkzeugmacher',
+      w: 2,
+      h: 2,
+      cost: { money: 200, wood: 15, tools: 3, stone: 0 },
+      upkeep: 25,
+      category: 'production',
+      consumes: 'wood',
+      produces: 'tools',
+      cycle: 80,
+      site: [],
     });
     expect(BUILDING_DEFS.chapel).toMatchObject({ service: 'faith', serviceRadius: 10 });
     expect(BUILDING_DEFS.market.supplyRadius).toBe(8);
