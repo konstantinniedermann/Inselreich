@@ -209,6 +209,7 @@ class _Builder:
                 "stopped": None,
                 "last_seen": ts,
                 "_pulse": ts,
+                "_signal": is_main,
                 "_confirmed": False,
                 "_chron": False,
                 "_type": "",
@@ -293,6 +294,21 @@ class _Builder:
 
     # --- Events -------------------------------------------------------------
 
+    def signal(self, event: dict, sid: str) -> None:
+        """Jedes Event ausser agent_stop ohne Rolle macht einen Knoten sichtbar (P31)."""
+        if event.get("source") == "log":
+            return
+        if event.get("kind") == "agent_stop" and not event.get("role"):
+            return
+        node = self.nodes.get(f"{sid}:{event.get('agent_id') or 'main'}")
+        if node is not None:
+            node["_signal"] = True
+
+    def hidden(self, key: str) -> bool:
+        """stop-only-Knoten: nur ein agent_stop ohne Rolle, sonst nichts (P31)."""
+        node = self.nodes[key]
+        return node["agent_id"] != "main" and not node["_signal"]
+
     def apply(self, event: dict) -> None:
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
@@ -305,6 +321,7 @@ class _Builder:
         handler = getattr(self, "on_" + str(event.get("kind", "")), None)
         if handler is not None:
             handler(event, ts, sid)
+        self.signal(event, sid)
         self.add_feed(event, ts, sid)
 
     def agent(self, event: dict, ts: float, sid: str) -> dict:
@@ -424,6 +441,7 @@ class _Builder:
         child = self.node(sid, child_id, ts, touch=False)
         self.reparent(child, parent["key"])
         child["_confirmed"] = True
+        child["_signal"] = True
         reported = {
             "duration_ms": event.get("duration_ms"),
             "tool_count": event.get("tool_count"),
@@ -479,6 +497,10 @@ class _Builder:
         if not node["_chron"]:
             self.add_chronicle(node, ts, node["summary"] or node["task"])
 
+    def on_message(self, event, ts, sid):
+        sender = self.agent(event, ts, sid)  # Lebenszeichen wie ein Heartbeat (T2)
+        self.count_tool(sender)  # SendMessage bleibt ein Tool-Aufruf (Aufwand)
+
     def on_heartbeat(self, event, ts, sid):
         self.count_tool(self.agent(event, ts, sid))
 
@@ -516,6 +538,7 @@ class _Builder:
 
     def on_status(self, event, ts, sid):
         node = self.resolve(sid, event.get("role") or "", _package(event), ts)
+        node["_signal"] = True
         self.touch(node, ts)
         self.stamp(node, event, ("handbook_version", "milestone"))
         status = event.get("status") or ""
@@ -735,7 +758,8 @@ class _Builder:
         def tree(key: str) -> dict:
             node = dict(views[key])
             children = sorted(
-                self.nodes[key]["children"], key=lambda k: self.nodes[k]["started"]
+                (k for k in self.nodes[key]["children"] if not self.hidden(k)),
+                key=lambda k: self.nodes[k]["started"],
             )
             node["children"] = [tree(k) for k in children]
             return node
@@ -745,7 +769,11 @@ class _Builder:
             for s in ordered
             if s["id"] in scope and f"{s['id']}:main" in self.nodes
         ]
-        in_scope = [v for v in views.values() if v["session_id"] in scope]
+        in_scope = [
+            v
+            for k, v in views.items()
+            if v["session_id"] in scope and not self.hidden(k)
+        ]
         counts = Counter(v["status"] for v in in_scope)
         counts["inactive"] = sum(1 for v in in_scope if v["inactive"])
         feed = [f for f in self.feed if f["session_id"] in scope]

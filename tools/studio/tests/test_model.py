@@ -915,6 +915,46 @@ class MainDurationTest(unittest.TestCase):
         self.assertIsNone(rec["duration_s"])
 
 
+# --- Prozess-Graph (Spec 2026-09-30-studio-prozessgraph-design.md) ----------
+
+
+def message(t, sender, to, text="Hallo", **kw):
+    return ev("message", t, agent_id=sender, to=to, text=text, **kw)
+
+
+def lead(t=1, aid="a1", typ="lead-qa", **kw):
+    return [spawn(t, "main", typ, description="Auftrag", **kw), start(t + 1, aid, typ)]
+
+
+class GraphTest(unittest.TestCase):
+    def test_message_is_heartbeat_of_sender(self):
+        state = build([*lead(), message(50, "a1", "main")])
+        node = flat(state)["s1:a1"]
+        self.assertEqual(node["last_seen"], T0 + 50)
+        self.assertEqual(node["status"], "active")
+        record = next(r for r in state["records"] if r["key"] == "s1:a1")
+        self.assertEqual(record["tool_calls"], 1)  # SendMessage zählt als Tool-Aufruf
+
+
+HELPER = {"agent_id": "h1", "status": "done", "summary": "Fortschritt: 3 von 5"}
+
+
+class StopOnlyTest(unittest.TestCase):
+    def test_hidden_in_graph_tree_and_counts(self):
+        state = build(
+            [ev("session_start", 0, status="idle"), ev("agent_stop", 5, **HELPER)]
+        )
+        self.assertNotIn("s1:h1", flat(state))
+        self.assertNotIn("done", state["counts"])
+
+    def test_role_or_other_event_keeps_node_visible(self):
+        with_role = ev("agent_stop", 5, role="Explore", **HELPER)
+        self.assertIn("s1:h1", flat(build([with_role])))
+        beat = ev("heartbeat", 4, agent_id="h1", tool="Read")
+        state = build([beat, ev("agent_stop", 5, **HELPER)])
+        self.assertIn("s1:h1", flat(state))
+
+
 class GateSpecFixesTest(unittest.TestCase):
     def test_session_restart_clears_ended(self):
         events = [
