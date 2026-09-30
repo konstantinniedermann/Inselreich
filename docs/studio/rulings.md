@@ -616,3 +616,18 @@ Verfassung §9 bleibt unberührt (unabhängiges Review je Task, Tests, QA-Check 
 Final-Review je Meilenstein). — Kosten bei Irrtum: kleine Fehler fallen erst im Final-Review auf.
 
 Entscheider: L0 · Anlass: Anweisung des Nutzers
+
+## R66 · 2026-09-30 · M5
+
+Ruling: Welle 5 abgenommen (S4, U-KANN Review-OK in einer Runde; Browser-Check AK-A4-01 OK,
+L(3000)/L(0) = 0.826; Sieg-Tick unverändert 6050). Übernommen: die vier Controller-Rulings aus
+`.studio/handoffs/m5-welle-5.md` (S5-Szenarien direkt nach S4; Merge render f81e0c0 vor S4; UI-Kann
+in zwei Commits mit einem Implementierer und einem Reviewer per Fortsetzung; Check A4 durch lead-tech).
+Die neun Minor-/Niedrig-Befunde gehen nach R65 ohne Fix-Runde in D1 und das Final-Review. Welle 6
+(D1 → Final-Review → Gate Merge → Meilenstein-Retro) startet in dieser Session; die Budgets werden
+hier neu geloggt (lead-tech Rest 5, lead-qa 2 fürs Final-Review samt einer Nachprüfung,
+lead-production 1 für den Integrator). Die vorige Session pausierte wegen Nutzungslimit; ihre
+Übergabe stand nur im Chat — L0 führt `state.md` künftig vor jeder Pause nach. — Kosten bei Irrtum:
+ein Befund aus Welle 5 fällt erst im Final-Review auf.
+
+Entscheider: L0 · Anlass: Übergabe Welle 5 und Session-Wechsel
