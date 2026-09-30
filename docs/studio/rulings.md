@@ -857,3 +857,24 @@ Warum: M6 bringt Entscheidungsdichte, Fortschrittstiefe fehlt; der Nutzer verlan
 Kosten bei Irrtum: Spec-Arbeit M8 früher als nötig.
 
 Entscheider: L0 · Anlass: Bericht lead-design M6-SPEC
+
+## R82 · 2026-09-30 · M6/M7
+
+Ruling: **Gate Spec M6 bestanden mit Auflagen** (lead-tech BEDENKEN, lead-qa BEDENKEN, kein
+ZURÜCK). Auflagen an lead-design (Spec-Nachtrag vor dem Plan): (1) Schnittstelle an M7 §6.5/§11.3
+angleichen — M7 zeichnet Feuer, Warnring, Boom und Wetter über `RenderFx` und liefert die Töne
+`alarm`/`stormWarning`/`boom`; M6-R1 schrumpft auf die Abbildung `crisisFx(view)` plus
+Verdrahtung im UI-Strang; AU1, AU0, R0 entfallen; Rauch-Nachlauf (D2) und „Gelöscht" (D3) mit
+lead-art klären; Umgebungsklang-Eingang `fire` (0…1) in U3. (2) QA-Befunde 1–6 einarbeiten:
+Determinismus über Speichern/Laden im Controller-Lauf `normal` mitten in Brand und Sturm; feste
+Sollfolge für Seed 3 (`s f s b f f f s b s f b`); Negativfall je Ladeprüfung; messbare Kriterien
+statt „sichtbar/unterscheidbar" oder lead-art als Urteiler; Vitest „Krisen nach dem Sieg".
+Vorentscheide fürs Gate Plan (beide Specs): (a) **Sim-Strang M6 (S1–S4, B1, B2) geht nach eigenem
+Gate Merge direkt auf main** (verhaltensneutral, Krisen standardmässig `off` in `createWorld`
+bis zur Verdrahtung), damit M8 darauf aufbaut; `test/m6-int` nur für UI und Verdrahtung.
+(b) **Ein gemeinsamer, serieller UI-Strang** für M6 und M7: M7-U2 → M6-U1/M7-U1 nach Freiwerden →
+M6-U2 → M6-U3. (c) **Frame-Messung** für M6 und M7: sichtbares Chrome, Frames über 10 s per CDP
+zählen, Median von 3 Läufen, Desktop 1920×1080. — Warum: vermeidet Doppelarbeit und
+Datei-Konflikte zwischen M6 und M7; macht Abnahme messbar. — Kosten bei Irrtum: Umordnung im Plan.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-tech und lead-qa M6-SPEC
