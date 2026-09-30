@@ -6,6 +6,7 @@ Regeln: docs/superpowers/specs/2026-09-30-studio-design.md, Abschnitt
 
 from __future__ import annotations
 
+import contextlib
 import json
 import threading
 from collections import Counter
@@ -125,6 +126,8 @@ class _Builder:
         self.nodes: dict[str, dict] = {}
         self.sessions: dict[str, dict] = {}
         self.pending: dict[str, list[dict]] = {}
+        self.spawns: dict[tuple[str, str], dict] = {}
+        self.seq = 0
         self.binds: dict[str, list[tuple[float, str, str]]] = {}
         self.budgets: dict[str, dict] = {}
         self.board: dict[str, dict] = {}
@@ -134,7 +137,11 @@ class _Builder:
 
     # --- Knoten -------------------------------------------------------------
 
-    def node(self, sid: str, agent_id: str, ts: float, role: str = "") -> dict:
+    def node(
+        self, sid: str, agent_id: str, ts: float, role: str = "", touch: bool = True
+    ) -> dict:
+        if not isinstance(role, str):
+            raise TypeError("role must be a string")
         key = f"{sid}:{agent_id}"
         node = self.nodes.get(key)
         if node is None:
@@ -159,12 +166,15 @@ class _Builder:
                 "last_seen": ts,
                 "_confirmed": False,
                 "_chron": False,
+                "_type": "",
+                "_entry": None,
             }
             self.nodes[key] = node
             self.set_role(node, DIRECTOR if is_main else (role or "unbekannt"))
             if not is_main:
-                self.reparent(node, self.node(sid, "main", ts)["key"])
-        node["last_seen"] = max(node["last_seen"], ts)
+                self.reparent(node, self.node(sid, "main", ts, touch=False)["key"])
+        if touch:
+            node["last_seen"] = max(node["last_seen"], ts)
         return node
 
     def set_role(self, node: dict, role: str) -> None:
@@ -174,8 +184,13 @@ class _Builder:
             node["model"] = self.models.get(role, node["model"] or "inherit")
 
     def reparent(self, node: dict, parent_key: str) -> None:
-        if node["parent"] == parent_key:
+        if node["agent_id"] == "main" or node["parent"] == parent_key:
             return
+        ancestor = parent_key
+        while ancestor is not None:  # kein Zyklus, auch nicht ueber mehrere Ebenen
+            if ancestor == node["key"]:
+                return
+            ancestor = self.nodes[ancestor]["parent"]
         if node["parent"] in self.nodes:
             siblings = self.nodes[node["parent"]]["children"]
             if node["key"] in siblings:
@@ -243,49 +258,88 @@ class _Builder:
 
     def on_spawn(self, event, ts, sid):
         parent = self.agent(event, ts, sid)
-        self.pending.setdefault(sid, []).append(
-            {
-                "parent": parent["key"],
-                "type": event.get("subagent_type") or "general-purpose",
-                "persona": event.get("persona") or "",
-                "package": event.get("package") or "",
-                "model": event.get("model") or "",
-                "task": event.get("description") or "",
-                "matched": False,
-            }
+        self.seq += 1
+        entry = {
+            "parent": parent["key"],
+            "type": event.get("subagent_type") or "general-purpose",
+            "persona": event.get("persona") or "",
+            "package": event.get("package") or "",
+            "model": event.get("model") or "",
+            "task": event.get("description") or "",
+            "tid": str(event.get("tool_use_id") or ""),
+            "seq": self.seq,
+            "child": None,
+        }
+        self.pending.setdefault(sid, []).append(entry)
+        if entry["tid"]:
+            self.spawns[(sid, entry["tid"])] = entry
+
+    def release(self, sid: str, entry: dict) -> None:
+        """Entry wieder zur Zuordnung freigeben (Reihenfolge nach Spawn)."""
+        entry["child"] = None
+        queue = self.pending.setdefault(sid, [])
+        if entry not in queue:
+            queue.append(entry)
+            queue.sort(key=lambda e: e["seq"])
+
+    def assign(self, sid: str, node: dict, entry: dict, reparent: bool = True) -> None:
+        """Spawn-Angaben (Rolle, Paket, Aufgabe, Modell) dem Knoten zuweisen."""
+        old = node["_entry"]
+        if old is not None and old is not entry and old["child"] is node:
+            self.release(sid, old)
+        other = entry["child"]
+        if other is not None and other is not node:
+            other["_entry"] = None
+        entry["child"] = node
+        node["_entry"] = entry
+        queue = self.pending.get(sid, [])
+        if entry in queue:
+            queue.remove(entry)
+        if reparent:
+            self.reparent(node, entry["parent"])
+        typ = node["_type"] or entry["type"]
+        node["persona"] = entry["persona"]
+        self.set_role(node, entry["persona"] or typ)
+        node["package"] = entry["package"]
+        node["task"] = entry["task"]
+        node["model"] = (
+            entry["model"]
+            or self.models.get(node["role"])
+            or self.models.get(typ)
+            or "inherit"
         )
 
     def on_spawned(self, event, ts, sid):
+        child_id = str(event.get("child_id") or "")
+        caller = str(event.get("agent_id") or "main")
+        if not child_id or child_id == "main" or child_id == caller:
+            return
         parent = self.agent(event, ts, sid)
-        child = self.node(sid, str(event.get("child_id")), ts)
+        child = self.node(sid, child_id, ts, touch=False)
         self.reparent(child, parent["key"])
         child["_confirmed"] = True
+        entry = self.spawns.get((sid, str(event.get("tool_use_id") or "")))
+        if entry is not None:
+            self.assign(sid, child, entry, reparent=False)
 
     def on_agent_start(self, event, ts, sid):
         typ = event.get("role") or "general-purpose"
-        node = self.node(sid, str(event.get("agent_id")), ts, typ)
+        agent_id = str(event.get("agent_id") or "main")
+        if agent_id == "main":
+            return
+        node = self.node(sid, agent_id, ts, typ)
         node["status"], node["started"] = "active", ts
-        candidates = [
-            p
-            for p in self.pending.get(sid, [])
-            if not p["matched"] and p["type"] == typ
-        ]
+        node["_type"] = typ
+        if node["_entry"] is not None:
+            self.assign(sid, node, node["_entry"], reparent=False)
+            return
+        candidates = [p for p in self.pending.get(sid, []) if p["type"] == typ]
         if node["_confirmed"]:
             own = [p for p in candidates if p["parent"] == node["parent"]]
             candidates = own or candidates
-        spawn = candidates[0] if candidates else None
         self.set_role(node, typ)
-        if spawn is None:
-            return
-        spawn["matched"] = True
-        if not node["_confirmed"]:
-            self.reparent(node, spawn["parent"])
-        if spawn["persona"]:
-            node["persona"] = spawn["persona"]
-            self.set_role(node, spawn["persona"])
-        node["package"] = spawn["package"] or node["package"]
-        node["task"] = spawn["task"] or node["task"]
-        node["model"] = spawn["model"] or node["model"]
+        if candidates:
+            self.assign(sid, node, candidates[0], reparent=not node["_confirmed"])
 
     def on_agent_stop(self, event, ts, sid):
         node = self.agent(event, ts, sid)
@@ -310,7 +364,9 @@ class _Builder:
         if role in (DIRECTOR, "main"):
             return self.node(sid, "main", ts)
         for bind_ts, bind_role, key in reversed(self.binds.get(sid, [])):
-            if bind_role == role and 0 <= ts - bind_ts <= BIND_WINDOW:
+            if ts - bind_ts > BIND_WINDOW:
+                break
+            if bind_role == role and ts >= bind_ts:
                 return self.nodes[key]
         candidates = [
             n
@@ -348,6 +404,8 @@ class _Builder:
         lead = event.get("role") or ""
         grant = event.get("budget") or {}
         phase = grant.get("phase") or "Standard"
+        granted = int(grant.get("granted") or 0)
+        parallel = int(grant.get("parallel") or 0)
         current = self.budgets.get(lead)
         if current is None or current["phase"] != phase:
             current = {
@@ -358,9 +416,9 @@ class _Builder:
                 "since": ts,
             }
             self.budgets[lead] = current
-        current["granted"] += int(grant.get("granted") or 0)
-        if grant.get("parallel"):
-            current["parallel"] = int(grant["parallel"])
+        current["granted"] += granted
+        if parallel:
+            current["parallel"] = parallel
 
     def on_package(self, event, ts, sid):
         key = str(event.get("package") or "")
@@ -368,7 +426,10 @@ class _Builder:
         for field in ("title", "owner", "status", "milestone"):
             if event.get(field):
                 item[field] = event[field]
-        item["blocked_by"] = list(event.get("blocked_by") or [])
+        blocked = event.get("blocked_by") or []
+        if isinstance(blocked, str):
+            blocked = [b.strip() for b in blocked.split(",") if b.strip()]
+        item["blocked_by"] = list(blocked)
         item["ts"] = event.get("ts", "")
 
     def on_decision(self, event, ts, sid):
@@ -541,7 +602,8 @@ class _Builder:
                     "parallel": plan["parallel"],
                     "used": used,
                     "parallel_used": peak,
-                    "overrun": used > plan["granted"] or peak > plan["parallel"],
+                    "overrun": used > plan["granted"]
+                    or (plan["parallel"] > 0 and peak > plan["parallel"]),
                     "model_mix": dict(
                         Counter(c["model"] or "inherit" for c in children)
                     ),
@@ -600,5 +662,7 @@ def build_state(
         (e for e in events if isinstance(e, dict)), key=lambda e: parse_ts(e.get("ts"))
     )
     for event in ordered:
-        builder.apply(event)
+        # ein kaputtes Event darf nie den ganzen Stand kippen
+        with contextlib.suppress(Exception):
+            builder.apply(event)
     return builder.result(session, inactive_after)

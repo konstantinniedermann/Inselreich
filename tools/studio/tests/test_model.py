@@ -435,6 +435,163 @@ class ViewTest(unittest.TestCase):
         json.dumps(build([start(1, "a1", "lead-qa")]))
 
 
+class RobustnessTest(unittest.TestCase):
+    def test_agent_start_main_after_spawn_keeps_tree(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "main", "lead-qa"),
+            start(3, "a1", "lead-qa"),
+        ]
+        state = build(events)
+        self.assertEqual([c["key"] for c in state["tree"][0]["children"]], ["s1:a1"])
+        json.dumps(state)
+
+    def test_spawned_child_equal_to_caller_is_ignored(self):
+        events = [
+            spawn(1, "main", "lead-qa"),
+            start(2, "L1", "lead-qa"),
+            ev("spawned", 3, agent_id="L1", child_id="L1"),
+            ev("spawned", 4, agent_id="L1", child_id="main"),
+        ]
+        nodes = flat(build(events))
+        self.assertEqual(nodes["s1:L1"]["children"], [])
+
+    def test_cycle_is_refused(self):
+        events = [
+            start(1, "A", "lead-qa"),
+            start(2, "B", "qa-playtester"),
+            ev("spawned", 3, agent_id="A", child_id="B"),
+            ev("spawned", 4, agent_id="B", child_id="A"),
+        ]
+        state = build(events)
+        json.dumps(state)
+        self.assertEqual(len(flat(state)), 3)
+
+    def test_malformed_events_are_skipped(self):
+        events = [
+            start(1, "a1", "lead-qa"),
+            ev("agent_start", 2, agent_id="x1", role=5),
+            ev(
+                "budget",
+                3,
+                agent_id="",
+                role="lead-qa",
+                source="log",
+                budget={"granted": "x", "parallel": 1},
+            ),
+            start(4, "a2", "lead-tech"),
+        ]
+        state = build(events)
+        nodes = flat(state)
+        self.assertIn("s1:a1", nodes)
+        self.assertIn("s1:a2", nodes)
+        self.assertNotIn("s1:x1", nodes)
+        self.assertEqual(state["budgets"], [])
+
+    def test_spawned_reassigns_task_package_by_tool_use_id(self):
+        events = [
+            spawn(1, "main", "lead-qa", tool_use_id="tq"),
+            start(2, "L1", "lead-qa"),
+            spawn(3, "main", "lead-tech", tool_use_id="tt"),
+            start(4, "L2", "lead-tech"),
+            spawn(
+                5,
+                "L2",
+                "tech-sim-engineer",
+                description="Sim",
+                package="P-T",
+                tool_use_id="t2",
+            ),
+            spawn(
+                6,
+                "L1",
+                "tech-sim-engineer",
+                description="Test",
+                package="P-Q",
+                tool_use_id="t1",
+            ),
+            start(7, "W1", "tech-sim-engineer"),
+            start(8, "W2", "tech-sim-engineer"),
+            ev("spawned", 9, agent_id="L1", child_id="W1", tool_use_id="t1"),
+            ev("spawned", 10, agent_id="L2", child_id="W2", tool_use_id="t2"),
+        ]
+        nodes = flat(build(events))
+        self.assertEqual(
+            (nodes["s1:W1"]["task"], nodes["s1:W1"]["package"]), ("Test", "P-Q")
+        )
+        self.assertEqual(
+            (nodes["s1:W2"]["task"], nodes["s1:W2"]["package"]), ("Sim", "P-T")
+        )
+        self.assertEqual([c["key"] for c in nodes["s1:L1"]["children"]], ["s1:W1"])
+
+    def test_spawned_fixes_persona_role(self):
+        events = [
+            spawn(
+                1,
+                "main",
+                "general-purpose",
+                persona="design-genre-researcher",
+                tool_use_id="t1",
+            ),
+            spawn(2, "main", "general-purpose", tool_use_id="t2"),
+            start(3, "g1", "general-purpose"),
+            start(4, "g2", "general-purpose"),
+            ev("spawned", 5, agent_id="main", child_id="g2", tool_use_id="t1"),
+            ev("spawned", 6, agent_id="main", child_id="g1", tool_use_id="t2"),
+        ]
+        nodes = flat(build(events))
+        self.assertEqual(nodes["s1:g2"]["role"], "design-genre-researcher")
+        self.assertEqual(nodes["s1:g1"]["role"], "general-purpose")
+
+    def test_parallel_zero_means_unlimited(self):
+        events = [
+            ev(
+                "budget",
+                0,
+                agent_id="",
+                role="lead-qa",
+                source="log",
+                budget={"granted": 2, "parallel": 0, "phase": "P1"},
+            ),
+            start(1, "a1", "lead-qa"),
+            spawn(2, "a1", "qa-playtester"),
+            start(3, "b1", "qa-playtester"),
+            spawn(4, "a1", "qa-playtester"),
+            start(5, "b2", "qa-playtester"),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual(budget["parallel_used"], 2)
+        self.assertFalse(budget["overrun"])
+
+    def test_child_creation_and_spawned_do_not_bump_last_seen(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            ev("prompt", 1, status="active"),
+            spawn(2, "main", "lead-qa"),
+            start(3, "L1", "lead-qa"),
+            ev("spawned", 500, agent_id="L1", child_id="W1"),
+        ]
+        nodes = flat(build(events, now=600))
+        self.assertEqual(nodes["s1:W1"]["idle_seconds"], 100)
+        self.assertEqual(nodes["s1:main"]["idle_seconds"], 598)
+
+    def test_blocked_by_string_is_split(self):
+        events = [
+            ev(
+                "package",
+                1,
+                agent_id="",
+                source="log",
+                package="T3",
+                title="x",
+                owner="lead-tech",
+                status="blocked",
+                blocked_by="T1, T2",
+            ),
+        ]
+        self.assertEqual(build(events)["board"][0]["blocked_by"], ["T1", "T2"])
+
+
 class StoreAndModelsTest(unittest.TestCase):
     def test_event_store_skips_corrupt_and_partial(self):
         with tempfile.TemporaryDirectory() as tmp:
