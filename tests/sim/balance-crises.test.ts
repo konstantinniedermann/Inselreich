@@ -53,6 +53,7 @@ const OFF_REFERENCE = {
 };
 const OFF_FINGERPRINT = 0xbfeac8c6; // Referenz Plan-Vorabmessung, bestätigt in Task 2
 
+const CRISIS_WIN_STOP = 8000; // Spec 15: Stopp-Schwelle Krisen-Lauf (R102)
 const NORMAL: ColonyOptions = { fireStation: true };
 
 interface CrisisCount {
@@ -106,6 +107,7 @@ describe('M6 Krisen-Lauf', () => {
     expect(w.won).toBe(true);
     expect(t.winTick).not.toBeNull();
     expect(t.winTick!).toBeLessThanOrEqual(MAX_TICKS);
+    expect(t.winTick!).toBeLessThanOrEqual(CRISIS_WIN_STOP);
     expect(w.money).toBeGreaterThan(0);
   });
 
