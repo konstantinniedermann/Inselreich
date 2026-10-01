@@ -1,11 +1,32 @@
+/* Holz und Pergament (M7-U2, Spec 9.1): Leisten Holz mit Goldkante, Karten Pergament.
+   Signalrot erscheint nie als Textfarbe oder Texthintergrund, nur als Kante oder Symbol. */
+@font-face {
+  font-family: 'EB Garamond';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/eb-garamond-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/eb-garamond-700.woff2') format('woff2');
+}
 :root {
-  --bg: #1e2a38;
-  --card: #2b3a4d;
-  --text: #e8eef5;
-  --accent: #e0a940;
-  --danger: #d9534f;
-  --negative: #ff8a80;
+  --bg: #1a130d;
+  --wood: #3b2a1d;
+  --wood-light: #52392a;
+  --gold: #c8962e;
+  --parchment: #efe3c4;
+  --parchment-edge: #d9c79c;
+  --ink: #2e2418;
+  --signal-red: #ff3b5c;
+  --signal-warn: #ff6726;
   --ok: #6aa84f;
+  --negative: #ff8a80;
+  --font-serif: 'EB Garamond', Georgia, serif;
 }
 * {
   box-sizing: border-box;
@@ -15,10 +36,15 @@ body {
   margin: 0;
   height: 100%;
   background: var(--bg);
-  color: var(--text);
-  font:
-    14px/1.4 system-ui,
-    sans-serif;
+  color: var(--parchment);
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.4;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
 }
 #app {
   display: grid;
@@ -49,12 +75,38 @@ body {
   height: 100%;
   display: block;
   border-radius: 8px;
+  border: 1px solid var(--gold);
   touch-action: none;
 }
+
+/* Karten: Pergament mit Rand, Text in Tinte */
 .card {
-  background: var(--card);
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--parchment-edge);
   border-radius: 8px;
   padding: 8px;
+  font-size: 15px;
+}
+.card h1,
+.card h2,
+.card h3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+/* Leisten (HUD, Bauleiste): dunkles Holz mit Maserung aus Verläufen, Goldkante 1 px */
+.bar {
+  background-color: var(--wood);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, rgba(255, 220, 160, 0.05) 0 2px, transparent 2px 23px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 5px);
+  color: var(--parchment);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
 }
 @media (min-width: 900px) {
   #app {
@@ -76,20 +128,35 @@ body {
   z-index: 10;
 }
 .toast {
-  background: var(--card);
-  color: var(--text);
-  border-left: 4px solid var(--accent);
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--parchment-edge);
+  border-left: 4px solid var(--gold);
   border-radius: 8px;
   padding: 6px 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .toast.error {
-  border-left-color: var(--danger);
+  border-left: 6px solid var(--signal-red);
 }
+/* rotes Symbol (Ring ohne Text) vor Fehlermeldungen */
+.toast.error::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 5px solid var(--signal-red);
+  border-radius: 50%;
+  outline: 1px solid var(--ink);
+}
+
+/* Buttons: Holz mit Goldrand, aktiv Gold mit Tinte */
 .btn {
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid transparent;
+  background: var(--wood-light);
+  color: var(--parchment);
+  border: 1px solid var(--gold);
   border-radius: 8px;
   padding: 6px 10px;
   font: inherit;
@@ -97,25 +164,27 @@ body {
   text-align: left;
 }
 .btn:hover {
-  border-color: var(--accent);
+  background: var(--wood);
+  box-shadow: inset 0 0 0 1px var(--gold);
 }
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
-  border-color: transparent;
+  box-shadow: none;
 }
 .btn.unaffordable {
-  opacity: 0.5;
+  opacity: 0.6;
 }
-.btn.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--bg);
+.btn.active,
+.btn.active:hover {
+  background: var(--gold);
+  color: var(--ink);
+  border-color: var(--gold);
 }
 .btn small {
   display: block;
-  opacity: 0.8;
-  font-size: 11px;
+  opacity: 0.9;
+  font-size: 12px;
 }
 .hud-row {
   display: flex;
@@ -133,8 +202,8 @@ body {
   gap: 4px;
 }
 .hud-seed {
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: 12px;
+  opacity: 0.8;
 }
 #buildbar {
   display: flex;
@@ -150,9 +219,10 @@ body {
 .buildbar-group h3 {
   flex-basis: 100%;
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
-  opacity: 0.7;
+  letter-spacing: 0.05em;
+  color: var(--gold);
 }
 .negative {
   color: var(--negative);
@@ -165,15 +235,20 @@ body {
   margin-top: 6px;
 }
 .chip {
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--gold);
   border-radius: 999px;
   padding: 2px 8px;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
+}
+.card .chip {
+  background: var(--parchment-edge);
+  border-color: var(--wood);
 }
 .panel-title {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 18px;
 }
 .panel-line {
   margin: 2px 0;
@@ -187,26 +262,27 @@ body {
 .progress {
   height: 8px;
   margin: 6px 0;
-  background: var(--bg);
+  background: var(--parchment-edge);
+  border: 1px solid var(--wood);
   border-radius: 4px;
   overflow: hidden;
 }
 .progress-fill {
   height: 100%;
   width: 0;
-  background: var(--accent);
+  background: var(--wood);
 }
 .trade-table {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 4px 8px;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
 }
 .trade-head {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 .trade-good {
   grid-column: 1 / -1;
@@ -215,12 +291,12 @@ body {
   gap: 0 8px;
   align-items: baseline;
   margin-top: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .trade-good small {
   font-weight: 400;
-  opacity: 0.8;
-  font-size: 11px;
+  opacity: 0.85;
+  font-size: 12px;
 }
 .trade-cell {
   display: flex;
@@ -230,11 +306,11 @@ body {
 }
 .trade-price {
   min-width: 28px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .btn-small {
   padding: 2px 5px;
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
 }
 .needs,
@@ -242,29 +318,41 @@ body {
   list-style: none;
   margin: 4px 0;
   padding: 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 .needs {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 12px;
 }
+/* Auf Pergament: Tinte als Text, Zustand als farbige Kante (nie als Textfarbe) */
 .needs .ok,
 .reasons .ok {
-  color: var(--ok);
+  color: var(--ink);
+  border-left: 4px solid var(--ok);
+  padding-left: 6px;
 }
 .needs .bad,
 .reasons .bad {
-  color: var(--negative);
+  color: var(--ink);
+  font-weight: 700;
+  border-left: 4px solid var(--signal-red);
+  padding-left: 6px;
+}
+.card .negative {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline wavy var(--signal-red);
+  text-underline-offset: 3px;
 }
 .upgrade {
   margin-top: 6px;
   padding-top: 4px;
-  border-top: 1px solid var(--bg);
+  border-top: 1px solid var(--parchment-edge);
 }
 .upgrade h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 /* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */
@@ -277,12 +365,12 @@ body {
   z-index: 20;
   max-width: 260px;
   padding: 6px 10px;
-  background: var(--card);
-  color: var(--text);
-  border: 1px solid var(--accent);
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--gold);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
   pointer-events: none;
 }
@@ -291,19 +379,22 @@ body {
 }
 .tooltip .tt-title {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
 }
 .tooltip .tt-line,
 .tooltip .tt-reason {
   display: block;
   opacity: 1;
-  font-size: 12px;
+  font-size: 13px;
 }
 .tooltip .tt-reason:empty {
   display: none;
 }
 .tooltip .tt-reason {
-  color: var(--danger);
+  margin-top: 2px;
+  padding-left: 6px;
+  border-left: 4px solid var(--signal-red);
+  font-weight: 700;
 }
 
 /* Ton und Laden-Auswahl im HUD */
@@ -315,6 +406,7 @@ body {
 }
 .hud-sound input[type='range'] {
   width: 80px;
+  accent-color: var(--gold);
 }
 .load-choice {
   display: flex;
@@ -327,7 +419,7 @@ body {
   gap: 6px 16px;
   align-items: center;
   margin-top: 6px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .hud-tax,
 .order-card {
@@ -337,5 +429,157 @@ body {
   align-items: center;
 }
 .tax-lock {
-  opacity: 0.8;
+  opacity: 0.85;
+}
+
+/* Dialoge: Einstellungen, Credits (M7-U1) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 12, 6, 0.65);
+}
+.card--modal {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+.card--settings {
+  width: min(460px, 100%);
+}
+.card--credits {
+  width: min(560px, 100%);
+}
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 8px 12px;
+  align-items: center;
+  margin: 8px 0;
+}
+.range {
+  width: 100%;
+  accent-color: var(--wood);
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.segmented__btn {
+  background: var(--wood-light);
+  color: var(--parchment);
+  border: 0;
+  border-right: 1px solid var(--gold);
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.segmented__btn:last-child {
+  border-right: 0;
+}
+.segmented__btn:hover {
+  background: var(--wood);
+}
+.segmented__btn--active,
+.segmented__btn--active:hover {
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 700;
+}
+.credits-list {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.credits-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--parchment-edge);
+  font-size: 14px;
+}
+.credits-item a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 2px;
+}
+
+/* Ruhe-Ansicht "Inselchronik" (Teil B setzt das Markup) */
+.card--rest {
+  border: 1px solid var(--parchment-edge);
+  border-top: 3px solid var(--gold);
+}
+.card--rest .panel-title {
+  font-size: 20px;
+}
+
+/* Krisenkarte, Ereignis-Log, Boom-Marke (M6-UI setzt nur diese Klassen) */
+.card--crisis {
+  border-left: 6px solid var(--gold);
+  color: var(--ink);
+}
+.card--crisis[data-kind='fire'] {
+  border-left-color: var(--signal-red);
+}
+.card--crisis[data-kind='storm'] {
+  border-left-color: var(--signal-warn);
+}
+.card--crisis[data-kind='boom'] {
+  border-left-color: var(--gold);
+}
+.card--crisis h2,
+.card--crisis h3,
+.card--crisis .panel-title {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+}
+.event-log {
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin: 0;
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+.event-log__item {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--parchment-edge);
+}
+.event-log__item:last-child {
+  border-bottom: 0;
+}
+/* eingeklappt: nur der neueste Eintrag (der erste) bleibt sichtbar */
+.event-log--collapsed {
+  max-height: none;
+  overflow: hidden;
+}
+.event-log--collapsed .event-log__item:not(:first-child) {
+  display: none;
+}
+.badge--boom {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
