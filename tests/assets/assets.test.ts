@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { MANIFEST } from '../../src/audio/manifest';
-import { FONT_CREDITS } from '../../src/ui/credits';
+import { FONT_CREDITS, LICENSE_LINKS } from '../../src/ui/credits';
 
 const MB = 1024 * 1024;
 const ROOT = process.cwd();
@@ -64,6 +64,11 @@ describe('Assets unter public/', () => {
     for (const f of listed) expect(files, f).toContain(f);
     for (const f of files.filter((f) => /^(audio|fonts)\//.test(f) && !f.endsWith('.txt')))
       expect(listed.has(f), f).toBe(true);
+  });
+
+  it('AK-X1-04 jede Lizenzkennung in MANIFEST und FONT_CREDITS hat einen Lizenzlink', () => {
+    for (const e of [...MANIFEST, ...FONT_CREDITS])
+      expect(e.license in LICENSE_LINKS, `${e.title}: ${e.license}`).toBe(true);
   });
 
   it('AK-X1-03 Grössenbudget', () => {

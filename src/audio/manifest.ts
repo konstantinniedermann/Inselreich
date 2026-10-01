@@ -19,7 +19,7 @@ export interface AssetEntry {
   changes?: string;
 }
 
-const CC0 = 'CC0 1.0';
+const CC0 = 'CC0-1.0';
 const fs = (id: number) => `https://freesound.org/s/${id}/`;
 
 export const MANIFEST: readonly AssetEntry[] = [
