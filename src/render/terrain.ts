@@ -1,6 +1,6 @@
 import { hash2 } from '../sim/noise';
 import type { Terrain, World } from '../sim/types';
-import { TILE } from './camera';
+import { TEX } from './iso';
 
 const COLORS: Record<Terrain, string> = {
   water: '#2f6f9f',
@@ -23,8 +23,8 @@ function drawDetail(
   tx: number,
   ty: number,
 ): void {
-  const px = tx * TILE;
-  const py = ty * TILE;
+  const px = tx * TEX;
+  const py = ty * TEX;
   const r = (k: number): number => hash2(seed + k, tx, ty);
   switch (terrain) {
     case 'water':
@@ -69,11 +69,11 @@ function drawDetail(
   }
 }
 
-/** Zeichnet die ganze Karte einmal in ein Offscreen-Canvas (Welt-Pixel, 1 Kachel = TILE px). */
+/** Zeichnet die ganze Karte einmal in ein Offscreen-Canvas (Welt-Pixel, 1 Kachel = TEX px). */
 export function buildTerrainLayer(world: World): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = world.width * TILE;
-  canvas.height = world.height * TILE;
+  canvas.width = world.width * TEX;
+  canvas.height = world.height * TEX;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
   for (let y = 0; y < world.height; y++) {
@@ -81,7 +81,7 @@ export function buildTerrainLayer(world: World): HTMLCanvasElement {
       const tile = world.tiles[y * world.width + x];
       if (!tile) continue;
       ctx.fillStyle = COLORS[tile.terrain];
-      ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+      ctx.fillRect(x * TEX, y * TEX, TEX, TEX);
       drawDetail(ctx, tile.terrain, world.seed, x, y);
     }
   }

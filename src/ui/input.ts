@@ -1,6 +1,6 @@
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import { inBounds, tileAt } from '../sim/world';
-import { TILE, clampCamera, screenToTile, zoomAt } from '../render/camera';
+import { clampToMap, screenToTile, zoomAt } from '../render/camera';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
 
@@ -64,10 +64,9 @@ export function bindInput(
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
   const clamp = (): void => {
-    clampCamera(
+    clampToMap(
       state.cam,
-      state.world.width * TILE,
-      state.world.height * TILE,
+      { w: state.world.width, h: state.world.height },
       canvas.clientWidth,
       canvas.clientHeight,
     );
@@ -192,10 +191,8 @@ export function bindInput(
             g.dist / gesture.dist,
             g.mx,
             g.my,
-            canvas.clientWidth,
-            canvas.clientHeight,
-            state.world.width * TILE,
-            state.world.height * TILE,
+            { w: canvas.clientWidth, h: canvas.clientHeight },
+            { w: state.world.width, h: state.world.height },
           );
           clamp();
         }
@@ -292,10 +289,8 @@ export function bindInput(
       e.deltaY < 0 ? 1.1 : 1 / 1.1,
       p.sx,
       p.sy,
-      canvas.clientWidth,
-      canvas.clientHeight,
-      state.world.width * TILE,
-      state.world.height * TILE,
+      { w: canvas.clientWidth, h: canvas.clientHeight },
+      { w: state.world.width, h: state.world.height },
     );
     updateHover();
   };

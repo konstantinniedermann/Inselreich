@@ -1,7 +1,7 @@
 # ADR-012: Isometrische Darstellung
 
-Status: vorgeschlagen (angenommen mit dem Gate Spec M7-ISO) · Datum: 2026-10-01 · ersetzt
-[ADR-003](ADR-003-topdown-statt-isometrie.md) · Ruling R91 · Spec:
+Status: akzeptiert (Zwischen-Merge R0-ISO, R100) · Datum: 2026-10-01 · ersetzt
+[ADR-003](ADR-003-topdown-statt-isometrie.md) · Rulings R91, R93, R100 · Spec:
 [M7-ISO](../superpowers/specs/2026-10-01-m7-iso-design.md), Nachtrag zu
 [M7 Stimmung](../superpowers/specs/2026-09-30-m7-stimmung-design.md)
 
@@ -43,9 +43,10 @@ nicht ändern (ADR-002).
 - Zwei Pakete kommen dazu. R0-ISO baut die Darstellung im alten Look auf Isometrie um und stellt die
   Kamera-Aufrufe in `src/ui/` mit um, denn `clampCamera` und `TILE` entfallen und `zoomAt` nimmt Kachelmasse. Das
   kleine UI-Paket U0-ISO schliesst Bau-Anker und Picking an. Der Render-Strang von M7 wird etwa 30 % grösser.
-- Die bestehenden reinen Render-Tests bleiben bis auf zwei bewusste Änderungen gültig: den Schritttest in
-  `camera.test.ts` und den Schiffsplatz in `ship.test.ts`. Neu kommen Tests für Rundreise, Kanten, Culling,
-  Tiefenschlüssel, Ellipse und Picking dazu.
+- Die bestehenden reinen Render-Tests bleiben gültig bis auf bewusste Änderungen an zwei Dateien: In
+  `camera.test.ts` wurden alle vier Kamera-Tests geändert (Zuordnung alt → neu nach R93: Clamp und Zoom/NaN →
+  AK-ISO-04, Rundreise → AK-ISO-01, Schritt → AK-ISO-03; die alte Abdeckung bleibt erhalten), in `ship.test.ts`
+  der Schiffsplatz. Neu kommen Tests für Rundreise, Kanten, Culling, Tiefenschlüssel, Ellipse und Picking dazu.
 - **Grenze des Tiefenschlüssels:** Er ist nur für Footprints mit `w = h` bewiesen. Ein späteres Gebäude mit
   `w ≠ h` braucht einen paarweisen Vergleich über die trennende Achse statt eines Schlüssels.
 - **Höhen im Gelände** (Berge, Klippen) sind nicht enthalten. Sie bräuchten Höhendaten, die die Sim nicht hat. Ein
