@@ -1308,3 +1308,13 @@ Warum: keine Umgehung der Policy, keine erfundenen Quellen (ADR-006). — Kosten
 Musik-Assets, nachrüstbar.
 
 Entscheider: L0 · Anlass: Bericht art-audio-engineer X1a
+
+## R110 · 2026-10-01 · M6-U1 abgenommen mit Nachprüfung
+
+Ruling: M6-U1 @ 0d52030 ist abgenommen (Review OK, QA-M6U1 BEDENKEN ohne blockende Befunde). Die
+Krisenkarten-Teile von M6-AK-U1-02 und -03 („Krisen: mild · nächste Krise in …", „Krisen: aus") prüft
+QA-M6U2 nach. Auslegung AK-U1-03: Die HUD-Auswahl zeigt die Stufe für das nächste Spiel; der geladene
+Stand behält seine eigene Stufe (belegt durch erneutes Speichern) — spec-konform. — Warum: Die
+fehlenden Teile hängen an M6-U2, nicht an M6-U1. — Kosten bei Irrtum: eine Fix-Runde in M6-U2.
+
+Entscheider: L0 · Anlass: QA-M6U1
