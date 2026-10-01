@@ -11,6 +11,8 @@ import { centerOn, clampToMap, createCamera, type Camera } from '../render/camer
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
+import { phaseAt } from '../render/daynight';
+import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { disposeHud, updateHud, type HudActions } from './hud';
 import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
@@ -18,7 +20,11 @@ import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
 import { bindMessages, showMessage } from './messages';
-import { loadSettings, saveSettings } from './settings';
+import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
+import { parseDevParams } from './devParams';
+import { createPerfProbe, startAudioProbe } from './devProbes';
+import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
+import { openSettings } from './settingsPanel';
 import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
 import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
@@ -40,8 +46,13 @@ export interface GameState {
 
 const MAX_TICKS_PER_FRAME = 20;
 const HUD_EVERY_FRAMES = 10;
+/** Umgebungsklang höchstens alle 250 ms füttern (Spec 11.2). */
+const AMBIENCE_EVERY_MS = 250;
 /** Autosave alle 120 s Echtzeit bei laufendem Spiel (Spec 10.8). */
 const AUTOSAVE_MS = 120000;
+
+/** Fremde Assets aus dem Manifest (A2/A3); leer, bis Assets eingebunden sind (R109). */
+const MANIFEST_CREDITS: readonly CreditEntry[] = [];
 
 /** Ein Nutzer-Klick oder -Tastendruck hat den Ton schon einmal freigeschaltet (überlebt Neustarts). */
 let audioUnlockedOnce = false;
@@ -127,17 +138,43 @@ function launch(
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
   };
-  const sound = createSound(settings);
+  const sound = createSound({
+    muted: settings.muted,
+    master: settings.master,
+    music: settings.music,
+    ambience: settings.ambience,
+    effects: settings.effects,
+  });
+  let closeSettings: (() => void) | null = null;
+  const preview = parseDevParams(location.search, import.meta.env.DEV);
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let prefersReduced = motionQuery.matches;
+  const onMotion = (e: MediaQueryListEvent): void => {
+    prefersReduced = e.matches;
+  };
+  motionQuery.addEventListener('change', onMotion);
+  const stopAudioProbe = import.meta.env.DEV ? startAudioProbe(sound) : null;
+  const perf = import.meta.env.DEV && preview.perf ? createPerfProbe() : null;
+  let previewSignalPlayed = false;
   const unlockSound = (): void => {
     audioUnlockedOnce = true;
     sound.unlock();
     removeUnlockListeners();
+    playPreviewSignal();
+  };
+  const playPreviewSignal = (): void => {
+    if (preview.signal && !previewSignalPlayed) {
+      previewSignalPlayed = true;
+      sound.play(preview.signal);
+    }
   };
   const removeUnlockListeners = (): void => {
     for (const ev of UNLOCK_EVENTS) window.removeEventListener(ev, unlockSound);
   };
-  if (audioUnlockedOnce) sound.unlock();
-  else for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, unlockSound);
+  if (audioUnlockedOnce) {
+    sound.unlock();
+    playPreviewSignal();
+  } else for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, unlockSound);
   const onVisibility = (): void => sound.setHidden(document.hidden);
   document.addEventListener('visibilitychange', onVisibility);
 
@@ -182,14 +219,25 @@ function launch(
       sound.setMuted(muted);
       saveSettings(settings);
     },
-    setVolume: (volume) => {
-      settings = { ...settings, volume };
-      sound.setVolume(volume);
-      saveSettings(settings);
-    },
-    setDayNight: (dayNight) => {
-      settings = { ...settings, dayNight };
-      saveSettings(settings);
+    openSettings: () => {
+      closeSettings?.();
+      closeSettings = openSettings(gameEl, {
+        settings: () => settings,
+        setBus: (bus, value) => {
+          settings = { ...settings, [bus]: value };
+          sound.setBus(bus, value);
+          saveSettings(settings);
+        },
+        setDayNight: (dayNight) => {
+          settings = { ...settings, dayNight };
+          saveSettings(settings);
+        },
+        setReduceMotion: (reduceMotion) => {
+          settings = { ...settings, reduceMotion };
+          saveSettings(settings);
+        },
+        credits: () => creditEntries(MANIFEST_CREDITS, FONT_CREDITS),
+      });
     },
     setCrisisLevel: (crisisLevel) => {
       settings = { ...settings, crisisLevel };
@@ -402,6 +450,8 @@ function launch(
   let autoErrorShown = false;
   let prevSnap = soundSnapshot(world);
   let last = performance.now();
+  let lastAmbienceMs = -Infinity;
+  const weather = preview.weather ?? { kind: 'clear' as const, w: 0 };
   let frame = 0;
   let disposed = false;
   let rafId = 0;
@@ -443,11 +493,32 @@ function launch(
           }
         }
       }
+      perf?.frame(now);
+      const reduce = resolveReduceMotion(settings.reduceMotion, prefersReduced);
+      if (now - lastAmbienceMs >= AMBIENCE_EVERY_MS) {
+        lastAmbienceMs = now;
+        const phase = phaseAt(world.tick);
+        sound.setAmbience({
+          view: viewStats(world, state.cam, view),
+          phase,
+          weather,
+          reduced: reduce,
+          fire: preview.fireId !== undefined ? 1 : 0,
+        });
+        sound.setPhase(phase);
+      }
+      const t0 = performance.now();
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
-        timeMs: performance.now(),
+        timeMs: t0,
         dayNight: settings.dayNight,
-        raster: import.meta.env.DEV && location.search.includes('raster=1'),
+        weather,
+        reduceMotion: reduce,
+        fire:
+          preview.fireId !== undefined ? [{ id: preview.fireId, flames: 1, smoke: 1 }] : undefined,
+        boom: preview.boom,
+        raster: preview.raster === true,
       });
+      perf?.renderDone(performance.now() - t0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -466,6 +537,9 @@ function launch(
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
     input?.unbind();
+    closeSettings?.();
+    stopAudioProbe?.();
+    motionQuery.removeEventListener('change', onMotion);
     removeUnlockListeners();
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();

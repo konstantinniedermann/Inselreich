@@ -72,8 +72,8 @@ export interface HudActions {
   /** Aktuelle Einstellungen für die Ton-Regler. */
   settings(): Settings;
   setMuted(muted: boolean): void;
-  setVolume(volume: number): void;
-  setDayNight(dayNight: boolean): void;
+  /** Öffnet die Einstellungs-Karte (Lautstärken, Tag-Nacht, Bewegung, Credits). */
+  openSettings(): void;
   /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
   setCrisisLevel(level: CrisisLevel): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
@@ -219,7 +219,7 @@ function renderGameButtons(box: Element, actions: HudActions): () => void {
   };
 }
 
-/** Stumm-Schalter und Lautstärkeregler; Werte kommen aus und gehen an `actions`. */
+/** Schnellschalter Stumm und Button Einstellungen; Werte kommen aus und gehen an `actions`. */
 function renderSoundControls(box: Element, actions: HudActions): void {
   const initial = actions.settings();
   const mute = document.createElement('button');
@@ -236,32 +236,8 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     actions.setMuted(muted);
     syncMute(muted);
   });
-  const vol = document.createElement('input');
-  vol.type = 'range';
-  vol.min = '0';
-  vol.max = '1';
-  vol.step = '0.05';
-  vol.value = String(initial.volume);
-  vol.setAttribute('aria-label', 'Lautstärke');
-  vol.addEventListener('input', () => actions.setVolume(Number(vol.value)));
-  // Nach dem Ziehen den Fokus abgeben, damit die Hotkeys wieder greifen
-  vol.addEventListener('pointerup', () => vol.blur());
-  const dayNight = document.createElement('button');
-  dayNight.className = 'btn';
-  dayNight.textContent = 'Tag-Nacht';
-  dayNight.title = 'Tag-Nacht an/aus';
-  const syncDayNight = (on: boolean): void => {
-    dayNight.classList.toggle('active', on);
-    dayNight.setAttribute('aria-pressed', String(on));
-  };
-  syncDayNight(initial.dayNight);
-  dayNight.addEventListener('click', () => {
-    dayNight.blur();
-    const on = !actions.settings().dayNight;
-    actions.setDayNight(on);
-    syncDayNight(on);
-  });
-  box.append(mute, vol, dayNight);
+  const settingsBtn = gameButton('Einstellungen', () => actions.openSettings());
+  box.append(mute, settingsBtn);
 }
 
 /** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */

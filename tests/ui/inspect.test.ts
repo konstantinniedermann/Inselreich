@@ -36,6 +36,7 @@ describe('restView (AK-U2-03)', () => {
     const w = SCENARIOS.galerie!();
     w.tick = 3000;
     const sum = Object.values(w.buildings).reduce((n, b) => n + (b.house?.inhabitants ?? 0), 0);
+    expect(sum).toBeGreaterThan(0);
     expect(restView(w)).toEqual({ phase: 'night', label: 'Nacht', symbol: '☾', inhabitants: sum });
   });
   it('alle vier Phasen', () => {
