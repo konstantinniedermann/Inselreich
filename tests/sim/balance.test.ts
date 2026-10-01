@@ -4,6 +4,7 @@ import { citizens } from '../../src/sim/population';
 import { createWorld } from '../../src/sim/world';
 import { buildColony, MAX_TICKS, WIN_TICK_LIMIT } from './controller';
 
+// AK-B1-01: Controller aus ./controller (M6-B1), Sieg 6050 vor und nach der Auslagerung.
 describe('balance: scripted colony (Kurz-Spec Balancing)', () => {
   it('reaches 50 citizens within 9000 ticks and ends with positive money', () => {
     const w = createWorld(3);
