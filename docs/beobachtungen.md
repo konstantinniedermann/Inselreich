@@ -520,6 +520,18 @@ Dev-Zähler in `__inselRender` würde es messbar machen. (e) HUD-Select „Krise
 **Ursprung:** INT-Check M7 (lead-tech, R119), Bericht X1b (lead-art).
 **Einschätzung:** niedrig; (a), (b), (e) passen zu M7-UX, (c) beobachten, (d) beim nächsten QA-Werkzeug.
 
+### 2026-10-01 · `src/ui/`, Git-Historie · Nachträge Final-Review M7
+
+**Beobachtung:** (a) `src/ui/eventLogView.ts`: `toggle.blur()` nimmt Tastaturnutzern nach Enter oder
+Leertaste den Fokus; die Einstellungs-Karte (`aria-modal`) hat keine Fokus-Falle. (b) `saveSettings`
+schreibt bei jedem `input`-Ereignis der Regler in `localStorage` (statt bei `change`). (c) Commit
+463da8b auf `feat/ui-m6m7` trägt das Präfix `style:` ausserhalb der Commit-Konvention; ohne Rebase
+nicht korrigierbar. (d) `tests/render/water.test.ts`: `STORM_WAVE_ALPHA` 0,32 liegt nur 0,03 unter der
+Schaum-Schwelle 0,35; eine Invariante `STORM_WAVE_ALPHA < FOAM_ALPHA[0]` fehlt.
+**Ursprung:** Final-Review M7 (lead-qa, qa-code-reviewer opus) auf `feat/ui-m6m7` @ a8d9447.
+**Einschätzung:** niedrig; (a), (b) passen zu M7-UX, (c) nur zur Kenntnis, (d) bei der nächsten
+Render-Änderung mitnehmen, falls nicht schon in der Kleinst-Fix-Runde erledigt.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
