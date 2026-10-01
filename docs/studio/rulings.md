@@ -1462,3 +1462,16 @@ Nachricht informiert. — Warum: fast fertiger Meilenstein; die verlorenen Asset
 durch Eintrag in „Parallele Sessions" und Nachricht.
 
 Entscheider: L0 · Anlass: Bericht lead-tech, `git fetch`
+
+## R120 · 2026-10-01 · M7-UX Spec-Entscheide
+
+Ruling: Kurz-Spec `docs/superpowers/specs/2026-10-01-m7-ux-design.md` (lead-design, 29 AK, 10 Tasks
+in UX-1–UX-5, Basis `feat/ui-m6m7` @ 4c69776) wird zum Gate Spec (lead-tech, lead-qa) vorgelegt.
+Vorab entschieden: (1) **Zeit statt Ticks** (L8) angenommen; die in Spec §6 gelisteten Texte
+abgenommener M6/M7-AK ändern sich bewusst. (2) **Rote Abriss-Vorschau**: Ausnahme für eine Zeile
+in `src/render/renderer.ts` im UI-Strang (Render-Strang ist abgeschlossen). (3) Leertaste auf
+fokussiertem Button bleibt Aktivierung. Umsetzung erst **nach** dem M7-Merge auf main (R119 d),
+als eigenes Paket auf main-Basis. — Warum: alle drei folgen aus dem Ziel „intuitiv" und schaden
+keinem bestehenden Verhalten. — Kosten bei Irrtum: Texte in bis zu ~10 AK erneut anpassen.
+
+Entscheider: L0 · Anlass: Bericht lead-design M7-UX

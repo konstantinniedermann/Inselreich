@@ -476,6 +476,40 @@ bzw. allgemein „Test rot").
 **Einschätzung:** kosmetisch; beim nächsten Eingriff in die Datei mitziehen. M7-R1b fügt dort einen
 Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 
+### 2026-10-01 · `src/sim/queries.ts` `goodsBalance` · Brennender Betrieb zählt in der Warenbilanz
+
+**Beobachtung:** Die Warenbilanz rechnet nominal und übergeht `outageUntil`. Eine brennende Brennerei
+hält deshalb „Rum ↑" in der Kopfzeile (Meldung lead-tech, S10). Der Playtest konnte es nicht prüfen,
+weil die Dev-Vorschau Feuer nicht lief.
+**Ursprung:** Heuristik-Prüfung und Playtest M7-UX (Stand `4c69776`).
+**Einschätzung:** mittel. Das ist eine Sim-Änderung und gehört deshalb nicht zu M7-UX (UI-only). Beim
+nächsten Sim-Durchgang mit Test beheben: Ausfall bedeutet keine Produktion in der Bilanz.
+
+### 2026-10-01 · `src/sim/` · Reason-Texte statt Codes, Literal 100 in `goodsBalance`, keine Auslastung
+
+**Beobachtung:** (a) Sim-Aktionen liefern deutsche Freitexte als `reason`. M7-UX übersetzt sie in der UI
+(`friendlyReason`) und hängt damit an den genauen Strings. (b) `goodsBalance` rechnet mit dem Literal 100
+(Ticks je Bilanzzeitraum), nicht mit einer Konstante aus `defs`. (c) Eine Auslastung in % je Betrieb
+liefert die Sim nicht, die UI könnte sie nur ungenau schätzen.
+**Ursprung:** Kurz-Spec M7-UX, Abschnitt 5.
+**Einschätzung:** niedrig. AK-UX-03 pinnt die Strings bis dahin. Beim nächsten Sim-Durchgang Reason-Codes
+plus Text und eine Konstante prüfen. Auslastung nur, wenn ein späteres Paket sie braucht.
+
+### 2026-10-01 · `src/ui/devParams.ts` · Dev-Vorschau `boom`/`signal` ohne Krisenkarte
+
+**Beobachtung:** `?boom=1` und `?signal=alarm` ändern nur Darstellung und Ton, nicht die Krisenkarte der
+Kopfzeile und nicht den Handel. Browser-Checks zu Karte und Boom-Marke brauchen deshalb echte Krisen.
+**Ursprung:** Playtest M7-UX.
+**Einschätzung:** niedrig; prüfen, ob M7-Spec 9.5 das so vorsieht. Sonst lassen sich Checks mit
+Szenario-Saves fahren.
+
+### 2026-10-01 · Spieltakt bei 4× · Tickrate schwankt
+
+**Beobachtung:** Bei 4× liefen im Headless-Chrome etwa 15–40 Ticks/s statt 40.
+**Ursprung:** Playtest M7-UX (Headless, CDP).
+**Einschätzung:** niedrig; wahrscheinlich eine Grenze von Headless und Drosselung. Erst auf einem
+Echtgerät nachmessen, bevor jemand handelt.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
