@@ -2,6 +2,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { MANIFEST } from '../../src/audio/manifest';
+import { FONT_CREDITS } from '../../src/ui/credits';
 
 const MB = 1024 * 1024;
 const ROOT = process.cwd();
@@ -52,6 +54,16 @@ const MUST = [
 describe('Assets unter public/', () => {
   it('Spec 7.6 alle Muss-Dateien liegen unter public/', () => {
     for (const f of MUST) expect(files).toContain(f);
+  });
+
+  it('AK-X1-01 jeder Manifest-Eintrag hat eine Datei, jede Datei unter public/audio und public/fonts einen Eintrag', () => {
+    const listed = new Set([
+      ...MANIFEST.map((e) => e.file),
+      ...FONT_CREDITS.flatMap((f) => f.files),
+    ]);
+    for (const f of listed) expect(files, f).toContain(f);
+    for (const f of files.filter((f) => /^(audio|fonts)\//.test(f) && !f.endsWith('.txt')))
+      expect(listed.has(f), f).toBe(true);
   });
 
   it('AK-X1-03 Grössenbudget', () => {
