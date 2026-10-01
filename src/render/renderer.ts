@@ -36,7 +36,6 @@ import {
   gullPose,
   gullShadow,
   hearthSmoke,
-  LANTERN_MIN,
   roadGraph,
   totalInhabitants,
   walkerAt,
@@ -284,6 +283,7 @@ function collectWindowLights(
   windows: number,
 ): WindowLights {
   const out: WindowLights = { windows: [], lanterns: [], k: windows };
+  if (windows <= 0) return out; // Laternen folgen `windows` (R114): am Tag und bei dayNight false aus
   for (const b of buildings) {
     const def = BUILDING_DEFS[b.defId];
     const lit = windows > 0 && isLit(def, b);
@@ -537,7 +537,7 @@ export function render(
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     drawWindowLight(ctx, cam.zoom, windowLights.windows, windowLights.k);
-    drawWindowLight(ctx, cam.zoom, windowLights.lanterns, Math.max(windowLights.k, LANTERN_MIN));
+    drawWindowLight(ctx, cam.zoom, windowLights.lanterns, windowLights.k);
     for (const { f, rect } of lit) drawFireGlow(ctx, rect, fx.timeMs, f.flames);
     ctx.restore();
   }

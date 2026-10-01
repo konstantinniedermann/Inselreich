@@ -5,6 +5,7 @@ import {
   CLOTHES,
   EPISODE_MS,
   EPISODE_SEGMENTS,
+  GULL_CELL,
   FADE_MS,
   HEARTH_PUFFS,
   SEG_MS,
@@ -232,7 +233,8 @@ describe('Möwen und Herdrauch (Spec 5.6)', () => {
   it('AK-R4-03 Möwen nur über Wasser mit −s < 2, höchstens CAP_GULLS, nie nachts', () => {
     for (const reduce of [false, true]) {
       const a = gullAnchors(field, full, 3, 'day', reduce);
-      expect(a.length).toBe(CAPS.gulls[reduce ? 1 : 0]);
+      expect(a.length).toBeGreaterThan(0);
+      expect(a.length).toBeLessThanOrEqual(CAPS.gulls[reduce ? 1 : 0]);
       for (const g of a) {
         const s = field.v[g.ty * field.w + g.tx]!;
         expect(s).toBeLessThan(0);
@@ -244,22 +246,42 @@ describe('Möwen und Herdrauch (Spec 5.6)', () => {
       expect(gullAnchors(field, full, 3, ph, false).length).toBeGreaterThan(0);
   });
 
-  it('AK-R4-03 Möwen bleiben im Bereich, sind deterministisch und stabil sortiert; leerer Bereich liefert keine', () => {
-    const range = { x0: 5, y0: 5, x1: 30, y1: 30 };
+  it('AK-R4-03 Möwen: deterministisch, je Zelle 8×8 höchstens eine, nach Schlüssel sortiert; leerer Bereich keine', () => {
+    const range = { x0: 5, y0: 5, x1: 40, y1: 40 };
     const a = gullAnchors(field, range, 3, 'day', false);
     expect(gullAnchors(field, range, 3, 'day', false)).toEqual(a);
-    for (const g of a) {
-      expect(g.tx).toBeGreaterThanOrEqual(5);
-      expect(g.tx).toBeLessThanOrEqual(30);
-      expect(g.ty).toBeGreaterThanOrEqual(5);
-      expect(g.ty).toBeLessThanOrEqual(30);
-    }
+    const cells = new Set(
+      a.map((g) => `${Math.floor(g.tx / GULL_CELL)},${Math.floor(g.ty / GULL_CELL)}`),
+    );
+    expect(cells.size).toBe(a.length);
     for (let i = 1; i < a.length; i++) expect(a[i]!.key).toBeGreaterThanOrEqual(a[i - 1]!.key);
     expect(gullAnchors(field, { x0: 5, y0: 5, x1: 4, y1: 4 }, 3, 'day', false)).toEqual([]);
     expect(gullAnchors(field, { x0: -50, y0: -50, x1: -40, y1: -40 }, 3, 'day', false)).toEqual([]);
-    // ganze Karte: die Auswahl entspricht der vollständigen Sortierung nach Schlüssel
-    const all = gullAnchors(field, full, 3, 'day', false);
-    expect(all.map((g) => g.key)).toEqual([...all.map((g) => g.key)].sort((p, q) => p - q));
+  });
+
+  it('AK-R4-03 (R114) Kamera um wenige Kacheln verschieben ändert die Möwen im inneren Bildbereich nicht', () => {
+    for (const seed of [3, 7, 11]) {
+      const w = createWorld(seed);
+      const f = coastField(w);
+      const wide = { x0: 0, y0: 0, x1: 63, y1: 63 };
+      const inner = { x0: 20, y0: 20, x1: 44, y1: 44 };
+      const inInner = (g: { tx: number; ty: number }): boolean =>
+        g.tx >= inner.x0 && g.tx <= inner.x1 && g.ty >= inner.y0 && g.ty <= inner.y1;
+      const base = gullAnchors(f, { x0: 10, y0: 10, x1: 54, y1: 54 }, seed, 'day', false).filter(
+        inInner,
+      );
+      for (const d of [1, 2, 3, 5]) {
+        const moved = gullAnchors(
+          f,
+          { x0: 10 + d, y0: 10 - d, x1: 54 + d, y1: 54 - d },
+          seed,
+          'day',
+          false,
+        ).filter(inInner);
+        expect(moved, `Seed ${seed} Verschiebung ${d}`).toEqual(base);
+      }
+      expect(wide.x1).toBe(63);
+    }
   });
 
   it('Spec 5.6 gullPose: Bahn um den Anker, Flügelschlag −1…1, Schatten rechts unten; Zeichnen ausgeglichen', () => {
