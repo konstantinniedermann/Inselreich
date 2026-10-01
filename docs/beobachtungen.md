@@ -510,6 +510,16 @@ Szenario-Saves fahren.
 **Einschätzung:** niedrig; wahrscheinlich eine Grenze von Headless und Drosselung. Erst auf einem
 Echtgerät nachmessen, bevor jemand handelt.
 
+### 2026-10-01 · `src/ui/`, `src/render/`, Dev-Server · Nachträge INT-Check M7
+
+**Beobachtung:** (a) `favicon.ico` liefert 404 (Dev-Server). (b) In der Einstellungs-Karte ist das
+Segment „Bewegung reduzieren" schmaler als die Zeile darüber. (c) Terrain-Aufbau bei DPR 2 bis
+988 ms, nahe der Grenze 1500 ms (AK-R1-06). (d) AK-U1-06 (≤ 12 Figuren) nur per Auge prüfbar; ein
+Dev-Zähler in `__inselRender` würde es messbar machen. (e) HUD-Select „Krisen" zeigt Arial statt
+`--font-serif`.
+**Ursprung:** INT-Check M7 (lead-tech, R119), Bericht X1b (lead-art).
+**Einschätzung:** niedrig; (a), (b), (e) passen zu M7-UX, (c) beobachten, (d) beim nächsten QA-Werkzeug.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
