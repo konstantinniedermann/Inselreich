@@ -545,3 +545,4 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 - 2026-10-01 · UI/Dev · `favicon.ico` 404 im Vite-Dev-Server erzeugt einen Konsolen-`error` (QA-M6U1).
 - 2026-10-01 · UI · Nach „Laden" läuft der Stand sofort mit 1× weiter statt pausiert; die M6-Spec nimmt für Szenarien Pause an. Prüfen in M6-U2/INT-Check (QA-M6U1, `04-feuerwache-szenario.png`).
 - 2026-10-01 · UI/Sim · Eine brennende Brennerei zeigt weiter „Rum ↑ +2.0" im HUD und „Erzeugt Rum alle 50 Ticks" im Panel; prüfen, ob die Anzeige den Ausfall berücksichtigen muss (QA-M6U1, `08-brennt-1280.png`).
+- 2026-10-01 · Tests · Muster (3× in dieser Session): Zeittests in `tests/render/terrain.test.ts` (AK-R1-06 Z. 218 mit festem 1500-ms-Limit, AK-R1-08 Z. 338/339) flackern unter Volllast von `make check`. L0: Fix im Render-Strang direkt nach R2 (eigener Commit), Gate-Läufe bis dahin einmal wiederholen.
