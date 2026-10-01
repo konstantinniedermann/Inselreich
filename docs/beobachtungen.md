@@ -541,7 +541,7 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 
 - 2026-10-01 · Harness · In der Cloud-Session fehlt Subagent-Leads das Agent-Werkzeug (nur Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage). Folge: R108, L0 startet Arbeiter direkt.
 - 2026-10-01 · Tests · `tests/render/terrain.test.ts` AK-R1-08 (I5, Z. 338) läuft unter voller Parallellast von `make check` in den 5-s-Timeout (isoliert grün). Vorschlag: eigener Timeout für diesen Test (Render-Strang, Fix-Kandidat R2/R4). Quelle: Review M7-R5.
-- 2026-10-01 · UI · `protectedCount` (src/ui/inspect.ts, M6-U1 @ 0d52030) rechnet die Abdeckungsgeometrie der Feuerwache in der UI nach (dieselbe Formel wie `isProtected`). Nach M6-R2 auf `coverageMask` umstellen. Quelle: Bericht tech-ui-engineer M6-U1.
+- 2026-10-01 · UI · `protectedCount` (src/ui/inspect.ts, M6-U1 @ 0d52030) rechnet die Abdeckungsgeometrie der Feuerwache in der UI nach (dieselbe Formel wie `isProtected`). Entscheid L0 (Review M6-R2): nicht auf die Render-Maske umstellen (2×2 nur Näherung), sondern auf die Sim-Abfragen `isProtected`/`unprotectedFlammables`; Umsetzung im UI-Strang mit M6-U3. Quelle: Bericht tech-ui-engineer M6-U1.
 - 2026-10-01 · UI/Dev · `favicon.ico` 404 im Vite-Dev-Server erzeugt einen Konsolen-`error` (QA-M6U1).
 - 2026-10-01 · UI · Nach „Laden" läuft der Stand sofort mit 1× weiter statt pausiert; die M6-Spec nimmt für Szenarien Pause an. Prüfen in M6-U2/INT-Check (QA-M6U1, `04-feuerwache-szenario.png`).
 - 2026-10-01 · UI/Sim · Eine brennende Brennerei zeigt weiter „Rum ↑ +2.0" im HUD und „Erzeugt Rum alle 50 Ticks" im Panel; prüfen, ob die Anzeige den Ausfall berücksichtigen muss (QA-M6U1, `08-brennt-1280.png`).
