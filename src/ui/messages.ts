@@ -26,14 +26,19 @@ export function bindMessages(container: HTMLElement): () => void {
  * Meldung raus. Sticky Meldungen zählen mit, werden aber nie verdrängt; sind alle sticky, bleibt
  * die neue trotzdem sichtbar (der Stapel wächst dann über das Limit).
  */
-export function showMessage(text: string, kind: 'info' | 'error' = 'info', sticky = false): void {
+export function showMessage(
+  text: string,
+  kind: 'info' | 'error' | 'warn' = 'info',
+  sticky = false,
+): void {
   if (!box) return;
   const now = performance.now();
   if (text === lastText && now - lastAt < DEDUPE_MS) return;
   lastText = text;
   lastAt = now;
   const toast = document.createElement('div');
-  toast.className = `toast ${kind}`;
+  // Warnung nutzt die rote Kante des Fehlers (kein eigener Stil), klingt aber nicht wie ein Fehler
+  toast.className = kind === 'warn' ? 'toast warn error' : `toast ${kind}`;
   toast.textContent = text;
   if (sticky) toast.dataset.sticky = '1';
   box.appendChild(toast);
