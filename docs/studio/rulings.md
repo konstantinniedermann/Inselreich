@@ -1286,3 +1286,14 @@ Nachholpaketen: Render R2 ∥ FX R5→R3 ∥ Audio A1→A2→A3 ∥ Assets X1a (
 Kosten bei Irrtum: Doppelarbeit von etwa 4 Paketen, bereits eingetreten.
 
 Entscheider: L0 · Anlass: Session-Start, Container ohne alte Branches
+
+## R108 · 2026-10-01 · Studio, Leads ohne Agent-Werkzeug (Cloud-Session)
+
+Ruling: In Cloud-Sessions haben als Subagent gestartete Leads kein Agent-Werkzeug (Befund lead-tech,
+Welle 2 UI). Bis das behoben ist, startet L0 die Arbeiter (Implementierer, qa-code-reviewer,
+qa-playtester) direkt mit dem Briefing nach Plan; Leads werden nur für Arbeit ohne Delegation eingesetzt
+(Specs, Pläne, Urteile, Merges nach Gate). Budget bleibt den Leads zugeordnet und wird von L0 je Start
+mitgezählt. — Warum: Harness-Grenze, nicht änderbar aus dem Repo. — Kosten bei Irrtum: L0 trägt mehr
+Steuerlast; inhaltliche Arbeit bleibt bei den Arbeitern.
+
+Entscheider: L0 · Anlass: Bericht lead-tech (blockiert)
