@@ -1,3 +1,4 @@
+import { BOOM_PCT } from './defs/crises';
 import { GOODS, GOOD_IDS, SELL_DROP, SELL_FLOOR, STORAGE_CAP } from './defs/goods';
 import { SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
@@ -8,15 +9,17 @@ export function buyPrice(good: GoodId, n: number): number {
   return n * GOODS[good].buy;
 }
 
-/** Erlös für `n` Einheiten: jede Einheit zum aktuellen Verkaufsanteil, der je Einheit um SELL_DROP fällt. Rein. */
+/** Erlös für `n` Einheiten: Sättigung je Einheit, im Boom auf dieses Gut × BOOM_PCT %. Ohne Boom bitgleich zu M5. Rein. */
 export function sellPrice(world: World, good: GoodId, n: number): number {
+  const c = world.crisis;
+  const m = c !== null && c.kind === 'boom' && c.good === good ? BOOM_PCT : 100;
   let acc = 0;
   let pct = world.sellPct[good];
   for (let i = 0; i < n; i++) {
-    acc += GOODS[good].sell * pct;
+    acc += GOODS[good].sell * pct * m;
     pct = Math.max(SELL_FLOOR, pct - SELL_DROP);
   }
-  return Math.floor(acc / 100);
+  return Math.floor(acc / 10000);
 }
 
 export function buy(world: World, good: GoodId, n: number): Result {

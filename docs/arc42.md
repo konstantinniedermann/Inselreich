@@ -391,17 +391,20 @@ läuft ungecacht je sichtbarem Haus und Frame; gemessen 2.5–3.1 ms Arbeit je F
 
 ### Persistenz
 
-- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 2`,
-  `SAVE_VERSION`). Gespeichert wird immer Version 2.
-- `deserialize(json)` wirft nie. Ein Stand mit `version: 1` wird zuerst migriert (`migrateV1ToV2`:
-  `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`); danach prüft sie
+- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 3`,
+  `SAVE_VERSION`). Gespeichert wird immer Version 3.
+- `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
+  `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
+  `crisisLevel = 'off'`, `crisis = null`); danach prüft sie
   JSON, Version, Kartengrösse und Kachelanzahl, die Gebäude (bekannte `defId`, Koordinaten), das Kontor,
   alle Güter im Lager, `stats`, `won`, `tick`, `nextBuildingId` und die v2-Felder (`taxLevel`,
-  `taxLockedUntil`, `sellPct` ganzzahlig 30…100, `order` passend zu Tick und Periode). Fehler ergeben
+  `taxLockedUntil`, `sellPct` ganzzahlig 30…100, `order` passend zu Tick und Periode), die v3-Felder (`crisisLevel` bekannt; `crisis` passend zu Stufe,
+  Periode und Tick; je Gebäude `outageUntil` nur mit `state 'burning'` und `tick < outageUntil ≤ tick + 200`). Fehler ergeben
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
-  Fixture in `tests/sim/fixtures/save-v1.json`.
+  Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
-  Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftragstakte dagegen gehen in die
+  Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
+  (`CRISIS_FIRST_TICK`, Periodenlängen, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`) gehen dagegen in die
   Prüfung ein; ändern sie sich, braucht es eine Migration.
 - Nach dem Laden wird `recomputeConnectivity` aufgerufen; ein gespeichertes `connected` wird nicht
   übernommen.
@@ -435,7 +438,8 @@ läuft ungecacht je sichtbarem Haus und Frame; gemessen 2.5–3.1 ms Arbeit je F
   verwendeten Seed fest, das HUD zeigt ihn als «Karte».
 - Die Simulation nutzt keine Uhr und kein DOM (ESLint verbietet u. a. `Date`, `performance`,
   `setTimeout` in `src/sim/**`). Zufall gibt es nur seed-abgeleitet über `rng.ts`: Handelsaufträge ziehen je
-  Periode eine neue RNG-Instanz aus `seed` und Periodennummer ([ADR-010](adr/ADR-010-zufall-je-periode.md));
+  Periode eine neue RNG-Instanz aus `seed` und Periodennummer ([ADR-010](adr/ADR-010-zufall-je-periode.md)). Krisen ziehen je Periode eine eigene Instanz
+  mit der zweiten Konstante `CRISIS_SALT` (ADR-010, Nachtrag M6); die Stufe `off` zieht keinen Zufall.
   `step()` zieht sonst keine Zufallszahlen, der Save trägt keinen RNG-Zustand. Gleiche Welt und gleiche
   Aktionen ergeben denselben Verlauf.
 - Nur die UI wählt für ein neues Spiel einen Seed aus der aktuellen Zeit.

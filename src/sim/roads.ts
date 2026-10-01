@@ -53,9 +53,11 @@ export function recomputeConnectivity(world: World): void {
     const dependsOnConnection =
       def.produces !== undefined ||
       def.service !== undefined ||
+      def.serviceRadius !== undefined ||
       (def.supplyRadius !== undefined && b.defId !== 'kontor');
     if (!dependsOnConnection) continue;
-    if (!b.connected) b.state = 'notConnected';
+    if (b.outageUntil !== undefined) b.state = 'burning';
+    else if (!b.connected) b.state = 'notConnected';
     else if (b.state === 'notConnected') b.state = 'ok';
   }
 }

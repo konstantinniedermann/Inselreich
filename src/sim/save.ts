@@ -1,12 +1,20 @@
+import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
+import { CRISIS_LEVELS } from './defs/crises';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from './defs/goods';
-import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
+import {
+  CRISIS_FIRST_TICK,
+  FIRE_OUTAGE,
+  ORDER_DURATION,
+  ORDER_FIRST_TICK,
+  ORDER_PERIOD,
+} from './defs/timing';
 import { TAX_LEVELS } from './defs/tiers';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
-import type { World } from './types';
+import type { CrisisKind, CrisisLevel, GoodId, World } from './types';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -75,6 +83,73 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
   raw.order = null;
 }
 
+const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
+const FIRE_OUTCOMES: readonly string[] = ['burning', 'extinguished', 'miss'];
+
+const isValidTile = (t: unknown): boolean =>
+  isObject(t) && isInt(t.x) && isInt(t.y) && t.x >= 0 && t.y >= 0 && t.x < MAP_W && t.y < MAP_H;
+
+/**
+ * Krise: `null` oder eine Krise, die zu Stufe, Periode und Tick passt (Spec M6 9.2): Stufe mit Periode `P`,
+ * `start = CRISIS_FIRST_TICK + period × P ≤ tick < until`, `from`/`until` nach der Formel der Art. Boom: Gut mit
+ * Auftragsdefinition. Brand: `outcome` bekannt, `target` ganzzahlig genau dann, wenn nicht `miss`, `tile` fehlt
+ * oder liegt ganzzahlig in der Karte.
+ */
+function isValidCrisis(c: unknown, level: CrisisLevel, tick: unknown): boolean {
+  if (c === null) return true;
+  if (!isObject(c) || !isInt(tick) || !isInt(c.period) || c.period < 0) return false;
+  const period = CRISIS_LEVELS[level].period;
+  if (period === null) return false;
+  if (typeof c.kind !== 'string' || !CRISIS_KINDS.includes(c.kind)) return false;
+  const start = CRISIS_FIRST_TICK + c.period * period;
+  const win = crisisWindow(c.kind as CrisisKind, start);
+  if (c.from !== win.from || c.until !== win.until) return false;
+  if (tick < start || tick >= win.until) return false;
+  if (c.kind === 'boom')
+    return (
+      typeof c.good === 'string' &&
+      Object.hasOwn(GOODS, c.good) &&
+      GOODS[c.good as GoodId].order !== undefined
+    );
+  if (c.kind === 'fire') {
+    if (typeof c.outcome !== 'string' || !FIRE_OUTCOMES.includes(c.outcome)) return false;
+    const hasTarget = c.target !== undefined;
+    if (hasTarget && !isInt(c.target)) return false;
+    if (hasTarget !== (c.outcome !== 'miss')) return false;
+    return c.tile === undefined || isValidTile(c.tile);
+  }
+  return true;
+}
+
+/** Ausfall: `outageUntil` und `state 'burning'` nur gemeinsam; `tick < outageUntil ≤ tick + FIRE_OUTAGE`. */
+function isValidOutage(b: Record<string, unknown>, tick: unknown): boolean {
+  const has = b.outageUntil !== undefined;
+  if (has !== (b.state === 'burning')) return false;
+  return (
+    !has ||
+    (isInt(tick) &&
+      isInt(b.outageUntil) &&
+      b.outageUntil > tick &&
+      b.outageUntil <= tick + FIRE_OUTAGE)
+  );
+}
+
+/** Felder von Save v3: Krisenstufe, Krise, Ausfälle der Gebäude. */
+function isValidV3Fields(raw: Record<string, unknown>): boolean {
+  const { crisisLevel, tick } = raw;
+  if (typeof crisisLevel !== 'string' || !Object.hasOwn(CRISIS_LEVELS, crisisLevel)) return false;
+  if (!isValidCrisis(raw.crisis, crisisLevel as CrisisLevel, tick)) return false;
+  const buildings = raw.buildings as Record<string, Record<string, unknown>>;
+  return Object.values(buildings).every((b) => isValidOutage(b, tick));
+}
+
+/** v2 → v3: keine Krisen (R74 Entscheid 5); Gebäude und alles Vorhandene bleiben unberührt. */
+export function migrateV2ToV3(raw: Record<string, unknown>): void {
+  raw.version = 3;
+  raw.crisisLevel = 'off';
+  raw.crisis = null;
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
@@ -87,6 +162,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!Object.values(buildings).every(isValidBuilding)) return false;
   if (!isObject(stock) || !GOOD_IDS.every((g) => typeof stock[g] === 'number')) return false;
   if (!isValidV2Fields(raw)) return false;
+  if (!isValidV3Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -106,6 +182,7 @@ export function deserialize(json: string): LoadResult {
   }
   if (!isObject(raw)) return { ok: false, reason: 'Ungültiges Format' };
   if (raw.version === 1) migrateV1ToV2(raw);
+  if (raw.version === 2) migrateV2ToV3(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;
