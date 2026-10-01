@@ -44,7 +44,7 @@ describe('overlays', () => {
       return coverageMask(world, kind);
     });
     const a = createWorld(3);
-    const b = createWorld(4);
+    const b = createWorld(3);
     expect(layoutKey(a)).toBe(layoutKey(b));
     cache.get(a, 'supply');
     const mb = cache.get(b, 'supply');

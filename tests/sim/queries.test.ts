@@ -248,6 +248,32 @@ describe('queries', () => {
     expect(layoutKey(w)).not.toBe(k5);
   });
 
+  it('layoutKey kollidiert nicht bei gleicher Wegindex-Summe (5+10 gegen 15)', () => {
+    const a = createWorld(3);
+    const b = createWorld(3);
+    for (const i of [5, 10]) a.tiles[i]!.road = true;
+    b.tiles[15]!.road = true;
+    expect(layoutKey(a)).not.toBe(layoutKey(b));
+  });
+
+  it('layoutKey kollidiert nicht bei gleicher Wegzahl und -summe an anderen Kacheln (1+4 gegen 2+3)', () => {
+    const a = createWorld(3);
+    const b = createWorld(3);
+    for (const i of [1, 4]) a.tiles[i]!.road = true;
+    for (const i of [2, 3]) b.tiles[i]!.road = true;
+    expect(layoutKey(a)).not.toBe(layoutKey(b));
+  });
+
+  it('layoutKey erkennt ein verschobenes Gebäude bei gleicher Anzahl und gleicher ID', () => {
+    const a = createWorld(3);
+    const b = createWorld(3);
+    const ka = a.buildings[a.kontorId]!;
+    const kb = b.buildings[b.kontorId]!;
+    expect(layoutKey(a)).toBe(layoutKey(b));
+    kb.x = ka.x + 1;
+    expect(layoutKey(a)).not.toBe(layoutKey(b));
+  });
+
   it('reine Funktionen: serialize(w) bleibt vor und nach jedem Aufruf gleich', () => {
     houseNearKontor(w);
     placeService(w, 'chapel', k.x + 3, k.y + 3);
