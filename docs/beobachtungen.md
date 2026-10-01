@@ -551,3 +551,6 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 - 2026-10-01 · Studio · Ein Implementierer nutzte `git stash` für einen Rot-Nachweis, während fünf Worktrees parallel liefen (der Stash-Stapel ist allen Worktrees gemeinsam). Ging gut, ist aber riskant. Vorschlag für Briefings: Rot-Nachweis per WIP-Commit oder `git worktree add --detach` am alten SHA, nie bare `git stash` (Retro-Kandidat).
 - 2026-10-01 · UI · Ein Drag zum Pannen, der auf einem Gebäude beginnt, wählt das Gebäude aus (Panel öffnet). Prüfen im INT-Check, ob Auswahl erst beim Loslassen ohne Bewegung erfolgen soll (QA-R2).
 - 2026-10-01 · Doku (für D1) · Spec 5.2/6.5 nennen die Feinschliff-Werte aus R111 nicht (Wellenalpha 0,32, Boost 0,5, Rauch 0,85, Bodenschein). Im Doku-Pass nachtragen. `water.test.ts:245` Schwelle 0,35 aus den Konstanten ableiten (Review 2cace60).
+- 2026-10-01 · Render · Rauch-Puffs zeigen sichtbare Scheibenkanten („gestempelt"), niedrig; Kandidat für die Kann-Welle oder einen Feinschliff nach R4 (QA-R3b).
+- 2026-10-01 · Spec (für D1) · AK-R3-03 Pixelprobe hängt vom Blinktakt ab (an/aus); Formulierung auf „in mindestens einem von N Bildern im Abstand 0,4 s" präzisieren (QA-R3, QA-R3b).
+- 2026-10-01 · Dev · `?feuer=<id>` hängt von der Gebäude-ID des Spielstands ab; QA-Briefings nennen das Gebäude, nicht die ID (QA-R3b).
