@@ -1417,3 +1417,20 @@ Warum: Plan „gestrichener Posten hinterlässt keinen Code"; Doku und Code soll
 Kosten bei Irrtum: gering.
 
 Entscheider: L0 · Anlass: Bericht D1
+
+## R118 · 2026-10-01 · INT-Check abgenommen, letzte Fix-Runde
+
+Ruling: Der INT-Check auf 2f954c0 (UI 0933bcc + fix/layoutkey 42d39b7) ist abgenommen (BEDENKEN, nichts
+blockend): AK-A2-04, AK-U1-06, M6 AK-R2-02, R2-FW, AK-R1-06, AK-ISO-14/15 OK; AK-U2-01 und AK-A3-05 nur
+mit R109-Ausnahme bewertbar (Rückfall „aus nach 2 Fehlversuchen" belegt); AK-R4-06 wie AK-U3-09 auf
+Echtgerät (R116, N-91). Letzte Fix-Runde vor dem Final-Review: (a) Render-Strang: Reste D3
+(`EXTINGUISHED_TICKS`, `RenderFx.extinguished`), Kommentar „Laternen (immer)", Testschwelle water.test.ts;
+(b) UI-Strang danach: Merge Render, `DevPreview.extinguishedId`/`?geloescht=` entfernen, Kommentar
+eventLogView „Standard offen", Auswahl erst beim Loslassen ohne Ziehen (Drag zum Pannen wählt nichts aus).
+Bewusst NICHT in M7 (für den Nutzer-Playtest bzw. M9 vorgemerkt): HUD-Höhensprung bei Krisenkarte,
+„Laden startet nicht pausiert" (Tempo bleibt erhalten — als Verhalten beibehalten), Legende der
+Bedarfsmarker, Warnringe bei vielen Bränden, schwache Abendtönung, Himmelstönung bei Sturm am Tag,
+Spec-Wording AK-A2-04 (sfx nach Bedarf). — Warum: M7 abschliessen; Restpunkte sind Geschmack oder
+Komfort und brauchen das Urteil des Nutzers. — Kosten bei Irrtum: kleine Folgepakete.
+
+Entscheider: L0 · Anlass: INT-Check M7
