@@ -1417,3 +1417,26 @@ Warum: Plan „gestrichener Posten hinterlässt keinen Code"; Doku und Code soll
 Kosten bei Irrtum: gering.
 
 Entscheider: L0 · Anlass: Bericht D1
+
+## R107 · 2026-10-01 · M7 Welle 2 und UX
+
+Ruling: Nutzerreaktion auf die Slice-Bilder: „Gefällt mir" → Slice bestätigt (R93/R96 erfüllt),
+Welle 2 frei. Auslegung „mach weiter mit den Gebäudegrafiken, Musik, ausserdem mach das UI besser,
+es ist nicht intuitiv genug" als drei Stränge:
+(1) **Gebäudegrafiken** = Render-Strang nach Plan: R106 Punkt 3 → R2 ∥ R3 → R2-FW → R4 (lead-art).
+(2) **Musik** = hörbar im Spiel: A3 (Musik-Player) und M7-U1 (Audio-Anbindung, Einstellungen) →
+X1b; danach Merge von Audio, FX und Assets (lead-art Audio/Assets, lead-tech UI).
+(3) **Intuitivere Bedienung** = neues Paket **M7-UX** (lead-design): UX-Analyse des aktuellen
+Stands auf main (Heuristik + Erstspieler-Playtest durch qa-playtester), Brainstorming und
+Kurz-Spec mit testbaren AK unter `docs/superpowers/specs/`, Gate Spec (lead-tech, lead-qa); die
+Umsetzung läuft im UI-Strang und **ersetzt bzw. erweitert M7-U2 Teil B**, das bis zum Gate Spec
+M7-UX wartet. M6-U1–U3 bleiben im Plan, aber nach M7-UX (gleiche Dateien). Am Ende jeder Etappe
+Zwischen-Merge nach main mit Push wie R100/R105, damit der Nutzer den Stand spielen kann.
+Budget: aus M7-Budget 80; M7-UX bekommt einen eigenen Antrag nach Gate Spec. — Warum: alle drei
+Wünsche sind im Plan angelegt bis auf „intuitiv", das eine Analyse vor dem Bauen braucht
+(Brainstorming-Pflicht). — Kosten bei Irrtum: M7-U2 Teil B verzögert sich um die UX-Spec.
+
+Zweck der Anweisung: das Spiel soll schöner klingen/aussehen und leichter bedienbar sein;
+Auslegung widerspricht ihm nicht, weil die Bedienung zuerst gemessen statt geraten wird.
+
+Entscheider: L0 · Anlass: Nutzeranweisung
