@@ -1,3 +1,5 @@
+import type { Building, BuildingDef } from '../sim/types';
+
 export const DAY_TICKS = 6000; // ein Tag = 10 Minuten bei 1x
 export type Phase = 'day' | 'evening' | 'night' | 'morning';
 export type WeatherKind = 'clear' | 'cloudy' | 'rain' | 'storm';
@@ -52,3 +54,12 @@ export function lightAt(tick: number): { mul: Mul; phase: Phase; windows: number
 }
 
 export const lumaOf = ([r, g, b]: Mul): number => 0.299 * r + 0.587 * g + 0.114 * b;
+
+/**
+ * Leuchten die Fenster des Gebäudes nachts (Spec 6.2)? Bewohnte Häuser und Gebäude im Zustand `ok`; unbewohnte
+ * Häuser und stillstehende Betriebe (`waitingInput`, `storageFull`, `notConnected`, `burning`) bleiben dunkel.
+ */
+export function isLit(def: BuildingDef, b: Building): boolean {
+  if (def.category === 'housing') return (b.house?.inhabitants ?? 0) > 0;
+  return b.state === 'ok';
+}

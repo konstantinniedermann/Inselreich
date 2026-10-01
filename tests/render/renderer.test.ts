@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { lightAt } from '../../src/render/daynight';
+import { isLit, lightAt } from '../../src/render/daynight';
 import { SMOKE_COLOR } from '../../src/render/fx';
 import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
-import { PALETTE, SHADOW, rgbaOf } from '../../src/render/palette';
+import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import {
@@ -13,6 +13,17 @@ import {
   type Hover,
   type RenderFx,
 } from '../../src/render/renderer';
+import {
+  HEARTH_COLOR,
+  HEARTH_PUFFS,
+  anchorsFor,
+  walkerAt,
+  roadGraph,
+  walkerCount,
+  EPISODE_MS,
+  GLOW_RADIUS,
+} from '../../src/render/life';
+import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
 import { center, createWorld, idx } from '../../src/sim/world';
@@ -21,9 +32,11 @@ import { forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
 interface Call {
-  kind: 'body' | 'air' | 'tree' | 'ship';
+  kind: 'body' | 'air' | 'tree' | 'ship' | 'walker';
   id: number;
   at: number;
+  /** Nur Figuren: Kachelposition der Pose. */
+  pose?: { x: number; y: number };
 }
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
@@ -42,6 +55,16 @@ vi.mock('../../src/render/sprites', async (orig) => {
     drawAir: (...a: Parameters<typeof m.drawAir>) => {
       h.calls.push({ kind: 'air', id: a[3].id, at: at(a[0]) });
       return m.drawAir(...a);
+    },
+  };
+});
+vi.mock('../../src/render/life', async (orig) => {
+  const m = await orig<typeof import('../../src/render/life')>();
+  return {
+    ...m,
+    drawWalker: (...a: Parameters<typeof m.drawWalker>) => {
+      h.calls.push({ kind: 'walker', id: -1, at: at(a[0]), pose: { x: a[2].x, y: a[2].y } });
+      return m.drawWalker(...a);
     },
   };
 });
@@ -82,6 +105,13 @@ const VIEW = { w: 1280, h: 720 };
 const BASE = (dpr: number): Mat => [dpr, 0, 0, dpr, 0, 0];
 const isBase = (m: Mat): boolean => m.every((v, i) => v === BASE(1)[i]);
 const layer = { width: 64 * 32, height: 64 * 32 } as unknown as HTMLCanvasElement;
+
+/** Erdpfad eines Wegs: Strich in `earthEdge` oder `earth` unter der Bodenmatrix (unabhängig von der Steinchen-Dichte). */
+const isRoadStroke = (e: Ev): boolean =>
+  e.op === 'stroke' &&
+  (e.style === PALETTE.earthEdge || e.style === PALETTE.earth) &&
+  !isBase(e.matrix) &&
+  e.matrix[0] !== 1;
 
 /** Welt mit Kontor, Haus, Markt, Weberei (roh gesetzt, raucht) und einem Weg (ISO §5: Wege vor den Körpern). */
 function scene(): { world: World; ids: Record<string, number> } {
@@ -214,10 +244,8 @@ describe('Renderer', () => {
     expect(isBase(ev[img]!.matrix)).toBe(false);
     // 4 Wege: Bodenfüllungen nach dem Boden (der Weg des Szenarios) …
     const ground = (e: Ev): boolean => !isBase(e.matrix) && e.op !== 'transform';
-    const roads = ev
-      .map((e, i) => (e.op === 'fillRect' && ground(e) && i > img ? i : -1))
-      .filter((i) => i >= 0);
-    expect(roads.length).toBeGreaterThan(0);
+    const roads = ev.map((e, i) => (isRoadStroke(e) && i > img ? i : -1)).filter((i) => i >= 0);
+    expect(roads.length).toBeGreaterThanOrEqual(2); // äusserer und innerer Erdpfad
     // 5 genau eine Schattenfüllung, unter der Bodenmatrix, nach den Wegen
     const shadows = ev
       .map((e, i) => (e.op === 'fill' && e.style === SHADOW ? i : -1))
@@ -310,10 +338,8 @@ describe('Renderer', () => {
     const { ctx, log } = fakeCtx();
     render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     const firstBody = h.calls.find((c) => c.kind === 'body')!.at;
-    const roadFills = log.events
-      .map((e, i) => ({ e, i }))
-      .filter(({ e }) => e.op === 'fillRect' && !isBase(e.matrix) && e.matrix[0] !== 1);
-    expect(roadFills.length).toBeGreaterThan(0);
+    const roadFills = log.events.map((e, i) => ({ e, i })).filter(({ e }) => isRoadStroke(e));
+    expect(roadFills.length).toBeGreaterThanOrEqual(2);
     for (const { i } of roadFills) expect(i).toBeLessThan(firstBody);
   });
 
@@ -417,6 +443,7 @@ describe('Renderer', () => {
   it('ISO §5 Schatten: Gebäude knapp ausserhalb des Bildes werfen ihren Schatten noch ins Bild (Culling um die Schattenlänge erweitert)', () => {
     const { world, ids } = scene();
     world.order = null;
+    world.tick = 3000; // Nacht: keine Möwen und ihre Schatten im Zähler
     for (const t of world.tiles) if (t.terrain === 'forest') t.terrain = 'grass'; // keine Baumschatten im Zähler
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
@@ -581,11 +608,11 @@ describe('Renderer', () => {
       expect(log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
       const add = ev.findIndex((e) => e.composite === 'lighter');
       expect(add).toBeGreaterThan(mul);
-      // Bodenschein skaliert die Matrix (transform); gefüllt wird nur mit fillRect
+      // Bodenschein skaliert die Matrix (transform); die Verläufe des Glühens füllt nur fillRect
       expect(
         ev
-          .filter((e) => e.composite === 'lighter')
-          .every((e) => e.op === 'fillRect' || e.op === 'transform'),
+          .filter((e) => e.composite === 'lighter' && e.style.startsWith('gradient('))
+          .every((e) => e.op === 'fillRect'),
       ).toBe(true);
     });
 
@@ -628,13 +655,14 @@ describe('Renderer', () => {
       }
     });
 
-    it('M7-R3 ohne Feuer kein additiver Durchgang; mit flames = 0 (Nachlauf) auch keiner', () => {
-      expect(frame({}).log.compositeSet).not.toContain('lighter');
+    it('M7-R3 ohne Feuer kein Feuerglühen im additiven Durchgang; mit flames = 0 (Nachlauf) auch keines', () => {
+      const glow = (ev: Ev[]) =>
+        ev.filter((e) => e.composite === 'lighter' && e.style.startsWith('gradient('));
+      expect(glow(frame({}).ev)).toHaveLength(0);
       const { world } = scene();
       const id = first(world);
-      expect(frame({ fire: [{ id, flames: 0, smoke: 1 }] }).log.compositeSet).not.toContain(
-        'lighter',
-      );
+      expect(glow(frame({ fire: [{ id, flames: 0, smoke: 1 }] }).ev)).toHaveLength(0);
+      expect(glow(frame({ fire: [{ id, flames: 1, smoke: 1 }] }).ev).length).toBeGreaterThan(0);
     });
 
     it('AK-R3-03 Warnring und Boom-Münze in den Signalen: nach dem Multiply, ungetönt, im Bildraum', () => {
@@ -721,6 +749,260 @@ describe('Renderer', () => {
       expect(mul).toBeGreaterThan(0);
       // vor der Tönung (Terrain, Gebäude, Leben, Wetter) keine Signalfarbe; danach nur Signale
       expect(ev.slice(0, mul).filter((e) => names.includes(e.style.toLowerCase()))).toHaveLength(0);
+    });
+  });
+
+  describe('M7-R4 Leben und Fensterlicht', () => {
+    const SIGNALS: string[] = [
+      PALETTE.signalRed,
+      PALETTE.signalYellow,
+      PALETTE.signalOk,
+      PALETTE.signalWarn,
+    ];
+    /** Szene mit 40 Einwohnern im ersten Haus (10 Figuren auf dem Weg), Tick und Zeit wählbar. */
+    function life(
+      fx: Partial<RenderFx> = {},
+      tick = 0,
+      mk?: (w: World, ids: Record<string, number>) => void,
+    ) {
+      const { world, ids } = scene();
+      world.tick = tick;
+      const home = Object.values(world.buildings).find((b) => b.defId === 'house')!;
+      home.house!.inhabitants = 40;
+      mk?.(world, ids);
+      const cam = camFor(world, 1);
+      const { ctx, log } = fakeCtx();
+      h.calls.length = 0;
+      render(ctx, world, cam, layer, null, null, VIEW, { timeMs: EPISODE_MS / 2, ...fx });
+      return { world, ids, log, ev: log.events, home };
+    }
+    const lighter = (ev: Ev[]) => ev.filter((e) => e.composite === 'lighter');
+
+    it('AK-R4-02 Figuren: Anzahl nach Einwohnern, Reihenfolge wie sortedObjects, weiter genau eine Schattenfüllung, RF-7', () => {
+      for (const [inh, reduce] of [
+        [40, false],
+        [400, false],
+        [400, true],
+      ] as const) {
+        const { world, log, ev } = life({ reduceMotion: reduce, dayNight: true }, 3000, (w) => {
+          Object.values(w.buildings).find((b) => b.defId === 'house')!.house!.inhabitants = inh;
+        });
+        const want = walkerCount(inh, reduce);
+        const g = roadGraph(world);
+        const poses = Array.from({ length: want }, (_, i) => ({
+          i,
+          p: walkerAt(g, i, EPISODE_MS / 2, world.seed)!,
+        }));
+        const drawn = h.calls.filter((c) => c.kind === 'walker');
+        expect(drawn).toHaveLength(want);
+        // Reihenfolge: Körper und Figuren zusammen wie sortedObjects
+        const key = (x: number, y: number) => `${x.toFixed(6)},${y.toFixed(6)}`;
+        const expected = sortedObjects(
+          world,
+          poses.map(({ i, p }) => ({ kind: 'walker' as const, id: i, cx: p.x, cy: p.y })),
+        )
+          .filter((it) => it.kind === 'building' || it.kind === 'walker')
+          .map((it) =>
+            it.kind === 'walker' ? `walker@${key(it.cx, it.cy)}` : `${it.kind}${it.id}`,
+          );
+        const got = h.calls
+          .filter((c) => c.kind === 'body' || c.kind === 'walker')
+          .map((c) =>
+            c.kind === 'body' ? `building${c.id}` : `walker@${key(c.pose!.x, c.pose!.y)}`,
+          );
+        expect(got).toEqual(expected);
+        expect(ev.filter((e) => e.style === SHADOW)).toHaveLength(1);
+        expect(renderStats.shadowFills).toBe(1);
+        expect(log.saves).toBe(log.restores);
+        expect(log.underflow).toBe(0);
+        expect(log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
+      }
+      expect(h.calls.filter((c) => c.kind === 'walker')).toHaveLength(12);
+    });
+
+    it('AK-R4-02 Figurenschatten stehen im einen Schattenpfad (mehr Punkte als ohne Einwohner); ohne Weg keine Figur', () => {
+      const withWalkers = life({}, 0).ev.find((e) => e.style === SHADOW)!;
+      const none = life({}, 0, (w) => {
+        for (const b of Object.values(w.buildings)) if (b.house) b.house.inhabitants = 0;
+      });
+      expect(h.calls.some((c) => c.kind === 'walker')).toBe(false);
+      expect(withWalkers.points.length).toBeGreaterThan(
+        none.ev.find((e) => e.style === SHADOW)!.points.length,
+      );
+      life({}, 0, (w) => {
+        for (const t of w.tiles) t.road = false;
+      });
+      expect(h.calls.some((c) => c.kind === 'walker')).toBe(false);
+    });
+
+    it('Spec 5.6 Figuren tragen keine Signalfarbe und stehen vor der Tönung; Episodenrand blendet aus (keine Figur bei alpha 0)', () => {
+      const { ev } = life({ dayNight: true }, 3000);
+      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      expect(ev.slice(0, mul).filter((e) => SIGNALS.includes(e.style.toLowerCase()))).toHaveLength(
+        0,
+      );
+      life({ timeMs: 0 }, 0); // alpha 0 zu Beginn der Episode
+      expect(h.calls.filter((c) => c.kind === 'walker')).toHaveLength(0);
+    });
+
+    it('AK-R4-03 Möwen nur am Tag/Morgen/Abend: Schatten und Flügelstriche; nachts keine; reduziert 3', () => {
+      const gullStrokes = (ev: Ev[]) =>
+        ev.filter((e) => e.op === 'stroke' && e.style === PALETTE.foam && e.lineWidth === 1.5);
+      const day = life({ dayNight: false }, 0);
+      const night = life({ dayNight: false }, 3000);
+      const red = life({ dayNight: false, reduceMotion: true }, 0);
+      expect(gullStrokes(day.ev)).toHaveLength(8);
+      expect(gullStrokes(night.ev)).toHaveLength(0);
+      expect(gullStrokes(red.ev)).toHaveLength(3);
+      expect(day.ev.filter((e) => e.style === SHADOW)).toHaveLength(1);
+      expect(night.ev.filter((e) => e.style === SHADOW)).toHaveLength(1);
+    });
+
+    it('AK-R4-03 Herdrauch nur Morgen und Abend, nur bewohnte Häuser; Rauch-Budget gilt über Betriebe, Herd und Feuer', () => {
+      const hearth = `rgba(${rgbOfCss(HEARTH_COLOR).join(',')},`;
+      const count = (ev: Ev[], prefix: string) =>
+        ev.filter((e) => e.op === 'fill' && e.style.startsWith(prefix) && e.points.length === 4)
+          .length;
+      for (const [tick, expected] of [
+        [4700, true],
+        [2300, true],
+        [0, false],
+        [3000, false],
+      ] as const) {
+        const { ev, world } = life({}, tick);
+        const inhabited = Object.values(world.buildings).filter(
+          (b) => (b.house?.inhabitants ?? 0) > 0,
+        ).length;
+        expect(inhabited).toBeGreaterThan(0);
+        expect(count(ev, hearth), `Tick ${tick}`).toBe(expected ? HEARTH_PUFFS * inhabited : 0);
+      }
+      // Budget: viele bewohnte Häuser, laufende Betriebe, 20 Feuer
+      for (const reduce of [false, true]) {
+        const total = reduce ? 50 : 150;
+        const many = (fire: boolean) =>
+          life({ reduceMotion: reduce, fire: fire ? fireList : [] }, 4700, (w) => {
+            const k = w.buildings[w.kontorId]!;
+            for (let i = 0; i < 80; i++) {
+              const id = w.nextBuildingId++;
+              w.buildings[id] = {
+                id,
+                defId: i % 2 ? 'house' : 'weaver',
+                x: k.x + 3 + (i % 8),
+                y: k.y + 3 + Math.floor(i / 8) * 1,
+                connected: true,
+                progress: 0,
+                state: 'ok',
+                ...(i % 2
+                  ? {
+                      house: {
+                        tier: 1,
+                        inhabitants: 5,
+                        demand: {},
+                        satisfied: {},
+                        services: {},
+                        satisfiedSince: 0,
+                        supplied: true,
+                      },
+                    }
+                  : {}),
+              };
+              if (i < 20) fireList.push({ id, flames: 1, smoke: 1 });
+            }
+          });
+        const fireList: { id: number; flames: number; smoke: number }[] = [];
+        const smokeStyles = [hearth, `rgba(${AIR_COLORS.smoke},`, `rgba(${SMOKE_COLOR.join(',')},`];
+        const noFire = many(false).ev;
+        const sum = (ev: Ev[]) => smokeStyles.reduce((n, p) => n + count(ev, p), 0);
+        expect(sum(noFire)).toBeLessThanOrEqual(total);
+        // Betriebe haben vor dem Herdrauch Vorrang: reduziert verbrauchen sie das ganze Budget
+        expect(count(noFire, hearth) > 0).toBe(!reduce);
+        expect(sum(noFire)).toBe(total);
+        const withFire = many(true).ev;
+        expect(sum(withFire)).toBeLessThanOrEqual(total);
+        expect(count(withFire, `rgba(${SMOKE_COLOR.join(',')},`)).toBeGreaterThan(0); // Feuer behält Vorrang
+      }
+    });
+
+    it('AK-R4-05 Fensterlicht: ein additiver Block nach dem Multiply; nur bewohnte Häuser und Betriebe ok; Laternen immer', () => {
+      const night = (mk?: Parameters<typeof life>[2], fx: Partial<RenderFx> = {}) =>
+        life({ dayNight: true, ...fx }, 3000, mk);
+      const rects = (ev: Ev[]) =>
+        lighter(ev).filter((e) => e.op === 'fill' && e.style === rgbaOf(PALETTE.window, 1));
+      const expectedWindows = (world: World): number =>
+        Object.values(world.buildings)
+          .filter((b) => isLit(BUILDING_DEFS[b.defId], b))
+          .reduce(
+            (n, b) => n + anchorsFor(BUILDING_DEFS[b.defId], b).filter((a) => !a.always).length,
+            0,
+          );
+      const base = night();
+      expect(base.log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
+      expect(base.ev.findIndex((e) => e.composite === 'lighter')).toBeGreaterThan(
+        base.ev.findIndex((e) => e.composite === 'multiply'),
+      );
+      const [win, lamp] = rects(base.ev);
+      const n = expectedWindows(base.world);
+      expect(n).toBeGreaterThan(3);
+      expect(win!.points).toHaveLength(4 * n);
+      expect(lamp!.points).toHaveLength(4 * 2); // Kontor und Marktplatz
+      // Radius des Scheins: 0,6 · ISO_H · Zoom
+      const ring = lighter(base.ev).find(
+        (e) => e.op === 'fill' && e.style === rgbaOf(PALETTE.window, Number((0.35 / 3).toFixed(4))),
+      )!;
+      const first = ring.points.slice(0, 5);
+      expect(
+        (Math.max(...first.map((p) => p.x)) - Math.min(...first.map((p) => p.x))) / 2,
+      ).toBeCloseTo(GLOW_RADIUS, 6);
+      // Stillstand: unbewohntes Haus (Einwohner 0) und Betrieb in waitingInput bleiben dunkel
+      const dark = night((w, ids) => {
+        w.buildings[ids.weaver!]!.state = 'waitingInput';
+        for (const b of Object.values(w.buildings)) if (b.house) b.house.inhabitants = 0;
+      });
+      const nDark = expectedWindows(dark.world);
+      expect(nDark).toBe(3); // nur das Kontor (ok)
+      expect(rects(dark.ev)[0]!.points).toHaveLength(4 * nDark);
+      // Schalter dayNight false: keine Fenster, die Laternen bleiben
+      const off = life({ dayNight: false }, 3000);
+      const offRects = lighter(off.ev).filter((e) => e.op === 'fill' && e.points.length === 8);
+      expect(offRects.length).toBeGreaterThan(0);
+      expect(lighter(off.ev).some((e) => e.op === 'fill' && e.points.length === 4 * n)).toBe(false);
+      // am Tag leuchten nur die Laternen (Mindeststärke)
+      const day = life({ dayNight: true }, 0);
+      expect(lighter(day.ev).filter((e) => e.points.length === 8).length).toBeGreaterThan(0);
+      expect(day.log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
+    });
+
+    it('ISO §5 Licht: Signale nach dem Licht, ungetönt; save/restore ausgeglichen (Zoom 0,5 und 2, leere Welt)', () => {
+      for (const zoom of [0.5, 2])
+        for (const empty of [false, true]) {
+          const { world } = scene();
+          world.tick = 3000;
+          Object.values(world.buildings).find((b) => b.defId === 'house')!.house!.inhabitants = 40;
+          const cam = camFor(world, zoom);
+          if (empty) {
+            world.buildings = {};
+            world.nextBuildingId = 2;
+          }
+          const { ctx, log } = fakeCtx();
+          ctx.setTransform(2, 0, 0, 2, 0, 0);
+          render(ctx, world, cam, layer, null, null, VIEW, {
+            timeMs: 5000,
+            dayNight: true,
+            boom: true,
+          });
+          expect(log.saves).toBe(log.restores);
+          expect(log.underflow).toBe(0);
+          expect(log.matrix).toEqual(BASE(2));
+          expect(log.compositeSet.filter((c) => c === 'lighter').length).toBeLessThanOrEqual(1);
+          expect(log.compositeSet.filter((c) => c === 'multiply').length).toBeLessThanOrEqual(1);
+        }
+    });
+
+    it('Spec 6.2 Anker-Cache hat eine Obergrenze (Typen × 3 Stufen)', async () => {
+      const { anchorCacheSize } = await import('../../src/render/life');
+      life({ dayNight: true }, 3000);
+      expect(anchorCacheSize()).toBeGreaterThan(0);
+      expect(anchorCacheSize()).toBeLessThanOrEqual(Object.keys(BUILDING_DEFS).length + 2);
     });
   });
 });
