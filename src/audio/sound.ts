@@ -10,6 +10,15 @@ import {
   type Layer,
   type Phase,
 } from './mix';
+import {
+  AMBIENCE_MIN_INTERVAL_MS,
+  ambienceMix,
+  createAmbienceEngine,
+  createSampleLoader,
+  type AmbienceEngine,
+  type SampleLoader,
+} from './ambience';
+import { SFX_FILES } from './manifest';
 
 export type { AmbienceInput, Bus, Layer, Phase } from './mix';
 
@@ -86,7 +95,11 @@ export const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
   boom: 2000,
 };
 
-/** Signale senken Musik und Umgebung (Ducking); Wert = Dauer der Figur in s. */
+/**
+ * Signale senken Musik und Umgebung (Ducking); Wert = Dauer der Figur in s.
+ * Die Dauern sind an die Figuren in `figures` gekoppelt (Länge bis zum letzten Ton): wer eine Figur ändert,
+ * passt den Wert hier an.
+ */
 const FIGURE_S: Partial<Record<SoundEvent, number>> = {
   error: 0.1,
   order: 0.52,
@@ -96,9 +109,7 @@ const FIGURE_S: Partial<Record<SoundEvent, number>> = {
 };
 
 const FX = 0.5; // Effekte liegen 6 dB unter den Signalen (Spec 7.1)
-const SEA_LEVEL = 0.15; // relativ zum Umgebungs-Bus
-const SEA_SWELL = 0.06; // Tiefe der langsamen Schwellung (absolut)
-const SEA_SWELL_HZ = 0.08;
+const SAMPLE_GAIN = 0.8; // Pegel der Signal-Samples (Alarm, Sturmwarnung) auf dem Effekte-Bus
 const EPS = 1e-9;
 
 const defaultIo = (): SoundIo => ({
@@ -149,14 +160,13 @@ export function createSound(
   let duckMusic: GainNode | null = null;
   let duckAmb: GainNode | null = null;
   let noise: AudioBuffer | null = null;
-  let seaSource: AudioBufferSourceNode | null = null;
-  let seaLfo: OscillatorNode | null = null;
+  let engine: AmbienceEngine | null = null;
+  let loader: SampleLoader | null = null;
+  let lastAmbienceMs: number | null = null;
   let signals: DuckSignal[] = [];
-  let ambienceInput: AmbienceInput | null = null; // Wirkung ab A2
   let phase: Phase | null = null; // Wirkung ab A3
   let crisis = false; // Wirkung ab A3
   const lastPlayed = new Map<SoundEvent, number>();
-  void io; // Netz und Medien nutzen erst A2/A3
 
   const safe = (fn: () => void) => {
     try {
@@ -247,6 +257,29 @@ export function createSound(
     tone(A5, at, 0.09, peak);
     tone(D6, at + 0.06, 0.12, peak);
   };
+  /** Geladenes Signal-Sample oder null (dann Rückfall); stößt das Laden beim ersten Abspielen an. */
+  const sample = (e: SoundEvent): AudioBuffer | null => {
+    const file = SFX_FILES[e];
+    if (!file || !loader) return null;
+    const b = loader.get(file);
+    if (!b) loader.request(file);
+    return b;
+  };
+  const playSample = (b: AudioBuffer, peak: number) => {
+    const dest = bus.effects;
+    if (!ctx || !dest) return;
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = b;
+    g.gain.value = peak;
+    src.connect(g);
+    g.connect(dest);
+    src.onended = () => {
+      src.disconnect();
+      g.disconnect();
+    };
+    src.start();
+  };
   const figures: Record<SoundEvent, () => void> = {
     build: () => {
       knock(0, 0.12 * FX);
@@ -276,12 +309,16 @@ export function createSound(
     },
     // Rückfall Alarm: Glocke aus Sinus-Partialtönen 1 : 2,76 : 5,4 auf D5, drei Schläge.
     alarm: () => {
+      const b = sample('alarm');
+      if (b) return playSample(b, SAMPLE_GAIN);
       for (let k = 0; k < 3; k++) {
         [1, 2.76, 5.4].forEach((m, j) => tone(D5 * m, k * 0.45, 0.8, 0.4 / (j + 1)));
       }
     },
     // Rückfall Sturmwarnung: tiefer Sägezahn-Akkord (D2, A2) durch Tiefpass 400 Hz, 2 s.
     stormWarning: () => {
+      const b = sample('stormWarning');
+      if (b) return playSample(b, SAMPLE_GAIN);
       const dest = bus.effects;
       if (!ctx || !dest) return;
       const t = ctx.currentTime;
@@ -312,8 +349,12 @@ export function createSound(
     },
     // Rückfall Boom: Münzfigur zweimal versetzt plus Fanfare D5-F#5-A5.
     boom: () => {
-      coinFigure(0, 0.15 * FX);
-      coinFigure(0.18, 0.15 * FX);
+      const b = sample('boom');
+      if (b) playSample(b, 0.4 * FX);
+      else {
+        coinFigure(0, 0.15 * FX);
+        coinFigure(0.18, 0.15 * FX);
+      }
       [D5, FS5, A5].forEach((f, i) =>
         tone(f, 0.4 + i * 0.14, i === 2 ? 0.5 : 0.18, 0.3 * FX, 'triangle'),
       );
@@ -337,7 +378,7 @@ export function createSound(
   };
 
   const setBus = (b: Bus, v: number) => {
-    if (!(b in levels)) return;
+    if (!Object.hasOwn(levels, b)) return;
     levels[b] = sanitizeVolume(v, levels[b]);
     if (!disposed) safe(() => applyBus(b));
   };
@@ -368,25 +409,8 @@ export function createSound(
     bus.ambience = ambience;
     (Object.keys(levels) as Bus[]).forEach(applyBus);
     noise = makeNoise(ctx, 2);
-    // Meeresrauschen (bis A2 die Schicht 'sea' übernimmt): gefiltertes Rauschen am Umgebungs-Bus,
-    // per langsamem LFO auf dem Gain schwellend.
-    const sea = ctx.createGain();
-    sea.gain.value = SEA_LEVEL;
-    sea.connect(ambience);
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 500;
-    seaSource = ctx.createBufferSource();
-    seaSource.buffer = noise;
-    seaSource.loop = true;
-    seaSource.connect(lp).connect(sea);
-    seaLfo = ctx.createOscillator();
-    seaLfo.frequency.value = SEA_SWELL_HZ;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = SEA_SWELL;
-    seaLfo.connect(lfoGain).connect(sea.gain);
-    seaSource.start();
-    seaLfo.start();
+    loader = createSampleLoader(ctx, io);
+    engine = createAmbienceEngine({ ctx, dest: ambience, noise, loader });
     swallow(ctx.resume());
   };
 
@@ -424,8 +448,13 @@ export function createSound(
     setVolume: (v) => setBus('master', v),
     setBus,
     setAmbience(input) {
-      if (disposed) return;
-      ambienceInput = input;
+      if (disposed || !unlocked || !ctx || !engine) return;
+      const t = Date.now();
+      if (lastAmbienceMs !== null && t - lastAmbienceMs < AMBIENCE_MIN_INTERVAL_MS) return;
+      lastAmbienceMs = t;
+      const e = engine;
+      const now = ctx.currentTime;
+      safe(() => e.update(ambienceMix(input), now));
     },
     setPhase(p) {
       if (disposed) return;
@@ -450,13 +479,12 @@ export function createSound(
           duck = duckGain(c.currentTime, signals);
         });
       }
-      void ambienceInput;
       void phase;
       void crisis;
       return {
         unlocked,
         buses: { ...levels },
-        layers: {},
+        layers: engine && !disposed ? engine.levels() : {},
         duck,
         music: { state: 'idle', id: null },
       };
@@ -465,8 +493,10 @@ export function createSound(
       if (disposed) return;
       disposed = true;
       const c = ctx;
-      safe(() => seaSource?.stop());
-      safe(() => seaLfo?.stop());
+      safe(() => engine?.dispose());
+      safe(() => loader?.dispose());
+      engine = null;
+      loader = null;
       if (c) safe(() => swallow(c.close()));
       ctx = null;
       bus.master = bus.effects = bus.music = bus.ambience = undefined;
