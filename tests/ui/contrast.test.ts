@@ -50,6 +50,14 @@ describe('UI-Kontrast (AK-U2-02)', () => {
     }
   });
 
+  it('Grafik-Kontrast ≥ 3 : 1: Warnkante auf Warn-Pergament', () => {
+    expect(contrast(vars['--warn-amber']!, vars['--warn-parchment']!)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('Boom-Marke bleibt mit hidden verborgen', () => {
+    expect(css).toMatch(/\.badge--boom\[hidden\]\s*\{[^}]*display:\s*none/);
+  });
+
   it('Keine Opacity auf Text (ausser :disabled, WCAG-ausgenommen)', () => {
     for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
       if (/opacity\s*:/.test(m[2]!)) expect(m[1]!, 'Regel mit opacity').toContain(':disabled');
