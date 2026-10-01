@@ -459,6 +459,30 @@ describe('sound', () => {
       expect(s.debugState().duck).toBe(1);
     });
 
+    it('AK-A1-02 zwei überlappende Signale: Ducking hält bis zum späteren Ende, vertieft nicht', () => {
+      const { s, ctx, log } = mk();
+      setTime(ctx, 5);
+      s.play('order'); // Halten bis 5 + 0,52 + 0,3 = 5,82
+      setTime(ctx, 5.4);
+      s.play('win'); // Halten bis 5,4 + 1,14 + 0,3 = 6,84
+      const mine = log.sets.filter((x) => x.gain === log.gains[3]!.gain).slice(-5);
+      expect(mine.map((x) => [x.kind, x.v])).toEqual([
+        ['cancel', 0],
+        ['set', 0.5],
+        ['ramp', 0.5],
+        ['set', 0.5],
+        ['ramp', 1],
+      ]);
+      expect(mine[3]!.t).toBeCloseTo(6.84, 9);
+      expect(mine[4]!.t).toBeCloseTo(7.44, 9);
+      setTime(ctx, 6.5); // erstes Signal längst frei, zweites hält
+      expect(s.debugState().duck).toBe(0.5);
+      setTime(ctx, 7.14); // Mitte der Freigabe
+      expect(s.debugState().duck).toBeCloseTo(0.75, 9);
+      setTime(ctx, 8);
+      expect(s.debugState().duck).toBe(1);
+    });
+
     it('AK-A1-03 alarm, stormWarning, boom spielen ohne Wurf und erzeugen Knoten', () => {
       for (const e of ['alarm', 'stormWarning', 'boom'] as const) {
         const { s, log } = mk();
