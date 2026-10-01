@@ -22,8 +22,6 @@ export interface AssetEntry {
 const CC0 = 'CC0 1.0';
 const fs = (id: number) => `https://freesound.org/s/${id}/`;
 
-const OGA = 'https://opengameart.org/'; // Seiten-Links der Stücke ergänzt X1 laut Lizenzurteil
-
 export const MANIFEST: readonly AssetEntry[] = [
   {
     id: 'MU1',
@@ -33,7 +31,7 @@ export const MANIFEST: readonly AssetEntry[] = [
     title: "Medieval: The Bard's Tale",
     author: 'RandomMind',
     license: CC0,
-    link: OGA,
+    link: 'https://opengameart.org/content/medieval-the-bards-tale',
   },
   {
     id: 'MU2',
@@ -43,7 +41,7 @@ export const MANIFEST: readonly AssetEntry[] = [
     title: 'Medieval: The Old Tower Inn',
     author: 'RandomMind',
     license: CC0,
-    link: OGA,
+    link: 'https://opengameart.org/content/medieval-the-old-tower-inn',
   },
   {
     id: 'MU3',
@@ -54,7 +52,7 @@ export const MANIFEST: readonly AssetEntry[] = [
       'If my complaints could passions move (John Dowland, 1597; Einspielung Of Far Different Nature)',
     author: 'Of Far Different Nature',
     license: CC0,
-    link: OGA,
+    link: 'https://opengameart.org/content/historic-renaissance-music-from-1597-if-my-complaints-could-passions-move-by-john-dowland',
   },
   {
     id: 'AM1',

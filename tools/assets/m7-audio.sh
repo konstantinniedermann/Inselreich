@@ -12,7 +12,7 @@
 # Quelle im Nachweis ist immer die Sound-Seite (nie die CDN-URL); die Zahl im Dateinamen ist die Freesound-ID.
 #
 # Pegelpolitik (Vorgabe lead-art, gemessen mit ebur128, EBU R128 / BS.1770):
-#   - Statischer Gain "volume=<x>dB" je Datei, kein dynamisches loudnorm, kein Limiter.
+#   - Statischer Gain "volume=<x>dB" je Datei, kein dynamisches loudnorm; nur die Glocke (bell) läuft zusätzlich über einen weichen Limiter.
 #   - Gemessen wird so, wie der Browser spielt: Mono-Dateien als L=R (Web Audio kopiert Mono auf beide Kanäle,
 #     das sind +3 LU gegenüber einer Ein-Kanal-Messung).
 #   - Ziele (integriert): Musik -18 LUFS; Umgebung -26 LUFS (Möwen -28, Sturm -24); Signale (bell, foghorn)
