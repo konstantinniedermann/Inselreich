@@ -75,7 +75,8 @@ export interface HudActions {
   settings(): Settings;
   setMuted(muted: boolean): void;
   /** Öffnet die Einstellungs-Karte (Lautstärken, Tag-Nacht, Bewegung, Credits). */
-  openSettings(): void;
+  /** `opener` ist der auslösende Knopf; ihm gibt das Schliessen den Fokus zurück. */
+  openSettings(opener?: HTMLElement): void;
   /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
   setCrisisLevel(level: CrisisLevel): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
@@ -238,7 +239,7 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     actions.setMuted(muted);
     syncMute(muted);
   });
-  const settingsBtn = gameButton('Einstellungen', () => actions.openSettings());
+  const settingsBtn = gameButton('Einstellungen', (btn) => actions.openSettings(btn));
   box.append(mute, settingsBtn);
 }
 

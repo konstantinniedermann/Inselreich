@@ -42,8 +42,21 @@ function row(label: string, control: HTMLElement): HTMLElement {
   return r;
 }
 
+/**
+ * Element, das beim Schliessen den Fokus zurückbekommt: der auslösende Knopf, sonst das aktive Element.
+ * Der Knopf wird ausdrücklich übergeben, weil er vor dem Öffnen den Fokus abgibt (`blur`), das aktive
+ * Element dann also nur noch der `body` wäre.
+ */
+export function pickOpener<T>(explicit: T | null | undefined, active: T | null): T | null {
+  return explicit ?? active;
+}
+
 /** Öffnet die Karte in `host`; gibt die Schliessen-Funktion zurück (idempotent). */
-export function openSettings(host: HTMLElement, actions: SettingsActions): () => void {
+export function openSettings(
+  host: HTMLElement,
+  actions: SettingsActions,
+  openedBy?: HTMLElement | null,
+): () => void {
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   const card = document.createElement('div');
@@ -52,7 +65,7 @@ export function openSettings(host: HTMLElement, actions: SettingsActions): () =>
   card.setAttribute('aria-modal', 'true');
   card.setAttribute('aria-label', 'Einstellungen');
   backdrop.appendChild(card);
-  const opener = document.activeElement as HTMLElement | null;
+  const opener = pickOpener(openedBy, document.activeElement as HTMLElement | null);
   let closed = false;
 
   const close = (): void => {

@@ -224,25 +224,29 @@ function launch(
       sound.setMuted(muted);
       saveSettings(settings);
     },
-    openSettings: () => {
+    openSettings: (opener) => {
       closeSettings?.();
-      closeSettings = openSettings(gameEl, {
-        settings: () => settings,
-        setBus: (bus, value) => {
-          settings = { ...settings, [bus]: value };
-          sound.setBus(bus, value);
-          saveSettings(settings);
+      closeSettings = openSettings(
+        gameEl,
+        {
+          settings: () => settings,
+          setBus: (bus, value) => {
+            settings = { ...settings, [bus]: value };
+            sound.setBus(bus, value);
+            saveSettings(settings);
+          },
+          setDayNight: (dayNight) => {
+            settings = { ...settings, dayNight };
+            saveSettings(settings);
+          },
+          setReduceMotion: (reduceMotion) => {
+            settings = { ...settings, reduceMotion };
+            saveSettings(settings);
+          },
+          credits: () => creditEntries(MANIFEST_CREDITS, FONT_CREDITS),
         },
-        setDayNight: (dayNight) => {
-          settings = { ...settings, dayNight };
-          saveSettings(settings);
-        },
-        setReduceMotion: (reduceMotion) => {
-          settings = { ...settings, reduceMotion };
-          saveSettings(settings);
-        },
-        credits: () => creditEntries(MANIFEST_CREDITS, FONT_CREDITS),
-      });
+        opener,
+      );
     },
     setCrisisLevel: (crisisLevel) => {
       settings = { ...settings, crisisLevel };
