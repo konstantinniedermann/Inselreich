@@ -18,3 +18,4 @@
 - Modellwahl nach Aufgabe; ein näher rückendes Limit ist nie ein Grund für ein schwächeres Modell, L0 fährt herunter (R71, Retro M5 B6).
 - Schreibende Git-Proben (revert, merge, reset) nur im Paket-Branch oder einem eigenen Worktree, nie im Haupt-Checkout auf main; vorher `git branch --show-current` (Retro session-5e248230 B6).
 - L0 formatiert `docs/studio/state.md` vor jedem Commit mit `npx prettier --write`; sonst wird `make check` auf main rot (Retro session-5e248230 B6).
+- Der Session-Container ist ephemer: nur gepushte Branches überleben einen Session-Wechsel. Strang-Branches nach jeder Abnahme nach `origin` pushen (R107; Verlust von A1, A2, R5, X1a, M8-Spec).
