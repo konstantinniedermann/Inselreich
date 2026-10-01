@@ -532,6 +532,14 @@ Schaum-Schwelle 0,35; eine Invariante `STORM_WAVE_ALPHA < FOAM_ALPHA[0]` fehlt.
 **Einschätzung:** niedrig; (a), (b) passen zu M7-UX, (c) nur zur Kenntnis, (d) bei der nächsten
 Render-Änderung mitnehmen, falls nicht schon in der Kleinst-Fix-Runde erledigt.
 
+### 2026-10-01 · `docs/superpowers/specs/2026-10-01-m7-ux-design.md` L1 · Startkarten-Text ohne Autosave
+
+**Beobachtung:** Die Startkarte zeigt bei jedem ladbaren Slot den L1-Text „Der bisherige Autosave
+wird … ersetzt", auch wenn nur ein manueller Stand existiert. Das Menü unterscheidet seit R125
+über `slot === 'auto'`, die Startkarte nicht.
+**Ursprung:** Planpflege lead-tech nach Gate Plan M7-UX (R125).
+**Einschätzung:** niedrig; im Task-Review der Startkarte (Task 4) mit derselben Fallunterscheidung lösen.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
