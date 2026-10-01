@@ -1331,3 +1331,17 @@ Kern des Nutzerauftrags (R73); kein Blocker, aber sichtbarer Qualitätsgewinn. �
 eine Fix-Runde.
 
 Entscheider: L0 · Anlass: QA-R3
+
+## R112 · 2026-10-01 · M6-U2 Ereignis-Log ausserhalb des HUD
+
+Ruling: Das Ereignis-Log sitzt nicht im HUD, sondern als eigene, schwebende Pergament-Box am unteren
+linken Rand der Spielfläche (über der Karte, unter keinem Panel). Eingeklappt (Standard, sobald mehr als
+1 Eintrag) zeigt sie nur den neuesten Eintrag in einer Zeile; aufgeklappt höchstens 220 px mit internem
+Scrollen. Das HUD behält seine Höhe ohne Log. Fix-Runde M6-U2 dazu: Boom-Marke nur am Boom-Gut
+(`hidden` darf nicht von `.badge--boom` überstimmt werden), Fokus-Rückgabe auch beim Klick auf den
+Hintergrund (Schliessen auf `click` bzw. Fokus nach dem Pointer-Ablauf setzen), Laden-Button verliert
+den Fokusring nach dem Laden. `style.css` darf dafür geändert werden (UI-Strang besitzt sie, M7-U2). —
+Warum: Desktop-first mit 1280×800 (R78) verlangt Platz für die Insel; das Log ist Nebeninformation.
+— Kosten bei Irrtum: eine Layout-Runde.
+
+Entscheider: L0 · Anlass: QA-M6U2
