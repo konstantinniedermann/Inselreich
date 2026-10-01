@@ -439,6 +439,43 @@ was R87 leicht widerspricht.
 **Einschätzung:** Berge und Klippen sind ein Kandidat für M9 oder eine spätere Stimmungsrunde, rein darstellend.
 Die anderen drei Punkte prüft erst der Playtest nach dem Slice bzw. ein neues Gebäude. Kein Paket jetzt.
 
+### 2026-10-01 · `tests/sim/balance.test.ts` (M6-Krisenlauf) · Krisenlauf `mild` knapp
+
+**Beobachtung:** Der Krisenlauf `mild` (Seed 3) endet mit minMoney 13 und Endgeld 40. Ein einziger
+zusätzlicher Brand (z. B. Schule, ≈ −400) kann ihn bei der nächsten Werteänderung rot machen.
+Der Sieg im Lauf `normal` hängt zudem an der Wachenposition (Spiegelplatz vermutlich > 8000).
+**Ursprung:** Kurz-Urteil lead-design zu M6-B2 (R101).
+**Einschätzung:** Kein Design-Risiko für Spieler (Bot hält keinen Puffer), aber Test-Risiko: bei
+jeder Änderung in `src/sim/defs/` zuerst diesen Lauf prüfen.
+
+### 2026-10-01 · `src/sim/`, `tests/sim/`, `src/ui/inspect.ts` · Nachträge Final-Review M6-Sim
+
+**Beobachtung:** (a) `tests/sim/scenario-saves.test.ts:215` führt brennbare Gebäude als feste
+Id-Liste statt über das Flag `flammable`. (b) `src/sim/save.ts:86-87` wiederholt `CrisisKind` und
+`FireOutcome` als Listen. (c) `src/ui/inspect.ts:30-31` zeigt „Brennt" nicht für Dienste und nicht
+für brennende, nicht angebundene Betriebe. (d) `isWellFormed` prüft `tick` nicht als
+nicht-negative Ganzzahl (bestand schon vor M6). (e) Feuerwache ohne Hinweis, dass sie ohne Krisen
+nicht wirkt (Tooltip). (f) Abdeckungsregel der Feuerwache doppelt (`queries.ts` und `isProtected`
+in `crises.ts`), durch AK-S4-02/03 gleich gehalten.
+**Ursprung:** Final-Review lead-qa M6-Sim (R102), Bericht lead-tech M6-SIM.
+**Einschätzung:** (c) und (e) gehören zu M6-U1; (a), (b), (f) beim nächsten Sim-Durchgang; (d) mit
+dem Spielstand-Validierungs-Eintrag zusammen auswerten.
+
+### 2026-10-01 · Plan-Vorlagen (`docs/superpowers/plans/`) · Rot-Erwartung bei fehlendem Export
+
+**Beobachtung:** Pläne erwarten für den roten Testlauf die Meldung „does not provide an export". Vitest
+liefert bei einem fehlenden Export stattdessen einen Laufzeit-`TypeError`.
+**Ursprung:** M6-Sim, Tasks S2, S4 und B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** niedrig; Hinweis für künftige Pläne (Rot-Erwartung „TypeError … is not a function"
+bzw. allgemein „Test rot").
+
+### 2026-10-01 · `tests/sim/scenarios.ts` · Importreihenfolge
+
+**Beobachtung:** Der Import aus `defs/timing` steht vor `defs/tiers` und ist damit nicht alphabetisch.
+**Ursprung:** Review M6-B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** kosmetisch; beim nächsten Eingriff in die Datei mitziehen. M7-R1b fügt dort einen
+Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
@@ -501,3 +538,33 @@ Die anderen drei Punkte prüft erst der Playtest nach dem Slice bzw. ein neues G
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
+
+- 2026-10-01 · Harness · In der Cloud-Session fehlt Subagent-Leads das Agent-Werkzeug (nur Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage). Folge: R108, L0 startet Arbeiter direkt.
+- 2026-10-01 · Tests · `tests/render/terrain.test.ts` AK-R1-08 (I5, Z. 338) läuft unter voller Parallellast von `make check` in den 5-s-Timeout (isoliert grün). Vorschlag: eigener Timeout für diesen Test (Render-Strang, Fix-Kandidat R2/R4). Quelle: Review M7-R5.
+- 2026-10-01 · UI · `protectedCount` (src/ui/inspect.ts, M6-U1 @ 0d52030) rechnet die Abdeckungsgeometrie der Feuerwache in der UI nach (dieselbe Formel wie `isProtected`). Entscheid L0 (Review M6-R2): nicht auf die Render-Maske umstellen (2×2 nur Näherung), sondern auf die Sim-Abfragen `isProtected`/`unprotectedFlammables`; Umsetzung im UI-Strang mit M6-U3. Quelle: Bericht tech-ui-engineer M6-U1.
+- 2026-10-01 · UI/Dev · `favicon.ico` 404 im Vite-Dev-Server erzeugt einen Konsolen-`error` (QA-M6U1).
+- 2026-10-01 · UI · Nach „Laden" läuft der Stand sofort mit 1× weiter statt pausiert; die M6-Spec nimmt für Szenarien Pause an. Prüfen in M6-U2/INT-Check (QA-M6U1, `04-feuerwache-szenario.png`).
+- 2026-10-01 · UI/Sim · Eine brennende Brennerei zeigt weiter „Rum ↑ +2.0" im HUD und „Erzeugt Rum alle 50 Ticks" im Panel; prüfen, ob die Anzeige den Ausfall berücksichtigen muss (QA-M6U1, `08-brennt-1280.png`).
+- 2026-10-01 · Tests · Muster (3× in dieser Session): Zeittests in `tests/render/terrain.test.ts` (AK-R1-06 Z. 218 mit festem 1500-ms-Limit, AK-R1-08 Z. 338/339) flackern unter Volllast von `make check`. L0: Fix im Render-Strang direkt nach R2 (eigener Commit), Gate-Läufe bis dahin einmal wiederholen.
+- 2026-10-01 · Doku (für D1) · `docs/arc42.md:181,428` nennen noch `{ muted, volume }` und das alte `createSound`; `README.md:92` beschreibt die Kopfzeile mit Lautstärke und Tag-Nacht. Nach M7-U1: Busse master/music/ambience/effects, `reduceMotion`, `crisisLevel`, Migration volume→master, HUD nur Stumm + Einstellungen (Review M7-U1).
+- 2026-10-01 · UI · `DevPreview.extinguishedId` (devParams.ts:45) wird geparst, aber nicht verwendet; vorgesehen für den Lösch-Effekt (Kann K1/M6-U3).
+- 2026-10-01 · Studio · Ein Implementierer nutzte `git stash` für einen Rot-Nachweis, während fünf Worktrees parallel liefen (der Stash-Stapel ist allen Worktrees gemeinsam). Ging gut, ist aber riskant. Vorschlag für Briefings: Rot-Nachweis per WIP-Commit oder `git worktree add --detach` am alten SHA, nie bare `git stash` (Retro-Kandidat).
+- 2026-10-01 · UI · Ein Drag zum Pannen, der auf einem Gebäude beginnt, wählt das Gebäude aus (Panel öffnet). Prüfen im INT-Check, ob Auswahl erst beim Loslassen ohne Bewegung erfolgen soll (QA-R2).
+- 2026-10-01 · Doku (für D1) · Spec 5.2/6.5 nennen die Feinschliff-Werte aus R111 nicht (Wellenalpha 0,32, Boost 0,5, Rauch 0,85, Bodenschein). Im Doku-Pass nachtragen. `water.test.ts:245` Schwelle 0,35 aus den Konstanten ableiten (Review 2cace60).
+- 2026-10-01 · Render · Rauch-Puffs zeigen sichtbare Scheibenkanten („gestempelt"), niedrig; Kandidat für die Kann-Welle oder einen Feinschliff nach R4 (QA-R3b).
+- 2026-10-01 · Spec (für D1) · AK-R3-03 Pixelprobe hängt vom Blinktakt ab (an/aus); Formulierung auf „in mindestens einem von N Bildern im Abstand 0,4 s" präzisieren (QA-R3, QA-R3b).
+- 2026-10-01 · Dev · `?feuer=<id>` hängt von der Gebäude-ID des Spielstands ab; QA-Briefings nennen das Gebäude, nicht die ID (QA-R3b).
+- 2026-10-01 · UI (mit M6-U3) · `gameButton` ruft `blur()` bei jedem Klick: Enter auf „Laden" zeigt „Wirklich laden?", der Fokus geht auf body, Bestätigen per Tastatur nur über Shift+Tab (QA-UI-2).
+- 2026-10-01 · UI (mit M6-U3) · Boom-Marke bricht in der Gut-Zelle in die Zeile der Verkaufen-Spalte um; gehört an den Gutnamen (QA-UI-2).
+- 2026-10-01 · UI (INT) · HUD wächst bei aktiver Krisenkarte um ~45 px (174 → 219 px) und verschiebt die Spielfläche (QA-UI-2).
+- 2026-10-01 · UI · Randfall: Druck auf Hintergrund, Loslassen im Dialog schliesst trotzdem (click geht an den gemeinsamen Vorfahren). Selten, Fokus korrekt; mit M6-U3 über pointerup-Ziel lösen (QA-UI-2).
+- 2026-10-01 · Audio (INT) · Musik: In 25 s Testlauf kein Ladeversuch beobachtet (keine Audio-404), Zustand blieb idle/pause; den Rückfall „aus nach 2 Fehlversuchen" im INT-Check mit längerem Lauf belegen (QA-UI-2).
+- 2026-10-01 · Tests (Render, Nachzug) · Review R113: (a) `tests/ui/target.test.ts` und `iso.test.ts` laden `sprites.ts` nicht und testen nur den Hüllenpfad; Test mit geladenem sprites über `targetTile` ergänzen. (b) Kein Test führt `bodyPolygons` für alle SILHOUETTES/Fallbacks aus (Aufzeichnungskontext kennt nur Pfadoperationen; Verläufe würden werfen). (c) Kommentar/Beschreibung zu `hoverPoint` in verdeckung.test.ts präzisieren (`inHull` tol −3 = „3-px-Randzone"). (d) arc42: Picking über Silhouette und Registrierung `setBodyShapes` im Doku-Pass beschreiben.
+- 2026-10-01 · Render (Feinschliff nach R4) · QA-R4: Herdrauch morgens/abends zu schwach gegen die warm getönte Wiese; Möwen über hellem Sand kaum sichtbar (Kontur/Schatten); Fensterschein bei starkem Zoom als Ringe mit Kante erkennbar. L0: kleiner Feinschliff-Commit im Render-Strang vor dem Final-Review.
+- 2026-10-01 · UI (INT) · Roter Punkt und violetter Ring mit weissem Rand an Gebäuden (z. B. Werkzeugmacher, Kapelle) sind im Spiel nicht erklärt; Legende/Tooltip prüfen (QA-R4).
+- 2026-10-01 · Render (niedrig) · `layoutKey` ist ein Gesamtschlüssel; der Weggraph in life.ts baut bei Brand/Anbindungswechsel unnötig neu (separater `roadKey` möglich); `layoutKey` läuft bis zu 5× je Frame (~0,2–0,4 ms), Frame-Memo möglich (Review fix/layoutkey 42d39b7).
+- 2026-10-01 · Studio (Retro-Kandidat) · Eine per SendMessage nachgeschobene Aufgabe, die über das ursprüngliche Briefing hinausging („nur Tests" → Produktcode), wurde vom Permission-Classifier blockiert; der Implementierer hatte zudem per Python-Skript statt Edit/Write geändert. Lehre: Umfangserweiterungen als neues Briefing an einen neuen Arbeiter, nicht als Nachtrag; Briefings nennen Edit/Write ausdrücklich.
+- 2026-10-01 · Doku (für D1) · M6-U3: Kann-Posten D3 „Gelöscht" (extinguished) nicht verdrahtet — Streichung im Doku-Pass festhalten; Spec-Notiz zur Panelzeile „Erzeugt X nicht — Betrieb brennt" (R115); Stimmungswetter noch `null` (Kann K3).
+- 2026-10-01 · UI (niedrig) · QA-M6U3: Panel einer brennenden Brennerei zeigt weiter „Verbraucht Zuckerrohr" (Textfrage); nach „Handeln" trägt der erste Knopf „+1" einen Fokusring trotz Mausklick; Boom-Münze kurz nach Boom-Start nicht sichtbar (Einblendphase?).
+- 2026-10-01 · Studio · QA-Baum `ui-qa` wurde während QA-M6U3 von einem Reviewer auf einen neuen Stand umgestellt (R116: QA-Bäume exklusiv, Reviewer nutzen eigene detached Worktrees).
+- 2026-10-01 · Erledigt durch D1 (8ec874b, 4c69776 auf feat/ui-m6m7): arc42/README zu Settings und HUD (Review M7-U1); Doku-Teil der R111-Werte; AK-R3-03-Formulierung; R113 (d) arc42 Picking/setBodyShapes; M6-U3 Doku-Punkte (D3, R115, K3). Offen bleiben: `water.test.ts`-Schwelle (Code, R117) und R113 (a) Test über `targetTile` in tests/ui.

@@ -1,8 +1,9 @@
 import { canPlace, canPlaceRoad } from '../sim/placement';
-import { inBounds, tileAt } from '../sim/world';
-import { TILE, clampCamera, screenToTile, zoomAt } from '../render/camera';
+import { tileAt } from '../sim/world';
+import { clampToMap, zoomAt } from '../render/camera';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
+import { targetTile } from './target';
 
 export type InputAction =
   | { type: 'tile'; x: number; y: number; dragging: boolean }
@@ -53,7 +54,8 @@ export function bindInput(
     pointerId: number;
     /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
     touch: boolean;
-    downTile: { x: number; y: number };
+    /** Zielkachel beim Drücken; `null` ausserhalb der Karte. */
+    downTile: { x: number; y: number } | null;
   } | null = null;
   /** Aktive Finger (nur Touch). Bei zwei Fingern läuft eine Pinch-/Pan-Geste. */
   const touches = new Map<number, { sx: number; sy: number }>();
@@ -64,10 +66,9 @@ export function bindInput(
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
   const clamp = (): void => {
-    clampCamera(
+    clampToMap(
       state.cam,
-      state.world.width * TILE,
-      state.world.height * TILE,
+      { w: state.world.width, h: state.world.height },
       canvas.clientWidth,
       canvas.clientHeight,
     );
@@ -78,12 +79,12 @@ export function bindInput(
       state.hover = null;
       return;
     }
-    const t = screenToTile(state.cam, pointer.sx, pointer.sy);
-    if (!inBounds(state.world, t.x, t.y)) {
+    const tool = state.tool;
+    const t = targetTile(state.world, state.cam, tool, pointer.sx, pointer.sy);
+    if (!t) {
       state.hover = null;
       return;
     }
-    const tool = state.tool;
     let ok = true;
     if (tool.kind === 'build') ok = canPlace(state.world, tool.defId, t.x, t.y).ok;
     else if (tool.kind === 'road') ok = canPlaceRoad(state.world, t.x, t.y).ok;
@@ -95,8 +96,8 @@ export function bindInput(
   };
 
   const tileAction = (sx: number, sy: number, dragging: boolean): void => {
-    const t = screenToTile(state.cam, sx, sy);
-    if (!inBounds(state.world, t.x, t.y)) return;
+    const t = targetTile(state.world, state.cam, state.tool, sx, sy);
+    if (!t) return;
     onAction({ type: 'tile', x: t.x, y: t.y, dragging });
   };
 
@@ -161,12 +162,12 @@ export function bindInput(
       road: !wantsPan && state.tool.kind === 'road',
       pointerId: e.pointerId,
       touch: isTouch,
-      downTile: screenToTile(state.cam, p.sx, p.sy),
+      downTile: targetTile(state.world, state.cam, state.tool, p.sx, p.sy),
     };
     if (wantsPan) return;
     if (drag.road && !isTouch) {
       // Maus: erste Weg-Kachel sofort; Touch wartet auf Ziehen oder Loslassen (Zwei-Finger-Geste baut nichts)
-      drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
+      drag.lastTile = drag.downTile ? `${drag.downTile.x},${drag.downTile.y}` : null;
       tileAction(p.sx, p.sy, false);
       pointer = p;
       updateHover();
@@ -192,10 +193,8 @@ export function bindInput(
             g.dist / gesture.dist,
             g.mx,
             g.my,
-            canvas.clientWidth,
-            canvas.clientHeight,
-            state.world.width * TILE,
-            state.world.height * TILE,
+            { w: canvas.clientWidth, h: canvas.clientHeight },
+            { w: state.world.width, h: state.world.height },
           );
           clamp();
         }
@@ -215,7 +214,7 @@ export function bindInput(
         state.cam.y -= (p.sy - drag.lastY) / state.cam.zoom;
         clamp();
       } else if (drag.road) {
-        if (drag.touch && drag.lastTile === null) {
+        if (drag.touch && drag.lastTile === null && drag.downTile) {
           // Touch: erst über der Zieh-Schwelle beginnt die Serie auf der Drück-Kachel
           if (Math.hypot(p.sx - drag.startX, p.sy - drag.startY) <= DRAG_THRESHOLD) {
             drag.lastX = p.sx;
@@ -226,9 +225,12 @@ export function bindInput(
           drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
           tileAction(drag.startX, drag.startY, false);
         }
-        const t = screenToTile(state.cam, p.sx, p.sy);
-        const key = `${t.x},${t.y}`;
-        if (key !== drag.lastTile) {
+        // Weg-Zug immer über die Bodenkachel; ausserhalb der Karte ignorieren
+        const t = targetTile(state.world, state.cam, state.tool, p.sx, p.sy);
+        const key = t ? `${t.x},${t.y}` : null;
+        if (t && key !== drag.lastTile) {
+          // Start ausserhalb der Karte: erste Kachel im Feld selbst setzen
+          if (drag.lastTile === null) onAction({ type: 'tile', x: t.x, y: t.y, dragging: true });
           const from = drag.lastTile?.split(',').map(Number) ?? [t.x, t.y];
           let cx = from[0] ?? t.x;
           let cy = from[1] ?? t.y;
@@ -259,11 +261,11 @@ export function bindInput(
     if (d.panning || d.button !== 0) return;
     if (d.road) {
       // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
-      if (d.touch && d.lastTile === null) {
+      if (d.touch && d.lastTile === null && d.downTile) {
         onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
       }
       onAction({ type: 'dragEnd' });
-    } else if (d.touch) {
+    } else if (d.touch && d.downTile) {
       // Touch: Aktion beim Loslassen, aber auf der Drück-Kachel
       onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
     }
@@ -292,10 +294,8 @@ export function bindInput(
       e.deltaY < 0 ? 1.1 : 1 / 1.1,
       p.sx,
       p.sy,
-      canvas.clientWidth,
-      canvas.clientHeight,
-      state.world.width * TILE,
-      state.world.height * TILE,
+      { w: canvas.clientWidth, h: canvas.clientHeight },
+      { w: state.world.width, h: state.world.height },
     );
     updateHover();
   };

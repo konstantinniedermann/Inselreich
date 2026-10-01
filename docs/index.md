@@ -44,7 +44,7 @@ Lokal, nicht Teil des Spiels.
 - [ADR-009 Studio-Autonomie, Verfassung und Selbstverbesserung](adr/ADR-009-studio-autonomie-und-lernen.md)
 - [ADR-010 Zufall je Periode aus dem Seed statt RNG-Strom im Save](adr/ADR-010-zufall-je-periode.md)
 - [ADR-011 Asset-Pipeline](adr/ADR-011-asset-pipeline.md) — vorgeschlagen
-- [ADR-012 Isometrische Darstellung](adr/ADR-012-isometrische-darstellung.md) — vorgeschlagen, ersetzt ADR-003
+- [ADR-012 Isometrische Darstellung](adr/ADR-012-isometrische-darstellung.md) — akzeptiert, ersetzt ADR-003
 
 ## Specs
 

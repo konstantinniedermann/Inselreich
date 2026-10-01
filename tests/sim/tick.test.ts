@@ -115,3 +115,19 @@ describe('step order: Markt und Aufträge', () => {
     expect(w.sellPct.wood).toBe(51);
   });
 });
+
+describe('M6 step: Krisen', () => {
+  it('AK-S1-13 Krisen laufen nach dem Sieg weiter, won bleibt true', () => {
+    const world = createWorld(3, { crisisLevel: 'normal' });
+    world.won = true;
+    const at = new Map<number, unknown>();
+    while (world.tick < 3600) {
+      step(world);
+      if ([2400, 3000, 3600].includes(world.tick)) at.set(world.tick, { ...world.crisis });
+    }
+    expect(at.get(2400)).toMatchObject({ kind: 'storm', period: 0 });
+    expect(at.get(3000)).toMatchObject({ kind: 'fire', period: 1, outcome: 'miss' });
+    expect(at.get(3600)).toMatchObject({ kind: 'storm', period: 2 });
+    expect(world.won).toBe(true);
+  });
+});

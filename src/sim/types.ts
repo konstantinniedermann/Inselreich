@@ -13,7 +13,8 @@ export type BuildingDefId =
   | 'distillery'
   | 'chapel'
   | 'school'
-  | 'toolmaker';
+  | 'toolmaker'
+  | 'firestation';
 export type ServiceId = 'faith' | 'school';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -41,6 +42,12 @@ export interface BuildingDef {
   service?: ServiceId;
   serviceRadius?: number;
   supplyRadius?: number;
+  /** Kann bei einem Brand getroffen werden (M6). */
+  flammable?: boolean;
+  /** Produziert im Sturm nur halb so schnell (M6). */
+  stormAffected?: boolean;
+  /** Schützt Gebäude im Radius vor Brand (M6). */
+  fireProtection?: boolean;
   site: SiteRule[];
 }
 export interface OrderDef {
@@ -66,7 +73,7 @@ export interface TierDef {
   tax: number; // Steuer je Einwohner pro 100 Ticks
   upgradeCost: Cost | null; // Kosten für Aufstieg auf tier+1
 }
-export type BuildingState = 'ok' | 'waitingInput' | 'storageFull' | 'notConnected';
+export type BuildingState = 'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning';
 export interface HouseState {
   tier: Tier;
   inhabitants: number;
@@ -84,6 +91,8 @@ export interface Building {
   connected: boolean;
   progress: number;
   state: BuildingState;
+  /** Letzter Ausfall-Tick; nur bei state 'burning'. */
+  outageUntil?: number;
   house?: HouseState;
 }
 export interface Tile {
@@ -109,8 +118,33 @@ export interface Order {
   /** Letzter Tick, an dem geliefert werden kann. */
   due: number;
 }
+export type CrisisLevel = 'off' | 'mild' | 'normal';
+export interface CrisisLevelDef {
+  /** Anzeige: aus | mild | normal */
+  name: string;
+  /** Ticks je Periode; null = keine Krisen. */
+  period: number | null;
+}
+export type CrisisKind = 'fire' | 'storm' | 'boom';
+export type FireOutcome = 'burning' | 'extinguished' | 'miss';
+export interface Crisis {
+  period: number;
+  kind: CrisisKind;
+  /** Erster Tick mit Wirkung. */
+  from: number;
+  /** Letzter Tick mit Wirkung; am Ende dieses Schritts entfernt. */
+  until: number;
+  /** Nur boom. */
+  good?: GoodId;
+  /** Nur fire; fehlt ohne brennbares Gebäude. */
+  tile?: { x: number; y: number };
+  /** Nur fire; fehlt bei 'miss'. */
+  target?: number;
+  /** Nur fire. */
+  outcome?: FireOutcome;
+}
 export interface World {
-  version: 2;
+  version: 3;
   seed: number;
   width: number;
   height: number;
@@ -127,6 +161,8 @@ export interface World {
   taxLockedUntil: number;
   sellPct: Record<GoodId, number>;
   order: Order | null;
+  crisisLevel: CrisisLevel;
+  crisis: Crisis | null;
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

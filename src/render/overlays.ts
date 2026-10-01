@@ -7,8 +7,11 @@ import {
   type CoverageKind,
   type Diagnosis,
 } from '../sim/queries';
-import type { BuildingDefId, GoodId, World } from '../sim/types';
-import { TILE, tileToScreen, type Camera } from './camera';
+import type { Building, BuildingDefId, GoodId, World } from '../sim/types';
+import { tileCorners, tileToScreen, worldToScreen, type Camera } from './camera';
+import { ISO_H, project, radiusEllipse, spriteBounds } from './iso';
+import { PALETTE } from './palette';
+import { EDGE } from './sprites';
 
 // --- Darstellungswerte ---
 export const SYMBOL_MIN_ZOOM = 0.75; // darunter keine Bedarfssymbole
@@ -141,16 +144,19 @@ export function drawPlacementOverlay(
 ): void {
   const plan = overlayPlan(world, defId, hx, hy);
   if (!plan) return;
-  const s = TILE * cam.zoom;
-  const o = tileToScreen(cam, 0, 0);
   ctx.save();
   if (plan.highlight.length) {
-    ctx.fillStyle = HIGHLIGHT_FILL;
+    ctx.beginPath(); // alle Rauten in einem Pfad
     for (const t of plan.highlight) {
-      const p = tileToScreen(cam, t.x, t.y);
-      const q = tileToScreen(cam, t.x + 1, t.y + 1);
-      ctx.fillRect(p.x, p.y, q.x - p.x, q.y - p.y);
+      const [a, b, c, d] = tileCorners(cam, t.x, t.y);
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.lineTo(c.x, c.y);
+      ctx.lineTo(d.x, d.y);
+      ctx.closePath();
     }
+    ctx.fillStyle = HIGHLIGHT_FILL;
+    ctx.fill();
   }
   if (plan.coverage) {
     ctx.beginPath();
@@ -166,8 +172,10 @@ export function drawPlacementOverlay(
     ctx.stroke();
   }
   if (plan.circle) {
+    const c = worldToScreen(cam, project(plan.circle.cx, plan.circle.cy));
+    const { rx, ry } = radiusEllipse(plan.circle.radius);
     ctx.beginPath();
-    ctx.arc(o.x + plan.circle.cx * s, o.y + plan.circle.cy * s, plan.circle.radius * s, 0, 7);
+    ctx.ellipse(c.x, c.y, rx * cam.zoom, ry * cam.zoom, 0, 0, Math.PI * 2);
     ctx.setLineDash([6, 4]);
     ctx.strokeStyle = CIRCLE_COLOR;
     ctx.lineWidth = 1.5;
@@ -191,6 +199,38 @@ export function symbolFor(d: Diagnosis): Symbol {
     : { shape: 'book', color: BOOK_COLOR };
 }
 
+/** Mitte der Oberkante der Bildbox in Bildpunkten: Anker für Bedarfssymbol und roten Punkt. */
+function topAnchor(
+  cam: Camera,
+  def: (typeof BUILDING_DEFS)[BuildingDefId],
+  b: Building,
+): { x: number; y: number } {
+  const box = spriteBounds(def, b);
+  return worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
+}
+
+/** Roter Punkt „nicht angebunden" in der Signalebene: `signalRed` mit dunklem Umriss. */
+export function drawUnconnected(
+  ctx: CanvasRenderingContext2D,
+  world: World,
+  cam: Camera,
+  range: Range,
+): void {
+  const r = ISO_H * cam.zoom * 0.14;
+  for (const b of Object.values(world.buildings)) {
+    if (b.connected || b.defId === 'house' || b.defId === 'kontor') continue;
+    if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
+    const a = topAnchor(cam, BUILDING_DEFS[b.defId], b);
+    ctx.beginPath();
+    ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = PALETTE.signalRed;
+    ctx.fill();
+    ctx.strokeStyle = EDGE;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
 /** Abzeichen über Häusern im Bereich; ausgeblendet bei Zoom < SYMBOL_MIN_ZOOM. */
 export function drawNeedSymbols(
   ctx: CanvasRenderingContext2D,
@@ -199,17 +239,14 @@ export function drawNeedSymbols(
   range: Range,
 ): void {
   if (cam.zoom < SYMBOL_MIN_ZOOM) return;
-  const s = TILE * cam.zoom;
-  const r = s * 0.2;
+  const r = ISO_H * cam.zoom * 0.2;
   for (const b of Object.values(world.buildings)) {
     if (!b.house || b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const diag = houseDiagnosis(world, b);
     const first = diag[0];
     if (!first) continue;
     const sym = symbolFor(first);
-    const p = tileToScreen(cam, b.x, b.y);
-    const cx = p.x + s * 0.78;
-    const cy = p.y + s * 0.22;
+    const { x: cx, y: cy } = topAnchor(cam, BUILDING_DEFS[b.defId], b);
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 7);
     ctx.fillStyle = BADGE_BG;

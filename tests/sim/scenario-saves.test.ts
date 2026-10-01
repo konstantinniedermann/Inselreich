@@ -4,11 +4,12 @@ import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import { deliverOrder } from '../../src/sim/orders';
 import { populationByTier } from '../../src/sim/population';
+import { unprotectedFlammables } from '../../src/sim/queries';
 import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { buildingsOfType, idx } from '../../src/sim/world';
-import { SCENARIOS, writeScenarios } from './scenarios';
+import { SCENARIOS, tickBeforeFirst, writeScenarios } from './scenarios';
 
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
 function load(name: string): World {
@@ -50,8 +51,18 @@ describe('Szenario-Saves', () => {
         'galerie',
         'lager-holz-99',
         'leistung-50',
+        'verdeckung',
         'tag-0',
         'tag-3000',
+        'krise-brand',
+        'krise-brand-geschuetzt',
+        'krise-sturm',
+        'sturm-aktiv',
+        'sturm-klar',
+        'krise-boom',
+        'krise-aus',
+        'feuerwache',
+        'leistung-sturm',
       ].sort(),
     );
   });
@@ -181,7 +192,7 @@ describe('Szenario-Saves', () => {
     expect(houses(w).map((h) => h.house!.tier)).toEqual(before);
   });
 
-  it('AK-S5-02 schreibt je Szenario genau eine Datei, ohne Ordner nichts', () => {
+  it('AK-S5-02 AK-B2-04 schreibt je Szenario genau eine Datei, ohne Ordner nichts', () => {
     const written: string[] = [];
     const fake = (path: string): void => void written.push(path);
     expect(writeScenarios(undefined, fake)).toBe(0);
@@ -192,6 +203,97 @@ describe('Szenario-Saves', () => {
         .map((n) => `out/${n}.json`)
         .sort(),
     );
+  });
+});
+
+describe('M6 Szenarien', () => {
+  it('AK-B2-04 krise-brand: Stufe normal, Tick 2999, eine Brennerei, Zuckerrohr 20, Geld 1000; Brand trifft sie', () => {
+    const w = load('krise-brand');
+    expect(w.crisisLevel).toBe('normal');
+    expect(w.tick).toBe(tickBeforeFirst(w, 'fire'));
+    expect(w.tick).toBe(2999);
+    const flammable = Object.values(w.buildings).filter((b) =>
+      ['distillery', 'fisher', 'lumberjack', 'sheepfarm', 'weaver', 'canefarm'].includes(b.defId),
+    );
+    expect(flammable.map((b) => b.defId)).toEqual(['distillery']);
+    expect(flammable[0]!.connected).toBe(true);
+    expect(w.stock.cane).toBe(20);
+    expect(w.money).toBe(1000);
+    step(w);
+    expect(w.crisis?.kind).toBe('fire');
+    expect(w.crisis?.outcome).toBe('burning');
+    expect(w.crisis?.target).toBe(flammable[0]!.id);
+    // Tick 3000 bucht auch den Unterhalt (UPKEEP_INTERVAL); der Brand selbst kostet 250.
+    expect(w.money + w.stats.upkeep).toBe(750);
+  });
+
+  it('AK-B2-04 krise-brand-geschuetzt: Brand wird gelöscht, Geld bleibt 1000', () => {
+    const w = load('krise-brand-geschuetzt');
+    step(w);
+    expect(w.crisis?.kind).toBe('fire');
+    expect(w.crisis?.outcome).toBe('extinguished');
+    expect(w.money + w.stats.upkeep).toBe(1000); // nur der Unterhalt von Tick 3000, keine Brandkosten
+  });
+
+  it('AK-B2-04 krise-sturm: Tick 2399, Fischer und Holzfäller angebunden, danach Sturm in Warnung', () => {
+    const w = load('krise-sturm');
+    expect(w.tick).toBe(2399);
+    expect(buildingsOfType(w, 'fisher')[0]!.connected).toBe(true);
+    expect(buildingsOfType(w, 'lumberjack')[0]!.connected).toBe(true);
+    step(w);
+    expect(w.crisis?.kind).toBe('storm');
+    expect(w.tick).toBeLessThan(w.crisis!.from);
+  });
+
+  it('AK-B2-04 sturm-aktiv und sturm-klar: gleiche Gebäude und Tick 2700; aktiv mit Sturm, klar ohne Krise', () => {
+    const a = load('sturm-aktiv');
+    const k = load('sturm-klar');
+    expect(a.tick).toBe(2700);
+    expect(k.tick).toBe(2700);
+    expect(a.crisis?.kind).toBe('storm');
+    expect(a.tick).toBeGreaterThanOrEqual(a.crisis!.from);
+    expect(k.crisisLevel).toBe('off');
+    expect(k.crisis).toBeNull();
+    const pos = (w: World): string[] =>
+      Object.values(w.buildings).map((x) => `${x.defId}@${x.x},${x.y}`);
+    expect(pos(k)).toEqual(pos(a));
+  });
+
+  it('AK-B2-04 krise-boom: Tick 4199, keine Häuser, Holz 50, Nahrung 50; danach Boom auf Holz oder Nahrung', () => {
+    const w = load('krise-boom');
+    expect(w.tick).toBe(4199);
+    expect(houses(w)).toHaveLength(0);
+    expect(w.stock.wood).toBe(50);
+    expect(w.stock.food).toBe(50);
+    step(w);
+    expect(w.crisis?.kind).toBe('boom');
+    expect(['wood', 'food']).toContain(w.crisis?.good);
+  });
+
+  it('AK-B2-04 krise-aus: Stufe off, Tick 2390, 600 Schritte ohne Krise', () => {
+    const w = load('krise-aus');
+    expect(w.crisisLevel).toBe('off');
+    expect(w.tick).toBe(2390);
+    for (let i = 0; i < 600; i++) {
+      step(w);
+      expect(w.crisis).toBeNull();
+    }
+  });
+
+  it('AK-B2-04 feuerwache: Stufe normal, Tick 1000, nur die Schäferei ungeschützt, Wache angebunden', () => {
+    const w = load('feuerwache');
+    expect(w.crisisLevel).toBe('normal');
+    expect(w.tick).toBe(1000);
+    expect(unprotectedFlammables(w).map((b) => b.defId)).toEqual(['sheepfarm']);
+    expect(buildingsOfType(w, 'firestation')[0]!.connected).toBe(true);
+  });
+
+  it('AK-B2-04 leistung-sturm: mindestens 51 Gebäude, Tick 2601, Sturm aktiv', () => {
+    const w = load('leistung-sturm');
+    expect(Object.keys(w.buildings).length).toBeGreaterThanOrEqual(51);
+    expect(w.tick).toBe(2601);
+    expect(w.crisis?.kind).toBe('storm');
+    expect(w.tick).toBeGreaterThanOrEqual(w.crisis!.from);
   });
 });
 
