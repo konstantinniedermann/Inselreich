@@ -1,6 +1,8 @@
 import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
+import type { Weather } from './daynight';
+import { CLEAR } from './weather';
 import { coastField, coastValue, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
@@ -164,12 +166,16 @@ function infoFor(world: World): WaterInfo {
 /**
  * Schaumsaum und Wellenstriche auf Wasserkacheln im Bereich x0..x1/y0..y1 (inklusive).
  * Zeichnet im Kachelraum (1 Einheit = 1 Kachel): Aufruf unter der Bodenmatrix (`withGround`).
+ * Sturm (Spec 5.2): Amplitude × (1 + w), Schaumbreite × (1 + 1,5 w), Periode × (1 − 0,4 w); `reduce` halbiert
+ * die Amplitude (Spec 9.2).
  */
 export function drawWaves(
   ctx: CanvasRenderingContext2D,
   world: World,
   range: { x0: number; y0: number; x1: number; y1: number },
   timeMs: number,
+  weather: Weather = CLEAR,
+  reduce = false,
 ): void {
   const info = infoFor(world);
   const { width: w, height: h } = world;
@@ -179,9 +185,16 @@ export function drawWaves(
     y1 = Math.min(h - 1, range.y1);
   if (x1 < x0 || y1 < y0) return;
   ctx.lineCap = 'round';
+  const sw =
+    weather.kind === 'storm' && Number.isFinite(weather.w)
+      ? Math.min(1, Math.max(0, weather.w))
+      : 0;
+  const ampK = (1 + sw) * (reduce ? 0.5 : 1),
+    widthK = 1 + 1.5 * sw,
+    periodK = 1 - 0.4 * sw;
 
   // Schaumsaum: ein Pfad je Frame entlang der Küstenlinie, einmal als weicher Saum und einmal als Kernlinie
-  const phaseT = (2 * Math.PI * timeMs) / FOAM_PERIOD_MS;
+  const phaseT = (2 * Math.PI * timeMs) / (FOAM_PERIOD_MS * periodK);
   const swing = 0.5 + 0.5 * Math.sin(phaseT);
   const alpha = FOAM_ALPHA[0] + (FOAM_ALPHA[1] - FOAM_ALPHA[0]) * swing;
   const core = FOAM_CORE_ALPHA[0] + (FOAM_CORE_ALPHA[1] - FOAM_CORE_ALPHA[0]) * swing;
@@ -206,16 +219,16 @@ export function drawWaves(
       }
     }
   if (any) {
-    ctx.lineWidth = FOAM_SEAM_WIDTH;
+    ctx.lineWidth = FOAM_SEAM_WIDTH * widthK;
     ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(alpha.toFixed(4)));
     ctx.stroke();
-    ctx.lineWidth = FOAM_CORE_WIDTH;
+    ctx.lineWidth = FOAM_CORE_WIDTH * widthK;
     ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(core.toFixed(4)));
     ctx.stroke();
   }
 
   // Wellenstriche: foam mit Deckkraft 0,12, nur im tiefen Wasser
-  const t = (timeMs / WAVE_PERIOD_MS) * Math.PI * 2;
+  const t = (timeMs / (WAVE_PERIOD_MS * periodK)) * Math.PI * 2;
   ctx.lineWidth = WAVE_LINE_WIDTH;
   ctx.beginPath();
   let waves = false;
@@ -224,9 +237,9 @@ export function drawWaves(
       const i = y * w + x;
       if (world.tiles[i]!.terrain !== 'water' || info.depth[i]! < WAVE_MIN_DEPTH) continue;
       const ph = info.phase[i]!;
-      const wy = y + info.lift[i]! + Math.sin(t + ph) * WAVE_AMPLITUDE;
+      const wy = y + info.lift[i]! + Math.sin(t + ph) * WAVE_AMPLITUDE * ampK;
       ctx.moveTo(x + 0.2, wy);
-      ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * Math.cos(t + ph), x + 0.8, wy);
+      ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * ampK * Math.cos(t + ph), x + 0.8, wy);
       waves = true;
     }
   if (waves) {

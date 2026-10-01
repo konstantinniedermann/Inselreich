@@ -1,10 +1,17 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
+import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
-import { PALETTE, SHADOW } from '../../src/render/palette';
+import { PALETTE, SHADOW, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
-import { render, renderStats, waterSides, type Hover } from '../../src/render/renderer';
+import {
+  render,
+  renderStats,
+  waterSides,
+  type Hover,
+  type RenderFx,
+} from '../../src/render/renderer';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
 import { center, createWorld, idx } from '../../src/sim/world';
@@ -425,5 +432,252 @@ describe('Renderer', () => {
     const cam = { x: box.x + box.w + 10, y: box.y - 100, zoom: 1 };
     render(fakeCtx().ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     expect(h.calls.filter((c) => c.kind === 'body')).toHaveLength(0); // gezeichnet wird er nicht
+  });
+
+  describe('M7-R3 Wetter und Krisen-Effekte', () => {
+    const storm = { kind: 'storm' as const, w: 1 };
+    const rainStyle = rgbaOf(PALETTE.foam, 0.25);
+    const first = (world: World) =>
+      sortedObjects(world, []).filter((i) => i.kind === 'building')[0]!.id;
+    const DARK = 'rgba(0,0,0,0.35)';
+    function frame(fx: Partial<RenderFx>, mk?: (w: World) => void, tick = 3000) {
+      const { world, ids } = scene();
+      world.order = order;
+      world.tick = tick;
+      mk?.(world);
+      const cam = camFor(world, 1);
+      const { ctx, log } = fakeCtx();
+      ctx.setTransform(2, 0, 0, 2, 0, 0);
+      render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 900, ...fx });
+      return { world, ids, log, ev: log.events };
+    }
+
+    it('M7-R3 Sturm mit dayNight false: weiter genau ein Multiply mit der Wettertönung', () => {
+      const { ev } = frame({ weather: storm, dayNight: false });
+      const mul = ev.filter((e) => e.op === 'fillRect' && e.composite === 'multiply');
+      expect(mul).toHaveLength(1);
+      expect(renderStats.multiplyFills).toBe(1);
+      expect(mul[0]!.style).toBe(
+        `rgb(${weatherMul(storm)
+          .map((c) => Math.round(c * 255))
+          .join(',')})`,
+      );
+      const day = frame({ weather: storm, dayNight: true });
+      expect(day.ev.filter((e) => e.composite === 'multiply')).toHaveLength(1);
+    });
+
+    it('M7-R3 clear ohne Licht: kein Multiply; Wetter-Klemmen durch pickWeather (w = 7 → 1)', () => {
+      expect(frame({ dayNight: false }).ev.filter((e) => e.composite === 'multiply')).toHaveLength(
+        0,
+      );
+      const wild = frame({ weather: { kind: 'storm', w: 7 }, dayNight: false });
+      const calm = frame({ weather: storm, dayNight: false });
+      expect(wild.ev.filter((e) => e.composite === 'multiply')[0]!.style).toBe(
+        calm.ev.filter((e) => e.composite === 'multiply')[0]!.style,
+      );
+    });
+
+    it('AK-R3-02 Regen: ein Pfad in foam 0,25 im Bildraum, w × CAP_RAIN Schlieren, reduziert 100, nur bei rain/storm', () => {
+      const streaks = (ev: Ev[]) => ev.filter((e) => e.op === 'stroke' && e.style === rainStyle);
+      const full = streaks(frame({ weather: storm, dayNight: false }).ev);
+      expect(full).toHaveLength(1);
+      expect(full[0]!.points).toHaveLength(2 * 350);
+      expect(isBase(full[0]!.matrix) || full[0]!.matrix[0] === 2).toBe(true);
+      const half = streaks(frame({ weather: { kind: 'rain', w: 0.5 } }).ev);
+      expect(half[0]!.points).toHaveLength(2 * 175);
+      const red = streaks(frame({ weather: storm, reduceMotion: true }).ev);
+      expect(red[0]!.points).toHaveLength(2 * 100);
+      expect(streaks(frame({ weather: { kind: 'cloudy', w: 1 } }).ev)).toHaveLength(0);
+      expect(streaks(frame({}).ev)).toHaveLength(0);
+    });
+
+    it('AK-R3-02 Regen liegt nach dem Multiply (Ebene 11) und ist deterministisch', () => {
+      const a = frame({ weather: storm });
+      const b = frame({ weather: storm });
+      const idx = (ev: Ev[]) => ({
+        rain: ev.findIndex((e) => e.op === 'stroke' && e.style === rainStyle),
+        mul: ev.findIndex((e) => e.composite === 'multiply'),
+      });
+      expect(idx(a.ev).rain).toBeGreaterThan(idx(a.ev).mul);
+      expect(a.ev.filter((e) => e.style === rainStyle)[0]!.points).toEqual(
+        b.ev.filter((e) => e.style === rainStyle)[0]!.points,
+      );
+    });
+
+    it('M7-R3 Sturm-Randschatten (Ebene 8) vor dem Multiply, normales source-over', () => {
+      const { ev } = frame({ weather: storm, dayNight: false });
+      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      const edge = ev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.op === 'fillRect' && e.style.startsWith('gradient('));
+      expect(edge).toHaveLength(1);
+      expect(edge[0]!.i).toBeLessThan(mul);
+      expect(edge[0]!.e.composite).toBe('source-over');
+      expect(
+        frame({ weather: { kind: 'rain', w: 1 }, dayNight: false }).ev.filter((e) =>
+          e.style.startsWith('gradient('),
+        ),
+      ).toHaveLength(0);
+    });
+
+    it('M7-R3 Abdunklung: zwischen dem Körper des brennenden Gebäudes und dem nächsten Objekt', () => {
+      const sc = scene();
+      sc.world.order = order;
+      sc.world.tick = 3000;
+      const id = first(sc.world);
+      const { ctx, log } = fakeCtx();
+      ctx.setTransform(2, 0, 0, 2, 0, 0);
+      h.calls.length = 0;
+      render(ctx, sc.world, camFor(sc.world, 1), layer, null, null, VIEW, {
+        timeMs: 900,
+        fire: [{ id, flames: 1, smoke: 1 }],
+      });
+      const bodies = h.calls.filter((c) => c.kind === 'body');
+      const burning = bodies[0]!,
+        next = bodies[1]!;
+      expect(burning.id).toBe(id);
+      const dark = log.events
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.op === 'fill' && e.style === DARK);
+      expect(dark).toHaveLength(1);
+      expect(dark[0]!.i).toBeGreaterThan(burning.at);
+      expect(dark[0]!.i).toBeLessThan(next.at);
+    });
+
+    it('M7-R3 Abdunklung nur bei flames > 0; unbekannte Id wird übersprungen', () => {
+      const dim = (fire: { id: number; flames: number; smoke: number }[]) =>
+        frame({ fire }, undefined).ev.filter((e) => e.style === DARK).length;
+      const { world } = scene();
+      const id = first(world);
+      expect(dim([{ id, flames: 0, smoke: 1 }])).toBe(0);
+      expect(dim([{ id, flames: 0.5, smoke: 0 }])).toBe(1);
+      expect(() => dim([{ id: 99999, flames: 1, smoke: 1 }])).not.toThrow();
+      expect(dim([{ id: 99999, flames: 1, smoke: 1 }])).toBe(0);
+    });
+
+    it('ISO §5 Feuer in der Luft (Ebene 7): nach dem letzten Körper, vor der Tönung; Glühen additiv, höchstens ein Block', () => {
+      const sc = scene();
+      const id = first(sc.world);
+      const { ev, log } = frame(
+        {
+          dayNight: true,
+          fire: [
+            { id, flames: 1, smoke: 1 },
+            { id: 99999, flames: 1, smoke: 1 },
+          ],
+        },
+        undefined,
+        3000,
+      );
+      const grad = ev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.op === 'fill' && e.style.startsWith('gradient('));
+      expect(grad).toHaveLength(1); // Flammen des einen bekannten Gebäudes
+      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      const lastBody = h.calls.filter((c) => c.kind === 'body').pop()!;
+      expect(grad[0]!.i).toBeGreaterThan(lastBody.at);
+      expect(grad[0]!.i).toBeLessThan(mul);
+      expect(log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
+      const add = ev.findIndex((e) => e.composite === 'lighter');
+      expect(add).toBeGreaterThan(mul);
+      expect(ev.filter((e) => e.composite === 'lighter').every((e) => e.op === 'fillRect')).toBe(
+        true,
+      );
+    });
+
+    it('M7-R3 ohne Feuer kein additiver Durchgang; mit flames = 0 (Nachlauf) auch keiner', () => {
+      expect(frame({}).log.compositeSet).not.toContain('lighter');
+      const { world } = scene();
+      const id = first(world);
+      expect(frame({ fire: [{ id, flames: 0, smoke: 1 }] }).log.compositeSet).not.toContain(
+        'lighter',
+      );
+    });
+
+    it('AK-R3-03 Warnring und Boom-Münze in den Signalen: nach dem Multiply, ungetönt, im Bildraum', () => {
+      const sc = scene();
+      const id = first(sc.world);
+      const { ev, world } = frame({
+        fire: [{ id, flames: 1, smoke: 1 }],
+        boom: true,
+        weather: storm,
+        timeMs: 100, // Plateau: volle Deckkraft
+      });
+      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      const ring = ev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.op === 'strokeRect' && e.style === PALETTE.signalWarn);
+      expect(ring).toHaveLength(1);
+      expect(ring[0]!.i).toBeGreaterThan(mul);
+      expect(ring[0]!.e.composite).toBe('source-over');
+      expect(ring[0]!.e.alpha).toBe(1);
+      expect(ring[0]!.e.matrix).toEqual([2, 0, 0, 2, 0, 0]);
+      const coin = ev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.op === 'fill' && e.style === PALETTE.roofThatch);
+      expect(coin.length).toBeGreaterThan(0);
+      expect(coin[coin.length - 1]!.i).toBeGreaterThan(mul);
+      // Münze über dem Kontor: Bildbox-Mitte x
+      const k = world.buildings[world.kontorId]!;
+      const box = spriteBounds(BUILDING_DEFS.kontor, k);
+      const cam = camFor(world, 1);
+      const cx = (box.x + box.w / 2 - cam.x) * cam.zoom;
+      const pts = coin[coin.length - 1]!.e.points;
+      expect(Math.abs(pts.reduce((a, p) => a + p.x, 0) / pts.length - cx * 2)).toBeLessThan(40);
+    });
+
+    it('M7-R3 Warnring nur bei flames > 0; ohne boom keine Münze', () => {
+      const { world } = scene();
+      const id = first(world);
+      const rings = (fx: Partial<RenderFx>) =>
+        frame(fx).ev.filter((e) => e.op === 'strokeRect' && e.style === PALETTE.signalWarn).length;
+      expect(rings({ fire: [{ id, flames: 0, smoke: 1 }] })).toBe(0);
+      expect(rings({ fire: [{ id, flames: 0.2, smoke: 0 }] })).toBe(1);
+      expect(frame({}).ev.some((e) => e.style === PALETTE.roofThatch && e.op === 'fill')).toBe(
+        false,
+      );
+    });
+
+    it('RF-7 mit Sturm, Feuer, Boom, reduceMotion: save/restore ausgeglichen, Matrix wie vorher (Zoom 0,5 und 2)', () => {
+      for (const zoom of [0.5, 2])
+        for (const reduceMotion of [true, false]) {
+          const { world } = scene();
+          world.order = order;
+          world.tick = 3000;
+          const cam = camFor(world, zoom);
+          const { ctx, log } = fakeCtx();
+          ctx.setTransform(2, 0, 0, 2, 0, 0);
+          render(ctx, world, cam, layer, null, null, VIEW, {
+            timeMs: 777,
+            dayNight: true,
+            weather: storm,
+            fire: [{ id: first(world), flames: 1, smoke: 1 }],
+            boom: true,
+            reduceMotion,
+          });
+          expect(log.saves).toBe(log.restores);
+          expect(log.underflow).toBe(0);
+          expect(log.matrix).toEqual(BASE(2));
+        }
+    });
+
+    it('M7-R3 Signalfarben kommen in Wetter und Feuer nicht vor (ausser dem Warnring)', () => {
+      const { world } = scene();
+      const { ev } = frame({
+        weather: storm,
+        fire: [{ id: first(world), flames: 1, smoke: 1 }],
+        dayNight: true,
+      });
+      const names: string[] = [
+        PALETTE.signalRed,
+        PALETTE.signalYellow,
+        PALETTE.signalOk,
+        PALETTE.signalWarn,
+      ];
+      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      expect(mul).toBeGreaterThan(0);
+      // vor der Tönung (Terrain, Gebäude, Leben, Wetter) keine Signalfarbe; danach nur Signale
+      expect(ev.slice(0, mul).filter((e) => names.includes(e.style.toLowerCase()))).toHaveLength(0);
+    });
   });
 });
