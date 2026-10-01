@@ -43,3 +43,13 @@ schliesst den Eintrag.
 - Blockiert: nichts
 - Von: studio-director
 - Antwort: bestätigt mit zwei Änderungen: (1) §3/§5 — neue Abhängigkeiten darf L0 selbst schaffen, wenn er die Entscheidung tragen kann und keine Alternative Sinn macht; (2) neue Regel: möglichst hoch parallelisieren und delegieren, Effizienz ist oberstes Credo des Projektleiters
+
+## N-90 · offen · 2026-10-01 · Asset-Quellen im Netzwerk freigeben (Q-X1A-NETZ)
+
+- Frage: Die Netzwerk-Policy der Cloud-Umgebung sperrt freesound.org, cdn.freesound.org, opengameart.org, fonts.google.com und archive.org. Ohne Zugriff kann X1a (Musik, Umgebungsklänge, Schrift) nicht neu erstellt werden. Hosts freigeben oder Originaldateien bereitstellen?
+- Empfehlung: In den Umgebungseinstellungen (Umgebungsmenü in der Titelleiste, Edit, Network access) diese Hosts zu den erlaubten Domains hinzufügen.
+- Begründung: Lizenzurteil und Dateien aus dem alten Container verloren (R107).
+- Kosten des Wartens: Ton bleibt bei prozeduralen Rückfällen, Schrift bei Georgia; übrige M7-Pakete laufen weiter.
+- Blockiert: M7-X1a, X1b, Musik in A3
+- Von: lead-art
+- Antwort: –
