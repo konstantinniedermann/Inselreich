@@ -379,10 +379,10 @@ Insgesamt kommen auf die bestehenden Render-Tasks etwa +25 % dazu, plus R0-ISO (
 | 2.3 Tür für fremde Grafik                                       | Kachelmassstab 32 px                                              | Rautenmassstab 64 × 32 (D-21)                                                                                          |
 | 3 Nicht in M7                                                   | „Keine Isometrie (ADR-003 bleibt)"                                | Isometrie nach diesem Nachtrag; ADR-003 ist ersetzt durch ADR-012                                                      |
 | 4.3.1 Ebenenreihenfolge                                         | 10 Ebenen, Schatten mit Gebäuden                                  | 12 Ebenen nach Abschnitt 5                                                                                             |
-| 4.4 I1 (Küste)                                                  | Übergang nicht auf der Kachelgrenze                               | nicht auf der Rautenkante, Fassung AK-ISO-18                                                                           |
-| 4.4 I2 (Wasser)                                                 | Farbproben nach `s` je Kachel                                     | Farbproben an Rautenmitten bzw. im projizierten Schaumstreifen, Fassung AK-ISO-18                                      |
+| 4.4 I1 (Küste)                                                  | Übergang nicht auf der Kachelgrenze                               | nicht auf der Rautenkante, Fassung AK-ISO-18; gemessen nach Ersatzmass D-M7-I1 (R104)                                  |
+| 4.4 I2 (Wasser)                                                 | Farbproben nach `s` je Kachel                                     | Farbproben an Rautenmitten bzw. im projizierten Schaumstreifen, Fassung AK-ISO-18; Schaumkern D-M7-FOAM (R104)         |
 | 4.4 I3 (Schatten)                                               | Streifen rechts unterhalb                                         | gilt im Bild unverändert (Schatten nach rechts unten, D-11)                                                            |
-| 4.4 I5 (Wald)                                                   | ≥ 3 Kronen je Waldkachel                                          | ≥ 3 aufrechte Kronen je Waldkachel (Stempel, D-08)                                                                     |
+| 4.4 I5 (Wald)                                                   | ≥ 3 Kronen je Waldkachel                                          | ≥ 3 aufrechte Kronen je Waldkachel (Stempel, D-08); Waldrand-Ecke ohne Kronenpixel, Fassung AK-ISO-18 (R104)           |
 | 5.1 Wald, Relief                                                | Kronen in der Terrain-Ebene; Licht links oben im Kachelraum       | Kronen als Stempel (Abschnitt 6); Lichtvektor `(−3, −1)` im Kachelraum                                                 |
 | 5.2, 5.4                                                        | Kachelraum                                                        | Kachelraum unter der Bodenmatrix (D-06)                                                                                |
 | 5.5 Bildsprache                                                 | top-down mit angedeuteter Front, nach Unterkante sortiert         | Körper aus `isoBox`, nach `depthKey` sortiert (7.1, D-09)                                                              |
@@ -569,6 +569,26 @@ Zoomstufen sind immer 0,5 · 0,75 · 1 · 1,1 · 1,33 · 1,7 · 2. Die Kameraver
       mit `−s ≥ 6` farbnah zu `waterDeep`. An ≥ 8 von 10 Küsten-Wasserkacheln gibt es Pixel farbnah zu `foam` im
       projizierten Streifen `−s < 0,15`.
     - I3 und I5 wie in AK-ISO-13 bzw. Abschnitt 13, I7 unverändert.
+  - **Messauslegungen (R104, übernommen nach R106 Punkt 3).** Sie gehen dem Wortlaut oben und M7-Spec 4.4 vor:
+    - **I1, Ersatzmass (D-M7-I1):** Der Wortlaut „≥ 8 von 10 Küstenkacheln ≥ 2 px neben der Rautenkante" widerspricht
+      der ¼-Regel (M7-Spec 4.3.5, AK-R1-02): An geraden Küstenkanten muss der Übergang nahe der Kante bleiben. AK-R1-02
+      hat Vorrang. Gemessen wird stattdessen im Feld `terrainAt` über die Seeds 3, 1, 42 und 12588: (a) an konvexen
+      Küstenecken (Wasser an zwei Seiten und der Diagonale, Land dahinter) ist der Median des Eckenschnitts entlang der
+      Diagonale ≥ 0,19 Kachel; (b) an geraden Küstenkanten (Dreierlauf) ist der Median der Welligkeit (Spanne der
+      Übergangslage entlang der Kante, in Bildpixeln bei Zoom 1 über `project`) ≥ 2 px. Je Mass > 20 Proben. Die Quote
+      nach dem alten Wortlaut wird nur ausgegeben, nicht geprüft. Test: `tests/render/terrainField.test.ts`
+      („AK-R1-08 I1"). Die Grasflächen-Regel (≥ 3 Farbwerte mit ΔE ≥ 3) bleibt.
+    - **I2, Schaumkern (D-M7-FOAM):** „Pixel farbnah zu `foam`" erfüllt die Kernlinie des Schaumsaums: Deckkraft
+      0,85–1 (`FOAM_CORE_ALPHA`), Breite 0,07 Kachel (unter der Bodenmatrix ≥ 1,5 px in jeder Richtung bei Zoom 1).
+      Über Flachwasser liegt sie bei ΔE2000 ≤ 10 zu `foam`. Der weiche Saum (Deckkraft 0,35–0,7) muss nicht farbnah
+      sein. Test: `tests/render/water.test.ts` („AK-ISO-18 I2 Schaumkern").
+    - **I5, Waldrand-Ecke ohne Kronenpixel:** „Ecke einer Waldkachel am Waldrand" ist die Ecke einer Waldkachel,
+      deren Nachbarn links, oben und diagonal kein Wald sind, gemessen am 3 × 3-Mittel in der Terrain-Textur, also
+      ohne Baumstempel (Kronen sind Stempel, D-08). Höchstens 10 % dieser Ecken dürfen farbnah zu `#3d7a3a` sein
+      (dunkle Grasflecken; `grassDark` liegt selbst bei ΔE ≈ 8 am alten Waldgrund), nie der Waldboden selbst. In der
+      Textur liegen keine `crownLight`-Pixel. Die Kronen prüft der Stempel: jede Variante zeigt bei Zoom 1 ≥ 3
+      getrennte `crownLight`-Kappen von je ≥ 4 px. Tests: `tests/render/terrain.test.ts` und
+      `tests/render/trees.test.ts` („AK-R1-08 I5").
   - Das Urteil fällt L0 nach der QA (R93). Die Bilder gehen dem Nutzer direkt zu, mit dem Hinweis, dass dies das
     erste isometrische Bild ist.
 
