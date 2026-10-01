@@ -10,8 +10,9 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 - Projekt: **Inselreich**. M1–M5 live. Nutzerauftrag nach M5-Playtest „mehr Tiefe, bessere
   Grafik, Ambiente, Musik — die Stimmung muss rüberkommen" (R73) läuft als Programm:
-  - **M6 „Krisen und Stadtdienste"** — Spec + Plan auf main; **M6-Sim-Umsetzung läuft** (lead-tech,
-    Budget 16/2 + lead-qa 1 Final-Review); Merge nach Gate Merge L0 direkt auf main (R82a).
+  - **M6 „Krisen und Stadtdienste"** — Spec + Plan auf main; M6-Sim umgesetzt, alle 6 Pakete Review OK,
+    Stand `feat/m6-balance` @ e2c84b0 (Baseline R101: off 6050, normal 7050, mild 6250); **Final-Review
+    lead-qa läuft**; danach Gate Merge L0, Merge-Reihenfolge m6-sim → m6-sim-queries → m6-balance (R82a).
   - **M7 „Stimmung" inkl. Isometrie** (R91–R98) — Spec + ISO-Nachtrag + Plan auf main (af0f6f6),
     Gate Spec/Plan bestanden, Budget 80 (lead-art 49/4, lead-tech 29/2, lead-qa 2/1), Freigabe je
     Welle. Welle 0 erledigt (Docs-Merge, gepusht). **Welle 1 erledigt**: R0-ISO @ 7039ddd (R100; auf main als 63d0f11, gepusht,
