@@ -1057,3 +1057,13 @@ bleiben; (2) Autonomie-Regel, der Nutzer sieht das Ergebnis trotzdem vor dem Gro
 durch den Nutzer bis zu einem bereits gestarteten Render-Task verworfen.
 
 Entscheider: L0 · Anlass: Gate Spec M7-ISO, lead-qa
+
+## R94 · 2026-10-01 · M7-ISO
+
+Ruling: R92 Punkt 1 wird erweitert — R0-ISO darf in `src/ui/app.ts` zusätzlich eine Zeile im
+Dev-Zweig ergänzen, die `?raster=1` als `RenderFx.raster` setzt. — Warum: Raster wird für
+AK-ISO-13/-20, AK-R1-09 und I1 schon im Slice gebraucht, die Dev-Parameter kommen sonst erst mit
+M7-U1; eine Zeile ist die kleinste Lösung. — Kosten bei Irrtum: ein Merge-Konflikt von einer Zeile
+mit M7-U1.
+
+Entscheider: L0 · Anlass: Nacharbeit lead-art Gate Spec M7-ISO
