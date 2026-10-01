@@ -335,6 +335,31 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(dark).toBeGreaterThan(0);
   });
 
+  it('AK-R1-08 I5 ≥ 90 % der Felskacheln zeigen Pixel farbnah (ΔE ≤ 10) zu rockLight und zu rockDark', () => {
+    for (const seed of [3, 5, 12588]) {
+      const w = seed === 3 ? world3 : createWorld(seed);
+      const p = seed === 3 ? painted : paintAll(w);
+      let rock = 0,
+        both = 0;
+      for (let y = 0; y < w.height; y++)
+        for (let x = 0; x < w.width; x++) {
+          if (terrainOf(w, x, y) !== 'mountain') continue;
+          rock++;
+          let l = 0,
+            d = 0;
+          for (let py = y * TEX; py < (y + 1) * TEX; py++)
+            for (let px = x * TEX; px < (x + 1) * TEX; px++) {
+              const c = p.at(px, py);
+              if (near(c, PALETTE.rockLight)) l++;
+              if (near(c, PALETTE.rockDark)) d++;
+            }
+          if (l > 0 && d > 0) both++;
+        }
+      expect(rock, `Seed ${seed}`).toBeGreaterThan(10);
+      expect(both / rock, `Seed ${seed}: ${both}/${rock}`).toBeGreaterThanOrEqual(0.9);
+    }
+  });
+
   it('AK-R1-03 keine Signalfarbe in der Terrain-Ebene (Stichprobe über die ganze Karte)', () => {
     const labs = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
     for (let py = 0; py < painted.h; py += 13)

@@ -170,7 +170,8 @@ export function buildGrid(
         0.65 * valueNoise(seed + 11, fx * 0.35, fy * 0.35) +
         0.35 * valueNoise(seed + 13, fx * 1.1, fy * 1.1);
       grass[k] = smoothstepClamp((m - 0.5) * 1.8 + 0.5); // Spreizung: das Rauschen liegt eng um 0,5
-      rock[k] = valueNoise(seed + 19, fx * 0.9, fy * 0.9);
+      // Felsrauschen: gespreizt (das Rauschen liegt eng um 0,5) und mit ~1,7 Merkmalen je Kachel, damit jede Felskachel Licht und Schatten zeigt
+      rock[k] = smoothstepClamp((valueNoise(seed + 19, fx * 1.7, fy * 1.7) - 0.5) * 2.4 + 0.5);
       height[k] = smooth[k]! + 2 * ind[mt]![k]! + 0.5 * valueNoise(seed + 17, fx * 0.5, fy * 0.5);
     }
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
@@ -292,8 +293,8 @@ export function paintPixels(
             const n = lerp(rock);
             if (im >= ROCK_EDGE[0] && im < ROCK_EDGE[1])
               mix3(sh >= 0 ? C.rockLight : C.rockDark, sh >= 0 ? C.rockLight : C.rockDark, 0, col);
-            else if (n > 0.56) mix3(C.rock, C.rockLight, smoothstepClamp((n - 0.56) / 0.14), col);
-            else if (n < 0.44) mix3(C.rock, C.rockDark, smoothstepClamp((0.44 - n) / 0.14), col);
+            else if (n > 0.62) mix3(C.rock, C.rockLight, smoothstepClamp((n - 0.62) / 0.2), col);
+            else if (n < 0.38) mix3(C.rock, C.rockDark, smoothstepClamp((0.38 - n) / 0.2), col);
             else mix3(C.rock, C.rock, 0, col);
           }
         }

@@ -34,17 +34,36 @@ const SHADOW_A = 0.5,
   SHADOW_B = 0.3;
 const DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) };
 
-/** 3–5 Kronen je Variante, deterministisch aus `hash2` (ISO §6). */
+/**
+ * Feste Kronenplätze in Kachel-Anteilen (Ecken und Mitte der Raute). Bei Zoom 1 liegen die Plätze mindestens 6 px
+ * auseinander, die Kronen sind klein genug, dass jede Lichtkappe sichtbar bleibt (Spec 5.3, I5).
+ */
+const SLOTS: readonly [number, number][] = [
+  [0.72, 0.3], // rechts
+  [0.3, 0.72], // links
+  [0.3, 0.3], // hinten
+  [0.72, 0.72], // vorn
+  [0.5, 0.5], // Mitte
+];
+
+/** 3–5 Kronen je Variante auf verschiedenen Plätzen, deterministisch aus `hash2` (ISO §6). */
 export function crownsFor(seed: number, variant: number): Crown[] {
   const n = 3 + Math.min(2, Math.floor(hash2(seed + 51, variant, 99) * 3));
+  // Plätze nach Hashwert mischen; die Mitte kommt nur bei fünf Kronen dazu
+  const order = SLOTS.slice(0, 4)
+    .map((slot, i) => ({ slot, k: hash2(seed + 52, variant, i) }))
+    .sort((p, q) => p.k - q.k)
+    .map((e) => e.slot);
+  if (n === 5) order.push(SLOTS[4]!);
   const out: Crown[] = [];
   for (let k = 0; k < n; k++) {
     const rnd = (j: number) => hash2(seed + 51, variant, k * 4 + j);
-    const cx = 0.22 + 0.56 * rnd(0),
-      cy = 0.22 + 0.56 * rnd(1);
-    const r = 0.14 + 0.04 * rnd(2);
+    const [sx, sy] = order[k]!;
+    const cx = sx + (rnd(0) - 0.5) * 0.05,
+      cy = sy + (rnd(1) - 0.5) * 0.05;
+    const r = 0.1 + 0.015 * rnd(2);
     const ground = ((cx + cy - 1) * ISO_H) / 2; // Bild-y des Fusspunkts relativ zur Rautenmitte
-    const h = Math.min((0.3 + 0.25 * rnd(3)) * ISO_H, TREE_H - CROWN_RY * r * ISO_W + ground - 0.5);
+    const h = Math.min((0.28 + 0.1 * rnd(3)) * ISO_H, TREE_H - CROWN_RY * r * ISO_W + ground - 0.5);
     out.push({ cx, cy, r, h });
   }
   return out;

@@ -151,9 +151,9 @@ describe('Wasser (Spec 5.2)', () => {
           }
     }
     expect(n).toBeGreaterThan(500);
-    // 0 = Küste, negativ = Wasser: Linie zwischen Strand und 0,1 Kachel (Gefälle ≈ 2,5 je Kachel) davor
+    // 0 = Küste, negativ = Wasser: Linie zwischen Strand und 0,16 Kachel (Gefälle bis ≈ 3,7 je Kachel) davor
     expect(maxF).toBeLessThanOrEqual(0.05);
-    expect(minF).toBeGreaterThanOrEqual(-0.45);
+    expect(minF).toBeGreaterThanOrEqual(-0.65);
   });
 
   it('Spec 5.2 Schaumlinie liegt nicht systematisch auf Kachelkanten (keine Kantenstücke)', () => {
@@ -200,5 +200,34 @@ describe('Wasser (Spec 5.2)', () => {
       min = Math.min(min, (widths[0]! * det) / md);
     }
     expect(min).toBeGreaterThanOrEqual(1.5);
+  });
+
+  it('Spec 5.2 Schaumlinie wandert: Lage bei t = 0 und t = 1,6 s unterscheidet sich im Median ≥ 3 px (Zoom 1), Periode 3,2 s', () => {
+    const w = createWorld(3);
+    const lineAt = (t: number) => {
+      const { ctx, log } = fakeCtx();
+      drawWaves(ctx, w, ALL(w), t);
+      const e = log.events.find(
+        (q) => q.op === 'stroke' && alphaOf(q.style) >= 0.35 && alphaOf(q.style) !== WAVE_ALPHA,
+      )!;
+      return e.points;
+    };
+    const a = lineAt(0),
+      b = lineAt(FOAM_PERIOD_MS / 2),
+      c = lineAt(FOAM_PERIOD_MS);
+    expect(a.length).toBeGreaterThan(500);
+    expect(b.length).toBe(a.length);
+    // Kachelraum → Bild bei Zoom 1: (x, y) → (32 (x − y), 16 (x + y))
+    const px = a.map((p, i) => {
+      const dx = b[i]!.x - p.x,
+        dy = b[i]!.y - p.y;
+      return Math.hypot(32 * (dx - dy), 16 * (dx + dy));
+    });
+    const median = [...px].sort((p, q) => p - q)[Math.floor(px.length / 2)]!;
+    expect(median).toBeGreaterThanOrEqual(3);
+    for (let i = 0; i < a.length; i += 37) {
+      expect(c[i]!.x).toBeCloseTo(a[i]!.x, 6);
+      expect(c[i]!.y).toBeCloseTo(a[i]!.y, 6);
+    }
   });
 });

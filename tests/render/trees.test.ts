@@ -210,3 +210,104 @@ describe('Baumstempel-Cache', () => {
     expect(dh!).toBeGreaterThan(0);
   });
 });
+
+/** Minimaler Raster-Kontext: save/restore/scale/translate, rect/ellipse, fill – genug, um einen Stempel zu rastern. */
+class RasterCtx {
+  fillStyle = '#000000';
+  private m = { s: 1, tx: 0, ty: 0 };
+  private stack: { s: number; tx: number; ty: number }[] = [];
+  private shape: { kind: 'rect' | 'ell'; a: number[] } | null = null;
+  readonly px: string[];
+  constructor(
+    readonly w: number,
+    readonly h: number,
+  ) {
+    this.px = new Array<string>(w * h).fill('');
+  }
+  save() {
+    this.stack.push({ ...this.m });
+  }
+  restore() {
+    this.m = this.stack.pop()!;
+  }
+  scale(s: number) {
+    this.m.s *= s;
+  }
+  translate(x: number, y: number) {
+    this.m.tx += x * this.m.s;
+    this.m.ty += y * this.m.s;
+  }
+  beginPath() {
+    this.shape = null;
+  }
+  rect(x: number, y: number, w: number, h: number) {
+    this.shape = { kind: 'rect', a: [x, y, w, h] };
+  }
+  ellipse(x: number, y: number, rx: number, ry: number) {
+    this.shape = { kind: 'ell', a: [x, y, rx, ry] };
+  }
+  fill() {
+    const sh = this.shape!;
+    const { s, tx, ty } = this.m;
+    for (let j = 0; j < this.h; j++)
+      for (let i = 0; i < this.w; i++) {
+        const x = (i + 0.5 - tx) / s,
+          y = (j + 0.5 - ty) / s;
+        const [a, b, c, d] = sh.a as [number, number, number, number];
+        const inside =
+          sh.kind === 'rect'
+            ? x >= a && x <= a + c && y >= b && y <= b + d
+            : ((x - a) / c) ** 2 + ((y - b) / d) ** 2 <= 1;
+        if (inside) this.px[j * this.w + i] = this.fillStyle;
+      }
+  }
+}
+
+/** 4-zusammenhängende Komponenten einer Farbe mit mindestens `min` Pixeln. */
+function components(r: RasterCtx, color: string, min: number): number {
+  const seen = new Uint8Array(r.w * r.h);
+  let n = 0;
+  for (let k = 0; k < r.px.length; k++) {
+    if (seen[k] || r.px[k] !== color) continue;
+    let size = 0;
+    const st = [k];
+    seen[k] = 1;
+    while (st.length) {
+      const q = st.pop()!;
+      size++;
+      const x = q % r.w,
+        y = (q / r.w) | 0;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ] as const) {
+        const u = x + dx,
+          v = y + dy;
+        if (u < 0 || v < 0 || u >= r.w || v >= r.h) continue;
+        const p = v * r.w + u;
+        if (!seen[p] && r.px[p] === color) {
+          seen[p] = 1;
+          st.push(p);
+        }
+      }
+    }
+    if (size >= min) n++;
+  }
+  return n;
+}
+
+describe('Baumstempel gerastert', () => {
+  it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte crownLight-Kappen (je ≥ 4 px), für alle Varianten und Seeds', () => {
+    for (const seed of [3, 11, 12588, 94108])
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        const r = new RasterCtx(ISO_W, Math.ceil(TREE_H + ISO_H / 2));
+        paintStamp(r as unknown as CanvasRenderingContext2D, seed, v, 1);
+        expect(
+          components(r, PALETTE.crownLight, 4),
+          `Seed ${seed} Variante ${v}`,
+        ).toBeGreaterThanOrEqual(3);
+      }
+  });
+});
