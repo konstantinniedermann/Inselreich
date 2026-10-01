@@ -10,6 +10,7 @@ import {
   pickBuilding,
   project,
   radiusEllipse,
+  pointBounds,
   sortedObjects,
   spriteBounds,
   unproject,
@@ -68,7 +69,7 @@ describe('Projektion', () => {
     }
     expect(project(1, 0)).toEqual({ x: ISO_W / 2, y: ISO_H / 2 });
   });
-  it('AK-ISO-03 zoomStep rastert auf die kleinste Stufe ≥ z, über 2 bleibt 2', () => {
+  it('ISO §16 zoomStep rastert auf die kleinste Stufe ≥ z, über 2 bleibt 2', () => {
     expect(zoomStep(0.5)).toBe(0.5);
     expect(zoomStep(0.51)).toBe(0.75);
     expect(zoomStep(1.1)).toBe(1.5);
@@ -76,12 +77,21 @@ describe('Projektion', () => {
     expect(zoomStep(3)).toBe(2);
     for (let z = 0.5; z <= 2; z += 0.01) expect(ZOOM_STEPS).toContain(zoomStep(z));
   });
-  it('AK-ISO-21 treeVariant ist deterministisch und liegt in 0 … 7', () => {
+  it('ISO D-13 treeVariant ist deterministisch und liegt in 0 … 7', () => {
     for (let i = 0; i < 200; i++) {
       const v = treeVariant(7, i % 64, (i * 7) % 64);
       expect(v).toBe(treeVariant(7, i % 64, (i * 7) % 64));
       expect(Number.isInteger(v) && v >= 0 && v < 8).toBe(true);
     }
+  });
+});
+
+describe('Bildbox', () => {
+  it('ISO D-12 pointBounds: Box um die Rautenmitte, Breite ISO_W, Höhe height + ISO_H / 2', () => {
+    const c = project(10.5, 20.25);
+    const b = pointBounds(10.5, 20.25, 40);
+    expect(b).toEqual({ x: c.x - ISO_W / 2, y: c.y - 40, w: ISO_W, h: 40 + ISO_H / 2 });
+    expect(b.y + b.h).toBe(c.y + ISO_H / 2);
   });
 });
 
@@ -221,6 +231,45 @@ describe('Picking', () => {
 });
 
 describe('Sortierung und Cache', () => {
+  it('AK-ISO-21 sortedObjects mischt bewegte Objekte ein; Gleichstand: Baum < Gebäude < Schiff < Boot < Figur, dann Id', () => {
+    const world = createWorld(1);
+    const t0 = sortedObjects(world).find((i) => i.kind === 'tree')!;
+    const [tx, ty] = [t0.fp.x, t0.fp.y];
+    // Gebäude mit niedriger Id auf derselben Kachel wie der Baum (Kachel bewusst nicht belegt)
+    world.buildings[2] = mkBuilding(2, 'house', tx, ty);
+    world.nextBuildingId = 3;
+    const at = (kind: 'ship' | 'boat' | 'walker', id: number, dx = 0, dy = 0) => ({
+      kind,
+      id,
+      cx: tx + 0.5 + dx,
+      cy: ty + 0.5 + dy,
+    });
+    const out = sortedObjects(world, [
+      at('walker', 7),
+      at('walker', 3),
+      at('boat', 4),
+      at('ship', 9),
+      at('walker', 50, -3, 0), // kleinerer key: vor allen festen Objekten dieser Kachel
+      at('walker', 51, 3, 0), // grösserer key: dahinter
+    ]);
+    const key = depthKey({ x: tx, y: ty, w: 1, h: 1 });
+    const same = out.filter((i) => i.key === key && i.fp.x === tx);
+    expect(same.map((i) => `${i.kind}${i.id}`)).toEqual([
+      `tree${t0.id}`,
+      'building2',
+      'ship9',
+      'boat4',
+      'walker3',
+      'walker7',
+    ]);
+    const idx = (kind: string, id: number) => out.findIndex((i) => i.kind === kind && i.id === id);
+    expect(idx('walker', 50)).toBeLessThan(idx('tree', t0.id));
+    expect(idx('walker', 51)).toBeGreaterThan(idx('walker', 7));
+    for (let i = 1; i < out.length; i++)
+      expect(out[i]!.key).toBeGreaterThanOrEqual(out[i - 1]!.key);
+    expect(out).toHaveLength(sortedObjects(world).length + 6);
+  });
+
   it('AK-ISO-21 sortedObjects: drei Permutationen der Gebäudeliste → gleiche Reihenfolge', () => {
     const spots: [Parameters<typeof placeBuilding>[1], number, number][] = [
       ['house', 0, 0],
@@ -264,14 +313,14 @@ describe('Sortierung und Cache', () => {
     expect(sortedObjects(world)).toBe(after);
     const b = world.buildings[id]!;
     const px = project(b.x + 0.5, b.y + 0.5).x;
-    const py = project(b.x, b.y).y; // oberste Ecke der vorderen Raute, im Dach beider
-    expect(pickBuilding(buildingHulls(world), px, py)).toBe(id);
+    const overlapY = project(b.x, b.y).y - 8; // im Dach beider Häuser
+    const frontOnlyY = project(b.x + 0.5, b.y + 0.5).y; // unterhalb der hinteren Hülle
+    expect(pickBuilding(buildingHulls(world), px, overlapY)).toBe(id);
+    expect(pickBuilding(buildingHulls(world), px, frontOnlyY)).toBe(id);
     expect(demolish(world, id).ok).toBe(true);
     const gone = sortedObjects(world);
     expect(gone.some((i) => i.kind === 'building' && i.id === id)).toBe(false);
-    const hit = pickBuilding(buildingHulls(world), px, py);
-    expect(hit === null || hit === back).toBe(true);
-    // unterhalb der früheren Raute liegt kein Gebäude mehr
-    expect(pickBuilding(buildingHulls(world), px, py + 30)).toBeNull();
+    expect(pickBuilding(buildingHulls(world), px, overlapY)).toBe(back);
+    expect(pickBuilding(buildingHulls(world), px, frontOnlyY)).toBeNull();
   });
 });
