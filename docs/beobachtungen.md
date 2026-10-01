@@ -305,19 +305,6 @@ Wirkung der Tag-Nacht-Tönung über einen ganzen Tag (10 min bei 1×), Gefühl v
 **Ursprung:** Übergaben Welle 3–5, Spec 14.2.
 **Einschätzung:** Eingabe für den Nutzer-Playtest nach dem Merge von M5, kein Paket.
 
-### 2026-10-01 · `src/render/`, Nachtrag M7-ISO · Iso-Folgethemen ausserhalb von M7
-
-- **Berge und Klippen mit Höhe:** Der Anno-Look kennt sie, M7-ISO hält den Boden flach (D-08), weil die Sim keine
-  Höhen hat. Fels bleibt flach in der Textur.
-- **Durchsichtige Vordergebäude:** Hohe Gebäude verdecken, was dahinter steht. In M7 helfen nur die Höhenhülle und
-  die Signale und Umrisse in der obersten Ebene (AK-ISO-15).
-- **Achssperre beim Weg ziehen:** Ein waagerechter Zug im Bild ergibt eine Treppe aus Kachelschritten (D-15).
-- **Lange Gebäude (`w ≠ h`):** Der Tiefenschlüssel ist nur für Quadrate bewiesen (ADR-012).
-
-**Ursprung:** `lead-art`, Paket M7-ISO, Spec-Nachtrag Abschnitt 15.
-**Einschätzung:** Berge und Klippen sind ein Kandidat für M9 oder eine spätere Stimmungsrunde, rein darstellend.
-Die anderen drei Punkte prüft erst der Playtest nach dem Slice bzw. ein neues Gebäude. Kein Paket jetzt.
-
 ---
 
 ## Ausgewertet 2026-09-30
