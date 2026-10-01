@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { CRISIS_LEVELS, CRISIS_SALT, CRISIS_WEIGHTS } from './defs/crises';
+import { CRISIS_LEVELS, CRISIS_SALT, CRISIS_WEIGHTS, FIRE_HIT_RADIUS } from './defs/crises';
 import {
   BOOM_DURATION,
   CRISIS_FIRST_TICK,
@@ -9,7 +9,8 @@ import {
 } from './defs/timing';
 import { maxHouseTier, orderPool } from './orders';
 import { createRng } from './rng';
-import type { Crisis, CrisisKind, GoodId, Tier, World } from './types';
+import type { Building, Crisis, CrisisKind, GoodId, Tier, World } from './types';
+import { center } from './world';
 
 /** Krisen (Spec M6 4, 10): Ziehung je Periode, Krisenschritt, Brandfolgen. Rein bis auf beginCrisis/tickCrises. */
 
@@ -95,9 +96,55 @@ export function crisisWindow(kind: CrisisKind, start: number): { from: number; u
   }
 }
 
+/** Nächstes brennbares Gebäude mit Chebyshev-Abstand ≤ FIRE_HIT_RADIUS zur Grundfläche; Gleichstand: kleinste Id. */
+export function fireTarget(world: World, tile: { x: number; y: number }): Building | null {
+  let best: Building | null = null;
+  let bestD = Infinity;
+  for (const b of Object.values(world.buildings)) {
+    const def = BUILDING_DEFS[b.defId];
+    if (def.flammable !== true) continue;
+    const dx = Math.max(b.x - tile.x, 0, tile.x - (b.x + def.w - 1));
+    const dy = Math.max(b.y - tile.y, 0, tile.y - (b.y + def.h - 1));
+    const d = Math.max(dx, dy);
+    if (d > FIRE_HIT_RADIUS) continue;
+    if (best === null || d < bestD || (d === bestD && b.id < best.id)) {
+      best = b;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+/** Geschützt: eine angebundene Wache (`fireProtection`) mit Mittenabstand ≤ ihrem `serviceRadius`. */
+export function isProtected(world: World, b: Building): boolean {
+  const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
+  return Object.values(world.buildings).some((s) => {
+    const def = BUILDING_DEFS[s.defId];
+    if (def.fireProtection !== true || !s.connected) return false;
+    const sc = center(def, s.x, s.y);
+    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (def.serviceRadius ?? 0);
+  });
+}
+
+/** Brandfolgen (Spec 5.2–5.4): löschen oder Gebühr (auch ins Minus), Fortschritt 0, Ausfall bis `until`. */
+function ignite(world: World, crisis: Crisis, tile: { x: number; y: number }): void {
+  const target = fireTarget(world, tile);
+  if (target === null) return;
+  crisis.target = target.id;
+  if (isProtected(world, target)) {
+    crisis.outcome = 'extinguished';
+    return;
+  }
+  crisis.outcome = 'burning';
+  world.money -= BUILDING_DEFS[target.defId].cost.money;
+  target.progress = 0;
+  target.state = 'burning';
+  target.outageUntil = crisis.until;
+}
+
 /**
  * Setzt die Krise der Periode `k` mit Start `T = world.tick`. Exportiert, damit Tests und Szenarien eine Krise
- * gezielt auslösen. S1: ein Brand endet immer mit `outcome 'miss'` (Brandfolgen kommen mit S2).
+ * gezielt auslösen.
  */
 export function beginCrisis(world: World, k: number, roll: CrisisRoll): void {
   const crisis: Crisis = { period: k, kind: roll.kind, ...crisisWindow(roll.kind, world.tick) };
@@ -107,6 +154,7 @@ export function beginCrisis(world: World, k: number, roll: CrisisRoll): void {
     if (roll.tile) crisis.tile = { x: roll.tile.x, y: roll.tile.y };
   }
   world.crisis = crisis;
+  if (roll.kind === 'fire' && roll.tile) ignite(world, crisis, roll.tile);
 }
 
 /** Krisenschritt nach den Aufträgen (Spec 10.1): Ausfälle beenden, Krise beenden, Periodenstart. Prüft `won` nicht. */

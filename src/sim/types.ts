@@ -13,7 +13,8 @@ export type BuildingDefId =
   | 'distillery'
   | 'chapel'
   | 'school'
-  | 'toolmaker';
+  | 'toolmaker'
+  | 'firestation';
 export type ServiceId = 'faith' | 'school';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {

@@ -11,6 +11,10 @@ export function tickProduction(world: World): void {
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
     if (!def.produces || def.cycle === undefined) continue;
+    if (b.outageUntil !== undefined) {
+      b.state = 'burning'; // Ausfall hat Vorrang (Spec 10.1)
+      continue;
+    }
     if (!b.connected) {
       b.state = 'notConnected';
       continue;
