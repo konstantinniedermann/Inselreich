@@ -1302,7 +1302,7 @@ Entscheider: L0 · Anlass: Bericht lead-tech (blockiert)
 
 Ruling: X1a pausiert. Die Netzwerk-Policy sperrt freesound.org, opengameart.org, fonts.google.com und
 archive.org; die Lizenz-Handoffs unter `.studio/handoffs/` lagen nur im alten Container (R107).
-Nutzerentscheid Q-X1A-NETZ in der Warteschlange. Bis dahin: A1–A3 laufen mit den prozeduralen Rückfällen
+Nutzerentscheid N-90 in der Warteschlange. Bis dahin: A1–A3 laufen mit den prozeduralen Rückfällen
 der Spec, Schrift mit Fallback-Kette; bei Freigabe neu: Lizenzprüfung (art-license-checker), dann X1a. —
 Warum: keine Umgehung der Policy, keine erfundenen Quellen (ADR-006). — Kosten bei Irrtum: M7 ohne
 Musik-Assets, nachrüstbar.
