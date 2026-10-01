@@ -33,8 +33,9 @@ nicht ändern (ADR-002).
    dem Tiefenschlüssel `2x + w + 2y + h` sortiert, bei Gleichstand nach x, dann nach Id. Schatten liegen in einem
    eigenen Durchgang davor, Signale ungetönt über allem.
 5. **Grafik bleibt prozedural** (ADR-006 erlaubt fremde Grafik, die Tür aus M7-Spec 2.3 bleibt mit Massstab 64 × 32).
-6. **Picking:** Bauen und Wege nutzen die Bodenkachel. Auswählen und Abreissen prüfen zuerst die Sprite-Hülle in
-   umgekehrter Zeichenreihenfolge.
+6. **Picking:** Bauen und Wege nutzen die Bodenkachel. Auswählen und Abreissen prüfen zuerst die exakte Körperhülle
+   der Gebäude (Sechseck aus Footprint-Raute und Höhe) in umgekehrter Zeichenreihenfolge; das Bildrechteck dient
+   nur für Culling und Effekte.
 
 ## Konsequenzen
 
