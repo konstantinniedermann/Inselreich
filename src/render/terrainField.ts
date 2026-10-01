@@ -17,20 +17,22 @@ export interface TerrainFields {
 }
 
 export const MAX_DIST = 16; // Kacheln; tiefer als waterDeep (6) unterscheidet niemand
-export const WARP = 0.12; // Spec 5.1: Verschiebung höchstens ±0,12 Kacheln je Achse
+export const WARP = 0.08; // Verschiebung höchstens ±WARP Kacheln je Achse (Spec 5.1 erlaubt ±0,12)
 /**
- * Rauschfrequenz je Kachel (Darstellungswert). Niedrig gewählt (Plan-Wert 1,3 scheiterte an AK-R1-02): Die
- * Verschiebung wirkt dann über eine Kachel hinweg fast wie eine Translation und kostet höchstens eine Zeile
- * und eine Spalte des 8 × 8-Rasters (≥ 49 von 64). Bei 1,3 wechselte die Wurzelformung das Vorzeichen innerhalb
- * einer Kachel und verschob gegenüberliegende Kanten nach innen.
+ * Rauschfrequenz je Kachel (Darstellungswert). Die Verschiebung ist linear geformt: Eine Wurzelformung sprang an
+ * den Nulldurchgängen und erzeugte Treppen an der Küste; mit linearer Form und Frequenz 1 wellt die Küste sanft.
  */
-const WARP_FREQ = 0.2;
+const WARP_FREQ = 1.0;
 /**
- * Übergangsband je Kante in Kacheln (Plan-Setzung zu Spec 4.3.5): Bis EDGE_BAND vor der Kante zählt nur die eigene
- * Kachel. 0,5 wäre reines Bilinear; das rundet konvexe Ecken bis 0,21 Kachel ab, mit WARP bis 0,33 > ¼ und bei
- * Einzelkacheln nur 61 % Eigenfläche. Mit 0,25 bleibt die Rundung ≤ 0,11 Kachel, zusammen mit WARP ≤ ¼.
+ * Übergangsband der Land-Typen je Kante in Kacheln (Plan-Setzung zu Spec 4.3.5): Bis EDGE_BAND vor der Kante zählt
+ * nur die eigene Kachel; 0,5 wäre reines Bilinear.
  */
 export const EDGE_BAND = 0.25;
+/**
+ * Übergangsband nur für das Küstenfeld: breiter als EDGE_BAND, damit konvexe Küstenecken sichtbar abgeschnitten
+ * werden statt als Kachelecke zu enden. Zusammen mit WARP bleibt jede Kachel zu ≥ 75 % ihres Typs (AK-R1-02).
+ */
+export const COAST_BAND = 0.35;
 
 /** s = +Abstand Land→nächstes Wasser, −Abstand Wasser→nächstes Land (Kacheln, 8er-Breitensuche, gekappt). */
 export function coastField(world: FieldWorld): Field {
@@ -107,18 +109,24 @@ export function sampleField(f: Field, fx: number, fy: number, band = 0.5): numbe
   );
 }
 
-/** Rauschverschiebung ±WARP je Achse; Wurzelformung schiebt Werte nach aussen (sichtbar weiche Küste, I1). */
+/** Rauschverschiebung ±WARP je Achse, linear geformt. */
 export function warp(seed: number, fx: number, fy: number): [number, number] {
   const n = (k: number) => {
     const r = valueNoise(seed + k, fx * WARP_FREQ, fy * WARP_FREQ) * 2 - 1;
-    return Math.sign(r) * Math.sqrt(Math.abs(r)) * WARP;
+    return r * WARP;
   };
   return [fx + n(701), fy + n(709)];
 }
 
+/** Scharfes Küstenfeld nach der Verschiebung: ≤ 0 ist Wasser, 0 die gezeichnete Küste. */
+export function coastValue(f: TerrainFields, fx: number, fy: number): number {
+  const [wx, wy] = warp(f.seed, fx, fy);
+  return sampleField(f.coast, wx, wy, COAST_BAND);
+}
+
 export function terrainAt(f: TerrainFields, fx: number, fy: number): Terrain {
   const [wx, wy] = warp(f.seed, fx, fy);
-  if (sampleField(f.coast, wx, wy, EDGE_BAND) <= 0) return 'water';
+  if (sampleField(f.coast, wx, wy, COAST_BAND) <= 0) return 'water';
   let best: Land = 'sand',
     bestV = -Infinity;
   for (const t of LAND) {

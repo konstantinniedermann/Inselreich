@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
+import { ISO_H, ISO_W, project } from '../../src/render/iso';
 import {
   EDGE_BAND,
   WARP,
@@ -78,6 +79,86 @@ describe('Küstenfeld', () => {
     expect(coastLand).toBeGreaterThan(0);
   });
 
+  it('AK-R1-08 I1 (lead-art-Ersatzmass, I1-Neufassung bei L0 beantragt) Eckenschnitt und Welligkeit der Küste', () => {
+    const cuts: number[] = [];
+    const wave: number[] = [];
+    const quote: number[] = [];
+    for (const seed of [3, 1, 42, 12588]) {
+      const w = createWorld(seed);
+      const f = terrainFields(w);
+      const land = (x: number, y: number) => {
+        const t = w.tiles[y * w.width + x];
+        return (
+          t !== undefined &&
+          t.terrain !== 'water' &&
+          x >= 0 &&
+          y >= 0 &&
+          x < w.width &&
+          y < w.height
+        );
+      };
+      const wat = (x: number, y: number) =>
+        x >= 0 && y >= 0 && x < w.width && y < w.height && !land(x, y);
+      for (let y = 2; y < w.height - 2; y++)
+        for (let x = 2; x < w.width - 2; x++) {
+          if (!land(x, y)) continue;
+          // konvexe Ecke: Wasser an zwei Seiten und der Diagonale, Land dahinter
+          for (const a of [-1, 1])
+            for (const b of [-1, 1]) {
+              if (!(wat(x + a, y) && wat(x, y + b) && wat(x + a, y + b))) continue;
+              if (!(land(x - a, y) && land(x, y - b) && land(x - a, y - b))) continue;
+              const px = x + (a > 0 ? 1 : 0),
+                py = y + (b > 0 ? 1 : 0);
+              let d = 0.7;
+              for (let s = 0; s <= 0.7; s += 0.004)
+                if (
+                  terrainAt(f, px - (a * s) / Math.SQRT2, py - (b * s) / Math.SQRT2) !== 'water'
+                ) {
+                  d = s;
+                  break;
+                }
+              cuts.push(d);
+            }
+          // gerade Küstenkante in allen vier Richtungen: Dreierlauf entlang der Kante
+          for (const [nx, ny] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ] as const) {
+            const ux = ny !== 0 ? 1 : 0,
+              uy = nx !== 0 ? 1 : 0;
+            const ok = [-1, 0, 1].every(
+              (k) => land(x + ux * k, y + uy * k) && wat(x + ux * k + nx, y + uy * k + ny),
+            );
+            if (!ok) continue;
+            const off = (t: number): number => {
+              for (let s = 0; s < 1.2; s += 0.004)
+                if (terrainAt(f, x + 0.5 + nx * s + ux * t, y + 0.5 + ny * s + uy * t) === 'water')
+                  return s - 0.5;
+              return 0.7;
+            };
+            const offs: number[] = [];
+            for (let t = -1.1; t <= 1.1; t += 0.05) offs.push(off(t));
+            const iso = (v: number) => Math.abs(v) * Math.hypot(ISO_W / 2, ISO_H / 2);
+            wave.push((Math.max(...offs) - Math.min(...offs)) * Math.hypot(ISO_W / 2, ISO_H / 2));
+            quote.push(iso(off(0)) >= 2 ? 1 : 0);
+          }
+        }
+    }
+    const median = (v: number[]) => [...v].sort((p, q) => p - q)[Math.floor(v.length / 2)]!;
+    expect(cuts.length).toBeGreaterThan(20);
+    expect(wave.length).toBeGreaterThan(20);
+    // Eckenschnitt in Kacheln entlang der Diagonale, Welligkeit in Iso-Pixeln (Zoom 1, über project-Mass)
+    const kx = project(1, 0);
+    expect(Math.hypot(kx.x, kx.y)).toBeCloseTo(Math.hypot(ISO_W / 2, ISO_H / 2), 9);
+    console.info(
+      `[I1] Eckenschnitt-Median ${median(cuts).toFixed(3)} Kachel (n=${cuts.length}), Welligkeit-Median ${median(wave).toFixed(2)} px (n=${wave.length}), Wortlaut-Quote ≥ 2 px ${(quote.reduce((p, q) => p + q, 0) / quote.length).toFixed(2)}`,
+    );
+    expect(median(cuts)).toBeGreaterThanOrEqual(0.15);
+    expect(median(wave)).toBeGreaterThanOrEqual(2);
+  });
+
   it('AK-R1-01 warp verschiebt höchstens um WARP je Achse', () => {
     for (let i = 0; i < 300; i++) {
       const fx = i * 0.37,
@@ -106,9 +187,8 @@ describe('Küstenfeld', () => {
 
   it('AK-R1-02 Karte 3: jede Kachel zeigt ihren Typ auf ≥ 75 %, Abweichung ≤ ¼ Kachel', () =>
     checkTiles(createWorld(3)));
-  it('AK-R1-02 weitere Seeds', () => {
-    checkTiles(createWorld(1));
-    checkTiles(createWorld(42));
+  it('AK-R1-02 weitere Seeds (1, 42, 12588, 5, 7, 9, 100)', () => {
+    for (const seed of [1, 42, 12588, 5, 7, 9, 100]) checkTiles(createWorld(seed));
   });
   it('RF-1a Karte ohne Wasser', () => checkTiles(mini(['ggg', 'gfg', 'ggg'])));
   it('RF-1b Karte ohne Land (keine Infinity/NaN)', () => {

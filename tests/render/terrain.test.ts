@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { createWorld } from '../../src/sim/world';
+import type { World3 } from '../../src/render/terrain';
 import type { World } from '../../src/sim/types';
-import { PALETTE, SIGNAL_NAMES, mixHex } from '../../src/render/palette';
+import { FOREST_FLOOR, PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
 import { TEX } from '../../src/render/iso';
 import { depthAt, terrainFields } from '../../src/render/terrainField';
 import {
+  RASTER,
   buildGrid,
   dirtyRect,
   occupancy,
@@ -136,43 +138,83 @@ describe('Terrain-Helfer', () => {
   });
 });
 
+describe('Waldboden und Licht', () => {
+  it('AK-R1-08 I5 Waldboden: ΔE2000 > 10 zu #3d7a3a, ≥ 6 zu grassDark und grass, grünlich-dunkel', () => {
+    const lab = labOfCss(FOREST_FLOOR);
+    expect(deltaE2000(lab, hexToLab('#3d7a3a'))).toBeGreaterThan(10);
+    expect(deltaE2000(lab, hexToLab(PALETTE.grassDark))).toBeGreaterThanOrEqual(6);
+    expect(deltaE2000(lab, hexToLab(PALETTE.grass))).toBeGreaterThanOrEqual(6);
+    const [r, g, b] = rgbOfCss(FOREST_FLOOR);
+    expect(g).toBeGreaterThan(r);
+    expect(g).toBeGreaterThan(b);
+    expect(lab[0]).toBeLessThan(hexToLab(PALETTE.grassDark)[0]);
+  });
+
+  const blockWorld = (): World3 => {
+    const n = 24;
+    const tiles = Array.from({ length: n * n }, (_, i) => {
+      const x = i % n,
+        y = (i / n) | 0;
+      const m = x >= 8 && x < 16 && y >= 8 && y < 16;
+      return { terrain: m ? 'mountain' : 'grass', buildingId: null, road: false };
+    });
+    return { width: n, height: n, seed: 9, tiles } as unknown as World3;
+  };
+  const meanShade = (
+    g: ReturnType<typeof buildGrid>,
+    x0: number,
+    x1: number,
+    y0: number,
+    y1: number,
+  ) => {
+    let s = 0,
+      c = 0;
+    const per = TEX / RASTER;
+    for (let j = Math.round(y0 * per); j <= Math.round(y1 * per); j++)
+      for (let i = Math.round(x0 * per); i <= Math.round(x1 * per); i++) {
+        s += g.shade[j * g.nx + i]!;
+        c++;
+      }
+    return s / c;
+  };
+
+  it('Spec 5.1 Relief: Licht von links oben (−3, −1) – Hang zur Lichtseite hell, abgewandt dunkel', () => {
+    const g = buildGrid(blockWorld());
+    const left = meanShade(g, 7.6, 8.4, 9, 15),
+      right = meanShade(g, 15.6, 16.4, 9, 15),
+      top = meanShade(g, 9, 15, 7.6, 8.4),
+      bottom = meanShade(g, 9, 15, 15.6, 16.4);
+    expect(left).toBeGreaterThan(0.02);
+    expect(top).toBeGreaterThan(0.01);
+    expect(right).toBeLessThan(-0.02);
+    expect(bottom).toBeLessThan(-0.01);
+    // Licht kommt stärker von links als von oben (−3 gegen −1)
+    expect(left).toBeGreaterThan(top);
+    for (const v of g.shade) expect(Math.abs(v)).toBeLessThanOrEqual(0.08 + 1e-6);
+  });
+
+  it('Spec 5.1 Gras: die Mischung ist gespreizt und nutzt grassDark, grass und grassLight', () => {
+    const n = 24;
+    const tiles = Array.from({ length: n * n }, () => ({
+      terrain: 'grass',
+      buildingId: null,
+      road: false,
+    }));
+    const g = buildGrid({ width: n, height: n, seed: 9, tiles } as unknown as World3);
+    const sorted = Array.from(g.grass).sort((a, b) => a - b);
+    const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))]!;
+    expect(q(0.1)).toBeLessThan(0.15);
+    expect(q(0.9)).toBeGreaterThan(0.85);
+    expect(sorted[0]).toBeGreaterThanOrEqual(0);
+    expect(sorted[sorted.length - 1]).toBeLessThanOrEqual(1);
+  });
+});
+
 describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
   it('AK-R1-06 Aufbau Faktor 1 (Rechenzeit ohne Canvas) ≤ 1500 ms', () => {
     const t0 = performance.now();
     paintAll(createWorld(5));
     expect(performance.now() - t0).toBeLessThan(1500);
-  });
-
-  it('AK-R1-08 I1 Küste liegt an ≥ 8 von 10 Küstenkacheln nicht auf der Kachelgrenze (≥ 2 px)', () => {
-    const w = world3;
-    const cands: { x: number; y: number }[] = [];
-    for (let y = 1; y < w.height - 1; y++)
-      for (let x = 1; x < w.width - 2; x++)
-        if (
-          terrainOf(w, x, y) === 'sand' &&
-          terrainOf(w, x + 1, y) === 'water' &&
-          terrainOf(w, x, y - 1) !== 'water' &&
-          terrainOf(w, x, y + 1) !== 'water'
-        )
-          cands.push({ x, y });
-    expect(cands.length).toBeGreaterThanOrEqual(10);
-    const step = Math.floor(cands.length / 10);
-    let off = 0;
-    for (let k = 0; k < 10; k++) {
-      const c = cands[k * step]!;
-      const py = c.y * TEX + TEX / 2;
-      let first = -1;
-      for (let px = c.x * TEX; px < (c.x + 2) * TEX; px++) {
-        const [r, , b] = painted.at(px, py);
-        if (b > r) {
-          first = px;
-          break;
-        }
-      }
-      expect(first).toBeGreaterThan(-1);
-      if (Math.abs(first - (c.x + 1) * TEX) >= 2) off++;
-    }
-    expect(off).toBeGreaterThanOrEqual(8);
   });
 
   it('AK-R1-08 I1 Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 3', () => {
@@ -249,7 +291,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
 
   it('AK-R1-08 I5 Waldboden ohne Kronen, nicht der alte Waldgrund; Fels mit rockLight und rockDark', () => {
     const w = world3;
-    const wood = mixHex(PALETTE.grassDark, PALETTE.crown, 0.3);
+    const wood = FOREST_FLOOR;
     let forest = 0,
       edgeCorners = 0,
       oldColor = 0,
@@ -285,8 +327,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       }
     expect(forest).toBeGreaterThan(0);
     expect(edgeCorners).toBeGreaterThan(0);
-    // Warp schiebt den Waldrand bis 0,12 Kachel nach aussen; an der Mehrheit der Ecken liegt Gras
-    expect(oldColor / edgeCorners).toBeLessThanOrEqual(0.5);
+    // Ausnahmen sind dunkle Grasflecken (grassDark liegt selbst ΔE ≈ 8 am alten Waldgrund), nie der Waldboden
+    expect(oldColor / edgeCorners).toBeLessThanOrEqual(0.1);
     expect(crownPix).toBe(0);
     expect(light).toBeGreaterThan(0);
     expect(dark).toBeGreaterThan(0);

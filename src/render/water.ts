@@ -1,13 +1,15 @@
 import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
-import { coastField, warp } from './terrainField';
+import { coastField, coastValue, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
 export const FOAM_PERIOD_MS = 3200; // Spec 5.2: Periode des Schaumsaums
-export const FOAM_ALPHA: [number, number] = [0.35, 0.7];
+export const FOAM_ALPHA: [number, number] = [0.35, 0.7]; // weicher Saum
+export const FOAM_CORE_ALPHA: [number, number] = [0.85, 1]; // Kernlinie: farbnah zu foam (I2)
 export const WAVE_ALPHA = 0.12;
-const FOAM_LINE_WIDTH = 0.06; // Kachel-Einheiten (unter der Bodenmatrix verzerrt, gewollt)
+const FOAM_SEAM_WIDTH = 0.09; // Kachel-Einheiten (unter der Bodenmatrix verzerrt, gewollt)
+const FOAM_CORE_WIDTH = 0.035;
 const FOAM_REST = 0.05; // Lage der Linie in Kacheln vor dem Strand (s ≈ −0,1 bei Gefälle 2 je Kachel)
 const FOAM_SWING = 0.05; // Spec 5.2: Versatz zum Strand 0,05
 const WAVE_PERIOD_MS = 2400;
@@ -18,18 +20,122 @@ const WAVE_LINE_WIDTH = 0.04;
  * Mittenwert 1 enthält Pixel mit −s < 1, also Flachwasser; erst ab 2 liegt jede Lage der Striche im Tiefenbereich.
  */
 const WAVE_MIN_DEPTH = 2;
-const PIECE = 5; // Punkte je Schaumstück
 
 interface WaterInfo {
   depth: Float32Array; // Tiefe je Kachelmitte (Kacheln, 0 auf Land)
   phase: Float32Array; // Wellenphase je Kachel (0..2π)
   lift: Float32Array; // Lage der Welle in der Kachel (0.25..0.75)
-  start: Int32Array; // Index des ersten Schaumstücks je Kachel (n + 1 Einträge)
-  pieces: Float32Array; // je Stück PIECE Punkte (x, y) und die Normale ins Wasser (nx, ny)
+  start: Int32Array; // Index des ersten Küstensegments je Kachel (n + 1 Einträge)
+  segs: Float32Array; // je Segment SEG Werte: zwei Endpunkte (x, y) mit je einer Normalen (nx, ny) ins Wasser
 }
+const SEG = 8;
+const CELLS = 8; // Marching-Squares-Zellen je Kachelkante
+const GRAD_H = 0.04; // Schrittweite für die Normale aus dem Feldgefälle (Kacheln)
 
 // Terrain ändert sich im Spiel nicht: einmal je Welt vorberechnen.
 const cache = new WeakMap<World, WaterInfo>();
+
+/**
+ * Küstenlinie als Höhenlinie `F = 0` desselben Felds, das das Terrain zeichnet (`coastValue`), per Marching Squares
+ * auf einem Raster von 1/CELLS Kachel, nur in Kacheln mit Landkontakt. Die Normale kommt aus dem Gefälle von F.
+ */
+function contour(world: World, depth: Float32Array, start: Int32Array): number[] {
+  const { width: w, height: h } = world;
+  const fields = terrainFields(world);
+  const flat: number[] = [];
+  const normal = (x: number, y: number): [number, number] => {
+    const gx = coastValue(fields, x + GRAD_H, y) - coastValue(fields, x - GRAD_H, y);
+    const gy = coastValue(fields, x, y + GRAD_H) - coastValue(fields, x, y - GRAD_H);
+    const len = Math.hypot(gx, gy) || 1;
+    return [-gx / len, -gy / len];
+  };
+  const F = new Float32Array((CELLS + 1) * (CELLS + 1));
+  const push = (p: [number, number], q: [number, number]): void => {
+    const np = normal(p[0], p[1]),
+      nq = normal(q[0], q[1]);
+    flat.push(p[0], p[1], np[0], np[1], q[0], q[1], nq[0], nq[1]);
+  };
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      start[i] = flat.length / SEG;
+      if (Math.abs(depth[i]!) > 1.5 && world.tiles[i]!.terrain === 'water') continue;
+      if (world.tiles[i]!.terrain !== 'water' && !touchesWater(world, x, y)) continue;
+      for (let j = 0; j <= CELLS; j++)
+        for (let k = 0; k <= CELLS; k++)
+          F[j * (CELLS + 1) + k] = coastValue(fields, x + k / CELLS, y + j / CELLS);
+      for (let j = 0; j < CELLS; j++)
+        for (let k = 0; k < CELLS; k++) {
+          const a = F[j * (CELLS + 1) + k]!, // links oben
+            b = F[j * (CELLS + 1) + k + 1]!, // rechts oben
+            c = F[(j + 1) * (CELLS + 1) + k + 1]!, // rechts unten
+            d = F[(j + 1) * (CELLS + 1) + k]!; // links unten
+          const x0 = x + k / CELLS,
+            y0 = y + j / CELLS,
+            e = 1 / CELLS;
+          const lerp = (u: number, v: number): number => (u === v ? 0.5 : u / (u - v));
+          const top = (): [number, number] => [x0 + lerp(a, b) * e, y0];
+          const right = (): [number, number] => [x0 + e, y0 + lerp(b, c) * e];
+          const bottom = (): [number, number] => [x0 + lerp(d, c) * e, y0 + e];
+          const left = (): [number, number] => [x0, y0 + lerp(a, d) * e];
+          const idx = (a <= 0 ? 8 : 0) | (b <= 0 ? 4 : 0) | (c <= 0 ? 2 : 0) | (d <= 0 ? 1 : 0);
+          switch (idx) {
+            case 1:
+            case 14:
+              push(left(), bottom());
+              break;
+            case 2:
+            case 13:
+              push(bottom(), right());
+              break;
+            case 3:
+            case 12:
+              push(left(), right());
+              break;
+            case 4:
+            case 11:
+              push(top(), right());
+              break;
+            case 6:
+            case 9:
+              push(top(), bottom());
+              break;
+            case 7:
+            case 8:
+              push(left(), top());
+              break;
+            case 5:
+            case 10: {
+              const mid = (a + b + c + d) / 4;
+              // Sattel: Mittelwert entscheidet, ob die Wasserecken verbunden sind
+              if ((idx === 5) === mid <= 0) {
+                push(left(), top());
+                push(bottom(), right());
+              } else {
+                push(left(), bottom());
+                push(top(), right());
+              }
+              break;
+            }
+            default:
+              break;
+          }
+        }
+    }
+  start[w * h] = flat.length / SEG;
+  return flat;
+}
+
+function touchesWater(world: World, x: number, y: number): boolean {
+  for (let dy = -1; dy <= 1; dy++)
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx,
+        ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= world.width || ny >= world.height) continue;
+      if (world.tiles[ny * world.width + nx]!.terrain === 'water') return true;
+    }
+  return false;
+}
 
 function infoFor(world: World): WaterInfo {
   const hit = cache.get(world);
@@ -40,58 +146,17 @@ function infoFor(world: World): WaterInfo {
   const depth = new Float32Array(n);
   const phase = new Float32Array(n);
   const lift = new Float32Array(n);
-  const start = new Int32Array(n + 1);
-  const flat: number[] = [];
-  const isLand = (x: number, y: number): boolean => {
-    if (x < 0 || y < 0 || x >= w || y >= h) return false;
-    return world.tiles[y * w + x]!.terrain !== 'water';
-  };
-  /** Punkt auf die gezeichnete Küste schieben: Das Terrain verschiebt seine Abtastung um warp(p) − p. */
-  const onCoast = (px: number, py: number): [number, number] => {
-    const [wx, wy] = warp(seed, px, py);
-    return [px - (wx - px), py - (wy - py)];
-  };
-  const piece = (pts: [number, number][], nx: number, ny: number): void => {
-    for (const [px, py] of pts) {
-      const [qx, qy] = onCoast(px, py);
-      flat.push(qx, qy);
-    }
-    flat.push(nx, ny);
-  };
-  const line = (x0: number, y0: number, x1: number, y1: number): [number, number][] =>
-    Array.from({ length: PIECE }, (_, k) => [
-      x0 + ((x1 - x0) * k) / (PIECE - 1),
-      y0 + ((y1 - y0) * k) / (PIECE - 1),
-    ]);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      start[i] = flat.length / (PIECE * 2 + 2);
       phase[i] = hash2(seed + 101, x, y) * Math.PI * 2;
       lift[i] = 0.25 + hash2(seed + 202, x, y) * 0.5;
       depth[i] = Math.max(0, -field.v[i]!);
-      if (world.tiles[i]!.terrain !== 'water') continue;
-      if (isLand(x + 1, y)) piece(line(x + 1, y, x + 1, y + 1), -1, 0);
-      if (isLand(x - 1, y)) piece(line(x, y, x, y + 1), 1, 0);
-      if (isLand(x, y + 1)) piece(line(x, y + 1, x + 1, y + 1), 0, -1);
-      if (isLand(x, y - 1)) piece(line(x, y, x + 1, y), 0, 1);
-      for (const dx of [-1, 1])
-        for (const dy of [-1, 1]) {
-          if (!isLand(x + dx, y + dy) || isLand(x + dx, y) || isLand(x, y + dy)) continue;
-          const cx = x + (dx > 0 ? 1 : 0),
-            cy = y + (dy > 0 ? 1 : 0);
-          const a: [number, number] = [cx - dx * 0.3, cy],
-            b: [number, number] = [cx, cy - dy * 0.3],
-            m: [number, number] = [cx - dx * 0.1, cy - dy * 0.1];
-          const mid = (p: [number, number], q: [number, number]): [number, number] => [
-            (p[0] + q[0]) / 2,
-            (p[1] + q[1]) / 2,
-          ];
-          piece([a, mid(a, m), m, mid(m, b), b], -dx * Math.SQRT1_2, -dy * Math.SQRT1_2);
-        }
     }
-  start[n] = flat.length / (PIECE * 2 + 2);
-  const info = { depth, phase, lift, start, pieces: Float32Array.from(flat) };
+  const start = new Int32Array(n + 1);
+  // Kacheln ohne Küste (Tiefe 0 = Land, ≥ 2 = offenes Wasser) liefern keine Segmente; Land trägt Tiefe 0
+  const segs = Float32Array.from(contour(world, depth, start));
+  const info = { depth, phase, lift, start, segs };
   cache.set(world, info);
   return info;
 }
@@ -115,33 +180,37 @@ export function drawWaves(
   if (x1 < x0 || y1 < y0) return;
   ctx.lineCap = 'round';
 
-  // Schaumsaum: ein Pfad je Frame
-  const swing = Math.sin((2 * Math.PI * timeMs) / FOAM_PERIOD_MS);
-  const alpha = FOAM_ALPHA[0] + (FOAM_ALPHA[1] - FOAM_ALPHA[0]) * (0.5 + 0.5 * swing);
-  const stride = PIECE * 2 + 2;
-  ctx.lineWidth = FOAM_LINE_WIDTH;
+  // Schaumsaum: ein Pfad je Frame entlang der Küstenlinie, einmal als weicher Saum und einmal als Kernlinie
+  const phaseT = (2 * Math.PI * timeMs) / FOAM_PERIOD_MS;
+  const swing = 0.5 + 0.5 * Math.sin(phaseT);
+  const alpha = FOAM_ALPHA[0] + (FOAM_ALPHA[1] - FOAM_ALPHA[0]) * swing;
+  const core = FOAM_CORE_ALPHA[0] + (FOAM_CORE_ALPHA[1] - FOAM_CORE_ALPHA[0]) * swing;
   ctx.beginPath();
   let any = false;
+  const at = (px: number, py: number, nx: number, ny: number): [number, number] => {
+    // Phase hängt am Punkt, damit benachbarte Segmente nahtlos wandern
+    const off = FOAM_REST + FOAM_SWING * Math.sin(phaseT + 0.35 * (px + py));
+    return [px + nx * off, py + ny * off];
+  };
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
       const i = y * w + x;
-      const off =
-        FOAM_REST + FOAM_SWING * Math.sin((2 * Math.PI * timeMs) / FOAM_PERIOD_MS + 0.35 * (x + y));
       for (let p = info.start[i]!; p < info.start[i + 1]!; p++) {
-        const o = p * stride;
-        const nx = info.pieces[o + PIECE * 2]!,
-          ny = info.pieces[o + PIECE * 2 + 1]!;
-        for (let k = 0; k < PIECE; k++) {
-          const px = info.pieces[o + k * 2]! + nx * off,
-            py = info.pieces[o + k * 2 + 1]! + ny * off;
-          if (k === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
+        const o = p * SEG,
+          g = info.segs;
+        const a = at(g[o]!, g[o + 1]!, g[o + 2]!, g[o + 3]!),
+          b = at(g[o + 4]!, g[o + 5]!, g[o + 6]!, g[o + 7]!);
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
         any = true;
       }
     }
   if (any) {
+    ctx.lineWidth = FOAM_SEAM_WIDTH;
     ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(alpha.toFixed(4)));
+    ctx.stroke();
+    ctx.lineWidth = FOAM_CORE_WIDTH;
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(core.toFixed(4)));
     ctx.stroke();
   }
 

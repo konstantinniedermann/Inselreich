@@ -2,8 +2,9 @@ import { hash2, valueNoise } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
-import { PALETTE, mixHex, rgbOf } from './palette';
+import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
+  COAST_BAND,
   EDGE_BAND,
   LAND,
   sampleField,
@@ -111,7 +112,7 @@ export function tuftsFor(
 
 // ---------- Knotengitter und Pixel ----------
 
-type World3 = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
+export type World3 = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
 export interface TerrainGrid {
   seed: number;
   nx: number;
@@ -152,7 +153,7 @@ export function buildGrid(
       const fx = i * step,
         fy = j * step;
       const [wx, wy] = warp(seed, fx, fy);
-      sharp[k] = sampleField(fields.coast, wx, wy, EDGE_BAND);
+      sharp[k] = sampleField(fields.coast, wx, wy, COAST_BAND);
       smooth[k] = sampleField(fields.coast, wx, wy);
       let best = 0,
         bestV = -Infinity;
@@ -198,11 +199,7 @@ const C = {
   grassLight: rgb(PALETTE.grassLight),
   grass: rgb(PALETTE.grass),
   grassDark: rgb(PALETTE.grassDark),
-  wood: rgbOf(PALETTE.grassDark).map((v, i) => v + (rgbOf(PALETTE.crown)[i]! - v) * 0.3) as [
-    number,
-    number,
-    number,
-  ],
+  wood: rgbOfCss(FOREST_FLOOR),
   rock: rgb(PALETTE.rock),
   rockLight: rgb(PALETTE.rockLight),
   rockDark: rgb(PALETTE.rockDark),

@@ -82,3 +82,13 @@ export function rgbaOf(hex: string, alpha: number): string {
   const [r, g, b] = rgbOf(hex);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
+/** Farbe aus `rgb(r,g,b)` bzw. `#rrggbb` als Tripel (für Zwischentöne aus `mixHex`). */
+export function rgbOfCss(css: string): [number, number, number] {
+  if (css.startsWith('#')) return rgbOf(css);
+  const m = /(\d+),(\d+),(\d+)/.exec(css);
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+}
+
+/** Waldboden (Spec 4.4 I5: nicht farbnah zum alten Waldgrund #3d7a3a): moosig-erdiges Dunkelgrün aus Palettenfarben. */
+export const FOREST_FLOOR = mixHex(PALETTE.crown, PALETTE.wallTimber, 0.4);

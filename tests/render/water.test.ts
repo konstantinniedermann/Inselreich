@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE, SIGNAL_NAMES, rgbOf } from '../../src/render/palette';
-import { drawWaves, FOAM_ALPHA, FOAM_PERIOD_MS, WAVE_ALPHA } from '../../src/render/water';
+import {
+  drawWaves,
+  FOAM_ALPHA,
+  FOAM_PERIOD_MS,
+  FOAM_CORE_ALPHA,
+  WAVE_ALPHA,
+} from '../../src/render/water';
 import type { World } from '../../src/sim/types';
+import { createWorld } from '../../src/sim/world';
+import { coastValue, terrainFields } from '../../src/render/terrainField';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import { fakeCtx } from './fakeCtx';
 
 /** w = Wasser, g = Gras (Kartengrösse aus den Zeilen). */
@@ -37,14 +46,14 @@ describe('Wasser (Spec 5.2)', () => {
     expect(frame(mini(['ggg', 'ggg']), 1000).allPoints.length).toBe(0);
   });
 
-  it('AK-R1-05 Schaumsaum: Deckkraft schwankt in [0,35, 0,7] mit Periode 3,2 s, nur foam-Farbe', () => {
+  it('Spec 5.2 Schaumsaum: Deckkraft schwankt in [0,35, 0,7] mit Periode 3,2 s, nur foam-Farbe', () => {
     const w = sea();
     const alphas: number[] = [];
     for (let t = 0; t < FOAM_PERIOD_MS; t += 100) {
       const log = frame(w, t);
       const foam = log.strokeSet.filter(isFoam).map(alphaOf);
       expect(foam.length).toBeGreaterThan(0);
-      alphas.push(...foam.filter((a) => a !== WAVE_ALPHA));
+      alphas.push(...foam.filter((a) => a !== WAVE_ALPHA && a < 0.8));
     }
     expect(FOAM_ALPHA).toEqual([0.35, 0.7]);
     expect(Math.min(...alphas)).toBeGreaterThanOrEqual(0.35 - 1e-9);
@@ -55,7 +64,7 @@ describe('Wasser (Spec 5.2)', () => {
     expect(b.strokeSet).toEqual(a.strokeSet);
   });
 
-  it('AK-R1-05 Schaumlinie liegt am Strand (Kachelraum) und wandert um höchstens 0,1 Kachel', () => {
+  it('Spec 5.2 Schaumlinie liegt am Strand (Kachelraum) und wandert um höchstens 0,1 Kachel', () => {
     const w = sea();
     let lo = Infinity,
       hi = -Infinity;
@@ -73,7 +82,7 @@ describe('Wasser (Spec 5.2)', () => {
     expect(hi).toBeLessThan(1 + 0.13 + 0.1 + 1e-6);
   });
 
-  it('AK-R1-05 Wellenstriche nur auf Wasser mit Tiefe ≥ 2 (Flachwasser trägt keine Striche), Alpha 0,12', () => {
+  it('Spec 5.2 Wellenstriche nur auf Wasser mit Tiefe ≥ 2 (Flachwasser trägt keine Striche), Alpha 0,12', () => {
     const w = sea();
     const { ctx, log } = fakeCtx();
     drawWaves(ctx, w, { x0: 2, y0: 0, x1: 8, y1: 5 }, 500);
@@ -87,7 +96,7 @@ describe('Wasser (Spec 5.2)', () => {
     ).toBe(false);
   });
 
-  it('AK-R1-03 keine Signalfarbe im Wasser, nur foam-Farbe', () => {
+  it('Spec 4.2 keine Signalfarbe im Wasser, nur foam-Farbe', () => {
     const log = frame(sea(), 900);
     const signals = SIGNAL_NAMES.map((n) => rgbOf(PALETTE[n]).join(','));
     for (const s of log.strokeSet) {
@@ -100,5 +109,74 @@ describe('Wasser (Spec 5.2)', () => {
     const log = frame(sea(), 0);
     expect(log.saves).toBe(log.restores);
     expect(log.underflow).toBe(0);
+  });
+
+  it('AK-ISO-18 I2 Schaumkern ist farbnah zu foam (ΔE2000 ≤ 10 über Flachwasser, Kern-Deckkraft ≥ 0,85)', () => {
+    const w = sea();
+    const bg = rgbOf(PALETTE.waterShallow);
+    const fg = rgbOf(PALETTE.foam);
+    let cores = 0;
+    for (let t = 0; t < FOAM_PERIOD_MS; t += 100) {
+      const log = frame(w, t);
+      const core = log.strokeSet
+        .filter(isFoam)
+        .map(alphaOf)
+        .filter((a) => a >= 0.8);
+      expect(core.length).toBe(1);
+      const a = core[0]!;
+      expect(a).toBeGreaterThanOrEqual(FOAM_CORE_ALPHA[0] - 1e-9);
+      const mixed = fg.map((v, i) => v * a + bg[i]! * (1 - a)) as [number, number, number];
+      expect(deltaE2000(rgbToLab(mixed), hexToLab(PALETTE.foam)), `t=${t}`).toBeLessThanOrEqual(10);
+      cores++;
+    }
+    expect(cores).toBeGreaterThan(0);
+  });
+
+  it('Spec 5.2 Schaumlinie ist eine Höhenlinie des Küstenfelds: nach warp an der gezeichneten Küste', () => {
+    const w = createWorld(3);
+    const f = terrainFields(w);
+    let n = 0,
+      minF = Infinity,
+      maxF = -Infinity;
+    for (let t = 0; t < FOAM_PERIOD_MS; t += 400) {
+      const { ctx, log } = fakeCtx();
+      drawWaves(ctx, w, ALL(w), t);
+      for (const e of log.events)
+        if (e.op === 'stroke' && alphaOf(e.style) >= 0.35 && alphaOf(e.style) !== WAVE_ALPHA)
+          for (const p of e.points) {
+            const v = coastValue(f, p.x, p.y);
+            minF = Math.min(minF, v);
+            maxF = Math.max(maxF, v);
+            n++;
+          }
+    }
+    expect(n).toBeGreaterThan(500);
+    // 0 = Küste, negativ = Wasser: Linie zwischen Strand und 0,1 Kachel (Gefälle ≈ 2,5 je Kachel) davor
+    expect(maxF).toBeLessThanOrEqual(0.05);
+    expect(minF).toBeGreaterThanOrEqual(-0.45);
+  });
+
+  it('Spec 5.2 Schaumlinie liegt nicht systematisch auf Kachelkanten (keine Kantenstücke)', () => {
+    const w = createWorld(3);
+    const { ctx, log } = fakeCtx();
+    drawWaves(ctx, w, ALL(w), 800);
+    const pts = log.events
+      .filter(
+        (e) => e.op === 'stroke' && alphaOf(e.style) >= 0.35 && alphaOf(e.style) !== WAVE_ALPHA,
+      )
+      .flatMap((e) => e.points);
+    // Segment = zwei aufeinanderfolgende Punkte; ein Kantenstück liegt mit beiden Enden auf derselben Kachelkante
+    let segs = 0,
+      onEdge = 0;
+    for (let k = 0; k + 1 < pts.length; k += 2) {
+      const a = pts[k]!,
+        b = pts[k + 1]!;
+      segs++;
+      const same = (u: number, v: number) =>
+        Math.abs(u - v) < 0.01 && Math.abs(u - Math.round(u)) < 0.01;
+      if (same(a.x, b.x) || same(a.y, b.y)) onEdge++;
+    }
+    expect(pts.length).toBeGreaterThan(500);
+    expect(onEdge / segs).toBeLessThan(0.1);
   });
 });

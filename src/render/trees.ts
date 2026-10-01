@@ -144,7 +144,7 @@ export function drawTreeStamp(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
   item: TreeItem,
-  seed = 0,
+  seed: number,
 ): void {
   const z = cam.zoom,
     step = zoomStep(z);
