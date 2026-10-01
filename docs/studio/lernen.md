@@ -19,3 +19,7 @@
 - Schreibende Git-Proben (revert, merge, reset) nur im Paket-Branch oder einem eigenen Worktree, nie im Haupt-Checkout auf main; vorher `git branch --show-current` (Retro session-5e248230 B6).
 - L0 formatiert `docs/studio/state.md` vor jedem Commit mit `npx prettier --write`; sonst wird `make check` auf main rot (Retro session-5e248230 B6).
 - Der Session-Container ist ephemer: nur gepushte Branches überleben einen Session-Wechsel. Strang-Branches nach jeder Abnahme nach `origin` pushen (R107; Verlust von A1, A2, R5, X1a, M8-Spec).
+- Vor jedem Ruling `git fetch` und die nächste freie R-Nummer prüfen; bei paralleler L0-Session zuerst in „Parallele Sessions" eintragen. Beide Sessions vergaben R107 und R118, Folge: Umnummerierung, Revert, Übergabe R120 (Retro ddd9a9ac B4).
+- Cloud-Session: Subagent-Leads haben kein Agent-Werkzeug; L0 startet Arbeiter direkt, Leads nur für Arbeit ohne Delegation (R108, Retro ddd9a9ac B2).
+- Kein bares `git stash` bei parallelen Worktrees (gemeinsamer Stash-Stapel); Rot-Nachweis per WIP-Commit oder `git worktree add --detach`. QA-Bäume gehören nur dem laufenden QA-Check (R116, Retro ddd9a9ac B5).
+- Software-Rendering (Cloud) misst Frames nicht belastbar: 27 fps bei Render-Median 4 ms; Frame-Abnahmen auf Echtgerät mit GPU, Headless mit `--disable-gpu` (R116, Retro ddd9a9ac B6).

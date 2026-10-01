@@ -57,7 +57,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start: Schritt „andere L0-Session aktiv → Datei-Eigentum und Merge-Reihenfolge in state.md eintragen oder übernehmen“), `docs/studio/state.md` (Abschnitt „Parallele Sessions“), `docs/studio/CHANGELOG.md`
 - Ruling: R55
 - Start: Handbuch 1.2
-- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten; Session 5e248230: keine parallele Episode, 0 Basis-Drift-Rulings in R91–R105 → weiter beobachten
+- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten; Session 5e248230: keine parallele Episode, 0 Basis-Drift-Rulings in R91–R105 → weiter beobachten; Cloud-Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md` B4): zweite Episode, 0 Basis-Drift-Rulings, aber Nummernkollision R107/R118 und Revert (nicht abgedeckte Klasse) → weiter beobachten bis Retro M7, Messregel um Ruling-Nummern ergänzen vorgeschlagen
 
 ## E-003 · laufend · Zweck-Gegenprobe bei Auslegungen
 
@@ -68,7 +68,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Abschnitt „Autonomie“, Ablauf Schritt 2: ein Halbsatz), `docs/studio/CHANGELOG.md`
 - Ruling: R75
 - Start: Handbuch 1.7
-- Bewertung: Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md`, Session 1 von 3): Anwendung 2/2 (R91, R105), 0 Korrekturen wegen Fehlauslegung (R97 berichtigt eine Rechnung, keine Auslegung) → weiter beobachten
+- Bewertung: Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md`, Session 1 von 3): Anwendung 2/2 (R91, R105), 0 Korrekturen wegen Fehlauslegung (R97 berichtigt eine Rechnung, keine Auslegung) → weiter beobachten; Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md`, Session 2 von 3): Anwendung 1 von 2 (R118 ja, R107 (3) nein), 0 Korrekturen wegen Fehlauslegung (R115 korrigiert ein L0-Briefing) → weiter beobachten
 
 ## E-004 · vorgeschlagen · Rechenweg im Budget-Ruling
 
