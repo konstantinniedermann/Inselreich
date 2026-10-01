@@ -1303,6 +1303,9 @@ export function drawBody(
 /**
  * Gezeichnete Körperpolygone in Weltpixeln (R113): zeichnet die Silhouette auf einen aufzeichnenden Kontext und
  * sammelt jede gefüllte Fläche (Hof, Wände, Dächer, Zubehör). Für das Picking, nicht für den Frame.
+ * Der Aufzeichnungskontext kennt nur Pfadoperationen (beginPath/moveTo/lineTo/quadraticCurveTo/rect/arc/fill);
+ * Verläufe (createLinearGradient …) und Clips lieferten dort `undefined` bzw. nichts und würden werfen oder
+ * Flächen verlieren. Silhouetten dürfen deshalb keine Verläufe oder Clips benutzen.
  */
 export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
   const polys: Pt[][] = [];

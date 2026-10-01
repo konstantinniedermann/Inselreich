@@ -116,7 +116,7 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
       }
   });
 
-  it('verdeckung: Hover-Punkt von H liegt in bodyHull(H) und ≥ 3 px ausserhalb von bodyHull(F)', () => {
+  it('verdeckung: Hover-Punkt von H liegt in bodyHull(H) und höchstens in einer 3-px-Randzone der Hülle von F (nicht ≥ 3 px innen)', () => {
     const cam = cameraOnH();
     const pt = hoverPoint(cam);
     const wp = { x: pt.sx / cam.zoom + cam.x, y: pt.sy / cam.zoom + cam.y };
@@ -187,7 +187,7 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
     expect(C.connected).toBe(true); // kein roter Punkt auf der Kapelle
   });
 
-  it('AK-ISO-15 (R2) Hover-Punkt von H2 liegt in bodyHull(H2) und ≥ 3 px ausserhalb von bodyHull(C), im Bild', () => {
+  it('AK-ISO-15 (R2) Hover-Punkt von H2 liegt in bodyHull(H2) und höchstens in einer 3-px-Randzone der Kapellenhülle (nicht ≥ 3 px innen), im Bild', () => {
     const cam = cameraOnH();
     const C = at(VERDECKUNG.C),
       H2 = at(VERDECKUNG.H2);
@@ -319,7 +319,11 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
   });
 });
 
-/** Erster Treffer von oben: Punkt in H's Hülle, ≥ 3 px ausserhalb von F's Hülle (1-px-Abtastung). */
+/**
+ * Erster Treffer von oben: Punkt in der Hülle von `target`, der höchstens in einer 3-px-Randzone der Hülle von `front`
+ * liegt. `inHull(hf, x, y, -3)` mit negativer Toleranz heisst „≥ 3 px innerhalb", das Ergebnis `false` also „ausserhalb
+ * oder in den äussersten 3 px" (1-px-Abtastung); der Punkt kann den Rand von `front` berühren, ist aber nie tief darin.
+ */
 function hoverPoint(
   cam: Camera,
   target: Building = at(VERDECKUNG.H),
