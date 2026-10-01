@@ -1499,3 +1499,18 @@ als eigenes Paket auf main-Basis. — Warum: alle drei folgen aus dem Ziel „in
 keinem bestehenden Verhalten. — Kosten bei Irrtum: Texte in bis zu ~10 AK erneut anpassen.
 
 Entscheider: L0 · Anlass: Bericht lead-design M7-UX
+
+## R122 · 2026-10-01 · Gate Spec M7-UX: Nacharbeit
+
+Ruling: Gate Spec M7-UX: lead-qa BEDENKEN (2 blockend, 11 weitere), lead-tech BEDENKEN (6 mit
+Spec-Änderung, 5 kleinere) → **Nacharbeit lead-design in einer Runde**, danach kurze Zweitprüfung
+lead-qa, dann Plan lead-tech. Vorab entschieden: (1) Basis der Umsetzung = main nach dem M7-Merge,
+Branch `feat/m7-ux` im Worktree `.worktrees/m7-ux` (bestätigt R121); AK-UX-14 prüft gegen diesen
+Merge-Commit. (2) „Neue Insel" auf der Startkarte bekommt eine Bestätigung mit Hinweis, dass der
+Autosave ersetzt wird (lead-qa 12). (3) Kosten- und Rückerstattungstexte einheitlich „50 Geld ·
+2 Holz" (lead-qa 13, lead-tech 11); AK-UX-23 wird angepasst. (4) Budgetvorschlag lead-tech
+(36 = lead-tech 34, lead-qa 2) wird im Gate Plan mit Rechenweg entschieden (E-004). — Warum: beide
+Prüfer unabhängig mit überlappenden Blockern; eine gebündelte Runde ist billiger als zwei. —
+Kosten bei Irrtum: eine weitere Nacharbeitsrunde.
+
+Entscheider: L0 · Anlass: Gate Spec M7-UX
