@@ -91,6 +91,15 @@ function fakeCtx() {
   return { ctx: ctx as unknown as AudioContext, log };
 }
 
+// Kein Netz, kein Media-Element: Rückfälle statt echter fetch-Aufrufe.
+const fakeIo = () => ({
+  baseUrl: '/',
+  fetchBuffer: () => Promise.reject(new Error('404')),
+  mediaFactory: (): never => {
+    throw new Error('kein Media-Element im Test');
+  },
+});
+
 const setTime = (ctx: AudioContext, t: number) => {
   (ctx as { currentTime: number }).currentTime = t;
 };
@@ -163,7 +172,7 @@ describe('sound', () => {
 
   it('AK-A2-02 Master 0.4, setVolume, Stumm und Meeresrauschen 15 % relativ', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const master = log.gains[0]!; // erster Gain: Master
     const sea = log.gains[6]!; // Meeresrauschen, hängt am Umgebungs-Bus (nach Master, Effekte, Musik, Duck, Umgebung, Duck)
@@ -184,7 +193,7 @@ describe('sound', () => {
 
   it('AK-A2-02 Stumm vor unlock() gilt nach unlock()', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: true, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: true, volume: 0.4 }, () => ctx, fakeIo());
     s.setVolume(0.3);
     s.unlock();
     expect(log.gains[0]!.gain.value).toBe(0);
@@ -194,7 +203,7 @@ describe('sound', () => {
 
   it('AK-A2-02 stumm erzeugt play() keine Stimmen', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: true, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: true, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const base = log.nodes;
     s.play('win');
@@ -206,7 +215,7 @@ describe('sound', () => {
 
   it('AK-A2-03 Drossel je Ereignis misst an currentTime', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const base = log.nodes;
     const voices = () => log.nodes - base;
@@ -222,7 +231,7 @@ describe('sound', () => {
 
   it('AK-A2-03 coin bei 0 / 0.04 / 0.06', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const base = log.nodes;
     s.play('coin');
@@ -252,7 +261,7 @@ describe('sound', () => {
     'AK-A2-03 %s: gedrosselt knapp vor %i ms, erlaubt danach',
     (e, ms) => {
       const { ctx, log } = fakeCtx();
-      const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+      const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
       s.unlock();
       setTime(ctx, 10);
       const base = log.nodes;
@@ -271,7 +280,7 @@ describe('sound', () => {
   it('AK-A2-03 ungedrosselte Ereignisse (order, orderDone, win) spielen jedes Mal', () => {
     for (const e of ['order', 'orderDone', 'win'] as const) {
       const { ctx, log } = fakeCtx();
-      const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+      const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
       s.unlock();
       const base = log.nodes;
       s.play(e);
@@ -283,7 +292,7 @@ describe('sound', () => {
 
   it('AK-A2-03 Drossel gilt je Ereignis, nicht übergreifend', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const base = log.nodes;
     s.play('build');
@@ -294,14 +303,14 @@ describe('sound', () => {
 
   it('AK-A2-04 vor unlock() erzeugt play() keine Knoten', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     ALL.forEach((e) => s.play(e));
     expect(log.nodes).toBe(0);
   });
 
   it('AK-A2-04 unlock() ruft resume() und startet das Rauschen genau einmal', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     expect(log.resume).toBe(1);
     expect(log.bufferStarts).toBe(1);
@@ -314,7 +323,7 @@ describe('sound', () => {
 
   it('AK-A2-05 setHidden(true) ruft suspend(), setHidden(false) resume()', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const r = log.resume;
     s.setHidden(true);
@@ -325,7 +334,7 @@ describe('sound', () => {
 
   it('AK-A2-05 setHidden(false) ohne unlock() ruft kein resume()', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.setHidden(true);
     s.setHidden(false);
     expect(log.resume).toBe(0);
@@ -334,7 +343,7 @@ describe('sound', () => {
 
   it('AK-A2-05 setHidden(false) bei stumm ruft kein resume()', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     s.setHidden(true);
     s.setMuted(true);
@@ -345,7 +354,7 @@ describe('sound', () => {
 
   it('RF-4a setVolume klemmt ungültige Werte', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     const master = log.gains[0]!;
     s.setVolume(Number.NaN);
@@ -365,14 +374,14 @@ describe('sound', () => {
     ['0.4' as unknown as number, 0.4],
   ])('RF-4a Startwert %s ergibt Master %s', (v, expected) => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: v }, () => ctx);
+    const s = createSound({ muted: false, volume: v }, () => ctx, fakeIo());
     s.unlock();
     expect(log.gains[0]!.gain.value).toBe(expected);
   });
 
   it('dispose() stoppt, schliesst den Kontext; danach wirkungslos', () => {
     const { ctx, log } = fakeCtx();
-    const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
     s.unlock();
     s.dispose();
     expect(log.close).toBe(1);
@@ -394,7 +403,7 @@ describe('sound', () => {
     const input = { view, phase: 'day', weather: { kind: 'clear', w: 0 } } as const;
     const mk = (o: Partial<Parameters<typeof createSound>[0]> = {}) => {
       const { ctx, log } = fakeCtx();
-      const s = createSound({ muted: false, ...o }, () => ctx);
+      const s = createSound({ muted: false, ...o }, () => ctx, fakeIo());
       s.unlock();
       return { s, ctx, log };
     };
@@ -409,6 +418,17 @@ describe('sound', () => {
       expect(amb!.target).toBe(dAmb);
       expect(dAmb!.target).toBe(master);
       expect(log.gains[6]!.target).toBe(amb); // Meer an genau einem Bus
+    });
+
+    it('setBus ignoriert Namen ausserhalb der Busse (toString, __proto__)', () => {
+      const { s } = mk();
+      const before = s.debugState().buses;
+      expect(() => {
+        s.setBus('toString' as never, 0.9);
+        s.setBus('__proto__' as never, 0.9);
+        s.setBus('constructor' as never, 0.9);
+      }).not.toThrow();
+      expect(s.debugState().buses).toEqual(before);
     });
 
     it('AK-A1-01 Standardpegel und Klemmen; setVolume = setBus(master); Stumm setzt Master 0', () => {
@@ -431,7 +451,7 @@ describe('sound', () => {
 
     it('AK-A1-01 Pegel vor unlock() gelten nach unlock()', () => {
       const { ctx, log } = fakeCtx();
-      const s = createSound({ muted: false }, () => ctx);
+      const s = createSound({ muted: false }, () => ctx, fakeIo());
       s.setBus('ambience', 0.2);
       s.unlock();
       expect(log.gains[4]!.gain.value).toBe(0.2);
@@ -459,6 +479,30 @@ describe('sound', () => {
       expect(s.debugState().duck).toBe(1);
     });
 
+    it('AK-A1-02 zwei überlappende Signale: Ducking hält bis zum späteren Ende, vertieft nicht', () => {
+      const { s, ctx, log } = mk();
+      setTime(ctx, 5);
+      s.play('order'); // Halten bis 5 + 0,52 + 0,3 = 5,82
+      setTime(ctx, 5.4);
+      s.play('win'); // Halten bis 5,4 + 1,14 + 0,3 = 6,84
+      const mine = log.sets.filter((x) => x.gain === log.gains[3]!.gain).slice(-5);
+      expect(mine.map((x) => [x.kind, x.v])).toEqual([
+        ['cancel', 0],
+        ['set', 0.5],
+        ['ramp', 0.5],
+        ['set', 0.5],
+        ['ramp', 1],
+      ]);
+      expect(mine[3]!.t).toBeCloseTo(6.84, 9);
+      expect(mine[4]!.t).toBeCloseTo(7.44, 9);
+      setTime(ctx, 6.5); // erstes Signal längst frei, zweites hält
+      expect(s.debugState().duck).toBe(0.5);
+      setTime(ctx, 7.14); // Mitte der Freigabe
+      expect(s.debugState().duck).toBeCloseTo(0.75, 9);
+      setTime(ctx, 8);
+      expect(s.debugState().duck).toBe(1);
+    });
+
     it('AK-A1-03 alarm, stormWarning, boom spielen ohne Wurf und erzeugen Knoten', () => {
       for (const e of ['alarm', 'stormWarning', 'boom'] as const) {
         const { s, log } = mk();
@@ -470,7 +514,7 @@ describe('sound', () => {
 
     it('RF-5a Aufrufe vor unlock und nach dispose werfen nicht und erzeugen keine Knoten', () => {
       const { ctx, log } = fakeCtx();
-      const s = createSound({ muted: false }, () => ctx);
+      const s = createSound({ muted: false }, () => ctx, fakeIo());
       expect(() => {
         s.setBus('music', 0.2);
         s.setAmbience(input);
