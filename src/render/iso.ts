@@ -62,6 +62,17 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   house: (b) => [0.8, 1.2, 1.6][(b.house?.tier ?? 1) - 1]! * ISO_H, // Hütte, Fachwerk, Bürgerhaus mit Gaube
   kontor: () => 1.4 * ISO_H, // Lagerhaus
   lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
+  // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
+  market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
+  fisher: () => 1.0 * ISO_H,
+  quarry: () => 1.1 * ISO_H,
+  sheepfarm: () => 1.2 * ISO_H,
+  weaver: () => 1.3 * ISO_H,
+  canefarm: () => 0.6 * ISO_H, // Halme; die Hütte steht vorn
+  distillery: () => 1.4 * ISO_H,
+  toolmaker: () => 1.3 * ISO_H,
+  chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
+  school: () => 1.5 * ISO_H,
 };
 export const bodyHeight = (def: BuildingDef, b: Building): number =>
   BODY_HEIGHTS[def.id]?.(b) ?? CATEGORY_HEIGHT[def.category];
