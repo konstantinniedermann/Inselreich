@@ -113,7 +113,9 @@ export function overlayPlan(
       ? 'supply'
       : def.supplyRadius !== undefined
         ? 'supply'
-        : (def.service ?? null);
+        : def.fireProtection === true
+          ? 'fire'
+          : (def.service ?? null);
   if (!zone && !coverage) return null;
   const hasCoverageCircle = def.supplyRadius !== undefined || def.serviceRadius !== undefined;
   return {

@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { DAY_TICKS, lightAt, lumaOf, phaseAt } from '../../src/render/daynight';
+import { DAY_TICKS, isLit, lightAt, lumaOf, phaseAt } from '../../src/render/daynight';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import type { Building, BuildingDefId, BuildingState, Tier } from '../../src/sim/types';
+
+const mkB = (
+  defId: BuildingDefId,
+  state: BuildingState = 'ok',
+  inhabitants?: number,
+): Building => ({
+  id: 3,
+  defId,
+  x: 10,
+  y: 10,
+  connected: state !== 'notConnected',
+  progress: 0,
+  state,
+  ...(inhabitants === undefined
+    ? {}
+    : { house: { tier: 1 as Tier, inhabitants } as unknown as Building['house'] }),
+});
 
 describe('Tageslicht', () => {
   it('AK-R1-04 Faktoren in [0,1], Luma ≥ 0,75, Tick 0 neutral, Periode 6000', () => {
@@ -31,5 +50,17 @@ describe('Tageslicht', () => {
   it('AK-R1-04 negative Ticks laufen periodisch weiter', () => {
     expect(lightAt(-DAY_TICKS + 2820)).toEqual(lightAt(2820));
     expect(phaseAt(-1)).toBe('day');
+  });
+
+  it('Spec 6.2 isLit: bewohntes Haus und Betrieb ok leuchten, unbewohnt und waitingInput nicht', () => {
+    expect(isLit(BUILDING_DEFS.house, mkB('house', 'ok', 3))).toBe(true);
+    expect(isLit(BUILDING_DEFS.house, mkB('house', 'ok', 0))).toBe(false);
+    expect(isLit(BUILDING_DEFS.house, mkB('house'))).toBe(false); // ohne Hausdaten unbewohnt
+    expect(isLit(BUILDING_DEFS.weaver, mkB('weaver', 'ok'))).toBe(true);
+    for (const st of ['waitingInput', 'storageFull', 'notConnected', 'burning'] as const) {
+      expect(isLit(BUILDING_DEFS.weaver, mkB('weaver', st)), st).toBe(false);
+      expect(isLit(BUILDING_DEFS.lumberjack, mkB('lumberjack', st)), st).toBe(false);
+    }
+    expect(isLit(BUILDING_DEFS.kontor, mkB('kontor', 'ok'))).toBe(true);
   });
 });

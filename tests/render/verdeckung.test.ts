@@ -5,13 +5,15 @@ import {
   ISO_H,
   bodyHeight,
   bodyHull,
+  buildingHulls,
   depthKey,
+  pickBuilding,
   project,
   sortedObjects,
 } from '../../src/render/iso';
 import { PALETTE } from '../../src/render/palette';
 import { render, renderStats } from '../../src/render/renderer';
-import { BODY_INSET } from '../../src/render/sprites';
+import { BODY_INSET, bodyPolygons } from '../../src/render/sprites';
 import {
   resetTreeCache,
   setCanvasFactory,
@@ -166,6 +168,104 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
     );
   });
 
+  it('AK-ISO-15 (R2) Kapelle C steht vor H2: depthKey(H2) < depthKey(C), Bildspalte überlappt echt, C ist höher (Turm)', () => {
+    const C = at(VERDECKUNG.C),
+      H2 = at(VERDECKUNG.H2);
+    expect(C.defId).toBe('chapel');
+    expect(H2.defId).toBe('house');
+    expect(H2.house?.tier).toBe(1);
+    expect(key(H2)).toBeLessThan(key(C));
+    const hc = hullOf(C),
+      ho = hullOf(H2);
+    const lo = Math.max(Math.min(...hc.map((p) => p.x)), Math.min(...ho.map((p) => p.x)));
+    const hi = Math.min(Math.max(...hc.map((p) => p.x)), Math.max(...ho.map((p) => p.x)));
+    expect(hi - lo).toBeGreaterThanOrEqual(16);
+    const d = (b: Building) => bodyHeight(BUILDING_DEFS[b.defId], b);
+    expect(d(C)).toBeGreaterThan(d(H2));
+    expect(d(C)).toBeGreaterThan(2 * ISO_H); // Turmkörper
+    expect(houseDiagnosis(world, H2)[0]?.kind).toBe('good');
+    expect(C.connected).toBe(true); // kein roter Punkt auf der Kapelle
+  });
+
+  it('AK-ISO-15 (R2) Hover-Punkt von H2 liegt in bodyHull(H2) und ≥ 3 px ausserhalb von bodyHull(C), im Bild', () => {
+    const cam = cameraOnH();
+    const C = at(VERDECKUNG.C),
+      H2 = at(VERDECKUNG.H2);
+    const pt = hoverPoint(cam, H2, C);
+    expect(pt.sx).toBeGreaterThanOrEqual(0);
+    expect(pt.sx).toBeLessThan(VIEW.w);
+    expect(pt.sy).toBeGreaterThanOrEqual(0);
+    expect(pt.sy).toBeLessThan(VIEW.h);
+    const wp = { x: pt.sx / cam.zoom + cam.x, y: pt.sy / cam.zoom + cam.y };
+    expect(inHull(hullOf(H2), wp.x, wp.y)).toBe(true);
+    expect(inHull(hullOf(C), wp.x, wp.y, -3)).toBe(false);
+    for (const o of [at(VERDECKUNG.F), at(VERDECKUNG.H), at(VERDECKUNG.P)])
+      expect(inHull(hullOf(o), wp.x, wp.y, -3), `${o.defId} ${o.id}`).toBe(false);
+  });
+
+  it('AK-ISO-15 (R2) Bedarfssymbol von H2 steht im letzten Frame mit Bildpunkt in der Liste, C hat keinen roten Punkt', () => {
+    const cam = cameraOnH();
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0, dayNight: true });
+    const H2 = at(VERDECKUNG.H2),
+      C = at(VERDECKUNG.C);
+    const need = renderStats.badges.find((b) => b.id === H2.id)!;
+    expect(need.kind).toBe('need');
+    const box = hullOf(H2);
+    const top = worldToScreen(cam, { x: box[0]!.x, y: Math.min(...box.map((p) => p.y)) });
+    expect(need.sx).toBeCloseTo(top.x, 6);
+    expect(need.sy).toBeCloseTo(top.y, 6);
+    expect(renderStats.badges.some((b) => b.id === C.id)).toBe(false);
+  });
+
+  it('AK-ISO-15 (R113) Auswahl über gezeichnete Silhouetten: hoverH2 wählt H2, sichtbare Wand-/Dachstellen von F und H wählen F bzw. H, Kapellenkörper die Kapelle', () => {
+    const cam = cameraOnH();
+    const hulls = buildingHulls(world);
+    const C = at(VERDECKUNG.C),
+      H2 = at(VERDECKUNG.H2);
+    const pickAt = (p: P): number | null => pickBuilding(hulls, p.x, p.y);
+    const hp = hoverPoint(cam, H2, C);
+    expect(pickAt({ x: hp.sx / cam.zoom + cam.x, y: hp.sy / cam.zoom + cam.y })).toBe(H2.id);
+    expect(pickAt(cBodyPoint(C))).toBe(C.id);
+    // Stellen von F und H, die in der Hülle der Kapelle liegen, aber nicht in ihrer Silhouette
+    const polysOf = (b: Building): P[][] => bodyPolygons(BUILDING_DEFS[b.defId], b);
+    const inside = (polys: P[][], x: number, y: number): boolean =>
+      polys.some((poly) => {
+        let r = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const a = poly[i]!,
+            b = poly[j]!;
+          if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) r = !r;
+        }
+        return r;
+      });
+    const cPolys = polysOf(C);
+    const frontOf = (b: Building) =>
+      Object.values(world.buildings).filter((o) => o.id !== b.id && key(o) > key(b));
+    for (const target of [at(VERDECKUNG.F), at(VERDECKUNG.H)]) {
+      const own = polysOf(target);
+      const fronts = frontOf(target).map(polysOf);
+      const hull = hullOf(target);
+      const xs = hull.map((q) => q.x),
+        ys = hull.map((q) => q.y);
+      const hits: P[] = [];
+      for (let y = Math.min(...ys); y <= Math.max(...ys); y += 1)
+        for (let x = Math.min(...xs); x <= Math.max(...xs); x += 1)
+          if (
+            inHull(hullOf(C), x, y, 2) &&
+            !inside(cPolys, x, y) &&
+            inside(own, x, y) &&
+            !fronts.some((f) => inside(f, x, y))
+          )
+            hits.push({ x, y });
+      expect(
+        hits.length,
+        `${target.defId} ${target.id}: Stellen unter der Kapellenhülle`,
+      ).toBeGreaterThan(0);
+      for (const q of hits) expect(pickAt(q), `${target.id} ${q.x},${q.y}`).toBe(target.id);
+    }
+  });
+
   it('verdeckung: schreibt (mit SCENARIO_OUT) verdeckung.points.json mit den Bildpunkten für QA-SLICE', () => {
     const cam = cameraOnH();
     const L1 = at(VERDECKUNG.L1),
@@ -182,9 +282,18 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
       hoverH: hoverPoint(cam),
       wallL1: toScreen(wallPoint(L1)),
       wallL2: toScreen(wallPoint(L2)),
+      hoverH2: hoverPoint(cam, at(VERDECKUNG.H2), at(VERDECKUNG.C)),
+      bodyC: toScreen(cBodyPoint(at(VERDECKUNG.C))),
       bodyF: toScreen(fBodyPoint(F)),
     };
-    for (const p of [points.hoverH, points.wallL1, points.wallL2, points.bodyF]) {
+    for (const p of [
+      points.hoverH,
+      points.hoverH2,
+      points.wallL1,
+      points.wallL2,
+      points.bodyC,
+      points.bodyF,
+    ]) {
       expect(p.sx).toBeGreaterThanOrEqual(0);
       expect(p.sx).toBeLessThan(VIEW.w);
       expect(p.sy).toBeGreaterThanOrEqual(0);
@@ -196,6 +305,12 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
     expect(fp.x).toBeGreaterThan(Math.min(...hx));
     expect(fp.x).toBeLessThan(Math.max(...hx));
     expect(inHull(hullOf(F), fp.x, fp.y)).toBe(true);
+    // Stelle 1 mit Turm: der C-Punkt liegt in der Bildspalte von H2 und in C's Hülle
+    const hx2 = hullOf(at(VERDECKUNG.H2)).map((p) => p.x);
+    const cp = cBodyPoint(at(VERDECKUNG.C));
+    expect(cp.x).toBeGreaterThan(Math.min(...hx2));
+    expect(cp.x).toBeLessThan(Math.max(...hx2));
+    expect(inHull(hullOf(at(VERDECKUNG.C)), cp.x, cp.y)).toBe(true);
     const out = process.env.SCENARIO_OUT;
     if (out) {
       mkdirSync(out, { recursive: true });
@@ -205,9 +320,13 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
 });
 
 /** Erster Treffer von oben: Punkt in H's Hülle, ≥ 3 px ausserhalb von F's Hülle (1-px-Abtastung). */
-function hoverPoint(cam: Camera): { sx: number; sy: number } {
-  const hh = hullOf(at(VERDECKUNG.H)),
-    hf = hullOf(at(VERDECKUNG.F));
+function hoverPoint(
+  cam: Camera,
+  target: Building = at(VERDECKUNG.H),
+  front: Building = at(VERDECKUNG.F),
+): { sx: number; sy: number } {
+  const hh = hullOf(target),
+    hf = hullOf(front);
   const x0 = Math.floor(Math.min(...hh.map((p) => p.x))),
     x1 = Math.ceil(Math.max(...hh.map((p) => p.x)));
   const y0 = Math.floor(Math.min(...hh.map((p) => p.y))),
@@ -218,7 +337,7 @@ function hoverPoint(cam: Camera): { sx: number; sy: number } {
         const s = worldToScreen(cam, { x, y });
         return { sx: s.x, sy: s.y };
       }
-  throw new Error('kein sichtbarer Punkt von H');
+  throw new Error(`kein sichtbarer Punkt von ${target.defId} ${target.id}`);
 }
 
 /** Mitte der linken Wand, so tief wie nötig, damit 3 × 3 px frei von allen Baumboxen bleiben (Weltpixel). */
@@ -241,5 +360,11 @@ function wallPoint(b: Building): P {
 /** Punkt in F's rechter Wand (Stelle 1 von AK-ISO-16), Weltpixel. */
 function fBodyPoint(f: Building): P {
   const base = project(f.x + 1 - BODY_INSET, f.y + 0.5); // rechte Wand
+  return { x: base.x, y: base.y - 0.3 * ISO_H };
+}
+
+/** Punkt in der rechten Wand der Kapelle (Stelle 1 von AK-ISO-16 mit Turm), Weltpixel, in H2's Bildspalte. */
+function cBodyPoint(c: Building): P {
+  const base = project(c.x + 2 - BODY_INSET, c.y + 0.9); // rechte Wand des Schiffs
   return { x: base.x, y: base.y - 0.3 * ISO_H };
 }

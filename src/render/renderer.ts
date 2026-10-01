@@ -11,7 +11,7 @@ import {
   type Camera,
   type TileRange,
 } from './camera';
-import type { Weather } from './daynight';
+import { isLit, lightAt, type Weather } from './daynight';
 import {
   drawBoomCoin,
   drawFire,
@@ -22,8 +22,39 @@ import {
   smokePuffs,
   type Rect,
 } from './fx';
+import {
+  HEARTH_PUFFS,
+  anchorRects,
+  anchorsFor,
+  clothesOf,
+  coastFor,
+  drawGull,
+  drawHearthSmoke,
+  drawWalker,
+  drawWindowLight,
+  gullAnchors,
+  gullPose,
+  gullShadow,
+  hearthSmoke,
+  roadGraph,
+  totalInhabitants,
+  walkerAt,
+  walkerCount,
+  walkerShadow,
+  type GullPose,
+  type LightRect,
+  type WalkerPose,
+} from './life';
 import { cap, rainStreaks } from './limits';
-import { TEX, bodyHull, sortedObjects, spriteBounds, type Pt, type SortedItem } from './iso';
+import {
+  TEX,
+  bodyHull,
+  sortedObjects,
+  spriteBounds,
+  type Moving,
+  type Pt,
+  type SortedItem,
+} from './iso';
 import {
   SYMBOL_MIN_ZOOM,
   drawNeedSymbols,
@@ -36,7 +67,16 @@ import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { drawTreeStamp, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
-import { buildingShadow, drawAir, drawBody, drawGhost, drawRoads, type BodyEnv } from './sprites';
+import {
+  buildingShadow,
+  drawAir,
+  drawBody,
+  drawGhost,
+  drawRoads,
+  hearthAnchor,
+  operatingPuffs,
+  type BodyEnv,
+} from './sprites';
 
 const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
@@ -229,6 +269,35 @@ function collectBadges(world: World, cam: Camera, range: TileRange): void {
   }
 }
 
+interface WindowLights {
+  windows: LightRect[];
+  lanterns: LightRect[];
+  /** Stärke 0…1 der Fenster (`windows` aus `lightAt`). */
+  k: number;
+}
+
+/** Fenster der leuchtenden Gebäude (nur bei `windows > 0`) und Laternen (immer) in Bildpunkten. */
+function collectWindowLights(
+  cam: Camera,
+  buildings: readonly Building[],
+  windows: number,
+): WindowLights {
+  const out: WindowLights = { windows: [], lanterns: [], k: windows };
+  if (windows <= 0) return out; // Laternen folgen `windows` (R114): am Tag und bei dayNight false aus
+  for (const b of buildings) {
+    const def = BUILDING_DEFS[b.defId];
+    const lit = windows > 0 && isLit(def, b);
+    const anchors = anchorsFor(def, b);
+    if (!lit && !anchors.some((a) => a.always)) continue;
+    const box = spriteBounds(def, b);
+    anchorRects(cam, box, anchors).forEach((r, i) => {
+      if (anchors[i]!.always) out.lanterns.push(r);
+      else if (lit) out.windows.push(r);
+    });
+  }
+  return out;
+}
+
 /**
  * Zeichnet einen Frame (Ebenen nach ISO §5, soweit es sie in R1b gibt). `ctx` muss bereits per
  * devicePixelRatio skaliert sein; `view` ist die Ansichtsgrösse in CSS-Pixeln.
@@ -248,8 +317,11 @@ export function render(
   renderStats.badges.length = 0;
   const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
   const reduce = fx.reduceMotion === true;
+  const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
   const fires = new Map<number, { id: number; flames: number; smoke: number }>();
   for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
+
+  let windowLights: WindowLights = { windows: [], lanterns: [], k: 0 };
 
   // 1 Hintergrund
   ctx.fillStyle = PALETTE.waterDeep;
@@ -298,12 +370,35 @@ export function render(
       drawRoads(ctx, world, range);
     });
 
-    // Sichtbare Objekte in Zeichenreihenfolge (D-09)
+    // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)
+    const poses = new Map<number, WalkerPose>();
+    const moving: Moving[] = [];
     const ship = shipTile(world);
-    const items = sortedObjects(
-      world,
-      ship ? [{ kind: 'ship', id: 0, cx: ship.x + 0.5, cy: ship.y + 0.5 }] : [],
-    );
+    if (ship) moving.push({ kind: 'ship', id: 0, cx: ship.x + 0.5, cy: ship.y + 0.5 });
+    const count = walkerCount(totalInhabitants(world), reduce);
+    if (count > 0) {
+      const graph = roadGraph(world);
+      for (let i = 0; i < count; i++) {
+        const pose = walkerAt(graph, i, fx.timeMs, world.seed);
+        if (!pose || pose.alpha <= 0.01) continue;
+        const tx = Math.floor(pose.x),
+          ty = Math.floor(pose.y);
+        if (tx < range.x0 || tx > range.x1 || ty < range.y0 || ty > range.y1) continue;
+        poses.set(i, pose);
+        moving.push({ kind: 'walker', id: i, cx: pose.x, cy: pose.y });
+      }
+    }
+    // Möwen: Kreisbahnen über der Küste im Bild, nicht nachts
+    const gulls: GullPose[] = gullAnchors(
+      coastFor(world),
+      range,
+      world.seed,
+      light.phase,
+      reduce,
+    ).map((a) => gullPose(a, world.seed, fx.timeMs));
+
+    // Sichtbare Objekte in Zeichenreihenfolge (D-09)
+    const items = sortedObjects(world, moving);
     const left = cam.x,
       top = cam.y,
       right = cam.x + view.w / cam.zoom,
@@ -330,12 +425,12 @@ export function render(
       } else if (it.kind === 'tree') {
         if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
           continue;
-      } else if (it.kind !== 'ship') continue;
+      } else if (it.kind !== 'ship' && it.kind !== 'walker') continue;
       visible.push(it);
     }
 
     // 5 Schatten: alle Polygone in einem Pfad, eine Füllung (überlappende Schatten dunkeln nicht doppelt)
-    if (visible.length > 0) {
+    if (visible.length > 0 || gulls.length > 0) {
       withGround(ctx, cam, () => {
         ctx.beginPath();
         for (const it of visible) {
@@ -343,8 +438,12 @@ export function render(
             const b = world.buildings[it.id]!;
             polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
-          else polyPath(ctx, shipShadow({ x: it.cx - 0.5, y: it.cy - 0.5 }));
+          else if (it.kind === 'walker') {
+            if ((poses.get(it.id)?.alpha ?? 0) >= 0.5)
+              polyPath(ctx, walkerShadow({ x: it.cx, y: it.cy }));
+          } else polyPath(ctx, shipShadow({ x: it.cx - 0.5, y: it.cy - 0.5 }));
         }
+        for (const g of gulls) polyPath(ctx, gullShadow(g));
         ctx.fillStyle = SHADOW;
         ctx.fill();
         renderStats.shadowFills++;
@@ -377,17 +476,45 @@ export function render(
       } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, world.seed);
       else if (it.kind === 'ship')
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
+      else if (it.kind === 'walker') {
+        const pose = poses.get(it.id);
+        if (pose) drawWalker(ctx, cam, pose, clothesOf(world.seed, it.id));
+      }
     }
 
-    // 7 Luft
-    for (const b of buildings) drawAir(ctx, cam, BUILDING_DEFS[b.defId], b, fx.timeMs);
-    // Feuer im Luftdurchgang: Flammen immer, Rauch nur im Rahmen von CAP_SMOKE (Rest des Budgets)
-    let puffs = cap('smoke', reduce);
-    for (const { f, rect } of lit) {
-      const own = Math.min(smokePuffs(f.smoke, reduce), puffs);
-      puffs -= own;
-      drawFire(ctx, rect, fx.timeMs, { flames: f.flames, smoke: f.smoke, reduce, maxPuffs: own });
+    // 7 Luft. Rauch-Budget CAP_SMOKE: zuerst Feuer (Krisensignal), dann Betriebe, dann Herdrauch
+    let budget = cap('smoke', reduce);
+    const own = lit.map(({ f }) => {
+      const n = Math.min(smokePuffs(f.smoke, reduce), budget);
+      budget -= n;
+      return n;
+    });
+    for (const b of buildings) {
+      const def = BUILDING_DEFS[b.defId];
+      const n = Math.min(operatingPuffs(def, b), budget);
+      budget -= n;
+      drawAir(ctx, cam, def, b, fx.timeMs, n);
     }
+    for (const b of buildings) {
+      const inh = b.house?.inhabitants ?? 0;
+      if (budget <= 0 || !hearthSmoke(light.phase, inh)) continue;
+      const at = hearthAnchor(BUILDING_DEFS[b.defId], b, cam);
+      if (!at) continue;
+      const n = Math.min(HEARTH_PUFFS, budget);
+      budget -= n;
+      drawHearthSmoke(ctx, cam, at, b.id, fx.timeMs, n);
+    }
+    for (const g of gulls) drawGull(ctx, cam, g);
+    // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
+    lit.forEach(({ f, rect }, i) =>
+      drawFire(ctx, rect, fx.timeMs, {
+        flames: f.flames,
+        smoke: f.smoke,
+        reduce,
+        maxPuffs: own[i]!,
+      }),
+    );
+    windowLights = collectWindowLights(cam, buildings, fx.dayNight === true ? light.windows : 0);
   }
 
   // 8 Sturm-Randschatten
@@ -404,10 +531,13 @@ export function render(
     renderStats.multiplyFills++;
   }
 
-  // 10 Additiver Durchgang (höchstens einer): Feuerglühen
-  if (lit.some(({ f }) => f.flames > 0)) {
+  // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
+  const glowing = lit.some(({ f }) => f.flames > 0);
+  if (glowing || windowLights.windows.length > 0 || windowLights.lanterns.length > 0) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+    drawWindowLight(ctx, cam.zoom, windowLights.windows, windowLights.k);
+    drawWindowLight(ctx, cam.zoom, windowLights.lanterns, windowLights.k);
     for (const { f, rect } of lit) drawFireGlow(ctx, rect, fx.timeMs, f.flames);
     ctx.restore();
   }
