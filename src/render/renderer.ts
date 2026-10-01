@@ -13,13 +13,13 @@ import {
 } from './camera';
 import type { Weather } from './daynight';
 import {
-  SMOKE_PUFFS_PER_FIRE,
   drawBoomCoin,
   drawFire,
   drawFireGlow,
   drawRain,
   drawStormEdge,
   drawWarnRing,
+  smokePuffs,
   type Rect,
 } from './fx';
 import { cap, rainStreaks } from './limits';
@@ -258,6 +258,16 @@ export function render(
   const range = visibleTileRange(cam, view, { w: world.width, h: world.height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
 
+  // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
+  const lit: { f: { flames: number; smoke: number }; rect: Rect }[] = [];
+  if (!empty)
+    for (const f of fires.values()) {
+      const rect = screenRect(cam, world.buildings[f.id]!);
+      if (rect.x > view.w || rect.x + rect.w < 0 || rect.y > view.h || rect.y + rect.h < 0)
+        continue;
+      lit.push({ f, rect });
+    }
+
   // 2 Teil-Neuzeichnung der Terrain-Ebene (Belegung geändert), dann Boden
   const patch = updateTerrainLayer(terrainLayer, world);
   if (patch.redrawn) {
@@ -371,13 +381,12 @@ export function render(
 
     // 7 Luft
     for (const b of buildings) drawAir(ctx, cam, BUILDING_DEFS[b.defId], b, fx.timeMs);
-    // Feuer und Feuerrauch im Luftdurchgang; Rauch insgesamt unter CAP_SMOKE
+    // Feuer im Luftdurchgang: Flammen immer, Rauch nur im Rahmen von CAP_SMOKE (Rest des Budgets)
     let puffs = cap('smoke', reduce);
-    for (const b of buildings) {
-      const f = fires.get(b.id);
-      if (!f || puffs < SMOKE_PUFFS_PER_FIRE) continue;
-      puffs -= SMOKE_PUFFS_PER_FIRE;
-      drawFire(ctx, screenRect(cam, b), fx.timeMs, { flames: f.flames, smoke: f.smoke, reduce });
+    for (const { f, rect } of lit) {
+      const own = Math.min(smokePuffs(f.smoke, reduce), puffs);
+      puffs -= own;
+      drawFire(ctx, rect, fx.timeMs, { flames: f.flames, smoke: f.smoke, reduce, maxPuffs: own });
     }
   }
 
@@ -394,16 +403,6 @@ export function render(
     ctx.restore();
     renderStats.multiplyFills++;
   }
-
-  // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
-  const lit: { f: { flames: number; smoke: number }; rect: Rect }[] = [];
-  if (!empty)
-    for (const f of fires.values()) {
-      const rect = screenRect(cam, world.buildings[f.id]!);
-      if (rect.x > view.w || rect.x + rect.w < 0 || rect.y > view.h || rect.y + rect.h < 0)
-        continue;
-      lit.push({ f, rect });
-    }
 
   // 10 Additiver Durchgang (höchstens einer): Feuerglühen
   if (lit.some(({ f }) => f.flames > 0)) {

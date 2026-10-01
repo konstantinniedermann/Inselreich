@@ -24,7 +24,9 @@ const spread = (i: number, salt: number): number => {
 const SMOKE_COLOR = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.4));
 const SMOKE_PERIOD_MS = 3000;
 const SMOKE_PUFFS = [10, 4] as const; // je Feuer [normal, reduziert]; Summe bleibt unter CAP_SMOKE
-export const SMOKE_PUFFS_PER_FIRE = SMOKE_PUFFS[0];
+/** Anzahl Rauchpuffs eines Feuers zur Rauchstärke `smoke`. */
+export const smokePuffs = (smoke: number, reduce = false): number =>
+  Math.ceil(clamp01(smoke) * SMOKE_PUFFS[reduce ? 1 : 0]);
 const FLAME_PERIOD_MS = 420;
 const DARK_OUTLINE = mixHex(PALETTE.rockDark, '#000000', 0.7);
 
@@ -32,6 +34,8 @@ export interface FireOpts {
   flames: number;
   smoke: number;
   reduce?: boolean;
+  /** Obergrenze der Rauchpuffs dieses Feuers (Rest des Rauchbudgets); Flammen bleiben unberührt. */
+  maxPuffs?: number;
 }
 
 /** Feuer auf dem Dach: Flammenzungen in einem Verlauf `lightEvening` → `window`, darüber dunkler Rauch mit Wind. */
@@ -39,7 +43,7 @@ export function drawFire(
   ctx: CanvasRenderingContext2D,
   rect: Rect,
   timeMs: number,
-  { flames, smoke, reduce = false }: FireOpts,
+  { flames, smoke, reduce = false, maxPuffs = Infinity }: FireOpts,
 ): void {
   const baseY = rect.y + rect.h * 0.5,
     maxH = rect.h * 0.45;
@@ -65,7 +69,7 @@ export function drawFire(
     }
     ctx.fill();
   }
-  const puffs = Math.ceil(clamp01(smoke) * SMOKE_PUFFS[reduce ? 1 : 0]);
+  const puffs = Math.max(0, Math.min(smokePuffs(smoke, reduce), Math.floor(maxPuffs)));
   for (let i = 0; i < puffs; i++) {
     const a = (timeMs / SMOKE_PERIOD_MS + i / puffs + spread(i, 3) * 0.1) % 1; // Alter 0…1
     const x = rect.x + rect.w * (0.3 + 0.4 * spread(i, 4)) + a * rect.w * 0.7; // Wind nach rechts
