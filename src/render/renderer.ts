@@ -97,8 +97,6 @@ export interface RenderFx {
   weather?: Weather;
   /** Brennende Betriebe (R3). */
   fire?: { id: number; flames: number; smoke: number }[];
-  /** Gerade gelöschte Betriebe (R3). */
-  extinguished?: { id: number; p: number }[];
   reduceMotion?: boolean;
   mood?: boolean;
   boom?: boolean;
@@ -276,7 +274,7 @@ interface WindowLights {
   k: number;
 }
 
-/** Fenster der leuchtenden Gebäude (nur bei `windows > 0`) und Laternen (immer) in Bildpunkten. */
+/** Fenster der leuchtenden Gebäude (nur bei `windows > 0`) und Laternen (nur nachts, k = windows, unabhängig von isLit, R114) in Bildpunkten. */
 function collectWindowLights(
   cam: Camera,
   buildings: readonly Building[],

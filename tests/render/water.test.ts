@@ -242,7 +242,7 @@ describe('Wasser (Spec 5.2)', () => {
       drawWaves(ctx, world, ALL(world), t, weather, reduce);
       return log;
     };
-    const isWave = (e: { style: string }): boolean => alphaOf(e.style) < 0.35; // Saum und Kern liegen ≥ 0,35
+    const isWave = (e: { style: string }): boolean => alphaOf(e.style) < FOAM_ALPHA[0]; // Saum und Kern liegen ≥ Schaum-Untergrenze
     const widths = (log: ReturnType<typeof run>) =>
       log.events.filter((e) => e.op === 'stroke' && !isWave(e)).map((e) => e.lineWidth);
     const waveY = (world: World, weather: Weather | undefined, reduce = false) => {
