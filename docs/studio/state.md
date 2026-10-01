@@ -10,7 +10,7 @@ Stand: 2026-10-01 (Session-Ende 5e248230)
 
 - Container neu: feat/m7-audio, feat/m7-fx, feat/m7-assets, docs/m8-spec und alle Worktrees verloren (nie gepusht). Neuumsetzung A1, A2, R5, X1a laeuft; M8-Spec nach M7 neu. Push-Pflicht fuer Strang-Branches.
 - lead-art: R106 Punkt 3, dann Welle 2 Render R2/M6-R2, FX R5->R3, Audio A1->A3, Assets X1a (Budget 30).
-- Abgenommen: R5 @ 90d07db (feat/m7-fx), A1 @ 1fe9791, A2 @ 8db7478 (feat/m7-audio; Fix-Runde offen: LOOKAHEAD/Drossel-Takt, requestFile-Callbacks, io-Fake in mk()), M7-U2 Teil B @ 0066ddc (Review+QA OK), M6-U1 @ 0d52030 (Review OK, QA laeuft) (feat/ui-m6m7). Laufend: R2, R3, A2, M7-U1. X1a blockiert (R109, Warteschlange N-90).
+- Abgenommen: R5 @ 90d07db (feat/m7-fx), A1 @ 1fe9791, A2 @ 8db7478 (feat/m7-audio; Fix-Runde offen: LOOKAHEAD/Drossel-Takt, requestFile-Callbacks, io-Fake in mk()), M7-U2 Teil B @ 0066ddc (Review+QA OK), M6-U1 @ 0d52030 (Review OK, QA laeuft) (feat/ui-m6m7). R3 @ 82f52af (Code OK, QA-R3 laeuft). M7-U1 d94e1f1: QA BEDENKEN (Fokus-Rueckgabe; AK-U1-05 erst nach Merge A2/A3 in UI pruefbar). Laufend: R2, M6-U2, Review A3, Review M7-U1. X1a blockiert (R109, Warteschlange N-90).
 - lead-tech: UI M7-U2 Teil B, M6-U1 in feat/ui-m6m7 (Budget 12).
 
 ## Aktuelles Projekt und Phase
