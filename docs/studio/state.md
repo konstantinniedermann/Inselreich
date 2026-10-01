@@ -10,12 +10,12 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 - Projekt: **Inselreich**. M1–M5 live. Nutzerauftrag nach M5-Playtest „mehr Tiefe, bessere
   Grafik, Ambiente, Musik — die Stimmung muss rüberkommen" (R73) läuft als Programm:
-  - **M6 „Krisen und Stadtdienste"** — Spec fertig (R82, R85), **Plan M6-Sim freigegeben (R87)**,
-    Umsetzung bereit.
+  - **M6 „Krisen und Stadtdienste"** — Spec + Plan auf main; **M6-Sim-Umsetzung läuft** (lead-tech,
+    Budget 16/2 + lead-qa 1 Final-Review); Merge nach Gate Merge L0 direkt auf main (R82a).
   - **M7 „Stimmung" inkl. Isometrie** (R91–R98) — Spec + ISO-Nachtrag + Plan auf main (af0f6f6),
     Gate Spec/Plan bestanden, Budget 80 (lead-art 49/4, lead-tech 29/2, lead-qa 2/1), Freigabe je
     Welle. Welle 0 erledigt (Docs-Merge, gepusht). **Welle 1 läuft**: lead-art (R0-ISO T1→T2→opus-
-    Review→QA-R0, A1, X1a, QA-VORHER), lead-tech (M7-U2 Teil A). Danach Gate Merge L0 für den
+    Review→QA-R0, A1, X1a, QA-VORHER), lead-tech M7-U2 Teil A erledigt (`feat/ui-m6m7` @ 07342a6, Review OK). Danach Gate Merge L0 für den
     Zwischen-Merge R0-ISO (mit Push), dann Welle 1b.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
@@ -62,7 +62,7 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Budget
 
-Session 5e248230: Welle 1 lead-art 13/4, lead-tech 3/2 (Phase umsetzung); Spec/Plan-Phasen abgeschlossen
+Session 5e248230: Welle 1 lead-art 13/4, lead-tech 3/2; M6-Sim lead-tech 16/2, lead-qa 1/1 (Phase umsetzung); Spec/Plan-Phasen abgeschlossen
 
 ## Offene Entscheide
 
