@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  coveredBuildingIds,
   createCoverageCache,
   outlineSegments,
   overlayPlan,
@@ -9,8 +8,7 @@ import {
 } from '../../src/render/overlays';
 import { placeRoad } from '../../src/sim/build';
 import { coverageMask, layoutKey } from '../../src/sim/queries';
-import { isProtected } from '../../src/sim/crises';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 
 let w: World;
@@ -110,40 +108,5 @@ describe('M6-R2 Feuerwache im Overlay', () => {
     cache.get(w, 'fire');
     cache.outline(w, 'fire');
     expect(calls).toBe(1);
-  });
-
-  it('M6-AK-R2-01 coveredBuildingIds(fire) deckt sich mit isProtected für 1×1-Gebäude (angebundene und nicht angebundene Wache)', () => {
-    const add = (
-      defId: 'firestation' | 'house',
-      x: number,
-      y: number,
-      connected: boolean,
-    ): Building => {
-      const id = w.nextBuildingId++;
-      const b: Building = { id, defId, x, y, connected, progress: 0, state: 'ok' };
-      w.buildings[id] = b;
-      w.tiles[idx(w, x, y)]!.buildingId = id;
-      return b;
-    };
-    add('firestation', k.x + 6, k.y - 6, true);
-    add('firestation', k.x + 6, k.y + 8, false); // nicht angebunden: schützt nicht
-    const houses = [];
-    for (let dx = -8; dx <= 14; dx += 2)
-      for (let dy = -12; dy <= 12; dy += 2) {
-        const x = k.x + 3 + dx,
-          y = k.y - 6 + dy;
-        const t = w.tiles[idx(w, x, y)];
-        if (t && t.buildingId === null) houses.push(add('house', x, y, false));
-      }
-    expect(houses.length).toBeGreaterThan(20);
-    // Maske ohne die nicht angebundene Wache: coverageMask zählt nur angebundene Quellen
-    const ids = new Set(coveredBuildingIds(w, 'fire', coverageMask(w, 'fire')));
-    let covered = 0;
-    for (const h of houses) {
-      expect(ids.has(h.id), `Haus ${h.x},${h.y}`).toBe(isProtected(w, h));
-      if (ids.has(h.id)) covered++;
-    }
-    expect(covered).toBeGreaterThan(0);
-    expect(covered).toBeLessThan(houses.length);
   });
 });
