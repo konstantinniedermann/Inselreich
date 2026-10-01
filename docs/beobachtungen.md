@@ -397,6 +397,18 @@ prüfen; bei Bruch Runner-Version pinnen.
 230 je Haus); M8 verschiebt den M5-Befund „hoch nach Sieg dominiert" nur. **Ursprung:**
 lead-design, M8-Designvorschlag (R86). **Einschätzung:** Kandidat für eine Kurz-Spec nach M8.
 
+### 2026-10-01 · `docs/studio/rulings.md` R88, `docs/studio/STUDIO.md` Budgetformel · Aufteilung je Lead ergibt mehr als die Summe
+
+**Beobachtung:** R88 nennt den M7-Budgetantrag mit 64 Starts, die Aufteilung lead-art 41, lead-tech 23,
+lead-qa 1 ergibt aber 65. Die Formel wird auf die Gesamtsumme angewandt und aufgerundet, die Anteile je Lead
+werden danach einzeln aufgerundet; die Rundungsreste addieren sich. Das Handbuch sagt nur „L0 teilt die
+Freigabe auf", nicht, wie gerundet wird. Der überarbeitete M7-Plan (`docs/m7-spec` @ 6396d15, 76 Starts)
+hält die Summe nur, weil lead-qa ohne Aufschlag bei 1 bleibt, obwohl er „aufgerundet je Anteil" schreibt.
+**Ursprung:** lead-tech, Plan-Überarbeitung M7-ISO; aufgenommen von lead-production im Gate Plan M7.
+**Einschätzung:** niedrig, kein Schaden (Freigaben gehen je Session-Welle, der Gate Plan setzt die Zahlen
+neu). Kandidat für den Verbesserungsprozess (`studio-coach`): ein Satz zur Aufteilung, z. B. „Summe der
+Anteile = Formelsumme, Rundungsrest beim grössten Anteil".
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
