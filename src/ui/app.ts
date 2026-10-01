@@ -21,6 +21,8 @@ import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
 import { renderEventLog, updateEventLog } from './eventLogView';
+import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
+import { CLEAR } from '../render/weather';
 import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, showMessage } from './messages';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -472,7 +474,8 @@ function launch(
   let prevCrisis = crisisView(world);
   let last = performance.now();
   let lastAmbienceMs = -Infinity;
-  const weather = preview.weather ?? { kind: 'clear' as const, w: 0 };
+  let fireMemo: FireMemo = null;
+  const previewFire = preview.fireIds?.map((id) => ({ id, flames: 1, smoke: 1 }));
   let frame = 0;
   let disposed = false;
   let rafId = 0;
@@ -496,6 +499,13 @@ function launch(
       for (const e of diffSoundEvents(prevSnap, snap)) sound.play(e);
       prevSnap = snap;
       const curCrisis = crisisView(world);
+      fireMemo = nextFireMemo(
+        fireMemo,
+        prevCrisis,
+        curCrisis,
+        world.tick,
+        (id) => world.buildings[id] !== undefined,
+      );
       const logged = crisisLogEntries(prevCrisis, curCrisis, world, world.tick);
       prevCrisis = curCrisis;
       if (logged.length > 0) {
@@ -523,6 +533,8 @@ function launch(
       }
       perf?.frame(now);
       const reduce = resolveReduceMotion(settings.reduceMotion, prefersReduced);
+      const inputs = frameInputs(crisisFx(curCrisis, world.tick, fireMemo), null);
+      const weather = preview.weather ?? inputs.render.weather ?? CLEAR;
       if (now - lastAmbienceMs >= AMBIENCE_EVERY_MS) {
         lastAmbienceMs = now;
         const phase = phaseAt(world.tick);
@@ -531,7 +543,7 @@ function launch(
           phase,
           weather,
           reduced: reduce,
-          fire: preview.fireId !== undefined ? 1 : 0,
+          fire: previewFire ? 1 : inputs.ambience.fire,
         });
         sound.setPhase(phase);
       }
@@ -541,9 +553,8 @@ function launch(
         dayNight: settings.dayNight,
         weather,
         reduceMotion: reduce,
-        fire:
-          preview.fireId !== undefined ? [{ id: preview.fireId, flames: 1, smoke: 1 }] : undefined,
-        boom: preview.boom,
+        fire: previewFire ?? inputs.render.fire,
+        boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
       });
       perf?.renderDone(performance.now() - t0);

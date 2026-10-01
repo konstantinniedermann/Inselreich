@@ -3,7 +3,8 @@ import type { Weather, WeatherKind } from '../render/daynight';
 /** Dev-Vorschau aus der Adresszeile (Spec 9.5); im Produktions-Build immer leer. */
 export interface DevPreview {
   weather?: Weather;
-  fireId?: number;
+  /** Brennende Betriebe (`feuer=<id>,<id>,…`), ohne Doppelte, in Eingabereihenfolge. */
+  fireIds?: number[];
   boom?: boolean;
   signal?: 'alarm' | 'stormWarning' | 'boom';
   extinguishedId?: number;
@@ -25,7 +26,18 @@ function wholeNumber(v: string | null): number | undefined {
   return Number.isSafeInteger(n) ? n : undefined;
 }
 
-/** Liest `?wetter=…&w=…&feuer=…&boom=1&signal=…&geloescht=…&perf=1&raster=1`; ungültige Werte entfallen. */
+/** Kommagetrennte Ids; ungültige Einträge und Doppelte entfallen. */
+export function parseIdList(v: string | null): number[] {
+  if (v === null) return [];
+  const ids: number[] = [];
+  for (const part of v.split(',')) {
+    const n = wholeNumber(part.trim());
+    if (n !== undefined && !ids.includes(n)) ids.push(n);
+  }
+  return ids;
+}
+
+/** Liest `?wetter=…&w=…&feuer=<id>,<id>,…&boom=1&signal=…&geloescht=…&perf=1&raster=1`; ungültige Werte entfallen. */
 export function parseDevParams(search: string, dev: boolean): DevPreview {
   const out: DevPreview = {};
   if (!dev) return out;
@@ -36,8 +48,8 @@ export function parseDevParams(search: string, dev: boolean): DevPreview {
     const w = raw === null || raw.trim() === '' ? 1 : Number(raw);
     out.weather = { kind, w: Number.isFinite(w) ? Math.min(1, Math.max(0, w)) : 1 };
   }
-  const fireId = wholeNumber(q.get('feuer'));
-  if (fireId !== undefined) out.fireId = fireId;
+  const fireIds = parseIdList(q.get('feuer'));
+  if (fireIds.length > 0) out.fireIds = fireIds;
   if (q.get('boom') === '1') out.boom = true;
   const signal = SIGNALS.find((s) => s === q.get('signal'));
   if (signal) out.signal = signal;

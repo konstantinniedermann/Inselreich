@@ -1,5 +1,5 @@
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { Result, World } from '../sim/types';
+import type { CrisisKind, Result, World } from '../sim/types';
 import type { SoundEvent } from '../audio/sound';
 
 /** Die Grössen, die je Frame verglichen werden (Spec 9.4). */
@@ -9,6 +9,8 @@ export interface SoundSnapshot {
   /** Summe von (Stufe − 1) über alle Häuser: ein neues Haus zählt nicht als Aufstieg. */
   upgrades: number;
   won: boolean;
+  /** Laufende Krise (M6 13.5); `burning` nur bei einem Brand mit Ausfall. */
+  crisis: { period: number; kind: CrisisKind; burning: boolean } | null;
 }
 
 export function soundSnapshot(world: World): SoundSnapshot {
@@ -21,7 +23,32 @@ export function soundSnapshot(world: World): SoundSnapshot {
     orderPeriod: world.order?.period ?? null,
     upgrades,
     won: world.won,
+    crisis: world.crisis
+      ? {
+          period: world.crisis.period,
+          kind: world.crisis.kind,
+          burning: world.crisis.outcome === 'burning',
+        }
+      : null,
   };
+}
+
+/**
+ * Signaltöne für eine neue Krisenperiode (M6 13.5): Brand nur bei `burning` (gelöscht und leer ohne Ton),
+ * Sturm `stormWarning`, Boom `boom`. Derselbe Brand meldet sich nicht erneut, auch wenn `burning` erst
+ * im Folgeframe sichtbar wird.
+ */
+function crisisSignals(prev: SoundSnapshot['crisis'], cur: SoundSnapshot['crisis']): SoundEvent[] {
+  if (!cur) return [];
+  const same = prev !== null && prev.period === cur.period;
+  switch (cur.kind) {
+    case 'fire':
+      return cur.burning && !(prev !== null && same && prev.burning) ? ['alarm'] : [];
+    case 'storm':
+      return same ? [] : ['stormWarning'];
+    case 'boom':
+      return same ? [] : ['boom'];
+  }
 }
 
 /** Zeitbasierte Töne aus dem Vergleich zweier Frames: coin, order, upgrade, win. */
@@ -31,6 +58,7 @@ export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundE
   if (cur.orderPeriod !== null && cur.orderPeriod !== prev.orderPeriod) out.push('order');
   if (cur.upgrades > prev.upgrades) out.push('upgrade');
   if (cur.won && !prev.won) out.push('win');
+  out.push(...crisisSignals(prev.crisis, cur.crisis));
   return out;
 }
 

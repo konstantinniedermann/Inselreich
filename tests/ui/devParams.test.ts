@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseDevParams } from '../../src/ui/devParams';
+import { parseDevParams, parseIdList } from '../../src/ui/devParams';
 
 describe('parseDevParams', () => {
   it('AK-U1-07 Vorschau-Parser', () => {
     expect(parseDevParams('?wetter=sturm&w=1&feuer=12&boom=1&signal=alarm', true)).toEqual({
       weather: { kind: 'storm', w: 1 },
-      fireId: 12,
+      fireIds: [12],
       boom: true,
       signal: 'alarm',
     });
@@ -31,5 +31,12 @@ describe('parseDevParams', () => {
       weather: { kind: 'cloudy', w: 1 },
       extinguishedId: 4,
     });
+  });
+
+  it('R111 feuer als Liste: mehrere Ids, ungültige und doppelte entfallen', () => {
+    expect(parseDevParams('?feuer=3,7,12', true)).toEqual({ fireIds: [3, 7, 12] });
+    expect(parseDevParams('?feuer=3,x,3, 8 ,-1,', true)).toEqual({ fireIds: [3, 8] });
+    expect(parseDevParams('?feuer=,', true)).toEqual({});
+    expect(parseIdList(null)).toEqual([]);
   });
 });
