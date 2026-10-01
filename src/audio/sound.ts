@@ -19,6 +19,7 @@ import {
   type SampleLoader,
 } from './ambience';
 import { SFX_FILES } from './manifest';
+import { createMusicPlayer, type MusicPlayer } from './music';
 
 export type { AmbienceInput, Bus, Layer, Phase } from './mix';
 
@@ -59,6 +60,8 @@ export interface SoundIo {
   fetchBuffer(url: string): Promise<ArrayBuffer>;
   mediaFactory(url: string): MediaLike;
   baseUrl: string;
+  /** Zufall für die Musikwahl (Tests: fest). */
+  rand?: () => number;
 }
 
 export interface AudioDebugState {
@@ -115,7 +118,12 @@ const EPS = 1e-9;
 const defaultIo = (): SoundIo => ({
   fetchBuffer: (u) =>
     fetch(u).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status))))),
-  mediaFactory: (u) => new Audio(u) as unknown as MediaLike,
+  mediaFactory: (u) => {
+    const a = new Audio();
+    a.preload = 'none'; // vor der Quelle: nichts laden, bis das Stück dran ist
+    a.src = u;
+    return a as unknown as MediaLike;
+  },
   baseUrl: import.meta.env.BASE_URL,
 });
 
@@ -164,8 +172,9 @@ export function createSound(
   let loader: SampleLoader | null = null;
   let lastAmbienceMs: number | null = null;
   let signals: DuckSignal[] = [];
-  let phase: Phase | null = null; // Wirkung ab A3
-  let crisis = false; // Wirkung ab A3
+  let phase: Phase = 'day';
+  let crisis = false;
+  let music: MusicPlayer | null = null;
   const lastPlayed = new Map<SoundEvent, number>();
 
   const safe = (fn: () => void) => {
@@ -395,9 +404,9 @@ export function createSound(
     master.connect(ctx.destination);
     const effects = ctx.createGain();
     effects.connect(master);
-    const music = ctx.createGain();
+    const music_ = ctx.createGain();
     duckMusic = ctx.createGain();
-    music.connect(duckMusic);
+    music_.connect(duckMusic);
     duckMusic.connect(master);
     const ambience = ctx.createGain();
     duckAmb = ctx.createGain();
@@ -405,12 +414,22 @@ export function createSound(
     duckAmb.connect(master);
     bus.master = master;
     bus.effects = effects;
-    bus.music = music;
+    bus.music = music_;
     bus.ambience = ambience;
     (Object.keys(levels) as Bus[]).forEach(applyBus);
     noise = makeNoise(ctx, 2);
     loader = createSampleLoader(ctx, io);
     engine = createAmbienceEngine({ ctx, dest: ambience, noise, loader });
+    music = createMusicPlayer({
+      ctx,
+      dest: music_,
+      io,
+      rand: io.rand ?? Math.random,
+      getPhase: () => phase,
+      getCrisis: () => crisis,
+      paused: muted || hidden,
+    });
+    music.start();
     swallow(ctx.resume());
   };
 
@@ -443,6 +462,7 @@ export function createSound(
     setMuted(b) {
       muted = !!b;
       applyBus('master');
+      safe(() => music?.setPaused(muted || hidden));
       if (!muted && unlocked && !hidden && !disposed && ctx) safe(() => swallow(ctx!.resume()));
     },
     setVolume: (v) => setBus('master', v),
@@ -466,6 +486,7 @@ export function createSound(
     },
     setHidden(b) {
       hidden = !!b;
+      safe(() => music?.setPaused(muted || hidden));
       if (!unlocked || disposed || !ctx) return;
       const c = ctx;
       if (hidden) safe(() => swallow(c.suspend()));
@@ -479,14 +500,13 @@ export function createSound(
           duck = duckGain(c.currentTime, signals);
         });
       }
-      void phase;
-      void crisis;
+      const m = music && !disposed ? music.state() : { state: 'idle' as const, id: null };
       return {
         unlocked,
         buses: { ...levels },
         layers: engine && !disposed ? engine.levels() : {},
         duck,
-        music: { state: 'idle', id: null },
+        music: m,
       };
     },
     dispose() {
@@ -495,6 +515,8 @@ export function createSound(
       const c = ctx;
       safe(() => engine?.dispose());
       safe(() => loader?.dispose());
+      safe(() => music?.dispose());
+      music = null;
       engine = null;
       loader = null;
       if (c) safe(() => swallow(c.close()));
