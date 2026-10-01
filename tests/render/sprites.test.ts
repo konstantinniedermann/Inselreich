@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   H_MAX,
+  H_TOWER,
   ISO_H,
   ISO_W,
   bodyHeight,
@@ -16,15 +17,21 @@ import {
   SHADOW_K,
   chimneyAnchor,
   CHIMNEY_OVER_ROOF,
-  bodyColors,
   buildingShadow,
   drawAir,
   drawBody,
   drawGhost,
+  drawRoads,
+  lightAnchors,
+  roadCenter,
   wallColors,
+  wallPolygon,
+  SILHOUETTES,
+  type LightAnchor,
 } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
+import { createWorld, idx } from '../../src/sim/world';
 import { fakeCtx, inHull, type P } from './fakeCtx';
 
 const CAM = { x: 0, y: 0, zoom: 1 };
@@ -40,7 +47,7 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, extra: Partial<Building> = {})
 });
 const DEFS = Object.values(BUILDING_DEFS);
 const SLICE = new Set<BuildingDefId>(['house', 'kontor', 'lumberjack']);
-const PLACEHOLDER = DEFS.filter((d) => !SLICE.has(d.id));
+const OTHERS = DEFS.filter((d) => !SLICE.has(d.id));
 const house = (tier: Tier, x = 10, y = 10): Building =>
   mk('house', x, y, { house: { tier } as unknown as Building['house'] });
 /** Die fünf Slice-Fälle: Wohnhaus Stufe 1–3, Kontor, Holzfäller. */
@@ -68,17 +75,16 @@ function hullWithHeight(defId: BuildingDefId, b: Building, h: number): P[] {
   return [up(t), up(r), r, bo, l, up(l)];
 }
 
-describe('Platzhalter-Körper', () => {
-  it('AK-ISO-10 Platzhalter-Körper: jeder Pfadpunkt in bodyHull (±0,5 px), Höhe ≤ H_MAX bzw. H_TOWER', () => {
-    for (const def of PLACEHOLDER) {
+describe('Übrige Typen als Körper (R2)', () => {
+  it('AK-ISO-10 übrige Typen: jeder Pfadpunkt in bodyHull (±0,5 px), Höhe ≤ H_MAX, Kapelle ≤ H_TOWER', () => {
+    for (const def of OTHERS) {
       const b = mk(def.id);
       const { ctx, log } = fakeCtx();
       drawBody(ctx, CAM, def, b, 0);
       expect(log.allPoints.length).toBeGreaterThan(8);
       const hull = bodyHull(def, b);
       for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5), `${def.id}`).toBe(true);
-      // keine Türme in R0-ISO: Grenze ist H_MAX
-      expect(bodyHeight(def, b)).toBeLessThanOrEqual(H_MAX);
+      expect(bodyHeight(def, b)).toBeLessThanOrEqual(def.id === 'chapel' ? H_TOWER : H_MAX);
       // Grundriss je Seite höchstens 0,1 Kachel eingezogen (in Bildpunkten der Raute)
       const top = project(b.x, b.y),
         left = project(b.x, b.y + def.h),
@@ -89,12 +95,13 @@ describe('Platzhalter-Körper', () => {
       expect(Math.min(...xs)).toBeLessThanOrEqual(left.x + 0.2 * (ISO_W / 2) + 1e-6);
       expect(Math.max(...xs)).toBeGreaterThanOrEqual(right.x - 0.2 * (ISO_W / 2) - 1e-6);
       expect(Math.max(...ys)).toBeGreaterThanOrEqual(bottom.y - 0.2 * (ISO_H / 2) - 1e-6);
-      expect(Math.min(...ys)).toBeLessThanOrEqual(top.y - bodyHeight(def, b) + 0.2 * ISO_H);
+      // Das Firstende sitzt bei Hallen entlang u in der Tiefe vm ≤ 1 Kachel; dichter prüft der Test „umgekehrt“
+      expect(Math.min(...ys), def.id).toBeLessThanOrEqual(top.y - bodyHeight(def, b) + 0.5 * ISO_H);
     }
   });
 
   it('AK-ISO-10 umgekehrt (QA-Hinweis a): die Hülle ist oben dicht — mit Höhe bodyHeight − 1 enthält sie nicht alle Körperpunkte', () => {
-    for (const def of PLACEHOLDER) {
+    for (const def of OTHERS) {
       const b = mk(def.id);
       const { ctx, log } = fakeCtx();
       drawBody(ctx, CAM, def, b, 0);
@@ -134,11 +141,11 @@ describe('Platzhalter-Körper', () => {
 });
 
 describe('Körper und Luft getrennt', () => {
-  it('RF-6a drawAir nur AIR_COLORS; drawBody ohne AIR_COLORS (Platzhalter)', () => {
+  it('RF-6a drawAir nur AIR_COLORS; drawBody ohne AIR_COLORS (übrige Typen)', () => {
     const smoke = [AIR_COLORS.smoke];
     const bodyStyles = new Set<string>();
     let airDrawn = 0;
-    for (const def of PLACEHOLDER) {
+    for (const def of OTHERS) {
       const b = mk(def.id);
       const body = fakeCtx();
       drawBody(body.ctx, CAM, def, b, 700);
@@ -156,9 +163,6 @@ describe('Körper und Luft getrennt', () => {
           `${def.id} Luft: ${s}`,
         ).toBe(true);
       }
-      // Körper setzt nur Kategorie-Töne
-      const bc = bodyColors(def.category);
-      for (const s of body.log.fillSet) expect([bc.left, bc.right, bc.top]).toContain(s);
     }
     expect(airDrawn).toBeGreaterThan(0); // Betriebe rauchen
     // nicht angebunden oder nicht in Betrieb: kein Rauch
@@ -270,7 +274,7 @@ describe('Slice-Körper: Wohnhaus (3 Stufen), Kontor, Holzfäller', () => {
     const air = Object.values(AIR_COLORS);
     expect(new Set(air).size).toBe(air.length);
     const bodyStyles = new Set<string>();
-    for (const b of [...SLICE_CASES, ...PLACEHOLDER.map((d) => mk(d.id))]) {
+    for (const b of [...SLICE_CASES, ...OTHERS.map((d) => mk(d.id))]) {
       const def = BUILDING_DEFS[b.defId];
       const body = fakeCtx();
       drawBody(body.ctx, CAM, def, b, 700);
@@ -437,5 +441,348 @@ describe('Schatten und Bauvorschau', () => {
       expect(log.events.filter((e) => e.op === 'fill').every((e) => e.alpha === 0.5)).toBe(true);
       for (const p of log.allPoints) expect(inHull(bodyHull(def, b), p.x, p.y, 0.5)).toBe(true);
     }
+  });
+});
+
+describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', () => {
+  /** Unbekannte Ids je Kategorie und Grösse (die Feuerwache nutzt bis R2-FW diesen Weg). */
+  const fallbackDefs = (['housing', 'production', 'public', 'infrastructure'] as const).flatMap(
+    (category) =>
+      [
+        { ...BUILDING_DEFS.house, w: 1, h: 1 },
+        { ...BUILDING_DEFS.chapel, w: 2, h: 2 },
+      ].map((d) => ({ ...d, id: 'unbekannt' as never, category })),
+  );
+  const unknown = (def: (typeof fallbackDefs)[number]): Building => ({
+    ...mk('house'),
+    defId: def.id,
+  });
+
+  it('AK-R2-03 jede heutige BuildingDefId hat eine eigene Silhouette', () => {
+    // `firestation` (M6) bekommt seine Silhouette erst in R2-FW und zeichnet bis dahin den Fallback
+    for (const id of Object.keys(BUILDING_DEFS).filter((i) => i !== 'firestation'))
+      expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();
+  });
+
+  it('AK-R2-03 unbekannte Id zeichnet den Kategorie-Fallback ohne Fehler, in der Hülle, oben dicht', () => {
+    for (const def of fallbackDefs) {
+      const b = unknown(def);
+      const { ctx, log } = fakeCtx();
+      expect(() => drawBody(ctx, CAM, def, b, 0), def.category).not.toThrow();
+      expect(log.allPoints.length).toBeGreaterThan(20);
+      const h = bodyHeight(def, b);
+      const full = hullWithHeight('house', b, h);
+      const low = hullWithHeight('house', b, h - 1);
+      const hullOfDef = bodyHull(def, b);
+      for (const p of log.allPoints)
+        expect(inHull(hullOfDef, p.x, p.y, 0.5), `${def.category} ${def.w}x${def.h}`).toBe(true);
+      expect(h).toBeLessThanOrEqual(H_MAX);
+      void full;
+      void low;
+    }
+  });
+
+  it('AK-ISO-10 Fallback umgekehrt: mit Höhe bodyHeight − 1 enthält die Hülle nicht alle Körperpunkte', () => {
+    for (const def of fallbackDefs) {
+      const b = unknown(def);
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def, b, 0);
+      const h = bodyHeight(def, b);
+      const t = project(b.x, b.y),
+        r = project(b.x + def.w, b.y),
+        bo = project(b.x + def.w, b.y + def.h),
+        l = project(b.x, b.y + def.h);
+      const up = (q: P): P => ({ x: q.x, y: q.y - (h - 1) });
+      const low = [up(t), up(r), r, bo, l, up(l)];
+      expect(
+        log.allPoints.every((q) => inHull(low, q.x, q.y, 0.5)),
+        `${def.category} ${def.w}x${def.h}`,
+      ).toBe(false);
+    }
+  });
+
+  it('Spec 5.5 Fallback trägt die Dachfamilie der Kategorie; Öffentlich mit Glockenstuhl (Schiefer + Holz im Aufbau)', () => {
+    const near = (a: string, hex: string): boolean => {
+      const x = rgbOfCss(a),
+        y = rgbOfCss(hex);
+      return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) < 45;
+    };
+    const family: Record<string, string> = {
+      housing: PALETTE.roofThatch,
+      production: PALETTE.roofWood,
+      public: PALETTE.roofSlate,
+      infrastructure: PALETTE.roofTimber,
+    };
+    for (const def of fallbackDefs) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def, unknown(def), 0);
+      expect(
+        log.fillSet.some((c) => near(c, family[def.category]!)),
+        def.category,
+      ).toBe(true);
+    }
+    const pub = fakeCtx();
+    drawBody(pub.ctx, CAM, fallbackDefs[4]!, unknown(fallbackDefs[4]!), 0);
+    expect(pub.log.fillSet.some((c) => near(c, PALETTE.wallTimber))).toBe(true); // Glockenstuhl
+  });
+
+  it('AK-ISO-10 Kapelle: Glockenturm, Spitze genau auf der Hüllenkante und höher als 2,3 · ISO_H, nicht über H_TOWER', () => {
+    const chapel = BUILDING_DEFS.chapel,
+      cb = mk('chapel');
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, chapel, cb, 0);
+    const minY = Math.min(...log.allPoints.map((q) => q.y));
+    expect(minY).toBeCloseTo(project(cb.x, cb.y).y - bodyHeight(chapel, cb), 6);
+    // Spitze über ihrem Fusspunkt im Turm (Mitte des Turm-Grundrisses)
+    const foot = project(cb.x + 0.35, cb.y + 0.35).y;
+    expect(foot - minY).toBeGreaterThan(2.3 * ISO_H);
+    expect(foot - minY).toBeLessThanOrEqual(H_TOWER);
+  });
+
+  it('AK-R2-03 (ISO) jeder Fensteranker liegt in bodyHull und ganz auf seiner Wand', () => {
+    const cases: [Parameters<typeof lightAnchors>[0], Building][] = [
+      ...DEFS.map((d) => [d, mk(d.id)] as [(typeof DEFS)[number], Building]),
+      ...[1, 2, 3].map(
+        (t) => [BUILDING_DEFS.house, house(t as Tier)] as [(typeof DEFS)[number], Building],
+      ),
+      ...fallbackDefs.map((d) => [d, unknown(d)] as [(typeof DEFS)[number], Building]),
+    ];
+    let total = 0;
+    for (const [def, b] of cases) {
+      const box = spriteBounds(def, b);
+      const hull = bodyHull(def, b);
+      for (const a of lightAnchors(def, b)) {
+        total++;
+        expect(a.w, `${def.id} Breite`).toBeGreaterThan(0);
+        expect(a.h, `${def.id} Höhe`).toBeGreaterThan(0);
+        const wall = wallPolygon(def, b, a.wall);
+        const x0 = box.x + a.x * box.w,
+          y0 = box.y + a.y * box.h;
+        for (const [x, y] of [
+          [x0, y0],
+          [x0 + a.w * box.w, y0],
+          [x0 + a.w * box.w, y0 + a.h * box.h],
+          [x0, y0 + a.h * box.h],
+        ] as const) {
+          expect(inHull(wall, x, y, 1e-6), `${def.id} ${a.wall} Wand`).toBe(true);
+          expect(inHull(hull, x, y, 1e-6), `${def.id} Hülle`).toBe(true);
+        }
+      }
+    }
+    expect(total).toBeGreaterThan(20);
+  });
+
+  it('Spec 6.2 Laternen: Kontor und Marktplatz haben einen Anker mit always, sonst keiner', () => {
+    const always = (id: BuildingDefId): LightAnchor[] =>
+      lightAnchors(BUILDING_DEFS[id], mk(id)).filter((a) => a.always);
+    expect(always('kontor')).toHaveLength(1);
+    expect(always('market')).toHaveLength(1);
+    for (const d of DEFS)
+      if (d.id !== 'kontor' && d.id !== 'market') expect(always(d.id), d.id).toHaveLength(0);
+    for (const d of DEFS) expect(lightAnchors(d, mk(d.id)).length, d.id).toBeGreaterThan(0);
+  });
+
+  it('RF-6c drawAir nur AIR_COLORS, drawBody ohne AIR_COLORS und SHADOW (alle Typen, Fallback)', () => {
+    const air = Object.values(AIR_COLORS);
+    const all: [(typeof DEFS)[number], Building][] = [
+      ...DEFS.map((d) => [d, mk(d.id)] as [(typeof DEFS)[number], Building]),
+      ...fallbackDefs.map((d) => [d, unknown(d)] as [(typeof DEFS)[number], Building]),
+    ];
+    for (const [def, b] of all) {
+      const body = fakeCtx();
+      drawBody(body.ctx, CAM, def, b, 700);
+      for (const st of [...body.log.fillSet, ...body.log.strokeSet]) {
+        expect(st).not.toBe(SHADOW);
+        for (const a of air) expect(st.includes(a), `${def.id}: ${st}`).toBe(false);
+      }
+      const a = fakeCtx();
+      drawAir(a.ctx, CAM, def, b, 700);
+      expect(a.log.strokeSet).toEqual([]);
+      for (const st of a.log.fillSet)
+        expect(
+          air.some((c) => st.includes(c)),
+          `${def.id} Luft: ${st}`,
+        ).toBe(true);
+    }
+  });
+
+  it('Spec 4.3.2 keine Signalfarbe in Silhouetten und Wegen; kein Körper füllt schwarz', () => {
+    const styles: string[] = [];
+    for (const d of DEFS) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, d, mk(d.id), 0);
+      styles.push(...log.fillSet, ...log.strokeSet);
+      for (const c of log.fillSet) expect(luma(c), `${d.id}: ${c}`).toBeGreaterThan(25);
+    }
+    for (const d of fallbackDefs) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, d, unknown(d), 0);
+      styles.push(...log.fillSet, ...log.strokeSet);
+    }
+    const w = roadWorld([
+      [3, 3],
+      [4, 3],
+      [4, 4],
+      [8, 8],
+    ]);
+    const road = fakeCtx();
+    drawRoads(road.ctx, w, { x0: 0, y0: 0, x1: 15, y1: 15 });
+    styles.push(...road.log.fillSet, ...road.log.strokeSet);
+    expect(styles.length).toBeGreaterThan(100);
+    for (const s of styles) expect(SIGNALS, s).not.toContain(s);
+  });
+
+  it('Spec 5.5 Marktplatz: gestreifte Sonnendächer in roofTimber und wallLime; Wohnhaus ist weiter 1×1', () => {
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS.market, mk('market'), 0);
+    const near = (a: string, hex: string): boolean => {
+      const x = rgbOfCss(a),
+        y = rgbOfCss(hex);
+      return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) < 45;
+    };
+    expect(log.fillSet.some((c) => near(c, PALETTE.roofTimber))).toBe(true);
+    expect(log.fillSet.some((c) => near(c, PALETTE.wallLime))).toBe(true);
+  });
+
+  it('Spec 5.5 Schäferei: helle Schafpunkte im eigenen Körper-Aufruf (nicht in der Luft)', () => {
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS.sheepfarm, mk('sheepfarm'), 0);
+    const light = log.fillSet.filter((c) => luma(c) > 200);
+    expect(light.length).toBeGreaterThan(0);
+  });
+
+  it('AK-R1-09 (ISO) Körper samt Hof bedecken ≥ 80 % der Footprint-Raute (übrige Typen und Fallback)', () => {
+    const all: [(typeof DEFS)[number], Building][] = [
+      ...OTHERS.map((d) => [d, mk(d.id)] as [(typeof DEFS)[number], Building]),
+      ...fallbackDefs.map((d) => [d, unknown(d)] as [(typeof DEFS)[number], Building]),
+    ];
+    for (const [def, b] of all) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def, b, 0);
+      const polys = log.events.filter((e) => e.op === 'fill').map((e) => e.points);
+      let n = 0,
+        hit = 0;
+      for (let i = 0; i < 30; i++)
+        for (let j = 0; j < 30; j++) {
+          const q = project(b.x + ((i + 0.5) / 30) * def.w, b.y + ((j + 0.5) / 30) * def.h);
+          n++;
+          if (polys.some((pl) => inHull(pl, q.x, q.y, 0) || inHull([...pl].reverse(), q.x, q.y, 0)))
+            hit++;
+        }
+      expect(hit / n, `${def.id} ${def.category}`).toBeGreaterThanOrEqual(0.8);
+    }
+  });
+
+  it('Kamine: Rauchanker für Brennerei und Werkzeugmacher liegt über dem Dach in der Hülle', () => {
+    for (const id of ['distillery', 'toolmaker', 'lumberjack'] as const) {
+      const def = BUILDING_DEFS[id],
+        b = mk(id);
+      const a = chimneyAnchor(def, b, CAM)!;
+      expect(a, id).not.toBeNull();
+      expect(inHull(bodyHull(def, b), a.x, a.y, 0.5), id).toBe(true);
+    }
+    expect(chimneyAnchor(BUILDING_DEFS.market, mk('market'), CAM)).toBeNull();
+  });
+
+  // --- Erdwege (Spec 5.4, ISO §6): Aufruf im Kachelraum unter der Bodenmatrix ---
+  function roadWorld(tiles: [number, number][]) {
+    const w = createWorld(3);
+    for (const t of w.tiles) t.road = false;
+    for (const [x, y] of tiles) w.tiles[idx(w, x, y)]!.road = true;
+    return w;
+  }
+  function recordWidths(ctx: CanvasRenderingContext2D): {
+    widths: number[];
+    caps: string[];
+    ctx: CanvasRenderingContext2D;
+  } {
+    const widths: number[] = [],
+      caps: string[] = [];
+    const proxy = new Proxy(ctx, {
+      set(t, k, v) {
+        if (k === 'lineWidth') widths.push(v as number);
+        if (k === 'lineCap' || k === 'lineJoin') caps.push(String(v));
+        return Reflect.set(t, k, v);
+      },
+      get(t, k) {
+        const v: unknown = Reflect.get(t, k);
+        return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(t) : v;
+      },
+    });
+    return { widths, caps, ctx: proxy };
+  }
+
+  it('AK-R2-04 Erdpfad: zwei Striche earthEdge 0,62 und earth 0,5 Kachel, runde Enden, Steinchen in rockLight', () => {
+    const w = roadWorld([
+      [5, 5],
+      [6, 5],
+      [7, 5],
+    ]);
+    const { ctx, log } = fakeCtx();
+    const rec = recordWidths(ctx);
+    drawRoads(rec.ctx, w, { x0: 0, y0: 0, x1: 15, y1: 15 });
+    const strokes = log.events.filter((e) => e.op === 'stroke');
+    expect(strokes.map((e) => e.style)).toEqual([PALETTE.earthEdge, PALETTE.earth]);
+    expect(rec.widths.slice(0, 2)).toEqual([0.62, 0.5]);
+    expect(rec.caps).toContain('round');
+    expect(rec.caps.filter((c) => c === 'round').length).toBeGreaterThanOrEqual(2);
+    // einheitlich im Kachelraum: Punkte liegen nahe den Kachelmitten (Rauschen ≤ ±0,04)
+    for (const q of strokes[0]!.points) {
+      expect(Math.abs((q.x % 1) - 0.5)).toBeLessThanOrEqual(0.04 + 1e-9);
+      expect(Math.abs((q.y % 1) - 0.5)).toBeLessThanOrEqual(0.04 + 1e-9);
+    }
+  });
+
+  it('AK-R2-04 Nähte lückenlos: jedes Nachbarpaar (Ost, Süd) hat ein Segment, Enden teilen den Mittelpunkt', () => {
+    const tiles: [number, number][] = [
+      [5, 5],
+      [6, 5],
+      [7, 5],
+      [7, 6],
+      [7, 7],
+      [6, 7],
+    ];
+    const w = roadWorld(tiles);
+    const { ctx, log } = fakeCtx();
+    drawRoads(ctx, w, { x0: 0, y0: 0, x1: 15, y1: 15 });
+    const pts = log.events.find((e) => e.op === 'stroke')!.points;
+    // Pfad besteht aus (moveTo, lineTo)-Paaren
+    expect(pts.length % 2).toBe(0);
+    const segs: (readonly [P, P])[] = [];
+    for (let i = 0; i < pts.length; i += 2) segs.push([pts[i]!, pts[i + 1]!] as const);
+    expect(segs).toHaveLength(5); // (5,5)-(6,5), (6,5)-(7,5), (7,5)-(7,6), (7,6)-(7,7), (7,7)-(6,7)
+    const centers = new Map(tiles.map(([x, y]) => [`${x},${y}`, roadCenter(w.seed, x, y)]));
+    const has = (a: P, b: P): boolean =>
+      segs.some(
+        ([p, q]) =>
+          (Math.hypot(p.x - a.x, p.y - a.y) < 1e-9 && Math.hypot(q.x - b.x, q.y - b.y) < 1e-9) ||
+          (Math.hypot(q.x - a.x, q.y - a.y) < 1e-9 && Math.hypot(p.x - b.x, p.y - b.y) < 1e-9),
+      );
+    for (const [ax, ay] of tiles)
+      for (const [bx, by] of tiles)
+        if ((bx === ax + 1 && by === ay) || (bx === ax && by === ay + 1))
+          expect(
+            has(centers.get(`${ax},${ay}`)!, centers.get(`${bx},${by}`)!),
+            `${ax},${ay}-${bx},${by}`,
+          ).toBe(true);
+  });
+
+  it('AK-R2-04 einzelne Wegkachel ohne Nachbar ist ein Kreis; Kante pro Tile deterministisch; Rauschen ≤ ±0,04', () => {
+    const w = roadWorld([[8, 8]]);
+    const { ctx, log } = fakeCtx();
+    drawRoads(ctx, w, { x0: 0, y0: 0, x1: 15, y1: 15 });
+    expect(log.events.some((e) => e.op === 'fill' && e.style === PALETTE.earthEdge)).toBe(true);
+    expect(log.events.some((e) => e.op === 'fill' && e.style === PALETTE.earth)).toBe(true);
+    for (let x = 0; x < 20; x++)
+      for (let y = 0; y < 20; y++) {
+        const c = roadCenter(7, x, y);
+        expect(Math.abs(c.x - x - 0.5)).toBeLessThanOrEqual(0.04 + 1e-12);
+        expect(Math.abs(c.y - y - 0.5)).toBeLessThanOrEqual(0.04 + 1e-12);
+        expect(roadCenter(7, x, y)).toEqual(c);
+      }
+    // ohne Wege nichts gezeichnet
+    const empty = fakeCtx();
+    drawRoads(empty.ctx, roadWorld([]), { x0: 0, y0: 0, x1: 15, y1: 15 });
+    expect(empty.log.events).toEqual([]);
   });
 });

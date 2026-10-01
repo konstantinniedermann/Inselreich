@@ -95,6 +95,19 @@ function insertLumberjack(w: World, x: number, y: number): Building {
   return b;
 }
 
+/** Kapelle ohne Platzierungsregeln (2 × 2, nur für die Darstellung: hoher Körper vor einem niedrigeren). */
+function insertChapel(w: World, x: number, y: number): Building {
+  const id = w.nextBuildingId++;
+  const b: Building = { id, defId: 'chapel', x, y, connected: false, progress: 0, state: 'ok' };
+  w.buildings[id] = b;
+  for (let dy = 0; dy < 2; dy++)
+    for (let dx = 0; dx < 2; dx++) {
+      forceGrass(w, x + dx, y + dy);
+      w.tiles[idx(w, x + dx, y + dy)]!.buildingId = id;
+    }
+  return b;
+}
+
 interface Pos {
   x: number;
   y: number;
@@ -108,6 +121,8 @@ function layout(kx: number, ky: number) {
     P: { x: kx + 4, y: ky - 3 }, // Holzfäller ohne Weg (roter Punkt) dahinter
     L1, // Holzfäller mit Weg, Bäume davor und dahinter
     L2: { x: kx + 16, y: ky + 7 }, // Holzfäller frei stehend
+    H2: { x: kx + 7, y: ky - 3 }, // Wohnhaus Stufe 1 hinter der Kapelle (Bedarfssymbol, R2)
+    C: { x: kx + 6, y: ky - 2 }, // Kapelle (2 × 2, Turm) vor H2, Bildspalte überlappt (R2)
     tVor: [
       { x: L1.x + 1, y: L1.y },
       { x: L1.x + 2, y: L1.y },
@@ -142,6 +157,8 @@ export function verdeckung(): World {
     services: ['faith', 'school'],
   });
   setHouse(w, insertHouse(w, L.H.x, L.H.y), { tier: 1, inhabitants: 3, supplied: true });
+  setHouse(w, insertHouse(w, L.H2.x, L.H2.y), { tier: 1, inhabitants: 3, supplied: true });
+  insertChapel(w, L.C.x, L.C.y);
   insertLumberjack(w, L.P.x, L.P.y);
   insertLumberjack(w, L.L1.x, L.L1.y);
   insertLumberjack(w, L.L2.x, L.L2.y);
