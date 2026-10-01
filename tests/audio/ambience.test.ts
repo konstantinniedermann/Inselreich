@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AMBIENCE_MIN_INTERVAL_MS,
+  createAmbienceEngine,
   CROSSFADE_S,
   GLIDE_S,
   IDLE_STOP_S,
@@ -581,5 +582,69 @@ describe('Manifest', () => {
       expect(e.title && e.author && e.license && e.link.startsWith('https://')).toBeTruthy();
       expect(e.file.startsWith('/')).toBe(false);
     }
+  });
+});
+
+describe('Fix-Runde A2 (Drossel, Vorlauf, Warteliste)', () => {
+  const flush = async () => {
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+  };
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const calm: AmbienceInput = { view: view({ water: 0.6, zoom: 2 }), phase: 'day', weather: CLEAR };
+  const stormy: AmbienceInput = { ...calm, weather: { kind: 'storm', w: 1 } };
+
+  it('250-ms-Takt mit ±20 ms Jitter: alle Aufrufe werden angenommen, unter 200 ms verworfen', () => {
+    const f = fake();
+    const s = createSound({ muted: false }, () => f.ctx, fakeIo('reject'));
+    s.unlock();
+    s.setAmbience(calm);
+    expect(s.debugState().layers.storm ?? 0).toBe(0);
+    const gaps = [230, 270, 235, 265, 250, 228, 272];
+    gaps.forEach((g, i) => {
+      vi.advanceTimersByTime(g);
+      s.setAmbience(i % 2 === 0 ? stormy : calm);
+      const storm = s.debugState().layers.storm ?? 0;
+      if (i % 2 === 0) expect(storm, `Aufruf ${i}`).toBeGreaterThan(0);
+      else expect(storm, `Aufruf ${i}`).toBe(0);
+    });
+    vi.advanceTimersByTime(190); // zu früh: verworfen
+    s.setAmbience(calm);
+    expect(s.debugState().layers.storm ?? 0).toBeGreaterThan(0);
+  });
+
+  it('Rückfall-Planung ist bei 500-ms-Kadenz lückenlos (Funken knistern bis zum nächsten Takt)', () => {
+    const f = fake();
+    const s = createSound({ muted: false }, () => f.ctx, fakeIo('reject'));
+    s.unlock();
+    const burning: AmbienceInput = { ...calm, fire: 1 };
+    for (let k = 0; k < 20; k++) {
+      f.raw.currentTime = k * 0.5;
+      vi.advanceTimersByTime(500);
+      s.setAmbience(burning);
+      const latest = Math.max(...f.sources.map((x) => x.startedAt ?? -1));
+      expect(latest, `Takt ${k}`).toBeGreaterThanOrEqual(k * 0.5 + 0.5);
+    }
+  });
+
+  it('Warte-Callback je Schicht nur einmal angehängt', async () => {
+    const f = fake();
+    const requests: string[] = [];
+    const loader = {
+      get: () => null,
+      request: (file: string, then?: unknown) => {
+        if (then) requests.push(file);
+      },
+      dispose() {},
+    };
+    const eng = createAmbienceEngine({
+      ctx: f.ctx,
+      dest: {} as AudioNode,
+      noise: {} as AudioBuffer,
+      loader,
+    });
+    for (let k = 0; k < 30; k++) eng.update(ambienceMix(calm), k * 0.25);
+    await flush();
+    expect(requests.filter((r) => r.endsWith('sea.mp3'))).toHaveLength(1);
   });
 });

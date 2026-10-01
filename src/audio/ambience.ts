@@ -8,6 +8,8 @@ export const GLIDE_S = 1.5;
 export const CROSSFADE_S = 1.5;
 export const IDLE_STOP_S = 10;
 export const AMBIENCE_MIN_INTERVAL_MS = 250;
+/** Annahmeschwelle der Drossel: der 250-ms-Takt der UI schwankt, darunter wird verworfen. */
+export const AMBIENCE_ACCEPT_MS = 200;
 
 export const LAYERS: readonly Layer[] = [
   'sea',
@@ -41,7 +43,7 @@ const HAMMER_TOWN_MIN = 0.2;
 const HAMMER_GAP_S: readonly [number, number] = [3, 8];
 const HAMMER_GAIN = 0.6;
 /** Vorlauf, in dem Zirp- und Knister-Figuren vorausgeplant werden. */
-const LOOKAHEAD_S = 0.5;
+const LOOKAHEAD_S = 1; // deckt zwei 500-ms-Takte ab (Drossel plus Jitter)
 
 const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
@@ -478,10 +480,14 @@ export function createAmbienceEngine(deps: {
     s.player = null;
   };
 
+  const waiting = new Set<Layer>();
   const requestFile = (l: Layer) => {
     const file = LAYER_FILES[l];
     if (!file) return;
+    if (waiting.has(l)) return; // Warte-Callback hängt schon; Liste wächst nicht mit jedem Takt
+    waiting.add(l);
     loader.request(file, (buf) => {
+      waiting.delete(l);
       if (disposed || !st[l].running || st[l].player) return;
       startPlayer(l, buf);
     });
