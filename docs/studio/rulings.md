@@ -1225,3 +1225,14 @@ seed-abhängige Krisen treffen die Kippkante `minMoney` 57 (mild knapp, R101 E3)
 Neumessung.
 
 Entscheider: L0 · Anlass: Gate Merge M6-Sim
+
+## R104 · 2026-10-01 · M7 Slice-Urteil
+
+Ruling: **Slice-Urteil M7: OK** (QA-SLICE `test/m7-slice` @ 179dd65 = main + R1b `f77b83c` + U0-ISO
+`83f8333`; AK-ISO-17 OK, R1c nicht nötig). Messauslegungen angenommen: D-M7-I1 nach Ersatzmass
+(Konflikt mit ¼-Regel AK-R1-02); D-M7-FOAM Schaumkern 0,85–1 / 0,07 Kachel; I5-Ecke ohne
+Kronenpixel. Bilder an den Nutzer gesendet; nach R93/R96 prüft die nächste Session zuerst eine
+Nutzerreaktion, dann R2 ∥ R3, M7-U2 Teil B, M6-R2, M6-U1. — Warum: alle Muss-AK bestanden,
+Abweichungen sind Wortlaut-Konflikte der Spec. — Kosten bei Irrtum: Nacharbeit in R2.
+
+Entscheider: L0 · Anlass: Bericht lead-art Welle 1b/1c

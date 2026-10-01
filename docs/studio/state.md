@@ -19,8 +19,12 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
     Welle. Welle 0 erledigt (Docs-Merge, gepusht). **Welle 1 erledigt**: R0-ISO @ 7039ddd (R100; auf main als 63d0f11, gepusht,
     ADR-012 akzeptiert b800d1e), A1 @ 374d793, X1a @ 9ce9025,
     QA-VORHER (Bilder `.studio/qa/M7-VORHER/`, Mittelkachel (33,32) bzw. (50,31) leistung-50),
-    M7-U2 Teil A @ 07342a6. Erstes Iso-Bild (Platzhalter) dem Nutzer gesendet. **Welle 1b/1c läuft** (R1a, R5, A2,
-    U0-ISO, dann R1b, QA-U0, QA-SLICE) bis zum Slice-Stopp.
+    M7-U2 Teil A @ 07342a6. Erstes Iso-Bild (Platzhalter) dem Nutzer gesendet. **Welle 1b/1c erledigt, Slice OK (R104)**:
+    R1b @ f77b83c (enthält R1a), R5 @ 4489bdd, A2 @ ad4a2ee, U0-ISO @ 83f8333. Bilder an Nutzer
+    gesendet (`.studio/qa/M7-SLICE/`). **Nächste Session zuerst:** Nutzerreaktion auf Slice-Bilder
+    prüfen; dann Welle 2 (R2 ∥ R3, M7-U2 Teil B, M6-R2, M6-U1). Session-Ende-Routine (Metriken,
+    Retro studio-coach inkl. Ad-hoc: inaktiv-Meldungen, R1a 4 Review-Runden, Integrator lief im
+    Hintergrund, fehlender Rot-Schritt Welle 1) wegen Nutzungslimit nicht gelaufen — nachholen.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
   Grafik und Stimmung Richtung Anno 1602. Start erst nach M7 und nur, wenn keine andere L0-Session
