@@ -1027,3 +1027,16 @@ Zweck der Anweisung: Spiel soll nach Anno 1602 aussehen (Stimmung, R73/R90); Aus
 ihm nicht, weil die Rautenprojektion der Kern dieses Looks ist.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R92 · 2026-10-01 · M7-ISO
+
+Ruling: (1) Task R0-ISO darf ausnahmsweise die Kamera-Aufrufe in `src/ui/input.ts` und
+`src/ui/app.ts` ändern (Wegfall `clampCamera`/`TILE`, `zoomAt` in Kacheln); die Plan-Überarbeitung
+regelt die Datei-Ownership gegenüber dem UI-Strang (R0-ISO vor M7-U2/U0-ISO). (2) Die M5-Tests
+`ship.test.ts` (Schiffsplatz) und `camera.test.ts` (Kamera-Schritt) werden bewusst geändert; der
+Review prüft, dass nur diese Erwartungen und nur aus Projektionsgründen wechseln. — Warum: Ohne (1)
+bleibt `make check` nach R0-ISO rot und das Spiel zwischen den Paketen unspielbar; (2) folgt
+zwingend aus ADR-012 (vorderes Wasserfeld, Kamera in Kacheln). — Kosten bei Irrtum: ein
+Ownership-Konflikt mit dem UI-Strang, behebbar durch Reihenfolge im Plan.
+
+Entscheider: L0 · Anlass: Bericht lead-art M7-ISO
