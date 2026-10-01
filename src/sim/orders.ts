@@ -4,8 +4,8 @@ import { createRng } from './rng';
 import type { GoodId, Result, Tier, World } from './types';
 import { fail, ok } from './types';
 
-/** Höchste Hausstufe aller Häuser; ohne Häuser 1. */
-function maxHouseTier(world: World): Tier {
+/** Höchste Hausstufe aller Häuser; ohne Häuser 1 (auch Eingabe des Boom-Pools, M6). */
+export function maxHouseTier(world: World): Tier {
   let max: Tier = 1;
   for (const b of Object.values(world.buildings)) {
     if (b.house !== undefined && b.house.tier > max) max = b.house.tier;
@@ -18,6 +18,14 @@ export function orderUnitReward(good: GoodId): number {
   return Math.floor(GOODS[good].buy * ORDER_PREMIUM);
 }
 
+/** Güterpool der Aufträge und Booms: Güter mit `order` bis `maxTier`, Reihenfolge GOOD_IDS. */
+export function orderPool(maxTier: Tier): GoodId[] {
+  return GOOD_IDS.filter((g) => {
+    const o = GOODS[g].order;
+    return o !== undefined && o.tier <= maxTier;
+  });
+}
+
 /**
  * Auftrag der Periode `k`, rein aus Seed, Periode und Höchststufe abgeleitet (ADR-010):
  * eine neue RNG-Instanz je Periode, kein gespeicherter RNG-Zustand.
@@ -27,10 +35,7 @@ export function orderForPeriod(
   k: number,
   maxTier: Tier,
 ): { good: GoodId; amount: number; reward: number } {
-  const pool = GOOD_IDS.filter((g) => {
-    const o = GOODS[g].order;
-    return o !== undefined && o.tier <= maxTier;
-  });
+  const pool = orderPool(maxTier);
   const r = createRng((seed ^ Math.imul(k + 1, 0x9e3779b1)) >>> 0);
   const good = pool[Math.floor(r() * pool.length)]!;
   const def = GOODS[good].order!;

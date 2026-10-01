@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
+import v2Json from './fixtures/save-v2.json?raw';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { beginCrisis, type CrisisRoll } from '../../src/sim/crises';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from '../../src/sim/defs/goods';
+import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
@@ -30,13 +33,13 @@ function expectFailure(json: string, reason: string): void {
 }
 
 describe('save', () => {
-  it('uses version 2', () => {
-    expect(SAVE_VERSION).toBe(2);
+  it('uses version 3', () => {
+    expect(SAVE_VERSION).toBe(3);
   });
 
   it('AK-S1-01 createWorld starts with the v2 fields', () => {
     const fresh = createWorld(3);
-    expect(fresh.version).toBe(2);
+    expect(fresh.version).toBe(3);
     expect(fresh.taxLevel).toBe('normal');
     expect(fresh.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => fresh.sellPct[g] === 100)).toBe(true);
@@ -52,7 +55,7 @@ describe('save', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(2);
+    expect(loaded.version).toBe(3);
     expect(loaded.taxLevel).toBe('normal');
     expect(loaded.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => loaded.sellPct[g] === 100)).toBe(true);
@@ -90,7 +93,7 @@ describe('save', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 3)),
+      tampered(w, (r) => (r.version = 4)),
       'Unbekannte Version',
     );
   });
@@ -170,7 +173,7 @@ describe('save', () => {
   });
 
   it('rejects an unknown version', () => {
-    expectFailure(JSON.stringify({ ...w, version: 3 }), 'Unbekannte Version');
+    expectFailure(JSON.stringify({ ...w, version: 4 }), 'Unbekannte Version');
   });
 
   it('rejects invalid JSON', () => {
@@ -241,5 +244,182 @@ describe('save', () => {
     for (const json of ['', '{not json', '42', 'null', '[]', '{"version":1}', '"text"']) {
       expect(() => deserialize(json)).not.toThrow();
     }
+  });
+});
+
+const T = CRISIS_FIRST_TICK; // Periode 0 bei Stufe normal
+
+/** `w` auf Stufe normal, Krise `roll` der Periode `k` bei ihrem Start, danach `after` Ticks weiter (ohne step). */
+function inCrisis(roll: CrisisRoll, after = 50, level: 'normal' | 'mild' = 'normal', k = 0): World {
+  w.crisisLevel = level;
+  w.tick = T + k * (level === 'normal' ? 600 : 1200);
+  beginCrisis(w, k, roll);
+  w.tick += after;
+  return w;
+}
+
+/** Angebundener Holzfäller brennt (Ausfall bis T + 200), Krise `burning` mit Ziel. */
+function burningWorld(): { world: World; id: number } {
+  for (let i = 0; i < 4; i++) expect(placeRoad(w, k.x + 2 + i, k.y).ok).toBe(true);
+  const lj = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
+  expect(lj.ok).toBe(true);
+  inCrisis({ kind: 'fire', tile: { x: k.x + 6, y: k.y } });
+  const b = w.buildings[lj.id!]!;
+  b.state = 'burning';
+  b.outageUntil = T + FIRE_OUTAGE;
+  w.crisis!.outcome = 'burning';
+  w.crisis!.target = b.id;
+  return { world: w, id: b.id };
+}
+
+describe('M6 Save v3', () => {
+  it('AK-S1-01 createWorld: version 3, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
+    const a = createWorld(3);
+    expect(a.version).toBe(3);
+    expect(a.crisisLevel).toBe('off');
+    expect(a.crisis).toBeNull();
+    const b = createWorld(3, { crisisLevel: 'normal' });
+    expect(b.crisisLevel).toBe('normal');
+    expect({ ...b, crisisLevel: 'off' }).toEqual(a);
+    expect(Object.keys(a).slice(-2)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
+  });
+
+  // Fixture erzeugt auf main 3fcb678 über den temporären Test tests/sim/gen-save-v2.test.ts
+  // (GEN_SAVE_V2=1; Seed 3, Weg + Holzfäller + Haus östlich des Kontors, Steuer low bei 1000, 10 Holz verkauft
+  // bei 1590, Tick 1600 mit Auftrag Periode 1), siehe Plan M6-Sim Task 1a.
+  it('AK-S1-02 lädt einen echten v2-Stand und migriert ihn nach v3', () => {
+    const before = JSON.parse(v2Json) as World;
+    expect(before.version).toBe(2);
+    const r = deserialize(v2Json);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const loaded = r.world;
+    expect(loaded.version).toBe(3);
+    expect(loaded.crisisLevel).toBe('off');
+    expect(loaded.crisis).toBeNull();
+    expect(Object.values(loaded.buildings).some((b) => b.outageUntil !== undefined)).toBe(false);
+    const shape = (x: World): unknown[] =>
+      Object.values(x.buildings).map((b) => [b.id, b.defId, b.x, b.y, b.progress, b.state]);
+    expect(shape(loaded)).toEqual(shape(before));
+    expect(loaded.stock).toEqual(before.stock);
+    expect(loaded.money).toBe(before.money);
+    expect(loaded.tick).toBe(before.tick);
+    expect(loaded.taxLevel).toBe(before.taxLevel);
+    expect(loaded.sellPct).toEqual(before.sellPct);
+    expect(loaded.order).toEqual(before.order);
+    expect(before.order).not.toBeNull();
+    expect(before.sellPct.wood).toBeLessThan(100);
+  });
+
+  it('AK-S1-03 lädt den v1-Stand über v2 nach v3', () => {
+    const r = deserialize(v1Json);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.world.version).toBe(3);
+    expect(r.world.crisisLevel).toBe('off');
+    expect(r.world.crisis).toBeNull();
+    expect(r.world.taxLevel).toBe('normal');
+    expect(r.world.taxLockedUntil).toBe(0);
+    expect(GOOD_IDS.every((g) => r.world.sellPct[g] === 100)).toBe(true);
+    expect(r.world.order).toBeNull();
+  });
+
+  it('AK-S1-04 Round-trip v3: Sturm in der Vorwarnung, Brand burning, Boom', () => {
+    const cases: Array<() => World> = [
+      () => inCrisis({ kind: 'storm' }),
+      () => burningWorld().world,
+      () => inCrisis({ kind: 'boom', good: 'rum' }),
+    ];
+    for (const make of cases) {
+      w = createWorld(42);
+      k = w.buildings[w.kontorId]!;
+      prepareEast(w, k);
+      const world = make();
+      const r = deserialize(serialize(world));
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.world).toEqual(world);
+    }
+  });
+
+  it('AK-S1-05 weist jede verletzte Ladeprüfung einzeln ab', () => {
+    type Edit = (r: Record<string, unknown>) => void;
+    const crisis = (r: Record<string, unknown>): Record<string, unknown> =>
+      r.crisis as Record<string, unknown>;
+    const storm = (): World => {
+      w = createWorld(42);
+      return inCrisis({ kind: 'storm' });
+    };
+    const boom = (): World => {
+      w = createWorld(42);
+      return inCrisis({ kind: 'boom', good: 'rum' });
+    };
+    const fire = (): { world: World; id: number } => {
+      w = createWorld(42);
+      k = w.buildings[w.kontorId]!;
+      prepareEast(w, k);
+      return burningWorld();
+    };
+    const onStorm: Edit[] = [
+      (r) => (r.crisisLevel = 'extrem'),
+      (r) => (r.crisis = 5),
+      (r) => (crisis(r).period = 1.5),
+      (r) => (crisis(r).period = -1),
+      (r) => (r.crisisLevel = 'off'),
+      (r) => (r.tick = T - 1), // Periodenstart nach tick
+      (r) => (r.tick = T + 500), // tick ≥ until
+      (r) => (crisis(r).kind = 'flood'),
+      (r) => (crisis(r).from = T + 200),
+      (r) => (crisis(r).until = T + 501),
+    ];
+    for (const edit of onStorm) expectFailure(tampered(storm(), edit), 'Beschädigter Spielstand');
+    const onBoom: Edit[] = [(r) => (crisis(r).good = 'tools'), (r) => delete crisis(r).good];
+    for (const edit of onBoom) expectFailure(tampered(boom(), edit), 'Beschädigter Spielstand');
+    const b = (r: Record<string, unknown>, id: number): Record<string, unknown> =>
+      (r.buildings as Record<string, Record<string, unknown>>)[String(id)]!;
+    const onFire: Array<(r: Record<string, unknown>, id: number) => void> = [
+      (r) => (crisis(r).outcome = 'smoulder'),
+      (r) => delete crisis(r).target, // burning ohne target
+      (r) => (crisis(r).outcome = 'miss'), // miss mit target
+      (r) => (crisis(r).tile = { x: 64, y: 3 }),
+      (r) => (crisis(r).tile = { x: 3, y: 1.5 }),
+      (r, id) => (b(r, id).outageUntil = 10.5),
+      (r, id) => (b(r, id).outageUntil = T + 50), // ≤ tick
+      (r, id) => (b(r, id).outageUntil = T + 50 + FIRE_OUTAGE + 1), // > tick + 200
+      (r, id) => delete b(r, id).outageUntil, // burning ohne outageUntil
+      (r, id) => (b(r, id).state = 'ok'), // outageUntil ohne burning
+    ];
+    for (const edit of onFire) {
+      const { world, id } = fire();
+      expectFailure(
+        tampered(world, (r) => edit(r, id)),
+        'Beschädigter Spielstand',
+      );
+    }
+    expectFailure(
+      tampered(storm(), (r) => (r.version = 4)),
+      'Unbekannte Version',
+    );
+  });
+
+  it('AK-S1-11 Laden mitten in einer Krise ändert den Verlauf nicht', () => {
+    const a = createWorld(3, { crisisLevel: 'normal' });
+    while (a.tick < 4000) step(a);
+    let b = createWorld(3, { crisisLevel: 'normal' });
+    while (b.tick < 2500) step(b);
+    expect(b.crisis?.kind).toBe('storm');
+    const r = deserialize(serialize(b));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    b = r.world;
+    while (b.tick < 4000) step(b);
+    expect(serialize(b)).toBe(serialize(a));
+  });
+
+  it('RF-1 Krise auf Stufe mild (Periode 1, Start 3600) lädt', () => {
+    const world = inCrisis({ kind: 'storm' }, 50, 'mild', 1);
+    expect(world.crisis).toMatchObject({ period: 1, from: 3801, until: 4100 });
+    const r = deserialize(serialize(world));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.world).toEqual(world);
   });
 });
