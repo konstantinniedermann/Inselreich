@@ -1005,3 +1005,25 @@ lead-design und lead-tech. — Warum: ausdrückliche Anweisung des Nutzers; Para
 würde render/ doppelt belegen. — Kosten bei Irrtum: keine, nur Vormerkung.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R91 · 2026-10-01 · M7-ISO
+
+Ruling: Auslegung „ich möchte isometrische Grafiken" als **Wechsel der Darstellung auf Isometrie**
+(2:1-Rautenkacheln, feste Blickrichtung ohne Drehen, Gebäude mit Höhe und Tiefensortierung — wie
+Anno 1602), umgesetzt **im Render-Strang von M7** als Spec-Nachtrag „M7-ISO", nicht als eigener
+Meilenstein. ADR-003 wird durch ein neues ADR abgelöst (Status „ersetzt"). Ablauf: Brainstorming
+lead-art mit lead-tech (Projektion, Trefferprüfung Maus→Kachel, Zeichenreihenfolge, Footprints,
+Kamera-Grenzen, Bauvorschau) → Spec-Nachtrag im Branch `docs/m7-spec` → Gate Spec (lead-tech,
+lead-qa) → Render-Tasks im M7-Plan überarbeiten → Gate Plan. Audio-, UI- und Asset-Stränge von M7
+bleiben unverändert; der Slice-Stopp mit Vorher/Nachher-Bildern an den Nutzer bleibt und zeigt das
+erste isometrische Bild. `src/sim/` bleibt unberührt (ADR-002); M6-Sim und M8 sind nicht betroffen;
+M9 baut auf dem isometrischen Slice auf. — Warum: Der M7-Render-Plan (R1a Terrain, R1b/R2 Sprites)
+setzt auf Draufsicht; ihn so zu bauen und danach umzubauen wäre doppelte Arbeit. ADR-003 hat
+Isometrie ausdrücklich als späteres Upgrade mit isoliertem Renderer vorgesehen. — Kosten bei
+Irrtum: Meinte der Nutzer nur schräg gezeichnete Sprites auf dem Quadratgitter, kostet der
+Nachtrag rund eine Session und verzögert M7 entsprechend.
+
+Zweck der Anweisung: Spiel soll nach Anno 1602 aussehen (Stimmung, R73/R90); Auslegung widerspricht
+ihm nicht, weil die Rautenprojektion der Kern dieses Looks ist.
+
+Entscheider: L0 · Anlass: Nutzeranweisung

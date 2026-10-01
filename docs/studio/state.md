@@ -12,7 +12,9 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
   Grafik, Ambiente, Musik — die Stimmung muss rüberkommen" (R73) läuft als Programm:
   - **M6 „Krisen und Stadtdienste"** — Spec fertig (R82, R85), **Plan M6-Sim freigegeben (R87)**,
     Umsetzung bereit.
-  - **M7 „Stimmung"** — Spec fertig (R84), **Plan fertig, Gate Plan offen** (R88).
+  - **M7 „Stimmung"** — Spec fertig (R84), Plan fertig (R88). **Neu R91: Isometrie** — Paket
+    M7-ISO (lead-art) schreibt Spec-Nachtrag + ADR-012 im Branch `docs/m7-spec`; danach Gate Spec
+    (lead-tech, lead-qa), Render-Tasks im Plan überarbeiten, erst dann Gate Plan.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
   Grafik und Stimmung Richtung Anno 1602. Start erst nach M7 und nur, wenn keine andere L0-Session
@@ -25,6 +27,7 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 | Session  | Stand         | besitzt     | bis |
 | -------- | ------------- | ----------- | --- |
 | 664ac8d3 | abgeschlossen | nichts mehr | –   |
+| 5e248230 | aktiv         | M7-ISO (`docs/m7-spec`) | –   |
 
 ## Seit letzter Session erledigt
 
@@ -57,7 +60,7 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Budget
 
-keine Freigaben (nach Session-Wechsel neu loggen)
+Session 5e248230: lead-art 3/1, lead-tech 1/1, lead-qa 1/1 (Phase spec, M7-ISO)
 
 ## Offene Entscheide
 
