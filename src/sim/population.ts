@@ -57,7 +57,12 @@ export function newHouseState(world: World): HouseState {
 export function serviceAvailable(world: World, house: Building, service: ServiceId): boolean {
   return Object.values(world.buildings).some((b) => {
     const def = BUILDING_DEFS[b.defId];
-    return def.service === service && b.connected && distance(house, b) <= (def.serviceRadius ?? 0);
+    return (
+      def.service === service &&
+      b.connected &&
+      b.outageUntil === undefined &&
+      distance(house, b) <= (def.serviceRadius ?? 0)
+    );
   });
 }
 

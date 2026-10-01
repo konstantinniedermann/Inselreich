@@ -1,8 +1,17 @@
 import { BUILDING_DEFS } from './defs/buildings';
+import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
 import { DEFAULT_TAX_LEVEL } from './defs/tiers';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
-import type { Building, BuildingDef, BuildingDefId, GoodId, Tile, World } from './types';
+import type {
+  Building,
+  BuildingDef,
+  BuildingDefId,
+  CrisisLevel,
+  GoodId,
+  Tile,
+  World,
+} from './types';
 
 export type Pos = { x: number; y: number };
 
@@ -56,11 +65,11 @@ export function buildingsOfType(world: World, defId: BuildingDefId): Building[] 
   return Object.values(world.buildings).filter((b) => b.defId === defId);
 }
 
-export function createWorld(seed: number): World {
+export function createWorld(seed: number, opts: { crisisLevel?: CrisisLevel } = {}): World {
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 2,
+    version: 3,
     seed: seedUsed,
     width: MAP_W,
     height: MAP_H,
@@ -77,6 +86,8 @@ export function createWorld(seed: number): World {
     taxLockedUntil: 0,
     sellPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
     order: null,
+    crisisLevel: opts.crisisLevel ?? DEFAULT_WORLD_CRISIS_LEVEL,
+    crisis: null,
   };
   world.buildings[1] = {
     id: 1,

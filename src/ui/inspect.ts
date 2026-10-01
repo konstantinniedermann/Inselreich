@@ -40,6 +40,8 @@ function stateInfo(b: Building): { text: string; ok: boolean } {
       };
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
+    case 'burning':
+      return { text: 'Brennt', ok: false };
   }
 }
 

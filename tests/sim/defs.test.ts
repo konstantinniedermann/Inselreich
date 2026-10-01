@@ -8,8 +8,8 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(8);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 13 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(13);
+  it('has 14 building defs whose goods exist', () => {
+    expect(BUILDING_IDS).toHaveLength(14);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
