@@ -34,6 +34,10 @@ const PAIRS: Array<[string, string]> = [
   ['--gold', '--wood'],
   ['--ink', '--gold'],
   ['--ink', '--parchment-edge'],
+  ['--parchment', '--wood-light'], // Buttons, Segmente
+  ['--parchment', '--wood'], // gesperrte Buttons, Leisten
+  ['--parchment-edge', '--wood'], // Seed-Zeile in der Leiste
+  ['--negative', '--wood'], // .negative in der Leiste
 ];
 
 describe('UI-Kontrast (AK-U2-02)', () => {
@@ -42,6 +46,12 @@ describe('UI-Kontrast (AK-U2-02)', () => {
       expect(vars[fg], fg).toBeDefined();
       expect(vars[bg], bg).toBeDefined();
       expect(contrast(vars[fg]!, vars[bg]!), `${fg}/${bg}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('Keine Opacity auf Text (ausser :disabled, WCAG-ausgenommen)', () => {
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (/opacity\s*:/.test(m[2]!)) expect(m[1]!, 'Regel mit opacity').toContain(':disabled');
     }
   });
 

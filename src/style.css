@@ -173,7 +173,8 @@ body {
   box-shadow: none;
 }
 .btn.unaffordable {
-  opacity: 0.6;
+  background: var(--wood);
+  border-style: dashed;
 }
 .btn.active,
 .btn.active:hover {
@@ -183,7 +184,6 @@ body {
 }
 .btn small {
   display: block;
-  opacity: 0.9;
   font-size: 12px;
 }
 .hud-row {
@@ -203,7 +203,7 @@ body {
 }
 .hud-seed {
   font-size: 12px;
-  opacity: 0.8;
+  color: var(--parchment-edge);
 }
 #buildbar {
   display: flex;
@@ -282,7 +282,7 @@ body {
 .trade-head {
   font-size: 12px;
   text-transform: uppercase;
-  opacity: 0.8;
+  font-weight: 700;
 }
 .trade-good {
   grid-column: 1 / -1;
@@ -295,7 +295,6 @@ body {
 }
 .trade-good small {
   font-weight: 400;
-  opacity: 0.85;
   font-size: 12px;
 }
 .trade-cell {
@@ -384,7 +383,6 @@ body {
 .tooltip .tt-line,
 .tooltip .tt-reason {
   display: block;
-  opacity: 1;
   font-size: 13px;
 }
 .tooltip .tt-reason:empty {
@@ -429,7 +427,7 @@ body {
   align-items: center;
 }
 .tax-lock {
-  opacity: 0.85;
+  font-style: italic;
 }
 
 /* Dialoge: Einstellungen, Credits (M7-U1) */
