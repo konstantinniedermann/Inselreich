@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
+import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { buildColony } from './controller';
+import {
+  buildColony,
+  layoutFor,
+  MAX_TICKS,
+  runColony,
+  startColony,
+  type ColonyOptions,
+} from './controller';
 
 /** FNV-1a, 32 Bit, über die UTF-16-Codeeinheiten (Test-Helfer, keine Abhängigkeit). */
 function fnv1a32(s: string): number {
@@ -45,6 +53,35 @@ const OFF_REFERENCE = {
 };
 const OFF_FINGERPRINT = 0xbfeac8c6; // Referenz Plan-Vorabmessung, bestätigt in Task 2
 
+const NORMAL: ColonyOptions = { fireStation: true };
+
+interface CrisisCount {
+  fires: number;
+  extinguished: number;
+  misses: number;
+  storms: number;
+  booms: number;
+}
+/** Zählt jede Krise einmal (bei ihrem ersten Auftreten); als `stop`, das nie anhält. */
+function counter(): { c: CrisisCount; see: (w: World) => boolean } {
+  const c: CrisisCount = { fires: 0, extinguished: 0, misses: 0, storms: 0, booms: 0 };
+  let last = -1;
+  const see = (w: World): boolean => {
+    const k = w.crisis;
+    if (k !== null && k.period !== last) {
+      last = k.period;
+      if (k.kind === 'fire') {
+        c.fires += 1;
+        if (k.outcome === 'extinguished') c.extinguished += 1;
+        if (k.outcome === 'miss') c.misses += 1;
+      } else if (k.kind === 'storm') c.storms += 1;
+      else c.booms += 1;
+    }
+    return false;
+  };
+  return { c, see };
+}
+
 describe('M6 Krisen-Lauf', () => {
   it('AK-B1-02 Stufe off: Laufdaten und Fingerabdruck der normalisierten Endwelt wie vor M6', () => {
     const w = createWorld(3);
@@ -54,5 +91,53 @@ describe('M6 Krisen-Lauf', () => {
       console.log({ level: 'off', ...t, fingerprint: `0x${fp.toString(16).padStart(8, '0')}` });
     expect(t).toEqual(OFF_REFERENCE);
     expect(fp).toBe(OFF_FINGERPRINT);
+  });
+
+  it.each([
+    ['normal', NORMAL],
+    ['mild', {}],
+  ] as const)('AK-B2-01 Krisen-Lauf %s: Sieg ≤ 9000, Geld > 0, won', (level, opts) => {
+    const w = createWorld(3, { crisisLevel: level });
+    const { layout, t } = startColony(w);
+    const { c, see } = counter();
+    expect(runColony(w, layout, t, opts, see)).toBe(false);
+    const hit = c.fires === 0 ? null : (c.fires - c.misses) / c.fires;
+    if (import.meta.env.VITE_BALANCE_LOG) console.log({ level, ...t, ...c, hitRate: hit }); // AK-B2-02
+    expect(w.won).toBe(true);
+    expect(t.winTick).not.toBeNull();
+    expect(t.winTick!).toBeLessThanOrEqual(MAX_TICKS);
+    expect(w.money).toBeGreaterThan(0);
+  });
+
+  /** Lauf mit Halt bei `stop`, Speichern/Laden, Fortsetzen ab geladenem Stand (Layout aus dem Kontor). */
+  function reloaded(stop: (w: World) => boolean): { w: World; winTick: number | null; at: number } {
+    let w = createWorld(3, { crisisLevel: 'normal' });
+    const { layout, t } = startColony(w);
+    expect(runColony(w, layout, t, NORMAL, stop)).toBe(true);
+    const at = w.tick;
+    const r = deserialize(serialize(w));
+    expect(r.ok).toBe(true);
+    if (!r.ok) throw new Error(r.reason);
+    w = r.world;
+    expect(runColony(w, layoutFor(w), t, NORMAL)).toBe(false);
+    return { w, winTick: t.winTick, at };
+  }
+
+  it('AK-B2-05 Laden mitten im Brand: gleicher Endzustand, gleicher Sieg-Tick', () => {
+    const a = createWorld(3, { crisisLevel: 'normal' });
+    const ta = buildColony(a, NORMAL);
+    const b = reloaded((w) => Object.values(w.buildings).some((x) => x.state === 'burning'));
+    if (import.meta.env.VITE_BALANCE_LOG) console.log({ reloadAtBurning: b.at });
+    expect(serialize(b.w)).toBe(serialize(a));
+    expect(b.winTick).toBe(ta.winTick);
+  });
+
+  it('AK-B2-06 Laden mitten im Sturm (aktiv, Seed 3: Tick 2601): gleicher Endzustand, gleicher Sieg-Tick', () => {
+    const a = createWorld(3, { crisisLevel: 'normal' });
+    const ta = buildColony(a, NORMAL);
+    const b = reloaded((w) => w.crisis?.kind === 'storm' && w.tick >= w.crisis.from);
+    expect(b.at).toBe(2601);
+    expect(serialize(b.w)).toBe(serialize(a));
+    expect(b.winTick).toBe(ta.winTick);
   });
 });

@@ -41,7 +41,17 @@ export interface Layout {
   farms: Slot[];
   chapel: Slot;
   school: Slot;
-  /** Platz der Feuerwache im Krisen-Lauf `normal` (Spec 15). */
+  /**
+   * Platz der Feuerwache im Krisen-Lauf `normal` (Spec 15, Ruling R99). Feste geometrische Regel, nicht am
+   * Sieg-Tick gesucht: Kandidat ist jede Kachel, die im Endlayout frei bleibt (Gras, in keinem Slot) und an
+   * einen Layout-Weg grenzt (angebunden). Gewählt wird der Kandidat, dessen Mitte die meisten Mitten der
+   * brennbaren Produktions-Slots (Holzfäller, Fischer, Farmen und Verarbeiter; 41 Slots) im Abstand
+   * <= serviceRadius (8) deckt; bei Gleichstand der kleinste Abstand zum Schwerpunkt dieser Slots, dann kleinstes
+   * y, dann kleinstes x. Es bleiben vier Kandidaten (kx+10/ky±8 mit je 16 Slots, kx+2/ky±1 mit je 6);
+   * kx+10/ky-8 gewinnt über kleinstes y: Ende der Querstrasse, mitten in den Farmreihen. Nicht gedeckt sind
+   * die Fischer-Slots an der Küste (kx+9) ausserhalb von 8 Kacheln, die weit östlichen Farmen und die
+   * Holzfäller am Waldrand (kx+19).
+   */
   fireStation: Slot;
 }
 
@@ -101,7 +111,7 @@ export function layoutFor(w: World): Layout {
     farms,
     chapel: [kx + 6, ky - 2],
     school: [kx + 6, ky + 1],
-    fireStation: [kx + 9, ky + 6],
+    fireStation: [kx + 10, ky - 8],
   };
 }
 
@@ -223,6 +233,13 @@ function control(w: World, layout: Layout, opts: ColonyOptions): void {
   if (!buildChain(w, 'food', layout)) return;
   // 4. Siedler: Kapelle, dann Stoffkette
   if (anyPlan(2) && count(w, 'chapel') === 0 && !build(w, 'chapel', [layout.chapel])) return;
+  if (
+    opts.fireStation === true &&
+    count(w, 'chapel') > 0 &&
+    count(w, 'firestation') === 0 &&
+    !build(w, 'firestation', [layout.fireStation])
+  )
+    return;
   if (!buildChain(w, 'cloth', layout)) return;
   // 5. Bürger: Schule erst, wenn auch das erste Rum-Paar bezahlbar ist (sonst Unterhalt ohne Nutzen)
   if (anyPlan(3) && count(w, 'school') === 0) {
