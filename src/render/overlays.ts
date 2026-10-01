@@ -10,6 +10,8 @@ import {
 import type { Building, BuildingDefId, GoodId, World } from '../sim/types';
 import { tileCorners, tileToScreen, worldToScreen, type Camera } from './camera';
 import { ISO_H, project, radiusEllipse, spriteBounds } from './iso';
+import { PALETTE } from './palette';
+import { EDGE } from './sprites';
 
 // --- Darstellungswerte ---
 export const SYMBOL_MIN_ZOOM = 0.75; // darunter keine Bedarfssymbole
@@ -207,7 +209,7 @@ function topAnchor(
   return worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
 }
 
-/** Roter Punkt „nicht angebunden" in der Signalebene (Farbe wie bisher; R1b stellt auf `signalRed` um). */
+/** Roter Punkt „nicht angebunden" in der Signalebene: `signalRed` mit dunklem Umriss. */
 export function drawUnconnected(
   ctx: CanvasRenderingContext2D,
   world: World,
@@ -221,8 +223,11 @@ export function drawUnconnected(
     const a = topAnchor(cam, BUILDING_DEFS[b.defId], b);
     ctx.beginPath();
     ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = EXTRA_DOT;
+    ctx.fillStyle = PALETTE.signalRed;
     ctx.fill();
+    ctx.strokeStyle = EDGE;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
 }
 

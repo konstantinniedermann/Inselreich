@@ -51,6 +51,7 @@ describe('Szenario-Saves', () => {
         'galerie',
         'lager-holz-99',
         'leistung-50',
+        'verdeckung',
         'tag-0',
         'tag-3000',
         'krise-brand',

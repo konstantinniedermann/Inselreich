@@ -23,6 +23,7 @@ import type {
 } from '../../src/sim/types';
 import { createWorld, idx } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
+import { verdeckung } from './scenarios-iso';
 
 const SEED = 3;
 
@@ -389,6 +390,7 @@ function leistungSturm(): World {
 
 export const SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
+  verdeckung,
   'lager-holz-99': lagerHolz99,
   bedarf,
   'autosave-lauf': autosaveLauf,
