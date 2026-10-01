@@ -25,6 +25,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
     z: { kind: 'build', defId: 'canefarm' },
     n: { kind: 'build', defId: 'distillery' },
     t: { kind: 'build', defId: 'toolmaker' },
+    e: { kind: 'build', defId: 'firestation' },
   };
 
   it('AK-U2-02: jede Werkzeugtaste aus 10.6 wählt ihr Werkzeug', () => {
@@ -68,7 +69,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
 
   it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
     for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(14);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(15);
   });
 
   it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
@@ -100,5 +101,16 @@ describe('Tempo merken (AK-U2-02)', () => {
 
   it('AK-U2-02: P bei laufendem Spiel pausiert und merkt das Tempo', () => {
     expect(afterPause(2, 1)).toEqual({ speed: 0, last: 2 });
+  });
+});
+
+describe('Feuerwache-Hotkey (M6-AK-U1-04)', () => {
+  it('M6-AK-U1-04: E wählt die Feuerwache, Label "E"', () => {
+    expect(hotkeyAction('e', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'firestation' },
+    });
+    expect(hotkeyAction('E', NONE, false)).not.toBeNull();
+    expect(hotkeyLabel({ kind: 'build', defId: 'firestation' })).toBe('E');
   });
 });

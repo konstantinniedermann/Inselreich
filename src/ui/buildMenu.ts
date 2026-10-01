@@ -1,8 +1,9 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
+import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
 import { GOODS } from '../sim/defs/goods';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { Category, Cost, GoodId, SiteRule, Terrain, World } from '../sim/types';
+import type { BuildingDefId, Category, Cost, GoodId, SiteRule, Terrain, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { costLine } from './dom';
@@ -58,6 +59,25 @@ function costText(c: Cost): string {
   return parts.join(' · ');
 }
 
+/** „Ungeschützt: N brennbare Gebäude" (Feuerwache-Tooltip, live). */
+export function unprotectedLine(n: number): string {
+  return `Ungeschützt: ${n} brennbare Gebäude`;
+}
+
+/** Krisen-Zeilen eines Gebäudetyps (M6 13.2): Brandschutz, „Brennbar", „sturmanfällig". */
+export function crisisTooltipLines(defId: BuildingDefId): string[] {
+  const def = BUILDING_DEFS[defId];
+  const lines: string[] = [];
+  if (def.fireProtection === true) {
+    lines.push(
+      `Schützt brennbare Gebäude im Radius ${def.serviceRadius ?? 0} vor Brand (muss angebunden sein)`,
+    );
+  }
+  if (def.flammable === true) lines.push('Brennbar');
+  if (def.stormAffected === true) lines.push('sturmanfällig (halbe Leistung im Sturm)');
+  return lines;
+}
+
 /** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. */
 export function tooltipLines(tool: Tool): string[] {
   const key = hotkeyLabel(tool);
@@ -82,6 +102,7 @@ export function tooltipLines(tool: Tool): string[] {
   if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
   const radius = def.serviceRadius ?? def.supplyRadius;
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
+  lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
   return lines;
 }
@@ -116,6 +137,11 @@ function attachTooltip(btn: HTMLButtonElement, tool: Tool, hasCost: boolean): vo
     line.textContent = text;
     tip.appendChild(line);
   });
+  if (tool.kind === 'build' && BUILDING_DEFS[tool.defId].fireProtection === true) {
+    const live = document.createElement('span');
+    live.className = 'tt-line tt-unprotected';
+    tip.appendChild(live);
+  }
   if (hasCost) {
     const reason = document.createElement('span');
     reason.className = 'tt-reason';
@@ -227,6 +253,11 @@ export function renderBuildMenu(
 
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
 export function updateBuildMenu(nav: HTMLElement, world: World): void {
+  const live = nav.querySelector('.tt-unprotected');
+  if (live) {
+    const text = unprotectedLine(unprotectedFlammables(world).length);
+    if (live.textContent !== text) live.textContent = text;
+  }
   for (const btn of nav.querySelectorAll<HTMLButtonElement>('button')) {
     const cost = buttonCost.get(btn);
     if (!cost) continue;

@@ -114,7 +114,8 @@ function launch(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
-  const world = loaded ?? createWorld(Date.now() % 100000);
+  let settings = loadSettings();
+  const world = loaded ?? createWorld(Date.now() % 100000, { crisisLevel: settings.crisisLevel });
   const state: GameState = {
     world,
     cam: opts?.camera ? { ...opts.camera } : createCamera(),
@@ -126,7 +127,6 @@ function launch(
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
   };
-  let settings = loadSettings();
   const sound = createSound(settings);
   const unlockSound = (): void => {
     audioUnlockedOnce = true;
@@ -190,6 +190,12 @@ function launch(
     setDayNight: (dayNight) => {
       settings = { ...settings, dayNight };
       saveSettings(settings);
+    },
+    setCrisisLevel: (crisisLevel) => {
+      settings = { ...settings, crisisLevel };
+      const r = saveSettings(settings);
+      if (r.ok) showMessage('Krisenstufe gilt ab dem nächsten Spiel');
+      else showError(r.reason);
     },
     hasProgress: () => world.tick > 0,
     restart: () => {

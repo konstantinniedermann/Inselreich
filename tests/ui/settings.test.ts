@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseSettings, saveSettings, SETTINGS_KEY } from '../../src/ui/settings';
 
-const DEFAULTS = { muted: false, volume: 0.4, dayNight: true };
+const DEFAULTS = { muted: false, volume: 0.4, dayNight: true, crisisLevel: 'normal' as const };
 
 describe('parseSettings (AK-U2-05)', () => {
   it('AK-U2-05: null ergibt die Standardwerte', () => {
@@ -19,8 +19,8 @@ describe('parseSettings (AK-U2-05)', () => {
 
   it('AK-U2-05: fehlende Felder fallen einzeln auf den Standard zurück', () => {
     expect(parseSettings('{}')).toEqual(DEFAULTS);
-    expect(parseSettings('{"muted":true}')).toEqual({ muted: true, volume: 0.4, dayNight: true });
-    expect(parseSettings('{"volume":0.7}')).toEqual({ muted: false, volume: 0.7, dayNight: true });
+    expect(parseSettings('{"muted":true}')).toEqual({ ...DEFAULTS, muted: true });
+    expect(parseSettings('{"volume":0.7}')).toEqual({ ...DEFAULTS, volume: 0.7 });
   });
 
   it('AK-U2-05: gültige Werte bleiben erhalten', () => {
@@ -28,11 +28,13 @@ describe('parseSettings (AK-U2-05)', () => {
       muted: true,
       volume: 0.25,
       dayNight: true,
+      crisisLevel: 'normal',
     });
     expect(parseSettings('{"muted":false,"volume":0}')).toEqual({
       muted: false,
       volume: 0,
       dayNight: true,
+      crisisLevel: 'normal',
     });
   });
 
@@ -41,6 +43,7 @@ describe('parseSettings (AK-U2-05)', () => {
       muted: false,
       volume: 0.5,
       dayNight: true,
+      crisisLevel: 'normal',
     });
     expect(parseSettings('{"muted":1}')).toEqual(DEFAULTS);
   });
@@ -96,12 +99,66 @@ describe('saveSettings dayNight (A4)', () => {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
     });
-    const r = saveSettings({ muted: true, volume: 0.3, dayNight: false });
+    const r = saveSettings({ muted: true, volume: 0.3, dayNight: false, crisisLevel: 'normal' });
     expect(r.ok).toBe(true);
     expect(parseSettings(store.get(SETTINGS_KEY) ?? null)).toEqual({
       muted: true,
       volume: 0.3,
       dayNight: false,
+      crisisLevel: 'normal',
     });
+  });
+});
+
+describe('parseSettings Krisenstufe (M6-AK-U1-01)', () => {
+  it('M6-AK-U1-01: fehlend oder ungültig ergibt normal', () => {
+    expect(parseSettings(null).crisisLevel).toBe('normal');
+    expect(parseSettings('{}').crisisLevel).toBe('normal');
+    expect(parseSettings('{"crisisLevel":"hard"}').crisisLevel).toBe('normal');
+    expect(parseSettings('{"crisisLevel":3}').crisisLevel).toBe('normal');
+    expect(parseSettings('{"crisisLevel":"toString"}').crisisLevel).toBe('normal');
+  });
+
+  it('M6-AK-U1-01: off, mild und normal bleiben', () => {
+    for (const l of ['off', 'mild', 'normal'] as const) {
+      expect(parseSettings(JSON.stringify({ crisisLevel: l })).crisisLevel).toBe(l);
+    }
+  });
+
+  it('M6-AK-U1-01: M5-JSON ohne das Feld behält muted, dayNight und volume', () => {
+    const s = parseSettings('{"muted":true,"volume":0.2,"dayNight":false}');
+    expect(s).toEqual({ muted: true, volume: 0.2, dayNight: false, crisisLevel: 'normal' });
+  });
+});
+
+describe('gemeinsames Einstellungsformat (M6-AK-U1-10)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('M6-AK-U1-10: Round-trip behält auch fremde Felder', () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    });
+    const input = {
+      muted: true,
+      master: 0.3,
+      music: 0.2,
+      ambience: 0.6,
+      effects: 0.9,
+      dayNight: false,
+      reduceMotion: 'on',
+      crisisLevel: 'mild',
+    };
+    const first = parseSettings(JSON.stringify(input));
+    expect(saveSettings(first).ok).toBe(true);
+    const saved = JSON.parse(store.get(SETTINGS_KEY) ?? '{}') as Record<string, unknown>;
+    expect(saved).toMatchObject(input);
+    expect(parseSettings(store.get(SETTINGS_KEY) ?? null)).toEqual(first);
+  });
+
+  it('M6-AK-U1-10: eine Änderung der Krisenstufe lässt fremde Felder stehen', () => {
+    const s = parseSettings('{"master":0.3,"crisisLevel":"off"}');
+    expect(s.extra).toEqual({ master: 0.3 });
   });
 });

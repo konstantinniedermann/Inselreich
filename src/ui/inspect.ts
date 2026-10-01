@@ -2,10 +2,12 @@ import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
+import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
 import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
 import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
+import { center } from '../sim/world';
 import { costLine, setField } from './dom';
 
 export interface InspectActions {
@@ -25,8 +27,27 @@ export function diagnosisText(d: Diagnosis): string {
   }
 }
 
-function stateInfo(b: Building): { text: string; ok: boolean } {
+/** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
+export function burningText(b: Building, tick: number): string {
+  const left = Math.max(0, (b.outageUntil ?? tick) - tick);
+  return `Brennt — wieder in Betrieb in ${left} Ticks`;
+}
+
+/** Anzahl brennbarer Gebäude im Wirkungsradius einer angebundenen Feuerwache (Panel „Schützt N …"). */
+export function protectedCount(world: World, station: Building): number {
+  const def = BUILDING_DEFS[station.defId];
+  if (!station.connected) return 0;
+  const sc = center(def, station.x, station.y);
+  return Object.values(world.buildings).filter((o) => {
+    if (BUILDING_DEFS[o.defId].flammable !== true) return false;
+    const c = center(BUILDING_DEFS[o.defId], o.x, o.y);
+    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (def.serviceRadius ?? 0);
+  }).length;
+}
+
+function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
+  if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
   // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
   if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
   if (!def.produces) return { text: 'Angebunden', ok: true };
@@ -42,7 +63,7 @@ function stateInfo(b: Building): { text: string; ok: boolean } {
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'burning':
-      return { text: 'Brennt', ok: false };
+      return { text: burningText(b, tick), ok: false };
   }
 }
 
@@ -230,6 +251,8 @@ export function renderInspect(
         panel.appendChild(bar);
       }
       addLine(panel, `Unterhalt ${def.upkeep} / ${UPKEEP_INTERVAL} Ticks`);
+      if (def.flammable === true) addLine(panel, '', 'fire-protection');
+      if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
     addButton(buttons, demolishLabel(world, b), () => actions.demolish(id), 'demolish');
   }
@@ -244,8 +267,14 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
   setField(panel, 'demolish', demolishLabel(world, b));
-  const info = stateInfo(b);
+  const info = stateInfo(b, world.tick);
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
+  if (def.flammable === true) {
+    setField(panel, 'fire-protection', `Brandschutz: ${isProtected(world, b) ? 'ja' : 'nein'}`);
+  }
+  if (def.fireProtection === true) {
+    setField(panel, 'fire-covers', `Schützt ${protectedCount(world, b)} brennbare Gebäude`);
+  }
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   if (fill && def.cycle) {
     const width = `${Math.min(100, Math.round((b.progress / def.cycle) * 100))}%`;

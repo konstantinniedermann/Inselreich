@@ -1,13 +1,14 @@
+import { CRISIS_LEVELS } from '../sim/defs/crises';
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { citizens, populationByTier } from '../sim/population';
 import { goodsBalance } from '../sim/queries';
-import type { TaxLevel, Tier } from '../sim/types';
+import type { CrisisLevel, TaxLevel, Tier } from '../sim/types';
 import type { GameState } from './app';
 import { setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
-import type { Settings } from './settings';
+import { CRISIS_LEVEL_IDS, type Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
@@ -73,6 +74,8 @@ export interface HudActions {
   setMuted(muted: boolean): void;
   setVolume(volume: number): void;
   setDayNight(dayNight: boolean): void;
+  /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
+  setCrisisLevel(level: CrisisLevel): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
   hasProgress(): boolean;
   restart(): void;
@@ -144,6 +147,31 @@ function slotLabel(info: SaveInfo): string {
 /** Zeit, nach der die Laden-Auswahl von selbst wieder verschwindet (Millisekunden). */
 const CHOICE_MS = 10000;
 
+/** Auswahl „Krisen: aus · mild · normal" (M6 13.1); gilt erst ab „Neu". */
+function renderCrisisSelect(actions: HudActions): HTMLElement {
+  const label = document.createElement('label');
+  label.className = 'crisis-select';
+  label.title = "gilt ab ‚Neu'";
+  label.append('Krisen: ');
+  const sel = document.createElement('select');
+  sel.setAttribute('aria-label', 'Krisenstufe (gilt ab Neu)');
+  for (const id of CRISIS_LEVEL_IDS) {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = CRISIS_LEVELS[id].name;
+    sel.appendChild(o);
+  }
+  sel.value = actions.settings().crisisLevel;
+  sel.addEventListener('change', () => {
+    actions.setCrisisLevel(sel.value as CrisisLevel);
+    sel.blur();
+  });
+  const hint = document.createElement('small');
+  hint.textContent = "gilt ab ‚Neu'";
+  label.append(sel, hint);
+  return label;
+}
+
 /**
  * Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. Gibt es zwei
  * ladbare Speicherplätze, folgt auf „Laden" eine Auswahl mit beiden Ständen.
@@ -178,6 +206,7 @@ function renderGameButtons(box: Element, actions: HudActions): () => void {
   const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, runLoad);
   const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
   box.append(
+    renderCrisisSelect(actions),
     gameButton('Speichern', () => actions.save()),
     load.btn,
     fresh.btn,

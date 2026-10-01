@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { refundText, restView } from '../../src/ui/inspect';
+import { burningText, protectedCount, refundText, restView } from '../../src/ui/inspect';
+import { createWorld } from '../../src/sim/world';
 import { SCENARIOS } from '../sim/scenarios';
 
 describe('refundText (AK-U1b-02)', () => {
@@ -44,5 +45,39 @@ describe('restView (AK-U2-03)', () => {
       return restView(w).label;
     };
     expect([at(0), at(2400), at(3000), at(4700)]).toEqual(['Tag', 'Abend', 'Nacht', 'Morgen']);
+  });
+});
+
+describe('burningText (M6-AK-U1-08)', () => {
+  const base = { id: 1, x: 0, y: 0, connected: true, progress: 0, state: 'burning' as const };
+  it('M6-AK-U1-08: Betrieb nennt outageUntil - tick', () => {
+    expect(burningText({ ...base, defId: 'lumberjack', outageUntil: 150 }, 100)).toBe(
+      'Brennt — wieder in Betrieb in 50 Ticks',
+    );
+  });
+  it('M6-AK-U1-08: Kapelle (Dienst) ebenso, nie negativ', () => {
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain(
+      'in 30 Ticks',
+    );
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 Ticks');
+  });
+  it('M6-AK-U1-07: protectedCount zählt brennbare Gebäude im Radius, nur bei Anbindung', () => {
+    const w = createWorld(3);
+    const mk = (
+      id: number,
+      defId: 'firestation' | 'distillery' | 'market',
+      x: number,
+      connected = true,
+    ) => {
+      w.buildings[id] = { id, defId, x, y: 50, connected, progress: 0, state: 'ok' };
+      return w.buildings[id];
+    };
+    const st = mk(901, 'firestation', 10);
+    mk(902, 'distillery', 14); // im Radius 8
+    mk(903, 'distillery', 30); // ausserhalb
+    mk(904, 'market', 12); // nicht brennbar
+    expect(protectedCount(w, st)).toBe(1);
+    st.connected = false;
+    expect(protectedCount(w, st)).toBe(0);
   });
 });

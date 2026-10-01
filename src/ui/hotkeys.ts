@@ -16,6 +16,7 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   z: { kind: 'build', defId: 'canefarm' },
   n: { kind: 'build', defId: 'distillery' },
   t: { kind: 'build', defId: 'toolmaker' },
+  e: { kind: 'build', defId: 'firestation' },
 };
 
 const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };

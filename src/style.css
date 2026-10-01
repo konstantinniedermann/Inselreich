@@ -581,3 +581,9 @@ body {
   font-weight: 700;
   white-space: nowrap;
 }
+
+.crisis-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
