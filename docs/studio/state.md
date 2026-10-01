@@ -40,10 +40,11 @@ Stand: 2026-10-01 (Session-Ende 5e248230)
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt     | bis |
-| -------- | ------------- | ----------- | --- |
-| 664ac8d3 | abgeschlossen | nichts mehr | –   |
-| 5e248230 | abgeschlossen | nichts mehr | –   |
+| Session                           | Stand                              | besitzt                                             | bis |
+| --------------------------------- | ---------------------------------- | --------------------------------------------------- | --- |
+| 664ac8d3                          | abgeschlossen                      | nichts mehr                                         | –   |
+| 5e248230                          | aktiv (fortgesetzt)                | M7-Abschluss (X1b, INT, Final-Review, Merge), M7-UX | –   |
+| Cloud „Thema abschliessen" 32e7c1 | idle, übergeben an 5e248230 (R119) | nichts mehr                                         | –   |
 
 ## Seit letzter Session erledigt
 
@@ -76,7 +77,8 @@ keine Freigaben (nach Session-Wechsel neu loggen; Welle 2 aus dem M7-Budget 80 f
 
 ## Nächste Schritte
 
-1. Nutzerreaktion auf Slice-Bilder prüfen (R93/R96).
+1. Nutzer: Slice „gefällt mir" (R107). **Läuft:** Welle 2 Render/Audio (lead-art), M7-U1
+   (lead-tech), M7-UX UX-Analyse + Kurz-Spec (lead-design).
 2. R106 Punkt 3 (lead-art: Spec-Auslegungen R104, Plan-Ausnahme `scenario-saves.test.ts`).
 3. Welle 2 freigeben: R2 ∥ R3 (lead-art), M7-U2 Teil B, M6-R2, M6-U1 (lead-tech); Merge-Briefings
    mit Integrator im Vordergrund (R106 Punkt 2).
