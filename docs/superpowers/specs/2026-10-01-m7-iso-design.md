@@ -307,7 +307,8 @@ und Tiefensortierung" dazu; das trägt D1 nach.
   unverändert. `zn` aus M7-Spec 7.3 hängt nur am Zoom, und der Zoombereich bleibt.
 - Palette, Signalfarben, Lesbarkeitsregeln 4.3.2 bis 4.3.5, Tageslicht, Wetter, Krisen-Effekte (Inhalt), Obergrenzen
   und Performance-Grenzen: unverändert.
-- Die M6-Schnittstelle (M7-Spec 11.3) und `RenderFx` bleiben unverändert. `render(...)` behält seine Signatur.
+- Die M6-Schnittstelle (M7-Spec 11.3) und `RenderFx` bleiben unverändert, bis auf das optionale Dev-Feld
+  `RenderFx.raster` (Abschnitt 13, R94). `render(...)` behält seine Signatur.
 - `src/sim/`, das Speicherformat und die Spielwerte: unverändert. Die Kamera wird nicht gespeichert, deshalb ist
   keine Migration nötig.
 - M6-Sim und M8 sind nicht betroffen. M9 baut auf dem isometrischen Slice auf (R91).
@@ -331,8 +332,8 @@ Signatur (D-05). Ohne die Aufrufer in `input.ts` und `app.ts` wird `make check` 
 
 - die Importzeilen (`input.ts:3`, `app.ts:10`);
 - die Kamera-Aufrufe (heute `input.ts` 66–74, 196–198, 296–298 und `app.ts` 150–151, 381, 388–390);
-- das Lesen von `?raster=1` im Dev-Build. Das ist eine kleine Erweiterung der Ausnahme aus R92, die L0 bestätigen
-  muss; der Renderer bekommt das Flag als optionales Feld `RenderFx.raster`.
+- das Lesen von `?raster=1` im Dev-Build. Das ist eine kleine Erweiterung der Ausnahme aus R92, bestätigt durch
+  R94; der Renderer bekommt das Flag als optionales Feld `RenderFx.raster`.
 
 Weil R0-ISO das erste Paket an diesen Dateien ist, gibt es keinen Konflikt.
 
@@ -348,16 +349,16 @@ parallel zu R0-ISO läuft und der UI-Strang vor U0-ISO `git merge main` macht, e
 
 **Auswirkungen auf die bestehenden Tasks** (Schätzung des Mehraufwands aus der Bestandsaufnahme):
 
-| Task  | Folge                                                                                                                                                                                                                              | Mehraufwand |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| R1a   | angepasst, klein: Lichtvektor (D-11), keine Kronen in der Textur, Baumstempel (D-08), `water.ts` unter der Bodenmatrix                                                                                                             | +15 %       |
-| R1b   | angepasst, mittel bis gross: Ebenen nach Abschnitt 5 vollständig, Schattendurchgang, Primitiv `isoBox` ausgebaut, 3 Silhouetten in Iso, echte Höhen in `spriteBounds`. Projektion, Rauten, Ellipse und Schiff liefert schon R0-ISO | +35 %       |
-| R2    | angepasst, mittel bis gross: 10 Silhouetten und Fallback in Iso, Fensteranker auf den Wänden, Erdwege unter der Bodenmatrix                                                                                                        | +40 %       |
-| R2-FW | angepasst: Feuerwache als Turmkörper (H_TOWER)                                                                                                                                                                                     | +40 %       |
-| M6-R2 | fast unverändert: `overlayPlan` bleibt, das Zeichnen projiziert die Endpunkte (macht R0-ISO für alle Umrisse)                                                                                                                      | ±0          |
-| R3    | angepasst, klein: Effekt-`Rect` aus `spriteBounds`, Sturmwasser unter der Bodenmatrix                                                                                                                                              | +10 %       |
-| R4    | angepasst, klein bis mittel: Figuren und Fischerboot im sortierten Durchgang, Schatten im Schattendurchgang, Fensterlicht an den Wand-Ankern, Leistungsmessung mit affinem Zeichnen                                                | +15 %       |
-| R5    | angepasst, klein: Mittelpunkt-Fall (AK-ISO-12); hängt jetzt an R0-ISO                                                                                                                                                              | +10 %       |
+| Task  | Folge                                                                                                                                                                                                                                             | Mehraufwand |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| R1a   | angepasst, klein: Lichtvektor (D-11), keine Kronen in der Textur, Baumstempel (D-08), `water.ts` unter der Bodenmatrix                                                                                                                            | +15 %       |
+| R1b   | angepasst, mittel bis gross: Ebenen nach Abschnitt 5 vollständig, Schattendurchgang, Primitiv `isoBox` ausgebaut, 3 Silhouetten in Iso, echte Höhen in `spriteBounds` und `bodyHull`. Projektion, Rauten, Ellipse und Schiff liefert schon R0-ISO | +35 %       |
+| R2    | angepasst, mittel bis gross: 10 Silhouetten und Fallback in Iso, Fensteranker auf den Wänden, Erdwege unter der Bodenmatrix                                                                                                                       | +40 %       |
+| R2-FW | angepasst: Feuerwache als Turmkörper (H_TOWER)                                                                                                                                                                                                    | +40 %       |
+| M6-R2 | fast unverändert: `overlayPlan` bleibt, das Zeichnen projiziert die Endpunkte (macht R0-ISO für alle Umrisse)                                                                                                                                     | ±0          |
+| R3    | angepasst, klein: Effekt-`Rect` aus `spriteBounds`, Sturmwasser unter der Bodenmatrix                                                                                                                                                             | +10 %       |
+| R4    | angepasst, klein bis mittel: Figuren und Fischerboot im sortierten Durchgang, Schatten im Schattendurchgang, Fensterlicht an den Wand-Ankern, Leistungsmessung mit affinem Zeichnen                                                               | +15 %       |
+| R5    | angepasst, klein: Mittelpunkt-Fall (AK-ISO-12); hängt jetzt an R0-ISO                                                                                                                                                                             | +10 %       |
 
 Insgesamt kommen auf die bestehenden Render-Tasks etwa +25 % dazu, plus R0-ISO (2 Tasks in einem Paket) und U0-ISO
 (≈ ¾ Task).
@@ -584,9 +585,8 @@ Zoomstufen sind immer 0,5 · 0,75 · 1 · 1,1 · 1,33 · 1,7 · 2. Die Kameraver
    bei Bedarf nach dem Playtest (Eintrag in `docs/beobachtungen.md`).
 4. **Treppen beim Weg ziehen** (D-15). _Empfehlung:_ So lassen. Fällt es im Playtest auf, kommt eine Achssperre als
    UI-Komfort, ausserhalb von M7.
-5. **Ownership und Teständerungen:** geregelt durch R92 und R93. _Offen für L0:_ Die Ausnahme aus R92 umfasst auch
-   das Lesen von `?raster=1` in `app.ts` (Abschnitt 12). _Empfehlung:_ bestätigen, denn es ist eine Zeile im
-   Dev-Zweig.
+5. **Ownership und Teständerungen:** geregelt durch R92 und R93. Die Ausnahme aus R92 umfasst auch das Lesen von
+   `?raster=1` in `app.ts` (Abschnitt 12), bestätigt durch R94.
 6. **Berge mit Höhe** gibt es nicht (D-08). Der Anno-Look kennt sie. _Empfehlung:_ Kandidat für M9 bzw. eine spätere
    Stimmungsrunde (Eintrag in `docs/beobachtungen.md`). Die Sim hat keine Höhe, und das soll so bleiben.
 
