@@ -46,7 +46,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Briefing-Standard: Hauptgrösse Tools, Minuten abgeleitet, Kopfzeile nennt Tabellenzeile), `docs/studio/templates/briefing.md` (Kopfzeile und Beispiel), `docs/studio/metriken/richtwerte.md` (Tabelle Rolle × Modell × Plan-Art: Median Minuten und Tools), `docs/studio/CHANGELOG.md`
 - Ruling: R54, angepasst R75
 - Start: Handbuch 1.1, angepasst Handbuch 1.7
-- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`. Zwischenstand Session 664ac8d3 (`retros/2026-09-30-session-664ac8d3.md` B2, B3): Anwendung 9 von 15 Starts seit 1.7 (60 %); Werkzeugaufrufe +68 % über 10 Agenten, davon 9 fortgesetzt (+91 %); Vorschlag Messregel für Folgeaufträge, Ruling offen. Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md` B7): Werkzeugaufrufe −23,1 % und Minuten +11,7 % über 44 Agenten, Tabellenzeile in 40 von 45 Briefings → weiter beobachten, Bewertung Retro M7
+- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`. Zwischenstand Session 664ac8d3 (`retros/2026-09-30-session-664ac8d3.md` B2, B3): Anwendung 9 von 15 Starts seit 1.7 (60 %); Werkzeugaufrufe +68 % über 10 Agenten, davon 9 fortgesetzt (+91 %); Vorschlag Messregel für Folgeaufträge, Ruling offen. Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md` B7): Werkzeugaufrufe −23,1 % und Minuten +11,7 % über 44 Agenten, Tabellenzeile in 40 von 45 Briefings → weiter beobachten, Bewertung Retro M7. **Bewertung Retro M7** (`retros/2026-10-01-meilenstein-m7.md` B4): Werkzeugaufrufe −0,3 % (1813 → 1807) über 43 Agenten, Schwelle ±50 % erreicht; Minuten +33,0 % (nur berichtet); Anwendung 42 von 60 M7-Briefings (70 %) → Empfehlung `behalten`, Ruling offen; Richtwerte nachgeeicht (`metriken/richtwerte.md`, „Nacheichung M7“)
 
 ## E-002 · laufend · Datei-Eigentum bei parallelen L0-Sessions
 
@@ -57,7 +57,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start: Schritt „andere L0-Session aktiv → Datei-Eigentum und Merge-Reihenfolge in state.md eintragen oder übernehmen“), `docs/studio/state.md` (Abschnitt „Parallele Sessions“), `docs/studio/CHANGELOG.md`
 - Ruling: R55
 - Start: Handbuch 1.2
-- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten; Session 5e248230: keine parallele Episode, 0 Basis-Drift-Rulings in R91–R105 → weiter beobachten; Cloud-Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md` B4): zweite Episode, 0 Basis-Drift-Rulings, aber Nummernkollision R107/R118 und Revert (nicht abgedeckte Klasse) → weiter beobachten bis Retro M7, Messregel um Ruling-Nummern ergänzen vorgeschlagen
+- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten; Session 5e248230: keine parallele Episode, 0 Basis-Drift-Rulings in R91–R105 → weiter beobachten; Cloud-Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md` B4): zweite Episode, 0 Basis-Drift-Rulings, aber Nummernkollision R107/R118 und Revert (nicht abgedeckte Klasse) → weiter beobachten bis Retro M7, Messregel um Ruling-Nummern ergänzen vorgeschlagen. **Bewertung Retro M7** (`retros/2026-10-01-meilenstein-m7.md` B1): Zeitraum erreicht (2 Episoden), Basis-Drift-Rulings 0 in beiden → Schwelle formal erfüllt; der Schaden der 2. Episode lag ausserhalb der Messregel (2 Nummernkollisionen, 4 Pakete neu umgesetzt, 1 Welle auf veraltetem Stand), Eintrag in „Parallele Sessions“ kam zu spät → Empfehlung `angepasst` über E-005 (übernimmt den Platz), Ruling offen
 
 ## E-003 · laufend · Zweck-Gegenprobe bei Auslegungen
 
@@ -68,7 +68,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Abschnitt „Autonomie“, Ablauf Schritt 2: ein Halbsatz), `docs/studio/CHANGELOG.md`
 - Ruling: R75
 - Start: Handbuch 1.7
-- Bewertung: Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md`, Session 1 von 3): Anwendung 2/2 (R91, R105), 0 Korrekturen wegen Fehlauslegung (R97 berichtigt eine Rechnung, keine Auslegung) → weiter beobachten; Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md`, Session 2 von 3): Anwendung 1 von 2 (R118 ja, R107 (3) nein), 0 Korrekturen wegen Fehlauslegung (R115 korrigiert ein L0-Briefing) → weiter beobachten
+- Bewertung: Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md`, Session 1 von 3): Anwendung 2/2 (R91, R105), 0 Korrekturen wegen Fehlauslegung (R97 berichtigt eine Rechnung, keine Auslegung) → weiter beobachten; Session ddd9a9ac (`retros/2026-10-01-session-ddd9a9ac.md`, Session 2 von 3): Anwendung 1 von 2 (R118 ja, R107 (3) nein), 0 Korrekturen wegen Fehlauslegung (R115 korrigiert ein L0-Briefing) → weiter beobachten; Retro M7: 2 von 3 Sessions (5e248230 mit R91, R105, R118 je mit Zweck-Satz; ddd9a9ac R107 (3) ohne), 0 Korrekturen wegen Fehlauslegung (R119 überholt R118 wegen neuer Lage, R117 betrifft eine Spec-Auslegung) → weiter beobachten, eine Session fehlt
 
 ## E-004 · vorgeschlagen · Rechenweg im Budget-Ruling
 
@@ -77,6 +77,28 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Zeitraum: die nächsten 3 Gate-Plan-Rulings mit Budget.
 - Rückfall: Handbuch in der Version vor der Umsetzung, Budget-Abschnitt ohne den Satz zum Rechenweg.
 - Dateien: `docs/studio/STUDIO.md` (Budget-Abschnitt, ein Satz), `docs/studio/CHANGELOG.md`
+- Ruling: R106 (1) (angenommen, Start bei freiem Platz)
+- Start: Platz frei, sobald L0 „E-001 behalten“ bestätigt (Retro M7); Umsetzung durch den Coach nach dem Ruling, erster Prüffall Budget-Ruling Gate Plan M7-UX (R122 (4))
+- Bewertung: –
+
+## E-005 · vorgeschlagen · Abstimmung paralleler L0-Sessions über origin (Stufe 2 von E-002)
+
+- Hypothese: Wenn jede L0-Session vor ihrem ersten Ruling `git fetch` ausführt und ihren Eintrag in „Parallele Sessions“ (`state.md`) auf `main` pusht, vor jedem Ruling die nächste freie R-Nummer gegen `origin/main` prüft und Strang-Branches nach jeder Abnahme pusht (R107 als Handbuchregel), dann entfallen in Episoden paralleler L0-Sessions Nummernkollisionen, verlorene Arbeit und Wellen auf veraltetem Stand.
+- Messgrösse: In der nächsten Episode paralleler L0-Sessions (überlappende Lebenszeiten in `.studio/events.jsonl` oder zwei aktive Zeilen in „Parallele Sessions“) 0 Ereignisse der Klassen (a) Ruling-Nummernkollision, (b) Paket neu umgesetzt wegen ungepushtem Branch, (c) Welle oder Paket wegen veraltetem Stand gestoppt oder überholt, (d) Ruling mit Anlass „Basis-Drift“/„Nachführen gegen main“ (Zählung in `docs/studio/rulings.md`). Ausgangswert Episode M7: (a) 2, (b) 4 Pakete, (c) 1, (d) 0. Nebenbei: Anwendung = Eintrag der zweiten Session in „Parallele Sessions“ auf `origin/main` vor ihrem ersten Ruling (ja/nein).
+- Zeitraum: die nächste Episode paralleler L0-Sessions; ohne Episode bis Ende M8 offen halten, dann `weiter beobachten` oder `zurückgenommen` mangels Daten.
+- Rückfall: Handbuch in der Version vor der Umsetzung, Abschnitt „Session-Start und -Ende“ im Stand von E-002 (Handbuch 1.2, R55); die Push-Pflicht gilt dann weiter als Ruling R107.
+- Dateien: `docs/studio/STUDIO.md` (Session-Start: Schritte `git fetch` und Push des Eintrags vor dem ersten Ruling; Rulings: Nummer gegen `origin/main`; Push-Pflicht für Strang-Branches), `docs/studio/state.md` (Abschnitt „Parallele Sessions“: Hinweis „Eintrag vor dem ersten Ruling pushen“), `docs/studio/CHANGELOG.md`
 - Ruling: – (offen)
-- Start: erst, wenn ein Platz frei wird (höchstens 3 laufend; frühestens nach der Bewertung von E-001 in der Retro M7)
+- Start: übernimmt den Platz von E-002, sobald L0 „E-002 angepasst“ bestätigt
+- Bewertung: –
+
+## E-006 · vorgeschlagen · Exklusive Arbeitsbäume
+
+- Hypothese: Wenn das Handbuch das Eigentum an Arbeitsbäumen festlegt — Hauptcheckout gehört L0 (Studio-Dateien) und während eines Merge-Fensters nur dem Integrator; Leads und Arbeiter committen nur in eigenen Worktrees oder Branches; QA-Bäume und Scratchpad-Unterordner gehören exklusiv dem jeweiligen Check; nur `git pull --ff-only`, kein bares `git stash` — und der Integrator laut Persona HEAD unmittelbar vor dem Merge und vor dem Push prüft, dann entfallen Vorfälle durch fremde Schreibzugriffe auf geteilte Arbeitsbäume.
+- Messgrösse: Vorfälle „fremder Schreibzugriff auf geteilten Arbeitsbaum“ (Zählung in `docs/studio/rulings.md`, Integrator- und QA-Berichten unter `.studio/archiv/berichte/` und `docs/beobachtungen.md`) bis Ende M8: 0. Ausgangswert M7: 6 (Probe-Revert auf main, QA-Baum `ui-qa` umgestellt R116, `lib.mjs` im Scratchpad R111, bares `git stash` bei fünf Worktrees, Lead-Commit im Hauptcheckout im Merge-Fenster, `pull --rebase` R124). Nebenbei: Anteil der Merge-Berichte mit HEAD-Prüfung vor Merge und vor Push (Anwendung).
+- Zeitraum: bis Ende M8 (M7-UX eingeschlossen).
+- Rückfall: Handbuch und `.claude/agents/production-integrator.md` in der Version vor der Umsetzung; R124 (2) gilt dann weiter als Ruling.
+- Dateien: `docs/studio/STUDIO.md` (Abschnitt zu Branches/Merges: Eigentum der Arbeitsbäume), `.claude/agents/production-integrator.md` (HEAD-Prüfung vor Merge und Push, Persona Minor), `docs/studio/templates/briefing.md` (Zeile „Arbeitsbaum:“), `docs/studio/CHANGELOG.md`
+- Ruling: – (offen)
+- Start: erst, wenn ein Platz frei wird (nach Abschluss von E-003); bis dahin gilt R124 (2) als Ruling und steht in `lernen.md`
 - Bewertung: –

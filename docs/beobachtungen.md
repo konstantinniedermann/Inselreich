@@ -540,6 +540,18 @@ wird … ersetzt", auch wenn nur ein manueller Stand existiert. Das Menü unters
 **Ursprung:** Planpflege lead-tech nach Gate Plan M7-UX (R125).
 **Einschätzung:** niedrig; im Task-Review der Startkarte (Task 4) mit derselben Fallunterscheidung lösen.
 
+### 2026-10-01 · `tools/studio/metrics.py --milestone` · Meilenstein-Metrik ohne Cloud-Session
+
+**Beobachtung:** `metriken/M7.md` zählt nur die lokalen Sessions 664ac8d3 und 5e248230. Die
+Cloud-Session ddd9a9ac (96 Agenten, 323,8 min, 1650 Werkzeugaufrufe laut
+`metriken/S-2026-10-01-ddd9a9ac.md`) fehlt, weil ihre Rohdaten im Cloud-Container lagen; Welle 2 von
+M7 ist in Aufwand und Qualität der Meilenstein-Metrik nicht enthalten. Zudem führt die Zeile
+`studio-director` 812 Agenten bei 1 gemessenen.
+**Ursprung:** Retro M7 (studio-coach), B7.
+**Einschätzung:** mittel für die Verbesserungsschleife (Meilenstein-Vergleiche werden schief, sobald
+Cloud-Sessions mitarbeiten). Denkbar: Session-Metrik-Dateien beim Meilenstein-Lauf mitsummieren oder die
+Lücke im Bericht ausweisen; Kandidat für lead-production.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
