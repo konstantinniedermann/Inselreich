@@ -76,3 +76,35 @@ describe('UNLOCK_EVENTS (AK-U2-06, Browser-Teil)', () => {
     expect(UNLOCK_EVENTS).not.toContain('pointerdown');
   });
 });
+
+describe('Krisen-Signaltöne (M6-AK-U3-01)', () => {
+  const snap = (crisis: ReturnType<typeof soundSnapshot>['crisis']) => {
+    const s = soundSnapshot(createWorld(1));
+    return { ...s, crisis };
+  };
+  const fire = (period: number, burning: boolean) => ({ period, kind: 'fire' as const, burning });
+  it('neue Periode Brand burning ergibt alarm, gleiche Periode nichts', () => {
+    expect(diffSoundEvents(snap(null), snap(fire(1, true)))).toEqual(['alarm']);
+    expect(diffSoundEvents(snap(fire(1, true)), snap(fire(1, true)))).toEqual([]);
+    expect(diffSoundEvents(snap(fire(1, true)), snap(null))).toEqual([]);
+    expect(diffSoundEvents(snap(fire(1, true)), snap(fire(2, true)))).toEqual(['alarm']);
+  });
+  it('gelöscht und leer ohne Ton', () => {
+    expect(diffSoundEvents(snap(null), snap(fire(1, false)))).toEqual([]);
+  });
+  it('Sturm und Boom', () => {
+    expect(diffSoundEvents(snap(null), snap({ period: 2, kind: 'storm', burning: false }))).toEqual(
+      ['stormWarning'],
+    );
+    expect(diffSoundEvents(snap(null), snap({ period: 3, kind: 'boom', burning: false }))).toEqual([
+      'boom',
+    ]);
+    const st = snap({ period: 2, kind: 'storm', burning: false });
+    expect(diffSoundEvents(st, st)).toEqual([]);
+  });
+  it('Laden: geladener Stand als Basis ergibt nichts', () => {
+    const w = createWorld(1);
+    w.crisis = { period: 4, kind: 'boom', from: 0, until: 300, good: 'wood' };
+    expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
+  });
+});

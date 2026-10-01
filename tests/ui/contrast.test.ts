@@ -30,6 +30,7 @@ const vars = rootVars(css);
 
 const PAIRS: Array<[string, string]> = [
   ['--ink', '--parchment'],
+  ['--ink', '--warn-parchment'], // .toast.warn
   ['--parchment', '--wood'],
   ['--gold', '--wood'],
   ['--ink', '--gold'],
@@ -47,6 +48,14 @@ describe('UI-Kontrast (AK-U2-02)', () => {
       expect(vars[bg], bg).toBeDefined();
       expect(contrast(vars[fg]!, vars[bg]!), `${fg}/${bg}`).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it('Grafik-Kontrast ≥ 3 : 1: Warnkante auf Warn-Pergament', () => {
+    expect(contrast(vars['--warn-amber']!, vars['--warn-parchment']!)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('Boom-Marke bleibt mit hidden verborgen', () => {
+    expect(css).toMatch(/\.badge--boom\[hidden\]\s*\{[^}]*display:\s*none/);
   });
 
   it('Keine Opacity auf Text (ausser :disabled, WCAG-ausgenommen)', () => {

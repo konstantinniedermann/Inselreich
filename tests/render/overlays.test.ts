@@ -88,3 +88,25 @@ describe('overlays', () => {
     expect(SYMBOL_MIN_ZOOM).toBe(0.75);
   });
 });
+
+describe('M6-R2 Feuerwache im Overlay', () => {
+  it('M6-AK-R2-01 overlayPlan für die Feuerwache: Kreis Radius 8, Abdeckung fire', () => {
+    const plan = overlayPlan(w, 'firestation', k.x + 6, k.y - 4);
+    expect(plan?.coverage).toBe('fire');
+    expect(plan?.circle?.radius).toBe(8);
+    expect(overlayPlan(w, 'chapel', k.x + 6, k.y - 4)?.coverage).toBe('faith');
+    expect(overlayPlan(w, 'house', k.x + 6, k.y - 4)?.coverage).toBe('supply');
+  });
+
+  it('M6-AK-R2-01 Cache rechnet fire nur bei geändertem layoutKey neu', () => {
+    let calls = 0;
+    const cache = createCoverageCache((world, kind) => {
+      calls++;
+      return coverageMask(world, kind);
+    });
+    cache.get(w, 'fire');
+    cache.get(w, 'fire');
+    cache.outline(w, 'fire');
+    expect(calls).toBe(1);
+  });
+});

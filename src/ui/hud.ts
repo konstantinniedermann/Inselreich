@@ -1,14 +1,16 @@
+import { CRISIS_LEVELS } from '../sim/defs/crises';
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { citizens, populationByTier } from '../sim/population';
-import { goodsBalance } from '../sim/queries';
-import type { TaxLevel, Tier } from '../sim/types';
+import { crisisView, goodsBalance } from '../sim/queries';
+import type { CrisisLevel, TaxLevel, Tier } from '../sim/types';
 import type { GameState } from './app';
-import { setField } from './dom';
+import { blurAfterClick, setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
-import type { Settings } from './settings';
+import { CRISIS_LEVEL_IDS, type Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
+import { crisisCardText } from './crisis';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -71,8 +73,13 @@ export interface HudActions {
   /** Aktuelle Einstellungen für die Ton-Regler. */
   settings(): Settings;
   setMuted(muted: boolean): void;
-  setVolume(volume: number): void;
-  setDayNight(dayNight: boolean): void;
+  /**
+   * Öffnet die Einstellungs-Karte (Lautstärken, Tag-Nacht, Bewegung, Credits).
+   * `opener` ist der auslösende Knopf; ihm gibt das Schliessen den Fokus zurück.
+   */
+  openSettings(opener?: HTMLElement): void;
+  /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
+  setCrisisLevel(level: CrisisLevel): void;
   /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
   hasProgress(): boolean;
   restart(): void;
@@ -86,8 +93,8 @@ function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): H
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.textContent = label;
-  btn.addEventListener('click', () => {
-    btn.blur();
+  btn.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) btn.blur();
     onClick(btn);
   });
   return btn;
@@ -144,6 +151,31 @@ function slotLabel(info: SaveInfo): string {
 /** Zeit, nach der die Laden-Auswahl von selbst wieder verschwindet (Millisekunden). */
 const CHOICE_MS = 10000;
 
+/** Auswahl „Krisen: aus · mild · normal" (M6 13.1); gilt erst ab „Neu". */
+function renderCrisisSelect(actions: HudActions): HTMLElement {
+  const label = document.createElement('label');
+  label.className = 'crisis-select';
+  label.title = "gilt ab ‚Neu'";
+  label.append('Krisen: ');
+  const sel = document.createElement('select');
+  sel.setAttribute('aria-label', 'Krisenstufe (gilt ab Neu)');
+  for (const id of CRISIS_LEVEL_IDS) {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = CRISIS_LEVELS[id].name;
+    sel.appendChild(o);
+  }
+  sel.value = actions.settings().crisisLevel;
+  sel.addEventListener('change', () => {
+    actions.setCrisisLevel(sel.value as CrisisLevel);
+    sel.blur();
+  });
+  const hint = document.createElement('small');
+  hint.textContent = "gilt ab ‚Neu'";
+  label.append(sel, hint);
+  return label;
+}
+
 /**
  * Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. Gibt es zwei
  * ladbare Speicherplätze, folgt auf „Laden" eine Auswahl mit beiden Ständen.
@@ -178,6 +210,7 @@ function renderGameButtons(box: Element, actions: HudActions): () => void {
   const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, runLoad);
   const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
   box.append(
+    renderCrisisSelect(actions),
     gameButton('Speichern', () => actions.save()),
     load.btn,
     fresh.btn,
@@ -190,7 +223,7 @@ function renderGameButtons(box: Element, actions: HudActions): () => void {
   };
 }
 
-/** Stumm-Schalter und Lautstärkeregler; Werte kommen aus und gehen an `actions`. */
+/** Schnellschalter Stumm und Button Einstellungen; Werte kommen aus und gehen an `actions`. */
 function renderSoundControls(box: Element, actions: HudActions): void {
   const initial = actions.settings();
   const mute = document.createElement('button');
@@ -207,32 +240,8 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     actions.setMuted(muted);
     syncMute(muted);
   });
-  const vol = document.createElement('input');
-  vol.type = 'range';
-  vol.min = '0';
-  vol.max = '1';
-  vol.step = '0.05';
-  vol.value = String(initial.volume);
-  vol.setAttribute('aria-label', 'Lautstärke');
-  vol.addEventListener('input', () => actions.setVolume(Number(vol.value)));
-  // Nach dem Ziehen den Fokus abgeben, damit die Hotkeys wieder greifen
-  vol.addEventListener('pointerup', () => vol.blur());
-  const dayNight = document.createElement('button');
-  dayNight.className = 'btn';
-  dayNight.textContent = 'Tag-Nacht';
-  dayNight.title = 'Tag-Nacht an/aus';
-  const syncDayNight = (on: boolean): void => {
-    dayNight.classList.toggle('active', on);
-    dayNight.setAttribute('aria-pressed', String(on));
-  };
-  syncDayNight(initial.dayNight);
-  dayNight.addEventListener('click', () => {
-    dayNight.blur();
-    const on = !actions.settings().dayNight;
-    actions.setDayNight(on);
-    syncDayNight(on);
-  });
-  box.append(mute, vol, dayNight);
+  const settingsBtn = gameButton('Einstellungen', (btn) => actions.openSettings(btn));
+  box.append(mute, settingsBtn);
 }
 
 /** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */
@@ -262,7 +271,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
       '<span class="hud-sound"></span><span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
-      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span></div>' +
+      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span>' +
+      '<span class="card card--crisis" data-field="crisis-card"></span></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
     for (const tier of TIER_IDS) {
@@ -340,6 +350,14 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   setField(header, 'tax-lock', left > 0 ? `Sperre noch ${left} Ticks` : '');
   const orderEl = header.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world);
+  const crisis = crisisCardText(crisisView(world), world);
+  const crisisEl = setField(header, 'crisis-card', crisis.text);
+  if (crisisEl) {
+    if (crisis.kind === null) delete crisisEl.dataset.kind;
+    else crisisEl.dataset.kind = crisis.kind;
+    if (crisis.level === null) delete crisisEl.dataset.level;
+    else crisisEl.dataset.level = crisis.level;
+  }
   setField(header, 'tick', `Tick: ${world.tick}`);
   setField(header, 'seed', `Karte: ${world.seed}`);
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {

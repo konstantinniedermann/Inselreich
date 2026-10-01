@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { refundText } from '../../src/ui/inspect';
+import {
+  burningText,
+  producesText,
+  protectedCount,
+  refundText,
+  restView,
+} from '../../src/ui/inspect';
+import { createWorld } from '../../src/sim/world';
+import { SCENARIOS } from '../sim/scenarios';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -26,5 +34,77 @@ describe('refundText (AK-U1b-02)', () => {
     expect(text).toBe(
       'Geld 5 · Holz 0 (4 verfallen – Lager voll) · Werkzeug 1 (1 verfallen – Lager voll)',
     );
+  });
+});
+
+describe('restView (AK-U2-03)', () => {
+  it('Tagesphase und Einwohnerzahl', () => {
+    const w = SCENARIOS.galerie!();
+    w.tick = 3000;
+    const sum = Object.values(w.buildings).reduce((n, b) => n + (b.house?.inhabitants ?? 0), 0);
+    expect(sum).toBeGreaterThan(0);
+    expect(restView(w)).toEqual({ phase: 'night', label: 'Nacht', symbol: '☾', inhabitants: sum });
+  });
+  it('alle vier Phasen', () => {
+    const w = SCENARIOS.galerie!();
+    const at = (t: number) => {
+      w.tick = t;
+      return restView(w).label;
+    };
+    expect([at(0), at(2400), at(3000), at(4700)]).toEqual(['Tag', 'Abend', 'Nacht', 'Morgen']);
+  });
+});
+
+describe('burningText (M6-AK-U1-08)', () => {
+  const base = { id: 1, x: 0, y: 0, connected: true, progress: 0, state: 'burning' as const };
+  it('M6-AK-U1-08: Betrieb nennt outageUntil - tick', () => {
+    expect(burningText({ ...base, defId: 'lumberjack', outageUntil: 150 }, 100)).toBe(
+      'Brennt — wieder in Betrieb in 50 Ticks',
+    );
+  });
+  it('M6-AK-U1-08: Kapelle (Dienst) ebenso, nie negativ', () => {
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain(
+      'in 30 Ticks',
+    );
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 Ticks');
+  });
+  it('M6-AK-U1-07: protectedCount zählt brennbare Gebäude im Radius, nur bei Anbindung', () => {
+    const w = createWorld(3);
+    const mk = (
+      id: number,
+      defId: 'firestation' | 'distillery' | 'market',
+      x: number,
+      connected = true,
+    ) => {
+      w.buildings[id] = { id, defId, x, y: 50, connected, progress: 0, state: 'ok' };
+      return w.buildings[id];
+    };
+    const st = mk(901, 'firestation', 10);
+    mk(902, 'distillery', 14); // im Radius 8
+    mk(903, 'distillery', 30); // ausserhalb
+    mk(904, 'market', 12); // nicht brennbar
+    expect(protectedCount(w, st)).toBe(1);
+    st.connected = false;
+    expect(protectedCount(w, st)).toBe(0);
+  });
+});
+
+describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
+  it('producesText: laufend mit Takt, brennend ohne', () => {
+    const def = { produces: 'rum' as const, cycle: 50 };
+    expect(producesText(def, false)).toBe('Erzeugt Rum alle 50 Ticks');
+    expect(producesText(def, true)).not.toContain('alle 50 Ticks');
+    expect(producesText(def, true)).toContain('brennt');
+  });
+  it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {
+    const w = createWorld(3);
+    const mk = (id: number, defId: 'firestation' | 'distillery', x: number) => {
+      w.buildings[id] = { id, defId, x, y: 50, connected: true, progress: 0, state: 'ok' };
+      return w.buildings[id];
+    };
+    const a = mk(901, 'firestation', 10);
+    mk(902, 'distillery', 14);
+    mk(903, 'firestation', 12);
+    expect(protectedCount(w, a)).toBe(1);
   });
 });

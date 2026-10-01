@@ -26,7 +26,11 @@ export function bindMessages(container: HTMLElement): () => void {
  * Meldung raus. Sticky Meldungen zählen mit, werden aber nie verdrängt; sind alle sticky, bleibt
  * die neue trotzdem sichtbar (der Stapel wächst dann über das Limit).
  */
-export function showMessage(text: string, kind: 'info' | 'error' = 'info', sticky = false): void {
+export function showMessage(
+  text: string,
+  kind: 'info' | 'error' | 'warn' = 'info',
+  sticky = false,
+): void {
   if (!box) return;
   const now = performance.now();
   if (text === lastText && now - lastAt < DEDUPE_MS) return;

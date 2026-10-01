@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { balanceLabel, formatBalance, taxTooltip, trendArrow } from '../../src/ui/hud';
+import { blurAfterClick } from '../../src/ui/dom';
+import { goodsBalance } from '../../src/sim/queries';
+import { createWorld } from '../../src/sim/world';
 import { diagnosisText } from '../../src/ui/inspect';
 import { actionSound } from '../../src/ui/soundEvents';
 import { fail, ok } from '../../src/sim/types';
@@ -52,5 +55,40 @@ describe('actionSound (Ton-Hooks)', () => {
     expect(actionSound(ok, null)).toBeNull();
     expect(actionSound(fail('Nicht genug Ware'), 'coin')).toBe('error');
     expect(actionSound(fail('x'), null)).toBe('error');
+  });
+});
+
+describe('Bilanz bei Brandausfall (R115: Dauerleistung)', () => {
+  it('goodsBalance bleibt bei Brandausfall nominal', () => {
+    const w = createWorld(3);
+    w.buildings[1] = {
+      id: 1,
+      defId: 'kontor',
+      x: 10,
+      y: 10,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+    };
+    w.buildings[2] = {
+      id: 2,
+      defId: 'distillery',
+      x: 12,
+      y: 10,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+    };
+    const nominal = goodsBalance(w).rum.produced;
+    expect(nominal).toBeGreaterThan(0);
+    w.buildings[2]!.outageUntil = w.tick + 100;
+    expect(goodsBalance(w).rum.produced).toBe(nominal);
+  });
+});
+
+describe('blurAfterClick (QA-UI-2)', () => {
+  it('Maus gibt den Fokus ab, Tastatur behält ihn', () => {
+    expect(blurAfterClick(1)).toBe(true);
+    expect(blurAfterClick(0)).toBe(false);
   });
 });

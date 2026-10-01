@@ -1,6 +1,8 @@
+import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
+import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
 import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
@@ -24,8 +26,35 @@ export function diagnosisText(d: Diagnosis): string {
   }
 }
 
-function stateInfo(b: Building): { text: string; ok: boolean } {
+/** Erzeugungszeile des Panels; während des Brandausfalls steht dort, dass nichts erzeugt wird. */
+export function producesText(def: { produces?: GoodId; cycle?: number }, burning: boolean): string {
+  const name = def.produces ? GOODS[def.produces].name : '';
+  return burning
+    ? `Erzeugt ${name} nicht — Betrieb brennt`
+    : `Erzeugt ${name} alle ${def.cycle} Ticks`;
+}
+
+/** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
+export function burningText(b: Building, tick: number): string {
+  const left = Math.max(0, (b.outageUntil ?? tick) - tick);
+  return `Brennt — wieder in Betrieb in ${left} Ticks`;
+}
+
+/**
+ * Anzahl brennbarer Gebäude, die diese Feuerwache schützt (Panel „Schützt N …"). Keine eigene Geometrie:
+ * die Sim-Abfrage `isProtected` läuft gegen eine Sicht, in der nur diese Wache steht, damit andere
+ * Wachen die Zahl nicht verändern.
+ */
+export function protectedCount(world: World, station: Building): number {
+  const solo: World = { ...world, buildings: { [station.id]: station } };
+  return Object.values(world.buildings).filter(
+    (o) => BUILDING_DEFS[o.defId].flammable === true && isProtected(solo, o),
+  ).length;
+}
+
+function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
+  if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
   // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
   if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
   if (!def.produces) return { text: 'Angebunden', ok: true };
@@ -41,7 +70,7 @@ function stateInfo(b: Building): { text: string; ok: boolean } {
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'burning':
-      return { text: 'Brennt', ok: false };
+      return { text: burningText(b, tick), ok: false };
   }
 }
 
@@ -218,7 +247,7 @@ export function renderInspect(
     } else {
       addLine(panel, '', 'state');
       if (def.produces && def.cycle !== undefined) {
-        addLine(panel, `Erzeugt ${GOODS[def.produces].name} alle ${def.cycle} Ticks`);
+        addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${GOODS[def.consumes].name}`);
         const bar = document.createElement('div');
         bar.className = 'progress';
@@ -229,6 +258,8 @@ export function renderInspect(
         panel.appendChild(bar);
       }
       addLine(panel, `Unterhalt ${def.upkeep} / ${UPKEEP_INTERVAL} Ticks`);
+      if (def.flammable === true) addLine(panel, '', 'fire-protection');
+      if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
     addButton(buttons, demolishLabel(world, b), () => actions.demolish(id), 'demolish');
   }
@@ -243,11 +274,59 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
   setField(panel, 'demolish', demolishLabel(world, b));
-  const info = stateInfo(b);
+  if (def.produces && def.cycle !== undefined) {
+    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
+  }
+  const info = stateInfo(b, world.tick);
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
+  if (def.flammable === true) {
+    setField(panel, 'fire-protection', `Brandschutz: ${isProtected(world, b) ? 'ja' : 'nein'}`);
+  }
+  if (def.fireProtection === true) {
+    setField(panel, 'fire-covers', `Schützt ${protectedCount(world, b)} brennbare Gebäude`);
+  }
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   if (fill && def.cycle) {
     const width = `${Math.min(100, Math.round((b.progress / def.cycle) * 100))}%`;
     if (fill.style.width !== width) fill.style.width = width;
   }
+}
+
+const PHASE_VIEW: Record<Phase, { label: string; symbol: string }> = {
+  morning: { label: 'Morgen', symbol: '◒' },
+  day: { label: 'Tag', symbol: '☀' },
+  evening: { label: 'Abend', symbol: '◓' },
+  night: { label: 'Nacht', symbol: '☾' },
+};
+
+/** Anzeigedaten der Ruhe-Ansicht (reine Darstellung, keine Regel). */
+export function restView(world: World): {
+  phase: Phase;
+  label: string;
+  symbol: string;
+  inhabitants: number;
+} {
+  const phase = phaseAt(world.tick);
+  let inhabitants = 0;
+  for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
+  return { phase, ...PHASE_VIEW[phase], inhabitants };
+}
+
+/** Ruhe-Ansicht „Inselchronik" ohne Auswahl; `updateRest` führt Phase und Einwohner nach. */
+export function renderRest(panel: HTMLElement, world: World): void {
+  panel.replaceChildren();
+  const title = document.createElement('h2');
+  title.className = 'panel-title';
+  title.textContent = 'Inselchronik';
+  panel.appendChild(title);
+  addLine(panel, '', 'rest-phase');
+  addLine(panel, '', 'rest-inhabitants');
+  addLine(panel, 'Gebäude anklicken für Details');
+  updateRest(panel, world);
+}
+
+export function updateRest(panel: HTMLElement, world: World): void {
+  const v = restView(world);
+  setField(panel, 'rest-phase', `${v.symbol} ${v.label}`);
+  setField(panel, 'rest-inhabitants', `Einwohner ${v.inhabitants}`);
 }

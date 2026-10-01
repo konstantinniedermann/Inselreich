@@ -15,3 +15,12 @@ export function costLine(c: Cost): string {
   if (c.stone) parts.push(`S ${c.stone}`);
   return parts.join(' · ');
 }
+
+/**
+ * Soll ein Knopf nach dem Klick den Fokus abgeben? Nur nach Mausklick (`detail` ≥ 1), damit kein Fokusring
+ * zurückbleibt. Eine Tastenbestätigung (Enter, Leertaste; `detail` 0) behält den Fokus, damit ein
+ * Zwei-Klick-Knopf („Wirklich laden?") per Tastatur bestätigt werden kann.
+ */
+export function blurAfterClick(detail: number): boolean {
+  return detail > 0;
+}

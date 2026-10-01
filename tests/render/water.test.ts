@@ -5,8 +5,12 @@ import {
   FOAM_ALPHA,
   FOAM_PERIOD_MS,
   FOAM_CORE_ALPHA,
+  STORM_AMP_BOOST,
+  STORM_WAVE_ALPHA,
   WAVE_ALPHA,
+  stormWaveAlpha,
 } from '../../src/render/water';
+import type { Weather } from '../../src/render/daynight';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { coastValue, terrainFields } from '../../src/render/terrainField';
@@ -229,5 +233,77 @@ describe('Wasser (Spec 5.2)', () => {
       expect(c[i]!.x).toBeCloseTo(a[i]!.x, 6);
       expect(c[i]!.y).toBeCloseTo(a[i]!.y, 6);
     }
+  });
+
+  describe('Sturm (Spec 5.2, R3)', () => {
+    const storm = (w: number): Weather => ({ kind: 'storm', w });
+    const run = (world: World, t: number, weather?: Weather, reduce = false) => {
+      const { ctx, log } = fakeCtx();
+      drawWaves(ctx, world, ALL(world), t, weather, reduce);
+      return log;
+    };
+    const isWave = (e: { style: string }): boolean => alphaOf(e.style) < 0.35; // Saum und Kern liegen ≥ 0,35
+    const widths = (log: ReturnType<typeof run>) =>
+      log.events.filter((e) => e.op === 'stroke' && !isWave(e)).map((e) => e.lineWidth);
+    const waveY = (world: World, weather: Weather | undefined, reduce = false) => {
+      const ys: number[] = [];
+      for (let t = 0; t < 2400; t += 40) {
+        const e = run(world, t, weather, reduce).events.find(
+          (q) => q.op === 'stroke' && isWave(q),
+        )!;
+        ys.push(e.points[0]!.y);
+      }
+      return Math.max(...ys) - Math.min(...ys);
+    };
+
+    it('R3 ohne Wetter und bei w = 0 unverändert (Aufruf wie bisher)', () => {
+      const w = sea();
+      expect(run(w, 800, storm(0)).events).toEqual(run(w, 800).events);
+      expect(run(w, 800, { kind: 'rain', w: 1 }).events).toEqual(run(w, 800).events);
+    });
+    it('R3 Schaumbreite × (1 + 1,5 w): Saum und Kern, Kern bleibt ≥ dem Normalwert (I2)', () => {
+      const w = sea();
+      const calm = widths(run(w, 800)),
+        rough = widths(run(w, 800, storm(1)));
+      expect(rough).toHaveLength(calm.length);
+      rough.forEach((v, i) => expect(v).toBeCloseTo(calm[i]! * 2.5, 9));
+      const half = widths(run(w, 800, storm(0.5)));
+      half.forEach((v, i) => expect(v).toBeCloseTo(calm[i]! * 1.75, 9));
+    });
+    it('R3 Amplitude der Wellen × (1 + w), reduceMotion halbiert sie', () => {
+      const w = sea();
+      const calm = waveY(w, undefined);
+      const ratio = waveY(w, storm(1)) / calm;
+      expect(ratio).toBeGreaterThanOrEqual(2 - 0.05); // Spec 5.2 ist Untergrenze
+      expect(ratio).toBeCloseTo(2 * (1 + STORM_AMP_BOOST), 1);
+      expect(waveY(w, undefined, true) / calm).toBeCloseTo(0.5, 1);
+    });
+    it('R3 Sturm (QA-R3 B2): Wellenstriche länger, kräftiger und deckender als bei Ruhe; bei w = 0 unverändert', () => {
+      const w = sea();
+      const strokes = (wt?: Weather) =>
+        run(w, 800, wt).events.filter((e) => e.op === 'stroke' && isWave(e));
+      const calm = strokes()[0]!,
+        rough = strokes(storm(1))[0]!;
+      const span = (e: typeof calm) =>
+        Math.max(...e.points.map((p) => p.x)) - Math.min(...e.points.map((p) => p.x));
+      expect(span(rough)).toBeGreaterThan(span(calm) + 0.2);
+      expect(rough.lineWidth).toBeGreaterThan(calm.lineWidth * 1.9);
+      expect(alphaOf(rough.style)).toBeGreaterThan(alphaOf(calm.style) * 2);
+      expect(stormWaveAlpha(0)).toBe(WAVE_ALPHA);
+      expect(stormWaveAlpha(1)).toBeCloseTo(STORM_WAVE_ALPHA, 9);
+    });
+    it('R3 Periode × (1 − 0,4 w): Schaumdeckkraft wiederholt sich nach 3200·0,6 ms', () => {
+      const w = sea();
+      const p = FOAM_PERIOD_MS * 0.6;
+      expect(run(w, 300 + p, storm(1)).strokeSet).toEqual(run(w, 300, storm(1)).strokeSet);
+      expect(run(w, 300 + FOAM_PERIOD_MS, storm(1)).strokeSet).not.toEqual(
+        run(w, 300, storm(1)).strokeSet,
+      );
+    });
+    it('R3 w wird geklemmt (NaN, 5)', () => {
+      const w = sea();
+      expect(run(w, 800, storm(NaN)).events).toEqual(run(w, 800).events);
+      expect(run(w, 800, storm(5)).events).toEqual(run(w, 800, storm(1)).events);
+    });
   });
 });

@@ -62,6 +62,18 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   house: (b) => [0.8, 1.2, 1.6][(b.house?.tier ?? 1) - 1]! * ISO_H, // Hütte, Fachwerk, Bürgerhaus mit Gaube
   kontor: () => 1.4 * ISO_H, // Lagerhaus
   lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
+  // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
+  market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
+  fisher: () => 1.0 * ISO_H,
+  quarry: () => 1.1 * ISO_H,
+  sheepfarm: () => 1.2 * ISO_H,
+  weaver: () => 1.3 * ISO_H,
+  canefarm: () => 0.6 * ISO_H, // Halme; die Hütte steht vorn
+  distillery: () => 1.4 * ISO_H,
+  toolmaker: () => 1.3 * ISO_H,
+  chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
+  school: () => 1.5 * ISO_H,
+  firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
 };
 export const bodyHeight = (def: BuildingDef, b: Building): number =>
   BODY_HEIGHTS[def.id]?.(b) ?? CATEGORY_HEIGHT[def.category];
@@ -151,14 +163,27 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
 export interface Hull {
   id: number;
   hull: readonly Pt[];
+  /** Gezeichnete Körperpolygone (Weltpixel), lazy: nur für Treffer des Hüllen-Vorfilters (R113). */
+  shape?: () => readonly (readonly Pt[])[];
 }
+type ShapeFn = (def: BuildingDef, b: Building) => readonly (readonly Pt[])[];
+let shapeProvider: ShapeFn | null = null;
+/** Meldet die Quelle der gezeichneten Körperpolygone an (`sprites.ts` beim Laden; iso.ts importiert sprites nicht, ISO §4). */
+export const setBodyShapes = (fn: ShapeFn): void => {
+  shapeProvider = fn;
+};
 /** Körperhüllen aller Gebäude in Zeichenreihenfolge (nur Gebäude, D-14). */
 export function buildingHulls(world: World): Hull[] {
   const out: Hull[] = [];
   for (const it of sortedObjects(world))
     if (it.kind === 'building') {
       const b = world.buildings[it.id]!;
-      out.push({ id: b.id, hull: bodyHull(BUILDING_DEFS[b.defId], b) });
+      const def = BUILDING_DEFS[b.defId];
+      out.push({
+        id: b.id,
+        hull: bodyHull(def, b),
+        ...(shapeProvider ? { shape: () => shapeProvider!(def, b) } : {}),
+      });
     }
   return out;
 }
@@ -170,9 +195,25 @@ const inConvex = (h: readonly Pt[], x: number, y: number): boolean => {
   }
   return true;
 };
-/** Vorderstes Gebäude, dessen Körperhülle den Weltpunkt enthält; sonst null. */
+/** Punkt in beliebigem Polygon (Strahlverfahren). */
+const inPoly = (poly: readonly Pt[], x: number, y: number): boolean => {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!,
+      b = poly[j]!;
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+};
+/**
+ * Vorderstes Gebäude unter dem Weltpunkt (R113): die Körperhülle ist nur Vorfilter; bei Treffern entscheiden die
+ * gezeichneten Silhouetten-Polygone (vorn zuerst). Hüllen ohne `shape` gelten als Körper.
+ */
 export function pickBuilding(hulls: readonly Hull[], wx: number, wy: number): number | null {
-  for (let i = hulls.length - 1; i >= 0; i--)
-    if (inConvex(hulls[i]!.hull, wx, wy)) return hulls[i]!.id;
+  for (let i = hulls.length - 1; i >= 0; i--) {
+    const h = hulls[i]!;
+    if (!inConvex(h.hull, wx, wy)) continue;
+    if (!h.shape || h.shape().some((poly) => inPoly(poly, wx, wy))) return h.id;
+  }
   return null;
 }

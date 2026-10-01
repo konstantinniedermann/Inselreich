@@ -15,6 +15,8 @@ export interface Ev {
   composite: string;
   /** `globalAlpha` zum Zeitpunkt des Aufrufs. */
   alpha: number;
+  /** `lineWidth` zum Zeitpunkt des Aufrufs. */
+  lineWidth: number;
   points: P[];
 }
 
@@ -87,6 +89,7 @@ export class FakeCtx {
       matrix: [...this.matrix] as Mat,
       composite: this._comp,
       alpha: this._alpha,
+      lineWidth: this.lineWidth,
       points,
     });
   }
@@ -193,6 +196,23 @@ export class FakeCtx {
     this.ev('drawImage', '', []);
   }
   setLineDash(): void {}
+  /** Verlauf als Objekt, dessen Textform die Farbstopps nennt (`gradient(a|b)`), damit Tests Füllungen erkennen. */
+  createLinearGradient(): FakeGradient {
+    return new FakeGradient();
+  }
+  createRadialGradient(): FakeGradient {
+    return new FakeGradient();
+  }
+}
+
+export class FakeGradient {
+  stops: string[] = [];
+  addColorStop(_o: number, c: string): void {
+    this.stops.push(c);
+  }
+  toString(): string {
+    return `gradient(${this.stops.join('|')})`;
+  }
 }
 
 /** Kontext als `CanvasRenderingContext2D` samt Protokoll; unbekannte Methoden werden zu No-Ops. */

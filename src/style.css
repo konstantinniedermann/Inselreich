@@ -24,6 +24,8 @@
   --ink: #2e2418;
   --signal-red: #ff3b5c;
   --signal-warn: #ff6726;
+  --warn-parchment: #f2dc9b;
+  --warn-amber: #b8620f;
   --ok: #6aa84f;
   --negative: #ff8a80;
   --font-serif: 'EB Garamond', Georgia, serif;
@@ -150,6 +152,23 @@ body {
   border: 5px solid var(--signal-red);
   border-radius: 50%;
   outline: 1px solid var(--ink);
+}
+
+/* Warnung (Sturm, Brand): Bernstein statt Rot, warmes Pergament, Dreieck-Symbol */
+.toast.warn {
+  background: var(--warn-parchment);
+  border-left: 6px solid var(--warn-amber);
+}
+.toast.warn::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 8px;
+  vertical-align: middle;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--warn-amber);
 }
 
 /* Buttons: Holz mit Goldrand, aktiv Gold mit Tinte */
@@ -580,4 +599,38 @@ body {
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.crisis-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge--boom[hidden] {
+  display: none;
+}
+
+/* Ereignis-Log: schwebende Pergament-Box unten links über der Spielfläche (R112) */
+.log-box {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: min(420px, calc(100% - 16px));
+}
+.log-box[hidden] {
+  display: none;
+}
+.log-box .event-log {
+  width: 100%;
+}
+.event-log--collapsed .event-log__item:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

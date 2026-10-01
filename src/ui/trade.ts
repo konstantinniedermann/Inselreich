@@ -1,4 +1,5 @@
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
+import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
 import type { GoodId, Result, World } from '../sim/types';
 import { setField } from './dom';
@@ -21,6 +22,12 @@ function sellTexts(
     price: `G ${price}`,
     title: `${n} ${GOODS[good].name} verkaufen für G ${price}`,
   };
+}
+
+/** Wahr, solange `good` das Boom-Gut der laufenden Krise ist. */
+export function boomGood(world: World, good: GoodId): boolean {
+  const c = world.crisis;
+  return c !== null && c.kind === 'boom' && c.good === good;
 }
 
 /** Handelsmengen pro Klick (reine Bedienung, keine Spielwerte). */
@@ -71,6 +78,12 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
 
   for (const good of GOOD_IDS) {
     const name = cell(table, 'trade-good', GOODS[good].name);
+    // Boom-Marke direkt hinter den Gutnamen; bei Platzmangel wandern Lager und Preis in die nächste Zeile
+    const boom = document.createElement('span');
+    boom.className = 'badge--boom';
+    boom.dataset.field = `boom-${good}`;
+    boom.hidden = true;
+    name.appendChild(boom);
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
@@ -103,6 +116,8 @@ export function updateTrade(panel: HTMLElement, world: World): void {
   for (const good of GOOD_IDS) {
     setField(panel, `stock-${good}`, `Lager ${world.stock[good]}`);
     setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
+    const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
+    if (boom) boom.hidden = !boomGood(world, good);
   }
   for (const btn of panel.querySelectorAll<HTMLButtonElement>('button[data-op]')) {
     const good = btn.dataset.good as GoodId;
