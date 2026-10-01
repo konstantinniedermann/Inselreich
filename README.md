@@ -46,6 +46,10 @@ in der Kopfzeile zeigt den Fortschritt.
   Kapelle und Schule zeigen ihren Wirkkreis um die Vorschau und den Umriss der schon abgedeckten
   Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den Standortkreis (Radius 2) mit den
   passenden Wald- bzw. Graskacheln.
+- **Feuerwache** (Kategorie «Öffentlich», noch ohne Taste): 1×1, Baukosten 150 Geld, 10 Holz, 2 Werkzeug,
+  Unterhalt 10. Angebunden löscht sie Brände an brennbaren Gebäuden, deren Mitte höchstens 8 Kacheln von
+  ihr entfernt ist. **Sie wirkt nur bei eingeschalteten Krisen**; im aktuellen Spiel sind Krisen aus, die
+  Feuerwache kostet dann nur Unterhalt.
 
 ### Tastatur und Maus
 
@@ -104,7 +108,7 @@ Einstellungen bleiben im Browser gespeichert und überstehen «Neu» und «Laden
   Erzeugung und Verbrauch. Gerechnet wird nominal aus den angebundenen Betrieben und dem Bedarf der
   versorgten Häuser; Handel, Aufträge und Aufstiege zählen nicht mit.
 - **Baukosten:** Geld und teils Holz, Werkzeug oder Stein; sie stehen in der Bauleiste.
-- **Anbindung:** Betriebe, Marktplatz, Kapelle und Schule arbeiten nur, wenn ein Weg an sie grenzt,
+- **Anbindung:** Betriebe, Marktplatz, Kapelle, Schule und Feuerwache arbeiten nur, wenn ein Weg an sie grenzt,
   der über Wege mit dem Kontor verbunden ist. Nicht angebundene Gebäude tragen einen roten Punkt.
 - **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
   angebunden»), Produktion, Fortschritt und Unterhalt.

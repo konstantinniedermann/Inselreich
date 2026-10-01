@@ -831,8 +831,13 @@ Format, 13.1).
   `normal` und `mild`. Grenze Sieg ≤ **9000**, Endgeld `money > 0`, `won`.
   - Der Controller ignoriert Boom und Aufträge. `sellSurplus` nimmt einen zufälligen Boompreis mit.
   - Feuerwache-Regel: **bei `normal` eine Wache, sobald die Kapelle steht**, auf dem festen Platz
-    `[kx + 9, ky + 6]` (freier Fischerplatz, 12 von 14 belegt). Sie deckt Kapelle (Abstand 7.9) und Schule
-    (5.1) ab, die fernen Farmen nicht (Kern-Wache). **Bei `mild` keine Wache** (8.1).
+    `[kx + 10, ky - 8]` (R99, R101). Der Platz folgt der Regel „freie Kachel am Weg mit maximaler Abdeckung
+    brennbarer Produktion im Radius 8, Norden zuerst gebaut" (Gleichstand mit dem Spiegelplatz
+    `[kx + 10, ky + 8]` entscheidet die Bau-Reihenfolge: der Bot bebaut den Norden zuerst). Gedeckt sind die
+    Kapelle und die Produktion im Norden (Fischer, Schäfereien, Weber, eine Zuckerrohrfarm, eine Brennerei);
+    ungedeckt sind die Schule und die Holzfäller (Kern-Wache). **Bei `mild` keine Wache** (8.1).
+  - Baseline (gemessen, Seed 3, R101): `off` Sieg 6050; `normal` Sieg 7050, `minMoney` 56, Endgeld 211, 4 Brände
+    (davon 3 gelöscht); `mild` Sieg 6250, `minMoney` 13, Endgeld 40.
   - Istwerte (Sieg, `minMoney`, Endgeld, Zahl der Brände, Stürme, Booms, gelöschten und leeren Brände,
     Trefferquote h) gibt der Test mit `VITE_BALANCE_LOG=1` aus. Sie werden im Paket gemessen und per Ruling
     festgehalten.
@@ -1080,7 +1085,7 @@ gezogene Kachel trifft sie (`d = 0`).
 
 ### B2 — Krisen-Lauf und Szenario-Saves
 
-- **AK-B2-01** (Vitest) Krisen-Lauf `normal` (Feuerwache ab Kapelle auf `[kx + 9, ky + 6]`) und `mild` (keine
+- **AK-B2-01** (Vitest) Krisen-Lauf `normal` (Feuerwache ab Kapelle auf `[kx + 10, ky - 8]`, R99/R101) und `mild` (keine
   Wache): Sieg ≤ **9000**, `money > 0`, `won true`.
 - **AK-B2-02** (Messung) `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-crises.test.ts` gibt je Stufe Sieg,
   `minMoney`, Endgeld, Zahl der Brände (davon gelöscht, leer), Stürme und Booms und die Trefferquote aus. Liegt ein
