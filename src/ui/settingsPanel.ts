@@ -164,7 +164,8 @@ export function openSettings(
     );
   };
 
-  backdrop.addEventListener('pointerdown', (e) => {
+  // Auf click statt pointerdown: sonst nimmt das folgende mousedown dem Knopf den Fokus wieder
+  backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) close();
   });
   showSettings();

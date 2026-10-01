@@ -20,6 +20,7 @@ import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
+import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, showMessage } from './messages';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -189,6 +190,12 @@ function launch(
     sound.play('error');
   };
 
+  // Ereignis-Log schwebt unten links über der Spielfläche (R112)
+  const logBox = document.createElement('div');
+  logBox.className = 'log-box';
+  renderEventLog(logBox);
+  gameEl.appendChild(logBox);
+
   const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
 
@@ -216,6 +223,8 @@ function launch(
         speed: state.speed,
         camera: r.world.seed === world.seed ? state.cam : undefined,
       });
+      // Kein bleibender Fokusring auf dem alten Laden-Knopf
+      (document.activeElement as HTMLElement | null)?.blur?.();
       showMessage('Spielstand geladen');
     },
     settings: () => settings,
@@ -321,6 +330,7 @@ function launch(
       showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
     }
     updateHud(hudEl, state, actions);
+    updateEventLog(logBox, state.eventLog);
     updateBuildMenu(navEl, world);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
@@ -561,6 +571,7 @@ function launch(
     removeUnlockListeners();
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
+    logBox.remove();
     unbindMessages();
     disposeHud(hudEl);
     hudEl.replaceChildren();
