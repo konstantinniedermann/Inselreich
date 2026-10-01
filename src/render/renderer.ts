@@ -286,7 +286,7 @@ function collectWindowLights(
   if (windows <= 0) return out; // Laternen folgen `windows` (R114): am Tag und bei dayNight false aus
   for (const b of buildings) {
     const def = BUILDING_DEFS[b.defId];
-    const lit = windows > 0 && isLit(def, b);
+    const lit = isLit(def, b);
     const anchors = anchorsFor(def, b);
     if (!lit && !anchors.some((a) => a.always)) continue;
     const box = spriteBounds(def, b);

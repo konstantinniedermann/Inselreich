@@ -22,6 +22,7 @@ import {
   walkerCount,
   EPISODE_MS,
   GLOW_RADIUS,
+  GLOW_RING_COUNT,
 } from '../../src/render/life';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
@@ -952,8 +953,17 @@ describe('Renderer', () => {
       expect(lamp!.points).toHaveLength(4 * 2); // Kontor und Marktplatz
       // Radius des Scheins: 0,6 · ISO_H · Zoom
       const ring = lighter(base.ev).find(
-        (e) => e.op === 'fill' && e.style === rgbaOf(PALETTE.window, Number((0.35 / 3).toFixed(4))),
+        (e) =>
+          e.op === 'fill' &&
+          e.style === rgbaOf(PALETTE.window, Number((0.35 / GLOW_RING_COUNT).toFixed(4))),
       )!;
+      expect(
+        lighter(base.ev).filter(
+          (e) =>
+            e.op === 'fill' &&
+            e.style === rgbaOf(PALETTE.window, Number((0.35 / GLOW_RING_COUNT).toFixed(4))),
+        ),
+      ).toHaveLength(2 * GLOW_RING_COUNT); // Gruppen Fenster und Laternen, je Ring ein Pfad
       const first = ring.points.slice(0, 5);
       expect(
         (Math.max(...first.map((p) => p.x)) - Math.min(...first.map((p) => p.x))) / 2,

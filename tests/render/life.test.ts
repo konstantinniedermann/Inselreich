@@ -263,24 +263,23 @@ describe('Möwen und Herdrauch (Spec 5.6)', () => {
     for (const seed of [3, 7, 11]) {
       const w = createWorld(seed);
       const f = coastField(w);
-      const wide = { x0: 0, y0: 0, x1: 63, y1: 63 };
       const inner = { x0: 20, y0: 20, x1: 44, y1: 44 };
       const inInner = (g: { tx: number; ty: number }): boolean =>
         g.tx >= inner.x0 && g.tx <= inner.x1 && g.ty >= inner.y0 && g.ty <= inner.y1;
       const base = gullAnchors(f, { x0: 10, y0: 10, x1: 54, y1: 54 }, seed, 'day', false).filter(
         inInner,
       );
-      for (const d of [1, 2, 3, 5]) {
-        const moved = gullAnchors(
-          f,
-          { x0: 10 + d, y0: 10 - d, x1: 54 + d, y1: 54 - d },
-          seed,
-          'day',
-          false,
-        ).filter(inInner);
-        expect(moved, `Seed ${seed} Verschiebung ${d}`).toEqual(base);
-      }
-      expect(wide.x1).toBe(63);
+      for (const dx of [-5, -3, -1, 0, 1, 2, 3, 5])
+        for (const dy of [-5, -2, 0, 1, 3, 5]) {
+          const moved = gullAnchors(
+            f,
+            { x0: 10 + dx, y0: 10 + dy, x1: 54 + dx, y1: 54 + dy },
+            seed,
+            'day',
+            false,
+          ).filter(inInner);
+          expect(moved, `Seed ${seed} Verschiebung ${dx},${dy}`).toEqual(base);
+        }
     }
   });
 
