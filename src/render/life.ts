@@ -9,11 +9,11 @@ import type { Phase } from './daynight';
 import { ISO_H, ISO_W, project, type Pt } from './iso';
 import { cap } from './limits';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
+import { lightAnchors, type LightAnchor } from './sprites';
+import { coastField, type Field } from './terrainField';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
 const rgbaCss = (css: string, alpha: number): string => `rgba(${rgbOfCss(css).join(',')},${alpha})`;
-import { lightAnchors, type LightAnchor } from './sprites';
-import { coastField, type Field } from './terrainField';
 
 // --- Spaziergänger -------------------------------------------------------------------------------------
 
@@ -212,9 +212,20 @@ export interface GullAnchor {
   key: number;
 }
 
+/** Kantenlänge der festen Zellen (Kacheln), je Zelle höchstens eine Möwe. */
+export const GULL_CELL = 8;
 /**
- * Kreismittelpunkte der Möwen: Wasserkacheln im Bereich mit `−s < 2` (Küstenfeld `s`), die `cap('gulls')`
- * kleinsten Schlüssel `hash2(seed + 31, x, y)`. In der Nacht leer.
+ * Füllung des Möwenbudgets: Von den Zellen im Bereich dürfen so viele eine Möwe tragen (Zellen-Hash unter der
+ * Schwelle), dass im Mittel `GULL_FILL · cap` Zellen zugelassen sind (nur Küstenzellen liefern wirklich eine). Die Schwelle hängt nur von der Bereichsgrösse ab, nicht
+ * von der Lage; so greift die Kappung auf `cap` beim Scrollen selten und Möwen springen nicht.
+ */
+const GULL_FILL = 1.5;
+
+/**
+ * Kreismittelpunkte der Möwen: Die Karte ist in feste Zellen zu 8×8 Kacheln geteilt. Je Zelle, die den Bereich
+ * schneidet, gilt die Wasserkachel mit `−s < 2` und kleinstem Schlüssel `hash2(seed + 31, x, y)` (die ganze Zelle
+ * wird gelesen, nicht nur der sichtbare Teil), sofern der Zellen-Hash es erlaubt; davon die `cap('gulls')` mit den
+ * kleinsten Schlüsseln. So springen Möwen beim Scrollen nicht. In der Nacht leer.
  */
 export function gullAnchors(
   field: Field,
@@ -225,29 +236,29 @@ export function gullAnchors(
 ): GullAnchor[] {
   const limit = cap('gulls', reduce);
   if (!GULL_PHASES.includes(phase) || limit <= 0) return [];
-  const best: GullAnchor[] = [];
-  const x0 = Math.max(0, range.x0),
-    x1 = Math.min(field.w - 1, range.x1),
-    y0 = Math.max(0, range.y0),
-    y1 = Math.min(field.h - 1, range.y1);
-  for (let y = y0; y <= y1; y++)
-    for (let x = x0; x <= x1; x++) {
-      const s = field.v[y * field.w + x]!;
-      if (!(s < 0 && -s < GULL_BAND)) continue;
-      const key = hash2(seed + 31, x, y);
-      if (best.length === limit && key >= best[limit - 1]!.key) continue;
-      let j = best.length;
-      if (best.length < limit) best.push({ tx: x, ty: y, key });
-      else {
-        j = limit - 1;
-        best[j] = { tx: x, ty: y, key };
-      }
-      while (j > 0 && best[j - 1]!.key > best[j]!.key) {
-        [best[j - 1], best[j]] = [best[j]!, best[j - 1]!];
-        j--;
-      }
+  if (range.x1 < range.x0 || range.y1 < range.y0) return [];
+  const cx0 = Math.floor(Math.max(0, range.x0) / GULL_CELL),
+    cx1 = Math.floor(Math.min(field.w - 1, range.x1) / GULL_CELL),
+    cy0 = Math.floor(Math.max(0, range.y0) / GULL_CELL),
+    cy1 = Math.floor(Math.min(field.h - 1, range.y1) / GULL_CELL);
+  const share = Math.min(1, (GULL_FILL * limit) / ((cx1 - cx0 + 1) * (cy1 - cy0 + 1)));
+  const winners: GullAnchor[] = [];
+  for (let cy = cy0; cy <= cy1; cy++)
+    for (let cx = cx0; cx <= cx1; cx++) {
+      if (hash2(seed + 32, cx, cy) >= share) continue;
+      let best: GullAnchor | null = null;
+      const x1 = Math.min(field.w, (cx + 1) * GULL_CELL),
+        y1 = Math.min(field.h, (cy + 1) * GULL_CELL);
+      for (let y = cy * GULL_CELL; y < y1; y++)
+        for (let x = cx * GULL_CELL; x < x1; x++) {
+          const v = field.v[y * field.w + x]!;
+          if (!(v < 0 && -v < GULL_BAND)) continue;
+          const key = hash2(seed + 31, x, y);
+          if (!best || key < best.key) best = { tx: x, ty: y, key };
+        }
+      if (best) winners.push(best);
     }
-  return best;
+  return winners.sort((a, b) => a.key - b.key).slice(0, limit);
 }
 
 export interface GullPose {
@@ -407,8 +418,6 @@ export function anchorRects(
 export const GLOW_RADIUS = 0.6 * ISO_H;
 /** Deckkraft des Scheins bei `windows = 1`. */
 export const GLOW_ALPHA = 0.35;
-/** Laternen glänzen auch am Tag; Untergrenze der Stärke. */
-export const LANTERN_MIN = 0.5;
 /** Ringe des weichen Scheins (Radius-Anteil), jeder als ein Pfad mit eigener Füllung: summiert sich additiv. */
 const GLOW_RINGS = [1, 0.66, 0.33] as const;
 

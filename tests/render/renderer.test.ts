@@ -655,14 +655,16 @@ describe('Renderer', () => {
       }
     });
 
-    it('M7-R3 ohne Feuer kein Feuerglühen im additiven Durchgang; mit flames = 0 (Nachlauf) auch keines', () => {
-      const glow = (ev: Ev[]) =>
-        ev.filter((e) => e.composite === 'lighter' && e.style.startsWith('gradient('));
-      expect(glow(frame({}).ev)).toHaveLength(0);
+    it('M7-R3 ohne Feuer kein additiver Durchgang; mit flames = 0 (Nachlauf) auch keiner', () => {
+      expect(frame({}, undefined, 0).log.compositeSet).not.toContain('lighter');
       const { world } = scene();
       const id = first(world);
-      expect(glow(frame({ fire: [{ id, flames: 0, smoke: 1 }] }).ev)).toHaveLength(0);
-      expect(glow(frame({ fire: [{ id, flames: 1, smoke: 1 }] }).ev).length).toBeGreaterThan(0);
+      expect(
+        frame({ fire: [{ id, flames: 0, smoke: 1 }] }, undefined, 0).log.compositeSet,
+      ).not.toContain('lighter');
+      expect(
+        frame({ fire: [{ id, flames: 1, smoke: 1 }] }, undefined, 0).log.compositeSet,
+      ).toContain('lighter');
     });
 
     it('AK-R3-03 Warnring und Boom-Münze in den Signalen: nach dem Multiply, ungetönt, im Bildraum', () => {
@@ -851,9 +853,11 @@ describe('Renderer', () => {
       const day = life({ dayNight: false }, 0);
       const night = life({ dayNight: false }, 3000);
       const red = life({ dayNight: false, reduceMotion: true }, 0);
-      expect(gullStrokes(day.ev)).toHaveLength(8);
+      expect(gullStrokes(day.ev).length).toBeGreaterThan(0);
+      expect(gullStrokes(day.ev).length).toBeLessThanOrEqual(8);
       expect(gullStrokes(night.ev)).toHaveLength(0);
-      expect(gullStrokes(red.ev)).toHaveLength(3);
+      expect(gullStrokes(red.ev).length).toBeGreaterThan(0);
+      expect(gullStrokes(red.ev).length).toBeLessThanOrEqual(3);
       expect(day.ev.filter((e) => e.style === SHADOW)).toHaveLength(1);
       expect(night.ev.filter((e) => e.style === SHADOW)).toHaveLength(1);
     });
@@ -879,8 +883,9 @@ describe('Renderer', () => {
       // Budget: viele bewohnte Häuser, laufende Betriebe, 20 Feuer
       for (const reduce of [false, true]) {
         const total = reduce ? 50 : 150;
-        const many = (fire: boolean) =>
-          life({ reduceMotion: reduce, fire: fire ? fireList : [] }, 4700, (w) => {
+        const many = (fire: boolean) => {
+          const fireList: { id: number; flames: number; smoke: number }[] = []; // je Aufruf frisch
+          return life({ reduceMotion: reduce, fire: fire ? fireList : [] }, 4700, (w) => {
             const k = w.buildings[w.kontorId]!;
             for (let i = 0; i < 80; i++) {
               const id = w.nextBuildingId++;
@@ -909,7 +914,7 @@ describe('Renderer', () => {
               if (i < 20) fireList.push({ id, flames: 1, smoke: 1 });
             }
           });
-        const fireList: { id: number; flames: number; smoke: number }[] = [];
+        };
         const smokeStyles = [hearth, `rgba(${AIR_COLORS.smoke},`, `rgba(${SMOKE_COLOR.join(',')},`];
         const noFire = many(false).ev;
         const sum = (ev: Ev[]) => smokeStyles.reduce((n, p) => n + count(ev, p), 0);
@@ -961,15 +966,16 @@ describe('Renderer', () => {
       const nDark = expectedWindows(dark.world);
       expect(nDark).toBe(3); // nur das Kontor (ok)
       expect(rects(dark.ev)[0]!.points).toHaveLength(4 * nDark);
-      // Schalter dayNight false: keine Fenster, die Laternen bleiben
-      const off = life({ dayNight: false }, 3000);
-      const offRects = lighter(off.ev).filter((e) => e.op === 'fill' && e.points.length === 8);
-      expect(offRects.length).toBeGreaterThan(0);
-      expect(lighter(off.ev).some((e) => e.op === 'fill' && e.points.length === 4 * n)).toBe(false);
-      // am Tag leuchten nur die Laternen (Mindeststärke)
-      const day = life({ dayNight: true }, 0);
-      expect(lighter(day.ev).filter((e) => e.points.length === 8).length).toBeGreaterThan(0);
-      expect(day.log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
+      // Laternen folgen `windows` (R114): bei dayNight false und am Tag kein additiver Durchgang
+      expect(life({ dayNight: false }, 3000).log.compositeSet).not.toContain('lighter');
+      expect(life({ dayNight: true }, 0).log.compositeSet).not.toContain('lighter');
+      // Abend (Tick 2520, windows 0,6): Laternen auch ohne bewohntes Haus, mit Stärke 0,6
+      const dusk = life({ dayNight: true }, 2520, (w) => {
+        for (const b of Object.values(w.buildings)) if (b.house) b.house.inhabitants = 0;
+      });
+      expect(
+        lighter(dusk.ev).some((e) => e.op === 'fill' && e.style === rgbaOf(PALETTE.window, 0.6)),
+      ).toBe(true);
     });
 
     it('ISO §5 Licht: Signale nach dem Licht, ungetönt; save/restore ausgeglichen (Zoom 0,5 und 2, leere Welt)', () => {
