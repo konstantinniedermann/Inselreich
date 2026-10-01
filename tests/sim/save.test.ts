@@ -382,6 +382,8 @@ describe('M6 Save v3', () => {
       (r) => (crisis(r).outcome = 'miss'), // miss mit target
       (r) => (crisis(r).tile = { x: 64, y: 3 }),
       (r) => (crisis(r).tile = { x: 3, y: 1.5 }),
+      (r) => (crisis(r).target = 1.5),
+      (r) => (crisis(r).tile = { x: -1, y: 3 }),
       (r, id) => (b(r, id).outageUntil = 10.5),
       (r, id) => (b(r, id).outageUntil = T + 50), // ≤ tick
       (r, id) => (b(r, id).outageUntil = T + 50 + FIRE_OUTAGE + 1), // > tick + 200
