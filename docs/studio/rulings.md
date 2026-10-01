@@ -1080,3 +1080,31 @@ Spec §16 und die Hinweise 1–4 der QA-Zweitprüfung auf; danach Gate Plan für
 berührt `input.ts`/`app.ts` nicht. — Kosten bei Irrtum: Nacharbeit im Plan, keine im Code.
 
 Entscheider: L0 · Anlass: Gate Spec M7-ISO
+
+## R96 · 2026-10-01 · M7 Gate Plan
+
+Ruling: **Gate Plan M7: Nacharbeit** (lead-qa BEDENKEN 5 Punkte, lead-production BEDENKEN 11 Punkte,
+kein ZURÜCK). Gesetzt: (1) **Budget 78** = lead-art 49/4, lead-tech 27/**2**, lead-qa **2**/1;
+Rundungsregel: Summe der Anteile = Formelsumme, Rest an den grössten Anteil, kein Anteil unter
+aufgerundetem Eigenwert; M7-U2 Teil B und R1c zählen als eigene Pakete. Freigabe je Session-Welle;
+Merge-Starts lead-production (Docs-, Zwischen-, Schluss-Merge) je 1, ausserhalb der Formel.
+(2) **Zwischen-Merge R0-ISO** mit eigenem Gate Merge (Prüffragen wie Meilenstein-Gate, Basis:
+opus-Review über die ganze R0-ISO-Strecke + QA-R0 + `make check`), Merge des abgenommenen SHA mit
+`--no-ff`, **mit Push**: Pages zeigt bis zum Meilensteinende das isometrische Spiel mit
+Platzhaltern (bis U0-ISO alter Bau-Anker); README/arc42 beschreiben bis D1 die Draufsicht — beides
+hingenommen. (3) Das **Final-Review des Meilensteins** diffed ab dem Stand vor R0-ISO (Hash aus
+QA-VORHER), R0-ISO wird voll mitgeprüft (Verfassung §9.5). (4) Alle Merges zwischen Strängen und
+nach main nur auf abgenommene SHAs (`git merge --no-ff <sha>`), Vorprüfung mit `git merge-tree`.
+(5) **Welle 0** vor Welle 1: Commit 42f11a1 im Branch `docs/m7-spec` zurücknehmen, Eintrag auf main
+übertragen, dann Docs-Merge `docs/m6-spec` und `docs/m7-spec` nach main (lead-production).
+(6) QA-SLICE wiederholt die Vorher-Messung direkt vor der Nachher-Messung unter gleicher Last.
+(7) Offene Plan-Punkte 1–6 angenommen mit den Auflagen der Prüfer (QA 2–5: Vitest Baumstempel in
+R1a, Nachmessung nach R1c, Helfer-Kopien in `scenarios-iso.ts`, QA-VORHER-Zentrierung; Prod 4,
+7, 8, 10). (8) Personas `art-rendering-engineer` und `art-audio-engineer` werden in dieser Session
+auf main angelegt (lead-production). (9) Slice-Stopp: L0 prüft beim nächsten Session-Start eine
+Reaktion des Nutzers auf die Bilder, bevor R2–R4 weiterlaufen (ergänzt R93). — Warum: alle
+Auflagen sind Plantext, keine Spec-Änderung; Push des Zwischenstands hält main und Pages gleich und
+das Spiel ist nach AK-ISO-20 spielbar. — Kosten bei Irrtum: (2) einige Tage öffentlicher
+Platzhalter-Look; (1) 2 Starts zu viel freigegeben.
+
+Entscheider: L0 · Anlass: Gate Plan M7 (lead-qa, lead-production)
