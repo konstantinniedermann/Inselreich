@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  balanceLabel,
-  formatBalance,
-  runningBalance,
-  taxTooltip,
-  trendArrow,
-} from '../../src/ui/hud';
+import { balanceLabel, formatBalance, taxTooltip, trendArrow } from '../../src/ui/hud';
 import { blurAfterClick } from '../../src/ui/dom';
 import { goodsBalance } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
@@ -64,8 +58,8 @@ describe('actionSound (Ton-Hooks)', () => {
   });
 });
 
-describe('runningBalance (QA-M6U1: Brandausfall nicht als laufend)', () => {
-  it('lässt brennende Betriebe aus der Bilanz, goodsBalance bleibt nominal', () => {
+describe('Bilanz bei Brandausfall (R115: Dauerleistung)', () => {
+  it('goodsBalance bleibt bei Brandausfall nominal', () => {
     const w = createWorld(3);
     w.buildings[1] = {
       id: 1,
@@ -85,10 +79,9 @@ describe('runningBalance (QA-M6U1: Brandausfall nicht als laufend)', () => {
       progress: 0,
       state: 'ok',
     };
-    const nominal = runningBalance(w).rum.produced;
+    const nominal = goodsBalance(w).rum.produced;
     expect(nominal).toBeGreaterThan(0);
     w.buildings[2]!.outageUntil = w.tick + 100;
-    expect(runningBalance(w).rum.produced).toBe(0);
     expect(goodsBalance(w).rum.produced).toBe(nominal);
   });
 });
