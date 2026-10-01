@@ -46,7 +46,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Briefing-Standard: Hauptgrösse Tools, Minuten abgeleitet, Kopfzeile nennt Tabellenzeile), `docs/studio/templates/briefing.md` (Kopfzeile und Beispiel), `docs/studio/metriken/richtwerte.md` (Tabelle Rolle × Modell × Plan-Art: Median Minuten und Tools), `docs/studio/CHANGELOG.md`
 - Ruling: R54, angepasst R75
 - Start: Handbuch 1.1, angepasst Handbuch 1.7
-- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`. Zwischenstand Session 664ac8d3 (`retros/2026-09-30-session-664ac8d3.md` B2, B3): Anwendung 9 von 15 Starts seit 1.7 (60 %); Werkzeugaufrufe +68 % über 10 Agenten, davon 9 fortgesetzt (+91 %); Vorschlag Messregel für Folgeaufträge, Ruling offen
+- Bewertung: Stufe 1 (Retro M5, `retros/2026-09-30-meilenstein-m5.md` B2): Schwelle verfehlt (Minuten −77,9 %, Werkzeugaufrufe +60,5 %, 20 Agenten), Behandlung kaum angewendet (4 von 107 Briefings) → `angepasst` per R75 (Hauptgrösse Werkzeugaufrufe, Kopfzeile nennt Tabellenzeile); läuft als Stufe 2 weiter, deshalb Status `laufend`. Zwischenstand Session 664ac8d3 (`retros/2026-09-30-session-664ac8d3.md` B2, B3): Anwendung 9 von 15 Starts seit 1.7 (60 %); Werkzeugaufrufe +68 % über 10 Agenten, davon 9 fortgesetzt (+91 %); Vorschlag Messregel für Folgeaufträge, Ruling offen. Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md` B7): Werkzeugaufrufe −23,1 % und Minuten +11,7 % über 44 Agenten, Tabellenzeile in 40 von 45 Briefings → weiter beobachten, Bewertung Retro M7
 
 ## E-002 · laufend · Datei-Eigentum bei parallelen L0-Sessions
 
@@ -57,7 +57,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start: Schritt „andere L0-Session aktiv → Datei-Eigentum und Merge-Reihenfolge in state.md eintragen oder übernehmen“), `docs/studio/state.md` (Abschnitt „Parallele Sessions“), `docs/studio/CHANGELOG.md`
 - Ruling: R55
 - Start: Handbuch 1.2
-- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten
+- Bewertung: Zwischenstand (Retro M5 B8): 1 von 2 Episoden (baff17bb und 25e8352d, rund 4,5 h parallel), 0 Basis-Drift-Rulings seit R55 → weiter beobachten; Session 5e248230: keine parallele Episode, 0 Basis-Drift-Rulings in R91–R105 → weiter beobachten
 
 ## E-003 · laufend · Zweck-Gegenprobe bei Auslegungen
 
@@ -68,4 +68,15 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Abschnitt „Autonomie“, Ablauf Schritt 2: ein Halbsatz), `docs/studio/CHANGELOG.md`
 - Ruling: R75
 - Start: Handbuch 1.7
+- Bewertung: Zwischenstand Session 5e248230 (`retros/2026-10-01-session-5e248230.md`, Session 1 von 3): Anwendung 2/2 (R91, R105), 0 Korrekturen wegen Fehlauslegung (R97 berichtigt eine Rechnung, keine Auslegung) → weiter beobachten
+
+## E-004 · vorgeschlagen · Rechenweg im Budget-Ruling
+
+- Hypothese: Wenn L0 im Budget-Ruling je Lead-Anteil den Rechenweg nennt (Eigenwert × Faktor = Rohwert → gerundeter Anteil; Budget = Summe der Anteile) statt nur der Zahlen, dann fallen Rechenfehler beim Schreiben auf, und Korrektur-Rulings zum Budget entfallen.
+- Messgrösse: Rulings, die eine Budgetzahl eines früheren Rulings berichtigen (Zählung in `docs/studio/rulings.md`), in den nächsten 3 Gate-Plan-Rulings mit Budget: 0. Ausgangswert: 2 (Rundungsfehler in R88 laut R97; R96 → R97). Nebenbei gezählt: Anteil der Budget-Rulings mit Rechenweg (Anwendung).
+- Zeitraum: die nächsten 3 Gate-Plan-Rulings mit Budget.
+- Rückfall: Handbuch in der Version vor der Umsetzung, Budget-Abschnitt ohne den Satz zum Rechenweg.
+- Dateien: `docs/studio/STUDIO.md` (Budget-Abschnitt, ein Satz), `docs/studio/CHANGELOG.md`
+- Ruling: – (offen)
+- Start: erst, wenn ein Platz frei wird (höchstens 3 laufend; frühestens nach der Bewertung von E-001 in der Retro M7)
 - Bewertung: –

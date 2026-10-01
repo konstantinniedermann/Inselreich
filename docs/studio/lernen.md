@@ -2,12 +2,12 @@
 
 <!-- Kuratiert vom studio-coach, höchstens 40 Inhaltszeilen; Veraltetes streichen. -->
 
-- Leads starten Arbeiter immer im Vordergrund (`run_in_background: false`), sonst landet der Arbeiterbericht bei L0 statt beim Lead (ADR-007).
+- Leads starten Arbeiter immer im Vordergrund (`run_in_background: false`), sonst landet der Arbeiterbericht bei L0 statt beim Lead (ADR-007). Das Agent-Werkzeug eines Subagenten hat den Schalter (Headless-Probe, Retro session-5e248230 B3); `async_launched` unterscheidet Vorder- und Hintergrund nicht, Beleg ist, wer den Bericht erhält.
 - Fix-Runden und Rückfragen setzen denselben Agenten per `SendMessage` fort, statt ihn neu zu starten; der Kontext bleibt erhalten.
 - Das Modell im Agent-Aufruf explizit setzen; sonst erbt der Agent das Modell der Session.
 - Implementierer ändern Dateien mit Edit/Write statt mit Shell-Einzeilern (sed, perl, Heredoc); Einzeiler liessen Agenten hängen (Befund M2). Reine Textgenerierung in Doku per Skript ist ausgenommen (Handbuch 1.7, R75).
 - Neue Personas lädt die Datei-Überwachung in laufenden Sessions — ausser `.claude/agents/` fehlte beim Session-Start; dann lädt die Session keine Projekt-Personas, auch nicht nach `/clear`. Rückfall: `general-purpose` mit Kopfzeile `Persona:` und dem Persona-Text im Briefing.
-- Die Anzeige „inaktiv" ist bei langen Bash-Aufrufen oder langen Schreibschritten ohne Lebenszeichen erwartbar (Heuristik, kein Fehler; Spec-Autor mit Lücken bis 7,4 min, Retro session-664ac8d3 B1). Eingebaute Agenten (z. B. `web-fetch`) senden kein SubagentStart/-Stop; liegt ein Vordergrund-`spawned` vor, ist „inaktiv" ein Messartefakt (Retro 2026-09-30).
+- Die Anzeige „inaktiv" ist bei langen Bash-Aufrufen oder langen Schreibschritten ohne Lebenszeichen erwartbar (Heuristik, kein Fehler; Spec-Autor mit Lücken bis 7,4 min, Retro session-664ac8d3 B1). Eingebaute Agenten (z. B. `web-fetch`) senden kein SubagentStart/-Stop; liegt ein Vordergrund-`spawned` vor, ist „inaktiv" ein Messartefakt (Retro 2026-09-30). Ein Hintergrund-Start aus einem Lead liefert nach dem ersten Heartbeat keine Hook-Events mehr; „Agent unbekannt inaktiv" ist dann ein Artefakt, und sein Aufwand fehlt in der Metrik (Retro session-5e248230 B1).
 - Ein roter Pages-Lauf mit „Failed to get ID Token" (`deploy-pages`) ist ein Plattform-Timeout: einmal `gh run rerun`, erst bei Wiederholung untersuchen; der grüne Rerun schliesst `ci:<run>` (Retro 2026-09-30 ci-pages, R58).
 - Budgetfreigaben gelten nur in der Session, in der L0 sie loggt: nach `/clear` oder Session-Wechsel neu loggen, sonst zählt der Start in keiner Zeile (Retro 2026-09-30 budget-lead-tech, R58).
 - Ein Nutzungslimit beendet die Session ohne Vorwarnung: `state.md` laufend nachführen, nicht erst im Session-Ende; die Übergabe steht nie nur im Chat (Retro session-25e8352d, R66).
@@ -16,3 +16,5 @@
 - Vor einer Übergabe wegen des Kontextwerts einen einzelnen Sprung einmal gegenprüfen (`ts` und `session_id` in `.studio/limits.json`): Veraltete Werte werden noch nicht markiert, der erste Wert nach dem Merge zeigte 77 %, kurz darauf 17 % (R80, Beobachtung Restbefunde Limit-Sensor).
 - Ein per SendMessage fortgesetzter Agent bucht allen Aufwand auf seine erste Schätzung und das zuletzt geloggte Paket; Schätzung gegen Ist daher getrennt nach „mit/ohne Fortsetzung" lesen (Retro session-664ac8d3 B2).
 - Modellwahl nach Aufgabe; ein näher rückendes Limit ist nie ein Grund für ein schwächeres Modell, L0 fährt herunter (R71, Retro M5 B6).
+- Schreibende Git-Proben (revert, merge, reset) nur im Paket-Branch oder einem eigenen Worktree, nie im Haupt-Checkout auf main; vorher `git branch --show-current` (Retro session-5e248230 B6).
+- L0 formatiert `docs/studio/state.md` vor jedem Commit mit `npx prettier --write`; sonst wird `make check` auf main rot (Retro session-5e248230 B6).
