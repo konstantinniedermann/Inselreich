@@ -1130,3 +1130,53 @@ Auflagen nachweislich erledigt; die Präzisierung erfüllt die Absicht von R96 (
 ohne fremde Änderungen aus main mitzuzählen. — Kosten bei Irrtum: keine im Code.
 
 Entscheider: L0 · Anlass: Gate Plan M7
+
+## R99 · 2026-10-01 · M6-Sim D-M6-02
+
+Ruling: Stopp B2 (Krisenlauf `normal` Seed 3 Sieg 8250 > 8000; Ursache: Feuerwache des
+Test-Controllers deckt die Produktion nicht, alle 4 Brände ausserhalb Radius 8). Entscheid:
+(1) Der Test-Controller setzt die Feuerwache an eine plausible Spielerposition — Mitte der
+Produktion, sodass die Produktionsgebäude im Radius liegen; **kein Spielwert ändert sich**, nur
+Testcode. Die Platzierung wird im Test begründet kommentiert; lead-design bestätigt in einem
+Kurz-Urteil (kein Spec), dass sie Spielerverhalten abbildet und nicht nur den Test bestehen
+lässt. (2) Neu messen. Sieg ≤ 8000 → B2 weiter ins Review. Sieg weiter > 8000 → Stopp bleibt,
+dann Kurz-Spec durch lead-design (Spec 15). (3) B2-Schritte 6–10 (Szenarien) dürfen parallel
+fertiggestellt werden. (4) Plan-Rulings lead-tech übernommen (vorab grüne Schutz-Tests AK-S1-09
+`off`, AK-S1-10-Invariante, AK-S2-05; Merges `--no-ff` auf geprüfte SHAs). — Warum: Die Ursache
+ist die Bot-Strategie, nicht das Balancing; eine Kurz-Spec vorab kostet eine Runde ohne
+Erkenntnisgewinn. — Kosten bei Irrtum: Testspiel wird geschönt und verdeckt eine zu harte
+Krise; abgefangen durch das lead-design-Urteil und die Grenze 9000.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech M6-SIM
+
+## R100 · 2026-10-01 · M7 Gate Merge R0-ISO
+
+Ruling: **Gate Merge Zwischen-Merge R0-ISO bestanden** für `feat/m7-render` @ `7039ddd`
+(opus-Review über `aa1d058..7039ddd` OK ohne blockende/hohe Befunde; QA-R0 OK, AK-ISO-20 6/6,
+Konsole fehlerfrei; `make check` am SHA grün, 298 Tests; `git merge-tree` konfliktfrei; Diff
+`src/sim` leer; L0 hat die QA-Bilder gesichtet). production-integrator mergt `--no-ff 7039ddd`
+nach main und pusht (R96). Danach setzt lead-production ADR-012 auf „akzeptiert" und ergänzt dort
+die Konsequenz „alle vier Kamera-Tests und `ship.test.ts` geändert" (Befund lead-art). Hingenommen:
+In Task 1 und A1 fehlte der Schritt „Tests zuerst rot"; die Reviewer haben die Tests per
+eingebautem Fehler geprüft — Hinweis an studio-coach für die Session-Retro. arc42/CLAUDE.md
+(Draufsicht) folgen mit D1 (R96). — Warum: alle Bedingungen aus R96 Punkt 2 erfüllt. — Kosten bei
+Irrtum: Pages zeigt bis R2 Platzhalter-Blöcke statt der bisherigen Sprites; Revert des
+Merge-Commits jederzeit möglich.
+
+Entscheider: L0 · Anlass: Bericht lead-art Welle 1
+
+## R101 · 2026-10-01 · M6-Sim Baseline Krisenlauf
+
+Ruling: lead-design-Urteil **PLAUSIBEL** zur Feuerwache des Test-Controllers (`[kx+10, ky-8]`,
+Regel „max. Produktionsabdeckung Radius 8", Messung Seed 3: off 6050, normal 7050, mild 6250).
+Baseline angenommen. Auflagen für B2 vor dem Review: (E1) Kommentar in `tests/sim/controller.ts`
+begründet den Gleichstand mit der Bau-Reihenfolge (Norden zuerst) statt „kleinstes y" und nennt die
+Abhängigkeit: mit dem Spiegelplatz `[kx+10, ky+8]` läge der Sieg vermutlich > 8000 — kein
+Probelauf verlangt; (E2) Spec M6 §15 nachführen (Wachenposition, Abdeckung „Kapelle, Produktion
+Nord; Schule und Holzfäller ungedeckt") als `docs:`-Commit im Branch `feat/m6-balance`; (E3)
+Beobachtung „Krisenlauf `mild` knapp (minMoney 13, Endgeld 40)" trägt L0 auf main ein. — Warum:
+Bot-Verhalten ist spielerplausibel und eher benachteiligt; die Spiegelplatz-Abhängigkeit ist
+dokumentiert statt versteckt. — Kosten bei Irrtum: Balancing-Grenze wird bei der nächsten
+Werteänderung früher sichtbar (gewollt).
+
+Entscheider: L0 · Anlass: Kurz-Urteil lead-design M6-B2

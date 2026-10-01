@@ -439,6 +439,15 @@ was R87 leicht widerspricht.
 **Einschätzung:** Berge und Klippen sind ein Kandidat für M9 oder eine spätere Stimmungsrunde, rein darstellend.
 Die anderen drei Punkte prüft erst der Playtest nach dem Slice bzw. ein neues Gebäude. Kein Paket jetzt.
 
+### 2026-10-01 · `tests/sim/balance.test.ts` (M6-Krisenlauf) · Krisenlauf `mild` knapp
+
+**Beobachtung:** Der Krisenlauf `mild` (Seed 3) endet mit minMoney 13 und Endgeld 40. Ein einziger
+zusätzlicher Brand (z. B. Schule, ≈ −400) kann ihn bei der nächsten Werteänderung rot machen.
+Der Sieg im Lauf `normal` hängt zudem an der Wachenposition (Spiegelplatz vermutlich > 8000).
+**Ursprung:** Kurz-Urteil lead-design zu M6-B2 (R101).
+**Einschätzung:** Kein Design-Risiko für Spieler (Bot hält keinen Puffer), aber Test-Risiko: bei
+jeder Änderung in `src/sim/defs/` zuerst diesen Lauf prüfen.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
