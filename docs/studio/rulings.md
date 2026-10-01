@@ -1253,3 +1253,19 @@ Abgenommenes gemergt wird. — Kosten bei Irrtum: Pages zeigt bis R2 noch Platzh
 der Merge-Commits jederzeit möglich.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R106 · 2026-10-01 · Studio, Retro Session 5e248230
+
+Ruling: Vorschläge studio-coach angenommen: (1) **E-004 „Rechenweg im Budget-Ruling"** angenommen,
+Start sobald ein Experiment-Platz frei wird (frühestens nach Bewertung E-001 in der M7-Retro).
+(2) **Prüfauftrag Integrator**: Die nächsten 3 Merge-Briefings verlangen von lead-production
+ausdrücklich `run_in_background: false` für production-integrator und die Meldung, wo der Bericht
+ankam; landet er trotzdem bei L0, Eintrag in `docs/beobachtungen.md` (Harness), keine Regeländerung.
+(3) Vor R2 übernimmt lead-art die Messauslegungen aus R104 (I1, FOAM, I5) in den Spec-Text
+(`docs:`-Commit), damit Reviews nicht kreisen. Der Plan-Ausnahme-Nachtrag für
+`tests/sim/scenario-saves.test.ts` (Render-Strang, Hinweis lead-production) geht in denselben
+Commit und wird im Final-Review M7 geprüft. — Warum: zwei Muster (Rundungsfehler, Integrator im
+Hintergrund) und eine Ursache für Review-Runden sind belegt. — Kosten bei Irrtum: je eine Zeile im
+Briefing.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session 5e248230

@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
+Stand: 2026-10-01 (Session-Ende 5e248230)
 
 ## Aktuelles Projekt und Phase
 
@@ -14,17 +14,14 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
     off 6050, normal 7050, mild 6250). Frei: M6-R2, M6-U1, M7-R2-FW, M8-Sim. Worktrees `m6-sim`,
     `m6-sim-queries`, `m6-balance` erst per Ruling aufräumen (R87 5). Offen: M6-UI-Tasks im
     UI-Strang von M7 (M6-U1–U3, Tooltip Feuerwache).
-  - **M7 „Stimmung" inkl. Isometrie** (R91–R98) — Spec + ISO-Nachtrag + Plan auf main (af0f6f6),
-    Gate Spec/Plan bestanden, Budget 80 (lead-art 49/4, lead-tech 29/2, lead-qa 2/1), Freigabe je
-    Welle. Welle 0 erledigt (Docs-Merge, gepusht). **Welle 1 erledigt**: R0-ISO @ 7039ddd (R100; auf main als 63d0f11, gepusht,
-    ADR-012 akzeptiert b800d1e), A1 @ 374d793, X1a @ 9ce9025,
-    QA-VORHER (Bilder `.studio/qa/M7-VORHER/`, Mittelkachel (33,32) bzw. (50,31) leistung-50),
-    M7-U2 Teil A @ 07342a6. Erstes Iso-Bild (Platzhalter) dem Nutzer gesendet. **Welle 1b/1c erledigt, Slice OK (R104)**:
-    R1b @ f77b83c (enthält R1a), R5 @ 4489bdd, A2 @ ad4a2ee, U0-ISO @ 83f8333. Bilder an Nutzer
-    gesendet (`.studio/qa/M7-SLICE/`). **Nächste Session zuerst:** Nutzerreaktion auf Slice-Bilder
-    prüfen; dann Welle 2 (R2 ∥ R3, M7-U2 Teil B, M6-R2, M6-U1). Session-Ende-Routine (Metriken,
-    Retro studio-coach inkl. Ad-hoc: inaktiv-Meldungen, R1a 4 Review-Runden, Integrator lief im
-    Hintergrund, fehlender Rot-Schritt Welle 1) wegen Nutzungslimit nicht gelaufen — nachholen.
+  - **M7 „Stimmung" inkl. Isometrie** (R91–R106) — Budget 80 (lead-art 49/4, lead-tech 29/2,
+    lead-qa 2/1), Freigabe je Welle. **Auf main und Pages spielbar (a6d6fb9):** R0-ISO, R1a, R1b
+    (Boden, Küste, Wasser, Wald, erste Gebäude mit Höhe), M7-U2 Teil A (Holz-UI), U0-ISO (Bau-Anker,
+    Picking). Slice-Urteil OK (R104), Bilder an Nutzer gesendet (`.studio/qa/M7-SLICE/`). In Branches,
+    nicht gemergt: A1/A2 `feat/m7-audio` @ ad4a2ee, R5 `feat/m7-fx` @ 4489bdd, X1a `feat/m7-assets` @
+    9ce9025 (Schriftdateien fehlen auf main bis X1a). **Nächste Session zuerst:** Nutzerreaktion auf
+    die Slice-Bilder prüfen (R93/R96); dann R106 Punkt 3 (Spec-Auslegungen R104), dann Welle 2:
+    R2 ∥ R3, M7-U2 Teil B, M6-R2, M6-U1 (alle frei, M6-Sim ist auf main).
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
   Grafik und Stimmung Richtung Anno 1602. Start erst nach M7 und nur, wenn keine andere L0-Session
@@ -34,54 +31,44 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt                              | bis |
-| -------- | ------------- | ------------------------------------ | --- |
-| 664ac8d3 | abgeschlossen | nichts mehr                          | –   |
-| 5e248230 | aktiv         | M7 Welle 1 (Worktrees m7-*, ui-m6m7) | –   |
+| Session  | Stand         | besitzt     | bis |
+| -------- | ------------- | ----------- | --- |
+| 664ac8d3 | abgeschlossen | nichts mehr | –   |
+| 5e248230 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Rulings R73–R88; M5-NACHLESE und STUDIO-LIMIT gemergt, CI/Pages grün; Worktrees aufgeräumt.
-- Specs M6 (77 AK), M7 (inkl. 22 geprüfter Asset-Quellen, ≈ 11 MB), M8 (68 AK); Pläne M6-Sim
-  und M7 (18 Tasks, ADR-011-Entwurf).
-- Handbuch 1.7/1.8, Personas Desktop-first.
+- Session 5e248230: Nutzerauftrag „isometrische Grafiken" (R91) → ISO-Spec (21 AK), ADR-012
+  akzeptiert, M7-Plan überarbeitet, Gate Spec/Plan bestanden, Welle 0/1/1b/1c, Slice OK, zwei
+  Zwischen-Merges (R100, R105). M6-Sim umgesetzt und auf main (R99–R103). Personas
+  `art-rendering-engineer`, `art-audio-engineer` angelegt. Rulings R91–R106. Retro
+  `docs/studio/retros/2026-10-01-session-5e248230.md`.
 
 ## Pausierte Pakete (Branches, nichts gemergt)
 
-- **M6** — `docs/m6-spec` @ 1d28ba2 (`.worktrees/m6-spec`): Spec + Plan
-  `docs/superpowers/plans/2026-09-30-m6-sim.md`. Übergabe `.studio/handoffs/m6-spec.md`.
-  Nächster Schritt: Budget 17 Starts / Parallelität 2 (lead-tech 16, lead-qa 1) freigeben,
-  Umsetzung M6-Sim (Task 1a/1b Baseline zuerst); Sim-Strang nach eigenem Final-Review und Gate
-  Merge direkt auf main (R82a). Spec/Plan-Branch vorher nach main mergen.
-- **M7** — `docs/m7-spec` @ 7c504e9 (`.worktrees/m7-spec`): Spec, Plan
-  `docs/superpowers/plans/2026-09-30-m7-stimmung.md`, ADR-011. Übergabe
-  `.studio/handoffs/m7-spec.md`, Lizenzurteil `.studio/handoffs/2026-09-30-m7-lizenzpruefung.md`
-  (Dateien nur im Scratchpad — X1 lädt neu und prüft SHA-256). Nächster Schritt: Gate Plan
-  (lead-qa, lead-production), Personas `art-rendering-engineer`/`art-audio-engineer` anlegen
-  (R88), dann Welle 1: R1a → R1b → **Slice-Stopp mit Vorher/Nachher-Bildern an den Nutzer**;
-  parallel R5, A1, X1a, M7-U2. Budgetantrag 64 (lead-art 41/4, lead-tech 23/1, lead-qa 1/1).
-- **M8** — `docs/m8-spec` @ 2a46996 (`.worktrees/m8-spec`): Spec
-  `2026-09-30-m8-kaufleute-design.md`, Übergabe `.studio/handoffs/m8-spec.md`, Werte
-  `m8-werte.md`. Nächster Schritt: Gate Spec (lead-tech, lead-qa); offene Punkte Spec §21
-  (M8-B1/B2 nach M6-B2; M7 AK-R2-03 feste Id-Liste; `buildMenu.ts`/`inspect.ts` nach M7-U2).
-  M8-Sim blocked-by M6-Sim-Merge auf main (R87).
-- Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design (R81: Tick
-  > 8000 → M8 Vorrang).
+- **M7 Audio/FX/Assets** — `feat/m7-audio` @ ad4a2ee (A1, A2), `feat/m7-fx` @ 4489bdd (R5),
+  `feat/m7-assets` @ 9ce9025 (X1a, 8,5 MB). Merge erst mit M7-U1/X1b bzw. Meilensteinende.
+- **M7 Render/UI** — Worktrees `m7-render`, `ui-m6m7` weiter nutzen (Stand = main nach a6d6fb9).
+  Weitere Worktrees: `m7-vorher`, `m7-render-qa`, `m7-slice`, `ui-qa`, `m6-sim`, `m6-sim-queries`,
+  `m6-balance`, `m6-spec`, `m7-spec`, `m8-spec`, `m5-int` — Aufräumen per Ruling (lead-production).
+- **M8** — `docs/m8-spec` @ 2a46996: Gate Spec offen (lead-tech, lead-qa); M8-Sim jetzt frei (M6-Sim
+  auf main).
+- Nutzer-Spielstand angefragt: `.studio/playtest/nutzer-save.json` → an lead-design (R81).
 
 ## Budget
 
-Session 5e248230: Welle 1 lead-art 13/4, lead-tech 3/2; M6-Sim lead-tech 16/2, lead-qa 1/1 (Phase umsetzung); Spec/Plan-Phasen abgeschlossen
+keine Freigaben (nach Session-Wechsel neu loggen; Welle 2 aus dem M7-Budget 80 freigeben)
 
 ## Offene Entscheide
 
-- L0: Paket lead-production `log.py result --package` (R75) + Folgeaufträge in `metrics.py` (R89); Ad-hoc-Retro „Agent unbekannt inaktiv“ prüfen (vermutlich Messartefakt);
-  Restbefunde Limit-Sensor (beobachtungen.md).
-- E-002-Episode für den Coach: parallele Session 01HkLmgZ schrieb R82 auf main, ohne sich in
-  „Parallele Sessions" einzutragen → Nummernkollision, beim Merge als R90 umnummeriert.
-- Nutzer: keine Warteschlangen-Einträge. Slice-Bilder kommen im Bericht (nicht blockierend).
+- L0: Paket lead-production `log.py result --package` (R75) + Folgeaufträge `metrics.py` (R89);
+  Restbefunde Limit-Sensor (beobachtungen.md); Worktree-Aufräumen per Ruling.
+- Nutzer: keine Warteschlangen-Einträge. Reaktion auf Slice-Bilder offen (nicht blockierend).
 
 ## Nächste Schritte
 
-1. Parallel: Umsetzung M6-Sim starten · Gate Plan M7 · Gate Spec M8.
-2. Nach Gate Plan M7: Welle 1 (Vertical Slice) — Bilder an den Nutzer, Slice-Urteil.
-3. Specs/Pläne nach main mergen, sobald die Umsetzung beginnt.
+1. Nutzerreaktion auf Slice-Bilder prüfen (R93/R96).
+2. R106 Punkt 3 (lead-art: Spec-Auslegungen R104, Plan-Ausnahme `scenario-saves.test.ts`).
+3. Welle 2 freigeben: R2 ∥ R3 (lead-art), M7-U2 Teil B, M6-R2, M6-U1 (lead-tech); Merge-Briefings
+   mit Integrator im Vordergrund (R106 Punkt 2).
+4. Parallel möglich: Gate Spec M8, danach M8-Sim.
