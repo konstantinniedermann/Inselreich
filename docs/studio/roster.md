@@ -108,7 +108,8 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
    `studio-emoji` nach der Namensregel; Arbeiter ohne `Agent`-Tool).
 2. Der Production-Lead prüft sie gegen STUDIO.md, verschiebt die Zeile hier von „Auf Abruf" nach
    „Aktive Personas", führt Organigramm und Lead-Tabelle oben nach (keine Regeländerung) und committet
-   (`docs: Persona <name>`).
+   (`docs: Persona <name>`). Dazu `PERSONA_NAMES` in `tools/studio/tests/test_model.py` eintragen,
+   `make studio-test` grün.
 3. Eine neue Agent-Datei ist in der laufenden Session erst **ab einem späteren Zug** als Agent-Typ
    verfügbar, nicht im Zug, in dem sie committet wurde (Befund Session 8c0e0295: Commit 339c728,
    Start im selben Zug „not found", nach dem nächsten Zug gelistet; R129). Wer die Rolle im selben

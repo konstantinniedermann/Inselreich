@@ -1343,6 +1343,11 @@ PERSONA_NAMES = {
     },
     "qa-playtester": {"name": "Zocker-Zoe", "title": "Spieltesterin", "emoji": "🎮"},
     "studio-coach": {"name": "Coach-Carla", "title": "Studio-Coach", "emoji": "🧭"},
+    "studio-process-coach": {
+        "name": "Takt-Tilda",
+        "title": "Prozess-Coach",
+        "emoji": "🔭",
+    },
 }
 
 
