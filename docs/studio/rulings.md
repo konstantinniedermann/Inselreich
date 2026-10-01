@@ -1589,3 +1589,24 @@ paralleler Sessions belegen ein Muster mit hohem Schaden (4 Pakete neu umgesetzt
 Irrtum: ein Experiment-Platz falsch belegt.
 
 Entscheider: L0 · Anlass: Meilenstein-Retro M7
+
+## R127 · 2026-10-01 · Prozess-Aussensicht in der Retro (Nutzeranweisung)
+
+Ruling: Nutzeranweisung „immer wenn du Fehler im Team und im Ablauf entdeckst, gib das an die Retro
+weiter; führe dort einen neuen Verantwortlichen ein, der eine neutrale Aussensicht vertritt und
+dessen Ziel es ist, interne Prozesse und Arbeitsabläufe zu optimieren (Scrum oder SAFe ähnlich);
+regelmässig nach einem Release einer Funktion oder wann immer es Sinn macht" — umgesetzt als:
+(1) **Dauerregel L0:** Jeder entdeckte Fehler im Team oder Ablauf wird als Retro-Befund geloggt
+(`log.py retro` bzw. Ad-hoc-Retro), nicht nur als Ruling. (2) **Neue Persona
+`studio-process-coach`** (Arbeitstitel; Rolle wie Scrum Master / SAFe Release Train Engineer):
+neutral, nicht in Lieferung und Gates eingebunden, analysiert Abläufe, Übergaben, Parallelität,
+Wartezeiten und Fehlerursachen, schlägt Prozessänderungen vor; L0 entscheidet per Ruling. Abgrenzung:
+`studio-coach` kuratiert weiterhin lernen.md, Experimente und Metriken. (3) **Takt:** nach jedem
+Release einer Funktion (Merge auf main/Pages) eine Prozess-Retro, zusätzlich ad hoc bei
+Prozessproblemen. (4) Anlegen der Persona per Onboarding (lead-production) zu Beginn der nächsten
+Session, vor dem Start der M7-UX-Umsetzung; Handbuch-Änderung (Rolle, Takt) durch studio-coach nach
+L0-Ruling. Erste Prozess-Retro: Rückblick auf M7 (parallele Sessions, Rebase-Vorfall). — Warum:
+ausdrückliche Nutzeranweisung; M7 zeigte Prozessfehler, die eine Sicht von aussen früher erkannt
+hätte. — Kosten bei Irrtum: ein zusätzlicher Retro-Start je Release.
+
+Entscheider: L0 · Anlass: Nutzeranweisung

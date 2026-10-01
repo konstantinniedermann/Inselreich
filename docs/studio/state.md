@@ -64,6 +64,10 @@ keine Freigaben (nach Session-Wechsel neu loggen: M7-UX 36 = lead-tech 34, lead-
 
 ## Nächste Schritte
 
+0. **R127 zuerst:** Persona `studio-process-coach` (neutrale Prozess-Aussensicht, Scrum-Master/RTE)
+   per Onboarding anlegen (lead-production), erste Prozess-Retro zu M7; Handbuch-Änderung (Rolle,
+   Takt „nach jedem Feature-Release + ad hoc") per Ruling. Dauerregel: entdeckte Ablauffehler immer
+   an die Retro.
 1. Budget M7-UX loggen, lead-tech startet Umsetzung Task 1 (Plan @ 925aee0).
 2. Nach Task 3/4/6/8/10 QA-UX1–5, am Ende Erstspieler-Playtest QA-UX, Final-Review lead-qa,
    Gate Merge, Merge nach R124 (2). Vorher/Nachher-Bilder an den Nutzer.
