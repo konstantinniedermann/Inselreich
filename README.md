@@ -130,10 +130,11 @@ Tab verborgen ist.
 - **Musik:** einige Sekunden nach dem ersten Klick ein Stück passend zur Tageszeit, danach Pausen von
   30–90 s.
 
-**Hinweis zum Stand:** Musik-, Klang- und Schriftdateien sind noch nicht eingebunden (Ruling R109: die
-Quellen sind aus der Arbeitsumgebung gesperrt). Bis dahin klingt alles synthetisch (Web Audio), die Musik
-fehlt, und die Schrift fällt auf eine Ersatzschrift zurück; die Credits melden «Fremde Assets sind derzeit
-nicht eingebunden».
+**Herkunft von Musik, Klang und Schrift:** Die Musikstücke, Umgebungsklänge, Signaltöne und die Schrift
+EB Garamond sind offen lizenzierte Dateien unter `public/` (Nachweis je Datei in `docs/CREDITS.md`,
+Lizenztexte in `docs/licenses/`). Die Credits stehen im Spiel unter **Einstellungen → Credits**. Fehlt eine
+Datei oder lädt sie nicht, klingt die Schicht synthetisch weiter, und die Schrift fällt auf eine
+Ersatzschrift zurück.
 
 ## Wirtschaft
 
