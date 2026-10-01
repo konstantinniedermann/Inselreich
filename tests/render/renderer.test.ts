@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
 import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
-import { PALETTE, SHADOW, rgbaOf } from '../../src/render/palette';
+import { PALETTE, SHADOW, mixHex, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import {
@@ -583,6 +583,46 @@ describe('Renderer', () => {
       expect(ev.filter((e) => e.composite === 'lighter').every((e) => e.op === 'fillRect')).toBe(
         true,
       );
+    });
+
+    it('M7-R3 Rauchbudget begrenzt nur den Rauch: 20 sichtbare Feuer → Rauch ≤ 150 (reduziert ≤ 50), alle 20 Flammen', () => {
+      const [r, g, b] = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.4));
+      const smokeStyle = `rgba(${r},${g},${b},`;
+      for (const reduce of [false, true]) {
+        const sc = scene();
+        sc.world.order = order;
+        sc.world.tick = 3000;
+        const k = sc.world.buildings[sc.world.kontorId]!;
+        const fire = [];
+        for (let i = 0; i < 20; i++) {
+          const id = sc.world.nextBuildingId++;
+          sc.world.buildings[id] = {
+            id,
+            defId: 'house',
+            x: k.x + 3 + (i % 5),
+            y: k.y + 3 + Math.floor(i / 5),
+            connected: true,
+            progress: 0,
+            state: 'ok',
+          };
+          fire.push({ id, flames: 1, smoke: 1 });
+        }
+        const { ctx, log } = fakeCtx();
+        render(ctx, sc.world, camFor(sc.world, 1), layer, null, null, VIEW, {
+          timeMs: 900,
+          reduceMotion: reduce,
+          fire,
+        });
+        const smoke = log.events.filter(
+          (e) => e.op === 'fill' && e.style.startsWith(smokeStyle) && e.points.length === 4,
+        ).length;
+        const flames = log.events.filter(
+          (e) => e.op === 'fill' && e.style.startsWith('gradient('),
+        ).length;
+        expect(smoke).toBeGreaterThan(0);
+        expect(smoke).toBeLessThanOrEqual(reduce ? 50 : 150);
+        expect(flames).toBe(20);
+      }
     });
 
     it('M7-R3 ohne Feuer kein additiver Durchgang; mit flames = 0 (Nachlauf) auch keiner', () => {
