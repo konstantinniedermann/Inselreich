@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-01 (Session-Ende 5e248230, Teil 2)
+Stand: 2026-10-01 (Session 8c0e0295 läuft: Prozess-Retro nach R128, nur Studio-Prozess)
 
 ## Aktuelles Projekt und Phase
 
@@ -32,6 +32,7 @@ Stand: 2026-10-01 (Session-Ende 5e248230, Teil 2)
 
 | Session                           | Stand                  | besitzt     | bis |
 | --------------------------------- | ---------------------- | ----------- | --- |
+| 8c0e0295                          | läuft (R128)           | docs/studio/, .claude/agents/ | Session-Ende |
 | 5e248230                          | abgeschlossen          | nichts mehr | –   |
 | Cloud „Thema abschliessen" 32e7c1 | übergeben (R119, R120) | nichts mehr | –   |
 

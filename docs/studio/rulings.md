@@ -1610,3 +1610,29 @@ ausdrückliche Nutzeranweisung; M7 zeigte Prozessfehler, die eine Sicht von auss
 hätte. — Kosten bei Irrtum: ein zusätzlicher Retro-Start je Release.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R128 · 2026-10-01 · Session Prozess-Retro (Nutzerauftrag)
+
+Ruling: Nutzerauftrag „setz die neue Rolle ein und mach eine Retro; verbessere interne Prozesse, um
+effizienter zu werden, nicht das Produkt (in dieser Session)" — ausgelegt als: (1) Scope dieser
+Session ist ausschliesslich Studio-Prozess (`docs/studio/`, `.claude/agents/`,
+`.claude/output-styles/`, `tools/studio/`); kein Code unter `src/`, M7-UX bleibt pausiert. (2)
+lead-production legt `studio-process-coach` nach R127 (2) per Onboarding an. (3) Erste
+Prozess-Retro über M6/M7/M7-UX-Vorbereitung mit Schwerpunkt Effizienz (Starts, Tokens, Wartezeit,
+Doppelarbeit, Übergaben). (4) L0 entscheidet die Vorschläge per Ruling; studio-coach setzt die
+angenommenen um. (5) Ampel rot (5h-Limit 81 %): höchstens 4 Agenten-Starts, state.md laufend. —
+Warum: Wortlaut „nicht das Produkt" und „in dieser Session" grenzen eindeutig ein; Zweck-Gegenprobe
+(E-003): Ziel ist Effizienz, also zählen Vorschläge, die Starts oder Wartezeit sparen, vor
+Dokumentationsausbau. — Kosten bei Irrtum: M7-UX startet eine Session später.
+
+Entscheider: L0 · Anlass: Nutzerauftrag
+
+## R129 · 2026-10-01 · Prozess-Retro 1: Vorschläge
+
+Ruling: Alle 5 Vorschläge aus [retros/2026-10-01-prozess-retro-1.md](retros/2026-10-01-prozess-retro-1.md)
+angenommen; (1) vorerst als Handbuch-Regel (Standard eine L0-Session je Repo, Parallelität nur per
+Ruling, ersetzt E-005), Start-Hook-Warnung als Werkzeug-Paket lead-production in Folgesession; E-004
+abgelehnt. Umsetzung (2)–(5) und Regel (1): studio-coach, ein Start. — Warum: Effizienzauftrag R128.
+— Kosten bei Irrtum: Rücknahme per Ruling, Texte in Git.
+
+Entscheider: L0 · Anlass: Prozess-Retro 1
