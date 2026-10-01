@@ -1,9 +1,14 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { adjacentOf, tileAt, type Pos } from '../sim/world';
 import type { World } from '../sim/types';
-import { tileToScreen, type Camera } from './camera';
+import { worldToScreen, type Camera } from './camera';
+import { ISO_H, ISO_W, project } from './iso';
 
 const BOB_PERIOD_MS = 2600;
+/** Höhe des Schiffs über der Rautenmitte (Weltpixel, Zoom 1). */
+export const SHIP_H = 1.2 * ISO_H;
+const SHIP_W = 0.8 * ISO_W;
+const SHIP_SPAN = 0.7; // Anteil der Formhöhe, der über SHIP_H liegt (Mast bis Kiel)
 const BOB_AMPLITUDE = 0.04; // Anteil der Kachelhöhe
 const TILT_MAX = 0.06; // rad
 const HULL = '#6b4423';
@@ -22,22 +27,19 @@ export function shipTile(world: World): Pos | null {
   return water[0] ?? null;
 }
 
-/** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`). */
+/** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`) an der Rautenmitte von `tile`. */
 export function drawShip(
   ctx: CanvasRenderingContext2D,
-  world: World,
   cam: Camera,
+  tile: Pos,
   timeMs: number,
 ): void {
-  const t = shipTile(world);
-  if (!t) return;
-  const p = tileToScreen(cam, t.x, t.y);
-  const q = tileToScreen(cam, t.x + 1, t.y + 1);
-  const w = q.x - p.x;
-  const h = q.y - p.y;
+  const c = worldToScreen(cam, project(tile.x + 0.5, tile.y + 0.5));
+  const w = SHIP_W * cam.zoom;
+  const h = (SHIP_H / SHIP_SPAN) * cam.zoom;
   const phase = (timeMs / BOB_PERIOD_MS) * Math.PI * 2;
   ctx.save();
-  ctx.translate(p.x + w / 2, p.y + h * 0.6 + Math.sin(phase) * h * BOB_AMPLITUDE);
+  ctx.translate(c.x, c.y + Math.sin(phase) * h * BOB_AMPLITUDE);
   ctx.rotate(Math.sin(phase + 1) * TILT_MAX);
   ctx.lineWidth = 1;
   ctx.strokeStyle = OUTLINE;

@@ -7,7 +7,7 @@ import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
 import type { World } from '../sim/types';
-import { TILE, clampCamera, createCamera, type Camera } from '../render/camera';
+import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
@@ -147,8 +147,7 @@ function launch(
     sound.play('error');
   };
 
-  const worldW = world.width * TILE;
-  const worldH = world.height * TILE;
+  const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
 
   const actions: HudActions = {
@@ -378,16 +377,14 @@ function launch(
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     view.w = w;
     view.h = h;
-    clampCamera(state.cam, worldW, worldH, w, h);
+    clampToMap(state.cam, map, w, h);
   };
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
   resize();
   if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
-    state.cam.x = c.cx * TILE - view.w / 2 / state.cam.zoom;
-    state.cam.y = c.cy * TILE - view.h / 2 / state.cam.zoom;
-    clampCamera(state.cam, worldW, worldH, view.w, view.h);
+    centerOn(state.cam, c.cx, c.cy, view, map);
   }
 
   let acc = 0;
@@ -439,6 +436,7 @@ function launch(
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
         timeMs: performance.now(),
         dayNight: settings.dayNight,
+        raster: import.meta.env.DEV && location.search.includes('raster=1'),
       });
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
