@@ -53,3 +53,13 @@ schliesst den Eintrag.
 - Blockiert: M7-X1a, X1b, Musik in A3
 - Von: lead-art
 - Antwort: –
+
+## N-91 · offen · 2026-10-01 · Leistung auf deinem Rechner prüfen (nach dem Merge)
+
+- Frage: Nach dem Merge von M7 auf Pages: Spiel mit ?perf=1 öffnen, Szenario Sturm, Zoom ganz heraus, 1920×1080 — liegen die Bilder pro Sekunde bei mindestens 30? (Cloud-Messung ohne GPU: 27 fps, Zeichenzeit nur 4 ms.)
+- Empfehlung: Nach dem Merge kurz im Browser prüfen; ich liefere eine einfache Anleitung mit.
+- Begründung: AK-U3-09/AK-R4-06 sind ohne Grafikkarte nicht bewertbar (R116).
+- Kosten des Wartens: Keine Blockade; bei <30 fps folgt ein Leistungspaket.
+- Blockiert: nichts (Nachprüfung)
+- Von: lead-qa
+- Antwort: –

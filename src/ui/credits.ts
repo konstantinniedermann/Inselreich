@@ -14,8 +14,17 @@ export interface FontCredit extends CreditEntry {
   files: string[];
 }
 
-/** Schriften mit Nachweis. Leer, solange `docs/CREDITS.md` keine fremde Schrift führt (R109). */
-export const FONT_CREDITS: readonly FontCredit[] = [];
+/** Schriften mit Nachweis; Quelle der Wahrheit ist `docs/CREDITS.md` (Abschnitt Schriften, R109). */
+export const FONT_CREDITS: readonly FontCredit[] = [
+  {
+    id: 'FO1',
+    files: ['fonts/eb-garamond-400.woff2', 'fonts/eb-garamond-700.woff2'],
+    title: 'EB Garamond (Schnitte 400 und 700, Subset latin)',
+    author: 'The EB Garamond Project Authors (Georg Duffner, Octavio Pardo)',
+    license: 'OFL-1.1',
+    link: 'https://fontsource.org/fonts/eb-garamond',
+  },
+];
 
 /** Lizenzkennung -> Link zum Lizenztext. */
 export const LICENSE_LINKS: Record<string, string> = {
