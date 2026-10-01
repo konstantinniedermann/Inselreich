@@ -113,7 +113,9 @@ export function overlayPlan(
       ? 'supply'
       : def.supplyRadius !== undefined
         ? 'supply'
-        : (def.service ?? null);
+        : def.fireProtection === true
+          ? 'fire'
+          : (def.service ?? null);
   if (!zone && !coverage) return null;
   const hasCoverageCircle = def.supplyRadius !== undefined || def.serviceRadius !== undefined;
   return {
@@ -124,6 +126,33 @@ export function overlayPlan(
 }
 
 export const overlayCache = createCoverageCache();
+
+/**
+ * Gebäude, deren Mittelpunkt in einer Maske der Abdeckungsart liegt (rein, schreibt nicht in die Welt).
+ * Die Maske ist je Kachel (Kachelmitte ≤ Radius); für 1×1-Gebäude deckt sich das mit `isProtected`
+ * (`fire`), bei 2×2 zählt die Kachel, in der die Gebäudemitte liegt. Die UI kann `protectedCount` darauf umstellen.
+ */
+export function coveredBuildingIds(
+  world: World,
+  kind: CoverageKind,
+  mask: boolean[] = overlayCache.get(world, kind),
+): number[] {
+  const out: number[] = [];
+  for (const b of Object.values(world.buildings)) {
+    const d = BUILDING_DEFS[b.defId];
+    const x = Math.floor(b.x + d.w / 2 - 1e-9),
+      y = Math.floor(b.y + d.h / 2 - 1e-9);
+    if (
+      x >= 0 &&
+      y >= 0 &&
+      x < world.width &&
+      y < world.height &&
+      mask[y * world.width + x] === true
+    )
+      out.push(b.id);
+  }
+  return out.sort((a, c) => a - c);
+}
 
 interface Range {
   x0: number;
