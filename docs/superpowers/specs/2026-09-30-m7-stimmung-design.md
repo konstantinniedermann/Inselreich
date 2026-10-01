@@ -3,6 +3,10 @@
 Datum: 2026-09-30 · Paket M7-SPEC · Status: **Gate Spec bestanden unter Auflage (R83), Nachtrag eingearbeitet** (Nachprüfung `lead-qa` der geänderten
 Stellen, Liste in Abschnitt 17) · Prozessstufe voll · Autor `lead-art`
 
+> **Nachtrag M7-ISO (R91, 2026-10-01):** Die Darstellung wechselt auf Isometrie. Wo diese Spec und
+> [`2026-10-01-m7-iso-design.md`](2026-10-01-m7-iso-design.md) abweichen, gilt der Nachtrag; die überlagerten Stellen
+> listet dessen Abschnitt 13. Der Nachtrag ist im Entwurf für das Gate Spec.
+
 Grundlage:
 
 - Designvorschlag `lead-art`: `.studio/handoffs/2026-09-30-lead-art-l0-m7-vorschlag.md`
@@ -72,7 +76,7 @@ urteilen, der Nutzer bekommt die Bilder im Bericht.
 Posten fremde **CC0**-Terrain- bzw. -Gebäudegrafik. Dann gilt:
 
 - Scouting und Lizenzprüfung laufen wie für Audio.
-- Palette, Kachelmassstab 32 px und die Lesbarkeitsregeln aus 4.3 gelten unverändert.
+- Palette, Rautenmassstab 64 × 32 (Nachtrag M7-ISO, D-21) und die Lesbarkeitsregeln aus 4.3 gelten unverändert.
 - R2 wird dann neu geschnitten.
 
 Ohne ein solches Ruling kommt keine fremde Grafik ins Spiel.
@@ -81,7 +85,7 @@ Ohne ein solches Ruling kommt keine fremde Grafik ins Spiel.
 
 - Keine Änderung an `src/sim/`: keine neuen Spielregeln, keine Spielwerte, kein neues Save-Format. Render und Audio
   lesen nur (ADR-002).
-- Keine Isometrie (ADR-003 bleibt).
+- ~~Keine Isometrie (ADR-003 bleibt).~~ Ersetzt durch den Nachtrag M7-ISO: Isometrie nach ADR-012, ADR-003 ist ersetzt.
 - Keine fremde Terrain- oder Gebäudegrafik ohne Ruling nach 2.3.
 - Kein kosmetischer Regen ohne Sturm: Regen ist dem Sturm vorbehalten und dadurch ein eindeutiges Signal.
 - Keine Mobil-Optimierung (R78). Schmale Fenster müssen nur „stürzt nicht ab, nichts Wesentliches unerreichbar"
@@ -1116,7 +1120,7 @@ setzt der Check per CDP vor dem Laden. Einen neuen Sim-Helfer braucht es nicht.
 | ADR-006                                  | Attribution im Spiel „spätere Projektarbeit"                                                                | umgesetzt durch den Credits-Dialog (9.3); kein Text-Change am ADR nötig                                                                            |
 | Projekt-CLAUDE.md Test-Strategie, Scopes | Vitest für sim, Kamera, audio, overlays, ui-Helfer                                                          | zusätzlich reine Render-Mathematik (`terrainField`, `daynight`, `life`, `weather`, `viewStats`) und `tests/assets/`; Scope „Assets"                |
 
-Keine Änderung an ADR-001 (keine Abhängigkeit), ADR-002 (Render und Audio lesen nur), ADR-003 (Top-down bleibt) und
+Keine Änderung an ADR-001 (keine Abhängigkeit), ADR-002 (Render und Audio lesen nur), ADR-003 (seit Nachtrag M7-ISO ersetzt durch ADR-012) und
 am Save-Format.
 
 ## 16. Offene Punkte mit Empfehlung

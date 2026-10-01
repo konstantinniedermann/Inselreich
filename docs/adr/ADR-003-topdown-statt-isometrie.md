@@ -1,6 +1,6 @@
 # ADR-003: Top-down-Darstellung statt Isometrie im MVP
 
-Status: akzeptiert · Datum: 2026-09-29
+Status: ersetzt durch [ADR-012](ADR-012-isometrische-darstellung.md) · Datum: 2026-09-29
 
 ## Kontext
 
