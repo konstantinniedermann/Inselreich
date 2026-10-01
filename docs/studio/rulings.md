@@ -1418,7 +1418,9 @@ Kosten bei Irrtum: gering.
 
 Entscheider: L0 · Anlass: Bericht D1
 
-## R107 · 2026-10-01 · M7 Welle 2 und UX
+## R118 · 2026-10-01 · M7 Welle 2 und UX
+
+(Ursprünglich als R107 geschrieben; Nummernkollision mit R107 der Cloud-Session, umnummeriert.)
 
 Ruling: Nutzerreaktion auf die Slice-Bilder: „Gefällt mir" → Slice bestätigt (R93/R96 erfüllt),
 Welle 2 frei. Auslegung „mach weiter mit den Gebäudegrafiken, Musik, ausserdem mach das UI besser,
@@ -1440,3 +1442,23 @@ Zweck der Anweisung: das Spiel soll schöner klingen/aussehen und leichter bedie
 Auslegung widerspricht ihm nicht, weil die Bedienung zuerst gemessen statt geraten wird.
 
 Entscheider: L0 · Anlass: Nutzeranweisung
+
+## R119 · 2026-10-01 · M7 Übernahme von der Cloud-Session, Abschluss und M7-UX
+
+Ruling: Lage nach `git fetch`: Die Cloud-Session „Thema abschliessen" (idle) hat M7 auf
+`origin/feat/ui-m6m7` @ 4c69776 bis D1 fertiggestellt (R107–R117); offen sind INT-Check,
+Final-Review und Gate Merge inkl. `fix/layoutkey` @ 42d39b7. Damit ist R118 Punkt (1) und (2)
+erledigt bzw. überholt. Diese Session (5e248230) **übernimmt den Abschluss von M7**: (a) Die lokal
+erhaltenen Assets `feat/m7-assets` @ 9ce9025 (Musik, Umgebung, Signale, Schrift, CREDITS, Lizenzen,
+lokales Lizenzurteil) beantworten **N-90 ohne den Nutzer**; lead-art führt X1b auf dem Assets-Baum
+(23e5eac = UI 4c69776 + Assets) durch, pusht unter einem neuen Branch (`feat/m7-assets-local`), da
+`origin/feat/m7-assets` abweicht. (b) Danach Merge Assets in UI, INT-Check, Final-Review (lead-qa),
+Gate Merge L0, Merge nach main mit Push. (c) N-91 (Leistung auf Echtgerät) misst lead-qa auf diesem
+Mac mit GPU nach dem Merge; der Eintrag wird damit beantwortet. (d) **M7-UX** (R118 Punkt 3) bleibt:
+Analyse und Kurz-Spec durch lead-design auf 4c69776; Umsetzung als eigenes Paket **nach** dem
+M7-Merge auf main. (e) Push-Pflicht aus R107 (Cloud) gilt auch hier. Die Cloud-Session wird per
+Nachricht informiert. — Warum: fast fertiger Meilenstein; die verlorenen Assets existieren lokal.
+— Kosten bei Irrtum: Läuft die Cloud-Session doch weiter, Doppelarbeit am Abschluss; abgefangen
+durch Eintrag in „Parallele Sessions" und Nachricht.
+
+Entscheider: L0 · Anlass: Bericht lead-tech, `git fetch`

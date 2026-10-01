@@ -40,10 +40,11 @@ Stand: 2026-10-01 (Session-Ende 5e248230)
 
 ## Parallele Sessions
 
-| Session  | Stand               | besitzt           | bis |
-| -------- | ------------------- | ----------------- | --- |
-| 664ac8d3 | abgeschlossen       | nichts mehr       | –   |
-| 5e248230 | aktiv (fortgesetzt) | M7 Welle 2, M7-UX | –   |
+| Session                           | Stand                              | besitzt                                             | bis |
+| --------------------------------- | ---------------------------------- | --------------------------------------------------- | --- |
+| 664ac8d3                          | abgeschlossen                      | nichts mehr                                         | –   |
+| 5e248230                          | aktiv (fortgesetzt)                | M7-Abschluss (X1b, INT, Final-Review, Merge), M7-UX | –   |
+| Cloud „Thema abschliessen" 32e7c1 | idle, übergeben an 5e248230 (R119) | nichts mehr                                         | –   |
 
 ## Seit letzter Session erledigt
 
