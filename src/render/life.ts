@@ -215,11 +215,11 @@ export interface GullAnchor {
 /** Kantenlänge der festen Zellen (Kacheln), je Zelle höchstens eine Möwe. */
 export const GULL_CELL = 8;
 /**
- * Füllung des Möwenbudgets: Von den Zellen im Bereich dürfen so viele eine Möwe tragen (Zellen-Hash unter der
- * Schwelle), dass im Mittel `GULL_FILL · cap` Zellen zugelassen sind (nur Küstenzellen liefern wirklich eine). Die Schwelle hängt nur von der Bereichsgrösse ab, nicht
- * von der Lage; so greift die Kappung auf `cap` beim Scrollen selten und Möwen springen nicht.
+ * Feste Schwelle des Zellen-Hashs: Nur dieser Anteil der Zellen darf eine Möwe tragen (nur Küstenzellen liefern
+ * wirklich eine). Sie hängt weder von Lage noch von Bereichsgrösse ab; so ändert Scrollen die Auswahl im Bild
+ * nicht, und die Kappung auf `cap` greift bei Bildausschnitten selten.
  */
-const GULL_FILL = 1.5;
+export const GULL_SHARE = 0.2;
 
 /**
  * Kreismittelpunkte der Möwen: Die Karte ist in feste Zellen zu 8×8 Kacheln geteilt. Je Zelle, die den Bereich
@@ -241,11 +241,10 @@ export function gullAnchors(
     cx1 = Math.floor(Math.min(field.w - 1, range.x1) / GULL_CELL),
     cy0 = Math.floor(Math.max(0, range.y0) / GULL_CELL),
     cy1 = Math.floor(Math.min(field.h - 1, range.y1) / GULL_CELL);
-  const share = Math.min(1, (GULL_FILL * limit) / ((cx1 - cx0 + 1) * (cy1 - cy0 + 1)));
   const winners: GullAnchor[] = [];
   for (let cy = cy0; cy <= cy1; cy++)
     for (let cx = cx0; cx <= cx1; cx++) {
-      if (hash2(seed + 32, cx, cy) >= share) continue;
+      if (hash2(seed + 32, cx, cy) >= GULL_SHARE) continue;
       let best: GullAnchor | null = null;
       const x1 = Math.min(field.w, (cx + 1) * GULL_CELL),
         y1 = Math.min(field.h, (cy + 1) * GULL_CELL);
@@ -297,7 +296,7 @@ export const gullShadow = (p: GullPose): Pt[] =>
 
 const GULL_SPAN = 0.3 * ISO_H; // halbe Spannweite in Weltpixeln
 const GULL_COLOR = PALETTE.foam;
-const GULL_UNDER = rgbaOf(PALETTE.rockDark, 0.45);
+const GULL_UNDER = rgbaOf(PALETTE.rockDark, 0.8);
 
 /** Möwe (Luft): Flügelschlag als Linienzug aus 2 Segmenten, Körperpunkt; heller Strich über dunklem Saum. */
 export function drawGull(ctx: CanvasRenderingContext2D, cam: Camera, pose: GullPose): void {
@@ -310,7 +309,7 @@ export function drawGull(ctx: CanvasRenderingContext2D, cam: Camera, pose: GullP
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   for (const [style, width] of [
-    [GULL_UNDER, 3 * z],
+    [GULL_UNDER, 4.5 * z],
     [GULL_COLOR, 1.5 * z],
   ] as const) {
     ctx.strokeStyle = style;
@@ -352,16 +351,20 @@ export function drawHearthSmoke(
   for (let i = 0; i < n; i++) {
     const a = (timeMs / HEARTH_PERIOD_MS + i / n + (id % 5) / 5) % 1;
     const fadeIn = Math.min(1, a / 0.12);
-    ctx.fillStyle = rgbaCss(HEARTH_COLOR, Number((0.42 * (1 - a) * fadeIn).toFixed(3)));
+    const fade = (1 - a) * fadeIn;
+    ctx.fillStyle = rgbaCss(HEARTH_COLOR, Number((0.7 * fade).toFixed(3)));
+    ctx.strokeStyle = rgbaOf(PALETTE.rockDark, Number((0.45 * fade).toFixed(3)));
+    ctx.lineWidth = Math.max(0.75, 0.8 * z);
     ctx.beginPath();
     ctx.arc(
       at.x + (Math.sin(a * 6 + id) * 1.6 + a * 5) * z,
       at.y - a * 0.75 * ISO_H * z,
-      (0.8 + 1.6 * a) * z,
+      (1.1 + 2 * a) * z,
       0,
       Math.PI * 2,
     );
     ctx.fill();
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -419,7 +422,11 @@ export const GLOW_RADIUS = 0.6 * ISO_H;
 /** Deckkraft des Scheins bei `windows = 1`. */
 export const GLOW_ALPHA = 0.35;
 /** Ringe des weichen Scheins (Radius-Anteil), jeder als ein Pfad mit eigener Füllung: summiert sich additiv. */
-const GLOW_RINGS = [1, 0.66, 0.33] as const;
+export const GLOW_RING_COUNT = 8;
+const GLOW_RINGS: readonly number[] = Array.from(
+  { length: GLOW_RING_COUNT },
+  (_, i) => (GLOW_RING_COUNT - i) / GLOW_RING_COUNT,
+);
 
 export interface LightRect {
   x: number;
