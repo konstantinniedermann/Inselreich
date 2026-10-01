@@ -4,6 +4,7 @@ import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { setTaxLevel } from '../sim/tax';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
+import { crisisView } from '../sim/queries';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
 import type { World } from '../sim/types';
@@ -19,6 +20,7 @@ import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
+import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, showMessage } from './messages';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
@@ -42,6 +44,8 @@ export interface GameState {
   terrainLayer: HTMLCanvasElement;
   /** Siegbanner bereits gezeigt (ein geladener, gewonnener Stand zeigt es nicht erneut). */
   wonShown: boolean;
+  /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
+  eventLog: LogEntry[];
 }
 
 const MAX_TICKS_PER_FRAME = 20;
@@ -137,6 +141,7 @@ function launch(
     panel: { kind: 'none' },
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
+    eventLog: [],
   };
   const sound = createSound({
     muted: settings.muted,
@@ -449,6 +454,8 @@ function launch(
   let autoMs = 0;
   let autoErrorShown = false;
   let prevSnap = soundSnapshot(world);
+  // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
+  let prevCrisis = crisisView(world);
   let last = performance.now();
   let lastAmbienceMs = -Infinity;
   const weather = preview.weather ?? { kind: 'clear' as const, w: 0 };
@@ -474,6 +481,13 @@ function launch(
       const snap = soundSnapshot(world);
       for (const e of diffSoundEvents(prevSnap, snap)) sound.play(e);
       prevSnap = snap;
+      const curCrisis = crisisView(world);
+      const logged = crisisLogEntries(prevCrisis, curCrisis, world, world.tick);
+      prevCrisis = curCrisis;
+      if (logged.length > 0) {
+        state.eventLog = pushLog(state.eventLog, logged);
+        for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
+      }
       const change = orderChange(prevOrderPeriod, world.order?.period ?? null);
       if (change === 'new') showMessage('Neuer Auftrag');
       else if (change === 'expired') showMessage('Auftrag verfallen');

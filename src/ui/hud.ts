@@ -3,13 +3,15 @@ import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { citizens, populationByTier } from '../sim/population';
-import { goodsBalance } from '../sim/queries';
+import { crisisView, goodsBalance } from '../sim/queries';
 import type { CrisisLevel, TaxLevel, Tier } from '../sim/types';
 import type { GameState } from './app';
 import { setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
 import { CRISIS_LEVEL_IDS, type Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
+import { crisisCardText } from './crisis';
+import { logLine, type LogEntry } from './crisisLog';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -257,6 +259,46 @@ function renderTaxControls(box: Element, actions: HudActions): void {
   box.appendChild(lock);
 }
 
+/** Ereignis-Log (M6 13.4): Kopf mit Einklappen, Liste neuester oben; Standard offen. */
+function renderEventLog(box: HTMLElement): void {
+  const toggle = document.createElement('button');
+  toggle.className = 'btn';
+  toggle.dataset.field = 'log-toggle';
+  const list = document.createElement('ul');
+  list.className = 'event-log';
+  list.dataset.field = 'event-log';
+  const sync = (): void => {
+    const collapsed = list.classList.contains('event-log--collapsed');
+    toggle.textContent = collapsed ? 'Ereignisse ▸' : 'Ereignisse ▾';
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+  };
+  toggle.addEventListener('click', () => {
+    toggle.blur();
+    list.classList.toggle('event-log--collapsed');
+    sync();
+  });
+  sync();
+  box.append(toggle, list);
+}
+
+/** Schreibt die Log-Einträge in die Liste; nur bei Änderung. Ohne Einträge ist die Box verborgen. */
+function updateEventLog(box: HTMLElement, entries: readonly LogEntry[]): void {
+  box.hidden = entries.length === 0;
+  const list = box.querySelector<HTMLElement>('[data-field="event-log"]');
+  if (!list) return;
+  const key = entries.map(logLine).join('\n');
+  if (list.dataset.key === key) return;
+  list.dataset.key = key;
+  list.replaceChildren(
+    ...entries.map((e) => {
+      const li = document.createElement('li');
+      li.className = 'event-log__item';
+      li.textContent = logLine(e);
+      return li;
+    }),
+  );
+}
+
 /** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
@@ -267,7 +309,9 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
       '<span class="hud-sound"></span><span class="hud-game"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
-      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span></div>' +
+      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span>' +
+      '<span class="card card--crisis" data-field="crisis-card"></span></div>' +
+      '<div class="log-box"></div>' +
       '<div class="hud-seed" data-field="seed"></div>';
     const popRow = header.querySelector('.pop-row');
     for (const tier of TIER_IDS) {
@@ -307,6 +351,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (orderEl) renderOrder(orderEl, state.world, { deliver: actions.deliverOrder });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
+    const logBox = header.querySelector<HTMLElement>('.log-box');
+    if (logBox) renderEventLog(logBox);
     const gameBox = header.querySelector('.hud-game');
     if (gameBox) cleanups.set(header, renderGameButtons(gameBox, actions));
   }
@@ -345,6 +391,16 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   setField(header, 'tax-lock', left > 0 ? `Sperre noch ${left} Ticks` : '');
   const orderEl = header.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world);
+  const crisis = crisisCardText(crisisView(world), world);
+  const crisisEl = setField(header, 'crisis-card', crisis.text);
+  if (crisisEl) {
+    if (crisis.kind === null) delete crisisEl.dataset.kind;
+    else crisisEl.dataset.kind = crisis.kind;
+    if (crisis.level === null) delete crisisEl.dataset.level;
+    else crisisEl.dataset.level = crisis.level;
+  }
+  const logBox = header.querySelector<HTMLElement>('.log-box');
+  if (logBox) updateEventLog(logBox, state.eventLog);
   setField(header, 'tick', `Tick: ${world.tick}`);
   setField(header, 'seed', `Karte: ${world.seed}`);
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
