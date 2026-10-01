@@ -460,8 +460,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
   });
 
   it('AK-R2-03 jede heutige BuildingDefId hat eine eigene Silhouette', () => {
-    // `firestation` (M6) bekommt seine Silhouette erst in R2-FW und zeichnet bis dahin den Fallback
-    for (const id of Object.keys(BUILDING_DEFS).filter((i) => i !== 'firestation'))
+    for (const id of Object.keys(BUILDING_DEFS))
       expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();
   });
 
@@ -618,6 +617,18 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       }
       expect(quads.length - used.size, `${name}: Fenster ohne Anker`).toBe(roofOnly[name] ?? 0);
     }
+  });
+
+  it('AK-ISO-10 Feuerwache: Glockenstuhl, Spitze genau auf der Hüllenkante, höher als ihr Dach, nicht über H_TOWER; zwei Fensteranker', () => {
+    const def = BUILDING_DEFS.firestation,
+      fb = mk('firestation');
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, def, fb, 0);
+    const minY = Math.min(...log.allPoints.map((q) => q.y));
+    expect(minY).toBeCloseTo(project(fb.x, fb.y).y - bodyHeight(def, fb), 6);
+    expect(bodyHeight(def, fb)).toBeLessThanOrEqual(H_TOWER);
+    expect(bodyHeight(def, fb)).toBeGreaterThan(1.5 * ISO_H);
+    expect(lightAnchors(def, fb).filter((a) => !a.always)).toHaveLength(2);
   });
 
   it('Spec 5.6 hearthAnchor: Kaminmündung der Häuser liegt in bodyHull, über dem Dach; andere Typen keinen', () => {

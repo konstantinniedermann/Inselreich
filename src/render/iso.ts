@@ -73,6 +73,7 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   toolmaker: () => 1.3 * ISO_H,
   chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
   school: () => 1.5 * ISO_H,
+  firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
 };
 export const bodyHeight = (def: BuildingDef, b: Building): number =>
   BODY_HEIGHTS[def.id]?.(b) ?? CATEGORY_HEIGHT[def.category];

@@ -988,6 +988,29 @@ function schoolBody(p: IsoPainter, b: Building): void {
   pole(p, 1.38, 1.45, 3, PALETTE.wallTimber, 0.03);
 }
 
+// Feuerwache (M6): schmales Wachhaus mit Schieferdach, Glockenstuhl auf dem First, Eimerreihe an der Wand
+function firestationBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.firestation, b);
+  yard(p, mixHex(PALETTE.rock, PALETTE.sandDry, 0.4));
+  const s = makeShell(p, 0.6 * h, h + ISO_H * I, 'gable', 'u');
+  drawShell(p, s, hallWall(), PALETTE.roofSlate);
+  leftQuad(p, s, 0.5, 0.78, 0, 0.62 * s.wz, DOOR);
+  leftQuad(p, s, 0.18, 0.38, 0.45 * s.wz, 0.8 * s.wz, WINDOW);
+  rightQuad(p, s, 0.35, 0.6, 0.45 * s.wz, 0.8 * s.wz, WINDOW);
+  // Eimerreihe (wallTimber) links neben dem Tor
+  const bucket = wallColors(PALETTE.wallTimber);
+  for (const u of [0.14, 0.24, 0.34])
+    p.quad(
+      [u, s.v1, 5],
+      [u + 0.07, s.v1, 5],
+      [u + 0.07, s.v1, 11],
+      [u, s.v1, 11],
+      bucket.left,
+      false,
+    );
+  cupola(p, s, h, s.um, s.vm, 0.24);
+}
+
 // Kategorie-Fallback: Dachfamilie der Kategorie (Spec 5.5), unabhängig von der Id
 function fallbackShell(p: IsoPainter, category: Category): Shell {
   const h = p.height;
@@ -1066,6 +1089,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   toolmaker: toolmakerBody,
   chapel: chapelBody,
   school: schoolBody,
+  firestation: firestationBody,
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---
@@ -1171,6 +1195,10 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
       R(1.3, 1.45, 0.3 * wz, 0.85 * wz),
     ];
   },
+  firestation: (_b, h) => [
+    L(0.18, 0.38, 0.45 * 0.6 * h, 0.8 * 0.6 * h),
+    R(0.35, 0.6, 0.45 * 0.6 * h, 0.8 * 0.6 * h),
+  ],
   school: (_b, h) => [
     L(0.2, 0.34, 0.35 * 0.5 * h, 0.75 * 0.5 * h),
     L(0.86, 1.0, 0.35 * 0.5 * h, 0.75 * 0.5 * h),
