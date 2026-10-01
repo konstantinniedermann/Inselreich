@@ -10,17 +10,16 @@ const HULL = '#6b4423';
 const SAIL = '#f2ecdc';
 const OUTLINE = 'rgba(0,0,0,0.6)';
 
-/** Kachel des Händlerschiffs: erste Wasserkachel am Kontor; null ohne Auftrag oder Wasser. */
+/** Kachel des Händlerschiffs: vorderes Wasserfeld am Kontor (grösstes x + y, bei Gleichstand kleineres x, D-18); null ohne Auftrag oder Wasser. */
 export function shipTile(world: World): Pos | null {
   if (world.order === null) return null;
   const k = world.buildings[world.kontorId];
   if (!k) return null;
   const def = BUILDING_DEFS[k.defId];
-  return (
-    adjacentOf(world, k.x, k.y, def.w, def.h).find(
-      (p) => tileAt(world, p.x, p.y)?.terrain === 'water',
-    ) ?? null
-  );
+  const water = adjacentOf(world, k.x, k.y, def.w, def.h)
+    .filter((p) => tileAt(world, p.x, p.y)?.terrain === 'water')
+    .sort((a, b) => b.x + b.y - (a.x + a.y) || a.x - b.x);
+  return water[0] ?? null;
 }
 
 /** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`). */
