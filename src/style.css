@@ -24,6 +24,8 @@
   --ink: #2e2418;
   --signal-red: #ff3b5c;
   --signal-warn: #ff6726;
+  --warn-parchment: #f2dc9b;
+  --warn-amber: #b8620f;
   --ok: #6aa84f;
   --negative: #ff8a80;
   --font-serif: 'EB Garamond', Georgia, serif;
@@ -150,6 +152,23 @@ body {
   border: 5px solid var(--signal-red);
   border-radius: 50%;
   outline: 1px solid var(--ink);
+}
+
+/* Warnung (Sturm, Brand): Bernstein statt Rot, warmes Pergament, Dreieck-Symbol */
+.toast.warn {
+  background: var(--warn-parchment);
+  border-left: 6px solid var(--warn-amber);
+}
+.toast.warn::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 8px;
+  vertical-align: middle;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--warn-amber);
 }
 
 /* Buttons: Holz mit Goldrand, aktiv Gold mit Tinte */
