@@ -47,8 +47,8 @@ Deine Prüffragen:
 | ------------------------ | ------------------------------------------------------------------------ | -------- |
 | `art-license-checker`    | Lizenz jeder Quelle prüfen, Veto, CREDITS und Lizenztext eintragen       | `opus`   |
 | `art-asset-scout`        | auf Abruf: offen lizenzierte Assets suchen, Kandidaten mit Lizenzangaben | `sonnet` |
-| `art-rendering-engineer` | auf Abruf: Canvas-2D-Darstellung, prozedurale Grafik, Animation, Wetter  | `sonnet` |
-| `art-audio-engineer`     | auf Abruf: synthetisches Audio, Einbindung lizenzierter Musik und Sounds | `sonnet` |
+| `art-rendering-engineer` | Canvas-2D-Darstellung, Isometrie, prozedurale Grafik, Licht, Wetter      | `sonnet` |
+| `art-audio-engineer`     | Ton in `src/audio/`, Schnitt und Nachweis lizenzierter Assets            | `sonnet` |
 
 - **Briefing:** immer nach `docs/studio/templates/briefing.md`; die ersten Zeilen sind
   `Persona: <rolle>` und `Paket: <id>`. Feste Regeln und Logging-Block wörtlich übernehmen.

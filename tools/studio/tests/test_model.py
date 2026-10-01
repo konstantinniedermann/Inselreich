@@ -1326,6 +1326,16 @@ PERSONA_NAMES = {
         "title": "Lizenzprüfer",
         "emoji": "⚖️",
     },
+    "art-rendering-engineer": {
+        "name": "Render-Rudi",
+        "title": "Darstellungs-Entwickler",
+        "emoji": "🖼️",
+    },
+    "art-audio-engineer": {
+        "name": "Klang-Klara",
+        "title": "Audio-Entwicklerin",
+        "emoji": "🎧",
+    },
     "qa-code-reviewer": {
         "name": "Review-Rita",
         "title": "Code-Prüferin",

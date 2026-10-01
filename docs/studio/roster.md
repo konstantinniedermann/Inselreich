@@ -28,22 +28,24 @@ stark = `opus`, mittel = `sonnet`, klein = `haiku`. Einsatzregeln: STUDIO.md, Ab
 
 ## Aktive Personas
 
-| Name                      | Persona          | Titel                    | Emoji | Ebene | Bereich    | Modell   | Version | Zweck                                                                                           |
-| ------------------------- | ---------------- | ------------------------ | ----- | ----- | ---------- | -------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `studio-coach`            | Coach-Carla      | Studio-Coach             | 🧭    | L1    | studio     | `opus`   | 1.1     | Stabsstelle: Retros, Metriken, Experimente, lernen.md; setzt Handbuch-Änderungen nach Ruling um |
-| `lead-production`         | Planungs-Paula   | Produktionschefin        | 📋    | L1    | production | `opus`   | 1.4     | Studio-Produzent: Board, Budget-Überblick, state.md-Entwurf, Merges, Onboarding                 |
-| `lead-design`             | Ideen-Ida        | Design-Chefin            | 💡    | L1    | design     | `opus`   | 1.4     | Spielerlebnis und Regeln: Brainstorming mit L0, Specs, Wirtschaft                               |
-| `lead-tech`               | Technik-Toni     | Tech-Chef                | 🔧    | L1    | tech       | `opus`   | 1.4     | Architektur, Implementierungspläne, Controller der Umsetzung im Worktree                        |
-| `lead-art`                | Pinsel-Pia       | Kunst-Chefin             | 🎨    | L1    | art        | `opus`   | 1.4     | Art Direction und Audio, Asset-Scouting, Lizenzen, CREDITS                                      |
-| `lead-qa`                 | Prüf-Peter       | QA-Chef                  | 🔍    | L1    | qa         | `opus`   | 1.4     | Testmanagement, Reviews, Final-Review, Determinismus und Regression                             |
-| `production-integrator`   | Merge-Moritz     | Zusammenführer           | 🔀    | L2    | production | `sonnet` | 1.3     | Merged nach dem Merge-Gate seriell, prüft `make check`, CI und Pages                            |
-| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin         | 📝    | L2    | design     | `opus`   | 1.2     | Schreibt Specs mit testbaren Abnahmekriterien nach `docs/superpowers/specs/`                    |
-| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner        | 💰    | L2    | design     | `opus`   | 1.1     | Produktionsketten, Kreisläufe, Steuern und Unterhalt; rechnet Bilanzen je Einwohner             |
-| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler    | ⚙️    | L2    | tech       | `sonnet` | 1.3     | Setzt Regeln in `src/sim/` um: DOM-frei, deterministisch, TDD, Save-Migrationen                 |
-| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    | L2    | tech       | `sonnet` | 1.5     | Setzt Bedienung und Darstellung in `src/ui/`, `src/render/` um (Card-UI, desktop-first)         |
-| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    | L2    | art        | `opus`   | 1.1     | Prüft jede Asset-Quelle gegen Positiv-/Negativliste, trägt CREDITS ein, hat Veto                |
-| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    | L2    | qa         | `sonnet` | 1.4     | Prüft Diffs gegen Brief und Spec, Urteil OK/BEDENKEN/ZURÜCK, ändert keinen Code                 |
-| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                 |
+| Name                      | Persona          | Titel                    | Emoji | Ebene | Bereich    | Modell   | Version | Zweck                                                                                                    |
+| ------------------------- | ---------------- | ------------------------ | ----- | ----- | ---------- | -------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| `studio-coach`            | Coach-Carla      | Studio-Coach             | 🧭    | L1    | studio     | `opus`   | 1.1     | Stabsstelle: Retros, Metriken, Experimente, lernen.md; setzt Handbuch-Änderungen nach Ruling um          |
+| `lead-production`         | Planungs-Paula   | Produktionschefin        | 📋    | L1    | production | `opus`   | 1.4     | Studio-Produzent: Board, Budget-Überblick, state.md-Entwurf, Merges, Onboarding                          |
+| `lead-design`             | Ideen-Ida        | Design-Chefin            | 💡    | L1    | design     | `opus`   | 1.4     | Spielerlebnis und Regeln: Brainstorming mit L0, Specs, Wirtschaft                                        |
+| `lead-tech`               | Technik-Toni     | Tech-Chef                | 🔧    | L1    | tech       | `opus`   | 1.4     | Architektur, Implementierungspläne, Controller der Umsetzung im Worktree                                 |
+| `lead-art`                | Pinsel-Pia       | Kunst-Chefin             | 🎨    | L1    | art        | `opus`   | 1.4     | Art Direction und Audio, Asset-Scouting, Lizenzen, CREDITS                                               |
+| `lead-qa`                 | Prüf-Peter       | QA-Chef                  | 🔍    | L1    | qa         | `opus`   | 1.4     | Testmanagement, Reviews, Final-Review, Determinismus und Regression                                      |
+| `production-integrator`   | Merge-Moritz     | Zusammenführer           | 🔀    | L2    | production | `sonnet` | 1.3     | Merged nach dem Merge-Gate seriell, prüft `make check`, CI und Pages                                     |
+| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin         | 📝    | L2    | design     | `opus`   | 1.2     | Schreibt Specs mit testbaren Abnahmekriterien nach `docs/superpowers/specs/`                             |
+| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner        | 💰    | L2    | design     | `opus`   | 1.1     | Produktionsketten, Kreisläufe, Steuern und Unterhalt; rechnet Bilanzen je Einwohner                      |
+| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler    | ⚙️    | L2    | tech       | `sonnet` | 1.3     | Setzt Regeln in `src/sim/` um: DOM-frei, deterministisch, TDD, Save-Migrationen                          |
+| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    | L2    | tech       | `sonnet` | 1.5     | Setzt Bedienung und Darstellung in `src/ui/`, `src/render/` um (Card-UI, desktop-first)                  |
+| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    | L2    | art        | `opus`   | 1.1     | Prüft jede Asset-Quelle gegen Positiv-/Negativliste, trägt CREDITS ein, hat Veto                         |
+| `art-rendering-engineer`  | Render-Rudi      | Darstellungs-Entwickler  | 🖼️    | L2    | art        | `sonnet` | 1.0     | Setzt Darstellung in `src/render/` um: Canvas 2D, Isometrie (ADR-012), prozedurale Grafik, Licht, Wetter |
+| `art-audio-engineer`      | Klang-Klara      | Audio-Entwicklerin       | 🎧    | L2    | art        | `sonnet` | 1.0     | Setzt Ton in `src/audio/` um (Busse, Umgebung, Musik-Streaming); schneidet und belegt Assets (ADR-011)   |
+| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    | L2    | qa         | `sonnet` | 1.4     | Prüft Diffs gegen Brief und Spec, Urteil OK/BEDENKEN/ZURÜCK, ändert keinen Code                          |
+| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                          |
 
 **Persona-Versionen:** Frontmatter-Feld `version` in `.claude/agents/<name>.md`. Erhöht wird sie nur
 über die Verbesserungsschleife (Handbuch, Abschnitt „Verbesserungsschleife") mit Eintrag in
@@ -63,8 +65,6 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
 | `tech-save-engineer`            | `lead-tech`       | `sonnet`           | Save-Format: Versionierung, Migrationen, Tests für alte Spielstände                    |
 | `tech-plan-architect`           | `lead-tech`       | `opus`             | Schreibt Implementierungspläne für grosse Meilensteine im Auftrag des Tech-Leads       |
 | `art-asset-scout`               | `lead-art`        | `sonnet`           | Sucht offen lizenzierte Assets und liefert Kandidaten mit Lizenzangaben                |
-| `art-rendering-engineer`        | `lead-art`        | `sonnet`           | Canvas-2D-Darstellung: prozedurale Grafik, Animation, Wetter                           |
-| `art-audio-engineer`            | `lead-art`        | `sonnet`           | Synthetisches Audio und Einbindung lizenzierter Musik und Sounds                       |
 | `qa-determinism-checker`        | `lead-qa`         | `sonnet`           | Prüft gleicher Seed → gleicher Zustand über lange Läufe und Speichern/Laden-Rundreisen |
 
 ## Neue Persona anlegen

@@ -39,18 +39,20 @@ flowchart TD
   T --> T1[tech-sim-engineer]
   T --> T2[tech-ui-engineer]
   A --> A1[art-license-checker]
+  A --> A2[art-rendering-engineer]
+  A --> A3[art-audio-engineer]
   Q --> Q1[qa-code-reviewer]
   Q --> Q2[qa-playtester]
 ```
 
-| Lead              | Bereich                                                  | Arbeiter aktiv                                  | Auf Abruf                                                                       |
-| ----------------- | -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| `studio-coach`    | Auswertung, Retros, Experimente, lernen.md               | keine Arbeiter                                  | —                                                                               |
-| `lead-production` | Board, Budget-Überblick, Merges, Onboarding neuer Rollen | `production-integrator`                         | `production-studio-ops`, `production-onboarding-analyst`, `production-chronist` |
-| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer` | `design-genre-researcher`, `design-balancing-analyst`                           |
-| `lead-tech`       | Architektur, Pläne, Umsetzung `src/`                     | `tech-sim-engineer`, `tech-ui-engineer`         | `tech-save-engineer`, `tech-plan-architect`                                     |
-| `lead-art`        | Grafik und Audio, Asset-Lizenzen, CREDITS                | `art-license-checker`                           | `art-asset-scout`, `art-rendering-engineer`, `art-audio-engineer`               |
-| `lead-qa`         | Reviews, Playtests, Determinismus, Regression            | `qa-code-reviewer`, `qa-playtester`             | `qa-determinism-checker`                                                        |
+| Lead              | Bereich                                                  | Arbeiter aktiv                                                        | Auf Abruf                                                                       |
+| ----------------- | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `studio-coach`    | Auswertung, Retros, Experimente, lernen.md               | keine Arbeiter                                                        | —                                                                               |
+| `lead-production` | Board, Budget-Überblick, Merges, Onboarding neuer Rollen | `production-integrator`                                               | `production-studio-ops`, `production-onboarding-analyst`, `production-chronist` |
+| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer`                       | `design-genre-researcher`, `design-balancing-analyst`                           |
+| `lead-tech`       | Architektur, Pläne, Umsetzung `src/`                     | `tech-sim-engineer`, `tech-ui-engineer`                               | `tech-save-engineer`, `tech-plan-architect`                                     |
+| `lead-art`        | Grafik und Audio, Asset-Lizenzen, CREDITS                | `art-license-checker`, `art-rendering-engineer`, `art-audio-engineer` | `art-asset-scout`                                                               |
+| `lead-qa`         | Reviews, Playtests, Determinismus, Regression            | `qa-code-reviewer`, `qa-playtester`                                   | `qa-determinism-checker`                                                        |
 
 Einzeiler je Rolle, Modelle und Anlage neuer Personas: [roster.md](roster.md). Namensschema (R11,
 erweitert): L1 `lead-<bereich>`, L1-Stabsstelle `studio-<rolle>`, L2 `<bereich>-<rolle>`, Bereiche
