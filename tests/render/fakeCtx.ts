@@ -13,6 +13,8 @@ export interface Ev {
   style: string;
   matrix: Mat;
   composite: string;
+  /** `globalAlpha` zum Zeitpunkt des Aufrufs. */
+  alpha: number;
   points: P[];
 }
 
@@ -30,8 +32,10 @@ export class FakeCtx {
   matrix: Mat = [1, 0, 0, 1, 0, 0];
   lineWidth = 1;
   lineCap = 'butt';
-  globalAlpha = 1;
-  private stack: { m: Mat; f: string; s: string; c: string }[] = [];
+  /** Jede Zuweisung an `globalAlpha`. */
+  alphaSet: number[] = [];
+  private stack: { m: Mat; f: string; s: string; c: string; a: number }[] = [];
+  private _alpha = 1;
   private path: P[] = [];
   private _fill = '#000000';
   private _stroke = '#000000';
@@ -43,6 +47,13 @@ export class FakeCtx {
   set fillStyle(v: string) {
     this._fill = String(v);
     this.fillSet.push(this._fill);
+  }
+  get globalAlpha(): number {
+    return this._alpha;
+  }
+  set globalAlpha(v: number) {
+    this._alpha = Number(v);
+    this.alphaSet.push(this._alpha);
   }
   get strokeStyle(): string {
     return this._stroke;
@@ -75,13 +86,20 @@ export class FakeCtx {
       style,
       matrix: [...this.matrix] as Mat,
       composite: this._comp,
+      alpha: this._alpha,
       points,
     });
   }
 
   save(): void {
     this.saves++;
-    this.stack.push({ m: [...this.matrix] as Mat, f: this._fill, s: this._stroke, c: this._comp });
+    this.stack.push({
+      m: [...this.matrix] as Mat,
+      f: this._fill,
+      s: this._stroke,
+      c: this._comp,
+      a: this._alpha,
+    });
   }
   restore(): void {
     this.restores++;
@@ -94,6 +112,7 @@ export class FakeCtx {
     this._fill = s.f;
     this._stroke = s.s;
     this._comp = s.c;
+    this._alpha = s.a;
   }
   transform(a: number, b: number, c: number, d: number, e: number, f: number): void {
     const [A, B, C, D, E, F] = this.matrix;

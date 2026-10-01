@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shipTile } from '../../src/render/ship';
+import { shipShadow, shipTile } from '../../src/render/ship';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { adjacentOf, createWorld, tileAt } from '../../src/sim/world';
 import type { Order } from '../../src/sim/types';
@@ -39,5 +39,23 @@ describe('Händlerschiff', () => {
       world.tiles[y * world.width + x]!.terrain = 'water';
     expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
     expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
+  });
+
+  it('ISO §5 shipShadow: konvexes Polygon im Kachelraum um die Kachel, nach (+3, +1) versetzt, gleiche Orientierung wie die Baumschatten', () => {
+    const poly = shipShadow({ x: 12, y: 9 });
+    expect(poly.length).toBeGreaterThanOrEqual(6);
+    const cx = poly.reduce((s, p) => s + p.x, 0) / poly.length,
+      cy = poly.reduce((s, p) => s + p.y, 0) / poly.length;
+    expect(cx).toBeGreaterThan(12.5);
+    expect(cy).toBeGreaterThan(9.5);
+    expect((cx - 12.5) / (cy - 9.5)).toBeCloseTo(3, 5);
+    const area =
+      poly.reduce(
+        (s, p, i) =>
+          s + (p.x * poly[(i + 1) % poly.length]!.y - poly[(i + 1) % poly.length]!.x * p.y),
+        0,
+      ) / 2;
+    expect(area).toBeGreaterThan(0);
+    for (const p of poly) expect(Math.hypot(p.x - 12.5, p.y - 9.5)).toBeLessThan(1);
   });
 });

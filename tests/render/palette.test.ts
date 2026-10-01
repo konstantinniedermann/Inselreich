@@ -8,7 +8,8 @@ import {
   rgbOf,
   rgbaOf,
 } from '../../src/render/palette';
-import { deltaE2000, hexToLab } from './deltaE';
+import { lightAt } from '../../src/render/daynight';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 
 describe('Palette', () => {
   it('AK-R1-03 ΔE2000-Helfer trifft die Sharma-Referenzwerte', () => {
@@ -83,5 +84,23 @@ describe('Palette', () => {
     expect(mixHex('#000000', '#ffffff', -1)).toBe('rgb(0,0,0)');
     expect(mixHex('#000000', '#ffffff', 9)).toBe('rgb(255,255,255)');
     expect(rgbaOf('#102030', 0.5)).toBe('rgba(16,32,48,0.5)');
+  });
+
+  it('AK-R1-03 getönt: unter maximaler Tönung (Abend, Nacht, Morgen) bleibt jede Flächenfarbe ΔE2000 ≥ 15 von jeder ungetönten Signalfarbe', () => {
+    for (const tick of [2160, 2520, 2820, 4680]) {
+      const { mul } = lightAt(tick);
+      for (const f of SURFACE_NAMES) {
+        const tinted = rgbOf(PALETTE[f]).map((c, i) => Math.round(c * mul[i]!)) as [
+          number,
+          number,
+          number,
+        ];
+        for (const s of SIGNAL_NAMES)
+          expect(
+            deltaE2000(hexToLab(PALETTE[s]), rgbToLab(tinted)),
+            `Tick ${tick} ${s}/${f}`,
+          ).toBeGreaterThanOrEqual(15);
+      }
+    }
   });
 });

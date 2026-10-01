@@ -379,8 +379,13 @@ function paintTufts(
   ctx.restore();
 }
 
+/** Standard-Auflösungsfaktor aus dem `devicePixelRatio` (Spec 5.1, Tech B3): ab 1,5 doppelt, sonst einfach. */
+export const defaultTerrainScale = (
+  dpr: number | undefined = (globalThis as { devicePixelRatio?: number }).devicePixelRatio,
+): number => ((dpr ?? 1) >= 1.5 ? 2 : 1);
+
 /** Baut die Terrain-Ebene einmal je Welt: Canvas `width·TEX·scale`; Aufbau gemessen. */
-export function buildTerrainLayer(world: World, scale = 1): HTMLCanvasElement {
+export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): HTMLCanvasElement {
   const t0 = performance.now();
   const { w, h } = terrainLayerSize(world, scale)[0]!;
   const canvas = document.createElement('canvas');

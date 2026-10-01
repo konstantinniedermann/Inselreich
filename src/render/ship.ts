@@ -2,7 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { adjacentOf, tileAt, type Pos } from '../sim/world';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
-import { ISO_H, ISO_W, project } from './iso';
+import { ISO_H, ISO_W, project, type Pt } from './iso';
 
 const BOB_PERIOD_MS = 2600;
 /** Höhe des Schiffs über der Rautenmitte (Weltpixel, Zoom 1). */
@@ -14,6 +14,27 @@ const TILT_MAX = 0.06; // rad
 const HULL = '#6b4423';
 const SAIL = '#f2ecdc';
 const OUTLINE = 'rgba(0,0,0,0.6)';
+const SHADOW_SHIFT = 0.15; // Kachelraum, Richtung (+3, +1) normiert (D-11)
+const SHADOW_A = 0.5,
+  SHADOW_B = 0.22; // Halbachsen des Rumpfschattens (Kachelraum)
+const SHADOW_DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) };
+
+/** Schattenpolygon des Schiffs im Kachelraum (Ellipse um die Rautenmitte, nach rechts unten versetzt); Schattendurchgang. */
+export function shipShadow(tile: Pos): Pt[] {
+  const mx = tile.x + 0.5 + SHADOW_DIR.x * SHADOW_SHIFT,
+    my = tile.y + 0.5 + SHADOW_DIR.y * SHADOW_SHIFT;
+  const pts: Pt[] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const u = Math.cos(a) * SHADOW_A,
+      v = Math.sin(a) * SHADOW_B;
+    pts.push({
+      x: mx + SHADOW_DIR.x * u - SHADOW_DIR.y * v,
+      y: my + SHADOW_DIR.y * u + SHADOW_DIR.x * v,
+    });
+  }
+  return pts;
+}
 
 /** Kachel des Händlerschiffs: vorderes Wasserfeld am Kontor (grösstes x + y, bei Gleichstand kleineres x, D-18); null ohne Auftrag oder Wasser. */
 export function shipTile(world: World): Pos | null {

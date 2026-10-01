@@ -58,7 +58,11 @@ const CATEGORY_HEIGHT: Record<Category, number> = {
   infrastructure: 1.4 * ISO_H,
 };
 /** R1b, R2 und R2-FW tragen hier die Höhen der Silhouetten ein; die Signaturen bleiben. */
-export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number>> = {};
+export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number>> = {
+  house: (b) => [0.8, 1.2, 1.6][(b.house?.tier ?? 1) - 1]! * ISO_H, // Hütte, Fachwerk, Bürgerhaus mit Gaube
+  kontor: () => 1.4 * ISO_H, // Lagerhaus
+  lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
+};
 export const bodyHeight = (def: BuildingDef, b: Building): number =>
   BODY_HEIGHTS[def.id]?.(b) ?? CATEGORY_HEIGHT[def.category];
 

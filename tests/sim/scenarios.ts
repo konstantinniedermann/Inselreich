@@ -10,6 +10,7 @@ import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, GoodId, ServiceId, Tier, World } from '../../src/sim/types';
 import { createWorld, idx } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
+import { verdeckung } from './scenarios-iso';
 
 const SEED = 3;
 
@@ -294,6 +295,7 @@ function leistung50(): World {
 
 export const SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
+  verdeckung,
   'lager-holz-99': lagerHolz99,
   bedarf,
   'autosave-lauf': autosaveLauf,

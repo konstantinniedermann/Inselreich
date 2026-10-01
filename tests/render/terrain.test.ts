@@ -9,6 +9,7 @@ import { depthAt, terrainFields } from '../../src/render/terrainField';
 import {
   RASTER,
   buildGrid,
+  defaultTerrainScale,
   dirtyRect,
   occupancy,
   paintPixels,
@@ -351,5 +352,12 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     const c = paintPixels(g, 2, 200, 200, 32, 32);
     expect(c.length).toBe(32 * 32 * 4);
     expect(a.every((v) => v >= 0 && v <= 255)).toBe(true);
+  });
+});
+
+describe('Auflösungsfaktor', () => {
+  it('AK-R1-06 Standard-Faktor aus devicePixelRatio: ab 1,5 doppelt, sonst einfach (Spec 5.1)', () => {
+    expect([undefined, 1, 1.25, 1.49].map(defaultTerrainScale)).toEqual([1, 1, 1, 1]);
+    expect([1.5, 2, 3].map(defaultTerrainScale)).toEqual([2, 2, 2]);
   });
 });
