@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { burningText, protectedCount, refundText, restView } from '../../src/ui/inspect';
+import {
+  burningText,
+  producesText,
+  protectedCount,
+  refundText,
+  restView,
+} from '../../src/ui/inspect';
 import { createWorld } from '../../src/sim/world';
 import { SCENARIOS } from '../sim/scenarios';
 
@@ -80,5 +86,25 @@ describe('burningText (M6-AK-U1-08)', () => {
     expect(protectedCount(w, st)).toBe(1);
     st.connected = false;
     expect(protectedCount(w, st)).toBe(0);
+  });
+});
+
+describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
+  it('producesText: laufend mit Takt, brennend ohne', () => {
+    const def = { produces: 'rum' as const, cycle: 50 };
+    expect(producesText(def, false)).toBe('Erzeugt Rum alle 50 Ticks');
+    expect(producesText(def, true)).not.toContain('alle 50 Ticks');
+    expect(producesText(def, true)).toContain('brennt');
+  });
+  it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {
+    const w = createWorld(3);
+    const mk = (id: number, defId: 'firestation' | 'distillery', x: number) => {
+      w.buildings[id] = { id, defId, x, y: 50, connected: true, progress: 0, state: 'ok' };
+      return w.buildings[id];
+    };
+    const a = mk(901, 'firestation', 10);
+    mk(902, 'distillery', 14);
+    mk(903, 'firestation', 12);
+    expect(protectedCount(w, a)).toBe(1);
   });
 });

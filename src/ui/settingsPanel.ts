@@ -51,9 +51,17 @@ export function pickOpener<T>(explicit: T | null | undefined, active: T | null):
   return explicit ?? active;
 }
 
-/** Der Hintergrund schliesst nur, wenn Druck und Loslassen beide auf ihm lagen (nicht beim Ziehen aus dem Dialog). */
-export function shouldCloseOnClick(downOnBackdrop: boolean, clickOnBackdrop: boolean): boolean {
-  return downOnBackdrop && clickOnBackdrop;
+/**
+ * Der Hintergrund schliesst nur, wenn Druck, Loslassen und Klick-Ziel alle auf ihm lagen. Beim Ziehen vom
+ * Hintergrund in den Dialog (oder umgekehrt) meldet `click` den gemeinsamen Vorfahren, also den Hintergrund;
+ * deshalb zählt das `pointerup`-Ziel mit.
+ */
+export function shouldCloseOnClick(
+  downOnBackdrop: boolean,
+  upOnBackdrop: boolean,
+  clickOnBackdrop: boolean,
+): boolean {
+  return downOnBackdrop && upOnBackdrop && clickOnBackdrop;
 }
 
 /** Öffnet die Karte in `host`; gibt die Schliessen-Funktion zurück (idempotent). */
@@ -171,13 +179,20 @@ export function openSettings(
 
   // Auf click statt pointerdown: sonst nimmt das folgende mousedown dem Knopf den Fokus wieder
   let downOnBackdrop = false;
+  let upOnBackdrop = false;
   backdrop.addEventListener('pointerdown', (e) => {
     downOnBackdrop = e.target === backdrop;
+    upOnBackdrop = false;
+  });
+  backdrop.addEventListener('pointerup', (e) => {
+    upOnBackdrop = e.target === backdrop;
   });
   backdrop.addEventListener('click', (e) => {
     const down = downOnBackdrop;
+    const up = upOnBackdrop;
     downOnBackdrop = false;
-    if (shouldCloseOnClick(down, e.target === backdrop)) close();
+    upOnBackdrop = false;
+    if (shouldCloseOnClick(down, up, e.target === backdrop)) close();
   });
   showSettings();
   host.appendChild(backdrop);

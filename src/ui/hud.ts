@@ -1,12 +1,13 @@
+import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { CRISIS_LEVELS } from '../sim/defs/crises';
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { citizens, populationByTier } from '../sim/population';
 import { crisisView, goodsBalance } from '../sim/queries';
-import type { CrisisLevel, TaxLevel, Tier } from '../sim/types';
+import type { BuildingDefId, CrisisLevel, TaxLevel, Tier, World } from '../sim/types';
 import type { GameState } from './app';
-import { setField } from './dom';
+import { blurAfterClick, setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
 import { CRISIS_LEVEL_IDS, type Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
@@ -93,11 +94,27 @@ function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): H
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.textContent = label;
-  btn.addEventListener('click', () => {
-    btn.blur();
+  btn.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) btn.blur();
     onClick(btn);
   });
   return btn;
+}
+
+/**
+ * Bilanz je Gut für die Anzeige: Betriebe im Brandausfall (`outageUntil`) liefern und verbrauchen
+ * nichts und zählen nicht mit. Nur Darstellung; die Sim-Abfrage `goodsBalance` bleibt nominal (M6 Spec 11).
+ */
+export function runningBalance(world: World): ReturnType<typeof goodsBalance> {
+  const out = (b: { outageUntil?: number; house?: unknown; defId: BuildingDefId }): boolean =>
+    b.outageUntil !== undefined &&
+    b.house === undefined &&
+    BUILDING_DEFS[b.defId].cycle !== undefined;
+  const all = Object.values(world.buildings);
+  if (!all.some(out)) return goodsBalance(world);
+  const buildings: World['buildings'] = {};
+  for (const b of all) if (!out(b)) buildings[b.id] = b;
+  return goodsBalance({ ...world, buildings });
 }
 
 /** Aufräumfunktionen (Bestätigungs-Timer) je HUD-Element. */
@@ -329,7 +346,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const pop = populationByTier(world);
   for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
   setField(header, 'goal', `Bürger-Ziel ${citizens(world)} / ${WIN_CITIZENS}`);
-  const balance = goodsBalance(world);
+  const balance = runningBalance(world);
   for (const good of GOOD_IDS) {
     const b = balance[good];
     const chip = setField(
