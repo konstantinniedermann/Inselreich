@@ -12,15 +12,11 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
   Grafik, Ambiente, Musik — die Stimmung muss rüberkommen" (R73) läuft als Programm:
   - **M6 „Krisen und Stadtdienste"** — Spec fertig (R82, R85), **Plan M6-Sim freigegeben (R87)**,
     Umsetzung bereit.
-  - **M7 „Stimmung"** — Spec fertig (R84), Plan fertig (R88). **Neu R91: Isometrie** — Nachtrag
-    `2026-10-01-m7-iso-design.md` + ADR-012 fertig (`docs/m7-spec` @ 42f11a1, 20 AK-ISO; R92);
-    **Gate Spec bestanden (R95, @ 65f4813, 21 AK-ISO)**; Plan auf Isometrie umgestellt
-    (`docs/m7-spec` @ 6396d15; neu R0-ISO 2 Tasks, U0-ISO, QA-VORHER/QA-SLICE, Zwischen-Merge R0-ISO;
-    Budgetantrag 76 = lead-art 49/4, lead-tech 26/1, lead-qa 1/1). Gate Plan: beide BEDENKEN →
-    **Nacharbeit lead-tech läuft** (R96: Budget 78 = 49/4, 27/2, 2/1; Zwischen-Merge R0-ISO mit Push;
-    Welle 0 = Revert 42f11a1 + Docs-Merge m6/m7-spec). Danach Zweitprüfung lead-qa, Welle 0,
-    Welle 1. lead-production legt Personas art-rendering/art-audio auf main an. Danach Render-Tasks im Plan überarbeiten (neu R0-ISO,
-    U0-ISO; ≈ +25 % Render), dann Gate Plan.
+  - **M7 „Stimmung" inkl. Isometrie** (R91–R98) — Spec + ISO-Nachtrag + Plan auf main (af0f6f6),
+    Gate Spec/Plan bestanden, Budget 80 (lead-art 49/4, lead-tech 29/2, lead-qa 2/1), Freigabe je
+    Welle. Welle 0 erledigt (Docs-Merge, gepusht). **Welle 1 läuft**: lead-art (R0-ISO T1→T2→opus-
+    Review→QA-R0, A1, X1a, QA-VORHER), lead-tech (M7-U2 Teil A). Danach Gate Merge L0 für den
+    Zwischen-Merge R0-ISO (mit Push), dann Welle 1b.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
   Grafik und Stimmung Richtung Anno 1602. Start erst nach M7 und nur, wenn keine andere L0-Session
@@ -30,10 +26,10 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt                 | bis |
-| -------- | ------------- | ----------------------- | --- |
-| 664ac8d3 | abgeschlossen | nichts mehr             | –   |
-| 5e248230 | aktiv         | M7-ISO (`docs/m7-spec`) | –   |
+| Session  | Stand         | besitzt                              | bis |
+| -------- | ------------- | ------------------------------------ | --- |
+| 664ac8d3 | abgeschlossen | nichts mehr                          | –   |
+| 5e248230 | aktiv         | M7 Welle 1 (Worktrees m7-*, ui-m6m7) | –   |
 
 ## Seit letzter Session erledigt
 
@@ -66,7 +62,7 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Budget
 
-Session 5e248230: lead-art 3/1, lead-tech 1/1, lead-qa 1/1 (Phase spec, M7-ISO); lead-tech 2/1 (Phase plan)
+Session 5e248230: Welle 1 lead-art 13/4, lead-tech 3/2 (Phase umsetzung); Spec/Plan-Phasen abgeschlossen
 
 ## Offene Entscheide
 
