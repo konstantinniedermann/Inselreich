@@ -4,11 +4,12 @@ Browser-Spiel (TypeScript + HTML5 Canvas, keine Laufzeit-Abhängigkeiten, siehe
 [ADR-001](docs/adr/ADR-001-tech-stack.md)).
 Eigene Grafik, eigene Spielwerte — inspiriert von der Mechanik des Klassikers, kein Nachbau von Originalmaterial.
 
-Stand: MVP (Meilensteine 1–4) und M5 „Spielerlebnis" — Insel generieren, Wege und Betriebe bauen,
-Produktionsketten, Handel am Kontor mit Verkaufssättigung und Handelsaufträgen, Bevölkerung mit drei
-Stufen und Steuerregler, Siegziel, Speichern, Laden und Autosave im Browser. Dazu gezeichnete
-Gebäude-Silhouetten, Animationen, synthetischer Ton, Tag-Nacht-Tönung, Tooltips, Hotkeys und
-Touch-Bedienung.
+Stand: MVP (Meilensteine 1–4), M5 „Spielerlebnis", M6 „Krisen" und M7 „Stimmung" — Insel generieren,
+Wege und Betriebe bauen, Produktionsketten, Handel am Kontor mit Verkaufssättigung und Handelsaufträgen,
+Bevölkerung mit drei Stufen und Steuerregler, Krisen (Brand, Sturm, Boom) mit Feuerwache, Siegziel,
+Speichern, Laden und Autosave im Browser. Die Insel ist isometrisch gezeichnet, mit Tageslicht,
+Fensterlicht in der Nacht, Wetter, Spaziergängern und Möwen; Ton mit getrennten Reglern für Musik,
+Umgebung und Effekte. Dazu Tooltips, Hotkeys und Touch-Bedienung (Zielplattform ist Desktop ab 1280 px).
 
 **Online spielen:** GitHub Pages: https://konstantinniedermann.github.io/anno-clone/.
 
@@ -22,34 +23,41 @@ in der Kopfzeile zeigt den Fortschritt.
 
 ### Kamera
 
-- **Zoomen:** Mausrad; auf Touch mit zwei Fingern (Pinch).
+Die Karte ist isometrisch: Jede Kachel ist eine Raute, die Kachel oben in der Ecke ist der Kartenursprung.
+Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was dahinter steht.
+
+- **Zoomen:** Mausrad (Stufen 0,5 bis 2); auf Touch mit zwei Fingern (Pinch).
 - **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen, im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen — oder WASD/Pfeiltasten. Auf Touch
   verschieben zwei Finger die Karte in jedem Werkzeug, ein Finger im Werkzeug «Auswahl».
 
 ### Werkzeuge (Bauleiste unten)
 
-- **Auswahl:** Klick auf ein Gebäude öffnet das Info-Panel.
-- **Weg:** klicken oder mit gedrückter Maustaste über mehrere Kacheln ziehen.
-- **Gebäude:** in der Bauleiste wählen (nach Kategorien, mit Kosten), dann auf die Karte klicken. Die
-  Vorschau ist grün, wenn der Standort passt, sonst rot; der Grund erscheint als Meldung. Nicht
+- **Auswahl:** Klick auf ein Gebäude öffnet das Info-Panel. Getroffen wird der sichtbare Gebäudekörper
+  (Wände und Dach), nicht nur die Bodenkachel; steht ein Gebäude hinter einem höheren, wählt ein Klick auf
+  seinen sichtbaren Teil trotzdem dieses Gebäude. Beim Überfahren zeigt ein Umriss, was getroffen wird.
+- **Weg:** klicken oder mit gedrückter Maustaste über mehrere Kacheln ziehen; massgeblich ist die
+  Bodenkachel unter dem Zeiger.
+- **Gebäude:** in der Bauleiste wählen (nach Kategorien, mit Kosten), dann auf die Karte klicken. Der
+  Zeiger liegt über der Mitte der Grundfläche; ein halbtransparenter Geist zeigt das Gebäude. Die
+  Grundfläche ist grün, wenn der Standort passt, sonst rot; der Grund erscheint als Meldung. Nicht
   bezahlbare Gebäude sind blass dargestellt, ein Klick nennt den Grund.
-- **Abriss:** Werkzeug wählen, dann auf ein Gebäude oder einen Weg klicken — oder im Info-Panel
+- **Abriss:** Werkzeug wählen, dann auf einen Gebäudekörper oder einen Weg klicken — oder im Info-Panel
   «Abreissen».
-- **Wann eine Aktion wirkt:** Mit der Maus sofort beim Drücken, auf der Kachel unter dem Zeiger. Auf
+- **Wann eine Aktion wirkt:** Mit der Maus sofort beim Drücken, auf dem Ziel unter dem Zeiger. Auf
   Touch beim Loslassen, aber auf der Kachel, auf die der Finger zuerst getippt hat — und nur, wenn
   kein zweiter Finger dazukam und nicht verschoben wurde.
 - **Tooltips:** Ein Eintrag der Bauleiste zeigt beim Überfahren, bei Tastaturfokus oder bei langem
   Drücken auf Touch (0,5 s) Name und Taste, Kosten, Unterhalt, was er erzeugt und braucht, die
   Standortregel, den Radius und — falls gesperrt — den Grund.
 - **Radiusanzeige beim Platzieren:** Wohnhaus zeigt den Umriss der versorgten Fläche; Marktplatz,
-  Kapelle und Schule zeigen ihren Wirkkreis um die Vorschau und den Umriss der schon abgedeckten
-  Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den Standortkreis (Radius 2) mit den
-  passenden Wald- bzw. Graskacheln.
-- **Feuerwache** (Kategorie «Öffentlich», noch ohne Taste): 1×1, Baukosten 150 Geld, 10 Holz, 2 Werkzeug,
+  Kapelle, Schule und Feuerwache zeigen ihren Wirkkreis (in der Isometrie eine Ellipse) um die Vorschau
+  und den Umriss der schon abgedeckten Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den
+  Standortkreis (Radius 2) mit den passenden Wald- bzw. Graskacheln.
+- **Feuerwache** (Kategorie «Öffentlich», Taste `E`): 1×1, Baukosten 150 Geld, 10 Holz, 2 Werkzeug,
   Unterhalt 10. Angebunden löscht sie Brände an brennbaren Gebäuden, deren Mitte höchstens 8 Kacheln von
-  ihr entfernt ist. **Sie wirkt nur bei eingeschalteten Krisen**; im aktuellen Spiel sind Krisen aus, die
-  Feuerwache kostet dann nur Unterhalt.
+  ihr entfernt ist (Abschnitt «Krisen»). Bei Krisenstufe «aus» kostet sie nur Unterhalt. Ihr Tooltip nennt,
+  wie viele brennbare Gebäude noch ungeschützt sind; das Info-Panel zeigt «Schützt N brennbare Gebäude».
 
 ### Tastatur und Maus
 
@@ -65,6 +73,7 @@ in der Kopfzeile zeigt den Fortschritt.
 | `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                  |
 | `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei        |
 | `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher |
+| `E`                    | Feuerwache                                                |
 
 Hotkeys wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
@@ -77,26 +86,54 @@ gelten pro 100 Ticks.
 
 ### Karte lesen
 
-- **Gebäude** sind gezeichnete Silhouetten; der Farbton zeigt die Kategorie. Ein roter Punkt heisst
-  «nicht angebunden».
-- **Arbeitsanzeige:** Betriebe, die gerade produzieren, zeigen Rauch bzw. ein pulsierendes Zeichen;
-  wartende, volle oder nicht angebundene Betriebe stehen still.
+- **Gebäude** sind gezeichnete Körper mit Wänden und Dach; Dachfarbe und Form zeigen die Art. Wohnhäuser
+  wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden».
+- **Arbeitsanzeige:** Betriebe, die gerade produzieren, zeigen Rauch bzw. ein Arbeitszeichen; wartende,
+  volle, brennende oder nicht angebundene Betriebe stehen still.
 - **Bedarfssymbole:** Über einem Wohnhaus, dem etwas fehlt, steht ein Symbol für den wichtigsten
   Mangel (Versorgung vor Ware vor Dienst), bei mehreren Mängeln mit einem Zusatzpunkt. Die Symbole
-  erscheinen ab Zoom 0.75.
+  erscheinen ab Zoom 0.75. Signale (Symbole, roter Punkt, Auswahl, Umriss beim Überfahren) liegen immer
+  über allen Gebäuden, auch über verdeckenden.
+- **Leben:** Auf den Wegen gehen Spaziergänger (etwa einer je 4 Einwohner, höchstens 40); über der Küste
+  kreisen Möwen (nicht nachts); am Morgen und am Abend steigt aus bewohnten Häusern Herdrauch.
+- **Tageslicht:** Ein Tag dauert 6000 Ticks (10 Minuten bei 1×) mit Tag, Abend, Nacht und Morgen. Die
+  Karte wird am Abend warm und in der Nacht kühl-dunkel getönt; nachts leuchten die Fenster bewohnter
+  Häuser und arbeitender Betriebe sowie die Laternen an Kontor und Marktplatz. Unbewohnte Häuser und
+  stillstehende Betriebe bleiben dunkel, Stillstand ist also auch nachts zu sehen. Die Tönung steht bei
+  Pause still und lässt sich in den Einstellungen abschalten.
 - **Händlerschiff:** Solange ein Handelsauftrag läuft, liegt ein Schiff am Kontor.
-- **Wasser** bewegt sich, an der Küste stärker.
+- **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
 
-### Ton und Anzeige
+### Einstellungen, Ton und Anzeige
 
-In der Kopfzeile: **Stumm**, **Lautstärke** (Standard 40 %) und **Tag-Nacht**. Der Ton ist
-synthetisch (Web Audio, keine Tondateien): Klicks beim Bauen und Abreissen, Münzen bei Steuern und
-Verkauf, Signale für neue und gelieferte Aufträge, Aufstieg, Fehler und Sieg, dazu leises
-Meeresrauschen. Er startet nach dem ersten Klick oder Tastendruck (Regel der Browser) und pausiert,
-solange der Tab verborgen ist. Die Tag-Nacht-Tönung dunkelt die Karte über einen Tag von 6000 Ticks
-(10 Minuten bei 1×) um höchstens 20 % ab (die Helligkeit fällt nie unter 80 %); sie steht bei Pause
-still. Alle drei
-Einstellungen bleiben im Browser gespeichert und überstehen «Neu» und «Laden».
+In der Kopfzeile stehen nur **Stumm** und **Einstellungen**. «Einstellungen» öffnet eine Karte mit:
+
+- vier Reglern **Gesamt**, **Musik**, **Umgebung**, **Effekte** (Standard 40 %, 50 %, 70 %, 100 %);
+- **Tag-Nacht** an/aus (Tönung und Fensterlicht);
+- **Bewegung reduzieren:** «Auto» folgt der Systemeinstellung, «An» zeigt weniger Figuren, Möwen, Rauch,
+  Regen und Flammen und halbiert die Wellen, «Aus» zeigt alles;
+- **Credits** (Herkunft und Lizenz fremder Musik, Klänge und Schrift) und **Schliessen**.
+
+Die Karte schliesst auch mit `Esc` oder einem Klick daneben. Alle Einstellungen und die Krisenstufe für
+das nächste Spiel bleiben im Browser gespeichert und überstehen «Neu» und «Laden». Eine ältere Einstellung
+«Lautstärke» wird zum Regler «Gesamt».
+
+**Ton:** Er startet nach dem ersten Klick oder Tastendruck (Regel der Browser) und pausiert, solange der
+Tab verborgen ist.
+
+- **Effekte:** Klicks beim Bauen und Abreissen, Münzen bei Steuern und Verkauf, Signale für neue und
+  gelieferte Aufträge, Aufstieg, Fehler und Sieg; bei Krisen Glocke (Brand), Nebelhorn (Sturmwarnung)
+  und Fanfare (Boom). Wichtige Signale senken Musik und Umgebung kurz ab.
+- **Umgebung:** folgt dem Bildausschnitt — Meer, Wind, Vögel am Tag, Grillen in der Nacht, Möwen an der
+  Küste, Stadtgeräusch bei vielen Einwohnern im Blick; Regen, Sturm und Feuer bei Krisen. Nah gezoomt
+  wird die Stadt lauter, weit gezoomt der Wind.
+- **Musik:** einige Sekunden nach dem ersten Klick ein Stück passend zur Tageszeit, danach Pausen von
+  30–90 s.
+
+**Hinweis zum Stand:** Musik-, Klang- und Schriftdateien sind noch nicht eingebunden (Ruling R109: die
+Quellen sind aus der Arbeitsumgebung gesperrt). Bis dahin klingt alles synthetisch (Web Audio), die Musik
+fehlt, und die Schrift fällt auf eine Ersatzschrift zurück; die Credits melden «Fremde Assets sind derzeit
+nicht eingebunden».
 
 ## Wirtschaft
 
@@ -250,6 +287,60 @@ Der **Steuerregler** in der Kopfzeile gilt für die ganze Insel:
 - «Hoch» bringt kurzfristig Geld, verfehlt auf Dauer aber das Ziel (weniger Einwohner, kein
   Aufstieg). «Niedrig» kostet Geld, lässt Häuser aber schneller aufsteigen.
 
+## Krisen
+
+### Krisenstufe
+
+Neben «Neu» in der Kopfzeile wählst du «Krisen: aus · mild · normal» (Standard «normal»). Die Wahl gilt
+ab dem nächsten «Neu»; das laufende Spiel behält seine Stufe, ein geladener Stand die seines Spielstands.
+
+| Stufe  | erste Krise | danach               |
+| ------ | ----------- | -------------------- |
+| aus    | —           | keine Krisen         |
+| mild   | Tick 2400   | alle 1200 Ticks eine |
+| normal | Tick 2400   | alle 600 Ticks eine  |
+
+Bei jeder Krise wird zufällig, aber aus der Kartennummer vorherbestimmt, eine von drei Arten gezogen:
+Brand (50 %), Sturm (25 %) oder Boom (25 %). Es läuft nie mehr als eine Krise zugleich.
+
+### Brand und Feuerwache
+
+- **Brennbar** sind alle Produktionsbetriebe, die Kapelle und die Schule; Kontor, Marktplatz, Wohnhäuser,
+  Wege und die Feuerwache brennen nicht. Der Tooltip der Bauleiste zeigt «Brennbar».
+- Der Brand trifft das brennbare Gebäude nahe einer zufälligen Stelle zwischen deinen brennbaren Gebäuden.
+- **Geschützt** ist ein Gebäude, wenn eine angebundene Feuerwache höchstens 8 Kacheln (Mitte zu Mitte)
+  entfernt steht. Dann wird der Brand gelöscht: kein Schaden, nur eine Meldung. Das Info-Panel brennbarer
+  Gebäude zeigt «Brandschutz: ja/nein».
+- **Ungeschützt** zahlst du sofort die Instandsetzung (die Geldkosten des Gebäudes, auch ins Minus), der
+  Fortschritt geht verloren, und das Gebäude fällt 200 Ticks aus: Ein Betrieb produziert nicht, eine Kapelle
+  oder Schule liefert keinen Dienst. Der Unterhalt läuft weiter. Das Info-Panel zeigt «Brennt — wieder in
+  Betrieb in N Ticks» und «Erzeugt X nicht — Betrieb brennt». Die Warenbilanz in der Kopfzeile bleibt bei
+  der Dauerleistung, sie zeigt keine kurzen Ausfälle.
+- Auf der Karte brennt das Gebäude mit Flammen, Rauch und Glut; ein pulsierender Warnring markiert es. Nach
+  dem Löschen zieht noch kurz Rauch ab.
+
+### Sturm
+
+Ein Sturm wird 200 Ticks vorher angekündigt (Himmel verdunkelt sich, Wind im Ton, Nebelhorn) und dauert
+dann 300 Ticks. Fischerhütte, Holzfäller, Schäferei und Zuckerrohrplantage arbeiten im Sturm mit halber
+Leistung. Auf der Karte: dunklere Tönung, Regen, höhere Wellen und dunkle Bildränder.
+
+### Boom
+
+Ein Händler zahlt 300 Ticks lang **+50 %** auf den Verkaufspreis eines Guts (aus dem Auftragspool deiner
+höchsten Stufe). Der Handelsdialog markiert das Gut mit «Boom +50 %», die Verkaufsbuttons zeigen den
+Erlös inklusive Boom; die Sättigung wirkt weiter. Über dem Kontor dreht sich eine Münze. Zukaufen und im
+Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als der Boom.
+
+### Krisenkarte und Ereignis-Log
+
+- Die **Krisenkarte** in der Kopfzeile neben dem Auftrag zeigt «Krisen: aus», «Krisen: normal · nächste Krise
+  in N Ticks» oder die laufende Krise mit Restzeit (z. B. «Brand: Weberei · Ausfall noch N Ticks ·
+  Instandsetzung 200», «Sturmwarnung: Sturm in N Ticks …», «Boom: Rum +50 % Verkaufspreis · noch N Ticks»).
+- Das **Ereignis-Log** schwebt unten links über der Karte, sobald es Einträge gibt. Eingeklappt zeigt es
+  nur den neuesten Eintrag; «Ereignisse ▸» klappt die letzten 10 auf («Tick t · …»). Es gehört nicht zum
+  Spielstand und ist nach «Neu» und «Laden» leer. Wichtige Ereignisse erscheinen zusätzlich als Meldung.
+
 ## Speichern, Laden, Neu
 
 - **Speichern:** legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem Browser).
@@ -262,10 +353,10 @@ Der **Steuerregler** in der Kopfzeile gilt für die ganze Insel:
   Kamera bleibt, wenn der Stand dieselbe Karte hat, sonst springt sie zum Kontor.
 - **Hinweis beim Start:** liegt ein Spielstand vor, weist eine Meldung auf «Laden» hin.
 - **Neu:** zweimal klicken — der Button fragt «Wirklich neu?» —, dann entsteht eine neue Insel mit
-  Tempo 1×. Der Autosave bleibt, bis der nächste ihn überschreibt. Die Nummer der Karte steht als
-  kleine Zeile in der Kopfzeile unter der Lagerleiste («Karte: …»).
-- Spielstände älterer Versionen (vor M5) lassen sich laden und werden danach im neuen Format
-  gespeichert.
+  Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn überschreibt. Die
+  Nummer der Karte steht als kleine Zeile in der Kopfzeile unter der Lagerleiste («Karte: …»).
+- Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format
+  gespeichert; Stände von vor M6 spielen mit Krisenstufe «aus».
 
 ## Entwicklung
 
