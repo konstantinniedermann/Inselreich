@@ -4,9 +4,6 @@ import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
 // fx.ts — Krisen-Effekte (Spec 6.5): Feuer mit Rauch, Glühen, Warnring, Boom-Münze. Bildraum, `rect` ist die
 // Bildbox des Gebäudes in CSS-Pixeln. Reine Zeichenfunktionen: kein Weltzugriff, kein Zustand.
 
-/** Dauer des Gelöscht-Effekts in Ticks (R85 Punkt 12: M6 importiert die Konstante). */
-export const EXTINGUISHED_TICKS = 60;
-
 export interface Rect {
   x: number;
   y: number;
