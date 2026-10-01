@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createSound, THROTTLE_MS, type SoundEvent } from '../../src/audio/sound';
 
 // Der Fake bildet nur die Knoten-API nach, die sound.ts nutzt.
+interface FakeNode {
+  gain: { value: number };
+  target?: unknown;
+  [k: string]: unknown;
+}
+
 function fakeCtx() {
   const log = {
     nodes: 0,
@@ -9,19 +15,31 @@ function fakeCtx() {
     suspend: 0,
     close: 0,
     bufferStarts: 0,
-    gains: [] as Array<{ gain: { value: number } }>,
+    gains: [] as FakeNode[],
+    sets: [] as Array<{ gain: unknown; kind: string; v: number; t: number }>,
   };
-  const param = () => ({
-    value: 1,
-    setValueAtTime() {},
-    linearRampToValueAtTime() {},
-    exponentialRampToValueAtTime() {},
-  });
+  const param = () => {
+    const p = {
+      value: 1,
+      cancelScheduledValues() {
+        log.sets.push({ gain: p, kind: 'cancel', v: 0, t: 0 });
+      },
+      setValueAtTime(v: number, t: number) {
+        log.sets.push({ gain: p, kind: 'set', v, t });
+      },
+      linearRampToValueAtTime(v: number, t: number) {
+        log.sets.push({ gain: p, kind: 'ramp', v, t });
+      },
+      exponentialRampToValueAtTime() {},
+    };
+    return p;
+  };
   const node = () => {
     log.nodes += 1;
-    return {
-      connect() {
-        return this;
+    const n: FakeNode = {
+      connect(target: unknown) {
+        n.target = target;
+        return target;
       },
       disconnect() {},
       start() {},
@@ -33,6 +51,7 @@ function fakeCtx() {
       buffer: null,
       loop: false,
     };
+    return n;
   };
   const ctx = {
     currentTime: 0,
@@ -85,6 +104,9 @@ const ALL: SoundEvent[] = [
   'upgrade',
   'error',
   'win',
+  'alarm',
+  'stormWarning',
+  'boom',
 ];
 
 describe('sound', () => {
@@ -144,7 +166,7 @@ describe('sound', () => {
     const s = createSound({ muted: false, volume: 0.4 }, () => ctx);
     s.unlock();
     const master = log.gains[0]!; // erster Gain: Master
-    const sea = log.gains[1]!; // zweiter Gain: Meeresrauschen, hängt hinter dem Master
+    const sea = log.gains[6]!; // Meeresrauschen, hängt am Umgebungs-Bus (nach Master, Effekte, Musik, Duck, Umgebung, Duck)
     expect(master.gain.value).toBe(0.4);
     expect(sea.gain.value).toBe(0.15);
     s.setVolume(0.1);
@@ -220,6 +242,9 @@ describe('sound', () => {
       coin: 50,
       upgrade: 300,
       error: 150,
+      alarm: 2000,
+      stormWarning: 5000,
+      boom: 2000,
     });
   });
 
@@ -362,5 +387,119 @@ describe('sound', () => {
     }).not.toThrow();
     expect(log.nodes).toBe(nodes);
     expect(log.close).toBe(1);
+  });
+
+  describe('M7-A1', () => {
+    const view = { water: 0, green: 0, forest: 0, rock: 0, coast: 0, inhabitants: 0, zoom: 1 };
+    const input = { view, phase: 'day', weather: { kind: 'clear', w: 0 } } as const;
+    const mk = (o: Partial<Parameters<typeof createSound>[0]> = {}) => {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false, ...o }, () => ctx);
+      s.unlock();
+      return { s, ctx, log };
+    };
+
+    it('AK-A1-01 Graph: Master am Ziel, Busse am Master (Musik/Umgebung über Duck)', () => {
+      const { log, ctx } = mk();
+      const [master, effects, music, dMusic, amb, dAmb] = log.gains;
+      expect(master!.target).toBe((ctx as unknown as { destination: unknown }).destination);
+      expect(effects!.target).toBe(master);
+      expect(music!.target).toBe(dMusic);
+      expect(dMusic!.target).toBe(master);
+      expect(amb!.target).toBe(dAmb);
+      expect(dAmb!.target).toBe(master);
+      expect(log.gains[6]!.target).toBe(amb); // Meer an genau einem Bus
+    });
+
+    it('AK-A1-01 Standardpegel und Klemmen; setVolume = setBus(master); Stumm setzt Master 0', () => {
+      const { s, log } = mk();
+      expect(s.debugState().buses).toEqual({ master: 0.4, music: 0.5, ambience: 0.7, effects: 1 });
+      s.setBus('music', 2);
+      expect(s.debugState().buses.music).toBe(1);
+      expect(log.gains[2]!.gain.value).toBe(1);
+      s.setVolume(0.3);
+      expect(s.debugState().buses.master).toBe(0.3);
+      s.setMuted(true);
+      expect(log.gains[0]!.gain.value).toBe(0);
+      expect(s.debugState().buses.master).toBe(0.3);
+    });
+
+    it('AK-A1-01 volume ist Alias für master, master hat Vorrang', () => {
+      expect(mk({ volume: 0.2 }).s.debugState().buses.master).toBe(0.2);
+      expect(mk({ volume: 0.2, master: 0.6 }).s.debugState().buses.master).toBe(0.6);
+    });
+
+    it('AK-A1-01 Pegel vor unlock() gelten nach unlock()', () => {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false }, () => ctx);
+      s.setBus('ambience', 0.2);
+      s.unlock();
+      expect(log.gains[4]!.gain.value).toBe(0.2);
+    });
+
+    it('AK-A1-02 Signal plant Ducking auf beiden Duck-Gains, Effekt nicht', () => {
+      const { s, ctx, log } = mk();
+      setTime(ctx, 5);
+      s.play('build');
+      expect(log.sets.some((x) => x.kind === 'ramp' && x.v === 0.5)).toBe(false);
+      s.play('order');
+      for (const idx of [3, 5]) {
+        const mine = log.sets.filter((x) => x.gain === log.gains[idx]!.gain);
+        expect(mine.map((x) => [x.kind, x.v, x.t])).toEqual([
+          ['cancel', 0, 0],
+          ['set', 1, 5],
+          ['ramp', 0.5, 5.05],
+          ['set', 0.5, 5 + 0.52 + 0.3],
+          ['ramp', 1, 5 + 0.52 + 0.3 + 0.6],
+        ]);
+      }
+      setTime(ctx, 5.2);
+      expect(s.debugState().duck).toBe(0.5);
+      setTime(ctx, 9);
+      expect(s.debugState().duck).toBe(1);
+    });
+
+    it('AK-A1-03 alarm, stormWarning, boom spielen ohne Wurf und erzeugen Knoten', () => {
+      for (const e of ['alarm', 'stormWarning', 'boom'] as const) {
+        const { s, log } = mk();
+        const base = log.nodes;
+        expect(() => s.play(e)).not.toThrow();
+        expect(log.nodes).toBeGreaterThan(base);
+      }
+    });
+
+    it('RF-5a Aufrufe vor unlock und nach dispose werfen nicht und erzeugen keine Knoten', () => {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false }, () => ctx);
+      expect(() => {
+        s.setBus('music', 0.2);
+        s.setAmbience(input);
+        s.setPhase('night');
+        s.setCrisis(true);
+        s.play('alarm');
+        s.debugState();
+      }).not.toThrow();
+      expect(log.nodes).toBe(0);
+      s.unlock();
+      s.dispose();
+      const n = log.nodes;
+      expect(() => {
+        s.play('alarm');
+        s.setAmbience(input);
+        s.setBus('master', 0.1);
+        s.debugState();
+      }).not.toThrow();
+      expect(log.nodes).toBe(n);
+    });
+
+    it('debugState vor unlock', () => {
+      const s = createSound({ muted: false }, () => null);
+      expect(s.debugState()).toMatchObject({
+        unlocked: false,
+        duck: 1,
+        layers: {},
+        music: { state: 'idle', id: null },
+      });
+    });
   });
 });
