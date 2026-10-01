@@ -25,6 +25,7 @@ import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, showMessage } from './messages';
+import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
 import { createPerfProbe, startAudioProbe } from './devProbes';
@@ -58,8 +59,8 @@ const AMBIENCE_EVERY_MS = 250;
 /** Autosave alle 120 s Echtzeit bei laufendem Spiel (Spec 10.8). */
 const AUTOSAVE_MS = 120000;
 
-/** Fremde Assets aus dem Manifest (A2/A3); leer, bis Assets eingebunden sind (R109). */
-const MANIFEST_CREDITS: readonly CreditEntry[] = [];
+/** Fremde Assets für die Credits-Karte: Quelle ist das Audio-Manifest (Nachweis nach ADR-006). */
+const MANIFEST_CREDITS: readonly CreditEntry[] = MANIFEST;
 
 /** Ein Nutzer-Klick oder -Tastendruck hat den Ton schon einmal freigeschaltet (überlebt Neustarts). */
 let audioUnlockedOnce = false;

@@ -5,18 +5,31 @@
 # Ziel:     <Repo>/public/audio/{music,amb,sfx}/   (die Schrift wird nicht geschnitten, siehe unten)
 # Netz:     keines. ffmpeg/ffprobe sind lokale Werkzeuge, keine Projekt-Abhängigkeit (ADR-001).
 #
-# Erwartete Originale im Ordner (Dateinamen, SHA-256 siehe docs/CREDITS.md und das Lizenzurteil):
-#   MU1_The_Bards_Tale.mp3  MU2_The_Old_Tower_Inn.mp3  MU3_Dowland_If_my_Complaints.mp3   (OpenGameArt-Dateien)
-#   AM1_852826.mp3 AM2_855955.mp3 AM3_317676.mp3 AM4_857163.mp3 AM5_321885.mp3 AM6_341941.mp3 AM7_564621.mp3
-#   SG1_582523.mp3 SG2_673668.mp3 FX1_847349.mp3 FX2_707864.mp3   (Freesound, HQ-Vorschau "<id>_<n>-hq.mp3")
+# Erwartete Originale im Ordner (Dateinamen und SHA-256, geprüft mit shasum -a 256):
+#   68cd94cdf360945f187e59ce583e45f7cd24dbf70e1cefac30b02e23a36035ed  AM1_852826.mp3
+#   28c4ba538fa020df9367f1000ab931553ccc8bd6dd257c2bb39d454f35d03250  AM2_855955.mp3
+#   bb08dfa012dd52cc3e8ac661b8a09129fbdd0af8480ac6b86142d445ea959d84  AM3_317676.mp3
+#   b694f7160f814318307c1d9728802d967d1b58e9a101fae9023d959facd4b1b2  AM4_857163.mp3
+#   52bb21b58ce17278896c683bef1ac621baccc7ff661921b6dc35cd2667178ea9  AM5_321885.mp3
+#   b611f67df5fd021fc5eba4f5da74d2bfdbd04c6c61a5768f83832bd2c0841402  AM6_341941.mp3
+#   add3756dec5cd84809e0e152675f83fe497cb5e5690886212b788b4a80fb070d  AM7_564621.mp3
+#   961cf5dd7027451656ed19a340d826cfa890bcbb50e3ddb8c3710afd376768c8  FX1_847349.mp3
+#   c682526b27f7e7d1eb9510ed778823ddb46dbc48e21d6a716e15c5cdcdcf7315  FX2_707864.mp3
+#   6e93e8e8215bea17a209c321c182111058e024c53e3ad775ce1481ca1d1fcfc2  MU1_The_Bards_Tale.mp3
+#   3fe4070015b880b591c79a7fca31156a0083a8768d88a39da39ab6c54f2f014d  MU2_The_Old_Tower_Inn.mp3
+#   d0e038bbc05df02503c39966639d2a823f97f149d75325ed742fd9817862ddd3  MU3_Dowland_If_my_Complaints.mp3
+#   297235c95d65d20f5cda6a0d94deb0d6d7886c9ac3f2b50e831b0d6aff137bc3  SG1_582523.mp3
+#   3331bf0629d8fc87e0f1bc001e8e06d8d7fd0f7e62d7c039d5f1e324712efce5  SG2_673668.mp3
+# Weitere Angaben zu den Originalen: siehe Lizenzurteil und docs/CREDITS.md.
+# MU1–MU3 sind OpenGameArt-Dateien, AM/SG/FX Freesound-HQ-Vorschauen ("<id>_<n>-hq.mp3", hier umbenannt).
 # Quelle im Nachweis ist immer die Sound-Seite (nie die CDN-URL); die Zahl im Dateinamen ist die Freesound-ID.
 #
 # Pegelpolitik (Vorgabe lead-art, gemessen mit ebur128, EBU R128 / BS.1770):
 #   - Statischer Gain "volume=<x>dB" je Datei, kein dynamisches loudnorm; nur die Glocke (bell) läuft zusätzlich über einen weichen Limiter.
 #   - Gemessen wird so, wie der Browser spielt: Mono-Dateien als L=R (Web Audio kopiert Mono auf beide Kanäle,
 #     das sind +3 LU gegenüber einer Ein-Kanal-Messung).
-#   - Ziele (integriert): Musik -18 LUFS; Umgebung -26 LUFS (Möwen -28, Sturm -24); Signale (bell, foghorn)
-#     -14 LUFS; Effekte (coins, hammer) -20 LUFS. True Peak der fertigen MP3 <= -1 dBTP: Reicht der Spielraum
+#   - Ziele (integriert): Musik -18 LUFS; Umgebung -26 LUFS (Möwen -28, Sturm -24); Signale (foghorn -14 LUFS,
+#     bell -15 LUFS, gemessen -15,1 LUFS nach Limiter, X1a-Fix-Runde); Effekte (coins, hammer) -20 LUFS. True Peak der fertigen MP3 <= -1 dBTP: Reicht der Spielraum
 #     nicht, wird der Gain kleiner und das Ziel verfehlt (die Zeile am Ende nennt Ist-Werte, nie Wunschwerte).
 #   - Kurze Effekte (< 400 ms, coins) haben keinen integrierten Wert nach BS.1770; dort wird auf 400 ms mit Stille
 #     aufgefüllt gemessen (entspricht dem höchsten Momentanwert).
@@ -190,7 +203,7 @@ encode "$TMP/fire.wav" "$OUT/audio/amb/fire.mp3" -26 64k 1 "AM7 fire (3 x 10 s)"
 # SG1 bell — freesound 582523 "6 Bell Ring.WAV", https://freesound.org/people/gsparrysound/sounds/582523/ ,
 #   gsparrysound, CC0 1.0; Schnitt 0:00,48–0:05,90 (5,42 s): drei Schläge (Einsätze laut Hüllkurve bei
 #   0,52 s, 1,60 s und 2,70 s im Original), der dritte Schlag klingt natürlich aus; 5 ms Einblendung, 400 ms
-#   Ausblendung am Ende (Pegel dort ca. -37 dB unter dem Maximum). Ziel -15 LUFS (lead-art; nicht -14, damit die
+#   Ausblendung am Ende (Pegel dort ca. -37 dB unter dem Maximum). Ziel -15 LUFS, gemessen -15,1 LUFS (lead-art; nicht -14, damit die
 #   Anschläge nicht platt werden). Nur diese Datei bekommt einen Limiter (alimiter, Attack 5 ms, Release 60 ms,
 #   level=0, Decke per Nachführung so, dass der True Peak der MP3 <= -1 dBTP bleibt): Das Alarmsignal muss über allem
 #   stehen, ohne Limiter begrenzt der Crest der Schläge (Spitze-LUFS 17,5 dB) den Pegel auf -18,5 LUFS
