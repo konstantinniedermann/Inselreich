@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { NIGHT_COLOR } from '../../src/render/daynight';
 import { sortedObjects } from '../../src/render/iso';
-import { centerOn } from '../../src/render/camera';
+import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
+import { centerOn, visibleTileRange } from '../../src/render/camera';
 import { render, type Hover } from '../../src/render/renderer';
 import { bodyColors } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
@@ -55,6 +56,15 @@ const camFor = (world: World, zoom: number) => {
   return cam;
 };
 const order = { period: 1, good: 'wood' as const, amount: 5, reward: 100, due: 999 };
+
+beforeAll(() => {
+  // Node hat kein document: Offscreen-Canvas der Baumstempel durch einen Fake ersetzen
+  setCanvasFactory(() => {
+    const { ctx } = fakeCtx();
+    return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
+  });
+  resetTreeCache();
+});
 
 describe('Renderer', () => {
   it('RF-7 nach render(): save/restore ausgeglichen, Matrix wie vor dem Aufruf (Zoom 0,5 und 2, mit raster)', () => {
@@ -140,5 +150,42 @@ describe('Renderer', () => {
     // kein Multiply, höchstens ein additiver Durchgang
     expect(log.compositeSet.filter((c) => c === 'multiply')).toHaveLength(0);
     expect(log.compositeSet.filter((c) => c === 'lighter').length).toBeLessThanOrEqual(1);
+  });
+
+  it('ISO §6 (D-08, AK-ISO-10) Baumstempel stehen im sortierten Durchgang: Reihenfolge wie sortedObjects, nur sichtbare Kacheln', () => {
+    const { world, ids } = scene();
+    const k = world.buildings[world.kontorId]!;
+    forceRect(world, k.x + 9, k.y + 2, 4, 4, 'forest');
+    forceRect(world, k.x > 32 ? 1 : 58, k.y > 32 ? 1 : 58, 3, 3, 'forest'); // ausserhalb des Bildes
+    const cam = camFor(world, 1);
+    const range = visibleTileRange(cam, VIEW, { w: world.width, h: world.height });
+    const { ctx, log } = fakeCtx();
+    render(ctx, world, cam, layer, null, ids.house!, VIEW, { timeMs: 0 });
+    const tops = new Set(
+      (['housing', 'production', 'infrastructure', 'public'] as const).map(
+        (c) => bodyColors(c).top,
+      ),
+    );
+    const isBase = (m: Mat) => m.every((v, i) => v === BASE(1)[i]);
+    const terrainImg = log.events.findIndex((e) => e.op === 'drawImage');
+    const seq: string[] = [];
+    log.events.forEach((e, i) => {
+      if (e.op === 'drawImage' && i !== terrainImg && isBase(e.matrix)) seq.push('t');
+      else if (e.op === 'fill' && tops.has(e.style) && isBase(e.matrix)) seq.push('b');
+    });
+    const expected = sortedObjects(world, [])
+      .filter(
+        (i) =>
+          i.kind === 'building' ||
+          (i.kind === 'tree' &&
+            i.fp.x >= range.x0 &&
+            i.fp.x <= range.x1 &&
+            i.fp.y >= range.y0 &&
+            i.fp.y <= range.y1),
+      )
+      .map((i) => (i.kind === 'tree' ? 't' : 'b'));
+    expect(expected.filter((c) => c === 't').length).toBeGreaterThanOrEqual(16);
+    expect(seq).toEqual(expected);
+    expect(log.saves).toBe(log.restores);
   });
 });

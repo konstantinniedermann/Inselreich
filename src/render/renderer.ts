@@ -13,6 +13,7 @@ import { dayNightAlpha, NIGHT_COLOR } from './daynight';
 import { TEX, bodyHull, sortedObjects, spriteBounds } from './iso';
 import { drawNeedSymbols, drawPlacementOverlay, drawUnconnected } from './overlays';
 import { drawShip, shipTile } from './ship';
+import { drawTreeStamp } from './trees';
 import { drawWaves } from './water';
 import { drawAir, drawBody, drawRoads } from './sprites';
 
@@ -165,7 +166,7 @@ export function render(
       drawRoads(ctx, world, range);
     });
 
-    // 6 Sortierter Objektdurchgang (Bäume erst ab R1a)
+    // 6 Sortierter Objektdurchgang (Gebäude, Baumstempel, Schiff)
     const ship = shipTile(world);
     const items = sortedObjects(
       world,
@@ -186,6 +187,10 @@ export function render(
           continue;
         drawBody(ctx, cam, def, b, fx.timeMs);
         visible.push(b);
+      } else if (it.kind === 'tree') {
+        if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
+          continue;
+        drawTreeStamp(ctx, cam, it, world.seed);
       } else if (it.kind === 'ship') {
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
       }
