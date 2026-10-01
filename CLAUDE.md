@@ -34,8 +34,8 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 
 ## Test-Strategie
 
-Vitest gegen `src/sim/` und reine Mathematik in `src/render/` (Kamera, Tag-Nacht-Tönung, Schiffsposition). Renderer und UI werden manuell im Browser geprüft.
-Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`), die Cache-Logik in `src/render/overlays.ts` und reine, DOM-freie Helfer in `src/ui/` (`tests/ui/`).
+Vitest gegen `src/sim/` und reine Mathematik in `src/render/`: Projektion, Kamera, Culling und Tiefensortierung (`iso.ts`, `camera.ts`, ISO §10), Picking und Verdeckung, Terrain-Felder, Tageslicht und Wetter (`daynight.ts`, `weather.ts`), Leben (`life.ts`), Obergrenzen, `viewStats`, Schiffsposition; dazu Zeichner gegen einen aufzeichnenden Fake-Kontext (`tests/render/fakeCtx.ts`). Renderer und UI werden zusätzlich im Browser geprüft.
+Vitest zusätzlich gegen `src/audio/` (Fake-`AudioContext`, Fake-Lader und -Media-Element), die Cache-Logik in `src/render/overlays.ts` und reine, DOM-freie Helfer in `src/ui/` (`tests/ui/`, u. a. `target`, `settings`, `crisisFx`, `crisisLog`). Assets: Budget und Prüfsummen unter `tests/assets/` (Assets-Strang, ADR-011).
 Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die Spielwerte: Jede Änderung in `src/sim/defs/` muss ihn grün lassen.
 
 ## Context-Scopes
@@ -46,6 +46,7 @@ Der Balancing-Test (`tests/sim/balance.test.ts`) ist Regressionsschutz für die 
 | Render      | `src/render/`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/defs/`, `src/sim/noise.ts` | Darstellung, Kamera                       |
 | UI          | `src/ui/` (inkl. `src/ui/storage.ts`), `index.html`, `src/style.css`                       | Bedienung, Layout, Speichern/Laden        |
 | Audio       | `src/audio/`, `tests/audio/`                                                               | Ton, Klangereignisse                      |
+| Assets      | `public/`, `tools/assets/`, `docs/CREDITS.md`, `docs/licenses/`, `tests/assets/`           | Fremde Dateien, Lizenz, Nachweis          |
 | Studio      | `docs/studio/`, `.claude/agents/`, `.claude/output-styles/`, `tools/studio/`               | Arbeitsweise, Personas, Dashboard         |
 | Vollständig | alles                                                                                      | Architektur, Querschnitt                  |
 
