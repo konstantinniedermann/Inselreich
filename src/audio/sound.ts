@@ -1,15 +1,76 @@
-// Synthetischer Ton über Web Audio (ADR-001: Browser-API, keine Abhängigkeit, keine Assets).
-// Kein Import aus sim/ui, kein DOM-Zugriff; der AudioContext kommt aus einer austauschbaren Fabrik.
+import {
+  BUS_DEFAULTS,
+  DUCK,
+  duckEnd,
+  duckGain,
+  holdEnd,
+  type AmbienceInput,
+  type Bus,
+  type DuckSignal,
+  type Layer,
+  type Phase,
+} from './mix';
+
+export type { AmbienceInput, Bus, Layer, Phase } from './mix';
 
 export type SoundEvent =
-  'build' | 'demolish' | 'coin' | 'order' | 'orderDone' | 'upgrade' | 'error' | 'win';
+  | 'build'
+  | 'demolish'
+  | 'coin'
+  | 'order'
+  | 'orderDone'
+  | 'upgrade'
+  | 'error'
+  | 'win'
+  | 'alarm'
+  | 'stormWarning'
+  | 'boom';
+
+export interface SoundOptions {
+  muted: boolean;
+  master?: number;
+  music?: number;
+  ambience?: number;
+  effects?: number;
+  /** Alias für `master` (bis M7-U1 unverändert genutzt). */
+  volume?: number;
+}
+
+export interface MediaLike {
+  src: string;
+  preload: string;
+  currentTime: number;
+  duration: number;
+  play(): Promise<void>;
+  pause(): void;
+  addEventListener(type: 'ended' | 'error' | 'loadedmetadata', fn: () => void): void;
+}
+
+export interface SoundIo {
+  fetchBuffer(url: string): Promise<ArrayBuffer>;
+  mediaFactory(url: string): MediaLike;
+  baseUrl: string;
+}
+
+export interface AudioDebugState {
+  unlocked: boolean;
+  buses: Record<Bus, number>;
+  layers: Partial<Record<Layer, number>>;
+  duck: number;
+  music: { state: 'idle' | 'pause' | 'playing'; id: string | null };
+}
 
 export interface Sound {
   unlock(): void;
   play(e: SoundEvent): void;
   setMuted(b: boolean): void;
   setVolume(v: number): void;
+  setBus(bus: Bus, v: number): void;
+  setAmbience(input: AmbienceInput): void;
+  setPhase(phase: Phase): void;
+  setCrisis(b: boolean): void;
   setHidden(b: boolean): void;
+  debugState(): AudioDebugState;
   dispose(): void;
 }
 
@@ -20,13 +81,32 @@ export const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
   coin: 50,
   upgrade: 300,
   error: 150,
+  alarm: 2000,
+  stormWarning: 5000,
+  boom: 2000,
 };
 
-const DEFAULT_VOLUME = 0.4;
-const SEA_LEVEL = 0.15; // relativ zum Master
-const SEA_SWELL = 0.06; // Tiefe der langsamen Schwellung (absolut, relativ zum Master)
+/** Signale senken Musik und Umgebung (Ducking); Wert = Dauer der Figur in s. */
+const FIGURE_S: Partial<Record<SoundEvent, number>> = {
+  error: 0.1,
+  order: 0.52,
+  win: 1.14,
+  alarm: 2.0,
+  stormWarning: 2.0,
+};
+
+const FX = 0.5; // Effekte liegen 6 dB unter den Signalen (Spec 7.1)
+const SEA_LEVEL = 0.15; // relativ zum Umgebungs-Bus
+const SEA_SWELL = 0.06; // Tiefe der langsamen Schwellung (absolut)
 const SEA_SWELL_HZ = 0.08;
 const EPS = 1e-9;
+
+const defaultIo = (): SoundIo => ({
+  fetchBuffer: (u) =>
+    fetch(u).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status))))),
+  mediaFactory: (u) => new Audio(u) as unknown as MediaLike,
+  baseUrl: import.meta.env.BASE_URL,
+});
 
 /** Gültige Zahl -> auf 0..1 geklemmt; sonst der Rückfallwert. */
 function sanitizeVolume(v: unknown, fallback: number): number {
@@ -48,21 +128,35 @@ function makeNoise(ctx: AudioContext, seconds: number): AudioBuffer {
 }
 
 export function createSound(
-  opts: { muted: boolean; volume: number },
+  opts: SoundOptions,
   ctxFactory: () => AudioContext | null = () => new AudioContext(),
+  ioIn: Partial<SoundIo> = {},
 ): Sound {
+  const io: SoundIo = { ...defaultIo(), ...ioIn };
   let muted = !!opts.muted;
-  let volume = sanitizeVolume(opts.volume, DEFAULT_VOLUME);
+  const levels: Record<Bus, number> = {
+    master: sanitizeVolume(opts.master ?? opts.volume, BUS_DEFAULTS.master),
+    music: sanitizeVolume(opts.music, BUS_DEFAULTS.music),
+    ambience: sanitizeVolume(opts.ambience, BUS_DEFAULTS.ambience),
+    effects: sanitizeVolume(opts.effects, BUS_DEFAULTS.effects),
+  };
   let hidden = false;
   let unlocked = false;
   let disposed = false;
   let failed = false;
   let ctx: AudioContext | null = null;
-  let master: GainNode | null = null;
+  const bus: Partial<Record<Bus, GainNode>> = {};
+  let duckMusic: GainNode | null = null;
+  let duckAmb: GainNode | null = null;
   let noise: AudioBuffer | null = null;
   let seaSource: AudioBufferSourceNode | null = null;
   let seaLfo: OscillatorNode | null = null;
+  let signals: DuckSignal[] = [];
+  let ambienceInput: AmbienceInput | null = null; // Wirkung ab A2
+  let phase: Phase | null = null; // Wirkung ab A3
+  let crisis = false; // Wirkung ab A3
   const lastPlayed = new Map<SoundEvent, number>();
+  void io; // Netz und Medien nutzen erst A2/A3
 
   const safe = (fn: () => void) => {
     try {
@@ -74,11 +168,13 @@ export function createSound(
   const swallow = (p: unknown) => {
     (p as Promise<void> | undefined)?.catch?.(() => {});
   };
-  const applyMaster = () => {
-    if (master) master.gain.value = muted ? 0 : volume;
+  const applyBus = (b: Bus) => {
+    const g = bus[b];
+    if (!g) return;
+    g.gain.value = b === 'master' && muted ? 0 : levels[b];
   };
 
-  // Stimmen: Oszillator + Hüllkurve; nach dem Ende getrennt (keine Knoten-Leaks).
+  // Stimmen laufen alle über den Effekte-Bus; nach dem Ende getrennt (keine Knoten-Leaks).
   const tone = (
     freq: number,
     at: number,
@@ -87,7 +183,8 @@ export function createSound(
     type: OscillatorType = 'sine',
     freqEnd?: number,
   ) => {
-    if (!ctx || !master) return;
+    const dest = bus.effects;
+    if (!ctx || !dest) return;
     const t = ctx.currentTime + at;
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
@@ -97,7 +194,7 @@ export function createSound(
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(peak, t + 0.005);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    osc.connect(g).connect(master);
+    osc.connect(g).connect(dest);
     osc.onended = () => {
       osc.disconnect();
       g.disconnect();
@@ -106,20 +203,28 @@ export function createSound(
     osc.stop(t + dur + 0.02);
   };
 
-  const burst = (at: number, dur: number, peak: number, fromHz: number, toHz: number) => {
-    if (!ctx || !master || !noise) return;
+  const burst = (
+    at: number,
+    dur: number,
+    peak: number,
+    fromHz: number,
+    toHz: number,
+    filter: BiquadFilterType = 'lowpass',
+  ) => {
+    const dest = bus.effects;
+    if (!ctx || !dest || !noise) return;
     const t = ctx.currentTime + at;
     const src = ctx.createBufferSource();
     const f = ctx.createBiquadFilter();
     const g = ctx.createGain();
     src.buffer = noise;
-    f.type = 'lowpass';
+    f.type = filter;
     f.frequency.setValueAtTime(fromHz, t);
     f.frequency.exponentialRampToValueAtTime(toHz, t + dur);
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(peak, t + 0.005);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f).connect(g).connect(master);
+    src.connect(f).connect(g).connect(dest);
     src.onended = () => {
       src.disconnect();
       f.disconnect();
@@ -129,36 +234,112 @@ export function createSound(
     src.stop(t + dur + 0.02);
   };
 
-  // Lautstärke-Hierarchie: Signale (error, order, orderDone, win) laut, build/coin leise, Meer darunter.
+  /** Kurzer Holz-Anschlag: 10 ms Rausch-Impuls, hochpassgefiltert. */
+  const knock = (at: number, peak: number) => burst(at, 0.01, peak, 1800, 1800, 'highpass');
+
+  // Pegel: Signale (error, alarm, stormWarning, order, win) laut, Effekte um FX (-6 dB) darunter.
+  // Figuren in D-Dur: D4 293,66 / F#4 369,99 / A4 440 / D5 587,33 / F#5 739,99 / A5 880 / D6 1174,66 Hz.
+  const D5 = 587.33;
+  const FS5 = 739.99;
+  const A5 = 880;
+  const D6 = 1174.66;
+  const coinFigure = (at: number, peak: number) => {
+    tone(A5, at, 0.09, peak);
+    tone(D6, at + 0.06, 0.12, peak);
+  };
   const figures: Record<SoundEvent, () => void> = {
-    build: () => tone(700, 0, 0.03, 0.12, 'square', 300),
-    demolish: () => burst(0, 0.12, 0.2, 2400, 300),
-    coin: () => {
-      tone(1320, 0, 0.09, 0.1);
-      tone(1760, 0.06, 0.12, 0.1);
+    build: () => {
+      knock(0, 0.12 * FX);
+      tone(700, 0, 0.03, 0.12 * FX, 'square', 300);
     },
+    demolish: () => burst(0, 0.12, 0.2 * FX, 2400, 300),
+    coin: () => coinFigure(0, 0.1 * FX),
     order: () => {
-      tone(523, 0, 0.16, 0.35, 'triangle');
-      tone(659, 0.12, 0.16, 0.35, 'triangle');
-      tone(784, 0.24, 0.28, 0.35, 'triangle');
+      knock(0, 0.3);
+      tone(D5, 0, 0.16, 0.35, 'triangle');
+      tone(FS5, 0.12, 0.16, 0.35, 'triangle');
+      tone(A5, 0.24, 0.28, 0.35, 'triangle');
     },
     orderDone: () => {
-      tone(1320, 0, 0.1, 0.3);
-      tone(1760, 0.07, 0.14, 0.3);
-      tone(523, 0.16, 0.4, 0.25, 'triangle');
-      tone(659, 0.16, 0.4, 0.25, 'triangle');
-      tone(784, 0.16, 0.4, 0.25, 'triangle');
+      coinFigure(0, 0.3 * FX);
+      [D5, FS5, A5].forEach((f) => tone(f, 0.16, 0.4, 0.25 * FX, 'triangle'));
     },
     upgrade: () => {
-      tone(440, 0, 0.14, 0.3, 'triangle');
-      tone(660, 0.12, 0.24, 0.3, 'triangle');
+      knock(0, 0.2 * FX);
+      tone(440, 0, 0.14, 0.3 * FX, 'triangle');
+      tone(D5, 0.12, 0.24, 0.3 * FX, 'triangle');
     },
     error: () => tone(130, 0, 0.1, 0.5, 'sawtooth', 100),
     win: () => {
-      [523, 659, 784, 1047].forEach((f, i) =>
-        tone(f, i * 0.18, i === 3 ? 0.6 : 0.2, 0.4, 'triangle'),
+      knock(0, 0.3);
+      [D5, FS5, A5, D6].forEach((f, i) => tone(f, i * 0.18, i === 3 ? 0.6 : 0.2, 0.4, 'triangle'));
+    },
+    // Rückfall Alarm: Glocke aus Sinus-Partialtönen 1 : 2,76 : 5,4 auf D5, drei Schläge.
+    alarm: () => {
+      for (let k = 0; k < 3; k++) {
+        [1, 2.76, 5.4].forEach((m, j) => tone(D5 * m, k * 0.45, 0.8, 0.4 / (j + 1)));
+      }
+    },
+    // Rückfall Sturmwarnung: tiefer Sägezahn-Akkord (D2, A2) durch Tiefpass 400 Hz, 2 s.
+    stormWarning: () => {
+      const dest = bus.effects;
+      if (!ctx || !dest) return;
+      const t = ctx.currentTime;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 400;
+      lp.connect(dest);
+      const oscs = [73.42, 110].map((f) => {
+        const o = ctx!.createOscillator();
+        const g = ctx!.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.25, t + 0.2);
+        g.gain.linearRampToValueAtTime(0.0001, t + 2);
+        o.connect(g).connect(lp);
+        o.start(t);
+        o.stop(t + 2.02);
+        return { o, g };
+      });
+      oscs[0]!.o.onended = () => {
+        oscs.forEach(({ o, g }) => {
+          o.disconnect();
+          g.disconnect();
+        });
+        lp.disconnect();
+      };
+    },
+    // Rückfall Boom: Münzfigur zweimal versetzt plus Fanfare D5-F#5-A5.
+    boom: () => {
+      coinFigure(0, 0.15 * FX);
+      coinFigure(0.18, 0.15 * FX);
+      [D5, FS5, A5].forEach((f, i) =>
+        tone(f, 0.4 + i * 0.14, i === 2 ? 0.5 : 0.18, 0.3 * FX, 'triangle'),
       );
     },
+  };
+
+  /** Plant den Duck-Verlauf beider Gains ab `now` (Spec 7.1). */
+  const scheduleDuck = (now: number) => {
+    signals = signals.filter((s) => duckEnd(s) > now);
+    const hEnd = signals.reduce((m, s) => Math.max(m, holdEnd(s)), now);
+    const start = duckGain(now, signals);
+    for (const g of [duckMusic, duckAmb]) {
+      if (!g) continue;
+      const p = g.gain;
+      p.cancelScheduledValues(now);
+      p.setValueAtTime(start, now);
+      p.linearRampToValueAtTime(DUCK.factor, now + DUCK.attackS);
+      p.setValueAtTime(DUCK.factor, hEnd);
+      p.linearRampToValueAtTime(1, hEnd + DUCK.releaseS);
+    }
+  };
+
+  const setBus = (b: Bus, v: number) => {
+    if (!(b in levels)) return;
+    levels[b] = sanitizeVolume(v, levels[b]);
+    if (!disposed) safe(() => applyBus(b));
   };
 
   const start = () => {
@@ -167,14 +348,31 @@ export function createSound(
       failed = true;
       return;
     }
-    master = ctx.createGain(); // erster Gain-Knoten: Master
+    // Graph: master -> destination; effects -> master; music -> duckMusic -> master;
+    // ambience -> duckAmb -> master. Erster Gain-Knoten: Master.
+    const master = ctx.createGain();
     master.connect(ctx.destination);
-    applyMaster();
+    const effects = ctx.createGain();
+    effects.connect(master);
+    const music = ctx.createGain();
+    duckMusic = ctx.createGain();
+    music.connect(duckMusic);
+    duckMusic.connect(master);
+    const ambience = ctx.createGain();
+    duckAmb = ctx.createGain();
+    ambience.connect(duckAmb);
+    duckAmb.connect(master);
+    bus.master = master;
+    bus.effects = effects;
+    bus.music = music;
+    bus.ambience = ambience;
+    (Object.keys(levels) as Bus[]).forEach(applyBus);
     noise = makeNoise(ctx, 2);
-    // Meeresrauschen: gefiltertes Rauschen, per langsamem LFO auf dem Gain schwellend (ohne Uhr).
-    const sea = ctx.createGain(); // zweiter Gain-Knoten: Meeresrauschen
+    // Meeresrauschen (bis A2 die Schicht 'sea' übernimmt): gefiltertes Rauschen am Umgebungs-Bus,
+    // per langsamem LFO auf dem Gain schwellend.
+    const sea = ctx.createGain();
     sea.gain.value = SEA_LEVEL;
-    sea.connect(master);
+    sea.connect(ambience);
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
     lp.frequency.value = 500;
@@ -212,15 +410,30 @@ export function createSound(
       if (gap !== undefined && last !== undefined && now - last + EPS < gap / 1000) return;
       lastPlayed.set(e, now);
       safe(figures[e]);
+      const figS = FIGURE_S[e];
+      if (figS !== undefined) {
+        signals.push({ t0: now, durS: figS });
+        safe(() => scheduleDuck(now));
+      }
     },
     setMuted(b) {
       muted = !!b;
-      applyMaster();
+      applyBus('master');
       if (!muted && unlocked && !hidden && !disposed && ctx) safe(() => swallow(ctx!.resume()));
     },
-    setVolume(v) {
-      volume = sanitizeVolume(v, volume);
-      applyMaster();
+    setVolume: (v) => setBus('master', v),
+    setBus,
+    setAmbience(input) {
+      if (disposed) return;
+      ambienceInput = input;
+    },
+    setPhase(p) {
+      if (disposed) return;
+      phase = p;
+    },
+    setCrisis(b) {
+      if (disposed) return;
+      crisis = !!b;
     },
     setHidden(b) {
       hidden = !!b;
@@ -228,6 +441,25 @@ export function createSound(
       const c = ctx;
       if (hidden) safe(() => swallow(c.suspend()));
       else if (!muted) safe(() => swallow(c.resume()));
+    },
+    debugState() {
+      let duck = 1;
+      if (ctx && !disposed) {
+        const c = ctx;
+        safe(() => {
+          duck = duckGain(c.currentTime, signals);
+        });
+      }
+      void ambienceInput;
+      void phase;
+      void crisis;
+      return {
+        unlocked,
+        buses: { ...levels },
+        layers: {},
+        duck,
+        music: { state: 'idle', id: null },
+      };
     },
     dispose() {
       if (disposed) return;
@@ -237,7 +469,8 @@ export function createSound(
       safe(() => seaLfo?.stop());
       if (c) safe(() => swallow(c.close()));
       ctx = null;
-      master = null;
+      bus.master = bus.effects = bus.music = bus.ambience = undefined;
+      duckMusic = duckAmb = null;
     },
   };
 }
