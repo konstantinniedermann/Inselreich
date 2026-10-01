@@ -1,0 +1,18 @@
+EB Garamond (Dateien: public/fonts/eb-garamond-*.woff2)
+
+Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+Lizenztext: OFL-1.1.txt (in diesem Ordner), FAQ: https://openfontlicense.org
+
+Designer laut Google-Fonts-Metadaten: Georg Duffner, Octavio Pardo.
+Bezugsquelle: Fontsource-Paket @fontsource/eb-garamond (Build aus Google Fonts),
+https://fontsource.org/fonts/eb-garamond
+Reserved Font Name: keiner deklariert. Das woff2-Subset (latin) ist eine
+"Modified Version" im Sinne der OFL und steht weiter unter OFL 1.1.
+
+Hinweis: Das Upstream-Repo fuehrt zusaetzlich die Zeile
+"Copyright 2025 Deborah Khodanovich (RCS citation glyphs)". Wird die Schrift
+aus dem Upstream-Build statt aus Fontsource/Google Fonts erzeugt, diese Zeile
+hier ergaenzen.
+Geprueft: art-license-checker, 2026-09-30
