@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-01 (Session 8c0e0295 läuft: Prozess-Retro nach R128, nur Studio-Prozess)
+Stand: 2026-10-01 (Session-Ende 8c0e0295)
 
 ## Aktuelles Projekt und Phase
 
@@ -26,23 +26,23 @@ Stand: 2026-10-01 (Session 8c0e0295 läuft: Prozess-Retro nach R128, nur Studio-
 - **M9 „Weite Welt"** vorgemerkt (R90): Start erst nach M7 und ohne parallele L0-Session.
 - Dauerregeln: Desktop-first (R78); **im Hauptcheckout nur `git pull --ff-only`, nie `--rebase`;
   Strang-Branches nach jedem abgenommenen Commit pushen** (R107, R124). Studio: Verfassung 1.1,
-  Handbuch 1.8.
+  Handbuch 1.9 (R129: **eine aktive L0-Session je Repo**, Parallelität nur per Ruling; ein Gate für
+  Folgepakete; Rulings ≤ ~60 Wörter, Abnahmen nur per `log.py result`; R1–R99 in
+  `rulings-archiv.md`; Messung/Verbesserung in `verbesserung.md`).
 
 ## Parallele Sessions
 
 | Session                           | Stand                  | besitzt     | bis |
 | --------------------------------- | ---------------------- | ----------- | --- |
-| 8c0e0295                          | läuft (R128)           | docs/studio/, .claude/agents/ | Session-Ende |
-| 5e248230                          | abgeschlossen          | nichts mehr | –   |
+| 8c0e0295                          | abgeschlossen          | nichts mehr | –   |
 | Cloud „Thema abschliessen" 32e7c1 | übergeben (R119, R120) | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Session 5e248230 (Teil 2): Slice bestätigt; Übernahme des M7-Abschlusses von der Cloud-Session
-  (R119); X1b mit lokal erhaltenen Assets (N-90 ohne Nutzer gelöst); INT-Check auf Mac (N-91: 120
-  fps); Final-Review mit Doku-Auflage (R123); M7 live (R124). M7-UX: Erstspieler-Playtest,
-  Kurz-Spec, Gate Spec und Gate Plan bestanden (R121–R125). Worktrees aufgeräumt (R125).
-  Rulings R118–R125.
+- Session 8c0e0295 (nur Studio-Prozess, R128): Persona `studio-process-coach` angelegt (R127);
+  erste Prozess-Retro (`retros/2026-10-01-prozess-retro-1.md`), alle 5 Vorschläge angenommen
+  (R129) und umgesetzt: Handbuch 1.9, STUDIO.md 689 → 399 Zeilen; E-004 abgelehnt, E-005 ersetzt,
+  neu E-007–E-009. Kurz-Retro geloggt. Rulings R128–R129.
 
 ## Pausierte Pakete
 
@@ -60,15 +60,16 @@ keine Freigaben (nach Session-Wechsel neu loggen: M7-UX 36 = lead-tech 34, lead-
 
 - L0: Paket lead-production `log.py result --package` (R75) + Folgeaufträge `metrics.py` (R89);
   Restbefunde Limit-Sensor (beobachtungen.md). Handbuch-Vorschläge aus der M7-Retro (studio-coach).
-  Prüfauftrag Integrator im Vordergrund (R106 (2)): 1/3 Starts gemessen.
+  Prüfauftrag Integrator im Vordergrund (R106 (2)): 1/3 Starts gemessen. Werkzeug-Paket
+  lead-production: Start-Hook warnt bei bereits aktiver L0-Session (R129 (1)). Rolle und Takt
+  `studio-process-coach` im Handbuch nachtragen (R127 (4), studio-coach).
 - Nutzer: keine offenen Warteschlangen-Einträge (N-90, N-91 ohne Nutzer beantwortet).
 
 ## Nächste Schritte
 
-0. **R127 zuerst:** Persona `studio-process-coach` (neutrale Prozess-Aussensicht, Scrum-Master/RTE)
-   per Onboarding anlegen (lead-production), erste Prozess-Retro zu M7; Handbuch-Änderung (Rolle,
-   Takt „nach jedem Feature-Release + ad hoc") per Ruling. Dauerregel: entdeckte Ablauffehler immer
-   an die Retro.
+0. Dauerregel R127:
+   entdeckte Ablauffehler immer an die Retro; Prozess-Retro (`studio-process-coach`) nach jedem
+   Feature-Release.
 1. Budget M7-UX loggen, lead-tech startet Umsetzung Task 1 (Plan @ 925aee0).
 2. Nach Task 3/4/6/8/10 QA-UX1–5, am Ende Erstspieler-Playtest QA-UX, Final-Review lead-qa,
    Gate Merge, Merge nach R124 (2). Vorher/Nachher-Bilder an den Nutzer.
