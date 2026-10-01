@@ -1,6 +1,6 @@
 import { logLine, type LogEntry } from './crisisLog';
 
-/** Ereignis-Log (M6 13.4): Kopf mit Einklappen, Liste neuester oben; Standard offen. */
+/** Ereignis-Log (M6 13.4): Kopf mit Einklappen, Liste neuester oben; Standard eingeklappt (R112). */
 export function renderEventLog(box: HTMLElement): void {
   const toggle = document.createElement('button');
   toggle.className = 'btn';

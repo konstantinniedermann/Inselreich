@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  EXTINGUISHED_TICKS,
   drawBoomCoin,
   drawFire,
   drawFireGlow,
@@ -137,6 +136,4 @@ describe('Krisen-Effekte (Spec 6.5)', () => {
     expect(ground.matrix[5]).toBeGreaterThan(R.y + R.h * 0.5);
     expect(log.saves).toBe(log.restores);
   });
-
-  it('EXTINGUISHED_TICKS ist 60 (R85 Punkt 12)', () => expect(EXTINGUISHED_TICKS).toBe(60));
 });

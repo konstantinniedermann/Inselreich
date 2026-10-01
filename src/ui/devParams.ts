@@ -7,7 +7,6 @@ export interface DevPreview {
   fireIds?: number[];
   boom?: boolean;
   signal?: 'alarm' | 'stormWarning' | 'boom';
-  extinguishedId?: number;
   perf?: boolean;
   raster?: boolean;
 }
@@ -37,7 +36,7 @@ export function parseIdList(v: string | null): number[] {
   return ids;
 }
 
-/** Liest `?wetter=…&w=…&feuer=<id>,<id>,…&boom=1&signal=…&geloescht=…&perf=1&raster=1`; ungültige Werte entfallen. */
+/** Liest `?wetter=…&w=…&feuer=<id>,<id>,…&boom=1&signal=…&perf=1&raster=1`; ungültige Werte entfallen. */
 export function parseDevParams(search: string, dev: boolean): DevPreview {
   const out: DevPreview = {};
   if (!dev) return out;
@@ -53,8 +52,6 @@ export function parseDevParams(search: string, dev: boolean): DevPreview {
   if (q.get('boom') === '1') out.boom = true;
   const signal = SIGNALS.find((s) => s === q.get('signal'));
   if (signal) out.signal = signal;
-  const ext = wholeNumber(q.get('geloescht'));
-  if (ext !== undefined) out.extinguishedId = ext;
   if (q.get('perf') === '1') out.perf = true;
   if (q.get('raster') === '1') out.raster = true;
   return out;

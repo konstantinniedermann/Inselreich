@@ -23,13 +23,12 @@ describe('parseDevParams', () => {
     expect(parseDevParams('?wetter=regen&w=-1', true).weather).toEqual({ kind: 'rain', w: 0 });
     expect(parseDevParams('?wetter=hagel&feuer=abc&signal=x', true)).toEqual({});
     expect(parseDevParams('?wetter=klar&w=abc', true).weather).toEqual({ kind: 'clear', w: 1 });
-    expect(parseDevParams('?feuer=-3&geloescht=1.5', true)).toEqual({});
+    expect(parseDevParams('?feuer=-3', true)).toEqual({});
   });
 
-  it('w fehlt gibt 1; geloescht und Wetterarten', () => {
+  it('w fehlt gibt 1; entfallenes geloescht wird ignoriert', () => {
     expect(parseDevParams('?wetter=wolkig&geloescht=4', true)).toEqual({
       weather: { kind: 'cloudy', w: 1 },
-      extinguishedId: 4,
     });
   });
 
