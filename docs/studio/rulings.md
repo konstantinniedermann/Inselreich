@@ -1118,3 +1118,15 @@ Plan führt 80 statt 78. — Warum: Regel und Zahl müssen übereinstimmen, sons
 Rundungsfehler aus R88. — Kosten bei Irrtum: 2 Starts zu viel freigegeben, nur bei Bedarf genutzt.
 
 Entscheider: L0 · Anlass: Nacharbeit Gate Plan M7, lead-tech
+
+## R98 · 2026-10-01 · M7 Gate Plan
+
+Ruling: **Gate Plan M7 bestanden** (`docs/m7-spec` @ 66bce31, `docs/m6-spec` @ 38cc084; lead-qa
+Zweitprüfung OK, Auflagen lead-production erledigt). Angenommen wird die Präzisierung von R96
+Punkt 3 durch lead-qa: Final-Review je Strang `git diff $(git merge-base main <sha>) <sha>`, die
+R0-ISO-Strecke getrennt `git diff <Hash QA-VORHER> <SHA R0-ISO>`, beide mit `-- src/sim` leer.
+Nächster Schritt: Welle 0 (lead-production), danach Welle 1 mit Freigabe je Welle. — Warum: alle
+Auflagen nachweislich erledigt; die Präzisierung erfüllt die Absicht von R96 (R0-ISO voll geprüft)
+ohne fremde Änderungen aus main mitzuzählen. — Kosten bei Irrtum: keine im Code.
+
+Entscheider: L0 · Anlass: Gate Plan M7
