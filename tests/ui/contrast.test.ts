@@ -30,6 +30,7 @@ const vars = rootVars(css);
 
 const PAIRS: Array<[string, string]> = [
   ['--ink', '--parchment'],
+  ['--ink', '--warn-parchment'], // .toast.warn
   ['--parchment', '--wood'],
   ['--gold', '--wood'],
   ['--ink', '--gold'],

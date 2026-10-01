@@ -74,8 +74,10 @@ export interface HudActions {
   /** Aktuelle Einstellungen für die Ton-Regler. */
   settings(): Settings;
   setMuted(muted: boolean): void;
-  /** Öffnet die Einstellungs-Karte (Lautstärken, Tag-Nacht, Bewegung, Credits). */
-  /** `opener` ist der auslösende Knopf; ihm gibt das Schliessen den Fokus zurück. */
+  /**
+   * Öffnet die Einstellungs-Karte (Lautstärken, Tag-Nacht, Bewegung, Credits).
+   * `opener` ist der auslösende Knopf; ihm gibt das Schliessen den Fokus zurück.
+   */
   openSettings(opener?: HTMLElement): void;
   /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
   setCrisisLevel(level: CrisisLevel): void;

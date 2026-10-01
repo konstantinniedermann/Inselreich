@@ -37,8 +37,7 @@ export function showMessage(
   lastText = text;
   lastAt = now;
   const toast = document.createElement('div');
-  // Warnung nutzt die rote Kante des Fehlers (kein eigener Stil), klingt aber nicht wie ein Fehler
-  toast.className = kind === 'warn' ? 'toast warn error' : `toast ${kind}`;
+  toast.className = `toast ${kind}`;
   toast.textContent = text;
   if (sticky) toast.dataset.sticky = '1';
   box.appendChild(toast);
