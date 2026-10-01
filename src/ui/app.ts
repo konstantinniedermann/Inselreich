@@ -15,7 +15,7 @@ import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { disposeHud, updateHud, type HudActions } from './hud';
 import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
-import { renderInspect, updateInspect } from './inspect';
+import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
 import { bindMessages, showMessage } from './messages';
 import { loadSettings, saveSettings } from './settings';
@@ -220,6 +220,7 @@ function launch(
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
+    panelEl.classList.toggle('card--rest', panel.kind === 'none');
     if (panel.kind === 'inspect') {
       state.selectedId = panel.id;
       renderInspect(panelEl, world, panel.id, {
@@ -246,7 +247,7 @@ function launch(
       });
     } else {
       state.selectedId = null;
-      panelEl.replaceChildren();
+      renderRest(panelEl, world);
     }
   };
 
@@ -264,6 +265,8 @@ function launch(
       else setPanel({ kind: 'none' });
     } else if (panel.kind === 'trade') {
       updateTrade(panelEl, world);
+    } else {
+      updateRest(panelEl, world);
     }
   };
 
@@ -364,6 +367,7 @@ function launch(
   input = bindInput(canvas, state, onAction);
 
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
+  setPanel({ kind: 'none' });
   refresh();
 
   // Kamera auf das Kontor zentrieren

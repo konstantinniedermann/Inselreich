@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { refundText } from '../../src/ui/inspect';
+import { refundText, restView } from '../../src/ui/inspect';
+import { SCENARIOS } from '../sim/scenarios';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -26,5 +27,22 @@ describe('refundText (AK-U1b-02)', () => {
     expect(text).toBe(
       'Geld 5 · Holz 0 (4 verfallen – Lager voll) · Werkzeug 1 (1 verfallen – Lager voll)',
     );
+  });
+});
+
+describe('restView (AK-U2-03)', () => {
+  it('Tagesphase und Einwohnerzahl', () => {
+    const w = SCENARIOS.galerie!();
+    w.tick = 3000;
+    const sum = Object.values(w.buildings).reduce((n, b) => n + (b.house?.inhabitants ?? 0), 0);
+    expect(restView(w)).toEqual({ phase: 'night', label: 'Nacht', symbol: '☾', inhabitants: sum });
+  });
+  it('alle vier Phasen', () => {
+    const w = SCENARIOS.galerie!();
+    const at = (t: number) => {
+      w.tick = t;
+      return restView(w).label;
+    };
+    expect([at(0), at(2400), at(3000), at(4700)]).toEqual(['Tag', 'Abend', 'Nacht', 'Morgen']);
   });
 });
