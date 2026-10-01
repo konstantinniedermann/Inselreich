@@ -158,17 +158,36 @@ export function effectiveRefund(world: World, cost: Cost): Cost {
 
 /** Cache-Schlüssel des Layouts: ändert sich bei Bau, Abriss, Weg und Anbindung, nicht durch `step()` allein. */
 export function layoutKey(world: World): string {
-  let roadSum = 0;
-  for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.road) roadSum += i;
-  let connectedSum = 0;
-  let outageSum = 0;
-  let count = 0;
+  const h = new LayoutHash();
+  h.add(world.nextBuildingId);
+  for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.road) h.add(i);
+  h.add(-1);
   for (const b of Object.values(world.buildings)) {
-    count += 1;
-    if (b.connected) connectedSum += b.id;
-    if (b.outageUntil !== undefined) outageSum += b.id;
+    h.add(b.id);
+    h.add(b.x);
+    h.add(b.y);
+    h.add((b.connected ? 1 : 0) | (b.outageUntil !== undefined ? 2 : 0));
+    for (let i = 0; i < b.defId.length; i++) h.add(b.defId.charCodeAt(i));
+    h.add(-1);
   }
-  return `${world.nextBuildingId}|${count}|${roadSum}|${connectedSum}|${outageSum}`;
+  return h.digest();
+}
+
+/** Zwei unabhängige FNV-1a-Bahnen (je 32 Bit) über eine Zahlenfolge; reihenfolgeabhängig, ohne Zufall. */
+class LayoutHash {
+  private a = 0x811c9dc5;
+  private b = 0x01000193 ^ 0x9e3779b9;
+
+  add(n: number): void {
+    const v = (n + 1) >>> 0;
+    this.a = Math.imul(this.a ^ v, 0x01000193) >>> 0;
+    this.b = Math.imul((this.b ^ v) + 0x7f4a7c15, 0x85ebca6b) >>> 0;
+    this.b ^= this.b >>> 13;
+  }
+
+  digest(): string {
+    return `${this.a.toString(36)}.${this.b.toString(36)}`;
+  }
 }
 
 /** Eine Sicht auf die laufende Krise für Karte, Log, crisisFx und Klang (Spec 11). Phase aus `from` abgeleitet. */
