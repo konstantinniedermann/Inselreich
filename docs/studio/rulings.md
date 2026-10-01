@@ -1130,3 +1130,21 @@ Auflagen nachweislich erledigt; die Präzisierung erfüllt die Absicht von R96 (
 ohne fremde Änderungen aus main mitzuzählen. — Kosten bei Irrtum: keine im Code.
 
 Entscheider: L0 · Anlass: Gate Plan M7
+
+## R99 · 2026-10-01 · M6-Sim D-M6-02
+
+Ruling: Stopp B2 (Krisenlauf `normal` Seed 3 Sieg 8250 > 8000; Ursache: Feuerwache des
+Test-Controllers deckt die Produktion nicht, alle 4 Brände ausserhalb Radius 8). Entscheid:
+(1) Der Test-Controller setzt die Feuerwache an eine plausible Spielerposition — Mitte der
+Produktion, sodass die Produktionsgebäude im Radius liegen; **kein Spielwert ändert sich**, nur
+Testcode. Die Platzierung wird im Test begründet kommentiert; lead-design bestätigt in einem
+Kurz-Urteil (kein Spec), dass sie Spielerverhalten abbildet und nicht nur den Test bestehen
+lässt. (2) Neu messen. Sieg ≤ 8000 → B2 weiter ins Review. Sieg weiter > 8000 → Stopp bleibt,
+dann Kurz-Spec durch lead-design (Spec 15). (3) B2-Schritte 6–10 (Szenarien) dürfen parallel
+fertiggestellt werden. (4) Plan-Rulings lead-tech übernommen (vorab grüne Schutz-Tests AK-S1-09
+`off`, AK-S1-10-Invariante, AK-S2-05; Merges `--no-ff` auf geprüfte SHAs). — Warum: Die Ursache
+ist die Bot-Strategie, nicht das Balancing; eine Kurz-Spec vorab kostet eine Runde ohne
+Erkenntnisgewinn. — Kosten bei Irrtum: Testspiel wird geschönt und verdeckt eine zu harte
+Krise; abgefangen durch das lead-design-Urteil und die Grenze 9000.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech M6-SIM
