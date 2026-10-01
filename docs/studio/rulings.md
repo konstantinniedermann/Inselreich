@@ -1297,3 +1297,14 @@ mitgezählt. — Warum: Harness-Grenze, nicht änderbar aus dem Repo. — Kosten
 Steuerlast; inhaltliche Arbeit bleibt bei den Arbeitern.
 
 Entscheider: L0 · Anlass: Bericht lead-tech (blockiert)
+
+## R109 · 2026-10-01 · M7-X1a blockiert (Netzwerk-Policy)
+
+Ruling: X1a pausiert. Die Netzwerk-Policy sperrt freesound.org, opengameart.org, fonts.google.com und
+archive.org; die Lizenz-Handoffs unter `.studio/handoffs/` lagen nur im alten Container (R107).
+Nutzerentscheid Q-X1A-NETZ in der Warteschlange. Bis dahin: A1–A3 laufen mit den prozeduralen Rückfällen
+der Spec, Schrift mit Fallback-Kette; bei Freigabe neu: Lizenzprüfung (art-license-checker), dann X1a. —
+Warum: keine Umgehung der Policy, keine erfundenen Quellen (ADR-006). — Kosten bei Irrtum: M7 ohne
+Musik-Assets, nachrüstbar.
+
+Entscheider: L0 · Anlass: Bericht art-audio-engineer X1a
