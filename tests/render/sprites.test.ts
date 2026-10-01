@@ -314,6 +314,16 @@ describe('Slice-Körper: Wohnhaus (3 Stufen), Kontor, Holzfäller', () => {
     expect(left).not.toEqual(right);
   });
 
+  it('ISO 7.1 abgeleitete Töne bleiben Töne: wallColors akzeptiert auch gemischte rgb()-Farben, kein Slice-Körper füllt schwarz', () => {
+    expect(luma(wallColors('rgb(200,180,150)').right)).toBeGreaterThan(100);
+    for (const b of SLICE_CASES) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, BUILDING_DEFS[b.defId], b, 0);
+      for (const c of log.fillSet)
+        expect(luma(c), `${b.defId}${b.house?.tier ?? ''}: ${c}`).toBeGreaterThan(25);
+    }
+  });
+
   it('Spec 5.5 Holzfäller: Sägemehlfleck in sandDry-Ton; Wohnhaus Stufe 1 Stroh, 2 Terrakotta, 3 dunkler Ziegel', () => {
     const styles = (b: Building): string[] => {
       const { ctx, log } = fakeCtx();

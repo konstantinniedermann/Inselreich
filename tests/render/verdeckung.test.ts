@@ -11,6 +11,7 @@ import {
 } from '../../src/render/iso';
 import { PALETTE } from '../../src/render/palette';
 import { render, renderStats } from '../../src/render/renderer';
+import { BODY_INSET } from '../../src/render/sprites';
 import {
   resetTreeCache,
   setCanvasFactory,
@@ -225,7 +226,7 @@ function wallPoint(b: Building): P {
   const near = trees().filter((t) =>
     [...VERDECKUNG.tVor, ...VERDECKUNG.tHinter].some((v) => v.x === t.fp.x && v.y === t.fp.y),
   );
-  const base = project(b.x + 0.5, b.y + 1); // Mitte der unteren linken Kante
+  const base = project(b.x + 0.5, b.y + 1 - BODY_INSET); // Mitte der linken Wand am Boden
   for (let z = 3; z < 0.8 * ISO_H; z += 0.5) {
     const p = { x: base.x, y: base.y - z };
     const free = near.every((t) => {
@@ -239,6 +240,6 @@ function wallPoint(b: Building): P {
 
 /** Punkt in F's rechter Wand (Stelle 1 von AK-ISO-16), Weltpixel. */
 function fBodyPoint(f: Building): P {
-  const base = project(f.x + 1, f.y + 0.5);
+  const base = project(f.x + 1 - BODY_INSET, f.y + 0.5); // rechte Wand
   return { x: base.x, y: base.y - 0.3 * ISO_H };
 }

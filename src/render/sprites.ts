@@ -3,7 +3,15 @@ import type { Building, BuildingDef, BuildingDefId, Category, World } from '../s
 import { tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, spriteBounds, type Pt } from './iso';
-import { PALETTE, mixHex, rgbOfCss } from './palette';
+import { PALETTE, rgbOfCss } from './palette';
+
+/** Mischt zwei CSS-Farben (`#rrggbb` oder `rgb(r,g,b)`, also auch bereits gemischte Töne). */
+function mixHex(a: string, b: string, t: number): string {
+  const p = rgbOfCss(a),
+    q = rgbOfCss(b),
+    k = Math.min(1, Math.max(0, t));
+  return `rgb(${p.map((v, i) => Math.round(v + (q[i]! - v) * k)).join(',')})`;
+}
 
 /** Platzhalter-Töne je Kategorie (heutige Werte); R1b und R2 ersetzen sie durch die Palette. */
 export const BUILDING_COLORS: Record<Category, string> = {
