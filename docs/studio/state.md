@@ -14,8 +14,8 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
     Umsetzung bereit.
   - **M7 „Stimmung"** — Spec fertig (R84), Plan fertig (R88). **Neu R91: Isometrie** — Nachtrag
     `2026-10-01-m7-iso-design.md` + ADR-012 fertig (`docs/m7-spec` @ 42f11a1, 20 AK-ISO; R92);
-    Gate Spec: lead-tech + lead-qa BEDENKEN → **Nacharbeit lead-art läuft** (R93), danach
-    Zweitprüfung lead-qa. Danach Render-Tasks im Plan überarbeiten (neu R0-ISO,
+    **Gate Spec bestanden (R95, @ 65f4813, 21 AK-ISO)**; lead-tech überarbeitet den Plan
+    (M7-PLAN-ISO), dann Gate Plan ganzer M7-Plan (lead-qa, lead-production). Danach Render-Tasks im Plan überarbeiten (neu R0-ISO,
     U0-ISO; ≈ +25 % Render), dann Gate Plan.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
@@ -62,7 +62,7 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Budget
 
-Session 5e248230: lead-art 3/1, lead-tech 1/1, lead-qa 1/1 (Phase spec, M7-ISO)
+Session 5e248230: lead-art 3/1, lead-tech 1/1, lead-qa 1/1 (Phase spec, M7-ISO); lead-tech 2/1 (Phase plan)
 
 ## Offene Entscheide
 

@@ -1067,3 +1067,16 @@ M7-U1; eine Zeile ist die kleinste Lösung. — Kosten bei Irrtum: ein Merge-Kon
 mit M7-U1.
 
 Entscheider: L0 · Anlass: Nacharbeit lead-art Gate Spec M7-ISO
+
+## R95 · 2026-10-01 · M7-ISO
+
+Ruling: **Gate Spec M7-ISO bestanden** (`docs/m7-spec` @ 65f4813; lead-tech BEDENKEN → erledigt,
+lead-qa Zweitprüfung OK; 21 AK-ISO). Im Gate Plan gilt als gesetzt: M7-U2 läuft parallel zu R0-ISO,
+der UI-Strang macht `git merge main` nach dem R0-ISO-Merge und vor U0-ISO (Tech B8; ersetzt die
+Reihenfolge „R0-ISO vor M7-U2" aus R92). Nächster Schritt: lead-tech überarbeitet die Render-Tasks im
+M7-Plan (neu R0-ISO als 2 Tasks, U0-ISO; R1a–R5, M6-R2 nach Spec §13), nimmt die Plan-Themen aus
+Spec §16 und die Hinweise 1–4 der QA-Zweitprüfung auf; danach Gate Plan für den ganzen M7-Plan
+(lead-qa, lead-production). — Warum: alle Auflagen beider Prüfer nachweislich erledigt; M7-U2
+berührt `input.ts`/`app.ts` nicht. — Kosten bei Irrtum: Nacharbeit im Plan, keine im Code.
+
+Entscheider: L0 · Anlass: Gate Spec M7-ISO
