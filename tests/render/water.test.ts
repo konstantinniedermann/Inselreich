@@ -5,7 +5,10 @@ import {
   FOAM_ALPHA,
   FOAM_PERIOD_MS,
   FOAM_CORE_ALPHA,
+  STORM_AMP_BOOST,
+  STORM_WAVE_ALPHA,
   WAVE_ALPHA,
+  stormWaveAlpha,
 } from '../../src/render/water';
 import type { Weather } from '../../src/render/daynight';
 import type { World } from '../../src/sim/types';
@@ -239,15 +242,14 @@ describe('Wasser (Spec 5.2)', () => {
       drawWaves(ctx, world, ALL(world), t, weather, reduce);
       return log;
     };
+    const isWave = (e: { style: string }): boolean => alphaOf(e.style) < 0.35; // Saum und Kern liegen ≥ 0,35
     const widths = (log: ReturnType<typeof run>) =>
-      log.events
-        .filter((e) => e.op === 'stroke' && alphaOf(e.style) !== WAVE_ALPHA)
-        .map((e) => e.lineWidth);
+      log.events.filter((e) => e.op === 'stroke' && !isWave(e)).map((e) => e.lineWidth);
     const waveY = (world: World, weather: Weather | undefined, reduce = false) => {
       const ys: number[] = [];
       for (let t = 0; t < 2400; t += 40) {
         const e = run(world, t, weather, reduce).events.find(
-          (q) => q.op === 'stroke' && alphaOf(q.style) === WAVE_ALPHA,
+          (q) => q.op === 'stroke' && isWave(q),
         )!;
         ys.push(e.points[0]!.y);
       }
@@ -271,8 +273,24 @@ describe('Wasser (Spec 5.2)', () => {
     it('R3 Amplitude der Wellen × (1 + w), reduceMotion halbiert sie', () => {
       const w = sea();
       const calm = waveY(w, undefined);
-      expect(waveY(w, storm(1)) / calm).toBeCloseTo(2, 1);
+      const ratio = waveY(w, storm(1)) / calm;
+      expect(ratio).toBeGreaterThanOrEqual(2 - 0.05); // Spec 5.2 ist Untergrenze
+      expect(ratio).toBeCloseTo(2 * (1 + STORM_AMP_BOOST), 1);
       expect(waveY(w, undefined, true) / calm).toBeCloseTo(0.5, 1);
+    });
+    it('R3 Sturm (QA-R3 B2): Wellenstriche länger, kräftiger und deckender als bei Ruhe; bei w = 0 unverändert', () => {
+      const w = sea();
+      const strokes = (wt?: Weather) =>
+        run(w, 800, wt).events.filter((e) => e.op === 'stroke' && isWave(e));
+      const calm = strokes()[0]!,
+        rough = strokes(storm(1))[0]!;
+      const span = (e: typeof calm) =>
+        Math.max(...e.points.map((p) => p.x)) - Math.min(...e.points.map((p) => p.x));
+      expect(span(rough)).toBeGreaterThan(span(calm) + 0.2);
+      expect(rough.lineWidth).toBeGreaterThan(calm.lineWidth * 1.9);
+      expect(alphaOf(rough.style)).toBeGreaterThan(alphaOf(calm.style) * 2);
+      expect(stormWaveAlpha(0)).toBe(WAVE_ALPHA);
+      expect(stormWaveAlpha(1)).toBeCloseTo(STORM_WAVE_ALPHA, 9);
     });
     it('R3 Periode × (1 − 0,4 w): Schaumdeckkraft wiederholt sich nach 3200·0,6 ms', () => {
       const w = sea();
