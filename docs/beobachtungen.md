@@ -538,3 +538,5 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
+
+- 2026-10-01 · Harness · In der Cloud-Session fehlt Subagent-Leads das Agent-Werkzeug (nur Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage). Folge: R108, L0 startet Arbeiter direkt.

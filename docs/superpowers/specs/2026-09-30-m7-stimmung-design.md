@@ -194,6 +194,11 @@ gemessen am Mittel eines 3 × 3-Pixel-Felds.
 | I10 | HUD belegt bei 390 px 40 % der Höhe                           | entfällt (R78, Desktop-first); nur AK-U2-04                                                                                                                                                                                                | —                            |
 | I11 | Nur Rauschen und Pieptöne, keine Musik                        | AK-A1-01 bis AK-A3-05; Nutzer-Playtest P-02, P-03                                                                                                                                                                                          | A1–A3, X1                    |
 
+**Messauslegungen (R104):** I1, I2 (Schaum) und I5 werden nach den Auslegungen in M7-ISO-Spec AK-ISO-18
+(„Messauslegungen") gemessen: I1 nach dem Ersatzmass D-M7-I1 (Eckenschnitt und Welligkeit, AK-R1-02 hat Vorrang),
+der Schaum nach D-M7-FOAM (Kernlinie Deckkraft 0,85–1, Breite 0,07 Kachel), die Waldrand-Ecke in I5 ohne Kronenpixel.
+Sie gehen dem Wortlaut der Tabelle vor.
+
 ## 5. Grafik
 
 ### 5.1 Terrain (R1)

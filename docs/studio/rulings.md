@@ -1286,3 +1286,25 @@ Nachholpaketen: Render R2 ∥ FX R5→R3 ∥ Audio A1→A2→A3 ∥ Assets X1a (
 Kosten bei Irrtum: Doppelarbeit von etwa 4 Paketen, bereits eingetreten.
 
 Entscheider: L0 · Anlass: Session-Start, Container ohne alte Branches
+
+## R108 · 2026-10-01 · Studio, Leads ohne Agent-Werkzeug (Cloud-Session)
+
+Ruling: In Cloud-Sessions haben als Subagent gestartete Leads kein Agent-Werkzeug (Befund lead-tech,
+Welle 2 UI). Bis das behoben ist, startet L0 die Arbeiter (Implementierer, qa-code-reviewer,
+qa-playtester) direkt mit dem Briefing nach Plan; Leads werden nur für Arbeit ohne Delegation eingesetzt
+(Specs, Pläne, Urteile, Merges nach Gate). Budget bleibt den Leads zugeordnet und wird von L0 je Start
+mitgezählt. — Warum: Harness-Grenze, nicht änderbar aus dem Repo. — Kosten bei Irrtum: L0 trägt mehr
+Steuerlast; inhaltliche Arbeit bleibt bei den Arbeitern.
+
+Entscheider: L0 · Anlass: Bericht lead-tech (blockiert)
+
+## R109 · 2026-10-01 · M7-X1a blockiert (Netzwerk-Policy)
+
+Ruling: X1a pausiert. Die Netzwerk-Policy sperrt freesound.org, opengameart.org, fonts.google.com und
+archive.org; die Lizenz-Handoffs unter `.studio/handoffs/` lagen nur im alten Container (R107).
+Nutzerentscheid Q-X1A-NETZ in der Warteschlange. Bis dahin: A1–A3 laufen mit den prozeduralen Rückfällen
+der Spec, Schrift mit Fallback-Kette; bei Freigabe neu: Lizenzprüfung (art-license-checker), dann X1a. —
+Warum: keine Umgehung der Policy, keine erfundenen Quellen (ADR-006). — Kosten bei Irrtum: M7 ohne
+Musik-Assets, nachrüstbar.
+
+Entscheider: L0 · Anlass: Bericht art-audio-engineer X1a
