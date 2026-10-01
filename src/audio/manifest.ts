@@ -1,5 +1,5 @@
 // Manifest der Audio-Dateien (Spec 7.6, ADR-011). Nur hier stehen Dateinamen; die Schrift steht in
-// src/ui/credits.ts. Fehlt eine Datei, greift der synthetische Rückfall (kein Fehler).
+// einer eigenen Tabelle, die von der Credits-Karte im UI gelesen wird. Fehlt eine Datei, greift der synthetische Rückfall (kein Fehler).
 // Pfade relativ zu `public/`; Auflösung über `assetUrl(import.meta.env.BASE_URL, file)`.
 import type { Layer } from './mix';
 import type { SoundEvent } from './sound';

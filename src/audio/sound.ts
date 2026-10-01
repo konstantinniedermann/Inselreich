@@ -11,7 +11,7 @@ import {
   type Phase,
 } from './mix';
 import {
-  AMBIENCE_MIN_INTERVAL_MS,
+  AMBIENCE_ACCEPT_MS,
   ambienceMix,
   createAmbienceEngine,
   createSampleLoader,
@@ -53,6 +53,7 @@ export interface MediaLike {
   duration: number;
   play(): Promise<void>;
   pause(): void;
+  removeAttribute?(name: string): void;
   addEventListener(type: 'ended' | 'error' | 'loadedmetadata', fn: () => void): void;
 }
 
@@ -404,9 +405,9 @@ export function createSound(
     master.connect(ctx.destination);
     const effects = ctx.createGain();
     effects.connect(master);
-    const music_ = ctx.createGain();
+    const musicBus = ctx.createGain();
     duckMusic = ctx.createGain();
-    music_.connect(duckMusic);
+    musicBus.connect(duckMusic);
     duckMusic.connect(master);
     const ambience = ctx.createGain();
     duckAmb = ctx.createGain();
@@ -414,7 +415,7 @@ export function createSound(
     duckAmb.connect(master);
     bus.master = master;
     bus.effects = effects;
-    bus.music = music_;
+    bus.music = musicBus;
     bus.ambience = ambience;
     (Object.keys(levels) as Bus[]).forEach(applyBus);
     noise = makeNoise(ctx, 2);
@@ -422,7 +423,7 @@ export function createSound(
     engine = createAmbienceEngine({ ctx, dest: ambience, noise, loader });
     music = createMusicPlayer({
       ctx,
-      dest: music_,
+      dest: musicBus,
       io,
       rand: io.rand ?? Math.random,
       getPhase: () => phase,
@@ -470,7 +471,7 @@ export function createSound(
     setAmbience(input) {
       if (disposed || !unlocked || !ctx || !engine) return;
       const t = Date.now();
-      if (lastAmbienceMs !== null && t - lastAmbienceMs < AMBIENCE_MIN_INTERVAL_MS) return;
+      if (lastAmbienceMs !== null && t - lastAmbienceMs < AMBIENCE_ACCEPT_MS) return;
       lastAmbienceMs = t;
       const e = engine;
       const now = ctx.currentTime;

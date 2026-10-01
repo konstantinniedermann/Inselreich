@@ -127,6 +127,7 @@ export function createMusicPlayer(deps: MusicDeps): MusicPlayer {
 
   const release = (c: Current) => {
     safe(() => c.el.pause());
+    safe(() => c.el.removeAttribute?.('src')); // Verbindung freigeben
     safe(() => c.src.disconnect());
     safe(() => c.gain.disconnect());
   };
