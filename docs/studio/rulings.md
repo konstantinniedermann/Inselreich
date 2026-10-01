@@ -1164,3 +1164,19 @@ Irrtum: Pages zeigt bis R2 Platzhalter-Blöcke statt der bisherigen Sprites; Rev
 Merge-Commits jederzeit möglich.
 
 Entscheider: L0 · Anlass: Bericht lead-art Welle 1
+
+## R101 · 2026-10-01 · M6-Sim Baseline Krisenlauf
+
+Ruling: lead-design-Urteil **PLAUSIBEL** zur Feuerwache des Test-Controllers (`[kx+10, ky-8]`,
+Regel „max. Produktionsabdeckung Radius 8", Messung Seed 3: off 6050, normal 7050, mild 6250).
+Baseline angenommen. Auflagen für B2 vor dem Review: (E1) Kommentar in `tests/sim/controller.ts`
+begründet den Gleichstand mit der Bau-Reihenfolge (Norden zuerst) statt „kleinstes y" und nennt die
+Abhängigkeit: mit dem Spiegelplatz `[kx+10, ky+8]` läge der Sieg vermutlich > 8000 — kein
+Probelauf verlangt; (E2) Spec M6 §15 nachführen (Wachenposition, Abdeckung „Kapelle, Produktion
+Nord; Schule und Holzfäller ungedeckt") als `docs:`-Commit im Branch `feat/m6-balance`; (E3)
+Beobachtung „Krisenlauf `mild` knapp (minMoney 13, Endgeld 40)" trägt L0 auf main ein. — Warum:
+Bot-Verhalten ist spielerplausibel und eher benachteiligt; die Spiegelplatz-Abhängigkeit ist
+dokumentiert statt versteckt. — Kosten bei Irrtum: Balancing-Grenze wird bei der nächsten
+Werteänderung früher sichtbar (gewollt).
+
+Entscheider: L0 · Anlass: Kurz-Urteil lead-design M6-B2
