@@ -98,6 +98,29 @@ encode() {
     "$name" "$i" "$tp" "$g" "$fi" "$ftp" "$target" "$TP_LIMIT" >>"$REPORT"
 }
 
+# encode_limited <eingabe> <ziel.mp3> <Ziel-LUFS> <Bitrate> <Kanäle> <Name>: wie encode, aber mit weichem Limiter
+# (nur für bell, Fix-Runde X1a). Gain und Limiter-Decke werden nachgeführt: Gain bis zum Ziel, Decke so, dass der
+# True Peak der fertigen MP3 knapp unter TP_LIMIT liegt. Der Bericht nennt zusätzlich Spitze minus LUFS (Crest).
+LIM_ATTACK=5    # ms
+LIM_RELEASE=60  # ms
+encode_limited() {
+  local in="$1" out="$2" target="$3" br="$4" ch="$5" name="$6" i tp g=0 lim=-1.6 fi ftp n ng nl
+  read -r i tp <<<"$(measure "$in")"
+  g="$(awk -v t="$target" -v i="$i" 'BEGIN { printf "%.2f", t - i }')"
+  for n in 1 2 3 4 5 6 7 8; do
+    ffmpeg -y -hide_banner -loglevel error -i "$in" \
+      -af "volume=${g}dB,alimiter=limit=$(awk -v d="$lim" 'BEGIN { printf "%.5f", 10 ^ (d / 20) }'):attack=${LIM_ATTACK}:release=${LIM_RELEASE}:level=0" \
+      -ac "$ch" -ar 44100 -b:a "$br" -map_metadata -1 -fflags +bitexact -flags:a +bitexact "$out"
+    read -r fi ftp <<<"$(measure "$out")"
+    ng="$(awk -v g="$g" -v t="$target" -v fi="$fi" 'BEGIN { d = t - fi; if (d > -0.15 && d < 0.15) d = 0; printf "%.2f", g + d }')"
+    nl="$(awk -v l="$lim" -v tp="$ftp" -v lim="$TP_LIMIT" 'BEGIN { d = (lim - 0.1) - tp; if (d > -0.05 && d < 0.35) d = 0; printf "%.2f", l + d }')"
+    [ "$ng" = "$g" ] && [ "$nl" = "$lim" ] && break
+    g="$ng"; lim="$nl"
+  done
+  printf '%-22s Quelle %6s LUFS %6s dBTP | Gain %6s dB, Limiter %s dB | Ergebnis %6s LUFS %6s dBTP, Spitze-LUFS %s dB | Ziel %s LUFS, <= %s dBTP\n' \
+    "$name" "$i" "$tp" "$g" "$lim" "$fi" "$ftp" "$(awk -v a="$ftp" -v b="$fi" 'BEGIN { printf "%.1f", a - b }')" "$target" "$TP_LIMIT" >>"$REPORT"
+}
+
 MONO='pan=mono|c0=0.5*c0+0.5*c1'
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -139,9 +162,10 @@ encode "$TMP/gulls.wav" "$OUT/audio/amb/gulls.mp3" -28 64k 2 "AM3 gulls (Stereo)
 # AM4 crickets — freesound 857163 "Quiet Night Atmosphere - Soft Crickets (Eagle Mountain, Utah)",
 #   https://freesound.org/people/Goldenboy76/sounds/857163/ , Goldenboy76, CC0 1.0; Schnitt 3:50,0–4:21,0 (31 s):
 #   30-s-Fenster mit der geringsten Lautheitsschwankung der ganzen Datei (Standardabweichung M 0,90 LU,
-#   Spannweite 4,2 LU; Mittel der Datei 1,95 LU), Schleife -> 30 s, Mono-Quelle, Ziel -26 LUFS (Gain gross, Quelle -49,5 LUFS)
+#   Spannweite 4,2 LU; ganze Datei: 1,95 LU), Schleife -> 30 s, Mono-Quelle, Ziel -28 LUFS (lead-art: Nachtschicht leise, weniger
+#   angehobenes Rauschen; Quelle -49,5 LUFS)
 stage "$TMP/crickets.wav" "$SRC/AM4_857163.mp3" "$(loop_filter 230 261)"
-encode "$TMP/crickets.wav" "$OUT/audio/amb/crickets.mp3" -26 64k 1 "AM4 crickets"
+encode "$TMP/crickets.wav" "$OUT/audio/amb/crickets.mp3" -28 64k 1 "AM4 crickets"
 # AM5 rain — freesound 321885 "Steady Rainstorm", https://freesound.org/people/Talitha5/sounds/321885/ ,
 #   Talitha5, CC0 1.0; Schnitt 0:03,5–0:30,5 (27 s; Kopf/Schwanz -29,9/-29,4 LUFS, Standardabweichung M 1,2 LU),
 #   Schleife -> 26 s, Mono-Mix (Phasenmittel 0,96), Ziel -26 LUFS
@@ -166,10 +190,12 @@ encode "$TMP/fire.wav" "$OUT/audio/amb/fire.mp3" -26 64k 1 "AM7 fire (3 x 10 s)"
 # SG1 bell — freesound 582523 "6 Bell Ring.WAV", https://freesound.org/people/gsparrysound/sounds/582523/ ,
 #   gsparrysound, CC0 1.0; Schnitt 0:00,48–0:05,90 (5,42 s): drei Schläge (Einsätze laut Hüllkurve bei
 #   0,52 s, 1,60 s und 2,70 s im Original), der dritte Schlag klingt natürlich aus; 5 ms Einblendung, 400 ms
-#   Ausblendung am Ende (Pegel dort ca. -37 dB unter dem Maximum). Ziel -14 LUFS, durch die Spitzen der Schläge
-#   (Crest) durch die True-Peak-Grenze begrenzt, kein Limiter
+#   Ausblendung am Ende (Pegel dort ca. -37 dB unter dem Maximum). Ziel -15 LUFS (lead-art; nicht -14, damit die
+#   Anschläge nicht platt werden). Nur diese Datei bekommt einen Limiter (alimiter, Attack 5 ms, Release 60 ms,
+#   level=0, Decke per Nachführung so, dass der True Peak der MP3 <= -1 dBTP bleibt): Das Alarmsignal muss über allem
+#   stehen, ohne Limiter begrenzt der Crest der Schläge (Spitze-LUFS 17,5 dB) den Pegel auf -18,5 LUFS
 stage "$TMP/bell.wav" "$SRC/SG1_582523.mp3" "$MONO,atrim=start=0.48:end=5.9,asetpts=PTS-STARTPTS,afade=t=in:d=0.005,afade=t=out:st=5.02:d=0.4"
-encode "$TMP/bell.wav" "$OUT/audio/sfx/bell.mp3" -14 96k 1 "SG1 bell"
+encode_limited "$TMP/bell.wav" "$OUT/audio/sfx/bell.mp3" -15 96k 1 "SG1 bell"
 # SG2 foghorn — freesound 673668 "Cruise ship foghorn", https://freesound.org/people/TomOstepop/sounds/673668/ ,
 #   TomOstepop, CC0 1.0; Schnitt 0:05,15–0:07,15 (2,0 s): natürlicher Anstieg des Horns (Einsatz bei 5,28 s) und
 #   gleichmässiger Ton, 10 ms Einblendung, 150 ms Ausblendung. Ziel -14 LUFS
