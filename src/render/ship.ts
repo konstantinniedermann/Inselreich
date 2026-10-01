@@ -3,6 +3,7 @@ import { adjacentOf, tileAt, type Pos } from '../sim/world';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, project, type Pt } from './iso';
+import { PALETTE, mixHex } from './palette';
 
 const BOB_PERIOD_MS = 2600;
 /** Höhe des Schiffs über der Rautenmitte (Weltpixel, Zoom 1). */
@@ -11,8 +12,8 @@ const SHIP_W = 0.8 * ISO_W;
 const SHIP_SPAN = 0.7; // Anteil der Formhöhe, der über SHIP_H liegt (Mast bis Kiel)
 const BOB_AMPLITUDE = 0.04; // Anteil der Kachelhöhe
 const TILT_MAX = 0.06; // rad
-const HULL = '#6b4423';
-const SAIL = '#f2ecdc';
+const HULL = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
+const SAIL = PALETTE.wallLime;
 const OUTLINE = 'rgba(0,0,0,0.6)';
 const SHADOW_SHIFT = 0.15; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,

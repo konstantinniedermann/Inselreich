@@ -170,16 +170,24 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
   ctx.restore();
 }
 
-/** Wasser an der vorderen rechten bzw. linken Seite des Kontors (für die Kaimauer). */
-function waterSides(world: World, b: Building): BodyEnv {
+/** Wasser an den vier Seiten des Footprints (für die Kaimauer): +v links, +u rechts, −u und −v hinten. */
+export function waterSides(world: World, b: Building): Required<BodyEnv> {
   const def = BUILDING_DEFS[b.defId];
   const water = (x: number, y: number): boolean => tileAt(world, x, y)?.terrain === 'water';
-  let waterRight = false,
-    waterLeft = false;
-  for (let i = 0; i < def.h; i++) waterRight ||= water(b.x + def.w, b.y + i);
-  for (let i = 0; i < def.w; i++) waterLeft ||= water(b.x + i, b.y + def.h);
-  return { waterLeft, waterRight };
+  const r = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
+  for (let i = 0; i < def.h; i++) {
+    r.waterRight ||= water(b.x + def.w, b.y + i);
+    r.waterU0 ||= water(b.x - 1, b.y + i);
+  }
+  for (let i = 0; i < def.w; i++) {
+    r.waterLeft ||= water(b.x + i, b.y + def.h);
+    r.waterV0 ||= water(b.x + i, b.y - 1);
+  }
+  return r;
 }
+
+/** Reichweite des Schattens über den Bildrand hinaus (Weltpixel): Gebäude knapp ausserhalb werfen ihn noch ins Bild. */
+const SHADOW_MARGIN = 64;
 
 /** Polygon im Kachelraum als Teilpfad des Schattenpfads. */
 function polyPath(ctx: CanvasRenderingContext2D, poly: readonly Pt[]): void {
@@ -267,14 +275,23 @@ export function render(
       bottom = cam.y + view.h / cam.zoom;
     const visible: SortedItem[] = [];
     const buildings: Building[] = [];
+    const shadowOnly = new Set<number>(); // knapp ausserhalb: nur der Schatten
     for (const it of items) {
       if (it.kind === 'building') {
         const b = world.buildings[it.id];
         if (!b) continue;
         const box = spriteBounds(BUILDING_DEFS[b.defId], b);
-        if (box.x > right || box.x + box.w < left || box.y > bottom || box.y + box.h < top)
+        const m = SHADOW_MARGIN;
+        if (
+          box.x > right + m ||
+          box.x + box.w < left - m ||
+          box.y > bottom + m ||
+          box.y + box.h < top - m
+        )
           continue;
-        buildings.push(b);
+        if (box.x > right || box.x + box.w < left || box.y > bottom || box.y + box.h < top)
+          shadowOnly.add(b.id);
+        else buildings.push(b);
       } else if (it.kind === 'tree') {
         if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
           continue;
@@ -302,6 +319,7 @@ export function render(
     // 6 Sortierter Objektdurchgang
     for (const it of visible) {
       if (it.kind === 'building') {
+        if (shadowOnly.has(it.id)) continue;
         const b = world.buildings[it.id]!;
         const def = BUILDING_DEFS[b.defId];
         drawBody(

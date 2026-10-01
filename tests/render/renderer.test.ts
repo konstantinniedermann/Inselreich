@@ -1,10 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
-import { TEX, sortedObjects } from '../../src/render/iso';
+import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, SHADOW } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
-import { render, renderStats, type Hover } from '../../src/render/renderer';
+import { render, renderStats, waterSides, type Hover } from '../../src/render/renderer';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
 import { center, createWorld, idx } from '../../src/sim/world';
@@ -383,5 +383,47 @@ describe('Renderer', () => {
     expect(renderStats.badges.some((b) => b.kind === 'unconnected' && b.id === ids.weaver)).toBe(
       true,
     );
+  });
+
+  it('Spec 5.5 waterSides wertet alle vier Seiten aus: Wasser nur hinten → nur hinten, vorn → vorn, keins → keine', () => {
+    const { world } = scene();
+    const k = world.buildings[world.kontorId]!;
+    forceRect(world, k.x - 2, k.y - 2, 6, 6, 'grass');
+    for (const y of [k.y, k.y + 1]) world.tiles[idx(world, k.x, y)]!.buildingId = k.id;
+    const set = (x: number, y: number) => (world.tiles[idx(world, x, y)]!.terrain = 'water');
+    const none = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
+    expect(waterSides(world, k)).toEqual(none);
+    set(k.x - 1, k.y);
+    expect(waterSides(world, k)).toEqual({ ...none, waterU0: true });
+    forceRect(world, k.x - 1, k.y, 1, 1, 'grass');
+    set(k.x + 1, k.y - 1);
+    expect(waterSides(world, k)).toEqual({ ...none, waterV0: true });
+    forceRect(world, k.x + 1, k.y - 1, 1, 1, 'grass');
+    set(k.x + 2, k.y + 1);
+    expect(waterSides(world, k)).toEqual({ ...none, waterRight: true });
+    forceRect(world, k.x + 2, k.y + 1, 1, 1, 'grass');
+    set(k.x, k.y + 2);
+    expect(waterSides(world, k)).toEqual({ ...none, waterLeft: true });
+  });
+
+  it('ISO §5 Schatten: Gebäude knapp ausserhalb des Bildes werfen ihren Schatten noch ins Bild (Culling um die Schattenlänge erweitert)', () => {
+    const { world, ids } = scene();
+    world.order = null;
+    for (const t of world.tiles) if (t.terrain === 'forest') t.terrain = 'grass'; // keine Baumschatten im Zähler
+    const keep = world.buildings[ids.market!]!;
+    world.buildings = { [keep.id]: keep };
+    const box = spriteBounds(BUILDING_DEFS.market, keep);
+    const shadowPoints = (gap: number): number => {
+      const cam = { x: box.x + box.w + gap, y: box.y - 100, zoom: 1 };
+      const { ctx, log } = fakeCtx();
+      render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
+      return log.events.filter((e) => e.style === SHADOW).reduce((n, e) => n + e.points.length, 0);
+    };
+    expect(shadowPoints(10)).toBeGreaterThan(0); // Körper links ausserhalb, Schatten im Rand
+    expect(shadowPoints(400)).toBe(0);
+    h.calls.length = 0;
+    const cam = { x: box.x + box.w + 10, y: box.y - 100, zoom: 1 };
+    render(fakeCtx().ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
+    expect(h.calls.filter((c) => c.kind === 'body')).toHaveLength(0); // gezeichnet wird er nicht
   });
 });

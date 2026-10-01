@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { shipShadow, shipTile } from '../../src/render/ship';
+import { drawShip, shipShadow, shipTile } from '../../src/render/ship';
+import { PALETTE, mixHex } from '../../src/render/palette';
+import { fakeCtx } from './fakeCtx';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { adjacentOf, createWorld, tileAt } from '../../src/sim/world';
 import type { Order } from '../../src/sim/types';
@@ -57,5 +59,13 @@ describe('Händlerschiff', () => {
       ) / 2;
     expect(area).toBeGreaterThan(0);
     for (const p of poly) expect(Math.hypot(p.x - 12.5, p.y - 9.5)).toBeLessThan(1);
+  });
+
+  it('Spec 4.2 Rumpf und Segel nur aus Palettenfarben (keine eigenen Hex-Werte)', () => {
+    const { ctx, log } = fakeCtx();
+    drawShip(ctx, { x: 0, y: 0, zoom: 1 }, { x: 5, y: 5 }, 0);
+    expect(new Set(log.fillSet)).toEqual(
+      new Set([mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4), PALETTE.wallLime]),
+    );
   });
 });

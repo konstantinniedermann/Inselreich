@@ -14,6 +14,8 @@ import {
   AIR_COLORS,
   BODY_INSET,
   SHADOW_K,
+  chimneyAnchor,
+  CHIMNEY_OVER_ROOF,
   bodyColors,
   buildingShadow,
   drawAir,
@@ -296,22 +298,59 @@ describe('Slice-Körper: Wohnhaus (3 Stufen), Kontor, Holzfäller', () => {
     expect(flag.log.fillSet).toContain(AIR_COLORS.pole);
   });
 
-  it('Spec 5.5 Kontor: Kaimauer an der Wasserseite (links bzw. rechts), ohne Angabe vorn rechts; Körper bleibt in der Hülle', () => {
+  it('Spec 5.5 Kontor: Kaimauer an jeder Wasserseite, hintere zuerst; ohne Wasser keine Mauer, kein Fallback auf die Landseite', () => {
     const def = BUILDING_DEFS.kontor,
       b = mk('kontor');
-    const run = (env?: { waterLeft?: boolean; waterRight?: boolean }) => {
+    const mauer = wallColors(PALETTE.rockDark);
+    const wall = wallColors(PALETTE.wallStone).left;
+    const run = (env?: {
+      waterLeft?: boolean;
+      waterRight?: boolean;
+      waterU0?: boolean;
+      waterV0?: boolean;
+    }) => {
       const { ctx, log } = fakeCtx();
       drawBody(ctx, CAM, def, b, 0, env);
       for (const p of log.allPoints) expect(inHull(bodyHull(def, b), p.x, p.y, 0.5)).toBe(true);
-      return log.events
-        .filter((e) => e.op === 'fill')
-        .map((e) => e.points.map((p) => `${p.x},${p.y}`).join(' '));
+      const f = log.fillSet;
+      const idx = f
+        .map((c, i) => (c === mauer.left || c === mauer.right ? i : -1))
+        .filter((i) => i >= 0);
+      return { idx, shell: f.indexOf(wall) };
     };
-    const dflt = run(),
-      right = run({ waterRight: true }),
-      left = run({ waterLeft: true });
-    expect(dflt).toEqual(right);
-    expect(left).not.toEqual(right);
+    expect(run().idx).toHaveLength(0);
+    expect(run({}).idx).toHaveLength(0);
+    const front = run({ waterRight: true });
+    expect(front.idx.length).toBeGreaterThan(0);
+    for (const i of front.idx) expect(i).toBeGreaterThan(front.shell);
+    expect(run({ waterLeft: true }).idx.length).toBeGreaterThan(0);
+    for (const env of [{ waterU0: true }, { waterV0: true }]) {
+      const back = run(env);
+      expect(back.idx.length, JSON.stringify(env)).toBeGreaterThan(0);
+      for (const i of back.idx) expect(i).toBeLessThan(back.shell); // der Körper überdeckt sie
+    }
+  });
+
+  it('Kamine: Oberkante höchstens 0,15 · ISO_H über dem Dach; Rauch steigt am Kamin auf', () => {
+    expect(CHIMNEY_OVER_ROOF).toBeLessThanOrEqual(0.15 * ISO_H);
+    const def = BUILDING_DEFS.lumberjack,
+      b = mk('lumberjack');
+    const anchor = chimneyAnchor(def, b, CAM)!;
+    expect(anchor).not.toBeNull();
+    const box = spriteBounds(def, b);
+    for (const t of [0, 400, 900, 1300]) {
+      const { ctx, log } = fakeCtx();
+      drawAir(ctx, CAM, def, b, t);
+      expect(log.allPoints.length % 4).toBe(0);
+      for (let i = 0; i < log.allPoints.length; i += 4) {
+        const q = log.allPoints.slice(i, i + 4);
+        const cx = (q[0]!.x + q[1]!.x) / 2,
+          cy = (q[2]!.y + q[3]!.y) / 2;
+        expect(Math.abs(cx - anchor.x)).toBeLessThanOrEqual(0.04 * box.w + 0.01);
+        expect(cy).toBeLessThanOrEqual(anchor.y + 0.01);
+        expect(cy).toBeGreaterThanOrEqual(anchor.y - 0.3 * box.h - 0.01);
+      }
+    }
   });
 
   it('ISO 7.1 abgeleitete Töne bleiben Töne: wallColors akzeptiert auch gemischte rgb()-Farben, kein Slice-Körper füllt schwarz', () => {
@@ -384,7 +423,7 @@ describe('Schatten und Bauvorschau', () => {
         expect(p.x).toBeLessThanOrEqual(b.x + def.w + shift + 1e-9);
       }
     }
-    expect(SHADOW_K).toBe(0.3);
+    expect(SHADOW_K).toBe(0.4);
   });
 
   it('D-13 drawGhost: Deckkraft 0,5 in save/restore, alles in der Körperhülle, danach wieder Deckkraft 1', () => {

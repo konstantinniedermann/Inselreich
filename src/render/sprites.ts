@@ -29,11 +29,11 @@ const INSET = 0.08; // Kachel, die der Grundriss je Seite eingezogen ist (Platzh
 /** Einzug des Grundrisses je Seite in Kacheln (ISO 7.1: höchstens 0,1; Grundriss ≥ 64 % der Raute). */
 export const BODY_INSET = 0.08;
 /** Schattenlänge je Höhe (Darstellungswert, ISO D-11; `lead-art` justiert ihn im Slice über AK-ISO-13). */
-export const SHADOW_K = 0.3;
+export const SHADOW_K = 0.4;
 const GHOST_ALPHA = 0.5; // Bauvorschau (D-13)
 const SHADOW_DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) }; // Kachelraum, nach rechts unten im Bild
 /** Umrisslinie der Slice-Körper (aus der Palette abgeleitet, keine Signalfarbe). */
-const EDGE = mixHex(PALETTE.wallTimber, '#000000', 0.55);
+export const EDGE = mixHex(PALETTE.wallTimber, '#000000', 0.55);
 const SMOKE_PERIOD_MS = 1500;
 const SMOKE_PUFFS = 3;
 const SMOKE_ORIGIN = { x: 0.7, y: 0.32 }; // Anteil der Bildbox
@@ -74,9 +74,11 @@ export const bodyColors = (category: Category): BoxColors => ({
 /** Footprint-lokale Koordinaten (u, v in Kacheln, z in Weltpixeln über dem Boden) → Bildpunkte. */
 /** Umgebung, die der Renderer einem Körper mitgibt (aus der Welt gelesen; ohne Angabe gilt der Standard). */
 export interface BodyEnv {
-  /** Wasser an der vorderen linken bzw. vorderen rechten Seite (Kaimauer des Kontors). */
+  /** Wasser an der Seite +v (vorn links), +u (vorn rechts), −u (hinten links) bzw. −v (hinten rechts) des Kontors. */
   waterLeft?: boolean;
   waterRight?: boolean;
+  waterU0?: boolean;
+  waterV0?: boolean;
 }
 export type SilhouetteFn = (p: IsoPainter, b: Building) => void;
 
@@ -279,10 +281,21 @@ const rightQuad = (
   c: string,
 ) => p.quad([s.u1, va, za], [s.u1, vb, za], [s.u1, vb, zb], [s.u1, va, zb], c, false);
 
-/** Kamin: Quader auf dem Dach, dessen Oberkante genau auf der Hüllenkante liegt (macht die Hülle oben dicht). */
-function chimney(p: IsoPainter, s: Shell, h: number, cu: number, cv: number, color: string): void {
-  const size = 0.11;
-  const top = h + ISO_H * Math.min(cu, cv);
+/** Kamin ragt höchstens so weit über das Dach (≤ 0,15 · ISO_H), damit er nicht wie ein Pfosten wirkt. */
+export const CHIMNEY_OVER_ROOF = 4.5;
+const CHIMNEY_SIZE = 0.11;
+
+/** Lage und Oberkante des Kamins (nahe am First; Oberkante nie über der Hüllenkante). Auch für den Rauch. */
+function chimneySpot(s: Shell, h: number): { cu: number; cv: number; top: number } {
+  const [cu, cv] =
+    s.kind === 'hip' ? [0.3, 0.3] : s.axis === 'u' ? [0.2, s.vm - 0.06] : [s.um - 0.06, 0.2];
+  const roof = roofZ(s, cu + CHIMNEY_SIZE / 2, cv + CHIMNEY_SIZE / 2);
+  return { cu, cv, top: Math.min(h + ISO_H * Math.min(cu, cv), roof + CHIMNEY_OVER_ROOF) };
+}
+
+function chimney(p: IsoPainter, s: Shell, h: number, color: string): void {
+  const size = CHIMNEY_SIZE;
+  const { cu, cv, top } = chimneySpot(s, h);
   const base = Math.min(roofZ(s, cu, cv), roofZ(s, cu + size, cv + size));
   const c = wallColors(color);
   p.quad(
@@ -331,11 +344,11 @@ function houseBody(p: IsoPainter, b: Building): void {
   yard(p, mixHex(PALETTE.grass, PALETTE.earth, 0.45));
   if (tier === 1) {
     // Hütte: Lehmwand, Strohdach (Walmdach)
-    const s = makeShell(p, 0.5 * h, zr, 'hip', 'u');
+    const s = makeShell(p, 0.5 * h, h + 0.5 * ISO_H, 'hip', 'u'); // Spitze genau auf der Hüllenkante
     drawShell(p, s, wallColors(mixHex(PALETTE.wallLime, PALETTE.earth, 0.4)), PALETTE.roofThatch);
     leftQuad(p, s, 0.42, 0.58, 0, 0.36 * s.wz, DOOR);
     rightQuad(p, s, 0.4, 0.6, 0.4 * s.wz, 0.75 * s.wz, WINDOW);
-    chimney(p, s, h, 0.22, 0.22, PALETTE.wallStone);
+    chimney(p, s, h, PALETTE.wallStone);
   } else if (tier === 2) {
     // Fachwerk auf Kalkputz, Terrakotta-Satteldach (First entlang u)
     const s = makeShell(p, 0.62 * h, zr, 'gable', 'u');
@@ -348,7 +361,7 @@ function houseBody(p: IsoPainter, b: Building): void {
     rightQuad(p, s, s.v0, s.v1, 0.47 * s.wz, 0.47 * s.wz + 2, t.right);
     leftQuad(p, s, 0.28, 0.4, 0.1, 0.6 * s.wz, DOOR);
     leftQuad(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz, WINDOW);
-    chimney(p, s, h, 0.2, 0.2, PALETTE.wallStone);
+    chimney(p, s, h, PALETTE.wallStone);
   } else {
     // Bürgerhaus: Steinwand, dunkler Ziegel, zwei Geschosse, Gaube (First entlang v)
     const s = makeShell(p, 0.6 * h, zr, 'gable', 'v');
@@ -390,7 +403,7 @@ function houseBody(p: IsoPainter, b: Building): void {
       ],
       roofColors(PALETTE.roofTerracottaDark).shade,
     );
-    chimney(p, s, h, 0.2, 0.2, PALETTE.wallStone);
+    chimney(p, s, h, PALETTE.wallStone);
   }
 }
 
@@ -398,6 +411,17 @@ function kontorBody(p: IsoPainter, b: Building): void {
   const def = BUILDING_DEFS.kontor;
   const h = bodyHeight(def, b);
   yard(p, mixHex(PALETTE.rock, PALETTE.sandDry, 0.45));
+  // Hintere Kaimauern zuerst: der Körper überdeckt sie, sichtbar bleibt der Rand links und rechts
+  const back = wallColors(PALETTE.rockDark);
+  const backTop = mixHex(PALETTE.rock, '#ffffff', 0.1);
+  if (p.env.waterU0 === true) {
+    p.quad([0, 0, 0], [0, p.h, 0], [0, p.h, 5], [0, 0, 5], back.right);
+    p.quad([0, 0, 5], [0.22, 0, 5], [0.22, p.h, 5], [0, p.h, 5], backTop, false);
+  }
+  if (p.env.waterV0 === true) {
+    p.quad([0, 0, 0], [p.w, 0, 0], [p.w, 0, 5], [0, 0, 5], back.left);
+    p.quad([0, 0, 5], [p.w, 0, 5], [p.w, 0.22, 5], [0, 0.22, 5], backTop, false);
+  }
   const s = makeShell(p, 0.56 * h, h + ISO_H * BODY_INSET, 'gable', 'u');
   const w = wallColors(PALETTE.wallStone);
   drawShell(p, s, w, PALETTE.roofTimber);
@@ -426,7 +450,7 @@ function kontorBody(p: IsoPainter, b: Building): void {
       false,
     );
   }
-  // Kaimauer zur Wasserseite (ohne Angabe vorn rechts)
+  // Kaimauer an jeder Wasserseite; ohne Wasser keine Mauer (kein Fallback auf die Landseite)
   const { waterLeft, waterRight } = p.env;
   const mauer = wallColors(PALETTE.rockDark);
   const top = mixHex(PALETTE.rock, '#ffffff', 0.1);
@@ -441,7 +465,7 @@ function kontorBody(p: IsoPainter, b: Building): void {
       false,
     );
   }
-  if (waterRight === true || waterLeft !== true) {
+  if (waterRight === true) {
     p.quad([s.u1, s.v0, 0], [s.u1, s.v1, 0], [s.u1, s.v1, 5], [s.u1, s.v0, 5], mauer.right);
     p.quad(
       [s.u1 - 0.14, s.v0, 5],
@@ -454,13 +478,32 @@ function kontorBody(p: IsoPainter, b: Building): void {
   }
 }
 
+const lumberjackShell = (p: IsoPainter, h: number): Shell =>
+  makeShell(p, 0.5 * h, h + ISO_H * BODY_INSET, 'gable', 'v');
+
+/** Mündung des Kamins in Bildpunkten (Rauch steigt dort auf); null für Typen ohne eigene Silhouette. */
+export function chimneyAnchor(def: BuildingDef, b: Building, cam: Camera): Pt | null {
+  if (def.id !== 'lumberjack') return null;
+  const p = new IsoPainter(
+    null as unknown as CanvasRenderingContext2D,
+    cam,
+    b.x,
+    b.y,
+    def.w,
+    def.h,
+  );
+  const h = bodyHeight(def, b);
+  const { cu, cv, top } = chimneySpot(lumberjackShell(p, h), h);
+  return p.pt(cu + CHIMNEY_SIZE / 2, cv + CHIMNEY_SIZE / 2, top);
+}
+
 function lumberjackBody(p: IsoPainter, b: Building): void {
   const def = BUILDING_DEFS.lumberjack;
   const h = bodyHeight(def, b);
   yard(p, mixHex(PALETTE.earth, PALETTE.sandDry, 0.4));
   // Sägemehlfleck (vorn, auf dem Hofboden)
   p.quad([0.5, 0.55, 0], [0.96, 0.55, 0], [0.96, 0.96, 0], [0.5, 0.96, 0], PALETTE.sandDry, false);
-  const s = makeShell(p, 0.5 * h, h + ISO_H * BODY_INSET, 'gable', 'v');
+  const s = lumberjackShell(p, h);
   const timber = mixHex(PALETTE.wallTimber, PALETTE.wallLime, 0.3);
   drawShell(p, s, wallColors(timber), PALETTE.roofWood);
   leftQuad(p, s, 0.58, 0.76, 0, 0.5 * s.wz, DOOR);
@@ -499,7 +542,7 @@ function lumberjackBody(p: IsoPainter, b: Building): void {
     mixHex(PALETTE.earth, PALETTE.sandDry, 0.5),
     false,
   );
-  chimney(p, s, h, 0.2, 0.2, PALETTE.rockDark);
+  chimney(p, s, h, PALETTE.rockDark);
 }
 
 /** Silhouetten der umgestellten Typen; alle anderen zeichnen bis R2 den Platzhalter-Körper. */
@@ -617,13 +660,17 @@ export function drawAir(
   const o = worldToScreen(cam, { x: box.x, y: box.y });
   const w = box.w * cam.zoom,
     h = box.h * cam.zoom;
+  // Ursprung: Kaminmündung der Silhouette, sonst fester Anteil der Bildbox (Platzhalter bis R2)
+  const chim = chimneyAnchor(def, b, cam);
+  const ox = chim ? chim.x : o.x + SMOKE_ORIGIN.x * w;
+  const oy = chim ? chim.y : o.y + SMOKE_ORIGIN.y * h;
   for (let i = 0; i < SMOKE_PUFFS; i++) {
     const phase = (timeMs / SMOKE_PERIOD_MS + i / SMOKE_PUFFS + (b.id % 7) / 7) % 1;
-    const fx = SMOKE_ORIGIN.x + Math.sin(phase * Math.PI * 2) * 0.04;
-    const fy = SMOKE_ORIGIN.y - phase * 0.3;
+    const fx = Math.sin(phase * Math.PI * 2) * 0.04;
+    const fy = -phase * 0.3;
     ctx.fillStyle = `rgba(${AIR_COLORS.smoke},${(SMOKE_ALPHA * (1 - phase)).toFixed(3)})`;
     ctx.beginPath();
-    ctx.arc(o.x + fx * w, o.y + fy * h, (0.05 + phase * 0.05) * Math.min(w, h), 0, Math.PI * 2);
+    ctx.arc(ox + fx * w, oy + fy * h, (0.05 + phase * 0.05) * Math.min(w, h), 0, Math.PI * 2);
     ctx.fill();
   }
 }
