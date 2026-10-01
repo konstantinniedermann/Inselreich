@@ -41,6 +41,8 @@ export interface Layout {
   farms: Slot[];
   chapel: Slot;
   school: Slot;
+  /** Platz der Feuerwache im Krisen-Lauf `normal` (Spec 15). */
+  fireStation: Slot;
 }
 
 type Need = 'food' | 'cloth' | 'rum';
@@ -53,10 +55,10 @@ const CHAINS: Record<Need, { producer: BuildingDefId; raw: BuildingDefId | null 
 const NO_COST: Cost = { money: 0, wood: 0, tools: 0, stone: 0 };
 
 /**
- * Erzwingt das Gelände östlich des Kontors (Seed 3: Kontor an der Westküste) und legt alle Wege.
- * Gras für Häuser und Betriebe, eine Wasserspalte für die Fischer, ein Waldstreifen für Holzfäller.
+ * Erzwingt das Gelände östlich des Kontors (Seed 3: Kontor an der Westküste): Gras für Häuser und
+ * Betriebe, eine Wasserspalte für die Fischer, ein Waldstreifen für Holzfäller.
  */
-export function prepareLayout(w: World): Layout {
+function forceTerrain(w: World): void {
   const k = w.buildings[w.kontorId]!;
   const kx = k.x;
   const ky = k.y;
@@ -64,7 +66,13 @@ export function prepareLayout(w: World): Layout {
   forceRect(w, kx + 8, ky - 8, 1, 8, 'water'); // Wasserspalte nördlich der Hauptstrasse
   forceRect(w, kx + 8, ky + 1, 1, 8, 'water'); // Wasserspalte südlich der Hauptstrasse
   forceRect(w, kx + 20, ky - 7, 1, 15, 'forest');
+}
 
+/** Alle Bauplätze und Wege aus der Kontor-Lage; ändert die Welt nicht (auch nach dem Laden nutzbar). */
+export function layoutFor(w: World): Layout {
+  const k = w.buildings[w.kontorId]!;
+  const kx = k.x;
+  const ky = k.y;
   const roads: Slot[] = [];
   for (let x = kx + 2; x <= kx + 18; x++) roads.push([x, ky]); // Hauptstrasse ab dem Kontor
   for (let y = ky - 7; y <= ky + 7; y++) if (y !== ky) roads.push([kx + 10, y]); // Querstrasse
@@ -93,7 +101,14 @@ export function prepareLayout(w: World): Layout {
     farms,
     chapel: [kx + 6, ky - 2],
     school: [kx + 6, ky + 1],
+    fireStation: [kx + 9, ky + 6],
   };
+}
+
+/** Gelände erzwingen, dann das Layout bestimmen. */
+export function prepareLayout(w: World): Layout {
+  forceTerrain(w);
+  return layoutFor(w);
 }
 
 const count = (w: World, defId: BuildingDefId): number => buildingsOfType(w, defId).length;
@@ -196,7 +211,7 @@ function buildChain(w: World, good: Need, layout: Layout): boolean {
  * Ein Controller-Durchlauf in fester Priorität. Scheitert ein Schritt am Geld, endet der Durchlauf:
  * spätere Stufen warten, bis die frühere bezahlt ist.
  */
-function control(w: World, layout: Layout): void {
+function control(w: World, layout: Layout, opts: ColonyOptions): void {
   const anyPlan = (tier: Tier): boolean => houses(w).some((b) => planTier(b) >= tier);
   // 1. Überschuss verkaufen, Material für den nächsten Aufstieg vorhalten (auch ohne `RESERVE`)
   sellSurplus(w);
@@ -219,6 +234,11 @@ function control(w: World, layout: Layout): void {
   buildChain(w, 'rum', layout);
 }
 
+export interface ColonyOptions {
+  /** Krisen-Lauf normal: eine Feuerwache, sobald die Kapelle steht, auf layout.fireStation (Spec 15). */
+  fireStation?: boolean;
+}
+
 export interface Trajectory {
   firstSettler: number | null;
   firstCitizen: number | null;
@@ -237,7 +257,7 @@ export interface Trajectory {
  * Laufdaten ausgeben: `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance.test.ts`
  * (Vite reicht nur `VITE_*`-Variablen an `import.meta.env` weiter).
  */
-export function buildColony(w: World): Trajectory {
+export function startColony(w: World): { layout: Layout; t: Trajectory } {
   const layout = prepareLayout(w);
   for (const [x, y] of layout.roads) expect(placeRoad(w, x, y).ok).toBe(true);
   for (const slot of layout.houses) expect(build(w, 'house', [slot])).toBe(true);
@@ -250,17 +270,37 @@ export function buildColony(w: World): Trajectory {
     endMoney: 0,
     buildings: {},
   };
+  return { layout, t };
+}
+
+/** Controller-Schleife bis Sieg oder MAX_TICKS; hält nach dem ersten Schritt mit stop(w) === true (Rückgabe true). */
+export function runColony(
+  w: World,
+  layout: Layout,
+  t: Trajectory,
+  opts: ColonyOptions = {},
+  stop?: (w: World) => boolean,
+): boolean {
   while (w.tick < MAX_TICKS && citizens(w) < WIN_CITIZENS) {
-    if (w.tick % CONTROL_INTERVAL === 0) control(w, layout);
+    if (w.tick % CONTROL_INTERVAL === 0) control(w, layout, opts);
     step(w);
     const pop = populationByTier(w);
     if (t.firstSettler === null && pop[2] > 0) t.firstSettler = w.tick;
     if (t.firstCitizen === null && pop[3] > 0) t.firstCitizen = w.tick;
     if (t.winTick === null && w.won) t.winTick = w.tick;
     t.minMoney = Math.min(t.minMoney, w.money);
+    if (stop?.(w)) return true;
   }
   t.endMoney = w.money;
+  t.buildings = {};
   for (const b of Object.values(w.buildings))
     t.buildings[b.defId] = (t.buildings[b.defId] ?? 0) + 1;
+  return false;
+}
+
+/** startColony + runColony. */
+export function buildColony(w: World, opts: ColonyOptions = {}): Trajectory {
+  const { layout, t } = startColony(w);
+  runColony(w, layout, t, opts);
   return t;
 }
