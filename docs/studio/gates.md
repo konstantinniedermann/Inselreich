@@ -115,11 +115,14 @@ Budgetfreigabe (`log.py budget`) und Pakete anlegen (`log.py package`).
 ## Kombiniertes Gate (Stufe leicht)
 
 Prüfen: `lead-qa` (`opus`, Testbarkeit, Review- und Testabdeckung) · **L0 selbst** (Ownership,
-Budget, Abhängigkeiten). Der Tech-Lead prüft seinen eigenen Plan nicht; der Design-Lead liefert zum
+Budget, Abhängigkeiten) · bei **Folgepaketen** (Handbuch, Prozessstufen; R129) zusätzlich und
+parallel `lead-tech` mit den Prüffragen des Gates Spec gegen den Spec-Teil des einen Dokuments
+Spec+Plan. Auf BEDENKEN folgt eine Nacharbeit ohne Zweitprüfung; eine Zweitprüfung nur bei einem
+blockierenden Punkt oder ZURÜCK. Der Tech-Lead prüft seinen eigenen Plan nicht; der Design-Lead liefert zum
 Kurzdesign seine Selbstprüfung nach den Fragen des Gates Brainstorming mit.
 
 **Auslöser:** Kurzdesign (Bericht `lead-design`) und Plan (Bericht `lead-tech`: Pakete,
-Datei-Ownership, Budgetantrag) liegen vor.
+Datei-Ownership, Budgetantrag) liegen vor; bei Folgepaketen das eine Dokument Spec+Plan.
 
 **Kontext:** beide Berichte, betroffene Dateien laut Plan, `tests/sim/balance.test.ts`,
 [state.md](state.md).
@@ -137,7 +140,8 @@ Datei-Ownership, Budgetantrag) liegen vor.
 
 1. Hat jede Datei genau einen Owner, und genügt ein Worktree?
 2. Stimmt der Budgetantrag mit der Formel, und sind die Abhängigkeiten zwischen Paketen vollständig?
-3. Bleibt der Auftrag leicht (≤ 1 Session, ≤ 3 Pakete, keine Architekturänderung)? Sonst hochstufen.
+3. Bleibt der Auftrag leicht (≤ 1 Session, ≤ 3 Pakete, keine Architekturänderung; Folgepaket: ein
+   Strang, kein Save-Format, keine Architekturänderung)? Sonst hochstufen.
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach
 Budgetfreigabe und Pakete anlegen.

@@ -3,6 +3,38 @@
 Wer im Studio arbeitet. Verbindliche Regeln: [STUDIO.md](STUDIO.md). Persona-Dateien liegen unter
 `.claude/agents/<name>.md`.
 
+## Organigramm
+
+```mermaid
+flowchart TD
+  L0[L0 Projektleiter]
+  L0 --> C[studio-coach]
+  L0 --> P[lead-production]
+  L0 --> D[lead-design]
+  L0 --> T[lead-tech]
+  L0 --> A[lead-art]
+  L0 --> Q[lead-qa]
+  P --> P1[production-integrator]
+  D --> D1[design-spec-author]
+  D --> D2[design-economy-designer]
+  T --> T1[tech-sim-engineer]
+  T --> T2[tech-ui-engineer]
+  A --> A1[art-license-checker]
+  A --> A2[art-rendering-engineer]
+  A --> A3[art-audio-engineer]
+  Q --> Q1[qa-code-reviewer]
+  Q --> Q2[qa-playtester]
+```
+
+| Lead              | Bereich                                                  | Arbeiter aktiv                                                        | Auf Abruf                                                                       |
+| ----------------- | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `studio-coach`    | Auswertung, Retros, Experimente, lernen.md               | keine Arbeiter                                                        | —                                                                               |
+| `lead-production` | Board, Budget-Überblick, Merges, Onboarding neuer Rollen | `production-integrator`                                               | `production-studio-ops`, `production-onboarding-analyst`, `production-chronist` |
+| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer`                       | `design-genre-researcher`, `design-balancing-analyst`                           |
+| `lead-tech`       | Architektur, Pläne, Umsetzung `src/`                     | `tech-sim-engineer`, `tech-ui-engineer`                               | `tech-save-engineer`, `tech-plan-architect`                                     |
+| `lead-art`        | Grafik und Audio, Asset-Lizenzen, CREDITS                | `art-license-checker`, `art-rendering-engineer`, `art-audio-engineer` | `art-asset-scout`                                                               |
+| `lead-qa`         | Reviews, Playtests, Determinismus, Regression            | `qa-code-reviewer`, `qa-playtester`                                   | `qa-determinism-checker`                                                        |
+
 ## Namensschema (R11, R28)
 
 - L0: Hauptsession, Rolle `studio-director` (keine Persona-Datei; Output-Style `Projektleiter`;
@@ -49,7 +81,7 @@ stark = `opus`, mittel = `sonnet`, klein = `haiku`. Einsatzregeln: STUDIO.md, Ab
 | `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                            |
 
 **Persona-Versionen:** Frontmatter-Feld `version` in `.claude/agents/<name>.md`. Erhöht wird sie nur
-über die Verbesserungsschleife (Handbuch, Abschnitt „Verbesserungsschleife") mit Eintrag in
+über die [Verbesserungsschleife](verbesserung.md#verbesserungsschleife) mit Eintrag in
 [CHANGELOG.md](CHANGELOG.md); die Spalte `Version` hier zieht der Coach dabei nach.
 
 ## Auf Abruf
@@ -75,10 +107,13 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
    `description`, `tools`, `model`, `version: 1.0`, dazu `studio-name`, `studio-title`,
    `studio-emoji` nach der Namensregel; Arbeiter ohne `Agent`-Tool).
 2. Der Production-Lead prüft sie gegen STUDIO.md, verschiebt die Zeile hier von „Auf Abruf" nach
-   „Aktive Personas", führt Organigramm und Lead-Tabelle in STUDIO.md nach (keine Regeländerung) und committet
+   „Aktive Personas", führt Organigramm und Lead-Tabelle oben nach (keine Regeländerung) und committet
    (`docs: Persona <name>`).
-3. Die Datei-Überwachung lädt neue oder geänderte Agent-Dateien nach wenigen Sekunden; nur wenn
-   `.claude/agents/` beim Session-Start fehlte, erst in der **nächsten Session**. Dann startet der
-   Lead `general-purpose` mit der Kopfzeile `Persona: <name>`, dem zu den Abschnitten von
-   [templates/persona.md](templates/persona.md) ausgebauten Persona-Text im Briefing und dem Modell
-   explizit im Agent-Aufruf (sonst erbt der Agent das Modell der Session).
+3. Eine neue Agent-Datei ist in der laufenden Session erst **ab einem späteren Zug** als Agent-Typ
+   verfügbar, nicht im Zug, in dem sie committet wurde (Befund Session 8c0e0295: Commit 339c728,
+   Start im selben Zug „not found", nach dem nächsten Zug gelistet; R129). Wer die Rolle im selben
+   Zug braucht, startet direkt `general-purpose` mit der Kopfzeile `Persona: <name>` und der
+   Persona-Datei als Vorgabe („zuerst `.claude/agents/<name>.md` lesen und befolgen"). Fehlte
+   `.claude/agents/` beim Session-Start, gilt das bis zur nächsten Session; dann den zu den
+   Abschnitten von [templates/persona.md](templates/persona.md) ausgebauten Persona-Text ins Briefing.
+   Das Modell immer explizit im Agent-Aufruf setzen (sonst erbt der Agent das Modell der Session).

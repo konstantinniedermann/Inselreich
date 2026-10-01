@@ -79,4 +79,4 @@ Bericht (≤ 15 Zeilen): nach docs/studio/templates/bericht.md
 ```
 
 Nach der Abnahme loggt der Lead (hier `lead-tech`) das Ergebnis mit `log.py result`; Werte und
-Beispiel: [STUDIO.md](../STUDIO.md), Abschnitte „Messung und Aufwand" und „Logging-Pflicht".
+Beispiel: [verbesserung.md](../verbesserung.md#messung-und-aufwand) und `log.py result --help`.

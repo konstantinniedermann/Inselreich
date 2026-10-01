@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-01 · Handbuch 1.9
+
+- Anlass: Prozess-Retro 1 (Effizienz), Vorschläge V1–V5
+- Datenbasis: `docs/studio/retros/2026-10-01-prozess-retro-1.md`, `docs/studio/metriken/M7.md`
+- Ruling: R129
+- Änderungen: (1) Session-Start: eine aktive L0-Session je Repo, Parallelität nur per Ruling mit
+  Datei-Eigentum; `git fetch`/R-Nummer/Push-Pflicht nur dann (E-007, ersetzt E-005; Start-Hook-Warnung
+  folgt als Werkzeug-Paket). (2) Prozessstufen, Gate-Tabelle, `gates.md`: Folgepakete leicht, Spec
+  und Plan in einem Dokument, ein Gate `lead-tech` + `lead-qa`, Zweitprüfung nur bei Blocker
+  (E-008). (3) Rulings entscheiden und verweisen (≤ 60 Wörter), Abnahmen nur per `log.py result`;
+  `templates/ruling.md`, Formatkopf `rulings.md`; R1–R99 wörtlich nach `rulings-archiv.md` (E-009).
+  (4) `STUDIO.md` 689 → 399 Zeilen: „Messung und Aufwand“, „Verbesserungsschleife“, Logging-Tabelle,
+  Limit-Sensor, Budget-Zählung und Guard-Grenzen wörtlich nach `verbesserung.md` (Teil des
+  Handbuchs); Organigramm und Lead-Tabelle wörtlich nach `roster.md`; Befehlsreferenz gestrichen
+  (Verweis auf `log.py --help` und Personas); Pflichtpunkte Briefing auf Vorlage verwiesen;
+  Wiederholungen der Verfassung (§1, §1.3, §5, §5.8) gekürzt. Verweise in Vorlagen und
+  `metriken/README.md` nachgezogen. `experimente.md` gestrafft: E-001, E-003 `behalten`, E-004
+  `abgelehnt`, E-005 `angepasst` (ersetzt), neu E-007–E-009 `laufend`. (5) `lernen.md`, `roster.md`:
+  neue Persona erst ab einem späteren Zug verfügbar, im selben Zug `general-purpose` mit
+  Persona-Datei als Vorgabe (Fehlerkorrektur).
+
 ## 2026-09-30 · Handbuch 1.8
 
 - Anlass: Merge STUDIO-LIMIT (Gate R80, Merge 57d1022)

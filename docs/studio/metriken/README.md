@@ -1,8 +1,8 @@
 # Metriken
 
 Verdichtete Messwerte des Studios je Session und je Meilenstein
-([Verfassung §8](../VERFASSUNG.md#8-transparenz-und-logging), Handbuch [STUDIO.md](../STUDIO.md),
-Abschnitt „Messung und Aufwand"). Die Rohdaten (`.studio/`) bleiben lokal; diese Dateien werden
+([Verfassung §8](../VERFASSUNG.md#8-transparenz-und-logging), Handbuch
+[verbesserung.md](../verbesserung.md#messung-und-aufwand)). Die Rohdaten (`.studio/`) bleiben lokal; diese Dateien werden
 committet, damit das Lernen die lokalen Rohdaten überdauert.
 
 - **Zweck:** Datenbasis für Retros, Experimente und den Verlauf im Dashboard (Reiter „Qualität").

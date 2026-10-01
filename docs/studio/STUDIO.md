@@ -1,19 +1,17 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.8 · Stand: 2026-09-30 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.9 · Stand: 2026-10-01 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
-Verbindliche Betriebsanleitung für alle Agenten des Studios. Rangfolge: **Verfassung > Handbuch >
-Persona > Briefing** — bei Widerspruch gilt die höhere Stufe. Die [Verfassung](VERFASSUNG.md)
-enthält die Regeln des Nutzers (feste Regeln, Asset- und Lizenzregeln, Vorbehalte, verbotene
-Aktionen, Qualitätssicherung); sie ändert nur der Nutzer. Dieses Handbuch regelt, **wie** das Team
-arbeitet, und ändert sich nur über die [Verbesserungsschleife](#verbesserungsschleife).
+Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
+der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
+sich nur über die [Verbesserungsschleife](verbesserung.md#verbesserungsschleife).
 
-Begleitdokumente: [VERFASSUNG.md](VERFASSUNG.md) · [CHANGELOG.md](CHANGELOG.md) ·
-[warteschlange.md](warteschlange.md) · [experimente.md](experimente.md) · [lernen.md](lernen.md) ·
-[retros/](retros/) · [metriken/](metriken/) · [gates.md](gates.md) · [roster.md](roster.md) ·
-[rulings.md](rulings.md) · [state.md](state.md) · [herkunft.md](herkunft.md) ·
-[Vorlagen](templates/) · Architektur der Hierarchie:
-[ADR-007](../adr/ADR-007-studio-hierarchie.md), Telemetrie:
+Begleitdokumente: [VERFASSUNG.md](VERFASSUNG.md) · [verbesserung.md](verbesserung.md) (Messung und
+Verbesserung, Teil des Handbuchs) · [CHANGELOG.md](CHANGELOG.md) · [warteschlange.md](warteschlange.md)
+· [experimente.md](experimente.md) · [lernen.md](lernen.md) · [retros/](retros/) ·
+[metriken/](metriken/) · [gates.md](gates.md) · [roster.md](roster.md) · [rulings.md](rulings.md)
+(R1–R99: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
+· [Vorlagen](templates/) · Hierarchie [ADR-007](../adr/ADR-007-studio-hierarchie.md), Telemetrie
 [ADR-008](../adr/ADR-008-studio-telemetrie.md).
 
 ## Organisation
@@ -24,40 +22,9 @@ und macht **keine inhaltliche Arbeit selbst**. **L1 Leads** zerlegen, briefen, n
 berichten. **L2 Arbeiter** setzen um. Der **`studio-coach`** ist eine Stabsstelle auf L1 direkt
 unter L0: Er wertet aus und verbessert die Arbeitsweise, arbeitet aber nie an Spiel oder Doku.
 
-```mermaid
-flowchart TD
-  L0[L0 Projektleiter]
-  L0 --> C[studio-coach]
-  L0 --> P[lead-production]
-  L0 --> D[lead-design]
-  L0 --> T[lead-tech]
-  L0 --> A[lead-art]
-  L0 --> Q[lead-qa]
-  P --> P1[production-integrator]
-  D --> D1[design-spec-author]
-  D --> D2[design-economy-designer]
-  T --> T1[tech-sim-engineer]
-  T --> T2[tech-ui-engineer]
-  A --> A1[art-license-checker]
-  A --> A2[art-rendering-engineer]
-  A --> A3[art-audio-engineer]
-  Q --> Q1[qa-code-reviewer]
-  Q --> Q2[qa-playtester]
-```
-
-| Lead              | Bereich                                                  | Arbeiter aktiv                                                        | Auf Abruf                                                                       |
-| ----------------- | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `studio-coach`    | Auswertung, Retros, Experimente, lernen.md               | keine Arbeiter                                                        | —                                                                               |
-| `lead-production` | Board, Budget-Überblick, Merges, Onboarding neuer Rollen | `production-integrator`                                               | `production-studio-ops`, `production-onboarding-analyst`, `production-chronist` |
-| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer`                       | `design-genre-researcher`, `design-balancing-analyst`                           |
-| `lead-tech`       | Architektur, Pläne, Umsetzung `src/`                     | `tech-sim-engineer`, `tech-ui-engineer`                               | `tech-save-engineer`, `tech-plan-architect`                                     |
-| `lead-art`        | Grafik und Audio, Asset-Lizenzen, CREDITS                | `art-license-checker`, `art-rendering-engineer`, `art-audio-engineer` | `art-asset-scout`                                                               |
-| `lead-qa`         | Reviews, Playtests, Determinismus, Regression            | `qa-code-reviewer`, `qa-playtester`                                   | `qa-determinism-checker`                                                        |
-
-Einzeiler je Rolle, Modelle und Anlage neuer Personas: [roster.md](roster.md). Namensschema (R11,
-erweitert): L1 `lead-<bereich>`, L1-Stabsstelle `studio-<rolle>`, L2 `<bereich>-<rolle>`, Bereiche
-`production`, `design`, `tech`, `art`, `qa`, `studio`. Das Dashboard leitet Ebene und Bereich aus dem
-Namen ab — keine anderen Namen verwenden.
+Organigramm, Lead-Tabelle, Namensschema (R11; das Dashboard leitet Ebene und Bereich aus dem Namen
+ab, keine anderen Namen verwenden), Einzeiler je Rolle, Modelle und Anlage neuer Personas:
+[roster.md](roster.md).
 
 ## Entscheidungsbefugnisse
 
@@ -120,19 +87,10 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
   Die Schätzzahlen stehen vor der Klammer, weil die Telemetrie die jeweils erste Angabe mit „Tools“
   bzw. „min“ liest.
 
-Pflichtpunkte:
-
-1. Persona und Expertise
-2. Ziel in einem Satz + warum es fürs Spielerlebnis zählt
-3. Kontext (nur nötige Dateien)
-4. Deliverable mit Ablageort
-5. Definition of Done
-6. Grenzen und Datei-Ownership
-7. Schnittstellen
-8. Logging-Pflicht
-
-Den Block ‚Feste Regeln' aus [VERFASSUNG.md §3](VERFASSUNG.md#3-feste-regeln) wörtlich in jedes
-Briefing kopieren.
+Pflichtpunkte laut Vorlage: Persona und Expertise, Ziel mit Warum fürs Spielerlebnis, Kontext,
+Deliverable mit Ablageort, Definition of Done, Grenzen und Datei-Ownership, Schnittstellen,
+Logging-Pflicht; dazu den Block ‚Feste Regeln' aus [VERFASSUNG.md §3](VERFASSUNG.md#3-feste-regeln)
+wörtlich.
 
 Für Rollen „auf Abruf" ohne Persona-Datei: `general-purpose` starten, `Persona:`-Kopfzeile setzen,
 den Einzeiler aus roster.md zu den Abschnitten von [templates/persona.md](templates/persona.md)
@@ -159,12 +117,8 @@ und in der Kopfzeile `Modell:` des Briefings.
 
 ## Limits und Sessiongrösse
 
-- **Sensor (R68, Paket STUDIO-LIMIT, in Betrieb seit R80):** Die Statuszeile von Claude Code
-  liefert `rate_limits.five_hour.used_percentage`, `seven_day.used_percentage` und
-  `context_window.used_percentage`. Ein Projekt-Wrapper ruft das Nutzer-Skript unverändert auf und
-  schreibt die Werte mit `ts` und `session_id` nach `.studio/limits.json`; der Prompt-Hook gibt sie
-  L0 mit, das Dashboard zeigt sie. Fehlt die Datei, steht „nicht gemessen“ da. Veraltete Werte
-  werden noch nicht als solche markiert (`docs/beobachtungen.md`, Restbefunde Limit-Sensor).
+- **Sensor (R68, R80):** `.studio/limits.json` (5-h-, Wochen- und Kontextwert), Details in
+  [verbesserung.md](verbesserung.md#limit-sensor).
 - **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 langsam herunter:
   weniger parallel, weniger Starts, Angefangenes abschliessen, `state.md` nachführen, Session
   beenden. Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
@@ -197,34 +151,30 @@ und in der Kopfzeile `Modell:` des Briefings.
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
-- **Zählung:** Das Dashboard zählt Starts, Parallelität und Modellmix automatisch über die Hooks
-  und markiert Überschreitungen rot. Leads nennen „verbraucht/frei" trotzdem in jedem Bericht. Ein
-  Start zählt für eine Freigabe seiner Session: bevorzugt die, deren Phase dem Paketnamen
-  entspricht, sonst die jüngste. Ein Start vor der ersten Freigabe der Session zählt in keiner
-  Zeile; ein Lead ohne Freigabe in seiner Session erscheint als „ohne Freigabe".
-- **Vorfall:** Erst ein Verbrauch über 1,5 × Freigabe ist ein Vorfall (`budget:<lead>:<phase>`) und
-  löst eine Ad-hoc-Retro aus. Mehr parallele Arbeiter als freigegeben färben die Zeile rot, sind
-  aber kein Vorfall.
+- **Zählung und Vorfall:** zählt das Dashboard ([verbesserung.md](verbesserung.md#budget-zählung)); Leads
+  nennen „verbraucht/frei" trotzdem in jedem Bericht.
 
 ## Gates und Dokumentation
 
 Vier Gates in der Stufe voll, zwei in der Stufe leicht (kombiniertes Gate und Merge), jeweils von
 L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 
-| Gate                                | Nach                                              | Prüfen                                                       |
-| ----------------------------------- | ------------------------------------------------- | ------------------------------------------------------------ |
-| Brainstorming                       | Designvorschlag des Design-Leads                  | `lead-design`                                                |
-| Spec                                | Spec in `docs/superpowers/specs/`                 | `lead-tech`, `lead-qa`                                       |
-| Plan                                | Plan in `docs/superpowers/plans/`                 | `lead-qa`, `lead-production`                                 |
-| Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten              | `lead-qa`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
-| Merge                               | Final-Review aller Stränge (eines je Meilenstein) | `lead-qa`, bei Assets `lead-art`                             |
+| Gate                                | Nach                                                                     | Prüfen                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Brainstorming                       | Designvorschlag des Design-Leads                                         | `lead-design`                                                                                         |
+| Spec                                | Spec in `docs/superpowers/specs/`                                        | `lead-tech`, `lead-qa`                                                                                |
+| Plan                                | Plan in `docs/superpowers/plans/`                                        | `lead-qa`, `lead-production`                                                                          |
+| Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
+| Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                      |
 
 Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumentiert:
 
 - **Jede Entscheidung** (Gate, Konflikt, Budget-Ausnahme, bewusste Balancing-Änderung, Auslegung
-  einer Nutzer-Anweisung, Experiment) als Ruling in [rulings.md](rulings.md), Format
-  `Ruling: <was> — <warum> — <Kosten bei Irrtum>` ([templates/ruling.md](templates/ruling.md)),
-  neueste unten.
+  einer Nutzer-Anweisung, Experiment) als Ruling in [rulings.md](rulings.md), neueste unten. Ein
+  Ruling **entscheidet und verweist** (R129, [templates/ruling.md](templates/ruling.md)): Entscheid
+  in 1–3 Sätzen, warum, Kosten bei Irrtum, Pfad zu Bericht, Plan oder Retro; Richtwert **≤ 60
+  Wörter**, keine Listen aus Gate-Berichten, Planpflege, Messwerte oder Zeitabläufe. Abnahmen ohne
+  Alternative nur per `log.py result`, kein Ruling.
 - **ADR** unter `docs/adr/`, wo es ein „Warum" mit Bestand gibt (Architektur, Formate,
   Abhängigkeiten, Organisation).
 - Der superpowers-Ledger unter `.superpowers/sdd/` bleibt Arbeitsdatei (gitignored, wird gelöscht).
@@ -239,6 +189,12 @@ L0 stuft jeden Auftrag ein (R2) und nennt die Stufe im Briefing. Hochstufen ist 
   als Kurzdesign im Bericht des Design-Leads, Plan im Tech-Bericht, dann Umsetzung mit Review je
   Paket. Gates Brainstorming, Spec und Plan fallen zu **einem** kombinierten Gate zusammen. Ablauf:
   [Umsetzungszyklus](#umsetzungszyklus).
+- **leicht für Folgepakete (R129):** Folgepakete eines laufenden oder abgeschlossenen Meilensteins
+  ohne Save-Format- oder Architekturänderung und mit einem Strang sind leicht, unabhängig von der
+  Paketzahl. Spec und Plan stehen in **einem** Dokument (Plan als Schlussabschnitt). **Ein** Gate:
+  `lead-tech` und `lead-qa` prüfen parallel ([gates.md](gates.md)), Ownership und Budget prüft L0
+  selbst. Auf BEDENKEN folgt eine Nacharbeit **ohne** Zweitprüfung; eine Zweitprüfung gibt es nur
+  bei einem blockierenden Punkt oder ZURÜCK. Verfassung §9 bleibt unberührt.
 - **voll:** neue Systeme, Save-Format, Architektur, Meilensteine. superpowers-Ablauf komplett:
   brainstorming → Spec (`docs/superpowers/specs/`) → writing-plans (`docs/superpowers/plans/`) →
   subagent-driven-development → Final-Review.
@@ -269,7 +225,7 @@ Ablauf eines Meilensteins (Stufe voll):
    Stränge seriell mergen, CI und Pages prüfen.
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
-   ([Verbesserungsschleife](#verbesserungsschleife)).
+   ([Verbesserungsschleife](verbesserung.md#verbesserungsschleife)).
 
 Ablauf eines Auftrags (Stufe leicht):
 
@@ -297,7 +253,7 @@ Regeln dazu:
 - **Je Task:** Implementierer + `qa-code-reviewer` (Spec-Konformität und Qualität, Urteil
   OK/BEDENKEN/ZURÜCK). Der Tech-Lead ist Controller und darf dafür die QA-Arbeiter starten; ihren
   Qualitätsmassstab verantwortet der QA-Lead. Nach der Abnahme loggt der abnehmende Lead das
-  Ergebnis (`log.py result`, Abschnitt [Messung und Aufwand](#messung-und-aufwand)).
+  Ergebnis (`log.py result`, [verbesserung.md](verbesserung.md#messung-und-aufwand)).
 - **Je UI-Task:** zusätzlich `qa-playtester` (Browser-Check, Screenshots im **Hauptrepo** unter
   `<Hauptrepo>/.studio/qa/<paket>/`, nicht im Worktree; Bericht nach
   [templates/playtest-report.md](templates/playtest-report.md)).
@@ -320,41 +276,24 @@ Regeln dazu:
 
 ## Autonomie
 
-Der Projektleiter **fragt nicht zurück und wartet nie untätig** (Verfassung §5). Er entscheidet
-selbst, hält jede Entscheidung als Ruling fest und arbeitet weiter.
-
-**Ablauf ohne Rückfrage:**
+L0 fragt nicht zurück und wartet nie untätig (Verfassung §5). **Ablauf ohne Rückfrage:**
 
 1. Anweisung des Nutzers lesen. Ist sie mehrdeutig, wählt L0 die plausibelste Auslegung.
 2. Auslegung als Ruling in [rulings.md](rulings.md) festhalten
    (`Ruling: Auslegung „…" als … — <warum> — <Kosten bei Irrtum>`), mit Zweck-Gegenprobe:
-   `Zweck der Anweisung: …; Auslegung widerspricht ihm nicht, weil …` (Experiment E-003).
+   `Zweck der Anweisung: …; Auslegung widerspricht ihm nicht, weil …` (E-003, behalten).
 3. Handeln: Auftrag einstufen, Budget freigeben, Leads briefen.
-4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Folgeissue, Lizenz-Grenzfall, Änderung der
-   Verfassung, Richtungswechsel des Spiels), kommt er in die Warteschlange — alles andere
-   entscheidet L0. Neue Abhängigkeiten sind kein Vorbehalt mehr: L0 entscheidet per Ruling und ADR
-   ([Verfassung §5.7](VERFASSUNG.md#5-autonomie-und-nutzerentscheid-warteschlange), R67; Normalfall
-   bleibt ADR-001). Den user-scope Hook `dep-guard` umgeht niemand; blockt er, meldet L0 den
-   Paketnamen dem Nutzer.
+4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Verfassung §5.3), kommt er in die
+   Warteschlange — alles andere entscheidet L0, auch neue Abhängigkeiten (§5.7, R67). Blockt
+   `dep-guard`, meldet L0 den Paketnamen dem Nutzer.
 
-**Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; `log.py queue` schreibt die
-Datei und ein Event). Die fragende Stelle legt den Eintrag an (`queue --id … --question …`, Status
-`offen`) und nennt die ID im Bericht; L0 trägt die Antwort ein (`--answer`, Status `beantwortet`)
-und schliesst den Eintrag (`--done`, Status `umgesetzt`). Vollständige Aufrufe:
-[Befehlsreferenz](#logging-pflicht). Die ID ist die nächste freie Nummer aus warteschlange.md
-(höchste N-Nummer + 1).
-
-**Um den Punkt herum weiterarbeiten:** Das blockierte Paket geht auf `blocked` mit Verweis auf den
-Eintrag, und L0 zieht das nächste ungeblockte Paket vor:
-
-```bash
-python3 tools/studio/log.py package --id M5-03 --title "Hafen-Musik" --owner lead-art --status blocked --blocked-by N-002 --milestone M5
-```
-
-**Antworten des Nutzers** kommen in einer beliebigen Session („N-002: …" im Prompt oder die Zeile
-„Antwort" in der Datei; eine dort eingetragene Antwort gilt auch bei Status `offen`, Start-Kontext
-und Dashboard zeigen sie). L0 setzt sie **in jeder Session zuerst** um: Antwort eintragen
-(`--answer`), umsetzen, schliessen (`--done`), blockiertes Paket wieder freigeben.
+**Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; Verfassung §5.4–§5.6;
+Aufrufe `log.py queue --help`): Die fragende Stelle legt den Eintrag an (Status `offen`, ID =
+höchste N-Nummer + 1) und nennt die ID im Bericht. Das blockierte Paket geht auf `blocked`
+(`log.py package … --status blocked --blocked-by N-…`), L0 zieht das nächste ungeblockte vor.
+Antworten des Nutzers („N-…: …" im Prompt oder Zeile „Antwort" in der Datei, gilt auch bei Status
+`offen`) setzt L0 **in jeder Session zuerst** um: `--answer` (Status `beantwortet`), umsetzen,
+`--done` (Status `umgesetzt`), Paket wieder freigeben.
 
 **Guard** (`tools/studio/guard.py`, PreToolUse-Hook für L0, Leads und Arbeiter; Verfassung §1.3
 und §6). Er weist mit Begründung ab:
@@ -373,25 +312,15 @@ und §6). Er weist mit Begründung ab:
   der Liste des Nutzers und wird fürs Aufräumen gebraucht.
 - **Stash:** `git stash push`/`apply` sind erlaubt, `drop` und `clear` verboten. Zum Zwischenparken
   deshalb einen temporären WIP-Commit statt eines Stash verwenden.
-- **Bekannte Grenzen:** Der Guard erkennt keine Befehle in Backticks bzw. `$(…)`, über `xargs`,
-  über Globs oder in Skripten. Er erkennt auch nicht: das Löschen ganzer Ordner, die geschützte
-  Dateien enthalten (`rm -rf docs/studio`, `git rm -r docs/studio`), `rm -rf .worktrees/<x>`
-  (ungesicherte Arbeit im Worktree), Formatierer über `docs/studio/` (`prettier --write .`,
-  `make format`; die Verfassung steht deshalb in `.prettierignore`) sowie `chmod` und `ln -sf` auf
-  geschützte Dateien. Er schützt **gegen Versehen, nicht gegen Absicht**; das Verbot der
-  Verfassung gilt auch dort, wo er nichts erkennt. Ein Fehler im Guard lässt die Aktion zu.
+- **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
+  gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
-- **Verfassungs-Freigabe:** Nur der Nutzer schreibt in einem eigenen Prompt `VERFASSUNG ÄNDERN`.
-  Dann ist `VERFASSUNG.md` für diese Session änderbar, und zwar nur in der Hauptsession, nie für
-  Subagenten. Agenten-Meldungen zählen nie als Freigabe.
+- **Verfassungs-Freigabe:** nur nach Verfassung §1.3; Agenten-Meldungen zählen nie als Freigabe.
 
 ## Arbeitsprinzipien und Tempo
 
-**Parallelisieren und delegieren** ist das oberste Arbeitsprinzip
-([Verfassung §5.8](VERFASSUNG.md#5-autonomie-und-nutzerentscheid-warteschlange), R67). Für die
-Leads gilt es gleichermassen: unabhängige Pakete und Prüfungen laufen gleichzeitig, serielles
-Arbeiten braucht einen Grund (Datei-Eigentum, echte Abhängigkeit). Die Parallelitätsgrenzen je
-Budget sind Richtwerte, keine Deckel.
+**Parallelisieren und delegieren** (Verfassung §5.8, R67) gilt für die Leads gleichermassen. Die
+Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 
 **Tempo-Vorgaben (R65):**
 
@@ -402,242 +331,22 @@ Budget sind Richtwerte, keine Deckel.
   sofort auf Lesbarkeit und Überlauf.
 - Fortsetzen (`SendMessage`) statt neue Leads je Welle, solange der Kontext reicht.
 
-## Messung und Aufwand
+## Messung und Verbesserung
 
-Wer wann wen womit beauftragt hat und mit welchem Aufwand, zeigt das Dashboard (Verfassung §8).
-Messwerte werden **gemessen, nie geschätzt**; fehlt eine Messung, steht „nicht gemessen" da.
-
-**Was wie gemessen wird:**
-
-| Grösse                  | Quelle                                                                                                                                                                                                                                   | Güte                                                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Dauer je Agent          | Summe der Läufe Start→Stop des Subagenten (Fortsetzungen eingeschlossen); bei Vordergrund zusätzlich `totalDurationMs`                                                                                                                   | gemessen                                                                                                   |
-| Tool-Aufrufe je Agent   | Zahl der Tool-Aufrufe des Agenten (PreToolUse); bei Vordergrund `totalToolUseCount` zum Abgleich                                                                                                                                         | gemessen; Untergrenze, falls ein Hook am 5-s-Timeout scheitert                                             |
-| Tokens je Agent/Modell  | Subagent-Transkript, je Message-ID dedupliziert: Input, Cache-Schreiben, Cache-Lesen, Output                                                                                                                                             | Input gemessen; Output **Untergrenze**, falls Einträge ohne `stop_reason` fehlen (Anteil wird ausgewiesen) |
-| Dauer L0                | Summe der Turns der Hauptsession (Nutzer-Prompt bzw. Agenten-Meldung → Turn-Ende)                                                                                                                                                        | gemessen; Wartezeit auf den Nutzer zählt nicht                                                             |
-| Tokens L0               | Haupt-Transkript, inkrementell je Turn                                                                                                                                                                                                   | wie oben                                                                                                   |
-| Sitzungssumme           | `cost-state`-Eintrag im Haupt-Transkript nach Session-Ende: Tokens je Modell inkl. Hilfsaufrufe; Kosten                                                                                                                                  | Tokens gemessen; Kosten **berechnet** (Listenpreis, keine Abrechnung); nur beendete Sessions               |
-| Schätzung               | Briefing-Kopfzeile `Schätzung:` (ganzer Auftrag inkl. Unteraufträge; Dezimalminuten wie `0.5 min` erlaubt), verglichen mit Dauer und Tool-Aufrufen des Teilbaums; hat ein Vorfahr eine Schätzung, zählt nur dessen (oberste je Teilbaum) | Schätzung, als solche markiert; fehlt → „keine Schätzung"                                                  |
-| Ergebnis, Review-Runden | `log.py result` durch den abnehmenden Lead bzw. L0                                                                                                                                                                                       | erfasst; fehlt → „nicht erfasst"                                                                           |
-| Fortsetzungen           | erneuter Start derselben Agent-ID (`SendMessage`)                                                                                                                                                                                        | gemessen                                                                                                   |
-| CI                      | `tools/studio/ci.py` über `gh run list` (Session-Start, Session-Ende, nach Push); ein Lauf zählt für die Session, in deren Zeitraum er erstellt wurde                                                                                    | gemessen; ohne `gh` → „nicht gemessen"                                                                     |
-| Eskalationen            | `decision --for l0` + Warteschlangen-Einträge                                                                                                                                                                                            | erfasst                                                                                                    |
-| Inaktiv/gescheitert     | Status `failed`; Lücke ohne Lebenszeichen > `STUDIO_INACTIVE_SECONDS` bei lebendem Status                                                                                                                                                | Lücke gemessen; „inaktiv" ist eine **Heuristik** (lange Bash-Aufrufe erzeugen keine Lebenszeichen)         |
-
-**Nicht messbar** (im Dashboard „nicht gemessen"):
-
-- Kosten je Agent (nur die Sitzungssumme ist bekannt),
-- Denkzeit ohne Tool-Aufruf,
-- Tokens von Hilfsaufrufen je Agent,
-- Aufwand des Nutzers.
-
-**Ergebnis loggen (`log.py result`).** Einmal je (Paket, Arbeiter) mit dem **Endurteil**, geloggt
-vom abnehmenden Lead nach jedem Arbeitsergebnis. Auch L0 loggt `result` für jeden Lead-Bericht
-(`--worker` = Lead). Ein späteres Ergebnis für dasselbe Paar ersetzt das frühere. `--outcome` und
-`--review-rounds` sind immer Pflicht; vollständiger Aufruf in der
-[Befehlsreferenz](#logging-pflicht).
-
-| Endurteil                                | Werte                                                     |
-| ---------------------------------------- | --------------------------------------------------------- |
-| beim ersten Review angenommen            | `--outcome angenommen --review-rounds 1`                  |
-| nach Fix-Runden angenommen               | `--outcome nacharbeit --review-rounds <Zahl der Reviews>` |
-| verworfen                                | `--outcome verworfen --review-rounds <Zahl der Reviews>`  |
-| ohne Review abgenommen (zählt ungeprüft) | `--outcome angenommen --review-rounds 0`                  |
-
-Für L0 zählt jeder Lead-Bericht als Runde: `--review-rounds` ist die Zahl der Berichte, bis L0 das
-Ergebnis angenommen hat. Erster Bericht angenommen → `--outcome angenommen --review-rounds 1`; nach
-einer Nachbesserung per `SendMessage` → `--outcome nacharbeit --review-rounds 2` usw.
-
-Die **Annahmequote beim ersten Wurf** zählt `angenommen` mit `--review-rounds 1` gegen alle geprüften
-Ergebnisse (`--review-rounds` ≥ 1); `--review-rounds 0` wird separat ausgewiesen und nie als Treffer
-gezählt. Mehr als 3 Review-Runden in einem Paket sind ein Vorfall (`runden:<paket>`).
-
-**Meilenstein-Zuordnung** des Aufwands, in dieser Reihenfolge: Kopfzeile `Meilenstein:` im Briefing
-(bzw. `--milestone`) → Meilenstein des Pakets → Meilenstein des delegierenden Vorfahren → der zu
-diesem Zeitpunkt in derselben Session laufende Meilenstein (`log.py milestone`) → „ohne".
-
-**Meilensteine:** L0 loggt Start und Ende (`log.py milestone --id M5 --status start --title "…"`
-bzw. `--status done`). Das Ende löst die Pflicht-Retro aus (Vorfall `meilenstein:<id>`).
-
-**Archiv** `.studio/archiv/` (lokal, gitignored; der alte Ordner `.studio/archive/` wird weiter
-gelesen):
-
-- `briefings/` — voller Prompt jeder Delegation,
-- `berichte/` — volle Schlussmeldung jedes Agenten,
-- `events/` — archivierte Event-Dateien (`make studio-archive`).
-
-Das Dashboard verlinkt Briefings und Berichte unter `/archiv/…`.
-
-**Verdichten:** `make studio-metrics` (letzte Session) bzw.
-`python3 tools/studio/metrics.py --milestone <id>` schreibt `docs/studio/metriken/<kennung>.md`
-([metriken/README.md](metriken/README.md)). Diese Dateien werden committet; sie überdauern das
-lokale Archiv.
-
-**Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
-
-| Reiter     | Link          | Zeigt                                                                                                          |
-| ---------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
-| Live       | `#live`       | Organigramm, Prozess-Graph, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
-| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                                        |
-| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                                         |
-| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                                   |
-| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen                    |
-
-## Verbesserungsschleife
-
-Der **`studio-coach`** (Stabsstelle, `opus`, ohne Arbeiter) wertet die Daten aus, moderiert Retros,
-schlägt Experimente vor, bewertet sie und pflegt [lernen.md](lernen.md) und
-[experimente.md](experimente.md). Er arbeitet nie an Spiel oder Doku und ist nicht in Production —
-so benotet niemand die eigene Arbeitsweise. Angenommene Änderungen setzt er nach dem Ruling von L0
-selbst um (Verfassung §10).
-
-**Auslöser:**
-
-| Retro       | Wann                                          | Umfang                                        |
-| ----------- | --------------------------------------------- | --------------------------------------------- |
-| Meilenstein | nach jedem Meilenstein (Pflicht)              | ausführlich, ≤ 1 Coach-Start                  |
-| Session     | kurz am Ende jeder Session                    | ≤ 1 Coach-Start, ≤ 15 Tool-Aufrufe            |
-| Ad hoc      | bei einem Vorfall (Dashboard: „Retro fällig") | wie Session-Retro, fokussiert auf den Vorfall |
-
-Vorfälle mit stabiler ID: `failed:<agent>` (Agent gescheitert), `inaktiv:<agent>` (Agent hängt),
-`ci:<run>` (CI auf `main` rot), `budget:<lead>:<phase>` (mehr als 1,5 × Freigabe verbraucht),
-`runden:<paket>` (mehr als 3 Review-Runden), `meilenstein:<id>` (Meilenstein beendet). Ein Vorfall
-gilt als erledigt, sobald ein `retro`-Event ihn in `--triggers` nennt. `ci.py` erfasst jeden Versuch
-eines Laufs (`run_id`, `attempt`); ist der neueste Versuch grün (z. B. nach `gh run rerun`), ist
-`ci:<run>` ohne Retro erledigt.
-
-```mermaid
-flowchart LR
-  R[Retro durch Coach] --> V[Vorschlag als Experiment]
-  V --> E{Ruling L0}
-  E -->|abgelehnt| X[experimente.md: abgelehnt]
-  E -->|angenommen| U[Coach ändert, Version und CHANGELOG]
-  U --> B[Beobachtungszeitraum]
-  B --> W[Bewertung gegen Schwelle]
-  W --> F{Ruling L0}
-  F --> K[behalten, angepasst oder zurückgenommen]
-```
-
-**Ablauf:**
-
-1. **Start:** L0 startet den Coach mit Auslöser, Vorfall-IDs und den Agent-IDs der Leads dieser
-   Session (für Rückfragen per `SendMessage`).
-2. **Auswerten:** Der Coach verdichtet (`metrics.py`), liest Metrik-Dateien, Berichte und Archiv
-   und befragt die Leads per `SendMessage`; nicht erreichbare Leads ersetzt er durch ihre
-   Archiv-Berichte.
-3. **Bericht:** Retro-Bericht nach [templates/retro.md](templates/retro.md) unter
-   `docs/studio/retros/`, mit Befunden und **höchstens 3 Vorschlägen**, jeder als Experiment nach
-   [templates/experiment.md](templates/experiment.md), den der Coach gleich mit Status
-   `vorgeschlagen` in experimente.md einträgt. Danach
-   `log.py retro --id <id> --kind <art> --triggers <vorfall-ids> --report <pfad>` — das quittiert
-   die genannten Vorfälle.
-4. **Entscheid:** L0 entscheidet je Vorschlag per Ruling. Abgelehnt → Status `abgelehnt` in
-   experimente.md.
-5. **Umsetzen und bewerten:** Angenommen → der Coach ändert die Dateien, zählt die Version hoch,
-   schreibt den CHANGELOG-Eintrag und setzt das Experiment auf `laufend`. Nach dem Zeitraum
-   bewertet er gegen die vorab festgelegte Schwelle (`behalten` / `angepasst` / `zurückgenommen`);
-   L0 bestätigt per Ruling. Zurückgenommen → Rückfallzustand wiederherstellen, Version erneut
-   hochzählen.
-
-**Versionierung:**
-
-- Handbuch: **Minor** je angenommenem Experiment (1.0 → 1.1), **Major** bei einem Umbau der
-  Organisation (1.x → 2.0). Die Version steht im Kopf dieser Datei.
-- Persona: **Minor** je Änderung, Frontmatter-Feld `version` in `.claude/agents/<name>.md`.
-- Jede Version bekommt einen Eintrag in [CHANGELOG.md](CHANGELOG.md), neueste oben:
-  `## <Datum> · Handbuch <Version>` bzw. `## <Datum> · Persona <name> <Version>`, darunter Anlass,
-  Datenbasis, Ruling, Änderungen.
-
-**Leitplanken:**
-
-- Die Verfassung ist tabu; Vorschläge an sie gehen in die [Warteschlange](warteschlange.md).
-- Höchstens **3** Experimente laufen gleichzeitig.
-- Jede Änderung braucht eine **Datenbasis** (Metrik-Datei oder Retro-Bericht); ausgenommen sind
-  offensichtliche Fehler.
-- Kein Experiment darf die **Messbarkeit** seiner eigenen Wirkung verschlechtern (Prüffrage in
-  [templates/experiment.md](templates/experiment.md)).
-- [lernen.md](lernen.md) hat höchstens **40 Inhaltszeilen**; der Coach streicht Veraltetes.
-
-Den Konsistenztest `tools/studio/tests/test_docs.py` (Teil von `make check`) hält jede Änderung
-grün: Handbuch-Version = neuester CHANGELOG-Eintrag, Persona-Versionen, höchstens 3 laufende
-Experimente, lernen.md-Länge, Verfassung vollständig, fester Regelblock gleich wie in der Vorlage.
-
-**Kostenrahmen:** Kurz-Retro ≤ 1 Coach-Start und ≤ 15 Tool-Aufrufe; Meilenstein-Retro ≤ 1
-Coach-Start.
+Was wie gemessen wird, `log.py result`, Meilenstein-Zuordnung, Archiv, Dashboard-Reiter, Retros,
+Experimente, Versionierung und Leitplanken: [verbesserung.md](verbesserung.md) (Teil des Handbuchs,
+R129). Grundsätze: [Verfassung §8 und §10](VERFASSUNG.md#8-transparenz-und-logging).
 
 ## Logging-Pflicht
 
-Dass ein Agent lebt, sieht das Dashboard ohnehin; **was** ein Agent tut, worauf er wartet und was er
-geliefert hat, sieht es nur, wenn er loggt. Die Hooks (`.claude/settings.json` →
-`tools/studio/hook.py`) erfassen **automatisch**: Session-Start/-Ende, Nutzer-Prompts, Turn-Ende,
-Start und Stop jedes Subagenten, Eltern-Kind-Zuordnung (ein `bind` für einen unbekannten Agenten
-erzeugt keinen Knoten), jeden Tool-Aufruf als Lebenszeichen,
-Briefings und Berichte fürs Archiv sowie den Token-Verbrauch. **Explizit** loggt jeder Agent mit
+Jeder Agent loggt Beginn, Warten bzw. Hindernis, Abschluss und Abbruch explizit mit
 `tools/studio/log.py` — immer als eigener Bash-Aufruf, damit der Hook ihn dem richtigen Agenten
-zuordnet.
-
-Befehlsreferenz:
-
-```bash
-# Status (Werte: active, delegated, waiting, blocked, idle, done, failed, ended)
-python3 tools/studio/log.py status --role lead-tech --status active --task "Plan M5 schreiben" --package M5-plan
-python3 tools/studio/log.py status --role tech-sim-engineer --status done --summary "Warenfluss-Test grün" --package M5-02
-
-# Ergebnis eines Arbeitsergebnisses (abnehmender Lead; L0 für Lead-Berichte)
-python3 tools/studio/log.py result --role lead-tech --package M5-02 --worker tech-sim-engineer --outcome nacharbeit --review-rounds 2 --milestone M5
-
-# Meilenstein starten und beenden (nur L0)
-python3 tools/studio/log.py milestone --id M5 --status start --title "Handel und Schiffe"
-python3 tools/studio/log.py milestone --id M5 --status done
-
-# Retro (Coach; quittiert die genannten Vorfälle)
-python3 tools/studio/log.py retro --id R-2026-10-05-m5 --kind meilenstein --triggers meilenstein:M5,runden:M5-03 --report docs/studio/retros/2026-10-05-meilenstein-m5.md
-
-# Nutzerentscheid-Warteschlange: anlegen (offen), Antwort eintragen (beantwortet), schliessen (umgesetzt)
-# ID = nächste freie Nummer aus warteschlange.md (höchste N-Nummer + 1)
-python3 tools/studio/log.py queue --id N-002 --title "Lizenz-Grenzfall Hafen-Musik" --question "Darf M5 den Titel unter CC-BY-SA mit Zusatzklausel einbauen?" --recommendation "Nein, synthetisch erzeugen" --reason "Verfassung §4: Grenzfälle entscheidet der Nutzer" --cost "M5-03 wartet, M5-04 läuft weiter" --blocks M5-03 --from lead-art
-python3 tools/studio/log.py queue --id N-002 --answer "Nein, synthetisch erzeugen"
-python3 tools/studio/log.py queue --id N-002 --done "M5-03 mit synthetischer Musik neu gebrieft"
-
-# Budget (nur L0; Aufteilung des Beispiels aus „Budget")
-python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
-python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-umsetzung
-
-# Paket (Status: open, active, review, blocked, done)
-python3 tools/studio/log.py package --id M5-02 --title "Warenfluss" --owner lead-tech --status blocked --blocked-by M5-01 --milestone M5
-
-# Entscheid an L0 öffnen und lösen (nur --for l0; Nutzer-Vorbehalte gehen in die Warteschlange)
-python3 tools/studio/log.py decision --id D-012 --for l0 --question "Budget +4 für Fix-Runden?" --recommendation "Ja, 2 Reviews ZURÜCK" --from lead-tech
-python3 tools/studio/log.py decision --id D-012 --resolution "Freigegeben, +4"
-
-# Ereignisdatei archivieren (gleich wie make studio-archive)
-python3 tools/studio/log.py archive
-```
-
-Wann wer loggt:
-
-| Anlass                           | Wer                                  | Aufruf                                                |
-| -------------------------------- | ------------------------------------ | ----------------------------------------------------- |
-| Arbeitsbeginn                    | jeder Agent                          | `status --status active --task "<Auftrag>"`           |
-| vor dem Starten von Arbeitern    | Leads, L0                            | `status --status delegated`                           |
-| Warten auf Antwort / Hindernis   | jeder Agent                          | `status --status waiting` bzw. `blocked` mit `--task` |
-| Abschluss                        | jeder Agent                          | `status --status done --summary "<Ergebnis>"`         |
-| Abbruch, Auftrag nicht erfüllbar | jeder Agent                          | `status --status failed --summary "<Grund>"`          |
-| Abnahme eines Arbeitsergebnisses | abnehmender Lead; L0 je Lead-Bericht | `result …`                                            |
-| Meilenstein beginnt / endet      | L0                                   | `milestone --status start` bzw. `done`                |
-| Retro abgeschlossen              | `studio-coach`                       | `retro … --triggers …`                                |
-| Nutzer-Vorbehalt                 | fragende Stelle                      | `queue --id … --question …`                           |
-| Antwort des Nutzers / umgesetzt  | L0                                   | `queue --id … --answer …` bzw. `--done …`             |
-| Budgetfreigabe (je Session neu)  | L0                                   | `budget …`                                            |
-| Paket angelegt / Statuswechsel   | L0, zuständiger Lead                 | `package …`                                           |
-| Frage an L0, Entscheid           | fragende Stelle, L0                  | `decision --for l0 …`                                 |
-
-`idle` (L0 wartet auf den Nutzer) und `ended` (Session-Ende) setzen die Hooks. Als inaktiv markiert
-das Dashboard Knoten ohne Lebenszeichen seit 5 Minuten (`STUDIO_INACTIVE_SECONDS`), ausser `idle`
-und Knoten mit aktiven Kindern (R9). Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
-beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`, Metriken
-verdichten mit `make studio-metrics`. Vor Commits an `tools/studio/`: `make studio-lint` (Ruff über
-`uvx`; bewusst nicht Teil von `make check`).
+zuordnet. Alles andere (Start/Stop, Tool-Aufrufe, Briefings, Berichte, Tokens) erfassen die Hooks
+automatisch. Aufrufe und Parameter: `python3 tools/studio/log.py --help` bzw.
+`log.py <befehl> --help` und der Abschnitt „Bericht und Logging" der eigenen Persona; wer wann was
+loggt: [verbesserung.md, Logging im Detail](verbesserung.md#logging-im-detail). Dashboard:
+`make studio` (URL `http://127.0.0.1:8765/`), Metriken `make studio-metrics`. Vor Commits an
+`tools/studio/`: `make studio-lint`.
 
 ## Session-Start und -Ende
 
@@ -658,12 +367,13 @@ nachfragen oder warten verlangt; Verfassung §1.4):
    steht in `state.md` und in den Übergaben unter `.studio/handoffs/`). Beantwortete
    Warteschlangen-Einträge zuerst umsetzen; offene Vorfälle → Ad-hoc-Retro.
 
-**Parallele L0-Sessions** (Experiment E-002): Läuft beim Start bereits eine andere L0-Session
-(Dashboard, Abschnitt „Parallele Sessions" in [state.md](state.md)), trägt L0 dort vor der ersten
-Delegation ein, welche geteilten Pfade (z. B. `tools/studio/`, Handbuch, `src/sim/`) welche Session
-bis zu welchem Merge besitzt und in welcher Reihenfolge gemergt wird, oder übernimmt den
-vorhandenen Eintrag. Gegen Pfade einer anderen Session wird erst nach deren Merge geplant und
-umgesetzt. Nach dem eigenen Merge oder am Session-Ende gibt L0 seine Pfade dort frei.
+**Eine aktive L0-Session je Repo** (R129, Experiment E-007): Standard ist genau eine aktive
+L0-Session. Läuft beim Start bereits eine andere (Dashboard, [state.md](state.md)), arbeitet die
+neue nur lesend oder beendet sich; Übernahme oder Parallelität nur per **L0-Ruling mit
+Datei-Eigentum** (welche Session welche geteilten Pfade bis zu welchem Merge besitzt, Reihenfolge der
+Merges, Eintrag in `state.md`). Nur dann gilt zusätzlich: vor jedem Ruling `git fetch` und die
+R-Nummer gegen `origin/main` prüfen, Strang-Branches nach jeder Abnahme pushen (R107), gegen Pfade
+der anderen Session erst nach deren Merge planen.
 
 Das Dashboard öffnet sich beim ersten Subagenten-Start von L0 automatisch im Browser (einmal je
 Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).
