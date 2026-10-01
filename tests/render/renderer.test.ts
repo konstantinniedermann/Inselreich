@@ -1,8 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
+import { SMOKE_COLOR } from '../../src/render/fx';
 import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
-import { PALETTE, SHADOW, mixHex, rgbOfCss, rgbaOf } from '../../src/render/palette';
+import { PALETTE, SHADOW, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import {
@@ -580,14 +581,16 @@ describe('Renderer', () => {
       expect(log.compositeSet.filter((c) => c === 'lighter')).toHaveLength(1);
       const add = ev.findIndex((e) => e.composite === 'lighter');
       expect(add).toBeGreaterThan(mul);
-      expect(ev.filter((e) => e.composite === 'lighter').every((e) => e.op === 'fillRect')).toBe(
-        true,
-      );
+      // Bodenschein skaliert die Matrix (transform); gefüllt wird nur mit fillRect
+      expect(
+        ev
+          .filter((e) => e.composite === 'lighter')
+          .every((e) => e.op === 'fillRect' || e.op === 'transform'),
+      ).toBe(true);
     });
 
     it('M7-R3 Rauchbudget begrenzt nur den Rauch: 20 sichtbare Feuer → Rauch ≤ 150 (reduziert ≤ 50), alle 20 Flammen', () => {
-      const [r, g, b] = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.4));
-      const smokeStyle = `rgba(${r},${g},${b},`;
+      const smokeStyle = `rgba(${SMOKE_COLOR.join(',')},`;
       for (const reduce of [false, true]) {
         const sc = scene();
         sc.world.order = order;

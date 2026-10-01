@@ -17,6 +17,12 @@ const FOAM_SWING = 0.075; // Wanderweite zum Strand hin und zurück (Spec 5.2: �
 const WAVE_PERIOD_MS = 2400;
 const WAVE_AMPLITUDE = 0.07;
 const WAVE_LINE_WIDTH = 0.04;
+/** Darstellungszuschläge im Sturm über die Spec-Faktoren hinaus (QA-R3 B2: Wellen sollen sichtbar höher wirken). */
+export const STORM_AMP_BOOST = 0.5; // Amplitude × (1 + w) × (1 + 0,5 w)
+export const STORM_WAVE_ALPHA = 0.32; // Deckkraft der Wellenstriche bei w = 1 (Ruhe: WAVE_ALPHA)
+const STORM_WAVE_LENGTH = 0.15; // Verlängerung je Seite in Kacheln bei w = 1
+export const stormWaveAlpha = (w: number): number =>
+  WAVE_ALPHA + (STORM_WAVE_ALPHA - WAVE_ALPHA) * w;
 /**
  * Tiefe (Kachelmitte, in Kacheln) ab der Wellenstriche liegen. Spec: nur auf Wasser mit −s ≥ 1. Eine Kachel mit
  * Mittenwert 1 enthält Pixel mit −s < 1, also Flachwasser; erst ab 2 liegt jede Lage der Striche im Tiefenbereich.
@@ -189,7 +195,7 @@ export function drawWaves(
     weather.kind === 'storm' && Number.isFinite(weather.w)
       ? Math.min(1, Math.max(0, weather.w))
       : 0;
-  const ampK = (1 + sw) * (reduce ? 0.5 : 1),
+  const ampK = (1 + sw) * (1 + STORM_AMP_BOOST * sw) * (reduce ? 0.5 : 1),
     widthK = 1 + 1.5 * sw,
     periodK = 1 - 0.4 * sw;
 
@@ -229,7 +235,8 @@ export function drawWaves(
 
   // Wellenstriche: foam mit Deckkraft 0,12, nur im tiefen Wasser
   const t = (timeMs / (WAVE_PERIOD_MS * periodK)) * Math.PI * 2;
-  ctx.lineWidth = WAVE_LINE_WIDTH;
+  ctx.lineWidth = WAVE_LINE_WIDTH * (1 + sw);
+  const ext = STORM_WAVE_LENGTH * sw;
   ctx.beginPath();
   let waves = false;
   for (let y = y0; y <= y1; y++)
@@ -238,12 +245,12 @@ export function drawWaves(
       if (world.tiles[i]!.terrain !== 'water' || info.depth[i]! < WAVE_MIN_DEPTH) continue;
       const ph = info.phase[i]!;
       const wy = y + info.lift[i]! + Math.sin(t + ph) * WAVE_AMPLITUDE * ampK;
-      ctx.moveTo(x + 0.2, wy);
-      ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * ampK * Math.cos(t + ph), x + 0.8, wy);
+      ctx.moveTo(x + 0.2 - ext, wy);
+      ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * ampK * Math.cos(t + ph), x + 0.8 + ext, wy);
       waves = true;
     }
   if (waves) {
-    ctx.strokeStyle = rgbaOf(PALETTE.foam, WAVE_ALPHA);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(stormWaveAlpha(sw).toFixed(4)));
     ctx.stroke();
   }
 }

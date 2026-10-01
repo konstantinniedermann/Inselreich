@@ -5,10 +5,11 @@ import {
   drawFire,
   drawFireGlow,
   drawWarnRing,
+  smokePuffs,
   warnRingAlpha,
 } from '../../src/render/fx';
 import { fireTongues, rainStreaks } from '../../src/render/limits';
-import { PALETTE, SIGNAL_NAMES, rgbaOf } from '../../src/render/palette';
+import { PALETTE, SIGNAL_NAMES, rgbOf, rgbaOf } from '../../src/render/palette';
 import { fakeCtx } from './fakeCtx';
 
 const R = { x: 100, y: 80, w: 64, h: 60 };
@@ -107,6 +108,34 @@ describe('Krisen-Effekte (Spec 6.5)', () => {
     expect(rings[1]!.alpha).toBe(1);
     expect(rings[1]!.composite).toBe('source-over');
     expect(rgbaOf(PALETTE.signalWarn, 1)).toBeTruthy();
+  });
+
+  it('QA-R3 B1 Rauch dichter und dunkler: Deckkraft bis 0,85, Kontur je Puff, Farbe dunkler als rockDark', () => {
+    const { ctx, log } = fakeCtx();
+    drawFire(ctx, R, 0, { flames: 0, smoke: 1 });
+    const fills = log.events.filter((e) => e.op === 'fill');
+    const strokes = log.events.filter((e) => e.op === 'stroke');
+    expect(fills).toHaveLength(smokePuffs(1));
+    expect(strokes).toHaveLength(fills.length);
+    const a = (css: string) => Number(/,([\d.]+)\)$/.exec(css)![1]);
+    expect(Math.max(...fills.map((e) => a(e.style)))).toBeGreaterThan(0.6);
+    const [r, g, b] = /rgba\((\d+),(\d+),(\d+)/.exec(fills[0]!.style)!.slice(1).map(Number);
+    const [dr, dg, db] = rgbOf(PALETTE.rockDark);
+    expect(r! + g! + b!).toBeLessThan((dr + dg + db) * 0.5);
+    expect(smokePuffs(1) * 1).toBeLessThanOrEqual(150); // CAP_SMOKE je Feuer nie überschritten
+    expect(smokePuffs(1, true)).toBeLessThanOrEqual(50);
+  });
+
+  it('QA-R3 B1 Glut: Schein am Boden (flache Ellipse) zusätzlich zum Dachschein, additiv aufrufbar, mit save/restore', () => {
+    const { ctx, log } = fakeCtx();
+    drawFireGlow(ctx, R, 100, 1);
+    const rects = log.events.filter((e) => e.op === 'fillRect');
+    expect(rects).toHaveLength(2);
+    // Bodenschein: y-Skalierung 0,5 in der Matrix, liegt im unteren Teil der Bildbox
+    const ground = rects[0]!;
+    expect(ground.matrix[3]).toBeCloseTo(0.5, 9);
+    expect(ground.matrix[5]).toBeGreaterThan(R.y + R.h * 0.5);
+    expect(log.saves).toBe(log.restores);
   });
 
   it('EXTINGUISHED_TICKS ist 60 (R85 Punkt 12)', () => expect(EXTINGUISHED_TICKS).toBe(60));

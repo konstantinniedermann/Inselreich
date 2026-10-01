@@ -21,9 +21,10 @@ const spread = (i: number, salt: number): number => {
   return s - Math.floor(s);
 };
 
-const SMOKE_COLOR = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.4));
+/** Rauchfarbe als `r,g,b`-Tripel (Tests und Renderer erkennen den Rauch daran). */
+export const SMOKE_COLOR = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.7)); // QA-R3 B1: dunkler, auch auf Fels lesbar
 const SMOKE_PERIOD_MS = 3000;
-const SMOKE_PUFFS = [10, 4] as const; // je Feuer [normal, reduziert]; Summe bleibt unter CAP_SMOKE
+const SMOKE_PUFFS = [14, 5] as const; // je Feuer [normal, reduziert]; Summe bleibt unter CAP_SMOKE
 /** Anzahl Rauchpuffs eines Feuers zur Rauchstärke `smoke`. */
 export const smokePuffs = (smoke: number, reduce = false): number =>
   Math.ceil(clamp01(smoke) * SMOKE_PUFFS[reduce ? 1 : 0]);
@@ -74,11 +75,16 @@ export function drawFire(
     const a = (timeMs / SMOKE_PERIOD_MS + i / puffs + spread(i, 3) * 0.1) % 1; // Alter 0…1
     const x = rect.x + rect.w * (0.3 + 0.4 * spread(i, 4)) + a * rect.w * 0.7; // Wind nach rechts
     const y = baseY - maxH * 0.3 - a * rect.h * 1.1;
-    const r = rect.w * (0.07 + 0.12 * a);
-    ctx.fillStyle = `rgba(${SMOKE_COLOR.join(',')},${(0.45 * (1 - a) * clamp01(smoke)).toFixed(3)})`;
+    const r = rect.w * (0.1 + 0.16 * a);
+    const fade = (1 - a) * clamp01(smoke);
+    ctx.fillStyle = `rgba(${SMOKE_COLOR.join(',')},${(0.85 * fade).toFixed(3)})`;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
+    // leichte Kontur: hebt den Rauch vom Untergrund ab
+    ctx.strokeStyle = `rgba(${rgbOfCss(DARK_OUTLINE).join(',')},${(0.5 * fade).toFixed(3)})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -96,8 +102,22 @@ export function drawFireGlow(
     cy = rect.y + rect.h * 0.4,
     r = rect.w * 0.9;
   const flick = 0.8 + 0.2 * Math.sin(timeMs / 170);
+  ctx.save();
+  // Schein am Boden (QA-R3 B1): flache Ellipse um den Fuss des Gebäudes
+  const gx = cx,
+    gy = rect.y + rect.h * 0.82,
+    gr = rect.w * 1.1;
+  ctx.translate(gx, gy);
+  ctx.scale(1, 0.5);
+  const ground = ctx.createRadialGradient(0, 0, 0, 0, 0, gr);
+  ground.addColorStop(0, rgbaOf(PALETTE.lightEvening, Number((0.7 * f * flick).toFixed(3))));
+  ground.addColorStop(0.6, rgbaOf(PALETTE.lightEvening, Number((0.3 * f * flick).toFixed(3))));
+  ground.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
+  ctx.fillStyle = ground;
+  ctx.fillRect(-gr, -gr, 2 * gr, 2 * gr);
+  ctx.restore();
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  g.addColorStop(0, rgbaOf(PALETTE.lightEvening, Number((0.4 * f * flick).toFixed(3))));
+  g.addColorStop(0, rgbaOf(PALETTE.lightEvening, Number((0.5 * f * flick).toFixed(3))));
   g.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
   ctx.save();
   ctx.fillStyle = g;
