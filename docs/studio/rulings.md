@@ -1376,3 +1376,14 @@ einem Branch von main, testgetrieben, mit Merge im Final-Gate. — Warum: Spec-T
 Irrtum: eine Fix-Runde.
 
 Entscheider: L0 · Anlass: Review M7-R4
+
+## R115 · 2026-10-01 · HUD-Bilanz bei Brand nach Spec
+
+Ruling: Die HUD-Warenbilanz zeigt bei einem brennenden Betrieb weiter die Dauerleistung (M6-Spec 11);
+L0 hatte im Briefing der UI-Nachzüge versehentlich das Gegenteil verlangt. `runningBalance` (hud.ts,
+d38b9af) wird zurückgenommen. Das Info-Panel des brennenden Betriebs darf „Erzeugt X nicht — Betrieb
+brennt" zeigen, weil das ein Zustand des einzelnen Gebäudes ist, keine Bilanz (Spec-Notiz im Doku-Pass).
+— Warum: Die Spec-Setzung ist bewusst (Bilanz = Planungsgrösse, kurze Ausfälle verzerren sie nicht);
+Spec-Treue vor L0-Eingebung (E-003 Zweck-Gegenprobe). — Kosten bei Irrtum: eine kleine Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht tech-ui-engineer M6-U3
