@@ -461,6 +461,21 @@ in `crises.ts`), durch AK-S4-02/03 gleich gehalten.
 **Einschätzung:** (c) und (e) gehören zu M6-U1; (a), (b), (f) beim nächsten Sim-Durchgang; (d) mit
 dem Spielstand-Validierungs-Eintrag zusammen auswerten.
 
+### 2026-10-01 · Plan-Vorlagen (`docs/superpowers/plans/`) · Rot-Erwartung bei fehlendem Export
+
+**Beobachtung:** Pläne erwarten für den roten Testlauf die Meldung „does not provide an export". Vitest
+liefert bei einem fehlenden Export stattdessen einen Laufzeit-`TypeError`.
+**Ursprung:** M6-Sim, Tasks S2, S4 und B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** niedrig; Hinweis für künftige Pläne (Rot-Erwartung „TypeError … is not a function"
+bzw. allgemein „Test rot").
+
+### 2026-10-01 · `tests/sim/scenarios.ts` · Importreihenfolge
+
+**Beobachtung:** Der Import aus `defs/timing` steht vor `defs/tiers` und ist damit nicht alphabetisch.
+**Ursprung:** Review M6-B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** kosmetisch; beim nächsten Eingriff in die Datei mitziehen. M7-R1b fügt dort einen
+Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
