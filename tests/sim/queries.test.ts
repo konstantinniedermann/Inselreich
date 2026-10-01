@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, tilesInRadius } from '../../src/sim/world';
+import { beginCrisis, isProtected } from '../../src/sim/crises';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../../src/sim/build';
 import { totalUpkeep } from '../../src/sim/economy';
 import { recomputeConnectivity } from '../../src/sim/roads';
@@ -11,11 +12,13 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, STORAGE_CAP } from '../../src/sim/defs/goods';
 import {
   coverageMask,
+  crisisView,
   effectiveRefund,
   goodsBalance,
   houseDiagnosis,
   layoutKey,
   placementZone,
+  unprotectedFlammables,
 } from '../../src/sim/queries';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import {
@@ -259,10 +262,170 @@ describe('queries', () => {
       () => placementZone(w, 'lumberjack', 10, 10),
       () => effectiveRefund(w, BUILDING_DEFS.chapel.cost),
       () => layoutKey(w),
+      () => crisisView(w),
+      () => unprotectedFlammables(w),
+      () => coverageMask(w, 'fire'),
     ];
     for (const call of calls) {
       call();
       expect(serialize(w)).toBe(snapshot);
     }
+  });
+});
+
+/** Feuerwache direkt eingefügt (Abdeckung liest nur `connected` und Lage). */
+function station(world: World, x: number, y: number, connected: boolean): Building {
+  const b: Building = {
+    id: nextTestId++,
+    defId: 'firestation',
+    x,
+    y,
+    connected,
+    progress: 0,
+    state: 'ok',
+  };
+  world.buildings[b.id] = b;
+  return b;
+}
+
+describe('M6 Abfragen', () => {
+  it('AK-S4-01 crisisView für off, Leerlauf, Sturm, Brand, Boom', () => {
+    expect(crisisView(createWorld(3))).toEqual({ phase: 'none', next: null });
+    const n = createWorld(3, { crisisLevel: 'normal' });
+    expect(crisisView(n)).toEqual({ phase: 'none', next: 2400 });
+    n.tick = 2400;
+    beginCrisis(n, 0, { kind: 'storm' });
+    expect(crisisView(n)).toMatchObject({ phase: 'warning', kind: 'storm', remaining: 201 });
+    n.tick = 2601;
+    expect(crisisView(n)).toMatchObject({
+      phase: 'active',
+      remaining: 299,
+      from: 2601,
+      until: 2900,
+    });
+    const f = createWorld(3, { crisisLevel: 'normal' });
+    const chapel = placeService(
+      f,
+      'chapel',
+      f.buildings[f.kontorId]!.x + 3,
+      f.buildings[f.kontorId]!.y + 3,
+    );
+    f.tick = 2400;
+    beginCrisis(f, 0, { kind: 'fire', tile: { x: chapel.x, y: chapel.y } });
+    expect(crisisView(f)).toMatchObject({
+      phase: 'active',
+      kind: 'fire',
+      remaining: 200,
+      from: 2400,
+      target: chapel.id,
+      targetExists: true,
+      outcome: 'burning',
+    });
+    delete f.buildings[chapel.id];
+    expect(crisisView(f)).toMatchObject({ targetExists: false });
+    const bm = createWorld(3, { crisisLevel: 'normal' });
+    bm.tick = 2400;
+    beginCrisis(bm, 0, { kind: 'boom', good: 'food' });
+    expect(crisisView(bm)).toMatchObject({
+      phase: 'active',
+      good: 'food',
+      remaining: 300,
+      targetExists: false,
+    });
+  });
+
+  it('AK-S4-02 Maske fire gleich isProtected für jedes 1×1-Gebäude; nicht angebunden → leer', () => {
+    const s = station(w, k.x + 6, k.y + 4, true);
+    const mask = coverageMask(w, 'fire');
+    expect(mask).toHaveLength(4096);
+    for (let y = 0; y < w.height; y++)
+      for (let x = 0; x < w.width; x++) {
+        const probe = {
+          id: -1,
+          defId: 'fisher',
+          x,
+          y,
+          connected: true,
+          progress: 0,
+          state: 'ok',
+        } as Building;
+        expect(mask[y * w.width + x], `${x},${y}`).toBe(isProtected(w, probe));
+      }
+    s.connected = false;
+    expect(coverageMask(w, 'fire').some(Boolean)).toBe(false);
+  });
+
+  it('AK-S4-03 brennende Kapelle liefert keine Abdeckung faith', () => {
+    const chapel = placeService(w, 'chapel', k.x + 3, k.y + 3);
+    w.crisisLevel = 'normal';
+    w.tick = 2400;
+    beginCrisis(w, 0, { kind: 'fire', tile: { x: chapel.x, y: chapel.y } });
+    expect(chapel.outageUntil).toBeDefined();
+    expect(coverageMask(w, 'faith').some(Boolean)).toBe(false);
+    const faith = coverageMask(w, 'faith');
+    for (let y = 0; y < w.height; y++)
+      for (let x = 0; x < w.width; x++) {
+        const probe = {
+          id: -1,
+          defId: 'house',
+          x,
+          y,
+          connected: false,
+          progress: 0,
+          state: 'ok',
+        } as Building;
+        expect(faith[y * w.width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
+      }
+  });
+
+  it('AK-S4-04 layoutKey enthält die Ausfälle: Brand ändert, Ende stellt wieder her', () => {
+    prepareEast(w, k);
+    expect(placeRoad(w, k.x + 2, k.y).ok).toBe(true);
+    forceGrass(w, k.x + 3, k.y - 1);
+    forceGrass(w, k.x + 3, k.y);
+    w.tiles[idx(w, k.x + 3, k.y - 1)]!.terrain = 'forest';
+    const lj = placeBuilding(w, 'lumberjack', k.x + 3, k.y);
+    expect(lj.ok).toBe(true);
+    w.crisisLevel = 'normal';
+    w.tick = 2400;
+    const k0 = layoutKey(w);
+    beginCrisis(w, 0, { kind: 'fire', tile: { x: k.x + 3, y: k.y } });
+    const k1 = layoutKey(w);
+    expect(k1).not.toBe(k0);
+    for (let i = 0; i < 200; i++) step(w);
+    expect(layoutKey(w)).not.toBe(k1);
+    expect(layoutKey(w)).toBe(k0);
+
+    const calm = createWorld(3);
+    const kc = calm.buildings[calm.kontorId]!;
+    prepareEast(calm, kc);
+    const c0 = layoutKey(calm);
+    for (let i = 0; i < 100; i++) step(calm);
+    expect(layoutKey(calm)).toBe(c0);
+  });
+
+  it('AK-S4-05 unprotectedFlammables aufsteigend; Wache schützt nur im Radius', () => {
+    const chapel = placeService(w, 'chapel', k.x + 3, k.y + 3);
+    const sheep: Building = {
+      id: nextTestId++,
+      defId: 'sheepfarm',
+      x: k.x + 30,
+      y: k.y,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+    };
+    w.buildings[sheep.id] = sheep;
+    houseNearKontor(w);
+    direct(w, 'market', true);
+    expect(unprotectedFlammables(w).map((b) => b.id)).toEqual([chapel.id, sheep.id]);
+    station(w, k.x + 4, k.y + 6, true);
+    expect(unprotectedFlammables(w).map((b) => b.id)).toEqual([sheep.id]);
+  });
+
+  it('AK-S4-06 placementZone der Feuerwache: Kreis mit serviceRadius', () => {
+    const z = placementZone(w, 'firestation', 20, 20)!;
+    expect(z).toMatchObject({ cx: 20.5, cy: 20.5, radius: 8 });
+    expect(z.tiles).toEqual(tilesInRadius(w, 20.5, 20.5, 8));
   });
 });
