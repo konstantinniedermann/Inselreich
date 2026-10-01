@@ -448,6 +448,19 @@ Der Sieg im Lauf `normal` hängt zudem an der Wachenposition (Spiegelplatz vermu
 **Einschätzung:** Kein Design-Risiko für Spieler (Bot hält keinen Puffer), aber Test-Risiko: bei
 jeder Änderung in `src/sim/defs/` zuerst diesen Lauf prüfen.
 
+### 2026-10-01 · `src/sim/`, `tests/sim/`, `src/ui/inspect.ts` · Nachträge Final-Review M6-Sim
+
+**Beobachtung:** (a) `tests/sim/scenario-saves.test.ts:215` führt brennbare Gebäude als feste
+Id-Liste statt über das Flag `flammable`. (b) `src/sim/save.ts:86-87` wiederholt `CrisisKind` und
+`FireOutcome` als Listen. (c) `src/ui/inspect.ts:30-31` zeigt „Brennt" nicht für Dienste und nicht
+für brennende, nicht angebundene Betriebe. (d) `isWellFormed` prüft `tick` nicht als
+nicht-negative Ganzzahl (bestand schon vor M6). (e) Feuerwache ohne Hinweis, dass sie ohne Krisen
+nicht wirkt (Tooltip). (f) Abdeckungsregel der Feuerwache doppelt (`queries.ts` und `isProtected`
+in `crises.ts`), durch AK-S4-02/03 gleich gehalten.
+**Ursprung:** Final-Review lead-qa M6-Sim (R102), Bericht lead-tech M6-SIM.
+**Einschätzung:** (c) und (e) gehören zu M6-U1; (a), (b), (f) beim nächsten Sim-Durchgang; (d) mit
+dem Spielstand-Validierungs-Eintrag zusammen auswerten.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)

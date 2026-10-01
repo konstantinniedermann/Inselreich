@@ -1180,3 +1180,20 @@ dokumentiert statt versteckt. — Kosten bei Irrtum: Balancing-Grenze wird bei d
 Werteänderung früher sichtbar (gewollt).
 
 Entscheider: L0 · Anlass: Kurz-Urteil lead-design M6-B2
+
+## R102 · 2026-10-01 · M6-Sim Gate Merge
+
+Ruling: Final-Review M6-Sim BEDENKEN (kein Blocker). **Gate Merge bestanden unter Auflage**: vor
+dem Merge ein Fix-Durchgang lead-tech auf `feat/m6-balance` mit (1) `docs/arc42.md` §5/§6/§8 um
+Krisen (`crises.ts`, `defs/crises.ts`, Krisenschritt im Tick, Zustand `burning`) nachführen, (2)
+README: Feuerwache in Bauleiste und Anleitung, mit Satz „wirkt nur bei eingeschalteten Krisen",
+(3) `balance-crises.test.ts`: Grenze Sieg ≤ 8000 für normal und mild festnageln, (4) Kommentar
+`controller.ts:44-55` nach R101 E1 korrigieren. Kurze Nachprüfung durch lead-qa (Fortsetzung),
+dann Merge seriell `feat/m6-sim` → `feat/m6-sim-queries` → `feat/m6-balance` durch
+production-integrator mit Push. Befunde 5, 6 und die zwei ausserhalb des Scopes trägt L0 als
+Beobachtung ein; Tooltip-Zeile „ohne Wirkung, solange Krisen aus sind" geht als Hinweis an den
+UI-Strang (M6-U1). Die Feuerwache wird nicht ausgeblendet (Spec 1, R82a). — Warum: Doku auf main
+muss den Tick-Ablauf richtig beschreiben, bevor M8 darauf aufbaut; (3)/(4) sind Minuten-Fixes im
+selben Themenbereich. — Kosten bei Irrtum: ein Fix-Durchgang mehr.
+
+Entscheider: L0 · Anlass: Final-Review lead-qa M6-Sim
