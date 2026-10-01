@@ -409,6 +409,23 @@ hält die Summe nur, weil lead-qa ohne Aufschlag bei 1 bleibt, obwohl er „aufg
 neu). Kandidat für den Verbesserungsprozess (`studio-coach`): ein Satz zur Aufteilung, z. B. „Summe der
 Anteile = Formelsumme, Rundungsrest beim grössten Anteil".
 
+### 2026-10-01 · `.claude/agents/tech-ui-engineer.md` / `art-rendering-engineer.md` · Ownership `src/render/`
+
+**Beobachtung:** `tech-ui-engineer` führt `src/render/` weiter in seiner Ownership, der neue
+`art-rendering-engineer` ebenso. Die Doppelung schadet nur, wenn ein Briefing die Dateien nicht je
+Paket trennt.
+**Ursprung:** Onboarding der M7-Personas (lead-production, R96 Punkt 8).
+**Einschätzung:** Kandidat für die nächste Persona-Pflege: `src/render/` bei `tech-ui-engineer`
+auf „nur auf Briefing" setzen. Bis dahin trennt der M7-Plan die Dateien je Task.
+
+### 2026-10-01 · `docs/studio/templates/` / Roster · Persona-Feld `version`
+
+**Beobachtung:** Die Persona-Vorlage hat kein Feld `version`, das Roster verlangt `version: 1.0`.
+In `lead-art.md` steht ausserdem noch, Leads tragen Befunde selbst in `docs/beobachtungen.md` ein,
+was R87 leicht widerspricht.
+**Ursprung:** Onboarding der M7-Personas (lead-production, R96 Punkt 8).
+**Einschätzung:** Fall für `studio-coach` bei der nächsten Handbuch-Pflege.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)

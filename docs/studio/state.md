@@ -30,9 +30,9 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt     | bis |
-| -------- | ------------- | ----------- | --- |
-| 664ac8d3 | abgeschlossen | nichts mehr | –   |
+| Session  | Stand         | besitzt                 | bis |
+| -------- | ------------- | ----------------------- | --- |
+| 664ac8d3 | abgeschlossen | nichts mehr             | –   |
 | 5e248230 | aktiv         | M7-ISO (`docs/m7-spec`) | –   |
 
 ## Seit letzter Session erledigt

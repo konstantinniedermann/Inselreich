@@ -1108,3 +1108,13 @@ das Spiel ist nach AK-ISO-20 spielbar. — Kosten bei Irrtum: (2) einige Tage ö
 Platzhalter-Look; (1) 2 Starts zu viel freigegeben.
 
 Entscheider: L0 · Anlass: Gate Plan M7 (lead-qa, lead-production)
+
+## R97 · 2026-10-01 · M7 Budget
+
+Ruling: R96 Punkt 1 wird korrigiert: **Budget M7 = 80** (lead-art 49/4, lead-tech **29**/2,
+lead-qa 2/1). Mit M7-U2 Teil B als eigenem Paket ergibt der lead-tech-Anteil 22 × 1,3 = 28,6 → 29;
+die Regel aus R96 („kein Anteil unter aufgerundetem Eigenwert") geht vor der genannten Summe. Der
+Plan führt 80 statt 78. — Warum: Regel und Zahl müssen übereinstimmen, sonst wiederholt sich der
+Rundungsfehler aus R88. — Kosten bei Irrtum: 2 Starts zu viel freigegeben, nur bei Bedarf genutzt.
+
+Entscheider: L0 · Anlass: Nacharbeit Gate Plan M7, lead-tech
