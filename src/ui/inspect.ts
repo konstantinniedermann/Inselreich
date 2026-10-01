@@ -1,3 +1,4 @@
+import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
@@ -250,4 +251,43 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
     const width = `${Math.min(100, Math.round((b.progress / def.cycle) * 100))}%`;
     if (fill.style.width !== width) fill.style.width = width;
   }
+}
+
+const PHASE_VIEW: Record<Phase, { label: string; symbol: string }> = {
+  morning: { label: 'Morgen', symbol: '◒' },
+  day: { label: 'Tag', symbol: '☀' },
+  evening: { label: 'Abend', symbol: '◓' },
+  night: { label: 'Nacht', symbol: '☾' },
+};
+
+/** Anzeigedaten der Ruhe-Ansicht (reine Darstellung, keine Regel). */
+export function restView(world: World): {
+  phase: Phase;
+  label: string;
+  symbol: string;
+  inhabitants: number;
+} {
+  const phase = phaseAt(world.tick);
+  let inhabitants = 0;
+  for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
+  return { phase, ...PHASE_VIEW[phase], inhabitants };
+}
+
+/** Ruhe-Ansicht „Inselchronik" ohne Auswahl; `updateRest` führt Phase und Einwohner nach. */
+export function renderRest(panel: HTMLElement, world: World): void {
+  panel.replaceChildren();
+  const title = document.createElement('h2');
+  title.className = 'panel-title';
+  title.textContent = 'Inselchronik';
+  panel.appendChild(title);
+  addLine(panel, '', 'rest-phase');
+  addLine(panel, '', 'rest-inhabitants');
+  addLine(panel, 'Gebäude anklicken für Details');
+  updateRest(panel, world);
+}
+
+export function updateRest(panel: HTMLElement, world: World): void {
+  const v = restView(world);
+  setField(panel, 'rest-phase', `${v.symbol} ${v.label}`);
+  setField(panel, 'rest-inhabitants', `Einwohner ${v.inhabitants}`);
 }
