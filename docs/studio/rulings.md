@@ -1040,3 +1040,20 @@ zwingend aus ADR-012 (vorderes Wasserfeld, Kamera in Kacheln). — Kosten bei Ir
 Ownership-Konflikt mit dem UI-Strang, behebbar durch Reihenfolge im Plan.
 
 Entscheider: L0 · Anlass: Bericht lead-art M7-ISO
+
+## R93 · 2026-10-01 · M7-ISO
+
+Ruling: Zu Gate Spec M7-ISO (Urteil lead-qa BEDENKEN): (1) R92 Punkt 2 wird erweitert — alle vier
+Tests in `tests/render/camera.test.ts` dürfen geändert werden, sofern die Spec eine Zuordnung
+alt → neu führt (Clamp und Zoom/NaN → AK-ISO-04, Rundreise → AK-ISO-01, Schritt → AK-ISO-03) und die
+alte Abdeckung (Zoomstufen 0,5/0,75/1,1/1,33/1,7/2, gebrochener Versatz, n 0–63, beide Achsen)
+erhalten bleibt. (2) Slice-Stopp: Das Slice-Urteil fällt L0 nach QA; die Vorher/Nachher-Bilder
+gehen dem Nutzer direkt zu. R2–R4 starten erst nach dem L0-Urteil. Eine Reaktion des Nutzers hat
+Vorrang und kann R2–R4 stoppen; ein Warten auf sie gibt es nicht (Verfassung §5). (3) Das
+Firefox-Risiko (Spec 15.2) wird hingenommen: Grenzwert nur in Chrome, eine Firefox-Messung zur
+Orientierung ohne Grenzwert. — Warum: (1) Projektion ändert jede Kamera-Erwartung, Abdeckung muss
+bleiben; (2) Autonomie-Regel, der Nutzer sieht das Ergebnis trotzdem vor dem Grossteil der Arbeit;
+(3) Zielplattform Desktop-Chrome/Edge reicht für den Slice. — Kosten bei Irrtum: (2) bei Ablehnung
+durch den Nutzer bis zu einem bereits gestarteten Render-Task verworfen.
+
+Entscheider: L0 · Anlass: Gate Spec M7-ISO, lead-qa
