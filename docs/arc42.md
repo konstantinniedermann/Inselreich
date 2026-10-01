@@ -53,7 +53,7 @@ Umgebungsschichten und Musik sowie eine Einstellungs-Karte mit Credits. M7 ände
 | Keine Laufzeit-Abhängigkeiten | Nur Dev-Abhängigkeiten (Vite, TypeScript, Vitest, ESLint, Prettier samt Plugins). Ausnahmen nur per L0-Ruling mit eigenem ADR (ADR-001, Nachtrag). |
 | Browser                       | Aktueller Browser mit Canvas 2D und Web Audio; Spielstände und Einstellungen in `localStorage`. Maus, Tastatur und Touch (Pinch, Zwei-Finger-Pan). |
 | Desktop-first                 | Zielplattform Desktop mit Maus und Tastatur ab 1280 px (R78); schmalere Fenster müssen nur funktionieren, keine Mobil-Optimierung.                 |
-| Fremde Assets                 | Nur offen lizenziert mit Nachweis (ADR-006), Ablage und Laden nach ADR-011. Stand: noch keine Datei eingebaut (R109, Netzwerk-Policy).             |
+| Fremde Assets                 | Nur offen lizenziert mit Nachweis (ADR-006), Ablage und Laden nach ADR-011. Stand: 14 Audiodateien und 2 Schriftschnitte unter `public/` (~8 MB).  |
 | Eigene Inhalte                | Eigener Titel, eigene Zahlen; Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).                                                 |
 | Werkzeuge                     | Node ≥ 22; `make check` (Lint, Tests, Build) läuft identisch lokal und in der CI.                                                                  |
 | Sprache                       | UI und Doku Deutsch (CH, kein ß); Code-Bezeichner Englisch.                                                                                        |
@@ -394,8 +394,9 @@ flowchart LR
   `audio/sfx`, `fonts`); nichts davon liegt im JavaScript-Bundle. Das Spiel löst Pfade über
   `import.meta.env.BASE_URL` auf (`assetUrl`) und lädt sie erst nach der ersten Interaktion und nur bei Bedarf;
   Musik wird gestreamt. Budget `public/` ≤ 12 MB, Nachweis je Datei in `docs/CREDITS.md`, Prüfsummen und Budget
-  prüfen Vitests unter `tests/assets/` (Assets-Strang). Stand dieses Branches: `public/` ist leer (R109), alle
-  Klänge laufen über die synthetischen Rückfälle.
+  prüfen Vitests unter `tests/assets/` (Assets-Strang). Stand: `public/` enthält 3 Musikstücke, 7 Umgebungsschleifen,
+  4 Signal-Samples und 2 Schriftschnitte (~8 MB); die synthetischen Rückfälle greifen nur, wenn eine Datei
+  fehlt oder nicht lädt.
 - **Entwicklung:** `make dev` startet den Vite-Dev-Server; `make check` entspricht der CI. Dev-Vorschau und
   Sonden (`?wetter=`, `?perf=1`, `window.__inselAudio`, `window.__inselPerf`) gibt es nur im Dev-Build.
 - **CI:** `.github/workflows/ci.yml` führt `make check` bei Push auf `main` und bei Pull Requests aus.
@@ -588,9 +589,9 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 - Beim Start lädt nichts aus dem Budget ausser der Schrift per CSS (`font-display: swap`, Fallback-Kette).
   Nach `unlock()` laden Umgebungsschichten, deren Zielpegel einmal > 0 war, als `AudioBuffer`; Musik streamt.
 - Nachweis je Datei in `docs/CREDITS.md` und `docs/licenses/`, Prüfsummen in `tests/assets/sha256.json`, Budget
-  per Vitest. **Stand:** Wegen der Netzwerk-Policy (R109) ist noch keine Datei eingebaut; das Manifest nennt die
-  geplanten Dateien, die UI übergibt dem Credits-Dialog eine leere Liste („Fremde Assets sind derzeit nicht
-  eingebunden").
+  per Vitest. **Stand:** Alle Dateien des Manifests liegen unter `public/` (Abgleich AK-X1-01 in `tests/assets/`);
+  der Credits-Dialog listet Manifest und `FONT_CREDITS`. Nur bei leerer Liste zeigt er „Fremde Assets sind derzeit
+  nicht eingebunden".
 
 ### Persistenz
 
@@ -737,9 +738,8 @@ Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. 
 - **Tiefenschlüssel nur für `w = h`:** Ein Gebäude mit rechteckigem Footprint braucht einen paarweisen Vergleich
   (ADR-012).
 - **Asset-Grösse und Lizenz:** Bis zu 12 MB unter `public/`; Budget, Prüfsummen und Nachweise sichern Vitests
-  und `art-license-checker`. Derzeit ist keine Datei eingebaut (R109); bis dahin fehlen Musik und Schrift, der
-  Klang ist synthetisch. Beim Einbau ist jede Datei ein bewusster Eintrag in Manifest, `CREDITS.md` und
-  `sha256.json`.
+  und `art-license-checker`. Eingebaut sind ~8 MB (Musik, Umgebung, Signale, Schrift). Jede weitere Datei ist
+  ein bewusster Eintrag in Manifest, `CREDITS.md` und `sha256.json`.
 - **`layoutKey` je Frame:** bis zu fünf Aufrufe je Frame; bei grossen Karten ein Frame-Memo (siehe 8).
 
 ## 12. Glossar
