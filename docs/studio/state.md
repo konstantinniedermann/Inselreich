@@ -13,6 +13,8 @@ Stand: 2026-10-01 (Session-Ende 5e248230)
 - Abgenommen: R5 @ 90d07db (feat/m7-fx), A1 @ 1fe9791, A2 @ 8db7478 (feat/m7-audio; Fix-Runde offen: LOOKAHEAD/Drossel-Takt, requestFile-Callbacks, io-Fake in mk()), M7-U2 Teil B @ 0066ddc (Review+QA OK), M6-U1 @ 0d52030 (Review OK, QA laeuft) (feat/ui-m6m7). R3 @ 82f52af (Code OK, QA-R3 laeuft). M7-U1 d94e1f1: QA BEDENKEN (Fokus-Rueckgabe; AK-U1-05 erst nach Merge A2/A3 in UI pruefbar). A3 @ 56c94d7, Audio-Fix @ bd575d8 (Audio-Strang fertig bis X1). M7-U1 Review OK. M6-U2 c5695ea + Fokus-Fix 9926984 (Review/QA laufen). R2 f7dd70d (Review OK, QA laeuft; Hinweise fuer R4/R2-FW: firestation-Filter in sprites.test.ts als failing test von R2-FW entfernen; Wege-Erkennung in renderer.test.ts auf stroke umstellen; Test Fensteranker vs. WINDOW-Fuellungen; Schaeferei linkes Fenster ohne Anker; toter Code sprites.test.ts:478-485, :552); R3 in Render-Merge konfliktfrei (merge-tree); danach im Render-Baum Terrain-Zeittest-Fix und M6-R2. X1a blockiert (R109, Warteschlange N-90).
 - lead-tech: UI M7-U2 Teil B, M6-U1 in feat/ui-m6m7 (Budget 12).
 
+- Stand Render: feat/m7-render @ 2cace60 (R2 Review OK f7dd70d, Terrain-Fix OK 3f933ea, M6-R2-Fix 7b93fd4, Merge R3 adb1c14, Feinschliff R111 2cace60 im Review); R4 laeuft. UI: feat/ui-m6m7 @ cba43fb (Merges Audio/R3, Warn-Toast, Fix M6-U2 R112) in Review+QA. Audio fertig @ bd575d8. Rest: R4, R2-FW, M6-U3, INT, D1, Final-Review, Gate Merge.
+
 ## Aktuelles Projekt und Phase
 
 - Projekt: **Inselreich**. M1–M5 live. Nutzerauftrag nach M5-Playtest „mehr Tiefe, bessere
