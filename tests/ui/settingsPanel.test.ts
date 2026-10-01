@@ -15,10 +15,14 @@ describe('pickOpener (QA-U1: Fokus zurück zum Einstellungen-Knopf)', () => {
 });
 
 describe('shouldCloseOnClick', () => {
-  it('schliesst nur bei Druck und Loslassen auf dem Hintergrund', () => {
-    expect(shouldCloseOnClick(true, true)).toBe(true);
-    expect(shouldCloseOnClick(false, true)).toBe(false); // im Dialog gedrückt, draussen losgelassen
-    expect(shouldCloseOnClick(true, false)).toBe(false);
-    expect(shouldCloseOnClick(false, false)).toBe(false);
+  it('schliesst nur bei Druck, Loslassen und Klick auf dem Hintergrund', () => {
+    expect(shouldCloseOnClick(true, true, true)).toBe(true);
+    expect(shouldCloseOnClick(false, true, true)).toBe(false); // im Dialog gedrückt, draussen losgelassen
+    expect(shouldCloseOnClick(true, true, false)).toBe(false);
+    expect(shouldCloseOnClick(false, false, false)).toBe(false);
+  });
+  it('QA-UI-2: Druck auf dem Hintergrund, Loslassen im Dialog schliesst nicht', () => {
+    // click geht dann an den gemeinsamen Vorfahren (den Hintergrund)
+    expect(shouldCloseOnClick(true, false, true)).toBe(false);
   });
 });

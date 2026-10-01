@@ -7,7 +7,6 @@ import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
 import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
 import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
-import { center } from '../sim/world';
 import { costLine, setField } from './dom';
 
 export interface InspectActions {
@@ -27,22 +26,30 @@ export function diagnosisText(d: Diagnosis): string {
   }
 }
 
+/** Erzeugungszeile des Panels; während des Brandausfalls steht dort, dass nichts erzeugt wird. */
+export function producesText(def: { produces?: GoodId; cycle?: number }, burning: boolean): string {
+  const name = def.produces ? GOODS[def.produces].name : '';
+  return burning
+    ? `Erzeugt ${name} nicht — Betrieb brennt`
+    : `Erzeugt ${name} alle ${def.cycle} Ticks`;
+}
+
 /** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
 export function burningText(b: Building, tick: number): string {
   const left = Math.max(0, (b.outageUntil ?? tick) - tick);
   return `Brennt — wieder in Betrieb in ${left} Ticks`;
 }
 
-/** Anzahl brennbarer Gebäude im Wirkungsradius einer angebundenen Feuerwache (Panel „Schützt N …"). */
+/**
+ * Anzahl brennbarer Gebäude, die diese Feuerwache schützt (Panel „Schützt N …"). Keine eigene Geometrie:
+ * die Sim-Abfrage `isProtected` läuft gegen eine Sicht, in der nur diese Wache steht, damit andere
+ * Wachen die Zahl nicht verändern.
+ */
 export function protectedCount(world: World, station: Building): number {
-  const def = BUILDING_DEFS[station.defId];
-  if (!station.connected) return 0;
-  const sc = center(def, station.x, station.y);
-  return Object.values(world.buildings).filter((o) => {
-    if (BUILDING_DEFS[o.defId].flammable !== true) return false;
-    const c = center(BUILDING_DEFS[o.defId], o.x, o.y);
-    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (def.serviceRadius ?? 0);
-  }).length;
+  const solo: World = { ...world, buildings: { [station.id]: station } };
+  return Object.values(world.buildings).filter(
+    (o) => BUILDING_DEFS[o.defId].flammable === true && isProtected(solo, o),
+  ).length;
 }
 
 function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {
@@ -240,7 +247,7 @@ export function renderInspect(
     } else {
       addLine(panel, '', 'state');
       if (def.produces && def.cycle !== undefined) {
-        addLine(panel, `Erzeugt ${GOODS[def.produces].name} alle ${def.cycle} Ticks`);
+        addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${GOODS[def.consumes].name}`);
         const bar = document.createElement('div');
         bar.className = 'progress';
@@ -267,6 +274,9 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
   setField(panel, 'demolish', demolishLabel(world, b));
+  if (def.produces && def.cycle !== undefined) {
+    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
+  }
   const info = stateInfo(b, world.tick);
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
   if (def.flammable === true) {

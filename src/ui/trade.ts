@@ -78,17 +78,18 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
 
   for (const good of GOOD_IDS) {
     const name = cell(table, 'trade-good', GOODS[good].name);
+    // Boom-Marke direkt hinter den Gutnamen; bei Platzmangel wandern Lager und Preis in die nächste Zeile
+    const boom = document.createElement('span');
+    boom.className = 'badge--boom';
+    boom.dataset.field = `boom-${good}`;
+    boom.hidden = true;
+    name.appendChild(boom);
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
     const pct = document.createElement('small');
     pct.dataset.field = `price-${good}`;
     name.appendChild(pct);
-    const boom = document.createElement('span');
-    boom.className = 'badge--boom';
-    boom.dataset.field = `boom-${good}`;
-    boom.hidden = true;
-    name.appendChild(boom);
 
     const buyCell = cell(table, 'trade-cell');
     cell(buyCell, 'trade-price', `G ${GOODS[good].buy}`);
