@@ -42,6 +42,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
   },
   fisher: {
     id: 'fisher',
+    stormAffected: true,
     name: 'Fischerhütte',
     w: 1,
     h: 1,
@@ -55,6 +56,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
   },
   lumberjack: {
     id: 'lumberjack',
+    stormAffected: true,
     name: 'Holzfäller',
     w: 1,
     h: 1,
@@ -81,6 +83,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
   },
   sheepfarm: {
     id: 'sheepfarm',
+    stormAffected: true,
     name: 'Schäferei',
     w: 2,
     h: 2,
@@ -108,6 +111,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
   },
   canefarm: {
     id: 'canefarm',
+    stormAffected: true,
     name: 'Zuckerrohrplantage',
     w: 2,
     h: 2,
