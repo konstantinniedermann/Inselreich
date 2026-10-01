@@ -340,22 +340,46 @@ function yard(
 const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
 const DOOR = mixHex(PALETTE.wallTimber, '#000000', 0.25);
 
+/** Hülle des Wohnhauses je Stufe (Silhouette und Kamin des Herdrauchs teilen sie). */
+function houseShell(p: IsoPainter, b: Building): Shell {
+  const tier = b.house?.tier ?? 1;
+  const h = bodyHeight(BUILDING_DEFS.house, b);
+  const zr = h + ISO_H * BODY_INSET; // Firstende genau auf der Hüllenkante
+  if (tier === 1) return makeShell(p, 0.5 * h, h + 0.5 * ISO_H, 'hip', 'u'); // Spitze genau auf der Hüllenkante
+  return tier === 2
+    ? makeShell(p, 0.62 * h, zr, 'gable', 'u')
+    : makeShell(p, 0.6 * h, zr, 'gable', 'v');
+}
+
+/** Mündung des Hauskamins in Bildpunkten (Herdrauch, Spec 5.6); null für andere Typen. */
+export function hearthAnchor(def: BuildingDef, b: Building, cam: Camera): Pt | null {
+  if (def.id !== 'house') return null;
+  const p = new IsoPainter(
+    null as unknown as CanvasRenderingContext2D,
+    cam,
+    b.x,
+    b.y,
+    def.w,
+    def.h,
+  );
+  const spot = chimneySpot(houseShell(p, b), bodyHeight(def, b));
+  return p.pt(spot.cu + CHIMNEY_SIZE / 2, spot.cv + CHIMNEY_SIZE / 2, spot.top);
+}
+
 function houseBody(p: IsoPainter, b: Building): void {
   const def = BUILDING_DEFS.house;
   const tier = b.house?.tier ?? 1;
   const h = bodyHeight(def, b);
-  const zr = h + ISO_H * BODY_INSET; // Firstende genau auf der Hüllenkante
   yard(p, mixHex(PALETTE.grass, PALETTE.earth, 0.45));
+  const s = houseShell(p, b);
   if (tier === 1) {
     // Hütte: Lehmwand, Strohdach (Walmdach)
-    const s = makeShell(p, 0.5 * h, h + 0.5 * ISO_H, 'hip', 'u'); // Spitze genau auf der Hüllenkante
     drawShell(p, s, wallColors(mixHex(PALETTE.wallLime, PALETTE.earth, 0.4)), PALETTE.roofThatch);
     leftQuad(p, s, 0.42, 0.58, 0, 0.36 * s.wz, DOOR);
     rightQuad(p, s, 0.4, 0.6, 0.4 * s.wz, 0.75 * s.wz, WINDOW);
     chimney(p, s, h, PALETTE.wallStone);
   } else if (tier === 2) {
     // Fachwerk auf Kalkputz, Terrakotta-Satteldach (First entlang u)
-    const s = makeShell(p, 0.62 * h, zr, 'gable', 'u');
     const w = wallColors(PALETTE.wallLime);
     const t = wallColors(PALETTE.wallTimber);
     drawShell(p, s, w, PALETTE.roofTerracotta);
@@ -368,7 +392,6 @@ function houseBody(p: IsoPainter, b: Building): void {
     chimney(p, s, h, PALETTE.wallStone);
   } else {
     // Bürgerhaus: Steinwand, dunkler Ziegel, zwei Geschosse, Gaube (First entlang v)
-    const s = makeShell(p, 0.6 * h, zr, 'gable', 'v');
     const w = wallColors(PALETTE.wallStone);
     drawShell(p, s, w, PALETTE.roofTerracottaDark);
     leftQuad(
@@ -1055,6 +1078,8 @@ export interface LightAnchor {
   h: number;
   wall: 'left' | 'right';
   always?: boolean;
+  /** Wandebene in Footprint-Koordinaten, nur wenn nicht die äussere Wand (Schäferei: Stall hinter der Koppel). */
+  plane?: number;
 }
 /** Fenster in Wandkoordinaten: `a` entlang der Wand in Kacheln (u links, v rechts), `z` in Weltpixeln. */
 interface WallWindow {
@@ -1064,6 +1089,7 @@ interface WallWindow {
   z0: number;
   z1: number;
   always?: boolean;
+  plane?: number;
 }
 const L = (a0: number, a1: number, z0: number, z1: number, always?: boolean): WallWindow => ({
   wall: 'left',
@@ -1115,6 +1141,7 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
   fisher: (_b, h) => [R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
   quarry: (_b, h) => [R(0.7, 0.85, 0.3 * 0.3 * h, 0.8 * 0.3 * h)],
   sheepfarm: (_b, h) => [
+    { ...L(1.2, 1.5, 0.35 * 0.5 * h, 0.7 * 0.5 * h), plane: 1.0 }, // Stallwand liegt bei v = 1,0 (Koppel davor)
     R(0.3, 0.5, 0.35 * 0.5 * h, 0.75 * 0.5 * h),
     R(0.62, 0.82, 0.35 * 0.5 * h, 0.75 * 0.5 * h),
   ],
@@ -1162,7 +1189,12 @@ function fallbackWindows(def: BuildingDef, h: number): WallWindow[] {
 }
 
 /** Wand als Parallelogramm in Weltpixeln auf der eingezogenen Wandebene, von 0 bis zur Hüllenhöhe (rein). */
-export function wallPolygon(def: BuildingDef, b: Building, side: 'left' | 'right'): Pt[] {
+export function wallPolygon(
+  def: BuildingDef,
+  b: Building,
+  side: 'left' | 'right',
+  plane?: number,
+): Pt[] {
   const H = bodyHeight(def, b);
   const at = (u: number, v: number, z: number): Pt => {
     const q = project(b.x + u, b.y + v);
@@ -1171,8 +1203,18 @@ export function wallPolygon(def: BuildingDef, b: Building, side: 'left' | 'right
   const [u0, v0, u1, v1] = [I, I, def.w - I, def.h - I];
   const poly =
     side === 'left'
-      ? [at(u0, v1, 0), at(u1, v1, 0), at(u1, v1, H), at(u0, v1, H)]
-      : [at(u1, v0, 0), at(u1, v1, 0), at(u1, v1, H), at(u1, v0, H)];
+      ? [
+          at(u0, plane ?? v1, 0),
+          at(u1, plane ?? v1, 0),
+          at(u1, plane ?? v1, H),
+          at(u0, plane ?? v1, H),
+        ]
+      : [
+          at(plane ?? u1, v0, 0),
+          at(plane ?? u1, v1, 0),
+          at(plane ?? u1, v1, H),
+          at(plane ?? u1, v0, H),
+        ];
   // im Uhrzeigersinn (Bild-y nach unten), wie `bodyHull`
   const area = poly.reduce((a, q, i) => {
     const r = poly[(i + 1) % poly.length]!;
@@ -1190,7 +1232,7 @@ export function lightAnchors(def: BuildingDef, b: Building): LightAnchor[] {
   const wins = WINDOWS[def.id]?.(b, h) ?? fallbackWindows(def, h);
   const box = spriteBounds(def, b);
   return wins.map((w) => {
-    const fixed = w.wall === 'left' ? def.h - I : def.w - I;
+    const fixed = w.plane ?? (w.wall === 'left' ? def.h - I : def.w - I);
     const corner = (a: number, z: number): Pt => {
       const q = w.wall === 'left' ? project(b.x + a, b.y + fixed) : project(b.x + fixed, b.y + a);
       return { x: q.x, y: q.y - z };
@@ -1209,6 +1251,7 @@ export function lightAnchors(def: BuildingDef, b: Building): LightAnchor[] {
       wall: w.wall,
     };
     if (w.always) out.always = true;
+    if (w.plane !== undefined) out.plane = w.plane;
     return out;
   });
 }
@@ -1305,16 +1348,26 @@ function drawFlag(
   ctx.fill();
 }
 
-/** Luft (Ebene 7): Rauch der laufenden Betriebe und Flagge des Kontors; nur aus Zeit und Gebäude. */
+/** Rauchpuffs, die ein laufender Betrieb zeichnet (0 für alle anderen); zählt gegen das Rauch-Budget. */
+export function operatingPuffs(def: BuildingDef, b: Building): number {
+  return def.category === 'production' && b.connected && b.state === 'ok' ? SMOKE_PUFFS : 0;
+}
+
+/**
+ * Luft (Ebene 7): Rauch der laufenden Betriebe und Flagge des Kontors; nur aus Zeit und Gebäude. `maxPuffs` ist
+ * der Rest des Rauch-Budgets (Standard: alle Puffs).
+ */
 export function drawAir(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
   def: BuildingDef,
   b: Building,
   timeMs: number,
+  maxPuffs: number = SMOKE_PUFFS,
 ): void {
   if (def.id === 'kontor') drawFlag(ctx, cam, def, b, timeMs);
-  if (def.category !== 'production' || !b.connected || b.state !== 'ok') return;
+  const puffs = Math.min(operatingPuffs(def, b), Math.max(0, Math.floor(maxPuffs)));
+  if (puffs <= 0) return;
   const box = spriteBounds(def, b);
   const o = worldToScreen(cam, { x: box.x, y: box.y });
   const w = box.w * cam.zoom,
@@ -1323,7 +1376,7 @@ export function drawAir(
   const chim = chimneyAnchor(def, b, cam);
   const ox = chim ? chim.x : o.x + SMOKE_ORIGIN.x * w;
   const oy = chim ? chim.y : o.y + SMOKE_ORIGIN.y * h;
-  for (let i = 0; i < SMOKE_PUFFS; i++) {
+  for (let i = 0; i < puffs; i++) {
     const phase = (timeMs / SMOKE_PERIOD_MS + i / SMOKE_PUFFS + (b.id % 7) / 7) % 1;
     const fx = Math.sin(phase * Math.PI * 2) * 0.04;
     const fy = -phase * 0.3;

@@ -10,7 +10,7 @@ import {
   spriteBounds,
 } from '../../src/render/iso';
 import { drawShip, SHIP_H } from '../../src/render/ship';
-import { PALETTE, SHADOW, rgbOfCss } from '../../src/render/palette';
+import { PALETTE, SHADOW, mixHex, rgbOfCss } from '../../src/render/palette';
 import {
   AIR_COLORS,
   BODY_INSET,
@@ -22,6 +22,7 @@ import {
   drawBody,
   drawGhost,
   drawRoads,
+  hearthAnchor,
   lightAnchors,
   roadCenter,
   wallColors,
@@ -464,21 +465,16 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();
   });
 
-  it('AK-R2-03 unbekannte Id zeichnet den Kategorie-Fallback ohne Fehler, in der Hülle, oben dicht', () => {
+  it('AK-R2-03 unbekannte Id zeichnet den Kategorie-Fallback ohne Fehler und in der Hülle', () => {
     for (const def of fallbackDefs) {
       const b = unknown(def);
       const { ctx, log } = fakeCtx();
       expect(() => drawBody(ctx, CAM, def, b, 0), def.category).not.toThrow();
       expect(log.allPoints.length).toBeGreaterThan(20);
-      const h = bodyHeight(def, b);
-      const full = hullWithHeight('house', b, h);
-      const low = hullWithHeight('house', b, h - 1);
       const hullOfDef = bodyHull(def, b);
       for (const p of log.allPoints)
         expect(inHull(hullOfDef, p.x, p.y, 0.5), `${def.category} ${def.w}x${def.h}`).toBe(true);
-      expect(h).toBeLessThanOrEqual(H_MAX);
-      void full;
-      void low;
+      expect(bodyHeight(def, b)).toBeLessThanOrEqual(H_MAX);
     }
   });
 
@@ -555,7 +551,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
         total++;
         expect(a.w, `${def.id} Breite`).toBeGreaterThan(0);
         expect(a.h, `${def.id} Höhe`).toBeGreaterThan(0);
-        const wall = wallPolygon(def, b, a.wall);
+        const wall = wallPolygon(def, b, a.wall, a.plane);
         const x0 = box.x + a.x * box.w,
           y0 = box.y + a.y * box.h;
         for (const [x, y] of [
@@ -570,6 +566,76 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       }
     }
     expect(total).toBeGreaterThan(20);
+  });
+
+  it('AK-R2-03 (ISO) Fensteranker und gezeichnete Fensterfüllungen stimmen überein (beide Richtungen)', () => {
+    const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
+    const LAMP = mixHex(PALETTE.window, '#000000', 0.5);
+    const glass = new Set([WINDOW, LAMP, wallColors(LAMP).left]);
+    // Fenster ausserhalb der Wandanker: Gaube (Bürgerhaus), Schallöffnungen von Dachreiter und Turm (Kapelle, Schule, öffentlicher Fallback)
+    const roofOnly: Record<string, number> = {
+      house3: 1,
+      chapel: 2,
+      school: 2,
+      firestation: 2,
+      'fallback public 1': 2,
+      'fallback public 2': 2,
+    };
+    const area = (q: P[]): number =>
+      q.reduce((a, p, i) => a + p.x * q[(i + 1) % q.length]!.y - q[(i + 1) % q.length]!.x * p.y, 0);
+    const cases: [string, (typeof DEFS)[number], Building][] = [
+      ...DEFS.filter((d) => d.id !== 'house').map((d) => [d.id, d, mk(d.id)] as never),
+      ...([1, 2, 3] as Tier[]).map((t) => [`house${t}`, BUILDING_DEFS.house, house(t)] as never),
+      ...fallbackDefs.map((d) => [`fallback ${d.category} ${d.w}`, d, unknown(d)] as never),
+    ];
+    for (const [name, def, b] of cases) {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def, b, 0);
+      const quads = log.events
+        .filter((e) => e.op === 'fill' && glass.has(e.style) && e.points.length === 4)
+        .map((e) => (area(e.points) < 0 ? [...e.points].reverse() : e.points));
+      const box = spriteBounds(def, b);
+      const anchors = lightAnchors(def, b);
+      const used = new Set<number>();
+      for (const a of anchors) {
+        const x0 = box.x + a.x * box.w,
+          x1 = x0 + a.w * box.w,
+          y0 = box.y + a.y * box.h,
+          y1 = y0 + a.h * box.h;
+        const k = quads.findIndex(
+          (q) =>
+            Math.abs(Math.min(...q.map((p) => p.x)) - x0) < 0.5 &&
+            Math.abs(Math.max(...q.map((p) => p.x)) - x1) < 0.5 &&
+            [
+              [x0, y0],
+              [x1, y0],
+              [x1, y1],
+              [x0, y1],
+            ].every(([x, y]) => inHull(q, x!, y!, 0.5)),
+        );
+        expect(k, `${name}: Anker ${a.wall} ohne gezeichnetes Fenster`).toBeGreaterThanOrEqual(0);
+        used.add(k);
+      }
+      expect(quads.length - used.size, `${name}: Fenster ohne Anker`).toBe(roofOnly[name] ?? 0);
+    }
+  });
+
+  it('Spec 5.6 hearthAnchor: Kaminmündung der Häuser liegt in bodyHull, über dem Dach; andere Typen keinen', () => {
+    for (const t of [1, 2, 3] as Tier[]) {
+      const b = house(t),
+        def = BUILDING_DEFS.house;
+      const a = hearthAnchor(def, b, CAM)!;
+      expect(a, `Stufe ${t}`).not.toBeNull();
+      expect(inHull(bodyHull(def, b), a.x, a.y, 0.5), `Stufe ${t}`).toBe(true);
+      // dort steht der Kamin: ein gezeichneter Punkt liegt (fast) an der Mündung
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def, b, 0);
+      expect(
+        log.allPoints.some((p) => Math.abs(p.x - a.x) < 4 && Math.abs(p.y - a.y) < 0.5),
+        `Stufe ${t} Kaminkante`,
+      ).toBe(true);
+    }
+    for (const d of DEFS) if (d.id !== 'house') expect(hearthAnchor(d, mk(d.id), CAM)).toBeNull();
   });
 
   it('Spec 6.2 Laternen: Kontor und Marktplatz haben einen Anker mit always, sonst keiner', () => {
@@ -642,6 +708,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     };
     expect(log.fillSet.some((c) => near(c, PALETTE.roofTimber))).toBe(true);
     expect(log.fillSet.some((c) => near(c, PALETTE.wallLime))).toBe(true);
+    expect([BUILDING_DEFS.house.w, BUILDING_DEFS.house.h]).toEqual([1, 1]);
   });
 
   it('Spec 5.5 Schäferei: helle Schafpunkte im eigenen Körper-Aufruf (nicht in der Luft)', () => {
