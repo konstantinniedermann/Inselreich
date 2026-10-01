@@ -14,8 +14,10 @@ Stand: 2026-09-30 (Session-Ende 664ac8d3, 5-h-Fenster 73 %, Reset 00:50)
     Umsetzung bereit.
   - **M7 „Stimmung"** — Spec fertig (R84), Plan fertig (R88). **Neu R91: Isometrie** — Nachtrag
     `2026-10-01-m7-iso-design.md` + ADR-012 fertig (`docs/m7-spec` @ 42f11a1, 20 AK-ISO; R92);
-    **Gate Spec bestanden (R95, @ 65f4813, 21 AK-ISO)**; lead-tech überarbeitet den Plan
-    (M7-PLAN-ISO), dann Gate Plan ganzer M7-Plan (lead-qa, lead-production). Danach Render-Tasks im Plan überarbeiten (neu R0-ISO,
+    **Gate Spec bestanden (R95, @ 65f4813, 21 AK-ISO)**; Plan auf Isometrie umgestellt
+    (`docs/m7-spec` @ 6396d15; neu R0-ISO 2 Tasks, U0-ISO, QA-VORHER/QA-SLICE, Zwischen-Merge R0-ISO;
+    Budgetantrag 76 = lead-art 49/4, lead-tech 26/1, lead-qa 1/1). **Gate Plan läuft** (lead-qa,
+    lead-production); offene Punkte 1–7 im Plan-Abschnitt „Offene Punkte". Danach Render-Tasks im Plan überarbeiten (neu R0-ISO,
     U0-ISO; ≈ +25 % Render), dann Gate Plan.
   - **M8 „Vierte Stufe und Veredelung"** (vorgezogen, R81/R86) — **Spec fertig, Gate Spec offen**.
 - **M9 „Weite Welt"** vorgemerkt (R90, Nutzeranweisung aus paralleler Session): grössere Welt,
