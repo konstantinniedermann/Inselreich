@@ -554,3 +554,8 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 - 2026-10-01 · Render · Rauch-Puffs zeigen sichtbare Scheibenkanten („gestempelt"), niedrig; Kandidat für die Kann-Welle oder einen Feinschliff nach R4 (QA-R3b).
 - 2026-10-01 · Spec (für D1) · AK-R3-03 Pixelprobe hängt vom Blinktakt ab (an/aus); Formulierung auf „in mindestens einem von N Bildern im Abstand 0,4 s" präzisieren (QA-R3, QA-R3b).
 - 2026-10-01 · Dev · `?feuer=<id>` hängt von der Gebäude-ID des Spielstands ab; QA-Briefings nennen das Gebäude, nicht die ID (QA-R3b).
+- 2026-10-01 · UI (mit M6-U3) · `gameButton` ruft `blur()` bei jedem Klick: Enter auf „Laden" zeigt „Wirklich laden?", der Fokus geht auf body, Bestätigen per Tastatur nur über Shift+Tab (QA-UI-2).
+- 2026-10-01 · UI (mit M6-U3) · Boom-Marke bricht in der Gut-Zelle in die Zeile der Verkaufen-Spalte um; gehört an den Gutnamen (QA-UI-2).
+- 2026-10-01 · UI (INT) · HUD wächst bei aktiver Krisenkarte um ~45 px (174 → 219 px) und verschiebt die Spielfläche (QA-UI-2).
+- 2026-10-01 · UI · Randfall: Druck auf Hintergrund, Loslassen im Dialog schliesst trotzdem (click geht an den gemeinsamen Vorfahren). Selten, Fokus korrekt; mit M6-U3 über pointerup-Ziel lösen (QA-UI-2).
+- 2026-10-01 · Audio (INT) · Musik: In 25 s Testlauf kein Ladeversuch beobachtet (keine Audio-404), Zustand blieb idle/pause; den Rückfall „aus nach 2 Fehlversuchen" im INT-Check mit längerem Lauf belegen (QA-UI-2).
