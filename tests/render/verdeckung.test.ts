@@ -5,13 +5,15 @@ import {
   ISO_H,
   bodyHeight,
   bodyHull,
+  buildingHulls,
   depthKey,
+  pickBuilding,
   project,
   sortedObjects,
 } from '../../src/render/iso';
 import { PALETTE } from '../../src/render/palette';
 import { render, renderStats } from '../../src/render/renderer';
-import { BODY_INSET } from '../../src/render/sprites';
+import { BODY_INSET, bodyPolygons } from '../../src/render/sprites';
 import {
   resetTreeCache,
   setCanvasFactory,
@@ -214,6 +216,54 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
     expect(need.sx).toBeCloseTo(top.x, 6);
     expect(need.sy).toBeCloseTo(top.y, 6);
     expect(renderStats.badges.some((b) => b.id === C.id)).toBe(false);
+  });
+
+  it('AK-ISO-15 (R113) Auswahl über gezeichnete Silhouetten: hoverH2 wählt H2, sichtbare Wand-/Dachstellen von F und H wählen F bzw. H, Kapellenkörper die Kapelle', () => {
+    const cam = cameraOnH();
+    const hulls = buildingHulls(world);
+    const C = at(VERDECKUNG.C),
+      H2 = at(VERDECKUNG.H2);
+    const pickAt = (p: P): number | null => pickBuilding(hulls, p.x, p.y);
+    const hp = hoverPoint(cam, H2, C);
+    expect(pickAt({ x: hp.sx / cam.zoom + cam.x, y: hp.sy / cam.zoom + cam.y })).toBe(H2.id);
+    expect(pickAt(cBodyPoint(C))).toBe(C.id);
+    // Stellen von F und H, die in der Hülle der Kapelle liegen, aber nicht in ihrer Silhouette
+    const polysOf = (b: Building): P[][] => bodyPolygons(BUILDING_DEFS[b.defId], b);
+    const inside = (polys: P[][], x: number, y: number): boolean =>
+      polys.some((poly) => {
+        let r = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const a = poly[i]!,
+            b = poly[j]!;
+          if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) r = !r;
+        }
+        return r;
+      });
+    const cPolys = polysOf(C);
+    const frontOf = (b: Building) =>
+      Object.values(world.buildings).filter((o) => o.id !== b.id && key(o) > key(b));
+    for (const target of [at(VERDECKUNG.F), at(VERDECKUNG.H)]) {
+      const own = polysOf(target);
+      const fronts = frontOf(target).map(polysOf);
+      const hull = hullOf(target);
+      const xs = hull.map((q) => q.x),
+        ys = hull.map((q) => q.y);
+      const hits: P[] = [];
+      for (let y = Math.min(...ys); y <= Math.max(...ys); y += 1)
+        for (let x = Math.min(...xs); x <= Math.max(...xs); x += 1)
+          if (
+            inHull(hullOf(C), x, y, 2) &&
+            !inside(cPolys, x, y) &&
+            inside(own, x, y) &&
+            !fronts.some((f) => inside(f, x, y))
+          )
+            hits.push({ x, y });
+      expect(
+        hits.length,
+        `${target.defId} ${target.id}: Stellen unter der Kapellenhülle`,
+      ).toBeGreaterThan(0);
+      for (const q of hits) expect(pickAt(q), `${target.id} ${q.x},${q.y}`).toBe(target.id);
+    }
   });
 
   it('verdeckung: schreibt (mit SCENARIO_OUT) verdeckung.points.json mit den Bildpunkten für QA-SLICE', () => {

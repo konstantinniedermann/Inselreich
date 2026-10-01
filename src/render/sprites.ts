@@ -3,7 +3,7 @@ import type { Building, BuildingDef, BuildingDefId, Category, World } from '../s
 import { hash2 } from '../sim/noise';
 import { tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
-import { ISO_H, bodyHeight, project, spriteBounds, type Pt } from './iso';
+import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { PALETTE, rgbOfCss } from './palette';
 
 /** Mischt zwei CSS-Farben (`#rrggbb` oder `rgb(r,g,b)`, also auch bereits gemischte Töne). */
@@ -1271,6 +1271,38 @@ export function drawBody(
   if (env) p.env = env;
   (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
 }
+
+/**
+ * Gezeichnete Körperpolygone in Weltpixeln (R113): zeichnet die Silhouette auf einen aufzeichnenden Kontext und
+ * sammelt jede gefüllte Fläche (Hof, Wände, Dächer, Zubehör). Für das Picking, nicht für den Frame.
+ */
+export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
+  const polys: Pt[][] = [];
+  let path: Pt[] = [];
+  const rec: Record<string, unknown> = {
+    beginPath: () => {
+      path = [];
+    },
+    moveTo: (x: number, y: number) => path.push({ x, y }),
+    lineTo: (x: number, y: number) => path.push({ x, y }),
+    quadraticCurveTo: (cx: number, cy: number, x: number, y: number) =>
+      path.push({ x: cx, y: cy }, { x, y }),
+    rect: (x: number, y: number, w: number, h: number) =>
+      path.push({ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }),
+    arc: (x: number, y: number, r: number) =>
+      path.push({ x: x - r, y }, { x, y: y - r }, { x: x + r, y }, { x, y: y + r }),
+    fill: () => {
+      if (path.length >= 3) polys.push(path.slice());
+    },
+  };
+  const ctx = new Proxy(rec, {
+    get: (t, k) => (k in t ? t[k as string] : () => undefined),
+    set: () => true,
+  }) as unknown as CanvasRenderingContext2D;
+  drawBody(ctx, { x: 0, y: 0, zoom: 1 }, def, b, 0);
+  return polys;
+}
+setBodyShapes(bodyPolygons);
 
 /** Geist der Bauvorschau (D-13): derselbe Körper mit Deckkraft 0,5; gehört in die Signalebene. */
 export function drawGhost(
