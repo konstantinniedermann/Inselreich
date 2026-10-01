@@ -47,8 +47,10 @@ export interface Layout {
    * einen Layout-Weg grenzt (angebunden). Gewählt wird der Kandidat, dessen Mitte die meisten Mitten der
    * brennbaren Produktions-Slots (Holzfäller, Fischer, Farmen und Verarbeiter; 41 Slots) im Abstand
    * <= serviceRadius (8) deckt; bei Gleichstand der kleinste Abstand zum Schwerpunkt dieser Slots, dann kleinstes
-   * y, dann kleinstes x. Es bleiben vier Kandidaten (kx+10/ky±8 mit je 16 Slots, kx+2/ky±1 mit je 6);
-   * kx+10/ky-8 gewinnt über kleinstes y: Ende der Querstrasse, mitten in den Farmreihen. Nicht gedeckt sind
+   * y, dann kleinstes x. Es bleiben vier Kandidaten (kx+10/ky±8 mit je 16 Slots, kx+2/ky±1 mit je 6). Zwischen
+   * kx+10/ky-8 und kx+10/ky+8 (Gleichstand) zählt die Bau-Reihenfolge (R101): Der Bot bebaut den Norden zuerst,
+   * dort steht deshalb die Produktion, die zu Beginn brennen kann. Mit dem Spiegelplatz [kx+10, ky+8] läge der
+   * Sieg im Lauf normal vermutlich über 8000 (R101; nicht gemessen). Nicht gedeckt sind
    * die Fischer-Slots an der Küste (kx+9) ausserhalb von 8 Kacheln, die weit östlichen Farmen und die
    * Holzfäller am Waldrand (kx+19).
    */
