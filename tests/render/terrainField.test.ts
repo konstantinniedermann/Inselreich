@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import { ISO_H, ISO_W, project } from '../../src/render/iso';
 import {
+  COAST_BAND,
   EDGE_BAND,
   WARP,
   coastField,
@@ -155,7 +156,7 @@ describe('Küstenfeld', () => {
     console.info(
       `[I1] Eckenschnitt-Median ${median(cuts).toFixed(3)} Kachel (n=${cuts.length}), Welligkeit-Median ${median(wave).toFixed(2)} px (n=${wave.length}), Wortlaut-Quote ≥ 2 px ${(quote.reduce((p, q) => p + q, 0) / quote.length).toFixed(2)}`,
     );
-    expect(median(cuts)).toBeGreaterThanOrEqual(0.15);
+    expect(median(cuts)).toBeGreaterThanOrEqual(0.19);
     expect(median(wave)).toBeGreaterThanOrEqual(2);
   });
 
@@ -168,7 +169,7 @@ describe('Küstenfeld', () => {
       expect(Math.abs(wy - fy)).toBeLessThanOrEqual(WARP + 1e-9);
     }
     expect(EDGE_BAND).toBeGreaterThanOrEqual(0.15);
-    expect(EDGE_BAND).toBeLessThanOrEqual(0.25);
+    expect(EDGE_BAND).toBeLessThanOrEqual(COAST_BAND);
   });
 
   it('AK-R1-01 sampleField klemmt am Kartenrand und depthAt ist ≥ 0', () => {

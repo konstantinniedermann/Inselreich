@@ -25,9 +25,10 @@ export const WARP = 0.08; // Verschiebung höchstens ±WARP Kacheln je Achse (Sp
 const WARP_FREQ = 1.0;
 /**
  * Übergangsband der Land-Typen je Kante in Kacheln (Plan-Setzung zu Spec 4.3.5): Bis EDGE_BAND vor der Kante zählt
- * nur die eigene Kachel; 0,5 wäre reines Bilinear.
+ * nur die eigene Kachel; 0,5 wäre reines Bilinear. 0,29 ist der grösste Wert, bei dem AK-R1-02 auf 40 Seeds hält
+ * (0,3 scheitert an Kachel 50,30 von Seed 100).
  */
-export const EDGE_BAND = 0.25;
+export const EDGE_BAND = 0.29;
 /**
  * Übergangsband nur für das Küstenfeld: breiter als EDGE_BAND, damit konvexe Küstenecken sichtbar abgeschnitten
  * werden statt als Kachelecke zu enden. Zusammen mit WARP bleibt jede Kachel zu ≥ 75 % ihres Typs (AK-R1-02).

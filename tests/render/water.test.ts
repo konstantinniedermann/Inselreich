@@ -179,4 +179,26 @@ describe('Wasser (Spec 5.2)', () => {
     expect(pts.length).toBeGreaterThan(500);
     expect(onEdge / segs).toBeLessThan(0.1);
   });
+
+  it('AK-ISO-18 I2 Schaumkern ist bei Zoom 1 in jeder Richtung ≥ 1,5 px breit (Bodenmatrix, analytisch)', () => {
+    const w = createWorld(3);
+    const { ctx, log } = fakeCtx();
+    const widths: number[] = [];
+    const orig = log.stroke.bind(log);
+    log.stroke = () => {
+      if (alphaOf(log.strokeStyle) >= 0.8) widths.push(log.lineWidth);
+      orig();
+    };
+    drawWaves(ctx, w, ALL(w), 1000);
+    expect(widths.length).toBe(1);
+    // Bodenmatrix bei Zoom 1: Texturpixel → Bild, Spalten (32, 16) und (−32, 16); Breite senkrecht zur Linie = lw · det / |M d|
+    const det = 32 * 16 + 32 * 16;
+    let min = Infinity;
+    for (let a = 0; a < Math.PI; a += 0.05) {
+      const d = [Math.cos(a), Math.sin(a)];
+      const md = Math.hypot(32 * d[0]! - 32 * d[1]!, 16 * d[0]! + 16 * d[1]!);
+      min = Math.min(min, (widths[0]! * det) / md);
+    }
+    expect(min).toBeGreaterThanOrEqual(1.5);
+  });
 });
