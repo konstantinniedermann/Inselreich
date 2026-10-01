@@ -540,3 +540,4 @@ Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
 
 - 2026-10-01 · Harness · In der Cloud-Session fehlt Subagent-Leads das Agent-Werkzeug (nur Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage). Folge: R108, L0 startet Arbeiter direkt.
+- 2026-10-01 · Tests · `tests/render/terrain.test.ts` AK-R1-08 (I5, Z. 338) läuft unter voller Parallellast von `make check` in den 5-s-Timeout (isoliert grün). Vorschlag: eigener Timeout für diesen Test (Render-Strang, Fix-Kandidat R2/R4). Quelle: Review M7-R5.

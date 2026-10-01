@@ -10,6 +10,7 @@ Stand: 2026-10-01 (Session-Ende 5e248230)
 
 - Container neu: feat/m7-audio, feat/m7-fx, feat/m7-assets, docs/m8-spec und alle Worktrees verloren (nie gepusht). Neuumsetzung A1, A2, R5, X1a laeuft; M8-Spec nach M7 neu. Push-Pflicht fuer Strang-Branches.
 - lead-art: R106 Punkt 3, dann Welle 2 Render R2/M6-R2, FX R5->R3, Audio A1->A3, Assets X1a (Budget 30).
+- Abgenommen: R5 @ 90d07db (feat/m7-fx). X1a blockiert (R109, Warteschlange N-90).
 - lead-tech: UI M7-U2 Teil B, M6-U1 in feat/ui-m6m7 (Budget 12).
 
 ## Aktuelles Projekt und Phase
