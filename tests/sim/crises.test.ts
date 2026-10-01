@@ -10,7 +10,10 @@ import {
 import { createRng } from '../../src/sim/rng';
 import { step } from '../../src/sim/tick';
 import type { CrisisKind, CrisisLevel } from '../../src/sim/types';
+import { UPGRADE_WAIT } from '../../src/sim/population';
+import { TIERS } from '../../src/sim/defs/tiers';
 import { createWorld } from '../../src/sim/world';
+import { houseNearKontor, placeService, prepareEast } from './helpers';
 
 const SEQ_SEED3 = [
   'storm',
@@ -163,5 +166,23 @@ describe('M6 Krisenkern', () => {
       period: 3,
       good: rollCrisis(3, 3, 2, null).good,
     });
+  });
+
+  it('RF-2 Aufstieg im Tick des Periodenstarts bestimmt den Boom-Pool', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    prepareEast(w, w.buildings[w.kontorId]!);
+    const house = houseNearKontor(w);
+    placeService(w, 'chapel', house.x + 9, house.y);
+    w.tick = 4199; // k = 3 ist bei Seed 3 ein Boom
+    house.house!.inhabitants = TIERS[1].maxInhabitants;
+    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    w.stock.cloth = 1;
+    expect(house.house!.tier).toBe(1);
+    step(w);
+    expect(w.tick).toBe(4200);
+    expect(house.house!.tier).toBe(2);
+    const good = w.crisis?.good;
+    expect(good).toBe(rollCrisis(3, 3, 2, null).good);
+    expect(good).not.toBe(rollCrisis(3, 3, 1, null).good);
   });
 });
