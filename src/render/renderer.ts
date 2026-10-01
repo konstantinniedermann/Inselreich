@@ -11,7 +11,18 @@ import {
   type Camera,
   type TileRange,
 } from './camera';
-import { lightAt, type Weather } from './daynight';
+import type { Weather } from './daynight';
+import {
+  drawBoomCoin,
+  drawFire,
+  drawFireGlow,
+  drawRain,
+  drawStormEdge,
+  drawWarnRing,
+  smokePuffs,
+  type Rect,
+} from './fx';
+import { cap, rainStreaks } from './limits';
 import { TEX, bodyHull, sortedObjects, spriteBounds, type Pt, type SortedItem } from './iso';
 import {
   SYMBOL_MIN_ZOOM,
@@ -24,8 +35,10 @@ import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { drawTreeStamp, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
+import { gradeAt, pickWeather } from './weather';
 import { buildingShadow, drawAir, drawBody, drawGhost, drawRoads, type BodyEnv } from './sprites';
 
+const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
 const HOVER_OK = rgbaOf(PALETTE.signalOk, 0.35);
 const HOVER_BAD = rgbaOf(PALETTE.signalRed, 0.35);
@@ -127,6 +140,14 @@ const buildingAt = (world: World, x: number, y: number): Building | undefined =>
   return id != null ? world.buildings[id] : undefined;
 };
 
+/** Bildbox eines Gebäudes in CSS-Pixeln (aus `spriteBounds`); nur für Effekte, nie fürs Picking. */
+function screenRect(cam: Camera, b: Building): Rect {
+  const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+  const a = worldToScreen(cam, { x: box.x, y: box.y }),
+    z = worldToScreen(cam, { x: box.x + box.w, y: box.y + box.h });
+  return { x: a.x, y: a.y, w: z.x - a.x, h: z.y - a.y };
+}
+
 /** Hover nach ISO 8: Bodenraute auf `hover.x/y`; bei Auswählen und Abreissen zusätzlich das Gebäude dort. */
 function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hover: Hover): void {
   const tool = hover.tool;
@@ -225,6 +246,10 @@ export function render(
   renderStats.multiplyFills = 0;
   renderStats.shadowFills = 0;
   renderStats.badges.length = 0;
+  const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
+  const reduce = fx.reduceMotion === true;
+  const fires = new Map<number, { id: number; flames: number; smoke: number }>();
+  for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
 
   // 1 Hintergrund
   ctx.fillStyle = PALETTE.waterDeep;
@@ -232,6 +257,16 @@ export function render(
 
   const range = visibleTileRange(cam, view, { w: world.width, h: world.height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
+
+  // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
+  const lit: { f: { flames: number; smoke: number }; rect: Rect }[] = [];
+  if (!empty)
+    for (const f of fires.values()) {
+      const rect = screenRect(cam, world.buildings[f.id]!);
+      if (rect.x > view.w || rect.x + rect.w < 0 || rect.y > view.h || rect.y + rect.h < 0)
+        continue;
+      lit.push({ f, rect });
+    }
 
   // 2 Teil-Neuzeichnung der Terrain-Ebene (Belegung geändert), dann Boden
   const patch = updateTerrainLayer(terrainLayer, world);
@@ -259,7 +294,7 @@ export function render(
 
     // 3 Wasser, 4 Wege: unter der Bodenmatrix
     withGround(ctx, cam, () => {
-      drawWaves(ctx, world, range, fx.timeMs);
+      drawWaves(ctx, world, range, fx.timeMs, weather, reduce);
       drawRoads(ctx, world, range);
     });
 
@@ -330,6 +365,15 @@ export function render(
           fx.timeMs,
           def.id === 'kontor' ? waterSides(world, b) : undefined,
         );
+        // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
+        if ((fires.get(b.id)?.flames ?? 0) > 0) {
+          ctx.save();
+          ctx.beginPath();
+          hullPath(ctx, cam, b);
+          ctx.fillStyle = DIM_FIRE;
+          ctx.fill();
+          ctx.restore();
+        }
       } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, world.seed);
       else if (it.kind === 'ship')
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
@@ -337,10 +381,20 @@ export function render(
 
     // 7 Luft
     for (const b of buildings) drawAir(ctx, cam, BUILDING_DEFS[b.defId], b, fx.timeMs);
+    // Feuer im Luftdurchgang: Flammen immer, Rauch nur im Rahmen von CAP_SMOKE (Rest des Budgets)
+    let puffs = cap('smoke', reduce);
+    for (const { f, rect } of lit) {
+      const own = Math.min(smokePuffs(f.smoke, reduce), puffs);
+      puffs -= own;
+      drawFire(ctx, rect, fx.timeMs, { flames: f.flames, smoke: f.smoke, reduce, maxPuffs: own });
+    }
   }
 
-  // 9 Tönung: genau ein Multiply-Durchgang; bei neutralem Licht entfällt er
-  const mul = fx.dayNight === true ? lightAt(world.tick).mul : [1, 1, 1];
+  // 8 Sturm-Randschatten
+  if (weather.kind === 'storm') drawStormEdge(ctx, view, weather.w);
+
+  // 9 Tönung: genau ein Multiply-Durchgang (Licht mal Wetter); bei neutralem Licht entfällt er
+  const mul = gradeAt(world.tick, weather, fx.dayNight === true);
   if (mul.some((c) => c < 0.999)) {
     ctx.save();
     ctx.globalCompositeOperation = 'multiply';
@@ -350,10 +404,25 @@ export function render(
     renderStats.multiplyFills++;
   }
 
+  // 10 Additiver Durchgang (höchstens einer): Feuerglühen
+  if (lit.some(({ f }) => f.flames > 0)) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const { f, rect } of lit) drawFireGlow(ctx, rect, fx.timeMs, f.flames);
+    ctx.restore();
+  }
+
+  // 11 Regen
+  if (weather.kind === 'rain' || weather.kind === 'storm')
+    drawRain(ctx, view, cam.zoom, weather.kind, rainStreaks(weather.w, reduce), fx.timeMs);
+
   // 12 Signale (Bildraum, ungetönt, nie unter der Bodenmatrix)
   if (hover?.tool?.kind === 'build') {
     drawPlacementOverlay(ctx, world, cam, range, hover.tool.defId, hover.x, hover.y);
   }
+  for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
+  const kontor = world.buildings[world.kontorId];
+  if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);
   if (import.meta.env.DEV) collectBadges(world, cam, range);
