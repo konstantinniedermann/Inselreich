@@ -1574,3 +1574,18 @@ keine Branches löschen, `m8-spec` und lokaler Branch `feat/m7-fx` bleiben). —
 sind Plantext ohne Spec-Wirkung. — Kosten bei Irrtum: Nacharbeit im ersten Task-Review.
 
 Entscheider: L0 · Anlass: Gate Plan M7-UX
+
+## R126 · 2026-10-01 · Retro M7: Experimente
+
+Ruling: Empfehlungen studio-coach aus der Meilenstein-Retro M7 (D-RETRO-M7) angenommen:
+**E-001 behalten** (Schätzung aus Richtwerten; Richtwerte nachgeeicht, Minuten = Tools ÷ 4).
+**E-002 beendet als „angepasst"** — die Messregel traf den eigentlichen Schaden (verlorene,
+ungepushte Branches, Nummernkollisionen) nicht; abgelöst durch **E-005 „Abstimmung paralleler
+Sessions über origin"** (angenommen, übernimmt den Platz). **E-004 „Rechenweg im Budget-Ruling"
+startet**, erster Prüffall Budget M7-UX (R125). **E-006 „Exklusive Arbeitsbäume"** angenommen,
+Start nach Ende E-003; bis dahin gilt R124 (2) als Ruling. Die Lücke der Meilenstein-Metrik
+(Cloud-Session nicht erfasst) bleibt als Beobachtung für lead-production. — Warum: zwei Episoden
+paralleler Sessions belegen ein Muster mit hohem Schaden (4 Pakete neu umgesetzt). — Kosten bei
+Irrtum: ein Experiment-Platz falsch belegt.
+
+Entscheider: L0 · Anlass: Meilenstein-Retro M7
