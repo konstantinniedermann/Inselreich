@@ -1403,3 +1403,17 @@ ui-qa wurde während QA-M6U3 umgestellt). — Warum: Messung unter Software-Rast
 das Spiel. — Kosten bei Irrtum: ein Leistungspaket nach dem Merge.
 
 Entscheider: L0 · Anlass: QA-M6U3
+
+## R117 · 2026-10-01 · Nachtrag R114: Scheinringe, D1 abgenommen
+
+Ruling: (1) Der Fensterschein aus Rechteck plus 8 Ringen je Gruppe (seit 27995c9; bis 2 × 9 Füllungen plus
+Feuerglühen) ist als Auslegung von Spec 6.2 bestätigt: konstante Zahl, genau ein `lighter`-Block; die
+Grenze „höchstens 8 Füllungen" aus R114 Punkt 2 gilt als überholt. (2) D1 (8ec874b, 4c69776) ist
+abgenommen; der Final-Review prüft die Doku mit. (3) Code-Reste aus der Streichung D3
+(`EXTINGUISHED_TICKS`, `RenderFx.extinguished`, `DevPreview.extinguishedId`/`?geloescht=`), veraltete
+Kommentare (renderer.ts „Laternen (immer)", eventLogView.ts „Standard offen") und die Testschwelle
+`water.test.ts` (aus Konstanten ableiten) gehen in eine gemeinsame Fix-Runde mit den INT-Befunden. —
+Warum: Plan „gestrichener Posten hinterlässt keinen Code"; Doku und Code sollen übereinstimmen. —
+Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Bericht D1
