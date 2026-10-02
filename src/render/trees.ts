@@ -16,8 +16,11 @@ import { PALETTE, mixHex } from './palette';
 
 // trees.ts — aufrechte Baumstempel (ISO §6, D-08, D-12). Kronen liegen in der Spaltenbreite ihrer Kachel.
 export type TreeItem = Extract<SortedItem, { kind: 'tree' }>;
-/** Eine Krone: Lage in Kachel-Anteilen, Radius in Rautenbreiten, Höhe des Kronenmittelpunkts in Weltpixeln. */
+/** Baumart: 0 Laubbaum, 1 Nadelbaum, 2 heller Laubbaum (R149). */
+export type CrownKind = 0 | 1 | 2;
+/** Eine Krone: Art, Lage in Kachel-Anteilen, Radius in Rautenbreiten, Höhe des Kronenmittelpunkts in Weltpixeln. */
 export interface Crown {
+  kind: CrownKind;
   cx: number;
   cy: number;
   r: number;
@@ -29,6 +32,13 @@ export const TREE_H = 1.1 * ISO_H;
 const STAMP_H = TREE_H + ISO_H / 2;
 const CROWN_RY = 0.85; // Kronenhöhe im Verhältnis zur Breite
 const TRUNK_COLOR = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
+/** Körper des Nadelbaums (R149). */
+export const CONIFER_COLOR = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
+/** Körper des hellen Laubbaums (R149). */
+export const LIGHT_CROWN_COLOR = mixHex(PALETTE.crown, PALETTE.grassLight, 0.45);
+/** Stamm des hellen Laubbaums, heller als der Standardstamm (R149). */
+export const LIGHT_TRUNK_COLOR = mixHex(PALETTE.wallLime, PALETTE.rockDark, 0.55);
+const CONIFER_TOP = 1.6; // Spitze des Nadelbaums über dem Kronenmittelpunkt, in Kronenhöhen (ry)
 const SHADOW_SHIFT = 0.19; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
   SHADOW_B = 0.3;
@@ -61,10 +71,14 @@ export function crownsFor(seed: number, variant: number): Crown[] {
     const [sx, sy] = order[k]!;
     const cx = sx + (rnd(0) - 0.5) * 0.05,
       cy = sy + (rnd(1) - 0.5) * 0.05;
-    const r = 0.1 + 0.015 * rnd(2);
+    const kr = hash2(seed + 68, variant, k); // Art je Krone (R149): 50 % Laub, 28 % Nadel, 22 % hell
+    const kind: CrownKind = kr < 0.5 ? 0 : kr < 0.78 ? 1 : 2;
+    const r = 0.08 + 0.07 * rnd(2);
     const ground = ((cx + cy - 1) * ISO_H) / 2; // Bild-y des Fusspunkts relativ zur Rautenmitte
-    const h = Math.min((0.28 + 0.1 * rnd(3)) * ISO_H, TREE_H - CROWN_RY * r * ISO_W + ground - 0.5);
-    out.push({ cx, cy, r, h });
+    const top = kind === 1 ? CONIFER_TOP : 1; // Spitze steht höher als die Kuppe
+    const hWanted = (0.26 + 0.14 * rnd(3) + (kind === 1 ? 0.06 : 0)) * ISO_H;
+    const h = Math.min(hWanted, TREE_H - top * CROWN_RY * r * ISO_W + ground - 0.5);
+    out.push({ kind, cx, cy, r, h });
   }
   return out;
 }
@@ -109,11 +123,35 @@ export function paintStamp(
     const rx = c.r * ISO_W,
       ry = rx * CROWN_RY,
       cyc = y - c.h;
-    ctx.fillStyle = TRUNK_COLOR;
+    ctx.fillStyle = c.kind === 2 ? LIGHT_TRUNK_COLOR : TRUNK_COLOR;
     ctx.beginPath();
     ctx.rect(x - 1.5, cyc, 3, c.h);
     ctx.fill();
-    ctx.fillStyle = PALETTE.crown;
+    if (c.kind === 1) {
+      // Nadelbaum: zwei Dreiecksstufen, die obere trägt die Lichtkappe
+      ctx.fillStyle = CONIFER_COLOR;
+      ctx.beginPath();
+      ctx.moveTo(x, cyc - 0.4 * ry);
+      ctx.lineTo(x + rx, cyc + 0.9 * ry);
+      ctx.lineTo(x - rx, cyc + 0.9 * ry);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x, cyc - CONIFER_TOP * ry);
+      ctx.lineTo(x + 0.75 * rx, cyc + 0.25 * ry);
+      ctx.lineTo(x - 0.75 * rx, cyc + 0.25 * ry);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = PALETTE.crownLight;
+      ctx.beginPath();
+      ctx.moveTo(x - 0.05 * rx, cyc - (CONIFER_TOP - 0.1) * ry);
+      ctx.lineTo(x - 0.05 * rx, cyc + 0.1 * ry);
+      ctx.lineTo(x - 0.7 * rx, cyc + 0.1 * ry);
+      ctx.closePath();
+      ctx.fill();
+      continue;
+    }
+    ctx.fillStyle = c.kind === 2 ? LIGHT_CROWN_COLOR : PALETTE.crown;
     ctx.beginPath();
     ctx.ellipse(x, cyc, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();

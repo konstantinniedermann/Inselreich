@@ -2,6 +2,7 @@ import { hash2, valueNoise } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
+import { FLOWER_TONES, SHRUB_TONES, flowersFor, shrubsFor } from './groundDecor';
 import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
   COAST_BAND,
@@ -17,8 +18,18 @@ import {
 export const RASTER = 4; // Texturpixel (Faktor 1) je Rechenknoten (Setzung Spec 5.1)
 const CHUNK = 512; // Ebenen-Pixel je ImageData-Block (begrenzt den Speicher)
 const LIGHT = { x: -3 / Math.sqrt(10), y: -1 / Math.sqrt(10) }; // Richtung zum Licht im Kachelraum (D-11)
-const SHADE_MAX = 0.08; // Spec 5.1: höchstens ±8 % Helligkeit
-const SHADE_GAIN = 0.04; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel
+// R149: Abweichung zu M7-Spec 5.1 — Gebirge ±12 %, sonst ±8 %
+const SHADE_MAX = 0.08;
+const SHADE_MAX_MOUNTAIN = 0.12;
+const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
+const FOOT_HEIGHT = 1.4; // Höhenanstieg am Gebirgsfuss (Bilinearfeld des Gebirgs-Indikators)
+const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
+// Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
+const CLOVER_MAX = 0.75; // höchstens 60 % Mischung zum Kleegrün
+const DRY_MAX = 0.35; // höchstens 35 % Mischung zu sandDry (darf nicht wie ein Weg aussehen)
+const MOSS_MAX = 0.55;
+const CLEARING_MAX = 0.5;
+const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
 const ROCK_EDGE: [number, number] = [0.5, 0.6]; // Spec 5.1: Kantenband des Fels-Indikators
@@ -122,7 +133,12 @@ export interface TerrainGrid {
   ind: Float32Array[]; // Land-Indikatoren in der Reihenfolge von LAND
   grass: Float32Array; // Grasmischung 0..1
   rock: Float32Array; // Felsrauschen 0..1
-  shade: Float32Array; // Relief −0,08…0,08
+  shade: Float32Array; // Relief −0,08…0,08 (Gebirgsknoten −0,12…0,12, R149)
+  /**
+   * Fleckenfeld −1…1 (R149, vorgeformt, Rauschen um 0 gespreizt): positiv Klee auf Gras bzw. Moos im Wald, negativ
+   * trockene Stellen auf Gras bzw. Lichtungen im Wald. Ein Feld statt zwei spart Rechenzeit im Frame-Budget.
+   */
+  patch: Float32Array;
   cls: Uint8Array; // 0 Wasser, 1 + Index in LAND
 }
 
@@ -141,6 +157,7 @@ export function buildGrid(
     grass = new Float32Array(n),
     rock = new Float32Array(n),
     shade = new Float32Array(n),
+    patch = new Float32Array(n),
     height = new Float32Array(n),
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
@@ -172,7 +189,21 @@ export function buildGrid(
       grass[k] = smoothstepClamp((m - 0.5) * 1.8 + 0.5); // Spreizung: das Rauschen liegt eng um 0,5
       // Felsrauschen: gespreizt (das Rauschen liegt eng um 0,5) und mit ~1,7 Merkmalen je Kachel, damit jede Felskachel Licht und Schatten zeigt
       rock[k] = smoothstepClamp((valueNoise(seed + 19, fx * 1.7, fy * 1.7) - 0.5) * 2.4 + 0.5);
-      height[k] = smooth[k]! + 2 * ind[mt]![k]! + 0.5 * valueNoise(seed + 17, fx * 0.5, fy * 0.5);
+      // R149: sanfter Anstieg am Gebirgsfuss (bilinear über eine ganze Kachel) und tiefe Wiesenwelle
+      const foot = sampleField(fields.types.mountain, wx, wy);
+      if (cls[k] !== 0) {
+        // nur an Landknoten (Wasser braucht keine Flecken); Wert schon geformt, das Pixelfeld interpoliert nur
+        patch[k] = Math.max(
+          -1,
+          Math.min(1, (valueNoise(seed + 62, fx * 1.4, fy * 1.4) - 0.5) * 10),
+        );
+      }
+      height[k] =
+        smooth[k]! +
+        2 * ind[mt]![k]! +
+        FOOT_HEIGHT * foot +
+        0.5 * valueNoise(seed + 17, fx * 0.5, fy * 0.5) +
+        MEADOW_WAVE * valueNoise(seed + 61, fx * 0.3, fy * 0.3);
     }
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
@@ -184,9 +215,10 @@ export function buildGrid(
       const gx = (height[j * nx + ir]! - height[j * nx + il]!) / ((ir - il) * step);
       const gy = (height[jd * nx + i]! - height[ju * nx + i]!) / ((jd - ju) * step);
       const lit = -(gx * LIGHT.x + gy * LIGHT.y);
-      shade[j * nx + i] = Math.max(-SHADE_MAX, Math.min(SHADE_MAX, lit * SHADE_GAIN));
+      const lim = cls[j * nx + i] === mt + 1 ? SHADE_MAX_MOUNTAIN : SHADE_MAX;
+      shade[j * nx + i] = Math.max(-lim, Math.min(lim, lit * SHADE_GAIN));
     }
-  return { seed, nx, ny, sharp, smooth, ind, grass, rock, shade, cls };
+  return { seed, nx, ny, sharp, smooth, ind, grass, rock, shade, patch, cls };
 }
 
 const rgb = (hex: string): [number, number, number] => rgbOf(hex);
@@ -201,6 +233,10 @@ const C = {
   grass: rgb(PALETTE.grass),
   grassDark: rgb(PALETTE.grassDark),
   wood: rgbOfCss(FOREST_FLOOR),
+  clover: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // kühleres Grün (R149)
+  moss: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.crown, 0.55)),
+  clearing: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.sandDry, 0.45)),
+  edgeLight: rgb(PALETTE.sandWet), // warmes Hell am Waldrand: bleibt fern vom alten Waldgrund #3d7a3a
   rock: rgb(PALETTE.rock),
   rockLight: rgb(PALETTE.rockLight),
   rockDark: rgb(PALETTE.rockDark),
@@ -232,7 +268,8 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, grass, rock, shade, cls } = g;
+  const { nx, ny, sharp, smooth, ind, grass, rock, shade, patch, cls } = g;
+  const fo = LAND.indexOf('forest');
   const col = [0, 0, 0];
   const mt = LAND.indexOf('mountain');
   for (let py = 0; py < h; py++) {
@@ -272,7 +309,8 @@ export function paintPixels(
       if (type < 0) {
         waterColor(Math.max(0, -lerp(smooth)), col);
       } else {
-        const sh = lerp(shade);
+        let sh = lerp(shade);
+        if (LAND[type] !== 'mountain') sh = Math.max(-SHADE_MAX, Math.min(SHADE_MAX, sh)); // R149: Rand trägt keine 12 %
         switch (LAND[type]) {
           case 'sand': {
             const s = lerp(smooth);
@@ -283,11 +321,19 @@ export function paintPixels(
             const m = lerp(grass);
             if (m < 0.4) mix3(C.grassDark, C.grass, m / 0.4, col);
             else mix3(C.grass, C.grassLight, (m - 0.4) / 0.6, col);
+            const p = lerp(patch);
+            if (p > 0.1) mix3(col, C.clover, (p - 0.1) * CLOVER_MAX, col);
+            else if (p < -0.1) mix3(col, C.sandDry, (-0.1 - p) * DRY_MAX, col);
             break;
           }
-          case 'forest':
-            mix3(C.wood, C.wood, 0, col);
+          case 'forest': {
+            const p = lerp(patch);
+            const edge = smoothstepClamp((1 - lerp(ind[fo]!)) * 2); // innen 0, Rand ~1 (Indikator ~0,5)
+            if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX, col);
+            else mix3(C.wood, C.clearing, -p * CLEARING_MAX, col);
+            if (edge > 0) mix3(col, C.edgeLight, edge * FOREST_EDGE_LIGHT, col);
             break;
+          }
           default: {
             const im = lerp(ind[mt]!);
             const n = lerp(rock);
@@ -343,14 +389,26 @@ function paintRegion(
   }
 }
 
-/** Büschel auf unbelegten Grasskacheln im Rechteck (Texturpixel × `scale`). */
-function paintTufts(
+/** Kachel ist unbelegtes Gras. */
+const isFreeGrass = (world: World, occ: Uint8Array, x: number, y: number): boolean => {
+  const i = y * world.width + x;
+  return world.tiles[i]!.terrain === 'grass' && occ[i] !== 1;
+};
+
+/**
+ * Deko auf unbelegten Grasskacheln im Rechteck (Texturpixel × `scale`): Büschel, Büsche am Waldrand, Blumen.
+ * Je Farbe ein Pfad; belegte Kacheln und Nicht-Gras bekommen nichts (R149).
+ */
+export function paintDecor(
   ctx: CanvasRenderingContext2D,
   world: World,
   occ: Uint8Array,
   scale: number,
   r: TileRect,
 ): void {
+  const { width: w, height: h, seed } = world;
+  const forestAt = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < w && y < h && world.tiles[y * w + x]!.terrain === 'forest';
   ctx.save();
   ctx.scale(scale, scale);
   ctx.lineWidth = 1;
@@ -360,9 +418,8 @@ function paintTufts(
     ctx.beginPath();
     for (let y = r.y0; y <= r.y1; y++)
       for (let x = r.x0; x <= r.x1; x++) {
-        const i = y * world.width + x;
-        if (world.tiles[i]!.terrain !== 'grass' || occ[i] === 1) continue;
-        for (const t of tuftsFor(world.seed, x, y)) {
+        if (!isFreeGrass(world, occ, x, y)) continue;
+        for (const t of tuftsFor(seed, x, y)) {
           if (t.tone !== tone) continue;
           const px = (x + t.x) * TEX,
             py = (y + t.y) * TEX;
@@ -376,6 +433,51 @@ function paintTufts(
       }
     ctx.strokeStyle = tones[tone]!;
     ctx.stroke();
+  }
+  // flache Büsche auf der Waldseite
+  for (const tone of [0, 1] as const) {
+    ctx.beginPath();
+    let any = false;
+    for (let y = r.y0; y <= r.y1; y++)
+      for (let x = r.x0; x <= r.x1; x++) {
+        if (!isFreeGrass(world, occ, x, y)) continue;
+        const sides = {
+          left: forestAt(x - 1, y),
+          right: forestAt(x + 1, y),
+          up: forestAt(x, y - 1),
+          down: forestAt(x, y + 1),
+        };
+        if (!(sides.left || sides.right || sides.up || sides.down)) continue;
+        for (const b of shrubsFor(seed, x, y, sides)) {
+          if (b.tone !== tone) continue;
+          const px = (x + b.x) * TEX,
+            py = (y + b.y) * TEX,
+            rx = b.r * TEX;
+          ctx.moveTo(px + rx, py);
+          ctx.ellipse(px, py, rx, rx * 0.6, 0, 0, Math.PI * 2);
+          any = true;
+        }
+      }
+    if (!any) continue;
+    ctx.fillStyle = SHRUB_TONES[tone]!;
+    ctx.fill();
+  }
+  // Blumen: kleine Punkte
+  for (const tone of [0, 1, 2] as const) {
+    ctx.beginPath();
+    let any = false;
+    for (let y = r.y0; y <= r.y1; y++)
+      for (let x = r.x0; x <= r.x1; x++) {
+        if (!isFreeGrass(world, occ, x, y)) continue;
+        for (const f of flowersFor(seed, x, y))
+          if (f.tone === tone) {
+            ctx.rect((x + f.x) * TEX, (y + f.y) * TEX, f.size, f.size);
+            any = true;
+          }
+      }
+    if (!any) continue;
+    ctx.fillStyle = FLOWER_TONES[tone]!;
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -397,7 +499,7 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
   const grid = buildGrid(world);
   paintRegion(ctx, grid, scale, 0, 0, w, h);
   const occ = occupancy(world);
-  paintTufts(ctx, world, occ, scale, { x0: 0, y0: 0, x1: world.width - 1, y1: world.height - 1 });
+  paintDecor(ctx, world, occ, scale, { x0: 0, y0: 0, x1: world.width - 1, y1: world.height - 1 });
   const buildMs = performance.now() - t0;
   meta.set(canvas, { world, scale, grid, occ, key: layoutKey(world), half: null, buildMs });
   if (import.meta.env.DEV)
@@ -434,7 +536,7 @@ export function updateTerrainLayer(
   const pw = Math.round((rect.x1 + 1) * s) - px,
     ph = Math.round((rect.y1 + 1) * s) - py;
   paintRegion(ctx, m.grid, m.scale, px, py, pw, ph);
-  paintTufts(ctx, world, next, m.scale, rect);
+  paintDecor(ctx, world, next, m.scale, rect);
   if (m.half) {
     const hc = m.half.getContext('2d');
     if (hc) {
