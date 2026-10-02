@@ -452,13 +452,13 @@ export function render(
       }
     }
     // Möwen: Kreisbahnen über der Küste im Bild, nicht nachts
-    const gulls: GullPose[] = gullAnchors(
-      coastFor(world),
-      range,
-      world.seed,
-      light.phase,
-      reduce,
-    ).map((a) => gullPose(a, world.seed, fx.timeMs));
+    // (bei Regen und Sturm bleiben sie am Boden: keine Möwen)
+    const gulls: GullPose[] =
+      weather.kind === 'rain' || weather.kind === 'storm'
+        ? []
+        : gullAnchors(coastFor(world), range, world.seed, light.phase, reduce).map((a) =>
+            gullPose(a, world.seed, fx.timeMs),
+          );
 
     // Sichtbare Objekte in Zeichenreihenfolge (D-09)
     const items = sortedObjects(world, moving);
