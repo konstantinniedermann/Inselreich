@@ -471,6 +471,22 @@ body {
 .card--settings {
   width: min(460px, 100%);
 }
+.card--menu {
+  width: min(420px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.confirm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.hotkey-list {
+  columns: 2;
+  margin: 0;
+  padding-left: 16px;
+}
 .card--credits {
   width: min(560px, 100%);
 }

@@ -1,5 +1,6 @@
 // Einstellungs-Karte (Spec 9.2) und Credits-Dialog (9.3). Keine Regeln: Werte gehen an `actions`.
 import { renderCredits, type CreditEntry } from './credits';
+import { openModal } from './modal';
 import type { ReduceMotion, Settings } from './settings';
 
 type MixBus = 'master' | 'music' | 'ambience' | 'effects';
@@ -42,62 +43,20 @@ function row(label: string, control: HTMLElement): HTMLElement {
   return r;
 }
 
-/**
- * Element, das beim Schliessen den Fokus zurückbekommt: der auslösende Knopf, sonst das aktive Element.
- * Der Knopf wird ausdrücklich übergeben, weil er vor dem Öffnen den Fokus abgibt (`blur`), das aktive
- * Element dann also nur noch der `body` wäre.
- */
-export function pickOpener<T>(explicit: T | null | undefined, active: T | null): T | null {
-  return explicit ?? active;
-}
-
-/**
- * Der Hintergrund schliesst nur, wenn Druck, Loslassen und Klick-Ziel alle auf ihm lagen. Beim Ziehen vom
- * Hintergrund in den Dialog (oder umgekehrt) meldet `click` den gemeinsamen Vorfahren, also den Hintergrund;
- * deshalb zählt das `pointerup`-Ziel mit.
- */
-export function shouldCloseOnClick(
-  downOnBackdrop: boolean,
-  upOnBackdrop: boolean,
-  clickOnBackdrop: boolean,
-): boolean {
-  return downOnBackdrop && upOnBackdrop && clickOnBackdrop;
-}
-
 /** Öffnet die Karte in `host`; gibt die Schliessen-Funktion zurück (idempotent). */
 export function openSettings(
   host: HTMLElement,
   actions: SettingsActions,
   openedBy?: HTMLElement | null,
 ): () => void {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
-  const card = document.createElement('div');
-  card.className = 'card card--modal card--settings';
-  card.setAttribute('role', 'dialog');
-  card.setAttribute('aria-modal', 'true');
-  card.setAttribute('aria-label', 'Einstellungen');
-  backdrop.appendChild(card);
-  const opener = pickOpener(openedBy, document.activeElement as HTMLElement | null);
-  let closed = false;
-
-  const close = (): void => {
-    if (closed) return;
-    closed = true;
-    window.removeEventListener('keydown', onKey, true);
-    backdrop.remove();
-    opener?.focus?.();
-  };
-  function onKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      close();
-    } else if (e.key !== 'Tab') {
-      // Hotkeys des Spiels ruhen, solange die Karte offen ist; Pfeiltasten am Regler bleiben wirksam
-      e.stopImmediatePropagation();
-    }
-  }
+  const handle = openModal({
+    host,
+    className: 'card--settings',
+    label: 'Einstellungen',
+    opener: openedBy,
+  });
+  const card = handle.card;
+  const close = handle.close;
 
   const showSettings = (): void => {
     const s = actions.settings();
@@ -177,26 +136,7 @@ export function openSettings(
     );
   };
 
-  // Auf click statt pointerdown: sonst nimmt das folgende mousedown dem Knopf den Fokus wieder
-  let downOnBackdrop = false;
-  let upOnBackdrop = false;
-  backdrop.addEventListener('pointerdown', (e) => {
-    downOnBackdrop = e.target === backdrop;
-    upOnBackdrop = false;
-  });
-  backdrop.addEventListener('pointerup', (e) => {
-    upOnBackdrop = e.target === backdrop;
-  });
-  backdrop.addEventListener('click', (e) => {
-    const down = downOnBackdrop;
-    const up = upOnBackdrop;
-    downOnBackdrop = false;
-    upOnBackdrop = false;
-    if (shouldCloseOnClick(down, up, e.target === backdrop)) close();
-  });
   showSettings();
-  host.appendChild(backdrop);
-  window.addEventListener('keydown', onKey, true);
   card.querySelector<HTMLElement>('input, button')?.focus();
   return close;
 }

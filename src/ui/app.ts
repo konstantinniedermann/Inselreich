@@ -15,7 +15,7 @@ import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { disposeHud, updateHud, type HudActions } from './hud';
+import { updateHud, type HudActions } from './hud';
 import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
@@ -31,8 +31,10 @@ import { parseDevParams } from './devParams';
 import { createPerfProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
+import { openMenu, type MenuActions } from './menu';
+import { closeAllModals } from './modal';
 import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
-import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
+import { listSaves, loadSlot, saveAuto, saveToStorage } from './storage';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -155,6 +157,7 @@ function launch(
     effects: settings.effects,
   });
   let closeSettings: (() => void) | null = null;
+  let closeMenu: (() => void) | null = null;
   const preview = parseDevParams(location.search, import.meta.env.DEV);
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let prefersReduced = motionQuery.matches;
@@ -202,20 +205,17 @@ function launch(
   const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
 
-  const actions: HudActions = {
+  const menuActions: MenuActions = {
     save: () => {
       const r = saveToStorage(world);
       if (r.ok) showMessage('Gespeichert');
       else showMessage(r.reason, 'error');
     },
     listSaves,
-    setSpeed: (speed) => setSpeed(speed),
+    storageNote: () => null, // Task 4
+    hasProgress: () => world.tick > 0,
     load: (slot) => {
       // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
-      if (!slot) {
-        showMessage(noLoadableReason(), 'error');
-        return;
-      }
       const r = loadSlot(slot);
       if (!r.ok) {
         showMessage(r.reason, 'error');
@@ -226,10 +226,22 @@ function launch(
         speed: state.speed,
         camera: r.world.seed === world.seed ? state.cam : undefined,
       });
-      // Kein bleibender Fokusring auf dem alten Laden-Knopf
+      // Kein bleibender Fokusring auf dem alten Knopf
       (document.activeElement as HTMLElement | null)?.blur?.();
       showMessage('Spielstand geladen');
     },
+    crisisLevel: () => settings.crisisLevel,
+    newIsland: (crisisLevel) => {
+      settings = { ...settings, crisisLevel };
+      saveSettings(settings);
+      restart(root);
+    },
+    seed: () => world.seed,
+    openGuide: () => {}, // Task 4
+  };
+
+  const actions: HudActions = {
+    setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
       settings = { ...settings, muted };
@@ -260,15 +272,9 @@ function launch(
         opener,
       );
     },
-    setCrisisLevel: (crisisLevel) => {
-      settings = { ...settings, crisisLevel };
-      const r = saveSettings(settings);
-      if (r.ok) showMessage('Krisenstufe gilt ab dem nächsten Spiel');
-      else showError(r.reason);
-    },
-    hasProgress: () => world.tick > 0,
-    restart: () => {
-      restart(root);
+    openMenu: (opener) => {
+      closeMenu?.();
+      closeMenu = openMenu(gameEl, menuActions, opener);
     },
     setTax: (level) => {
       const r = setTaxLevel(world, level);
@@ -577,6 +583,7 @@ function launch(
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
     input?.unbind();
+    closeAllModals();
     closeSettings?.();
     stopAudioProbe?.();
     motionQuery.removeEventListener('change', onMotion);
@@ -585,7 +592,6 @@ function launch(
     sound.dispose();
     logBox.remove();
     unbindMessages();
-    disposeHud(hudEl);
     hudEl.replaceChildren();
     navEl.replaceChildren();
     panelEl.replaceChildren();

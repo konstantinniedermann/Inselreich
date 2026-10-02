@@ -1,15 +1,13 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import { CRISIS_LEVELS } from '../sim/defs/crises';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, citizens, populationByTier } from '../sim/population';
 import { crisisView, goodsBalance } from '../sim/queries';
-import type { CrisisLevel, GoodId, TaxLevel, Tier, World } from '../sim/types';
+import type { GoodId, TaxLevel, Tier, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
-import type { SaveInfo, Slot } from './storage';
-import { CRISIS_LEVEL_IDS, type Settings } from './settings';
+import type { Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
@@ -60,16 +58,8 @@ export function taxTooltip(level: TaxLevel): string {
   return `Steuer ${t.pct} % · ${wait} · Belegung ${Math.round(t.occupancy * 100)} %`;
 }
 
-/** Zeitfenster, in dem ein zweiter Klick auf Neu bzw. Laden bestätigt (Millisekunden). */
-const NEW_CONFIRM_MS = 3000;
-
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
 export interface HudActions {
-  save(): void;
-  /** Lädt den Slot; ohne Angabe den einzigen bzw. (bei keinem ladbaren) zeigt den Grund. */
-  load(slot?: Slot): void;
-  /** Ladbare Speicherplätze (kaputte fehlen). */
-  listSaves(): SaveInfo[];
   /** Setzt das Tempo (merkt das letzte laufende für die Taste P). */
   setSpeed(speed: GameState['speed']): void;
   /** Aktuelle Einstellungen für die Ton-Regler. */
@@ -80,11 +70,8 @@ export interface HudActions {
    * `opener` ist der auslösende Knopf; ihm gibt das Schliessen den Fokus zurück.
    */
   openSettings(opener?: HTMLElement): void;
-  /** Speichert die Krisenstufe für das nächste „Neu"; meldet selbst. */
-  setCrisisLevel(level: CrisisLevel): void;
-  /** Wahr, sobald ein Laden Fortschritt verwerfen würde (dann verlangt Laden einen zweiten Klick). */
-  hasProgress(): boolean;
-  restart(): void;
+  /** Öffnet die Menü-Karte (Speichern, Laden, Neue Insel, Hilfe); `opener` bekommt den Fokus zurück. */
+  openMenu(opener: HTMLElement): void;
   /** Schaltet die Steuerstufe; zeigt bei Fehlschlag selbst den Grund. */
   setTax(level: TaxLevel): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
@@ -100,129 +87,6 @@ function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): H
     onClick(btn);
   });
   return btn;
-}
-
-/** Aufräumfunktionen (Bestätigungs-Timer) je HUD-Element. */
-const cleanups = new WeakMap<HTMLElement, () => void>();
-
-/** Stoppt die Bestätigungs-Timer von Neu und Laden; beim Beenden des Spiels aufrufen. */
-export function disposeHud(header: HTMLElement): void {
-  cleanups.get(header)?.();
-  cleanups.delete(header);
-}
-
-/**
- * Button mit Zwei-Klick-Bestätigung: der erste Klick zeigt `confirmLabel` für NEW_CONFIRM_MS, der
- * zweite Klick darin führt `run` aus. Ist `needsConfirm()` falsch, läuft `run` sofort.
- */
-function confirmButton(
-  label: string,
-  confirmLabel: string,
-  needsConfirm: () => boolean,
-  run: () => void,
-): { btn: HTMLButtonElement; dispose: () => void } {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  const btn = gameButton(label, () => {
-    if (timer === null && needsConfirm()) {
-      btn.textContent = confirmLabel;
-      timer = setTimeout(() => {
-        timer = null;
-        btn.textContent = label;
-      }, NEW_CONFIRM_MS);
-      return;
-    }
-    if (timer !== null) clearTimeout(timer);
-    timer = null;
-    btn.textContent = label;
-    run();
-  });
-  return {
-    btn,
-    dispose: () => {
-      if (timer !== null) clearTimeout(timer);
-      timer = null;
-    },
-  };
-}
-
-/** Beschriftung eines Speicherplatzes in der Laden-Auswahl. */
-function slotLabel(info: SaveInfo): string {
-  return `${info.slot === 'auto' ? 'Autosave' : 'Gespeichert'} — Tick ${info.tick}`;
-}
-
-/** Zeit, nach der die Laden-Auswahl von selbst wieder verschwindet (Millisekunden). */
-const CHOICE_MS = 10000;
-
-/** Auswahl „Krisen: aus · mild · normal" (M6 13.1); gilt erst ab „Neu". */
-function renderCrisisSelect(actions: HudActions): HTMLElement {
-  const label = document.createElement('label');
-  label.className = 'crisis-select';
-  label.title = "gilt ab ‚Neu'";
-  label.append('Krisen: ');
-  const sel = document.createElement('select');
-  sel.setAttribute('aria-label', 'Krisenstufe (gilt ab Neu)');
-  for (const id of CRISIS_LEVEL_IDS) {
-    const o = document.createElement('option');
-    o.value = id;
-    o.textContent = CRISIS_LEVELS[id].name;
-    sel.appendChild(o);
-  }
-  sel.value = actions.settings().crisisLevel;
-  sel.addEventListener('change', () => {
-    actions.setCrisisLevel(sel.value as CrisisLevel);
-    sel.blur();
-  });
-  const hint = document.createElement('small');
-  hint.textContent = "gilt ab ‚Neu'";
-  label.append(sel, hint);
-  return label;
-}
-
-/**
- * Speichern, Laden und Neu; Neu immer, Laden nur bei Fortschritt mit zweitem Klick. Gibt es zwei
- * ladbare Speicherplätze, folgt auf „Laden" eine Auswahl mit beiden Ständen.
- */
-function renderGameButtons(box: Element, actions: HudActions): () => void {
-  const choice = document.createElement('span');
-  choice.className = 'load-choice';
-  let choiceTimer: ReturnType<typeof setTimeout> | null = null;
-  const closeChoice = (): void => {
-    if (choiceTimer !== null) clearTimeout(choiceTimer);
-    choiceTimer = null;
-    choice.replaceChildren();
-  };
-  const openChoice = (saves: SaveInfo[]): void => {
-    closeChoice();
-    for (const info of saves) {
-      choice.appendChild(
-        gameButton(slotLabel(info), () => {
-          closeChoice();
-          actions.load(info.slot);
-        }),
-      );
-    }
-    choice.appendChild(gameButton('Abbrechen', closeChoice));
-    choiceTimer = setTimeout(closeChoice, CHOICE_MS);
-  };
-  const runLoad = (): void => {
-    const saves = actions.listSaves();
-    if (saves.length >= 2) openChoice(saves);
-    else actions.load(saves[0]?.slot);
-  };
-  const load = confirmButton('Laden', 'Wirklich laden?', actions.hasProgress, runLoad);
-  const fresh = confirmButton('Neu', 'Wirklich neu?', () => true, actions.restart);
-  box.append(
-    renderCrisisSelect(actions),
-    gameButton('Speichern', () => actions.save()),
-    load.btn,
-    fresh.btn,
-    choice,
-  );
-  return () => {
-    closeChoice();
-    load.dispose();
-    fresh.dispose();
-  };
 }
 
 /** Schnellschalter Stumm und Button Einstellungen; Werte kommen aus und gehen an `actions`. */
@@ -243,7 +107,8 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     syncMute(muted);
   });
   const settingsBtn = gameButton('Einstellungen', (btn) => actions.openSettings(btn));
-  box.append(mute, settingsBtn);
+  const menuBtn = gameButton('Menü', (btn) => actions.openMenu(btn));
+  box.append(mute, settingsBtn, menuBtn);
 }
 
 /** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */
@@ -271,7 +136,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-balance"><span data-field="balance"></span> ' +
       '<span data-field="net"></span></span>' +
       '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
-      '<span class="hud-sound"></span><span class="hud-game"></span></div>' +
+      '<span class="hud-sound"></span></div>' +
       '<div class="pop-row"></div><div class="stock-row"></div>' +
       '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span>' +
       '<span class="card card--crisis" data-field="crisis-card"></span></div>' +
@@ -314,8 +179,6 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (orderEl) renderOrder(orderEl, state.world, { deliver: actions.deliverOrder });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
-    const gameBox = header.querySelector('.hud-game');
-    if (gameBox) cleanups.set(header, renderGameButtons(gameBox, actions));
   }
   const { world } = state;
   setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
