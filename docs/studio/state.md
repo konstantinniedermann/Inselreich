@@ -72,6 +72,8 @@ zeigt lead-art M9-H-R2 6/4 (Zählabweichung, Retro). Für M10 Stufe 1 und M9 Wel
 - Aufräumen: Worktrees `m7-ux`, `pages-limit`, `m8-sim`, `m8-sim-ui`, `m8-balance`, `m8-scen`,
   `m8-ui`, `m8-spec`, `programm-feedback`, `m10-design` sind gemergt und können weg (ohne
   `--force`, Branches bleiben).
+- STUDIO.md hat 410 Zeilen (E-009-Grenze 400): Grenze bleibt, studio-coach kürzt in der nächsten
+  Session (Ruling L0).
 - Board-Altlast: Studio-Graph-Ereignis ohne `package_id` erscheint als Paket `None`.
 - CI: `ubuntu-latest` wechselt ab 2026-10-19 auf Ubuntu 26 (in beobachtungen.md).
 - Nutzer: keine offenen Warteschlangen-Einträge. Optional angeboten: echtes Arbeitskräfte-System
