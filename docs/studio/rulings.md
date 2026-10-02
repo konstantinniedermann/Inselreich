@@ -820,3 +820,13 @@ B8: `maxCount` in Defs, `noService` statt `noSchool`. B9, B11 entscheidet der Pl
 Spec-Runde — Archiv-Berichte lead-qa, lead-tech M10-SPEC-GATE
 
 Entscheider: L0 · Anlass: Gate Spec M10, löst R159 W3 ab · ADR: —
+
+## R164 · 2026-10-02 · M10
+
+Ruling: Gate Plan M10 bestanden mit Auflagen (abcf92c; lead-qa und lead-production BEDENKEN): QA 1–4
+und Production B1, B3–B5 arbeitet lead-tech in einer Runde ein, Sichtung L0. P1–P6, W1–W4 bestätigt.
+`sprites.ts`: M10 vor M9 Welle 2. M9 Welle 1b: H-R3 nach M8-R1, H-R4 in `errands.ts` parallel, Anschluss
+`renderer.ts` nach H-R3. Budget gestuft (B2): Start M10 erst nach Gate Merge M8, zuerst T1–T4 und A1. —
+Kosten bei Irrtum: Plan-Nachtrag — Archiv-Berichte M10-PLAN-GATE
+
+Entscheider: L0 · Anlass: Gate Plan M10 · ADR: —
