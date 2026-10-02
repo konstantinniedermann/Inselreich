@@ -275,4 +275,19 @@ describe('M8 Bausperre (Änderung S11)', () => {
     for (const id of BUILDING_IDS)
       if (BUILDING_DEFS[id].unlockTier === undefined) expect(buildLock(w, id), id).toBeNull();
   });
+
+  it('AK-S2-19 Glashütte vor dem Sieg gesperrt, placeBuilding bucht nichts; mit won frei', () => {
+    fund();
+    expect(BUILDING_DEFS.glassworks.unlockTier).toBe(4);
+    expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');
+    expect(canPlace(w, 'glassworks', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
+    const money = w.money;
+    const stock = { ...w.stock };
+    expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(false);
+    expect(w.money).toBe(money);
+    expect(w.stock).toEqual(stock);
+    w.won = true;
+    expect(buildLock(w, 'glassworks')).toBeNull();
+    expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(true);
+  });
 });
