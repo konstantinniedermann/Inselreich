@@ -746,7 +746,9 @@ class _Builder:
                 "session_id": str(event.get("session_id") or ""),
             }
             self.budgets[key] = current
-        current["granted"] += granted
+        # jedes Event ist eine neue Freigabe: gezählt wird ab dem jüngsten (R168)
+        current["granted"] = granted
+        current["since"] = ts
         if parallel:
             current["parallel"] = parallel
 
