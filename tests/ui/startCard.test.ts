@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_MS } from '../../src/sim/defs/timing';
-import { STORAGE_NOTES, startChoices, startGoal, startSteps } from '../../src/ui/startCard';
+import {
+  STORAGE_NOTES,
+  startChoices,
+  startDismissAction,
+  startGoal,
+  startSteps,
+} from '../../src/ui/startCard';
 
 const t = (s: number): number => (s * 1000) / TICK_MS;
 
@@ -42,5 +48,12 @@ describe('Startkarte (AK-UX-01)', () => {
       '2 Fischerhütte (F) am Wasser und Holzfäller (L) am Wald bauen',
       '3 Betriebe mit einem Weg (R) zum Kontor verbinden — Wohnhäuser brauchen keinen Weg',
     ]);
+  });
+});
+
+describe('Startkarte Esc (Spec L1)', () => {
+  it('L1 Esc bei offener Bestätigung bricht ab, sonst primärer Knopf', () => {
+    expect(startDismissAction(true)).toBe('cancel');
+    expect(startDismissAction(false)).toBe('primary');
   });
 });

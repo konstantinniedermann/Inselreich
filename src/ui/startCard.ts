@@ -62,6 +62,11 @@ export function startSteps(): string[] {
   ];
 }
 
+/** Esc und Hintergrund: bei offener Bestätigung abbrechen, sonst den primären Knopf wählen (Spec L1). */
+export function startDismissAction(confirming: boolean): 'cancel' | 'primary' {
+  return confirming ? 'cancel' : 'primary';
+}
+
 export interface StartCardOptions {
   mode: 'start' | 'help';
   choices?: StartChoice[];
@@ -74,9 +79,10 @@ export interface StartCardOptions {
 /** Öffnet die Startkarte; die Rückgabe schliesst sie. */
 export function openStartCard(host: HTMLElement, o: StartCardOptions): () => void {
   const choices = o.choices ?? [];
-  const ref = { primary: null, fresh: null } as {
+  const ref = { primary: null, fresh: null, cancelConfirm: null } as {
     primary: HTMLButtonElement | null;
     fresh: HTMLButtonElement | null;
+    cancelConfirm: (() => void) | null;
   };
   const m = openModal({
     host,
@@ -85,8 +91,9 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
     restoreFocus: o.mode === 'start' ? 'body' : 'opener',
     opener: o.opener,
     onDismiss: () => {
-      if (o.mode === 'start') ref.primary?.click();
-      else m.close();
+      if (o.mode !== 'start') m.close();
+      else if (startDismissAction(ref.cancelConfirm !== null) === 'cancel') ref.cancelConfirm?.();
+      else ref.primary?.click();
     },
   });
   const title = Object.assign(document.createElement('h2'), { textContent: 'Inselreich' });
@@ -117,18 +124,16 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
   const build = (): void => {
     ref.primary = null;
     ref.fresh = null;
+    ref.cancelConfirm = null;
     const buttons = choices.map((c) => {
       const b = btn(c.label, c.primary, () => {
         if (c.kind === 'new' && o.hasSlot) {
-          renderConfirm(
-            row,
-            newIslandPrompt(true),
-            () => o.onChoice?.(c),
-            () => {
-              build();
-              ref.fresh?.focus();
-            },
-          );
+          const cancel = (): void => {
+            build();
+            ref.fresh?.focus();
+          };
+          ref.cancelConfirm = cancel;
+          renderConfirm(row, newIslandPrompt(true), () => o.onChoice?.(c), cancel);
         } else o.onChoice?.(c);
       });
       if (c.primary) ref.primary = b;

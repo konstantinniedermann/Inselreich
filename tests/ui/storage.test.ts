@@ -98,6 +98,11 @@ it('RF-3 autosaveOnHide: Tick 0 schreibt nicht, werfendes Schreiben bleibt still
     return ok;
   });
   expect(calls).toEqual([]);
+  autosaveOnHide({ tick: 5 } as World, () => {
+    calls.push(5);
+    return ok;
+  });
+  expect(calls).toEqual([5]);
   expect(() =>
     autosaveOnHide({ tick: 5 } as World, () => {
       throw new Error('voll');
