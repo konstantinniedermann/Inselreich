@@ -16,7 +16,7 @@ export const MAX_TICKS = 9000;
 /** Strengere Grenze für den Sieg nach Übernahme der Eskalationswerte (Entscheid in der Kurz-Spec). */
 export const WIN_TICK_LIMIT = 7500;
 /** Der Controller entscheidet alle 100 Ticks, was gebaut oder gekauft wird. */
-const CONTROL_INTERVAL = 100;
+export const CONTROL_INTERVAL = 100;
 /** Geld, das nach jedem Bau oder Kauf übrig bleiben muss (deckt einen Aufstieg zum Bürger). */
 const RESERVE = 300;
 /** Holzfäller senken den Holzzukauf; zwei reichen für den gestaffelten Ausbau. */
@@ -223,7 +223,7 @@ function buildChain(w: World, good: Need, layout: Layout): boolean {
  * Ein Controller-Durchlauf in fester Priorität. Scheitert ein Schritt am Geld, endet der Durchlauf:
  * spätere Stufen warten, bis die frühere bezahlt ist.
  */
-function control(w: World, layout: Layout, opts: ColonyOptions): void {
+export function control(w: World, layout: Layout, opts: ColonyOptions): void {
   const anyPlan = (tier: Tier): boolean => houses(w).some((b) => planTier(b) >= tier);
   // 1. Überschuss verkaufen, Material für den nächsten Aufstieg vorhalten (auch ohne `RESERVE`)
   sellSurplus(w);
