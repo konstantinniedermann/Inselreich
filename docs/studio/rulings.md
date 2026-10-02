@@ -661,3 +661,14 @@ R143 streicht nichts, K1–K3 und Zwei-Input bleiben. Spec und Plan gehen jetzt 
 damit dessen M8-Empfehlung einfliessen kann. — Kosten bei Irrtum: kurze Startverzögerung M8
 
 Entscheider: L0 · Anlass: Sichtung Auflagen M8 (R143) · ADR: —
+
+## R147 · 2026-10-02 · Programm Nutzerfeedback
+
+Ruling: Nutzernachtrag S11 „Freischaltung und Progression" (UI zeigt nur Freigeschaltetes, Bauten
+nach Bedürfnis, qualifizierte Arbeit nur mit Schule, Funktionen wie Steuern an Gebäude gebunden,
+Freischalt-Meldung, Hilfe-Knopf mit nächstem Schritt) geht in FB-TRIAGE als eigener Strang.
+Widerspricht M8 §3/4.3 („Glashütte ab Spielbeginn baubar"): M8-Start bleibt bis zum Gate
+Brainstorming zurückgestellt; Triage empfiehlt, ob S11 vor, in oder nach M8 kommt. — Kosten bei
+Irrtum: M8-Spec-Nachführung — `.studio/handoffs/nutzerfeedback-2026-10-02.md`
+
+Entscheider: L0 · Anlass: Nutzer-Anweisung, ergänzt R144 · ADR: —
