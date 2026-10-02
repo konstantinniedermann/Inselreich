@@ -605,3 +605,12 @@ und (2) als Zwischenstand, Kopfzeilen-Smoke-Check vor dem Merge. Zweitprüfung l
 (B1, B2). Hinweise beider Leads gehen in den Plan. — Kosten bei Irrtum: späterer erster Merge.
 
 Entscheider: L0 · Anlass: Gate Spec M8
+
+## R141 · 2026-10-02 · Gate Spec M8 bestanden
+
+Ruling: Spec M8 @ 283bd9f (79 AK) freigegeben (lead-qa Zweitprüfung OK, lead-tech BEDENKEN durch R140
+erledigt). Plan durch lead-tech auf `docs/m8-spec`, mit allen Plan-Hinweisen beider Leads, Übergabe
+nach S3 (E-010) und R1 als eigenem Paket lead-art parallel zu U1/U2. Spec und Plan gehen nach Gate
+Plan gemeinsam nach main. — Kosten bei Irrtum: Plan-Nacharbeit.
+
+Entscheider: L0 · Anlass: Gate Spec M8
