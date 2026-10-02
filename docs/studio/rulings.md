@@ -840,3 +840,15 @@ main-Merge mit beiden Beobachtungs-Seiten), Nachprüfung L0 per Diff `src tests`
 — Kosten bei Irrtum: Revert eines Merges — Archiv-Bericht lead-qa M8-FR
 
 Entscheider: L0 · Anlass: Gate Merge M8 · ADR: —
+
+## R166 · 2026-10-02 · Session-Ende 58d6bc4a
+
+Ruling: Retros angenommen. E-007 und E-008 enden als „behalten"; E-010 läuft angepasst in M10 weiter
+(Schwelle je Controller, Wechsel an Reset-Pausen, Doku delegieren). Neu: E-011 Rebase-Verbot in
+Briefing-Vorlage (Guard-Teil per Warteschlange N-92), E-012 Pages `paths-ignore` für Nicht-Build-Pfade,
+E-013 Budget-Phase = Paket-ID auch je Integrator-Start. Prozess-V1 (Hänger-Alarm 12 min), V3 (im
+knappen Fenster erst abschliessen), V4 (Nutzernachtrag als ein Delta-Paket) ins Handbuch; Werkzeuge
+(Pages, metrics.py „Tokens je Agent", Hänger-Alarm) als Paket lead-production nächste Session. —
+Kosten bei Irrtum: Handbuch-Revert — `docs/studio/retros/2026-10-02-*.md`
+
+Entscheider: L0 · Anlass: Retros M8, Session, Prozess · ADR: —

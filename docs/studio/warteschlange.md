@@ -63,3 +63,13 @@ schliesst den Eintrag.
 - Blockiert: nichts (Nachprüfung)
 - Von: lead-qa
 - Antwort: Ohne Nutzer beantwortet (R119 c): INT-Check auf Mac M1 Pro, Sturm+Feuer, 1920x1080 DPR 2: 120 fps (Bildschirmgrenze), renderMedian 2,6 ms
+
+## N-92 · offen · 2026-10-02 · Guard soll auch git pull --rebase blocken
+
+- Frage: Der Guard-Hook (tools/studio/guard.py) blockt heute nur 'git rebase', nicht 'git pull --rebase'. In dieser Session hat L0 einmal 'pull --rebase' ausgeführt (Verstoss gegen Verfassung §6.3, zweiter Vorfall dieser Art). Darf das Team den Guard so erweitern? Dazu müsstest du in einem eigenen Prompt 'VERFASSUNG ÄNDERN' schreiben (gilt eine Session).
+- Empfehlung: Freigeben: Guard um 'pull --rebase', 'pull -r' und 'config pull.rebase true' erweitern, mit Test.
+- Begründung: Verfassung §1.3: Änderungen am Guard nur mit Nutzerfreigabe. Das Muster trat zweimal auf; Vorlagen allein (E-011) verhindern es nicht technisch.
+- Kosten des Wartens: Gering: Bis dahin schützt nur die Regel in Briefing-Vorlage und lernen.md; ein erneuter Rebase lokaler, ungepushter Commits wäre ärgerlich, aber selten folgenschwer.
+- Blockiert: nichts (E-011 läuft ohne Guard-Teil)
+- Von: studio-director
+- Antwort: –
