@@ -525,3 +525,12 @@ CI-Lauf auf main belegt; bei Rot `check-latest: true` als Fix. — Kosten bei Ir
 Deploy, alte Seite bleibt online.
 
 Entscheider: L0 · Anlass: Merge-Gate
+
+## R132 · 2026-10-02 · M7-UX AK-UX-16 Auflage
+
+Ruling: Auflage lead-design angenommen: `.btn.unaffordable` mit Schrift `--parchment-muted` (#c0b090,
+≥ 4,5:1, Paar im Kontrasttest), gestrichelt, ohne Hintergrund-Überschreibung; Spec-Text AK-UX-16
+nachziehen; QA-Bild. Umsetzung lead-tech vor Merge, Final-Review prüft das Delta mit. Stolperstellen
+nicht blockierend (beobachtungen.md). — Kosten bei Irrtum: drei CSS-Zeilen.
+
+Entscheider: L0 · Anlass: Designurteil M7-UX
