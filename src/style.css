@@ -21,6 +21,7 @@
   --gold: #c8962e;
   --parchment: #efe3c4;
   --parchment-edge: #d9c79c;
+  --parchment-muted: #c0b090;
   --ink: #2e2418;
   --signal-red: #ff3b5c;
   --signal-warn: #ff6726;
@@ -205,7 +206,7 @@ body {
   box-shadow: none;
 }
 .btn.unaffordable {
-  background: var(--wood);
+  color: var(--parchment-muted);
   border-style: dashed;
 }
 .btn.active,
