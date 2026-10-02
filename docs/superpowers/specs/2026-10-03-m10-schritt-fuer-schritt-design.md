@@ -1,8 +1,8 @@
 # M10 „Schritt für Schritt" — Designvorschlag
 
-Datum: 2026-10-03 · Paket H-D1 · Meilenstein M10 · Status: **Vorschlag, Gate Brainstorming** · Prozessstufe voll
-(neues System, Save v5). Das Dokument ist **keine Spec**: Es hat keine Abnahmekriterien. Die Spec mit AK schreibt
-`design-spec-author` nach dem Gate.
+Datum: 2026-10-03 · Paket H-D1 · Meilenstein M10 · Status: **Vorschlag, Gate Brainstorming bestanden (R155)** ·
+Prozessstufe voll (neues System, Save v5). Das Dokument ist **keine Spec**: Es hat keine Abnahmekriterien. Die Spec
+mit AK: [2026-10-03-m10-schritt-fuer-schritt-spec.md](2026-10-03-m10-schritt-fuer-schritt-spec.md).
 
 Grundlage: Nutzerfeedback S11 (Nachtrag), S5, S9, G9 (`.studio/handoffs/nutzerfeedback-2026-10-02.md`), Programm
 `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §3.5, §3.7, §3.8, §4, §6, §7, §8 (F3, F4, F9, F14),
