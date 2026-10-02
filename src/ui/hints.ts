@@ -166,6 +166,11 @@ function touchesReachable(
   return adjacentOf(world, x, y, w, h).some((p) => roads.has(idx(world, p.x, p.y)));
 }
 
+/** Satzteil „danach mit Weg (Taste) …"; ohne Taste entfällt die Klammer. */
+export function connectAdvice(label: string | null): string {
+  return `danach mit Weg${label ? ` (${label})` : ''} zum Kontor verbinden`;
+}
+
 export function placementHint(world: World, tool: Tool, x: number, y: number): Hint | null {
   const road = hotkeyLabel({ kind: 'road' });
   if (tool.kind === 'build') {
@@ -176,7 +181,7 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
     if (tool.defId === 'house') return { tone: 'ok', text: 'Baubar · im Versorgungsgebiet' };
     return touchesReachable(world, x, y, def.w, def.h, reachableRoads(world))
       ? { tone: 'ok', text: 'Baubar · wird an den Kontor angebunden' }
-      : { tone: 'ok', text: `Baubar · danach mit Weg (${road}) zum Kontor verbinden` };
+      : { tone: 'ok', text: `Baubar · ${connectAdvice(road)}` };
   }
   if (tool.kind === 'road') {
     const r = canPlaceRoad(world, x, y);

@@ -7,7 +7,7 @@ import { setField } from './dom';
 export interface TradeActions {
   back(): void;
   /** Nach jedem Kauf/Verkauf, mit dem Ergebnis der Sim-Aktion (Meldung und Ton macht der Aufrufer). */
-  changed(op: 'buy' | 'sell', result: Result): void;
+  changed(op: 'buy' | 'sell', result: Result, good: GoodId, n: number): void;
 }
 
 /** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
@@ -81,7 +81,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);
-      actions.changed(op, r);
+      actions.changed(op, r, good, n);
     });
     parent.appendChild(btn);
   };

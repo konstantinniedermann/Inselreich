@@ -1,13 +1,16 @@
-import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { setTaxLevel } from '../sim/tax';
+import { refundCost } from '../sim/economy';
+import { crisisView, effectiveRefund } from '../sim/queries';
+import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
-import { crisisView } from '../sim/queries';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { Category, World } from '../sim/types';
+import type { Category, GoodId, Order, Result, World } from '../sim/types';
+import { refundText } from './texts';
 import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
@@ -19,12 +22,20 @@ import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from
 import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
-import { orderChange } from './order';
+import { deliveredMessage, orderMessage } from './order';
+import {
+  friendlyReason,
+  hintPosition,
+  newlyConnected,
+  placementHint,
+  unconnectedIds,
+  type ReasonCtx,
+} from './hints';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
-import { bindMessages, showMessage } from './messages';
+import { bindMessages, closeClosableToast, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
@@ -32,7 +43,7 @@ import { createPerfProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
 import { openMenu, type MenuActions } from './menu';
-import { closeAllModals } from './modal';
+import { closeAllModals, isModalOpen } from './modal';
 import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
 import {
   autosaveOnHide,
@@ -294,25 +305,27 @@ function launch(
     },
     setTax: (level) => {
       const r = setTaxLevel(world, level);
-      if (!r.ok) showError(r.reason);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
       refresh();
     },
     deliverOrder: () => {
+      const o = world.order ? { ...world.order } : null;
       const r = deliverOrder(world);
       const ev = actionSound(r, 'orderDone');
-      if (!r.ok) showError(r.reason);
+      if (!r.ok)
+        showError(friendlyReason(world, r.reason, o ? { good: o.good, amount: o.amount } : {}));
       else {
         // Vergleichswert zurücksetzen, damit die Lieferung nicht als „verfallen" gilt
-        prevOrderPeriod = null;
-        showMessage('Auftrag geliefert');
+        prevOrder = null;
+        if (o) showMessage(deliveredMessage(o));
         if (ev) sound.play(ev);
       }
       refresh();
     },
   };
 
-  /** Auftragsperiode im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
-  let prevOrderPeriod: number | null = world.order?.period ?? null;
+  /** Auftrag im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
+  let prevOrder: Order | null = world.order ? { ...world.order } : null;
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -322,9 +335,8 @@ function launch(
       state.selectedId = panel.id;
       renderInspect(panelEl, world, panel.id, {
         demolish: (id) => {
-          const r = demolish(world, id);
-          if (!r.ok) showError(r.reason);
-          else {
+          const r = demolishBuilding(id);
+          if (r.ok) {
             sound.play('demolish');
             setPanel({ kind: 'none' });
           }
@@ -336,8 +348,8 @@ function launch(
       state.selectedId = world.kontorId;
       renderTrade(panelEl, world, {
         back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
-        changed: (op, r) => {
-          if (!r.ok) showError(r.reason);
+        changed: (op, r, good, n) => {
+          if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
           else if (op === 'sell') sound.play('coin');
           refresh();
         },
@@ -352,7 +364,12 @@ function launch(
   const refresh = (): void => {
     if (world.won && !state.wonShown) {
       state.wonShown = true;
-      showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
+      showMessage(
+        `Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`,
+        'info',
+        true,
+        true,
+      );
     }
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world);
@@ -404,11 +421,12 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
+    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ });
     if (!dragging) {
-      showError(reason);
+      showError(text);
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
       dragMoneyToastShown = true;
-      showError(reason);
+      showError(text);
     }
   };
 
@@ -431,12 +449,34 @@ function launch(
     refresh();
   };
 
+  const reportConnections = (before: Set<number>): void => {
+    for (const name of newlyConnected(before, world))
+      showMessage(`${name} ist jetzt mit dem Kontor verbunden`);
+  };
+  const demolishBuilding = (id: number): Result => {
+    const b = world.buildings[id];
+    const cost = b ? BUILDING_DEFS[b.defId].cost : null;
+    const text =
+      b && cost
+        ? `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`
+        : '';
+    const r = demolish(world, id);
+    if (r.ok) showMessage(text);
+    else showError(friendlyReason(world, r.reason));
+    return r;
+  };
+  const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number): ReasonCtx =>
+    op === 'buy'
+      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good }
+      : { good, amount: n };
+
   const onAction = (a: InputAction): void => {
     if (a.type === 'hotkey') {
       onHotkey(a.action);
       return;
     }
     if (a.type === 'cancel') {
+      if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
       return;
@@ -451,17 +491,24 @@ function launch(
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
+      const before = unconnectedIds(world);
       const r = placeBuilding(world, tool.defId, a.x, a.y);
-      if (!r.ok) showError(r.reason);
-      else sound.play('build');
+      if (!r.ok) showError(friendlyReason(world, r.reason, { defId: tool.defId }));
+      else {
+        sound.play('build');
+        reportConnections(before);
+      }
     } else if (tool.kind === 'road') {
+      const before = unconnectedIds(world);
       const r = placeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
-      else sound.play('build');
+      else {
+        sound.play('build');
+        reportConnections(before);
+      }
     } else if (tile?.buildingId != null) {
-      const r = demolish(world, tile.buildingId);
-      if (!r.ok) showError(r.reason);
-      else sound.play('demolish');
+      const r = demolishBuilding(tile.buildingId);
+      if (r.ok) sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
@@ -470,6 +517,42 @@ function launch(
     refresh();
   };
   input = bindInput(canvas, state, onAction);
+
+  // Cursor-Hinweis: Schild am Zeiger mit dem Grund; Zielkachel ausserhalb der Karte = kein Hover = kein Schild
+  const hintEl = document.createElement('div');
+  hintEl.className = 'cursor-hint';
+  hintEl.hidden = true;
+  document.body.appendChild(hintEl);
+  let hintFor: Hover | null = null;
+  const updateHint = (force: boolean): void => {
+    const pos = input?.pointerClient() ?? null;
+    const hover = state.hover;
+    if (!hover || !pos || isModalOpen()) {
+      hintEl.hidden = true;
+      hintFor = null;
+      return;
+    }
+    if (force || hover !== hintFor) {
+      hintFor = hover;
+      const h = placementHint(world, hover.tool ?? state.tool, hover.x, hover.y);
+      hintEl.hidden = h === null;
+      if (h) {
+        hintEl.textContent = h.text;
+        hintEl.className = `cursor-hint cursor-hint--${h.tone}`;
+      }
+    }
+    if (hintEl.hidden) return;
+    const p = hintPosition(
+      pos.x,
+      pos.y,
+      hintEl.offsetWidth,
+      hintEl.offsetHeight,
+      innerWidth,
+      innerHeight,
+    );
+    hintEl.style.left = `${p.left}px`;
+    hintEl.style.top = `${p.top}px`;
+  };
 
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   setPanel({ kind: 'none' });
@@ -561,10 +644,9 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
-      const change = orderChange(prevOrderPeriod, world.order?.period ?? null);
-      if (change === 'new') showMessage('Neuer Auftrag');
-      else if (change === 'expired') showMessage('Auftrag verfallen');
-      prevOrderPeriod = world.order?.period ?? null;
+      const msg = orderMessage(prevOrder, world.order);
+      if (msg) showMessage(msg);
+      prevOrder = world.order ? { ...world.order } : null;
       if (state.speed > 0) {
         autoMs += dt;
         if (autoMs >= AUTOSAVE_MS) {
@@ -607,6 +689,7 @@ function launch(
         raster: preview.raster === true,
       });
       perf?.renderDone(performance.now() - t0);
+      updateHint(frame % HUD_EVERY_FRAMES === 0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -636,6 +719,7 @@ function launch(
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
     logBox.remove();
+    hintEl.remove();
     noticeStack.remove();
     unbindMessages();
     hudEl.replaceChildren();

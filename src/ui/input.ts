@@ -1,4 +1,5 @@
 import { canPlace, canPlaceRoad } from '../sim/placement';
+import type { World } from '../sim/types';
 import { tileAt } from '../sim/world';
 import { clampToMap, zoomAt } from '../render/camera';
 import type { GameState } from './app';
@@ -16,6 +17,12 @@ export const PAN_PX_PER_S = 960;
 const DRAG_THRESHOLD = 4;
 const PAN_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
 
+/** Abriss-Vorschau rot: Gebäude (ausser Kontor) oder Weg auf der Kachel. */
+export function canDemolishTile(world: World, x: number, y: number): boolean {
+  const tile = tileAt(world, x, y);
+  return !!tile && ((tile.buildingId !== null && tile.buildingId !== world.kontorId) || tile.road);
+}
+
 /** Weltpixel, um die die Kamera bei gedrückter Pan-Taste in `dtMs` wandert (unabhängig von der Framerate). */
 export function panDelta(dtMs: number, zoom: number): number {
   return (PAN_PX_PER_S * dtMs) / 1000 / zoom;
@@ -28,6 +35,8 @@ export interface InputBinding {
   cancelPointerAction(): void;
   /** Berechnet die Vorschau an der letzten Zeigerposition neu (nach einem Werkzeugwechsel). */
   refreshHover(): void;
+  /** Letzte Zeigerposition in Fensterkoordinaten; `null`, wenn der Zeiger die Karte verlassen hat. */
+  pointerClient(): { x: number; y: number } | null;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
 }
@@ -41,6 +50,7 @@ export function bindInput(
   const keys = new Set<string>();
   let spaceDown = false;
   let pointer: { sx: number; sy: number } | null = null;
+  let client: { x: number; y: number } | null = null;
   let drag: {
     button: number;
     startX: number;
@@ -88,10 +98,7 @@ export function bindInput(
     let ok = true;
     if (tool.kind === 'build') ok = canPlace(state.world, tool.defId, t.x, t.y).ok;
     else if (tool.kind === 'road') ok = canPlaceRoad(state.world, t.x, t.y).ok;
-    else if (tool.kind === 'demolish') {
-      const tile = tileAt(state.world, t.x, t.y);
-      ok = !!tile && (tile.buildingId !== null || tile.road);
-    }
+    else if (tool.kind === 'demolish') ok = canDemolishTile(state.world, t.x, t.y);
     state.hover = { x: t.x, y: t.y, tool, ok };
   };
 
@@ -181,6 +188,7 @@ export function bindInput(
 
   const onPointerMove = (e: PointerEvent): void => {
     const p = local(e);
+    client = { x: e.clientX, y: e.clientY };
     if (e.pointerType === 'touch' && touches.has(e.pointerId)) {
       touches.set(e.pointerId, p);
       if (touches.size >= 2) {
@@ -281,6 +289,7 @@ export function bindInput(
   const onPointerLeave = (): void => {
     if (drag) return; // bei Capture ignorieren
     pointer = null;
+    client = null;
     state.hover = null;
   };
 
@@ -389,5 +398,11 @@ export function bindInput(
     }
   };
 
-  return { applyKeys, cancelPointerAction, refreshHover: updateHover, unbind };
+  return {
+    applyKeys,
+    cancelPointerAction,
+    refreshHover: updateHover,
+    pointerClient: () => client,
+    unbind,
+  };
 }

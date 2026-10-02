@@ -30,6 +30,7 @@ export function showMessage(
   text: string,
   kind: 'info' | 'error' | 'warn' = 'info',
   sticky = false,
+  closable = false,
 ): void {
   if (!box) return;
   const now = performance.now();
@@ -40,6 +41,12 @@ export function showMessage(
   toast.className = `toast ${kind}`;
   toast.textContent = text;
   if (sticky) toast.dataset.sticky = '1';
+  if (closable) {
+    toast.dataset.closable = '1';
+    toast.title = 'Klicken zum Schliessen';
+    toast.classList.add('toast--closable');
+    toast.addEventListener('click', () => toast.remove());
+  }
   box.appendChild(toast);
   if (!sticky) setTimeout(() => toast.remove(), 3000);
   if (box.children.length > MAX_TOASTS) {
@@ -48,4 +55,14 @@ export function showMessage(
     );
     oldest?.remove();
   }
+}
+
+/** Entfernt den jüngsten schliessbaren Toast; wahr, wenn einer da war (Esc schliesst zuerst ihn). */
+export function closeClosableToast(): boolean {
+  if (!box) return false;
+  const all = box.querySelectorAll<HTMLElement>('[data-closable="1"]');
+  const last = all[all.length - 1];
+  if (!last) return false;
+  last.remove();
+  return true;
 }

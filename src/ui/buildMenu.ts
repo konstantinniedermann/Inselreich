@@ -8,6 +8,7 @@ import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
+import { friendlyReason } from './hints';
 import { showMessage } from './messages';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -231,7 +232,8 @@ export function renderBuildMenu(
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
       const afford = cost ? checkAfford(state.world, cost) : null;
-      if (afford && !afford.ok) showMessage(afford.reason, 'error');
+      if (afford && !afford.ok)
+        showMessage(friendlyReason(state.world, afford.reason, { cost }), 'error');
     });
     parent.appendChild(btn);
   };
@@ -307,7 +309,7 @@ export function updateBuildMenu(nav: HTMLElement, world: World): void {
     const r = checkAfford(world, cost);
     btn.classList.toggle('unaffordable', !r.ok);
     const reason = btn.querySelector('.tt-reason');
-    const text = r.ok ? '' : r.reason;
+    const text = r.ok ? '' : friendlyReason(world, r.reason, { cost });
     if (reason && reason.textContent !== text) reason.textContent = text;
   }
 }

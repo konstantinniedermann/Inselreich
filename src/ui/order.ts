@@ -1,6 +1,6 @@
 import { GOODS } from '../sim/defs/goods';
 import { nextOrderTick } from '../sim/orders';
-import type { World } from '../sim/types';
+import type { Order, World } from '../sim/types';
 import { setField } from './dom';
 
 export interface OrderActions {
@@ -25,6 +25,20 @@ export function orderCardText(world: World): string {
 export function orderChange(prev: number | null, cur: number | null): 'new' | 'expired' | null {
   if (cur === prev) return null;
   return cur !== null ? 'new' : 'expired';
+}
+
+/** Meldung zum Wechsel des Auftrags zwischen zwei Frames; `null`, wenn sich nichts geändert hat. */
+export function orderMessage(prev: Order | null, cur: Order | null): string | null {
+  if (cur !== null && (prev === null || prev.period !== cur.period)) {
+    return `Neuer Auftrag: ${cur.amount} ${GOODS[cur.good].name} · Prämie ${cur.reward}`;
+  }
+  if (cur === null && prev !== null)
+    return `Auftrag verfallen: ${prev.amount} ${GOODS[prev.good].name}`;
+  return null;
+}
+
+export function deliveredMessage(o: Order): string {
+  return `Auftrag geliefert: ${o.amount} ${GOODS[o.good].name} · +${o.reward} Geld`;
 }
 
 /** Baut die Auftragskarte auf: Text und „Liefern" (immer klickbar, der Grund kommt als Toast). */
