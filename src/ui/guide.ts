@@ -1,0 +1,232 @@
+// guide.ts — rein: nächster Schritt, Steuerwirkung, Abhilfe und Kartenzeichen als Klartext (Spec L5–L7).
+import { PALETTE } from '../render/palette';
+import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
+import { GOOD_IDS, GOODS } from '../sim/defs/goods';
+import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
+import { SERVICE_BUILDING } from '../sim/population';
+import { houseDiagnosis } from '../sim/queries';
+import type {
+  Building,
+  BuildingDefId,
+  GoodId,
+  ServiceId,
+  TaxLevel,
+  Tier,
+  World,
+} from '../sim/types';
+import { hotkeyLabel } from './hotkeys';
+import { unconnectedIds } from './hints';
+import { formatGameTime } from './time';
+
+const key = (id: BuildingDefId): string => hotkeyLabel({ kind: 'build', defId: id }) ?? '';
+const nm = (id: BuildingDefId): string => BUILDING_DEFS[id].name;
+const nk = (id: BuildingDefId): string => `${nm(id)} (${key(id)})`;
+const has = (w: World, id: BuildingDefId): boolean =>
+  Object.values(w.buildings).some((b) => b.defId === id);
+
+export const producerOf = (g: GoodId): BuildingDefId | undefined =>
+  BUILDING_IDS.find((id) => BUILDING_DEFS[id].produces === g);
+export const consumerOf = (g: GoodId): BuildingDefId | undefined =>
+  BUILDING_IDS.find((id) => BUILDING_DEFS[id].consumes === g);
+
+/** Satz zu einem fehlenden Gut, oder null, wenn Erzeuger und Vorstufe stehen (dann weiterschalten). */
+function goodSentence(w: World, tierName: string, g: GoodId): string | null {
+  const p = producerOf(g);
+  if (!p) return null;
+  const input = BUILDING_DEFS[p].consumes;
+  const q = input ? producerOf(input) : undefined;
+  if (!has(w, p)) {
+    const base = `Deine ${tierName} brauchen ${GOODS[g].name}: baue ${nk(p)}`;
+    return q && !has(w, q) ? `${base} und ${nk(q)} für ${GOODS[input!].name}` : base;
+  }
+  if (q && !has(w, q)) return `${nm(p)} braucht ${GOODS[input!].name}: baue ${nk(q)}`;
+  return null;
+}
+
+export function nextStep(w: World): string {
+  if (w.won) return 'Ziel erreicht — spiel frei weiter';
+  const houses = Object.values(w.buildings)
+    .filter((b) => b.house)
+    .sort((a, b) => a.id - b.id);
+  if (houses.length === 0) return `Baue ein ${nk('house')} nahe dem Kontor`;
+  const unc = [...unconnectedIds(w)].sort((a, b) => a - b)[0];
+  if (unc !== undefined)
+    return `Verbinde ${nm(w.buildings[unc]!.defId)} per Weg (${hotkeyLabel({ kind: 'road' })}) mit dem Kontor`;
+  const full = houses.filter(
+    (h) =>
+      h.house!.inhabitants === TIERS[h.house!.tier].maxInhabitants &&
+      TIERS[h.house!.tier].upgradeCost !== null,
+  );
+  // Regel 3: erst Diagnosen (Versorgung, Güter), dann neue Güter der nächsten Stufe voller Häuser
+  for (const h of houses)
+    for (const d of houseDiagnosis(w, h)) {
+      if (d.kind === 'supply')
+        return `Ein Wohnhaus liegt ausserhalb der Versorgung: baue einen ${nk('market')}`;
+      if (d.kind === 'good') {
+        const s = goodSentence(w, TIERS[h.house!.tier].name, d.good);
+        if (s) return s;
+      }
+    }
+  for (const h of full) {
+    const next = (h.house!.tier + 1) as Tier;
+    for (const g of GOOD_IDS) {
+      if (!(g in TIERS[next].needs) || g in TIERS[h.house!.tier].needs) continue;
+      const s = goodSentence(w, TIERS[next].name, g);
+      if (s) return s;
+    }
+  }
+  // Regel 4: Dienste
+  const serviceSentence = (tierName: string, s: ServiceId): string | null => {
+    const id = SERVICE_BUILDING[s];
+    return has(w, id) ? null : `Deine ${tierName} brauchen ${nm(id)}: baue ${nk(id)} in ihrer Nähe`;
+  };
+  for (const h of houses)
+    for (const d of houseDiagnosis(w, h))
+      if (d.kind === 'service') {
+        const s = serviceSentence(TIERS[h.house!.tier].name, d.service);
+        if (s) return s;
+      }
+  for (const h of full) {
+    const next = (h.house!.tier + 1) as Tier;
+    for (const sv of TIERS[next].services) {
+      if (TIERS[h.house!.tier].services.includes(sv)) continue;
+      const s = serviceSentence(TIERS[next].name, sv);
+      if (s) return s;
+    }
+  }
+  if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0)
+    return 'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder erhöhe die Steuer';
+  if (
+    TAX_LEVELS[w.taxLevel].upgradeWait === null &&
+    houses.some((h) => TIERS[h.house!.tier].upgradeCost !== null)
+  )
+    return `Steuer ‚${TAX_LEVELS[w.taxLevel].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
+  return 'Baue weitere Wohnhäuser und versorge sie';
+}
+
+export function taxEffect(level: TaxLevel): string {
+  const t = TAX_LEVELS[level];
+  const up =
+    t.upgradeWait === null
+      ? 'kein Aufstieg'
+      : `Aufstieg nach ${formatGameTime(t.upgradeWait)} Zufriedenheit`;
+  const occ =
+    t.occupancy === 1
+      ? 'Häuser voll belegt'
+      : `Häuser nur zu ${Math.round(t.occupancy * 100)} % belegt`;
+  return `${t.name}: ${t.pct} % Steuer · ${up} · ${occ}`;
+}
+
+export function remedyText(w: World, b: Building): string | null {
+  if (b.id === w.kontorId) return null;
+  if (b.house) {
+    const d = houseDiagnosis(w, b)[0];
+    if (!d) return null;
+    if (d.kind === 'supply') return `Baue einen ${nk('market')} in der Nähe`;
+    if (d.kind === 'service') {
+      const id = SERVICE_BUILDING[d.service];
+      return `${nm(id)} fehlt: baue ${nk(id)} in Reichweite`;
+    }
+    const p = producerOf(d.good)!;
+    const g = GOODS[d.good].name;
+    return has(w, p)
+      ? `${g} fehlt: baue mehr ${nm(p)} oder kaufe ${g} am Kontor`
+      : `${g} fehlt: baue ${nk(p)}`;
+  }
+  if (b.outageUntil !== undefined)
+    return `Läuft nach dem Brand von selbst wieder; eine ${nk('firestation')} in der Nähe schützt`;
+  if (!b.connected) return `Baue einen Weg (${hotkeyLabel({ kind: 'road' })}) von hier zum Kontor`;
+  const def = BUILDING_DEFS[b.defId];
+  if (b.state === 'waitingInput' && def.consumes) {
+    const p = producerOf(def.consumes)!;
+    return `Baue ${nk(p)} oder kaufe ${GOODS[def.consumes].name} am Kontor`;
+  }
+  if (b.state === 'storageFull' && def.produces) {
+    const g = def.produces;
+    const sell = `Verkaufe ${GOODS[g].name} am Kontor`;
+    const c = consumerOf(g);
+    if (c) return `${sell} oder baue ${nk(c)}`;
+    if (Object.values(TIERS).some((t) => g in t.needs))
+      return `${sell} oder baue weitere Wohnhäuser`;
+    return sell;
+  }
+  return null;
+}
+
+/** Eine Legendenzeile der Kartenzeichen; `color` nur, wo das Zeichen eine feste Farbe aus `PALETTE` hat. */
+export interface MapSign {
+  sign: string;
+  renderer: string;
+  meaning: string;
+  color: string | null;
+}
+
+/** Legende der Kartenzeichen, Reihenfolge der Spec-Tabelle L5. */
+export const MAP_SIGNS: readonly MapSign[] = [
+  {
+    sign: 'Roter Punkt über Betrieb',
+    renderer: 'drawUnconnected',
+    meaning: 'nicht mit dem Kontor verbunden: Weg (R) bauen',
+    color: PALETTE.signalRed,
+  },
+  {
+    sign: 'Weisses Abzeichen, brauner Wegweiser',
+    renderer: 'drawNeedSymbols, sign',
+    meaning: 'Wohnhaus ohne Versorgung (Kontor/Markt zu weit)',
+    color: null,
+  },
+  {
+    sign: 'Weisses Abzeichen, Kreis in Gutfarbe',
+    renderer: 'good, GOOD_COLORS',
+    meaning: 'dem Wohnhaus fehlt dieses Gut',
+    color: null,
+  },
+  {
+    sign: 'Abzeichen mit gelber Glocke bzw. blauem Buch',
+    renderer: 'bell bzw. book',
+    meaning: 'Kapelle bzw. Schule fehlt in Reichweite',
+    color: null,
+  },
+  {
+    sign: 'Kleiner roter Zusatzpunkt am Abzeichen',
+    renderer: 'EXTRA_DOT',
+    meaning: 'es fehlt noch mehr — Haus anklicken',
+    color: null,
+  },
+  {
+    sign: 'Pulsierender oranger Ring, Gebäude abgedunkelt',
+    renderer: 'drawWarnRing, DIM_FIRE',
+    meaning: 'Gebäude brennt und fällt aus',
+    color: PALETTE.signalWarn,
+  },
+  {
+    sign: 'Goldmünze über dem Kontor',
+    renderer: 'drawBoomCoin',
+    meaning: 'Boom: ein Gut verkauft sich teurer',
+    color: null,
+  },
+  {
+    sign: 'Gelber Umriss',
+    renderer: 'Auswahl',
+    meaning: 'ausgewähltes Gebäude',
+    color: PALETTE.signalYellow,
+  },
+  {
+    sign: 'Grüne / rote Fläche beim Bauen; rote beim Abreissen',
+    renderer: 'HOVER_OK / HOVER_BAD',
+    meaning: 'baubar / nicht baubar; wird abgerissen',
+    color: PALETTE.signalOk,
+  },
+  {
+    sign: 'Gestrichelter weisser Kreis, helle Felder',
+    renderer: 'drawPlacementOverlay',
+    meaning: 'Reichweite bzw. Standortfelder',
+    color: null,
+  },
+  {
+    sign: 'Weisse Umrisslinie',
+    renderer: 'drawPlacementOverlay, coverage',
+    meaning: 'schon versorgte bzw. geschützte Fläche',
+    color: null,
+  },
+];

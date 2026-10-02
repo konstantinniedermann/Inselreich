@@ -2,14 +2,28 @@
 // nur über Sim-Funktionen (`createWorld`, `placeBuilding`, `placeRoad`, `step`) und Test-Helfer.
 // Alle Szenarien nutzen Seed 3 (Kontor an der Westküste) und legen ihr Gelände östlich des Kontors selbst an.
 import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { beginCrisis, flammableRect, rollCrisis } from '../../src/sim/crises';
+import { CRISIS_LEVELS } from '../../src/sim/defs/crises';
+import { CRISIS_FIRST_TICK, STORM_WARNING } from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { maxHouseTier } from '../../src/sim/orders';
 import { newHouseState } from '../../src/sim/population';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import type { Building, BuildingDefId, GoodId, ServiceId, Tier, World } from '../../src/sim/types';
+import type {
+  Building,
+  BuildingDefId,
+  CrisisKind,
+  CrisisLevel,
+  GoodId,
+  ServiceId,
+  Tier,
+  World,
+} from '../../src/sim/types';
 import { createWorld, idx } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
+import { verdeckung } from './scenarios-iso';
 
 const SEED = 3;
 
@@ -95,8 +109,8 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
 }
 
 /** Seed-3-Welt mit Gras östlich des Kontors: x = kx+2 … kx+19, y = ky-9 … ky+9. Liefert die Kontor-Koordinaten. */
-function baseWorld(): { w: World; kx: number; ky: number } {
-  const w = createWorld(SEED);
+function baseWorld(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number } {
+  const w = createWorld(SEED, { crisisLevel: level });
   const k = w.buildings[w.kontorId]!;
   forceRect(w, k.x + 2, k.y - 9, 18, 19, 'grass');
   return { w, kx: k.x, ky: k.y };
@@ -107,8 +121,8 @@ const setTerrain = (w: World, x: number, y: number, t: 'water' | 'forest' | 'mou
 };
 
 /** Startgrundriss der Kleinszenarien: Hauptstrasse ab Kontor, Wasserspalte, Waldkachel. */
-function smallColony(): { w: World; kx: number; ky: number } {
-  const s = baseWorld();
+function smallColony(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number } {
+  const s = baseWorld(level);
   roadRow(s.w, s.kx + 2, s.kx + 12, s.ky);
   return s;
 }
@@ -240,6 +254,7 @@ function galerie(): World {
   });
   put(w, 'quarry', kx + 7, ky + 1);
   put(w, 'toolmaker', kx + 9, ky + 1);
+  put(w, 'firestation', kx + 13, ky + 1); // M6-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;
@@ -292,8 +307,116 @@ function leistung50(): World {
   return w;
 }
 
+/** `T_k − 1` der ersten Periode (k = 0…199), deren Ziehung die Art `kind` liefert (Spec 17.1). */
+export function tickBeforeFirst(w: World, kind: CrisisKind): number {
+  const P = CRISIS_LEVELS[w.crisisLevel].period!;
+  for (let k = 0; k < 200; k++)
+    if (rollCrisis(w.seed, k, maxHouseTier(w), flammableRect(w)).kind === kind)
+      return CRISIS_FIRST_TICK + P * k - 1;
+  throw new Error(`keine Periode mit ${kind}`);
+}
+
+function kriseBrandWelt(guarded: boolean): World {
+  const { w, kx, ky } = smallColony('normal'); // Weg kx+2 … kx+12
+  put(w, 'distillery', kx + 3, ky + 1);
+  if (guarded) put(w, 'firestation', kx + 6, ky + 1); // Mittenabstand 2.55
+  w.stock.cane = 20;
+  w.money = 1000;
+  w.tick = tickBeforeFirst(w, 'fire'); // Seed 3: 2999
+  return w;
+}
+
+function kriseSturm(): World {
+  const { w, kx, ky } = smallColony('normal');
+  setTerrain(w, kx + 8, ky - 1, 'water');
+  setTerrain(w, kx + 11, ky - 2, 'forest');
+  put(w, 'fisher', kx + 9, ky - 1);
+  put(w, 'lumberjack', kx + 11, ky - 1);
+  w.tick = tickBeforeFirst(w, 'storm'); // Seed 3: 2399
+  return w;
+}
+
+function sturmAktiv(): World {
+  const w = kriseSturm();
+  const T = w.tick + 1;
+  while (w.tick < T + 300) step(w);
+  return w;
+}
+
+function sturmKlar(): World {
+  const w = sturmAktiv();
+  w.crisisLevel = 'off';
+  w.crisis = null;
+  return w;
+}
+
+function kriseBoom(): World {
+  const { w } = baseWorld('normal');
+  w.stock.wood = 50;
+  w.stock.food = 50;
+  w.tick = tickBeforeFirst(w, 'boom'); // Seed 3: 4199
+  return w;
+}
+
+function kriseAus(): World {
+  const w = tagWelt(); // Stufe off, Fischer, Holzfäller, drei Häuser
+  w.tick = 2390;
+  return w;
+}
+
+function feuerwache(): World {
+  const { w, kx, ky } = baseWorld('normal');
+  roadRow(w, kx + 2, kx + 18, ky);
+  setTerrain(w, kx + 8, ky - 1, 'water');
+  setTerrain(w, kx + 8, ky + 1, 'water');
+  put(w, 'chapel', kx + 3, ky - 2);
+  put(w, 'school', kx + 5, ky - 2);
+  put(w, 'fisher', kx + 9, ky - 1);
+  put(w, 'fisher', kx + 9, ky + 1);
+  put(w, 'sheepfarm', kx + 15, ky + 1); // Mittenabstand zur Wache 11.5 > 8
+  put(w, 'firestation', kx + 4, ky + 1); // Kapelle 2.55, Schule 2.9
+  w.tick = 1000;
+  return w;
+}
+
+function leistungSturm(): World {
+  const w = leistung50();
+  w.crisisLevel = 'normal';
+  w.tick = CRISIS_FIRST_TICK;
+  beginCrisis(w, 0, { kind: 'storm' });
+  w.tick = CRISIS_FIRST_TICK + STORM_WARNING + 1;
+  return w;
+}
+
+/** M7-UX: Kontor mit 3 Wegkacheln, Fischerhütte durch genau eine freie Kachel vom Weg getrennt (AK-UX-05, -23). */
+function uxAnbindung(): World {
+  const { w, kx, ky } = baseWorld();
+  roadRow(w, kx + 2, kx + 4, ky); // Kontor ist 2×2 bei (kx, ky): (kx+2, ky) ist Wurzel
+  setTerrain(w, kx + 7, ky, 'water');
+  put(w, 'fisher', kx + 6, ky); // Wasser östlich, Lücke (kx+5, ky) westlich
+  put(w, 'house', kx + 3, ky - 2);
+  w.money = 1000;
+  return w;
+}
+
+/** M7-UX: 4 Bürgerhäuser (4 × 15 ≥ WIN_CITIZENS), `won` noch falsch; der erste Tick setzt es (AK-UX-24). */
+function uxSieg(): World {
+  const { w, kx, ky } = baseWorld();
+  for (let i = 0; i < 4; i++) {
+    setHouse(w, put(w, 'house', kx + 3 + i, ky - 2), {
+      tier: 3,
+      inhabitants: TIERS[3].maxInhabitants,
+      supplied: true,
+      metGoods: Object.keys(TIERS[3].needs) as GoodId[],
+      services: TIERS[3].services,
+    });
+  }
+  return w;
+}
+
 export const SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
+  verdeckung,
   'lager-holz-99': lagerHolz99,
   bedarf,
   'autosave-lauf': autosaveLauf,
@@ -302,6 +425,17 @@ export const SCENARIOS: Record<string, () => World> = {
   'leistung-50': leistung50,
   'tag-0': tag0,
   'tag-3000': tag3000,
+  'krise-brand': () => kriseBrandWelt(false),
+  'krise-brand-geschuetzt': () => kriseBrandWelt(true),
+  'krise-sturm': kriseSturm,
+  'sturm-aktiv': sturmAktiv,
+  'sturm-klar': sturmKlar,
+  'krise-boom': kriseBoom,
+  'krise-aus': kriseAus,
+  feuerwache,
+  'leistung-sturm': leistungSturm,
+  'ux-anbindung': uxAnbindung,
+  'ux-sieg': uxSieg,
 };
 
 /**

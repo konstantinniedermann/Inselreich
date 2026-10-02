@@ -2,8 +2,8 @@
 
 Jeder Vorschlag des `studio-coach` ist ein Experiment. Der Coach nennt es im Retro-Bericht und
 trägt es gleich mit Status `vorgeschlagen` in [experimente.md](../experimente.md) ein; nach dem
-Ruling von L0 wird es `laufend` oder `abgelehnt`. Ablauf im Handbuch [STUDIO.md](../STUDIO.md),
-Abschnitt „Verbesserungsschleife".
+Ruling von L0 wird es `laufend` oder `abgelehnt`. Ablauf im Handbuch
+[verbesserung.md](../verbesserung.md#verbesserungsschleife).
 
 ```markdown
 ## E-<nnn> · vorgeschlagen · <Kurztitel>

@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics
+.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -40,4 +40,7 @@ studio-archive: ## Studio-Events archivieren (Dashboard startet leer)
 studio-metrics: ## Studio-Metriken der letzten Session verdichten
 	@python3 tools/studio/metrics.py --session latest
 
-check: lint test studio-test build ## Gleich wie CI: lint, test, studio-test, build
+pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle 50 %)
+	node tools/pages/check.ts dist
+
+check: lint test studio-test build pages-limit ## Gleich wie CI: lint, test, studio-test, build, pages-limit

@@ -1,8 +1,8 @@
 # Vorlage: Retro-Bericht
 
 Für jede Retrospektive des `studio-coach`. Ablage unter `docs/studio/retros/<datum>-<art>-<kurz>.md`
-([retros/README.md](../retros/README.md)); Ablauf im Handbuch [STUDIO.md](../STUDIO.md), Abschnitt
-„Verbesserungsschleife". Kurz-Retro am Session-Ende: nur die Abschnitte mit Inhalt, höchstens eine
+([retros/README.md](../retros/README.md)); Ablauf im Handbuch
+[verbesserung.md](../verbesserung.md#verbesserungsschleife). Kurz-Retro am Session-Ende: nur die Abschnitte mit Inhalt, höchstens eine
 Seite.
 
 ```markdown

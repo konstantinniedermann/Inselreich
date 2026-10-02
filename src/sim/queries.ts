@@ -1,17 +1,42 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { TIERS } from './defs/tiers';
+import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
 import { isSupplied, serviceAvailable } from './population';
 import { supplyBuildings } from './supply';
-import type { Building, BuildingDefId, Cost, GoodId, ServiceId, World } from './types';
+import type {
+  Building,
+  BuildingDefId,
+  Cost,
+  CrisisKind,
+  FireOutcome,
+  GoodId,
+  ServiceId,
+  World,
+} from './types';
 import { center, idx, tilesInRadius, type Pos } from './world';
 
 /** Reine Abfragen für UI und Renderer: lesen die Welt, verändern sie nie. */
 
 export type Diagnosis =
   { kind: 'supply' } | { kind: 'good'; good: GoodId } | { kind: 'service'; service: ServiceId };
-export type CoverageKind = 'supply' | ServiceId;
+export type CoverageKind = 'supply' | ServiceId | 'fire';
+export type CrisisView =
+  | { phase: 'none'; next: number | null }
+  | {
+      phase: 'warning' | 'active';
+      kind: CrisisKind;
+      period: number;
+      from: number;
+      until: number;
+      remaining: number;
+      good?: GoodId;
+      target?: number;
+      targetExists: boolean;
+      outcome?: FireOutcome;
+      tile?: { x: number; y: number };
+    };
 
 /** Standortradius der Rohstoffbetriebe mit Zone: Holzfäller (Wald), Schäferei und Zuckerrohr (Gras). */
 function siteZone(defId: BuildingDefId): { terrain: 'forest' | 'grass'; radius: number } | null {
@@ -71,7 +96,11 @@ function coverageSources(
     kind === 'supply'
       ? supplyBuildings(world)
       : Object.values(world.buildings).filter(
-          (b) => b.connected && BUILDING_DEFS[b.defId].service === kind,
+          (b) =>
+            b.connected &&
+            (kind === 'fire'
+              ? BUILDING_DEFS[b.defId].fireProtection === true
+              : BUILDING_DEFS[b.defId].service === kind && b.outageUntil === undefined),
         );
   return buildings.map((b) => {
     const def = BUILDING_DEFS[b.defId];
@@ -129,13 +158,62 @@ export function effectiveRefund(world: World, cost: Cost): Cost {
 
 /** Cache-Schlüssel des Layouts: ändert sich bei Bau, Abriss, Weg und Anbindung, nicht durch `step()` allein. */
 export function layoutKey(world: World): string {
-  let roadSum = 0;
-  for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.road) roadSum += i;
-  let connectedSum = 0;
-  let count = 0;
+  const h = new LayoutHash();
+  h.add(world.nextBuildingId);
+  for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.road) h.add(i);
+  h.add(-1);
   for (const b of Object.values(world.buildings)) {
-    count += 1;
-    if (b.connected) connectedSum += b.id;
+    h.add(b.id);
+    h.add(b.x);
+    h.add(b.y);
+    h.add((b.connected ? 1 : 0) | (b.outageUntil !== undefined ? 2 : 0));
+    for (let i = 0; i < b.defId.length; i++) h.add(b.defId.charCodeAt(i));
+    h.add(-1);
   }
-  return `${world.nextBuildingId}|${count}|${roadSum}|${connectedSum}`;
+  return h.digest();
+}
+
+/** Zwei unabhängige FNV-1a-Bahnen (je 32 Bit) über eine Zahlenfolge; reihenfolgeabhängig, ohne Zufall. */
+class LayoutHash {
+  private a = 0x811c9dc5;
+  private b = 0x01000193 ^ 0x9e3779b9;
+
+  add(n: number): void {
+    const v = (n + 1) >>> 0;
+    this.a = Math.imul(this.a ^ v, 0x01000193) >>> 0;
+    this.b = Math.imul((this.b ^ v) + 0x7f4a7c15, 0x85ebca6b) >>> 0;
+    this.b ^= this.b >>> 13;
+  }
+
+  digest(): string {
+    return `${this.a.toString(36)}.${this.b.toString(36)}`;
+  }
+}
+
+/** Eine Sicht auf die laufende Krise für Karte, Log, crisisFx und Klang (Spec 11). Phase aus `from` abgeleitet. */
+export function crisisView(world: World): CrisisView {
+  const c = world.crisis;
+  if (c === null) return { phase: 'none', next: nextCrisisTick(world) };
+  const warning = world.tick < c.from;
+  const view: CrisisView = {
+    phase: warning ? 'warning' : 'active',
+    kind: c.kind,
+    period: c.period,
+    from: c.from,
+    until: c.until,
+    remaining: warning ? c.from - world.tick : c.until - world.tick,
+    targetExists: c.target !== undefined && world.buildings[c.target] !== undefined,
+  };
+  if (c.good !== undefined) view.good = c.good;
+  if (c.target !== undefined) view.target = c.target;
+  if (c.outcome !== undefined) view.outcome = c.outcome;
+  if (c.tile !== undefined) view.tile = { x: c.tile.x, y: c.tile.y };
+  return view;
+}
+
+/** Brennbare Gebäude ohne Schutz, aufsteigend nach Id (Tooltip, Info-Panel). */
+export function unprotectedFlammables(world: World): Building[] {
+  return Object.values(world.buildings)
+    .filter((b) => BUILDING_DEFS[b.defId].flammable === true && !isProtected(world, b))
+    .sort((a, b) => a.id - b.id);
 }

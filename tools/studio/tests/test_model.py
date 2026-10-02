@@ -1326,6 +1326,16 @@ PERSONA_NAMES = {
         "title": "Lizenzprüfer",
         "emoji": "⚖️",
     },
+    "art-rendering-engineer": {
+        "name": "Render-Rudi",
+        "title": "Darstellungs-Entwickler",
+        "emoji": "🖼️",
+    },
+    "art-audio-engineer": {
+        "name": "Klang-Klara",
+        "title": "Audio-Entwicklerin",
+        "emoji": "🎧",
+    },
     "qa-code-reviewer": {
         "name": "Review-Rita",
         "title": "Code-Prüferin",
@@ -1333,6 +1343,11 @@ PERSONA_NAMES = {
     },
     "qa-playtester": {"name": "Zocker-Zoe", "title": "Spieltesterin", "emoji": "🎮"},
     "studio-coach": {"name": "Coach-Carla", "title": "Studio-Coach", "emoji": "🧭"},
+    "studio-process-coach": {
+        "name": "Takt-Tilda",
+        "title": "Prozess-Coach",
+        "emoji": "🔭",
+    },
 }
 
 

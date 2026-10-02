@@ -1,0 +1,12 @@
+Datei: public/audio/music/dowland-complaints.mp3
+
+"If my complaints could passions move"
+Komposition: John Dowland (1563-1626), veroeffentlicht 1597; gemeinfrei.
+Digitale Einspielung (Render) und Instrumentierung: Of Far Different Nature (OpenGameArt-Nutzer),
+https://opengameart.org/content/historic-renaissance-music-from-1597-if-my-complaints-could-passions-move-by-john-dowland
+Lizenz der Einspielung: CC0 1.0 (http://creativecommons.org/publicdomain/zero/1.0/)
+Wortlaut der Quellseite: "His works are public domain today, and I release my render of his song as CC0, too."
+ID3 der Datei: encoded_by "LAME in FL Studio 10", date 2014 (eigener DAW-Render, keine fremde Aufnahme).
+Keine Attribution gefordert; Nennung erfolgt freiwillig (ADR-006).
+Lizenztext: CC0-1.0.txt (in diesem Ordner).
+Geprueft: art-license-checker, 2026-09-30

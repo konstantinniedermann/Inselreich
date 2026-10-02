@@ -367,12 +367,198 @@ leer; (4) Hook-Zeile gilt 600 s als frisch, Dashboard 1 h; (5) `renderLimits` oh
 Tooltip mit Reset-Zeiten nur im Code geprüft. **Ursprung:** lead-qa und lead-tech, STUDIO-LIMIT
 (R76, R80). **Einschätzung:** niedrig; bündeln, sobald wieder an `tools/studio/` gearbeitet wird.
 
+### 2026-09-30 · `tools/studio/`, Harness · Starts melden `async_launched` trotz Vordergrund
+
+**Beobachtung:** Alle 25 `spawned`-Events der Session 664ac8d3 (auch 15 Starts von Leads an
+Arbeiter, alle mit `background: false`) und 15 von 15 in 2bf010b4 tragen `status: async_launched`.
+L0 meldet zwei Starts des `production-integrator`, die als Hintergrund liefen. **Ursprung:**
+studio-coach, Retro `docs/studio/retros/2026-09-30-session-664ac8d3.md` B4. **Einschätzung:**
+mittel; per Headless-Probe klären, ob die Laufzeit `run_in_background: false` beachtet und was der
+Status bedeutet, dann Dashboard-Ansicht und ADR-007 prüfen.
+
+### 2026-09-30 · `tools/studio/metrics.py` · Fortgesetzte Agenten verzerren Schätzung und Paket
+
+**Beobachtung:** 9 von 10 verglichenen Agenten wurden per SendMessage fortgesetzt (39
+Fortsetzungen); ihre Schätzung deckt nur den ersten Auftrag, der Datensatz trägt das zuletzt
+geloggte Paket. Werkzeugaufrufe +91 % bei fortgesetzten, −53 % beim einzigen nicht fortgesetzten
+Agenten. **Ursprung:** studio-coach, Retro 664ac8d3 B2. **Einschätzung:** mittel; hängt am
+Vorschlag zu E-001 (Folgeauftrag nennt Schätzung, Auswertung summiert).
+
 ### 2026-09-30 · `.github/workflows/` · `ubuntu-latest` wechselt auf Ubuntu 26
 
 **Beobachtung:** Die CI-Ausgabe (Lauf 36763696005) kündigt an, dass `ubuntu-latest` ab 2026-10-19
 auf Ubuntu 26 umgestellt wird. **Ursprung:** production-integrator, Merge STUDIO-LIMIT.
 **Einschätzung:** niedrig; nur Hinweis, CI und Pages sind grün. Nach dem Wechsel den ersten Lauf
 prüfen; bei Bruch Runner-Version pinnen.
+
+### 2026-09-30 · `src/sim/defs/`, M8-Werte · Steuer „hoch" dominiert auch im Endzustand M8
+
+**Beobachtung:** Mit Stufe 4 (M8) dominiert im Endzustand wieder die Steuer „hoch" (262,5 gegen
+230 je Haus); M8 verschiebt den M5-Befund „hoch nach Sieg dominiert" nur. **Ursprung:**
+lead-design, M8-Designvorschlag (R86). **Einschätzung:** Kandidat für eine Kurz-Spec nach M8.
+
+### 2026-10-01 · `docs/studio/rulings.md` R88, `docs/studio/STUDIO.md` Budgetformel · Aufteilung je Lead ergibt mehr als die Summe
+
+**Beobachtung:** R88 nennt den M7-Budgetantrag mit 64 Starts, die Aufteilung lead-art 41, lead-tech 23,
+lead-qa 1 ergibt aber 65. Die Formel wird auf die Gesamtsumme angewandt und aufgerundet, die Anteile je Lead
+werden danach einzeln aufgerundet; die Rundungsreste addieren sich. Das Handbuch sagt nur „L0 teilt die
+Freigabe auf", nicht, wie gerundet wird. Der überarbeitete M7-Plan (`docs/m7-spec` @ 6396d15, 76 Starts)
+hält die Summe nur, weil lead-qa ohne Aufschlag bei 1 bleibt, obwohl er „aufgerundet je Anteil" schreibt.
+**Ursprung:** lead-tech, Plan-Überarbeitung M7-ISO; aufgenommen von lead-production im Gate Plan M7.
+**Einschätzung:** niedrig, kein Schaden (Freigaben gehen je Session-Welle, der Gate Plan setzt die Zahlen
+neu). Kandidat für den Verbesserungsprozess (`studio-coach`): ein Satz zur Aufteilung, z. B. „Summe der
+Anteile = Formelsumme, Rundungsrest beim grössten Anteil".
+
+### 2026-10-01 · `.claude/agents/tech-ui-engineer.md` / `art-rendering-engineer.md` · Ownership `src/render/`
+
+**Beobachtung:** `tech-ui-engineer` führt `src/render/` weiter in seiner Ownership, der neue
+`art-rendering-engineer` ebenso. Die Doppelung schadet nur, wenn ein Briefing die Dateien nicht je
+Paket trennt.
+**Ursprung:** Onboarding der M7-Personas (lead-production, R96 Punkt 8).
+**Einschätzung:** Kandidat für die nächste Persona-Pflege: `src/render/` bei `tech-ui-engineer`
+auf „nur auf Briefing" setzen. Bis dahin trennt der M7-Plan die Dateien je Task.
+
+### 2026-10-01 · `docs/studio/templates/` / Roster · Persona-Feld `version`
+
+**Beobachtung:** Die Persona-Vorlage hat kein Feld `version`, das Roster verlangt `version: 1.0`.
+In `lead-art.md` steht ausserdem noch, Leads tragen Befunde selbst in `docs/beobachtungen.md` ein,
+was R87 leicht widerspricht.
+**Ursprung:** Onboarding der M7-Personas (lead-production, R96 Punkt 8).
+**Einschätzung:** Fall für `studio-coach` bei der nächsten Handbuch-Pflege.
+
+### 2026-10-01 · `src/render/`, Nachtrag M7-ISO · Iso-Folgethemen ausserhalb von M7
+
+- **Berge und Klippen mit Höhe:** Der Anno-Look kennt sie, M7-ISO hält den Boden flach (D-08), weil die Sim keine
+  Höhen hat. Fels bleibt flach in der Textur.
+- **Durchsichtige Vordergebäude:** Hohe Gebäude verdecken, was dahinter steht. In M7 helfen nur die Höhenhülle und
+  die Signale und Umrisse in der obersten Ebene (AK-ISO-15).
+- **Achssperre beim Weg ziehen:** Ein waagerechter Zug im Bild ergibt eine Treppe aus Kachelschritten (D-15).
+- **Lange Gebäude (`w ≠ h`):** Der Tiefenschlüssel ist nur für Quadrate bewiesen (ADR-012).
+
+**Ursprung:** `lead-art`, Paket M7-ISO, Spec-Nachtrag Abschnitt 15.
+**Einschätzung:** Berge und Klippen sind ein Kandidat für M9 oder eine spätere Stimmungsrunde, rein darstellend.
+Die anderen drei Punkte prüft erst der Playtest nach dem Slice bzw. ein neues Gebäude. Kein Paket jetzt.
+
+### 2026-10-01 · `tests/sim/balance.test.ts` (M6-Krisenlauf) · Krisenlauf `mild` knapp
+
+**Beobachtung:** Der Krisenlauf `mild` (Seed 3) endet mit minMoney 13 und Endgeld 40. Ein einziger
+zusätzlicher Brand (z. B. Schule, ≈ −400) kann ihn bei der nächsten Werteänderung rot machen.
+Der Sieg im Lauf `normal` hängt zudem an der Wachenposition (Spiegelplatz vermutlich > 8000).
+**Ursprung:** Kurz-Urteil lead-design zu M6-B2 (R101).
+**Einschätzung:** Kein Design-Risiko für Spieler (Bot hält keinen Puffer), aber Test-Risiko: bei
+jeder Änderung in `src/sim/defs/` zuerst diesen Lauf prüfen.
+
+### 2026-10-01 · `src/sim/`, `tests/sim/`, `src/ui/inspect.ts` · Nachträge Final-Review M6-Sim
+
+**Beobachtung:** (a) `tests/sim/scenario-saves.test.ts:215` führt brennbare Gebäude als feste
+Id-Liste statt über das Flag `flammable`. (b) `src/sim/save.ts:86-87` wiederholt `CrisisKind` und
+`FireOutcome` als Listen. (c) `src/ui/inspect.ts:30-31` zeigt „Brennt" nicht für Dienste und nicht
+für brennende, nicht angebundene Betriebe. (d) `isWellFormed` prüft `tick` nicht als
+nicht-negative Ganzzahl (bestand schon vor M6). (e) Feuerwache ohne Hinweis, dass sie ohne Krisen
+nicht wirkt (Tooltip). (f) Abdeckungsregel der Feuerwache doppelt (`queries.ts` und `isProtected`
+in `crises.ts`), durch AK-S4-02/03 gleich gehalten.
+**Ursprung:** Final-Review lead-qa M6-Sim (R102), Bericht lead-tech M6-SIM.
+**Einschätzung:** (c) und (e) gehören zu M6-U1; (a), (b), (f) beim nächsten Sim-Durchgang; (d) mit
+dem Spielstand-Validierungs-Eintrag zusammen auswerten.
+
+### 2026-10-01 · Plan-Vorlagen (`docs/superpowers/plans/`) · Rot-Erwartung bei fehlendem Export
+
+**Beobachtung:** Pläne erwarten für den roten Testlauf die Meldung „does not provide an export". Vitest
+liefert bei einem fehlenden Export stattdessen einen Laufzeit-`TypeError`.
+**Ursprung:** M6-Sim, Tasks S2, S4 und B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** niedrig; Hinweis für künftige Pläne (Rot-Erwartung „TypeError … is not a function"
+bzw. allgemein „Test rot").
+
+### 2026-10-01 · `tests/sim/scenarios.ts` · Importreihenfolge
+
+**Beobachtung:** Der Import aus `defs/timing` steht vor `defs/tiers` und ist damit nicht alphabetisch.
+**Ursprung:** Review M6-B2 (Übergabe Gate Merge M6-Sim).
+**Einschätzung:** kosmetisch; beim nächsten Eingriff in die Datei mitziehen. M7-R1b fügt dort einen
+Import ein (Regel im M7-Plan, Ausnahme `scenarios.ts`).
+
+### 2026-10-01 · `src/sim/queries.ts` `goodsBalance` · Brennender Betrieb zählt in der Warenbilanz
+
+**Beobachtung:** Die Warenbilanz rechnet nominal und übergeht `outageUntil`. Eine brennende Brennerei
+hält deshalb „Rum ↑" in der Kopfzeile (Meldung lead-tech, S10). Der Playtest konnte es nicht prüfen,
+weil die Dev-Vorschau Feuer nicht lief.
+**Ursprung:** Heuristik-Prüfung und Playtest M7-UX (Stand `4c69776`).
+**Einschätzung:** mittel. Das ist eine Sim-Änderung und gehört deshalb nicht zu M7-UX (UI-only). Beim
+nächsten Sim-Durchgang mit Test beheben: Ausfall bedeutet keine Produktion in der Bilanz.
+
+### 2026-10-01 · `src/sim/` · Reason-Texte statt Codes, Literal 100 in `goodsBalance`, keine Auslastung
+
+**Beobachtung:** (a) Sim-Aktionen liefern deutsche Freitexte als `reason`. M7-UX übersetzt sie in der UI
+(`friendlyReason`) und hängt damit an den genauen Strings. (b) `goodsBalance` rechnet mit dem Literal 100
+(Ticks je Bilanzzeitraum), nicht mit einer Konstante aus `defs`. (c) Eine Auslastung in % je Betrieb
+liefert die Sim nicht, die UI könnte sie nur ungenau schätzen.
+**Ursprung:** Kurz-Spec M7-UX, Abschnitt 5.
+**Einschätzung:** niedrig. AK-UX-03 pinnt die Strings bis dahin. Beim nächsten Sim-Durchgang Reason-Codes
+plus Text und eine Konstante prüfen. Auslastung nur, wenn ein späteres Paket sie braucht.
+
+### 2026-10-01 · `src/ui/devParams.ts` · Dev-Vorschau `boom`/`signal` ohne Krisenkarte
+
+**Beobachtung:** `?boom=1` und `?signal=alarm` ändern nur Darstellung und Ton, nicht die Krisenkarte der
+Kopfzeile und nicht den Handel. Browser-Checks zu Karte und Boom-Marke brauchen deshalb echte Krisen.
+**Ursprung:** Playtest M7-UX.
+**Einschätzung:** niedrig; prüfen, ob M7-Spec 9.5 das so vorsieht. Sonst lassen sich Checks mit
+Szenario-Saves fahren.
+
+### 2026-10-01 · Spieltakt bei 4× · Tickrate schwankt
+
+**Beobachtung:** Bei 4× liefen im Headless-Chrome etwa 15–40 Ticks/s statt 40.
+**Ursprung:** Playtest M7-UX (Headless, CDP).
+**Einschätzung:** niedrig; wahrscheinlich eine Grenze von Headless und Drosselung. Erst auf einem
+Echtgerät nachmessen, bevor jemand handelt.
+
+### 2026-10-01 · `src/ui/`, `src/render/`, Dev-Server · Nachträge INT-Check M7
+
+**Beobachtung:** (a) `favicon.ico` liefert 404 (Dev-Server). (b) In der Einstellungs-Karte ist das
+Segment „Bewegung reduzieren" schmaler als die Zeile darüber. (c) Terrain-Aufbau bei DPR 2 bis
+988 ms, nahe der Grenze 1500 ms (AK-R1-06). (d) AK-U1-06 (≤ 12 Figuren) nur per Auge prüfbar; ein
+Dev-Zähler in `__inselRender` würde es messbar machen. (e) HUD-Select „Krisen" zeigt Arial statt
+`--font-serif`.
+**Ursprung:** INT-Check M7 (lead-tech, R119), Bericht X1b (lead-art).
+**Einschätzung:** niedrig; (a), (b), (e) passen zu M7-UX, (c) beobachten, (d) beim nächsten QA-Werkzeug.
+
+### 2026-10-01 · `src/ui/`, Git-Historie · Nachträge Final-Review M7
+
+**Beobachtung:** (a) `src/ui/eventLogView.ts`: `toggle.blur()` nimmt Tastaturnutzern nach Enter oder
+Leertaste den Fokus; die Einstellungs-Karte (`aria-modal`) hat keine Fokus-Falle. (b) `saveSettings`
+schreibt bei jedem `input`-Ereignis der Regler in `localStorage` (statt bei `change`). (c) Commit
+463da8b auf `feat/ui-m6m7` trägt das Präfix `style:` ausserhalb der Commit-Konvention; ohne Rebase
+nicht korrigierbar. (d) `tests/render/water.test.ts`: `STORM_WAVE_ALPHA` 0,32 liegt nur 0,03 unter der
+Schaum-Schwelle 0,35; eine Invariante `STORM_WAVE_ALPHA < FOAM_ALPHA[0]` fehlt.
+**Ursprung:** Final-Review M7 (lead-qa, qa-code-reviewer opus) auf `feat/ui-m6m7` @ a8d9447.
+**Einschätzung:** niedrig; (a), (b) passen zu M7-UX, (c) nur zur Kenntnis, (d) bei der nächsten
+Render-Änderung mitnehmen, falls nicht schon in der Kleinst-Fix-Runde erledigt.
+
+### 2026-10-01 · `docs/superpowers/specs/2026-10-01-m7-ux-design.md` L1 · Startkarten-Text ohne Autosave
+
+**Beobachtung:** Die Startkarte zeigt bei jedem ladbaren Slot den L1-Text „Der bisherige Autosave
+wird … ersetzt", auch wenn nur ein manueller Stand existiert. Das Menü unterscheidet seit R125
+über `slot === 'auto'`, die Startkarte nicht.
+**Ursprung:** Planpflege lead-tech nach Gate Plan M7-UX (R125).
+**Einschätzung:** niedrig; im Task-Review der Startkarte (Task 4) mit derselben Fallunterscheidung lösen.
+
+### 2026-10-01 · `tools/studio/metrics.py --milestone` · Meilenstein-Metrik ohne Cloud-Session
+
+**Beobachtung:** `metriken/M7.md` zählt nur die lokalen Sessions 664ac8d3 und 5e248230. Die
+Cloud-Session ddd9a9ac (96 Agenten, 323,8 min, 1650 Werkzeugaufrufe laut
+`metriken/S-2026-10-01-ddd9a9ac.md`) fehlt, weil ihre Rohdaten im Cloud-Container lagen; Welle 2 von
+M7 ist in Aufwand und Qualität der Meilenstein-Metrik nicht enthalten. Zudem führt die Zeile
+`studio-director` 812 Agenten bei 1 gemessenen.
+**Ursprung:** Retro M7 (studio-coach), B7.
+**Einschätzung:** mittel für die Verbesserungsschleife (Meilenstein-Vergleiche werden schief, sobald
+Cloud-Sessions mitarbeiten). Denkbar: Session-Metrik-Dateien beim Meilenstein-Lauf mitsummieren oder die
+Lücke im Bericht ausweisen; Kandidat für lead-production.
+
+### 2026-10-02 · `src/ui/startCard.ts`, `src/ui/modal.ts` · Erster Tab nach der Startkarte
+
+**Beobachtung:** Erster Tab nach dem Schliessen der Startkarte landet im Panel auf „Kartenzeichen" statt in
+der Kopfzeile.
+**Ursprung:** Browser-Prüfung M7-UX-H1 (lead-qa, Final-Review M7-UX).
+**Einschätzung:** niedrig; vermutlich geht der Fokus beim Schliessen (`restoreFocus`) an kein Element der
+Kopfzeile zurück, sodass der Browser die Tab-Folge an der zuletzt fokussierten Stelle im DOM fortsetzt.
 
 ## Ausgewertet 2026-09-30
 
@@ -436,3 +622,43 @@ prüfen; bei Bruch Runner-Version pinnen.
 | Halbe Steuer nach dem Aufstieg          | „in derselben 100er-Buchung"                              | nur wenn der Aufstieg auf einen Buchungstick fällt (Wachstum alle 50, Buchung alle 100 Ticks)                  |
 | Abriss-Regel doppelt                    | Zusammenziehen „beim dritten Aufrufer (Inspect-Panel M2)" | `inspect.ts` gibt es, er nutzt die Regel nicht; der Trigger ist nicht eingetreten                              |
 | Server-Tests                            | „~5 s"                                                    | 14 Tests, 7,4 s (`python3 -m unittest tests.test_server`)                                                      |
+
+- 2026-10-01 · Harness · In der Cloud-Session fehlt Subagent-Leads das Agent-Werkzeug (nur Read, Grep, Glob, Write, Edit, Bash, Skill, SendMessage). Folge: R108, L0 startet Arbeiter direkt.
+- 2026-10-01 · Tests · `tests/render/terrain.test.ts` AK-R1-08 (I5, Z. 338) läuft unter voller Parallellast von `make check` in den 5-s-Timeout (isoliert grün). Vorschlag: eigener Timeout für diesen Test (Render-Strang, Fix-Kandidat R2/R4). Quelle: Review M7-R5.
+- 2026-10-01 · UI · `protectedCount` (src/ui/inspect.ts, M6-U1 @ 0d52030) rechnet die Abdeckungsgeometrie der Feuerwache in der UI nach (dieselbe Formel wie `isProtected`). Entscheid L0 (Review M6-R2): nicht auf die Render-Maske umstellen (2×2 nur Näherung), sondern auf die Sim-Abfragen `isProtected`/`unprotectedFlammables`; Umsetzung im UI-Strang mit M6-U3. Quelle: Bericht tech-ui-engineer M6-U1.
+- 2026-10-01 · UI/Dev · `favicon.ico` 404 im Vite-Dev-Server erzeugt einen Konsolen-`error` (QA-M6U1).
+- 2026-10-01 · UI · Nach „Laden" läuft der Stand sofort mit 1× weiter statt pausiert; die M6-Spec nimmt für Szenarien Pause an. Prüfen in M6-U2/INT-Check (QA-M6U1, `04-feuerwache-szenario.png`).
+- 2026-10-01 · UI/Sim · Eine brennende Brennerei zeigt weiter „Rum ↑ +2.0" im HUD und „Erzeugt Rum alle 50 Ticks" im Panel; prüfen, ob die Anzeige den Ausfall berücksichtigen muss (QA-M6U1, `08-brennt-1280.png`).
+- 2026-10-01 · Tests · Muster (3× in dieser Session): Zeittests in `tests/render/terrain.test.ts` (AK-R1-06 Z. 218 mit festem 1500-ms-Limit, AK-R1-08 Z. 338/339) flackern unter Volllast von `make check`. L0: Fix im Render-Strang direkt nach R2 (eigener Commit), Gate-Läufe bis dahin einmal wiederholen.
+- 2026-10-01 · Doku (für D1) · `docs/arc42.md:181,428` nennen noch `{ muted, volume }` und das alte `createSound`; `README.md:92` beschreibt die Kopfzeile mit Lautstärke und Tag-Nacht. Nach M7-U1: Busse master/music/ambience/effects, `reduceMotion`, `crisisLevel`, Migration volume→master, HUD nur Stumm + Einstellungen (Review M7-U1).
+- 2026-10-01 · UI · `DevPreview.extinguishedId` (devParams.ts:45) wird geparst, aber nicht verwendet; vorgesehen für den Lösch-Effekt (Kann K1/M6-U3).
+- 2026-10-01 · Studio · Ein Implementierer nutzte `git stash` für einen Rot-Nachweis, während fünf Worktrees parallel liefen (der Stash-Stapel ist allen Worktrees gemeinsam). Ging gut, ist aber riskant. Vorschlag für Briefings: Rot-Nachweis per WIP-Commit oder `git worktree add --detach` am alten SHA, nie bare `git stash` (Retro-Kandidat).
+- 2026-10-01 · UI · Ein Drag zum Pannen, der auf einem Gebäude beginnt, wählt das Gebäude aus (Panel öffnet). Prüfen im INT-Check, ob Auswahl erst beim Loslassen ohne Bewegung erfolgen soll (QA-R2).
+- 2026-10-01 · Doku (für D1) · Spec 5.2/6.5 nennen die Feinschliff-Werte aus R111 nicht (Wellenalpha 0,32, Boost 0,5, Rauch 0,85, Bodenschein). Im Doku-Pass nachtragen. `water.test.ts:245` Schwelle 0,35 aus den Konstanten ableiten (Review 2cace60).
+- 2026-10-01 · Render · Rauch-Puffs zeigen sichtbare Scheibenkanten („gestempelt"), niedrig; Kandidat für die Kann-Welle oder einen Feinschliff nach R4 (QA-R3b).
+- 2026-10-01 · Spec (für D1) · AK-R3-03 Pixelprobe hängt vom Blinktakt ab (an/aus); Formulierung auf „in mindestens einem von N Bildern im Abstand 0,4 s" präzisieren (QA-R3, QA-R3b).
+- 2026-10-01 · Dev · `?feuer=<id>` hängt von der Gebäude-ID des Spielstands ab; QA-Briefings nennen das Gebäude, nicht die ID (QA-R3b).
+- 2026-10-01 · UI (mit M6-U3) · `gameButton` ruft `blur()` bei jedem Klick: Enter auf „Laden" zeigt „Wirklich laden?", der Fokus geht auf body, Bestätigen per Tastatur nur über Shift+Tab (QA-UI-2).
+- 2026-10-01 · UI (mit M6-U3) · Boom-Marke bricht in der Gut-Zelle in die Zeile der Verkaufen-Spalte um; gehört an den Gutnamen (QA-UI-2).
+- 2026-10-01 · UI (INT) · HUD wächst bei aktiver Krisenkarte um ~45 px (174 → 219 px) und verschiebt die Spielfläche (QA-UI-2).
+- 2026-10-01 · UI · Randfall: Druck auf Hintergrund, Loslassen im Dialog schliesst trotzdem (click geht an den gemeinsamen Vorfahren). Selten, Fokus korrekt; mit M6-U3 über pointerup-Ziel lösen (QA-UI-2).
+- 2026-10-01 · Audio (INT) · Musik: In 25 s Testlauf kein Ladeversuch beobachtet (keine Audio-404), Zustand blieb idle/pause; den Rückfall „aus nach 2 Fehlversuchen" im INT-Check mit längerem Lauf belegen (QA-UI-2).
+- 2026-10-01 · Tests (Render, Nachzug) · Review R113: (a) `tests/ui/target.test.ts` und `iso.test.ts` laden `sprites.ts` nicht und testen nur den Hüllenpfad; Test mit geladenem sprites über `targetTile` ergänzen. (b) Kein Test führt `bodyPolygons` für alle SILHOUETTES/Fallbacks aus (Aufzeichnungskontext kennt nur Pfadoperationen; Verläufe würden werfen). (c) Kommentar/Beschreibung zu `hoverPoint` in verdeckung.test.ts präzisieren (`inHull` tol −3 = „3-px-Randzone"). (d) arc42: Picking über Silhouette und Registrierung `setBodyShapes` im Doku-Pass beschreiben.
+- 2026-10-01 · Render (Feinschliff nach R4) · QA-R4: Herdrauch morgens/abends zu schwach gegen die warm getönte Wiese; Möwen über hellem Sand kaum sichtbar (Kontur/Schatten); Fensterschein bei starkem Zoom als Ringe mit Kante erkennbar. L0: kleiner Feinschliff-Commit im Render-Strang vor dem Final-Review.
+- 2026-10-01 · UI (INT) · Roter Punkt und violetter Ring mit weissem Rand an Gebäuden (z. B. Werkzeugmacher, Kapelle) sind im Spiel nicht erklärt; Legende/Tooltip prüfen (QA-R4).
+- 2026-10-01 · Render (niedrig) · `layoutKey` ist ein Gesamtschlüssel; der Weggraph in life.ts baut bei Brand/Anbindungswechsel unnötig neu (separater `roadKey` möglich); `layoutKey` läuft bis zu 5× je Frame (~0,2–0,4 ms), Frame-Memo möglich (Review fix/layoutkey 42d39b7).
+- 2026-10-01 · Studio (Retro-Kandidat) · Eine per SendMessage nachgeschobene Aufgabe, die über das ursprüngliche Briefing hinausging („nur Tests" → Produktcode), wurde vom Permission-Classifier blockiert; der Implementierer hatte zudem per Python-Skript statt Edit/Write geändert. Lehre: Umfangserweiterungen als neues Briefing an einen neuen Arbeiter, nicht als Nachtrag; Briefings nennen Edit/Write ausdrücklich.
+- 2026-10-01 · Doku (für D1) · M6-U3: Kann-Posten D3 „Gelöscht" (extinguished) nicht verdrahtet — Streichung im Doku-Pass festhalten; Spec-Notiz zur Panelzeile „Erzeugt X nicht — Betrieb brennt" (R115); Stimmungswetter noch `null` (Kann K3).
+- 2026-10-01 · UI (niedrig) · QA-M6U3: Panel einer brennenden Brennerei zeigt weiter „Verbraucht Zuckerrohr" (Textfrage); nach „Handeln" trägt der erste Knopf „+1" einen Fokusring trotz Mausklick; Boom-Münze kurz nach Boom-Start nicht sichtbar (Einblendphase?).
+- 2026-10-01 · Studio · QA-Baum `ui-qa` wurde während QA-M6U3 von einem Reviewer auf einen neuen Stand umgestellt (R116: QA-Bäume exklusiv, Reviewer nutzen eigene detached Worktrees).
+- 2026-10-01 · Erledigt durch D1 (8ec874b, 4c69776 auf feat/ui-m6m7): arc42/README zu Settings und HUD (Review M7-U1); Doku-Teil der R111-Werte; AK-R3-03-Formulierung; R113 (d) arc42 Picking/setBodyShapes; M6-U3 Doku-Punkte (D3, R115, K3). Offen bleiben: `water.test.ts`-Schwelle (Code, R117) und R113 (a) Test über `targetTile` in tests/ui.
+- 2026-10-01 · Nutzer-Playtest/M9 (R120) · HUD springt bei Sturmwarnung um 38 px (1280×800); Laden behält das Tempo; Bedarfsmarker ohne Legende; Warnringe bei vielen Bränden kantig/überlappend; Abend (Tick 2400) kaum getönt; Sturm am Tag wenig Himmelstönung; AK-A2-04 Wording (sfx nach Bedarf unter audio/sfx/). Messhinweis: Headless-Chromium braucht `--disable-gpu`, sonst ~1 fps.
+- 2026-10-01 · Studio (Werkzeug) · `make studio-test` rot: `test_all_personas_have_names` erwartet `studio-process-coach` in `PERSONA_NAMES` (`tools/studio/model.py`); das Onboarding 339c728 legte nur die Persona-Datei an. Vor dem nächsten Push von `main` beheben (Paket lead-production); Retro `retros/2026-10-01-session-8c0e0295.md` B3.
+- 2026-10-02 · Doku (README:370) · Kommentar zu `make check` („Lint, Tests und Build wie in der CI") nennt die neue Plattformwache `pages-limit` nicht (Review PAGES-LIMIT; README war nicht im Paket-Scope). Beim nächsten Doku-Pass mitnehmen.
+- 2026-10-02 · CI (niedrig) · `node tools/pages/check.ts` braucht Node ≥ 22.18 (Typ-Stripping ohne Schalter); Workflows setzen nur `node-version: 22`. Erster CI-Lauf auf `main` belegt es; schlägt er fehl, `check-latest: true` in `setup-node` setzen (Review PAGES-LIMIT).
+- 2026-10-02 · Design (Kandidat späterer Design-Durchgang „Spielerführung Wirtschaft") · Erstspieler-Playtest M7-UX-QA (`.studio/qa/M7-UX-QA/report.md`, 3e4123c), alle spec-konform, also Designlücken: (a) Neue Stolperstelle 2: `nextStep` Regel 3 sieht nur den Ist-Zustand (`houseDiagnosis`) und die Bedürfnisse der nächsten Stufe; sinkender Bestand eines Grundguts (Nahrung ↓ ohne Fischerhütte) wird erst gemeldet, wenn er fehlt — vorher zeigt „Nächster Schritt" schon auf Stoff. Vorschlag: Regel „Gut mit negativem Saldo, Vorrat < N Minuten, kein Erzeuger → baue {P}" vor die Stufen-Bedürfnisse; ändert AK-UX-08. (b) Neue Stolperstelle 5: Handel am Kontor zeigt keinen Bezug zum Auftrag (A6 „grenzwertig", 90 s); Vorschlag: Auftragsgut im Handel markieren („Auftrag: 11 Nahrung"). (c) Neue Stolperstelle 1: Weg-Vorschau „verbunden mit dem Kontor" bezieht sich auf die Wegkachel, liest sich aber wie „Betrieb verbunden"; Text präzisieren (z. B. „Weg am Kontor-Netz", bei berührtem unverbundenem Betrieb „verbindet {Name}").
+- 2026-10-02 · UI (niedrig, spec-konform) · M7-UX-QA: Bauleiste wächst beim Öffnen einer Kategorie um ~35 px (AK-UX-15 erlaubt ≥ 520 px); Menü-Karte scrollt bei 1280 × 800 intern (Seite scrollt nicht, AK-UX-15 erfüllt); Legende „Kartenzeichen" zeigt den roten Punkt als eckiges Feld (Farbfeld rund zeichnen, Trivial-Fix-Kandidat) und ist standardmässig zu (so spezifiziert).
+- 2026-10-02 · UI/Design (niedrig) · Bau-Eintrag zeigt nur „{Name} · {n} Geld"; ist er wegen einer Ware unbezahlbar (Schule: Stein), wirkt die Geldangabe bei vollem Konto irreführend, der Grund steht nur im Tooltip. Kandidat für den Design-Durchgang oben (fehlende Ware im Eintrag nennen).
+- 2026-10-02 · Persistenz (`src/ui/app.ts`, `src/ui/storage.ts`, `src/ui/startCard.ts`) · Final-Review M7-UX (lead-qa, qa-code-reviewer opus, `feat/m7-ux` @ 0be9b8c, R133): (a) N1 niedrig: Ist der Speicher nicht verfügbar, geht die im Menü gewählte Krisenstufe bei „Neue Insel" still verloren (`app.ts:259–262` ignoriert das Ergebnis von `saveSettings`, `restart` liest `loadSettings()` neu; das alte `setCrisisLevel` meldete den Fehler). Repro: `setItem` werfen lassen → Menü → „mild" → Neue Insel → Ja → Standardstufe. Vorschlag: Stufe über `StartOptions` durchreichen. (b) N2 niedrig, **Designfrage an lead-design**: `pagehide` (`app.ts:704`, `autosaveOnHide`) schreibt den gerade geladenen älteren Stand als Autosave. Repro: Autosave 30:00, manueller Stand 5:00 → Startkarte „Laden (5:00)" → Tab schliessen → Reload zeigt „Fortsetzen — Autosave (5:00)", 30:00 ist weg. Frage: Soll Laden den Autosave ersetzen (dann Hinweis wie bei „Neue Insel") oder erst nach Spielfortschritt (`tick` seit Laden gestiegen)? (c) N6: Der Eintrag „Startkarten-Text ohne Autosave" vom 2026-10-01 ist in Task 4 nicht gelöst worden (`startCard.ts:136`), bleibt offen.
+- 2026-10-02 · UI (niedrig) · Final-Review M7-UX, aufgeschobene Minor-Befunde aus dem Ledger: (a) aktiv + unbezahlbar: `.btn.active` macht die gestrichelte Kante unsichtbar (Gold auf Gold; lead-tech, nach R132). (b) N7: `guide.ts:169` „Weg (R)" fest im Text statt `hotkeyLabel`; `nextStep` Regel 2 und `remedyText` nutzen `hotkeyLabel` ohne Null-Schutz (heute theoretisch). (c) Esc oder Rechtsklick mit Fokus auf einem Bau-Eintrag lässt den Fokus auf `body` fallen (QA-UX5). (d) Esc in den Credits schliesst die ganze Einstellungs-Karte (Altverhalten). (e) Ladefehler laufen über `showError` mit Fehlerton. (f) `#panel` `max-height: 38vh` unter 600 px Fensterhöhe ungeprüft. (g) Unter 1280 px (Desktop-first, geparkt): Toast überlappt bei 800 px den Meldungsstapel um ~40 px (QA-UX1); „Menü" liegt bei 390 px ausserhalb (QA-UX2). (h) Zwei gleichnamige Betriebe, die im selben Schritt angebunden werden, ergeben durch den `showMessage`-Dedupe nur eine Meldung (QA-UX3). N8 (Bau-Eintrag nennt nur Geld) steht schon oben.
+- 2026-10-02 · Code/Tests/Doku (niedrig) · Final-Review M7-UX: (a) N5 toter Code: `storage.ts:82 noLoadableReason` ohne Aufrufer; `balanceLabel`, `orderChange` nur noch von Tests benutzt; CSS `.btn small` ohne Verwender. (b) Testlücken, jeweils im Browser abgenommen: kein Vitest für „Kontor öffnet Handel" und den Lebenszyklus des Meldungsstapels, keiner für „Hotkeys stumm bei offener Karte"; `toolName` nur indirekt geprüft; `settingsPanel.test.ts` nur Smoke-Test (Ausnahme laut Spec); `guide.test.ts` prüft bei R5/R6 nur den Satzanfang; `format.test.ts` importiert doppelt aus `dom`; Szenario `leistung-50` hat nur ~34 Wegkacheln (AK-UX-31 misst damit ein kleineres Netz als der Name sagt). (c) `README.md:252` Klammer mitten im Satz „Unterhalt und Geld". Bei der nächsten UI-Runde mitnehmen.

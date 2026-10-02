@@ -37,3 +37,15 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
   (`tick % 10 === 0`, `tick > 0`); Aufträge ab Tick 600 alle 900 Ticks (Versatz 600,
   `(tick − 600) % 900 === 0`), Laufzeit 600. Ein Auftrag ist bis einschliesslich `due` lieferbar und
   verfällt bei `tick > due`. Der Zufall der Aufträge folgt ADR-010.
+
+## Nachtrag M6 (2026-09-30): Krisen
+
+- Die Reihenfolge lautet jetzt Produktion → Bevölkerung → Steuern → Wirtschaft (Unterhalt) → Markt → Aufträge →
+  **Krisen (`tickCrises`)** → Sieg. Der Krisenschritt läuft nach der Bevölkerung (Höchststufe für den Boom-Pool
+  wie bei den Aufträgen) und nach der Buchung (eine Instandsetzungsgebühr ändert Steuer und Unterhalt des Ticks
+  nicht). Ein Schritt `T` produziert noch normal; der Ausfall gilt in den Schritten `T + 1 … T + 200`.
+- **Takt mit Versatz:** Krisen beginnen bei `tick ≥ 2400 && (tick − 2400) % P === 0` (`P` 600 bei `normal`,
+  1200 bei `mild`, keine bei `off`). Wie die Aufträge weicht das bewusst von `tick % INTERVAL === 0` ab.
+- **Zustand `burning`:** gesetzt beim Brandbeginn zusammen mit `outageUntil`; er hat Vorrang vor
+  `notConnected` (Produktion und `recomputeConnectivity` lassen ihn stehen) und endet am Ende des Schritts
+  `outageUntil` mit `connected ? 'ok' : 'notConnected'`. Massgeblich für den Ausfall ist `outageUntil`.

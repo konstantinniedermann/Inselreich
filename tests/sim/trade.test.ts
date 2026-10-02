@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { beginCrisis } from '../../src/sim/crises';
+import { BOOM_PCT } from '../../src/sim/defs/crises';
+import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
+import { deliverOrder } from '../../src/sim/orders';
 import { createWorld } from '../../src/sim/world';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice, sell, sellPrice, tickMarket } from '../../src/sim/trade';
-import type { World } from '../../src/sim/types';
+import type { GoodId, World } from '../../src/sim/types';
 
 let w: World;
 
@@ -158,5 +162,74 @@ describe('Verkaufssättigung', () => {
     expect(w.sellPct.wood).toBe(80);
     expect(w.money).toBe(money);
     expect(w.stock.wood).toBe(wood);
+  });
+});
+
+/** Boom auf `good` ab world.tick = 2400 (Periode 0, Stufe normal). */
+function boom(good: GoodId): void {
+  w.crisisLevel = 'normal';
+  w.tick = 2400;
+  beginCrisis(w, 0, { kind: 'boom', good });
+}
+
+describe('M6 Boom', () => {
+  it('AK-S3-03 Rum-Boom: 10 Rum 257 statt 171, Sättigung wie gewohnt; Holz unberührt', () => {
+    w.stock.rum = 10;
+    const plain = sellPrice(w, 'rum', 10);
+    boom('rum');
+    expect(plain).toBe(171);
+    expect(sellPrice(w, 'rum', 10)).toBe(257);
+    const m0 = w.money;
+    expect(sell(w, 'rum', 10)).toEqual({ ok: true });
+    expect(w.money - m0).toBe(257);
+    expect(w.sellPct.rum).toBe(90);
+    expect(sellPrice(w, 'wood', 10)).toBe(38);
+  });
+
+  it('AK-S3-04 Aufschlag bei world.tick T und T+299, nach Schritt T+300 nicht mehr', () => {
+    boom('rum');
+    expect(sellPrice(w, 'rum', 1)).toBe(27);
+    while (w.tick < 2699) step(w);
+    expect(sellPrice(w, 'rum', 1)).toBe(27);
+    step(w);
+    expect(w.tick).toBe(2700);
+    expect(sellPrice(w, 'rum', 1)).toBe(18);
+  });
+
+  it('AK-S3-05 Invariante: Boompreis < Auftragsprämie < Kaufpreis; Kaufen und im Boom verkaufen verliert', () => {
+    for (const g of GOOD_IDS) {
+      const { buy: b, sell: s } = GOODS[g];
+      expect((s * BOOM_PCT) / 100, g).toBeLessThan(Math.floor(b * ORDER_PREMIUM));
+      expect(Math.floor(b * ORDER_PREMIUM), g).toBeLessThan(b);
+      w = createWorld(3);
+      boom(g);
+      w.stock[g] = 0;
+      const m0 = w.money;
+      expect(buy(w, g, 1).ok).toBe(true);
+      expect(sell(w, g, 1).ok).toBe(true);
+      expect(w.money, g).toBeLessThan(m0);
+    }
+  });
+
+  it('AK-S3-06 Sättigung im Boom: sellPct 30 → +81 statt +54, bleibt 30', () => {
+    w.stock.rum = 10;
+    w.sellPct.rum = 30;
+    expect(sellPrice(w, 'rum', 10)).toBe(54);
+    boom('rum');
+    const m0 = w.money;
+    expect(sell(w, 'rum', 10).ok).toBe(true);
+    expect(w.money - m0).toBe(81);
+    expect(w.sellPct.rum).toBe(30);
+  });
+
+  it('AK-S3-07 ohne Boom bitgleich; Auftragsprämie im Boom unverändert', () => {
+    expect(sellPrice(w, 'rum', 3)).toBe(53);
+    expect(sellPrice(w, 'wood', 10)).toBe(38);
+    boom('wood');
+    w.order = { period: 2, good: 'wood', amount: 25, reward: 175, due: 3000 }; // Angebot 2400
+    w.stock.wood = 25;
+    const m0 = w.money;
+    expect(deliverOrder(w)).toEqual({ ok: true });
+    expect(w.money - m0).toBe(175);
   });
 });

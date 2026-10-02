@@ -26,7 +26,12 @@ export function bindMessages(container: HTMLElement): () => void {
  * Meldung raus. Sticky Meldungen zählen mit, werden aber nie verdrängt; sind alle sticky, bleibt
  * die neue trotzdem sichtbar (der Stapel wächst dann über das Limit).
  */
-export function showMessage(text: string, kind: 'info' | 'error' = 'info', sticky = false): void {
+export function showMessage(
+  text: string,
+  kind: 'info' | 'error' | 'warn' = 'info',
+  sticky = false,
+  closable = false,
+): void {
   if (!box) return;
   const now = performance.now();
   if (text === lastText && now - lastAt < DEDUPE_MS) return;
@@ -36,6 +41,12 @@ export function showMessage(text: string, kind: 'info' | 'error' = 'info', stick
   toast.className = `toast ${kind}`;
   toast.textContent = text;
   if (sticky) toast.dataset.sticky = '1';
+  if (closable) {
+    toast.dataset.closable = '1';
+    toast.title = 'Klicken zum Schliessen';
+    toast.classList.add('toast--closable');
+    toast.addEventListener('click', () => toast.remove());
+  }
   box.appendChild(toast);
   if (!sticky) setTimeout(() => toast.remove(), 3000);
   if (box.children.length > MAX_TOASTS) {
@@ -44,4 +55,14 @@ export function showMessage(text: string, kind: 'info' | 'error' = 'info', stick
     );
     oldest?.remove();
   }
+}
+
+/** Entfernt den jüngsten schliessbaren Toast; wahr, wenn einer da war (Esc schliesst zuerst ihn). */
+export function closeClosableToast(): boolean {
+  if (!box) return false;
+  const all = box.querySelectorAll<HTMLElement>('[data-closable="1"]');
+  const last = all[all.length - 1];
+  if (!last) return false;
+  last.remove();
+  return true;
 }

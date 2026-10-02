@@ -28,3 +28,14 @@ Welt oder im Save.
 - Die Simulation bleibt ohne Uhr und ohne DOM; arc42 §8 nennt den seed-abgeleiteten Zufall.
 - Wer weiteren Zufall braucht, leitet ihn nach demselben Muster je Ereignis aus Seed und einem
   Zähler ab und legt keinen RNG-Strom in den Save.
+
+## Nachtrag M6 (2026-09-30): Krisen
+
+- Krisen nutzen eine **zweite Konstante** `CRISIS_SALT = 0x85ebca6b` (`src/sim/defs/crises.ts`):
+  `createRng((seed ^ Math.imul(k + 1, CRISIS_SALT)) >>> 0)`, eine eigene Instanz je Krisenperiode `k`
+  (`rollCrisis` in `src/sim/crises.ts`). Aufträge und Krisen ziehen damit unabhängig voneinander.
+- **Feste Zug-Reihenfolge:** r1 → Art (`floor(r × 100)` gegen die kumulierten Gewichte fire, storm, boom);
+  Brand mit Rechteck r2 → x, r3 → y; Boom r2 → Gut aus dem Auftragspool der Höchststufe. Eine neue Ziehung
+  kommt nur hinten dazu, sonst verschieben sich alle Tests (AK-S1-07, AK-S1-08).
+- Der Save trägt keinen RNG-Zustand, nur das Ergebnis (`world.crisis`); das Brandziel hängt vom Gebäudestand ab
+  und wird deshalb gespeichert.

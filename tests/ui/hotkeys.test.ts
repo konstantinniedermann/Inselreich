@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import {
+  NAV_KEYS,
   TOOL_HOTKEYS,
   afterPause,
+  categoryOf,
   hotkeyAction,
   hotkeyLabel,
+  hotkeyList,
+  nextOpenCategory,
+  toolName,
   withSpeed,
 } from '../../src/ui/hotkeys';
 
@@ -25,6 +31,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
     z: { kind: 'build', defId: 'canefarm' },
     n: { kind: 'build', defId: 'distillery' },
     t: { kind: 'build', defId: 'toolmaker' },
+    e: { kind: 'build', defId: 'firestation' },
   };
 
   it('AK-U2-02: jede Werkzeugtaste aus 10.6 wählt ihr Werkzeug', () => {
@@ -68,7 +75,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
 
   it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
     for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(14);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(15);
   });
 
   it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
@@ -101,4 +108,43 @@ describe('Tempo merken (AK-U2-02)', () => {
   it('AK-U2-02: P bei laufendem Spiel pausiert und merkt das Tempo', () => {
     expect(afterPause(2, 1)).toEqual({ speed: 0, last: 2 });
   });
+});
+
+describe('Feuerwache-Hotkey (M6-AK-U1-04)', () => {
+  it('M6-AK-U1-04: E wählt die Feuerwache, Label "E"', () => {
+    expect(hotkeyAction('e', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'firestation' },
+    });
+    expect(hotkeyAction('E', NONE, false)).not.toBeNull();
+    expect(hotkeyLabel({ kind: 'build', defId: 'firestation' })).toBe('E');
+  });
+});
+
+it('AK-UX-06 hotkeyList nennt jede Taste genau einmal, Werkzeuge mit Namen', () => {
+  const list = hotkeyList();
+  const keys = list.map((e) => e.key);
+  for (const [k, tool] of Object.entries(TOOL_HOTKEYS)) {
+    expect(keys.filter((x) => x === k.toUpperCase())).toHaveLength(1);
+    expect(list.find((e) => e.key === k.toUpperCase())!.label).toBe(toolName(tool!));
+  }
+  for (const k of ['1', '2', '3', 'P']) expect(keys.filter((x) => x === k)).toHaveLength(1);
+  for (const n of NAV_KEYS) expect(keys.filter((x) => x === n.key)).toHaveLength(1);
+  expect(list).toContainEqual({ key: 'E', label: BUILDING_DEFS.firestation.name });
+});
+it('AK-UX-06 categoryOf: Gebäude → Kategorie, sonst null', () => {
+  expect(categoryOf({ kind: 'build', defId: 'fisher' })).toBe('production');
+  expect(categoryOf({ kind: 'road' })).toBeNull();
+  expect(categoryOf({ kind: 'demolish' })).toBeNull();
+  expect(categoryOf({ kind: 'select' })).toBeNull();
+});
+it('Untermenü: Klick schaltet um, Bau-Werkzeug öffnet seine Kategorie, andere Werkzeuge schliessen', () => {
+  expect(nextOpenCategory(null, { kind: 'toggle', category: 'production' })).toBe('production');
+  expect(nextOpenCategory('production', { kind: 'toggle', category: 'production' })).toBeNull();
+  expect(nextOpenCategory('public', { kind: 'toggle', category: 'production' })).toBe('production');
+  expect(nextOpenCategory(null, { kind: 'tool', tool: { kind: 'build', defId: 'fisher' } })).toBe(
+    'production',
+  );
+  expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'select' } })).toBeNull();
+  expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'road' } })).toBeNull();
 });

@@ -35,7 +35,7 @@ Lokal, nicht Teil des Spiels.
 
 - [ADR-001 Tech-Stack](adr/ADR-001-tech-stack.md)
 - [ADR-002 Simulation getrennt von Darstellung](adr/ADR-002-sim-render-trennung.md)
-- [ADR-003 Top-down statt Isometrie](adr/ADR-003-topdown-statt-isometrie.md)
+- [ADR-003 Top-down statt Isometrie](adr/ADR-003-topdown-statt-isometrie.md) (ersetzt durch ADR-012)
 - [ADR-004 Eigener Titel, eigene Grafik, eigene Spielwerte](adr/ADR-004-eigene-assets.md) — abgelöst durch ADR-006
 - [ADR-005 Tick-Reihenfolge und Zustände](adr/ADR-005-tick-reihenfolge-und-zustaende.md)
 - [ADR-006 Eigene oder offen lizenzierte Inhalte mit Nachweis](adr/ADR-006-offene-lizenzen.md)
@@ -43,11 +43,15 @@ Lokal, nicht Teil des Spiels.
 - [ADR-008 Studio-Telemetrie über Hooks, JSONL und Dashboard](adr/ADR-008-studio-telemetrie.md)
 - [ADR-009 Studio-Autonomie, Verfassung und Selbstverbesserung](adr/ADR-009-studio-autonomie-und-lernen.md)
 - [ADR-010 Zufall je Periode aus dem Seed statt RNG-Strom im Save](adr/ADR-010-zufall-je-periode.md)
+- [ADR-011 Asset-Pipeline](adr/ADR-011-asset-pipeline.md) — vorgeschlagen
+- [ADR-012 Isometrische Darstellung](adr/ADR-012-isometrische-darstellung.md) — akzeptiert, ersetzt ADR-003
 
 ## Specs
 
 - [Design-Spec MVP](superpowers/specs/2026-09-29-inselreich-design.md) — Spielkonzept, Datenmodell, Module
 - [Kurz-Spec Balancing-Revision](superpowers/specs/2026-09-30-balancing-design.md) — Steuern und Luxusverbrauch
+- [M7-Spec Stimmung](superpowers/specs/2026-09-30-m7-stimmung-design.md) — Grafik, Licht, Klang, Musik, UI-Anmutung
+- [M7-ISO Nachtrag](superpowers/specs/2026-10-01-m7-iso-design.md) — isometrische Darstellung (ADR-012)
 - [Design-Spec M5 Spielerlebnis](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md) — Steuerregler, Verkaufssättigung, Aufträge, Ambiente, Bedienkomfort, Save v2
 - [Design-Spec Studio](superpowers/specs/2026-09-30-studio-design.md) — Hierarchie, Telemetrie, Dashboard
 - [Design-Spec Studio 1.5](superpowers/specs/2026-09-30-studio-autonomie-design.md) — Projektleiter, Autonomie, Messung, Selbstverbesserung

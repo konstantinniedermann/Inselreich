@@ -1,46 +1,44 @@
+import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TIERS } from '../sim/defs/tiers';
+import { TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { GROWTH_INTERVAL } from '../sim/defs/timing';
+import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
-import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
-import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
-import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
+import { SERVICE_BUILDING, citizens, isSupplied, upgradeStatus } from '../sim/population';
+import { effectiveRefund, houseDiagnosis } from '../sim/queries';
+import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
+import { diagnosisText, producesText, refundText, stateInfo } from './texts';
+import { MAP_SIGNS, nextStep, remedyText, taxEffect } from './guide';
+import { friendlyReason } from './hints';
+import { tierPath } from './hud';
+import { formatGameTime, perMinute } from './time';
+
+export {
+  burningText,
+  diagnosisText,
+  producesText,
+  refundText,
+  stateInfo,
+  stateText,
+} from './texts';
 
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
 }
 
-/** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
-export function diagnosisText(d: Diagnosis): string {
-  switch (d.kind) {
-    case 'supply':
-      return 'nicht versorgt';
-    case 'good':
-      return `${GOODS[d.good].name} fehlt`;
-    case 'service':
-      return `${BUILDING_DEFS[SERVICE_BUILDING[d.service]].name} fehlt`;
-  }
-}
-
-function stateInfo(b: Building): { text: string; ok: boolean } {
-  const def = BUILDING_DEFS[b.defId];
-  // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
-  if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
-  if (!def.produces) return { text: 'Angebunden', ok: true };
-  switch (b.state) {
-    case 'ok':
-    case 'notConnected': // wieder angebunden, `state` folgt erst im nächsten Tick
-      return { text: 'In Betrieb', ok: true };
-    case 'waitingInput':
-      return {
-        text: `Wartet auf ${def.consumes ? GOODS[def.consumes].name : 'Rohstoff'}`,
-        ok: false,
-      };
-    case 'storageFull':
-      return { text: 'Lager voll', ok: false };
-  }
+/**
+ * Anzahl brennbarer Gebäude, die diese Feuerwache schützt (Panel „Schützt N …"). Keine eigene Geometrie:
+ * die Sim-Abfrage `isProtected` läuft gegen eine Sicht, in der nur diese Wache steht, damit andere
+ * Wachen die Zahl nicht verändern.
+ */
+export function protectedCount(world: World, station: Building): number {
+  const solo: World = { ...world, buildings: { [station.id]: station } };
+  return Object.values(world.buildings).filter(
+    (o) => BUILDING_DEFS[o.defId].flammable === true && isProtected(solo, o),
+  ).length;
 }
 
 function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement {
@@ -52,30 +50,20 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
   return p;
 }
 
-/** Rückerstattungstext: tatsächlicher Betrag, je Gut mit Verfall-Hinweis (nur wenn etwas verfällt). */
-export function refundText(nominal: Cost, effective: Cost): string {
-  const parts = [`Geld ${effective.money}`];
-  for (const [key, label] of REFUND_GOODS) {
-    if (!nominal[key]) continue;
-    const lost = nominal[key] - effective[key];
-    parts.push(
-      lost > 0
-        ? `${label} ${effective[key]} (${lost} verfallen – Lager voll)`
-        : `${label} ${effective[key]}`,
-    );
-  }
-  return parts.join(' · ');
+function refundLine(world: World, b: Building): string {
+  const nominal = refundCost(BUILDING_DEFS[b.defId].cost);
+  return `Rückerstattung: ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))}`;
 }
 
-const REFUND_GOODS = [
-  ['wood', GOODS.wood.name],
-  ['tools', GOODS.tools.name],
-  ['stone', GOODS.stone.name],
-] as const;
+/** Aufstiegszeile bei erfüllten Bedingungen (Spec L8: Zeit statt „Tick"). */
+export function upgradeOkText(): string {
+  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`;
+}
 
-function demolishLabel(world: World, b: Building): string {
-  const nominal = refundCost(BUILDING_DEFS[b.defId].cost);
-  return `Abreissen (Rückerstattung ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))})`;
+/** Gründe, warum das Haus nicht aufsteigt, als Klartext mit Aufstiegskosten. */
+export function upgradeReasonTexts(world: World, b: Building): string[] {
+  const cost = TIERS[b.house!.tier].upgradeCost!;
+  return upgradeStatus(world, b).reasons.map((r) => `✗ ${friendlyReason(world, r, { cost })}`);
 }
 
 function addButton(parent: HTMLElement, label: string, onClick: () => void, field?: string): void {
@@ -120,11 +108,19 @@ function setList(root: HTMLElement, field: string, items: ListItem[]): void {
   );
 }
 
+/** Abhilfe-Zeile (Spec L7), anfangs versteckt; `updateInspect` setzt Text und Sichtbarkeit. */
+function addRemedy(parent: HTMLElement): void {
+  const p = addLine(parent, '', 'remedy');
+  p.classList.add('remedy');
+  p.hidden = true;
+}
+
 /** Gerüst des Wohnhaus-Panels: Einwohner, Versorgung, Bedürfnisse, Aufstieg. */
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
   addList(panel, 'reasons', 'diagnosis');
+  addRemedy(panel);
   addList(panel, 'needs', 'needs');
   const upgrade = document.createElement('div');
   upgrade.className = 'upgrade';
@@ -178,8 +174,8 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     panel,
     'upgrade-reasons',
     status.ok
-      ? [{ text: '✓ Bedingungen erfüllt — Aufstieg im nächsten Wachstums-Tick', ok: true }]
-      : status.reasons.map((r) => ({ text: `✗ ${r}`, ok: false })),
+      ? [{ text: upgradeOkText(), ok: true }]
+      : upgradeReasonTexts(world, b).map((text) => ({ text, ok: false })),
   );
   setField(panel, 'upgrade-cost', `Kosten ${costLine(tier.upgradeCost)}`);
   if (cost) cost.hidden = false;
@@ -202,7 +198,7 @@ export function renderInspect(
   title.textContent = def.name;
   title.dataset.field = 'title';
   panel.appendChild(title);
-  addLine(panel, `Position (${b.x}, ${b.y})`);
+  if (import.meta.env.DEV) addLine(panel, `Position (${b.x}, ${b.y})`);
 
   const buttons = document.createElement('div');
   buttons.className = 'panel-actions';
@@ -215,8 +211,9 @@ export function renderInspect(
       renderHouse(panel);
     } else {
       addLine(panel, '', 'state');
+      addRemedy(panel);
       if (def.produces && def.cycle !== undefined) {
-        addLine(panel, `Erzeugt ${GOODS[def.produces].name} alle ${def.cycle} Ticks`);
+        addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${GOODS[def.consumes].name}`);
         const bar = document.createElement('div');
         bar.className = 'progress';
@@ -226,11 +223,14 @@ export function renderInspect(
         bar.appendChild(fill);
         panel.appendChild(bar);
       }
-      addLine(panel, `Unterhalt ${def.upkeep} / ${UPKEEP_INTERVAL} Ticks`);
+      addLine(panel, `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`);
+      if (def.flammable === true) addLine(panel, '', 'fire-protection');
+      if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
-    addButton(buttons, demolishLabel(world, b), () => actions.demolish(id), 'demolish');
+    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
+  if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
 }
 
@@ -240,12 +240,117 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (!b) return;
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
-  setField(panel, 'demolish', demolishLabel(world, b));
-  const info = stateInfo(b);
+  setField(panel, 'refund', refundLine(world, b));
+  const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
+  if (remedyEl) {
+    const text = remedyText(world, b);
+    remedyEl.hidden = text === null;
+    setField(panel, 'remedy', text ?? '');
+  }
+  if (def.produces && def.cycle !== undefined) {
+    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
+  }
+  const info = stateInfo(b, world.tick);
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
+  if (def.flammable === true) {
+    setField(panel, 'fire-protection', `Brandschutz: ${isProtected(world, b) ? 'ja' : 'nein'}`);
+  }
+  if (def.fireProtection === true) {
+    setField(panel, 'fire-covers', `Schützt ${protectedCount(world, b)} brennbare Gebäude`);
+  }
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   if (fill && def.cycle) {
     const width = `${Math.min(100, Math.round((b.progress / def.cycle) * 100))}%`;
     if (fill.style.width !== width) fill.style.width = width;
   }
+}
+
+const PHASE_VIEW: Record<Phase, { label: string; symbol: string }> = {
+  morning: { label: 'Morgen', symbol: '◒' },
+  day: { label: 'Tag', symbol: '☀' },
+  evening: { label: 'Abend', symbol: '◓' },
+  night: { label: 'Nacht', symbol: '☾' },
+};
+
+/** Anzeigedaten der Ruhe-Ansicht (reine Darstellung, keine Regel). */
+export function restView(world: World): {
+  phase: Phase;
+  label: string;
+  symbol: string;
+  inhabitants: number;
+} {
+  const phase = phaseAt(world.tick);
+  let inhabitants = 0;
+  for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
+  return { phase, ...PHASE_VIEW[phase], inhabitants };
+}
+
+function addHeading(parent: HTMLElement, text: string): void {
+  const h = document.createElement('h3');
+  h.textContent = text;
+  parent.appendChild(h);
+}
+
+/** Ruhe-Ansicht „Inselchronik": Ziel, nächster Schritt, Steuer, Kartenzeichen; `updateRest` führt nach. */
+export function renderRest(panel: HTMLElement, world: World): void {
+  panel.replaceChildren();
+  const title = document.createElement('h2');
+  title.className = 'panel-title';
+  title.textContent = 'Inselchronik';
+  panel.appendChild(title);
+  addLine(panel, '', 'rest-phase');
+  addLine(panel, '', 'rest-inhabitants');
+
+  addHeading(panel, 'Ziel');
+  const bar = document.createElement('div');
+  bar.className = 'goal-bar';
+  const fill = document.createElement('span');
+  fill.dataset.field = 'goal-fill';
+  bar.appendChild(fill);
+  const label = document.createElement('div');
+  label.className = 'goal-label';
+  label.dataset.field = 'goal-text';
+  bar.appendChild(label);
+  panel.appendChild(bar);
+  addLine(panel, tierPath());
+
+  addHeading(panel, 'Nächster Schritt');
+  addLine(panel, '', 'next-step');
+  addHeading(panel, 'Steuer');
+  addLine(panel, '', 'rest-tax');
+
+  const details = document.createElement('details');
+  details.className = 'map-signs';
+  const summary = document.createElement('summary');
+  summary.textContent = 'Kartenzeichen';
+  details.appendChild(summary);
+  const ul = document.createElement('ul');
+  for (const s of MAP_SIGNS) {
+    const li = document.createElement('li');
+    if (s.color !== null) {
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = s.color;
+      li.appendChild(sw);
+    }
+    li.append(`${s.sign} — ${s.meaning}`);
+    ul.appendChild(li);
+  }
+  details.appendChild(ul);
+  panel.appendChild(details);
+  updateRest(panel, world);
+}
+
+/** Führt Zahlen und Texte nach; baut das `details` „Kartenzeichen" nie neu (Auf/Zu bleibt). */
+export function updateRest(panel: HTMLElement, world: World): void {
+  const v = restView(world);
+  setField(panel, 'rest-phase', `${v.symbol} ${v.label}`);
+  setField(panel, 'rest-inhabitants', `Einwohner ${v.inhabitants}`);
+  const n = citizens(world);
+  setField(panel, 'goal-text', `${n} / ${WIN_CITIZENS} ${TIERS[3].name}`);
+  const fill = panel.querySelector<HTMLElement>('[data-field="goal-fill"]');
+  const width = `${Math.min(100, (n / WIN_CITIZENS) * 100)}%`;
+  if (fill && fill.style.width !== width) fill.style.width = width;
+  setField(panel, 'next-step', nextStep(world));
+  setField(panel, 'rest-tax', taxEffect(world.taxLevel));
 }
