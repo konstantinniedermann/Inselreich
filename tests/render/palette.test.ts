@@ -69,6 +69,7 @@ describe('Palette', () => {
     expect(PALETTE.roofWood).toBe('#8a6a3f');
     expect(PALETTE.roofSlate).toBe('#4f6478');
     expect(PALETTE.roofTimber).toBe('#6b4a2b');
+    expect(PALETTE.roofCopper).toBe('#5e9488'); // M8 R1: Kaufmannshaus
     expect(PALETTE.wallLime).toBe('#efe6d2');
     expect(PALETTE.wallTimber).toBe('#5a3d25');
     expect(PALETTE.wallStone).toBe('#b9ad97');
