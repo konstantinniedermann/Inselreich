@@ -1,14 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createCoverageCache,
+  GOOD_COLORS,
+  drawNeedSymbols,
   outlineSegments,
   overlayPlan,
   symbolFor,
   SYMBOL_MIN_ZOOM,
 } from '../../src/render/overlays';
+import { fakeCtx } from './fakeCtx';
 import { placeRoad } from '../../src/sim/build';
 import { coverageMask, layoutKey } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
+import { deltaE2000, hexToLab } from './deltaE';
 import type { Building, World } from '../../src/sim/types';
 
 let w: World;
@@ -108,5 +112,73 @@ describe('M6-R2 Feuerwache im Overlay', () => {
     cache.get(w, 'fire');
     cache.outline(w, 'fire');
     expect(calls).toBe(1);
+  });
+});
+
+describe('M8 R1 Symbole und Farben', () => {
+  it('AK-R1-03 Bad-Symbol eigen, Glasfarbe eigen', () => {
+    expect(symbolFor({ kind: 'service', service: 'bath' }).shape).toBe('bath');
+    expect(symbolFor({ kind: 'service', service: 'school' }).shape).toBe('book');
+    expect(symbolFor({ kind: 'service', service: 'faith' }).shape).toBe('bell');
+    const others = Object.entries(GOOD_COLORS)
+      .filter(([g]) => g !== 'glass')
+      .map(([, c]) => c);
+    expect(GOOD_COLORS.glass).toBeDefined();
+    expect(others).not.toContain(GOOD_COLORS.glass);
+  });
+
+  it('AK-R1-03 Bad-Farbe hebt sich von der Buchfarbe ab (ΔE2000 ≥ 15), Glas von jeder Warenfarbe (≥ 10)', () => {
+    const sym = symbolFor({ kind: 'service', service: 'bath' });
+    const book = symbolFor({ kind: 'service', service: 'school' });
+    expect(deltaE2000(hexToLab(sym.color), hexToLab(book.color))).toBeGreaterThanOrEqual(15);
+    for (const [g, c] of Object.entries(GOOD_COLORS))
+      if (g !== 'glass')
+        expect(deltaE2000(hexToLab(GOOD_COLORS.glass!), hexToLab(c)), g).toBeGreaterThanOrEqual(10);
+  });
+
+  it('AK-R1-03 drawNeedSymbols zeichnet bei Bad-Mangel mit der Bad-Farbe, nicht mit der Buchfarbe', () => {
+    const world = createWorld(3);
+    const kk = world.buildings[world.kontorId]!;
+    const mkB = (
+      id: number,
+      defId: Building['defId'],
+      dx: number,
+      extra: Partial<Building>,
+    ): void => {
+      world.buildings[id] = {
+        id,
+        defId,
+        x: kk.x + dx,
+        y: kk.y,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        ...extra,
+      };
+    };
+    mkB(900, 'house', 2, {
+      house: {
+        tier: 4,
+        inhabitants: 5,
+        demand: {},
+        satisfied: { food: true, cloth: true, rum: true, glass: true },
+        services: {},
+        satisfiedSince: 0,
+        supplied: true,
+      },
+    });
+    mkB(901, 'chapel', 4, {});
+    mkB(902, 'school', 6, {});
+    const sym = symbolFor({ kind: 'service', service: 'bath' });
+    const { ctx, log } = fakeCtx();
+    drawNeedSymbols(ctx, world, { x: 0, y: 0, zoom: 1 }, { x0: 0, y0: 0, x1: 200, y1: 200 });
+    expect(log.fillSet).toContain(sym.color);
+    expect(log.fillSet).not.toContain('#3a6ab8');
+  });
+
+  it('AK-R1-04 overlayPlan Badehaus: Kreis Radius 10, Abdeckung bath', () => {
+    const plan = overlayPlan(w, 'bathhouse', k.x + 6, k.y - 4);
+    expect(plan?.coverage).toBe('bath');
+    expect(plan?.circle?.radius).toBe(10);
   });
 });

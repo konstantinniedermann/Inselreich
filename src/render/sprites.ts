@@ -351,6 +351,76 @@ function houseShell(p: IsoPainter, b: Building): Shell {
     : makeShell(p, 0.6 * h, zr, 'gable', 'v');
 }
 
+/** Fensterreihen des Kaufmannshauses als Anteile der Traufhöhe (Zeichnung und Fensteranker teilen sie). */
+const MERCHANT_ROWS: readonly (readonly [number, number])[] = [
+  [0.14, 0.34],
+  [0.48, 0.66],
+  [0.78, 0.95],
+];
+/** Fenster links (Strassenseite) je Reihe; die mittlere Tür im Erdgeschoss ersetzt dort das Mittelfenster. */
+const MERCHANT_LEFT: readonly (readonly (readonly [number, number])[])[] = [
+  [
+    [0.16, 0.28],
+    [0.68, 0.8],
+  ],
+  [
+    [0.16, 0.28],
+    [0.44, 0.56],
+    [0.68, 0.8],
+  ],
+  [
+    [0.16, 0.28],
+    [0.44, 0.56],
+    [0.68, 0.8],
+  ],
+];
+const MERCHANT_RIGHT: readonly (readonly [number, number])[] = [
+  [0.2, 0.32],
+  [0.62, 0.74],
+];
+/** Treppengiebel: drei Stufen je Seite plus Spitzenstufe in Wandebene v = `s.v1`, darüber Ladeluke und Kranbalken. */
+function stepGable(p: IsoPainter, s: Shell, wall: WallColors): void {
+  const half = s.um - s.u0;
+  const mid = 0.09; // halbe Breite der Spitzenstufe
+  const n = 3;
+  const dw = (half - mid) / n;
+  const top = (u: number): number => roofZ(s, u, s.vm);
+  const left: [number, number, number][] = [[s.u0, s.v1, s.wz]];
+  for (let k = 0; k < n; k++) {
+    const z = top(s.u0 + (k + 1) * dw);
+    left.push([s.u0 + k * dw, s.v1, z], [s.u0 + (k + 1) * dw, s.v1, z]);
+  }
+  const right = left
+    .slice(1)
+    .map(([u, v, z]): [number, number, number] => [2 * s.um - u, v, z])
+    .reverse();
+  p.poly(
+    [...left, [s.um - mid, s.v1, s.zr], [s.um + mid, s.v1, s.zr], ...right, [s.u1, s.v1, s.wz]],
+    wall.left,
+  );
+  // Gesims-Kappen entlang der Stufenkanten
+  const cap = wallColors(PALETTE.wallStone).left;
+  for (let k = 0; k < n; k++) {
+    const z = top(s.u0 + (k + 1) * dw);
+    leftQuad(p, s, s.u0 + k * dw, s.u0 + (k + 1) * dw, z - 1.6, z, cap);
+    leftQuad(p, s, 2 * s.um - (s.u0 + (k + 1) * dw), 2 * s.um - (s.u0 + k * dw), z - 1.6, z, cap);
+  }
+  leftQuad(p, s, s.um - mid, s.um + mid, s.zr - 1.6, s.zr, cap);
+  // Ladeluke (dunkel) mit Kranbalken darüber, der nach vorn auskragt
+  const z0 = s.wz + 3;
+  leftQuad(p, s, s.um - 0.07, s.um + 0.07, z0, z0 + 10, DOOR);
+  const beam = wallColors(PALETTE.wallTimber);
+  cuboid(
+    p,
+    [s.um - 0.02, s.v1, s.um + 0.02, s.v1 + 0.07],
+    s.zr - 6,
+    s.zr - 3.5,
+    beam,
+    beam.left,
+    false,
+  );
+}
+
 /** Mündung des Hauskamins in Bildpunkten (Herdrauch, Spec 5.6); null für andere Typen. */
 export function hearthAnchor(def: BuildingDef, b: Building, cam: Camera): Pt | null {
   if (def.id !== 'house') return null;
@@ -390,7 +460,7 @@ function houseBody(p: IsoPainter, b: Building): void {
     leftQuad(p, s, 0.28, 0.4, 0.1, 0.6 * s.wz, DOOR);
     leftQuad(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz, WINDOW);
     chimney(p, s, h, PALETTE.wallStone);
-  } else {
+  } else if (tier === 3) {
     // Bürgerhaus: Steinwand, dunkler Ziegel, zwei Geschosse, Gaube (First entlang v)
     const w = wallColors(PALETTE.wallStone);
     drawShell(p, s, w, PALETTE.roofTerracottaDark);
@@ -431,6 +501,23 @@ function houseBody(p: IsoPainter, b: Building): void {
       roofColors(PALETTE.roofTerracottaDark).shade,
     );
     chimney(p, s, h, PALETTE.wallStone);
+  } else {
+    // Kaufmannshaus: hanseatisches Giebelhaus, Putzwand auf Steinsockel, Kupferdach, Treppengiebel zur Strasse
+    const w = wallColors(PALETTE.wallLime);
+    const stone = wallColors(PALETTE.wallStone);
+    drawShell(p, s, w, PALETTE.roofCopper);
+    chimney(p, s, h, PALETTE.wallStone);
+    stepGable(p, s, w);
+    leftQuad(p, s, s.u0, s.u1, 0, 4, stone.left); // Sockel
+    rightQuad(p, s, s.v0, s.v1, 0, 4, stone.right);
+    for (const f of [0.4, 0.72]) {
+      leftQuad(p, s, s.u0, s.u1, f * s.wz, f * s.wz + 2, stone.left); // Gesimse
+      rightQuad(p, s, s.v0, s.v1, f * s.wz, f * s.wz + 2, stone.right);
+    }
+    leftQuad(p, s, 0.4, 0.56, 4, 0.37 * s.wz, DOOR);
+    for (const x of merchantWindows(s.wz)) {
+      (x.wall === 'left' ? leftQuad : rightQuad)(p, s, x.a0, x.a1, x.z0, x.z1, WINDOW);
+    }
   }
 }
 
@@ -521,6 +608,13 @@ const CHIMNEY_SPOTS: Partial<Record<BuildingDefId, (p: IsoPainter, h: number) =>
   lumberjack: (p, h) => ({ ...chimneySpot(lumberjackShell(p, h), h), size: CHIMNEY_SIZE }),
   distillery: (_p, h) => ({ cu: 0.25, cv: 0.4, size: 0.2, top: cap(h, 0.25, 0.4) }),
   toolmaker: (_p, h) => ({ cu: 0.3, cv: 0.35, size: 0.22, top: cap(h, 0.3, 0.35) }),
+  // Schlot des Glasofens (Rauch steigt dort auf)
+  glassworks: () => ({
+    cu: GLASS_CONE.uc - 0.05,
+    cv: GLASS_CONE.vc - 0.05,
+    size: 0.1,
+    top: GLASS_CONE.top,
+  }),
 };
 
 /** Mündung des Kamins in Bildpunkten (Rauch steigt dort auf); null für Typen ohne eigenen Kamin. */
@@ -1011,6 +1105,224 @@ function firestationBody(p: IsoPainter, b: Building): void {
   cupola(p, s, h, s.um, s.vm, 0.24);
 }
 
+// --- M8-R1: Glashütte und Badehaus (Drehkörper aus Polygonen) ---
+
+/** Dreht ein Profil [Radius, Höhe] um die Senkrechte bei (uc, vc); nur die zugewandte Hälfte, hinten nach vorn. */
+function lathe(
+  p: IsoPainter,
+  uc: number,
+  vc: number,
+  rings: readonly (readonly [number, number])[],
+  light: string,
+  dark: string,
+  n = 14,
+): void {
+  const facets: { a: number; b: number; depth: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (2 * Math.PI * i) / n,
+      b = (2 * Math.PI * (i + 1)) / n;
+    const m = (a + b) / 2;
+    const depth = Math.cos(m) + Math.sin(m); // + zum Betrachter (vorn, nach u und v)
+    if (depth > -0.35) facets.push({ a, b, depth });
+  }
+  facets.sort((x, y) => x.depth - y.depth);
+  for (const { a, b } of facets) {
+    const m = (a + b) / 2;
+    const t = 0.5 - (0.5 * (Math.sin(m) - Math.cos(m))) / Math.SQRT2; // links (+v) hell, rechts (+u) dunkel
+    const color = mixHex(light, dark, t);
+    for (let k = 0; k + 1 < rings.length; k++) {
+      const [r0, z0] = rings[k]!;
+      const [r1, z1] = rings[k + 1]!;
+      p.poly(
+        [
+          [uc + r0 * Math.cos(a), vc + r0 * Math.sin(a), z0],
+          [uc + r0 * Math.cos(b), vc + r0 * Math.sin(b), z0],
+          [uc + r1 * Math.cos(b), vc + r1 * Math.sin(b), z1],
+          [uc + r1 * Math.cos(a), vc + r1 * Math.sin(a), z1],
+        ],
+        color,
+        false,
+      );
+    }
+  }
+}
+/** Waagerechte Kreisscheibe als Polygon. */
+function disc(
+  p: IsoPainter,
+  uc: number,
+  vc: number,
+  r: number,
+  z: number,
+  color: string,
+  outline = false,
+): void {
+  const pts: [number, number, number][] = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (2 * Math.PI * i) / 14;
+    pts.push([uc + r * Math.cos(a), vc + r * Math.sin(a), z]);
+  }
+  p.poly(pts, color, outline);
+}
+
+// Glashütte: Werkhalle rechts, markanter Glasofenkegel links vorn mit glühendem Ofenmaul, Sandhaufen im Hof
+const GLASS_CONE = { uc: 0.6, vc: 1.3, top: 63 } as const;
+const GLASS_PROFILE: readonly (readonly [number, number])[] = [
+  [0.46, 0],
+  [0.36, 22],
+  [0.27, 44],
+  [0.2, 59],
+  [0.23, 63],
+];
+const glassHallShell = (h: number): Shell =>
+  shellAt([1.1, I, 1.92, 1.92], 0.42 * h, 0.76 * h, 'gable', 'v');
+function glassworksBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.glassworks, b);
+  yard(p, mixHex(PALETTE.earth, PALETTE.rockDark, 0.3));
+  // Sandhaufen hinten links (zwei Kegel)
+  const sand = PALETTE.sandDry;
+  for (const [uc, vc, r, z] of [
+    [0.55, 0.38, 0.3, 9],
+    [0.3, 0.62, 0.2, 6],
+  ] as const) {
+    const [a, c, d, e] = [uc - r, vc - r, uc + r, vc + r];
+    p.poly(
+      [
+        [a, e, 0],
+        [d, e, 0],
+        [uc, vc, z],
+      ],
+      mixHex(sand, '#ffffff', 0.12),
+      false,
+    );
+    p.poly(
+      [
+        [d, c, 0],
+        [d, e, 0],
+        [uc, vc, z],
+      ],
+      mixHex(sand, '#000000', 0.2),
+      false,
+    );
+  }
+  // Ofenkegel
+  const { uc, vc, top } = GLASS_CONE;
+  lathe(
+    p,
+    uc,
+    vc,
+    GLASS_PROFILE,
+    mixHex(PALETTE.wallStone, PALETTE.rockDark, 0.1),
+    mixHex(PALETTE.rockDark, PALETTE.wallStone, 0.25),
+  );
+  disc(p, uc, vc, 0.23, top, mixHex(PALETTE.wallStone, PALETTE.rockDark, 0.3), true); // Rand
+  disc(p, uc, vc, 0.15, top, mixHex(PALETTE.rockDark, '#000000', 0.6)); // offener Schlot
+  // Ofenmaul: Bogenöffnung nach vorn links, glühend
+  const rAt = (z: number): number => 0.46 - (0.46 - 0.36) * (z / 22);
+  const arch = (half: number, z0: number, z1: number, color: string): void => {
+    const pt = (da: number, z: number): [number, number, number] => [
+      uc + rAt(z) * Math.cos(Math.PI / 2 + da),
+      vc + rAt(z) * Math.sin(Math.PI / 2 + da),
+      z,
+    ];
+    p.poly([pt(-half, z0), pt(half, z0), pt(half * 0.7, z1), pt(-half * 0.7, z1)], color, false);
+  };
+  arch(0.3, 2, 15, mixHex(PALETTE.rockDark, '#000000', 0.5));
+  arch(0.21, 2, 12, PALETTE.window);
+  // Halle
+  const s = glassHallShell(h);
+  drawShell(p, s, woodWall(), PALETTE.roofWood);
+  leftQuad(p, s, 1.28, 1.52, 0, 0.62 * s.wz, DOOR);
+  leftQuad(p, s, 1.65, 1.8, 0.35 * s.wz, 0.75 * s.wz, WINDOW);
+  rightQuad(p, s, 0.5, 0.7, 0.35 * s.wz, 0.75 * s.wz, WINDOW);
+  rightQuad(p, s, 1.0, 1.2, 0.35 * s.wz, 0.75 * s.wz, WINDOW);
+}
+
+// Badehaus: Kubus mit flacher Kuppel, Säulenportikus vorn, Becken mit Schaumrand im Hof
+const BATH_CUBE = { u1: 1.3, v1: 1.3 } as const;
+function bathhouseBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.bathhouse, b);
+  yard(p, mixHex(PALETTE.sandDry, PALETTE.grass, 0.3));
+  // Becken rechts im Hof
+  p.quad([1.36, 0.7, 0], [1.88, 0.7, 0], [1.88, 1.82, 0], [1.36, 1.82, 0], PALETTE.foam, false);
+  p.quad(
+    [1.42, 0.76, 0],
+    [1.82, 0.76, 0],
+    [1.82, 1.76, 0],
+    [1.42, 1.76, 0],
+    PALETTE.waterShallow,
+    false,
+  );
+  const wz = 0.75 * h;
+  const wall = wallColors(PALETTE.wallStone);
+  const lime = wallColors(PALETTE.wallLime);
+  const cube = [I, I, BATH_CUBE.u1, BATH_CUBE.v1] as const;
+  cuboid(p, cube, 0, wz, wall, mixHex(PALETTE.wallStone, PALETTE.roofSlate, 0.3));
+  leftPlane(p, BATH_CUBE.v1, I, BATH_CUBE.u1, wz - 3, wz, lime.left); // Gesims
+  rightPlane(p, BATH_CUBE.u1, I, BATH_CUBE.v1, wz - 3, wz, lime.right);
+  const dz = 0.18;
+  for (const [a, c] of [
+    [0.2, 0.32],
+    [1.0, 1.12],
+  ] as const)
+    leftPlane(p, BATH_CUBE.v1, a, c, 0.68 * wz, 0.9 * wz, WINDOW);
+  for (const [a, c] of [
+    [0.4, 0.6],
+    [0.8, 1.0],
+  ] as const)
+    rightPlane(p, BATH_CUBE.u1, a, c, 0.5 * wz, 0.85 * wz, WINDOW);
+  leftPlane(p, BATH_CUBE.v1, 0.5, 0.85, 0, 0.5 * wz, DOOR);
+  // Heizungsschornstein hinten links, Oberkante genau auf der Hüllenkante
+  cuboid(
+    p,
+    [0.12, 0.12, 0.23, 0.23],
+    wz - 1,
+    cap(h, 0.12, 0.12),
+    wallColors(PALETTE.rockLight),
+    PALETTE.rockDark,
+  );
+  // Flache Kuppel (Schiefer) mit Laterne
+  const m = (I + BATH_CUBE.u1) / 2;
+  const r = wallColors(PALETTE.roofSlate);
+  lathe(
+    p,
+    m,
+    m,
+    [
+      [0.53, wz],
+      [0.47, wz + 5],
+      [0.34, wz + 9],
+      [0.14, wz + 11],
+    ],
+    mixHex(PALETTE.roofSlate, '#ffffff', 0.18),
+    r.right,
+  );
+  disc(p, m, m, 0.14, wz + 11, mixHex(PALETTE.roofSlate, '#ffffff', 0.3), true);
+  disc(p, m, m, 0.05, wz + 11.5, PALETTE.wallLime);
+  // Säulenportikus vor der linken Wand: vier Säulen tragen Gebälk und Giebelfeld
+  const zc = 0.5 * wz;
+  const front = BATH_CUBE.v1 + 0.3;
+  const cols = [0.28, 0.55, 0.82, 1.09];
+  p.quad(
+    [0.2, BATH_CUBE.v1, 0],
+    [1.2, BATH_CUBE.v1, 0],
+    [1.2, front, 0],
+    [0.2, front, 0],
+    mixHex(PALETTE.rock, PALETTE.sandDry, 0.5),
+    false,
+  );
+  for (const u of cols) pole(p, u, front - 0.08, zc, PALETTE.wallLime, 0.08);
+  cuboid(p, [0.22, BATH_CUBE.v1, 1.16, front + 0.02], zc, zc + 4, lime);
+  leftPlane(p, front + 0.02, 0.22, 1.16, zc + 4, zc + 4, PALETTE.wallLime);
+  p.poly(
+    [
+      [0.22, front + 0.02, zc + 4],
+      [1.16, front + 0.02, zc + 4],
+      [0.69, front + 0.02, zc + 4 + dz * ISO_H],
+    ],
+    PALETTE.wallLime,
+  );
+}
+
 // Kategorie-Fallback: Dachfamilie der Kategorie (Spec 5.5), unabhängig von der Id
 function fallbackShell(p: IsoPainter, category: Category): Shell {
   const h = p.height;
@@ -1067,7 +1379,7 @@ function fallbackBody(category: Category): SilhouetteFn {
     }
   };
 }
-const FALLBACKS: Record<Category, SilhouetteFn> = {
+export const FALLBACKS: Record<Category, SilhouetteFn> = {
   housing: fallbackBody('housing'),
   production: fallbackBody('production'),
   public: fallbackBody('public'),
@@ -1090,8 +1402,8 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   chapel: chapelBody,
   school: schoolBody,
   firestation: firestationBody,
-  bathhouse: FALLBACKS.public, // M8-S1: Kategorie-Rückfall bis zur eigenen Silhouette (R1, K3)
-  glassworks: FALLBACKS.production, // M8-S2: Kategorie-Rückfall bis zur eigenen Silhouette (R1, K3)
+  bathhouse: bathhouseBody, // M8-R1
+  glassworks: glassworksBody, // M8-R1
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---
@@ -1133,6 +1445,16 @@ const R = (a0: number, a1: number, z0: number, z1: number): WallWindow => ({
   z1,
 });
 
+/** Fenster des Kaufmannshauses in Wandkoordinaten (drei Reihen, links 2 + 3 + 3, rechts 2 je Reihe). */
+function merchantWindows(wz: number): WallWindow[] {
+  const out: WallWindow[] = [];
+  MERCHANT_ROWS.forEach(([a, b], row) => {
+    for (const [u0, u1] of MERCHANT_LEFT[row]!) out.push(L(u0, u1, a * wz, b * wz));
+    for (const [v0, v1] of MERCHANT_RIGHT) out.push(R(v0, v1, a * wz, b * wz));
+  });
+  return out;
+}
+
 /** Lagen wie in den Silhouetten gezeichnet (gleiche Wandebenen, gleiche Anteile an der Traufhöhe `wz`). */
 const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWindow[]>> = {
   house: (b, h) => {
@@ -1146,6 +1468,7 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
       return [L(0.6, 0.74, 0.5 * wz, 0.82 * wz)];
     }
     const wz = 0.6 * h;
+    if (tier >= 4) return merchantWindows(wz);
     return [
       L(0.6, 0.72, 0.1, 0.4 * wz),
       L(0.6, 0.72, 0.58 * wz, 0.9 * wz),
@@ -1201,6 +1524,24 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
     L(0.18, 0.38, 0.45 * 0.6 * h, 0.8 * 0.6 * h),
     R(0.35, 0.6, 0.45 * 0.6 * h, 0.8 * 0.6 * h),
   ],
+  glassworks: (_b, h) => {
+    const wz = 0.42 * h;
+    return [
+      L(1.65, 1.8, 0.35 * wz, 0.75 * wz),
+      R(0.5, 0.7, 0.35 * wz, 0.75 * wz),
+      R(1.0, 1.2, 0.35 * wz, 0.75 * wz),
+    ];
+  },
+  bathhouse: (_b, h) => {
+    const wz = 0.75 * h;
+    const pl = BATH_CUBE.v1; // Würfelwand bei 1,3 (nicht die äussere Wand)
+    return [
+      { ...L(0.2, 0.32, 0.68 * wz, 0.9 * wz), plane: pl },
+      { ...L(1.0, 1.12, 0.68 * wz, 0.9 * wz), plane: pl },
+      { ...R(0.4, 0.6, 0.5 * wz, 0.85 * wz), plane: BATH_CUBE.u1 },
+      { ...R(0.8, 1.0, 0.5 * wz, 0.85 * wz), plane: BATH_CUBE.u1 },
+    ];
+  },
   school: (_b, h) => [
     L(0.2, 0.34, 0.35 * 0.5 * h, 0.75 * 0.5 * h),
     L(0.86, 1.0, 0.35 * 0.5 * h, 0.75 * 0.5 * h),

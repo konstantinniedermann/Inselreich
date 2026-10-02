@@ -41,6 +41,14 @@ describe('Palette', () => {
     }
   });
 
+  it('M8 R1 roofCopper hebt sich von Gras, Krone und Schieferdach ab (ΔE2000 ≥ 10)', () => {
+    for (const n of ['grass', 'grassDark', 'crown', 'crownLight', 'roofSlate'] as const)
+      expect(
+        deltaE2000(hexToLab(PALETTE.roofCopper), hexToLab(PALETTE[n])),
+        `roofCopper/${n}`,
+      ).toBeGreaterThanOrEqual(10);
+  });
+
   it('AK-R1-03 Palette enthält genau die Werte aus Spec 4.2', () => {
     expect(PALETTE.signalRed).toBe('#ff3b5c');
     expect(PALETTE.signalYellow).toBe('#ffe000');
@@ -69,6 +77,7 @@ describe('Palette', () => {
     expect(PALETTE.roofWood).toBe('#8a6a3f');
     expect(PALETTE.roofSlate).toBe('#4f6478');
     expect(PALETTE.roofTimber).toBe('#6b4a2b');
+    expect(PALETTE.roofCopper).toBe('#5e9488'); // M8 R1: Kaufmannshaus
     expect(PALETTE.wallLime).toBe('#efe6d2');
     expect(PALETTE.wallTimber).toBe('#5a3d25');
     expect(PALETTE.wallStone).toBe('#b9ad97');

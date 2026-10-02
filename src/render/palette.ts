@@ -22,6 +22,7 @@ export const PALETTE = {
   roofWood: '#8a6a3f',
   roofSlate: '#4f6478',
   roofTimber: '#6b4a2b',
+  roofCopper: '#5e9488', // M8 R1: Kupferdach mit Grünspan (Kaufmannshaus)
   wallLime: '#efe6d2',
   wallTimber: '#5a3d25',
   wallStone: '#b9ad97',
@@ -63,6 +64,7 @@ export const SURFACE_NAMES = [
   'roofWood',
   'roofSlate',
   'roofTimber',
+  'roofCopper',
   'wallLime',
   'wallTimber',
   'wallStone',
