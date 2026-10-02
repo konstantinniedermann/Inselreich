@@ -383,6 +383,24 @@ class EnrichTest(unittest.TestCase):
         ev = hook.enrich(hook.to_event(p), p)[0]
         self.assertEqual(ev["usage"]["m"]["output"], 9)
 
+    def test_agent_stop_without_role_is_internal_and_not_archived(self):
+        p = payload("SubagentStop", agent_id="a4", last_assistant_message="Lese x")
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertTrue(ev["internal"])
+        self.assertNotIn("report", ev)
+        self.assertFalse((self.home / "archiv" / "berichte").exists())
+
+    def test_agent_stop_with_role_is_not_internal(self):
+        p = payload(
+            "SubagentStop",
+            agent_id="a5",
+            agent_type="lead-qa",
+            last_assistant_message="x",
+        )
+        ev = hook.enrich(hook.to_event(p), p)[0]
+        self.assertNotIn("internal", ev)
+        self.assertIn("report", ev)
+
     def test_agent_stop_without_transcript_has_no_usage_value(self):
         p = payload("SubagentStop", agent_id="a3", last_assistant_message="x")
         ev = hook.enrich(hook.to_event(p), p)[0]

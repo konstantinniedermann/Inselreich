@@ -248,7 +248,11 @@ def _stop_extras(event: dict, payload: dict) -> None:
     agent = safe_name(payload.get("agent_id"), "agent")
     role = safe_name(event.get("role"), "agent")
     message = payload.get("last_assistant_message")
-    if isinstance(message, str) and message:
+    if not event.get("role"):
+        # Interne Hilfsagenten der Laufzeit senden nur SubagentStop, ohne Rolle:
+        # kein Archivbericht, nur Markierung (Prozess-Retro M7-UX V5, R136).
+        event["internal"] = True
+    elif isinstance(message, str) and message:
         with contextlib.suppress(Exception):
             event["report"] = archive_text(
                 "berichte", f"{stamp()}-{role}-{agent}.md", message
