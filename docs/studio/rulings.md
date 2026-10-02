@@ -587,3 +587,12 @@ M8-S2 (Spec-AK vor Gate nachtragen); „Spielerführung Wirtschaft" eigene Kurz-
 M8. Danach Gate Spec M8 (lead-qa, lead-tech). — Kosten bei Irrtum: ein AK verschoben.
 
 Entscheider: L0 · Anlass: Spec-Prüfung M8
+
+## R139 · 2026-10-02 · D-138a: Bilanz bei Brand
+
+Ruling: R115 bleibt (HUD-Bilanz zeigt bei Brand die Dauerleistung, Planungsgrösse). R138 Punkt
+`goodsBalance` zurückgenommen: AK-S2-19 streichen, Beobachtung „erledigt durch R115". Übrige R138
+gilt. Lehre: Beobachtungen vor Übernahme gegen Rulings prüfen (Retro). — Kosten bei Irrtum: Bilanz
+flackert nicht, Brand zeigt Warnring.
+
+Entscheider: L0 · Anlass: Bericht lead-design M8-SPEC
