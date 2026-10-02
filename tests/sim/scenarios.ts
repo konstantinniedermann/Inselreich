@@ -41,6 +41,20 @@ function withFunds<T>(w: World, fn: () => T): T {
   }
 }
 
+/**
+ * Baut Gebäude mit `unlockTier` vor der Freischaltung: `won` für `fn` kurz true, danach zurück. Nur für die
+ * Bildergalerie (`galerie`, Spec 18.1); der Zustand „Bad oder Hütte ohne Sieg" ist im Spiel nicht erreichbar.
+ */
+function withUnlock<T>(w: World, fn: () => T): T {
+  const won = w.won;
+  w.won = true;
+  try {
+    return fn();
+  } finally {
+    w.won = won;
+  }
+}
+
 function road(w: World, x: number, y: number): void {
   forceGrass(w, x, y);
   const r = withFunds(w, () => placeRoad(w, x, y));
@@ -255,6 +269,7 @@ function galerie(): World {
   put(w, 'quarry', kx + 7, ky + 1);
   put(w, 'toolmaker', kx + 9, ky + 1);
   put(w, 'firestation', kx + 13, ky + 1); // M6-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  withUnlock(w, () => put(w, 'bathhouse', kx + 11, ky + 1)); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;

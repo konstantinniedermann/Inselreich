@@ -294,6 +294,7 @@ describe('M6 Brand und Feuerwache', () => {
     expect(BUILDING_DEFS.firestation.flammable).toBeUndefined();
     const flammable = BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true).sort();
     expect(flammable).toEqual([
+      'bathhouse',
       'canefarm',
       'chapel',
       'distillery',

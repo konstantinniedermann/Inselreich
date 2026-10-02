@@ -9,12 +9,12 @@ import {
   ORDER_FIRST_TICK,
   ORDER_PERIOD,
 } from './defs/timing';
-import { TAX_LEVELS } from './defs/tiers';
+import { TAX_LEVELS, TIERS } from './defs/tiers';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import type { CrisisKind, CrisisLevel, GoodId, World } from './types';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -150,6 +150,33 @@ export function migrateV2ToV3(raw: Record<string, unknown>): void {
   raw.crisis = null;
 }
 
+/**
+ * Felder von Save v4 (M8 10.2): `wonMerchants` boolean und nur mit `won`; jede Hausstufe ganzzahlig 1 … 4;
+ * Stufe 4 nur mit `won` oder aktivem Hebel (`TIERS[4].unlockCitizens` ≠ null; die Bürgerzahl wird bewusst nicht
+ * geprüft, Kaufleute ohne Glas schrumpfen unter die Schwelle).
+ */
+function isValidV4Fields(raw: Record<string, unknown>): boolean {
+  if (typeof raw.wonMerchants !== 'boolean') return false;
+  if (raw.wonMerchants && raw.won !== true) return false;
+  const leverActive = (TIERS[4].unlockCitizens ?? null) !== null;
+  const buildings = raw.buildings as Record<string, Record<string, unknown>>;
+  return Object.values(buildings).every((b) => {
+    if (b.house === undefined) return true;
+    if (!isObject(b.house)) return false;
+    const tier = b.house.tier;
+    if (!isInt(tier) || tier < 1 || tier > 4) return false;
+    return tier !== 4 || raw.won === true || leverActive;
+  });
+}
+
+/** v3 → v4: Glas 0 / 100, zweites Ziel offen; Gebäude und Häuser bleiben unberührt (in v3 gibt es keine Stufe 4). */
+export function migrateV3ToV4(raw: Record<string, unknown>): void {
+  raw.version = 4;
+  if (isObject(raw.stock)) raw.stock.glass = 0;
+  if (isObject(raw.sellPct)) raw.sellPct.glass = 100;
+  raw.wonMerchants = false;
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
@@ -163,6 +190,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isObject(stock) || !GOOD_IDS.every((g) => typeof stock[g] === 'number')) return false;
   if (!isValidV2Fields(raw)) return false;
   if (!isValidV3Fields(raw)) return false;
+  if (!isValidV4Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -183,6 +211,7 @@ export function deserialize(json: string): LoadResult {
   if (!isObject(raw)) return { ok: false, reason: 'Ungültiges Format' };
   if (raw.version === 1) migrateV1ToV2(raw);
   if (raw.version === 2) migrateV2ToV3(raw);
+  if (raw.version === 3) migrateV3ToV4(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

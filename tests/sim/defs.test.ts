@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST } from '../../src/sim/defs/buildings';
-import { GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
-import { TIERS } from '../../src/sim/defs/tiers';
+import { GOODS, GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
+import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
+import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 
 describe('defs', () => {
   it('has 8 goods with buy > sell', () => {
-    expect(GOOD_IDS).toHaveLength(8);
+    expect(GOOD_IDS).toHaveLength(9);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
   it('has 14 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(14);
+    expect(BUILDING_IDS).toHaveLength(15);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -66,8 +67,57 @@ describe('defs', () => {
       tax: 14,
       needs: { food: 0.5, cloth: 0.2, rum: 0.2 },
       services: ['faith', 'school'],
-      upgradeCost: null,
+      upgradeCost: { money: 600, wood: 15, tools: 8, stone: 10 },
     });
     expect(TIERS[2].upgradeCost).toEqual({ money: 300, wood: 10, tools: 5, stone: 5 });
+  });
+});
+
+describe('M8 defs', () => {
+  it('AK-S1-01 Stufe 4, Hebel, Glas, Badehaus und Dienst bath laut Spec 4.5', () => {
+    expect(TIERS[3].upgradeCost).toEqual({ money: 600, wood: 15, tools: 8, stone: 10 });
+    expect(TIERS[4]).toEqual({
+      tier: 4,
+      name: 'Kaufleute',
+      maxInhabitants: 20,
+      needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1 },
+      services: ['faith', 'school', 'bath'],
+      tax: 20,
+      upgradeCost: null,
+      requiresWin: true,
+      unlockCitizens: null,
+    });
+    for (const t of [1, 2, 3] as const) expect(TIERS[t].requiresWin).toBeUndefined();
+    expect(WIN_MERCHANTS).toBe(60);
+    const lever = TIERS[4].unlockCitizens ?? null;
+    expect(
+      lever === null || (Number.isInteger(lever) && lever >= 1 && lever <= WIN_CITIZENS - 1),
+    ).toBe(true);
+    expect(GOODS.glass).toEqual({
+      id: 'glass',
+      name: 'Glas',
+      buy: 50,
+      sell: 20,
+      order: { tier: 4, min: 4, max: 8 },
+    });
+    expect(GOOD_IDS).toHaveLength(9);
+    expect(GOOD_IDS[GOOD_IDS.length - 1]).toBe('glass');
+    expect(START_STOCK.glass).toBe(0);
+    const bath = BUILDING_DEFS.bathhouse;
+    expect(bath).toMatchObject({
+      name: 'Badehaus',
+      w: 2,
+      h: 2,
+      cost: { money: 500, wood: 30, tools: 10, stone: 20 },
+      upkeep: 30,
+      category: 'public',
+      service: 'bath',
+      serviceRadius: 10,
+      site: [],
+      flammable: true,
+    });
+    expect(bath.stormAffected).toBeUndefined();
+    expect(SERVICE_BUILDING.bath).toBe('bathhouse');
+    expect(SERVICE_IDS).toEqual(['faith', 'school', 'bath']);
   });
 });

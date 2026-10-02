@@ -9,6 +9,7 @@ export const GOODS: Record<GoodId, GoodDef> = {
   cloth: { id: 'cloth', name: 'Stoff', buy: 30, sell: 12, order: { tier: 2, min: 6, max: 12 } },
   cane: { id: 'cane', name: 'Zuckerrohr', buy: 12, sell: 5, order: { tier: 3, min: 10, max: 20 } },
   rum: { id: 'rum', name: 'Rum', buy: 40, sell: 18, order: { tier: 3, min: 6, max: 12 } },
+  glass: { id: 'glass', name: 'Glas', buy: 50, sell: 20, order: { tier: 4, min: 4, max: 8 } },
 };
 export const GOOD_IDS = Object.keys(GOODS) as GoodId[];
 /** Untergrenze für den Verkaufsanteil je Gut (in %). */
@@ -28,4 +29,5 @@ export const START_STOCK: Record<GoodId, number> = {
   cloth: 0,
   cane: 0,
   rum: 0,
+  glass: 0,
 };

@@ -189,6 +189,20 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     fireProtection: true,
     site: [],
   },
+  bathhouse: {
+    id: 'bathhouse',
+    name: 'Badehaus',
+    w: 2,
+    h: 2,
+    cost: cost(500, 30, 10, 20),
+    upkeep: 30,
+    category: 'public',
+    flammable: true,
+    service: 'bath',
+    serviceRadius: 10,
+    unlockTier: 4,
+    site: [],
+  },
 };
 export const BUILDING_IDS = Object.keys(BUILDING_DEFS) as BuildingDefId[];
 export const ROAD_COST = 5;

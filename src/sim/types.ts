@@ -1,4 +1,5 @@
-export type GoodId = 'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum';
+export type GoodId =
+  'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass';
 export type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
 export type BuildingDefId =
   | 'kontor'
@@ -14,8 +15,9 @@ export type BuildingDefId =
   | 'chapel'
   | 'school'
   | 'toolmaker'
-  | 'firestation';
-export type ServiceId = 'faith' | 'school';
+  | 'firestation'
+  | 'bathhouse';
+export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
   money: number;
@@ -38,6 +40,8 @@ export interface BuildingDef {
   category: Category;
   produces?: GoodId;
   consumes?: GoodId;
+  /** Baubar erst, wenn diese Stufe frei ist (M8 4.3, Änderung S11); fehlt = immer baubar. */
+  unlockTier?: Tier;
   cycle?: number;
   service?: ServiceId;
   serviceRadius?: number;
@@ -63,7 +67,7 @@ export interface GoodDef {
   /** Fehlt: kein Auftragsgut. */
   order?: OrderDef;
 }
-export type Tier = 1 | 2 | 3;
+export type Tier = 1 | 2 | 3 | 4;
 export interface TierDef {
   tier: Tier;
   name: string;
@@ -72,6 +76,10 @@ export interface TierDef {
   services: ServiceId[];
   tax: number; // Steuer je Einwohner pro 100 Ticks
   upgradeCost: Cost | null; // Kosten für Aufstieg auf tier+1
+  /** Aufstieg auf diese Stufe erst nach `won` (M8 4.2). */
+  requiresWin?: boolean;
+  /** Hebel: frei ab so vielen Bürgern+; `null` = nur nach dem Sieg (M8 4.4). */
+  unlockCitizens?: number | null;
 }
 export type BuildingState = 'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning';
 export interface HouseState {
@@ -144,7 +152,7 @@ export interface Crisis {
   outcome?: FireOutcome;
 }
 export interface World {
-  version: 3;
+  version: 4;
   seed: number;
   width: number;
   height: number;
@@ -157,6 +165,8 @@ export interface World {
   money: number;
   stats: { taxes: number; upkeep: number };
   won: boolean;
+  /** Zweites Ziel „Handelsstadt“ erreicht (M8 7); wird nie zurückgesetzt. */
+  wonMerchants: boolean;
   taxLevel: TaxLevel;
   taxLockedUntil: number;
   sellPct: Record<GoodId, number>;

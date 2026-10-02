@@ -22,8 +22,10 @@ export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
 export const SERVICE_BUILDING: Record<ServiceId, BuildingDefId> = {
   faith: 'chapel',
   school: 'school',
+  bath: 'bathhouse',
 };
-const SERVICE_IDS: ServiceId[] = ['faith', 'school'];
+/** Alle Dienste in fester Reihenfolge; `tickPopulation` leitet je Haus jeden davon ab. */
+export const SERVICE_IDS: readonly ServiceId[] = ['faith', 'school', 'bath'];
 /** Toleranz für die Gleitkomma-Summe von 50 × 0.02. */
 const EPSILON = 1e-9;
 
@@ -116,6 +118,8 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
   if (current.upgradeCost === null) return { ok: false, reasons: ['Höchste Stufe erreicht'] };
   const next = TIERS[(house.tier + 1) as Tier];
   const reasons: string[] = [];
+  const lock = tierLock(world, next.tier);
+  if (lock !== null) reasons.push(lock);
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
   const wait = TAX_LEVELS[world.taxLevel].upgradeWait;
   if (wait === null) reasons.push('Steuer zu hoch');
@@ -201,18 +205,41 @@ export function tickTaxes(world: World): void {
   if (world.tick > 0 && world.tick % UPKEEP_INTERVAL === 0) world.money += world.stats.taxes;
 }
 
-/** Bürger: Einwohner aller Häuser der Stufe 3. */
+/** Bürger und höher: Einwohner aller Häuser ab Stufe 3 (M8 4.2; ein Aufstieg 3 → 4 senkt die Zahl nie). */
 export function citizens(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) {
-    if (b.house?.tier === 3) sum += b.house.inhabitants;
+    if (b.house !== undefined && b.house.tier >= 3) sum += b.house.inhabitants;
   }
   return sum;
 }
 
+/** Kaufleute: Einwohner aller Häuser der Stufe 4. */
+export function merchants(world: World): number {
+  let sum = 0;
+  for (const b of Object.values(world.buildings)) {
+    if (b.house?.tier === 4) sum += b.house.inhabitants;
+  }
+  return sum;
+}
+
+/**
+ * Sperrgrund der Zielstufe `tier` oder `null` (frei). Stufen ohne Definition (z. B. 5) und Stufen ohne
+ * `requiresWin` sind frei. Mit Hebel `unlockCitizens` = N ist die Stufe ab N Bürgern+ frei (live gelesen).
+ */
+export function tierLock(world: World, tier: number): string | null {
+  if (tier !== 1 && tier !== 2 && tier !== 3 && tier !== 4) return null;
+  const def = TIERS[tier];
+  if (def.requiresWin !== true || world.won) return null;
+  const n = def.unlockCitizens ?? null;
+  if (n === null) return 'Erst nach dem Ziel';
+  const c = citizens(world);
+  return c >= n ? null : `Erst ab ${n} Bürgern (jetzt ${c})`;
+}
+
 /** Einwohner je Bevölkerungsstufe über alle Häuser. */
 export function populationByTier(world: World): Record<Tier, number> {
-  const sum: Record<Tier, number> = { 1: 0, 2: 0, 3: 0 };
+  const sum: Record<Tier, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (const b of Object.values(world.buildings)) {
     if (b.house) sum[b.house.tier] += b.house.inhabitants;
   }

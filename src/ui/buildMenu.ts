@@ -30,7 +30,7 @@ const TERRAIN_NAMES: Record<Terrain, string> = {
   mountain: 'Gebirge',
 };
 
-const SERVICE_NAMES = { faith: 'Glaube', school: 'Bildung' } as const;
+const SERVICE_NAMES = { faith: 'Glaube', school: 'Bildung', bath: 'Hygiene' } as const;
 
 /** Zahl mit höchstens einer Nachkommastelle, ohne „.0" („3.3", „2"). */
 function num(n: number): string {

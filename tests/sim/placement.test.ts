@@ -1,8 +1,12 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createWorld, idx, isLand, tileAt } from '../../src/sim/world';
-import { canPlace, canPlaceRoad } from '../../src/sim/placement';
+import { buildLock, canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { placeBuilding, placeRoad, removeRoad, demolish } from '../../src/sim/build';
+import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { TIERS } from '../../src/sim/defs/tiers';
+import { fail } from '../../src/sim/types';
 import type { World } from '../../src/sim/types';
+import { forceGrass } from './helpers';
 
 function landRect(w: World, size: number): { x: number; y: number } {
   for (let y = 1; y < w.height - size; y++)
@@ -198,5 +202,77 @@ describe('costs', () => {
     expect(tileAt(w, o.x + 2, o.y)!.road).toBe(false);
     expect(removeRoad(w, o.x, o.y).ok).toBe(true);
     expect(w.money).toBe(2);
+  });
+});
+
+describe('M8 Bausperre (Änderung S11)', () => {
+  /** Geld und Lager reichen für jeden Bau; die Sperre ist der einzige mögliche Grund. */
+  const fund = (): void => {
+    w.money = 10_000;
+    for (const g of ['wood', 'tools', 'stone'] as const) w.stock[g] = 100;
+  };
+  /** Bürgerhäuser (Stufe 3) mit den Einwohnerzahlen `n`, direkt gesetzt. */
+  const citizenHouses = (n: readonly number[]) =>
+    n.map((inh, i) => {
+      const k = w.buildings[w.kontorId]!; // Häuser brauchen Versorgung: Spalte östlich des Kontors
+      forceGrass(w, k.x + 2, k.y + i);
+      const r = placeBuilding(w, 'house', k.x + 2, k.y + i);
+      expect(r.ok).toBe(true);
+      const h = w.buildings[r.id!]!;
+      h.house!.tier = 3;
+      h.house!.inhabitants = inh;
+      return h;
+    });
+  const water = (): { x: number; y: number } => {
+    for (let y = 0; y < w.height; y++)
+      for (let x = 0; x < w.width; x++) if (!isLand(tileAt(w, x, y)!.terrain)) return { x, y };
+    throw new Error('kein Wasser');
+  };
+
+  it('AK-S1-21 Badehaus vor dem Sieg gesperrt (auch auf Wasser), placeBuilding bucht nichts; mit won frei', () => {
+    fund();
+    expect(w.won).toBe(false);
+    expect(BUILDING_DEFS.bathhouse.unlockTier).toBe(4);
+    expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
+    expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
+    const sea = water();
+    expect(canPlace(w, 'bathhouse', sea.x, sea.y)).toEqual(fail('Erst nach dem Ziel'));
+    const money = w.money;
+    const stock = { ...w.stock };
+    const count = Object.keys(w.buildings).length;
+    expect(placeBuilding(w, 'bathhouse', o.x, o.y + 2).ok).toBe(false);
+    expect(w.money).toBe(money);
+    expect(w.stock).toEqual(stock);
+    expect(Object.keys(w.buildings)).toHaveLength(count);
+    w.won = true;
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(placeBuilding(w, 'bathhouse', o.x, o.y + 2).ok).toBe(true);
+  });
+
+  it('AK-S1-21 Hebel 40: Grund mit Zahl bei 39 Bürgern, frei bei 40; stehendes Badehaus bleibt beim Rückfall', () => {
+    try {
+      TIERS[4].unlockCitizens = 40;
+      fund();
+      const houses = citizenHouses([15, 15, 9]);
+      expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
+      expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst ab 40 Bürgern (jetzt 39)'));
+      houses[2]!.house!.inhabitants = 10;
+      expect(buildLock(w, 'bathhouse')).toBeNull();
+      const r = placeBuilding(w, 'bathhouse', o.x, o.y + 2);
+      expect(r.ok).toBe(true);
+      houses[2]!.house!.inhabitants = 9; // Sperre greift wieder (Spec 21 Punkt 5)
+      expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
+      expect(w.buildings[r.id!]?.defId).toBe('bathhouse'); // nur Neubau gesperrt
+      expect(canPlace(w, 'bathhouse', o.x + 3, o.y + 2)).toEqual(
+        fail('Erst ab 40 Bürgern (jetzt 39)'),
+      );
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
+  });
+
+  it('AK-S1-21 buildLock ist für jedes Gebäude ohne unlockTier null (auch vor dem Sieg)', () => {
+    for (const id of BUILDING_IDS)
+      if (BUILDING_DEFS[id].unlockTier === undefined) expect(buildLock(w, id), id).toBeNull();
   });
 });
