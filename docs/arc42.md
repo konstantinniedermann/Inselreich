@@ -309,7 +309,7 @@ Fenster, Laternen oder Feuer leuchten.
 ```mermaid
 flowchart LR
   T["tick += 1"] --> P["Produktion"] --> B["Bevölkerung"] --> S["Steuern"] --> W["Wirtschaft (Unterhalt)"]
-  W --> M["Markt-Erholung"] --> O["Aufträge"] --> K["Krisen"] --> V["Sieg"]
+  W --> M["Markt-Erholung"] --> O["Aufträge"] --> K["Krisen"] --> V["Sieg: won, dann wonMerchants"]
 ```
 
 | System                     | Takt                                                                                    | Wirkung                                                                                                                                                       |
@@ -320,7 +320,7 @@ flowchart LR
 | `tickMarket`               | alle 10 (`SELL_RECOVERY_INTERVAL`)                                                      | jeder Verkaufsanteil +1 Prozentpunkt, höchstens 100; kein Geld, kein Lager                                                                                    |
 | `tickOrders`               | ab 600 alle 900 (`ORDER_FIRST_TICK`, `ORDER_PERIOD`)                                    | zuerst Verfall (`tick > due`), dann Angebot aus `orderForPeriod`; kein Geld, kein Lager                                                                       |
 | `tickCrises`               | jeder Tick; Periodenstart ab 2400 alle 600 (`normal`) bzw. 1200 (`mild`), nie bei `off` | Ausfälle bei `outageUntil` beenden, Krise nach `until` entfernen, bei Periodenstart Krise ziehen (`rollCrisis`) und beginnen; Brandgebühr wird sofort gebucht |
-| `checkWin`                 | jeder Tick                                                                              | setzt `won` einmalig bei 50 Bürgern                                                                                                                           |
+| `checkWin`                 | jeder Tick                                                                              | setzt `won` einmalig bei 50 Bürgern und höher (Stufe ≥ 3), danach `wonMerchants` einmalig bei 60 Kaufleuten (nur mit `won`)                                   |
 
 M7 ändert den Simulationsschritt nicht. Alle Takte ausser Aufträgen und Krisen folgen der Konvention `tick > 0 && tick % INTERVAL === 0` (ADR-005); der
 Auftragstakt hat einen Versatz von 600 (Nachtrag in ADR-005). Die Höchststufe für den Güterpool eines
@@ -491,8 +491,8 @@ entsteht. Zustände bleiben stehen, bis ihre Ursache behoben ist.
 ```mermaid
 stateDiagram-v2
   [*] --> ok
-  ok --> waitingInput : Input fehlt bei Zyklusbeginn
-  waitingInput --> ok : Input entnommen
+  ok --> waitingInput : mindestens ein Input fehlt, nichts entnommen
+  waitingInput --> ok : alle Inputs entnommen
   ok --> storageFull : Lager voll bei Zyklusende
   storageFull --> ok : nächste Einheit eingelagert
   ok --> notConnected : Anbindung verloren
@@ -511,6 +511,9 @@ stateDiagram-v2
 `notConnected` und endet am Ende des Schritts `outageUntil` mit `connected ? 'ok' : 'notConnected'`. Nach der Wiederanbindung setzt `recomputeConnectivity` den Zustand auf `ok`; `waitingInput` bzw.
 `storageFull` leitet die Produktion im nächsten Tick neu ab. Für Wohnhäuser gilt dieselbe Konvention:
 `supplied`, `services` und `satisfied` werden jeden Tick neu abgeleitet.
+
+Mit mehreren Inputs (M8, Glashütte) gilt `waitingInput`, solange mindestens ein Input fehlt;
+entnommen wird erst, wenn alle vorhanden sind (ADR-005, Nachtrag M8).
 
 ### Anbindung
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { demolish, placeBuilding } from '../../src/sim/build';
 import { beginCrisis } from '../../src/sim/crises';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { buildLock, canPlace } from '../../src/sim/placement';
 import {
   citizens,
   merchants,
@@ -11,9 +12,10 @@ import {
 } from '../../src/sim/population';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
+import { fail } from '../../src/sim/types';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { forceGrass, placeService } from './helpers';
+import { forceGrass, forceRect, placeService } from './helpers';
 
 interface Town {
   w: World;
@@ -337,5 +339,94 @@ describe('M8 Brand am Badehaus (Spec 9)', () => {
     expect(w.tick).toBe(661);
     expect(h.house!.services.bath).toBe(true);
     expect(h.house!.tier).toBe(4);
+  });
+});
+
+describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
+  it('AK-S3-01 59 Kaufleute: noch nicht; nach dem Wachstumstakt 60 → wonMerchants; Schrumpfen ohne Glas setzt nicht zurück', () => {
+    const { w, houses } = town(3);
+    w.won = true;
+    w.tick = 440;
+    setHouse(w, houses[0]!, 4, 20);
+    setHouse(w, houses[1]!, 4, 20);
+    setHouse(w, houses[2]!, 4, 19);
+    w.stock.glass = 50;
+    step(w);
+    expect(w.tick % 50).not.toBe(0);
+    expect(merchants(w)).toBe(59);
+    expect(w.wonMerchants).toBe(false);
+    while (w.tick < 450) step(w);
+    expect(merchants(w)).toBe(60);
+    expect(w.wonMerchants).toBe(true);
+    w.stock.glass = 0;
+    while (merchants(w) > 55 && w.tick < 2000) step(w);
+    expect(merchants(w)).toBe(54); // drei Häuser schrumpfen im selben Wachstumstakt: 60 → 57 → 54
+    expect(w.wonMerchants).toBe(true);
+    expect(w.won).toBe(true);
+  });
+
+  it('AK-S3-02 Hebel 40, won false, 60 Kaufleute: nach einem Schritt won und wonMerchants', () => {
+    try {
+      TIERS[4].unlockCitizens = 40;
+      const { w, houses } = town(3);
+      for (const b of houses) setHouse(w, b, 4, 20);
+      w.stock.glass = 50;
+      expect(w.won).toBe(false);
+      step(w);
+      expect([w.won, w.wonMerchants]).toEqual([true, true]);
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
+  });
+
+  it('AK-S3-08 Freischaltung im Siegtick: bei W − 1 Badehaus gesperrt, ab W Bad und Hütte frei, merchants 0 bei W', () => {
+    // Änderung S11: Welt wie m8-kurz-vor-sieg, ohne Badehaus (vorher „Vorbereitung zahlt sich aus")
+    const w = createWorld(3);
+    const k = w.buildings[w.kontorId]!;
+    const at: [number, number, number][] = [
+      [k.x + 2, k.y - 6, 15],
+      [k.x + 2, k.y + 7, 15],
+      [k.x + 8, k.y + 1, 15],
+      [k.x + 3, k.y - 3, 4],
+    ];
+    const houses = at.map(([x, y, n]) => {
+      forceGrass(w, x, y);
+      const r = placeBuilding(w, 'house', x, y);
+      if (!r.ok || r.id === undefined) throw new Error('house not placed');
+      const b = w.buildings[r.id]!;
+      setHouse(w, b, 3, n);
+      return b;
+    });
+    const services = [
+      placeService(w, 'chapel', k.x + 4, k.y),
+      placeService(w, 'school', k.x + 4, k.y + 2),
+    ];
+    for (const s of services) s.connected = true;
+    const spot = { x: k.x + 14, y: k.y }; // freier Platz für das Badehaus (vorher stand es hier)
+    forceRect(w, spot.x, spot.y, 2, 2, 'grass');
+    w.tick = 50 * 9 - 1;
+    for (const h of houses) h.house!.satisfiedSince = w.tick - 300;
+    w.money = 3000;
+    w.stock = {
+      ...w.stock,
+      glass: 5,
+      wood: 30,
+      tools: 20,
+      stone: 20,
+      food: 100,
+      cloth: 100,
+      rum: 100,
+    };
+    expect(citizens(w)).toBe(49);
+    expect(canPlace(w, 'bathhouse', spot.x, spot.y)).toEqual(fail('Erst nach dem Ziel'));
+    expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');
+    step(w);
+    const W = w.tick;
+    expect(W % 50).toBe(0);
+    expect(w.won).toBe(true);
+    expect(merchants(w)).toBe(0);
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(buildLock(w, 'glassworks')).toBeNull();
+    expect(canPlace(w, 'bathhouse', spot.x, spot.y).ok).toBe(true);
   });
 });

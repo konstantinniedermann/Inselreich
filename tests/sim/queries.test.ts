@@ -14,6 +14,7 @@ import {
   coverageMask,
   crisisView,
   effectiveRefund,
+  goalView,
   goodsBalance,
   houseDiagnosis,
   layoutKey,
@@ -21,7 +22,8 @@ import {
   placementZone,
   unprotectedFlammables,
 } from '../../src/sim/queries';
-import type { Building, BuildingDefId, World } from '../../src/sim/types';
+import { TIERS } from '../../src/sim/defs/tiers';
+import type { Building, BuildingDefId, Tier, World } from '../../src/sim/types';
 import {
   forceGrass,
   forceRect,
@@ -458,6 +460,80 @@ describe('M6 Abfragen', () => {
 });
 
 describe('M8 Abfragen', () => {
+  /** Wohnhaus direkt eingefügt (Mitte im Kontor-Radius), Stufe `tier`, `n` Einwohner, alle Güter erfüllt. */
+  function m8House(tier: Tier, n: number, x = k.x + 2, y = k.y): Building {
+    const b = directHouse(w, x, y, 1, true);
+    b.house!.tier = tier;
+    b.house!.inhabitants = n;
+    b.house!.satisfied = Object.fromEntries(Object.keys(TIERS[tier].needs).map((g) => [g, true]));
+    return b;
+  }
+
+  it('AK-S3-03 goalView vor dem Sieg, nach dem Sieg und nach dem zweiten Ziel', () => {
+    const hs = [0, 1, 2].map((i) => m8House(3, 15, k.x + 2, k.y + i));
+    expect(goalView(w)).toEqual({
+      phase: 'citizens',
+      current: 45,
+      target: 50,
+      next: { tierName: 'Kaufleute', target: 60, unlockCitizens: null },
+    });
+    w.won = true;
+    hs[0]!.house!.tier = 4;
+    expect(goalView(w)).toEqual({ phase: 'merchants', current: 15, target: 60 });
+    for (const h of hs) Object.assign(h.house!, { tier: 4, inhabitants: 20 });
+    w.wonMerchants = true;
+    expect(goalView(w)).toEqual({ phase: 'done', current: 60, target: 60 });
+  });
+
+  it('AK-S3-05 Badabdeckung: coverageMask(bath) gleich serviceAvailable je Kachel, auch während eines Brands', () => {
+    const bath = placeService(w, 'bathhouse', k.x + 3, k.y + 3);
+    const probeAll = (): void => {
+      const mask = coverageMask(w, 'bath');
+      for (let y = 0; y < w.height; y++)
+        for (let x = 0; x < w.width; x++) {
+          const probe = {
+            id: -1,
+            defId: 'house',
+            x,
+            y,
+            connected: false,
+            progress: 0,
+            state: 'ok',
+          } as Building;
+          expect(mask[y * w.width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'bath'));
+        }
+    };
+    expect(coverageMask(w, 'bath').some(Boolean)).toBe(true);
+    probeAll();
+    w.crisisLevel = 'normal';
+    w.tick = 2400;
+    beginCrisis(w, 0, { kind: 'fire', tile: { x: bath.x, y: bath.y } });
+    expect(bath.outageUntil).toBeDefined();
+    expect(coverageMask(w, 'bath').some(Boolean)).toBe(false);
+    probeAll();
+  });
+
+  it('AK-S3-06 placementZone: Badehaus Kreis Radius 10, Glashütte null', () => {
+    const z = placementZone(w, 'bathhouse', 20, 20)!;
+    expect(z.radius).toBe(10);
+    expect([z.cx, z.cy]).toEqual([21, 21]);
+    expect(placementZone(w, 'glassworks', 20, 20)).toBeNull();
+  });
+
+  it('AK-S3-07 Diagnose Kaufmannshaus: ohne Glas → good glass; ohne Bad → service bath', () => {
+    placeService(w, 'chapel', k.x + 3, k.y + 3);
+    placeService(w, 'school', k.x + 5, k.y + 3);
+    const bath = placeService(w, 'bathhouse', k.x + 7, k.y + 3);
+    for (const b of Object.values(w.buildings)) if (b.defId !== 'house') b.connected = true;
+    const h = m8House(4, 20);
+    expect(houseDiagnosis(w, h)).toEqual([]);
+    h.house!.satisfied.glass = false;
+    expect(houseDiagnosis(w, h)).toContainEqual({ kind: 'good', good: 'glass' });
+    h.house!.satisfied.glass = true;
+    bath.connected = false;
+    expect(houseDiagnosis(w, h)).toEqual([{ kind: 'service', service: 'bath' }]);
+  });
+
   it('AK-S3-04 missingInputs: fehlende Inputs in consumes-Reihenfolge, leer ohne consumes', () => {
     const gw = direct(w, 'glassworks', true);
     w.stock.stone = 3;
