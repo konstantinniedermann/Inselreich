@@ -17,16 +17,16 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 
 ---
 
-## E-010 · laufend · Controller-Wechsel nach der Hälfte der Tasks
+## E-010 · laufend · Schlanke Steuerung
 
-- Hypothese: Wenn der Controller bei Plänen mit mehr als 6 Tasks nach dem mittleren QA-Block und vor einer Wartezeit über einen 5-h-Reset per Ledger an eine frische `lead-tech`-Instanz übergibt und Doku-Pakete delegiert, bleibt die Cache-Last jedes Controllers niedrig, ohne Informationsverlust (Prozess-Retro M7-UX B0, V4; Retro M8).
-- Messgrösse: Cache-Read **je Controller** je abgeschlossenem Task ≤ 3,5 Mio. (Tabelle „Tokens je Agent“ aus metrics.py, sonst Transkript je agent_id; M7-UX: 5,02 Mio., M8: 2,31 und 4,21 Mio.). Abbruch: ein Ruling der zweiten Hälfte widerspricht der ersten (Final-Review) oder der Nachfolger fragt mehr als einmal nach.
+- Hypothese: Wenn Leads einen Auftrag je Instanz abarbeiten (Gate-Urteil, Spec, Plan je eine Instanz), der Controller in der Umsetzung auf `sonnet` läuft und höchstens 4 Tasks je Instanz übernimmt, dann Übergabe per Ledger an eine frische Instanz, und Leads nicht mit grossem Kontext auf Arbeiter warten, sinken der Steuerungsanteil und die 5-min-Neuschreibungen, ohne Informationsverlust (Ad-hoc-Retro Token-Effizienz B1, B2; zuvor: Controller-Wechsel nach der Hälfte der Tasks, Prozess-Retro M7-UX B0, V4; Retro M8).
+- Messgrösse: in M10 gemessen mit dem Abschnitt „Effizienz“ aus `metrics.py` (`--efficiency`): Steuerungsanteil (L0 + Leads) ≤ 40 %, Lead-Kontext-Median ≤ 80k, Cache-Write 5 min ≤ 15 % (Ausgangswerte: 67,2 %, bis 169k, 28,6 %). Abbruch: ein Ruling der späteren Tasks widerspricht einem früheren (Final-Review) oder eine Folgeinstanz fragt mehr als einmal nach.
 - Zeitraum: M10.
-- Rückfall: ein Controller je Meilenstein (Handbuch 1.10, Satz in Schritt 4 streichen); Fassung 1.11: `git show c1e0fa4:docs/studio/STUDIO.md`.
-- Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/CHANGELOG.md`; Werkzeug-Paket lead-production: `tools/studio/metrics.py` (Tokens je Agent)
-- Ruling: R136, Start R137, angepasst R166
-- Start: Handbuch 1.11 (Messung M8), angepasst Handbuch 1.12 (Messung M10)
-- Bewertung: M8 (Fassung 1.11): M-1 2,31 Mio./Task, M-2 0, M-3 4,21 Mio./Task (Störgrössen: Warten über 5-h-Reset, D1 und Diagnose selbst); Summe 3,02 Mio./Task; Abbruch nicht ausgelöst → angepasst R166 ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
+- Rückfall: Handbuch 1.12 (Umsetzungszyklus Schritt 4: Controller-Wechsel nach dem mittleren QA-Block; `git show a5c8fcf:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus, Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`; Werkzeug EFF-W: `tools/studio/metrics.py`
+- Ruling: R136, Start R137, angepasst R166, angepasst R167
+- Start: Handbuch 1.11 (Messung M8), angepasst 1.12, angepasst 1.13 (Messung M10)
+- Bewertung: M8 (Fassung 1.11): Summe 3,02 Mio. Cache-Read je Task, Abbruch nicht ausgelöst → angepasst R166 ([Retro M8](retros/2026-10-02-meilenstein-m8.md)); Token-Analyse: Steuerung 67,2 %, Umsetzer 5,0 % → angepasst R167 ([Ad-hoc-Retro](retros/2026-10-02-adhoc-token-effizienz.md))
 
 ## E-011 · laufend · Rebase-Verbot in der Briefing-Vorlage
 
@@ -48,6 +48,17 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Budget), `docs/studio/CHANGELOG.md`
 - Ruling: R166
 - Start: Handbuch 1.12
+- Bewertung: –
+
+## E-014 · vorgeschlagen · Task-Dateien und kurze L0-Sessions
+
+- Hypothese: Wenn ein Plan aus einem Index und einer Datei je Task (je ≤ 10 KB) besteht, eine Spec höchstens 40 KB hat, das Briefing nur Task-Datei und AK-IDs nennt, `rulings.md` nie ganz gelesen wird und L0 nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext, übergibt und keine Bilder liest, dann sinkt der Kontext der Arbeiter, Reviewer und von L0, ohne dass Arbeiter Vorgaben verpassen (Ad-hoc-Retro Token-Effizienz B3, B4).
+- Messgrösse: grösste gelesene Datei ≤ 40 KB und L0-Kontext Max ≤ 250k (Abschnitt „Effizienz“, `metrics.py --efficiency`; Ausgangswerte 310 KB und 774k). Gegenprobe: höchstens 1 Rückfrage je 10 Tasks wegen fehlendem Planteil und kein Review-Befund „Vorgabe übersehen“.
+- Zeitraum: M10 (Plan in Task-Dateien) bis Ende M10.
+- Rückfall: Handbuch 1.12 (Plan eine Datei, Übergabe bei 50 % Kontext); Plan M10 bleibt als Index plus Task-Dateien lesbar.
+- Dateien: `docs/studio/STUDIO.md` (Briefing-Standard, Limits, Gates), `.claude/agents/lead-tech.md`, `.claude/agents/lead-design.md`, `.claude/agents/design-spec-author.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R167 (angenommen; wartet auf Platz, höchstens 3 laufend)
+- Start: – (sobald E-011 oder E-013 abgeschlossen ist; die Regeln stehen im Handbuch 1.13 und gelten bis dahin als Vorgabe)
 - Bewertung: –
 
 ## E-012 · vorgeschlagen · Pages nur bei Spieländerungen

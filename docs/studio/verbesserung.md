@@ -76,6 +76,45 @@ Das Dashboard verlinkt Briefings und Berichte unter `/archiv/…`.
 ([metriken/README.md](metriken/README.md)). Diese Dateien werden committet; sie überdauern das
 lokale Archiv.
 
+**Effizienz (Abschnitt in den Metriken, R167):** `python3 tools/studio/metrics.py --efficiency
+[--sessions N]` verdichtet die Token-Nutzung der letzten `N` Sessions (Standard: die letzte) aus den
+Transkripten und schreibt den Abschnitt „Effizienz“ in die Metrik-Datei. Er zeigt:
+
+- **Anteil je Rollenklasse** am Kostengewicht: Leads (Steuerung), L0, Review/QA/Merge,
+  Design/Spec/Plan, Umsetzer (`tech-*`, `art-rendering-engineer`, `art-audio-engineer`),
+  Studio-Betrieb (Coach, Ops, Retro). Steuerung = L0 + Leads. Ein `general-purpose`-Start mit
+  Kopfzeile `Persona: x` zählt als x.
+- **Kostengewicht (Schätzung, keine Abrechnung):** Input 1, Cache-Write 5 min 1,25, Cache-Write 1 h 2,
+  Cache-Read 0,1, Output 5; Modellfaktor opus 1, sonnet 0,6, haiku 0,2 (fable wie opus); Usage je
+  Message-ID einmal gezählt.
+- **Kontext je Rolle** (Median über Instanzen), **5-min-Cache-Neuschreibungen** über 20k, den
+  **opus-Anteil**, **Persona-Starts als `general-purpose` auf opus** und die **grösste gelesene
+  Datei**.
+
+Ampel-Schwellen (die Werkzeug-Ausgabe weist sie je Zeile aus):
+
+| Kennzahl                                      | gelb    | rot      |
+| --------------------------------------------- | ------- | -------- |
+| Steuerungsanteil (L0 + Leads)                 | > 40 %  | > 50 %   |
+| Umsetzer-Anteil                               | < 15 %  | < 8 %    |
+| Cache-Write 5 min                             | > 15 %  | > 25 %   |
+| Lead-Kontext-Median                           | > 80k   | > 150k   |
+| L0-Kontext Max                                | > 250k  | > 500k   |
+| opus-Anteil                                   | > 60 %  | > 80 %   |
+| Persona-Starts als `general-purpose` auf opus | ≥ 1     | ≥ 5      |
+| grösste gelesene Datei                        | > 40 KB | > 100 KB |
+
+Ausgangswerte (Token-Analyse 2026-10-02, [Ad-hoc-Retro](retros/2026-10-02-adhoc-token-effizienz.md)):
+67,2 % · 5,0 % · 28,6 % · bis 169k · 774k · 83 % · 2040 Aufrufe geerbt · 310 KB. Das Werkzeug ist
+Teil des Pakets EFF-W; weicht seine Ausgabe von dieser Beschreibung ab, gleicht L0 das Handbuch an.
+
+**Pflichtpunkt jeder Retro** (Kurz-, Meilenstein- und Prozess-Aussensicht-Retro): Der Coach bzw.
+Prozess-Coach liest die Effizienz-Ampel (Abschnitt „Effizienz“ der Metrik-Datei; fehlt er, vorher
+`metrics.py --efficiency` ausführen). **Jede gelbe oder rote Zeile ist ein Befund mit Ursache**
+(Beobachtung und Deutung getrennt). Bei **Rot** folgt ein Experiment-Vorschlag oder die Begründung,
+warum keiner folgt. Der Retro-Bericht enthält dazu den Abschnitt „Effizienz-Ampel“
+([templates/retro.md](templates/retro.md)); eine Retro ohne ihn ist unvollständig.
+
 **Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
 
 | Reiter     | Link          | Zeigt                                                                                                          |
@@ -127,7 +166,7 @@ flowchart LR
    Session (für Rückfragen per `SendMessage`).
 2. **Auswerten:** Der Coach verdichtet (`metrics.py`), liest Metrik-Dateien, Berichte und Archiv
    und befragt die Leads per `SendMessage`; nicht erreichbare Leads ersetzt er durch ihre
-   Archiv-Berichte.
+   Archiv-Berichte. Pflicht: die Effizienz-Ampel lesen (siehe oben).
 3. **Bericht:** Retro-Bericht nach [templates/retro.md](templates/retro.md) unter
    `docs/studio/retros/`, mit Befunden und **höchstens 3 Vorschlägen**, jeder als Experiment nach
    [templates/experiment.md](templates/experiment.md), den der Coach gleich mit Status

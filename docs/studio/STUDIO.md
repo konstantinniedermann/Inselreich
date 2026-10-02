@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.12 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.13 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -87,6 +87,10 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
   Die Schätzzahlen stehen vor der Klammer, weil die Telemetrie die jeweils erste Angabe mit „Tools“
   bzw. „min“ liest.
 
+- **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs** (Format unter „Gates und
+  Dokumentation“), nie einen ganzen Plan oder eine ganze Spec; `rulings.md` wird nie ganz gelesen,
+  nur per `grep` auf die R-Nummern (E-014, R167).
+
 Pflichtpunkte laut Vorlage: Persona und Expertise, Ziel mit Warum fürs Spielerlebnis, Kontext,
 Deliverable mit Ablageort, Definition of Done, Grenzen und Datei-Ownership, Schnittstellen,
 Logging-Pflicht; dazu den Block ‚Feste Regeln' aus [VERFASSUNG.md §3](VERFASSUNG.md#3-feste-regeln)
@@ -102,18 +106,21 @@ roster.md) — sonst erbt der Agent das Modell der Session.
 Modellstufen zentral hier (R10); Aliase statt fester Modell-IDs. Die Wahl richtet sich nach der
 Aufgabe (R71).
 
-| Stufe  | Alias    | Einsatz                                                        |
-| ------ | -------- | -------------------------------------------------------------- |
-| stark  | `opus`   | Leads, Studio-Coach, Design, Lizenzprüfung, Final-Reviews      |
-| mittel | `sonnet` | spezifizierte Umsetzung, Recherche, Task-Reviews               |
-| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen) |
+| Stufe  | Alias    | Einsatz                                                                                                                |
+| ------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                           |
+| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche |
+| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                         |
 
 Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Modell; L0 fährt
 stattdessen herunter (R69, R71).
 
 Die Persona-Frontmatter legt das Standardmodell fest. Weicht ein Einsatz davon ab (z. B.
 `qa-code-reviewer` für das Final-Review), steht das Modell **explizit im Agent-Aufruf** (`model`)
-und in der Kopfzeile `Modell:` des Briefings.
+und in der Kopfzeile `Modell:` des Briefings. Ein Persona-Start als `general-purpose` braucht
+immer `model`; der Guard blockt ihn sonst (R167). Der Controller der Umsetzung (`lead-tech`) und die
+Kurz-Retro des Coachs laufen daher mit `model: sonnet` im Aufruf, der Tech-Lead beim Plan und die
+Meilenstein-Retro auf `opus`.
 
 ## Limits und Sessiongrösse
 
@@ -125,8 +132,10 @@ und in der Kopfzeile `Modell:` des Briefings.
   Merges) und beginnt erst danach Neues (R166). Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
   Session-Ende-Routine, keine neuen Starts. Wochenfenster über 80 %: Parallelität reduzieren.
   Die Modelle bleiben unverändert (kein Downgrade, R71).
-- **Sessiongrösse (R68):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). Spätestens
-  bei 50 % Kontext übergibt L0 über `state.md` an eine neue Session.
+- **Sessiongrösse (R68, E-014):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
+  übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
+  (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.
+  `rulings.md` liest L0 nie ganz, nur per `grep`.
 
 ## Budget
 
@@ -169,6 +178,21 @@ L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 | Plan                                | Plan in `docs/superpowers/plans/`                                        | `lead-qa`, `lead-production`                                                                          |
 | Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
 | Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                      |
+
+**Plan- und Spec-Format (E-014, R167):**
+
+- Eine **Spec** hat höchstens 40 KB; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
+  `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md`, die Spec verweist darauf.
+- Ein **Plan** ist ein Index plus eine Datei je Task unter `docs/superpowers/plans/<plan>/`
+  (`<plan>` = bisheriger Plan-Dateiname ohne `.md`, z. B. `2026-10-02-m10-schritt-fuer-schritt`).
+  Der **Index** `docs/superpowers/plans/<plan>/index.md` enthält: Ziel, Architektur in höchstens 15
+  Zeilen, Datei-Ownership je Strang, Budgetantrag und eine Tabelle mit je einer Zeile je Task
+  (Task-ID, Titel, Dateiname, AK-IDs, Strang, `blocked-by`, Modell). Je Task eine **Task-Datei**
+  `docs/superpowers/plans/<plan>/T<nn>-<kurz>.md` (zweistellig, aufsteigend, `<kurz>` Kleinbuchstaben
+  mit Bindestrich), **höchstens 10 KB**: Kopf (Task-ID, AK-IDs, Strang, erlaubte Dateien,
+  `blocked-by`), Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht. Ein Task, der
+  10 KB überschreitet, wird geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer
+  lesen nur ihre Task-Datei und die in ihr genannten AK-IDs der Spec.
 
 Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumentiert:
 
@@ -223,9 +247,12 @@ Ablauf eines Meilensteins (Stufe voll):
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
-   Bei mehr als 6 Tasks übergibt der Controller nach dem mittleren QA-Block allein per Ledger und
-   einem Satz Status an eine frische `lead-tech`-Instanz, ebenso vor einer Wartezeit über einen
-   5-h-Reset; Doku-Pakete delegiert er (E-010, angepasst R166).
+   **Schlanke Steuerung (E-010, angepasst R167):** Ein Lead arbeitet einen Auftrag je Instanz ab
+   (Gate-Urteil, Spec, Plan). Der Controller läuft auf `sonnet` und übernimmt höchstens 4 Tasks je
+   Instanz; danach übergibt er allein per Ledger und einem Satz Status an eine frische
+   `lead-tech`-Instanz, ebenso vor einer Wartezeit über einen 5-h-Reset. Leads warten nicht mit
+   grossem Kontext auf Arbeiter; Doku-Pakete delegiert er. Der Controller liest je Task nur die
+   Task-Datei (siehe „Gates und Dokumentation“).
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
