@@ -28,7 +28,7 @@ import {
   anchorRects,
   anchorsFor,
   boxAround,
-  buildingPolys,
+  buildingClips,
   clipOutOccluders,
   clothesOf,
   coastFor,
@@ -282,7 +282,7 @@ function collectBadges(world: World, cam: Camera, range: TileRange): void {
 interface LightGroup {
   windows: LightRect[];
   lanterns: LightRect[];
-  clip: Poly[];
+  clip: Poly[][];
 }
 
 interface WindowLights {
@@ -344,11 +344,17 @@ function occludersOf(
       const b = world.buildings[it.id];
       if (!b || shadowOnly.has(b.id)) return null;
       const def = BUILDING_DEFS[b.defId];
-      return { box: toScreen(spriteBounds(def, b)), polys: once(() => buildingPolys(cam, def, b)) };
+      return {
+        box: toScreen(spriteBounds(def, b)),
+        clips: once(() => buildingClips(cam, world, b)),
+      };
     }
     if (it.kind === 'tree') {
       const t = it as TreeItem;
-      return { box: toScreen(treeBounds(t)), polys: once(() => crownPolys(cam, t, world.seed)) };
+      return {
+        box: toScreen(treeBounds(t)),
+        clips: once(() => crownPolys(cam, t, world.seed).map((c) => [c])),
+      };
     }
     return null;
   });
@@ -378,7 +384,7 @@ export function render(
   for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
 
   let windowLights: WindowLights = { groups: [], k: 0 };
-  let fireClips: Poly[][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
+  let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
 
   // 1 Hintergrund
   ctx.fillStyle = PALETTE.waterDeep;

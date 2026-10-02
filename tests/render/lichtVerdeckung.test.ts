@@ -4,8 +4,13 @@ import { sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, rgbaOf } from '../../src/render/palette';
 import {
   anchorRects,
+  POLY_CACHE_MAX,
   anchorsFor,
+  buildingClips,
   crownPolys,
+  occludersAfter,
+  polyCacheStats,
+  groupDisjoint,
   pruneContained,
   type LightRect,
 } from '../../src/render/life';
@@ -203,5 +208,63 @@ describe('RF-LICHT Fensterlicht hinter Verdeckern', () => {
     const kept = pruneContained(all);
     expect(kept.length).toBeGreaterThan(0);
     expect(kept.length).toBeLessThan(all.length);
+  });
+
+  it('RF-LICHT-9 nur Flächen eines Verdeckers, die das Licht berühren, und nur Objekte nach der Quelle', () => {
+    const sq = (x: number, y: number, w: number): P[] => [
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + w },
+      { x, y: y + w },
+    ];
+    const near = sq(10, 10, 10),
+      far = sq(200, 200, 10);
+    const occ = {
+      box: { x: 0, y: 0, w: 300, h: 300 },
+      clips: () => [[near, far]],
+    };
+    const light = { x: 5, y: 5, w: 30, h: 30 };
+    expect(occludersAfter([occ, occ, null, occ], 0, light)).toEqual([[near], [near]]);
+    expect(occludersAfter([occ, occ], 1, light)).toEqual([]);
+  });
+
+  it('RF-LICHT-10 Flächen-Cache: Treffer beim zweiten Mal, neu bei anderer Stufe, Obergrenze gilt', () => {
+    world = verdeckung();
+    const cam: Camera = { x: 0, y: 0, zoom: 1 };
+    const house = at(VERDECKUNG.H2);
+    const first = buildingClips(cam, world, house);
+    const hits = polyCacheStats(world).hits;
+    expect(buildingClips(cam, world, house)).toEqual(first);
+    expect(polyCacheStats(world).hits).toBe(hits + 1);
+    house.house!.tier = 2;
+    buildingClips(cam, world, house);
+    expect(polyCacheStats(world).hits).toBe(hits + 1); // Schlüssel geändert: neu berechnet
+    const fake = { ...house };
+    for (let i = 0; i < POLY_CACHE_MAX + 5; i++)
+      buildingClips(cam, world, { ...fake, id: 10_000 + i });
+    expect(polyCacheStats(world).size).toBeLessThanOrEqual(POLY_CACHE_MAX);
+  });
+
+  it('RF-LICHT-12 groupDisjoint: Nachbarn mit gemeinsamer Kante teilen einen Clip, Überlappende nicht, Konkave allein', () => {
+    const sq = (x: number, y: number, w: number): P[] => [
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + w },
+      { x, y: y + w },
+    ];
+    const a = sq(0, 0, 10),
+      b = sq(10, 0, 10), // teilt eine Kante mit a
+      c = sq(5, 5, 10), // überlappt a und b
+      dent: P[] = [
+        { x: 40, y: 0 },
+        { x: 50, y: 0 },
+        { x: 45, y: 4 },
+        { x: 50, y: 10 },
+        { x: 40, y: 10 },
+      ];
+    const groups = groupDisjoint([a, b, c, dent]);
+    expect(groups).toEqual([[a, b], [c], [dent]]);
+    // Vereinigung bleibt erhalten
+    expect(groups.flat()).toHaveLength(4);
   });
 });
