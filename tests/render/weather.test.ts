@@ -62,6 +62,9 @@ describe('Obergrenzen (Spec 12.2)', () => {
       fire: [24, 8],
       clouds: [6, 0],
       glitter: [30, 0],
+      fish: [20, 6],
+      whales: [1, 1],
+      flocks: [4, 2],
     });
     expect(cap('walkers')).toBe(40);
     expect(cap('walkers', true)).toBe(12);
