@@ -623,3 +623,12 @@ Umsetzung als eine Spec-Runde zusammen mit dem Gate-Plan-Ergebnis. Ampel rot: ke
 ausser Session-Ende-Retro; Umsetzung M8 erst in der Folgesession.
 
 Entscheider: L0 · Anlass: Designurteil M8-Plan, Limit 81 %
+
+## R143 · 2026-10-02 · Gate Plan M8 bestanden mit Auflagen
+
+Ruling: lead-qa OK, lead-production BEDENKEN angenommen. Auflagen (eine Runde mit R142, Sichtung L0,
+keine Zweitprüfung): QA-Hinweise 1–3; B1 lead-art merged selbst; B2 Session-/Agent-ID je E-010-Messpunkt;
+B3 Kanten, Worktree `m8-render` durch lead-art; B4 SHA nachführen; B5 Integrations-Merges pushen.
+Bestätigt: P1, W1, W3–W6. Budget lead-tech 25 (Par. 4), lead-qa 3, lead-art 4, +1 L0 (E-010).
+
+Entscheider: L0 · Anlass: Gate Plan M8
