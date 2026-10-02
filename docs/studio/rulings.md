@@ -642,3 +642,13 @@ als BUG-LICHT bei lead-art (leicht). M8 läuft weiter (deckt S1 teilweise); Aufl
 Kosten bei Irrtum: Neuschnitt der Roadmap, kein Code — `.studio/handoffs/nutzerfeedback-2026-10-02.md`
 
 Entscheider: L0 · Anlass: Nutzer-Anweisung · ADR: —
+
+## R145 · 2026-10-02 · BUG-LICHT
+
+Ruling: Kombiniertes Gate BUG-LICHT bestanden: Clip je verdecktem Gebäude in Durchgang 10
+(Verdecker Gebäudekörper und Kronen, Box-Vortest), Feuerflammen (Durchgang 7) mit demselben Clip,
+Figuren und Schiff verdecken kein Licht. Rauch nur mit, wenn derselbe Helfer mit höchstens einem
+Zusatztest reicht, sonst beobachtungen.md. Leistung: P95 `leistung-50` Nacht ≤ +10 %. — Kosten
+bei Irrtum: ein Render-Commit zurück — Archiv-Bericht lead-art Phase 1
+
+Entscheider: L0 · Anlass: Gate BUG-LICHT · ADR: —
