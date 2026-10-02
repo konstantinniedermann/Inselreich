@@ -3,7 +3,9 @@ import { PALETTE, mixHex } from './palette';
 
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
 // Reine Helfer ohne Canvas; Lage in Kachel-Anteilen, deterministisch aus `hash2`/`valueNoise`.
-// Seed-Versätze 60–89 (frei von 11, 13, 17, 19, 31–34, 41, 51, 52 und den Terrainrauschen 61–65 in terrain.ts).
+// Seed-Versätze: Blumen 60 (Rauschen) und 66–82, Büsche 90–100 (k = 0, 1 mit Schritt 5). Frei von 11, 13, 17, 19,
+// 31–34, 41, 51, 52, den Terrainrauschen 61/62 in terrain.ts und trees.ts (seed + 68 mit Argumenten `variant, k`,
+// keine Kollision).
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -62,20 +64,20 @@ export interface Shrub {
 export function shrubsFor(seed: number, x: number, y: number, sides: ForestSides): Shrub[] {
   const active = (['left', 'right', 'up', 'down'] as const).filter((s) => sides[s]);
   if (active.length === 0) return [];
-  const n = Math.floor(hash2(seed + 80, x, y) * 3); // 0..2
+  const n = Math.floor(hash2(seed + 90, x, y) * 3); // 0..2
   const out: Shrub[] = [];
   for (let k = 0; k < n; k++) {
-    const side = active[Math.floor(hash2(seed + 81 + k * 5, x, y) * active.length)]!;
-    const r = 0.035 + 0.025 * hash2(seed + 82 + k * 5, x, y);
-    const along = 0.15 + 0.7 * hash2(seed + 83 + k * 5, x, y);
-    const across = r + 0.02 + 0.18 * hash2(seed + 84 + k * 5, x, y); // Abstand zur Waldkante
+    const side = active[Math.floor(hash2(seed + 91 + k * 5, x, y) * active.length)]!;
+    const r = 0.035 + 0.025 * hash2(seed + 92 + k * 5, x, y);
+    const along = 0.15 + 0.7 * hash2(seed + 93 + k * 5, x, y);
+    const across = r + 0.02 + 0.18 * hash2(seed + 94 + k * 5, x, y); // Abstand zur Waldkante
     const horizontal = side === 'left' || side === 'right';
     const near = side === 'left' || side === 'up' ? across : 1 - across;
     out.push({
       x: horizontal ? near : along,
       y: horizontal ? along : near,
       r,
-      tone: hash2(seed + 85 + k * 5, x, y) < 0.5 ? 0 : 1,
+      tone: hash2(seed + 95 + k * 5, x, y) < 0.5 ? 0 : 1,
     });
   }
   return out;
