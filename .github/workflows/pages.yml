@@ -1,6 +1,7 @@
 # Baut das Spiel und veröffentlicht `dist/` auf GitHub Pages.
 # Voraussetzung: Pages ist im Repo aktiviert (Settings → Pages → Source: GitHub Actions);
 # auf dem Free-Plan braucht das ein öffentliches Repo.
+# Nach dem Build prüft `tools/pages/check.ts` die Plattformgrenzen (R130, Schwelle 50 %).
 # `vite.config.ts` setzt `base: './'` (relative Pfade), deshalb braucht der Build kein `--base`.
 name: Pages
 on:
@@ -25,6 +26,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Plattformgrenze GitHub Pages prüfen (R130)
+        run: node tools/pages/check.ts dist
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
