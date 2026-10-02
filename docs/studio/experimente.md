@@ -26,7 +26,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start), `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`; Folgepaket lead-production: `tools/studio/context.py` (Warnblock) mit Test
 - Ruling: R129 (1)
 - Start: Handbuch 1.9 (Regel); Start-Hook-Warnung folgt als Werkzeug-Paket
-- Bewertung: Zwischenstand M7-UX: (a)–(c) je 0; Session `2a96d607` 2 min parallel, nur lesend ([Retro M7-UX](retros/2026-10-02-meilenstein-m7ux.md))
+- Bewertung: Ende M8: (a)–(c) je 0 (Ausgangswert 2/4/1); Session-Übergang 2042a460 → 58d6bc4a ohne Überlappung, einzig `2a96d607` 2 min nur lesend (M7-UX); Start-Hook-Warnung nicht umgesetzt → Empfehlung behalten, Ruling offen ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
 
 ## E-008 · laufend · Ein Gate für Folgepakete
 
@@ -37,7 +37,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md`, `docs/studio/gates.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R129 (2)
 - Start: Handbuch 1.9
-- Bewertung: Zwischenstand M7-UX: noch kein Folgepaket (PAGES-LIMIT war Nutzerauftrag)
+- Bewertung: Ende M8 (BUG-LICHT, H-R1, H-R2): je 2 Starts bis zum ersten Code (Schwelle ≤ 4) erfüllt; 0 BEDENKEN wegen Spec-/Plan-Lücke erfüllt; Erstabnahme 1/3 = 33 % < 50 % verfehlt (Ursachen Code-Fix H-R1, visuelle Auflage H-R2 R160, nicht die Gate-Form) → Empfehlung behalten, Ruling offen ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
 
 ## E-010 · laufend · Controller-Wechsel nach der Hälfte der Tasks
 
@@ -48,6 +48,39 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/CHANGELOG.md`
 - Ruling: R136, Start R137
 - Start: Handbuch 1.11 (Messung ab Plan M8)
+- Bewertung: M-1 2,31 Mio./Task ≤ 3,5; M-2 0; M-3 4,21 Mio./Task > 3,5 (Störgrössen: Warten über 5-h-Reset, D1 und Diagnose selbst); Summe 3,02 Mio./Task (M7-UX 5,02); Abbruch nicht ausgelöst → Empfehlung angepasst: Schwelle je Controller, Übergabe vor Reset-Wartezeit, Doku delegieren, Messung M10 mit metrics.py-Zeile je Agent; Ruling offen ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
+
+## E-011 · vorgeschlagen · Rebase-Verbot in Briefing und Guard
+
+- Hypothese: Wenn die Briefing-Vorlage im festen Regelteil „Integration nur per `merge` bzw. `git pull --ff-only`, nie Rebase“ trägt und der Guard `git pull --rebase`/`-r`/`--rebase=…` sowie `git config pull.rebase true` blockt, dann weist niemand mehr Rebase an und keiner wird ausgeführt.
+- Messgrösse: über M9 und M10 0 Briefings in `.studio/archiv/briefings/` mit Rebase-Anweisung (ausgenommen Verbotssätze) und 0 ausgeführte Rebases auf geteilten Branches; Guard-Test für die vier Formen grün (Ausgangswert Session 58d6bc4a: 3 Anweisungen, 1 Ausführung; R124 (2): 1 Ausführung).
+- Zeitraum: bis Ende M10.
+- Rückfall: `templates/briefing.md` und `tools/studio/guard.py` im Stand vor der Umsetzung (Handbuch 1.11, `git show <commit>` im CHANGELOG).
+- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/CHANGELOG.md`, `docs/studio/STUDIO.md` (Version); Werkzeug-Paket lead-production: `tools/studio/guard.py`, `tools/studio/tests/`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-012 · vorgeschlagen · Pages nur bei Spieländerungen
+
+- Hypothese: Wenn `pages.yml` Pushes ignoriert, die nur Doku und Studio-Dateien ändern (`paths-ignore`: `docs/**`, `.superpowers/**`, `.claude/**`, `tools/studio/**`; vorher prüfen, dass nichts davon in `dist/` landet), dann sinken die Deploys stark und Spiel-Merges werden nicht mehr abgebrochen.
+- Messgrösse: Pages-Läufe je Session mit `docs:`-Titel ≤ 10 % (Ausgangswert 24 von 31 = 77 %) und 0 abgebrochene Läufe zu Spiel-Merges über die nächsten 3 Sessions; Gegenprobe: jeder Merge mit `src/`, `public/` oder `index.html` hat einen grünen Pages-Lauf.
+- Zeitraum: die nächsten 3 Sessions.
+- Rückfall: `.github/workflows/pages.yml` ohne `paths-ignore` (Stand vor der Umsetzung).
+- Dateien: `.github/workflows/pages.yml` (Paket lead-production), `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-013 · vorgeschlagen · Budget-Log je Start, Phase gleich Paket-ID
+
+- Hypothese: Wenn L0 jede Freigabe mit `--phase` gleich der Paket-ID loggt (je Paket eine Zeile, auch für jeden Integrator-Start), dann stimmen Dashboard-Zählung und Lead-Bericht überein.
+- Messgrösse: über M9 und M10 0 Abweichungen zwischen „verbraucht“ im Lead-Bericht und der Dashboard-Zeile, 0 Starts ohne passende Freigabe (Ausgangswert Session 58d6bc4a: lead-art 6/4 statt 3/4, 1 Integrator-Start ohne Log).
+- Zeitraum: bis Ende M10.
+- Rückfall: Handbuch 1.11, Abschnitt „Budget-Zählung“ in `verbesserung.md`.
+- Dateien: `docs/studio/verbesserung.md` (Budget-Zählung), `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
 - Bewertung: –
 
 ## E-006 · vorgeschlagen · Exklusive Arbeitsbäume
