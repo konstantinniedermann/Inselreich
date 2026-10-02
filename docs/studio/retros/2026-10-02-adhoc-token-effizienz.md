@@ -95,3 +95,11 @@ Messbarkeit: Keiner der Vorschläge verschlechtert die Messung. Die Messgrössen
 ## Änderungen an lernen.md
 
 - neu: Effizienz-Ampel jeder Retro lesen (Befund B6); Persona-Start als `general-purpose` immer mit `model` (B5) · gestrichen: die Zeile „Das Modell im Agent-Aufruf explizit setzen“ wird mit der neuen Zeile zusammengelegt
+
+## Nachtrag Session-Ende
+
+Diese Retro gilt nach Ruling als Kurz-Retro der Session ca427887.
+
+- (a) Die L0-Analyse hat Output unterzählt. Zählregel: je Message-ID das Maximum je Feld, nicht die erste Streaming-Zeile.
+- (b) Der Budget-Fix 2663c66 beruhte auf einer unbelegten Ursache, machte neue Fehlalarme und wurde zurückgenommen (R169). Lehre: erst die Ursache gegen echte Events belegen, dann fixen.
+- (c) Erster Messpunkt E-010: Die Session lief ohne Lead. `python3 tools/studio/metrics.py --efficiency --sessions 1`: L0 52,6 %, Studio-Betrieb 38,9 %, Umsetzer 0 % (keine Spielarbeit, R169 (4)), Persona-Starts als `general-purpose` auf opus 0, opus-Anteil 52,6 %, L0-Kontext Max 198k, grösste gelesene Datei 19,8 KB. Kein Steuerungsvergleich möglich (Leads 0 %).
