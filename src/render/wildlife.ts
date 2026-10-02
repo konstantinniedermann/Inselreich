@@ -94,14 +94,12 @@ const BIRDS_PER_FLOCK = [6, 4] as const;
 
 export const FISH_SHIMMER = rgbaOf(PALETTE.waterDeep, 0.32);
 const FISH_RIM = rgbaOf(PALETTE.waterDeep, 0.75);
-const FISH_SILVER = mixHex(PALETTE.foam, PALETTE.waterShallow, 0.5);
+export const FISH_SILVER = mixHex(PALETTE.foam, PALETTE.waterShallow, 0.5);
 const SPLASH_RGB = PALETTE.foam;
-export const WHALE_COLOR = mixHex(
-  mixHex(PALETTE.roofSlate, PALETTE.rockDark, 0.35),
-  '#000000',
-  0.3,
-);
-const WHALE_GLOSS = mixHex(PALETTE.roofSlate, PALETTE.foam, 0.3);
+// Nur Hex-Werte in mixHex (rgbOf parst kein `rgb(…)`): dunkles Blaugrau, Unterseite dunkler, Glanz heller
+const WHALE_DARK = '#1c2430';
+export const WHALE_COLOR = mixHex(PALETTE.roofSlate, WHALE_DARK, 0.35);
+export const WHALE_GLOSS = mixHex(PALETTE.roofSlate, PALETTE.foam, 0.3);
 export const BIRD_COLOR = mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5);
 
 const clampTime = (t: number): number => (Number.isFinite(t) ? Math.max(0, t) : 0);
@@ -450,17 +448,18 @@ function ringPath(ctx: CanvasRenderingContext2D, c: Pt2, rx: number): void {
   }
 }
 
-/** Rücken-Profil: Höhe 0…1 bei `u` ∈ [−1, 1] (Kopf bei +1): gewölbter Buckel, kleine Finne hinter der Mitte. */
-function backProfile(u: number): number {
-  const dome = Math.pow(Math.max(0, 1 - u * u), u > 0 ? 0.7 : 1);
-  const fin = Math.max(0, 1 - Math.abs(u + 0.35) / 0.1) * 0.22;
-  return Math.min(1.15, dome + fin * (dome > 0 ? 1 : 0));
-}
+/** Rücken-Profil: Höhe 0…1 bei `u` ∈ [−1, 1] (Kopf bei +1): gewölbter Buckel ohne Finne. */
+const backProfile = (u: number): number => Math.pow(Math.max(0, 1 - u * u), u > 0 ? 0.7 : 1);
+/** Rückenfinne: Dreieck bei `FIN_U` (leicht hinter der Mitte), Halbbreite `FIN_HALF`, Höhe 0,12 · ISO_H. */
+const FIN_U = -0.35;
+const FIN_HALF = 0.1;
+const FIN_H = 0.12 * ISO_H;
+const finProfile = (u: number): number => Math.max(0, 1 - Math.abs(u - FIN_U) / FIN_HALF);
 const WHALE_LEN = 1.8; // Kacheln
 const WHALE_HUMP = 0.42 * ISO_H;
 const FLUKE_W = 0.6 * ISO_W;
 const FLUKE_H = 0.75 * ISO_H;
-const WHALE_UNDER = mixHex(WHALE_COLOR, '#000000', 0.35);
+export const WHALE_UNDER = mixHex(PALETTE.roofSlate, WHALE_DARK, 0.65);
 
 /**
  * Wal im Profil (Bildraum): gewölbter Rücken über der Wasserlinie, nur nach links oder rechts gewendet
@@ -481,17 +480,17 @@ function drawWhale(ctx: CanvasRenderingContext2D, cam: Camera, p: WhalePose): vo
     const N = 14;
     const top = (u: number): number =>
       b.y -
-      H * p.lift * backProfile(u) +
+      (H * backProfile(u) + FIN_H * z * finProfile(u)) * p.lift +
       H * 0.12 * p.swell * (1 - u * u) + // flacher Wellenbogen beim Schwimmen
       H * 0.85 * p.curl * Math.max(0, u); // Kopf sinkt beim Abtauchen zuerst
     const xs = (u: number): number => b.x + f * u * (L / 2);
     const water = b.y;
     const clampY = (y: number): number => Math.min(water, y);
     const outline: { x: number; y: number }[] = [];
-    for (let i = 0; i <= N; i++) {
-      const u = -1 + (2 * i) / N;
-      outline.push({ x: xs(u), y: clampY(top(u)) });
-    }
+    const us = Array.from({ length: N + 1 }, (_, i) => -1 + (2 * i) / N);
+    us.push(FIN_U - FIN_HALF, FIN_U, FIN_U + FIN_HALF); // Finne mit eigenen Stützpunkten
+    us.sort((a, b) => a - b);
+    for (const u of us) outline.push({ x: xs(u), y: clampY(top(u)) });
     // Körper
     ctx.fillStyle = WHALE_COLOR;
     ctx.beginPath();
@@ -516,7 +515,7 @@ function drawWhale(ctx: CanvasRenderingContext2D, cam: Camera, p: WhalePose): vo
     ctx.strokeStyle = WHALE_GLOSS;
     ctx.lineWidth = Math.max(1, 1.2 * z);
     ctx.beginPath();
-    for (let i = 3; i <= N - 3; i++) {
+    for (let i = 3; i < outline.length - 3; i++) {
       const o = outline[i]!;
       if (i === 3) ctx.moveTo(o.x, o.y - 0.5 * z);
       else ctx.lineTo(o.x, o.y - 0.5 * z);

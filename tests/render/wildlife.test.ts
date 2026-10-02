@@ -3,7 +3,7 @@ import { centerOn, visibleTileRange, type TileRange } from '../../src/render/cam
 import { phaseAt } from '../../src/render/daynight';
 import { CAPS } from '../../src/render/limits';
 import { ISO_H, ISO_W } from '../../src/render/iso';
-import { PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
+import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import { render, type RenderFx } from '../../src/render/renderer';
 import { coastField } from '../../src/render/terrainField';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
@@ -13,6 +13,9 @@ import {
   WHALE_EPISODE_MS,
   WHALE_VISIBLE_MS,
   WHALE_COLOR,
+  WHALE_GLOSS,
+  WHALE_UNDER,
+  FISH_SILVER,
   drawWaterLife,
   type WhalePose,
   type WildlifeHit,
@@ -27,6 +30,7 @@ import { shipTile } from '../../src/render/ship';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import { fakeCtx, type Ev } from './fakeCtx';
 
 const h = vi.hoisted(() => ({ calls: [] as { kind: string; at: number }[] }));
@@ -424,6 +428,16 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       expect(body.w).toBeGreaterThanOrEqual(1.6 * (ISO_W / 2) * zoom - 1);
       expect(body.w).toBeLessThanOrEqual(2 * (ISO_W / 2) * zoom + 1);
       expect(body.bottom - body.top).toBeGreaterThanOrEqual(0.35 * ISO_H * zoom - 0.5); // Buckel
+      // Rückenfinne: lokaler Höcker hinter der Mitte (heading 0.5 blickt nach rechts, also links der Mitte)
+      const top = bodyFill.points.slice(0, -2);
+      const midX = (Math.min(...top.map((q) => q.x)) + Math.max(...top.map((q) => q.x))) / 2;
+      const bump = top.some((q, i) => {
+        if (i === 0 || i === top.length - 1 || q.x >= midX) return false;
+        const a = top[i - 1]!,
+          c = top[i + 1]!;
+        return (a.y + c.y) / 2 - q.y >= 0.08 * ISO_H * zoom && q.y < a.y && q.y < c.y;
+      });
+      expect(bump).toBe(true);
       const fl = draw(pose({ phase: 'fluke', lift: 0, fluke: 1 }), zoom);
       const flukeFill = fl.find((e) => e.op === 'fill' && e.style === WHALE_COLOR)!;
       const fext = ext(flukeFill.points);
@@ -447,6 +461,29 @@ describe('Wasser- und Luftleben (H-R2)', () => {
         ),
       ).toHaveLength(0);
     }
+  });
+
+  it('RF-11 Farbkonstanten gültig (kein verschachteltes mixHex): endlich, nicht Schwarz; Wal dunkles Blaugrau mit Glanz', () => {
+    const luma = (c: string) => {
+      const [r, g, b] = rgbOfCss(c);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    };
+    for (const c of [WHALE_COLOR, WHALE_UNDER, WHALE_GLOSS, FISH_SILVER, BIRD_COLOR]) {
+      const rgb = rgbOfCss(c);
+      expect(rgb.every((v) => Number.isFinite(v))).toBe(true);
+      expect(rgb.join(',')).not.toBe('0,0,0');
+      expect(c).not.toContain('NaN');
+    }
+    expect(luma(WHALE_COLOR)).toBeGreaterThanOrEqual(0.22);
+    expect(luma(WHALE_COLOR)).toBeLessThanOrEqual(0.35);
+    expect(luma(WHALE_UNDER)).toBeLessThan(luma(WHALE_COLOR));
+    expect(luma(WHALE_GLOSS)).toBeGreaterThan(luma(WHALE_COLOR));
+    const [br, bg, bb] = rgbOfCss(WHALE_COLOR);
+    expect(bb).toBeGreaterThan(br); // blaugrau, nicht rötlich
+    expect(
+      deltaE2000(rgbToLab(rgbOfCss(WHALE_COLOR)), hexToLab(PALETTE.waterDeep)),
+    ).toBeGreaterThan(8);
+    expect(bg).toBeGreaterThan(0);
   });
 
   it('RF-10 Startansicht am Kontor (Zoom 1, 980×650) zeigt bei Tag und klar Fische und Vögel, Seeds 1 bis 40', () => {
