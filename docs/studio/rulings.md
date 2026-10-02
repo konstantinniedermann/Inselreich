@@ -534,3 +534,12 @@ nachziehen; QA-Bild. Umsetzung lead-tech vor Merge, Final-Review prüft das Delt
 nicht blockierend (beobachtungen.md). — Kosten bei Irrtum: drei CSS-Zeilen.
 
 Entscheider: L0 · Anlass: Designurteil M7-UX
+
+## R133 · 2026-10-02 · Gate Merge M7-UX: BEDENKEN
+
+Ruling: Urteil lead-qa angenommen. Vor Merge: H1 (Tab-Kreislauf `buildMenu.ts`) durch Entfernen von
+Handler und `tabOrder` samt Test, N3/N4 (README, arc42); dann Re-Review, Browser-Prüfung AK-UX-20,
+Probe-Merge. Bestätigt: Esc bricht Startkarten-Bestätigung ab; AK-UX-28 A6 (Handel in 15 s
+gefunden) erfüllt. N1/N2/N5–N8, 15 Minor → `beobachtungen.md` (lead-qa).
+
+Entscheider: L0 · Anlass: Final-Review M7-UX
