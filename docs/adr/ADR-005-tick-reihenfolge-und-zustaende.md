@@ -49,3 +49,15 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
 - **Zustand `burning`:** gesetzt beim Brandbeginn zusammen mit `outageUntil`; er hat Vorrang vor
   `notConnected` (Produktion und `recomputeConnectivity` lassen ihn stehen) und endet am Ende des Schritts
   `outageUntil` mit `connected ? 'ok' : 'notConnected'`. Massgeblich für den Ausfall ist `outageUntil`.
+
+## Nachtrag M8 (2026-10-02): Inputs als Liste, zweites Ziel
+
+- **Inputs als Liste, atomar entnommen:** `BuildingDef.consumes` ist `readonly GoodId[]` (je 1 Einheit je Zyklus).
+  Bei `progress 0` entnimmt ein Betrieb je 1 Einheit aller Inputs nur, wenn jeder Input mit Bestand ≥ 1 im Lager
+  liegt; sonst entnimmt er nichts. Es gibt keinen Teilzyklus und keine Reservierung.
+- **`waitingInput` bis alle Inputs entnommen werden konnten.** Konkurrieren Betriebe um die letzte Einheit, gewinnt
+  die kleinere Id (Iterationsreihenfolge von `world.buildings`). Ein-Input-Betriebe verhalten sich wie bisher.
+- **Siegschritt setzt `won`, dann `wonMerchants`:** erst `won` bei `citizens ≥ WIN_CITIZENS` (Bürger und höher),
+  danach `wonMerchants` bei `won && merchants ≥ WIN_MERCHANTS`. Beide werden nie zurückgesetzt. Die Reihenfolge der
+  Systeme bleibt; die Sperre der Stufe 4 liest `won` aus dem Vorschritt, der früheste Aufstieg 3 → 4 liegt bei
+  `W + 50`.

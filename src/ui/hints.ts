@@ -1,7 +1,7 @@
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { checkAfford, refundCost } from '../sim/economy';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
@@ -127,6 +127,12 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   },
   { source: 'upgradeStatus', pattern: /^Kein Wohnhaus$/, show: same },
   { source: 'upgradeStatus', pattern: /^Höchste Stufe erreicht$/, show: same },
+  {
+    source: 'upgradeStatus',
+    pattern: /^Erst nach dem Ziel$/,
+    show: () => `Erst nach dem Ziel (${WIN_CITIZENS} ${TIERS[3].name})`,
+  },
+  { source: 'upgradeStatus', pattern: /^Erst ab \d+ Bürgern \(jetzt \d+\)$/, show: same },
   { source: 'upgradeStatus', pattern: /^Haus nicht voll belegt$/, show: same },
   {
     source: 'upgradeStatus',

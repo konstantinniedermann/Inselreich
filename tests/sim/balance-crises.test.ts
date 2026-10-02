@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TIERS } from '../../src/sim/defs/tiers';
 import { deserialize, serialize } from '../../src/sim/save';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
@@ -21,12 +22,22 @@ function fnv1a32(s: string): number {
   return h;
 }
 
-/** Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt. */
+/**
+ * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
+ * (M8-Spec 16.1): `stock.glass`, `sellPct.glass`, `wonMerchants` und je Haus `services.bath` entfernt.
+ */
 function normalized(json: string): string {
   const raw = JSON.parse(json) as Record<string, unknown>;
   raw.version = 2;
   delete raw.crisisLevel;
   delete raw.crisis;
+  delete (raw.stock as Record<string, unknown>).glass;
+  delete (raw.sellPct as Record<string, unknown>).glass;
+  delete raw.wonMerchants;
+  for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>)) {
+    const house = b.house as { services: Record<string, unknown> } | undefined;
+    if (house) delete house.services.bath;
+  }
   return JSON.stringify(raw);
 }
 
@@ -141,5 +152,18 @@ describe('M6 Krisen-Lauf', () => {
     expect(b.at).toBe(2601);
     expect(serialize(b.w)).toBe(serialize(a));
     expect(b.winTick).toBe(ta.winTick);
+  });
+});
+
+describe('M8 Fingerabdruck (AK-S1-15)', () => {
+  it('AK-S1-15 Stufe off bitgleich bis auf die M8-Felder: Sieg 6050, minMoney 57, Fingerabdruck, Hebel null', () => {
+    expect(TIERS[4].unlockCitizens).toBeNull();
+    const w = createWorld(3);
+    const t = buildColony(w);
+    expect(t.winTick).toBe(6050);
+    expect(t.minMoney).toBe(57);
+    expect(w.stock.glass).toBe(0);
+    expect(w.wonMerchants).toBe(false);
+    expect(fnv1a32(normalized(serialize(w)))).toBe(OFF_FINGERPRINT);
   });
 });

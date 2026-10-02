@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { tooltipLines } from '../../src/ui/buildMenu';
 import {
   NAV_KEYS,
   TOOL_HOTKEYS,
@@ -75,7 +76,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
 
   it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
     for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(15);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(17);
   });
 
   it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
@@ -147,4 +148,36 @@ it('Untermenü: Klick schaltet um, Bau-Werkzeug öffnet seine Kategorie, andere 
   );
   expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'select' } })).toBeNull();
   expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'road' } })).toBeNull();
+});
+
+describe('M8 Taste J (AK-S1-20)', () => {
+  it('AK-S1-20 J wählt das Badehaus, Label „J“, J als 16. Taste, bisherige unverändert, „Badehaus (J)“', () => {
+    expect(hotkeyAction('j', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'bathhouse' },
+    });
+    expect(hotkeyAction('J', NONE, false)).not.toBeNull();
+    expect(hotkeyLabel({ kind: 'build', defId: 'bathhouse' })).toBe('J');
+    const keys = Object.keys(TOOL_HOTKEYS);
+    expect(keys.slice(0, 15).join('')).toBe('rxhkumflbgvznte');
+    expect(keys[15]).toBe('j');
+    expect(hotkeyList()).toContainEqual({ key: 'J', label: 'Badehaus' });
+    expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })[0]).toBe('Badehaus (J)');
+  });
+});
+
+describe('M8 Taste O (AK-S2-18)', () => {
+  it('AK-S2-18 O wählt die Glashütte, Label „O“, 17 Tasten, bisherige unverändert, Tooltip „Glashütte (O)“', () => {
+    expect(hotkeyAction('o', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'glassworks' },
+    });
+    expect(hotkeyLabel({ kind: 'build', defId: 'glassworks' })).toBe('O');
+    const keys = Object.keys(TOOL_HOTKEYS);
+    expect(keys).toHaveLength(17);
+    expect(keys.join('')).toBe('rxhkumflbgvzntejo');
+    expect(hotkeyList().filter((e) => e.key === 'O')).toEqual([{ key: 'O', label: 'Glashütte' }]);
+    expect(hotkeyList().filter((e) => e.key === 'J')).toEqual([{ key: 'J', label: 'Badehaus' }]);
+    expect(tooltipLines({ kind: 'build', defId: 'glassworks' })[0]).toBe('Glashütte (O)');
+  });
 });

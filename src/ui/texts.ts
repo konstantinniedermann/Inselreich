@@ -31,7 +31,21 @@ export function burningText(b: Building, tick: number): string {
   return `Brennt — wieder in Betrieb in ${formatGameTime(left)}`;
 }
 
-export function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {
+/** Güternamen mit „und“ verbunden: „Holz“, „Stein und Holz“ (Reihenfolge wie übergeben). */
+export function goodList(goods: readonly GoodId[]): string {
+  const names = goods.map((g) => GOODS[g].name);
+  return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} und ${names.at(-1)}`;
+}
+
+/**
+ * Zustandstext des Info-Panels. `missing` = fehlende Inputs (`missingInputs`); leer oder fehlend → alle Inputs
+ * aus `consumes` (M8 14.4, Input seit dem letzten Schritt eingetroffen).
+ */
+export function stateInfo(
+  b: Building,
+  tick: number,
+  missing?: readonly GoodId[],
+): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
   if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
   // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
@@ -41,11 +55,10 @@ export function stateInfo(b: Building, tick: number): { text: string; ok: boolea
     case 'ok':
     case 'notConnected': // wieder angebunden, `state` folgt erst im nächsten Tick
       return { text: 'In Betrieb', ok: true };
-    case 'waitingInput':
-      return {
-        text: `Wartet auf ${def.consumes ? GOODS[def.consumes].name : 'Rohstoff'}`,
-        ok: false,
-      };
+    case 'waitingInput': {
+      const goods = missing && missing.length > 0 ? missing : (def.consumes ?? []);
+      return { text: `Wartet auf ${goods.length > 0 ? goodList(goods) : 'Rohstoff'}`, ok: false };
+    }
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'burning':

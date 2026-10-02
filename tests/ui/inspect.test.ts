@@ -8,7 +8,10 @@ import {
   upgradeOkText,
   upgradeReasonTexts,
 } from '../../src/ui/inspect';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import type { Building } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { goodList, stateInfo } from '../../src/ui/texts';
 import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
@@ -126,5 +129,29 @@ describe('Inselchronik und Aufstiegszeilen (M7-UX Task 8)', () => {
     const texts = upgradeReasonTexts(w, house);
     expect(texts).toContain(`✗ Zu wenig Geld: ${TIERS[1].upgradeCost!.money} nötig, 0 vorhanden`);
     for (const t of texts) expect(t).not.toContain('Tick');
+  });
+});
+
+describe('M8 Info-Texte (AK-U2-02)', () => {
+  it('AK-U2-02 stateInfo: fehlende Inputs mit „und“, leere Liste → alle Inputs; Weberei; producesText Glashütte', () => {
+    const gw: Building = {
+      id: 1,
+      defId: 'glassworks',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'waitingInput',
+    };
+    expect(stateInfo(gw, 0, ['wood'])).toEqual({ text: 'Wartet auf Holz', ok: false });
+    expect(stateInfo(gw, 0, ['stone', 'wood']).text).toBe('Wartet auf Stein und Holz');
+    expect(stateInfo(gw, 0, []).text).toBe('Wartet auf Stein und Holz');
+    expect(stateInfo(gw, 0).text).toBe('Wartet auf Stein und Holz');
+    const weaver: Building = { ...gw, defId: 'weaver' };
+    expect(stateInfo(weaver, 0, ['wool']).text).toBe('Wartet auf Wolle');
+    expect(stateInfo(weaver, 0).text).toBe('Wartet auf Wolle');
+    expect(producesText(BUILDING_DEFS.glassworks, false)).toBe('Erzeugt Glas alle 5 s');
+    expect(goodList(['stone', 'wood'])).toBe('Stein und Holz');
+    expect(goodList(['wool'])).toBe('Wolle');
   });
 });
