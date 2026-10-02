@@ -113,6 +113,15 @@ body {
   padding: 8px;
   font-size: 14px;
 }
+/* Einspaltig (< 900 px): das Panel bleibt unter dem Spielfeld und scrollt, statt es zu verdrängen */
+@media (max-width: 899px) {
+  #panel {
+    max-height: 38vh;
+  }
+  #game {
+    overflow: hidden;
+  }
+}
 @media (min-width: 900px) {
   #app {
     grid-template-columns: 1fr 280px;
