@@ -115,14 +115,14 @@ P1 ist eine **bestätigte Abweichung** (R143): Der Wortlaut von AK-S2-17 in der 
 geänderte UI-Testdatei `hotkeys.test.ts`"); er gilt für M8 nur sinngemäss wie in Zeile P1 beschrieben. P2–P6 hat
 lead-qa als haltbar ohne Testlücke beurteilt; sie gelten mit dem bestandenen Gate Plan.
 
-| Nr. | Spec sagt                                                                                                                                             | Plan macht                                                                                                                                                                                                                                                                                                                                                                                                                     | Grund                                                                                                                                               |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1  | S2: UI nur Typanpassung; `producerOf`-Vorstufe/`consumerOf` bis U2 nur Ein-Input-Gebäude; einzige geänderte UI-Testdatei `hotkeys.test.ts` (AK-S2-17) | Task 4 setzt die **endgültige** Listen-Semantik in `guide.ts`, `texts.ts`, `inspect.ts`, `buildMenu.ts` um. Damit wandern **AK-U2-01, AK-U2-02, AK-U2-08, AK-U2-09** nach Task 4; `tests/ui/guide.test.ts` (Steinbruch-Abhilfe „… oder baue Glashütte (O)") und `tests/ui/tooltip.test.ts`/`inspect.test.ts` ändern sich bewusst in Task 4. AK-S2-17 gilt sinngemäss: kein UI-Test ändert sich ausser den in Task 4 genannten. | Kein Wegwerf-Code (YAGNI, L0-Auftrag zum Plan). Seit R140 gibt es keinen sichtbaren Zwischenstand S2 auf `main`; der Filter hatte nur diesen Zweck. |
-| P2  | `missingInputs` in S3 (AK-S3-04)                                                                                                                      | `missingInputs` entsteht in **Task 3** (`queries.ts` gehört S2 ohnehin), AK-S3-04 wird dort geprüft                                                                                                                                                                                                                                                                                                                            | Task 4 braucht es für `stateInfo` und `remedyText`.                                                                                                 |
-| P3  | `MAP_SIGNS`-Legendenzeile in R1 (AK-R1-03), R1 nach U2                                                                                                | Die Zeile ändert **Task 8** (Owner `guide.ts` im UI-Strang), nur wenn K2 nicht gestrichen ist; den Wortlaut des Zeichens liefert `lead-art` vor Task 8 (Übergabe `.studio/handoffs/m8-r1-symbol.md`). Der Symbolname ist fest: `Symbol.shape` bekommt `'bath'`. R1 läuft parallel zu Task 8.                                                                                                                                   | Ruling R141 („`MAP_SIGNS`-Zeile an U2"); R1 und UI-Strang haben damit getrennte Dateien.                                                            |
-| P4  | U1 und U2 als zwei Pakete                                                                                                                             | **ein** Task 8 (U1 + Rest U2), zwei parallele Browser-Checks                                                                                                                                                                                                                                                                                                                                                                   | Nach P1 bleibt von U2 nur die `MAP_SIGNS`-Zeile und die Browser-Abnahme; ein eigener Implementierer-Start lohnt nicht.                              |
-| P5  | S1 und S2 je ein Paket, jedes hält `make check` grün                                                                                                  | S1 = Task 1 + Task 2, S2 = Task 3 + Task 4 (Sim und Folgen getrennt, Tasks 2 ∥ 3 und 4 ∥ 5 parallel). Grün ist jede **Welle** (siehe „Wellen"); zwischen Task 1 und 2 bzw. 3 und 4 sind nur die dort benannten Prüfungen rot.                                                                                                                                                                                                  | Parallelität (R67) bei getrennter Datei-Ownership; Sim- und UI-Folgen haben verschiedene Personas.                                                  |
-| P6  | D1 als eigener Doku-Strang                                                                                                                            | `lead-tech` schreibt D1 selbst, kein Start                                                                                                                                                                                                                                                                                                                                                                                     | Persona lead-tech führt arc42 und README mit.                                                                                                       |
+| Nr. | Spec sagt                                                                                                                                             | Plan macht                                                                                                                                                                                                                                                                                                                                                                                                                                        | Grund                                                                                                                                               |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | S2: UI nur Typanpassung; `producerOf`-Vorstufe/`consumerOf` bis U2 nur Ein-Input-Gebäude; einzige geänderte UI-Testdatei `hotkeys.test.ts` (AK-S2-17) | Task 4 setzt die **endgültige** Listen-Semantik in `guide.ts`, `texts.ts`, `inspect.ts`, `buildMenu.ts` um. Damit wandern **AK-U2-01, AK-U2-02, AK-U2-08, AK-U2-09** nach Task 4; `tests/ui/guide.test.ts` (R0; die Steinbruch-Abhilfe Z. 152 bleibt nach R151 W9 unverändert) und `tests/ui/tooltip.test.ts`/`inspect.test.ts` ändern sich bewusst in Task 4. AK-S2-17 gilt sinngemäss: kein UI-Test ändert sich ausser den in Task 4 genannten. | Kein Wegwerf-Code (YAGNI, L0-Auftrag zum Plan). Seit R140 gibt es keinen sichtbaren Zwischenstand S2 auf `main`; der Filter hatte nur diesen Zweck. |
+| P2  | `missingInputs` in S3 (AK-S3-04)                                                                                                                      | `missingInputs` entsteht in **Task 3** (`queries.ts` gehört S2 ohnehin), AK-S3-04 wird dort geprüft                                                                                                                                                                                                                                                                                                                                               | Task 4 braucht es für `stateInfo` und `remedyText`.                                                                                                 |
+| P3  | `MAP_SIGNS`-Legendenzeile in R1 (AK-R1-03), R1 nach U2                                                                                                | Die Zeile ändert **Task 8** (Owner `guide.ts` im UI-Strang), nur wenn K2 nicht gestrichen ist; den Wortlaut des Zeichens liefert `lead-art` vor Task 8 (Übergabe `.studio/handoffs/m8-r1-symbol.md`). Der Symbolname ist fest: `Symbol.shape` bekommt `'bath'`. R1 läuft parallel zu Task 8.                                                                                                                                                      | Ruling R141 („`MAP_SIGNS`-Zeile an U2"); R1 und UI-Strang haben damit getrennte Dateien.                                                            |
+| P4  | U1 und U2 als zwei Pakete                                                                                                                             | **ein** Task 8 (U1 + Rest U2), zwei parallele Browser-Checks                                                                                                                                                                                                                                                                                                                                                                                      | Nach P1 bleibt von U2 nur die `MAP_SIGNS`-Zeile und die Browser-Abnahme; ein eigener Implementierer-Start lohnt nicht.                              |
+| P5  | S1 und S2 je ein Paket, jedes hält `make check` grün                                                                                                  | S1 = Task 1 + Task 2, S2 = Task 3 + Task 4 (Sim und Folgen getrennt, Tasks 2 ∥ 3 und 4 ∥ 5 parallel). Grün ist jede **Welle** (siehe „Wellen"); zwischen Task 1 und 2 bzw. 3 und 4 sind nur die dort benannten Prüfungen rot.                                                                                                                                                                                                                     | Parallelität (R67) bei getrennter Datei-Ownership; Sim- und UI-Folgen haben verschiedene Personas.                                                  |
+| P6  | D1 als eigener Doku-Strang                                                                                                                            | `lead-tech` schreibt D1 selbst, kein Start                                                                                                                                                                                                                                                                                                                                                                                                        | Persona lead-tech führt arc42 und README mit.                                                                                                       |
 
 ### Gemeldete Widersprüche und Messwerte aus dem Planungslauf (R136; entschieden durch R142, R143)
 
@@ -213,11 +213,11 @@ Titel `M8-B1` ohne K1, `M8-U` um „Freischaltung S11" ergänzen.
 
 **Gemeldete Widersprüche (R137), Plan vorläufig mit der einfacheren Variante; das Delta-Gate entscheidet:**
 
-| Nr. | Spec-Stelle       | Befund                                                                                                                                            | Plan vorläufig                                                                                                                                                                 |
-| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| W8  | AK-U1-07          | „neues Spiel, Badehaus mit J bauen" ist nach S11 unmöglich (neues Spiel `won false`).                                                             | QA-B-1 Schritt 4: neues Spiel bei 800 px, J zeigt den Sperrgrund (kein Absturz); dann `m8-kaufleute-ohne-glas` laden, Badehaus mit J bauen, Info-Panel öffnen.                 |
-| W9  | AK-U2-09, 14.8    | Steinbruch `storageFull` → „… oder baue Glashütte (O)" empfiehlt vor dem Sieg ein gesperrtes Gebäude (die Taste O zeigt dann nur den Sperrgrund). | Wortlaut der Spec bleibt (Task 4, Test wie Spec); keine stille Sperr-Abfrage in `remedyText`. Vorschlag fürs Delta-Gate: Zusatz nur bei `buildLock(w, 'glassworks') === null`. |
-| W10 | 14.1, 4.3 Punkt 5 | Art der Meldung von `lockedToolText` ist nicht festgelegt.                                                                                        | `showMessage(text, 'error')` wie die übrigen Ablehnungsgründe in `app.ts` (nicht bleibend).                                                                                    |
+| Nr. | Spec-Stelle       | Befund                                                                                                                                            | Plan vorläufig                                                                                                                                                 |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W8  | AK-U1-07          | „neues Spiel, Badehaus mit J bauen" ist nach S11 unmöglich (neues Spiel `won false`).                                                             | QA-B-1 Schritt 4: neues Spiel bei 800 px, J zeigt den Sperrgrund (kein Absturz); dann `m8-kaufleute-ohne-glas` laden, Badehaus mit J bauen, Info-Panel öffnen. |
+| W9  | AK-U2-09, 14.8    | Steinbruch `storageFull` → „… oder baue Glashütte (O)" empfiehlt vor dem Sieg ein gesperrtes Gebäude (die Taste O zeigt dann nur den Sperrgrund). | **Entschieden R151:** Zusatz nur bei `buildLock(w, 'glassworks') === null` (Task 4 `remedyText`, Test mit Fall `won false` ohne und `won true` mit Zusatz).    |
+| W10 | 14.1, 4.3 Punkt 5 | Art der Meldung von `lockedToolText` ist nicht festgelegt.                                                                                        | **Entschieden R151:** bestehender Weg für Bau-Ablehnungen, `showError` in `app.ts` (Meldung `error` plus Ton `error`), Task 8 Schritt 5b.                      |
 
 ### Gemeinsame Schnittstellen (verbindlich für alle Tasks)
 
@@ -511,7 +511,6 @@ neue Tests stehen nicht hier.
 | `tests/ui/hotkeys.test.ts`         | Z. 78                              | `TOOL_HOTKEYS` `toHaveLength(15)` → `16` (T2) → `17` (T4)                                                   | 2, 4 |
 | `tests/render/sprites.test.ts`     | nach Z. 579                        | `roofOnly` + `bathhouse: 2` (R136-Meldung, Task 2 Schritt 1)                                                | 2    |
 | `tests/ui/guide.test.ts`           | Z. 42–43                           | R0: + `w.wonMerchants = true`, „Ziel erreicht — …“ → „Handelsstadt erreicht — spiel frei weiter“            | 4    |
-| `tests/ui/guide.test.ts`           | Z. 152                             | Steinbruch „Verkaufe Stein am Kontor“ → „… oder baue Glashütte (O)“                                         | 4    |
 
 Gegenüber Spec §20 zusätzlich (per Lauf gefunden): `save.test.ts` Z. 65, 147, 304, 308; `defs.test.ts` Z. 17, 31,
 42; `helpers.ts` Z. 48; `sprites.test.ts` nach Z. 579; `guide.test.ts` Z. 42–43 (R0, in §19 als Änderung genannt).
@@ -2579,7 +2578,7 @@ nach Welle W2 nur die Sim-Tests als grün. Rot sind (ermittelt im Probe-Lauf):
 **Paket** M8-S2 (Folgen) · **Implementierer** `tech-ui-engineer` (sonnet) · **Worktree/Branch**
 `.worktrees/m8-sim-ui` · `feat/m8-sim-ui` · **blocked-by** Task 2 und Task 3 (je Review OK) · parallel zu Task 5 ·
 **AK** AK-S2-17, AK-S2-18, AK-U2-01 (geändert S11: „Für Kaufleute (Stufe 4)"), AK-U2-02, AK-U2-08, AK-U2-09 (P1;
-Widerspruch W9 gemeldet, Wortlaut der Spec bleibt)
+W9 entschieden R151: Steinbruch-Zusatz nur bei freigeschalteter Glashütte)
 
 **Files:**
 
@@ -2700,8 +2699,9 @@ describe('M8 Info-Texte (AK-U2-02)', () => {
 `tests/ui/guide.test.ts`: Z. 3 `import type { World } from '../../src/sim/types';` →
 `import type { Building, BuildingDefId, World } from '../../src/sim/types';`; bewusst geändert: Z. 42–43 (R0)
 nach `w.won = true;` die Zeile `w.wonMerchants = true;` einfügen und die Erwartung
-`'Ziel erreicht — spiel frei weiter'` → `'Handelsstadt erreicht — spiel frei weiter'`; Z. 152
-`'Verkaufe Stein am Kontor'` → `'Verkaufe Stein am Kontor oder baue Glashütte (O)'`. Am Dateiende (nach dem
+`'Ziel erreicht — spiel frei weiter'` → `'Handelsstadt erreicht — spiel frei weiter'`. Z. 152 („AK-UX-10
+storageFull ohne Abnehmer …", Welt `won false`) bleibt **unverändert** (R151 W9: Glashütte gesperrt, kein Zusatz).
+Am Dateiende (nach dem
 Block aus Task 2):
 
 ```ts
@@ -2784,7 +2784,11 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
     const quarry = addDirect(w, 'quarry');
     quarry.state = 'storageFull';
-    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)');
+    expect(w.won).toBe(false);
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    w.won = true;
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
+    w.won = false;
     const lj = addDirect(w, 'lumberjack');
     lj.state = 'storageFull';
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
@@ -2903,7 +2907,8 @@ export function tierPreviewLine(defId: BuildingDefId): string | null {
 ```
 
 `src/ui/guide.ts` (endgültige Listen-Semantik; Zwischenregeln fürs Ledger, Plan „E-010“): Import
-`import { houseDiagnosis, missingInputs } from '../sim/queries';`;
+`import { houseDiagnosis, missingInputs } from '../sim/queries';` und `import { buildLock } from '../sim/placement';`
+(R151 W9);
 
 ```ts
 export const consumerOf = (g: GoodId): BuildingDefId | undefined =>
@@ -2939,8 +2944,15 @@ if (b.state === 'waitingInput' && def.consumes) {
 }
 ```
 
-Die Steinbruch-Abhilfe „… oder baue Glashütte (O)“ entsteht ohne weiteren Code aus `consumerOf('stone')`
-(= `glassworks`); `consumerOf('wood')` bleibt `toolmaker` (kleinerer Index in `BUILDING_IDS`).
+Die Steinbruch-Abhilfe „… oder baue Glashütte (O)“ entsteht aus `consumerOf('stone')` (= `glassworks`);
+`consumerOf('wood')` bleibt `toolmaker` (kleinerer Index in `BUILDING_IDS`). **R151 W9:** Der Zusatz erscheint nur,
+wenn der Abnehmer baubar ist. Im `storageFull`-Zweig von `remedyText` die Zeile `if (c) return …` ersetzen durch:
+
+```ts
+if (c && buildLock(w, c) === null) return `${sell} oder baue ${nk(c)}`; // gesperrter Abnehmer: kein Zusatz (S11)
+```
+
+(sonst unverändert: danach folgt wie heute der Satz zu weiteren Wohnhäusern bzw. nur der Verkauf).
 
 `src/ui/hotkeys.ts`, `TOOL_HOTKEYS` nach `j: …`:
 
@@ -4900,7 +4912,7 @@ Funktion nach deren Definition legen.)
 if (tool.kind === 'build') {
   const locked = lockedToolText(state.world, tool.defId);
   if (locked !== null) {
-    showMessage(locked, 'error'); // W10: Art wie die übrigen Ablehnungsgründe
+    showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
     return; // kein Werkzeug (Spec 14.2, AK-U1-09)
   }
 }
@@ -5276,7 +5288,8 @@ Wort). Häuser und Gebäude werden per Klick auf ihre Kachel gewählt (Position 
 
 5. **AK-U1-09** (Browser-Teil, Änderung S11; `m8-vor-sieg`, 1280 × 800, pausiert): Geld notieren; Taste `j`:
    kein `#buildbar .active` mit `data-key` „Badehaus …" bzw. das Werkzeug bleibt „Auswahl" (`[data-key="Auswahl"]`
-   hat `active`), ein `.messages .toast` mit `textContent` „Badehaus: Erst nach dem Ziel (50 Bürger)"; Geld unverändert.
+   hat `active`), ein `.messages .toast.error` mit `textContent` „Badehaus: Erst nach dem Ziel (50 Bürger)" (Klasse `toast error`, R151
+   W10); Geld unverändert.
    Taste `o` ebenso mit „Glashütte: Erst nach dem Ziel (50 Bürger)". Screenshot `u1-09-gesperrt.png`.
 
 ### QA-B-2 (AK-U2-03 … -07, AK-U2-10)
