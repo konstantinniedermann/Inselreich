@@ -22,6 +22,28 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-02 · Handbuch 1.10
+
+- Anlass: Prozess-Retro M7-UX (Aussensicht), Vorschläge V1–V5
+- Datenbasis: `docs/studio/retros/2026-10-02-prozess-retro-m7ux.md`, `docs/studio/metriken/M7-UX.md`
+- Ruling: R136
+- Änderungen: (1) `gates.md`, Gate Spec, `lead-qa` Frage 4: Einzeiler listet AK-Kennungen, die
+  auch in anderen Specs vorkommen; Verweise auf alte AK tragen den Meilenstein (`M7:AK-U2-02`);
+  Prüffrage AK-Wortlaut gegen Prosa (V1). (2) Umsetzungszyklus: Bei Widerspruch zwischen AK und
+  Spec-Text gilt vorläufig die einfachere Variante, der Controller meldet ihn im Schlussbericht, das
+  Gate entscheidet (V2, geändert per R136). (3) Tempo-Vorgaben: jede Nachprüfung einer Fix-Runde
+  beantwortet „Gegenweg geprüft?“ und „Fundstellen per `grep -rn` nachgeführt?“ (V3). (4) Hook
+  archiviert `agent_stop` ohne Rolle nicht mehr, Event mit `internal: true` (`tools/studio/hook.py`
+  mit Test, `verbesserung.md` Archiv); `lernen.md` Zeile „inaktiv“ korrigiert (V5). (5) Straffung:
+  Absatz Dashboard-Öffnen (steht in ADR-008 und README), Doppel „Fortsetzen statt neue Leads“ und
+  „Report bei Final-Review“ gekürzt; `STUDIO.md` 398 Zeilen. (6) `experimente.md`: E-010
+  (Controller-Wechsel, V4) `vorgeschlagen`, Start bei freiem Platz; Statustabelle als Satz.
+- Messung (Retro M8, Rückfall: Handbuch 1.9, `git show 6e05101:docs/studio/<datei>`): V1
+  Widersprüche AK/Spec nach dem Spec-Gate ≤ 1 je Meilenstein über 2 Meilensteine (M7-UX: 2); V2
+  zurückgenommene Controller-Rulings 0 (M7-UX: 1); V3 Final-Review-Befunde „hoch“ aus Fix-Runden 0
+  und ≤ 2 Merge-Gate-Runden (M7-UX: 1 und 3); V5 Anteil `*-agent-<id>.md` im Archiv je Session < 5 %
+  (2026-10-02: 68 %), Agentenzahl der Metrik unverändert.
+
 ## 2026-10-01 · Handbuch 1.9
 
 - Anlass: Prozess-Retro 1 (Effizienz), Vorschläge V1–V5

@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.9 · Stand: 2026-10-01 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.10 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -254,17 +254,17 @@ Regeln dazu:
   OK/BEDENKEN/ZURÜCK). Der Tech-Lead ist Controller und darf dafür die QA-Arbeiter starten; ihren
   Qualitätsmassstab verantwortet der QA-Lead. Nach der Abnahme loggt der abnehmende Lead das
   Ergebnis (`log.py result`, [verbesserung.md](verbesserung.md#messung-und-aufwand)).
+- **Widerspruch zwischen AK und Spec-Text (R136):** Vorläufig gilt die einfachere Variante
+  (Plattform-Standard, weniger Code). Der Controller meldet den Widerspruch ausdrücklich im
+  Schlussbericht, das nächste Gate entscheidet; kein stilles Controller-Ruling.
 - **Je UI-Task:** zusätzlich `qa-playtester` (Browser-Check, Screenshots im **Hauptrepo** unter
   `<Hauptrepo>/.studio/qa/<paket>/`, nicht im Worktree; Bericht nach
   [templates/playtest-report.md](templates/playtest-report.md)).
 - **Final-Review:** durch QA auf `opus`, einmal je Meilenstein über **alle** Strang-Branches gegen
   `main` in einer Review-Session (kombinierter Diff bzw. jeder Strang-Diff), inkl. Balancing-Test
   und Determinismus (gleicher Seed → gleicher Zustand). Nicht abschwächbar (Verfassung §9).
-- **Report bei Final-Review und Playtests:** Pläne und Briefings verlangen **keinen
-  Report-Dateipfad**. Der Schlussbericht ist der Report und liegt archiviert unter
-  `.studio/archiv/berichte/`; Screenshots und Proben legt der Arbeiter weiter unter
-  `.studio/qa/<paket>/` ab. Wird eine Report-Datei gebraucht, legt sie L0 oder der abnehmende Lead
-  aus dem Schlussbericht ab.
+- **Report bei Final-Review und Playtests:** kein Report-Dateipfad im Briefing; der archivierte
+  Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
 - **Merge:** nur nach dem einen L0-Merge-Gate des Meilensteins, seriell (ein Strang nach dem
   anderen) durch `production-integrator`: `make check` vor dem ersten Merge; je Strang
   `git merge --no-ff --no-commit`, dann `make check` — grün: Merge committen, rot:
@@ -327,9 +327,11 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 - Echtzeit-Proben dauern höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
 - Minor- und Low-Befunde lösen keine Fix-Runde aus; sie gehen gesammelt ins Final-Review.
 - Kleine Fixes (≤ ~20 Zeilen) prüft der Lead selbst am Diff statt einer vollen Re-Review-Runde.
+  Jede Nachprüfung einer Fix-Runde beantwortet zwei Fragen aus dem Fix-Briefing (R136): Gegenweg
+  geprüft (rückwärts, über das Ende hinaus, Abbruch)? Fundstellen geänderter oder entfernter
+  Symbole per `grep -rn <symbol> README.md docs/` nachgeführt?
 - Browser-Checks laufen parallel (eigener Port je Check); jeder Check prüft jedes geöffnete Panel
   sofort auf Lesbarkeit und Überlauf.
-- Fortsetzen (`SendMessage`) statt neue Leads je Welle, solange der Kontext reicht.
 
 ## Messung und Verbesserung
 
@@ -374,9 +376,6 @@ Datei-Eigentum** (welche Session welche geteilten Pfade bis zu welchem Merge bes
 Merges, Eintrag in `state.md`). Nur dann gilt zusätzlich: vor jedem Ruling `git fetch` und die
 R-Nummer gegen `origin/main` prüfen, Strang-Branches nach jeder Abnahme pushen (R107), gegen Pfade
 der anderen Session erst nach deren Merge planen.
-
-Das Dashboard öffnet sich beim ersten Subagenten-Start von L0 automatisch im Browser (einmal je
-Session; nicht in headless-Läufen; Opt-out: `STUDIO_NO_BROWSER=1`).
 
 **Ende:**
 

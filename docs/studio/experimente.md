@@ -2,22 +2,15 @@
 
 Jede Änderung an Handbuch, Personas, Vorlagen, Budget-Heuristiken oder Dashboard-Ansichten ist ein
 Experiment ([Verfassung §10](VERFASSUNG.md#10-verbesserungsprozess-grundzüge), Ablauf im Handbuch
-[verbesserung.md](verbesserung.md#verbesserungsschleife)). Der `studio-coach` schlägt vor und
-pflegt diese Datei; der Projektleiter entscheidet je Vorschlag per Ruling.
+[verbesserung.md](verbesserung.md#verbesserungsschleife)). Der `studio-coach` pflegt die Datei,
+L0 entscheidet per Ruling.
 
 **Format:** ein Abschnitt je Experiment nach [templates/experiment.md](templates/experiment.md);
 abgeschlossene Experimente stehen unten mit Ruling und Bewertung in je einer Zeile.
 
-**Status:**
-
-| Status           | Bedeutung                                                 |
-| ---------------- | --------------------------------------------------------- |
-| `vorgeschlagen`  | vom Coach vorgeschlagen, Ruling von L0 steht aus          |
-| `laufend`        | angenommen und umgesetzt, Beobachtungszeitraum läuft      |
-| `behalten`       | Schwelle erreicht, Änderung bleibt                        |
-| `angepasst`      | Änderung bleibt in angepasster Form (neues Ruling)        |
-| `zurückgenommen` | Schwelle verfehlt, Rückfallzustand wiederhergestellt      |
-| `abgelehnt`      | L0 hat den Vorschlag per Ruling abgelehnt (nie umgesetzt) |
+**Status:** `vorgeschlagen` (Ruling aus oder angenommen und wartet auf Platz) → `laufend` →
+`behalten`, `angepasst` (neues Ruling) oder `zurückgenommen` (Rückfall hergestellt); `abgelehnt`
+heisst nie umgesetzt.
 
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
@@ -33,18 +26,18 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Session-Start), `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`; Folgepaket lead-production: `tools/studio/context.py` (Warnblock) mit Test
 - Ruling: R129 (1)
 - Start: Handbuch 1.9 (Regel); Start-Hook-Warnung folgt als Werkzeug-Paket
-- Bewertung: –
+- Bewertung: Zwischenstand M7-UX: (a)–(c) je 0; Session `2a96d607` 2 min parallel, nur lesend ([Retro M7-UX](retros/2026-10-02-meilenstein-m7ux.md))
 
 ## E-008 · laufend · Ein Gate für Folgepakete
 
 - Hypothese: Wenn Folgepakete (ein Strang, ohne Save-Format- oder Architekturänderung) Spec und Plan in einem Dokument mit einem Gate durchlaufen (`lead-tech` und `lead-qa` parallel, Zweitprüfung nur bei Blocker), dann sinken die Starts bis zum ersten Code ohne Qualitätsverlust.
-- Messgrösse: Starts vom Paketstart bis zum ersten Umsetzungs-Commit (`spawn`-Events je Paket, Fortsetzungen eingerechnet) mindestens 3 unter dem Ausgangswert M7-UX (zählt der Coach einmal aus `.studio/events.jsonl`). Gegenprobe: Erstabnahme-Quote der Umsetzung ≥ 50 % und höchstens 1 Task-Review-BEDENKEN je Paket mit Ursache „Spec- oder Plan-Lücke“.
+- Messgrösse: Starts vom Paketstart bis zum ersten Umsetzungs-Commit (`spawn`-Events je Paket, Fortsetzungen eingerechnet) mindestens 3 unter dem Ausgangswert M7-UX (7 Starts bis zum ersten Implementierer). Gegenprobe: Erstabnahme-Quote der Umsetzung ≥ 50 % und höchstens 1 Task-Review-BEDENKEN je Paket mit Ursache „Spec- oder Plan-Lücke“.
 - Zeitraum: die nächsten 2 Folgepakete, längstens bis Ende M8.
 - Rückfall: `STUDIO.md` (Prozessstufen, Gate-Tabelle) und `gates.md` aus `git show 6bb5b14:docs/studio/<datei>`.
 - Dateien: `docs/studio/STUDIO.md`, `docs/studio/gates.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R129 (2)
 - Start: Handbuch 1.9
-- Bewertung: –
+- Bewertung: Zwischenstand M7-UX: noch kein Folgepaket (PAGES-LIMIT war Nutzerauftrag)
 
 ## E-009 · laufend · Rulings verweisen, Handbuch-Kern gestrafft
 
@@ -55,18 +48,29 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: unter `docs/studio/`: `STUDIO.md`, `verbesserung.md`, `rulings.md`, `rulings-archiv.md`, `templates/ruling.md`, `roster.md`, `experimente.md`, `CHANGELOG.md`
 - Ruling: R129 (3), (4)
 - Start: Handbuch 1.9
+- Bewertung: Zwischenstand M7-UX: Schwellen erfüllt (R130–R136 Mittel 50 Wörter, 0 Abnahme-Rulings, `STUDIO.md` 398 Zeilen; Cache-Write je Delegation ≈ 155 000)
+
+## E-010 · vorgeschlagen · Controller-Wechsel nach der Hälfte der Tasks
+
+- Hypothese: Wenn der Controller bei Plänen mit mehr als 6 Tasks nach dem mittleren QA-Block per Ledger an eine frische `lead-tech`-Instanz übergibt, sinkt seine Cache-Last ohne Informationsverlust (Prozess-Retro M7-UX B0, V4).
+- Messgrösse: Cache-Read beider Controller je abgeschlossenem Task (`usage` je agent_id) ≤ 3,5 Mio. (M7-UX: 50,2 Mio. auf 10 Tasks). Abbruch: ein Ruling der zweiten Hälfte widerspricht der ersten (Final-Review) oder der Nachfolger fragt mehr als einmal nach.
+- Zeitraum: nächster Meilenstein mit mehr als 6 Tasks.
+- Rückfall: ein Controller je Meilenstein (Handbuch 1.10).
+- Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/CHANGELOG.md`
+- Ruling: R136 (angenommen, Start bei freiem Platz)
+- Start: –
 - Bewertung: –
 
 ## E-006 · vorgeschlagen · Exklusive Arbeitsbäume
 
-- Hypothese: Wenn das Handbuch das Eigentum an Arbeitsbäumen festlegt — Hauptcheckout gehört L0 (Studio-Dateien) und während eines Merge-Fensters nur dem Integrator; Leads und Arbeiter committen nur in eigenen Worktrees oder Branches; QA-Bäume und Scratchpad-Unterordner gehören exklusiv dem jeweiligen Check; nur `git pull --ff-only`, kein bares `git stash` — und der Integrator laut Persona HEAD unmittelbar vor dem Merge und vor dem Push prüft, dann entfallen Vorfälle durch fremde Schreibzugriffe auf geteilte Arbeitsbäume.
-- Messgrösse: Vorfälle „fremder Schreibzugriff auf geteilten Arbeitsbaum“ (Zählung in `rulings.md`, Archiv-Berichten, `docs/beobachtungen.md`) bis Ende M8: 0. Ausgangswert M7: 6 (Probe-Revert auf main, QA-Baum `ui-qa` umgestellt R116, `lib.mjs` im Scratchpad R111, bares `git stash` bei fünf Worktrees, Lead-Commit im Hauptcheckout im Merge-Fenster, `pull --rebase` R124). Nebenbei: Anteil der Merge-Berichte mit HEAD-Prüfung vor Merge und vor Push (Anwendung).
+- Hypothese: Wenn das Handbuch das Eigentum an Arbeitsbäumen festlegt (Hauptcheckout L0, im Merge-Fenster der Integrator; sonst nur eigene Worktrees; HEAD-Prüfung vor Merge und Push), entfallen Vorfälle durch fremde Schreibzugriffe.
+- Messgrösse: Vorfälle „fremder Schreibzugriff auf geteilten Arbeitsbaum“ bis Ende M8: 0 (Ausgangswert M7: 6, [Retro M7](retros/2026-10-01-meilenstein-m7.md)).
 - Zeitraum: bis Ende M8 (M7-UX eingeschlossen).
-- Rückfall: Handbuch und `.claude/agents/production-integrator.md` in der Version vor der Umsetzung; R124 (2) gilt dann weiter als Ruling.
-- Dateien: `docs/studio/STUDIO.md` (Eigentum der Arbeitsbäume), `.claude/agents/production-integrator.md` (HEAD-Prüfung), `docs/studio/templates/briefing.md` (Zeile „Arbeitsbaum:“), `docs/studio/CHANGELOG.md`
-- Ruling: R126 (angenommen, Start bei freiem Platz; wartet laut R129)
-- Start: wenn ein Platz frei wird; bis dahin gilt R124 (2) als Ruling und steht in `lernen.md`
-- Bewertung: –
+- Rückfall: Handbuch und `.claude/agents/production-integrator.md` vor der Umsetzung; R124 (2) gilt weiter.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/production-integrator.md`, `docs/studio/templates/briefing.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R126 (angenommen, Start bei freiem Platz; R129)
+- Start: –
+- Bewertung: Zwischenstand M7-UX: 0 Vorfälle bei drei Worktrees (Prozess-Retro M7-UX B5)
 
 ## Abgeschlossen
 
@@ -96,4 +100,4 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 ## E-005 · angepasst · Abstimmung paralleler L0-Sessions über origin
 
 - Ruling: R126, ersetzt durch R129 (1) (→ E-007); nie als eigene Stufe umgesetzt
-- Bewertung: Die Schritte (`git fetch`, R-Nummer gegen `origin/main`, Push nach Abnahme) gelten nur noch bei per Ruling erlaubter Parallelität (Handbuch, Session-Start)
+- Bewertung: Die Schritte gelten nur bei per Ruling erlaubter Parallelität (Handbuch, Session-Start)

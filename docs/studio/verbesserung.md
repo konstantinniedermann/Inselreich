@@ -65,7 +65,8 @@ bzw. `--status done`). Das Ende löst die Pflicht-Retro aus (Vorfall `meilenstei
 gelesen):
 
 - `briefings/` — voller Prompt jeder Delegation,
-- `berichte/` — volle Schlussmeldung jedes Agenten,
+- `berichte/` — volle Schlussmeldung jedes Agenten mit Rolle (interne Hilfsagenten ohne Rolle nur
+  als Event mit `internal: true`, R136),
 - `events/` — archivierte Event-Dateien (`make studio-archive`).
 
 Das Dashboard verlinkt Briefings und Berichte unter `/archiv/…`.

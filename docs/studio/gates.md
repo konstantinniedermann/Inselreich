@@ -80,6 +80,10 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
 1. Ist jedes Abnahmekriterium prüfbar — als Vitest-Test oder als beschriebener Browser-Check?
 2. Welche Kriterien berühren den Balancing-Test? Sind bewusste Wertänderungen als Ruling vorgesehen?
 3. Sind Randfälle genannt (leeres Lager, Abriss während Produktion, Laden alter Spielstände)?
+4. Sind die AK eindeutig (R136)? Kennungen, die auch in anderen Specs vorkommen, listet
+   `s=<spec>; for k in $(grep -o 'AK-[A-Z0-9]*-[0-9]*' "$s" | sort -u); do n=$(grep -lw -- "$k" docs/superpowers/specs/*.md | wc -l); [ "$n" -gt 1 ] && echo "$k $n"; done`.
+   Jeder Verweis auf ein altes AK trägt den Meilenstein (`M7:AK-U2-02`); alte Specs werden nicht
+   umnummeriert. Widerspricht ein AK-Wortlaut der Prosa derselben Spec?
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling.
 
