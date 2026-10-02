@@ -737,3 +737,12 @@ im Gebirge kommt mit G3. lead-art merged selbst. — Kosten bei Irrtum: Revert e
 Archiv-Bericht lead-art H-R1 Phase 2
 
 Entscheider: L0 · Anlass: Gate Merge H-R1 · ADR: —
+
+## R155 · 2026-10-02 · M10
+
+Ruling: Gate Brainstorming M10 „Schritt für Schritt" bestanden (Vorschlag aef60a3); D1–D11 wie empfohlen,
+D10 (Marktplatz ab 20 Wohnhäusern) mit Playtest-Frage im Spec-Gate. H-S1 (Wald roden, Sim) geht als
+Sim-Paket in M10 auf statt eigenständig. Spec durch design-spec-author, Spec-Gate nach gates.md. —
+Kosten bei Irrtum: Spec-Runde — `docs/superpowers/specs/2026-10-03-m10-schritt-fuer-schritt-design.md`
+
+Entscheider: L0 · Anlass: Gate Brainstorming M10, ändert R148 (H-S1) · ADR: —
