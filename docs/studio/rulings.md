@@ -507,3 +507,12 @@ abgelehnt. Umsetzung (2)–(5) und Regel (1): studio-coach, ein Start. — Warum
 — Kosten bei Irrtum: Rücknahme per Ruling, Texte in Git.
 
 Entscheider: L0 · Anlass: Prozess-Retro 1
+
+## R130 · 2026-10-02 · Pages-Limiten überwachen (Nutzerauftrag)
+
+Ruling: „Limiten prüfen, im Blick behalten" ausgelegt als Paket PAGES-LIMIT (lead-tech, Budget 3):
+Limiten gegen aktuelle GitHub-Doku prüfen, Ist-Grösse messen, Fakten in arc42 Kap. 7, automatische
+Warnschwelle (50 % je Limit) in CI. Bei Schwelle: Warteschlange mit Alternativen. Läuft parallel zu
+M7-UX (getrennte Pfade). — Kosten bei Irrtum: ein kleiner Check zu viel.
+
+Entscheider: L0 · Anlass: Nutzerauftrag
