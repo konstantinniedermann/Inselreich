@@ -1091,6 +1091,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   school: schoolBody,
   firestation: firestationBody,
   bathhouse: FALLBACKS.public, // M8-S1: Kategorie-Rückfall bis zur eigenen Silhouette (R1, K3)
+  glassworks: FALLBACKS.production, // M8-S2: Kategorie-Rückfall bis zur eigenen Silhouette (R1, K3)
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---

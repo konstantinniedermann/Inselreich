@@ -880,3 +880,15 @@ describe('M8 Render-Mindestpflicht (AK-S1-17)', () => {
     for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5)).toBe(true);
   });
 });
+
+describe('M8 Render-Rückfall Glashütte (AK-S2-17)', () => {
+  it('AK-S2-17 Glashütte hat einen Silhouetten-Eintrag und zeichnet in der Hülle', () => {
+    expect(SILHOUETTES.glassworks).toBeDefined();
+    const gw = mk('glassworks');
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS.glassworks, gw, 0);
+    expect(log.allPoints.length).toBeGreaterThan(20);
+    const hull = bodyHull(BUILDING_DEFS.glassworks, gw);
+    for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5)).toBe(true);
+  });
+});

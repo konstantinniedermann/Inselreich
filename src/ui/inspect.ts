@@ -6,10 +6,10 @@ import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, citizens, isSupplied, upgradeStatus } from '../sim/population';
-import { effectiveRefund, houseDiagnosis } from '../sim/queries';
+import { effectiveRefund, houseDiagnosis, missingInputs } from '../sim/queries';
 import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
-import { diagnosisText, producesText, refundText, stateInfo } from './texts';
+import { diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
 import { tierPath } from './hud';
@@ -214,7 +214,7 @@ export function renderInspect(
       addRemedy(panel);
       if (def.produces && def.cycle !== undefined) {
         addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
-        if (def.consumes) addLine(panel, `Verbraucht ${GOODS[def.consumes].name}`);
+        if (def.consumes) addLine(panel, `Verbraucht ${goodList(def.consumes)}`);
         const bar = document.createElement('div');
         bar.className = 'progress';
         const fill = document.createElement('div');
@@ -250,7 +250,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (def.produces && def.cycle !== undefined) {
     setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
   }
-  const info = stateInfo(b, world.tick);
+  const info = stateInfo(b, world.tick, missingInputs(world, b));
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
   if (def.flammable === true) {
     setField(panel, 'fire-protection', `Brandschutz: ${isProtected(world, b) ? 'ja' : 'nein'}`);

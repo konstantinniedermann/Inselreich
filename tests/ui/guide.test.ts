@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../../src/render/palette';
-import type { World } from '../../src/sim/types';
+import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { idx } from '../../src/sim/world';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
@@ -40,7 +40,8 @@ describe('nextStep (AK-UX-08)', () => {
   it('AK-UX-08 R0 gewonnen', () => {
     const w = world(2, 4, ['chapel']);
     w.won = true;
-    expectStep(w, 'Ziel erreicht — spiel frei weiter');
+    w.wonMerchants = true;
+    expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
   });
   it('AK-UX-08 R1 nur Kontor', () => {
     const { w, house, fisher } = uxWorld();
@@ -193,5 +194,99 @@ describe('M8 nextStep vor dem Sieg (AK-S1-19)', () => {
     const w = citizenWorld();
     w.taxLevel = 'high';
     expectStep(w, 'Baue weitere Wohnhäuser und versorge sie');
+  });
+});
+
+/** Betrieb direkt eingefügt, angebunden (Zustandssetzung; `nextStep` liest nur, ob der Typ gebaut ist). */
+function addDirect(w: World, defId: BuildingDefId): Building {
+  const b: Building = {
+    id: w.nextBuildingId++,
+    defId,
+    x: 0,
+    y: 0,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+  };
+  w.buildings[b.id] = b;
+  return b;
+}
+
+describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
+  it('AK-U2-08 (b) won, Steinbruch und Holzfäller, keine Glashütte → Glashütte bauen', () => {
+    const w = citizenWorld();
+    w.won = true;
+    addDirect(w, 'quarry');
+    addDirect(w, 'lumberjack');
+    expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O)');
+  });
+  it('AK-U2-08 (c) wie (b) ohne Steinbruch → Glashütte und Steinbruch für Stein', () => {
+    const w = citizenWorld();
+    w.won = true;
+    addDirect(w, 'lumberjack');
+    expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O) und Steinbruch (B) für Stein');
+  });
+  it('AK-U2-08 (d) won, Glas-Kette steht, kein Badehaus → Badehaus bauen', () => {
+    const w = citizenWorld();
+    w.won = true;
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    expectStep(w, 'Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe');
+  });
+  it('AK-U2-08 (f) Hebel 40, won false, 45 Bürger, sonst wie (b) → Satz aus (b)', () => {
+    const w = citizenWorld();
+    addDirect(w, 'quarry');
+    addDirect(w, 'lumberjack');
+    let s: string;
+    try {
+      TIERS[4].unlockCitizens = 40;
+      s = nextStep(w);
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
+    expect(w.won).toBe(false);
+    expect(s).toBe('Deine Kaufleute brauchen Glas: baue Glashütte (O)');
+  });
+  it('AK-U2-08 (g) wonMerchants → Handelsstadt erreicht', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.wonMerchants = true;
+    expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
+  });
+  it('AK-U2-08 (h) won, Glashütte steht, Steinbruch fehlt → Steinbruch bauen', () => {
+    const w = citizenWorld();
+    w.won = true;
+    addDirect(w, 'glassworks');
+    addDirect(w, 'lumberjack');
+    expectStep(w, 'Glashütte braucht Stein: baue Steinbruch (B)');
+  });
+});
+
+describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
+  it('AK-U2-09 Glashütte wartet: fehlendes Gut zuerst; leer → erstes aus consumes; Abnehmer bei vollem Lager', () => {
+    const { w } = uxWorld();
+    const gw = addDirect(w, 'glassworks');
+    gw.state = 'waitingInput';
+    w.stock.stone = 5;
+    w.stock.wood = 0;
+    expect(remedyText(w, gw)).toBe('Baue Holzfäller (L) oder kaufe Holz am Kontor');
+    w.stock.stone = 0;
+    expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
+    w.stock.stone = 5;
+    w.stock.wood = 5;
+    expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
+    const quarry = addDirect(w, 'quarry');
+    quarry.state = 'storageFull';
+    expect(w.won).toBe(false);
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    w.won = true;
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
+    w.won = false;
+    const lj = addDirect(w, 'lumberjack');
+    lj.state = 'storageFull';
+    expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
+    const weaver = addDirect(w, 'weaver');
+    weaver.state = 'waitingInput';
+    w.stock.wool = 0;
+    expect(remedyText(w, weaver)).toBe('Baue Schäferei (G) oder kaufe Wolle am Kontor');
   });
 });

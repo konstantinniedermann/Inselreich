@@ -76,7 +76,7 @@ describe('hotkeyAction (AK-U2-02)', () => {
 
   it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
     for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(16);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(17);
   });
 
   it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
@@ -163,5 +163,21 @@ describe('M8 Taste J (AK-S1-20)', () => {
     expect(keys[15]).toBe('j');
     expect(hotkeyList()).toContainEqual({ key: 'J', label: 'Badehaus' });
     expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })[0]).toBe('Badehaus (J)');
+  });
+});
+
+describe('M8 Taste O (AK-S2-18)', () => {
+  it('AK-S2-18 O wählt die Glashütte, Label „O“, 17 Tasten, bisherige unverändert, Tooltip „Glashütte (O)“', () => {
+    expect(hotkeyAction('o', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'glassworks' },
+    });
+    expect(hotkeyLabel({ kind: 'build', defId: 'glassworks' })).toBe('O');
+    const keys = Object.keys(TOOL_HOTKEYS);
+    expect(keys).toHaveLength(17);
+    expect(keys.join('')).toBe('rxhkumflbgvzntejo');
+    expect(hotkeyList().filter((e) => e.key === 'O')).toEqual([{ key: 'O', label: 'Glashütte' }]);
+    expect(hotkeyList().filter((e) => e.key === 'J')).toEqual([{ key: 'J', label: 'Badehaus' }]);
+    expect(tooltipLines({ kind: 'build', defId: 'glassworks' })[0]).toBe('Glashütte (O)');
   });
 });

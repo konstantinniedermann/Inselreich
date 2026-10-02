@@ -4,7 +4,8 @@ import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { GOOD_IDS, GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
-import { houseDiagnosis } from '../sim/queries';
+import { buildLock } from '../sim/placement';
+import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
   Building,
   BuildingDefId,
@@ -27,24 +28,27 @@ const has = (w: World, id: BuildingDefId): boolean =>
 export const producerOf = (g: GoodId): BuildingDefId | undefined =>
   BUILDING_IDS.find((id) => BUILDING_DEFS[id].produces === g);
 export const consumerOf = (g: GoodId): BuildingDefId | undefined =>
-  BUILDING_IDS.find((id) => BUILDING_DEFS[id].consumes === g);
+  BUILDING_IDS.find((id) => BUILDING_DEFS[id].consumes?.includes(g) === true);
 
 /** Satz zu einem fehlenden Gut, oder null, wenn Erzeuger und Vorstufe stehen (dann weiterschalten). */
 function goodSentence(w: World, tierName: string, g: GoodId): string | null {
   const p = producerOf(g);
   if (!p) return null;
-  const input = BUILDING_DEFS[p].consumes;
-  const q = input ? producerOf(input) : undefined;
+  const input = (BUILDING_DEFS[p].consumes ?? []).find((i) => {
+    const q = producerOf(i);
+    return q !== undefined && !has(w, q);
+  });
+  const q = input !== undefined ? producerOf(input) : undefined;
   if (!has(w, p)) {
     const base = `Deine ${tierName} brauchen ${GOODS[g].name}: baue ${nk(p)}`;
-    return q && !has(w, q) ? `${base} und ${nk(q)} für ${GOODS[input!].name}` : base;
+    return q ? `${base} und ${nk(q)} für ${GOODS[input!].name}` : base;
   }
-  if (q && !has(w, q)) return `${nm(p)} braucht ${GOODS[input!].name}: baue ${nk(q)}`;
+  if (q) return `${nm(p)} braucht ${GOODS[input!].name}: baue ${nk(q)}`;
   return null;
 }
 
 export function nextStep(w: World): string {
-  if (w.won) return 'Ziel erreicht — spiel frei weiter';
+  if (w.wonMerchants) return 'Handelsstadt erreicht — spiel frei weiter';
   const houses = Object.values(w.buildings)
     .filter((b) => b.house)
     .sort((a, b) => a.id - b.id);
@@ -136,14 +140,14 @@ export function remedyText(w: World, b: Building): string | null {
   if (!b.connected) return `Baue einen Weg (${hotkeyLabel({ kind: 'road' })}) von hier zum Kontor`;
   const def = BUILDING_DEFS[b.defId];
   if (b.state === 'waitingInput' && def.consumes) {
-    const p = producerOf(def.consumes)!;
-    return `Baue ${nk(p)} oder kaufe ${GOODS[def.consumes].name} am Kontor`;
+    const g = missingInputs(w, b)[0] ?? def.consumes[0]!;
+    return `Baue ${nk(producerOf(g)!)} oder kaufe ${GOODS[g].name} am Kontor`;
   }
   if (b.state === 'storageFull' && def.produces) {
     const g = def.produces;
     const sell = `Verkaufe ${GOODS[g].name} am Kontor`;
     const c = consumerOf(g);
-    if (c) return `${sell} oder baue ${nk(c)}`;
+    if (c && buildLock(w, c) === null) return `${sell} oder baue ${nk(c)}`; // gesperrter Abnehmer: kein Zusatz (S11)
     if (Object.values(TIERS).some((t) => g in t.needs))
       return `${sell} oder baue weitere Wohnhäuser`;
     return sell;
