@@ -109,10 +109,18 @@ function setList(root: HTMLElement, field: string, items: ListItem[]): void {
 }
 
 /** Gerüst des Wohnhaus-Panels: Einwohner, Versorgung, Bedürfnisse, Aufstieg. */
+/** Abhilfe-Zeile (Spec L7), anfangs versteckt; `updateInspect` setzt Text und Sichtbarkeit. */
+function addRemedy(parent: HTMLElement): void {
+  const p = addLine(parent, '', 'remedy');
+  p.classList.add('remedy');
+  p.hidden = true;
+}
+
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
   addList(panel, 'reasons', 'diagnosis');
+  addRemedy(panel);
   addList(panel, 'needs', 'needs');
   const upgrade = document.createElement('div');
   upgrade.className = 'upgrade';
@@ -191,9 +199,6 @@ export function renderInspect(
   title.dataset.field = 'title';
   panel.appendChild(title);
   if (import.meta.env.DEV) addLine(panel, `Position (${b.x}, ${b.y})`);
-  const remedy = addLine(panel, '', 'remedy');
-  remedy.classList.add('remedy');
-  remedy.hidden = true;
 
   const buttons = document.createElement('div');
   buttons.className = 'panel-actions';
@@ -206,6 +211,7 @@ export function renderInspect(
       renderHouse(panel);
     } else {
       addLine(panel, '', 'state');
+      addRemedy(panel);
       if (def.produces && def.cycle !== undefined) {
         addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${GOODS[def.consumes].name}`);
