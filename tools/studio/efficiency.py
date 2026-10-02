@@ -15,6 +15,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 NOT_MEASURED = "nicht gemessen"
+KB = 1024
 
 KIND_WEIGHT = {
     "input": 1.0,
@@ -41,7 +42,7 @@ THRESHOLDS = {
     "l0_ctx_max": {"gelb": 250_000, "rot": 500_000, "op": ">"},
     "opus": {"gelb": 0.60, "rot": 0.80, "op": ">"},
     "persona_opus": {"gelb": 1, "rot": 5, "op": ">="},
-    "largest_read": {"gelb": 40_000, "rot": 100_000, "op": ">"},
+    "largest_read": {"gelb": 40, "rot": 100, "op": ">"},  # KB (1 KB = 1024 Zeichen)
 }
 
 CLASSES = (
@@ -172,7 +173,8 @@ def _collect_tools(content: list, pending: dict, reads: list) -> None:
             if target and isinstance(block.get("id"), str):
                 pending[block["id"]] = target
         elif block.get("type") == "tool_result":
-            target = pending.get(block.get("tool_use_id"))
+            ident = block.get("tool_use_id")
+            target = pending.get(ident) if isinstance(ident, str) else None
             if target:
                 chars = _text_chars(block.get("content"))
                 reads.append({"path": target, "chars": chars})
@@ -258,7 +260,14 @@ def _ratio(part: float, total: float) -> float:
 
 
 def compute(mains: list[Path]) -> dict | None:
-    """Kennzahlen über Haupttranskripte samt Subagenten; None, wenn nichts lesbar ist."""
+    """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen."""
+    try:
+        return _compute(mains)
+    except Exception:  # noqa: BLE001 - Messung darf nie abstürzen
+        return None
+
+
+def _compute(mains: list[Path]) -> dict | None:
     instances: list[dict] = []
     reads: list[dict] = []
     sessions = 0
@@ -301,7 +310,7 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
     ]
     l0_max = max(
-        (max(i["contexts"]) for i in instances if i["role"] == "L0"), default=0
+        (max(i["contexts"]) for i in instances if i["role"] == "L0"), default=None
     )
     biggest: dict[str, int] = {}
     for item in reads:
@@ -387,7 +396,7 @@ def _table(head: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def _lights(data: dict) -> list[str]:
-    top = data["top_reads"][0]["chars"] if data["top_reads"] else None
+    top = data["top_reads"][0]["chars"] / KB if data["top_reads"] else None
     t = THRESHOLDS
     entries = [
         (
@@ -409,7 +418,7 @@ def _lights(data: dict) -> list[str]:
             f"gelb > {t['cache_write_5m']['gelb'] * 100:.0f} %, rot > {t['cache_write_5m']['rot'] * 100:.0f} %",
         ),
         (
-            "Lead-Kontext Median",
+            "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
             "lead_ctx",
             _k(data["lead_ctx_median"]),
             f"gelb > {_k(t['lead_ctx']['gelb'])}, rot > {_k(t['lead_ctx']['rot'])}",
@@ -427,7 +436,7 @@ def _lights(data: dict) -> list[str]:
             f"gelb > {t['opus']['gelb'] * 100:.0f} %, rot > {t['opus']['rot'] * 100:.0f} %",
         ),
         (
-            "Persona-Starts auf opus ohne Absicht (`general-purpose`)",
+            "Persona-Starts als general-purpose auf opus (Instanzen)",
             "persona_opus",
             str(data["persona_opus"]),
             f"gelb ≥ {t['persona_opus']['gelb']}, rot ≥ {t['persona_opus']['rot']}",
@@ -435,8 +444,8 @@ def _lights(data: dict) -> list[str]:
         (
             "Grösste gelesene Datei",
             "largest_read",
-            NOT_MEASURED if top is None else f"{top} Zeichen",
-            f"gelb > {t['largest_read']['gelb']} Zeichen, rot > {t['largest_read']['rot']} Zeichen",
+            NOT_MEASURED if top is None else f"{top:.1f} KB",
+            f"gelb > {t['largest_read']['gelb']} KB, rot > {t['largest_read']['rot']} KB",
         ),
     ]
     values = {"largest_read": top}
@@ -483,14 +492,14 @@ def render_section(data: dict | None) -> str:
         ),
         "",
         f"- opus-Anteil: {_pct(data['opus_share'])}",
-        f"- `general-purpose`-Persona-Starts auf opus: {data['persona_opus']}",
+        f"- Persona-Starts als general-purpose auf opus (Instanzen): {data['persona_opus']}",
         "",
         *_table(
             [
                 "Rolle",
                 "Instanzen",
                 "Start-Kontext",
-                "Kontext Mittel",
+                "Kontext Mittel (Median der Instanzen)",
                 "Kontext Max",
                 "5-min-Neuschreibungen > 20k",
             ],
@@ -507,10 +516,12 @@ def render_section(data: dict | None) -> str:
             ],
         ),
         "",
-        "Grösste Lese-Ergebnisse (Textdateien, Zeichen):",
+        "Grösste Lese-Ergebnisse (Textdateien, KB):",
         "",
     ]
-    out += [f"- {r['chars']}: `{r['path']}`" for r in data["top_reads"]] or ["- –"]
+    out += [
+        f"- {r['chars'] / KB:.1f} KB: `{r['path']}`" for r in data["top_reads"]
+    ] or ["- –"]
     out.append("")
     return "\n".join(out)
 

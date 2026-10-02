@@ -186,6 +186,91 @@ class ComputeTest(Fixture):
         self.assertEqual(self.data["lead_ctx_median"], 0)
 
 
+class MedianAndEdgeTest(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def test_lead_context_is_median_of_instance_means(self):
+        write(self.root / "s.jsonl", [assistant("m", "claude-opus-4", cr=10)])
+        # Instanz-Mittel: 100k, 100k, 400k (Median 100k, arithmetisches Mittel 200k)
+        for name, ctx in (("a", 100_000), ("b", 100_000), ("c", 400_000)):
+            lines = [prompt("Start"), assistant(f"x{name}", "claude-opus-4", cr=ctx)]
+            agent(self.root, "s", name, {"agentType": "lead-qa"}, lines)
+        data = efficiency.compute([self.root / "s.jsonl"])
+        self.assertEqual(data["lead_ctx_median"], 100_000)
+        lead = next(r for r in data["roles"] if r["role"] == "lead-qa")
+        self.assertEqual((lead["instances"], lead["ctx_mean"]), (3, 100_000))
+
+    def test_dedupe_keeps_maximum_even_when_first_line_is_larger(self):
+        write(
+            self.root / "s.jsonl",
+            [
+                assistant("m", "claude-opus-4", out=100, cr=50),
+                assistant("m", "claude-opus-4", out=7, cr=20),
+            ],
+        )
+        calls = efficiency.scan(self.root / "s.jsonl")["calls"]
+        self.assertEqual(len(calls), 1)
+        self.assertEqual((calls[0]["output"], calls[0]["cache_read"]), (100, 50))
+
+    def test_streaming_placeholder_output_is_not_counted(self):
+        write(
+            self.root / "s.jsonl",
+            [
+                assistant("m", "claude-opus-4", out=3),
+                assistant("m", "claude-opus-4", out=900),
+            ],
+        )
+        calls = efficiency.scan(self.root / "s.jsonl")["calls"]
+        self.assertEqual(calls[0]["output"], 900)
+
+    def test_no_l0_data_is_not_measured(self):
+        write(self.root / "s.jsonl", [prompt("nur Text")])
+        agent(
+            self.root,
+            "s",
+            "a",
+            {"agentType": "lead-qa"},
+            [assistant("x", "claude-opus-4", out=5)],
+        )
+        data = efficiency.compute([self.root / "s.jsonl"])
+        self.assertIsNone(data["l0_ctx_max"])
+        text = efficiency.render_section(data)
+        self.assertIn(
+            "NICHT GEMESSEN: L0-Kontext Max",
+            text.replace("nicht gemessen", "NICHT GEMESSEN"),
+        )
+
+    def test_unhashable_tool_use_id_is_ignored(self):
+        read = ("t1", "Read", {"file_path": "/r/a.md"})
+        write(
+            self.root / "s.jsonl",
+            [
+                assistant("m", "claude-opus-4", out=5, tools=[read]),
+                result(["liste"], "x"),
+                result("t1", "y" * 2048),
+            ],
+        )
+        data = efficiency.compute([self.root / "s.jsonl"])
+        self.assertEqual(data["top_reads"], [{"path": "/r/a.md", "chars": 2048}])
+        text = efficiency.render_section(data)
+        self.assertIn("2.0 KB", text)
+
+    def test_compute_never_raises(self):
+        from unittest import mock
+
+        write(self.root / "s.jsonl", [assistant("m", "claude-opus-4", out=5)])
+        with mock.patch.object(efficiency, "_summary", side_effect=RuntimeError):
+            self.assertIsNone(efficiency.compute([self.root / "s.jsonl"]))
+
+    def test_largest_read_is_measured_in_kb(self):
+        self.assertEqual(efficiency.ampel("largest_read", 40), "grün")
+        self.assertEqual(efficiency.ampel("largest_read", 41), "gelb")
+        self.assertEqual(efficiency.ampel("largest_read", 101), "rot")
+
+
 class MissingTest(unittest.TestCase):
     def test_missing_and_broken_do_not_crash(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -232,7 +317,7 @@ class AmpelTest(unittest.TestCase):
         )
         self.assertEqual((t["opus"]["gelb"], t["opus"]["rot"]), (0.60, 0.80))
         self.assertEqual(
-            (t["largest_read"]["gelb"], t["largest_read"]["rot"]), (40_000, 100_000)
+            (t["largest_read"]["gelb"], t["largest_read"]["rot"]), (40, 100)
         )
 
 
@@ -247,7 +332,7 @@ class RenderTest(Fixture):
             "Lead-Kontext Median",
             "L0-Kontext Max",
             "opus-Anteil",
-            "Persona-Starts auf opus",
+            "Persona-Starts als general-purpose auf opus (Instanzen)",
             "Grösste gelesene Datei",
             "/r/docs/big.md",
             "tech-sim-engineer",

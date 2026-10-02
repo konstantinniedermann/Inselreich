@@ -320,6 +320,18 @@ class BudgetBoardDecisionTest(unittest.TestCase):
         self.assertEqual((rows["P2"]["granted"], rows["P2"]["used"]), (3, 0))
         self.assertEqual((rows["P1"]["granted"], rows["P1"]["used"]), (3, 1))
 
+    def test_start_before_event_does_not_count(self):
+        events = [
+            start(1, "a1", "lead-qa"),
+            spawn(2, "a1", "qa-playtester"),
+            start(3, "b1", "qa-playtester"),
+            self.grant(5, "lead-qa", 1, 1),
+            spawn(6, "a1", "qa-playtester"),
+            start(7, "b2", "qa-playtester"),
+        ]
+        rows = [b for b in build(events)["budgets"] if b["phase"] == "P1"]
+        self.assertEqual((rows[0]["used"], rows[0]["overrun"]), (1, False))
+
     def test_starts_without_grant_are_overrun(self):
         events = [
             start(1, "a1", "lead-tech"),

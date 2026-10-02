@@ -77,8 +77,10 @@ Das Dashboard verlinkt Briefings und Berichte unter `/archiv/…`.
 lokale Archiv.
 
 **Effizienz (Abschnitt in den Metriken, R167):** `python3 tools/studio/metrics.py --efficiency
-[--sessions N]` verdichtet die Token-Nutzung der letzten `N` Sessions (Standard: die letzte) aus den
-Transkripten und schreibt den Abschnitt „Effizienz“ in die Metrik-Datei. Er zeigt:
+[--sessions N]` verdichtet die Token-Nutzung der letzten `N` Sessions (Standard: alle Sessions) aus
+den Transkripten und gibt nur den Abschnitt „Effizienz“ auf stdout aus (keine Datei); das ist das
+Retro-Werkzeug. In die Metrik-Datei kommt der Abschnitt über `--session` bzw. `--milestone`
+(`make studio-metrics`). Er zeigt:
 
 - **Anteil je Rollenklasse** am Kostengewicht: Leads (Steuerung), L0, Review/QA/Merge,
   Design/Spec/Plan, Umsetzer (`tech-*`, `art-rendering-engineer`, `art-audio-engineer`),
@@ -86,10 +88,14 @@ Transkripten und schreibt den Abschnitt „Effizienz“ in die Metrik-Datei. Er 
   Kopfzeile `Persona: x` zählt als x.
 - **Kostengewicht (Schätzung, keine Abrechnung):** Input 1, Cache-Write 5 min 1,25, Cache-Write 1 h 2,
   Cache-Read 0,1, Output 5; Modellfaktor opus 1, sonnet 0,6, haiku 0,2 (fable wie opus); Usage je
-  Message-ID einmal gezählt.
-- **Kontext je Rolle** (Median über Instanzen), **5-min-Cache-Neuschreibungen** über 20k, den
-  **opus-Anteil**, **Persona-Starts als `general-purpose` auf opus** und die **grösste gelesene
-  Datei**.
+  Message-ID einmal gezählt, bei mehreren Zeilen je Feld der Maximalwert (die erste Streaming-Zeile
+  trägt nur einen Platzhalter von 1 bis 5 Output-Tokens).
+- **Kontext je Rolle:** Start-Kontext = Median des ersten Aufrufs je Instanz; Kontext Mittel = Median
+  der Instanz-Mittelwerte (je Instanz der Mittelwert über ihre Aufrufe); Kontext Max = grösster
+  Einzelaufruf. Der Lead-Kontext-Median der Ampel ist der Median der Instanz-Mittelwerte aller Leads.
+- **5-min-Cache-Neuschreibungen** über 20k nach dem ersten Aufruf, den **opus-Anteil**, die
+  **Persona-Starts als general-purpose auf opus (Instanzen)** und die **grösste gelesene Datei**
+  (nur Textdateien, Einheit KB, 1 KB = 1024 Zeichen). Fehlen Daten, steht „nicht gemessen“.
 
 Ampel-Schwellen (die Werkzeug-Ausgabe weist sie je Zeile aus):
 
@@ -105,7 +111,9 @@ Ampel-Schwellen (die Werkzeug-Ausgabe weist sie je Zeile aus):
 | grösste gelesene Datei                        | > 40 KB | > 100 KB |
 
 Ausgangswerte (Token-Analyse 2026-10-02, [Ad-hoc-Retro](retros/2026-10-02-adhoc-token-effizienz.md)):
-67,2 % · 5,0 % · 28,6 % · bis 169k · 774k · 83 % · 2040 Aufrufe geerbt · 310 KB. Das Werkzeug ist
+67,2 % · 5,0 % · 28,6 % · bis 169k · 774k · 83 % · 2040 Aufrufe geerbt · 310 KB (der Output-Anteil
+von 6 % dort war zu niedrig, weil die erste Streaming-Zeile gezählt wurde; das Werkzeug zählt den
+Maximalwert und kommt auf ≈ 19 % Output, Steuerung 63,7 %, Umsetzer 5,5 %). Das Werkzeug ist
 Teil des Pakets EFF-W; weicht seine Ausgabe von dieser Beschreibung ab, gleicht L0 das Handbuch an.
 
 **Pflichtpunkt jeder Retro** (Kurz-, Meilenstein- und Prozess-Aussensicht-Retro): Der Coach bzw.
