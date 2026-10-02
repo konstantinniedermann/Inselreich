@@ -5,6 +5,7 @@ import { clampToMap, zoomAt } from '../render/camera';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
+import { isModalOpen } from './modal';
 import { targetTile } from './target';
 
 export type InputAction =
@@ -15,8 +16,28 @@ export type InputAction =
 
 /** Tastatur-Pan in Bildschirm-Pixeln je Sekunde (= 16 px je Frame bei 60 fps). */
 export const PAN_PX_PER_S = 960;
-const DRAG_THRESHOLD = 4;
+export const DRAG_THRESHOLD = 4;
+export type KeyTarget = { tagName: string; isContentEditable?: boolean };
+export type Pt = { x: number; y: number };
 const PAN_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright']);
+
+/** Kamera- und Abbruch-Tasten wirken auch bei fokussiertem Knopf, nicht in Eingabefeldern oder bei offener Karte. */
+export function panKeyAllowed(target: KeyTarget | null, modalOpen: boolean): boolean {
+  if (modalOpen) return false;
+  if (target === null) return true;
+  if (target.isContentEditable === true) return false;
+  return !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
+/** Zieht der Zeiger weiter als die Schwelle (euklidisch, CSS-px) vom Startpunkt weg? */
+export function exceedsDrag(start: Pt, p: Pt): boolean {
+  return Math.hypot(p.x - start.x, p.y - start.y) > DRAG_THRESHOLD;
+}
+
+/** Klick, wenn der Zeiger auf dem ganzen Weg unter der Schwelle blieb. */
+export function isClick(start: Pt, path: readonly Pt[]): boolean {
+  return !path.some((p) => exceedsDrag(start, p));
+}
 
 /** Abriss-Vorschau rot: Gebäude (ausser Kontor) oder Weg auf der Kachel. */
 export function canDemolishTile(world: World, x: number, y: number): boolean {
@@ -73,6 +94,8 @@ export function bindInput(
     touch: boolean;
     /** Zielkachel beim Drücken; `null` ausserhalb der Karte. */
     downTile: { x: number; y: number } | null;
+    /** Maus-Auswahl: wirkt erst beim Loslassen, Ziehen ab der Schwelle schwenkt stattdessen. */
+    select: boolean;
   } | null = null;
   /** Aktive Finger (nur Touch). Bei zwei Fingern läuft eine Pinch-/Pan-Geste. */
   const touches = new Map<number, { sx: number; sy: number }>();
@@ -177,6 +200,7 @@ export function bindInput(
       pointerId: e.pointerId,
       touch: isTouch,
       downTile: targetTile(state.world, state.cam, state.tool, p.sx, p.sy),
+      select: !wantsPan && !isTouch && state.tool.kind === 'select',
     };
     if (wantsPan) return;
     if (drag.road && !isTouch) {
@@ -185,8 +209,8 @@ export function bindInput(
       tileAction(p.sx, p.sy, false);
       pointer = p;
       updateHover();
-    } else if (!isTouch) {
-      // Maus: Bau, Abriss und Auswahl wirken sofort auf der Drück-Kachel
+    } else if (!isTouch && !drag.select) {
+      // Maus: Bau und Abriss wirken sofort auf der Drück-Kachel (Auswahl erst beim Loslassen)
       tileAction(p.sx, p.sy, false);
       pointer = p;
       updateHover();
@@ -219,10 +243,12 @@ export function bindInput(
     }
     pointer = p;
     if (drag && drag.pointerId === e.pointerId) {
-      if (!drag.panning && state.tool.kind === 'select') {
-        if (Math.hypot(p.sx - drag.startX, p.sy - drag.startY) > DRAG_THRESHOLD) {
-          drag.panning = true;
-        }
+      if (
+        !drag.panning &&
+        drag.select &&
+        exceedsDrag({ x: drag.startX, y: drag.startY }, { x: p.sx, y: p.sy })
+      ) {
+        drag.panning = true;
       }
       if (drag.panning) {
         state.cam.x -= (p.sx - drag.lastX) / state.cam.zoom;
@@ -274,7 +300,12 @@ export function bindInput(
     const d = drag;
     drag = null;
     if (d.panning || d.button !== 0) return;
-    if (d.road) {
+    if (d.select && !d.touch) {
+      const up = local(e);
+      if (d.downTile && !exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })) {
+        onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+      }
+    } else if (d.road) {
       // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
       if (d.touch && d.lastTile === null && d.downTile) {
         onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
@@ -284,7 +315,7 @@ export function bindInput(
       // Touch: Aktion beim Loslassen, aber auf der Drück-Kachel
       onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
     }
-    // Maus: Aktion lief schon beim Drücken; Strassen beim Drücken/Ziehen
+    // Maus: Bau/Abriss/Strassen liefen schon beim Drücken; Auswahl beim Loslassen (oben)
     updateHover();
   };
   const onPointerCancel = (e: PointerEvent): void => {
@@ -316,14 +347,7 @@ export function bindInput(
     updateHover();
   };
 
-  const isFormControl = (t: EventTarget | null): boolean =>
-    t instanceof HTMLInputElement ||
-    t instanceof HTMLTextAreaElement ||
-    t instanceof HTMLSelectElement ||
-    t instanceof HTMLButtonElement ||
-    (t instanceof HTMLElement && t.isContentEditable);
-
-  /** Eingabefelder (ohne Buttons: ein per Tab fokussierter Bauleisten-Button soll Hotkeys erlauben). */
+  /** Eingabefelder (ohne Buttons: ein fokussierter Knopf soll Hotkeys und Kamera-Tasten erlauben). */
   const isTextField = (t: EventTarget | null): boolean =>
     t instanceof HTMLInputElement ||
     t instanceof HTMLTextAreaElement ||
@@ -331,22 +355,29 @@ export function bindInput(
     (t instanceof HTMLElement && t.isContentEditable);
 
   const onKeyDown = (e: KeyboardEvent): void => {
+    const target: KeyTarget | null =
+      e.target instanceof HTMLElement
+        ? { tagName: e.target.tagName, isContentEditable: e.target.isContentEditable }
+        : null;
+    const modal = isModalOpen();
     const hot = hotkeyAction(
       e.key,
       { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
-      isTextField(e.target),
+      isTextField(e.target) || modal,
     );
     if (hot) {
       if (!e.repeat) onAction({ type: 'hotkey', action: hot });
       e.preventDefault();
       return;
     }
-    if (isFormControl(e.target)) return;
+    if (!panKeyAllowed(target, modal)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'escape') {
       onAction({ type: 'cancel' });
     } else if (k === ' ') {
+      // Auf Knöpfen bleibt die Leertaste deren Aktivierung (R121 Punkt 3)
+      if (target?.tagName === 'BUTTON') return;
       spaceDown = true;
       e.preventDefault();
     } else if (PAN_KEYS.has(k)) {
@@ -355,7 +386,7 @@ export function bindInput(
     }
   };
   const onKeyUp = (e: KeyboardEvent): void => {
-    if (isFormControl(e.target)) return;
+    // Immer löschen, damit nichts hängen bleibt (z. B. Fokuswechsel während der Taste)
     const k = e.key.toLowerCase();
     if (k === ' ') spaceDown = false;
     keys.delete(k);
