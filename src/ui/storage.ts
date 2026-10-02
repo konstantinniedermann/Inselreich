@@ -86,3 +86,38 @@ export function noLoadableReason(): string {
   }
   return NO_SAVE;
 }
+
+export type StorageProblem = 'none' | 'unavailable' | 'damaged';
+
+/** Speicherzustand für Startkarte und Menü: wirft `getItem`, ist er gesperrt; ein belegter, abgelehnter Slot ist kaputt. */
+export function storageProblem(storage: StorageLike): StorageProblem {
+  let problem: StorageProblem = 'none';
+  for (const slot of SLOTS) {
+    let json: string | null;
+    try {
+      json = storage.getItem(SLOT_KEYS[slot]);
+    } catch {
+      return 'unavailable';
+    }
+    if (json !== null && !deserialize(json).ok) problem = 'damaged';
+  }
+  return problem;
+}
+
+export function currentStorageProblem(): StorageProblem {
+  try {
+    return storageProblem(localStorage);
+  } catch {
+    return 'unavailable';
+  }
+}
+
+/** `pagehide`: still den Autosave schreiben (nicht bei Tick 0); Fehler bleiben folgenlos (Spec L1, §9 Punkt 7). */
+export function autosaveOnHide(world: World, write: (w: World) => Result = saveAuto): void {
+  if (world.tick <= 0) return;
+  try {
+    write(world);
+  } catch {
+    // bewusst still: die Startkarte bietet dann den älteren Stand an
+  }
+}

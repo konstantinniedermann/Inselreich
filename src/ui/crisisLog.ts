@@ -5,6 +5,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { CrisisView } from '../sim/queries';
 import type { World } from '../sim/types';
 import { repairFee, targetName } from './crisis';
+import { formatClock, formatGameTime } from './time';
 
 /** Ereignis-Log (M6 13.4): Einträge aus dem Vergleich zweier `crisisView`-Stände; kein Teil des Spielstands. */
 
@@ -22,7 +23,7 @@ export const LOG_MAX = 10;
 
 /** Anzeigezeile eines Eintrags. */
 export function logLine(e: LogEntry): string {
-  return `Tick ${e.tick} · ${e.text}`;
+  return `${formatClock(e.tick)} · ${e.text}`;
 }
 
 /**
@@ -65,17 +66,19 @@ export function crisisLogEntries(
     const name = targetName(cur, world);
     if (cur.outcome === 'burning') {
       const fee = repairFee(cur, world);
-      const feeText = fee === null ? '' : ` — Instandsetzung ${fee}, ${FIRE_OUTAGE} Ticks Ausfall`;
+      const feeText =
+        fee === null ? '' : ` — Instandsetzung ${fee}, ${formatGameTime(FIRE_OUTAGE)} Ausfall`;
       add(`Brand: ${name} brennt${feeText}`, 'warn');
     } else if (cur.outcome === 'extinguished') {
       add(`Brand gelöscht: ${name} (Feuerwache)`, 'info');
     } else add('Brand ohne Schaden', null);
   } else if (cur.kind === 'storm') {
-    if (cur.phase === 'warning') add(`Sturmwarnung: Sturm in ${STORM_WARNING + 1} Ticks`, 'warn');
+    if (cur.phase === 'warning')
+      add(`Sturmwarnung: Sturm in ${formatGameTime(STORM_WARNING + 1)}`, 'warn');
     else add('Sturm hat begonnen', null);
   } else {
     const good = cur.good === undefined ? '' : `${GOODS[cur.good].name} `;
-    add(`Boom: ${good}+${BOOM_PCT - 100} % für ${BOOM_DURATION} Ticks`, 'info');
+    add(`Boom: ${good}+${BOOM_PCT - 100} % für ${formatGameTime(BOOM_DURATION)}`, 'info');
   }
   return out;
 }

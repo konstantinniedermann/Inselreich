@@ -7,7 +7,7 @@ import { setField } from './dom';
 export interface TradeActions {
   back(): void;
   /** Nach jedem Kauf/Verkauf, mit dem Ergebnis der Sim-Aktion (Meldung und Ton macht der Aufrufer). */
-  changed(op: 'buy' | 'sell', result: Result): void;
+  changed(op: 'buy' | 'sell', result: Result, good: GoodId, n: number): void;
 }
 
 /** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
@@ -19,8 +19,8 @@ function sellTexts(
   const price = sellPrice(world, good, n);
   return {
     label: `−${n}`,
-    price: `G ${price}`,
-    title: `${n} ${GOODS[good].name} verkaufen für G ${price}`,
+    price: `${price} Geld`,
+    title: `${n} ${GOODS[good].name} verkaufen für ${price} Geld`,
   };
 }
 
@@ -44,10 +44,18 @@ function cell(parent: HTMLElement, className: string, text?: string): HTMLElemen
 /** Baut den Handelsdialog des Kontors auf. */
 export function renderTrade(panel: HTMLElement, world: World, actions: TradeActions): void {
   panel.replaceChildren();
+  const head = cell(panel, 'panel-head');
   const title = document.createElement('h2');
   title.className = 'panel-title';
   title.textContent = 'Handel am Kontor';
-  panel.appendChild(title);
+  const back = document.createElement('button');
+  back.className = 'btn';
+  back.textContent = 'Zurück';
+  back.addEventListener('click', () => {
+    back.blur();
+    actions.back();
+  });
+  head.append(title, back);
 
   const table = cell(panel, 'trade-table');
   cell(table, 'trade-head', 'Kaufen');
@@ -67,11 +75,13 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
-    btn.title = sellT ? sellT.title : `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`;
+    btn.title = sellT
+      ? sellT.title
+      : `${n} ${GOODS[good].name} kaufen für ${buyPrice(good, n)} Geld`;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);
-      actions.changed(op, r);
+      actions.changed(op, r, good, n);
     });
     parent.appendChild(btn);
   };
@@ -92,22 +102,13 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     name.appendChild(pct);
 
     const buyCell = cell(table, 'trade-cell');
-    cell(buyCell, 'trade-price', `G ${GOODS[good].buy}`);
+    cell(buyCell, 'trade-price', `${GOODS[good].buy} Geld`);
     for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
 
     const sellCell = cell(table, 'trade-cell');
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);
   }
 
-  const buttons = cell(panel, 'panel-actions');
-  const back = document.createElement('button');
-  back.className = 'btn';
-  back.textContent = 'Zurück';
-  back.addEventListener('click', () => {
-    back.blur();
-    actions.back();
-  });
-  buttons.appendChild(back);
   updateTrade(panel, world);
 }
 

@@ -209,11 +209,11 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
   } else {
     const b = buildingAt(world, hover.x, hover.y);
     const def = b ? BUILDING_DEFS[b.defId] : null;
-    if (tool.kind === 'demolish') {
+    if (tool.kind === 'demolish' && hover.ok) {
       ctx.beginPath();
       footprintPath(ctx, cam, hover.x, hover.y, 1, 1);
       if (b && def) footprintPath(ctx, cam, b.x, b.y, def.w, def.h);
-      ctx.fillStyle = hover.ok ? HOVER_OK : HOVER_BAD;
+      ctx.fillStyle = HOVER_BAD;
       ctx.fill();
     }
     ctx.beginPath();

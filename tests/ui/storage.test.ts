@@ -1,7 +1,18 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { serialize } from '../../src/sim/save';
+import { ok, type World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { AUTO_KEY, SAVE_KEY, listSavesFrom, type StorageLike } from '../../src/ui/storage';
+import {
+  AUTO_KEY,
+  SAVE_KEY,
+  autosaveOnHide,
+  listSavesFrom,
+  storageProblem,
+  type StorageLike,
+} from '../../src/ui/storage';
+import { startChoices } from '../../src/ui/startCard';
+import { formatClock } from '../../src/ui/time';
 
 function fake(entries: Record<string, string>): StorageLike {
   return { getItem: (k) => entries[k] ?? null };
@@ -53,4 +64,48 @@ describe('listSavesFrom (RF-1, AK-U2-04, AK-U2-10)', () => {
     };
     expect(listSavesFrom(s)).toEqual([]);
   });
+});
+
+it('AK-UX-01 storageProblem: werfend → unavailable, kaputt → damaged, leer → none', () => {
+  expect(
+    storageProblem({
+      getItem: () => {
+        throw new Error('gesperrt');
+      },
+    }),
+  ).toBe('unavailable');
+  const broken = { getItem: (k: string) => (k === SAVE_KEY ? '{kaputt' : null) };
+  expect(storageProblem(broken)).toBe('damaged');
+  expect(listSavesFrom(broken)).toEqual([]);
+  expect(storageProblem({ getItem: () => null })).toBe('none');
+});
+
+it('AK-UX-01 v2-Fixture im manuellen Slot ist ladbar (Migration)', () => {
+  const json = readFileSync('tests/sim/fixtures/save-v2.json', 'utf8');
+  const s = { getItem: (k: string) => (k === SAVE_KEY ? json : null) };
+  const tick = (JSON.parse(json) as { tick: number }).tick;
+  expect(listSavesFrom(s)).toEqual([{ slot: 'manual', tick }]);
+  expect(storageProblem(s)).toBe('none');
+  expect(startChoices(listSavesFrom(s), 'none').choices[0]!.label).toBe(
+    `Gespeichertes Spiel laden (Spielzeit ${formatClock(tick)})`,
+  );
+});
+
+it('RF-3 autosaveOnHide: Tick 0 schreibt nicht, werfendes Schreiben bleibt still', () => {
+  const calls: number[] = [];
+  autosaveOnHide({ tick: 0 } as World, () => {
+    calls.push(0);
+    return ok;
+  });
+  expect(calls).toEqual([]);
+  autosaveOnHide({ tick: 5 } as World, () => {
+    calls.push(5);
+    return ok;
+  });
+  expect(calls).toEqual([5]);
+  expect(() =>
+    autosaveOnHide({ tick: 5 } as World, () => {
+      throw new Error('voll');
+    }),
+  ).not.toThrow();
 });

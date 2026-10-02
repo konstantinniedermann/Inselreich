@@ -1,3 +1,4 @@
+import { GOODS } from '../sim/defs/goods';
 import type { Cost } from '../sim/types';
 
 /** Setzt den Text eines `data-field`-Elements, nur wenn er sich geändert hat. */
@@ -7,12 +8,11 @@ export function setField(root: HTMLElement, field: string, text: string): HTMLEl
   return el;
 }
 
-/** Kosten als Kurztext, z. B. „G 50 · H 3"; Nullwerte ausser Geld entfallen. */
+/** Kosten als Text, z. B. „50 Geld · 3 Holz"; Nullwerte ausser Geld entfallen (Spec L2, R122 Punkt 3). */
 export function costLine(c: Cost): string {
-  const parts = [`G ${c.money}`];
-  if (c.wood) parts.push(`H ${c.wood}`);
-  if (c.tools) parts.push(`W ${c.tools}`);
-  if (c.stone) parts.push(`S ${c.stone}`);
+  const parts = [`${c.money} Geld`];
+  for (const g of ['wood', 'tools', 'stone'] as const)
+    if (c[g]) parts.push(`${c[g]} ${GOODS[g].name}`);
   return parts.join(' · ');
 }
 

@@ -27,19 +27,19 @@ describe('crisisCardText (M6-AK-U2-02)', () => {
     const w = SCENARIOS['krise-brand']!(); // Stufe normal, Tick vor der Periode
     const c = card(w);
     expect(c).toEqual({
-      text: 'Krisen: normal · nächste Krise in 1 Ticks',
+      text: 'Krisen: normal · nächste Krise in 1 s',
       kind: null,
       level: null,
     });
     w.crisisLevel = 'mild';
-    expect(card(w).text).toMatch(/^Krisen: mild · nächste Krise in \d+ Ticks$/);
+    expect(card(w).text).toMatch(/^Krisen: mild · nächste Krise in (\d+ s|\d+:\d{2})$/);
   });
 
   it('Brand, burning: Gebäude, Ausfall, Gebühr; Warnung', () => {
     const w = SCENARIOS['krise-brand']!();
     step(w);
     expect(card(w)).toEqual({
-      text: `Brand: ${BUILDING_DEFS.distillery.name} · Ausfall noch 200 Ticks · Instandsetzung ${BUILDING_DEFS.distillery.cost.money}`,
+      text: `Brand: ${BUILDING_DEFS.distillery.name} · Ausfall noch 20 s · Instandsetzung ${BUILDING_DEFS.distillery.cost.money}`,
       kind: 'fire',
       level: 'warn',
     });
@@ -91,7 +91,7 @@ describe('crisisCardText (M6-AK-U2-02)', () => {
     expect(warn.kind).toBe('storm');
     expect(warn.level).toBe('warn');
     expect(warn.text).toBe(
-      `Sturmwarnung: Sturm in 201 Ticks, dauert 300 Ticks · halbe Leistung: ${stormAffectedNames()}`,
+      `Sturmwarnung: Sturm in 21 s, dauert 30 s · halbe Leistung: ${stormAffectedNames()}`,
     );
     for (const id of Object.keys(BUILDING_DEFS) as (keyof typeof BUILDING_DEFS)[]) {
       if (BUILDING_DEFS[id].stormAffected === true)
@@ -99,7 +99,7 @@ describe('crisisCardText (M6-AK-U2-02)', () => {
     }
     until(w, () => crisisView(w).phase === 'active');
     expect(card(w)).toEqual({
-      text: 'Sturm: noch 299 Ticks · Rohstoffbetriebe halbe Leistung',
+      text: 'Sturm: noch 30 s · Rohstoffbetriebe halbe Leistung',
       kind: 'storm',
       level: 'warn',
     });
@@ -111,7 +111,7 @@ describe('crisisCardText (M6-AK-U2-02)', () => {
     const v = crisisView(w);
     if (v.phase === 'none' || v.good === undefined) throw new Error('kein Boom');
     expect(card(w)).toEqual({
-      text: `Boom: ${GOODS[v.good].name} +${BOOM_PCT - 100} % Verkaufspreis · noch 300 Ticks`,
+      text: `Boom: ${GOODS[v.good].name} +${BOOM_PCT - 100} % Verkaufspreis · noch 30 s`,
       kind: 'boom',
       level: 'info',
     });

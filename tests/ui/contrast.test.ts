@@ -39,6 +39,8 @@ const PAIRS: Array<[string, string]> = [
   ['--parchment', '--wood'], // gesperrte Buttons, Leisten
   ['--parchment-edge', '--wood'], // Seed-Zeile in der Leiste
   ['--negative', '--wood'], // .negative in der Leiste
+  ['--parchment-muted', '--wood-light'], // .btn.unaffordable (R132)
+  ['--parchment-muted', '--wood'], // .btn.unaffordable auf Hover
 ];
 
 describe('UI-Kontrast (AK-U2-02)', () => {

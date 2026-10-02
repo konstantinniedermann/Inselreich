@@ -388,6 +388,32 @@ function leistungSturm(): World {
   return w;
 }
 
+/** M7-UX: Kontor mit 3 Wegkacheln, Fischerhütte durch genau eine freie Kachel vom Weg getrennt (AK-UX-05, -23). */
+function uxAnbindung(): World {
+  const { w, kx, ky } = baseWorld();
+  roadRow(w, kx + 2, kx + 4, ky); // Kontor ist 2×2 bei (kx, ky): (kx+2, ky) ist Wurzel
+  setTerrain(w, kx + 7, ky, 'water');
+  put(w, 'fisher', kx + 6, ky); // Wasser östlich, Lücke (kx+5, ky) westlich
+  put(w, 'house', kx + 3, ky - 2);
+  w.money = 1000;
+  return w;
+}
+
+/** M7-UX: 4 Bürgerhäuser (4 × 15 ≥ WIN_CITIZENS), `won` noch falsch; der erste Tick setzt es (AK-UX-24). */
+function uxSieg(): World {
+  const { w, kx, ky } = baseWorld();
+  for (let i = 0; i < 4; i++) {
+    setHouse(w, put(w, 'house', kx + 3 + i, ky - 2), {
+      tier: 3,
+      inhabitants: TIERS[3].maxInhabitants,
+      supplied: true,
+      metGoods: Object.keys(TIERS[3].needs) as GoodId[],
+      services: TIERS[3].services,
+    });
+  }
+  return w;
+}
+
 export const SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
@@ -408,6 +434,8 @@ export const SCENARIOS: Record<string, () => World> = {
   'krise-aus': kriseAus,
   feuerwache,
   'leistung-sturm': leistungSturm,
+  'ux-anbindung': uxAnbindung,
+  'ux-sieg': uxSieg,
 };
 
 /**

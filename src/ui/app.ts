@@ -1,13 +1,16 @@
-import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { setTaxLevel } from '../sim/tax';
+import { refundCost } from '../sim/economy';
+import { crisisView, effectiveRefund } from '../sim/queries';
+import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
-import { crisisView } from '../sim/queries';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { World } from '../sim/types';
+import type { Category, GoodId, Order, Result, World } from '../sim/types';
+import { refundText } from './texts';
 import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
@@ -15,24 +18,43 @@ import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { disposeHud, updateHud, type HudActions } from './hud';
-import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
-import { bindInput, type InputAction, type InputBinding } from './input';
+import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
+import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
+import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
-import { orderChange } from './order';
+import { deliveredMessage, orderMessage } from './order';
+import {
+  friendlyReason,
+  hintPosition,
+  newlyConnected,
+  placementHint,
+  unconnectedIds,
+  type ReasonCtx,
+} from './hints';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
-import { bindMessages, showMessage } from './messages';
+import { bindMessages, closeClosableToast, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
 import { createPerfProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
+import { openMenu, type MenuActions } from './menu';
+import { closeAllModals, isModalOpen } from './modal';
 import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
-import { listSaves, loadSlot, noLoadableReason, saveAuto, saveToStorage } from './storage';
+import {
+  autosaveOnHide,
+  currentStorageProblem,
+  listSaves,
+  loadSlot,
+  saveAuto,
+  saveToStorage,
+  type Slot,
+} from './storage';
+import { openStartCard, startChoices, STORAGE_NOTES } from './startCard';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -45,6 +67,8 @@ export interface GameState {
   hover: Hover | null;
   selectedId: number | null;
   panel: PanelState;
+  /** Bau-Kategorie, deren Einträge-Leiste offen ist (Spec L2). */
+  openCategory: Category | null;
   terrainLayer: HTMLCanvasElement;
   /** Siegbanner bereits gezeigt (ein geladener, gewonnener Stand zeigt es nicht erneut). */
   wonShown: boolean;
@@ -92,6 +116,8 @@ function restart(root: HTMLElement, world?: World, opts?: StartOptions): Startab
 export interface StartOptions {
   speed?: GameState['speed'];
   camera?: Camera;
+  /** Beim Programmstart: Startkarte zeigen (Spec L1). */
+  intro?: boolean;
 }
 
 /**
@@ -104,11 +130,7 @@ export function startGame(root: HTMLElement, loaded?: World, opts?: StartOptions
   try {
     const gameEl = need<HTMLElement>(root, '#game');
     unbindMessages = bindMessages(gameEl);
-    const game = launch(root, gameEl, unbindMessages, loaded, opts);
-    if (!loaded && listSaves().length > 0) {
-      showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
-    }
-    return game;
+    return launch(root, gameEl, unbindMessages, loaded, opts);
   } catch (err) {
     console.error(err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -143,6 +165,7 @@ function launch(
     hover: null,
     selectedId: null,
     panel: { kind: 'none' },
+    openCategory: null,
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
     eventLog: [],
@@ -155,6 +178,7 @@ function launch(
     effects: settings.effects,
   });
   let closeSettings: (() => void) | null = null;
+  let closeMenu: (() => void) | null = null;
   const preview = parseDevParams(location.search, import.meta.env.DEV);
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let prefersReduced = motionQuery.matches;
@@ -199,37 +223,52 @@ function launch(
   renderEventLog(logBox);
   gameEl.appendChild(logBox);
 
+  const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
+
   const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
 
-  const actions: HudActions = {
+  /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */
+  const loadSlotPaused = (slot: Slot): void => {
+    const r = loadSlot(slot);
+    if (!r.ok) {
+      showError(r.reason);
+      return;
+    }
+    // Die Kamera nur bei gleicher Karte (gleicher Seed), sonst aufs Kontor zentrieren
+    restart(root, r.world, {
+      speed: 0,
+      camera: r.world.seed === world.seed ? state.cam : undefined,
+    });
+    // Kein bleibender Fokusring auf dem alten Knopf
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    showMessage('Pausiert — P oder 1× setzt fort');
+  };
+
+  const menuActions: MenuActions = {
     save: () => {
       const r = saveToStorage(world);
       if (r.ok) showMessage('Gespeichert');
       else showMessage(r.reason, 'error');
     },
     listSaves,
-    setSpeed: (speed) => setSpeed(speed),
-    load: (slot) => {
-      // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
-      if (!slot) {
-        showMessage(noLoadableReason(), 'error');
-        return;
-      }
-      const r = loadSlot(slot);
-      if (!r.ok) {
-        showMessage(r.reason, 'error');
-        return;
-      }
-      // Tempo bleibt; die Kamera nur bei gleicher Karte (gleicher Seed), sonst aufs Kontor zentrieren
-      restart(root, r.world, {
-        speed: state.speed,
-        camera: r.world.seed === world.seed ? state.cam : undefined,
-      });
-      // Kein bleibender Fokusring auf dem alten Laden-Knopf
-      (document.activeElement as HTMLElement | null)?.blur?.();
-      showMessage('Spielstand geladen');
+    storageNote: () => STORAGE_NOTES[currentStorageProblem()],
+    hasProgress: () => world.tick > 0,
+    load: (slot) => loadSlotPaused(slot),
+    crisisLevel: () => settings.crisisLevel,
+    newIsland: (crisisLevel) => {
+      settings = { ...settings, crisisLevel };
+      saveSettings(settings);
+      restart(root);
     },
+    seed: () => world.seed,
+    openGuide: (opener) => {
+      openStartCard(gameEl, { mode: 'help', opener });
+    },
+  };
+
+  const actions: HudActions = {
+    setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
       settings = { ...settings, muted };
@@ -260,37 +299,33 @@ function launch(
         opener,
       );
     },
-    setCrisisLevel: (crisisLevel) => {
-      settings = { ...settings, crisisLevel };
-      const r = saveSettings(settings);
-      if (r.ok) showMessage('Krisenstufe gilt ab dem nächsten Spiel');
-      else showError(r.reason);
-    },
-    hasProgress: () => world.tick > 0,
-    restart: () => {
-      restart(root);
+    openMenu: (opener) => {
+      closeMenu?.();
+      closeMenu = openMenu(gameEl, menuActions, opener);
     },
     setTax: (level) => {
       const r = setTaxLevel(world, level);
-      if (!r.ok) showError(r.reason);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
       refresh();
     },
     deliverOrder: () => {
+      const o = world.order ? { ...world.order } : null;
       const r = deliverOrder(world);
       const ev = actionSound(r, 'orderDone');
-      if (!r.ok) showError(r.reason);
+      if (!r.ok)
+        showError(friendlyReason(world, r.reason, o ? { good: o.good, amount: o.amount } : {}));
       else {
         // Vergleichswert zurücksetzen, damit die Lieferung nicht als „verfallen" gilt
-        prevOrderPeriod = null;
-        showMessage('Auftrag geliefert');
+        prevOrder = null;
+        if (o) showMessage(deliveredMessage(o));
         if (ev) sound.play(ev);
       }
       refresh();
     },
   };
 
-  /** Auftragsperiode im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
-  let prevOrderPeriod: number | null = world.order?.period ?? null;
+  /** Auftrag im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
+  let prevOrder: Order | null = world.order ? { ...world.order } : null;
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -300,9 +335,8 @@ function launch(
       state.selectedId = panel.id;
       renderInspect(panelEl, world, panel.id, {
         demolish: (id) => {
-          const r = demolish(world, id);
-          if (!r.ok) showError(r.reason);
-          else {
+          const r = demolishBuilding(id);
+          if (r.ok) {
             sound.play('demolish');
             setPanel({ kind: 'none' });
           }
@@ -314,8 +348,8 @@ function launch(
       state.selectedId = world.kontorId;
       renderTrade(panelEl, world, {
         back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
-        changed: (op, r) => {
-          if (!r.ok) showError(r.reason);
+        changed: (op, r, good, n) => {
+          if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
           else if (op === 'sell') sound.play('coin');
           refresh();
         },
@@ -330,9 +364,15 @@ function launch(
   const refresh = (): void => {
     if (world.won && !state.wonShown) {
       state.wonShown = true;
-      showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
+      showMessage(
+        `Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`,
+        'info',
+        true,
+        true,
+      );
     }
     updateHud(hudEl, state, actions);
+    updateNoticeStack(noticeStack, world);
     updateEventLog(logBox, state.eventLog);
     updateBuildMenu(navEl, world);
     const panel = state.panel;
@@ -354,19 +394,25 @@ function launch(
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
     state.tool = tool;
+    state.openCategory = nextOpenCategory(state.openCategory, { kind: 'tool', tool });
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
     // Vorschau an der letzten Zeigerposition neu (ohne Zeiger: keine); keine hängende Drag-Vorschau
     input?.refreshHover();
-    renderBuildMenu(navEl, state, selectTool);
+    renderBuildMenu(navEl, state, selectTool, toggleCategory);
   };
-  renderBuildMenu(navEl, state, selectTool);
+  const toggleCategory = (category: Category): void => {
+    state.openCategory = nextOpenCategory(state.openCategory, { kind: 'toggle', category });
+    renderBuildMenu(navEl, state, selectTool, toggleCategory);
+  };
+  renderBuildMenu(navEl, state, selectTool, toggleCategory);
 
   const selectBuilding = (id: number | null): void => {
     const panel = state.panel;
     if (id === null) {
       setPanel({ kind: 'none' });
-    } else if (panel.kind === 'trade' && id === world.kontorId) {
-      // Handel bleibt offen, wenn das Kontor erneut angeklickt wird
+    } else if (id === world.kontorId) {
+      // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
+      if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
       setPanel({ kind: 'inspect', id });
     }
@@ -375,11 +421,12 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
+    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ });
     if (!dragging) {
-      showError(reason);
+      showError(text);
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
       dragMoneyToastShown = true;
-      showError(reason);
+      showError(text);
     }
   };
 
@@ -402,12 +449,34 @@ function launch(
     refresh();
   };
 
+  const reportConnections = (before: Set<number>): void => {
+    for (const name of newlyConnected(before, world))
+      showMessage(`${name} ist jetzt mit dem Kontor verbunden`);
+  };
+  const demolishBuilding = (id: number): Result => {
+    const b = world.buildings[id];
+    const cost = b ? BUILDING_DEFS[b.defId].cost : null;
+    const text =
+      b && cost
+        ? `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`
+        : '';
+    const r = demolish(world, id);
+    if (r.ok) showMessage(text);
+    else showError(friendlyReason(world, r.reason));
+    return r;
+  };
+  const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number): ReasonCtx =>
+    op === 'buy'
+      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good }
+      : { good, amount: n };
+
   const onAction = (a: InputAction): void => {
     if (a.type === 'hotkey') {
       onHotkey(a.action);
       return;
     }
     if (a.type === 'cancel') {
+      if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
       return;
@@ -422,17 +491,24 @@ function launch(
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
+      const before = unconnectedIds(world);
       const r = placeBuilding(world, tool.defId, a.x, a.y);
-      if (!r.ok) showError(r.reason);
-      else sound.play('build');
+      if (!r.ok) showError(friendlyReason(world, r.reason, { defId: tool.defId }));
+      else {
+        sound.play('build');
+        reportConnections(before);
+      }
     } else if (tool.kind === 'road') {
+      const before = unconnectedIds(world);
       const r = placeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
-      else sound.play('build');
+      else {
+        sound.play('build');
+        reportConnections(before);
+      }
     } else if (tile?.buildingId != null) {
-      const r = demolish(world, tile.buildingId);
-      if (!r.ok) showError(r.reason);
-      else sound.play('demolish');
+      const r = demolishBuilding(tile.buildingId);
+      if (r.ok) sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
@@ -442,9 +518,65 @@ function launch(
   };
   input = bindInput(canvas, state, onAction);
 
+  // Cursor-Hinweis: Schild am Zeiger mit dem Grund; Zielkachel ausserhalb der Karte = kein Hover = kein Schild
+  const hintEl = document.createElement('div');
+  hintEl.className = 'cursor-hint';
+  hintEl.hidden = true;
+  document.body.appendChild(hintEl);
+  let hintFor: string | null = null;
+  const updateHint = (force: boolean): void => {
+    const pos = input?.pointerClient() ?? null;
+    const hover = state.hover;
+    if (!hover || !pos || isModalOpen()) {
+      hintEl.hidden = true;
+      hintFor = null;
+      return;
+    }
+    const key = hintKey(hover);
+    if (force || key !== hintFor) {
+      hintFor = key;
+      const h = placementHint(world, hover.tool ?? state.tool, hover.x, hover.y);
+      hintEl.hidden = h === null;
+      if (h) {
+        hintEl.textContent = h.text;
+        hintEl.className = `cursor-hint cursor-hint--${h.tone}`;
+      }
+    }
+    if (hintEl.hidden) return;
+    const p = hintPosition(
+      pos.x,
+      pos.y,
+      hintEl.offsetWidth,
+      hintEl.offsetHeight,
+      innerWidth,
+      innerHeight,
+    );
+    hintEl.style.left = `${p.left}px`;
+    hintEl.style.top = `${p.top}px`;
+  };
+
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   setPanel({ kind: 'none' });
   refresh();
+  let closeStart: (() => void) | null = null;
+  if (opts?.intro) {
+    const saves = listSaves();
+    const { choices, note } = startChoices(saves, currentStorageProblem());
+    closeStart = openStartCard(gameEl, {
+      mode: 'start',
+      choices,
+      note,
+      hasSlot: saves.length > 0,
+      onChoice: (c) => {
+        if (c.kind === 'load') loadSlotPaused(c.slot);
+        else {
+          closeStart?.();
+          setSpeed(1);
+          refresh();
+        }
+      },
+    });
+  }
 
   // Kamera auf das Kontor zentrieren
   const kontor = world.buildings[world.kontorId];
@@ -513,10 +645,9 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
-      const change = orderChange(prevOrderPeriod, world.order?.period ?? null);
-      if (change === 'new') showMessage('Neuer Auftrag');
-      else if (change === 'expired') showMessage('Auftrag verfallen');
-      prevOrderPeriod = world.order?.period ?? null;
+      const msg = orderMessage(prevOrder, world.order);
+      if (msg) showMessage(msg);
+      prevOrder = world.order ? { ...world.order } : null;
       if (state.speed > 0) {
         autoMs += dt;
         if (autoMs >= AUTOSAVE_MS) {
@@ -559,6 +690,7 @@ function launch(
         raster: preview.raster === true,
       });
       perf?.renderDone(performance.now() - t0);
+      updateHint(frame % HUD_EVERY_FRAMES === 0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -569,6 +701,8 @@ function launch(
     }
   };
   rafId = requestAnimationFrame(loop);
+  const onPageHide = (): void => autosaveOnHide(world);
+  window.addEventListener('pagehide', onPageHide);
 
   /** Beendet Loop, Beobachter und Listener und leert das DOM, das dieses Spiel aufgebaut hat. */
   const dispose = (): void => {
@@ -577,15 +711,18 @@ function launch(
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
     input?.unbind();
+    closeAllModals();
     closeSettings?.();
     stopAudioProbe?.();
     motionQuery.removeEventListener('change', onMotion);
     removeUnlockListeners();
+    window.removeEventListener('pagehide', onPageHide);
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
     logBox.remove();
+    hintEl.remove();
+    noticeStack.remove();
     unbindMessages();
-    disposeHud(hudEl);
     hudEl.replaceChildren();
     navEl.replaceChildren();
     panelEl.replaceChildren();

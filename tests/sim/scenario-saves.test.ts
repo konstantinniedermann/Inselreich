@@ -33,11 +33,11 @@ describe('Szenario-Saves', () => {
     }
   });
 
-  it('kein Szenario ist nach dem ersten Tick gewonnen (Sieg-Overlay verfälscht Browser-Checks)', () => {
+  it('kein Szenario (ausser ux-sieg) ist nach dem ersten Tick gewonnen (Sieg-Overlay verfälscht Browser-Checks)', () => {
     for (const name of Object.keys(SCENARIOS)) {
       const w = load(name);
       step(w);
-      expect(w.won, name).toBe(false);
+      expect(w.won, name).toBe(name === 'ux-sieg');
     }
   });
 
@@ -54,6 +54,8 @@ describe('Szenario-Saves', () => {
         'verdeckung',
         'tag-0',
         'tag-3000',
+        'ux-anbindung',
+        'ux-sieg',
         'krise-brand',
         'krise-brand-geschuetzt',
         'krise-sturm',

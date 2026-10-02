@@ -5,7 +5,13 @@ import {
   protectedCount,
   refundText,
   restView,
+  upgradeOkText,
+  upgradeReasonTexts,
 } from '../../src/ui/inspect';
+import { TIERS } from '../../src/sim/defs/tiers';
+import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
+import { formatGameTime } from '../../src/ui/time';
+import { setHouse, uxWorld } from './worlds';
 import { createWorld } from '../../src/sim/world';
 import { SCENARIOS } from '../sim/scenarios';
 
@@ -15,14 +21,14 @@ describe('refundText (AK-U1b-02)', () => {
       { money: 10, wood: 5, tools: 0, stone: 0 },
       { money: 10, wood: 1, tools: 0, stone: 0 },
     );
-    expect(text).toContain('Holz 1');
+    expect(text).toContain('1 Holz');
     expect(text).toContain('4 verfallen – Lager voll');
   });
 
   it('zeigt ohne Verfall nur die Beträge', () => {
     const c = { money: 10, wood: 5, tools: 0, stone: 0 };
     const text = refundText(c, c);
-    expect(text).toBe('Geld 10 · Holz 5');
+    expect(text).toBe('10 Geld · 5 Holz');
     expect(text).not.toContain('verfallen');
   });
 
@@ -32,7 +38,7 @@ describe('refundText (AK-U1b-02)', () => {
       { money: 5, wood: 0, tools: 1, stone: 0 },
     );
     expect(text).toBe(
-      'Geld 5 · Holz 0 (4 verfallen – Lager voll) · Werkzeug 1 (1 verfallen – Lager voll)',
+      '5 Geld · 0 Holz (4 verfallen – Lager voll) · 1 Werkzeug (1 verfallen – Lager voll)',
     );
   });
 });
@@ -59,14 +65,12 @@ describe('burningText (M6-AK-U1-08)', () => {
   const base = { id: 1, x: 0, y: 0, connected: true, progress: 0, state: 'burning' as const };
   it('M6-AK-U1-08: Betrieb nennt outageUntil - tick', () => {
     expect(burningText({ ...base, defId: 'lumberjack', outageUntil: 150 }, 100)).toBe(
-      'Brennt — wieder in Betrieb in 50 Ticks',
+      'Brennt — wieder in Betrieb in 5 s',
     );
   });
   it('M6-AK-U1-08: Kapelle (Dienst) ebenso, nie negativ', () => {
-    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain(
-      'in 30 Ticks',
-    );
-    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 Ticks');
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain('in 3 s');
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 s');
   });
   it('M6-AK-U1-07: protectedCount zählt brennbare Gebäude im Radius, nur bei Anbindung', () => {
     const w = createWorld(3);
@@ -92,8 +96,8 @@ describe('burningText (M6-AK-U1-08)', () => {
 describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
   it('producesText: laufend mit Takt, brennend ohne', () => {
     const def = { produces: 'rum' as const, cycle: 50 };
-    expect(producesText(def, false)).toBe('Erzeugt Rum alle 50 Ticks');
-    expect(producesText(def, true)).not.toContain('alle 50 Ticks');
+    expect(producesText(def, false)).toBe('Erzeugt Rum alle 5 s');
+    expect(producesText(def, true)).not.toContain('alle 5 s');
     expect(producesText(def, true)).toContain('brennt');
   });
   it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {
@@ -106,5 +110,21 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
     mk(902, 'distillery', 14);
     mk(903, 'firestation', 12);
     expect(protectedCount(w, a)).toBe(1);
+  });
+});
+
+describe('Inselchronik und Aufstiegszeilen (M7-UX Task 8)', () => {
+  it('Aufstiegszeile ohne „Tick" (Spec L8)', () => {
+    expect(upgradeOkText()).toBe(
+      `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`,
+    );
+  });
+  it('Aufstiegsgründe über friendlyReason mit Aufstiegskosten (Spec L3 Aufrufer)', () => {
+    const { w, house } = uxWorld();
+    setHouse(house, 1, TIERS[1].maxInhabitants, ['food']);
+    w.money = 0;
+    const texts = upgradeReasonTexts(w, house);
+    expect(texts).toContain(`✗ Zu wenig Geld: ${TIERS[1].upgradeCost!.money} nötig, 0 vorhanden`);
+    for (const t of texts) expect(t).not.toContain('Tick');
   });
 });

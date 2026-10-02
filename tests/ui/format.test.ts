@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { balanceLabel, formatBalance, taxTooltip, trendArrow } from '../../src/ui/hud';
 import { blurAfterClick } from '../../src/ui/dom';
 import { goodsBalance } from '../../src/sim/queries';
+import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { costLine } from '../../src/ui/dom';
+import { refundText } from '../../src/ui/texts';
+import { tooltipLines } from '../../src/ui/buildMenu';
 import { createWorld } from '../../src/sim/world';
 import { diagnosisText } from '../../src/ui/inspect';
 import { actionSound } from '../../src/ui/soundEvents';
@@ -34,8 +38,12 @@ describe('balanceLabel (AK-U3-01/07)', () => {
 
 describe('taxTooltip (Spec 10.7)', () => {
   it('nennt Steuer, Wartezeit bzw. „kein Aufstieg" und Belegung', () => {
-    expect(taxTooltip('low')).toBe('Steuer 70 % · Aufstieg nach 150 Ticks · Belegung 100 %');
-    expect(taxTooltip('high')).toBe('Steuer 130 % · kein Aufstieg · Belegung 75 %');
+    expect(taxTooltip('low')).toBe(
+      'niedrig: 70 % Steuer · Aufstieg nach 15 s Zufriedenheit · Häuser voll belegt',
+    );
+    expect(taxTooltip('high')).toBe(
+      'hoch: 130 % Steuer · kein Aufstieg · Häuser nur zu 75 % belegt',
+    );
   });
 });
 
@@ -91,4 +99,24 @@ describe('blurAfterClick (QA-UI-2)', () => {
     expect(blurAfterClick(1)).toBe(true);
     expect(blurAfterClick(0)).toBe(false);
   });
+});
+
+it('AK-UX-06 costLine: „{n} Geld · {n} Holz · …", Nullwerte ausser Geld entfallen', () => {
+  expect(costLine(BUILDING_DEFS.chapel.cost)).toBe('300 Geld · 20 Holz · 5 Werkzeug · 10 Stein');
+  expect(costLine({ money: 5, wood: 0, tools: 0, stone: 0 })).toBe('5 Geld');
+});
+it('AK-UX-06 kein Kürzel G/H/W/S; Kosten und Rückerstattung ohne „Geld 50"', () => {
+  const tips = [
+    ...BUILDING_IDS.flatMap((id) => tooltipLines({ kind: 'build', defId: id })),
+    ...tooltipLines({ kind: 'road' }),
+  ];
+  for (const t of tips) expect(t).not.toMatch(/\b[GHWS] \d/);
+  const costTexts = [
+    ...BUILDING_IDS.flatMap((id) => [
+      costLine(BUILDING_DEFS[id].cost),
+      refundText(BUILDING_DEFS[id].cost, BUILDING_DEFS[id].cost),
+    ]),
+    ...tips.filter((t) => t.startsWith('Kosten:')),
+  ];
+  for (const t of costTexts) expect(t).not.toMatch(/(Geld|Holz|Werkzeug|Stein) \d/);
 });
