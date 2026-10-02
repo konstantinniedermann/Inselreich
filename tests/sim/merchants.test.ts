@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { demolish, placeBuilding } from '../../src/sim/build';
+import { beginCrisis } from '../../src/sim/crises';
 import { TIERS } from '../../src/sim/defs/tiers';
 import {
   citizens,
@@ -302,5 +303,39 @@ describe('M8 Review Focus S1', () => {
     } finally {
       TIERS[4].unlockCitizens = null;
     }
+  });
+});
+
+describe('M8 Brand am Badehaus (Spec 9)', () => {
+  it('AK-S2-10 Badehaus brennt bei T: bath false in T+1 … T+200, true ab T+201; Steuer 200 statt 400; Stufe 4', () => {
+    const make = (): Town => {
+      const t = town(1);
+      t.w.won = true;
+      t.w.tick = 460; // T; T + 1 = 461 ≢ 0 mod 50
+      setHouse(t.w, t.houses[0]!, 4, 20);
+      t.w.stock.glass = 20;
+      return t;
+    };
+    const { w, houses, bath } = make();
+    const twin = make();
+    beginCrisis(w, 0, { kind: 'fire', tile: { x: bath.x, y: bath.y } });
+    expect(w.crisis).toMatchObject({ outcome: 'burning', target: bath.id });
+    const h = houses[0]!;
+    step(w);
+    step(twin.w);
+    expect(w.tick % 50).not.toBe(0);
+    expect(w.stats.taxes).toBe(200);
+    expect(twin.w.stats.taxes).toBe(400);
+    const seen: boolean[] = [h.house!.services.bath!];
+    while (w.tick < 660) {
+      step(w);
+      seen.push(h.house!.services.bath!);
+    }
+    expect(seen).toHaveLength(200);
+    expect(seen.every((x) => x === false)).toBe(true);
+    step(w);
+    expect(w.tick).toBe(661);
+    expect(h.house!.services.bath).toBe(true);
+    expect(h.house!.tier).toBe(4);
   });
 });

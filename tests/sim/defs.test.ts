@@ -10,12 +10,12 @@ describe('defs', () => {
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
   it('has 14 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(15);
+    expect(BUILDING_IDS).toHaveLength(16);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
       if (d.produces) expect(GOODS[d.produces]).toBeDefined();
-      if (d.consumes) expect(GOODS[d.consumes]).toBeDefined();
+      for (const g of d.consumes ?? []) expect(GOODS[g]).toBeDefined();
       if (d.produces) expect(d.cycle).toBeGreaterThan(0);
     }
     expect(ROAD_COST).toBe(5);
@@ -29,7 +29,7 @@ describe('defs', () => {
       upkeep: 5,
     });
     expect(BUILDING_DEFS.distillery).toMatchObject({
-      consumes: 'cane',
+      consumes: ['cane'],
       produces: 'rum',
       cost: { money: 250, wood: 15, tools: 4, stone: 5 },
     });
@@ -40,7 +40,7 @@ describe('defs', () => {
       cost: { money: 200, wood: 15, tools: 3, stone: 0 },
       upkeep: 25,
       category: 'production',
-      consumes: 'wood',
+      consumes: ['wood'],
       produces: 'tools',
       cycle: 80,
       site: [],

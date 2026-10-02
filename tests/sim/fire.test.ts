@@ -299,6 +299,7 @@ describe('M6 Brand und Feuerwache', () => {
       'chapel',
       'distillery',
       'fisher',
+      'glassworks',
       'lumberjack',
       'quarry',
       'school',

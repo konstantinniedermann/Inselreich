@@ -16,7 +16,8 @@ export type BuildingDefId =
   | 'school'
   | 'toolmaker'
   | 'firestation'
-  | 'bathhouse';
+  | 'bathhouse'
+  | 'glassworks';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -39,7 +40,8 @@ export interface BuildingDef {
   upkeep: number;
   category: Category;
   produces?: GoodId;
-  consumes?: GoodId;
+  /** Inputs, je 1 Einheit je Zyklus, atomar entnommen (M8 5.3). */
+  consumes?: readonly GoodId[];
   /** Baubar erst, wenn diese Stufe frei ist (M8 4.3, Änderung S11); fehlt = immer baubar. */
   unlockTier?: Tier;
   cycle?: number;

@@ -65,10 +65,15 @@ export function goodsBalance(
     const def = BUILDING_DEFS[b.defId];
     if (def.cycle === undefined) continue;
     if (def.produces) out[def.produces].produced += 100 / def.cycle;
-    if (def.consumes) out[def.consumes].consumed += 100 / def.cycle;
+    for (const g of def.consumes ?? []) out[g].consumed += 100 / def.cycle;
   }
   for (const g of GOOD_IDS) out[g].net = out[g].produced - out[g].consumed;
   return out;
+}
+
+/** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
+export function missingInputs(world: World, b: Building): GoodId[] {
+  return (BUILDING_DEFS[b.defId].consumes ?? []).filter((g) => world.stock[g] < 1);
 }
 
 /** Was dem Haus fehlt: Versorgung, sonst Güter (Reihenfolge GOOD_IDS), dann Dienste. Leer = alles erfüllt. */

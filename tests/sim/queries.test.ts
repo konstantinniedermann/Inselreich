@@ -17,6 +17,7 @@ import {
   goodsBalance,
   houseDiagnosis,
   layoutKey,
+  missingInputs,
   placementZone,
   unprotectedFlammables,
 } from '../../src/sim/queries';
@@ -453,5 +454,22 @@ describe('M6 Abfragen', () => {
     const z = placementZone(w, 'firestation', 20, 20)!;
     expect(z).toMatchObject({ cx: 20.5, cy: 20.5, radius: 8 });
     expect(z.tiles).toEqual(tilesInRadius(w, 20.5, 20.5, 8));
+  });
+});
+
+describe('M8 Abfragen', () => {
+  it('AK-S3-04 missingInputs: fehlende Inputs in consumes-Reihenfolge, leer ohne consumes', () => {
+    const gw = direct(w, 'glassworks', true);
+    w.stock.stone = 3;
+    w.stock.wood = 0;
+    expect(missingInputs(w, gw)).toEqual(['wood']);
+    w.stock.stone = 0;
+    expect(missingInputs(w, gw)).toEqual(['stone', 'wood']);
+    w.stock.stone = 1;
+    w.stock.wood = 1;
+    expect(missingInputs(w, gw)).toEqual([]);
+    w.stock.wool = 0;
+    expect(missingInputs(w, direct(w, 'weaver', true))).toEqual(['wool']);
+    expect(missingInputs(w, direct(w, 'fisher', true))).toEqual([]);
   });
 });
