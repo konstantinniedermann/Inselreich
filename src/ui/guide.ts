@@ -3,7 +3,7 @@ import { PALETTE } from '../render/palette';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { GOOD_IDS, GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
-import { SERVICE_BUILDING } from '../sim/population';
+import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { houseDiagnosis } from '../sim/queries';
 import type {
   Building,
@@ -52,10 +52,11 @@ export function nextStep(w: World): string {
   const unc = [...unconnectedIds(w)].sort((a, b) => a - b)[0];
   if (unc !== undefined)
     return `Verbinde ${nm(w.buildings[unc]!.defId)} per Weg (${hotkeyLabel({ kind: 'road' })}) mit dem Kontor`;
+  // Nur Häuser, deren nächste Stufe frei ist (M8 14.8): vor dem Sieg kein Kaufleute-Satz.
+  const canRise = (h: Building): boolean =>
+    TIERS[h.house!.tier].upgradeCost !== null && tierLock(w, h.house!.tier + 1) === null;
   const full = houses.filter(
-    (h) =>
-      h.house!.inhabitants === TIERS[h.house!.tier].maxInhabitants &&
-      TIERS[h.house!.tier].upgradeCost !== null,
+    (h) => h.house!.inhabitants === TIERS[h.house!.tier].maxInhabitants && canRise(h),
   );
   // Regel 3: erst Diagnosen (Versorgung, Güter), dann neue Güter der nächsten Stufe voller Häuser
   for (const h of houses)
@@ -96,10 +97,7 @@ export function nextStep(w: World): string {
   }
   if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0)
     return 'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder erhöhe die Steuer';
-  if (
-    TAX_LEVELS[w.taxLevel].upgradeWait === null &&
-    houses.some((h) => TIERS[h.house!.tier].upgradeCost !== null)
-  )
+  if (TAX_LEVELS[w.taxLevel].upgradeWait === null && houses.some(canRise))
     return `Steuer ‚${TAX_LEVELS[w.taxLevel].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
   return 'Baue weitere Wohnhäuser und versorge sie';
 }

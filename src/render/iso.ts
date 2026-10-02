@@ -59,7 +59,8 @@ const CATEGORY_HEIGHT: Record<Category, number> = {
 };
 /** R1b, R2 und R2-FW tragen hier die Höhen der Silhouetten ein; die Signaturen bleiben. */
 export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number>> = {
-  house: (b) => [0.8, 1.2, 1.6][(b.house?.tier ?? 1) - 1]! * ISO_H, // Hütte, Fachwerk, Bürgerhaus mit Gaube
+  // Hütte, Fachwerk, Bürgerhaus mit Gaube; Stufe 4 (Kaufleute) bis R1 wie Stufe 3 (M8-S1, gedeckelt)
+  house: (b) => [0.8, 1.2, 1.6][Math.min(b.house?.tier ?? 1, 3) - 1]! * ISO_H,
   kontor: () => 1.4 * ISO_H, // Lagerhaus
   lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
   // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)

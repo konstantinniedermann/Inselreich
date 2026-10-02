@@ -164,3 +164,34 @@ describe('MAP_SIGNS (AK-UX-11)', () => {
     expect(MAP_SIGNS.find((s) => s.renderer === 'Auswahl')!.color).toBe(PALETTE.signalYellow);
   });
 });
+
+/**
+ * M8-Testwelt aus `ux-anbindung`: drei volle Bürgerhäuser (alle Güter der Stufe 3 erfüllt), Kapelle und Schule
+ * angebunden in Reichweite, Geld 1000, Steuer normal, Steuern ≥ Unterhalt. `won` false.
+ */
+function citizenWorld(): World {
+  const { w, kx, ky, house } = uxWorld();
+  const more = [build(w, 'house', kx + 4, ky - 2), build(w, 'house', kx + 5, ky - 2)];
+  build(w, 'chapel', kx + 3, ky + 1);
+  build(w, 'school', kx + 8, ky + 2);
+  connectAll(w);
+  for (const h of [house, ...more])
+    setHouse(h, 3, TIERS[3].maxInhabitants, ['food', 'cloth', 'rum']);
+  w.money = 1000;
+  w.taxLevel = 'normal';
+  w.stats = { taxes: 10, upkeep: 5 };
+  return w;
+}
+
+describe('M8 nextStep vor dem Sieg (AK-S1-19)', () => {
+  it('AK-S1-19 (a) drei volle Bürgerhäuser, alles versorgt, won false → kein Kaufleute-Satz', () => {
+    const w = citizenWorld();
+    expect(w.won).toBe(false);
+    expectStep(w, 'Baue weitere Wohnhäuser und versorge sie');
+  });
+  it('AK-S1-19 (e) Steuer hoch, nur Bürgerhäuser, won false → nicht der Steuer-Satz', () => {
+    const w = citizenWorld();
+    w.taxLevel = 'high';
+    expectStep(w, 'Baue weitere Wohnhäuser und versorge sie');
+  });
+});

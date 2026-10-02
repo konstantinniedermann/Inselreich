@@ -577,6 +577,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       chapel: 2,
       school: 2,
       firestation: 2,
+      bathhouse: 2, // M8-S1: Rückfall FALLBACKS.public zeichnet dessen zwei Schallöffnungen
       'fallback public 1': 2,
       'fallback public 2': 2,
     };
@@ -862,5 +863,20 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     const empty = fakeCtx();
     drawRoads(empty.ctx, roadWorld([]), { x0: 0, y0: 0, x1: 15, y1: 15 });
     expect(empty.log.events).toEqual([]);
+  });
+});
+
+describe('M8 Render-Mindestpflicht (AK-S1-17)', () => {
+  it('AK-S1-17 Kaufmannshaus: Höhe endlich und gleich Stufe 3; Badehaus hat einen Silhouetten-Eintrag und zeichnet in der Hülle', () => {
+    const h4 = bodyHeight(BUILDING_DEFS.house, house(4));
+    expect(Number.isFinite(h4)).toBe(true);
+    expect(h4).toBe(bodyHeight(BUILDING_DEFS.house, house(3)));
+    expect(() => drawBody(fakeCtx().ctx, CAM, BUILDING_DEFS.house, house(4), 0)).not.toThrow();
+    expect(SILHOUETTES.bathhouse).toBeDefined();
+    const bath = mk('bathhouse');
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS.bathhouse, bath, 0);
+    const hull = bodyHull(BUILDING_DEFS.bathhouse, bath);
+    for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5)).toBe(true);
   });
 });
