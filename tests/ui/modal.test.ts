@@ -46,7 +46,7 @@ describe('Modal-Stapel (Spec L2)', () => {
     expect(modalStackAfterEscape(['menu', 'help'])).toEqual(['menu']);
     expect(modalStackAfterEscape([])).toEqual([]);
   });
-  it('RF-2 closeAllModals ohne offene Karte ist folgenlos, danach ist keine Karte offen', () => {
+  it('RF-2 closeAllModals ohne offene Karte ist folgenlos, danach ist keine Karte offen (Browserteil QA-UX2)', () => {
     closeAllModals();
     expect(isModalOpen()).toBe(false);
   });

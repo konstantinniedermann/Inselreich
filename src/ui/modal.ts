@@ -82,7 +82,9 @@ function onKey(e: KeyboardEvent): void {
   e.stopImmediatePropagation(); // Spiel-Hotkeys, WASD, Pfeile, Leertaste-Ziehen ruhen (Spec L2)
   if (e.key === 'Escape') {
     e.preventDefault();
-    top.dismiss();
+    // RF-1: nur die Einträge, die im Stapel nach Esc fehlen (die oberste Karte), werden geschlossen
+    const remaining = modalStackAfterEscape(stack);
+    for (const entry of stack.filter((x) => !remaining.includes(x))) entry.dismiss();
   } else if (e.key === 'Tab') {
     e.preventDefault();
     const f = focusables(top.card);
