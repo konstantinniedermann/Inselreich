@@ -596,3 +596,12 @@ gilt. Lehre: Beobachtungen vor Übernahme gegen Rulings prüfen (Retro). — Kos
 flackert nicht, Brand zeigt Warnring.
 
 Entscheider: L0 · Anlass: Bericht lead-design M8-SPEC
+
+## R140 · 2026-10-02 · Gate Spec M8: BEDENKEN
+
+Ruling: Beide Urteile angenommen. Nacharbeit lead-design: lead-qa B1–B5, AK-U2-10 nach R134-Wortlaut;
+lead-tech (3): S1–S3 auf einer Branch, ein Gate Merge nach S3 (R82a gilt nicht); damit entfallen (1)
+und (2) als Zwischenstand, Kopfzeilen-Smoke-Check vor dem Merge. Zweitprüfung lead-qa am Diff
+(B1, B2). Hinweise beider Leads gehen in den Plan. — Kosten bei Irrtum: späterer erster Merge.
+
+Entscheider: L0 · Anlass: Gate Spec M8
