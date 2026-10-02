@@ -543,3 +543,12 @@ Probe-Merge. Bestätigt: Esc bricht Startkarten-Bestätigung ab; AK-UX-28 A6 (Ha
 gefunden) erfüllt. N1/N2/N5–N8, 15 Minor → `beobachtungen.md` (lead-qa).
 
 Entscheider: L0 · Anlass: Final-Review M7-UX
+
+## R134 · 2026-10-02 · M7-UX AK-UX-20 Auslegung
+
+Ruling: AK-UX-20 „weiteres Tab erreicht Fischerhütte" gilt als erfüllt, wenn Tab nach dem letzten
+Kategorie-Knopf die Fischerhütte erreicht (DOM-Reihenfolge, Spec L2). Verbindliche Auslegung für
+Browser-Check und Gate; Spec-Wortlaut bleibt, dieses Ruling ist Referenz. — Kosten bei Irrtum: ein
+Tab-Druck mehr für Tastaturspieler.
+
+Entscheider: L0 · Anlass: Fix-Runde H1 M7-UX
