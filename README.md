@@ -60,8 +60,9 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 - **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen, im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen (ab 4 Pixel Bewegung schwenkt die Karte, es wird
   nichts ausgewählt) — oder WASD/Pfeiltasten; diese wirken auch, wenn nach einem Klick ein Knopf den
-  Fokus hat (nicht in Eingabefeldern und nicht bei offener Karte). Auf Touch
-  verschieben zwei Finger die Karte in jedem Werkzeug, ein Finger im Werkzeug «Auswahl».
+  Fokus hat (nicht in Eingabefeldern und nicht bei offener Karte).
+- **Verschieben auf Touch:** Zwei Finger verschieben die Karte in jedem Werkzeug, ein Finger im Werkzeug
+  «Auswahl».
 
 ### Werkzeuge (Bauleiste unten)
 
@@ -91,7 +92,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   und den Umriss der schon abgedeckten Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den
   Standortkreis (Radius 2) mit den passenden Wald- bzw. Graskacheln.
 - **Feuerwache** (Kategorie «Öffentlich», Taste `E`): 1×1, Baukosten 150 Geld, 10 Holz, 2 Werkzeug,
-  Unterhalt 10. Angebunden löscht sie Brände an brennbaren Gebäuden, deren Mitte höchstens 8 Kacheln von
+  Unterhalt 60 / min. Angebunden löscht sie Brände an brennbaren Gebäuden, deren Mitte höchstens 8 Kacheln von
   ihr entfernt ist (Abschnitt «Krisen»). Bei Krisenstufe «aus» kostet sie nur Unterhalt. Ihr Tooltip nennt,
   wie viele brennbare Gebäude noch ungeschützt sind; das Info-Panel zeigt «Schützt N brennbare Gebäude».
 
@@ -190,16 +191,16 @@ Ersatzschrift zurück.
 
 ### Produktionsketten
 
-| Gebäude            | Erzeugt    | Braucht    | Zyklus | Unterhalt (je 10 s) | Standort                        |
-| ------------------ | ---------- | ---------- | ------ | ------------------- | ------------------------------- |
-| Fischerhütte       | Nahrung    | —          | 4 s    | 5                   | an Wasser angrenzend            |
-| Holzfäller         | Holz       | —          | 3 s    | 5                   | mind. 1 Waldkachel im Radius 2  |
-| Steinbruch         | Stein      | —          | 6 s    | 10                  | an Gebirge angrenzend           |
-| Schäferei          | Wolle      | —          | 5 s    | 10                  | mind. 4 Graskacheln im Radius 2 |
-| Weberei            | Stoff      | Wolle      | 5 s    | 15                  | beliebiges Bauland              |
-| Zuckerrohrplantage | Zuckerrohr | —          | 5 s    | 10                  | mind. 4 Graskacheln im Radius 2 |
-| Brennerei          | Rum        | Zuckerrohr | 5 s    | 20                  | beliebiges Bauland              |
-| Werkzeugmacher     | Werkzeug   | Holz       | 8 s    | 25                  | beliebiges Bauland              |
+| Gebäude            | Erzeugt    | Braucht    | Zyklus | Unterhalt (/ min) | Standort                        |
+| ------------------ | ---------- | ---------- | ------ | ----------------- | ------------------------------- |
+| Fischerhütte       | Nahrung    | —          | 4 s    | 30                | an Wasser angrenzend            |
+| Holzfäller         | Holz       | —          | 3 s    | 30                | mind. 1 Waldkachel im Radius 2  |
+| Steinbruch         | Stein      | —          | 6 s    | 60                | an Gebirge angrenzend           |
+| Schäferei          | Wolle      | —          | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
+| Weberei            | Stoff      | Wolle      | 5 s    | 90                | beliebiges Bauland              |
+| Zuckerrohrplantage | Zuckerrohr | —          | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
+| Brennerei          | Rum        | Zuckerrohr | 5 s    | 120               | beliebiges Bauland              |
+| Werkzeugmacher     | Werkzeug   | Holz       | 8 s    | 150               | beliebiges Bauland              |
 
 Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukosten 200 Geld, 15 Holz,
 3 Werkzeug). Er lohnt sich erst, wenn du viel Werkzeug brauchst: Sein Unterhalt läuft auch im
@@ -248,7 +249,7 @@ mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird
 
 ### Unterhalt und Geld
 
-- Alle 10 Sekunden wird der Unterhalt aller Gebäude abgezogen — auch nicht angebundener. Im selben Takt
+- Alle 10 Sekunden wird der Unterhalt aller Gebäude abgezogen (Angaben «/ min» rechnen das auf eine Minute um) — auch nicht angebundener. Im selben Takt
   kommen die Steuern herein. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
   der Tooltip nennt Steuern und Unterhalt je Minute; eine negative Bilanz ist hervorgehoben.
 - Geld darf negativ werden. Solange es negativ ist, sind Bauen, Kaufen und Aufstieg gesperrt, bis
