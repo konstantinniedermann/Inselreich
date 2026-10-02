@@ -8,6 +8,7 @@ import {
   hotkeyAction,
   hotkeyLabel,
   hotkeyList,
+  nextOpenCategory,
   toolName,
   withSpeed,
 } from '../../src/ui/hotkeys';
@@ -136,4 +137,14 @@ it('AK-UX-06 categoryOf: Gebäude → Kategorie, sonst null', () => {
   expect(categoryOf({ kind: 'road' })).toBeNull();
   expect(categoryOf({ kind: 'demolish' })).toBeNull();
   expect(categoryOf({ kind: 'select' })).toBeNull();
+});
+it('Untermenü: Klick schaltet um, Bau-Werkzeug öffnet seine Kategorie, andere Werkzeuge schliessen', () => {
+  expect(nextOpenCategory(null, { kind: 'toggle', category: 'production' })).toBe('production');
+  expect(nextOpenCategory('production', { kind: 'toggle', category: 'production' })).toBeNull();
+  expect(nextOpenCategory('public', { kind: 'toggle', category: 'production' })).toBe('production');
+  expect(nextOpenCategory(null, { kind: 'tool', tool: { kind: 'build', defId: 'fisher' } })).toBe(
+    'production',
+  );
+  expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'select' } })).toBeNull();
+  expect(nextOpenCategory('production', { kind: 'tool', tool: { kind: 'road' } })).toBeNull();
 });

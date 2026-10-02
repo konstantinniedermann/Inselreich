@@ -10,7 +10,7 @@ import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
-import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
+import { GOODS_BALANCE_TICKS, formatGameTime, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -20,13 +20,6 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 2, label: '2×' },
   { value: 4, label: '4×' },
 ];
-
-/** Zahl mit ausdrücklichem Vorzeichen: „+12", „−33", „±0" (typografisches Minus wie beim Unterhalt). */
-function signed(n: number): string {
-  if (n > 0) return `+${n}`;
-  if (n < 0) return `−${-n}`;
-  return '±0';
-}
 
 /** Schwelle, unter der eine Bilanz als „ausgeglichen" gilt (gegen Gleitkomma-Rauschen). */
 const TREND_EPS = 0.05;
@@ -128,30 +121,27 @@ function renderTaxControls(box: Element, actions: HudActions): void {
   box.appendChild(lock);
 }
 
-/** Baut das HUD beim ersten Aufruf auf und aktualisiert danach nur die Werte. */
+/** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
-      '<div class="hud-row"><span class="hud-money" data-field="money"></span>' +
-      '<span class="hud-balance"><span data-field="balance"></span> ' +
-      '<span data-field="net"></span></span>' +
-      '<span class="hud-tick" data-field="tick"></span><span class="hud-speed"></span>' +
-      '<span class="hud-sound"></span></div>' +
-      '<div class="pop-row"></div><div class="stock-row"></div>' +
-      '<div class="ctrl-row"><span class="hud-tax"></span><span class="order-card"></span>' +
-      '<span class="card card--crisis" data-field="crisis-card"></span></div>' +
-      '<div class="hud-seed" data-field="seed"></div>';
-    const popRow = header.querySelector('.pop-row');
+      '<div class="hud-row"><span class="hud-balance" data-field="balance"></span>' +
+      '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
+      '<span class="hud-money" data-field="money"></span><span class="hud-tax"></span>' +
+      '<span class="hud-speed"></span><span class="hud-sound"></span></div>' +
+      '<div class="stock-row"></div>';
+    const popBox = header.querySelector('.pop-chips');
     for (const tier of TIER_IDS) {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.dataset.field = `pop-${tier}`;
-      popRow?.appendChild(chip);
+      chip.title = tierTooltip(tier);
+      popBox?.appendChild(chip);
     }
-    const goal = document.createElement('span');
-    goal.className = 'chip';
-    goal.dataset.field = 'goal';
-    popRow?.appendChild(goal);
+    const goal = header.querySelector<HTMLElement>('[data-field="goal"]');
+    if (goal) {
+      goal.title = `Ziel: ${WIN_CITIZENS} ${TIERS[3].name} — Einwohner der Stufe 3`;
+    }
     const stockRow = header.querySelector('.stock-row');
     for (const good of GOOD_IDS) {
       const chip = document.createElement('span');
@@ -160,12 +150,17 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       chip.dataset.field = `stock-${good}`;
       stockRow?.appendChild(chip);
     }
+    const lock = document.createElement('span');
+    lock.className = 'tax-lock';
+    lock.dataset.field = 'tax-lock';
+    stockRow?.appendChild(lock);
     const speedBox = header.querySelector('.hud-speed');
     for (const s of SPEEDS) {
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = s.label;
       btn.dataset.speed = String(s.value);
+      if (s.value === 2 || s.value === 4) btn.title = speedTooltip(s.value);
       btn.addEventListener('click', () => {
         btn.blur();
         actions.setSpeed(s.value);
@@ -175,36 +170,31 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     }
     const taxBox = header.querySelector('.hud-tax');
     if (taxBox) renderTaxControls(taxBox, actions);
-    const orderEl = header.querySelector<HTMLElement>('.order-card');
-    if (orderEl) renderOrder(orderEl, state.world, { deliver: actions.deliverOrder });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
   }
   const { world } = state;
-  setField(header, 'money', `Geld: ${world.money}`)?.classList.toggle('negative', world.money < 0);
-  const { taxes, upkeep } = world.stats;
-  const taxSign = taxes > 0 ? '+' : '';
-  const upkeepSign = upkeep > 0 ? '−' : '';
-  setField(header, 'balance', `Steuern ${taxSign}${taxes} · Unterhalt ${upkeepSign}${upkeep}`);
-  const net = taxes - upkeep;
-  setField(header, 'net', `= ${signed(net)} / ${UPKEEP_INTERVAL} Ticks`)?.classList.toggle(
-    'negative',
-    net < 0,
-  );
+  const bal = balanceText(world.stats);
+  const balEl = setField(header, 'balance', bal.text);
+  if (balEl) {
+    if (balEl.title !== bal.title) balEl.title = bal.title;
+    balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
+  }
   const pop = populationByTier(world);
   for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
-  setField(header, 'goal', `Bürger-Ziel ${citizens(world)} / ${WIN_CITIZENS}`);
+  setField(header, 'goal', `Ziel ${citizens(world)} / ${WIN_CITIZENS} ${TIERS[3].name}`);
+  setField(header, 'money', `Geld ${world.money}`)?.classList.toggle('negative', world.money < 0);
   const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
     const b = balance[good];
     const chip = setField(
       header,
       `stock-${good}`,
-      `${GOODS[good].name} ${world.stock[good]} ${balanceLabel(b.net)}`,
+      `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}`,
     );
     if (chip) {
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
-      const tip = `Erzeugung ${b.produced.toFixed(1)} · Verbrauch ${b.consumed.toFixed(1)} je 100 Ticks`;
+      const tip = stockTooltip(world, good);
       if (chip.title !== tip) chip.title = tip;
     }
   }
@@ -212,21 +202,45 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     btn.classList.toggle('active', btn.dataset.tax === world.taxLevel);
   }
   const left = world.taxLockedUntil - world.tick;
-  setField(header, 'tax-lock', left > 0 ? `Sperre noch ${left} Ticks` : '');
-  const orderEl = header.querySelector<HTMLElement>('.order-card');
+  setField(header, 'tax-lock', left > 0 ? `Steuer wieder änderbar in ${formatGameTime(left)}` : '');
+  for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
+    btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
+  }
+}
+
+/** Legt den Meldungsstapel oben rechts in `#game` an: Auftrag und Krisenkarte (Spec L2). */
+export function renderNoticeStack(
+  gameEl: HTMLElement,
+  world: World,
+  deliver: () => void,
+): HTMLElement {
+  const stack = document.createElement('div');
+  stack.className = 'notice-stack';
+  const order = document.createElement('span');
+  order.className = 'order-card';
+  renderOrder(order, world, { deliver });
+  const crisis = document.createElement('span');
+  crisis.className = 'card card--crisis';
+  crisis.dataset.field = 'crisis-card';
+  crisis.hidden = true;
+  stack.append(order, crisis);
+  gameEl.appendChild(stack);
+  updateNoticeStack(stack, world);
+  return stack;
+}
+
+/** Aktualisiert Auftrag und Krisenkarte; eine leere Krisenkarte ist verborgen. */
+export function updateNoticeStack(stack: HTMLElement, world: World): void {
+  const orderEl = stack.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world);
   const crisis = crisisCardText(crisisView(world), world);
-  const crisisEl = setField(header, 'crisis-card', crisis.text);
+  const crisisEl = setField(stack, 'crisis-card', crisis.text);
   if (crisisEl) {
+    crisisEl.hidden = crisis.text === '';
     if (crisis.kind === null) delete crisisEl.dataset.kind;
     else crisisEl.dataset.kind = crisis.kind;
     if (crisis.level === null) delete crisisEl.dataset.level;
     else crisisEl.dataset.level = crisis.level;
-  }
-  setField(header, 'tick', `Tick: ${world.tick}`);
-  setField(header, 'seed', `Karte: ${world.seed}`);
-  for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
-    btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
   }
 }
 

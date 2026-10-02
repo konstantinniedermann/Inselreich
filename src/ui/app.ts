@@ -7,7 +7,7 @@ import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { crisisView } from '../sim/queries';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { World } from '../sim/types';
+import type { Category, World } from '../sim/types';
 import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
@@ -15,8 +15,8 @@ import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { updateHud, type HudActions } from './hud';
-import { afterPause, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
+import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
+import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
 import { bindInput, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { orderChange } from './order';
@@ -47,6 +47,8 @@ export interface GameState {
   hover: Hover | null;
   selectedId: number | null;
   panel: PanelState;
+  /** Bau-Kategorie, deren Einträge-Leiste offen ist (Spec L2). */
+  openCategory: Category | null;
   terrainLayer: HTMLCanvasElement;
   /** Siegbanner bereits gezeigt (ein geladener, gewonnener Stand zeigt es nicht erneut). */
   wonShown: boolean;
@@ -145,6 +147,7 @@ function launch(
     hover: null,
     selectedId: null,
     panel: { kind: 'none' },
+    openCategory: null,
     terrainLayer: buildTerrainLayer(world),
     wonShown: world.won,
     eventLog: [],
@@ -201,6 +204,8 @@ function launch(
   logBox.className = 'log-box';
   renderEventLog(logBox);
   gameEl.appendChild(logBox);
+
+  const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
 
   const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
@@ -339,6 +344,7 @@ function launch(
       showMessage(`Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`, 'info', true);
     }
     updateHud(hudEl, state, actions);
+    updateNoticeStack(noticeStack, world);
     updateEventLog(logBox, state.eventLog);
     updateBuildMenu(navEl, world);
     const panel = state.panel;
@@ -360,19 +366,25 @@ function launch(
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
     state.tool = tool;
+    state.openCategory = nextOpenCategory(state.openCategory, { kind: 'tool', tool });
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
     // Vorschau an der letzten Zeigerposition neu (ohne Zeiger: keine); keine hängende Drag-Vorschau
     input?.refreshHover();
-    renderBuildMenu(navEl, state, selectTool);
+    renderBuildMenu(navEl, state, selectTool, toggleCategory);
   };
-  renderBuildMenu(navEl, state, selectTool);
+  const toggleCategory = (category: Category): void => {
+    state.openCategory = nextOpenCategory(state.openCategory, { kind: 'toggle', category });
+    renderBuildMenu(navEl, state, selectTool, toggleCategory);
+  };
+  renderBuildMenu(navEl, state, selectTool, toggleCategory);
 
   const selectBuilding = (id: number | null): void => {
     const panel = state.panel;
     if (id === null) {
       setPanel({ kind: 'none' });
-    } else if (panel.kind === 'trade' && id === world.kontorId) {
-      // Handel bleibt offen, wenn das Kontor erneut angeklickt wird
+    } else if (id === world.kontorId) {
+      // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
+      if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
       setPanel({ kind: 'inspect', id });
     }
@@ -591,6 +603,7 @@ function launch(
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
     logBox.remove();
+    noticeStack.remove();
     unbindMessages();
     hudEl.replaceChildren();
     navEl.replaceChildren();

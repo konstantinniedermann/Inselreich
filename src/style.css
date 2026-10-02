@@ -37,6 +37,7 @@ html,
 body {
   margin: 0;
   height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--parchment);
   font-family: var(--font-serif);
@@ -50,10 +51,10 @@ body {
 }
 #app {
   display: grid;
-  height: 100%;
+  height: 100vh;
   gap: 8px;
   padding: 8px;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   grid-template-areas: 'hud' 'game' 'panel' 'buildbar';
 }
 #hud {
@@ -66,6 +67,8 @@ body {
 }
 #panel {
   grid-area: panel;
+  overflow-y: auto;
+  min-height: 0;
 }
 #buildbar {
   grid-area: buildbar;
@@ -113,7 +116,7 @@ body {
 @media (min-width: 900px) {
   #app {
     grid-template-columns: 1fr 280px;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas: 'hud hud' 'game panel' 'buildbar panel';
   }
 }
@@ -130,6 +133,7 @@ body {
   z-index: 10;
 }
 .toast {
+  max-width: 340px;
   background: var(--parchment);
   color: var(--ink);
   border: 1px solid var(--parchment-edge);
@@ -205,53 +209,61 @@ body {
   display: block;
   font-size: 12px;
 }
-.hud-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: center;
-}
 .hud-speed {
   display: flex;
   gap: 4px;
   margin-left: auto;
 }
-.hud-game {
-  display: flex;
-  gap: 4px;
+#hud {
+  padding: 6px 8px;
 }
-.hud-seed {
-  font-size: 12px;
-  color: var(--parchment-edge);
+#hud .btn {
+  padding: 2px 8px;
 }
+
 #buildbar {
   display: flex;
-  gap: 12px;
-  overflow-x: auto;
+  flex-direction: column-reverse;
+  gap: 6px;
+  padding: 6px 8px;
 }
-.buildbar-group {
+.buildbar-main {
+  display: flex;
+  gap: 6px;
+}
+.buildbar-sub {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  align-content: flex-start;
+  gap: 6px;
 }
-.buildbar-group h3 {
-  flex-basis: 100%;
-  margin: 0;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gold);
+#buildbar .btn {
+  padding: 4px 10px;
+}
+.btn-category[aria-expanded='true'] {
+  background: var(--gold);
+  color: var(--ink);
 }
 .negative {
   color: var(--negative);
 }
-.pop-row,
+.hud-row,
 .stock-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+  min-width: 0;
+}
+.stock-row {
+  margin-top: 4px;
+}
+.stock-row .tax-lock {
+  margin-left: auto;
+}
+.pop-chips {
+  display: flex;
   gap: 4px;
-  margin-top: 6px;
 }
 .chip {
   background: rgba(0, 0, 0, 0.35);
@@ -268,6 +280,16 @@ body {
 .panel-title {
   margin: 0 0 4px;
   font-size: 18px;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.panel-head .panel-title {
+  margin: 0;
 }
 .panel-line {
   margin: 2px 0;
@@ -374,9 +396,6 @@ body {
 }
 
 /* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */
-.buildbar-group .btn {
-  position: relative;
-}
 .tooltip {
   display: none;
   position: fixed;
@@ -424,19 +443,6 @@ body {
 .hud-sound input[type='range'] {
   width: 80px;
   accent-color: var(--gold);
-}
-.load-choice {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.ctrl-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  align-items: center;
-  margin-top: 6px;
-  font-size: 13px;
 }
 .hud-tax,
 .order-card {
@@ -617,17 +623,42 @@ body {
   white-space: nowrap;
 }
 
-.crisis-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .badge--boom[hidden] {
   display: none;
 }
 
 /* Ereignis-Log: schwebende Pergament-Box unten links über der Spielfläche (R112) */
+.notice-stack {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 9;
+  pointer-events: none;
+}
+.notice-stack > * {
+  pointer-events: auto;
+}
+.notice-stack .order-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  background: var(--parchment);
+  color: var(--ink);
+  border: 1px solid var(--parchment-edge);
+  border-left: 6px solid var(--gold);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.notice-stack [hidden] {
+  display: none;
+}
 .log-box {
   position: absolute;
   left: 8px;

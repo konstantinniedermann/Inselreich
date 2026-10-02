@@ -107,3 +107,11 @@ export function hotkeyList(): { key: string; label: string }[] {
   const speeds = Object.entries(SPEED_KEYS).map(([k, s]) => ({ key: k, label: `Tempo ${s}×` }));
   return [...tools, ...speeds, { key: 'P', label: 'Pause / weiter' }, ...NAV_KEYS];
 }
+
+export type CategoryEvent = { kind: 'toggle'; category: Category } | { kind: 'tool'; tool: Tool };
+
+/** Welche Kategorie die Einträge-Leiste nach einem Klick oder Werkzeugwechsel offen zeigt. */
+export function nextOpenCategory(open: Category | null, ev: CategoryEvent): Category | null {
+  if (ev.kind === 'toggle') return open === ev.category ? null : ev.category;
+  return categoryOf(ev.tool);
+}

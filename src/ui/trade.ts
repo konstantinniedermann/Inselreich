@@ -44,10 +44,18 @@ function cell(parent: HTMLElement, className: string, text?: string): HTMLElemen
 /** Baut den Handelsdialog des Kontors auf. */
 export function renderTrade(panel: HTMLElement, world: World, actions: TradeActions): void {
   panel.replaceChildren();
+  const head = cell(panel, 'panel-head');
   const title = document.createElement('h2');
   title.className = 'panel-title';
   title.textContent = 'Handel am Kontor';
-  panel.appendChild(title);
+  const back = document.createElement('button');
+  back.className = 'btn';
+  back.textContent = 'Zurück';
+  back.addEventListener('click', () => {
+    back.blur();
+    actions.back();
+  });
+  head.append(title, back);
 
   const table = cell(panel, 'trade-table');
   cell(table, 'trade-head', 'Kaufen');
@@ -101,15 +109,6 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);
   }
 
-  const buttons = cell(panel, 'panel-actions');
-  const back = document.createElement('button');
-  back.className = 'btn';
-  back.textContent = 'Zurück';
-  back.addEventListener('click', () => {
-    back.blur();
-    actions.back();
-  });
-  buttons.appendChild(back);
   updateTrade(panel, world);
 }
 
