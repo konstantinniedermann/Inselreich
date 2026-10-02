@@ -77,7 +77,7 @@ Mechaniken anderer Spiele sind frei; Inhalte, Namen und Marken nie (ADR-006).
    `docs/superpowers/specs/<datum>-<thema>-design.md`, geschrieben von
    `design-spec-author` (Werte und Bilanzen von `design-economy-designer`), von dir abgenommen.
    Die Spec hat **höchstens 40 KB**; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
-   `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md` (E-014, R167).
+   `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md` (E-010, R167).
    Danach **Gate Spec** (L0 lässt `lead-tech` und `lead-qa` prüfen). In **Stufe leicht** genügt das
    Kurzdesign im Bericht; eine Spec-Datei entsteht nicht.
 4. Nach der Spec **nicht** in superpowers:writing-plans übergehen: Den Plan schreibt `lead-tech`.

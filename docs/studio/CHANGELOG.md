@@ -33,10 +33,9 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   mit `model` (Guard). Umsetzungszyklus Schritt 4: „Schlanke Steuerung“ (E-010 angepasst, Messung
   M10). Limits: L0-Übergabe nach jedem Gate-Block, spätestens bei 25 % Kontext, keine Bilder. Gates
   und Dokumentation: Plan = Index plus Task-Datei je Task (≤ 10 KB), Spec ≤ 40 KB mit Anhängen.
-  Briefing-Standard: Kontext nur Task-Datei und AK-IDs, `rulings.md` nur per grep (E-014
-  `vorgeschlagen`, wartet auf Platz). `verbesserung.md`: Abschnitt „Effizienz“ der Metriken,
+  Briefing-Standard: Kontext nur Task-Datei und AK-IDs, `rulings.md` nur per grep (E-010). `verbesserung.md`: Abschnitt „Effizienz“ der Metriken,
   Ampel-Schwellen, Pflichtpunkt Effizienz-Ampel in jeder Retro; `templates/retro.md`: Abschnitt
-  „Effizienz-Ampel“. `experimente.md`: E-010 „Schlanke Steuerung“, E-014 neu. `lernen.md`: Effizienz-Ampel,
+  „Effizienz-Ampel“. `experimente.md`: E-010 „Schlanke Steuerung“ (umfasst Task-Dateien und L0-Sessiongrösse, R168). `lernen.md`: Effizienz-Ampel,
   Persona-Starts mit `model`.
 
 ## 2026-10-02 · Persona studio-coach 1.2
@@ -79,14 +78,14 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 - Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
 - Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
 - Ruling: R167
-- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-014)
+- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-010)
 
 ## 2026-10-02 · Persona design-spec-author 1.3
 
 - Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
 - Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
 - Ruling: R167
-- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-014)
+- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-010)
 
 ## 2026-10-02 · Handbuch 1.12
 

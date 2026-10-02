@@ -89,7 +89,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
 
 - **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs** (Format unter „Gates und
   Dokumentation“), nie einen ganzen Plan oder eine ganze Spec; `rulings.md` wird nie ganz gelesen,
-  nur per `grep` auf die R-Nummern (E-014, R167).
+  nur per `grep` auf die R-Nummern (E-010, R167).
 
 Pflichtpunkte laut Vorlage: Persona und Expertise, Ziel mit Warum fürs Spielerlebnis, Kontext,
 Deliverable mit Ablageort, Definition of Done, Grenzen und Datei-Ownership, Schnittstellen,
@@ -132,7 +132,7 @@ Meilenstein-Retro auf `opus`.
   Merges) und beginnt erst danach Neues (R166). Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
   Session-Ende-Routine, keine neuen Starts. Wochenfenster über 80 %: Parallelität reduzieren.
   Die Modelle bleiben unverändert (kein Downgrade, R71).
-- **Sessiongrösse (R68, E-014):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
+- **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
   übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
   (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.
   `rulings.md` liest L0 nie ganz, nur per `grep`.
@@ -179,7 +179,7 @@ L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 | Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
 | Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                      |
 
-**Plan- und Spec-Format (E-014, R167):**
+**Plan- und Spec-Format (E-010, R167):**
 
 - Eine **Spec** hat höchstens 40 KB; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
   `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md`, die Spec verweist darauf.

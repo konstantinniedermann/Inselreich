@@ -49,6 +49,12 @@ Einschränkung: Die Zahlen stammen aus der L0-Analyse (Schätzung nach Kostengew
 - Wirkung: Das Problem blieb bis zu einer Nutzerfrage unsichtbar. Eine Retro findet nur, was ihre Datenbasis und ihre Vorlage zeigen.
 - Deutung: Zwei Ursachen. (1) Messlücke: keine Kennzahl mit Schwelle. (2) Prozesslücke: kein Pflichtpunkt, also hing der Fund an der Aufmerksamkeit des Coachs. Zusätzlich war E-010 zu eng gemessen (Teilgrösse statt Anteil), und die Prüffrage 4 der Persona („Verschlechtert der Vorschlag die Messbarkeit?“) fragt nach Experimenten, nicht nach dem Gesamtbild. Gegenmassnahme: Abschnitt „Effizienz“ in `metrics.py` mit Ampel und Pflichtpunkt „Effizienz-Ampel“ in jeder Retro.
 
+### B7 · Budget-Alarm „13 von 3“ ist ein Messartefakt
+
+- Beobachtung: Die Budget-Prüfung zählt L0-Direktstarts (R167) gegen die ganze Historie von `studio-director` statt ab dem Budget-Event. Alarm „13 von 3“ bei 2 echten Starts.
+- Beleg: `docs/studio/rulings.md` R168
+- Wirkung: Falscher Vorfall `budget:` (Rauschen in den Retro-Auslösern). Der Fix liegt im Paket EFF-W (`tools/studio/`), nicht im Handbuch.
+
 ## Befragung der Leads
 
 - Keine Befragung (Budget: keine Agenten starten). Datenbasis ist die L0-Analyse; Lead-Berichte nicht neu gelesen.
@@ -68,12 +74,12 @@ Das Werkzeug (`metrics.py --efficiency`, EFF-W) liegt noch nicht vor; die Ampel 
 | Persona-Starts `general-purpose` auf opus | 2040 Aufrufe insgesamt | rot          | B5 (nicht nur Personas)                 |
 | grösste gelesene Datei                    | 310 KB (Plan M8)       | rot          | B3                                      |
 
-Jede Zeile rot oder gelb: Vorschläge unten (E-010 angepasst, E-014) und Handbuch 1.13; die Modellwahl (B5) ist eine Regeländerung mit Guard (EFF-W), kein Experiment.
+Jede Zeile rot oder gelb: Vorschläge unten (E-010 angepasst und erweitert) und Handbuch 1.13; die Modellwahl (B5) ist eine Regeländerung mit Guard (EFF-W), kein Experiment.
 
 ## Vorschläge
 
 - E-010 wird zu „Schlanke Steuerung“ angepasst (Ursachen B1, B2). Messgrössen in M10: Steuerungsanteil ≤ 40 %, Lead-Kontext-Median ≤ 80k, Cache-Write 5 min ≤ 15 %. Rückfall Handbuch 1.12.
-- Neu E-014 „Task-Dateien und kurze L0-Sessions“ (Ursachen B3, B4). Messgrössen: grösste gelesene Datei ≤ 40 KB, L0-Kontext Max ≤ 250k. Status `vorgeschlagen`, weil kein Platz frei ist (siehe unten).
+- E-010 umfasst zusätzlich Task-Dateien und kurze L0-Sessions (Ursachen B3, B4; ursprünglich als E-014 vorgeschlagen, mit R168 eingegliedert). Zusätzliche Messgrössen: grösste gelesene Datei ≤ 40 KB, L0-Kontext Max ≤ 250k.
 - Modellwahl neu (B5): kein Experiment, Regel im Handbuch 1.13 (Ruling R167: die Wahl folgt der Aufgabe).
 - Nicht vorgeschlagen: M6 „weniger Prozess je Paket“ erst nach Messung M10 (R167).
 
@@ -83,7 +89,7 @@ Messbarkeit: Keiner der Vorschläge verschlechtert die Messung. Die Messgrössen
 
 - E-010: noch keine Messung unter 1.12 (Zeitraum M10); wird mit Auftrag R167 zu „Schlanke Steuerung“ angepasst.
 - E-011: Zeitraum M9 und M10, unter 1.12 noch keine abgeschlossenen Pakete → weiter beobachten.
-- E-013: Zeitraum M9 und M10. In `.studio/events.jsonl` haben nur 3 `spawn`/`budget`-Ereignisse `handbook_version` 1.12; die Session 58d6bc4a lief unter 1.11 (Ausgangswert, nicht Messung). Die dortigen Phasen (`M10-design`, `M8-umsetzung`, `M10-plan`) gleichen der Paket-ID nicht, das ist der Ausgangszustand. Eine regelkonforme Bewertung ist nicht möglich → weiter beobachten, E-014 bleibt `vorgeschlagen`.
+- E-013: Zeitraum M9 und M10. In `.studio/events.jsonl` haben nur 3 `spawn`/`budget`-Ereignisse `handbook_version` 1.12; die Session 58d6bc4a lief unter 1.11 (Ausgangswert, nicht Messung). Die dortigen Phasen (`M10-design`, `M8-umsetzung`, `M10-plan`) gleichen der Paket-ID nicht, das ist der Ausgangszustand. Eine regelkonforme Bewertung ist nicht möglich → weiter beobachten, E-014 wurde deshalb als eigenes Experiment nicht gestartet, sondern mit R168 in E-010 eingegliedert.
 
 ## Änderungen an lernen.md
 

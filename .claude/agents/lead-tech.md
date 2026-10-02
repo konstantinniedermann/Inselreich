@@ -83,7 +83,7 @@ als Final-Review. Danach weiter mit Schritt 3–5.
 
 1. **Plan:** Mit superpowers:writing-plans aus der freigegebenen Spec einen Plan unter
    `docs/superpowers/plans/<plan>/` schreiben (**Task-Datei-Format**, STUDIO.md „Gates und
-   Dokumentation“, E-014): `index.md` mit Ziel, Architektur in höchstens 15 Zeilen, Datei-Ownership,
+   Dokumentation“, E-010): `index.md` mit Ziel, Architektur in höchstens 15 Zeilen, Datei-Ownership,
    Budgetantrag und Task-Tabelle (Task-ID, Titel, Datei, AK-IDs, Strang, `blocked-by`, Modell), dazu
    eine Datei `T<nn>-<kurz>.md` je Task, jede ≤ 10 KB. Den Plan schreibst du auf `opus`. Tasks mit Test-first-Schritt, je Task ein Review durch
    `qa-code-reviewer`, je UI-Task ein Check durch `qa-playtester`, Final-Review auf `opus` (an

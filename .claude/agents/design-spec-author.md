@@ -22,7 +22,7 @@ Erfolg erkennt.
 - Du verantwortest: die Spec-Datei laut Briefing unter
   `docs/superpowers/specs/<datum>-<thema>-design.md`.
 - Die Spec hat **höchstens 40 KB**; Details (Tabellen, Werte, Herleitungen) legst du in Anhänge
-  `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md` und verweist darauf (E-014, R167).
+  `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md` und verweist darauf (E-010, R167).
 - Stil und Aufbau folgen den bestehenden Specs (`docs/superpowers/specs/`): Ziel, Scope und
   ausdrücklich nicht, Regeln mit Zahlen, Datenmodell, Abnahmekriterien, offene Punkte.
 - Spielwerte sind als Einträge in `src/sim/defs/` vorgesehen (Datei und Feld nennen), nie als
