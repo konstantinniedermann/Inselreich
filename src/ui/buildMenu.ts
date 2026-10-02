@@ -6,7 +6,7 @@ import { UPKEEP_INTERVAL } from '../sim/defs/timing';
 import type { BuildingDefId, Category, Cost, SiteRule, Terrain, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
-import { costLine } from './dom';
+import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { showMessage } from './messages';
 
@@ -185,6 +185,15 @@ function attachTooltip(
   btn.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
+/**
+ * Tab-Reihenfolge bei offener Einträge-Leiste: Hauptzeile bis einschliesslich der offenen Kategorie, dann die
+ * Einträge, dann der Rest der Hauptzeile (Spec L2 „Tastatur"). Ohne offene Kategorie (`openIdx` < 0): nur die Hauptzeile.
+ */
+export function tabOrder<T>(main: T[], sub: T[], openIdx: number): T[] {
+  if (openIdx < 0) return [...main];
+  return [...main.slice(0, openIdx + 1), ...sub, ...main.slice(openIdx + 1)];
+}
+
 /** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
 const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
@@ -198,6 +207,11 @@ export function renderBuildMenu(
   onSelect: (tool: Tool) => void,
   onToggle: (category: Category) => void,
 ): void {
+  // Per Tastatur ausgelöst bleibt der Fokus im Menü: nach dem Neuaufbau geht er an das gleiche Gegenstück zurück
+  const active = document.activeElement;
+  const focusKey =
+    active instanceof HTMLElement && nav.contains(active) ? active.dataset.key : undefined;
+  nav.onkeydown = null;
   nav.replaceChildren();
   const addButton = (parent: HTMLElement, label: string, tool: Tool, cost?: Cost): void => {
     const btn = document.createElement('button');
@@ -205,14 +219,15 @@ export function renderBuildMenu(
     btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
     btn.setAttribute('aria-label', label);
     btn.textContent = label;
+    btn.dataset.key = label;
     attachTooltip(btn, tool, cost !== undefined, nav);
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (ev) => {
       if (btn.dataset.longPress) {
         // Langdruck zeigte nur das Tooltip: kein Werkzeugwechsel
         delete btn.dataset.longPress;
         return;
       }
-      btn.blur();
+      if (blurAfterClick(ev.detail)) btn.blur();
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
       const afford = cost ? checkAfford(state.world, cost) : null;
@@ -232,8 +247,9 @@ export function renderBuildMenu(
     btn.textContent = cat.label;
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
-    btn.addEventListener('click', () => {
-      btn.blur();
+    btn.dataset.key = cat.id;
+    btn.addEventListener('click', (ev) => {
+      if (blurAfterClick(ev.detail)) btn.blur();
       onToggle(cat.id);
     });
     main.appendChild(btn);
@@ -257,7 +273,25 @@ export function renderBuildMenu(
     }
     nav.appendChild(sub);
   }
+  if (state.openCategory !== null) {
+    // Die Einträge liegen im DOM nach der Hauptzeile; Tab springt trotzdem von der offenen Kategorie direkt hinein
+    nav.onkeydown = (ev) => {
+      if (ev.key !== 'Tab') return;
+      const mainBtns = [...main.querySelectorAll<HTMLElement>('button')];
+      const subBtns = [...nav.querySelectorAll<HTMLElement>('.buildbar-sub button')];
+      const openIdx = mainBtns.findIndex((b) => b.dataset.key === state.openCategory);
+      const order = tabOrder(mainBtns, subBtns, openIdx);
+      const at = order.indexOf(ev.target as HTMLElement);
+      const next = order[at + (ev.shiftKey ? -1 : 1)];
+      if (at < 0 || !next) return;
+      ev.preventDefault();
+      next.focus();
+    };
+  }
   updateBuildMenu(nav, state.world);
+  if (focusKey !== undefined) {
+    nav.querySelector<HTMLElement>(`[data-key="${CSS.escape(focusKey)}"]`)?.focus();
+  }
 }
 
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
