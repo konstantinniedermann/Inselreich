@@ -632,3 +632,13 @@ B3 Kanten, Worktree `m8-render` durch lead-art; B4 SHA nachführen; B5 Integrati
 Bestätigt: P1, W1, W3–W6. Budget lead-tech 25 (Par. 4), lead-qa 3, lead-art 4, +1 L0 (E-010).
 
 Entscheider: L0 · Anlass: Gate Plan M8
+
+## R144 · 2026-10-02 · Programm Nutzerfeedback
+
+Ruling: Nutzerfeedback G1–G9/S1–S10 („planen, in Häppchen, Abteilungen ggf. parallel") ist ein
+Programm, kein Sofortauftrag: lead-design macht eine Programm-Triage mit lead-art und lead-tech
+(Stränge, Meilensteinschnitt, Reihenfolge, erste Häppchen) → Gate Brainstorming L0. Bug G2 sofort
+als BUG-LICHT bei lead-art (leicht). M8 läuft weiter (deckt S1 teilweise); Auflagen-Runde jetzt. —
+Kosten bei Irrtum: Neuschnitt der Roadmap, kein Code — `.studio/handoffs/nutzerfeedback-2026-10-02.md`
+
+Entscheider: L0 · Anlass: Nutzer-Anweisung · ADR: —
