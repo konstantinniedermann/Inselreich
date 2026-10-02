@@ -516,3 +516,12 @@ Warnschwelle (50 % je Limit) in CI. Bei Schwelle: Warteschlange mit Alternativen
 M7-UX (getrennte Pfade). — Kosten bei Irrtum: ein kleiner Check zu viel.
 
 Entscheider: L0 · Anlass: Nutzerauftrag
+
+## R131 · 2026-10-02 · Gate Merge PAGES-LIMIT
+
+Ruling: `feat/pages-limit` @ 3065631 angenommen (Review OK, `make check` grün, Ist 0,87 % von 1 GB);
+Merge per production-integrator. Node-Risiko (Typ-Stripping ab 22.18, CI pinnt 22) wird am ersten
+CI-Lauf auf main belegt; bei Rot `check-latest: true` als Fix. — Kosten bei Irrtum: ein ausgesetztes
+Deploy, alte Seite bleibt online.
+
+Entscheider: L0 · Anlass: Merge-Gate
