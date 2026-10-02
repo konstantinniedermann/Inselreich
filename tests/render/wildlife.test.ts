@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { centerOn, visibleTileRange, type TileRange } from '../../src/render/camera';
 import { phaseAt } from '../../src/render/daynight';
 import { CAPS } from '../../src/render/limits';
+import { ISO_H, ISO_W } from '../../src/render/iso';
 import { PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
 import { render, type RenderFx } from '../../src/render/renderer';
 import { coastField } from '../../src/render/terrainField';
@@ -13,6 +14,8 @@ import {
   WHALE_VISIBLE_MS,
   WHALE_COLOR,
   drawWaterLife,
+  type WhalePose,
+  type WildlifeHit,
   fishAnchors,
   flockAnchors,
   flockPose,
@@ -58,6 +61,7 @@ vi.mock('../../src/render/terrain', async (orig) => {
   };
 });
 
+const SIGNALS = SIGNAL_NAMES.map((n) => PALETTE[n].toLowerCase());
 const VIEW = { w: 1280, h: 720 };
 const layer = { width: 64 * 32, height: 64 * 32 } as unknown as HTMLCanvasElement;
 const DAY: WildlifeEnv = { phase: 'day', weather: 'clear', reduce: false };
@@ -345,30 +349,107 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect([...kinds].sort()).toEqual(['birds', 'fish', 'whale']);
   });
 
-  it('RF-8 Wal lesbar: gefüllter Rücken, Glanz, Fontäne aus gefüllten Kreisen, gefüllte Fluke, keine Foam-1.5-Striche', () => {
-    const { ctx, log } = fakeCtx();
-    const cam = { x: 0, y: 0, zoom: 0.75 };
-    const mk = (spout: number, fluke: number) => ({
-      kind: 'whale' as const,
-      name: 'Wal' as const,
+  it('RF-8 Wal Ablauf in 12 s: Auftauchen, Schwimmen, Abtauchen, Fluke; Fontäne nur beim Auftauchen; wildlifeAt liefert Wal in allen Phasen', () => {
+    const seen = new Set<string>();
+    let found = 0;
+    for (const seed of SEEDS) {
+      const world = createWorld(seed);
+      let t0 = -1;
+      for (let t = 0; t < 600000 && t0 < 0; t += 50) if (whaleAt(world, t)) t0 = t;
+      if (t0 < 0) continue;
+      found++;
+      const at = (dt: number) => whaleAt(world, t0 + dt)!;
+      expect(at(500).phase).toBe('surface');
+      expect(at(1500).phase).toBe('surface');
+      expect(at(4000).phase).toBe('swim');
+      expect(at(9000).phase).toBe('dive');
+      expect(at(11000).phase).toBe('fluke');
+      expect(at(500).lift).toBeLessThan(at(1500).lift);
+      expect(at(4000).lift).toBeGreaterThan(0.75);
+      expect(at(8500).lift).toBeGreaterThan(at(9800).lift);
+      expect(at(11000).lift).toBe(0);
+      expect(at(11000).fluke).toBeGreaterThan(0);
+      expect(at(4000).fluke).toBe(-1);
+      expect(at(1500).spout).toBeGreaterThanOrEqual(0);
+      for (let dt = 0; dt < WHALE_VISIBLE_MS; dt += 50) {
+        const p = whaleAt(world, t0 + dt);
+        if (!p) continue;
+        seen.add(p.phase);
+        if (p.spout >= 0) expect(p.phase).toBe('surface');
+        const hit = wildlifeAt(world, FULL, t0 + dt, DAY).find((x) => x.kind === 'whale');
+        expect(hit?.name).toBe('Wal');
+      }
+    }
+    expect(found).toBeGreaterThan(0);
+    expect([...seen].sort()).toEqual(['dive', 'fluke', 'surface', 'swim']);
+  });
+
+  it('RF-9 Wal gezeichnet: gewölbter Rücken (Buckel), Fluke steigt über den Rücken, Farben, keine Ringe, Masse', () => {
+    const cam = (zoom: number) => ({ x: 0, y: 0, zoom });
+    const pose = (over: Partial<WhalePose>): WildlifeHit => ({
+      kind: 'whale',
+      name: 'Wal',
       x: 10,
       y: 10,
       z: 0,
       r: 1,
-      pose: { x: 10, y: 10, heading: 0.5, lift: 1, spout, fluke },
+      pose: {
+        x: 10,
+        y: 10,
+        heading: 0.5,
+        phase: 'swim',
+        lift: 1,
+        spout: -1,
+        fluke: -1,
+        fade: 1,
+        swell: 0,
+        curl: 0,
+        ...over,
+      },
     });
-    drawWaterLife(ctx as unknown as CanvasRenderingContext2D, cam, [mk(0.5, 0.6)]);
-    const fills = log.events.filter((e) => e.op === 'fill');
-    expect(fills.filter((e) => e.style === WHALE_COLOR).length).toBeGreaterThanOrEqual(2); // Rücken + Fluke
-    expect(fills.length).toBeGreaterThanOrEqual(2 + 3); // plus Glanz und Säulenkreise
-    expect(log.events.filter((e) => e.op === 'stroke' && e.style === PALETTE.foam)).toHaveLength(0);
-    const body = fills.find((e) => e.style === WHALE_COLOR)!;
-    const xs = body.points.map((p) => p.x);
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(26); // Länge 2 Kacheln, Zoom 0,75, Richtung 0,5 rad: ca. 28 px
+    const draw = (hit: WildlifeHit, zoom: number) => {
+      const { ctx, log } = fakeCtx();
+      drawWaterLife(ctx as unknown as CanvasRenderingContext2D, cam(zoom), [hit]);
+      return log.events;
+    };
+    const ext = (pts: { x: number; y: number }[]) => ({
+      w: Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x)),
+      top: Math.min(...pts.map((p) => p.y)),
+      bottom: Math.max(...pts.map((p) => p.y)),
+    });
+    for (const zoom of [0.75, 1.5]) {
+      const swim = draw(pose({}), zoom);
+      const bodyFill = swim.find((e) => e.op === 'fill' && e.style === WHALE_COLOR)!;
+      const body = ext(bodyFill.points);
+      expect(body.w).toBeGreaterThanOrEqual(1.6 * (ISO_W / 2) * zoom - 1);
+      expect(body.w).toBeLessThanOrEqual(2 * (ISO_W / 2) * zoom + 1);
+      expect(body.bottom - body.top).toBeGreaterThanOrEqual(0.35 * ISO_H * zoom - 0.5); // Buckel
+      const fl = draw(pose({ phase: 'fluke', lift: 0, fluke: 1 }), zoom);
+      const flukeFill = fl.find((e) => e.op === 'fill' && e.style === WHALE_COLOR)!;
+      const fext = ext(flukeFill.points);
+      expect(fext.top).toBeLessThan(body.top); // Spitze über dem Rücken
+      expect(fext.w).toBeGreaterThanOrEqual(0.55 * ISO_W * zoom);
+      expect(flukeFill.points.length).toBeGreaterThanOrEqual(8); // V mit Kerbe, gefüllt
+      for (const ev of [swim, fl, draw(pose({ phase: 'surface', spout: 0.5 }), zoom)]) {
+        expect(ev.filter((e) => e.op === 'stroke' && e.style === PALETTE.foam)).toHaveLength(0);
+        expect(ev.filter((e) => SIGNALS.includes(e.style.toLowerCase()))).toHaveLength(0);
+        expect(ev.some((e) => e.op === 'stroke' && e.style.startsWith('rgba(244,241,230'))).toBe(
+          true,
+        ); // Schaumrand
+      }
+      const spout = draw(pose({ phase: 'surface', spout: 0.5 }), zoom).filter(
+        (e) => e.op === 'fill' && e.style.startsWith('rgba(244,241,230'),
+      );
+      expect(spout.length).toBeGreaterThanOrEqual(3);
+      expect(
+        draw(pose({}), zoom).filter(
+          (e) => e.style.startsWith('rgba(244,241,230') && e.op === 'fill',
+        ),
+      ).toHaveLength(0);
+    }
   });
 
   it('RF-7 Einbindung: Wasserleben vor Schiff und Objekten, Vögel danach und vor dem Multiply-Durchgang, keine Signalfarbe, reduceMotion weniger', () => {
-    const signals = SIGNAL_NAMES.map((n) => PALETTE[n].toLowerCase());
     let done = false;
     for (const seed of SEEDS) {
       const world = createWorld(seed);
@@ -394,7 +475,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       expect(Math.min(...birdIdx)).toBeGreaterThan(lastBody);
       expect(Math.max(...birdIdx)).toBeLessThan(mul);
       const animals = [...fishIdx, ...birdIdx].map((i) => ev[i]!);
-      expect(animals.filter((e) => signals.includes(e.style.toLowerCase()))).toHaveLength(0);
+      expect(animals.filter((e) => SIGNALS.includes(e.style.toLowerCase()))).toHaveLength(0);
       const pts = (e2: Ev[], st: string) =>
         e2
           .filter((e) => e.op === 'stroke' && e.style === st)

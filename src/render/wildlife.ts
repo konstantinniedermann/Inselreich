@@ -34,17 +34,26 @@ export interface FishPose {
   /** Spritzringe: Mitte (Kachelraum) und Alter 0…1. */
   splash: { x: number; y: number; age: number }[];
 }
+export type WhalePhase = 'surface' | 'swim' | 'dive' | 'fluke';
 export interface WhalePose {
   x: number;
   y: number;
   /** Schwimmrichtung im Kachelraum (Bogenmass). */
   heading: number;
-  /** Hebung des Rückens 0…1. */
+  /** Phase des 12-s-Ablaufs: 0–2 s Auftauchen, 2–8 s Schwimmen, 8–10 s Abtauchen, 10–12 s Fluke. */
+  phase: WhalePhase;
+  /** Hebung des Rückens 0…1 (in der Fluke-Phase 0). */
   lift: number;
-  /** Fontäne 0…1 (Verlauf) oder -1 ohne Fontäne. */
+  /** Fontäne 0…1 (Verlauf, nur beim Auftauchen) oder -1 ohne Fontäne. */
   spout: number;
-  /** Fluke beim Abtauchen 0…1 oder -1. */
+  /** Höhe der Fluke 0…1 oder -1 ausserhalb der Fluke-Phase. */
   fluke: number;
+  /** Deckkraft der Fluke 0…1 (blendet am Ende aus). */
+  fade: number;
+  /** Wellenbogen des Rückens beim Schwimmen −1…1. */
+  swell: number;
+  /** Krümmung beim Abtauchen 0…1 (Kopf sinkt zuerst). */
+  curl: number;
 }
 export interface FlockPose {
   birds: { x: number; y: number; z: number; flap: number }[];
@@ -85,11 +94,12 @@ export const FISH_SHIMMER = rgbaOf(PALETTE.waterDeep, 0.32);
 const FISH_RIM = rgbaOf(PALETTE.waterDeep, 0.75);
 const FISH_SILVER = mixHex(PALETTE.foam, PALETTE.waterShallow, 0.5);
 const SPLASH_RGB = PALETTE.foam;
-export const WHALE_COLOR = mixHex(PALETTE.roofSlate, PALETTE.waterDeep, 0.45);
+export const WHALE_COLOR = mixHex(
+  mixHex(PALETTE.roofSlate, PALETTE.rockDark, 0.35),
+  '#000000',
+  0.3,
+);
 const WHALE_GLOSS = mixHex(PALETTE.roofSlate, PALETTE.foam, 0.3);
-const WHALE_HALF_LEN = 1; // Kacheln (Länge 2)
-const WHALE_SCALE = WHALE_HALF_LEN / 0.75; // Fluke, Bugwellen und Breite wachsen mit
-const WHALE_HALF_WID = 0.24 * WHALE_SCALE;
 export const BIRD_COLOR = mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5);
 
 const clampTime = (t: number): number => (Number.isFinite(t) ? Math.max(0, t) : 0);
@@ -295,17 +305,33 @@ export function whaleAt(world: World, timeMs: number): WhalePose | null {
     y = a.y + Math.sin(ang) * drift * u;
   const ship = shipTile(world);
   if (ship && Math.hypot(x - (ship.x + 0.5), y - (ship.y + 0.5)) < WHALE_SHIP_GAP) return null;
-  const rise = Math.min(1, dt / 1500),
-    sink = Math.min(1, (WHALE_VISIBLE_MS - dt) / 1500);
-  const sprayU = (dt - 2000) / 1200,
-    flukeU = (dt - 10000) / 2000;
+  const smooth = (v: number): number => v * v * (3 - 2 * v);
+  const phase: WhalePhase =
+    dt < 2000 ? 'surface' : dt < 8000 ? 'swim' : dt < 10000 ? 'dive' : 'fluke';
+  const lift =
+    phase === 'surface'
+      ? smooth(dt / 2000)
+      : phase === 'swim'
+        ? 0.9 + 0.1 * Math.sin(((dt - 2000) / 6000) * Math.PI * 2)
+        : phase === 'dive'
+          ? 0.9 * smooth(1 - (dt - 8000) / 2000)
+          : 0;
+  const fu = (dt - 10000) / 2000; // 0…1 in der Fluke-Phase
+  const sprayU = (dt - 1000) / 1000; // Fontäne bei ca. 1,5 s, nur beim Auftauchen
   return {
     x,
     y,
     heading: ang,
-    lift: Math.max(0, Math.min(rise, sink)),
-    spout: sprayU >= 0 && sprayU <= 1 ? sprayU : -1,
-    fluke: flukeU >= 0 ? Math.min(1, flukeU) : -1,
+    phase,
+    lift,
+    spout: phase === 'surface' && sprayU >= 0 ? sprayU : -1,
+    fluke:
+      phase === 'fluke'
+        ? smooth(Math.min(1, fu / 0.4)) * (fu < 0.7 ? 1 : 1 - smooth((fu - 0.7) / 0.3))
+        : -1,
+    fade: phase === 'fluke' ? Math.min(1, (1 - fu) / 0.25) : 1,
+    swell: phase === 'swim' ? Math.sin(((dt - 2000) / 6000) * Math.PI * 4) : 0,
+    curl: phase === 'dive' ? smooth((dt - 8000) / 2000) : 0,
   };
 }
 
@@ -411,29 +437,145 @@ function ringPath(ctx: CanvasRenderingContext2D, c: Pt2, rx: number): void {
   }
 }
 
-/** Ellipse im Kachelraum (Mitte, Richtung `h`, Halbachsen) als Pfad im Bildraum; `lift` hebt sie um Weltpixel an. */
-function tileEllipse(
-  ctx: CanvasRenderingContext2D,
-  cam: Camera,
-  c: Pt2,
-  h: number,
-  ra: number,
-  rb: number,
-  lift = 0,
-): void {
-  const n = 16;
-  const ch = Math.cos(h),
-    sh = Math.sin(h);
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    const u = Math.cos(a) * ra,
-      v = Math.sin(a) * rb;
-    const p = project(c.x + ch * u - sh * v, c.y + sh * u + ch * v);
-    const q = worldToScreen(cam, { x: p.x, y: p.y - lift });
-    if (i === 0) ctx.moveTo(q.x, q.y);
-    else ctx.lineTo(q.x, q.y);
+/** Rücken-Profil: Höhe 0…1 bei `u` ∈ [−1, 1] (Kopf bei +1): gewölbter Buckel, kleine Finne hinter der Mitte. */
+function backProfile(u: number): number {
+  const dome = Math.pow(Math.max(0, 1 - u * u), u > 0 ? 0.7 : 1);
+  const fin = Math.max(0, 1 - Math.abs(u + 0.35) / 0.1) * 0.22;
+  return Math.min(1.15, dome + fin * (dome > 0 ? 1 : 0));
+}
+const WHALE_LEN = 1.8; // Kacheln
+const WHALE_HUMP = 0.42 * ISO_H;
+const FLUKE_W = 0.6 * ISO_W;
+const FLUKE_H = 0.75 * ISO_H;
+const WHALE_UNDER = mixHex(WHALE_COLOR, '#000000', 0.35);
+
+/**
+ * Wal im Profil (Bildraum): gewölbter Rücken über der Wasserlinie, nur nach links oder rechts gewendet
+ * (`heading` im Bildraum), mit Glanz, dunklerer Unterseite, Schaumrand (Bugwelle, Kielwasser), Fontäne beim
+ * Auftauchen und senkrecht aufsteigender, gefüllter V-Fluke. Kein Ring, keine geschlossene Umrandung.
+ */
+function drawWhale(ctx: CanvasRenderingContext2D, cam: Camera, p: WhalePose): void {
+  const z = cam.zoom;
+  const q = project(p.x, p.y);
+  const b = worldToScreen(cam, q);
+  const f = Math.cos(p.heading) - Math.sin(p.heading) >= 0 ? 1 : -1; // Blickrichtung im Bild
+  const L = WHALE_LEN * (ISO_W / 2) * z,
+    H = WHALE_HUMP * z;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (p.lift > 0.02) {
+    const N = 14;
+    const top = (u: number): number =>
+      b.y -
+      H * p.lift * backProfile(u) +
+      H * 0.12 * p.swell * (1 - u * u) + // flacher Wellenbogen beim Schwimmen
+      H * 0.85 * p.curl * Math.max(0, u); // Kopf sinkt beim Abtauchen zuerst
+    const xs = (u: number): number => b.x + f * u * (L / 2);
+    const water = b.y;
+    const clampY = (y: number): number => Math.min(water, y);
+    const outline: { x: number; y: number }[] = [];
+    for (let i = 0; i <= N; i++) {
+      const u = -1 + (2 * i) / N;
+      outline.push({ x: xs(u), y: clampY(top(u)) });
+    }
+    // Körper
+    ctx.fillStyle = WHALE_COLOR;
+    ctx.beginPath();
+    outline.forEach((o, i) => (i === 0 ? ctx.moveTo(o.x, o.y) : ctx.lineTo(o.x, o.y)));
+    ctx.lineTo(xs(1), water);
+    ctx.lineTo(xs(-1), water);
+    ctx.closePath();
+    ctx.fill();
+    // dunklere Unterseite an der Wasserlinie
+    ctx.fillStyle = WHALE_UNDER;
+    ctx.beginPath();
+    outline.forEach((o, i) => {
+      const y = water - (water - o.y) * 0.25;
+      if (i === 0) ctx.moveTo(o.x, y);
+      else ctx.lineTo(o.x, y);
+    });
+    ctx.lineTo(xs(1), water);
+    ctx.lineTo(xs(-1), water);
+    ctx.closePath();
+    ctx.fill();
+    // schmaler Glanz auf der Oberkante
+    ctx.strokeStyle = WHALE_GLOSS;
+    ctx.lineWidth = Math.max(1, 1.2 * z);
+    ctx.beginPath();
+    for (let i = 3; i <= N - 3; i++) {
+      const o = outline[i]!;
+      if (i === 3) ctx.moveTo(o.x, o.y - 0.5 * z);
+      else ctx.lineTo(o.x, o.y - 0.5 * z);
+    }
+    ctx.stroke();
+    // heller Wasserrand: Schaumbogen entlang der Wasserlinie, Bugwelle vorn, Kielwasser hinten
+    const foamA = Number((0.5 * Math.min(1, p.lift * 1.5)).toFixed(3));
+    ctx.strokeStyle = rgbaOf(SPLASH_RGB, foamA);
+    ctx.lineWidth = Math.max(0.75, z);
+    ctx.beginPath();
+    ctx.moveTo(xs(-1.05), water + 0.5 * z);
+    ctx.quadraticCurveTo(b.x, water + 2.5 * z, xs(1.05), water + 0.5 * z);
+    ctx.moveTo(xs(1.05), water + 0.5 * z);
+    ctx.quadraticCurveTo(xs(1.3), water + 2 * z, xs(1.55), water + 5 * z);
+    ctx.moveTo(xs(-1.05), water + 0.5 * z);
+    ctx.quadraticCurveTo(xs(-1.5), water + 3 * z, xs(-2.1), water + 6 * z);
+    ctx.moveTo(xs(-1.05), water + 0.5 * z);
+    ctx.quadraticCurveTo(xs(-1.6), water - 0.5 * z, xs(-2.2), water + 1 * z);
+    ctx.stroke();
+    if (p.spout >= 0) {
+      // weiche Säule aus kleinen gefüllten Kreisen, nach oben schwächer
+      const base = { x: xs(0.45), y: clampY(top(0.45)) };
+      const col = Math.sin(p.spout * Math.PI);
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = rgbaOf(SPLASH_RGB, Number((0.7 * col * (1 - i / 5)).toFixed(3)));
+        ctx.beginPath();
+        ctx.arc(
+          base.x,
+          base.y - (0.1 + 0.16 * i) * col * ISO_H * z,
+          (2.4 - 0.3 * i) * z,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
   }
-  ctx.closePath();
+  if (p.fluke > 0) {
+    // senkrecht aufsteigende Schwanzflosse: gefüllt, V-förmig mit Kerbe, Spitzen oben aussen
+    const h = FLUKE_H * z * p.fluke,
+      W = FLUKE_W * z,
+      s = 0.05;
+    const pts: [number, number][] = [
+      [-s, 0],
+      [-s, 0.4],
+      [-0.5, 1],
+      [-0.2, 0.72],
+      [0, 0.62],
+      [0.2, 0.72],
+      [0.5, 1],
+      [s, 0.4],
+      [s, 0],
+    ];
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.fade));
+    ctx.fillStyle = WHALE_COLOR;
+    ctx.beginPath();
+    pts.forEach(([px, py], i) => {
+      const x = b.x + px * W;
+      const y = b.y - py * h;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = rgbaOf(SPLASH_RGB, Number((0.5 * p.fade).toFixed(3)));
+    ctx.lineWidth = Math.max(0.75, z);
+    ctx.beginPath();
+    ctx.moveTo(b.x - 0.16 * W, b.y + 1.5 * z);
+    ctx.quadraticCurveTo(b.x, b.y + 3.5 * z, b.x + 0.16 * W, b.y + 1.5 * z);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 /** Wasserleben (Fische, Wal) aus `wildlifeAt`-Treffern; Fische gebündelt je Art (Schimmer, Ringe, Sprünge). */
@@ -506,83 +648,7 @@ export function drawWaterLife(
       ctx.stroke();
     }
   }
-  for (const w of hits) {
-    if (w.kind !== 'whale') continue;
-    const p = w.pose as WhalePose;
-    if (p.lift <= 0) continue;
-    const ch = Math.cos(p.heading),
-      sh = Math.sin(p.heading);
-    const k = 0.45 + 0.55 * p.lift; // taucht auf: der Rücken wächst
-    // zwei kurze, weiche Bugwellen vor der Nase
-    ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.4 * p.lift);
-    ctx.lineWidth = Math.max(0.75, z);
-    ctx.beginPath();
-    for (const side of [-1, 1]) {
-      for (let i = 0; i <= 5; i++) {
-        const s = i / 5;
-        const back = WHALE_HALF_LEN * k * (0.75 - 1.1 * s),
-          out = side * (0.1 + 0.28 * s) * k * WHALE_SCALE;
-        const q = scr({ x: p.x + ch * back - sh * out, y: p.y + sh * back + ch * out });
-        if (i === 0) ctx.moveTo(q.x, q.y);
-        else ctx.lineTo(q.x, q.y);
-      }
-    }
-    ctx.stroke();
-    // länglicher, dunkler Rücken und schmaler Glanz darauf
-    ctx.fillStyle = WHALE_COLOR;
-    ctx.beginPath();
-    tileEllipse(ctx, cam, p, p.heading, WHALE_HALF_LEN * k, WHALE_HALF_WID * k, 0);
-    ctx.fill();
-    ctx.fillStyle = WHALE_GLOSS;
-    ctx.beginPath();
-    tileEllipse(
-      ctx,
-      cam,
-      p,
-      p.heading,
-      WHALE_HALF_LEN * 0.7 * k,
-      WHALE_HALF_WID * 0.28 * k,
-      p.lift * 0.1 * ISO_H,
-    );
-    ctx.fill();
-    if (p.spout >= 0) {
-      // weiche Säule aus kleinen gefüllten Kreisen, nach oben schwächer
-      const nose = scr({ x: p.x + ch * 0.35, y: p.y + sh * 0.35 }, p.lift * 0.08 * ISO_H);
-      const col = Math.sin(p.spout * Math.PI);
-      for (let i = 0; i < 4; i++) {
-        ctx.fillStyle = rgbaOf(SPLASH_RGB, Number((0.7 * col * (1 - i / 5)).toFixed(3)));
-        ctx.beginPath();
-        ctx.arc(
-          nose.x,
-          nose.y - (0.12 + 0.17 * i) * col * ISO_H * z,
-          (2.4 - 0.3 * i) * z,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-    }
-    if (p.fluke >= 0) {
-      // Schwanzflosse als gefüllte Silhouette (zwei Lappen mit Kerbe) am Heck
-      const tail = scr({ x: p.x - ch * WHALE_HALF_LEN * k, y: p.y - sh * WHALE_HALF_LEN * k });
-      const up =
-        Math.sin(Math.min(1, p.fluke * 1.2) * Math.PI * 0.8) * 0.34 * WHALE_SCALE * ISO_H * z;
-      const w2 = 0.2 * WHALE_SCALE * ISO_W * z;
-      ctx.fillStyle = WHALE_COLOR;
-      ctx.beginPath();
-      ctx.moveTo(tail.x - 0.02 * ISO_W * z, tail.y);
-      ctx.lineTo(tail.x - 0.02 * ISO_W * z, tail.y - up * 0.55);
-      ctx.lineTo(tail.x - w2, tail.y - up);
-      ctx.lineTo(tail.x - 0.04 * ISO_W * z, tail.y - up * 0.8);
-      ctx.lineTo(tail.x, tail.y - up * 0.85);
-      ctx.lineTo(tail.x + 0.04 * ISO_W * z, tail.y - up * 0.8);
-      ctx.lineTo(tail.x + w2, tail.y - up);
-      ctx.lineTo(tail.x + 0.02 * ISO_W * z, tail.y - up * 0.55);
-      ctx.lineTo(tail.x + 0.02 * ISO_W * z, tail.y);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
+  for (const w of hits) if (w.kind === 'whale') drawWhale(ctx, cam, w.pose as WhalePose);
   ctx.restore();
 }
 
