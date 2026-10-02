@@ -572,6 +572,7 @@ fehlen in der Bauleiste. Zwei Stellen zeigen sie trotzdem ab Spielbeginn: (a) di
 (Nutzernachtrag S11): gehört in die M10-Spec „Schritt für Schritt" (Programm
 `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §3.8, Grundsatz 5), dort zusammen mit Lager-Chips,
 Hotkeys und Bauleiste über `unlocked` lösen.
+
 - 2026-10-03 · Studio-Werkzeuge (`tools/studio/model.py`, Budget-Zählung) · Der Alarm „Budget von studio-director überschritten“ zählt Knoten mit Rolle „unbekannt“ mit, die nur aus `general-purpose`-Heartbeats entstehen (Live: 22 von 3 bei 3 echten Starts nach dem Budget-Event EFF). Der Zählbeginn ab dem jüngsten Budget-Event ist seit `2663c66` korrigiert, die Zuordnung der Heartbeat-Knoten nicht. Ursprung: Paket EFF-W (R168). Erste Einschätzung: Heartbeat-Knoten ohne Rolle nicht als Start zählen bzw. dem Spawn per agent_id zuordnen; wichtig, sobald L0 nach E-010 öfter direkt Arbeiter startet.
 
 ## Ausgewertet 2026-09-30

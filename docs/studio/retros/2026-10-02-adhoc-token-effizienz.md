@@ -4,6 +4,7 @@
 - Art: adhoc
 - Auslöser: Nutzerauftrag Token-Effizienz (R167), kein Vorfall mit ID
 - Datenbasis: `.studio/handoffs/EFF-analyse.md` (15 Hauptsessions, 512 Subagenten-Transkripte), `docs/studio/rulings.md` (R166, R167), `docs/studio/experimente.md`, `.studio/events.jsonl`
+- Korrektur 2026-10-03 (Review EFF-W): Die L0-Analyse unterzählte Output (erste Streaming-Zeile je Message-ID). Massgeblich sind die Werte aus `metrics.py --efficiency`: Steuerung 63,7 % (rot), Umsetzer 5,5 % (rot), Cache-Write 5 min 24,5 % (gelb), Output ≈ 19 %, 458 Subagenten. Befunde und Massnahmen bleiben gültig. B7: Ursache sind Heartbeat-Knoten ohne Rolle, nicht der Zählbeginn (`docs/beobachtungen.md`, 2026-10-03).
 
 Einschränkung: Die Zahlen stammen aus der L0-Analyse (Schätzung nach Kostengewicht, keine Abrechnung); der Coach hat sie nicht neu berechnet. Das Werkzeug-Paket EFF-W macht sie reproduzierbar.
 
