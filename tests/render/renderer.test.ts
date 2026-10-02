@@ -946,24 +946,23 @@ describe('Renderer', () => {
       expect(base.ev.findIndex((e) => e.composite === 'lighter')).toBeGreaterThan(
         base.ev.findIndex((e) => e.composite === 'multiply'),
       );
-      const [win, lamp] = rects(base.ev);
+      // Fensterrechtecke und Laternen können über Clip-Gruppen verteilt sein (BUG-LICHT): Punkte summieren
       const n = expectedWindows(base.world);
       expect(n).toBeGreaterThan(3);
-      expect(win!.points).toHaveLength(4 * n);
-      expect(lamp!.points).toHaveLength(4 * 2); // Kontor und Marktplatz
+      expect(rects(base.ev).reduce((sum, e) => sum + e.points.length, 0)).toBe(4 * n + 4 * 2); // Kontor und Marktplatz
       // Radius des Scheins: 0,6 · ISO_H · Zoom
       const ring = lighter(base.ev).find(
         (e) =>
           e.op === 'fill' &&
           e.style === rgbaOf(PALETTE.window, Number((0.35 / GLOW_RING_COUNT).toFixed(4))),
       )!;
-      expect(
-        lighter(base.ev).filter(
-          (e) =>
-            e.op === 'fill' &&
-            e.style === rgbaOf(PALETTE.window, Number((0.35 / GLOW_RING_COUNT).toFixed(4))),
-        ),
-      ).toHaveLength(2 * GLOW_RING_COUNT); // Gruppen Fenster und Laternen, je Ring ein Pfad
+      const ringFills = lighter(base.ev).filter(
+        (e) =>
+          e.op === 'fill' &&
+          e.style === rgbaOf(PALETTE.window, Number((0.35 / GLOW_RING_COUNT).toFixed(4))),
+      );
+      expect(ringFills.length).toBeGreaterThanOrEqual(2 * GLOW_RING_COUNT);
+      expect(ringFills.length % GLOW_RING_COUNT).toBe(0); // je Gruppe ein Pfad je Ring
       const first = ring.points.slice(0, 5);
       expect(
         (Math.max(...first.map((p) => p.x)) - Math.min(...first.map((p) => p.x))) / 2,

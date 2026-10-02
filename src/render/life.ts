@@ -1,16 +1,18 @@
 // life.ts — Leben (Spec 5.6, ISO §5 Ebenen 5 bis 7): Spaziergänger, Möwen, Herdrauch, Fensterlicht-Hilfen.
 // Kosmetisch und deterministisch aus `timeMs` und dem Welt-Zustand; kein Zustand ausser Caches je Welt, kein
 // Schreibzugriff auf die Welt. Die Mathematik (Weggraph, Positionen, Anker) ist rein; die Zeichner sind dünn.
+import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { hash2 } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import type { Phase } from './daynight';
-import { ISO_H, ISO_W, project, type Pt } from './iso';
+import { ISO_H, ISO_W, TREE_VARIANTS, project, type Pt } from './iso';
 import { cap } from './limits';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
-import { lightAnchors, type LightAnchor } from './sprites';
+import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, type Field } from './terrainField';
+import { crownsFor, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
 const rgbaCss = (css: string, alpha: number): string => `rgba(${rgbOfCss(css).join(',')},${alpha})`;
@@ -464,5 +466,233 @@ export function drawWindowLight(
       ctx.arc(cx, cy, radius * ring, 0, Math.PI * 2);
     }
     ctx.fill();
+  }
+}
+
+// --- Verdeckung von Licht und Feuer (BUG-LICHT) ------------------------------------------------------------
+
+/** Polygon im Bildraum (CSS-Pixel). */
+export type Poly = Pt[];
+
+/** Ein Objekt, das Licht hinter sich verdeckt: Bildbox und (erst bei Bedarf berechnete) Clips. */
+export interface Occluder {
+  box: LightRect;
+  /** Flächen in Gruppen, deren Flächen sich nicht überlappen; jede Gruppe ist ein Clip (`clipOutOccluders`). */
+  clips: () => Poly[][];
+}
+
+const CROWN_RY = 0.85; // wie `trees.ts`: Kronenhöhe im Verhältnis zur Breite
+const CROWN_SEGMENTS = 12;
+
+const area = (p: Poly): number =>
+  Math.abs(
+    p.reduce((a, q, i) => a + q.x * p[(i + 1) % p.length]!.y - p[(i + 1) % p.length]!.x * q.y, 0),
+  ) / 2;
+const inside = (poly: Poly, x: number, y: number): boolean => {
+  let in_ = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!,
+      b = poly[j]!;
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) in_ = !in_;
+  }
+  return in_;
+};
+
+/**
+ * Lässt Flächen weg, die ganz in einer grösseren liegen (Fenster, Türen, Zierleisten auf Wänden): die Vereinigung
+ * bleibt gleich, aber jeder Verdecker kostet einen eigenen Clip. Gedacht für (fast) konvexe Flächen.
+ */
+export function pruneContained(polys: readonly Poly[]): Poly[] {
+  const kept: Poly[] = [];
+  for (const p of [...polys].sort((a, b) => area(b) - area(a)))
+    if (!kept.some((k) => p.every((v) => inside(k, v.x, v.y)))) kept.push(p);
+  return kept;
+}
+
+const OVERLAP_TOL = 0.5; // Berührung (gemeinsame Kante) zählt nicht als Überlappung, px
+const isConvex = (p: Poly): boolean => {
+  let sign = 0;
+  for (let i = 0; i < p.length; i++) {
+    const a = p[i]!,
+      b = p[(i + 1) % p.length]!,
+      c = p[(i + 2) % p.length]!;
+    const z = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (Math.abs(z) < 1e-9) continue;
+    if (sign === 0) sign = Math.sign(z);
+    else if (Math.sign(z) !== sign) return false;
+  }
+  return true;
+};
+/** Trennachsensatz für zwei konvexe Flächen: überlappen sie um mehr als `OVERLAP_TOL`? */
+const overlapConvex = (a: Poly, b: Poly): boolean => {
+  for (const poly of [a, b])
+    for (let i = 0; i < poly.length; i++) {
+      const p = poly[i]!,
+        q = poly[(i + 1) % poly.length]!;
+      const nx = q.y - p.y,
+        ny = p.x - q.x;
+      const len = Math.hypot(nx, ny) || 1;
+      let a0 = Infinity,
+        a1 = -Infinity,
+        b0 = Infinity,
+        b1 = -Infinity;
+      for (const v of a) {
+        const d = (v.x * nx + v.y * ny) / len;
+        a0 = Math.min(a0, d);
+        a1 = Math.max(a1, d);
+      }
+      for (const v of b) {
+        const d = (v.x * nx + v.y * ny) / len;
+        b0 = Math.min(b0, d);
+        b1 = Math.max(b1, d);
+      }
+      if (a1 - b0 <= OVERLAP_TOL || b1 - a0 <= OVERLAP_TOL) return false; // getrennt (oder nur berührt)
+    }
+  return true;
+};
+
+/**
+ * Fasst Flächen zu Gruppen zusammen, deren Flächen sich paarweise nicht überlappen (konvex, Trennachsensatz):
+ * eine Gruppe lässt sich mit `evenodd` in einem Clip ausschneiden. Nicht konvexe Flächen bleiben allein.
+ */
+export function groupDisjoint(polys: readonly Poly[]): Poly[][] {
+  const groups: { items: Poly[]; open: boolean }[] = [];
+  for (const p of polys) {
+    const convex = isConvex(p);
+    const g = convex
+      ? groups.find((e) => e.open && e.items.every((q) => !overlapConvex(p, q)))
+      : undefined;
+    if (g) g.items.push(p);
+    else groups.push({ items: [p], open: convex });
+  }
+  return groups.map((g) => g.items);
+}
+
+/** Obergrenze des Flächen-Caches je Welt (Gebäude); darüber wird er geleert. */
+export const POLY_CACHE_MAX = 512;
+const polyCache = new WeakMap<World, Map<number, { key: string; groups: Poly[][] }>>();
+let polyCacheHits = 0;
+/** Zähler der Cache-Treffer (nur für Tests). */
+export const polyCacheStats = (world: World): { size: number; hits: number } => ({
+  size: polyCache.get(world)?.size ?? 0,
+  hits: polyCacheHits,
+});
+
+/**
+ * Gezeichnete Körperflächen eines Gebäudes im Bildraum (die Flächen, die `drawBody` füllt), ohne enthaltene und
+ * zu Clip-Gruppen zusammengefasst (`groupDisjoint`). Die Kachelraum-Gruppen liegen je Gebäude im Cache; der Schlüssel enthält alles, was
+ * `drawBody` liest (Art, Ort, Anbindung, Stufe, Zustand).
+ */
+export function buildingClips(cam: Camera, world: World, b: Building): Poly[][] {
+  let c = polyCache.get(world);
+  if (!c || c.size >= POLY_CACHE_MAX) polyCache.set(world, (c = new Map()));
+  const key = `${b.defId}|${b.x}|${b.y}|${b.connected}|${b.house?.tier ?? 0}|${b.state}`;
+  let e = c.get(b.id);
+  if (e?.key === key) polyCacheHits++;
+  else {
+    e = { key, groups: groupDisjoint(pruneContained(bodyPolygons(BUILDING_DEFS[b.defId], b))) };
+    c.set(b.id, e);
+  }
+  return e.groups.map((g) => g.map((p) => p.map((q) => worldToScreen(cam, q))));
+}
+
+/** Kronenkreise eines Baumstempels im Bildraum (Vieleck je Krone), an der Stempelposition wie `drawTreeStamp`. */
+export function crownPolys(cam: Camera, item: TreeItem, seed: number): Poly[] {
+  const z = cam.zoom;
+  const o = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
+  return crownsFor(seed, item.variant % TREE_VARIANTS).map((c) => {
+    const mx = o.x + (c.cx - c.cy) * (ISO_W / 2) * z,
+      my = o.y + (((c.cx + c.cy - 1) * ISO_H) / 2 - c.h) * z;
+    const rx = c.r * ISO_W * z,
+      ry = rx * CROWN_RY;
+    return Array.from({ length: CROWN_SEGMENTS }, (_, i) => {
+      const a = (i / CROWN_SEGMENTS) * Math.PI * 2;
+      return { x: mx + Math.cos(a) * rx, y: my + Math.sin(a) * ry };
+    });
+  });
+}
+
+/** Kleinste Box um `rects`, rundum um `pad` erweitert. */
+export function boxAround(rects: readonly LightRect[], pad: number): LightRect {
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
+  for (const r of rects) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
+}
+
+const polyBox = (p: Poly): LightRect => {
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
+  for (const q of p) {
+    if (q.x < x0) x0 = q.x;
+    if (q.x > x1) x1 = q.x;
+    if (q.y < y0) y0 = q.y;
+    if (q.y > y1) y1 = q.y;
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+};
+const overlaps = (a: LightRect, b: LightRect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/**
+ * Flächen aller Verdecker mit Rang `> from` (sie kommen im sortierten Durchgang nach der Lichtquelle), deren
+ * Bildbox die Box der Quelle schneidet. `null` steht für Objekte, die nicht verdecken (Figuren, Schiff).
+ */
+export function occludersAfter(
+  list: readonly (Occluder | null)[],
+  from: number,
+  box: LightRect,
+): Poly[][] {
+  const out: Poly[][] = [];
+  for (let i = from + 1; i < list.length; i++) {
+    const o = list[i];
+    if (!o || !overlaps(o.box, box)) continue;
+    for (const g of o.clips()) {
+      const touching = g.filter((p) => overlaps(polyBox(p), box)); // nur Flächen, die das Licht berühren
+      if (touching.length > 0) out.push(touching);
+    }
+  }
+  return out;
+}
+
+/**
+ * Schneidet alles aus, was in `clips` liegt: je Gruppe ein eigener Clip (Bildfläche plus die Flächen der Gruppe,
+ * `evenodd`). Die Clips verschachteln sich; ein einziger Pfad würde sich überlappende Verdecker aufheben, darum
+ * enthält eine Gruppe nur Flächen ohne Überlappung. Der Aufrufer steht zwischen `save` und `restore`.
+ */
+export function clipOutOccluders(
+  ctx: CanvasRenderingContext2D,
+  view: { w: number; h: number },
+  clips: readonly (readonly Poly[])[],
+): void {
+  for (const group of clips) {
+    let x0 = 0,
+      y0 = 0,
+      x1 = view.w,
+      y1 = view.h;
+    for (const poly of group)
+      for (const p of poly) {
+        x0 = Math.min(x0, p.x);
+        y0 = Math.min(y0, p.y);
+        x1 = Math.max(x1, p.x);
+        y1 = Math.max(y1, p.y);
+      }
+    ctx.beginPath();
+    ctx.rect(x0 - 1, y0 - 1, x1 - x0 + 2, y1 - y0 + 2);
+    for (const poly of group) {
+      if (poly.length < 3) continue;
+      poly.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+      ctx.closePath();
+    }
+    ctx.clip('evenodd');
   }
 }
