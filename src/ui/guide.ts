@@ -184,9 +184,9 @@ export const MAP_SIGNS: readonly MapSign[] = [
     color: null,
   },
   {
-    sign: 'Abzeichen mit gelber Glocke bzw. blauem Buch',
-    renderer: 'bell bzw. book',
-    meaning: 'Kapelle bzw. Schule fehlt in Reichweite',
+    sign: 'Abzeichen mit gelber Glocke, blauem Buch bzw. türkiser Badewanne mit Dampf',
+    renderer: 'bell, book bzw. bath',
+    meaning: 'Kapelle, Schule bzw. Badehaus fehlt in Reichweite',
     color: null,
   },
   {

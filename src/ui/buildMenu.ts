@@ -1,6 +1,7 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
+import { buildLock } from '../sim/placement';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -203,6 +204,14 @@ function attachTooltip(
 /** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
 const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
+/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und ohne Gesperrtes (Spec M8 14.2, S11). */
+export function buildEntries(world: World, category: Category): BuildingDefId[] {
+  return BUILDING_IDS.filter(
+    (id) =>
+      id !== 'kontor' && BUILDING_DEFS[id].category === category && buildLock(world, id) === null,
+  );
+}
+
 /**
  * Baut die Bauleiste neu auf: Hauptzeile (Auswahl, Weg, Abriss, Kategorien), darüber die Einträge-Leiste der
  * offenen Kategorie. `onSelect` bekommt das Werkzeug, `onToggle` die angeklickte Kategorie.
@@ -265,9 +274,7 @@ export function renderBuildMenu(
   if (state.openCategory !== null) {
     const sub = document.createElement('div');
     sub.className = 'buildbar-sub';
-    const ids = BUILDING_IDS.filter(
-      (id) => id !== 'kontor' && BUILDING_DEFS[id].category === state.openCategory,
-    );
+    const ids = buildEntries(state.world, state.openCategory);
     for (const id of ids) {
       const def = BUILDING_DEFS[id];
       addButton(

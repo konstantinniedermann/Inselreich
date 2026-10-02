@@ -15,9 +15,15 @@ Umgebung und Effekte. Dazu Tooltips, Hotkeys und Touch-Bedienung (Zielplattform 
 
 ## Ziel
 
-Lass **50 Bürger** auf deiner Insel leben. Gezählt werden die Einwohner aller Wohnhäuser der höchsten
-Stufe. Ist das Ziel erreicht, erscheint eine Meldung und das Spiel läuft weiter. Der Chip «Ziel» in der
-Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt.
+Lass **50 Bürger** auf deiner Insel leben. Gezählt werden die Einwohner aller Wohnhäuser der Stufe Bürger und
+höher. Ist das Ziel erreicht, erscheint eine Meldung und das Spiel läuft weiter. Der Chip «Ziel» in der
+Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt; der Ausblick «Danach: Kaufleute — Handelsstadt 60» steht
+in der Inselchronik und im Tooltip des Ziel-Chips.
+
+Mit dem Bürger-Ziel werden die vierte Stufe **Kaufleute**, das **Badehaus** und die **Glashütte** frei (Meldung
+«Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden»). Das zweite Ziel
+heisst **Handelsstadt**: 60 Kaufleute. Ist es erreicht, erscheint «Zweites Ziel erreicht: 60 Kaufleute! Das Spiel
+läuft weiter.», danach spielst du frei weiter («Handelsstadt · 60 Kaufleute»).
 
 Alle Zeitangaben sind **Spielzeit bei 1×** (Minuten und Sekunden); bei 2× und 4× läuft sie entsprechend
 schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
@@ -91,6 +97,10 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Kapelle, Schule und Feuerwache zeigen ihren Wirkkreis (in der Isometrie eine Ellipse) um die Vorschau
   und den Umriss der schon abgedeckten Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den
   Standortkreis (Radius 2) mit den passenden Wald- bzw. Graskacheln.
+- **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
+  Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
+  `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,
+  und ihre Taste nennt nur den Grund («Badehaus: Erst nach dem Ziel (50 Bürger)»).
 - **Feuerwache** (Kategorie «Öffentlich», Taste `E`): 1×1, Baukosten 150 Geld, 10 Holz, 2 Werkzeug,
   Unterhalt 60 / min. Angebunden löscht sie Brände an brennbaren Gebäuden, deren Mitte höchstens 8 Kacheln von
   ihr entfernt ist (Abschnitt «Krisen»). Bei Krisenstufe «aus» kostet sie nur Unterhalt. Ihr Tooltip nennt,
@@ -111,6 +121,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                  |
 | `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher           |
 | `E`                    | Feuerwache                                                          |
+| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                    |
 
 Hotkeys wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
@@ -180,7 +191,7 @@ Ersatzschrift zurück.
 - **Lager:** Alle Waren liegen im Kontor-Lager, höchstens 100 je Gut. Ist das Lager voll, verfällt
   neu erzeugte Ware (Zustand «Lager voll»).
 - **Lagerleiste und Warenbilanz:** Die Lagerleiste in der Kopfzeile (zweite Zeile) zeigt je Gut den Bestand und die
-  Bilanz mit Trendpfeil (↑ / → / ↓, negative Bilanz hervorgehoben). Der Tooltip nennt Bilanz, Erzeugung und
+  Bilanz mit Trendpfeil (↑ / → / ↓, negative Bilanz hervorgehoben). Die Chips «Glas» und «Kaufleute» erscheinen erst nach der Freischaltung der Stufe 4 oder sobald es Glas bzw. Kaufleute gibt. Der Tooltip nennt Bilanz, Erzeugung und
   Verbrauch je Minute. Gerechnet wird nominal aus den angebundenen Betrieben und dem Bedarf der
   versorgten Häuser; Handel, Aufträge und Aufstiege zählen nicht mit.
 - **Baukosten:** Geld und teils Holz, Werkzeug oder Stein; sie stehen in der Bauleiste.
@@ -191,30 +202,35 @@ Ersatzschrift zurück.
 
 ### Produktionsketten
 
-| Gebäude            | Erzeugt    | Braucht    | Zyklus | Unterhalt (/ min) | Standort                        |
-| ------------------ | ---------- | ---------- | ------ | ----------------- | ------------------------------- |
-| Fischerhütte       | Nahrung    | —          | 4 s    | 30                | an Wasser angrenzend            |
-| Holzfäller         | Holz       | —          | 3 s    | 30                | mind. 1 Waldkachel im Radius 2  |
-| Steinbruch         | Stein      | —          | 6 s    | 60                | an Gebirge angrenzend           |
-| Schäferei          | Wolle      | —          | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
-| Weberei            | Stoff      | Wolle      | 5 s    | 90                | beliebiges Bauland              |
-| Zuckerrohrplantage | Zuckerrohr | —          | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
-| Brennerei          | Rum        | Zuckerrohr | 5 s    | 120               | beliebiges Bauland              |
-| Werkzeugmacher     | Werkzeug   | Holz       | 8 s    | 150               | beliebiges Bauland              |
+| Gebäude            | Erzeugt    | Braucht     | Zyklus | Unterhalt (/ min) | Standort                        |
+| ------------------ | ---------- | ----------- | ------ | ----------------- | ------------------------------- |
+| Fischerhütte       | Nahrung    | —           | 4 s    | 30                | an Wasser angrenzend            |
+| Holzfäller         | Holz       | —           | 3 s    | 30                | mind. 1 Waldkachel im Radius 2  |
+| Steinbruch         | Stein      | —           | 6 s    | 60                | an Gebirge angrenzend           |
+| Schäferei          | Wolle      | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
+| Weberei            | Stoff      | Wolle       | 5 s    | 90                | beliebiges Bauland              |
+| Zuckerrohrplantage | Zuckerrohr | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
+| Brennerei          | Rum        | Zuckerrohr  | 5 s    | 120               | beliebiges Bauland              |
+| Werkzeugmacher     | Werkzeug   | Holz        | 8 s    | 150               | beliebiges Bauland              |
+| Glashütte          | Glas       | Stein, Holz | 5 s    | 150               | beliebiges Bauland              |
 
 Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukosten 200 Geld, 15 Holz,
 3 Werkzeug). Er lohnt sich erst, wenn du viel Werkzeug brauchst: Sein Unterhalt läuft auch im
 Leerlauf, und Werkzeug zu verkaufen bringt weniger, als es kostet. Bauland sind Sand, Gras und Wald
 ohne Gebäude oder Weg; Gebirge und Wasser sind unbebaubar.
 
+Die **Glashütte** (2×2, Baukosten 300 Geld, 20 Holz, 6 Werkzeug, 10 Stein; erst nach dem Bürger-Ziel) braucht
+Stein **und** Holz: Sie entnimmt je Zyklus beides zugleich und nur, wenn beides im Lager liegt; sonst «Wartet auf
+…» mit dem fehlenden Gut.
+
 ### Handel
 
 Kontor anklicken, dann «Handeln»: Waren in Mengen von 1 oder 10 kaufen und verkaufen.
 
-| Gut             | Holz | Werkzeug | Stein | Nahrung | Wolle | Stoff | Zuckerrohr | Rum |
-| --------------- | ---- | -------- | ----- | ------- | ----- | ----- | ---------- | --- |
-| Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  |
-| Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  |
+| Gut             | Holz | Werkzeug | Stein | Nahrung | Wolle | Stoff | Zuckerrohr | Rum | Glas |
+| --------------- | ---- | -------- | ----- | ------- | ----- | ----- | ---------- | --- | ---- |
+| Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  | 50   |
+| Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  | 20   |
 
 - **Kaufpreise sind fest.**
 - **Verkaufssättigung:** Jede verkaufte Einheit senkt den Verkaufspreis dieses Guts um 1 Prozentpunkt,
@@ -234,15 +250,16 @@ Menge Gut · Prämie · noch m:ss · Lager x/Menge». **Liefern** gibt die ganze
 und bringt die Prämie — auch bei negativem Geld. Teillieferungen gibt es nicht, ein verpasster
 Auftrag verfällt ohne Strafe. Ohne Auftrag zeigt die Karte «Nächster Auftrag in m:ss».
 
-| Gut        | ab Stufe | Menge | Prämie je Einheit |
-| ---------- | -------- | ----- | ----------------- |
-| Holz       | Pioniere | 20–40 | 7                 |
-| Nahrung    | Pioniere | 10–20 | 6                 |
-| Stein      | Siedler  | 10–20 | 11                |
-| Wolle      | Siedler  | 10–20 | 9                 |
-| Stoff      | Siedler  | 6–12  | 22                |
-| Zuckerrohr | Bürger   | 10–20 | 9                 |
-| Rum        | Bürger   | 6–12  | 30                |
+| Gut        | ab Stufe  | Menge | Prämie je Einheit |
+| ---------- | --------- | ----- | ----------------- |
+| Holz       | Pioniere  | 20–40 | 7                 |
+| Nahrung    | Pioniere  | 10–20 | 6                 |
+| Stein      | Siedler   | 10–20 | 11                |
+| Wolle      | Siedler   | 10–20 | 9                 |
+| Stoff      | Siedler   | 6–12  | 22                |
+| Zuckerrohr | Bürger    | 10–20 | 9                 |
+| Rum        | Bürger    | 6–12  | 30                |
+| Glas       | Kaufleute | 4–8   | 37                |
 
 Welche Waren bestellt werden, richtet sich nach der höchsten Stufe deiner Häuser. Ein Auftrag bringt
 mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird nicht bestellt.
@@ -265,11 +282,12 @@ Button «Abreissen» zeigt den tatsächlichen Betrag und was am Lagerlimit verf�
 
 ### Stufen
 
-| Stufe    | max. Einwohner | Bedürfnisse (je Einwohner pro 10 s) | Dienste         | Steuer je Einwohner pro 10 s | Aufstieg kostet (Geld/Holz/Werkzeug/Stein) |
-| -------- | -------------- | ----------------------------------- | --------------- | ---------------------------- | ------------------------------------------ |
-| Pioniere | 4              | Nahrung 0.5                         | —               | 2                            | zu Siedlern: 100 / 5 / 2 / 0               |
-| Siedler  | 8              | Nahrung 0.5, Stoff 0.2              | Kapelle         | 7                            | zu Bürgern: 300 / 10 / 5 / 5               |
-| Bürger   | 15             | Nahrung 0.5, Stoff 0.2, Rum 0.2     | Kapelle, Schule | 14                           | —                                          |
+| Stufe     | max. Einwohner | Bedürfnisse (je Einwohner pro 10 s)       | Dienste                   | Steuer je Einwohner pro 10 s | Aufstieg kostet (Geld/Holz/Werkzeug/Stein)                 |
+| --------- | -------------- | ----------------------------------------- | ------------------------- | ---------------------------- | ---------------------------------------------------------- |
+| Pioniere  | 4              | Nahrung 0.5                               | —                         | 2                            | zu Siedlern: 100 / 5 / 2 / 0                               |
+| Siedler   | 8              | Nahrung 0.5, Stoff 0.2                    | Kapelle                   | 7                            | zu Bürgern: 300 / 10 / 5 / 5                               |
+| Bürger    | 15             | Nahrung 0.5, Stoff 0.2, Rum 0.2           | Kapelle, Schule           | 14                           | zu Kaufleuten: 600 / 15 / 8 / 10, nur nach dem Bürger-Ziel |
+| Kaufleute | 20             | Nahrung 0.5, Stoff 0.2, Rum 0.2, Glas 0.1 | Kapelle, Schule, Badehaus | 20                           | —                                                          |
 
 Ein neues Wohnhaus startet mit einem Pionier. Die Kopfzeile zeigt die Einwohner je Stufe. Die
 Steuer und die Wartezeit vor dem Aufstieg hängen zusätzlich vom Steuerregler ab (unten).
@@ -284,7 +302,7 @@ unerfüllt.
 
 - Jedes Haus verbraucht die Waren seiner Stufe aus dem Lager. Fehlt eine Ware, ist das Bedürfnis
   unerfüllt, bis wieder eine Einheit entnommen werden kann.
-- **Dienste:** Kapelle und Schule wirken im Radius 10 und nur, wenn sie per Weg angebunden sind.
+- **Dienste:** Kapelle, Schule und Badehaus wirken im Radius 10 und nur, wenn sie per Weg angebunden sind.
 - **Wachstum:** Alle 5 Sekunden wächst ein Haus um einen Einwohner, wenn alle Bedürfnisse und Dienste
   seiner Stufe erfüllt sind; sonst schrumpft es um einen (mindestens einer bleibt). Liegt es über der
   Belegung der Steuerstufe (nur bei «hoch»), zieht je Takt ein Einwohner aus.

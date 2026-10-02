@@ -55,6 +55,8 @@ gezeichnete Grafik, eigene Zahlen.
 Mit M5 sind die Verkaufspreise gesättigt (Kaufpreise bleiben fest), es gibt Handelsaufträge, und der
 Werkzeugmacher stellt Werkzeug aus Holz her, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 4.2, 5.2 und 5.3.
 
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.1
+
 ### 2.4 Gebäude
 
 Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
@@ -80,6 +82,8 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
   vom Footprint-Mittelpunkt.
 - **Abriss:** 50 % der Geld-/Materialkosten zurück (abgerundet). Kontor nicht abreissbar.
 
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.2 und §6
+
 ### 2.5 Wegenetz und Anbindung
 
 - Produktionsgebäude, Weberei, Brennerei, Markt, Kapelle, Schule gelten als **angebunden**,
@@ -97,6 +101,8 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
   (falls vorhanden) am Zyklusbeginn entnommen werden konnte.
 - Fehlt Input, wartet das Gebäude (Zustand `waitingInput`). Ist das Lager voll, geht die
   Einheit verloren (Zustand `storageFull`).
+
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.3
 
 ### 2.7 Bevölkerung
 
@@ -125,6 +131,8 @@ Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-
 Mit M5 hängen Zielbelegung und Aufstiegs-Wartezeit von der globalen Steuerstufe ab, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md)
 Abschnitt 4.1.
 
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §4
+
 ### 2.8 Wirtschaft
 
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
@@ -139,6 +147,8 @@ abgerundet („normal" = 100 %, unverändert), siehe [M5-Spec](2026-09-30-m5-spi
 ### 2.9 Sieg
 
 - Sobald die Summe der Einwohner in Bürger-Häusern ≥ 50: Banner „Ziel erreicht", Spiel läuft weiter.
+
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §7
 
 ## 3. Architektur
 
@@ -253,6 +263,8 @@ Wege sind ein Tile-Flag, kein Building (billiger, kein Id-Verbrauch).
 Mit M5 ist `World.version` 2 mit den Feldern `taxLevel`, `taxLockedUntil`, `sellPct` und `order`; v1-Stände
 werden beim Laden migriert, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 6.
 
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §10.1
+
 ### 3.4 Game-Loop
 
 `requestAnimationFrame`; Akkumulator mit fixem Schritt 100 ms × Geschwindigkeit; max. 20
@@ -282,6 +294,8 @@ Mit M5 zeichnet der Renderer Silhouetten statt Kurzsymbolen, Animationen, ein H�
 
 Mit M5 gibt es zusätzlich einen Autosave-Platz (`inselreich.save.auto`) und Einstellungen in einem eigenen
 Schlüssel (`inselreich.settings`), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 9.7 und 10.8.
+
+**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §10.2
 
 ## 4. Tests (Vitest, nur `sim/`)
 

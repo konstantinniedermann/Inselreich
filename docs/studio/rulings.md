@@ -830,3 +830,13 @@ und Production B1, B3–B5 arbeitet lead-tech in einer Runde ein, Sichtung L0. P
 Kosten bei Irrtum: Plan-Nachtrag — Archiv-Berichte M10-PLAN-GATE
 
 Entscheider: L0 · Anlass: Gate Plan M10 · ADR: —
+
+## R165 · 2026-10-02 · M8
+
+Ruling: Gate Merge M8 bestanden mit Auflage (Final-Review BEDENKEN): `feat/m8-balance` e1aa6cd und
+`feat/m8-ui` 6cbdc56 jetzt seriell durch den Integrator; `feat/m8-render` nach Fix-Runde lead-art
+(Test Fensteranker `house(4)` auf Wand/Hülle und Zeichnung, `palette.test.ts`-Verschärfung im Bericht,
+main-Merge mit beiden Beobachtungs-Seiten), Nachprüfung L0 per Diff `src tests`, dann merged lead-art.
+— Kosten bei Irrtum: Revert eines Merges — Archiv-Bericht lead-qa M8-FR
+
+Entscheider: L0 · Anlass: Gate Merge M8 · ADR: —

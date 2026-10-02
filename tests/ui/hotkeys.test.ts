@@ -181,3 +181,16 @@ describe('M8 Taste O (AK-S2-18)', () => {
     expect(tooltipLines({ kind: 'build', defId: 'glassworks' })[0]).toBe('Glashütte (O)');
   });
 });
+
+describe('M8 U1 Tasten (Bestand nach S2)', () => {
+  it('AK-U1-02 17 Werkzeugtasten; J und O je genau einmal mit Namen', () => {
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(17);
+    const list = hotkeyList();
+    expect(list.filter((e) => e.key === 'J')).toEqual([
+      { key: 'J', label: BUILDING_DEFS.bathhouse.name },
+    ]);
+    expect(list.filter((e) => e.key === 'O')).toEqual([
+      { key: 'O', label: BUILDING_DEFS.glassworks.name },
+    ]);
+  });
+});
