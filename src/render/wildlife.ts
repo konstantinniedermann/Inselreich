@@ -87,8 +87,9 @@ const FISH_SILVER = mixHex(PALETTE.foam, PALETTE.waterShallow, 0.5);
 const SPLASH_RGB = PALETTE.foam;
 export const WHALE_COLOR = mixHex(PALETTE.roofSlate, PALETTE.waterDeep, 0.45);
 const WHALE_GLOSS = mixHex(PALETTE.roofSlate, PALETTE.foam, 0.3);
-const WHALE_HALF_LEN = 0.75; // Kacheln (Länge 1,5)
-const WHALE_HALF_WID = 0.24;
+const WHALE_HALF_LEN = 1; // Kacheln (Länge 2)
+const WHALE_SCALE = WHALE_HALF_LEN / 0.75; // Fluke, Bugwellen und Breite wachsen mit
+const WHALE_HALF_WID = 0.24 * WHALE_SCALE;
 export const BIRD_COLOR = mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5);
 
 const clampTime = (t: number): number => (Number.isFinite(t) ? Math.max(0, t) : 0);
@@ -520,7 +521,7 @@ export function drawWaterLife(
       for (let i = 0; i <= 5; i++) {
         const s = i / 5;
         const back = WHALE_HALF_LEN * k * (0.75 - 1.1 * s),
-          out = side * (0.1 + 0.28 * s) * k;
+          out = side * (0.1 + 0.28 * s) * k * WHALE_SCALE;
         const q = scr({ x: p.x + ch * back - sh * out, y: p.y + sh * back + ch * out });
         if (i === 0) ctx.moveTo(q.x, q.y);
         else ctx.lineTo(q.x, q.y);
@@ -564,8 +565,9 @@ export function drawWaterLife(
     if (p.fluke >= 0) {
       // Schwanzflosse als gefüllte Silhouette (zwei Lappen mit Kerbe) am Heck
       const tail = scr({ x: p.x - ch * WHALE_HALF_LEN * k, y: p.y - sh * WHALE_HALF_LEN * k });
-      const up = Math.sin(Math.min(1, p.fluke * 1.2) * Math.PI * 0.8) * 0.34 * ISO_H * z;
-      const w2 = 0.2 * ISO_W * z;
+      const up =
+        Math.sin(Math.min(1, p.fluke * 1.2) * Math.PI * 0.8) * 0.34 * WHALE_SCALE * ISO_H * z;
+      const w2 = 0.2 * WHALE_SCALE * ISO_W * z;
       ctx.fillStyle = WHALE_COLOR;
       ctx.beginPath();
       ctx.moveTo(tail.x - 0.02 * ISO_W * z, tail.y);

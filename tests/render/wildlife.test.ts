@@ -364,7 +364,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect(log.events.filter((e) => e.op === 'stroke' && e.style === PALETTE.foam)).toHaveLength(0);
     const body = fills.find((e) => e.style === WHALE_COLOR)!;
     const xs = body.points.map((p) => p.x);
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(20); // gut sichtbar bei Zoom 0,75 (Länge 1,5 Kacheln)
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(26); // Länge 2 Kacheln, Zoom 0,75, Richtung 0,5 rad: ca. 28 px
   });
 
   it('RF-7 Einbindung: Wasserleben vor Schiff und Objekten, Vögel danach und vor dem Multiply-Durchgang, keine Signalfarbe, reduceMotion weniger', () => {
