@@ -1,6 +1,5 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
-import { WIN_CITIZENS } from '../sim/defs/tiers';
 import { setTaxLevel } from '../sim/tax';
 import { refundCost } from '../sim/economy';
 import { crisisView, effectiveRefund } from '../sim/queries';
@@ -11,6 +10,13 @@ import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
 import type { Category, GoodId, Order, Result, World } from '../sim/types';
 import { refundText } from './texts';
+import {
+  goalBanners,
+  initialGoalShown,
+  initialUnlockShown,
+  lockedToolText,
+  unlockNotice,
+} from './goal';
 import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
@@ -72,6 +78,10 @@ export interface GameState {
   terrainLayer: HTMLCanvasElement;
   /** Siegbanner bereits gezeigt (ein geladener, gewonnener Stand zeigt es nicht erneut). */
   wonShown: boolean;
+  /** Banner des zweiten Ziels bereits gezeigt (Spec M8 14.1; ein geladener Stand zeigt es nicht erneut). */
+  wonMerchantsShown: boolean;
+  /** Freischalt-Meldung gezeigt bzw. beim Start/Laden schon frei (Spec M8 4.3 Punkt 5; höchstens einmal je Sitzung). */
+  unlockShown: boolean;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
 }
@@ -167,7 +177,8 @@ function launch(
     panel: { kind: 'none' },
     openCategory: null,
     terrainLayer: buildTerrainLayer(world),
-    wonShown: world.won,
+    ...initialGoalShown(world),
+    unlockShown: initialUnlockShown(world),
     eventLog: [],
   };
   const sound = createSound({
@@ -362,14 +373,15 @@ function launch(
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
-    if (world.won && !state.wonShown) {
-      state.wonShown = true;
-      showMessage(
-        `Ziel erreicht: ${WIN_CITIZENS} Bürger! Das Spiel läuft weiter.`,
-        'info',
-        true,
-        true,
-      );
+    const goal = goalBanners(state, world);
+    state.wonShown = goal.shown.wonShown;
+    state.wonMerchantsShown = goal.shown.wonMerchantsShown;
+    for (const text of goal.texts) showMessage(text, 'info', true, true);
+    const unlock = unlockNotice(!state.unlockShown, world);
+    if (unlock !== null) {
+      state.unlockShown = true;
+      showMessage(unlock, 'info', true, true);
+      renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world);
@@ -391,6 +403,13 @@ function launch(
 
   /** Einzige Stelle für jeden Werkzeugwechsel (Bauleiste, Hotkey, Esc/X, Rechtsklick). */
   const selectTool = (tool: Tool): void => {
+    if (tool.kind === 'build') {
+      const locked = lockedToolText(state.world, tool.defId);
+      if (locked !== null) {
+        showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
+        return; // kein Werkzeug (Spec 14.2, AK-U1-09)
+      }
+    }
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
     state.tool = tool;
