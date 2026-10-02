@@ -578,3 +578,12 @@ mit dem Plan M8; E-006 bleibt vorgeschlagen (Regeln gelten über R124 (2)). Stat
 `experimente.md`: studio-coach. — Kosten bei Irrtum: E-010 wird nach M8 beendet.
 
 Entscheider: L0 · Anlass: Meilenstein-Retro M7-UX
+
+## R138 · 2026-10-02 · M8-Spec: Beobachtungen
+
+Ruling: Empfehlungen lead-design angenommen: brennender Betrieb in `goodsBalance` wird Teil von
+M8-S2 (Spec-AK vor Gate nachtragen); „Spielerführung Wirtschaft" eigene Kurz-Spec nach M8-U2; N2
+(Autosave erst nach Spielzeit) bleibt Beobachtung mit Designantwort, Kandidat für ein UI-Paket nach
+M8. Danach Gate Spec M8 (lead-qa, lead-tech). — Kosten bei Irrtum: ein AK verschoben.
+
+Entscheider: L0 · Anlass: Spec-Prüfung M8
