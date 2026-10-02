@@ -801,3 +801,12 @@ Glashütte↔Aufstieg (Reservierung ist M8-Nicht-Scope §3) geht als Beobachtung
 Irrtum: zwei Testzeilen — Ledger m8
 
 Entscheider: L0 · Anlass: Meldung Controller 2, Spec 16.3 · ADR: —
+
+## R162 · 2026-10-02 · M8
+
+Ruling: Zweites Ziel 60 Kaufleute, Szenario-Baseline 10 100, erster Kaufmann 8550 (Krisen aus) —
+Grenze 12 000 = Schätzung ≈ 10 000 + Marge 2000 — bei Irrtum Neumessung, `WIN_MERCHANTS` und
+`unlockCitizens` ohne Codeeingriff anpassbar. Bürger-Endzustand 7300 / Geld 1490; Reserve 500,
+`minMoneyAfterWin` 212; Messung mit C2-2 (R161) — Ledger m8, Ruling-Vorlage B1
+
+Entscheider: L0 · Anlass: AK-B1-06 · ADR: —
