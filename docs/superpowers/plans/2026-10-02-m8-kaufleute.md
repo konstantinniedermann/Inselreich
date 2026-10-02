@@ -20,7 +20,7 @@ Dev-Abhängigkeit.
 eingearbeitet (Abschnitt „Auflagen Gate Plan"), Sichtung R146. **Plan-Delta S11-Minimum (H-M8, R150)** eingearbeitet,
 wartet auf das Delta-Gate (Abschnitt „Plan-Delta S11").
 
-**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `413d6b8` (Gate Spec bestanden, R141;
+**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `da3da51` (Gate Spec bestanden, R141;
 Auflagen Gate Plan R142/R143 eingearbeitet; Nachführung S11-Minimum §23, R150; **81 AK**; im Plan „Spec §n",
 „AK-…"). Rulings: R86 (Entscheide 1–6),
 R115/R139 (`goodsBalance` nominal), R138, R140 (S1–S3 auf einer Branch, ein Gate Merge nach S3, AK-S3-10), R141
@@ -151,7 +151,7 @@ Weitere Abweichungen vom Gerüst: `goodList` in `texts.ts` (neu, Task 4); AK-S3-
 
 ### Bestätigte Abweichungen (R143) — Prüfgrundlage beider Final-Reviews
 
-Sim-Final-Review und Final-Review M8 prüfen gegen Spec @ `413d6b8` **plus** diese Liste; was hier steht, ist kein
+Sim-Final-Review und Final-Review M8 prüfen gegen Spec @ `da3da51` **plus** diese Liste; was hier steht, ist kein
 Befund (lead-qa Gate Plan, Hinweis 3):
 
 | Nr. | Spec-Stelle         | gilt für M8                                                                                        |
@@ -174,7 +174,7 @@ Befund (lead-qa Gate Plan, Hinweis 3):
 | B1: lead-art merged selbst in `feat/m8-render`                     | Final-Review M8 (Vorbereitung), Paket R1                                                    |
 | B2: Session- und Agent-ID je E-010-Messpunkt, Wechsel = Störgrösse | „E-010", Messpunkte; Abschluss Punkt 3                                                      |
 | B3: Kanten R1 ↔ T7/T8; Worktree `m8-render` durch lead-art         | Mermaid und „Paket-Abhängigkeiten" unter „Wellen"; „Einrichten"; Paket R1; Task 8 Kopf      |
-| B4: Spec-SHA nachgeführt (jetzt `413d6b8`, R150)                   | Kopf, Task 7 „Produces"                                                                     |
+| B4: Spec-SHA nachgeführt (jetzt `da3da51`, R150)                   | Kopf, Task 7 „Produces"                                                                     |
 | B5: Integrations-Merges pushen                                     | Global Constraints „Push-Pflicht"; Wellen-Tabelle                                           |
 | R144: BUG-LICHT parallel in `src/render/`                          | „Wellen", Vermerk BUG-LICHT; Paket R1                                                       |
 
@@ -3829,7 +3829,7 @@ Erwartet: `make check` grün. Bericht: Messwerte aus Schritt 5, Satz aus Schritt
 
 **Paket** M8-B2 · **Implementierer** `tech-sim-engineer` (sonnet) · **Worktree / Branch** `.worktrees/m8-scen` /
 `feat/m8-scen` (ab `main` nach dem Gate Merge Sim) · **blocked-by** Gate Merge Sim · **AK** AK-B2-01, AK-B2-02
-(geändert S11: Szenarien laut Spec 18.1 @ 413d6b8).
+(geändert S11: Szenarien laut Spec 18.1 @ da3da51).
 `galerie` ändert dieser Task **nicht** (Badehaus und Glashütte haben Tasks 1 und 3 ergänzt).
 
 **Files:**
@@ -3844,7 +3844,7 @@ Szenarien')`)
   (Task 1); `bathhouse` (Task 1), `glassworks` (Task 3); `GoodId 'glass'`; `houseDiagnosis` (bestehend); `sellPrice`
   (bestehend); `UPGRADE_WAIT`, `GROWTH_INTERVAL` aus `src/sim/defs/timing.ts`.
 - Produces: `SCENARIOS` mit den Schlüsseln `m8-vor-sieg`, `m8-kurz-vor-sieg`, `m8-kurz-vor-handelsstadt`,
-  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ 413d6b8). QA-B und der R1-Blindtest
+  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ da3da51). QA-B und der R1-Blindtest
   laden sie.
 
 **Gesetzte Regeln:**
@@ -5349,7 +5349,7 @@ sed -E 's/.*> //' | sort -u` (setzt voraus, dass die Tests der Tasks 1–5 wie i
    stehen; M6 hat eigene `AK-S1-…`-Namen) → alle Vitest-AK von S1–S3 und RF-1, RF-2, RF-3, RF-5; Review-AK (AK-S1-16, AK-S3-09) per Diff der Doku; AK-S3-10 per
    QA-A-Bericht; AK-U2-01, -02, -08, -09 (P1) aus Task 4.
 6. Testzählung (R125) mit `<BASIS>` wie in den Global Constraints; geänderte Zeilen nur Erwartungswerte und nur in
-   den Dateien aus „Bewusst geänderte Tests". Geprüft wird gegen Spec @ `413d6b8` plus „Bestätigte Abweichungen
+   den Dateien aus „Bewusst geänderte Tests". Geprüft wird gegen Spec @ `da3da51` plus „Bestätigte Abweichungen
    (R143)" (P1, W1, W3–W6); diese sind kein Befund.
 7. Urteil OK / BEDENKEN / ZURÜCK. Fix-Runden über Controller 2 (E-010), Nachprüfung nach R136; danach **M-2**
    messen und ins Ledger.
@@ -5408,7 +5408,7 @@ Konflikt oder rot → ZURÜCK mit Fundstelle. 2. **Balancing:** Task-6-Messwerte
 AK-R1-02 per Blindtest-Bericht, AK-B1-03 per Task-6-Bericht, AK-B1-06 per Ruling-Vorlage, AK-U1-08 per Diff. 4. **Global Constraints:** `index.html`, `src/ui/trade.ts`, `src/ui/messages.ts` ohne Diff gegen `<BASIS>`;
 `src/style.css` nur nach AK-U1-08; kein Text mit „Tick" (`tests/ui/time.test.ts` grün); Testzählung je Datei gegen
 `<BASIS-B>` (Zählbefehl wie Global Constraints); geänderte bestehende Tests nur laut „Bewusst geänderte Tests
-Teil B"; Massstab Spec @ `413d6b8` plus „Bestätigte Abweichungen (R143)". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
+Teil B"; Massstab Spec @ `da3da51` plus „Bestätigte Abweichungen (R143)". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
 
 **Gate Merge M8** (L0) → `production-integrator` nach R124 Punkt 2, Reihenfolge `feat/m8-balance` → `feat/m8-ui` →
 `feat/m8-render`, je mit dem im Final-Review genannten SHA; vor jedem Schritt `git merge-tree --write-tree main <SHA>`
