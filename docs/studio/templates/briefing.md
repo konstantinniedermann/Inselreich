@@ -32,6 +32,8 @@ Feste Regeln (unverändert, gelten immer):
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
 - Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
 
+Git: kein Rebase (auch kein `pull --rebase`), kein reset --hard, kein Force-Push; main per Merge holen (Verfassung §6.3).
+
 Logging (jeweils als eigener Bash-Aufruf):
 - Start:     python3 tools/studio/log.py status --role <rolle> --status active --task "<auftrag>" --package <id>
 - Delegiert: python3 tools/studio/log.py status --role <rolle> --status delegated --package <id>   (nur Leads)
@@ -70,6 +72,8 @@ Feste Regeln (unverändert, gelten immer):
 - Save-Format versionieren und migrieren, mit Test für alte Spielstände.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
 - Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
+
+Git: kein Rebase (auch kein `pull --rebase`), kein reset --hard, kein Force-Push; main per Merge holen (Verfassung §6.3).
 
 Logging (jeweils als eigener Bash-Aufruf):
 - Start: python3 tools/studio/log.py status --role tech-sim-engineer --status active --task "Marktplatz-Versorgung" --package M5-02

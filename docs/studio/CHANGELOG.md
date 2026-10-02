@@ -22,6 +22,22 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-02 · Handbuch 1.12
+
+- Anlass: Meilenstein-Retro M8, Session-Retro 58d6bc4a, Prozess-Retro M8 (V1, V3, V4)
+- Datenbasis: `docs/studio/retros/2026-10-02-meilenstein-m8.md`,
+  `docs/studio/retros/2026-10-02-session-58d6bc4a.md`, `docs/studio/retros/2026-10-02-prozess-retro-m8.md`, `docs/studio/metriken/M8.md`,
+  `docs/studio/metriken/S-2026-10-02-58d6bc4a.md`
+- Ruling: R166
+- Änderungen: STUDIO.md Budget: Phase = Paket-ID des Leads, je Integrator-Start eigene Freigabe,
+  Beispiel `M5-UMSETZUNG` (E-013 `laufend`). Umsetzungszyklus Schritt 4: Controller-Wechsel auch
+  vor einer Wartezeit über einen 5-h-Reset, Doku-Pakete delegieren (E-010 angepasst, Messung M10).
+  Nutzernachtrag zu laufendem Meilenstein = ein Delta-Paket (Spec und Plan) mit einem Ruling (V4).
+  Limits: im knappen 5-h-Fenster erst Angefangenes abschliessen, dann Neues (V3). Tempo: Hänger-Alarm
+  nach 12 min ohne Tool-Ereignis, Anstoss per `SendMessage` und Log (V1). `templates/briefing.md`:
+  Git-Zeile nach den festen Regeln (E-011 `laufend`, Guard-Teil Warteschlange N-92).
+  `experimente.md`: E-007 und E-008 `behalten` (abgeschlossen), E-012 angenommen, wartet auf Platz.
+
 ## 2026-10-02 · Handbuch 1.11
 
 - Anlass: Meilenstein-Retro M7-UX (Bewertung E-009, freier Platz)

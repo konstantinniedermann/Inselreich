@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.11 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.12 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -121,7 +121,8 @@ und in der Kopfzeile `Modell:` des Briefings.
   [verbesserung.md](verbesserung.md#limit-sensor).
 - **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 langsam herunter:
   weniger parallel, weniger Starts, Angefangenes abschliessen, `state.md` nachführen, Session
-  beenden. Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
+  beenden. Ist das Fenster knapp, schliesst L0 zuerst Angefangenes ab (Reviews, Fix-Runden,
+  Merges) und beginnt erst danach Neues (R166). Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
   Session-Ende-Routine, keine neuen Starts. Wochenfenster über 80 %: Parallelität reduzieren.
   Die Modelle bleiben unverändert (kein Downgrade, R71).
 - **Sessiongrösse (R68):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). Spätestens
@@ -133,7 +134,9 @@ und in der Kopfzeile `Modell:` des Briefings.
 - **Freigabe:** L0 gibt je Lead und Phase frei und loggt sie (`log.py budget`, Beispiel unten).
   Weitere Freigaben derselben Phase addieren sich. Leads verteilen innerhalb ihrer Freigabe selbst.
   Eine Freigabe gilt für die Session, in der L0 sie loggt; Budgets zählen je Lead, Phase und
-  Session. Nach `/clear` oder einem Session-Wechsel loggt L0 laufende Freigaben neu.
+  Session. Nach `/clear` oder einem Session-Wechsel loggt L0 laufende Freigaben neu. Die Phase
+  ist genau die Paket-ID aus der Kopfzeile `Paket:` des Leads, auch je Integrator-Start eine eigene
+  Freigabe; sonst zählt das Dashboard den Start auf die jüngste Freigabe (E-013, R166).
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 = 14,3 → **15**. Der Puffer deckt
   Neustarts und Zusatzprüfungen; Fix-Runden per `SendMessage` zählen nicht als Start. Der Tech-Lead
@@ -141,8 +144,8 @@ und in der Kopfzeile `Modell:` des Briefings.
   Final-Review an `lead-qa`, Rest an `lead-tech`):
 
   ```bash
-  python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-umsetzung
-  python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-umsetzung
+  python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG
+  python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-UMSETZUNG
   ```
 
   In der Stufe leicht startet der Tech-Lead auch das abschliessende `opus`-Review; die ganze
@@ -221,13 +224,17 @@ Ablauf eines Meilensteins (Stufe voll):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
    Bei mehr als 6 Tasks übergibt der Controller nach dem mittleren QA-Block allein per Ledger und
-   einem Satz Status an eine frische `lead-tech`-Instanz (E-010, ab M8).
+   einem Satz Status an eine frische `lead-tech`-Instanz, ebenso vor einer Wartezeit über einen
+   5-h-Reset; Doku-Pakete delegiert er (E-010, angepasst R166).
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
    ([Verbesserungsschleife](verbesserung.md#verbesserungsschleife)).
+
+**Nutzernachtrag** zu einem laufenden Meilenstein: ein einziges Delta-Paket (Spec und Plan) mit
+einem Ruling (R166).
 
 Ablauf eines Auftrags (Stufe leicht):
 
@@ -327,6 +334,9 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 **Tempo-Vorgaben (R65):**
 
 - Echtzeit-Proben dauern höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
+- **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
+  Lead per `SendMessage` an und vermerkt es (`log.py status --status waiting --task "Hänger-Alarm
+<agent-id>"`).
 - Minor- und Low-Befunde lösen keine Fix-Runde aus; sie gehen gesammelt ins Final-Review.
 - Kleine Fixes (≤ ~20 Zeilen) prüft der Lead selbst am Diff statt einer vollen Re-Review-Runde.
   Jede Nachprüfung einer Fix-Runde beantwortet zwei Fragen aus dem Fix-Briefing (R136): Gegenweg

@@ -27,7 +27,7 @@ Stand: 2026-10-02 (Session-Ende 58d6bc4a; Wochenfenster 81 %, Reset 2026-10-07 1
 - Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; **kein Rebase
   (Verfassung §6.3), Branches holen main per Merge**; Strang-Branches nach jedem abgenommenen
   Commit und nach grünen Integrations-Merges pushen (R107, R124, R143); `renderer.ts` seriell
-  H-R2 → H-R3/H-R4 → M10-U2 (R159). Studio: Verfassung 1.1, Handbuch 1.11.
+  H-R2 → H-R3/H-R4 → M10-U2 (R159). Studio: Verfassung 1.1, Handbuch 1.12.
 
 ## Parallele Sessions
 
