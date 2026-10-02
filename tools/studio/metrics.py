@@ -11,6 +11,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import efficiency
 import effort
 import model
 import paths
@@ -80,6 +81,7 @@ def summarize(
     handbook: str,
     cost: dict | None,
     created: str,
+    efficiency_data: dict | None = None,
 ) -> dict:
     """Rohwerte einer Verdichtung; fehlende Messungen bleiben ``None``."""
     aggregate = state["effort"]
@@ -98,6 +100,7 @@ def summarize(
         "quality": state["quality"],
         "incidents_open": len(state["incidents"]),
         "session_cost": cost,
+        "efficiency": efficiency_data,
     }
 
 
@@ -239,6 +242,8 @@ def render(raw: dict) -> str:
         "",
         f"- Offene Vorfälle: {raw['incidents_open']}",
         "",
+        efficiency.render_section(raw.get("efficiency")).rstrip("\n"),
+        "",
         "## Grenzen der Messung",
         "",
         (
@@ -323,6 +328,22 @@ def _session_cost(state: dict, sid: str, root: Path) -> dict | None:
     return None
 
 
+def _session_files(root: Path, sids: list[str]) -> list[Path]:
+    folder = transcript_dir(root)
+    return [folder / f"{sid}.jsonl" for sid in sids]
+
+
+def latest_transcripts(root: Path, count: int | None) -> list[Path]:
+    """Haupttranskripte, die letzten ``count`` nach Änderungszeit (None: alle)."""
+    try:
+        found = sorted(
+            transcript_dir(root).glob("*.jsonl"), key=lambda p: p.stat().st_mtime
+        )
+    except OSError:
+        return []
+    return found if count is None else found[-count:] if count > 0 else []
+
+
 def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     events = load_events(paths.studio_home())
     models = model.read_agent_models(paths.agents_dir())
@@ -332,7 +353,11 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
-        raw = summarize(state, "milestone", args.milestone, handbook, None, created)
+        sids = sorted({r["session_id"] for r in state["records"]})
+        data = efficiency.compute(_session_files(paths.repo_root(), sids))
+        raw = summarize(
+            state, "milestone", args.milestone, handbook, None, created, data
+        )
         return args.milestone, raw
     state = model.build_state(events, now, models, args.session)
     sid = state["session"]
@@ -342,7 +367,8 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     day = datetime.fromtimestamp(found["started"]).astimezone().strftime("%Y-%m-%d")
     kennung = f"S-{day}-{sid[:8]}"
     cost = _session_cost(state, sid, paths.repo_root())
-    return kennung, summarize(state, "session", kennung, handbook, cost, created)
+    data = efficiency.compute(_session_files(paths.repo_root(), [sid]))
+    return kennung, summarize(state, "session", kennung, handbook, cost, created, data)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -350,8 +376,21 @@ def main(argv: list[str] | None = None) -> int:
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--session", help="Session-ID oder latest")
     target.add_argument("--milestone", help="Meilenstein-ID")
+    target.add_argument(
+        "--efficiency",
+        action="store_true",
+        help="nur den Abschnitt Effizienz ausgeben (Retro-Werkzeug)",
+    )
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument(
+        "--sessions", type=int, default=None, help="mit --efficiency: letzte N Sessions"
+    )
     args = parser.parse_args(argv)
+    if args.efficiency:
+        files = latest_transcripts(paths.repo_root(), args.sessions)
+        data = efficiency.compute(files)
+        print(efficiency.render_section(data))
+        return 0
     result = build(args)
     if result is None:
         print("studio-metrics: keine passende Session gefunden", file=sys.stderr)

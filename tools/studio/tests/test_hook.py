@@ -777,7 +777,7 @@ class SettingsTest(unittest.TestCase):
         first = hooks["PreToolUse"][0]
         self.assertEqual(
             set(first["matcher"].split("|")),
-            {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit"},
+            {"Bash", "Edit", "Write", "MultiEdit", "NotebookEdit", "Agent", "Task"},
         )
         self.assertIn("tools/studio/guard.py", first["hooks"][0]["command"])
         prompt = [h["command"] for g in hooks["UserPromptSubmit"] for h in g["hooks"]]
