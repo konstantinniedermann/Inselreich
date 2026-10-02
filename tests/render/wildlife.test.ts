@@ -11,8 +11,11 @@ import {
   FISH_SHIMMER,
   WHALE_EPISODE_MS,
   WHALE_VISIBLE_MS,
+  WHALE_COLOR,
+  drawWaterLife,
   fishAnchors,
   flockAnchors,
+  flockPose,
   whaleAt,
   wildlifeAt,
   type WildlifeEnv,
@@ -139,7 +142,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
         expect(-s(hit.x, hit.y)).toBeGreaterThanOrEqual(1);
         expect(-s(hit.x, hit.y)).toBeLessThan(4);
       }
-      for (const a of flockAnchors(world, f, FULL, DAY.phase!, false)) {
+      for (const a of flockAnchors(world, DAY.phase!, false)) {
         flocks++;
         expect(['forest', 'grass']).toContain(world.tiles[a.ty * world.width + a.tx]!.terrain);
         expect(s(a.tx, a.ty)).toBeGreaterThanOrEqual(2);
@@ -161,9 +164,9 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect(CAPS.fish).toEqual([12, 4]);
     expect(CAPS.whales).toEqual([1, 1]);
     expect(CAPS.flocks).toEqual([3, 1]);
+    const reduce0 = true;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
-      const f = coastField(world);
       for (const reduce of [false, true]) {
         const env = { ...DAY, reduce };
         const hits = wildlifeAt(world, FULL, 7000, env);
@@ -172,15 +175,87 @@ describe('Wasser- und Luftleben (H-R2)', () => {
         expect(n('whale')).toBeLessThanOrEqual(1);
         expect(n('birds')).toBeLessThanOrEqual(CAPS.flocks[reduce ? 1 : 0]);
       }
-      const a: TileRange = { x0: 0, y0: 0, x1: 40, y1: 63 };
-      const b: TileRange = { x0: 20, y0: 0, x1: 63, y1: 63 };
-      const inside = (r: TileRange, p: { x: number; y: number }) =>
-        p.x >= r.x0 && p.x < r.x1 + 1 && p.y >= r.y0 && p.y < r.y1 + 1;
-      const fa = fishAnchors(f, a, seed, false).filter((p) => p.tx >= 24 && p.tx <= 40);
-      const fb = fishAnchors(f, b, seed, false).filter((p) => p.tx >= 24 && p.tx <= 40);
-      if (fishAnchors(f, FULL, seed, false).length < CAPS.fish[0]) expect(fa).toEqual(fb);
-      expect(inside(a, { x: 1, y: 1 })).toBe(true);
+      // Kappe je Welt: die globale Anker-Liste hängt nicht vom Bereich ab
+      expect(fishAnchors(world, reduce0).length).toBeLessThanOrEqual(CAPS.fish[1]);
+      expect(fishAnchors(world, false).length).toBeLessThanOrEqual(CAPS.fish[0]);
+      expect(flockAnchors(world, 'day', false).length).toBeLessThanOrEqual(CAPS.flocks[0]);
     }
+  });
+
+  it('RF-3b Kappe unabhängig vom Bereich: sich überlappende Bereiche liefern im Schnitt identische Treffer, kleiner Bereich ist Teilmenge', () => {
+    const inR = (r: TileRange, x: number, y: number) =>
+      x >= r.x0 && x < r.x1 + 1 && y >= r.y0 && y < r.y1 + 1;
+    const key = (hit: { kind: string; x: number; y: number }) => `${hit.kind}@${hit.x},${hit.y}`;
+    let compared = 0;
+    for (const seed of SEEDS)
+      for (const reduce of [true, false]) {
+        const world = worldOf(seed);
+        const env = { ...DAY, reduce };
+        const a: TileRange = { x0: 0, y0: 0, x1: 40, y1: 63 };
+        const b: TileRange = { x0: 24, y0: 0, x1: 63, y1: 63 };
+        const cut: TileRange = { x0: 24, y0: 0, x1: 40, y1: 63 };
+        const t = 9100;
+        const ha = wildlifeAt(world, a, t, env).filter((x) => inR(cut, x.x, x.y));
+        const hb = wildlifeAt(world, b, t, env).filter((x) => inR(cut, x.x, x.y));
+        expect(JSON.stringify(ha)).toBe(JSON.stringify(hb));
+        compared += ha.length;
+        const full = new Set(wildlifeAt(world, FULL, t, env).map(key));
+        for (const hit of wildlifeAt(world, FULL, t, env)) {
+          const small: TileRange = {
+            x0: Math.floor(hit.x) - 1,
+            y0: Math.floor(hit.y) - 1,
+            x1: Math.floor(hit.x) + 1,
+            y1: Math.floor(hit.y) + 1,
+          };
+          const got = wildlifeAt(world, small, t, env);
+          expect(got.map(key)).toContain(key(hit));
+          for (const g of got) expect(full.has(key(g))).toBe(true);
+        }
+      }
+    expect(compared).toBeGreaterThan(0);
+  });
+
+  it('RF-3c Wal ist vom Schiff unabhängig: gleiche Bahn mit und ohne Schiff, nur die Sichtbarkeit ändert sich; nie näher als 3 Kacheln', () => {
+    let seen = 0;
+    for (const seed of SEEDS) {
+      const world = createWorld(seed);
+      for (let e = 0; e < 120; e++)
+        for (let t = 0; t < WHALE_EPISODE_MS; t += 1000) {
+          const ms = e * WHALE_EPISODE_MS + t;
+          world.order = null;
+          const free = whaleAt(world, ms);
+          world.order = { period: 1, good: 'wood', amount: 5, reward: 100, due: 999 };
+          const ship = shipTile(world)!;
+          const withShip = whaleAt(world, ms);
+          if (!free) {
+            expect(withShip).toBeNull();
+            continue;
+          }
+          const near = Math.hypot(free.x - (ship.x + 0.5), free.y - (ship.y + 0.5)) < 3;
+          if (near) {
+            expect(withShip).toBeNull();
+          } else {
+            expect(withShip).toEqual(free);
+            seen++;
+          }
+        }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('RF-3d Vogelschwarm bleibt über Land: Schwarmmitte über 200 Zeitpunkte mit s > 0', () => {
+    let n = 0;
+    for (const seed of SEEDS) {
+      const world = worldOf(seed);
+      const f = coastField(world);
+      for (const a of flockAnchors(world, 'day', false))
+        for (let i = 0; i < 200; i++) {
+          const p = flockPose(a, seed, i * 997, false);
+          expect(f.v[Math.floor(p.y) * f.w + Math.floor(p.x)]!).toBeGreaterThan(0);
+          n++;
+        }
+    }
+    expect(n).toBeGreaterThan(0);
   });
 
   it('RF-4 Phase und Wetter: nachts, bei Regen und Sturm keine Vögel; im Sturm keine Sprünge; Wal unabhängig', () => {
@@ -268,6 +343,28 @@ describe('Wasser- und Luftleben (H-R2)', () => {
         }
     }
     expect([...kinds].sort()).toEqual(['birds', 'fish', 'whale']);
+  });
+
+  it('RF-8 Wal lesbar: gefüllter Rücken, Glanz, Fontäne aus gefüllten Kreisen, gefüllte Fluke, keine Foam-1.5-Striche', () => {
+    const { ctx, log } = fakeCtx();
+    const cam = { x: 0, y: 0, zoom: 0.75 };
+    const mk = (spout: number, fluke: number) => ({
+      kind: 'whale' as const,
+      name: 'Wal' as const,
+      x: 10,
+      y: 10,
+      z: 0,
+      r: 1,
+      pose: { x: 10, y: 10, heading: 0.5, lift: 1, spout, fluke },
+    });
+    drawWaterLife(ctx as unknown as CanvasRenderingContext2D, cam, [mk(0.5, 0.6)]);
+    const fills = log.events.filter((e) => e.op === 'fill');
+    expect(fills.filter((e) => e.style === WHALE_COLOR).length).toBeGreaterThanOrEqual(2); // Rücken + Fluke
+    expect(fills.length).toBeGreaterThanOrEqual(2 + 3); // plus Glanz und Säulenkreise
+    expect(log.events.filter((e) => e.op === 'stroke' && e.style === PALETTE.foam)).toHaveLength(0);
+    const body = fills.find((e) => e.style === WHALE_COLOR)!;
+    const xs = body.points.map((p) => p.x);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(20); // gut sichtbar bei Zoom 0,75 (Länge 1,5 Kacheln)
   });
 
   it('RF-7 Einbindung: Wasserleben vor Schiff und Objekten, Vögel danach und vor dem Multiply-Durchgang, keine Signalfarbe, reduceMotion weniger', () => {

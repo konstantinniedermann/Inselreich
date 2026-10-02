@@ -37,6 +37,8 @@ export interface FishPose {
 export interface WhalePose {
   x: number;
   y: number;
+  /** Schwimmrichtung im Kachelraum (Bogenmass). */
+  heading: number;
   /** Hebung des Rückens 0…1. */
   lift: number;
   /** Fontäne 0…1 (Verlauf) oder -1 ohne Fontäne. */
@@ -79,10 +81,14 @@ const BIRD_SPAN = 0.11 * ISO_H;
 const BIRD_PHASES: readonly Phase[] = ['morning', 'day', 'evening'];
 const BIRDS_PER_FLOCK = [6, 4] as const;
 
-export const FISH_SHIMMER = rgbaOf(PALETTE.waterDeep, 0.22);
+export const FISH_SHIMMER = rgbaOf(PALETTE.waterDeep, 0.32);
+const FISH_RIM = rgbaOf(PALETTE.waterDeep, 0.75);
 const FISH_SILVER = mixHex(PALETTE.foam, PALETTE.waterShallow, 0.5);
 const SPLASH_RGB = PALETTE.foam;
-export const WHALE_COLOR = mixHex(PALETTE.roofSlate, PALETTE.waterDeep, 0.4);
+export const WHALE_COLOR = mixHex(PALETTE.roofSlate, PALETTE.waterDeep, 0.45);
+const WHALE_GLOSS = mixHex(PALETTE.roofSlate, PALETTE.foam, 0.3);
+const WHALE_HALF_LEN = 0.75; // Kacheln (Länge 1,5)
+const WHALE_HALF_WID = 0.24;
 export const BIRD_COLOR = mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5);
 
 const clampTime = (t: number): number => (Number.isFinite(t) ? Math.max(0, t) : 0);
@@ -133,42 +139,64 @@ function cellAnchors(
   return out.sort((a, b) => a.key - b.key).slice(0, limit);
 }
 
-/** Anker der Fischschwärme: Wasser mit `1 ≤ −s < 4`, Zellen 6×6, Anteil 0,35, `cap('fish')`. */
-export const fishAnchors = (f: Field, range: TileRange, seed: number, reduce = false): Anchor[] =>
-  cellAnchors(
-    f,
-    range,
-    seed,
-    FISH_CELL,
-    FISH_SHARE,
-    51,
-    (_x, _y, s) => s <= -1 && s > -4,
-    cap('fish', reduce),
-  );
+/** Schleifenradius des Vogelschwarms in Kacheln (1,5 bis 2), aus dem Ankerhash. */
+const flockRadius = (seed: number, x: number, y: number): number =>
+  1.5 + 0.5 * hash2(seed + 73, x, y);
 
-/** Anker der Vogelschwärme: Wald oder Wiese mit `s ≥ 2`, Zellen 12×12, Anteil 0,3, `cap('flocks')`. */
-export const flockAnchors = (
-  world: Pick<World, 'width' | 'tiles' | 'seed'>,
-  f: Field,
-  range: TileRange,
-  phase: Phase,
-  reduce = false,
-): Anchor[] =>
-  !BIRD_PHASES.includes(phase)
-    ? []
-    : cellAnchors(
+/**
+ * Anker je Welt und Kappe: Fische und Vögel werden einmal über die ganze Karte bestimmt und global nach Schlüssel
+ * auf `cap(...)` gekappt (Cache in einer WeakMap je Welt; die Kachelarten ändern sich im Spiel nicht, ein Schlüssel
+ * entfällt). Der Bereich filtert erst ganz am Ende in `wildlifeAt`. So kostet ein Anker aus einer angeschnittenen
+ * Zelle keinen Kappenplatz, und Renderer (weiter Bereich) und UI (kleiner Bereich) sehen dieselben Tiere; Scrollen
+ * ändert die gezeichnete Menge nicht. Phase und Wetter wirken danach als Filter.
+ */
+const anchorCache = new WeakMap<World, { fish: Anchor[][]; flocks: Anchor[][] }>();
+function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
+  let c = anchorCache.get(world);
+  if (!c) {
+    const f = coastFor(world);
+    const all: TileRange = { x0: 0, y0: 0, x1: f.w - 1, y1: f.h - 1 };
+    const make = (reduce: boolean) => ({
+      fish: cellAnchors(
         f,
-        range,
+        all,
+        world.seed,
+        FISH_CELL,
+        FISH_SHARE,
+        51,
+        (_x, _y, s) => s <= -1 && s > -4,
+        cap('fish', reduce),
+      ),
+      flocks: cellAnchors(
+        f,
+        all,
         world.seed,
         FLOCK_CELL,
         FLOCK_SHARE,
         71,
         (x, y, s) => {
           const t = world.tiles[y * world.width + x]?.terrain;
-          return s >= 2 && (t === 'forest' || t === 'grass');
+          // der Schwarm bleibt über Land: Abstand zum Wasser ≥ Schleifenradius + 1
+          return (t === 'forest' || t === 'grass') && s >= flockRadius(world.seed, x, y) + 1;
         },
         cap('flocks', reduce),
-      );
+      ),
+    });
+    const n = make(false),
+      r = make(true);
+    c = { fish: [n.fish, r.fish], flocks: [n.flocks, r.flocks] };
+    anchorCache.set(world, c);
+  }
+  return c;
+}
+
+/** Anker der Fischschwärme: Wasser mit `1 ≤ −s < 4`, Zellen 6×6, Anteil 0,35, global auf `cap('fish')` gekappt. */
+export const fishAnchors = (world: World, reduce = false): Anchor[] =>
+  anchorsOf(world).fish[reduce ? 1 : 0]!;
+
+/** Anker der Vogelschwärme: Wald oder Wiese mit `s ≥ Radius + 1`, Zellen 12×12, Anteil 0,3, global gekappt; nur Tagesphasen. */
+export const flockAnchors = (world: World, phase: Phase, reduce = false): Anchor[] =>
+  BIRD_PHASES.includes(phase) ? anchorsOf(world).flocks[reduce ? 1 : 0]! : [];
 
 // --- Posen ---------------------------------------------------------------------------------------------
 
@@ -223,18 +251,11 @@ function candidatesOf(world: World): number[] {
 }
 
 const DIRS = 8;
-/** Kleinster Abstand des Punktes `p` zur Strecke `a`–`b`. */
-function segDist(a: Pt2, b: Pt2, p: Pt2): number {
-  const dx = b.x - a.x,
-    dy = b.y - a.y,
-    l2 = dx * dx + dy * dy;
-  const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
-  return Math.hypot(a.x + t * dx - p.x, a.y + t * dy - p.y);
-}
-
 /**
  * Wal zur Zeit `timeMs` oder null. Episoden zu 60 s; in ca. 35 % taucht ein Wal für 12 s auf einer Kandidatenkachel
- * auf und driftet 0,15 Kacheln/s in eine Richtung, die tiefes Wasser (`−s ≥ 5`) und 3 Kacheln Abstand zum Schiff hält.
+ * auf und driftet 0,15 Kacheln/s in eine Richtung, die tiefes Wasser (`−s ≥ 5`) hält. Bahn und Kandidat hängen nur
+ * von Seed, Episode und Tiefwasser ab, nie vom Schiff: liegt das Schiff näher als 3 Kacheln am aktuellen Walpunkt,
+ * ist der Wal einfach nicht sichtbar (er springt nie).
  */
 export function whaleAt(world: World, timeMs: number): WhalePose | null {
   const t = clampTime(timeMs);
@@ -248,40 +269,46 @@ export function whaleAt(world: World, timeMs: number): WhalePose | null {
   const n = cands.length;
   if (n === 0) return null;
   const f = coastFor(world);
-  const ship = shipTile(world);
-  const sp = ship ? { x: ship.x + 0.5, y: ship.y + 0.5 } : null;
-  const i0 = Math.min(n - 1, Math.floor(hash2(world.seed + 63, e, 0) * n));
+  const c = cands[Math.min(n - 1, Math.floor(hash2(world.seed + 63, e, 0) * n))]!;
+  const a = { x: (c % f.w) + 0.5, y: Math.floor(c / f.w) + 0.5 };
   const d0 = Math.floor(hash2(world.seed + 64, e, 0) * DIRS);
   const reach = WHALE_DRIFT * WHALE_VISIBLE_MS;
-  for (let j = 0; j < n; j++) {
-    const c = cands[(i0 + j) % n]!;
-    const a = { x: (c % f.w) + 0.5, y: Math.floor(c / f.w) + 0.5 };
-    for (let d = 0; d <= DIRS; d++) {
-      // letzter Versuch ohne Drift
-      const ang = ((d0 + d) / DIRS) * Math.PI * 2;
-      const b = d === DIRS ? a : { x: a.x + Math.cos(ang) * reach, y: a.y + Math.sin(ang) * reach };
-      const deep = [0, 0.25, 0.5, 0.75, 1].every(
-        (u) => fieldAt(f, a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u) <= -5,
-      );
-      if (!deep || (sp && segDist(a, b, sp) < WHALE_SHIP_GAP)) continue;
-      const u = dt / WHALE_VISIBLE_MS;
-      const rise = Math.min(1, dt / 1500),
-        sink = Math.min(1, (WHALE_VISIBLE_MS - dt) / 1500);
-      const sprayU = (dt - 2000) / 1200,
-        flukeU = (dt - 10000) / 2000;
-      return {
-        x: a.x + (b.x - a.x) * u,
-        y: a.y + (b.y - a.y) * u,
-        lift: Math.max(0, Math.min(rise, sink)),
-        spout: sprayU >= 0 && sprayU <= 1 ? sprayU : -1,
-        fluke: flukeU >= 0 ? Math.min(1, flukeU) : -1,
-      };
+  let ang = (d0 / DIRS) * Math.PI * 2,
+    drift = 0;
+  for (let d = 0; d < DIRS; d++) {
+    const q = ((d0 + d) / DIRS) * Math.PI * 2;
+    const bx = a.x + Math.cos(q) * reach,
+      by = a.y + Math.sin(q) * reach;
+    if (
+      [0.25, 0.5, 0.75, 1].every(
+        (u) => fieldAt(f, a.x + (bx - a.x) * u, a.y + (by - a.y) * u) <= -5,
+      )
+    ) {
+      ang = q;
+      drift = reach;
+      break;
     }
   }
-  return null;
+  const u = dt / WHALE_VISIBLE_MS;
+  const x = a.x + Math.cos(ang) * drift * u,
+    y = a.y + Math.sin(ang) * drift * u;
+  const ship = shipTile(world);
+  if (ship && Math.hypot(x - (ship.x + 0.5), y - (ship.y + 0.5)) < WHALE_SHIP_GAP) return null;
+  const rise = Math.min(1, dt / 1500),
+    sink = Math.min(1, (WHALE_VISIBLE_MS - dt) / 1500);
+  const sprayU = (dt - 2000) / 1200,
+    flukeU = (dt - 10000) / 2000;
+  return {
+    x,
+    y,
+    heading: ang,
+    lift: Math.max(0, Math.min(rise, sink)),
+    spout: sprayU >= 0 && sprayU <= 1 ? sprayU : -1,
+    fluke: flukeU >= 0 ? Math.min(1, flukeU) : -1,
+  };
 }
 
-/** Vogelschwarm am Anker `a`: Figur-Acht-Schleife (Radius 2 bis 3 Kacheln, Periode 20 bis 35 s), Vögel mit Versatz. */
+/** Vogelschwarm am Anker `a`: Figur-Acht-Schleife (Radius 1,5 bis 2 Kacheln, Periode 20 bis 35 s), Vögel mit Versatz. */
 export function flockPose(
   a: Anchor,
   seed: number,
@@ -290,7 +317,7 @@ export function flockPose(
 ): FlockPose & { z: number; x: number; y: number } {
   const t = clampTime(timeMs);
   const hh = (salt: number): number => hash2(seed + 73 + salt, a.tx, a.ty);
-  const R = 2 + hh(0),
+  const R = flockRadius(seed, a.tx, a.ty),
     period = 20000 + hh(1) * 15000,
     th0 = (t / period + hh(2)) * Math.PI * 2;
   const baseZ = (1.6 + 0.6 * hh(3)) * ISO_H;
@@ -332,9 +359,8 @@ export function wildlifeAt(
   const phase = env.phase ?? phaseAt(world.tick);
   const weather = env.weather ?? 'clear';
   const reduce = env.reduce === true;
-  const field = coastFor(world);
   const out: WildlifeHit[] = [];
-  for (const a of fishAnchors(field, range, world.seed, reduce)) {
+  for (const a of fishAnchors(world, reduce)) {
     const x = a.tx + 0.5,
       y = a.ty + 0.5;
     if (!inRange(range, x, y)) continue;
@@ -354,7 +380,7 @@ export function wildlifeAt(
       out.push({ kind: 'whale', name: 'Wal', x: w.x, y: w.y, z: 0, r: 1.0, pose: w });
   }
   if (weather === 'clear' || weather === 'cloudy')
-    for (const a of flockAnchors(world, field, range, phase, reduce)) {
+    for (const a of flockAnchors(world, phase, reduce)) {
       const p = flockPose(a, world.seed, timeMs, reduce);
       if (!inRange(range, p.x, p.y)) continue;
       out.push({
@@ -384,7 +410,32 @@ function ringPath(ctx: CanvasRenderingContext2D, c: Pt2, rx: number): void {
   }
 }
 
-/** Wasserleben (Fische, Wal) aus `wildlifeAt`-Treffern; Fische gebündelt je Art (Schimmer, Sprünge, Ringe). */
+/** Ellipse im Kachelraum (Mitte, Richtung `h`, Halbachsen) als Pfad im Bildraum; `lift` hebt sie um Weltpixel an. */
+function tileEllipse(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  c: Pt2,
+  h: number,
+  ra: number,
+  rb: number,
+  lift = 0,
+): void {
+  const n = 16;
+  const ch = Math.cos(h),
+    sh = Math.sin(h);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const u = Math.cos(a) * ra,
+      v = Math.sin(a) * rb;
+    const p = project(c.x + ch * u - sh * v, c.y + sh * u + ch * v);
+    const q = worldToScreen(cam, { x: p.x, y: p.y - lift });
+    if (i === 0) ctx.moveTo(q.x, q.y);
+    else ctx.lineTo(q.x, q.y);
+  }
+  ctx.closePath();
+}
+
+/** Wasserleben (Fische, Wal) aus `wildlifeAt`-Treffern; Fische gebündelt je Art (Schimmer, Ringe, Sprünge). */
 export function drawWaterLife(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
@@ -406,8 +457,8 @@ export function drawWaterLife(
     for (const f of fish)
       for (const s of (f.pose as FishPose).shimmer) {
         const c = scr(s);
-        ctx.moveTo(c.x - 0.1 * ISO_W * z, c.y - 0.05 * ISO_H * z);
-        ctx.lineTo(c.x + 0.1 * ISO_W * z, c.y + 0.05 * ISO_H * z);
+        ctx.moveTo(c.x - 0.15 * ISO_W * z, c.y - 0.075 * ISO_H * z);
+        ctx.lineTo(c.x + 0.15 * ISO_W * z, c.y + 0.075 * ISO_H * z);
       }
     ctx.stroke();
     // Spritzringe (andere Strichbreite und Tonart als die Möwen)
@@ -421,66 +472,111 @@ export function drawWaterLife(
         rings++;
       }
     if (rings > 0) ctx.stroke();
-    // springende Fische: kurzer silbriger Strich, Neigung folgt dem Bogen
-    ctx.strokeStyle = FISH_SILVER;
-    ctx.lineWidth = Math.max(1, 2 * z);
-    ctx.beginPath();
-    let jumps = 0;
+    // springende Fische: gefüllter silbriger Körper (spitze Ellipse, 0,22 · ISO_H lang) mit dunklem Saum
+    const body: Pt2[][] = [];
     for (const f of fish) {
       const j = (f.pose as FishPose).jump;
       if (!j) continue;
       const c = scr(j, j.z);
-      const tilt = (0.5 - j.t) * 0.12 * ISO_H * z;
-      ctx.moveTo(c.x - 0.09 * ISO_W * z, c.y - tilt);
-      ctx.lineTo(c.x + 0.09 * ISO_W * z, c.y + tilt);
-      jumps++;
+      const tilt = (0.5 - j.t) * 1.2;
+      const L = 0.22 * ISO_H * z;
+      const pts: Pt2[] = [];
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const u = Math.cos(a) * L * 0.5,
+          v = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 1.4 * L * 0.2;
+        pts.push({
+          x: c.x + u * Math.cos(tilt) - v * Math.sin(tilt),
+          y: c.y + u * Math.sin(tilt) + v * Math.cos(tilt),
+        });
+      }
+      body.push(pts);
     }
-    if (jumps > 0) ctx.stroke();
+    if (body.length > 0) {
+      ctx.fillStyle = FISH_SILVER;
+      ctx.strokeStyle = FISH_RIM;
+      ctx.lineWidth = Math.max(0.75, 0.9 * z);
+      ctx.beginPath();
+      for (const pts of body) {
+        pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+        ctx.closePath();
+      }
+      ctx.fill();
+      ctx.stroke();
+    }
   }
   for (const w of hits) {
     if (w.kind !== 'whale') continue;
     const p = w.pose as WhalePose;
     if (p.lift <= 0) continue;
-    const b = scr(p);
-    const rx = 0.5 * ISO_W * z,
-      top = p.lift * 0.22 * ISO_H * z;
-    // Kielwasser
-    ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.35 * p.lift);
+    const ch = Math.cos(p.heading),
+      sh = Math.sin(p.heading);
+    const k = 0.45 + 0.55 * p.lift; // taucht auf: der Rücken wächst
+    // zwei kurze, weiche Bugwellen vor der Nase
+    ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.4 * p.lift);
     ctx.lineWidth = Math.max(0.75, z);
     ctx.beginPath();
-    ringPath(ctx, b, rx * 1.15);
+    for (const side of [-1, 1]) {
+      for (let i = 0; i <= 5; i++) {
+        const s = i / 5;
+        const back = WHALE_HALF_LEN * k * (0.75 - 1.1 * s),
+          out = side * (0.1 + 0.28 * s) * k;
+        const q = scr({ x: p.x + ch * back - sh * out, y: p.y + sh * back + ch * out });
+        if (i === 0) ctx.moveTo(q.x, q.y);
+        else ctx.lineTo(q.x, q.y);
+      }
+    }
     ctx.stroke();
-    // flacher Rücken (Halbellipse)
+    // länglicher, dunkler Rücken und schmaler Glanz darauf
     ctx.fillStyle = WHALE_COLOR;
     ctx.beginPath();
-    ctx.moveTo(b.x - rx, b.y);
-    for (let i = 1; i < 8; i++) {
-      const a = Math.PI - (i / 8) * Math.PI;
-      ctx.lineTo(b.x + Math.cos(a) * rx, b.y - Math.sin(a) * top);
-    }
-    ctx.lineTo(b.x + rx, b.y);
-    ctx.closePath();
+    tileEllipse(ctx, cam, p, p.heading, WHALE_HALF_LEN * k, WHALE_HALF_WID * k, 0);
+    ctx.fill();
+    ctx.fillStyle = WHALE_GLOSS;
+    ctx.beginPath();
+    tileEllipse(
+      ctx,
+      cam,
+      p,
+      p.heading,
+      WHALE_HALF_LEN * 0.7 * k,
+      WHALE_HALF_WID * 0.28 * k,
+      p.lift * 0.1 * ISO_H,
+    );
     ctx.fill();
     if (p.spout >= 0) {
-      const hgt = Math.sin(p.spout * Math.PI) * 0.55 * ISO_H * z;
-      ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.7 * (1 - p.spout * 0.5));
-      ctx.lineWidth = Math.max(1, 1.2 * z);
-      ctx.beginPath();
-      for (const dx of [-0.08, 0, 0.08]) {
-        ctx.moveTo(b.x + rx * 0.4, b.y - top);
-        ctx.lineTo(b.x + rx * 0.4 + dx * ISO_W * z * 1.5, b.y - top - hgt);
+      // weiche Säule aus kleinen gefüllten Kreisen, nach oben schwächer
+      const nose = scr({ x: p.x + ch * 0.35, y: p.y + sh * 0.35 }, p.lift * 0.08 * ISO_H);
+      const col = Math.sin(p.spout * Math.PI);
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = rgbaOf(SPLASH_RGB, Number((0.7 * col * (1 - i / 5)).toFixed(3)));
+        ctx.beginPath();
+        ctx.arc(
+          nose.x,
+          nose.y - (0.12 + 0.17 * i) * col * ISO_H * z,
+          (2.4 - 0.3 * i) * z,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
       }
-      ctx.stroke();
     }
     if (p.fluke >= 0) {
-      const up = Math.sin(Math.min(1, p.fluke * 1.2) * Math.PI * 0.8) * 0.3 * ISO_H * z;
-      const tx = b.x - rx * 0.9;
+      // Schwanzflosse als gefüllte Silhouette (zwei Lappen mit Kerbe) am Heck
+      const tail = scr({ x: p.x - ch * WHALE_HALF_LEN * k, y: p.y - sh * WHALE_HALF_LEN * k });
+      const up = Math.sin(Math.min(1, p.fluke * 1.2) * Math.PI * 0.8) * 0.34 * ISO_H * z;
+      const w2 = 0.2 * ISO_W * z;
       ctx.fillStyle = WHALE_COLOR;
       ctx.beginPath();
-      ctx.moveTo(tx - 0.12 * ISO_W * z, b.y - up);
-      ctx.lineTo(tx, b.y - up * 0.5);
-      ctx.lineTo(tx + 0.12 * ISO_W * z, b.y - up);
-      ctx.lineTo(tx, b.y);
+      ctx.moveTo(tail.x - 0.02 * ISO_W * z, tail.y);
+      ctx.lineTo(tail.x - 0.02 * ISO_W * z, tail.y - up * 0.55);
+      ctx.lineTo(tail.x - w2, tail.y - up);
+      ctx.lineTo(tail.x - 0.04 * ISO_W * z, tail.y - up * 0.8);
+      ctx.lineTo(tail.x, tail.y - up * 0.85);
+      ctx.lineTo(tail.x + 0.04 * ISO_W * z, tail.y - up * 0.8);
+      ctx.lineTo(tail.x + w2, tail.y - up);
+      ctx.lineTo(tail.x + 0.02 * ISO_W * z, tail.y - up * 0.55);
+      ctx.lineTo(tail.x + 0.02 * ISO_W * z, tail.y);
       ctx.closePath();
       ctx.fill();
     }
