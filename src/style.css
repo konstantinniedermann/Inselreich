@@ -587,6 +587,54 @@ body {
 .card--rest .panel-title {
   font-size: 20px;
 }
+.card--rest h3 {
+  margin: 10px 0 2px;
+  font-size: 14px;
+}
+.goal-bar {
+  position: relative;
+  height: 18px;
+  border: 1px solid var(--wood);
+  background: var(--parchment-edge);
+}
+.goal-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+.goal-label {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+}
+.map-signs {
+  margin-top: 10px;
+}
+.map-signs summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+.map-signs ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.map-signs li {
+  margin: 3px 0;
+}
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border: 1px solid var(--ink);
+  vertical-align: middle;
+}
+.remedy {
+  color: var(--ink);
+  font-weight: bold;
+}
 
 /* Krisenkarte, Ereignis-Log, Boom-Marke (M6-UI setzt nur diese Klassen) */
 .card--crisis {

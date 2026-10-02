@@ -5,7 +5,13 @@ import {
   protectedCount,
   refundText,
   restView,
+  upgradeOkText,
+  upgradeReasonTexts,
 } from '../../src/ui/inspect';
+import { TIERS } from '../../src/sim/defs/tiers';
+import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
+import { formatGameTime } from '../../src/ui/time';
+import { setHouse, uxWorld } from './worlds';
 import { createWorld } from '../../src/sim/world';
 import { SCENARIOS } from '../sim/scenarios';
 
@@ -106,5 +112,21 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
     mk(902, 'distillery', 14);
     mk(903, 'firestation', 12);
     expect(protectedCount(w, a)).toBe(1);
+  });
+});
+
+describe('Inselchronik und Aufstiegszeilen (M7-UX Task 8)', () => {
+  it('Aufstiegszeile ohne „Tick" (Spec L8)', () => {
+    expect(upgradeOkText()).toBe(
+      `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`,
+    );
+  });
+  it('Aufstiegsgründe über friendlyReason mit Aufstiegskosten (Spec L3 Aufrufer)', () => {
+    const { w, house } = uxWorld();
+    setHouse(house, 1, TIERS[1].maxInhabitants, ['food']);
+    w.money = 0;
+    const texts = upgradeReasonTexts(w, house);
+    expect(texts).toContain(`✗ Zu wenig Geld: ${TIERS[1].upgradeCost!.money} nötig, 0 vorhanden`);
+    for (const t of texts) expect(t).not.toContain('Tick');
   });
 });

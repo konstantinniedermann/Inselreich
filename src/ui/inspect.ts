@@ -1,14 +1,19 @@
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TIERS } from '../sim/defs/tiers';
+import { TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
-import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
+import { SERVICE_BUILDING, citizens, isSupplied, upgradeStatus } from '../sim/population';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 import { diagnosisText, producesText, refundText, stateInfo } from './texts';
+import { MAP_SIGNS, nextStep, remedyText, taxEffect } from './guide';
+import { friendlyReason } from './hints';
+import { tierPath } from './hud';
+import { formatGameTime } from './time';
 
 export {
   burningText,
@@ -45,9 +50,20 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
   return p;
 }
 
-function demolishLabel(world: World, b: Building): string {
+function refundLine(world: World, b: Building): string {
   const nominal = refundCost(BUILDING_DEFS[b.defId].cost);
-  return `Abreissen (Rückerstattung ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))})`;
+  return `Rückerstattung: ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))}`;
+}
+
+/** Aufstiegszeile bei erfüllten Bedingungen (Spec L8: Zeit statt „Tick"). */
+export function upgradeOkText(): string {
+  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`;
+}
+
+/** Gründe, warum das Haus nicht aufsteigt, als Klartext mit Aufstiegskosten. */
+export function upgradeReasonTexts(world: World, b: Building): string[] {
+  const cost = TIERS[b.house!.tier].upgradeCost!;
+  return upgradeStatus(world, b).reasons.map((r) => `✗ ${friendlyReason(world, r, { cost })}`);
 }
 
 function addButton(parent: HTMLElement, label: string, onClick: () => void, field?: string): void {
@@ -150,8 +166,8 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     panel,
     'upgrade-reasons',
     status.ok
-      ? [{ text: '✓ Bedingungen erfüllt — Aufstieg im nächsten Wachstums-Tick', ok: true }]
-      : status.reasons.map((r) => ({ text: `✗ ${r}`, ok: false })),
+      ? [{ text: upgradeOkText(), ok: true }]
+      : upgradeReasonTexts(world, b).map((text) => ({ text, ok: false })),
   );
   setField(panel, 'upgrade-cost', `Kosten ${costLine(tier.upgradeCost)}`);
   if (cost) cost.hidden = false;
@@ -174,7 +190,10 @@ export function renderInspect(
   title.textContent = def.name;
   title.dataset.field = 'title';
   panel.appendChild(title);
-  addLine(panel, `Position (${b.x}, ${b.y})`);
+  if (import.meta.env.DEV) addLine(panel, `Position (${b.x}, ${b.y})`);
+  const remedy = addLine(panel, '', 'remedy');
+  remedy.classList.add('remedy');
+  remedy.hidden = true;
 
   const buttons = document.createElement('div');
   buttons.className = 'panel-actions';
@@ -202,9 +221,10 @@ export function renderInspect(
       if (def.flammable === true) addLine(panel, '', 'fire-protection');
       if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
-    addButton(buttons, demolishLabel(world, b), () => actions.demolish(id), 'demolish');
+    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
+  if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
 }
 
@@ -214,7 +234,13 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (!b) return;
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
-  setField(panel, 'demolish', demolishLabel(world, b));
+  setField(panel, 'refund', refundLine(world, b));
+  const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
+  if (remedyEl) {
+    const text = remedyText(world, b);
+    remedyEl.hidden = text === null;
+    setField(panel, 'remedy', text ?? '');
+  }
   if (def.produces && def.cycle !== undefined) {
     setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
   }
@@ -253,7 +279,13 @@ export function restView(world: World): {
   return { phase, ...PHASE_VIEW[phase], inhabitants };
 }
 
-/** Ruhe-Ansicht „Inselchronik" ohne Auswahl; `updateRest` führt Phase und Einwohner nach. */
+function addHeading(parent: HTMLElement, text: string): void {
+  const h = document.createElement('h3');
+  h.textContent = text;
+  parent.appendChild(h);
+}
+
+/** Ruhe-Ansicht „Inselchronik": Ziel, nächster Schritt, Steuer, Kartenzeichen; `updateRest` führt nach. */
 export function renderRest(panel: HTMLElement, world: World): void {
   panel.replaceChildren();
   const title = document.createElement('h2');
@@ -262,12 +294,57 @@ export function renderRest(panel: HTMLElement, world: World): void {
   panel.appendChild(title);
   addLine(panel, '', 'rest-phase');
   addLine(panel, '', 'rest-inhabitants');
-  addLine(panel, 'Gebäude anklicken für Details');
+
+  addHeading(panel, 'Ziel');
+  const bar = document.createElement('div');
+  bar.className = 'goal-bar';
+  const fill = document.createElement('span');
+  fill.dataset.field = 'goal-fill';
+  bar.appendChild(fill);
+  const label = document.createElement('div');
+  label.className = 'goal-label';
+  label.dataset.field = 'goal-text';
+  bar.appendChild(label);
+  panel.appendChild(bar);
+  addLine(panel, tierPath());
+
+  addHeading(panel, 'Nächster Schritt');
+  addLine(panel, '', 'next-step');
+  addHeading(panel, 'Steuer');
+  addLine(panel, '', 'rest-tax');
+
+  const details = document.createElement('details');
+  details.className = 'map-signs';
+  const summary = document.createElement('summary');
+  summary.textContent = 'Kartenzeichen';
+  details.appendChild(summary);
+  const ul = document.createElement('ul');
+  for (const s of MAP_SIGNS) {
+    const li = document.createElement('li');
+    if (s.color !== null) {
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = s.color;
+      li.appendChild(sw);
+    }
+    li.append(`${s.sign} — ${s.meaning}`);
+    ul.appendChild(li);
+  }
+  details.appendChild(ul);
+  panel.appendChild(details);
   updateRest(panel, world);
 }
 
+/** Führt Zahlen und Texte nach; baut das `details` „Kartenzeichen" nie neu (Auf/Zu bleibt). */
 export function updateRest(panel: HTMLElement, world: World): void {
   const v = restView(world);
   setField(panel, 'rest-phase', `${v.symbol} ${v.label}`);
   setField(panel, 'rest-inhabitants', `Einwohner ${v.inhabitants}`);
+  const n = citizens(world);
+  setField(panel, 'goal-text', `${n} / ${WIN_CITIZENS} ${TIERS[3].name}`);
+  const fill = panel.querySelector<HTMLElement>('[data-field="goal-fill"]');
+  const width = `${Math.min(100, (n / WIN_CITIZENS) * 100)}%`;
+  if (fill && fill.style.width !== width) fill.style.width = width;
+  setField(panel, 'next-step', nextStep(world));
+  setField(panel, 'rest-tax', taxEffect(world.taxLevel));
 }
