@@ -2,10 +2,13 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
+import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { deliverOrder } from '../../src/sim/orders';
-import { populationByTier } from '../../src/sim/population';
-import { unprotectedFlammables } from '../../src/sim/queries';
+import { buildLock, canPlace } from '../../src/sim/placement';
+import { citizens, merchants, populationByTier, serviceAvailable } from '../../src/sim/population';
+import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
 import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
+import { sellPrice } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { buildingsOfType, idx } from '../../src/sim/world';
@@ -20,6 +23,15 @@ function load(name: string): World {
 
 const houses = (w: World): Building[] => buildingsOfType(w, 'house');
 
+/** Szenarien, die gewonnen haben oder im ersten Tick gewinnen (M7: ux-sieg; M8 Spec 18.1). */
+const WON_AFTER_FIRST_TICK = new Set([
+  'ux-sieg',
+  'm8-kurz-vor-sieg',
+  'm8-kurz-vor-handelsstadt',
+  'm8-glashuette-wartet', // Änderung S11: won true (Freischaltung der Glashütte)
+  'm8-kaufleute-ohne-glas',
+]);
+
 describe('Szenario-Saves', () => {
   it('AK-S5-01 jedes Szenario ist ladbar und Version 2', () => {
     for (const name of Object.keys(SCENARIOS)) {
@@ -33,11 +45,11 @@ describe('Szenario-Saves', () => {
     }
   });
 
-  it('kein Szenario (ausser ux-sieg) ist nach dem ersten Tick gewonnen (Sieg-Overlay verfälscht Browser-Checks)', () => {
+  it('AK-B2-02 nach dem ersten Tick gewonnen nur ux-sieg und die M8-Siegszenarien (Sieg-Overlay verfälscht Browser-Checks)', () => {
     for (const name of Object.keys(SCENARIOS)) {
       const w = load(name);
       step(w);
-      expect(w.won, name).toBe(name === 'ux-sieg');
+      expect(w.won, name).toBe(WON_AFTER_FIRST_TICK.has(name));
     }
   });
 
@@ -65,6 +77,12 @@ describe('Szenario-Saves', () => {
         'krise-aus',
         'feuerwache',
         'leistung-sturm',
+        'm8-vor-sieg',
+        'm8-kurz-vor-sieg',
+        'm8-kurz-vor-handelsstadt',
+        'm8-glashuette-wartet',
+        'm8-kaufleute-ohne-glas',
+        'm8-handel',
       ].sort(),
     );
   });
@@ -296,6 +314,120 @@ describe('M6 Szenarien', () => {
     expect(w.tick).toBe(2601);
     expect(w.crisis?.kind).toBe('storm');
     expect(w.tick).toBeGreaterThanOrEqual(w.crisis!.from);
+  });
+});
+
+describe('M8 Szenarien', () => {
+  /** Jedes Haus seit mindestens UPGRADE_WAIT (300) Ticks zufrieden. */
+  const satisfiedLongEnough = (w: World): void => {
+    for (const h of houses(w))
+      expect(w.tick - h.house!.satisfiedSince, `Haus ${h.id}`).toBeGreaterThanOrEqual(UPGRADE_WAIT);
+  };
+  const shape = (w: World): number[][] =>
+    houses(w).map((h) => [h.house!.tier, h.house!.inhabitants]);
+
+  it('AK-B2-01 m8-vor-sieg: 3 volle Bürgerhäuser (45), seit 300 Ticks zufrieden, Steuer normal, kein Bad', () => {
+    const w = load('m8-vor-sieg');
+    expect(w.version).toBe(SAVE_VERSION);
+    expect(w.won).toBe(false);
+    expect(w.wonMerchants).toBe(false);
+    expect(shape(w)).toEqual([
+      [3, 15],
+      [3, 15],
+      [3, 15],
+    ]);
+    expect(citizens(w)).toBe(45);
+    expect(w.taxLevel).toBe('normal');
+    for (const id of ['chapel', 'school'] as const)
+      expect(buildingsOfType(w, id)[0]!.connected, id).toBe(true);
+    expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0);
+    expect(w.money).toBe(3000);
+    expect([w.stock.glass, w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([0, 60, 20, 30]);
+    satisfiedLongEnough(w);
+    step(w);
+    satisfiedLongEnough(w);
+    expect(w.won).toBe(false);
+  });
+
+  it('AK-B2-01 m8-kurz-vor-sieg: 49 Bürger, kein Badehaus, Tick 50·n − 1; Sieg bei W, dann Bad und Hütte frei', () => {
+    const w = load('m8-kurz-vor-sieg');
+    expect(w.won).toBe(false);
+    expect(w.tick % GROWTH_INTERVAL).toBe(GROWTH_INTERVAL - 1);
+    expect(citizens(w)).toBe(49);
+    expect(
+      houses(w)
+        .map((h) => h.house!.inhabitants)
+        .sort((a, b) => a - b),
+    ).toEqual([4, 15, 15, 15]);
+    expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0); // Änderung S11
+    expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
+    expect(w.money).toBe(3000);
+    expect([w.stock.glass, w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([5, 30, 20, 20]);
+    satisfiedLongEnough(w);
+    step(w);
+    expect(w.won).toBe(true);
+    expect(merchants(w)).toBe(0);
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(buildLock(w, 'glassworks')).toBeNull();
+  });
+
+  it('AK-B2-01 m8-kurz-vor-handelsstadt: won, 3 Kaufmannshäuser 20/20/19, Tick 50·n − 1; zweites Ziel im nächsten Takt', () => {
+    const w = load('m8-kurz-vor-handelsstadt');
+    expect(w.won).toBe(true);
+    expect(w.wonMerchants).toBe(false);
+    expect(w.tick % GROWTH_INTERVAL).toBe(GROWTH_INTERVAL - 1);
+    expect(shape(w)).toEqual([
+      [4, 20],
+      [4, 20],
+      [4, 19],
+    ]);
+    for (const h of houses(w))
+      for (const s of ['faith', 'school', 'bath'] as const)
+        expect(serviceAvailable(w, h, s), `${h.id} ${s}`).toBe(true);
+    step(w);
+    expect(merchants(w)).toBe(60);
+    expect(w.wonMerchants).toBe(true);
+  });
+
+  it('AK-B2-01 m8-glashuette-wartet: angebundene Glashütte, Stein 5, Holz 0, waitingInput; nichts entnommen', () => {
+    const w = load('m8-glashuette-wartet');
+    expect(w.won).toBe(true); // Änderung S11
+    const works = buildingsOfType(w, 'glassworks');
+    expect(works).toHaveLength(1);
+    expect(works[0]!.connected).toBe(true);
+    expect(works[0]!.state).toBe('waitingInput');
+    expect([w.stock.stone, w.stock.wood]).toEqual([5, 0]);
+    step(w);
+    expect(buildingsOfType(w, 'glassworks')[0]!.state).toBe('waitingInput');
+    expect([w.stock.stone, w.stock.wood, w.stock.glass]).toEqual([5, 0, 0]);
+  });
+
+  it('AK-B2-01 m8-kaufleute-ohne-glas: won, 1 Kaufmannshaus 20 EW, alle Dienste, Glas 0, satisfied.glass false', () => {
+    const w = load('m8-kaufleute-ohne-glas');
+    expect(w.won).toBe(true);
+    expect(shape(w)).toEqual([[4, 20]]);
+    const h = houses(w)[0]!;
+    expect(w.stock.glass).toBe(0);
+    expect(h.house!.satisfied.glass).toBe(false);
+    expect(h.house!.services).toEqual({ faith: true, school: true, bath: true });
+    expect(houseDiagnosis(w, h)).toEqual([{ kind: 'good', good: 'glass' }]);
+    // Änderung S11: Mittel für AK-U2-06 (Badehaus mit J bauen) und AK-U2-10
+    expect(w.money).toBe(3000);
+    expect([w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([60, 20, 30]);
+    // R152 (Gate-Risiko): fester freier, angebundener 2×2-Platz für AK-U1-07/AK-U2-06 (QA nennt ihn: kx+9, ky+1)
+    const k = w.buildings[w.kontorId]!;
+    expect([k.x + 9, k.y + 1]).toEqual([41, 32]); // Seed 3, Kontor (32, 31)
+    expect(canPlace(w, 'bathhouse', k.x + 9, k.y + 1).ok).toBe(true);
+    expect(w.tiles[idx(w, k.x + 9, k.y)]!.road).toBe(true); // Weg nördlich → angebunden
+    step(w);
+    expect(houses(w)[0]!.house!.satisfied.glass).toBe(false);
+  });
+
+  it('AK-B2-01 m8-handel: Glas 10, Verkaufsanteil 100, 10 Glas bringen 191', () => {
+    const w = load('m8-handel');
+    expect(w.stock.glass).toBe(10);
+    expect(w.sellPct.glass).toBe(100);
+    expect(sellPrice(w, 'glass', 10)).toBe(191);
   });
 });
 
