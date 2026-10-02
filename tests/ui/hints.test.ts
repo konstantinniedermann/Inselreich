@@ -31,6 +31,7 @@ import {
 } from '../../src/ui/hints';
 import { formatGameTime } from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
+import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -200,7 +201,7 @@ describe('friendlyReason (AK-UX-03)', () => {
     reasons.push(...upgradeStatus(w, fisher).reasons); // Kein Wohnhaus
     reasons.push(...upgradeStatus(w, house).reasons); // Haus nicht voll, Steuer zu hoch, Kein Geld …
     w.taxLevel = 'normal'; // direkt gesetzt: Sperrzeit läuft noch
-    for (const tier of [1, 2, 3] as const) {
+    for (const tier of [1, 2, 3, 4] as const) {
       setHouse(house, tier, TIERS[tier].maxInhabitants, []);
       reasons.push(...upgradeStatus(w, house).reasons); // Bedürfnisse noch nicht …, Kapelle fehlt …, Kein … im Lager, Höchste Stufe
     }
@@ -367,5 +368,34 @@ describe('friendlyReason Mehrzahl (Fix Task 6)', () => {
     expect(friendlyReason(w, 'Zu wenig Weide in der Nähe', { defId: 'sheepfarm' })).toBe(
       'Zu wenig Weide in der Nähe: mindestens 4 Felder im Umkreis 2',
     );
+  });
+});
+
+describe('M8 Sperrgründe (AK-S1-18)', () => {
+  it('AK-S1-18 friendlyReason: „Erst nach dem Ziel (50 Bürger)“, Hebel-Grund unverändert, beide von upgradeStatus provoziert', () => {
+    const { w, house } = uxWorld();
+    expect(friendlyReason(w, 'Erst nach dem Ziel')).toBe('Erst nach dem Ziel (50 Bürger)');
+    expect(friendlyReason(w, 'Erst ab 40 Bürgern (jetzt 39)')).toBe(
+      'Erst ab 40 Bürgern (jetzt 39)',
+    );
+    setHouse(house, 3, TIERS[3].maxInhabitants, []);
+    const locked = upgradeStatus(w, house).reasons[0]!;
+    expect(locked).toBe('Erst nach dem Ziel');
+    let lever: string;
+    try {
+      TIERS[4].unlockCitizens = 40;
+      lever = upgradeStatus(w, house).reasons[0]!;
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
+    expect(lever).toBe('Erst ab 40 Bürgern (jetzt 15)');
+    for (const r of [locked, lever]) {
+      expect(
+        REASON_TABLE.filter((row) => row.pattern.test(r)),
+        r,
+      ).toHaveLength(1);
+      expect(friendlyReason(w, r)).not.toContain('Tick');
+    }
+    expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })).toContain('Dienst: Hygiene');
   });
 });

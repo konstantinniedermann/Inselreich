@@ -2,6 +2,7 @@ import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/de
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
 import { GOODS } from '../sim/defs/goods';
+import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
 import type { BuildingDefId, Category, Cost, SiteRule, Terrain, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
@@ -92,14 +93,26 @@ export function tooltipLines(tool: Tool): string[] {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
   }
   if (def.consumes && def.cycle) {
-    lines.push(`Braucht: ${GOODS[def.consumes].name} ${perInterval(def.cycle)}`);
+    const rate = perInterval(def.cycle);
+    lines.push(`Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`);
   }
   if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
   const radius = def.serviceRadius ?? def.supplyRadius;
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
   lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
+  const preview = tierPreviewLine(def.id);
+  if (preview) lines.push(preview);
   return lines;
+}
+
+/**
+ * Stufen-Zeile (M8 4.3 Punkt 4, Änderung S11): für welche Stufe das Gebäude freigeschaltet wird, aus
+ * `def.unlockTier`; ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht. `null` ohne `unlockTier`.
+ */
+export function tierPreviewLine(defId: BuildingDefId): string | null {
+  const tier = BUILDING_DEFS[defId].unlockTier;
+  return tier === undefined ? null : `Für ${TIERS[tier].name} (Stufe ${tier})`;
 }
 
 let tooltipCounter = 0;
