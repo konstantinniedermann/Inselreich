@@ -728,3 +728,12 @@ selbst nach dem laufenden Doku-Merge (serialisiert durch L0). Nachmessung auf 60
 nächsten Leistungs-Check M8/M9. — Kosten bei Irrtum: Revert eines Merges — Archiv-Bericht lead-art Phase 2
 
 Entscheider: L0 · Anlass: Gate Merge BUG-LICHT · ADR: —
+
+## R154 · 2026-10-02 · M9 H-R1
+
+Ruling: Gate Merge H-R1 Bodenbild bestanden (03aa0fd, Review OK, alle Messgrenzen gehalten,
+`renderMedian` +5 % auf der Grenze). Keine weitere Anhebung der Schattierung; sichtbares Relief
+im Gebirge kommt mit G3. lead-art merged selbst. — Kosten bei Irrtum: Revert eines Merges —
+Archiv-Bericht lead-art H-R1 Phase 2
+
+Entscheider: L0 · Anlass: Gate Merge H-R1 · ADR: —
