@@ -61,8 +61,9 @@ Reviews sucht `describe('M8` plus AK-Nummer.
   (`feat/m8-scen` → `feat/m8-ui`), R1 ← Task 7 (pusht `lead-art`) und jeder Merge von `main` vor einem Final-Review.
   Kein abgenommener oder integrierter Stand liegt nur lokal. Für rote Zwischenstände (nach Task 1 bzw. Task 3) wird
   **kein Pull Request** geöffnet (CI läuft auf PRs; lead-qa Gate Plan (c)).
-- Im Hauptcheckout nur `git pull --ff-only`; in Worktrees wird nicht rebased (einzige Ausnahme: R144-Vermerk unter
-  „Wellen", Branch ohne eigene Commits). Integration zwischen Strängen nur per `git merge --no-edit <geprüfter SHA>`.
+- Im Hauptcheckout nur `git pull --ff-only`; **nie rebasen** (Verfassung §6.3), auch nicht in Worktrees und nicht vor
+  einem Push. Ist der Remote-Branch neuer: `git fetch`, dann `git merge` bzw. `git pull --no-rebase`. Integration
+  zwischen Strängen und von `main` nur per `git merge --no-edit <geprüfter SHA>`.
 
 ## Review Focus
 
@@ -204,20 +205,21 @@ Tick-Phase. Belegt wird das wie bisher: Task 1 Schritt 9 (`git diff <BASIS> -- t
 6050, `minMoney` 57, Fingerabdruck `0xbfeac8c6` in AK-S1-15) und Task 6 Schritt 7 (AK-B1-05).
 
 **AK-Zuordnung S11:** neu AK-S1-21 (Task 1), AK-S2-19 (Task 3), AK-U1-09 (Task 8 Vitest, QA-B-1 Browser); geändert
-AK-S3-08 (Task 5), AK-B2-02 (Task 7), AK-U1-04/-05 (QA-B-1), AK-U2-01 (Task 4), AK-U2-06/-10 (QA-B-2); gestrichen
+AK-S3-08 (Task 5), AK-B2-02 (Task 7), AK-U1-04/-05 (QA-B-1), AK-U1-07 (QA-B-1, R151 W8), AK-U1-09 (Task 8 und
+QA-B-1, R151 W10, R152 B1), AK-U2-01 (Task 4), AK-U2-06/-10 (QA-B-2), AK-U2-09 (Task 4, R151 W9); gestrichen
 AK-B1-07 (Task 6). Summe 81 (Tabelle „Abdeckung AK → Task").
 
 **Budget, Tasks, Board:** Taskzahl bleibt 8, QA-Checks bleiben 3 (AK-U1-09 läuft in QA-B-1 mit). Formel unverändert
 21 → 28, Freigabe R143 (lead-tech 25) reicht; kein Mehrbedarf. Board: keine neuen Pakete und keine neuen Kanten;
 Titel `M8-B1` ohne K1, `M8-U` um „Freischaltung S11" ergänzen.
 
-**Gemeldete Widersprüche (R137), Plan vorläufig mit der einfacheren Variante; das Delta-Gate entscheidet:**
+**Gemeldete Widersprüche (R137), entschieden durch R151 (Spec @ `da3da51`), Delta-Gate bestanden mit Auflagen (R152):**
 
-| Nr. | Spec-Stelle       | Befund                                                                                                                                            | Plan vorläufig                                                                                                                                                 |
-| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| W8  | AK-U1-07          | „neues Spiel, Badehaus mit J bauen" ist nach S11 unmöglich (neues Spiel `won false`).                                                             | QA-B-1 Schritt 4: neues Spiel bei 800 px, J zeigt den Sperrgrund (kein Absturz); dann `m8-kaufleute-ohne-glas` laden, Badehaus mit J bauen, Info-Panel öffnen. |
-| W9  | AK-U2-09, 14.8    | Steinbruch `storageFull` → „… oder baue Glashütte (O)" empfiehlt vor dem Sieg ein gesperrtes Gebäude (die Taste O zeigt dann nur den Sperrgrund). | **Entschieden R151:** Zusatz nur bei `buildLock(w, 'glassworks') === null` (Task 4 `remedyText`, Test mit Fall `won false` ohne und `won true` mit Zusatz).    |
-| W10 | 14.1, 4.3 Punkt 5 | Art der Meldung von `lockedToolText` ist nicht festgelegt.                                                                                        | **Entschieden R151:** bestehender Weg für Bau-Ablehnungen, `showError` in `app.ts` (Meldung `error` plus Ton `error`), Task 8 Schritt 5b.                      |
+| Nr. | Spec-Stelle       | Befund                                                                                                                                            | Entscheid / Plan                                                                                                                                                                                      |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W8  | AK-U1-07          | „neues Spiel, Badehaus mit J bauen" ist nach S11 unmöglich (neues Spiel `won false`).                                                             | **Entschieden R151:** so in Spec AK-U1-07 übernommen; QA-B-1 Schritt 4: neues Spiel bei 800 px, J zeigt den Sperrgrund, dann `m8-kaufleute-ohne-glas` laden, Badehaus mit J bauen, Info-Panel öffnen. |
+| W9  | AK-U2-09, 14.8    | Steinbruch `storageFull` → „… oder baue Glashütte (O)" empfiehlt vor dem Sieg ein gesperrtes Gebäude (die Taste O zeigt dann nur den Sperrgrund). | **Entschieden R151:** Zusatz nur bei `buildLock(w, 'glassworks') === null` (Task 4 `remedyText`, Test mit Fall `won false` ohne und `won true` mit Zusatz).                                           |
+| W10 | 14.1, 4.3 Punkt 5 | Art der Meldung von `lockedToolText` ist nicht festgelegt.                                                                                        | **Entschieden R151:** bestehender Weg für Bau-Ablehnungen, `showError` in `app.ts` (Meldung `error` plus Ton `error`), Task 8 Schritt 5b.                                                             |
 
 ### Gemeinsame Schnittstellen (verbindlich für alle Tasks)
 
@@ -432,10 +434,9 @@ flowchart LR
 **Vermerk BUG-LICHT (R144):** Parallel ändert `lead-art` im Paket BUG-LICHT (Branch `fix/licht-verdeckung`) Dateien in
 `src/render/`. Die W5-Worktrees (insbesondere `m8-render` für R1, dazu `m8-balance`, `m8-scen`, `m8-ui`) entstehen
 am **aktuellen** `main` zum Startzeitpunkt (`git pull --ff-only` direkt davor), nicht an einem älteren SHA. Ist
-BUG-LICHT erst nach dem Anlegen, aber vor dem eigenen Start gemergt, rebased der Branch vor dem ersten eigenen
-Commit auf `main` (`git -C .worktrees/<strang> rebase main`; ohne eigene Commits gefahrlos, einzige Ausnahme zur
-Regel „nicht rebasen"). Wird BUG-LICHT erst während W5 gemergt, wird **nicht** rebased; `main` kommt mit dem Merge
-vor dem Final-Review M8 hinein. Für den Sim-Strang (Tasks 2 und 4 ändern `src/render/{iso,sprites}.ts`) gilt der
+BUG-LICHT erst nach dem Anlegen gemergt (vor oder während W5), kommt `main` **per Merge** in den Branch
+(`git -C .worktrees/<strang> merge --no-edit main`, `make check`, push), nie per Rebase (Verfassung §6.3, Korrektur
+L0 zu R144); spätestens mit dem Merge von `main` vor dem Final-Review M8. Für den Sim-Strang (Tasks 2 und 4 ändern `src/render/{iso,sprites}.ts`) gilt der
 bestehende Merge von `main` vor dem Sim-Final-Review.
 
 **Einrichten** (Controller; `m8-render` legt `lead-art` an, R143 B3):
@@ -3883,7 +3884,8 @@ UPGRADE_WAIT` direkt (wie `setHouse` die übrigen Hausfelder), statt 300 Schritt
 import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { citizens, merchants, populationByTier, serviceAvailable } from '../../src/sim/population';
 import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
-import { buildLock } from '../../src/sim/placement'; // Änderung S11
+import { buildLock, canPlace } from '../../src/sim/placement'; // Änderung S11, R152
+// dazu `idx` im Import aus `../../src/sim/world` ergänzen, falls nicht vorhanden
 import { sellPrice } from '../../src/sim/trade';
 ```
 
@@ -4022,6 +4024,11 @@ describe('M8 Szenarien', () => {
     // Änderung S11: Mittel für AK-U2-06 (Badehaus mit J bauen) und AK-U2-10
     expect(w.money).toBe(3000);
     expect([w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([60, 20, 30]);
+    // R152 (Gate-Risiko): fester freier, angebundener 2×2-Platz für AK-U1-07/AK-U2-06 (QA nennt ihn: kx+9, ky+1)
+    const k = w.buildings[w.kontorId]!;
+    expect([k.x + 9, k.y + 1]).toEqual([41, 32]); // Seed 3, Kontor (32, 31)
+    expect(canPlace(w, 'bathhouse', k.x + 9, k.y + 1).ok).toBe(true);
+    expect(w.tiles[idx(w, k.x + 9, k.y)]!.road).toBe(true); // Weg nördlich → angebunden
     step(w);
     expect(houses(w)[0]!.house!.satisfied.glass).toBe(false);
   });
@@ -4781,6 +4788,13 @@ describe('M8 U1 Freischaltung (Änderung S11)', () => {
     expect(unlockNotice(false, w)).toBeNull();
     expect(UNLOCK_NOTICE).not.toContain('Tick');
   });
+  it('AK-U1-09 geladener Stand mit freier Stufe: Merkfeld gesetzt, keine Freischalt-Meldung (Spec 4.3 Punkt 5, R152 B1)', () => {
+    const w = createWorld(3);
+    expect(initialUnlockShown(w)).toBe(false); // gesperrt: Meldung kommt später genau einmal
+    w.won = true; // wie m8-kurz-vor-handelsstadt nach dem Laden
+    expect(initialUnlockShown(w)).toBe(true);
+    expect(unlockNotice(!initialUnlockShown(w), w)).toBeNull();
+  });
 });
 ```
 
@@ -4825,7 +4839,7 @@ describe('M8 Bauleiste (Änderung S11)', () => {
 npx vitest run tests/ui/goal.test.ts tests/ui/hud.test.ts tests/ui/tooltip.test.ts
 ```
 
-Erwartet rot: die beiden `AK-U1-09 …` (`lockedToolText is not a function` bzw. Import fehlt), der Glas-Chip-Test
+Erwartet rot: die drei `AK-U1-09 …` (`lockedToolText is not a function` bzw. Import fehlt), der Glas-Chip-Test
 (`stockChipHidden is not a function`), der Bauleisten-Test (`buildEntries is not a function`). Rot-Log in den Bericht.
 
 (ii) **Umsetzung.** `src/ui/goal.ts` (Importe `BUILDING_DEFS`, `TIERS`, `buildLock` aus `../sim/placement`,
@@ -4837,6 +4851,11 @@ const withKey = (id: BuildingDefId): string =>
 
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
 export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;
+
+/** Merkfeld beim Start und nach dem Laden: true, wenn die Stufe schon frei ist (dann keine Meldung, Spec 4.3 Punkt 5). */
+export function initialUnlockShown(world: World): boolean {
+  return buildLock(world, 'bathhouse') === null;
+}
 
 /** Text genau beim Wechsel gesperrt → frei; `wasLocked` ist das Merkfeld aus `app.ts` (wie `wonShown`). */
 export function unlockNotice(wasLocked: boolean, world: World): string | null {
@@ -4891,7 +4910,7 @@ unlockShown: boolean;
 ```
 
 - Im Zustand von `startGame` nach `...initialGoalShown(world),` die Zeile
-  `unlockShown: buildLock(world, 'bathhouse') === null,`.
+  `unlockShown: initialUnlockShown(world),` (Import aus `./goal`; `buildLock` braucht `app.ts` dann nicht).
 - In `refresh()` direkt nach der Banner-Schleife:
 
 ```ts
@@ -5046,8 +5065,8 @@ dem Final-Review M8), pusht jeden Merge nach grünem `make check` und meldet den
 Der Controller schreibt nie in diesen Worktree.
 
 **BUG-LICHT (R144):** Ist BUG-LICHT (`fix/licht-verdeckung`, ebenfalls `src/render/`) vor dem Start von R1 auf `main`
-gemergt, entsteht `m8-render` am aktuellen `main` bzw. rebased vor dem ersten eigenen Commit darauf (Vermerk unter
-„Wellen"). Läuft BUG-LICHT beim Start von R1 noch, prüft `lead-art` die Dateiüberschneidung beider Pakete und
+gemergt, entsteht `m8-render` am aktuellen `main`; wird BUG-LICHT erst später gemergt, kommt `main` per Merge dazu,
+nie per Rebase (Vermerk unter „Wellen", Verfassung §6.3). Läuft BUG-LICHT beim Start von R1 noch, prüft `lead-art` die Dateiüberschneidung beider Pakete und
 serialisiert sie in eigener Verantwortung (beide Pakete gehören `lead-art`).
 
 **Übergabewortlaut:** Die Übergabedatei unter `.studio/handoffs/` ist nicht versioniert; `lead-art` nennt die zwei
@@ -5275,14 +5294,15 @@ Wort). Häuser und Gebäude werden per Klick auf ihre Kachel gewählt (Position 
      erreicht: 60 Kaufleute! Das Spiel läuft weiter." = 1; `[data-field="goal"]` = „Handelsstadt · 60 Kaufleute",
      `title` = „Beide Ziele erreicht — freies Spiel"; ohne Auswahl `[data-field="goal-text"]` = „Handelsstadt
      erreicht · 60 Kaufleute", `[data-field="goal-fill"]` `style.width === '100%'`, `goal-next` `hidden === true`;
-     `#hud` Höhe ≤ 84. Screenshot `u1-06-handelsstadt.png`.
+     `#hud` Höhe ≤ 84; Anzahl `.messages .toast` mit Text, der mit „Neu freigeschaltet" beginnt, = **0** (Spec 4.3
+     Punkt 5: geladener Stand mit freier Stufe, R152 B1). Screenshot `u1-06-handelsstadt.png`.
    - Menü öffnen, „Speichern" klicken; Seite neu laden, „Gespeichertes Spiel laden (Spielzeit …)" klicken, 2 s
-     warten. Messen: Anzahl Toasts mit dem Text des zweiten Banners = 0; Tempo 1× für 3 s, erneut 0. Screenshot
-     `u1-06-geladen.png`.
-4. **AK-U1-07** (Viewport 800 × 900; **W8 gemeldet**, Plan vorläufig): `localStorage.clear()`, neu laden, „Los
+     warten. Messen: Anzahl Toasts mit dem Text des zweiten Banners = 0 und mit „Neu freigeschaltet …" = 0 (R152 B1);
+     Tempo 1× für 3 s, erneut beide 0. Screenshot `u1-06-geladen.png`.
+4. **AK-U1-07** (Viewport 800 × 900; Änderung S11, entschieden R151 W8): `localStorage.clear()`, neu laden, „Los
    geht's", Taste `j`: Meldung „Badehaus: Erst nach dem Ziel (50 Bürger)", kein Absturz. Dann Szenario
-   `m8-kaufleute-ohne-glas` laden (wie oben), Tempo bleibt 0; Taste `j`, auf freie Landkacheln an der Hauptstrasse
-   klicken, bis `[data-field="money"]` um 500 sinkt; `Escape`, das neue Badehaus anklicken: `#panel [data-field="title"]`
+   `m8-kaufleute-ohne-glas` laden (wie oben), Tempo bleibt 0; Taste `j`, auf den geprüften Bauplatz **(41, 32)**
+   (= `kx + 9, ky + 1`, Weg nördlich; Task 7 belegt ihn per `canPlace`) klicken, bis `[data-field="money"]` um 500 sinkt; `Escape`, das neue Badehaus anklicken: `#panel [data-field="title"]`
    beginnt mit „Badehaus". Kein Absturz (Canvas
    zeichnet weiter: zwei Screenshots im Abstand 1 s bei 1× unterscheiden sich oder die Tick-Zeit steigt), Konsolenfehler 0. Screenshot `u1-07-800.png`.
 
@@ -5311,7 +5331,7 @@ clientWidth`. Dann `Escape`: die `#panel .panel-line`, deren Text mit „Pionier
    - `m8-kaufleute-ohne-glas` laden: Geld und Lager notieren (Soll 3000 / Holz 60 / Werkzeug 20 / Stein 30). Taste `j`; Maus über zwei verschiedene
      freie Kacheln bewegen (`Input.dispatchMouseEvent` `mouseMoved`), je Screenshot (`u2-06-ellipse-a.png`,
      `-b.png`): die Radius-Ellipse folgt der Maus (Urteil `qa-playtester`). Auf einen freien Platz an der Hauptstrasse
-     klicken (2 × 2), bis ein zweites Badehaus steht. Messen: Geld −500, Holz −30,
+     auf den geprüften Bauplatz **(41, 32)** (= `kx + 9, ky + 1`, R152) klicken, bis ein zweites Badehaus steht. Messen: Geld −500, Holz −30,
      Werkzeug −10, Stein −20. Screenshot `u2-06-gebaut.png`.
 5. **AK-U2-07** (`m8-handel`, 1280 × 800): Kontor anklicken (öffnet den Handel). Eine `.trade-good` mit Text „Glas"
    existiert; `const b = document.querySelector('#panel button[data-good="glass"][data-op="sell"][data-n="10"]')`:
@@ -5550,7 +5570,7 @@ in den neuen Dateien `merchants.test.ts` und `glassworks.test.ts`; Reviews greif
 | AK-U1-06     | QA-B-1 Schritt 3                    | Browser                                                                                                                                                                                 |
 | AK-U1-07     | QA-B-1 Schritt 4                    | Browser                                                                                                                                                                                 |
 | AK-U1-08     | Task 8 Schritt 9                    | `git diff` leer, `tests/ui/contrast.test.ts` grün                                                                                                                                       |
-| AK-U1-09     | Task 8 Schritt 5b; QA-B-1 Schritt 5 | `tests/ui/goal.test.ts` / zwei `AK-U1-09 …` (S11); Browser: Tasten J und O vor der Freischaltung                                                                                        |
+| AK-U1-09     | Task 8 Schritt 5b; QA-B-1 Schritt 5 | `tests/ui/goal.test.ts` / drei `AK-U1-09 …` (S11, R152 B1); Browser: Tasten J und O vor der Freischaltung                                                                               |
 | RF-4         | Task 8 Schritt 1                    | `tests/ui/goal.test.ts` / `RF-4 beide Ziele im selben Frame …`, `RF-4 zweites Ziel allein …`                                                                                            |
 | AK-U2-03     | QA-B-2 Schritt 1                    | Browser                                                                                                                                                                                 |
 | AK-U2-04     | QA-B-2 Schritt 2                    | Browser                                                                                                                                                                                 |
