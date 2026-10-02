@@ -552,6 +552,14 @@ M7 ist in Aufwand und Qualität der Meilenstein-Metrik nicht enthalten. Zudem f�
 Cloud-Sessions mitarbeiten). Denkbar: Session-Metrik-Dateien beim Meilenstein-Lauf mitsummieren oder die
 Lücke im Bericht ausweisen; Kandidat für lead-production.
 
+### 2026-10-02 · `src/ui/startCard.ts`, `src/ui/modal.ts` · Erster Tab nach der Startkarte
+
+**Beobachtung:** Erster Tab nach dem Schliessen der Startkarte landet im Panel auf „Kartenzeichen" statt in
+der Kopfzeile.
+**Ursprung:** Browser-Prüfung M7-UX-H1 (lead-qa, Final-Review M7-UX).
+**Einschätzung:** niedrig; vermutlich geht der Fokus beim Schliessen (`restoreFocus`) an kein Element der
+Kopfzeile zurück, sodass der Browser die Tab-Folge an der zuletzt fokussierten Stelle im DOM fortsetzt.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
