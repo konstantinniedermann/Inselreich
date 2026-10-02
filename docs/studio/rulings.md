@@ -672,3 +672,12 @@ Brainstorming zurückgestellt; Triage empfiehlt, ob S11 vor, in oder nach M8 kom
 Irrtum: M8-Spec-Nachführung — `.studio/handoffs/nutzerfeedback-2026-10-02.md`
 
 Entscheider: L0 · Anlass: Nutzer-Anweisung, ergänzt R144 · ADR: —
+
+## R148 · 2026-10-02 · Programm Nutzerfeedback
+
+Ruling: Gate Brainstorming Programm bestanden (Vorschlag @ 8143365); F1–F14 nach Empfehlung, Abweichung
+F3: Freischaltung (i) und Betriebsbedingung Schule (ii) sind Muss in M10, Arbeitskräfte-System (iii)
+Backlog. R90 geteilt: M9 „Lebendige Insel" (Render, parallel zu M8), M10, M11, M12 „Weite Welt". Welle
+jetzt: H-M8, H-R1; H-R2, H-S1, H-D1 nach M8-Start (Woche 69 %). — Kosten bei Irrtum: Roadmap-Neuschnitt
+
+Entscheider: L0 · Anlass: Gate Brainstorming FB-TRIAGE, löst R90 teilweise ab · ADR: —
