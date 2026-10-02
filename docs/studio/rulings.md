@@ -552,3 +552,12 @@ Browser-Check und Gate; Spec-Wortlaut bleibt, dieses Ruling ist Referenz. — Ko
 Tab-Druck mehr für Tastaturspieler.
 
 Entscheider: L0 · Anlass: Fix-Runde H1 M7-UX
+
+## R135 · 2026-10-02 · Gate Merge M7-UX bestanden
+
+Ruling: `feat/m7-ux` @ 8246625 angenommen (lead-qa OK, Auflage arc42 erfüllt und von L0 gesichtet,
+Probe-Merge konfliktfrei, 818 Tests). Merge `--no-ff` durch production-integrator nach R124 (2); M7-UX
+damit abgeschlossen. Prozess-Aussensicht durch studio-process-coach nach Release (R127). — Kosten bei
+Irrtum: Fix-Commit auf main.
+
+Entscheider: L0 · Anlass: Gate Merge M7-UX
