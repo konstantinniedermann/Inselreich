@@ -74,7 +74,7 @@ zweites Banner).
    wie ein Bürgerhaus mit gedeckelter Höhe.
 
 **Abweichung zu 2.2 (Nachführung 2026-10-02):** Bisher war jede Render-Arbeit Kann. Seit M7 Isometrie verlangt
-`tests/render/sprites.test.ts` (M7-ISO AK-R2-03) einen `SILHOUETTES`-Eintrag für jede `BuildingDefId`, und
+`tests/render/sprites.test.ts` (M7:AK-R2-03) einen `SILHOUETTES`-Eintrag für jede `BuildingDefId`, und
 `BODY_HEIGHTS.house` indiziert die Stufe als Feldindex. Ohne Mindestpflicht wäre `main` nach S1 rot bzw. die Höhe
 eines Kaufmannshauses `NaN`. Die Mindestpflicht (13, AK-S1-17, AK-S2-17) ist deshalb **Muss** und fällt mit K3
 nicht weg.
@@ -175,7 +175,7 @@ Das neue Ziel ist ab Spielbeginn sichtbar, nicht erst nach dem Sieg.
    **Setzung Spec**), mit Hebel „Danach: Kaufleute ab {N} Bürgern — Handelsstadt 60". **Abweichung zur
    Auflage-R86-Umsetzung** (die Auflage selbst bleibt erfüllt): Der Satz steht nicht als eigener HUD-Chip, sondern in
    der Ruhe-Ansicht des Panels (ohne Auswahl ab Tick 0 sichtbar) unter dem Zielbalken und im Tooltip des HUD-Chips
-   `goal` (14.1). Grund: AK-UX-15 (`#hud` ≤ 84 px bei 1280) und das M7-UX-Ziel „ruhige Kopfzeile".
+   `goal` (14.1). Grund: M7:AK-UX-15 (`#hud` ≤ 84 px bei 1280) und das M7-UX-Ziel „ruhige Kopfzeile".
 3. **Info-Panel:** Ein Bürgerhaus zeigt „Aufstieg zu Kaufleute" mit Kosten und allen Gründen (4.2). Heute zeigt es
    „Höchste Stufe"; das entfällt für Stufe 3 automatisch, weil `TIERS[3].upgradeCost` ≠ `null` ist. Der Stufenpfad
    der Ruhe-Ansicht endet mit „→ Kaufleute (brauchen Glas, Badehaus)" (14.4).
@@ -421,18 +421,20 @@ Break-even ≈ 2030 Ticks.
 ## 9. Krisen-Interaktion (M6)
 
 - **Brennbar:** Glashütte und Badehaus sind `flammable`. Die M6-Liste der brennbaren Ids wächst von zehn auf
-  **zwölf** (Änderung an M6 AK-S2-10, 18.4).
+  **zwölf** (Änderung an M6:AK-S2-10, Abschnitt 20).
 - **Nicht sturmanfällig:** Glashütte und Badehaus sind nicht `stormAffected`. Der Sturm trifft Glas nur über den
   Holzfäller.
 - **Brand Glashütte:** Schaden D = 300 + 4 Glas × 20 = **380** mit Puffer, 300 + 4 × 50 = **500** ohne.
 - **Brand Badehaus:** D = 500 + 60 × 20 × 0.5 × 2 = **1700**, der teuerste Einzelschaden im Spiel. Während des
   Ausfalls liefert das Bad keinen Dienst (M6 `serviceAvailable`): Kaufleute im Radius zahlen halbe Steuer, steigen
-  aber nicht ab. Kapelle und Schule steigen durch die Kaufleute auf ≈ 1710 / 1810.
+  aber nicht ab. Ihre Bedürfnisse sind unerfüllt; die Häuser schrumpfen um 1 EW je Wachstumstakt (höchstens 4 EW in
+  200 Ticks) und wachsen danach wieder. Der Schaden 1700 ist damit eine Untergrenze (Wert unverändert, R140). Kapelle
+  und Schule steigen durch die Kaufleute auf ≈ 1710 / 1810.
 - **Feuerwache im Spätspiel:** D̄ ≈ 275 → E ≈ **18 je 100 Ticks** > Unterhalt 10. Eine Wache lohnt klarer als in M6.
 - **Sturm, Endzustand Ziel:** Zukauf ≈ **2020** → E ≈ 84 je 100 Ticks; Holz für Glas: Puffer 20 Holz reicht.
 - **Boom Glas:** Pool ab Stufe 4 mit Glas (5.4), P = **1/8** je Boom. Gewinn aus Eigenproduktion ≈ +172 einmalig.
 - **Invariante Glas:** `sell × BOOM_PCT / 100` = 30 < `floor(buy × ORDER_PREMIUM)` = 37 < `buy` 50. Der
-  Eigenschaftstest M6 AK-S3-05 läuft über `GOOD_IDS` und deckt Glas ohne Änderung ab.
+  Eigenschaftstest M6:AK-S3-05 läuft über `GOOD_IDS` und deckt Glas ohne Änderung ab.
 
 | je EW / 100 Ticks, normal | vorgesorgt (1 Wache und Puffer) | ungeschützt |
 | ------------------------- | ------------------------------- | ----------- |
@@ -572,7 +574,7 @@ M8 bringt **keine eigene Grafik und keinen eigenen Klang**. Die Tabelle ist die 
 | --- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----- | -------------- |
 | G1  | Silhouette Glashütte                 | Produktion: Dachfamilie `roofWood`, 2 × 2 mit Hof; Formmerkmal Vorschlag: Schmelzofen mit gemauertem Schornstein | Kategorie-Rückfall über `SILHOUETTES`-Eintrag (J, S2)                  | R1    | Kann (K3)      |
 | G2  | Silhouette Badehaus                  | Öffentlich: `roofSlate`; Formmerkmal Vorschlag: flache Kuppel, Becken im Hof                                     | Kategorie-Rückfall über `SILHOUETTES`-Eintrag (J, S1)                  | R1    | Kann (K3)      |
-| G3  | Kaufmannshaus (Wohnhaus Stufe 4)     | Wohnen: eigene Dachfarbe als 4. Stufe (Palette-Eintrag, Name und Wert `lead-art`, ΔE-Prüfung wie M7 AK-R1-03)    | `sprites.ts` zeichnet Stufe ≥ 3 als Bürgerhaus, Höhe gedeckelt (J, S1) | R1    | Kann (K3)      |
+| G3  | Kaufmannshaus (Wohnhaus Stufe 4)     | Wohnen: eigene Dachfarbe als 4. Stufe (Palette-Eintrag, Name und Wert `lead-art`, ΔE-Prüfung wie M7:AK-R1-03)    | `sprites.ts` zeichnet Stufe ≥ 3 als Bürgerhaus, Höhe gedeckelt (J, S1) | R1    | Kann (K3)      |
 | G4  | Fensteranker für G1–G3               | M7 5.5 „Fensteranker" (für das Fensterlicht M7-R4)                                                               | keine Fenster                                                          | R1    | Kann (K3)      |
 | G5  | Bedarfssymbol Bad und Legendenzeile  | eigenes Symbol wie Glocke und Buch; Legende `MAP_SIGNS` erweitert die Glocke-Buch-Zeile (I)                      | Buch-Symbol der Schule, Legende unverändert                            | R1    | Kann (K2)      |
 | G6  | Warenfarbe Glas                      | `GOOD_COLORS.glass`, unterscheidbar von den acht bestehenden                                                     | `FALLBACK_GOOD_COLOR` Grau                                             | R1    | Kann (K2)      |
@@ -580,7 +582,7 @@ M8 bringt **keine eigene Grafik und keinen eigenen Klang**. Die Tabelle ist die 
 | A1  | Ton für das zweite Banner            | M7-Ton `win` wiederverwenden                                                                                     | —                                                                      | U1    | Muss           |
 | C1  | Anmutung der Chips (Glas, Kaufleute) | M7-U2 Klassen `.chip` und Materialsprache (M7 9.1)                                                               | bestehende `.chip`                                                     | U1    | Muss           |
 
-- Die M8-UI setzt nur bestehende Klassen und Textfarben; nichts wird per Opacity gedämpft (M7 AK-U2-02,
+- Die M8-UI setzt nur bestehende Klassen und Textfarben; nichts wird per Opacity gedämpft (M7:AK-U2-02,
   `tests/ui/contrast.test.ts` ≥ 4,5 : 1). `src/style.css` ändert U1 nur nach AK-U1-08 (**Änderung**, vorher
   „unverändert"); `index.html` bleibt unverändert.
 
@@ -588,7 +590,7 @@ M8 bringt **keine eigene Grafik und keinen eigenen Klang**. Die Tabelle ist die 
 
 - `src/render/iso.ts`: `BODY_HEIGHTS.house` indiziert `[0.8, 1.2, 1.6][tier − 1]`; Stufe 4 ergäbe `NaN`. S1 deckelt
   den Index bei Stufe 3 (Kaufmannshaus hat bis R1 die Höhe des Bürgerhauses). Benannte Ausnahme S1 (17).
-- `tests/render/sprites.test.ts` (M7-ISO AK-R2-03) verlangt für **jede** `BuildingDefId` einen `SILHOUETTES`-Eintrag.
+- `tests/render/sprites.test.ts` (M7:AK-R2-03) verlangt für **jede** `BuildingDefId` einen `SILHOUETTES`-Eintrag.
   S1 trägt `bathhouse`, S2 `glassworks` als Kategorie-Rückfall ein (benannte Ausnahme `src/render/sprites.ts`);
   R1 (K3) ersetzt beide. Offener Punkt 9 ist damit entschieden.
 - Prüfung: AK-S1-17 und AK-S2-17.
@@ -611,13 +613,13 @@ Stufenpfad, `next-step` = `nextStep`.
   über `GOOD_IDS` und ist immer sichtbar; U1 prüft nur Lesbarkeit und Überlauf.
 - **Kaufleute-Chip** `[data-field=pop-4]` (entsteht über `TIER_IDS`): `hidden`, solange `merchants(world) === 0`
   und `tierLock(world, 4) !== null` gilt (**Abweichung**, vorher immer sichtbar). Grund: ruhige Kopfzeile vor der
-  Freischaltung (AK-UX-15); die Vorschau tragen Ruhe-Ansicht, Tooltips und Info-Panel (4.3).
+  Freischaltung (M7:AK-UX-15); die Vorschau tragen Ruhe-Ansicht, Tooltips und Info-Panel (4.3).
 - **Zielanzeige** aus `goalView`, Texte aus einer reinen Funktion `goalTexts(view)` in `src/ui/goal.ts` (neu,
   **Setzung Spec**). Sie liefert `{ chip, title, rest, next: string | null, fillPct }`; `fillPct` =
   `min(100, current / target × 100)` wie heute, in Phase `done` 100.
 - **Abweichung zur Auflage-R86-Umsetzung** (die Auflage bleibt erfüllt, 4.3): **kein eigener HUD-Chip
   `goal-next`**. Der Ausblick steht (1) in der Ruhe-Ansicht als neue Zeile `[data-field=goal-next]` direkt unter dem
-  Zielbalken und (2) im `title` des HUD-Chips `goal`. Grund: AK-UX-15 (`#hud` ≤ 84 px bei 1280) und das
+  Zielbalken und (2) im `title` des HUD-Chips `goal`. Grund: M7:AK-UX-15 (`#hud` ≤ 84 px bei 1280) und das
   M7-UX-Ziel „ruhige Kopfzeile". Offener Punkt 14 ist damit erledigt.
 
 | Phase               | `chip` (HUD `goal`)                | `title` (HUD `goal`)                                                                                     | `rest` (Ruhe `goal-text`)               | `next` (Ruhe `goal-next`)                            |
@@ -635,14 +637,14 @@ Stufenpfad, `next-step` = `nextStep`.
   Stand mit `wonMerchants true` zeigt es nicht erneut (Merkfeld `wonMerchantsShown` neben `wonShown`).
 - **Ton:** `diffSoundEvents` meldet `win` auch beim Wechsel von `wonMerchants`. Höchstens ein `win` je Frame, auch
   wenn beide Ziele im selben Frame fallen (**Setzung Spec**).
-- **Kopfzeilen-Layout:** `#hud` bleibt ≤ 84 px bei 1280 × 800 (AK-UX-15 gilt unverändert). Reisst das nur mit dem
+- **Kopfzeilen-Layout:** `#hud` bleibt ≤ 84 px bei 1280 × 800 (M7:AK-UX-15 gilt unverändert). Reisst das nur mit dem
   Glas-Chip, darf U1 Layout-Regeln der Kopfzeile in `src/style.css` anpassen, ohne neue Farben und ohne `opacity`
   auf Text (AK-U1-08, **Änderung**: vorher war `style.css` für M8 gesperrt).
 
 ### 14.2 Bauleiste und Hotkeys (U1, U2)
 
 - Glashütte erscheint in „Produktion" (dann **9** Einträge), Badehaus in „Öffentlich" (4 Einträge), Reihenfolge
-  nach `BUILDING_IDS`, Eintragstext im Format „{Name} · {n} Geld" (M7-UX L2). **Änderung AK-UX-16:** „Produktion
+  nach `BUILDING_IDS`, Eintragstext im Format „{Name} · {n} Geld" (M7-UX L2). **Änderung M7:AK-UX-16:** „Produktion
   öffnet 8 Einträge" gilt ab M8-S2 als „9 Einträge".
 - Glashütte und Badehaus sind vor dem Sieg baubar und werden **nicht** gedämpft. Gedämpft wird nur nach R132
   (unbezahlbar: gestrichelte Kante, Schrift `--parchment-muted`, keine Opacity).
@@ -651,7 +653,7 @@ Stufenpfad, `next-step` = `nextStep`.
 - Hotkeys **J** (Badehaus) und **O** (Glashütte) in `TOOL_HOTKEYS`; frei laut Prüfung gegen `TOOL_HOTKEYS`,
   `SPEED_KEYS` 1–3, P und `NAV_KEYS` @ 03b34e1. **Änderung (Entscheid Offener Punkt 15):** J kommt mit S1, O mit S2,
   jeweils mit dem Gebäude, damit `nk()` nie „Badehaus ()" bzw. „Glashütte ()" liefert (AK-S1-20, AK-S2-18). Alle
-  bisherigen Tasten bleiben. `hotkeyList()` (AK-UX-06) führt sie automatisch.
+  bisherigen Tasten bleiben. `hotkeyList()` (M7:AK-UX-06) führt sie automatisch.
 
 ### 14.3 Tooltips (U2)
 
@@ -675,7 +677,7 @@ gerechnet. Die Zeilen der beiden neuen Gebäude lauten wörtlich:
   „Glaube" und „Bildung").
 - **Vorschau-Zeile** als letzte Zeile für Glashütte und Badehaus: „Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)",
   mit Hebel „Für Kaufleute (Stufe 4, ab {N} Bürgern)" (4.3).
-- AK-UX-23 (`/(Geld|Holz|Werkzeug|Stein) \d/`) gilt für Kosten- und Rückerstattungstexte; „Braucht: Holz 12 / min"
+- M7:AK-UX-23 (`/(Geld|Holz|Werkzeug|Stein) \d/`) gilt für Kosten- und Rückerstattungstexte; „Braucht: Holz 12 / min"
   hat das Vorbild Werkzeugmacher und fällt nicht darunter.
 
 ### 14.4 Info-Panel (U2)
@@ -685,7 +687,7 @@ gerechnet. Die Zeilen der beiden neuen Gebäude lauten wörtlich:
   kommt nach S1 ohne UI-Code.
 - **Stufenpfad** (`tierPath()`, Ruhe-Ansicht und Info) zeigt automatisch „… → Bürger (brauchen Rum, Schule) →
   Kaufleute (brauchen Glas, Badehaus)"; `tierTooltip(4)` = „Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung,
-  Stoff, Rum, Glas, Kapelle, Schule, Badehaus". **Änderung AK-UX-07** (erwarteter Text von `tierPath()`), wirksam
+  Stoff, Rum, Glas, Kapelle, Schule, Badehaus". **Änderung M7:AK-UX-07** (erwarteter Text von `tierPath()`), wirksam
   mit S1 (17).
 - **Kaufmannshaus:** Titel „Wohnhaus — Kaufleute", Einwohner „x / 20", Bedarf mit Glas, Dienste mit Badehaus,
   „Höchste Stufe". Fehlt Glas: „Mangel: Glas fehlt" (bestehende Diagnose).
@@ -706,7 +708,7 @@ Glas erscheint im Handel und als Auftragsgut über `GOOD_IDS` ohne Code. Die Ver
 
 Unter 1280 px gilt nur: kein Absturz, keine Konsolenfehler, nichts Wesentliches unerreichbar (R78).
 
-### 14.7 Gründe-Texte (`src/ui/hints.ts`, Erweiterung AK-UX-03)
+### 14.7 Gründe-Texte (`src/ui/hints.ts`, Erweiterung M7:AK-UX-03)
 
 `REASON_TABLE` bekommt zwei Zeilen (Quelle `upgradeStatus`) für die neuen Sim-Gründe aus 4.2:
 
@@ -718,9 +720,9 @@ Unter 1280 px gilt nur: kein Absturz, keine Konsolenfehler, nichts Wesentliches 
 50 und „Bürger" kommen aus `WIN_CITIZENS` und `TIERS[3].name`. „Badehaus fehlt in Reichweite" und „Kein Glas im
 Lager" decken die bestehenden Muster. Im Info-Panel stehen damit „✗ Erst nach dem Ziel (50 Bürger)", „✗ Badehaus
 fehlt in Reichweite", „✗ Kein Glas im Lager" (AK-U2-03). Die Zeilen kommen mit S1 (17), weil die
-Vollständigkeitsprüfung von AK-UX-03 sonst rot wird.
+Vollständigkeitsprüfung von M7:AK-UX-03 sonst rot wird.
 
-### 14.8 Nächster Schritt und Abhilfe (`src/ui/guide.ts`, S1 und U2, Änderung AK-UX-08)
+### 14.8 Nächster Schritt und Abhilfe (`src/ui/guide.ts`, S1 und U2, Änderung M7:AK-UX-08)
 
 - **R0:** `wonMerchants` → „Handelsstadt erreicht — spiel frei weiter" (bisher `won` → „Ziel erreicht — spiel
   frei weiter"). Nach `won` laufen die Regeln 1–7 weiter.
@@ -736,9 +738,9 @@ Vollständigkeitsprüfung von AK-UX-03 sonst rot wird.
 - **`remedyText`, `waitingInput`:** erstes Gut aus `missingInputs` (leer → erstes aus `consumes`). Glashütte ohne
   Holz → „Baue Holzfäller (L) oder kaufe Holz am Kontor".
 - **`remedyText`, `storageFull` am Steinbruch:** „Verkaufe Stein am Kontor oder baue Glashütte (O)" (**Änderung**,
-  bisher „Verkaufe Stein am Kontor" ohne Abnehmer). AK-UX-10 nennt keine Steinbruch-Zeile, aber
+  bisher „Verkaufe Stein am Kontor" ohne Abnehmer). M7:AK-UX-10 nennt keine Steinbruch-Zeile, aber
   `tests/ui/guide.test.ts` prüft den bisherigen Text; er wird bewusst geändert (20).
-- Kein Satz enthält „Tick" (AK-UX-13).
+- Kein Satz enthält „Tick" (M7:AK-UX-13).
 
 ## 15. Schnittstellen zwischen den Strängen
 
@@ -747,7 +749,7 @@ Vollständigkeitsprüfung von AK-UX-03 sonst rot wird.
 | Sim → UI                 | `World.wonMerchants`, `Tier 4`, `GoodId 'glass'`, `ServiceId 'bath'`; `citizens`, `merchants`, `upgradeStatus`, `tierLock`; `goalView`, `missingInputs` (12) |
 | Sim → Render             | `BuildingDefId` `glassworks`, `bathhouse`; `house.tier` 4; `Diagnosis` mit `glass` und `bath`                                                                |
 | Sim (S1, S2) → Render    | neue Ids `bathhouse` (S1) und `glassworks` (S2) in `BUILDING_IDS` → Rückfall-Einträge in `SILHOUETTES`, Höhe Stufe 4 gedeckelt (13, Muss)                    |
-| Sim (S1) → UI-Tests      | `TIERS[4]` ändert `tierPath()` (AK-UX-07); Sperrgründe brauchen `REASON_TABLE`-Zeilen (AK-UX-03, 14.7)                                                       |
+| Sim (S1) → UI-Tests      | `TIERS[4]` ändert `tierPath()` (M7:AK-UX-07); Sperrgründe brauchen `REASON_TABLE`-Zeilen (M7:AK-UX-03, 14.7)                                                 |
 | Sim (S1, S2) → Szenarien | `galerie` enthält jeden `BUILDING_IDS`-Typ: S1 ergänzt ein Badehaus, S2 eine Glashütte (18.1)                                                                |
 | UI → Audio (M7)          | `SoundEvent 'win'` (bestehend) für das zweite Banner                                                                                                         |
 | UI → Anmutung (M7)       | nur bestehende Klassen und Textfarben, keine Opacity; `style.css` nur nach AK-U1-08 (13)                                                                     |
@@ -783,7 +785,7 @@ M6-Normalisierung setzt `version` auf den Stand der Referenzmessung (v2). Beides
 ### 16.2 M6-Krisen-Lauf unverändert
 
 `balance-crises.test.ts` endet beim Sieg, der Controller erreicht nie Stufe 4, `rollCrisis` sieht dieselben Pools.
-Die Istwerte aus dem M6-Ruling (B2) bleiben gleich. Auch M6 AK-S1-13 „Krisen nach dem Sieg" bleibt gleich
+Die Istwerte aus dem M6-Ruling (B2) bleiben gleich. Auch M6:AK-S1-13 „Krisen nach dem Sieg" bleibt gleich
 (kein Bad).
 
 ### 16.3 Szenario-Lauf „bis zum zweiten Ziel" (B1)
@@ -834,12 +836,12 @@ in S2. Grund: `TIERS[4]` braucht Glas als Bedarf und `bath` als Dienst, `SERVICE
 - **S1:** `src/ui/buildMenu.ts` genau `SERVICE_NAMES.bath` („Hygiene", sonst bricht der Typcheck);
   `src/render/iso.ts` (Höhe Stufe 4 gedeckelt) und `src/render/sprites.ts` (`bathhouse`-Rückfall) nach 13;
   `tests/sim/scenarios.ts` (`galerie` + Badehaus, 18.1); `tests/sim/balance-crises.test.ts` (`normalized()`,
-  16.1). **Entscheid Offener Punkt 15** (`main` wird über Pages ausgeliefert und bleibt jederzeit sauber
-  spielbar): `src/ui/guide.ts` nur der Sperrfilter aus 14.8 mit `tests/ui/guide.test.ts` (AK-S1-19);
+  16.1). **Entscheid Offener Punkt 15** (jedes Paket hält `make check` grün und liefert keine leere Taste
+  und keinen Kaufleute-Satz vor dem Sieg): `src/ui/guide.ts` nur der Sperrfilter aus 14.8 mit `tests/ui/guide.test.ts` (AK-S1-19);
   `src/ui/hotkeys.ts` und `tests/ui/hotkeys.test.ts` nur Taste J (`TOOL_HOTKEYS` 15 → 16, AK-S1-20).
 - **S1, zusätzlich (Abweichung zur Änderungsliste von `lead-design`):** `src/ui/hints.ts` (die zwei Zeilen aus
-  14.7), `tests/ui/hints.test.ts` (AK-UX-03: neue Zeilen; die Vollständigkeitsschleife über die Stufen reicht bis 4)
-  und `tests/ui/hud.test.ts` (AK-UX-07: `tierPath()`). Grund: Mit `TIERS[4]` und `TIERS[3].upgradeCost` liefert
+  14.7), `tests/ui/hints.test.ts` (M7:AK-UX-03: neue Zeilen; die Vollständigkeitsschleife über die Stufen reicht bis 4)
+  und `tests/ui/hud.test.ts` (M7:AK-UX-07: `tierPath()`). Grund: Mit `TIERS[4]` und `TIERS[3].upgradeCost` liefert
   `upgradeStatus` für ein volles Bürgerhaus „Erst nach dem Ziel", das `REASON_TABLE` nicht deckt, und `tierPath()`
   bekommt die Kaufleute; beide Tests wären nach S1 rot.
 - **S2:** alle Stellen, die `def.consumes` als Einzelwert lesen — `src/ui/buildMenu.ts`, `src/ui/inspect.ts`,
@@ -848,30 +850,33 @@ in S2. Grund: `TIERS[4]` braucht Glas als Bedarf und `bath` als Dienst, `SERVICE
   `tests/ui/guide.test.ts` unverändert grün bleibt (Steinbruch „Verkaufe Stein am Kontor"). Dazu
   `src/render/sprites.ts` (`glassworks`-Rückfall), `tests/sim/scenarios.ts` (`galerie` + Glashütte) und
   `src/ui/hotkeys.ts` mit `tests/ui/hotkeys.test.ts` nur Taste O (`TOOL_HOTKEYS` 16 → 17, AK-S2-18).
-- Die Ausnahmen gehen mit dem Sim-Strang auf `main`; U1 und U2 bauen darauf auf.
+- Die Ausnahmen gehen mit dem Gate Merge nach S3 auf `main`; U1 und U2 bauen darauf auf.
 
-| Paket | Inhalt                                                                                                                                                                                      | Strang / Rolle                                 | Dateien                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | hängt ab von                           |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| S1    | Stufe 4, Sperre und Hebel, `citizens ≥ 3`, `merchants`, Glas als Gut, Dienst `bath`, Badehaus, Save v4, Migration, Fingerabdruck-Normalisierung, Render-Mindestpflicht Badehaus und Stufe 4 | Sim · tech-sim-engineer (+ tech-save-engineer) | `types.ts`, `defs/tiers.ts`, `defs/goods.ts`, `defs/buildings.ts` (nur `bathhouse`), `world.ts`, `population.ts`, `save.ts`, `tests/sim/population.test.ts`, `tests/sim/merchants.test.ts` (neu), `tests/sim/save.test.ts`, `tests/sim/defs.test.ts`, `tests/sim/fire.test.ts` (Liste brennbar), `tests/sim/fixtures/save-v3.json` (neu, vor S1 auf `main`), `tests/sim/balance-crises.test.ts` (`normalized()`), `tests/sim/scenarios.ts` (`galerie`), `docs/arc42.md` (nur §8 Persistenz); Ausnahmen `src/ui/buildMenu.ts`, `src/ui/hints.ts`, `tests/ui/hints.test.ts`, `tests/ui/hud.test.ts`, `src/ui/guide.ts` (Sperrfilter), `tests/ui/guide.test.ts`, `src/ui/hotkeys.ts` (J), `tests/ui/hotkeys.test.ts`, `src/render/iso.ts`, `src/render/sprites.ts`, `tests/render/iso.test.ts`, `tests/render/sprites.test.ts` (AK-S1-17) | — (M6 auf `main`)                      |
-| S2    | Zwei-Input atomar, `consumes` als Liste, Glashütte, Pools, Krisen-Wechselwirkung, Render-Rückfall Glashütte                                                                                 | Sim · tech-sim-engineer                        | `types.ts` (`consumes`), `defs/buildings.ts`, `production.ts`, `queries.ts` (`goodsBalance`), `tests/sim/production.test.ts`, `tests/sim/glassworks.test.ts` (neu), `tests/sim/orders.test.ts`, `tests/sim/defs.test.ts`, `tests/sim/fire.test.ts`, `tests/sim/scenarios.ts` (`galerie`); Ausnahmen `src/ui/buildMenu.ts`, `src/ui/inspect.ts`, `src/ui/texts.ts`, `src/ui/guide.ts` (nur Typ), `src/ui/hotkeys.ts` (O), `tests/ui/hotkeys.test.ts`, `src/render/sprites.ts`, `tests/render/sprites.test.ts` (AK-S2-17)                                                                                                                                                                                                                                                                                                                | S1                                     |
-| S3    | Zweites Ziel, Sim-Abfragen, ADR-005-Nachtrag                                                                                                                                                | Sim · tech-sim-engineer                        | `tick.ts`, `queries.ts`, `tests/sim/tick.test.ts`, `tests/sim/queries.test.ts`, `docs/adr/ADR-005-…` (Nachtrag), `docs/arc42.md` (§6, §8 Gebäudezustände)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | S2 (`queries.ts`)                      |
-| B1    | Szenario-Lauf, `firstMerchantTick`, Ruling-Vorlage; Kann K1                                                                                                                                 | Balancing                                      | `tests/sim/balance-merchants.test.ts` (neu), `tests/sim/merchantsController.ts` (neu); `tests/sim/controller.ts` nur, falls ein Export fehlt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | S3                                     |
-| B2    | Szenario-Saves für die Browser-Checks (18.1)                                                                                                                                                | Balancing                                      | `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | S3                                     |
-| U1    | HUD: Zielanzeige mit Ausblick (HUD-`title` und Ruhe-Ansicht), Kaufleute-Chip, zweites Banner, Ton                                                                                           | UI (serieller Strang) · tech-ui-engineer       | `goal.ts` (neu), `hud.ts`, `inspect.ts` (nur Ruhe-Ansicht), `app.ts`, `soundEvents.ts`, ggf. `style.css` (nur nach AK-U1-08), `tests/ui/goal.test.ts` (neu), `tests/ui/soundEvents.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | S3 (auf `main`); Browser-Check nach B2 |
-| U2    | Tooltips, Info-Panel, Gründe, nächster Schritt und Abhilfe, Bauleiste und Handel prüfen                                                                                                     | UI (serieller Strang) · tech-ui-engineer       | `buildMenu.ts`, `inspect.ts`, `texts.ts`, `guide.ts`, `hints.ts`, `tests/ui/tooltip.test.ts`, `tests/ui/inspect.test.ts`, `tests/ui/guide.test.ts`, `tests/ui/hints.test.ts`, `tests/ui/format.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | U1; Browser-Check nach B2              |
-| R1    | Kann K2 und K3: Silhouetten G1–G4, Symbol Bad und Legendenzeile, Glasfarbe                                                                                                                  | Render · art-rendering-engineer                | `sprites.ts`, `iso.ts` (Höhe Stufe 4), `palette.ts`, `overlays.ts`, `tests/render/sprites.test.ts`, `tests/render/overlays.test.ts`, `tests/render/palette.test.ts`, `tests/render/renderer.test.ts` (falls `anchorCacheSize`); Ausnahme `src/ui/guide.ts` (nur `MAP_SIGNS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | S2; U2 (`guide.ts`)                    |
-| D1    | Doku-Pass: Hauptspec-Verweise, README-Spielanleitung, arc42 §5                                                                                                                              | Doku                                           | `docs/superpowers/specs/2026-09-29-inselreich-design.md`, `README.md`, `docs/arc42.md` (§5)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | U2                                     |
+| Paket | Inhalt                                                                                                                                                                                      | Strang / Rolle                                 | Dateien                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | hängt ab von                           |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| S1    | Stufe 4, Sperre und Hebel, `citizens ≥ 3`, `merchants`, Glas als Gut, Dienst `bath`, Badehaus, Save v4, Migration, Fingerabdruck-Normalisierung, Render-Mindestpflicht Badehaus und Stufe 4 | Sim · tech-sim-engineer (+ tech-save-engineer) | `types.ts`, `defs/tiers.ts`, `defs/goods.ts`, `defs/buildings.ts` (nur `bathhouse`), `world.ts`, `population.ts`, `save.ts`, `tests/sim/population.test.ts`, `tests/sim/taxes.test.ts`, `tests/sim/merchants.test.ts` (neu), `tests/sim/save.test.ts`, `tests/sim/defs.test.ts`, `tests/sim/fire.test.ts` (Liste brennbar), `tests/sim/fixtures/save-v3.json` (neu, vor S1 auf `main`), `tests/sim/balance-crises.test.ts` (`normalized()`), `tests/sim/scenarios.ts` (`galerie`), `docs/arc42.md` (nur §8 Persistenz); Ausnahmen `src/ui/buildMenu.ts`, `src/ui/hints.ts`, `tests/ui/hints.test.ts`, `tests/ui/hud.test.ts`, `src/ui/guide.ts` (Sperrfilter), `tests/ui/guide.test.ts`, `src/ui/hotkeys.ts` (J), `tests/ui/hotkeys.test.ts`, `src/render/iso.ts`, `src/render/sprites.ts`, `tests/render/iso.test.ts`, `tests/render/sprites.test.ts` (AK-S1-17) | — (M6 auf `main`)                      |
+| S2    | Zwei-Input atomar, `consumes` als Liste, Glashütte, Pools, Krisen-Wechselwirkung, Render-Rückfall Glashütte                                                                                 | Sim · tech-sim-engineer                        | `types.ts` (`consumes`), `defs/buildings.ts`, `production.ts`, `queries.ts` (`goodsBalance`), `tests/sim/production.test.ts`, `tests/sim/glassworks.test.ts` (neu), `tests/sim/orders.test.ts`, `tests/sim/defs.test.ts`, `tests/sim/fire.test.ts`, `tests/sim/scenarios.ts` (`galerie`); Ausnahmen `src/ui/buildMenu.ts`, `src/ui/inspect.ts`, `src/ui/texts.ts`, `src/ui/guide.ts` (nur Typ), `src/ui/hotkeys.ts` (O), `tests/ui/hotkeys.test.ts`, `src/render/sprites.ts`, `tests/render/sprites.test.ts` (AK-S2-17)                                                                                                                                                                                                                                                                                                                                           | S1                                     |
+| S3    | Zweites Ziel, Sim-Abfragen, ADR-005-Nachtrag                                                                                                                                                | Sim · tech-sim-engineer                        | `tick.ts`, `queries.ts`, `tests/sim/tick.test.ts`, `tests/sim/queries.test.ts`, `docs/adr/ADR-005-…` (Nachtrag), `docs/arc42.md` (§6, §8 Gebäudezustände)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | S2 (`queries.ts`)                      |
+| B1    | Szenario-Lauf, `firstMerchantTick`, Ruling-Vorlage; Kann K1                                                                                                                                 | Balancing                                      | `tests/sim/balance-merchants.test.ts` (neu), `tests/sim/merchantsController.ts` (neu); `tests/sim/controller.ts` nur, falls ein Export fehlt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | S3                                     |
+| B2    | Szenario-Saves für die Browser-Checks (18.1)                                                                                                                                                | Balancing                                      | `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | S3                                     |
+| U1    | HUD: Zielanzeige mit Ausblick (HUD-`title` und Ruhe-Ansicht), Kaufleute-Chip, zweites Banner, Ton                                                                                           | UI (serieller Strang) · tech-ui-engineer       | `goal.ts` (neu), `hud.ts`, `inspect.ts` (nur Ruhe-Ansicht), `app.ts`, `soundEvents.ts`, ggf. `style.css` (nur nach AK-U1-08), `tests/ui/goal.test.ts` (neu), `tests/ui/soundEvents.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | S3 (auf `main`); Browser-Check nach B2 |
+| U2    | Tooltips, Info-Panel, Gründe, nächster Schritt und Abhilfe, Bauleiste und Handel prüfen                                                                                                     | UI (serieller Strang) · tech-ui-engineer       | `buildMenu.ts`, `inspect.ts`, `texts.ts`, `guide.ts`, `hints.ts`, `tests/ui/tooltip.test.ts`, `tests/ui/inspect.test.ts`, `tests/ui/guide.test.ts`, `tests/ui/hints.test.ts`, `tests/ui/format.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | U1; Browser-Check nach B2              |
+| R1    | Kann K2 und K3: Silhouetten G1–G4, Symbol Bad und Legendenzeile, Glasfarbe                                                                                                                  | Render · art-rendering-engineer                | `sprites.ts`, `iso.ts` (Höhe Stufe 4), `palette.ts`, `overlays.ts`, `tests/render/sprites.test.ts`, `tests/render/overlays.test.ts`, `tests/render/palette.test.ts`, `tests/render/renderer.test.ts` (falls `anchorCacheSize`); Ausnahme `src/ui/guide.ts` (nur `MAP_SIGNS`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | S2; U2 (`guide.ts`)                    |
+| D1    | Doku-Pass: Hauptspec-Verweise, README-Spielanleitung, arc42 §5                                                                                                                              | Doku                                           | `docs/superpowers/specs/2026-09-29-inselreich-design.md`, `README.md`, `docs/arc42.md` (§5)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | U2                                     |
 
 Pfade ohne Präfix liegen im Ordner des Strangs (`src/sim/`, `src/ui/`, `src/render/`).
 
 **Reihenfolge und Parallelität** (**Änderung**, Nachführung 2026-10-02: M6 und M7 sind auf `main`, ihre
 Abhängigkeiten entfallen):
 
-- **Sim-Strang direkt auf `main`** (wie M6-Sim, R82 a): S1 → S2 → S3 → B1. Jedes Paket geht nach eigenem Gate
-  Merge direkt auf `main`. Sichtbare Spuren auf `main` vor der UI: Chips „Kaufleute 0" und „Glas 0", Badehaus (nach
+- **Sim-Strang auf einer Branch, ein Gate Merge nach S3** (**Änderung R140**, lead-tech; R82 a galt nur für M6):
+  S1 → S2 → S3 laufen auf **einer** Branch, jedes Paket hält `make check` grün; danach ein Gate Merge auf `main`.
+  Vorbedingung dieses Merges ist der Kopfzeilen-Smoke-Check AK-S3-10 (`qa-playtester`). B1 folgt auf `main`. Einen
+  sichtbaren Zwischenstand S1 oder S2 auf `main` gibt es nicht. Sichtbare Spuren auf `main` nach dem S3-Merge, vor
+  der UI: Chips „Kaufleute 0" und „Glas 0", Badehaus (nach
   S1) und Glashütte (nach S2) in der Bauleiste, Bürgerhäuser zeigen „Aufstieg zu Kaufleute" mit „✗ Erst nach dem
   Ziel (50 Bürger)". Das ist gewollt (Vorschau, 4.3). Der nächste Schritt bleibt vor dem Sieg beim Bürger-Ziel, die
-  Tasten J und O kommen mit ihrem Gebäude (Offener Punkt 15, entschieden).
+  Tasten J und O sind belegt (Offener Punkt 15, entschieden).
 - **UI-Strang seriell:** **M8-U1 → M8-U2**, keine andere UI-Arbeit parallel. `index.html`, `trade.ts` und
   `messages.ts` bleiben unverändert; `style.css` nur nach AK-U1-08.
 - **Render:** R1 nach S2 und nach U2 (gemeinsame Datei `guide.ts`). Streicht das Gate Plan K2 und K3, entfällt R1;
@@ -896,11 +901,11 @@ Wachstumstakt" heisst `tick = 50 · n − 1`.
 
 | Szenario                   | Inhalt                                                                                                                                                                                                                                       | genutzt von                            |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `m8-vor-sieg`              | `won false`; 3 volle Bürgerhäuser (45 Bürger), Kapelle und Schule angebunden, kein Bad, Glas 0, Geld 3000, Holz 60, Werkzeug 20, Stein 30                                                                                                    | AK-U1-04, AK-U2-03, AK-U2-06, AK-U2-10 |
+| `m8-vor-sieg`              | `won false`; 3 volle Bürgerhäuser (45 Bürger), alle seit ≥ 300 Ticks zufrieden, Steuer normal; Kapelle und Schule angebunden, kein Bad, Glas 0, Geld 3000, Holz 60, Werkzeug 20, Stein 30                                                    | AK-U1-04, AK-U2-03, AK-U2-06, AK-U2-10 |
 | `m8-kurz-vor-sieg`         | 3 volle Bürgerhäuser und 1 Bürgerhaus mit 4 EW (49 Bürger), alle seit ≥ 300 Ticks zufrieden; Badehaus angebunden, **nur ein** volles Bürgerhaus in seinem Radius; Glas 5, Geld 3000, Holz 30, Werkzeug 20, Stein 20; 1 vor dem Wachstumstakt | AK-U1-05, AK-S3-08                     |
 | `m8-kurz-vor-handelsstadt` | `won true`; 3 Kaufmannshäuser 20 / 20 / 19, alles reichlich, 1 vor dem Wachstumstakt                                                                                                                                                         | AK-U1-06                               |
-| `m8-glashuette-wartet`     | Glashütte angebunden, Stein 5, Holz 0                                                                                                                                                                                                        | AK-U2-04                               |
-| `m8-kaufleute-ohne-glas`   | `won true`; 1 Kaufmannshaus 20 EW, Kapelle, Schule, Bad, Glas 0                                                                                                                                                                              | AK-U2-05, AK-R1-02                     |
+| `m8-glashuette-wartet`     | Glashütte angebunden, Stein 5, Holz 0, `state 'waitingInput'`                                                                                                                                                                                | AK-U2-04                               |
+| `m8-kaufleute-ohne-glas`   | `won true`; 1 Kaufmannshaus 20 EW, Kapelle, Schule, Bad, Glas 0, `satisfied.glass false`                                                                                                                                                     | AK-U2-05, AK-R1-02                     |
 | `m8-handel`                | Glas 10, `sellPct.glass` 100                                                                                                                                                                                                                 | AK-U2-07                               |
 
 **Änderung `galerie` statt `m8-galerie`** (Nachführung 2026-10-02): `tests/sim/scenario-saves.test.ts` prüft, dass
@@ -908,7 +913,7 @@ das bestehende Szenario `galerie` **jeden** `BUILDING_IDS`-Typ enthält. S1 erg�
 Badehaus, S2 um eine Glashütte (Ausnahme `tests/sim/scenarios.ts` im Sim-Strang, 17). `galerie` bleibt `won false`;
 die Folgen für `tests/render/viewStats.test.ts` und `tests/ui/inspect.test.ts`, die `galerie` nutzen, prüft der
 Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus `m8-kaufleute-ohne-glas`
-(Kaufmannshaus). Alle neuen Szenarien fallen automatisch unter AK-UX-13 (kein „Tick").
+(Kaufmannshaus). Alle neuen Szenarien fallen automatisch unter M7:AK-UX-13 (kein „Tick").
 
 ### 18.2 Nutzer-Playtest (keine Abnahmekriterien)
 
@@ -938,15 +943,18 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
   angebunden im Radius, Glas 1, Geld 1000, Holz 15, Werkzeug 8, Stein 10, `won false`: `upgradeStatus.reasons`
   genau `['Erst nach dem Ziel']`; nach dem nächsten Wachstumstakt Stufe 3, Geld und Lager unverändert (bis auf den
   Verbrauch der Stufe 3).
-- **AK-S1-05** (Vitest, Aufstieg 3 → 4) Wie AK-S1-04, `won true`, nächster Wachstumstakt: Stufe **4**, Geld **400**,
-  Holz, Werkzeug, Stein und Glas **0**, `demand.glass 0`, `satisfied.glass true`, `satisfiedSince = tick`; nächste
-  Buchung dieses Hauses 15 × 20 = **300** (vorher 210).
+- **AK-S1-05** (Vitest, Aufstieg 3 → 4; **Änderung R140**: Messgrösse `stats.taxes` statt Buchung) Wie AK-S1-04,
+  `won true`; der Aufstieg fällt auf einen Tick ≡ 50 mod 100 (Wachstumstakt ohne Buchung). Direkt nach diesem
+  Schritt: Stufe **4**, Geld **400** (1000 − 600), Holz, Werkzeug, Stein und Glas **0**, `demand.glass 0`,
+  `satisfied.glass true`, `satisfiedSince = tick`. Nach dem nächsten Schritt (Tick ≡ 51 mod 100, kein Wachstumstakt)
+  `stats.taxes` = 15 × 20 = **300** (im gleichen Aufbau ohne Aufstieg **210**).
 - **AK-S1-06** (Vitest, Gründe) Je ein Fall mit `won true`: ohne Bad → „Badehaus fehlt in Reichweite"; Glas 0 →
   „Kein Glas im Lager"; Steuer „hoch" → „Steuer zu hoch". Volles Bürgerhaus mit `won false`, ohne Bad und ohne Glas:
   Gründe beginnen mit „Erst nach dem Ziel" und enthalten „Badehaus fehlt in Reichweite" und „Kein Glas im Lager".
 - **AK-S1-07** (Vitest, Wachstum) Nach dem Aufstieg, alle Güter reichlich: 20 EW nach **5** Wachstumstakten (250 Ticks).
-- **AK-S1-08** (Vitest, Kaufleute ohne Glas) Kaufmannshaus 20 EW, Glas 0, `won true`: Buchung 20 × 20 × 0.5 = **200**;
-  −1 EW je 50 Ticks bis **1** (nach 950 Ticks), Stufe bleibt 4, `won` bleibt `true`.
+- **AK-S1-08** (Vitest, Kaufleute ohne Glas; **Änderung R140**: Messgrösse `stats.taxes`) Kaufmannshaus 20 EW, Glas
+  0, `won true`: `stats.taxes` nach dem ersten Schritt auf einem Tick ≢ 0 mod 50 = 20 × 20 × 0.5 = **200**; danach
+  −1 EW je Wachstumstakt bis **1** (19 Takte = 950 Ticks), Stufe bleibt 4, `won` bleibt `true`.
 - **AK-S1-09** (Vitest, Hebel) Test setzt `TIERS[4].unlockCitizens = 40` und stellt danach `null` wieder her.
   `won false`, drei volle Bürgerhäuser (45 Bürger), eines erfüllt alle Bedingungen aus AK-S1-04: Aufstieg im
   nächsten Wachstumstakt, `won` bleibt `false`, `citizens` bleibt 45. Mit 39 Bürgern (15 / 15 / 9): kein Aufstieg,
@@ -958,8 +966,8 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
   `wonMerchants false`; Gebäude, Lager (ohne Glas), Geld, Tick, `taxLevel`, `sellPct` (ohne Glas), `order`,
   `crisisLevel` und `crisis` gleich wie im Fixture. Der Testkommentar nennt Erzeugungs-Commit und Erzeugungsweg.
 - **AK-S1-12** (Vitest, Kette) `save-v1.json` und `save-v2.json` laden über alle Migrationen: `version 4`,
-  `wonMerchants false`, `stock.glass 0`, `sellPct.glass 100`, die v2- und v3-Felder wie in M5 AK-S1-02 und
-  M6 AK-S1-02/03.
+  `wonMerchants false`, `stock.glass 0`, `sellPct.glass 100`, die v2- und v3-Felder wie in M5:AK-S1-02 und
+  M6:AK-S1-02/03.
 - **AK-S1-13** (Vitest, Round-trip v4) `deserialize(serialize(w))` gleich `w` für eine Welt mit `won true`, einem
   Kaufmannshaus, `wonMerchants true`, Glas 7 und `sellPct.glass 90`.
 - **AK-S1-14** (Vitest, Negativfälle, je Ladeprüfung aus 10.2 mindestens einer) → `Beschädigter Spielstand`:
@@ -968,22 +976,21 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
   `sellPct.glass 29`; `sellPct.glass 101`. `version 5` → `Unbekannte Version`. Positivfall: `house.tier 4` bei
   `won false` mit `unlockCitizens 40` → `ok`.
 - **AK-S1-15** (Vitest, bitgleich) `balance.test.ts` ohne Diff grün, Sieg **6050**, `minMoney` **57**; der M6-Fall
-  `off` (M6 AK-B1-02) mit erweiterter Normalisierung (16.1) gleich der Referenzkonstante; `TIERS[4].unlockCitizens`
+  `off` (M6:AK-B1-02) mit erweiterter Normalisierung (16.1) gleich der Referenzkonstante; `TIERS[4].unlockCitizens`
   ist `null`.
 - **AK-S1-16** (Review) arc42 §8 Persistenz nennt Save v4, Migration v3 → v4 und die neuen Prüfungen.
 - **AK-S1-17** (Vitest, Render-Mindestpflicht, neu) Für ein Haus der Stufe 4 ist `BODY_HEIGHTS.house` endlich und
-  gleich dem Wert der Stufe 3; `SILHOUETTES.bathhouse` ist definiert; `tests/render/sprites.test.ts` (M7-ISO
-  AK-R2-03) ist ohne Lockerung grün.
-- **AK-S1-18** (Vitest, UI-Folgen von S1, neu; Erweiterung AK-UX-03, Änderung AK-UX-07) `friendlyReason` für „Erst
+  gleich dem Wert der Stufe 3 (gilt bis R1; R1 ändert das bewusst, AK-R1-01, Abschnitt 20); `SILHOUETTES.bathhouse` ist definiert; `tests/render/sprites.test.ts` (M7:AK-R2-03) ist ohne Lockerung grün.
+- **AK-S1-18** (Vitest, UI-Folgen von S1, neu; Erweiterung M7:AK-UX-03, Änderung M7:AK-UX-07) `friendlyReason` für „Erst
   nach dem Ziel" → „Erst nach dem Ziel (50 Bürger)"; für „Erst ab 40 Bürgern (jetzt 39)" → unverändert; die
-  Vollständigkeitsprüfung von AK-UX-03 provoziert die Gründe der Stufen 1–4 und ist grün. `tierPath()` → „Pioniere →
+  Vollständigkeitsprüfung von M7:AK-UX-03 provoziert die Gründe der Stufen 1–4 und ist grün. `tierPath()` → „Pioniere →
   Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)";
   `tierTooltip(4)` → „Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Kapelle, Schule,
   Badehaus". `SERVICE_NAMES.bath` = „Hygiene".
-- **AK-S1-19** (Vitest, `nextStep` vor dem Sieg, neu; Änderung AK-UX-08, Entscheid Offener Punkt 15) Testwelten
-  wie in AK-UX-08: (a) `won false`, 3 volle Bürgerhäuser, alles versorgt → „Baue weitere Wohnhäuser und versorge
+- **AK-S1-19** (Vitest, `nextStep` vor dem Sieg, neu; Änderung M7:AK-UX-08, Entscheid Offener Punkt 15) Testwelten
+  wie in M7:AK-UX-08: (a) `won false`, 3 volle Bürgerhäuser, alles versorgt → „Baue weitere Wohnhäuser und versorge
   sie" (kein Kaufleute-Satz); (e) `won false`, Steuer „hoch", nur Bürgerhäuser → nicht der Steuer-Satz, sondern „Baue
-  weitere Wohnhäuser und versorge sie". R0–R7 aus AK-UX-08 unverändert grün. Kein Satz enthält „Tick".
+  weitere Wohnhäuser und versorge sie". R0–R7 aus M7:AK-UX-08 unverändert grün. Kein Satz enthält „Tick".
 - **AK-S1-20** (Vitest, Taste J, neu) `hotkeyAction('j', …)` wählt `bathhouse`, `hotkeyLabel` → „J";
   `TOOL_HOTKEYS` hat 16 Einträge; alle bisherigen Tasten unverändert; `nk('bathhouse')` = „Badehaus (J)".
 
@@ -1008,10 +1015,11 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
   Brand: Geld **−300** gegenüber dem Zwilling, Glas **4**, Entnahmen je Input **4**, `progress 0`. Zwilling: Glas
   **8**, Entnahmen **8**, `progress 20`.
 - **AK-S2-09** (Vitest, Sturm) Glashütte und Holzfäller angebunden, Holz 50, Stein 50, Sturm aktiv 300 Schritte;
-  Zwilling ohne Sturm: Glas der Glashütte gleich wie im Zwilling; der Holzfäller liefert die Hälfte (M6 AK-S3-01).
-- **AK-S2-10** (Vitest, Brand Badehaus) Kaufmannshaus nur im Radius eines Badehauses, alles erfüllt; Badehaus brennt
-  bei T: `services.bath` ist in T + 1 … T + 200 `false`, ab T + 201 `true`; die Buchung im Fenster zählt das Haus mit
-  halber Steuer (200 statt 400); Stufe bleibt 4.
+  Zwilling ohne Sturm: Glas der Glashütte gleich wie im Zwilling; der Holzfäller liefert die Hälfte (M6:AK-S3-01).
+- **AK-S2-10** (Vitest, Brand Badehaus; **Änderung R140**: Messgrösse `stats.taxes`) Kaufmannshaus 20 EW nur im
+  Radius eines Badehauses, alles erfüllt; Badehaus brennt bei T, wobei T + 1 ≢ 0 mod 50 vorgegeben ist:
+  `services.bath` ist in T + 1 … T + 200 `false`, ab T + 201 `true`; `stats.taxes` nach Schritt T + 1 = **200**, im
+  Zwilling ohne Brand **400**; Stufe bleibt 4.
 - **AK-S2-11** (Vitest, Glas-Verkauf) Glas 10, `sellPct.glass 100`: `sell(w, 'glass', 10)` → Geld **+191**
   (20 × 955 / 100), `sellPct.glass` **90**; mit Boom auf Glas **+286** (`floor(286.5)`).
 - **AK-S2-12** (Vitest, Auftrag Glas) `orderUnitReward('glass')` = **37**; Menge 4 … 8 → **148 … 296**; Lieferung von
@@ -1019,14 +1027,15 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
 - **AK-S2-13** (Vitest, Pool bitgleich) `orderForPeriod(seed, k, t)` für t 1 … 3, k 0 … 199, Seeds 1 … 10: FNV-1a-32
   über alle Ergebnisse gleich der Referenzkonstante, gemessen auf dem Code vor S1 (Testkommentar nennt den Commit).
   Bei t = 4 hat der Pool **8** Güter, Glas ist das letzte; über k 0 … 199 (Seed 3) kommt Glas mindestens einmal vor.
-- **AK-S2-14** (Vitest, Boom-Pool) `rollCrisis` mit Höchststufe 1 und 3: M6 AK-S1-07 und AK-S1-08 unverändert grün;
+- **AK-S2-14** (Vitest, Boom-Pool) `rollCrisis` mit Höchststufe 1 und 3: M6:AK-S1-07 und M6:AK-S1-08 unverändert grün;
   mit Höchststufe 4 zieht der Boom aus 8 Gütern, Glas kommt über k 0 … 199 (Seed 3) mindestens einmal vor.
-- **AK-S2-15** (Vitest, Invariante) M6 AK-S3-05 läuft über `GOOD_IDS` und ist mit Glas grün (30 < 37 < 50).
+- **AK-S2-15** (Vitest, Invariante) M6:AK-S3-05 läuft über `GOOD_IDS` und ist mit Glas grün (30 < 37 < 50).
 - **AK-S2-16** (Vitest, Bilanz) Angebundene Glashütte: `goodsBalance` Glas `produced` 2, Stein `consumed` 2, Holz
   `consumed` 2 je 100 Ticks.
 - **AK-S2-17** (Vitest, Render-Rückfall und UI-Typ, neu) `SILHOUETTES.glassworks` ist definiert,
   `tests/render/sprites.test.ts` grün; `tests/ui/` ohne geänderte Sollwerte grün (Typanpassung `consumes` in
-  `buildMenu.ts`, `inspect.ts`, `texts.ts`, `guide.ts` mit wörtlich gleichem Text für einen Input, 17).
+  `buildMenu.ts`, `inspect.ts`, `texts.ts`, `guide.ts` mit wörtlich gleichem Text für einen Input, 17); einzige
+  geänderte UI-Testdatei ist `tests/ui/hotkeys.test.ts` (AK-S2-18).
 - **AK-S2-18** (Vitest, Taste O, neu) `hotkeyAction('o', …)` wählt `glassworks`, `hotkeyLabel` → „O";
   `TOOL_HOTKEYS` hat 17 Einträge; alle bisherigen Tasten unverändert; Glashütte-Tooltip beginnt mit „Glashütte (O)".
 
@@ -1043,8 +1052,8 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
 current 15, target 60 }`; nach dem zweiten Ziel: `{ phase 'done', current 60, target 60 }`.
 - **AK-S3-04** (Vitest, `missingInputs`) Glashütte, Stein 3, Holz 0 → `['wood']`; Stein 0, Holz 0 →
   `['stone', 'wood']`; beide ≥ 1 → `[]`; Weberei ohne Wolle → `['wool']`; Fischer → `[]`.
-- **AK-S3-05** (Vitest, Badabdeckung) Eigenschaft wie M5 AK-S3-03: Für alle Kacheln ist `coverageMask(w, 'bath')`
-  gleich `serviceAvailable` für ein 1×1-Haus auf dieser Kachel, auch während eines Brands am Badehaus (M6 AK-S4-03).
+- **AK-S3-05** (Vitest, Badabdeckung) Eigenschaft wie M5:AK-S3-03: Für alle Kacheln ist `coverageMask(w, 'bath')`
+  gleich `serviceAvailable` für ein 1×1-Haus auf dieser Kachel, auch während eines Brands am Badehaus (M6:AK-S4-03).
 - **AK-S3-06** (Vitest) `placementZone(w, 'bathhouse', x, y)` → Kreis Radius 10; `placementZone(w, 'glassworks', …)`
   → `null`.
 - **AK-S3-07** (Vitest, Diagnose) Kaufmannshaus ohne Glas → Diagnose enthält `{ good: 'glass' }`; ohne Bad →
@@ -1054,6 +1063,10 @@ current 15, target 60 }`; nach dem zweiten Ziel: `{ phase 'done', current 60, ta
 - **AK-S3-09** (Review) ADR-005 hat den Nachtrag „Inputs als Liste, atomar entnommen; `waitingInput` bis alle Inputs
   entnommen werden konnten; Siegschritt setzt `won`, dann `wonMerchants`"; arc42 §6 und §8 Gebäudezustände sind
   nachgeführt.
+
+- **AK-S3-10** (Browser, Kopfzeilen-Smoke-Check vor dem Gate Merge nach S3, neu, R140) Stand der Branch nach S3,
+  1280 × 800, neues Spiel: Glas-Chip `stock-glass` sichtbar, `#hud` ≤ 84 px (M7:AK-UX-15), keine Konsolenfehler.
+  Urteiler: `qa-playtester`.
 
 ### B1 — Szenario-Lauf
 
@@ -1066,7 +1079,7 @@ current 15, target 60 }`; nach dem zweiten Ziel: `{ phase 'done', current 60, ta
   über **9600**, enthält die Vorlage den Hebel-Vorschlag `unlockCitizens` 40 samt Playtest-Frage P-02; kein
   geänderter Wert im Paket.
 - **AK-B1-04** (Vitest, Determinismus über Laden) Lauf A bis zum Ende. Lauf B hält bei `firstMerchantTick`, speichert,
-  lädt und setzt fort (Layout aus dem Kontor abgeleitet wie M6 AK-B2-05): `serialize(A) === serialize(B)`, gleicher
+  lädt und setzt fort (Layout aus dem Kontor abgeleitet wie M6:AK-B2-05): `serialize(A) === serialize(B)`, gleicher
   `wonMerchantsTick`.
 - **AK-B1-05** (Vitest) M6-Krisen-Lauf `normal` und `mild` grün mit den Istwerten des M6-Rulings; `balance.test.ts`
   ohne Diff.
@@ -1077,13 +1090,14 @@ current 15, target 60 }`; nach dem zweiten Ziel: `{ phase 'done', current 60, ta
 ### B2 — Szenario-Saves
 
 - **AK-B2-01** (Vitest) Jedes Szenario aus 18.1 ist per `deserialize(serialize(w))` ladbar (v4) und hat die
-  beschriebenen Eigenschaften (Stufen, EW, Lager, Tick = `50 · n − 1` wo verlangt, `won`, `wonMerchants`); mit
+  beschriebenen Eigenschaften (Stufen, EW, Lager, Tick = `50 · n − 1` wo verlangt, `won`, `wonMerchants`,
+  Zufriedenheit seit ≥ 300 Ticks und Steuerstufe, `state` der Glashütte, `satisfied.glass`); mit
   `SCENARIO_OUT` entsteht je Szenario genau eine Datei.
-- **AK-B2-02** (Vitest, bestehende Szenario-Tests, bewusst geändert, neu) Die Namensliste aus AK-S5-01 in
+- **AK-B2-02** (Vitest, bestehende Szenario-Tests, bewusst geändert, neu) Die Namensliste aus M5:AK-S5-01 in
   `scenario-saves.test.ts` enthält die `m8-*`-Szenarien; die Prüfung „nach dem ersten Tick `won` nur bei `ux-sieg`"
   lässt zusätzlich die M8-Szenarien zu, die `won true` haben oder im ersten Tick gewinnen (`m8-kurz-vor-sieg`,
   `m8-kurz-vor-handelsstadt`, `m8-kaufleute-ohne-glas`); `galerie` enthält jeden `BUILDING_IDS`-Typ inklusive
-  Badehaus und Glashütte und bleibt `won false`. Alle Szenarien bestehen AK-UX-13.
+  Badehaus und Glashütte und bleibt `won false`. Alle Szenarien bestehen M7:AK-UX-13.
 
 ### U1 — HUD, Ziele, Banner, Hotkeys
 
@@ -1095,7 +1109,7 @@ Ausblick in Ruhe-Ansicht und Tooltip, Texte im M7-UX-Format).
   45 / 50 Bürgern, 25 bei 15 / 60 Kaufleuten, 100 in Phase `done`. Kein Text enthält „Tick".
 - **AK-U1-02** (Vitest, Hotkeys, Prüfung des Stands nach S2; die Tasten selbst kommen mit S1 und S2, AK-S1-20,
   AK-S2-18) `TOOL_HOTKEYS` hat 17 Einträge (15 heute + J + O); `hotkeyList()` enthält O und J je genau einmal mit
-  Namen (AK-UX-06); U1 ändert `hotkeys.ts` nicht.
+  Namen (M7:AK-UX-06); U1 ändert `hotkeys.ts` nicht.
 - **AK-U1-03** (Vitest, Ton) `diffSoundEvents`: `wonMerchants` false → true ergibt genau ein `win`; `won` und
   `wonMerchants` im selben Frame → genau ein `win`; Laden eines Stands mit `wonMerchants true` (Basis = geladener
   Stand) → kein Ton; alle bisherigen Töne unverändert.
@@ -1103,23 +1117,23 @@ Ausblick in Ruhe-Ansicht und Tooltip, Texte im M7-UX-Format).
   neunte beginnt mit „Glas 0"; `[data-field=pop-4]` ist `hidden`; `[data-field=goal]` = „Ziel 45 / 50 Bürger" mit
   `title` „Ziel: 50 Bürger — Einwohner der Stufe 3 und höher · Danach: Kaufleute — Handelsstadt 60"; Ruhe-Ansicht:
   `goal-text` = „45 / 50 Bürger", `[data-field=goal-next]` = „Danach: Kaufleute — Handelsstadt 60" und nicht
-  `hidden`. `#hud` ≤ 84 px bei 1280 × 800 (AK-UX-15 bleibt gültig); `#hud` hat bei beiden Breiten
+  `hidden`. `#hud` ≤ 84 px bei 1280 × 800 (M7:AK-UX-15 bleibt gültig); `#hud` hat bei beiden Breiten
   `scrollWidth ≤ clientWidth`.
 - **AK-U1-05** (Browser, Szenario `m8-kurz-vor-sieg`, 1×) Nach dem nächsten Wachstumstakt: Banner „Ziel erreicht:
   50 Bürger! Das Spiel läuft weiter." (wörtlich wie heute), `[data-field=goal]` = „Ziel 0 / 60 Kaufleute" mit
   `title` „Zweites Ziel: 60 Kaufleute — Einwohner der Stufe 4", `goal-next` `hidden`, `pop-4` sichtbar mit
   „Kaufleute 0"; nach dem folgenden Wachstumstakt „Ziel 15 / 60 Kaufleute" und `pop-4` „Kaufleute 15". `#hud` ≤ 84 px
-  (AK-UX-15 bleibt gültig).
+  (M7:AK-UX-15 bleibt gültig).
 - **AK-U1-06** (Browser, Szenario `m8-kurz-vor-handelsstadt`, 1×) Nach dem nächsten Wachstumstakt genau eine Meldung
   „Zweites Ziel erreicht: 60 Kaufleute! Das Spiel läuft weiter.", `[data-field=goal]` = „Handelsstadt · 60
   Kaufleute" mit `title` „Beide Ziele erreicht — freies Spiel"; Ruhe-Ansicht `goal-text` = „Handelsstadt erreicht ·
   60 Kaufleute", Balken 100 %, `goal-next` `hidden`. Speichern und Laden: keine erneute Meldung. `#hud` ≤ 84 px
-  (AK-UX-15 bleibt gültig).
+  (M7:AK-UX-15 bleibt gültig).
 - **AK-U1-07** (Browser) Fensterbreite 800 px: neues Spiel, Badehaus mit J bauen, Info-Panel öffnen — kein Absturz,
   keine Konsolenfehler (R78).
 - **AK-U1-08** (Review, **Änderung**: gelockert) Der Diff von U1 und U2 ändert `index.html`, `trade.ts` und
-  `messages.ts` nicht. `src/style.css` ändert nur U1 und nur, wenn AK-UX-15 sonst reisst; dann nur Layout-Regeln der
-  Kopfzeile, keine neuen Farben, keine `opacity` auf Text. `tests/ui/contrast.test.ts` (M7 AK-U2-02, ≥ 4,5 : 1)
+  `messages.ts` nicht. `src/style.css` ändert nur U1 und nur, wenn M7:AK-UX-15 sonst reisst; dann nur Layout-Regeln der
+  Kopfzeile, keine neuen Farben, keine `opacity` auf Text. `tests/ui/contrast.test.ts` (M7:AK-U2-02, ≥ 4,5 : 1)
   bleibt ohne Änderung grün.
 
 ### U2 — Tooltips, Info-Panel, Gründe, nächster Schritt, Handel
@@ -1129,8 +1143,8 @@ AK-U2-10 sind neu (14.2, 14.8).
 
 - **AK-U2-01** (Vitest, Tooltips) `tooltipLines` für Glashütte und Badehaus enthält jede Zeile der Tabelle in 14.3
   wörtlich und in dieser Reihenfolge; mit Hebel 40 lautet die Vorschau-Zeile „Für Kaufleute (Stufe 4, ab 40
-  Bürgern)". Weberei wörtlich wie vor M8 („Braucht: Wolle 12 / min"). Keine Zeile enthält „Tick"; AK-UX-06 und
-  AK-UX-23 bleiben grün.
+  Bürgern)". Weberei wörtlich wie vor M8 („Braucht: Wolle 12 / min"). Keine Zeile enthält „Tick"; M7:AK-UX-06 und
+  M7:AK-UX-23 bleiben grün.
 - **AK-U2-02** (Vitest, Info-Texte) `stateInfo` (`src/ui/texts.ts`) einer wartenden Glashütte: Holz fehlt →
   „Wartet auf Holz"; beide fehlen → „Wartet auf Stein und Holz"; Liste leer → „Wartet auf Stein und Holz"; Weberei →
   „Wartet auf Wolle". `producesText(glassworks, false)` → „Erzeugt Glas alle 5 s".
@@ -1145,48 +1159,52 @@ AK-U2-10 sind neu (14.2, 14.8).
   20 / 20", Diagnose „Mangel: Glas fehlt", Aufstieg „Höchste Stufe".
 - **AK-U2-06** (Browser, Szenario `m8-vor-sieg`, Vorschau) Bauleiste „Produktion" enthält „Glashütte · 300 Geld",
   „Öffentlich" enthält „Badehaus · 500 Geld". Badehaus mit J an einem freien, angebundenen Platz bauen: Geld sinkt um
-  500, Holz um 30, Werkzeug um 10, Stein um 20, `won` bleibt `false`. Während das Werkzeug aktiv ist, folgt ein
-  Kreis mit Radius 10 Kacheln der Maus (Kreisradius per CDP gleich `10 × Zoom × Kachelgrösse` ± 1 px).
-- **AK-U2-07** (Browser, Szenario `m8-handel`) Der Handel zeigt eine Zeile „Glas"; der Knopf „10 verkaufen" nennt
-  **191**; nach dem Klick Geld +191, Glas 0; das Handels-Panel hat `scrollWidth ≤ clientWidth` bei 1280.
-- **AK-U2-08** (Vitest, `nextStep`, Änderung AK-UX-08, neu) Testwelten wie in AK-UX-08 (frühere Regeln greifen
+  500, Holz um 30, Werkzeug um 10, Stein um 20, `won` bleibt `false`. Während das Werkzeug aktiv ist, folgt die
+  Radius-Ellipse (M7-ISO D-16) der Maus; Urteiler `qa-playtester` (**Änderung R140**: die Mathematik decken
+  M7:AK-ISO-07 mit den Halbachsen r·z·32·√2 / r·z·16·√2 und AK-S3-06 mit `placementZone` Radius 10).
+- **AK-U2-07** (Browser, Szenario `m8-handel`) Der Handel zeigt eine Zeile „Glas"; der Verkaufsknopf „−10" zeigt
+  „191 Geld" (`title` „10 Glas verkaufen für 191 Geld"); nach dem Klick Geld +191, Glas 0; das Handels-Panel hat
+  `scrollWidth ≤ clientWidth` bei 1280 und scrollt intern bis „Glas" (**Änderung** M7:AK-UX-18: bisher „bis Rum").
+- **AK-U2-08** (Vitest, `nextStep`, Änderung M7:AK-UX-08, neu) Testwelten wie in M7:AK-UX-08 (frühere Regeln greifen
   nachweislich nicht; (a) und (e) liegen in AK-S1-19): (b) die Welt aus AK-S1-19 (a) mit `won true`, Steinbruch
   und Holzfäller vorhanden, keine Glashütte → „Deine Kaufleute brauchen Glas: baue Glashütte (O)"; (c) wie (b) ohne
   Steinbruch → „Deine Kaufleute brauchen Glas: baue Glashütte (O) und Steinbruch (B) für Stein"; (d) `won true`,
   Glas-Kette steht, kein Badehaus → „Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe"; (f) Hebel
-  40, `won false`, 45 Bürger, sonst wie (b) → der Satz aus (b); (g) `wonMerchants true` → „Handelsstadt erreicht — spiel frei weiter"; R1–R7 aus AK-UX-08
+  40, `won false`, 45 Bürger, sonst wie (b) → der Satz aus (b); (g) `wonMerchants true` → „Handelsstadt erreicht —
+  spiel frei weiter"; (h) `won true`, Glashütte steht, Steinbruch fehlt → „Glashütte braucht Stein: baue Steinbruch
+  (B)"; R1–R7 aus M7:AK-UX-08
   unverändert. Kein Satz enthält „Tick".
-- **AK-U2-09** (Vitest, `remedyText`, Erweiterung AK-UX-10, neu) Glashütte `waitingInput` mit Stein 5, Holz 0 →
+- **AK-U2-09** (Vitest, `remedyText`, Erweiterung M7:AK-UX-10, neu) Glashütte `waitingInput` mit Stein 5, Holz 0 →
   „Baue Holzfäller (L) oder kaufe Holz am Kontor"; Stein 0, Holz 0 → „Baue Steinbruch (B) oder kaufe Stein am
   Kontor"; `missingInputs` leer → Satz zum ersten Gut aus `consumes` (Stein). Steinbruch `storageFull` → „Verkaufe
   Stein am Kontor oder baue Glashütte (O)" (**Änderung**, bewusst geänderter Test). Holzfäller `storageFull` →
   „Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)" und Weberei wartet → „Baue Schäferei (G) oder kaufe Wolle am
   Kontor" (beide wörtlich wie heute).
-- **AK-U2-10** (Browser, 1280 × 800, Szenario `m8-vor-sieg`, Änderung AK-UX-16, neu) „Produktion" öffnet **9**
+- **AK-U2-10** (Browser, 1280 × 800, Szenario `m8-vor-sieg`, Änderung M7:AK-UX-16, neu) „Produktion" öffnet **9**
   Einträge, „Öffentlich" 4; Glashütte und Badehaus haben keine gestrichelte Kante und keine `opacity`. Tastatur
-  (R134): Tab erreicht „Öffentlich", Enter öffnet die Einträge-Leiste, weiteres Tab erreicht „Badehaus · 500 Geld",
-  Enter wählt das Werkzeug Badehaus; das Tooltip endet mit „Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)".
+  (R134): Tab erreicht „Öffentlich", Enter öffnet die Einträge-Leiste; Tab nach dem letzten Kategorie-Knopf erreicht
+  „Kapelle", drei weitere Tab erreichen „Badehaus · 500 Geld" (4. Eintrag, DOM-Reihenfolge); Enter wählt das Werkzeug
+  Badehaus; das Tooltip endet mit „Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)".
 
 ### R1 — Darstellung (Kann K2 und K3, `lead-art`)
 
 - **AK-R1-01** (Vitest, Fake-Kontext) `SILHOUETTES` hat für `glassworks` und `bathhouse` eigene Einträge statt der
   Rückfall-Einträge aus S1 und S2; ein Haus der Stufe 4 zeichnet mit dem neuen Dach-Palettenwert (Name `lead-art`),
   nicht mit `roofTerracottaDark`, und hat eine eigene, endliche Höhe in `BODY_HEIGHTS.house`. Alle Fensteranker
-  liegen im Footprint (wie M7 AK-R2-03).
+  liegen im Footprint (wie M7:AK-R2-03).
 - **AK-R1-02** (Browser, 1280, Szenarien `galerie` und `m8-kaufleute-ohne-glas`, **Änderung**: vorher `m8-galerie`)
   Blindtest durch `qa-playtester`: Screenshots ohne Beschriftung, Legende erlaubt; Glashütte, Badehaus und
   Kaufmannshaus werden richtig zugeordnet, die vier Wohnhaus-Stufen sind richtig geordnet. Urteiler:
   `qa-playtester`.
 - **AK-R1-03** (Vitest) `symbolFor({ kind: 'service', service: 'bath' })` liefert ein eigenes Symbol (nicht `book`);
-  `GOOD_COLORS.glass` ist gesetzt und verschieden von allen anderen Einträgen; die ΔE-Prüfung der Palette (M7
-  AK-R1-03) ist mit dem neuen Dachwert grün. `MAP_SIGNS`: Die Zeile „Abzeichen mit gelber Glocke bzw. blauem Buch"
+  `GOOD_COLORS.glass` ist gesetzt und verschieden von allen anderen Einträgen; die ΔE-Prüfung der Palette (M7:AK-R1-03) ist mit dem neuen Dachwert grün. `MAP_SIGNS`: Die Zeile „Abzeichen mit gelber Glocke bzw. blauem Buch"
   nennt zusätzlich das Bad-Symbol (Text `lead-art`), ihre Bedeutung lautet „Kapelle, Schule bzw. Badehaus fehlt in
-  Reichweite"; die Legende bleibt bei **11** Zeilen (AK-UX-11, AK-UX-25).
+  Reichweite"; die Legende bleibt bei **11** Zeilen (M7:AK-UX-11, M7:AK-UX-25).
 - **AK-R1-04** (Vitest) `overlayPlan(w, 'bathhouse', x, y)`: Kreis Radius 10, Abdeckung `'bath'`.
 
-**Summe:** 78 Abnahmekriterien (S1 20 · S2 18 · S3 9 · B1 7 · B2 2 · U1 8 · U2 10 · R1 4), davon Kann: AK-B1-07 (K1)
+**Summe:** 79 Abnahmekriterien (S1 20 · S2 18 · S3 10 · B1 7 · B2 2 · U1 8 · U2 10 · R1 4), davon Kann: AK-B1-07 (K1)
 und AK-R1-01 bis AK-R1-04 (K2, K3); dazu 6 Punkte „Nutzer-Playtest" (18.2). Vorher 68; neu sind AK-S1-17,
-AK-S1-18, AK-S1-19, AK-S1-20, AK-S2-17, AK-S2-18, AK-B2-02, AK-U2-08, AK-U2-09 und AK-U2-10.
+AK-S1-18, AK-S1-19, AK-S1-20, AK-S2-17, AK-S2-18, AK-S3-10, AK-B2-02, AK-U2-08, AK-U2-09 und AK-U2-10.
 
 ### 18.3 Randfälle (Übersicht)
 
@@ -1228,13 +1246,14 @@ AK-S1-18, AK-S1-19, AK-S1-20, AK-S2-17, AK-S2-18, AK-B2-02, AK-U2-08, AK-U2-09 u
 | arc42 §6 Laufzeitsicht             | `checkWin` setzt `won` bei 50 Bürgern                | setzt `won`, dann `wonMerchants`                                                                                              |
 | arc42 §8 Gebäudezustände           | `waitingInput`: „Input fehlt"                        | „mindestens ein Input fehlt; nichts entnommen"                                                                                |
 | arc42 §5 Bausteinsicht             | —                                                    | Baustein `goal` (`src/ui/goal.ts`, reine Zieltexte)                                                                           |
-| M7-UX AK-UX-03                     | Reason-Tabelle ohne Sperrgründe                      | **Änderung:** zwei Zeilen für die Sperrgründe (14.7, AK-S1-18)                                                                |
-| M7-UX AK-UX-07                     | `tierPath()` endet bei den Bürgern                   | **Änderung:** endet mit „→ Kaufleute (brauchen Glas, Badehaus)" (14.4, AK-S1-18)                                              |
-| M7-UX AK-UX-08 R0, Regeln 3, 4, 6  | R0 bei `won`; alle vollen Häuser zählen              | **Änderung:** R0 bei `wonMerchants`; Häuser zählen nur bei freier nächster Stufe (14.8; Filter S1, AK-S1-19; R0 U2, AK-U2-08) |
+| M7:AK-UX-03                        | Reason-Tabelle ohne Sperrgründe                      | **Änderung:** zwei Zeilen für die Sperrgründe (14.7, AK-S1-18)                                                                |
+| M7:AK-UX-07                        | `tierPath()` endet bei den Bürgern                   | **Änderung:** endet mit „→ Kaufleute (brauchen Glas, Badehaus)" (14.4, AK-S1-18)                                              |
+| M7:AK-UX-08 R0, Regeln 3, 4, 6     | R0 bei `won`; alle vollen Häuser zählen              | **Änderung:** R0 bei `wonMerchants`; Häuser zählen nur bei freier nächster Stufe (14.8; Filter S1, AK-S1-19; R0 U2, AK-U2-08) |
 | M7-UX Steinbruch-Abhilfe (Test)    | „Verkaufe Stein am Kontor"                           | **Änderung:** „… oder baue Glashütte (O)" (14.8, AK-U2-09)                                                                    |
-| M7-UX AK-UX-16                     | „Produktion" öffnet 8 Einträge                       | **Änderung:** 9 Einträge ab S2 (14.2, AK-U2-10)                                                                               |
-| M7-UX AK-UX-25, AK-UX-11           | Legende 11 Zeilen                                    | unverändert 11 Zeilen; die Glocke-Buch-Zeile nennt das Bad-Symbol (K2, AK-R1-03)                                              |
-| M7-ISO AK-R2-03, `BODY_HEIGHTS`    | Silhouette je `BuildingDefId`; Höhe Stufe 1–3        | Rückfall-Einträge in S1/S2, Höhe Stufe 4 gedeckelt (13, AK-S1-17, AK-S2-17)                                                   |
+| M7:AK-UX-16                        | „Produktion" öffnet 8 Einträge                       | **Änderung:** 9 Einträge ab S2 (14.2, AK-U2-10)                                                                               |
+| M7:AK-UX-18                        | Handels-Panel scrollt intern bis „Rum"               | **Änderung:** bis „Glas" (14.5, AK-U2-07)                                                                                     |
+| M7:AK-UX-25, M7:AK-UX-11           | Legende 11 Zeilen                                    | unverändert 11 Zeilen; die Glocke-Buch-Zeile nennt das Bad-Symbol (K2, AK-R1-03)                                              |
+| M7:AK-R2-03, `BODY_HEIGHTS`        | Silhouette je `BuildingDefId`; Höhe Stufe 1–3        | Rückfall-Einträge in S1/S2, Höhe Stufe 4 gedeckelt (13, AK-S1-17, AK-S2-17)                                                   |
 | ADR-005                            | `waitingInput` bis der Input entnommen werden konnte | Nachtrag M8: Inputs als Liste, atomar; Siegschritt mit zweitem Ziel                                                           |
 | Balancing-Kurz-Spec                | Balancing-Lauf und Krisen-Lauf                       | zusätzlich Szenario-Lauf bis zum zweiten Ziel, Grenze 12 000                                                                  |
 
@@ -1257,19 +1276,24 @@ Assets in M8) und ADR-010 (kein neuer Zufall; der Pool wächst nur für Stufe 4)
 - **Rulings (L0):** Szenario-Baseline und `firstMerchantTick` (nach B1); Beobachtung „Steuer hoch dominiert im
   Endzustand" (R86 Entscheid 6, Eintrag macht L0).
 - **Bestehende Tests, bewusst geändert** (Paket in Klammern):
-  - Sim: `tests/sim/defs.test.ts` (`GOOD_IDS` 8 → 9, `BUILDING_IDS` 14 → 16; S1, S2); `tests/sim/save.test.ts`
-    (die drei Prüfungen „`version 4` → Unbekannte Version" auf `version 5`, M6 AK-S1-05; S1);
-    `tests/sim/fire.test.ts` (sortierte Liste der brennbaren Ids, zwölf, M6 AK-S2-10; S1, S2);
+  - Sim: `tests/sim/defs.test.ts` (`GOOD_IDS` 8 → 9, `BUILDING_IDS` 14 → 16; S1, S2; Z. 69 `TIERS[3].upgradeCost`
+    `null` → 600 / 15 / 8 / 10; S1); `tests/sim/save.test.ts` (die drei Prüfungen „`version 4` → Unbekannte Version"
+    auf `version 5`, M6:AK-S1-05; dazu Z. 37, 42, 58, 278, 297, 318 `version 3` bzw. `SAVE_VERSION 3` → 4; S1);
+    `tests/sim/population.test.ts` („citizen house has no further upgrade", Z. 260–267: Bürgerhaus → „Höchste Stufe
+    erreicht" wird umgeschrieben auf ein Haus der Stufe 4 bzw. den Sperrgrund „Erst nach dem Ziel"; S1);
+    `tests/sim/taxes.test.ts` (Z. 113 und 117 `populationByTier` `{ 1, 2, 3 }` → mit Schlüssel 4; S1);
+    `tests/sim/fire.test.ts` (sortierte Liste der brennbaren Ids, zwölf, M6:AK-S2-10; S1, S2);
     `tests/sim/balance-crises.test.ts` (`normalized()`, 16.1; S1); `tests/sim/scenarios.ts` (`galerie` + Badehaus
-    bzw. Glashütte; S1, S2); `tests/sim/scenario-saves.test.ts` (Namensliste AK-S5-01 um `m8-*`, `won`-Prüfung um
+    bzw. Glashütte; S1, S2); `tests/sim/scenario-saves.test.ts` (Namensliste M5:AK-S5-01 um `m8-*`, `won`-Prüfung um
     die M8-Szenarien mit `won true`; B2, AK-B2-02).
-  - UI: `tests/ui/hints.test.ts` (AK-UX-03, zwei Zeilen, Stufen bis 4; S1); `tests/ui/hud.test.ts` (AK-UX-07,
+  - UI: `tests/ui/hints.test.ts` (M7:AK-UX-03, zwei Zeilen, Stufen bis 4; S1); `tests/ui/hud.test.ts` (M7:AK-UX-07,
     `tierPath()`; S1); `tests/ui/hotkeys.test.ts` (`TOOL_HOTKEYS` 15 → 16 mit J; S1; 16 → 17 mit O; S2);
-    `tests/ui/guide.test.ts` (Sperrfilter, AK-S1-19; S1; AK-UX-08 R0 und Steinbruch-Abhilfe; U2).
+    `tests/ui/guide.test.ts` (Sperrfilter, AK-S1-19; S1; M7:AK-UX-08 R0 und Steinbruch-Abhilfe; U2).
   - Render: `tests/render/sprites.test.ts` bleibt unverändert und wird durch die Rückfall-Einträge erfüllt;
     `tests/render/renderer.test.ts` (`anchorCacheSize` ≤ Typen + 3, nur falls die Testwelt ein Kaufmannshaus enthält;
-    R1).
-  - Browser-Kriterium AK-UX-16 („Produktion" 9 Einträge; ab S2).
+    R1); AK-S1-17 (Höhe Stufe 4 gleich Stufe 3) ändert R1 bewusst auf eine eigene Höhe (AK-R1-01; R1).
+  - Browser-Kriterien M7:AK-UX-16 („Produktion" 9 Einträge; ab S2) und M7:AK-UX-18 (Handels-Panel scrollt intern
+    „bis Glas" statt „bis Rum"; ab S1, geprüft in AK-U2-07).
 
 ## 21. Offene Punkte mit Empfehlung
 
@@ -1296,7 +1320,7 @@ Assets in M8) und ADR-010 (kein neuer Zufall; der Pool wächst nur für Stufe 4)
 8. **Ownership-Ausnahmen der Sim-Pakete in UI-, Render- und Testdateien.** _Erledigt (Nachführung 2026-10-02):_
    M7-U2 ist auf `main`; die Ausnahmen von S1 und S2 sind in 17 vollständig benannt. Die Zusätze `hints.ts`,
    `hints.test.ts` und `hud.test.ts` in S1 sind eine Abweichung zur Änderungsliste von `lead-design` (17).
-9. **M7 AK-R2-03 über `BUILDING_IDS`.** _Entschieden (Nachführung 2026-10-02):_ Der Test iteriert über alle
+9. **M7:AK-R2-03 über `BUILDING_IDS`.** _Entschieden (Nachführung 2026-10-02):_ Der Test iteriert über alle
    `BuildingDefId`. S1 und S2 tragen Rückfall-Einträge ein (13, Render-Mindestpflicht, Muss); R1 ersetzt sie.
 10. **Dateien des Balancing-Strangs.** B1 braucht aus `controller.ts` womöglich Exporte (zum Beispiel `control`),
     B2 ändert `scenarios.ts`. _Erledigt (Nachführung 2026-10-02):_ M6-B2 ist auf `main`. Der Fingerabdruck-Helfer ist
@@ -1310,12 +1334,13 @@ Assets in M8) und ADR-010 (kein neuer Zufall; der Pool wächst nur für Stufe 4)
 13. **Lesart „niedrig dominiert" (werte §5a).** Gemeint ist nach der Begründung „niedrig wird dominiert" (nur −30 %
     Steuer, Wartezeit ohnehin erfüllt). _Empfehlung:_ so übernommen (8.2, 8.6); `design-economy-designer` bestätigt.
 14. **HUD-Breite bei 1280 px.** _Erledigt (Nachführung 2026-10-02):_ Kein Ausblick-Chip; der Kaufleute-Chip ist
-    vor der Freischaltung verborgen (14.1). Reisst AK-UX-15 trotzdem, gilt AK-U1-08 (nur Layout der Kopfzeile).
-15. **Zwischenstand auf `main` zwischen S1 und U2.** Mit `TIERS[3].upgradeCost` zählen volle Bürgerhäuser ab S1
-    als „aufstiegsfähig"; ohne Gegenmassnahme zeigte `nextStep` vor dem Sieg Kaufleute-Sätze mit leerer Taste
-    („Badehaus ()") und den Steuer-Satz für reine Bürgerstädte. _Entschieden (`lead-design`, 2026-10-02):_ `main`
-    wird über Pages ausgeliefert und bleibt jederzeit sauber spielbar. Der Sperrfilter aus 14.8 kommt als Ausnahme
-    `guide.ts` mit S1 (AK-S1-19), Taste J mit S1 (AK-S1-20), Taste O mit S2 (AK-S2-18); R0 und die
+    vor der Freischaltung verborgen (14.1). Reisst M7:AK-UX-15 trotzdem, gilt AK-U1-08 (nur Layout der Kopfzeile).
+15. **Zwischenstände von S1 und S2.** Mit `TIERS[3].upgradeCost` zählen volle Bürgerhäuser ab S1 als
+    „aufstiegsfähig"; ohne Gegenmassnahme zeigte `nextStep` vor dem Sieg Kaufleute-Sätze mit leerer Taste
+    („Badehaus ()") und den Steuer-Satz für reine Bürgerstädte. _Entschieden (`lead-design`, 2026-10-02; R140):_
+    S1–S3 gehen mit einem Gate Merge nach S3 auf `main`, einen sichtbaren Zwischenstand gibt es nicht (17). Die
+    Zuordnung bleibt trotzdem, weil jedes Paket `make check` grün hält und in sich stimmig ist: der Sperrfilter aus
+    14.8 als Ausnahme `guide.ts` mit S1 (AK-S1-19), Taste J mit S1 (AK-S1-20), Taste O mit S2 (AK-S2-18); R0 und die
     Mehr-Input-Sätze bleiben in U2.
 
 ## 22. Prüfung gegen Stand nach M7-UX (2026-10-02)
@@ -1324,16 +1349,17 @@ Geprüft gegen `main` @ 03b34e1 (M6, M7 Isometrie, M7-UX). Werte und Sim-Regeln 
 
 | Spec-Stelle                     | Konflikt                                                       | Lösung                                                                          |
 | ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 14.1 Chip `goal-next`           | AK-UX-15 (`#hud` ≤ 84 px), ruhige Kopfzeile                    | Ausblick in Ruhe-Ansicht und `title` des Chips `goal`; `pop-4` vorher verborgen |
+| 14.1 Chip `goal-next`           | M7:AK-UX-15 (`#hud` ≤ 84 px), ruhige Kopfzeile                 | Ausblick in Ruhe-Ansicht und `title` des Chips `goal`; `pop-4` vorher verborgen |
 | 14.1 Texte „Bürger-Ziel x / 50" | Ist-Text „Ziel {n} / 50 Bürger"                                | `goalTexts` im heutigen Format, alle Phasen (AK-U1-01)                          |
-| AK-U1-08 `style.css` gesperrt   | Glas-Chip kann AK-UX-15 reissen                                | Layout der Kopfzeile erlaubt, keine Farben, keine Opacity, Kontrasttest grün    |
-| 14.2 Bauleiste                  | AK-UX-16 „8 Einträge", R132 Dämpfung, R134 Tastatur            | 9 Einträge ab S2, nur Unbezahlbares gedämpft, Tab-AK (AK-U2-10)                 |
-| 14.3 Tooltips „je 100 Ticks"    | AK-UX-13 kein „Tick", Format `costLine` und „/ min"            | Zeilen neu gerechnet; Dienst „Hygiene"                                          |
-| 14.4 „alle 50 Ticks", Ort       | AK-UX-13; Zustandstext liegt in `texts.ts`                     | `producesText` „alle 5 s", `stateInfo` in `texts.ts`                            |
-| 4.2 Sperrgründe                 | AK-UX-03 Vollständigkeit wird mit S1 rot                       | zwei `REASON_TABLE`-Zeilen in S1 (14.7, AK-S1-18)                               |
-| `tierPath()`                    | AK-UX-07 wird mit S1 rot                                       | erwarteter Text mit Kaufleuten in S1 (AK-S1-18)                                 |
+| AK-U1-08 `style.css` gesperrt   | Glas-Chip kann M7:AK-UX-15 reissen                             | Layout der Kopfzeile erlaubt, keine Farben, keine Opacity, Kontrasttest grün    |
+| 14.2 Bauleiste                  | M7:AK-UX-16 „8 Einträge", R132 Dämpfung, R134 Tastatur         | 9 Einträge ab S2, nur Unbezahlbares gedämpft, Tab-AK (AK-U2-10)                 |
+| 14.3 Tooltips „je 100 Ticks"    | M7:AK-UX-13 kein „Tick", Format `costLine` und „/ min"         | Zeilen neu gerechnet; Dienst „Hygiene"                                          |
+| 14.4 „alle 50 Ticks", Ort       | M7:AK-UX-13; Zustandstext liegt in `texts.ts`                  | `producesText` „alle 5 s", `stateInfo` in `texts.ts`                            |
+| 4.2 Sperrgründe, `tierPath()`   | M7:AK-UX-03 und M7:AK-UX-07 werden mit S1 rot                  | `REASON_TABLE`-Zeilen und Text mit Kaufleuten in S1 (14.7, AK-S1-18)            |
 | `nextStep` (fehlte)             | Kaufleute-Sätze vor dem Sieg, R0 bei `won`, Einzel-Input       | Sperrfilter, R0 `wonMerchants`, Listen (14.8, AK-U2-08, -09)                    |
-| 13 Render nur Kann              | AK-R2-03 je `BuildingDefId`; `BODY_HEIGHTS` Stufe 4 = `NaN`    | Mindestpflicht Muss in S1/S2 (AK-S1-17, AK-S2-17)                               |
+| 13 Render nur Kann              | M7:AK-R2-03 je `BuildingDefId`; `BODY_HEIGHTS` Stufe 4 = `NaN` | Mindestpflicht Muss in S1/S2 (AK-S1-17, AK-S2-17)                               |
 | 18.1 `m8-galerie`               | `galerie` muss jeden Typ enthalten                             | `galerie` erweitert, `m8-galerie` entfällt (AK-B2-02)                           |
-| 21 Punkt 15 Zwischenstand       | `main` (Pages) zeigte vor U2 Kaufleute-Sätze und „Badehaus ()" | Sperrfilter und Taste J mit S1, Taste O mit S2 (AK-S1-19, -20, AK-S2-18)        |
+| 21 Punkt 15 Zwischenstand       | Kaufleute-Sätze und „Badehaus ()" vor U2                       | Sperrfilter und J mit S1, O mit S2; ein Gate Merge nach S3 (R140)               |
 | 17 Abhängigkeiten M6/M7         | alle erfüllt; Fingerabdruck in `balance-crises.test.ts`        | gestrichen; Ausnahmen neu benannt; UI-Strang M8-U1 → M8-U2                      |
+
+| Gate Spec R140: B1–B5 | Steuer-AK nicht messbar, Kreis-AK falsch, Testliste lückenhaft, Szenarien, Verweise | `stats.taxes`, Ellipse, 20 ergänzt, 18.1 präzisiert, Format `M7:AK-…` |
