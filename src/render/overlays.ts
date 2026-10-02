@@ -24,6 +24,8 @@ const EXTRA_DOT = '#e02020';
 const SIGN_COLOR = '#8b5a2b';
 const BELL_COLOR = '#e0b020';
 const BOOK_COLOR = '#3a6ab8';
+/** Bad-Symbol: Teal, klar abgesetzt vom Blau des Buchs (ΔE2000 ≥ 15, getestet). */
+const BATH_COLOR = '#159a8c';
 const FALLBACK_GOOD_COLOR = '#999999';
 /** Warenfarben; neue Güter ohne Eintrag nutzen die Fallback-Farbe. */
 export const GOOD_COLORS: Partial<Record<GoodId, string>> = {
@@ -35,6 +37,7 @@ export const GOOD_COLORS: Partial<Record<GoodId, string>> = {
   cloth: '#b85ab0',
   cane: '#7fae4a',
   rum: '#7a2a2a',
+  glass: '#4aa8d8', // Azurblau, ΔE2000 ≥ 10 zu jeder anderen Warenfarbe (getestet)
 };
 
 // --- Abdeckungs-Cache ---
@@ -188,7 +191,7 @@ export function drawPlacementOverlay(
 
 // --- Bedarfssymbole (Spec 10.4) ---
 export interface Symbol {
-  shape: 'sign' | 'good' | 'bell' | 'book';
+  shape: 'sign' | 'good' | 'bell' | 'book' | 'bath';
   color: string;
 }
 
@@ -196,9 +199,9 @@ export function symbolFor(d: Diagnosis): Symbol {
   if (d.kind === 'supply') return { shape: 'sign', color: SIGN_COLOR };
   if (d.kind === 'good')
     return { shape: 'good', color: GOOD_COLORS[d.good] ?? FALLBACK_GOOD_COLOR };
-  return d.service === 'faith'
-    ? { shape: 'bell', color: BELL_COLOR }
-    : { shape: 'book', color: BOOK_COLOR };
+  if (d.service === 'faith') return { shape: 'bell', color: BELL_COLOR };
+  if (d.service === 'bath') return { shape: 'bath', color: BATH_COLOR };
+  return { shape: 'book', color: BOOK_COLOR };
 }
 
 /** Mitte der Oberkante der Bildbox in Bildpunkten: Anker für Bedarfssymbol und roten Punkt. */
@@ -276,7 +279,27 @@ export function drawNeedSymbols(
       ctx.quadraticCurveTo(cx + r * 0.5, cy - r * 0.7, cx + r * 0.55, cy + r * 0.4);
       ctx.closePath();
       ctx.fill();
-    } else {
+    } else if (sym.shape === 'bath') {
+      // Badewanne: Wanne mit gerundetem Boden, zwei Füsschen, drei Dampfwellen darüber
+      ctx.beginPath();
+      ctx.moveTo(cx - r * 0.65, cy + r * 0.02);
+      ctx.lineTo(cx + r * 0.65, cy + r * 0.02);
+      ctx.quadraticCurveTo(cx + r * 0.6, cy + r * 0.55, cx, cy + r * 0.55);
+      ctx.quadraticCurveTo(cx - r * 0.6, cy + r * 0.55, cx - r * 0.65, cy + r * 0.02);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(cx - r * 0.42, cy + r * 0.55, r * 0.14, r * 0.17); // Füsschen
+      ctx.fillRect(cx + r * 0.28, cy + r * 0.55, r * 0.14, r * 0.17);
+      ctx.strokeStyle = sym.color;
+      ctx.lineWidth = Math.max(1, r * 0.1);
+      for (const dx of [-0.38, 0, 0.38]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + r * dx, cy - r * 0.08);
+        ctx.quadraticCurveTo(cx + r * (dx + 0.16), cy - r * 0.28, cx + r * dx, cy - r * 0.46);
+        ctx.quadraticCurveTo(cx + r * (dx - 0.16), cy - r * 0.62, cx + r * dx, cy - r * 0.78);
+        ctx.stroke();
+      }
+    } else if (sym.shape === 'book') {
       ctx.fillRect(cx - r * 0.55, cy - r * 0.45, r * 1.1, r * 0.9); // Buch
       ctx.fillStyle = BADGE_BG;
       ctx.fillRect(cx - r * 0.05, cy - r * 0.45, r * 0.1, r * 0.9);

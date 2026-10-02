@@ -41,6 +41,14 @@ describe('Palette', () => {
     }
   });
 
+  it('M8 R1 roofCopper hebt sich von Gras, Krone und Schieferdach ab (ΔE2000 ≥ 10)', () => {
+    for (const n of ['grass', 'grassDark', 'crown', 'crownLight', 'roofSlate'] as const)
+      expect(
+        deltaE2000(hexToLab(PALETTE.roofCopper), hexToLab(PALETTE[n])),
+        `roofCopper/${n}`,
+      ).toBeGreaterThanOrEqual(10);
+  });
+
   it('AK-R1-03 Palette enthält genau die Werte aus Spec 4.2', () => {
     expect(PALETTE.signalRed).toBe('#ff3b5c');
     expect(PALETTE.signalYellow).toBe('#ffe000');

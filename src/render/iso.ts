@@ -59,8 +59,8 @@ const CATEGORY_HEIGHT: Record<Category, number> = {
 };
 /** R1b, R2 und R2-FW tragen hier die Höhen der Silhouetten ein; die Signaturen bleiben. */
 export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number>> = {
-  // Hütte, Fachwerk, Bürgerhaus mit Gaube; Stufe 4 (Kaufleute) bis R1 wie Stufe 3 (M8-S1, gedeckelt)
-  house: (b) => [0.8, 1.2, 1.6][Math.min(b.house?.tier ?? 1, 3) - 1]! * ISO_H,
+  // Hütte, Fachwerk, Bürgerhaus mit Gaube, Kaufmannshaus mit Treppengiebel (M8-R1, Spitze 2,08 · ISO_H < H_TOWER)
+  house: (b) => [0.8, 1.2, 1.6, 2.0][Math.min(b.house?.tier ?? 1, 4) - 1]! * ISO_H,
   kontor: () => 1.4 * ISO_H, // Lagerhaus
   lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
   // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
@@ -74,6 +74,8 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   toolmaker: () => 1.3 * ISO_H,
   chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
   school: () => 1.5 * ISO_H,
+  bathhouse: () => 1.4 * ISO_H, // M8-R1: Kubus mit flacher Kuppel, Portikus, Becken; Kuppelscheitel unter H_TOWER
+  glassworks: () => 1.6 * ISO_H, // M8-R1: Werkhalle, Glasofenkegel bis 1,97 · ISO_H, unter H_TOWER
   firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
 };
 export const bodyHeight = (def: BuildingDef, b: Building): number =>

@@ -578,7 +578,6 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       chapel: 2,
       school: 2,
       firestation: 2,
-      bathhouse: 2, // M8-S1: Rückfall FALLBACKS.public zeichnet dessen zwei Schallöffnungen
       'fallback public 1': 2,
       'fallback public 2': 2,
     };
