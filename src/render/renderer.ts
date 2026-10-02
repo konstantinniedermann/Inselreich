@@ -75,6 +75,7 @@ import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
+import { drawFlocks, drawWaterLife, wildlifeAt } from './wildlife';
 import {
   buildingShadow,
   drawAir,
@@ -433,6 +434,20 @@ export function render(
       drawRoads(ctx, world, range);
     });
 
+    // Wasser- und Luftleben: eine Abfrage für Bild und Name (wildlifeAt); Bereich um 3 Kacheln erweitert
+    const wildRange = {
+      x0: Math.max(0, range.x0 - 3),
+      y0: Math.max(0, range.y0 - 3),
+      x1: Math.min(world.width - 1, range.x1 + 3),
+      y1: Math.min(world.height - 1, range.y1 + 3),
+    };
+    const wild = wildlifeAt(world, wildRange, fx.timeMs, {
+      phase: light.phase,
+      weather: weather.kind,
+      reduce,
+    });
+    drawWaterLife(ctx, cam, wild);
+
     // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)
     const poses = new Map<number, WalkerPose>();
     const moving: Moving[] = [];
@@ -578,6 +593,7 @@ export function render(
       drawHearthSmoke(ctx, cam, at, b.id, fx.timeMs, n);
     }
     for (const g of gulls) drawGull(ctx, cam, g);
+    drawFlocks(ctx, cam, wild);
     // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
     lit.forEach(({ f, rect }, i) => {
       const clip = fireClips[i]!;
