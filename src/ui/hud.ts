@@ -1,9 +1,10 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { SERVICE_BUILDING, citizens, populationByTier } from '../sim/population';
-import { crisisView, goodsBalance } from '../sim/queries';
+import { buildLock } from '../sim/placement';
+import { SERVICE_BUILDING, populationByTier, tierLock } from '../sim/population';
+import { crisisView, goalView, goodsBalance } from '../sim/queries';
 import type { GoodId, TaxLevel, Tier, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
@@ -11,6 +12,7 @@ import type { Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
+import { goalTexts } from './goal';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
@@ -137,10 +139,6 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       chip.title = tierTooltip(tier);
       popBox?.appendChild(chip);
     }
-    const goal = header.querySelector<HTMLElement>('[data-field="goal"]');
-    if (goal) {
-      goal.title = `Ziel: ${WIN_CITIZENS} ${TIERS[3].name} — Einwohner der Stufe 3`;
-    }
     const stockRow = header.querySelector('.stock-row');
     for (const good of GOOD_IDS) {
       const chip = document.createElement('span');
@@ -180,8 +178,14 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
   }
   const pop = populationByTier(world);
-  for (const tier of TIER_IDS) setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
-  setField(header, 'goal', `Ziel ${citizens(world)} / ${WIN_CITIZENS} ${TIERS[3].name}`);
+  for (const tier of TIER_IDS) {
+    const chip = setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
+    const hide = popChipHidden(world, tier);
+    if (chip && chip.hidden !== hide) chip.hidden = hide;
+  }
+  const goal = goalTexts(goalView(world));
+  const goalEl = setField(header, 'goal', goal.chip);
+  if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
   setField(header, 'money', `Geld ${world.money}`)?.classList.toggle('negative', world.money < 0);
   const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
@@ -192,6 +196,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}`,
     );
     if (chip) {
+      const hide = stockChipHidden(world, good);
+      if (chip.hidden !== hide) chip.hidden = hide;
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
       const tip = stockTooltip(world, good);
       if (chip.title !== tip) chip.title = tip;
@@ -264,6 +270,16 @@ export function tierPath(): string {
   return TIER_IDS.map((t) =>
     t === 1 ? TIERS[t].name : `${TIERS[t].name} (brauchen ${tierNeeds(t, true).join(', ')})`,
   ).join(' → ');
+}
+
+/** Stufen-Chip verborgen: niemand auf der Stufe und die Stufe noch gesperrt (Spec M8 14.1, ruhige Kopfzeile). */
+export function popChipHidden(world: World, tier: Tier): boolean {
+  return populationByTier(world)[tier] === 0 && tierLock(world, tier) !== null;
+}
+
+/** Glas-Chip verborgen, solange die Glashütte gesperrt und kein Glas im Lager ist (Spec M8 14.1, Änderung S11). */
+export function stockChipHidden(world: World, good: GoodId): boolean {
+  return good === 'glass' && buildLock(world, 'glassworks') !== null && world.stock.glass === 0;
 }
 
 export function balanceText(stats: { taxes: number; upkeep: number }): {

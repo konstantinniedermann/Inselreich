@@ -108,3 +108,26 @@ describe('Krisen-Signaltöne (M6-AK-U3-01)', () => {
     expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
   });
 });
+
+describe('M8 U1 Ton (Spec 14.1)', () => {
+  it('AK-U1-03 wonMerchants false → true ergibt genau ein win', () => {
+    const w = createWorld(1);
+    w.won = true;
+    const before = soundSnapshot(w);
+    w.wonMerchants = true;
+    expect(diffSoundEvents(before, soundSnapshot(w))).toEqual(['win']);
+  });
+  it('AK-U1-03 won und wonMerchants im selben Frame: genau ein win', () => {
+    const w = createWorld(1);
+    const before = soundSnapshot(w);
+    w.won = true;
+    w.wonMerchants = true;
+    expect(diffSoundEvents(before, soundSnapshot(w))).toEqual(['win']);
+  });
+  it('AK-U1-03 Laden mit wonMerchants true (Basis = geladener Stand): kein Ton', () => {
+    const w = createWorld(1);
+    w.won = true;
+    w.wonMerchants = true;
+    expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
+  });
+});

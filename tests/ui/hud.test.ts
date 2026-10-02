@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
 import { SCENARIOS } from '../sim/scenarios';
-import { balanceText, speedTooltip, stockTooltip, tierPath, tierTooltip } from '../../src/ui/hud';
+import {
+  balanceText,
+  popChipHidden,
+  speedTooltip,
+  stockChipHidden,
+  stockTooltip,
+  tierPath,
+  tierTooltip,
+} from '../../src/ui/hud';
+import { GOOD_IDS } from '../../src/sim/defs/goods';
+import { createWorld } from '../../src/sim/world';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -44,5 +54,27 @@ describe('M8 Stufenpfad (AK-S1-18)', () => {
     expect(tierTooltip(4)).toBe(
       'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Kapelle, Schule, Badehaus',
     );
+  });
+});
+
+describe('M8 U1 Kopfzeile', () => {
+  it('Spec M8 14.1 Kaufleute-Chip verborgen bis zur Freischaltung, Stufen 1–3 nie (Vorprüfung zu AK-U1-04)', () => {
+    const w = createWorld(3);
+    expect(popChipHidden(w, 4)).toBe(true);
+    for (const tier of [1, 2, 3] as const) expect(popChipHidden(w, tier)).toBe(false);
+    w.won = true;
+    expect(popChipHidden(w, 4)).toBe(false);
+  });
+
+  it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, andere Güter nie (Vorprüfung AK-U1-04, S11)', () => {
+    const w = createWorld(3);
+    expect(stockChipHidden(w, 'glass')).toBe(true);
+    for (const g of GOOD_IDS.filter((x) => x !== 'glass'))
+      expect(stockChipHidden(w, g), g).toBe(false);
+    w.stock.glass = 1;
+    expect(stockChipHidden(w, 'glass')).toBe(false);
+    w.stock.glass = 0;
+    w.won = true;
+    expect(stockChipHidden(w, 'glass')).toBe(false);
   });
 });
