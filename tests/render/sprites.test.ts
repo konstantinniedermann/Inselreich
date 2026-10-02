@@ -922,7 +922,7 @@ describe('M8 R1 Silhouetten', () => {
     expect(hs[3]).toBeLessThan(H_TOWER);
   });
 
-  it('AK-R1-01 Kaufmannshaus zeichnet in der Hülle; Fensteranker im Footprint, Herdrauch-Mündung vorhanden', () => {
+  it('AK-R1-01 Kaufmannshaus zeichnet in der Hülle; mindestens so viele Fensteranker wie Stufe 3; Herdrauch-Mündung vorhanden', () => {
     const b = house(4);
     const { ctx, log } = fakeCtx();
     drawBody(ctx, CAM, BUILDING_DEFS.house, b, 0);
@@ -934,6 +934,57 @@ describe('M8 R1 Silhouetten', () => {
     const a = hearthAnchor(BUILDING_DEFS.house, b, CAM);
     expect(a).not.toBeNull();
     expect(inHull(hull, a!.x, a!.y, 0.5)).toBe(true);
+  });
+
+  it('AK-R1-01 Kaufmannshaus: jeder Fensteranker liegt auf seiner Wand und in bodyHull; Anker und gezeichnete Fenster stimmen überein', () => {
+    const def = BUILDING_DEFS.house,
+      b = house(4);
+    const box = spriteBounds(def, b);
+    const hull = bodyHull(def, b);
+    const anchors = lightAnchors(def, b);
+    expect(anchors.length).toBeGreaterThan(10);
+    const rect = (a: LightAnchor): [number, number][] => {
+      const x0 = box.x + a.x * box.w,
+        y0 = box.y + a.y * box.h;
+      return [
+        [x0, y0],
+        [x0 + a.w * box.w, y0],
+        [x0 + a.w * box.w, y0 + a.h * box.h],
+        [x0, y0 + a.h * box.h],
+      ];
+    };
+    for (const a of anchors) {
+      expect(a.w).toBeGreaterThan(0);
+      expect(a.h).toBeGreaterThan(0);
+      const wall = wallPolygon(def, b, a.wall, a.plane);
+      for (const [x, y] of rect(a)) {
+        expect(inHull(wall, x, y, 1e-6), `${a.wall} Wand`).toBe(true);
+        expect(inHull(hull, x, y, 1e-6), 'Hülle').toBe(true);
+      }
+    }
+    // Gezeichnete Fensterfüllungen (WINDOW-Farbe) gegen Anker, beide Richtungen; Giebel und Luke nutzen DOOR bzw. Wandfarben,
+    // daher keine Fenster ohne Anker (roofOnly house4 = 0)
+    const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
+    const area = (q: P[]): number =>
+      q.reduce((s, p, i) => s + p.x * q[(i + 1) % q.length]!.y - q[(i + 1) % q.length]!.x * p.y, 0);
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, def, b, 0);
+    const quads = log.events
+      .filter((e) => e.op === 'fill' && e.style === WINDOW && e.points.length === 4)
+      .map((e) => (area(e.points) < 0 ? [...e.points].reverse() : e.points));
+    const used = new Set<number>();
+    for (const a of anchors) {
+      const r = rect(a);
+      const k = quads.findIndex(
+        (q) =>
+          Math.abs(Math.min(...q.map((p) => p.x)) - r[0]![0]) < 0.5 &&
+          Math.abs(Math.max(...q.map((p) => p.x)) - r[1]![0]) < 0.5 &&
+          r.every(([x, y]) => inHull(q, x, y, 0.5)),
+      );
+      expect(k, `Anker ${a.wall} ohne gezeichnetes Fenster`).toBeGreaterThanOrEqual(0);
+      used.add(k);
+    }
+    expect(quads.length - used.size, 'Fenster ohne Anker').toBe(0);
   });
 
   it('AK-R1-01 Glashütte und Badehaus haben eigene Silhouetten, nicht den Kategorie-Rückfall', () => {
