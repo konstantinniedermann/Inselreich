@@ -24,10 +24,15 @@ import {
 } from './fx';
 import {
   HEARTH_PUFFS,
+  GLOW_RADIUS,
   anchorRects,
   anchorsFor,
+  boxAround,
+  buildingPolys,
+  clipOutOccluders,
   clothesOf,
   coastFor,
+  crownPolys,
   drawGull,
   drawHearthSmoke,
   drawWalker,
@@ -36,6 +41,7 @@ import {
   gullPose,
   gullShadow,
   hearthSmoke,
+  occludersAfter,
   roadGraph,
   totalInhabitants,
   walkerAt,
@@ -43,6 +49,8 @@ import {
   walkerShadow,
   type GullPose,
   type LightRect,
+  type Occluder,
+  type Poly,
   type WalkerPose,
 } from './life';
 import { cap, rainStreaks } from './limits';
@@ -64,7 +72,7 @@ import {
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
-import { drawTreeStamp, treeShadow, type TreeItem } from './trees';
+import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
 import {
@@ -248,6 +256,9 @@ export function waterSides(world: World, b: Building): Required<BodyEnv> {
 /** Reichweite des Schattens über den Bildrand hinaus (Weltpixel): Gebäude knapp ausserhalb werfen ihn noch ins Bild. */
 const SHADOW_MARGIN = 64;
 
+/** Reichweite des Feuerscheins in Gebäudebreiten um die Bildbox (Boden-Ellipse `fx.drawFireGlow`: 1,1). */
+const FIRE_GLOW_REACH = 1.1;
+
 /** Polygon im Kachelraum als Teilpfad des Schattenpfads. */
 function polyPath(ctx: CanvasRenderingContext2D, poly: readonly Pt[]): void {
   poly.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
@@ -267,20 +278,31 @@ function collectBadges(world: World, cam: Camera, range: TileRange): void {
   }
 }
 
-interface WindowLights {
+/** Fenster und Laternen eines Gebäudes samt den Flächen, die sein Licht verdecken (leer: frei, gebündelt zeichnen). */
+interface LightGroup {
   windows: LightRect[];
   lanterns: LightRect[];
+  clip: Poly[];
+}
+
+interface WindowLights {
+  groups: LightGroup[];
   /** Stärke 0…1 der Fenster (`windows` aus `lightAt`). */
   k: number;
 }
 
-/** Fenster leuchtender Gebäude und Laternen in Bildpunkten; beide nur bei `windows > 0`, Laternen unabhängig von `isLit` (R114). */
+/**
+ * Fenster leuchtender Gebäude und Laternen in Bildpunkten, je Gebäude; beide nur bei `windows > 0`, Laternen
+ * unabhängig von `isLit` (R114). `occ` und `rank` (Gebäude-Id → Rang im sortierten Durchgang) liefern die Verdecker.
+ */
 function collectWindowLights(
   cam: Camera,
   buildings: readonly Building[],
   windows: number,
+  occ: readonly (Occluder | null)[],
+  rank: ReadonlyMap<number, number>,
 ): WindowLights {
-  const out: WindowLights = { windows: [], lanterns: [], k: windows };
+  const out: WindowLights = { groups: [], k: windows };
   if (windows <= 0) return out; // Laternen folgen `windows` (R114): am Tag und bei dayNight false aus
   for (const b of buildings) {
     const def = BUILDING_DEFS[b.defId];
@@ -288,12 +310,48 @@ function collectWindowLights(
     const anchors = anchorsFor(def, b);
     if (!lit && !anchors.some((a) => a.always)) continue;
     const box = spriteBounds(def, b);
+    const g: LightGroup = { windows: [], lanterns: [], clip: [] };
     anchorRects(cam, box, anchors).forEach((r, i) => {
-      if (anchors[i]!.always) out.lanterns.push(r);
-      else if (lit) out.windows.push(r);
+      if (anchors[i]!.always) g.lanterns.push(r);
+      else if (lit) g.windows.push(r);
     });
+    const all = [...g.windows, ...g.lanterns];
+    if (all.length === 0) continue;
+    const at = rank.get(b.id);
+    if (at !== undefined) g.clip = occludersAfter(occ, at, boxAround(all, GLOW_RADIUS * cam.zoom));
+    out.groups.push(g);
   }
   return out;
+}
+
+/** Verdecker je Eintrag von `visible`: Gebäude und Bäume; Figuren und Schiff verdecken nicht. */
+function occludersOf(
+  world: World,
+  cam: Camera,
+  visible: readonly SortedItem[],
+  shadowOnly: ReadonlySet<number>,
+): (Occluder | null)[] {
+  const toScreen = (r: { x: number; y: number; w: number; h: number }): LightRect => {
+    const a = worldToScreen(cam, { x: r.x, y: r.y });
+    return { x: a.x, y: a.y, w: r.w * cam.zoom, h: r.h * cam.zoom };
+  };
+  const once = <T>(fn: () => T): (() => T) => {
+    let v: T | undefined;
+    return () => (v ??= fn());
+  };
+  return visible.map((it) => {
+    if (it.kind === 'building') {
+      const b = world.buildings[it.id];
+      if (!b || shadowOnly.has(b.id)) return null;
+      const def = BUILDING_DEFS[b.defId];
+      return { box: toScreen(spriteBounds(def, b)), polys: once(() => buildingPolys(cam, def, b)) };
+    }
+    if (it.kind === 'tree') {
+      const t = it as TreeItem;
+      return { box: toScreen(treeBounds(t)), polys: once(() => crownPolys(cam, t, world.seed)) };
+    }
+    return null;
+  });
 }
 
 /**
@@ -319,7 +377,8 @@ export function render(
   const fires = new Map<number, { id: number; flames: number; smoke: number }>();
   for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
 
-  let windowLights: WindowLights = { windows: [], lanterns: [], k: 0 };
+  let windowLights: WindowLights = { groups: [], k: 0 };
+  let fireClips: Poly[][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
 
   // 1 Hintergrund
   ctx.fillStyle = PALETTE.waterDeep;
@@ -329,7 +388,7 @@ export function render(
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
 
   // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
-  const lit: { f: { flames: number; smoke: number }; rect: Rect }[] = [];
+  const lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[] = [];
   if (!empty)
     for (const f of fires.values()) {
       const rect = screenRect(cam, world.buildings[f.id]!);
@@ -427,6 +486,16 @@ export function render(
       visible.push(it);
     }
 
+    // Verdecker von Licht und Feuer (BUG-LICHT): Objekte, die im sortierten Durchgang nach der Quelle kommen
+    const rank = new Map<number, number>();
+    visible.forEach((it, i) => it.kind === 'building' && rank.set(it.id, i));
+    const occ = occludersOf(world, cam, visible, shadowOnly);
+    fireClips = lit.map(({ f, rect }) => {
+      const at = rank.get(f.id);
+      if (at === undefined) return [];
+      return occludersAfter(occ, at, boxAround([rect], rect.w * FIRE_GLOW_REACH));
+    });
+
     // 5 Schatten: alle Polygone in einem Pfad, eine Füllung (überlappende Schatten dunkeln nicht doppelt)
     if (visible.length > 0 || gulls.length > 0) {
       withGround(ctx, cam, () => {
@@ -504,15 +573,27 @@ export function render(
     }
     for (const g of gulls) drawGull(ctx, cam, g);
     // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
-    lit.forEach(({ f, rect }, i) =>
+    lit.forEach(({ f, rect }, i) => {
+      const clip = fireClips[i]!;
+      if (clip.length > 0) {
+        ctx.save();
+        clipOutOccluders(ctx, view, clip);
+      }
       drawFire(ctx, rect, fx.timeMs, {
         flames: f.flames,
         smoke: f.smoke,
         reduce,
         maxPuffs: own[i]!,
-      }),
+      });
+      if (clip.length > 0) ctx.restore();
+    });
+    windowLights = collectWindowLights(
+      cam,
+      buildings,
+      fx.dayNight === true ? light.windows : 0,
+      occ,
+      rank,
     );
-    windowLights = collectWindowLights(cam, buildings, fx.dayNight === true ? light.windows : 0);
   }
 
   // 8 Sturm-Randschatten
@@ -531,12 +612,41 @@ export function render(
 
   // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
   const glowing = lit.some(({ f }) => f.flames > 0);
-  if (glowing || windowLights.windows.length > 0 || windowLights.lanterns.length > 0) {
+  const lights = windowLights.groups;
+  if (glowing || lights.length > 0) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    drawWindowLight(ctx, cam.zoom, windowLights.windows, windowLights.k);
-    drawWindowLight(ctx, cam.zoom, windowLights.lanterns, windowLights.k);
-    for (const { f, rect } of lit) drawFireGlow(ctx, rect, fx.timeMs, f.flames);
+    // frei stehende Gebäude gebündelt, verdeckte einzeln unter ihren Clips (BUG-LICHT)
+    const free = lights.filter((g) => g.clip.length === 0);
+    drawWindowLight(
+      ctx,
+      cam.zoom,
+      free.flatMap((g) => g.windows),
+      windowLights.k,
+    );
+    drawWindowLight(
+      ctx,
+      cam.zoom,
+      free.flatMap((g) => g.lanterns),
+      windowLights.k,
+    );
+    for (const g of lights) {
+      if (g.clip.length === 0) continue;
+      ctx.save();
+      clipOutOccluders(ctx, view, g.clip);
+      drawWindowLight(ctx, cam.zoom, g.windows, windowLights.k);
+      drawWindowLight(ctx, cam.zoom, g.lanterns, windowLights.k);
+      ctx.restore();
+    }
+    lit.forEach(({ f, rect }, i) => {
+      const clip = fireClips[i]!;
+      if (clip.length > 0) {
+        ctx.save();
+        clipOutOccluders(ctx, view, clip);
+      }
+      drawFireGlow(ctx, rect, fx.timeMs, f.flames);
+      if (clip.length > 0) ctx.restore();
+    });
     ctx.restore();
   }
 

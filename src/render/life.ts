@@ -6,11 +6,12 @@ import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import type { Phase } from './daynight';
-import { ISO_H, ISO_W, project, type Pt } from './iso';
+import { ISO_H, ISO_W, TREE_VARIANTS, project, type Pt } from './iso';
 import { cap } from './limits';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
-import { lightAnchors, type LightAnchor } from './sprites';
+import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, type Field } from './terrainField';
+import { crownsFor, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
 const rgbaCss = (css: string, alpha: number): string => `rgba(${rgbOfCss(css).join(',')},${alpha})`;
@@ -464,5 +465,105 @@ export function drawWindowLight(
       ctx.arc(cx, cy, radius * ring, 0, Math.PI * 2);
     }
     ctx.fill();
+  }
+}
+
+// --- Verdeckung von Licht und Feuer (BUG-LICHT) ------------------------------------------------------------
+
+/** Polygon im Bildraum (CSS-Pixel). */
+export type Poly = Pt[];
+
+/** Ein Objekt, das Licht hinter sich verdeckt: Bildbox und (erst bei Bedarf berechnete) Bildflächen. */
+export interface Occluder {
+  box: LightRect;
+  polys: () => Poly[];
+}
+
+const CROWN_RY = 0.85; // wie `trees.ts`: Kronenhöhe im Verhältnis zur Breite
+const CROWN_SEGMENTS = 12;
+
+/** Gezeichnete Körperflächen eines Gebäudes im Bildraum (die Flächen, die `drawBody` füllt). */
+export function buildingPolys(cam: Camera, def: BuildingDef, b: Building): Poly[] {
+  return bodyPolygons(def, b).map((p) => p.map((q) => worldToScreen(cam, q)));
+}
+
+/** Kronenkreise eines Baumstempels im Bildraum (Vieleck je Krone), an der Stempelposition wie `drawTreeStamp`. */
+export function crownPolys(cam: Camera, item: TreeItem, seed: number): Poly[] {
+  const z = cam.zoom;
+  const o = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
+  return crownsFor(seed, item.variant % TREE_VARIANTS).map((c) => {
+    const mx = o.x + (c.cx - c.cy) * (ISO_W / 2) * z,
+      my = o.y + (((c.cx + c.cy - 1) * ISO_H) / 2 - c.h) * z;
+    const rx = c.r * ISO_W * z,
+      ry = rx * CROWN_RY;
+    return Array.from({ length: CROWN_SEGMENTS }, (_, i) => {
+      const a = (i / CROWN_SEGMENTS) * Math.PI * 2;
+      return { x: mx + Math.cos(a) * rx, y: my + Math.sin(a) * ry };
+    });
+  });
+}
+
+/** Kleinste Box um `rects`, rundum um `pad` erweitert. */
+export function boxAround(rects: readonly LightRect[], pad: number): LightRect {
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
+  for (const r of rects) {
+    x0 = Math.min(x0, r.x);
+    y0 = Math.min(y0, r.y);
+    x1 = Math.max(x1, r.x + r.w);
+    y1 = Math.max(y1, r.y + r.h);
+  }
+  return { x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
+}
+
+const overlaps = (a: LightRect, b: LightRect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/**
+ * Flächen aller Verdecker mit Rang `> from` (sie kommen im sortierten Durchgang nach der Lichtquelle), deren
+ * Bildbox die Box der Quelle schneidet. `null` steht für Objekte, die nicht verdecken (Figuren, Schiff).
+ */
+export function occludersAfter(
+  list: readonly (Occluder | null)[],
+  from: number,
+  box: LightRect,
+): Poly[] {
+  const out: Poly[] = [];
+  for (let i = from + 1; i < list.length; i++) {
+    const o = list[i];
+    if (o && overlaps(o.box, box)) out.push(...o.polys());
+  }
+  return out;
+}
+
+/**
+ * Schneidet alles aus, was in `polys` liegt: je Fläche ein eigener Clip (Bildfläche plus Polygon, `evenodd`).
+ * Die Clips verschachteln sich; ein einziger Pfad würde sich überlappende Verdecker aufheben. Der Aufrufer
+ * steht zwischen `save` und `restore`.
+ */
+export function clipOutOccluders(
+  ctx: CanvasRenderingContext2D,
+  view: { w: number; h: number },
+  polys: readonly Poly[],
+): void {
+  for (const poly of polys) {
+    if (poly.length < 3) continue;
+    let x0 = 0,
+      y0 = 0,
+      x1 = view.w,
+      y1 = view.h;
+    for (const p of poly) {
+      x0 = Math.min(x0, p.x);
+      y0 = Math.min(y0, p.y);
+      x1 = Math.max(x1, p.x);
+      y1 = Math.max(y1, p.y);
+    }
+    ctx.beginPath();
+    ctx.rect(x0 - 1, y0 - 1, x1 - x0 + 2, y1 - y0 + 2);
+    poly.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.clip('evenodd');
   }
 }
