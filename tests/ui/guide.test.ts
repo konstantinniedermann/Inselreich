@@ -290,3 +290,16 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     expect(remedyText(w, weaver)).toBe('Baue Schäferei (G) oder kaufe Wolle am Kontor');
   });
 });
+
+describe('M8 U2 Kartenzeichen (P3)', () => {
+  it('AK-R1-03 MAP_SIGNS: Dienstzeile nennt das Bad-Symbol, Bedeutung mit Badehaus, 11 Zeilen', () => {
+    expect(MAP_SIGNS).toHaveLength(11);
+    const row = MAP_SIGNS.find((s) => s.renderer.includes('bell'))!;
+    expect(row.renderer).toBe('bell, book bzw. bath');
+    expect(row.meaning).toBe('Kapelle, Schule bzw. Badehaus fehlt in Reichweite');
+    expect(row.sign).not.toBe('Abzeichen mit gelber Glocke bzw. blauem Buch');
+    expect(row.sign).toMatch(/Glocke/);
+    expect(row.sign).toMatch(/Buch/);
+    expect(row.color).toBeNull();
+  });
+});
