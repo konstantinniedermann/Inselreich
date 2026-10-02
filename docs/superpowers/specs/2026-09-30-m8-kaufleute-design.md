@@ -1,6 +1,7 @@
 # M8 „Vierte Stufe und Veredelung" — Design-Spec
 
-Datum: 2026-09-30 · Paket M8-SPEC · Status: **Spec, bereit für Gate Spec** · Prozessstufe voll
+Datum: 2026-09-30 · Paket M8-SPEC · Status: **Spec, Gate Spec bestanden (R141), Auflagen Gate Plan eingearbeitet
+(R142, R143)** · Prozessstufe voll
 
 Grundlage: Ruling R78 (desktop-first), R81 (M8 vorziehen, Sim-Strang folgt auf M6), R82 (Sim-Strang M6 direkt auf
 `main`, gemeinsamer serieller UI-Strang), R85 (M6/M7-Abstimmung), R86 (Gate Brainstorming M8 mit Auflage, Entscheide
@@ -333,6 +334,7 @@ stateDiagram-v2
 
 Rechnung je Einwohner (EW) und 100 Ticks wie in der Balancing-Kurz-Spec. Werte mit „≈" sind Schätzungen des
 Cashflow-Modells ab dem Messpunkt Bürger-Endzustand (Tick ≈ 7500, Geld 2290, +429 je 100 Ticks, werte Kopf).
+Im Planungslauf gemessen: Tick 7300, Geld 1490 (16.3, R142); die Schätzungen bleiben stehen, B1 misst.
 
 ### 8.1 Bilanz je EW und 100 Ticks
 
@@ -592,7 +594,9 @@ M8 bringt **keine eigene Grafik und keinen eigenen Klang**. Die Tabelle ist die 
   den Index bei Stufe 3 (Kaufmannshaus hat bis R1 die Höhe des Bürgerhauses). Benannte Ausnahme S1 (17).
 - `tests/render/sprites.test.ts` (M7:AK-R2-03) verlangt für **jede** `BuildingDefId` einen `SILHOUETTES`-Eintrag.
   S1 trägt `bathhouse`, S2 `glassworks` als Kategorie-Rückfall ein (benannte Ausnahme `src/render/sprites.ts`);
-  R1 (K3) ersetzt beide. Offener Punkt 9 ist damit entschieden.
+  R1 (K3) ersetzt beide. Offener Punkt 9 ist damit entschieden. Der Fensteranker-Test führt Dachfenster je Fall in
+  `roofOnly`; der Rückfall `public` zeichnet zwei, darum ergänzt S1 dort `bathhouse: 2` (Ergänzung, keine
+  Lockerung; R142 W1, Abschnitt 20).
 - Prüfung: AK-S1-17 und AK-S2-17.
 - **Hinweis für R1:** Die Obergrenze `anchorCacheSize` ≤ Typen + 2 (`tests/render/renderer.test.ts`) wächst mit
   Stufe 4 auf Typen + 3, falls die Testwelt ein Kaufmannshaus enthält.
@@ -794,9 +798,13 @@ Neue Datei `tests/sim/balance-merchants.test.ts`, Krisen `off`, Seed 3.
 
 - **Phase 1:** Controller aus `tests/sim/controller.ts` unverändert bis zum Sieg (Sieg 6050 wird mitgeprüft).
 - **Phase 2:** Der Controller läuft weiter bis zum Bürger-Endzustand (werte Messpunkt: Tick ≈ 7500, Geld 2290).
+  **Messpunkt gemessen 7300 / 1490 (Plan W4, R142):** Der Planungslauf erreicht den Bürger-Endzustand bei Tick
+  **7300** mit Geld **1490**. Phase 3 startet damit ≈ 200 Ticks früher und mit ≈ 800 Geld weniger. Kein Wert wird
+  vorab angepasst (R74, Hebel-Regel unten); B1 misst, die Ruling-Vorlage nennt beide Messpunkte.
 - **Phase 3** (Merchant-Controller, neue Datei `tests/sim/merchantsController.ts`): Badehaus, dann je Bürgerhaus
   Glashütte, Mehrkette (Fischer, Stoff- und Rumpaare) und Aufstieg. Stein wird **zugekauft** (kein Berg-Layout).
-  Fehlt beim Aufstieg das Glas, kauft er 1 Glas als Auslöser (8.3). Kein Verkauf von Glas.
+  Fehlt beim Aufstieg das Glas, kauft er 1 Glas als Auslöser (8.3). Kein Verkauf von Glas. Er investiert nur, wenn
+  das Geld nach dem Kauf über einer festen Reserve bleibt (R142; Testhelfer-Regel, kein Spielwert, Höhe im Plan).
 - **Layout-Erweiterung nach dem Sieg:** eigene Funktion in `merchantsController.ts`. Sie sucht deterministisch
   (Zeilen, dann Spalten, ab dem Kontor) freie Plätze für Bad, Hütten und Zusatzbetriebe mit `canPlace`.
   `prepareLayout` bleibt unverändert, sonst kippt die Baseline. Hinweis werte §7: 24 von 24 Farmplätzen und 12 von
@@ -804,7 +812,8 @@ Neue Datei `tests/sim/balance-merchants.test.ts`, Krisen `off`, Seed 3.
 - **Grenze:** `wonMerchants` bis Tick **12 000**, am Ende `money > 0`. **Erwartung ≈ 9800–10 000.**
 - **Eskalation:** Liegt `wonMerchantsTick` über **11 500** oder wird der Test rot, wird nicht still nachgestellt;
   es braucht eine neue Kurz-Spec (R74-Eskalationsregel).
-- **Messung** mit `VITE_BALANCE_LOG=1`: `winTick`, Tick des Bürger-Endzustands, `firstMerchantTick`,
+- **Messung** mit `VITE_BALANCE_LOG=1` und `--silent=false` (Vitest unterdrückt sonst die Ausgabe bestandener
+  Tests; R142 W5): `winTick`, Tick des Bürger-Endzustands, `firstMerchantTick`,
   `wonMerchantsTick`, `minMoney` nach dem Sieg, Endgeld, Gebäudezahlen.
 - **Hebel-Regel (Auflage R86):** `firstMerchantTick` > **9600** → Ruling-Vorschlag „Hebel `unlockCitizens` 40 als
   Playtest-Frage" an L0 (4.4). Kein Nachstellen im Paket.
@@ -980,7 +989,8 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
   ist `null`.
 - **AK-S1-16** (Review) arc42 §8 Persistenz nennt Save v4, Migration v3 → v4 und die neuen Prüfungen.
 - **AK-S1-17** (Vitest, Render-Mindestpflicht, neu) Für ein Haus der Stufe 4 ist `BODY_HEIGHTS.house` endlich und
-  gleich dem Wert der Stufe 3 (gilt bis R1; R1 ändert das bewusst, AK-R1-01, Abschnitt 20); `SILHOUETTES.bathhouse` ist definiert; `tests/render/sprites.test.ts` (M7:AK-R2-03) ist ohne Lockerung grün.
+  gleich dem Wert der Stufe 3 (gilt bis R1; R1 ändert das bewusst, AK-R1-01, Abschnitt 20); `SILHOUETTES.bathhouse` ist definiert; `tests/render/sprites.test.ts` (M7:AK-R2-03) ist ohne Lockerung grün;
+  einzige Änderung dort ist der Erwartungseintrag `roofOnly.bathhouse: 2` für den Rückfall `public` (R142 W1, 20).
 - **AK-S1-18** (Vitest, UI-Folgen von S1, neu; Erweiterung M7:AK-UX-03, Änderung M7:AK-UX-07) `friendlyReason` für „Erst
   nach dem Ziel" → „Erst nach dem Ziel (50 Bürger)"; für „Erst ab 40 Bürgern (jetzt 39)" → unverändert; die
   Vollständigkeitsprüfung von M7:AK-UX-03 provoziert die Gründe der Stufen 1–4 und ist grün. `tierPath()` → „Pioniere →
@@ -1043,7 +1053,8 @@ Plan. Das Szenario `m8-galerie` entfällt; der R1-Blindtest nutzt `galerie` plus
 
 - **AK-S3-01** (Vitest, zweites Ziel) `won true`, 3 Kaufmannshäuser 20 / 20 / 19, alles erfüllt: nach einem Schritt
   ohne Wachstumstakt `wonMerchants false` (**59**); nach dem nächsten Wachstumstakt `true` (**60**). Danach Glas 0
-  bis zum Schrumpfen auf 55: `wonMerchants` bleibt `true`.
+  bis zum Schrumpfen auf **54** (zwei Wachstumstakte, je −1 EW in drei Häusern: 60 → 57 → 54; R142 W3):
+  `wonMerchants` bleibt `true`.
 - **AK-S3-02** (Vitest, Reihenfolge im Siegschritt) Mit Hebel 40, `won false`, 3 Kaufmannshäuser mit 60 Kaufleuten:
   nach einem Schritt sind `won` und `wonMerchants` beide `true`. Ohne Hebel ist diese Welt nicht erreichbar
   (Ladeprüfung AK-S1-14).
@@ -1072,7 +1083,8 @@ current 15, target 60 }`; nach dem zweiten Ziel: `{ phase 'done', current 60, ta
 
 - **AK-B1-01** (Vitest) `balance-merchants.test.ts`: Phase 1 Sieg **6050**; `wonMerchants` bei Tick ≤ **12 000**;
   `money > 0` am Ende; `won true`.
-- **AK-B1-02** (Messung) `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-merchants.test.ts` gibt `winTick`,
+- **AK-B1-02** (Messung) `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-merchants.test.ts --silent=false`
+  (R142 W5) gibt `winTick`,
   Tick des Bürger-Endzustands, `firstMerchantTick`, `wonMerchantsTick`, `minMoney` nach dem Sieg, Endgeld und
   Gebäudezahlen aus. `wonMerchantsTick` > 11 500 → Stopp und Kurz-Spec (16.3).
 - **AK-B1-03** (Messung und Review, Auflage R86) `firstMerchantTick` ist in der Ruling-Vorlage festgehalten. Liegt er
@@ -1277,19 +1289,24 @@ Assets in M8) und ADR-010 (kein neuer Zufall; der Pool wächst nur für Stufe 4)
   Endzustand" (R86 Entscheid 6, Eintrag macht L0).
 - **Bestehende Tests, bewusst geändert** (Paket in Klammern):
   - Sim: `tests/sim/defs.test.ts` (`GOOD_IDS` 8 → 9, `BUILDING_IDS` 14 → 16; S1, S2; Z. 69 `TIERS[3].upgradeCost`
-    `null` → 600 / 15 / 8 / 10; S1); `tests/sim/save.test.ts` (die drei Prüfungen „`version 4` → Unbekannte Version"
-    auf `version 5`, M6:AK-S1-05; dazu Z. 37, 42, 58, 278, 297, 318 `version 3` bzw. `SAVE_VERSION 3` → 4; S1);
+    `null` → 600 / 15 / 8 / 10; S1; Z. 17, 31, 42 Typ `consumes` als Liste; S2, R142 W2); `tests/sim/save.test.ts` (die drei Prüfungen „`version 4` → Unbekannte Version"
+    auf `version 5`, M6:AK-S1-05; dazu Z. 37, 42, 58, 278, 297, 318 `version 3` bzw. `SAVE_VERSION 3` → 4; Z. 65, 304, 308 und nach Z. 147: v1/v2-Migration
+    mit `stock.glass 0`, `sellPct.glass 100` und Auftragstabelle mit Glas; S1, R142 W2);
     `tests/sim/population.test.ts` („citizen house has no further upgrade", Z. 260–267: Bürgerhaus → „Höchste Stufe
     erreicht" wird umgeschrieben auf ein Haus der Stufe 4 bzw. den Sperrgrund „Erst nach dem Ziel"; S1);
     `tests/sim/taxes.test.ts` (Z. 113 und 117 `populationByTier` `{ 1, 2, 3 }` → mit Schlüssel 4; S1);
     `tests/sim/fire.test.ts` (sortierte Liste der brennbaren Ids, zwölf, M6:AK-S2-10; S1, S2);
     `tests/sim/balance-crises.test.ts` (`normalized()`, 16.1; S1); `tests/sim/scenarios.ts` (`galerie` + Badehaus
     bzw. Glashütte; S1, S2); `tests/sim/scenario-saves.test.ts` (Namensliste M5:AK-S5-01 um `m8-*`, `won`-Prüfung um
-    die M8-Szenarien mit `won true`; B2, AK-B2-02).
+    die M8-Szenarien mit `won true`; B2, AK-B2-02); `tests/sim/helpers.ts` (Z. 48 `placeService` nimmt
+    `'bathhouse'`; S1, R142 W2).
   - UI: `tests/ui/hints.test.ts` (M7:AK-UX-03, zwei Zeilen, Stufen bis 4; S1); `tests/ui/hud.test.ts` (M7:AK-UX-07,
     `tierPath()`; S1); `tests/ui/hotkeys.test.ts` (`TOOL_HOTKEYS` 15 → 16 mit J; S1; 16 → 17 mit O; S2);
     `tests/ui/guide.test.ts` (Sperrfilter, AK-S1-19; S1; M7:AK-UX-08 R0 und Steinbruch-Abhilfe; U2).
-  - Render: `tests/render/sprites.test.ts` bleibt unverändert und wird durch die Rückfall-Einträge erfüllt;
+  - Render: `tests/render/sprites.test.ts` wird durch die Rückfall-Einträge erfüllt; einzige Änderung ist der
+    Erwartungseintrag `roofOnly.bathhouse: 2` im Fensteranker-Test (M7:AK-R2-03), weil der Rückfall `public` zwei
+    Dachfenster zeichnet (Ergänzung, keine Lockerung; S1, R142 W1); R1 ändert diesen Eintrag mit der eigenen
+    Silhouette bewusst, ebenso einen Eintrag für `glassworks`, falls deren Silhouette Dachfenster hat (R1);
     `tests/render/renderer.test.ts` (`anchorCacheSize` ≤ Typen + 3, nur falls die Testwelt ein Kaufmannshaus enthält;
     R1); AK-S1-17 (Höhe Stufe 4 gleich Stufe 3) ändert R1 bewusst auf eine eigene Höhe (AK-R1-01; R1).
   - Browser-Kriterien M7:AK-UX-16 („Produktion" 9 Einträge; ab S2) und M7:AK-UX-18 (Handels-Panel scrollt intern
@@ -1363,3 +1380,4 @@ Geprüft gegen `main` @ 03b34e1 (M6, M7 Isometrie, M7-UX). Werte und Sim-Regeln 
 | 17 Abhängigkeiten M6/M7         | alle erfüllt; Fingerabdruck in `balance-crises.test.ts`        | gestrichen; Ausnahmen neu benannt; UI-Strang M8-U1 → M8-U2                      |
 
 | Gate Spec R140: B1–B5 | Steuer-AK nicht messbar, Kreis-AK falsch, Testliste lückenhaft, Szenarien, Verweise | `stats.taxes`, Ellipse, 20 ergänzt, 18.1 präzisiert, Format `M7:AK-…` |
+| Gate Plan R142/R143: W1–W5 | `sprites.test.ts` nicht unverändert, Testliste lückenhaft, 55 unerreichbar, Messpunkt, Messbefehl stumm | 20 und AK-S1-17 (`roofOnly`), 20 ergänzt, AK-S3-01 auf 54, 16.3 Messpunkt 7300 / 1490 und Reserve, `--silent=false` |
