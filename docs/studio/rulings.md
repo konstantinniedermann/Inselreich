@@ -652,3 +652,12 @@ Zusatztest reicht, sonst beobachtungen.md. Leistung: P95 `leistung-50` Nacht ≤
 bei Irrtum: ein Render-Commit zurück — Archiv-Bericht lead-art Phase 1
 
 Entscheider: L0 · Anlass: Gate BUG-LICHT · ADR: —
+
+## R146 · 2026-10-02 · M8
+
+Ruling: Sichtung Auflagen M8 angenommen (Spec dbda0f8, Plan f5762b1). Lesart lead-tech bestätigt:
+R143 streicht nichts, K1–K3 und Zwei-Input bleiben. Spec und Plan gehen jetzt nach main
+(lead-production, Integrator). Start der M8-Umsetzung erst nach dem Gate Brainstorming FB-TRIAGE,
+damit dessen M8-Empfehlung einfliessen kann. — Kosten bei Irrtum: kurze Startverzögerung M8
+
+Entscheider: L0 · Anlass: Sichtung Auflagen M8 (R143) · ADR: —
