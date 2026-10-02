@@ -773,3 +773,12 @@ erst nach dem Reset des 5-h-Fensters (19:00; jetzt 58 %, keine neuen Wellen ab ~
 Kosten bei Irrtum: Revert des Sim-Merges — Archiv-Bericht lead-qa M8-SIM-FR
 
 Entscheider: L0 · Anlass: Gate Merge Sim M8 · ADR: —
+
+## R159 · 2026-10-02 · M10
+
+Ruling: M10-Spec (7f805d9, 96 AK) geht ins Spec-Gate (lead-tech, lead-qa) nach dem 5-h-Reset (Ampel gelb).
+Widersprüche W1–W5 aus Spec §22 wie empfohlen angenommen (u. a. `terrainRev` in `layoutKey`, ändert
+M6:AK-S3-07). `renderer.ts` seriell: H-R2 → H-R3/H-R4 → M10-U2; der spätere Strang merged vorher main.
+— Kosten bei Irrtum: Spec-Nachführung — Archiv-Bericht lead-design H-D1
+
+Entscheider: L0 · Anlass: Bericht Spec M10, R137-Meldungen · ADR: —
