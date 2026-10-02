@@ -10,6 +10,7 @@ import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
+import { taxEffect } from './guide';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
@@ -44,11 +45,9 @@ export function balanceLabel(net: number): string {
 
 const TAX_IDS = Object.keys(TAX_LEVELS) as TaxLevel[];
 
-/** Tooltip einer Steuerstufe: Steuer, Wartezeit bis zum Aufstieg und Belegung (alles aus `TAX_LEVELS`). */
+/** Tooltip einer Steuerstufe: Wirkung in Klartext (`taxEffect`, alles aus `TAX_LEVELS`). */
 export function taxTooltip(level: TaxLevel): string {
-  const t = TAX_LEVELS[level];
-  const wait = t.upgradeWait === null ? 'kein Aufstieg' : `Aufstieg nach ${t.upgradeWait} Ticks`;
-  return `Steuer ${t.pct} % · ${wait} · Belegung ${Math.round(t.occupancy * 100)} %`;
+  return taxEffect(level);
 }
 
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
