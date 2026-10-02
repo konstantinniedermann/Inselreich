@@ -39,26 +39,15 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: Handbuch 1.9
 - Bewertung: Zwischenstand M7-UX: noch kein Folgepaket (PAGES-LIMIT war Nutzerauftrag)
 
-## E-009 · laufend · Rulings verweisen, Handbuch-Kern gestrafft
-
-- Hypothese: Wenn Rulings nur entscheiden und verweisen (≤ 60 Wörter, keine Abnahme-Rulings), R1–R99 im Archiv liegen und `STUDIO.md` auf einen Kern ≤ 400 Zeilen gestrafft ist, dann sinken Ruling-Text, Doppelwahrheiten und Lese-Kontext je Delegation.
-- Messgrösse: im nächsten Meilenstein Mittel ≤ 80 Wörter je Ruling und 0 reine Abnahme-Rulings; `STUDIO.md` ≤ 400 Zeilen, `experimente.md` ≤ 900 Wörter. Gegenprobe: 0 Retro-Befunde „Information fehlte im Ruling“. Nur berichtet: Cache-Write-Tokens je Delegation gegen M7 (≈ 305 000).
-- Zeitraum: nächster Meilenstein (M8).
-- Rückfall: die genannten Dateien aus `git show 6bb5b14:docs/studio/<datei>`; `verbesserung.md` und `rulings-archiv.md` entfernen.
-- Dateien: unter `docs/studio/`: `STUDIO.md`, `verbesserung.md`, `rulings.md`, `rulings-archiv.md`, `templates/ruling.md`, `roster.md`, `experimente.md`, `CHANGELOG.md`
-- Ruling: R129 (3), (4)
-- Start: Handbuch 1.9
-- Bewertung: Zwischenstand M7-UX: Schwellen erfüllt (R130–R136 Mittel 50 Wörter, 0 Abnahme-Rulings, `STUDIO.md` 398 Zeilen; Cache-Write je Delegation ≈ 155 000)
-
-## E-010 · vorgeschlagen · Controller-Wechsel nach der Hälfte der Tasks
+## E-010 · laufend · Controller-Wechsel nach der Hälfte der Tasks
 
 - Hypothese: Wenn der Controller bei Plänen mit mehr als 6 Tasks nach dem mittleren QA-Block per Ledger an eine frische `lead-tech`-Instanz übergibt, sinkt seine Cache-Last ohne Informationsverlust (Prozess-Retro M7-UX B0, V4).
 - Messgrösse: Cache-Read beider Controller je abgeschlossenem Task (`usage` je agent_id) ≤ 3,5 Mio. (M7-UX: 50,2 Mio. auf 10 Tasks). Abbruch: ein Ruling der zweiten Hälfte widerspricht der ersten (Final-Review) oder der Nachfolger fragt mehr als einmal nach.
 - Zeitraum: nächster Meilenstein mit mehr als 6 Tasks.
-- Rückfall: ein Controller je Meilenstein (Handbuch 1.10).
+- Rückfall: ein Controller je Meilenstein (Handbuch 1.10, Satz in Schritt 4 streichen).
 - Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/CHANGELOG.md`
-- Ruling: R136 (angenommen, Start bei freiem Platz)
-- Start: –
+- Ruling: R136, Start R137
+- Start: Handbuch 1.11 (Messung ab Plan M8)
 - Bewertung: –
 
 ## E-006 · vorgeschlagen · Exklusive Arbeitsbäume
@@ -101,3 +90,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 
 - Ruling: R126, ersetzt durch R129 (1) (→ E-007); nie als eigene Stufe umgesetzt
 - Bewertung: Die Schritte gelten nur bei per Ruling erlaubter Parallelität (Handbuch, Session-Start)
+
+## E-009 · behalten · Rulings verweisen, Handbuch-Kern gestrafft
+
+- Ruling: R129 (3), (4), behalten R137
+- Bewertung: M7-UX: Rulings im Mittel 50 Wörter, 0 Abnahme-Rulings, `STUDIO.md` ≤ 400 Zeilen ([Retro M7-UX](retros/2026-10-02-meilenstein-m7ux.md))

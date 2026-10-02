@@ -22,6 +22,15 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-02 · Handbuch 1.11
+
+- Anlass: Meilenstein-Retro M7-UX (Bewertung E-009, freier Platz)
+- Datenbasis: `docs/studio/retros/2026-10-02-meilenstein-m7ux.md`
+- Ruling: R137
+- Änderungen: Umsetzungszyklus Schritt 4: Controller-Wechsel nach dem mittleren QA-Block bei mehr
+  als 6 Tasks (E-010 `laufend`, Messung im Plan M8). `experimente.md`: E-009 `behalten`
+  (abgeschlossen), E-006 bleibt `vorgeschlagen`.
+
 ## 2026-10-02 · Handbuch 1.10
 
 - Anlass: Prozess-Retro M7-UX (Aussensicht), Vorschläge V1–V5

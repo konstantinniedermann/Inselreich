@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.10 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.11 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -220,6 +220,8 @@ Ablauf eines Meilensteins (Stufe voll):
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
+   Bei mehr als 6 Tasks übergibt der Controller nach dem mittleren QA-Block allein per Ledger und
+   einem Satz Status an eine frische `lead-tech`-Instanz (E-010, ab M8).
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
