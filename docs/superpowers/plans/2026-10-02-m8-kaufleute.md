@@ -16,10 +16,14 @@ Darstellung bekommt in S1/S2 nur Rückfall-Einträge; eigene Grafik ist das Kann
 **Tech Stack:** TypeScript, Vite, Vitest (`node`), Canvas 2D. Keine neue Abhängigkeit (ADR-001), auch keine
 Dev-Abhängigkeit.
 
-**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `283bd9f` (Gate Spec bestanden, R141; 79 AK;
-im Plan „Spec §n", „AK-…"). Rulings: R86 (Entscheide 1–6), R115/R139 (`goodsBalance` nominal), R138, R140
-(S1–S3 auf einer Branch, ein Gate Merge nach S3, AK-S3-10), R141 (Gate Spec, Plan-Hinweise beider Leads, E-010,
-R1 als eigenes Paket). Gate-Urteile: lead-tech (BEDENKEN 1–3, Hinweise), lead-qa (Erstprüfung B1–B5 und Hinweise
+**Status:** Gate Plan bestanden mit Auflagen (R143); Auflagen aus R142, R143 und der Vermerk aus R144 sind
+eingearbeitet (Abschnitt „Auflagen Gate Plan").
+
+**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `dbda0f8` (Gate Spec bestanden, R141;
+Auflagen Gate Plan R142/R143 eingearbeitet; 79 AK; im Plan „Spec §n", „AK-…"). Rulings: R86 (Entscheide 1–6),
+R115/R139 (`goodsBalance` nominal), R138, R140 (S1–S3 auf einer Branch, ein Gate Merge nach S3, AK-S3-10), R141
+(Gate Spec, Plan-Hinweise beider Leads, E-010, R1 als eigenes Paket), R142 (W1–W7, Reserve-Regel B1), R143 (Gate
+Plan, Auflagen, Budget), R144 (BUG-LICHT parallel in `src/render/`). Gate-Urteile: lead-tech (BEDENKEN 1–3, Hinweise), lead-qa (Erstprüfung B1–B5 und Hinweise
 1–13, Zweitprüfung OK mit 2 Hinweisen). **Test-Namen beginnen mit der AK-Nummer** (`it('AK-S1-04 …')`),
 Review-Focus-Tests mit `RF-<n>`, damit Reviews die Abdeckung per `grep` prüfen. Weil M5–M7 dieselben Kennungen
 nutzen (AK-U1-01, AK-R1-03 …), stehen alle neuen M8-Tests in einem `describe('M8 …')`; der Abdeckungs-Grep der
@@ -48,10 +52,14 @@ Reviews sucht `describe('M8` plus AK-Nummer.
   R125, mit `<BASIS>`). Geänderte Zeilen in bestehenden Tests betreffen nur Erwartungswerte; die bewusst geänderten
   Tests stehen in Spec §20 und in der Tabelle „Bewusst geänderte Tests" unten.
 - Commits mit Präfix `feat:`, `fix:`, `test:`, `refactor:`, `docs:`; je Task mindestens ein Commit.
-- **Push-Pflicht (R107, R125):** Nach jedem abgenommenen Commit pusht der Controller sofort
-  (`git -C .worktrees/<strang> push -u origin <branch>`). Kein abgenommener Stand liegt nur lokal.
-- Im Hauptcheckout nur `git pull --ff-only`; in Worktrees wird nicht rebased. Integration zwischen Strängen nur
-  per `git merge --no-edit <geprüfter SHA>`.
+- **Push-Pflicht (R107, R125, R143 B5):** Nach jedem abgenommenen Commit pusht der Controller sofort
+  (`git -C .worktrees/<strang> push -u origin <branch>`). Ebenso jeder **Integrations-Merge**, sobald die
+  Wellen-Prüfung grün ist: W3 (`feat/m8-sim` → `feat/m8-sim-ui`), W4 (`feat/m8-sim-ui` → `feat/m8-sim`), W6
+  (`feat/m8-scen` → `feat/m8-ui`), R1 ← Task 7 (pusht `lead-art`) und jeder Merge von `main` vor einem Final-Review.
+  Kein abgenommener oder integrierter Stand liegt nur lokal. Für rote Zwischenstände (nach Task 1 bzw. Task 3) wird
+  **kein Pull Request** geöffnet (CI läuft auf PRs; lead-qa Gate Plan (c)).
+- Im Hauptcheckout nur `git pull --ff-only`; in Worktrees wird nicht rebased (einzige Ausnahme: R144-Vermerk unter
+  „Wellen", Branch ohne eigene Commits). Integration zwischen Strängen nur per `git merge --no-edit <geprüfter SHA>`.
 
 ## Review Focus
 
@@ -98,7 +106,11 @@ genannten Task):
   die Persona hat keine Datei). Die Ruling-Vorlage aus den Messwerten schreibt `lead-tech`.
 - **D1** schreibt `lead-tech` selbst (Doku, kein Produktivcode) nach Task 8, vor dem Final-Review M8.
 
-### Plan-Abweichungen von Spec §17 (Gate Plan bestätigt sie; R136: gemeldet, nicht still entschieden)
+### Plan-Abweichungen von Spec §17 (R136 gemeldet; Gate Plan bestanden, R143: P1 ausdrücklich bestätigt)
+
+P1 ist eine **bestätigte Abweichung** (R143): Der Wortlaut von AK-S2-17 in der Spec bleibt unverändert („einzige
+geänderte UI-Testdatei `hotkeys.test.ts`"); er gilt für M8 nur sinngemäss wie in Zeile P1 beschrieben. P2–P6 hat
+lead-qa als haltbar ohne Testlücke beurteilt; sie gelten mit dem bestandenen Gate Plan.
 
 | Nr. | Spec sagt                                                                                                                                             | Plan macht                                                                                                                                                                                                                                                                                                                                                                                                                     | Grund                                                                                                                                               |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -109,24 +121,59 @@ genannten Task):
 | P5  | S1 und S2 je ein Paket, jedes hält `make check` grün                                                                                                  | S1 = Task 1 + Task 2, S2 = Task 3 + Task 4 (Sim und Folgen getrennt, Tasks 2 ∥ 3 und 4 ∥ 5 parallel). Grün ist jede **Welle** (siehe „Wellen"); zwischen Task 1 und 2 bzw. 3 und 4 sind nur die dort benannten Prüfungen rot.                                                                                                                                                                                                  | Parallelität (R67) bei getrennter Datei-Ownership; Sim- und UI-Folgen haben verschiedene Personas.                                                  |
 | P6  | D1 als eigener Doku-Strang                                                                                                                            | `lead-tech` schreibt D1 selbst, kein Start                                                                                                                                                                                                                                                                                                                                                                                     | Persona lead-tech führt arc42 und README mit.                                                                                                       |
 
-### Gemeldete Widersprüche und Messwerte aus dem Planungslauf (R136, Gate Plan entscheidet)
+### Gemeldete Widersprüche und Messwerte aus dem Planungslauf (R136; entschieden durch R142, R143)
+
+Entscheide: **W1, W3–W6 bestätigt** (R143). Spec @ `dbda0f8` ist nachgezogen: W1 in §13 und AK-S1-17
+(`roofOnly.bathhouse: 2`), W2 in §20 (Liste ergänzt), W3 in AK-S3-01 (**54**), W4 in §8 und §16.3 (Messpunkt
+7300 / 1490, kein Wert angepasst, Reserve-Regel als Testhelfer-Regel), W5 in AK-B1-02 und §16.3 (`--silent=false`).
+W6 braucht keine Spec-Änderung (Tick 5400 erfüllt „≥ 3000"). W7 ist Prozess (Task 3 „Rot nach diesem Task
+erlaubt"; lead-qa (c): akzeptabel). Die Spalte „Plan vorläufig" unten gilt damit endgültig.
 
 Die Task-Texte 1–5 sind in einem Probe-Worktree auf `main` @ 05240f4 durchgespielt (nach Tasks 1–5 `make check`
 grün, 882 Tests, 1 übersprungen; jeder neue Test auf dem Vorgänger-Stand rot). Dabei fiel auf:
 
-| Nr. | Stelle                               | Befund                                                                                                                                                          | Plan vorläufig (einfachere Variante)                                           |
-| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| W1  | Spec §20, AK-S1-17                   | „`sprites.test.ts` bleibt unverändert" hält nicht: Der Fensteranker-Test braucht `roofOnly.bathhouse: 2`, weil der Rückfall `public` zwei Dachfenster zeichnet. | Erwartungswert ergänzt (keine Lockerung), Tabelle „Bewusst geänderte Tests"    |
-| W2  | Spec §20                             | Liste unvollständig: zusätzlich `save.test.ts` Z. 65, 147, 304, 308; `defs.test.ts` Z. 17, 31, 42; `helpers.ts` Z. 48.                                          | in „Bewusst geänderte Tests" aufgenommen                                       |
-| W3  | AK-S3-01 „bis zum Schrumpfen auf 55" | Drei Häuser schrumpfen im selben Takt (60 → 57 → 54); 55 wird nie erreicht.                                                                                     | Test schrumpft bis ≤ 55 (also 54) und prüft `wonMerchants` `true`              |
-| W4  | Spec §16.3 Messpunkt                 | Bürger-Endzustand gemessen bei Tick **7300**, Geld **1490** (Spec/Werte: ≈ 7500, 2290). Weniger Startgeld für Phase 3.                                          | Task 6 misst und meldet; Ruling-Vorlage nennt beide Werte; nichts nachgestellt |
-| W5  | AK-B1-02 Messbefehl                  | Vitest unterdrückt `console.log` bestandener Tests; der Befehl aus der Spec gibt nichts aus.                                                                    | Task 6 nutzt `VITE_BALANCE_LOG=1 npx vitest run … --silent=false`              |
-| W6  | v3-Fixture (Spec §10.2)              | Alle Bedingungen (Krise läuft, Auftrag, Stufe 3, `sellPct < 100`) gelten erstmals bei Tick **5400**; Tick ≥ 3000 ist damit erfüllt.                             | Fixture bei Tick 5400                                                          |
-| W7  | Task 3 Zwischenstand                 | Nach Task 3 sind neben 9 `tsc`-Fehlern auch 6 UI-/Render-Vitest-Fälle rot (dieselben `consumes`-Stellen zur Laufzeit).                                          | in „Rot nach diesem Task erlaubt" (Task 3) benannt, Task 4 macht grün          |
+| Nr. | Stelle                             | Befund                                                                                                                                                          | Plan vorläufig (einfachere Variante)                                           |
+| --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| W1  | Spec §20, AK-S1-17                 | „`sprites.test.ts` bleibt unverändert" hält nicht: Der Fensteranker-Test braucht `roofOnly.bathhouse: 2`, weil der Rückfall `public` zwei Dachfenster zeichnet. | Erwartungswert ergänzt (keine Lockerung), Tabelle „Bewusst geänderte Tests"    |
+| W2  | Spec §20                           | Liste unvollständig: zusätzlich `save.test.ts` Z. 65, 147, 304, 308; `defs.test.ts` Z. 17, 31, 42; `helpers.ts` Z. 48.                                          | in „Bewusst geänderte Tests" aufgenommen                                       |
+| W3  | AK-S3-01 (alter Wortlaut „auf 55") | Drei Häuser schrumpfen im selben Takt (60 → 57 → 54); 55 wird nie erreicht.                                                                                     | Test schrumpft bis ≤ 55 (also 54) und prüft `wonMerchants` `true`              |
+| W4  | Spec §16.3 Messpunkt               | Bürger-Endzustand gemessen bei Tick **7300**, Geld **1490** (Spec/Werte: ≈ 7500, 2290). Weniger Startgeld für Phase 3.                                          | Task 6 misst und meldet; Ruling-Vorlage nennt beide Werte; nichts nachgestellt |
+| W5  | AK-B1-02 Messbefehl                | Vitest unterdrückt `console.log` bestandener Tests; der Befehl aus der Spec gibt nichts aus.                                                                    | Task 6 nutzt `VITE_BALANCE_LOG=1 npx vitest run … --silent=false`              |
+| W6  | v3-Fixture (Spec §10.2)            | Alle Bedingungen (Krise läuft, Auftrag, Stufe 3, `sellPct < 100`) gelten erstmals bei Tick **5400**; Tick ≥ 3000 ist damit erfüllt.                             | Fixture bei Tick 5400                                                          |
+| W7  | Task 3 Zwischenstand               | Nach Task 3 sind neben 9 `tsc`-Fehlern auch 6 UI-/Render-Vitest-Fälle rot (dieselben `consumes`-Stellen zur Laufzeit).                                          | in „Rot nach diesem Task erlaubt" (Task 3) benannt, Task 4 macht grün          |
 
 Messwerte: Pool-Referenz AK-S2-13 = `0xea2c801e` (auf 05240f4; Task 1 misst auf `<BASIS>` neu und vergleicht).
 Weitere Abweichungen vom Gerüst: `goodList` in `texts.ts` (neu, Task 4); AK-S3-01, -02, -08 in
 `tests/sim/merchants.test.ts` statt `tick.test.ts`; AK-S2-13 zweiteilig (Referenz Task 1, Stufe 4 Task 3).
+
+### Bestätigte Abweichungen (R143) — Prüfgrundlage beider Final-Reviews
+
+Sim-Final-Review und Final-Review M8 prüfen gegen Spec @ `dbda0f8` **plus** diese Liste; was hier steht, ist kein
+Befund (lead-qa Gate Plan, Hinweis 3):
+
+| Nr. | Spec-Stelle         | gilt für M8                                                                                        |
+| --- | ------------------- | -------------------------------------------------------------------------------------------------- |
+| P1  | AK-S2-17, §17 S2    | Wortlaut bleibt; geänderte UI-Tests nur die in Task 4 genannten, AK-U2-01, -02, -08, -09 in Task 4 |
+| W1  | §13, §20, AK-S1-17  | `roofOnly.bathhouse: 2` in `sprites.test.ts` ist Ergänzung, keine Lockerung (Spec nachgezogen)     |
+| W3  | AK-S3-01            | Schrumpfen auf **54** (60 → 57 → 54), `wonMerchants` bleibt `true` (Spec nachgezogen)              |
+| W4  | §8, §16.3 Messpunkt | Bürger-Endzustand Tick 7300 / Geld 1490 im Planungslauf; B1 misst neu, kein Wert angepasst         |
+| W5  | AK-B1-02            | Messbefehl mit `--silent=false` (Spec nachgezogen)                                                 |
+| W6  | §10.2 v3-Fixture    | Fixture bei Tick 5400 (erfüllt „Tick ≥ 3000")                                                      |
+
+### Auflagen Gate Plan (R142, R143, R144) — Fundstellen in diesem Plan
+
+| Auflage                                                            | Fundstelle                                                                                  |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| R142: B1-Controller investiert nur über fester Reserve             | Task 6 „Gesetzte Regeln" und `RESERVE` in `merchantsController.ts` (500, Begründung dort)   |
+| QA-Hinweis 1: genau 9 `tsc`-Fehler auch in Task 5                  | Task 5 Schritt 5                                                                            |
+| QA-Hinweis 2: Teil B `roofOnly.bathhouse`, `glassworks`            | „Bewusst geänderte Tests", Tabelle Tasks 6–8 und R1                                         |
+| QA-Hinweis 3: P1, W1, W3–W6 bestätigt                              | Abschnitt oben, Kopf „Plan-Abweichungen", Sim-Final-Review Punkt 6, Final-Review M8 Punkt 4 |
+| B1: lead-art merged selbst in `feat/m8-render`                     | Final-Review M8 (Vorbereitung), Paket R1                                                    |
+| B2: Session- und Agent-ID je E-010-Messpunkt, Wechsel = Störgrösse | „E-010", Messpunkte; Abschluss Punkt 3                                                      |
+| B3: Kanten R1 ↔ T7/T8; Worktree `m8-render` durch lead-art         | Mermaid und „Paket-Abhängigkeiten" unter „Wellen"; „Einrichten"; Paket R1; Task 8 Kopf      |
+| B4: Spec-SHA `dbda0f8`                                             | Kopf, Task 7 „Produces"                                                                     |
+| B5: Integrations-Merges pushen                                     | Global Constraints „Push-Pflicht"; Wellen-Tabelle                                           |
+| R144: BUG-LICHT parallel in `src/render/`                          | „Wellen", Vermerk BUG-LICHT; Paket R1                                                       |
 
 ### Gemeinsame Schnittstellen (verbindlich für alle Tasks)
 
@@ -268,7 +315,8 @@ Konflikt in der Reihenfolge T1 → T2 → T3 → T4 → T5).
 
 ### Wellen, Abhängigkeiten und Merges
 
-Ein abhängiger Task startet erst nach Review-Urteil OK des Vorgängers. Integration nur geprüfter SHAs.
+Ein abhängiger Task startet erst nach Review-Urteil OK des Vorgängers. Integration nur geprüfter SHAs. Jeder Merge
+der Spalten W3, W4, W6 und R1 ← Task 7 wird nach grüner Wellen-Prüfung sofort gepusht (R143 B5), SHA ins Ledger.
 
 | Welle | Branch `feat/m8-sim`                                                                                                        | Branch `feat/m8-sim-ui`                  | weitere Branches                                                                            | grün am Wellenende                                       |
 | ----- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -295,6 +343,8 @@ flowchart LR
   GM1 --> T7["T7 B2"]
   GM1 --> T8["T8 U"]
   GM1 --> R1["R1 lead-art"]
+  R1 -->|"Übergabe m8-r1-symbol.md vor Schritt 8"| T8
+  T7 -->|"Szenarien vor Blindtest AK-R1-02"| R1
   T7 --> QB["QA-B Browser"]
   T8 --> QB
   QB --> D1["D1 Doku"]
@@ -304,7 +354,34 @@ flowchart LR
   FR --> GM2["Gate Merge M8"]
 ```
 
-**Einrichten** (Controller):
+**Paket-Abhängigkeiten (`blocked-by` für das Board, `lead-production`):**
+
+| Paket                 | blocked-by                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| M8-S1 (Task 1)        | Gate Plan (R143), Merge von Spec und Plan auf `main`                                                       |
+| M8-S1 Folgen (Task 2) | M8-S1 Task 1                                                                                               |
+| M8-S2 (Task 3)        | M8-S1 Task 1                                                                                               |
+| M8-S2 Folgen (Task 4) | Task 2, Task 3                                                                                             |
+| M8-S3 (Task 5)        | Task 3                                                                                                     |
+| QA-A                  | Task 4, Task 5 (W4-Merge)                                                                                  |
+| M8-B1 (Task 6)        | Gate Merge Sim                                                                                             |
+| M8-B2 (Task 7)        | Gate Merge Sim                                                                                             |
+| M8-U (Task 8)         | Gate Merge Sim; **Schritt 8 zusätzlich M8-R1** (Übergabe `.studio/handoffs/m8-r1-symbol.md`)               |
+| M8-R1 (`lead-art`)    | Gate Merge Sim; **Blindtest AK-R1-02 zusätzlich M8-B2** (Task 7, Review OK); Start nach R144-Vermerk unten |
+| QA-B                  | Task 7, Task 8 (W6-Merge)                                                                                  |
+| M8-D1                 | QA-B                                                                                                       |
+| Final-Review M8       | Task 6, M8-D1, M8-R1                                                                                       |
+
+**Vermerk BUG-LICHT (R144):** Parallel ändert `lead-art` im Paket BUG-LICHT (Branch `fix/licht-verdeckung`) Dateien in
+`src/render/`. Die W5-Worktrees (insbesondere `m8-render` für R1, dazu `m8-balance`, `m8-scen`, `m8-ui`) entstehen
+am **aktuellen** `main` zum Startzeitpunkt (`git pull --ff-only` direkt davor), nicht an einem älteren SHA. Ist
+BUG-LICHT erst nach dem Anlegen, aber vor dem eigenen Start gemergt, rebased der Branch vor dem ersten eigenen
+Commit auf `main` (`git -C .worktrees/<strang> rebase main`; ohne eigene Commits gefahrlos, einzige Ausnahme zur
+Regel „nicht rebasen"). Wird BUG-LICHT erst während W5 gemergt, wird **nicht** rebased; `main` kommt mit dem Merge
+vor dem Final-Review M8 hinein. Für den Sim-Strang (Tasks 2 und 4 ändern `src/render/{iso,sprites}.ts`) gilt der
+bestehende Merge von `main` vor dem Sim-Final-Review.
+
+**Einrichten** (Controller; `m8-render` legt `lead-art` an, R143 B3):
 
 ```bash
 cd /Users/KN/CAS/projekte/anno-clone
@@ -315,11 +392,15 @@ ln -s ../../node_modules .worktrees/m8-sim/node_modules
 # nach Review-OK von Task 1 (SHA aus dem Bericht):
 git worktree add .worktrees/m8-sim-ui -b feat/m8-sim-ui <T1-SHA>
 ln -s ../../node_modules .worktrees/m8-sim-ui/node_modules
-# nach dem Gate Merge Sim (auf main):
+# nach dem Gate Merge Sim, direkt vor dem Start von W5 (R144: aktueller main, BUG-LICHT ggf. enthalten):
+git pull --ff-only
 git worktree add .worktrees/m8-balance -b feat/m8-balance main
 git worktree add .worktrees/m8-scen -b feat/m8-scen main
 git worktree add .worktrees/m8-ui -b feat/m8-ui main
 for w in m8-balance m8-scen m8-ui; do ln -s ../../node_modules .worktrees/$w/node_modules; done
+# nur lead-art (nicht der Controller), vor dem Start von R1:
+#   git worktree add .worktrees/m8-render -b feat/m8-render main
+#   ln -s ../../node_modules .worktrees/m8-render/node_modules
 ```
 
 ### Ablauf je Task (Controller `lead-tech`)
@@ -383,16 +464,18 @@ Kein `it(` fällt weg.
 Jeder Implementierer ermittelt nach der Umsetzung per `npx vitest run`, welche **bestehenden** Tests rot werden; nur
 die folgenden dürfen sich ändern, jede weitere Stelle ist ein Befund an den Controller.
 
-| Datei                                               | Stelle                                                    | alt → neu                                                                                        | Task |
-| --------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---- |
-| `tests/sim/controller.ts` (Test-Helfer)             | `CONTROL_INTERVAL`, `control`                             | ohne → mit `export`, sonst Zeichen für Zeichen gleich                                            | 6    |
-| `tests/sim/scenarios.ts` (Test-Helfer)              | `setHouse`, Feld `services`                               | Liste `['faith', 'school']` → `SERVICE_IDS` (Task 1 ändert `setHouse` nicht)                     | 7    |
-| `tests/sim/scenario-saves.test.ts`                  | `AK-S5-01 die Szenario-Namen sind genau die vereinbarten` | 21 Namen → 27 (+ sechs `m8-*`)                                                                   | 7    |
-| `tests/sim/scenario-saves.test.ts`                  | „kein Szenario (ausser ux-sieg) …"                        | `toBe(name === 'ux-sieg')` → `toBe(WON_AFTER_FIRST_TICK.has(name))`, Name beginnt mit `AK-B2-02` | 7    |
-| `tests/render/sprites.test.ts` (`it('AK-S1-17 …')`) | Höhe Stufe 4                                              | gleich Stufe 3 → endlich und ≠ Stufe 3                                                           | R1   |
-| `tests/render/renderer.test.ts`                     | `anchorCacheSize() ≤ Typen + 2`                           | `+ 2` → `+ 3`, nur falls die Testwelt ein Kaufmannshaus enthält (per Lauf ermittelt)             | R1   |
-| `tests/render/palette.test.ts`                      | Listen- oder Zählprüfungen der Palettennamen              | per Lauf ermittelt (neuer Dachwert Stufe 4)                                                      | R1   |
-| `tests/render/overlays.test.ts`                     | `AK-A3-04 symbolFor` (falls um `bath` erweitert)          | nur neue Zeile, bestehende Erwartungen gleich                                                    | R1   |
+| Datei                                                      | Stelle                                                    | alt → neu                                                                                        | Task |
+| ---------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---- |
+| `tests/sim/controller.ts` (Test-Helfer)                    | `CONTROL_INTERVAL`, `control`                             | ohne → mit `export`, sonst Zeichen für Zeichen gleich                                            | 6    |
+| `tests/sim/scenarios.ts` (Test-Helfer)                     | `setHouse`, Feld `services`                               | Liste `['faith', 'school']` → `SERVICE_IDS` (Task 1 ändert `setHouse` nicht)                     | 7    |
+| `tests/sim/scenario-saves.test.ts`                         | `AK-S5-01 die Szenario-Namen sind genau die vereinbarten` | 21 Namen → 27 (+ sechs `m8-*`)                                                                   | 7    |
+| `tests/sim/scenario-saves.test.ts`                         | „kein Szenario (ausser ux-sieg) …"                        | `toBe(name === 'ux-sieg')` → `toBe(WON_AFTER_FIRST_TICK.has(name))`, Name beginnt mit `AK-B2-02` | 7    |
+| `tests/render/sprites.test.ts` (`it('AK-S1-17 …')`)        | Höhe Stufe 4                                              | gleich Stufe 3 → endlich und ≠ Stufe 3                                                           | R1   |
+| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.bathhouse`                                      | `2` (Rückfall `public`, W1) → Zahl der Dachfenster der eigenen Silhouette, per Lauf ermittelt    | R1   |
+| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.glassworks`                                     | ohne → neuer Eintrag, nur falls die eigene Silhouette Dachfenster hat (per Lauf ermittelt)       | R1   |
+| `tests/render/renderer.test.ts`                            | `anchorCacheSize() ≤ Typen + 2`                           | `+ 2` → `+ 3`, nur falls die Testwelt ein Kaufmannshaus enthält (per Lauf ermittelt)             | R1   |
+| `tests/render/palette.test.ts`                             | Listen- oder Zählprüfungen der Palettennamen              | per Lauf ermittelt (neuer Dachwert Stufe 4)                                                      | R1   |
+| `tests/render/overlays.test.ts`                            | `AK-A3-04 symbolFor` (falls um `bath` erweitert)          | nur neue Zeile, bestehende Erwartungen gleich                                                    | R1   |
 
 Task 8 ändert keinen bestehenden Test (nur neue `it`); `tests/ui/contrast.test.ts` bleibt unverändert.
 
@@ -406,7 +489,8 @@ Der Plan hat 8 Implementierer-Tasks (> 6). **Übergabepunkt:** nach QA-A (AK-S3-
 **Pflichtinhalt des Ledgers** `.superpowers/sdd/m8/ledger.md` bei der Übergabe:
 
 - `<BASIS>`, Branches, Worktrees, geprüfte SHAs je Task, Push-Stand; Agent-IDs der Implementierer und Reviewer
-  (für `SendMessage`-Fix-Runden).
+  (für `SendMessage`-Fix-Runden) **mit Session-ID** (nach einem Session-Wechsel sind sie nicht fortsetzbar; Fix-Runden
+  kosten dann neue Starts aus dem Puffer).
 - Alle Controller-Entscheide und gemeldeten Widersprüche (R136) mit Spec-Stelle.
 - **Zwischenregeln `guide.ts`** (Stand nach Task 4): `tierLock`-Filter für Regeln 3, 4, 6 (Spec §14.8, AK-S1-19);
   R0 hängt an `wonMerchants`; `producerOf`/`consumerOf` arbeiten mit Listen (`consumes.includes(g)`); der
@@ -420,11 +504,19 @@ Der Plan hat 8 Implementierer-Tasks (> 6). **Übergabepunkt:** nach QA-A (AK-S3-
 
 **Messpunkte (Schwelle ≤ 3,5 Mio. Cache-Read je abgeschlossenem Task und Controller):**
 
-| Messpunkt | Wann                                    | Was                                                                        | Wie                                                                                                                                   |
-| --------- | --------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| M-1       | Übergabe (nach QA-A)                    | Cache-Read Controller 1 (eigene `agent_id`) ÷ 5 abgeschlossene Tasks       | `python3 tools/studio/metrics.py --session latest`, Zeile der Controller-`agent_id` in „Tokens je Agent"; Wert ins Ledger             |
-| M-2       | nach Gate Merge Sim (Fix-Runden fertig) | Zuwachs Cache-Read Controller 2 durch Final-Review-Fixes (zählt zu Task 5) | wie M-1, Controller-2-`agent_id`                                                                                                      |
-| M-3       | Abschluss (vor Final-Review M8)         | Cache-Read Controller 2 ÷ 3 abgeschlossene Tasks (6, 7, 8)                 | wie M-1; Ergebnis und Abbruchkriterien (Ruling-Widerspruch, > 1 Rückfrage des Nachfolgers) im Schlussbericht an L0 und `studio-coach` |
+| Messpunkt | Wann                                    | Was                                                                        | Wie                                                                                                                                                         |
+| --------- | --------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M-1       | Übergabe (nach QA-A)                    | Cache-Read Controller 1 (eigene `agent_id`) ÷ 5 abgeschlossene Tasks       | `python3 tools/studio/metrics.py --session <Session-ID>` je Session des Messfensters, Zeile der Controller-`agent_id` in „Tokens je Agent"; Wert ins Ledger |
+| M-2       | nach Gate Merge Sim (Fix-Runden fertig) | Zuwachs Cache-Read Controller 2 durch Final-Review-Fixes (zählt zu Task 5) | wie M-1, Controller-2-`agent_id`                                                                                                                            |
+| M-3       | Abschluss (vor Final-Review M8)         | Cache-Read Controller 2 ÷ 3 abgeschlossene Tasks (6, 7, 8)                 | wie M-1; Ergebnis und Abbruchkriterien (Ruling-Widerspruch, > 1 Rückfrage des Nachfolgers) im Schlussbericht an L0 und `studio-coach`                       |
+
+**Ledger-Pflicht je Messpunkt (R143 B2):** Zeile `M-<n> · Session-ID(s) · agent_id · Cache-Read · abgeschlossene
+Tasks · Störgrösse ja/nein`. Die Session-ID steht beim Start jedes Controllers im Ledger; `--session latest` nur, wenn
+das Messfenster in genau der laufenden Session liegt. **Session-Wechsel = Störgrösse:** Liegt zwischen Beginn und
+Ende eines Messfensters ein Session-Wechsel (neue Controller-Instanz, neue `agent_id`), wird der Messpunkt als
+„Störgrösse: Session-Wechsel" markiert, die Teilwerte je Session und `agent_id` werden einzeln eingetragen, und der
+Schlussbericht wertet ihn nicht ohne diesen Vermerk gegen die Schwelle. Ein Session-Wechsel vor der geplanten
+Übergabe ersetzt Controller 1 vorzeitig; das wird ebenso vermerkt (lead-production Gate Plan B2).
 
 Abbruch nach E-010: Ein Ruling der zweiten Hälfte widerspricht der ersten (Final-Review) oder Controller 2 fragt
 mehr als einmal nach. Rückfragen von Controller 2 an Controller 1 gehen per `SendMessage` und werden im Ledger
@@ -450,6 +542,8 @@ eigener Port je Check). QA-A läuft vor der E-010-Übergabe, QA-B nach dem Merge
   („Verbraucht Stein"), AK-U2-08 (Fall c ohne Holz-Bezug, Fall h unverändert), AK-U2-09 (nur Stein-Fälle) sowie die
   Texte in Spec §14.3/§14.4. **Empfehlung Plan: nicht streichen** (der Zwei-Input-Pfad ist der Kern von M8 und
   kostet in Task 3 einen Schleifenumbau).
+- **Stand nach Gate Plan:** R143 streicht weder K1–K3 noch den Zwei-Input-Pfad; der Plan gilt im vollen Umfang. Eine
+  spätere Streichung braucht ein eigenes Ruling.
 
 ### Budgetantrag
 
@@ -492,10 +586,13 @@ Beantragt: 4 Starts, Parallelität 1 (Final-Review im Final-Review M8 enthalten)
   `SendMessage` und zählen nicht.
 - Gegenüber der Gate-Schätzung (34) spart der Plan 6 Starts: U1/U2 als ein Task (P4), D1 ohne Start (P6), kein
   eigener `tech-save-engineer`.
-- **Freigabe (Vorschlag):**
-  `log.py budget --lead lead-tech --grant 26 --parallel 4 --phase M8-umsetzung`,
-  `log.py budget --lead lead-qa --grant 2 --parallel 1 --phase M8-umsetzung`,
+- **Freigabe R143** (ersetzt den Vorschlag 26/2): lead-tech **25** (Parallelität 4), lead-qa **3** (Parallelität 1;
+  Reserve für ein zweites Review bei zwei Gates), lead-art **4** (Parallelität 1), dazu **+1 Start L0** für die
+  E-010-Instanz. Summe Formel unverändert 28.
+  `log.py budget --lead lead-tech --grant 25 --parallel 4 --phase M8-umsetzung`,
+  `log.py budget --lead lead-qa --grant 3 --parallel 1 --phase M8-umsetzung`,
   `log.py budget --lead lead-art --grant 4 --parallel 1 --phase M8-umsetzung`.
+  Bei jedem Session-Wechsel wird nur der **Rest** neu geloggt, nicht die volle Freigabe (STUDIO.md, „Budget").
 
 ---
 
@@ -2955,6 +3052,7 @@ npx prettier --write docs/arc42.md docs/adr/ADR-005-tick-reihenfolge-und-zustaen
 npx prettier --write src/sim tests/sim
 npx vitest run tests/sim                                                     # grün
 npx tsc --noEmit 2>&1 | grep -v -E "^src/ui/(buildMenu|inspect|texts|guide)\.ts" # leer, solange Task 4 nicht gemerged ist
+npx tsc --noEmit 2>&1 | grep -c "error TS"                                  # genau 9 (wie Task 3; sonst neuer Fehler in den gefilterten UI-Dateien → Befund)
 npx eslint src/sim tests/sim && npx prettier --check src/sim tests/sim docs
 ```
 
@@ -3057,7 +3155,19 @@ export function runMerchants(
   den Aufstieg und **1 Glas als Auslöser** kaufen, falls das Lager leer ist. **Kein Glas-Verkauf.**
 - Werkzeug kauft der Controller nur genau für Bauten und den geplanten Aufstieg. Ohne Werkzeug im Lager steigt kein
   ungeplantes viertes Haus auf (Aufstieg kostet 8 Werkzeug; Vorabprobe: Werkzeug 0 im Bürger-Endzustand).
-- Jeder Kauf und Bau lässt 300 Geld übrig (wie `RESERVE` im Bürger-Controller).
+- **Feste Reserve (R142, Spec 16.3 Phase 3; Testhelfer-Regel, kein Spielwert):** Der Merchant-Controller
+  investiert nur, wenn nach dem Kauf oder Bau mindestens **500 Geld** übrig bleiben (`RESERVE = 500` in
+  `merchantsController.ts`, modul-lokal; der Bürger-Controller behält seine 300, Phase 1/2 bleiben bitgleich). Das
+  gilt für **jeden** eigenen Kauf und Bau: Wege, Stein/Holz für Glashütten, Badehaus, Glashütten, Ketten,
+  Aufstiegsmaterial, Glas-Auslöser. Begründung der Höhe: Unterhalt und Steuer werden gemeinsam alle 100 Ticks
+  verbucht; der Unterhalt des geplanten Endausbaus liegt bei ≈ 415 je 100 Ticks (Bürger-Endzustand ≈ 185 plus
+  Badehaus 30, 3 Glashütten 75, 3 Fischer 15, 2 Stoffpaare 50, 2 Rumpaare 60). 500 deckt eine volle
+  Unterhaltsbuchung ohne jede Steuer; mit 300 sank schon der Bürger-Lauf auf `minMoney` 57. Damit fällt das Geld
+  nicht unter 0 und der Kauf-Stopp (`trade.ts`: kein Kauf bei Geld < 0, M6) sperrt den Stein-Zukauf nicht. Kosten:
+  200 Geld mehr gebunden, bei ≈ +429 je 100 Ticks höchstens ≈ 50 Ticks später investiert. Alternative (verworfen):
+  dynamisch `totalUpkeep(w)` + Marge — genauer, aber nicht „fest" (R142) und schwerer zu prüfen. Fällt
+  `minMoneyAfterWin` trotzdem unter 0: Stopp und Meldung wie Eskalation, **kein Nachstellen der Reserve im Paket**.
+  Der Aufruf `control(w, layout, {})` in Schritt (1) bleibt unverändert (eigene Regeln des Bürger-Controllers).
 - **K1** (`prepareAt: 30`): vor dem Sieg nach `control` zusätzlich, sobald `citizens(w) ≥ 30`: Erweiterungswege,
   Lager für die Glashütte, Badehaus, dann eine Glashütte. Nach dem Sieg gilt Phase 3 sofort (die Wege liegen).
 - **Grenzen** (Spec, fest): `wonMerchants` ≤ 12 000 (`MERCHANT_TICK_LIMIT`), `money > 0` am Ende. **Eskalation**
@@ -3207,8 +3317,11 @@ import { CONTROL_INTERVAL, control, type Layout } from './controller';
 
 /** Grenze aus Spec 16.3: `wonMerchants` bis zu diesem Tick. */
 export const MERCHANT_TICK_LIMIT = 12_000;
-/** Geld, das nach jedem Kauf oder Bau bleibt (wie `RESERVE` im Bürger-Controller). */
-const RESERVE = 300;
+/**
+ * Feste Reserve (R142, Spec 16.3 Phase 3): Geld, das nach jedem eigenen Kauf oder Bau bleibt. Deckt eine volle
+ * Unterhaltsbuchung des Endausbaus (≈ 415 je 100 Ticks) ohne Steuer. Testhelfer-Regel, kein Spielwert.
+ */
+const RESERVE = 500;
 /** Stein und Holz je Glashütte im Lager (zwei Zyklen; Verbrauch je 2 je 100 Ticks, Spec 5.2). */
 const FEED_PER_WORKS = 4;
 /** Kaufmannshäuser für das zweite Ziel: 60 / 20 = 3. */
@@ -3564,7 +3677,7 @@ Szenarien')`)
   (Task 1); `bathhouse` (Task 1), `glassworks` (Task 3); `GoodId 'glass'`; `houseDiagnosis` (bestehend); `sellPrice`
   (bestehend); `UPGRADE_WAIT`, `GROWTH_INTERVAL` aus `src/sim/defs/timing.ts`.
 - Produces: `SCENARIOS` mit den Schlüsseln `m8-vor-sieg`, `m8-kurz-vor-sieg`, `m8-kurz-vor-handelsstadt`,
-  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ 283bd9f). QA-B und der R1-Blindtest
+  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ dbda0f8). QA-B und der R1-Blindtest
   laden sie.
 
 **Gesetzte Regeln:**
@@ -3967,8 +4080,8 @@ git commit -m "test: M8-B2 Szenario-Saves m8-* für die Browser-Checks (Spec 18.
 ## Task 8: U — Zielanzeige, Kaufleute-Chip, zweites Banner, Ton, MAP_SIGNS
 
 **Paket** M8-U1 + Rest M8-U2 (P4) · **Implementierer** `tech-ui-engineer` (sonnet) · **Worktree / Branch**
-`.worktrees/m8-ui` / `feat/m8-ui` (ab `main` nach dem Gate Merge Sim) · **blocked-by** Gate Merge Sim; Schritt 8
-zusätzlich `.studio/handoffs/m8-r1-symbol.md` (R1) · **AK** AK-U1-01, AK-U1-02 (Bestandsprüfung), AK-U1-03,
+`.worktrees/m8-ui` / `feat/m8-ui` (ab aktuellem `main` nach dem Gate Merge Sim, R144-Vermerk) · **blocked-by** Gate
+Merge Sim; Schritt 8 zusätzlich **M8-R1** (Übergabe `.studio/handoffs/m8-r1-symbol.md`, Kante R1 → T8) · **AK** AK-U1-01, AK-U1-02 (Bestandsprüfung), AK-U1-03,
 AK-U1-08 (Diff-Grenzen), RF-4, MAP_SIGNS-Teil von AK-R1-03 (P3). Browser-AK (AK-U1-04 … -07, AK-U2-03 … -07, -10)
 prüft QA-B, nicht der Implementierer.
 
@@ -4559,10 +4672,25 @@ keine `opacity` auf Text; `tests/ui/contrast.test.ts` bleibt unverändert grün;
 ## Paket R1 (lead-art): Darstellung K2/K3
 
 **Controller** `lead-art` · **Implementierer** `art-rendering-engineer` · **Worktree / Branch** `.worktrees/m8-render` /
-`feat/m8-render` (ab `main` nach dem Gate Merge Sim) · **parallel zu** Tasks 6, 7, 8 (Welle W5) · **AK** AK-R1-01,
+`feat/m8-render` (ab aktuellem `main` nach dem Gate Merge Sim) · **parallel zu** Tasks 6, 7, 8 (Welle W5) ·
+**blocked-by** Gate Merge Sim; Blindtest AK-R1-02 zusätzlich **M8-B2** (Task 7, Review OK; Kante T7 → R1) ·
+**blocks** Task 8 Schritt 8 (Übergabe, Kante R1 → T8) · **AK** AK-R1-01,
 AK-R1-02 (Blindtest), AK-R1-03 ohne `MAP_SIGNS`-Teil (P3), AK-R1-04. Dieser Abschnitt ist Vorgabe; die Schritte plant
 `lead-art` selbst (Plan oder Briefing mit TDD wie dieser Plan). Streicht das Gate K2, entfällt AK-R1-03; streicht es
 K3, entfallen AK-R1-01 und -02; beide gestrichen → R1 entfällt (Streichvariante).
+
+**Worktree, Merges, Push (R143 B1, B3, B5; R124 (2)):** `lead-art` legt `.worktrees/m8-render` selbst an (Befehl unter
+„Einrichten"), führt alle Merges in `feat/m8-render` selbst aus (Task-7-SHA vor dem Blindtest, aktueller `main` vor
+dem Final-Review M8), pusht jeden Merge nach grünem `make check` und meldet den SHA an `lead-tech` (Controller 2).
+Der Controller schreibt nie in diesen Worktree.
+
+**BUG-LICHT (R144):** Ist BUG-LICHT (`fix/licht-verdeckung`, ebenfalls `src/render/`) vor dem Start von R1 auf `main`
+gemergt, entsteht `m8-render` am aktuellen `main` bzw. rebased vor dem ersten eigenen Commit darauf (Vermerk unter
+„Wellen"). Läuft BUG-LICHT beim Start von R1 noch, prüft `lead-art` die Dateiüberschneidung beider Pakete und
+serialisiert sie in eigener Verantwortung (beide Pakete gehören `lead-art`).
+
+**Übergabewortlaut:** Die Übergabedatei unter `.studio/handoffs/` ist nicht versioniert; `lead-art` nennt die zwei
+Zeilen zusätzlich wörtlich im Bericht (lead-production Gate Plan, Risiko; Lehre R107).
 
 **Dateien (Owner R1, sonst niemand in W5):** `src/render/sprites.ts`, `src/render/iso.ts`, `src/render/palette.ts`,
 `src/render/overlays.ts`, `tests/render/sprites.test.ts`, `tests/render/overlays.test.ts`,
@@ -4861,14 +4989,16 @@ sed -E 's/.*> //' | sort -u` (setzt voraus, dass die Tests der Tasks 1–5 wie i
    stehen; M6 hat eigene `AK-S1-…`-Namen) → alle Vitest-AK von S1–S3 und RF-1, RF-2, RF-3, RF-5; Review-AK (AK-S1-16, AK-S3-09) per Diff der Doku; AK-S3-10 per
    QA-A-Bericht; AK-U2-01, -02, -08, -09 (P1) aus Task 4.
 6. Testzählung (R125) mit `<BASIS>` wie in den Global Constraints; geänderte Zeilen nur Erwartungswerte und nur in
-   den Dateien aus „Bewusst geänderte Tests".
+   den Dateien aus „Bewusst geänderte Tests". Geprüft wird gegen Spec @ `dbda0f8` plus „Bestätigte Abweichungen
+   (R143)" (P1, W1, W3–W6); diese sind kein Befund.
 7. Urteil OK / BEDENKEN / ZURÜCK. Fix-Runden über Controller 2 (E-010), Nachprüfung nach R136; danach **M-2**
    messen und ins Ledger.
 
 **Gate Merge Sim** (L0) → `production-integrator` merged nach R124 Punkt 2: `git merge-tree --write-tree main <SHA>`
 gegen das aktuelle `main` ohne Konflikt, `git merge --no-ff <SHA>` mit genau dem geprüften SHA, HEAD vor Merge und vor
 Push gegen `origin/main` prüfen, nach dem Push `make check`, CI und Pages grün. Danach `<BASIS-B>` = neuer
-`main`-SHA ins Ledger; Worktrees `m8-balance`, `m8-scen`, `m8-ui`, `m8-render` entstehen ab diesem SHA.
+`main`-SHA ins Ledger; Worktrees `m8-balance`, `m8-scen`, `m8-ui` (Controller 2) und `m8-render` (`lead-art`)
+entstehen frühestens ab diesem SHA, am aktuellen `main` zum Startzeitpunkt (R144-Vermerk unter „Wellen").
 
 ### D1 (lead-tech, kein Start; nach QA-B OK, auf `feat/m8-ui`)
 
@@ -4896,7 +5026,9 @@ Push gegen `origin/main` prüfen, nach dem Push `make check`, CI und Pages grün
 
 **Prüfer** `lead-qa` (opus) über `feat/m8-balance`, `feat/m8-ui` (enthält `feat/m8-scen` @ Task-7-SHA und D1) und
 `feat/m8-render` (enthält `feat/m8-scen` @ Task-7-SHA, falls AK-R1-02 lief). Vorher merged Controller 2 den aktuellen
-`main` in jede Branch (`git merge --no-edit main`, `make check`) und nennt die SHAs.
+`main` in `feat/m8-balance` und `feat/m8-ui` (`git merge --no-edit main`, `make check`, push) und nennt die SHAs.
+In `feat/m8-render` merged **`lead-art` selbst** (R143 B1, R124 (2): kein fremder Controller im Worktree eines
+anderen Leads), pusht und meldet den SHA an Controller 2; erst mit allen drei SHAs startet das Final-Review.
 
 1. **Integrationsprobe** (Prüfer, Scratch-Worktree, nichts committen):
 
@@ -4915,7 +5047,7 @@ Konflikt oder rot → ZURÜCK mit Fundstelle. 2. **Balancing:** Task-6-Messwerte
 AK-R1-02 per Blindtest-Bericht, AK-B1-03 per Task-6-Bericht, AK-B1-06 per Ruling-Vorlage, AK-U1-08 per Diff. 4. **Global Constraints:** `index.html`, `src/ui/trade.ts`, `src/ui/messages.ts` ohne Diff gegen `<BASIS>`;
 `src/style.css` nur nach AK-U1-08; kein Text mit „Tick" (`tests/ui/time.test.ts` grün); Testzählung je Datei gegen
 `<BASIS-B>` (Zählbefehl wie Global Constraints); geänderte bestehende Tests nur laut „Bewusst geänderte Tests
-Teil B". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
+Teil B"; Massstab Spec @ `dbda0f8` plus „Bestätigte Abweichungen (R143)". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
 
 **Gate Merge M8** (L0) → `production-integrator` nach R124 Punkt 2, Reihenfolge `feat/m8-balance` → `feat/m8-ui` →
 `feat/m8-render`, je mit dem im Final-Review genannten SHA; vor jedem Schritt `git merge-tree --write-tree main <SHA>`
@@ -4932,7 +5064,9 @@ Text aus Spec 16.3, nur die Messwerte aus dem Task-6-Bericht einsetzen:
 
 Zusätze (je nach Messung, wörtlich):
 
-- Bürger-Endzustand: „gemessen bei Tick {endStateTick}, Geld dort {Geld}; Werte-Datei nannte ≈ 7500 / 2290."
+- Bürger-Endzustand: „gemessen bei Tick {endStateTick}, Geld dort {Geld}; Werte-Datei nannte ≈ 7500 / 2290,
+  Planungslauf 7300 / 1490 (R142 W4)."
+- Reserve: „Merchant-Controller mit fester Reserve 500 (R142); `minMoneyAfterWin` {Wert}."
 - Nur wenn `firstMerchantTick` > 9600: „Ruling-Vorschlag: Hebel `TIERS[4].unlockCitizens` 40 als Playtest-Frage P-02
   (Spec 4.4); kein geänderter Wert in M8."
 - K1 (falls nicht gestrichen): „Vorbereitet ab 30 Bürgern: Sieg {winTick K1} (ohne Vorbereitung 6050), erster
@@ -4945,8 +5079,9 @@ Zusätze (je nach Messung, wörtlich):
    Merge auf `main` in `docs/studio/rulings.md` ein (R125 e). Die Stränge committen nichts davon.
 2. **Befunde ausserhalb Scope** aus allen Berichten gesammelt (Fundort, Beobachtung, Ursprung, erste Einschätzung)
    im Schlussbericht; L0 trägt sie in `docs/beobachtungen.md` ein.
-3. **E-010 M-3** (vor dem Final-Review M8): `python3 tools/studio/metrics.py --session latest`, Zeile der
-   `agent_id` von Controller 2 in „Tokens je Agent"; Cache-Read ÷ 3 (Tasks 6, 7, 8) gegen die Schwelle 3,5 Mio.;
+3. **E-010 M-3** (vor dem Final-Review M8): `python3 tools/studio/metrics.py --session <Session-ID>` je Session seit
+   dem Start von Controller 2, Zeile der `agent_id` von Controller 2 in „Tokens je Agent"; Cache-Read ÷ 3 (Tasks 6,
+   7, 8) gegen die Schwelle 3,5 Mio.; Session-IDs, `agent_id` und Störgrösse wie unter „E-010" ins Ledger;
    dazu Zahl der Rückfragen an Controller 1 (Ledger) und jeder Ruling-Widerspruch zur ersten Hälfte. Ergebnis ins
    Ledger und in den Schlussbericht an L0 und `studio-coach`.
 4. Bericht an L0 „bereit fürs Gate Merge M8" mit SHAs, Final-Review-Urteil, Ruling-Vorlage B1, M-3.
