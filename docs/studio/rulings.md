@@ -810,3 +810,13 @@ Grenze 12 000 = Schätzung ≈ 10 000 + Marge 2000 — bei Irrtum Neumessung, `W
 `minMoneyAfterWin` 212; Messung mit C2-2 (R161) — Ledger m8, Ruling-Vorlage B1
 
 Entscheider: L0 · Anlass: AK-B1-06 · ADR: —
+
+## R163 · 2026-10-02 · M10
+
+Ruling: Gate Spec M10 bestanden mit Auflagen (lead-qa und lead-tech BEDENKEN, 7f805d9): Spec-Delta durch
+lead-design ohne neue Gate-Runde, Sichtung L0, für QA B-1…B-12 und Tech B1–B6, B8, B10. B7 angenommen:
+`layoutKey` hasht die Geländeart je Kachel statt Weltfeld `terrainRev` (löst R159 W3 ab, einfacher).
+B8: `maxCount` in Defs, `noService` statt `noSchool`. B9, B11 entscheidet der Plan. — Kosten bei Irrtum:
+Spec-Runde — Archiv-Berichte lead-qa, lead-tech M10-SPEC-GATE
+
+Entscheider: L0 · Anlass: Gate Spec M10, löst R159 W3 ab · ADR: —
