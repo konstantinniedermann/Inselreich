@@ -614,3 +614,12 @@ nach S3 (E-010) und R1 als eigenem Paket lead-art parallel zu U1/U2. Spec und Pl
 Plan gemeinsam nach main. — Kosten bei Irrtum: Plan-Nacharbeit.
 
 Entscheider: L0 · Anlass: Gate Spec M8
+
+## R142 · 2026-10-02 · M8-Plan W1–W7, Ampel rot
+
+Ruling: Designurteil lead-design angenommen: W3 AK-S3-01 auf 54; W4 ohne Wertanpassung, Messung in
+Task 6, B1-Controller investiert nur über fester Reserve; W1, W2, W5 Spec-Korrektur §20/AK-B1-02.
+Umsetzung als eine Spec-Runde zusammen mit dem Gate-Plan-Ergebnis. Ampel rot: keine neuen Starts
+ausser Session-Ende-Retro; Umsetzung M8 erst in der Folgesession.
+
+Entscheider: L0 · Anlass: Designurteil M8-Plan, Limit 81 %
