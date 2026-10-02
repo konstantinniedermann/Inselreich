@@ -10,8 +10,12 @@ import {
   project,
   sortedObjects,
 } from '../../src/render/iso';
-import { PALETTE, SHADOW, SIGNAL_NAMES, mixHex } from '../../src/render/palette';
+import { PALETTE, SHADOW, SIGNAL_NAMES, mixHex, rgbOfCss } from '../../src/render/palette';
+import { deltaE2000, rgbToLab } from './deltaE';
 import {
+  CONIFER_COLOR,
+  LIGHT_CROWN_COLOR,
+  LIGHT_TRUNK_COLOR,
   TREE_H,
   crownsFor,
   drawTreeStamp,
@@ -46,7 +50,7 @@ describe('Baumstempel', () => {
   });
 
   it('AK-ISO-10 Baumstempel: jeder Pfadpunkt in treeBounds und in der Spaltenbreite einer Kachel', () => {
-    for (const seed of [3, 11])
+    for (const seed of [3, 11, 12588])
       for (const step of ZOOM_STEPS)
         for (let v = 0; v < TREE_VARIANTS; v++) {
           const { ctx, log } = fakeCtx();
@@ -80,6 +84,9 @@ describe('Baumstempel', () => {
       PALETTE.crown,
       PALETTE.crownLight,
       mixHex(PALETTE.rockDark, PALETTE.earth, 0.5),
+      CONIFER_COLOR,
+      LIGHT_CROWN_COLOR,
+      LIGHT_TRUNK_COLOR,
     ]);
     const signals = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
     for (let v = 0; v < TREE_VARIANTS; v++) {
@@ -90,9 +97,44 @@ describe('Baumstempel', () => {
         expect(signals.has(f)).toBe(false);
         expect(f).not.toBe(SHADOW);
       }
-      expect(log.fillSet).toContain(PALETTE.crown);
       expect(log.fillSet).toContain(PALETTE.crownLight);
     }
+    // neue Töne: ΔE2000 ≥ 20 zu den Signalfarben
+    for (const c of [CONIFER_COLOR, LIGHT_CROWN_COLOR, LIGHT_TRUNK_COLOR])
+      for (const n of SIGNAL_NAMES)
+        expect(
+          deltaE2000(rgbToLab(rgbOfCss(c)), rgbToLab(rgbOfCss(PALETTE[n]))),
+          `${c} ~ ${n}`,
+        ).toBeGreaterThanOrEqual(20);
+  });
+
+  it('R149 Baumarten: je Seed ≥ 2 Arten über die Varianten, Radienverhältnis max/min ≥ 1,4, Radien 0,08–0,15', () => {
+    for (const seed of [3, 11, 12588, 94108]) {
+      const kinds = new Set<number>();
+      let lo = Infinity,
+        hi = 0;
+      for (let v = 0; v < TREE_VARIANTS; v++)
+        for (const c of crownsFor(seed, v)) {
+          kinds.add(c.kind);
+          lo = Math.min(lo, c.r);
+          hi = Math.max(hi, c.r);
+          expect(c.r).toBeGreaterThanOrEqual(0.08);
+          expect(c.r).toBeLessThanOrEqual(0.15);
+        }
+      expect(kinds.size, `Seed ${seed}`).toBeGreaterThanOrEqual(2);
+      expect(hi / lo, `Seed ${seed}`).toBeGreaterThanOrEqual(1.4);
+    }
+  });
+
+  it('R149 Stempel zeigen die Körperfarben der drei Arten', () => {
+    const seen = new Set<string>();
+    for (let v = 0; v < TREE_VARIANTS; v++) {
+      const { ctx, log } = fakeCtx();
+      paintStamp(ctx, 3, v, 1);
+      for (const f of log.fillSet) seen.add(f);
+    }
+    for (const c of [PALETTE.crown, CONIFER_COLOR, LIGHT_CROWN_COLOR])
+      expect(seen.has(c), c).toBe(true);
   });
 
   it('AK-ISO-10 treeShadow: Polygon im Kachelraum, nach rechts unten versetzt, deterministisch', () => {
@@ -216,7 +258,7 @@ class RasterCtx {
   fillStyle = '#000000';
   private m = { s: 1, tx: 0, ty: 0 };
   private stack: { s: number; tx: number; ty: number }[] = [];
-  private shape: { kind: 'rect' | 'ell'; a: number[] } | null = null;
+  private shape: { kind: 'rect' | 'ell' | 'poly'; a: number[] } | null = null;
   readonly px: string[];
   constructor(
     readonly w: number,
@@ -243,6 +285,13 @@ class RasterCtx {
   rect(x: number, y: number, w: number, h: number) {
     this.shape = { kind: 'rect', a: [x, y, w, h] };
   }
+  moveTo(x: number, y: number) {
+    this.shape = { kind: 'poly', a: [x, y] };
+  }
+  lineTo(x: number, y: number) {
+    this.shape!.a.push(x, y);
+  }
+  closePath() {}
   ellipse(x: number, y: number, rx: number, ry: number) {
     this.shape = { kind: 'ell', a: [x, y, rx, ry] };
   }
@@ -253,11 +302,21 @@ class RasterCtx {
       for (let i = 0; i < this.w; i++) {
         const x = (i + 0.5 - tx) / s,
           y = (j + 0.5 - ty) / s;
-        const [a, b, c, d] = sh.a as [number, number, number, number];
-        const inside =
-          sh.kind === 'rect'
-            ? x >= a && x <= a + c && y >= b && y <= b + d
-            : ((x - a) / c) ** 2 + ((y - b) / d) ** 2 <= 1;
+        let inside: boolean;
+        if (sh.kind === 'poly') {
+          inside = false; // Gerade-Ungerade-Regel
+          const p = sh.a;
+          for (let a = 0, b = p.length - 2; a < p.length; b = a, a += 2) {
+            const [xa, ya, xb, yb] = [p[a]!, p[a + 1]!, p[b]!, p[b + 1]!];
+            if (ya > y !== yb > y && x < ((xb - xa) * (y - ya)) / (yb - ya) + xa) inside = !inside;
+          }
+        } else {
+          const [a, b, c, d] = sh.a as [number, number, number, number];
+          inside =
+            sh.kind === 'rect'
+              ? x >= a && x <= a + c && y >= b && y <= b + d
+              : ((x - a) / c) ** 2 + ((y - b) / d) ** 2 <= 1;
+        }
         if (inside) this.px[j * this.w + i] = this.fillStyle;
       }
   }
