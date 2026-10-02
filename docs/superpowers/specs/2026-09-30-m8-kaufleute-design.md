@@ -952,14 +952,14 @@ Seed 3, Krisen `off`, erzeugt mit `SCENARIO_OUT=<ordner> npx vitest run tests/si
 in M5 und M6: pausieren, per CDP `localStorage.setItem('inselreich.save.v1', <json>)`, „Laden". „1 vor dem
 Wachstumstakt" heisst `tick = 50 · n − 1`.
 
-| Szenario                   | Inhalt                                                                                                                                                                                                                                | genutzt von                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `m8-vor-sieg`              | `won false`; 3 volle Bürgerhäuser (45 Bürger), alle seit ≥ 300 Ticks zufrieden, Steuer normal; Kapelle und Schule angebunden, kein Bad, Glas 0, Geld 3000, Holz 60, Werkzeug 20, Stein 30                                             | AK-U1-04, AK-U1-09, AK-U2-03, AK-U2-06 |
-| `m8-kurz-vor-sieg`         | 3 volle Bürgerhäuser und 1 Bürgerhaus mit 4 EW (49 Bürger), alle seit ≥ 300 Ticks zufrieden; **kein Badehaus** (Änderung S11: vorher Badehaus angebunden); Glas 5, Geld 3000, Holz 30, Werkzeug 20, Stein 20; 1 vor dem Wachstumstakt | AK-U1-05, AK-S3-08                     |
-| `m8-kurz-vor-handelsstadt` | `won true`; 3 Kaufmannshäuser 20 / 20 / 19, alles reichlich, 1 vor dem Wachstumstakt                                                                                                                                                  | AK-U1-06                               |
-| `m8-glashuette-wartet`     | `won true` (Änderung S11, Freischaltung); Glashütte angebunden, Stein 5, Holz 0, `state 'waitingInput'`                                                                                                                               | AK-U2-04                               |
-| `m8-kaufleute-ohne-glas`   | `won true`; 1 Kaufmannshaus 20 EW, Kapelle, Schule, Bad, Glas 0, `satisfied.glass false`; Geld 3000, Holz 60, Werkzeug 20, Stein 30 (Änderung S11, für AK-U2-06 und AK-U2-10)                                                         | AK-U2-05, AK-U2-10, AK-R1-02           |
-| `m8-handel`                | Glas 10, `sellPct.glass` 100                                                                                                                                                                                                          | AK-U2-07                               |
+| Szenario                   | Inhalt                                                                                                                                                                                                                                | genutzt von                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `m8-vor-sieg`              | `won false`; 3 volle Bürgerhäuser (45 Bürger), alle seit ≥ 300 Ticks zufrieden, Steuer normal; Kapelle und Schule angebunden, kein Bad, Glas 0, Geld 3000, Holz 60, Werkzeug 20, Stein 30                                             | AK-U1-04, AK-U1-09, AK-U2-03, AK-U2-06           |
+| `m8-kurz-vor-sieg`         | 3 volle Bürgerhäuser und 1 Bürgerhaus mit 4 EW (49 Bürger), alle seit ≥ 300 Ticks zufrieden; **kein Badehaus** (Änderung S11: vorher Badehaus angebunden); Glas 5, Geld 3000, Holz 30, Werkzeug 20, Stein 20; 1 vor dem Wachstumstakt | AK-U1-05, AK-S3-08                               |
+| `m8-kurz-vor-handelsstadt` | `won true`; 3 Kaufmannshäuser 20 / 20 / 19, alles reichlich, 1 vor dem Wachstumstakt                                                                                                                                                  | AK-U1-06                                         |
+| `m8-glashuette-wartet`     | `won true` (Änderung S11, Freischaltung); Glashütte angebunden, Stein 5, Holz 0, `state 'waitingInput'`                                                                                                                               | AK-U2-04                                         |
+| `m8-kaufleute-ohne-glas`   | `won true`; 1 Kaufmannshaus 20 EW, Kapelle, Schule, Bad, Glas 0, `satisfied.glass false`; Geld 3000, Holz 60, Werkzeug 20, Stein 30 (Änderung S11, für AK-U2-06 und AK-U2-10)                                                         | AK-U1-07, AK-U2-05, AK-U2-06, AK-U2-10, AK-R1-02 |
+| `m8-handel`                | Glas 10, `sellPct.glass` 100                                                                                                                                                                                                          | AK-U2-07                                         |
 
 **Änderung `galerie` statt `m8-galerie`** (Nachführung 2026-10-02): `tests/sim/scenario-saves.test.ts` prüft, dass
 das bestehende Szenario `galerie` **jeden** `BUILDING_IDS`-Typ enthält. S1 ergänzt `galerie` deshalb um ein
@@ -1290,7 +1290,7 @@ AK-U2-10 sind neu (14.2, 14.8).
 AK-R1-04 (K2, K3); dazu 6 Punkte „Nutzer-Playtest" (18.2). Vorher 68; mit der Nachführung M7-UX neu AK-S1-17,
 AK-S1-18, AK-S1-19, AK-S1-20, AK-S2-17, AK-S2-18, AK-S3-10, AK-B2-02, AK-U2-08, AK-U2-09 und AK-U2-10 (79).
 **Änderung S11:** neu AK-S1-21, AK-S2-19, AK-U1-09; gestrichen AK-B1-07 (K1); geändert AK-S3-08, AK-B2-02, AK-U1-04,
-AK-U1-05, AK-U2-01, AK-U2-06, AK-U2-10 (81).
+AK-U1-05, AK-U2-01, AK-U2-06, AK-U2-10, dazu mit R151 AK-U1-07 (W8), AK-U1-09 (W10) und AK-U2-09 (W9) (81).
 
 ### 18.3 Randfälle (Übersicht)
 
