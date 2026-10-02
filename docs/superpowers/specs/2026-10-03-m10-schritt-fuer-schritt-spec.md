@@ -1,7 +1,7 @@
 # M10 „Schritt für Schritt" — Design-Spec
 
-Datum: 2026-10-03 · Paket H-D1 · Meilenstein M10 · Status: **Spec, Gate Spec** · Prozessstufe voll (neues System,
-Save v5)
+Datum: 2026-10-03 · Paket H-D1 · Meilenstein M10 · Status: **Spec, Gate Spec bestanden mit Auflagen (R163), Delta eingearbeitet** · Prozessstufe
+voll (neues System, Save v5)
 
 Grundlage: [Designvorschlag M10](2026-10-03-m10-schritt-fuer-schritt-design.md) (Gate Brainstorming bestanden, R155,
 D1–D11 wie empfohlen, D10 mit Playtest-Frage im Spec-Gate), Ruling R155 (H-S1 „Wald roden" geht als Sim-Paket in M10
@@ -17,9 +17,11 @@ arc42, ADR oder einem Abnahmekriterium früherer Meilensteine (Übersicht in Abs
 markiert eine Stelle, die auf dem M8-Stand aufsetzt und sich **bis zum M8-Merge ändern kann** (Abschnitt 17).
 Fremde Abnahmekriterien tragen das Präfix ihres Meilensteins (`M7:AK-UX-15`, `M8:AK-S1-21`).
 
-Code-Stand der Prüfung: `main` @ ab82f04 (M6, M7, M7-UX, M9 H-R1, BUG-LICHT; **M8 nicht gemergt**, M8 in
-Umsetzung). M10 startet nach dem M8-Merge (Vorschlag 10.4) und setzt auf dessen Stand auf: Save v4, `tierLock`,
-`buildLock`, `unlockTier`, `unlockNotice`, `lockedToolText`, `goalTexts`, Tasten J und O, Badehaus, Glashütte, Glas.
+Code-Stand der Prüfung (Delta R163): `main` @ 9460ab9 mit M8-Sim (Save v4, `migrateV3ToV4`, `tierLock`,
+`buildLock`, `unlockTier`, Badehaus, Glashütte, Glas), M9 H-R1 und H-R2 (`wildlifeAt`); M8-UI auf `feat/m8-ui` @ 6cbdc56
+noch nicht gemergt (`goalTexts`, `UNLOCK_NOTICE`, `initialUnlockShown`, `unlockNotice`, `lockedToolText` in
+`src/ui/goal.ts`, Merkfeld `unlockShown` in `app.ts`, Tasten J und O). M10 startet nach dem M8-Merge (Vorschlag 10.4)
+und setzt auf dessen Stand auf. Die M8-Branches ändern `src/sim/` nicht mehr (lead-tech, Gate Spec).
 
 ## 1. Ziel
 
@@ -53,7 +55,7 @@ Hilfe-Karte, Mouse-over und einen ersten Symbolsatz. Die Referenzläufe bleiben 
 | M1  | Freischalt-Sim: `defs/unlocks.ts`, `unlocks.ts`, `tickUnlocks`, `buildLock` aus `unlocked`, Sperren in `placeBuilding`, `buy`, `deliverOrder` | S1         | 4         |
 | M2  | Amtsstube (Gebäude, Silhouette), `effectiveTaxLevel`, `setTaxLevel` nur mit Amtsstube                                                         | S2, R1     | 5.1, 5.2  |
 | M3  | Ausgabesperre S5 (`goodLocks`, `setGoodLock`, Wirkung in `consume` und Aufstieg)                                                              | S2         | 5.3       |
-| M4  | Werkzeugmacher: Freischaltung U5, Betriebsbedingung Schule (`noSchool`)                                                                       | S1, S2     | 5.5       |
+| M4  | Werkzeugmacher: Freischaltung U5, Betriebsbedingung Schule (`noService`)                                                                      | S1, S2     | 5.5       |
 | M5  | Save v5 mit Migration v4 → v5 und Test alter Stände                                                                                           | S1         | 8         |
 | M6  | UI zeigt nur Freigeschaltetes: Bauleiste, Tasten, Tastenliste, Lager- und Einwohner-Chips, Handels-Panel, Auftragskarte, Amtsstuben-Panel     | U1, U2     | 11        |
 | M7  | Freischalt-Meldung                                                                                                                            | U1         | 11.6      |
@@ -133,8 +135,11 @@ braucht einen Namen); `UnlockDef = { id; trigger; buildings; goods; functions; l
 Haus wird also nie voll, 4.6). Das Prädikat ist für `tier ≤ 3` gleich `anyPlan(tier)` des Controllers
 (`tests/sim/controller.ts`, Ist-Stand `main`); daraus folgt die Bitgleichheit (9).
 
-**Kette (Setzung Spec):** Die Einträge U2 → U3 → U4 → U5 → U6 bilden eine Kette. Ist ein Eintrag der Kette frei,
-sind alle früheren frei. U0 ist immer frei, U1 liegt ausserhalb der Kette.
+**Kette (Setzung Spec):** Die Einträge U2 → U3 → U4 → U5 → U6 bilden eine Kette. Schaltet `tickUnlocks` (oder
+`triggeredUnlocks`) einen Eintrag der Kette über seinen **Auslöser** frei, schaltet es alle früheren mit frei. Ein
+Eintrag, der nur über ein stehendes Gebäude dazukommt (`deriveUnlocks`, Migration und Szenarien, 8.2), zieht keine
+Kette nach; dort kann also ein späterer Eintrag ohne frühere frei sein. U0 ist immer frei, U1 liegt ausserhalb der
+Kette.
 
 ### 4.3 Ablauf `tickUnlocks(world)`
 
@@ -226,9 +231,10 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
 | Taste         | I                                                       | Vorschlag 2.2                   |
 | Freischaltung | U3                                                      | Vorschlag 2.2                   |
 
-- **Höchstens eine:** `canPlace(w, 'townhall', …)` liefert nach der Sperrprüfung den Grund
-  `'Es gibt schon eine Amtsstube'`, sobald eine Amtsstube steht (auch brennend oder unverbunden), sonst die
-  bisherigen Prüfungen.
+- **Höchstens eine (Delta R163, B8):** neues optionales Def-Feld `BuildingDef.maxCount?: { n: number; reason: string }`,
+  bei `townhall` `{ n: 1, reason: 'Es gibt schon eine Amtsstube' }`. `canPlace` prüft nach der Sperrprüfung allgemein:
+  stehen schon `n` Gebäude dieses Typs (auch brennend oder unverbunden) → `fail(maxCount.reason)`; sonst die
+  bisherigen Prüfungen. Keine Abfrage der Id `townhall` in `placement.ts`.
 - **Aktiv** (`townhallActive(w)`, **Setzung Spec**): eine Amtsstube steht, ist angebunden (`connected`) und hat
   keinen Ausfall (`outageUntil` fehlt). Gleiche Prüfung wie bei Diensten (`serviceAvailable`), ohne Radius. Grund:
   Jeder Betrieb und Dienst braucht einen Weg; `nextStep` Regel 2 nennt das schon.
@@ -244,8 +250,8 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
 - `effectiveTaxLevel(w)` = `w.taxLevel`, wenn `townhallActive(w)`, sonst `'normal'`. Die gespeicherte Stufe bleibt
   (Vorschlag 2.3, D3).
 - **Alle Lesestellen** von `TAX_LEVELS[world.taxLevel]` lesen künftig `TAX_LEVELS[effectiveTaxLevel(world)]`:
-  `population.ts` (`upgradeStatus` Wartezeit, `houseCap` Belegung, `totalTaxes` Prozent; Ist-Stand Zeilen 120, 162,
-  195), `src/ui/guide.ts` (Steuer-Regel), `src/ui/inspect.ts` (`rest-tax`), `src/ui/hud.ts` (aktive Stufe).
+  `population.ts` (`upgradeStatus` Wartezeit, `houseCap` Belegung, `totalTaxes` Prozent; Ist-Stand @ 9460ab9 Zeilen 124, 166,
+  199), `src/ui/guide.ts` (Steuer-Regel), `src/ui/inspect.ts` (`rest-tax`), `src/ui/hud.ts` (aktive Stufe).
 - `setTaxLevel(w, level)` prüft in dieser Reihenfolge (**Setzung Spec**): unbekannte Stufe → `'Ungültige Stufe'`;
   nicht `townhallActive` → `townhallReason(w)`; gleiche Stufe → `'Stufe bereits aktiv'`; Sperrzeit →
   `'Sperrzeit'`. Bei `fail` bleiben `taxLevel` und `taxLockedUntil` unverändert. Werte in `TAX_LEVELS` und
@@ -284,14 +290,16 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
 
 - `defs/buildings.ts` `toolmaker.requiresService = 'school'` (neues optionales Feld
   `BuildingDef.requiresService?: ServiceId`). Radius = `school.serviceRadius` (10), kein neuer Wert.
-- **Neuer Zustand** `BuildingState` `'noSchool'` (**Setzung Spec** für den Namen, Vorschlag 2.3).
+- **Neuer Zustand** `BuildingState` `'noService'` (Delta R163, B8: allgemeiner Name, damit ein späterer Betrieb mit
+  anderem `requiresService` keine Migration braucht). Texte nennen den Dienst über `SERVICE_BUILDING[requiresService]`
+  („Braucht eine Schule in Reichweite").
   `tickProduction` prüft in dieser Reihenfolge: Ausfall → `burning`; nicht angebunden → `notConnected`;
-  `requiresService` und kein `serviceAvailable(world, b, service)` → `noSchool` (kein Fortschritt, keine
+  `requiresService` und kein `serviceAvailable(world, b, service)` → `noService` (kein Fortschritt, keine
   Entnahme, `progress` bleibt); Sturm; Input → `waitingInput`; Fortschritt. Der Unterhalt läuft weiter
   (`tickEconomy` unverändert).
-- `serviceAvailable` gilt Mitte zu Mitte für jedes Gebäude, nicht nur Häuser (Ist-Stand `population.ts` Zeile 57,
+- `serviceAvailable` gilt Mitte zu Mitte für jedes Gebäude, nicht nur Häuser (Ist-Stand `population.ts` Zeile 59 @ 9460ab9,
   ohne Codeänderung nutzbar).
-- Ohne Werkzeugmacher tritt `noSchool` nie auf (bitgleich).
+- Ohne Werkzeugmacher tritt `noService` nie auf (bitgleich).
 
 ## 6. Regeln: Wald roden und aufforsten (Sim, Paket F1, H-S1 in M10)
 
@@ -305,8 +313,8 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
 **Aktionen** (rein bis auf die Wirkung, `{ ok, reason }`, werfen nie):
 
 - `canClearForest(w, x, y)` / `canPlantForest(w, x, y)`: Prüfung ohne Wirkung (Vorschau und Hinweise).
-- `clearForest(w, x, y)`: Wald → Weide (`'forest'` → `'grass'`), bucht `CLEAR_FOREST_COST`, `terrainRev += 1`.
-- `plantForest(w, x, y)`: Weide → Wald (`'grass'` → `'forest'`), bucht `PLANT_FOREST_COST`, `terrainRev += 1`.
+- `clearForest(w, x, y)`: Wald → Weide (`'forest'` → `'grass'`), bucht `CLEAR_FOREST_COST`.
+- `plantForest(w, x, y)`: Weide → Wald (`'grass'` → `'forest'`), bucht `PLANT_FOREST_COST`.
 
 **Prüfreihenfolge** (**Setzung Spec**, Texte aus `placement.ts` wiederverwendet, wo es sie gibt):
 
@@ -317,16 +325,17 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
    Gebirge, die jeweils andere Art).
 5. `checkAfford` → `'Kein Geld'` (Geld < 0) bzw. `'Zu wenig Geld'`.
 
-Bei `fail` ändert sich nichts an der Welt (auch nicht `terrainRev`).
+Bei `fail` ändert sich nichts an der Welt.
 
 **Regeln:** Roden liefert **kein Holz**. Kein Nachwachsen, keine Erstattung. Kein Zufall. Ein stehender Holzfäller,
 dessen Wald gerodet wurde, **arbeitet weiter** (Standortregel nur beim Bau; „braucht Wald" ist M11); Mouse-over warnt
 (13.2). Eine stehende Schäferei oder Plantage verliert durch Aufforsten nichts. Der Kreis Roden → Aufforsten kostet
 30 und bringt nichts (Vorschlag 9.5). Freischaltung U2; mit „Alles frei" ab Tick 0.
 
-**Cache-Schlüssel (Teil von F1):** `layoutKey(world)` in `src/sim/queries.ts` mischt `world.terrainRev` ein
-(**Abweichung** zum Briefing-Wortlaut „Schlüssel in `src/render/`", siehe 7). Der Doc-Kommentar lautet dann „ändert
-sich bei Bau, Abriss, Weg, Anbindung und Geländewechsel, nicht durch `step()` allein".
+**Cache-Schlüssel (Teil von F1, Delta R163 B7, löst R159 W3 ab):** `layoutKey(world)` in `src/sim/queries.ts` hasht
+zusätzlich die **Geländeart jeder Kachel** (in der Kachel-Schleife, die heute schon die Wege hasht). Kein neues
+Weltfeld. Der Doc-Kommentar lautet dann „ändert sich bei Bau, Abriss, Weg, Anbindung und Geländewechsel, nicht durch
+`step()` allein".
 
 ## 7. Terrain-Cache und Darstellung nach Geländewechsel
 
@@ -338,18 +347,23 @@ kein Gelände. Zusätzlich zeichnet `updateTerrainLayer` nur Kacheln mit geände
 
 **Vorgabe:**
 
-1. Neues Weltfeld `terrainRev: number` (Save v5, Standard 0, jede **erfolgreiche** Forst-Aktion +1; sonst schreibt
-   niemand hinein). Der Controller erzwingt sein Gelände direkt in `tiles` (`forceTerrain`) und lässt `terrainRev`
-   bei 0 (Testhelfer, kein Spielweg).
-2. `layoutKey` schliesst `terrainRev` ein (F1). Damit verwerfen Terrain-, Baum-, Abdeckungs- und Weggraph-Cache ihren
-   Stand ohne eigene Logik; der Render-Schlüssel enthält `terrainRev` mittelbar.
+1. Kein neues Weltfeld (Delta R163, B7). `layoutKey` hasht die Geländeart je Kachel (F1, 6). Damit verwerfen
+   Terrain-, Baum-, Abdeckungs- und Weggraph-Cache ihren Stand nach jedem Geländewechsel ohne eigene Logik. Auch das
+   erzwungene Gelände des Controllers (`forceTerrain`) ändert den Schlüssel; das ist ohne Wirkung auf die Sim.
+2. **Gelände-feste Caches (Delta R163, B3):** Drei weitere Caches gehen davon aus, dass sich das Gelände nie ändert:
+   Tier-Anker in `src/render/wildlife.ts` (Vögel über „Wald oder Weide"), Küstenfeld in `src/render/water.ts` und
+   `src/render/life.ts`. Sie bleiben gültig, **weil Forst-Aktionen nur zwischen Wald und Weide wechseln** und die
+   Küste nie berühren (Setzung Spec). Jede künftige Geländeänderung anderer Art muss diese Caches neu bewerten. R1
+   passt die Code-Kommentare an; AK-R1-05 prüft die Bedingung.
 3. `updateTerrainLayer` (R1) erkennt einen Geländewechsel über ein Gelände-Abbild je Kachel (analog `occupancy`) und
    zeichnet das Rechteck der geänderten Kacheln **plus den Rand der Feld-Glättung** neu, inklusive Neuberechnung des
-   Rasters in diesem Rechteck. Ein vollständiger Neuaufbau ist zulässig, wenn er die Zeitgrenze aus AK-R1-03 hält.
+   Rasters in diesem Rechteck. Ein vollständiger Neuaufbau ist **nicht** zulässig (≈ 650 ms bei dpr 2, lead-tech B10);
+   erwartet sind ≤ 15 ms je Forst-Aktion (Teil-Neuzeichnung nach Bau heute 3,4–4,3 ms). Messpunkt ist
+   `updateTerrainLayer().ms`; arc42 §10 bekommt dazu eine Zeile (R1).
 4. Die Baumstempel einer gerodeten Kachel verschwinden, eine aufgeforstete Kachel bekommt Bäume (`sortedObjects`,
    Variante weiter aus `treeVariant(seed, x, y)`).
 
-**Die Beobachtung gilt mit F1 und R1 als gelöst** (AK-F1-08, AK-R1-01, AK-R1-02). Die Datei `docs/beobachtungen.md`
+**Die Beobachtung gilt mit F1 und R1 als gelöst** (AK-F1-08, AK-R1-01, AK-R1-02, AK-R1-05). Die Datei `docs/beobachtungen.md`
 ändert diese Spec nicht; den Eintrag schliesst das Paket R1 beim Merge.
 
 ## 8. Datenmodell und Save v5
@@ -359,10 +373,11 @@ kein Gelände. Zusätzlich zeichnet `updateTerrainLayer` nur Kacheln mit geände
 ```ts
 export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
 export type BuildingDefId = /* bestehend inkl. M8 */ 'townhall'; // am Ende
-export type BuildingState = /* bestehend */ 'noSchool';
+export type BuildingState = /* bestehend */ 'noService';
 export interface BuildingDef {
   /* bestehend; M8 `unlockTier` entfällt (17) */
   requiresService?: ServiceId; // Betrieb arbeitet nur mit diesem Dienst in Reichweite (5.5)
+  maxCount?: { n: number; reason: string }; // Höchstzahl dieses Typs (5.1, Delta R163 B8)
 }
 export interface World {
   version: 5; // war 4 (M8)
@@ -370,12 +385,11 @@ export interface World {
   unlocked: UnlockId[]; // Reihenfolge wie UNLOCKS, monoton
   goodLocks: { tier: Tier; good: GoodId }[]; // sortiert (5.3)
   upgradeStops: Tier[]; // aufsteigend (5.4, K1)
-  terrainRev: number; // ganzzahlig ≥ 0 (7)
 }
 ```
 
 - `createWorld(seed, opts?)` mit `opts.unlockAll?: boolean` (**Setzung Spec**): `version 5`, `unlocked` = `['U0']`
-  bzw. alle Ids bei `unlockAll`, `goodLocks []`, `upgradeStops []`, `terrainRev 0`. Alles andere wie nach M8;
+  bzw. alle Ids bei `unlockAll`, `goodLocks []`, `upgradeStops []`. Alles andere wie nach M8;
   `unlockAll` ändert keinen Zufall und kein anderes Feld.
 
 ### 8.2 Save v5 (`src/sim/save.ts`)
@@ -383,22 +397,23 @@ export interface World {
 - `SAVE_VERSION = 5`. `serialize` schreibt immer v5. `deserialize` wirft weiterhin nie.
 - Kette: v1 → v2 → v3 → v4 (bestehend, M8-Schnittstelle) → **`migrateV4ToV5(raw)`** → Prüfung. `version` ≠ 5 nach
   der Kette → `'Unbekannte Version'` (auch `version 6`).
-- **`migrateV4ToV5`** (Vorschlag 6, präzisiert): `unlocked = deriveUnlocks(Welt)` (4.4: Auslöser jetzt erfüllt plus
-  Kettenvorgänger plus jeder Eintrag, dessen Gebäude steht), `goodLocks = []`, `upgradeStops = []`,
-  `terrainRev = 0`, `version = 5`. Gebäude, Häuser, `taxLevel`, `taxLockedUntil`, Lager, Auftrag und Krise bleiben
-  unberührt. **Präzisierung:** Ein Eintrag, der nur über ein stehendes Gebäude dazukommt, zieht keine Kette nach
+- **`migrateV4ToV5`** (Vorschlag 6, präzisiert, Delta R163 B1): setzt `unlocked = ['U0']` (Platzhalter),
+  `goodLocks = []`, `upgradeStops = []`, `version = 5` und merkt sich „aus v4 migriert". **Erst nachdem
+  `isWellFormed` den Stand angenommen hat**, setzt `deserialize` für einen migrierten Stand
+  `unlocked = deriveUnlocks(Welt)` (4.4: Auslöser jetzt erfüllt plus Kettenvorgänger plus jeder Eintrag, dessen
+  Gebäude steht). So läuft `deriveUnlocks` nie auf ungeprüften Rohdaten, und `deserialize` wirft weiterhin nie.
+  Gebäude, Häuser, `taxLevel`, `taxLockedUntil`, Lager, Auftrag und Krise bleiben unberührt. **Präzisierung:** Ein Eintrag, der nur über ein stehendes Gebäude dazukommt, zieht keine Kette nach
   (sonst schaltete ein früh gebauter Werkzeugmacher Kapelle und Schule frei).
 - **Strukturprüfung zusätzlich** (Verstoss → `'Beschädigter Spielstand'`, **Setzung Spec**):
   - `unlocked` ist ein Array aus bekannten Ids, ohne Doppelte, enthält `'U0'`, in `UNLOCKS`-Reihenfolge.
   - `goodLocks` ist ein Array aus Objekten mit `tier` (Schlüssel von `TIERS`) und `good` (in `GOOD_IDS` und in
     `TIERS[tier].needs`), ohne Doppelte, sortiert (5.3).
   - `upgradeStops` ist ein Array aus Stufen mit `upgradeCost !== null`, ohne Doppelte, aufsteigend.
-  - `terrainRev` ist eine ganze Zahl ≥ 0.
   - Nicht geprüft (bewusst): ob stehende Gebäude freigeschaltet sind (ein Stand mit Schule ohne U4 ist gültig, 18.3).
 - `recomputeConnectivity` wie heute. Der `localStorage`-Schlüssel bleibt `inselreich.save.v1`.
 - **Laden zeigt keine Freischalt-Meldung** (11.6) und spielt keinen Ton (11.7).
-- **Fixture** `tests/sim/fixtures/save-v4.json` (**Setzung Spec**), erzeugt mit dem Code **nach dem M8-Merge und
-  vor M10-S1** als erster Schritt auf `main`: Controller Seed 3, Krisen „normal" mit Feuerwache, angehalten bei Tick
+- **Fixture** `tests/sim/fixtures/save-v4.json` (**Setzung Spec**), erzeugt mit dem Sim-Code von `main` ab 9460ab9
+  (M8-Sim gemergt, Save v4; die M8-UI-Branches ändern `src/sim/` nicht) **vor M10-S1** als erster Schritt auf `main`: Controller Seed 3, Krisen „normal" mit Feuerwache, angehalten bei Tick
   **4800** (erster Bürger 4750), danach `setTaxLevel(w, 'high')`, dann `serialize`. Bei Tick 4800 läuft der Auftrag
   der Periode 4 (angeboten 4200, fällig 4800). Der Testkommentar nennt Erzeugungs-Commit und Erzeugungsweg.
   `tests/sim/fixtures/` steht in `.prettierignore`.
@@ -425,7 +440,7 @@ Nachweis am Code (Vorschlag 7, am Ist-Stand `main` geprüft):
 | M8 B1 Phase 3: Badehaus, Glashütte, Glas kaufen                    | nach dem Sieg                           | U6      | ja: `tickUnlocks` nach `checkWin` im Siegtick             |
 
 Weitere Pfade: `canPlace` mit `buildLock === null` läuft wie heute; `consume` und `upgradeStatus` mit leeren
-`goodLocks` und `upgradeStops` wie heute; `noSchool` ohne Werkzeugmacher nie; `layoutKey` ist eine Abfrage, kein
+`goodLocks` und `upgradeStops` wie heute; `noService` ohne Werkzeugmacher nie; `layoutKey` ist eine Abfrage, kein
 Zustand. Die Messprobe aus Vorschlag 9.1 fand **keinen Bau und keinen Handel vor seinem Auslöser** (engster Abstand
 U2 Tick 150, Kapelle Tick 200).
 
@@ -436,7 +451,7 @@ AK-S1-05 hält die Reihenfolge fest.
 ### 9.2 Fingerabdruck
 
 Die Normalisierung `normalized()` in `tests/sim/balance-crises.test.ts` entfernt zusätzlich `unlocked`,
-`goodLocks`, `upgradeStops` und `terrainRev` und setzt `version` wie bisher auf den Referenzwert (Muster M8 16.1).
+`goodLocks` und `upgradeStops` und setzt `version` wie bisher auf den Referenzwert (Muster M8 16.1).
 Kein Ruling für einen Baseline-Bruch nötig.
 
 ### 9.3 Sollwerte der Freischaltung (Messtabelle Vorschlag 9.1)
@@ -496,7 +511,7 @@ den Sim-Abfragen. Texte mit **Setzung Spec** sind Vorgaben; Wortlaut nach Anmutu
 
 ### 11.2 Tasten (U1; I in S2; C, Q, `?` in U2)
 
-**Prüfstand der Belegung** (`main` @ ab82f04 plus M8): `TOOL_HOTKEYS` R, X, H, K, U, M, F, L, B, G, V, Z, N, T, E
+**Prüfstand der Belegung** (`main` @ 9460ab9 plus `feat/m8-ui` @ 6cbdc56): `TOOL_HOTKEYS` R, X, H, K, U, M, F, L, B, G, V, Z, N, T, E
 (15) plus M8 J, O (17); `SPEED_KEYS` 1, 2, 3; P (Pause); `PAN_KEYS`/`NAV_KEYS` W, A, S, D, Pfeile, Leertaste, Esc,
 Mausrad, Rechtsklick. **Frei und neu belegt:** I (Amtsstube), C (Roden), Q (Aufforsten), `?` (Hilfe). Danach 20
 Werkzeugtasten.
@@ -590,8 +605,10 @@ wächst; nicht beim Laden, nicht bei „Neu". Fällt `won` in denselben Frame, n
 
 (**Setzung Spec** für alle Zeilen ausser den Formaten aus M7-UX.)
 
-- **Werkzeugmacher:** Zustandstext `stateInfo` (`texts.ts`) für `noSchool` „Braucht eine Schule in Reichweite";
-  `remedyText` „Baue eine Schule (U) in Reichweite". Kartenzeichen wie `waitingInput` (Vorschlag 2.3).
+- **Werkzeugmacher:** Zustandstext `stateInfo` (`texts.ts`) für `noService` „Braucht eine Schule in Reichweite";
+  `remedyText` „Baue eine Schule (U) in Reichweite", ist die Schule gesperrt (`buildLock('school') ≠ null`, etwa in
+  einem migrierten v4-Stand) „Schule kommt, {whenText von U4}" („Schule kommt, sobald ein Wohnhaus 8 Siedler hat",
+  Delta R163 B-3). Kartenzeichen wie `waitingInput` (Vorschlag 2.3).
 - **Gründe** (`hints.ts` `REASON_TABLE`, Erweiterung M7:AK-UX-03, **Setzung Spec**): „Es gibt schon eine Amtsstube"
   → „Es gibt schon eine Amtsstube — höchstens eine wirkt"; „Braucht eine Amtsstube" → „Baue zuerst eine Amtsstube (I)"; „Amtsstube wirkt nicht" → „Die Amtsstube wirkt erst mit Weg und ohne Brand"; „Kein Wald" → „Hier ist kein Wald"; „Keine Weide" → „Aufforsten geht nur auf Weide"; alle `lockText`, „{Gut}
   für {Stufe} gesperrt", „Aufstieg in der Amtsstube angehalten", „Ungültige Sperre" → wörtlich. „Erst nach dem Ziel"
@@ -643,7 +660,7 @@ und Auslöser `tierWish` oder `tierReached`.
 
 ### 12.3 `nextStep` und `remedyText` (Filter, Änderung M7:AK-UX-08)
 
-- **S1 (Ausnahme `guide.ts`, wie M8 AK-S1-19):** Nennt ein Satz ein Gebäude mit `buildLock ≠ null`, lautet er
+- **S1 (Ausnahme `guide.ts`, wie M8:AK-S1-19):** Nennt ein Satz ein Gebäude mit `buildLock ≠ null`, lautet er
   stattdessen „{Name} kommt, {whenText}" (zum Beispiel „Marktplatz kommt, sobald 20 Wohnhäuser stehen",
   **Setzung Spec**). Der M8-Filter (Stufen nur bei `tierLock(w, t + 1) === null`) bleibt.
 - **U2:** Steuer-Regel und Kassen-Satz lesen `effectiveTaxLevel`. Kassen-Satz: vor U3 „Deine Kasse schrumpft:
@@ -651,7 +668,8 @@ und Auslöser `tierWish` oder `tierReached`.
   versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder baue eine Amtsstube (I)"; mit aktiver Amtsstube wörtlich
   wie heute („… oder erhöhe die Steuer").
 - `remedyText`: „oder baue {Name} ({Taste})" nur bei `buildLock === null` (Holzfäller `storageFull` vor U5 →
-  „Verkaufe Holz am Kontor"); `noSchool` → „Baue eine Schule (U) in Reichweite". Kein Satz enthält „Tick".
+  „Verkaufe Holz am Kontor"); `noService` → „Baue eine Schule (U) in Reichweite" bzw. bei gesperrter Schule
+  „Schule kommt, sobald ein Wohnhaus 8 Siedler hat" (11.9). Kein Satz enthält „Tick".
 
 ## 13. Mouse-over (U3, S9)
 
@@ -660,7 +678,9 @@ und Auslöser `tierWish` oder `tierReached`.
 - Reine Funktion `hoverInfo(world, tile, timeMs, extra)` in `src/ui/hover.ts` (neu, DOM-frei, Vitest unter
   `tests/ui/`) liefert `{ title: string; lines: string[] } | null`, `lines.length ≤ 3`. `extra` (**Setzung Spec**):
   `{ ship: boolean; animal: string | null }`, ermittelt in `app.ts` über das Picking des Renderers und
-  `wildlifeAt(world, range, timeMs)` (M9 H-R2; fehlt H-R2, ist `animal` immer `null`).
+  `wildlifeAt(world, range, timeMs, env)` (M9 H-R2, gemergt) mit **derselben `timeMs` und derselben `env`**
+  (`phase`, `weather`, `reduce`) wie der Renderer im Frame (Delta R163 B6), sonst nennt der Mouse-over Tiere, die
+  nicht gezeichnet sind.
 - Anzeige als Karte am Zeiger nach **400 ms** Ruhe über derselben Kachel; verschwindet bei Wechsel der Kachel, beim
   Ziehen, bei offenem Modal. **Nur mit dem Auswahl-Werkzeug** (bei jedem anderen Werkzeug zeigt `placementHint`
   den Grund). Die Karte bleibt im Fenster (kein Überlauf am Rand).
@@ -671,7 +691,7 @@ und Auslöser `tierWish` oder `tierReached`.
 | Objekt        | `title`                                                       | `lines`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Wohnhaus      | „Pionierhaus", „Siedlerhaus", „Bürgerhaus", „Kaufmannshaus"   | „Einwohner {n} / {max}"; erste Diagnose („{Gut} fehlt", „{Gebäude} fehlt in Reichweite", „Ausserhalb der Versorgung") oder „zufrieden"; „Aufstieg bereit" oder „Aufstieg: {friendlyReason(erster Grund)}" (höchste Stufe: keine dritte Zeile)                                                                                                                                                                                                                                                                                               |
-| Betrieb       | Name                                                          | Zustand: `ok` „arbeitet — {600 / cycle} {Gut} / min"; `waitingInput` „wartet auf {Güter aus `missingInputs`, mit „und"}"; `storageFull` „Lager voll"; `noSchool` „braucht eine Schule in Reichweite"; `burning` „brennt"; `notConnected` „nicht angebunden". Holzfäller ohne Wald im Standortradius zusätzlich „kein Wald mehr in der Nähe"                                                                                                                                                                                                 |
+| Betrieb       | Name                                                          | Zustand: `ok` „arbeitet — {600 / cycle} {Gut} / min"; `waitingInput` „wartet auf {Güter aus `missingInputs`, mit „und"}"; `storageFull` „Lager voll"; `noService` „braucht eine Schule in Reichweite"; `burning` „brennt"; `notConnected` „nicht angebunden". Holzfäller ohne Wald im Standortradius zusätzlich „kein Wald mehr in der Nähe"                                                                                                                                                                                                |
 | Dienst        | Name                                                          | Kapelle, Schule, Badehaus: „versorgt {n} Häuser" (Wohnhäuser mit Mittenabstand ≤ `serviceRadius`; 0, wenn nicht angebunden oder brennend, dann zweite Zeile mit dem Zustand); Feuerwache: „schützt {protectedCount} Gebäude"                                                                                                                                                                                                                                                                                                                |
 | Amtsstube     | „Amtsstube"                                                   | „Steuer: {wirksame Stufe}"; „Sperren: {Zahl goodLocks}"; „Klicken zum Einstellen" bzw. „Wirkt nicht: …"                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Kontor, Markt | Name                                                          | „Versorgung im Radius {supplyRadius}"; Kontor zusätzlich „Handel: klicken"                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -726,7 +746,7 @@ muss `balance.test.ts` grün lassen (AK-S1-16).
 
 ## 16. Tick-Reihenfolge und Aktionen (Übersicht)
 
-`step(world)`: `tick += 1` → `tickProduction` (mit `noSchool`) → `tickPopulation` (wirksame Steuer, `goodLocks`,
+`step(world)`: `tick += 1` → `tickProduction` (mit `noService`) → `tickPopulation` (wirksame Steuer, `goodLocks`,
 `upgradeStops`) → `tickTaxes` (wirksame Steuer) → `tickEconomy` → `tickMarket` → `tickOrders` → `tickCrises` →
 `checkWin` → **`tickUnlocks`**.
 
@@ -739,9 +759,9 @@ muss `balance.test.ts` grün lassen (AK-S1-16).
 | `townhallActive`, `effectiveTaxLevel`, `setGoodLock`, `setUpgradeStop`                                                                        | `townhall.ts` (neu)        | neu                             | S2     |
 | `setTaxLevel`                                                                                                                                 | `tax.ts`                   | braucht aktive Amtsstube        | S2     |
 | `consume`, `upgradeStatus`, `houseCap`, `totalTaxes`                                                                                          | `population.ts`            | wirksame Steuer, Sperren        | S2     |
-| `tickProduction`                                                                                                                              | `production.ts`            | `noSchool`                      | S2     |
+| `tickProduction`                                                                                                                              | `production.ts`            | `noService`                     | S2     |
 | `clearForest`, `plantForest`, `canClearForest`, `canPlantForest`                                                                              | `forest.ts` (neu)          | neu                             | F1     |
-| `layoutKey`                                                                                                                                   | `queries.ts`               | mischt `terrainRev` ein         | F1     |
+| `layoutKey`                                                                                                                                   | `queries.ts`               | hasht die Geländeart je Kachel  | F1     |
 
 ## 17. Schnittstellen zu M8 (kann sich bis zum M8-Merge ändern)
 
@@ -749,22 +769,24 @@ muss `balance.test.ts` grün lassen (AK-S1-16).
 Signaturen, Texte, AK-Nummern). Weicht M8 ab, gilt der M8-Stand, und das Delta passt die betroffenen Stellen hier an;
 Werte und Regeln von M10 ändern sich dadurch nicht ohne Gate.
 
-| M8-Stelle (Stand M8-Spec)                                                                                   | M10                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `buildLock(world, defId)` in `placement.ts` aus `tierLock(world, def.unlockTier)`                           | Quelle wird `world.unlocked` (`unlocks.ts`); `placement.ts` re-exportiert `buildLock`, damit M8-Importe gültig bleiben. U6-Sperrgrund bleibt `tierLock(w, 4)` |
-| `BuildingDef.unlockTier`, `bathhouse`/`glassworks.unlockTier: 4`                                            | entfällt; ersetzt durch Eintrag U6                                                                                                                            |
-| `tierLock(world, 4)` (`population.ts`)                                                                      | Prädikat `tierOpen` von U6; unverändert genutzt                                                                                                               |
-| `unlockNotice(wasLocked, world)` (`goal.ts`), Text „Neu freigeschaltet: Badehaus (J) und Glashütte (O) — …" | ersetzt durch `unlockNoticeText(prev, world)`; der Text ist die Meldung von U6, wörtlich                                                                      |
-| `lockedToolText(world, defId)` (`goal.ts`)                                                                  | verallgemeinert auf `lockedToolText(world, tool)` inklusive Forst-Werkzeuge und Feuerwache bei Krisen „aus"                                                   |
-| `goalTexts(view)`, `goalView(world)`                                                                        | unverändert; Quelle des Hilfe-Abschnitts „Ziel und Ausblick"                                                                                                  |
-| `src/ui/guide.ts` `nextStep` mit M8-Filter (M8 14.8)                                                        | bleibt; M10-Filter zusätzlich (12.3)                                                                                                                          |
-| `hotkeyList()` (M7:AK-UX-06), Tasten J, O                                                                   | `hotkeyList(world)`; J und O bleiben belegt                                                                                                                   |
-| Helfer `withUnlock` in `tests/sim/scenarios.ts`                                                             | entfällt; `createWorld(…, { unlockAll: true })` plus `finishUnlocks` (10)                                                                                     |
-| HUD-Regeln `stock-glass` und `pop-4` (M8 14.1)                                                              | verallgemeinert (11.3, 11.4), gleiches Ergebnis                                                                                                               |
-| Save v4, `migrateV3ToV4`, Fixture `save-v3.json`                                                            | Kette v3 → v4 → v5; neue Fixture `save-v4.json` nach dem M8-Merge (8.2)                                                                                       |
-| `normalized()` mit M8-Feldern (M8 16.1)                                                                     | zusätzlich `unlocked`, `goodLocks`, `upgradeStops`, `terrainRev` (9.2)                                                                                        |
-| M8 B1 `balance-merchants.test.ts`, `merchantsController.ts`                                                 | Messung nach dem M8-Merge (AK-B1-02); Merchant-Controller baut nach dem Sieg, also nach U6                                                                    |
-| Reihenfolge `BUILDING_IDS` nach M8 (…, `firestation`, M8-Ids)                                               | `townhall` am Ende                                                                                                                                            |
+| M8-Stelle (Stand M8-Spec)                                                                                                                                 | M10                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildLock(world, defId)` in `placement.ts` aus `tierLock(world, def.unlockTier)`                                                                         | Quelle wird `world.unlocked` (`unlocks.ts`); `placement.ts` re-exportiert `buildLock`, damit M8-Importe gültig bleiben. U6-Sperrgrund bleibt `tierLock(w, 4)` |
+| `BuildingDef.unlockTier`, `bathhouse`/`glassworks.unlockTier: 4`                                                                                          | entfällt; ersetzt durch Eintrag U6                                                                                                                            |
+| `tierLock(world, 4)` (`population.ts`)                                                                                                                    | Prädikat `tierOpen` von U6; unverändert genutzt                                                                                                               |
+| `unlockNotice(wasLocked, world)` (`goal.ts:107` @ 6cbdc56), `UNLOCK_NOTICE` (`goal.ts:99`), Text „Neu freigeschaltet: Badehaus (J) und Glashütte (O) — …" | ersetzt durch `unlockNoticeText(prev, world)`; der Text ist die Meldung von U6, wörtlich                                                                      |
+| `lockedToolText(world, defId)` (`goal.ts:112` @ 6cbdc56)                                                                                                  | verallgemeinert auf `lockedToolText(world, tool)` inklusive Forst-Werkzeuge und Feuerwache bei Krisen „aus"                                                   |
+| `goalTexts(view)`, `goalView(world)`                                                                                                                      | unverändert; Quelle des Hilfe-Abschnitts „Ziel und Ausblick"                                                                                                  |
+| `src/ui/guide.ts` `nextStep` mit M8-Filter (M8 14.8)                                                                                                      | bleibt; M10-Filter zusätzlich (12.3)                                                                                                                          |
+| `hotkeyList()` (M7:AK-UX-06), Tasten J, O                                                                                                                 | `hotkeyList(world)`; J und O bleiben belegt                                                                                                                   |
+| `initialUnlockShown(world)` (`goal.ts:102` @ 6cbdc56), Merkfeld `state.unlockShown` (`app.ts:84`, gesetzt `app.ts:181`, gelesen `app.ts:380`)             | ersetzt durch das Merkfeld `unlockedSeen` (11.6); beide entfallen (Delta R163 B5)                                                                             |
+| `MAP_SIGNS` (`guide.ts:167` @ 6cbdc56, Konstante)                                                                                                         | bleibt Konstante; K4 braucht eine Filterfunktion (11.10)                                                                                                      |
+| Helfer `withUnlock` in `tests/sim/scenarios.ts`                                                                                                           | entfällt; `createWorld(…, { unlockAll: true })` plus `finishUnlocks` (10)                                                                                     |
+| HUD-Regeln `stock-glass` und `pop-4` (M8 14.1)                                                                                                            | verallgemeinert (11.3, 11.4), gleiches Ergebnis                                                                                                               |
+| Save v4, `migrateV3ToV4`, Fixture `save-v3.json`                                                                                                          | Kette v3 → v4 → v5; neue Fixture `save-v4.json` nach dem M8-Merge (8.2)                                                                                       |
+| `normalized()` mit M8-Feldern (M8 16.1)                                                                                                                   | zusätzlich `unlocked`, `goodLocks`, `upgradeStops` (9.2)                                                                                                      |
+| M8 B1 `balance-merchants.test.ts`, `merchantsController.ts`                                                                                               | Messung nach dem M8-Merge (AK-B1-02); Merchant-Controller baut nach dem Sieg, also nach U6                                                                    |
+| Reihenfolge `BUILDING_IDS` nach M8 (…, `firestation`, M8-Ids)                                                                                             | `townhall` am Ende                                                                                                                                            |
 
 ## 18. Abnahmekriterien
 
@@ -780,20 +802,39 @@ Seed 3, Krisen „off", wenn nicht anders genannt; gebaut mit `unlockAll`, am En
 und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-saves.test.ts`, pausieren, per CDP
 `localStorage.setItem('inselreich.save.v1', <json>)`, „Laden"). „1 vor dem Wachstumstakt" heisst `tick = 50 · n − 1`.
 
-| Szenario                | Inhalt                                                                                                                                                                                        | genutzt von                            |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `m10-start`             | `createWorld(3)`, Krisen „normal", Tick 0, `unlocked ['U0']`                                                                                                                                  | AK-U1-01, -03, -04, -05, -06, AK-U2-05 |
-| `m10-pionier-fast-voll` | 4 Pionierhäuser, eines mit 3 EW, alle versorgt und zufrieden, Nahrung 30, Krisen „normal", 1 vor dem Wachstumstakt, `unlocked ['U0']`                                                         | AK-U1-09, AK-U2-05                     |
-| `m10-siedler-fast`      | U0, U2; Kapelle angebunden; ein volles Pionierhaus seit ≥ 300 Ticks zufrieden, Stoff 5, Geld 2000, Holz 20, Werkzeug 10; Auftrag aktiv (angeboten 1500, fällig 2100); 1 vor dem Wachstumstakt | AK-U1-07, AK-U1-09                     |
-| `m10-wald`              | U0, U2; Waldkacheln und Weide im Kontor-Radius, ein Holzfäller angebunden, Geld 500                                                                                                           | AK-U2-06, AK-R1-01, AK-U3-05           |
-| `m10-amtsstube`         | U0–U5; Pionier-, Siedler- und Bürgerhäuser bewohnt; Amtsstube angebunden; Stoff 2; ein Werkzeugmacher mit Schule in Reichweite, einer ohne                                                    | AK-U1-11, AK-U2-08, AK-U2-09, AK-U3-04 |
-| `m10-amtsstube-aus`     | wie `m10-amtsstube`, Amtsstube ohne Weg; `taxLevel 'high'`                                                                                                                                    | AK-U1-11, AK-U1-13, AK-U2-08           |
-| `galerie` (bestehend)   | jeder `BUILDING_IDS`-Typ inklusive Amtsstube; `finishUnlocks` (alle Einträge mit stehenden Gebäuden)                                                                                          | AK-U3-04, AK-R1-04, AK-U4-03           |
+**Prüfpunkte (Delta R163 B-1):** Alle Szenarien nutzen das Gelände und die Lage aus `prepareLayout` (Kontor bei
+`(kx, ky)`, wie der Controller). Die Koordinaten unten sind relativ zum Kontor. `scenario-saves.test.ts` schreibt je
+Szenario neben das JSON eine Datei `<name>.probes.json` mit den **absoluten** Kachel-Koordinaten jedes benannten
+Prüfpunkts (Name → `{ x, y }`); Browser-Checks klicken und zeigen nur auf diese Punkte. AK-B1-03 prüft, dass jeder
+Prüfpunkt existiert und das genannte Objekt bzw. Gelände trägt.
+
+| Szenario                | Prüfpunkte (relativ zu `(kx, ky)`)                                                                                                                                                                        |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `m10-start`             | `kontor` (0, 0)                                                                                                                                                                                           |
+| `m10-pionier-fast-voll` | `haus3` (+3, −2) mit 3 EW                                                                                                                                                                                 |
+| `m10-siedler-fast`      | `haus-voll` (+3, −2), `kapelle` (+6, −2)                                                                                                                                                                  |
+| `m10-wald`              | `wald` (+20, −7) unbebauter Wald; `weide` (+12, −3) unbebaute Weide; `holzfaeller` (+19, −5) angebunden, Wald (+20, …) im Radius 2                                                                        |
+| `m10-amtsstube`         | `amtsstube` (+11, −7) angebunden; `schule` (+6, +1); `werkzeug-mit` (+11, +1), Mittenabstand zur Schule 5; `werkzeug-ohne` (+17, +6), Mittenabstand > 10; Häuser auf den vier Hausplätzen des Controllers |
+| `m10-amtsstube-aus`     | `amtsstube` (+3, −6) ohne Weg; sonst wie `m10-amtsstube`                                                                                                                                                  |
+| `m10-krise-bald`        | `kontor` (0, 0)                                                                                                                                                                                           |
+| `galerie`               | je Gebäudetyp ein Prüfpunkt `<defId>` (Lage schreibt der Test aus dem gebauten Stand)                                                                                                                     |
+
+| Szenario                | Inhalt                                                                                                                                                                                                             | genutzt von                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `m10-start`             | `createWorld(3)`, Krisen „normal", Tick 0, `unlocked ['U0']`                                                                                                                                                       | AK-U1-01, -02, -03, -04, -05, -06, -11, AK-U2-03, -04, -05, AK-U4-01, -02 |
+| `m10-pionier-fast-voll` | 4 Pionierhäuser, eines mit 3 EW, alle versorgt und zufrieden, Nahrung 30, Krisen „normal", 1 vor dem Wachstumstakt, `unlocked ['U0']`                                                                              | AK-U1-09, AK-U2-05                                                        |
+| `m10-siedler-fast`      | U0, U2; Kapelle angebunden; ein volles Pionierhaus seit ≥ 300 Ticks zufrieden, Stoff 5, Geld 2000, Holz 20, Werkzeug 10; Auftrag aktiv (angeboten 1500, fällig 2100); **Tick 1549** (1 vor dem Wachstumstakt 1550) | AK-U1-07, AK-U1-09                                                        |
+| `m10-wald`              | U0, U2; Waldkachel und Weide (Prüfpunkte), ein Holzfäller angebunden, Geld 500                                                                                                                                     | AK-U2-06, AK-R1-03, AK-U3-05                                              |
+| `m10-amtsstube`         | U0–U5; Pionier-, Siedler- und Bürgerhäuser bewohnt; Amtsstube angebunden; Stoff 2; ein Werkzeugmacher mit Schule in Reichweite, einer ohne                                                                         | AK-U1-11, AK-U2-08, AK-U2-09, AK-U3-04                                    |
+| `m10-amtsstube-aus`     | wie `m10-amtsstube`, Amtsstube ohne Weg; `taxLevel 'high'`                                                                                                                                                         | AK-U1-11, AK-U1-13, AK-U2-08                                              |
+| `m10-krise-bald`        | `createWorld(3)` mit Krisen „normal", Tick **2399** (1 vor `CRISIS_FIRST_TICK`), nur das Kontor, `unlocked ['U0']`                                                                                                 | AK-U2-11                                                                  |
+| `galerie` (bestehend)   | jeder `BUILDING_IDS`-Typ inklusive Amtsstube; `finishUnlocks` (alle Einträge mit stehenden Gebäuden)                                                                                                               | AK-U3-04, AK-R1-04, AK-U4-03                                              |
 
 ### 18.2 Nutzer-Playtest (keine Abnahmekriterien)
 
 - **P-01** (D10, R155, Prüfpunkt im Spec-Gate) „Hat dir der Marktplatz gefehlt, bevor du 20 Wohnhäuser hattest?"
-  Bei Ja: Wert U1 `trigger.min` 8 (Empfehlung `design-economy-designer`) als Ruling-Vorschlag.
+  Bei Ja: Wert U1 `trigger.min` 8 (Empfehlung `design-economy-designer`) als Ruling-Vorschlag. U1 bleibt bis dahin
+  bei 20 (R163); ein späteres Ruling nennt das AK-Delta: AK-S1-01, AK-S1-03, AK-S1-10, AK-B1-01, AK-U2-01, AK-U2-05.
 - **P-02** (D9) „War der Anfang zäh, weil Werkzeug nur über den Kauf kam?" Bei Ja: Hebel „Werkzeugmacher bei U4 statt
   U5" (bitgleich, Defs-Wert, Vorschlag 9.4).
 - **P-03** (Risiko dichter Anfang) „Waren die drei Meldungen in den ersten ein bis zwei Minuten zu viel?"
@@ -807,8 +848,8 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   `firestation` trägt `onlyWithCrises: true`. Jeder Eintrag ausser U0 hat nicht leere `lockText`, `whenText`,
   `notice`; jeder hat `tip`; kein Text enthält „Tick". Die Platzhalter liefern „Erst ab 20 Wohnhäusern", „Erst wenn
   ein Wohnhaus 4 Pioniere hat", „Erst wenn ein Wohnhaus 8 Siedler hat".
-- **AK-S1-02** (Vitest) `createWorld(3)`: `version 5`, `unlocked ['U0']`, `goodLocks []`, `upgradeStops []`,
-  `terrainRev 0`. `createWorld(3, { unlockAll: true })`: `unlocked` = alle 7 Ids in Reihenfolge; `serialize` beider
+- **AK-S1-02** (Vitest) `createWorld(3)`: `version 5`, `unlocked ['U0']`, `goodLocks []`, `upgradeStops []`; kein
+  Feld `terrainRev`. `createWorld(3, { unlockAll: true })`: `unlocked` = alle 7 Ids in Reihenfolge; `serialize` beider
   Welten ist bis auf `unlocked` gleich.
 - **AK-S1-03** (Vitest, Auslöser) Nach je einem `step`: vier Pionierhäuser, eines mit 4 EW → `unlocked` enthält U2,
   mit höchstens 3 EW nicht; ein Siedlerhaus (Stufe 2) → U2 und U3; ein Bürgerhaus → U2, U3, U4, U5; ein voll
@@ -817,9 +858,11 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-S1-04** (Vitest, monoton) Nach U2 schrumpft das Haus auf 1 EW, dann werden alle Häuser abgerissen: `unlocked`
   enthält U2 nach 200 weiteren Schritten.
 - **AK-S1-05** (Vitest und Review, Reihenfolge in `step`) (a) Ein Pionierhaus erreicht 4 EW im Wachstumstakt von
-  Schritt t: `unlocked` enthält U2 **direkt nach** Schritt t (nicht erst nach t+1). (b) Ein Bürgerhaus erreicht im
-  Schritt t 50 Bürger: direkt nach Schritt t gilt `won true` **und** `unlocked` enthält U6. (c) Review: `step` in
-  `src/sim/tick.ts` ruft `tickUnlocks` als letzten Aufruf nach `checkWin`; arc42 §6 nennt die Stelle.
+  Schritt t: `unlocked` enthält U2 **direkt nach** Schritt t (nicht erst nach t+1). (b) Im Schritt t erreicht
+  die Bürgerzahl `WIN_CITIZENS`: direkt nach Schritt t gilt `won true` **und** `unlocked` enthält U6. (c) Review:
+  `step` in `src/sim/tick.ts` ruft `tickUnlocks` als letzten Aufruf nach `checkWin`; arc42 §6 nennt die Stelle; der
+  Nachtrag zu ADR-005 (lead-tech, S1) nennt `tickUnlocks` als letzten Aufruf in `step` mit Begründung Bitgleichheit,
+  die Trennung „Freischaltung gespeichert, Bedingung live" und den Zustand `noService` (Delta R163 B4).
 - **AK-S1-06** (Vitest, Bausperre) Neue Welt, freier angebundener Platz: `buildLock(w, 'chapel')` = „Erst wenn ein
   Wohnhaus 4 Pioniere hat"; `canPlace` → `{ ok: false, reason: 'Erst wenn ein Wohnhaus 4 Pioniere hat' }` auch auf
   Wasser (Sperre zuerst); `placeBuilding` → `ok false`, Geld und Lager unverändert. Je ein Fall: `market` „Erst ab 20
@@ -840,25 +883,27 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   Nach U2 ist der Ketteneintrag U3 mit `now null`. Mit `won false` und allen Einträgen ausser U6: U6 mit `now` =
   `citizens`, `need 50`. Mit `unlockAll`: `[]`.
 - **AK-S1-11** (Vitest, Round-trip v5) `deserialize(serialize(w))` gleich `w` für eine Welt mit
-  `unlocked ['U0', 'U2', 'U3']`, `goodLocks [{ tier: 2, good: 'cloth' }]`, `upgradeStops [1]`, `terrainRev 7`.
+  `unlocked ['U0', 'U2', 'U3']`, `goodLocks [{ tier: 2, good: 'cloth' }]`, `upgradeStops [1]`.
 - **AK-S1-12** (Vitest, Migration v4) `save-v4.json` lädt `ok`: `version 5`,
-  `unlocked ['U0', 'U2', 'U3', 'U4', 'U5']`, `goodLocks []`, `upgradeStops []`, `terrainRev 0`, `taxLevel 'high'`; Gebäude, Lager, Geld, Tick,
+  `unlocked ['U0', 'U2', 'U3', 'U4', 'U5']`, `goodLocks []`, `upgradeStops []`, `taxLevel 'high'`; Gebäude, Lager, Geld, Tick,
   `taxLockedUntil`, `sellPct`, `order`, `crisisLevel`, `crisis`, `won`, `wonMerchants` gleich wie im Fixture. Ohne
   Amtsstube ist `effectiveTaxLevel` „normal" (ab S2 prüfbar, AK-S2-04). Der Testkommentar nennt Erzeugungs-Commit
   und -weg.
-- **AK-S1-13** (Vitest, Kette) `save-v3.json` (M8) lädt über v4 nach v5: `unlocked` enthält U0, U2, U3, U4, U5,
-  nicht U6 (`won false`); U1 genau dann, wenn das Fixture ≥ 20 Wohnhäuser oder einen Marktplatz hat (Testkommentar
-  nennt den Fall). `save-v1.json` und `save-v2.json` laden über alle Migrationen mit `version 5` und den v5-Feldern
+- **AK-S1-13** (Vitest, Kette) `save-v3.json` (4 Wohnhäuser, kein Marktplatz, Häuser der Stufe 3, `won false`)
+  lädt über v4 nach v5 mit `unlocked` genau `['U0', 'U2', 'U3', 'U4', 'U5']` (Delta R163 B-8). `save-v1.json` und `save-v2.json` laden über alle Migrationen mit `version 5` und den v5-Feldern
   aus `deriveUnlocks`.
 - **AK-S1-14** (Vitest, Migration je Fall, synthetische v4-Stände) (a) vier Pionierhäuser mit 1 EW → `['U0']`;
-  (b) ein volles Pionierhaus → `['U0', 'U2']`; (c) ein Werkzeugmacher steht, nur Pioniere → `['U0', 'U5']` (ohne
-  Kette); (d) ein Marktplatz steht → enthält U1; (e) 20 Wohnhäuser → enthält U1; (f) `won true`, keine Bürgerhäuser
+  (b) ein volles Pionierhaus → `['U0', 'U2']`; (c) ein Werkzeugmacher steht (angebunden, Holz 10,
+  `progress 20`), nur Pioniere, keine Schule → `['U0', 'U5']` (ohne Kette); danach 100 Schritte: Zustand
+  `noService`, `progress 20`, Holz 10, Werkzeug unverändert (Delta R163 B-3); (d) ein Marktplatz steht → enthält U1; (e) 20 Wohnhäuser → enthält U1; (f) `won true`, keine Bürgerhäuser
   mehr → U2 … U6; (g) Krisen „off" mit stehender Feuerwache → enthält U2.
 - **AK-S1-15** (Vitest, Negativfälle) → `{ ok: false, reason: 'Beschädigter Spielstand' }`, ohne Ausnahme: `unlocked`
   fehlt; `unlocked` kein Array; enthält `'U9'`; enthält `2`; `['U0', 'U2', 'U2']`; ohne `'U0'`; `['U2', 'U0']`;
   `goodLocks` fehlt; `{ tier: 5, good: 'food' }`; `{ tier: 2, good: 'gold' }`; `{ tier: 1, good: 'cloth' }`
   (kein Bedarf); doppelter Eintrag; unsortiert; `upgradeStops` fehlt; `[0]`; `[4]` (kein Aufstieg); `[1, 1]`;
-  `[2, 1]`; `terrainRev` fehlt; `-1`; `1.5`; `'3'`. `version 6` → `{ ok: false, reason: 'Unbekannte Version' }`.
+  `[2, 1]`. Ein v4-Stand mit beschädigten Gebäuden (`buildings` kein Objekt; ein Haus ohne `house`) → `'Beschädigter
+Spielstand'`, ohne Ausnahme (Delta R163 B1: `deriveUnlocks` läuft erst nach `isWellFormed`). `version 6` →
+  `{ ok: false, reason: 'Unbekannte Version' }`.
 - **AK-S1-16** (Vitest, bitgleich) `balance.test.ts` ohne Diff grün, Sieg **6050**, `minMoney` **57** (Log mit
   `VITE_BALANCE_LOG=1`, `--silent=false`). `balance-crises.test.ts`: `OFF_REFERENCE` und `OFF_FINGERPRINT`
   unverändert mit erweiterter Normalisierung (9.2); Krisen „normal" Sieg **7050**, `minMoney` **56**; der Test
@@ -879,17 +924,21 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-F1-01** (Vitest, Defs) `CLEAR_FOREST_COST` = `{ money: 10, wood: 0, tools: 0, stone: 0 }`,
   `PLANT_FOREST_COST` = `{ money: 20, wood: 0, tools: 0, stone: 0 }`.
 - **AK-F1-02** (Vitest, Roden) Welt mit U2, unbebaute Waldkachel, Geld 100: `clearForest` ok; Kachel `grass`, Geld
-  **90**, Holz unverändert, `terrainRev` **1**, `tick` unverändert, alle anderen Kacheln gleich.
+  **90**, Holz unverändert, `tick` unverändert, alle anderen Kacheln gleich; `layoutKey` vorher ≠ nachher.
 - **AK-F1-03** (Vitest, Aufforsten) Unbebaute Weide, Geld 100: `plantForest` ok; Kachel `forest`, Geld **80**,
-  `terrainRev` **1**. Danach `clearForest` auf derselben Kachel: Geld **70**, `grass`, `terrainRev` **2**.
+  `layoutKey` geändert. Danach `clearForest` auf derselben Kachel: Geld **70**, `grass`, `layoutKey` gleich dem
+  Stand vor dem Aufforsten (der Schlüssel hängt am Gelände, nicht an einem Zähler).
 - **AK-F1-04** (Vitest, Negativfälle) Je Fall `{ ok: false, reason }`, `serialize(w)` vorher gleich nachher:
   Roden auf Wasser, Sand, Gebirge, Weide → `'Kein Wald'`; Aufforsten auf Wasser, Sand, Gebirge, Wald →
-  `'Keine Weide'`; Waldkachel unter einem Gebäude (roh gesetzt), mit Weg, Kontor-Kachel → `'Bereits bebaut'`; `x = -1`,
+  `'Keine Weide'`; Waldkachel unter einem Gebäude (roh gesetzt), mit Weg, Kontor-Kachel → `'Bereits bebaut'`;
+  Aufforsten auf Weide unter einem Wohnhaus und auf Weide mit Weg → `'Bereits bebaut'` (Delta R163 B-6); `x = -1`,
   `x = width`, `y = height`, `x = 1.5` → `'Ausserhalb der Karte'`; Geld 9 (Roden) bzw. 19 (Aufforsten) →
   `'Zu wenig Geld'`; Geld −5 → `'Kein Geld'`; neue Welt ohne U2 → `'Erst wenn ein Wohnhaus 4 Pioniere hat'` (auch auf Wasser:
   Sperre zuerst).
 - **AK-F1-05** (Vitest, Holzfäller arbeitet weiter) Angebundener Holzfäller; alle Waldkacheln im Radius 2 gerodet:
   nach 300 Schritten (Krisen „off") Holz **+10**, gleich wie in der Vergleichswelt ohne Rodung; Zustand `ok`.
+  Ebenso: Aufforsten aller freien Weidekacheln im Radius 2 einer stehenden, angebundenen Schäferei ändert deren
+  Wolle nach 300 Schritten nicht gegenüber der Vergleichswelt (Delta R163 B-6).
 - **AK-F1-06** (Vitest, Vorschau) `canClearForest`/`canPlantForest` liefern für jeden Fall aus AK-F1-02 bis AK-F1-04
   dasselbe Ergebnis wie die Aktion und ändern die Welt nicht.
 - **AK-F1-07** (Vitest, Nutzen) Ein Schäferei-Platz mit 3 Weide im Radius 2 liefert `'Zu wenig Weide in der Nähe'`;
@@ -898,14 +947,17 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   `clearForest`/`plantForest`, nicht nach einem gescheiterten und nicht durch `step()`; der bestehende Test „ändert
   sich nur durch Bau, Abriss, Weg und Anbindung" wird um „und Geländewechsel" ergänzt.
 - **AK-F1-09** (Vitest, Determinismus) Dieselbe Folge aus Roden, Aufforsten und 100 Schritten auf zwei Kopien
-  derselben Welt ergibt gleiches `serialize`. `forest.ts` importiert keinen RNG.
+  derselben Welt ergibt gleiches `serialize`. Variante mit Speichern (Delta R163 B-9): nach Roden, Aufforsten und
+  gesetzten `goodLocks` (aktive Amtsstube, U5) `deserialize(serialize(w))`, dann 100 Schritte auf beiden Welten →
+  gleiches `serialize`. `forest.ts` importiert keinen RNG.
 - **AK-F1-10** (Vitest, „Alles frei") `createWorld(3, { unlockAll: true })`: `clearForest` gelingt bei Tick 0.
 
 ### S2 — Amtsstube, Steuer, Ausgabesperre, Werkzeugmacher, Aufstiegsstopp (K1)
 
 - **AK-S2-01** (Vitest, Defs) `townhall`: Name „Amtsstube", 2 × 2, Kosten 200 / 15 / 2 / 5, Unterhalt 20, `public`,
-  `site []`, `flammable true`, nicht `stormAffected`, ohne `service`, `serviceRadius`, `supplyRadius`; letzter Eintrag
-  von `BUILDING_IDS`. U3 `buildings` = `['townhall']`. `toolmaker.requiresService` = `'school'`, sonst hat kein Gebäude
+  `site []`, `flammable true`, nicht `stormAffected`, ohne `service`, `serviceRadius`, `supplyRadius`;
+  `maxCount { n: 1, reason: 'Es gibt schon eine Amtsstube' }`, kein anderes Gebäude hat `maxCount` (Delta R163 B8);
+  letzter Eintrag von `BUILDING_IDS`. U3 `buildings` = `['townhall']`. `toolmaker.requiresService` = `'school'`, sonst hat kein Gebäude
   `requiresService`. Die brennbaren Ids (M6:AK-S2-10, M8) enthalten `townhall`.
 - **AK-S2-02** (Vitest, eine Amtsstube) Mit U3: erste Amtsstube ok; zweite → `'Es gibt schon eine Amtsstube'`, auch
   wenn die erste brennt oder unverbunden ist; nach Abriss der ersten gelingt der Bau.
@@ -917,12 +969,14 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   AK-S1-12 hat `effectiveTaxLevel` `'normal'`.
 - **AK-S2-05** (Vitest, `setTaxLevel`) Ohne Amtsstube → `'Braucht eine Amtsstube'`, mit unverbundener Amtsstube →
   `'Amtsstube wirkt nicht'`, jeweils `taxLevel` und `taxLockedUntil` unverändert; `'foo'` → `'Ungültige Stufe'` (zuerst); mit aktiver Amtsstube die bisherigen Fälle
-  aus M5 unverändert (`'Stufe bereits aktiv'`, `'Sperrzeit'`, ok mit Sperre 300).
+  aus M5 unverändert (`'Stufe bereits aktiv'`, `'Sperrzeit'`, ok mit Sperre 300). Mit
+  `createWorld(3, { unlockAll: true })` ohne Amtsstube ebenfalls `'Braucht eine Amtsstube'` (Delta R163 B-2).
 - **AK-S2-06** (Vitest, Abriss-Lücke) Amtsstube bauen, `'high'` setzen, abreissen: im nächsten Schritt wirkt
   „normal", `taxLevel` bleibt `'high'`; nach Neubau (angebunden) wirkt wieder „hoch", ohne neue Sperrzeit.
 - **AK-S2-07** (Vitest, `setGoodLock`) Vor U5 → U5-`lockText`; ohne Amtsstube → `'Braucht eine Amtsstube'`;
   `(5, 'food')`, `(2, 'gold')`, `(1, 'cloth')` → `'Ungültige Sperre'`. Setzen von `(3, 'rum')` dann `(2, 'cloth')` →
-  `goodLocks [{ 2, 'cloth' }, { 3, 'rum' }]`; erneutes Setzen ok ohne Doppelte; Entfernen löscht den Eintrag.
+  `goodLocks [{ 2, 'cloth' }, { 3, 'rum' }]`; erneutes Setzen ok ohne Doppelte; Entfernen löscht den Eintrag. Mit
+  `unlockAll` ohne Amtsstube → `'Braucht eine Amtsstube'` (Delta R163 B-2).
 - **AK-S2-08** (Vitest, Sperre in `consume`) Siedlerhaus 8 EW mit Kapelle in Reichweite, Nahrung 50, Stoff 50, aktive
   Amtsstube, U5, Sperre `(2, 'cloth')`, Start Tick 0: nach dem ersten Schritt `satisfied.cloth false`,
   `stats.taxes` **28**; nach Tick 101 Stoff **50**, Einwohner **6**. Nach Abriss der Amtsstube entnimmt das Haus
@@ -934,10 +988,11 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   selben Schritt je 1 Stoff: ohne Sperre bekommt das Siedlerhaus die Einheit; mit wirksamer Sperre `(2, 'cloth')`
   das Bürgerhaus.
 - **AK-S2-11** (Vitest, Werkzeugmacher) Angebunden, Holz 10, `progress 0`: ohne Schule nach 100 Schritten Zustand
-  `noSchool`, `progress 0`, Holz 10, Werkzeug unverändert, `stats.upkeep` enthält 25. Schule angebunden mit
-  Mittenabstand 10 (dx 10, dy 0) → nach genau 80 Schritten Werkzeug +1, Holz −1. Mittenabstand 11 → `noSchool`.
-  Schule brennt oder ist unverbunden → `noSchool`. Bei `progress 40` wird die Schule abgerissen: 100 Schritte
-  `progress 40`; nach Neubau läuft der Zyklus ab 40 weiter.
+  `noService`, `progress 0`, Holz 10, Werkzeug unverändert, `stats.upkeep` enthält 25. Schule angebunden mit
+  Mittenabstand 10 (dx 10, dy 0) → nach genau 80 Schritten Werkzeug +1, Holz −1. Mittenabstand 11 → `noService`.
+  Schule brennt oder ist unverbunden → `noService`. Bei `progress 40` wird die Schule abgerissen: 100 Schritte
+  `progress 40`; nach Neubau läuft der Zyklus ab 40 weiter. In `createWorld(3, { unlockAll: true })` ohne Schule
+  ebenfalls `noService` nach 100 Schritten (Delta R163 B-2).
 - **AK-S2-12** (Vitest, `taxBlocks`) Aktive Amtsstube mit `'high'`, U0, U2, U3: der Eintrag U4 in `nextUnlocks` hat
   `taxBlocks true`, U1 `false`; ohne Amtsstube bei gespeichertem `'high'` beide `false`.
 - **AK-S2-13** (Vitest, Kann K1) Aktive Amtsstube, `setUpgradeStop(w, 1, true)`: ein volles, bereites Pionierhaus
@@ -950,7 +1005,7 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   den Rückfall, falls der Fensteranker-Test ihn verlangt (wie M8 R142 W1).
 - **AK-S2-16** (Vitest, Taste I, Ausnahme `hotkeys.ts`) `hotkeyAction('i', …)` wählt `townhall`; `hotkeyLabel` → „I";
   `TOOL_HOTKEYS` hat 18 Einträge; `nk('townhall')` = „Amtsstube (I)"; alle bisherigen Tasten unverändert.
-- **AK-S2-17** (Vitest, Texte, Ausnahmen `texts.ts`, `hints.ts`) `stateInfo` für `noSchool` = „Braucht eine Schule in
+- **AK-S2-17** (Vitest, Texte, Ausnahmen `texts.ts`, `hints.ts`) `stateInfo` für `noService` = „Braucht eine Schule in
   Reichweite"; `friendlyReason` für „Es gibt schon eine Amtsstube" und „Braucht eine Amtsstube" wie 11.9; die
   Vollständigkeitsprüfung M7:AK-UX-03 ist grün.
 
@@ -966,6 +1021,9 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-B1-03** (Vitest) `tests/sim/scenario-saves.test.ts` erzeugt alle Szenarien aus 18.1; jedes lädt mit
   `deserialize` als v5 `ok`; `unlocked` jedes Szenarios ist gleich `deriveUnlocks` der Welt (ausser `m10-start`:
   `['U0']`); `galerie` enthält jeden `BUILDING_IDS`-Typ inklusive `townhall`; kein Szenariotext enthält „Tick".
+  Je Szenario liegt `<name>.probes.json` vor; jeder Prüfpunkt aus 18.1 ist darin, liegt auf der Karte und trägt das
+  genannte Gebäude bzw. Gelände (Wald, Weide), die Mittenabstände der Werkzeugmacher zur Schule stimmen (≤ 10 bzw.
+  > 10), `amtsstube` in `m10-amtsstube-aus` ist nicht angebunden (Delta R163 B-1).
 - **AK-B1-04** (Review) Die Messwerte aus AK-B1-01 und AK-B1-02 stehen im Bericht an L0 als Ruling-Vorlage
   („Freischalt-Ticks Seed 3: …, Baseline unverändert").
 
@@ -979,11 +1037,17 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   `id = y · width + x`, nach `plantForest` an einer Weidekachel genau eines mit `variant` = `treeVariant(seed, x, y)`.
 - **AK-R1-03** (Browser, Szenario `m10-wald`, 1280 × 800, dpr 1 und 2, `?perf=1`) Roden einer Waldkachel mit dem
   Werkzeug: Ausschnitt der Kachel vor und nach dem Klick unterscheidet sich (Pixelvergleich, Bäume weg, Wiesenbild);
-  Aufforsten einer Weidekachel zeigt Bäume. Die Neuzeichnung je Forst-Aktion dauert ≤ **100 ms** bei dpr 2
-  (**Setzung Spec**: ab etwa 100 ms ruckelt der Klick spürbar). Urteiler Bild: `qa-playtester`.
+  Aufforsten einer Weidekachel zeigt Bäume. **Messung (Delta R163 B-7, B10):** Messgrösse ist
+  `updateTerrainLayer().ms` des Frames nach der Forst-Aktion (nicht die Frame-Renderzeit), bei dpr 2, je 10
+  Forst-Aktionen auf den Prüfpunkten (5 × Roden, 5 × Aufforsten, abwechselnd); Grenze: höchster Einzelwert ≤ **100 ms**
+  (**Setzung Spec**: ab etwa 100 ms ruckelt der Klick spürbar), erwartet ≤ 15 ms. Urteiler Bild: `qa-playtester`.
 - **AK-R1-04** (Vitest und Browser) `SILHOUETTES.townhall` ist ein eigener Eintrag statt des Rückfalls aus S2; alle
   Fensteranker liegen im Footprint (M7:AK-R2-03). Blindtest im Szenario `galerie`: `qa-playtester` ordnet die
   Amtsstube ohne Beschriftung richtig zu (Legende erlaubt). Urteiler `qa-playtester`, Anmutung `lead-art`.
+- **AK-R1-05** (Vitest, gelände-feste Caches, Delta R163 B3) Für eine Welt vor und nach `clearForest` und
+  `plantForest`: die Tier-Anker aus `src/render/wildlife.ts` und das Küstenfeld aus `src/render/water.ts` bzw.
+  `src/render/life.ts` sind gleich (Forst-Aktionen wechseln nur zwischen Wald und Weide und berühren die Küste nicht).
+  Review: Die Code-Kommentare der drei Caches nennen diese Bedingung.
 
 ### A1 — Symbolsatz
 
@@ -1003,13 +1067,13 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   „Holzfäller · 50 Geld"). Vitest: die Zählung je Stand aus der Tabelle 11.1 (Welten mit den genannten Einträgen,
   Krisen „normal" und „off").
 - **AK-U1-02** (Vitest und Browser, gesperrte Taste) Vitest: `lockedToolText(w, { kind: 'build', defId: 'chapel' })`
-  in neuer Welt = „Kapelle: Erst wenn ein Wohnhaus 4 Pioniere hat"; `{ kind: 'clearForest' }` = „Roden: Erst wenn ein
-  Wohnhaus 4 Pioniere hat"; Feuerwache bei Krisen „off" mit `unlockAll` = „Feuerwache: ohne Krisen nicht nötig";
+  in neuer Welt = „Kapelle: Erst wenn ein Wohnhaus 4 Pioniere hat"; Feuerwache bei Krisen „off" mit `unlockAll` = „Feuerwache: ohne Krisen nicht nötig";
   freie Werkzeuge → `null`. Browser (`m10-start`): Taste K → kein Werkzeug aktiv, Meldung mit Klasse `toast error`
   und diesem Text, Geld unverändert.
 - **AK-U1-03** (Vitest, `hotkeyList(world)`, **Änderung** M7:AK-UX-06) Neue Welt: Werkzeugtasten genau R, X, H, F, L
-  (in `TOOL_HOTKEYS`-Reihenfolge), dann 1, 2, 3, P, „?" mit „Hilfe", dann `NAV_KEYS`; mit `unlockAll` und Krisen
-  „normal" alle 20 Werkzeugtasten. Browser (`m10-start`): Menü-Tastenliste ohne K, J, O, I, C, Q.
+  (in `TOOL_HOTKEYS`-Reihenfolge), dann 1, 2, 3, P, dann `NAV_KEYS`; mit `unlockAll` und Krisen „normal" alle 18
+  Werkzeugtasten des Stands nach S2 (mit I). Browser (`m10-start`): Menü-Tastenliste ohne K, J, O, I. Die Tasten C, Q
+  und `?` prüft AK-U2-12 (Delta R163 B2).
 - **AK-U1-04** (Browser, `m10-start`) In `.stock-row` sind genau 4 Chips ohne `hidden` (Holz, Werkzeug, Stein,
   Nahrung). Vitest: Wolle 3 im Lager ohne U2 → Chip `stock-wool` sichtbar.
 - **AK-U1-05** (Browser, `m10-start`; Vitest je Stand) Nur `pop-1` sichtbar; mit U3 auch `pop-2`, mit U5 `pop-3`, mit
@@ -1026,12 +1090,12 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Amtsstube (I), Handelsaufträge — die ersten
   Siedler sind da. Mehr unter Hilfe (?)"; gleiche Listen → `null`. Kein Text enthält „Tick".
 - **AK-U1-09** (Browser, `m10-pionier-fast-voll` und `m10-siedler-fast`, 1×) Nach dem Wachstumstakt genau eine
-  Meldung, Art `info`, bleibend, mit dem U2- bzw. U3-Text und einem Knopf „Hilfe", der die Hilfe-Karte öffnet; der
-  neue Eintrag steht danach in der Bauleiste. Speichern und Laden: keine erneute Meldung, kein Ton (R152 B1).
+  Meldung, Art `info`, bleibend, mit dem U2- bzw. U3-Text und einem Knopf „Hilfe" (bis U2 öffnet er die bisherige
+  Karte „Ziel und erste Schritte"; die Hilfe-Karte prüft AK-U2-12); der neue Eintrag steht danach in der Bauleiste. Speichern und Laden: keine erneute Meldung, kein Ton (R152 B1).
 - **AK-U1-10** (Browser und Vitest, „Alles frei") Vitest: `loadSettings` liest `unlockMode`, unbekannter Wert →
   `'stepwise'`. Browser: Menü → „Neue Insel" mit „Alles frei" und Krisen „normal": „Infrastruktur" 1, „Wohnen" 1,
-  „Produktion" 9, „Öffentlich" 5; Roden und Aufforsten in der Hauptleiste; 2 Minuten bei 4× ohne Freischalt-Meldung;
-  die Hilfe zeigt „Alles freigeschaltet". Die Wahl bleibt nach Neuladen der Seite im Menü erhalten.
+  „Produktion" 9, „Öffentlich" 5; 2 Minuten bei 4× ohne Freischalt-Meldung. Die Wahl bleibt nach Neuladen der Seite
+  im Menü erhalten. Roden und Aufforsten in der Leiste und „Alles freigeschaltet" in der Hilfe prüft AK-U2-12.
 - **AK-U1-11** (Browser, 1280 × 800, `m10-start`, `m10-amtsstube`, `m10-amtsstube-aus`) Ohne aktive Amtsstube ist
   `.hud-tax` verborgen; mit aktiver Amtsstube zeigt `[data-field=tax]` „Steuer normal", ein Klick wählt die Amtsstube
   und öffnet ihr Panel. `#hud` ≤ 84 px und `scrollWidth ≤ clientWidth` in allen drei Szenarien (M7:AK-UX-15).
@@ -1053,8 +1117,10 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-U2-02** (Vitest, `nextStep` und `remedyText`, **Änderung** M7:AK-UX-08 und M7:AK-UX-10) Kasse schrumpft:
   ohne U3 „Deine Kasse schrumpft: versorge mehr Wohnhäuser oder verkaufe Waren am Kontor"; mit U3 ohne aktive
   Amtsstube „Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder baue eine Amtsstube (I)";
-  mit aktiver Amtsstube wörtlich wie heute. Gespeichertes `'high'` ohne Amtsstube → kein Steuer-Satz. Holzfäller `storageFull` ohne U5 → „Verkaufe Holz am
-  Kontor", mit U5 wörtlich wie heute. Werkzeugmacher `noSchool` → „Baue eine Schule (U) in Reichweite". Alle übrigen
+  mit aktiver Amtsstube wörtlich wie heute. Gespeichertes `'high'` ohne Amtsstube → kein Steuer-Satz. Werkzeugmacher
+  `noService` mit gesperrter Schule (Stand aus AK-S1-14 (c)) → „Schule kommt, sobald ein Wohnhaus 8 Siedler hat"
+  (Delta R163 B-3). Holzfäller `storageFull` ohne U5 → „Verkaufe Holz am
+  Kontor", mit U5 wörtlich wie heute. Werkzeugmacher `noService` → „Baue eine Schule (U) in Reichweite". Alle übrigen
   Testwelten aus M7:AK-UX-08 und M8:AK-U2-08 grün (mit `unlockAll`).
 - **AK-U2-03** (Browser) Ruhe-Ansicht zeigt unter „Nächster Schritt" `[data-field=help-hint]` „Mehr in der Hilfe (?)".
 - **AK-U2-04** (Browser, 1280 und 1920) HUD-Knopf „Hilfe" steht vor „Einstellungen"; Klick, Taste `?` und Menü-Knopf
@@ -1081,6 +1147,12 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   Reichweite", Abhilfe „Baue eine Schule (U) in Reichweite"; der andere Werkzeugmacher zeigt den heutigen Text.
 - **AK-U2-10** (Vitest, Gründe, Erweiterung M7:AK-UX-03) `friendlyReason` für jede Zeile aus 11.9 (Amtsstube, Wald,
   Weide, `lockText`, Gut-Sperre, Aufstiegsstopp, „Ungültige Sperre"); Vollständigkeitsprüfung grün.
+- **AK-U2-12** (Vitest und Browser, Teile aus U1 nach U2, Delta R163 B2) Vitest: `lockedToolText(w, { kind:
+'clearForest' })` in neuer Welt = „Roden: Erst wenn ein Wohnhaus 4 Pioniere hat"; `hotkeyList(world)` der neuen Welt
+  enthält „?" mit „Hilfe" nach P; mit `unlockAll` und Krisen „normal" alle 20 Werkzeugtasten. Browser (`m10-start`):
+  Menü-Tastenliste ohne C, Q; Knopf „Hilfe" einer Freischalt-Meldung (`m10-pionier-fast-voll`) öffnet die Hilfe-Karte;
+  mit „Alles frei" (Neue Insel, Krisen „normal") Roden und Aufforsten in der Hauptleiste, `help-next` =
+  „Alles freigeschaltet".
 - **AK-U2-11** (Vitest und Browser, Kann K4) Krisen „normal" bei Tick 2399: Krisen-Log und die `MAP_SIGNS`-Zeilen für
   Brand und Sturm verborgen; bei Tick 2400 sichtbar; bei Krisen „off" nie.
 
@@ -1090,7 +1162,7 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
   „Einwohner 6 / 8", „Stoff fehlt", „Aufstieg: {friendlyReason(„Haus nicht voll belegt")}"; volles, bereites
   Pionierhaus → dritte Zeile „Aufstieg bereit"; versorgtes Haus → zweite Zeile „zufrieden".
 - **AK-U3-02** (Vitest, Betrieb und Dienst) Fischerhütte `ok` → „arbeitet — 15 Nahrung / min"; Weberei
-  `waitingInput` → „wartet auf Wolle"; `storageFull` → „Lager voll"; Werkzeugmacher `noSchool` → „braucht eine Schule
+  `waitingInput` → „wartet auf Wolle"; `storageFull` → „Lager voll"; Werkzeugmacher `noService` → „braucht eine Schule
   in Reichweite"; brennend → „brennt"; unverbunden → „nicht angebunden"; Holzfäller ohne Wald im Radius 2 zusätzlich
   „kein Wald mehr in der Nähe". Kapelle mit drei Wohnhäusern im Radius → „versorgt 3 Häuser"; Feuerwache →
   „schützt {protectedCount} Gebäude"; Amtsstube → „Steuer: normal", „Sperren: 0", „Klicken zum Einstellen".
@@ -1107,7 +1179,9 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-U3-05** (Browser, `m10-wald`) Mouse-over über einer Waldkachel zeigt „Roden: 10 Geld"; nach dem Roden zeigt
   dieselbe Kachel „Weide" und „Aufforsten: 20 Geld".
 - **AK-U3-06** (Vitest, Anschluss Tiere) Ohne H-R2 (Abfrage liefert keine Tiere) bricht nichts; mit einer Fake-Abfrage
-  nutzt `app.ts` dieselbe `timeMs` wie der Renderer im Frame (Prüfung über einen reinen Helfer, Name im Plan).
+  nutzt `app.ts` dieselbe `timeMs` und dieselbe `env` (`phase`, `weather`, `reduce`) wie der Renderer im Frame
+  (Prüfung über einen reinen Helfer, Name im Plan): Bei Regen oder reduzierter Bewegung liefert der Helfer genau die
+  Tiere, die der Renderer zeichnet.
 
 ### U4 — Symbole im Einbau, Kann K2 und K3
 
@@ -1131,45 +1205,47 @@ und Laden wie M8 18.1 (`SCENARIO_OUT=<ordner> npx vitest run tests/sim/scenario-
 - **AK-D1-01** (Review) README-Spielanleitung: Freischaltung Schritt für Schritt (Tabelle U0–U6 mit Auslösern),
   Option „Alles frei", Amtsstube (Taste I, Kosten, Unterhalt, Steuer und Ausgabesperre), Werkzeugmacher braucht
   Schule, Roden (C, 10) und Aufforsten (Q, 20), Hilfe (`?`), Mouse-over.
-- **AK-D1-02** (Review) arc42: §5 Bausteine `unlocks`, `townhall`, `forest`, `hover`, `icons`; §6 `step` mit
-  `tickUnlocks` am Ende; §8 Gebäudezustände mit `noSchool`, Steuerstufe mit `effectiveTaxLevel`, Persistenz v5
-  (falls nicht schon in S1), Caches mit `terrainRev`. ADR-005 bekommt einen Nachtrag zu `noSchool`.
+- **AK-D1-02** (Review) arc42: §5 Bausteine `unlocks`, `townhall`, `forest`, `hover`, `icons`; §8 Gebäudezustände
+  mit `noService`, Steuerstufe mit `effectiveTaxLevel`, Caches mit Geländeart im `layoutKey` und den gelände-festen
+  Caches (7); §10 Messzeile `updateTerrainLayer().ms` (aus R1). arc42 §6, §8 Persistenz und der Nachtrag zu ADR-005
+  liegen bei S1 (AK-S1-05, AK-S1-20; Delta R163 B4) und werden hier nur auf Stand geprüft.
 - **AK-D1-03** (Review) Hauptspec 2.4, 2.7, 2.8, 3.3, 3.7 verweisen auf diese Spec (Abschnitt 20).
 
-**Summe:** 96 Abnahmekriterien (S1 20 · F1 10 · S2 17 · B1 4 · R1 4 · A1 3 · U1 13 · U2 11 · U3 6 · U4 5 · D1 3),
+**Summe:** 98 Abnahmekriterien (S1 20 · F1 10 · S2 17 · B1 4 · R1 5 · A1 3 · U1 13 · U2 12 · U3 6 · U4 5 · D1 3;
+Delta R163: neu AK-R1-05, AK-U2-12),
 davon Kann: AK-S2-13 und Teil von AK-U2-08 (K1), AK-U4-04 (K2), AK-U4-05 (K3), AK-U2-11 (K4); K5 ohne eigenes Kriterium (fällt
 zuerst). Dazu 4 Punkte „Nutzer-Playtest" (18.2).
 
 ### 18.3 Randfälle (Übersicht)
 
-| Randfall                                                                               | Antwort                                                                                         | AK                           |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------- |
-| Gebäude vor der Freischaltung                                                          | Sperre zuerst, nichts gebucht, nicht in der Bauleiste, Taste zeigt Grund                        | AK-S1-06, AK-U1-01, AK-U1-02 |
-| Haus schrumpft, Gebäude abgerissen                                                     | Freischaltung bleibt                                                                            | AK-S1-04                     |
-| Mehrere Freischaltungen im selben Frame                                                | eine Meldung, ein Ton                                                                           | AK-U1-08, AK-U1-12           |
-| Freischaltung im Siegtick (U6)                                                         | `won` und U6 nach demselben Schritt, nur Ton `win`                                              | AK-S1-05, AK-U1-12           |
-| Laden eines Stands                                                                     | keine Meldung, kein Ton                                                                         | AK-U1-09, AK-U1-12           |
-| Alter Spielstand v1–v4                                                                 | Migration, `deriveUnlocks`, gebaute Gebäude bleiben baubar                                      | AK-S1-12 – AK-S1-14          |
-| Beschädigter v5-Stand, `version 6`                                                     | `Beschädigter Spielstand` bzw. `Unbekannte Version`, kein Wurf                                  | AK-S1-15                     |
-| v4-Stand mit Werkzeugmacher ohne Schule                                                | Werkzeugmacher steht, arbeitet nicht (`noSchool`), Panel und Abhilfe erklären (Offener Punkt 2) | AK-S1-14, AK-S2-11, AK-U2-09 |
-| v4-Stand mit Steuer „hoch"                                                             | gespeichert bleibt „hoch", wirksam „normal" bis zur Amtsstube                                   | AK-S1-12, AK-S2-04           |
-| Gesperrtes Gut im Lager                                                                | verkaufbar, Chip und Handelszeile sichtbar, nicht kaufbar                                       | AK-S1-08, AK-U1-04, AK-U1-06 |
-| Auftrag vor U3                                                                         | entsteht, nicht lieferbar, Karte verborgen, verfällt ohne Kosten                                | AK-S1-09, AK-U1-07           |
-| Auftrag läuft bei U3                                                                   | Karte sofort mit Restzeit                                                                       | AK-U1-07                     |
-| Zweite Amtsstube                                                                       | abgelehnt, auch wenn die erste brennt                                                           | AK-S2-02                     |
-| Amtsstube brennt, unverbunden, abgerissen                                              | Steuer wirkt „normal", Sperren und Stopp wirken nicht, Werte bleiben gespeichert                | AK-S2-04, AK-S2-06, AK-S2-08 |
-| Steuer „hoch"                                                                          | kein volles Haus, kein Fortschritt; Hilfe nennt den Grund                                       | AK-S2-12, AK-U2-01           |
-| Alle Güter einer Stufe gesperrt                                                        | erlaubt; Stufe zahlt halb und schrumpft bis 1                                                   | AK-S2-07, AK-S2-08           |
-| Knappes Gut, Sperre für die untere Stufe                                               | obere Stufe bekommt die Einheit                                                                 | AK-S2-10                     |
-| Schule abgerissen während Werkzeugproduktion                                           | `noSchool`, `progress` bleibt, Unterhalt läuft                                                  | AK-S2-11                     |
-| Roden um einen Holzfäller                                                              | Holzfäller arbeitet weiter, Mouse-over warnt                                                    | AK-F1-05, AK-U3-02           |
-| Roden auf Wasser, Sand, Gebirge, Gebäude, Weg, Kontor, Kartenrand, ohne Geld, gesperrt | `fail` mit Grund, Welt unverändert                                                              | AK-F1-04                     |
-| Roden → Aufforsten im Kreis                                                            | kostet 30, bringt nichts                                                                        | AK-F1-03                     |
-| Bild nach Geländewechsel                                                               | Kachel und Bäume neu gezeichnet, ≤ 100 ms                                                       | AK-R1-01 – AK-R1-03          |
-| Feuerwache bei Krisen „aus"                                                            | nicht angezeigt, Taste mit Hinweis, in der Sim baubar                                           | AK-S1-18, AK-U1-02           |
-| „Alles frei"                                                                           | alles sichtbar und baubar, Bedingungen bleiben, keine Meldung                                   | AK-S1-17, AK-U1-10           |
-| Mouse-over mit Bauwerkzeug, beim Ziehen, mit Modal                                     | keine Karte                                                                                     | AK-U3-04                     |
-| Kopfzeile mit Steuer-Knopf und Symbolen                                                | `#hud` ≤ 84 px bei 1280                                                                         | AK-U1-11, AK-U4-01           |
+| Randfall                                                                               | Antwort                                                                                         | AK                                                         |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Gebäude vor der Freischaltung                                                          | Sperre zuerst, nichts gebucht, nicht in der Bauleiste, Taste zeigt Grund                        | AK-S1-06, AK-U1-01, AK-U1-02                               |
+| Haus schrumpft, Gebäude abgerissen                                                     | Freischaltung bleibt                                                                            | AK-S1-04                                                   |
+| Mehrere Freischaltungen im selben Frame                                                | eine Meldung, ein Ton                                                                           | AK-U1-08, AK-U1-12                                         |
+| Freischaltung im Siegtick (U6)                                                         | `won` und U6 nach demselben Schritt, nur Ton `win`                                              | AK-S1-05, AK-U1-12                                         |
+| Laden eines Stands                                                                     | keine Meldung, kein Ton                                                                         | AK-U1-09, AK-U1-12                                         |
+| Alter Spielstand v1–v4                                                                 | Migration, `deriveUnlocks`, gebaute Gebäude bleiben baubar                                      | AK-S1-12 – AK-S1-14                                        |
+| Beschädigter v4- oder v5-Stand, `version 6`                                            | `Beschädigter Spielstand` bzw. `Unbekannte Version`, kein Wurf                                  | AK-S1-15                                                   |
+| v4-Stand mit Werkzeugmacher ohne Schule                                                | Werkzeugmacher steht, arbeitet nicht (`noService`), Abhilfe „Schule kommt, …" (Offener Punkt 2) | AK-S1-14, AK-S2-11, AK-U2-02, AK-U2-09                     |
+| v4-Stand mit Steuer „hoch"                                                             | gespeichert bleibt „hoch", wirksam „normal" bis zur Amtsstube                                   | AK-S1-12, AK-S2-04                                         |
+| Gesperrtes Gut im Lager                                                                | verkaufbar, Chip und Handelszeile sichtbar, nicht kaufbar                                       | AK-S1-08, AK-U1-04, AK-U1-06                               |
+| Auftrag vor U3                                                                         | entsteht, nicht lieferbar, Karte verborgen, verfällt ohne Kosten                                | AK-S1-09, AK-U1-07                                         |
+| Auftrag läuft bei U3                                                                   | Karte sofort mit Restzeit                                                                       | AK-U1-07                                                   |
+| Zweite Amtsstube                                                                       | abgelehnt, auch wenn die erste brennt                                                           | AK-S2-02                                                   |
+| Amtsstube brennt, unverbunden, abgerissen                                              | Steuer wirkt „normal", Sperren und Stopp wirken nicht, Werte bleiben gespeichert                | AK-S2-04, AK-S2-06, AK-S2-08                               |
+| Steuer „hoch"                                                                          | kein volles Haus, kein Fortschritt; Hilfe nennt den Grund                                       | AK-S2-12, AK-U2-01                                         |
+| Alle Güter einer Stufe gesperrt                                                        | erlaubt; Stufe zahlt halb und schrumpft bis 1                                                   | AK-S2-07, AK-S2-08                                         |
+| Knappes Gut, Sperre für die untere Stufe                                               | obere Stufe bekommt die Einheit                                                                 | AK-S2-10                                                   |
+| Schule abgerissen während Werkzeugproduktion                                           | `noService`, `progress` bleibt, Unterhalt läuft                                                 | AK-S2-11                                                   |
+| Roden um einen Holzfäller                                                              | Holzfäller arbeitet weiter, Mouse-over warnt                                                    | AK-F1-05, AK-U3-02                                         |
+| Roden auf Wasser, Sand, Gebirge, Gebäude, Weg, Kontor, Kartenrand, ohne Geld, gesperrt | `fail` mit Grund, Welt unverändert                                                              | AK-F1-04                                                   |
+| Roden → Aufforsten im Kreis                                                            | kostet 30, bringt nichts                                                                        | AK-F1-03                                                   |
+| Bild nach Geländewechsel                                                               | Kachel und Bäume neu gezeichnet, ≤ 100 ms; Tier-Anker und Küste unverändert                     | AK-R1-01 – AK-R1-03, AK-R1-05                              |
+| Feuerwache bei Krisen „aus"                                                            | nicht angezeigt, Taste mit Hinweis, in der Sim baubar                                           | AK-S1-18, AK-U1-02                                         |
+| „Alles frei"                                                                           | alles sichtbar und baubar, Bedingungen bleiben, keine Meldung                                   | AK-S1-17, AK-S2-05, AK-S2-07, AK-S2-11, AK-U1-10, AK-U2-12 |
+| Mouse-over mit Bauwerkzeug, beim Ziehen, mit Modal                                     | keine Karte                                                                                     | AK-U3-04                                                   |
+| Kopfzeile mit Steuer-Knopf und Symbolen                                                | `#hud` ≤ 84 px bei 1280                                                                         | AK-U1-11, AK-U4-01                                         |
 
 ## 19. Pakete und Datei-Ownership
 
@@ -1178,57 +1254,65 @@ Stränge wie M8 17: **Sim** = `tech-sim-engineer` (`src/sim/**`, `tests/sim/**`)
 (`lead-art`), **UI** = `tech-ui-engineer`, serieller Strang U1 → U2 → U3 → U4 (R148 F14), **Doku** = Doku-Paket.
 **Regel: Keine Datei liegt in zwei parallel laufenden Paketen.** Jedes Paket hält `make check` grün.
 
-| Paket | Inhalt                                                                                     | Lead · Arbeiter                                      | Dateien                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Folge                                          |
-| ----- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| S1    | M1 (ohne Amtsstube), M5, M12 (Sim), Fingerabdruck, `nextStep`-Filter                       | lead-tech · tech-sim-engineer (+ tech-save-engineer) | `src/sim/unlocks.ts` (neu), `src/sim/defs/unlocks.ts` (neu), `types.ts`, `world.ts`, `tick.ts`, `save.ts`, `placement.ts`, `build.ts` (falls nötig), `trade.ts`, `orders.ts`, `defs/buildings.ts` (nur `unlockTier` entfernen), `tests/sim/unlocks.test.ts` (neu), `save.test.ts`, `fixtures/save-v4.json` (neu, vorab auf `main`), `placement.test.ts`, `trade.test.ts`, `orders.test.ts`, `defs.test.ts`, `balance-crises.test.ts` (`normalized()`), `helpers.ts`, `scenarios.ts` (`finishUnlocks`, `unlockAll`), Tests mit gesperrten Bauten (nur `unlockAll`, Liste im Plan), `docs/arc42.md` (§8 Persistenz); Ausnahmen `src/ui/guide.ts` + `tests/ui/guide.test.ts` (nur Filter 12.3), `src/ui/hints.ts` + `tests/ui/hints.test.ts` (nur `lockText`-Zeilen, falls M7:AK-UX-03 sie verlangt), `src/ui/goal.ts` + `tests/ui/goal.test.ts` (nur Typanpassung, falls `unlockTier` gelesen wird), Render- und UI-Tests mit gesperrten Bauten (nur `unlockAll`) | M8 auf `main`; Fixture vorab                   |
-| F1    | M10 Sim (H-S1), `layoutKey`                                                                | lead-tech · tech-sim-engineer                        | `src/sim/forest.ts` (neu), `src/sim/defs/forest.ts` (neu), `src/sim/queries.ts` (nur `layoutKey`), `tests/sim/forest.test.ts` (neu), `tests/sim/queries.test.ts` (M6:AK-S3-07)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | S1; parallel zu S2                             |
-| S2    | M2, M3, M4 (Bedingung), K1                                                                 | lead-tech · tech-sim-engineer                        | `src/sim/townhall.ts` (neu), `defs/buildings.ts`, `defs/unlocks.ts` (U3 `townhall`), `types.ts`, `tax.ts`, `population.ts`, `production.ts`, `placement.ts` (eine Amtsstube), `unlocks.ts` (`taxBlocks`), `tests/sim/townhall.test.ts` (neu), `taxes.test.ts`, `population.test.ts`, `production.test.ts`, `defs.test.ts`, `fire.test.ts`, `scenarios.ts` (`galerie` + Amtsstube); Ausnahmen `src/render/sprites.ts` + `tests/render/sprites.test.ts` (Rückfall), `src/ui/hotkeys.ts` + `tests/ui/hotkeys.test.ts` (nur I), `src/ui/texts.ts` (nur `noSchool`), `src/ui/hints.ts` + `tests/ui/hints.test.ts` (Gründe 11.9), `src/render/overlays.ts` (nur falls ein Zustands-`switch` `noSchool` verlangt)                                                                                                                                                                                                                                                      | S1; parallel zu F1                             |
-| B1    | M13 Messung, Szenarien 18.1                                                                | lead-tech · design-balancing-analyst                 | `tests/sim/unlock-timeline.test.ts` (neu), `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`; Messung `balance-merchants.test.ts` ohne Änderung                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | S2 und F1                                      |
-| R1    | Amtsstube-Silhouette, Terrain-Cache, Baumstempel                                           | lead-art · art-rendering-engineer                    | `src/render/sprites.ts`, `src/render/terrain.ts`, `src/render/iso.ts` (nur falls AK-R1-02 nicht schon über `layoutKey` grün ist), `tests/render/sprites.test.ts`, `tests/render/terrain.test.ts`, `tests/render/iso.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | S2 (sprites), F1 (`layoutKey`); parallel zu U1 |
-| A1    | Symbolsatz (M11 Gestaltung)                                                                | lead-art · art-rendering-engineer                    | `src/ui/icons.ts` (neu), `tests/ui/icons.test.ts` (neu)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | parallel zu S1 (vor R1, gleicher Arbeiter)     |
-| U1    | M6 (Bauleiste, Tasten, Liste, Chips, Handel, Auftrag, Kopfzeile Steuer), M7, M12 (UI), Ton | lead-tech · tech-ui-engineer                         | `buildMenu.ts`, `hud.ts`, `hotkeys.ts`, `menu.ts`, `trade.ts`, `order.ts`, `app.ts`, `goal.ts`, `settings.ts`, `soundEvents.ts`, Tests dazu; Ausnahme `src/audio/sound.ts` (+ Zuordnung in `src/audio/`, nur `'unlock'`) und `tests/audio/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | S2, F1 auf `main`; Browser nach B1             |
-| U2    | M8 (Hilfe), M10 Bedienung, Amtsstuben-Panel, Tooltips, Gründe, K4                          | lead-tech · tech-ui-engineer                         | `startCard.ts`, `guide.ts`, `inspect.ts`, `hints.ts`, `texts.ts`, `input.ts`, `hotkeys.ts`, `buildMenu.ts`, `menu.ts`, `app.ts`, `crisisLog.ts`, `eventLogView.ts`, Tests dazu; Ausnahme `src/render/renderer.ts` (nur `Tool`-Typ und Werkzeug-Vorschau der Forst-Werkzeuge)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | U1; R1 für Browser-Check                       |
-| U3    | M9 Mouse-over                                                                              | lead-tech · tech-ui-engineer                         | `src/ui/hover.ts` (neu), `input.ts`, `app.ts`, `src/style.css`, `tests/ui/hover.test.ts` (neu)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | U2                                             |
-| U4    | M11 Einbau, K2, K3                                                                         | lead-tech · tech-ui-engineer                         | `hud.ts`, `buildMenu.ts`, `inspect.ts`, `src/style.css`, Tests dazu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | U3, A1                                         |
-| D1    | Doku-Pass                                                                                  | lead-design · Doku                                   | `README.md`, `docs/arc42.md` (§5, §6, §8 ausser Persistenz), Hauptspec, `docs/adr/ADR-005-…` (Nachtrag)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | U4                                             |
+| Paket                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Inhalt                                                                                     | Lead · Arbeiter                                      | Dateien                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Folge                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| S1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M1 (ohne Amtsstube), M5, M12 (Sim), Fingerabdruck, `nextStep`-Filter                       | lead-tech · tech-sim-engineer (+ tech-save-engineer) | `src/sim/unlocks.ts` (neu), `src/sim/defs/unlocks.ts` (neu), `types.ts`, `world.ts`, `tick.ts`, `save.ts`, `placement.ts`, `build.ts` (falls nötig), `trade.ts`, `orders.ts`, `defs/buildings.ts` (nur `unlockTier` entfernen), `tests/sim/unlocks.test.ts` (neu), `save.test.ts`, `fixtures/save-v4.json` (neu, vorab auf `main`), `placement.test.ts`, `trade.test.ts`, `orders.test.ts`, `defs.test.ts`, `balance-crises.test.ts` (`normalized()`), `helpers.ts`, `scenarios.ts` (`finishUnlocks`, `unlockAll`), Tests mit gesperrten Bauten (nur `unlockAll`, Liste im Plan), `docs/arc42.md` (§6 `step`, §8 Persistenz),                                                                                |
+| `docs/adr/ADR-005-…` (Nachtrag: `tickUnlocks`, Freischaltung gespeichert / Bedingung live, `noService`; Delta R163 B4); Ausnahmen `src/ui/guide.ts` + `tests/ui/guide.test.ts` (nur Filter 12.3), `src/ui/hints.ts` + `tests/ui/hints.test.ts` (nur `lockText`-Zeilen, falls M7:AK-UX-03 sie verlangt), `src/ui/goal.ts` + `tests/ui/goal.test.ts` (nur Typanpassung, falls `unlockTier` gelesen wird), Render- und UI-Tests mit gesperrten Bauten (nur `unlockAll`) | M8 auf `main`; Fixture vorab                                                               |
+| F1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M10 Sim (H-S1), `layoutKey`                                                                | lead-tech · tech-sim-engineer                        | `src/sim/forest.ts` (neu), `src/sim/defs/forest.ts` (neu), `src/sim/queries.ts` (nur `layoutKey`), `tests/sim/forest.test.ts` (neu), `tests/sim/queries.test.ts` (M6:AK-S3-07)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | S1; parallel zu S2                         |
+| S2                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M2, M3, M4 (Bedingung), K1                                                                 | lead-tech · tech-sim-engineer                        | `src/sim/townhall.ts` (neu), `defs/buildings.ts`, `defs/unlocks.ts` (U3 `townhall`), `types.ts`, `tax.ts`, `population.ts`, `production.ts`, `placement.ts` (eine Amtsstube), `unlocks.ts` (`taxBlocks`), `tests/sim/townhall.test.ts` (neu), `taxes.test.ts`, `population.test.ts`, `production.test.ts`, `defs.test.ts`, `fire.test.ts`, `scenarios.ts` (`galerie` + Amtsstube); Ausnahmen `src/render/sprites.ts` + `tests/render/sprites.test.ts` (Rückfall), `src/ui/hotkeys.ts` + `tests/ui/hotkeys.test.ts` (nur I), `src/ui/texts.ts` (nur `noService`), `src/ui/hints.ts` + `tests/ui/hints.test.ts` (Gründe 11.9), `src/render/overlays.ts` (nur falls ein Zustands-`switch` `noService` verlangt) | S1; parallel zu F1                         |
+| B1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M13 Messung, Szenarien 18.1                                                                | lead-tech · design-balancing-analyst                 | `tests/sim/unlock-timeline.test.ts` (neu), `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`; Messung `balance-merchants.test.ts` ohne Änderung                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | S2 und F1                                  |
+| R1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Amtsstube-Silhouette, Terrain-Cache, Baumstempel                                           | lead-art · art-rendering-engineer                    | `src/render/sprites.ts`, `src/render/terrain.ts`, `src/render/iso.ts` (nur falls AK-R1-02 nicht schon über `layoutKey` grün ist),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `src/render/wildlife.ts`, `src/render/water.ts`, `src/render/life.ts` (nur Kommentare, AK-R1-05), `tests/render/wildlife.test.ts`, `docs/arc42.md` (§10, eine Zeile), `tests/render/sprites.test.ts`, `tests/render/terrain.test.ts`, `tests/render/iso.test.ts`                                                                                                                                                                                                     | S2 (sprites), F1 (`layoutKey`); parallel zu U1                                             |
+| A1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Symbolsatz (M11 Gestaltung)                                                                | lead-art · art-rendering-engineer                    | `src/ui/icons.ts` (neu), `tests/ui/icons.test.ts` (neu)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | parallel zu S1 (vor R1, gleicher Arbeiter) |
+| U1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M6 (Bauleiste, Tasten, Liste, Chips, Handel, Auftrag, Kopfzeile Steuer), M7, M12 (UI), Ton | lead-tech · tech-ui-engineer                         | `buildMenu.ts`, `hud.ts`, `hotkeys.ts`, `menu.ts`, `trade.ts`, `order.ts`, `app.ts`, `goal.ts`, `settings.ts`, `soundEvents.ts`, Tests dazu; Ausnahme `src/audio/sound.ts` (+ Zuordnung in `src/audio/`, nur `'unlock'`) und `tests/audio/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | S2, F1 auf `main`; Browser nach B1         |
+| U2                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M8 (Hilfe), M10 Bedienung, Amtsstuben-Panel, Tooltips, Gründe, K4                          | lead-tech · tech-ui-engineer                         | `startCard.ts`, `guide.ts`, `inspect.ts`, `hints.ts`, `texts.ts`, `input.ts`, `hotkeys.ts`, `buildMenu.ts`, `menu.ts`, `app.ts`, `crisisLog.ts`, `eventLogView.ts`, Tests dazu; Ausnahme `src/render/renderer.ts` (nur `Tool`-Typ und Werkzeug-Vorschau der Forst-Werkzeuge)                                                                                                                                                                                                                                                                                                                                                                                                                                 | U1; R1 für Browser-Check                   |
+| U3                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M9 Mouse-over                                                                              | lead-tech · tech-ui-engineer                         | `src/ui/hover.ts` (neu), `input.ts`, `app.ts`, `src/style.css`, `tests/ui/hover.test.ts` (neu)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | U2                                         |
+| U4                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | M11 Einbau, K2, K3                                                                         | lead-tech · tech-ui-engineer                         | `hud.ts`, `buildMenu.ts`, `inspect.ts`, `src/style.css`, Tests dazu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | U3, A1                                     |
+| D1                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Doku-Pass                                                                                  | lead-design · Doku                                   | `README.md`, `docs/arc42.md` (§5, §8 ausser Persistenz), Hauptspec                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | U4                                         |
 
 Pfade ohne Präfix liegen im Ordner des Strangs. **Parallelität:** A1 ∥ S1; nach S1: F1 ∥ S2; nach S2 und F1: B1 ∥
 R1 ∥ U1; U2 nach U1 (und R1 für den Browser-Check der Forst-Werkzeuge); U3, U4, D1 seriell.
+**Planhinweise aus dem Gate Spec (R163, regelt der Plan von lead-tech):** (B9) Importkreis `unlocks` →
+`population` (`tierLock`) → `townhall` → `unlocks`; in ESM nur mit Funktionen unkritisch, der Plan legt die Richtung
+fest. (B11) Zwischen den Merges von S2 und U1/U2 scheitern die Steuer-Knöpfe der Kopfzeile ohne Amtsstube, und
+`guide.ts` liest noch das gespeicherte `taxLevel`; der Plan sieht einen M10-Integrationsbranch vor oder legt den
+Zwischenstand per Ruling fest. Möglich ist auch die Teilung von S1 in S1a (Freischaltung) und S1b (Save v5).
 **Abhängigkeiten ausserhalb M10:** `src/render/renderer.ts` (Ausnahme U2) teilt M9 H-R2, H-R3, H-R4 — U2 läuft erst
 nach deren Merge oder seriell per L0 (Risiko 3). `src/render/sprites.ts` teilt M9 Welle 2 (G1/G8) — R1 und S2 nicht
 parallel dazu.
 
 ## 20. Änderungen gegenüber Hauptspec, arc42, ADR und früheren AK
 
-| Dokument / Stelle                       | bisher                                                              | mit M10                                                                                                              |
-| --------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Hauptspec 2.4 Gebäude                   | alle Gebäude ab Spielbeginn baubar (M8: ausser Bad, Hütte)          | Freischaltbaum U0–U6; Amtsstube neu; Werkzeugmacher mit Betriebsbedingung Schule                                     |
-| Hauptspec 2.2 Karte                     | Gelände fest                                                        | Wald roden und aufforsten (6)                                                                                        |
-| Hauptspec 2.8 Wirtschaft (Steuerregler) | Steuer jederzeit                                                    | **Änderung:** nur mit aktiver Amtsstube; sonst wirkt „normal"                                                        |
-| Hauptspec 3.3 Datenmodell               | `World.version: 4` (M8)                                             | `version: 5`, `unlocked`, `goodLocks`, `upgradeStops`, `terrainRev`; `BuildingState` + `noSchool`; `requiresService` |
-| Hauptspec 3.7, arc42 §8 Persistenz      | Save v4                                                             | Save v5, Migration v4 → v5, neue Prüfungen, Fixture `save-v4.json`                                                   |
-| arc42 §6 `step`                         | endet mit `checkWin`                                                | endet mit `tickUnlocks`                                                                                              |
-| arc42 §8 Gebäudezustände, ADR-005       | `ok`, `waitingInput`, `storageFull`, `notConnected`, `burning`      | + `noSchool` (Nachtrag ADR-005)                                                                                      |
-| arc42 §8 Caches                         | `layoutKey` ohne Gelände                                            | mit `terrainRev`; Terrain-Teil-Neuzeichnung auch bei Geländewechsel                                                  |
-| arc42 §5                                | —                                                                   | Bausteine `unlocks`, `townhall`, `forest`, `hover`, `icons`                                                          |
-| M6:AK-S3-07 (`queries.test.ts`)         | `layoutKey` nur durch Bau, Abriss, Weg, Anbindung                   | **Änderung:** zusätzlich Geländewechsel (AK-F1-08)                                                                   |
-| M7:AK-UX-06                             | `hotkeyList()` enthält jede Taste aus `TOOL_HOTKEYS`                | **Änderung:** `hotkeyList(world)`, nur freigeschaltete (AK-U1-03)                                                    |
-| M7:AK-UX-08, M7:AK-UX-10                | Kassen- und Steuer-Satz mit `taxLevel`; Abhilfe nennt jedes Gebäude | **Änderung:** wirksame Steuer, Amtsstube, gesperrte Gebäude gefiltert (AK-S1-19, AK-U2-02)                           |
-| M7:AK-UX-15                             | Steuerregler in der Kopfzeile                                       | gilt weiter; Steuer-Knopf nur mit Amtsstube (AK-U1-11)                                                               |
-| M7:AK-UX-16                             | neues Spiel: „Produktion" 8 Einträge (M8: 9 ab S2)                  | **Änderung:** neues Spiel 2 Einträge; 9 erst mit U6 bzw. „Alles frei" (AK-U1-01, AK-U1-10)                           |
-| M7:AK-UX-03                             | Reason-Tabelle                                                      | **Erweiterung** um die Zeilen aus 11.9 (AK-S2-17, AK-U2-10)                                                          |
-| M7:AK-UX-11, M7:AK-UX-25 (Legende)      | 11 Zeilen                                                           | mit K4 vor der ersten Krisenperiode ohne Brand und Sturm (AK-U2-11)                                                  |
-| M8 14.1 HUD, M8:AK-U1-04, M8:AK-U1-05   | `stock-glass`, `pop-4` mit M8-Regel; Text „Glas 5"                  | Regel verallgemeinert (gleiches Ergebnis); mit U4 steht der Name im `aria-label` (AK-U4-01)                          |
-| M8:AK-U1-09, M8 14.1                    | `lockedToolText(world, defId)`, `unlockNotice`                      | `lockedToolText(world, tool)`, `unlockNoticeText(prev, world)` (17)                                                  |
-| M8:AK-U2-06, M8:AK-U2-10                | Zählung „Produktion" 8 / 9                                          | gilt mit `finishUnlocks` in den M8-Szenarien weiter; Eintragstext im `aria-label` (AK-U4-02)                         |
-| M8:AK-S1-21, M8:AK-S2-19                | `buildLock` aus `unlockTier`                                        | aus `unlocked` (U6), gleiche Texte                                                                                   |
-| M8 18.1 `galerie` mit `withUnlock`      | Helfer setzt `won`                                                  | `unlockAll` plus `finishUnlocks`; `galerie` + Amtsstube                                                              |
-| Programm §6 H-S1                        | „bitgleich, kein Save-Wechsel"                                      | **Änderung (R155):** Sim-Paket F1 in M10 mit `terrainRev` in Save v5                                                 |
+| Dokument / Stelle                       | bisher                                                              | mit M10                                                                                                                             |
+| --------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Hauptspec 2.4 Gebäude                   | alle Gebäude ab Spielbeginn baubar (M8: ausser Bad, Hütte)          | Freischaltbaum U0–U6; Amtsstube neu; Werkzeugmacher mit Betriebsbedingung Schule                                                    |
+| Hauptspec 2.2 Karte                     | Gelände fest                                                        | Wald roden und aufforsten (6)                                                                                                       |
+| Hauptspec 2.8 Wirtschaft (Steuerregler) | Steuer jederzeit                                                    | **Änderung:** nur mit aktiver Amtsstube; sonst wirkt „normal"                                                                       |
+| Hauptspec 3.3 Datenmodell               | `World.version: 4` (M8)                                             | `version: 5`, `unlocked`, `goodLocks`, `upgradeStops`; `BuildingState` + `noService`; `requiresService`, `maxCount`                 |
+| Hauptspec 3.7, arc42 §8 Persistenz      | Save v4                                                             | Save v5, Migration v4 → v5, neue Prüfungen, Fixture `save-v4.json`                                                                  |
+| arc42 §6 `step`                         | endet mit `checkWin`                                                | endet mit `tickUnlocks`                                                                                                             |
+| arc42 §8 Gebäudezustände, ADR-005       | `ok`, `waitingInput`, `storageFull`, `notConnected`, `burning`      | + `noService` (Nachtrag ADR-005)                                                                                                    |
+| arc42 §8 Caches                         | `layoutKey` ohne Gelände                                            | mit Geländeart je Kachel (Delta R163 B7); Terrain-Teil-Neuzeichnung auch bei Geländewechsel; gelände-feste Caches mit Bedingung (7) |
+| arc42 §5                                | —                                                                   | Bausteine `unlocks`, `townhall`, `forest`, `hover`, `icons`                                                                         |
+| M6:AK-S3-07 (`queries.test.ts`)         | `layoutKey` nur durch Bau, Abriss, Weg, Anbindung                   | **Änderung:** zusätzlich Geländewechsel (AK-F1-08)                                                                                  |
+| M7:AK-UX-06                             | `hotkeyList()` enthält jede Taste aus `TOOL_HOTKEYS`                | **Änderung:** `hotkeyList(world)`, nur freigeschaltete (AK-U1-03)                                                                   |
+| M7:AK-UX-08, M7:AK-UX-10                | Kassen- und Steuer-Satz mit `taxLevel`; Abhilfe nennt jedes Gebäude | **Änderung:** wirksame Steuer, Amtsstube, gesperrte Gebäude gefiltert (AK-S1-19, AK-U2-02)                                          |
+| M7:AK-UX-15                             | Steuerregler in der Kopfzeile                                       | gilt weiter; Steuer-Knopf nur mit Amtsstube (AK-U1-11)                                                                              |
+| M7:AK-UX-16                             | neues Spiel: „Produktion" 8 Einträge (M8: 9 ab S2)                  | **Änderung:** neues Spiel 2 Einträge; 9 erst mit U6 bzw. „Alles frei" (AK-U1-01, AK-U1-10)                                          |
+| M7:AK-UX-03                             | Reason-Tabelle                                                      | **Erweiterung** um die Zeilen aus 11.9 (AK-S2-17, AK-U2-10)                                                                         |
+| M7:AK-UX-11, M7:AK-UX-25 (Legende)      | 11 Zeilen                                                           | mit K4 vor der ersten Krisenperiode ohne Brand und Sturm (AK-U2-11)                                                                 |
+| M8 14.1 HUD, M8:AK-U1-04, M8:AK-U1-05   | `stock-glass`, `pop-4` mit M8-Regel; Text „Glas 5"                  | Regel verallgemeinert (gleiches Ergebnis); mit U4 steht der Name im `aria-label` (AK-U4-01)                                         |
+| M8:AK-U1-09, M8 14.1                    | `lockedToolText(world, defId)`, `unlockNotice`                      | `lockedToolText(world, tool)`, `unlockNoticeText(prev, world)` (17)                                                                 |
+| M8:AK-U2-06, M8:AK-U2-10                | Zählung „Produktion" 8 / 9                                          | gilt mit `finishUnlocks` in den M8-Szenarien weiter; Eintragstext im `aria-label` (AK-U4-02)                                        |
+| M8:AK-S1-21, M8:AK-S2-19                | `buildLock` aus `unlockTier`                                        | aus `unlocked` (U6), gleiche Texte                                                                                                  |
+| M8 18.1 `galerie` mit `withUnlock`      | Helfer setzt `won`                                                  | `unlockAll` plus `finishUnlocks`; `galerie` + Amtsstube                                                                             |
+| Programm §6 H-S1                        | „bitgleich, kein Save-Wechsel"                                      | **Änderung (R155):** Sim-Paket F1 in M10; bitgleich, kein eigenes Save-Feld (Delta R163 B7)                                         |
 
 **Kein neues ADR:** Freischaltung, Amtsstube und Roden sind Designentscheide (R155), keine Architekturentscheide.
 Keine Änderung an ADR-001 (keine Abhängigkeit), ADR-002 (Sim DOM-frei, `hover.ts` und `icons.ts` liegen in
 `src/ui/`), ADR-006 (Symbole eigen, prozedural), ADR-010 (kein neuer Zufall). ADR-005 bekommt einen Nachtrag
-(`noSchool`).
+(lead-tech in S1, Delta R163 B4): `tickUnlocks` als letzter Aufruf in `step` (Bitgleichheit), Trennung „Freischaltung
+gespeichert, Bedingung live", Zustand `noService`.
 
 **Bestehende Tests, bewusst geändert** (Paket in Klammern, Liste im Plan zu vervollständigen):
 `tests/sim/balance-crises.test.ts` (`normalized()`; S1), `tests/sim/save.test.ts` (`SAVE_VERSION 5`, „Unbekannte
@@ -1241,10 +1325,11 @@ U2), `tests/render/sprites.test.ts` (S2, R1).
 
 ## 21. Offene Punkte mit Empfehlung
 
-1. **Marktplatz-Schwelle 20 (D10, R155).** Spec-Gate-Prüfpunkt und Playtest P-01. _Empfehlung:_ 20 lassen; bei „Ja"
-   in P-01 Ruling auf 8 (ein Wert in `defs/unlocks.ts`, bitgleich, der Controller baut keinen Markt).
+1. **Marktplatz-Schwelle 20 (D10, R155, R163).** Entschieden: U1 bleibt bei 20. Playtest P-01 bleibt. Bei „Ja" in
+   P-01 Ruling auf 8 (ein Wert in `defs/unlocks.ts`, bitgleich, der Controller baut keinen Markt) **mit AK-Delta**
+   AK-S1-01, AK-S1-03, AK-S1-10, AK-B1-01, AK-U2-01, AK-U2-05 (lead-qa B-12).
 2. **Alte Stände mit Werkzeugmacher ohne Schule.** Vor M10 war der Werkzeugmacher ab Tick 0 baubar; nach der
-   Migration steht er, arbeitet aber ohne Schule nicht (`noSchool`). Das ist die Folge von D4 („eine Regelwelt").
+   Migration steht er, arbeitet aber ohne Schule nicht (`noService`). Das ist die Folge von D4 („eine Regelwelt").
    _Empfehlung:_ hinnehmen; Panel, Abhilfe und Mouse-over erklären es. Alternative (nicht empfohlen): Bedingung für
    migrierte Werkzeugmacher aussetzen — zweite Regelwelt.
 3. **Zäher Anfang (D9).** Playtest P-02. _Empfehlung:_ Hebel „Werkzeugmacher bei U4" vor `START_STOCK.tools`
@@ -1252,9 +1337,9 @@ U2), `tests/render/sprites.test.ts` (S2, R1).
 4. **Gelände und Tiere ohne Panel.** Der Vorschlag sagt „dieselben Inhalte per Klick im Panel"; für Gelände und
    Tiere gibt es kein Panel (13.2). _Empfehlung:_ in M10 hinnehmen (Inhalte stehen in Tooltips und Hilfe), ein
    Gelände-Panel als Kandidat für M11.
-5. **Zeitgrenze Terrain-Neuzeichnung 100 ms (AK-R1-03).** Ob eine Teil-Neuzeichnung mit geglätteten Feldern das
-   hält, ist ungemessen. _Empfehlung:_ R1 misst zuerst; liegt der Wert darüber, Ruling-Vorlage an L0 mit Messwert
-   statt stiller Lockerung.
+5. **Zeitgrenze Terrain-Neuzeichnung 100 ms (AK-R1-03).** Laut lead-tech (Gate Spec, B10) machbar: Die Glättung
+   wirkt nur lokal (etwa eine Kachel Rand), erwartet ≤ 15 ms. _Empfehlung:_ R1 misst `updateTerrainLayer().ms`; liegt
+   der Wert über 100 ms, Ruling-Vorlage an L0 mit Messwert statt stiller Lockerung.
 6. **Dichter Anfang.** Drei Meldungen in ein bis zwei Minuten (P-03). _Empfehlung:_ beobachten; Hebel wäre eine
    kürzere Meldung ohne „Mehr unter Hilfe (?)" ab der zweiten, kein späterer Auslöser (Bitgleichheit).
 7. **Ton `unlock`.** Erfordert eine kleine Ausnahme in `src/audio/` (U1). _Empfehlung:_ so lassen; verzichtet
@@ -1262,21 +1347,51 @@ U2), `tests/render/sprites.test.ts` (S2, R1).
 
 ## 22. Widersprüche und Präzisierungen (R137, nicht still entschieden)
 
-| Nr  | Stelle                                      | Befund                                                                                                                      | Entscheid der Spec (Empfehlung)                                                                        |
-| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 1   | Vorschlag 2.1 Punkt 4, 2.3 Handel           | `sell` „frei oder im Lager" ist in der Sim immer erfüllt, wenn `sell` gelingt                                               | `sell` bleibt unverändert; Regel nur in der Anzeige (4.4)                                              |
-| 2   | Vorschlag 2.2 Fussnote 1 vs. 2.1 Punkt 4    | Feuerwache bei Krisen „aus" als Sim-Sperre bräche `galerie` und „Alles frei" ohne Nutzen                                    | nur Anzeige-Bedingung `buildingShown`; Taste mit Hinweis (4.4)                                         |
-| 3   | Briefing „Cache-Schlüssel in `src/render/`" | Baumstempel, Abdeckung und Weggraph hängen auch an `layoutKey` (`src/sim/queries.ts`)                                       | `terrainRev` in `layoutKey` (F1); Render nutzt ihn mittelbar, plus Gelände-Abbild in `terrain.ts` (R1) |
-| 4   | Vorschlag 6 Migration Punkt 1               | „frühere Kette" auch für Einträge aus stehenden Gebäuden? Ein früher Werkzeugmacher schaltete sonst Kapelle und Schule frei | Kette nur für Auslöser-Einträge (8.2)                                                                  |
-| 5   | Vorschlag 6 (Ort)                           | `effectiveTaxLevel`, `townhallActive` in `unlocks.ts`                                                                       | `src/sim/townhall.ts` (neu); trennt Regeln und Paket-Dateien (5.1)                                     |
-| 6   | Vorschlag 6 `functions`                     | nur `'orders' \| 'forest'`; Ausgabesperre ohne Namen                                                                        | `'goodLocks'` ergänzt (4.2)                                                                            |
-| 7   | Vorschlag 5 „Steuer nur mit Amtsstube"      | offen, ob der Regler in der Kopfzeile bleibt                                                                                | Regler ins Amtsstuben-Panel, Kopfzeile nur ein Knopf mit aktiver Amtsstube (11.8)                      |
-| 8   | Vorschlag 4 Barrierefreiheit                | Gelände und Tiere haben kein Panel                                                                                          | hingenommen, Offener Punkt 4                                                                           |
-| 9   | Vorschlag 2.3 `deliverOrder`-Text           | eigener Satz „Aufträge kommen mit den ersten Siedlern"                                                                      | einheitlich `lockText` (4.5)                                                                           |
-| 10  | Vorschlag 3.1 Meldungsformat vs. M8         | U6-Text ist M8-Wortlaut ohne „Mehr unter Hilfe (?)"                                                                         | U6 allein wörtlich M8 (AK-M8 bleibt), sonst Format „Neu: …" (11.6)                                     |
-| 11  | Programm §6 H-S1 „kein Save-Wechsel"        | Briefing verlangt `terrainRev` in Save v5                                                                                   | `terrainRev` in v5 (R155 absorbiert H-S1)                                                              |
-| 12  | Vorschlag 9.2 Amtsstube                     | `flammable` nicht genannt                                                                                                   | brennbar wie Kapelle (Setzung, 5.1)                                                                    |
+| Nr  | Stelle                                      | Befund                                                                                                                      | Entscheid der Spec (Empfehlung)                                                                                                                |
+| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Vorschlag 2.1 Punkt 4, 2.3 Handel           | `sell` „frei oder im Lager" ist in der Sim immer erfüllt, wenn `sell` gelingt                                               | `sell` bleibt unverändert; Regel nur in der Anzeige (4.4)                                                                                      |
+| 2   | Vorschlag 2.2 Fussnote 1 vs. 2.1 Punkt 4    | Feuerwache bei Krisen „aus" als Sim-Sperre bräche `galerie` und „Alles frei" ohne Nutzen                                    | nur Anzeige-Bedingung `buildingShown`; Taste mit Hinweis (4.4)                                                                                 |
+| 3   | Briefing „Cache-Schlüssel in `src/render/`" | Baumstempel, Abdeckung und Weggraph hängen auch an `layoutKey` (`src/sim/queries.ts`)                                       | Geländeart je Kachel in `layoutKey` (F1, Delta R163 B7, löst R159 W3 ab); Render nutzt ihn mittelbar, plus Gelände-Abbild in `terrain.ts` (R1) |
+| 4   | Vorschlag 6 Migration Punkt 1               | „frühere Kette" auch für Einträge aus stehenden Gebäuden? Ein früher Werkzeugmacher schaltete sonst Kapelle und Schule frei | Kette nur für Auslöser-Einträge (8.2)                                                                                                          |
+| 5   | Vorschlag 6 (Ort)                           | `effectiveTaxLevel`, `townhallActive` in `unlocks.ts`                                                                       | `src/sim/townhall.ts` (neu); trennt Regeln und Paket-Dateien (5.1)                                                                             |
+| 6   | Vorschlag 6 `functions`                     | nur `'orders' \| 'forest'`; Ausgabesperre ohne Namen                                                                        | `'goodLocks'` ergänzt (4.2)                                                                                                                    |
+| 7   | Vorschlag 5 „Steuer nur mit Amtsstube"      | offen, ob der Regler in der Kopfzeile bleibt                                                                                | Regler ins Amtsstuben-Panel, Kopfzeile nur ein Knopf mit aktiver Amtsstube (11.8)                                                              |
+| 8   | Vorschlag 4 Barrierefreiheit                | Gelände und Tiere haben kein Panel                                                                                          | hingenommen, Offener Punkt 4                                                                                                                   |
+| 9   | Vorschlag 2.3 `deliverOrder`-Text           | eigener Satz „Aufträge kommen mit den ersten Siedlern"                                                                      | einheitlich `lockText` (4.5)                                                                                                                   |
+| 10  | Vorschlag 3.1 Meldungsformat vs. M8         | U6-Text ist M8-Wortlaut ohne „Mehr unter Hilfe (?)"                                                                         | U6 allein wörtlich M8 (M8:AK-U1-09 bleibt), sonst Format „Neu: …" (11.6)                                                                       |
+| 11  | Programm §6 H-S1 „kein Save-Wechsel"        | Briefing verlangte `terrainRev` in Save v5                                                                                  | entfallen (Delta R163 B7): kein Weltfeld, Geländeart im `layoutKey`                                                                            |
+| 12  | Vorschlag 9.2 Amtsstube                     | `flammable` nicht genannt                                                                                                   | brennbar wie Kapelle (Setzung, 5.1)                                                                                                            |
 
 **Gelöste Beobachtungen** (Eintrag in `docs/beobachtungen.md` schliesst das jeweilige Paket, nicht diese Spec):
 „Gesperrtes vor der Freischaltung sichtbar" (a) Tastenliste → U1 (AK-U1-03), (b) Handels-Panel → U1 (AK-U1-06);
 „Terrain-Cache hängt an `layoutKey`" → F1 und R1 (AK-F1-08, AK-R1-01, AK-R1-02).
+
+## 23. Delta Gate Spec (R163)
+
+Gate Spec bestanden mit Auflagen (R163). Befunde aus den Berichten von `lead-qa` (B-1 bis B-12) und `lead-tech` (B1 bis
+B11), eingearbeitet von `lead-design` in einer Runde. AK-Zahl 96 → **98** (neu AK-R1-05, AK-U2-12).
+
+| Befund           | Stelle in dieser Spec                                                                                          |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| QA B-1           | 18.1 Prüfpunkte relativ zum Kontor, `<name>.probes.json`, AK-B1-03                                             |
+| QA B-2           | AK-S2-05, AK-S2-07, AK-S2-11 mit `unlockAll`                                                                   |
+| QA B-3           | 11.9, 12.3 „Schule kommt, …"; AK-S1-14 (c) mit `noService` und Lager; AK-U2-02                                 |
+| QA B-4           | 4.2 Kette nur über Auslöser                                                                                    |
+| QA B-5           | AK-S1-05 (b) „Bürgerzahl erreicht `WIN_CITIZENS`"                                                              |
+| QA B-6           | AK-F1-04 (Aufforsten auf bebauter Weide), AK-F1-05 (Schäferei)                                                 |
+| QA B-7, Tech B10 | 7 Punkt 3, AK-R1-03: Messgrösse `updateTerrainLayer().ms`, 10 Aktionen, Neuaufbau unzulässig; Offener Punkt 5  |
+| QA B-8           | AK-S1-13 feste Liste                                                                                           |
+| QA B-9           | AK-F1-09 mit Speichern und Laden                                                                               |
+| QA B-10          | 18.1: Szenario `m10-krise-bald`, Tick 1549 für `m10-siedler-fast`, „genutzt von" korrigiert                    |
+| QA B-11          | 12.3 `M8:AK-S1-19`, 22 Nr. 10 `M8:AK-U1-09`                                                                    |
+| QA B-12          | 18.2 P-01, Offener Punkt 1: U1 bleibt 20, AK-Delta bei späterem Ruling benannt                                 |
+| Tech B1          | 8.2 `deriveUnlocks` erst nach `isWellFormed`; AK-S1-15 v4 mit beschädigten Gebäuden                            |
+| Tech B2          | AK-U1-02, -03, -09, -10 gekürzt; Teile nach AK-U2-12                                                           |
+| Tech B3          | 7 Punkt 2 gelände-feste Caches; AK-R1-05; 19 R1                                                                |
+| Tech B4          | AK-S1-05 (c), 19 S1 (arc42 §6, ADR-005-Nachtrag), AK-D1-02, 20                                                 |
+| Tech B5          | 17: `initialUnlockShown`, `unlockShown`, Zeilen @ 6cbdc56, `MAP_SIGNS`                                         |
+| Tech B6          | 13.1, AK-U3-06: gleiche `env`                                                                                  |
+| Tech B7 (L0)     | `terrainRev` entfällt; Geländeart im `layoutKey` (6, 7, 8, 9.2, 16, 17, 20, 22); löst R159 W3 ab               |
+| Tech B8 (L0)     | 5.1 `maxCount`; Zustand `noService` überall                                                                    |
+| Tech B9, B11     | 19 Planhinweise (regelt der Plan)                                                                              |
+| Kopf             | Code-Stand `main` @ 9460ab9, `feat/m8-ui` @ 6cbdc56; Zeilen `population.ts` 124/166/199, `serviceAvailable` 59 |
