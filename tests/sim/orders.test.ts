@@ -163,3 +163,27 @@ describe('Handelsaufträge', () => {
     expect(ORDER_PREMIUM).toBe(0.75);
   });
 });
+
+/** FNV-1a, 32 Bit, über die UTF-16-Codeeinheiten (wie balance-crises.test.ts; Test-Helfer, keine Abhängigkeit). */
+function fnv1a32(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+// Referenz gemessen auf main 31b5977 (Code vor M8-S1) mit genau diesem Test, Plan M8 Task 1 Schritt 1.
+const POOL_REFERENCE = 0xea2c801e;
+
+describe('M8 Auftrags-Pool bitgleich (Spec 5.4)', () => {
+  it('AK-S2-13 Referenz: orderForPeriod für Stufe 1 … 3, k 0 … 199, Seeds 1 … 10 bitgleich zum Code vor M8', () => {
+    const all: unknown[] = [];
+    for (let seed = 1; seed <= 10; seed++)
+      for (const t of [1, 2, 3] as Tier[])
+        for (let k = 0; k < 200; k++) all.push(orderForPeriod(seed, k, t));
+    expect(all).toHaveLength(6000);
+    expect(fnv1a32(JSON.stringify(all))).toBe(POOL_REFERENCE);
+  });
+});

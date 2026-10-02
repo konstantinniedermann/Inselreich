@@ -764,3 +764,12 @@ Frame-Grenze +5 % gegen main @ 5f7e085. Möwen bei Regen/Sturm als Trivial-Fix i
 Commit). — Kosten bei Irrtum: Render-Revert — Archiv-Bericht lead-art H-R2 Phase 1
 
 Entscheider: L0 · Anlass: Gate H-R2 · ADR: —
+
+## R158 · 2026-10-02 · M8
+
+Ruling: Gate Merge Sim bestanden (lead-qa OK, `feat/m8-sim` @ f71f7fa, 4 niedrige Befunde fürs
+Final-Review M8 gesammelt; L-1 und L-2 gehen in D1). Merge durch production-integrator. W5 startet
+erst nach dem Reset des 5-h-Fensters (19:00; jetzt 58 %, keine neuen Wellen ab ~60 %, R69). —
+Kosten bei Irrtum: Revert des Sim-Merges — Archiv-Bericht lead-qa M8-SIM-FR
+
+Entscheider: L0 · Anlass: Gate Merge Sim M8 · ADR: —

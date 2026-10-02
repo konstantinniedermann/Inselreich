@@ -262,8 +262,13 @@ describe('tryUpgrade', () => {
     house.house!.tier = 3;
     house.house!.inhabitants = 15;
     expect(tryUpgrade(w, house)).toBe(false);
-    expect(upgradeStatus(w, house)).toEqual({ ok: false, reasons: ['Höchste Stufe erreicht'] });
+    expect(upgradeStatus(w, house).reasons[0]).toBe('Erst nach dem Ziel');
     expect(house.house!.tier).toBe(3);
+    house.house!.tier = 4;
+    house.house!.inhabitants = 20;
+    expect(tryUpgrade(w, house)).toBe(false);
+    expect(upgradeStatus(w, house)).toEqual({ ok: false, reasons: ['Höchste Stufe erreicht'] });
+    expect(house.house!.tier).toBe(4);
   });
 
   it('consumes the checked good: two ready houses, one cloth, only one upgrades', () => {

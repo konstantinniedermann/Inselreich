@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
 import v2Json from './fixtures/save-v2.json?raw';
+import v3Json from './fixtures/save-v3.json?raw';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { beginCrisis, type CrisisRoll } from '../../src/sim/crises';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from '../../src/sim/defs/goods';
 import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
+import { TIERS } from '../../src/sim/defs/tiers';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
@@ -34,12 +36,12 @@ function expectFailure(json: string, reason: string): void {
 
 describe('save', () => {
   it('uses version 3', () => {
-    expect(SAVE_VERSION).toBe(3);
+    expect(SAVE_VERSION).toBe(4);
   });
 
   it('AK-S1-01 createWorld starts with the v2 fields', () => {
     const fresh = createWorld(3);
-    expect(fresh.version).toBe(3);
+    expect(fresh.version).toBe(4);
     expect(fresh.taxLevel).toBe('normal');
     expect(fresh.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => fresh.sellPct[g] === 100)).toBe(true);
@@ -55,14 +57,14 @@ describe('save', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(3);
+    expect(loaded.version).toBe(4);
     expect(loaded.taxLevel).toBe('normal');
     expect(loaded.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => loaded.sellPct[g] === 100)).toBe(true);
     expect(loaded.order).toBeNull();
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.money).toBe(before.money);
-    expect(loaded.stock).toEqual(before.stock);
+    expect(loaded.stock).toEqual({ ...(before.stock as object), glass: 0 });
     expect(Object.keys(loaded.buildings)).toEqual(Object.keys(before.buildings as object));
   });
 
@@ -93,7 +95,7 @@ describe('save', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 4)),
+      tampered(w, (r) => (r.version = 5)),
       'Unbekannte Version',
     );
   });
@@ -145,6 +147,7 @@ describe('save', () => {
       cloth: [2, 6, 12],
       cane: [3, 10, 20],
       rum: [3, 6, 12],
+      glass: [4, 4, 8],
       tools: undefined,
     };
     for (const g of GOOD_IDS) {
@@ -173,7 +176,7 @@ describe('save', () => {
   });
 
   it('rejects an unknown version', () => {
-    expectFailure(JSON.stringify({ ...w, version: 4 }), 'Unbekannte Version');
+    expectFailure(JSON.stringify({ ...w, version: 5 }), 'Unbekannte Version');
   });
 
   it('rejects invalid JSON', () => {
@@ -275,7 +278,7 @@ function burningWorld(): { world: World; id: number } {
 describe('M6 Save v3', () => {
   it('AK-S1-01 createWorld: version 3, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
     const a = createWorld(3);
-    expect(a.version).toBe(3);
+    expect(a.version).toBe(4);
     expect(a.crisisLevel).toBe('off');
     expect(a.crisis).toBeNull();
     const b = createWorld(3, { crisisLevel: 'normal' });
@@ -294,18 +297,18 @@ describe('M6 Save v3', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(3);
+    expect(loaded.version).toBe(4);
     expect(loaded.crisisLevel).toBe('off');
     expect(loaded.crisis).toBeNull();
     expect(Object.values(loaded.buildings).some((b) => b.outageUntil !== undefined)).toBe(false);
     const shape = (x: World): unknown[] =>
       Object.values(x.buildings).map((b) => [b.id, b.defId, b.x, b.y, b.progress, b.state]);
     expect(shape(loaded)).toEqual(shape(before));
-    expect(loaded.stock).toEqual(before.stock);
+    expect(loaded.stock).toEqual({ ...before.stock, glass: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.taxLevel).toBe(before.taxLevel);
-    expect(loaded.sellPct).toEqual(before.sellPct);
+    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100 });
     expect(loaded.order).toEqual(before.order);
     expect(before.order).not.toBeNull();
     expect(before.sellPct.wood).toBeLessThan(100);
@@ -315,7 +318,7 @@ describe('M6 Save v3', () => {
     const r = deserialize(v1Json);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.world.version).toBe(3);
+    expect(r.world.version).toBe(4);
     expect(r.world.crisisLevel).toBe('off');
     expect(r.world.crisis).toBeNull();
     expect(r.world.taxLevel).toBe('normal');
@@ -398,7 +401,7 @@ describe('M6 Save v3', () => {
       );
     }
     expectFailure(
-      tampered(storm(), (r) => (r.version = 4)),
+      tampered(storm(), (r) => (r.version = 5)),
       'Unbekannte Version',
     );
   });
@@ -423,5 +426,115 @@ describe('M6 Save v3', () => {
     const r = deserialize(serialize(world));
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.world).toEqual(world);
+  });
+});
+
+// Fixture erzeugt auf main 31b5977 über den temporären Test tests/sim/gen-save-v3.test.ts
+// (GEN_SAVE_V3=1; Seed 3, crisisLevel 'normal', Controller startColony/runColony ohne Optionen mit stop beim
+// ersten Tick ≥ 3000 mit laufender Krise, aktivem Auftrag, Bürgerhaus und sellPct < 100 → Tick 5400),
+// siehe Plan M8 Task 1 Schritt 1.
+describe('M8 Save v4', () => {
+  it('AK-S1-02 createWorld: version 4, wonMerchants false, Glas 0 / 100, übrige Felder wie nach M6', () => {
+    const a = createWorld(3);
+    expect(a.version).toBe(4);
+    expect(a.wonMerchants).toBe(false);
+    expect(a.stock.glass).toBe(0);
+    expect(a.sellPct.glass).toBe(100);
+    const keys = Object.keys(a);
+    expect(keys.indexOf('wonMerchants')).toBe(keys.indexOf('won') + 1);
+    expect(keys.slice(-2)).toEqual(['crisisLevel', 'crisis']);
+  });
+
+  it('AK-S1-11 lädt einen echten v3-Stand und migriert ihn nach v4', () => {
+    const before = JSON.parse(v3Json) as World;
+    expect(before.version).toBe(3);
+    expect(before.tick).toBeGreaterThanOrEqual(3000);
+    expect(before.crisisLevel).toBe('normal');
+    expect(before.crisis).not.toBeNull();
+    expect(before.order).not.toBeNull();
+    expect(Object.values(before.buildings).some((b) => b.house?.tier === 3)).toBe(true);
+    expect(Object.values(before.sellPct).some((p) => p < 100)).toBe(true);
+    const r = deserialize(v3Json);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const loaded = r.world;
+    expect(loaded.version).toBe(4);
+    expect(loaded.stock.glass).toBe(0);
+    expect(loaded.sellPct.glass).toBe(100);
+    expect(loaded.wonMerchants).toBe(false);
+    expect(loaded.buildings).toEqual(before.buildings);
+    expect(loaded.stock).toEqual({ ...before.stock, glass: 0 });
+    expect(loaded.money).toBe(before.money);
+    expect(loaded.tick).toBe(before.tick);
+    expect(loaded.taxLevel).toBe(before.taxLevel);
+    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100 });
+    expect(loaded.order).toEqual(before.order);
+    expect(loaded.crisisLevel).toBe(before.crisisLevel);
+    expect(loaded.crisis).toEqual(before.crisis);
+  });
+
+  it('AK-S1-12 v1 und v2 laden über alle Migrationen nach v4', () => {
+    for (const json of [v1Json, v2Json]) {
+      const before = JSON.parse(json) as Record<string, unknown>;
+      const r = deserialize(json);
+      expect(r.ok).toBe(true);
+      if (!r.ok) continue;
+      expect(r.world.version).toBe(4);
+      expect(r.world.wonMerchants).toBe(false);
+      expect(r.world.stock.glass).toBe(0);
+      expect(r.world.sellPct.glass).toBe(100);
+      expect(r.world.crisisLevel).toBe('off');
+      expect(r.world.crisis).toBeNull();
+      expect(r.world.taxLevel).toBe(before.version === 1 ? 'normal' : before.taxLevel);
+      expect(r.world.order).toEqual(before.version === 1 ? null : before.order);
+    }
+  });
+
+  it('AK-S1-13 Round-trip v4: won, Kaufmannshaus, wonMerchants, Glas 7, sellPct.glass 90', () => {
+    forceGrass(w, k.x + 2, k.y + 1);
+    const h = placeBuilding(w, 'house', k.x + 2, k.y + 1);
+    expect(h.ok).toBe(true);
+    w.buildings[h.id!]!.house!.tier = 4;
+    w.buildings[h.id!]!.house!.inhabitants = 20;
+    w.won = true;
+    w.wonMerchants = true;
+    w.stock.glass = 7;
+    w.sellPct.glass = 90;
+    expect(w.version).toBe(4);
+    const r = deserialize(serialize(w));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.world).toEqual(w);
+  });
+
+  it('AK-S1-14 weist jede verletzte v4-Ladeprüfung einzeln ab; Stufe 4 vor dem Sieg nur mit Hebel', () => {
+    forceGrass(w, k.x + 2, k.y + 1);
+    const h = placeBuilding(w, 'house', k.x + 2, k.y + 1);
+    expect(h.ok).toBe(true);
+    const tier = (t: number) => (r: Record<string, unknown>) =>
+      ((r.buildings as Record<string, { house: { tier: number } }>)[String(h.id)]!.house.tier = t);
+    const bad: Array<(r: Record<string, unknown>) => void> = [
+      (r) => delete r.wonMerchants,
+      (r) => (r.wonMerchants = 1),
+      (r) => (r.wonMerchants = true), // bei won false
+      tier(5),
+      tier(0),
+      tier(3.5),
+      tier(4), // bei won false, Hebel null
+      (r) => delete (r.stock as Record<string, unknown>).glass,
+      (r) => delete (r.sellPct as Record<string, unknown>).glass,
+      (r) => ((r.sellPct as Record<string, number>).glass = 29),
+      (r) => ((r.sellPct as Record<string, number>).glass = 101),
+    ];
+    for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
+    expectFailure(
+      tampered(w, (r) => (r.version = 5)),
+      'Unbekannte Version',
+    );
+    try {
+      TIERS[4].unlockCitizens = 40;
+      expect(deserialize(tampered(w, tier(4))).ok).toBe(true);
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
   });
 });

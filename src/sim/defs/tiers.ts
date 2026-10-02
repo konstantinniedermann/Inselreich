@@ -30,10 +30,23 @@ export const TIERS: Record<Tier, TierDef> = {
     needs: { food: 0.5, cloth: 0.2, rum: 0.2 },
     services: ['faith', 'school'],
     tax: 14,
+    upgradeCost: { money: 600, wood: 15, tools: 8, stone: 10 },
+  },
+  4: {
+    tier: 4,
+    name: 'Kaufleute',
+    maxInhabitants: 20,
+    needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1 },
+    services: ['faith', 'school', 'bath'],
+    tax: 20,
     upgradeCost: null,
+    requiresWin: true,
+    unlockCitizens: null,
   },
 };
 export const WIN_CITIZENS = 50;
+/** Zweites Ziel „Handelsstadt“: so viele Einwohner der Stufe 4 (M8 7; Rückfallwert 40). */
+export const WIN_MERCHANTS = 60;
 
 export const TAX_LEVELS: Record<TaxLevel, TaxLevelDef> = {
   low: { name: 'niedrig', pct: 70, upgradeWait: 150, occupancy: 1 },

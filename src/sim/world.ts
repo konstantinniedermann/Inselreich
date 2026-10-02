@@ -69,7 +69,7 @@ export function createWorld(seed: number, opts: { crisisLevel?: CrisisLevel } = 
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 3,
+    version: 4,
     seed: seedUsed,
     width: MAP_W,
     height: MAP_H,
@@ -82,6 +82,7 @@ export function createWorld(seed: number, opts: { crisisLevel?: CrisisLevel } = 
     money: START_MONEY,
     stats: { taxes: 0, upkeep: 0 },
     won: false,
+    wonMerchants: false,
     taxLevel: DEFAULT_TAX_LEVEL,
     taxLockedUntil: 0,
     sellPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,

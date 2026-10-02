@@ -12,7 +12,7 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
     );
     expect(tierTooltip(1)).toBe('Pioniere: Einwohner der Stufe 1 · brauchen Nahrung');
     expect(tierPath()).toBe(
-      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule)',
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
     );
   });
   it('AK-UX-07 balanceText je Minute', () => {
@@ -33,5 +33,16 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
   });
   it('AK-UX-07 speedTooltip', () => {
     expect(speedTooltip(4)).toBe('Spielzeit läuft 4× so schnell');
+  });
+});
+
+describe('M8 Stufenpfad (AK-S1-18)', () => {
+  it('AK-S1-18 tierPath endet mit den Kaufleuten, tierTooltip(4) nennt alle Bedarfe', () => {
+    expect(tierPath()).toBe(
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
+    );
+    expect(tierTooltip(4)).toBe(
+      'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Kapelle, Schule, Badehaus',
+    );
   });
 });

@@ -123,3 +123,16 @@ describe('step', () => {
     expect(w.money).toBe(money - 3 * upkeep);
   });
 });
+
+describe('M8 Ein-Input-Betriebe bitgleich (Spec 5.3)', () => {
+  it('AK-S2-05 Weberei, Brennerei, Werkzeugmacher mit Input-Liste: Ausstoss und Entnahme wie vor M8', () => {
+    const weaver = connectedBuilding(w, 'weaver');
+    const distillery = connectedBuilding(w, 'distillery');
+    const toolmaker = connectedBuilding(w, 'toolmaker');
+    w.stock = { ...w.stock, wool: 3, cane: 2, wood: 1, cloth: 0, rum: 0, tools: 0 };
+    ticks(w, 200);
+    expect([w.stock.cloth, w.stock.wool, weaver.state]).toEqual([3, 0, 'waitingInput']);
+    expect([w.stock.rum, w.stock.cane, distillery.state]).toEqual([2, 0, 'waitingInput']);
+    expect([w.stock.tools, w.stock.wood, toolmaker.state]).toEqual([1, 0, 'waitingInput']);
+  });
+});

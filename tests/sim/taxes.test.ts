@@ -110,11 +110,11 @@ describe('citizens', () => {
 
 describe('populationByTier', () => {
   it('sums inhabitants per tier, zero for empty tiers', () => {
-    expect(populationByTier(w)).toEqual({ 1: 0, 2: 0, 3: 0 });
+    expect(populationByTier(w)).toEqual({ 1: 0, 2: 0, 3: 0, 4: 0 });
     addHouse(w, 1, 4, true);
     addHouse(w, 1, 2, false);
     addHouse(w, 3, 7, true);
-    expect(populationByTier(w)).toEqual({ 1: 6, 2: 0, 3: 7 });
+    expect(populationByTier(w)).toEqual({ 1: 6, 2: 0, 3: 7, 4: 0 });
   });
 });
 

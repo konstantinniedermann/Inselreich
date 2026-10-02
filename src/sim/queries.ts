@@ -1,9 +1,9 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
-import { TIERS } from './defs/tiers';
+import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
 import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
-import { isSupplied, serviceAvailable } from './population';
+import { citizens, isSupplied, merchants, serviceAvailable } from './population';
 import { supplyBuildings } from './supply';
 import type {
   Building,
@@ -38,6 +38,17 @@ export type CrisisView =
       tile?: { x: number; y: number };
     };
 
+/** Zielanzeige (M8 12): Bürger-Ziel mit Ausblick, dann Kaufleute-Ziel, dann erreicht. Eine Quelle für HUD und Banner. */
+export type GoalView =
+  | {
+      phase: 'citizens';
+      current: number;
+      target: number;
+      next: { tierName: string; target: number; unlockCitizens: number | null };
+    }
+  | { phase: 'merchants'; current: number; target: number }
+  | { phase: 'done'; current: number; target: number };
+
 /** Standortradius der Rohstoffbetriebe mit Zone: Holzfäller (Wald), Schäferei und Zuckerrohr (Gras). */
 function siteZone(defId: BuildingDefId): { terrain: 'forest' | 'grass'; radius: number } | null {
   for (const rule of BUILDING_DEFS[defId].site) {
@@ -65,10 +76,31 @@ export function goodsBalance(
     const def = BUILDING_DEFS[b.defId];
     if (def.cycle === undefined) continue;
     if (def.produces) out[def.produces].produced += 100 / def.cycle;
-    if (def.consumes) out[def.consumes].consumed += 100 / def.cycle;
+    for (const g of def.consumes ?? []) out[g].consumed += 100 / def.cycle;
   }
   for (const g of GOOD_IDS) out[g].net = out[g].produced - out[g].consumed;
   return out;
+}
+
+/** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
+export function missingInputs(world: World, b: Building): GoodId[] {
+  return (BUILDING_DEFS[b.defId].consumes ?? []).filter((g) => world.stock[g] < 1);
+}
+
+export function goalView(world: World): GoalView {
+  if (world.wonMerchants)
+    return { phase: 'done', current: merchants(world), target: WIN_MERCHANTS };
+  if (world.won) return { phase: 'merchants', current: merchants(world), target: WIN_MERCHANTS };
+  return {
+    phase: 'citizens',
+    current: citizens(world),
+    target: WIN_CITIZENS,
+    next: {
+      tierName: TIERS[4].name,
+      target: WIN_MERCHANTS,
+      unlockCitizens: TIERS[4].unlockCitizens ?? null,
+    },
+  };
 }
 
 /** Was dem Haus fehlt: Versorgung, sonst Güter (Reihenfolge GOOD_IDS), dann Dienste. Leer = alles erfüllt. */
