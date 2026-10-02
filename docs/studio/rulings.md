@@ -719,3 +719,12 @@ B1 Messung „keine Freischalt-Meldung nach Laden" in QA-B-1 (lead-tech); B2 Dok
 L0, dann Merge nach main und M8-Start. — Kosten bei Irrtum: Plan-Nachtrag — Archiv-Bericht lead-qa
 
 Entscheider: L0 · Anlass: Delta-Gate M8 · ADR: —
+
+## R153 · 2026-10-02 · BUG-LICHT
+
+Ruling: Gate Merge BUG-LICHT bestanden (e4f8c31, Review BEDENKEN ohne Blocker, P95 Nacht +6 % ≤ 10 %).
+Anpassung AK-R4-05-Test (eine Füllung je Fenstergruppe nicht spec-pflichtig) angenommen. lead-art merged
+selbst nach dem laufenden Doku-Merge (serialisiert durch L0). Nachmessung auf 60 Hz/gedrosselter CPU im
+nächsten Leistungs-Check M8/M9. — Kosten bei Irrtum: Revert eines Merges — Archiv-Bericht lead-art Phase 2
+
+Entscheider: L0 · Anlass: Gate Merge BUG-LICHT · ADR: —
