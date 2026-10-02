@@ -34,7 +34,16 @@ import { openSettings } from './settingsPanel';
 import { openMenu, type MenuActions } from './menu';
 import { closeAllModals } from './modal';
 import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
-import { listSaves, loadSlot, saveAuto, saveToStorage } from './storage';
+import {
+  autosaveOnHide,
+  currentStorageProblem,
+  listSaves,
+  loadSlot,
+  saveAuto,
+  saveToStorage,
+  type Slot,
+} from './storage';
+import { openStartCard, startChoices, STORAGE_NOTES } from './startCard';
 import { renderTrade, updateTrade } from './trade';
 
 export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
@@ -96,6 +105,8 @@ function restart(root: HTMLElement, world?: World, opts?: StartOptions): Startab
 export interface StartOptions {
   speed?: GameState['speed'];
   camera?: Camera;
+  /** Beim Programmstart: Startkarte zeigen (Spec L1). */
+  intro?: boolean;
 }
 
 /**
@@ -108,11 +119,7 @@ export function startGame(root: HTMLElement, loaded?: World, opts?: StartOptions
   try {
     const gameEl = need<HTMLElement>(root, '#game');
     unbindMessages = bindMessages(gameEl);
-    const game = launch(root, gameEl, unbindMessages, loaded, opts);
-    if (!loaded && listSaves().length > 0) {
-      showMessage('Spielstand vorhanden — mit „Laden" fortsetzen', 'info');
-    }
-    return game;
+    return launch(root, gameEl, unbindMessages, loaded, opts);
   } catch (err) {
     console.error(err);
     const msg = err instanceof Error ? err.message : String(err);
@@ -210,6 +217,23 @@ function launch(
   const map = { w: world.width, h: world.height };
   const view = { w: 1, h: 1 };
 
+  /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */
+  const loadSlotPaused = (slot: Slot): void => {
+    const r = loadSlot(slot);
+    if (!r.ok) {
+      showError(r.reason);
+      return;
+    }
+    // Die Kamera nur bei gleicher Karte (gleicher Seed), sonst aufs Kontor zentrieren
+    restart(root, r.world, {
+      speed: 0,
+      camera: r.world.seed === world.seed ? state.cam : undefined,
+    });
+    // Kein bleibender Fokusring auf dem alten Knopf
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    showMessage('Pausiert — P oder 1× setzt fort');
+  };
+
   const menuActions: MenuActions = {
     save: () => {
       const r = saveToStorage(world);
@@ -217,24 +241,9 @@ function launch(
       else showMessage(r.reason, 'error');
     },
     listSaves,
-    storageNote: () => null, // Task 4
+    storageNote: () => STORAGE_NOTES[currentStorageProblem()],
     hasProgress: () => world.tick > 0,
-    load: (slot) => {
-      // Erst prüfen, dann ersetzen: ein kaputter Stand lässt das laufende Spiel unberührt
-      const r = loadSlot(slot);
-      if (!r.ok) {
-        showMessage(r.reason, 'error');
-        return;
-      }
-      // Tempo bleibt; die Kamera nur bei gleicher Karte (gleicher Seed), sonst aufs Kontor zentrieren
-      restart(root, r.world, {
-        speed: state.speed,
-        camera: r.world.seed === world.seed ? state.cam : undefined,
-      });
-      // Kein bleibender Fokusring auf dem alten Knopf
-      (document.activeElement as HTMLElement | null)?.blur?.();
-      showMessage('Spielstand geladen');
-    },
+    load: (slot) => loadSlotPaused(slot),
     crisisLevel: () => settings.crisisLevel,
     newIsland: (crisisLevel) => {
       settings = { ...settings, crisisLevel };
@@ -242,7 +251,9 @@ function launch(
       restart(root);
     },
     seed: () => world.seed,
-    openGuide: () => {}, // Task 4
+    openGuide: (opener) => {
+      openStartCard(gameEl, { mode: 'help', opener });
+    },
   };
 
   const actions: HudActions = {
@@ -463,6 +474,25 @@ function launch(
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   setPanel({ kind: 'none' });
   refresh();
+  let closeStart: (() => void) | null = null;
+  if (opts?.intro) {
+    const saves = listSaves();
+    const { choices, note } = startChoices(saves, currentStorageProblem());
+    closeStart = openStartCard(gameEl, {
+      mode: 'start',
+      choices,
+      note,
+      hasSlot: saves.length > 0,
+      onChoice: (c) => {
+        if (c.kind === 'load') loadSlotPaused(c.slot);
+        else {
+          closeStart?.();
+          setSpeed(1);
+          refresh();
+        }
+      },
+    });
+  }
 
   // Kamera auf das Kontor zentrieren
   const kontor = world.buildings[world.kontorId];
@@ -587,6 +617,8 @@ function launch(
     }
   };
   rafId = requestAnimationFrame(loop);
+  const onPageHide = (): void => autosaveOnHide(world);
+  window.addEventListener('pagehide', onPageHide);
 
   /** Beendet Loop, Beobachter und Listener und leert das DOM, das dieses Spiel aufgebaut hat. */
   const dispose = (): void => {
@@ -600,6 +632,7 @@ function launch(
     stopAudioProbe?.();
     motionQuery.removeEventListener('change', onMotion);
     removeUnlockListeners();
+    window.removeEventListener('pagehide', onPageHide);
     document.removeEventListener('visibilitychange', onVisibility);
     sound.dispose();
     logBox.remove();

@@ -491,6 +491,23 @@ body {
   max-height: calc(100vh - 32px);
   overflow-y: auto;
 }
+.card--start {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.start-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.btn--primary {
+  border: 2px solid var(--gold);
+  font-weight: 600;
+}
+.note {
+  font-style: italic;
+}
 .confirm-row {
   display: flex;
   flex-wrap: wrap;
