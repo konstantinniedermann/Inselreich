@@ -570,3 +570,11 @@ Controller meldet den Widerspruch im Schlussbericht, Gate entscheidet. Umsetzung
 Meilenstein-Retro M7-UX: studio-coach, ein Start. — Kosten bei Irrtum: Rücknahme per Ruling.
 
 Entscheider: L0 · Anlass: Prozess-Retro M7-UX
+
+## R137 · 2026-10-02 · Experimente nach Retro M7-UX
+
+Ruling: E-009 → behalten (alle Schwellen erfüllt). Freier Platz an E-010 (Controller-Wechsel), Start
+mit dem Plan M8; E-006 bleibt vorgeschlagen (Regeln gelten über R124 (2)). Statuspflege
+`experimente.md`: studio-coach. — Kosten bei Irrtum: E-010 wird nach M8 beendet.
+
+Entscheider: L0 · Anlass: Meilenstein-Retro M7-UX
