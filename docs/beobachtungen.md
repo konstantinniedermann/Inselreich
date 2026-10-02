@@ -561,6 +561,18 @@ der Kopfzeile.
 **Einschätzung:** niedrig; vermutlich geht der Fokus beim Schliessen (`restoreFocus`) an kein Element der
 Kopfzeile zurück, sodass der Browser die Tab-Folge an der zuletzt fokussierten Stelle im DOM fortsetzt.
 
+### 2026-10-02 · `src/ui/menu.ts:99`, `src/ui/trade.ts` · Gesperrtes vor der Freischaltung sichtbar (M8, S11)
+
+**Beobachtung:** Nach M8 (S11-Minimum) sind Glashütte und Badehaus bis zur Freischaltung der Stufe 4 gesperrt und
+fehlen in der Bauleiste. Zwei Stellen zeigen sie trotzdem ab Spielbeginn: (a) die Tastenliste im Menü
+(`hotkeyList()` in `menu.ts:99`) nennt J und O mit Namen; (b) das Handels-Panel bietet Glas zum Kauf und Verkauf an
+(`trade.ts` bleibt in M8 unverändert, R150; M8-Spec §23 Widerspruch 2).
+**Ursprung:** Delta-Gate H-M8 (R152, B3) und Spec-Nachführung H-M8 (R150).
+**Einschätzung:** niedrig, kein Fehler im Sinne der M8-Spec. Dieselbe Klasse „UI zeigt nur Freigeschaltetes"
+(Nutzernachtrag S11): gehört in die M10-Spec „Schritt für Schritt" (Programm
+`docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §3.8, Grundsatz 5), dort zusammen mit Lager-Chips,
+Hotkeys und Bauleiste über `unlocked` lösen.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
@@ -667,3 +679,6 @@ Kopfzeile zurück, sodass der Browser die Tab-Folge an der zuletzt fokussierten 
 - 2026-10-02 · Sim (Leistung, vor M12) · `serviceAvailable` wird je Haus und Tick über alle Gebäude gerechnet (O(Häuser × Gebäude)) und skaliert schlecht mit grossen Karten (FB-TRIAGE). Einschätzung: vor M12 ein Index je Dienst-Gebäude oder Abdeckung bei Layout-Wechsel vorberechnen; Determinismus und Balancing-Test bleiben Prüfgrundlage.
 - 2026-10-02 · Render (Terrain-Cache) · Der Terrain-Cache hängt an `layoutKey` und bemerkt keine Terrainwechsel (FB-TRIAGE). Einschätzung: heute ohne Wirkung, wird mit Strang S3 „Wald roden/aufforsten" zum Fehler; Cache-Schlüssel um einen Terrain-Stand erweitern, im Plan von S3 mitnehmen.
 - 2026-10-02 · Studio (Dashboard/Board) · Im Board steht ein Eintrag mit Meilenstein „Studio-Graph" im Status `blocked` ohne Paket-ID (`package_id` fehlt in `.studio/events.jsonl`), vermutlich altes Event-Format (lead-production, Board-Aufräumen M8-DOCS-MERGE). Einschätzung: `production-studio-ops` prüft, ob `model.py` das alte Format lesen soll oder der Eintrag archiviert wird.
+- 2026-10-02 · Render (`src/render/renderer.ts` Durchgang 7, `drawAir`/`drawHearthSmoke`; `sprites.ts` `drawAir`) · Betriebs- und Herdrauch zeigt denselben Tiefenfehler wie das Fensterlicht: er wird nach allen Objekten gezeichnet und liegt über Gebäuden und Bäumen, die davor stehen. Ursprung: BUG-LICHT. Der Clip-Helfer `clipOutOccluders` passt, aber für jedes Gebäude mit Rauch pro Frame (nicht nur nachts, nicht nur bei Licht) wären Verdeckersuche und Clips nötig; die Rauchbox ist zudem nicht dieselbe wie die Bildbox (Puffs steigen über die Bildbox hinaus). Das sprengt „ohne Umbau und höchstens ein Test". Erste Einschätzung: eigenes kleines Paket mit Leistungsmessung; Variante: Rauch in den sortierten Durchgang 6 direkt hinter sein Gebäude ziehen, statt zu clippen.
+- 2026-10-02 · Render (`src/render/life.ts` Licht-Verdecker) · Review BUG-LICHT (qa-code-reviewer, BEDENKEN ohne Blocker), aufgeschobene Niedrig-Befunde: (a) Der Flächen-Cache `buildingClips` rendert `bodyPolygons` ohne `env`; die Kaimauern des Kontors (`waterSides`) verdecken deshalb kein Licht (nur eine dünne Kante). (b) `CROWN_RY` ist in `life.ts` aus `trees.ts` dupliziert, ohne Test, der beide bindet; Vorschlag: in `trees.ts` exportieren und die Kopie entfernen. (c) `pruneContained` prüft Enthaltensein nur über Eckpunkte und ist für nicht konvexe Flächen unsicher (mögliches Licht-Leck); bei Kanten-Nachbarn kann mit 0,5 px Toleranz eine Haarlinie durchscheinen, in der Sichtprüfung nicht sichtbar. (d) Testlücken: kein Test „Figuren verdecken nicht" und keiner für mehrere Clip-Gruppen mit echter Überlappung. (e) Leistung: P95 `leistung-50` bei Nacht +6 % (vsync-gedeckelt bei 120 Hz), Skriptzeit je Frame aber +33 % (2,7 → 3,6 ms) und GPU-Zeit etwa verdoppelt (1,9 → 3,9 ms); auf schwacher Hardware nachmessen (60 Hz oder CPU-Drosselung). Ursprung: BUG-LICHT. Erste Einschätzung: (a) bis (d) bei der nächsten Render-Runde mitnehmen, (e) im nächsten Leistungs-Check von M8/M9.
+- 2026-10-02 · QA-Werkzeuge (`.studio/qa/M7-SLICE/mess/measure.mjs`, `run-slice.sh`, ungetrackt) · Die M7-Mess-Skripte laden den Spielstand über „Laden" im Menü. Mit der Startkarte aus M7-UX laufen sie ins Leere. Für BUG-LICHT gab es eine lokale Kopie unter `.studio/qa/bug-licht/mess/`, die über die Startkarte „Fortsetzen" lädt. Ursprung: BUG-LICHT (art-rendering-engineer). Erste Einschätzung: Mess-Skripte versioniert unter `tools/` ablegen und an die Startkarte anpassen, damit der nächste Leistungs-Check (M8/M9) nicht wieder improvisiert.

@@ -8,8 +8,21 @@ export interface P {
   y: number;
 }
 export type Mat = [number, number, number, number, number, number];
+/** Ein `clip`-Aufruf: Pfadpunkte in Bildpunkten und Füllregel (`nonzero`, wenn nicht angegeben). */
+export interface ClipRec {
+  points: P[];
+  rule: string;
+}
 export interface Ev {
-  op: 'fill' | 'stroke' | 'fillRect' | 'strokeRect' | 'clearRect' | 'drawImage' | 'transform';
+  op:
+    | 'fill'
+    | 'stroke'
+    | 'fillRect'
+    | 'strokeRect'
+    | 'clearRect'
+    | 'drawImage'
+    | 'transform'
+    | 'clip';
   style: string;
   matrix: Mat;
   composite: string;
@@ -18,6 +31,10 @@ export interface Ev {
   /** `lineWidth` zum Zeitpunkt des Aufrufs. */
   lineWidth: number;
   points: P[];
+  /** Zum Zeitpunkt des Aufrufs aktive Clips (ältester zuerst); `restore` nimmt sie zurück. */
+  clips: readonly ClipRec[];
+  /** Füllregel bei `op === 'clip'`. */
+  rule?: string;
 }
 
 export class FakeCtx {
@@ -36,7 +53,9 @@ export class FakeCtx {
   lineCap = 'butt';
   /** Jede Zuweisung an `globalAlpha`. */
   alphaSet: number[] = [];
-  private stack: { m: Mat; f: string; s: string; c: string; a: number }[] = [];
+  private stack: { m: Mat; f: string; s: string; c: string; a: number; k: readonly ClipRec[] }[] =
+    [];
+  private clips: readonly ClipRec[] = [];
   private _alpha = 1;
   private path: P[] = [];
   private _fill = '#000000';
@@ -91,6 +110,7 @@ export class FakeCtx {
       alpha: this._alpha,
       lineWidth: this.lineWidth,
       points,
+      clips: this.clips,
     });
   }
 
@@ -102,6 +122,7 @@ export class FakeCtx {
       s: this._stroke,
       c: this._comp,
       a: this._alpha,
+      k: this.clips,
     });
   }
   restore(): void {
@@ -116,6 +137,7 @@ export class FakeCtx {
     this._stroke = s.s;
     this._comp = s.c;
     this._alpha = s.a;
+    this.clips = s.k;
   }
   transform(a: number, b: number, c: number, d: number, e: number, f: number): void {
     const [A, B, C, D, E, F] = this.matrix;
@@ -171,6 +193,12 @@ export class FakeCtx {
     this.add(x + rx, y);
     this.add(x, y - ry);
     this.add(x, y + ry);
+  }
+  /** Schneidet mit dem aktuellen Pfad; der Clip gilt bis zum passenden `restore`. */
+  clip(rule: string = 'nonzero'): void {
+    this.clips = [...this.clips, { points: [...this.path], rule }];
+    this.ev('clip', '', [...this.path]);
+    this.events[this.events.length - 1]!.rule = rule;
   }
   fill(): void {
     this.ev('fill', this._fill, [...this.path]);
