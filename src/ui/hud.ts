@@ -1,16 +1,18 @@
+import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { CRISIS_LEVELS } from '../sim/defs/crises';
-import { GOODS, GOOD_IDS } from '../sim/defs/goods';
+import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { citizens, populationByTier } from '../sim/population';
+import { SERVICE_BUILDING, citizens, populationByTier } from '../sim/population';
 import { crisisView, goodsBalance } from '../sim/queries';
-import type { CrisisLevel, TaxLevel, Tier } from '../sim/types';
+import type { CrisisLevel, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { SaveInfo, Slot } from './storage';
 import { CRISIS_LEVEL_IDS, type Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
+import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -363,4 +365,51 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
   }
+}
+
+/** Bedürfnisse und Dienste einer Stufe; `onlyNew` lässt weg, was die Stufe darunter schon braucht. */
+function tierNeeds(tier: Tier, onlyNew: boolean): string[] {
+  const t = TIERS[tier];
+  const prev = onlyNew && tier > 1 ? TIERS[(tier - 1) as Tier] : null;
+  const goods = GOOD_IDS.filter((g) => g in t.needs && !(prev && g in prev.needs)).map(
+    (g) => GOODS[g].name,
+  );
+  const services = t.services
+    .filter((s) => !(prev && prev.services.includes(s)))
+    .map((s) => BUILDING_DEFS[SERVICE_BUILDING[s]].name);
+  return [...goods, ...services];
+}
+
+export function tierTooltip(tier: Tier): string {
+  return `${TIERS[tier].name}: Einwohner der Stufe ${tier} · brauchen ${tierNeeds(tier, false).join(', ')}`;
+}
+
+export function tierPath(): string {
+  return TIER_IDS.map((t) =>
+    t === 1 ? TIERS[t].name : `${TIERS[t].name} (brauchen ${tierNeeds(t, true).join(', ')})`,
+  ).join(' → ');
+}
+
+export function balanceText(stats: { taxes: number; upkeep: number }): {
+  text: string;
+  title: string;
+} {
+  const pm = (x: number): number => perMinute(x, UPKEEP_INTERVAL);
+  return {
+    text: `Bilanz ${signedNum(pm(stats.taxes - stats.upkeep))} / min`,
+    title: `Steuern +${pm(stats.taxes)} / min · Unterhalt −${pm(stats.upkeep)} / min`,
+  };
+}
+
+export function stockTooltip(world: World, good: GoodId): string {
+  const b = goodsBalance(world)[good];
+  const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
+  return (
+    `${GOODS[good].name} ${world.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
+    `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`
+  );
+}
+
+export function speedTooltip(n: 1 | 2 | 4): string {
+  return `Spielzeit läuft ${n}× so schnell`;
 }

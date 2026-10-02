@@ -5,39 +5,23 @@ import { TIERS } from '../sim/defs/tiers';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
-import { effectiveRefund, houseDiagnosis, type Diagnosis } from '../sim/queries';
-import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
+import { effectiveRefund, houseDiagnosis } from '../sim/queries';
+import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
+import { diagnosisText, producesText, refundText, stateInfo } from './texts';
+
+export {
+  burningText,
+  diagnosisText,
+  producesText,
+  refundText,
+  stateInfo,
+  stateText,
+} from './texts';
 
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
-}
-
-/** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
-export function diagnosisText(d: Diagnosis): string {
-  switch (d.kind) {
-    case 'supply':
-      return 'nicht versorgt';
-    case 'good':
-      return `${GOODS[d.good].name} fehlt`;
-    case 'service':
-      return `${BUILDING_DEFS[SERVICE_BUILDING[d.service]].name} fehlt`;
-  }
-}
-
-/** Erzeugungszeile des Panels; während des Brandausfalls steht dort, dass nichts erzeugt wird. */
-export function producesText(def: { produces?: GoodId; cycle?: number }, burning: boolean): string {
-  const name = def.produces ? GOODS[def.produces].name : '';
-  return burning
-    ? `Erzeugt ${name} nicht — Betrieb brennt`
-    : `Erzeugt ${name} alle ${def.cycle} Ticks`;
-}
-
-/** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
-export function burningText(b: Building, tick: number): string {
-  const left = Math.max(0, (b.outageUntil ?? tick) - tick);
-  return `Brennt — wieder in Betrieb in ${left} Ticks`;
 }
 
 /**
@@ -52,28 +36,6 @@ export function protectedCount(world: World, station: Building): number {
   ).length;
 }
 
-function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {
-  const def = BUILDING_DEFS[b.defId];
-  if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
-  // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
-  if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
-  if (!def.produces) return { text: 'Angebunden', ok: true };
-  switch (b.state) {
-    case 'ok':
-    case 'notConnected': // wieder angebunden, `state` folgt erst im nächsten Tick
-      return { text: 'In Betrieb', ok: true };
-    case 'waitingInput':
-      return {
-        text: `Wartet auf ${def.consumes ? GOODS[def.consumes].name : 'Rohstoff'}`,
-        ok: false,
-      };
-    case 'storageFull':
-      return { text: 'Lager voll', ok: false };
-    case 'burning':
-      return { text: burningText(b, tick), ok: false };
-  }
-}
-
 function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement {
   const p = document.createElement('p');
   p.className = 'panel-line';
@@ -82,27 +44,6 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
   parent.appendChild(p);
   return p;
 }
-
-/** Rückerstattungstext: tatsächlicher Betrag, je Gut mit Verfall-Hinweis (nur wenn etwas verfällt). */
-export function refundText(nominal: Cost, effective: Cost): string {
-  const parts = [`Geld ${effective.money}`];
-  for (const [key, label] of REFUND_GOODS) {
-    if (!nominal[key]) continue;
-    const lost = nominal[key] - effective[key];
-    parts.push(
-      lost > 0
-        ? `${label} ${effective[key]} (${lost} verfallen – Lager voll)`
-        : `${label} ${effective[key]}`,
-    );
-  }
-  return parts.join(' · ');
-}
-
-const REFUND_GOODS = [
-  ['wood', GOODS.wood.name],
-  ['tools', GOODS.tools.name],
-  ['stone', GOODS.stone.name],
-] as const;
 
 function demolishLabel(world: World, b: Building): string {
   const nominal = refundCost(BUILDING_DEFS[b.defId].cost);

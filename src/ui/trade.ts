@@ -19,8 +19,8 @@ function sellTexts(
   const price = sellPrice(world, good, n);
   return {
     label: `−${n}`,
-    price: `G ${price}`,
-    title: `${n} ${GOODS[good].name} verkaufen für G ${price}`,
+    price: `${price} Geld`,
+    title: `${n} ${GOODS[good].name} verkaufen für ${price} Geld`,
   };
 }
 
@@ -67,7 +67,9 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
-    btn.title = sellT ? sellT.title : `${n} ${GOODS[good].name} kaufen für G ${buyPrice(good, n)}`;
+    btn.title = sellT
+      ? sellT.title
+      : `${n} ${GOODS[good].name} kaufen für ${buyPrice(good, n)} Geld`;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);
@@ -92,7 +94,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     name.appendChild(pct);
 
     const buyCell = cell(table, 'trade-cell');
-    cell(buyCell, 'trade-price', `G ${GOODS[good].buy}`);
+    cell(buyCell, 'trade-price', `${GOODS[good].buy} Geld`);
     for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
 
     const sellCell = cell(table, 'trade-cell');

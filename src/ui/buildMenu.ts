@@ -3,14 +3,14 @@ import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
 import { GOODS } from '../sim/defs/goods';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { BuildingDefId, Category, Cost, GoodId, SiteRule, Terrain, World } from '../sim/types';
+import type { BuildingDefId, Category, Cost, SiteRule, Terrain, World } from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { showMessage } from './messages';
 
-const CATEGORIES: { id: Category; label: string }[] = [
+export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
   { id: 'housing', label: 'Wohnen' },
   { id: 'production', label: 'Produktion' },
@@ -23,9 +23,9 @@ const LONG_PRESS_MS = 500;
 const TERRAIN_NAMES: Record<Terrain, string> = {
   water: 'Wasser',
   sand: 'Sand',
-  grass: 'Wiese',
+  grass: 'Weide',
   forest: 'Wald',
-  mountain: 'Berg',
+  mountain: 'Gebirge',
 };
 
 const SERVICE_NAMES = { faith: 'Glaube', school: 'Bildung' } as const;
@@ -50,13 +50,6 @@ function siteText(rule: SiteRule): string {
     case 'supply':
       return 'Im Versorgungsradius von Kontor oder Marktplatz';
   }
-}
-
-function costText(c: Cost): string {
-  const parts = [`Geld ${c.money}`];
-  const goods = ['wood', 'tools', 'stone'] as const satisfies readonly GoodId[];
-  for (const g of goods) if (c[g]) parts.push(`${GOODS[g].name} ${c[g]}`);
-  return parts.join(' · ');
 }
 
 /** „Ungeschützt: N brennbare Gebäude" (Feuerwache-Tooltip, live). */
@@ -85,12 +78,12 @@ export function tooltipLines(tool: Tool): string[] {
   if (tool.kind === 'select') return [withKey('Auswahl')];
   if (tool.kind === 'demolish') return [withKey('Abriss')];
   if (tool.kind === 'road') {
-    return [withKey('Weg'), `Kosten: Geld ${ROAD_COST}`];
+    return [withKey('Weg'), `Kosten: ${costLine(ROAD_COST_OBJ)}`];
   }
   const def = BUILDING_DEFS[tool.defId];
   const lines = [
     withKey(def.name),
-    `Kosten: ${costText(def.cost)}`,
+    `Kosten: ${costLine(def.cost)}`,
     `Unterhalt: ${def.upkeep} je ${UPKEEP_INTERVAL} Ticks`,
   ];
   if (def.produces && def.cycle) {

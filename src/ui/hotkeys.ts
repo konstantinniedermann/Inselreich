@@ -1,4 +1,6 @@
 import type { Tool } from '../render/renderer';
+import { BUILDING_DEFS } from '../sim/defs/buildings';
+import type { Category } from '../sim/types';
 
 /** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
@@ -19,7 +21,7 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   e: { kind: 'build', defId: 'firestation' },
 };
 
-const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
+export const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
 
 export type HotkeyAction =
   { kind: 'tool'; tool: Tool } | { kind: 'speed'; speed: 1 | 2 | 4 } | { kind: 'pause' };
@@ -71,4 +73,37 @@ export function afterPause(
   last: 1 | 2 | 4,
 ): { speed: 0 | 1 | 2 | 4; last: 1 | 2 | 4 } {
   return speed === 0 ? withSpeed(last, last) : withSpeed(0, speed);
+}
+
+/** Feste Bedien-Tasten ohne Werkzeug (Menü „Tastenkürzel", Spec L2). */
+export const NAV_KEYS: readonly { key: string; label: string }[] = [
+  { key: 'W A S D / Pfeile', label: 'Karte schwenken' },
+  { key: 'Leertaste + Ziehen', label: 'Karte schwenken mit der Maus' },
+  { key: 'Mausrad', label: 'Zoomen' },
+  { key: 'Esc', label: 'Werkzeug ablegen, Karte schliessen' },
+  { key: 'Rechtsklick', label: 'Werkzeug ablegen' },
+];
+
+export function toolName(tool: Tool): string {
+  if (tool.kind === 'select') return 'Auswahl';
+  if (tool.kind === 'road') return 'Weg';
+  if (tool.kind === 'demolish') return 'Abriss';
+  return BUILDING_DEFS[tool.defId].name;
+}
+
+/** Bau-Kategorie eines Werkzeugs (öffnet die Einträge-Leiste), sonst `null`. */
+export function categoryOf(tool: Tool): Category | null {
+  return tool.kind === 'build' && tool.defId !== 'kontor'
+    ? BUILDING_DEFS[tool.defId].category
+    : null;
+}
+
+/** Einzige Liste aller Tasten für das Menü (keine zweite Liste, Spec L2). */
+export function hotkeyList(): { key: string; label: string }[] {
+  const tools = Object.entries(TOOL_HOTKEYS).map(([k, t]) => ({
+    key: k.toUpperCase(),
+    label: toolName(t!),
+  }));
+  const speeds = Object.entries(SPEED_KEYS).map(([k, s]) => ({ key: k, label: `Tempo ${s}×` }));
+  return [...tools, ...speeds, { key: 'P', label: 'Pause / weiter' }, ...NAV_KEYS];
 }

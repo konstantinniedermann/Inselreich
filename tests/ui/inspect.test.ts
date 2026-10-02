@@ -15,14 +15,14 @@ describe('refundText (AK-U1b-02)', () => {
       { money: 10, wood: 5, tools: 0, stone: 0 },
       { money: 10, wood: 1, tools: 0, stone: 0 },
     );
-    expect(text).toContain('Holz 1');
+    expect(text).toContain('1 Holz');
     expect(text).toContain('4 verfallen – Lager voll');
   });
 
   it('zeigt ohne Verfall nur die Beträge', () => {
     const c = { money: 10, wood: 5, tools: 0, stone: 0 };
     const text = refundText(c, c);
-    expect(text).toBe('Geld 10 · Holz 5');
+    expect(text).toBe('10 Geld · 5 Holz');
     expect(text).not.toContain('verfallen');
   });
 
@@ -32,7 +32,7 @@ describe('refundText (AK-U1b-02)', () => {
       { money: 5, wood: 0, tools: 1, stone: 0 },
     );
     expect(text).toBe(
-      'Geld 5 · Holz 0 (4 verfallen – Lager voll) · Werkzeug 1 (1 verfallen – Lager voll)',
+      '5 Geld · 0 Holz (4 verfallen – Lager voll) · 1 Werkzeug (1 verfallen – Lager voll)',
     );
   });
 });
