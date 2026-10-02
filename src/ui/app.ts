@@ -20,7 +20,7 @@ import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
 import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
-import { bindInput, type InputAction, type InputBinding } from './input';
+import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { deliveredMessage, orderMessage } from './order';
 import {
@@ -523,7 +523,7 @@ function launch(
   hintEl.className = 'cursor-hint';
   hintEl.hidden = true;
   document.body.appendChild(hintEl);
-  let hintFor: Hover | null = null;
+  let hintFor: string | null = null;
   const updateHint = (force: boolean): void => {
     const pos = input?.pointerClient() ?? null;
     const hover = state.hover;
@@ -532,8 +532,9 @@ function launch(
       hintFor = null;
       return;
     }
-    if (force || hover !== hintFor) {
-      hintFor = hover;
+    const key = hintKey(hover);
+    if (force || key !== hintFor) {
+      hintFor = key;
       const h = placementHint(world, hover.tool ?? state.tool, hover.x, hover.y);
       hintEl.hidden = h === null;
       if (h) {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { project } from '../../src/render/iso';
 import type { Camera } from '../../src/render/camera';
 import { connectAdvice, placementHint } from '../../src/ui/hints';
-import { canDemolishTile } from '../../src/ui/input';
+import { canDemolishTile, hintKey } from '../../src/ui/input';
 import { targetTile } from '../../src/ui/target';
 import { uxWorld } from './worlds';
 
@@ -46,5 +46,17 @@ describe('Abriss-Vorschau (Spec L3)', () => {
     expect(canDemolishTile(w, fisher.x, fisher.y)).toBe(true);
     expect(canDemolishTile(w, kx, ky)).toBe(false);
     expect(canDemolishTile(w, -5, -5)).toBe(false);
+  });
+});
+
+describe('Hinweis-Schlüssel (Fix Task 6)', () => {
+  it('hintKey ändert sich nur mit Kachel oder Werkzeug', () => {
+    const f = { kind: 'build', defId: 'fisher' } as const;
+    const a = hintKey({ x: 3, y: 4, tool: f });
+    expect(hintKey({ x: 3, y: 4, tool: { ...f } })).toBe(a);
+    expect(hintKey({ x: 4, y: 4, tool: f })).not.toBe(a);
+    expect(hintKey({ x: 3, y: 4, tool: { kind: 'build', defId: 'house' } })).not.toBe(a);
+    expect(hintKey({ x: 3, y: 4, tool: { kind: 'road' } })).not.toBe(a);
+    expect(hintKey({ x: 3, y: 4, tool: null })).not.toBe(a);
   });
 });

@@ -2,6 +2,7 @@ import { canPlace, canPlaceRoad } from '../sim/placement';
 import type { World } from '../sim/types';
 import { tileAt } from '../sim/world';
 import { clampToMap, zoomAt } from '../render/camera';
+import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
 import { targetTile } from './target';
@@ -21,6 +22,12 @@ const PAN_KEYS = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown
 export function canDemolishTile(world: World, x: number, y: number): boolean {
   const tile = tileAt(world, x, y);
   return !!tile && ((tile.buildingId !== null && tile.buildingId !== world.kontorId) || tile.road);
+}
+
+/** Schlüssel für den Cursor-Hinweis: der Text ändert sich nur mit Kachel oder Werkzeug. */
+export function hintKey(h: { x: number; y: number; tool: Tool | null }): string {
+  const t = h.tool;
+  return `${h.x},${h.y},${t ? `${t.kind}:${t.kind === 'build' ? t.defId : ''}` : 'none'}`;
 }
 
 /** Weltpixel, um die die Kamera bei gedrückter Pan-Taste in `dtMs` wandert (unabhängig von der Framerate). */
