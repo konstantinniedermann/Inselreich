@@ -710,3 +710,12 @@ bestehende Bau-Ablehnungen. lead-design führt die Spec nach, dann Delta-Gate le
 Irrtum: AK-Wortlaut — Archiv-Bericht lead-tech H-M8
 
 Entscheider: L0 · Anlass: R137-Meldungen Plan-Delta · ADR: —
+
+## R152 · 2026-10-02 · M8 H-M8
+
+Ruling: Delta-Gate S11-Minimum bestanden mit Auflagen (lead-qa BEDENKEN, Spec da3da51, Plan 4ec97f9):
+B1 Messung „keine Freischalt-Meldung nach Laden" in QA-B-1 (lead-tech); B2 Doku-Abgleich Spec/Plan
+(lead-design, lead-tech); B3 Tastenliste `menu.ts` als Beobachtung für M10. Eine Runde, Sichtung
+L0, dann Merge nach main und M8-Start. — Kosten bei Irrtum: Plan-Nachtrag — Archiv-Bericht lead-qa
+
+Entscheider: L0 · Anlass: Delta-Gate M8 · ADR: —
