@@ -561,3 +561,12 @@ damit abgeschlossen. Prozess-Aussensicht durch studio-process-coach nach Release
 Irrtum: Fix-Commit auf main.
 
 Entscheider: L0 · Anlass: Gate Merge M7-UX
+
+## R136 · 2026-10-02 · Prozess-Retro M7-UX: Vorschläge
+
+Ruling: Aus [retros/2026-10-02-prozess-retro-m7ux.md](retros/2026-10-02-prozess-retro-m7ux.md)
+angenommen: V1, V3, V5; V4 als Experiment; V2 mit Änderung: einfachere Variante gilt vorläufig,
+Controller meldet den Widerspruch im Schlussbericht, Gate entscheidet. Umsetzung und
+Meilenstein-Retro M7-UX: studio-coach, ein Start. — Kosten bei Irrtum: Rücknahme per Ruling.
+
+Entscheider: L0 · Anlass: Prozess-Retro M7-UX
