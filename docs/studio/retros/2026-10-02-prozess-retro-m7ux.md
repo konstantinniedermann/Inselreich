@@ -32,7 +32,7 @@
 
 - Ledger: „Branch feat/m7-ux-guide gepusht VOR der Nachprüfung (Abweichung R107 …) — Controller-Fehler". Danach:
   „Nachprüfung OK". R107 (2) verlangt den Push „nach jedem abgenommenen Commit".
-- Von 14 Push-Vermerken im Ledger ist dies der einzige vor der Abnahme. Er betraf den zweiten Worktree
+- Von 15 Push-Vermerken im Ledger ist dies der einzige vor der Abnahme. Er betraf den zweiten Worktree
   (`.worktrees/m7-ux-guide`, parallel Task 6 ∥ 7). Ein Schaden ist nicht eingetreten: Feature-Branch, Inhalt danach
   abgenommen.
 
