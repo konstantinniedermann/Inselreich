@@ -482,9 +482,34 @@ export interface Occluder {
 const CROWN_RY = 0.85; // wie `trees.ts`: Kronenhöhe im Verhältnis zur Breite
 const CROWN_SEGMENTS = 12;
 
-/** Gezeichnete Körperflächen eines Gebäudes im Bildraum (die Flächen, die `drawBody` füllt). */
+const area = (p: Poly): number =>
+  Math.abs(
+    p.reduce((a, q, i) => a + q.x * p[(i + 1) % p.length]!.y - p[(i + 1) % p.length]!.x * q.y, 0),
+  ) / 2;
+const inside = (poly: Poly, x: number, y: number): boolean => {
+  let in_ = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!,
+      b = poly[j]!;
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) in_ = !in_;
+  }
+  return in_;
+};
+
+/**
+ * Lässt Flächen weg, die ganz in einer grösseren liegen (Fenster, Türen, Zierleisten auf Wänden): die Vereinigung
+ * bleibt gleich, aber jeder Verdecker kostet einen eigenen Clip. Gedacht für (fast) konvexe Flächen.
+ */
+export function pruneContained(polys: readonly Poly[]): Poly[] {
+  const kept: Poly[] = [];
+  for (const p of [...polys].sort((a, b) => area(b) - area(a)))
+    if (!kept.some((k) => p.every((v) => inside(k, v.x, v.y)))) kept.push(p);
+  return kept;
+}
+
+/** Gezeichnete Körperflächen eines Gebäudes im Bildraum (die Flächen, die `drawBody` füllt), ohne enthaltene. */
 export function buildingPolys(cam: Camera, def: BuildingDef, b: Building): Poly[] {
-  return bodyPolygons(def, b).map((p) => p.map((q) => worldToScreen(cam, q)));
+  return pruneContained(bodyPolygons(def, b).map((p) => p.map((q) => worldToScreen(cam, q))));
 }
 
 /** Kronenkreise eines Baumstempels im Bildraum (Vieleck je Krone), an der Stempelposition wie `drawTreeStamp`. */

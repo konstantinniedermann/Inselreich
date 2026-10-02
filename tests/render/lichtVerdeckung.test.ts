@@ -2,7 +2,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { centerOn, type Camera } from '../../src/render/camera';
 import { sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, rgbaOf } from '../../src/render/palette';
-import { anchorRects, anchorsFor, crownPolys, type LightRect } from '../../src/render/life';
+import {
+  anchorRects,
+  anchorsFor,
+  crownPolys,
+  pruneContained,
+  type LightRect,
+} from '../../src/render/life';
 import { render } from '../../src/render/renderer';
 import { bodyPolygons } from '../../src/render/sprites';
 import { resetTreeCache, setCanvasFactory, type TreeItem } from '../../src/render/trees';
@@ -178,5 +184,24 @@ describe('RF-LICHT Fensterlicht hinter Verdeckern', () => {
     expect(log.saves).toBe(log.restores);
     expect(log.underflow).toBe(0);
     expect(log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
+  });
+
+  it('RF-LICHT-8 enthaltene Flächen entfallen, überlappende und getrennte bleiben', () => {
+    const sq = (x: number, y: number, w: number): P[] => [
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + w },
+      { x, y: y + w },
+    ];
+    const out = pruneContained([sq(2, 2, 2), sq(0, 0, 10), sq(8, 8, 6), sq(30, 30, 2)]);
+    expect(out).toHaveLength(3);
+    expect(out.some((p) => p[0]!.x === 2)).toBe(false);
+    // jedes Gebäude behält weniger Flächen als bodyPolygons liefert, aber mindestens eine
+    world = verdeckung();
+    const chapel = at(VERDECKUNG.C);
+    const all = bodyPolygons(BUILDING_DEFS[chapel.defId], chapel);
+    const kept = pruneContained(all);
+    expect(kept.length).toBeGreaterThan(0);
+    expect(kept.length).toBeLessThan(all.length);
   });
 });
