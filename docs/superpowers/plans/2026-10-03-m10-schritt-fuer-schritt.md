@@ -17,8 +17,8 @@ Bitgleichheit.
 **Tech Stack:** TypeScript, Vite, Vitest (`node`), Canvas 2D, SVG-Pfade für Symbole. Keine neue Abhängigkeit
 (ADR-001), auch keine Dev-Abhängigkeit.
 
-**Status:** Entwurf für das **Gate Plan** (lead-qa: Testbarkeit; lead-production: Budget, Ownership). Prozessstufe
-voll.
+**Status:** Gate Plan **bestanden mit Auflagen (R164)**; Auflagen QA 1–4 und Production B1, B3–B5 sind eingearbeitet
+(Abschnitt „Auflagen Gate Plan (R164)"), Budget gestuft (B2). Prozessstufe voll.
 
 **Spec:** `docs/superpowers/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md` @ `0797218` (Branch
 `docs/m10-design`; Gate Spec bestanden mit Auflagen R163, Delta eingearbeitet; **98 AK**; im Plan „Spec §n",
@@ -161,7 +161,27 @@ sieht ihn, alle Tests bleiben grün (die betroffenen UI-Tests prüfen Texte übe
 breit (M8-Lehre Task 1); (3) **F1 kann nach S1a parallel zu S1b laufen** (braucht nur `functionLock`), das spart eine
 Welle. Kosten: ein Paket mehr (2 Starts).
 
-### Plan-Abweichungen und gemeldete Widersprüche (R137, zur Entscheidung im Gate Plan)
+### Bestätigte Abweichungen (R164) — Prüfgrundlage des Final-Reviews
+
+L0 hat im Gate Plan **P1–P6 und W1–W4** aus der folgenden Tabelle bestätigt. Das Final-Review prüft gegen Spec @
+`0797218` **plus** diese Zeilen; was dort steht, ist kein Befund. P1 braucht kein Spec-Delta (lead-qa: das Ruling
+genügt). Ebenfalls entschieden (R164): `sprites.ts` — M10 (Task 4, R1) vor M9 Welle 2.
+
+### Auflagen Gate Plan (R164) — Fundstellen in diesem Plan
+
+| Auflage                                                                                                         | Fundstelle                                                                          |
+| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| QA 1: BG-3 mit `buildColony` (normal, mit und ohne `unlockAll`, je zweimal) und Laden U4–U5                     | „Bitgleich-Messung", BG-3                                                           |
+| QA 2: Final-Review durch `qa-code-reviewer` mit `model: opus`, Kopfzeile `Modell: opus`                         | „Final-Review M10", Budget lead-qa                                                  |
+| QA 3: Taste I im Browser                                                                                        | QA-U1 Schritt 12; Abdeckung AK-S2-16                                                |
+| QA 4: Abdeckungs-Grep gegen die echte Vitest-Ausgabe                                                            | Task 1 „Review-Zusatz"                                                              |
+| B1: Board — M10-U4 nach M10-QA-U2, Pakete M10-DOC und M10-MERGE, Ids H-R3/H-R4/M8-MERGE                         | „Board-Paketliste"                                                                  |
+| B2: Budget gestuft (Stufe 1 nach Gate Merge M8: T1–T4 lead-tech 11, A1 lead-art 3); > 80 % → Parallelität 2     | „Budgetantrag"                                                                      |
+| B3: fremde Testdateien aus dem Lauf melden; Konflikte im W5-Merge löst Controller 2; R1 ohne `beobachtungen.md` | „Bewusst geänderte Tests", „Wellen" (W5), Paket R1, Ownership R1                    |
+| B4: `noService` und H-R3 `statusMarks.ts`: Standardfall in H-R3; Nachtrag durch Controller 2 als Ausnahme       | „Abhängigkeiten ausserhalb M10", Task 7 Vorher-Schritt                              |
+| B5: H-R4 in `errands.ts`, R1 ohne Kommentar in `life.ts`                                                        | „Abhängigkeiten ausserhalb M10", Paket R1; Kommentar `life.ts` in Task 8 (AK-R1-05) |
+
+### Plan-Abweichungen und gemeldete Widersprüche (R137; P1–P6, W1–W4 bestätigt durch R164)
 
 | Nr. | Spec sagt                                                                                 | Plan macht                                                                                                                                                                                                                                                                                                                   | Grund / Empfehlung                                                                                                                                                                                                                  |
 | --- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -321,11 +341,11 @@ Jede Datei hat in einer Welle genau einen Owner-Task. Tasks auf derselben Branch
 | 4    | `feat/m10-sim`    | `src/sim/townhall.ts` (neu), `src/sim/{types,tax,population,production,placement,unlocks}.ts`, `src/sim/defs/{buildings,unlocks}.ts`, `tests/sim/townhall.test.ts` (neu), `tests/sim/imports.test.ts` (neu), `tests/sim/{taxes,population,production,defs,fire,toolmaker,save}.test.ts`, `tests/sim/scenarios.ts` (`galerie` + Amtsstube); Ausnahmen `src/render/sprites.ts` + `tests/render/sprites.test.ts` (Rückfall), `src/ui/hotkeys.ts` + `tests/ui/hotkeys.test.ts` (nur I), `src/ui/texts.ts` + `tests/ui/inspect.test.ts` (nur `noService`), `src/ui/hints.ts` + `tests/ui/hints.test.ts` (Gründe 11.9), `src/render/overlays.ts` (nur falls ein Zustands-`switch` `noService` verlangt) |
 | 5    | `feat/m10-scen`   | `tests/sim/unlock-timeline.test.ts` (neu), `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 6    | `feat/m10-ui`     | `src/ui/{buildMenu,hud,hotkeys,menu,trade,order,app,goal,settings,soundEvents,inspect (nur restView),messages,devProbes}.ts`, `src/audio/sound.ts` (+ Zuordnung `'unlock'`), Tests dazu unter `tests/ui/`, `tests/audio/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 7    | `feat/m10-ui`     | `src/ui/{startCard,guide,inspect,hints,texts,input,hotkeys,buildMenu,menu,app,crisisLog,eventLogView}.ts`, `src/render/renderer.ts` (nur `Tool` und Forst-Vorschau), Tests dazu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 8    | `feat/m10-ui`     | `src/ui/hover.ts` (neu), `src/ui/{input,app}.ts`, `src/style.css`, `src/render/renderer.ts` (nur `wildlifeEnvOf`), `tests/ui/hover.test.ts` (neu), `tests/render/renderer.test.ts` (nur neues `it`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 7    | `feat/m10-ui`     | `src/ui/{startCard,guide,inspect,hints,texts,input,hotkeys,buildMenu,menu,app,crisisLog,eventLogView}.ts`, `src/render/renderer.ts` (nur `Tool` und Forst-Vorschau), Tests dazu; Controller 2 beim W5-Merge: `src/render/statusMarks.ts` (nur Fall `noService`, falls `tsc` ihn verlangt, R164 B4)                                                                                                                                                                                                                                                                                                                                                                                                |
+| 8    | `feat/m10-ui`     | `src/ui/hover.ts` (neu), `src/ui/{input,app}.ts`, `src/style.css`, `src/render/renderer.ts` (nur `wildlifeEnvOf`), `src/render/life.ts` (nur Kommentar, R164 B5), `tests/ui/hover.test.ts` (neu), `tests/render/renderer.test.ts` (nur neues `it`)                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 9    | `feat/m10-ui`     | `src/ui/{hud,buildMenu,inspect,startCard,goal,messages,app}.ts`, `src/style.css`, Tests dazu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | A1   | `feat/m10-icons`  | `src/ui/icons.ts` (neu), `tests/ui/icons.test.ts` (neu)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| R1   | `feat/m10-render` | `src/render/{sprites,terrain}.ts`, `src/render/iso.ts` (nur falls AK-R1-02 nicht schon über `layoutKey` grün ist), `src/render/{wildlife,water,life}.ts` (nur Kommentare), `tests/render/{sprites,terrain,iso,wildlife}.test.ts`, `docs/arc42.md` (§10, eine Zeile), `docs/beobachtungen.md` (Eintrag „Terrain-Cache" schliessen)                                                                                                                                                                                                                                                                                                                                                                 |
+| R1   | `feat/m10-render` | `src/render/{sprites,terrain}.ts`, `src/render/iso.ts` (nur falls AK-R1-02 nicht schon über `layoutKey` grün ist), `src/render/{wildlife,water}.ts` (nur Kommentare; nicht `life.ts`, R164 B5), `tests/render/{sprites,terrain,iso,wildlife}.test.ts`, `docs/arc42.md` (§10, eine Zeile); nicht `docs/beobachtungen.md` (R164 B3)                                                                                                                                                                                                                                                                                                                                                                 |
 | D1   | `feat/m10-ui`     | `README.md`, `docs/arc42.md` (§5, §8 ausser Persistenz), `docs/superpowers/specs/2026-09-29-inselreich-design.md` (nur Verweise)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 **Disjunkt je Welle:** W2 Task 2 (`feat/m10-sim`) ∥ Task 3 (`feat/m10-forest`: `forest.ts`, `defs/forest.ts`,
@@ -341,27 +361,28 @@ D1) — die Merges sind zeitlich getrennt (W3, W5, W8).
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Gate Merge M8** (M8-UI @ `feat/m8-ui`, M8-Render, M8-Balance, M8-Scen) | blockiert Task 1 und damit alles ausser A1. M10 setzt auf `goal.ts` (`UNLOCK_NOTICE`, `lockedToolText`), Tasten J/O, `buildEntries`, `stockChipHidden`/`popChipHidden`, `withUnlock`, `balance-merchants.test.ts` auf. Vor Task 1 prüft der Controller die Spec-Schnittstellen (Spec 17) gegen den gemergten Stand (`grep -n "unlockNotice\|initialUnlockShown\|lockedToolText\|withUnlock\|unlockShown" src tests`); weicht etwas ab, Meldung an L0 (Spec 17: Delta durch lead-design), kein stilles Anpassen. |
 | **M9 H-R3, H-R4** (`renderer.ts`, R159)                                  | blockiert **Task 7** (U2 ändert `renderer.ts`). Vor Task 7: H-R3 und H-R4 auf `main`, dann `git -C .worktrees/m10-ui merge --no-edit main`, `make check`, push. Task 8 (`wildlifeEnvOf`) läuft danach ohnehin seriell. **Rückfall, falls H-R3/H-R4 nach Task 6 noch offen sind:** Controller meldet an L0; Option (a) warten (Empfehlung, solange ≤ 1 Session), Option (b) L0-Ruling „M10-U2 vor H-R3/H-R4", dann merged der spätere M9-Strang vorher `main` (R159 sinngemäss).                                 |
-| **M9 Welle 2 (G1/G8, `sprites.ts`)**                                     | Task 4 (Rückfall `townhall`) und R1 (Silhouette) ändern `src/render/sprites.ts`. Spec 19: nicht parallel zu M9 Welle 2. **Entscheidungsbedarf L0:** Empfehlung M10 zuerst (Task 4 fügt nur einen Eintrag hinzu, R1 eine Silhouette), M9 Welle 2 startet nach dem Gate Merge M10 oder merged dann `main`.                                                                                                                                                                                                        |
-| **M9 H-R4 (`life.ts`)**                                                  | R1 ändert in `life.ts` nur einen Kommentar. `lead-art` serialisiert H-R4 und R1 selbst; spätestens vor dem Final-Review merged `feat/m10-render` den aktuellen `main`.                                                                                                                                                                                                                                                                                                                                          |
+| **M9 Welle 2 (G1/G8, `sprites.ts`)**                                     | Task 4 (Rückfall `townhall`) und R1 (Silhouette) ändern `src/render/sprites.ts`. Spec 19: nicht parallel zu M9 Welle 2. **Entschieden (R164):** M10 zuerst; M9 Welle 2 schreibt ihre Kurz-Spec parallel, der Code folgt nach dem Gate Merge M10.                                                                                                                                                                                                                                                                |
+| **M9 H-R4 (`life.ts`)**                                                  | R164 B5: H-R4 legt seinen Code in die neue Datei `src/render/errands.ts`; R1 ändert `life.ts` nicht (den Kommentar für AK-R1-05 setzt Task 8 nach H-R4). Damit laufen R1 und H-R4 parallel. Spätestens vor dem Final-Review merged `feat/m10-render` den aktuellen `main`.                                                                                                                                                                                                                                      |
+| **M9 H-R3 (`statusMarks.ts`)**                                           | R164 B4: Task 4 führt `BuildingState` `'noService'` ein. Das Briefing von H-R3 (lead-art) verlangt einen Standardfall für unbekannte Zustände; fehlt er, ergänzt Controller 2 beim W5-Merge `noService` in `statusMarks.ts` als Ausnahme (Task 7, „Vorher").                                                                                                                                                                                                                                                    |
 
 ### Wellen, Abhängigkeiten und Merges
 
 Ein abhängiger Task startet erst nach Review-Urteil OK des Vorgängers. Integration nur geprüfter SHAs, danach sofort
 push, SHA ins Ledger.
 
-| Welle | `feat/m10-sim`                                       | weitere Branches                                                                                                           | grün am Wellenende                   |
-| ----- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| W0    | —                                                    | A1 (`feat/m10-icons`, lead-art), ab Gate Plan                                                                              | `feat/m10-icons`: `make check`       |
-| —     | **Gate Merge M8** (L0), `<BASIS>` festhalten         |                                                                                                                            |                                      |
-| W1    | Task 1 (S1a)                                         | —                                                                                                                          | `make check`; BG-1                   |
-| W2    | Task 2 (S1b); danach lead-tech: ADR-005, arc42 §6/§8 | Task 3 (F1) auf `feat/m10-forest` ab Task-1-SHA                                                                            | beide: `make check`; BG-1            |
-| W3    | merge `feat/m10-forest` @ Task-3-SHA; Task 4 (S2)    | —                                                                                                                          | `make check`; BG-1; `PLAN-B9`        |
-| W4    | —                                                    | `feat/m10-scen` und `feat/m10-ui` ab Task-4-SHA: Task 5 (B1) ∥ Task 6 (U1); R1 (`feat/m10-render` ab Task-4-SHA, lead-art) | je Branch `make check`; Task 5: BG-2 |
-| W4b   | —                                                    | `feat/m10-ui` merged `feat/m10-scen` @ Task-5-SHA; **QA-U1**; **E-010-Übergabe**                                           | `feat/m10-ui`: `make check`          |
-| W5    | —                                                    | `feat/m10-ui` merged `main` (H-R3, H-R4) und `feat/m10-render` @ R1-SHA; Task 7 (U2)                                       | `make check`                         |
-| W6    | —                                                    | QA-U2 (detached am Task-7-SHA) ∥ Task 8 (U3)                                                                               | `make check`                         |
-| W7    | —                                                    | QA-U3 ∥ merge `feat/m10-icons` @ A1-SHA, Task 9 (U4); QA-ART (lead-art, nach A1, R1, Task 5)                               | `make check`                         |
-| W8    | —                                                    | QA-U4; D1; merge `main`; BG-3; **Final-Review M10** (lead-qa, opus); **Gate Merge M10**                                    | `make check`                         |
+| Welle | `feat/m10-sim`                                       | weitere Branches                                                                                                            | grün am Wellenende                   |
+| ----- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| W0    | —                                                    | A1 (`feat/m10-icons`, lead-art), ab Gate Plan                                                                               | `feat/m10-icons`: `make check`       |
+| —     | **Gate Merge M8** (L0), `<BASIS>` festhalten         |                                                                                                                             |                                      |
+| W1    | Task 1 (S1a)                                         | —                                                                                                                           | `make check`; BG-1                   |
+| W2    | Task 2 (S1b); danach lead-tech: ADR-005, arc42 §6/§8 | Task 3 (F1) auf `feat/m10-forest` ab Task-1-SHA                                                                             | beide: `make check`; BG-1            |
+| W3    | merge `feat/m10-forest` @ Task-3-SHA; Task 4 (S2)    | —                                                                                                                           | `make check`; BG-1; `PLAN-B9`        |
+| W4    | —                                                    | `feat/m10-scen` und `feat/m10-ui` ab Task-4-SHA: Task 5 (B1) ∥ Task 6 (U1); R1 (`feat/m10-render` ab Task-4-SHA, lead-art)  | je Branch `make check`; Task 5: BG-2 |
+| W4b   | —                                                    | `feat/m10-ui` merged `feat/m10-scen` @ Task-5-SHA; **QA-U1**; **E-010-Übergabe**                                            | `feat/m10-ui`: `make check`          |
+| W5    | —                                                    | `feat/m10-ui` merged `main` (H-R3, H-R4) und `feat/m10-render` @ R1-SHA (Konflikte löst Controller 2, R164 B3); Task 7 (U2) | `make check`                         |
+| W6    | —                                                    | QA-U2 (detached am Task-7-SHA) ∥ Task 8 (U3)                                                                                | `make check`                         |
+| W7    | —                                                    | QA-U3 ∥ merge `feat/m10-icons` @ A1-SHA, Task 9 (U4); QA-ART (lead-art, nach A1, R1, Task 5)                                | `make check`                         |
+| W8    | —                                                    | QA-U4; D1; merge `main`; BG-3; **Final-Review M10** (lead-qa, opus); **Gate Merge M10**                                     | `make check`                         |
 
 ```mermaid
 flowchart LR
@@ -426,29 +447,32 @@ ln -s ../../node_modules .worktrees/m10-qa/node_modules
 
 **Board-Paketliste (`blocked-by` für `lead-production`):**
 
-| Paket      | Titel                                              | Owner     | blocked-by                         |
-| ---------- | -------------------------------------------------- | --------- | ---------------------------------- |
-| M10-A1     | Symbolsatz Schritt 1                               | lead-art  | M10-PLAN (Gate Plan)               |
-| M10-S1A    | Freischalt-Modell, Save v5                         | lead-tech | M10-PLAN, M8-MERGE (Gate Merge M8) |
-| M10-S1B    | Sperren in Bau, Handel, Aufträgen                  | lead-tech | M10-S1A                            |
-| M10-F1     | Wald roden und aufforsten (Sim)                    | lead-tech | M10-S1A                            |
-| M10-S2     | Amtsstube, Steuer, Ausgabesperre, Werkzeugmacher   | lead-tech | M10-S1B, M10-F1                    |
-| M10-B1     | Freischalt-Messung und Szenarien                   | lead-tech | M10-S2                             |
-| M10-R1     | Amtsstube-Silhouette, Terrain nach Geländewechsel  | lead-art  | M10-S2                             |
-| M10-U1     | Bedienung zeigt nur Freigeschaltetes, Meldung, Ton | lead-tech | M10-S2                             |
-| M10-QA-U1  | Browser-Check U1                                   | lead-tech | M10-U1, M10-B1                     |
-| M10-U2     | Hilfe, Forst-Bedienung, Amtsstuben-Panel           | lead-tech | M10-QA-U1, M10-R1, H-R3, H-R4      |
-| M10-QA-U2  | Browser-Check U2 (inkl. AK-R1-03)                  | lead-tech | M10-U2                             |
-| M10-U3     | Mouse-over                                         | lead-tech | M10-U2                             |
-| M10-QA-U3  | Browser-Check U3                                   | lead-tech | M10-U3                             |
-| M10-U4     | Symbole im Einbau, K2, K3                          | lead-tech | M10-U3, M10-A1                     |
-| M10-QA-U4  | Browser-Check U4                                   | lead-tech | M10-U4                             |
-| M10-QA-ART | Blindtests Symbole und Amtsstube                   | lead-art  | M10-A1, M10-R1, M10-B1             |
-| M10-D1     | README, arc42, Hauptspec-Verweise                  | lead-tech | M10-QA-U2, M10-QA-U3, M10-QA-U4    |
-| M10-FR     | Final-Review M10                                   | lead-qa   | M10-D1, M10-QA-ART                 |
+| Paket      | Titel                                              | Owner           | blocked-by                         |
+| ---------- | -------------------------------------------------- | --------------- | ---------------------------------- |
+| M10-A1     | Symbolsatz Schritt 1                               | lead-art        | M10-PLAN (Gate Plan)               |
+| M10-S1A    | Freischalt-Modell, Save v5                         | lead-tech       | M10-PLAN, M8-MERGE (Gate Merge M8) |
+| M10-S1B    | Sperren in Bau, Handel, Aufträgen                  | lead-tech       | M10-S1A                            |
+| M10-F1     | Wald roden und aufforsten (Sim)                    | lead-tech       | M10-S1A                            |
+| M10-S2     | Amtsstube, Steuer, Ausgabesperre, Werkzeugmacher   | lead-tech       | M10-S1B, M10-F1                    |
+| M10-B1     | Freischalt-Messung und Szenarien                   | lead-tech       | M10-S2                             |
+| M10-R1     | Amtsstube-Silhouette, Terrain nach Geländewechsel  | lead-art        | M10-S2                             |
+| M10-U1     | Bedienung zeigt nur Freigeschaltetes, Meldung, Ton | lead-tech       | M10-S2                             |
+| M10-QA-U1  | Browser-Check U1                                   | lead-tech       | M10-U1, M10-B1                     |
+| M10-U2     | Hilfe, Forst-Bedienung, Amtsstuben-Panel           | lead-tech       | M10-QA-U1, M10-R1, H-R3, H-R4      |
+| M10-QA-U2  | Browser-Check U2 (inkl. AK-R1-03)                  | lead-tech       | M10-U2                             |
+| M10-U3     | Mouse-over                                         | lead-tech       | M10-U2                             |
+| M10-QA-U3  | Browser-Check U3                                   | lead-tech       | M10-U3                             |
+| M10-U4     | Symbole im Einbau, K2, K3                          | lead-tech       | M10-U3, M10-A1, M10-QA-U2          |
+| M10-QA-U4  | Browser-Check U4                                   | lead-tech       | M10-U4                             |
+| M10-QA-ART | Blindtests Symbole und Amtsstube                   | lead-art        | M10-A1, M10-R1, M10-B1             |
+| M10-DOC    | ADR-005-Nachtrag, arc42 §6 und §8 Persistenz       | lead-tech       | M10-S1B                            |
+| M10-D1     | README, arc42, Hauptspec-Verweise                  | lead-tech       | M10-QA-U2, M10-QA-U3, M10-QA-U4    |
+| M10-FR     | Final-Review M10                                   | lead-qa         | M10-D1, M10-DOC, M10-QA-ART        |
+| M10-MERGE  | Gate Merge M10 (L0, `production-integrator`)       | lead-production | M10-FR                             |
 
-`H-R3`, `H-R4` und `M8-MERGE` sind Pakete anderer Meilensteine; legt `lead-production` sie nicht unter diesen Ids an,
-gilt die jeweilige Board-Id.
+**Fremde Pakete (R164 B1):** `M8-MERGE` (Gate Merge M8), `H-R3`, `H-R4` (M9 Welle 1b, lead-art) legt
+`lead-production` auf dem Board an, falls sie dort noch fehlen; `M10-U2` ist von `H-R3` **und** `H-R4` blockiert
+(R159). Das Planpaket heisst `M10-PLAN`.
 
 ### Ablauf je Task (Controller `lead-tech`)
 
@@ -493,8 +517,36 @@ den Werten aus R162 (erster Kaufmann 8550, zweites Ziel 10 100, Bürger-Endzusta
 212). **Weicht ein Wert ab: nicht nachstellen**, Messwerte an den Controller, Meldung an L0 (R74).
 
 **BG-3** (vor dem Final-Review, Controller auf `feat/m10-ui` nach dem Merge von `main`): BG-1 und BG-2 vollständig;
-zusätzlich Determinismus ad hoc (nicht committen): `createWorld(7, { crisisLevel: 'normal' })` und
-`createWorld(7, { crisisLevel: 'normal', unlockAll: true })` je 9000 Schritte zweimal → `serialize` je Paar gleich.
+zusätzlich Determinismus ad hoc in einer temporären Testdatei (nicht committen, R164 QA 1):
+
+```ts
+// tests/sim/zz-bg3.test.ts — TEMPORÄR, nach dem Lauf löschen
+import { expect, it } from 'vitest';
+import { deserialize, serialize } from '../../src/sim/save';
+import { createWorld } from '../../src/sim/world';
+import { buildColony, runColony, startColony } from './controller';
+
+const end = (unlockAll: boolean): string => {
+  const w = createWorld(3, { crisisLevel: 'normal', unlockAll });
+  buildColony(w, { fireStation: true });
+  return serialize(w);
+};
+it('BG-3 buildColony normal, mit und ohne unlockAll, je zweimal gleich', () => {
+  for (const all of [false, true]) expect(end(all)).toBe(end(all));
+});
+it('BG-3 Laden zwischen U4 und U5 (Tick 2000) ändert den Endstand nicht', () => {
+  const w = createWorld(3, { crisisLevel: 'normal' });
+  const { layout, t } = startColony(w);
+  expect(runColony(w, layout, t, { fireStation: true }, (x) => x.tick >= 2000)).toBe(true);
+  expect(w.unlocked).toEqual(['U0', 'U2', 'U3', 'U4']);
+  const r = deserialize(serialize(w));
+  if (!r.ok) throw new Error(r.reason);
+  runColony(r.world, layout, t, { fireStation: true });
+  expect(serialize(r.world)).toBe(end(false));
+});
+```
+
+`npx vitest run tests/sim/zz-bg3.test.ts` → 2 passed; Ausgabe ins Ledger; Datei löschen (`git status` sauber).
 
 ### Bewusst geänderte Tests
 
@@ -519,6 +571,10 @@ den Controller, keine eigenmächtige Anpassung:
 | T-13 | `scenario-saves.test.ts` „AK-S5-01 die Szenario-Namen sind genau die vereinbarten": Liste + sieben `m10-*`; `galerie`-Test (Gebäudezahl) + Amtsstube                                                                                  | 4, 5  |
 
 Jeder Implementierer listet im Bericht jede geänderte bestehende Testzeile mit Art (T-n); der Reviewer gleicht ab.
+**Fremde Dateien (R164 B3):** Trifft der Lauf eine Testdatei, die nicht in der Ownership-Zeile des eigenen Tasks
+steht (z. B. `tests/sim/queries.test.ts` aus Task 3 oder `tests/render/*`, wo parallel H-R3/H-R4 arbeiten), ändert
+der Implementierer sie **nicht**, sondern meldet Datei, Test und Grund dem Controller; der Controller entscheidet
+(Änderung im Task mit Vermerk im Ledger oder Verschiebung zum Owner).
 
 ### E-010: Controller-Wechsel nach dem mittleren QA-Block
 
@@ -548,13 +604,13 @@ Hälfte widerspricht der ersten, oder Controller 2 fragt mehr als einmal bei Con
 
 ### QA-Checks (Übersicht)
 
-| Check  | Wann                      | AK (Browser-Teil)                                                        | Vite / CDP-Port | Szenarien                                                                                                |
-| ------ | ------------------------- | ------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------------------- |
-| QA-U1  | W4b, am Merge-SHA T6 + T5 | AK-U1-01, -02, -03, -04, -05, -06, -07, -09, -10, -11, -13               | 5191 / 9241     | `m10-start`, `m10-pionier-fast-voll`, `m10-siedler-fast`, `m10-amtsstube`, `m10-amtsstube-aus`           |
-| QA-U2  | W6, am Task-7-SHA         | AK-U2-03, -04, -05, -06, -08, -09, -11, -12; AK-R1-03 (Bild und Messung) | 5192 / 9242     | `m10-start`, `m10-pionier-fast-voll`, `m10-wald`, `m10-amtsstube`, `m10-amtsstube-aus`, `m10-krise-bald` |
-| QA-U3  | W7, am Task-8-SHA         | AK-U3-04, -05                                                            | 5193 / 9243     | `galerie`, `m10-amtsstube`, `m10-wald`                                                                   |
-| QA-U4  | W8, am Task-9-SHA         | AK-U4-01, -02, -03, -04 (K2), -05 (K3)                                   | 5194 / 9244     | `m10-start`, `galerie`, `m10-pionier-fast-voll`                                                          |
-| QA-ART | W7, lead-art              | AK-A1-03, AK-R1-04 (Blindtests)                                          | 5195 / 9245     | `galerie`; Symboltafel                                                                                   |
+| Check  | Wann                      | AK (Browser-Teil)                                                              | Vite / CDP-Port | Szenarien                                                                                                |
+| ------ | ------------------------- | ------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------------------- |
+| QA-U1  | W4b, am Merge-SHA T6 + T5 | AK-U1-01, -02, -03, -04, -05, -06, -07, -09, -10, -11, -13; AK-S2-16 (Taste I) | 5191 / 9241     | `m10-start`, `m10-pionier-fast-voll`, `m10-siedler-fast`, `m10-amtsstube`, `m10-amtsstube-aus`           |
+| QA-U2  | W6, am Task-7-SHA         | AK-U2-03, -04, -05, -06, -08, -09, -11, -12; AK-R1-03 (Bild und Messung)       | 5192 / 9242     | `m10-start`, `m10-pionier-fast-voll`, `m10-wald`, `m10-amtsstube`, `m10-amtsstube-aus`, `m10-krise-bald` |
+| QA-U3  | W7, am Task-8-SHA         | AK-U3-04, -05                                                                  | 5193 / 9243     | `galerie`, `m10-amtsstube`, `m10-wald`                                                                   |
+| QA-U4  | W8, am Task-9-SHA         | AK-U4-01, -02, -03, -04 (K2), -05 (K3)                                         | 5194 / 9244     | `m10-start`, `galerie`, `m10-pionier-fast-voll`                                                          |
+| QA-ART | W7, lead-art              | AK-A1-03, AK-R1-04 (Blindtests)                                                | 5195 / 9245     | `galerie`; Symboltafel                                                                                   |
 
 Gemeinsame Vorbereitung, Laden und feste Prüfpunkte stehen im Abschnitt „QA-Checks im Browser" nach den Tasks.
 
@@ -606,16 +662,24 @@ Beantragt: 7 Starts, Parallelität 1
 ```text
 Lead: lead-qa
 Phase: M10-umsetzung
-Pakete: Final-Review M10 (opus) über feat/m10-ui (enthält alle Stränge)
+Pakete: Final-Review M10 über feat/m10-ui (enthält alle Stränge), Prüfer qa-code-reviewer mit model: opus
 Formel: 1 → × 1,3 = 1,3 → aufgerundet 2 (Reserve für eine Zweitprüfung)
 Beantragt: 2 Starts, Parallelität 1
 ```
 
 - **Summe** 29 + 7 + 2 = **38** (Formel über alles: 11 × 2 + 5 + 1 = 28 → × 1,3 = 36,4 → 37; die Aufrundung je Lead
   ergibt 38). Ausserhalb der Formel: +1 Start L0 für die E-010-Instanz. Fix-Runden per `SendMessage` zählen nicht.
-- Vorschlag Logging: `log.py budget --lead lead-tech --grant 29 --parallel 3 --phase M10-umsetzung`,
-  `--lead lead-art --grant 7 --parallel 1`, `--lead lead-qa --grant 2 --parallel 1`. Bei jedem Session-Wechsel nur
-  den **Rest** neu loggen.
+- **Stufung (R164, B2):** Kein Start vor dem Gate Merge M8.
+  - **Stufe 1** (nach dem Gate Merge M8): lead-tech **11** für Tasks 1–4 (4 × 2 = 8 → × 1,3 = 10,4 → 11),
+    lead-art **3** für A1 (1 × 2 = 2 → × 1,3 = 2,6 → 3).
+  - **Stufe 2** (nach Freigabe durch L0): lead-tech 18 (Tasks 5–9, QA-U1 … QA-U4), lead-art 4 (R1, QA-ART),
+    lead-qa 2.
+  - Liegt das Wochenfenster über 80 %, gilt Parallelität **2** statt 3. Der Controller prüft das vor jeder Welle
+    (`.studio/limits.json`) und startet dann höchstens zwei Agenten gleichzeitig.
+- Logging je Stufe durch L0, z. B. Stufe 1:
+  `log.py budget --lead lead-tech --grant 11 --parallel 3 --phase M10-umsetzung` und
+  `log.py budget --lead lead-art --grant 3 --parallel 1 --phase M10-umsetzung`. Bei jedem Session-Wechsel nur den
+  **Rest** neu loggen.
 - Gegenüber Spec 19 (10 Pakete): +1 Paket durch die Teilung S1 (P2), −1 Start durch D1 ohne Start (P5).
 
 ---
@@ -1479,6 +1543,10 @@ npx tsc --noEmit && make check                                         # grün
 Vor der Umsetzung grün erlaubt: keiner (alle neuen Tests importieren neue Module).
 
 - [ ] **Schritt 8: BG-1** ausführen (ohne die AK-S1-17-Zeile), Ausgabe in den Bericht; Testzählbefehl.
+- [ ] **Review-Zusatz (R164 QA 4, nur bei Task 1):** Der Reviewer führt den Abdeckungs-Grep aus dem Plankopf gegen die
+      echte Vitest-Ausgabe aus und belegt im Bericht, dass er `AK-S1-01` trifft (Ausgabezeile zitieren). Trifft er
+      nicht, korrigiert der Controller das Muster im Ledger (gilt dann für alle weiteren Reviews und das
+      Final-Review) und meldet die Korrektur im Schlussbericht.
 - [ ] **Schritt 9: Commit.**
 
 ```bash
@@ -3354,8 +3422,11 @@ world), seen: [...world.unlocked] }`. `lockedToolText(world, tool)`: `build` →
 **Paket** M10-U2 · **Implementierer** `tech-ui-engineer` (sonnet) · **Worktree/Branch** `.worktrees/m10-ui` ·
 `feat/m10-ui` · **blocked-by** QA-U1 (OK), R1 (Review OK, gemergt), **M9 H-R3 und H-R4 auf `main`** (R159) ·
 **Vorher (Controller):** `git -C .worktrees/m10-ui merge --no-edit main` (enthält H-R3/H-R4) und
-`git -C .worktrees/m10-ui merge --no-edit <R1-SHA>`, je `make check`, push · **AK** Vitest-Teile AK-U2-01, -02, -07,
--10, -11, -12 (Browser-Teile in QA-U2), `RF-5`
+`git -C .worktrees/m10-ui merge --no-edit <R1-SHA>`, je `make check`, push. **Konflikte in diesem W5-Merge löst
+Controller 2** (R164 B3) im eigenen Baum per Merge-Commit (nie Rebase), danach `make check`; meldet `tsc` nach dem
+Merge von H-R3 einen unvollständigen `switch` über `BuildingState` in `src/render/statusMarks.ts`, ergänzt Controller 2
+dort den Fall `noService` (Kartenzeichen wie `waitingInput`) als Ausnahme wie Task 4 bei `overlays.ts` (R164 B4) ·
+**AK** Vitest-Teile AK-U2-01, -02, -07, -10, -11, -12 (Browser-Teile in QA-U2), `RF-5`
 
 **Files:**
 
@@ -3661,7 +3732,9 @@ Bedeutungstexte so, wie sie in `MAP_SIGNS` stehen — Wortlaut dort nachsehen. L
 
 - Create: `src/ui/hover.ts`, `tests/ui/hover.test.ts`
 - Modify: `src/ui/input.ts`, `src/ui/app.ts`, `src/style.css`, `src/render/renderer.ts` (nur Export `wildlifeEnvOf`
-  und dessen Nutzung im Renderer, P4)
+  und dessen Nutzung im Renderer, P4), `src/render/life.ts` (nur ein Kommentar am Küstenfeld-Cache `coastFor`: „gültig,
+  solange Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere Geländeänderungen müssen diesen Cache neu
+  bewerten" — AK-R1-05, R164 B5; Task 8 läuft nach H-R4 auf `main`)
 - Test: `tests/ui/hover.test.ts`, `tests/render/renderer.test.ts` (nur neues `it`)
 
 **Interfaces:**
@@ -4094,16 +4167,17 @@ nie berühren; Spec 7 Punkt 2 und 4). Der Fensteranker-Test (M7:AK-R2-03) prüft
 ohne Lockerung (T-12).
 
 - [ ] **Schritt 2:** rot. **Schritt 3:** Umsetzung (`terrain.ts` Gelände-Abbild im `meta`, Teil-Raster,
-      `terrainStats`; `sprites.ts` Silhouette Amtsstube; Kommentare in `wildlife.ts`, `water.ts`, `life.ts`: „gültig,
-      solange Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere Geländeänderungen müssen diesen Cache neu
-      bewerten"; `iso.ts` nur falls AK-R1-02 nicht schon über `layoutKey` grün ist). **Schritt 4:** arc42 §10 eine Zeile
+      `terrainStats`; `sprites.ts` Silhouette Amtsstube; Kommentare in `wildlife.ts` und `water.ts`: „gültig, solange
+      Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere Geländeänderungen müssen diesen Cache neu
+      bewerten" — **nicht** in `life.ts` (R164 B5: H-R4 arbeitet parallel; den Kommentar in `life.ts` setzt Task 8);
+      `iso.ts` nur falls AK-R1-02 nicht schon über `layoutKey` grün ist). **Schritt 4:** arc42 §10 eine Zeile
       „Teil-Neuzeichnung nach Forst-Aktion: `updateTerrainLayer().ms`, Grenze 100 ms, erwartet ≤ 15 ms"; `make check`;
-      Commit `feat: M10-R1 Amtsstube-Silhouette, Terrain-Teil-Neuzeichnung nach Geländewechsel (Spec 7)`; push;
-      Beobachtung „Terrain-Cache hängt an `layoutKey`" in `docs/beobachtungen.md` als gelöst markieren (mit Verweis
-      F1/R1).
+      Commit `feat: M10-R1 Amtsstube-Silhouette, Terrain-Teil-Neuzeichnung nach Geländewechsel (Spec 7)`; push.
+      **`docs/beobachtungen.md` ändert R1 nicht** (R164 B3, häufige Konfliktstelle): Die Erledigung der Beobachtung
+      „Terrain-Cache hängt an `layoutKey`" steht im R1-Bericht; L0 trägt sie nach dem Gate Merge ein.
 - Review: `qa-code-reviewer` (lead-art-Budget). SHA an den Controller (Merge vor Task 7). Vor dem Final-Review merged
-  `lead-art` den aktuellen `main` (H-R4 `life.ts`) in `feat/m10-render`, `make check`, push, neuer SHA an den
-  Controller, der ihn in `feat/m10-ui` merged.
+  `lead-art` den aktuellen `main` in `feat/m10-render`, `make check`, push, neuer SHA an den Controller, der ihn in
+  `feat/m10-ui` merged.
 
 ---
 
@@ -4169,6 +4243,9 @@ npx vite --port 5191 --strictPort > "$QA/vite.log" 2>&1 &         # Port je Chec
     „Amtsstube"; je Szenario `#hud` Höhe ≤ 84 und `scrollWidth ≤ clientWidth`. `u1-11-<szenario>.png`.
 11. **AK-U1-13** (`m10-amtsstube-aus`, ohne Auswahl): `[data-field=rest-tax]` = `taxEffect('normal') + ' (keine Amtsstube)'`;
     Bilanz-Tooltip (Hover über `[data-field=balance]`) enthält „Steuer: normal (keine Amtsstube)".
+12. **AK-S2-16 Taste I** (R164 QA 3): `m10-start` → Taste `i`: Werkzeug bleibt „Auswahl", `.toast.error`
+    „Amtsstube: Erst mit den ersten Siedlern"; `m10-siedler-fast` bei 1× durch Tick 1550 (U3), dann Taste `i`:
+    aktives Werkzeug ist die Amtsstube (Bau-Eintrag „Amtsstube · 200 Geld" `active`, Tooltip-Kopf „Amtsstube (I)").
 
 ### QA-U2 (W6, am Task-7-SHA; enthält R1)
 
@@ -4270,7 +4347,8 @@ t.terrainStats.patches.length = 0`; dann 10 Forst-Aktionen abwechselnd auf `wald
 
 ### Final-Review M10
 
-**Prüfer** `lead-qa` (opus) über **`feat/m10-ui`** (enthält `feat/m10-sim` @ Task 4, `feat/m10-forest`,
+**Prüfer** `qa-code-reviewer` mit `model: opus` im Agent-Aufruf und Kopfzeile `Modell: opus` im Briefing (Start durch
+`lead-qa` aus dessen Budget, R164 QA 2) über **`feat/m10-ui`** (enthält `feat/m10-sim` @ Task 4, `feat/m10-forest`,
 `feat/m10-scen`, `feat/m10-render` (letzter SHA nach Merge von `main` durch lead-art), `feat/m10-icons`, D1). Vorher
 merged Controller 2 den aktuellen `main` (`git -C .worktrees/m10-ui merge --no-edit main`), `make check`, BG-3, push;
 geprüft wird genau dieser SHA.
@@ -4305,7 +4383,7 @@ entfernt `lead-production` die M10-Worktrees per Ruling.
    `docs/studio/rulings.md` ein.
 2. Befunde ausserhalb Scope (Fundort, Beobachtung, Ursprung, Einschätzung) im Schlussbericht; L0 trägt sie in
    `docs/beobachtungen.md` ein. Gelöste Beobachtungen: „Gesperrtes vor der Freischaltung sichtbar" (a) und (b) → U1;
-   „Terrain-Cache hängt an `layoutKey`" → F1, R1 (R1 schliesst den Eintrag).
+   „Terrain-Cache hängt an `layoutKey`" → F1, R1 (R1 meldet, L0 trägt ein; R164 B3).
 3. E-010 M-2/M-3 ins Ledger und in den Schlussbericht an L0 und `studio-coach`.
 4. Bericht an L0 „bereit fürs Gate Merge M10" mit SHA, Final-Review-Urteil, Ruling-Vorlage B1, Playtest-Fragen
    P-01 … P-04 (Spec 18.2) für den Nutzer.
@@ -4364,7 +4442,7 @@ Gegenprobe: Abschnitt „Grep-Gegenprobe" unter der Tabelle.
 | AK-S2-13 | Task 4 (Kann K1)                                   | `tests/sim/townhall.test.ts` „AK-S2-13 …"                                             |
 | AK-S2-14 | Task 4 (BG-1)                                      | AK-S1-16 und AK-S1-17 grün nach Task 4; Werte im Ledger                               |
 | AK-S2-15 | Task 4                                             | `tests/render/sprites.test.ts` „AK-S2-15 …"                                           |
-| AK-S2-16 | Task 4                                             | `tests/ui/hotkeys.test.ts` „AK-S2-16 …"                                               |
+| AK-S2-16 | Task 4; QA-U1 Schritt 12                           | `tests/ui/hotkeys.test.ts` „AK-S2-16 …"; Browser (R164 QA 3)                          |
 | AK-S2-17 | Task 4                                             | `tests/ui/inspect.test.ts` bzw. `tooltip.test.ts` und `hints.test.ts` „AK-S2-17 …"    |
 | AK-B1-01 | Task 5                                             | `tests/sim/unlock-timeline.test.ts` „AK-B1-01 …" (off, normal)                        |
 | AK-B1-02 | Task 5 (BG-2)                                      | `balance-merchants.test.ts` unverändert grün, Werte gegen R162 im Bericht             |
@@ -4374,7 +4452,7 @@ Gegenprobe: Abschnitt „Grep-Gegenprobe" unter der Tabelle.
 | AK-R1-02 | R1                                                 | `tests/render/iso.test.ts` „AK-R1-02 …"                                               |
 | AK-R1-03 | QA-U2 Schritt 5                                    | Pixelvergleich und `terrainStats.patches` (≤ 100 ms) bei DPR 2                        |
 | AK-R1-04 | R1; QA-ART Schritt 2                               | `tests/render/sprites.test.ts` „AK-R1-04 …" + Fensteranker; Blindtest                 |
-| AK-R1-05 | R1                                                 | `tests/render/terrain.test.ts` „AK-R1-05 …"; Review Kommentare                        |
+| AK-R1-05 | R1; Task 8 (Kommentar `life.ts`)                   | `tests/render/terrain.test.ts` „AK-R1-05 …"; Review Kommentare (R164 B5)              |
 | AK-A1-01 | A1                                                 | `tests/ui/icons.test.ts` „AK-A1-01 …"                                                 |
 | AK-A1-02 | A1                                                 | `tests/ui/icons.test.ts` „AK-A1-02 …"                                                 |
 | AK-A1-03 | QA-ART Schritt 1                                   | Blindtest ≥ 20/24; Anmutung lead-art                                                  |
