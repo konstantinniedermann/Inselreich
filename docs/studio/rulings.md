@@ -871,3 +871,14 @@ folgt der Aufgabe. — Kosten bei Irrtum: Handbuch-Revert auf 1.12, Guard-Regel 
 `.studio/handoffs/EFF-analyse.md`
 
 Entscheider: L0 · Anlass: Nutzerauftrag Token-Effizienz · ADR: —
+
+## R168 · 2026-10-02 · Token-Effizienz
+
+Ruling: E-014 („Task-Dateien und kurze L0-Sessions") wird in E-010 „Schlanke Steuerung" eingegliedert
+statt auf einen Platz zu warten: Beide wirken auf dieselbe Messquelle (metrics.py „Effizienz") im
+selben Zeitraum M10, die Handbuch-Regeln 1.13 gelten damit gemessen; Grenze 3 laufende bleibt.
+Budget-Alarm „studio-director 13 von 3" ist ein Messartefakt: L0-Direktstarts (R167) zählen gegen die
+ganze Historie statt ab dem Budget-Event; Fix im Paket EFF-W. — Kosten bei Irrtum: Experiment-Split
+nachträglich — `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+
+Entscheider: L0 · Anlass: Bericht EFF-H · ADR: —
