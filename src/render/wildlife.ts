@@ -2,6 +2,7 @@
 // Kosmetisch und deterministisch aus `timeMs`, `world.seed`, Küstenfeld und Kachelart (nur `hash2`, nie
 // `Math.random`); kein Zustand ausser Caches je Welt, kein Schreibzugriff auf die Welt. `wildlifeAt` ist die
 // eine Quelle für Bild (Renderer) und Name (Mouse-over); die Zeichner sind dünn und bündeln je Art.
+import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
@@ -77,7 +78,8 @@ export interface WildlifeHit {
 export const FISH_CELL = 6;
 export const FISH_SHARE = 0.35;
 export const FLOCK_CELL = 12;
-export const FLOCK_SHARE = 0.3;
+// Jede Zelle darf einen Schwarm tragen (Land mit Abstand zum Wasser ist knapp); die Kappe und der Nähe-Vorrang wählen aus.
+export const FLOCK_SHARE = 1;
 export const WHALE_EPISODE_MS = 60000;
 export const WHALE_VISIBLE_MS = 12000;
 const WHALE_SHARE = 0.35;
@@ -126,6 +128,7 @@ function cellAnchors(
   salt: number,
   ok: (x: number, y: number, s: number) => boolean,
   limit: number,
+  near?: Pt2,
 ): Anchor[] {
   if (limit <= 0 || range.x1 < range.x0 || range.y1 < range.y0) return [];
   const cx0 = Math.floor(Math.max(0, range.x0) / cell),
@@ -147,7 +150,12 @@ function cellAnchors(
         }
       if (best) out.push(best);
     }
-  return out.sort((a, b) => a.key - b.key).slice(0, limit);
+  // Nähe-Vorrang: Der Sortierschlüssel der Kappung enthält den Abstand zum Kontor (Anteil Abstand/Kartenbreite),
+  // damit in der Startansicht Tiere stehen. Er hängt nur von Welt und Anker ab (global je Welt), so sehen
+  // Renderer und UI weiterhin dieselbe Menge.
+  const rank = (a: Anchor): number =>
+    near ? a.key + Math.hypot(a.tx + 0.5 - near.x, a.ty + 0.5 - near.y) / f.w : a.key;
+  return out.sort((a, b) => rank(a) - rank(b)).slice(0, limit);
 }
 
 /** Schleifenradius des Vogelschwarms in Kacheln (1,5 bis 2), aus dem Ankerhash. */
@@ -167,6 +175,9 @@ function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
   if (!c) {
     const f = coastFor(world);
     const all: TileRange = { x0: 0, y0: 0, x1: f.w - 1, y1: f.h - 1 };
+    const k = world.buildings[world.kontorId];
+    const kd = k ? BUILDING_DEFS[k.defId] : null;
+    const near = k && kd ? { x: k.x + kd.w / 2, y: k.y + kd.h / 2 } : { x: f.w / 2, y: f.h / 2 };
     const make = (reduce: boolean) => ({
       fish: cellAnchors(
         f,
@@ -177,6 +188,7 @@ function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
         51,
         (_x, _y, s) => s <= -1 && s > -4,
         cap('fish', reduce),
+        near,
       ),
       flocks: cellAnchors(
         f,
@@ -191,6 +203,7 @@ function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
           return (t === 'forest' || t === 'grass') && s >= flockRadius(world.seed, x, y) + 1;
         },
         cap('flocks', reduce),
+        near,
       ),
     });
     const n = make(false),

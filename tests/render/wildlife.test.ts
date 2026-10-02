@@ -165,9 +165,9 @@ describe('Wasser- und Luftleben (H-R2)', () => {
   });
 
   it('RF-3 Kappen normal und reduziert; Scrollen ändert die Anker im Überlappungsbereich nicht', () => {
-    expect(CAPS.fish).toEqual([12, 4]);
+    expect(CAPS.fish).toEqual([20, 6]);
     expect(CAPS.whales).toEqual([1, 1]);
-    expect(CAPS.flocks).toEqual([3, 1]);
+    expect(CAPS.flocks).toEqual([4, 2]);
     const reduce0 = true;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
@@ -447,6 +447,26 @@ describe('Wasser- und Luftleben (H-R2)', () => {
         ),
       ).toHaveLength(0);
     }
+  });
+
+  it('RF-10 Startansicht am Kontor (Zoom 1, 980×650) zeigt bei Tag und klar Fische und Vögel, Seeds 1 bis 40', () => {
+    const view = { w: 980, h: 650 };
+    const bad: number[] = [];
+    for (let seed = 1; seed <= 40; seed++) {
+      const world = createWorld(seed);
+      const k = world.buildings[world.kontorId]!;
+      const c = center(BUILDING_DEFS[k.defId], k.x, k.y);
+      const cam = { x: 0, y: 0, zoom: 1 };
+      const map = { w: world.width, h: world.height };
+      centerOn(cam, c.cx, c.cy, view, map);
+      const r = visibleTileRange(cam, view, map);
+      for (const t of [3000, 17000, 41000, 77000]) {
+        const hits = wildlifeAt(world, r, t, DAY);
+        if (!hits.some((x) => x.kind === 'fish') || !hits.some((x) => x.kind === 'birds'))
+          bad.push(seed * 1e6 + t);
+      }
+    }
+    expect(bad).toEqual([]);
   });
 
   it('RF-7 Einbindung: Wasserleben vor Schiff und Objekten, Vögel danach und vor dem Multiply-Durchgang, keine Signalfarbe, reduceMotion weniger', () => {

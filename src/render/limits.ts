@@ -8,9 +8,9 @@ export const CAPS = {
   fire: [24, 8],
   clouds: [6, 0],
   glitter: [30, 0],
-  fish: [12, 4],
+  fish: [20, 6],
   whales: [1, 1],
-  flocks: [3, 1],
+  flocks: [4, 2],
 } as const;
 export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];
