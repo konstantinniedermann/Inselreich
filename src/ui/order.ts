@@ -2,6 +2,7 @@ import { GOODS } from '../sim/defs/goods';
 import { nextOrderTick } from '../sim/orders';
 import type { Order, World } from '../sim/types';
 import { setField } from './dom';
+import { formatGameTime } from './time';
 
 export interface OrderActions {
   deliver(): void;
@@ -10,10 +11,10 @@ export interface OrderActions {
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
 export function orderCardText(world: World): string {
   const o = world.order;
-  if (o === null) return `Nächster Auftrag in ${nextOrderTick(world) - world.tick} Ticks`;
+  if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
   const name = GOODS[o.good].name;
   return (
-    `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${o.due - world.tick} Ticks` +
+    `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
     ` · Lager ${world.stock[o.good]}/${o.amount}`
   );
 }

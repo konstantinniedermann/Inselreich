@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { TICK_MS, UPKEEP_INTERVAL } from '../../src/sim/defs/timing';
+import { crisisView } from '../../src/sim/queries';
+import { step } from '../../src/sim/tick';
+import type { TaxLevel } from '../../src/sim/types';
+import { tooltipLines } from '../../src/ui/buildMenu';
+import { crisisCardText } from '../../src/ui/crisis';
+import { logLine } from '../../src/ui/crisisLog';
+import { nextStep, taxEffect } from '../../src/ui/guide';
+import { orderCardText } from '../../src/ui/order';
+import { burningText, producesText } from '../../src/ui/texts';
 import { formatClock, formatGameTime, perMinute, signedNum } from '../../src/ui/time';
+import { SCENARIOS } from '../sim/scenarios';
 
 const ticksFor = (seconds: number): number => (seconds * 1000) / TICK_MS;
 
@@ -30,4 +42,28 @@ describe('formatGameTime (AK-UX-02)', () => {
     expect(signedNum(-42)).toBe('−42');
     expect(signedNum(0)).toBe('±0');
   });
+});
+
+it('AK-UX-13 kein Text enthält „Tick" (alle Szenarien, Tick +0 und +300)', () => {
+  const texts: string[] = [];
+  for (const tool of [{ kind: 'select' }, { kind: 'road' }, { kind: 'demolish' }] as const)
+    texts.push(...tooltipLines(tool));
+  for (const id of BUILDING_IDS) texts.push(...tooltipLines({ kind: 'build', defId: id }));
+  for (const lvl of Object.keys(TAX_LEVELS) as TaxLevel[]) texts.push(taxEffect(lvl));
+  for (const build of Object.values(SCENARIOS)) {
+    const w = build();
+    for (let i = 0; i <= 300; i++) {
+      if (i === 0 || i === 300) {
+        texts.push(crisisCardText(crisisView(w), w).text, orderCardText(w), nextStep(w));
+        texts.push(logLine({ tick: w.tick, text: 'x', toast: null }));
+        for (const b of Object.values(w.buildings)) {
+          const def = BUILDING_DEFS[b.defId];
+          if (def.produces) texts.push(producesText(def, false));
+          texts.push(burningText(b, w.tick));
+        }
+      }
+      step(w);
+    }
+  }
+  for (const t of texts) expect(t, t).not.toMatch(/Tick/);
 });

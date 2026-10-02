@@ -10,6 +10,7 @@ import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { friendlyReason } from './hints';
 import { showMessage } from './messages';
+import { perMinute } from './time';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -37,7 +38,7 @@ function num(n: number): string {
 }
 
 function perInterval(cycle: number): string {
-  return `${num(UPKEEP_INTERVAL / cycle)} je ${UPKEEP_INTERVAL} Ticks`;
+  return `${num(perMinute(1, cycle))} / min`;
 }
 
 function siteText(rule: SiteRule): string {
@@ -85,7 +86,7 @@ export function tooltipLines(tool: Tool): string[] {
   const lines = [
     withKey(def.name),
     `Kosten: ${costLine(def.cost)}`,
-    `Unterhalt: ${def.upkeep} je ${UPKEEP_INTERVAL} Ticks`,
+    `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);

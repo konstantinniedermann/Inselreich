@@ -65,14 +65,12 @@ describe('burningText (M6-AK-U1-08)', () => {
   const base = { id: 1, x: 0, y: 0, connected: true, progress: 0, state: 'burning' as const };
   it('M6-AK-U1-08: Betrieb nennt outageUntil - tick', () => {
     expect(burningText({ ...base, defId: 'lumberjack', outageUntil: 150 }, 100)).toBe(
-      'Brennt — wieder in Betrieb in 50 Ticks',
+      'Brennt — wieder in Betrieb in 5 s',
     );
   });
   it('M6-AK-U1-08: Kapelle (Dienst) ebenso, nie negativ', () => {
-    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain(
-      'in 30 Ticks',
-    );
-    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 Ticks');
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 130 }, 100)).toContain('in 3 s');
+    expect(burningText({ ...base, defId: 'chapel', outageUntil: 90 }, 100)).toContain('in 0 s');
   });
   it('M6-AK-U1-07: protectedCount zählt brennbare Gebäude im Radius, nur bei Anbindung', () => {
     const w = createWorld(3);
@@ -98,8 +96,8 @@ describe('burningText (M6-AK-U1-08)', () => {
 describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
   it('producesText: laufend mit Takt, brennend ohne', () => {
     const def = { produces: 'rum' as const, cycle: 50 };
-    expect(producesText(def, false)).toBe('Erzeugt Rum alle 50 Ticks');
-    expect(producesText(def, true)).not.toContain('alle 50 Ticks');
+    expect(producesText(def, false)).toBe('Erzeugt Rum alle 5 s');
+    expect(producesText(def, true)).not.toContain('alle 5 s');
     expect(producesText(def, true)).toContain('brennt');
   });
   it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {

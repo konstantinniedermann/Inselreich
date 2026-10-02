@@ -3,6 +3,7 @@ import { GOODS } from '../sim/defs/goods';
 import { SERVICE_BUILDING } from '../sim/population';
 import type { Diagnosis } from '../sim/queries';
 import type { Building, Cost, GoodId } from '../sim/types';
+import { formatGameTime } from './time';
 
 /** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
 export function diagnosisText(d: Diagnosis): string {
@@ -21,13 +22,13 @@ export function producesText(def: { produces?: GoodId; cycle?: number }, burning
   const name = def.produces ? GOODS[def.produces].name : '';
   return burning
     ? `Erzeugt ${name} nicht — Betrieb brennt`
-    : `Erzeugt ${name} alle ${def.cycle} Ticks`;
+    : `Erzeugt ${name} alle ${formatGameTime(def.cycle ?? 0)}`;
 }
 
 /** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
 export function burningText(b: Building, tick: number): string {
   const left = Math.max(0, (b.outageUntil ?? tick) - tick);
-  return `Brennt — wieder in Betrieb in ${left} Ticks`;
+  return `Brennt — wieder in Betrieb in ${formatGameTime(left)}`;
 }
 
 export function stateInfo(b: Building, tick: number): { text: string; ok: boolean } {

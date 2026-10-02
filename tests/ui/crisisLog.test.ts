@@ -27,7 +27,7 @@ describe('crisisLogEntries (M6-AK-U2-01)', () => {
     const fee = BUILDING_DEFS.distillery.cost.money;
     const es = run(w, 205);
     expect(es[0]).toMatchObject({
-      text: `Brand: ${BUILDING_DEFS.distillery.name} brennt — Instandsetzung ${fee}, 200 Ticks Ausfall`,
+      text: `Brand: ${BUILDING_DEFS.distillery.name} brennt — Instandsetzung ${fee}, 20 s Ausfall`,
       toast: 'warn',
     });
     expect(es[1]).toMatchObject({
@@ -49,7 +49,7 @@ describe('crisisLogEntries (M6-AK-U2-01)', () => {
     const w = SCENARIOS['krise-sturm']!();
     const es = run(w, 201 + 300 + 5);
     expect(texts(es)).toEqual([
-      'Sturmwarnung: Sturm in 201 Ticks',
+      'Sturmwarnung: Sturm in 21 s',
       'Sturm hat begonnen',
       'Sturm vorüber',
     ]);
@@ -60,7 +60,7 @@ describe('crisisLogEntries (M6-AK-U2-01)', () => {
     const w = SCENARIOS['krise-boom']!();
     const es = run(w, 305);
     expect(es).toHaveLength(2);
-    expect(es[0]!.text).toMatch(/^Boom: .+ \+50 % für 300 Ticks$/);
+    expect(es[0]!.text).toMatch(/^Boom: .+ \+50 % für 30 s$/);
     expect(es[0]!.toast).toBe('info');
     expect(es[1]!.text).toBe('Boom vorbei');
   });
@@ -106,7 +106,7 @@ describe('crisisLogEntries (M6-AK-U2-01)', () => {
   });
 
   it('Zeile mit Tick', () => {
-    expect(logLine({ text: 'Boom vorbei', toast: null, tick: 42 })).toBe('Tick 42 · Boom vorbei');
+    expect(logLine({ text: 'Boom vorbei', toast: null, tick: 42 })).toBe('0:04 · Boom vorbei');
   });
 });
 

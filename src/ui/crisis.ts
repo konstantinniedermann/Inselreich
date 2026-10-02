@@ -4,6 +4,7 @@ import { GOODS } from '../sim/defs/goods';
 import { STORM_DURATION } from '../sim/defs/timing';
 import type { CrisisView } from '../sim/queries';
 import type { BuildingDefId, CrisisKind, World } from '../sim/types';
+import { formatGameTime } from './time';
 
 /** Krisenkarte (M6 13.3): reine Textfunktion über `crisisView` und Welt; alle Werte aus `defs`. */
 
@@ -41,7 +42,7 @@ export function crisisCardText(view: CrisisView, world: World): CrisisCard {
   if (view.phase === 'none') {
     if (view.next === null) return { text: 'Krisen: aus', kind: null, level: null };
     return {
-      text: `Krisen: ${CRISIS_LEVELS[world.crisisLevel].name} · nächste Krise in ${view.next - world.tick} Ticks`,
+      text: `Krisen: ${CRISIS_LEVELS[world.crisisLevel].name} · nächste Krise in ${formatGameTime(view.next - world.tick)}`,
       kind: null,
       level: null,
     };
@@ -53,7 +54,7 @@ export function crisisCardText(view: CrisisView, world: World): CrisisCard {
         const fee = repairFee(view, world);
         const feeText = fee === null ? '' : ` · Instandsetzung ${fee}`;
         return {
-          text: `Brand: ${name} · Ausfall noch ${view.remaining} Ticks${feeText}`,
+          text: `Brand: ${name} · Ausfall noch ${formatGameTime(view.remaining)}${feeText}`,
           kind: 'fire',
           level: 'warn',
         };
@@ -67,15 +68,15 @@ export function crisisCardText(view: CrisisView, world: World): CrisisCard {
       return {
         text:
           view.phase === 'warning'
-            ? `Sturmwarnung: Sturm in ${view.remaining} Ticks, dauert ${STORM_DURATION} Ticks · halbe Leistung: ${stormAffectedNames()}`
-            : `Sturm: noch ${view.remaining} Ticks · Rohstoffbetriebe halbe Leistung`,
+            ? `Sturmwarnung: Sturm in ${formatGameTime(view.remaining)}, dauert ${formatGameTime(STORM_DURATION)} · halbe Leistung: ${stormAffectedNames()}`
+            : `Sturm: noch ${formatGameTime(view.remaining)} · Rohstoffbetriebe halbe Leistung`,
         kind: 'storm',
         level: 'warn',
       };
     case 'boom': {
       const good = view.good === undefined ? '' : `${GOODS[view.good].name} `;
       return {
-        text: `Boom: ${good}+${BOOM_PCT - 100} % Verkaufspreis · noch ${view.remaining} Ticks`,
+        text: `Boom: ${good}+${BOOM_PCT - 100} % Verkaufspreis · noch ${formatGameTime(view.remaining)}`,
         kind: 'boom',
         level: 'info',
       };

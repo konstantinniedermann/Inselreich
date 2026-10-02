@@ -13,7 +13,7 @@ import { diagnosisText, producesText, refundText, stateInfo } from './texts';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
 import { tierPath } from './hud';
-import { formatGameTime } from './time';
+import { formatGameTime, perMinute } from './time';
 
 export {
   burningText,
@@ -108,7 +108,6 @@ function setList(root: HTMLElement, field: string, items: ListItem[]): void {
   );
 }
 
-/** Gerüst des Wohnhaus-Panels: Einwohner, Versorgung, Bedürfnisse, Aufstieg. */
 /** Abhilfe-Zeile (Spec L7), anfangs versteckt; `updateInspect` setzt Text und Sichtbarkeit. */
 function addRemedy(parent: HTMLElement): void {
   const p = addLine(parent, '', 'remedy');
@@ -116,6 +115,7 @@ function addRemedy(parent: HTMLElement): void {
   p.hidden = true;
 }
 
+/** Gerüst des Wohnhaus-Panels: Einwohner, Versorgung, Bedürfnisse, Aufstieg. */
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
@@ -223,7 +223,7 @@ export function renderInspect(
         bar.appendChild(fill);
         panel.appendChild(bar);
       }
-      addLine(panel, `Unterhalt ${def.upkeep} / ${UPKEEP_INTERVAL} Ticks`);
+      addLine(panel, `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`);
       if (def.flammable === true) addLine(panel, '', 'fire-protection');
       if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
