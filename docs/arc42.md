@@ -191,30 +191,37 @@ Modulschnitt nach ISO §4: `iso.ts` kennt keine Kamera und importiert `sprites.t
 
 ### Ebene 2: `src/ui/`
 
-| Modul              | Verantwortung                                                                                                                                                                                                                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app.ts`           | `startGame`: baut ein Spiel auf, Game-Loop, `onAction`, Werkzeugwahl (`selectTool`), Tempo (`setSpeed`), Autosave, Ton-Anbindung (Entsperren, Sichtbarkeit, `setAmbience` alle 250 ms), Krisen-Verdrahtung (`crisisFx`, `FireMemo`, Log), Panel-Wechsel, Speichern/Laden/Neu, `dispose`. |
-| `input.ts`         | Maus, Tastatur und Touch: Kamera (Zoom, Pinch, Pan mit `applyKeys(dtMs)`), Hover-Prüfung, Kachel-Aktionen auf dem Ziel von `targetTile` beim Drücken, Weg-Ziehen, `cancelPointerAction`.                                                                                                 |
-| `target.ts`        | `targetTile(world, cam, tool, sx, sy)`, rein: Auswählen und Abreissen über den Gebäudekörper (`pickBuilding`), Bauen über die Footprint-Mitte (`footprintOrigin`), Weg über die Bodenkachel.                                                                                             |
-| `hotkeys.ts`       | Tastenbelegung (`TOOL_HOTKEYS`, inklusive `E` Feuerwache), `hotkeyAction`, Tempo-Helfer `withSpeed`/`afterPause`, Tastenname für Tooltips. Rein, ohne DOM.                                                                                                                               |
-| `hud.ts`           | Kopfzeile: Geld, Steuern, Unterhalt und Bilanz, Tick, Geschwindigkeit, **Stumm** und **Einstellungen**, Spielstand-Buttons mit Laden-Auswahl und Krisenstufe für „Neu", Einwohner, Lager mit Warenbilanz (Dauerleistung, R115), Steuerregler, Auftrags- und Krisenkarte.                 |
-| `settingsPanel.ts` | Einstellungs-Karte (Spec 9.2): Regler Gesamt, Musik, Umgebung, Effekte; Tag-Nacht; Bewegung reduzieren (Auto/An/Aus); Credits-Dialog; schliesst mit `Esc`, Hintergrund und Button, gibt den Fokus an den Öffner zurück. Keine Regeln: Werte gehen an `actions`.                          |
-| `credits.ts`       | Credits-Liste aus Manifest und Schriften (`FONT_CREDITS`), Lizenzlinks; nur `createElement`/`textContent`.                                                                                                                                                                               |
-| `crisis.ts`        | Krisenkarte (M6 13.3): reine Textfunktion über `crisisView` und Welt.                                                                                                                                                                                                                    |
-| `crisisLog.ts`     | Ereignis-Log (M6 13.4): Einträge aus dem Vergleich zweier `crisisView`-Stände, höchstens 10, Meldungsart je Eintrag. Rein.                                                                                                                                                               |
-| `eventLogView.ts`  | DOM des Logs als schwebende Box unten links (R112), Standard eingeklappt, verborgen ohne Einträge.                                                                                                                                                                                       |
-| `crisisFx.ts`      | Abbildung der Krisensicht auf Effekte und Umgebung: `crisisFx` (Feuer, Boom, Krisenwetter, Feuerpegel), `nextFireMemo` (Rauch-Nachlauf 80 Ticks ohne Sim-Gedächtnis), `frameInputs` (ein Wetter für Render und Ton über `pickWeather`). Rein.                                            |
-| `order.ts`         | Auftragskarte (Text, „Liefern") und Erkennung neuer bzw. verfallener Aufträge je Frame.                                                                                                                                                                                                  |
-| `buildMenu.ts`     | Bauleiste nach Kategorien mit Kosten; markiert nicht bezahlbare Einträge; Tooltips mit Werten aus `src/sim/defs/`, dazu „Brennbar", „sturmanfällig" und bei der Feuerwache die ungeschützten Gebäude.                                                                                    |
-| `inspect.ts`       | Info-Panel: Zustand, Produktion („Erzeugt X nicht — Betrieb brennt" bei Brand), Unterhalt, Brandschutz, bei der Feuerwache „Schützt N", Wohnhaus-Details aus `houseDiagnosis`, Abriss mit `effectiveRefund`, Handel.                                                                     |
-| `trade.ts`         | Handelsdialog am Kontor mit Preisanteil je Gut, Boom-Marke und genauem Erlös je Verkaufsbutton; Buttons bleiben klickbar.                                                                                                                                                                |
-| `soundEvents.ts`   | Frame-Vergleich für zeitbasierte Töne (Buchung, Auftrag, Aufstieg, Sieg, Krisensignale `alarm`, `stormWarning`, `boom`), Ton je Aktionsergebnis, Ereignisse zum Entsperren.                                                                                                              |
-| `settings.ts`      | Einstellungen lesen und schreiben (gemeinsames Format M6/M7, Migration `volume` → `master`, fremde Felder in `extra`), `resolveReduceMotion`.                                                                                                                                            |
-| `devParams.ts`     | Dev-Vorschau aus der Adresszeile (`?wetter=`, `w=`, `feuer=<id>,<id>`, `boom=1`, `signal=`, `perf=1`, `raster=1`); im Produktions-Build immer leer.                                                                                                                                      |
-| `devProbes.ts`     | Dev-Sonden: `window.__inselAudio` aus `sound.debugState()` alle 250 ms, `window.__inselPerf` (Frame-Intervall und Render-Dauer, Median und p95 über 600 Frames).                                                                                                                         |
-| `messages.ts`      | Meldungen (Toasts), begrenzt und entdoppelt; Warn-Toast; sticky Meldungen für Sieg und Fehler.                                                                                                                                                                                           |
-| `storage.ts`       | Adapter zu `localStorage` für manuellen Platz und Autosave; listet ladbare Stände; fängt Speicherfehler ab und liefert `Result`.                                                                                                                                                         |
-| `dom.ts`           | Kleine DOM-Helfer (`setField`, `costLine`).                                                                                                                                                                                                                                              |
+| Modul              | Verantwortung                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app.ts`           | `startGame`: baut ein Spiel auf (mit `intro` die Startkarte über einer Hintergrundwelt bei Tempo 0), Game-Loop, `onAction`, Werkzeugwahl (`selectTool`, offene Bau-Kategorie), Tempo (`setSpeed`), Autosave (Takt und `pagehide`), Ton-Anbindung (Entsperren, Sichtbarkeit, `setAmbience` alle 250 ms), Krisen-Verdrahtung (`crisisFx`, `FireMemo`, Log), Panel-Wechsel, Menü-Aktionen (Speichern, Laden pausiert, Neue Insel), Cursor-Hinweis und Anbindungsmeldungen, `dispose`. |
+| `input.ts`         | Maus, Tastatur und Touch: Kamera (Zoom, Pinch, Pan mit `applyKeys(dtMs)`), Hover-Prüfung, Kachel-Aktionen auf dem Ziel von `targetTile`, Auswahl erst beim Loslassen (`isClick`, Ziehen ab `DRAG_THRESHOLD` = 4 px schwenkt), Weg-Ziehen, `cancelPointerAction`; Kamera- und Abbruchtasten auch bei fokussiertem Knopf (`panKeyAllowed`), stumm in Textfeldern und bei offener Modalkarte; `pointerClient`, `hintKey`.                                                             |
+| `target.ts`        | `targetTile(world, cam, tool, sx, sy)`, rein: Auswählen und Abreissen über den Gebäudekörper (`pickBuilding`), Bauen über die Footprint-Mitte (`footprintOrigin`), Weg über die Bodenkachel.                                                                                                                                                                                                                                                                                       |
+| `hotkeys.ts`       | Tastenbelegung (`TOOL_HOTKEYS`, inklusive `E` Feuerwache), `hotkeyAction`, Tempo-Helfer `withSpeed`/`afterPause`, Tastenname für Tooltips. Rein, ohne DOM.                                                                                                                                                                                                                                                                                                                         |
+| `hud.ts`           | Kopfzeile in zwei Zeilen (M7-UX L2): Bilanz je Minute, Einwohner je Stufe, Ziel, Geld, Steuerregler mit Wirkung im `title` (`taxEffect`), Tempo, **Stumm**, **Einstellungen**, **Menü**; zweite Zeile Lager mit Warenbilanz (Dauerleistung, R115) und Steuersperre in Spielzeit. Meldungsstapel oben rechts im Spielfeld mit Auftrags- und Krisenkarte (`renderNoticeStack`). Reine Textfunktionen `tierTooltip`, `tierPath`, `balanceText`, `stockTooltip`, `speedTooltip`.       |
+| `modal.ts`         | Ein Stapel aller Modalkarten mit **einem** Tasten-Listener (Capture): Esc und Hintergrund schliessen nur die oberste Karte, Fokusfalle (Tab, Shift+Tab), Fokus zurück an den Auslöser, Hotkeys stumm; `openModal`, `isModalOpen`, `closeAllModals`, `renderConfirm` (eine Bestätigungsform im ganzen Spiel).                                                                                                                                                                       |
+| `menu.ts`          | Menü-Karte: Speichern, Laden (Slot-Liste mit Spielzeit), „Neue Insel" mit Krisenstufe und Bestätigung, Hinweis bei Speicherproblem, Kürzel, „Ziel und erste Schritte" (Hilfe-Modus der Startkarte über dem Menü).                                                                                                                                                                                                                                                                  |
+| `startCard.ts`     | Startkarte beim Seitenstart und als Hilfe: Ziel, erste Schritte, Wahl „Fortsetzen — Autosave", „Gespeichertes Spiel laden", „Neue Insel" bzw. „Los geht's"; `startChoices` und `startDismissAction` rein (Esc und Hintergrund lösen die primäre Wahl aus, bei offener Bestätigung brechen sie ab).                                                                                                                                                                                 |
+| `time.ts`          | Zeit statt Ticks (M7-UX L8), rein: `formatGameTime` für Dauern („59 s", „4:00", aufgerundet), `formatClock` für Zeitpunkte („m:ss", abgerundet), `perMinute`, `signedNum`. Rechnet nur mit `TICK_MS`.                                                                                                                                                                                                                                                                              |
+| `texts.ts`         | Reine Zustands- und Kostentexte (`diagnosisText`, `stateInfo`, `producesText`, `burningText`, `refundText`); aus `inspect.ts` gezogen, damit `hints.ts` sie ohne Zyklus nutzt (`inspect.ts` re-exportiert).                                                                                                                                                                                                                                                                        |
+| `hints.ts`         | Rein: Sim-Gründe in Spielersprache (`REASON_TABLE`, `friendlyReason`), Cursor-Hinweis vor dem Klick (`placementHint`, `hintPosition` im Fenster), Anbindungsmeldungen (`unconnectedIds`, `newlyConnected`). Liest die Sim nur.                                                                                                                                                                                                                                                     |
+| `guide.ts`         | Rein: nächster Schritt der Inselchronik (`nextStep`, Regeln in fester Reihenfolge), Steuerwirkung (`taxEffect`), Abhilfe je Gebäude (`remedyText`), Legende `MAP_SIGNS` (Farben aus `src/render/palette.ts`, sonst ohne Muster).                                                                                                                                                                                                                                                   |
+| `settingsPanel.ts` | Einstellungs-Karte (Spec 9.2) über `openModal`: Regler Gesamt, Musik, Umgebung, Effekte; Tag-Nacht; Bewegung reduzieren (Auto/An/Aus); Credits-Dialog. Keine Regeln: Werte gehen an `actions`.                                                                                                                                                                                                                                                                                     |
+| `credits.ts`       | Credits-Liste aus Manifest und Schriften (`FONT_CREDITS`), Lizenzlinks; nur `createElement`/`textContent`.                                                                                                                                                                                                                                                                                                                                                                         |
+| `crisis.ts`        | Krisenkarte (M6 13.3): reine Textfunktion über `crisisView` und Welt.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `crisisLog.ts`     | Ereignis-Log (M6 13.4): Einträge aus dem Vergleich zweier `crisisView`-Stände, höchstens 10, Meldungsart je Eintrag. Rein.                                                                                                                                                                                                                                                                                                                                                         |
+| `eventLogView.ts`  | DOM des Logs als schwebende Box unten links (R112), Standard eingeklappt, verborgen ohne Einträge.                                                                                                                                                                                                                                                                                                                                                                                 |
+| `crisisFx.ts`      | Abbildung der Krisensicht auf Effekte und Umgebung: `crisisFx` (Feuer, Boom, Krisenwetter, Feuerpegel), `nextFireMemo` (Rauch-Nachlauf 80 Ticks ohne Sim-Gedächtnis), `frameInputs` (ein Wetter für Render und Ton über `pickWeather`). Rein.                                                                                                                                                                                                                                      |
+| `order.ts`         | Auftragskarte (Text in Spielzeit, „Liefern"), Erkennung neuer bzw. verfallener Aufträge je Frame, Meldungen `orderMessage` und `deliveredMessage`.                                                                                                                                                                                                                                                                                                                                 |
+| `buildMenu.ts`     | Bauleiste: Hauptzeile (Auswahl, Weg, Abriss, vier Kategorie-Knöpfe) und darüber die Einträge der offenen Kategorie („{Name} · {Geld} Geld"); Tab führt von der offenen Kategorie in die Einträge (`tabOrder`); unbezahlbare Einträge gestrichelt; Tooltips mit Werten aus `src/sim/defs/` je Minute, „Brennbar", „sturmanfällig", bei der Feuerwache die ungeschützten Gebäude, Grund über `friendlyReason`.                                                                       |
+| `inspect.ts`       | Info-Panel: Zustand, darunter die Abhilfe (`remedyText`; beim Wohnhaus unter der Diagnose), Produktion und Unterhalt je Minute, Brandschutz, bei der Feuerwache „Schützt N", Wohnhaus-Details aus `houseDiagnosis` mit Aufstiegsgründen, Abriss mit Rückerstattung. Ruhe-Ansicht „Inselchronik": Phase, Einwohner, Ziel mit Balken und Stufenpfad, nächster Schritt, Steuer, aufklappbare Kartenzeichen.                                                                           |
+| `trade.ts`         | Handel am Kontor (Kopf mit „Zurück", Klick aufs Kontor öffnet ihn direkt) mit Preisanteil je Gut, Boom-Marke und genauem Erlös je Verkaufsbutton; Gründe über `friendlyReason`.                                                                                                                                                                                                                                                                                                    |
+| `soundEvents.ts`   | Frame-Vergleich für zeitbasierte Töne (Buchung, Auftrag, Aufstieg, Sieg, Krisensignale `alarm`, `stormWarning`, `boom`), Ton je Aktionsergebnis, Ereignisse zum Entsperren.                                                                                                                                                                                                                                                                                                        |
+| `settings.ts`      | Einstellungen lesen und schreiben (gemeinsames Format M6/M7, Migration `volume` → `master`, fremde Felder in `extra`), `resolveReduceMotion`.                                                                                                                                                                                                                                                                                                                                      |
+| `devParams.ts`     | Dev-Vorschau aus der Adresszeile (`?wetter=`, `w=`, `feuer=<id>,<id>`, `boom=1`, `signal=`, `perf=1`, `raster=1`); im Produktions-Build immer leer.                                                                                                                                                                                                                                                                                                                                |
+| `devProbes.ts`     | Dev-Sonden: `window.__inselAudio` aus `sound.debugState()` alle 250 ms, `window.__inselPerf` (Frame-Intervall und Render-Dauer, Median und p95 über 600 Frames).                                                                                                                                                                                                                                                                                                                   |
+| `messages.ts`      | Meldungen (Toasts), begrenzt und entdoppelt; Warn-Toast; sticky Meldungen für Fehler; Sieg-Toast per Klick, Esc oder Rechtsklick schliessbar (`closeClosableToast`).                                                                                                                                                                                                                                                                                                               |
+| `storage.ts`       | Adapter zu `localStorage` für manuellen Platz und Autosave; listet ladbare Stände; `storageProblem` (nicht verfügbar, beschädigt) für Startkarte und Menü; `autosaveOnHide` (still, nie bei Tick 0); fängt Speicherfehler ab und liefert `Result`.                                                                                                                                                                                                                                 |
+| `dom.ts`           | Kleine DOM-Helfer (`setField`, `costLine` „50 Geld · 2 Holz · 1 Werkzeug", `blurAfterClick` nur bei Mausklick).                                                                                                                                                                                                                                                                                                                                                                    |
 
 ### Ebene 2: `src/audio/`
 
@@ -350,8 +357,9 @@ sequenceDiagram
   B-->>App: ok oder reason
   alt ok
     App->>Snd: play(build)
+    App->>M: newlyConnected(vorher, world) je Betrieb eine Meldung
   else nicht ok
-    App->>M: showMessage(reason, error)
+    App->>M: showMessage(friendlyReason(reason), error)
     App->>Snd: play(error)
   end
   App->>App: refresh() für HUD, Bauleiste, Panel
@@ -366,6 +374,42 @@ dem Grund zurück; die Welt bleibt unverändert. Wege entstehen schon beim Drüc
 aber auf der Kachel des ersten Tippens, und entfällt, wenn ein zweiter Finger dazukam oder geschwenkt
 wurde. Jeder Werkzeugwechsel (Bauleiste oder Hotkey) läuft über `selectTool` und bricht zuerst eine
 laufende Zeiger-Aktion ab (`cancelPointerAction`).
+
+Vor dem Klick zeigt der Cursor-Hinweis (M7-UX L3) am Zeiger, ob und warum die Aktion geht: `placementHint`
+prüft mit denselben Sim-Abfragen (`canPlace`, `canPlaceRoad`, `checkAfford`, `reachableRoads`), schreibt aber
+nie in die Welt, und wird nur bei Wechsel von Kachel oder Werkzeug neu berechnet (`hintKey`) sowie im HUD-Takt
+aufgefrischt. Ausserhalb der Karte gibt es kein Schild. Mit dem Auswahl-Werkzeug wählt erst das Loslassen aus;
+ab 4 px Weg (`DRAG_THRESHOLD`) wird geschwenkt statt ausgewählt.
+
+### Seitenstart (M7-UX L1)
+
+```mermaid
+sequenceDiagram
+  actor S as Spieler
+  participant Main as main.ts
+  participant App as app.startGame
+  participant St as storage
+  participant SC as startCard
+  participant Mod as modal
+  Main->>App: startGame(root, undefined, speed 0, intro)
+  App->>App: Hintergrundwelt mit Tempo 0
+  App->>St: listSaves(), currentStorageProblem()
+  St-->>App: ladbare Stände, Problem
+  App->>SC: openStartCard(start, startChoices(...))
+  SC->>Mod: openModal (Fokus auf primärer Wahl)
+  alt Fortsetzen oder Laden
+    S->>SC: Wahl
+    SC->>App: loadSlotPaused(slot)
+    App->>App: prüfen, dann ersetzen, Tempo 0, Meldung „Pausiert"
+  else Neue Insel bzw. Los geht's
+    S->>SC: Wahl (mit Bestätigung, falls ein Stand existiert)
+    SC->>App: Hintergrundwelt behalten, Tempo 1x
+  end
+  SC->>Mod: close, Fokus zurück
+```
+
+Esc und Hintergrund-Klick lösen die primäre Wahl aus; bei offener Bestätigung brechen sie ab. Die Startkarte
+öffnet dieselbe Karte im Hilfe-Modus aus dem Menü („Ziel und erste Schritte", ohne Wahl, Tempo bleibt).
 
 ## 7. Verteilungssicht
 
@@ -632,8 +676,33 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
     oder ein gesperrter Speicher ergibt den Standard, ein Schreibfehler wird als `Result` gemeldet.
   - Die Einstellungen gehören nicht zum Spielstand und überleben „Neu" und „Laden". M7 ändert das
     Spielstand-Format nicht (weiter v3).
-- Laden und «Neu» beenden das laufende Spiel über `dispose()` (Loop, ResizeObserver, Listener,
-  Meldungsfläche, HUD-Timer, Einstellungs-Karte, Log-Box, Sonden, Ton) und starten ein neues. Ein gewonnener Stand zeigt das Siegbanner nicht erneut.
+- **Autosave beim Verlassen der Seite** (M7-UX L1): `pagehide` ruft `autosaveOnHide`; es schreibt nur bei
+  Tick > 0, fängt jeden Fehler und zeigt keine Meldung. Beim nächsten Seitenstart bietet die Startkarte
+  „Fortsetzen — Autosave" als primäre Wahl an; Laden aus Startkarte und Menü startet pausiert.
+- Laden und «Neu» beenden das laufende Spiel über `dispose()` (alle Modalkarten per `closeAllModals`, Loop,
+  ResizeObserver, Listener inklusive `pagehide`, Meldungsfläche und Meldungsstapel, Cursor-Hinweis, Log-Box,
+  Sonden, Ton) und starten ein neues. Ein gewonnener Stand zeigt das Siegbanner nicht erneut.
+
+### Modalkarten und Fokus (M7-UX)
+
+- Startkarte, Menü, Hilfe und Einstellungen laufen über einen Stapel in `src/ui/modal.ts` mit **einem**
+  Tasten-Listener in der Capture-Phase. Esc und Hintergrund-Klick (Druck **und** Loslassen auf dem Hintergrund)
+  schliessen nur die oberste Karte (`modalStackAfterEscape`); der Fokus geht an deren Auslöser zurück.
+- Fokusfalle: Tab und Shift+Tab bleiben in der obersten Karte (`nextFocusIndex`). Spiel-Hotkeys und
+  Kameratasten sind bei offener Karte stumm (`isModalOpen`, `panKeyAllowed`).
+- Ausserhalb von Karten wirken Kamera- und Abbruchtasten auch, wenn ein Knopf den Fokus hat; nur Textfelder
+  und Auswahllisten behalten ihre Tasten.
+
+### Texte der Bedienung (M7-UX)
+
+- Abhängigkeiten der reinen Textmodule bilden einen DAG: `time` ← `texts` ← `hints` ← `guide` ←
+  `inspect`/`hud`/`app` (dazu `inspect` → `hud` für `tierPath`, ohne Rückkante). Alle sind DOM-frei und
+  in Vitest (`node`) geprüft; der DOM-Aufbau steht daneben.
+- Zeit statt Ticks: Sichtbare Texte nennen Spielzeit (`formatGameTime`, `formatClock`) bzw. Mengen je Minute
+  (`perMinute`); kein sichtbarer Text und kein `title` enthält „Tick" (AK-UX-13).
+- Kosten und Rückerstattungen immer als „50 Geld · 2 Holz · 1 Werkzeug" (`costLine`, `refundText`).
+- Sim-Gründe bleiben in der Sim unverändert; `friendlyReason` übersetzt sie über eine Tabelle von Mustern
+  (`REASON_TABLE`) und ergänzt Zahlen aus `src/sim/defs/` und der Welt.
 
 ### Fehlerbehandlung
 
