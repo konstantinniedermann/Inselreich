@@ -882,3 +882,16 @@ ganze Historie statt ab dem Budget-Event; Fix im Paket EFF-W. — Kosten bei Irr
 nachträglich — `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
 
 Entscheider: L0 · Anlass: Bericht EFF-H · ADR: —
+
+## R169 · 2026-10-03 · Token-Effizienz
+
+Ruling: (1) Gate Merge EFF bestanden (Review OK nach Fix-Runde 2), main @ 8794174, CI und Pages grün.
+(2) Der Budget-Fix 2663c66 (Ersetzen statt Addieren) löste neue Fehlalarme aus (lead-art 21/3,
+lead-production 2/1) und traf nicht die Ursache (Heartbeat-Knoten, beobachtungen.md 2026-10-03):
+Revert durch den Autor, Merge durch den Integrator. (3) Plan M10 `orga-13` (Controller-Wechsel nach
+der Hälfte, Modell laut Persona) ist durch Handbuch 1.13 / E-010 überholt; Budget R164 bleibt.
+(4) Die Effizienz-Ampel ist je nach Sessionart zu lesen: Sessions ohne Spielarbeit zeigen
+„Umsetzer rot“ ohne Befund; der Coach vermerkt das statt eines Experiments. — Kosten bei Irrtum:
+falscher Alarm in einer Retro — `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+
+Entscheider: L0 · Anlass: Merge EFF, Hook-Alarme · ADR: —
