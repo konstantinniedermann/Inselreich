@@ -22,6 +22,71 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-02 · Handbuch 1.13
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: STUDIO.md Modellwahl: `opus` für Design-Lead, Tech-Lead beim Plan, Spec-Autor,
+  Lizenzprüfung, Final-Review, Meilenstein-Retro; `sonnet` für Controller, `lead-qa`-Gate-Urteile,
+  `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung; Persona-Start als `general-purpose` immer
+  mit `model` (Guard). Umsetzungszyklus Schritt 4: „Schlanke Steuerung“ (E-010 angepasst, Messung
+  M10). Limits: L0-Übergabe nach jedem Gate-Block, spätestens bei 25 % Kontext, keine Bilder. Gates
+  und Dokumentation: Plan = Index plus Task-Datei je Task (≤ 10 KB), Spec ≤ 40 KB mit Anhängen.
+  Briefing-Standard: Kontext nur Task-Datei und AK-IDs, `rulings.md` nur per grep (E-010). `verbesserung.md`: Abschnitt „Effizienz“ der Metriken,
+  Ampel-Schwellen, Pflichtpunkt Effizienz-Ampel in jeder Retro; `templates/retro.md`: Abschnitt
+  „Effizienz-Ampel“. `experimente.md`: E-010 „Schlanke Steuerung“ (umfasst Task-Dateien und L0-Sessiongrösse, R168). `lernen.md`: Effizienz-Ampel,
+  Persona-Starts mit `model`.
+
+## 2026-10-02 · Persona studio-coach 1.2
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Prüffrage 6 und Verdichten: Effizienz-Ampel lesen (Pflichtpunkt jeder Retro)
+
+## 2026-10-02 · Persona studio-process-coach 1.1
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Prüffrage 6: Effizienz-Ampel lesen (Pflichtpunkt jeder Retro)
+
+## 2026-10-02 · Persona lead-production 1.5
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Frontmatter `model: sonnet` (Modellwahl 1.13)
+
+## 2026-10-02 · Persona lead-qa 1.5
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Frontmatter `model: sonnet`; Final-Review bleibt `qa-code-reviewer` auf `opus`
+
+## 2026-10-02 · Persona lead-tech 1.5
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Plan im Task-Datei-Format; Controller-Regel E-010 „Schlanke Steuerung“ (sonnet, höchstens 4 Tasks je Instanz)
+
+## 2026-10-02 · Persona lead-design 1.5
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-010)
+
+## 2026-10-02 · Persona design-spec-author 1.3
+
+- Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro
+- Datenbasis: `.studio/handoffs/EFF-analyse.md`, `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+- Ruling: R167
+- Änderungen: Spec ≤ 40 KB, Details in Anhängen (E-010)
+
 ## 2026-10-02 · Handbuch 1.12
 
 - Anlass: Meilenstein-Retro M8, Session-Retro 58d6bc4a, Prozess-Retro M8 (V1, V3, V4)

@@ -21,6 +21,14 @@ Seite.
 - Beleg: <Zahl oder Zitat mit Pfad>
 - Wirkung: <was es gekostet oder gebracht hat>
 
+## Effizienz-Ampel
+
+Pflicht in jeder Retro. Quelle: Abschnitt „Effizienz“ der Metrik-Datei (`python3 tools/studio/metrics.py --efficiency`), Schwellen in [verbesserung.md](../verbesserung.md#messung-und-aufwand). Je gelber oder roter Zeile ein Befund mit Ursache (Beobachtung und Deutung getrennt); bei Rot ein Experiment-Vorschlag oder die Begründung, warum keiner folgt.
+
+| Kennzahl   | Wert   | Ampel         | Befund / Ursache          |
+| ---------- | ------ | ------------- | ------------------------- |
+| <Kennzahl> | <Wert> | grün/gelb/rot | <B-Nr. oder „–“ bei grün> |
+
 ## Befragung der Leads
 
 - <lead>: <Kurzfassung der Antwort> (oder „nicht erreichbar, Archiv-Bericht <pfad> gelesen")

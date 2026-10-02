@@ -73,3 +73,13 @@ schliesst den Eintrag.
 - Blockiert: nichts (E-011 läuft ohne Guard-Teil)
 - Von: studio-director
 - Antwort: –
+
+## N-93 · offen · 2026-10-03 · Guard soll Persona-Starts ohne Modell blocken
+
+- Frage: Darf guard.py die Regel 'general-purpose mit Persona-Zeile braucht model' bekommen? (Diff fertig und getestet, Scratchpad gp/guard-persona.diff + test_guard.diff)
+- Empfehlung: Freigeben, zusammen mit N-92 in einem Guard-Commit
+- Begründung: 41 Persona-Starts liefen ungewollt auf opus (Effizienz-Ampel rot); Handbuchregel allein hat das bisher nicht verhindert
+- Kosten des Wartens: Bis zur Freigabe nur Handbuchregel, Risiko weiterer ungewollter opus-Starts in M10
+- Blockiert: nichts (Guard-Matcher steht schon, Regel fehlt)
+- Von: studio-director
+- Antwort: –

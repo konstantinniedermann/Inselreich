@@ -852,3 +852,33 @@ knappen Fenster erst abschliessen), V4 (Nutzernachtrag als ein Delta-Paket) ins 
 Kosten bei Irrtum: Handbuch-Revert — `docs/studio/retros/2026-10-02-*.md`
 
 Entscheider: L0 · Anlass: Retros M8, Session, Prozess · ADR: —
+
+## R167 · 2026-10-02 · Token-Effizienz (Nutzerauftrag)
+
+Ruling: Auslegung „Massnahmen testen/umsetzen; solche Themen sollen in Retros von selbst auffallen"
+als Paket EFF, Stufe leicht, ohne Lead (L0 brieft direkt, zugleich erster Test von M1):
+EFF-W **Werkzeug** (`production-studio-ops`, sonnet, Worktree): metrics.py-Abschnitt „Effizienz"
+mit Anteil je Rollenklasse (Kostengewicht), Kontext je Rolle, 5-min-Neuschreibungen, opus-Anteil,
+grösste gelesene Dateien und Ampel-Schwellen; Guard blockt `general-purpose` mit `Persona:` ohne
+`model`. Erfüllt zugleich R166 „metrics.py Tokens je Agent". EFF-H **Handbuch 1.13** (`studio-coach`,
+sonnet): Ad-hoc-Retro aus der L0-Analyse, M1/M3/M5 als E-010 angepasst („Schlanke Steuerung":
+Leads ein Auftrag je Instanz, Controller sonnet, höchstens 4 Tasks je Instanz), M2 Task-Dateien
+(Plan = Index + je Task ≤ 10 KB, Spec ≤ 40 KB, `rulings.md` nur per grep) und M4 L0-Sessiongrösse
+als Experiment E-014 innerhalb der Grenze von 3 laufenden, Modellwahl neu, Effizienz-Ampel als
+Pflichtpunkt jeder Retro. EFF-P Plan M10 danach mechanisch in Task-Dateien teilen. M6 (weniger
+Prozess je Paket) erst nach Messung M10. Kein Modell-Downgrade wegen Limit (R71 bleibt): die Wahl
+folgt der Aufgabe. — Kosten bei Irrtum: Handbuch-Revert auf 1.12, Guard-Regel entfernen —
+`.studio/handoffs/EFF-analyse.md`
+
+Entscheider: L0 · Anlass: Nutzerauftrag Token-Effizienz · ADR: —
+
+## R168 · 2026-10-02 · Token-Effizienz
+
+Ruling: E-014 („Task-Dateien und kurze L0-Sessions") wird in E-010 „Schlanke Steuerung" eingegliedert
+statt auf einen Platz zu warten: Beide wirken auf dieselbe Messquelle (metrics.py „Effizienz") im
+selben Zeitraum M10, die Handbuch-Regeln 1.13 gelten damit gemessen; Grenze 3 laufende bleibt.
+Budget-Alarm „studio-director 13 von 3" ist ein Messartefakt: L0-Direktstarts (R167) zählen gegen die
+ganze Historie statt ab dem Budget-Event; Fix im Paket EFF-W. — Kosten bei Irrtum: Experiment-Split
+nachträglich — `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
+
+Entscheider: L0 · Anlass: Bericht EFF-H · ADR: —
