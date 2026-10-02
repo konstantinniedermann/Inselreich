@@ -71,13 +71,13 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   seinen sichtbaren Teil trotzdem dieses Gebäude. Beim Überfahren zeigt ein Umriss, was getroffen wird.
 - **Weg:** klicken oder mit gedrückter Maustaste über mehrere Kacheln ziehen; massgeblich ist die
   Bodenkachel unter dem Zeiger.
-- **Gebäude:** In der Bauleiste eine **Kategorie** wählen (Wohnen, Versorgung, Produktion, Öffentlich); darüber
+- **Gebäude:** In der Bauleiste eine **Kategorie** wählen (Infrastruktur, Wohnen, Produktion, Öffentlich); darüber
   öffnet sich eine Leiste mit den Einträgen samt Kosten. Sie bleibt offen, solange ein Werkzeug dieser Kategorie
   aktiv ist, und schliesst mit `Esc`, «Auswahl» oder erneutem Klick auf die Kategorie; ein Bau-Hotkey öffnet sie
-  mit. Per `Tab` erreichst du nach den Kategorien die Einträge, `Enter` wählt. Dann auf die Karte klicken. Der
+  mit. Per `Tab` erreichst du nach dem letzten Kategorie-Knopf die Einträge der offenen Kategorie (`Shift+Tab` läuft zurück), `Enter` wählt. Dann auf die Karte klicken. Der
   Zeiger liegt über der Mitte der Grundfläche; ein halbtransparenter Geist zeigt das Gebäude. Die
   Grundfläche ist grün, wenn der Standort passt, sonst rot; der Grund erscheint als Meldung. Nicht
-  bezahlbare Gebäude sind blass dargestellt, ein Klick nennt den Grund.
+  bezahlbare Gebäude sind gedämpft mit gestrichelter Kante dargestellt, ein Klick nennt den Grund.
 - **Abriss:** Werkzeug wählen, dann auf einen Gebäudekörper oder einen Weg klicken — oder im Info-Panel
   «Abreissen».
 - **Wann eine Aktion wirkt:** Mit der Maus wirken Bauen, Weg und Abriss sofort beim Drücken, auf dem Ziel
