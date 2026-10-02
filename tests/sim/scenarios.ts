@@ -4,10 +4,15 @@
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { beginCrisis, flammableRect, rollCrisis } from '../../src/sim/crises';
 import { CRISIS_LEVELS } from '../../src/sim/defs/crises';
-import { CRISIS_FIRST_TICK, STORM_WARNING } from '../../src/sim/defs/timing';
+import {
+  CRISIS_FIRST_TICK,
+  GROWTH_INTERVAL,
+  STORM_WARNING,
+  UPGRADE_WAIT,
+} from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { maxHouseTier } from '../../src/sim/orders';
-import { newHouseState } from '../../src/sim/population';
+import { newHouseState, SERVICE_IDS } from '../../src/sim/population';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
@@ -114,9 +119,7 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
     inhabitants: s.inhabitants,
     demand: Object.fromEntries(goods.map((g) => [g, 0])),
     satisfied: Object.fromEntries(goods.map((g) => [g, met.includes(g)])),
-    services: Object.fromEntries(
-      (['faith', 'school'] as ServiceId[]).map((sv) => [sv, (s.services ?? []).includes(sv)]),
-    ),
+    services: Object.fromEntries(SERVICE_IDS.map((sv) => [sv, (s.services ?? []).includes(sv)])),
     satisfiedSince: w.tick,
     supplied: s.supplied,
   };
@@ -430,6 +433,129 @@ function uxSieg(): World {
   return w;
 }
 
+/** M8: 1 vor dem Wachstumstakt (tick = 50 · n − 1, Spec 18.1). */
+const PRE_GROWTH_TICK = GROWTH_INTERVAL * 20 - 1;
+
+/**
+ * Volles bzw. teilbelegtes Haus der Stufe `tier`, versorgt, alle Bedarfsgüter und Dienste der Stufe erfüllt,
+ * seit UPGRADE_WAIT Ticks zufrieden (`satisfiedSince = tick − 300`, statt 300 Schritte zu simulieren).
+ * `metGoods` überschreibt die erfüllten Güter (z. B. ohne Glas).
+ */
+function settledHouse(
+  w: World,
+  x: number,
+  y: number,
+  tier: Tier,
+  inhabitants: number,
+  metGoods: GoodId[] = Object.keys(TIERS[tier].needs) as GoodId[],
+): Building {
+  const b = put(w, 'house', x, y);
+  setHouse(w, b, { tier, inhabitants, supplied: true, metGoods, services: TIERS[tier].services });
+  b.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+  return b;
+}
+
+/** Lager für Häuser der Stufen 3 und 4: Nahrung, Stoff und Rum reichen weit über 300 Ticks. */
+function stockHouses(w: World): void {
+  w.stock.food = 50;
+  w.stock.cloth = 30;
+  w.stock.rum = 30;
+}
+
+/** M8 AK-U1-04, AK-U1-09, AK-U2-03, -06: vor dem Sieg, 45 Bürger, Kapelle und Schule, kein Bad, Glas 0. */
+function m8VorSieg(): World {
+  const { w, kx, ky } = smallColony(); // Weg kx+2 … kx+12
+  w.tick = 400;
+  put(w, 'chapel', kx + 6, ky - 2);
+  put(w, 'school', kx + 6, ky + 1);
+  settledHouse(w, kx + 3, ky - 2, 3, TIERS[3].maxInhabitants);
+  settledHouse(w, kx + 4, ky - 2, 3, TIERS[3].maxInhabitants);
+  settledHouse(w, kx + 3, ky + 1, 3, TIERS[3].maxInhabitants);
+  stockHouses(w);
+  w.money = 3000;
+  w.stock.wood = 60;
+  w.stock.tools = 20;
+  w.stock.stone = 30;
+  w.stock.glass = 0;
+  return w;
+}
+
+/** M8 AK-U1-05 (AK-S3-08-Lage): 49 Bürger, kein Badehaus (Änderung S11); 1 vor dem Takt. */
+function m8KurzVorSieg(): World {
+  const { w, kx, ky } = baseWorld();
+  roadRow(w, kx + 2, kx + 18, ky);
+  w.tick = PRE_GROWTH_TICK;
+  put(w, 'chapel', kx + 6, ky - 2);
+  put(w, 'school', kx + 6, ky + 1);
+  settledHouse(w, kx + 3, ky - 2, 3, TIERS[3].maxInhabitants);
+  settledHouse(w, kx + 4, ky - 2, 3, TIERS[3].maxInhabitants);
+  settledHouse(w, kx + 8, ky - 1, 3, TIERS[3].maxInhabitants);
+  settledHouse(w, kx + 3, ky + 1, 3, 4);
+  stockHouses(w);
+  w.money = 3000;
+  w.stock.wood = 30;
+  w.stock.tools = 20;
+  w.stock.stone = 20;
+  w.stock.glass = 5;
+  return w;
+}
+
+/** Kapelle, Schule und Badehaus an der Hauptstrasse der Kleinkolonie; alle Häuser bei kx+3/4 im Radius. */
+function servicesWithBath(w: World, kx: number, ky: number): void {
+  put(w, 'chapel', kx + 6, ky - 2);
+  put(w, 'school', kx + 6, ky + 1);
+  put(w, 'bathhouse', kx + 9, ky - 2);
+}
+
+/** M8 AK-U1-06: won, 3 Kaufmannshäuser 20 / 20 / 19, alles reichlich, 1 vor dem Takt. */
+function m8KurzVorHandelsstadt(): World {
+  const { w, kx, ky } = smallColony();
+  w.won = true;
+  w.tick = PRE_GROWTH_TICK;
+  servicesWithBath(w, kx, ky);
+  settledHouse(w, kx + 3, ky - 2, 4, TIERS[4].maxInhabitants);
+  settledHouse(w, kx + 4, ky - 2, 4, TIERS[4].maxInhabitants);
+  settledHouse(w, kx + 3, ky + 1, 4, TIERS[4].maxInhabitants - 1);
+  stockHouses(w);
+  w.stock.glass = 20;
+  w.money = 3000;
+  return w;
+}
+
+/** M8 AK-U2-04: angebundene Glashütte, Stein 5, Holz 0, wartet (wie `tickProduction` es setzen würde). */
+function m8GlashuetteWartet(): World {
+  const { w, kx, ky } = smallColony();
+  w.won = true; // Änderung S11: Glashütte erst nach der Freischaltung
+  const works = put(w, 'glassworks', kx + 9, ky - 2);
+  w.stock.stone = 5;
+  w.stock.wood = 0;
+  works.state = 'waitingInput';
+  return w;
+}
+
+/** M8 AK-U2-05, -06, -10, AK-R1-02: won, 1 Kaufmannshaus 20 EW mit allen Diensten, Glas 0 und nicht erfüllt. */
+function m8KaufleuteOhneGlas(): World {
+  const { w, kx, ky } = smallColony();
+  w.won = true;
+  servicesWithBath(w, kx, ky);
+  const goods = (Object.keys(TIERS[4].needs) as GoodId[]).filter((g) => g !== 'glass');
+  settledHouse(w, kx + 3, ky - 2, 4, TIERS[4].maxInhabitants, goods);
+  stockHouses(w);
+  w.stock.glass = 0;
+  w.money = 3000; // Änderung S11: für AK-U2-06/-10 (Badehaus bauen)
+  w.stock.wood = 60;
+  w.stock.tools = 20;
+  w.stock.stone = 30;
+  return w;
+}
+
+/** M8 AK-U2-07: Glas 10, Verkaufsanteil Glas 100 (Startwert). */
+function m8Handel(): World {
+  const w = createWorld(SEED);
+  w.stock.glass = 10;
+  return w;
+}
+
 export const SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
@@ -452,6 +578,12 @@ export const SCENARIOS: Record<string, () => World> = {
   'leistung-sturm': leistungSturm,
   'ux-anbindung': uxAnbindung,
   'ux-sieg': uxSieg,
+  'm8-vor-sieg': m8VorSieg,
+  'm8-kurz-vor-sieg': m8KurzVorSieg,
+  'm8-kurz-vor-handelsstadt': m8KurzVorHandelsstadt,
+  'm8-glashuette-wartet': m8GlashuetteWartet,
+  'm8-kaufleute-ohne-glas': m8KaufleuteOhneGlas,
+  'm8-handel': m8Handel,
 };
 
 /**
