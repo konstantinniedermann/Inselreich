@@ -17,13 +17,16 @@ Darstellung bekommt in S1/S2 nur Rückfall-Einträge; eigene Grafik ist das Kann
 Dev-Abhängigkeit.
 
 **Status:** Gate Plan bestanden mit Auflagen (R143); Auflagen aus R142, R143 und der Vermerk aus R144 sind
-eingearbeitet (Abschnitt „Auflagen Gate Plan").
+eingearbeitet (Abschnitt „Auflagen Gate Plan"), Sichtung R146. **Plan-Delta S11-Minimum (H-M8, R150)** eingearbeitet,
+wartet auf das Delta-Gate (Abschnitt „Plan-Delta S11").
 
-**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `dbda0f8` (Gate Spec bestanden, R141;
-Auflagen Gate Plan R142/R143 eingearbeitet; 79 AK; im Plan „Spec §n", „AK-…"). Rulings: R86 (Entscheide 1–6),
+**Spec:** `docs/superpowers/specs/2026-09-30-m8-kaufleute-design.md` @ `da3da51` (Gate Spec bestanden, R141;
+Auflagen Gate Plan R142/R143 eingearbeitet; Nachführung S11-Minimum §23, R150; **81 AK**; im Plan „Spec §n",
+„AK-…"). Rulings: R86 (Entscheide 1–6),
 R115/R139 (`goodsBalance` nominal), R138, R140 (S1–S3 auf einer Branch, ein Gate Merge nach S3, AK-S3-10), R141
 (Gate Spec, Plan-Hinweise beider Leads, E-010, R1 als eigenes Paket), R142 (W1–W7, Reserve-Regel B1), R143 (Gate
-Plan, Auflagen, Budget), R144 (BUG-LICHT parallel in `src/render/`). Gate-Urteile: lead-tech (BEDENKEN 1–3, Hinweise), lead-qa (Erstprüfung B1–B5 und Hinweise
+Plan, Auflagen, Budget), R144 (BUG-LICHT parallel in `src/render/`), R146 (Sichtung Auflagen), R147/R148
+(Nutzernachtrag S11, Programm), R150 (Spec-Delta S11-Minimum). Gate-Urteile: lead-tech (BEDENKEN 1–3, Hinweise), lead-qa (Erstprüfung B1–B5 und Hinweise
 1–13, Zweitprüfung OK mit 2 Hinweisen). **Test-Namen beginnen mit der AK-Nummer** (`it('AK-S1-04 …')`),
 Review-Focus-Tests mit `RF-<n>`, damit Reviews die Abdeckung per `grep` prüfen. Weil M5–M7 dieselben Kennungen
 nutzen (AK-U1-01, AK-R1-03 …), stehen alle neuen M8-Tests in einem `describe('M8 …')`; der Abdeckungs-Grep der
@@ -37,7 +40,7 @@ Reviews sucht `describe('M8` plus AK-Nummer.
   Gebäude laufen in aufsteigender Id (`Object.values(world.buildings)` über numerische Schlüssel).
 - Sim-Aktionen werfen nicht, sie liefern `{ ok, reason }`. `deserialize` wirft nie.
 - **Spielwerte nur in `src/sim/defs/`:** Stufe 4 (Spec §4.1), Glas (§5.1), Glashütte (§5.2), Badehaus (§6),
-  `WIN_MERCHANTS` 60, `requiresWin`, `unlockCitizens` (`null`). Keine Zahl davon steht hart in `src/ui/`,
+  `WIN_MERCHANTS` 60, `requiresWin`, `unlockCitizens` (`null`), `unlockTier` 4 für Badehaus und Glashütte (§4.3, S11). Keine Zahl davon steht hart in `src/ui/`,
   `src/render/` oder in Sim-Logik; Texte holen Zahlen und Namen aus `defs` bzw. Sim-Abfragen.
 - `git diff <BASIS> -- tests/sim/balance.test.ts package.json package-lock.json` bleibt leer. Sieg **6050**,
   `minMoney` **57** (belegt über `OFF_REFERENCE` in `tests/sim/balance-crises.test.ts`, Hinweis lead-qa 13).
@@ -58,8 +61,9 @@ Reviews sucht `describe('M8` plus AK-Nummer.
   (`feat/m8-scen` → `feat/m8-ui`), R1 ← Task 7 (pusht `lead-art`) und jeder Merge von `main` vor einem Final-Review.
   Kein abgenommener oder integrierter Stand liegt nur lokal. Für rote Zwischenstände (nach Task 1 bzw. Task 3) wird
   **kein Pull Request** geöffnet (CI läuft auf PRs; lead-qa Gate Plan (c)).
-- Im Hauptcheckout nur `git pull --ff-only`; in Worktrees wird nicht rebased (einzige Ausnahme: R144-Vermerk unter
-  „Wellen", Branch ohne eigene Commits). Integration zwischen Strängen nur per `git merge --no-edit <geprüfter SHA>`.
+- Im Hauptcheckout nur `git pull --ff-only`; **nie rebasen** (Verfassung §6.3), auch nicht in Worktrees und nicht vor
+  einem Push. Ist der Remote-Branch neuer: `git fetch`, dann `git merge` bzw. `git pull --no-rebase`. Integration
+  zwischen Strängen und von `main` nur per `git merge --no-edit <geprüfter SHA>`.
 
 ## Review Focus
 
@@ -92,9 +96,9 @@ genannten Task):
 | 4    | M8-S2 (Folgen)     | `consumes` als Liste in allen Texten (endgültig), Taste O, Rückfall Glashütte, Tooltips, Guide | `tech-ui-engineer` (sonnet)                              | `feat/m8-sim-ui` · `.worktrees/m8-sim-ui`   |
 | 5    | M8-S3              | Zweites Ziel, `goalView`, Badabdeckung, ADR-005-Nachtrag, arc42 §6/§8                          | `tech-sim-engineer` (sonnet)                             | `feat/m8-sim` · `.worktrees/m8-sim`         |
 | QA-A | AK-S3-10           | Kopfzeilen-Smoke-Check auf `feat/m8-sim` nach Merge von `feat/m8-sim-ui`                       | `qa-playtester` (sonnet)                                 | `.worktrees/m8-sim` (nur lesen)             |
-| 6    | M8-B1              | Szenario-Lauf bis zum zweiten Ziel, `firstMerchantTick`, K1                                    | `tech-sim-engineer` (sonnet)                             | `feat/m8-balance` · `.worktrees/m8-balance` |
+| 6    | M8-B1              | Szenario-Lauf bis zum zweiten Ziel, `firstMerchantTick` (K1 gestrichen, R150)                  | `tech-sim-engineer` (sonnet)                             | `feat/m8-balance` · `.worktrees/m8-balance` |
 | 7    | M8-B2              | Szenario-Saves `m8-*` für die Browser-Checks                                                   | `tech-sim-engineer` (sonnet)                             | `feat/m8-scen` · `.worktrees/m8-scen`       |
-| 8    | M8-U1, M8-U2       | Zielanzeige, Kaufleute-Chip, zweites Banner, Ton, `MAP_SIGNS`-Zeile (K2)                       | `tech-ui-engineer` (sonnet)                              | `feat/m8-ui` · `.worktrees/m8-ui`           |
+| 8    | M8-U1, M8-U2       | Zielanzeige, Kaufleute-Chip, zweites Banner, Ton, `MAP_SIGNS`-Zeile (K2); Freischaltung S11    | `tech-ui-engineer` (sonnet)                              | `feat/m8-ui` · `.worktrees/m8-ui`           |
 | QA-B | U1/U2-Browser      | AK-U1-04…07, AK-U2-03…07, AK-U2-10 (zwei parallele Checks, je eigener Port)                    | `qa-playtester` (sonnet) × 2                             | `.worktrees/m8-ui` (nur lesen)              |
 | R1   | M8-R1 (`lead-art`) | Kann K2/K3: Silhouetten G1–G4, Symbol Bad, Glasfarbe                                           | `art-rendering-engineer` (Controller `lead-art`)         | `feat/m8-render` · `.worktrees/m8-render`   |
 | D1   | M8-D1              | README, Hauptspec-Verweise, arc42 §5 (`lead-tech`, kein Start)                                 | —                                                        | `feat/m8-ui`                                |
@@ -112,18 +116,18 @@ P1 ist eine **bestätigte Abweichung** (R143): Der Wortlaut von AK-S2-17 in der 
 geänderte UI-Testdatei `hotkeys.test.ts`"); er gilt für M8 nur sinngemäss wie in Zeile P1 beschrieben. P2–P6 hat
 lead-qa als haltbar ohne Testlücke beurteilt; sie gelten mit dem bestandenen Gate Plan.
 
-| Nr. | Spec sagt                                                                                                                                             | Plan macht                                                                                                                                                                                                                                                                                                                                                                                                                     | Grund                                                                                                                                               |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1  | S2: UI nur Typanpassung; `producerOf`-Vorstufe/`consumerOf` bis U2 nur Ein-Input-Gebäude; einzige geänderte UI-Testdatei `hotkeys.test.ts` (AK-S2-17) | Task 4 setzt die **endgültige** Listen-Semantik in `guide.ts`, `texts.ts`, `inspect.ts`, `buildMenu.ts` um. Damit wandern **AK-U2-01, AK-U2-02, AK-U2-08, AK-U2-09** nach Task 4; `tests/ui/guide.test.ts` (Steinbruch-Abhilfe „… oder baue Glashütte (O)") und `tests/ui/tooltip.test.ts`/`inspect.test.ts` ändern sich bewusst in Task 4. AK-S2-17 gilt sinngemäss: kein UI-Test ändert sich ausser den in Task 4 genannten. | Kein Wegwerf-Code (YAGNI, L0-Auftrag zum Plan). Seit R140 gibt es keinen sichtbaren Zwischenstand S2 auf `main`; der Filter hatte nur diesen Zweck. |
-| P2  | `missingInputs` in S3 (AK-S3-04)                                                                                                                      | `missingInputs` entsteht in **Task 3** (`queries.ts` gehört S2 ohnehin), AK-S3-04 wird dort geprüft                                                                                                                                                                                                                                                                                                                            | Task 4 braucht es für `stateInfo` und `remedyText`.                                                                                                 |
-| P3  | `MAP_SIGNS`-Legendenzeile in R1 (AK-R1-03), R1 nach U2                                                                                                | Die Zeile ändert **Task 8** (Owner `guide.ts` im UI-Strang), nur wenn K2 nicht gestrichen ist; den Wortlaut des Zeichens liefert `lead-art` vor Task 8 (Übergabe `.studio/handoffs/m8-r1-symbol.md`). Der Symbolname ist fest: `Symbol.shape` bekommt `'bath'`. R1 läuft parallel zu Task 8.                                                                                                                                   | Ruling R141 („`MAP_SIGNS`-Zeile an U2"); R1 und UI-Strang haben damit getrennte Dateien.                                                            |
-| P4  | U1 und U2 als zwei Pakete                                                                                                                             | **ein** Task 8 (U1 + Rest U2), zwei parallele Browser-Checks                                                                                                                                                                                                                                                                                                                                                                   | Nach P1 bleibt von U2 nur die `MAP_SIGNS`-Zeile und die Browser-Abnahme; ein eigener Implementierer-Start lohnt nicht.                              |
-| P5  | S1 und S2 je ein Paket, jedes hält `make check` grün                                                                                                  | S1 = Task 1 + Task 2, S2 = Task 3 + Task 4 (Sim und Folgen getrennt, Tasks 2 ∥ 3 und 4 ∥ 5 parallel). Grün ist jede **Welle** (siehe „Wellen"); zwischen Task 1 und 2 bzw. 3 und 4 sind nur die dort benannten Prüfungen rot.                                                                                                                                                                                                  | Parallelität (R67) bei getrennter Datei-Ownership; Sim- und UI-Folgen haben verschiedene Personas.                                                  |
-| P6  | D1 als eigener Doku-Strang                                                                                                                            | `lead-tech` schreibt D1 selbst, kein Start                                                                                                                                                                                                                                                                                                                                                                                     | Persona lead-tech führt arc42 und README mit.                                                                                                       |
+| Nr. | Spec sagt                                                                                                                                             | Plan macht                                                                                                                                                                                                                                                                                                                                                                                                                                        | Grund                                                                                                                                               |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | S2: UI nur Typanpassung; `producerOf`-Vorstufe/`consumerOf` bis U2 nur Ein-Input-Gebäude; einzige geänderte UI-Testdatei `hotkeys.test.ts` (AK-S2-17) | Task 4 setzt die **endgültige** Listen-Semantik in `guide.ts`, `texts.ts`, `inspect.ts`, `buildMenu.ts` um. Damit wandern **AK-U2-01, AK-U2-02, AK-U2-08, AK-U2-09** nach Task 4; `tests/ui/guide.test.ts` (R0; die Steinbruch-Abhilfe Z. 152 bleibt nach R151 W9 unverändert) und `tests/ui/tooltip.test.ts`/`inspect.test.ts` ändern sich bewusst in Task 4. AK-S2-17 gilt sinngemäss: kein UI-Test ändert sich ausser den in Task 4 genannten. | Kein Wegwerf-Code (YAGNI, L0-Auftrag zum Plan). Seit R140 gibt es keinen sichtbaren Zwischenstand S2 auf `main`; der Filter hatte nur diesen Zweck. |
+| P2  | `missingInputs` in S3 (AK-S3-04)                                                                                                                      | `missingInputs` entsteht in **Task 3** (`queries.ts` gehört S2 ohnehin), AK-S3-04 wird dort geprüft                                                                                                                                                                                                                                                                                                                                               | Task 4 braucht es für `stateInfo` und `remedyText`.                                                                                                 |
+| P3  | `MAP_SIGNS`-Legendenzeile in R1 (AK-R1-03), R1 nach U2                                                                                                | Die Zeile ändert **Task 8** (Owner `guide.ts` im UI-Strang), nur wenn K2 nicht gestrichen ist; den Wortlaut des Zeichens liefert `lead-art` vor Task 8 (Übergabe `.studio/handoffs/m8-r1-symbol.md`). Der Symbolname ist fest: `Symbol.shape` bekommt `'bath'`. R1 läuft parallel zu Task 8.                                                                                                                                                      | Ruling R141 („`MAP_SIGNS`-Zeile an U2"); R1 und UI-Strang haben damit getrennte Dateien.                                                            |
+| P4  | U1 und U2 als zwei Pakete                                                                                                                             | **ein** Task 8 (U1 + Rest U2), zwei parallele Browser-Checks                                                                                                                                                                                                                                                                                                                                                                                      | Nach P1 bleibt von U2 nur die `MAP_SIGNS`-Zeile und die Browser-Abnahme; ein eigener Implementierer-Start lohnt nicht.                              |
+| P5  | S1 und S2 je ein Paket, jedes hält `make check` grün                                                                                                  | S1 = Task 1 + Task 2, S2 = Task 3 + Task 4 (Sim und Folgen getrennt, Tasks 2 ∥ 3 und 4 ∥ 5 parallel). Grün ist jede **Welle** (siehe „Wellen"); zwischen Task 1 und 2 bzw. 3 und 4 sind nur die dort benannten Prüfungen rot.                                                                                                                                                                                                                     | Parallelität (R67) bei getrennter Datei-Ownership; Sim- und UI-Folgen haben verschiedene Personas.                                                  |
+| P6  | D1 als eigener Doku-Strang                                                                                                                            | `lead-tech` schreibt D1 selbst, kein Start                                                                                                                                                                                                                                                                                                                                                                                                        | Persona lead-tech führt arc42 und README mit.                                                                                                       |
 
 ### Gemeldete Widersprüche und Messwerte aus dem Planungslauf (R136; entschieden durch R142, R143)
 
-Entscheide: **W1, W3–W6 bestätigt** (R143). Spec @ `dbda0f8` ist nachgezogen: W1 in §13 und AK-S1-17
+Entscheide: **W1, W3–W6 bestätigt** (R143). Die Spec ist seit der R142-Runde nachgezogen: W1 in §13 und AK-S1-17
 (`roofOnly.bathhouse: 2`), W2 in §20 (Liste ergänzt), W3 in AK-S3-01 (**54**), W4 in §8 und §16.3 (Messpunkt
 7300 / 1490, kein Wert angepasst, Reserve-Regel als Testhelfer-Regel), W5 in AK-B1-02 und §16.3 (`--silent=false`).
 W6 braucht keine Spec-Änderung (Tick 5400 erfüllt „≥ 3000"). W7 ist Prozess (Task 3 „Rot nach diesem Task
@@ -148,7 +152,7 @@ Weitere Abweichungen vom Gerüst: `goodList` in `texts.ts` (neu, Task 4); AK-S3-
 
 ### Bestätigte Abweichungen (R143) — Prüfgrundlage beider Final-Reviews
 
-Sim-Final-Review und Final-Review M8 prüfen gegen Spec @ `dbda0f8` **plus** diese Liste; was hier steht, ist kein
+Sim-Final-Review und Final-Review M8 prüfen gegen Spec @ `da3da51` **plus** diese Liste; was hier steht, ist kein
 Befund (lead-qa Gate Plan, Hinweis 3):
 
 | Nr. | Spec-Stelle         | gilt für M8                                                                                        |
@@ -171,9 +175,51 @@ Befund (lead-qa Gate Plan, Hinweis 3):
 | B1: lead-art merged selbst in `feat/m8-render`                     | Final-Review M8 (Vorbereitung), Paket R1                                                    |
 | B2: Session- und Agent-ID je E-010-Messpunkt, Wechsel = Störgrösse | „E-010", Messpunkte; Abschluss Punkt 3                                                      |
 | B3: Kanten R1 ↔ T7/T8; Worktree `m8-render` durch lead-art         | Mermaid und „Paket-Abhängigkeiten" unter „Wellen"; „Einrichten"; Paket R1; Task 8 Kopf      |
-| B4: Spec-SHA `dbda0f8`                                             | Kopf, Task 7 „Produces"                                                                     |
+| B4: Spec-SHA nachgeführt (jetzt `da3da51`, R150)                   | Kopf, Task 7 „Produces"                                                                     |
 | B5: Integrations-Merges pushen                                     | Global Constraints „Push-Pflicht"; Wellen-Tabelle                                           |
 | R144: BUG-LICHT parallel in `src/render/`                          | „Wellen", Vermerk BUG-LICHT; Paket R1                                                       |
+
+### Plan-Delta S11-Minimum (H-M8, R147, R148, R150; Spec §23)
+
+Nutzerwunsch: Glashütte und Badehaus erst nach der Freischaltung der Stufe 4. Umsetzung im Plan:
+
+| Teil                  | Task (Welle) | Inhalt                                                                                                                                                                            |
+| --------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sperre Badehaus       | 1 (W1)       | `BuildingDef.unlockTier`, `bathhouse.unlockTier: 4`, `buildLock` in `placement.ts`, `canPlace` prüft sie zuerst; AK-S1-21 in `tests/sim/placement.test.ts`                        |
+| Test-Helfer           | 1, 3         | `withUnlock` in `tests/sim/scenarios.ts` (`galerie`: Badehaus T1, Glashütte T3); `placeService` in `tests/sim/helpers.ts` baut Gebäude mit `unlockTier` ebenso                    |
+| Sperre Glashütte      | 3 (W2)       | `glassworks.unlockTier: 4`; AK-S2-19 in `tests/sim/placement.test.ts`                                                                                                             |
+| Tooltip               | 4 (W3)       | `tierPreviewLine` aus `unlockTier`: „Für Kaufleute (Stufe 4)" ohne Hebel-Variante (AK-U2-01 geändert)                                                                             |
+| Freischaltung im Sieg | 5 (W3)       | AK-S3-08 neu gefasst (Sperre bei `W − 1`, frei bei `W`, `merchants` 0)                                                                                                            |
+| K1 gestrichen         | 6 (W5)       | `MerchantOptions`, `prepare`, AK-B1-07 entfallen; ein Fall im Szenario-Lauf                                                                                                       |
+| Szenarien             | 7 (W5)       | `m8-kurz-vor-sieg` ohne Badehaus, `m8-glashuette-wartet` mit `won true`, `m8-kaufleute-ohne-glas` mit Geld und Lager (AK-B2-01/-02 geändert)                                      |
+| UI-Freischaltung      | 8 (W5)       | `goal.ts` `unlockNotice`, `lockedToolText`; `app.ts` Merkfeld `unlockShown`, Sperre in `selectTool`; `hud.ts` Glas-Chip `hidden`; `buildMenu.ts` blendet Gesperrtes aus; AK-U1-09 |
+| Browser               | QA-A, QA-B   | QA-A Tooltip-Text; QA-B-1 AK-U1-04/-05 geändert, AK-U1-09 neu, AK-U1-07 angepasst; QA-B-2 AK-U2-06/-10 geändert                                                                   |
+
+**Bitgleich-Nachweis (Prüfauftrag H-M8):** `balance.test.ts` und `balance-crises.test.ts` bleiben bitgleich.
+Begründung: (1) Die Sim ruft `canPlace` nur aus `placeBuilding` (`src/sim/build.ts`); sonst nur UI (`hints.ts`,
+`input.ts`). (2) `buildLock` gibt für jedes Gebäude ohne `unlockTier` sofort `null` zurück, ohne Spielzustand zu lesen;
+`canPlace` liefert für diese Gebäude also dasselbe Ergebnis wie vorher. (3) Der Bürger-Controller
+(`tests/sim/controller.ts`, unverändert) baut weder Badehaus noch Glashütte; der Merchant-Controller baut beide erst
+in Phase 3, die `w.won` voraussetzt (dann `buildLock` `null`). (4) Kein neues Save-Feld, kein Zufall, keine neue
+Tick-Phase. Belegt wird das wie bisher: Task 1 Schritt 9 (`git diff <BASIS> -- tests/sim/balance.test.ts` leer, Sieg
+6050, `minMoney` 57, Fingerabdruck `0xbfeac8c6` in AK-S1-15) und Task 6 Schritt 7 (AK-B1-05).
+
+**AK-Zuordnung S11:** neu AK-S1-21 (Task 1), AK-S2-19 (Task 3), AK-U1-09 (Task 8 Vitest, QA-B-1 Browser); geändert
+AK-S3-08 (Task 5), AK-B2-02 (Task 7), AK-U1-04/-05 (QA-B-1), AK-U1-07 (QA-B-1, R151 W8), AK-U1-09 (Task 8 und
+QA-B-1, R151 W10, R152 B1), AK-U2-01 (Task 4), AK-U2-06/-10 (QA-B-2), AK-U2-09 (Task 4, R151 W9); gestrichen
+AK-B1-07 (Task 6). Summe 81 (Tabelle „Abdeckung AK → Task").
+
+**Budget, Tasks, Board:** Taskzahl bleibt 8, QA-Checks bleiben 3 (AK-U1-09 läuft in QA-B-1 mit). Formel unverändert
+21 → 28, Freigabe R143 (lead-tech 25) reicht; kein Mehrbedarf. Board: keine neuen Pakete und keine neuen Kanten;
+Titel `M8-B1` ohne K1, `M8-U` um „Freischaltung S11" ergänzen.
+
+**Gemeldete Widersprüche (R137), entschieden durch R151 (Spec @ `da3da51`), Delta-Gate bestanden mit Auflagen (R152):**
+
+| Nr. | Spec-Stelle       | Befund                                                                                                                                            | Entscheid / Plan                                                                                                                                                                                      |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W8  | AK-U1-07          | „neues Spiel, Badehaus mit J bauen" ist nach S11 unmöglich (neues Spiel `won false`).                                                             | **Entschieden R151:** so in Spec AK-U1-07 übernommen; QA-B-1 Schritt 4: neues Spiel bei 800 px, J zeigt den Sperrgrund, dann `m8-kaufleute-ohne-glas` laden, Badehaus mit J bauen, Info-Panel öffnen. |
+| W9  | AK-U2-09, 14.8    | Steinbruch `storageFull` → „… oder baue Glashütte (O)" empfiehlt vor dem Sieg ein gesperrtes Gebäude (die Taste O zeigt dann nur den Sperrgrund). | **Entschieden R151:** Zusatz nur bei `buildLock(w, 'glassworks') === null` (Task 4 `remedyText`, Test mit Fall `won false` ohne und `won true` mit Zusatz).                                           |
+| W10 | 14.1, 4.3 Punkt 5 | Art der Meldung von `lockedToolText` ist nicht festgelegt.                                                                                        | **Entschieden R151:** bestehender Weg für Bau-Ablehnungen, `showError` in `app.ts` (Meldung `error` plus Ton `error`), Task 8 Schritt 5b.                                                             |
 
 ### Gemeinsame Schnittstellen (verbindlich für alle Tasks)
 
@@ -194,6 +240,7 @@ export interface TierDef {
 export interface BuildingDef {
   /* bestehend */
   consumes?: readonly GoodId[]; // Task 3; vorher GoodId
+  unlockTier?: Tier; // Task 1 (S11): baubar erst, wenn diese Stufe frei ist; bathhouse 4 (Task 1), glassworks 4 (Task 3)
 }
 export interface World {
   version: 4;
@@ -214,6 +261,11 @@ export function tierLock(world: World, tier: number): string | null;
 //   'Erst nach dem Ziel'                          (Hebel null, !won)
 //   `Erst ab ${N} Bürgern (jetzt ${citizens})`   (Hebel N, !won, citizens < N)
 // upgradeStatus(world, b): Sperrgrund als ERSTER Eintrag, danach die bisherigen Gründe in bisheriger Reihenfolge.
+
+// src/sim/placement.ts (Task 1, Änderung S11)
+/** Bausperre: tierLock(world, def.unlockTier) oder null; ohne unlockTier immer null, ohne Weltzugriff. */
+export function buildLock(world: World, defId: BuildingDefId): string | null;
+// canPlace(world, defId, x, y): prüft buildLock ZUERST (vor Boden und Standort) und liefert fail(<Grund>).
 
 // src/sim/save.ts (Task 1)
 export const SAVE_VERSION = 4;
@@ -246,8 +298,7 @@ export function stateInfo(
 
 // src/ui/buildMenu.ts (Task 4)
 export function tierPreviewLine(defId: BuildingDefId): string | null;
-//   „Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)" bzw. „Für Kaufleute (Stufe 4, ab {N} Bürgern)";
-//   null, wenn die niedrigste Stufe, die das Erzeugnis braucht bzw. den Dienst verlangt, kein requiresWin hat
+//   „Für Kaufleute (Stufe 4)" (Änderung S11, ohne Hebel-Variante) aus def.unlockTier; null ohne unlockTier
 
 // src/ui/texts.ts (Task 4)
 export function goodList(goods: readonly GoodId[]): string; // „Holz", „Stein und Holz"
@@ -270,12 +321,19 @@ export function goalBanners(
   shown: GoalShown,
   world: Pick<World, 'won' | 'wonMerchants'>,
 ): { texts: string[]; shown: GoalShown };
+// src/ui/goal.ts (Task 8, Änderung S11)
+export const UNLOCK_NOTICE: string; // „Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden"
+export function unlockNotice(wasLocked: boolean, world: World): string | null; // Text genau bei wasLocked && buildLock(world,'bathhouse') === null
+export function lockedToolText(world: World, defId: BuildingDefId): string | null; // „{Name}: {friendlyReason(buildLock)}" oder null
 // src/ui/hud.ts (Task 8): export function popChipHidden(world: World, tier: Tier): boolean;
-// src/ui/soundEvents.ts (Task 8): SoundSnapshot.wonMerchants; src/ui/app.ts: GameState.wonMerchantsShown
+//                         export function stockChipHidden(world: World, good: GoodId): boolean; // S11: Glas bis Freischaltung oder Glas > 0
+// src/ui/buildMenu.ts (Task 8, S11): export function buildEntries(world: World, category: Category): BuildingDefId[]; // ohne Gesperrtes
+// src/ui/soundEvents.ts (Task 8): SoundSnapshot.wonMerchants; src/ui/app.ts: GameState.wonMerchantsShown, GameState.unlockShown
 
 // src/render/overlays.ts (R1): Symbol.shape bekommt 'bath'
 
 // tests/sim/controller.ts (Task 6): export const CONTROL_INTERVAL; export function control(w, layout, opts)
+// tests/sim/scenarios.ts (Task 1, S11): function withUnlock<T>(w, fn): T — won für den Bau kurz true (nur Bildergalerie)
 ```
 
 ### Datei-Ownership
@@ -284,13 +342,13 @@ Jede Datei hat in einer Welle genau einen Owner-Task. Tasks auf demselben Branch
 
 **Sim-Strang (Tasks 1–5):**
 
-| Task | Branch           | Dateien                                                                                                                                                                                                                                                                                                                                                            |
-| ---- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1    | `feat/m8-sim`    | `src/sim/{types,world,population,save}.ts`, `src/sim/defs/{tiers,goods,buildings}.ts`, `src/ui/buildMenu.ts` (nur `SERVICE_NAMES`), `tests/sim/merchants.test.ts` (neu), `tests/sim/{defs,save,population,taxes,fire,balance-crises,orders}.test.ts`, `tests/sim/{helpers,scenarios}.ts`, `tests/sim/fixtures/save-v3.json` (neu), `docs/arc42.md` (§8 Persistenz) |
-| 2    | `feat/m8-sim-ui` | `src/ui/{hints,guide,hotkeys}.ts`, `src/render/{iso,sprites}.ts`, `tests/ui/{hints,hud,guide,hotkeys}.test.ts`, `tests/render/sprites.test.ts`                                                                                                                                                                                                                     |
-| 3    | `feat/m8-sim`    | `src/sim/{types,production,queries}.ts`, `src/sim/defs/buildings.ts`, `tests/sim/glassworks.test.ts` (neu), `tests/sim/{defs,fire,production,merchants,queries}.test.ts`, `tests/sim/scenarios.ts`                                                                                                                                                                 |
-| 4    | `feat/m8-sim-ui` | `src/ui/{texts,inspect,buildMenu,guide,hotkeys}.ts`, `src/render/sprites.ts`, `tests/ui/{tooltip,inspect,guide,hotkeys}.test.ts`, `tests/render/sprites.test.ts`                                                                                                                                                                                                   |
-| 5    | `feat/m8-sim`    | `src/sim/{tick,queries}.ts`, `tests/sim/{merchants,queries}.test.ts`, `docs/adr/ADR-005-tick-reihenfolge-und-zustaende.md`, `docs/arc42.md` (§6, §8 Gebäudezustände)                                                                                                                                                                                               |
+| Task | Branch           | Dateien                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `feat/m8-sim`    | `src/sim/{types,world,population,save,placement}.ts`, `tests/sim/placement.test.ts` (S11), `src/sim/defs/{tiers,goods,buildings}.ts`, `src/ui/buildMenu.ts` (nur `SERVICE_NAMES`), `tests/sim/merchants.test.ts` (neu), `tests/sim/{defs,save,population,taxes,fire,balance-crises,orders}.test.ts`, `tests/sim/{helpers,scenarios}.ts`, `tests/sim/fixtures/save-v3.json` (neu), `docs/arc42.md` (§8 Persistenz) |
+| 2    | `feat/m8-sim-ui` | `src/ui/{hints,guide,hotkeys}.ts`, `src/render/{iso,sprites}.ts`, `tests/ui/{hints,hud,guide,hotkeys}.test.ts`, `tests/render/sprites.test.ts`                                                                                                                                                                                                                                                                    |
+| 3    | `feat/m8-sim`    | `src/sim/{types,production,queries}.ts`, `src/sim/defs/buildings.ts`, `tests/sim/placement.test.ts` (S11), `tests/sim/glassworks.test.ts` (neu), `tests/sim/{defs,fire,production,merchants,queries}.test.ts`, `tests/sim/scenarios.ts`                                                                                                                                                                           |
+| 4    | `feat/m8-sim-ui` | `src/ui/{texts,inspect,buildMenu,guide,hotkeys}.ts`, `src/render/sprites.ts`, `tests/ui/{tooltip,inspect,guide,hotkeys}.test.ts`, `tests/render/sprites.test.ts`                                                                                                                                                                                                                                                  |
+| 5    | `feat/m8-sim`    | `src/sim/{tick,queries}.ts`, `tests/sim/{merchants,queries}.test.ts`, `docs/adr/ADR-005-tick-reihenfolge-und-zustaende.md`, `docs/arc42.md` (§6, §8 Gebäudezustände)                                                                                                                                                                                                                                              |
 
 Je Welle disjunkt: W2 Task 2 (`src/ui`, `src/render`, `tests/ui`, `tests/render`) ∥ Task 3 (`src/sim`, `tests/sim`);
 W3 Task 4 ∥ Task 5 ebenso. Die Merges W3 (`feat/m8-sim` @ T3 → `feat/m8-sim-ui`) und W4 (`feat/m8-sim-ui` @ T4 →
@@ -306,6 +364,7 @@ Konflikt in der Reihenfolge T1 → T2 → T3 → T4 → T5).
 | `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts`                                                                                              | Task 7 (W5)                           |
 | `src/ui/goal.ts` (neu), `tests/ui/goal.test.ts` (neu)                                                                                                     | Task 8 (W5)                           |
 | `src/ui/hud.ts`, `src/ui/inspect.ts` (Ruhe-Ansicht), `src/ui/app.ts`, `src/ui/soundEvents.ts`                                                             | Task 8 (W5)                           |
+| `src/ui/buildMenu.ts` (nur `buildEntries` und der Filter in `renderBuildMenu`, S11), `tests/ui/tooltip.test.ts` (nur neues `it`)                          | Task 8 (W5, Schritt 5b)               |
 | `tests/ui/soundEvents.test.ts`, `tests/ui/hud.test.ts`, `tests/ui/hotkeys.test.ts` (je nur neue `it`)                                                     | Task 8 (W5)                           |
 | `src/ui/guide.ts` (nur `MAP_SIGNS`), `tests/ui/guide.test.ts` (nur neues `it`)                                                                            | Task 8 (W5, Schritt 8)                |
 | `src/style.css` (nur nach AK-U1-08)                                                                                                                       | Task 8 (W5/W6)                        |
@@ -375,10 +434,9 @@ flowchart LR
 **Vermerk BUG-LICHT (R144):** Parallel ändert `lead-art` im Paket BUG-LICHT (Branch `fix/licht-verdeckung`) Dateien in
 `src/render/`. Die W5-Worktrees (insbesondere `m8-render` für R1, dazu `m8-balance`, `m8-scen`, `m8-ui`) entstehen
 am **aktuellen** `main` zum Startzeitpunkt (`git pull --ff-only` direkt davor), nicht an einem älteren SHA. Ist
-BUG-LICHT erst nach dem Anlegen, aber vor dem eigenen Start gemergt, rebased der Branch vor dem ersten eigenen
-Commit auf `main` (`git -C .worktrees/<strang> rebase main`; ohne eigene Commits gefahrlos, einzige Ausnahme zur
-Regel „nicht rebasen"). Wird BUG-LICHT erst während W5 gemergt, wird **nicht** rebased; `main` kommt mit dem Merge
-vor dem Final-Review M8 hinein. Für den Sim-Strang (Tasks 2 und 4 ändern `src/render/{iso,sprites}.ts`) gilt der
+BUG-LICHT erst nach dem Anlegen gemergt (vor oder während W5), kommt `main` **per Merge** in den Branch
+(`git -C .worktrees/<strang> merge --no-edit main`, `make check`, push), nie per Rebase (Verfassung §6.3, Korrektur
+L0 zu R144); spätestens mit dem Merge von `main` vor dem Final-Review M8. Für den Sim-Strang (Tasks 2 und 4 ändern `src/render/{iso,sprites}.ts`) gilt der
 bestehende Merge von `main` vor dem Sim-Final-Review.
 
 **Einrichten** (Controller; `m8-render` legt `lead-art` an, R143 B3):
@@ -430,30 +488,30 @@ for w in m8-balance m8-scen m8-ui; do ln -s ../../node_modules .worktrees/$w/nod
 Zeilen auf `<BASIS>` (= `main` 05240f4 im Probe-Lauf), ermittelt per `git diff -U0` nach Tasks 1–5. Importzeilen und
 neue Tests stehen nicht hier.
 
-| Datei                              | Stelle (Zeile auf Basis)     | alt → neu                                                                                                   | Task |
-| ---------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------- | ---- |
-| `tests/sim/defs.test.ts`           | Z. 8                         | `GOOD_IDS` `toHaveLength(8)` → `9`                                                                          | 1    |
-| `tests/sim/defs.test.ts`           | Z. 12                        | `BUILDING_IDS` `toHaveLength(14)` → `15` (T1) → `16` (T3)                                                   | 1, 3 |
-| `tests/sim/defs.test.ts`           | Z. 17                        | `if (d.consumes) expect(GOODS[d.consumes])…` → `for (const g of d.consumes ?? []) expect(GOODS[g])…` (Typ)  | 3    |
-| `tests/sim/defs.test.ts`           | Z. 31, Z. 42                 | `consumes: 'cane'` / `'wood'` → `['cane']` / `['wood']` (Typ)                                               | 3    |
-| `tests/sim/defs.test.ts`           | Z. 69                        | `TIERS[3]` `upgradeCost: null` → `{ money: 600, wood: 15, tools: 8, stone: 10 }`                            | 1    |
-| `tests/sim/save.test.ts`           | Z. 37, 42, 58, 278, 297, 318 | Version `3` → `4`                                                                                           | 1    |
-| `tests/sim/save.test.ts`           | Z. 96, 176, 401              | „Unbekannte Version“ mit `version 4` → `version 5`                                                          | 1    |
-| `tests/sim/save.test.ts`           | Z. 65                        | v1: `loaded.stock` gleich `before.stock` → `{ ...before.stock, glass: 0 }`                                  | 1    |
-| `tests/sim/save.test.ts`           | nach Z. 147                  | Auftragstabelle + `glass: [4, 4, 8]`                                                                        | 1    |
-| `tests/sim/save.test.ts`           | Z. 304, Z. 308               | v2: `stock` + `glass: 0`, `sellPct` + `glass: 100`                                                          | 1    |
-| `tests/sim/population.test.ts`     | Z. 265 (+ 5 Zeilen nach 266) | Bürgerhaus „Höchste Stufe erreicht“ → erster Grund „Erst nach dem Ziel“; Stufe 4 → „Höchste Stufe erreicht“ | 1    |
-| `tests/sim/taxes.test.ts`          | Z. 113, Z. 117               | `populationByTier` + Schlüssel `4: 0`                                                                       | 1    |
-| `tests/sim/fire.test.ts`           | nach Z. 296 / nach Z. 300    | brennbare Ids + `'bathhouse'` (T1), + `'glassworks'` (T3) = zwölf                                           | 1, 3 |
-| `tests/sim/balance-crises.test.ts` | Z. 24–31                     | `normalized()` entfernt zusätzlich `stock.glass`, `sellPct.glass`, `wonMerchants`, `services.bath` je Haus  | 1    |
-| `tests/sim/helpers.ts`             | Z. 48                        | `placeService`-Typ + `'bathhouse'`                                                                          | 1    |
-| `tests/sim/scenarios.ts`           | nach Z. 257                  | `galerie` + Badehaus (T1), + Glashütte (T3)                                                                 | 1, 3 |
-| `tests/ui/hints.test.ts`           | Z. 203                       | Vollständigkeitsschleife `[1, 2, 3]` → `[1, 2, 3, 4]`                                                       | 2    |
-| `tests/ui/hud.test.ts`             | Z. 15                        | `tierPath()` + „ → Kaufleute (brauchen Glas, Badehaus)“                                                     | 2    |
-| `tests/ui/hotkeys.test.ts`         | Z. 78                        | `TOOL_HOTKEYS` `toHaveLength(15)` → `16` (T2) → `17` (T4)                                                   | 2, 4 |
-| `tests/render/sprites.test.ts`     | nach Z. 579                  | `roofOnly` + `bathhouse: 2` (R136-Meldung, Task 2 Schritt 1)                                                | 2    |
-| `tests/ui/guide.test.ts`           | Z. 42–43                     | R0: + `w.wonMerchants = true`, „Ziel erreicht — …“ → „Handelsstadt erreicht — spiel frei weiter“            | 4    |
-| `tests/ui/guide.test.ts`           | Z. 152                       | Steinbruch „Verkaufe Stein am Kontor“ → „… oder baue Glashütte (O)“                                         | 4    |
+| Datei                              | Stelle (Zeile auf Basis)           | alt → neu                                                                                                   | Task |
+| ---------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---- |
+| `tests/sim/defs.test.ts`           | Z. 8                               | `GOOD_IDS` `toHaveLength(8)` → `9`                                                                          | 1    |
+| `tests/sim/defs.test.ts`           | Z. 12                              | `BUILDING_IDS` `toHaveLength(14)` → `15` (T1) → `16` (T3)                                                   | 1, 3 |
+| `tests/sim/defs.test.ts`           | Z. 17                              | `if (d.consumes) expect(GOODS[d.consumes])…` → `for (const g of d.consumes ?? []) expect(GOODS[g])…` (Typ)  | 3    |
+| `tests/sim/defs.test.ts`           | Z. 31, Z. 42                       | `consumes: 'cane'` / `'wood'` → `['cane']` / `['wood']` (Typ)                                               | 3    |
+| `tests/sim/defs.test.ts`           | Z. 69                              | `TIERS[3]` `upgradeCost: null` → `{ money: 600, wood: 15, tools: 8, stone: 10 }`                            | 1    |
+| `tests/sim/save.test.ts`           | Z. 37, 42, 58, 278, 297, 318       | Version `3` → `4`                                                                                           | 1    |
+| `tests/sim/save.test.ts`           | Z. 96, 176, 401                    | „Unbekannte Version“ mit `version 4` → `version 5`                                                          | 1    |
+| `tests/sim/save.test.ts`           | Z. 65                              | v1: `loaded.stock` gleich `before.stock` → `{ ...before.stock, glass: 0 }`                                  | 1    |
+| `tests/sim/save.test.ts`           | nach Z. 147                        | Auftragstabelle + `glass: [4, 4, 8]`                                                                        | 1    |
+| `tests/sim/save.test.ts`           | Z. 304, Z. 308                     | v2: `stock` + `glass: 0`, `sellPct` + `glass: 100`                                                          | 1    |
+| `tests/sim/population.test.ts`     | Z. 265 (+ 5 Zeilen nach 266)       | Bürgerhaus „Höchste Stufe erreicht“ → erster Grund „Erst nach dem Ziel“; Stufe 4 → „Höchste Stufe erreicht“ | 1    |
+| `tests/sim/taxes.test.ts`          | Z. 113, Z. 117                     | `populationByTier` + Schlüssel `4: 0`                                                                       | 1    |
+| `tests/sim/fire.test.ts`           | nach Z. 296 / nach Z. 300          | brennbare Ids + `'bathhouse'` (T1), + `'glassworks'` (T3) = zwölf                                           | 1, 3 |
+| `tests/sim/balance-crises.test.ts` | Z. 24–31                           | `normalized()` entfernt zusätzlich `stock.glass`, `sellPct.glass`, `wonMerchants`, `services.bath` je Haus  | 1    |
+| `tests/sim/helpers.ts`             | Z. 48                              | `placeService`-Typ + `'bathhouse'`                                                                          | 1    |
+| `tests/sim/helpers.ts`             | `placeService`, um `placeBuilding` | `won` für Gebäude mit `unlockTier` kurz `true`, danach zurück (S11; kein Sollwert)                          | 1    |
+| `tests/sim/scenarios.ts`           | nach Z. 257                        | `galerie` + Badehaus (T1), + Glashütte (T3), je über `withUnlock` (S11); Helfer `withUnlock` neu (T1)       | 1, 3 |
+| `tests/ui/hints.test.ts`           | Z. 203                             | Vollständigkeitsschleife `[1, 2, 3]` → `[1, 2, 3, 4]`                                                       | 2    |
+| `tests/ui/hud.test.ts`             | Z. 15                              | `tierPath()` + „ → Kaufleute (brauchen Glas, Badehaus)“                                                     | 2    |
+| `tests/ui/hotkeys.test.ts`         | Z. 78                              | `TOOL_HOTKEYS` `toHaveLength(15)` → `16` (T2) → `17` (T4)                                                   | 2, 4 |
+| `tests/render/sprites.test.ts`     | nach Z. 579                        | `roofOnly` + `bathhouse: 2` (R136-Meldung, Task 2 Schritt 1)                                                | 2    |
+| `tests/ui/guide.test.ts`           | Z. 42–43                           | R0: + `w.wonMerchants = true`, „Ziel erreicht — …“ → „Handelsstadt erreicht — spiel frei weiter“            | 4    |
 
 Gegenüber Spec §20 zusätzlich (per Lauf gefunden): `save.test.ts` Z. 65, 147, 304, 308; `defs.test.ts` Z. 17, 31,
 42; `helpers.ts` Z. 48; `sprites.test.ts` nach Z. 579; `guide.test.ts` Z. 42–43 (R0, in §19 als Änderung genannt).
@@ -464,18 +522,18 @@ Kein `it(` fällt weg.
 Jeder Implementierer ermittelt nach der Umsetzung per `npx vitest run`, welche **bestehenden** Tests rot werden; nur
 die folgenden dürfen sich ändern, jede weitere Stelle ist ein Befund an den Controller.
 
-| Datei                                                      | Stelle                                                    | alt → neu                                                                                        | Task |
-| ---------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---- |
-| `tests/sim/controller.ts` (Test-Helfer)                    | `CONTROL_INTERVAL`, `control`                             | ohne → mit `export`, sonst Zeichen für Zeichen gleich                                            | 6    |
-| `tests/sim/scenarios.ts` (Test-Helfer)                     | `setHouse`, Feld `services`                               | Liste `['faith', 'school']` → `SERVICE_IDS` (Task 1 ändert `setHouse` nicht)                     | 7    |
-| `tests/sim/scenario-saves.test.ts`                         | `AK-S5-01 die Szenario-Namen sind genau die vereinbarten` | 21 Namen → 27 (+ sechs `m8-*`)                                                                   | 7    |
-| `tests/sim/scenario-saves.test.ts`                         | „kein Szenario (ausser ux-sieg) …"                        | `toBe(name === 'ux-sieg')` → `toBe(WON_AFTER_FIRST_TICK.has(name))`, Name beginnt mit `AK-B2-02` | 7    |
-| `tests/render/sprites.test.ts` (`it('AK-S1-17 …')`)        | Höhe Stufe 4                                              | gleich Stufe 3 → endlich und ≠ Stufe 3                                                           | R1   |
-| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.bathhouse`                                      | `2` (Rückfall `public`, W1) → Zahl der Dachfenster der eigenen Silhouette, per Lauf ermittelt    | R1   |
-| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.glassworks`                                     | ohne → neuer Eintrag, nur falls die eigene Silhouette Dachfenster hat (per Lauf ermittelt)       | R1   |
-| `tests/render/renderer.test.ts`                            | `anchorCacheSize() ≤ Typen + 2`                           | `+ 2` → `+ 3`, nur falls die Testwelt ein Kaufmannshaus enthält (per Lauf ermittelt)             | R1   |
-| `tests/render/palette.test.ts`                             | Listen- oder Zählprüfungen der Palettennamen              | per Lauf ermittelt (neuer Dachwert Stufe 4)                                                      | R1   |
-| `tests/render/overlays.test.ts`                            | `AK-A3-04 symbolFor` (falls um `bath` erweitert)          | nur neue Zeile, bestehende Erwartungen gleich                                                    | R1   |
+| Datei                                                      | Stelle                                                    | alt → neu                                                                                                                                  | Task |
+| ---------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| `tests/sim/controller.ts` (Test-Helfer)                    | `CONTROL_INTERVAL`, `control`                             | ohne → mit `export`, sonst Zeichen für Zeichen gleich                                                                                      | 6    |
+| `tests/sim/scenarios.ts` (Test-Helfer)                     | `setHouse`, Feld `services`                               | Liste `['faith', 'school']` → `SERVICE_IDS` (Task 1 ändert `setHouse` nicht)                                                               | 7    |
+| `tests/sim/scenario-saves.test.ts`                         | `AK-S5-01 die Szenario-Namen sind genau die vereinbarten` | 21 Namen → 27 (+ sechs `m8-*`)                                                                                                             | 7    |
+| `tests/sim/scenario-saves.test.ts`                         | „kein Szenario (ausser ux-sieg) …"                        | `toBe(name === 'ux-sieg')` → `toBe(WON_AFTER_FIRST_TICK.has(name))` (Menge inkl. `m8-glashuette-wartet`, S11), Name beginnt mit `AK-B2-02` | 7    |
+| `tests/render/sprites.test.ts` (`it('AK-S1-17 …')`)        | Höhe Stufe 4                                              | gleich Stufe 3 → endlich und ≠ Stufe 3                                                                                                     | R1   |
+| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.bathhouse`                                      | `2` (Rückfall `public`, W1) → Zahl der Dachfenster der eigenen Silhouette, per Lauf ermittelt                                              | R1   |
+| `tests/render/sprites.test.ts` (Fensteranker, M7:AK-R2-03) | `roofOnly.glassworks`                                     | ohne → neuer Eintrag, nur falls die eigene Silhouette Dachfenster hat (per Lauf ermittelt)                                                 | R1   |
+| `tests/render/renderer.test.ts`                            | `anchorCacheSize() ≤ Typen + 2`                           | `+ 2` → `+ 3`, nur falls die Testwelt ein Kaufmannshaus enthält (per Lauf ermittelt)                                                       | R1   |
+| `tests/render/palette.test.ts`                             | Listen- oder Zählprüfungen der Palettennamen              | per Lauf ermittelt (neuer Dachwert Stufe 4)                                                                                                | R1   |
+| `tests/render/overlays.test.ts`                            | `AK-A3-04 symbolFor` (falls um `bath` erweitert)          | nur neue Zeile, bestehende Erwartungen gleich                                                                                              | R1   |
 
 Task 8 ändert keinen bestehenden Test (nur neue `it`); `tests/ui/contrast.test.ts` bleibt unverändert.
 
@@ -530,7 +588,7 @@ eigener Port je Check). QA-A läuft vor der E-010-Übergabe, QA-B nach dem Merge
 
 ### Streichvariante (Spec §2.2, vollständige Liste, Hinweis lead-qa 10)
 
-- **K1** (AK-B1-07): entfällt der zweite Fall in Task 6; sonst nichts.
+- **K1** (AK-B1-07): **gestrichen durch R150** (Spec 16.4, Änderung S11); Task 6 hat nur noch einen Fall.
 - **K2** (Symbol Bad, Glasfarbe, `MAP_SIGNS`-Zeile): R1 ohne AK-R1-03; Task 8 lässt `MAP_SIGNS` unverändert.
 - **K3** (Silhouetten): R1 ohne AK-R1-01/-02; die Rückfall-Einträge und die gedeckelte Höhe aus Task 2 und 4 bleiben
   (AK-S1-17 bleibt gültig). K2 und K3 gestrichen → R1 entfällt ganz.
@@ -542,8 +600,8 @@ eigener Port je Check). QA-A läuft vor der E-010-Übergabe, QA-B nach dem Merge
   („Verbraucht Stein"), AK-U2-08 (Fall c ohne Holz-Bezug, Fall h unverändert), AK-U2-09 (nur Stein-Fälle) sowie die
   Texte in Spec §14.3/§14.4. **Empfehlung Plan: nicht streichen** (der Zwei-Input-Pfad ist der Kern von M8 und
   kostet in Task 3 einen Schleifenumbau).
-- **Stand nach Gate Plan:** R143 streicht weder K1–K3 noch den Zwei-Input-Pfad; der Plan gilt im vollen Umfang. Eine
-  spätere Streichung braucht ein eigenes Ruling.
+- **Stand nach Gate Plan:** R143 streicht weder K1–K3 noch den Zwei-Input-Pfad (R146 bestätigt). Danach streicht
+  R150 (S11) nur K1; K2, K3 und der Zwei-Input-Pfad bleiben. Jede weitere Streichung braucht ein eigenes Ruling.
 
 ### Budgetantrag
 
@@ -600,7 +658,7 @@ Beantragt: 4 Starts, Parallelität 1 (Final-Review im Final-Review M8 enthalten)
 
 **Paket** M8-S1 · **Implementierer** `tech-sim-engineer` (sonnet; Roster-Text `tech-save-engineer` im Briefing) ·
 **Worktree/Branch** `.worktrees/m8-sim` · `feat/m8-sim` (ab `<BASIS>`) · **blocked-by** Gate Plan (R141) ·
-**AK** AK-S1-01 … AK-S1-16, `RF-1`, `RF-3`; Vorlauf: Fixture v3 (AK-S1-11) und Pool-Referenz (AK-S2-13, Teil
+**AK** AK-S1-01 … AK-S1-16, AK-S1-21 (S11), `RF-1`, `RF-3`; Vorlauf: Fixture v3 (AK-S1-11) und Pool-Referenz (AK-S2-13, Teil
 „Stufe 1–3“)
 
 **Files:**
@@ -608,8 +666,10 @@ Beantragt: 4 Starts, Parallelität 1 (Final-Review im Final-Review M8 enthalten)
 - Create: `tests/sim/fixtures/save-v3.json` (Schritt 1), `tests/sim/merchants.test.ts`
 - Modify: `src/sim/types.ts`, `src/sim/defs/tiers.ts`, `src/sim/defs/goods.ts`, `src/sim/defs/buildings.ts` (nur
   `bathhouse`), `src/sim/world.ts`, `src/sim/population.ts`, `src/sim/save.ts`, `src/ui/buildMenu.ts` (genau
-  `SERVICE_NAMES.bath`, Ausnahme Spec 17), `tests/sim/helpers.ts` (`placeService` nimmt `'bathhouse'`),
-  `tests/sim/scenarios.ts` (`galerie` + Badehaus), `docs/arc42.md` (nur §8 Persistenz)
+  `SERVICE_NAMES.bath`, Ausnahme Spec 17), `src/sim/placement.ts` (`buildLock`, S11), `tests/sim/helpers.ts`
+  (`placeService` nimmt `'bathhouse'` und baut Gebäude mit `unlockTier`, S11),
+  `tests/sim/scenarios.ts` (`galerie` + Badehaus über `withUnlock`, S11), `docs/arc42.md` (nur §8 Persistenz)
+- Test (S11): `tests/sim/placement.test.ts` (AK-S1-21, neuer `describe('M8 Bausperre …')`)
 - Test: `tests/sim/orders.test.ts` (Pool-Referenz), `tests/sim/defs.test.ts`, `tests/sim/save.test.ts`,
   `tests/sim/population.test.ts`, `tests/sim/taxes.test.ts`, `tests/sim/fire.test.ts`,
   `tests/sim/balance-crises.test.ts` (`normalized()` und AK-S1-15), `tests/sim/merchants.test.ts`
@@ -621,7 +681,9 @@ Beantragt: 4 Starts, Parallelität 1 (Final-Review im Final-Review M8 enthalten)
   `BuildingDefId` + `'bathhouse'`, `Tier = 1 | 2 | 3 | 4`, `TierDef.requiresWin?`, `TierDef.unlockCitizens?`,
   `World.version: 4`, `World.wonMerchants` (nach `won`); `WIN_MERCHANTS = 60`; `SERVICE_IDS` (exportiert),
   `citizens` (`tier ≥ 3`), `merchants`, `populationByTier` (Schlüssel 1–4), `tierLock(world, tier)`,
-  `upgradeStatus` mit Sperrgrund als erstem Eintrag; `SAVE_VERSION = 4`, `migrateV3ToV4(raw)`.
+  `upgradeStatus` mit Sperrgrund als erstem Eintrag; `SAVE_VERSION = 4`, `migrateV3ToV4(raw)`; S11:
+  `BuildingDef.unlockTier?`, `bathhouse.unlockTier = 4`, `buildLock(world, defId)`, `canPlace` mit Sperre zuerst,
+  `withUnlock` (Test-Helfer).
 
 **Hinweise, die in die Tests gehören** (alle im Testcode unten umgesetzt): `tierLock(w, 5)` liefert `null` ohne
 Zugriff auf `TIERS[5]` (ein naiver Zugriff würfe `TypeError`); AK-S1-09 und der Positivfall von AK-S1-14 setzen
@@ -1221,6 +1283,82 @@ describe('M8 Fingerabdruck (AK-S1-15)', () => {
 });
 ```
 
+(S11) **`tests/sim/placement.test.ts`** (bestehende Datei, 15 `it`; nur neuer Block am Dateiende, Imports ergänzen:
+`buildLock` im Import aus `placement`, `import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';`,
+`import { TIERS } from '../../src/sim/defs/tiers';`, `import { fail } from '../../src/sim/types';`):
+
+```ts
+describe('M8 Bausperre (Änderung S11)', () => {
+  /** Geld und Lager reichen für jeden Bau; die Sperre ist der einzige mögliche Grund. */
+  const fund = (): void => {
+    w.money = 10_000;
+    for (const g of ['wood', 'tools', 'stone'] as const) w.stock[g] = 100;
+  };
+  /** Drei Bürgerhäuser (Stufe 3) in der Zeile o.y mit den Einwohnerzahlen `n`, direkt gesetzt. */
+  const citizenHouses = (n: readonly number[]) =>
+    n.map((inh, i) => {
+      const r = placeBuilding(w, 'house', o.x + i, o.y);
+      expect(r.ok).toBe(true);
+      const h = w.buildings[r.id!]!;
+      h.house!.tier = 3;
+      h.house!.inhabitants = inh;
+      return h;
+    });
+  const water = (): { x: number; y: number } => {
+    for (let y = 0; y < w.height; y++)
+      for (let x = 0; x < w.width; x++) if (!isLand(tileAt(w, x, y)!.terrain)) return { x, y };
+    throw new Error('kein Wasser');
+  };
+
+  it('AK-S1-21 Badehaus vor dem Sieg gesperrt (auch auf Wasser), placeBuilding bucht nichts; mit won frei', () => {
+    fund();
+    expect(w.won).toBe(false);
+    expect(BUILDING_DEFS.bathhouse.unlockTier).toBe(4);
+    expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
+    expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
+    const sea = water();
+    expect(canPlace(w, 'bathhouse', sea.x, sea.y)).toEqual(fail('Erst nach dem Ziel'));
+    const money = w.money;
+    const stock = { ...w.stock };
+    const count = Object.keys(w.buildings).length;
+    expect(placeBuilding(w, 'bathhouse', o.x, o.y + 2).ok).toBe(false);
+    expect(w.money).toBe(money);
+    expect(w.stock).toEqual(stock);
+    expect(Object.keys(w.buildings)).toHaveLength(count);
+    w.won = true;
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(placeBuilding(w, 'bathhouse', o.x, o.y + 2).ok).toBe(true);
+  });
+
+  it('AK-S1-21 Hebel 40: Grund mit Zahl bei 39 Bürgern, frei bei 40; stehendes Badehaus bleibt beim Rückfall', () => {
+    try {
+      TIERS[4].unlockCitizens = 40;
+      fund();
+      const houses = citizenHouses([15, 15, 9]);
+      expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
+      expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst ab 40 Bürgern (jetzt 39)'));
+      houses[2]!.house!.inhabitants = 10;
+      expect(buildLock(w, 'bathhouse')).toBeNull();
+      const r = placeBuilding(w, 'bathhouse', o.x, o.y + 2);
+      expect(r.ok).toBe(true);
+      houses[2]!.house!.inhabitants = 9; // Sperre greift wieder (Spec 21 Punkt 5)
+      expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
+      expect(w.buildings[r.id!]?.defId).toBe('bathhouse'); // nur Neubau gesperrt
+      expect(canPlace(w, 'bathhouse', o.x + 3, o.y + 2)).toEqual(
+        fail('Erst ab 40 Bürgern (jetzt 39)'),
+      );
+    } finally {
+      TIERS[4].unlockCitizens = null;
+    }
+  });
+
+  it('AK-S1-21 buildLock ist für jedes Gebäude ohne unlockTier null (auch vor dem Sieg)', () => {
+    for (const id of BUILDING_IDS)
+      if (BUILDING_DEFS[id].unlockTier === undefined) expect(buildLock(w, id), id).toBeNull();
+  });
+});
+```
+
 - [ ] **Schritt 3: Bewusst geänderte Bestandstests (nur Erwartungswerte, Zeilen auf `<BASIS>`).**
 
   - `tests/sim/defs.test.ts` Z. 8 `toHaveLength(8)` → `toHaveLength(9)`; Z. 12 `toHaveLength(14)` →
@@ -1249,7 +1387,7 @@ expect(house.house!.tier).toBe(4);
 - `tests/sim/fire.test.ts` AK-S2-10 (M6): nach Z. 296 (`expect(flammable).toEqual([`) als erste Zeile
   `'bathhouse',` (elf Ids; die zwölfte, `'glassworks'`, kommt in Task 3).
 - `tests/sim/helpers.ts` Z. 48 `defId: 'chapel' | 'school',` → `defId: 'chapel' | 'school' | 'bathhouse',`
-  (Signatur-Erweiterung, kein Sollwert).
+  (Signatur-Erweiterung, kein Sollwert); dazu S11 die Freigabe für `unlockTier` (Code in Schritt 6b, kein Sollwert).
 
 - [ ] **Schritt 4: Rot laufen lassen.**
 
@@ -1259,7 +1397,7 @@ npx vitest run tests/sim 2>&1 | grep -E "^\s+×"
 
 Erwartet rot (Assertion oder `TypeError … undefined`, z. B. `TypeError: (0 , merchants) is not a function`,
 `Cannot read properties of undefined (reading 'unlockCitizens')`): alle neuen Tests `AK-S1-01` … `AK-S1-15`
-(ohne AK-S1-16), `RF-1`, `RF-3`, sowie die geänderten Bestandstests „has 8 goods …“, „has 14 building defs …“,
+(ohne AK-S1-16), die drei `AK-S1-21 …` (S11; `buildLock` fehlt bzw. keine Sperre), `RF-1`, `RF-3`, sowie
 „tiers escalate“, „uses version 3“, beide „AK-S1-01 createWorld …“, beide „AK-S1-02 lädt …“, „AK-S1-03 lädt den
 v1-Stand …“, „citizen house has no further upgrade“, „sums inhabitants per tier …“, fire „AK-S2-10 Feuerwache …“.
 Grün erlaubt nur die Liste am Ende des Tasks.
@@ -1394,6 +1532,15 @@ export const DEFAULT_TAX_LEVEL: TaxLevel = 'normal';
 const SERVICE_NAMES = { faith: 'Glaube', school: 'Bildung', bath: 'Hygiene' } as const;
 ```
 
+**Zusatz S11 (Typen und Werte):** `src/sim/types.ts`, `BuildingDef` nach `consumes?`:
+
+```ts
+  /** Baubar erst, wenn diese Stufe frei ist (M8 4.3, Änderung S11); fehlt = immer baubar. */
+  unlockTier?: Tier;
+```
+
+`src/sim/defs/buildings.ts`, im Eintrag `bathhouse` nach `serviceRadius: 10,` die Zeile `unlockTier: 4,`.
+
 - [ ] **Schritt 6: Bevölkerung (`src/sim/population.ts`).**
 
 ```ts
@@ -1445,6 +1592,34 @@ export function tierLock(world: World, tier: number): string | null {
 
 // populationByTier: Startwert
 const sum: Record<Tier, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+```
+
+- [ ] **Schritt 6b: Bausperre (`src/sim/placement.ts`, Änderung S11).** Import
+      `import { tierLock } from './population';` (kein Zyklus: `population.ts` importiert `placement.ts` nicht);
+      vor `canPlace` einfügen und `canPlace` mit der Sperre beginnen:
+
+```ts
+/** Bausperre (M8 4.3, Änderung S11): Sperrgrund der Stufe `unlockTier` oder null; ohne `unlockTier` sofort null. */
+export function buildLock(world: World, defId: BuildingDefId): string | null {
+  const tier = BUILDING_DEFS[defId].unlockTier;
+  return tier === undefined ? null : tierLock(world, tier);
+}
+
+export function canPlace(world: World, defId: BuildingDefId, x: number, y: number): Result {
+  const lock = buildLock(world, defId);
+  if (lock !== null) return fail(lock); // zuerst: auch auf Wasser oder belegtem Boden gilt der Sperrgrund
+  const def = BUILDING_DEFS[defId];
+  // … unverändert
+```
+
+`tests/sim/helpers.ts` `placeService`: den Aufruf `const r = placeBuilding(world, defId, x, y);` ersetzen durch
+
+```ts
+// S11: Gebäude mit `unlockTier` (Badehaus) baut der Testaufbau auch vor dem Sieg; `won` danach wie vorher
+const won = world.won;
+if (BUILDING_DEFS[defId].unlockTier !== undefined) world.won = true;
+const r = placeBuilding(world, defId, x, y);
+world.won = won;
 ```
 
 - [ ] **Schritt 7: Save v4 (`src/sim/save.ts`).**
@@ -1517,7 +1692,25 @@ function normalized(json: string): string {
 (Platz am Code geprüft: Gras, frei, Weg nördlich auf `ky`; `setHouse` bleibt unverändert):
 
 ```ts
-put(w, 'bathhouse', kx + 11, ky + 1); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
+withUnlock(w, () => put(w, 'bathhouse', kx + 11, ky + 1)); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
+```
+
+und nach `withFunds` (Z. 31 ff.) den Helfer (Spec 18.1, Änderung S11):
+
+```ts
+/**
+ * Baut Gebäude mit `unlockTier` vor der Freischaltung: `won` für `fn` kurz true, danach zurück. Nur für die
+ * Bildergalerie (`galerie`, Spec 18.1); der Zustand „Bad oder Hütte ohne Sieg" ist im Spiel nicht erreichbar.
+ */
+function withUnlock<T>(w: World, fn: () => T): T {
+  const won = w.won;
+  w.won = true;
+  try {
+    return fn();
+  } finally {
+    w.won = won;
+  }
+}
 ```
 
 - [ ] **Schritt 9: Grün.**
@@ -1582,6 +1775,9 @@ vier Vitest-Fälle (ermittelt im Probe-Lauf mit `npx vitest run`):
 | `tests/ui/hud.test.ts`         | „AK-UX-07 tierTooltip und tierPath aus TIERS“                                    | `tierPath()` endet jetzt mit den Kaufleuten                       | Task 2           |
 
 `format`, `time`, `tooltip`, `guide`, `hotkeys` und die übrigen Render-Tests bleiben nach Task 1 grün (Lauf).
+Der Probe-Lauf lag vor S11. Mit der Bausperre kommt nach Erwartung kein weiterer roter Fall hinzu (`galerie` baut
+über `withUnlock`, `placeService` über die Freigabe; die Sperrgründe sind dieselben Texte wie bei `tierLock`). Jeder
+weitere rote Fall ist ein Befund an den Controller, kein stilles Nachziehen.
 
 ---
 
@@ -1846,13 +2042,14 @@ git commit -m "feat: Sperrgründe, Stufenpfad, Sperrfilter, Taste J und Render-R
 
 **Paket** M8-S2 · **Implementierer** `tech-sim-engineer` (sonnet) · **Worktree/Branch** `.worktrees/m8-sim` ·
 `feat/m8-sim` · **blocked-by** Task 1 (Review OK) · parallel zu Task 2 · **AK** AK-S2-01 … AK-S2-16 (AK-S2-13 Teil
-Stufe 4), AK-S3-04 (P2), `RF-2`, `RF-5`
+Stufe 4), AK-S2-19 (S11), AK-S3-04 (P2), `RF-2`, `RF-5`
 
 **Files:**
 
 - Create: `tests/sim/glassworks.test.ts`
 - Modify: `src/sim/types.ts` (`consumes`, `'glassworks'`), `src/sim/defs/buildings.ts`, `src/sim/production.ts`,
-  `src/sim/queries.ts` (`goodsBalance`, `missingInputs`), `tests/sim/scenarios.ts` (`galerie` + Glashütte)
+  `src/sim/queries.ts` (`goodsBalance`, `missingInputs`), `tests/sim/scenarios.ts` (`galerie` + Glashütte über
+  `withUnlock`, S11); Test (S11) `tests/sim/placement.test.ts` (AK-S2-19)
 - Test: `tests/sim/glassworks.test.ts`, `tests/sim/defs.test.ts`, `tests/sim/fire.test.ts`,
   `tests/sim/production.test.ts`, `tests/sim/merchants.test.ts` (AK-S2-10), `tests/sim/queries.test.ts` (AK-S3-04)
 
@@ -2235,6 +2432,25 @@ Bewusst geänderte Bestandstests (Zeilen auf `<BASIS>`): `tests/sim/defs.test.ts
 `consumes: ['cane'],`; Z. 42 `consumes: 'wood',` → `consumes: ['wood'],`. `tests/sim/fire.test.ts`: in der Liste
 nach `'fisher',` die Zeile `'glassworks',` (zwölf Ids).
 
+(S11) `tests/sim/placement.test.ts`, im `describe('M8 Bausperre …')` aus Task 1 am Ende:
+
+```ts
+it('AK-S2-19 Glashütte vor dem Sieg gesperrt, placeBuilding bucht nichts; mit won frei', () => {
+  fund();
+  expect(BUILDING_DEFS.glassworks.unlockTier).toBe(4);
+  expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');
+  expect(canPlace(w, 'glassworks', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
+  const money = w.money;
+  const stock = { ...w.stock };
+  expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(false);
+  expect(w.money).toBe(money);
+  expect(w.stock).toEqual(stock);
+  w.won = true;
+  expect(buildLock(w, 'glassworks')).toBeNull();
+  expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(true);
+});
+```
+
 - [ ] **Schritt 2: Rot laufen lassen.**
 
 ```bash
@@ -2242,7 +2458,7 @@ npx vitest run tests/sim 2>&1 | grep -E "^\s+×"
 ```
 
 Erwartet rot: „AK-S2-01 …“, „AK-S2-02 …“, „AK-S2-03 …“, „AK-S2-04 …“, „AK-S2-06 …“, „AK-S2-07 …“, „AK-S2-08 …“,
-„AK-S2-09 …“, „AK-S2-16 …“, „RF-2 …“, „AK-S3-04 missingInputs …“ (`TypeError` bzw. `Cannot read properties of
+„AK-S2-09 …“, „AK-S2-16 …“, „AK-S2-19 …“ (S11), „RF-2 …“, „AK-S3-04 missingInputs …“ (`TypeError` bzw. `Cannot read properties of
   undefined`, Glashütte fehlt), „has 14 building defs …“, „matches the spec values …“, fire „AK-S2-10 Feuerwache …“. Der
 `scenario-saves`-Test „galerie …“ bleibt bis Schritt 4 grün (`glassworks` ist vorher keine Id). Grün erlaubt nur
 die Liste am Ende des Tasks.
@@ -2274,6 +2490,7 @@ die Liste am Ende des Tasks.
     consumes: ['stone', 'wood'],
     cycle: 50,
     site: [],
+    unlockTier: 4, // Änderung S11: baubar erst ab Freischaltung der Stufe 4
   },
 ```
 
@@ -2313,7 +2530,7 @@ export function missingInputs(world: World, b: Building): GoodId[] {
       ändert sich nach `step`):
 
 ```ts
-put(w, 'glassworks', kx + 15, ky + 1); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+withUnlock(w, () => put(w, 'glassworks', kx + 15, ky + 1)); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
 ```
 
 - [ ] **Schritt 5: Wellen-Prüfung W2 (`feat/m8-sim`: Sim-Tests).**
@@ -2361,7 +2578,8 @@ nach Welle W2 nur die Sim-Tests als grün. Rot sind (ermittelt im Probe-Lauf):
 
 **Paket** M8-S2 (Folgen) · **Implementierer** `tech-ui-engineer` (sonnet) · **Worktree/Branch**
 `.worktrees/m8-sim-ui` · `feat/m8-sim-ui` · **blocked-by** Task 2 und Task 3 (je Review OK) · parallel zu Task 5 ·
-**AK** AK-S2-17, AK-S2-18, AK-U2-01, AK-U2-02, AK-U2-08, AK-U2-09 (P1)
+**AK** AK-S2-17, AK-S2-18, AK-U2-01 (geändert S11: „Für Kaufleute (Stufe 4)"), AK-U2-02, AK-U2-08, AK-U2-09 (P1;
+W9 entschieden R151: Steinbruch-Zusatz nur bei freigeschalteter Glashütte)
 
 **Files:**
 
@@ -2417,7 +2635,7 @@ describe('M8 Tooltips (AK-U2-01)', () => {
       'Braucht: Stein 12 / min · Holz 12 / min',
       'Brennbar',
       'Standort: frei',
-      'Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)',
+      'Für Kaufleute (Stufe 4)',
     ]);
     expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })).toEqual([
       'Badehaus (J)',
@@ -2427,14 +2645,14 @@ describe('M8 Tooltips (AK-U2-01)', () => {
       'Radius: 10',
       'Brennbar',
       'Standort: frei',
-      'Für Kaufleute (Stufe 4, nach dem Bürger-Ziel)',
+      'Für Kaufleute (Stufe 4)',
     ]);
     try {
-      TIERS[4].unlockCitizens = 40;
+      TIERS[4].unlockCitizens = 40; // Änderung S11: keine Hebel-Variante mehr
       expect(tooltipLines({ kind: 'build', defId: 'glassworks' }).at(-1)).toBe(
-        'Für Kaufleute (Stufe 4, ab 40 Bürgern)',
+        'Für Kaufleute (Stufe 4)',
       );
-      expect(tierPreviewLine('bathhouse')).toBe('Für Kaufleute (Stufe 4, ab 40 Bürgern)');
+      expect(tierPreviewLine('bathhouse')).toBe('Für Kaufleute (Stufe 4)');
     } finally {
       TIERS[4].unlockCitizens = null;
     }
@@ -2482,8 +2700,9 @@ describe('M8 Info-Texte (AK-U2-02)', () => {
 `tests/ui/guide.test.ts`: Z. 3 `import type { World } from '../../src/sim/types';` →
 `import type { Building, BuildingDefId, World } from '../../src/sim/types';`; bewusst geändert: Z. 42–43 (R0)
 nach `w.won = true;` die Zeile `w.wonMerchants = true;` einfügen und die Erwartung
-`'Ziel erreicht — spiel frei weiter'` → `'Handelsstadt erreicht — spiel frei weiter'`; Z. 152
-`'Verkaufe Stein am Kontor'` → `'Verkaufe Stein am Kontor oder baue Glashütte (O)'`. Am Dateiende (nach dem
+`'Ziel erreicht — spiel frei weiter'` → `'Handelsstadt erreicht — spiel frei weiter'`. Z. 152 („AK-UX-10
+storageFull ohne Abnehmer …", Welt `won false`) bleibt **unverändert** (R151 W9: Glashütte gesperrt, kein Zusatz).
+Am Dateiende (nach dem
 Block aus Task 2):
 
 ```ts
@@ -2566,7 +2785,11 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
     const quarry = addDirect(w, 'quarry');
     quarry.state = 'storageFull';
-    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)');
+    expect(w.won).toBe(false);
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    w.won = true;
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
+    w.won = false;
     const lj = addDirect(w, 'lumberjack');
     lj.state = 'storageFull';
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
@@ -2660,8 +2883,8 @@ export function stateInfo(
  `if (def.consumes) addLine(panel, \`Verbraucht ${goodList(def.consumes)}\`);`;
   `const info = stateInfo(b, world.tick);`→`const info = stateInfo(b, world.tick, missingInputs(world, b));`.
 
-`src/ui/buildMenu.ts`: Importe `import { TIERS } from '../sim/defs/tiers';` (vor `timing`) und `Tier` im
-Typ-Import aus `../sim/types`; in `tooltipLines`:
+`src/ui/buildMenu.ts`: Import `import { TIERS } from '../sim/defs/tiers';` (vor `timing`; kein `Tier`-Import nötig,
+Änderung S11); in `tooltipLines`:
 
 ```ts
   if (def.consumes && def.cycle) {
@@ -2674,28 +2897,19 @@ Typ-Import aus `../sim/types`; in `tooltipLines`:
   return lines;
 }
 
-const TIER_IDS = (Object.keys(TIERS).map(Number) as Tier[]).sort((a, b) => a - b);
-
 /**
- * Vorschau-Zeile (M8 4.3): Für welche gesperrte Stufe das Gebäude gebaut wird — die niedrigste Stufe, deren Bedarf
- * das Erzeugnis bzw. deren Dienste den Dienst enthalten. `null`, wenn diese Stufe kein `requiresWin` hat.
+ * Stufen-Zeile (M8 4.3 Punkt 4, Änderung S11): für welche Stufe das Gebäude freigeschaltet wird, aus
+ * `def.unlockTier`; ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht. `null` ohne `unlockTier`.
  */
 export function tierPreviewLine(defId: BuildingDefId): string | null {
-  const def = BUILDING_DEFS[defId];
-  const tier = TIER_IDS.find(
-    (t) =>
-      (def.produces !== undefined && def.produces in TIERS[t].needs) ||
-      (def.service !== undefined && TIERS[t].services.includes(def.service)),
-  );
-  if (tier === undefined || TIERS[tier].requiresWin !== true) return null;
-  const n = TIERS[tier].unlockCitizens ?? null;
-  const when = n === null ? `nach dem ${TIERS[3].name}-Ziel` : `ab ${n} Bürgern`;
-  return `Für ${TIERS[tier].name} (Stufe ${tier}, ${when})`;
+  const tier = BUILDING_DEFS[defId].unlockTier;
+  return tier === undefined ? null : `Für ${TIERS[tier].name} (Stufe ${tier})`;
 }
 ```
 
 `src/ui/guide.ts` (endgültige Listen-Semantik; Zwischenregeln fürs Ledger, Plan „E-010“): Import
-`import { houseDiagnosis, missingInputs } from '../sim/queries';`;
+`import { houseDiagnosis, missingInputs } from '../sim/queries';` und `import { buildLock } from '../sim/placement';`
+(R151 W9);
 
 ```ts
 export const consumerOf = (g: GoodId): BuildingDefId | undefined =>
@@ -2731,8 +2945,15 @@ if (b.state === 'waitingInput' && def.consumes) {
 }
 ```
 
-Die Steinbruch-Abhilfe „… oder baue Glashütte (O)“ entsteht ohne weiteren Code aus `consumerOf('stone')`
-(= `glassworks`); `consumerOf('wood')` bleibt `toolmaker` (kleinerer Index in `BUILDING_IDS`).
+Die Steinbruch-Abhilfe „… oder baue Glashütte (O)“ entsteht aus `consumerOf('stone')` (= `glassworks`);
+`consumerOf('wood')` bleibt `toolmaker` (kleinerer Index in `BUILDING_IDS`). **R151 W9:** Der Zusatz erscheint nur,
+wenn der Abnehmer baubar ist. Im `storageFull`-Zweig von `remedyText` die Zeile `if (c) return …` ersetzen durch:
+
+```ts
+if (c && buildLock(w, c) === null) return `${sell} oder baue ${nk(c)}`; // gesperrter Abnehmer: kein Zusatz (S11)
+```
+
+(sonst unverändert: danach folgt wie heute der Satz zu weiteren Wohnhäusern bzw. nur der Verkauf).
 
 `src/ui/hotkeys.ts`, `TOOL_HOTKEYS` nach `j: …`:
 
@@ -2780,10 +3001,12 @@ Task-3-Stand).
 
 - [ ] **Schritt 1: Failing tests schreiben.**
 
-  `tests/sim/merchants.test.ts`: im Import aus `population` `serviceAvailable,` nach `populationByTier,`; am
-  Dateiende. AK-S3-08 baut die Welt im Test selbst (das B2-Szenario `m8-kurz-vor-sieg` gibt es erst in Task 7):
-  4 Bürgerhäuser 15/15/15/4, alle ≥ 300 Ticks zufrieden, Badehaus angebunden mit nur einem vollen Bürgerhaus im
-  Radius, Glas 5, Geld 3000, Holz 30, Werkzeug 20, Stein 20, `tick = 50·9 − 1`:
+  `tests/sim/merchants.test.ts` (S11: kein `serviceAvailable`-Import mehr nötig, AK-S3-08 prüft die Badabdeckung
+  nicht mehr); am Dateiende (S11: Imports `import { buildLock, canPlace } from '../../src/sim/placement';`, `fail` aus
+  `../../src/sim/types` und `forceRect` aus `./helpers` ergänzen, soweit nicht vorhanden). AK-S3-08 baut die Welt im
+  Test selbst (das B2-Szenario `m8-kurz-vor-sieg` gibt es erst in Task 7):
+  4 Bürgerhäuser 15/15/15/4, alle ≥ 300 Ticks zufrieden, **kein Badehaus** (Änderung S11), Glas 5, Geld 3000,
+  Holz 30, Werkzeug 20, Stein 20, `tick = 50·9 − 1`:
 
 ```ts
 describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
@@ -2823,13 +3046,14 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
     }
   });
 
-  it('AK-S3-08 Vorbereitung zahlt sich aus: won bei W (Vielfaches von 50), merchants 0 bei W und 15 bei W + 50', () => {
+  it('AK-S3-08 Freischaltung im Siegtick: bei W − 1 Badehaus gesperrt, ab W Bad und Hütte frei, merchants 0 bei W', () => {
+    // Änderung S11: Welt wie m8-kurz-vor-sieg, ohne Badehaus (vorher „Vorbereitung zahlt sich aus")
     const w = createWorld(3);
     const k = w.buildings[w.kontorId]!;
     const at: [number, number, number][] = [
       [k.x + 2, k.y - 6, 15],
       [k.x + 2, k.y + 7, 15],
-      [k.x + 8, k.y + 1, 15], // einziges volles Bürgerhaus im Badradius
+      [k.x + 8, k.y + 1, 15],
       [k.x + 3, k.y - 3, 4],
     ];
     const houses = at.map(([x, y, n]) => {
@@ -2843,12 +3067,10 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
     const services = [
       placeService(w, 'chapel', k.x + 4, k.y),
       placeService(w, 'school', k.x + 4, k.y + 2),
-      placeService(w, 'bathhouse', k.x + 14, k.y),
     ];
     for (const s of services) s.connected = true;
-    const bath = services[2]!;
-    const inBath = houses.filter((h) => serviceAvailable(w, h, 'bath'));
-    expect(inBath.map((h) => h.id)).toEqual([houses[2]!.id]);
+    const spot = { x: k.x + 14, y: k.y }; // freier Platz für das Badehaus (vorher stand es hier)
+    forceRect(w, spot.x, spot.y, 2, 2, 'grass');
     w.tick = 50 * 9 - 1;
     for (const h of houses) h.house!.satisfiedSince = w.tick - 300;
     w.money = 3000;
@@ -2863,14 +3085,16 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
       rum: 100,
     };
     expect(citizens(w)).toBe(49);
+    expect(canPlace(w, 'bathhouse', spot.x, spot.y)).toEqual(fail('Erst nach dem Ziel'));
+    expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');
     step(w);
     const W = w.tick;
     expect(W % 50).toBe(0);
     expect(w.won).toBe(true);
     expect(merchants(w)).toBe(0);
-    while (w.tick < W + 50) step(w);
-    expect(merchants(w)).toBe(15);
-    expect(bath.connected).toBe(true);
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(buildLock(w, 'glassworks')).toBeNull();
+    expect(canPlace(w, 'bathhouse', spot.x, spot.y).ok).toBe(true);
   });
 });
 ```
@@ -3068,16 +3292,16 @@ Nach W4 (`merge feat/m8-sim-ui @ Task-4-SHA` in `feat/m8-sim`, Controller): `mak
 
 **Vor der Umsetzung grün erlaubt (Task 5):**
 
-| Test                                                                                       | Grund                                                                  |
-| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| „AK-S3-05 Badabdeckung …“, „AK-S3-06 placementZone …“, „AK-S3-07 Diagnose Kaufmannshaus …“ | „ohne Codeänderung“ laut Spec 12 (Abfragen über `ServiceId`/`service`) |
-| „AK-S3-08 Vorbereitung zahlt sich aus …“                                                   | Sperre und Aufstieg aus Task 1; Task 5 ändert nur `wonMerchants`       |
+| Test                                                                                       | Grund                                                                     |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| „AK-S3-05 Badabdeckung …“, „AK-S3-06 placementZone …“, „AK-S3-07 Diagnose Kaufmannshaus …“ | „ohne Codeänderung“ laut Spec 12 (Abfragen über `ServiceId`/`service`)    |
+| „AK-S3-08 Freischaltung im Siegtick …“ (S11)                                               | `buildLock` aus Tasks 1/3, `won` aus M5; Task 5 ändert nur `wonMerchants` |
 
 ## Task 6: B1 — Szenario-Lauf bis zum zweiten Ziel
 
 **Paket** M8-B1 · **Implementierer** `tech-sim-engineer` (sonnet) · **Worktree / Branch** `.worktrees/m8-balance` /
 `feat/m8-balance` (ab `main` nach dem Gate Merge Sim) · **blocked-by** Gate Merge Sim (Tasks 1–5 und QA-A auf
-`main`) · **AK** AK-B1-01, AK-B1-02 (Messung), AK-B1-03 (Messung und Meldung), AK-B1-04, AK-B1-05, AK-B1-07 (Kann K1)
+`main`) · **AK** AK-B1-01, AK-B1-02 (Messung), AK-B1-03 (Messung und Meldung), AK-B1-04, AK-B1-05 (AK-B1-07/K1 gestrichen, R150)
 · AK-B1-06 (Ruling-Vorlage) schreibt `lead-tech` im Abschluss.
 
 **Vor dem Start (Controller):**
@@ -3105,9 +3329,6 @@ make check                    # muss grün sein, bevor etwas geändert wird
 
 ```ts
 export const MERCHANT_TICK_LIMIT = 12_000;
-export interface MerchantOptions {
-  prepareAt?: number;
-} // K1: Vorbereitung ab so vielen Bürgern
 export interface MerchantTrajectory {
   winTick: number | null;
   endStateTick: number | null; // Bürger-Endzustand: jedes Haus Bürgerhaus mit 15 EW
@@ -3126,7 +3347,6 @@ export function runMerchants(
   w: World,
   layout: Layout,
   t: MerchantTrajectory,
-  opts?: MerchantOptions,
   stop?: (w: World) => boolean,
 ): boolean;
 ```
@@ -3168,8 +3388,9 @@ export function runMerchants(
   dynamisch `totalUpkeep(w)` + Marge — genauer, aber nicht „fest" (R142) und schwerer zu prüfen. Fällt
   `minMoneyAfterWin` trotzdem unter 0: Stopp und Meldung wie Eskalation, **kein Nachstellen der Reserve im Paket**.
   Der Aufruf `control(w, layout, {})` in Schritt (1) bleibt unverändert (eigene Regeln des Bürger-Controllers).
-- **K1** (`prepareAt: 30`): vor dem Sieg nach `control` zusätzlich, sobald `citizens(w) ≥ 30`: Erweiterungswege,
-  Lager für die Glashütte, Badehaus, dann eine Glashütte. Nach dem Sieg gilt Phase 3 sofort (die Wege liegen).
+- **K1 gestrichen (R150, Spec 16.4, Änderung S11):** Vor dem Sieg lehnt `canPlace` Badehaus und Glashütte ab; der
+  Merchant-Controller baut beide nur in Phase 3 (setzt `w.won` voraus, dann ist `buildLock` `null`). Es gibt einen
+  Fall `standard`, keine `MerchantOptions` und keine Funktion `prepare`.
 - **Grenzen** (Spec, fest): `wonMerchants` ≤ 12 000 (`MERCHANT_TICK_LIMIT`), `money > 0` am Ende. **Eskalation**
   `wonMerchantsTick` > 11 500 oder Test rot → Stopp und Meldung, **nichts nachstellen** (R74, Spec 16.3).
   `firstMerchantTick` > 9600 → Ruling-Vorschlag Hebel (Schritt 6), **kein Wertwechsel**.
@@ -3209,21 +3430,17 @@ import {
   MERCHANT_TICK_LIMIT,
   newMerchantTrajectory,
   runMerchants,
-  type MerchantOptions,
   type MerchantTrajectory,
 } from './merchantsController';
 
 /** Sieg-Tick des Bürger-Controllers (balance.test.ts, Spec 16.1). */
 const WIN_TICK = 6050;
-/** K1 (Spec 16.4): Badehaus und eine Glashütte ab 30 Bürgern. */
-const K1: MerchantOptions = { prepareAt: 30 };
-
 /** Seed 3, Krisen aus: Startphase des Bürger-Controllers, dann Merchant-Schleife bis zum zweiten Ziel. */
-function run(opts: MerchantOptions = {}): { w: World; t: MerchantTrajectory } {
+function run(): { w: World; t: MerchantTrajectory } {
   const w = createWorld(3);
   const { layout } = startColony(w);
   const t = newMerchantTrajectory();
-  expect(runMerchants(w, layout, t, opts)).toBe(false);
+  expect(runMerchants(w, layout, t)).toBe(false);
   return { w, t };
 }
 
@@ -3262,7 +3479,7 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     let w = createWorld(3);
     const { layout } = startColony(w);
     const t = newMerchantTrajectory();
-    expect(runMerchants(w, layout, t, {}, (x) => merchants(x) > 0)).toBe(true);
+    expect(runMerchants(w, layout, t, (x) => merchants(x) > 0)).toBe(true);
     expect(w.tick).toBe(a.t.firstMerchantTick);
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
@@ -3271,18 +3488,6 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     expect(runMerchants(w, layoutFor(w), t)).toBe(false);
     expect(serialize(w)).toBe(serialize(a.w));
     expect(t.wonMerchantsTick).toBe(a.t.wonMerchantsTick);
-  });
-
-  it('AK-B1-07 K1 vorbereitet: zweites Ziel bis 12 000, Geld > 0; Log nennt beide Fälle', () => {
-    const base = run();
-    const prep = run(K1);
-    log('standard', base.w, base.t);
-    log('vorbereitet', prep.w, prep.t);
-    expect(prep.t.winTick).not.toBeNull();
-    expect(prep.t.firstMerchantTick).not.toBeNull();
-    expect(prep.w.wonMerchants).toBe(true);
-    expect(prep.t.wonMerchantsTick!).toBeLessThanOrEqual(MERCHANT_TICK_LIMIT);
-    expect(prep.w.money).toBeGreaterThan(0);
   });
 });
 ```
@@ -3307,7 +3512,7 @@ import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { BUILDING_DEFS, ROAD_COST } from '../../src/sim/defs/buildings';
 import { TIERS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
 import { canPlace } from '../../src/sim/placement';
-import { citizens, merchants } from '../../src/sim/population';
+import { merchants } from '../../src/sim/population'; // `citizens` nur für K1, gestrichen (S11)
 import { reachableRoads } from '../../src/sim/roads';
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice } from '../../src/sim/trade';
@@ -3336,11 +3541,6 @@ const CHAINS: Record<Need, { producer: BuildingDefId; raw: BuildingDefId | null 
   rum: { producer: 'distillery', raw: 'canefarm' },
 };
 const NEEDS: readonly Need[] = ['food', 'cloth', 'rum'];
-
-export interface MerchantOptions {
-  /** K1 (Spec 16.4): Badehaus und eine Glashütte schon vor dem Sieg, sobald so viele Bürger leben. */
-  prepareAt?: number;
-}
 
 export interface MerchantTrajectory {
   winTick: number | null;
@@ -3393,7 +3593,7 @@ function hasExtension(w: World): boolean {
   return w.tiles[idx(w, k.x + 2, k.y - 1)]!.road;
 }
 
-/** Phase 3: nach dem Sieg und entweder im Bürger-Endzustand oder mit angelegter Erweiterung (K1). */
+/** Phase 3: nach dem Sieg und entweder im Bürger-Endzustand oder mit angelegter Erweiterung (bleibt nach dem ersten Aufstieg). */
 export function merchantPhase(w: World): boolean {
   return w.won && (hasExtension(w) || citizenEndState(w));
 }
@@ -3540,22 +3740,6 @@ function merchantControl(w: World, layout: Layout): void {
   if (ready < works) prepareUpgrade(w);
 }
 
-/** K1 (Spec 16.4): vor dem Sieg ab `prepareAt` Bürgern Wege, Lager, Badehaus, dann eine Glashütte. */
-function prepare(w: World, opts: MerchantOptions): void {
-  if (opts.prepareAt === undefined || citizens(w) < opts.prepareAt) return;
-  if (!ensureExtension(w)) return;
-  feedGlassworks(w);
-  if (count(w, 'bathhouse') === 0) {
-    build(
-      w,
-      'bathhouse',
-      freeSlot(w, 'bathhouse', (x, y) => bathCovers(w, x, y)),
-    );
-    return;
-  }
-  if (count(w, 'glassworks') === 0) build(w, 'glassworks', freeSlot(w, 'glassworks'));
-}
-
 function record(t: MerchantTrajectory, w: World): void {
   if (t.winTick === null && w.won) t.winTick = w.tick;
   if (t.endStateTick === null && w.won && citizenEndState(w)) t.endStateTick = w.tick;
@@ -3575,16 +3759,12 @@ export function runMerchants(
   w: World,
   layout: Layout,
   t: MerchantTrajectory,
-  opts: MerchantOptions = {},
   stop?: (w: World) => boolean,
 ): boolean {
   while (w.tick < MERCHANT_TICK_LIMIT && !w.wonMerchants) {
     if (w.tick % CONTROL_INTERVAL === 0) {
       if (merchantPhase(w)) merchantControl(w, layout);
-      else {
-        control(w, layout, {});
-        if (!w.won) prepare(w, opts);
-      }
+      else control(w, layout, {});
     }
     step(w);
     record(t, w);
@@ -3605,19 +3785,18 @@ npx vitest run tests/sim/balance-merchants.test.ts
 VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-merchants.test.ts --silent=false
 ```
 
-Erwartet: 4 Tests grün. Das Log zeigt je Fall (`standard`, `vorbereitet`) `winTick`, `endStateTick`,
+Erwartet: 3 Tests grün (K1 gestrichen). Das Log zeigt für den Fall `standard` `winTick`, `endStateTick`,
 `firstMerchantTick`, `wonMerchantsTick`, `minMoneyAfterWin`, `endMoney`, `buildings`. **Hinweis:** Vitest 5
 unterdrückt `console.log` bestandener Tests; ohne `--silent=false` erscheint kein Log (Befund zum Befehl in
 AK-B1-02, gemeldet). Alle Werte sind **gemessene Werte, ins Ledger** — der Plan setzt keine Erwartung ausser:
 
-| Wert                                                   | Quelle                                                                                           |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `winTick` (standard)                                   | fest 6050 (Spec 16.1)                                                                            |
-| `endStateTick`, Geld dort                              | gemessener Wert, ins Ledger; Vorabprobe auf `main` @ 05240f4 (Code vor M8): Tick 7300, Geld 1490 |
-| `firstMerchantTick`                                    | gemessener Wert, ins Ledger (Schwelle 9600, Schritt 6)                                           |
-| `wonMerchantsTick`                                     | gemessener Wert, ins Ledger (Grenze 12 000 fest, Eskalation > 11 500)                            |
-| `minMoneyAfterWin`, `endMoney`, `buildings`            | gemessene Werte, ins Ledger                                                                      |
-| K1: `winTick`, `firstMerchantTick`, `wonMerchantsTick` | gemessene Werte, ins Ledger                                                                      |
+| Wert                                        | Quelle                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `winTick` (standard)                        | fest 6050 (Spec 16.1)                                                                            |
+| `endStateTick`, Geld dort                   | gemessener Wert, ins Ledger; Vorabprobe auf `main` @ 05240f4 (Code vor M8): Tick 7300, Geld 1490 |
+| `firstMerchantTick`                         | gemessener Wert, ins Ledger (Schwelle 9600, Schritt 6)                                           |
+| `wonMerchantsTick`                          | gemessener Wert, ins Ledger (Grenze 12 000 fest, Eskalation > 11 500)                            |
+| `minMoneyAfterWin`, `endMoney`, `buildings` | gemessene Werte, ins Ledger                                                                      |
 
 Bricht ein Lauf mit `kein freier Erweiterungsplatz für …` ab oder wird ein Test rot: **Stopp**, Fehlertext und
 Stand ins Ledger, Meldung an den Controller; keine Änderung an Layout-Regeln, Werten oder Grenzen ohne Ruling.
@@ -3626,7 +3805,7 @@ Stand ins Ledger, Meldung an den Controller; keine Änderung an Layout-Regeln, W
 
 Aus dem Log von Schritt 5:
 
-- `wonMerchantsTick` (standard oder vorbereitet) > **11 500** → **Stopp**, Meldung „Eskalation Spec 16.3: neue
+- `wonMerchantsTick` > **11 500** → **Stopp**, Meldung „Eskalation Spec 16.3: neue
   Kurz-Spec nötig" an den Controller; kein Commit von Wertänderungen.
 - `firstMerchantTick` (standard) > **9600** → der Bericht enthält wörtlich den Satz „Ruling-Vorschlag: Hebel
   `TIERS[4].unlockCitizens` 40 als Playtest-Frage P-02 (Spec 4.4); im Paket kein geänderter Wert." Sonst: „Erster
@@ -3655,14 +3834,15 @@ git commit -m "test: M8-B1 Szenario-Lauf bis zum zweiten Ziel mit Merchant-Contr
 
 Erwartet: `make check` grün. Bericht: Messwerte aus Schritt 5, Satz aus Schritt 6, Rot-Log aus Schritt 3.
 
-**Vor der Umsetzung grün erlaubt:** keiner (alle vier Tests sind vor Schritt 4 rot, weil das Modul fehlt).
+**Vor der Umsetzung grün erlaubt:** keiner (alle drei Tests sind vor Schritt 4 rot, weil das Modul fehlt).
 
 ---
 
 ## Task 7: B2 — Szenario-Saves m8-*
 
 **Paket** M8-B2 · **Implementierer** `tech-sim-engineer` (sonnet) · **Worktree / Branch** `.worktrees/m8-scen` /
-`feat/m8-scen` (ab `main` nach dem Gate Merge Sim) · **blocked-by** Gate Merge Sim · **AK** AK-B2-01, AK-B2-02.
+`feat/m8-scen` (ab `main` nach dem Gate Merge Sim) · **blocked-by** Gate Merge Sim · **AK** AK-B2-01, AK-B2-02
+(geändert S11: Szenarien laut Spec 18.1 @ da3da51).
 `galerie` ändert dieser Task **nicht** (Badehaus und Glashütte haben Tasks 1 und 3 ergänzt).
 
 **Files:**
@@ -3677,7 +3857,7 @@ Szenarien')`)
   (Task 1); `bathhouse` (Task 1), `glassworks` (Task 3); `GoodId 'glass'`; `houseDiagnosis` (bestehend); `sellPrice`
   (bestehend); `UPGRADE_WAIT`, `GROWTH_INTERVAL` aus `src/sim/defs/timing.ts`.
 - Produces: `SCENARIOS` mit den Schlüsseln `m8-vor-sieg`, `m8-kurz-vor-sieg`, `m8-kurz-vor-handelsstadt`,
-  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ dbda0f8). QA-B und der R1-Blindtest
+  `m8-glashuette-wartet`, `m8-kaufleute-ohne-glas`, `m8-handel` (Spec 18.1 @ da3da51). QA-B und der R1-Blindtest
   laden sie.
 
 **Gesetzte Regeln:**
@@ -3690,8 +3870,11 @@ UPGRADE_WAIT` direkt (wie `setHouse` die übrigen Hausfelder), statt 300 Schritt
   und Rum im Lager, und jedes Haus steht im Kontor-Radius sowie im Radius von Kapelle und Schule.
 - „1 vor dem Wachstumstakt" heisst `tick = 50 · n − 1`; hier `PRE_GROWTH_TICK = GROWTH_INTERVAL · 20 − 1` = 999.
 - Geometrie von `m8-kurz-vor-sieg` am Code geprüft (`main` @ 05240f4, Gebäude mit gleichem Footprint): Haus
-  `(kx + 8, ky − 1)` ist versorgt (Mitte 7,65 vom Kontor); Badehaus `(kx + 15, ky − 2)` angebunden, Abstände zu den
-  Hausmitten 12,51 / 11,51 / **7,52** / 12,75 → genau ein volles Haus im Radius 10.
+  `(kx + 8, ky − 1)` ist versorgt (Mitte 7,65 vom Kontor). **Änderung S11:** kein Badehaus mehr; der Platz
+  `(kx + 15, ky − 2)` bleibt frei und ist nach dem Sieg baubar (Prüfung im Test).
+- **Bau mit Sperre (S11):** `put` baut über `placeBuilding`, also mit `canPlace`. Szenarien mit Badehaus oder Glashütte
+  setzen `w.won = true` **vor** dem ersten `put` dieser Gebäude (`m8-kurz-vor-handelsstadt`, `m8-glashuette-wartet`,
+  `m8-kaufleute-ohne-glas`); nur `galerie` nutzt `withUnlock` (Task 1).
 
 - [ ] **Schritt 1: Failing tests** — in `tests/sim/scenario-saves.test.ts`:
 
@@ -3701,6 +3884,8 @@ UPGRADE_WAIT` direkt (wie `setHouse` die übrigen Hausfelder), statt 300 Schritt
 import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { citizens, merchants, populationByTier, serviceAvailable } from '../../src/sim/population';
 import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
+import { buildLock, canPlace } from '../../src/sim/placement'; // Änderung S11, R152
+// dazu `idx` im Import aus `../../src/sim/world` ergänzen, falls nicht vorhanden
 import { sellPrice } from '../../src/sim/trade';
 ```
 
@@ -3715,6 +3900,7 @@ const WON_AFTER_FIRST_TICK = new Set([
   'ux-sieg',
   'm8-kurz-vor-sieg',
   'm8-kurz-vor-handelsstadt',
+  'm8-glashuette-wartet', // Änderung S11: won true (Freischaltung der Glashütte)
   'm8-kaufleute-ohne-glas',
 ]);
 it('AK-B2-02 nach dem ersten Tick gewonnen nur ux-sieg und die M8-Siegszenarien (Sieg-Overlay verfälscht Browser-Checks)', () => {
@@ -3773,7 +3959,7 @@ describe('M8 Szenarien', () => {
     expect(w.won).toBe(false);
   });
 
-  it('AK-B2-01 m8-kurz-vor-sieg: 49 Bürger, Bad deckt genau ein volles Haus, Tick 50·n − 1; Sieg bei W, 15 Kaufleute bei W + 50', () => {
+  it('AK-B2-01 m8-kurz-vor-sieg: 49 Bürger, kein Badehaus, Tick 50·n − 1; Sieg bei W, dann Bad und Hütte frei', () => {
     const w = load('m8-kurz-vor-sieg');
     expect(w.won).toBe(false);
     expect(w.tick % GROWTH_INTERVAL).toBe(GROWTH_INTERVAL - 1);
@@ -3783,20 +3969,16 @@ describe('M8 Szenarien', () => {
         .map((h) => h.house!.inhabitants)
         .sort((a, b) => a - b),
     ).toEqual([4, 15, 15, 15]);
-    const bath = buildingsOfType(w, 'bathhouse');
-    expect(bath).toHaveLength(1);
-    expect(bath[0]!.connected).toBe(true);
-    const full = houses(w).filter((h) => h.house!.inhabitants === 15);
-    expect(full.filter((h) => serviceAvailable(w, h, 'bath'))).toHaveLength(1);
+    expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0); // Änderung S11
+    expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
     expect(w.money).toBe(3000);
     expect([w.stock.glass, w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([5, 30, 20, 20]);
     satisfiedLongEnough(w);
     step(w);
     expect(w.won).toBe(true);
     expect(merchants(w)).toBe(0);
-    const W = w.tick;
-    while (w.tick < W + GROWTH_INTERVAL) step(w);
-    expect(merchants(w)).toBe(15);
+    expect(buildLock(w, 'bathhouse')).toBeNull();
+    expect(buildLock(w, 'glassworks')).toBeNull();
   });
 
   it('AK-B2-01 m8-kurz-vor-handelsstadt: won, 3 Kaufmannshäuser 20/20/19, Tick 50·n − 1; zweites Ziel im nächsten Takt', () => {
@@ -3819,6 +4001,7 @@ describe('M8 Szenarien', () => {
 
   it('AK-B2-01 m8-glashuette-wartet: angebundene Glashütte, Stein 5, Holz 0, waitingInput; nichts entnommen', () => {
     const w = load('m8-glashuette-wartet');
+    expect(w.won).toBe(true); // Änderung S11
     const works = buildingsOfType(w, 'glassworks');
     expect(works).toHaveLength(1);
     expect(works[0]!.connected).toBe(true);
@@ -3838,6 +4021,14 @@ describe('M8 Szenarien', () => {
     expect(h.house!.satisfied.glass).toBe(false);
     expect(h.house!.services).toEqual({ faith: true, school: true, bath: true });
     expect(houseDiagnosis(w, h)).toEqual([{ kind: 'good', good: 'glass' }]);
+    // Änderung S11: Mittel für AK-U2-06 (Badehaus mit J bauen) und AK-U2-10
+    expect(w.money).toBe(3000);
+    expect([w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([60, 20, 30]);
+    // R152 (Gate-Risiko): fester freier, angebundener 2×2-Platz für AK-U1-07/AK-U2-06 (QA nennt ihn: kx+9, ky+1)
+    const k = w.buildings[w.kontorId]!;
+    expect([k.x + 9, k.y + 1]).toEqual([41, 32]); // Seed 3, Kontor (32, 31)
+    expect(canPlace(w, 'bathhouse', k.x + 9, k.y + 1).ok).toBe(true);
+    expect(w.tiles[idx(w, k.x + 9, k.y)]!.road).toBe(true); // Weg nördlich → angebunden
     step(w);
     expect(houses(w)[0]!.house!.satisfied.glass).toBe(false);
   });
@@ -3930,7 +4121,7 @@ function stockHouses(w: World): void {
   w.stock.rum = 30;
 }
 
-/** M8 AK-U1-04, AK-U2-03, -06, -10: vor dem Sieg, 45 Bürger, Kapelle und Schule, kein Bad, Glas 0. */
+/** M8 AK-U1-04, AK-U1-09, AK-U2-03, -06: vor dem Sieg, 45 Bürger, Kapelle und Schule, kein Bad, Glas 0. */
 function m8VorSieg(): World {
   const { w, kx, ky } = smallColony(); // Weg kx+2 … kx+12
   w.tick = 400;
@@ -3948,14 +4139,13 @@ function m8VorSieg(): World {
   return w;
 }
 
-/** M8 AK-U1-05 (AK-S3-08-Lage): 49 Bürger, Badehaus deckt nur das volle Haus bei kx+8; 1 vor dem Takt. */
+/** M8 AK-U1-05 (AK-S3-08-Lage): 49 Bürger, kein Badehaus (Änderung S11); 1 vor dem Takt. */
 function m8KurzVorSieg(): World {
   const { w, kx, ky } = baseWorld();
   roadRow(w, kx + 2, kx + 18, ky);
   w.tick = PRE_GROWTH_TICK;
   put(w, 'chapel', kx + 6, ky - 2);
   put(w, 'school', kx + 6, ky + 1);
-  put(w, 'bathhouse', kx + 15, ky - 2); // Radius 10: nur das Haus bei kx+8 (Abstand 7,52)
   settledHouse(w, kx + 3, ky - 2, 3, TIERS[3].maxInhabitants);
   settledHouse(w, kx + 4, ky - 2, 3, TIERS[3].maxInhabitants);
   settledHouse(w, kx + 8, ky - 1, 3, TIERS[3].maxInhabitants);
@@ -3994,6 +4184,7 @@ function m8KurzVorHandelsstadt(): World {
 /** M8 AK-U2-04: angebundene Glashütte, Stein 5, Holz 0, wartet (wie `tickProduction` es setzen würde). */
 function m8GlashuetteWartet(): World {
   const { w, kx, ky } = smallColony();
+  w.won = true; // Änderung S11: Glashütte erst nach der Freischaltung
   const works = put(w, 'glassworks', kx + 9, ky - 2);
   w.stock.stone = 5;
   w.stock.wood = 0;
@@ -4001,7 +4192,7 @@ function m8GlashuetteWartet(): World {
   return w;
 }
 
-/** M8 AK-U2-05, AK-R1-02: won, 1 Kaufmannshaus 20 EW mit allen Diensten, Glas 0 und nicht erfüllt. */
+/** M8 AK-U2-05, -06, -10, AK-R1-02: won, 1 Kaufmannshaus 20 EW mit allen Diensten, Glas 0 und nicht erfüllt. */
 function m8KaufleuteOhneGlas(): World {
   const { w, kx, ky } = smallColony();
   w.won = true;
@@ -4010,6 +4201,10 @@ function m8KaufleuteOhneGlas(): World {
   settledHouse(w, kx + 3, ky - 2, 4, TIERS[4].maxInhabitants, goods);
   stockHouses(w);
   w.stock.glass = 0;
+  w.money = 3000; // Änderung S11: für AK-U2-06/-10 (Badehaus bauen)
+  w.stock.wood = 60;
+  w.stock.tools = 20;
+  w.stock.stone = 30;
   return w;
 }
 
@@ -4082,7 +4277,8 @@ git commit -m "test: M8-B2 Szenario-Saves m8-* für die Browser-Checks (Spec 18.
 **Paket** M8-U1 + Rest M8-U2 (P4) · **Implementierer** `tech-ui-engineer` (sonnet) · **Worktree / Branch**
 `.worktrees/m8-ui` / `feat/m8-ui` (ab aktuellem `main` nach dem Gate Merge Sim, R144-Vermerk) · **blocked-by** Gate
 Merge Sim; Schritt 8 zusätzlich **M8-R1** (Übergabe `.studio/handoffs/m8-r1-symbol.md`, Kante R1 → T8) · **AK** AK-U1-01, AK-U1-02 (Bestandsprüfung), AK-U1-03,
-AK-U1-08 (Diff-Grenzen), RF-4, MAP_SIGNS-Teil von AK-R1-03 (P3). Browser-AK (AK-U1-04 … -07, AK-U2-03 … -07, -10)
+AK-U1-08 (Diff-Grenzen), AK-U1-09 (Vitest; S11), RF-4, MAP_SIGNS-Teil von AK-R1-03 (P3). Browser-AK (AK-U1-04 … -07,
+AK-U1-09, AK-U2-03 … -07, -10)
 prüft QA-B, nicht der Implementierer.
 
 **Ist-Stand am Code (main @ 05240f4, unverändert durch Tasks 1–5 laut Schnittstellenblock):**
@@ -4104,9 +4300,11 @@ true, true)`.
 **Files:**
 
 - Create: `src/ui/goal.ts`, `tests/ui/goal.test.ts`
+- Modify (S11, Schritt 5b): `src/ui/buildMenu.ts` (nur `buildEntries` und der Filter in `renderBuildMenu`)
 - Modify: `src/ui/hud.ts`, `src/ui/inspect.ts` (nur `renderRest`/`updateRest` und Imports), `src/ui/app.ts`,
   `src/ui/soundEvents.ts`, `src/ui/guide.ts` (nur der `MAP_SIGNS`-Eintrag, Schritt 8)
 - Test (nur neue `it`): `tests/ui/soundEvents.test.ts`, `tests/ui/hud.test.ts`, `tests/ui/hotkeys.test.ts`,
+  `tests/ui/tooltip.test.ts` (S11),
   `tests/ui/guide.test.ts`
 - Unverändert: `index.html`, `src/ui/trade.ts`, `src/ui/messages.ts`, `src/ui/hotkeys.ts`, `tests/ui/contrast.test.ts`;
   `src/style.css` nur nach AK-U1-08 (Schritt 9)
@@ -4143,7 +4341,10 @@ export function goalBanners(
 
 - Produces (`src/ui/hud.ts`): `popChipHidden(world: World, tier: Tier): boolean`.
 - Produces (`src/ui/soundEvents.ts`): `SoundSnapshot.wonMerchants: boolean`.
-- Produces (`src/ui/app.ts`): `GameState.wonMerchantsShown: boolean`.
+- Produces (`src/ui/app.ts`): `GameState.wonMerchantsShown: boolean`, `GameState.unlockShown: boolean` (S11).
+- Produces (S11): `goal.ts` `UNLOCK_NOTICE`, `unlockNotice`, `lockedToolText`; `hud.ts` `stockChipHidden`;
+  `buildMenu.ts` `buildEntries(world, category)`. Consumes (S11): `buildLock` (Task 1, `src/sim/placement.ts`),
+  `friendlyReason` (`hints.ts`), `hotkeyLabel` (`hotkeys.ts`).
 
 - [ ] **Schritt 1: Failing tests Zieltexte und Banner** — neue Datei `tests/ui/goal.test.ts`:
 
@@ -4560,6 +4761,184 @@ for (const text of goal.texts) showMessage(text, 'info', true, true);
 (Art wie das erste Banner: `info`, bleibend, schliessbar. Zwei verschiedene Texte im selben Aufruf scheitern nicht an
 der Dublettensperre von `showMessage`, die nur gleiche Texte innerhalb von 1 s verwirft.)
 
+- [ ] **Schritt 5b: Freischaltung in der UI (Änderung S11, AK-U1-09; Vorprüfungen zu AK-U1-04, AK-U2-06/-10)**
+
+  (i) **Tests zuerst.** `tests/ui/goal.test.ts`: Import aus `../../src/ui/goal` um `lockedToolText`, `unlockNotice`,
+  `UNLOCK_NOTICE` ergänzen; am Dateiende:
+
+```ts
+describe('M8 U1 Freischaltung (Änderung S11)', () => {
+  it('AK-U1-09 lockedToolText: gesperrt mit Grund, frei oder ohne unlockTier null', () => {
+    const w = createWorld(3);
+    expect(lockedToolText(w, 'bathhouse')).toBe('Badehaus: Erst nach dem Ziel (50 Bürger)');
+    expect(lockedToolText(w, 'glassworks')).toBe('Glashütte: Erst nach dem Ziel (50 Bürger)');
+    expect(lockedToolText(w, 'house')).toBeNull();
+    w.won = true;
+    expect(lockedToolText(w, 'bathhouse')).toBeNull();
+    expect(lockedToolText(w, 'glassworks')).toBeNull();
+  });
+  it('AK-U1-09 unlockNotice nur beim Wechsel gesperrt → frei; kein Text mit „Tick"', () => {
+    const w = createWorld(3);
+    expect(unlockNotice(true, w)).toBeNull();
+    expect(unlockNotice(false, w)).toBeNull();
+    w.won = true;
+    expect(unlockNotice(true, w)).toBe(
+      'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
+    );
+    expect(unlockNotice(false, w)).toBeNull();
+    expect(UNLOCK_NOTICE).not.toContain('Tick');
+  });
+  it('AK-U1-09 geladener Stand mit freier Stufe: Merkfeld gesetzt, keine Freischalt-Meldung (Spec 4.3 Punkt 5, R152 B1)', () => {
+    const w = createWorld(3);
+    expect(initialUnlockShown(w)).toBe(false); // gesperrt: Meldung kommt später genau einmal
+    w.won = true; // wie m8-kurz-vor-handelsstadt nach dem Laden
+    expect(initialUnlockShown(w)).toBe(true);
+    expect(unlockNotice(!initialUnlockShown(w), w)).toBeNull();
+  });
+});
+```
+
+`tests/ui/hud.test.ts`: `stockChipHidden` in den Import aus `../../src/ui/hud`, dazu
+`import { GOOD_IDS } from '../../src/sim/defs/goods';`; im `describe('M8 U1 Kopfzeile')`:
+
+```ts
+it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, andere Güter nie (Vorprüfung AK-U1-04, S11)', () => {
+  const w = createWorld(3);
+  expect(stockChipHidden(w, 'glass')).toBe(true);
+  for (const g of GOOD_IDS.filter((x) => x !== 'glass'))
+    expect(stockChipHidden(w, g), g).toBe(false);
+  w.stock.glass = 1;
+  expect(stockChipHidden(w, 'glass')).toBe(false);
+  w.stock.glass = 0;
+  w.won = true;
+  expect(stockChipHidden(w, 'glass')).toBe(false);
+});
+```
+
+`tests/ui/tooltip.test.ts`: `buildEntries` in den Import aus `../../src/ui/buildMenu`, dazu
+`import { createWorld } from '../../src/sim/world';` (falls nicht vorhanden); am Dateiende:
+
+```ts
+describe('M8 Bauleiste (Änderung S11)', () => {
+  it('Spec M8 14.2 Glashütte und Badehaus erst ab der Freischaltung (Vorprüfung AK-U2-06, AK-U2-10)', () => {
+    const w = createWorld(3);
+    expect(buildEntries(w, 'production')).toHaveLength(8);
+    expect(buildEntries(w, 'production')).not.toContain('glassworks');
+    expect(buildEntries(w, 'public')).toHaveLength(3);
+    expect(buildEntries(w, 'public')).not.toContain('bathhouse');
+    w.won = true;
+    expect(buildEntries(w, 'production')).toHaveLength(9);
+    expect(buildEntries(w, 'production')).toContain('glassworks');
+    expect(buildEntries(w, 'public')).toHaveLength(4);
+    expect(buildEntries(w, 'public')).toContain('bathhouse');
+  });
+});
+```
+
+```bash
+npx vitest run tests/ui/goal.test.ts tests/ui/hud.test.ts tests/ui/tooltip.test.ts
+```
+
+Erwartet rot: die drei `AK-U1-09 …` (`lockedToolText is not a function` bzw. Import fehlt), der Glas-Chip-Test
+(`stockChipHidden is not a function`), der Bauleisten-Test (`buildEntries is not a function`). Rot-Log in den Bericht.
+
+(ii) **Umsetzung.** `src/ui/goal.ts` (Importe `BUILDING_DEFS`, `TIERS`, `buildLock` aus `../sim/placement`,
+`friendlyReason` aus `./hints`, `hotkeyLabel` aus `./hotkeys`, Typen `BuildingDefId`, `World`):
+
+```ts
+const withKey = (id: BuildingDefId): string =>
+  `${BUILDING_DEFS[id].name} (${hotkeyLabel({ kind: 'build', defId: id })})`;
+
+/** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
+export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;
+
+/** Merkfeld beim Start und nach dem Laden: true, wenn die Stufe schon frei ist (dann keine Meldung, Spec 4.3 Punkt 5). */
+export function initialUnlockShown(world: World): boolean {
+  return buildLock(world, 'bathhouse') === null;
+}
+
+/** Text genau beim Wechsel gesperrt → frei; `wasLocked` ist das Merkfeld aus `app.ts` (wie `wonShown`). */
+export function unlockNotice(wasLocked: boolean, world: World): string | null {
+  return wasLocked && buildLock(world, 'bathhouse') === null ? UNLOCK_NOTICE : null;
+}
+
+/** Gesperrte Taste oder gesperrter Eintrag (Spec M8 14.1, Offener Punkt 15 neu): „{Name}: {Grund}" oder null. */
+export function lockedToolText(world: World, defId: BuildingDefId): string | null {
+  const lock = buildLock(world, defId);
+  return lock === null ? null : `${BUILDING_DEFS[defId].name}: ${friendlyReason(world, lock)}`;
+}
+```
+
+`src/ui/hud.ts`: Import `buildLock` aus `../sim/placement`, `GoodId` im Typ-Import; nach `popChipHidden`:
+
+```ts
+/** Glas-Chip verborgen, solange die Glashütte gesperrt und kein Glas im Lager ist (Spec M8 14.1, Änderung S11). */
+export function stockChipHidden(world: World, good: GoodId): boolean {
+  return good === 'glass' && buildLock(world, 'glassworks') !== null && world.stock.glass === 0;
+}
+```
+
+und in der `GOOD_IDS`-Schleife von `updateHud` im Block `if (chip) {` als erste Zeilen:
+
+```ts
+const hide = stockChipHidden(world, good);
+if (chip.hidden !== hide) chip.hidden = hide;
+```
+
+`src/ui/buildMenu.ts` (Owner Task 8 nur hier, S11): Import `buildLock` aus `../sim/placement`; vor `renderBuildMenu`:
+
+```ts
+/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und ohne Gesperrtes (Spec M8 14.2, S11). */
+export function buildEntries(world: World, category: Category): BuildingDefId[] {
+  return BUILDING_IDS.filter(
+    (id) =>
+      id !== 'kontor' && BUILDING_DEFS[id].category === category && buildLock(world, id) === null,
+  );
+}
+```
+
+(`Category` ist der Typ von `state.openCategory` ohne `null`; Import wie in `renderBuildMenu`.) In `renderBuildMenu`
+`const ids = BUILDING_IDS.filter(…);` ersetzen durch `const ids = buildEntries(state.world, state.openCategory);`.
+
+`src/ui/app.ts`: Import `buildLock` aus `../sim/placement`, `lockedToolText` und `unlockNotice` aus `./goal`.
+
+- In `GameState` nach `wonMerchantsShown: boolean;`:
+
+```ts
+/** Freischalt-Meldung gezeigt bzw. beim Start/Laden schon frei (Spec M8 4.3 Punkt 5; höchstens einmal je Sitzung). */
+unlockShown: boolean;
+```
+
+- Im Zustand von `startGame` nach `...initialGoalShown(world),` die Zeile
+  `unlockShown: initialUnlockShown(world),` (Import aus `./goal`; `buildLock` braucht `app.ts` dann nicht).
+- In `refresh()` direkt nach der Banner-Schleife:
+
+```ts
+const unlock = unlockNotice(!state.unlockShown, world);
+if (unlock !== null) {
+  state.unlockShown = true;
+  showMessage(unlock, 'info', true, true);
+  renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
+}
+```
+
+(`refresh` läuft erst nach dem Aufbau, `selectTool` und `toggleCategory` sind dann definiert; sonst den Block in eine
+Funktion nach deren Definition legen.)
+
+- In `selectTool` als erste Zeilen (einzige Stelle für jeden Werkzeugwechsel, also Taste und Eintrag):
+
+```ts
+if (tool.kind === 'build') {
+  const locked = lockedToolText(state.world, tool.defId);
+  if (locked !== null) {
+    showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
+    return; // kein Werkzeug (Spec 14.2, AK-U1-09)
+  }
+}
+```
+
+`src/ui/hotkeys.ts` bleibt unverändert (J und O bleiben fest belegt, Offener Punkt 15 neu).
+
 - [ ] **Schritt 6: grün**
 
 ```bash
@@ -4575,8 +4954,9 @@ Erwartet: alle UI-Tests grün; `grep` findet nichts (die Zieltexte kommen nur no
 make format
 make check
 git add src/ui/goal.ts src/ui/hud.ts src/ui/inspect.ts src/ui/app.ts src/ui/soundEvents.ts \
-  tests/ui/goal.test.ts tests/ui/soundEvents.test.ts tests/ui/hud.test.ts tests/ui/hotkeys.test.ts
-git commit -m "feat: M8-U Zielanzeige mit Ausblick, Kaufleute-Chip, zweites Banner und Ton (Spec 14.1)"
+  src/ui/buildMenu.ts tests/ui/goal.test.ts tests/ui/soundEvents.test.ts tests/ui/hud.test.ts tests/ui/hotkeys.test.ts \
+  tests/ui/tooltip.test.ts
+git commit -m "feat: M8-U Zielanzeige mit Ausblick, Kaufleute-Chip, zweites Banner, Ton und Freischaltung (Spec 14.1, S11)"
 ```
 
 - [ ] **Schritt 8: `MAP_SIGNS` nennt das Bad-Symbol (P3, MAP_SIGNS-Teil von AK-R1-03)**
@@ -4685,8 +5065,8 @@ dem Final-Review M8), pusht jeden Merge nach grünem `make check` und meldet den
 Der Controller schreibt nie in diesen Worktree.
 
 **BUG-LICHT (R144):** Ist BUG-LICHT (`fix/licht-verdeckung`, ebenfalls `src/render/`) vor dem Start von R1 auf `main`
-gemergt, entsteht `m8-render` am aktuellen `main` bzw. rebased vor dem ersten eigenen Commit darauf (Vermerk unter
-„Wellen"). Läuft BUG-LICHT beim Start von R1 noch, prüft `lead-art` die Dateiüberschneidung beider Pakete und
+gemergt, entsteht `m8-render` am aktuellen `main`; wird BUG-LICHT erst später gemergt, kommt `main` per Merge dazu,
+nie per Rebase (Vermerk unter „Wellen", Verfassung §6.3). Läuft BUG-LICHT beim Start von R1 noch, prüft `lead-art` die Dateiüberschneidung beider Pakete und
 serialisiert sie in eigener Verantwortung (beide Pakete gehören `lead-art`).
 
 **Übergabewortlaut:** Die Übergabedatei unter `.studio/handoffs/` ist nicht versioniert; `lead-art` nennt die zwei
@@ -4825,10 +5205,13 @@ Viewport per CDP `Emulation.setDeviceMetricsOverride` (1280 × 800, DPR 1). Kons
 4. **Tasks 2/4 Tasten:** Taste `j` per `Input.dispatchKeyEvent` (keyDown/keyUp, `key: 'j'`), dann
    `document.querySelector('#buildbar [data-key="Badehaus · 500 Geld"]').classList.contains('active') === true`;
    `Escape`; Taste `o`, dann `[data-key="Glashütte · 300 Geld"]` hat `active`. Screenshot `qa-a-tasten.png`.
+   **Bausperre (S11, Zwischenstand vor U, Spec 14.2):** mit aktiver Glashütte auf eine freie Landkachel klicken:
+   `[data-field="money"]` unverändert, kein Gebäude entsteht (der Grund „Erst nach dem Ziel (50 Bürger)" erscheint
+   als Hinweis); `Escape`.
 5. **Tasks 2/4 Tooltip Glashütte:** Fokus auf `[data-key="Glashütte · 300 Geld"]` (Kategorie „Produktion" offen) →
    im Kind `.tooltip`: erster `.tt-title`-Text = „Glashütte (O)"; die `.tt-line`-Texte enthalten „Braucht: Stein 12 /
-   min · Holz 12 / min"; der letzte `.tt-line`-Text (ohne `.tt-reason`, `.tt-unprotected`) = „Für Kaufleute (Stufe 4,
-   nach dem Bürger-Ziel)". Screenshot `qa-a-tooltip.png`.
+   min · Holz 12 / min"; der letzte `.tt-line`-Text (ohne `.tt-reason`, `.tt-unprotected`) = „Für Kaufleute (Stufe 4)"
+   (Änderung S11). Screenshot `qa-a-tooltip.png`.
 6. **Tasks 2/4 Info-Panel:** `localStorage.setItem('inselreich.save.v1', <Inhalt von "$QA/saves/galerie.json">)`,
    `localStorage.removeItem('inselreich.save.auto')`, neu laden, „Gespeichertes Spiel laden (Spielzeit …)" klicken
    (lädt pausiert). Das volle Bürgerhaus (Südreihe, dritte Hauskachel ab Westen, `kx + 5, ky + 1`) anklicken (Position
@@ -4852,7 +5235,7 @@ grünem `make check`. Zwei Checks **parallel** (in **einer** Nachricht gestartet
 
 | Check  | AK                                     | Vite-Port | CDP-Port |
 | ------ | -------------------------------------- | --------- | -------- |
-| QA-B-1 | AK-U1-04, AK-U1-05, AK-U1-06, AK-U1-07 | 5181      | 9231     |
+| QA-B-1 | AK-U1-04 … -07, AK-U1-09 (S11)         | 5181      | 9231     |
 | QA-B-2 | AK-U2-03, -04, -05, -06, -07, AK-U2-10 | 5182      | 9232     |
 
 **Gemeinsame Vorbereitung** (je Check mit eigenem `$QA` und eigenen Ports):
@@ -4882,7 +5265,8 @@ Wort). Häuser und Gebäude werden per Klick auf ihre Kachel gewählt (Position 
 
 1. **AK-U1-04** (`m8-vor-sieg`, ohne Auswahl, je 1280 × 800 und 1920 × 1080; Screenshots `u1-04-1280.png`,
    `u1-04-1920.png`):
-   - `document.querySelectorAll('.stock-row .chip').length === 9`; der neunte `textContent` beginnt mit „Glas 0".
+   - `document.querySelectorAll('.stock-row .chip').length === 9`; `const g = document.querySelector('[data-field="stock-glass"]')`:
+     `g.hidden === true` und `getComputedStyle(g).display === 'none'` (Änderung S11; vorher sichtbar „Glas 0").
    - `const p4 = document.querySelector('[data-field="pop-4"]')`: `p4.hidden === true` und
      `getComputedStyle(p4).display === 'none'`.
    - `[data-field="goal"]`: `textContent` = „Ziel 45 / 50 Bürger", `title` = „Ziel: 50 Bürger — Einwohner der Stufe 3
@@ -4901,23 +5285,32 @@ Wort). Häuser und Gebäude werden per Klick auf ihre Kachel gewählt (Position 
      `[data-field="goal"]` = „Ziel 0 / 60 Kaufleute", `title` = „Zweites Ziel: 60 Kaufleute — Einwohner der Stufe 4";
      `[data-field="goal-next"].hidden === true`; `[data-field="pop-4"]` sichtbar (`hidden === false`) mit
      `textContent` „Kaufleute 0"; `#hud` Höhe ≤ 84. Screenshot `u1-05-sieg.png`.
-   - `[data-speed="1"]` klicken, 6 s warten, `[data-speed="0"]` (Tick nach W + 50, vor W + 100). Messen:
-     `[data-field="goal"]` = „Ziel 15 / 60 Kaufleute", `[data-field="pop-4"]` = „Kaufleute 15"; `#hud` Höhe ≤ 84.
-     Screenshot `u1-05-kaufleute.png`.
+   - **Änderung S11:** genau ein `.messages .toast` mit `textContent` „Neu freigeschaltet: Badehaus (J) und Glashütte
+     (O) — deine Bürger wollen Kaufleute werden"; `[data-field="stock-glass"]` sichtbar (`hidden === false`), Text
+     beginnt mit „Glas 5". Weitere 3 s bei 1×: Anzahl dieser Meldung bleibt 1. (Entfällt: „Ziel 15 / 60 Kaufleute"
+     nach dem folgenden Takt, das Szenario hat kein Badehaus mehr.)
 3. **AK-U1-06** (`m8-kurz-vor-handelsstadt`, 1280 × 800, Tempo 1×):
    - `[data-speed="1"]`, 1 s, `[data-speed="0"]`. Messen: Anzahl `.messages .toast` mit `textContent` „Zweites Ziel
      erreicht: 60 Kaufleute! Das Spiel läuft weiter." = 1; `[data-field="goal"]` = „Handelsstadt · 60 Kaufleute",
      `title` = „Beide Ziele erreicht — freies Spiel"; ohne Auswahl `[data-field="goal-text"]` = „Handelsstadt
      erreicht · 60 Kaufleute", `[data-field="goal-fill"]` `style.width === '100%'`, `goal-next` `hidden === true`;
-     `#hud` Höhe ≤ 84. Screenshot `u1-06-handelsstadt.png`.
+     `#hud` Höhe ≤ 84; Anzahl `.messages .toast` mit Text, der mit „Neu freigeschaltet" beginnt, = **0** (Spec 4.3
+     Punkt 5: geladener Stand mit freier Stufe, R152 B1). Screenshot `u1-06-handelsstadt.png`.
    - Menü öffnen, „Speichern" klicken; Seite neu laden, „Gespeichertes Spiel laden (Spielzeit …)" klicken, 2 s
-     warten. Messen: Anzahl Toasts mit dem Text des zweiten Banners = 0; Tempo 1× für 3 s, erneut 0. Screenshot
-     `u1-06-geladen.png`.
-4. **AK-U1-07** (Viewport 800 × 900): `localStorage.clear()`, neu laden, „Los geht's". Handel am Kontor öffnen (Kontor
-   anklicken), `#panel button[data-good="stone"][data-op="buy"][data-n="10"]` klicken (Startlager Stein 10, Badehaus
-   braucht 20). Taste `j`, auf freie Landkacheln nahe dem Kontor klicken, bis `[data-field="money"]` um 500 sinkt;
-   `Escape`, das Badehaus anklicken: `#panel [data-field="title"]` beginnt mit „Badehaus". Kein Absturz (Canvas
+     warten. Messen: Anzahl Toasts mit dem Text des zweiten Banners = 0 und mit „Neu freigeschaltet …" = 0 (R152 B1);
+     Tempo 1× für 3 s, erneut beide 0. Screenshot `u1-06-geladen.png`.
+4. **AK-U1-07** (Viewport 800 × 900; Änderung S11, entschieden R151 W8): `localStorage.clear()`, neu laden, „Los
+   geht's", Taste `j`: Meldung „Badehaus: Erst nach dem Ziel (50 Bürger)", kein Absturz. Dann Szenario
+   `m8-kaufleute-ohne-glas` laden (wie oben), Tempo bleibt 0; Taste `j`, auf den geprüften Bauplatz **(41, 32)**
+   (= `kx + 9, ky + 1`, Weg nördlich; Task 7 belegt ihn per `canPlace`) klicken, bis `[data-field="money"]` um 500 sinkt; `Escape`, das neue Badehaus anklicken: `#panel [data-field="title"]`
+   beginnt mit „Badehaus". Kein Absturz (Canvas
    zeichnet weiter: zwei Screenshots im Abstand 1 s bei 1× unterscheiden sich oder die Tick-Zeit steigt), Konsolenfehler 0. Screenshot `u1-07-800.png`.
+
+5. **AK-U1-09** (Browser-Teil, Änderung S11; `m8-vor-sieg`, 1280 × 800, pausiert): Geld notieren; Taste `j`:
+   kein `#buildbar .active` mit `data-key` „Badehaus …" bzw. das Werkzeug bleibt „Auswahl" (`[data-key="Auswahl"]`
+   hat `active`), ein `.messages .toast.error` mit `textContent` „Badehaus: Erst nach dem Ziel (50 Bürger)" (Klasse `toast error`, R151
+   W10); Geld unverändert.
+   Taste `o` ebenso mit „Glashütte: Erst nach dem Ziel (50 Bürger)". Screenshot `u1-09-gesperrt.png`.
 
 ### QA-B-2 (AK-U2-03 … -07, AK-U2-10)
 
@@ -4932,22 +5325,22 @@ clientWidth`. Dann `Escape`: die `#panel .panel-line`, deren Text mit „Pionier
 3. **AK-U2-05** (`m8-kaufleute-ohne-glas`, 1280 × 800): Kaufmannshaus anklicken. `[data-field="title"]` = „Wohnhaus —
    Kaufleute"; `[data-field="inhabitants"]` = „Einwohner 20 / 20"; ein `[data-field="diagnosis"] li` = „Mangel: Glas
    fehlt"; `[data-field="upgrade-title"]` = „Höchste Stufe". Screenshot `u2-05.png`.
-4. **AK-U2-06** (`m8-vor-sieg`, 1280 × 800, pausiert):
-   - `[data-category="production"]` klicken → `#buildbar .buildbar-sub [data-key="Glashütte · 300 Geld"]` existiert;
-     `[data-category="public"]` klicken → `[data-key="Badehaus · 500 Geld"]` existiert.
-   - Geld und Lager notieren (Soll 3000 / Holz 60 / Werkzeug 20 / Stein 30). Taste `j`; Maus über zwei verschiedene
+4. **AK-U2-06** (Änderung S11; 1280 × 800, pausiert):
+   - `m8-vor-sieg`: `[data-category="production"]` klicken → `#buildbar .buildbar-sub button` zählt 8, kein
+     `[data-key="Glashütte · 300 Geld"]`; `[data-category="public"]` → 3, kein `[data-key="Badehaus · 500 Geld"]`.
+   - `m8-kaufleute-ohne-glas` laden: Geld und Lager notieren (Soll 3000 / Holz 60 / Werkzeug 20 / Stein 30). Taste `j`; Maus über zwei verschiedene
      freie Kacheln bewegen (`Input.dispatchMouseEvent` `mouseMoved`), je Screenshot (`u2-06-ellipse-a.png`,
      `-b.png`): die Radius-Ellipse folgt der Maus (Urteil `qa-playtester`). Auf einen freien Platz an der Hauptstrasse
-     klicken (z. B. 2 × 2 nördlich der Strasse bei `kx + 9`), bis das Badehaus steht. Messen: Geld −500, Holz −30,
-     Werkzeug −10, Stein −20; `[data-field="goal"]` weiter „Ziel 45 / 50 Bürger" (`won` bleibt `false`).
-     Screenshot `u2-06-gebaut.png`.
+     auf den geprüften Bauplatz **(41, 32)** (= `kx + 9, ky + 1`, R152) klicken, bis ein zweites Badehaus steht. Messen: Geld −500, Holz −30,
+     Werkzeug −10, Stein −20. Screenshot `u2-06-gebaut.png`.
 5. **AK-U2-07** (`m8-handel`, 1280 × 800): Kontor anklicken (öffnet den Handel). Eine `.trade-good` mit Text „Glas"
    existiert; `const b = document.querySelector('#panel button[data-good="glass"][data-op="sell"][data-n="10"]')`:
    `b.querySelector('small').textContent` = „191 Geld", `b.title` = „10 Glas verkaufen für 191 Geld". Geld notieren,
-   `b` klicken: Geld +191, `[data-field="stock-glass"]` beginnt mit „Glas 0". Panel: `scrollWidth ≤ clientWidth`;
+   `b` klicken: Geld +191, `[data-field="stock-glass"]` beginnt mit „Glas 0" (danach `hidden`, weil `won false` und
+   Glas 0 — Spec 14.1, S11; der Text wird trotzdem geprüft). Panel: `scrollWidth ≤ clientWidth`;
    scrollt das Panel intern (`scrollHeight > clientHeight`), ans Ende scrollen: die Zeile „Glas" liegt vollständig im
    sichtbaren Panelrechteck. Screenshot `u2-07.png`.
-6. **AK-U2-10** (`m8-vor-sieg`, 1280 × 800):
+6. **AK-U2-10** (`m8-kaufleute-ohne-glas`, Änderung S11, 1280 × 800):
    - `[data-category="production"]` klicken: `#buildbar .buildbar-sub button` zählt 9; `[data-category="public"]`
      klicken: 4.
    - Für `[data-key="Glashütte · 300 Geld"]` und `[data-key="Badehaus · 500 Geld"]`: `getComputedStyle(btn).borderStyle`
@@ -4956,8 +5349,8 @@ clientWidth`. Dann `Escape`: die `#panel .panel-line`, deren Text mit „Pionier
      `document.activeElement.dataset.category === 'public'` (höchstens 60 Tabs, Zahl notieren); `Enter` → Einträge-
      Leiste offen. `Tab`, bis kein `[data-category]` mehr fokussiert ist: `document.activeElement.dataset.key` beginnt
      mit „Kapelle"; drei weitere `Tab` → `dataset.key === 'Badehaus · 500 Geld'`; `Enter` → der Knopf hat `active`;
-     der letzte `.tooltip .tt-line`-Text des Knopfs (ohne `.tt-reason`) = „Für Kaufleute (Stufe 4, nach dem
-     Bürger-Ziel)". Screenshot `u2-10-tastatur.png`.
+     der letzte `.tooltip .tt-line`-Text des Knopfs (ohne `.tt-reason`) = „Für Kaufleute (Stufe 4)". Screenshot
+     `u2-10-tastatur.png`.
 
 **Aufräumen je Check:** Chrome und Vite beenden; `lsof -i :<Vite-Port> -i :<CDP-Port>` leer; `rm -r "$QA/chrome-prof"`.
 
@@ -4989,7 +5382,7 @@ sed -E 's/.*> //' | sort -u` (setzt voraus, dass die Tests der Tasks 1–5 wie i
    stehen; M6 hat eigene `AK-S1-…`-Namen) → alle Vitest-AK von S1–S3 und RF-1, RF-2, RF-3, RF-5; Review-AK (AK-S1-16, AK-S3-09) per Diff der Doku; AK-S3-10 per
    QA-A-Bericht; AK-U2-01, -02, -08, -09 (P1) aus Task 4.
 6. Testzählung (R125) mit `<BASIS>` wie in den Global Constraints; geänderte Zeilen nur Erwartungswerte und nur in
-   den Dateien aus „Bewusst geänderte Tests". Geprüft wird gegen Spec @ `dbda0f8` plus „Bestätigte Abweichungen
+   den Dateien aus „Bewusst geänderte Tests". Geprüft wird gegen Spec @ `da3da51` plus „Bestätigte Abweichungen
    (R143)" (P1, W1, W3–W6); diese sind kein Befund.
 7. Urteil OK / BEDENKEN / ZURÜCK. Fix-Runden über Controller 2 (E-010), Nachprüfung nach R136; danach **M-2**
    messen und ins Ledger.
@@ -5011,7 +5404,8 @@ entstehen frühestens ab diesem SHA, am aktuellen `main` zum Startzeitpunkt (R14
     20 | —"; Bürger-Zeile „Aufstieg kostet" → „zu Kaufleuten: 600 / 15 / 8 / 10, nur nach dem Bürger-Ziel".
   - Wirtschaft: Gut Glas (Kauf 50, Verkauf 20, Auftrag ab Kaufleuten 4–8, Prämie 37); Glashütte (Taste O, braucht
     Stein und Holz, beide werden zugleich entnommen); Badehaus (Taste J, Dienst „Hygiene", Radius 10, Kosten 500 Geld
-    · 30 Holz · 10 Werkzeug · 20 Stein, Unterhalt 180 / min). Tastenliste um J und O.
+    · 30 Holz · 10 Werkzeug · 20 Stein, Unterhalt 180 / min). Beide erst nach dem Bürger-Ziel baubar, dann Meldung
+    „Neu freigeschaltet …" (Spec 20, Änderung S11). Tastenliste um J und O.
 - [ ] **Hauptspec** `docs/superpowers/specs/2026-09-29-inselreich-design.md`: in 2.3, 2.4, 2.6, 2.7, 2.9, 3.3 und 3.7
       je eine Zeile „**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §{n}" mit §5.1 (2.3), §5.2 und §6
       (2.4), §5.3 (2.6), §4 (2.7), §7 (2.9), §10.1 (3.3), §10.2 (3.7).
@@ -5042,12 +5436,12 @@ rm node_modules && cd /Users/KN/CAS/projekte/anno-clone && git worktree remove /
 
 Konflikt oder rot → ZURÜCK mit Fundstelle. 2. **Balancing:** Task-6-Messwerte im Ledger; `balance.test.ts` und `balance-crises.test.ts` ohne Diff gegen
 `<BASIS-B>`; `tests/sim/controller.ts` nur die zwei `export`; `src/sim/defs` ohne Diff gegen `<BASIS-B>`. 3. **Abdeckung Teil B:** `npx vitest run --reporter=verbose 2>&1 | grep -oE "M8[^>]*> (AK-[A-Z0-9]+-[0-9]+|RF-4)" |
-   sed -E 's/.*> //' | sort -u` (in der Integrationsprobe) → AK-B1-01, -02, -04, -07, AK-B2-01, -02, AK-U1-01, -02,
--03, RF-4, AK-R1-01, -03, -04 (R1 und `MAP_SIGNS` nur ohne Streichung); Browser-AK per QA-B-1/-2-Bericht,
+   sed -E 's/.*> //' | sort -u` (in der Integrationsprobe) → AK-B1-01, -02, -04, AK-B2-01, -02, AK-U1-01, -02,
+-03, -09, RF-4, AK-R1-01, -03, -04 (R1 und `MAP_SIGNS` nur ohne Streichung); Browser-AK per QA-B-1/-2-Bericht,
 AK-R1-02 per Blindtest-Bericht, AK-B1-03 per Task-6-Bericht, AK-B1-06 per Ruling-Vorlage, AK-U1-08 per Diff. 4. **Global Constraints:** `index.html`, `src/ui/trade.ts`, `src/ui/messages.ts` ohne Diff gegen `<BASIS>`;
 `src/style.css` nur nach AK-U1-08; kein Text mit „Tick" (`tests/ui/time.test.ts` grün); Testzählung je Datei gegen
 `<BASIS-B>` (Zählbefehl wie Global Constraints); geänderte bestehende Tests nur laut „Bewusst geänderte Tests
-Teil B"; Massstab Spec @ `dbda0f8` plus „Bestätigte Abweichungen (R143)". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
+Teil B"; Massstab Spec @ `da3da51` plus „Bestätigte Abweichungen (R143)". 5. Gesammelte Minor/Low-Befunde aus dem Ledger (R65) abarbeiten oder als Beobachtung melden. 6. Urteil OK / BEDENKEN / ZURÜCK; Fix-Runden über Controller 2.
 
 **Gate Merge M8** (L0) → `production-integrator` nach R124 Punkt 2, Reihenfolge `feat/m8-balance` → `feat/m8-ui` →
 `feat/m8-render`, je mit dem im Final-Review genannten SHA; vor jedem Schritt `git merge-tree --write-tree main <SHA>`
@@ -5069,13 +5463,11 @@ Zusätze (je nach Messung, wörtlich):
 - Reserve: „Merchant-Controller mit fester Reserve 500 (R142); `minMoneyAfterWin` {Wert}."
 - Nur wenn `firstMerchantTick` > 9600: „Ruling-Vorschlag: Hebel `TIERS[4].unlockCitizens` 40 als Playtest-Frage P-02
   (Spec 4.4); kein geänderter Wert in M8."
-- K1 (falls nicht gestrichen): „Vorbereitet ab 30 Bürgern: Sieg {winTick K1} (ohne Vorbereitung 6050), erster
-  Kaufmann {firstMerchantTick K1}, zweites Ziel {wonMerchantsTick K1}."
 
 ### Rulings, Befunde, E-010 M-3, Schlussbericht
 
 1. **Rulings aus dem Ledger** `.superpowers/sdd/m8/ledger.md` (Controller-Entscheide, gemeldete Widersprüche nach
-   R136, Plan-Abweichungen P1–P6, Streichentscheide K1–K3) stehen im Schlussbericht an L0; L0 trägt sie nach dem
+   R136, Plan-Abweichungen P1–P6, Streichentscheide K2–K3; K1 durch R150 gestrichen) stehen im Schlussbericht an L0; L0 trägt sie nach dem
    Merge auf `main` in `docs/studio/rulings.md` ein (R125 e). Die Stränge committen nichts davon.
 2. **Befunde ausserhalb Scope** aus allen Berichten gesammelt (Fundort, Beobachtung, Ursprung, erste Einschätzung)
    im Schlussbericht; L0 trägt sie in `docs/beobachtungen.md` ein.
@@ -5092,64 +5484,66 @@ Zusätze (je nach Messung, wörtlich):
 
 **Tasks 1–5:**
 
-| AK       | Task                       | Testdatei / Testname                                                                                                         |
-| -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| AK-S1-01 | 1                          | `tests/sim/defs.test.ts` „AK-S1-01 Stufe 4, Hebel, Glas, Badehaus und Dienst bath …“                                         |
-| AK-S1-02 | 1                          | `tests/sim/save.test.ts` „AK-S1-02 createWorld: version 4, wonMerchants false …“                                             |
-| AK-S1-03 | 1                          | `tests/sim/merchants.test.ts` „AK-S1-03 Häuser Stufe 2 (8), 3 (15), 4 (20) …“                                                |
-| AK-S1-04 | 1                          | `merchants.test.ts` „AK-S1-04 vor dem Sieg: einziger Grund …“                                                                |
-| AK-S1-05 | 1                          | `merchants.test.ts` „AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 … Steuer 300 (ohne Aufstieg 210)“                                |
-| AK-S1-06 | 1                          | `merchants.test.ts` „AK-S1-06 Gründe …“                                                                                      |
-| AK-S1-07 | 1                          | `merchants.test.ts` „AK-S1-07 … 20 EW nach 5 Wachstumstakten“                                                                |
-| AK-S1-08 | 1                          | `merchants.test.ts` „AK-S1-08 Kaufleute ohne Glas …“                                                                         |
-| AK-S1-09 | 1                          | `merchants.test.ts` „AK-S1-09 Hebel 40 …“ und „AK-S1-09 tierLock …“                                                          |
-| AK-S1-10 | 1                          | `merchants.test.ts` „AK-S1-10 Massenaufstieg …“                                                                              |
-| AK-S1-11 | 1                          | `save.test.ts` „AK-S1-11 lädt einen echten v3-Stand …“ (Fixture Schritt 1)                                                   |
-| AK-S1-12 | 1                          | `save.test.ts` „AK-S1-12 v1 und v2 laden über alle Migrationen nach v4“                                                      |
-| AK-S1-13 | 1                          | `save.test.ts` „AK-S1-13 Round-trip v4 …“                                                                                    |
-| AK-S1-14 | 1                          | `save.test.ts` „AK-S1-14 weist jede verletzte v4-Ladeprüfung einzeln ab …“                                                   |
-| AK-S1-15 | 1                          | `tests/sim/balance-crises.test.ts` „AK-S1-15 Stufe off bitgleich …“ (+ `balance.test.ts` ohne Diff, Schritt 9)               |
-| AK-S1-16 | 1                          | Review: Doku-Schritt 10 (`docs/arc42.md` §8 Persistenz)                                                                      |
-| AK-S1-17 | 2                          | `tests/render/sprites.test.ts` „AK-S1-17 Kaufmannshaus: Höhe endlich und gleich Stufe 3 …“                                   |
-| AK-S1-18 | 2                          | `tests/ui/hints.test.ts` „AK-S1-18 friendlyReason …“ und `tests/ui/hud.test.ts` „AK-S1-18 tierPath …“                        |
-| AK-S1-19 | 2                          | `tests/ui/guide.test.ts` „AK-S1-19 (a) …“ und „AK-S1-19 (e) …“                                                               |
-| AK-S1-20 | 2                          | `tests/ui/hotkeys.test.ts` „AK-S1-20 J wählt das Badehaus …“ (16 Einträge: Z. 78)                                            |
-| AK-S2-01 | 3                          | `tests/sim/glassworks.test.ts` „AK-S2-01 glassworks laut Spec 5.2 …“                                                         |
-| AK-S2-02 | 3                          | `glassworks.test.ts` „AK-S2-02 Glashütte allein …“                                                                           |
-| AK-S2-03 | 3                          | `glassworks.test.ts` „AK-S2-03 ein Input fehlt …“                                                                            |
-| AK-S2-04 | 3                          | `glassworks.test.ts` „AK-S2-04 Konkurrenz ums Holz …“                                                                        |
-| AK-S2-05 | 3                          | `tests/sim/production.test.ts` „AK-S2-05 Weberei, Brennerei, Werkzeugmacher mit Input-Liste …“                               |
-| AK-S2-06 | 3                          | `glassworks.test.ts` „AK-S2-06 Lager voll …“                                                                                 |
-| AK-S2-07 | 3                          | `glassworks.test.ts` „AK-S2-07 Abriss im Zyklus …“                                                                           |
-| AK-S2-08 | 3                          | `glassworks.test.ts` „AK-S2-08 Brand bei progress 20 …“                                                                      |
-| AK-S2-09 | 3                          | `glassworks.test.ts` „AK-S2-09 Sturm …“                                                                                      |
-| AK-S2-10 | 3                          | `tests/sim/merchants.test.ts` „AK-S2-10 Badehaus brennt bei T …“                                                             |
-| AK-S2-11 | 3                          | `glassworks.test.ts` „AK-S2-11 Glas-Verkauf …“                                                                               |
-| AK-S2-12 | 3                          | `glassworks.test.ts` „AK-S2-12 Auftrag Glas …“                                                                               |
-| AK-S2-13 | 3 (Referenz: 1, Schritt 1) | `glassworks.test.ts` „AK-S2-13 Stufe 4 …“; Referenz `tests/sim/orders.test.ts` „AK-S2-13 Referenz …“                         |
-| AK-S2-14 | 3                          | `glassworks.test.ts` „AK-S2-14 Boom-Pool …“ (M6:AK-S1-07/-08 in `crises.test.ts` unverändert)                                |
-| AK-S2-15 | 3                          | `glassworks.test.ts` „AK-S2-15 Invariante mit Glas …“ (M6:AK-S3-05 in `trade.test.ts` unverändert)                           |
-| AK-S2-16 | 3                          | `glassworks.test.ts` „AK-S2-16 goodsBalance …“                                                                               |
-| AK-S2-17 | 4                          | `tests/render/sprites.test.ts` „AK-S2-17 Glashütte hat einen Silhouetten-Eintrag …“; UI-Sollwerte nur laut Tabelle oben (P1) |
-| AK-S2-18 | 4                          | `tests/ui/hotkeys.test.ts` „AK-S2-18 O wählt die Glashütte …“                                                                |
-| AK-S3-01 | 5                          | `tests/sim/merchants.test.ts` „AK-S3-01 59 Kaufleute …“                                                                      |
-| AK-S3-02 | 5                          | `merchants.test.ts` „AK-S3-02 Hebel 40, won false, 60 Kaufleute …“                                                           |
-| AK-S3-03 | 5                          | `tests/sim/queries.test.ts` „AK-S3-03 goalView …“                                                                            |
-| AK-S3-04 | 3 (P2)                     | `queries.test.ts` „AK-S3-04 missingInputs …“ (in `describe('M8 Abfragen')`)                                                  |
-| AK-S3-05 | 5                          | `queries.test.ts` „AK-S3-05 Badabdeckung …“                                                                                  |
-| AK-S3-06 | 5                          | `queries.test.ts` „AK-S3-06 placementZone …“                                                                                 |
-| AK-S3-07 | 5                          | `queries.test.ts` „AK-S3-07 Diagnose Kaufmannshaus …“                                                                        |
-| AK-S3-08 | 5                          | `merchants.test.ts` „AK-S3-08 Vorbereitung zahlt sich aus …“                                                                 |
-| AK-S3-09 | 5                          | Review: Doku-Schritt 4 (ADR-005-Nachtrag, arc42 §6 und §8)                                                                   |
-| AK-S3-10 | QA-A                       | Browser-Kopfzeilen-Check (`qa-playtester`), siehe QA-Checks                                                                  |
-| AK-U2-01 | 4 (P1)                     | `tests/ui/tooltip.test.ts` „AK-U2-01 Glashütte und Badehaus wörtlich …“                                                      |
-| AK-U2-02 | 4 (P1)                     | `tests/ui/inspect.test.ts` „AK-U2-02 stateInfo …“                                                                            |
-| AK-U2-08 | 4 (P1)                     | `tests/ui/guide.test.ts` „AK-U2-08 (b)“, „(c)“, „(d)“, „(f)“, „(g)“, „(h)“ ((a), (e): AK-S1-19)                              |
-| AK-U2-09 | 4 (P1)                     | `tests/ui/guide.test.ts` „AK-U2-09 Glashütte wartet …“                                                                       |
-| RF-1     | 1                          | `merchants.test.ts` „RF-1 Badehaus abgerissen …“                                                                             |
-| RF-2     | 3                          | `glassworks.test.ts` „RF-2 nicht angebundene Glashütte …“                                                                    |
-| RF-3     | 1                          | `merchants.test.ts` „RF-3 Hebel aktiv, Bürger unter N …“                                                                     |
-| RF-5     | 3                          | `glassworks.test.ts` „RF-5 Glas-Auftrag läuft weiter …“                                                                      |
+| AK       | Task                       | Testdatei / Testname                                                                                                          |
+| -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| AK-S1-01 | 1                          | `tests/sim/defs.test.ts` „AK-S1-01 Stufe 4, Hebel, Glas, Badehaus und Dienst bath …“                                          |
+| AK-S1-02 | 1                          | `tests/sim/save.test.ts` „AK-S1-02 createWorld: version 4, wonMerchants false …“                                              |
+| AK-S1-03 | 1                          | `tests/sim/merchants.test.ts` „AK-S1-03 Häuser Stufe 2 (8), 3 (15), 4 (20) …“                                                 |
+| AK-S1-04 | 1                          | `merchants.test.ts` „AK-S1-04 vor dem Sieg: einziger Grund …“                                                                 |
+| AK-S1-05 | 1                          | `merchants.test.ts` „AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 … Steuer 300 (ohne Aufstieg 210)“                                 |
+| AK-S1-06 | 1                          | `merchants.test.ts` „AK-S1-06 Gründe …“                                                                                       |
+| AK-S1-07 | 1                          | `merchants.test.ts` „AK-S1-07 … 20 EW nach 5 Wachstumstakten“                                                                 |
+| AK-S1-08 | 1                          | `merchants.test.ts` „AK-S1-08 Kaufleute ohne Glas …“                                                                          |
+| AK-S1-09 | 1                          | `merchants.test.ts` „AK-S1-09 Hebel 40 …“ und „AK-S1-09 tierLock …“                                                           |
+| AK-S1-10 | 1                          | `merchants.test.ts` „AK-S1-10 Massenaufstieg …“                                                                               |
+| AK-S1-11 | 1                          | `save.test.ts` „AK-S1-11 lädt einen echten v3-Stand …“ (Fixture Schritt 1)                                                    |
+| AK-S1-12 | 1                          | `save.test.ts` „AK-S1-12 v1 und v2 laden über alle Migrationen nach v4“                                                       |
+| AK-S1-13 | 1                          | `save.test.ts` „AK-S1-13 Round-trip v4 …“                                                                                     |
+| AK-S1-14 | 1                          | `save.test.ts` „AK-S1-14 weist jede verletzte v4-Ladeprüfung einzeln ab …“                                                    |
+| AK-S1-15 | 1                          | `tests/sim/balance-crises.test.ts` „AK-S1-15 Stufe off bitgleich …“ (+ `balance.test.ts` ohne Diff, Schritt 9)                |
+| AK-S1-16 | 1                          | Review: Doku-Schritt 10 (`docs/arc42.md` §8 Persistenz)                                                                       |
+| AK-S1-17 | 2                          | `tests/render/sprites.test.ts` „AK-S1-17 Kaufmannshaus: Höhe endlich und gleich Stufe 3 …“                                    |
+| AK-S1-18 | 2                          | `tests/ui/hints.test.ts` „AK-S1-18 friendlyReason …“ und `tests/ui/hud.test.ts` „AK-S1-18 tierPath …“                         |
+| AK-S1-19 | 2                          | `tests/ui/guide.test.ts` „AK-S1-19 (a) …“ und „AK-S1-19 (e) …“                                                                |
+| AK-S1-20 | 2                          | `tests/ui/hotkeys.test.ts` „AK-S1-20 J wählt das Badehaus …“ (16 Einträge: Z. 78)                                             |
+| AK-S1-21 | 1 (S11)                    | `tests/sim/placement.test.ts` „AK-S1-21 Badehaus vor dem Sieg gesperrt …“, „AK-S1-21 Hebel 40 …“, „AK-S1-21 buildLock … null“ |
+| AK-S2-01 | 3                          | `tests/sim/glassworks.test.ts` „AK-S2-01 glassworks laut Spec 5.2 …“                                                          |
+| AK-S2-02 | 3                          | `glassworks.test.ts` „AK-S2-02 Glashütte allein …“                                                                            |
+| AK-S2-03 | 3                          | `glassworks.test.ts` „AK-S2-03 ein Input fehlt …“                                                                             |
+| AK-S2-04 | 3                          | `glassworks.test.ts` „AK-S2-04 Konkurrenz ums Holz …“                                                                         |
+| AK-S2-05 | 3                          | `tests/sim/production.test.ts` „AK-S2-05 Weberei, Brennerei, Werkzeugmacher mit Input-Liste …“                                |
+| AK-S2-06 | 3                          | `glassworks.test.ts` „AK-S2-06 Lager voll …“                                                                                  |
+| AK-S2-07 | 3                          | `glassworks.test.ts` „AK-S2-07 Abriss im Zyklus …“                                                                            |
+| AK-S2-08 | 3                          | `glassworks.test.ts` „AK-S2-08 Brand bei progress 20 …“                                                                       |
+| AK-S2-09 | 3                          | `glassworks.test.ts` „AK-S2-09 Sturm …“                                                                                       |
+| AK-S2-10 | 3                          | `tests/sim/merchants.test.ts` „AK-S2-10 Badehaus brennt bei T …“                                                              |
+| AK-S2-11 | 3                          | `glassworks.test.ts` „AK-S2-11 Glas-Verkauf …“                                                                                |
+| AK-S2-12 | 3                          | `glassworks.test.ts` „AK-S2-12 Auftrag Glas …“                                                                                |
+| AK-S2-13 | 3 (Referenz: 1, Schritt 1) | `glassworks.test.ts` „AK-S2-13 Stufe 4 …“; Referenz `tests/sim/orders.test.ts` „AK-S2-13 Referenz …“                          |
+| AK-S2-14 | 3                          | `glassworks.test.ts` „AK-S2-14 Boom-Pool …“ (M6:AK-S1-07/-08 in `crises.test.ts` unverändert)                                 |
+| AK-S2-15 | 3                          | `glassworks.test.ts` „AK-S2-15 Invariante mit Glas …“ (M6:AK-S3-05 in `trade.test.ts` unverändert)                            |
+| AK-S2-16 | 3                          | `glassworks.test.ts` „AK-S2-16 goodsBalance …“                                                                                |
+| AK-S2-17 | 4                          | `tests/render/sprites.test.ts` „AK-S2-17 Glashütte hat einen Silhouetten-Eintrag …“; UI-Sollwerte nur laut Tabelle oben (P1)  |
+| AK-S2-18 | 4                          | `tests/ui/hotkeys.test.ts` „AK-S2-18 O wählt die Glashütte …“                                                                 |
+| AK-S2-19 | 3 (S11)                    | `tests/sim/placement.test.ts` „AK-S2-19 Glashütte vor dem Sieg gesperrt …“                                                    |
+| AK-S3-01 | 5                          | `tests/sim/merchants.test.ts` „AK-S3-01 59 Kaufleute …“                                                                       |
+| AK-S3-02 | 5                          | `merchants.test.ts` „AK-S3-02 Hebel 40, won false, 60 Kaufleute …“                                                            |
+| AK-S3-03 | 5                          | `tests/sim/queries.test.ts` „AK-S3-03 goalView …“                                                                             |
+| AK-S3-04 | 3 (P2)                     | `queries.test.ts` „AK-S3-04 missingInputs …“ (in `describe('M8 Abfragen')`)                                                   |
+| AK-S3-05 | 5                          | `queries.test.ts` „AK-S3-05 Badabdeckung …“                                                                                   |
+| AK-S3-06 | 5                          | `queries.test.ts` „AK-S3-06 placementZone …“                                                                                  |
+| AK-S3-07 | 5                          | `queries.test.ts` „AK-S3-07 Diagnose Kaufmannshaus …“                                                                         |
+| AK-S3-08 | 5                          | `merchants.test.ts` „AK-S3-08 Freischaltung im Siegtick …“ (geändert S11)                                                     |
+| AK-S3-09 | 5                          | Review: Doku-Schritt 4 (ADR-005-Nachtrag, arc42 §6 und §8)                                                                    |
+| AK-S3-10 | QA-A                       | Browser-Kopfzeilen-Check (`qa-playtester`), siehe QA-Checks                                                                   |
+| AK-U2-01 | 4 (P1)                     | `tests/ui/tooltip.test.ts` „AK-U2-01 Glashütte und Badehaus wörtlich …“                                                       |
+| AK-U2-02 | 4 (P1)                     | `tests/ui/inspect.test.ts` „AK-U2-02 stateInfo …“                                                                             |
+| AK-U2-08 | 4 (P1)                     | `tests/ui/guide.test.ts` „AK-U2-08 (b)“, „(c)“, „(d)“, „(f)“, „(g)“, „(h)“ ((a), (e): AK-S1-19)                               |
+| AK-U2-09 | 4 (P1)                     | `tests/ui/guide.test.ts` „AK-U2-09 Glashütte wartet …“                                                                        |
+| RF-1     | 1                          | `merchants.test.ts` „RF-1 Badehaus abgerissen …“                                                                              |
+| RF-2     | 3                          | `glassworks.test.ts` „RF-2 nicht angebundene Glashütte …“                                                                     |
+| RF-3     | 1                          | `merchants.test.ts` „RF-3 Hebel aktiv, Bürger unter N …“                                                                      |
+| RF-5     | 3                          | `glassworks.test.ts` „RF-5 Glas-Auftrag läuft weiter …“                                                                       |
 
 Hinweis zum `grep`: Die Namen „AK-S1-0x“, „AK-S2-0x“, „AK-S3-0x“ gibt es auch aus M5/M6 in `save.test.ts`,
 `queries.test.ts`, `orders.test.ts`, `fire.test.ts`. Alle M8-Tests stehen deshalb in `describe('M8 …')`-Blöcken bzw.
@@ -5158,35 +5552,35 @@ in den neuen Dateien `merchants.test.ts` und `glassworks.test.ts`; Reviews greif
 
 **Tasks 6–8, QA, R1:**
 
-| AK           | Task / Check          | Testdatei / Testname bzw. Messung                                                                                                                                                       |
-| ------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AK-B1-01     | Task 6 Schritt 2      | `tests/sim/balance-merchants.test.ts` / `AK-B1-01 Sieg 6050, zweites Ziel bis 12 000 …`                                                                                                 |
-| AK-B1-02     | Task 6 Schritt 5      | Log `VITE_BALANCE_LOG=1 … --silent=false`; Vitest `AK-B1-02 Messwerte vollständig …`                                                                                                    |
-| AK-B1-03     | Task 6 Schritt 6      | Bericht Task 6 (Hebel-Satz bei > 9600)                                                                                                                                                  |
-| AK-B1-04     | Task 6 Schritt 2      | `tests/sim/balance-merchants.test.ts` / `AK-B1-04 Laden beim ersten Kaufmann …`                                                                                                         |
-| AK-B1-05     | Task 6 Schritt 7      | `balance.test.ts`, `balance-crises.test.ts` grün, `git diff` leer                                                                                                                       |
-| AK-B1-06     | Abschluss             | Ruling-Vorlage B1                                                                                                                                                                       |
-| AK-B1-07     | Task 6 Schritt 2      | `tests/sim/balance-merchants.test.ts` / `AK-B1-07 K1 vorbereitet …`                                                                                                                     |
-| AK-B2-01     | Task 7 Schritt 1      | `tests/sim/scenario-saves.test.ts` / sechs `AK-B2-01 m8-…`; Ladbarkeit und Dateizahl über `AK-S5-01`, `AK-S5-02`                                                                        |
-| AK-B2-02     | Task 7 Schritt 1      | `tests/sim/scenario-saves.test.ts` / `AK-B2-02 nach dem ersten Tick …`, Namensliste `AK-S5-01`, `galerie`-Test                                                                          |
-| AK-U1-01     | Task 8 Schritt 1      | `tests/ui/goal.test.ts` / fünf `AK-U1-01 …`                                                                                                                                             |
-| AK-U1-02     | Task 8 Schritt 2      | `tests/ui/hotkeys.test.ts` / `AK-U1-02 17 Werkzeugtasten …`                                                                                                                             |
-| AK-U1-03     | Task 8 Schritt 2      | `tests/ui/soundEvents.test.ts` / drei `AK-U1-03 …`                                                                                                                                      |
-| AK-U1-04     | QA-B-1 Schritt 1      | Browser (Vorprüfung `popChipHidden` in `tests/ui/hud.test.ts`)                                                                                                                          |
-| AK-U1-05     | QA-B-1 Schritt 2      | Browser                                                                                                                                                                                 |
-| AK-U1-06     | QA-B-1 Schritt 3      | Browser                                                                                                                                                                                 |
-| AK-U1-07     | QA-B-1 Schritt 4      | Browser                                                                                                                                                                                 |
-| AK-U1-08     | Task 8 Schritt 9      | `git diff` leer, `tests/ui/contrast.test.ts` grün                                                                                                                                       |
-| RF-4         | Task 8 Schritt 1      | `tests/ui/goal.test.ts` / `RF-4 beide Ziele im selben Frame …`, `RF-4 zweites Ziel allein …`                                                                                            |
-| AK-U2-03     | QA-B-2 Schritt 1      | Browser                                                                                                                                                                                 |
-| AK-U2-04     | QA-B-2 Schritt 2      | Browser                                                                                                                                                                                 |
-| AK-U2-05     | QA-B-2 Schritt 3      | Browser                                                                                                                                                                                 |
-| AK-U2-06     | QA-B-2 Schritt 4      | Browser                                                                                                                                                                                 |
-| AK-U2-07     | QA-B-2 Schritt 5      | Browser                                                                                                                                                                                 |
-| AK-U2-10     | QA-B-2 Schritt 6      | Browser                                                                                                                                                                                 |
-| AK-R1-01     | R1 (`lead-art`)       | `tests/render/sprites.test.ts` / `describe('M8 R1 Silhouetten')`                                                                                                                        |
-| AK-R1-02     | R1, Blindtest nach T7 | Browser `qa-playtester`, `.studio/qa/M8-R1/`                                                                                                                                            |
-| AK-R1-03     | R1 (`lead-art`)       | `tests/render/overlays.test.ts`, `palette.test.ts` / `describe('M8 R1 Symbole und Farben')`; `MAP_SIGNS`-Teil: Task 8 Schritt 8, `tests/ui/guide.test.ts` / `AK-R1-03 MAP_SIGNS …` (P3) |
-| AK-R1-04     | R1 (`lead-art`)       | `tests/render/overlays.test.ts` / `AK-R1-04 overlayPlan Badehaus …`                                                                                                                     |
-| AK-S3-10     | QA-A Schritte 2, 3, 7 | Browser                                                                                                                                                                                 |
-| (Tasks 2, 4) | QA-A Schritte 4–6     | Browser, Abnahme der UI-Tasks 2 und 4 (kein neues AK)                                                                                                                                   |
+| AK           | Task / Check                        | Testdatei / Testname bzw. Messung                                                                                                                                                       |
+| ------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AK-B1-01     | Task 6 Schritt 2                    | `tests/sim/balance-merchants.test.ts` / `AK-B1-01 Sieg 6050, zweites Ziel bis 12 000 …`                                                                                                 |
+| AK-B1-02     | Task 6 Schritt 5                    | Log `VITE_BALANCE_LOG=1 … --silent=false`; Vitest `AK-B1-02 Messwerte vollständig …`                                                                                                    |
+| AK-B1-03     | Task 6 Schritt 6                    | Bericht Task 6 (Hebel-Satz bei > 9600)                                                                                                                                                  |
+| AK-B1-04     | Task 6 Schritt 2                    | `tests/sim/balance-merchants.test.ts` / `AK-B1-04 Laden beim ersten Kaufmann …`                                                                                                         |
+| AK-B1-05     | Task 6 Schritt 7                    | `balance.test.ts`, `balance-crises.test.ts` grün, `git diff` leer                                                                                                                       |
+| AK-B1-06     | Abschluss                           | Ruling-Vorlage B1                                                                                                                                                                       |
+| AK-B2-01     | Task 7 Schritt 1                    | `tests/sim/scenario-saves.test.ts` / sechs `AK-B2-01 m8-…`; Ladbarkeit und Dateizahl über `AK-S5-01`, `AK-S5-02`                                                                        |
+| AK-B2-02     | Task 7 Schritt 1                    | `tests/sim/scenario-saves.test.ts` / `AK-B2-02 nach dem ersten Tick …`, Namensliste `AK-S5-01`, `galerie`-Test                                                                          |
+| AK-U1-01     | Task 8 Schritt 1                    | `tests/ui/goal.test.ts` / fünf `AK-U1-01 …`                                                                                                                                             |
+| AK-U1-02     | Task 8 Schritt 2                    | `tests/ui/hotkeys.test.ts` / `AK-U1-02 17 Werkzeugtasten …`                                                                                                                             |
+| AK-U1-03     | Task 8 Schritt 2                    | `tests/ui/soundEvents.test.ts` / drei `AK-U1-03 …`                                                                                                                                      |
+| AK-U1-04     | QA-B-1 Schritt 1                    | Browser (Vorprüfung `popChipHidden` in `tests/ui/hud.test.ts`)                                                                                                                          |
+| AK-U1-05     | QA-B-1 Schritt 2                    | Browser                                                                                                                                                                                 |
+| AK-U1-06     | QA-B-1 Schritt 3                    | Browser                                                                                                                                                                                 |
+| AK-U1-07     | QA-B-1 Schritt 4                    | Browser                                                                                                                                                                                 |
+| AK-U1-08     | Task 8 Schritt 9                    | `git diff` leer, `tests/ui/contrast.test.ts` grün                                                                                                                                       |
+| AK-U1-09     | Task 8 Schritt 5b; QA-B-1 Schritt 5 | `tests/ui/goal.test.ts` / drei `AK-U1-09 …` (S11, R152 B1); Browser: Tasten J und O vor der Freischaltung                                                                               |
+| RF-4         | Task 8 Schritt 1                    | `tests/ui/goal.test.ts` / `RF-4 beide Ziele im selben Frame …`, `RF-4 zweites Ziel allein …`                                                                                            |
+| AK-U2-03     | QA-B-2 Schritt 1                    | Browser                                                                                                                                                                                 |
+| AK-U2-04     | QA-B-2 Schritt 2                    | Browser                                                                                                                                                                                 |
+| AK-U2-05     | QA-B-2 Schritt 3                    | Browser                                                                                                                                                                                 |
+| AK-U2-06     | QA-B-2 Schritt 4                    | Browser                                                                                                                                                                                 |
+| AK-U2-07     | QA-B-2 Schritt 5                    | Browser                                                                                                                                                                                 |
+| AK-U2-10     | QA-B-2 Schritt 6                    | Browser                                                                                                                                                                                 |
+| AK-R1-01     | R1 (`lead-art`)                     | `tests/render/sprites.test.ts` / `describe('M8 R1 Silhouetten')`                                                                                                                        |
+| AK-R1-02     | R1, Blindtest nach T7               | Browser `qa-playtester`, `.studio/qa/M8-R1/`                                                                                                                                            |
+| AK-R1-03     | R1 (`lead-art`)                     | `tests/render/overlays.test.ts`, `palette.test.ts` / `describe('M8 R1 Symbole und Farben')`; `MAP_SIGNS`-Teil: Task 8 Schritt 8, `tests/ui/guide.test.ts` / `AK-R1-03 MAP_SIGNS …` (P3) |
+| AK-R1-04     | R1 (`lead-art`)                     | `tests/render/overlays.test.ts` / `AK-R1-04 overlayPlan Badehaus …`                                                                                                                     |
+| AK-S3-10     | QA-A Schritte 2, 3, 7               | Browser                                                                                                                                                                                 |
+| (Tasks 2, 4) | QA-A Schritte 4–6                   | Browser, Abnahme der UI-Tasks 2 und 4 (kein neues AK)                                                                                                                                   |

@@ -561,6 +561,18 @@ der Kopfzeile.
 **Einschätzung:** niedrig; vermutlich geht der Fokus beim Schliessen (`restoreFocus`) an kein Element der
 Kopfzeile zurück, sodass der Browser die Tab-Folge an der zuletzt fokussierten Stelle im DOM fortsetzt.
 
+### 2026-10-02 · `src/ui/menu.ts:99`, `src/ui/trade.ts` · Gesperrtes vor der Freischaltung sichtbar (M8, S11)
+
+**Beobachtung:** Nach M8 (S11-Minimum) sind Glashütte und Badehaus bis zur Freischaltung der Stufe 4 gesperrt und
+fehlen in der Bauleiste. Zwei Stellen zeigen sie trotzdem ab Spielbeginn: (a) die Tastenliste im Menü
+(`hotkeyList()` in `menu.ts:99`) nennt J und O mit Namen; (b) das Handels-Panel bietet Glas zum Kauf und Verkauf an
+(`trade.ts` bleibt in M8 unverändert, R150; M8-Spec §23 Widerspruch 2).
+**Ursprung:** Delta-Gate H-M8 (R152, B3) und Spec-Nachführung H-M8 (R150).
+**Einschätzung:** niedrig, kein Fehler im Sinne der M8-Spec. Dieselbe Klasse „UI zeigt nur Freigeschaltetes"
+(Nutzernachtrag S11): gehört in die M10-Spec „Schritt für Schritt" (Programm
+`docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §3.8, Grundsatz 5), dort zusammen mit Lager-Chips,
+Hotkeys und Bauleiste über `unlocked` lösen.
+
 ## Ausgewertet 2026-09-30
 
 ### Erledigt (überholt)
