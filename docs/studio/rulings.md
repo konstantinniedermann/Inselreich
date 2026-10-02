@@ -782,3 +782,12 @@ M6:AK-S3-07). `renderer.ts` seriell: H-R2 → H-R3/H-R4 → M10-U2; der spätere
 — Kosten bei Irrtum: Spec-Nachführung — Archiv-Bericht lead-design H-D1
 
 Entscheider: L0 · Anlass: Bericht Spec M10, R137-Meldungen · ADR: —
+
+## R160 · 2026-10-02 · M9 H-R2
+
+Ruling: Gate Merge H-R2 bestanden mit Auflagen (2a53cdd, Review OK, Frame 0 %): Wal mit erkennbarer
+Silhouette (Rücken, Fluke, Fontäne) statt Scheibe; Kappen `fish [20, 6]`, `flocks [4, 2]`, Tiere in der
+Startansicht sichtbar. Re-Review per Diff, dann merged lead-art ohne neues Gate. — Kosten bei Irrtum:
+eine Art-Runde — Screenshots `.studio/qa/h-r2/`
+
+Entscheider: L0 · Anlass: Gate Merge H-R2, Art-Sichtung L0 · ADR: —
