@@ -668,7 +668,9 @@ Stufenpfad, `next-step` = `nextStep`.
 - **Gesperrte Taste** (`app.ts`, **Änderung S11**, Entscheid Offener Punkt 15 neu): reine Funktion
   `lockedToolText(world, defId)` in `goal.ts` liefert „{Name}: {friendlyReason(buildLock)}", zum Beispiel
   „Badehaus: Erst nach dem Ziel (50 Bürger)", oder `null`. Wählt eine Taste oder ein Eintrag ein gesperrtes Gebäude,
-  setzt `app.ts` kein Werkzeug und zeigt den Text als Meldung.
+  setzt `app.ts` kein Werkzeug und zeigt den Text als Meldung. **Art (R151 W10):** dieselbe wie die bestehenden
+  Bau-Ablehnungen in `app.ts` (`placeBuilding` mit `!r.ok` → `showError`): `showMessage(text, 'error')`, nicht
+  bleibend, dazu der Ton `error` (`sound.play('error')`). Die Freischalt-Meldung (4.3 Punkt 5) bleibt `info`.
 - **Zweites Banner** (`app.ts`): Wechselt `wonMerchants` auf `true`, erscheint einmal die Meldung „Zweites Ziel
   erreicht: 60 Kaufleute! Das Spiel läuft weiter." (Art wie das erste Banner, `info`, bleibend). Ein geladener
   Stand mit `wonMerchants true` zeigt es nicht erneut (Merkfeld `wonMerchantsShown` neben `wonShown`).
@@ -780,8 +782,10 @@ Vollständigkeitsprüfung von M7:AK-UX-03 sonst rot wird.
 - **`remedyText`, `waitingInput`:** erstes Gut aus `missingInputs` (leer → erstes aus `consumes`). Glashütte ohne
   Holz → „Baue Holzfäller (L) oder kaufe Holz am Kontor".
 - **`remedyText`, `storageFull` am Steinbruch:** „Verkaufe Stein am Kontor oder baue Glashütte (O)" (**Änderung**,
-  bisher „Verkaufe Stein am Kontor" ohne Abnehmer). M7:AK-UX-10 nennt keine Steinbruch-Zeile, aber
-  `tests/ui/guide.test.ts` prüft den bisherigen Text; er wird bewusst geändert (20).
+  bisher „Verkaufe Stein am Kontor" ohne Abnehmer). **Änderung S11 (R151 W9):** Der Zusatz „ oder baue Glashütte (O)"
+  erscheint nur, wenn `buildLock(world, 'glassworks') === null`; vorher bleibt es wörtlich bei „Verkaufe Stein am
+  Kontor" (kein Hinweis auf ein gesperrtes Gebäude). M7:AK-UX-10 nennt keine Steinbruch-Zeile, aber
+  `tests/ui/guide.test.ts` prüft den bisherigen Text; er wird bewusst um den freigeschalteten Fall ergänzt (20).
 - Kein Satz enthält „Tick" (M7:AK-UX-13).
 
 ## 15. Schnittstellen zwischen den Strängen
@@ -1197,8 +1201,10 @@ Ausblick in Ruhe-Ansicht und Tooltip, Texte im M7-UX-Format).
   Kaufleute" mit `title` „Beide Ziele erreicht — freies Spiel"; Ruhe-Ansicht `goal-text` = „Handelsstadt erreicht ·
   60 Kaufleute", Balken 100 %, `goal-next` `hidden`. Speichern und Laden: keine erneute Meldung. `#hud` ≤ 84 px
   (M7:AK-UX-15 bleibt gültig).
-- **AK-U1-07** (Browser) Fensterbreite 800 px: neues Spiel, Badehaus mit J bauen, Info-Panel öffnen — kein Absturz,
-  keine Konsolenfehler (R78).
+- **AK-U1-07** (Browser, **Änderung S11**, R151 W8) Fensterbreite 800 px: neues Spiel, Taste J → Meldung „Badehaus:
+  Erst nach dem Ziel (50 Bürger)", kein Werkzeug aktiv; dann Szenario `m8-kaufleute-ohne-glas` laden, Badehaus mit J
+  bauen, Info-Panel öffnen — kein Absturz, keine Konsolenfehler (R78). (Vorher: im neuen Spiel Badehaus mit J bauen,
+  nach S11 unmöglich.)
 - **AK-U1-08** (Review, **Änderung**: gelockert) Der Diff von U1 und U2 ändert `index.html`, `trade.ts` und
   `messages.ts` nicht. `src/style.css` ändert nur U1 und nur, wenn M7:AK-UX-15 sonst reisst; dann nur Layout-Regeln der
   Kopfzeile, keine neuen Farben, keine `opacity` auf Text. `tests/ui/contrast.test.ts` (M7:AK-U2-02, ≥ 4,5 : 1)
@@ -1208,7 +1214,8 @@ Ausblick in Ruhe-Ansicht und Tooltip, Texte im M7-UX-Format).
 'bathhouse')` bei `won false` = „Badehaus: Erst nach dem Ziel (50 Bürger)", bei `won true` `null`;
   `unlockNotice(true, w)` mit `won true` = Text aus 4.3 Punkt 5, `unlockNotice(false, w)` und `unlockNotice(true, w)`
   mit `won false` = `null`; kein Text enthält „Tick". Browser (Szenario `m8-vor-sieg`): Taste J → kein Werkzeug aktiv,
-  Meldung „Badehaus: Erst nach dem Ziel (50 Bürger)", Geld unverändert; Taste O ebenso mit „Glashütte: …".
+  Meldung „Badehaus: Erst nach dem Ziel (50 Bürger)" mit Klasse `toast error` (wie eine Bau-Ablehnung, R151 W10),
+  Geld unverändert; Taste O ebenso mit „Glashütte: …".
 
 ### U2 — Tooltips, Info-Panel, Gründe, nächster Schritt, Handel
 
@@ -1251,8 +1258,9 @@ AK-U2-10 sind neu (14.2, 14.8).
   unverändert. Kein Satz enthält „Tick".
 - **AK-U2-09** (Vitest, `remedyText`, Erweiterung M7:AK-UX-10, neu) Glashütte `waitingInput` mit Stein 5, Holz 0 →
   „Baue Holzfäller (L) oder kaufe Holz am Kontor"; Stein 0, Holz 0 → „Baue Steinbruch (B) oder kaufe Stein am
-  Kontor"; `missingInputs` leer → Satz zum ersten Gut aus `consumes` (Stein). Steinbruch `storageFull` → „Verkaufe
-  Stein am Kontor oder baue Glashütte (O)" (**Änderung**, bewusst geänderter Test). Holzfäller `storageFull` →
+  Kontor"; `missingInputs` leer → Satz zum ersten Gut aus `consumes` (Stein). Steinbruch `storageFull` mit `won true`
+  → „Verkaufe Stein am Kontor oder baue Glashütte (O)" (**Änderung**, bewusst geänderter Test); mit `won false` →
+  „Verkaufe Stein am Kontor" (wörtlich wie heute, **Änderung S11**, R151 W9). Holzfäller `storageFull` →
   „Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)" und Weberei wartet → „Baue Schäferei (G) oder kaufe Wolle am
   Kontor" (beide wörtlich wie heute).
 - **AK-U2-10** (Browser, 1280 × 800, Szenario `m8-kaufleute-ohne-glas` (**Änderung S11**: vorher `m8-vor-sieg`),
@@ -1329,7 +1337,7 @@ AK-U1-05, AK-U2-01, AK-U2-06, AK-U2-10 (81).
 | M7:AK-UX-03                        | Reason-Tabelle ohne Sperrgründe                      | **Änderung:** zwei Zeilen für die Sperrgründe (14.7, AK-S1-18)                                                                                      |
 | M7:AK-UX-07                        | `tierPath()` endet bei den Bürgern                   | **Änderung:** endet mit „→ Kaufleute (brauchen Glas, Badehaus)" (14.4, AK-S1-18)                                                                    |
 | M7:AK-UX-08 R0, Regeln 3, 4, 6     | R0 bei `won`; alle vollen Häuser zählen              | **Änderung:** R0 bei `wonMerchants`; Häuser zählen nur bei freier nächster Stufe (14.8; Filter S1, AK-S1-19; R0 U2, AK-U2-08)                       |
-| M7-UX Steinbruch-Abhilfe (Test)    | „Verkaufe Stein am Kontor"                           | **Änderung:** „… oder baue Glashütte (O)" (14.8, AK-U2-09)                                                                                          |
+| M7-UX Steinbruch-Abhilfe (Test)    | „Verkaufe Stein am Kontor"                           | **Änderung:** „… oder baue Glashütte (O)", nur bei freigeschalteter Glashütte (14.8, AK-U2-09, R151 W9)                                             |
 | M7:AK-UX-16                        | „Produktion" öffnet 8 Einträge                       | **Änderung:** 9 Einträge ab S2 (14.2, AK-U2-10)                                                                                                     |
 | M7:AK-UX-18                        | Handels-Panel scrollt intern bis „Rum"               | **Änderung:** bis „Glas" (14.5, AK-U2-07)                                                                                                           |
 | M7:AK-UX-25, M7:AK-UX-11           | Legende 11 Zeilen                                    | unverändert 11 Zeilen; die Glocke-Buch-Zeile nennt das Bad-Symbol (K2, AK-R1-03)                                                                    |
@@ -1461,21 +1469,22 @@ Anlass: Nutzernachtrag S11 („Glashütte erst bauen, wenn die Bevölkerung das 
 `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §5, Gate Brainstorming R148 (F2). Nur der direkte
 Widerspruch wird in M8 gelöst; Freischaltbaum, Feld `unlocked`, Hilfe-Karte und Handels-Ausblendung folgen in M10.
 
-| Spec-Stelle       | vorher                                                | jetzt                                                                                                                                    |
-| ----------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1, 2.2          | Kann K1 „vorbereitet"                                 | K1 gestrichen; Streichreihenfolge K2, K3                                                                                                 |
-| 3 Nicht-Scope     | „keine Sperre des Bauens vor dem Sieg"                | Sperre von Glashütte und Badehaus im Scope; Freischaltbaum ausdrücklich M10                                                              |
-| 4.3 Punkt 1, 4, 5 | ab Tick 0 baubar, Vorschau-Tooltip                    | `unlockTier: 4`, `buildLock`, `canPlace` prüft zuerst; Tooltip „Für Kaufleute (Stufe 4)"; Freischalt-Meldung                             |
-| 4.3 Vorbereitung  | Bau vor dem Sieg als echte Wahl                       | entfällt; Vorbereiten = Material zurücklegen                                                                                             |
-| 11.2              | —                                                     | `buildLock`, `canPlace` mit Sperre                                                                                                       |
-| 14.1              | Glas-Chip immer sichtbar                              | verborgen bis Freischaltung oder Glas > 0; `unlockNotice`, `lockedToolText` in `goal.ts`                                                 |
-| 14.2, 21 Punkt 15 | Einträge und Tasten ab S1/S2 aktiv                    | Einträge ab Freischaltung; Tasten fest, vorher Meldung statt Werkzeug                                                                    |
-| 14.3              | Vorschau-Zeile „nach dem Bürger-Ziel"                 | „Für Kaufleute (Stufe 4)"                                                                                                                |
-| 16.4, AK-B1-07    | Kann K1                                               | gestrichen                                                                                                                               |
-| 17                | —                                                     | S1: `placement.ts`, `placement.test.ts`, `bathhouse.unlockTier`; S2: `glassworks.unlockTier`; U1, U2 Inhalt ergänzt                      |
-| 18.1 Szenarien    | `m8-kurz-vor-sieg` mit Badehaus; `galerie` über `put` | ohne Badehaus; `m8-glashuette-wartet` `won true`; `galerie` mit Helfer `withUnlock`                                                      |
-| 18 AK             | 79                                                    | 81: neu AK-S1-21, AK-S2-19, AK-U1-09; gestrichen AK-B1-07; geändert AK-S3-08, AK-B2-02, AK-U1-04, AK-U1-05, AK-U2-01, AK-U2-06, AK-U2-10 |
-| 21 Punkt 11       | offen                                                 | entfallen                                                                                                                                |
+| Spec-Stelle                                     | vorher                                                                            | jetzt                                                                                                                                    |
+| ----------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1, 2.2                                        | Kann K1 „vorbereitet"                                                             | K1 gestrichen; Streichreihenfolge K2, K3                                                                                                 |
+| 3 Nicht-Scope                                   | „keine Sperre des Bauens vor dem Sieg"                                            | Sperre von Glashütte und Badehaus im Scope; Freischaltbaum ausdrücklich M10                                                              |
+| 4.3 Punkt 1, 4, 5                               | ab Tick 0 baubar, Vorschau-Tooltip                                                | `unlockTier: 4`, `buildLock`, `canPlace` prüft zuerst; Tooltip „Für Kaufleute (Stufe 4)"; Freischalt-Meldung                             |
+| 4.3 Vorbereitung                                | Bau vor dem Sieg als echte Wahl                                                   | entfällt; Vorbereiten = Material zurücklegen                                                                                             |
+| 11.2                                            | —                                                                                 | `buildLock`, `canPlace` mit Sperre                                                                                                       |
+| 14.1                                            | Glas-Chip immer sichtbar                                                          | verborgen bis Freischaltung oder Glas > 0; `unlockNotice`, `lockedToolText` in `goal.ts`                                                 |
+| 14.2, 21 Punkt 15                               | Einträge und Tasten ab S1/S2 aktiv                                                | Einträge ab Freischaltung; Tasten fest, vorher Meldung statt Werkzeug                                                                    |
+| 14.3                                            | Vorschau-Zeile „nach dem Bürger-Ziel"                                             | „Für Kaufleute (Stufe 4)"                                                                                                                |
+| 16.4, AK-B1-07                                  | Kann K1                                                                           | gestrichen                                                                                                                               |
+| 17                                              | —                                                                                 | S1: `placement.ts`, `placement.test.ts`, `bathhouse.unlockTier`; S2: `glassworks.unlockTier`; U1, U2 Inhalt ergänzt                      |
+| 18.1 Szenarien                                  | `m8-kurz-vor-sieg` mit Badehaus; `galerie` über `put`                             | ohne Badehaus; `m8-glashuette-wartet` `won true`; `galerie` mit Helfer `withUnlock`                                                      |
+| 18 AK                                           | 79                                                                                | 81: neu AK-S1-21, AK-S2-19, AK-U1-09; gestrichen AK-B1-07; geändert AK-S3-08, AK-B2-02, AK-U1-04, AK-U1-05, AK-U2-01, AK-U2-06, AK-U2-10 |
+| 14.1, 14.8, AK-U1-07, AK-U1-09, AK-U2-09 (R151) | Art der Sperrmeldung offen; Steinbruch-Zusatz immer; AK-U1-07 baut im neuen Spiel | W10 `showError` (`error` plus Ton); W9 Zusatz nur bei freier Glashütte; W8 Sperrtext im neuen Spiel, Bau in `m8-kaufleute-ohne-glas`     |
+| 21 Punkt 11                                     | offen                                                                             | entfallen                                                                                                                                |
 
 **Bitgleich-Nachweis unverändert:** Der Referenz-Controller baut weder Badehaus noch Glashütte (16.1); `canPlace`
 für alle anderen Gebäude ist unverändert, weil `buildLock` ohne `unlockTier` `null` liefert und kein Spielzustand
