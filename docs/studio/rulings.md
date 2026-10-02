@@ -755,3 +755,12 @@ Prüfungen gleich) zur Kenntnis. E-010: Controller 2 übernimmt per Ledger, merg
 `feat/m8-sim`; danach Sim-Final-Review lead-qa. — Kosten bei Irrtum: QA-A-Nachprüfung — Ledger m8
 
 Entscheider: L0 · Anlass: Übergabe E-010, Bericht Controller 1 · ADR: —
+
+## R157 · 2026-10-02 · M9 H-R2
+
+Ruling: Kombiniertes Gate H-R2 Wasser- und Luftleben bestanden (Kurzdesign `.studio/handoffs/h-r2-kurzdesign.md`):
+Signatur `wildlifeAt(world, range, timeMs, env?)` nach M10-Design §4; Änderung `weather.test.ts` (CAPS) zulässig;
+Frame-Grenze +5 % gegen main @ 5f7e085. Möwen bei Regen/Sturm als Trivial-Fix im selben Branch (eigener
+Commit). — Kosten bei Irrtum: Render-Revert — Archiv-Bericht lead-art H-R2 Phase 1
+
+Entscheider: L0 · Anlass: Gate H-R2 · ADR: —
