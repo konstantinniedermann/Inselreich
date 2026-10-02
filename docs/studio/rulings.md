@@ -700,3 +700,13 @@ bleibt vor der Freischaltung im Handel kaufbar (Handel-Freischaltung in M10); R�
 Kosten bei Irrtum: Spec-Runde — Archiv-Bericht lead-design H-M8
 
 Entscheider: L0 · Anlass: Sichtung H-M8, R137-Meldungen · ADR: —
+
+## R151 · 2026-10-02 · M8 H-M8
+
+Ruling: Plan-Delta 3b6abdc angenommen; Spec-Widersprüche W8–W10 entschieden: AK-U1-07 prüft im neuen
+Spiel den Sperrtext von J und baut das Badehaus im Szenario `m8-kaufleute-ohne-glas`; AK-U2-09 zeigt
+„… oder baue Glashütte (O)" nur bei freigeschalteter Glashütte; die Sperrmeldung hat dieselbe Art wie
+bestehende Bau-Ablehnungen. lead-design führt die Spec nach, dann Delta-Gate lead-qa. — Kosten bei
+Irrtum: AK-Wortlaut — Archiv-Bericht lead-tech H-M8
+
+Entscheider: L0 · Anlass: R137-Meldungen Plan-Delta · ADR: —
