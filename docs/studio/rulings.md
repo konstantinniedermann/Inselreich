@@ -791,3 +791,13 @@ Startansicht sichtbar. Re-Review per Diff, dann merged lead-art ohne neues Gate.
 eine Art-Runde — Screenshots `.studio/qa/h-r2/`
 
 Entscheider: L0 · Anlass: Gate Merge H-R2, Art-Sichtung L0 · ADR: —
+
+## R161 · 2026-10-02 · M8
+
+Ruling: Controller-Entscheid C2-2 bestätigt (Ledger W-T6-1): Testhelfer `prepareUpgrade` kauft je
+Glashütte 1 Stein zusätzlich; Spielwerte, Reserve, Layout und `src/**` unverändert; erster Kaufmann
+8550, zweites Ziel 10 100. Gilt als bestätigte Abweichung fürs Final-Review M8. Die Stein-Konkurrenz
+Glashütte↔Aufstieg (Reservierung ist M8-Nicht-Scope §3) geht als Beobachtung an M11. — Kosten bei
+Irrtum: zwei Testzeilen — Ledger m8
+
+Entscheider: L0 · Anlass: Meldung Controller 2, Spec 16.3 · ADR: —
