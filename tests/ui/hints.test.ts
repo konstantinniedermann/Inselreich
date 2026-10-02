@@ -85,12 +85,12 @@ describe('friendlyReason (AK-UX-03)', () => {
       [
         'Zu wenig Wald in der Nähe',
         { defId: 'lumberjack' },
-        `Zu wenig Wald in der Nähe: mindestens ${site('lumberjack').min} Felder im Umkreis ${site('lumberjack').radius}`,
+        `Zu wenig Wald in der Nähe: mindestens ${site('lumberjack').min} ${site('lumberjack').min === 1 ? 'Feld' : 'Felder'} im Umkreis ${site('lumberjack').radius}`,
       ],
       [
         'Zu wenig Weide in der Nähe',
         { defId: 'sheepfarm' },
-        `Zu wenig Weide in der Nähe: mindestens ${site('sheepfarm').min} Felder im Umkreis ${site('sheepfarm').radius}`,
+        `Zu wenig Weide in der Nähe: mindestens ${site('sheepfarm').min} ${site('sheepfarm').min === 1 ? 'Feld' : 'Felder'} im Umkreis ${site('sheepfarm').radius}`,
       ],
       ['Zu wenig Weide in der Nähe', {}, SAME],
       [
@@ -357,3 +357,15 @@ it('AK-UX-31 placementHint in leistung-50, ungünstigster Fall: Median je Aufruf
   if (process.env.PERF_LOG) console.info(`AK-UX-31 ${report}`);
   expect(m, report).toBeLessThanOrEqual(0.5);
 }, 60_000);
+
+describe('friendlyReason Mehrzahl (Fix Task 6)', () => {
+  it('AK-UX-03 Singular „1 Feld" und Plural „N Felder" im Umkreis-Grund', () => {
+    const { w } = uxWorld();
+    expect(friendlyReason(w, 'Zu wenig Wald in der Nähe', { defId: 'lumberjack' })).toBe(
+      'Zu wenig Wald in der Nähe: mindestens 1 Feld im Umkreis 2',
+    );
+    expect(friendlyReason(w, 'Zu wenig Weide in der Nähe', { defId: 'sheepfarm' })).toBe(
+      'Zu wenig Weide in der Nähe: mindestens 4 Felder im Umkreis 2',
+    );
+  });
+});

@@ -66,7 +66,7 @@ export const REASON_TABLE: readonly ReasonRow[] = [
         (r) => r.kind === 'radius' && r.terrain === terrain,
       );
       return rule?.kind === 'radius'
-        ? `Zu wenig ${m[1]} in der Nähe: mindestens ${rule.min} Felder im Umkreis ${rule.radius}`
+        ? `Zu wenig ${m[1]} in der Nähe: mindestens ${rule.min} ${rule.min === 1 ? 'Feld' : 'Felder'} im Umkreis ${rule.radius}`
         : null;
     },
   },
