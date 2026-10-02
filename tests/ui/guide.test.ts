@@ -121,6 +121,38 @@ describe('taxEffect und remedyText (AK-UX-10)', () => {
   });
 });
 
+describe('remedyText, übrige Tabellenzeilen (AK-UX-10)', () => {
+  it('AK-UX-10 Wohnhaus supply', () => {
+    const { w, kx, house } = uxWorld();
+    house.x = kx + 40; // Zustandssetzung: weit ausserhalb jeder Versorgung
+    expect(remedyText(w, house)).toBe('Baue einen Marktplatz (M) in der Nähe');
+  });
+  it('AK-UX-10 Wohnhaus service', () => {
+    const { w, house } = uxWorld();
+    setHouse(house, 2, 4, ['food', 'cloth']);
+    expect(remedyText(w, house)).toBe('Kapelle fehlt: baue Kapelle (K) in Reichweite');
+  });
+  it('AK-UX-10 Wohnhaus good ohne vorhandenen Erzeuger', () => {
+    const { w, house, fisher } = uxWorld();
+    delete w.buildings[fisher.id];
+    setHouse(house, 1, 2, []);
+    expect(remedyText(w, house)).toBe('Nahrung fehlt: baue Fischerhütte (F)');
+  });
+  it('AK-UX-10 storageFull ohne Abnehmer, Stufe braucht das Gut', () => {
+    const { w, fisher } = uxWorld();
+    fisher.connected = true;
+    fisher.state = 'storageFull';
+    expect(remedyText(w, fisher)).toBe('Verkaufe Nahrung am Kontor oder baue weitere Wohnhäuser');
+  });
+  it('AK-UX-10 storageFull ohne Abnehmer, kein Bedarf: nur Verkauf', () => {
+    const { w, fisher } = uxWorld();
+    fisher.defId = 'quarry'; // Zustandssetzung: Steinbruch (Stein: kein Abnehmer, keine Stufe braucht ihn)
+    fisher.connected = true;
+    fisher.state = 'storageFull';
+    expect(remedyText(w, fisher)).toBe('Verkaufe Stein am Kontor');
+  });
+});
+
 describe('MAP_SIGNS (AK-UX-11)', () => {
   it('AK-UX-11 elf Zeilen mit Bedeutung, Signalfarben aus PALETTE', () => {
     expect(MAP_SIGNS).toHaveLength(11);
