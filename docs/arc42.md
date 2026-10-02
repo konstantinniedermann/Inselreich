@@ -404,6 +404,39 @@ flowchart LR
   `dist/` auf GitHub Pages. Er greift erst, wenn Pages im Repo aktiviert ist (Quelle: GitHub Actions);
   auf dem Free-Plan braucht das ein öffentliches Repo (offene Entscheidung, Spec Abschnitt 6).
 
+### Plattformgrenzen GitHub Pages (R130)
+
+Quelle: [GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
+und [About large files on GitHub](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github),
+geprüft am 2026-10-02. Gemessen am selben Tag auf `main` (`make build`, `git count-objects -vH`).
+
+| Grenze                | Wert laut GitHub                                    | Ist-Stand                                  | Anteil | Wache                          |
+| --------------------- | --------------------------------------------------- | ------------------------------------------ | ------ | ------------------------------ |
+| Veröffentlichte Seite | max. 1 GB (hart)                                    | `dist/` 8,68 MB, 20 Dateien                | 0,9 %  | `make pages-limit`, ab 500 MB  |
+| Einzeldatei im Git    | 100 MiB blockiert, Warnung ab 50 MiB                | grösste Datei 2,47 MiB (Musikstück)        | 2,5 %  | `make pages-limit`, ab 50 MiB  |
+| Quell-Repo            | empfohlen ≤ 1 GB, dringend ≤ 5 GB                   | Pack 11,2 MiB (GitHub `diskUsage` 11,8 MB) | 1,2 %  | keine, manuell                 |
+| Bandbreite            | weich 100 GB/Monat                                  | nicht messbar (siehe unten)                | –      | keine                          |
+| Deploy                | Abbruch nach 10 min                                 | Deploy-Job im Sekundenbereich              | –      | Workflow-Fehler                |
+| Builds                | weich 10/h, gilt nicht für eigene Actions-Workflows | eigener Workflow `pages.yml`               | –      | entfällt                       |
+| Ratenlimit            | HTTP 429 bei zu vielen Anfragen                     | –                                          | –      | keine                          |
+| Nutzung               | kein kostenloses Hosting für Geschäft/E-Commerce    | nicht kommerziell                          | –      | bei Monetarisierung neu prüfen |
+
+- **Wache:** `tools/pages/check.ts` (Grenzwerte als Konstanten mit Quelle in `tools/pages/limits.ts`, Test
+  `tests/assets/pagesLimit.test.ts`) misst `dist/` nach dem Build. Sie läuft in `make check` (damit in der CI)
+  und im Pages-Workflow vor dem Upload. Erreicht die Seite 50 % von 1 GB oder eine Datei 50 % von 100 MiB,
+  schlägt sie fehl: Build bzw. Deploy stoppen, und es sind **Alternativen zu prüfen** (Eintrag in die
+  Warteschlange mit Alternativen, R130).
+- **Verhältnis zum Asset-Budget:** Das inhaltliche Budget `public/` ≤ 12 MB (AK-X1-03, `tests/assets/assets.test.ts`)
+  ist enger und greift zuerst; die Pages-Wache ist die Plattformgrenze und erfasst zusätzlich das gebaute Bundle.
+- **Bandbreite:** Für Pages gibt es keine Zugriffsstatistik; die Traffic-API (`repos/…/traffic/views`) zählt
+  nur Aufrufe der Repo-Seite auf github.com. Abschätzung: Ein vollständiger Abruf aller Dateien kostet höchstens
+  ~8,7 MB (Musik lädt nur bei Bedarf), 100 GB/Monat reichen also für rund 11 000 vollständige Abrufe; die
+  50-%-Marke läge bei rund 5 700. Signal zum Handeln: E-Mail von GitHub oder HTTP 429 auf der Seite.
+- **Repo-Grösse** wird nicht automatisch geprüft (CI klont flach); bei grösseren Asset-Lieferungen
+  `git count-objects -vH` von Hand ansehen.
+- **Merkliste Alternativen** (unbewertet, Bewertung erst bei Erreichen der Schwelle): Cloudflare Pages ·
+  Netlify · itch.io (HTML5-Upload) · Codeberg Pages · eigener statischer Webserver.
+
 ## 8. Querschnittliche Konzepte
 
 ### Gebäudezustände (ADR-005)
@@ -709,6 +742,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 | Einstellungs-Migration          | M5-Einstellung `{ muted, volume, dayNight }` und fremde Felder laden       | `master = volume`, kein `volume` beim Schreiben, fremde Felder unverändert             | `tests/ui/settings.test.ts`                                                     |
 | Ton ohne Dateien                | Lader und Media-Element schlagen fehl                                      | Synthetischer Rückfall je Schicht, Musik endet nach 2 Fehlschlägen, nichts wirft       | `tests/audio/ambience.test.ts`, `music.test.ts`                                 |
 | Krisen-Lauf                     | Controller-Kolonie mit Krisenstufe `normal` und `mild`                     | Sieg bis Tick 8000, Geld am Ende > 0; `off` bitgleich zur Referenz                     | `tests/sim/balance-crises.test.ts`                                              |
+| Plattformgrenze Pages           | Gebaute Seite ≥ 500 MB oder eine Datei ≥ 50 MiB                            | `make check` und Pages-Workflow schlagen fehl, Alternativen prüfen (R130)              | `tests/assets/pagesLimit.test.ts`, `tools/pages/check.ts`                       |
 
 ## 11. Risiken und technische Schulden
 
