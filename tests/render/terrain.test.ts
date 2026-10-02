@@ -5,7 +5,7 @@ import type { World3 } from '../../src/render/terrain';
 import type { World } from '../../src/sim/types';
 import { FOREST_FLOOR, PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
 import { TEX } from '../../src/render/iso';
-import { depthAt, terrainFields } from '../../src/render/terrainField';
+import { LAND, depthAt, terrainFields } from '../../src/render/terrainField';
 import {
   RASTER,
   buildGrid,
@@ -191,7 +191,49 @@ describe('Waldboden und Licht', () => {
     expect(bottom).toBeLessThan(-0.01);
     // Licht kommt stärker von links als von oben (−3 gegen −1)
     expect(left).toBeGreaterThan(top);
-    for (const v of g.shade) expect(Math.abs(v)).toBeLessThanOrEqual(0.08 + 1e-6);
+    // R149: Abweichung zu M7-Spec 5.1 — Gebirge ±12 %, sonst ±8 %
+    const mtCls = 1 + LAND.indexOf('mountain');
+    let mtMax = 0;
+    for (let k = 0; k < g.shade.length; k++) {
+      const a = Math.abs(g.shade[k]!);
+      const limit = g.cls[k] === mtCls ? 0.12 : 0.08;
+      expect(a).toBeLessThanOrEqual(limit + 1e-6);
+      if (g.cls[k] === mtCls) mtMax = Math.max(mtMax, a);
+    }
+    expect(mtMax).toBeGreaterThan(0.08); // das Gebirge nutzt die höhere Grenze tatsächlich
+  });
+
+  it('R149 Plastik: mittlere |shade| auf Land ≥ 0,035 und auf Gebirge ≥ 0,05 (Seeds 3, 5, 12588)', () => {
+    const mtCls = 1 + LAND.indexOf('mountain');
+    for (const seed of [3, 5, 12588]) {
+      const g = buildGrid(createWorld(seed));
+      let sl = 0,
+        cl = 0,
+        sm = 0,
+        cm = 0;
+      for (let k = 0; k < g.cls.length; k++) {
+        if (g.cls[k] === 0) continue;
+        if (g.cls[k] === mtCls) {
+          sm += Math.abs(g.shade[k]!);
+          cm++;
+        } else {
+          sl += Math.abs(g.shade[k]!);
+          cl++;
+        }
+      }
+      expect(sl / cl, `Land Seed ${seed}`).toBeGreaterThanOrEqual(0.035);
+      expect(sm / cm, `Gebirge Seed ${seed}`).toBeGreaterThanOrEqual(0.05);
+    }
+  });
+
+  it('R149 Pixel ausserhalb des Gebirges tragen höchstens ±8 % Schattierung', () => {
+    // Alle Knoten tragen 0,12 bzw. 0,08: Gleiche Pixel auf Gras beweisen, dass paintPixels ausserhalb des Gebirges klemmt.
+    const g = buildGrid(blockWorld());
+    const hot = { ...g, shade: g.shade.map(() => 0.12) };
+    const flat = { ...g, shade: g.shade.map(() => 0.08) };
+    const a = paintPixels(hot, 1, 0, 0, 8 * TEX, 8 * TEX); // Gras links oben (kein Gebirge)
+    const b = paintPixels(flat, 1, 0, 0, 8 * TEX, 8 * TEX);
+    expect(Array.from(a)).toEqual(Array.from(b));
   });
 
   it('Spec 5.1 Gras: die Mischung ist gespreizt und nutzt grassDark, grass und grassLight', () => {
@@ -366,6 +408,79 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       expect(both / rock, `Seed ${seed}: ${both}/${rock}`).toBeGreaterThanOrEqual(0.9);
     }
   }, 60_000); // Korrektheitstest ohne Zeitaussage; Rechenzeit steigt unter Volllast
+
+  it('R149 Grasfläche 4 × 4 Kacheln zeigt ≥ 5 Farbwerte mit ΔE ≥ 3', () => {
+    const w = world3;
+    let checked = 0;
+    for (let y = 0; y < w.height - 4 && checked < 5; y++)
+      for (let x = 0; x < w.width - 4 && checked < 5; x++) {
+        let all = true;
+        for (let j = 0; j < 4 && all; j++)
+          for (let i = 0; i < 4; i++) if (terrainOf(w, x + i, y + j) !== 'grass') all = false;
+        if (!all) continue;
+        checked++;
+        const distinct: ReturnType<typeof rgbToLab>[] = [];
+        for (let j = 0; j < 4; j++)
+          for (let i = 0; i < 4; i++) {
+            const l = rgbToLab(painted.at((x + i + 0.5) * TEX, (y + j + 0.5) * TEX));
+            if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
+          }
+        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(5);
+        x += 3; // nicht überlappende Flächen
+      }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('R149 Waldrand ist im Mittel heller als das Waldinnere', () => {
+    const w = world3;
+    const lum = (c: [number, number, number]) => c[0] + c[1] + c[2];
+    let eSum = 0,
+      eN = 0,
+      iSum = 0,
+      iN = 0;
+    const dirs = [-1, 0, 1];
+    for (let y = 1; y < w.height - 1; y++)
+      for (let x = 1; x < w.width - 1; x++) {
+        if (terrainOf(w, x, y) !== 'forest') continue;
+        let nForest = 0;
+        for (const dy of dirs)
+          for (const dx of dirs) if (terrainOf(w, x + dx, y + dy) === 'forest') nForest++;
+        const c = mean3((x + 0.5) * TEX, (y + 0.5) * TEX);
+        if (nForest === 9) {
+          iSum += lum(c);
+          iN++;
+        } else if (terrainOf(w, x - 1, y) !== 'forest' || terrainOf(w, x, y - 1) !== 'forest') {
+          // Randkachel: die Kachelhälfte zur Aussenseite
+          const ox = terrainOf(w, x - 1, y) !== 'forest' ? x * TEX + 3 : (x + 0.5) * TEX;
+          const oy = terrainOf(w, x, y - 1) !== 'forest' ? y * TEX + 3 : (y + 0.5) * TEX;
+          eSum += lum(mean3(ox, oy));
+          eN++;
+        }
+      }
+    expect(iN).toBeGreaterThan(5);
+    expect(eN).toBeGreaterThan(5);
+    expect(eSum / eN).toBeGreaterThan(iSum / iN);
+  });
+
+  it('R149 Grastöne (Klee, trocken) liegen ΔE2000 ≥ 15 neben earth und earthEdge', () => {
+    const w = world3;
+    const labs = [PALETTE.earth, PALETTE.earthEdge].map((c) => hexToLab(c));
+    let n = 0,
+      minDe = Infinity;
+    for (let y = 0; y < w.height; y++)
+      for (let x = 0; x < w.width; x++) {
+        if (terrainOf(w, x, y) !== 'grass') continue;
+        // Kachelinneres: am Rand zeigt eine Grasskachel auch Felspixel des Nachbarn (Typ je Pixel, nicht je Kachel)
+        for (let py = 10; py < TEX - 9; py += 4)
+          for (let px = 10; px < TEX - 9; px += 4) {
+            const l = rgbToLab(painted.at(x * TEX + px, y * TEX + py));
+            for (const e of labs) minDe = Math.min(minDe, deltaE2000(l, e));
+            n++;
+          }
+      }
+    expect(n).toBeGreaterThan(1000);
+    expect(minDe).toBeGreaterThanOrEqual(15);
+  });
 
   it('AK-R1-03 keine Signalfarbe in der Terrain-Ebene (Stichprobe über die ganze Karte)', () => {
     const labs = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
