@@ -297,28 +297,25 @@ class BudgetBoardDecisionTest(unittest.TestCase):
         self.assertTrue(budget["overrun"])
         self.assertEqual(budget["model_mix"], {"sonnet": 1, "haiku": 1})
 
-    def test_budget_counts_only_after_newest_event(self):
+    def test_budget_same_phase_adds_new_phase_resets(self):
         events = [
             self.grant(0, "lead-qa", 2, 1),
             start(1, "a1", "lead-qa"),
             spawn(2, "a1", "qa-playtester"),
             start(3, "b1", "qa-playtester"),
             stop(4, "b1", "qa-playtester"),
-            spawn(5, "a1", "qa-playtester"),
-            start(6, "b2", "qa-playtester"),
-            stop(7, "b2", "qa-playtester"),
-            self.grant(10, "lead-qa", 3, 1),  # jüngstes Event: Zählung beginnt neu
-            spawn(11, "a1", "qa-playtester"),
-            start(12, "b3", "qa-playtester"),
+            self.grant(5, "lead-qa", 2, 1),
         ]
         budget = build(events)["budgets"][0]
         self.assertEqual(
-            (budget["granted"], budget["used"], budget["overrun"]), (3, 1, False)
+            (budget["granted"], budget["used"], budget["overrun"]), (4, 1, False)
         )
-        events.append(self.grant(20, "lead-qa", 3, 2, phase="P2"))
+        events.append(self.grant(6, "lead-qa", 3, 2, phase="P2"))
         rows = {b["phase"]: b for b in build(events)["budgets"]}
-        self.assertEqual((rows["P2"]["granted"], rows["P2"]["used"]), (3, 0))
-        self.assertEqual((rows["P1"]["granted"], rows["P1"]["used"]), (3, 1))
+        self.assertEqual(
+            (rows["P2"]["granted"], rows["P2"]["used"]), (3, 0)
+        )  # neue Phase ersetzt P1 nicht
+        self.assertEqual((rows["P1"]["granted"], rows["P1"]["used"]), (4, 1))
 
     def test_start_before_event_does_not_count(self):
         events = [
