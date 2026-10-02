@@ -791,3 +791,42 @@ Startansicht sichtbar. Re-Review per Diff, dann merged lead-art ohne neues Gate.
 eine Art-Runde — Screenshots `.studio/qa/h-r2/`
 
 Entscheider: L0 · Anlass: Gate Merge H-R2, Art-Sichtung L0 · ADR: —
+
+## R161 · 2026-10-02 · M8
+
+Ruling: Controller-Entscheid C2-2 bestätigt (Ledger W-T6-1): Testhelfer `prepareUpgrade` kauft je
+Glashütte 1 Stein zusätzlich; Spielwerte, Reserve, Layout und `src/**` unverändert; erster Kaufmann
+8550, zweites Ziel 10 100. Gilt als bestätigte Abweichung fürs Final-Review M8. Die Stein-Konkurrenz
+Glashütte↔Aufstieg (Reservierung ist M8-Nicht-Scope §3) geht als Beobachtung an M11. — Kosten bei
+Irrtum: zwei Testzeilen — Ledger m8
+
+Entscheider: L0 · Anlass: Meldung Controller 2, Spec 16.3 · ADR: —
+
+## R162 · 2026-10-02 · M8
+
+Ruling: Zweites Ziel 60 Kaufleute, Szenario-Baseline 10 100, erster Kaufmann 8550 (Krisen aus) —
+Grenze 12 000 = Schätzung ≈ 10 000 + Marge 2000 — bei Irrtum Neumessung, `WIN_MERCHANTS` und
+`unlockCitizens` ohne Codeeingriff anpassbar. Bürger-Endzustand 7300 / Geld 1490; Reserve 500,
+`minMoneyAfterWin` 212; Messung mit C2-2 (R161) — Ledger m8, Ruling-Vorlage B1
+
+Entscheider: L0 · Anlass: AK-B1-06 · ADR: —
+
+## R163 · 2026-10-02 · M10
+
+Ruling: Gate Spec M10 bestanden mit Auflagen (lead-qa und lead-tech BEDENKEN, 7f805d9): Spec-Delta durch
+lead-design ohne neue Gate-Runde, Sichtung L0, für QA B-1…B-12 und Tech B1–B6, B8, B10. B7 angenommen:
+`layoutKey` hasht die Geländeart je Kachel statt Weltfeld `terrainRev` (löst R159 W3 ab, einfacher).
+B8: `maxCount` in Defs, `noService` statt `noSchool`. B9, B11 entscheidet der Plan. — Kosten bei Irrtum:
+Spec-Runde — Archiv-Berichte lead-qa, lead-tech M10-SPEC-GATE
+
+Entscheider: L0 · Anlass: Gate Spec M10, löst R159 W3 ab · ADR: —
+
+## R164 · 2026-10-02 · M10
+
+Ruling: Gate Plan M10 bestanden mit Auflagen (abcf92c; lead-qa und lead-production BEDENKEN): QA 1–4
+und Production B1, B3–B5 arbeitet lead-tech in einer Runde ein, Sichtung L0. P1–P6, W1–W4 bestätigt.
+`sprites.ts`: M10 vor M9 Welle 2. M9 Welle 1b: H-R3 nach M8-R1, H-R4 in `errands.ts` parallel, Anschluss
+`renderer.ts` nach H-R3. Budget gestuft (B2): Start M10 erst nach Gate Merge M8, zuerst T1–T4 und A1. —
+Kosten bei Irrtum: Plan-Nachtrag — Archiv-Berichte M10-PLAN-GATE
+
+Entscheider: L0 · Anlass: Gate Plan M10 · ADR: —
