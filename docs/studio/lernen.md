@@ -23,3 +23,4 @@
 - Cloud-Session: Subagent-Leads haben kein Agent-Werkzeug; L0 startet Arbeiter direkt, Leads nur für Arbeit ohne Delegation (R108, Retro ddd9a9ac B2).
 - Kein bares `git stash` bei parallelen Worktrees (gemeinsamer Stash-Stapel); Rot-Nachweis per WIP-Commit oder `git worktree add --detach`. QA-Bäume gehören nur dem laufenden QA-Check (R116, Retro ddd9a9ac B5).
 - Software-Rendering (Cloud) misst Frames nicht belastbar: 27 fps bei Render-Median 4 ms; Frame-Abnahmen auf Echtgerät mit GPU, Headless mit `--disable-gpu` (R116, Retro ddd9a9ac B6).
+- Beobachtungen vor der Übernahme in Spec oder Plan gegen `rulings.md` prüfen: R138 übernahm eine Bilanz-Änderung, die R115 entschieden hatte; R139 nahm sie zurück.
