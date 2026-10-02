@@ -378,7 +378,7 @@ const MERCHANT_RIGHT: readonly (readonly [number, number])[] = [
   [0.2, 0.32],
   [0.62, 0.74],
 ];
-/** Treppengiebel: vier Stufen je Seite plus Spitzenstufe in Wandebene v = `s.v1`, darüber Ladeluke und Kranbalken. */
+/** Treppengiebel: drei Stufen je Seite plus Spitzenstufe in Wandebene v = `s.v1`, darüber Ladeluke und Kranbalken. */
 function stepGable(p: IsoPainter, s: Shell, wall: WallColors): void {
   const half = s.um - s.u0;
   const mid = 0.09; // halbe Breite der Spitzenstufe
