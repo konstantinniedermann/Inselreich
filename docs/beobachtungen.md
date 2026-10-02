@@ -484,7 +484,7 @@ weil die Dev-Vorschau Feuer nicht lief.
 **Ursprung:** Heuristik-Prüfung und Playtest M7-UX (Stand `4c69776`).
 **Einschätzung:** mittel. Das ist eine Sim-Änderung und gehört deshalb nicht zu M7-UX (UI-only). Beim
 nächsten Sim-Durchgang mit Test beheben: Ausfall bedeutet keine Produktion in der Bilanz.
-**Stand 2026-10-02:** übernommen in M8-S2 (R138; M8-Spec auf `docs/m8-spec`, AK in S2).
+**Stand 2026-10-02:** erledigt durch R115 (R139): Die Bilanz zeigt bewusst die Dauerleistung.
 
 ### 2026-10-01 · `src/sim/` · Reason-Texte statt Codes, Literal 100 in `goodsBalance`, keine Auslastung
 
