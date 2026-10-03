@@ -905,12 +905,12 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
   // main (93f420e) gemessen, gleiche Funktion: Chroma 48,75/48,01/48,35, Flecken 4,30/4,65/4,74 (Seeds 7/8/42)
   const MAIN = { 7: [48.75, 4.3], 8: [48.01, 4.65], 42: [48.35, 4.74] } as const;
 
-  it('H-R9 R4 Chroma der Wiese ≥ main − 2 % (r3: 40,3/40,4/40,0)', () => {
+  it('H-R9 R4 Chroma der Wiese ≥ main − 2 % (r3: 40,3/40,4/40,0; r4: 49,4/48,5/48,7)', () => {
     for (const seed of [7, 8, 42] as const)
       expect(meadow(seed).chroma, `Seed ${seed}`).toBeGreaterThanOrEqual(0.98 * MAIN[seed][0]);
   }, 60_000);
 
-  it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43)', () => {
+  it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43; r4: 4,78/5,02/5,19)', () => {
     for (const seed of [7, 8, 42] as const)
       expect(meadow(seed).patches, `Seed ${seed}`).toBeGreaterThanOrEqual(MAIN[seed][1]);
   }, 60_000);
@@ -997,25 +997,25 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     }
   });
 
-  it('H-R9 B3 Warmton nie heller als grassLight: Luma ohne Relief ≤ Luma(grassLight), Sättigung gehalten', () => {
+  it('H-R9 B3/R4 Warmton und Schleier ändern nur den Farbton: Luma je Pixel ≤ Grundstruktur (ohne Ebenen) + 6 % Trockenton + Mottling', () => {
     const g0 = buildGrid(flat(30, 'grass', 7));
     const g = { ...g0, shade: g0.shade.map(() => 0) };
-    const out = paintPixels(g, 1, 100, 100, 700, 700);
-    const luma = (r: number, gg: number, b: number) => 0.299 * r + 0.587 * gg + 0.114 * b;
-    const [lr, lg, lb] = rgbOfCss(PALETTE.grassLight);
-    const cap = luma(lr, lg, lb);
-    let maxL = 0,
-      minChroma = 1e9;
-    for (let i = 0; i < out.length; i += 4 * 7) {
-      const r = out[i]!,
-        gg = out[i + 1]!,
-        b = out[i + 2]!;
-      maxL = Math.max(maxL, luma(r, gg, b));
-      if (luma(r, gg, b) > cap - 25)
-        minChroma = Math.min(minChroma, Math.max(r, gg, b) - Math.min(r, gg, b));
+    const base = {
+      ...g,
+      warm: g.warm.map(() => 0),
+      veil: g.veil.map(() => 0),
+      mottle: g.mottle.map(() => 0),
+    };
+    const a = paintPixels(g, 1, 100, 100, 500, 500),
+      b = paintPixels(base, 1, 100, 100, 500, 500);
+    const luma = (p: Uint8ClampedArray, i: number) =>
+      0.299 * p[i]! + 0.587 * p[i + 1]! + 0.114 * p[i + 2]!;
+    let changed = 0;
+    for (let i = 0; i < a.length; i += 4 * 3) {
+      expect(luma(a, i)).toBeLessThanOrEqual(luma(b, i) * (1 + 0.06 + 0.035) + 1);
+      if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 6) changed++;
     }
-    expect(maxL).toBeLessThanOrEqual(cap + 1);
-    expect(minChroma).toBeGreaterThan(45); // helle Wiese bleibt satt, nicht ausgewaschen
+    expect(changed).toBeGreaterThan(1000); // die Ebenen wirken tatsächlich
   });
 
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {

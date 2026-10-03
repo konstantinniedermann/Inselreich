@@ -40,11 +40,12 @@ const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kach
 const DUNE_AMP = 1.3; // Höhe der Dünenrücken auf trockenem Sand (R3: weniger Fläche, dafür lesbar)
 const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
-const WARM_MAX = 0.75; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
-const COOL_MAX = 0.9; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
-const VEIL_MAX = 0.42; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
-const TONE_LIGHT = 0.08; // trockene Kuppen bis +8 % Helligkeit (zusammen mit Warmton und Schleier auf `grassLight` gedeckelt)
-const TONE_DARK = 0; // satte Senken nicht dunkler: sonst rückt das Gras an den alten Waldgrund (ΔE ≥ 10, I5); die Tiefe trägt das Relief
+const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 % der Wiese je Seite höchstens)
+const WARM_MAX = 0.5; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
+const COOL_MAX = 0.5; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
+const VEIL_MAX = 0.1; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
+const TONE_LIGHT = 0.06; // H-R9 R4: trockene Teilflächen bis +6 % Helligkeit (Farbton und Schleier ändern die Helligkeit nicht)
+const TONE_DARK = 0; // satte Teilflächen nicht dunkler (I5: sonst rückt das Gras an den alten Waldgrund); sie tragen nur Farbton
 const MOTTLE_AMP = 0.035; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
@@ -59,8 +60,8 @@ const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreh
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 1; // höchstens 90 % Mischung zum Kleegrün ((1 − 0,1) · 1 bei Fleckwert 1)
-const DRY_MAX = 0.55; // höchstens 50 % Mischung zu sandDry ((1 − 0,1) · 0,55; darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 0.75; // höchstens 90 % Mischung zum Kleegrün ((1 − 0,1) · 1 bei Fleckwert 1)
+const DRY_MAX = 0.35; // höchstens 50 % Mischung zu sandDry ((1 − 0,1) · 0,55; darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -495,9 +496,9 @@ const C = {
   wood: rgbOfCss(FOREST_FLOOR),
   clover: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // kühleres Grün (R149)
   moss: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.crown, 0.55)),
-  dryTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.sandDry, 0.58)), // H-R9: Goldoliv; der Luma-Deckel hält es auf grassLight
+  dryTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.roofThatch, 0.45)), // H-R9 R4: Goldgrün, satt (Farbton, Helligkeit bleibt)
   hollow: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.4)), // H-R9 R3: Senke kühl und satt (ΔE fern vom alten Waldgrund)
-  lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // H-R9: kühles Satt-Grün, ΔE2000 ≥ 17 zum alten Waldgrund
+  lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.crown, 0.5)), // H-R9 R4: sattes Tiefgrün als Farbton (Helligkeit bleibt)
   veilTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.wallLime, 0.5)), // H-R9: Blumenschleier
   clearing: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.sandDry, 0.45)),
   edgeLight: rgb(PALETTE.sandWet), // warmes Hell am Waldrand: bleibt fern vom alten Waldgrund #3d7a3a
@@ -510,8 +511,6 @@ const C = {
     return l + (rgb(PALETTE.sandDry)[i]! - l) * 0.15;
   }) as [number, number, number],
 };
-const GRASS_LUMA_CAP =
-  0.299 * C.grassLight[0]! + 0.587 * C.grassLight[1]! + 0.114 * C.grassLight[2]!;
 const mix3 = (a: number[], b: number[], t: number, o: number[]): void => {
   o[0] = a[0]! + (b[0]! - a[0]!) * t;
   o[1] = a[1]! + (b[1]! - a[1]!) * t;
@@ -552,24 +551,25 @@ function landColor(
       const p = lerp(g.patch);
       if (p > 0.1) mix3(o, C.clover, (p - 0.1) * CLOVER_MAX, o);
       else if (p < -0.1) mix3(o, C.sandDry, (-0.1 - p) * DRY_MAX, o);
+      // H-R9 R4: Helligkeit der Grundstruktur (wie main); der Deckel unten greift nur, was die neuen Ebenen aufhellen
+      const luma0 = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
       // H-R9 B3: grosser Warm/Kühl-Verlauf mit Flecken und Kuppen, Blumenschleier, feines Mottling
       const wm = lerp(g.warm);
-      if (wm > 0) mix3(o, C.dryTone, wm * WARM_MAX, o);
-      else mix3(o, C.lushTone, -wm * COOL_MAX, o);
+      // H-R9 R4: nur in Teilflächen (|wm| > WARM_ON), die Grundstruktur grassDark/grassLight bleibt sonst wie main
+      const wa = Math.max(0, (Math.abs(wm) - WARM_ON) / (1 - WARM_ON));
+      if (wm > 0) mix3(o, C.dryTone, wa * WARM_MAX, o);
+      else mix3(o, C.lushTone, wa * COOL_MAX, o);
+      // nur Farbton: Helligkeit der Grundstruktur bleibt (sonst ebnet die Mischung die Flecken von main ein)
       mix3(o, C.veilTone, lerp(g.veil) * VEIL_MAX, o);
-      // Kuppen und Trockenstellen heller, satte Senken dunkler (Höhentönung)
-      const mf = 1 + lerp(g.mottle) * MOTTLE_AMP + wm * (wm > 0 ? TONE_LIGHT : TONE_DARK);
+      // nur Farbton: Helligkeit der Grundstruktur bleibt (sonst ebnet die Mischung die Flecken von main ein) …
+      const lw = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
+      // … plus Mottling und Teilflächen-Tönung: trockene Stellen etwas heller, satte etwas dunkler (verstärkt die Flecken)
+      const mf =
+        (lw > 0 ? luma0 / lw : 1) *
+        (1 + lerp(g.mottle) * MOTTLE_AMP + wa * (wm > 0 ? TONE_LIGHT : -TONE_DARK));
       o[0] = o[0]! * mf;
       o[1] = o[1]! * mf;
       o[2] = o[2]! * mf;
-      // gemeinsamer Deckel: Warmton, Kuppenaufhellung und Schleier addieren sich nicht über die Helligkeit von grassLight
-      const luma = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
-      if (luma > GRASS_LUMA_CAP) {
-        const k = GRASS_LUMA_CAP / luma;
-        o[0] = o[0]! * k;
-        o[1] = o[1]! * k;
-        o[2] = o[2]! * k;
-      }
       break;
     }
     case 'forest': {
