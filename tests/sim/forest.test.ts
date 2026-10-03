@@ -1,13 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../../src/sim/defs/forest';
 import { canClearForest, canPlantForest, clearForest, plantForest } from '../../src/sim/forest';
+import { totalUpkeep } from '../../src/sim/economy';
+import { tickProduction } from '../../src/sim/production';
 import { canPlace } from '../../src/sim/placement';
 import { layoutKey } from '../../src/sim/queries';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
+import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { step } from '../../src/sim/tick';
-import type { Result, Terrain, World } from '../../src/sim/types';
+import type { Building, Result, Terrain, World } from '../../src/sim/types';
 import { createWorld, idx, tilesInRadius } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
 
@@ -219,8 +223,8 @@ describe('M10 Wald roden und aufforsten (Spec 6)', () => {
       expect(serialize(w), c.name).toBe(before);
     }
   });
-  it('AK-F1-05 Holzfäller arbeitet nach Rodung seines Waldes weiter; Schäferei verliert durch Aufforsten nichts', () => {
-    const lumber = (clear: boolean): { wood: number; state: string } => {
+  it('AK-F1-05 Holzfäller ohne freien Wald steht in noForest, Unterhalt läuft; Schäferei verliert durch Aufforsten nichts (M11 S3)', () => {
+    const lumber = (clear: boolean): { wood: number; state: string; money: number } => {
       const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
       const k = w.buildings[w.kontorId]!;
       w.money = 10_000;
@@ -234,11 +238,12 @@ describe('M10 Wald roden und aufforsten (Spec 6)', () => {
           if (w.tiles[idx(w, p.x, p.y)]!.terrain === 'forest')
             expect(clearForest(w, p.x, p.y).ok).toBe(true);
       const wood = w.stock.wood;
+      const money = w.money;
       for (let i = 0; i < 300; i++) step(w);
-      return { wood: w.stock.wood - wood, state: w.buildings[r.id]!.state };
+      return { wood: w.stock.wood - wood, state: w.buildings[r.id]!.state, money: w.money - money };
     };
-    expect(lumber(true)).toEqual({ wood: 10, state: 'ok' });
-    expect(lumber(false)).toEqual(lumber(true));
+    expect(lumber(false)).toEqual({ wood: 10, state: 'ok', money: -15 });
+    expect(lumber(true)).toEqual({ wood: 0, state: 'noForest', money: -15 });
     const sheep = (plant: boolean): number => {
       const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
       const k = w.buildings[w.kontorId]!;
@@ -342,5 +347,132 @@ describe('M10 Wald roden und aufforsten (Spec 6)', () => {
     expect(() => clearForest(w, Number.NaN, 3)).not.toThrow();
     expect(clearForest(w, Number.NaN, 3)).toEqual({ ok: false, reason: 'Ausserhalb der Karte' });
     expect(serialize(w)).toBe(before);
+  });
+});
+
+function lumberSite(): { w: World; b: Building; forest: { x: number; y: number } } {
+  const w = createWorld(3, { unlockAll: true });
+  const k = w.buildings[w.kontorId]!;
+  w.money = 10_000;
+  forceRect(w, k.x + 2, k.y - 3, 7, 7, 'grass');
+  const forest = { x: k.x + 4, y: k.y - 1 };
+  w.tiles[idx(w, forest.x, forest.y)]!.terrain = 'forest';
+  expect(placeRoad(w, k.x + 2, k.y).ok).toBe(true);
+  const r = placeBuilding(w, 'lumberjack', k.x + 3, k.y);
+  if (!r.ok || r.id === undefined) throw new Error('Holzfäller');
+  return { w, b: w.buildings[r.id]!, forest };
+}
+
+function hunterSite(w: World): { b: Building; forest: { x: number; y: number } } {
+  const k = w.buildings[w.kontorId]!;
+  forceRect(w, k.x + 2, k.y, 5, 1, 'grass');
+  forceRect(w, k.x + 3, k.y - 4, 7, 7, 'grass');
+  forceRect(w, k.x + 4, k.y - 3, 5, 2, 'forest');
+  for (let i = 2; i <= 6; i++) expect(placeRoad(w, k.x + i, k.y).ok).toBe(true);
+  const r = placeBuilding(w, 'hunter', k.x + 6, k.y - 1);
+  if (!r.ok || r.id === undefined) throw new Error('Jagdhütte');
+  return { b: w.buildings[r.id]!, forest: { x: k.x + 4, y: k.y - 3 } };
+}
+
+describe('M11 Wald live (Spec 3.4)', () => {
+  it('AK-P2S3-01 Holzfäller: Rodung -> noForest, progress bleibt, kein Holz, Unterhalt gebucht; Aufforsten -> weiter', () => {
+    const { w, b, forest } = lumberSite();
+    for (let i = 0; i < 10; i++) step(w);
+    expect([b.state, b.progress]).toEqual(['ok', 10]);
+    expect(clearForest(w, forest.x, forest.y).ok).toBe(true);
+    const wood = w.stock.wood,
+      carry = w.upkeepCarry,
+      money = w.money,
+      up = totalUpkeep(w);
+    step(w);
+    expect([b.state, b.progress, w.stock.wood]).toEqual(['noForest', 10, wood]);
+    expect(w.upkeepCarry).toBe((carry + up) % 100);
+    expect(w.money).toBe(money - Math.floor((carry + up) / 100));
+    expect(plantForest(w, forest.x, forest.y).ok).toBe(true);
+    step(w);
+    expect([b.state, b.progress]).toEqual(['ok', 11]);
+  });
+  it('AK-P2S3-02 Jagdhütte mit 10 freien Waldkacheln: eine roden -> noForest, aufforsten -> ok', () => {
+    const w = createWorld(3, { unlockAll: true });
+    w.money = 10_000;
+    const { b, forest } = hunterSite(w);
+    step(w);
+    expect(b.state).toBe('ok');
+    expect(clearForest(w, forest.x, forest.y).ok).toBe(true);
+    step(w);
+    expect(b.state).toBe('noForest');
+    expect(plantForest(w, forest.x, forest.y).ok).toBe(true);
+    step(w);
+    expect(b.state).toBe('ok');
+  });
+  it('AK-P2S3-03 Vorrang vor noForest: burning, notConnected, noService; ohne sie noForest', () => {
+    const { w, b, forest } = lumberSite();
+    expect(clearForest(w, forest.x, forest.y).ok).toBe(true);
+    b.outageUntil = w.tick + 50;
+    tickProduction(w);
+    expect(b.state).toBe('burning');
+    delete b.outageUntil;
+    b.connected = false;
+    tickProduction(w);
+    expect(b.state).toBe('notConnected');
+    b.connected = true;
+    const def = BUILDING_DEFS.lumberjack;
+    def.requiresService = 'school';
+    try {
+      tickProduction(w);
+      expect(b.state).toBe('noService');
+    } finally {
+      delete def.requiresService;
+    }
+    tickProduction(w);
+    expect(b.state).toBe('noForest');
+  });
+  it('AK-P2S3-04 Holzfäller, dessen einziger Wald unter dem eigenen Grundriss liegt: Zu wenig freier Wald', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    w.money = 10_000;
+    forceRect(w, k.x + 1, k.y - 3, 7, 7, 'grass');
+    w.tiles[idx(w, k.x + 3, k.y)]!.terrain = 'forest';
+    expect(placeRoad(w, k.x + 2, k.y).ok).toBe(true);
+    expect(canPlace(w, 'lumberjack', k.x + 3, k.y)).toEqual({
+      ok: false,
+      reason: 'Zu wenig freier Wald in der Nähe',
+    });
+  });
+  it('RF-6 noForest füllt kein Lager (kein storageFull), Unterhalt läuft; nach Aufforsten läuft progress weiter', () => {
+    const { w, b, forest } = lumberSite();
+    for (let i = 0; i < 5; i++) step(w);
+    expect(b.progress).toBe(5);
+    w.stock.wood = STORAGE_CAP;
+    expect(clearForest(w, forest.x, forest.y).ok).toBe(true);
+    const carry = w.upkeepCarry,
+      money = w.money,
+      up = totalUpkeep(w);
+    for (let i = 0; i < 100; i++) {
+      step(w);
+      expect(b.state).toBe('noForest');
+    }
+    expect([b.progress, w.stock.wood]).toEqual([5, STORAGE_CAP]);
+    expect(w.money).toBe(money - Math.floor((carry + 100 * up) / 100));
+    expect(plantForest(w, forest.x, forest.y).ok).toBe(true);
+    step(w);
+    expect(b.progress).toBe(6);
+  });
+  it('RF-7 Stand mit state noForest lädt ok und wird im nächsten Schritt neu bewertet', () => {
+    const a = lumberSite();
+    expect(clearForest(a.w, a.forest.x, a.forest.y).ok).toBe(true);
+    a.b.state = 'noForest';
+    const la = deserialize(serialize(a.w));
+    if (!la.ok) throw new Error(la.reason);
+    step(la.world);
+    expect(la.world.buildings[a.b.id]!.state).toBe('noForest');
+    expect(la.world.buildings[a.b.id]!.progress).toBe(a.b.progress);
+    const c = lumberSite();
+    c.b.state = 'noForest';
+    const lc = deserialize(serialize(c.w));
+    if (!lc.ok) throw new Error(lc.reason);
+    step(lc.world);
+    expect(lc.world.buildings[c.b.id]!.state).toBe('ok');
+    expect(lc.world.buildings[c.b.id]!.progress).toBe(c.b.progress + 1);
   });
 });

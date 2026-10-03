@@ -30,12 +30,15 @@ function timeline(level: CrisisLevel, fireStation: boolean): Timeline {
 }
 
 describe('M10 Freischalt-Ticks Seed 3 (Spec 9.3)', () => {
+  // M11 R185/R187, gemessen auf 7363cb0 mit
+  // `VITE_BALANCE_LOG=1 npx vitest run tests/sim/unlock-timeline.test.ts --silent=false`;
+  // vorher off 3850/6050/3700, normal 4750/7050/4600. Schul-Bauticks: Neupin mit Beleg.
   const cases = [
-    { level: 'off' as const, fire: false, u5: 3850, u6: 6050, school: 3700 },
-    { level: 'normal' as const, fire: true, u5: 4750, u6: 7050, school: 4600 },
+    { level: 'off' as const, fire: false, u5: 4150, u6: 6750, school: 4000 },
+    { level: 'normal' as const, fire: true, u5: 5150, u6: 7850, school: 5000 },
   ];
   for (const c of cases)
-    it(`AK-B1-01 Krisen ${c.level}: Freischalt- und Bauticks exakt, kein Bau vor seiner Freischaltung`, () => {
+    it(`AK-B1-01 Krisen ${c.level}: Freischalt- und Bauticks exakt, kein Bau vor seiner Freischaltung (M11 S10)`, () => {
       const tl = timeline(c.level, c.fire);
       expect(tl.unlock).toMatchObject({ U0: 0, U2: 150, U3: 350, U4: 550, U5: c.u5, U6: c.u6 });
       expect(tl.unlock.U1).toBeUndefined();
@@ -49,4 +52,13 @@ describe('M10 Freischalt-Ticks Seed 3 (Spec 9.3)', () => {
         expect(tl.build[id]!, id).toBeGreaterThanOrEqual(tl.unlock[e.id]!);
       }
     });
+});
+
+describe('M11 Freischalt-Ticks (M-11)', () => {
+  it('AK-BAS-03 off 150/350/550/4150/6750; normal …/5150/7850; mild …/4250/7850', () => {
+    const early = { U2: 150, U3: 350, U4: 550 };
+    expect(timeline('off', false).unlock).toMatchObject({ ...early, U5: 4150, U6: 6750 });
+    expect(timeline('normal', true).unlock).toMatchObject({ ...early, U5: 5150, U6: 7850 });
+    expect(timeline('mild', false).unlock).toMatchObject({ ...early, U5: 4250, U6: 7850 });
+  });
 });

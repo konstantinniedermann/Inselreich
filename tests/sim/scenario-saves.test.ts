@@ -3,9 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
+import { TAX_CARRY_DIVISOR } from '../../src/sim/defs/tiers';
+import { totalUpkeep, UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { deliverOrder } from '../../src/sim/orders';
 import { buildLock, canPlace } from '../../src/sim/placement';
-import { citizens, merchants, populationByTier, serviceAvailable } from '../../src/sim/population';
+import {
+  citizens,
+  merchants,
+  populationByTier,
+  serviceAvailable,
+  taxUnits,
+} from '../../src/sim/population';
 import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
 import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { sellPrice } from '../../src/sim/trade';
@@ -234,8 +242,16 @@ describe('Szenario-Saves', () => {
   });
 });
 
+/** Geld, das ein Schritt bucht (M11 S10, Anhang 02 D): Überträge `c0`, `u0` vor dem Schritt, Raten nach dem Schritt. */
+function booked(w: World, c0: number, u0: number): number {
+  return (
+    Math.floor((c0 + taxUnits(w)) / TAX_CARRY_DIVISOR) -
+    Math.floor((u0 + totalUpkeep(w)) / UPKEEP_INTERVAL)
+  );
+}
+
 describe('M6 Szenarien', () => {
-  it('AK-B2-04 krise-brand: Stufe normal, Tick 2999, eine Brennerei, Zuckerrohr 20, Geld 1000; Brand trifft sie', () => {
+  it('AK-B2-04 krise-brand: Stufe normal, Tick 2999, eine Brennerei, Zuckerrohr 20, Geld 1000; Brand trifft sie (M11 S10)', () => {
     const w = load('krise-brand');
     expect(w.crisisLevel).toBe('normal');
     expect(w.tick).toBe(tickBeforeFirst(w, 'fire'));
@@ -247,20 +263,22 @@ describe('M6 Szenarien', () => {
     expect(flammable[0]!.connected).toBe(true);
     expect(w.stock.cane).toBe(20);
     expect(w.money).toBe(1000);
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.crisis?.kind).toBe('fire');
     expect(w.crisis?.outcome).toBe('burning');
     expect(w.crisis?.target).toBe(flammable[0]!.id);
-    // Tick 3000 bucht auch den Unterhalt (UPKEEP_INTERVAL); der Brand selbst kostet 250.
-    expect(w.money + w.stats.upkeep).toBe(750);
+    // Der Schritt bucht Steuer und Unterhalt mit Übertrag (M11); der Brand selbst kostet 250.
+    expect(w.money).toBe(750 + booked(w, c0, u0));
   });
 
-  it('AK-B2-04 krise-brand-geschuetzt: Brand wird gelöscht, Geld bleibt 1000', () => {
+  it('AK-B2-04 krise-brand-geschuetzt: Brand wird gelöscht, Geld bleibt 1000 (M11 S10)', () => {
     const w = load('krise-brand-geschuetzt');
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.crisis?.kind).toBe('fire');
     expect(w.crisis?.outcome).toBe('extinguished');
-    expect(w.money + w.stats.upkeep).toBe(1000); // nur der Unterhalt von Tick 3000, keine Brandkosten
+    expect(w.money).toBe(1000 + booked(w, c0, u0)); // nur die Buchung des Schritts, keine Brandkosten
   });
 
   it('AK-B2-04 krise-sturm: Tick 2399, Fischer und Holzfäller angebunden, danach Sturm in Warnung', () => {

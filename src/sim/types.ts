@@ -18,7 +18,9 @@ export type BuildingDefId =
   | 'firestation'
   | 'bathhouse'
   | 'glassworks'
-  | 'townhall';
+  | 'townhall'
+  | 'hunter'
+  | 'cattlefarm';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {

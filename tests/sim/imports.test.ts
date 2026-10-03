@@ -32,4 +32,11 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
       expect(read.test(readFileSync(f, 'utf8')), f).toBe(false);
     expect(importsOf('levels').every((m) => m === 'types' || m.startsWith('defs/'))).toBe(true);
   });
+  it('PLAN-FLOW flow.ts importiert weder population noch queries; queries re-exportiert goodsBalance', () => {
+    expect(importsOf('flow')).not.toContain('population');
+    expect(importsOf('flow')).not.toContain('queries');
+    expect(readFileSync(`${SIM}/queries.ts`, 'utf8')).toMatch(
+      /export \{[^}]*goodsBalance[^}]*\} from '\.\/flow'/,
+    );
+  });
 });

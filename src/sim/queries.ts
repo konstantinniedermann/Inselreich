@@ -3,7 +3,6 @@ import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
 import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
-import { cycleOf } from './levels';
 import { citizens, isSupplied, merchants, serviceAvailable } from './population';
 import { supplyBuildings } from './supply';
 import type {
@@ -60,30 +59,7 @@ function siteZone(defId: BuildingDefId): { terrain: 'forest' | 'grass'; radius: 
   return null;
 }
 
-/** Erzeugung und Verbrauch je Gut über 100 Ticks (nominal, ungerundet). */
-export function goodsBalance(
-  world: World,
-): Record<GoodId, { produced: number; consumed: number; net: number }> {
-  const out = {} as Record<GoodId, { produced: number; consumed: number; net: number }>;
-  for (const g of GOOD_IDS) out[g] = { produced: 0, consumed: 0, net: 0 };
-  for (const b of Object.values(world.buildings)) {
-    if (b.house) {
-      if (!isSupplied(world, b)) continue;
-      const needs = TIERS[b.house.tier].needs;
-      for (const g of Object.keys(needs) as GoodId[])
-        out[g].consumed += b.house.inhabitants * needs[g]!;
-      continue;
-    }
-    if (!b.connected) continue;
-    const def = BUILDING_DEFS[b.defId];
-    const cycle = cycleOf(b);
-    if (cycle === undefined) continue;
-    if (def.produces) out[def.produces].produced += 100 / cycle;
-    for (const g of def.consumes ?? []) out[g].consumed += 100 / cycle;
-  }
-  for (const g of GOOD_IDS) out[g].net = out[g].produced - out[g].consumed;
-  return out;
-}
+export { goodsBalance } from './flow';
 
 /** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
 export function missingInputs(world: World, b: Building): GoodId[] {

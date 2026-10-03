@@ -5,6 +5,7 @@ import { checkWin, step } from '../../src/sim/tick';
 import { WIN_CITIZENS } from '../../src/sim/defs/tiers';
 import type { Building, World } from '../../src/sim/types';
 import { orderForPeriod } from '../../src/sim/orders';
+import { UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import { UPGRADE_WAIT } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { forceGrass, houseNearKontor, placeService, prepareEast } from './helpers';
@@ -87,7 +88,7 @@ describe('step order', () => {
 });
 
 describe('step order: Markt und Aufträge', () => {
-  it('AK-S2-13 Aufstieg im selben Tick wie das Angebot öffnet den Stufe-2-Pool', () => {
+  it('AK-S2-13 Aufstieg im selben Tick wie das Angebot öffnet den Stufe-2-Pool (M11 S10)', () => {
     let seed = -1;
     for (let s = 1; s < 500 && seed < 0; s++) {
       const a = orderForPeriod(s, 0, 2);
@@ -100,7 +101,7 @@ describe('step order: Markt und Aufträge', () => {
     placeService(w, 'chapel', house.x + 9, house.y);
     w.tick = 599;
     house.house!.inhabitants = TIERS[1].maxInhabitants;
-    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR; // Defizitwelt
     w.stock.cloth = 1;
     expect(w.order).toBeNull();
     step(w);

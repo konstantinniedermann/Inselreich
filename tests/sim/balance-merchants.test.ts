@@ -11,8 +11,11 @@ import {
   type MerchantTrajectory,
 } from './merchantsController';
 
-/** Sieg-Tick des Bürger-Controllers (balance.test.ts, Spec 16.1). */
-const WIN_TICK = 6050;
+/**
+ * Sieg-Tick des Bürger-Controllers (balance.test.ts, Spec 16.1). M11 R185/R187, gemessen auf 7363cb0 mit
+ * `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-merchants.test.ts --silent=false`; vorher 6050.
+ */
+const WIN_TICK = 6750;
 /** Seed 3, Krisen aus: Startphase des Bürger-Controllers, dann Merchant-Schleife bis zum zweiten Ziel. */
 function run(): { w: World; t: MerchantTrajectory } {
   const w = createWorld(3);
@@ -29,7 +32,7 @@ function log(label: string, w: World, t: MerchantTrajectory): void {
 }
 
 describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
-  it('AK-B1-01 Sieg 6050, zweites Ziel bis 12 000, Geld > 0, won', () => {
+  it('AK-B1-01 Sieg 6750, zweites Ziel bis 12 000, Geld > 0, won (M11 S10)', () => {
     const { w, t } = run();
     log('standard', w, t);
     expect(t.winTick).toBe(WIN_TICK);
@@ -66,5 +69,14 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     expect(runMerchants(w, layoutFor(w), t)).toBe(false);
     expect(serialize(w)).toBe(serialize(a.w));
     expect(t.wonMerchantsTick).toBe(a.t.wonMerchantsTick);
+  });
+});
+
+describe('M11 Baseline Kaufleute (Spec 14)', () => {
+  it('AK-BAS-02 Kaufleute: Sieg 6750, Ziel 2 11 200 ≤ 12 000, minMoneyAfterWin 320, Geld > 0', () => {
+    const { w, t } = run();
+    expect([t.winTick, t.wonMerchantsTick, t.minMoneyAfterWin]).toEqual([6750, 11200, 320]); // M-01, M-08, M-10
+    expect(t.wonMerchantsTick!).toBeLessThanOrEqual(MERCHANT_TICK_LIMIT);
+    expect(w.money).toBeGreaterThan(0);
   });
 });

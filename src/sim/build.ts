@@ -5,6 +5,7 @@ import { canPlace, canPlaceRoad } from './placement';
 import { recomputeConnectivity } from './roads';
 import type { Building, BuildingDefId, Result, World } from './types';
 import { fail, ok } from './types';
+import { paidCost } from './upgrade';
 import { footprint, tileAt } from './world';
 
 export function placeRoad(world: World, x: number, y: number): Result {
@@ -58,7 +59,7 @@ export function demolish(world: World, id: number): Result {
     if (tile) tile.buildingId = null;
   }
   delete world.buildings[id];
-  grantRefund(world, refundCost(BUILDING_DEFS[b.defId].cost));
+  grantRefund(world, refundCost(paidCost(b)));
   recomputeConnectivity(world);
   return ok;
 }
