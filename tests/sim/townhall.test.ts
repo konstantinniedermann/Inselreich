@@ -126,14 +126,14 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
   it('AK-S2-06 Abriss-Lücke: nach Abriss wirkt normal, taxLevel bleibt high; Neubau wirkt wieder ohne Sperrzeit', () => {
     const { w, houses } = village(1, { unlockAll: true });
     fill(w, houses[0]!, 2, 8);
-    let t = placeTownhall(w);
+    const t = placeTownhall(w);
     expect(setTaxLevel(w, 'high').ok).toBe(true);
     const lock = w.taxLockedUntil;
     expect(demolish(w, t.id).ok).toBe(true);
     step(w);
     expect(effectiveTaxLevel(w)).toBe('normal');
     expect(w.taxLevel).toBe('high');
-    t = placeTownhall(w);
+    placeTownhall(w);
     expect(effectiveTaxLevel(w)).toBe('high');
     expect(w.taxLockedUntil).toBe(lock);
   });
