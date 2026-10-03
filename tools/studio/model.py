@@ -205,6 +205,7 @@ class _Builder:
         self.index = 0
         self.current_ts = ""
         self.budgets: dict[tuple[str, str, str], dict] = {}
+        self.claims: dict[tuple[str, str, str], str] = {}
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
@@ -770,12 +771,36 @@ class _Builder:
         for grant in candidates:
             if grant["phase"] in names:
                 return (grant["lead"], grant["phase"], grant["session_id"])
-        # Ohne Namenstreffer gehoert der Start in die Phase seines Leads (Freigabe
-        # zum Zeitpunkt des Lead-Starts), nicht in die zum Zeitpunkt des Starts:
-        # parallele Controller teilen sich sonst die jeweils juengste Freigabe.
-        own = [g for g in candidates if g["since"] <= lead_node["started"]]
-        best = max(own or candidates, key=lambda g: g["since"])
+        # Ohne Namenstreffer: Freigaben, die ein anderer Lead derselben Rolle
+        # beansprucht (parallele Controller), scheiden aus; von den uebrigen zaehlt
+        # die juengste. Ein einzelner Lead mit mehreren Phasen bleibt zeitlich
+        # zugeordnet.
+        free = [
+            g
+            for g in candidates
+            if self.claims.get((g["lead"], g["phase"], g["session_id"]))
+            in (None, lead_node["key"])
+        ]
+        if not free:  # Lead ohne eigene Freigabe: Freigabe zum Zeitpunkt seines Starts
+            free = [g for g in candidates if g["since"] <= lead_node["started"]]
+        best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
+
+    def claim_budgets(self) -> None:
+        """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead."""
+        self.claims = {}
+        taken: set[str] = set()
+        for key, grant in sorted(self.budgets.items(), key=lambda kv: kv[1]["since"]):
+            for lead in sorted(self.nodes.values(), key=lambda n: n["started"]):
+                if (
+                    lead["role"] == grant["lead"]
+                    and lead["key"] not in taken
+                    and lead["started"] >= grant["since"]
+                    and grant["session_id"] in ("", lead["session_id"])
+                ):
+                    self.claims[key] = lead["key"]
+                    taken.add(lead["key"])
+                    break
 
     def on_package(self, event, ts, sid):
         key = _package(event)
@@ -1128,6 +1153,7 @@ class _Builder:
         return view
 
     def budget_view(self) -> list[dict]:
+        self.claim_budgets()
         groups: dict[tuple[str, str, str], dict] = {
             key: {"plan": plan, "children": []} for key, plan in self.budgets.items()
         }
