@@ -1420,15 +1420,15 @@ T07b, T09, `qa-checks`, README) und wird hier **nicht** vorgenommen.
 
 **Neue Spalte `tip` (ersetzt die Texte in 4.5 und in T01c; ≤ 175 Zeichen, kein „Tick"):**
 
-| Id  | `tip`                                                                                                                                                     |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Id  | `tip`                                                                                                                                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | U0  | Fischerleute gehen an Land, ohne Bildung und ohne Besitz: Dach, Holz und Fisch müssen reichen. Wohnhäuser brauchen keinen Weg, Betriebe schon: verbinde sie mit dem Kontor. |
-| U1  | Aus dem Lager am Strand wird ein Dorf. Ein Marktplatz versorgt Wohnhäuser wie das Kontor und braucht einen Weg.                                           |
-| U2  | Die Fischer wollen mehr als Fisch: Kleidung, Glauben, feste Mauern. Die Schäferei braucht Weide im Umkreis: rode Wald (C), wenn es eng wird.              |
-| U3  | Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie.  |
-| U4  | Wer Kleidung und Glauben hat, will lesen und feiern: Schule und Rum. Zuckerrohr wächst wie Schafe nur mit Weide im Umkreis.                               |
-| U5  | Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe.             |
-| U6  | Bürger wollen Hygiene und helle Fenster. Kaufleute brauchen Glas und ein Badehaus.                                                                        |
+| U1  | Aus dem Lager am Strand wird ein Dorf. Ein Marktplatz versorgt Wohnhäuser wie das Kontor und braucht einen Weg.                                                             |
+| U2  | Die Fischer wollen mehr als Fisch: Kleidung, Glauben, feste Mauern. Die Schäferei braucht Weide im Umkreis: rode Wald (C), wenn es eng wird.                                |
+| U3  | Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie.                    |
+| U4  | Wer Kleidung und Glauben hat, will lesen und feiern: Schule und Rum. Zuckerrohr wächst wie Schafe nur mit Weide im Umkreis.                                                 |
+| U5  | Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe.                               |
+| U6  | Bürger wollen Hygiene und helle Fenster. Kaufleute brauchen Glas und ein Badehaus.                                                                                          |
 
 **`notice` bleibt unverändert** (4.5, 11.6): Die Gründe erzählen den Bogen schon („deine Pioniere wollen Siedler
 werden", „die ersten Siedler sind da"), und ihr Wortlaut steht als Literal in T06b, 11.6 und `qa-checks`. `lockText`
