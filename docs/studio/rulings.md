@@ -914,3 +914,15 @@ M10 Stufe 1 (T01) startet nach diesem Delta. — Kosten bei Irrtum: Ausbau früh
 Thema verlangt Strukturänderung → T01 neu briefen.
 
 Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-03 · ADR: —
+
+## R171 · 2026-10-03 · S12 Ausbau, M10-Thema
+
+Ruling: (1) Gate Delta M10-Spec (Abschnitt 24, nur `tip`-Texte, „Fischerleute ohne Bildung gehen an
+Land") bestanden; Stufenname „Pioniere" bleibt (Umbenennung wäre Strukturänderung). T01 startet
+unverändert, T01c übernimmt die neuen `tip`-Literale. (2) Gate Brainstorming S12 „Ausbau" bestanden:
+Designvorschlag `docs/superpowers/specs/2026-10-03-s12-ausbau-design.md`, Variante C, Annahmen A1–A7 wie
+empfohlen angenommen; Einordnung M11 nach S10, parallel S2; Spec erst mit M11. (3) Reiner
+Doku-Fast-Forward `docs/s12-design` → main durch L0 ohne Integrator (kein Code, kein Konflikt).
+— Kosten bei Irrtum: Nutzer will Ausbau vor S10 → S12 in M11 vorziehen (keine Abhängigkeit ausser Save-Version).
+
+Entscheider: L0 · Anlass: Bericht S12-D · ADR: —
