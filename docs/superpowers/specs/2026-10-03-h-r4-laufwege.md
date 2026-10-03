@@ -47,3 +47,4 @@ Tiefensortierung über die `moving`-Liste mit `kind: 'walker'` und `id = ERRAND_
 - Weggraph (`roadGraph`, damit `layoutKey`) wird je `errandsFrom`-Aufruf einmal geholt und an `errandPlan`/`errandPose` durchgereicht; der Plan-Cache bleibt über die Graph-Identität.
 - Gibt es mehr passende Betriebe als `MAX_ERRANDS`, ordnet der feste Schlüssel `hash2(seed + 95, id)` die Auswahl (nicht die ID-Reihenfolge); stabil von Frame zu Frame.
 - **[A]** Die gerade Linie der Sammler kann in dichter Bebauung Nachbargebäude kreuzen (Playtest-Befund); Wegsuche über freie Kacheln wäre ein Folgehäppchen.
+- **[A] (ersetzt die Linien-Annahme oben):** Der Sammelweg ist eine gerade Linie, die einmal je Plan (Cache) mit Schritt 0,5 Kachel auf Wasser geprüft wird; kreuzt sie Wasser, gibt es für diesen Betrieb keine Sammelfigur (Träger laufen weiter). Wegpunkte um Hindernisse (Wasser, Nachbargebäude) bleiben Folgehäppchen.

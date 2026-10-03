@@ -122,6 +122,18 @@ const walkable = (world: World, x: number, y: number): boolean => {
   return !!t && t.terrain !== 'water' && t.buildingId === null;
 };
 
+const SAMPLE_STEP = 0.5;
+/** Liegt auf der Linie `a`–`b` (Schritt höchstens 0,5 Kachel, beide Enden inklusive) keine Wasserkachel? */
+function dryLine(world: World, a: Pt, b: Pt): boolean {
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / SAMPLE_STEP));
+  for (let i = 0; i <= n; i++) {
+    const x = Math.floor(a.x + ((b.x - a.x) * i) / n),
+      y = Math.floor(a.y + ((b.y - a.y) * i) / n);
+    if (inBounds(world, x, y) && world.tiles[idx(world, x, y)]!.terrain === 'water') return false;
+  }
+  return true;
+}
+
 function gatherPath(world: World, b: Building, target: Target): Pt[] | null {
   const d = BUILDING_DEFS[b.defId];
   const cx = b.x + d.w / 2,
@@ -144,7 +156,9 @@ function gatherPath(world: World, b: Building, target: Target): Pt[] | null {
   }
   if (!best) return null;
   const to = { x: best.x + 0.5, y: best.y + 0.5 };
-  return [edgePoint(b, to), to];
+  const from = edgePoint(b, to);
+  // Hin- und Rückweg sind dieselbe Linie; Wasser darauf: keine Figur (Wegpunkte um Hindernisse: Folgehäppchen)
+  return dryLine(world, from, to) ? [from, to] : null;
 }
 
 function carryPath(world: World, g: RoadGraph, b: Building): Pt[] | null {

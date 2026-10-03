@@ -155,6 +155,26 @@ describe('H-R4 errandPlan', () => {
     const lj = put(far, 2030, 'lumberjack', 35, 35);
     expect(errandPlan(far, lj).gather).toBeNull();
   });
+  it('RF-11 Wasser auf der Sammellinie: kein Sammelweg und keine Figur; ohne Wasser wie bisher', () => {
+    const dry = scene();
+    dry.lj.progress = 15;
+    expect(errandPlan(dry.world, dry.lj).gather).not.toBeNull();
+    expect(errandsFrom(dry.world, FULL, CLOCK, false).length).toBe(1);
+    const wet = scene();
+    wet.lj.progress = 15;
+    setTerrain(wet.world, 40, 39, 'water');
+    setTerrain(wet.world, 41, 39, 'water');
+    expect(errandPlan(wet.world, wet.lj).gather).toBeNull();
+    expect(errandsFrom(wet.world, FULL, CLOCK, false)).toEqual([]);
+    expect(errandPose(wet.world, wet.lj, 0.15)).toBeNull(); // Hin- und Rückweg: dieselbe Linie
+    expect(errandPose(wet.world, wet.lj, 0.55)).toBeNull();
+  });
+  it('RF-11 Träger läuft weiter, wenn nur der Sammelweg nass ist', () => {
+    const { world, lj } = scene();
+    setTerrain(world, 40, 39, 'water');
+    setTerrain(world, 41, 39, 'water');
+    expect(errandPose(world, lj, 0.875)!.load).toBe('wood');
+  });
   it('RF-3 Träger: Weg folgt den Wegkacheln vom Betrieb zum Markt', () => {
     const { world, lj } = scene();
     const carry = errandPlan(world, lj).carry!;
