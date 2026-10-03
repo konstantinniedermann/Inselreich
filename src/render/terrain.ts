@@ -22,17 +22,33 @@ const LIGHT = { x: -3 / Math.sqrt(10), y: -1 / Math.sqrt(10) }; // Richtung zum 
 const SHADE_MAX = 0.08;
 const SHADE_MAX_MOUNTAIN = 0.12;
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
-const FOOT_HEIGHT = 1.4; // Höhenanstieg am Gebirgsfuss (Bilinearfeld des Gebirgs-Indikators)
+const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
+const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreht), trägt die Plastik im Inneren
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
+const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
 const CLOVER_MAX = 0.75; // höchstens 60 % Mischung zum Kleegrün
 const DRY_MAX = 0.35; // höchstens 35 % Mischung zu sandDry (darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
+const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
+const PATCH_SPREAD = 5; // R170: weicher als 10 — die Flecken laufen aus statt als Kante zu enden
 const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
-const ROCK_EDGE: [number, number] = [0.5, 0.6]; // Spec 5.1: Kantenband des Fels-Indikators
+/**
+ * R170: Typ-Übergang. Gewicht je Typ = Indikator^TYPE_BLEND_POW (normiert); der stärkste Typ bleibt der von
+ * `terrainAt` (AK-R1-02), die Farbe läuft aber über das Plateau-Band weich in den Nachbartyp statt hart zu springen.
+ */
+const TYPE_BLEND_POW = 2;
+// R170: Abweichung zu M7-Spec 5.1 — kein Kantenband des Fels-Indikators mehr (wirkte als harte Pseudo-3D-Kontur)
+const ROCK_AMP = 0.7; // R170: Fels mischt höchstens 70 % zu rockLight/rockDark, stetig statt drei Stufen
+const ROCK_GRAIN = 0.05; // R170: Pixelkorn im Fels ±2,5 % Helligkeit (feinkörnig, ohne Flecken)
+// Rauschdrehungen (rad): Wertrauschen ist achsparallel; gedreht laufen Flecken nicht entlang der Kachelkanten (R170)
+const ROT_PATCH = 1.07,
+  ROT_ROCK = 0.41,
+  ROT_ROCK2 = 1.23,
+  ROT_HILL = 0.33;
 
 export interface TileRect {
   x0: number;
@@ -144,6 +160,35 @@ export interface TerrainGrid {
 
 const smoothstepClamp = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
+/** Wertrauschen an gedrehten Koordinaten (R170: keine achsparallelen Flecken). */
+function rotNoise(seed: number, fx: number, fy: number, freq: number, rot: number): number {
+  const c = Math.cos(rot) * freq,
+    s = Math.sin(rot) * freq;
+  return valueNoise(seed, c * fx - s * fy, s * fx + c * fy);
+}
+
+/** Separabler Box-Weichzeichner mit Radius `r` (Knoten), Ränder geklemmt; `tmp` gleich gross wie `f`. */
+function boxBlur(f: Float32Array, nx: number, ny: number, r: number, tmp: Float32Array): void {
+  const span = 2 * r + 1;
+  for (let j = 0; j < ny; j++) {
+    const row = j * nx;
+    let acc = 0;
+    for (let k = -r; k <= r; k++) acc += f[row + Math.min(nx - 1, Math.max(0, k))]!;
+    for (let i = 0; i < nx; i++) {
+      tmp[row + i] = acc / span;
+      acc += f[row + Math.min(nx - 1, i + r + 1)]! - f[row + Math.max(0, i - r)]!;
+    }
+  }
+  for (let i = 0; i < nx; i++) {
+    let acc = 0;
+    for (let k = -r; k <= r; k++) acc += tmp[Math.min(ny - 1, Math.max(0, k)) * nx + i]!;
+    for (let j = 0; j < ny; j++) {
+      f[j * nx + i] = acc / span;
+      acc += tmp[Math.min(ny - 1, j + r + 1) * nx + i]! - tmp[Math.max(0, j - r) * nx + i]!;
+    }
+  }
+}
+
 /** Rechnet alle Felder auf dem groben Raster (alle `RASTER` Texturpixel ein Knoten). */
 export function buildGrid(
   world: World3,
@@ -187,24 +232,31 @@ export function buildGrid(
         0.65 * valueNoise(seed + 11, fx * 0.35, fy * 0.35) +
         0.35 * valueNoise(seed + 13, fx * 1.1, fy * 1.1);
       grass[k] = smoothstepClamp((m - 0.5) * 1.8 + 0.5); // Spreizung: das Rauschen liegt eng um 0,5
-      // Felsrauschen: gespreizt (das Rauschen liegt eng um 0,5) und mit ~1,7 Merkmalen je Kachel, damit jede Felskachel Licht und Schatten zeigt
-      rock[k] = smoothstepClamp((valueNoise(seed + 19, fx * 1.7, fy * 1.7) - 0.5) * 2.4 + 0.5);
-      // R149: sanfter Anstieg am Gebirgsfuss (bilinear über eine ganze Kachel) und tiefe Wiesenwelle
+      // R170: Felsstruktur feinkörnig (~3,2 und ~4,3 Merkmale je Kachel, zwei Drehungen), stetig gespreizt
+      const r =
+        0.7 * rotNoise(seed + 19, fx, fy, 3.2, ROT_ROCK) +
+        0.3 * rotNoise(seed + 27, fx, fy, 4.3, ROT_ROCK2);
+      rock[k] = smoothstepClamp((r - 0.5) * 2.2 + 0.5);
+      // R149/R170: Gebirgshöhe aus dem Bilinearfeld (sanfter Fuss) plus Kuppen im Gebirge
       const foot = sampleField(fields.types.mountain, wx, wy);
       if (cls[k] !== 0) {
         // nur an Landknoten (Wasser braucht keine Flecken); Wert schon geformt, das Pixelfeld interpoliert nur
         patch[k] = Math.max(
           -1,
-          Math.min(1, (valueNoise(seed + 62, fx * 1.4, fy * 1.4) - 0.5) * 10),
+          Math.min(1, (rotNoise(seed + 62, fx, fy, 1.4, ROT_PATCH) - 0.5) * PATCH_SPREAD),
         );
       }
       height[k] =
         smooth[k]! +
-        2 * ind[mt]![k]! +
         FOOT_HEIGHT * foot +
+        HILL_HEIGHT * foot * rotNoise(seed + 29, fx, fy, 0.9, ROT_HILL) +
         0.5 * valueNoise(seed + 17, fx * 0.5, fy * 0.5) +
         MEADOW_WAVE * valueNoise(seed + 61, fx * 0.3, fy * 0.3);
     }
+  // R170: Knicke der Bilinearfelder (Kachelmitten) weichzeichnen, bevor das Gefälle das Relief bestimmt
+  const tmp = new Float32Array(n);
+  boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
+  boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -256,8 +308,56 @@ function waterColor(d: number, o: number[]): void {
   if (d < FOAM_STATIC) mix3(o, C.foam, 0.6, o);
 }
 
+const FOREST = LAND.indexOf('forest');
+
+/** Farbe eines Land-Typs `t` an einem Pixel (ohne Relief); `lerp` interpoliert ein Knotenfeld. */
+function landColor(
+  g: TerrainGrid,
+  t: number,
+  lerp: (f: Float32Array) => number,
+  grain: number,
+  o: number[],
+): void {
+  switch (LAND[t]) {
+    case 'sand': {
+      const s = lerp(g.smooth);
+      mix3(C.sandWet, C.sandDry, smoothstepClamp((s - WET_SAND) / 0.06), o);
+      break;
+    }
+    case 'grass': {
+      const m = lerp(g.grass);
+      if (m < 0.4) mix3(C.grassDark, C.grass, m / 0.4, o);
+      else mix3(C.grass, C.grassLight, (m - 0.4) / 0.6, o);
+      const p = lerp(g.patch);
+      if (p > 0.1) mix3(o, C.clover, (p - 0.1) * CLOVER_MAX, o);
+      else if (p < -0.1) mix3(o, C.sandDry, (-0.1 - p) * DRY_MAX, o);
+      break;
+    }
+    case 'forest': {
+      const p = lerp(g.patch);
+      const edge = smoothstepClamp((1 - lerp(g.ind[FOREST]!)) * 2); // innen 0, Rand ~1
+      // R170: am sonnigen Rand weniger Moos — sonst ergibt Moos + Klee im Übergang einen Kronenton
+      if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX * (1 - MOSS_EDGE_FADE * edge), o);
+      else mix3(C.wood, C.clearing, -p * CLEARING_MAX, o);
+      if (edge > 0) mix3(o, C.edgeLight, edge * FOREST_EDGE_LIGHT, o);
+      break;
+    }
+    default: {
+      // R170: stetige Felsstruktur ohne Kantenband; Korn je Pixel statt Flecken
+      const n = (lerp(g.rock) - 0.5) * 2;
+      if (n >= 0) mix3(C.rock, C.rockLight, n * ROCK_AMP, o);
+      else mix3(C.rock, C.rockDark, -n * ROCK_AMP, o);
+      const f = 1 + grain * ROCK_GRAIN;
+      o[0] = o[0]! * f;
+      o[1] = o[1]! * f;
+      o[2] = o[2]! * f;
+    }
+  }
+}
+
 /**
  * Pixel eines Ausschnitts der Ebene (RGBA). `px0/py0/w/h` in Ebenenpixeln, `scale` = Auflösungsfaktor. Rein, ohne Canvas.
+ * R170: Land-Typen mischen ihre Farben nach Gewichten (Indikator^TYPE_BLEND_POW); reine Zellen rechnen nur einen Typ.
  */
 export function paintPixels(
   g: TerrainGrid,
@@ -268,10 +368,12 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, grass, rock, shade, patch, cls } = g;
-  const fo = LAND.indexOf('forest');
-  const col = [0, 0, 0];
+  const { nx, ny, sharp, smooth, ind, shade, cls } = g;
+  const col = [0, 0, 0],
+    tc = [0, 0, 0];
   const mt = LAND.indexOf('mountain');
+  const wt = new Array<number>(LAND.length).fill(0);
+  const grainSeed = g.seed + 23;
   for (let py = 0; py < h; py++) {
     const gy = (py0 + py + 0.5) / scale / RASTER;
     const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
@@ -290,60 +392,43 @@ export function paintPixels(
         w11 = tx * ty;
       const lerp = (f: Float32Array): number =>
         f[a]! * w00 + f[b]! * w10 + f[c]! * w01 + f[d]! * w11;
-      let type: number; // -1 Wasser, sonst Index in LAND
       const c0 = cls[a]!;
-      if (c0 === cls[b] && c0 === cls[c] && c0 === cls[d]) type = c0 - 1;
-      else if (lerp(sharp) <= 0) type = -1;
-      else {
-        let best = 0,
-          bestV = -Infinity;
-        for (let t = 0; t < LAND.length; t++) {
-          const v = lerp(ind[t]!);
-          if (v > bestV) {
-            bestV = v;
-            best = t;
-          }
-        }
-        type = best;
-      }
-      if (type < 0) {
+      // reine Zelle: vier gleiche Klassen, und an Land trägt jeder Knoten nur seinen Typ (Indikator 1)
+      const uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
+      const own = c0 === 0 ? null : ind[c0 - 1]!;
+      const pure =
+        uniform && (own === null || (own[a] === 1 && own[b] === 1 && own[c] === 1 && own[d] === 1));
+      const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
+      if (water) {
         waterColor(Math.max(0, -lerp(smooth)), col);
       } else {
-        let sh = lerp(shade);
-        if (LAND[type] !== 'mountain') sh = Math.max(-SHADE_MAX, Math.min(SHADE_MAX, sh)); // R149: Rand trägt keine 12 %
-        switch (LAND[type]) {
-          case 'sand': {
-            const s = lerp(smooth);
-            mix3(C.sandWet, C.sandDry, smoothstepClamp((s - WET_SAND) / 0.06), col);
-            break;
+        const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
+        let wMt: number;
+        if (pure) {
+          landColor(g, c0 - 1, lerp, grain, col);
+          wMt = c0 - 1 === mt ? 1 : 0;
+        } else {
+          let sum = 0;
+          for (let t = 0; t < LAND.length; t++) {
+            const v = lerp(ind[t]!);
+            const q = v > 0 ? v ** TYPE_BLEND_POW : 0;
+            wt[t] = q;
+            sum += q;
           }
-          case 'grass': {
-            const m = lerp(grass);
-            if (m < 0.4) mix3(C.grassDark, C.grass, m / 0.4, col);
-            else mix3(C.grass, C.grassLight, (m - 0.4) / 0.6, col);
-            const p = lerp(patch);
-            if (p > 0.1) mix3(col, C.clover, (p - 0.1) * CLOVER_MAX, col);
-            else if (p < -0.1) mix3(col, C.sandDry, (-0.1 - p) * DRY_MAX, col);
-            break;
+          col[0] = col[1] = col[2] = 0;
+          for (let t = 0; t < LAND.length; t++) {
+            const q = wt[t]! / sum;
+            if (q <= 0) continue;
+            landColor(g, t, lerp, grain, tc);
+            col[0] += tc[0]! * q;
+            col[1] += tc[1]! * q;
+            col[2] += tc[2]! * q;
           }
-          case 'forest': {
-            const p = lerp(patch);
-            const edge = smoothstepClamp((1 - lerp(ind[fo]!)) * 2); // innen 0, Rand ~1 (Indikator ~0,5)
-            if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX, col);
-            else mix3(C.wood, C.clearing, -p * CLEARING_MAX, col);
-            if (edge > 0) mix3(col, C.edgeLight, edge * FOREST_EDGE_LIGHT, col);
-            break;
-          }
-          default: {
-            const im = lerp(ind[mt]!);
-            const n = lerp(rock);
-            if (im >= ROCK_EDGE[0] && im < ROCK_EDGE[1])
-              mix3(sh >= 0 ? C.rockLight : C.rockDark, sh >= 0 ? C.rockLight : C.rockDark, 0, col);
-            else if (n > 0.62) mix3(C.rock, C.rockLight, smoothstepClamp((n - 0.62) / 0.2), col);
-            else if (n < 0.38) mix3(C.rock, C.rockDark, smoothstepClamp((0.38 - n) / 0.2), col);
-            else mix3(C.rock, C.rock, 0, col);
-          }
+          wMt = wt[mt]! / sum;
         }
+        // R149: ±12 % nur im Gebirge; R170 stetig: Pixel mit Gebirgsanteil ≤ 50 % tragen höchstens ±8 %
+        const lim = SHADE_MAX + (SHADE_MAX_MOUNTAIN - SHADE_MAX) * smoothstepClamp((wMt - 0.5) * 2);
+        const sh = Math.max(-lim, Math.min(lim, lerp(shade)));
         const f = 1 + sh;
         col[0] = col[0]! * f;
         col[1] = col[1]! * f;
