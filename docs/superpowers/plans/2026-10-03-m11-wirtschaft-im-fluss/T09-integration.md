@@ -96,17 +96,14 @@ it('AK-P3-07 Weberei Stufe 2, Schäferei Stufe 1, Wolle 0: in 600 Schritten mind
 });
 ```
 
-- [ ] **Schritt 2: Rot-Beleg.** AK-P3-01: `expected [ 'canefarm', … (9) ] to deeply equal [ 'canefarm', 'cattlefarm', …
-    (11) ]`. AK-P3-07: auf dem Merge-Stand sofort grün (kein neuer Code); **Rot-Beleg auf `<T08-SHA>`**: Datei-Kopie im
+- [ ] **Schritt 2: Rot-Beleg.** AK-P3-01: `expected [ 'canefarm', … (9) ] to deeply equal [ 'canefarm', 'cattlefarm', … (11) ]`. AK-P3-07: auf dem Merge-Stand sofort grün (kein neuer Code); **Rot-Beleg auf `<T08-SHA>`**: Datei-Kopie im
       Worktree `git worktree add --detach .worktrees/m11-qa <T08-SHA>` (node_modules verlinken), Test dort einfügen →
       `expected 1000 to be less than 1000` (ohne `eff`); Worktree danach entfernen. Lauf im Bericht.
-- [ ] **Schritt 3: Umsetzung.** `defs/levels.ts`: `hunter: [L(30, 7, 25, 1, 1, 0, 'cloth', 2), L(20, 9, 38, 2, 1, 0,
-    'rum', 2)]`, `cattlefarm: [L(12, 13, 125, 8, 2, 0, 'cloth', 3), L(8, 17, 188, 12, 3, 0, 'rum', 3)]` (Anhang 01 A.4;
+- [ ] **Schritt 3: Umsetzung.** `defs/levels.ts`: `hunter: [L(30, 7, 25, 1, 1, 0, 'cloth', 2), L(20, 9, 38, 2, 1, 0, 'rum', 2)]`, `cattlefarm: [L(12, 13, 125, 8, 2, 0, 'cloth', 3), L(8, 17, 188, 12, 3, 0, 'rum', 3)]` (Anhang 01 A.4;
       Schreibweise wie die übrigen Einträge; Reihenfolge der Schlüssel wie `BUILDING_DEFS`).
 - [ ] **Schritt 4: Grün und Bitgleichheit.**
   - `npx vitest run`; `npx tsc --noEmit`; `make check`.
-  - Pins: `git diff <T03-SHA> -- tests/sim/balance.test.ts tests/sim/balance-crises.test.ts tests/sim/balance-merchants.test.ts
-tests/sim/unlock-timeline.test.ts tests/sim/controller.ts tests/sim/merchantsController.ts` **leer**, alle grün.
+  - Pins: `git diff <T03-SHA> -- tests/sim/balance.test.ts tests/sim/balance-crises.test.ts tests/sim/balance-merchants.test.ts tests/sim/unlock-timeline.test.ts tests/sim/controller.ts tests/sim/merchantsController.ts` **leer**, alle grün.
     `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance` und die Laufdaten mit dem T03-Bericht vergleichen. Abweichung →
     Stopp, Meldung an L0 (R74), nichts nachstellen.
   - **Prüfung AK-BAS-05** (Test in B1): bitgleicher Fingerabdruck (`OFF_FINGERPRINT`, Gebäudezahlen `OFF_REFERENCE`) heisst

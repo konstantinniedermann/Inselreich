@@ -88,10 +88,7 @@ Importe: `upgradeBuilding` aus `../../src/sim/upgrade`, `LEVELS`, `LevelDef` aus
 `upkeepOf` aus `../../src/sim/levels`, `goodsBalance` aus `../../src/sim/queries`, `totalUpkeep`, `serialize`, `step`,
 `unlockText`, `UNLOCKS`, `createWorld`, `idx`.
 
-- [ ] **Schritt 2: Rot-Beleg.** `npx vitest run tests/sim/upgrade.test.ts` → ganze Datei rot: `Failed to load url
-    ../../src/sim/upgrade` (Modul fehlt). Nach dem Anlegen eines leeren `upgrade.ts` mit `export function
-    upgradeBuilding(): Result { return ok; }`: AK-P3-02 `expected undefined to be 2` (Stufe), AK-P3-03 `expected
-    { ok: true } to deeply equal { ok: false, reason: 'Gebäude nicht gefunden' }`, AK-P3-04 `expected [ 0, 31 ] …`
+- [ ] **Schritt 2: Rot-Beleg.** `npx vitest run tests/sim/upgrade.test.ts` → ganze Datei rot: `Failed to load url ../../src/sim/upgrade` (Modul fehlt). Nach dem Anlegen eines leeren `upgrade.ts` mit `export function upgradeBuilding(): Result { return ok; }`: AK-P3-02 `expected undefined to be 2` (Stufe), AK-P3-03 `expected { ok: true } to deeply equal { ok: false, reason: 'Gebäude nicht gefunden' }`, AK-P3-04 `expected [ 0, 31 ] …`
       (Zyklus 40), AK-UNL-03 analog; Vorstufe LEVELS `expected undefined to deeply equal [ … ]`.
 - [ ] **Schritt 3: Umsetzung.**
   - `src/sim/defs/levels.ts`: `LEVELS` mit genau den neun Einträgen der Tabelle (Anhang 01 A.4), Kommentar „Index 0 = Stufe
@@ -123,8 +120,7 @@ export function upgradeBuilding(world: World, id: number): Result {
 ```
 
 - [ ] **Schritt 4: Grün.** `npx vitest run tests/sim/upgrade.test.ts tests/sim/imports.test.ts`; `npx vitest run`;
-      `npx tsc --noEmit`; `make check`. Balancing unverändert (Controller baut nie aus): `git diff <T03-SHA> --
-    tests/sim/balance*.test.ts` leer und grün. Testzählbefehl aus index.md.
+      `npx tsc --noEmit`; `make check`. Balancing unverändert (Controller baut nie aus): `git diff <T03-SHA> -- tests/sim/balance*.test.ts` leer und grün. Testzählbefehl aus index.md.
 - [ ] **Schritt 5: Doku.** Keine Datei (siehe T07a); im Bericht die arc42-Zeilen für T09 vorschlagen (`upgrade.ts`,
       `defs/levels.ts`).
 - [ ] **Schritt 6: Commit und Push.**

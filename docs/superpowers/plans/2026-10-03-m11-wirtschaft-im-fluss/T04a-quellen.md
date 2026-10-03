@@ -90,8 +90,7 @@ it('AK-P2S2-01 Felder wie Spec 3.3, Reihenfolge nach fisher, Geld je Einwohner, 
 ```
 
 `tests/sim/placement.test.ts`, neuer Block `describe('M11 Regelfeld free (Spec 3.3)')` mit lokalem Helfer
-`hunterSite(w)`: Kontor `k`; `forceRect(w, k.x + 3, k.y - 4, 7, 7, 'grass')`, dann Wald `forceRect(w, k.x + 4, k.y - 3, 5, 2,
-'forest')` (= genau 10 Kacheln im Radius 3 um die Mitte von `(k.x + 6, k.y - 1)`; Rechnung: Reihen dy −1 und −2 je dx −2…+2);
+`hunterSite(w)`: Kontor `k`; `forceRect(w, k.x + 3, k.y - 4, 7, 7, 'grass')`, dann Wald `forceRect(w, k.x + 4, k.y - 3, 5, 2, 'forest')` (= genau 10 Kacheln im Radius 3 um die Mitte von `(k.x + 6, k.y - 1)`; Rechnung: Reihen dy −1 und −2 je dx −2…+2);
 Wege `(k.x + 2 … k.x + 6, k.y)`; liefert `{ x: k.x + 6, y: k.y - 1 }`. Welt `createWorld(3, { unlockAll: true })`, Geld 10 000.
 Der Test zählt die Vorbedingung selbst (`freeForest(w, x, y) === 10` über `tilesInRadius`, Gelände, `buildingId`, `road`).
 

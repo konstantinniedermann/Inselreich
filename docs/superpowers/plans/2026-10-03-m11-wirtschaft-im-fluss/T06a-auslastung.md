@@ -87,8 +87,7 @@ it('RF-4 Abriss und Neubau am selben Platz: eff und level weg, Neubau Stufe 1 mi
 Start bei Tick 0: erster Sturmtick 1 (ungerade), gemessen 501 ‰; Nahrung nach 2000 Schritten 25 + 40 < 100 (kein
 `storageFull`).
 
-- [ ] **Schritt 2: Rot-Beleg.** `npx vitest run tests/sim/utilization.test.ts`: -01 `expected [ 'ok', undefined, 1000 ]
-    to deeply equal [ 'ok', 256000, 1000 ]`; -02 `… [ 'waitingInput', undefined, 1000 ] …`; -03 `expected 0 to be 999`; -04
+- [ ] **Schritt 2: Rot-Beleg.** `npx vitest run tests/sim/utilization.test.ts`: -01 `expected [ 'ok', undefined, 1000 ] to deeply equal [ 'ok', 256000, 1000 ]`; -02 `… [ 'waitingInput', undefined, 1000 ] …`; -03 `expected 0 to be 999`; -04
       `expected 1000 to be less than or equal to 550`; -05 `expected undefined to be less than 256000`; -06 Fischer
       `expected undefined not to be undefined`; RF-4 `expected undefined to be less than 256000`.
 - [ ] **Schritt 3: Umsetzung** (`production.ts`): Zweig-Logik in eine Funktion ziehen, die meldet, ob `progress` stieg;

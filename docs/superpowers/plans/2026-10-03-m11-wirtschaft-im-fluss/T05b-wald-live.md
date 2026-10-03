@@ -63,8 +63,7 @@ Probe: mit diesen Ergänzungen sind alle übrigen Tests grün; `hints.test.ts` M
 (Test unverändert). Szenarien (`galerie`, `m10-wald`, Controller-Layout) bleiben baubar.
 
 - [ ] **Schritt 4: Grün.** `npx vitest run tests/sim tests/ui`; `npx tsc --noEmit`; `make check`. **Bitgleichheit (A9,
-      M-09):** `npx vitest run tests/sim/balance tests/sim/unlock-timeline.test.ts` grün und `git diff <T03-SHA> --
-    tests/sim/balance*.test.ts tests/sim/unlock-timeline.test.ts` leer. Wackelt ein Pin: Stopp, Meldung an L0 (R74;
+      M-09):** `npx vitest run tests/sim/balance tests/sim/unlock-timeline.test.ts` grün und `git diff <T03-SHA> -- tests/sim/balance*.test.ts tests/sim/unlock-timeline.test.ts` leer. Wackelt ein Pin: Stopp, Meldung an L0 (R74;
       Rückfall Variante C nur per Ruling). Testzählbefehl aus index.md.
 - [ ] **Schritt 5: Doku.**
   - `docs/arc42.md` Baustein `production.ts`: „… Zustand `noForest` (Wald-Regel live über `siteRuleOk`)"; §6 Laufzeit-Zeile

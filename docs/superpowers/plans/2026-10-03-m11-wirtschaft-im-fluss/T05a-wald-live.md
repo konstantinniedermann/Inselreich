@@ -40,9 +40,7 @@ der Betrieb in `noForest` (kein Fortschritt, keine Entnahme, `progress` bleibt, 
 `src/ui/` ausser `hints.ts`, `tests/sim/controller.ts`, `tests/sim/upgrade.test.ts`.
 
 - [ ] **Schritt 1: Tests schreiben** — `tests/sim/forest.test.ts`, neuer Block `describe('M11 Wald live (Spec 3.4)')`.
-      Lokaler Helfer `lumberSite()`: `createWorld(3, { unlockAll: true })`, Geld 10 000, `forceRect(w, k.x + 2, k.y - 3,
-    7, 7, 'grass')` (deckt die ganze Radius-2-Scheibe ausser den Kontorkacheln), genau **eine** Waldkachel `(k.x + 4, k.y - 1)`, Weg `(k.x + 2, k.y)`, `placeBuilding(w, 'lumberjack',
-    k.x + 3, k.y)`; liefert `{ w, b, forest: { x, y } }`. Für die Jagdhütte `hunterSite` wie in T04 (lokal kopieren).
+      Lokaler Helfer `lumberSite()`: `createWorld(3, { unlockAll: true })`, Geld 10 000, `forceRect(w, k.x + 2, k.y - 3, 7, 7, 'grass')` (deckt die ganze Radius-2-Scheibe ausser den Kontorkacheln), genau **eine** Waldkachel `(k.x + 4, k.y - 1)`, Weg `(k.x + 2, k.y)`, `placeBuilding(w, 'lumberjack', k.x + 3, k.y)`; liefert `{ w, b, forest: { x, y } }`. Für die Jagdhütte `hunterSite` wie in T04 (lokal kopieren).
 
 ```ts
 it('AK-P2S3-01 Holzfäller: Rodung → noForest, progress bleibt, kein Holz, Unterhalt gebucht; Aufforsten → weiter', () => {

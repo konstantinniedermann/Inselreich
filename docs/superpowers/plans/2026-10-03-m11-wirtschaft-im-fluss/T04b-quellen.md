@@ -75,11 +75,9 @@ it('AK-UNL-05 Tipps U2, U3, U5 enthalten die Sätze aus Anhang 01 A.5; kein Text
   - `defs/unlocks.ts`: U2 `buildings: ['hunter', 'quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation']`; U3
     `buildings: ['cattlefarm', 'townhall']`; U2-`tip` + „ Die Jagdhütte liefert Nahrung aus dem Wald; sie braucht 10 freie
     Waldfelder im Umkreis."; U3-`tip`: „ Die Rinderfarm braucht viel freie Weide." **vor** dem T01-Satz.
-  - **Minimal-Eingriff** `src/ui/goal.ts:97`: `const withKey = (id) => { const k = hotkeyLabel({ kind: 'build', defId: id });
-return k === null ? BUILDING_DEFS[id].name : \`${BUILDING_DEFS[id].name} (${k})\`; };` Grund: sonst zeigt die
+  - **Minimal-Eingriff** `src/ui/goal.ts:97`: `const withKey = (id) => { const k = hotkeyLabel({ kind: 'build', defId: id }); return k === null ? BUILDING_DEFS[id].name : \`${BUILDING_DEFS[id].name} (${k})\`; };` Grund: sonst zeigt die
     Freischalt-Meldung „Jagdhütte (null)" (Probe); T12 vergibt Y und zieht die Tests nach.
-  - `tests/sim/scenarios.ts` `galerie` (Probe grün): nach `put(w, 'townhall', …)`: `roadCol(w, kx + 2, ky - 5, ky - 1);
-roadRow(w, kx + 3, kx + 11, ky - 5);` Wald `x = kx+2 … kx+5`, `y = ky-9 … ky-6` ausser `(kx+3, ky-6)`;
+  - `tests/sim/scenarios.ts` `galerie` (Probe grün): nach `put(w, 'townhall', …)`: `roadCol(w, kx + 2, ky - 5, ky - 1); roadRow(w, kx + 3, kx + 11, ky - 5);` Wald `x = kx+2 … kx+5`, `y = ky-9 … ky-6` ausser `(kx+3, ky-6)`;
     `put(w, 'hunter', kx + 3, ky - 6); put(w, 'cattlefarm', kx + 8, ky - 7);` (12 freie Waldkacheln, auch nach T05 `ok`).
 
 **Geänderte bestehende Tests** (Name + „(M11 S2)", nur Erwartungen, Probe auf M10-Code gemessen; Zeilen Ist M10):

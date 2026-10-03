@@ -103,15 +103,12 @@ it('RF-5 Ausbau im Sturm und bei noForest: Kosten und Gebühr gebucht, eff und s
     für `i < (b.level ?? 1) − 1` (je Feld addiert; Gebühr nie). Fischer 3: 100+50+75 / 5+3+4 / 2+1+2 / 0.
   - `build.ts:61`: `grantRefund(world, refundCost(paidCost(b)));` (Import aus `./upgrade`; `upgrade.ts` importiert
     `build.ts` nicht → kreisfrei, `imports.test.ts`).
-  - `unlocks.ts` `deriveUnlocks`, in der Gebäudeschleife: `if ((b.level ?? 1) >= 2) out.add(FUNCTION_ENTRY.upgrade2);
-if (b.level === 3) out.add(FUNCTION_ENTRY.upgrade3);` (ohne Kette; keine hart codierten Ids).
+  - `unlocks.ts` `deriveUnlocks`, in der Gebäudeschleife: `if ((b.level ?? 1) >= 2) out.add(FUNCTION_ENTRY.upgrade2); if (b.level === 3) out.add(FUNCTION_ENTRY.upgrade3);` (ohne Kette; keine hart codierten Ids).
 - [ ] **Schritt 4: Grün.** `npx vitest run`; `npx tsc --noEmit`; `make check`; Balancing unverändert gegen `<T03-SHA>`;
       Testzählbefehl.
 - [ ] **Schritt 5: Doku.** Keine Datei; im Bericht für T09: arc42 `build.ts` (Erstattung über `paidCost`), `unlocks.ts`
       (`deriveUnlocks` mit Stufen-Regel).
-- [ ] **Schritt 6: Commit und Push.** `git add src/sim/upgrade.ts src/sim/build.ts src/sim/unlocks.ts
-    tests/sim/upgrade.test.ts`; `git commit -m "feat: M11-P3B Abriss-Erstattung mit Stufenkosten, deriveUnlocks, Brand
-    (Spec 3.6, 4)"`; `git -C .worktrees/m11-upgrade push origin feat/m11-upgrade`.
+- [ ] **Schritt 6: Commit und Push.** `git add src/sim/upgrade.ts src/sim/build.ts src/sim/unlocks.ts tests/sim/upgrade.test.ts`; `git commit -m "feat: M11-P3B Abriss-Erstattung mit Stufenkosten, deriveUnlocks, Brand (Spec 3.6, 4)"`; `git -C .worktrees/m11-upgrade push origin feat/m11-upgrade`.
 
 **Risiken/Randfälle:** `beginCrisis` braucht keine Krisenstufe; die Krise endet in `tickCrises` bei `until`. Der Brand
 kostet `def.cost.money` (100) auch bei Stufe 2 (Spec sagt nichts anderes). Die UI-Abriss-Vorschau zeigt bis zur UI-Welle

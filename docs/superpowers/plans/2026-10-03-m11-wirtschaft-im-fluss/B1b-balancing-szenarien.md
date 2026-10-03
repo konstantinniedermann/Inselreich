@@ -72,8 +72,7 @@ git -C .worktrees/m11-scen push -u origin feat/m11-scen
 **Risiken/Randfälle und Spec-Lücken:**
 
 - **`m11-fluss` „Bilanz ≥ +500 je 100 Ticks" ist im Referenzlauf nicht erreichbar:** gemessen (M10-Code, Tick 3000)
-  Steuer 224, Unterhalt 160 → **+64**; Höchstwert im Lauf ≈ +315 (Tick 6000). Der Test prüft `stats.taxes −
-stats.upkeep > 0`; die Zahl kommt in den Bericht. AK-UI-01 (≥ 10 Änderungen in 2 s) hält bei +0,64 je Tick knapp
+  Steuer 224, Unterhalt 160 → **+64**; Höchstwert im Lauf ≈ +315 (Tick 6000). Der Test prüft `stats.taxes − stats.upkeep > 0`; die Zahl kommt in den Bericht. AK-UI-01 (≥ 10 Änderungen in 2 s) hält bei +0,64 je Tick knapp
   (≈ 13 von 20). Entscheid L0: Tick 3000 lassen oder z. B. Tick 6000.
 - **`m11-defizit`:** ohne Nahrung und Stoff wäre `deficitGood` „Nahrung" (erstes Gut in `GOOD_IDS`), nicht „Rum".
   3 Fischer (7,5 − 4,0 = 3,5 = Δ, dämpft nicht) und 2 Webereien (4,0 − 1,6 ≥ 1,4) sind Ergänzung des Plans; Text
