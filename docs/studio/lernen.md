@@ -33,3 +33,5 @@
 - Vor „bereit für Gate Merge“ weist der Lead Rot-Beleg und, nach Review-BEDENKEN > 20 Zeilen, die Nachprüfung (R136) selbst nach; in Session 08e7b5f1 verlangte beides erst L0 (R174, R178). Auch reine Doku-Pushes auf main brauchen vorher `npx prettier --check` (R173).
 - Prüfungen vor dem Push als eigener Befehl mit `&&` verketten, nie mit `;`: ein roter prettier-Check darf den Push nicht durchlassen (R193, Retro M11 B1).
 - Ein Ruling, das eine Schranke ausnahmsweise überschreitet, nennt die Schranke und ihren Geltungsbereich: die +10 %-Schranke aus R195 galt nur H-R7 (R199, Retro M11).
+- Bricht ein Agent mit API 429 (Limit) ab, setzt L0 ihn per `SendMessage` fort statt neu zu starten: Kontext und Worktree-Stand bleiben erhalten (H-R8, Retro session-9b13950a B1).
+- Prüfungen nie in eine Pipe schicken (`make studio-test | tail -1` liefert den Exit-Code von `tail`): `make studio-test >/dev/null && …` (R202, Retro session-9b13950a B2).

@@ -1279,3 +1279,13 @@ aufsetzen (gleiche Bedingungen wie R199). Einmaliger `make check`-Exit 2 (dritte
 E-023. Merge durch production-integrator im eigenen Worktree (E-022, Handbuch 1.15). — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-art H-R8 · ADR: —
+
+## R203 · 2026-10-03 · Session-Ende 9b13950a
+
+Ruling: Session-Ende wegen L0-Kontext über 25 % (E-010-Regel) nach abgeschlossenem Gate-Block; alle Pakete
+fertig, keine offenen Freigaben. Kurz-Retro `retros/2026-10-03-session-9b13950a.md`: Vorschläge E-025, E-023,
+E-026 warten auf Platz (E-015, E-017, E-022 laufen bis M12). lernen.md um zwei Zeilen ergänzt (429-Fortsetzung,
+Prüfung ohne Pipe). Nächste Session: M12 „Weite Welt" Brainstorming, parallel M9-Rest-Häppchen. — Kosten bei
+Irrtum: keine.
+
+Entscheider: L0 · Anlass: Session-Ende-Routine · ADR: —
