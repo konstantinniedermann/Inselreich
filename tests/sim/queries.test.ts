@@ -77,7 +77,7 @@ function directHouse(world: World, x: number, y: number, tier: 1 | 2 | 3, suppli
 }
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
   k = w.buildings[w.kontorId]!;
 });
 
@@ -252,24 +252,24 @@ describe('queries', () => {
   });
 
   it('layoutKey kollidiert nicht bei gleicher Wegindex-Summe (5+10 gegen 15)', () => {
-    const a = createWorld(3);
-    const b = createWorld(3);
+    const a = createWorld(3, { unlockAll: true });
+    const b = createWorld(3, { unlockAll: true });
     for (const i of [5, 10]) a.tiles[i]!.road = true;
     b.tiles[15]!.road = true;
     expect(layoutKey(a)).not.toBe(layoutKey(b));
   });
 
   it('layoutKey kollidiert nicht bei gleicher Wegzahl und -summe an anderen Kacheln (1+4 gegen 2+3)', () => {
-    const a = createWorld(3);
-    const b = createWorld(3);
+    const a = createWorld(3, { unlockAll: true });
+    const b = createWorld(3, { unlockAll: true });
     for (const i of [1, 4]) a.tiles[i]!.road = true;
     for (const i of [2, 3]) b.tiles[i]!.road = true;
     expect(layoutKey(a)).not.toBe(layoutKey(b));
   });
 
   it('layoutKey erkennt ein verschobenes Gebäude bei gleicher Anzahl und gleicher ID', () => {
-    const a = createWorld(3);
-    const b = createWorld(3);
+    const a = createWorld(3, { unlockAll: true });
+    const b = createWorld(3, { unlockAll: true });
     const ka = a.buildings[a.kontorId]!;
     const kb = b.buildings[b.kontorId]!;
     expect(layoutKey(a)).toBe(layoutKey(b));
@@ -319,8 +319,8 @@ function station(world: World, x: number, y: number, connected: boolean): Buildi
 
 describe('M6 Abfragen', () => {
   it('AK-S4-01 crisisView für off, Leerlauf, Sturm, Brand, Boom', () => {
-    expect(crisisView(createWorld(3))).toEqual({ phase: 'none', next: null });
-    const n = createWorld(3, { crisisLevel: 'normal' });
+    expect(crisisView(createWorld(3, { unlockAll: true }))).toEqual({ phase: 'none', next: null });
+    const n = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     expect(crisisView(n)).toEqual({ phase: 'none', next: 2400 });
     n.tick = 2400;
     beginCrisis(n, 0, { kind: 'storm' });
@@ -332,7 +332,7 @@ describe('M6 Abfragen', () => {
       from: 2601,
       until: 2900,
     });
-    const f = createWorld(3, { crisisLevel: 'normal' });
+    const f = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     const chapel = placeService(
       f,
       'chapel',
@@ -352,7 +352,7 @@ describe('M6 Abfragen', () => {
     });
     delete f.buildings[chapel.id];
     expect(crisisView(f)).toMatchObject({ targetExists: false });
-    const bm = createWorld(3, { crisisLevel: 'normal' });
+    const bm = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     bm.tick = 2400;
     beginCrisis(bm, 0, { kind: 'boom', good: 'food' });
     expect(crisisView(bm)).toMatchObject({
@@ -425,7 +425,7 @@ describe('M6 Abfragen', () => {
     expect(layoutKey(w)).not.toBe(k1);
     expect(layoutKey(w)).toBe(k0);
 
-    const calm = createWorld(3);
+    const calm = createWorld(3, { unlockAll: true });
     const kc = calm.buildings[calm.kontorId]!;
     prepareEast(calm, kc);
     const c0 = layoutKey(calm);
