@@ -936,3 +936,12 @@ an Typgrenzen) gehen in die Nutzerabnahme; ein Domain-Warp wäre ein eigenes Pak
 production-integrator. H-A1 Bausound startet danach. — Kosten bei Irrtum: Revert eines Commits.
 
 Entscheider: L0 · Anlass: Bericht H-R5 · ADR: —
+
+## R173 · 2026-10-03 · H-A1 Bausound, Vorfall CI
+
+Ruling: (1) H-R5 auf main @ 07783b7 (CI, Pages grün), Paket done. (2) H-A1 Bausound startet (lead-art,
+Budget 3). (3) Vorfall: CI auf main @ 592df06 rot (Prettier der Spec-Docs), weil L0 den Doku-Fast-Forward
+(R171 (3)) ohne `make check` machte; behoben 6242c6d. Ab sofort prüft L0 auch bei reinen Doku-Merges
+`npx prettier --check` vor dem Push. Befund an die Kurz-Retro am Session-Ende. — Kosten bei Irrtum: keine.
+
+Entscheider: L0 · Anlass: Integrator-Bericht H-R5, Hook-Alarm CI · ADR: —
