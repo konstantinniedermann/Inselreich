@@ -337,6 +337,8 @@ describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
     expect(deficitText('rum', 100, -0.2)).toBe(`${pre}Vorrat reicht noch über 60 Minuten`);
     expect(deficitText('rum', 10, -3)).toBe(`${pre}Vorrat reicht noch weniger als 1 Minute`);
     expect(deficitText('rum', 20, -3)).toBe(`${pre}Vorrat reicht noch 1 Minute`);
+    expect(deficitText('rum', 360, -1)).toBe(`${pre}Vorrat reicht noch über 60 Minuten`); // x = 60
+    expect(deficitText('rum', 354, -1)).toBe(`${pre}Vorrat reicht noch 59 Minuten`); // x = 59
   });
   it('AK-UI-07 deficitLine: volles Siedlerhaus, Rum 40, keine Brennerei → Rum-Zeile; ohne Defizit oder nicht voll keine', () => {
     const { w, houses } = village(1, { unlockAll: true });
