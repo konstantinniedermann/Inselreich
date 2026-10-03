@@ -131,3 +131,14 @@ describe('M8 U1 Ton (Spec 14.1)', () => {
     expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
   });
 });
+
+import { buildSoundKey } from '../../src/ui/soundEvents';
+
+describe('buildSoundKey', () => {
+  it('liefert Gebäude-Id, road oder nichts', () => {
+    expect(buildSoundKey({ kind: 'build', defId: 'chapel' })).toBe('chapel');
+    expect(buildSoundKey({ kind: 'road' })).toBe('road');
+    expect(buildSoundKey({ kind: 'select' })).toBeNull();
+    expect(buildSoundKey({ kind: 'demolish' })).toBeNull();
+  });
+});

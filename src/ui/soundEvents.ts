@@ -75,3 +75,15 @@ export const UNLOCK_EVENTS = ['pointerup', 'keydown'] as const;
 export function actionSound(r: Result, onOk: SoundEvent | null): SoundEvent | null {
   return r.ok ? onOk : 'error';
 }
+
+/**
+ * Bauklang-Schlüssel nach erfolgreichem Platzieren: Gebäude-Id bzw. 'road'; sonst keiner.
+ * Die Zuordnung zur Klanggruppe liegt in `src/audio/buildSounds.ts`.
+ */
+export function buildSoundKey(
+  tool: { kind: 'build'; defId: string } | { kind: 'road' } | { kind: string },
+): string | null {
+  if (tool.kind === 'road') return 'road';
+  if (tool.kind === 'build' && 'defId' in tool && typeof tool.defId === 'string') return tool.defId;
+  return null;
+}
