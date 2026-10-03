@@ -19,11 +19,12 @@ const T = (
 
 /**
  * Index 0 = Stufe 2, Index 1 = Stufe 3 (Anhang 01 A.4). Fehlt ein Eintrag: Betrieb nicht ausbaubar.
- * `hunter`/`cattlefarm` setzt T09.
  * Parameter von T: Zyklus, Unterhalt, Geld, Holz, Werkzeug, Stein, Gebührenware, Gebührenmenge.
  */
 export const LEVELS: Readonly<Partial<Record<BuildingDefId, readonly [LevelDef, LevelDef]>>> = {
   fisher: [T(24, 7, 50, 3, 1, 0, 'cloth', 2), T(16, 9, 75, 4, 2, 0, 'rum', 2)],
+  hunter: [T(30, 7, 25, 1, 1, 0, 'cloth', 2), T(20, 9, 38, 2, 1, 0, 'rum', 2)],
+  cattlefarm: [T(12, 13, 125, 8, 2, 0, 'cloth', 3), T(8, 17, 188, 12, 3, 0, 'rum', 3)],
   lumberjack: [T(18, 7, 25, 0, 1, 0, 'cloth', 2), T(12, 9, 38, 0, 1, 0, 'rum', 2)],
   quarry: [T(36, 13, 75, 5, 2, 0, 'cloth', 2), T(24, 17, 113, 8, 3, 0, 'rum', 2)],
   sheepfarm: [T(30, 13, 75, 5, 1, 0, 'cloth', 3), T(20, 17, 113, 8, 2, 0, 'rum', 3)],

@@ -9,7 +9,7 @@ import { beginCrisis } from '../../src/sim/crises';
 import { FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { LEVELS, type LevelDef } from '../../src/sim/defs/levels';
 import { UNLOCKS } from '../../src/sim/defs/unlocks';
-import { cycleOf, upkeepOf } from '../../src/sim/levels';
+import { cycleOf, upkeepOf, utilization } from '../../src/sim/levels';
 import { goodsBalance } from '../../src/sim/queries';
 import { deriveUnlocks, unlockText } from '../../src/sim/unlocks';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
@@ -215,5 +215,35 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
       7,
       0,
     ]);
+  });
+});
+
+describe('M11 Kette und Auslastung (Spec 10)', () => {
+  it('AK-P3-07 Weberei Stufe 2, Schäferei Stufe 1, Wolle 0: in 600 Schritten mindestens einmal waitingInput, utilization < 1000', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const put = (defId: BuildingDefId, x: number): Building => {
+      const b: Building = {
+        id: w.nextBuildingId++,
+        defId,
+        x,
+        y: 5,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+      };
+      w.buildings[b.id] = b;
+      return b;
+    };
+    put('sheepfarm', 0);
+    const weaver = put('weaver', 3);
+    weaver.level = 2;
+    w.stock.wool = 0;
+    let waited = false;
+    for (let i = 0; i < 600; i++) {
+      step(w);
+      if (weaver.state === 'waitingInput') waited = true;
+    }
+    expect(waited).toBe(true);
+    expect(utilization(weaver)).toBeLessThan(1000);
   });
 });

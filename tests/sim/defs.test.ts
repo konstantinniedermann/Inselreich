@@ -10,7 +10,11 @@ import {
   WIN_MERCHANTS,
 } from '../../src/sim/defs/tiers';
 import { EFF_MAX, EFF_WINDOW, UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
+import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
+import { sellPrice } from '../../src/sim/trade';
+import type { GoodId } from '../../src/sim/types';
+import { createWorld } from '../../src/sim/world';
 
 describe('defs', () => {
   it('has 8 goods with buy > sell', () => {
@@ -180,5 +184,58 @@ describe('M11 Jagdhütte und Rinderfarm (Spec 3.3)', () => {
       BUILDING_DEFS[id].upkeep / (100 / BUILDING_DEFS[id].cycle!);
     expect([per('fisher'), per('hunter'), per('cattlefarm')]).toEqual([2, 2.5, 2]);
     expect(GOODS.food.sell).toBe(3);
+    // Grenzgewinn je Nahrung: Verkaufspreis minus Unterhalt je Einheit > 0, je Quelle
+    for (const id of ['fisher', 'hunter', 'cattlefarm'] as const)
+      expect(GOODS.food.sell - per(id), id).toBeGreaterThan(0);
+    // Sättigung: 100 Einheiten bringen weniger als der Listenpreis (3 x 100 = 300 ohne Sättigung)
+    const w = createWorld(1);
+    expect(sellPrice(w, 'food', 100)).toBe(164);
+    expect(sellPrice(w, 'food', 100)).toBeLessThan(200);
+  });
+});
+
+describe('M11 Ausbau-Werte (Spec 3.6)', () => {
+  // Die übrigen neun Einträge prüft der Vorstufen-Test in upgrade.test.ts wörtlich.
+  it('AK-P3-01 LEVELS hat genau die 11 Betriebe mit produces, Werte Anhang 01 A.4, ganzzahlig, Stufe 3 schneller', () => {
+    const producers = BUILDING_IDS.filter((id) => BUILDING_DEFS[id].produces !== undefined).sort();
+    expect(producers).toHaveLength(11);
+    expect(Object.keys(LEVELS).sort()).toEqual(producers);
+    const T = (
+      c: number,
+      u: number,
+      m: number,
+      h: number,
+      w: number,
+      s: number,
+      g: GoodId,
+      a: number,
+    ) => ({
+      cycle: c,
+      upkeep: u,
+      cost: { money: m, wood: h, tools: w, stone: s },
+      fee: { good: g, amount: a },
+    });
+    expect(LEVELS.hunter).toEqual([
+      T(30, 7, 25, 1, 1, 0, 'cloth', 2),
+      T(20, 9, 38, 2, 1, 0, 'rum', 2),
+    ]);
+    expect(LEVELS.cattlefarm).toEqual([
+      T(12, 13, 125, 8, 2, 0, 'cloth', 3),
+      T(8, 17, 188, 12, 3, 0, 'rum', 3),
+    ]);
+    for (const id of producers) {
+      const [s2, s3] = LEVELS[id]!;
+      for (const n of [
+        s2.cycle,
+        s2.upkeep,
+        s3.cycle,
+        s3.upkeep,
+        ...Object.values(s2.cost),
+        ...Object.values(s3.cost),
+      ])
+        expect(Number.isInteger(n), id).toBe(true);
+      expect(s3.cycle, id).toBeLessThan(s2.cycle);
+      expect([s2.fee.good, s3.fee.good], id).toEqual(['cloth', 'rum']);
+    }
   });
 });
