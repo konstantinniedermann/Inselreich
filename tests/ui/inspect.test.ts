@@ -10,6 +10,7 @@ import {
   upgradeOkText,
   upgradeReasonTexts,
   levelText,
+  refundLine,
   utilizationText,
   upgradeView,
 } from '../../src/ui/inspect';
@@ -19,7 +20,7 @@ import type { BuildingDefId, World } from '../../src/sim/types';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { goodList, stateInfo } from '../../src/ui/texts';
+import { demolishText, goodList, stateInfo } from '../../src/ui/texts';
 import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
@@ -290,5 +291,39 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
       reasons: [],
       ok: false,
     });
+  });
+});
+
+describe('M11 Rückerstattung nach Ausbau (paidCost)', () => {
+  const stufe2 = () => {
+    const w = createWorld(3, { unlockAll: true });
+    const b: Building = {
+      id: w.nextBuildingId++,
+      defId: 'fisher',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      level: 2,
+    };
+    w.buildings[b.id] = b;
+    w.stock.wood = 0;
+    w.stock.tools = 0;
+    return { w, b };
+  };
+  it('Panelzeile: Fischer Stufe 2 erstattet die Hälfte von Bau plus Stufe (150/8/3)', () => {
+    const { w, b } = stufe2();
+    expect(refundLine(w, b)).toBe('Rückerstattung: 75 Geld · 4 Holz · 1 Werkzeug');
+  });
+  it('Abriss-Meldung: gleiche Werte, Stufe 1 weiter 50/2/1', () => {
+    const { w, b } = stufe2();
+    expect(demolishText(w, b)).toBe(
+      'Fischerhütte abgerissen · zurück 75 Geld · 4 Holz · 1 Werkzeug',
+    );
+    b.level = undefined;
+    expect(demolishText(w, b)).toBe(
+      'Fischerhütte abgerissen · zurück 50 Geld · 2 Holz · 1 Werkzeug',
+    );
   });
 });

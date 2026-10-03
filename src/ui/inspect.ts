@@ -102,7 +102,7 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
   return p;
 }
 
-function refundLine(world: World, b: Building): string {
+export function refundLine(world: World, b: Building): string {
   const paid = paidCost(b); // Bau- plus Stufenkosten, ohne Gebühr
   return `Rückerstattung: ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
 }

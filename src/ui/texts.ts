@@ -1,8 +1,10 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { SERVICE_BUILDING } from '../sim/population';
-import type { Diagnosis } from '../sim/queries';
-import type { Building, Cost, GoodId } from '../sim/types';
+import { refundCost } from '../sim/economy';
+import { effectiveRefund, type Diagnosis } from '../sim/queries';
+import type { Building, Cost, GoodId, World } from '../sim/types';
+import { paidCost } from '../sim/upgrade';
 import { formatGameTime } from './time';
 
 /** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
@@ -89,4 +91,10 @@ export function refundText(nominal: Cost, effective: Cost): string {
     parts.push(lost > 0 ? `${base} (${lost} verfallen – Lager voll)` : base);
   }
   return parts.join(' · ');
+}
+
+/** Abriss-Meldung: Name und Rückerstattung auf Basis der tatsächlich bezahlten Kosten (Bau plus Stufen). */
+export function demolishText(world: World, b: Building): string {
+  const paid = paidCost(b);
+  return `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
 }
