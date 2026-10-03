@@ -15,7 +15,7 @@ import { step } from '../../src/sim/tick';
 import { fail } from '../../src/sim/types';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { forceGrass, forceRect, placeService } from './helpers';
+import { forceGrass, forceRect, placeService, placeTownhall } from './helpers';
 
 interface Town {
   w: World;
@@ -148,6 +148,8 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     const high = town(1);
     readyCitizen(high.w, high.houses[0]!);
     high.w.won = true;
+    placeTownhall(high.w); // M10 T-10: Steuer wirkt nur mit Amtsstube
+    for (const s of [high.chapel, high.school, high.bath]) s.connected = true; // Platzieren setzt die Anbindung zurück
     high.w.taxLevel = 'high';
     expect(upgradeStatus(high.w, high.houses[0]!).reasons).toEqual(['Steuer zu hoch']);
     const locked = town(1);

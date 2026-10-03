@@ -102,13 +102,13 @@ describe('M8 Bauleiste (Änderung S11)', () => {
     w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // alles ausser U6, wie M8 vor dem Ziel
     expect(buildEntries(w, 'production')).toHaveLength(8);
     expect(buildEntries(w, 'production')).not.toContain('glassworks');
-    expect(buildEntries(w, 'public')).toHaveLength(3);
+    expect(buildEntries(w, 'public')).toHaveLength(4); // M10: + Amtsstube (U3)
     expect(buildEntries(w, 'public')).not.toContain('bathhouse');
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     expect(buildEntries(w, 'production')).toHaveLength(9);
     expect(buildEntries(w, 'production')).toContain('glassworks');
-    expect(buildEntries(w, 'public')).toHaveLength(4);
+    expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
   });
 });

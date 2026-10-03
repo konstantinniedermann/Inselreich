@@ -66,7 +66,7 @@ describe('M8 Glashütte: Werte', () => {
     expect(BUILDING_DEFS.weaver.consumes).toEqual(['wool']);
     expect(BUILDING_DEFS.distillery.consumes).toEqual(['cane']);
     expect(BUILDING_DEFS.toolmaker.consumes).toEqual(['wood']);
-    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(12);
+    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(13);
   });
 });
 
@@ -94,6 +94,7 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
   it('AK-S2-04 Konkurrenz ums Holz: Werkzeugmacher (kleinere Id) gewinnt, Glashütte wartet, Stein bleibt', () => {
     const w = base();
     const tm = direct(w, 'toolmaker', 10);
+    direct(w, 'school', 10); // M10: Werkzeugmacher braucht eine Schule in Reichweite
     const gw = direct(w, 'glassworks', 13);
     expect(tm.id).toBeLessThan(gw.id);
     w.stock.wood = 1;
