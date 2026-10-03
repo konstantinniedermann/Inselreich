@@ -91,10 +91,16 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
     warm = false;
   const st = { hits: 0, misses: 0, bypassed: 0 };
 
+  /** Gibt die Fläche frei: Breite/Höhe 0 lässt Safari den Speicher sofort zurückgeben. */
+  function release(e: Entry): void {
+    e.surface.width = 0;
+    e.surface.height = 0;
+  }
   function evict(room: number): void {
     for (const [k, e] of map) {
       if (bytes + room <= maxBytes) break;
       map.delete(k);
+      release(e);
       bytes -= e.bytes;
     }
   }
@@ -108,7 +114,7 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
      */
     beginFrame(z: number, d: number): void {
       if (z !== zoom || d !== dpr) {
-        map.clear();
+        this.clear();
         bytes = 0;
         zoom = z;
         dpr = d;
@@ -175,6 +181,7 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
       return { ...st, entries: map.size, bytes };
     },
     clear(): void {
+      for (const e of map.values()) release(e);
       map.clear();
       bytes = 0;
     },

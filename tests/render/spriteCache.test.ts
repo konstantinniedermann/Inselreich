@@ -265,6 +265,33 @@ describe('H-R6 AK4 Obergrenze', () => {
   });
 });
 
+describe('H-R6 Freigabe', () => {
+  it('Fläche hat nach evict und clear Breite und Höhe 0', () => {
+    const f = factory();
+    const probe = createSpriteCache({ factory: f.make });
+    probe.beginFrame(1, 1);
+    probe.beginFrame(1, 1);
+    probe.draw(target().ctx, cam(), BUILDING_DEFS.market, mk('market'));
+    const size = probe.stats().bytes;
+    const c = createSpriteCache({ factory: f.make, maxBytes: Math.floor(size * 1.5) });
+    c.beginFrame(1, 1);
+    c.beginFrame(1, 1);
+    const t = target();
+    c.draw(t.ctx, cam(), BUILDING_DEFS.market, mk('market'), {});
+    const first = f.made[f.made.length - 1]!;
+    c.draw(t.ctx, cam(), BUILDING_DEFS.market, mk('market'), { waterLeft: true });
+    expect([first.width, first.height]).toEqual([0, 0]); // verdrängt
+    const second = f.made[f.made.length - 1]!;
+    expect(second.width).toBeGreaterThan(0);
+    c.clear();
+    expect([second.width, second.height]).toEqual([0, 0]);
+    c.draw(t.ctx, cam(), BUILDING_DEFS.market, mk('market'), {});
+    const third = f.made[f.made.length - 1]!;
+    c.beginFrame(2, 1); // Zoom-Wechsel räumt ebenfalls
+    expect([third.width, third.height]).toEqual([0, 0]);
+  });
+});
+
 describe('H-R6 AK6 Zähler', () => {
   it('AK6 Treffer, Fehlgriffe, Bytes, Einträge', () => {
     const f = factory();
