@@ -16,30 +16,32 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, tier?: Tier): Building => {
   return b;
 };
 const MAIN_REF: Record<string, string> = {
-  kontor: '36b685b0',
+  kontor: 'cdb73f3a',
   market: '4f0aa6e',
-  house1: '4e81a70f',
-  house2: '408bdaca',
-  house3: '23445565',
-  house4: '131aec0d',
-  fisher: '7e300971',
-  lumberjack: 'e1759b25',
-  quarry: '45644c4',
-  sheepfarm: 'c78ca3b',
-  weaver: '74a4d359',
-  canefarm: '16e630b1',
-  distillery: '36190c4c',
-  toolmaker: '81938d37',
-  chapel: '59f9db0a',
-  school: 'f10cb106',
-  firestation: '18769b1e',
+  house1: '2b818d3',
+  house2: 'fcb1611c',
+  house3: 'd960b6b7',
+  house4: 'cd7c81b7',
+  fisher: '97e5e56f',
+  lumberjack: 'cd4b4bbb',
+  quarry: '17dc728c',
+  sheepfarm: 'c7335de5',
+  weaver: 'dfe8697d',
+  canefarm: 'c9a4ecbf',
+  distillery: '8268f8fa',
+  toolmaker: 'b16776b5',
+  chapel: '2c2767fa',
+  school: 'f373ff1a',
+  firestation: 'f7660e2c',
   bathhouse: '64b56519',
-  glassworks: '837a5355',
-  townhall: 'be83a713',
+  glassworks: '2c73b56b',
+  townhall: 'ab173eb7',
 };
 /**
- * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammen aus dem Stand
- * main @ 4a5130e (vor H-R7), Gebäude bei (12, 7), Kamera (0, 0, Zoom 1), Variante nicht angegeben.
+ * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammten aus dem Stand
+ * main @ 4a5130e (vor H-R7) und sind seit H-R8 bewusst neu gesetzt: Dach- und Giebelpfade zeichnen mit
+ * lineJoin 'round' (R195, die Aufzeichnung trägt lineJoin). Markt und Badehaus (ohne drawShell) blieben gleich.
+ * Gebäude bei (12, 7), Kamera (0, 0, Zoom 1), Variante 0.
  */
 function hashEvents(ev: unknown[]): string {
   const s = JSON.stringify(ev, (_k, v) =>
@@ -132,7 +134,7 @@ describe('H-R7 AK1 Determinismus', () => {
       }
     }
   });
-  it('AK1 Variante 0 zeichnet bytegleich wie main @ 4a5130e (feste Referenz, Hash der Aufzeichnung)', () => {
+  it('AK1 Variante 0 zeichnet bytegleich wie die Referenz (lineJoin-Stand H-R8; Hash der Aufzeichnung)', () => {
     for (const [id, tier] of cases) {
       const b = mk(id, 12, 7, tier);
       expect(hashEvents(events(BUILDING_DEFS[id], b, 0)), `${id}${tier ?? ''}`).toBe(
