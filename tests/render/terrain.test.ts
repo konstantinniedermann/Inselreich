@@ -833,7 +833,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     return { g, out: paintPixels(g, 1, 0, 0, W, W) };
   };
 
-  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 7,5 (vorher 5,0)', () => {
+  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,3 (vorher 5,0; Runde 1: Lime-Töne und 6-%-Mottling entfernt)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
       const labs: [number, number, number][] = [];
@@ -845,8 +845,29 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       const mean: [number, number, number] = [0, 0, 0];
       for (const l of labs) for (let c = 0; c < 3; c++) mean[c]! += l[c]! / labs.length;
       const rms = Math.sqrt(labs.reduce((a, l) => a + deltaE2000(l, mean) ** 2, 0) / labs.length);
-      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(7.5);
+      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(5.3);
     }
+  });
+
+  it('H-R9 B3 Warmton nie heller als grassLight: Luma ohne Relief ≤ Luma(grassLight), Sättigung gehalten', () => {
+    const g0 = buildGrid(flat(30, 'grass', 7));
+    const g = { ...g0, shade: g0.shade.map(() => 0) };
+    const out = paintPixels(g, 1, 100, 100, 700, 700);
+    const luma = (r: number, gg: number, b: number) => 0.299 * r + 0.587 * gg + 0.114 * b;
+    const [lr, lg, lb] = rgbOfCss(PALETTE.grassLight);
+    const cap = luma(lr, lg, lb);
+    let maxL = 0,
+      minChroma = 1e9;
+    for (let i = 0; i < out.length; i += 4 * 7) {
+      const r = out[i]!,
+        gg = out[i + 1]!,
+        b = out[i + 2]!;
+      maxL = Math.max(maxL, luma(r, gg, b));
+      if (luma(r, gg, b) > cap - 25)
+        minChroma = Math.min(minChroma, Math.max(r, gg, b) - Math.min(r, gg, b));
+    }
+    expect(maxL).toBeLessThanOrEqual(cap + 1);
+    expect(minChroma).toBeGreaterThan(45); // helle Wiese bleibt satt, nicht ausgewaschen
   });
 
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {

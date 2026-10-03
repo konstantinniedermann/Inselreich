@@ -34,23 +34,23 @@ const SHADE_MAX_MOUNTAIN = 0.12;
 const SHADE_MAX_FLUR = 0.14;
 const RELIEF_GAIN = 0.3; // Helligkeit je Höhengefälle des Mikroreliefs (die Kuppen sind flach, ~0,15 Höhe je Kachel)
 const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
-const DUNE_AMP = 1.1; // Höhe der Dünenrücken auf trockenem Sand
+const DUNE_AMP = 0.8; // Höhe der Dünenrücken auf trockenem Sand
 const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
-const WARM_MAX = 0.6; // warm/trocken: Mischung zu Strohgrün
-const COOL_MAX = 0.6; // kühl/satt: Mischung zu Tiefgrün
+const WARM_MAX = 0.9; // warm/trocken: Mischung zu Strohgrün
+const COOL_MAX = 0.7; // kühl/satt: Mischung zu Tiefgrün
 const VEIL_MAX = 0.3; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
-const TONE_LIGHT = 0.14; // trockene Kuppen bis +14 % Helligkeit
+const TONE_LIGHT = 0.08; // trockene Kuppen bis +8 % Helligkeit (zusammen mit Warmton und Schleier auf `grassLight` gedeckelt)
 const TONE_DARK = 0; // satte Senken nicht dunkler: sonst rückt das Gras an den alten Waldgrund (ΔE ≥ 10, I5); die Tiefe trägt das Relief
-const MOTTLE_AMP = 0.06; // feines Mottling ±6 % (Spec: ±3–4 % netto nach Interpolation) Helligkeit
+const MOTTLE_AMP = 0.035; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
 const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreht), trägt die Plastik im Inneren
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 0.75; // höchstens 60 % Mischung zum Kleegrün
-const DRY_MAX = 0.35; // höchstens 35 % Mischung zu sandDry (darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 0.8; // höchstens 60 % Mischung zum Kleegrün
+const DRY_MAX = 0.5; // höchstens 35 % Mischung zu sandDry (darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -356,13 +356,17 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
           0.62 * rotNoise(seed + 105, fx, fy, 0.23, ROT_RELIEF) +
           0.38 * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2);
         // gestreckte Rücken: Rauschen entlang u gedehnt (Frequenz 0,09), quer dazu eng (0,5)
-        const c = Math.cos(ROT_DUNE),
-          sn = Math.sin(ROT_DUNE);
+        // Richtung variiert tieffrequent; Rückenstärke läuft längs aus und setzt versetzt neu an (einzelne Dünen)
+        const ang = ROT_DUNE + 0.7 * (valueNoise(seed + 110, fx * 0.05, fy * 0.05) - 0.5);
+        const c = Math.cos(ang),
+          sn = Math.sin(ang);
         const u = c * fx - sn * fy,
           v = sn * fx + c * fy;
+        const env = smoothstepClamp((valueNoise(seed + 109, u * 0.06, v * 0.3) - 0.38) * 3.2);
         duneRaw[k] =
-          0.65 * valueNoise(seed + 107, u * 0.09, v * 0.5) +
-          0.35 * valueNoise(seed + 108, u * 0.2, v * 0.95 + ROT_DUNE2);
+          env *
+          (0.65 * valueNoise(seed + 107, u * 0.09, v * 0.5) +
+            0.35 * valueNoise(seed + 108, u * 0.2, v * 0.95 + ROT_DUNE2));
       }
       const hill = hillRaw[k]!,
         dune = duneRaw[k]!;
@@ -371,14 +375,14 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
           -1,
           Math.min(
             1,
-            1.6 * meadowWarmth(seed, fx, fy) +
-              3.2 * (rotNoise(seed + 102, fx, fy, 0.35, ROT_WARM) - 0.5) +
-              (hill - 0.5) * 1.1,
+            2 * meadowWarmth(seed, fx, fy) +
+              6 * (rotNoise(seed + 102, fx, fy, 0.35, ROT_WARM) - 0.5) +
+              (hill - 0.5) * 0.5,
           ),
         );
         mottle[k] = Math.max(
           -1,
-          Math.min(1, (rotNoise(seed + 103, fx, fy, 3.8, ROT_MOTTLE) - 0.5) * 3),
+          Math.min(1, (rotNoise(seed + 103, fx, fy, 2.4, ROT_MOTTLE) - 0.5) * 3),
         );
         veil[k] = flowerVeil(seed, fx, fy);
       }
@@ -456,8 +460,8 @@ const C = {
   wood: rgbOfCss(FOREST_FLOOR),
   clover: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // kühleres Grün (R149)
   moss: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.crown, 0.55)),
-  dryTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.sandDry, 0.7)), // H-R9: Strohgrün
-  lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterMid, 0.35)), // H-R9: kühles Satt-Grün, ΔE2000 ≥ 12 zum alten Waldgrund
+  dryTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.sandDry, 0.58)), // H-R9: Goldoliv; der Luma-Deckel hält es auf grassLight
+  lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // H-R9: kühles Satt-Grün, ΔE2000 ≥ 17 zum alten Waldgrund
   veilTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.wallLime, 0.5)), // H-R9: Blumenschleier
   clearing: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.sandDry, 0.45)),
   edgeLight: rgb(PALETTE.sandWet), // warmes Hell am Waldrand: bleibt fern vom alten Waldgrund #3d7a3a
@@ -465,6 +469,8 @@ const C = {
   rockLight: rgb(PALETTE.rockLight),
   rockDark: rgb(PALETTE.rockDark),
 };
+const GRASS_LUMA_CAP =
+  0.299 * C.grassLight[0]! + 0.587 * C.grassLight[1]! + 0.114 * C.grassLight[2]!;
 const mix3 = (a: number[], b: number[], t: number, o: number[]): void => {
   o[0] = a[0]! + (b[0]! - a[0]!) * t;
   o[1] = a[1]! + (b[1]! - a[1]!) * t;
@@ -515,6 +521,14 @@ function landColor(
       o[0] = o[0]! * mf;
       o[1] = o[1]! * mf;
       o[2] = o[2]! * mf;
+      // gemeinsamer Deckel: Warmton, Kuppenaufhellung und Schleier addieren sich nicht über die Helligkeit von grassLight
+      const luma = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
+      if (luma > GRASS_LUMA_CAP) {
+        const k = GRASS_LUMA_CAP / luma;
+        o[0] = o[0]! * k;
+        o[1] = o[1]! * k;
+        o[2] = o[2]! * k;
+      }
       break;
     }
     case 'forest': {
