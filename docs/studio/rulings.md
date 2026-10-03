@@ -1180,3 +1180,16 @@ Mutationsprobe. C5 startet: T09 (merge sources + upgrade in `feat/m11-sim`) und 
 — Kosten bei Irrtum: ein Testnachtrag.
 
 Entscheider: L0 · Anlass: Berichte C2, C3, C4 · ADR: —
+
+## R195 · 2026-10-03 · Gate Merge H-R7 Varianz und Material
+
+Ruling: Gate Merge H-R7 (G1 + G8) bestanden (`feat/h-r7-varianz` @ 9233c35; Rot-Belege je Runde, Review
+ZURÜCK → BEDENKEN → OK durch dieselbe Instanz, E-015 erfüllt). renderMedian innerhalb +10 %; R191-Pflicht
+Sichtvergleich erfüllt (Stempelversatz < 0,5 Geräte-Pixel, Ursache doppeltes Runden, kein Fix ohne gerasterte
+Kamera). Blindtest mit Vorbehalt (Rater 2 nicht verwertbar); Silhouetten durch Tests und Rater 1 belegt. Schwache
+Typ-Erkennung kleiner Bauten (Weberei, Fischerhütte, Schule, Feuerwache) bestand schon auf main → Auflage für
+M11-R2/K3: Silhouetten-Abgrenzung kleiner Bauten prüfen. `lineJoin='round'` an spitzen Dachwinkeln angenommen,
+umgesetzt im nächsten Render-Häppchen H-R8 (G3 Felsmassive) mit neuen Referenz-Hashes für Variante 0. Merge durch
+production-integrator; H-R7 ist Vorbedingung für M11-R2 (R192). — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R7 · ADR: —
