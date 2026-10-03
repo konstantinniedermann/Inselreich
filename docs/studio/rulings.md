@@ -1108,3 +1108,13 @@ Auslöser-Satz, K3-Vermerke). K3 gestrichen (R186). Merge seriell durch lead-pro
 R164) und M11-Plan nach Gate Spec. — Kosten bei Irrtum: Revert-Merge auf main (reversibel).
 
 Entscheider: L0 · Anlass: Nachprüfung lead-qa, Fix-Bericht lead-tech · ADR: —
+
+## R189 · 2026-10-03 · Gate Spec M11
+
+Ruling: Gate Spec M11 bestanden (`docs/m11-design` @ 07a45bc, Hauptdatei 39 706 B, 75 AK). Alle vier
+blockierenden und drei hohen Punkte aus R187 behoben (Fix-Bericht lead-design); neue AK-UI-10 und AK-BAS-07
+schliessen genannte Lücken und brauchen keine eigene Nachprüfung. 655 ‰ bleibt (ungerader Sturmstart,
+beide Fälle in 3.5). Nächster Schritt: Plan M11 durch lead-tech nach dem Merge von M10 (Code-Fakten gegen main
+mit Save v5); `docs/m11-design` geht mit dem Plan nach main. — Kosten bei Irrtum: AK-Nachtrag im Gate Plan.
+
+Entscheider: L0 · Anlass: Fix-Bericht lead-design M11-SPEC · ADR: —
