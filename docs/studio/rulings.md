@@ -1230,3 +1230,15 @@ Parallelität, keine Zählfehler. Merge durch production-integrator. Regel für 
 eigener Commit im Hauptcheckout, solange ein Integrator dort arbeitet. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-production STUDIO-WERKZEUG · ADR: —
+
+## R199 · 2026-10-03 · Final-Review M11, Auflagen
+
+Ruling: Final-Review M11 (opus) BEDENKEN, kein blockierender Befund; QA-UI W7 bestanden. (1) renderMedian
++0,4 ms (0,9 → 1,3 ms, +44 % relativ) per Ausnahme angenommen: Massstab für M11 ist die Absolutgrenze 8 ms;
+die +10 %-Schranke aus R195 galt nur H-R7. (2) Stufe 3 zu schwach von Stufe 2 unterscheidbar → Fix-Runde lead-art
+auf `feat/m11-render` (deutlichere Stufenkennung), danach Merge in `feat/m11-ui` durch C7. (3) Doku-Nachträge
+(orga-12, abdeckung.md, README Stein-Aufpreis) und Beobachtungen als Trivial-Fix durch C7. Gate Merge M11 nach
+Bericht beider Fixes und grünem make check ohne erneutes Final-Review (Diff-Sichtung L0). Ampel gelb: keine neue
+Welle bis zum Session-Ende; H-R8 läuft zu Ende. — Kosten bei Irrtum: Nachbesserung Stufenkennung in M12.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M11-QA · ADR: —
