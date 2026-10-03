@@ -88,7 +88,7 @@ Gegenprobe: Abschnitt „Grep-Gegenprobe" unter der Tabelle.
 | AK-U2-07 | Task 7                                             | `tests/ui/tooltip.test.ts` bzw. `hints.test.ts` „AK-U2-07 …"                          |
 | AK-U2-08 | QA-U2 Schritt 7                                    | Browser (K1-Teil nur ohne Streichung)                                                 |
 | AK-U2-09 | QA-U2 Schritt 8                                    | Browser                                                                               |
-| AK-U2-10 | Task 7                                             | `tests/ui/hints.test.ts` „AK-U2-10 …"                                                 |
+| AK-U2-10 | Task 7                                             | `tests/ui/tooltip.test.ts` „AK-U2-10 …"                                               |
 | AK-U2-11 | Task 7; QA-U2 Schritt 9                            | `tests/ui/crisisLog.test.ts` „AK-U2-11 …" (Kann K4); Browser                          |
 | AK-U2-12 | Task 7; QA-U2 Schritt 10                           | `tests/ui/hotkeys.test.ts` „AK-U2-12 …"; Browser                                      |
 | AK-U3-01 | Task 8                                             | `tests/ui/hover.test.ts` „AK-U3-01 …"                                                 |
