@@ -1219,3 +1219,14 @@ C7 lässt `make check` mehrfach laufen und benennt ihn. C7 startet: Integrations
 Kosten bei Irrtum: eine weitere Fix-Runde vor dem Gate Merge.
 
 Entscheider: L0 · Anlass: Berichte lead-art M11-R2, C6 · ADR: —
+
+## R198 · 2026-10-03 · Gate Merge Studio-Werkzeug
+
+Ruling: Gate Merge `feat/studio-tools` @ ab14014 bestanden (Budget-Alarm je Freigabe-Phase und ohne Heartbeat-
+Knoten, leere Paket-ID auf dem Board unterbunden; Rot-Beleg, Review BEDENKEN → Fix → Nachprüfung derselben Instanz
+OK). `log.py result --package` und `metrics.py --efficiency`/„Tokens je Agent" waren schon vorhanden → in state.md
+als erledigt führen. Rest-Alarme (M10-S1C 4/3, lead-art Parallelität) sind echte Überschreitungen bzw. Mass der
+Parallelität, keine Zählfehler. Merge durch production-integrator. Regel für L0 (Ablauffehler R196/f8f234e): kein
+eigener Commit im Hauptcheckout, solange ein Integrator dort arbeitet. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-production STUDIO-WERKZEUG · ADR: —
