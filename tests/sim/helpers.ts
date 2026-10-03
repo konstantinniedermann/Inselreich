@@ -1,4 +1,4 @@
-import { placeBuilding } from '../../src/sim/build';
+import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, idx } from '../../src/sim/world';
@@ -137,3 +137,21 @@ export const setHouse = (b: Building, tier: Tier, n: number): void => {
   b.house!.tier = tier;
   b.house!.inhabitants = n;
 };
+
+/** Angebundene Amtsstube südlich des Kontors: Weg (kx, ky+2), Amtsstube 2×2 ab (kx, ky+3). Welt braucht U3. Geld und Lager unverändert. */
+export function placeTownhall(world: World): Building {
+  const k = world.buildings[world.kontorId]!;
+  forceRect(world, k.x, k.y + 2, 2, 3, 'grass');
+  const money = world.money;
+  const stock = { ...world.stock };
+  world.money = 1_000_000;
+  for (const g of Object.keys(world.stock) as (keyof typeof world.stock)[]) world.stock[g] = 100;
+  if (!placeRoad(world, k.x, k.y + 2).ok) throw new Error('Weg');
+  const r = placeBuilding(world, 'townhall', k.x, k.y + 3);
+  if (!r.ok || r.id === undefined) throw new Error(r.ok ? 'ohne Id' : r.reason);
+  world.money = money;
+  world.stock = stock;
+  const b = world.buildings[r.id]!;
+  if (!b.connected) throw new Error('nicht angebunden');
+  return b;
+}

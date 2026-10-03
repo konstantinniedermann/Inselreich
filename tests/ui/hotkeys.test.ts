@@ -194,3 +194,17 @@ describe('M8 U1 Tasten (Bestand nach S2)', () => {
     ]);
   });
 });
+
+describe('M10 Taste I', () => {
+  it('AK-S2-16 I wählt die Amtsstube, Label „I“, 18 Tasten, bisherige 17 unverändert, Tooltip „Amtsstube (I)“', () => {
+    expect(hotkeyAction('i', NONE, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'townhall' },
+    });
+    expect(hotkeyLabel({ kind: 'build', defId: 'townhall' })).toBe('I');
+    const keys = Object.keys(TOOL_HOTKEYS);
+    expect(keys).toHaveLength(18);
+    expect(keys.slice(0, 17).join('')).toBe('rxhkumflbgvzntejo');
+    expect(tooltipLines({ kind: 'build', defId: 'townhall' })[0]).toBe('Amtsstube (I)');
+  });
+});

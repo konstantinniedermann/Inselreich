@@ -893,6 +893,12 @@ describe('M8 Render-Rückfall Glashütte (AK-S2-17)', () => {
   });
 });
 
+describe('M10 Rückfall Amtsstube', () => {
+  it('AK-S2-15 SILHOUETTES.townhall definiert (Rückfall public)', () => {
+    expect(SILHOUETTES.townhall).toBeDefined();
+  });
+});
+
 describe('M8 R1 Silhouetten', () => {
   const styles = (b: Building): string[] => {
     const { ctx, log } = fakeCtx();

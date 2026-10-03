@@ -155,3 +155,18 @@ describe('M8 Info-Texte (AK-U2-02)', () => {
     expect(goodList(['wool'])).toBe('Wolle');
   });
 });
+
+describe('M10 noService', () => {
+  it('AK-S2-17 stateInfo noService nennt die Schule', () => {
+    const tm: Building = {
+      id: 1,
+      defId: 'toolmaker',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'noService',
+    };
+    expect(stateInfo(tm, 0)).toEqual({ text: 'Braucht eine Schule in Reichweite', ok: false });
+  });
+});

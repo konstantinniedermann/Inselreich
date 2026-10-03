@@ -692,4 +692,20 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     step(l);
     expect(l.unlocked).toEqual(['U0', 'U6']);
   });
+  it('AK-S1-14 (c2) migrierter Werkzeugmacher ohne Schule: 100 Schritte noService, progress 20, Holz 10, Werkzeug gleich', () => {
+    const c = createWorld(3, { unlockAll: true });
+    const tm = connectedToolmaker(c);
+    c.stock.wood = 10;
+    tm.progress = 20;
+    const w = loadOk(asV4(c));
+    const tools = w.stock.tools;
+    for (let i = 0; i < 100; i++) step(w);
+    const b = w.buildings[tm.id]!;
+    expect([b.state, b.progress, w.stock.wood, w.stock.tools]).toEqual([
+      'noService',
+      20,
+      10,
+      tools,
+    ]);
+  });
 });
