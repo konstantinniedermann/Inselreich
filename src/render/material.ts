@@ -74,8 +74,80 @@ function isWall(pts: readonly Pt[]): boolean {
   return v >= 2;
 }
 
+/** Strecke einer Fläche (Index in der Zeichenreihenfolge). */
+interface Seg {
+  fi: number;
+  a: Pt;
+  b: Pt;
+}
+/** Abstand um eine deckende Fläche, den der Strich frei lässt (Bildpixel): keine Spitzen unter Kanten. */
+const COVER_PAD = 0.75;
+
+type Interval = [number, number];
+
+/** Parameterbereiche `t` der Strecke a→b, die im Polygon liegen (exakt über die Kantenschnitte). */
+function insideIntervals(a: Pt, b: Pt, poly: readonly Pt[]): Interval[] {
+  const dx = b.x - a.x,
+    dy = b.y - a.y;
+  const ts = [0, 1];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i]!,
+      q = poly[(i + 1) % poly.length]!;
+    const ex = q.x - p.x,
+      ey = q.y - p.y;
+    const den = dx * ey - dy * ex;
+    if (Math.abs(den) < 1e-12) continue;
+    const t = ((p.x - a.x) * ey - (p.y - a.y) * ex) / den;
+    const u = ((p.x - a.x) * dy - (p.y - a.y) * dx) / den;
+    if (t > 0 && t < 1 && u >= 0 && u <= 1) ts.push(t);
+  }
+  ts.sort((x, y) => x - y);
+  const out: Interval[] = [];
+  for (let i = 0; i + 1 < ts.length; i++) {
+    const m = (ts[i]! + ts[i + 1]!) / 2;
+    if (ts[i + 1]! - ts[i]! > 1e-9 && inPoly(poly, a.x + dx * m, a.y + dy * m)) {
+      const last = out[out.length - 1];
+      if (last && last[1] >= ts[i]! - 1e-9) last[1] = ts[i + 1]!;
+      else out.push([ts[i]!, ts[i + 1]!]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Deckungsprüfung: Teile der Strecke, die in der eigenen Fläche liegen und von keiner später gezeichneten Fläche
+ * (Fenster, Tür, Dach davor, Kamin …) überdeckt sind. Exakt über die Kantenschnitte mit jeder späteren Fläche; um
+ * jede deckende Fläche bleibt `COVER_PAD` Pixel frei. Teilstücke unter einem halben Pixel entfallen.
+ */
+function visibleParts(s: Seg, faces: readonly BodyFace[]): [Pt, Pt][] {
+  const len = dist(s.a, s.b);
+  if (len < 1e-9) return [];
+  const pad = COVER_PAD / len;
+  let vis = insideIntervals(s.a, s.b, faces[s.fi]!.pts);
+  for (let j = s.fi + 1; j < faces.length && vis.length > 0; j++) {
+    const cover = insideIntervals(s.a, s.b, faces[j]!.pts);
+    if (cover.length === 0) continue;
+    const next: Interval[] = [];
+    for (const [v0, v1] of vis) {
+      let from = v0;
+      for (const [c0, c1] of cover) {
+        const lo = c0 - pad,
+          hi = c1 + pad;
+        if (hi <= from || lo >= v1) continue;
+        if (lo > from) next.push([from, lo]);
+        from = Math.max(from, hi);
+      }
+      if (from < v1) next.push([from, v1]);
+    }
+    vis = next;
+  }
+  return vis
+    .filter(([t0, t1]) => (t1 - t0) * len >= 0.5)
+    .map(([t0, t1]) => [lerp(s.a, s.b, t0), lerp(s.a, s.b, t1)]);
+}
+
 /** Fugenlinien eines Vierecks, parallel zum längeren Kantenpaar. */
-function courses(pts: readonly Pt[], step: number, path: Pt[][]): void {
+function courses(pts: readonly Pt[], step: number, fi: number, path: Seg[]): void {
   const [p0, p1, p2, p3] = pts as [Pt, Pt, Pt, Pt];
   const along = dist(p0, p1) + dist(p2, p3) >= dist(p1, p2) + dist(p3, p0);
   const [a0, a1, b0, b1, across] = along
@@ -86,7 +158,7 @@ function courses(pts: readonly Pt[], step: number, path: Pt[][]): void {
     const t = i / (n + 1);
     const a = lerp(a0, a1, t),
       b = lerp(b0, b1, t);
-    path.push([lerp(a, b, END_GAP), lerp(a, b, 1 - END_GAP)]);
+    path.push({ fi, a: lerp(a, b, END_GAP), b: lerp(a, b, 1 - END_GAP) });
   }
 }
 
@@ -110,11 +182,12 @@ export function drawMaterial(
   const fullWidth = ((def.w + def.h) * ISO_W * zoom) / 2;
   const step = (level >= 3 ? SPACING_FINE : SPACING_COARSE) * zoom;
 
-  const joints: Pt[][] = [];
-  const dark: Pt[][] = [];
-  const light: Pt[][] = [];
-  const cracks: Pt[][] = [];
+  const joints: Seg[] = [];
+  const dark: Seg[] = [];
+  const light: Seg[] = [];
+  const cracks: Seg[] = [];
   let widest: BodyFace | null = null;
+  let widestIdx = -1;
 
   faces.forEach((f, fi) => {
     const pts = f.pts;
@@ -128,7 +201,10 @@ export function drawMaterial(
     if (a < 24 * zoom * zoom) return; // Fenster, Türen, Kamine: kein Material
     if (maxX - minX >= 0.93 * fullWidth) return; // Hof (Footprint-Raute)
     const wall = isWall(pts);
-    if (wall && (!widest || a > area(widest.pts))) widest = f;
+    if (wall && (!widest || a > area(widest.pts))) {
+      widest = f;
+      widestIdx = fi;
+    }
     if (straw && !wall) {
       const n = Math.min(MAX_STRAW, Math.floor(a / (zoom * zoom * 40)));
       for (let i = 0; i < n; i++) {
@@ -137,12 +213,13 @@ export function drawMaterial(
         const dx = (hash2(salt + fi, i, 3) - 0.5) * 2.4 * zoom,
           dy = 3 * zoom;
         if (inPoly(pts, x, y) && inPoly(pts, x + dx, y + dy))
-          ((i & 1) === 0 ? dark : light).push([
-            { x, y },
-            { x: x + dx, y: y + dy },
-          ]);
+          ((i & 1) === 0 ? dark : light).push({
+            fi,
+            a: { x, y },
+            b: { x: x + dx, y: y + dy },
+          });
       }
-    } else if (pts.length === 4) courses(pts, step, joints);
+    } else if (pts.length === 4) courses(pts, step, fi, joints);
   });
 
   // Risse (nur Stufe 3, nur ab Variante 2): ein Zickzack auf der grössten Wand, jeder Punkt in der Fläche.
@@ -160,26 +237,31 @@ export function drawMaterial(
       x += (hash2(salt, i, 3) - 0.5) * 3 * zoom;
       y += (1.5 + hash2(salt, i, 4)) * zoom;
     }
-    if (line.length >= 2) cracks.push(line);
+    for (let i = 1; i < line.length; i++)
+      cracks.push({ fi: widestIdx, a: line[i - 1]!, b: line[i]! });
   }
 
-  const groups: [Pt[][], string][] = [
+  const groups: [Seg[], string][] = [
     [joints, JOINT],
     [dark, STRAW_DARK],
     [light, STRAW_LIGHT],
     [cracks, CRACK],
   ];
-  if (groups.every(([g]) => g.length === 0)) return;
+  const drawn = groups.map(([g, color]): [[Pt, Pt][], string] => [
+    g.flatMap((sg) => visibleParts(sg, faces)),
+    color,
+  ]);
+  if (drawn.every(([g]) => g.length === 0)) return;
   ctx.save();
   ctx.lineWidth = LINE_WIDTH;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
-  for (const [g, color] of groups) {
+  for (const [g, color] of drawn) {
     if (g.length === 0) continue;
     ctx.beginPath();
-    for (const l of g) {
-      ctx.moveTo(l[0]!.x, l[0]!.y);
-      for (let i = 1; i < l.length; i++) ctx.lineTo(l[i]!.x, l[i]!.y);
+    for (const [p, q] of g) {
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(q.x, q.y);
     }
     ctx.strokeStyle = color;
     ctx.stroke();

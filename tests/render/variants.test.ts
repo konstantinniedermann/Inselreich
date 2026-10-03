@@ -291,7 +291,16 @@ describe('H-R7 AK5 Material', () => {
                 y = p.y + (q.y - p.y) * t;
               let top = -1;
               fs.forEach((f, i) => {
-                if (inPolyT(f.pts, x, y)) top = i;
+                // gedeckt nur, wenn auch die Umgebung (±0,1 px) in der Fläche liegt: streifende Ecken zählen nicht
+                const e = 0.1;
+                if (
+                  inPolyT(f.pts, x, y) &&
+                  inPolyT(f.pts, x + e, y) &&
+                  inPolyT(f.pts, x - e, y) &&
+                  inPolyT(f.pts, x, y + e) &&
+                  inPolyT(f.pts, x, y - e)
+                )
+                  top = i;
               });
               return top;
             });

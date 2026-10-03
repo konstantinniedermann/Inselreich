@@ -650,8 +650,12 @@ läuft ungecacht je sichtbarem Haus und Frame; gemessen 2.5–3.1 ms Arbeit je F
   und Verbindungen) nur in den Körperflächen, nie am Rand der Fläche. Detailstufen: Zoom < 0,75 keines; < 1 grobe
   Fugen; < 1,5 zusätzlich Stroh; ab 1,5 feine Fugen und Risse (ab Variante 2). Kalte Frames nach Zoom-/DPR-Wechsel
   zeigen das Material noch nicht.
-- **Stempel:** Der Cache stempelt auf das nächste Geräte-Pixel; gegenüber dem ungecachten Weg beträgt der Versatz
-  höchstens 0,5 Geräte-Pixel (gemessen ≤ 0,45), siehe `tools/render-qa/sichtvergleich.mjs`.
+- **Deckung:** Material wird nur dort gezeichnet, wo die eigene Fläche oben liegt: jede Strecke wird exakt gegen alle
+  später aufgezeichneten Flächen geschnitten und um 0,75 Pixel von deren Kanten freigehalten.
+- **Stempel:** Der Stempel liegt seit H-R6 auf Geräte-Pixeln. Gegenüber dem ungecachten Weg entsteht die Abweichung
+  durch doppeltes Runden: `worldToScreen` rundet jeden Eckpunkt, der Stempel rundet den Ursprung erneut; einzelne
+  Eckpunkte weichen dadurch bis etwa 1 CSS-Pixel ab. Exakt wäre es nur mit pixelgerasterter Kamera oder Sprites je
+  Pixelphase; nicht behoben, plausibel (`tools/render-qa/sichtvergleich.mjs`).
 
 ### Licht, Wetter und Obergrenzen (M7)
 
