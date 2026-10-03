@@ -15,7 +15,7 @@ import {
   type Moving,
   type SortedItem,
 } from '../../src/render/iso';
-import { MASSIF_CACHE_MAX_BYTES } from '../../src/render/limits';
+import { MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOf, rgbOfCss } from '../../src/render/palette';
 import {
   AMP_CAP,
@@ -31,6 +31,11 @@ import {
   nodeInside,
   pieceCells,
   pieceNodes,
+  ROCK_TONES,
+  TONE_FLAT,
+  VIEW_CAP,
+  carve,
+  toneStep,
   type MassifComponent,
   type MassifPiece,
 } from '../../src/render/massif';
@@ -42,6 +47,7 @@ import {
   pieceQuads,
   rasterPiece,
   setMassifCanvasFactory,
+  strataAt,
   type MassifItem,
 } from '../../src/render/rocks';
 import { render } from '../../src/render/renderer';
@@ -174,7 +180,7 @@ describe('H-R9 A2 Höhenfeld', () => {
     expect(nodeHeight(hill, (hill.x0 + 1) * SUB, (hill.y0 + 1) * SUB)).toBeCloseTo(maxH(hill), -1);
   });
 
-  it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite, bei gleichem Randabstand', () => {
+  it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite, je Randabstand-Band verglichen (Entscheid lead-art R1: sonst bestimmt die Umrissform das Mittel)', () => {
     // Vergleich je Randabstand-Band (halbe Kachel): die Form der Komponente (z. B. schmaler Rücken, breite Front)
     // soll das Ergebnis nicht bestimmen; zusätzlich für das Quadrat der reine Mittelwert je Hälfte.
     const worlds = [
@@ -268,6 +274,46 @@ describe('H-R9 A2 Höhenfeld', () => {
     }
     expect(peaks).toBeGreaterThanOrEqual(3);
   });
+
+  it('A2 Nebengrate und Vorberge über das ganze Massiv: lokale Gipfel in mindestens drei Vierteln des Rechtecks', () => {
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      const top = maxH(c);
+      const quads = new Set<number>();
+      let peaks = 0;
+      const mx = ((c.x0 + c.x1 + 1) / 2) * SUB,
+        my = ((c.y0 + c.y1 + 1) / 2) * SUB;
+      for (const [I, J] of nodes(c)) {
+        const h = nodeHeight(c, I, J);
+        if (h < 0.2 * top) continue;
+        let max = true;
+        for (let dj = -3; dj <= 3 && max; dj++)
+          for (let di = -3; di <= 3; di++)
+            if ((di || dj) && nodeHeight(c, I + di, J + dj) >= h) {
+              max = false;
+              break;
+            }
+        if (!max) continue;
+        peaks++;
+        quads.add((I < mx ? 0 : 1) + (J < my ? 0 : 2));
+      }
+      expect(peaks, `Seed ${seed}`).toBeGreaterThanOrEqual(6);
+      expect(quads.size, `Seed ${seed}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('A2 kein breiter flacher Saum: ab 1 Kachel Randabstand trägt das Massiv schon ein Fünftel der Amplitude (Median)', () => {
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      const band: number[] = [];
+      for (const [I, J] of nodes(c)) {
+        const d = c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]!;
+        if (d >= 1 && d <= 1.5) band.push(nodeHeight(c, I, J));
+      }
+      band.sort((a, b) => a - b);
+      expect(band[Math.floor(band.length / 2)]!, `Seed ${seed}`).toBeGreaterThan(0.2 * c.amp);
+    }
+  });
 });
 
 describe('H-R9 A3 Färbung', () => {
@@ -279,6 +325,89 @@ describe('H-R9 A3 Färbung', () => {
     const shade = cellColor(5, 3.3, 4.1, { ...base, gx: -60, gy: -20 });
     expect(lum(lit)).toBeGreaterThan(lum(flat) + 8);
     expect(lum(shade)).toBeLessThan(lum(flat) - 8);
+    // auf einen Blick: Lichtseite deutlich heller als Schattenseite
+    expect(lum(lit) - lum(shade)).toBeGreaterThan(45);
+  });
+
+  it('A3 Tonstufen (lead-art R1): 5 Stufen hell aufsteigend, Schatten kühl, Licht warm (sandDry höchstens 20 %)', () => {
+    expect(ROCK_TONES).toHaveLength(5);
+    const L = ROCK_TONES.map((c) => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]);
+    for (let i = 1; i < L.length; i++) expect(L[i]!).toBeGreaterThan(L[i - 1]! + 10);
+    const rock = rgbOf(PALETTE.rock);
+    const warmth = (c: readonly number[]): number => c[0]! - c[2]!;
+    expect(warmth(ROCK_TONES[0]!)).toBeLessThan(warmth(rgbOf(PALETTE.rockDark)));
+    expect(warmth(ROCK_TONES[1]!)).toBeLessThan(warmth(rock));
+    expect(warmth(ROCK_TONES[4]!)).toBeGreaterThan(warmth(rgbOf(PALETTE.rockLight)));
+    const lim = rgbOf(PALETTE.rockLight).map((v, i) => v + (rgbOf(PALETTE.sandDry)[i]! - v) * 0.2);
+    expect(warmth(ROCK_TONES[4]!)).toBeLessThanOrEqual(warmth(lim) + 1);
+  });
+
+  it('A3 Stufung: ausserhalb des Übergangs ganzzahlig, Übergang nur um k + 0,5 und höchstens 2 · hw breit', () => {
+    for (let t = 0; t <= 4; t += 0.01) {
+      const hw = 0.1;
+      const v = toneStep(t, hw),
+        f = t - Math.floor(t);
+      if (Math.abs(f - 0.5) > hw) expect(Math.abs(v - Math.round(v))).toBeLessThan(1e-9);
+      expect(v).toBeGreaterThanOrEqual(Math.floor(t) - 1e-9);
+      expect(v).toBeLessThanOrEqual(Math.floor(t) + 1 + 1e-9);
+    }
+    expect(toneStep(2.3, 0)).toBe(2);
+    expect(toneStep(2.7, 0)).toBe(3);
+    // gerastert: im grossen Massiv liegen höchstens 30 % der Pixel im Übergang zwischen zwei Stufen
+    const w = createWorld(14, { unlockAll: true });
+    const ps = massifPieces(w).filter((_, i) => i % 9 === 0);
+    let n = 0,
+      mid = 0;
+    const tones = ROCK_TONES.map((c) => [...c]);
+    for (const p of ps) {
+      const b = massifBounds({ piece: p });
+      const px = rasterPiece({ piece: p }, 64, Math.ceil(b.h * 2), 2);
+      for (let o = 0; o < px.length; o += 4) {
+        if (px[o + 3] !== 255) continue;
+        n++;
+        // Abstand zur nächsten Stufe nach Helligkeit relativ zum Stufenabstand (Textur ±11 % eingerechnet)
+        const l = 0.299 * px[o]! + 0.587 * px[o + 1]! + 0.114 * px[o + 2]!;
+        const ls = tones.map((c) => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!);
+        const d = Math.min(...ls.map((v) => Math.abs(v - l) / v));
+        if (d > 0.12) mid++;
+      }
+    }
+    expect(n).toBeGreaterThan(5000);
+    expect(mid / n).toBeLessThan(0.3);
+    expect(TONE_FLAT).toBe(2);
+  });
+
+  it('A3 Schichtbänder (lead-art R1): nur an steilen Flanken, entlang einer Höhenlinie unterbrochen, keine geschlossenen Ringe', () => {
+    expect(strataAt(30, 0.2, 0, 10, 10)).toBe(0);
+    let off = 0,
+      on = 0,
+      n = 0;
+    // Höhenlinie: gleiche Höhe, voll steil, 600 Weltpixel lang; Phase so gewählt, dass das Band dort liegt
+    for (let x = 0; x < 600; x += 1) {
+      const v = strataAt(0, 1, 0, x, 0.37 * x);
+      n++;
+      if (v < 0.05) off++;
+      if (v > 0.3) on++;
+    }
+    expect(off / n).toBeGreaterThan(0.3);
+    expect(on / n).toBeGreaterThan(0.15);
+  });
+
+  it('A3 Bewuchsflecken nur in tiefen, flachen Lagen; hoch oben nie', () => {
+    const w = createWorld(14, { unlockAll: true });
+    let low = 0,
+      high = 0;
+    for (const p of massifPieces(w)) {
+      const at = pieceNodes(p);
+      for (const c of pieceCells(p)) {
+        const nd = at(c.I, c.J);
+        if (nd.veg < 0.5) continue;
+        if (nd.h / p.comp.amp > 0.4) high++;
+        else low++;
+      }
+    }
+    expect(low).toBeGreaterThan(50);
+    expect(high).toBe(0);
   });
 
   it('A3 Sockel ohne Naht: bei h = 0 Felsgrund, am Rand halb zum Nachbargelände gemischt', () => {
@@ -291,7 +420,7 @@ describe('H-R9 A3 Färbung', () => {
     expect(dist3(edge, rock)).toBeLessThan(dist3(grass, rock));
   });
 
-  it('A3 Sockel: Deckkraft < 1 nur im flachen Randband (h < RIM_H), an geraden Kanten 0, innen voll deckend', () => {
+  it('A3 Sockel: Deckkraft < 1 nur im flachen Randband (h < RIM_H), an geraden Kanten 0, innen voll deckend (Entscheid lead-art R1: Geländeebene rundet die Kachelkontur)', () => {
     for (const w of [createWorld(7, { unlockAll: true }), square(3), square(10)]) {
       let partial = 0,
         full = 0;
@@ -665,6 +794,34 @@ describe('H-R9 A6 Cache und Culling', () => {
     }
   });
 
+  it('A6 Rasterfaktor: Zoom 1 bei DPR 2 voll (Faktor 2), erst darüber gedeckelt auf MASSIF_MAX_SCALE (Entscheid lead-art R1: Bytegrenze)', () => {
+    const w = square(6);
+    const it0 = massifItems(w)[5]!;
+    const widths: number[] = [];
+    const factory = (): HTMLCanvasElement => {
+      const c = fakeCanvas();
+      widths.push(-1);
+      const i = widths.length - 1;
+      return new Proxy(c, {
+        set(t, k, v) {
+          if (k === 'width') widths[i] = v as number;
+          return Reflect.set(t, k, v);
+        },
+      });
+    };
+    for (const [zoom, dpr, want] of [
+      [1, 2, 64],
+      [1, 1, 32],
+      [2, 1, 64],
+      [2, 2, 32 * MASSIF_MAX_SCALE],
+    ] as const) {
+      const cache = createMassifCache({ factory });
+      cache.beginFrame(dpr);
+      cache.draw(fakeCtx().ctx, { x: 0, y: 0, zoom }, it0);
+      expect(widths.at(-1), `Zoom ${zoom} DPR ${dpr}`).toBe(want);
+    }
+  });
+
   it('A6 Culling je Teilstück über die Bildbox; render zeichnet nur sichtbare Teilstücke, save/restore ausgeglichen', () => {
     const w = createWorld(7, { unlockAll: true });
     const c = largest(w);
@@ -723,6 +880,47 @@ describe('H-R9 A7 Picking und Verdeckung', () => {
     const p = project(c.x0 + 2, c.y0 + 2);
     const blocked = hulls.some((h) => pickBuilding([h], p.x, p.y - 20) !== null);
     if (!blocked) expect(pickBuilding(hulls, p.x, p.y - 20)).toBeNull();
+  });
+
+  it('A7 Lesbarkeit (lead-art R1): kein Teilstück deckt die Rautenmitte einer bebauten Gebirgskachel (Weg, Haus, Steinbruch)', () => {
+    const w = square(16);
+    for (let x = 12; x <= 22; x++) w.tiles[18 * 64 + x]!.road = true; // Weg quer durchs Massiv
+    expect(put(w, 'house', 20, 14)).toBe(true);
+    expect(put(w, 'quarry', 13, 22)).toBe(true);
+    expect(put(w, 'house', 24, 23)).toBe(true);
+    const occ: [number, number][] = [];
+    for (let y = 10; y < 26; y++)
+      for (let x = 10; x < 26; x++) {
+        const t = w.tiles[y * 64 + x]!;
+        if (t.road || t.buildingId !== null) occ.push([x, y]);
+      }
+    const tris = massifPieces(w).flatMap((p) => pieceQuads(p).map((q) => ({ p, pts: q.pts })));
+    let checked = 0;
+    for (const [x, y] of occ) {
+      const c = project(x + 0.5, y + 0.5);
+      for (const dx of [-0.5, 0.5]) {
+        const pt = { x: c.x + dx, y: c.y };
+        const hit = tris.find((t) => inTri(t.pts, pt.x, pt.y));
+        expect(hit, `Kachel ${x},${y} von Teilstück ${hit?.p.id}`).toBeUndefined();
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  });
+
+  it('A7 Sichtschneise: vor einer bebauten Kachel höchstens VIEW_CAP px je Kachel Tiefe (flacher als der Blick, 16 px)', () => {
+    expect(VIEW_CAP).toBeLessThan(ISO_H / 2);
+    const W = 64,
+      o = 20 * W + 20;
+    for (let ds = 0.25; ds < 12; ds += 0.25)
+      for (const du of [0, 0.25, 0.5]) {
+        const fx = 20.5 + (ds + du) / 2,
+          fy = 20.5 + (ds - du) / 2;
+        expect(carve(500, [o], W, fx, fy)).toBeLessThanOrEqual(VIEW_CAP * ds + 1e-9);
+      }
+    // hinten und weit seitlich wirkt nur der Sattel (1 Kachel)
+    expect(carve(100, [o], W, 18.5, 18.5)).toBeCloseTo(100, 6);
+    expect(carve(100, [o], W, 26, 18)).toBeCloseTo(100, 6);
   });
 
   it('A7 Silhouette je Teilstück umschliesst alle gezeichneten Zellen (Licht- und Feuerverdeckung)', () => {

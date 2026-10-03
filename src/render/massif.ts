@@ -28,11 +28,15 @@ export const PIECE_RUN = 8;
 const AMP_K = 5;
 const AMP_POW = 1.3;
 const AMP_SLOPE = 45; // höchstens so viel Amplitude je Kachel grösstem Randabstand (px): schmale Grate bleiben flacher
-export const AMP_CAP = 150;
-const PROFILE = 1.2; // Exponent des Grundprofils: hohle Flanken, steilere Kuppen
-const RIM = 1; // Kacheln: Randband, in dem das Grundprofil auf 0 geht (h = 0 an der Grenze)
+export const AMP_CAP = 135;
+const PROFILE = 0.9; // Exponent des Körpers über dem Randabstand (< 1: Flanken steigen früh, kein breiter Saum)
+const BODY_FLOOR = 0.24; // Anteil der Amplitude, den der Körper schon nach RIM Kacheln Randabstand erreicht
+/** Kacheln: Randband, in dem die Höhe von 0 auf den Körper steigt (flacher Saum höchstens etwa 1 Kachel). */
+const RIM = 1.1;
 const BLUR = 2; // Knoten-Radius des Weichzeichners (2 Durchgänge): Kontur gerundet, keine Treppen
-const RIDGE = 0.5; // Anteil der Grate an der Höhe (± um 1)
+/** Grate: Faktor RIDGE_LO … RIDGE_LO + RIDGE_SPAN aus dem Ridged-Noise (Nebengrate und Vorberge im ganzen Massiv). */
+const RIDGE_LO = 0.5,
+  RIDGE_SPAN = 1.0;
 /**
  * Höhenstaffelung: Faktor exp(β · g), g = −1 vorn … +1 hinten (Tiefe x + y). β startet bei STAGGER und wächst je
  * Komponente höchstens bis STAGGER_MAX, bis die hintere Hälfte im Mittel BACK_RATIO-mal so hoch ist wie die vordere.
@@ -42,9 +46,18 @@ const STAGGER_MAX = 0.5;
 const BACK_RATIO = 1.25;
 const BUMP = 0.8; // px Geröll-Buckel am Fuss
 /** Obergrenze jeder Massivhöhe (px): Amplitude mal Grate mal Staffelung plus Geröll. */
-export const MASSIF_MAX_H = AMP_CAP * (1 + RIDGE) * Math.exp(STAGGER_MAX) + BUMP;
-/** Kacheln: Höhe läuft im Umkreis eines Gebäudes oder Wegs auf dem Gebirge auf 0 (eingeschnittener Sattel). */
+export const MASSIF_MAX_H = AMP_CAP * (RIDGE_LO + RIDGE_SPAN) * Math.exp(STAGGER_MAX) + BUMP;
+/**
+ * Sattel um Gebäude und Wege auf dem Gebirge: die Höhe läuft nach hinten und zur Seite in OCC_FADE Kacheln auf 0,
+ * nach vorn (grössere Tiefe x + y) in OCC_FADE_FRONT. Dazu eine Sichtschneise nach vorn: vor der bebauten Kachel
+ * steigt das Massiv höchstens um VIEW_CAP px je Kachel Tiefe (flacher als der Blickstrahl, ISO_H/2 = 16 px je
+ * Kachel Tiefe), seitlich mit WALL px je Spaltenbreite ansteigend. So verdeckt kein vorderer Grat die Rautenmitte.
+ */
 export const OCC_FADE = 1;
+export const OCC_FADE_FRONT = 1.6;
+export const VIEW_CAP = 14;
+const WALL = 40;
+const NOTCH = 0.6; // halbe Breite der Schneisensohle in Spalten (fx − fy)
 const ROT_A = 0.61,
   ROT_B = 1.37,
   ROT_C = 0.23; // Rauschdrehungen (rad): keine achsparallelen Grate
@@ -207,10 +220,10 @@ function rotNoise(seed: number, fx: number, fy: number, freq: number, rot: numbe
 }
 /** Ridged-Noise 1 − |2n − 1|, zwei Oktaven plus feine Zacken, quadriert (scharfe Grate), 0…1. */
 export function ridged(seed: number, fx: number, fy: number): number {
-  const r1 = 1 - Math.abs(2 * rotNoise(seed + 301, fx, fy, 0.24, ROT_A) - 1);
-  const r2 = 1 - Math.abs(2 * rotNoise(seed + 303, fx, fy, 0.55, ROT_B) - 1);
-  const r3 = 1 - Math.abs(2 * rotNoise(seed + 309, fx, fy, 1.15, ROT_C) - 1);
-  const r = 0.62 * r1 + 0.26 * r2 + 0.12 * r3;
+  const r1 = 1 - Math.abs(2 * rotNoise(seed + 301, fx, fy, 0.3, ROT_A) - 1);
+  const r2 = 1 - Math.abs(2 * rotNoise(seed + 303, fx, fy, 0.62, ROT_B) - 1);
+  const r3 = 1 - Math.abs(2 * rotNoise(seed + 309, fx, fy, 1.25, ROT_C) - 1);
+  const r = 0.55 * r1 + 0.3 * r2 * (0.5 + 0.5 * r1) + 0.15 * r3;
   return r * r;
 }
 
@@ -356,11 +369,14 @@ function buildComponent(
       if (src[k] || maxBase <= 0) continue;
       const fx = x0 + i / SUB,
         fy = y0 + j / SUB;
-      // Grundform leicht verbeult (tieffrequent, gedreht): kein Kegel aus dem Abstandsfeld
+      // Körper: steigt im Randband schnell auf BODY_FLOOR, dann über dem (verbeulten) Randabstand weiter
       const wob = 0.78 + 0.44 * rotNoise(seed + 305, fx, fy, 0.16, ROT_C);
       const dn = Math.min(1, (base[k]! / maxBase) * wob);
-      const mid = smoothstep(0.08, 0.55, dn) * ridgeW;
-      shape[k] = Math.pow(dn, PROFILE) * (1 + RIDGE * mid * (2 * ridged(seed, fx, fy) - 1));
+      const body =
+        smooth01(dist[k]! / RIM) * (BODY_FLOOR + (1 - BODY_FLOOR) * Math.pow(dn, PROFILE));
+      // Grate und Vorberge überall im Massiv (nicht nur am Zentralgipfel); kleine Komponenten bleiben rund
+      const r = ridged(seed, fx, fy);
+      shape[k] = body * (1 + ridgeW * (RIDGE_LO + RIDGE_SPAN * r - 1));
       gs[k] = Math.max(-1, Math.min(1, (sMid - (i + j)) / sHalf));
     }
   // Staffelung: kleinstes β ≥ STAGGER (Schritt 0,05), mit dem die Rückseite im Mittel BACK_RATIO-mal so hoch ist
@@ -391,7 +407,7 @@ function buildComponent(
       if (src[k] || maxBase <= 0) continue;
       const fx = x0 + i / SUB,
         fy = y0 + j / SUB;
-      const dn = base[k]! / maxBase;
+      const dn = Math.min(1, base[k]! / maxBase);
       const rim = smooth01(dist[k]! / RIM);
       const bump = (valueNoise(seed + 307, fx * 1.7, fy * 1.7) - 0.5) * 2 * BUMP * rim * (1 - dn);
       height[k] = Math.max(0, amp * shape[k]! * Math.exp(beta * gs[k]!) + bump);
@@ -465,7 +481,7 @@ export interface MassifPiece {
   tiles: number[];
   /** Letzte Kachel des vorigen Abschnitts desselben Laufs (wird darunter mitgezeichnet, keine Naht), sonst −1. */
   seam: number;
-  /** Bebaute Kacheln der Komponente im Umkreis von 2 Kacheln (Sattel um Gebäude und Wege), aufsteigend. */
+  /** Bebaute Kacheln der Komponente, die auf das Teilstück wirken (Sattel und Sichtschneise), aufsteigend. */
   occ: number[];
   /** Cache-Schlüssel (Geländeabbild, Lage, Sattel). */
   key: string;
@@ -488,6 +504,25 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
     const i = y * W + x;
     return data.compOf[i]! >= 0 && !occupied(w, i);
   };
+  // bebaute Gebirgskacheln je Komponente
+  const built = new Map<number, number[]>();
+  for (let i = 0; i < W * H; i++)
+    if (data.compOf[i]! >= 0 && occupied(w, i)) {
+      const l = built.get(data.compOf[i]!) ?? [];
+      l.push(i);
+      built.set(data.compOf[i]!, l);
+    }
+  /** Wirkt die bebaute Kachel o auf die Kachel t (Sattel im Umkreis 2, Schneise nach vorn)? */
+  const reach = (o: number, t: number): boolean => {
+    const ox = o % W,
+      oy = (o / W) | 0,
+      tx = t % W,
+      ty = (t / W) | 0;
+    if (Math.abs(ox - tx) <= 2 && Math.abs(oy - ty) <= 2) return true;
+    const ds = tx + ty - (ox + oy),
+      du = Math.abs(tx - ty - (ox - oy));
+    return ds > 0 && ds <= SCHNEISE_DS + 1 && du <= SCHNEISE_DU + 1;
+  };
   const flush = (k: number, run: number[]): void => {
     for (let a = 0; a < run.length; a += PIECE_RUN) {
       const tiles = run.slice(a, a + PIECE_RUN);
@@ -497,13 +532,8 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
         fy = (front / W) | 0;
       const seam = a > 0 ? run[a - 1]! : -1;
       const occ = new Set<number>();
-      for (const t of seam >= 0 ? [seam, ...tiles] : tiles) {
-        const tx = t % W,
-          ty = (t / W) | 0;
-        for (let y = ty - 2; y <= ty + 2; y++)
-          for (let x = tx - 2; x <= tx + 2; x++)
-            if (inComp(comp, x, y) && occupied(w, y * W + x)) occ.add(y * W + x);
-      }
+      for (const t of seam >= 0 ? [seam, ...tiles] : tiles)
+        for (const o of built.get(comp.id) ?? []) if (reach(o, t)) occ.add(o);
       const occList = [...occ].sort((p, q) => p - q);
       const id = 2 * front + (fx - fy === k ? 0 : 1);
       out.push({
@@ -534,23 +564,42 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
   return out;
 }
 
-/** Sattelfaktor 0…1 am Kachelpunkt (fx, fy): 0 an bebauten Kacheln, 1 ab `OCC_FADE` Abstand. */
-function fade(p: MassifPiece, fx: number, fy: number): number {
-  let f = 1;
-  const W = p.comp.width;
-  for (const o of p.occ) {
+/** Tiefe (Kacheln) und Spaltenabstand, bis zu denen die Sichtschneise wirken kann (MASSIF_MAX_H / VIEW_CAP …). */
+const SCHNEISE_DS = Math.ceil(MASSIF_MAX_H / VIEW_CAP),
+  SCHNEISE_DU = Math.ceil(NOTCH + MASSIF_MAX_H / WALL);
+
+/**
+ * Höhe am Kachelpunkt (fx, fy) nach Sattel und Sichtschneise aller bebauten Kacheln `occ` (A7, Lesbarkeit): Faktor
+ * 0 an der bebauten Kachel, 1 ab OCC_FADE (hinten, seitlich) bzw. OCC_FADE_FRONT (vorn); vor der Kachel höchstens
+ * VIEW_CAP px je Kachel Tiefe ab ihrer Mitte, seitlich ab NOTCH Spalten mit WALL px je Spalte ansteigend.
+ */
+export function carve(
+  h: number,
+  occ: readonly number[],
+  W: number,
+  fx: number,
+  fy: number,
+): number {
+  let f = 1,
+    cap = Infinity;
+  for (const o of occ) {
     const ox = o % W,
       oy = (o / W) | 0;
     const dx = Math.max(ox - fx, 0, fx - ox - 1),
       dy = Math.max(oy - fy, 0, fy - oy - 1);
-    f *= smooth01(Math.hypot(dx, dy) / OCC_FADE);
+    const ds = fx + fy - (ox + oy + 1);
+    f *= smooth01(Math.hypot(dx, dy) / (ds > 0 ? OCC_FADE_FRONT : OCC_FADE));
+    if (ds > 0) {
+      const du = Math.abs(fx - fy - (ox - oy));
+      cap = Math.min(cap, VIEW_CAP * ds + WALL * Math.max(0, du - NOTCH));
+    }
   }
-  return f;
+  return Math.min(h * f, cap);
 }
-/** Höhe am Knoten (I, J) im Teilstück: Grundhöhe mal Sattel um Gebäude und Wege. */
+/** Höhe am Knoten (I, J) im Teilstück: Grundhöhe nach Sattel und Sichtschneise um Gebäude und Wege. */
 export function pieceHeight(p: MassifPiece, I: number, J: number): number {
   const h = nodeHeight(p.comp, I, J);
-  return h > 0 && p.occ.length ? h * fade(p, I / SUB, J / SUB) : h;
+  return h > 0 && p.occ.length ? carve(h, p.occ, p.comp.width, I / SUB, J / SUB) : h;
 }
 
 export interface PieceCell {
@@ -614,18 +663,34 @@ const P = {
   rock: rgbOf(PALETTE.rock),
   light: rgbOf(PALETTE.rockLight),
   dark: rgbOf(PALETTE.rockDark),
+  cool: rgbOf(PALETTE.waterDeep),
+  warm: rgbOf(PALETTE.sandDry),
 };
-const C = {
-  ...P,
-  /** Felsgrund des Massivs: etwas heller als `rock`, die Schattenseite dunkelt ohnehin ab */
-  base: mixRgb(P.rock, P.light, 0.12),
-  /** helle Grate und Kappen: rockLight mit 25 % foam (kein Schnee, höchstens 30 %) */
-  cap: mixRgb(P.light, rgbOf(PALETTE.foam), 0.25),
-  /** kühle Schattenseite */
-  shadow: mixRgb(P.dark, rgbOf(PALETTE.waterDeep), 0.28),
-  /** grünlich-brauner Bewuchs am Fuss */
-  veg: mixRgb(rgbOf(PALETTE.grassDark), rgbOf(PALETTE.earthEdge), 0.35),
-};
+/**
+ * Tonstufen des Felses (A3, Abnahme lead-art Runde 1: „gemalte Low-Poly-Felsen“ statt stufenloser Beleuchtung),
+ * dunkel nach hell: Schattenseite kühl (rockDark mit waterDeep), Lichtseite warm (rockLight mit sandDry ≤ 20 %).
+ */
+export const ROCK_TONES: readonly Rgb[] = [
+  mixRgb(P.dark, P.cool, 0.22),
+  mixRgb(mixRgb(P.dark, P.rock, 0.35), P.cool, 0.12),
+  mixRgb(P.rock, P.dark, 0.12),
+  mixRgb(mixRgb(P.rock, P.light, 0.55), P.warm, 0.08),
+  mixRgb(P.light, P.warm, 0.18),
+];
+/** Bewuchs in denselben Stufen (grassDark/crown, gering eingesetzt). */
+export const VEG_TONES: readonly Rgb[] = [
+  mixRgb(rgbOf(PALETTE.crown), P.dark, 0.45),
+  mixRgb(rgbOf(PALETTE.crown), P.dark, 0.2),
+  mixRgb(rgbOf(PALETTE.grassDark), rgbOf(PALETTE.crown), 0.45),
+  rgbOf(PALETTE.grassDark),
+  mixRgb(rgbOf(PALETTE.grassDark), P.warm, 0.2),
+];
+/** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
+export const TONE_FLAT = 2;
+const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
+const TONE_GAIN_SHADE = 1.6; // auf der Schattenseite (die dem Blick zugewandten Flanken sollen nicht absaufen)
+const TONE_NOISE = 0.22; // grossflächige Tönung ± (Stufen): die Stufengrenzen wandern, kein Kachelraster
+const LAP_REF = 16; // px Krümmung für volle Grat- bzw. Rinnenkante
 const LAND_EDGE: Partial<Record<string, Rgb>> = {
   grass: mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25),
   forest: rgbOfCss(FOREST_FLOOR),
@@ -652,60 +717,105 @@ export interface CellShade {
 export const steepness = (gx: number, gy: number): number =>
   smoothstep(0.35, 1.15, Math.hypot(gx, gy) / TILE_PX);
 
+/** Relative Beleuchtung (Lambert gegen die ebene Fläche, 1 = eben, > 1 Lichtseite, < 1 Schattenseite). */
+export function relLight(gx: number, gy: number): number {
+  const nx = -gx / TILE_PX,
+    ny = -gy / TILE_PX;
+  return (nx * L3.x + ny * L3.y + L3.z) / Math.hypot(nx, ny, 1) / L3.z;
+}
+
+/** Stetige Tonstufe 0…4 an einem Netzpunkt: Licht, grossflächige Tönung, etwas dunkler in tiefen Lagen. */
+export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): number {
+  const rl = relLight(s.gx, s.gy);
+  const tone =
+    0.7 * (rotNoise(seed + 311, fx, fy, 0.55, ROT_C) - 0.5) +
+    0.3 * (rotNoise(seed + 315, fx, fy, 1.6, ROT_A) - 0.5);
+  const t =
+    TONE_FLAT +
+    (rl >= 1 ? TONE_GAIN : TONE_GAIN_SHADE) * (rl - 1) +
+    2 * TONE_NOISE * tone +
+    0.35 * (Math.min(1, s.hn) - 0.4);
+  return Math.max(0, Math.min(ROCK_TONES.length - 1, t));
+}
+
 /**
- * Farbe an einem Netzpunkt (A3): Material nach Hang und Höhe, Lambert-Licht von links oben, Sockel ohne Naht. Die
- * Schichtung (Bänder nach Höhe) und das Korn kommen je Pixel beim Rastern dazu (`rocks.ts`).
+ * Stufung: T wird auf ganze Stufen gerundet, mit einem weichen Übergang der halben Breite `hw` (in Stufen) um jede
+ * Stufengrenze k + 0,5. Der Rasterizer setzt `hw` aus dem Gefälle von T so, dass der Übergang 1–2 px breit ist.
+ */
+export function toneStep(t: number, hw: number): number {
+  const n = Math.floor(t),
+    f = t - n;
+  return n + (hw <= 0 ? (f >= 0.5 ? 1 : 0) : smoothstep(0.5 - hw, 0.5 + hw, f));
+}
+/** Farbe zur gestuften Tonstufe `st` (0…4), Rampe `ramp`. */
+export function toneColor(st: number, ramp: readonly Rgb[] = ROCK_TONES): Rgb {
+  const n = Math.max(0, Math.min(ramp.length - 1, Math.floor(st)));
+  return n >= ramp.length - 1 ? ramp[n]! : mixRgb(ramp[n]!, ramp[n + 1]!, st - n);
+}
+
+/** Bewuchs-Feld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern): Flecken nur in tiefen, flachen Lagen. */
+function vegField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
+  const low = smoothstep(0.01, 0.05, hn) * (1 - smoothstep(0.16, 0.34, hn)) * (1 - steep);
+  return rotNoise(seed + 317, fx, fy, 1.9, ROT_A) * (0.25 + 0.7 * low);
+}
+/** Geröll-Feld 0…1 am Netzpunkt: tiefe, flache Lagen und Fuss der Flanken. */
+function rubbleField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
+  const low = 1 - smoothstep(0.08, 0.4, hn);
+  return (
+    low * (0.4 + 0.6 * steep) * smoothstep(0.35, 0.65, rotNoise(seed + 319, fx, fy, 1.7, ROT_B))
+  );
+}
+
+/**
+ * Farbe an einem Netzpunkt (A3), ohne weiche Übergänge: gestufte Tonstufe, Grat-/Rinnenkante, Bewuchs, Sockel. Für
+ * Tests und als Füllfarbe der Netzdreiecke; gerastert wird je Pixel mit denselben Regeln (`rocks.ts`).
  */
 export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): Rgb {
   const steep = steepness(s.gx, s.gy);
-  // Felsgrund mit grossflächiger Tönung (gedreht, kein Kachelraster)
-  const tone =
-    0.65 * (rotNoise(seed + 311, fx, fy, 0.85, ROT_C) - 0.5) +
-    0.35 * (rotNoise(seed + 315, fx, fy, 2.3, ROT_A) - 0.5); // grossflächig plus Fleckung
-  let c: Rgb =
-    tone >= 0 ? mixRgb(C.base, C.light, tone * 0.6) : mixRgb(C.base, C.dark, -tone * 0.6);
-  // flach und hoch: helle Grate und Kappen
-  c = mixRgb(c, C.cap, (1 - steep) * smoothstep(0.55, 1.0, s.hn) * 0.5);
-  // flach und tief: Bewuchs und Geröll am Fuss
-  const mask = smoothstep(0.42, 0.72, rotNoise(seed + 317, fx, fy, 1.3, ROT_A));
-  const foot = smoothstep(0, 0.04, s.hn) * (1 - smoothstep(0.12, 0.38, s.hn));
-  c = mixRgb(c, C.veg, (1 - steep) * foot * (0.12 + 0.38 * mask));
-  const rubble = smoothstep(0.6, 0.85, rotNoise(seed + 319, fx, fy, 2.6, ROT_B));
-  c = mixRgb(c, C.light, 0.18 * rubble * (1 - smoothstep(0, 0.3, s.hn))); // Geröll am Fuss
-  // Umgebungsverdeckung in Rinnen, helle Kanten auf Graten
-  if (s.lap > 0) c = mixRgb(c, C.shadow, Math.min(0.4, s.lap * 0.05));
-  else c = mixRgb(c, C.cap, Math.min(0.3, -s.lap * 0.04));
-  // Lambert: Normale (−gx, −gy, 1) gegen das Licht, relativ zur ebenen Fläche
-  const nx = -s.gx / TILE_PX,
-    ny = -s.gy / TILE_PX;
-  const rel = (nx * L3.x + ny * L3.y + L3.z) / Math.hypot(nx, ny, 1) / L3.z;
-  c =
-    rel >= 1
-      ? mixRgb(c, C.cap, Math.min(0.55, (rel - 1) * 1.5))
-      : mixRgb(c, C.shadow, Math.min(0.7, (1 - rel) * 1.25));
-  // Sockel: zur Grenze hin ins Nachbargelände (wie die Typmischung der Geländeebene), an Ecken stärker
+  const st = toneStep(toneLevel(seed, fx, fy, s), 0);
+  const veg = vegField(seed, fx, fy, s.hn, steep) >= 0.5 ? 1 : 0;
+  let c = mixRgb(toneColor(st), toneColor(st, VEG_TONES), VEG_MIX * veg);
+  const e = Math.max(-1, Math.min(1, -s.lap / LAP_REF));
+  if (e > EDGE_ON && st >= TONE_FLAT) c = mixRgb(c, ROCK_TONES[4]!, RIDGE_HI);
+  if (e < -EDGE_ON) c = mixRgb(c, ROCK_TONES[0]!, RINNE_LO);
   if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, EDGE_MIX * (1 - s.rim));
   return c;
 }
+/** Bewuchsanteil eines Flecks, Schwellen der Grat- und Rinnenkante und ihre Stärke. */
+export const VEG_MIX = 0.75,
+  EDGE_ON = 0.72,
+  RIDGE_HI = 0.75,
+  RINNE_LO = 0.55;
 /** Wie `shadeColor`, als CSS-Farbe. */
 export function cellColor(seed: number, fx: number, fy: number, s: CellShade): string {
   const c = shadeColor(seed, fx, fy, s);
   return `rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
 }
 
-/** Netzpunkt eines Teilstücks: Farbe ohne Schichtung, Höhe, Steilheit und Versatz der Schichtbänder. */
+/** Netzpunkt eines Teilstücks: Attribute, die der Rasterizer je Pixel interpoliert und stuft. */
 export interface NodeShade {
+  /** Füllfarbe ohne weiche Übergänge (Tests, Netzdreiecke). */
   c: Rgb;
   /** Deckkraft 0…1 (nur im Sockelband < 1). */
   a: number;
   h: number;
   steep: number;
+  /** stetige Tonstufe 0…4 */
+  t: number;
+  /** Grat (+1) bzw. Rinne (−1) aus der Krümmung */
+  e: number;
+  /** Bewuchs- und Geröll-Feld */
+  veg: number;
+  rub: number;
+  /** Sockel: Anteil und Farbe des Nachbargeländes */
+  mix: number;
+  ec: Rgb;
   /** Phasenversatz der Schichtbänder (verworfen, gedreht). */
   warp: number;
 }
 /**
- * Netzpunkte eines Teilstücks, gemerkt: Farbe und Attribute hängen nur von (Komponente, Sattel, Knoten) ab, die
- * geteilten Randzellen zweier Halbstreifen bekommen also exakt dieselben Werte (keine Naht an der Streifenkante).
+ * Netzpunkte eines Teilstücks, gemerkt: Attribute hängen nur von (Komponente, Sattel, Knoten) ab, die geteilten
+ * Randzellen zweier Halbstreifen bekommen also exakt dieselben Werte (keine Naht an der Streifenkante).
  */
 export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade {
   const c = p.comp;
@@ -736,20 +846,23 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       ty = Math.min(c.y1, Math.max(c.y0, Math.floor((J - 0.5) / SUB)));
     const fx = I / SUB,
       fy = J / SUB;
-    const col = shadeColor(c.seed, fx, fy, {
-      h,
-      hn: h / c.amp,
-      gx,
-      gy,
-      lap,
-      rim: smoothstep(SOFT_LO, SOFT_HI, soft),
-      edge: c.edge[(ty - c.y0) * bw + tx - c.x0] ?? null,
-    });
+    const hn = h / c.amp;
+    const edge = c.edge[(ty - c.y0) * bw + tx - c.x0] ?? null;
+    const sh: CellShade = { h, hn, gx, gy, lap, rim: smoothstep(SOFT_LO, SOFT_HI, soft), edge };
+    const steep = steepness(gx, gy);
     const out: NodeShade = {
-      c: col,
+      c: shadeColor(c.seed, fx, fy, sh),
+      // Sockel ohne Naht (Entscheid lead-art Runde 1): nur das flache Randband (h < RIM_H) blendet in die
+      // Geländeebene aus; dort zeigt sie ihren eigenen Felsgrund mit gerundeter Typgrenze statt der Kachelkontur
       a: Math.max(smoothstep(SOFT_A_LO, SOFT_A_HI, soft), smoothstep(RIM_H * 0.25, RIM_H, h)),
       h,
-      steep: steepness(gx, gy),
+      steep,
+      t: toneLevel(c.seed, fx, fy, sh),
+      e: Math.max(-1, Math.min(1, -lap / LAP_REF)),
+      veg: vegField(c.seed, fx, fy, hn, steep),
+      rub: rubbleField(c.seed, fx, fy, hn, steep),
+      mix: edge ? EDGE_MIX * (1 - sh.rim) : 0,
+      ec: edge ?? ROCK_TONES[TONE_FLAT]!,
       warp: 3.2 * rotNoise(c.seed + 313, fx, fy, 0.7, ROT_B),
     };
     nm.set(k, out);

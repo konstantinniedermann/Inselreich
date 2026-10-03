@@ -2,7 +2,21 @@ import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem } from './iso';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
-import { SUB, pieceHeight, pieceMesh, type MassifPiece, type MeshCell } from './massif';
+import {
+  EDGE_ON,
+  RIDGE_HI,
+  RINNE_LO,
+  ROCK_TONES,
+  SUB,
+  TONE_FLAT,
+  VEG_MIX,
+  VEG_TONES,
+  pieceHeight,
+  pieceMesh,
+  toneStep,
+  type MassifPiece,
+  type MeshCell,
+} from './massif';
 
 // rocks.ts — Canvas-Hülle des Gebirgsmassivs (H-R9 Teil A, A4–A7): projiziert das Netz eines Teilstücks
 // (`massif.ts`), malt es einmal je Zoomstufe und Geräte-DPR in eine Offscreen-Fläche (LRU mit Bytegrenze) und
@@ -127,13 +141,19 @@ export function massifOnScreen(
 export const massifClips = (cam: Camera, item: MassifItem): Pt[] =>
   massifSilhouette(item).map((q) => worldToScreen(cam, q));
 
-const STRATA = 0.11; // Schichtbänder je Weltpixel Höhe (Phase): alle ≈ 9 px eine feine Linie
-const STRATA_DARK = 0.12; // Abdunklung im Band an steilen Wänden
-const GRAIN = 0.05; // Pixelkorn ±2,5 % (wie ROCK_GRAIN der Geländeebene)
+/** Schichtbänder je Weltpixel Höhe (Phase): alle ≈ 9 px eine feine Linie, nur an steilen Flanken. */
+const STRATA = 0.11;
+const STRATA_DARK = 0.07; // Abdunklung im Band (schwach)
+/** Weltpixel je Texturpixel der Unterbrechungsmaske: Bänder reissen ab und springen versetzt weiter. */
+const STRATA_BREAK = 0.09;
+const GRAIN = 0.04; // Pixelkorn ±2 %
+/** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
+export const TONE_EDGE_PX = 1.5;
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
-const TEX_FINE = 1 / 3.5,
-  TEX_COARSE = 1 / 11; // Texturzellen je Weltpixel: feines Korn und gröbere Brocken
-const TEX_AMP = 0.16; // Helligkeit ±8 % (fein, an steilen Wänden stärker) plus ±5 % grob
+/** Texturpixel je Weltpixel: Merkmale ≈ 2 px (fein, feiner als die Tonstufen) und ≈ 6 px (Brocken). */
+const TEX_FINE = 4,
+  TEX_COARSE = 1.3;
+const TEX_AMP = 0.15; // Helligkeit fein ±7,5 % (an steilen Flanken), grob ±3,5 %
 /** Kachelbares Wertrauschen 0…1 (Gitter 16 × 16, geglättet auf TEX_N × TEX_N). */
 const ROCK_TEX = (() => {
   const g = 16,
@@ -248,7 +268,29 @@ export function rasterPiece(
   return out;
 }
 
-/** Ein Dreieck in den Puffer (Pixelmitten inklusive Kante), Gouraud plus Schichtband und Korn. */
+/** Schichtband 0…1 am Weltpunkt (wx, wy) in Höhe h: nur an steilen Flanken, unterbrochen und versetzt (A3). */
+export function strataAt(h: number, steep: number, warp: number, wx: number, wy: number): number {
+  if (steep < 0.35) return 0;
+  const m = tex(wx * STRATA_BREAK * 4 + 11, wy * STRATA_BREAK * 4 + 53);
+  const on = m < 0.42 ? 0 : Math.min(1, (m - 0.42) * 12); // abgerissen, wo die Maske tief ist
+  if (on === 0) return 0;
+  const jump = tex(wx * STRATA_BREAK * 2 + 71, wy * STRATA_BREAK * 2 + 17) > 0.5 ? 0.5 : 0; // Versatz
+  const ph = h * STRATA + warp + jump;
+  const sm = (steep - 0.35) / 0.65;
+  return BAND[Math.floor((ph - Math.floor(ph)) * 64) & 63]! * on * sm * sm;
+}
+
+/** Halbe Übergangsbreite (in Einheiten des Werts) für TONE_EDGE_PX Pixel bei Gefälle |∇v| (je Pixel). */
+const halfWidth = (g: number): number => Math.min(0.5, Math.max(0.02, 0.5 * TONE_EDGE_PX * g));
+const sstep = (v: number, t: number, hw: number): number => {
+  const x = (v - (t - hw)) / (2 * hw);
+  return x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+};
+
+/**
+ * Ein Dreieck in den Puffer (Pixelmitten inklusive Kante): Tonstufen mit 1–2 px weichen Übergängen (Breite aus dem
+ * Gefälle der Tonstufe im Dreieck), Grat- und Rinnenkanten, Bewuchsflecken, Geröll, Schichtbänder, Felstextur.
+ */
 function triangle(
   buf: Uint8ClampedArray,
   W: number,
@@ -279,7 +321,18 @@ function triangle(
   const a = n[i0],
     b = n[i1],
     c = n[i2];
+  // Gefälle der baryzentrischen Gewichte je Pixel: Übergangsbreiten konstant je Dreieck
+  const d0x = (y1 - y2) / area,
+    d0y = (x2 - x1) / area,
+    d1x = (y2 - y0) / area,
+    d1y = (x0 - x2) / area;
+  const grad = (va: number, vb: number, vc: number): number =>
+    Math.hypot((va - vc) * d0x + (vb - vc) * d1x, (va - vc) * d0y + (vb - vc) * d1y);
+  const hwT = halfWidth(grad(a.t, b.t, c.t)),
+    hwE = halfWidth(grad(a.e, b.e, c.e)),
+    hwV = halfWidth(grad(a.veg, b.veg, c.veg));
   const eps = -1e-7;
+  const top = ROCK_TONES.length - 1;
   for (let y = minY; y <= maxY; y++) {
     const yc = y + 0.5;
     for (let x = minX; x <= maxX; x++) {
@@ -290,23 +343,71 @@ function triangle(
       if (w1 < eps) continue;
       const w2 = 1 - w0 - w1;
       if (w2 < eps) continue;
-      const hh = a.h * w0 + b.h * w1 + c.h * w2;
-      const st = a.steep * w0 + b.steep * w1 + c.steep * w2;
-      const ph = hh * STRATA + a.warp * w0 + b.warp * w1 + c.warp * w2;
-      const band = BAND[Math.floor((ph - Math.floor(ph)) * 64) & 63]!;
-      const gr = 1 + (hash2(seed + 23, x, y) - 0.5) * GRAIN;
-      // Felstextur in Weltpixeln (stetig über Streifen und Zoomstufen), an steilen Wänden kräftiger
+      const lerp = (va: number, vb: number, vc: number): number => va * w0 + vb * w1 + vc * w2;
+      // Tonstufe
+      const st = Math.min(top, toneStep(lerp(a.t, b.t, c.t), hwT));
+      const k0 = Math.floor(st),
+        k1 = Math.min(top, k0 + 1),
+        fr = st - k0;
+      const R = ROCK_TONES[k0]!,
+        R1 = ROCK_TONES[k1]!,
+        V = VEG_TONES[k0]!,
+        V1 = VEG_TONES[k1]!;
+      let r = R[0] + (R1[0] - R[0]) * fr,
+        g = R[1] + (R1[1] - R[1]) * fr,
+        bl = R[2] + (R1[2] - R[2]) * fr;
+      // Bewuchsflecken
+      const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg), 0.5, hwV);
+      if (vg > 0) {
+        r += (V[0] + (V1[0] - V[0]) * fr - r) * vg;
+        g += (V[1] + (V1[1] - V[1]) * fr - g) * vg;
+        bl += (V[2] + (V1[2] - V[2]) * fr - bl) * vg;
+      }
+      // knappe helle Kante auf Graten (Lichtseite), dunkle in Rinnen
+      const e = lerp(a.e, b.e, c.e);
+      const hi = e > 0 ? RIDGE_HI * sstep(e, EDGE_ON, hwE) * (st >= TONE_FLAT ? 1 : 0) : 0,
+        lo = e < 0 ? RINNE_LO * sstep(-e, EDGE_ON, hwE) : 0;
+      if (hi > 0) {
+        const L = ROCK_TONES[top]!;
+        r += (L[0] - r) * hi;
+        g += (L[1] - g) * hi;
+        bl += (L[2] - bl) * hi;
+      } else if (lo > 0) {
+        const D = ROCK_TONES[0]!;
+        r += (D[0] - r) * lo;
+        g += (D[1] - g) * lo;
+        bl += (D[2] - bl) * lo;
+      }
+      // Textur, Geröll und Schichtbänder in Weltpixeln (stetig über Streifen und Zoomstufen)
       const wx = ox + xc / sx,
         wy = oy + yc / sy;
-      const tf = tex(wx * TEX_FINE * 4, wy * TEX_FINE * 4) - 0.5,
-        tc = tex(wx * TEX_COARSE * 4 + 37, wy * TEX_COARSE * 4 + 91) - 0.5;
-      const k =
-        (1 - STRATA_DARK * st * st * band) * gr * (1 + TEX_AMP * (tf * (0.5 + st) + 0.6 * tc)); // Bänder nur an steilen Wänden
+      const steep = lerp(a.steep, b.steep, c.steep);
+      const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
+        tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
+      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) + 0.45 * tc);
+      const rub = lerp(a.rub, b.rub, c.rub);
+      if (rub > 0.05) {
+        const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);
+        if (s2 > 0.72)
+          k *= 1 + 0.22 * rub; // helle Brocken
+        else if (s2 < 0.26) k *= 1 - 0.18 * rub; // ihre Schatten
+      }
+      k *=
+        1 -
+        STRATA_DARK * strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
+      k *= 1 + (hash2(seed + 23, x, y) - 0.5) * GRAIN;
+      r *= k;
+      g *= k;
+      bl *= k;
+      // Sockel: Nachbargelände einmischen, Deckkraft
+      const mx = lerp(a.mix, b.mix, c.mix);
+      if (mx > 0) {
+        r += (lerp(a.ec[0], b.ec[0], c.ec[0]) - r) * mx;
+        g += (lerp(a.ec[1], b.ec[1], c.ec[1]) - g) * mx;
+        bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
+      }
       const o = (y * W + x) * 4;
-      const r = (a.c[0] * w0 + b.c[0] * w1 + c.c[0] * w2) * k,
-        g = (a.c[1] * w0 + b.c[1] * w1 + c.c[1] * w2) * k,
-        bl = (a.c[2] * w0 + b.c[2] * w1 + c.c[2] * w2) * k;
-      const al = a.a * w0 + b.a * w1 + c.a * w2;
+      const al = lerp(a.a, b.a, c.a);
       if (al >= 0.999) {
         buf[o] = r;
         buf[o + 1] = g;
