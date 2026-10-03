@@ -497,7 +497,7 @@ geprüft am 2026-10-02. Gemessen am selben Tag auf `main` (`make build`, `git co
 ### Gebäudezustände (ADR-005)
 
 Produktionsbetriebe tragen einen Zustand, der dem Spieler im Info-Panel erklärt, warum nichts
-entsteht. Zustände bleiben stehen, bis ihre Ursache behoben ist. M10 ergänzt `noService` (Werkzeugmacher ohne Schule in Reichweite: kein Fortschritt, keine Entnahme, Unterhalt läuft weiter; die Produktion leitet den Zustand jeden Tick neu ab). M11 ergänzt `noForest`: Holzfäller und Jagdhütte ohne freien Wald im Radius (Wald ohne Gebäude und Weg, ausserhalb des eigenen Grundrisses); kein Fortschritt, keine Entnahme, `progress` bleibt, Unterhalt läuft; jeder Schritt bewertet neu.
+entsteht. Zustände bleiben stehen, bis ihre Ursache behoben ist. M10 ergänzt `noService` (Werkzeugmacher ohne Schule in Reichweite: kein Fortschritt, keine Entnahme, Unterhalt läuft weiter; die Produktion leitet den Zustand jeden Tick neu ab). M11 ergänzt `noForest`: Holzfäller und Jagdhütte ohne freien Wald im Radius (Wald ohne Gebäude und Weg, ausserhalb des eigenen Grundrisses); kein Fortschritt, keine Entnahme, `progress` bleibt, Unterhalt läuft; jeder Schritt bewertet neu. M11: Jeder Betrieb führt `eff` (Ganzzahl 0 … 256 000, je Schritt `eff − floor(eff / 256) + Ziel`, Ziel 1000 nur bei Fortschritt mit Zustand `ok`); Anzeige `utilization` in Promille; Geld und Waren hängen nicht daran; gespeichert.
 
 ```mermaid
 stateDiagram-v2
