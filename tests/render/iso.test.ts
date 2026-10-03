@@ -25,6 +25,7 @@ import { demolish, placeBuilding } from '../../src/sim/build';
 import { createWorld, tilesInRadius } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
+import { clearForest, plantForest } from '../../src/sim/forest';
 
 const inPoly = (h: readonly Pt[], x: number, y: number): boolean => {
   for (let i = 0; i < h.length; i++) {
@@ -323,4 +324,19 @@ describe('Sortierung und Cache', () => {
     expect(pickBuilding(buildingHulls(world), px, overlapY)).toBe(back);
     expect(pickBuilding(buildingHulls(world), px, frontOnlyY)).toBeNull();
   });
+});
+
+it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer mit treeVariant', () => {
+  const w = createWorld(3, { unlockAll: true });
+  const k = w.buildings[w.kontorId]!;
+  const x = k.x + 6;
+  const y = k.y + 2;
+  forceRect(w, x, y, 1, 1, 'forest');
+  w.money = 1000;
+  const trees = () => sortedObjects(w).filter((o) => o.kind === 'tree' && o.id === y * w.width + x);
+  expect(trees()).toHaveLength(1);
+  expect(clearForest(w, x, y).ok).toBe(true);
+  expect(trees()).toHaveLength(0);
+  expect(plantForest(w, x, y).ok).toBe(true);
+  expect(trees()).toEqual([expect.objectContaining({ variant: treeVariant(w.seed, x, y) })]);
 });
