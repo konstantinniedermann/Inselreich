@@ -341,6 +341,78 @@ class BudgetBoardDecisionTest(unittest.TestCase):
             ("lead-tech", 0, True),
         )
 
+    def test_parallel_phases_count_per_lead_not_per_child_time(self):
+        """Parallele Controller: Starts zaehlen in der Phase ihres Leads."""
+        events = [
+            self.grant(0, "lead-tech", 3, 1, phase="A"),
+            start(1, "L1", "lead-tech"),
+            self.grant(5, "lead-tech", 3, 1, phase="B"),
+            start(6, "L2", "lead-tech"),
+            spawn(2, "L1", "tech-sim-engineer"),
+            start(2, "w1", "tech-sim-engineer"),
+            spawn(7, "L1", "tech-sim-engineer"),
+            start(7, "w2", "tech-sim-engineer"),
+            spawn(8, "L2", "tech-sim-engineer"),
+            start(8, "w3", "tech-sim-engineer"),
+        ]
+        rows = {b["phase"]: b for b in build(events)["budgets"]}
+        self.assertEqual((rows["A"]["used"], rows["B"]["used"]), (2, 1))
+
+    def test_single_lead_with_sequential_phases_counts_by_time(self):
+        events = [
+            self.grant(0, "lead-tech", 3, 1, phase="A"),
+            start(1, "L1", "lead-tech"),
+            spawn(2, "L1", "tech-sim-engineer"),
+            start(2, "w1", "tech-sim-engineer"),
+            self.grant(5, "lead-tech", 3, 1, phase="B"),
+            spawn(7, "L1", "tech-sim-engineer"),
+            start(7, "w2", "tech-sim-engineer"),
+        ]
+        rows = {b["phase"]: b for b in build(events)["budgets"]}
+        self.assertEqual((rows["A"]["used"], rows["B"]["used"]), (1, 1))
+
+    def test_spawned_only_node_counts_as_start(self):
+        events = [
+            self.grant(0, "lead-tech", 3, 1),
+            start(1, "L1", "lead-tech"),
+            spawn(2, "L1", "tech-sim-engineer", tool_use_id="t1"),
+            ev("spawned", 3, agent_id="L1", child_id="w1", tool_use_id="t1"),
+        ]
+        budget = build(events)["budgets"][0]
+        self.assertEqual(budget["used"], 1)
+
+    def test_lead_without_own_grant_follows_grant_at_its_start(self):
+        events = [
+            self.grant(0, "lead-tech", 3, 1, phase="A"),
+            start(1, "L1", "lead-tech"),
+            start(2, "L2", "lead-tech"),  # A gehört L1; L2 hat keine eigene
+            self.grant(5, "lead-tech", 3, 1, phase="B"),
+            start(6, "L3", "lead-tech"),  # B gehört L3
+            spawn(8, "L2", "tech-sim-engineer"),
+            start(8, "w1", "tech-sim-engineer"),
+        ]
+        rows = {b["phase"]: b for b in build(events)["budgets"]}
+        self.assertEqual((rows["A"]["used"], rows["B"]["used"]), (1, 0))
+
+    def test_heartbeat_only_nodes_are_no_starts(self):
+        events = [
+            self.grant(0, "studio-director", 3, 1, phase="EFF"),
+            spawn(1, "main", "qa-code-reviewer"),
+            start(2, "w1", "qa-code-reviewer"),
+            ev("heartbeat", 3, agent_id="x1", tool="Read"),
+            ev("heartbeat", 4, agent_id="x2", tool="Read"),
+        ]
+        rows = [b for b in build(events)["budgets"] if b["lead"] == "studio-director"]
+        self.assertEqual([(r["phase"], r["used"], r["overrun"]) for r in rows], [("EFF", 1, False)])
+
+    def test_package_event_without_id_is_ignored(self):
+        events = [
+            ev("package", 1, agent_id="", source="log", package_id=None, title="X"),
+            ev("package", 2, agent_id="", source="log", title="Y", status="blocked"),
+            ev("package", 3, agent_id="", source="log", package="P9", title="Z"),
+        ]
+        self.assertEqual([b["id"] for b in build(events)["board"]], ["P9"])
+
     def test_board_blocks(self):
         events = [
             ev(
