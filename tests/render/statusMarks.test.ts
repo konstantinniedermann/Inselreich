@@ -7,6 +7,7 @@ import {
   type TileRange,
 } from '../../src/render/camera';
 import { spriteBounds } from '../../src/render/iso';
+import { isLit } from '../../src/render/daynight';
 import { PALETTE } from '../../src/render/palette';
 import { render } from '../../src/render/renderer';
 import {
@@ -196,5 +197,20 @@ describe('H-R3 Anschluss im Renderer', () => {
     expect(mark).toBeGreaterThan(mul);
     expect(log.saves).toBe(log.restores);
     expect(visibleTileRange(cam, VIEW, { w: world.width, h: world.height }).x1).toBeGreaterThan(kx);
+  });
+});
+
+describe('M11 Marke noForest (Spec 8)', () => {
+  it('AK-RND-03 noForest: eigene Marke (Form ≠ waitingInput), wird gezeichnet, gilt nachts als stillstehend', () => {
+    const m = statusMarkOf('noForest');
+    expect(m?.shape).toBe('stump');
+    expect(m!.shape).not.toBe(statusMarkOf('waitingInput')!.shape);
+    expect(m!.color).toBe(PALETTE.signalRed);
+    const world = worldWith([['lumberjack', 5, 5, 'noForest']]);
+    const { ctx, log } = fakeCtx();
+    expect(drawStatusMarks(ctx, world, camAt(world, 1), FULL, 0, true)).toBe(1);
+    expect(log.fillSet).toContain(PALETTE.signalRed);
+    const b = world.buildings[1001]!;
+    expect(isLit(BUILDING_DEFS.lumberjack, b)).toBe(false);
   });
 });

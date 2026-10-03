@@ -70,6 +70,7 @@ import {
   drawUnconnected,
 } from './overlays';
 import { drawErrandLoad, errandsFrom, tickClock, walkersLeft, type ErrandPose } from './errands';
+import { drawProgressRings } from './ring';
 import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
@@ -732,6 +733,7 @@ export function render(
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);
   drawStatusMarks(ctx, world, cam, range, fx.timeMs, reduce);
+  drawProgressRings(ctx, world, cam, range, tickClock(world, fx.timeMs).frac);
   if (import.meta.env.DEV) collectBadges(world, cam, range);
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];
