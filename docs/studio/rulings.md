@@ -1242,3 +1242,14 @@ Bericht beider Fixes und grünem make check ohne erneutes Final-Review (Diff-Sic
 Welle bis zum Session-Ende; H-R8 läuft zu Ende. — Kosten bei Irrtum: Nachbesserung Stufenkennung in M12.
 
 Entscheider: L0 · Anlass: Bericht lead-qa M11-QA · ADR: —
+
+## R200 · 2026-10-03 · Gate Merge M11
+
+Ruling: Gate Merge M11 „Wirtschaft im Fluss" bestanden: `feat/m11-ui` @ f19db1a (enthält sim, sources, upgrade,
+scen, render). Final-Review (opus) BEDENKEN ohne Blocker, QA-UI W7 bestanden; Auflagen R199 erfüllt: Stufe-3-Kennung
+(b928b9a, Rot-Beleg, Nachprüfung OK, Sichtprobe), Doku-Nachträge (39984a4). Diff seit Final-Review von L0 gesichtet
+(6 Dateien: README, beobachtungen, abdeckung, orga-12, sprites.ts + Test; keine Konfliktmarker). Merge seriell durch
+lead-production/production-integrator (`--no-ff`, make check, CI, Pages), danach Meilenstein M11 beenden. Retros
+M11 am Session-Ende. — Kosten bei Irrtum: Revert-Merge (Save v6 ist abwärts migrierend, alte Stände laden weiter).
+
+Entscheider: L0 · Anlass: Berichte lead-qa M11-QA, lead-art R2-Fix, C7 · ADR: —
