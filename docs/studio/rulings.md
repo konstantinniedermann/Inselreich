@@ -976,3 +976,14 @@ Playtest-Screenshots lesbar, `make check` grün). Annahmen des Kurzdesigns angen
 danach ist `renderer.ts` frei für H-R4 (R159). — Kosten bei Irrtum: Revert eines Commits.
 
 Entscheider: L0 · Anlass: Bericht H-R3 · ADR: —
+
+## R177 · 2026-10-03 · M10 Stufe 1 Sim abgeschlossen
+
+Ruling: (1) M10-S1C abgenommen (`feat/m10-sim` @ 14870ae; T03c, T04a–c Review OK je 1 Runde; BG-1
+winTick 6050, minMoney 57, balance-crises 6/6, PLAN-B9 grün). Die fünf Bestandstest-Umbauten ausserhalb
+der Ownership (R164 B3) und `tooltip.test.ts` Bauleiste 4 statt 3 sind angenommen (zwingende Folge der
+Amtsstube über U3, Sollwerte sonst gleich). (2) Budget gestuft (R164 B2) bleibt: T01e, T05 ff. erst nach
+dem Wochen-Reset (2026-10-07); lead-tech Rest 1 Start verfällt nicht, wird mit Stufe 2 verrechnet.
+(3) M10-A1 (lead-art, Symbolsatz, Stufe 1) startet nach H-R4. — Kosten bei Irrtum: M10 zwei Tage später.
+
+Entscheider: L0 · Anlass: Bericht M10-S1C · ADR: —
