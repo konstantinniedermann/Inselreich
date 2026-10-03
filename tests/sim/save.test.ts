@@ -574,7 +574,7 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     w.upgradeStops = [1];
     expect(loadOk(serialize(w))).toEqual(w);
   });
-  // Fixture erzeugt auf <BASIS> (= <SHA eintragen>) mit dem temporären Test gen-save-v4 (Plan M10 Task 1 Schritt 1):
+  // Fixture erzeugt auf <BASIS> (= 592df06) mit dem temporären Test gen-save-v4 (Plan M10 Task 1 Schritt 1):
   // Controller Seed 3, Krisen normal mit Feuerwache, angehalten bei Tick 4800, dann setTaxLevel(w, 'high').
   it('AK-S1-12 save-v4.json lädt als v5 mit abgeleiteter Freischaltung; alles andere unverändert', () => {
     const json = readFileSync('tests/sim/fixtures/save-v4.json', 'utf8');
