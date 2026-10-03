@@ -11,6 +11,7 @@ import { bodyFaces, drawBody, type BodyEnv } from './sprites';
 //   - `def` (w, h, id, category)                    → Schlüssel: def.id
 //   - `b.house.tier` (Wohnhaus-Stufe, Höhe/Dach)    → Schlüssel: Stufe (für Nicht-Häuser 0)
 //   - `b.x`, `b.y` nur als Ursprung der Projektion  → reine Verschiebung, nicht im Schlüssel
+//   - `b.level` (Ausbaustufe, M11 `drawLevelTopper`) → Schlüssel: Stufe, fehlend = 1
 //   - `env` (Wasserseiten des Kontors)              → Schlüssel: 4 Bits
 //   - Zoom und DPR (Kameraabbildung, Pixelraster)   → Schlüssel
 //   - Variante (H-R7, `variantOf(seed, x, y)`)      → Schlüssel; Töne und Zubehör, nie der Umriss
@@ -65,7 +66,8 @@ export function spriteKey(
       (env.waterU0 ? 4 : 0) |
       (env.waterV0 ? 8 : 0)
     : 0;
-  return `${def.id}|${tier}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}`;
+  const level = b.level ?? 1;
+  return `${def.id}|${tier}|${level}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}`;
 }
 
 interface Entry {

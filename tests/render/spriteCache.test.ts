@@ -50,6 +50,12 @@ describe('H-R6 AK1 Schlüssel', () => {
     expect(k(1)).not.toBe(k(1, 1, 1, {}, 1));
     expect(spriteKey(BUILDING_DEFS.market, mk('market'), {}, 1, 1, 0)).not.toBe(k(1));
   });
+  it('AK-RND-02 Cache-Schlüssel enthält level', () => {
+    const d = BUILDING_DEFS.fisher;
+    const k = (level?: 2 | 3) =>
+      spriteKey(d, { ...mk('fisher', 3, 4), ...(level ? { level } : {}) }, {}, 1, 1, 0);
+    expect(new Set([k(), k(2), k(3)]).size).toBe(3); // fehlendes level = Stufe 1
+  });
   it('AK1 Schlüssel ist positionsfrei (Silhouette liest b.x/b.y nur als Verschiebung)', () => {
     const d = BUILDING_DEFS.market;
     expect(spriteKey(d, mk('market', 1, 2), {}, 1, 1, 0)).toBe(

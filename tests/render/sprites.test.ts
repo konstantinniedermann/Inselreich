@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BODY_HEIGHTS,
   H_MAX,
   H_TOWER,
   ISO_H,
@@ -32,6 +33,8 @@ import {
   type LightAnchor,
 } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { LEVELS } from '../../src/sim/defs/levels';
+import { serialize } from '../../src/sim/save';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
 import { createWorld, idx } from '../../src/sim/world';
 import { fakeCtx, inHull, type P } from './fakeCtx';
@@ -475,8 +478,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
   });
 
   it('AK-R2-03 jede heutige BuildingDefId hat eine eigene Silhouette (M11 S2)', () => {
-    // hunter, cattlefarm: Silhouetten in R2; R2 entfernt den Filter
-    for (const id of Object.keys(BUILDING_DEFS).filter((i) => i !== 'hunter' && i !== 'cattlefarm'))
+    for (const id of Object.keys(BUILDING_DEFS))
       expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();
   });
 
@@ -1039,5 +1041,125 @@ describe('M8 R1 Silhouetten', () => {
     };
     const all = ['glassworks', 'bathhouse', 'distillery', 'toolmaker', 'chapel', 'school'] as const;
     expect(new Set(all.map(sig)).size).toBe(all.length);
+  });
+});
+
+describe('M11 Silhouetten und Stufen-Aufsatz (Spec 8)', () => {
+  const draw = (id: BuildingDefId, extra: Partial<Building> = {}) => {
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS[id], mk(id, 10, 10, extra), 0);
+    return log;
+  };
+  it('AK-RND-01 hunter, cattlefarm: eigene Höhe, in bodyHull (± 0,5 px), ≤ H_MAX, Pfad ≠ Fischer bzw. Schäferei', () => {
+    for (const [id, other] of [
+      ['hunter', 'fisher'],
+      ['cattlefarm', 'sheepfarm'],
+    ] as const) {
+      expect(BODY_HEIGHTS[id], id).toBeDefined();
+      const log = draw(id);
+      const hull = bodyHull(BUILDING_DEFS[id], mk(id));
+      for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5), id).toBe(true);
+      expect(bodyHeight(BUILDING_DEFS[id], mk(id))).toBeLessThanOrEqual(H_MAX);
+      expect(JSON.stringify(log.events)).not.toBe(JSON.stringify(draw(other).events));
+    }
+  });
+  it('AK-RND-02 je LEVELS-Typ: Stufe 1, 2, 3 verschieden, alles in bodyHull, keine Fensterfarben im Aufsatz; Welt unverändert', () => {
+    const glass = new Set([
+      mixHex(PALETTE.roofSlate, '#000000', 0.4),
+      mixHex(PALETTE.window, '#000000', 0.5),
+    ]);
+    const glassFills = (l: ReturnType<typeof draw>) =>
+      l.events.filter((e) => e.op === 'fill' && glass.has(e.style)).length;
+    const ids = Object.keys(LEVELS) as BuildingDefId[];
+    expect(ids).toHaveLength(11);
+    for (const id of ids) {
+      const logs = ([undefined, 2, 3] as const).map((level) => draw(id, level ? { level } : {}));
+      expect(new Set(logs.map((l) => JSON.stringify(l.events))).size, id).toBe(3);
+      for (const [i, l] of logs.entries()) {
+        const hull = bodyHull(
+          BUILDING_DEFS[id],
+          mk(id, 10, 10, i ? { level: (i + 1) as 2 | 3 } : {}),
+        );
+        for (const p of l.allPoints)
+          expect(inHull(hull, p.x, p.y, 0.5), `${id} ${i + 1}`).toBe(true);
+        expect(glassFills(l), `${id} ${i + 1}`).toBe(glassFills(logs[0]!));
+      }
+    }
+    const w = createWorld(3, { unlockAll: true });
+    const b = mk('fisher', 10, 10, { id: w.nextBuildingId++, level: 3 });
+    w.buildings[b.id] = b;
+    const before = serialize(w);
+    drawBody(fakeCtx().ctx, CAM, BUILDING_DEFS.fisher, b, 0);
+    expect(serialize(w)).toBe(before);
+  });
+});
+
+describe('M11 Abgrenzung kleiner Bauten', () => {
+  const N = 16;
+  const pointInPoly = (pts: readonly P[], x: number, y: number): boolean => {
+    let inside = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const a = pts[i]!,
+        b = pts[j]!;
+      if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x)
+        inside = !inside;
+    }
+    return inside;
+  };
+  /** Silhouetten-Rasterfüllung 16 x 16 über der Bildbox (Footprint-Raute bis H_MAX) und Ereignis-Hash. */
+  const shape = (id: BuildingDefId) => {
+    const def = BUILDING_DEFS[id];
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, def, mk(id), 0);
+    const top = project(10, 10),
+      left = project(10, 10 + def.h),
+      right = project(10 + def.w, 10),
+      bottom = project(10 + def.w, 10 + def.h);
+    const [x0, x1, y0, y1] = [left.x, right.x, top.y - H_MAX, bottom.y];
+    const polys = log.events.filter((e) => e.op === 'fill').map((e) => e.points);
+    const mask: boolean[] = [];
+    for (let j = 0; j < N; j++)
+      for (let i = 0; i < N; i++) {
+        const x = x0 + ((i + 0.5) * (x1 - x0)) / N,
+          y = y0 + ((j + 0.5) * (y1 - y0)) / N;
+        mask.push(polys.some((p) => pointInPoly(p, x, y)));
+      }
+    return { hash: JSON.stringify(log.events), mask };
+  };
+  const hamming = (a: boolean[], b: boolean[]): number => a.filter((v, i) => v !== b[i]).length;
+  const matrix = (ids: BuildingDefId[]) => {
+    const s = new Map(ids.map((id) => [id, shape(id)]));
+    const pairs: { a: BuildingDefId; b: BuildingDefId; d: number; same: boolean }[] = [];
+    for (const [i, a] of ids.entries())
+      for (const b of ids.slice(i + 1))
+        pairs.push({
+          a,
+          b,
+          d: hamming(s.get(a)!.mask, s.get(b)!.mask),
+          same: s.get(a)!.hash === s.get(b)!.hash,
+        });
+    return pairs;
+  };
+  // Kalibrierung am Ist-Stand (Hamming-Abstand der 16 x 16 Rasterfüllung, 256 Zellen): alte 1x1-Paare 11 (house-fisher,
+  // engste) bis 61; hunter zu den alten 1x1: 15 (house) bis 70; cattlefarm zu den 2x2: 13 (market, engste) bis 39.
+  // Schwelle alt >= 10 (knapp unter dem engsten Altpaar), neu >= 14 (1x1) bzw. >= 12 (2x2, grösseres Raster je Zelle).
+  const NEW = new Set<BuildingDefId>(['hunter', 'cattlefarm']);
+  const small = DEFS.filter((d) => d.w * d.h <= 2).map((d) => d.id);
+  const quad = DEFS.filter((d) => d.w * d.h === 4).map((d) => d.id);
+  it('M11 Abgrenzung kleiner Bauten (1x1): Aufzeichnung verschieden, Umriss >= 10 Zellen, neue Typen >= 14', () => {
+    const pairs = matrix(small);
+    expect(small).toEqual(expect.arrayContaining(['hunter', 'fisher', 'firestation']));
+    for (const p of pairs) {
+      expect(p.same, `${p.a}-${p.b}`).toBe(false);
+      expect(p.d, `${p.a}-${p.b}`).toBeGreaterThanOrEqual(NEW.has(p.a) || NEW.has(p.b) ? 14 : 10);
+    }
+  });
+  it('M11 Abgrenzung kleiner Bauten (2x2): cattlefarm weicht von jedem 2x2-Bau um >= 12 Zellen ab (engste Paarung Markt, 13)', () => {
+    const pairs = matrix(quad).filter((p) => p.a === 'cattlefarm' || p.b === 'cattlefarm');
+    expect(pairs.length).toBeGreaterThan(5);
+    for (const p of pairs) {
+      expect(p.same, `${p.a}-${p.b}`).toBe(false);
+      expect(p.d, `${p.a}-${p.b}`).toBeGreaterThanOrEqual(12);
+    }
   });
 });

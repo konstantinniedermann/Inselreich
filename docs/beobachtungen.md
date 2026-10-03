@@ -735,3 +735,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tests/sim` (balance-crises, balance-merchants, economy, merchants, scenario-saves, taxes, unlock-timeline, unlocks), `tests/ui/goal.test.ts`; `make check` dort rot.
 - Beobachtung: vom T01-Stand, nicht von R1; Plan erwartet das bis Neupin (T03, index.md:51). Vom Reviewer bestätigt.
 - Ursprung: M11-R1 (lead-art). Einschätzung: kein Handlungsbedarf, beim Merge nach T03 prüfen.
+
+## 2026-10-03 · M11-R2 · Abgrenzung kleiner Bauten (Auflage R195)
+
+- Fundort: `src/render/sprites.ts` (Silhouetten), Test «M11 Abgrenzung kleiner Bauten» in `tests/render/sprites.test.ts`.
+- Beobachtung: Hamming-Abstand der 16 x 16 Silhouetten-Rasterfüllung (256 Zellen). Kleine Bauten (w·h <= 2): house-fisher 11 (engste Paarung), house-hunter 15, fisher-hunter 18, house-lumberjack 21, fisher-lumberjack 20, fisher-quarry 23, lumberjack-quarry 25, hunter-quarry 27, hunter-lumberjack 30, house-quarry 32, lumberjack-firestation 40, quarry-firestation 45, fisher-firestation 58, house-firestation 61, hunter-firestation 70. Weberei und Schule sind 2x2, nicht klein. Rinderfarm gegen 2x2: market 13 (engste), toolmaker 16, bathhouse 19, sheepfarm/weaver/canefarm 21, school 24, distillery 27, kontor 28, chapel 30, glassworks 36, townhall 39. Die engste alte Paarung (Wohnhaus Stufe 1 gegen Fischerhütte) liegt bei 4,3 % der Zellen; Schwellen im Test: alt >= 10, neu >= 14 (1x1) bzw. >= 12 (2x2).
+- Ursprung: M11-R2. Einschätzung: alte Bauten nicht geändert (Variante-0-Referenz bleibt); Wohnhaus/Fischerhütte im Blindtest (QA-ART) beobachten, bei Verwechslung ein Dach- oder Farbakzent in eigenem Häppchen.

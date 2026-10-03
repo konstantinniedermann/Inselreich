@@ -139,7 +139,9 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 ### Karte lesen
 
 - **Gebäude** sind gezeichnete Körper mit Wänden und Dach; Dachfarbe und Form zeigen die Art. Wohnhäuser
-  wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden».
+  wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden». Jagdhütte und Rinderfarm haben eigene
+  Formen. Ausgebaute Betriebe tragen einen Anbau vorn links (Stufe 2) bzw. Anbau, Steinsockel und Fahne
+  (Stufe 3).
 - **Arbeitsanzeige:** Betriebe, die gerade produzieren, zeigen Rauch bzw. ein Arbeitszeichen; wartende,
   volle, brennende oder nicht angebundene Betriebe stehen still.
 - **Fortschrittsring und Marken:** Über jedem Betrieb zeigt ein Ring den Zyklus (grün, solange er läuft; grau
