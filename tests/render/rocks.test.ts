@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { createWorld } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import {
@@ -193,41 +194,22 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
           b.x < r.fp.x + r.fp.w && b.x + 3 > r.fp.x && b.y < r.fp.y + r.fp.h && b.y + 3 > r.fp.y,
         ).toBe(false);
   });
-  it('Tiefenordnung (Property): jedes Objekt, das nach einer Footprint-Achse vor/hinter dem Fels liegt, kommt danach/davor', () => {
-    const w = createWorld(WORLD_SEED, { unlockAll: true });
-    const rocks = rocksOf(w);
-    const sample = rocks.filter((_, i) => i % 5 === 0);
-    // Gebäude (3x3 würde überlappen: 1x1-Häuser) rund um die Fels-Footprints, nur auf Nicht-Gebirge
-    let id = 900;
-    const near = (r: Rock) => {
-      const out: [number, number][] = [];
-      for (let dy = -2; dy <= r.fp.h + 1; dy++)
-        for (let dx = -2; dx <= r.fp.w + 1; dx++) {
-          const x = r.fp.x + dx,
-            y = r.fp.y + dy;
-          const inside = dx >= 0 && dy >= 0 && dx < r.fp.w && dy < r.fp.h;
-          if (!inside && x >= 0 && y >= 0 && x < w.width && y < w.height) out.push([x, y]);
-        }
-      return out;
-    };
-    const movers: { kind: 'walker' | 'ship' | 'boat'; id: number; cx: number; cy: number }[] = [];
-    const kinds = ['walker', 'ship', 'boat'] as const;
-    let k = 0;
-    for (const r of sample)
-      for (const [x, y] of near(r)) {
-        movers.push({ kind: kinds[k++ % 3]!, id: ++id, cx: x + 0.5, cy: y + 0.5 });
-      }
+  /** Prüft für alle Felsen: wer nach einer Footprint-Achse eindeutig davor/dahinter liegt, kommt danach/davor. */
+  const expectDepthOrder = (
+    w: World,
+    rocks: Rock[],
+    movers: Parameters<typeof sortedObjects>[1],
+  ) => {
     const out = sortedObjects(w, movers);
     const pos = new Map<string, number>();
     out.forEach((it, i) => pos.set(`${it.kind}${it.id}`, i));
     let checked = 0;
-    for (const r of sample) {
+    for (const r of rocks) {
       const pr = pos.get(`rock${r.id}`)!;
       for (const it of out) {
         if (it === r || it.kind === 'rock') continue;
-        const dx = it.fp.x - r.fp.x,
-          dy = it.fp.y - r.fp.y;
-        if (Math.abs(dx) > r.fp.w + 3 || Math.abs(dy) > r.fp.h + 3) continue;
+        if (Math.abs(it.fp.x - r.fp.x) > r.fp.w + 4 || Math.abs(it.fp.y - r.fp.y) > r.fp.h + 4)
+          continue;
         const frontX = it.fp.x >= r.fp.x + r.fp.w - 1e-9,
           frontY = it.fp.y >= r.fp.y + r.fp.h - 1e-9;
         const backX = it.fp.x + it.fp.w <= r.fp.x + 1e-9,
@@ -242,7 +224,77 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
         }
       }
     }
-    expect(checked).toBeGreaterThan(200);
+    return checked;
+  };
+  it('Tiefenordnung (Property): Figuren, Schiffe und Boote auf allen Nachbarkacheln der Footprints', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const rocks = rocksOf(w);
+    const sample = rocks.filter((_, i) => i % 5 === 0);
+    let id = 900;
+    const movers: { kind: 'walker' | 'ship' | 'boat'; id: number; cx: number; cy: number }[] = [];
+    const kinds = ['walker', 'ship', 'boat'] as const;
+    let k = 0;
+    for (const r of sample)
+      for (let dy = -2; dy <= r.fp.h + 1; dy++)
+        for (let dx = -2; dx <= r.fp.w + 1; dx++) {
+          const x = r.fp.x + dx,
+            y = r.fp.y + dy;
+          const inside = dx >= 0 && dy >= 0 && dx < r.fp.w && dy < r.fp.h;
+          if (!inside && x >= 0 && y >= 0 && x < w.width && y < w.height)
+            movers.push({ kind: kinds[k++ % 3]!, id: ++id, cx: x + 0.5, cy: y + 0.5 });
+        }
+    expect(expectDepthOrder(w, sample, movers)).toBeGreaterThan(200);
+  });
+  it('Tiefenordnung (Property): eigene Gebäude (1x1, 2x2, Steinbruch auf Gebirgskachel) rund um 2x2-Blöcke und Einzelfelsen', () => {
+    const ref = rocksOf(createWorld(WORLD_SEED, { unlockAll: true })).filter((_, i) => i % 2 === 0);
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    let bid = 900;
+    const put = (defId: 'house' | 'quarry' | 'kontor', x: number, y: number): void => {
+      const d = BUILDING_DEFS[defId];
+      if (x < 0 || y < 0 || x + d.w > w.width || y + d.h > w.height) return;
+      const tiles = [];
+      for (let dy = 0; dy < d.h; dy++)
+        for (let dx = 0; dx < d.w; dx++) tiles.push(w.tiles[(y + dy) * w.width + x + dx]!);
+      if (tiles.some((t) => t.buildingId !== null)) return;
+      w.buildings[bid] = { id: bid, defId, x, y, connected: true, progress: 0, state: 'ok' };
+      for (const t of tiles) t.buildingId = bid;
+      w.nextBuildingId = ++bid;
+    };
+    const defs = ['house', 'quarry', 'kontor'] as const;
+    let k = 0;
+    for (const r of ref) {
+      // Ringposition rund um den Footprint (inkl. Gebirgskacheln selbst: Steinbruch am Berg)
+      const ring: [number, number][] = [];
+      for (let dy = -2; dy <= r.fp.h + 1; dy++)
+        for (let dx = -2; dx <= r.fp.w + 1; dx++) {
+          const inside = dx >= 0 && dy >= 0 && dx < r.fp.w && dy < r.fp.h;
+          if (!inside) ring.push([r.fp.x + dx, r.fp.y + dy]);
+        }
+      const [x, y] = ring[k % ring.length]!;
+      const def = defs[k++ % 3]!;
+      const d = BUILDING_DEFS[def];
+      const overlaps =
+        x < r.fp.x + r.fp.w && x + d.w > r.fp.x && y < r.fp.y + r.fp.h && y + d.h > r.fp.y;
+      if (!overlaps) put(def, x, y);
+    }
+    expect(Object.keys(w.buildings).length).toBeGreaterThan(40);
+    expect(
+      Object.values(w.buildings).some(
+        (b) => b.id >= 900 && w.tiles[b.y * w.width + b.x]!.terrain === 'mountain',
+      ),
+    ).toBe(true);
+    const rocks = rocksOf(w);
+    expect(expectDepthOrder(w, rocks, [])).toBeGreaterThan(200);
+    for (const r of rocks)
+      for (const b of Object.values(w.buildings)) {
+        const d = BUILDING_DEFS[b.defId];
+        expect(
+          b.x < r.fp.x + r.fp.w &&
+            b.x + d.w > r.fp.x &&
+            b.y < r.fp.y + r.fp.h &&
+            b.y + d.h > r.fp.y,
+        ).toBe(false);
+      }
   });
   it('rockOnScreen entspricht rockBounds samt Rand (Kamera ungleich 0, Kacheln mit x ungleich y)', () => {
     const view = { w: 800, h: 600 };
