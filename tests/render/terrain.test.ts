@@ -873,6 +873,49 @@ describe('H-R9 B2 Dünen', () => {
   });
 });
 
+describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
+  /** Grasfläche 960 × 960 px ohne Hangbeleuchtung (shade 0): mittlere Chroma (Lab) und Streuung der 24-px-Blockhelligkeit. */
+  const meadow = (seed: number): { chroma: number; patches: number } => {
+    const g0 = buildGrid(flat(40, 'grass', seed));
+    const g = { ...g0, shade: g0.shade.map(() => 0) };
+    const W = 960;
+    const px = paintPixels(g, 1, 160, 160, W, W);
+    const L = new Float32Array(W * W);
+    let ch = 0;
+    for (let i = 0; i < W * W; i++) {
+      const lab = rgbToLab([px[i * 4]!, px[i * 4 + 1]!, px[i * 4 + 2]!]);
+      L[i] = lab[0];
+      ch += Math.hypot(lab[1], lab[2]);
+    }
+    const B = 24,
+      blocks: number[] = [];
+    for (let by = 0; by < W / B; by++)
+      for (let bx = 0; bx < W / B; bx++) {
+        let s = 0;
+        for (let y = 0; y < B; y++)
+          for (let x = 0; x < B; x++) s += L[(by * B + y) * W + bx * B + x]!;
+        blocks.push(s / (B * B));
+      }
+    const mu = blocks.reduce((a, b) => a + b, 0) / blocks.length;
+    return {
+      chroma: ch / (W * W),
+      patches: Math.sqrt(blocks.reduce((a, b) => a + (b - mu) ** 2, 0) / blocks.length),
+    };
+  };
+  // main (93f420e) gemessen, gleiche Funktion: Chroma 48,75/48,01/48,35, Flecken 4,30/4,65/4,74 (Seeds 7/8/42)
+  const MAIN = { 7: [48.75, 4.3], 8: [48.01, 4.65], 42: [48.35, 4.74] } as const;
+
+  it('H-R9 R4 Chroma der Wiese ≥ main − 2 % (r3: 40,3/40,4/40,0)', () => {
+    for (const seed of [7, 8, 42] as const)
+      expect(meadow(seed).chroma, `Seed ${seed}`).toBeGreaterThanOrEqual(0.98 * MAIN[seed][0]);
+  }, 60_000);
+
+  it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43)', () => {
+    for (const seed of [7, 8, 42] as const)
+      expect(meadow(seed).patches, `Seed ${seed}`).toBeGreaterThanOrEqual(MAIN[seed][1]);
+  }, 60_000);
+});
+
 describe('H-R9 R3 Dünen in Teilbereichen', () => {
   it('H-R9 R3 Dünen: im Mittel 40–60 % des Strands ohne Dünen (je Seed 30–70 %), einzelne Kuppen statt Bänder', () => {
     let offSum = 0;
