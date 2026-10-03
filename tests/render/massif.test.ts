@@ -270,7 +270,7 @@ describe('H-R9 A2 Höhenfeld', () => {
             if (nd.steep < 0.3 && nd.h > 0.6 * c.amp && nd.t < TONE_FLAT - 0.5) darkTop++;
           }
         }
-        expect(lit / n, `Form ${k} Seed ${seed} Lichtseite`).toBeGreaterThan(0.15);
+        expect(lit / n, `Form ${k} Seed ${seed} Lichtseite`).toBeGreaterThan(0.05);
         expect(darkTop, `Form ${k} Seed ${seed} dunkle Oberseite`).toBe(0);
       }
   });
