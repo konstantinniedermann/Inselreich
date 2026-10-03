@@ -5,7 +5,7 @@ import { tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { PALETTE, rgbOfCss } from './palette';
-import { VARIANT_LOOKS, type Mix } from './variants';
+import { VARIANT_LOOKS, keepSaturation, type Mix } from './variants';
 
 /** Mischt zwei CSS-Farben (`#rrggbb` oder `rgb(r,g,b)`, also auch bereits gemischte Töne). */
 function mixHex(a: string, b: string, t: number): string {
@@ -81,7 +81,8 @@ export class IsoPainter {
     if (!mix) return color;
     const k = `${color}|${mix[0]}|${mix[1]}`;
     let c = this.tones.get(k);
-    if (c === undefined) this.tones.set(k, (c = mixHex(color, mix[0], mix[1])));
+    if (c === undefined)
+      this.tones.set(k, (c = keepSaturation(color, mixHex(color, mix[0], mix[1]))));
     return c;
   }
   get look() {

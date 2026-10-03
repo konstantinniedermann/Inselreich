@@ -1,5 +1,5 @@
 import { hash2 } from '../sim/noise';
-import { PALETTE } from './palette';
+import { PALETTE, rgbOfCss } from './palette';
 
 // variants.ts — Gebäudevarianten (H-R7, G1). Reine Daten und Funktionen, kein DOM, kein Zufall ausser `hash2`.
 // Art Direction: Die Silhouette ist die Identität, die Oberfläche trägt die Varianz. Eine Variante ändert nur
@@ -58,9 +58,33 @@ export const VARIANT_LOOKS: readonly VariantLook[] = [
     shutters: PALETTE.roofCopper,
   },
   {
-    wall: [PALETTE.earth, 0.18],
+    wall: [PALETTE.earth, 0.22],
     roof: [PALETTE.earth, 0.24],
     chimney: ['#ffffff', 0.25],
     shutters: null,
   },
 ];
+
+/** Anteil der Sättigung (HSV) des Ausgangstons, den eine Variante mindestens behält (Typ-Identität, Blindtest H-R7). */
+export const KEEP_SATURATION = 0.9;
+
+const hsvSat = (r: number, g: number, b: number): number => {
+  const mx = Math.max(r, g, b);
+  return mx === 0 ? 0 : (mx - Math.min(r, g, b)) / mx;
+};
+
+/**
+ * Holt die Sättigung eines gemischten Tons auf mindestens `KEEP_SATURATION` der Sättigung des Ausgangstons zurück
+ * (Helligkeit bleibt), damit Mischen mit Weiss oder Erde kräftige Töne nicht auswäscht.
+ */
+export function keepSaturation(orig: string, mixed: string): string {
+  const o = rgbOfCss(orig),
+    m = rgbOfCss(mixed);
+  const so = hsvSat(o[0]!, o[1]!, o[2]!),
+    sm = hsvSat(m[0]!, m[1]!, m[2]!);
+  const target = so * KEEP_SATURATION;
+  if (sm >= target || sm === 0) return mixed;
+  const mx = Math.max(m[0]!, m[1]!, m[2]!);
+  const k = target / sm;
+  return `rgb(${m.map((c) => Math.min(255, Math.max(0, Math.round(mx - (mx - c) * k)))).join(',')})`;
+}
