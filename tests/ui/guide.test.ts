@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../../src/render/palette';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { idx } from '../../src/sim/world';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
+import { createWorld } from '../../src/sim/world';
+import { houseFar } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
 type Extra = 'chapel' | 'weaver' | 'sheepfarm';
@@ -216,6 +219,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (b) won, Steinbruch und Holzfäller, keine Glashütte → Glashütte bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'quarry');
     addDirect(w, 'lumberjack');
     expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O)');
@@ -223,12 +227,14 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (c) wie (b) ohne Steinbruch → Glashütte und Steinbruch für Stein', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'lumberjack');
     expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O) und Steinbruch (B) für Stein');
   });
   it('AK-U2-08 (d) won, Glas-Kette steht, kein Badehaus → Badehaus bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
     expectStep(w, 'Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe');
   });
@@ -239,6 +245,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     let s: string;
     try {
       TIERS[4].unlockCitizens = 40;
+      w.unlocked = deriveUnlocks(w);
       s = nextStep(w);
     } finally {
       TIERS[4].unlockCitizens = null;
@@ -255,6 +262,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (h) won, Glashütte steht, Steinbruch fehlt → Steinbruch bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'glassworks');
     addDirect(w, 'lumberjack');
     expectStep(w, 'Glashütte braucht Stein: baue Steinbruch (B)');
@@ -278,9 +286,12 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     quarry.state = 'storageFull';
     expect(w.won).toBe(false);
     expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    const beforeGoal = w.unlocked;
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
     w.won = false;
+    w.unlocked = beforeGoal;
     const lj = addDirect(w, 'lumberjack');
     lj.state = 'storageFull';
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
@@ -301,5 +312,18 @@ describe('M8 U2 Kartenzeichen (P3)', () => {
     expect(row.sign).toMatch(/Glocke/);
     expect(row.sign).toMatch(/Buch/);
     expect(row.color).toBeNull();
+  });
+});
+
+describe('M10 nextStep-Filter (Spec 12.3)', () => {
+  it('AK-S1-19 gesperrter Marktplatz: „Marktplatz kommt, …"; mit U1 wörtlich wie heute', () => {
+    const w = createWorld(3);
+    const far = houseFar(w); // Haus ausserhalb der Versorgung, roh gesetzt (tests/sim/helpers.ts)
+    expect(far.house).toBeDefined();
+    expect(nextStep(w)).toBe('Marktplatz kommt, sobald 20 Wohnhäuser stehen');
+    w.unlocked = ['U0', 'U1'];
+    expect(nextStep(w)).toBe(
+      'Ein Wohnhaus liegt ausserhalb der Versorgung: baue einen Marktplatz (M)',
+    );
   });
 });

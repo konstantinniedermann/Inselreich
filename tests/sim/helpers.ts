@@ -56,11 +56,7 @@ export function placeService(
   world.money = 1_000_000;
   for (const good of Object.keys(world.stock) as (keyof typeof world.stock)[])
     world.stock[good] = 100;
-  // S11: Gebäude mit `unlockTier` (Badehaus) baut der Testaufbau auch vor dem Sieg; `won` danach wie vorher
-  const won = world.won;
-  if (BUILDING_DEFS[defId].unlockTier !== undefined) world.won = true;
   const r = placeBuilding(world, defId, x, y);
-  world.won = won;
   if (!r.ok || r.id === undefined) throw new Error(`${defId} not placed`);
   world.money = money;
   world.stock = stock;

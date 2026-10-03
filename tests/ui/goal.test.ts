@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
 import { goalView, type GoalView } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
@@ -86,6 +87,7 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
     const prevSnap = soundSnapshot(before);
     const w = createWorld(3);
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     w.wonMerchants = true;
     const r = goalBanners(shown, w);
     expect(r.texts).toEqual([FIRST_GOAL_BANNER, SECOND_GOAL_BANNER]);
@@ -102,6 +104,7 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
   it('RF-4 zweites Ziel allein nach gezeigtem ersten: nur das zweite Banner, danach keines', () => {
     const w = createWorld(3);
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     const shown = initialGoalShown(w);
     expect(shown).toEqual({ wonShown: true, wonMerchantsShown: false });
     w.wonMerchants = true;
@@ -112,12 +115,13 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
 });
 
 describe('M8 U1 Freischaltung (Änderung S11)', () => {
-  it('AK-U1-09 lockedToolText: gesperrt mit Grund, frei oder ohne unlockTier null', () => {
+  it('AK-U1-09 lockedToolText: gesperrt mit Grund, frei oder ohne Sperre null', () => {
     const w = createWorld(3);
     expect(lockedToolText(w, 'bathhouse')).toBe('Badehaus: Erst nach dem Ziel (50 Bürger)');
     expect(lockedToolText(w, 'glassworks')).toBe('Glashütte: Erst nach dem Ziel (50 Bürger)');
     expect(lockedToolText(w, 'house')).toBeNull();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(lockedToolText(w, 'bathhouse')).toBeNull();
     expect(lockedToolText(w, 'glassworks')).toBeNull();
   });
@@ -126,6 +130,7 @@ describe('M8 U1 Freischaltung (Änderung S11)', () => {
     expect(unlockNotice(true, w)).toBeNull();
     expect(unlockNotice(false, w)).toBeNull();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(unlockNotice(true, w)).toBe(
       'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
     );
@@ -136,6 +141,7 @@ describe('M8 U1 Freischaltung (Änderung S11)', () => {
     const w = createWorld(3);
     expect(initialUnlockShown(w)).toBe(false); // gesperrt: Meldung kommt später genau einmal
     w.won = true; // wie m8-kurz-vor-handelsstadt nach dem Laden
+    w.unlocked = deriveUnlocks(w);
     expect(initialUnlockShown(w)).toBe(true);
     expect(unlockNotice(!initialUnlockShown(w), w)).toBeNull();
   });

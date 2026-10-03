@@ -200,7 +200,6 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     flammable: true,
     service: 'bath',
     serviceRadius: 10,
-    unlockTier: 4,
     site: [],
   },
   glassworks: {
@@ -216,7 +215,6 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     consumes: ['stone', 'wood'],
     cycle: 50,
     site: [],
-    unlockTier: 4, // Änderung S11: baubar erst ab Freischaltung der Stufe 4
   },
 };
 export const BUILDING_IDS = Object.keys(BUILDING_DEFS) as BuildingDefId[];

@@ -2,6 +2,7 @@ import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/de
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
 import { buildLock } from '../sim/placement';
+import { entryOfBuilding } from '../sim/unlocks';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -108,12 +109,15 @@ export function tooltipLines(tool: Tool): string[] {
 }
 
 /**
- * Stufen-Zeile (M8 4.3 Punkt 4, Änderung S11): für welche Stufe das Gebäude freigeschaltet wird, aus
- * `def.unlockTier`; ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht. `null` ohne `unlockTier`.
+ * Stufen-Zeile (M8 4.3 Punkt 4): für welche Stufe das Gebäude freigeschaltet wird, aus dem Freischalt-Eintrag
+ * (Auslöser `tierOpen`); ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht.
+ * `null` für Gebäude anderer Einträge. Task 6 ersetzt die Zeile durch den Freischalt-Hinweis.
  */
 export function tierPreviewLine(defId: BuildingDefId): string | null {
-  const tier = BUILDING_DEFS[defId].unlockTier;
-  return tier === undefined ? null : `Für ${TIERS[tier].name} (Stufe ${tier})`;
+  const t = entryOfBuilding(defId)?.trigger;
+  return t === undefined || t.kind !== 'tierOpen'
+    ? null
+    : `Für ${TIERS[t.tier].name} (Stufe ${t.tier})`;
 }
 
 let tooltipCounter = 0;

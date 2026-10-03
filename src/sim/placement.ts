@@ -1,8 +1,8 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { BuildingDefId, Result, SiteRule, Terrain, World } from './types';
 import { fail, ok } from './types';
-import { tierLock } from './population';
 import { inSupplyRange } from './supply';
+import { buildLock } from './unlocks';
 import { adjacentOf, center, inBounds, isLand, tileAt, tilesInRadius, type Pos } from './world';
 
 // Karte -> Bauland -> frei, für ein w×h-Rechteck ab (x, y).
@@ -62,11 +62,7 @@ export function canPlaceRoad(world: World, x: number, y: number): Result {
   return checkGround(world, x, y, 1, 1);
 }
 
-/** Bausperre (M8 4.3, Änderung S11): Sperrgrund der Stufe `unlockTier` oder null; ohne `unlockTier` sofort null. */
-export function buildLock(world: World, defId: BuildingDefId): string | null {
-  const tier = BUILDING_DEFS[defId].unlockTier;
-  return tier === undefined ? null : tierLock(world, tier);
-}
+export { buildLock } from './unlocks';
 
 export function canPlace(world: World, defId: BuildingDefId, x: number, y: number): Result {
   const lock = buildLock(world, defId);

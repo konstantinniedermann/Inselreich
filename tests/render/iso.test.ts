@@ -46,7 +46,7 @@ const mkBuilding = (id: number, defId: Building['defId'], x: number, y: number):
 
 /** Welt mit freier Grasfläche östlich des Kontors (Versorgungsradius), Geld im Überfluss. */
 function buildWorld(): { world: World; o: Pt } {
-  const world = createWorld(3);
+  const world = createWorld(3, { unlockAll: true });
   const k = world.buildings[world.kontorId]!;
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');
@@ -134,7 +134,7 @@ describe('Tiefe', () => {
 
 describe('Radius', () => {
   it('AK-ISO-07 Ellipse = Sim-Metrik (tilesInRadius) für jede Kachel, ausser |d − r| ≤ 1e-9', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     for (const r of [2, 3.5, 6, 8])
       for (const [cx, cy] of [
         [10, 10],
@@ -206,7 +206,7 @@ describe('Picking', () => {
   });
 
   it('AK-ISO-08 Negativfall: nur über Baumstempel, Schiff oder Figur → null; in keiner Hülle → null', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     const hulls = buildingHulls(world);
     const items = sortedObjects(world, [
       { kind: 'ship', id: 1, cx: 3.5, cy: 3.5 },
@@ -232,7 +232,7 @@ describe('Picking', () => {
 
 describe('Sortierung und Cache', () => {
   it('AK-ISO-21 sortedObjects mischt bewegte Objekte ein; Gleichstand: Baum < Gebäude < Schiff < Boot < Figur, dann Id', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     const t0 = sortedObjects(world).find((i) => i.kind === 'tree')!;
     const [tx, ty] = [t0.fp.x, t0.fp.y];
     // Gebäude mit niedriger Id auf derselben Kachel wie der Baum (Kachel bewusst nicht belegt)

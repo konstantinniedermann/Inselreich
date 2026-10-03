@@ -20,7 +20,7 @@ import { createWorld } from '../../src/sim/world';
 
 /** Seed-3-Welt, Krisen aus, Lager für Glas leer gestartet; Tick 1000 (keine Krisenperiode, kein Auftragsstart). */
 function base(): World {
-  const w = createWorld(3);
+  const w = createWorld(3, { unlockAll: true });
   w.tick = 1000;
   w.stock = { ...w.stock, stone: 0, wood: 0, glass: 0 };
   return w;

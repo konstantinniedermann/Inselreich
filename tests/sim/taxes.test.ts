@@ -48,7 +48,7 @@ function addHouse(world: World, tier: Tier, inhabitants: number, met: boolean): 
 }
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
 });
 
 describe('totalTaxes', () => {
@@ -231,7 +231,7 @@ describe('tax levels', () => {
   });
   it('AK-S1-06 niedrig steigt ab 150 Ticks auf, normal erst ab 300', () => {
     const firstUpgradeTick = (level: string): number => {
-      const world = createWorld(3);
+      const world = createWorld(3, { unlockAll: true });
       colony(world);
       const h = readyHouse(world, 1, 4, 0);
       if (level !== 'normal') expect(setTaxLevel(world, level).ok).toBe(true);

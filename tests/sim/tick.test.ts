@@ -37,7 +37,7 @@ function citizenHouse(world: World, inhabitants: number): Building {
 }
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
 });
 
 describe('checkWin', () => {
@@ -118,7 +118,7 @@ describe('step order: Markt und Aufträge', () => {
 
 describe('M6 step: Krisen', () => {
   it('AK-S1-13 Krisen laufen nach dem Sieg weiter, won bleibt true', () => {
-    const world = createWorld(3, { crisisLevel: 'normal' });
+    const world = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     world.won = true;
     const at = new Map<number, unknown>();
     while (world.tick < 3600) {

@@ -10,7 +10,7 @@ import { SCENARIOS } from './scenarios';
 
 describe('M5 15-Minuten-Nachweis', () => {
   it('AK-B1-02 genau 10 Aufträge in 9000 Ticks ohne Eingriff', () => {
-    const w = createWorld(3);
+    const w = createWorld(3, { unlockAll: true });
     const seen = new Map<number, number>();
     for (let i = 0; i < 9000; i++) {
       step(w);

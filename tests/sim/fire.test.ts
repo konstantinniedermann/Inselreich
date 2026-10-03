@@ -18,7 +18,7 @@ let ky: number;
 
 /** Seed 3, Stufe normal; Gras östlich des Kontors, Hauptweg (kx+2 … kx+13, ky). */
 beforeEach(() => {
-  w = createWorld(3, { crisisLevel: 'normal' });
+  w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
   const k = w.buildings[w.kontorId]!;
   kx = k.x;
   ky = k.y;
@@ -261,7 +261,7 @@ describe('M6 Brand und Feuerwache', () => {
     run(w, 200);
     expect(d.state).toBe('notConnected');
 
-    w = createWorld(3, { crisisLevel: 'normal' });
+    w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     const k = w.buildings[w.kontorId]!;
     kx = k.x;
     ky = k.y;

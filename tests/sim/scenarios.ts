@@ -26,6 +26,7 @@ import type {
   Tier,
   World,
 } from '../../src/sim/types';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
 import { verdeckung } from './scenarios-iso';
@@ -46,18 +47,9 @@ function withFunds<T>(w: World, fn: () => T): T {
   }
 }
 
-/**
- * Baut Gebäude mit `unlockTier` vor der Freischaltung: `won` für `fn` kurz true, danach zurück. Nur für die
- * Bildergalerie (`galerie`, Spec 18.1); der Zustand „Bad oder Hütte ohne Sieg" ist im Spiel nicht erreichbar.
- */
-function withUnlock<T>(w: World, fn: () => T): T {
-  const won = w.won;
-  w.won = true;
-  try {
-    return fn();
-  } finally {
-    w.won = won;
-  }
+/** Spec 10: am Ende jedes Szenarios gilt, was die gebaute Welt rechtfertigt (`unlockAll` nur zum Bauen). */
+export function finishUnlocks(w: World): void {
+  w.unlocked = deriveUnlocks(w);
 }
 
 function road(w: World, x: number, y: number): void {
@@ -127,7 +119,7 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
 
 /** Seed-3-Welt mit Gras östlich des Kontors: x = kx+2 … kx+19, y = ky-9 … ky+9. Liefert die Kontor-Koordinaten. */
 function baseWorld(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number } {
-  const w = createWorld(SEED, { crisisLevel: level });
+  const w = createWorld(SEED, { crisisLevel: level, unlockAll: true });
   const k = w.buildings[w.kontorId]!;
   forceRect(w, k.x + 2, k.y - 9, 18, 19, 'grass');
   return { w, kx: k.x, ky: k.y };
@@ -209,7 +201,7 @@ function autosaveLauf(): World {
 }
 
 function auftrag(): World {
-  const w = createWorld(SEED);
+  const w = createWorld(SEED, { unlockAll: true });
   w.tick = 595;
   w.stock.wood = 50;
   w.stock.food = 30;
@@ -272,8 +264,8 @@ function galerie(): World {
   put(w, 'quarry', kx + 7, ky + 1);
   put(w, 'toolmaker', kx + 9, ky + 1);
   put(w, 'firestation', kx + 13, ky + 1); // M6-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
-  withUnlock(w, () => put(w, 'bathhouse', kx + 11, ky + 1)); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
-  withUnlock(w, () => put(w, 'glassworks', kx + 15, ky + 1)); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'bathhouse', kx + 11, ky + 1); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'glassworks', kx + 15, ky + 1); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;
@@ -551,12 +543,12 @@ function m8KaufleuteOhneGlas(): World {
 
 /** M8 AK-U2-07: Glas 10, Verkaufsanteil Glas 100 (Startwert). */
 function m8Handel(): World {
-  const w = createWorld(SEED);
+  const w = createWorld(SEED, { unlockAll: true });
   w.stock.glass = 10;
   return w;
 }
 
-export const SCENARIOS: Record<string, () => World> = {
+const RAW_SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
   'lager-holz-99': lagerHolz99,
@@ -585,6 +577,25 @@ export const SCENARIOS: Record<string, () => World> = {
   'm8-kaufleute-ohne-glas': m8KaufleuteOhneGlas,
   'm8-handel': m8Handel,
 };
+
+/**
+ * Ohne Nachbearbeitung: `verdeckung` (Welt aus `scenarios-iso.ts`, dort nicht Teil von Task 2; ein Test vergleicht sie
+ * mit dem Original) und `auftrag` (bleibt „Alles frei", damit der Auftrag lieferbar ist, Spec 4.4).
+ */
+const KEEP_UNLOCKS = new Set(['verdeckung', 'auftrag']);
+
+export const SCENARIOS: Record<string, () => World> = Object.fromEntries(
+  Object.entries(RAW_SCENARIOS).map(([name, build]) => [
+    name,
+    KEEP_UNLOCKS.has(name)
+      ? build
+      : (): World => {
+          const w = build();
+          finishUnlocks(w);
+          return w;
+        },
+  ]),
+);
 
 /**
  * Schreibt je Szenario `<out>/<name>.json` über `write` und liefert die Anzahl. Ohne `out` passiert

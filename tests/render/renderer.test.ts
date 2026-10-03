@@ -116,7 +116,7 @@ const isRoadStroke = (e: Ev): boolean =>
 
 /** Welt mit Kontor, Haus, Markt, Weberei (roh gesetzt, raucht) und einem Weg (ISO §5: Wege vor den Körpern). */
 function scene(): { world: World; ids: Record<string, number> } {
-  const world = createWorld(3);
+  const world = createWorld(3, { unlockAll: true });
   const k = world.buildings[world.kontorId]!;
   forceRect(world, k.x + 3, k.y + 3, 6, 6, 'grass');
   world.money = 100000;

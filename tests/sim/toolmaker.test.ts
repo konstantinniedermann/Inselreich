@@ -26,7 +26,7 @@ function placeToolmaker(): Building {
 }
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
   k = w.buildings[w.kontorId]!;
 });
 

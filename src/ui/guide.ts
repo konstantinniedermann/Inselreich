@@ -5,6 +5,7 @@ import { GOOD_IDS, GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
+import { entryOfBuilding, unlockText } from '../sim/unlocks';
 import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
   Building,
@@ -30,6 +31,17 @@ export const producerOf = (g: GoodId): BuildingDefId | undefined =>
 export const consumerOf = (g: GoodId): BuildingDefId | undefined =>
   BUILDING_IDS.find((id) => BUILDING_DEFS[id].consumes?.includes(g) === true);
 
+/** Spec 12.3: Nennt ein Satz ein gesperrtes Gebäude, lautet er „{Name} kommt, {whenText}". */
+function lockedSentence(w: World, ids: readonly (BuildingDefId | undefined)[]): string | null {
+  for (const id of ids) {
+    if (id === undefined) continue;
+    const e = entryOfBuilding(id);
+    if (e !== null && buildLock(w, id) !== null)
+      return `${nm(id)} kommt, ${unlockText(e, 'whenText')}`;
+  }
+  return null;
+}
+
 /** Satz zu einem fehlenden Gut, oder null, wenn Erzeuger und Vorstufe stehen (dann weiterschalten). */
 function goodSentence(w: World, tierName: string, g: GoodId): string | null {
   const p = producerOf(g);
@@ -40,8 +52,14 @@ function goodSentence(w: World, tierName: string, g: GoodId): string | null {
   });
   const q = input !== undefined ? producerOf(input) : undefined;
   if (!has(w, p)) {
+    const locked = lockedSentence(w, [p, q]);
+    if (locked) return locked;
     const base = `Deine ${tierName} brauchen ${GOODS[g].name}: baue ${nk(p)}`;
     return q ? `${base} und ${nk(q)} für ${GOODS[input!].name}` : base;
+  }
+  if (q) {
+    const lockedQ = lockedSentence(w, [q]);
+    if (lockedQ) return lockedQ;
   }
   if (q) return `${nm(p)} braucht ${GOODS[input!].name}: baue ${nk(q)}`;
   return null;
@@ -66,7 +84,10 @@ export function nextStep(w: World): string {
   for (const h of houses)
     for (const d of houseDiagnosis(w, h)) {
       if (d.kind === 'supply')
-        return `Ein Wohnhaus liegt ausserhalb der Versorgung: baue einen ${nk('market')}`;
+        return (
+          lockedSentence(w, ['market']) ??
+          `Ein Wohnhaus liegt ausserhalb der Versorgung: baue einen ${nk('market')}`
+        );
       if (d.kind === 'good') {
         const s = goodSentence(w, TIERS[h.house!.tier].name, d.good);
         if (s) return s;
@@ -83,6 +104,10 @@ export function nextStep(w: World): string {
   // Regel 4: Dienste
   const serviceSentence = (tierName: string, s: ServiceId): string | null => {
     const id = SERVICE_BUILDING[s];
+    if (!has(w, id)) {
+      const locked = lockedSentence(w, [id]);
+      if (locked) return locked;
+    }
     return has(w, id) ? null : `Deine ${tierName} brauchen ${nm(id)}: baue ${nk(id)} in ihrer Nähe`;
   };
   for (const h of houses)

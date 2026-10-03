@@ -31,7 +31,7 @@ interface Town {
  * von Hand gesetzt. Tick 449: der nächste Schritt ist der Wachstumstakt 450 (≡ 50 mod 100, keine Buchung).
  */
 function town(houseCount: number): Town {
-  const w = createWorld(3);
+  const w = createWorld(3, { unlockAll: true });
   const k = w.buildings[w.kontorId]!;
   const houses: Building[] = [];
   for (let i = 0; i < houseCount; i++) {
@@ -381,7 +381,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
 
   it('AK-S3-08 Freischaltung im Siegtick: bei W − 1 Badehaus gesperrt, ab W Bad und Hütte frei, merchants 0 bei W', () => {
     // Änderung S11: Welt wie m8-kurz-vor-sieg, ohne Badehaus (vorher „Vorbereitung zahlt sich aus")
-    const w = createWorld(3);
+    const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[w.kontorId]!;
     const at: [number, number, number][] = [
       [k.x + 2, k.y - 6, 15],
@@ -417,6 +417,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
       cloth: 100,
       rum: 100,
     };
+    w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // alles ausser U6, wie M8 vor dem Ziel
     expect(citizens(w)).toBe(49);
     expect(canPlace(w, 'bathhouse', spot.x, spot.y)).toEqual(fail('Erst nach dem Ziel'));
     expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');

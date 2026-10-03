@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
 import { SCENARIOS } from '../sim/scenarios';
@@ -63,6 +64,8 @@ describe('M8 U1 Kopfzeile', () => {
     expect(popChipHidden(w, 4)).toBe(true);
     for (const tier of [1, 2, 3] as const) expect(popChipHidden(w, tier)).toBe(false);
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    w.unlocked = deriveUnlocks(w);
     expect(popChipHidden(w, 4)).toBe(false);
   });
 
@@ -75,6 +78,8 @@ describe('M8 U1 Kopfzeile', () => {
     expect(stockChipHidden(w, 'glass')).toBe(false);
     w.stock.glass = 0;
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    w.unlocked = deriveUnlocks(w);
     expect(stockChipHidden(w, 'glass')).toBe(false);
   });
 });
