@@ -224,8 +224,14 @@ export class FakeCtx {
   clearRect(): void {
     this.ev('clearRect', '', []);
   }
-  drawImage(): void {
-    this.ev('drawImage', '', []);
+  /** Protokolliert das Zielrechteck (obere linke und untere rechte Ecke in Bildpunkten), falls angegeben (H-R9). */
+  drawImage(_img?: unknown, ...a: number[]): void {
+    const d = a.length >= 8 ? a.slice(4, 8) : a.length >= 4 ? a.slice(0, 4) : null;
+    this.ev(
+      'drawImage',
+      '',
+      d ? [this.apply(d[0]!, d[1]!), this.apply(d[0]! + d[2]!, d[1]! + d[3]!)] : [],
+    );
   }
   setLineDash(): void {}
   /** Verlauf als Objekt, dessen Textform die Farbstopps nennt (`gradient(a|b)`), damit Tests Füllungen erkennen. */
