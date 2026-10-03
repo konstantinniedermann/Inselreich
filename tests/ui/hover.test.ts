@@ -10,7 +10,7 @@ import type { Building, BuildingDefId, BuildingState, Order, World } from '../..
 import { friendlyReason } from '../../src/ui/hints';
 import { hoverInfo, hoverPosition, hoverVisible, type HoverState } from '../../src/ui/hover';
 import { protectedCount } from '../../src/ui/inspect';
-import { forceGrass, forceRect, placeService, setHouse, village } from '../sim/helpers';
+import { forceGrass, forceRect, houseFar, placeService, setHouse, village } from '../sim/helpers';
 
 const rainWeather = (): Weather => ({ kind: 'rain', w: 1 });
 
@@ -151,6 +151,8 @@ describe('M10 Mouse-over (Spec 13)', () => {
       expect(JSON.stringify(i)).not.toMatch(/Tick/);
     }
   });
+  // Der erste Teil ist absichtlich tautologisch (gleiche Funktion, gleiche Argumente); die echte Absicherung der
+  // Umgebung liegt in tests/render/renderer.test.ts (wildlifeEnvOf). Hier zählt: hoverInfo bricht ohne Treffer nicht.
   it('AK-U3-06 Tiere: ohne Abfrage-Treffer bricht nichts; gleiche env wie der Renderer (Regen, reduziert)', () => {
     const w = createWorld(3);
     const range = { x0: 0, y0: 0, x1: w.width - 1, y1: w.height - 1 };
@@ -169,6 +171,88 @@ describe('M10 Mouse-over (Spec 13)', () => {
       );
     }
     expect(hoverInfo(w, { x: 0, y: 0 }, 0, { ship: false, animal: null })).not.toBeNull();
+  });
+  it('Spec 13.2 Dienst: Einzahl, Schule und Badehaus, nicht angebunden und brennend', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    const at = (dx: number, dy: number): [number, number] => [k.x + dx, k.y + dy];
+    const chapel = raw(w, 'chapel', ...at(4, 10));
+    raw(w, 'house', ...at(6, 10)).house = newHouseState(w);
+    expect(hoverInfo(w, chapel, 0, none)!.lines).toEqual(['versorgt 1 Haus']); // Abweichung von Spec 13.2 (Einzahl)
+    const w2 = createWorld(3, { crisisLevel: 'off', unlockAll: true }); // ohne Haus in Reichweite
+    const k2 = w2.buildings[w2.kontorId]!;
+    const school = raw(w2, 'school', k2.x + 4, k2.y + 14);
+    expect(hoverInfo(w2, school, 0, none)).toEqual({
+      title: 'Schule',
+      lines: ['versorgt 0 Häuser'],
+    });
+    school.connected = false;
+    expect(hoverInfo(w2, school, 0, none)!.lines).toEqual([
+      'versorgt 0 Häuser',
+      'nicht angebunden',
+    ]);
+    const bath = raw(w2, 'bathhouse', k2.x + 8, k2.y + 14);
+    bath.outageUntil = 500;
+    expect(hoverInfo(w2, bath, 0, none)!.lines).toEqual(['versorgt 0 Häuser', 'brennt']);
+  });
+  it('Spec 13.2 Amtsstube wirkt nicht: nicht angebunden, brennend', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    const t = raw(w, 'townhall', k.x + 4, k.y + 10);
+    t.connected = false;
+    expect(hoverInfo(w, t, 0, none)!.lines[2]).toBe('Wirkt nicht: nicht angebunden');
+    t.connected = true;
+    t.outageUntil = 500;
+    expect(hoverInfo(w, t, 0, none)!.lines[2]).toBe('Wirkt nicht: brennt');
+  });
+  it('Spec 13.2 Kontor, Marktplatz, Weg', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    expect(hoverInfo(w, k, 0, none)).toEqual({
+      title: 'Kontor',
+      lines: ['Versorgung im Radius 8', 'Handel: klicken'],
+    });
+    const m = raw(w, 'market', k.x + 4, k.y + 10);
+    expect(hoverInfo(w, m, 0, none)).toEqual({
+      title: 'Marktplatz',
+      lines: ['Versorgung im Radius 8'],
+    });
+    forceGrass(w, k.x + 8, k.y + 10);
+    w.tiles[idx(w, k.x + 8, k.y + 10)]!.road = true;
+    expect(hoverInfo(w, { x: k.x + 8, y: k.y + 10 }, 0, none)).toEqual({
+      title: 'Weg',
+      lines: ['Verbindet Betriebe mit dem Kontor'],
+    });
+  });
+  it('Spec 13.2 Gelände: Sand, Wasser, Fischerhütte neben Wasser', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    const sand = { x: k.x + 6, y: k.y + 3 };
+    forceGrass(w, sand.x, sand.y);
+    w.tiles[idx(w, sand.x, sand.y)]!.terrain = 'sand';
+    expect(hoverInfo(w, sand, 0, none)).toEqual({ title: 'Sand', lines: ['Gut für Wohnhaus'] });
+    const sea = { x: k.x + 6, y: k.y + 12 };
+    forceRect(w, sea.x, sea.y, 1, 1, 'water');
+    expect(hoverInfo(w, sea, 0, none)).toEqual({
+      title: 'Wasser',
+      lines: ['Gut für Fischerhütte an der Küste'],
+    });
+    forceGrass(w, sea.x, sea.y - 1);
+    expect(hoverInfo(w, { x: sea.x, y: sea.y - 1 }, 0, none)!.lines[0]).toMatch(/Fischerhütte$/);
+  });
+  it('Spec 13.2 Haus-Diagnose: Ausserhalb der Versorgung, Dienst fehlt in Reichweite', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    expect(hoverInfo(w, houseFar(w), 0, none)!.lines[1]).toBe('Ausserhalb der Versorgung');
+    const { w: w2, houses } = village(1, { unlockAll: true });
+    setHouse(houses[0]!, 2, 8);
+    houses[0]!.house!.satisfied = { food: true, cloth: true };
+    expect(hoverInfo(w2, houses[0]!, 0, none)!.lines[1]).toBe('Kapelle fehlt in Reichweite');
+  });
+  it('Spec 13.1 Vorrang: Schiff vor Gebäude, Tier vor Schiff', () => {
+    const w = createWorld(3);
+    const k = w.buildings[w.kontorId]!;
+    expect(hoverInfo(w, k, 0, { ship: true, animal: null })!.title).toBe('Händlerschiff');
+    expect(hoverInfo(w, k, 0, { ship: true, animal: 'Wal' })!.title).toBe('Wal');
   });
   it('AK-U3-04 (Vitest-Teil) hoverVisible und hoverPosition', () => {
     const base: HoverState = {
