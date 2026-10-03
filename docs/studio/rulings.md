@@ -987,3 +987,13 @@ dem Wochen-Reset (2026-10-07); lead-tech Rest 1 Start verfällt nicht, wird mit 
 (3) M10-A1 (lead-art, Symbolsatz, Stufe 1) startet nach H-R4. — Kosten bei Irrtum: M10 zwei Tage später.
 
 Entscheider: L0 · Anlass: Bericht M10-S1C · ADR: —
+
+## R178 · 2026-10-03 · H-R4 Laufwege
+
+Ruling: Gate Merge H-R4 bestanden (`feat/h-r4-laufwege` @ 0b91db7; Review BEDENKEN → Fix → Nachprüfung
+durch denselben Reviewer OK nach R136; L0-Auflage „keine Figur über Wasser" mit Test umgesetzt;
+`make check` grün laut Engineer, Integrator prüft erneut). Offen niedrig: Diagonalecken, gerade Wege durch
+Nachbargebäude → beobachtungen.md, Folgehäppchen mit „Bürger Haus → Markt". Merge durch
+production-integrator. Danach M10-A1 Symbolsatz (lead-art, Stufe 1). — Kosten bei Irrtum: Revert.
+
+Entscheider: L0 · Anlass: Bericht H-R4 · ADR: —
