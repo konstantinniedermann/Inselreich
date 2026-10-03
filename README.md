@@ -236,7 +236,10 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Anbindung:** Betriebe, Marktplatz, Kapelle, Schule und Feuerwache arbeiten nur, wenn ein Weg an sie grenzt,
   der über Wege mit dem Kontor verbunden ist. Nicht angebundene Gebäude tragen einen roten Punkt.
 - **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
-  angebunden»), Produktion, Fortschritt und Unterhalt.
+  angebunden»), Stufe («Stufe 1» bis «Stufe 3»), Auslastung, Produktion, Fortschritt und Unterhalt. Ab der
+  Freischaltung des Ausbaus steht dort der Abschnitt «Ausbau zu Stufe n» mit Kosten, Gebühr, Vorschau auf
+  Ausstoss und Unterhalt, dem Knopf «Ausbauen» und, falls es nicht geht, dem Grund. Das Mouse-over nennt Stufe
+  und Auslastung.
 
 ### Produktionsketten
 
@@ -256,6 +259,13 @@ Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukoste
 3 Werkzeug). Er lohnt sich erst, wenn du viel Werkzeug brauchst: Sein Unterhalt läuft auch im
 Leerlauf, und Werkzeug zu verkaufen bringt weniger, als es kostet. Bauland sind Sand, Gras und Wald
 ohne Gebäude oder Weg; Gebirge und Wasser sind unbebaubar.
+
+**Ausbau:** Die meisten Betriebe lassen sich ausbauen. Stufe 2 (ab Freischaltung U3) kostet Geld, Holz und
+Werkzeug sowie 2–3 Stoff als Gebühr, Stufe 3 (ab U5) kostet mehr und 2–3 Rum als Gebühr. Der Zyklus sinkt auf etwa
+× 0,6 bzw. × 0,4, der Unterhalt steigt (Fischerhütte: 30 → 42 → 54 / min). Baue die Kette gemeinsam aus, sonst
+wartet der nächste Betrieb auf Ware. Ein Abriss erstattet die Hälfte von Bau- und Stufenkosten, die Gebühr nicht.
+
+**Auslastung:** gleitender Anteil der Zeit, in der der Betrieb arbeitet statt zu warten (100 % = nie ausgebremst).
 
 Die **Glashütte** (2×2, Baukosten 300 Geld, 20 Holz, 6 Werkzeug, 10 Stein; erst nach dem Bürger-Ziel) braucht
 Stein **und** Holz: Sie entnimmt je Zyklus beides zugleich und nur, wenn beides im Lager liegt; sonst «Wartet auf

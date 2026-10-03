@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { checkAfford } from '../../src/sim/economy';
 import { demolish, placeRoad, removeRoad } from '../../src/sim/build';
+import { upgradeBuilding } from '../../src/sim/upgrade';
 import { setTaxLevel } from '../../src/sim/tax';
 import { buy, sell } from '../../src/sim/trade';
 import { deliverOrder } from '../../src/sim/orders';
@@ -17,8 +18,8 @@ import { GOODS, STORAGE_CAP } from '../../src/sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { createRng } from '../../src/sim/rng';
-import type { BuildingDefId, GoodId, TaxLevel } from '../../src/sim/types';
-import { idx } from '../../src/sim/world';
+import type { Building, BuildingDefId, GoodId, TaxLevel } from '../../src/sim/types';
+import { createWorld, idx } from '../../src/sim/world';
 import type { Tool } from '../../src/render/renderer';
 import {
   REASON_TABLE,
@@ -410,5 +411,50 @@ describe('M10 Gründe Amtsstube', () => {
       'Es gibt schon eine Amtsstube — höchstens eine wirkt',
     );
     expect(friendlyReason(w, 'Braucht eine Amtsstube')).toBe('Baue zuerst eine Amtsstube (I)');
+  });
+});
+
+describe('M11 Ausbau-Gründe (Spec 3.6)', () => {
+  it('AK-UI-04 jeder Grund von upgradeBuilding steht in REASON_TABLE, „Zu wenig Stoff" bleibt wörtlich', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const add = (defId: BuildingDefId, extra: Partial<Building> = {}) => {
+      const b = {
+        id: w.nextBuildingId++,
+        defId,
+        x: 0,
+        y: 0,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        ...extra,
+      } as Building;
+      w.buildings[b.id] = b;
+      return b.id;
+    };
+    const reasons = [
+      upgradeBuilding(w, 99_999), // Gebäude nicht gefunden
+      upgradeBuilding(w, add('chapel')), // Kann nicht ausgebaut werden
+      upgradeBuilding(w, add('fisher', { level: 3 })), // Höchste Stufe erreicht
+      upgradeBuilding(w, add('fisher', { outageUntil: w.tick + 200 })), // Gebäude brennt
+    ].map((r) => (r.ok ? '' : r.reason));
+    w.stock.cloth = 0;
+    const r = upgradeBuilding(w, add('fisher'));
+    reasons.push(r.ok ? '' : r.reason); // Zu wenig Stoff
+    for (const x of reasons)
+      expect(
+        REASON_TABLE.some((row) => row.pattern.test(x)),
+        x,
+      ).toBe(true);
+    expect(
+      friendlyReason(w, 'Zu wenig Stoff', { cost: { money: 50, wood: 3, tools: 1, stone: 0 } }),
+    ).toBe('Zu wenig Stoff');
+  });
+  it('Abriss-Vorschau erstattet die Hälfte der tatsächlich bezahlten Kosten (Stufe 2)', () => {
+    const { w, fisher } = uxWorld();
+    fisher.level = 2;
+    expect(placementHint(w, { kind: 'demolish' }, fisher.x, fisher.y)?.text).toBe(
+      // bezahlt: Bau 100/5/2 + Stufe 2 50/3/1 = 150/8/3; zurück die Hälfte, abgerundet
+      'Abreissen: Fischerhütte · zurück 75 Geld · 4 Holz · 1 Werkzeug',
+    );
   });
 });

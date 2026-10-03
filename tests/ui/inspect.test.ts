@@ -9,7 +9,13 @@ import {
   restView,
   upgradeOkText,
   upgradeReasonTexts,
+  levelText,
+  utilizationText,
+  upgradeView,
 } from '../../src/ui/inspect';
+import { upgradeBuilding } from '../../src/sim/upgrade';
+import { serialize } from '../../src/sim/save';
+import type { BuildingDefId, World } from '../../src/sim/types';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
@@ -219,5 +225,70 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
     expect(items.every((i) => i.met)).toBe(true);
     house.house!.satisfied.cloth = false;
     expect(needIcons(w, house)[1]).toEqual({ icon: 'cloth', met: false, label: 'Stoff' });
+  });
+});
+
+describe('M11 Betriebs-Panel (Spec 7)', () => {
+  /** Betrieb roh einsetzen (ohne Kachel); das Panel liest nur Gebäude und Welt. */
+  const put = (w: World, defId: BuildingDefId, extra: Partial<Building> = {}): Building => {
+    const b: Building = {
+      id: w.nextBuildingId++,
+      defId,
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      ...extra,
+    };
+    w.buildings[b.id] = b;
+    return b;
+  };
+  it('AK-UI-03 Auslastung ohne eff 100 %, eff 94 208 → 36 %; Stufe 1/2; Haus und Kapelle ohne Zeilen', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(utilizationText(put(w, 'fisher'))).toBe('Auslastung 100 %');
+    expect(utilizationText(put(w, 'fisher', { eff: 94_208 }))).toBe('Auslastung 36 %');
+    expect(levelText(put(w, 'fisher'))).toBe('Stufe 1');
+    expect(levelText(put(w, 'fisher', { level: 2 }))).toBe('Stufe 2');
+    const { houses } = village(1, { unlockAll: true });
+    expect(utilizationText(houses[0]!)).toBeNull();
+    expect(levelText(houses[0]!)).toBeNull();
+    expect(levelText(put(w, 'chapel'))).toBeNull();
+  });
+  it('AK-UI-04 Ausbau Fischer: vor U3 verborgen, Kosten, Gebühr, Vorschau, ✗-Grund, Stufe 3 „Höchste Stufe"', () => {
+    const w0 = createWorld(3);
+    expect(upgradeView(w0, put(w0, 'fisher'))).toBeNull();
+    const w = createWorld(3, { unlockAll: true });
+    w.money = 1000;
+    w.stock.cloth = 2;
+    w.stock.rum = 2;
+    const f = put(w, 'fisher');
+    const before = serialize(w);
+    expect(upgradeView(w, f)).toEqual({
+      title: 'Ausbau zu Stufe 2',
+      cost: 'Kosten 50 Geld · 3 Holz · 1 Werkzeug',
+      fee: 'Gebühr 2 Stoff',
+      preview: 'Ausstoss 15 → 25 / min · Unterhalt 30 → 42 / min',
+      reasons: [],
+      ok: true,
+    });
+    expect(serialize(w)).toBe(before); // Vorschau ändert die Welt nicht
+    w.stock.cloth = 0;
+    expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff']);
+    w.stock.cloth = 2;
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    expect(upgradeView(w, f)!.preview).toBe('Ausstoss 25 → 37.5 / min · Unterhalt 42 → 54 / min');
+    w.unlocked = w.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
+    expect(upgradeView(w, f)).toBeNull(); // Stufe 3 vor U5 verborgen
+    const w3 = createWorld(3, { unlockAll: true });
+    const f3 = put(w3, 'fisher', { level: 3 });
+    expect(upgradeView(w3, f3)).toEqual({
+      title: 'Höchste Stufe',
+      cost: '',
+      fee: '',
+      preview: '',
+      reasons: [],
+      ok: false,
+    });
   });
 });

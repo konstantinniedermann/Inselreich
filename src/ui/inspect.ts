@@ -6,7 +6,9 @@ import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
-import { cycleOf, upkeepOf } from '../sim/levels';
+import { LEVELS } from '../sim/defs/levels';
+import { cycleOf, upkeepOf, utilization } from '../sim/levels';
+import { paidCost, upgradeBuilding } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
@@ -33,6 +35,8 @@ export {
 export interface InspectActions {
   demolish(id: number): void;
   openTrade(): void;
+  /** Betrieb um eine Stufe ausbauen; die Ablehnung zeigt der Aufrufer. */
+  upgrade(id: number): void;
   /** Amtsstube: Steuerstufe, Ausgabesperre und Aufstiegsstopp setzen; die Ablehnung zeigt der Aufrufer. */
   setTax(level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
@@ -99,8 +103,8 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
 }
 
 function refundLine(world: World, b: Building): string {
-  const nominal = refundCost(BUILDING_DEFS[b.defId].cost);
-  return `Rückerstattung: ${refundText(nominal, effectiveRefund(world, BUILDING_DEFS[b.defId].cost))}`;
+  const paid = paidCost(b); // Bau- plus Stufenkosten, ohne Gebühr
+  return `Rückerstattung: ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
 }
 
 /** Aufstiegszeile bei erfüllten Bedingungen (Spec L8: Zeit statt „Tick"). */
@@ -461,6 +465,8 @@ export function renderInspect(
     } else {
       addLine(panel, '', 'state');
       addRemedy(panel);
+      if (LEVELS[b.defId] !== undefined) addLine(panel, '', 'level');
+      if (def.produces) addLine(panel, '', 'utilization');
       if (def.produces && def.cycle !== undefined) {
         addLine(panel, producesText(def, b.outageUntil !== undefined, cycleOf(b)), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${goodList(def.consumes)}`);
@@ -473,6 +479,7 @@ export function renderInspect(
         panel.appendChild(bar);
       }
       addLine(panel, '', 'upkeep');
+      if (LEVELS[b.defId] !== undefined) renderUpgradeBox(panel, () => actions.upgrade(id));
       if (def.flammable === true) addLine(panel, '', 'fire-protection');
       if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
@@ -481,6 +488,102 @@ export function renderInspect(
   panel.appendChild(buttons);
   if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
+}
+
+/** „Stufe n" nur für ausbaubare Betriebe, sonst `null`. */
+export function levelText(b: Building): string | null {
+  return LEVELS[b.defId] === undefined ? null : `Stufe ${b.level ?? 1}`;
+}
+
+/** „Auslastung n %" nur für Betriebe mit Erzeugung, sonst `null`. */
+export function utilizationText(b: Building): string | null {
+  const u = utilization(b);
+  return u === null ? null : `Auslastung ${Math.floor(u / 10)} %`;
+}
+
+export interface UpgradeView {
+  title: string;
+  cost: string;
+  fee: string;
+  preview: string;
+  reasons: string[];
+  ok: boolean;
+}
+
+/**
+ * Ausbau-Abschnitt des Betriebs-Panels (Spec 7); `null`, wenn der Betrieb nicht ausbaubar oder die Stufe noch
+ * nicht freigeschaltet ist. Die Gründe stammen aus einem Probelauf von `upgradeBuilding` auf einer Kopie.
+ */
+export function upgradeView(world: World, b: Building): UpgradeView | null {
+  const levels = LEVELS[b.defId];
+  if (levels === undefined) return null;
+  const lvl = b.level ?? 1;
+  if (lvl >= 3)
+    return { title: 'Höchste Stufe', cost: '', fee: '', preview: '', reasons: [], ok: false };
+  if (functionLock(world, lvl === 1 ? 'upgrade2' : 'upgrade3') !== null) return null;
+  const next = levels[lvl - 1]!;
+  const probe = {
+    ...world,
+    stock: { ...world.stock },
+    buildings: { ...world.buildings, [b.id]: { ...b } },
+  };
+  const r = upgradeBuilding(probe, b.id);
+  const out = `${perMinute(1, cycleOf(b) ?? 1)} → ${perMinute(1, next.cycle)}`;
+  const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
+  return {
+    title: `Ausbau zu Stufe ${lvl + 1}`,
+    cost: `Kosten ${costLine(next.cost)}`,
+    fee: `Gebühr ${next.fee.amount} ${GOODS[next.fee.good].name}`,
+    preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
+    reasons: r.ok ? [] : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost })}`],
+    ok: r.ok,
+  };
+}
+
+/** Gerüst des Ausbau-Abschnitts; `updateInspect` füllt Texte und Sichtbarkeit. */
+function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
+  const box = document.createElement('div');
+  box.className = 'upgrade';
+  box.dataset.field = 'upgrade-box';
+  const heading = document.createElement('h3');
+  heading.dataset.field = 'level-title';
+  box.appendChild(heading);
+  addLine(box, '', 'level-cost');
+  addLine(box, '', 'level-fee');
+  addLine(box, '', 'level-preview');
+  addList(box, 'reasons', 'level-reasons');
+  addButton(box, 'Ausbauen', onUpgrade, 'upgrade');
+  panel.appendChild(box);
+}
+
+/** Setzt den Ausbau-Abschnitt aus `upgradeView`; ohne Ansicht verborgen. */
+function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
+  const box = panel.querySelector<HTMLElement>('[data-field="upgrade-box"]');
+  if (!box) return;
+  const v = upgradeView(world, b);
+  box.hidden = v === null;
+  if (v === null) return;
+  setField(box, 'level-title', v.title);
+  const maxed = v.title === 'Höchste Stufe';
+  const rows = [
+    ['level-cost', v.cost],
+    ['level-fee', v.fee],
+    ['level-preview', v.preview],
+  ] as const;
+  for (const [field, text] of rows) {
+    const el = setField(box, field, text);
+    if (el) el.hidden = maxed;
+  }
+  setList(
+    box,
+    'level-reasons',
+    v.reasons.map((text) => ({ ok: false, text })),
+  );
+  const btn = box.querySelector<HTMLElement>('[data-field="upgrade"]');
+  if (btn) {
+    btn.hidden = maxed;
+    btn.classList.toggle('unaffordable', !v.ok);
+  }
 }
 
 /** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
@@ -502,6 +605,9 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (b.defId === 'townhall') updateTownhall(panel, world);
   setField(panel, 'refund', refundLine(world, b));
   setField(panel, 'upkeep', upkeepText(b));
+  setField(panel, 'level', levelText(b) ?? '');
+  setField(panel, 'utilization', utilizationText(b) ?? '');
+  updateUpgradeBox(panel, world, b);
   const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
   if (remedyEl) {
     const text = remedyText(world, b);

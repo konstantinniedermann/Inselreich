@@ -6,6 +6,8 @@ import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
+import { LEVELS } from '../sim/defs/levels';
+import { paidCost, upgradeBuilding } from '../sim/upgrade';
 import { tileAt, createWorld, center } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
@@ -410,6 +412,14 @@ function launch(
           refresh();
         },
         openTrade: () => setPanel({ kind: 'trade' }),
+        upgrade: (id) => {
+          const b = world.buildings[id];
+          const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
+          const r = upgradeBuilding(world, id);
+          if (r.ok) sound.play('build');
+          else showError(friendlyReason(world, r.reason, next ? { cost: next.cost } : {}));
+          refresh();
+        },
         setTax: (level) => {
           const r = setTaxLevel(world, level);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -550,7 +560,7 @@ function launch(
   };
   const demolishBuilding = (id: number): Result => {
     const b = world.buildings[id];
-    const cost = b ? BUILDING_DEFS[b.defId].cost : null;
+    const cost = b ? paidCost(b) : null;
     const text =
       b && cost
         ? `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`

@@ -8,6 +8,7 @@ import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
+import { paidCost } from '../sim/upgrade';
 import type { Building, BuildingDefId, Cost, GoodId, World } from '../sim/types';
 import { adjacentOf, idx, tileAt } from '../sim/world';
 import { costLine } from './dom';
@@ -37,6 +38,8 @@ const costOf = (c: ReasonCtx): Cost | null =>
   c.cost ?? (c.defId ? BUILDING_DEFS[c.defId].cost : null);
 
 export const REASON_TABLE: readonly ReasonRow[] = [
+  { source: 'upgrade', pattern: /^Kann nicht ausgebaut werden$/, show: same },
+  { source: 'upgrade', pattern: /^Gebäude brennt$/, show: same },
   {
     source: 'placement',
     pattern: /^Ausserhalb der Karte$/,
@@ -247,7 +250,7 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
     if (b?.id === world.kontorId)
       return { tone: 'info', text: 'Kontor kann nicht abgerissen werden' };
     if (b) {
-      const cost = BUILDING_DEFS[b.defId].cost;
+      const cost = paidCost(b);
       return {
         tone: 'bad',
         text: `Abreissen: ${BUILDING_DEFS[b.defId].name} · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`,
