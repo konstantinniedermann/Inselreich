@@ -145,6 +145,17 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R129 (1), behalten R166
 - Bewertung: Ende M8 (a)–(c) je 0 (Ausgangswert 2/4/1), Session-Übergänge ohne Überlappung ausser 2 min nur lesend (M7-UX); Start-Hook-Warnung nicht gebaut ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
 
+## E-022 · vorgeschlagen · Beobachtungen ohne Merge-Konflikt (union)
+
+- Hypothese: Wenn `.gitattributes` für `docs/beobachtungen.md` `merge=union` setzt, dann entstehen bei Merges paralleler Zweige keine Konflikte in dieser Datei, weil Einträge nur angehängt werden (Retro M11 B4).
+- Messgrösse: in M12 0 manuell aufgelöste Konflikte in `docs/beobachtungen.md` und 0 verlorene oder doppelte Einträge (Stichprobe `git diff` je Merge; Ausgang M11: 3 Konflikte, H-R7, C7, R2).
+- Zeitraum: M12.
+- Rückfall: Zeile aus `.gitattributes` entfernen (Datei ohne Attribut war der Zustand bis M11).
+- Dateien: `.gitattributes`, `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
 ## E-008 · behalten · Ein Gate für Folgepakete
 
 - Ruling: R129 (2), behalten R166
