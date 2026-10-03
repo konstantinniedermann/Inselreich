@@ -21,6 +21,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
 
   it('neue Auftragsperiode ergibt order; Wechsel auf null nicht', () => {
     const w = createWorld(1);
+    w.unlocked = ['U0', 'U2', 'U3']; // Auftragskarte sichtbar (M10, Spec 11.4)
     const none = soundSnapshot(w);
     w.order = { period: 3, good: 'wood', amount: 20, reward: 100, due: 500 };
     const withOrder = soundSnapshot(w);
@@ -140,5 +141,28 @@ describe('buildSoundKey', () => {
     expect(buildSoundKey({ kind: 'road' })).toBe('road');
     expect(buildSoundKey({ kind: 'select' })).toBeNull();
     expect(buildSoundKey({ kind: 'demolish' })).toBeNull();
+  });
+});
+
+describe('M10 Ton unlock', () => {
+  it('AK-U1-12 unlock: wächst → genau ein unlock; zwei Einträge ein Ton; mit won nur win; Laden kein Ton; Rest unverändert', () => {
+    const a = createWorld(3);
+    const s0 = soundSnapshot(a);
+    a.unlocked = ['U0', 'U2'];
+    expect(diffSoundEvents(s0, soundSnapshot(a))).toEqual(['unlock']);
+    a.unlocked = ['U0', 'U2', 'U3', 'U4'];
+    expect(
+      diffSoundEvents(soundSnapshot(createWorld(3)), soundSnapshot(a)).filter(
+        (e) => e === 'unlock',
+      ),
+    ).toHaveLength(1);
+    const b = createWorld(3);
+    const s1 = soundSnapshot(b);
+    b.won = true;
+    b.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5', 'U6'];
+    const ev = diffSoundEvents(s1, soundSnapshot(b));
+    expect(ev).toContain('win');
+    expect(ev).not.toContain('unlock');
+    expect(diffSoundEvents(soundSnapshot(b), soundSnapshot(b))).toEqual([]);
   });
 });

@@ -1,9 +1,11 @@
 // Zieltexte und Banner (Spec M8 14.1): rein, ohne DOM. Zahlen und Namen aus `goalView` und `defs`.
-import { BUILDING_DEFS } from '../sim/defs/buildings';
+import type { Tool } from '../render/renderer';
+import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
+import { FUNCTION_LABELS, UNLOCKS } from '../sim/defs/unlocks';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from '../sim/defs/tiers';
-import { buildLock } from '../sim/placement';
+import { buildLock, buildingShown } from '../sim/unlocks';
 import type { GoalView } from '../sim/queries';
-import type { BuildingDefId, World } from '../sim/types';
+import type { BuildingDefId, UnlockDef, UnlockId, World } from '../sim/types';
 import { friendlyReason } from './hints';
 import { hotkeyLabel } from './hotkeys';
 
@@ -98,18 +100,47 @@ const withKey = (id: BuildingDefId): string =>
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
 export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;
 
-/** Merkfeld beim Start und nach dem Laden: true, wenn die Stufe schon frei ist (dann keine Meldung, Spec 4.3 Punkt 5). */
-export function initialUnlockShown(world: World): boolean {
-  return buildLock(world, 'bathhouse') === null;
+/** Tasten der Forst-Werkzeuge in `FUNCTION_LABELS.forest`-Reihenfolge (Spec 11.2; ab Task 7 aus `hotkeyLabel`). */
+const FOREST_KEYS: readonly string[] = ['C', 'Q'];
+
+/** Namen mit Taste, die ein Freischalt-Eintrag neu in die Bedienung bringt (Gebäude, dann Funktionen). */
+function entryNames(world: World, def: UnlockDef): string[] {
+  const buildings = BUILDING_IDS.filter(
+    (id) => def.buildings.includes(id) && buildingShown(world, id),
+  ).map(withKey);
+  const functions = def.functions.flatMap((f) =>
+    f === 'forest'
+      ? FUNCTION_LABELS.forest.map((label, i) => `${label} (${FOREST_KEYS[i] ?? '?'})`)
+      : [...FUNCTION_LABELS[f]],
+  );
+  return [...buildings, ...functions];
 }
 
-/** Text genau beim Wechsel gesperrt → frei; `wasLocked` ist das Merkfeld aus `app.ts` (wie `wonShown`). */
-export function unlockNotice(wasLocked: boolean, world: World): string | null {
-  return wasLocked && buildLock(world, 'bathhouse') === null ? UNLOCK_NOTICE : null;
+/**
+ * Freischalt-Meldung (Spec 11.6): neue Einträge = `world.unlocked` ohne `prev`; keine → `null`;
+ * nur U6 → die M8-Meldung; sonst „Neu: {Namen} — {Satz des letzten Eintrags}. Mehr unter Hilfe (?)".
+ */
+export function unlockNoticeText(prev: readonly UnlockId[], world: World): string | null {
+  const fresh = UNLOCKS.filter((u) => world.unlocked.includes(u.id) && !prev.includes(u.id));
+  if (fresh.length === 0) return null;
+  if (fresh.length === 1 && fresh[0]!.id === 'U6') return UNLOCK_NOTICE;
+  const names = fresh.flatMap((u) => entryNames(world, u));
+  return `Neu: ${names.join(', ')} — ${fresh[fresh.length - 1]!.notice}. Mehr unter Hilfe (?)`;
 }
 
-/** Gesperrte Taste oder gesperrter Eintrag (Spec M8 14.1, Offener Punkt 15 neu): „{Name}: {Grund}" oder null. */
-export function lockedToolText(world: World, defId: BuildingDefId): string | null {
-  const lock = buildLock(world, defId);
-  return lock === null ? null : `${BUILDING_DEFS[defId].name}: ${friendlyReason(world, lock)}`;
+/** Je Frame: Meldung gegen den Stand am Frame-Anfang (`seen`) und das neue Merkfeld. Rein. */
+export function frameUnlock(
+  seen: readonly UnlockId[],
+  world: World,
+): { text: string | null; seen: UnlockId[] } {
+  return { text: unlockNoticeText(seen, world), seen: [...world.unlocked] };
+}
+
+/** Gesperrte Taste oder gesperrter Eintrag (Spec 11.2): „{Name}: {Grund}" oder null; nur Bau-Werkzeuge. */
+export function lockedToolText(world: World, tool: Tool): string | null {
+  if (tool.kind !== 'build') return null;
+  const name = BUILDING_DEFS[tool.defId].name;
+  const lock = buildLock(world, tool.defId);
+  if (lock !== null) return `${name}: ${friendlyReason(world, lock)}`;
+  return buildingShown(world, tool.defId) ? null : `${name}: ohne Krisen nicht nötig`;
 }

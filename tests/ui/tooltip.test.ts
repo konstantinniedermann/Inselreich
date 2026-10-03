@@ -3,8 +3,11 @@ import { deriveUnlocks } from '../../src/sim/unlocks';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { createWorld } from '../../src/sim/world';
+import type { CrisisLevel, UnlockId, World } from '../../src/sim/types';
 import {
+  CATEGORIES,
   buildEntries,
+  visibleCategories,
   crisisTooltipLines,
   tierPreviewLine,
   tooltipLines,
@@ -98,7 +101,7 @@ describe('M8 Tooltips (AK-U2-01)', () => {
 
 describe('M8 Bauleiste (Änderung S11)', () => {
   it('Spec M8 14.2 Glashütte und Badehaus erst ab der Freischaltung (Vorprüfung AK-U2-06, AK-U2-10)', () => {
-    const w = createWorld(3, { unlockAll: true });
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // alles ausser U6, wie M8 vor dem Ziel
     expect(buildEntries(w, 'production')).toHaveLength(8);
     expect(buildEntries(w, 'production')).not.toContain('glassworks');
@@ -110,5 +113,42 @@ describe('M8 Bauleiste (Änderung S11)', () => {
     expect(buildEntries(w, 'production')).toContain('glassworks');
     expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
+  });
+});
+
+describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
+  const count = (w: World) =>
+    Object.fromEntries(CATEGORIES.map((c) => [c.id, buildEntries(w, c.id).length]));
+  const at = (ids: UnlockId[], crisisLevel: CrisisLevel = 'normal') => {
+    const w = createWorld(3, { crisisLevel });
+    w.unlocked = ids;
+    return w;
+  };
+  it('AK-U1-01 Zählung je Stand (Krisen normal und off), leere Kategorien verborgen', () => {
+    expect(count(at(['U0']))).toEqual({ infrastructure: 0, housing: 1, production: 2, public: 0 });
+    expect(visibleCategories(at(['U0']))).toEqual(['housing', 'production']);
+    expect(buildEntries(at(['U0']), 'production')).toEqual(['fisher', 'lumberjack']);
+    expect(count(at(['U0', 'U2']))).toEqual({
+      infrastructure: 0,
+      housing: 1,
+      production: 5,
+      public: 2,
+    });
+    expect(count(at(['U0', 'U2'], 'off')).public).toBe(1);
+    expect(count(at(['U0', 'U2', 'U3'])).public).toBe(3);
+    expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 7, public: 4 });
+    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(8);
+    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']))).toMatchObject({
+      production: 9,
+      public: 5,
+    });
+    expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
+    expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
+      infrastructure: 1,
+      housing: 1,
+      production: 9,
+      public: 5,
+    });
+    expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);
   });
 });

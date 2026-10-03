@@ -16,6 +16,7 @@ import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
 import { createWorld } from '../../src/sim/world';
+import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
 
 describe('refundText (AK-U1b-02)', () => {
@@ -52,7 +53,13 @@ describe('restView (AK-U2-03)', () => {
     w.tick = 3000;
     const sum = Object.values(w.buildings).reduce((n, b) => n + (b.house?.inhabitants ?? 0), 0);
     expect(sum).toBeGreaterThan(0);
-    expect(restView(w)).toEqual({ phase: 'night', label: 'Nacht', symbol: '☾', inhabitants: sum });
+    expect(restView(w)).toEqual({
+      phase: 'night',
+      label: 'Nacht',
+      symbol: '☾',
+      inhabitants: sum,
+      tax: restView(w).tax,
+    });
   });
   it('alle vier Phasen', () => {
     const w = SCENARIOS.galerie!();
@@ -168,5 +175,13 @@ describe('M10 noService', () => {
       state: 'noService',
     };
     expect(stateInfo(tm, 0)).toEqual({ text: 'Braucht eine Schule in Reichweite', ok: false });
+  });
+});
+
+describe('M10 Ruhe-Ansicht Steuer', () => {
+  it('AK-U1-13 rest-tax: wirksame Stufe, ohne aktive Amtsstube mit Zusatz', () => {
+    const w = createWorld(3);
+    w.taxLevel = 'high';
+    expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
   });
 });

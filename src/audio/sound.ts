@@ -35,7 +35,8 @@ export type SoundEvent =
   | 'win'
   | 'alarm'
   | 'stormWarning'
-  | 'boom';
+  | 'boom'
+  | 'unlock';
 
 export interface SoundOptions {
   muted: boolean;
@@ -115,6 +116,8 @@ const FIGURE_S: Partial<Record<SoundEvent, number>> = {
   stormWarning: 2.0,
 };
 
+/** Pegel von `unlock` gegenüber `win` (Setzung U1, ohne Vorgabe von lead-art). */
+const UNLOCK_LEVEL = 0.5;
 const FX = 0.5; // Effekte liegen 6 dB unter den Signalen (Spec 7.1)
 const SAMPLE_GAIN = 0.8; // Pegel der Signal-Samples (Alarm, Sturmwarnung) auf dem Effekte-Bus
 const EPS = 1e-9;
@@ -294,6 +297,12 @@ export function createSound(
     };
     src.start();
   };
+  const winFigure = (level: number) => {
+    knock(0, 0.3 * level);
+    [D5, FS5, A5, D6].forEach((f, i) =>
+      tone(f, i * 0.18, i === 3 ? 0.6 : 0.2, 0.4 * level, 'triangle'),
+    );
+  };
   const figures: Record<SoundEvent, () => void> = {
     build: () => {
       knock(0, 0.12 * FX);
@@ -317,10 +326,9 @@ export function createSound(
       tone(D5, 0.12, 0.24, 0.3 * FX, 'triangle');
     },
     error: () => tone(130, 0, 0.1, 0.5, 'sawtooth', 100),
-    win: () => {
-      knock(0, 0.3);
-      [D5, FS5, A5, D6].forEach((f, i) => tone(f, i * 0.18, i === 3 ? 0.6 : 0.2, 0.4, 'triangle'));
-    },
+    win: () => winFigure(1),
+    // Freischaltung (M10): dieselbe Figur wie `win`, kleinerer Pegel (Wahl und Pegel bei lead-art offen)
+    unlock: () => winFigure(UNLOCK_LEVEL),
     // Rückfall Alarm: Glocke aus Sinus-Partialtönen 1 : 2,76 : 5,4 auf D5, drei Schläge.
     alarm: () => {
       const b = sample('alarm');

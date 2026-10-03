@@ -1,6 +1,7 @@
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import type { Category } from '../sim/types';
+import { buildingShown } from '../sim/unlocks';
+import type { Category, World } from '../sim/types';
 
 /** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
@@ -101,12 +102,19 @@ export function categoryOf(tool: Tool): Category | null {
     : null;
 }
 
-/** Einzige Liste aller Tasten für das Menü (keine zweite Liste, Spec L2). */
-export function hotkeyList(): { key: string; label: string }[] {
-  const tools = Object.entries(TOOL_HOTKEYS).map(([k, t]) => ({
-    key: k.toUpperCase(),
-    label: toolName(t!),
-  }));
+/** Werkzeug ist in der Bedienung sichtbar: Bau-Werkzeuge nur, wenn das Gebäude angezeigt wird (Spec 11.2). */
+export function toolShown(world: World, tool: Tool): boolean {
+  return tool.kind !== 'build' || buildingShown(world, tool.defId);
+}
+
+/** Einzige Liste aller Tasten für das Menü (keine zweite Liste, Spec L2); nur Freigeschaltetes. */
+export function hotkeyList(world: World): { key: string; label: string }[] {
+  const tools = Object.entries(TOOL_HOTKEYS)
+    .filter(([, t]) => toolShown(world, t!))
+    .map(([k, t]) => ({
+      key: k.toUpperCase(),
+      label: toolName(t!),
+    }));
   const speeds = Object.entries(SPEED_KEYS).map(([k, s]) => ({ key: k, label: `Tempo ${s}×` }));
   return [...tools, ...speeds, { key: 'P', label: 'Pause / weiter' }, ...NAV_KEYS];
 }

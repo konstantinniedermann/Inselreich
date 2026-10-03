@@ -31,6 +31,7 @@ export function showMessage(
   kind: 'info' | 'error' | 'warn' = 'info',
   sticky = false,
   closable = false,
+  action?: { label: string; onClick: () => void },
 ): void {
   if (!box) return;
   const now = performance.now();
@@ -40,6 +41,17 @@ export function showMessage(
   const toast = document.createElement('div');
   toast.className = `toast ${kind}`;
   toast.textContent = text;
+  if (action) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-small toast-action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation(); // der Toast schliesst sich nicht über seinen eigenen Klick-Handler
+      action.onClick();
+    });
+    toast.appendChild(btn);
+  }
   if (sticky) toast.dataset.sticky = '1';
   if (closable) {
     toast.dataset.closable = '1';

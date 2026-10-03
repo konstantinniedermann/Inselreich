@@ -1,11 +1,17 @@
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
+import { orderVisible } from './order';
 import type { CrisisKind, Result, World } from '../sim/types';
 import type { SoundEvent } from '../audio/sound';
 
 /** Die Grössen, die je Frame verglichen werden (Spec 9.4). */
 export interface SoundSnapshot {
   bucket: number;
+  /** `null`, solange die Auftragskarte verborgen ist (vor U3): kein Ton `order` beim Wechsel zu U3. */
   orderPeriod: number | null;
+  /** Auftragskarte sichtbar (ab U3); der erste Auftrag nach dem Freischalten ist kein Ton wert. */
+  orderShown: boolean;
+  /** Zahl der freien Einträge (`world.unlocked.length`). */
+  unlocked: number;
   /** Summe von (Stufe − 1) über alle Häuser: ein neues Haus zählt nicht als Aufstieg. */
   upgrades: number;
   won: boolean;
@@ -22,7 +28,9 @@ export function soundSnapshot(world: World): SoundSnapshot {
   }
   return {
     bucket: Math.floor(world.tick / UPKEEP_INTERVAL),
-    orderPeriod: world.order?.period ?? null,
+    orderPeriod: orderVisible(world) ? (world.order?.period ?? null) : null,
+    orderShown: orderVisible(world),
+    unlocked: world.unlocked.length,
     upgrades,
     won: world.won,
     wonMerchants: world.wonMerchants,
@@ -54,13 +62,16 @@ function crisisSignals(prev: SoundSnapshot['crisis'], cur: SoundSnapshot['crisis
   }
 }
 
-/** Zeitbasierte Töne aus dem Vergleich zweier Frames: coin, order, upgrade, win. */
+/** Zeitbasierte Töne aus dem Vergleich zweier Frames: coin, order, upgrade, win, unlock. */
 export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundEvent[] {
   const out: SoundEvent[] = [];
   if (cur.bucket > prev.bucket) out.push('coin');
-  if (cur.orderPeriod !== null && cur.orderPeriod !== prev.orderPeriod) out.push('order');
+  if (prev.orderShown && cur.orderPeriod !== null && cur.orderPeriod !== prev.orderPeriod)
+    out.push('order');
   if (cur.upgrades > prev.upgrades) out.push('upgrade');
-  if ((cur.won && !prev.won) || (cur.wonMerchants && !prev.wonMerchants)) out.push('win');
+  const won = (cur.won && !prev.won) || (cur.wonMerchants && !prev.wonMerchants);
+  if (won) out.push('win');
+  else if (cur.unlocked > prev.unlocked) out.push('unlock');
   out.push(...crisisSignals(prev.crisis, cur.crisis));
   return out;
 }

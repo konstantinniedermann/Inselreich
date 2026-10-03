@@ -1,6 +1,7 @@
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
+import { goodUnlocked } from '../sim/unlocks';
 import type { GoodId, Result, World } from '../sim/types';
 import { setField } from './dom';
 
@@ -28,6 +29,14 @@ function sellTexts(
 export function boomGood(world: World, good: GoodId): boolean {
   const c = world.crisis;
   return c !== null && c.kind === 'boom' && c.good === good;
+}
+
+/** Handelszeilen (Spec 11.4): Güter, die frei sind oder im Lager liegen; Kaufen nur für freie Güter. */
+export function tradeRows(world: World): { good: GoodId; canBuy: boolean }[] {
+  return GOOD_IDS.filter((g) => goodUnlocked(world, g) || world.stock[g] > 0).map((good) => ({
+    good,
+    canBuy: goodUnlocked(world, good),
+  }));
 }
 
 /** Handelsmengen pro Klick (reine Bedienung, keine Spielwerte). */
@@ -86,7 +95,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     parent.appendChild(btn);
   };
 
-  for (const good of GOOD_IDS) {
+  for (const { good, canBuy } of tradeRows(world)) {
     const name = cell(table, 'trade-good', GOODS[good].name);
     // Boom-Marke direkt hinter den Gutnamen; bei Platzmangel wandern Lager und Preis in die nächste Zeile
     const boom = document.createElement('span');
@@ -102,8 +111,12 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     name.appendChild(pct);
 
     const buyCell = cell(table, 'trade-cell');
-    cell(buyCell, 'trade-price', `${GOODS[good].buy} Geld`);
-    for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
+    if (canBuy) {
+      cell(buyCell, 'trade-price', `${GOODS[good].buy} Geld`);
+      for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
+    } else {
+      cell(buyCell, 'trade-price', 'noch nicht freigeschaltet');
+    }
 
     const sellCell = cell(table, 'trade-cell');
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);

@@ -7,6 +7,7 @@ import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
 import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim/queries';
+import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import type { Building, GoodId, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 import { diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
@@ -279,11 +280,14 @@ export function restView(world: World): {
   label: string;
   symbol: string;
   inhabitants: number;
+  tax: string;
 } {
   const phase = phaseAt(world.tick);
   let inhabitants = 0;
   for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
-  return { phase, ...PHASE_VIEW[phase], inhabitants };
+  const tax =
+    taxEffect(effectiveTaxLevel(world)) + (townhallActive(world) ? '' : ' (keine Amtsstube)');
+  return { phase, ...PHASE_VIEW[phase], inhabitants, tax };
 }
 
 function addHeading(parent: HTMLElement, text: string): void {
@@ -356,5 +360,5 @@ export function updateRest(panel: HTMLElement, world: World): void {
   const next = setField(panel, 'goal-next', goal.next ?? '');
   if (next && next.hidden !== (goal.next === null)) next.hidden = goal.next === null;
   setField(panel, 'next-step', nextStep(world));
-  setField(panel, 'rest-tax', taxEffect(world.taxLevel));
+  setField(panel, 'rest-tax', v.tax);
 }

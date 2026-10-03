@@ -3,6 +3,8 @@ import { deriveUnlocks } from '../../src/sim/unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
 import { goalView, type GoalView } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
+import type { CrisisLevel, UnlockId } from '../../src/sim/types';
+import type { Tool } from '../../src/render/renderer';
 import {
   FIRST_GOAL_BANNER,
   SECOND_GOAL_BANNER,
@@ -10,9 +12,9 @@ import {
   goalTexts,
   UNLOCK_NOTICE,
   initialGoalShown,
-  initialUnlockShown,
+  frameUnlock,
   lockedToolText,
-  unlockNotice,
+  unlockNoticeText,
 } from '../../src/ui/goal';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 
@@ -117,32 +119,102 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
 describe('M8 U1 Freischaltung (Änderung S11)', () => {
   it('AK-U1-09 lockedToolText: gesperrt mit Grund, frei oder ohne Sperre null', () => {
     const w = createWorld(3);
-    expect(lockedToolText(w, 'bathhouse')).toBe('Badehaus: Erst nach dem Ziel (50 Bürger)');
-    expect(lockedToolText(w, 'glassworks')).toBe('Glashütte: Erst nach dem Ziel (50 Bürger)');
-    expect(lockedToolText(w, 'house')).toBeNull();
+    const tool = (defId: 'bathhouse' | 'glassworks' | 'house'): Tool => ({ kind: 'build', defId });
+    expect(lockedToolText(w, tool('bathhouse'))).toBe('Badehaus: Erst nach dem Ziel (50 Bürger)');
+    expect(lockedToolText(w, tool('glassworks'))).toBe('Glashütte: Erst nach dem Ziel (50 Bürger)');
+    expect(lockedToolText(w, tool('house'))).toBeNull();
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(lockedToolText(w, 'bathhouse')).toBeNull();
-    expect(lockedToolText(w, 'glassworks')).toBeNull();
+    expect(lockedToolText(w, tool('bathhouse'))).toBeNull();
+    expect(lockedToolText(w, tool('glassworks'))).toBeNull();
   });
-  it('AK-U1-09 unlockNotice nur beim Wechsel gesperrt → frei; kein Text mit „Tick"', () => {
+  it('AK-U1-09 unlockNoticeText nur beim Wechsel gesperrt → frei; kein Text mit „Tick"', () => {
     const w = createWorld(3);
-    expect(unlockNotice(true, w)).toBeNull();
-    expect(unlockNotice(false, w)).toBeNull();
+    const before = [...w.unlocked];
+    expect(unlockNoticeText(before, w)).toBeNull();
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(unlockNotice(true, w)).toBe(
+    expect(unlockNoticeText(['U0', 'U2', 'U3', 'U4', 'U5'], w)).toBe(
       'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
     );
-    expect(unlockNotice(false, w)).toBeNull();
+    expect(unlockNoticeText(w.unlocked, w)).toBeNull();
     expect(UNLOCK_NOTICE).not.toContain('Tick');
   });
-  it('AK-U1-09 geladener Stand mit freier Stufe: Merkfeld gesetzt, keine Freischalt-Meldung (Spec 4.3 Punkt 5, R152 B1)', () => {
+  it('AK-U1-09 geladener Stand mit freier Stufe: Basis = geladener Stand, keine Freischalt-Meldung (Spec 4.3 Punkt 5, R152 B1)', () => {
     const w = createWorld(3);
-    expect(initialUnlockShown(w)).toBe(false); // gesperrt: Meldung kommt später genau einmal
     w.won = true; // wie m8-kurz-vor-handelsstadt nach dem Laden
     w.unlocked = deriveUnlocks(w);
-    expect(initialUnlockShown(w)).toBe(true);
-    expect(unlockNotice(!initialUnlockShown(w), w)).toBeNull();
+    expect(frameUnlock([...w.unlocked], w).text).toBeNull();
+  });
+});
+
+describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () => {
+  const w = (ids: UnlockId[], crisisLevel: CrisisLevel = 'normal') => {
+    const x = createWorld(3, { crisisLevel });
+    x.unlocked = ids;
+    return x;
+  };
+  const tail = '. Mehr unter Hilfe (?)';
+  it('AK-U1-08 Texte je Eintrag wörtlich, Kombination, nur U6 = M8-Text, gleich → null, kein „Tick"', () => {
+    const t = (prev: UnlockId[], now: UnlockId[], c: CrisisLevel = 'normal') =>
+      unlockNoticeText(prev, w(now, c));
+    expect(t(['U0'], ['U0', 'U2'])).toBe(
+      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+    );
+    expect(t(['U0'], ['U0', 'U2'], 'off')).toBe(
+      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+    );
+    expect(t(['U0'], ['U0', 'U1'])).toBe(
+      `Neu: Marktplatz (M) — deine Siedlung wächst über das Kontor hinaus${tail}`,
+    );
+    expect(t(['U0', 'U2'], ['U0', 'U2', 'U3'])).toBe(
+      `Neu: Amtsstube (I), Handelsaufträge — die ersten Siedler sind da${tail}`,
+    );
+    expect(t(['U0', 'U2', 'U3'], ['U0', 'U2', 'U3', 'U4'])).toBe(
+      `Neu: Zuckerrohrplantage (Z), Brennerei (N), Schule (U) — deine Siedler wollen Bürger werden${tail}`,
+    );
+    expect(t(['U0', 'U2', 'U3', 'U4'], ['U0', 'U2', 'U3', 'U4', 'U5'])).toBe(
+      `Neu: Werkzeugmacher (T), Ausgabesperre — die ersten Bürger sind da${tail}`,
+    );
+    expect(t(['U0', 'U2', 'U3', 'U4', 'U5'], ['U0', 'U2', 'U3', 'U4', 'U5', 'U6'])).toBe(
+      UNLOCK_NOTICE,
+    );
+    expect(UNLOCK_NOTICE).toBe(
+      'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
+    );
+    expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
+      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Amtsstube (I), Handelsaufträge — die ersten Siedler sind da${tail}`,
+    );
+    expect(t(['U0', 'U2'], ['U0', 'U2'])).toBeNull();
+    for (const s of [t(['U0'], ['U0', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6'])])
+      expect(s).not.toMatch(/Tick/);
+  });
+  it('AK-U1-02 lockedToolText: Grund in neuer Welt; Feuerwache bei Krisen off; freie Werkzeuge null', () => {
+    expect(lockedToolText(w(['U0']), { kind: 'build', defId: 'chapel' })).toBe(
+      'Kapelle: Erst wenn ein Wohnhaus 4 Pioniere hat',
+    );
+    const off = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    expect(lockedToolText(off, { kind: 'build', defId: 'firestation' })).toBe(
+      'Feuerwache: ohne Krisen nicht nötig',
+    );
+    for (const tool of [
+      { kind: 'road' },
+      { kind: 'demolish' },
+      { kind: 'select' },
+      { kind: 'build', defId: 'house' },
+    ] as Tool[])
+      expect(lockedToolText(w(['U0']), tool)).toBeNull();
+  });
+  it('RF-4 zwei Freischaltungen in verschiedenen Ticks eines Frames → eine Meldung mit beiden, Basis = Frame-Anfang', () => {
+    const x = w(['U0']);
+    const seen: UnlockId[] = [...x.unlocked];
+    x.unlocked = ['U0', 'U2']; // Tick 1 des Frames
+    x.unlocked = ['U0', 'U2', 'U3']; // Tick 2 des Frames
+    const r = frameUnlock(seen, x);
+    expect(r.text).toBe(unlockNoticeText(['U0'], x));
+    expect(r.seen).toEqual(['U0', 'U2', 'U3']);
+    expect(frameUnlock(r.seen, x).text).toBeNull();
+    const a = soundSnapshot(w(['U0']));
+    expect(diffSoundEvents(a, soundSnapshot(x)).filter((e) => e === 'unlock')).toHaveLength(1);
   });
 });

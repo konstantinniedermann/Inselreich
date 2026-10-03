@@ -1,8 +1,7 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
-import { buildLock } from '../sim/placement';
-import { entryOfBuilding } from '../sim/unlocks';
+import { buildingShown, entryOfBuilding } from '../sim/unlocks';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -208,12 +207,16 @@ function attachTooltip(
 /** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
 const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
-/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und ohne Gesperrtes (Spec M8 14.2, S11). */
+/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und nur Angezeigtes (Spec 11.1). */
 export function buildEntries(world: World, category: Category): BuildingDefId[] {
   return BUILDING_IDS.filter(
-    (id) =>
-      id !== 'kontor' && BUILDING_DEFS[id].category === category && buildLock(world, id) === null,
+    (id) => id !== 'kontor' && BUILDING_DEFS[id].category === category && buildingShown(world, id),
   );
+}
+
+/** Kategorien mit mindestens einem Eintrag, in `CATEGORIES`-Reihenfolge. */
+export function visibleCategories(world: World): Category[] {
+  return CATEGORIES.filter((c) => buildEntries(world, c.id).length > 0).map((c) => c.id);
 }
 
 /**
@@ -255,6 +258,9 @@ export function renderBuildMenu(
     parent.appendChild(btn);
   };
 
+  // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1)
+  if (state.openCategory !== null && buildEntries(state.world, state.openCategory).length === 0)
+    state.openCategory = null;
   const main = document.createElement('div');
   main.className = 'buildbar-main';
   addButton(main, 'Auswahl', { kind: 'select' });
@@ -267,6 +273,7 @@ export function renderBuildMenu(
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
     btn.dataset.key = cat.id;
+    btn.hidden = buildEntries(state.world, cat.id).length === 0;
     btn.addEventListener('click', (ev) => {
       if (blurAfterClick(ev.detail)) btn.blur();
       onToggle(cat.id);

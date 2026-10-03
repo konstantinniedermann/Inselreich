@@ -1,13 +1,18 @@
 // Menü-Karte (Spec L2): Speichern, Laden, Neue Insel, Karte, Hilfe, Tastenkürzel. Keine Regeln.
 import { CRISIS_LEVELS } from '../sim/defs/crises';
 import type { CrisisLevel } from '../sim/types';
-import { hotkeyList } from './hotkeys';
 import { openModal, renderConfirm } from './modal';
-import { CRISIS_LEVEL_IDS } from './settings';
+import { CRISIS_LEVEL_IDS, UNLOCK_MODE_IDS, type UnlockMode } from './settings';
 import type { SaveInfo, Slot } from './storage';
 import { formatClock } from './time';
 
 export const NO_SAVE_TEXT = 'Noch kein Spielstand gespeichert';
+/** Beschriftung der Freischalt-Auswahl für „Neue Insel“ (Spec 10). */
+export const UNLOCK_MODE_LABELS: Readonly<Record<UnlockMode, string>> = {
+  stepwise: 'Schritt für Schritt (empfohlen)',
+  all: 'Alles frei',
+};
+
 export const UNSAVED_WARNING = 'Ungespeicherter Fortschritt geht verloren';
 
 /** Beschriftung eines Speicherplatzes in der Laden-Liste. */
@@ -29,7 +34,10 @@ export interface MenuActions {
   hasProgress(): boolean;
   load(slot: Slot): void;
   crisisLevel(): CrisisLevel;
-  newIsland(level: CrisisLevel): void;
+  unlockMode(): UnlockMode;
+  newIsland(level: CrisisLevel, unlockMode: UnlockMode): void;
+  /** Tastenliste für das Menü (nur Freigeschaltetes, `hotkeyList(world)`). */
+  hotkeys(): { key: string; label: string }[];
   seed(): number;
   openGuide(opener: HTMLElement): void;
 }
@@ -72,13 +80,17 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   select.setAttribute('aria-label', 'Krisen für die neue Insel');
   for (const id of CRISIS_LEVEL_IDS) select.append(new Option(CRISIS_LEVELS[id].name, id));
   select.value = a.crisisLevel();
+  const unlockSelect = document.createElement('select');
+  unlockSelect.setAttribute('aria-label', 'Freischaltung für die neue Insel');
+  for (const id of UNLOCK_MODE_IDS) unlockSelect.append(new Option(UNLOCK_MODE_LABELS[id], id));
+  unlockSelect.value = a.unlockMode();
   const newRow = document.createElement('div');
   const showNew = (): void => {
     const start = btn('Neue Insel', () =>
       renderConfirm(
         newRow,
         newIslandPrompt(a.listSaves().some((s) => s.slot === 'auto')),
-        () => a.newIsland(select.value as CrisisLevel),
+        () => a.newIsland(select.value as CrisisLevel, unlockSelect.value as UnlockMode),
         () => {
           showNew();
           newRow.querySelector('button')?.focus();
@@ -90,13 +102,15 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   showNew();
   const crisisLabel = document.createElement('label');
   crisisLabel.append('Krisen: ', select);
-  newBox.append(crisisLabel, newRow);
+  const unlockLabel = document.createElement('label');
+  unlockLabel.append('Freischaltung: ', unlockSelect);
+  newBox.append(crisisLabel, unlockLabel, newRow);
   // Karte, Hilfe, Tastenkürzel, Schliessen
   const seed = Object.assign(document.createElement('p'), { textContent: `Karte ${a.seed()}` });
   const guide = btn('Ziel und erste Schritte', (b) => a.openGuide(b));
   const keys = document.createElement('ul');
   keys.className = 'hotkey-list';
-  for (const k of hotkeyList())
+  for (const k of a.hotkeys())
     keys.append(
       Object.assign(document.createElement('li'), { textContent: `${k.key} ${k.label}` }),
     );

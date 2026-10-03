@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { createWorld } from '../../src/sim/world';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import {
   NAV_KEYS,
@@ -123,7 +124,7 @@ describe('Feuerwache-Hotkey (M6-AK-U1-04)', () => {
 });
 
 it('AK-UX-06 hotkeyList nennt jede Taste genau einmal, Werkzeuge mit Namen', () => {
-  const list = hotkeyList();
+  const list = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true }));
   const keys = list.map((e) => e.key);
   for (const [k, tool] of Object.entries(TOOL_HOTKEYS)) {
     expect(keys.filter((x) => x === k.toUpperCase())).toHaveLength(1);
@@ -161,7 +162,10 @@ describe('M8 Taste J (AK-S1-20)', () => {
     const keys = Object.keys(TOOL_HOTKEYS);
     expect(keys.slice(0, 15).join('')).toBe('rxhkumflbgvznte');
     expect(keys[15]).toBe('j');
-    expect(hotkeyList()).toContainEqual({ key: 'J', label: 'Badehaus' });
+    expect(hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toContainEqual({
+      key: 'J',
+      label: 'Badehaus',
+    });
     expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })[0]).toBe('Badehaus (J)');
   });
 });
@@ -176,8 +180,16 @@ describe('M8 Taste O (AK-S2-18)', () => {
     const keys = Object.keys(TOOL_HOTKEYS);
     expect(keys).toHaveLength(18);
     expect(keys.join('')).toBe('rxhkumflbgvzntejoi');
-    expect(hotkeyList().filter((e) => e.key === 'O')).toEqual([{ key: 'O', label: 'Glashütte' }]);
-    expect(hotkeyList().filter((e) => e.key === 'J')).toEqual([{ key: 'J', label: 'Badehaus' }]);
+    expect(
+      hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).filter(
+        (e) => e.key === 'O',
+      ),
+    ).toEqual([{ key: 'O', label: 'Glashütte' }]);
+    expect(
+      hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).filter(
+        (e) => e.key === 'J',
+      ),
+    ).toEqual([{ key: 'J', label: 'Badehaus' }]);
     expect(tooltipLines({ kind: 'build', defId: 'glassworks' })[0]).toBe('Glashütte (O)');
   });
 });
@@ -185,7 +197,7 @@ describe('M8 Taste O (AK-S2-18)', () => {
 describe('M8 U1 Tasten (Bestand nach S2)', () => {
   it('AK-U1-02 17 Werkzeugtasten; J und O je genau einmal mit Namen', () => {
     expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(18);
-    const list = hotkeyList();
+    const list = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true }));
     expect(list.filter((e) => e.key === 'J')).toEqual([
       { key: 'J', label: BUILDING_DEFS.bathhouse.name },
     ]);
@@ -206,5 +218,28 @@ describe('M10 Taste I', () => {
     expect(keys).toHaveLength(18);
     expect(keys.slice(0, 17).join('')).toBe('rxhkumflbgvzntejo');
     expect(tooltipLines({ kind: 'build', defId: 'townhall' })[0]).toBe('Amtsstube (I)');
+  });
+});
+
+describe('M10 Tastenliste nach Freischaltung', () => {
+  it('AK-U1-03 hotkeyList(world): neue Welt R, X, H, F, L, dann 1, 2, 3, P, NAV_KEYS; unlockAll normal: 18 Werkzeugtasten', () => {
+    const keys = hotkeyList(createWorld(3, { crisisLevel: 'normal' })).map((e) => e.key);
+    expect(keys).toEqual([
+      'R',
+      'X',
+      'H',
+      'F',
+      'L',
+      '1',
+      '2',
+      '3',
+      'P',
+      ...NAV_KEYS.map((n) => n.key),
+    ]);
+    const all = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).map(
+      (e) => e.key,
+    );
+    expect(all.slice(0, 18)).toEqual(Object.keys(TOOL_HOTKEYS).map((k) => k.toUpperCase()));
+    expect(all[18]).toBe('1');
   });
 });

@@ -1,6 +1,5 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
-import { setTaxLevel } from '../sim/tax';
 import { refundCost } from '../sim/economy';
 import { crisisView, effectiveRefund } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
@@ -8,16 +7,10 @@ import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { Category, GoodId, Order, Result, World } from '../sim/types';
+import type { Category, GoodId, Order, Result, UnlockId, World } from '../sim/types';
 import { refundText } from './texts';
-import {
-  goalBanners,
-  initialGoalShown,
-  initialUnlockShown,
-  lockedToolText,
-  unlockNotice,
-} from './goal';
-import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
+import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
+import { centerOn, clampToMap, createCamera, tileCorners, type Camera } from '../render/camera';
 import { createSound } from '../audio/sound';
 import { render, type Hover, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
@@ -25,10 +18,17 @@ import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
-import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
+import {
+  afterPause,
+  hotkeyList,
+  nextOpenCategory,
+  sameTool,
+  withSpeed,
+  type HotkeyAction,
+} from './hotkeys';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
-import { deliveredMessage, orderMessage } from './order';
+import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
   friendlyReason,
   hintPosition,
@@ -45,7 +45,7 @@ import { bindMessages, closeClosableToast, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
-import { createPerfProbe, startAudioProbe } from './devProbes';
+import { createPerfProbe, exposeDevProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
 import { openMenu, type MenuActions } from './menu';
@@ -86,8 +86,8 @@ export interface GameState {
   wonShown: boolean;
   /** Banner des zweiten Ziels bereits gezeigt (Spec M8 14.1; ein geladener Stand zeigt es nicht erneut). */
   wonMerchantsShown: boolean;
-  /** Freischalt-Meldung gezeigt bzw. beim Start/Laden schon frei (Spec M8 4.3 Punkt 5; höchstens einmal je Sitzung). */
-  unlockShown: boolean;
+  /** Einträge, die die Freischalt-Meldung schon kennt: beim Start/Laden und bei „Neu“ = `world.unlocked` (Spec 11.6). */
+  unlockedSeen: UnlockId[];
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
 }
@@ -172,7 +172,12 @@ function launch(
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
   let settings = loadSettings();
-  const world = loaded ?? createWorld(Date.now() % 100000, { crisisLevel: settings.crisisLevel });
+  const world =
+    loaded ??
+    createWorld(Date.now() % 100000, {
+      crisisLevel: settings.crisisLevel,
+      unlockAll: settings.unlockMode === 'all',
+    });
   const state: GameState = {
     world,
     cam: opts?.camera ? { ...opts.camera } : createCamera(),
@@ -184,7 +189,7 @@ function launch(
     openCategory: null,
     terrainLayer: buildTerrainLayer(world),
     ...initialGoalShown(world),
-    unlockShown: initialUnlockShown(world),
+    unlockedSeen: [...world.unlocked],
     eventLog: [],
   };
   const sound = createSound({
@@ -273,8 +278,10 @@ function launch(
     hasProgress: () => world.tick > 0,
     load: (slot) => loadSlotPaused(slot),
     crisisLevel: () => settings.crisisLevel,
-    newIsland: (crisisLevel) => {
-      settings = { ...settings, crisisLevel };
+    unlockMode: () => settings.unlockMode,
+    hotkeys: () => hotkeyList(world),
+    newIsland: (crisisLevel, unlockMode) => {
+      settings = { ...settings, crisisLevel, unlockMode };
       saveSettings(settings);
       restart(root);
     },
@@ -282,6 +289,10 @@ function launch(
     openGuide: (opener) => {
       openStartCard(gameEl, { mode: 'help', opener });
     },
+  };
+  /** „Hilfe“-Knopf der Freischalt-Meldung; bis Task 7 die bisherige Karte im Modus `help`. */
+  const openHelp = (): void => {
+    openStartCard(gameEl, { mode: 'help' });
   };
 
   const actions: HudActions = {
@@ -320,10 +331,14 @@ function launch(
       closeMenu?.();
       closeMenu = openMenu(gameEl, menuActions, opener);
     },
-    setTax: (level) => {
-      const r = setTaxLevel(world, level);
-      if (!r.ok) showError(friendlyReason(world, r.reason));
-      refresh();
+    openTownhall: () => {
+      // Erste aktive Amtsstube, sonst irgendeine (Spec 11.8); ohne Amtsstube ist der Knopf verborgen
+      const halls = Object.values(world.buildings).filter((b) => b.defId === 'townhall');
+      const hall = halls.find((b) => b.connected && b.outageUntil === undefined) ?? halls[0];
+      if (hall) {
+        setPanel({ kind: 'inspect', id: hall.id });
+        refresh();
+      }
     },
     deliverOrder: () => {
       const o = world.order ? { ...world.order } : null;
@@ -383,10 +398,10 @@ function launch(
     state.wonShown = goal.shown.wonShown;
     state.wonMerchantsShown = goal.shown.wonMerchantsShown;
     for (const text of goal.texts) showMessage(text, 'info', true, true);
-    const unlock = unlockNotice(!state.unlockShown, world);
-    if (unlock !== null) {
-      state.unlockShown = true;
-      showMessage(unlock, 'info', true, true);
+    const unlock = frameUnlock(state.unlockedSeen, world);
+    state.unlockedSeen = unlock.seen;
+    if (unlock.text !== null) {
+      showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: openHelp });
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
@@ -409,12 +424,10 @@ function launch(
 
   /** Einzige Stelle für jeden Werkzeugwechsel (Bauleiste, Hotkey, Esc/X, Rechtsklick). */
   const selectTool = (tool: Tool): void => {
-    if (tool.kind === 'build') {
-      const locked = lockedToolText(state.world, tool.defId);
-      if (locked !== null) {
-        showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
-        return; // kein Werkzeug (Spec 14.2, AK-U1-09)
-      }
+    const locked = lockedToolText(state.world, tool);
+    if (locked !== null) {
+      showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
+      return; // kein Werkzeug (Spec 11.2, AK-U1-02)
     }
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
@@ -628,6 +641,7 @@ function launch(
   let autoMs = 0;
   let autoErrorShown = false;
   let prevSnap = soundSnapshot(world);
+  let prevOrderVisible = orderVisible(world);
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
   let last = performance.now();
@@ -635,6 +649,21 @@ function launch(
   let fireMemo: FireMemo = null;
   const previewFire = preview.fireIds?.map((id) => ({ id, flames: 1, smoke: 1 }));
   let frame = 0;
+  if (import.meta.env.DEV) {
+    exposeDevProbe(
+      {
+        world: () => state.world,
+        // Mitte der Raute (obere und untere Ecke) in CSS-Pixeln der Seite
+        tileCenter: (x, y) => {
+          const c = tileCorners(state.cam, x, y);
+          const r = canvas.getBoundingClientRect();
+          return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
+        },
+        centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, map),
+      },
+      true,
+    );
+  }
   let disposed = false;
   let rafId = 0;
   const loop = (now: number): void => {
@@ -670,8 +699,9 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
-      const msg = orderMessage(prevOrder, world.order);
+      const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);
+      prevOrderVisible = orderVisible(world);
       prevOrder = world.order ? { ...world.order } : null;
       if (state.speed > 0) {
         autoMs += dt;
@@ -739,6 +769,7 @@ function launch(
     closeAllModals();
     closeSettings?.();
     stopAudioProbe?.();
+    if (import.meta.env.DEV) delete window.__inselDev;
     motionQuery.removeEventListener('change', onMotion);
     removeUnlockListeners();
     window.removeEventListener('pagehide', onPageHide);
