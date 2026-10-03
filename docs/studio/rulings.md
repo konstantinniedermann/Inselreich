@@ -1143,3 +1143,16 @@ Zoom 0,75/1,5 wird Pflicht-AK im nächsten Häppchen H-R7 (G1 + G8, Varianz und 
 production-integrator. — Kosten bei Irrtum: Revert-Merge oder Kantenfix in H-R7.
 
 Entscheider: L0 · Anlass: Bericht lead-art H-R6 · ADR: —
+
+## R192 · 2026-10-03 · Gate Plan M11
+
+Ruling: Gate Plan M11 bestanden (`docs/m11-design` @ 3e5a387; Spec @ e784388). lead-production und lead-qa je
+BEDENKEN ohne ZURÜCK; Fix-Runde erledigt (Basis 4a5130e auf `src/sim`, R2 blocked-by H-R7, Cache-Schlüssel mit
+Variante/Material/`level`, Playtester-Port und Teardown, Rotliste im Ledger, Budget 52). P-12 zulässig:
+Mutationsproben als Rot-Beleg für bestandsmessende Tests mit Befehl, roter Meldung und Rücknahme im Bericht,
+`git diff -- src` danach leer, Reviewer prüft. Spec-Entscheid lead-design: Nahrungsverkauf mit kleinem
+Grenzgewinn gewollt (13-15). Budget gestuft: Stufe 1 lead-tech 11 (C1: T00–T03), lead-art 3 (R1); Stufe 2 nach
+Pin-Prüfung T03. Branch `docs/m11-design` geht vorher per Merge nach main. Befund an die Retro: Plan-Instanz lief
+über den E-010-Deckel (225k) für die Fix-Runde. — Kosten bei Irrtum: Plan-Nachtrag in einer Controller-Instanz.
+
+Entscheider: L0 · Anlass: Gate-Urteile lead-production und lead-qa M11-PLAN · ADR: —
