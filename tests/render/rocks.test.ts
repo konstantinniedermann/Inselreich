@@ -18,7 +18,9 @@ import { ROCK_CAP, rockCap, SPRITE_CACHE_MAX_BYTES } from '../../src/render/limi
 import { PALETTE, SHADOW, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import {
   ROCK_H,
+  ROCK_SHAPES,
   ROCK_VARIANTS,
+  ROCK_W,
   drawRockStamp,
   paintRock,
   resetRockCache,
@@ -63,17 +65,19 @@ beforeAll(() => {
 });
 
 describe('H-R8 AK1 Determinismus', () => {
-  it('AK1 rockVariant ist rein, liegt in [0, ROCK_VARIANTS) und hängt von seed, x, y ab', () => {
+  it('AK1 rockVariant ist rein, liegt in [0, ROCK_SHAPES) (klein: +ROCK_SHAPES) und hängt von seed, x, y ab', () => {
     const rnd = vi.spyOn(Math, 'random');
     const seen = new Set<number>();
     for (let x = 0; x < 30; x++)
       for (let y = 0; y < 30; y++) {
         const v = rockVariant(5, x, y);
         expect(v).toBe(rockVariant(5, x, y));
-        expect(Number.isInteger(v) && v >= 0 && v < ROCK_VARIANTS).toBe(true);
+        expect(Number.isInteger(v) && v >= 0 && v < ROCK_SHAPES).toBe(true);
+        expect(rockVariant(5, x, y, true)).toBe(v + ROCK_SHAPES);
         seen.add(v);
       }
-    expect(seen.size).toBe(ROCK_VARIANTS);
+    expect(seen.size).toBe(ROCK_SHAPES);
+    expect(ROCK_VARIANTS).toBe(2 * ROCK_SHAPES);
     const a = [...Array(40).keys()].map((i) => rockVariant(1, i, 3));
     const b = [...Array(40).keys()].map((i) => rockVariant(2, i, 3));
     expect(a).not.toEqual(b);
@@ -98,6 +102,97 @@ describe('H-R8 AK1 Determinismus', () => {
   });
 });
 
+describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
+  const peaksOf = (faces: ReturnType<typeof rockFaces>) => {
+    const out: (typeof faces)[] = [];
+    for (const f of faces) {
+      if (f.role === 'base') out.push([]);
+      out[out.length - 1]!.push(f);
+    }
+    return out;
+  };
+  const area = (pts: { x: number; y: number }[]) =>
+    Math.abs(
+      pts.reduce(
+        (a, p, i) => a + p.x * pts[(i + 1) % pts.length]!.y - pts[(i + 1) % pts.length]!.x * p.y,
+        0,
+      ),
+    ) / 2;
+  const apexY = (pk: ReturnType<typeof rockFaces>) =>
+    Math.min(...pk.flatMap((f) => f.pts.map((p) => p.y)));
+  it('Gipfelhierarchie: 2-3 Gipfel je Massiv, Hauptgipfel deutlich höher, Höhen variiert', () => {
+    for (let v = 0; v < ROCK_VARIANTS; v++) {
+      const hs = peaksOf(rockFaces(3, v)).map((pk) => -apexY(pk));
+      expect(hs.length).toBeGreaterThanOrEqual(2);
+      expect(hs.length).toBeLessThanOrEqual(3);
+      const sorted = [...hs].sort((a, b) => b - a);
+      expect(sorted[0]! / sorted[1]!).toBeGreaterThanOrEqual(1.25);
+      expect(sorted[0]! / sorted[sorted.length - 1]!).toBeGreaterThanOrEqual(1.4);
+    }
+  });
+  it('Flanken asymmetrisch, Sockel und Felsband vorhanden, kleine Massive niedriger und schmaler', () => {
+    for (let v = 0; v < ROCK_VARIANTS; v++) {
+      const faces = rockFaces(3, v);
+      const roles = new Set(faces.map((f) => f.role));
+      for (const r of ['base', 'light', 'shade', 'cap', 'foot', 'band'] as const)
+        expect(roles.has(r), `${v}${r}`).toBe(true);
+      const main = peaksOf(faces).sort((a, b) => apexY(a) - apexY(b))[0]!;
+      const l = area(main.find((f) => f.role === 'light')!.pts),
+        r = area(main.find((f) => f.role === 'shade')!.pts);
+      expect(Math.abs(l - r) / Math.max(l, r)).toBeGreaterThan(0.05);
+    }
+    const top = (v: number) => Math.min(...rockFaces(3, v).flatMap((f) => f.pts.map((p) => p.y)));
+    const wide = (v: number) => {
+      const xs = rockFaces(3, v).flatMap((f) => f.pts.map((p) => p.x));
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    for (let v = 0; v < ROCK_SHAPES; v++) {
+      expect(-top(v + ROCK_SHAPES)).toBeLessThan(-top(v));
+      expect(wide(v + ROCK_SHAPES)).toBeLessThan(wide(v));
+    }
+    const widest = Math.max(...[...Array(ROCK_VARIANTS).keys()].map(wide));
+    expect(widest).toBeGreaterThan(1.3 * ISO_W);
+    expect(widest).toBeLessThanOrEqual(ROCK_W);
+  });
+  it('2x2-Raster: je Block mit freiem Gebirge genau ein Stempel auf der vordersten Gebirgskachel, klein bei höchstens 2 Kacheln', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const free = (x: number, y: number) => {
+      const t = w.tiles[y * w.width + x];
+      return !!t && x < w.width && t.terrain === 'mountain' && t.buildingId === null && !t.road;
+    };
+    const rocks = rocksOf(w);
+    const blocks = new Map<string, Rock>();
+    for (const r of rocks) {
+      const k = `${r.fp.x >> 1},${r.fp.y >> 1}`;
+      expect(blocks.has(k), k).toBe(false);
+      blocks.set(k, r);
+    }
+    let mountain = 0;
+    for (let by = 0; by < w.height; by += 2)
+      for (let bx = 0; bx < w.width; bx += 2) {
+        const tiles = [
+          [0, 0],
+          [1, 0],
+          [0, 1],
+          [1, 1],
+        ]
+          .map(([dx, dy]) => [bx + dx!, by + dy!] as const)
+          .filter(([x, y]) => free(x, y));
+        mountain += tiles.length;
+        const r = blocks.get(`${bx >> 1},${by >> 1}`);
+        if (tiles.length === 0) {
+          expect(r).toBeUndefined();
+          continue;
+        }
+        expect(r).toBeDefined();
+        const front = Math.max(...tiles.map(([x, y]) => x + y));
+        expect(r!.fp.x + r!.fp.y).toBe(front);
+        expect(r!.variant >= ROCK_SHAPES).toBe(tiles.length <= 2);
+      }
+    expect(rocks.length).toBeLessThan(mountain / 2);
+  });
+});
+
 describe('H-R8 AK2 Sortierung', () => {
   it('AK2 sortedObjects liefert Felsen nur auf Gebirge ohne Gebäude und Weg, id = Kachelindex', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
@@ -109,7 +204,7 @@ describe('H-R8 AK2 Sortierung', () => {
       expect(t.buildingId).toBeNull();
       expect(t.road).toBeFalsy();
       expect(r.id).toBe(r.fp.y * w.width + r.fp.x);
-      expect(r.variant).toBe(rockVariant(w.seed, r.fp.x, r.fp.y));
+      expect(r.variant % ROCK_SHAPES).toBe(rockVariant(w.seed, r.fp.x, r.fp.y));
     }
     expect(sortedObjects(w)).toBe(sortedObjects(w)); // gecacht
   });
@@ -145,18 +240,19 @@ describe('H-R8 AK2 Sortierung', () => {
     expect(idx('walker', 1)).toBeGreaterThan(idx('rock', r.id));
     expect(idx('walker', 2)).toBeLessThan(idx('rock', r.id));
   });
-  it('AK2 Stempelgrenzen: Pfadpunkte in rockBounds, Breite höchstens eine Kachel, Höhe höchstens H_MAX', () => {
+  it('AK2 Stempelgrenzen: Pfadpunkte in rockBounds, Breite höchstens zwei Kacheln, Höhe höchstens H_MAX', () => {
     expect(ROCK_H).toBeLessThanOrEqual(H_MAX);
     const it0 = mkRock(0, 10, 7);
     const box = rockBounds(it0);
     const c = project(10.5, 7.5);
-    expect(box.w).toBe(ISO_W);
+    expect(box.w).toBe(ROCK_W);
+    expect(ROCK_W).toBeLessThanOrEqual(2 * ISO_W);
     expect(c.y - box.y).toBeLessThanOrEqual(H_MAX);
     for (const seed of [3, 7, 12588])
       for (let v = 0; v < ROCK_VARIANTS; v++)
         for (const f of rockFaces(seed, v))
           for (const p of f.pts) {
-            expect(Math.abs(p.x)).toBeLessThanOrEqual(ISO_W / 2);
+            expect(Math.abs(p.x)).toBeLessThanOrEqual(ROCK_W / 2);
             expect(p.y).toBeGreaterThanOrEqual(-ROCK_H - 1e-9);
             expect(p.y).toBeLessThanOrEqual(ISO_H / 2);
             const q = { x: c.x + p.x, y: c.y + p.y };
@@ -234,7 +330,7 @@ describe('H-R8 AK4 Cap und Cache', () => {
   it('AK4 thinRocks kamerastabil: ein gewählter Fels bleibt gewählt, wenn der Ausschnitt schrumpft oder wandert', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
     const rocks = rocksOf(w);
-    const n = 80;
+    const n = 20;
     const sel = (items: readonly Rock[]) => new Set(thinRocks(items, n, w.seed).map((i) => i.id));
     const full = sel(rocks);
     expect(full.size).toBe(n);
@@ -322,9 +418,7 @@ describe('H-R8 AK4 Frame-Kosten', () => {
       .reduce((n, e) => n + e.points.length, 0);
     const edgeAll = rocksOf(w).filter((r) => r.shadow).length;
     expect(pts).toBeLessThanOrEqual(8 * Math.min(edgeAll, ROCK_CAP[0]) + 40); // + Schiffsschatten;
-    expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(
-      ROCK_CAP[0] + 10,
-    );
+    expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(110);
   });
 });
 

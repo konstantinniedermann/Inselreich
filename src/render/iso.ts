@@ -10,7 +10,9 @@ export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
 export const TREE_VARIANTS = 8;
-export const ROCK_VARIANTS = 8;
+/** Gestalten eines Felsmassivs; jede gibt es gross und klein (Randblock), also `ROCK_VARIANTS` Stempel. */
+export const ROCK_SHAPES = 12;
+export const ROCK_VARIANTS = 2 * ROCK_SHAPES;
 export const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
   x: number;
@@ -50,9 +52,12 @@ export const zoomStep = (z: number): number => ZOOM_STEPS.find((s) => s >= z - 1
 export const treeVariant = (seed: number, x: number, y: number): number =>
   Math.floor(hash2(seed + 41, x, y) * TREE_VARIANTS) % TREE_VARIANTS;
 
-/** Gestaltvariante des Felsmassivs auf (x, y): rein aus Seed und Kachel (Darstellung, kein Spielzustand). */
-export const rockVariant = (seed: number, x: number, y: number): number =>
-  Math.floor(hash2(seed + 71, x, y) * ROCK_VARIANTS) % ROCK_VARIANTS;
+/**
+ * Stempelvariante des Felsmassivs auf (x, y): rein aus Seed und Kachel (Darstellung, kein Spielzustand). `small`
+ * (Randblock mit höchstens zwei freien Gebirgskacheln) verschiebt um `ROCK_SHAPES` auf die kleine Fassung.
+ */
+export const rockVariant = (seed: number, x: number, y: number, small = false): number =>
+  (Math.floor(hash2(seed + 71, x, y) * ROCK_SHAPES) % ROCK_SHAPES) + (small ? ROCK_SHAPES : 0);
 
 // iso.ts — Fortsetzung
 /** Platzhalter-Höhe je Kategorie über der oberen Ecke des vollen Footprints (Weltpixel, Zoom 1, D-12). */
@@ -139,28 +144,50 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       const fp = { x: b.x, y: b.y, w: d.w, h: d.h };
       items.push({ kind: 'building', id: b.id, fp, key: depthKey(fp) });
     }
+    // Felsmassive: ein Stempel je 2×2-Block auf der vordersten freien Gebirgskachel (grösser, weniger Stempel)
+    const freeMountain = (x: number, y: number): boolean => {
+      if (x >= world.width || y >= world.height) return false;
+      const t = world.tiles[y * world.width + x]!;
+      return t.terrain === 'mountain' && t.buildingId === null && !t.road;
+    };
+    const openAt = (x: number, y: number): boolean =>
+      x >= world.width ||
+      y >= world.height ||
+      world.tiles[y * world.width + x]!.terrain !== 'mountain';
+    for (let by = 0; by < world.height; by += 2)
+      for (let bx = 0; bx < world.width; bx += 2) {
+        let n = 0,
+          ax = -1,
+          ay = -1;
+        for (const [dx, dy] of [
+          [0, 0],
+          [1, 0],
+          [0, 1],
+          [1, 1],
+        ] as const)
+          if (freeMountain(bx + dx, by + dy)) {
+            n++;
+            if (bx + dx + by + dy >= ax + ay) {
+              ax = bx + dx;
+              ay = by + dy;
+            }
+          }
+        if (n === 0) continue;
+        const fp = { x: ax, y: ay, w: 1, h: 1 };
+        // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt
+        const shadow = openAt(ax + 1, ay) || openAt(ax, ay + 1) || openAt(ax + 1, ay + 1);
+        items.push({
+          kind: 'rock',
+          id: ay * world.width + ax,
+          fp,
+          key: depthKey(fp),
+          variant: rockVariant(world.seed, ax, ay, n <= 2),
+          shadow,
+        });
+      }
     for (let y = 0; y < world.height; y++)
       for (let x = 0; x < world.width; x++) {
         const t = world.tiles[y * world.width + x]!;
-        if (t.terrain === 'mountain' && t.buildingId === null && !t.road) {
-          const fp = { x, y, w: 1, h: 1 };
-          const variant = rockVariant(world.seed, x, y);
-          // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt (Binnenfelsen sparen ihn)
-          const open = (dx: number, dy: number): boolean =>
-            x + dx >= world.width ||
-            y + dy >= world.height ||
-            world.tiles[(y + dy) * world.width + x + dx]!.terrain !== 'mountain';
-          const shadow = open(1, 0) || open(0, 1) || open(1, 1);
-          items.push({
-            kind: 'rock',
-            id: y * world.width + x,
-            fp,
-            key: depthKey(fp),
-            variant,
-            shadow,
-          });
-          continue;
-        }
         if (t.terrain !== 'forest' || t.buildingId !== null || t.road) continue;
         const fp = { x, y, w: 1, h: 1 };
         const variant = treeVariant(world.seed, x, y);
