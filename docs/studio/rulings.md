@@ -1267,3 +1267,15 @@ nach Dauer als Hinweis. Laufend danach: E-015, E-017, E-022. Handbuch 1.15 durch
 union-Merge kann Dubletten erzeugen (Sichtprüfung im Review).
 
 Entscheider: L0 · Anlass: `retros/2026-10-03-meilenstein-m11.md`, `retros/2026-10-03-prozess-retro-m11.md` · ADR: —
+
+## R202 · 2026-10-03 · Gate Merge H-R8 Felsmassive
+
+Ruling: Gate Merge H-R8 (G3 Felsmassive + `lineJoin='round'`) bestanden (`feat/h-r8-felsen` @ 5e07b21; Rot-Belege
+71067fe/2e8ad51, Tiefensortierung nur Property-Test ohne echten Rot-Beleg — vom Reviewer als ausreichend bewertet;
+5 Review-Runden mit Nachprüfung derselben Instanz, zuletzt OK). renderMedian gegen main gleichauf; 18 von 20
+Variante-0-Hashes bewusst geändert (R195). Blindtest Note 3 („Gebirge", pyramidenhaft/lückig) → Feinschliff als
+Beobachtung für M9-Rest. Befund: Render-Basis nach M11 bei 1920×1080/DPR 2 rund 4,0 ms → Messung für M12 neu
+aufsetzen (gleiche Bedingungen wie R199). Einmaliger `make check`-Exit 2 (dritte Sichtung flakiger Test) stützt
+E-023. Merge durch production-integrator im eigenen Worktree (E-022, Handbuch 1.15). — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R8 · ADR: —
