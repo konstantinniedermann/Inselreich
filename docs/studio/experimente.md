@@ -37,7 +37,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`. Guard-Teil (`git pull --rebase`, `-r`, `pull.rebase true` blocken) braucht die Nutzerfreigabe: [Warteschlange N-92](warteschlange.md)
 - Ruling: R166
 - Start: Handbuch 1.12
-- Bewertung: –
+- Bewertung: Vorschlag Retro M10 (Vorschlag, Status erst nach Ruling): 0 Rebase-Anweisungen, 0 Ausführungen seit 1.12 → behalten ([Retro M10](retros/2026-10-03-meilenstein-m10.md), B-Hinweis: 18 von 86 Briefings ohne Git-Zeile)
 
 ## E-013 · laufend · Budget-Phase gleich Paket-ID
 
@@ -48,7 +48,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Budget), `docs/studio/CHANGELOG.md`
 - Ruling: R166
 - Start: Handbuch 1.12
-- Bewertung: –
+- Bewertung: Vorschlag Retro M10 (Vorschlag, Status erst nach Ruling): 27 Freigaben, alle Phase gleich Paket-ID, keine fremde Freigabe; 4 Pakete mit Nachfreigabe, 1 Überschreitung (A1 4/3) → behalten ([Retro M10](retros/2026-10-03-meilenstein-m10.md))
 
 ## E-015 · vorgeschlagen · Nachweiszeilen im Lead-Bericht
 
@@ -58,6 +58,39 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Rückfall: `docs/studio/templates/bericht.md` und Handbuch ohne die zwei Zeilen (Handbuch 1.13, `git show HEAD:docs/studio/templates/bericht.md`).
 - Dateien: `docs/studio/templates/bericht.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
 - Ruling: R179 (angenommen), R180 (wartet auf Platz, höchstens 3 laufend; Start, sobald E-011 oder E-013 abgeschlossen ist)
+- Start: –
+- Bewertung: –
+
+## E-016 · vorgeschlagen · Lead-Übergabe-Deckel
+
+- Hypothese: Wenn jede Lead-Instanz bei 200k Kontext (nicht erst bei Bedarf) per Ledger an eine frische Instanz übergibt und nie mehr als 6 Arbeiter-Starts je Instanz führt, dann sinken Steuerungsanteil und 5-min-Neuschreibungen, ohne dass Aufträge scheitern (Retro M10 B1).
+- Messgrösse: in M11 laut `metrics.py --milestone M11`: Steuerungsanteil ≤ 55 %, Cache-Write 5 min ≤ 20 %, Lead-Kontext Max ≤ 300k (Ausgang M10: 62,2 %, 25,8 %, 549k). Gegenprobe: Rückfragen der Folgeinstanz wegen fehlendem Ledger-Inhalt ≤ 1 je Übergabe; Review-Runden im Mittel ≤ 1,5.
+- Zeitraum: M11.
+- Rückfall: Handbuch 1.13 (Umsetzungszyklus ohne Deckel; `git show HEAD:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-017 · vorgeschlagen · Doku-Ownership im Umsetzer-Briefing
+
+- Hypothese: Wenn die Briefing-Vorlage des Umsetzers eine Zeile „Doku (D1): Dateien <README-Abschnitt, arc42-Paragraf, Spec-Verweise> gehören dir“ trägt, dann schreibt kein Lead D1 selbst und das Final-Review meldet kein fehlendes D1 (Retro M10 B3, R186).
+- Messgrösse: über die nächsten 3 Pakete mit Final-Review 0 Final-Review-Befunde „D1 fehlt“ und 0 Lead-Commits mit Doku-Inhalt statt Umsetzer-Commits (Ausgang M10: 1 von 1). Gegenprobe: Ownership-Überschneidungen zwischen parallelen Instanzen 0.
+- Zeitraum: die nächsten 3 Pakete mit Final-Review.
+- Rückfall: `docs/studio/templates/briefing.md` ohne die Zeile (`git show HEAD:docs/studio/templates/briefing.md`).
+- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
+
+- Hypothese: Wenn die Briefing-Vorlage des `qa-playtester` bei Blindtests vorschreibt, Probe-Dateien (z. B. `galerie.probes.json`) erst nach dem schriftlichen Urteil zu öffnen, und der Rater-Start im Paketbudget des Lead-Auftrags steht, dann gibt es keine Blindtests mit Vorbehalt und keine Budgetüberschreitung durch den Rater (Retro M10 B5, R181, R183).
+- Messgrösse: über die nächsten 3 Blindtests 0 mit Vorbehalt „Probe vorab gesehen“ und 0 Budgetüberschreitungen durch Rater-Starts (Ausgang M10: 1 von 2 Vorbehalt, 1 Überschreitung 4/3).
+- Zeitraum: die nächsten 3 Blindtests (M9 Welle 2 / M11).
+- Rückfall: Playtester-Briefing ohne Zusatz (`git show HEAD:docs/studio/templates/briefing.md`).
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/qa-playtester.md`, `docs/studio/CHANGELOG.md`
+- Ruling: –
 - Start: –
 - Bewertung: –
 
