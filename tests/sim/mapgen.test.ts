@@ -232,7 +232,12 @@ describe('mountain patches', () => {
       const quarry = m.terrain.some(
         (tt, i) =>
           isLand(tt) &&
-          [i - 1, i + 1, i - MAP_W, i + MAP_W].some((j) => m.terrain[j] === 'mountain'),
+          [
+            i % MAP_W > 0 ? i - 1 : -1,
+            i % MAP_W < MAP_W - 1 ? i + 1 : -1,
+            i - MAP_W,
+            i + MAP_W,
+          ].some((j) => m.terrain[j] === 'mountain'),
       );
       expect(quarry, `seed ${s}`).toBe(true);
     }
