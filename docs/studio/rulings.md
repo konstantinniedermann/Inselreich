@@ -926,3 +926,13 @@ Doku-Fast-Forward `docs/s12-design` → main durch L0 ohne Integrator (kein Code
 — Kosten bei Irrtum: Nutzer will Ausbau vor S10 → S12 in M11 vorziehen (keine Abhängigkeit ausser Save-Version).
 
 Entscheider: L0 · Anlass: Bericht S12-D · ADR: —
+
+## R172 · 2026-10-03 · H-R5 Terrain
+
+Ruling: Gate Merge H-R5 bestanden (`feat/h-r5-terrain` @ b2cf4a7; Review OK, Playtest OK, `make check`
+grün, Kantenenergie an Kachelgrenzen 4,3 → 1,9, Felsrandsprung 74 → 8). Die Abweichung von M7-Spec 5.1
+(`ROCK_EDGE` entfällt) ist angenommen. Restrisiken (Fels in Nahaufnahme verwaschen, weiche Kachel-Treppe
+an Typgrenzen) gehen in die Nutzerabnahme; ein Domain-Warp wäre ein eigenes Paket. Merge durch
+production-integrator. H-A1 Bausound startet danach. — Kosten bei Irrtum: Revert eines Commits.
+
+Entscheider: L0 · Anlass: Bericht H-R5 · ADR: —
