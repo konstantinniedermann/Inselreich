@@ -1007,3 +1007,37 @@ Session-Ampel Steuerung 40 %, Umsetzer 44 %, opus 33 %, Cache-Write 26,6 % rot (
 geht als Paket an lead-production (nach Reset). — Kosten bei Irrtum: eine Zeile mehr je Bericht.
 
 Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-03-session-08e7b5f1.md` · ADR: —
+
+## R180 · 2026-10-03 · Wochenlimit aufgehoben, Experiment-Grenze
+
+Ruling: (1) Nutzer-Anweisung „mach weiter, ignorier das Wochenlimit, darfst es ausschöpfen" ausgelegt als:
+R164 B2 (Stufe 2 M10 erst nach Reset) entfällt; der Plan aus state.md läuft ab jetzt in normaler
+Taktung weiter (M10 Stufe 2 → Gate Merge M10 → M9 Welle 2 → M11). E-010 „Schlanke Steuerung" gilt
+unverändert, die Effizienzregeln bleiben Pflicht. (2) CI rot @ be2a58e: `test_experiments_limit` (4 statt
+höchstens 3 laufend). E-015 ist angenommen (R179), aber noch nicht umgesetzt (Vorlage `bericht.md` ohne
+Pflichtzeilen) → Status `vorgeschlagen` (angenommen, wartet auf Platz); Start, sobald E-011 oder E-013
+abgeschlossen ist. — Kosten bei Irrtum: E-015 startet ein bis zwei Pakete später.
+
+Entscheider: L0 · Anlass: Nutzer-Prompt Session-Start, CI-Lauf 37111435226 · ADR: —
+
+## R181 · 2026-10-03 · M10-A1 AK-A1-03
+
+Ruling: AK-A1-03 bestanden (Blindtest 24/24, davon 5 geraten; Anmutung bestanden mit Auflage). Auflage für
+T09 (UI-Instanz lead-tech): Symbole nur auf dunklen Chips/Leisten (`--wood`), nie direkt auf Pergament
+(`foam` und `wallLime` Kontrast 1,13 bzw. 1,03); keine Fix-Runde an `icons.ts`. Stufenfiguren bei 16 px
+und Farbausreisser Geld/Schule gehen als Beobachtung an M9 Welle 2 / G8. Budget A1: 4 von 3 Starts
+verbraucht (Tafel + blinder Rater), Überschreitung um 1 nachträglich freigegeben. — Kosten bei Irrtum:
+Chips in T09 nachträglich gegen Randlinie tauschen (eine Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-art M10-A1, `.studio/qa/M10-A1/` · ADR: —
+
+## R182 · 2026-10-03 · M10 Stufe 2 Sim abgenommen, UI-Welle frei
+
+Ruling: M10-S2 (T01e) und M10-B1 (T05a–c) abgenommen (`feat/m10-sim` @ 6912e88; Review OK, Rot-Beleg T05
+vorhanden, BG-1/BG-2 grün). Abweichungen angenommen: Arbeit in `m10-sim` statt `m10-scen` (seriell, kein
+Konflikt), `Slot` lokal in `scenarios.ts`. `endMoney` 2681 statt 1490 aus R162 ist kein Regress (main
+identisch); R162-Zahl gilt als veraltet, neue Referenz 2681. Frei: lead-tech UI-Instanz T06–T09 (`feat/m10-ui`
+ab `feat/m10-sim` @ 6912e88, 10 Starts, Parallelität 2) mit Auflage R181; lead-art R1 parallel
+(`feat/m10-render`, 3 Starts). QA-U1…U4 und Final-Review folgen über lead-qa vor Gate Merge M10.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M10-S2 · ADR: —
