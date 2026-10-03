@@ -10,6 +10,9 @@ export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
 export const TREE_VARIANTS = 8;
+/** Gestalten eines Felsmassivs; jede gibt es gross und klein (Randblock), also `ROCK_VARIANTS` Stempel. */
+export const ROCK_SHAPES = 16;
+export const ROCK_VARIANTS = 2 * ROCK_SHAPES;
 export const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
   x: number;
@@ -48,6 +51,13 @@ export const radiusEllipse = (r: number): { rx: number; ry: number } => ({
 export const zoomStep = (z: number): number => ZOOM_STEPS.find((s) => s >= z - 1e-9) ?? 2;
 export const treeVariant = (seed: number, x: number, y: number): number =>
   Math.floor(hash2(seed + 41, x, y) * TREE_VARIANTS) % TREE_VARIANTS;
+
+/**
+ * Stempelvariante des Felsmassivs auf (x, y): rein aus Seed und Kachel (Darstellung, kein Spielzustand). `small`
+ * (Randblock mit höchstens zwei freien Gebirgskacheln) verschiebt um `ROCK_SHAPES` auf die kleine Fassung.
+ */
+export const rockVariant = (seed: number, x: number, y: number, small = false): number =>
+  (Math.floor(hash2(seed + 71, x, y) * ROCK_SHAPES) % ROCK_SHAPES) + (small ? ROCK_SHAPES : 0);
 
 // iso.ts — Fortsetzung
 /** Platzhalter-Höhe je Kategorie über der oberen Ecke des vollen Footprints (Weltpixel, Zoom 1, D-12). */
@@ -118,13 +128,14 @@ export interface Moving {
 export type SortedItem =
   | { kind: 'building'; id: number; fp: Footprint; key: number }
   | { kind: 'tree'; id: number; fp: Footprint; key: number; variant: number }
+  | { kind: 'rock'; id: number; fp: Footprint; key: number; variant: number; shadow: boolean }
   | { kind: Moving['kind']; id: number; fp: Footprint; key: number; cx: number; cy: number };
-const RANK = { tree: 0, building: 1, ship: 2, boat: 3, walker: 4 } as const;
+const RANK = { rock: 0, tree: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
 const cmp = (a: SortedItem, b: SortedItem): number =>
   a.key - b.key || a.fp.x - b.fp.x || RANK[a.kind] - RANK[b.kind] || a.id - b.id;
 const fixed = new WeakMap<World, { key: string; items: SortedItem[] }>();
 
-/** Feste Objekte (Gebäude, Baumstempel) gecacht je Welt und `layoutKey`; bewegte je Aufruf eingemischt (D-09). */
+/** Feste Objekte (Gebäude, Baum- und Felsstempel) gecacht je Welt und `layoutKey`; bewegte je Aufruf eingemischt (D-09). */
 export function sortedObjects(world: World, moving: readonly Moving[] = []): readonly SortedItem[] {
   const key = layoutKey(world);
   let c = fixed.get(world);
@@ -135,6 +146,66 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       const fp = { x: b.x, y: b.y, w: d.w, h: d.h };
       items.push({ kind: 'building', id: b.id, fp, key: depthKey(fp) });
     }
+    // Felsmassive: grosser Stempel nur auf einem vollständig freien 2×2-Block (Footprint 2×2, überlappt nichts, die
+    // Sortierung trägt wie bei Gebäuden); sonst kleine 1×1-Stempel auf einem Teil der freien Gebirgskacheln
+    const freeMountain = (x: number, y: number): boolean => {
+      if (x >= world.width || y >= world.height) return false;
+      const t = world.tiles[y * world.width + x]!;
+      return t.terrain === 'mountain' && t.buildingId === null && !t.road;
+    };
+    const openAt = (x: number, y: number): boolean =>
+      x >= world.width ||
+      y >= world.height ||
+      world.tiles[y * world.width + x]!.terrain !== 'mountain';
+    const pushRock = (x: number, y: number, n: number): void => {
+      const fp = { x, y, w: n, h: n };
+      // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt
+      let shadow = false;
+      for (let k = 0; k <= n && !shadow; k++) shadow = openAt(x + n, y + k) || openAt(x + k, y + n);
+      items.push({
+        kind: 'rock',
+        id: y * world.width + x,
+        fp,
+        key: depthKey(fp),
+        variant: rockVariant(world.seed, x, y, n === 1),
+        shadow,
+      });
+    };
+    // Gitterphase je 8×8-Region (Versatz 0 oder 1 je Achse) und ein Viertel der freien Blöcke ausgelassen:
+    // kein sichtbares Raster; Blöcke bleiben innerhalb ihrer Region, also disjunkt
+    const used = new Set<number>();
+    for (let ry = 0; ry < world.height; ry += 8)
+      for (let rx = 0; rx < world.width; rx += 8) {
+        const ox = hash2(world.seed + 77, rx, ry) < 0.5 ? 0 : 1,
+          oy = hash2(world.seed + 78, rx, ry) < 0.5 ? 0 : 1;
+        for (let by = ry + oy; by + 1 < Math.min(ry + 8, world.height); by += 2)
+          for (let bx = rx + ox; bx + 1 < Math.min(rx + 8, world.width); bx += 2) {
+            if (
+              freeMountain(bx, by) &&
+              freeMountain(bx + 1, by) &&
+              freeMountain(bx, by + 1) &&
+              freeMountain(bx + 1, by + 1) &&
+              hash2(world.seed + 76, bx, by) >= 0.25
+            ) {
+              pushRock(bx, by, 2);
+              for (const [dx, dy] of [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [1, 1],
+              ] as const)
+                used.add((by + dy) * world.width + bx + dx);
+            }
+          }
+      }
+    for (let y = 0; y < world.height; y++)
+      for (let x = 0; x < world.width; x++)
+        if (
+          freeMountain(x, y) &&
+          !used.has(y * world.width + x) &&
+          hash2(world.seed + 74, x, y) < 0.3
+        )
+          pushRock(x, y, 1);
     for (let y = 0; y < world.height; y++)
       for (let x = 0; x < world.width; x++) {
         const t = world.tiles[y * world.width + x]!;

@@ -236,6 +236,7 @@ function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): voi
   const r = roofColors(p.tone(roof, p.look.roof));
   p.quad([u0, v1, 0], [u1, v1, 0], [u1, v1, wz], [u0, v1, wz], wall.left);
   p.quad([u1, v0, 0], [u1, v1, 0], [u1, v1, wz], [u1, v0, wz], wall.right);
+  p.ctx.lineJoin = 'round'; // spitze Giebel- und Dachwinkel ohne Miter-Spitzen (R195); unten zurückgesetzt
   if (s.kind === 'gable' && s.axis === 'u') {
     p.poly(
       [
@@ -280,6 +281,7 @@ function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): voi
       r.shade,
     ); // vorn rechts
   }
+  p.ctx.lineJoin = 'miter';
 }
 
 const leftQuad = (

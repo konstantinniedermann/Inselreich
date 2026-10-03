@@ -15,6 +15,14 @@ export const CAPS = {
 export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];
 
+/**
+ * Felsstempel je Frame [normal, reduziert] (H-R8). Jeder Stempel kostet ein drawImage (rund 4 µs, gemessen +2,6 ms bei
+ * 600 Stück gegen 1,9 ms Frame); Randfelsen haben Vorrang, im Binnenland zeigen die übrigen Kacheln das Geländemuster; Zahl nach Messung (+20 % bei 250).
+ * Eigene Konstante, damit die Setzungen von `CAPS` (Spec 12.2) unverändert bleiben.
+ */
+export const ROCK_CAP = [160, 80] as const;
+export const rockCap = (reduce = false): number => ROCK_CAP[reduce ? 1 : 0];
+
 const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 
 /** Anzahl Regenschlieren zur Stärke `w` (≤ w × CAP_RAIN). */
