@@ -17,8 +17,6 @@ const GAP_PX = 3; // Abstand zur Sprite-Oberkante
 const TRACK = PALETTE.wallTimber;
 const MAX_FRACTION = 0.99999;
 
-const ringable = (b: Building): boolean => !b.house && b.defId !== 'house' && b.defId !== 'kontor';
-
 /** Anteil des laufenden Zyklus 0 … 0,99999; 0 ohne Zyklus. `frac` = Bruchteil des aktuellen Ticks. */
 export function ringFraction(b: Building, frac: number): number {
   const cycle = cycleOf(b);
@@ -46,8 +44,7 @@ export function drawProgressRings(
   let n = 0;
   for (const b of Object.values(world.buildings)) {
     if (n >= MAX_RINGS) break;
-    if (!ringable(b) || b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1)
-      continue;
+    if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const view = ringView(b, frac);
     if (!view) continue;
     const box = spriteBounds(BUILDING_DEFS[b.defId], b);

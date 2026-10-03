@@ -99,6 +99,19 @@ describe('M11 Fortschrittsring (Spec 8)', () => {
     const allowed = new Set<string>([...Object.values(PALETTE), 'rgba(255,255,255,0.85)']);
     for (const c of [...log.fillSet, ...log.strokeSet]) expect(allowed.has(c)).toBe(true);
 
+    // Randfälle: ok aber nicht angebunden, und noForest → grau, aber gezeichnet
+    const edge = worldWith([
+      ['fisher', 5, 5, 'ok'],
+      ['lumberjack', 9, 5, 'noForest'],
+    ]);
+    edge.buildings[1001]!.connected = false;
+    edge.buildings[1001]!.progress = 10;
+    edge.buildings[1002]!.progress = 10;
+    const f1 = fakeCtx();
+    expect(drawProgressRings(f1.ctx, edge, camAt(edge, 1), FULL, 0.5)).toBe(2);
+    expect(f1.log.strokeSet).toContain(PALETTE.rockLight);
+    expect(f1.log.strokeSet).not.toContain(PALETTE.signalOk);
+
     const none: TileRange = { x0: 40, y0: 40, x1: 41, y1: 41 };
     const f2 = fakeCtx();
     expect(drawProgressRings(f2.ctx, world, camAt(world, 1), none, 0)).toBe(0);
