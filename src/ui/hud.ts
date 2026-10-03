@@ -92,6 +92,11 @@ export function taxView(world: World): ChipView | null {
     : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world)].name, label };
 }
 
+/** Rolle eines Chips: ein Knopf bleibt Knopf (sein `aria-label` ist gültig), alles andere braucht `img`. */
+export function chipRole(tagName: string): 'img' | null {
+  return tagName === 'BUTTON' ? null : 'img';
+}
+
 /**
  * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
  * ändert sich nur der Wert. Gibt das Element zurück.
@@ -107,7 +112,8 @@ function setChip(root: HTMLElement, field: string, v: ChipView): HTMLElement | n
     el.dataset.icon = v.icon;
   }
   if (value.textContent !== v.text) value.textContent = v.text;
-  if (el.getAttribute('role') !== 'img') el.setAttribute('role', 'img'); // aria-label braucht eine Rolle
+  const role = chipRole(el.tagName);
+  if (role !== null && el.getAttribute('role') !== role) el.setAttribute('role', role);
   if (el.getAttribute('aria-label') !== v.label) el.setAttribute('aria-label', v.label);
   return el;
 }

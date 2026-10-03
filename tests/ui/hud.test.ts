@@ -6,11 +6,13 @@ import { SCENARIOS } from '../sim/scenarios';
 import {
   balanceText,
   balanceView,
+  chipRole,
   chipView,
   moneyView,
   popChipView,
   balanceTooltip,
   taxButtonText,
+  taxView,
   popChipHidden,
   speedTooltip,
   stockChipHidden,
@@ -155,5 +157,14 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
   it('AK-U4-01 jedes Gut hat ein Symbol gleicher Kennung', () => {
     const w = createWorld(3);
     for (const g of GOOD_IDS) expect(chipView(w, g).icon).toBe(g);
+  });
+});
+
+describe('M10 Kopfzeilen-Chips, Rolle', () => {
+  it('Steuer-Knopf bleibt Knopf (keine Rolle img), Lager-Chip bekommt sie', () => {
+    const w = SCENARIOS['m10-amtsstube']!();
+    expect(taxView(w)).not.toBeNull();
+    expect(chipRole('BUTTON')).toBeNull();
+    expect(chipRole('SPAN')).toBe('img');
   });
 });
