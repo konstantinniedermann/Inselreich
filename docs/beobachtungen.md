@@ -724,6 +724,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - 2026-10-03 · Tests (`tests/render/spriteCache.test.ts`, H-R6 Review) · Bildgleichheit des Cache nur gegen den Fake-Kontext belegt; Browser-Sichtvergleich bei DPR 2 und Zoom 0,75/1,5 offen. Einschätzung: qa-playtester beim Abnahmelauf (siehe `.studio/qa/H-R6/`).
 
 ## 2026-10-03 · M11-R1 · 16 Rot-Tests auf feat/m11-sim @ 9ef025f
+
 - Fundort: `tests/sim` (balance-crises, balance-merchants, economy, merchants, scenario-saves, taxes, unlock-timeline, unlocks), `tests/ui/goal.test.ts`; `make check` dort rot.
 - Beobachtung: vom T01-Stand, nicht von R1; Plan erwartet das bis Neupin (T03, index.md:51). Vom Reviewer bestätigt.
 - Ursprung: M11-R1 (lead-art). Einschätzung: kein Handlungsbedarf, beim Merge nach T03 prüfen.
