@@ -16,7 +16,7 @@ import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK } from '../../src/sim/defs/timing';
 import { setTaxLevel } from '../../src/sim/tax';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
-import { forceGrass, placeService } from './helpers';
+import { forceGrass, placeService, placeTownhall } from './helpers';
 
 let w: World;
 let nextTestId = 9000;
@@ -49,6 +49,7 @@ function addHouse(world: World, tier: Tier, inhabitants: number, met: boolean): 
 
 beforeEach(() => {
   w = createWorld(3, { unlockAll: true });
+  placeTownhall(w); // M10 T-10: Steuerstufen wirken nur mit aktiver Amtsstube
 });
 
 describe('totalTaxes', () => {
@@ -232,6 +233,7 @@ describe('tax levels', () => {
   it('AK-S1-06 niedrig steigt ab 150 Ticks auf, normal erst ab 300', () => {
     const firstUpgradeTick = (level: string): number => {
       const world = createWorld(3, { unlockAll: true });
+      placeTownhall(world); // M10 T-10
       colony(world);
       const h = readyHouse(world, 1, 4, 0);
       if (level !== 'normal') expect(setTaxLevel(world, level).ok).toBe(true);

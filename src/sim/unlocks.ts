@@ -9,6 +9,7 @@ import {
   UNLOCKS,
 } from './defs/unlocks';
 import { citizens, tierLock } from './population';
+import { effectiveTaxLevel } from './townhall';
 import type {
   Building,
   BuildingDefId,
@@ -165,6 +166,8 @@ export function nextUnlocks(w: World): NextUnlock[] {
     ],
     when: unlockText(u, 'whenText'),
     ...progress(w, u.trigger),
-    taxBlocks: false, // Task 4: effectiveTaxLevel(w) === 'high' && (tierWish | tierReached)
+    taxBlocks:
+      effectiveTaxLevel(w) === 'high' &&
+      (u.trigger.kind === 'tierWish' || u.trigger.kind === 'tierReached'),
   }));
 }

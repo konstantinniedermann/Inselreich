@@ -1404,6 +1404,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   firestation: firestationBody,
   bathhouse: bathhouseBody, // M8-R1
   glassworks: glassworksBody, // M8-R1
+  townhall: FALLBACKS.public, // M10-S2: Rückfall, eigene Silhouette in R1
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---

@@ -17,7 +17,8 @@ export type BuildingDefId =
   | 'toolmaker'
   | 'firestation'
   | 'bathhouse'
-  | 'glassworks';
+  | 'glassworks'
+  | 'townhall';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -52,6 +53,10 @@ export interface BuildingDef {
   stormAffected?: boolean;
   /** Schützt Gebäude im Radius vor Brand (M6). */
   fireProtection?: boolean;
+  /** Produziert nur mit erreichbarem Dienst dieser Art (M10 5.5). */
+  requiresService?: ServiceId;
+  /** Höchstzahl gleichzeitig stehender Gebäude dieser Art (M10 5.1). */
+  maxCount?: { n: number; reason: string };
   site: SiteRule[];
 }
 export interface OrderDef {
@@ -81,7 +86,8 @@ export interface TierDef {
   /** Hebel: frei ab so vielen Bürgern+; `null` = nur nach dem Sieg (M8 4.4). */
   unlockCitizens?: number | null;
 }
-export type BuildingState = 'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning';
+export type BuildingState =
+  'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning' | 'noService';
 export interface HouseState {
   tier: Tier;
   inhabitants: number;

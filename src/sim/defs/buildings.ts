@@ -149,6 +149,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     produces: 'tools',
     consumes: ['wood'],
     cycle: 80,
+    requiresService: 'school',
     site: [],
   },
   chapel: {
@@ -214,6 +215,18 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     produces: 'glass',
     consumes: ['stone', 'wood'],
     cycle: 50,
+    site: [],
+  },
+  townhall: {
+    id: 'townhall',
+    name: 'Amtsstube',
+    w: 2,
+    h: 2,
+    cost: cost(200, 15, 2, 5),
+    upkeep: 20,
+    category: 'public',
+    flammable: true,
+    maxCount: { n: 1, reason: 'Es gibt schon eine Amtsstube' },
     site: [],
   },
 };

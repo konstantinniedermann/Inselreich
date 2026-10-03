@@ -223,21 +223,21 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
     expect(run(false)).toEqual({ settler: true, citizen: false });
     expect(run(true)).toEqual({ settler: false, citizen: true });
   });
+  // Alle Fälle in createWorld(3, { unlockAll: true }): die Bedingung gilt auch bei „Alles frei" (Delta R163 B-2)
+  const setup = (): { w: World; tm: Building } => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    prepareEast(w, k);
+    w.money = 100_000;
+    expect(placeRoadOk(w, k.x + 2, k.y)).toBe(true);
+    forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
+    const r = placeBuilding(w, 'toolmaker', k.x + 3, k.y);
+    if (!r.ok || r.id === undefined) throw new Error('Werkzeugmacher');
+    w.stock.wood = 10;
+    w.stock.tools = 0;
+    return { w, tm: w.buildings[r.id]! };
+  };
   it('AK-S2-11 Werkzeugmacher braucht Schule in Reichweite; progress bleibt; Unterhalt läuft; unlockAll ohne Schule', () => {
-    // Alle Fälle in createWorld(3, { unlockAll: true }): die Bedingung gilt auch bei „Alles frei" (Delta R163 B-2)
-    const setup = (): { w: World; tm: Building } => {
-      const w = createWorld(3, { unlockAll: true });
-      const k = w.buildings[w.kontorId]!;
-      prepareEast(w, k);
-      w.money = 100_000;
-      expect(placeRoadOk(w, k.x + 2, k.y)).toBe(true);
-      forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
-      const r = placeBuilding(w, 'toolmaker', k.x + 3, k.y);
-      if (!r.ok || r.id === undefined) throw new Error('Werkzeugmacher');
-      w.stock.wood = 10;
-      w.stock.tools = 0;
-      return { w, tm: w.buildings[r.id]! };
-    };
     const a = setup();
     for (let i = 0; i < 100; i++) step(a.w);
     expect([a.tm.state, a.tm.progress, a.w.stock.wood, a.w.stock.tools]).toEqual([
@@ -301,6 +301,8 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
   it('AK-S2-13 Aufstiegsstopp (K1): angehalten nur mit aktiver Amtsstube; Gründe', () => {
     const { w, houses } = village(1, { unlockAll: true });
     expect(setUpgradeStop(w, 1, true)).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
+    const k = w.buildings[w.kontorId]!;
+    placeService(w, 'chapel', k.x - 2, k.y + 2); // am Weg der Amtsstube: angebunden, in Reichweite
     const t = placeTownhall(w);
     expect(setUpgradeStop(w, 4, true)).toEqual({ ok: false, reason: 'Ungültige Stufe' });
     expect(setUpgradeStop(w, 1, true).ok).toBe(true);

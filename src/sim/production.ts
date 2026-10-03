@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { STORM_TICK_DIVISOR } from './defs/crises';
 import { addStock, takeStock } from './economy';
+import { serviceAvailable } from './population';
 import type { World } from './types';
 
 /** Sturm wirkt (nach der Vorwarnung): Schritte `from … until` (Spec 6). */
@@ -23,6 +24,11 @@ export function tickProduction(world: World): void {
     }
     if (!b.connected) {
       b.state = 'notConnected';
+      continue;
+    }
+    const svc = def.requiresService;
+    if (svc !== undefined && !serviceAvailable(world, b, svc)) {
+      b.state = 'noService'; // kein Fortschritt, keine Entnahme; Unterhalt läuft weiter (Spec 5.5)
       continue;
     }
     if (def.stormAffected === true && stormActive(world) && world.tick % STORM_TICK_DIVISOR !== 0)

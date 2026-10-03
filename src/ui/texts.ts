@@ -63,6 +63,11 @@ export function stateInfo(
       return { text: 'Lager voll', ok: false };
     case 'burning':
       return { text: burningText(b, tick), ok: false };
+    case 'noService':
+      return {
+        text: `Braucht eine ${BUILDING_DEFS[SERVICE_BUILDING[def.requiresService!]].name} in Reichweite`,
+        ok: false,
+      };
   }
 }
 

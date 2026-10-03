@@ -40,7 +40,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
   {
     id: 'U3',
     trigger: { kind: 'tierReached', tier: 2 },
-    buildings: [],
+    buildings: ['townhall'],
     goods: [],
     functions: ['orders'],
     lockText: 'Erst mit den ersten Siedlern',

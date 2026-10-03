@@ -55,7 +55,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
     });
     expect(row('U3')).toMatchObject({
       trigger: { kind: 'tierReached', tier: 2 },
-      buildings: [],
+      buildings: ['townhall'],
       goods: [],
       functions: ['orders'],
     });

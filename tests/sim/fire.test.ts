@@ -305,6 +305,7 @@ describe('M6 Brand und Feuerwache', () => {
       'school',
       'sheepfarm',
       'toolmaker',
+      'townhall',
       'weaver',
     ]);
     expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].fireProtection === true)).toEqual([

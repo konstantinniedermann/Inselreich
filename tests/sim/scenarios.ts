@@ -266,6 +266,7 @@ function galerie(): World {
   put(w, 'firestation', kx + 13, ky + 1); // M6-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   put(w, 'bathhouse', kx + 11, ky + 1); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
   put(w, 'glassworks', kx + 15, ky + 1); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'townhall', kx + 17, ky + 1); // M10-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;

@@ -68,6 +68,12 @@ export function canPlace(world: World, defId: BuildingDefId, x: number, y: numbe
   const lock = buildLock(world, defId);
   if (lock !== null) return fail(lock); // zuerst: auch auf Wasser oder belegtem Boden gilt der Sperrgrund
   const def = BUILDING_DEFS[defId];
+  const max = def.maxCount;
+  if (
+    max !== undefined &&
+    Object.values(world.buildings).filter((b) => b.defId === defId).length >= max.n
+  )
+    return fail(max.reason);
   const ground = checkGround(world, x, y, def.w, def.h);
   if (!ground.ok) return ground;
   for (const rule of def.site) {

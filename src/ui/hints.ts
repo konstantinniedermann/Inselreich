@@ -105,6 +105,16 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   { source: 'tax', pattern: /^Ungültige Stufe$/, show: same },
   { source: 'tax', pattern: /^Stufe bereits aktiv$/, show: () => 'Diese Steuerstufe gilt bereits' },
   {
+    source: 'placement',
+    pattern: /^Es gibt schon eine Amtsstube$/,
+    show: () => 'Es gibt schon eine Amtsstube — höchstens eine wirkt',
+  },
+  {
+    source: 'tax',
+    pattern: /^Braucht eine Amtsstube$/,
+    show: () => 'Baue zuerst eine Amtsstube (I)',
+  },
+  {
     source: 'tax',
     pattern: /^Sperrzeit$/,
     show: (_m, w) => `Steuer erst in ${formatGameTime(w.taxLockedUntil - w.tick)} wieder änderbar`,
