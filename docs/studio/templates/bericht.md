@@ -10,6 +10,7 @@ Entscheidungsbedarf: <Frage> — Empfehlung: <Option und warum> (oder „keiner"
 Risiken: <was schiefgehen kann> (oder „keine bekannten")
 Befunde ausserhalb Scope: <eingetragen in docs/beobachtungen.md: Titel> (oder „keine")
 Budget: <verbraucht>/<frei> Starts, Parallelität max <k> (Arbeiter: „—")
+Nachweise (Lead je Paket vor „bereit für Gate Merge", E-015): Rot-Beleg: <Commit/Lauf oder Abweichung mit Begründung> · Nachprüfung nach Review-BEDENKEN: <Reviewer, Ergebnis oder entfällt>
 Aufwand (Selbstangabe, Schätzung): <Dauer, Tool-Aufrufe> — gemessen wird im Dashboard
 Status: <done|failed|blocked|waiting>
 ```

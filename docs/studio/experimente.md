@@ -20,44 +20,66 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 ## E-010 · laufend · Schlanke Steuerung
 
 - Hypothese: Wenn Leads einen Auftrag je Instanz abarbeiten (Gate-Urteil, Spec, Plan je eine Instanz), der Controller in der Umsetzung auf `sonnet` läuft und höchstens 4 Tasks je Instanz übernimmt, dann Übergabe per Ledger an eine frische Instanz, Leads nicht mit grossem Kontext auf Arbeiter warten, Pläne aus einem Index plus einer Datei je Task (≤ 10 KB) bestehen, Specs höchstens 40 KB haben, `rulings.md` nie ganz gelesen wird (nur per grep) und L0 nach jedem Gate-Block, spätestens bei 25 % Kontext, übergibt und keine Bilder liest, sinken der Steuerungsanteil und die 5-min-Neuschreibungen, ohne Informationsverlust (Ad-hoc-Retro Token-Effizienz B1, B2; zuvor: Controller-Wechsel nach der Hälfte der Tasks, Prozess-Retro M7-UX B0, V4; Retro M8).
-- Messgrösse: in M10 gemessen mit dem Abschnitt „Effizienz“ aus `metrics.py` (`--efficiency`): Steuerungsanteil (L0 + Leads) ≤ 40 %, Lead-Kontext-Median ≤ 80k, Cache-Write 5 min ≤ 15 %, grösste gelesene Datei ≤ 40 KB, L0-Kontext Max ≤ 250k (Ausgangswerte: 67,2 %, bis 169k, 28,6 %, 310 KB, 774k). Gegenprobe: höchstens 1 Rückfrage je 10 Tasks wegen fehlendem Planteil. Abbruch: ein Ruling der späteren Tasks widerspricht einem früheren (Final-Review) oder eine Folgeinstanz fragt mehr als einmal nach.
-- Zeitraum: M10.
+- Messgrösse: in M10 gemessen mit dem Abschnitt „Effizienz“ aus `metrics.py` (`--efficiency`): Steuerungsanteil (L0 + Leads) ≤ 40 %, Lead-Kontext-Median ≤ 80k, Cache-Write 5 min ≤ 15 %, grösste gelesene Datei ≤ 40 KB, L0-Kontext Max ≤ 250k (Ausgangswerte: 67,2 %, bis 169k, 28,6 %, 310 KB, 774k). Zusatz (R190, aus E-016): Lead-Instanz übergibt spätestens bei 200k Kontext oder nach 6 Arbeiter-Starts (Lead-Kontext Max ≤ 300k, Steuerungsanteil ≤ 55 % als Zwischenwert); Gate Spec prüft Spec ≤ 40 KB und Task-Dateien ≤ 10 KB (`lead-qa`). Gegenprobe: höchstens 1 Rückfrage je 10 Tasks wegen fehlendem Planteil. Abbruch: ein Ruling der späteren Tasks widerspricht einem früheren (Final-Review) oder eine Folgeinstanz fragt mehr als einmal nach.
+- Zeitraum: M11 (angepasst nach M10, R190).
 - Rückfall: Handbuch 1.12 (Umsetzungszyklus Schritt 4: Controller-Wechsel nach dem mittleren QA-Block; `git show a5c8fcf:docs/studio/STUDIO.md`).
 - Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus, Modellwahl), `.claude/agents/lead-tech.md`, `.claude/agents/lead-design.md`, `.claude/agents/design-spec-author.md`, `docs/studio/CHANGELOG.md`; Werkzeug EFF-W: `tools/studio/metrics.py`
-- Ruling: R136, R137, R166, R167, R168 (E-014 eingegliedert)
-- Start: Handbuch 1.11 (Messung M8), angepasst 1.12, angepasst 1.13 (Messung M10)
+- Ruling: R136, R137, R166, R167, R168 (E-014 eingegliedert), R190 (E-016 eingegliedert)
+- Start: Handbuch 1.11 (Messung M8), angepasst 1.12, angepasst 1.13 (Messung M10), angepasst 1.14 (Messung M11)
 - Bewertung: M8 (Fassung 1.11): Summe 3,02 Mio. Cache-Read je Task, Abbruch nicht ausgelöst → angepasst R166 ([Retro M8](retros/2026-10-02-meilenstein-m8.md)); Token-Analyse: Steuerung 67,2 %, Umsetzer 5,0 % → angepasst R167 ([Ad-hoc-Retro](retros/2026-10-02-adhoc-token-effizienz.md))
 
-## E-011 · laufend · Rebase-Verbot in der Briefing-Vorlage
-
-- Hypothese: Wenn die Briefing-Vorlage direkt nach den festen Regeln die Zeile „Git: kein Rebase (auch kein `pull --rebase`), kein reset --hard, kein Force-Push; main per Merge holen“ trägt, dann weist niemand mehr Rebase an und keiner wird ausgeführt.
-- Messgrösse: über M9 und M10 0 Briefings und Pläne mit Rebase-Anweisung (`.studio/archiv/briefings/`, `docs/superpowers/plans/`; Verbotssätze ausgenommen) und 0 ausgeführte Rebases auf geteilten Branches (Ausgangswert Session 58d6bc4a: 3 Anweisungen, 1 Ausführung; R124 (2): 1 Ausführung).
-- Zeitraum: bis Ende M10.
-- Rückfall: `docs/studio/templates/briefing.md` ohne Git-Zeile (`git show c1e0fa4:docs/studio/templates/briefing.md`, Handbuch 1.11).
-- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`. Guard-Teil (`git pull --rebase`, `-r`, `pull.rebase true` blocken) braucht die Nutzerfreigabe: [Warteschlange N-92](warteschlange.md)
-- Ruling: R166
-- Start: Handbuch 1.12
-- Bewertung: –
-
-## E-013 · laufend · Budget-Phase gleich Paket-ID
-
-- Hypothese: Wenn L0 jede Freigabe mit `--phase` gleich der Paket-ID des Leads loggt (auch je Integrator-Start eine eigene Freigabe), dann stimmen Dashboard-Zählung und Lead-Bericht überein.
-- Messgrösse: über M9 und M10 0 Abweichungen zwischen „verbraucht“ im Lead-Bericht und der Dashboard-Zeile und 0 Starts, die auf eine fremde Freigabe fallen (`budget`- gegen `spawn`-Events; Ausgangswert Session 58d6bc4a: lead-art 6/4 statt 3/4, 1 Integrator-Start ohne Freigabe).
-- Zeitraum: bis Ende M10.
-- Rückfall: Handbuch 1.11, Abschnitt „Budget“ (`git show c1e0fa4:docs/studio/STUDIO.md`).
-- Dateien: `docs/studio/STUDIO.md` (Budget), `docs/studio/CHANGELOG.md`
-- Ruling: R166
-- Start: Handbuch 1.12
-- Bewertung: –
-
-## E-015 · vorgeschlagen · Nachweiszeilen im Lead-Bericht
+## E-015 · laufend · Nachweiszeilen im Lead-Bericht
 
 - Hypothese: Wenn die Berichtsvorlage des Leads für jedes Paket zwei Pflichtzeilen trägt („Rot-Beleg: Commit/Lauf oder Abweichung mit Begründung“, „Nachprüfung nach Review-BEDENKEN: Reviewer, Ergebnis oder entfällt“), dann meldet kein Lead ein Paket „bereit für Gate Merge“ ohne diese Nachweise, und L0 muss sie nicht mehr im Gate nachfordern.
 - Messgrösse: über die nächsten 8 Pakete mit Gate Merge 0 Gate-Rulings, in denen L0 einen fehlenden Rot-Beleg oder eine fehlende Nachprüfung feststellt (Ausgangswert Session 08e7b5f1: 2 von 4 Paketen, R174, R178). Gegenprobe: Lead-Berichte bleiben ≤ 15 Zeilen.
 - Zeitraum: die nächsten 8 Pakete mit Gate Merge (rund M10 Stufe 1/2).
 - Rückfall: `docs/studio/templates/bericht.md` und Handbuch ohne die zwei Zeilen (Handbuch 1.13, `git show HEAD:docs/studio/templates/bericht.md`).
 - Dateien: `docs/studio/templates/bericht.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
-- Ruling: R179 (angenommen), R180 (wartet auf Platz, höchstens 3 laufend; Start, sobald E-011 oder E-013 abgeschlossen ist)
+- Ruling: R179, R180, R190 (Start)
+- Start: Handbuch 1.14
+- Bewertung: –
+
+## E-017 · laufend · Doku als eigener Plan-Task mit Eigentümer
+
+- Hypothese: Wenn der Plan die Doku (README, arc42, ADR, Spec-Verweise) als eigenen Task mit Eigentümer führt und das Umsetzer-Briefing die D1-Dateien ausdrücklich erlaubt, dann schreibt kein Lead D1 selbst und das Final-Review meldet keine fehlende Doku (Retro M10 B3; Prozess-Retro M10 V1).
+- Messgrösse: in M11 0 Final-Reviews mit fehlender Doku und 0 Lead-Commits mit Doku-Inhalt statt Umsetzer-Commits (Ausgang M10: 1 von 1; M8: 1 zweite Doku-Runde). Gegenprobe: Ownership-Überschneidungen zwischen parallelen Instanzen 0.
+- Zeitraum: M11.
+- Rückfall: `docs/studio/templates/briefing.md` und Persona `lead-tech` ohne die Zeile (Handbuch 1.13, `git show HEAD~1:docs/studio/templates/briefing.md`).
+- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md` (Briefing-Standard, Plan-Format), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R190
+- Start: Handbuch 1.14
+- Bewertung: –
+
+## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
+
+- Hypothese: Wenn die Briefing-Vorlage des `qa-playtester` bei Blindtests vorschreibt, Probe-Dateien (z. B. `galerie.probes.json`) erst nach dem schriftlichen Urteil zu öffnen, und der Rater-Start im Paketbudget des Lead-Auftrags steht, dann gibt es keine Blindtests mit Vorbehalt und keine Budgetüberschreitung durch den Rater (Retro M10 B5, R181, R183).
+- Messgrösse: über die nächsten 3 Blindtests 0 mit Vorbehalt „Probe vorab gesehen“ und 0 Budgetüberschreitungen durch Rater-Starts (Ausgang M10: 1 von 2 Vorbehalt, 1 Überschreitung 4/3).
+- Zeitraum: die nächsten 3 Blindtests (M9 Welle 2 / M11).
+- Rückfall: Playtester-Briefing ohne Zusatz (`git show HEAD:docs/studio/templates/briefing.md`).
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/qa-playtester.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R190 (vorgeschlagen, wartet auf Platz)
+- Start: –
+- Bewertung: –
+
+## E-019 · vorgeschlagen · Parallelität aus der Dateimatrix
+
+- Hypothese: Wenn das Gate Plan vor jeder Parallelitätszusage eine Dateimatrix je Task prüft (gleiche Datei in zwei Tasks = seriell, im Plan benannt) und Bestandstests der geänderten Module im Task-Text nennt, dann stimmt die geplante mit der gemessenen Parallelität überein (Prozess-Retro M10 V3).
+- Messgrösse: Differenz geplante minus gemessene Parallelität je Welle = 0 in den nächsten 2 Wellen (Ausgangswert M10-UI: 2 geplant, 1 gemessen).
+- Zeitraum: die nächsten 2 Wellen.
+- Rückfall: Gate-Plan-Briefing ohne die Prüfzeile.
+- Dateien: `docs/studio/gates.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R190 (vorgeschlagen, wartet auf Platz)
+- Start: –
+- Bewertung: –
+
+## E-020 · vorgeschlagen · Nachführaufwand des Parallelstrangs als Berichtszeile
+
+- Hypothese: Wenn der Lead-Bericht den Nachführaufwand eines parallelen Doku-Strangs (Minuten, Befunde mit Ursprung im Parallelstrang) als Zeile trägt, lässt sich nach 2 Meilensteinen entscheiden, ob der Parallelbetrieb netto spart (Prozess-Retro M10 V5).
+- Messgrösse: Nachführaufwand ≤ 20 % der Design-Dauer (Ausgangswert M10: nicht erfasst; 1 von 4 blockierenden Spec-Befunden mit Ursprung in M10). Gegenprobe: Lead-Berichte bleiben ≤ 15 Zeilen.
+- Zeitraum: 2 Meilensteine.
+- Rückfall: `docs/studio/templates/bericht.md` ohne die Zeile.
+- Dateien: `docs/studio/templates/bericht.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R190 (vorgeschlagen, wartet auf Platz)
 - Start: –
 - Bewertung: –
 
@@ -127,3 +149,17 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 
 - Ruling: R129 (2), behalten R166
 - Bewertung: BUG-LICHT, H-R1, H-R2 je 2 Starts bis zum ersten Code (Schwelle ≤ 4), 0 Spec-/Plan-Lücken; Erstabnahme 1/3 (Code-Fix, visuelle Auflage), nicht der Gate-Form zugerechnet ([Retro M8](retros/2026-10-02-meilenstein-m8.md))
+
+## E-011 · behalten · Rebase-Verbot in der Briefing-Vorlage
+
+- Ruling: R166, behalten R190
+- Bewertung: 0 Rebase-Anweisungen, 0 Ausführungen seit 1.12 → behalten R190 ([Retro M10](retros/2026-10-03-meilenstein-m10.md), B-Hinweis: 18 von 86 Briefings ohne Git-Zeile)
+
+## E-013 · behalten · Budget-Phase gleich Paket-ID
+
+- Ruling: R166, behalten R190
+- Bewertung: 27 Freigaben, alle Phase gleich Paket-ID, keine fremde Freigabe; 4 Pakete mit Nachfreigabe, 1 Überschreitung (A1 4/3) → behalten R190 ([Retro M10](retros/2026-10-03-meilenstein-m10.md))
+
+## E-021 · abgelehnt · QA-Stichprobe nach der Hälfte der UI-Strecke
+
+- Ruling: R190 (V4 der Prozess-Retro M10 abgelehnt; die Ursache deckt E-015 billiger ab)

@@ -24,3 +24,8 @@ export const rainStreaks = (w: number, reduce = false): number =>
 /** Anzahl Flammenzungen eines Feuers; bei `flames = 0` keine. */
 export const fireTongues = (flames: number, reduce = false): number =>
   clamp01(flames) > 0 ? Math.ceil(clamp01(flames) * cap('fire', reduce)) : 0;
+
+/** Obergrenze des Gebäude-Sprite-Caches (H-R6): Summe der Offscreen-Flächen in Bytes (RGBA), Darstellungswert. */
+export const SPRITE_CACHE_MAX_BYTES = 64 * 1024 * 1024;
+/** Obergrenze eines einzelnen Sprites (RGBA-Bytes); grössere Körper gehen den ungecachten Weg. */
+export const SPRITE_MAX_BYTES = 4 * 1024 * 1024;
