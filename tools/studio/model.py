@@ -750,6 +750,11 @@ class _Builder:
         if parallel:
             current["parallel"] = parallel
 
+    @staticmethod
+    def is_start(node: dict) -> bool:
+        """Echter Start (agent_start, Spawn-Zuordnung oder spawned); nur Heartbeats nicht."""
+        return bool(node["_started"] or node["_confirmed"] or node["_entry"])
+
     def budget_key(self, lead_node: dict, child: dict) -> tuple | None:
         """Schlüssel der Freigabe, der ein Start zählt; None = keine passt."""
         candidates = [
@@ -765,11 +770,17 @@ class _Builder:
         for grant in candidates:
             if grant["phase"] in names:
                 return (grant["lead"], grant["phase"], grant["session_id"])
-        best = max(candidates, key=lambda g: g["since"])
+        # Ohne Namenstreffer gehoert der Start in die Phase seines Leads (Freigabe
+        # zum Zeitpunkt des Lead-Starts), nicht in die zum Zeitpunkt des Starts:
+        # parallele Controller teilen sich sonst die jeweils juengste Freigabe.
+        own = [g for g in candidates if g["since"] <= lead_node["started"]]
+        best = max(own or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
     def on_package(self, event, ts, sid):
         key = _package(event)
+        if not key:
+            return  # Ereignis ohne Paket-ID: kein Board-Eintrag
         item = self.board.setdefault(key, {"id": key})
         for field in ("title", "owner", "status", "milestone"):
             if event.get(field):
@@ -1134,6 +1145,8 @@ class _Builder:
             lead = lead_node["role"]
             for c in lead_node["children"]:
                 child = self.nodes[c]
+                if not self.is_start(child):
+                    continue
                 if not any(
                     g["lead"] == lead
                     and g["session_id"] in ("", lead_node["session_id"])
