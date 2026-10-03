@@ -502,6 +502,139 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
   });
 });
 
+/**
+ * R170 Messgrössen auf Leuchtdichte L (Texturpixel, Faktor 1), nur Binnenland (3 × 3-Kachelumfeld ohne Wasser):
+ * - seam: mittlere quadrierte L-Differenz benachbarter Pixel nahe Kachelkanten (±2 px) ÷ über alle Paare; 1 = kein Raster
+ * - axis: Diagonal- zu Achsdifferenzen (je Pixelabstand); 1 = richtungslos, √2 = rein achsparallel (Kachelachsen)
+ * - rim95: 95-%-Quantil |ΔL| quer zur Kante Gebirge/Nicht-Gebirge (±4 px); harte Kontur = gross
+ * - blob: Streuung der 8 × 8-Pixel-Mittel in Gebirgskacheln mit Gebirge rundum; grosse Flecken = gross
+ */
+function rasterStats(world: World, out: Uint8ClampedArray) {
+  const W = world.width * TEX,
+    H = world.height * TEX;
+  const L = new Float32Array(W * H);
+  for (let k = 0; k < W * H; k++)
+    L[k] = 0.2126 * out[k * 4]! + 0.7152 * out[k * 4 + 1]! + 0.0722 * out[k * 4 + 2]!;
+  const T = (tx: number, ty: number) => terrainOf(world, tx, ty);
+  const inland = new Uint8Array(world.width * world.height);
+  for (let ty = 1; ty < world.height - 1; ty++)
+    for (let tx = 1; tx < world.width - 1; tx++) {
+      let ok = true;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) if (T(tx + dx, ty + dy) === 'water') ok = false;
+      inland[ty * world.width + tx] = ok ? 1 : 0;
+    }
+  const land = (px: number, py: number) =>
+    inland[((py / TEX) | 0) * world.width + ((px / TEX) | 0)] === 1;
+  const nearEdge = (q: number) => q <= 2 || q >= TEX - 2;
+  let seam = 0,
+    nSeam = 0,
+    all = 0,
+    nAll = 0,
+    ax = 0,
+    dg = 0;
+  for (let y = 1; y < H - 1; y++)
+    for (let x = 1; x < W - 1; x++) {
+      if (!land(x, y)) continue;
+      const l = L[y * W + x]!;
+      if (land(x + 1, y)) {
+        const d = (L[y * W + x + 1]! - l) ** 2;
+        all += d;
+        nAll++;
+        if (nearEdge((x + 1) % TEX)) {
+          seam += d;
+          nSeam++;
+        }
+      }
+      if (land(x, y + 1)) {
+        const d = (L[(y + 1) * W + x]! - l) ** 2;
+        all += d;
+        nAll++;
+        if (nearEdge((y + 1) % TEX)) {
+          seam += d;
+          nSeam++;
+        }
+      }
+      if (land(x + 1, y) && land(x, y + 1) && land(x + 1, y + 1) && land(x - 1, y + 1)) {
+        ax += Math.abs(L[y * W + x + 1]! - l) + Math.abs(L[(y + 1) * W + x]! - l);
+        dg +=
+          (Math.abs(L[(y + 1) * W + x + 1]! - l) + Math.abs(L[(y + 1) * W + x - 1]! - l)) /
+          Math.SQRT2;
+      }
+    }
+  const rim: number[] = [];
+  const blocks: number[] = [];
+  for (let ty = 1; ty < world.height - 1; ty++)
+    for (let tx = 1; tx < world.width - 1; tx++) {
+      if (T(tx, ty) !== 'mountain') continue;
+      let all9 = true;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ] as const) {
+        const o = T(tx + dx, ty + dy);
+        if (o !== 'mountain') all9 = false;
+        if (o === 'mountain' || o === 'water') continue;
+        for (let s = 4; s < TEX - 4; s++)
+          for (let r = -4; r < 4; r++) {
+            const e = dx !== 0 ? (dx > 0 ? tx + 1 : tx) * TEX : (dy > 0 ? ty + 1 : ty) * TEX;
+            const [x, y] = dx !== 0 ? [e + r, ty * TEX + s] : [tx * TEX + s, e + r];
+            const [x2, y2] = dx !== 0 ? [x + 1, y] : [x, y + 1];
+            rim.push(Math.abs(L[y2 * W + x2]! - L[y * W + x]!));
+          }
+      }
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) if (T(tx + dx, ty + dy) !== 'mountain') all9 = false;
+      if (!all9) continue;
+      for (let by = 0; by < TEX; by += 8)
+        for (let bx = 0; bx < TEX; bx += 8) {
+          let m = 0;
+          for (let j = 0; j < 8; j++)
+            for (let i = 0; i < 8; i++) m += L[(ty * TEX + by + j) * W + tx * TEX + bx + i]!;
+          blocks.push(m / 64);
+        }
+    }
+  rim.sort((a, b) => a - b);
+  const mu = blocks.reduce((a, b) => a + b, 0) / blocks.length;
+  const blob = Math.sqrt(blocks.reduce((a, b) => a + (b - mu) ** 2, 0) / blocks.length);
+  return {
+    seam: seam / nSeam / (all / nAll),
+    axis: dg / ax,
+    rim95: rim[Math.floor(rim.length * 0.95)]!,
+    blob,
+  };
+}
+
+describe('R170 Terrain ohne Kachelraster, Gebirge ohne Kontur', () => {
+  const seeds = [3, 5, 12588];
+  const stats = new Map<number, ReturnType<typeof rasterStats>>();
+  const statsOf = (seed: number) => {
+    if (!stats.has(seed)) {
+      const w = seed === 3 ? world3 : createWorld(seed);
+      stats.set(seed, rasterStats(w, seed === 3 ? painted.out : paintAll(w).out));
+    }
+    return stats.get(seed)!;
+  };
+
+  it('R170 Kachelraster: Kantenenergie an Kachelgrenzen ≤ 2,3-fach des Mittels (vorher ≈ 4,3)', () => {
+    for (const seed of seeds) expect(statsOf(seed).seam, `Seed ${seed}`).toBeLessThanOrEqual(2.3);
+  }, 60_000);
+
+  it('R170 Kachelraster: Achsindex ≤ 1,05 — Strukturen laufen nicht entlang der Kachelachsen (vorher ≈ 1,10)', () => {
+    for (const seed of seeds) expect(statsOf(seed).axis, `Seed ${seed}`).toBeLessThanOrEqual(1.05);
+  }, 60_000);
+
+  it('R170 Gebirgsrand ohne harte Hell/Dunkel-Kontur: 95-%-Quantil |ΔL| am Rand ≤ 15 (vorher ≈ 74)', () => {
+    for (const seed of seeds) expect(statsOf(seed).rim95, `Seed ${seed}`).toBeLessThanOrEqual(15);
+  }, 60_000);
+
+  it('R170 Fels ruhig: Streuung der 8 × 8-Pixel-Mittel im Gebirge ≤ 20 (vorher ≈ 34)', () => {
+    for (const seed of seeds) expect(statsOf(seed).blob, `Seed ${seed}`).toBeLessThanOrEqual(20);
+  }, 60_000);
+});
+
 describe('Auflösungsfaktor', () => {
   it('AK-R1-06 Standard-Faktor aus devicePixelRatio: ab 1,5 doppelt, sonst einfach (Spec 5.1)', () => {
     expect([undefined, 1, 1.25, 1.49].map(defaultTerrainScale)).toEqual([1, 1, 1, 1]);
