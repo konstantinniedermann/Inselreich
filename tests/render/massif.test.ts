@@ -244,6 +244,37 @@ describe('H-R9 A2 Höhenfeld', () => {
     expect(HILL_AMP).toBeGreaterThanOrEqual(0.8 * ISO_H);
   });
 
+  it('A2 schmale Felsflecken (Playtest R5): Linien 1 × 8, 2 × 5, 2 × 7 längs x und y haben Gipfel ≥ 0,8 ISO_H, Lichtseite, keine dunklen flachen Oberseiten', () => {
+    const shapes: string[][] = [
+      ['MMMMMMMM'],
+      Array.from({ length: 8 }, () => 'M'),
+      ['MMMMM', 'MMMMM'],
+      Array.from({ length: 5 }, () => 'MM'),
+      ['MMMMMMM', 'MMMMMMM'],
+    ];
+    for (const [k, rows] of shapes.entries())
+      for (const seed of [5, 11, 23]) {
+        const w = scene(rows, 20, 20, seed);
+        const c = largest(w);
+        expect(maxH(c), `Form ${k} Seed ${seed}`).toBeGreaterThanOrEqual(0.8 * ISO_H);
+        let lit = 0,
+          n = 0,
+          darkTop = 0;
+        for (const p of massifPieces(w)) {
+          const at = pieceNodes(p);
+          for (const cell of pieceCells(p)) {
+            const nd = at(cell.I, cell.J);
+            if (nd.h < 0.3 * c.amp) continue;
+            n++;
+            if (nd.t > TONE_FLAT + 0.5) lit++;
+            if (nd.steep < 0.3 && nd.h > 0.6 * c.amp && nd.t < TONE_FLAT - 0.5) darkTop++;
+          }
+        }
+        expect(lit / n, `Form ${k} Seed ${seed} Lichtseite`).toBeGreaterThan(0.15);
+        expect(darkTop, `Form ${k} Seed ${seed} dunkle Oberseite`).toBe(0);
+      }
+  });
+
   it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite, je Randabstand-Band verglichen (Entscheid lead-art R1: sonst bestimmt die Umrissform das Mittel)', () => {
     // Vergleich je Randabstand-Band (halbe Kachel): die Form der Komponente (z. B. schmaler Rücken, breite Front)
     // soll das Ergebnis nicht bestimmen; zusätzlich für das Quadrat der reine Mittelwert je Hälfte.
