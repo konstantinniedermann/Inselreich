@@ -81,13 +81,14 @@ import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildl
 import {
   buildingShadow,
   drawAir,
-  drawBody,
   drawGhost,
   drawRoads,
   hearthAnchor,
   operatingPuffs,
   type BodyEnv,
 } from './sprites';
+
+import { drawBodyCached, spriteCache } from './spriteCache';
 
 const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
@@ -155,6 +156,10 @@ export const renderStats = {
   badges: [] as Badge[],
   /** Laufweg-Figuren des letzten Frames (H-R4). */
   errands: 0,
+  /** Sprite-Cache der Gebäudekörper (H-R6), nach jedem Frame aktualisiert: Treffer/Fehlgriffe seit Start, Bytes jetzt. */
+  spriteHits: 0,
+  spriteMisses: 0,
+  spriteBytes: 0,
 };
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
 
@@ -397,6 +402,9 @@ export function render(
   renderStats.multiplyFills = 0;
   renderStats.shadowFills = 0;
   renderStats.badges.length = 0;
+  // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
+  const dpr = ctx.getTransform?.()?.a;
+  spriteCache.beginFrame(cam.zoom, dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
   const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
   const reduce = fx.reduceMotion === true;
   const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
@@ -575,7 +583,7 @@ export function render(
         if (shadowOnly.has(it.id)) continue;
         const b = world.buildings[it.id]!;
         const def = BUILDING_DEFS[b.defId];
-        drawBody(
+        drawBodyCached(
           ctx,
           cam,
           def,
@@ -602,6 +610,11 @@ export function render(
         if (er) drawErrandLoad(ctx, cam, er);
       }
     }
+
+    const sc = spriteCache.stats();
+    renderStats.spriteHits = sc.hits;
+    renderStats.spriteMisses = sc.misses;
+    renderStats.spriteBytes = sc.bytes;
 
     // 7 Luft. Rauch-Budget CAP_SMOKE: zuerst Feuer (Krisensignal), dann Betriebe, dann Herdrauch
     let budget = cap('smoke', reduce);
