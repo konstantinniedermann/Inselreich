@@ -191,6 +191,8 @@ Ein Auftrag vor U3 kann nicht geliefert werden und verfällt ohne Kosten.
 
 ### 4.5 Texte je Eintrag (Setzung Spec, `defs/unlocks.ts`)
 
+> **Delta R170 (4), Abschnitt 24:** Die Spalte `tip` ist dort neu gefasst (Thema Fischer gehen an Land); die anderen Spalten gelten unverändert.
+
 Platzhalter werden aus `defs/` gefüllt: `{min}` aus `trigger.min`, `{max}` aus `TIERS[tier − 1].maxInhabitants`;
 Stufennamen stehen wörtlich. Den Wortlaut darf `lead-art` im Rahmen der Anmutung anpassen, den Inhalt nicht.
 
