@@ -67,8 +67,8 @@ Rot-Beleg und Zeilenverweise stehen in der Task-Datei.
 | AK-SAV-03  | T03                                                 | Vitest (balance-crises)                                                                    |
 | AK-SAV-04  | T01                                                 | Vitest                                                                                     |
 | AK-SAV-05  | T01                                                 | Vitest                                                                                     |
-| AK-UI-01   | T10                                                 | Vitest + Browser                                                                           |
-| AK-UI-02   | T10                                                 | Vitest + Browser                                                                           |
+| AK-UI-01   | T10 (Browser-Beleg später in W7)                    | Vitest + Browser                                                                           |
+| AK-UI-02   | T10 (Browser-Beleg später in W7)                    | Vitest + Browser                                                                           |
 | AK-UI-03   | T11                                                 | Vitest + Browser                                                                           |
 | AK-UI-04   | T11                                                 | Vitest + Browser                                                                           |
 | AK-UI-05   | T12                                                 | Vitest + Browser                                                                           |
