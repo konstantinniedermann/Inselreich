@@ -76,18 +76,12 @@ describe('H-R7 AK2 Varianz sichtbar', () => {
   for (const [id, tier] of cases) {
     it(`AK2 ${id}${tier ?? ''}: über eine Beispielwelt entstehen >= 2 Varianten, Aufzeichnungen unterscheiden sich`, () => {
       const def = BUILDING_DEFS[id];
-      const vs = new Map<number, Building>();
-      for (let i = 0; i < 40 && vs.size < 2; i++) {
-        const b = mk(id, 3 + i * 2, 5 + i, tier);
-        vs.set(variantOf(4242, b.x, b.y), b);
-      }
+      const vs = new Set<number>();
+      for (let i = 0; i < 40; i++) vs.add(variantOf(4242, 3 + i * 2, 5 + i));
       expect(vs.size).toBeGreaterThanOrEqual(2);
-      const [[va, ba], [vb, bb]] = [...vs.entries()] as [number, Building][];
-      expect(events(def, mk(id, 10, 10, tier), va)).not.toEqual(
-        events(def, mk(id, 10, 10, tier), vb),
-      );
-      void ba;
-      void bb;
+      const [va, vb] = [...vs] as [number, number];
+      const b = mk(id, 10, 10, tier);
+      expect(events(def, b, va)).not.toEqual(events(def, b, vb));
     });
   }
   it('AK2 der Variantenindex steckt im Schlüssel', () => {

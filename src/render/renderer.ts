@@ -89,6 +89,7 @@ import {
 } from './sprites';
 
 import { drawBodyCached, spriteCache } from './spriteCache';
+import { variantOf } from './variants';
 
 const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
@@ -590,6 +591,7 @@ export function render(
           b,
           fx.timeMs,
           def.id === 'kontor' ? waterSides(world, b) : undefined,
+          variantOf(world.seed, b.x, b.y),
         );
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
         if ((fires.get(b.id)?.flames ?? 0) > 0) {
