@@ -1,6 +1,6 @@
 import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
 import { valueNoise } from '../sim/noise';
-import { LIGHT, rotNoise } from './light';
+import { DEBRIS, DEBRIS_MIX, LIGHT, rotNoise } from './light';
 import type { World } from '../sim/types';
 import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 
@@ -49,6 +49,7 @@ const BUMP = 0.8; // px Geröll-Buckel am Fuss
 /** Felshügel (< SMALL_MASSIF): Mindestamplitude (px, ≈ 0,9 ISO_H) und Kuppen-Modulation ± HILL_DOME. */
 export const HILL_AMP = 29;
 const HILL_DOME = 0.18;
+const SKEL_SADDLE = 0.45; // Felsgrat kleiner/schmaler Flecken: Sattel zwischen den Kuppen in Anteilen der Gipfelhöhe
 /** Obergrenze jeder Massivhöhe (px): Amplitude mal Grate mal Staffelung plus Geröll. */
 export const MASSIF_MAX_H = AMP_CAP * (RIDGE_LO + RIDGE_SPAN) * Math.exp(STAGGER_MAX) + BUMP;
 const ROT_A = 0.61,
@@ -341,13 +342,46 @@ function buildComponent(
   const n = tiles.length;
   // Felshügel-Mindesthöhe (Playtest R3): auch ein schmaler Fleck aus 8 Kacheln steht als Hügel, nicht als Platte
   const amp = Math.max(
-    HILL_AMP,
+    HILL_AMP * (0.9 + 0.1 * Math.min(1, n / 9)), // wächst noch leicht mit der Grösse (A2)
     Math.min(AMP_CAP, AMP_K * Math.pow(Math.sqrt(n), AMP_POW), AMP_SLOPE * Math.max(maxD, 0.25)),
   );
   // Grate, Verbeulung und Staffelung laufen bei kleinen Komponenten stetig aus: Felshügel ohne Sonderfall
   const ridgeW = smoothstep(SMALL_MASSIF * 0.75, SMALL_MASSIF * 3, n);
   // Randband nie breiter als der grösste Randabstand: der Hügel erreicht in der Mitte seinen Körper
   const rimR = Math.min(RIM, Math.max(0.3, 0.9 * maxD));
+  // Playtest R5: kleine oder schmale Flecken (Randabstand wächst nie) tragen einen Grat entlang ihrer Längsachse mit
+  // 1–3 Kuppen; Gewicht 1 bei kleinen Komponenten bzw. Breite ≤ 2 Kacheln, 0 bei grossen breiten Massiven
+  const sk = Math.max(1 - ridgeW, 1 - smoothstep(1, 2, maxD));
+  let cx = 0,
+    cy = 0;
+  for (const t of tiles) {
+    cx += (t % W) + 0.5;
+    cy += ((t / W) | 0) + 0.5;
+  }
+  cx /= n;
+  cy /= n;
+  let sxx = 0,
+    syy = 0,
+    sxy = 0;
+  for (const t of tiles) {
+    const dx = (t % W) + 0.5 - cx,
+      dy = ((t / W) | 0) + 0.5 - cy;
+    sxx += dx * dx;
+    syy += dy * dy;
+    sxy += dx * dy;
+  }
+  const phi = 0.5 * Math.atan2(2 * sxy, sxx - syy); // Hauptachse
+  const ax = Math.cos(phi),
+    ay = Math.sin(phi);
+  let tMin = Infinity,
+    tMax = -Infinity;
+  for (const t of tiles) {
+    const u = ((t % W) + 0.5 - cx) * ax + (((t / W) | 0) + 0.5 - cy) * ay;
+    tMin = Math.min(tMin, u - 0.5);
+    tMax = Math.max(tMax, u + 0.5);
+  }
+  const len = Math.max(1, tMax - tMin);
+  const kuppen = Math.max(1, Math.min(3, Math.round(len / 3)));
   const sMid = (sMin + sMax) / 2,
     sHalf = Math.max(1, (sMax - sMin) / 2);
   const seed = w.seed;
@@ -368,6 +402,16 @@ function buildComponent(
       const r = ridged(seed, fx, fy);
       const dome = HILL_DOME * (2 * rotNoise(seed + 323, fx, fy, 0.9, ROT_B) - 1);
       shape[k] = body * (1 + ridgeW * (RIDGE_LO + RIDGE_SPAN * r - 1) + (1 - ridgeW) * dome);
+      if (sk > 0) {
+        const u = (((fx - cx) * ax + (fy - cy) * ay - tMin) / len) * kuppen; // 0 … kuppen entlang der Achse
+        const s2 = Math.sin(Math.PI * Math.min(kuppen, Math.max(0, u)));
+        // Querprofil nur aus dem Randabstand (voll ab 0,6 · grösstem Randabstand): Grathöhe
+        // unabhängig davon, wie weit der Randabstand wächst
+        const ridgeLine =
+          smooth01(dist[k]! / Math.max(0.3, 0.6 * maxD)) *
+          (SKEL_SADDLE + (1 - SKEL_SADDLE) * s2 * s2);
+        shape[k] = (1 - sk) * shape[k]! + sk * ridgeLine;
+      }
       gs[k] = Math.max(-1, Math.min(1, (sMid - (i + j)) / sHalf));
     }
   // Staffelung: kleinstes β ≥ STAGGER (Schritt 0,05), mit dem die Rückseite im Mittel BACK_RATIO-mal so hoch ist
@@ -593,8 +637,7 @@ export const SOFT_CUT = 0.52; // Wert an einer geraden Kante (gemessen), Kontur 
 const SOFT_A_LO = SOFT_CUT - 0.05,
   SOFT_A_HI = SOFT_CUT + 0.05;
 /** Schuttband: voll am Rand (Innen-Anteil SOFT_CUT), aus ab DEBRIS_HI. */
-const DEBRIS_HI = 0.74,
-  DEBRIS_MIX = 0.9;
+const DEBRIS_HI = 0.8;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
 const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => {
@@ -628,7 +671,7 @@ export const VEG_TONES: readonly Rgb[] = [
   mixRgb(rgbOf(PALETTE.grassDark), P.warm, 0.2),
 ];
 /** Helles Geröll-/Schuttband am Massivfuss: rock/rockLight mit etwas sandDry (Playtest R3: kein dunkler Saum). */
-export const DEBRIS: Rgb = mixRgb(mixRgb(P.rock, P.light, 0.6), P.warm, 0.15);
+export { DEBRIS };
 /** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
 export const TONE_FLAT = 2;
 const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
@@ -677,6 +720,8 @@ export function relLight(gx: number, gy: number): number {
 /** Stetige Tonstufe 0…4 an einem Netzpunkt: Licht, grossflächige Tönung, etwas dunkler in tiefen Lagen. */
 export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): number {
   const rl = relLight(s.gx, s.gy);
+  // Playtest R5: flache Oberseiten (Kuppen, Plateaus) nie in den dunklen Stufen
+  const top = (1 - smoothstep(0.25, 0.45, steepness(s.gx, s.gy))) * smoothstep(0.35, 0.55, s.hn);
   const tone =
     0.7 * (rotNoise(seed + 311, fx, fy, 0.55, ROT_C) - 0.5) +
     0.3 * (rotNoise(seed + 315, fx, fy, 1.6, ROT_A) - 0.5);
@@ -685,7 +730,7 @@ export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): n
     (rl >= 1 ? TONE_GAIN : TONE_GAIN_SHADE) * (rl - 1) +
     2 * TONE_NOISE * tone +
     0.35 * (Math.min(1, s.hn) - 0.4);
-  return Math.max(0, Math.min(ROCK_TONES.length - 1, t));
+  return Math.max(0, TONE_FLAT - 2 * (1 - top), Math.min(ROCK_TONES.length - 1, t));
 }
 
 /**
