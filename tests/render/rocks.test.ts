@@ -538,7 +538,7 @@ describe('H-R8 AK4 Cap und Cache', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
     const VIEW = { w: 1280, h: 720 };
     const layer = { width: 2048, height: 2048 } as unknown as HTMLCanvasElement;
-    const r = rocksOf(w)[100]!;
+    const r = rocksOf(w)[99]!; // H-S1: Seed 7 hat nach der Gebirgsflecken-Bereinigung 100 Felsen
     const c = project(r.fp.x + 0.5, r.fp.y + 0.5);
     const cam = { x: 0, y: 0, zoom: 1 };
     for (const t of w.tiles) if (t.terrain === 'forest') t.terrain = 'grass'; // nur Felsstempel zählen
