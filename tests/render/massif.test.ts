@@ -325,8 +325,11 @@ describe('H-R9 A3 Färbung', () => {
     const shade = cellColor(5, 3.3, 4.1, { ...base, gx: -60, gy: -20 });
     expect(lum(lit)).toBeGreaterThan(lum(flat) + 8);
     expect(lum(shade)).toBeLessThan(lum(flat) - 8);
-    // auf einen Blick: Lichtseite deutlich heller als Schattenseite
+    // auf einen Blick: Lichtseite deutlich heller als Schattenseite, schon bei sanfter Flanke (≈ 16°)
+    const lit2 = cellColor(5, 3.3, 4.1, { ...base, gx: 12, gy: 4 }),
+      shade2 = cellColor(5, 3.3, 4.1, { ...base, gx: -12, gy: -4 });
     expect(lum(lit) - lum(shade)).toBeGreaterThan(45);
+    expect(lum(lit2) - lum(shade2)).toBeGreaterThan(40);
   });
 
   it('A3 Tonstufen (lead-art R1): 5 Stufen hell aufsteigend, Schatten kühl, Licht warm (sandDry höchstens 20 %)', () => {
