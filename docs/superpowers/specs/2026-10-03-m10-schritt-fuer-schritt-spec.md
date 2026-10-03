@@ -1395,3 +1395,49 @@ B11), eingearbeitet von `lead-design` in einer Runde. AK-Zahl 96 → **98** (neu
 | Tech B8 (L0)     | 5.1 `maxCount`; Zustand `noService` überall                                                                    |
 | Tech B9, B11     | 19 Planhinweise (regelt der Plan)                                                                              |
 | Kopf             | Code-Stand `main` @ 9460ab9, `feat/m8-ui` @ 6cbdc56; Zeilen `population.ts` 124/166/199, `serviceAvailable` 59 |
+
+## 24. Delta R170 (4): Thema „Fischer gehen an Land" (Texte, keine Struktur)
+
+Stand 2026-10-03, Auftrag Ruling R170 (4), Nutzerwortlaut: „‚Freischaltbar' auch für alle bisherigen Gebäude
+einschalten. Konzept, welches thematisch Sinn macht. Am Anfang ungebildete Fischer, die an Land gehen." Dieses Delta
+ändert **nur den Wortlaut der Spalte `tip`** in `defs/unlocks.ts` (4.5). Es ändert keinen Baum, keine Typen, keine
+Auslöser, keine Werte und keine Abnahmekriterium-Aussage.
+
+**Abdeckung (geprüft gegen `BUILDING_DEFS`, 16 Gebäude):** Jede `BuildingDefId` ausser `kontor` steht in genau einem
+Eintrag von 4.2 (`townhall` in U3, ab S2). Weg und Abriss sind frei, das Kontor ist nicht baubar. Es fehlt nichts; der
+Baum deckt alle bisherigen Gebäude ab (AK-S1-01 prüft das schon). Auch thematisch trägt die Reihe: Die Kette
+Fischerhütte → Kapelle/Weberei → Schule → Werkzeugmacher folgt dem Weg von ungebildeten Fischerleuten zu qualifizierter
+Arbeit (die Schule steht vor dem Werkzeugmacher, 5.5).
+
+**Rahmen:** Die ersten Bewohner (Stufe 1, „Pioniere") sind einfache Fischerleute ohne Bildung, die mit einem Kontor am
+Strand an Land gehen. Jede Stufe weckt ein neues Bedürfnis: Kleidung und Glauben (U2), Verwaltung (U3), Bildung und
+Genuss (U4), gelernte Arbeit (U5), Hygiene und Glas (U6). Den Stufennamen **„Pioniere" behalten wir**: Er trägt den
+Rahmen schon (wer an Land geht, ist Pionier), und eine Umbenennung auf „Fischer" verwechselt sich mit der Fischerhütte.
+Die Umbenennung ist **keine Textänderung** (Treffer in `TIERS`, `lockText`, `whenText`, `popChipView`, T02a, T03b, T06b,
+T07b, T09, `qa-checks`, README) und wird hier **nicht** vorgenommen.
+
+**Neue Spalte `tip` (ersetzt die Texte in 4.5 und in T01c; ≤ 175 Zeichen, kein „Tick"):**
+
+| Id  | `tip`                                                                                                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| U0  | Fischerleute gehen an Land, ohne Bildung und ohne Besitz: Dach, Holz und Fisch müssen reichen. Wohnhäuser brauchen keinen Weg, Betriebe schon: verbinde sie mit dem Kontor. |
+| U1  | Aus dem Lager am Strand wird ein Dorf. Ein Marktplatz versorgt Wohnhäuser wie das Kontor und braucht einen Weg.                                           |
+| U2  | Die Fischer wollen mehr als Fisch: Kleidung, Glauben, feste Mauern. Die Schäferei braucht Weide im Umkreis: rode Wald (C), wenn es eng wird.              |
+| U3  | Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie.  |
+| U4  | Wer Kleidung und Glauben hat, will lesen und feiern: Schule und Rum. Zuckerrohr wächst wie Schafe nur mit Weide im Umkreis.                               |
+| U5  | Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe.             |
+| U6  | Bürger wollen Hygiene und helle Fenster. Kaufleute brauchen Glas und ein Badehaus.                                                                        |
+
+**`notice` bleibt unverändert** (4.5, 11.6): Die Gründe erzählen den Bogen schon („deine Pioniere wollen Siedler
+werden", „die ersten Siedler sind da"), und ihr Wortlaut steht als Literal in T06b, 11.6 und `qa-checks`. `lockText`
+und `whenText` bleiben unverändert (AK-S1-01, T01b, T02a, T03b, T07b prüfen sie wörtlich).
+
+**Folgen für M10:** Keine für T01a, T01b, T01d, T01e, T02 bis T09 und alle AK. Einzig **T01c** übernimmt die sieben
+`tip`-Literale aus der Tabelle (keine Assertion dahinter ausser „nicht leer" und „kein Tick", T01b; T07b prüft
+`UNLOCKS[0].tip` per Verweis, nicht per Literal). **T01 kann unverändert starten**; die Tip-Literale lassen sich in
+T01c nachziehen. Das Hilfe-Fenster zeigt höchstens drei Tipps (12.1), also passt die längere U0-Zeile bei Spielstart
+neben zwei weitere. Ein Tip-Text, der die Zeilenbreite der Hilfe-Karte sprengt, kürzt `lead-art` (Wortlaut, nicht
+Inhalt, 4.5).
+
+**Nicht Teil dieses Deltas:** Fortschreibung des Themas in den Gebäude-Mouse-overs (13.2) und im Text der Start-Karte
+(`startSteps`, Test `startCard.test.ts`); beides wäre eine Änderung geprüfter Literale. Vorschlag für später (Kann).
