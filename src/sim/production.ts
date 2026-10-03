@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { STORM_TICK_DIVISOR } from './defs/crises';
 import { addStock, takeStock } from './economy';
+import { cycleOf } from './levels';
 import { serviceAvailable } from './population';
 import type { World } from './types';
 
@@ -17,7 +18,8 @@ const stormActive = (world: World): boolean =>
 export function tickProduction(world: World): void {
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (!def.produces || def.cycle === undefined) continue;
+    const cycle = cycleOf(b);
+    if (!def.produces || cycle === undefined) continue;
     if (b.outageUntil !== undefined) {
       b.state = 'burning'; // Ausfall hat Vorrang (Spec 10.1)
       continue;
@@ -42,7 +44,7 @@ export function tickProduction(world: World): void {
     }
     b.progress += 1;
     if (b.state !== 'storageFull') b.state = 'ok';
-    if (b.progress >= def.cycle) {
+    if (b.progress >= cycle) {
       const accepted = addStock(world, def.produces, 1);
       b.state = accepted === 1 ? 'ok' : 'storageFull';
       b.progress = 0;

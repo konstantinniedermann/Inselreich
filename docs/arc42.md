@@ -154,9 +154,9 @@ flowchart TB
 | `roads.ts`                                               | `recomputeConnectivity`: Breitensuche über Wege ab dem Kontor, setzt `connected` und `notConnected`; `burning` hat Vorrang.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `supply.ts`                                              | Versorgungsradius von Kontor und angebundenen Marktplätzen (für Bauregel und Häuser).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `production.ts`                                          | `tickProduction`: Fortschritt, Input-Entnahme, Ausstoss ins Lager, Zustände der Betriebe; Ausfall bei Brand, halber Takt bei Sturm.                                                                                                                                                                                                                                                                                                                                                                                   |
-| `population.ts`                                          | `tickPopulation` (Versorgung, Dienste, Verbrauch, Wachstum mit Zielbelegung, Aufstieg mit Wartezeit der Steuerstufe; Dienste fallen bei Brand aus) und `tickTaxes` (Steuern × `pct` der Steuerstufe); Zählungen `citizens` (Stufe ≥ 3), `merchants` (Stufe 4), `populationByTier`; Stufensperre `tierLock` (Stufe 4 erst nach dem Bürger-Ziel bzw. Hebel `unlockCitizens`, M8).                                                                                                                                       |
+| `population.ts`                                          | `tickPopulation` (Versorgung, Dienste, Verbrauch, Wachstum mit Zielbelegung, Aufstieg mit Wartezeit der Steuerstufe; Dienste fallen bei Brand aus) und `tickTaxes` (Steuern × `pct` der Steuerstufe, Buchung je Schritt mit Übertrag `taxCarry`; `taxUnits` ganzzahlig); Zählungen `citizens` (Stufe ≥ 3), `merchants` (Stufe 4), `populationByTier`; Stufensperre `tierLock` (Stufe 4 erst nach dem Bürger-Ziel bzw. Hebel `unlockCitizens`, M8).                                                                    |
 | `tax.ts`                                                 | `setTaxLevel`: schaltet die globale Steuerstufe, mit Sperrzeit `TAX_SWITCH_LOCK`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `economy.ts`                                             | Lager (`addStock`/`takeStock`), `checkAfford`/`pay`, Rückerstattung, `tickEconomy` (Unterhalt).                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `economy.ts`                                             | Lager (`addStock`/`takeStock`), `checkAfford`/`pay`, Rückerstattung, `tickEconomy` (Unterhalt, Buchung je Schritt mit Übertrag `upkeepCarry`).                                                                                                                                                                                                                                                                                                                                                                        |
 | `trade.ts`                                               | `buy` zu Fixpreisen; `sell` mit Verkaufssättigung (`sellPrice(world, good, n)` über `sellPct`, Aufschlag `BOOM_PCT` für das Boom-Gut); `tickMarket` (Erholung des Verkaufsanteils).                                                                                                                                                                                                                                                                                                                                   |
 | `orders.ts`                                              | Handelsaufträge: `orderForPeriod` (rein, seed-abgeleitet), `tickOrders` (Angebot, Verfall), `deliverOrder`, `nextOrderTick`; `maxHouseTier`, `orderPool` (auch für den Boom).                                                                                                                                                                                                                                                                                                                                         |
 | `crises.ts`                                              | Krisen (ADR-005/ADR-010, Nachtrag M6): `rollCrisis` (rein, seed-abgeleitet je Periode), `beginCrisis`, `tickCrises` (Ausfälle und Krise beenden, Periodenstart), `nextCrisisTick`, `crisisWindow`; Brand mit `fireTarget`, `isProtected`, Gebühr und Ausfall.                                                                                                                                                                                                                                                         |
@@ -164,7 +164,8 @@ flowchart TB
 | `unlocks.ts`                                             | Freischaltbaum (M10, Spec 4): `isUnlocked`, `buildLock`/`goodLock`/`functionLock` (Sperrgründe), `buildingShown`/`goodUnlocked`, `triggeredUnlocks`, `deriveUnlocks` (Stand aus der Welt, Kette U2…U6), `tickUnlocks`, `nextUnlocks`; Werte in `defs/unlocks.ts`. `population.ts` importiert nie `unlocks.ts` (B9).                                                                                                                                                                                                   |
 | `townhall.ts`                                            | Amtsstube (M10, Spec 5): `townhallActive` (steht, angebunden, kein Brand), `effectiveTaxLevel` (ohne aktive Amtsstube «normal»), `goodLockActive`, `upgradeStopActive`, `townhallReason`. Importiert nur `./types` und `./defs/*` (B9).                                                                                                                                                                                                                                                                               |
 | `forest.ts`                                              | Roden und Aufforsten (M10, Spec 6): `canClearForest`/`clearForest`/`canPlantForest`/`plantForest`; Kosten in `defs/forest.ts`; Geländeart geht in `layoutKey` ein.                                                                                                                                                                                                                                                                                                                                                    |
-| `save.ts`                                                | `serialize`/`deserialize` (Version 5) mit Migrationskette v1 → v2 → v3 → v4 → v5 (`migrateV3ToV4`: Glas in Lager und `sellPct`, `wonMerchants`, Dienst `bath`; `migrateV4ToV5`: Freischaltungen, Gütersperren, Aufstiegsstopps) und Strukturprüfung; leitet die Anbindung nach dem Laden neu ab.                                                                                                                                                                                                                      |
+| `levels.ts`                                              | `cycleOf`, `upkeepOf`, `utilization`: einziger Leseort für Zyklus und Unterhalt (M11); Ausbau-Werte in `defs/levels.ts` (`LEVELS`, bis P3 leer).                                                                                                                                                                                                                                                                                                                                                                      |
+| `save.ts`                                                | `serialize`/`deserialize` (Version 6) mit Migrationskette v1 → v2 → v3 → v4 → v5 → v6 (`migrateV3ToV4`: Glas in Lager und `sellPct`, `wonMerchants`, Dienst `bath`; `migrateV4ToV5`: Freischaltungen, Gütersperren, Aufstiegsstopps; `migrateV5ToV6`: Überträge 0) und Strukturprüfung; leitet die Anbindung nach dem Laden neu ab.                                                                                                                                                                                   |
 | `tick.ts`                                                | `step(world)`: Tick-Zähler, dann alle Systeme in fester Reihenfolge; `checkWin` (setzt erst `won`, dann `wonMerchants`).                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### Ebene 2: `src/render/`
@@ -324,7 +325,7 @@ flowchart LR
 | -------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tickProduction`           | jeder Tick                                                                              | Fortschritt, Input-Entnahme, Ausstoss, Zustände der Betriebe                                                                                                  |
 | `tickPopulation`           | Verbrauch jeder Tick, Wachstum alle 50                                                  | Versorgung, Dienste, Verbrauch; Wachstum mit Zielbelegung und Aufstieg mit Wartezeit der Steuerstufe                                                          |
-| `tickTaxes`, `tickEconomy` | Buchung alle 100 (`UPKEEP_INTERVAL`)                                                    | Steuern × `pct` der Steuerstufe, Unterhalt; dazwischen nur `stats`                                                                                            |
+| `tickTaxes`, `tickEconomy` | je Tick mit Übertrag `taxCarry`/`upkeepCarry`                                           | Steuern × `pct` der Steuerstufe, Unterhalt; `stats` bleiben Nominalwerte je 100 Ticks                                                                         |
 | `tickMarket`               | alle 10 (`SELL_RECOVERY_INTERVAL`)                                                      | jeder Verkaufsanteil +1 Prozentpunkt, höchstens 100; kein Geld, kein Lager                                                                                    |
 | `tickOrders`               | ab 600 alle 900 (`ORDER_FIRST_TICK`, `ORDER_PERIOD`)                                    | zuerst Verfall (`tick > due`), dann Angebot aus `orderForPeriod`; kein Geld, kein Lager                                                                       |
 | `tickCrises`               | jeder Tick; Periodenstart ab 2400 alle 600 (`normal`) bzw. 1200 (`mild`), nie bei `off` | Ausfälle bei `outageUntil` beenden, Krise nach `until` entfernen, bei Periodenstart Krise ziehen (`rollCrisis`) und beginnen; Brandgebühr wird sofort gebucht |
@@ -686,13 +687,14 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 
 ### Persistenz
 
-- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 5`,
-  `SAVE_VERSION`). Gespeichert wird immer Version 5.
+- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 6`,
+  `SAVE_VERSION`). Gespeichert wird immer Version 6.
 - `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
   `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
   `crisisLevel = 'off'`, `crisis = null`) → v4 (`migrateV3ToV4`: `stock.glass = 0`, `sellPct.glass = 100`,
   `wonMerchants = false`; Gebäude und Häuser unberührt) → v5 (`migrateV4ToV5`: `unlocked = ['U0']`, `goodLocks = []`,
-  `upgradeStops = []`; nach `isWellFormed` setzt `deriveUnlocks` den echten Stand aus der Welt); danach prüft sie
+  `upgradeStops = []`; nach `isWellFormed` setzt `deriveUnlocks` den echten Stand aus der Welt) → v6 (`migrateV5ToV6`:
+  `taxCarry = 0`, `upkeepCarry = 0`; `eff`/`level` fehlen = volle Auslastung bzw. Stufe 1); danach prüft sie
   JSON, Version, Kartengrösse und Kachelanzahl, die Gebäude (bekannte `defId`, Koordinaten), das Kontor,
   alle Güter im Lager, `stats`, `won`, `tick`, `nextBuildingId` und die v2-Felder (`taxLevel`,
   `taxLockedUntil`, `sellPct` ganzzahlig 30…100, `order` passend zu Tick und Periode), die v3-Felder (`crisisLevel` bekannt; `crisis` passend zu Stufe,
@@ -700,10 +702,11 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   (`wonMerchants` boolean und nur mit `won`; je Wohnhaus `house.tier` ganzzahlig 1 … 4; Stufe 4 nur mit `won`
   oder aktivem Hebel `TIERS[4].unlockCitizens`, die Bürgerzahl wird dabei nicht geprüft) und die v5-Felder (`unlocked`
   geordnete Liste bekannter Ids mit `U0`, `goodLocks` und `upgradeStops` als wohlgeformte Listen; ein Haus braucht sein
-  `house`-Objekt). Fehler ergeben
+  `house`-Objekt) und die v6-Felder (`taxCarry` ganzzahlig 0 … 19 999, `upkeepCarry` 0 … 99; je Gebäude `state` bekannt,
+  `eff` nur bei Betrieben mit `produces` und ganzzahlig 0 … 256 000, `level` nur bei Betrieben mit Ausbau-Eintrag und 2 oder 3). Fehler ergeben
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
   Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`, ein
-  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`.
+  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
   Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
   (`CRISIS_FIRST_TICK`, Periodenlängen, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`) gehen dagegen in die
@@ -869,27 +872,27 @@ Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. 
 
 ## 12. Glossar
 
-| Begriff         | Bedeutung                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Kontor          | Startgebäude an der Küste (2×2), zentrales Lager, Handelsplatz und Ausgangspunkt des Wegenetzes; nicht abreissbar. |
-| Tick            | Ein Simulationsschritt; bei Geschwindigkeit 1× dauert er `TICK_MS`. Raten gelten pro 100 Ticks.                    |
-| Anbindung       | Verbindung eines Gebäudes über Wege mit dem Kontor; Voraussetzung für Produktion, Markt und Dienste.               |
-| Versorgung      | Lage eines Wohnhauses im Radius des Kontors oder eines angebundenen Marktplatzes; nur dann erhält es Waren.        |
-| Stufe           | Bevölkerungsstufe eines Wohnhauses: Pioniere, Siedler, Bürger; bestimmt Bedürfnisse, Dienste, Steuer.              |
-| Aufstieg        | Wechsel eines Wohnhauses auf die nächste Stufe, wenn alle Bedingungen erfüllt sind; kostet Geld und Baustoffe.     |
-| Bilanz          | Steuern minus Unterhalt je Buchungstakt (`UPKEEP_INTERVAL`); das HUD zeigt sie hinter Steuern und Unterhalt.       |
-| Dienst          | Leistung eines öffentlichen Gebäudes im Radius: Glaube (Kapelle), Bildung (Schule).                                |
-| Zyklus          | Anzahl Ticks, bis ein Betrieb eine Einheit erzeugt.                                                                |
-| Steuerstufe     | Globale Einstellung niedrig / normal / hoch; bestimmt Steuer in %, Aufstiegs-Wartezeit und Zielbelegung.           |
-| Verkaufsanteil  | `sellPct` je Gut in %: sinkt mit jedem Verkauf (Sättigung), erholt sich mit der Zeit; bestimmt den Verkaufserlös.  |
-| Auftrag         | Bestellung eines Händlers (Gut, Menge, Prämie, Frist); nur vollständig lieferbar, verfällt ohne Strafe.            |
-| Autosave        | Zweiter Speicherplatz, den das Spiel alle 120 s laufender Zeit selbst schreibt.                                    |
-| Krise           | Ereignis je Krisenperiode: Brand, Sturm oder Boom; Häufigkeit nach Krisenstufe (aus, mild, normal).                |
-| Feuerwache      | Öffentliches Gebäude (Taste E); angebunden schützt es brennbare Gebäude im Radius 8 vor Brandschaden.              |
-| Ausfall         | Zustand `burning` eines Gebäudes nach einem ungeschützten Brand (200 Ticks ohne Produktion bzw. Dienst).           |
-| Kachelraum      | Quadratisches Raster der Sim; alle Regeln und Geometrie rechnen hier, nur das Zeichnen projiziert isometrisch.     |
-| Tiefenschlüssel | `depthKey = 2x + w + 2y + h`; bestimmt die Zeichenreihenfolge der Objekte mit Höhe.                                |
-| Körperhülle     | Konvexes Sechseck aus Footprint-Raute und Höhe; Vorfilter des Pickings vor den gezeichneten Polygonen.             |
-| Bus             | Lautstärke-Gruppe im Ton: Master, Musik, Umgebung, Effekte; je ein Regler in den Einstellungen.                    |
-| Ducking         | Kurzes Absenken von Musik und Umgebung, während ein Signal spielt.                                                 |
-| Rückfall        | Synthetischer Ersatz für eine fehlende oder nicht ladbare Datei; das Spiel meldet und wirft nichts.                |
+| Begriff         | Bedeutung                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Kontor          | Startgebäude an der Küste (2×2), zentrales Lager, Handelsplatz und Ausgangspunkt des Wegenetzes; nicht abreissbar.               |
+| Tick            | Ein Simulationsschritt; bei Geschwindigkeit 1× dauert er `TICK_MS`. Raten gelten pro 100 Ticks.                                  |
+| Anbindung       | Verbindung eines Gebäudes über Wege mit dem Kontor; Voraussetzung für Produktion, Markt und Dienste.                             |
+| Versorgung      | Lage eines Wohnhauses im Radius des Kontors oder eines angebundenen Marktplatzes; nur dann erhält es Waren.                      |
+| Stufe           | Bevölkerungsstufe eines Wohnhauses: Pioniere, Siedler, Bürger; bestimmt Bedürfnisse, Dienste, Steuer.                            |
+| Aufstieg        | Wechsel eines Wohnhauses auf die nächste Stufe, wenn alle Bedingungen erfüllt sind; kostet Geld und Baustoffe.                   |
+| Bilanz          | Rate je 100 Ticks (`UPKEEP_INTERVAL`), Buchung je Tick: Steuern minus Unterhalt; das HUD zeigt sie hinter Steuern und Unterhalt. |
+| Dienst          | Leistung eines öffentlichen Gebäudes im Radius: Glaube (Kapelle), Bildung (Schule).                                              |
+| Zyklus          | Anzahl Ticks, bis ein Betrieb eine Einheit erzeugt.                                                                              |
+| Steuerstufe     | Globale Einstellung niedrig / normal / hoch; bestimmt Steuer in %, Aufstiegs-Wartezeit und Zielbelegung.                         |
+| Verkaufsanteil  | `sellPct` je Gut in %: sinkt mit jedem Verkauf (Sättigung), erholt sich mit der Zeit; bestimmt den Verkaufserlös.                |
+| Auftrag         | Bestellung eines Händlers (Gut, Menge, Prämie, Frist); nur vollständig lieferbar, verfällt ohne Strafe.                          |
+| Autosave        | Zweiter Speicherplatz, den das Spiel alle 120 s laufender Zeit selbst schreibt.                                                  |
+| Krise           | Ereignis je Krisenperiode: Brand, Sturm oder Boom; Häufigkeit nach Krisenstufe (aus, mild, normal).                              |
+| Feuerwache      | Öffentliches Gebäude (Taste E); angebunden schützt es brennbare Gebäude im Radius 8 vor Brandschaden.                            |
+| Ausfall         | Zustand `burning` eines Gebäudes nach einem ungeschützten Brand (200 Ticks ohne Produktion bzw. Dienst).                         |
+| Kachelraum      | Quadratisches Raster der Sim; alle Regeln und Geometrie rechnen hier, nur das Zeichnen projiziert isometrisch.                   |
+| Tiefenschlüssel | `depthKey = 2x + w + 2y + h`; bestimmt die Zeichenreihenfolge der Objekte mit Höhe.                                              |
+| Körperhülle     | Konvexes Sechseck aus Footprint-Raute und Höhe; Vorfilter des Pickings vor den gezeichneten Polygonen.                           |
+| Bus             | Lautstärke-Gruppe im Ton: Master, Musik, Umgebung, Effekte; je ein Regler in den Einstellungen.                                  |
+| Ducking         | Kurzes Absenken von Musik und Umgebung, während ein Signal spielt.                                                               |
+| Rückfall        | Synthetischer Ersatz für eine fehlende oder nicht ladbare Datei; das Spiel meldet und wirft nichts.                              |

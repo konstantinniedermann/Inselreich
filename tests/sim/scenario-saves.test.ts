@@ -477,7 +477,7 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       const r = deserialize(serialize(w));
       expect(r.ok, name).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(5);
+      expect(r.world.version).toBe(6);
       expect(r.world.unlocked, name).toEqual(
         name === 'm10-start' ? ['U0'] : deriveUnlocks(r.world),
       );

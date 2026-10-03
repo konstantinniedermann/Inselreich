@@ -7,12 +7,13 @@ import {
   houseCap,
   newHouseState,
   populationByTier,
+  taxUnits,
   tickTaxes,
   totalTaxes,
   tryUpgrade,
   upgradeStatus,
 } from '../../src/sim/population';
-import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK } from '../../src/sim/defs/timing';
 import { setTaxLevel } from '../../src/sim/tax';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
@@ -287,5 +288,65 @@ describe('tax levels', () => {
     expect(w.tick).toBe(100);
     expect(w.stats.taxes).toBe(156);
     expect(w.money - money).toBe(156 - w.stats.upkeep);
+  });
+});
+
+describe('M11 Steuer je Tick (Spec 3.1)', () => {
+  const sum = (d: number[]): number => d.reduce((a, b) => a + b, 0);
+  /** n × tickTaxes; Zuwachs je Aufruf; Übertrag ganzzahlig 0 … 19 999. */
+  const run = (n: number): number[] => {
+    const d: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const m = w.money;
+      tickTaxes(w);
+      d.push(w.money - m);
+      expect(
+        Number.isInteger(w.taxCarry) && w.taxCarry >= 0 && w.taxCarry < TAX_CARRY_DIVISOR,
+      ).toBe(true);
+    }
+    return d;
+  };
+  it('AK-P1-02 20 Siedlerhäuser à 8 EW, erfüllt, normal: je Schritt +11 oder +12, nach 100 genau +1120', () => {
+    for (let i = 0; i < 20; i++) addHouse(w, 2, 8, true);
+    const d = run(100);
+    expect(new Set(d)).toEqual(new Set([11, 12]));
+    expect(sum(d)).toBe(1120);
+    expect(w.stats.taxes).toBe(1120); // Nominalwert je 100 Ticks bleibt
+  });
+  it('AK-P1-03 niedrig +784; 10 von 20 unerfüllt +840 je 100 Schritte', () => {
+    for (let i = 0; i < 20; i++) addHouse(w, 2, 8, true);
+    expect(setTaxLevel(w, 'low').ok).toBe(true);
+    expect(sum(run(100))).toBe(784);
+    w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    for (let i = 0; i < 20; i++) addHouse(w, 2, 8, i < 10);
+    expect(sum(run(100))).toBe(840);
+  });
+  it('RF-1 Übertrag über Steuerstufen-Wechsel (Amtsstube brennt): kein Verlust, keine Doppelbuchung', () => {
+    for (let i = 0; i < 7; i++) addHouse(w, 2, 8, i % 2 === 0);
+    expect(setTaxLevel(w, 'low').ok).toBe(true);
+    const th = Object.values(w.buildings).find((b) => b.defId === 'townhall')!;
+    const m0 = w.money;
+    let units = 0;
+    for (let i = 0; i < 137; i++) {
+      if (i === 41) Object.assign(th, { outageUntil: 1_000_000, state: 'burning' }); // wirksam ab jetzt „normal"
+      units += taxUnits(w);
+      run(1);
+    }
+    expect((w.money - m0) * TAX_CARRY_DIVISOR + w.taxCarry).toBe(units);
+  });
+  it('RF-2 Aufstieg und Buchung im selben Schritt: Steuer des neuen Standes, Geld ganzzahlig', () => {
+    colony(w);
+    const h = readyHouse(w, 1, 4, 0);
+    h.house!.satisfiedSince = 0; // weit zurück: robust gegen die Dämpfung aus T02 (höchstens 600)
+    w.tick = 999; // nächster Schritt = Wachstumstakt 1000
+    const [m0, c0, u0] = [w.money, w.taxCarry, w.upkeepCarry];
+    step(w);
+    expect(h.house!.tier).toBe(2);
+    expect(w.stats.taxes).toBe(totalTaxes(w));
+    const tax = Math.floor((c0 + taxUnits(w)) / TAX_CARRY_DIVISOR);
+    const upk = Math.floor((u0 + totalUpkeep(w)) / UPKEEP_INTERVAL);
+    expect(w.money).toBe(m0 - TIERS[1].upgradeCost!.money + tax - upk);
+    expect(Number.isInteger(w.money)).toBe(true);
   });
 });

@@ -109,7 +109,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
 
   it('AK-S1-02 createWorld: version 5, v5-Felder; unlockAll ändert nur unlocked', () => {
     const w = createWorld(3);
-    expect(w.version).toBe(5);
+    expect(w.version).toBe(6);
     expect(w.unlocked).toEqual(['U0']);
     expect(w.goodLocks).toEqual([]);
     expect(w.upgradeStops).toEqual([]);

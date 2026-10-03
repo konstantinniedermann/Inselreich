@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST } from '../../src/sim/defs/buildings';
 import { GOODS, GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
-import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
+import {
+  TAX_CARRY_DIVISOR,
+  TAX_UNIT,
+  TIERS,
+  UNSATISFIED_TAX_FACTOR,
+  WIN_CITIZENS,
+  WIN_MERCHANTS,
+} from '../../src/sim/defs/tiers';
+import { EFF_MAX, EFF_WINDOW, UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 
 describe('defs', () => {
@@ -119,5 +127,12 @@ describe('M8 defs', () => {
     expect(bath.stormAffected).toBeUndefined();
     expect(SERVICE_BUILDING.bath).toBe('bathhouse');
     expect(SERVICE_IDS).toEqual(['faith', 'school', 'bath']);
+  });
+});
+
+describe('M11 Werte P1 (Anhang 01 A.1, A.2)', () => {
+  it('AK-P1-01 TAX_UNIT 2, UNSATISFIED_TAX_FACTOR 0,5, TAX_CARRY_DIVISOR 20 000, Faktor 2, EFF 256/1000', () => {
+    expect([TAX_UNIT, UNSATISFIED_TAX_FACTOR, TAX_CARRY_DIVISOR]).toEqual([2, 0.5, 20000]);
+    expect([UPGRADE_DEFICIT_WAIT_FACTOR, EFF_WINDOW, EFF_MAX]).toEqual([2, 256, 1000]);
   });
 });

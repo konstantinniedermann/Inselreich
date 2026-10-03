@@ -73,7 +73,7 @@ export function createWorld(
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 5,
+    version: 6,
     seed: seedUsed,
     width: MAP_W,
     height: MAP_H,
@@ -96,6 +96,8 @@ export function createWorld(
     unlocked: opts.unlockAll === true ? [...UNLOCK_IDS] : ['U0'],
     goodLocks: [],
     upgradeStops: [],
+    taxCarry: 0,
+    upkeepCarry: 0,
   };
   world.buildings[1] = {
     id: 1,

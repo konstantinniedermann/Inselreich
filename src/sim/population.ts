@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { TAX_LEVELS, TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { GROWTH_INTERVAL, UPKEEP_INTERVAL } from './defs/timing';
+import { GROWTH_INTERVAL } from './defs/timing';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
@@ -197,22 +197,31 @@ export function tickPopulation(world: World): void {
   }
 }
 
-/** Steuern je Buchungstakt: Einwohner × Steuersatz, halbiert bei unerfüllten Bedürfnissen, dann × Steuerstufe. Erst summieren, dann einmal abrunden. */
-export function totalTaxes(world: World): number {
+/** Steuereinheiten je Schritt (ganzzahlig): Einwohner × Steuersatz × (erfüllt ? TAX_UNIT : 1), dann × Steuerstufe in Prozent. */
+export function taxUnits(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
     const tier = TIERS[house.tier];
-    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : UNSATISFIED_TAX_FACTOR);
+    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? TAX_UNIT : 1);
   }
-  return Math.floor((sum * TAX_LEVELS[effectiveTaxLevel(world)].pct) / 100);
+  return sum * TAX_LEVELS[effectiveTaxLevel(world)].pct;
 }
 
-/** Aktualisiert die Steuerstatistik und bucht sie im selben Takt wie den Unterhalt. */
+/** Steuern als Nominalwert je 100 Ticks (Anzeige). Erst summieren, dann einmal abrunden. */
+export function totalTaxes(world: World): number {
+  return Math.floor(taxUnits(world) / (TAX_UNIT * 100));
+}
+
+/** Aktualisiert die Steuerstatistik (Nominalwert je 100 Ticks) und bucht je Schritt mit ganzzahligem Übertrag. */
 export function tickTaxes(world: World): void {
-  world.stats.taxes = totalTaxes(world);
-  if (world.tick > 0 && world.tick % UPKEEP_INTERVAL === 0) world.money += world.stats.taxes;
+  const units = taxUnits(world);
+  world.stats.taxes = Math.floor(units / (TAX_UNIT * 100));
+  world.taxCarry += units;
+  const n = Math.floor(world.taxCarry / TAX_CARRY_DIVISOR);
+  world.money += n;
+  world.taxCarry -= n * TAX_CARRY_DIVISOR;
 }
 
 /** Bürger und höher: Einwohner aller Häuser ab Stufe 3 (M8 4.2; ein Aufstieg 3 → 4 senkt die Zahl nie). */

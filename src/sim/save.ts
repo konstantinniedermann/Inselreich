@@ -8,15 +8,19 @@ import {
   ORDER_DURATION,
   ORDER_FIRST_TICK,
   ORDER_PERIOD,
+  EFF_MAX,
+  EFF_WINDOW,
+  UPKEEP_INTERVAL,
 } from './defs/timing';
-import { TAX_LEVELS, TIERS } from './defs/tiers';
+import { LEVELS } from './defs/levels';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { deriveUnlocks } from './unlocks';
-import type { CrisisKind, CrisisLevel, GoodId, UnlockId, World } from './types';
+import type { BuildingState, CrisisKind, CrisisLevel, GoodId, UnlockId, World } from './types';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -187,6 +191,13 @@ export function migrateV4ToV5(raw: Record<string, unknown>): void {
   raw.version = 5;
 }
 
+/** v5 → v6 (Spec 5): Überträge 0; `eff`/`level` fehlen = 256 000 bzw. Stufe 1. */
+export function migrateV5ToV6(raw: Record<string, unknown>): void {
+  raw.taxCarry = 0;
+  raw.upkeepCarry = 0;
+  raw.version = 6;
+}
+
 function isUnlockList(v: unknown): boolean {
   if (!Array.isArray(v) || !v.includes('U0')) return false;
   let last = -1;
@@ -238,6 +249,42 @@ function isValidV5Fields(raw: Record<string, unknown>): boolean {
   );
 }
 
+const BUILDING_STATES: readonly BuildingState[] = [
+  'ok',
+  'waitingInput',
+  'storageFull',
+  'notConnected',
+  'burning',
+  'noService',
+  'noForest',
+];
+
+const isIntBetween = (v: unknown, min: number, max: number): boolean =>
+  isInt(v) && v >= min && v <= max;
+
+/** `eff` nur bei Betrieben mit `produces`, `level` nur bei Betrieben mit Ausbau-Eintrag (Spec 5). */
+function isValidV6Building(b: unknown): boolean {
+  if (!isObject(b)) return false;
+  const def = BUILDING_DEFS[b.defId as keyof typeof BUILDING_DEFS];
+  if (!BUILDING_STATES.includes(b.state as BuildingState)) return false;
+  if (
+    b.eff !== undefined &&
+    (def.produces === undefined || !isIntBetween(b.eff, 0, EFF_WINDOW * EFF_MAX))
+  )
+    return false;
+  if (b.level !== undefined && (LEVELS[def.id] === undefined || (b.level !== 2 && b.level !== 3)))
+    return false;
+  return true;
+}
+
+function isValidV6Fields(raw: Record<string, unknown>): boolean {
+  return (
+    isIntBetween(raw.taxCarry, 0, TAX_CARRY_DIVISOR - 1) &&
+    isIntBetween(raw.upkeepCarry, 0, UPKEEP_INTERVAL - 1) &&
+    Object.values(raw.buildings as Record<string, unknown>).every(isValidV6Building)
+  );
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
@@ -253,6 +300,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV3Fields(raw)) return false;
   if (!isValidV4Fields(raw)) return false;
   if (!isValidV5Fields(raw)) return false;
+  if (!isValidV6Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -276,6 +324,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 3) migrateV3ToV4(raw);
   const fromV4 = raw.version === 4;
   if (fromV4) migrateV4ToV5(raw);
+  if (raw.version === 5) migrateV5ToV6(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

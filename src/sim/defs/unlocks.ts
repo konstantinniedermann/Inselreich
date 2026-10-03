@@ -42,11 +42,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
     trigger: { kind: 'tierReached', tier: 2 },
     buildings: ['townhall'],
     goods: [],
-    functions: ['orders'],
+    functions: ['orders', 'upgrade2'],
     lockText: 'Erst mit den ersten Siedlern',
     whenText: 'sobald die ersten Siedler einziehen',
     notice: 'die ersten Siedler sind da',
-    tip: 'Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie.',
+    tip: 'Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie. Betriebe lassen sich jetzt gegen Stoff ausbauen.',
   },
   {
     id: 'U4',
@@ -64,11 +64,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
     trigger: { kind: 'tierReached', tier: 3 },
     buildings: ['toolmaker'],
     goods: [],
-    functions: ['goodLocks'],
+    functions: ['goodLocks', 'upgrade3'],
     lockText: 'Erst mit den ersten Bürgern',
     whenText: 'sobald die ersten Bürger einziehen',
     notice: 'die ersten Bürger sind da',
-    tip: 'Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe.',
+    tip: 'Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe. Ausbau Stufe 3 kostet Rum.',
   },
   {
     id: 'U6',
@@ -94,6 +94,8 @@ export const FUNCTION_LABELS: Readonly<Record<UnlockFunction, readonly string[]>
   forest: ['Roden', 'Aufforsten'],
   orders: ['Handelsaufträge'],
   goodLocks: ['Ausgabesperre'],
+  upgrade2: ['Ausbau Stufe 2'],
+  upgrade3: ['Ausbau Stufe 3'],
 };
 /** Eintrag je Funktion, aus UNLOCKS abgeleitet (für das Blatt-Modul townhall.ts, Entscheid B9). */
 export const FUNCTION_ENTRY = Object.fromEntries(

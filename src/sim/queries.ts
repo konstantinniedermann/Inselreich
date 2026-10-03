@@ -3,6 +3,7 @@ import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
 import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
+import { cycleOf } from './levels';
 import { citizens, isSupplied, merchants, serviceAvailable } from './population';
 import { supplyBuildings } from './supply';
 import type {
@@ -75,9 +76,10 @@ export function goodsBalance(
     }
     if (!b.connected) continue;
     const def = BUILDING_DEFS[b.defId];
-    if (def.cycle === undefined) continue;
-    if (def.produces) out[def.produces].produced += 100 / def.cycle;
-    for (const g of def.consumes ?? []) out[g].consumed += 100 / def.cycle;
+    const cycle = cycleOf(b);
+    if (cycle === undefined) continue;
+    if (def.produces) out[def.produces].produced += 100 / cycle;
+    for (const g of def.consumes ?? []) out[g].consumed += 100 / cycle;
   }
   for (const g of GOOD_IDS) out[g].net = out[g].produced - out[g].consumed;
   return out;

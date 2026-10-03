@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createWorld } from '../../src/sim/world';
-import { placeBuilding } from '../../src/sim/build';
+import { demolish, placeBuilding } from '../../src/sim/build';
+import { step } from '../../src/sim/tick';
+import { tickTaxes } from '../../src/sim/population';
+import { forceGrass } from './helpers';
 import {
   addStock,
   takeStock,
@@ -12,7 +15,7 @@ import {
   tickEconomy,
   UPKEEP_INTERVAL,
 } from '../../src/sim/economy';
-import type { World } from '../../src/sim/types';
+import type { Building, BuildingDefId, World } from '../../src/sim/types';
 
 let w: World;
 beforeEach(() => {
@@ -123,3 +126,74 @@ function findGrass(w: World): { x: number; y: number } {
     }
   throw new Error('no grass');
 }
+
+/** Betrieb ohne Kacheln (Muster addHouse in taxes.test.ts); zählt für Unterhalt und Bilanz. */
+function addRaw(world: World, defId: BuildingDefId): Building {
+  const id = world.nextBuildingId++;
+  const b: Building = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok' };
+  world.buildings[id] = b;
+  return b;
+}
+const SET_115 = [
+  'fisher',
+  'weaver',
+  'distillery',
+  'toolmaker',
+  'school',
+  'chapel',
+  'market',
+] as const; // 5+15+20+25+25+15+10
+
+describe('M11 Unterhalt je Tick (Spec 3.1)', () => {
+  it('AK-P1-04 Unterhalt Σ 115 ohne Häuser: je Schritt −1 oder −2, nach 100 genau −115; upkeepCarry 0 … 99', () => {
+    for (const id of SET_115) addRaw(w, id);
+    expect(totalUpkeep(w)).toBe(115);
+    const d: number[] = [];
+    for (let i = 0; i < 100; i++) {
+      const m = w.money;
+      tickEconomy(w);
+      d.push(m - w.money);
+      expect(Number.isInteger(w.upkeepCarry) && w.upkeepCarry >= 0 && w.upkeepCarry < 100).toBe(
+        true,
+      );
+    }
+    expect(new Set(d)).toEqual(new Set([1, 2]));
+    expect(d.reduce((a, b) => a + b, 0)).toBe(115);
+  });
+  it('AK-P1-06 Abriss eines Fischers bei upkeepCarry 50: Übertrag bleibt, nächster Schritt ohne die 5', () => {
+    for (const id of SET_115) addRaw(w, id);
+    const fisher = Object.values(w.buildings).find((b) => b.defId === 'fisher')!;
+    w.upkeepCarry = 50;
+    expect(demolish(w, fisher.id).ok).toBe(true);
+    expect(w.upkeepCarry).toBe(50);
+    const m = w.money;
+    tickEconomy(w);
+    expect(w.stats.upkeep).toBe(110);
+    expect([m - w.money, w.upkeepCarry]).toEqual([1, 60]); // floor(160 / 100), Rest 60
+  });
+  it('AK-P1-07 Geld 10, Unterhalt 115, ohne Häuser: nach 20 Schritten < 0, „Kein Geld"; Steuer bucht weiter', () => {
+    const k = w.buildings[w.kontorId]!;
+    forceGrass(w, k.x + 2, k.y);
+    for (const id of SET_115) addRaw(w, id);
+    w.money = 10;
+    for (let i = 0; i < 20; i++) step(w);
+    expect(w.money).toBe(-13); // 10 − floor(20 × 115 / 100)
+    expect(placeBuilding(w, 'house', k.x + 2, k.y)).toEqual({ ok: false, reason: 'Kein Geld' });
+    const id = w.nextBuildingId++;
+    w.buildings[id] = {
+      ...{ id, defId: 'house', x: k.x + 2, y: k.y, connected: true, progress: 0, state: 'ok' },
+      house: {
+        tier: 1,
+        inhabitants: 4,
+        demand: {},
+        satisfied: { food: true },
+        services: {},
+        satisfiedSince: 0,
+        supplied: true,
+      },
+    };
+    const m = w.money;
+    for (let i = 0; i < 100; i++) tickTaxes(w);
+    expect(w.money - m).toBe(8); // 4 EW × 2 × TAX_UNIT 2 × pct 100 × 100 / 20 000
+  });
+});
