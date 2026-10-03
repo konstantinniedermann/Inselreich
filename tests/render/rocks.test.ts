@@ -25,6 +25,7 @@ import {
   paintRock,
   resetRockCache,
   rockOnScreen,
+  ROCK_MARGIN,
   rockBounds,
   rockCacheBytes,
   rockCacheSize,
@@ -154,42 +155,119 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
     expect(widest).toBeGreaterThan(1.3 * ISO_W);
     expect(widest).toBeLessThanOrEqual(ROCK_W);
   });
-  it('2x2-Raster: je Block mit freiem Gebirge genau ein Stempel auf der vordersten Gebirgskachel, klein bei höchstens 2 Kacheln', () => {
+  it('Footprint: gross = freier 2x2-Block (Footprint 2x2), klein = einzelne freie Gebirgskachel (1x1), nie überlappend', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
     const free = (x: number, y: number) => {
-      const t = w.tiles[y * w.width + x];
-      return !!t && x < w.width && t.terrain === 'mountain' && t.buildingId === null && !t.road;
+      const t = x < w.width && y < w.height ? w.tiles[y * w.width + x] : undefined;
+      return !!t && t.terrain === 'mountain' && t.buildingId === null && !t.road;
     };
     const rocks = rocksOf(w);
-    const blocks = new Map<string, Rock>();
+    const used = new Set<string>();
+    let big = 0;
     for (const r of rocks) {
-      const k = `${r.fp.x >> 1},${r.fp.y >> 1}`;
-      expect(blocks.has(k), k).toBe(false);
-      blocks.set(k, r);
-    }
-    let mountain = 0;
-    for (let by = 0; by < w.height; by += 2)
-      for (let bx = 0; bx < w.width; bx += 2) {
-        const tiles = [
-          [0, 0],
-          [1, 0],
-          [0, 1],
-          [1, 1],
-        ]
-          .map(([dx, dy]) => [bx + dx!, by + dy!] as const)
-          .filter(([x, y]) => free(x, y));
-        mountain += tiles.length;
-        const r = blocks.get(`${bx >> 1},${by >> 1}`);
-        if (tiles.length === 0) {
-          expect(r).toBeUndefined();
-          continue;
-        }
-        expect(r).toBeDefined();
-        const front = Math.max(...tiles.map(([x, y]) => x + y));
-        expect(r!.fp.x + r!.fp.y).toBe(front);
-        expect(r!.variant >= ROCK_SHAPES).toBe(tiles.length <= 2);
+      expect(r.fp.w).toBe(r.fp.h);
+      expect([1, 2]).toContain(r.fp.w);
+      expect(r.variant >= ROCK_SHAPES).toBe(r.fp.w === 1);
+      if (r.fp.w === 2) {
+        big++;
+        expect(r.fp.x % 2).toBe(0);
+        expect(r.fp.y % 2).toBe(0);
       }
-    expect(rocks.length).toBeLessThan(mountain / 2);
+      for (let dy = 0; dy < r.fp.h; dy++)
+        for (let dx = 0; dx < r.fp.w; dx++) {
+          expect(free(r.fp.x + dx, r.fp.y + dy)).toBe(true);
+          const k = `${r.fp.x + dx},${r.fp.y + dy}`;
+          expect(used.has(k), k).toBe(false);
+          used.add(k);
+        }
+    }
+    expect(big).toBeGreaterThan(10);
+    // jeder vollständig freie 2x2-Block trägt einen grossen Stempel
+    for (let by = 0; by < w.height; by += 2)
+      for (let bx = 0; bx < w.width; bx += 2)
+        if (free(bx, by) && free(bx + 1, by) && free(bx, by + 1) && free(bx + 1, by + 1))
+          expect(rocks.some((r) => r.fp.w === 2 && r.fp.x === bx && r.fp.y === by)).toBe(true);
+    for (const b of Object.values(w.buildings))
+      for (const r of rocks)
+        expect(
+          b.x < r.fp.x + r.fp.w && b.x + 3 > r.fp.x && b.y < r.fp.y + r.fp.h && b.y + 3 > r.fp.y,
+        ).toBe(false);
+  });
+  it('Tiefenordnung (Property): jedes Objekt, das nach einer Footprint-Achse vor/hinter dem Fels liegt, kommt danach/davor', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const rocks = rocksOf(w);
+    const sample = rocks.filter((_, i) => i % 5 === 0);
+    // Gebäude (3x3 würde überlappen: 1x1-Häuser) rund um die Fels-Footprints, nur auf Nicht-Gebirge
+    let id = 900;
+    const near = (r: Rock) => {
+      const out: [number, number][] = [];
+      for (let dy = -2; dy <= r.fp.h + 1; dy++)
+        for (let dx = -2; dx <= r.fp.w + 1; dx++) {
+          const x = r.fp.x + dx,
+            y = r.fp.y + dy;
+          const inside = dx >= 0 && dy >= 0 && dx < r.fp.w && dy < r.fp.h;
+          if (!inside && x >= 0 && y >= 0 && x < w.width && y < w.height) out.push([x, y]);
+        }
+      return out;
+    };
+    const movers: { kind: 'walker' | 'ship' | 'boat'; id: number; cx: number; cy: number }[] = [];
+    const kinds = ['walker', 'ship', 'boat'] as const;
+    let k = 0;
+    for (const r of sample)
+      for (const [x, y] of near(r)) {
+        movers.push({ kind: kinds[k++ % 3]!, id: ++id, cx: x + 0.5, cy: y + 0.5 });
+      }
+    const out = sortedObjects(w, movers);
+    const pos = new Map<string, number>();
+    out.forEach((it, i) => pos.set(`${it.kind}${it.id}`, i));
+    let checked = 0;
+    for (const r of sample) {
+      const pr = pos.get(`rock${r.id}`)!;
+      for (const it of out) {
+        if (it === r || it.kind === 'rock') continue;
+        const dx = it.fp.x - r.fp.x,
+          dy = it.fp.y - r.fp.y;
+        if (Math.abs(dx) > r.fp.w + 3 || Math.abs(dy) > r.fp.h + 3) continue;
+        const frontX = it.fp.x >= r.fp.x + r.fp.w - 1e-9,
+          frontY = it.fp.y >= r.fp.y + r.fp.h - 1e-9;
+        const backX = it.fp.x + it.fp.w <= r.fp.x + 1e-9,
+          backY = it.fp.y + it.fp.h <= r.fp.y + 1e-9;
+        const pi = pos.get(`${it.kind}${it.id}`)!;
+        if ((frontX || frontY) && !(backX || backY)) {
+          expect(pi, `${it.kind}${it.id} vor ${r.id}`).toBeGreaterThan(pr);
+          checked++;
+        } else if ((backX || backY) && !(frontX || frontY)) {
+          expect(pi, `${it.kind}${it.id} hinter ${r.id}`).toBeLessThan(pr);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(200);
+  });
+  it('rockOnScreen entspricht rockBounds samt Rand (Kamera ungleich 0, Kacheln mit x ungleich y)', () => {
+    const view = { w: 800, h: 600 };
+    let agree = 0;
+    for (const zoom of [0.5, 1, 2])
+      for (const cam0 of [
+        { x: 300, y: 250 },
+        { x: -120, y: 700 },
+      ])
+        for (let x = 0; x < 40; x += 3)
+          for (let y = 0; y < 40; y += 2)
+            for (const wdt of [1, 2]) {
+              const cam = { ...cam0, zoom };
+              const r = { ...mkRock(0, x, y), fp: { x, y, w: wdt, h: wdt } } as RockItem;
+              const box = rockBounds(r);
+              const m = ROCK_MARGIN;
+              const want =
+                box.x + box.w >= cam.x - m &&
+                box.x <= cam.x + view.w / zoom + m &&
+                box.y + box.h >= cam.y - m &&
+                box.y <= cam.y + view.h / zoom + m;
+              expect(rockOnScreen(cam, view, r), `${zoom} ${x},${y},${wdt}`).toBe(want);
+              agree += want ? 1 : 0;
+            }
+    expect(agree).toBeGreaterThan(20);
   });
 });
 
@@ -216,7 +294,7 @@ describe('H-R8 AK2 Sortierung', () => {
   });
   it('AK2 Gleichstand: Fels < Baum < Gebäude < Schiff < Boot < Figur', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
-    const r = rocksOf(w)[0]!;
+    const r = rocksOf(w).find((q) => q.fp.w === 1)!;
     const { x, y } = r.fp;
     const at = (kind: 'ship' | 'boat' | 'walker', id: number) => ({
       kind,
@@ -233,26 +311,27 @@ describe('H-R8 AK2 Sortierung', () => {
     const r = rocksOf(w)[0]!;
     const { x, y } = r.fp;
     const out = sortedObjects(w, [
-      { kind: 'walker', id: 1, cx: x + 1.5, cy: y + 1.5 }, // davor
+      { kind: 'walker', id: 1, cx: x + r.fp.w + 0.5, cy: y + r.fp.h + 0.5 }, // davor
       { kind: 'walker', id: 2, cx: x - 0.5, cy: y - 0.5 }, // dahinter
     ]);
     const idx = (kind: string, id: number) => out.findIndex((i) => i.kind === kind && i.id === id);
     expect(idx('walker', 1)).toBeGreaterThan(idx('rock', r.id));
     expect(idx('walker', 2)).toBeLessThan(idx('rock', r.id));
   });
-  it('AK2 Stempelgrenzen: Pfadpunkte in rockBounds, Breite höchstens zwei Kacheln, Höhe höchstens H_MAX', () => {
+  it('AK2 Stempelgrenzen: Pfadpunkte in rockBounds, Breite höchstens der Footprint, Höhe höchstens H_MAX', () => {
     expect(ROCK_H).toBeLessThanOrEqual(H_MAX);
-    const it0 = mkRock(0, 10, 7);
-    const box = rockBounds(it0);
-    const c = project(10.5, 7.5);
-    expect(box.w).toBe(ROCK_W);
-    expect(ROCK_W).toBeLessThanOrEqual(2 * ISO_W);
-    expect(c.y - box.y).toBeLessThanOrEqual(H_MAX);
+    expect(ROCK_W).toBe(2 * ISO_W);
     for (const seed of [3, 7, 12588])
-      for (let v = 0; v < ROCK_VARIANTS; v++)
+      for (let v = 0; v < ROCK_VARIANTS; v++) {
+        const n = v >= ROCK_SHAPES ? 1 : 2; // klein = 1x1-, gross = 2x2-Footprint
+        const it0 = { ...mkRock(0, 10, 7, v), fp: { x: 10, y: 7, w: n, h: n } } as RockItem;
+        const box = rockBounds(it0);
+        const c = project(10 + n / 2, 7 + n / 2);
+        expect(box.w).toBe(n * ISO_W);
+        expect(c.y - box.y).toBeLessThanOrEqual(H_MAX);
         for (const f of rockFaces(seed, v))
           for (const p of f.pts) {
-            expect(Math.abs(p.x)).toBeLessThanOrEqual(ROCK_W / 2);
+            expect(Math.abs(p.x)).toBeLessThanOrEqual((n * ISO_W) / 2);
             expect(p.y).toBeGreaterThanOrEqual(-ROCK_H - 1e-9);
             expect(p.y).toBeLessThanOrEqual(ISO_H / 2);
             const q = { x: c.x + p.x, y: c.y + p.y };
@@ -261,6 +340,7 @@ describe('H-R8 AK2 Sortierung', () => {
             expect(q.y).toBeGreaterThanOrEqual(box.y - 1e-9);
             expect(q.y).toBeLessThanOrEqual(box.y + box.h + 1e-9);
           }
+      }
   });
   it('AK2 rockShadow liegt im Kachelraum nach rechts unten und ist ein Polygon', () => {
     const s = rockShadow(mkRock(0, 10, 7, 2), 3);
@@ -298,7 +378,7 @@ describe('H-R8 AK3 kein Picking', () => {
       };
       w.nextBuildingId = Math.max(w.nextBuildingId, id + 1);
     };
-    mk(900, x + 1, y + 1);
+    mk(900, x + r.fp.w, y + r.fp.h);
     mk(901, x - 2, y - 2);
     const out = sortedObjects(w);
     const at = (kind: string, id: number) => out.findIndex((i) => i.kind === kind && i.id === id);
@@ -418,7 +498,7 @@ describe('H-R8 AK4 Frame-Kosten', () => {
       .reduce((n, e) => n + e.points.length, 0);
     const edgeAll = rocksOf(w).filter((r) => r.shadow).length;
     expect(pts).toBeLessThanOrEqual(8 * Math.min(edgeAll, ROCK_CAP[0]) + 40); // + Schiffsschatten;
-    expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(110);
+    expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(130);
   });
 });
 

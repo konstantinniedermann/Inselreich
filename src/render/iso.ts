@@ -144,7 +144,8 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       const fp = { x: b.x, y: b.y, w: d.w, h: d.h };
       items.push({ kind: 'building', id: b.id, fp, key: depthKey(fp) });
     }
-    // Felsmassive: ein Stempel je 2×2-Block auf der vordersten freien Gebirgskachel (grösser, weniger Stempel)
+    // Felsmassive: grosser Stempel nur auf einem vollständig freien 2×2-Block (Footprint 2×2, überlappt nichts, die
+    // Sortierung trägt wie bei Gebäuden); sonst kleine 1×1-Stempel auf einem Teil der freien Gebirgskacheln
     const freeMountain = (x: number, y: number): boolean => {
       if (x >= world.width || y >= world.height) return false;
       const t = world.tiles[y * world.width + x]!;
@@ -154,36 +155,35 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       x >= world.width ||
       y >= world.height ||
       world.tiles[y * world.width + x]!.terrain !== 'mountain';
+    const pushRock = (x: number, y: number, n: number): void => {
+      const fp = { x, y, w: n, h: n };
+      // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt
+      let shadow = false;
+      for (let k = 0; k <= n && !shadow; k++) shadow = openAt(x + n, y + k) || openAt(x + k, y + n);
+      items.push({
+        kind: 'rock',
+        id: y * world.width + x,
+        fp,
+        key: depthKey(fp),
+        variant: rockVariant(world.seed, x, y, n === 1),
+        shadow,
+      });
+    };
     for (let by = 0; by < world.height; by += 2)
       for (let bx = 0; bx < world.width; bx += 2) {
-        let n = 0,
-          ax = -1,
-          ay = -1;
-        for (const [dx, dy] of [
-          [0, 0],
-          [1, 0],
-          [0, 1],
-          [1, 1],
-        ] as const)
-          if (freeMountain(bx + dx, by + dy)) {
-            n++;
-            if (bx + dx + by + dy >= ax + ay) {
-              ax = bx + dx;
-              ay = by + dy;
-            }
-          }
-        if (n === 0) continue;
-        const fp = { x: ax, y: ay, w: 1, h: 1 };
-        // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt
-        const shadow = openAt(ax + 1, ay) || openAt(ax, ay + 1) || openAt(ax + 1, ay + 1);
-        items.push({
-          kind: 'rock',
-          id: ay * world.width + ax,
-          fp,
-          key: depthKey(fp),
-          variant: rockVariant(world.seed, ax, ay, n <= 2),
-          shadow,
-        });
+        if (
+          freeMountain(bx, by) &&
+          freeMountain(bx + 1, by) &&
+          freeMountain(bx, by + 1) &&
+          freeMountain(bx + 1, by + 1)
+        ) {
+          pushRock(bx, by, 2);
+          continue;
+        }
+        for (let dy = 0; dy < 2; dy++)
+          for (let dx = 0; dx < 2; dx++)
+            if (freeMountain(bx + dx, by + dy) && hash2(world.seed + 74, bx + dx, by + dy) < 0.55)
+              pushRock(bx + dx, by + dy, 1);
       }
     for (let y = 0; y < world.height; y++)
       for (let x = 0; x < world.width; x++) {

@@ -17,8 +17,9 @@ import { PALETTE, mixHex } from './palette';
 
 // rocks.ts — Felsmassive als aufrechte Stempel über Gebirgskacheln (G3, ADR-012). Reine Darstellung: Gestalt, Grösse
 // und Farbe sind Funktionen von (world.seed, x, y); die Sim kennt keine Höhe. Ein Stempel steht je 2×2-Block auf der
-// vordersten freien Gebirgskachel, ist bis zwei Kacheln breit (`ROCK_W`) und überragt die Kachel höchstens bis H_MAX
-// (< `H_MAX`); sortiert wird mit dem 1×1-Footprint der Ankerkachel (ISO §10).
+// 2×2-Block (grosser Stempel, Footprint 2×2, bis `ROCK_W`) bzw. auf einzelnen Randkacheln (kleiner Stempel, Footprint
+// 1×1); Stempel bleiben im Prisma über ihrem Footprint und höchstens `ROCK_H` (< H_MAX) hoch, so tragen die
+// Sortierbeweise wie bei Gebäuden (ISO §10).
 export { ROCK_SHAPES, ROCK_VARIANTS, rockVariant };
 export type RockItem = Extract<SortedItem, { kind: 'rock' }>;
 /** Rolle einer Fläche: Sockelsilhouette, Lichtseite (links), Schattenseite (rechts), Sockelband, Felsband, Lichtkappe. */
@@ -56,7 +57,7 @@ function peaksFor(seed: number, variant: number): Peak[] {
   const rnd = (k: number, j: number) => hash2(seed + 72, shape * 13 + j, k);
   const sx = small ? 0.5 : 1,
     sh = small ? 0.6 : 1;
-  const half = (ROCK_W / 2 - 2) * (small ? 0.55 : 1); // Platz nach links/rechts
+  const half = small ? ISO_W / 2 - 1 : ROCK_W / 2 - 2; // Platz nach links/rechts (Footprint 1×1 bzw. 2×2)
   const usable = ROCK_H - TOP_MARGIN;
   const n = small ? 2 : 2 + Math.floor(rnd(0, 0) * 2);
   const topMain = usable * sh * (0.85 + 0.15 * rnd(1, 0));
@@ -134,17 +135,22 @@ export function rockFaces(seed: number, variant: number): RockFace[] {
 const mainHeight = (seed: number, variant: number): number =>
   Math.max(...peaksFor(seed, variant).map((p) => p.top));
 
-/** Bildbox des Stempels: `ROCK_W` breit, `ROCK_H` hoch über der Rautenmitte der Ankerkachel. */
+/** Mitte des Footprints in Weltpixeln (Stempelursprung). */
+const centerOf = (item: RockItem): Pt =>
+  project(item.fp.x + item.fp.w / 2, item.fp.y + item.fp.h / 2);
+
+/** Bildbox des Stempels: Footprint-Breite (`ISO_W` je Kachel), `ROCK_H` hoch über der Footprint-Mitte. */
 export function rockBounds(item: RockItem): Box {
-  const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
-  return { x: c.x - ROCK_W / 2, y: c.y - ROCK_H, w: ROCK_W, h: ROCK_H + ISO_H / 2 };
+  const c = centerOf(item),
+    w = item.fp.w * ISO_W;
+  return { x: c.x - w / 2, y: c.y - ROCK_H, w, h: ROCK_H + ISO_H / 2 };
 }
 
 /** Schattenpolygon im Kachelraum, nach rechts unten (+3, +1); länger bei höherem, breiter bei grossem Massiv. */
 export function rockShadow(item: RockItem, seed: number): Pt[] {
   const len = 0.2 + (0.5 * mainHeight(seed, item.variant)) / ROCK_H;
-  const mx = item.fp.x + 0.5 + DIR.x * (SHADOW_SHIFT + len / 2),
-    my = item.fp.y + 0.5 + DIR.y * (SHADOW_SHIFT + len / 2);
+  const mx = item.fp.x + item.fp.w / 2 + DIR.x * (SHADOW_SHIFT + len / 2),
+    my = item.fp.y + item.fp.h / 2 + DIR.y * (SHADOW_SHIFT + len / 2);
   const a = 0.45 + len / 2,
     b = item.variant >= ROCK_SHAPES ? 0.32 : 0.55;
   const pts: Pt[] = [];
@@ -157,7 +163,7 @@ export function rockShadow(item: RockItem, seed: number): Pt[] {
   return pts;
 }
 
-const ROCK_MARGIN = 40; // Rand um die Bildbox für den Schatten nach rechts unten
+export const ROCK_MARGIN = 40; // Rand um die Bildbox für den Schatten nach rechts unten
 
 /** Liegt die Bildbox des Stempels (samt Schattenrand) im Bild? Genauer als der Kachelbereich, der unten `H_TOWER` zugibt. */
 export function rockOnScreen(
@@ -166,13 +172,16 @@ export function rockOnScreen(
   item: RockItem,
 ): boolean {
   // Bildbox wie `rockBounds`, ohne Allokation (läuft je Fels und Frame)
-  const cx = (item.fp.x - item.fp.y) * (ROCK_W / 2),
-    cy = (item.fp.x + item.fp.y + 1) * (ISO_H / 2);
+  const fx = item.fp.x + item.fp.w / 2,
+    fy = item.fp.y + item.fp.h / 2;
+  const cx = (fx - fy) * (ISO_W / 2),
+    cy = (fx + fy) * (ISO_H / 2),
+    hw = (item.fp.w * ISO_W) / 2;
   const right = cam.x + view.w / cam.zoom,
     bottom = cam.y + view.h / cam.zoom;
   return (
-    cx + ROCK_W / 2 >= cam.x - ROCK_MARGIN &&
-    cx - ROCK_W / 2 <= right + ROCK_MARGIN &&
+    cx + hw >= cam.x - ROCK_MARGIN &&
+    cx - hw <= right + ROCK_MARGIN &&
     cy + ISO_H / 2 >= cam.y - ROCK_MARGIN &&
     cy - ROCK_H <= bottom + ROCK_MARGIN
   );
@@ -180,7 +189,7 @@ export function rockOnScreen(
 
 /** Silhouetten (Bildschirmpixel) für die Verdeckung von Licht und Feuer: je Gipfel eine Gruppe. */
 export function rockClips(cam: Camera, item: RockItem, seed: number): Pt[][] {
-  const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+  const c = centerOf(item);
   return rockFaces(seed, item.variant)
     .filter((f) => f.role === 'base')
     .map((f) => f.pts.map((q) => worldToScreen(cam, { x: c.x + q.x, y: c.y + q.y })));
@@ -260,7 +269,7 @@ export function drawRockStamp(
   const stamp = stampFor(seed, item.variant % ROCK_VARIANTS, step);
   if (!stamp) return;
   const f = z / step;
-  const p = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
+  const p = worldToScreen(cam, centerOf(item));
   ctx.drawImage(stamp, p.x - (ROCK_W / 2) * z, p.y - ROCK_H * z, stamp.width * f, stamp.height * f);
 }
 
