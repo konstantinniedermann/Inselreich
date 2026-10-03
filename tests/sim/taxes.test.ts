@@ -97,12 +97,13 @@ describe('tickTaxes', () => {
     const m0 = w.money;
     const upkeep = totalUpkeep(w);
     for (let i = 0; i < UPKEEP_INTERVAL; i++) step(w);
-    // Unterhalt: 100 Schritte × upkeep Einheiten = genau upkeep Münzen, Übertrag 0 (Anhang 02 D)
+    // Anhang 02 D, n = 100, c0 = u0 = 0: money = m0 + floor(Σ Steuereinheiten / TAX_CARRY_DIVISOR) − floor(100 · upkeep / 100).
+    // Das Haus verliert unterwegs die Versorgung: Σ Einheiten = 69 600 = 3 · 20 000 + Übertrag 9 600.
     expect(w.stats.upkeep).toBe(upkeep);
+    expect(upkeep).toBe(20);
     expect(w.upkeepCarry).toBe(0);
-    // Steuern: das Haus verliert unterwegs die Versorgung, gebucht ist, was der Übertrag nicht hält
-    expect(w.money - m0 + upkeep).toBeGreaterThan(0);
-    expect(w.taxCarry).toBeLessThan(TAX_CARRY_DIVISOR);
+    expect(w.taxCarry).toBe(9600);
+    expect(w.money).toBe(m0 + 3 - 20);
   });
 });
 
