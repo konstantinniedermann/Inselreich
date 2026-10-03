@@ -149,7 +149,7 @@ flowchart TB
 | `noise.ts`, `rng.ts`                                     | Seed-basiertes Value-Noise für die Karte; `rng.ts` (mulberry32) liefert je Auftrags- und je Krisenperiode eine neue Zufallsfolge (ADR-010).                                                                                                                                                                                                                                                                                                                                                                           |
 | `mapgen.ts`                                              | Erzeugt die Insel aus einem Seed, prüft die Nachbedingungen, sucht den Kontor-Standort an der Küste.                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `world.ts`                                               | `createWorld(seed, { crisisLevel? })` (Standard `off`) und Zugriffshelfer (Kachel, Footprint, Nachbarn, Radius, Mittelpunkt).                                                                                                                                                                                                                                                                                                                                                                                         |
-| `placement.ts`                                           | `canPlace`/`canPlaceRoad`: Bausperre `buildLock` (M8: Gebäude mit `unlockTier` erst nach Freischaltung der Stufe, geprüft zuerst), Kartenrand, Bauland, Belegung und Standortregeln, mit deutschem Grund.                                                                                                                                                                                                                                                                                                             |
+| `placement.ts`                                           | `canPlace`/`canPlaceRoad`: Bausperre `buildLock` (M10: Sperre aus `unlocks.ts`, geprüft zuerst; `buy` prüft `goodLock`, `deliverOrder` `functionLock`), Kartenrand, Bauland, Belegung und Standortregeln, mit deutschem Grund.                                                                                                                                                                                                                                                                                        |
 | `build.ts`                                               | `placeBuilding`, `placeRoad`, `demolish`, `removeRoad`: prüfen, bezahlen, Kacheln belegen, Rückerstattung.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `roads.ts`                                               | `recomputeConnectivity`: Breitensuche über Wege ab dem Kontor, setzt `connected` und `notConnected`; `burning` hat Vorrang.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `supply.ts`                                              | Versorgungsradius von Kontor und angebundenen Marktplätzen (für Bauregel und Häuser).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -311,7 +311,7 @@ Fenster, Laternen oder Feuer leuchten.
 ```mermaid
 flowchart LR
   T["tick += 1"] --> P["Produktion"] --> B["Bevölkerung"] --> S["Steuern"] --> W["Wirtschaft (Unterhalt)"]
-  W --> M["Markt-Erholung"] --> O["Aufträge"] --> K["Krisen"] --> V["Sieg: won, dann wonMerchants"]
+  W --> M["Markt-Erholung"] --> O["Aufträge"] --> K["Krisen"] --> V["Sieg: won, dann wonMerchants"] --> U["Freischaltung (tickUnlocks)"]
 ```
 
 | System                     | Takt                                                                                    | Wirkung                                                                                                                                                       |
@@ -323,8 +323,9 @@ flowchart LR
 | `tickOrders`               | ab 600 alle 900 (`ORDER_FIRST_TICK`, `ORDER_PERIOD`)                                    | zuerst Verfall (`tick > due`), dann Angebot aus `orderForPeriod`; kein Geld, kein Lager                                                                       |
 | `tickCrises`               | jeder Tick; Periodenstart ab 2400 alle 600 (`normal`) bzw. 1200 (`mild`), nie bei `off` | Ausfälle bei `outageUntil` beenden, Krise nach `until` entfernen, bei Periodenstart Krise ziehen (`rollCrisis`) und beginnen; Brandgebühr wird sofort gebucht |
 | `checkWin`                 | jeder Tick                                                                              | setzt `won` einmalig bei 50 Bürgern und höher (Stufe ≥ 3), danach `wonMerchants` einmalig bei 60 Kaufleuten (nur mit `won`)                                   |
+| `tickUnlocks`              | jeder Tick, letzter Aufruf                                                              | setzt Freischaltungen (`world.unlocked`) gespeichert und monoton; läuft nach `checkWin`, damit der Referenzlauf bitgleich bleibt                              |
 
-M7 ändert den Simulationsschritt nicht. Alle Takte ausser Aufträgen und Krisen folgen der Konvention `tick > 0 && tick % INTERVAL === 0` (ADR-005); der
+M10 hängt `tickUnlocks` als letzten Aufruf an (ADR-005, Nachtrag M10): Der Controller liest vor Schritt t+1 genau den Zustand, den `tickUnlocks` am Ende von Schritt t sah. M7 ändert den Simulationsschritt nicht. Alle Takte ausser Aufträgen und Krisen folgen der Konvention `tick > 0 && tick % INTERVAL === 0` (ADR-005); der
 Auftragstakt hat einen Versatz von 600 (Nachtrag in ADR-005). Die Höchststufe für den Güterpool eines
 Auftrags stammt aus dem Zustand nach `tickPopulation` desselben Ticks. Krisen beginnen bei `tick ≥ 2400 && (tick − 2400) % P === 0` (Nachtrag M6 in ADR-005); der Krisenschritt läuft
 nach Bevölkerung und Buchung (Boom-Pool aus der Höchststufe desselben Ticks) und vor dem Sieg, auch nach dem Sieg weiter.
@@ -677,21 +678,24 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 
 ### Persistenz
 
-- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 4`,
-  `SAVE_VERSION`). Gespeichert wird immer Version 4.
+- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 5`,
+  `SAVE_VERSION`). Gespeichert wird immer Version 5.
 - `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
   `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
   `crisisLevel = 'off'`, `crisis = null`) → v4 (`migrateV3ToV4`: `stock.glass = 0`, `sellPct.glass = 100`,
-  `wonMerchants = false`; Gebäude und Häuser unberührt); danach prüft sie
+  `wonMerchants = false`; Gebäude und Häuser unberührt) → v5 (`migrateV4ToV5`: `unlocked = ['U0']`, `goodLocks = []`,
+  `upgradeStops = []`; nach `isWellFormed` setzt `deriveUnlocks` den echten Stand aus der Welt); danach prüft sie
   JSON, Version, Kartengrösse und Kachelanzahl, die Gebäude (bekannte `defId`, Koordinaten), das Kontor,
   alle Güter im Lager, `stats`, `won`, `tick`, `nextBuildingId` und die v2-Felder (`taxLevel`,
   `taxLockedUntil`, `sellPct` ganzzahlig 30…100, `order` passend zu Tick und Periode), die v3-Felder (`crisisLevel` bekannt; `crisis` passend zu Stufe,
   Periode und Tick; je Gebäude `outageUntil` nur mit `state 'burning'` und `tick < outageUntil ≤ tick + 200`) und die v4-Felder
   (`wonMerchants` boolean und nur mit `won`; je Wohnhaus `house.tier` ganzzahlig 1 … 4; Stufe 4 nur mit `won`
-  oder aktivem Hebel `TIERS[4].unlockCitizens`, die Bürgerzahl wird dabei nicht geprüft). Fehler ergeben
+  oder aktivem Hebel `TIERS[4].unlockCitizens`, die Bürgerzahl wird dabei nicht geprüft) und die v5-Felder (`unlocked`
+  geordnete Liste bekannter Ids mit `U0`, `goodLocks` und `upgradeStops` als wohlgeformte Listen; ein Haus braucht sein
+  `house`-Objekt). Fehler ergeben
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
   Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`, ein
-  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`.
+  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
   Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
   (`CRISIS_FIRST_TICK`, Periodenlängen, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`) gehen dagegen in die

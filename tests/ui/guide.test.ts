@@ -3,9 +3,8 @@ import { PALETTE } from '../../src/render/palette';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { idx } from '../../src/sim/world';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, idx } from '../../src/sim/world';
 import { houseFar } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
