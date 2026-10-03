@@ -3,12 +3,15 @@ import { createWorld, idx } from '../../src/sim/world';
 import { totalUpkeep } from '../../src/sim/economy';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import { upgradeBuilding } from '../../src/sim/upgrade';
+import { paidCost, upgradeBuilding } from '../../src/sim/upgrade';
+import { demolish } from '../../src/sim/build';
+import { beginCrisis } from '../../src/sim/crises';
+import { FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { LEVELS, type LevelDef } from '../../src/sim/defs/levels';
 import { UNLOCKS } from '../../src/sim/defs/unlocks';
 import { cycleOf, upkeepOf } from '../../src/sim/levels';
 import { goodsBalance } from '../../src/sim/queries';
-import { unlockText } from '../../src/sim/unlocks';
+import { deriveUnlocks, unlockText } from '../../src/sim/unlocks';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 
 /** Angebundener Fischer, direkt eingefügt (Muster production.test.ts:15); Kachel trägt die Id für demolish. */
@@ -147,5 +150,70 @@ describe('M11 Ausbau (Spec 3.6)', () => {
       ok: false,
       reason: unlockText(UNLOCKS[5]!, 'lockText'),
     });
+  });
+});
+
+describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
+  it('AK-P3-05 Abriss Fischer Stufe 3: +112 Geld, +6 Holz, +2 Werkzeug; Stoff und Rum unverändert', () => {
+    const w = world();
+    const f = fisherAt(w);
+    w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
+    w.stock.rum = 2;
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    expect(paidCost(f)).toEqual({ money: 225, wood: 12, tools: 5, stone: 0 });
+    const m = w.money,
+      s = { ...w.stock };
+    expect(demolish(w, f.id).ok).toBe(true);
+    expect([w.money - m, w.stock.wood - s.wood, w.stock.tools - s.tools]).toEqual([112, 6, 2]);
+    expect([w.stock.cloth, w.stock.rum]).toEqual([s.cloth, s.rum]);
+  });
+  it('AK-P3-06 Brand: Stufe bleibt; Ausbau während des Ausfalls → „Gebäude brennt"; nach dem Ausfall Stufe 2', () => {
+    const w = world();
+    const f = fisherAt(w);
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    beginCrisis(w, 0, { kind: 'fire', tile: { x: f.x, y: f.y } }); // keine Feuerwache: brennt
+    expect([f.state, f.level]).toEqual(['burning', 2]);
+    w.stock.cloth = 2;
+    w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
+    expect(upgradeBuilding(w, f.id)).toEqual({ ok: false, reason: 'Gebäude brennt' });
+    for (let i = 0; i <= FIRE_OUTAGE; i++) step(w);
+    expect([f.outageUntil, f.level]).toEqual([undefined, 2]);
+  });
+  it('AK-UNL-04 deriveUnlocks: Fischer Stufe 2 ohne Häuser → U3, nicht U2; Stufe 3 → U5', () => {
+    const w = createWorld(3);
+    const f = fisherAt(w);
+    f.level = 2;
+    expect(deriveUnlocks(w)).toEqual(['U0', 'U3']);
+    f.level = 3;
+    expect(deriveUnlocks(w)).toEqual(['U0', 'U3', 'U5']);
+  });
+  it('RF-5 Ausbau im Sturm und bei noForest: Kosten und Gebühr gebucht, eff und state unberührt', () => {
+    const w = world();
+    const f = fisherAt(w);
+    w.crisis = { period: 0, kind: 'storm', from: w.tick, until: w.tick + 300 };
+    f.eff = 123456; // Feld seit T01, Akkumulator kommt erst mit T06
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    expect([f.level, f.eff, f.state, w.money]).toEqual([2, 123456, 'ok', 950]);
+    const l: Building = {
+      id: w.nextBuildingId++,
+      defId: 'lumberjack',
+      x: 1,
+      y: 0,
+      connected: true,
+      progress: 7,
+      state: 'noForest',
+      eff: 1000,
+    };
+    w.buildings[l.id] = l;
+    w.stock.cloth = 2;
+    expect(upgradeBuilding(w, l.id).ok).toBe(true);
+    expect([l.level, l.state, l.eff, l.progress, w.stock.cloth]).toEqual([
+      2,
+      'noForest',
+      1000,
+      7,
+      0,
+    ]);
   });
 });

@@ -1,7 +1,8 @@
+import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { LEVELS } from './defs/levels';
 import { checkAfford, pay, takeStock } from './economy';
-import { fail, ok, type Result, type World } from './types';
+import { fail, ok, type Building, type Cost, type Result, type World } from './types';
 import { functionLock } from './unlocks';
 
 /** Ausbau eines Betriebs um eine Stufe (Spec 3.6). Wirft nie; bei fail bleibt die Welt unverändert. */
@@ -24,4 +25,18 @@ export function upgradeBuilding(world: World, id: number): Result {
   takeStock(world, next.fee.good, next.fee.amount);
   b.level = level === 1 ? 2 : 3; // progress, eff, state bleiben (Spec 3.6)
   return ok;
+}
+
+/** Bisher bezahlte Kosten: Neubau plus Stufenkosten bis zur aktuellen Stufe (ohne Gebühr). */
+export function paidCost(b: Building): Cost {
+  const total: Cost = { ...BUILDING_DEFS[b.defId].cost };
+  const levels = LEVELS[b.defId] ?? [];
+  for (let i = 0; i < (b.level ?? 1) - 1; i++) {
+    const c = levels[i]!.cost;
+    total.money += c.money;
+    total.wood += c.wood;
+    total.tools += c.tools;
+    total.stone += c.stone;
+  }
+  return total;
 }
