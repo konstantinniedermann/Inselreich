@@ -16,12 +16,19 @@ export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];
 
 /**
- * Felsstempel je Frame [normal, reduziert] (H-R8). Jeder Stempel kostet ein drawImage (rund 4 µs, gemessen +2,6 ms bei
- * 600 Stück gegen 1,9 ms Frame); Randfelsen haben Vorrang, im Binnenland zeigen die übrigen Kacheln das Geländemuster; Zahl nach Messung (+20 % bei 250).
- * Eigene Konstante, damit die Setzungen von `CAPS` (Spec 12.2) unverändert bleiben.
+ * Gebirgsmassiv (H-R9, A6): Obergrenze des Teilstück-Caches (Summe der Offscreen-Flächen, RGBA-Bytes; Richtwert der
+ * Spec 48 MB) und höchstens so viele neue Flächen je Frame, solange eine andere Zoomstufe als Ersatz bereitliegt
+ * (verteilt den Aufbau nach einem Zoomwechsel auf mehrere Frames; gemessen ≈ 0,8 ms je Teilstück). Darstellungswerte.
  */
-export const ROCK_CAP = [160, 80] as const;
-export const rockCap = (reduce = false): number => ROCK_CAP[reduce ? 1 : 0];
+export const MASSIF_CACHE_MAX_BYTES = 48 * 1024 * 1024;
+export const MASSIF_BUILDS_PER_FRAME = 8;
+/**
+ * Höchstens so viele Flächenpixel je Weltpixel und Achse (Zoomstufe × DPR gedeckelt): bei Zoom 2 und DPR 2 wird die
+ * Fläche mit Faktor 2 gemalt und doppelt so gross gestempelt. Ohne Deckel passt ein bildfüllendes Massiv (gemessen
+ * ≈ 59 MB bei 1920 × 1080) nicht unter die Bytegrenze und würde jeden Frame neu gerastert. Zoom 1 bei DPR 2
+ * (Faktor 2) bleibt voll scharf. Entscheid lead-art H-R9 Runde 1.
+ */
+export const MASSIF_MAX_SCALE = 2;
 
 const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 
