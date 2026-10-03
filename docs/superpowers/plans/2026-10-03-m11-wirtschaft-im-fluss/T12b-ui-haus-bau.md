@@ -70,7 +70,7 @@ describe('M11 R161 Stein-Hinweis (Spec 3.7)', () => {
 - [ ] **Schritt 3: Umsetzung.**
   - `hotkeys.ts`: am Ende von `TOOL_HOTKEYS` `y: { kind: 'build', defId: 'hunter' }` (Kommentar: „M11, Spec 13-10:
     Rinderfarm bewusst ohne Taste"). `hotkeyList` filtert über `toolShown` (Y erst nach U2).
-  - `goal.ts` `withKey`: `const key = hotkeyLabel(…); return key === null ? name : `${name} (${key})`;`.
+  - `goal.ts` `withKey` ohne Taste nur der Name — nur falls T04 (Minimal-Eingriff) es nicht schon getan hat.
   - `buildMenu.ts` `tooltipLines`: nach der „Erzeugt"-Zeile, wenn `LEVELS[def.id]`: „Ausstoss je Stufe: {a} · {b} · {c} / min"
     mit `num(perMinute(1, c))` für `def.cycle`, `LEVELS[id][0].cycle`, `LEVELS[id][1].cycle`. „Erzeugt" bleibt Stufe 1 (AK-UI-10).
   - `texts.ts`: `deficitText(good: GoodId, stock: number, net: number): string` = „{GOODS[good].name}-Bilanz negativ —

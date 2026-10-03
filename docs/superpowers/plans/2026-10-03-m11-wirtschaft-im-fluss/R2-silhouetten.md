@@ -11,7 +11,7 @@
 Stufe 2 und 3 über einen gemeinsamen Aufsatz, der nur `b.level` liest und nie in die Welt schreibt.
 
 - [ ] **Schritt 0: Code-Fakten nach H-R6 neu prüfen** (Ergebnis in den Bericht): `git log --oneline main -3 --
-    src/render/sprites.ts`; `grep -rn -i "cache" src/render/sprites.ts src/render/*.ts | head`. Festhalten: Wo liegt der
+src/render/sprites.ts`; `grep -rn -i "cache" src/render/sprites.ts src/render/*.ts | head`. Festhalten: Wo liegt der
       Cache, wie heisst die Schlüsselfunktion bzw. woraus wird der Schlüssel gebildet, ruft der Cache weiter
       `drawBody`/`SILHOUETTES` auf? **Pflichtpunkt:** Der Schlüssel enthält `b.level ?? 1` (Programm-Spec
       `2026-10-02-programm-nutzerfeedback.md:221`: „Sprite-Cache je Typ, Stufe, Variante, Zoom und DPR" — „Stufe" meint
@@ -134,11 +134,15 @@ git -C .worktrees/m11-render push -u origin feat/m11-render
 
 ### QA-ART (lead-art mit lead-qa, nach R2 und B1)
 
-Szenen `m11-wald`, `m11-ausbau`, `m11-fluss`; 1280 × 800 und 1920 × 1080, Standardzoom: Ring läuft sichtbar;
-Jagdhütte, Rinderfarm, Fischer Stufe 1/2/3 im Blindtest unterscheidbar (Screenshots unter `.studio/qa/M11-QA-ART/`).
+Szenen `m11-wald`, `m11-ausbau`, `m11-fluss`, 1280 × 800 und 1920 × 1080: Ring läuft; Jagdhütte, Rinderfarm,
+Stufen 1/2/3 im Blindtest unterscheidbar (Screenshots `.studio/qa/M11-QA-ART/`).
+
+### Geänderte bestehende Tests
+
+`tests/render/sprites.test.ts` :: AK-R2-03 „jede heutige BuildingDefId hat eine eigene Silhouette" (`:478`): den von T04
+gesetzten Filter ohne `hunter`/`cattlefarm` samt Kommentar entfernen (Stand vor T04 wiederhergestellt).
 
 ### Risiken/Randfälle
 
-- Fehlt `level` im Cache-Schlüssel, zeigt ein ausgebauter Betrieb bis zum Cache-Verfall das alte Bild (Pflichtpunkt Schritt 0).
+- Fehlt `level` im Cache-Schlüssel, zeigt ein Ausbau bis zum Cache-Verfall das alte Bild (Pflichtpunkt Schritt 0).
 - Der Aufsatz liegt im Hof vorn links; bei 1 × 1 kann er die Tür verdecken (Blindtest).
-- Fenster-Anker-Test verlangt je gezeichnetes Fenster einen Anker; Aufsatz ohne Fensterfarben.
