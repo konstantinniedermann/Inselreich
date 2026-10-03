@@ -18,6 +18,7 @@ import {
   type AmbienceEngine,
   type SampleLoader,
 } from './ambience';
+import { BUILD_GROUPS, buildGroupName } from './buildSounds';
 import { SFX_FILES } from './manifest';
 import { createMusicPlayer, type MusicPlayer } from './music';
 
@@ -76,6 +77,8 @@ export interface AudioDebugState {
 export interface Sound {
   unlock(): void;
   play(e: SoundEvent): void;
+  /** Bauklang je Gebäudeart (Id-String oder 'road'); unbekannt -> Holz. */
+  playBuild(kind: string): void;
   setMuted(b: boolean): void;
   setVolume(v: number): void;
   setBus(bus: Bus, v: number): void;
@@ -177,6 +180,7 @@ export function createSound(
   let crisis = false;
   let music: MusicPlayer | null = null;
   const lastPlayed = new Map<SoundEvent, number>();
+  const lastBuild = new Map<string, number>();
 
   const safe = (fn: () => void) => {
     try {
@@ -458,6 +462,22 @@ export function createSound(
       if (figS !== undefined) {
         signals.push({ t0: now, durS: figS });
         safe(() => scheduleDuck(now));
+      }
+    },
+    playBuild(kind) {
+      if (!unlocked || disposed || muted || !ctx) return;
+      const name = buildGroupName(typeof kind === 'string' ? kind : '');
+      const group = BUILD_GROUPS[name];
+      const now = ctx.currentTime;
+      const last = lastBuild.get(name);
+      if (last !== undefined && now - last + EPS < group.throttleMs / 1000) return;
+      lastBuild.set(name, now);
+      for (const st of group.steps) {
+        if (st.k === 'tone') {
+          safe(() => tone(st.freq, st.at, st.dur, st.peak * FX, st.type ?? 'sine', st.freqEnd));
+        } else {
+          safe(() => burst(st.at, st.dur, st.peak * FX, st.from, st.to, st.filter));
+        }
       }
     },
     setMuted(b) {

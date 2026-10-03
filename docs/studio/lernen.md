@@ -28,3 +28,5 @@
 - Software-Rendering (Cloud) misst Frames nicht belastbar: 27 fps bei Render-Median 4 ms; Frame-Abnahmen auf Echtgerät mit GPU, Headless mit `--disable-gpu` (R116, Retro ddd9a9ac B6).
 - Beobachtungen vor der Übernahme in Spec oder Plan gegen `rulings.md` prüfen: R138 übernahm eine Bilanz-Änderung, die R115 entschieden hatte; R139 nahm sie zurück.
 - Eine vermutete Ursache gegen echte Events belegen, bevor ein Werkzeug-Fix gebaut wird: der Budget-Fix 2663c66 beruhte auf einer unbelegten Ursache, machte neue Fehlalarme und wurde zurückgenommen (R169).
+- Die Ampel ohne Argument (`metrics.py --efficiency`) misst die ganze Historie, die Session-Datei nur die eigene Session; E-010 und jede Wirkung wird gegen die Session-Zeile gelesen. Die „grösste gelesene Datei“ kann ein Tool-Ergebnis sein, keine Spec (Retro session-08e7b5f1 B8).
+- Vor „bereit für Gate Merge“ weist der Lead Rot-Beleg und, nach Review-BEDENKEN > 20 Zeilen, die Nachprüfung (R136) selbst nach; in Session 08e7b5f1 verlangte beides erst L0 (R174, R178). Auch reine Doku-Pushes auf main brauchen vorher `npx prettier --check` (R173).

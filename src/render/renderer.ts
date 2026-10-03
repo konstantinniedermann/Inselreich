@@ -69,6 +69,8 @@ import {
   drawPlacementOverlay,
   drawUnconnected,
 } from './overlays';
+import { drawErrandLoad, errandsFrom, tickClock, walkersLeft, type ErrandPose } from './errands';
+import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
@@ -137,6 +139,8 @@ export const renderStats = {
   terrainPatchMs: 0,
   /** Bedarfssymbole und rote Punkte des letzten Frames (nur unter DEV gefüllt). */
   badges: [] as Badge[],
+  /** Laufweg-Figuren des letzten Frames (H-R4). */
+  errands: 0,
 };
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
 
@@ -453,7 +457,23 @@ export function render(
     const moving: Moving[] = [];
     const ship = shipTile(world);
     if (ship) moving.push({ kind: 'ship', id: 0, cx: ship.x + 0.5, cy: ship.y + 0.5 });
-    const count = walkerCount(totalInhabitants(world), reduce);
+    // Laufwege (H-R4) zuerst: sie zählen gegen das Figurenlimit, Spaziergänger bekommen den Rest
+    const errands = errandsFrom(world, range, tickClock(world, fx.timeMs), reduce);
+    const errandPoses = new Map<number, ErrandPose>();
+    for (const e of errands) {
+      const tx = Math.floor(e.x),
+        ty = Math.floor(e.y);
+      if (tx < range.x0 || tx > range.x1 || ty < range.y0 || ty > range.y1) continue;
+      errandPoses.set(e.id, e);
+      poses.set(e.id, { x: e.x, y: e.y, alpha: e.alpha });
+      moving.push({ kind: 'walker', id: e.id, cx: e.x, cy: e.y });
+    }
+    renderStats.errands = errandPoses.size;
+    const count = walkersLeft(
+      walkerCount(totalInhabitants(world), reduce),
+      errandPoses.size,
+      reduce,
+    );
     if (count > 0) {
       const graph = roadGraph(world);
       for (let i = 0; i < count; i++) {
@@ -567,6 +587,8 @@ export function render(
       else if (it.kind === 'walker') {
         const pose = poses.get(it.id);
         if (pose) drawWalker(ctx, cam, pose, clothesOf(world.seed, it.id));
+        const er = errandPoses.get(it.id);
+        if (er) drawErrandLoad(ctx, cam, er);
       }
     }
 
@@ -685,6 +707,7 @@ export function render(
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);
+  drawStatusMarks(ctx, world, cam, range, fx.timeMs, reduce);
   if (import.meta.env.DEV) collectBadges(world, cam, range);
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];

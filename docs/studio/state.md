@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-03 (Session-Ende ca427887; Wochenfenster 83 %, Reset 2026-10-07 12:00)
+Stand: 2026-10-03 (Session-Ende 08e7b5f1; Wochenfenster 85 %, Reset 2026-10-07 12:00)
 
 ## Aktuelles Projekt und Phase
 
@@ -12,17 +12,20 @@ Stand: 2026-10-03 (Session-Ende ca427887; Wochenfenster 83 %, Reset 2026-10-07 1
   Programm Nutzerfeedback G1–G9/S1–S11 (R144, R147, R148, Dokument
   `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`): M8 → M10 → M11 → M12, dazu
   M9 „Lebendige Insel" (nur Render) parallel.
-- **M9 „Lebendige Insel"** — gestartet. Auf main: BUG-LICHT (R153), H-R1 Bodenbild (R154), H-R2
-  Wasser-/Luftleben mit `wildlifeAt` (R160). Welle 1b (R164): **H-R3** Statusmarken (S4, darf
-  jetzt starten; Briefing: Standardfall für unbekannte Gebäudezustände wegen M10 `noService`),
-  **H-R4** Laufwege (G6) in neuer Datei `errands.ts` parallel, Anschluss `renderer.ts` erst nach
-  H-R3. Welle 2 (Sprite-Cache, G1 Varianz, G8 Material, G3 Felsmassive, G7b Landtiere) erst nach
-  Gate Merge M10 (`sprites.ts`, R164); Kurz-Spec Welle 2 darf vorher laufen.
-- **M10 „Schritt für Schritt"** — Design (R155), Spec 98 AK (R163), Plan @ c936fd6 (R164) auf main
-  (3329346), seit R167 geteilt: `docs/superpowers/plans/2026-10-03-m10-schritt-fuer-schritt/index.md`
-  - Task-Dateien (Briefings nennen nur Task-Datei + AK-IDs); Board vollständig. Umsetzung darf jetzt starten (M8-MERGE done). Budget gestuft (R164
-    B2): Stufe 1 lead-tech 11 (T1–T4, Parallelität 2 solange Woche > 80 %) und lead-art 3 (A1);
-    Rest nach Wochen-Reset. Ein Gate Merge am Ende über `feat/m10-ui` (B11).
+- **M9 „Lebendige Insel"** — Auf main: BUG-LICHT, H-R1, H-R2, **H-R5 Terrain** (Berg, Raster; R172),
+  **H-A1 Bausound** (R174), **H-R3 Statusmarken** (R176), **H-R4 Laufwege** (R178), main @ e99ca15.
+  `renderer.ts` ist frei für M10-U2 (R159). Welle 2 (Sprite-Cache, G1, G8, G3 Felsmassive, G7b) erst
+  nach Gate Merge M10 (`sprites.ts`, R164); Folgehäppchen in beobachtungen.md (Markenversatz 2×2,
+  Laufwege um Hindernisse + Bürger Haus → Markt).
+- **M10 „Schritt für Schritt"** — Plan `docs/superpowers/plans/2026-10-03-m10-schritt-fuer-schritt/`,
+  Spec mit Thema-Delta §24 („Fischerleute ohne Bildung gehen an Land", nur `tip`-Texte, R171).
+  **Stufe 1 fertig** (R177): `feat/m10-sim` @ 14870ae (T01a–d, T02a–b, T03a–c, T04a–c; BG-1 winTick
+  6050, minMoney 57), `feat/m10-icons` @ 02078dc (A1, AK-A1-03 offen in QA-ART). Ledger
+  `.superpowers/sdd/m10/ledger.md`. Stufe 2 (T01e, T05 ff., UI) erst nach Wochen-Reset (R164 B2);
+  lead-tech hat 1 Start Rest. Ein Gate Merge am Ende über `feat/m10-ui` (B11).
+- **S12 „Ausbau"** (Nutzerwunsch: Produktionsgebäude ausbaubar, Freischaltung je Stufe) — Designvorschlag
+  `docs/superpowers/specs/2026-10-03-s12-ausbau-design.md`, Gate Brainstorming bestanden (R171,
+  Variante C, A1–A7): Umsetzung in M11 nach S10, parallel S2.
 - **M11 „Wirtschaft im Fluss"** (S10, S2, Stein-Konkurrenz Glashütte↔Aufstieg R161) und **M12
   „Weite Welt"** (R90-Rest) vorgemerkt; Backlog: Erlasse, Stufe 5, Arbeitskräfte-System (R148 F3).
 - Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; **kein Rebase
@@ -38,22 +41,23 @@ Stand: 2026-10-03 (Session-Ende ca427887; Wochenfenster 83 %, Reset 2026-10-07 1
 
 | Session  | Stand         | besitzt     | bis |
 | -------- | ------------- | ----------- | --- |
-| ca427887 | abgeschlossen | nichts mehr | –   |
+| 08e7b5f1 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Token-Analyse aller 15 Sessions (`.studio/handoffs/EFF-analyse.md`): Steuerung 64 %, Umsetzer 5,5 %.
-- Paket EFF (R167, R168): Effizienz-Ampel in `metrics.py` (`--efficiency`), Handbuch 1.13,
-  Ad-hoc-Retro `retros/2026-10-02-adhoc-token-effizienz.md`, Plan M10 in Task-Dateien, lead-qa und
-  lead-production auf `sonnet`. Erstmals ohne Lead (L0 → Arbeiter direkt).
+- Nutzerauftrag 5 Punkte (R170): Terrain Berg/Raster (H-R5), Bausound je Gebäude (H-A1), Ausbau als
+  S12-Design für M11, Freischaltung = M10 mit Thema-Delta. Dazu H-R3 Statusmarken, H-R4 Laufwege
+  (alle auf main, CI/Pages grün) und M10 Stufe 1 (Sim T01–T04, A1 Symbolsatz) auf Feature-Branches.
+- E-010 im Einsatz: drei lead-tech-Instanzen (`sonnet`, ≤ 4 Tasks), jede Review-Runde 1; Session-Ampel
+  Steuerung 40 %, Umsetzer 44 %, opus 33 % (Retro `retros/2026-10-03-session-08e7b5f1.md`).
+- Vorfall CI rot @ 592df06 (L0-Doku-FF ohne prettier, R173) — behoben.
 
 ## Pausierte Pakete
 
-| Paket      | Worktree / Branch          | nächster Schritt                                        |
-| ---------- | -------------------------- | ------------------------------------------------------- |
-| M10-S1A    | `.worktrees/m10-sim` (neu) | Budget loggen, Controller lead-tech `sonnet`, T01a–T04c |
-| M10-A1     | `feat/m10-icons` (neu)     | lead-art, Budget 3                                      |
-| H-R3, H-R4 | neu                        | lead-art Kurzdesign → kombiniertes Gate (Stufe leicht)  |
+| Paket  | Worktree / Branch                                   | nächster Schritt                                 |
+| ------ | --------------------------------------------------- | ------------------------------------------------ |
+| M10-S2 | `.worktrees/m10-sim` · `feat/m10-sim` @ 14870ae     | nach Reset: Budget Stufe 2, lead-tech T01e + T05 |
+| M10-A1 | `.worktrees/m10-icons` · `feat/m10-icons` @ 02078dc | AK-A1-03 in QA-ART (W7); Einbau mit Task 9       |
 
 - Lokaler Branch `feat/m7-fx` @ 4489bdd (alte R5-Umsetzung, ungemergt, behalten §6.2).
 - Remote `wip/r118a-render-aufraeumen` ändert Render-Tests: nur per Ruling aufnehmen.
@@ -61,8 +65,8 @@ Stand: 2026-10-03 (Session-Ende ca427887; Wochenfenster 83 %, Reset 2026-10-07 1
 
 ## Budget
 
-Keine offenen Freigaben. M8 abgeschlossen (lead-tech 25/18, lead-qa 3/2, lead-art 4/3). Dashboard
-zeigt lead-art M9-H-R2 6/4 (Zählabweichung, Retro). Für M10 Stufe 1 und M9 Welle 1b neu loggen.
+Keine offenen Freigaben. M10 Stufe 1: lead-tech 10/11 (1 Rest), lead-art A1 2/3. M9-Häppchen
+H-R5 3/3, H-A1 2/3, H-R3 3/3, H-R4 3/3; S12-D lead-design 1/3. Stufe 2 M10 nach Reset neu loggen.
 
 ## Offene Entscheide
 
@@ -80,14 +84,20 @@ zeigt lead-art M9-H-R2 6/4 (Zählabweichung, Retro). Für M10 Stufe 1 und M9 Wel
   „Retro fällig“ wegen Budget bis zum Fix ignorieren.
 - Board-Altlast: Studio-Graph-Ereignis ohne `package_id` erscheint als Paket `None`.
 - CI: `ubuntu-latest` wechselt ab 2026-10-19 auf Ubuntu 26 (in beobachtungen.md).
+- Nutzer: Abnahme im Spiel von Terrain (Fels nah verwaschen? weiche Kachel-Treppe), Bausound
+  (Hörcheck), S12-Annahmen A1–A7 (bei Einwand Ruling anpassen).
+- Aufräumen zusätzlich: Worktrees `h-r5`, `h-a1`, `h-r3`, `h-r4`, `s12-design` sind gemergt.
 - Nutzer: N-92 und N-93 (Guard: `pull --rebase` und Persona-Starts ohne `model`; Diff N-93 liegt
   im Scratchpad der Session ca427887 `gp/`, bei Freigabe neu erzeugen lassen falls weg). Optional angeboten: echtes Arbeitskräfte-System
   statt Freischaltung (R148 F3, Backlog).
 
 ## Nächste Schritte
 
-0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. Wochenfenster prüfen (> 80 %: Parallelität 2). M10 Stufe 1 loggen; Controller lead-tech auf
-   `sonnet` (≤ 4 Tasks je Instanz, E-010) startet T01 nach Task-Datei; parallel lead-art M10-A1.
-2. lead-art H-R3 (Statusmarken) Kurzdesign, danach H-R4 (Laufwege) — beide vor M10-U2 auf main.
-3. Nach Wochen-Reset: M10-Budget Rest; W4, QA-U1, E-010-Übergabe; Kurz-Spec M9 Welle 2.
+0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release. L0 prüft
+   auch Doku-Merges mit `npx prettier --check` (R173). E-015 (Rot-Beleg/Nachprüfung im Lead-Bericht)
+   ist angenommen (R179).
+1. Bis Reset 2026-10-07 (Woche > 80 %): nur kleine Häppchen; Worktrees aufräumen; Werkzeug-Vorschlag
+   `metrics.py --efficiency` je Session/Meilenstein an lead-production.
+2. Nach Reset: M10 Stufe 2 loggen; lead-tech T01e + T05 (eine Instanz), dann UI-Tasks T06–T09
+   (`renderer.ts` frei, R159), QA-ART für A1.
+3. Danach Gate Merge M10; dann M9 Welle 2 (Sprite-Cache, G1/G8, G3 Felsmassive) und M11 (S10, S12, S2).

@@ -50,6 +50,17 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: Handbuch 1.12
 - Bewertung: –
 
+## E-015 · laufend · Nachweiszeilen im Lead-Bericht
+
+- Hypothese: Wenn die Berichtsvorlage des Leads für jedes Paket zwei Pflichtzeilen trägt („Rot-Beleg: Commit/Lauf oder Abweichung mit Begründung“, „Nachprüfung nach Review-BEDENKEN: Reviewer, Ergebnis oder entfällt“), dann meldet kein Lead ein Paket „bereit für Gate Merge“ ohne diese Nachweise, und L0 muss sie nicht mehr im Gate nachfordern.
+- Messgrösse: über die nächsten 8 Pakete mit Gate Merge 0 Gate-Rulings, in denen L0 einen fehlenden Rot-Beleg oder eine fehlende Nachprüfung feststellt (Ausgangswert Session 08e7b5f1: 2 von 4 Paketen, R174, R178). Gegenprobe: Lead-Berichte bleiben ≤ 15 Zeilen.
+- Zeitraum: die nächsten 8 Pakete mit Gate Merge (rund M10 Stufe 1/2).
+- Rückfall: `docs/studio/templates/bericht.md` und Handbuch ohne die zwei Zeilen (Handbuch 1.13, `git show HEAD:docs/studio/templates/bericht.md`).
+- Dateien: `docs/studio/templates/bericht.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
 ## E-012 · vorgeschlagen · Pages nur bei Spieländerungen
 
 - Hypothese: Wenn `pages.yml` Pushes ignoriert, die nur Nicht-Build-Pfade ändern (`paths-ignore`, z. B. `docs/**`, `.superpowers/**`, `.claude/**`, `tools/studio/**`; vorher prüfen, dass nichts davon in `dist/` landet), dann sinken die Deploys stark und Spiel-Merges werden nicht mehr abgebrochen.

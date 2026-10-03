@@ -926,3 +926,84 @@ Doku-Fast-Forward `docs/s12-design` → main durch L0 ohne Integrator (kein Code
 — Kosten bei Irrtum: Nutzer will Ausbau vor S10 → S12 in M11 vorziehen (keine Abhängigkeit ausser Save-Version).
 
 Entscheider: L0 · Anlass: Bericht S12-D · ADR: —
+
+## R172 · 2026-10-03 · H-R5 Terrain
+
+Ruling: Gate Merge H-R5 bestanden (`feat/h-r5-terrain` @ b2cf4a7; Review OK, Playtest OK, `make check`
+grün, Kantenenergie an Kachelgrenzen 4,3 → 1,9, Felsrandsprung 74 → 8). Die Abweichung von M7-Spec 5.1
+(`ROCK_EDGE` entfällt) ist angenommen. Restrisiken (Fels in Nahaufnahme verwaschen, weiche Kachel-Treppe
+an Typgrenzen) gehen in die Nutzerabnahme; ein Domain-Warp wäre ein eigenes Paket. Merge durch
+production-integrator. H-A1 Bausound startet danach. — Kosten bei Irrtum: Revert eines Commits.
+
+Entscheider: L0 · Anlass: Bericht H-R5 · ADR: —
+
+## R173 · 2026-10-03 · H-A1 Bausound, Vorfall CI
+
+Ruling: (1) H-R5 auf main @ 07783b7 (CI, Pages grün), Paket done. (2) H-A1 Bausound startet (lead-art,
+Budget 3). (3) Vorfall: CI auf main @ 592df06 rot (Prettier der Spec-Docs), weil L0 den Doku-Fast-Forward
+(R171 (3)) ohne `make check` machte; behoben 6242c6d. Ab sofort prüft L0 auch bei reinen Doku-Merges
+`npx prettier --check` vor dem Push. Befund an die Kurz-Retro am Session-Ende. — Kosten bei Irrtum: keine.
+
+Entscheider: L0 · Anlass: Integrator-Bericht H-R5, Hook-Alarm CI · ADR: —
+
+## R174 · 2026-10-03 · H-A1 Bausound
+
+Ruling: Gate Merge H-A1 bestanden (`feat/h-a1-bausound` @ 445529e; Review OK, `make check` grün, 11 neue
+Tests, prozedurale Klänge ohne Assets). Prozessabweichung: Implementierung vor Test, kein Rot-Lauf —
+angenommen, weil die Tests alle 16 Gebäude-Ids, Pegel und Drosselung abdecken; Befund an die Kurz-Retro.
+Klangqualität prüft der Nutzer im Browser (Hörcheck), Nachbesserung als eigenes Häppchen. Merge durch
+production-integrator. — Kosten bei Irrtum: Revert eines Commits.
+
+Entscheider: L0 · Anlass: Bericht H-A1 · ADR: —
+
+## R175 · 2026-10-03 · M10 Stufe 1, Plan-Widersprüche
+
+Ruling: (1) H-A1 auf main @ aa0c66a (CI, Pages grün), Paket done. (2) M10-S1B abgenommen
+(`feat/m10-sim` @ f811e28, `feat/m10-forest` @ 5a81459 bewusst rot bis T03c; BG-1 winTick 6050,
+minMoney 57). (3) Plan-Widerspruch AK-F1-08: es gilt T03b (Test in `tests/sim/forest.test.ts`).
+AK-F1-09 „mit Speichern" in T04 mit abdecken, sonst offen für T05. Veralteter Testname „uses version 3"
+als Trivial-Fix. (4) Nächste Instanz lead-tech T03c–T04c, Budget +3 (Stufe 1 gesamt 11). (5) Zweiter
+Strang: lead-art H-R3 Statusmarken Kurzdesign (state.md Schritt 2). — Kosten bei Irrtum: ein Test
+wandert die Datei.
+
+Entscheider: L0 · Anlass: Berichte M10-S1B, H-A1-Merge · ADR: —
+
+## R176 · 2026-10-03 · H-R3 Statusmarken
+
+Ruling: Gate Merge H-R3 bestanden (`feat/h-r3-statusmarks` @ 34f0f41; Rot-Beleg vorhanden, Review OK,
+Playtest-Screenshots lesbar, `make check` grün). Annahmen des Kurzdesigns angenommen (Marke nach Tönung,
+`MAX_MARKS` lokal). Versatz bei 2×2-Betrieben → beobachtungen.md. Merge durch production-integrator;
+danach ist `renderer.ts` frei für H-R4 (R159). — Kosten bei Irrtum: Revert eines Commits.
+
+Entscheider: L0 · Anlass: Bericht H-R3 · ADR: —
+
+## R177 · 2026-10-03 · M10 Stufe 1 Sim abgeschlossen
+
+Ruling: (1) M10-S1C abgenommen (`feat/m10-sim` @ 14870ae; T03c, T04a–c Review OK je 1 Runde; BG-1
+winTick 6050, minMoney 57, balance-crises 6/6, PLAN-B9 grün). Die fünf Bestandstest-Umbauten ausserhalb
+der Ownership (R164 B3) und `tooltip.test.ts` Bauleiste 4 statt 3 sind angenommen (zwingende Folge der
+Amtsstube über U3, Sollwerte sonst gleich). (2) Budget gestuft (R164 B2) bleibt: T01e, T05 ff. erst nach
+dem Wochen-Reset (2026-10-07); lead-tech Rest 1 Start verfällt nicht, wird mit Stufe 2 verrechnet.
+(3) M10-A1 (lead-art, Symbolsatz, Stufe 1) startet nach H-R4. — Kosten bei Irrtum: M10 zwei Tage später.
+
+Entscheider: L0 · Anlass: Bericht M10-S1C · ADR: —
+
+## R178 · 2026-10-03 · H-R4 Laufwege
+
+Ruling: Gate Merge H-R4 bestanden (`feat/h-r4-laufwege` @ 0b91db7; Review BEDENKEN → Fix → Nachprüfung
+durch denselben Reviewer OK nach R136; L0-Auflage „keine Figur über Wasser" mit Test umgesetzt;
+`make check` grün laut Engineer, Integrator prüft erneut). Offen niedrig: Diagonalecken, gerade Wege durch
+Nachbargebäude → beobachtungen.md, Folgehäppchen mit „Bürger Haus → Markt". Merge durch
+production-integrator. Danach M10-A1 Symbolsatz (lead-art, Stufe 1). — Kosten bei Irrtum: Revert.
+
+Entscheider: L0 · Anlass: Bericht H-R4 · ADR: —
+
+## R179 · 2026-10-03 · Kurz-Retro Session 08e7b5f1
+
+Ruling: (1) E-015 „Nachweiszeilen im Lead-Bericht" (Pflichtzeilen Rot-Beleg und Nachprüfung) angenommen,
+Status laufend; Ausgangswert 2 von 4 Gate-Merge-Paketen ohne Nachweis (H-A1, H-R4). (2) E-010 läuft weiter;
+Session-Ampel Steuerung 40 %, Umsetzer 44 %, opus 33 %, Cache-Write 26,6 % rot (kein neuer Eingriff).
+(3) Werkzeug-Vorschlag `metrics.py --efficiency` je Session/Meilenstein und Tool-Ergebnis vs. Plan-Lesen
+geht als Paket an lead-production (nach Reset). — Kosten bei Irrtum: eine Zeile mehr je Bericht.
+
+Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-03-session-08e7b5f1.md` · ADR: —
