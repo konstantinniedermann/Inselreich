@@ -12,9 +12,11 @@ import { paidCost, upgradeBuilding } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
+import { upgradeDeficit } from '../sim/flow';
+import { glassStoneHint } from './hints';
 import type { Building, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
-import { diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
+import { deficitText, diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
 import { goalTexts } from './goal';
@@ -214,6 +216,8 @@ function renderHouse(panel: HTMLElement): void {
   heading.dataset.field = 'upgrade-title';
   upgrade.appendChild(heading);
   addList(upgrade, 'reasons', 'upgrade-reasons');
+  addLine(upgrade, '', 'deficit').hidden = true;
+  addLine(upgrade, '', 'stone-hint').hidden = true;
   addLine(upgrade, '', 'upgrade-cost');
   panel.appendChild(upgrade);
 }
@@ -228,6 +232,24 @@ function setFirstMissing(panel: HTMLElement, n: NeedIcon | undefined): void {
   line.hidden = n === undefined;
   if (n === undefined) line.replaceChildren();
   else line.replaceChildren(iconChip(n.icon), document.createTextNode(`Fehlt: ${n.label}`));
+}
+
+/** Defizit-Zeile (Spec 7): nur volles Haus mit möglichem Aufstieg und einem Defizitgut; sonst `null`. */
+export function deficitLine(world: World, b: Building): string | null {
+  const house = b.house;
+  if (!house) return null;
+  const tier = TIERS[house.tier];
+  if (tier.upgradeCost === null || house.inhabitants !== tier.maxInhabitants) return null;
+  const d = upgradeDeficit(world, b);
+  return d ? deficitText(d.good, world.stock[d.good], d.net) : null;
+}
+
+/** Setzt Text und Sichtbarkeit einer optionalen Panel-Zeile (`null` → verborgen). */
+function setOptionalLine(panel: HTMLElement, field: string, text: string | null): void {
+  const line = panel.querySelector<HTMLElement>(`[data-field="${field}"]`);
+  if (!line) return;
+  line.hidden = text === null;
+  if (text !== null) setField(panel, field, text);
 }
 
 function updateHouse(panel: HTMLElement, world: World, b: Building): void {
@@ -269,6 +291,8 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
   if (tier.upgradeCost === null) {
     setField(panel, 'upgrade-title', 'Höchste Stufe');
     setList(panel, 'upgrade-reasons', []);
+    setOptionalLine(panel, 'deficit', null);
+    setOptionalLine(panel, 'stone-hint', null);
     if (cost) cost.hidden = true;
     return;
   }
@@ -281,6 +305,8 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
       ? [{ text: upgradeOkText(), ok: true }]
       : upgradeReasonTexts(world, b).map((text) => ({ text, ok: false })),
   );
+  setOptionalLine(panel, 'deficit', deficitLine(world, b));
+  setOptionalLine(panel, 'stone-hint', glassStoneHint(world, status.reasons));
   setField(panel, 'upgrade-cost', `Kosten ${costLine(tier.upgradeCost)}`);
   if (cost) cost.hidden = false;
 }

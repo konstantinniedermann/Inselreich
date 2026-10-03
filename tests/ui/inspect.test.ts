@@ -13,6 +13,7 @@ import {
   refundLine,
   utilizationText,
   upgradeView,
+  deficitLine,
 } from '../../src/ui/inspect';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
@@ -20,7 +21,7 @@ import type { BuildingDefId, World } from '../../src/sim/types';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { demolishText, goodList, stateInfo } from '../../src/ui/texts';
+import { deficitText, demolishText, goodList, stateInfo } from '../../src/ui/texts';
 import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
@@ -325,5 +326,38 @@ describe('M11 Rückerstattung nach Ausbau (paidCost)', () => {
     expect(demolishText(w, b)).toBe(
       'Fischerhütte abgerissen · zurück 50 Geld · 2 Holz · 1 Werkzeug',
     );
+  });
+});
+
+describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
+  const pre = 'Rum-Bilanz negativ — Aufstieg verzögert; ';
+  it('AK-UI-07 deficitText: X = floor(Lager / −net / 6); leer, über 60, unter 1, genau 1', () => {
+    expect(deficitText('rum', 40, -3)).toBe(`${pre}Vorrat reicht noch 2 Minuten`);
+    expect(deficitText('rum', 0, -3)).toBe(`${pre}Vorrat leer`);
+    expect(deficitText('rum', 100, -0.2)).toBe(`${pre}Vorrat reicht noch über 60 Minuten`);
+    expect(deficitText('rum', 10, -3)).toBe(`${pre}Vorrat reicht noch weniger als 1 Minute`);
+    expect(deficitText('rum', 20, -3)).toBe(`${pre}Vorrat reicht noch 1 Minute`);
+  });
+  it('AK-UI-07 deficitLine: volles Siedlerhaus, Rum 40, keine Brennerei → Rum-Zeile; ohne Defizit oder nicht voll keine', () => {
+    const { w, houses } = village(1, { unlockAll: true });
+    const h = houses[0]!;
+    setHouseTo(h, 2, 8);
+    const add = (defId: BuildingDefId) => {
+      const id = w.nextBuildingId++;
+      w.buildings[id] = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok' };
+    };
+    for (let i = 0; i < 3; i++) add('fisher'); // Nahrung 7,5 − 4,0 = 3,5 = Δ 3,5 (dämpft nicht)
+    add('weaver');
+    add('weaver'); // Stoff 4,0 − 1,6 = 2,4 ≥ Δ 1,4
+    w.stock.rum = 40;
+    expect(deficitLine(w, h)).toBe(`${pre}Vorrat reicht noch 2 Minuten`);
+    w.stock.rum = 0;
+    expect(deficitLine(w, h)).toBe(`${pre}Vorrat leer`);
+    setHouseTo(h, 2, 7);
+    expect(deficitLine(w, h)).toBeNull();
+    setHouseTo(h, 2, 8);
+    add('distillery');
+    add('distillery'); // Rum 4,0 ≥ Δ 3,0
+    expect(deficitLine(w, h)).toBeNull();
   });
 });

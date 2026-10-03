@@ -63,12 +63,13 @@ describe('Krisen-Tooltip (M6-AK-U1-05)', () => {
 });
 
 describe('M8 Tooltips (AK-U2-01)', () => {
-  it('AK-U2-01 Glashütte und Badehaus wörtlich nach Spec 14.3; Hebel 40; Weberei wie vor M8', () => {
+  it('AK-U2-01 Glashütte und Badehaus wörtlich nach Spec 14.3; Hebel 40; Weberei wie vor M8 (M11 Ausstoss je Stufe)', () => {
     expect(tooltipLines({ kind: 'build', defId: 'glassworks' })).toEqual([
       'Glashütte (O)',
       'Kosten: 300 Geld · 20 Holz · 6 Werkzeug · 10 Stein',
       'Unterhalt: 150 / min',
       'Erzeugt: Glas 12 / min',
+      'Ausstoss je Stufe: 12 · 20 · 30 / min',
       'Braucht: Stein 12 / min · Holz 12 / min',
       'Brennbar',
       'Standort: frei',
@@ -242,5 +243,20 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
     fresh.delete('chapel'); // erste Wahl
     expect(fresh.has('chapel')).toBe(false);
     expect(newBuildEntries(w.unlocked, w).size).toBe(0); // Laden: Basis = geladener Stand
+  });
+});
+
+describe('M11 Bauleisten-Tooltip (Spec 7)', () => {
+  it('AK-UI-06 Tooltip: „Erzeugt" bleibt Stufe 1, darunter Ausstoss je Stufe; Kapelle ohne', () => {
+    const t = tooltipLines({ kind: 'build', defId: 'fisher' });
+    const i = t.indexOf('Erzeugt: Nahrung 15 / min');
+    expect(i).toBeGreaterThan(0);
+    expect(t[i + 1]).toBe('Ausstoss je Stufe: 15 · 25 · 37.5 / min');
+    expect(tooltipLines({ kind: 'build', defId: 'hunter' })).toContain(
+      'Ausstoss je Stufe: 12 · 20 · 30 / min',
+    );
+    expect(
+      tooltipLines({ kind: 'build', defId: 'chapel' }).some((l) => l.startsWith('Ausstoss')),
+    ).toBe(false);
   });
 });

@@ -123,6 +123,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `E`                    | Feuerwache                                                          |
 | `I`                    | Amtsstube (erst ab U3, höchstens eine)                              |
 | `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                     |
+| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste              |
 | `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                       |
 | `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                    |
 
@@ -367,6 +368,7 @@ Ein Haus steigt beim nächsten Wachstumstakt auf, wenn
 
 Würde eine Ware der nächsten Stufe durch den Aufstieg ins Minus rutschen (Erzeugung minus Verbrauch, Lagerbestand
 zählt nicht), dauert die Wartezeit doppelt so lange (60 statt 30 Sekunden, «niedrig» 30 statt 15).
+Das Haus-Panel zeigt bei einem solchen Defizit eine Zeile mit dem Restvorrat («Vorrat reicht noch 2 Minuten»); fehlt beim Aufstieg Stein und steht eine Glashütte, nennt es sie als zweiten Steinverbraucher.
 
 Beim Aufstieg wird von jeder neuen Ware eine Einheit aus dem Lager entnommen und direkt ans Haus geliefert.
 

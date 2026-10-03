@@ -98,3 +98,16 @@ export function demolishText(world: World, b: Building): string {
   const paid = paidCost(b);
   return `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
 }
+
+/**
+ * Defizit-Zeile des Haus-Panels (Spec 7): Gut, Lagerbestand und Netto je Bilanzabschnitt (< 0).
+ * Restvorrat in Spielminuten: 6 Abschnitte je Minute.
+ */
+export function deficitText(good: GoodId, stock: number, net: number): string {
+  const head = `${GOODS[good].name}-Bilanz negativ — Aufstieg verzögert; `;
+  if (stock <= 0) return `${head}Vorrat leer`;
+  const x = Math.floor(stock / -net / 6);
+  if (x >= 60) return `${head}Vorrat reicht noch über 60 Minuten`;
+  if (x === 0) return `${head}Vorrat reicht noch weniger als 1 Minute`;
+  return `${head}Vorrat reicht noch ${x === 1 ? '1 Minute' : `${x} Minuten`}`;
+}

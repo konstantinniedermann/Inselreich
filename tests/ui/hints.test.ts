@@ -24,6 +24,7 @@ import type { Tool } from '../../src/render/renderer';
 import {
   REASON_TABLE,
   friendlyReason,
+  glassStoneHint,
   hintPosition,
   newlyConnected,
   placementHint,
@@ -456,5 +457,25 @@ describe('M11 Ausbau-Gründe (Spec 3.6)', () => {
       // bezahlt: Bau 100/5/2 + Stufe 2 50/3/1 = 150/8/3; zurück die Hälfte, abgerundet
       'Abreissen: Fischerhütte · zurück 75 Geld · 4 Holz · 1 Werkzeug',
     );
+  });
+});
+
+describe('M11 R161 Stein-Hinweis (Spec 3.7)', () => {
+  it('AK-R161-01 „Zu wenig Stein" mit 1 Glashütte → Zusatzzeile; ohne Glashütte oder anderer Grund: keine', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const text = 'Die Glashütte verbraucht ebenfalls Stein — baue weitere Steinbrüche.';
+    expect(glassStoneHint(w, ['Zu wenig Stein'])).toBeNull();
+    const id = w.nextBuildingId++;
+    w.buildings[id] = {
+      id,
+      defId: 'glassworks',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'waitingInput',
+    };
+    expect(glassStoneHint(w, ['Haus nicht voll belegt', 'Zu wenig Stein'])).toBe(text);
+    expect(glassStoneHint(w, ['Zu wenig Holz'])).toBeNull();
   });
 });

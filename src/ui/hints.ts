@@ -304,3 +304,10 @@ export function newlyConnected(before: Set<number>, world: World): string[] {
     .filter((b): b is Building => b !== undefined && b.connected)
     .map((b) => BUILDING_DEFS[b.defId].name);
 }
+
+/** R161-Hinweis (Spec 3.7): fehlt Stein beim Aufstieg und steht eine Glashütte, nennt er den zweiten Steinverbraucher. */
+export function glassStoneHint(world: World, reasons: readonly string[]): string | null {
+  if (!reasons.includes('Zu wenig Stein')) return null;
+  const hasGlass = Object.values(world.buildings).some((b) => b.defId === 'glassworks');
+  return hasGlass ? 'Die Glashütte verbraucht ebenfalls Stein — baue weitere Steinbrüche.' : null;
+}
