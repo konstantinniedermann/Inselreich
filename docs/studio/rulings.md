@@ -1253,3 +1253,17 @@ lead-production/production-integrator (`--no-ff`, make check, CI, Pages), danach
 M11 am Session-Ende. — Kosten bei Irrtum: Revert-Merge (Save v6 ist abwärts migrierend, alte Stände laden weiter).
 
 Entscheider: L0 · Anlass: Berichte lead-qa M11-QA, lead-art R2-Fix, C7 · ADR: —
+
+## R201 · 2026-10-03 · Retros M11: Experimente
+
+Ruling: (1) E-010 „Schlanke Steuerung" behalten → abgeschlossen (M11: Steuerung 29,8 %, Lead-Median 61k; Restgrössen
+Cache-Write, grösste Datei, L0-Max werden in M12 ohne Experiment beobachtet). (2) E-022 angenommen und gestartet,
+erweitert um Prozessvorschlag 1 zu „Merge-Hygiene": `.gitattributes` `docs/beobachtungen.md merge=union` und der
+production-integrator mergt in einem eigenen Worktree statt im Hauptcheckout (`git worktree add` auf main, Push von
+dort); Messung M12: 0 Konflikte in beobachtungen.md, 0 Vorfälle durch geteilten Arbeitsbaum. (3) E-015 und E-017
+laufen weiter bis M12. (4) Vorgeschlagen, wartend: E-019 (erweitert um Abhängigkeits-Prüfung im Gate Plan und
+Task-Datei-Nachzug nach Rulings), Sicherung des letzten roten Testlaufs (Werkzeug, lead-production), Wellen-Zuschnitt
+nach Dauer als Hinweis. Laufend danach: E-015, E-017, E-022. Handbuch 1.15 durch studio-coach. — Kosten bei Irrtum:
+union-Merge kann Dubletten erzeugen (Sichtprüfung im Review).
+
+Entscheider: L0 · Anlass: `retros/2026-10-03-meilenstein-m11.md`, `retros/2026-10-03-prozess-retro-m11.md` · ADR: —
