@@ -1,5 +1,6 @@
 import { GOODS } from '../sim/defs/goods';
 import { nextOrderTick } from '../sim/orders';
+import { functionLock } from '../sim/unlocks';
 import type { Order, World } from '../sim/types';
 import { setField } from './dom';
 import { formatGameTime } from './time';
@@ -38,6 +39,20 @@ export function orderMessage(prev: Order | null, cur: Order | null): string | nu
   return null;
 }
 
+/** Auftragskarte sichtbar: ab U3 (Spec 11.4). */
+export function orderVisible(world: World): boolean {
+  return functionLock(world, 'orders') === null;
+}
+
+/** Meldung nur, wenn die Karte im vorigen und im jetzigen Frame sichtbar war (kein „Neuer Auftrag" beim Wechsel zu U3). */
+export function orderMessageFor(
+  prevOrder: Order | null,
+  prevVisible: boolean,
+  cur: World,
+): string | null {
+  return prevVisible && orderVisible(cur) ? orderMessage(prevOrder, cur.order) : null;
+}
+
 export function deliveredMessage(o: Order): string {
   return `Auftrag geliefert: ${o.amount} ${GOODS[o.good].name} · +${o.reward} Geld`;
 }
@@ -61,6 +76,8 @@ export function renderOrder(el: HTMLElement, world: World, actions: OrderActions
 
 /** Aktualisiert Text und Sichtbarkeit des Buttons. */
 export function updateOrder(el: HTMLElement, world: World): void {
+  const visible = orderVisible(world);
+  if (el.hidden === visible) el.hidden = !visible;
   setField(el, 'order-text', orderCardText(world));
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;

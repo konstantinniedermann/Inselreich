@@ -1,17 +1,28 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
-import { buildLock } from '../sim/placement';
+import { UNLOCKS } from '../sim/defs/unlocks';
+import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
+import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { BuildingDefId, Category, Cost, SiteRule, Terrain, World } from '../sim/types';
+import type {
+  BuildingDefId,
+  Category,
+  Cost,
+  SiteRule,
+  Terrain,
+  UnlockId,
+  World,
+} from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { friendlyReason } from './hints';
-import { showMessage } from './messages';
+import type { IconId } from './icons';
+import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -43,7 +54,7 @@ function perInterval(cycle: number): string {
   return `${num(perMinute(1, cycle))} / min`;
 }
 
-function siteText(rule: SiteRule): string {
+export function siteText(rule: SiteRule): string {
   switch (rule.kind) {
     case 'coast':
       return 'Küste (Wasser angrenzend)';
@@ -84,12 +95,29 @@ export function tooltipLines(tool: Tool): string[] {
   if (tool.kind === 'road') {
     return [withKey('Weg'), `Kosten: ${costLine(ROAD_COST_OBJ)}`];
   }
+  if (tool.kind === 'clearForest') {
+    return [
+      withKey('Roden'),
+      `Kosten: ${costLine(CLEAR_FOREST_COST)}`,
+      'Wald wird Weide — kein Holz',
+      'Nur auf unbebautem Wald',
+    ];
+  }
+  if (tool.kind === 'plantForest') {
+    return [
+      withKey('Aufforsten'),
+      `Kosten: ${costLine(PLANT_FOREST_COST)}`,
+      'Weide wird Wald',
+      'Nur auf unbebauter Weide',
+    ];
+  }
   const def = BUILDING_DEFS[tool.defId];
   const lines = [
     withKey(def.name),
     `Kosten: ${costLine(def.cost)}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
+  if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
   }
@@ -102,18 +130,22 @@ export function tooltipLines(tool: Tool): string[] {
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
   lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
+  if (def.maxCount?.n === 1) lines.push(`Höchstens eine ${def.name}`);
   const preview = tierPreviewLine(def.id);
   if (preview) lines.push(preview);
   return lines;
 }
 
 /**
- * Stufen-Zeile (M8 4.3 Punkt 4, Änderung S11): für welche Stufe das Gebäude freigeschaltet wird, aus
- * `def.unlockTier`; ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht. `null` ohne `unlockTier`.
+ * Stufen-Zeile (M8 4.3 Punkt 4): für welche Stufe das Gebäude freigeschaltet wird, aus dem Freischalt-Eintrag
+ * (Auslöser `tierOpen`); ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht.
+ * `null` für Gebäude anderer Einträge. Task 6 ersetzt die Zeile durch den Freischalt-Hinweis.
  */
 export function tierPreviewLine(defId: BuildingDefId): string | null {
-  const tier = BUILDING_DEFS[defId].unlockTier;
-  return tier === undefined ? null : `Für ${TIERS[tier].name} (Stufe ${tier})`;
+  const t = entryOfBuilding(defId)?.trigger;
+  return t === undefined || t.kind !== 'tierOpen'
+    ? null
+    : `Für ${TIERS[t.tier].name} (Stufe ${t.tier})`;
 }
 
 let tooltipCounter = 0;
@@ -204,12 +236,29 @@ function attachTooltip(
 /** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
 const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
-/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und ohne Gesperrtes (Spec M8 14.2, S11). */
+/** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und nur Angezeigtes (Spec 11.1). */
 export function buildEntries(world: World, category: Category): BuildingDefId[] {
   return BUILDING_IDS.filter(
-    (id) =>
-      id !== 'kontor' && BUILDING_DEFS[id].category === category && buildLock(world, id) === null,
+    (id) => id !== 'kontor' && BUILDING_DEFS[id].category === category && buildingShown(world, id),
   );
+}
+
+/**
+ * Einträge der Bauleiste, die seit `prev` frei wurden (K2): Gebäude der neuen Freischalt-Einträge, soweit
+ * angezeigt, in der Reihenfolge des Eintrags. Das UI führt die Menge bis zur ersten Wahl (nicht gespeichert).
+ */
+export function newBuildEntries(prev: readonly UnlockId[], world: World): Set<BuildingDefId> {
+  const out = new Set<BuildingDefId>();
+  for (const u of UNLOCKS) {
+    if (!world.unlocked.includes(u.id) || prev.includes(u.id)) continue;
+    for (const id of u.buildings) if (id !== 'kontor' && buildingShown(world, id)) out.add(id);
+  }
+  return out;
+}
+
+/** Kategorien mit mindestens einem Eintrag, in `CATEGORIES`-Reihenfolge. */
+export function visibleCategories(world: World): Category[] {
+  return CATEGORIES.filter((c) => buildEntries(world, c.id).length > 0).map((c) => c.id);
 }
 
 /**
@@ -227,13 +276,28 @@ export function renderBuildMenu(
   const focusKey =
     active instanceof HTMLElement && nav.contains(active) ? active.dataset.key : undefined;
   nav.replaceChildren();
-  const addButton = (parent: HTMLElement, label: string, tool: Tool, cost?: Cost): void => {
+  const addButton = (
+    parent: HTMLElement,
+    label: string,
+    tool: Tool,
+    cost?: Cost,
+    icon?: IconId,
+  ): void => {
     const btn = document.createElement('button');
     if (cost) buttonCost.set(btn, cost);
     btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
     btn.setAttribute('aria-label', label);
     btn.textContent = label;
     btn.dataset.key = label;
+    if (icon) btn.prepend(iconChip(icon));
+    if (tool.kind === 'build' && state.newEntries.has(tool.defId)) {
+      const mark = document.createElement('span');
+      mark.className = 'badge-new';
+      mark.setAttribute('role', 'img');
+      mark.setAttribute('aria-label', 'neu');
+      mark.textContent = 'neu';
+      btn.append(mark);
+    }
     attachTooltip(btn, tool, cost !== undefined, nav);
     btn.addEventListener('click', (ev) => {
       if (btn.dataset.longPress) {
@@ -251,18 +315,39 @@ export function renderBuildMenu(
     parent.appendChild(btn);
   };
 
+  // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1);
+  // Seiteneffekt: setzt `state.openCategory` auf null
+  if (state.openCategory !== null && buildEntries(state.world, state.openCategory).length === 0)
+    state.openCategory = null;
   const main = document.createElement('div');
   main.className = 'buildbar-main';
   addButton(main, 'Auswahl', { kind: 'select' });
   addButton(main, `Weg · ${ROAD_COST} Geld`, { kind: 'road' }, ROAD_COST_OBJ);
   addButton(main, 'Abriss', { kind: 'demolish' });
+  if (functionLock(state.world, 'forest') === null) {
+    addButton(
+      main,
+      `Roden · ${CLEAR_FOREST_COST.money} Geld`,
+      { kind: 'clearForest' },
+      CLEAR_FOREST_COST,
+    );
+    addButton(
+      main,
+      `Aufforsten · ${PLANT_FOREST_COST.money} Geld`,
+      { kind: 'plantForest' },
+      PLANT_FOREST_COST,
+    );
+  }
   for (const cat of CATEGORIES) {
     const btn = document.createElement('button');
     btn.className = 'btn btn-category' + (state.openCategory === cat.id ? ' active' : '');
-    btn.textContent = cat.label;
+    btn.append(iconChip(`cat-${cat.id}`));
+    btn.setAttribute('aria-label', cat.label);
+    btn.title = cat.label;
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
     btn.dataset.key = cat.id;
+    btn.hidden = buildEntries(state.world, cat.id).length === 0;
     btn.addEventListener('click', (ev) => {
       if (blurAfterClick(ev.detail)) btn.blur();
       onToggle(cat.id);
@@ -282,6 +367,7 @@ export function renderBuildMenu(
         `${def.name} · ${def.cost.money} Geld`,
         { kind: 'build', defId: id },
         def.cost,
+        `cat-${def.category}`,
       );
     }
     nav.appendChild(sub);

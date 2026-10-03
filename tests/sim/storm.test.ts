@@ -16,7 +16,7 @@ let ids: Record<'fisher' | 'lumberjack' | 'weaver' | 'quarry', number>;
 
 /** Seed 3, normal: Fischer (Wasser westlich), Holzfäller (Wald), Weberei mit Wolle, Steinbruch am Berg; Tick T. */
 beforeEach(() => {
-  w = createWorld(3, { crisisLevel: 'normal' });
+  w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
   const k = w.buildings[w.kontorId]!;
   const [kx, ky] = [k.x, k.y];
   forceRect(w, kx + 2, ky - 3, 14, 7, 'grass');

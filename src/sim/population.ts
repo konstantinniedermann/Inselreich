@@ -14,6 +14,7 @@ import type {
   World,
 } from './types';
 import { inSupplyRange } from './supply';
+import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
 import { center } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
@@ -90,6 +91,12 @@ function consume(world: World, house: HouseState, tier: TierDef): void {
       house.satisfied[good] = false;
       continue;
     }
+    if (goodLockActive(world, house.tier, good)) {
+      const locked = (house.demand[good] ?? 0) + (house.inhabitants * rate) / 100;
+      house.demand[good] = Math.min(locked, 1); // wie leeres Lager (Spec 5.3)
+      house.satisfied[good] = false;
+      continue;
+    }
     const demand = (house.demand[good] ?? 0) + (house.inhabitants * rate) / 100;
     if (demand >= 1 - EPSILON) {
       if (takeStock(world, good, 1)) {
@@ -120,8 +127,9 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
   const reasons: string[] = [];
   const lock = tierLock(world, next.tier);
   if (lock !== null) reasons.push(lock);
+  if (upgradeStopActive(world, house.tier)) reasons.push('Aufstieg in der Amtsstube angehalten');
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
-  const wait = TAX_LEVELS[world.taxLevel].upgradeWait;
+  const wait = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
   if (wait === null) reasons.push('Steuer zu hoch');
   else if (world.tick - house.satisfiedSince < wait)
     reasons.push(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
@@ -130,7 +138,9 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
       reasons.push(`${BUILDING_DEFS[SERVICE_BUILDING[s]].name} fehlt in Reichweite`);
   }
   for (const g of newNeeds(current, next)) {
-    if (world.stock[g] < 1) reasons.push(`Kein ${GOODS[g].name} im Lager`);
+    if (goodLockActive(world, next.tier, g))
+      reasons.push(`${GOODS[g].name} für ${next.name} gesperrt`);
+    else if (world.stock[g] < 1) reasons.push(`Kein ${GOODS[g].name} im Lager`);
   }
   const afford = checkAfford(world, current.upgradeCost);
   if (!afford.ok) reasons.push(afford.reason);
@@ -163,7 +173,7 @@ export function tryUpgrade(world: World, b: Building): boolean {
 export function houseCap(world: World, house: HouseState): number {
   return Math.max(
     1,
-    Math.floor(TIERS[house.tier].maxInhabitants * TAX_LEVELS[world.taxLevel].occupancy),
+    Math.floor(TIERS[house.tier].maxInhabitants * TAX_LEVELS[effectiveTaxLevel(world)].occupancy),
   );
 }
 
@@ -196,7 +206,7 @@ export function totalTaxes(world: World): number {
     const tier = TIERS[house.tier];
     sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : UNSATISFIED_TAX_FACTOR);
   }
-  return Math.floor((sum * TAX_LEVELS[world.taxLevel].pct) / 100);
+  return Math.floor((sum * TAX_LEVELS[effectiveTaxLevel(world)].pct) / 100);
 }
 
 /** Aktualisiert die Steuerstatistik und bucht sie im selben Takt wie den Unterhalt. */

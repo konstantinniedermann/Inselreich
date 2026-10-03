@@ -547,3 +547,18 @@ describe('sound', () => {
     });
   });
 });
+
+describe('M10 Ton unlock', () => {
+  it("AK-U1-12 'unlock' ist zugeordnet und spielt die Figur von win (Rückfall ohne Datei)", () => {
+    const count = (e: SoundEvent): number => {
+      const { ctx, log } = fakeCtx();
+      const s = createSound({ muted: false, volume: 0.4 }, () => ctx, fakeIo());
+      s.unlock();
+      const base = log.nodes;
+      s.play(e);
+      return log.nodes - base;
+    };
+    expect(count('win')).toBeGreaterThan(0);
+    expect(count('unlock')).toBe(count('win'));
+  });
+});

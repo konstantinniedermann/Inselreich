@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { createWorld } from '../../src/sim/world';
-import { boomGood } from '../../src/ui/trade';
+import { boomGood, tradeRows } from '../../src/ui/trade';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
   it('trifft genau das Boom-Gut, nach dem Boom keines', () => {
@@ -12,5 +12,14 @@ describe('boomGood (Marke nur am Boom-Gut)', () => {
     expect(GOOD_IDS.filter((g) => boomGood(w, g))).toEqual([]);
     w.crisis = null;
     expect(GOOD_IDS.filter((g) => boomGood(w, g))).toEqual([]);
+  });
+});
+
+describe('M10 Handelszeilen nach Freischaltung', () => {
+  it('AK-U1-06 Handelszeilen: neue Welt Holz, Werkzeug, Stein, Nahrung; Wolle 3 ohne U2: verkaufbar, nicht kaufbar', () => {
+    const w = createWorld(3);
+    expect(tradeRows(w).map((r) => r.good)).toEqual(['wood', 'tools', 'stone', 'food']);
+    w.stock.wool = 3;
+    expect(tradeRows(w).find((r) => r.good === 'wool')).toEqual({ good: 'wool', canBuy: false });
   });
 });

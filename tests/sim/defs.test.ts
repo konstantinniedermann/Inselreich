@@ -10,7 +10,7 @@ describe('defs', () => {
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
   it('has 14 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(16);
+    expect(BUILDING_IDS).toHaveLength(17);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);

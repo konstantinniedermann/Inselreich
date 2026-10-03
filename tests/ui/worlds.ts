@@ -1,10 +1,12 @@
 import { placeBuilding } from '../../src/sim/build';
+import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import { TIERS } from '../../src/sim/defs/tiers';
 import type { Building, BuildingDefId, GoodId, Tier, World } from '../../src/sim/types';
 import { SCENARIOS } from '../sim/scenarios';
 
 export function uxWorld(): { w: World; kx: number; ky: number; fisher: Building; house: Building } {
   const w = SCENARIOS['ux-anbindung']!();
+  w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // Stand vor dem Ziel wie in M8; U6 erst nach `won`
   const k = w.buildings[w.kontorId]!;
   const all = Object.values(w.buildings);
   return {
@@ -21,7 +23,10 @@ export function build(w: World, defId: BuildingDefId, x: number, y: number): Bui
   const stock = { ...w.stock };
   w.money = 1_000_000;
   for (const g of Object.keys(w.stock) as GoodId[]) w.stock[g] = 100;
+  const unlocked = w.unlocked;
+  w.unlocked = [...UNLOCK_IDS]; // Testaufbau: „Alles frei" nur für diesen Bau (Spec 10)
   const r = placeBuilding(w, defId, x, y);
+  w.unlocked = unlocked;
   w.money = money;
   w.stock = stock;
   if (!r.ok || r.id === undefined) throw new Error(`${defId}@${x},${y}: ${r.ok ? '' : r.reason}`);

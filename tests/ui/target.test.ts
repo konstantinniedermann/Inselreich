@@ -16,7 +16,7 @@ import { forceRect } from '../sim/helpers';
 
 /** Welt mit freier Grasfläche östlich des Kontors, Geld im Überfluss. */
 function buildWorld(): { world: World; o: { x: number; y: number } } {
-  const world = createWorld(1);
+  const world = createWorld(1, { unlockAll: true });
   const k = world.buildings[world.kontorId]!;
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');

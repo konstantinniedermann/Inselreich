@@ -7,6 +7,9 @@ export const CRISIS_LEVEL_IDS: readonly CrisisLevel[] = ['off', 'mild', 'normal'
 export type ReduceMotion = 'auto' | 'on' | 'off';
 export const REDUCE_MOTION_IDS: readonly ReduceMotion[] = ['auto', 'on', 'off'];
 
+export type UnlockMode = 'stepwise' | 'all';
+export const UNLOCK_MODE_IDS: readonly UnlockMode[] = ['stepwise', 'all'];
+
 export interface Settings {
   muted: boolean;
   /** Gesamtlautstärke (bis M6 „volume"). */
@@ -20,6 +23,8 @@ export interface Settings {
   reduceMotion: ReduceMotion;
   /** Krisenstufe für „Neu" (M6 13.1); das laufende Spiel behält seine Stufe. */
   crisisLevel: CrisisLevel;
+  /** Freischaltung für „Neue Insel“ (M10): Schritt für Schritt oder alles frei. */
+  unlockMode: UnlockMode;
   /** Fremde Felder des gemeinsamen Formats (M7: master, music, …); unverändert zurückgeschrieben. */
   extra?: Record<string, unknown>;
 }
@@ -34,6 +39,7 @@ const KNOWN_KEYS: readonly string[] = [
   'dayNight',
   'reduceMotion',
   'crisisLevel',
+  'unlockMode',
   'volume',
 ];
 
@@ -47,6 +53,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   dayNight: true,
   reduceMotion: 'auto',
   crisisLevel: DEFAULT_NEW_GAME_CRISIS_LEVEL,
+  unlockMode: 'stepwise',
 };
 
 /** Zahl -> auf 0…1 geklemmt; alles andere (Text, NaN, ±Infinity, fehlend) -> Standard. */
@@ -83,6 +90,9 @@ export function parseSettings(json: string | null): Settings {
       (CRISIS_LEVEL_IDS as readonly string[]).includes(o.crisisLevel)
         ? (o.crisisLevel as CrisisLevel)
         : DEFAULT_SETTINGS.crisisLevel,
+    unlockMode: UNLOCK_MODE_IDS.includes(o.unlockMode as UnlockMode)
+      ? (o.unlockMode as UnlockMode)
+      : DEFAULT_SETTINGS.unlockMode,
   };
   if (Object.keys(extra).length > 0) settings.extra = extra;
   return settings;

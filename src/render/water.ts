@@ -41,6 +41,7 @@ const CELLS = 8; // Marching-Squares-Zellen je Kachelkante
 const GRAD_H = 0.04; // Schrittweite für die Normale aus dem Feldgefälle (Kacheln)
 
 // Terrain ändert sich im Spiel nicht: einmal je Welt vorberechnen.
+// Gültig, solange Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere Geländeänderungen müssen diesen Cache neu bewerten.
 const cache = new WeakMap<World, WaterInfo>();
 
 /**

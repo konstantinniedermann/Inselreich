@@ -25,6 +25,7 @@ import { demolish, placeBuilding } from '../../src/sim/build';
 import { createWorld, tilesInRadius } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
+import { clearForest, plantForest } from '../../src/sim/forest';
 
 const inPoly = (h: readonly Pt[], x: number, y: number): boolean => {
   for (let i = 0; i < h.length; i++) {
@@ -46,7 +47,7 @@ const mkBuilding = (id: number, defId: Building['defId'], x: number, y: number):
 
 /** Welt mit freier Grasfläche östlich des Kontors (Versorgungsradius), Geld im Überfluss. */
 function buildWorld(): { world: World; o: Pt } {
-  const world = createWorld(3);
+  const world = createWorld(3, { unlockAll: true });
   const k = world.buildings[world.kontorId]!;
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');
@@ -134,7 +135,7 @@ describe('Tiefe', () => {
 
 describe('Radius', () => {
   it('AK-ISO-07 Ellipse = Sim-Metrik (tilesInRadius) für jede Kachel, ausser |d − r| ≤ 1e-9', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     for (const r of [2, 3.5, 6, 8])
       for (const [cx, cy] of [
         [10, 10],
@@ -206,7 +207,7 @@ describe('Picking', () => {
   });
 
   it('AK-ISO-08 Negativfall: nur über Baumstempel, Schiff oder Figur → null; in keiner Hülle → null', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     const hulls = buildingHulls(world);
     const items = sortedObjects(world, [
       { kind: 'ship', id: 1, cx: 3.5, cy: 3.5 },
@@ -232,7 +233,7 @@ describe('Picking', () => {
 
 describe('Sortierung und Cache', () => {
   it('AK-ISO-21 sortedObjects mischt bewegte Objekte ein; Gleichstand: Baum < Gebäude < Schiff < Boot < Figur, dann Id', () => {
-    const world = createWorld(1);
+    const world = createWorld(1, { unlockAll: true });
     const t0 = sortedObjects(world).find((i) => i.kind === 'tree')!;
     const [tx, ty] = [t0.fp.x, t0.fp.y];
     // Gebäude mit niedriger Id auf derselben Kachel wie der Baum (Kachel bewusst nicht belegt)
@@ -323,4 +324,19 @@ describe('Sortierung und Cache', () => {
     expect(pickBuilding(buildingHulls(world), px, overlapY)).toBe(back);
     expect(pickBuilding(buildingHulls(world), px, frontOnlyY)).toBeNull();
   });
+});
+
+it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer mit treeVariant', () => {
+  const w = createWorld(3, { unlockAll: true });
+  const k = w.buildings[w.kontorId]!;
+  const x = k.x + 6;
+  const y = k.y + 2;
+  forceRect(w, x, y, 1, 1, 'forest');
+  w.money = 1000;
+  const trees = () => sortedObjects(w).filter((o) => o.kind === 'tree' && o.id === y * w.width + x);
+  expect(trees()).toHaveLength(1);
+  expect(clearForest(w, x, y).ok).toBe(true);
+  expect(trees()).toHaveLength(0);
+  expect(plantForest(w, x, y).ok).toBe(true);
+  expect(trees()).toEqual([expect.objectContaining({ variant: treeVariant(w.seed, x, y) })]);
 });

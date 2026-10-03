@@ -116,7 +116,7 @@ const isRoadStroke = (e: Ev): boolean =>
 
 /** Welt mit Kontor, Haus, Markt, Weberei (roh gesetzt, raucht) und einem Weg (ISO §5: Wege vor den Körpern). */
 function scene(): { world: World; ids: Record<string, number> } {
-  const world = createWorld(3);
+  const world = createWorld(3, { unlockAll: true });
   const k = world.buildings[world.kontorId]!;
   forceRect(world, k.x + 3, k.y + 3, 6, 6, 'grass');
   world.money = 100000;
@@ -1019,5 +1019,18 @@ describe('Renderer', () => {
       expect(anchorCacheSize()).toBeGreaterThan(0);
       expect(anchorCacheSize()).toBeLessThanOrEqual(Object.keys(BUILDING_DEFS).length + 2);
     });
+  });
+
+  it('AK-U3-06 wildlifeEnvOf: Phase aus dem Tick, Wetter geklemmt, reduce nur bei true', async () => {
+    const { wildlifeEnvOf } = await import('../../src/render/renderer');
+    const w = createWorld(3);
+    expect(wildlifeEnvOf(w, { timeMs: 0 })).toEqual({
+      phase: lightAt(w.tick).phase,
+      weather: 'clear',
+      reduce: false,
+    });
+    expect(
+      wildlifeEnvOf(w, { timeMs: 0, weather: { kind: 'storm', w: 1 }, reduceMotion: true }),
+    ).toMatchObject({ weather: 'storm', reduce: true });
   });
 });

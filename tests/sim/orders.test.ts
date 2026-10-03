@@ -11,7 +11,7 @@ import { createWorld } from '../../src/sim/world';
 let w: World;
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
 });
 
 function runTo(world: World, tick: number): void {
@@ -20,8 +20,8 @@ function runTo(world: World, tick: number): void {
 
 describe('Handelsaufträge', () => {
   it('AK-S2-05 erster Auftrag bei Tick 600, deterministisch je Seed', () => {
-    const a = createWorld(3);
-    const b = createWorld(3);
+    const a = createWorld(3, { unlockAll: true });
+    const b = createWorld(3, { unlockAll: true });
     runTo(a, 599);
     expect(a.order).toBeNull();
     runTo(a, 600);
@@ -128,9 +128,9 @@ describe('Handelsaufträge', () => {
   });
 
   it('AK-S2-12 Determinismus über Speichern und Laden', () => {
-    const a = createWorld(3);
+    const a = createWorld(3, { unlockAll: true });
     for (let i = 0; i < 3000; i++) step(a);
-    const b0 = createWorld(3);
+    const b0 = createWorld(3, { unlockAll: true });
     for (let i = 0; i < 1000; i++) step(b0);
     expect(b0.order).not.toBeNull();
     const r = deserialize(serialize(b0));

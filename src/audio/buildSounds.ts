@@ -100,6 +100,7 @@ export const BUILD_SOUND_OF: Readonly<Record<string, BuildGroupName>> = {
   house: 'wood',
   market: 'wood',
   school: 'wood',
+  townhall: 'stone',
   weaver: 'wood',
   toolmaker: 'wood',
   quarry: 'stone',

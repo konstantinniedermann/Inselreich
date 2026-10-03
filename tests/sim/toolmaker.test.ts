@@ -8,7 +8,7 @@ import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { forceRect, prepareEast } from './helpers';
+import { forceRect, placeService, prepareEast } from './helpers';
 
 let w: World;
 let k: Building;
@@ -22,11 +22,12 @@ function placeToolmaker(): Building {
   expect(r.ok).toBe(true);
   const b = w.buildings[r.id!]!;
   expect(b.connected).toBe(true);
+  placeService(w, 'school', k.x + 2, k.y - 2); // M10: Werkzeugmacher braucht eine Schule in Reichweite; am Weg, bleibt beim Laden angebunden
   return b;
 }
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
   k = w.buildings[w.kontorId]!;
 });
 
@@ -39,7 +40,8 @@ describe('Werkzeugmacher (S4)', () => {
     for (let i = 0; i < 800; i++) step(w);
     expect(w.stock.tools).toBe(10);
     expect(w.stock.wood).toBe(90);
-    expect(money - w.money).toBe(200);
+    // Unterhalt: Werkzeugmacher 8 × 25 = 200, dazu die Schule (M10)
+    expect(money - w.money - 8 * BUILDING_DEFS.school.upkeep).toBe(200);
     const before = w.money;
     expect(sell(w, 'tools', 10).ok).toBe(true);
     expect(w.money - before).toBe(143);
@@ -53,7 +55,7 @@ describe('Werkzeugmacher (S4)', () => {
     for (let i = 0; i < 100; i++) step(w);
     expect(tm.state).toBe('waitingInput');
     expect(w.stock.tools).toBe(0);
-    expect(money - w.money).toBe(BUILDING_DEFS.toolmaker.upkeep);
+    expect(money - w.money - BUILDING_DEFS.school.upkeep).toBe(BUILDING_DEFS.toolmaker.upkeep);
   });
 
   it('AK-S4-03 Abriss während Produktion: Holz verloren, kein Werkzeug, 50 % zurück, kein Unterhalt', () => {

@@ -1,6 +1,7 @@
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from './defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { createRng } from './rng';
+import { functionLock } from './unlocks';
 import type { GoodId, Result, Tier, World } from './types';
 import { fail, ok } from './types';
 
@@ -63,6 +64,8 @@ export function tickOrders(world: World): void {
 
 /** Liefert den aktiven Auftrag ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung. */
 export function deliverOrder(world: World): Result {
+  const lock = functionLock(world, 'orders');
+  if (lock !== null) return fail(lock);
   const o = world.order;
   if (o === null) return fail('Kein Auftrag');
   if (world.stock[o.good] < o.amount) return fail('Nicht genug Ware');

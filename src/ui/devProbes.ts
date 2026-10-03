@@ -1,9 +1,11 @@
 // Dev-Sonden (Spec 9.5): nur im Dev-Build verdrahtet (app.ts). Lesen, nie schreiben.
 import type { AudioDebugState } from '../audio/sound';
+import type { World } from '../sim/types';
 
 declare global {
   interface Window {
     __inselAudio?: AudioDebugState;
+    __inselDev?: DevProbe;
     __inselPerf?: {
       frameMedian: number;
       frameP95: number;
@@ -12,6 +14,18 @@ declare global {
       n: number;
     };
   }
+}
+
+/** Dev-Sonde für Browser-Prüfungen (M10): Welt lesen, Kachelmitte in CSS-Pixeln, Kamera zentrieren. */
+export interface DevProbe {
+  world(): World;
+  tileCenter(x: number, y: number): { x: number; y: number };
+  centerOn(x: number, y: number): void;
+}
+
+/** Hängt die Sonde nur im Dev-Build an `window.__inselDev` ; sonst nichts. */
+export function exposeDevProbe(probe: DevProbe): void {
+  if (import.meta.env.DEV) window.__inselDev = probe;
 }
 
 /** Median und 95. Perzentil (Nearest-Rank); leere Liste ergibt 0. */

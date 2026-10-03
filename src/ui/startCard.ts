@@ -1,10 +1,17 @@
 // Startkarte (Spec L1): Ziel, erste Schritte, Fortsetzen oder Neu; im Modus `help` nur Nachlesen. Keine Regeln.
-import { BUILDING_DEFS } from '../sim/defs/buildings';
-import type { BuildingDefId } from '../sim/types';
+import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
+import { UNLOCKS } from '../sim/defs/unlocks';
+import { goalView } from '../sim/queries';
+import { buildingShown, nextUnlocks } from '../sim/unlocks';
+import type { BuildingDefId, World } from '../sim/types';
 import { TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import type { Tool } from '../render/renderer';
+import { siteText } from './buildMenu';
+import { goalTexts } from './goal';
+import { mapSigns, nextStep } from './guide';
 import { hotkeyLabel } from './hotkeys';
 import { openModal, renderConfirm } from './modal';
+import { decorateNames } from './messages';
 import { newIslandPrompt } from './menu';
 import type { SaveInfo, Slot, StorageProblem } from './storage';
 import { formatClock } from './time';
@@ -62,6 +69,66 @@ export function startSteps(): string[] {
   ];
 }
 
+export type HelpField =
+  'help-now' | 'help-next' | 'help-goal' | 'help-tips' | 'help-signs' | 'help-steps';
+
+export interface HelpSection {
+  field: HelpField;
+  title: string;
+  lines: string[];
+}
+
+/** Höchstzahl der Freischalt-Tipps in der Hilfe (Spec 12.1). */
+const MAX_TIPS = 3;
+
+/** Zeilen „Als Nächstes" (Spec 12.1, 12.2); leer → „Alles freigeschaltet". */
+function nextLines(world: World): string[] {
+  const lines = nextUnlocks(world).map((n) => {
+    const progress = n.now !== null && n.need !== null ? ` (jetzt ${n.now} / ${n.need})` : '';
+    const tax = n.taxBlocks ? " · Steuer ‚hoch' verhindert volle Häuser" : '';
+    return `${n.names.join(', ')} — ${n.when}${progress}${tax}`;
+  });
+  return lines.length > 0 ? lines : ['Alles freigeschaltet'];
+}
+
+/** Tipps: `tip` der freien Einträge absteigend (höchstens 3), dann je freies Gebäude mit Standortregel. */
+function tipLines(world: World): string[] {
+  const tips = UNLOCKS.filter((u) => world.unlocked.includes(u.id) && u.tip !== '')
+    .map((u) => u.tip)
+    .reverse()
+    .slice(0, MAX_TIPS);
+  const sites = BUILDING_IDS.filter(
+    (id) => id !== 'kontor' && buildingShown(world, id) && BUILDING_DEFS[id].site.length > 0,
+  ).map((id) => `${name(id)}: ${BUILDING_DEFS[id].site.map(siteText).join(', ')}`);
+  return [...tips, ...sites];
+}
+
+/** Abschnitte der Hilfe-Karte in der Reihenfolge der Spec 12.1; rein, ohne DOM. */
+export function helpSections(world: World): HelpSection[] {
+  const goal = goalTexts(goalView(world));
+  const sections: HelpSection[] = [
+    { field: 'help-now', title: 'Jetzt tun', lines: [nextStep(world)] },
+    { field: 'help-next', title: 'Als Nächstes', lines: nextLines(world) },
+    {
+      field: 'help-goal',
+      title: 'Ziel und Ausblick',
+      lines: goal.next === null ? [goal.rest] : [goal.rest, goal.next],
+    },
+    { field: 'help-tips', title: 'Tipps', lines: tipLines(world) },
+    {
+      field: 'help-signs',
+      title: 'Kartenzeichen',
+      lines: mapSigns(world).map((s) => `${s.sign} — ${s.meaning}`),
+    },
+  ];
+  const settlers = Object.values(world.buildings).some(
+    (b) => b.house !== undefined && b.house.tier >= 2 && b.house.inhabitants > 0,
+  );
+  if (!settlers)
+    sections.push({ field: 'help-steps', title: 'Erste Schritte', lines: startSteps() });
+  return sections;
+}
+
 /** Esc und Hintergrund: bei offener Bestätigung abbrechen, sonst den primären Knopf wählen (Spec L1). */
 export function startDismissAction(confirming: boolean): 'cancel' | 'primary' {
   return confirming ? 'cancel' : 'primary';
@@ -73,6 +140,8 @@ export interface StartCardOptions {
   note?: string | null;
   hasSlot?: boolean;
   opener?: HTMLElement | null;
+  /** Welt für die Hilfe-Karte (Modus `help`). */
+  world?: World;
   onChoice?: (c: StartChoice) => void;
 }
 
@@ -87,7 +156,7 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
   const m = openModal({
     host,
     className: 'card--start',
-    label: 'Inselreich',
+    label: o.mode === 'help' ? 'Hilfe' : 'Inselreich',
     restoreFocus: o.mode === 'start' ? 'body' : 'opener',
     opener: o.opener,
     onDismiss: () => {
@@ -96,12 +165,14 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
       else ref.primary?.click();
     },
   });
-  const title = Object.assign(document.createElement('h2'), { textContent: 'Inselreich' });
-  const goal = Object.assign(document.createElement('p'), { textContent: startGoal() });
-  const steps = document.createElement('ol');
-  for (const s of startSteps())
-    steps.append(Object.assign(document.createElement('li'), { textContent: s }));
-  m.card.append(title, goal, steps);
+  if (o.mode === 'start') {
+    const title = Object.assign(document.createElement('h2'), { textContent: 'Inselreich' });
+    const goal = Object.assign(document.createElement('p'), { textContent: startGoal() });
+    const steps = document.createElement('ol');
+    for (const s of startSteps())
+      steps.append(Object.assign(document.createElement('li'), { textContent: s }));
+    m.card.append(title, goal, steps);
+  }
 
   const btn = (label: string, primary: boolean, onClick: () => void): HTMLButtonElement => {
     const b = document.createElement('button');
@@ -113,6 +184,20 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
   };
 
   if (o.mode === 'help') {
+    m.card.append(Object.assign(document.createElement('h2'), { textContent: 'Hilfe' }));
+    for (const sec of o.world ? helpSections(o.world) : []) {
+      const box = document.createElement('section');
+      box.dataset.field = sec.field;
+      const h = Object.assign(document.createElement('h3'), { textContent: sec.title });
+      const ul = document.createElement('ul');
+      for (const line of sec.lines) {
+        const li = document.createElement('li');
+        li.append(...decorateNames(line)); // Symbol vor Gebäude- und Gutnamen, Text unverändert
+        ul.append(li);
+      }
+      box.append(h, ul);
+      m.card.append(box);
+    }
     const more = btn('Weiter spielen', true, () => m.close());
     m.card.append(more);
     more.focus();

@@ -88,7 +88,7 @@ Gegenprobe: Abschnitt „Grep-Gegenprobe" unter der Tabelle.
 | AK-U2-07 | Task 7                                             | `tests/ui/tooltip.test.ts` bzw. `hints.test.ts` „AK-U2-07 …"                          |
 | AK-U2-08 | QA-U2 Schritt 7                                    | Browser (K1-Teil nur ohne Streichung)                                                 |
 | AK-U2-09 | QA-U2 Schritt 8                                    | Browser                                                                               |
-| AK-U2-10 | Task 7                                             | `tests/ui/hints.test.ts` „AK-U2-10 …"                                                 |
+| AK-U2-10 | Task 7                                             | `tests/ui/tooltip.test.ts` „AK-U2-10 …"                                               |
 | AK-U2-11 | Task 7; QA-U2 Schritt 9                            | `tests/ui/crisisLog.test.ts` „AK-U2-11 …" (Kann K4); Browser                          |
 | AK-U2-12 | Task 7; QA-U2 Schritt 10                           | `tests/ui/hotkeys.test.ts` „AK-U2-12 …"; Browser                                      |
 | AK-U3-01 | Task 8                                             | `tests/ui/hover.test.ts` „AK-U3-01 …"                                                 |
@@ -101,7 +101,7 @@ Gegenprobe: Abschnitt „Grep-Gegenprobe" unter der Tabelle.
 | AK-U4-02 | QA-U4 Schritt 2                                    | Browser                                                                               |
 | AK-U4-03 | QA-U4 Schritt 3                                    | Browser                                                                               |
 | AK-U4-04 | Task 9; QA-U4 Schritt 4                            | `tests/ui/tooltip.test.ts` „AK-U4-04 …" (Kann K2); Browser                            |
-| AK-U4-05 | QA-U4 Schritt 5                                    | Browser, Blindtest (Kann K3)                                                          |
+| AK-U4-05 | QA-U4 Schritt 5                                    | gestrichen (R186), K3 an M9 Welle 2                                                   |
 | AK-D1-01 | D1                                                 | Review README                                                                         |
 | AK-D1-02 | D1                                                 | Review arc42                                                                          |
 | AK-D1-03 | D1                                                 | Review Hauptspec                                                                      |

@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { deliverOrder } from '../../src/sim/orders';
@@ -11,8 +11,9 @@ import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { sellPrice } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
-import { buildingsOfType, idx } from '../../src/sim/world';
-import { SCENARIOS, tickBeforeFirst, writeScenarios } from './scenarios';
+import { deriveUnlocks } from '../../src/sim/unlocks';
+import { buildingsOfType, center, idx, inBounds } from '../../src/sim/world';
+import { PROBES, SCENARIOS, tickBeforeFirst, writeProbes, writeScenarios } from './scenarios';
 
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
 function load(name: string): World {
@@ -83,6 +84,13 @@ describe('Szenario-Saves', () => {
         'm8-glashuette-wartet',
         'm8-kaufleute-ohne-glas',
         'm8-handel',
+        'm10-start',
+        'm10-pionier-fast-voll',
+        'm10-siedler-fast',
+        'm10-wald',
+        'm10-amtsstube',
+        'm10-amtsstube-aus',
+        'm10-krise-bald',
       ].sort(),
     );
   });
@@ -431,9 +439,116 @@ describe('M8 Szenarien', () => {
   });
 });
 
+const M10 = [
+  'm10-start',
+  'm10-pionier-fast-voll',
+  'm10-siedler-fast',
+  'm10-wald',
+  'm10-amtsstube',
+  'm10-amtsstube-aus',
+  'm10-krise-bald',
+] as const;
+const PROBE_SPEC: Record<string, Record<string, [number, number]>> = {
+  'm10-start': { kontor: [0, 0] },
+  'm10-pionier-fast-voll': { kontor: [0, 0], haus3: [3, -2] },
+  'm10-siedler-fast': { kontor: [0, 0], 'haus-voll': [3, -2], kapelle: [6, -2] },
+  'm10-wald': { kontor: [0, 0], wald: [20, -7], weide: [12, -3], holzfaeller: [19, -5] },
+  'm10-amtsstube': {
+    kontor: [0, 0],
+    amtsstube: [11, -7],
+    schule: [6, 1],
+    'werkzeug-mit': [11, 1],
+    'werkzeug-ohne': [17, 6],
+  },
+  'm10-amtsstube-aus': {
+    kontor: [0, 0],
+    amtsstube: [3, -6],
+    schule: [6, 1],
+    'werkzeug-mit': [11, 1],
+    'werkzeug-ohne': [17, 6],
+  },
+  'm10-krise-bald': { kontor: [0, 0] },
+};
+
+describe('M10 Szenarien (Spec 18.1)', () => {
+  it('AK-B1-03 alle Szenarien laden als v5, unlocked = deriveUnlocks (ausser m10-start), galerie mit townhall, kein „Tick"', () => {
+    for (const name of [...M10, 'galerie']) {
+      const w = SCENARIOS[name]!();
+      const r = deserialize(serialize(w));
+      expect(r.ok, name).toBe(true);
+      if (!r.ok) continue;
+      expect(r.world.version).toBe(5);
+      expect(r.world.unlocked, name).toEqual(
+        name === 'm10-start' ? ['U0'] : deriveUnlocks(r.world),
+      );
+      expect(JSON.stringify(PROBES[name]!(r.world))).not.toMatch(/Tick/);
+    }
+    const g = SCENARIOS.galerie!();
+    for (const id of BUILDING_IDS)
+      expect(
+        Object.values(g.buildings).some((b) => b.defId === id),
+        id,
+      ).toBe(true);
+  });
+  it('AK-B1-03 Prüfpunkte: vorhanden, auf der Karte, tragen Gebäude bzw. Gelände; Abstände; amtsstube-aus nicht angebunden', () => {
+    for (const name of M10) {
+      const w = SCENARIOS[name]!();
+      const k = w.buildings[w.kontorId]!;
+      const probes = PROBES[name]!(w);
+      for (const [p, [dx, dy]] of Object.entries(PROBE_SPEC[name]!)) {
+        expect(probes[p], `${name}/${p}`).toEqual({ x: k.x + dx, y: k.y + dy });
+        expect(inBounds(w, k.x + dx, k.y + dy)).toBe(true);
+      }
+    }
+    const at = (w: World, p: { x: number; y: number }) => w.tiles[idx(w, p.x, p.y)]!;
+    const wald = SCENARIOS['m10-wald']!();
+    const pw = PROBES['m10-wald']!(wald);
+    expect([
+      at(wald, pw.wald!).terrain,
+      at(wald, pw.wald!).buildingId,
+      at(wald, pw.wald!).road,
+    ]).toEqual(['forest', null, false]);
+    expect([
+      at(wald, pw.weide!).terrain,
+      at(wald, pw.weide!).buildingId,
+      at(wald, pw.weide!).road,
+    ]).toEqual(['grass', null, false]);
+    const hf = wald.buildings[at(wald, pw.holzfaeller!).buildingId!]!;
+    expect([hf.defId, hf.connected]).toEqual(['lumberjack', true]);
+    for (const name of ['m10-amtsstube', 'm10-amtsstube-aus'] as const) {
+      const w = SCENARIOS[name]!();
+      const p = PROBES[name]!(w);
+      const b = (n: string) => w.buildings[at(w, p[n]!).buildingId!]!;
+      const mid = (x: Building) => center(BUILDING_DEFS[x.defId], x.x, x.y);
+      const dist = (a: Building, c: Building) =>
+        Math.hypot(mid(a).cx - mid(c).cx, mid(a).cy - mid(c).cy);
+      expect([b('amtsstube').defId, b('amtsstube').connected]).toEqual([
+        'townhall',
+        name === 'm10-amtsstube',
+      ]);
+      expect(dist(b('werkzeug-mit'), b('schule'))).toBeLessThanOrEqual(10);
+      expect(dist(b('werkzeug-ohne'), b('schule'))).toBeGreaterThan(10);
+    }
+  });
+  it('AK-B1-03 writeProbes schreibt je Szenario aus 18.1 genau <name>.probes.json mit den Prüfpunkten', () => {
+    const written: [string, string][] = [];
+    const fake = (path: string, text: string): void => void written.push([path, text]);
+    expect(writeProbes(undefined, fake)).toBe(0);
+    expect(writeProbes('out', fake)).toBe(8);
+    expect(written.map(([p]) => p).sort()).toEqual(
+      [...M10, 'galerie'].map((n) => `out/${n}.probes.json`).sort(),
+    );
+    for (const [p, text] of written) {
+      const name = p.slice('out/'.length, -'.probes.json'.length);
+      expect(JSON.parse(text)).toEqual(PROBES[name]!(SCENARIOS[name]!()));
+    }
+  });
+});
+
 // Echter Schreibpfad für die Browser-Checks (übersprungen ohne SCENARIO_OUT).
 const out = import.meta.env.SCENARIO_OUT as string | undefined;
 it.runIf(out)('schreibt die Szenario-Saves nach SCENARIO_OUT', () => {
   mkdirSync(out!, { recursive: true });
   writeScenarios(out, writeFileSync);
+  writeProbes(out, writeFileSync);
 });

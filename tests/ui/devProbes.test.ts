@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { summarize } from '../../src/ui/devProbes';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { exposeDevProbe, summarize } from '../../src/ui/devProbes';
 
 describe('summarize', () => {
   it('Median und p95', () => {
@@ -14,5 +14,23 @@ describe('summarize', () => {
     const v = [3, 1, 2];
     summarize(v);
     expect(v).toEqual([3, 1, 2]);
+  });
+});
+
+describe('M10 Dev-Sonde', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+  it('AK-U1-11 Dev-Sonde nur unter DEV: ohne DEV nichts an window, mit DEV __inselDev', () => {
+    const fakeWindow: Record<string, unknown> = {};
+    vi.stubGlobal('window', fakeWindow);
+    const probe = { world: () => null, tileCenter: () => ({ x: 0, y: 0 }), centerOn: () => {} };
+    vi.stubEnv('DEV', false);
+    exposeDevProbe(probe as never);
+    expect(fakeWindow.__inselDev).toBeUndefined();
+    vi.stubEnv('DEV', true);
+    exposeDevProbe(probe as never);
+    expect(fakeWindow.__inselDev).toBe(probe);
   });
 });

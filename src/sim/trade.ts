@@ -2,6 +2,7 @@ import { BOOM_PCT } from './defs/crises';
 import { GOODS, GOOD_IDS, SELL_DROP, SELL_FLOOR, STORAGE_CAP } from './defs/goods';
 import { SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
+import { goodLock } from './unlocks';
 import type { GoodId, Result, World } from './types';
 import { fail, ok } from './types';
 
@@ -23,6 +24,9 @@ export function sellPrice(world: World, good: GoodId, n: number): number {
 }
 
 export function buy(world: World, good: GoodId, n: number): Result {
+  const lock = goodLock(world, good);
+  if (lock !== null) return fail(lock);
+
   // Menge muss eine positive ganze Zahl sein
   if (!Number.isInteger(n) || n < 1) {
     return fail('Ungültige Menge');

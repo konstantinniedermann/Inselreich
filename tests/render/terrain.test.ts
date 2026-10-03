@@ -8,15 +8,25 @@ import { TEX } from '../../src/render/iso';
 import { LAND, depthAt, terrainFields } from '../../src/render/terrainField';
 import {
   RASTER,
+  SMOOTH_BORDER,
   buildGrid,
+  patchGrid,
   defaultTerrainScale,
   dirtyRect,
   occupancy,
   paintPixels,
   shouldPatch,
+  terrainCodes,
   terrainLayerSize,
+  terrainPatchRect,
   tuftsFor,
 } from '../../src/render/terrain';
+import { clearForest, plantForest } from '../../src/sim/forest';
+import { step } from '../../src/sim/tick';
+import { layoutKey } from '../../src/sim/queries';
+import { coastField } from '../../src/render/terrainField';
+import { fishAnchors, flockAnchors } from '../../src/render/wildlife';
+import { phaseAt } from '../../src/render/daynight';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import { forceRect } from '../sim/helpers';
 
@@ -640,4 +650,72 @@ describe('Auflösungsfaktor', () => {
     expect([undefined, 1, 1.25, 1.49].map(defaultTerrainScale)).toEqual([1, 1, 1, 1]);
     expect([1.5, 2, 3].map(defaultTerrainScale)).toEqual([2, 2, 2]);
   });
+});
+
+describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
+  it('AK-R1-01 Gelände-Abbild unterscheidet sich genau in (x, y); Rechteck mit Glättungsrand, geklemmt; step allein patcht nicht', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    const x = k.x + 6,
+      y = k.y + 2;
+    forceRect(w, x, y, 1, 1, 'forest');
+    const a = terrainCodes(w);
+    const key = layoutKey(w);
+    step(w);
+    expect(shouldPatch({ world: w, key }, w, layoutKey(w))).toBe(false);
+    expect(clearForest(w, x, y).ok).toBe(true);
+    const b = terrainCodes(w);
+    expect([...a.keys()].filter((i) => a[i] !== b[i])).toEqual([y * w.width + x]);
+    const r = terrainPatchRect(a, b, w.width, w.height)!;
+    expect(r.x0).toBeLessThanOrEqual(x - SMOOTH_BORDER);
+    expect(r.x1).toBeGreaterThanOrEqual(x + SMOOTH_BORDER);
+    expect(terrainPatchRect(b, b, w.width, w.height)).toBeNull();
+    const edge = terrainPatchRect(
+      new Uint8Array(w.width * w.height),
+      (() => {
+        const c = new Uint8Array(w.width * w.height);
+        c[0] = 1;
+        return c;
+      })(),
+      w.width,
+      w.height,
+    )!;
+    expect([edge.x0, edge.y0]).toEqual([0, 0]);
+  });
+  it('AK-R1-05 Tier-Anker (Fische, Vögel) und Küstenfeld (water.ts und life.ts nutzen coastField) bleiben gleich', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
+    forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
+    w.money = 1000;
+    const snap = () => ({
+      fish: fishAnchors(w),
+      flock: flockAnchors(w, phaseAt(w.tick)),
+      coast: coastField(w),
+    });
+    const before = snap();
+    expect(clearForest(w, k.x + 6, k.y + 2).ok).toBe(true);
+    expect(plantForest(w, k.x + 7, k.y + 2).ok).toBe(true);
+    expect(snap()).toEqual(before);
+  });
+});
+
+describe('M10 Teil-Raster', () => {
+  it('AK-R1-01 patchGrid im Rechteck ergibt dasselbe Raster wie ein Vollaufbau (Roden und Aufforsten)', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    forceRect(w, k.x + 6, k.y + 2, 2, 1, 'forest');
+    const fields = terrainFields(w);
+    const grid = buildGrid(w, fields);
+    const prev = terrainCodes(w);
+    w.tiles[(k.y + 2) * w.width + k.x + 6]!.terrain = 'grass';
+    w.tiles[(k.y + 2) * w.width + k.x + 7]!.terrain = 'sand';
+    const next = terrainCodes(w);
+    const rect = terrainPatchRect(prev, next, w.width, w.height)!;
+    patchGrid(w, fields, grid, prev, next, rect);
+    const full = buildGrid(w);
+    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch', 'cls'] as const)
+      expect(grid[f], f).toEqual(full[f]);
+    grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
+  }, 30000);
 });

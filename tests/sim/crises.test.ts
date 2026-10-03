@@ -40,7 +40,7 @@ function ownKind(seed: number, k: number): { kind: CrisisKind; r: () => number }
 describe('M6 Krisenkern', () => {
   it('AK-S1-06 nextCrisisTick', () => {
     const at = (level: CrisisLevel, tick: number): number | null => {
-      const w = createWorld(3, { crisisLevel: level });
+      const w = createWorld(3, { crisisLevel: level, unlockAll: true });
       w.tick = tick;
       return nextCrisisTick(w);
     };
@@ -52,7 +52,7 @@ describe('M6 Krisenkern', () => {
   });
 
   it('AK-S1-07 rollCrisis ist rein, folgt Salt und Zug-Reihenfolge, feste Sollwerte für Seed 3', () => {
-    expect(createWorld(3).seed).toBe(3);
+    expect(createWorld(3, { unlockAll: true }).seed).toBe(3);
     const rect = { x0: 10, y0: 20, x1: 13, y1: 21 };
     const counts: Record<CrisisKind, number> = { fire: 0, storm: 0, boom: 0 };
     for (let k = 0; k < 200; k++) {
@@ -91,7 +91,7 @@ describe('M6 Krisenkern', () => {
     ['mild', 1200, 6],
     ['off', 0, 0],
   ] as const)('AK-S1-09 Stufe %s: Krisenzahl bis Tick 9000', (level, P, n) => {
-    const w = createWorld(3, { crisisLevel: level });
+    const w = createWorld(3, { crisisLevel: level, unlockAll: true });
     const seen: { period: number; kind: CrisisKind; tick: number }[] = [];
     while (w.tick < 9000) {
       step(w);
@@ -112,7 +112,7 @@ describe('M6 Krisenkern', () => {
   ] as [string, CrisisRoll, number, number][])(
     'AK-S1-10 Zeitfenster %s',
     (_n, roll, from, until) => {
-      const w = createWorld(3, { crisisLevel: 'normal' });
+      const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
       w.tick = 2400;
       beginCrisis(w, 0, roll);
       expect(w.crisis).toMatchObject({ period: 0, kind: roll.kind, from, until });
@@ -138,7 +138,7 @@ describe('M6 Krisenkern', () => {
   });
 
   it('RF-2 Boom-Pool nutzt die Höchststufe desselben Ticks', () => {
-    const w = createWorld(3, { crisisLevel: 'normal' });
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     // Siedlerhaus direkt einfügen (Stufe 2 → Pool mit Stein, Wolle, Stoff)
     const id = w.nextBuildingId++;
     w.buildings[id] = {
@@ -169,7 +169,7 @@ describe('M6 Krisenkern', () => {
   });
 
   it('RF-2 Aufstieg im Tick des Periodenstarts bestimmt den Boom-Pool', () => {
-    const w = createWorld(3, { crisisLevel: 'normal' });
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     prepareEast(w, w.buildings[w.kontorId]!);
     const house = houseNearKontor(w);
     placeService(w, 'chapel', house.x + 9, house.y);

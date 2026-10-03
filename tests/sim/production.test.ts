@@ -129,6 +129,7 @@ describe('M8 Ein-Input-Betriebe bitgleich (Spec 5.3)', () => {
     const weaver = connectedBuilding(w, 'weaver');
     const distillery = connectedBuilding(w, 'distillery');
     const toolmaker = connectedBuilding(w, 'toolmaker');
+    connectedBuilding(w, 'school'); // M10: der Werkzeugmacher arbeitet nur mit Schule in Reichweite (Spec 5.5)
     w.stock = { ...w.stock, wool: 3, cane: 2, wood: 1, cloth: 0, rum: 0, tools: 0 };
     ticks(w, 200);
     expect([w.stock.cloth, w.stock.wool, weaver.state]).toEqual([3, 0, 'waitingInput']);

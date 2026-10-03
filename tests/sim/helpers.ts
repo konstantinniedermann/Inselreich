@@ -1,8 +1,8 @@
-import { placeBuilding } from '../../src/sim/build';
+import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, idx } from '../../src/sim/world';
-import type { Building, World } from '../../src/sim/types';
+import { center, createWorld, idx } from '../../src/sim/world';
+import type { Building, CrisisLevel, Tier, World } from '../../src/sim/types';
 
 /** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
 export function prepareEast(world: World, kontor: Building): void {
@@ -56,11 +56,7 @@ export function placeService(
   world.money = 1_000_000;
   for (const good of Object.keys(world.stock) as (keyof typeof world.stock)[])
     world.stock[good] = 100;
-  // S11: Gebäude mit `unlockTier` (Badehaus) baut der Testaufbau auch vor dem Sieg; `won` danach wie vorher
-  const won = world.won;
-  if (BUILDING_DEFS[defId].unlockTier !== undefined) world.won = true;
   const r = placeBuilding(world, defId, x, y);
-  world.won = won;
   if (!r.ok || r.id === undefined) throw new Error(`${defId} not placed`);
   world.money = money;
   world.stock = stock;
@@ -114,4 +110,48 @@ export function houseFar(world: World): Building {
     }
   }
   throw new Error('no far tile');
+}
+
+/** Seed 3; n Wohnhäuser östlich des Kontors (x = kx+2 … kx+6, ab y = ky−2, je 5 pro Zeile), alle im Kontor-Radius. */
+export function village(
+  n: number,
+  opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean } = {},
+): { w: World; houses: Building[] } {
+  const w = createWorld(3, { crisisLevel: opts.crisisLevel ?? 'off', unlockAll: opts.unlockAll });
+  w.money = 100_000;
+  w.stock.wood = 200;
+  const k = w.buildings[w.kontorId]!;
+  const houses: Building[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = k.x + 2 + (i % 5);
+    const y = k.y - 2 + Math.floor(i / 5);
+    forceGrass(w, x, y);
+    const r = placeBuilding(w, 'house', x, y);
+    if (!r.ok || r.id === undefined) throw new Error(`Haus ${i}: ${r.ok ? 'ohne Id' : r.reason}`);
+    houses.push(w.buildings[r.id]!);
+  }
+  w.money = 5000;
+  return { w, houses };
+}
+export const setHouse = (b: Building, tier: Tier, n: number): void => {
+  b.house!.tier = tier;
+  b.house!.inhabitants = n;
+};
+
+/** Angebundene Amtsstube südlich des Kontors: Weg (kx, ky+2), Amtsstube 2×2 ab (kx, ky+3). Welt braucht U3. Geld und Lager unverändert. */
+export function placeTownhall(world: World): Building {
+  const k = world.buildings[world.kontorId]!;
+  forceRect(world, k.x, k.y + 2, 2, 3, 'grass');
+  const money = world.money;
+  const stock = { ...world.stock };
+  world.money = 1_000_000;
+  for (const g of Object.keys(world.stock) as (keyof typeof world.stock)[]) world.stock[g] = 100;
+  if (!placeRoad(world, k.x, k.y + 2).ok) throw new Error('Weg');
+  const r = placeBuilding(world, 'townhall', k.x, k.y + 3);
+  if (!r.ok || r.id === undefined) throw new Error(r.ok ? 'ohne Id' : r.reason);
+  world.money = money;
+  world.stock = stock;
+  const b = world.buildings[r.id]!;
+  if (!b.connected) throw new Error('nicht angebunden');
+  return b;
 }

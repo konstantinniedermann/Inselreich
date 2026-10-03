@@ -135,6 +135,8 @@ describe('friendlyReason (AK-UX-03)', () => {
       ['Ungültiges Format', {}, SAME],
       ['Unbekannte Version', {}, SAME],
       ['Beschädigter Spielstand', {}, SAME],
+      ['Es gibt schon eine Amtsstube', {}, 'Es gibt schon eine Amtsstube — höchstens eine wirkt'],
+      ['Braucht eine Amtsstube', {}, 'Baue zuerst eine Amtsstube (I)'],
     ];
     for (const [input, ctx, want] of rows) {
       expect(friendlyReason(w, input, ctx), input).toBe(want === SAME ? input : want);
@@ -185,6 +187,7 @@ describe('friendlyReason (AK-UX-03)', () => {
     push(setTaxLevel(w, w.taxLevel));
     push(setTaxLevel(w, 'high'));
     push(setTaxLevel(w, 'low')); // Sperrzeit
+    reasons.push('Es gibt schon eine Amtsstube', 'Braucht eine Amtsstube');
     push(buy(w, 'wood', 0));
     w.stock.wood = 100;
     push(buy(w, 'wood', 1)); // Lager voll
@@ -397,5 +400,15 @@ describe('M8 Sperrgründe (AK-S1-18)', () => {
       expect(friendlyReason(w, r)).not.toContain('Tick');
     }
     expect(tooltipLines({ kind: 'build', defId: 'bathhouse' })).toContain('Dienst: Hygiene');
+  });
+});
+
+describe('M10 Gründe Amtsstube', () => {
+  it('AK-S2-17 friendlyReason Amtsstube', () => {
+    const { w } = uxWorld();
+    expect(friendlyReason(w, 'Es gibt schon eine Amtsstube')).toBe(
+      'Es gibt schon eine Amtsstube — höchstens eine wirkt',
+    );
+    expect(friendlyReason(w, 'Braucht eine Amtsstube')).toBe('Baue zuerst eine Amtsstube (I)');
   });
 });

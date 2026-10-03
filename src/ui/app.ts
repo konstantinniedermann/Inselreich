@@ -1,6 +1,5 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
-import { setTaxLevel } from '../sim/tax';
 import { refundCost } from '../sim/economy';
 import { crisisView, effectiveRefund } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
@@ -8,27 +7,53 @@ import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { Category, GoodId, Order, Result, World } from '../sim/types';
+import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
+import type {
+  BuildingDefId,
+  Category,
+  Cost,
+  GoodId,
+  Order,
+  Result,
+  UnlockId,
+  World,
+} from '../sim/types';
 import { refundText } from './texts';
+import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
-  goalBanners,
-  initialGoalShown,
-  initialUnlockShown,
-  lockedToolText,
-  unlockNotice,
-} from './goal';
-import { centerOn, clampToMap, createCamera, type Camera } from '../render/camera';
+  centerOn,
+  clampToMap,
+  createCamera,
+  screenToTileF,
+  tileCorners,
+  worldToScreen,
+  type Camera,
+} from '../render/camera';
+import { ISO_W, project } from '../render/iso';
+import { shipTile } from '../render/ship';
+import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
-import { render, type Hover, type Tool } from '../render/renderer';
+import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
-import { renderBuildMenu, updateBuildMenu } from './buildMenu';
+import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
-import { afterPause, nextOpenCategory, sameTool, withSpeed, type HotkeyAction } from './hotkeys';
+import {
+  afterPause,
+  hotkeyList,
+  nextOpenCategory,
+  sameTool,
+  withSpeed,
+  type HotkeyAction,
+} from './hotkeys';
+import { hoverInfo, hoverPosition, hoverVisible } from './hover';
+import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
+import { clearForest, plantForest } from '../sim/forest';
+import { setGoodLock, setTaxLevel, setUpgradeStop } from '../sim/tax';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
-import { deliveredMessage, orderMessage } from './order';
+import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
   friendlyReason,
   hintPosition,
@@ -40,12 +65,12 @@ import {
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
-import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
+import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
-import { createPerfProbe, startAudioProbe } from './devProbes';
+import { createPerfProbe, exposeDevProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
 import { openMenu, type MenuActions } from './menu';
@@ -86,8 +111,10 @@ export interface GameState {
   wonShown: boolean;
   /** Banner des zweiten Ziels bereits gezeigt (Spec M8 14.1; ein geladener Stand zeigt es nicht erneut). */
   wonMerchantsShown: boolean;
-  /** Freischalt-Meldung gezeigt bzw. beim Start/Laden schon frei (Spec M8 4.3 Punkt 5; höchstens einmal je Sitzung). */
-  unlockShown: boolean;
+  /** Einträge, die die Freischalt-Meldung schon kennt: beim Start/Laden und bei „Neu“ = `world.unlocked` (Spec 11.6). */
+  unlockedSeen: UnlockId[];
+  /** Neu freigeschaltete Bau-Einträge bis zur ersten Wahl (Zeichen neu, K2); nur UI-Zustand, nicht gespeichert. */
+  newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
 }
@@ -172,7 +199,12 @@ function launch(
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
   let settings = loadSettings();
-  const world = loaded ?? createWorld(Date.now() % 100000, { crisisLevel: settings.crisisLevel });
+  const world =
+    loaded ??
+    createWorld(Date.now() % 100000, {
+      crisisLevel: settings.crisisLevel,
+      unlockAll: settings.unlockMode === 'all',
+    });
   const state: GameState = {
     world,
     cam: opts?.camera ? { ...opts.camera } : createCamera(),
@@ -184,7 +216,8 @@ function launch(
     openCategory: null,
     terrainLayer: buildTerrainLayer(world),
     ...initialGoalShown(world),
-    unlockShown: initialUnlockShown(world),
+    unlockedSeen: [...world.unlocked],
+    newEntries: new Set(),
     eventLog: [],
   };
   const sound = createSound({
@@ -196,6 +229,7 @@ function launch(
   });
   let closeSettings: (() => void) | null = null;
   let closeMenu: (() => void) | null = null;
+  let closeHelp: (() => void) | null = null;
   const preview = parseDevParams(location.search, import.meta.env.DEV);
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let prefersReduced = motionQuery.matches;
@@ -273,15 +307,20 @@ function launch(
     hasProgress: () => world.tick > 0,
     load: (slot) => loadSlotPaused(slot),
     crisisLevel: () => settings.crisisLevel,
-    newIsland: (crisisLevel) => {
-      settings = { ...settings, crisisLevel };
+    unlockMode: () => settings.unlockMode,
+    hotkeys: () => hotkeyList(world),
+    newIsland: (crisisLevel, unlockMode) => {
+      settings = { ...settings, crisisLevel, unlockMode };
       saveSettings(settings);
       restart(root);
     },
     seed: () => world.seed,
-    openGuide: (opener) => {
-      openStartCard(gameEl, { mode: 'help', opener });
-    },
+    openGuide: (opener) => openHelp(opener),
+  };
+  /** Hilfe-Karte (Spec 12.1): HUD-Knopf, Taste `?`, Menü und Freischalt-Meldung; Esc schliesst, Fokus zurück zum Öffner. */
+  const openHelp = (opener?: HTMLElement): void => {
+    closeHelp?.();
+    closeHelp = openStartCard(gameEl, { mode: 'help', opener, world });
   };
 
   const actions: HudActions = {
@@ -316,14 +355,19 @@ function launch(
         opener,
       );
     },
+    openHelp: (opener) => openHelp(opener),
     openMenu: (opener) => {
       closeMenu?.();
       closeMenu = openMenu(gameEl, menuActions, opener);
     },
-    setTax: (level) => {
-      const r = setTaxLevel(world, level);
-      if (!r.ok) showError(friendlyReason(world, r.reason));
-      refresh();
+    openTownhall: () => {
+      // Erste aktive Amtsstube, sonst irgendeine (Spec 11.8); ohne Amtsstube ist der Knopf verborgen
+      const halls = Object.values(world.buildings).filter((b) => b.defId === 'townhall');
+      const hall = halls.find((b) => b.connected && b.outageUntil === undefined) ?? halls[0];
+      if (hall) {
+        setPanel({ kind: 'inspect', id: hall.id });
+        refresh();
+      }
     },
     deliverOrder: () => {
       const o = world.order ? { ...world.order } : null;
@@ -360,6 +404,21 @@ function launch(
           refresh();
         },
         openTrade: () => setPanel({ kind: 'trade' }),
+        setTax: (level) => {
+          const r = setTaxLevel(world, level);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setGoodLock: (tier, good, locked) => {
+          const r = setGoodLock(world, tier, good, locked);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setUpgradeStop: (tier, stopped) => {
+          const r = setUpgradeStop(world, tier, stopped);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
       });
     } else if (panel.kind === 'trade') {
       state.selectedId = world.kontorId;
@@ -383,15 +442,16 @@ function launch(
     state.wonShown = goal.shown.wonShown;
     state.wonMerchantsShown = goal.shown.wonMerchantsShown;
     for (const text of goal.texts) showMessage(text, 'info', true, true);
-    const unlock = unlockNotice(!state.unlockShown, world);
-    if (unlock !== null) {
-      state.unlockShown = true;
-      showMessage(unlock, 'info', true, true);
+    for (const id of newBuildEntries(state.unlockedSeen, world)) state.newEntries.add(id);
+    const unlock = frameUnlock(state.unlockedSeen, world);
+    state.unlockedSeen = unlock.seen;
+    if (unlock.text !== null) {
+      showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: () => openHelp() });
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world);
-    updateEventLog(logBox, state.eventLog);
+    updateEventLog(logBox, state.eventLog, crisisLogVisible(world));
     updateBuildMenu(navEl, world);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
@@ -409,16 +469,15 @@ function launch(
 
   /** Einzige Stelle für jeden Werkzeugwechsel (Bauleiste, Hotkey, Esc/X, Rechtsklick). */
   const selectTool = (tool: Tool): void => {
-    if (tool.kind === 'build') {
-      const locked = lockedToolText(state.world, tool.defId);
-      if (locked !== null) {
-        showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
-        return; // kein Werkzeug (Spec 14.2, AK-U1-09)
-      }
+    const locked = lockedToolText(state.world, tool);
+    if (locked !== null) {
+      showError(locked); // R151 W10: Weg der Bau-Ablehnungen, Meldung `error` plus Ton `error`
+      return; // kein Werkzeug (Spec 11.2, AK-U1-02)
     }
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
     state.tool = tool;
+    if (tool.kind === 'build') state.newEntries.delete(tool.defId); // erste Wahl löscht das Zeichen „neu“
     state.openCategory = nextOpenCategory(state.openCategory, { kind: 'tool', tool });
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
     // Vorschau an der letzten Zeigerposition neu (ohne Zeiger: keine); keine hängende Drag-Vorschau
@@ -445,6 +504,9 @@ function launch(
 
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
+  let dragForestFailureShown = false;
+  const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
+    tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
     const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ });
     if (!dragging) {
@@ -468,6 +530,8 @@ function launch(
       selectTool(sameTool(state.tool, h.tool) ? { kind: 'select' } : h.tool);
     } else if (h.kind === 'speed') {
       setSpeed(h.speed);
+    } else if (h.kind === 'help') {
+      openHelp();
     } else {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -508,9 +572,13 @@ function launch(
     }
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
+      dragForestFailureShown = false;
       return;
     }
-    if (!a.dragging) dragMoneyToastShown = false;
+    if (!a.dragging) {
+      dragMoneyToastShown = false;
+      dragForestFailureShown = false;
+    }
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
     if (tool.kind === 'select') {
@@ -530,6 +598,15 @@ function launch(
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'road');
         reportConnections(before);
+      }
+    } else if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+      const r =
+        tool.kind === 'clearForest' ? clearForest(world, a.x, a.y) : plantForest(world, a.x, a.y);
+      if (r.ok) sound.play('build');
+      else if (!dragForestFailureShown) {
+        // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
+        dragForestFailureShown = true;
+        showError(friendlyReason(world, r.reason, { cost: forestCost(tool) }));
       }
     } else if (tile?.buildingId != null) {
       const r = demolishBuilding(tile.buildingId);
@@ -580,6 +657,118 @@ function launch(
     hintEl.style.top = `${p.top}px`;
   };
 
+  // Mouse-over-Karte (Spec M10 13): nach 400 ms Ruhe über derselben Kachel, nur mit dem Auswahl-Werkzeug
+  const hoverEl = document.createElement('div');
+  hoverEl.className = 'hover-card';
+  hoverEl.setAttribute('role', 'tooltip');
+  hoverEl.hidden = true;
+  document.body.appendChild(hoverEl);
+  const hoverTitle = document.createElement('strong');
+  hoverTitle.className = 'hover-card__title';
+  const hoverLines = document.createElement('div');
+  hoverLines.className = 'hover-card__lines';
+  hoverEl.append(hoverTitle, hoverLines);
+  let hoverTile: string | null = null;
+  let hoverSince = 0;
+  let hoverShown: string | null = null;
+  const hideHoverCard = (): void => {
+    hoverEl.hidden = true;
+    hoverShown = null;
+  };
+  /** Tier unter dem Zeiger: Treffer im Bildraum gegen `project(x, y) − z` und `r` (wildlifeAt-Vertrag). */
+  const animalAt = (
+    fx: RenderFx,
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+  ): string | null => {
+    const range = {
+      x0: Math.max(0, tx - 6),
+      y0: Math.max(0, ty - 6),
+      x1: Math.min(world.width - 1, tx + 6),
+      y1: Math.min(world.height - 1, ty + 6),
+    };
+    let best: { name: string; d: number } | null = null;
+    for (const h of wildlifeAt(world, range, fx.timeMs, wildlifeEnvOf(world, fx))) {
+      const p = project(h.x, h.y);
+      const c = worldToScreen(state.cam, { x: p.x, y: p.y - h.z });
+      const d = Math.hypot(c.x - sx, c.y - sy);
+      if (d <= h.r * (ISO_W / 2) * state.cam.zoom && (!best || d < best.d))
+        best = { name: h.name, d };
+    }
+    return best?.name ?? null;
+  };
+  const updateHoverCard = (fx: RenderFx, now: number): void => {
+    const client = input?.pointerClient() ?? null;
+    const sel: Tool = { kind: 'select' };
+    if (!client || state.tool.kind !== 'select' || isModalOpen()) {
+      hoverTile = null;
+      hideHoverCard();
+      return;
+    }
+    const r = canvas.getBoundingClientRect();
+    const sx = client.x - r.left,
+      sy = client.y - r.top;
+    const t = targetTile(world, state.cam, sel, sx, sy);
+    if (!t) {
+      hoverTile = null;
+      hideHoverCard();
+      return;
+    }
+    const f = screenToTileF(state.cam, sx, sy);
+    const gx = Math.floor(f.x),
+      gy = Math.floor(f.y);
+    const key = `${t.x},${t.y},${gx},${gy}`;
+    const sameTile = key === hoverTile;
+    if (!sameTile) {
+      hoverTile = key;
+      hoverSince = now;
+      hideHoverCard();
+    }
+    if (
+      !hoverVisible({
+        restMs: now - hoverSince,
+        sameTile,
+        dragging: input?.isDragging() ?? false,
+        modalOpen: false,
+        tool: state.tool,
+      })
+    ) {
+      if (input?.isDragging()) hideHoverCard();
+      return;
+    }
+    const ship = shipTile(world);
+    const info = hoverInfo(world, t, fx.timeMs, {
+      ship: ship !== null && ship.x === gx && ship.y === gy,
+      animal: animalAt(fx, sx, sy, gx, gy),
+    });
+    if (!info) {
+      hideHoverCard();
+      return;
+    }
+    const text = `${info.title}\n${info.lines.join('\n')}`;
+    if (text !== hoverShown) {
+      hoverShown = text;
+      hoverTitle.textContent = info.title;
+      hoverLines.replaceChildren(
+        ...info.lines.map((l) => {
+          const p = document.createElement('p');
+          p.textContent = l;
+          return p;
+        }),
+      );
+    }
+    hoverEl.hidden = false;
+    const pos = hoverPosition(
+      client,
+      { w: hoverEl.offsetWidth, h: hoverEl.offsetHeight },
+      { w: innerWidth, h: innerHeight },
+    );
+    hoverEl.style.left = `${pos.x}px`;
+    hoverEl.style.top = `${pos.y}px`;
+  };
+
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   setPanel({ kind: 'none' });
   refresh();
@@ -628,6 +817,7 @@ function launch(
   let autoMs = 0;
   let autoErrorShown = false;
   let prevSnap = soundSnapshot(world);
+  let prevOrderVisible = orderVisible(world);
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
   let last = performance.now();
@@ -635,6 +825,18 @@ function launch(
   let fireMemo: FireMemo = null;
   const previewFire = preview.fireIds?.map((id) => ({ id, flames: 1, smoke: 1 }));
   let frame = 0;
+  if (import.meta.env.DEV) {
+    exposeDevProbe({
+      world: () => state.world,
+      // Mitte der Raute (obere und untere Ecke) in CSS-Pixeln der Seite
+      tileCenter: (x, y) => {
+        const c = tileCorners(state.cam, x, y);
+        const r = canvas.getBoundingClientRect();
+        return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
+      },
+      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, map),
+    });
+  }
   let disposed = false;
   let rafId = 0;
   const loop = (now: number): void => {
@@ -670,8 +872,9 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
-      const msg = orderMessage(prevOrder, world.order);
+      const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);
+      prevOrderVisible = orderVisible(world);
       prevOrder = world.order ? { ...world.order } : null;
       if (state.speed > 0) {
         autoMs += dt;
@@ -705,7 +908,7 @@ function launch(
         sound.setPhase(phase);
       }
       const t0 = performance.now();
-      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
+      const fx: RenderFx = {
         timeMs: t0,
         dayNight: settings.dayNight,
         weather,
@@ -713,9 +916,11 @@ function launch(
         fire: previewFire ?? inputs.render.fire,
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
-      });
+      };
+      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
       perf?.renderDone(performance.now() - t0);
       updateHint(frame % HUD_EVERY_FRAMES === 0);
+      updateHoverCard(fx, t0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -739,6 +944,7 @@ function launch(
     closeAllModals();
     closeSettings?.();
     stopAudioProbe?.();
+    if (import.meta.env.DEV) delete window.__inselDev;
     motionQuery.removeEventListener('change', onMotion);
     removeUnlockListeners();
     window.removeEventListener('pagehide', onPageHide);
@@ -746,6 +952,7 @@ function launch(
     sound.dispose();
     logBox.remove();
     hintEl.remove();
+    hoverEl.remove();
     noticeStack.remove();
     unbindMessages();
     hudEl.replaceChildren();

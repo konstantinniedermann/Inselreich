@@ -1,3 +1,4 @@
+import { canClearForest, canPlantForest } from '../sim/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import type { World } from '../sim/types';
 import { tileAt } from '../sim/world';
@@ -51,6 +52,11 @@ export function hintKey(h: { x: number; y: number; tool: Tool | null }): string 
   return `${h.x},${h.y},${t ? `${t.kind}:${t.kind === 'build' ? t.defId : ''}` : 'none'}`;
 }
 
+/** Werkzeuge, die beim Ziehen über mehrere Kacheln je Kachel einmal wirken: Weg, Roden, Aufforsten (Spec K5). */
+export function isDragPaintTool(tool: Tool): boolean {
+  return tool.kind === 'road' || tool.kind === 'clearForest' || tool.kind === 'plantForest';
+}
+
 /** Weltpixel, um die die Kamera bei gedrückter Pan-Taste in `dtMs` wandert (unabhängig von der Framerate). */
 export function panDelta(dtMs: number, zoom: number): number {
   return (PAN_PX_PER_S * dtMs) / 1000 / zoom;
@@ -65,6 +71,8 @@ export interface InputBinding {
   refreshHover(): void;
   /** Letzte Zeigerposition in Fensterkoordinaten; `null`, wenn der Zeiger die Karte verlassen hat. */
   pointerClient(): { x: number; y: number } | null;
+  /** Läuft gerade eine Zeigeraktion mit gedrückter Taste (Ziehen, Schwenken, Weg-Zug)? */
+  isDragging(): boolean;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
 }
@@ -87,7 +95,7 @@ export function bindInput(
     lastY: number;
     panning: boolean;
     lastTile: string | null;
-    /** Werkzeug war beim Drücken "Weg" (unabhängig von späteren Werkzeugwechseln). */
+    /** Werkzeug war beim Drücken Weg, Roden oder Aufforsten, also ein Zieh-Werkzeug (unabhängig von späteren Werkzeugwechseln). */
     road: boolean;
     pointerId: number;
     /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
@@ -129,6 +137,8 @@ export function bindInput(
     if (tool.kind === 'build') ok = canPlace(state.world, tool.defId, t.x, t.y).ok;
     else if (tool.kind === 'road') ok = canPlaceRoad(state.world, t.x, t.y).ok;
     else if (tool.kind === 'demolish') ok = canDemolishTile(state.world, t.x, t.y);
+    else if (tool.kind === 'clearForest') ok = canClearForest(state.world, t.x, t.y).ok;
+    else if (tool.kind === 'plantForest') ok = canPlantForest(state.world, t.x, t.y).ok;
     state.hover = { x: t.x, y: t.y, tool, ok };
   };
 
@@ -196,7 +206,7 @@ export function bindInput(
       lastY: p.sy,
       panning: wantsPan,
       lastTile: null,
-      road: !wantsPan && state.tool.kind === 'road',
+      road: !wantsPan && isDragPaintTool(state.tool),
       pointerId: e.pointerId,
       touch: isTouch,
       downTile: targetTile(state.world, state.cam, state.tool, p.sx, p.sy),
@@ -441,6 +451,7 @@ export function bindInput(
     cancelPointerAction,
     refreshHover: updateHover,
     pointerClient: () => client,
+    isDragging: () => drag !== null,
     unbind,
   };
 }
