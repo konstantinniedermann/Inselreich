@@ -1163,3 +1163,40 @@ describe('M11 Abgrenzung kleiner Bauten', () => {
     }
   });
 });
+
+describe('M11 Stufe 3 deutlich lesbar (R199)', () => {
+  it('RF-R199 je LEVELS-Typ: Fahne >= 9 x 8 px (Auftrag >= 6 x 5), Mast >= 5 px breit, >= 10 px über dem Anbau und bis zur Hüllenkante', () => {
+    const bbox = (pts: P[]) => {
+      const xs = pts.map((q) => q.x),
+        ys = pts.map((q) => q.y);
+      return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+    };
+    for (const id of Object.keys(LEVELS) as BuildingDefId[]) {
+      const f2 = fakeCtx(),
+        f3 = fakeCtx();
+      const b2 = mk(id, 10, 10, { level: 2 }),
+        b3 = mk(id, 10, 10, { level: 3 });
+      drawBody(f2.ctx, CAM, BUILDING_DEFS[id], b2, 0);
+      drawBody(f3.ctx, CAM, BUILDING_DEFS[id], b3, 0);
+      const extra = f3.log.events.slice(f2.log.events.length);
+      const flag = extra.filter((e) => e.op === 'fill' && e.style === PALETTE.roofTerracotta);
+      expect(flag.length, id).toBe(1);
+      const fb = bbox(flag[0]!.points);
+      expect(fb.x1 - fb.x0, `${id} Fahne Breite`).toBeGreaterThanOrEqual(9);
+      expect(fb.y1 - fb.y0, `${id} Fahne Höhe`).toBeGreaterThanOrEqual(8);
+      const mast = extra.filter(
+        (e) =>
+          e.op === 'fill' &&
+          (e.style === PALETTE.wallTimber || e.style === wallColors(PALETTE.wallTimber).right),
+      );
+      expect(mast.length, id).toBeGreaterThan(0);
+      const mb = bbox(mast.flatMap((e) => e.points));
+      expect(mb.y1 - mb.y0, `${id} Mast`).toBeGreaterThanOrEqual(10 + 0.35 * ISO_H);
+      expect(mb.x1 - mb.x0, `${id} Mastbreite`).toBeGreaterThanOrEqual(5);
+      const top = mast.flatMap((e) => e.points).find((q) => q.y === mb.y0)!;
+      const hull = bodyHull(BUILDING_DEFS[id], b3);
+      expect(inHull(hull, top.x, top.y, 0), `${id} in Hülle`).toBe(true);
+      expect(inHull(hull, top.x, top.y - 4, 0), `${id} bis zur Kante`).toBe(false);
+    }
+  });
+});

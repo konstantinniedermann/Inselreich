@@ -1568,14 +1568,15 @@ export function drawLevelTopper(p: IsoPainter, def: BuildingDef, b: Building): v
   const band = mixHex(PALETTE.wallStone, '#000000', 0.08);
   leftPlane(p, def.h - I, I + 0.3, def.w - I, 0, sock, band, true);
   rightPlane(p, def.w - I, I, def.h - I, 0, sock, mixHex(band, '#000000', 0.18), true);
-  // Fahne an der hinteren rechten Ecke, Wimpel nach innen
-  const [u, v, top] = [def.w - I - 0.05, I, 0.95 * p.height];
-  pole(p, u, v, top, PALETTE.wallTimber, 0.05);
+  // Fahne an der hinteren rechten Ecke: Mast bis zur Hüllenkante (`cap` bei v = I), breiter Wimpel nach innen
+  const [u, v, top] = [def.w - I - 0.09, I, p.height + ISO_H * I - 0.2];
+  pole(p, u, v, top, PALETTE.wallTimber, 0.09);
   p.poly(
     [
       [u, v + 0.02, top],
-      [u - 0.24, v + 0.02, top - 2.5],
-      [u, v + 0.02, top - 5],
+      [u - 0.34, v + 0.02, top - 1.5],
+      [u - 0.34, v + 0.02, top - 7.5],
+      [u, v + 0.02, top - 9],
     ],
     PALETTE.roofTerracotta,
   );
