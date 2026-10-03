@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
+import type { Terrain } from '../../src/sim/types';
 import {
+  components,
+  findKontorSite,
   generateMap,
   generateTerrain,
   meetsPostconditions,
+  seaMask,
   MAP_H,
   MAP_W,
 } from '../../src/sim/mapgen';
@@ -29,7 +34,7 @@ describe('generateMap', () => {
       const land = m.terrain.filter(isLand).length;
       expect(land).toBeGreaterThanOrEqual(800);
       expect(count(m.terrain, 'forest')).toBeGreaterThanOrEqual(40);
-      expect(count(m.terrain, 'mountain')).toBeGreaterThanOrEqual(10);
+      expect(count(m.terrain, 'mountain')).toBeGreaterThanOrEqual(MIN_MOUNTAIN_PATCH);
       expect(m.seedUsed).toBeGreaterThanOrEqual(s);
     }
   });
@@ -107,5 +112,167 @@ describe('world helpers', () => {
       expect(set.has(`${-dx},${dy}`)).toBe(true);
     }
     expect(set.has('-2,0') && set.has('2,0')).toBe(true);
+  });
+});
+
+// Unabhängiger Flood-Fill im Test: Meer = vom Kartenrand aus erreichbares Wasser.
+function referenceSea(terrain: Terrain[], w: number, h: number): Set<number> {
+  const sea = new Set<number>();
+  const queue: number[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
+      if ((x === 0 || y === 0 || x === w - 1 || y === h - 1) && terrain[y * w + x] === 'water') {
+        sea.add(y * w + x);
+        queue.push(y * w + x);
+      }
+  while (queue.length > 0) {
+    const i = queue.shift()!;
+    const x = i % w;
+    const y = Math.floor(i / w);
+    for (const [nx, ny] of [
+      [x + 1, y],
+      [x - 1, y],
+      [x, y + 1],
+      [x, y - 1],
+    ] as const) {
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const j = ny * w + nx;
+      if (terrain[j] === 'water' && !sea.has(j)) {
+        sea.add(j);
+        queue.push(j);
+      }
+    }
+  }
+  return sea;
+}
+
+function mountainSizes(terrain: Terrain[], w: number, h: number): number[] {
+  const seen = new Set<number>();
+  const sizes: number[] = [];
+  for (let start = 0; start < w * h; start++) {
+    if (terrain[start] !== 'mountain' || seen.has(start)) continue;
+    let n = 0;
+    const stack = [start];
+    seen.add(start);
+    while (stack.length > 0) {
+      const i = stack.pop()!;
+      n++;
+      const x = i % w;
+      const y = Math.floor(i / w);
+      for (const [nx, ny] of [
+        [x + 1, y],
+        [x - 1, y],
+        [x, y + 1],
+        [x, y - 1],
+      ] as const) {
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const j = ny * w + nx;
+        if (terrain[j] === 'mountain' && !seen.has(j)) {
+          seen.add(j);
+          stack.push(j);
+        }
+      }
+    }
+    sizes.push(n);
+  }
+  return sizes;
+}
+
+describe('kontor at the sea', () => {
+  it('has sea (not an inland lake) next to the kontor for seeds 0..199', () => {
+    for (let s = 0; s < 200; s++) {
+      const m = generateMap(s);
+      const sea = referenceSea(m.terrain, MAP_W, MAP_H);
+      const { x, y } = m.kontor;
+      const rim = [
+        [x, y - 1],
+        [x + 1, y - 1],
+        [x, y + 2],
+        [x + 1, y + 2],
+        [x - 1, y],
+        [x - 1, y + 1],
+        [x + 2, y],
+        [x + 2, y + 1],
+      ];
+      expect(
+        rim.some(([rx, ry]) => sea.has(ry! * MAP_W + rx!)),
+        `seed ${s}`,
+      ).toBe(true);
+    }
+  });
+  it('prefers the coast over a nearer inland lake', () => {
+    const w = 12;
+    const h = 12;
+    const t: Terrain[] = new Array<Terrain>(w * h).fill('water');
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) t[y * w + x] = 'grass';
+    t[5 * w + 5] = 'water'; // Binnensee nahe der Mitte
+    const k = findKontorSite(t, w, h)!;
+    const sea = referenceSea(t, w, h);
+    const rim = [
+      [k.x, k.y - 1],
+      [k.x + 1, k.y - 1],
+      [k.x, k.y + 2],
+      [k.x + 1, k.y + 2],
+      [k.x - 1, k.y],
+      [k.x - 1, k.y + 1],
+      [k.x + 2, k.y],
+      [k.x + 2, k.y + 1],
+    ];
+    expect(rim.some(([rx, ry]) => sea.has(ry! * w + rx!))).toBe(true);
+  });
+});
+
+describe('mountain patches', () => {
+  it('has no patch below the minimum, one large patch and a quarry site for seeds 0..199', () => {
+    for (let s = 0; s < 200; s++) {
+      const m = generateMap(s);
+      const sizes = mountainSizes(m.terrain, MAP_W, MAP_H);
+      expect(Math.min(...sizes, Infinity), `seed ${s}`).toBeGreaterThanOrEqual(MIN_MOUNTAIN_PATCH);
+      expect(sizes.length, `seed ${s}`).toBeGreaterThan(0);
+      const quarry = m.terrain.some(
+        (tt, i) =>
+          isLand(tt) &&
+          [i - 1, i + 1, i - MAP_W, i + MAP_W].some((j) => m.terrain[j] === 'mountain'),
+      );
+      expect(quarry, `seed ${s}`).toBe(true);
+    }
+  });
+});
+
+describe('components and seaMask', () => {
+  const W = 5;
+  const H = 4;
+  const rows = ['wwwww', 'wgwgw', 'wwwgw', 'wwwww'];
+  const map: Terrain[] = rows
+    .join('')
+    .split('')
+    .map((c) => (c === 'w' ? 'water' : 'grass'));
+  it('labels 4-connected components in row-scan order, -1 outside the predicate', () => {
+    const { id, sizes } = components(map, W, H, (t) => t === 'grass');
+    expect(sizes).toEqual([1, 2]);
+    expect(id[0]).toBe(-1);
+    expect(id[1 * W + 1]).toBe(0);
+    expect(id[1 * W + 3]).toBe(1);
+    expect(id[2 * W + 3]).toBe(1);
+  });
+  it('marks only border-connected water as sea', () => {
+    const m: Terrain[] = new Array<Terrain>(25).fill('water');
+    const g = (x: number, y: number) => (m[y * 5 + x] = 'grass');
+    // Ring um einen Binnensee bei (2,2)
+    for (const [x, y] of [
+      [1, 1],
+      [2, 1],
+      [3, 1],
+      [1, 2],
+      [3, 2],
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ] as const)
+      g(x, y);
+    const sea = seaMask(m, 5, 5);
+    expect(sea[0]).toBeTruthy();
+    expect(sea[2 * 5 + 2]).toBeFalsy();
+    expect(sea[1 * 5 + 1]).toBeFalsy();
   });
 });
