@@ -276,6 +276,18 @@ describe('H-R4 errandsFrom', () => {
     expect(errandCap(true)).toBeLessThanOrEqual(CAPS.walkers[1]);
     expect(CAPS.walkers).toEqual([40, 12]);
   });
+  it('RF-6 Auswahl über dem Limit: gemischt nach hash2 statt nach ID-Reihenfolge, deterministisch', () => {
+    const { world } = scene();
+    for (let i = 0; i < 30; i++) {
+      put(world, 3200 + i, 'lumberjack', 31 + i, 33, { progress: 15 });
+      setTerrain(world, 31 + i, 32, 'forest');
+    }
+    const a = errandsFrom(world, FULL, CLOCK, false).map((p) => p.id);
+    expect(a.length).toBe(MAX_ERRANDS);
+    expect(errandsFrom(world, FULL, CLOCK, false).map((p) => p.id)).toEqual(a);
+    const firstById = Array.from({ length: MAX_ERRANDS }, (_, i) => ERRAND_ID_BASE + 3200 + i);
+    expect([...a].sort((x, y) => x - y)).not.toEqual(firstById);
+  });
   it('RF-6 Tempo über 2x: deterministische Teilmenge, nie mehr als bei normalem Tempo', () => {
     const { world } = scene();
     for (let i = 0; i < 12; i++) {

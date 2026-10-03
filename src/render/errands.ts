@@ -195,8 +195,7 @@ const plans = new WeakMap<RoadGraph, Map<number, ErrandPlan>>();
 export const planCacheSize = (world: World): number => plans.get(roadGraph(world))?.size ?? 0;
 
 /** Sammel- und Trägerweg eines Betriebs; Breitensuche und Zielwahl nur bei Cache-Fehlgriff. */
-export function errandPlan(world: World, b: Building): ErrandPlan {
-  const g = roadGraph(world);
+export function errandPlan(world: World, b: Building, g: RoadGraph = roadGraph(world)): ErrandPlan {
   let c = plans.get(g);
   if (!c) plans.set(g, (c = new Map()));
   const hit = c.get(b.id);
@@ -232,12 +231,17 @@ const ramp = (v: number): number => Math.max(0, Math.min(1, v / FADE_PHASE));
  * Träger ab 0,75 (ohne Sammelweg ab 0,70) bis 1. `null` ausserhalb dieser Fenster, ohne Ware, ohne Zustand `ok`
  * oder ohne Anbindung. Bei Phase 0 und 1 ist `alpha` 0: die Figur steht nie sichtbar auf dem Betrieb.
  */
-export function errandPose(world: World, b: Building, p: number): ErrandPose | null {
+export function errandPose(
+  world: World,
+  b: Building,
+  p: number,
+  g: RoadGraph = roadGraph(world),
+): ErrandPose | null {
   const def = BUILDING_DEFS[b.defId];
   if (!def.produces || def.cycle === undefined || b.state !== 'ok' || !b.connected) return null;
   if (!Number.isFinite(p)) return null;
   const k = Math.min(1, Math.max(0, p));
-  const plan = errandPlan(world, b);
+  const plan = errandPlan(world, b, g);
   const id = ERRAND_ID_BASE + b.id;
   const at = (path: Pt[], f: number, alpha: number, load: GoodId | null): ErrandPose | null => {
     const q = pointAlong(path, f);
@@ -309,8 +313,8 @@ export function errandsFrom(
 ): ErrandPose[] {
   const out: ErrandPose[] = [];
   const limit = errandCap(reduce);
+  const cands: { b: Building; key: number }[] = [];
   for (const b of Object.values(world.buildings)) {
-    if (out.length >= limit) break;
     const def = BUILDING_DEFS[b.defId];
     if (!def.produces || def.cycle === undefined || b.state !== 'ok' || !b.connected) continue;
     if (
@@ -320,9 +324,18 @@ export function errandsFrom(
       b.y > range.y1 + RANGE_PAD
     )
       continue;
-    if (clock.fast && hash2(world.seed + 95, b.id, 0) >= THIN_SHARE) continue;
-    const p = Math.min(0.99999, (b.progress + clock.frac) / def.cycle);
-    const pose = errandPose(world, b, p);
+    const key = hash2(world.seed + 95, b.id, 0);
+    if (clock.fast && key >= THIN_SHARE) continue;
+    cands.push({ b, key });
+  }
+  if (cands.length === 0) return out;
+  // Feste Mischung nach Schlüssel (nicht nach ID): über dem Limit gewinnt keine Gruppe von Betrieben dauerhaft
+  cands.sort((p, q) => p.key - q.key || p.b.id - q.b.id);
+  const g = roadGraph(world); // einmal je Frame: `layoutKey` läuft über alle Kacheln
+  for (const { b } of cands) {
+    if (out.length >= limit) break;
+    const p = Math.min(0.99999, (b.progress + clock.frac) / BUILDING_DEFS[b.defId].cycle!);
+    const pose = errandPose(world, b, p, g);
     if (pose && pose.alpha > 0.01) out.push(pose);
   }
   return out;

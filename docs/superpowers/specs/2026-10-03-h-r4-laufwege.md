@@ -41,3 +41,9 @@ Status: Umsetzungsnotiz, kein Gate. Annahmen sind mit **[A]** markiert. Reine Da
 Tiefensortierung über die `moving`-Liste mit `kind: 'walker'` und `id = ERRAND_ID_BASE (1000) + Betriebs-ID`
 (`iso.ts` und `sprites.ts` bleiben unberührt). Schatten wie Spaziergänger, Figur über `drawWalker`, danach
 `drawErrandLoad` (Punkt mit dunkler Kontur, mind. 2,5 px, Palettenfarbe je Ware, keine Signalfarben).
+
+## Nachtrag (Fix-Runde)
+
+- Weggraph (`roadGraph`, damit `layoutKey`) wird je `errandsFrom`-Aufruf einmal geholt und an `errandPlan`/`errandPose` durchgereicht; der Plan-Cache bleibt über die Graph-Identität.
+- Gibt es mehr passende Betriebe als `MAX_ERRANDS`, ordnet der feste Schlüssel `hash2(seed + 95, id)` die Auswahl (nicht die ID-Reihenfolge); stabil von Frame zu Frame.
+- **[A]** Die gerade Linie der Sammler kann in dichter Bebauung Nachbargebäude kreuzen (Playtest-Befund); Wegsuche über freie Kacheln wäre ein Folgehäppchen.
