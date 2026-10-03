@@ -142,6 +142,8 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
   wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden».
 - **Arbeitsanzeige:** Betriebe, die gerade produzieren, zeigen Rauch bzw. ein Arbeitszeichen; wartende,
   volle, brennende oder nicht angebundene Betriebe stehen still.
+- **Fortschrittsring und Marken:** Über jedem Betrieb zeigt ein Ring den Zyklus (grün, solange er läuft; grau
+  bei Stillstand). Ein durchgestrichener Baum heisst «kein freier Wald in der Nähe».
 - **Bedarfssymbole:** Über einem Wohnhaus, dem etwas fehlt, steht ein Symbol für den wichtigsten
   Mangel (Versorgung vor Ware vor Dienst), bei mehreren Mängeln mit einem Zusatzpunkt. Die Symbole
   erscheinen ab Zoom 0.75. Signale (Symbole, roter Punkt, Auswahl, Umriss beim Überfahren) liegen immer
