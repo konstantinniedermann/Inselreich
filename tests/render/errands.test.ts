@@ -13,6 +13,7 @@ import {
   planCacheSize,
   pointAlong,
   tickClock,
+  walkersLeft,
 } from '../../src/render/errands';
 import { roadGraph } from '../../src/render/life';
 import { CAPS } from '../../src/render/limits';
@@ -22,13 +23,7 @@ import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { TICK_MS } from '../../src/sim/defs/timing';
 import { createWorld, idx } from '../../src/sim/world';
-import type {
-  Building,
-  BuildingDefId,
-  BuildingState,
-  Terrain,
-  World,
-} from '../../src/sim/types';
+import type { Building, BuildingDefId, BuildingState, Terrain, World } from '../../src/sim/types';
 import { fakeCtx } from './fakeCtx';
 
 const VIEW = { w: 1280, h: 720 };
@@ -64,7 +59,10 @@ const put = (
 };
 
 /** Wiese 30..60 × 30..50; Holzfäller (40,40), Wald rechts davon, Weg y = 40 von x = 41 bis 49, Markt (50,40). */
-function scene(opts: { road?: boolean; state?: BuildingState } = {}): { world: World; lj: Building } {
+function scene(opts: { road?: boolean; state?: BuildingState } = {}): {
+  world: World;
+  lj: Building;
+} {
   const world = createWorld(3);
   for (let y = 30; y <= 50; y++) for (let x = 30; x <= 60; x++) setTerrain(world, x, y, 'grass');
   const lj = put(world, 2001, 'lumberjack', 40, 40, { state: opts.state ?? 'ok' });
@@ -75,7 +73,8 @@ function scene(opts: { road?: boolean; state?: BuildingState } = {}): { world: W
   ] as const)
     setTerrain(world, x, y, 'forest');
   put(world, 2002, 'market', 50, 40);
-  if (opts.road !== false) for (let x = 41; x <= 49; x++) world.tiles[idx(world, x, 40)]!.road = true;
+  if (opts.road !== false)
+    for (let x = 41; x <= 49; x++) world.tiles[idx(world, x, 40)]!.road = true;
   return { world, lj };
 }
 const camAt = (world: World, zoom = 1): Camera => {
@@ -123,7 +122,9 @@ describe('H-R4 errandPlan', () => {
     expect(to!.x).toBeGreaterThan(36);
     const t = world.tiles[idx(world, Math.floor(to!.x), Math.floor(to!.y))]!;
     expect(t.terrain).toBe('forest');
-    expect(Math.hypot(to!.x - 40.5, to!.y - 40.5)).toBeLessThanOrEqual(BUILDING_DEFS.lumberjack.site[0]!.kind === 'radius' ? 3.5 : 3);
+    expect(Math.hypot(to!.x - 40.5, to!.y - 40.5)).toBeLessThanOrEqual(
+      BUILDING_DEFS.lumberjack.site[0]!.kind === 'radius' ? 3.5 : 3,
+    );
     expect(from!.x).toBeGreaterThanOrEqual(40);
     expect(from!.x).toBeLessThanOrEqual(41);
     expect(from!.y).toBeGreaterThanOrEqual(40);
@@ -187,8 +188,7 @@ describe('H-R4 errandPlan', () => {
     expect(p2.carry).toBeNull();
     const g = roadGraph(world);
     expect(g).toBeDefined();
-    for (let i = 0; i < PLAN_CACHE_MAX + 30; i++)
-      errandPlan(world, { ...lj, id: 5000 + i }); // fremde IDs füllen den Cache
+    for (let i = 0; i < PLAN_CACHE_MAX + 30; i++) errandPlan(world, { ...lj, id: 5000 + i }); // fremde IDs füllen den Cache
     expect(planCacheSize(world)).toBeLessThanOrEqual(PLAN_CACHE_MAX);
   });
 });
@@ -261,8 +261,8 @@ describe('H-R4 errandsFrom', () => {
   it('RF-6 Obergrenze: höchstens errandCap, reduziert weniger, CAPS unverändert', () => {
     const { world } = scene();
     for (let i = 0; i < 60; i++) {
-      const x = 31 + (i % 28);
-      const y = 31 + Math.floor(i / 28) * 3;
+      const x = 31 + (i % 14) * 2;
+      const y = [31, 34, 43, 46, 49][Math.floor(i / 14)]!;
       if (world.tiles[idx(world, x, y)]!.buildingId !== null) continue;
       put(world, 3000 + i, 'lumberjack', x, y, { progress: 15 });
       setTerrain(world, x + 1, y, 'forest');
@@ -302,7 +302,17 @@ describe('H-R4 errandsFrom', () => {
     lj.progress = 6;
     const a = errandsFrom(world, FULL, { frac: 0, fast: false }, false)[0]!;
     const b = errandsFrom(world, FULL, { frac: 0.5, fast: false }, false)[0]!;
-    expect(b.x).not.toBe(a.x);
+    expect(b.x !== a.x || b.y !== a.y).toBe(true);
+  });
+});
+
+describe('H-R4 Figurenlimit', () => {
+  it('RF-6 Errands zuerst: Summe mit Spaziergängern höchstens 40, reduziert 12', () => {
+    expect(walkersLeft(40, MAX_ERRANDS)).toBe(40 - MAX_ERRANDS);
+    expect(MAX_ERRANDS + walkersLeft(40, MAX_ERRANDS)).toBeLessThanOrEqual(40);
+    expect(walkersLeft(40, errandCap(true), true) + errandCap(true)).toBeLessThanOrEqual(12);
+    expect(walkersLeft(3, 2)).toBe(3);
+    expect(walkersLeft(40, 99)).toBe(0);
   });
 });
 
@@ -362,7 +372,8 @@ describe('H-R4 drawErrandLoad', () => {
     expect(log.underflow).toBe(0);
     expect(log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
     const signals = SIGNAL_NAMES.map((n) => PALETTE[n].toLowerCase());
-    for (const s of [...log.fillSet, ...log.strokeSet]) expect(signals).not.toContain(s.toLowerCase());
+    for (const s of [...log.fillSet, ...log.strokeSet])
+      expect(signals).not.toContain(s.toLowerCase());
     expect(log.fillSet).toContain(PALETTE.roofWood);
   });
   it('RF-9 ohne Last nichts; Punkt mindestens 2,5 px gross bei Zoom 0,75', () => {

@@ -4,6 +4,7 @@ Status: Umsetzungsnotiz, kein Gate. Annahmen sind mit **[A]** markiert. Reine Da
 `b.state`, `b.connected`, Terrain und Weggraph, schreibt nie in die Welt.
 
 ## Phase und Zeit
+
 - Phase `p = (progress + frac) / cycle`, nur bei Zustand `ok` und `connected`. `frac` (0..1) ist der Anteil des
   laufenden Ticks. **[A]** Der Renderer kennt Tempo und Tickbruchteil nicht; `errands.ts` merkt sich je Welt
   (WeakMap, ein Eintrag) Tickwechsel und Zeit und schätzt daraus Tickdauer und `frac`. So laufen Figuren flüssig
@@ -11,6 +12,7 @@ Status: Umsetzungsnotiz, kein Gate. Annahmen sind mit **[A]** markiert. Reine Da
 - Pause: `frac` bleibt bei 1 stehen, Figuren stehen.
 
 ## Figuren je Betrieb (eine Figur je Betrieb)
+
 - **Sammler** (Betrieb mit `produces` und Standortregel Wald/Fels/Küste: Holzfäller, Steinbrecher, Fischer):
   Phase 0–0,30 hin zur Zielkachel, 0,30–0,40 Arbeit (steht), 0,40–0,70 zurück **mit Last** (Lastpunkt in Warenfarbe).
 - **Zielkachel:** begehbar (kein Wasser, kein Gebäude), Terrain laut Regel (Wald, Fels; Küste: Land mit Wasser-Nachbar)
@@ -25,6 +27,7 @@ Status: Umsetzungsnotiz, kein Gate. Annahmen sind mit **[A]** markiert. Reine Da
   ehrliche Regel braucht eigene Taktung und kostet Figurenbudget. Nicht in H-R4.
 
 ## Budget und Leistung
+
 - Figurenlimit 40 (`CAPS.walkers`, unverändert, reduziert 12): **Errands zuerst**, Spaziergänger bekommen den Rest
   (`cap − Errands`). `MAX_ERRANDS` = 16 (reduziert 6), lokal in `errands.ts`; gezählt werden nur gerade sichtbare Figuren.
 - Über 2x Tempo: deterministische Teilmenge (`hash2(seed + 95, id, 0) < 0,5`).
@@ -34,6 +37,7 @@ Status: Umsetzungsnotiz, kein Gate. Annahmen sind mit **[A]** markiert. Reine Da
   bei Cache-Fehlgriff. `renderStats.errands` zählt die Figuren des letzten Frames.
 
 ## Zeichnung
+
 Tiefensortierung über die `moving`-Liste mit `kind: 'walker'` und `id = ERRAND_ID_BASE (1000) + Betriebs-ID`
 (`iso.ts` und `sprites.ts` bleiben unberührt). Schatten wie Spaziergänger, Figur über `drawWalker`, danach
 `drawErrandLoad` (Punkt mit dunkler Kontur, mind. 2,5 px, Palettenfarbe je Ware, keine Signalfarben).
