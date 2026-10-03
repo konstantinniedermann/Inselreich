@@ -69,7 +69,7 @@ describe('M11 Gedämpfter Aufstieg (Spec 3.2)', () => {
     const hi = ready(1, 2, 1, 'high');
     expect(upTick(hi.w, hi.h, 2000)).toBe(-1);
   });
-  it('AK-P1-10 zwei volle Pionierhäuser, 3 Fischer, 2 Webereien: kleinere Id t0+300, die andere sieht Rest 1,5 − 2,0', () => {
+  it('AK-P1-10 zwei volle Pionierhäuser, 3 Fischer, 2 Webereien: kleinere Id t0+300, die andere t0+350 (Rest 3,5 − 2,0 ≥ 0 im nächsten Takt)', () => {
     const { w, houses } = ready(2, 3, 2); // Nahrung 7,5 − 4,0 = 3,5
     const [a, b] = [...houses].sort((x, y) => x.id - y.id);
     while (w.tick < 1300) step(w);
