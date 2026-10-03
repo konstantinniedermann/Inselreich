@@ -84,13 +84,13 @@ describe('M10 Mouse-over (Spec 13)', () => {
       }
     return b;
   }
-  it('AK-U3-02 Betrieb, Dienst, Amtsstube: Zustandszeilen wörtlich (10 Fälle)', () => {
+  it('AK-U3-02 Betrieb, Dienst, Amtsstube: Zustandszeilen wörtlich (10 Fälle) (M11 S3)', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
     const k = w.buildings[w.kontorId]!;
     const p = (dx: number, dy: number): [number, number] => [k.x + dx, k.y + dy];
     const first = (b: Building): string => hoverInfo(w, b, 0, none)!.lines[0]!;
     forceRect(w, k.x + 2, k.y + 4, 6, 5, 'grass'); // Holzfäller ohne Wald im Radius 2
-    const lj = raw(w, 'lumberjack', ...p(4, 6));
+    const lj = raw(w, 'lumberjack', ...p(4, 6), 'noForest');
     expect(first(raw(w, 'fisher', ...p(4, -6)))).toBe('arbeitet — 15 Nahrung / min');
     expect(first(raw(w, 'weaver', ...p(6, -6), 'waitingInput'))).toBe('wartet auf Wolle'); // Wolle 0 im Startlager
     expect(first(raw(w, 'weaver', ...p(8, -6), 'storageFull'))).toBe('Lager voll');
@@ -103,7 +103,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
     const unc = raw(w, 'weaver', ...p(14, -6), 'notConnected');
     unc.connected = false;
     expect(first(unc)).toBe('nicht angebunden');
-    expect(hoverInfo(w, lj, 0, none)!.lines).toContain('kein Wald mehr in der Nähe');
+    expect(hoverInfo(w, lj, 0, none)!.lines).toContain('Kein freier Wald in der Nähe');
     const chapel = raw(w, 'chapel', ...p(4, 10));
     for (const dx of [6, 7, 8]) raw(w, 'house', ...p(dx, 10)).house = newHouseState(w);
     expect(first(chapel)).toBe('versorgt 3 Häuser');
@@ -274,5 +274,40 @@ describe('M10 Mouse-over (Spec 13)', () => {
     const p = hoverPosition({ x: 1270, y: 790 }, { w: 220, h: 90 }, { w: 1280, h: 800 });
     expect(p.x + 220).toBeLessThanOrEqual(1280);
     expect(p.y + 90).toBeLessThanOrEqual(800);
+  });
+});
+
+describe('M11 Mouse-over Betrieb (Spec 7)', () => {
+  const none = { ship: false, animal: null };
+  it('AK-UI-08 Fischer Stufe 2: Titel „Fischerhütte, Stufe 2 · Auslastung 100 %"; Kapelle ohne Stufe', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    const put = (
+      defId: BuildingDefId,
+      x: number,
+      y: number,
+      extra: Partial<Building> = {},
+    ): Building => {
+      const b: Building = {
+        id: w.nextBuildingId++,
+        defId,
+        x,
+        y,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        ...extra,
+      };
+      w.buildings[b.id] = b;
+      forceGrass(w, x, y);
+      w.tiles[idx(w, x, y)]!.buildingId = b.id;
+      return b;
+    };
+    const f = put('fisher', k.x + 4, k.y - 6, { level: 2 });
+    expect(hoverInfo(w, f, 0, none)!.title).toBe('Fischerhütte, Stufe 2 · Auslastung 100 %');
+    expect(hoverInfo(w, f, 0, none)!.lines[0]).toBe('arbeitet — 25 Nahrung / min');
+    const half = put('fisher', k.x + 6, k.y - 6, { eff: 128_000 });
+    expect(hoverInfo(w, half, 0, none)!.title).toBe('Fischerhütte, Stufe 1 · Auslastung 50 %');
+    expect(hoverInfo(w, put('chapel', k.x + 8, k.y - 6), 0, none)!.title).toBe('Kapelle');
   });
 });

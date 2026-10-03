@@ -1,8 +1,12 @@
 import type { TaxLevel, TaxLevelDef, Tier, TierDef } from '../types';
-import { UPGRADE_WAIT } from './timing';
+import { UPGRADE_WAIT, UPKEEP_INTERVAL } from './timing';
 
+/** Ganzzahlige Steuereinheit: ein erfülltes Haus zahlt `TAX_UNIT`, ein unerfülltes 1 (Anhang 01 A.1). */
+export const TAX_UNIT = 2;
 /** Steuerfaktor, solange nicht alle Bedürfnisse eines Hauses erfüllt sind. */
-export const UNSATISFIED_TAX_FACTOR = 0.5;
+export const UNSATISFIED_TAX_FACTOR = 1 / TAX_UNIT;
+/** Teiler des Steuer-Übertrags: Einheiten × Prozent je Geldstück (Anhang 01 A.1). */
+export const TAX_CARRY_DIVISOR = UPKEEP_INTERVAL * 100 * TAX_UNIT;
 
 export const TIERS: Record<Tier, TierDef> = {
   1: {

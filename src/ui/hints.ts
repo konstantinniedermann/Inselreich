@@ -8,6 +8,7 @@ import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
+import { paidCost } from '../sim/upgrade';
 import type { Building, BuildingDefId, Cost, GoodId, World } from '../sim/types';
 import { adjacentOf, idx, tileAt } from '../sim/world';
 import { costLine } from './dom';
@@ -37,6 +38,8 @@ const costOf = (c: ReasonCtx): Cost | null =>
   c.cost ?? (c.defId ? BUILDING_DEFS[c.defId].cost : null);
 
 export const REASON_TABLE: readonly ReasonRow[] = [
+  { source: 'upgrade', pattern: /^Kann nicht ausgebaut werden$/, show: same },
+  { source: 'upgrade', pattern: /^Gebäude brennt$/, show: same },
   {
     source: 'placement',
     pattern: /^Ausserhalb der Karte$/,
@@ -60,15 +63,15 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   },
   {
     source: 'placement',
-    pattern: /^Zu wenig (Wald|Weide) in der Nähe$/,
+    pattern: /^Zu wenig (freier |freie )?(Wald|Weide) in der Nähe$/,
     show: (m, _w, c) => {
       if (!c.defId) return null;
-      const terrain = m[1] === 'Wald' ? 'forest' : 'grass';
+      const terrain = m[2] === 'Wald' ? 'forest' : 'grass';
       const rule = BUILDING_DEFS[c.defId].site.find(
         (r) => r.kind === 'radius' && r.terrain === terrain,
       );
       return rule?.kind === 'radius'
-        ? `Zu wenig ${m[1]} in der Nähe: mindestens ${rule.min} ${rule.min === 1 ? 'Feld' : 'Felder'} im Umkreis ${rule.radius}`
+        ? `Zu wenig ${m[1] ?? ''}${m[2]} in der Nähe: mindestens ${rule.min} ${rule.min === 1 ? 'Feld' : 'Felder'} im Umkreis ${rule.radius}`
         : null;
     },
   },
@@ -247,7 +250,7 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
     if (b?.id === world.kontorId)
       return { tone: 'info', text: 'Kontor kann nicht abgerissen werden' };
     if (b) {
-      const cost = BUILDING_DEFS[b.defId].cost;
+      const cost = paidCost(b);
       return {
         tone: 'bad',
         text: `Abreissen: ${BUILDING_DEFS[b.defId].name} · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`,
@@ -300,4 +303,11 @@ export function newlyConnected(before: Set<number>, world: World): string[] {
     .map((id) => world.buildings[id])
     .filter((b): b is Building => b !== undefined && b.connected)
     .map((b) => BUILDING_DEFS[b.defId].name);
+}
+
+/** R161-Hinweis (Spec 3.7): fehlt Stein beim Aufstieg und steht eine Glashütte, nennt er den zweiten Steinverbraucher. */
+export function glassStoneHint(world: World, reasons: readonly string[]): string | null {
+  if (!reasons.includes('Zu wenig Stein')) return null;
+  const hasGlass = Object.values(world.buildings).some((b) => b.defId === 'glassworks');
+  return hasGlass ? 'Die Glashütte verbraucht ebenfalls Stein — baue weitere Steinbrüche.' : null;
 }

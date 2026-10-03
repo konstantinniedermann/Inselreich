@@ -23,3 +23,20 @@ describe('M10 Importrichtung src/sim (Entscheid B9)', () => {
     for (const f of files) expect(() => visit(f, [])).not.toThrow();
   });
 });
+
+describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
+  it('PLAN-NAHT src/sim (ausser levels.ts, defs/) und render/errands.ts lesen cycle/upkeep nie direkt', () => {
+    const read = /\b(def|BUILDING_DEFS\[[^\]]+\])\.(cycle|upkeep)\b/;
+    const paths = files.filter((m) => m !== 'levels').map((m) => `${SIM}/${m}.ts`);
+    for (const f of [...paths, 'src/render/errands.ts'])
+      expect(read.test(readFileSync(f, 'utf8')), f).toBe(false);
+    expect(importsOf('levels').every((m) => m === 'types' || m.startsWith('defs/'))).toBe(true);
+  });
+  it('PLAN-FLOW flow.ts importiert weder population noch queries; queries re-exportiert goodsBalance', () => {
+    expect(importsOf('flow')).not.toContain('population');
+    expect(importsOf('flow')).not.toContain('queries');
+    expect(readFileSync(`${SIM}/queries.ts`, 'utf8')).toMatch(
+      /export \{[^}]*goodsBalance[^}]*\} from '\.\/flow'/,
+    );
+  });
+});

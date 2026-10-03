@@ -55,7 +55,7 @@ Rot-Beleg und Zeilenverweise stehen in der Task-Datei.
 | AK-P3-06   | T08                                                 | Vitest                                                                                     |
 | AK-P3-07   | T09                                                 | Vitest (braucht `eff` aus P2; Rot-Beleg auf dem T08-SHA, Test läuft erst nach Integration) |
 | AK-R161-01 | T12                                                 | Vitest / Browser                                                                           |
-| AK-R161-02 | T12                                                 | Vitest / Browser                                                                           |
+| AK-R161-02 | T12                                                 | Browser                                                                                    |
 | AK-R161-03 | T12                                                 | Review                                                                                     |
 | AK-RND-01  | R2                                                  | Vitest                                                                                     |
 | AK-RND-02  | R2                                                  | Vitest                                                                                     |
@@ -67,7 +67,7 @@ Rot-Beleg und Zeilenverweise stehen in der Task-Datei.
 | AK-SAV-03  | T03                                                 | Vitest (balance-crises)                                                                    |
 | AK-SAV-04  | T01                                                 | Vitest                                                                                     |
 | AK-SAV-05  | T01                                                 | Vitest                                                                                     |
-| AK-UI-01   | T10 (Browser-Beleg später in W7)                    | Vitest + Browser                                                                           |
+| AK-UI-01   | T10 (Browser-Beleg später in W7)                    | Browser                                                                                    |
 | AK-UI-02   | T10 (Browser-Beleg später in W7)                    | Vitest + Browser                                                                           |
 | AK-UI-03   | T11                                                 | Vitest + Browser                                                                           |
 | AK-UI-04   | T11                                                 | Vitest + Browser                                                                           |

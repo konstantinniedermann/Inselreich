@@ -6,6 +6,7 @@ import {
   FIRE_OUTAGE,
   STORM_DURATION,
   STORM_WARNING,
+  UPGRADE_DEFICIT_WAIT_FACTOR,
 } from '../../src/sim/defs/timing';
 import { createRng } from '../../src/sim/rng';
 import { step } from '../../src/sim/tick';
@@ -168,14 +169,14 @@ describe('M6 Krisenkern', () => {
     });
   });
 
-  it('RF-2 Aufstieg im Tick des Periodenstarts bestimmt den Boom-Pool', () => {
+  it('RF-2 Aufstieg im Tick des Periodenstarts bestimmt den Boom-Pool (M11 S10)', () => {
     const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     prepareEast(w, w.buildings[w.kontorId]!);
     const house = houseNearKontor(w);
     placeService(w, 'chapel', house.x + 9, house.y);
     w.tick = 4199; // k = 3 ist bei Seed 3 ein Boom
     house.house!.inhabitants = TIERS[1].maxInhabitants;
-    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR; // Defizitwelt
     w.stock.cloth = 1;
     expect(house.house!.tier).toBe(1);
     step(w);

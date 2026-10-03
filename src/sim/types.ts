@@ -18,7 +18,9 @@ export type BuildingDefId =
   | 'firestation'
   | 'bathhouse'
   | 'glassworks'
-  | 'townhall';
+  | 'townhall'
+  | 'hunter'
+  | 'cattlefarm';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -30,7 +32,7 @@ export interface Cost {
 export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
-  | { kind: 'radius'; terrain: Terrain; radius: number; min: number } // ≥min Kacheln im Radius
+  | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' }; // im Radius von Kontor oder Markt
 export interface BuildingDef {
   id: BuildingDefId;
@@ -87,7 +89,7 @@ export interface TierDef {
   unlockCitizens?: number | null;
 }
 export type BuildingState =
-  'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning' | 'noService';
+  'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning' | 'noService' | 'noForest';
 export interface HouseState {
   tier: Tier;
   inhabitants: number;
@@ -107,6 +109,10 @@ export interface Building {
   state: BuildingState;
   /** Letzter Ausfall-Tick; nur bei state 'burning'. */
   outageUntil?: number;
+  /** Auslastung in Promille × `EFF_WINDOW` (0 … 256 000); fehlt = 256 000 (volle Auslastung). */
+  eff?: number;
+  /** Ausbaustufe; fehlt = Stufe 1. */
+  level?: 2 | 3;
   house?: HouseState;
 }
 export interface Tile {
@@ -158,7 +164,7 @@ export interface Crisis {
   outcome?: FireOutcome;
 }
 export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
-export type UnlockFunction = 'forest' | 'orders' | 'goodLocks';
+export type UnlockFunction = 'forest' | 'orders' | 'goodLocks' | 'upgrade2' | 'upgrade3';
 export type UnlockTrigger =
   | { kind: 'start' }
   | { kind: 'houses'; min: number }
@@ -181,7 +187,7 @@ export interface GoodLock {
   good: GoodId;
 }
 export interface World {
-  version: 5;
+  version: 6;
   seed: number;
   width: number;
   height: number;
@@ -208,6 +214,10 @@ export interface World {
   goodLocks: GoodLock[];
   /** Stufen mit Aufstiegsstopp, aufsteigend (M10 5.4). */
   upgradeStops: Tier[];
+  /** Steuer-Übertrag in Einheiten, 0 … TAX_CARRY_DIVISOR − 1 (M11 3.1). */
+  taxCarry: number;
+  /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
+  upkeepCarry: number;
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

@@ -1,6 +1,6 @@
 /** Echtzeit-Dauer eines Ticks bei Geschwindigkeit 1× (Millisekunden). */
 export const TICK_MS = 100;
-/** Steuern und Unterhalt werden alle 100 Ticks verbucht. */
+/** Raten je 100 Ticks; Teiler des Unterhalts-Übertrags; Takt des Tons `coin`. */
 export const UPKEEP_INTERVAL = 100;
 /** Alle 50 Ticks wächst oder schrumpft ein Haus um einen Einwohner. */
 export const GROWTH_INTERVAL = 50;
@@ -8,6 +8,12 @@ export const GROWTH_INTERVAL = 50;
 export const TAX_SWITCH_LOCK = 300;
 /** Ticks ununterbrochener Zufriedenheit, bevor ein Haus aufsteigen darf. */
 export const UPGRADE_WAIT = 300;
+/** Wartezeit-Faktor des Aufstiegs, solange die Zielstufe ein Güterdefizit hätte (Anhang 01 A.1). */
+export const UPGRADE_DEFICIT_WAIT_FACTOR = 2;
+/** Fensterlänge der Auslastungs-Glättung: `eff` fällt je Schritt um `floor(eff / EFF_WINDOW)` (Anhang 01 A.1). */
+export const EFF_WINDOW = 256;
+/** Zielwert der Auslastung in Promille (100 %), wenn ein Betrieb in diesem Schritt produziert (Anhang 01 A.1). */
+export const EFF_MAX = 1000;
 /** Alle 10 Ticks erholt sich der Verkaufsanteil jedes Guts um einen Prozentpunkt. */
 export const SELL_RECOVERY_INTERVAL = 10;
 /*

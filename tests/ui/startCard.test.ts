@@ -71,7 +71,7 @@ describe('M10 Hilfe-Karte (Spec 12.1)', () => {
     [3, 2, 1, 1].forEach((n, i) => setHouse(houses[i]!, 1, n));
     return { w, houses };
   };
-  it('AK-U2-01 Abschnitte, Als Nächstes, Tipps, Erste Schritte, Alles frei, taxBlocks', () => {
+  it('AK-U2-01 (M11 S2) Abschnitte, Als Nächstes, Tipps, Erste Schritte, Alles frei, taxBlocks', () => {
     const { w, houses } = pioneers();
     const s = helpSections(w);
     expect(s.map((x) => x.field)).toEqual([
@@ -85,7 +85,7 @@ describe('M10 Hilfe-Karte (Spec 12.1)', () => {
     expect(s[0]!.lines).toEqual([nextStep(w)]);
     expect(s[1]!.lines).toEqual([
       'Marktplatz — sobald 20 Wohnhäuser stehen (jetzt 4 / 20)',
-      'Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache, Roden, Aufforsten — sobald ein Wohnhaus 4 Pioniere hat (jetzt 3 / 4)',
+      'Jagdhütte, Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache, Roden, Aufforsten — sobald ein Wohnhaus 4 Pioniere hat (jetzt 3 / 4)',
     ]);
     expect(s[3]!.lines[0]).toBe(UNLOCKS[0]!.tip);
     expect(s[5]!.lines).toEqual(startSteps());

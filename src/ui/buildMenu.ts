@@ -5,6 +5,7 @@ import { UNLOCKS } from '../sim/defs/unlocks';
 import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
+import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
 import type {
@@ -120,6 +121,11 @@ export function tooltipLines(tool: Tool): string[] {
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
+    const lv = LEVELS[def.id];
+    if (lv) {
+      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, c)));
+      lines.push(`Ausstoss je Stufe: ${rates.join(' · ')} / min`);
+    }
   }
   if (def.consumes && def.cycle) {
     const rate = perInterval(def.cycle);

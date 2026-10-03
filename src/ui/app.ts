@@ -1,11 +1,12 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
-import { refundCost } from '../sim/economy';
-import { crisisView, effectiveRefund } from '../sim/queries';
+import { crisisView } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
+import { LEVELS } from '../sim/defs/levels';
+import { upgradeBuilding } from '../sim/upgrade';
 import { tileAt, createWorld, center } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
@@ -18,7 +19,7 @@ import type {
   UnlockId,
   World,
 } from '../sim/types';
-import { refundText } from './texts';
+import { demolishText } from './texts';
 import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
   centerOn,
@@ -38,7 +39,13 @@ import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
+import {
+  renderNoticeStack,
+  updateHud,
+  updateMoney,
+  updateNoticeStack,
+  type HudActions,
+} from './hud';
 import {
   afterPause,
   hotkeyList,
@@ -404,6 +411,14 @@ function launch(
           refresh();
         },
         openTrade: () => setPanel({ kind: 'trade' }),
+        upgrade: (id) => {
+          const b = world.buildings[id];
+          const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
+          const r = upgradeBuilding(world, id);
+          if (r.ok) sound.play('build');
+          else showError(friendlyReason(world, r.reason, next ? { cost: next.cost } : {}));
+          refresh();
+        },
         setTax: (level) => {
           const r = setTaxLevel(world, level);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -544,11 +559,7 @@ function launch(
   };
   const demolishBuilding = (id: number): Result => {
     const b = world.buildings[id];
-    const cost = b ? BUILDING_DEFS[b.defId].cost : null;
-    const text =
-      b && cost
-        ? `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`
-        : '';
+    const text = b ? demolishText(world, b) : ''; // vor dem Abriss, solange Stufe und Welt stehen
     const r = demolish(world, id);
     if (r.ok) showMessage(text);
     else showError(friendlyReason(world, r.reason));
@@ -919,6 +930,7 @@ function launch(
       };
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
       perf?.renderDone(performance.now() - t0);
+      updateMoney(hudEl, world);
       updateHint(frame % HUD_EVERY_FRAMES === 0);
       updateHoverCard(fx, t0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();

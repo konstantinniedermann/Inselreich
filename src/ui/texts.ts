@@ -1,8 +1,10 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { SERVICE_BUILDING } from '../sim/population';
-import type { Diagnosis } from '../sim/queries';
-import type { Building, Cost, GoodId } from '../sim/types';
+import { refundCost } from '../sim/economy';
+import { effectiveRefund, type Diagnosis } from '../sim/queries';
+import type { Building, Cost, GoodId, World } from '../sim/types';
+import { paidCost } from '../sim/upgrade';
 import { formatGameTime } from './time';
 
 /** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
@@ -18,11 +20,15 @@ export function diagnosisText(d: Diagnosis): string {
 }
 
 /** Erzeugungszeile des Panels; während des Brandausfalls steht dort, dass nichts erzeugt wird. */
-export function producesText(def: { produces?: GoodId; cycle?: number }, burning: boolean): string {
+export function producesText(
+  def: { produces?: GoodId; cycle?: number },
+  burning: boolean,
+  cycle: number = def.cycle ?? 0,
+): string {
   const name = def.produces ? GOODS[def.produces].name : '';
   return burning
     ? `Erzeugt ${name} nicht — Betrieb brennt`
-    : `Erzeugt ${name} alle ${formatGameTime(def.cycle ?? 0)}`;
+    : `Erzeugt ${name} alle ${formatGameTime(cycle)}`;
 }
 
 /** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */
@@ -63,6 +69,8 @@ export function stateInfo(
       return { text: 'Lager voll', ok: false };
     case 'burning':
       return { text: burningText(b, tick), ok: false };
+    case 'noForest':
+      return { text: 'Kein freier Wald in der Nähe', ok: false };
     case 'noService':
       return {
         text: `Braucht eine ${BUILDING_DEFS[SERVICE_BUILDING[def.requiresService!]].name} in Reichweite`,
@@ -83,4 +91,23 @@ export function refundText(nominal: Cost, effective: Cost): string {
     parts.push(lost > 0 ? `${base} (${lost} verfallen – Lager voll)` : base);
   }
   return parts.join(' · ');
+}
+
+/** Abriss-Meldung: Name und Rückerstattung auf Basis der tatsächlich bezahlten Kosten (Bau plus Stufen). */
+export function demolishText(world: World, b: Building): string {
+  const paid = paidCost(b);
+  return `${BUILDING_DEFS[b.defId].name} abgerissen · zurück ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
+}
+
+/**
+ * Defizit-Zeile des Haus-Panels (Spec 7): Gut, Lagerbestand und Netto je Bilanzabschnitt (< 0).
+ * Restvorrat in Spielminuten: 6 Abschnitte je Minute.
+ */
+export function deficitText(good: GoodId, stock: number, net: number): string {
+  const head = `${GOODS[good].name}-Bilanz negativ — Aufstieg verzögert; `;
+  if (stock <= 0) return `${head}Vorrat leer`;
+  const x = Math.floor(stock / -net / 6);
+  if (x >= 60) return `${head}Vorrat reicht noch über 60 Minuten`;
+  if (x === 0) return `${head}Vorrat reicht noch weniger als 1 Minute`;
+  return `${head}Vorrat reicht noch ${x === 1 ? '1 Minute' : `${x} Minuten`}`;
 }

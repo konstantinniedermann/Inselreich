@@ -155,26 +155,26 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
     return x;
   };
   const tail = '. Mehr unter Hilfe (?)';
-  it('AK-U1-08 Texte je Eintrag wörtlich, Kombination, nur U6 = M8-Text, gleich → null, kein „Tick"', () => {
+  it('AK-U1-08 (M11 S2) Texte je Eintrag wörtlich, Kombination, nur U6 = M8-Text, gleich → null, kein „Tick" (M11 S10)', () => {
     const t = (prev: UnlockId[], now: UnlockId[], c: CrisisLevel = 'normal') =>
       unlockNoticeText(prev, w(now, c));
     expect(t(['U0'], ['U0', 'U2'])).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+      `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
     );
     expect(t(['U0'], ['U0', 'U2'], 'off')).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+      `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
     );
     expect(t(['U0'], ['U0', 'U1'])).toBe(
       `Neu: Marktplatz (M) — deine Siedlung wächst über das Kontor hinaus${tail}`,
     );
     expect(t(['U0', 'U2'], ['U0', 'U2', 'U3'])).toBe(
-      `Neu: Amtsstube (I), Handelsaufträge — die ersten Siedler sind da${tail}`,
+      `Neu: Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
     );
     expect(t(['U0', 'U2', 'U3'], ['U0', 'U2', 'U3', 'U4'])).toBe(
       `Neu: Zuckerrohrplantage (Z), Brennerei (N), Schule (U) — deine Siedler wollen Bürger werden${tail}`,
     );
     expect(t(['U0', 'U2', 'U3', 'U4'], ['U0', 'U2', 'U3', 'U4', 'U5'])).toBe(
-      `Neu: Werkzeugmacher (T), Ausgabesperre — die ersten Bürger sind da${tail}`,
+      `Neu: Werkzeugmacher (T), Ausgabesperre, Ausbau Stufe 3 — die ersten Bürger sind da${tail}`,
     );
     expect(t(['U0', 'U2', 'U3', 'U4', 'U5'], ['U0', 'U2', 'U3', 'U4', 'U5', 'U6'])).toBe(
       UNLOCK_NOTICE,
@@ -183,7 +183,7 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
       'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
     );
     expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Amtsstube (I), Handelsaufträge — die ersten Siedler sind da${tail}`,
+      `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
     );
     expect(t(['U0', 'U2'], ['U0', 'U2'])).toBeNull();
     for (const s of [t(['U0'], ['U0', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6'])])
@@ -216,5 +216,26 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
     expect(frameUnlock(r.seen, x).text).toBeNull();
     const a = soundSnapshot(w(['U0']));
     expect(diffSoundEvents(a, soundSnapshot(x)).filter((e) => e === 'unlock')).toHaveLength(1);
+  });
+});
+
+describe('M11 Freischalt-Meldungen (Spec 4)', () => {
+  const at = (ids: UnlockId[]) =>
+    Object.assign(createWorld(3, { crisisLevel: 'normal' }), { unlocked: ids });
+  const tail = '. Mehr unter Hilfe (?)';
+  it('AK-UI-09 U3 nennt Rinderfarm und Ausbau Stufe 2, U5 Ausbau Stufe 3; U2 mit Jagdhütte (Y); kein „null", kein „Tick"', () => {
+    const u2 = unlockNoticeText(['U0'], at(['U0', 'U2']))!;
+    const u3 = unlockNoticeText(['U0', 'U2'], at(['U0', 'U2', 'U3']))!;
+    const u5 = unlockNoticeText(['U0', 'U2', 'U3', 'U4'], at(['U0', 'U2', 'U3', 'U4', 'U5']))!;
+    expect(u2).toBe(
+      `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+    );
+    expect(u3).toBe(
+      `Neu: Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
+    );
+    expect(u5).toBe(
+      `Neu: Werkzeugmacher (T), Ausgabesperre, Ausbau Stufe 3 — die ersten Bürger sind da${tail}`,
+    );
+    for (const s of [u2, u3, u5]) expect(s).not.toMatch(/null|Tick/);
   });
 });

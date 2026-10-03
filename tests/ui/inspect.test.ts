@@ -9,11 +9,19 @@ import {
   restView,
   upgradeOkText,
   upgradeReasonTexts,
+  levelText,
+  refundLine,
+  utilizationText,
+  upgradeView,
+  deficitLine,
 } from '../../src/ui/inspect';
+import { upgradeBuilding } from '../../src/sim/upgrade';
+import { serialize } from '../../src/sim/save';
+import type { BuildingDefId, World } from '../../src/sim/types';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { goodList, stateInfo } from '../../src/ui/texts';
+import { deficitText, demolishText, goodList, stateInfo } from '../../src/ui/texts';
 import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
@@ -219,5 +227,139 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
     expect(items.every((i) => i.met)).toBe(true);
     house.house!.satisfied.cloth = false;
     expect(needIcons(w, house)[1]).toEqual({ icon: 'cloth', met: false, label: 'Stoff' });
+  });
+});
+
+describe('M11 Betriebs-Panel (Spec 7)', () => {
+  /** Betrieb roh einsetzen (ohne Kachel); das Panel liest nur Gebäude und Welt. */
+  const put = (w: World, defId: BuildingDefId, extra: Partial<Building> = {}): Building => {
+    const b: Building = {
+      id: w.nextBuildingId++,
+      defId,
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      ...extra,
+    };
+    w.buildings[b.id] = b;
+    return b;
+  };
+  it('AK-UI-03 Auslastung ohne eff 100 %, eff 94 208 → 36 %; Stufe 1/2; Haus und Kapelle ohne Zeilen', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(utilizationText(put(w, 'fisher'))).toBe('Auslastung 100 %');
+    expect(utilizationText(put(w, 'fisher', { eff: 94_208 }))).toBe('Auslastung 36 %');
+    expect(levelText(put(w, 'fisher'))).toBe('Stufe 1');
+    expect(levelText(put(w, 'fisher', { level: 2 }))).toBe('Stufe 2');
+    const { houses } = village(1, { unlockAll: true });
+    expect(utilizationText(houses[0]!)).toBeNull();
+    expect(levelText(houses[0]!)).toBeNull();
+    expect(levelText(put(w, 'chapel'))).toBeNull();
+  });
+  it('AK-UI-04 Ausbau Fischer: vor U3 verborgen, Kosten, Gebühr, Vorschau, ✗-Grund, Stufe 3 „Höchste Stufe"', () => {
+    const w0 = createWorld(3);
+    expect(upgradeView(w0, put(w0, 'fisher'))).toBeNull();
+    const w = createWorld(3, { unlockAll: true });
+    w.money = 1000;
+    w.stock.cloth = 2;
+    w.stock.rum = 2;
+    const f = put(w, 'fisher');
+    const before = serialize(w);
+    expect(upgradeView(w, f)).toEqual({
+      title: 'Ausbau zu Stufe 2',
+      cost: 'Kosten 50 Geld · 3 Holz · 1 Werkzeug',
+      fee: 'Gebühr 2 Stoff',
+      preview: 'Ausstoss 15 → 25 / min · Unterhalt 30 → 42 / min',
+      reasons: [],
+      ok: true,
+    });
+    expect(serialize(w)).toBe(before); // Vorschau ändert die Welt nicht
+    w.stock.cloth = 0;
+    expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff']);
+    w.stock.cloth = 2;
+    expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    expect(upgradeView(w, f)!.preview).toBe('Ausstoss 25 → 37.5 / min · Unterhalt 42 → 54 / min');
+    w.unlocked = w.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
+    expect(upgradeView(w, f)).toBeNull(); // Stufe 3 vor U5 verborgen
+    const w3 = createWorld(3, { unlockAll: true });
+    const f3 = put(w3, 'fisher', { level: 3 });
+    expect(upgradeView(w3, f3)).toEqual({
+      title: 'Höchste Stufe',
+      cost: '',
+      fee: '',
+      preview: '',
+      reasons: [],
+      ok: false,
+    });
+  });
+});
+
+describe('M11 Rückerstattung nach Ausbau (paidCost)', () => {
+  const stufe2 = () => {
+    const w = createWorld(3, { unlockAll: true });
+    const b: Building = {
+      id: w.nextBuildingId++,
+      defId: 'fisher',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      level: 2,
+    };
+    w.buildings[b.id] = b;
+    w.stock.wood = 0;
+    w.stock.tools = 0;
+    return { w, b };
+  };
+  it('Panelzeile: Fischer Stufe 2 erstattet die Hälfte von Bau plus Stufe (150/8/3)', () => {
+    const { w, b } = stufe2();
+    expect(refundLine(w, b)).toBe('Rückerstattung: 75 Geld · 4 Holz · 1 Werkzeug');
+  });
+  it('Abriss-Meldung: gleiche Werte, Stufe 1 weiter 50/2/1', () => {
+    const { w, b } = stufe2();
+    expect(demolishText(w, b)).toBe(
+      'Fischerhütte abgerissen · zurück 75 Geld · 4 Holz · 1 Werkzeug',
+    );
+    b.level = undefined;
+    expect(demolishText(w, b)).toBe(
+      'Fischerhütte abgerissen · zurück 50 Geld · 2 Holz · 1 Werkzeug',
+    );
+  });
+});
+
+describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
+  const pre = 'Rum-Bilanz negativ — Aufstieg verzögert; ';
+  it('AK-UI-07 deficitText: X = floor(Lager / −net / 6); leer, über 60, unter 1, genau 1', () => {
+    expect(deficitText('rum', 40, -3)).toBe(`${pre}Vorrat reicht noch 2 Minuten`);
+    expect(deficitText('rum', 0, -3)).toBe(`${pre}Vorrat leer`);
+    expect(deficitText('rum', 100, -0.2)).toBe(`${pre}Vorrat reicht noch über 60 Minuten`);
+    expect(deficitText('rum', 10, -3)).toBe(`${pre}Vorrat reicht noch weniger als 1 Minute`);
+    expect(deficitText('rum', 20, -3)).toBe(`${pre}Vorrat reicht noch 1 Minute`);
+    expect(deficitText('rum', 360, -1)).toBe(`${pre}Vorrat reicht noch über 60 Minuten`); // x = 60
+    expect(deficitText('rum', 354, -1)).toBe(`${pre}Vorrat reicht noch 59 Minuten`); // x = 59
+  });
+  it('AK-UI-07 deficitLine: volles Siedlerhaus, Rum 40, keine Brennerei → Rum-Zeile; ohne Defizit oder nicht voll keine', () => {
+    const { w, houses } = village(1, { unlockAll: true });
+    const h = houses[0]!;
+    setHouseTo(h, 2, 8);
+    const add = (defId: BuildingDefId) => {
+      const id = w.nextBuildingId++;
+      w.buildings[id] = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok' };
+    };
+    for (let i = 0; i < 3; i++) add('fisher'); // Nahrung 7,5 − 4,0 = 3,5 = Δ 3,5 (dämpft nicht)
+    add('weaver');
+    add('weaver'); // Stoff 4,0 − 1,6 = 2,4 ≥ Δ 1,4
+    w.stock.rum = 40;
+    expect(deficitLine(w, h)).toBe(`${pre}Vorrat reicht noch 2 Minuten`);
+    w.stock.rum = 0;
+    expect(deficitLine(w, h)).toBe(`${pre}Vorrat leer`);
+    setHouseTo(h, 2, 7);
+    expect(deficitLine(w, h)).toBeNull();
+    setHouseTo(h, 2, 8);
+    add('distillery');
+    add('distillery'); // Rum 4,0 ≥ Δ 3,0
+    expect(deficitLine(w, h)).toBeNull();
   });
 });
