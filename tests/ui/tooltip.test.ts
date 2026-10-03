@@ -11,6 +11,7 @@ import {
   buildEntries,
   visibleCategories,
   crisisTooltipLines,
+  newBuildEntries,
   tierPreviewLine,
   tooltipLines,
   unprotectedLine,
@@ -220,5 +221,18 @@ describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
         `Tabellenzeile für ${r}`,
       ).toBe(true);
     }
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-04 (K2) neue Einträge nach U2 tragen „neu" bis zur ersten Wahl; nach Laden keine', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    const prev = [...w.unlocked];
+    w.unlocked = ['U0', 'U2'];
+    const fresh = newBuildEntries(prev, w);
+    expect([...fresh]).toEqual(['quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation']);
+    fresh.delete('chapel'); // erste Wahl
+    expect(fresh.has('chapel')).toBe(false);
+    expect(newBuildEntries(w.unlocked, w).size).toBe(0); // Laden: Basis = geladener Stand
   });
 });

@@ -14,6 +14,8 @@ import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { goalTexts } from './goal';
+import type { IconId } from './icons';
+import { iconChip } from './messages';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
@@ -49,6 +51,64 @@ export function balanceLabel(net: number): string {
 /** Tooltip einer Steuerstufe: Wirkung in Klartext (`taxEffect`, alles aus `TAX_LEVELS`). */
 export function taxTooltip(level: TaxLevel): string {
   return taxEffect(level);
+}
+
+/** Symbol-Chip der Kopfzeile: Symbol, sichtbarer Wert und zugänglicher Name (= bisheriger Text, Spec 14). */
+export interface ChipView {
+  icon: IconId;
+  text: string;
+  label: string;
+}
+
+/** Lager-Chip: Symbol des Guts, „{Bestand} {Pfeil}"; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}". */
+export function chipView(world: World, good: GoodId): ChipView {
+  const text = `${world.stock[good]} ${trendArrow(goodsBalance(world)[good].net)}`;
+  return { icon: good, text, label: `${GOODS[good].name} ${text}` };
+}
+
+/** Einwohner-Chip einer Stufe: Stufen-Symbol und Zahl. */
+export function popChipView(world: World, tier: Tier): ChipView {
+  const n = String(populationByTier(world)[tier]);
+  return { icon: `tier-${tier}`, text: n, label: `${TIERS[tier].name} ${n}` };
+}
+
+export function moneyView(world: World): ChipView {
+  return { icon: 'money', text: String(world.money), label: `Geld ${world.money}` };
+}
+
+const BALANCE_PREFIX = 'Bilanz ';
+
+/** Bilanz: Waage und Wert; `label` ist der bisherige Text. */
+export function balanceView(world: World): ChipView {
+  const { text } = balanceText(world.stats);
+  return { icon: 'balance', text: text.slice(BALANCE_PREFIX.length), label: text };
+}
+
+/** Steuer-Knopf: Steuer-Symbol und Stufenname, oder `null` ohne aktive Amtsstube. */
+export function taxView(world: World): ChipView | null {
+  const label = taxButtonText(world);
+  return label === null
+    ? null
+    : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world)].name, label };
+}
+
+/**
+ * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
+ * ändert sich nur der Wert. Gibt das Element zurück.
+ */
+function setChip(root: HTMLElement, field: string, v: ChipView): HTMLElement | null {
+  const el = root.querySelector<HTMLElement>(`[data-field="${field}"]`);
+  if (!el) return null;
+  let value = el.querySelector<HTMLElement>('.chip-value');
+  if (!value || el.dataset.icon !== v.icon) {
+    value = document.createElement('span');
+    value.className = 'chip-value';
+    el.replaceChildren(iconChip(v.icon), value);
+    el.dataset.icon = v.icon;
+  }
+  if (value.textContent !== v.text) value.textContent = v.text;
+  if (el.getAttribute('aria-label') !== v.label) el.setAttribute('aria-label', v.label);
+  return el;
 }
 
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
@@ -156,31 +216,25 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (soundBox) renderSoundControls(soundBox, actions);
   }
   const { world } = state;
-  const bal = balanceText(world.stats);
-  const balEl = setField(header, 'balance', bal.text);
+  const balEl = setChip(header, 'balance', balanceView(world));
   if (balEl) {
     const tip = balanceTooltip(world);
     if (balEl.title !== tip) balEl.title = tip;
     balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
   }
-  const pop = populationByTier(world);
   for (const tier of TIER_IDS) {
-    const chip = setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
+    const chip = setChip(header, `pop-${tier}`, popChipView(world, tier));
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
   }
   const goal = goalTexts(goalView(world));
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
-  setField(header, 'money', `Geld ${world.money}`)?.classList.toggle('negative', world.money < 0);
+  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
   const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
     const b = balance[good];
-    const chip = setField(
-      header,
-      `stock-${good}`,
-      `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}`,
-    );
+    const chip = setChip(header, `stock-${good}`, chipView(world, good));
     if (chip) {
       const hide = stockChipHidden(world, good);
       if (chip.hidden !== hide) chip.hidden = hide;
@@ -189,15 +243,15 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       if (chip.title !== tip) chip.title = tip;
     }
   }
-  const taxText = taxButtonText(world);
+  const tax = taxView(world);
   const taxBox = header.querySelector<HTMLElement>('.hud-tax');
   if (taxBox) {
-    const hide = taxText === null;
+    const hide = tax === null;
     if (taxBox.hidden !== hide) taxBox.hidden = hide;
     // `.hud-tax` setzt `display: flex`; das Attribut allein verbirgt es nicht (style.css gehört nicht zu U1)
     const display = hide ? 'none' : '';
     if (taxBox.style.display !== display) taxBox.style.display = display;
-    if (taxText !== null) setField(header, 'tax', taxText);
+    if (tax !== null) setChip(header, 'tax', tax);
   }
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));

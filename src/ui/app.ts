@@ -8,7 +8,16 @@ import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
-import type { Category, Cost, GoodId, Order, Result, UnlockId, World } from '../sim/types';
+import type {
+  BuildingDefId,
+  Category,
+  Cost,
+  GoodId,
+  Order,
+  Result,
+  UnlockId,
+  World,
+} from '../sim/types';
 import { refundText } from './texts';
 import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
@@ -28,7 +37,7 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
-import { renderBuildMenu, updateBuildMenu } from './buildMenu';
+import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
 import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
 import {
   afterPause,
@@ -104,6 +113,8 @@ export interface GameState {
   wonMerchantsShown: boolean;
   /** Einträge, die die Freischalt-Meldung schon kennt: beim Start/Laden und bei „Neu“ = `world.unlocked` (Spec 11.6). */
   unlockedSeen: UnlockId[];
+  /** Neu freigeschaltete Bau-Einträge bis zur ersten Wahl (Zeichen neu, K2); nur UI-Zustand, nicht gespeichert. */
+  newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
 }
@@ -206,6 +217,7 @@ function launch(
     terrainLayer: buildTerrainLayer(world),
     ...initialGoalShown(world),
     unlockedSeen: [...world.unlocked],
+    newEntries: new Set(),
     eventLog: [],
   };
   const sound = createSound({
@@ -430,6 +442,7 @@ function launch(
     state.wonShown = goal.shown.wonShown;
     state.wonMerchantsShown = goal.shown.wonMerchantsShown;
     for (const text of goal.texts) showMessage(text, 'info', true, true);
+    for (const id of newBuildEntries(state.unlockedSeen, world)) state.newEntries.add(id);
     const unlock = frameUnlock(state.unlockedSeen, world);
     state.unlockedSeen = unlock.seen;
     if (unlock.text !== null) {
@@ -464,6 +477,7 @@ function launch(
     // RF-5: eine laufende Zieh-Aktion endet sauber, bevor das neue Werkzeug gilt
     input?.cancelPointerAction();
     state.tool = tool;
+    if (tool.kind === 'build') state.newEntries.delete(tool.defId); // erste Wahl löscht das Zeichen „neu“
     state.openCategory = nextOpenCategory(state.openCategory, { kind: 'tool', tool });
     if (tool.kind !== 'select') setPanel({ kind: 'none' });
     // Vorschau an der letzten Zeigerposition neu (ohne Zeiger: keine); keine hängende Drag-Vorschau

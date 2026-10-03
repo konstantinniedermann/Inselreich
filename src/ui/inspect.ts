@@ -15,6 +15,8 @@ import { diagnosisText, goodList, producesText, refundText, stateInfo } from './
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
 import { goalTexts } from './goal';
+import type { IconId } from './icons';
+import { iconChip } from './messages';
 import { tierPath } from './hud';
 import { formatGameTime, perMinute } from './time';
 
@@ -126,6 +128,34 @@ function addButton(parent: HTMLElement, label: string, onClick: () => void, fiel
 interface ListItem {
   text: string;
   ok: boolean;
+  /** Symbol statt Text: sichtbar nur Symbol und `mark`, `text` wird zum zugänglichen Namen. */
+  icon?: IconId;
+  mark?: string;
+}
+
+/** Bedarf eines Wohnhauses als Symbol (Spec 14): Gut oder Dienst, erfüllt oder offen, Name für `aria-label`. */
+export interface NeedIcon {
+  icon: IconId;
+  met: boolean;
+  label: string;
+}
+
+/** Bedarfe des Hauses in Reihenfolge der Stufe: erst Güter, dann Dienste. */
+export function needIcons(_world: World, b: Building): NeedIcon[] {
+  const house = b.house;
+  if (!house) return [];
+  const tier = TIERS[house.tier];
+  const goods = (Object.keys(tier.needs) as GoodId[]).map((g) => ({
+    icon: g as IconId,
+    met: house.satisfied[g] === true,
+    label: GOODS[g].name,
+  }));
+  const services = tier.services.map((s) => ({
+    icon: s as IconId,
+    met: house.services[s] === true,
+    label: BUILDING_DEFS[SERVICE_BUILDING[s]].name,
+  }));
+  return [...goods, ...services];
 }
 
 /** Leere Liste mit `data-field`; Einträge setzt `setList`. */
@@ -140,14 +170,19 @@ function addList(parent: HTMLElement, className: string, field: string): void {
 function setList(root: HTMLElement, field: string, items: ListItem[]): void {
   const ul = root.querySelector<HTMLElement>(`[data-field="${field}"]`);
   if (!ul) return;
-  const key = items.map((i) => `${i.ok ? '1' : '0'}${i.text}`).join('\n');
+  const key = items.map((i) => `${i.ok ? '1' : '0'}${i.icon ?? ''}${i.text}`).join('\n');
   if (ul.dataset.key === key) return;
   ul.dataset.key = key;
   ul.replaceChildren(
     ...items.map((i) => {
       const li = document.createElement('li');
       li.className = i.ok ? 'ok' : 'bad';
-      li.textContent = i.text;
+      if (i.icon !== undefined) {
+        // Symbol auf dunklem Chip (R181); der Name sitzt am Eintrag
+        li.setAttribute('aria-label', i.text);
+        li.title = i.text;
+        li.append(iconChip(i.icon), document.createTextNode(i.mark ?? ''));
+      } else li.textContent = i.text;
       return li;
     }),
   );
@@ -167,6 +202,7 @@ function renderHouse(panel: HTMLElement): void {
   addList(panel, 'reasons', 'diagnosis');
   addRemedy(panel);
   addList(panel, 'needs', 'needs');
+  addLine(panel, '', 'first-missing').hidden = true;
   const upgrade = document.createElement('div');
   upgrade.className = 'upgrade';
   const heading = document.createElement('h3');
@@ -175,6 +211,18 @@ function renderHouse(panel: HTMLElement): void {
   addList(upgrade, 'reasons', 'upgrade-reasons');
   addLine(upgrade, '', 'upgrade-cost');
   panel.appendChild(upgrade);
+}
+
+/** Zeile unter den Bedarfen: Symbol und Name des ersten fehlenden Guts oder Dienstes; sonst verborgen. */
+function setFirstMissing(panel: HTMLElement, n: NeedIcon | undefined): void {
+  const line = panel.querySelector<HTMLElement>('[data-field="first-missing"]');
+  if (!line) return;
+  const key = n === undefined ? '' : `${n.icon}|${n.label}`;
+  if (line.dataset.key === key) return;
+  line.dataset.key = key;
+  line.hidden = n === undefined;
+  if (n === undefined) line.replaceChildren();
+  else line.replaceChildren(iconChip(n.icon), document.createTextNode(`Fehlt: ${n.label}`));
 }
 
 function updateHouse(panel: HTMLElement, world: World, b: Building): void {
@@ -190,15 +238,21 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     supplied ? 'Versorgung: ✓ im Radius' : 'Versorgung: ✗ ausserhalb von Kontor/Markt',
   )?.classList.toggle('negative', !supplied);
 
-  const needs: ListItem[] = (Object.keys(tier.needs) as GoodId[]).map((g) => {
-    const ok = house.satisfied[g] === true;
-    return { text: `${GOODS[g].name} ${ok ? '✓' : '✗'}`, ok };
-  });
-  for (const s of tier.services) {
-    const ok = house.services[s] === true;
-    needs.push({ text: `${BUILDING_DEFS[SERVICE_BUILDING[s]].name} ${ok ? '✓' : '✗'}`, ok });
-  }
-  setList(panel, 'needs', needs);
+  const icons = needIcons(world, b);
+  setList(
+    panel,
+    'needs',
+    icons.map((n) => ({
+      text: `${n.label} ${n.met ? '✓' : '✗'}`,
+      ok: n.met,
+      icon: n.icon,
+      mark: n.met ? '✓' : '✗',
+    })),
+  );
+  setFirstMissing(
+    panel,
+    icons.find((n) => !n.met),
+  );
   // Reihenfolge wie beim Kartensymbol: das erste Element ist das dort gezeigte
   setList(
     panel,

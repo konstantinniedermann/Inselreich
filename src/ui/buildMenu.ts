@@ -1,18 +1,28 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
+import { UNLOCKS } from '../sim/defs/unlocks';
 import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
-import type { BuildingDefId, Category, Cost, SiteRule, Terrain, World } from '../sim/types';
+import type {
+  BuildingDefId,
+  Category,
+  Cost,
+  SiteRule,
+  Terrain,
+  UnlockId,
+  World,
+} from '../sim/types';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { friendlyReason } from './hints';
-import { showMessage } from './messages';
+import type { IconId } from './icons';
+import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -233,6 +243,19 @@ export function buildEntries(world: World, category: Category): BuildingDefId[] 
   );
 }
 
+/**
+ * Einträge der Bauleiste, die seit `prev` frei wurden (K2): Gebäude der neuen Freischalt-Einträge, soweit
+ * angezeigt, in der Reihenfolge des Eintrags. Das UI führt die Menge bis zur ersten Wahl (nicht gespeichert).
+ */
+export function newBuildEntries(prev: readonly UnlockId[], world: World): Set<BuildingDefId> {
+  const out = new Set<BuildingDefId>();
+  for (const u of UNLOCKS) {
+    if (!world.unlocked.includes(u.id) || prev.includes(u.id)) continue;
+    for (const id of u.buildings) if (id !== 'kontor' && buildingShown(world, id)) out.add(id);
+  }
+  return out;
+}
+
 /** Kategorien mit mindestens einem Eintrag, in `CATEGORIES`-Reihenfolge. */
 export function visibleCategories(world: World): Category[] {
   return CATEGORIES.filter((c) => buildEntries(world, c.id).length > 0).map((c) => c.id);
@@ -253,13 +276,28 @@ export function renderBuildMenu(
   const focusKey =
     active instanceof HTMLElement && nav.contains(active) ? active.dataset.key : undefined;
   nav.replaceChildren();
-  const addButton = (parent: HTMLElement, label: string, tool: Tool, cost?: Cost): void => {
+  const addButton = (
+    parent: HTMLElement,
+    label: string,
+    tool: Tool,
+    cost?: Cost,
+    icon?: IconId,
+  ): void => {
     const btn = document.createElement('button');
     if (cost) buttonCost.set(btn, cost);
     btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
     btn.setAttribute('aria-label', label);
     btn.textContent = label;
     btn.dataset.key = label;
+    if (icon) btn.prepend(iconChip(icon));
+    if (tool.kind === 'build' && state.newEntries.has(tool.defId)) {
+      const mark = document.createElement('span');
+      mark.className = 'badge-new';
+      mark.setAttribute('role', 'img');
+      mark.setAttribute('aria-label', 'neu');
+      mark.textContent = 'neu';
+      btn.append(mark);
+    }
     attachTooltip(btn, tool, cost !== undefined, nav);
     btn.addEventListener('click', (ev) => {
       if (btn.dataset.longPress) {
@@ -303,7 +341,9 @@ export function renderBuildMenu(
   for (const cat of CATEGORIES) {
     const btn = document.createElement('button');
     btn.className = 'btn btn-category' + (state.openCategory === cat.id ? ' active' : '');
-    btn.textContent = cat.label;
+    btn.append(iconChip(`cat-${cat.id}`));
+    btn.setAttribute('aria-label', cat.label);
+    btn.title = cat.label;
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
     btn.dataset.key = cat.id;
@@ -327,6 +367,7 @@ export function renderBuildMenu(
         `${def.name} · ${def.cost.money} Geld`,
         { kind: 'build', defId: id },
         def.cost,
+        `cat-${def.category}`,
       );
     }
     nav.appendChild(sub);

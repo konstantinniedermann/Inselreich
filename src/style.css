@@ -812,3 +812,54 @@ body {
   pointer-events: auto;
   cursor: pointer;
 }
+
+/* Symbole (M10 U4, Spec 14): immer auf dunklem Chip (--wood), nie direkt auf Pergament (R181) */
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: var(--wood);
+  border-radius: 4px;
+  padding: 1px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.icon-chip svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+/* in hellen Karten und Meldungen hebt eine Goldkante den Chip vom Pergament ab */
+.card .icon-chip,
+.toast .icon-chip {
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.chip,
+.hud-balance,
+.hud-money,
+.hud-tax .btn {
+  display: inline-flex;
+  align-items: center;
+}
+.btn-category .icon-chip {
+  margin-right: 0;
+}
+.panel-line[data-field='first-missing'] {
+  display: flex;
+  align-items: center;
+}
+.needs li {
+  display: inline-flex;
+  align-items: center;
+}
+.badge-new {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}

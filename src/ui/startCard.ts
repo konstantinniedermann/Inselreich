@@ -11,6 +11,7 @@ import { goalTexts } from './goal';
 import { mapSigns, nextStep } from './guide';
 import { hotkeyLabel } from './hotkeys';
 import { openModal, renderConfirm } from './modal';
+import { decorateNames } from './messages';
 import { newIslandPrompt } from './menu';
 import type { SaveInfo, Slot, StorageProblem } from './storage';
 import { formatClock } from './time';
@@ -189,8 +190,11 @@ export function openStartCard(host: HTMLElement, o: StartCardOptions): () => voi
       box.dataset.field = sec.field;
       const h = Object.assign(document.createElement('h3'), { textContent: sec.title });
       const ul = document.createElement('ul');
-      for (const line of sec.lines)
-        ul.append(Object.assign(document.createElement('li'), { textContent: line }));
+      for (const line of sec.lines) {
+        const li = document.createElement('li');
+        li.append(...decorateNames(line)); // Symbol vor Gebäude- und Gutnamen, Text unverändert
+        ul.append(li);
+      }
       box.append(h, ul);
       m.card.append(box);
     }

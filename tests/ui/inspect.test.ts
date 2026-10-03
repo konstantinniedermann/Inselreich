@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   lockMatrix,
+  needIcons,
   burningText,
   producesText,
   protectedCount,
@@ -204,5 +205,19 @@ describe('M10 Amtsstuben-Panel (Spec 11.8)', () => {
     setHouseTo(houses[1]!, 2, 3);
     expect(lockMatrix(w)[1]!.goods.find((g) => g.good === 'cloth')!.locked).toBe(true);
     expect(lockMatrix(createWorld(3)).length).toBe(0); // vor U5 verborgen
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-01 Haus-Panel: Bedarfe als Symbole mit erfüllt/offen und Gutname', () => {
+    const { w, house } = uxWorld();
+    setHouse(house, 2, 4, ['food', 'cloth']);
+    house.house!.services = { faith: true };
+    const items = needIcons(w, house);
+    expect(items[0]).toEqual({ icon: 'food', met: true, label: 'Nahrung' });
+    expect(items.map((i) => i.icon)).toEqual(['food', 'cloth', 'faith']);
+    expect(items.every((i) => i.met)).toBe(true);
+    house.house!.satisfied.cloth = false;
+    expect(needIcons(w, house)[1]).toEqual({ icon: 'cloth', met: false, label: 'Stoff' });
   });
 });

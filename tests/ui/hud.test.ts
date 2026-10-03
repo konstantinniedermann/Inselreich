@@ -5,6 +5,10 @@ import { goodsBalance } from '../../src/sim/queries';
 import { SCENARIOS } from '../sim/scenarios';
 import {
   balanceText,
+  balanceView,
+  chipView,
+  moneyView,
+  popChipView,
   balanceTooltip,
   taxButtonText,
   popChipHidden,
@@ -131,5 +135,25 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
     const w = createWorld(3);
     w.taxLevel = 'high';
     expect(balanceTooltip(w)).toContain('Steuer: normal (keine Amtsstube)');
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-01 Chips tragen Symbol; aria-label = bisheriger Text wörtlich', () => {
+    const w = createWorld(3);
+    expect(chipView(w, 'wood')).toEqual({
+      icon: 'wood',
+      text: `${w.stock.wood} →`,
+      label: `Holz ${w.stock.wood} →`,
+    });
+    expect(popChipView(w, 1).label).toBe('Pioniere 0');
+    expect(popChipView(w, 3)).toEqual({ icon: 'tier-3', text: '0', label: 'Bürger 0' });
+    expect(moneyView(w)).toMatchObject({ icon: 'money', label: `Geld ${w.money}` });
+    expect(balanceView(w)).toMatchObject({ icon: 'balance' });
+    expect(balanceView(w).label).toBe(balanceText(w.stats).text);
+  });
+  it('AK-U4-01 jedes Gut hat ein Symbol gleicher Kennung', () => {
+    const w = createWorld(3);
+    for (const g of GOOD_IDS) expect(chipView(w, g).icon).toBe(g);
   });
 });

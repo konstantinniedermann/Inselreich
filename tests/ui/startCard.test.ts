@@ -5,6 +5,7 @@ import type { CrisisLevel } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { nextStep } from '../../src/ui/guide';
 import { placeTownhall, setHouse, village } from '../sim/helpers';
+import { nameSegments } from '../../src/ui/messages';
 import {
   STORAGE_NOTES,
   helpSections,
@@ -103,5 +104,25 @@ describe('M10 Hilfe-Karte (Spec 12.1)', () => {
         .find((l) => l.startsWith('Zuckerrohrplantage'))!
         .endsWith(" · Steuer ‚hoch' verhindert volle Häuser"),
     ).toBe(true);
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-01 Meldung und Hilfe: Symbol vor Gebäude- und Gutnamen, Text unverändert', () => {
+    const text = 'Neu: Steinbruch (Q), Kapelle — Holz und Stein knapp. Glashütte';
+    const segs = nameSegments(text);
+    expect(segs.map((s) => s.text).join('')).toBe(text);
+    const icons = segs.filter((s) => s.icon !== undefined);
+    expect(icons.map((s) => [s.text, s.icon])).toEqual([
+      ['Steinbruch', 'cat-production'],
+      ['Kapelle', 'cat-public'],
+      ['Holz', 'wood'],
+      ['Stein', 'stone'],
+      ['Glashütte', 'cat-production'],
+    ]);
+  });
+  it('AK-U4-01 Teilwörter bekommen kein Symbol; Text ohne Namen bleibt ein Stück', () => {
+    expect(nameSegments('Holzweg Steine')).toEqual([{ text: 'Holzweg Steine' }]);
+    expect(nameSegments('')).toEqual([]);
   });
 });
