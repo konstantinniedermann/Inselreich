@@ -1,0 +1,14 @@
+> Teil des Plans M11, Einstieg und Task-Tabelle: [index.md](index.md). **Gemeinsame Regeln:** index.md (Global Constraints).
+
+### Schnittstellen zwischen Tasks
+
+| Von → Nach     | Schnittstelle (Datei)                                                                                                                                                                 | Hinweis                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| T01 → alle     | `cycleOf(b)`, `upkeepOf(b)`, `utilization(b)` (`src/sim/levels.ts`); Typen `eff?`, `level?`, `noForest`, `free?`, `taxCarry`, `upkeepCarry`; `UnlockFunction` + `upgrade2`/`upgrade3` | einziger Leseort für Zyklus und Unterhalt                                  |
+| T02 → T10…T12  | `goodsBalance`, `upgradeDelta`, `deficitGood`, `upgradeDeficit(world, b)` (`src/sim/flow.ts`)                                                                                         | `queries.ts` re-exportiert `goodsBalance`                                  |
+| T04 → T05, T09 | `siteRuleOk(world, defId, x, y, rule)` (`placement.ts`), `BuildingDefId` + `hunter`/`cattlefarm`                                                                                      | T05 nutzt die Regel für die Live-Prüfung                                   |
+| T07 → T08, T11 | `upgradeBuilding(world, id)` → `{ ok, reason }`; `LEVELS` (`defs/levels.ts`); `paidCost(b)` (T08)                                                                                     | T11 liest `LEVELS` für die Ausbau-Vorschau                                 |
+| T06 → T11, R1  | `eff` → `utilization(b)`                                                                                                                                                              | Anzeige „Auslastung" und Ring-Grau                                         |
+| T09 → T11, R2  | integrierter Sim-Stand (`feat/m11-sim`)                                                                                                                                               | `LEVELS` mit 11 Betrieben                                                  |
+| R1 → T12       | Ring-Modul (`ringFraction`), Marke `noForest`                                                                                                                                         | T12 zeigt Zustandstext; Marke kommt aus R1                                 |
+| T11 → T12      | Betriebs-Panel-Struktur in `inspect.ts`                                                                                                                                               | beide Tasks ändern `inspect.ts`/`hints.ts` nicht gleichzeitig (ein Strang) |
