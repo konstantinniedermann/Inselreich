@@ -460,6 +460,20 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     defId: def.id,
   });
 
+  it('AK-R1-04 Amtsstube zeichnet eine eigene Form, nicht den public-Rückfall', () => {
+    // gleicher Footprint (2 × 2) und gleicher Standort: nur die Silhouette darf den Unterschied machen
+    const pub = fallbackDefs.find((d) => d.category === 'public' && d.w === 2)!;
+    const drawLog = (
+      def: (typeof fallbackDefs)[number] | typeof BUILDING_DEFS.townhall,
+      b: Building,
+    ) => {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def as never, b, 0);
+      return log.events;
+    };
+    expect(drawLog(BUILDING_DEFS.townhall, mk('townhall'))).not.toEqual(drawLog(pub, unknown(pub)));
+  });
+
   it('AK-R2-03 jede heutige BuildingDefId hat eine eigene Silhouette', () => {
     for (const id of Object.keys(BUILDING_DEFS))
       expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();

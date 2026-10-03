@@ -167,6 +167,7 @@ const flockRadius = (seed: number, x: number, y: number): number =>
  * Zelle keinen Kappenplatz, und Renderer (weiter Bereich) und UI (kleiner Bereich) sehen dieselben Tiere; Scrollen
  * ändert die gezeichnete Menge nicht. Phase und Wetter wirken danach als Filter.
  */
+// Gültig, solange Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere Geländeänderungen müssen diesen Cache neu bewerten.
 const anchorCache = new WeakMap<World, { fish: Anchor[][]; flocks: Anchor[][] }>();
 function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
   let c = anchorCache.get(world);
