@@ -153,8 +153,31 @@ export interface Crisis {
   /** Nur fire. */
   outcome?: FireOutcome;
 }
+export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
+export type UnlockFunction = 'forest' | 'orders' | 'goodLocks';
+export type UnlockTrigger =
+  | { kind: 'start' }
+  | { kind: 'houses'; min: number }
+  | { kind: 'tierWish'; tier: Tier }
+  | { kind: 'tierReached'; tier: Tier }
+  | { kind: 'tierOpen'; tier: Tier };
+export interface UnlockDef {
+  id: UnlockId;
+  trigger: UnlockTrigger;
+  buildings: readonly BuildingDefId[];
+  goods: readonly GoodId[];
+  functions: readonly UnlockFunction[];
+  lockText: string; // Platzhalter {min}, {max}; '' nur bei U0
+  whenText: string; // Platzhalter {min}, {max}, {WIN_CITIZENS}; '' nur bei U0
+  notice: string; // '' nur bei U0
+  tip: string;
+}
+export interface GoodLock {
+  tier: Tier;
+  good: GoodId;
+}
 export interface World {
-  version: 4;
+  version: 5;
   seed: number;
   width: number;
   height: number;
@@ -175,6 +198,12 @@ export interface World {
   order: Order | null;
   crisisLevel: CrisisLevel;
   crisis: Crisis | null;
+  /** Freigeschaltete Einträge in UNLOCK_IDS-Reihenfolge, monoton (M10 4). */
+  unlocked: UnlockId[];
+  /** Ausgabesperren, sortiert nach Stufe, dann GOOD_IDS-Index, ohne Doppelte (M10 5.3). */
+  goodLocks: GoodLock[];
+  /** Stufen mit Aufstiegsstopp, aufsteigend (M10 5.4). */
+  upgradeStops: Tier[];
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

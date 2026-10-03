@@ -10,11 +10,13 @@ import {
   ORDER_PERIOD,
 } from './defs/timing';
 import { TAX_LEVELS, TIERS } from './defs/tiers';
+import { UNLOCK_IDS } from './defs/unlocks';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
-import type { CrisisKind, CrisisLevel, GoodId, World } from './types';
+import { deriveUnlocks } from './unlocks';
+import type { CrisisKind, CrisisLevel, GoodId, UnlockId, World } from './types';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -177,6 +179,65 @@ export function migrateV3ToV4(raw: Record<string, unknown>): void {
   raw.wonMerchants = false;
 }
 
+/** v4 → v5 (Spec 8.2): Platzhalter; die echte Freischaltung setzt deserialize nach isWellFormed (deriveUnlocks). */
+export function migrateV4ToV5(raw: Record<string, unknown>): void {
+  raw.unlocked = ['U0'];
+  raw.goodLocks = [];
+  raw.upgradeStops = [];
+  raw.version = 5;
+}
+
+function isUnlockList(v: unknown): boolean {
+  if (!Array.isArray(v) || !v.includes('U0')) return false;
+  let last = -1;
+  for (const id of v) {
+    const i = UNLOCK_IDS.indexOf(id as UnlockId);
+    if (i <= last) return false; // unbekannt (−1), doppelt oder falsche Reihenfolge
+    last = i;
+  }
+  return true;
+}
+function isGoodLockList(v: unknown): boolean {
+  if (!Array.isArray(v)) return false;
+  let last = -1;
+  for (const e of v) {
+    if (!isObject(e)) return false;
+    const tier = e.tier;
+    if (tier !== 1 && tier !== 2 && tier !== 3 && tier !== 4) return false;
+    const gi = GOOD_IDS.indexOf(e.good as GoodId);
+    if (gi < 0 || !Object.hasOwn(TIERS[tier].needs, e.good as string)) return false;
+    const key = tier * 100 + gi;
+    if (key <= last) return false; // doppelt oder unsortiert
+    last = key;
+  }
+  return true;
+}
+function isUpgradeStopList(v: unknown): boolean {
+  if (!Array.isArray(v)) return false;
+  let last = 0;
+  for (const t of v as unknown[]) {
+    if (t !== 1 && t !== 2 && t !== 3 && t !== 4) return false;
+    if (TIERS[t].upgradeCost === null || t <= last) return false;
+    last = t;
+  }
+  return true;
+}
+
+/** Ein Wohnhaus ohne Hausdaten bräuchte jede Abfrage der Freischaltung als Sonderfall (Spec 8.2). */
+const housesHaveState = (buildings: unknown): boolean =>
+  Object.values(buildings as Record<string, Record<string, unknown>>).every(
+    (b) => b.defId !== 'house' || isObject(b.house),
+  );
+
+function isValidV5Fields(raw: Record<string, unknown>): boolean {
+  return (
+    housesHaveState(raw.buildings) &&
+    isUnlockList(raw.unlocked) &&
+    isGoodLockList(raw.goodLocks) &&
+    isUpgradeStopList(raw.upgradeStops)
+  );
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
@@ -191,6 +252,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV2Fields(raw)) return false;
   if (!isValidV3Fields(raw)) return false;
   if (!isValidV4Fields(raw)) return false;
+  if (!isValidV5Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -212,12 +274,15 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 1) migrateV1ToV2(raw);
   if (raw.version === 2) migrateV2ToV3(raw);
   if (raw.version === 3) migrateV3ToV4(raw);
+  const fromV4 = raw.version === 4;
+  if (fromV4) migrateV4ToV5(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;
   try {
     // Persistiertes `connected` nicht übernehmen, sondern aus den Wegen neu ableiten
     recomputeConnectivity(world);
+    if (fromV4) world.unlocked = deriveUnlocks(world);
   } catch {
     return { ok: false, reason: 'Beschädigter Spielstand' };
   }

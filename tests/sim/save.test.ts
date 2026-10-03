@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
 import v2Json from './fixtures/save-v2.json?raw';
@@ -10,8 +11,9 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
+import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld } from '../../src/sim/world';
-import { forceGrass, prepareEast } from './helpers';
+import { forceGrass, forceRect, prepareEast, setHouse, village } from './helpers';
 
 let w: World;
 let k: Building;
@@ -36,12 +38,12 @@ function expectFailure(json: string, reason: string): void {
 
 describe('save', () => {
   it('uses version 3', () => {
-    expect(SAVE_VERSION).toBe(4);
+    expect(SAVE_VERSION).toBe(5);
   });
 
   it('AK-S1-01 createWorld starts with the v2 fields', () => {
     const fresh = createWorld(3);
-    expect(fresh.version).toBe(4);
+    expect(fresh.version).toBe(5);
     expect(fresh.taxLevel).toBe('normal');
     expect(fresh.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => fresh.sellPct[g] === 100)).toBe(true);
@@ -57,7 +59,7 @@ describe('save', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(4);
+    expect(loaded.version).toBe(5);
     expect(loaded.taxLevel).toBe('normal');
     expect(loaded.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => loaded.sellPct[g] === 100)).toBe(true);
@@ -95,7 +97,7 @@ describe('save', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 5)),
+      tampered(w, (r) => (r.version = 6)),
       'Unbekannte Version',
     );
   });
@@ -176,7 +178,7 @@ describe('save', () => {
   });
 
   it('rejects an unknown version', () => {
-    expectFailure(JSON.stringify({ ...w, version: 5 }), 'Unbekannte Version');
+    expectFailure(JSON.stringify({ ...w, version: 6 }), 'Unbekannte Version');
   });
 
   it('rejects invalid JSON', () => {
@@ -278,13 +280,13 @@ function burningWorld(): { world: World; id: number } {
 describe('M6 Save v3', () => {
   it('AK-S1-01 createWorld: version 3, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
     const a = createWorld(3);
-    expect(a.version).toBe(4);
+    expect(a.version).toBe(5);
     expect(a.crisisLevel).toBe('off');
     expect(a.crisis).toBeNull();
     const b = createWorld(3, { crisisLevel: 'normal' });
     expect(b.crisisLevel).toBe('normal');
     expect({ ...b, crisisLevel: 'off' }).toEqual(a);
-    expect(Object.keys(a).slice(-2)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
+    expect(Object.keys(a).slice(-5, -3)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
   });
 
   // Fixture erzeugt auf main 3fcb678 über den temporären Test tests/sim/gen-save-v2.test.ts
@@ -297,7 +299,7 @@ describe('M6 Save v3', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(4);
+    expect(loaded.version).toBe(5);
     expect(loaded.crisisLevel).toBe('off');
     expect(loaded.crisis).toBeNull();
     expect(Object.values(loaded.buildings).some((b) => b.outageUntil !== undefined)).toBe(false);
@@ -318,7 +320,7 @@ describe('M6 Save v3', () => {
     const r = deserialize(v1Json);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.world.version).toBe(4);
+    expect(r.world.version).toBe(5);
     expect(r.world.crisisLevel).toBe('off');
     expect(r.world.crisis).toBeNull();
     expect(r.world.taxLevel).toBe('normal');
@@ -401,7 +403,7 @@ describe('M6 Save v3', () => {
       );
     }
     expectFailure(
-      tampered(storm(), (r) => (r.version = 5)),
+      tampered(storm(), (r) => (r.version = 6)),
       'Unbekannte Version',
     );
   });
@@ -436,13 +438,13 @@ describe('M6 Save v3', () => {
 describe('M8 Save v4', () => {
   it('AK-S1-02 createWorld: version 4, wonMerchants false, Glas 0 / 100, übrige Felder wie nach M6', () => {
     const a = createWorld(3);
-    expect(a.version).toBe(4);
+    expect(a.version).toBe(5);
     expect(a.wonMerchants).toBe(false);
     expect(a.stock.glass).toBe(0);
     expect(a.sellPct.glass).toBe(100);
     const keys = Object.keys(a);
     expect(keys.indexOf('wonMerchants')).toBe(keys.indexOf('won') + 1);
-    expect(keys.slice(-2)).toEqual(['crisisLevel', 'crisis']);
+    expect(keys.slice(-5, -3)).toEqual(['crisisLevel', 'crisis']);
   });
 
   it('AK-S1-11 lädt einen echten v3-Stand und migriert ihn nach v4', () => {
@@ -458,7 +460,7 @@ describe('M8 Save v4', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(4);
+    expect(loaded.version).toBe(5);
     expect(loaded.stock.glass).toBe(0);
     expect(loaded.sellPct.glass).toBe(100);
     expect(loaded.wonMerchants).toBe(false);
@@ -479,7 +481,7 @@ describe('M8 Save v4', () => {
       const r = deserialize(json);
       expect(r.ok).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(4);
+      expect(r.world.version).toBe(5);
       expect(r.world.wonMerchants).toBe(false);
       expect(r.world.stock.glass).toBe(0);
       expect(r.world.sellPct.glass).toBe(100);
@@ -500,7 +502,7 @@ describe('M8 Save v4', () => {
     w.wonMerchants = true;
     w.stock.glass = 7;
     w.sellPct.glass = 90;
-    expect(w.version).toBe(4);
+    expect(w.version).toBe(5);
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.world).toEqual(w);
@@ -527,7 +529,7 @@ describe('M8 Save v4', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 5)),
+      tampered(w, (r) => (r.version = 6)),
       'Unbekannte Version',
     );
     try {
@@ -536,5 +538,158 @@ describe('M8 Save v4', () => {
     } finally {
       TIERS[4].unlockCitizens = null;
     }
+  });
+});
+
+/** Synthetischer v4-Stand: v5-Felder entfernt, version 4 (Spec 8.2). */
+function asV4(w: World): string {
+  const raw = JSON.parse(serialize(w)) as Record<string, unknown>;
+  delete raw.unlocked;
+  delete raw.goodLocks;
+  delete raw.upgradeStops;
+  raw.version = 4;
+  return JSON.stringify(raw);
+}
+const loadOk = (json: string): World => {
+  const r = deserialize(json);
+  if (!r.ok) throw new Error(r.reason);
+  return r.world;
+};
+/** Angebundener Werkzeugmacher östlich des Kontors (wie tests/sim/toolmaker.test.ts). */
+function connectedToolmaker(w: World): Building {
+  const k = w.buildings[w.kontorId]!;
+  prepareEast(w, k);
+  expect(placeRoad(w, k.x + 2, k.y).ok).toBe(true);
+  forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
+  const r = placeBuilding(w, 'toolmaker', k.x + 3, k.y);
+  if (!r.ok || r.id === undefined) throw new Error(r.ok ? 'ohne Id' : r.reason);
+  return w.buildings[r.id]!;
+}
+
+describe('M10 Save v5 (Spec 8.2)', () => {
+  it('AK-S1-11 Round-trip v5 mit unlocked, goodLocks, upgradeStops', () => {
+    const w = createWorld(3);
+    w.unlocked = ['U0', 'U2', 'U3'];
+    w.goodLocks = [{ tier: 2, good: 'cloth' }];
+    w.upgradeStops = [1];
+    expect(loadOk(serialize(w))).toEqual(w);
+  });
+  // Fixture erzeugt auf <BASIS> (= <SHA eintragen>) mit dem temporären Test gen-save-v4 (Plan M10 Task 1 Schritt 1):
+  // Controller Seed 3, Krisen normal mit Feuerwache, angehalten bei Tick 4800, dann setTaxLevel(w, 'high').
+  it('AK-S1-12 save-v4.json lädt als v5 mit abgeleiteter Freischaltung; alles andere unverändert', () => {
+    const json = readFileSync('tests/sim/fixtures/save-v4.json', 'utf8');
+    const raw = JSON.parse(json) as Record<string, unknown>;
+    const w = loadOk(json);
+    expect(w.version).toBe(5);
+    expect(w.unlocked).toEqual(['U0', 'U2', 'U3', 'U4', 'U5']);
+    expect(w.goodLocks).toEqual([]);
+    expect(w.upgradeStops).toEqual([]);
+    expect(w.taxLevel).toBe('high');
+    for (const k of [
+      'buildings',
+      'stock',
+      'money',
+      'tick',
+      'taxLockedUntil',
+      'sellPct',
+      'order',
+      'crisisLevel',
+      'crisis',
+      'won',
+      'wonMerchants',
+    ] as const)
+      expect(w[k]).toEqual(raw[k]);
+  });
+  it('AK-S1-13 Kette: save-v3 → U0, U2 … U5; save-v1, save-v2 → v5 mit deriveUnlocks', () => {
+    const v3 = loadOk(readFileSync('tests/sim/fixtures/save-v3.json', 'utf8'));
+    expect(v3.version).toBe(5);
+    expect(v3.unlocked).toEqual(['U0', 'U2', 'U3', 'U4', 'U5']);
+    for (const f of ['save-v1.json', 'save-v2.json']) {
+      const w = loadOk(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
+      expect(w.version).toBe(5);
+      expect(w.unlocked).toEqual(deriveUnlocks(w));
+      expect(w.goodLocks).toEqual([]);
+      expect(w.upgradeStops).toEqual([]);
+    }
+  });
+  it('AK-S1-14 Migration je Fall (a, b, c1, d–g)', () => {
+    const a = village(4, { unlockAll: true });
+    expect(loadOk(asV4(a.w)).unlocked).toEqual(['U0']);
+    const b = village(4, { unlockAll: true });
+    setHouse(b.houses[0]!, 1, 4);
+    expect(loadOk(asV4(b.w)).unlocked).toEqual(['U0', 'U2']);
+    const c = createWorld(3, { unlockAll: true });
+    const tm = connectedToolmaker(c);
+    c.stock.wood = 10;
+    tm.progress = 20;
+    expect(loadOk(asV4(c)).unlocked).toEqual(['U0', 'U5']); // c1: ohne Kette (c2 in Task 4)
+    const d = createWorld(3, { unlockAll: true });
+    const k = d.buildings[d.kontorId]!;
+    forceRect(d, k.x + 3, k.y + 3, 2, 2, 'grass');
+    expect(placeBuilding(d, 'market', k.x + 3, k.y + 3).ok).toBe(true);
+    expect(loadOk(asV4(d)).unlocked).toContain('U1');
+    expect(loadOk(asV4(village(20, { unlockAll: true }).w)).unlocked).toContain('U1');
+    const f = village(1, { unlockAll: true });
+    f.w.won = true;
+    expect(loadOk(asV4(f.w)).unlocked).toEqual(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']);
+    const g = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const gk = g.buildings[g.kontorId]!;
+    forceRect(g, gk.x + 3, gk.y + 3, 2, 2, 'grass');
+    expect(placeBuilding(g, 'firestation', gk.x + 3, gk.y + 3).ok).toBe(true);
+    expect(loadOk(asV4(g)).unlocked).toEqual(['U0', 'U2']);
+  });
+  it('AK-S1-15 Negativfälle → Beschädigter Spielstand bzw. Unbekannte Version, ohne Ausnahme', () => {
+    const bad = (mut: (r: Record<string, unknown>) => void) => {
+      const r = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
+      mut(r);
+      return deserialize(JSON.stringify(r));
+    };
+    const damaged = { ok: false, reason: 'Beschädigter Spielstand' };
+    const cases: ((r: Record<string, unknown>) => void)[] = [
+      (r) => delete r.unlocked,
+      (r) => (r.unlocked = 'U0'),
+      (r) => (r.unlocked = ['U0', 'U9']),
+      (r) => (r.unlocked = ['U0', 2]),
+      (r) => (r.unlocked = ['U0', 'U2', 'U2']),
+      (r) => (r.unlocked = ['U2']),
+      (r) => (r.unlocked = ['U2', 'U0']),
+      (r) => delete r.goodLocks,
+      (r) => (r.goodLocks = [{ tier: 5, good: 'food' }]),
+      (r) => (r.goodLocks = [{ tier: 2, good: 'gold' }]),
+      (r) => (r.goodLocks = [{ tier: 1, good: 'cloth' }]),
+      (r) =>
+        (r.goodLocks = [
+          { tier: 2, good: 'cloth' },
+          { tier: 2, good: 'cloth' },
+        ]),
+      (r) =>
+        (r.goodLocks = [
+          { tier: 3, good: 'rum' },
+          { tier: 2, good: 'cloth' },
+        ]),
+      (r) => delete r.upgradeStops,
+      (r) => (r.upgradeStops = [0]),
+      (r) => (r.upgradeStops = [4]),
+      (r) => (r.upgradeStops = [1, 1]),
+      (r) => (r.upgradeStops = [2, 1]),
+    ];
+    for (const m of cases) expect(() => bad(m)).not.toThrow();
+    for (const m of cases) expect(bad(m)).toEqual(damaged);
+    const v = village(1, { unlockAll: true });
+    const r4 = JSON.parse(asV4(v.w)) as Record<string, unknown>;
+    expect(deserialize(JSON.stringify({ ...r4, buildings: 5 }))).toEqual(damaged);
+    const noHouse = JSON.parse(asV4(v.w)) as { buildings: Record<string, Record<string, unknown>> };
+    delete noHouse.buildings[String(v.houses[0]!.id)]!.house;
+    expect(() => deserialize(JSON.stringify(noHouse))).not.toThrow();
+    expect(deserialize(JSON.stringify(noHouse))).toEqual(damaged);
+    expect(bad((r) => (r.version = 6))).toEqual({ ok: false, reason: 'Unbekannte Version' });
+  });
+  it('RF-1 gespeicherte Freischaltung gilt: U6 ohne won bleibt, U2 … U5 werden nicht nachgezogen', () => {
+    const w = createWorld(3);
+    w.unlocked = ['U0', 'U6'];
+    const l = loadOk(serialize(w));
+    expect(buildLock(l, 'bathhouse')).toBeNull();
+    step(l);
+    expect(l.unlocked).toEqual(['U0', 'U6']);
   });
 });

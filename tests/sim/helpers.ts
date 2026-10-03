@@ -1,8 +1,8 @@
 import { placeBuilding } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, idx } from '../../src/sim/world';
-import type { Building, World } from '../../src/sim/types';
+import { center, createWorld, idx } from '../../src/sim/world';
+import type { Building, CrisisLevel, Tier, World } from '../../src/sim/types';
 
 /** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
 export function prepareEast(world: World, kontor: Building): void {
@@ -115,3 +115,29 @@ export function houseFar(world: World): Building {
   }
   throw new Error('no far tile');
 }
+
+/** Seed 3; n Wohnhäuser östlich des Kontors (x = kx+2 … kx+6, ab y = ky−2, je 5 pro Zeile), alle im Kontor-Radius. */
+export function village(
+  n: number,
+  opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean } = {},
+): { w: World; houses: Building[] } {
+  const w = createWorld(3, { crisisLevel: opts.crisisLevel ?? 'off', unlockAll: opts.unlockAll });
+  w.money = 100_000;
+  w.stock.wood = 200;
+  const k = w.buildings[w.kontorId]!;
+  const houses: Building[] = [];
+  for (let i = 0; i < n; i++) {
+    const x = k.x + 2 + (i % 5);
+    const y = k.y - 2 + Math.floor(i / 5);
+    forceGrass(w, x, y);
+    const r = placeBuilding(w, 'house', x, y);
+    if (!r.ok || r.id === undefined) throw new Error(`Haus ${i}: ${r.ok ? 'ohne Id' : r.reason}`);
+    houses.push(w.buildings[r.id]!);
+  }
+  w.money = 5000;
+  return { w, houses };
+}
+export const setHouse = (b: Building, tier: Tier, n: number): void => {
+  b.house!.tier = tier;
+  b.house!.inhabitants = n;
+};

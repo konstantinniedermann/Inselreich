@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from './defs/buildings';
 import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
 import { DEFAULT_TAX_LEVEL } from './defs/tiers';
+import { UNLOCK_IDS } from './defs/unlocks';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
 import type {
   Building,
@@ -65,11 +66,14 @@ export function buildingsOfType(world: World, defId: BuildingDefId): Building[] 
   return Object.values(world.buildings).filter((b) => b.defId === defId);
 }
 
-export function createWorld(seed: number, opts: { crisisLevel?: CrisisLevel } = {}): World {
+export function createWorld(
+  seed: number,
+  opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean } = {},
+): World {
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 4,
+    version: 5,
     seed: seedUsed,
     width: MAP_W,
     height: MAP_H,
@@ -89,6 +93,9 @@ export function createWorld(seed: number, opts: { crisisLevel?: CrisisLevel } = 
     order: null,
     crisisLevel: opts.crisisLevel ?? DEFAULT_WORLD_CRISIS_LEVEL,
     crisis: null,
+    unlocked: opts.unlockAll === true ? [...UNLOCK_IDS] : ['U0'],
+    goodLocks: [],
+    upgradeStops: [],
   };
   world.buildings[1] = {
     id: 1,
