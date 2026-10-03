@@ -215,7 +215,7 @@ describe('queries', () => {
     expect(w.stats.upkeep).toBe(upkeepBefore - BUILDING_DEFS.weaver.upkeep);
   });
 
-  it('AK-S3-07 layoutKey ändert sich nur durch Bau, Abriss, Weg und Anbindung', () => {
+  it('AK-S3-07 layoutKey ändert sich nur durch Bau, Abriss, Weg, Anbindung und Geländewechsel', () => {
     prepareEast(w, k);
     const k0 = layoutKey(w);
     for (let i = 0; i < 100; i++) step(w);
