@@ -93,7 +93,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     flammable: true,
     produces: 'wood',
     cycle: 30,
-    site: [{ kind: 'radius', terrain: 'forest', radius: 2, min: 1 }],
+    site: [{ kind: 'radius', terrain: 'forest', radius: 2, min: 1, free: true }],
   },
   quarry: {
     id: 'quarry',

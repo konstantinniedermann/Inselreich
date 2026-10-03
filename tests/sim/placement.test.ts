@@ -62,10 +62,10 @@ describe('site rules', () => {
     w.tiles[idx(w, o.x + 3, o.y + 2)]!.terrain = 'water';
     expect(canPlace(w, 'fisher', o.x + 2, o.y + 2).ok).toBe(true);
   });
-  it('lumberjack needs forest within radius 2', () => {
+  it('lumberjack needs forest within radius 2 (M11 S3)', () => {
     expect(canPlace(w, 'lumberjack', o.x + 4, o.y + 4)).toEqual({
       ok: false,
-      reason: 'Zu wenig Wald in der Nähe',
+      reason: 'Zu wenig freier Wald in der Nähe',
     });
     w.tiles[idx(w, o.x + 6, o.y + 4)]!.terrain = 'forest';
     expect(canPlace(w, 'lumberjack', o.x + 4, o.y + 4).ok).toBe(true);

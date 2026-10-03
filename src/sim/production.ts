@@ -2,12 +2,20 @@ import { BUILDING_DEFS } from './defs/buildings';
 import { STORM_TICK_DIVISOR } from './defs/crises';
 import { addStock, takeStock } from './economy';
 import { cycleOf } from './levels';
+import { siteRuleOk } from './placement';
 import { serviceAvailable } from './population';
-import type { World } from './types';
+import type { Building, World } from './types';
 
 /** Sturm wirkt (nach der Vorwarnung): Schritte `from … until` (Spec 6). */
 const stormActive = (world: World): boolean =>
   world.crisis !== null && world.crisis.kind === 'storm' && world.tick >= world.crisis.from;
+
+/** Spec 3.4: jede radius-Regel mit Wald muss live erfüllt sein (Holzfäller, Jagdhütte; nur freie Kacheln). */
+const forestOk = (world: World, b: Building): boolean =>
+  BUILDING_DEFS[b.defId].site.every(
+    (r) =>
+      r.kind !== 'radius' || r.terrain !== 'forest' || siteRuleOk(world, b.defId, b.x, b.y, r).ok,
+  );
 
 /**
  * Ein Produktionsschritt für alle Produktionsgebäude. Die Inputs werden einmal pro Zyklus bei progress 0
@@ -31,6 +39,10 @@ export function tickProduction(world: World): void {
     const svc = def.requiresService;
     if (svc !== undefined && !serviceAvailable(world, b, svc)) {
       b.state = 'noService'; // kein Fortschritt, keine Entnahme; Unterhalt läuft weiter (Spec 5.5)
+      continue;
+    }
+    if (!forestOk(world, b)) {
+      b.state = 'noForest'; // kein Fortschritt, keine Entnahme, progress bleibt; Unterhalt läuft
       continue;
     }
     if (def.stormAffected === true && stormActive(world) && world.tick % STORM_TICK_DIVISOR !== 0)

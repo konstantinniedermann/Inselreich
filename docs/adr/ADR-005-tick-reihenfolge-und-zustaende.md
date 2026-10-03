@@ -82,3 +82,5 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
 - `tickPopulation` rechnet im Wachstumstakt einmal vor der Häuserschleife das Budget (`goodsBalance` aus `flow.ts`);
   jeder erfolgreiche Aufstieg zieht sein Δ ab (Id-Reihenfolge, deterministisch). Zwischen den Takten keine Berechnung.
 - Begründung: Aufstieg und Buchung im selben Schritt sehen denselben Stand (RF-2). Kosten bei Irrtum: Faktor 1.
+- Zustand `noForest` nach `noService`, vor dem Sturm-Aussetzer; nicht gespeichert bewertet, sondern je Schritt neu
+  (`siteRuleOk` mit `free`, Holzfäller und Jagdhütte).

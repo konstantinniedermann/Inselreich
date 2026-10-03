@@ -16,7 +16,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, idx } from '../../src/sim/world';
 
 /** Seed-3-Welt, Krisen aus, Lager für Glas leer gestartet; Tick 1000 (keine Krisenperiode, kein Auftragsstart). */
 function base(): World {
@@ -149,10 +149,11 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
     ]);
   });
 
-  it('AK-S2-09 Sturm: Glashütte unberührt, Holzfäller liefert die Hälfte', () => {
+  it('AK-S2-09 Sturm: Glashütte unberührt, Holzfäller liefert die Hälfte (M11 S3)', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
     const lj = direct(w, 'lumberjack', 13);
+    w.tiles[idx(w, 14, 5)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
     w.stock = { ...w.stock, stone: 50, wood: 50 };
     w.crisisLevel = 'normal';
     w.tick = 2400;
