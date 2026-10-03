@@ -1300,3 +1300,12 @@ kleine Flecken alter Spielstände dürfen nicht kaputt aussehen. Merge H-S1 vor 
 Häppchen; alte Spielstände unberührt (Kacheln im Save).
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-03, Beobachtung H-R8 Bergoptik · ADR: —
+
+## R205 · 2026-10-03 · Gate Merge H-S1 Kartenerzeugung
+
+Ruling: Gate Merge H-S1 bestanden (`feat/h-s1-kartengen` @ fca5fa7; Rot-Beleg e70d540, Final-Review OK, `make check`
+grün, Balancing unverändert). Kontor nur am Meer (vorher 66 von 200 Seeds am Binnensee), `MIN_MOUNTAIN_PATCH = 12`
+in `src/sim/defs/map.ts`. Merge durch production-integrator im eigenen Worktree, vor H-R9. — Kosten bei Irrtum:
+Revert-Merge; alte Spielstände unberührt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-S1 · ADR: —

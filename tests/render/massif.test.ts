@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
 import type { BuildingDefId, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { centerOn, type Camera } from '../../src/render/camera';
@@ -166,7 +167,7 @@ describe('H-R9 A2 Höhenfeld', () => {
     const huge = largest(square(30));
     expect(huge.amp).toBe(AMP_CAP);
     expect(maxH(huge)).toBeLessThanOrEqual(MASSIF_MAX_H);
-    expect(SMALL_MASSIF).toBe(12);
+    expect(SMALL_MASSIF).toBe(MIN_MOUNTAIN_PATCH); // H-S1; kleinere Flecken nur aus alten Spielständen
     // gleicher Codepfad: der Hügel ist rund (Gipfel innen, nicht am Rand)
     const hill = largest(square(2));
     expect(nodeHeight(hill, (hill.x0 + 1) * SUB, (hill.y0 + 1) * SUB)).toBeCloseTo(maxH(hill), -1);

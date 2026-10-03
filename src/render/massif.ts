@@ -1,3 +1,4 @@
+import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
 import { valueNoise } from '../sim/noise';
 import type { World } from '../sim/types';
 import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
@@ -14,9 +15,10 @@ type Rgb = readonly [number, number, number];
 export const SUB = 4;
 /**
  * Unter dieser Kachelzahl wird eine Komponente ein niedriger, runder Felshügel (gleicher Codepfad, Grate laufen
- * stetig aus). Render-Konstante; wird an `MIN_MOUNTAIN_PATCH` aus H-S1 angeglichen.
+ * stetig aus). Gleich der kleinsten Gebirgsfläche der Kartenerzeugung (H-S1); alte Spielstände können kleinere
+ * Flecken enthalten, die als Felshügel erscheinen.
  */
-export const SMALL_MASSIF = 12;
+export const SMALL_MASSIF = MIN_MOUNTAIN_PATCH;
 /** Höchstens so viele Kacheln je Teilstück (lange Läufe werden geteilt, A5); hält Offscreen-Flächen klein. */
 export const PIECE_RUN = 8;
 /**
