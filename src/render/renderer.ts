@@ -562,7 +562,7 @@ export function render(
       visible.push(it);
     }
 
-    visible = thinRocks(visible, rockCap(reduce)) as SortedItem[]; // Obergrenze Felsen je Frame
+    visible = thinRocks(visible, rockCap(reduce), world.seed) as SortedItem[]; // Obergrenze Felsen je Frame
 
     // Verdecker von Licht und Feuer (BUG-LICHT): Objekte, die im sortierten Durchgang nach der Quelle kommen
     const rank = new Map<number, number>();

@@ -217,18 +217,33 @@ export function drawRockStamp(
   ctx.drawImage(stamp, p.x - (ISO_W / 2) * z, p.y - ROCK_H * z, stamp.width * f, stamp.height * f);
 }
 
+/** Stabile Rangzahl eines Felsens aus (Seed, Kachel); unabhängig von Ausschnitt und Listenposition. */
+const rockPriority = (seed: number, it: { fp: { x: number; y: number } }): number =>
+  hash2(seed + 73, it.fp.x, it.fp.y);
+
 /**
- * Begrenzt die Felsen eines Frames auf `max`: gleichmässig ausgedünnt (jeder k-te, k = ⌈Anzahl / max⌉), deterministisch;
- * andere Arten und die Reihenfolge bleiben. Unter dem Limit unverändert.
+ * Begrenzt die Felsen eines Frames auf `max`: behalten werden die mit der kleinsten Rangzahl aus (Seed, Kachel). Die
+ * Wahl hängt nicht von der Kamera ab, ein Fels bleibt beim Scrollen gewählt, solange er im Bild ist und nicht mehr
+ * Felsen mit kleinerer Rangzahl dazukommen als Platz ist. Andere Arten und die Reihenfolge bleiben; unter dem Limit
+ * unverändert.
  */
-export function thinRocks<T extends { kind: string }>(
+export function thinRocks<T extends { kind: string; fp: { x: number; y: number } }>(
   items: readonly T[],
   max: number,
+  seed: number,
 ): readonly T[] {
-  let n = 0;
-  for (const it of items) if (it.kind === 'rock') n++;
-  if (n <= max) return items;
-  const k = Math.ceil(n / Math.max(1, max));
-  let i = 0;
-  return items.filter((it) => it.kind !== 'rock' || i++ % k === 0);
+  const ranks: number[] = [];
+  for (const it of items) if (it.kind === 'rock') ranks.push(rockPriority(seed, it));
+  if (ranks.length <= max) return items;
+  const keep = Math.max(0, max);
+  const cut = keep === 0 ? -1 : ranks.sort((a, b) => a - b)[keep - 1]!;
+  let left = keep;
+  return items.filter((it) => {
+    if (it.kind !== 'rock') return true;
+    if (left > 0 && rockPriority(seed, it) <= cut) {
+      left--;
+      return true;
+    }
+    return false;
+  });
 }

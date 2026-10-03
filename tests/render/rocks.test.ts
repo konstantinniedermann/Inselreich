@@ -215,19 +215,36 @@ describe('H-R8 AK4 Cap und Cache', () => {
     expect(rockCap()).toBe(ROCK_CAP[0]);
     expect(rockCap(true)).toBe(ROCK_CAP[1]);
   });
-  it('AK4 thinRocks: höchstens cap Felsen, Reihenfolge und andere Arten bleiben, unter dem Limit unverändert', () => {
+  it('AK4 thinRocks: genau cap Felsen, Reihenfolge und andere Arten bleiben, unter dem Limit unverändert', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
     const all = sortedObjects(w, [{ kind: 'walker', id: 1, cx: 20.5, cy: 20.5 }]).slice();
     const rocks = all.filter((i) => i.kind === 'rock');
-    expect(thinRocks(all, rocks.length)).toEqual(all);
+    expect(thinRocks(all, rocks.length, w.seed)).toEqual(all);
     const n = Math.floor(rocks.length / 3);
-    const out = thinRocks(all, n);
-    expect(out.filter((i) => i.kind === 'rock').length).toBeLessThanOrEqual(n);
-    expect(out.filter((i) => i.kind === 'rock').length).toBeGreaterThan(n / 2);
+    const out = thinRocks(all, n, w.seed);
+    expect(out.filter((i) => i.kind === 'rock').length).toBe(n);
     expect(out.filter((i) => i.kind !== 'rock')).toEqual(all.filter((i) => i.kind !== 'rock'));
     const pos = out.map((i) => all.indexOf(i));
     expect([...pos].sort((a, b) => a - b)).toEqual(pos);
-    expect(thinRocks(all, n)).toEqual(out);
+    expect(thinRocks(all, n, w.seed)).toEqual(out);
+  });
+  it('AK4 thinRocks kamerastabil: ein gewählter Fels bleibt gewählt, wenn der Ausschnitt schrumpft oder wandert', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const rocks = rocksOf(w);
+    const n = 80;
+    const sel = (items: readonly Rock[]) => new Set(thinRocks(items, n, w.seed).map((i) => i.id));
+    const full = sel(rocks);
+    expect(full.size).toBe(n);
+    // Ausschnitt wandert: jeweils die ersten k Felsen fallen weg, die letzten kommen nie dazu
+    for (const k of [5, 20, 60]) {
+      const part = rocks.slice(k);
+      const s2 = sel(part);
+      expect(s2.size).toBe(n);
+      for (const r of part) if (full.has(r.id)) expect(s2.has(r.id), `k${k} id${r.id}`).toBe(true);
+    }
+    // Wahl hängt nur an (Seed, Kachel), nicht an der Position in der Liste
+    expect(sel([...rocks].reverse())).toEqual(full);
+    expect(sel(rocks)).not.toEqual(new Set(thinRocks(rocks, n, w.seed + 1).map((i) => i.id)));
   });
   it('AK4 Stempel-Cache: ein Stempel je Variante und Zoomstufe, begrenzt und unter SPRITE_CACHE_MAX_BYTES', () => {
     resetRockCache();
