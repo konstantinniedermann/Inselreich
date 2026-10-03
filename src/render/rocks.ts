@@ -14,6 +14,7 @@ import {
   type SortedItem,
 } from './iso';
 import { PALETTE, mixHex } from './palette';
+import type { World } from '../sim/types';
 
 // rocks.ts — Felsmassive als aufrechte Stempel über Gebirgskacheln (G3, ADR-012). Reine Darstellung: Gestalt, Grösse
 // und Farbe sind Funktionen von (world.seed, x, y); die Sim kennt keine Höhe. Wie `trees.ts` bleibt jeder Stempel in
@@ -131,6 +132,25 @@ export function rockShadow(item: RockItem, seed: number): Pt[] {
   return pts;
 }
 
+/**
+ * Wirft der Fels einen sichtbaren Schatten? Der Schatten fällt nach rechts unten; liegt dort (x+1, y), (x, y+1) und
+ * (x+1, y+1) nur Gebirge, deckt der Nachbarfels ihn ab. Spart den Schattenpfad im Binnenland des Massivs.
+ */
+export function castsRockShadow(world: World, item: RockItem): boolean {
+  const { x, y } = item.fp;
+  for (const [dx, dy] of [
+    [1, 0],
+    [0, 1],
+    [1, 1],
+  ] as const) {
+    const nx = x + dx,
+      ny = y + dy;
+    if (nx >= world.width || ny >= world.height) return true;
+    if (world.tiles[ny * world.width + nx]!.terrain !== 'mountain') return true;
+  }
+  return false;
+}
+
 /** Silhouetten (Bildschirmpixel) für die Verdeckung von Licht und Feuer: je Gipfel eine Gruppe. */
 export function rockClips(cam: Camera, item: RockItem, seed: number): Pt[][] {
   const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
@@ -227,23 +247,30 @@ const rockPriority = (seed: number, it: { fp: { x: number; y: number } }): numbe
  * Felsen mit kleinerer Rangzahl dazukommen als Platz ist. Andere Arten und die Reihenfolge bleiben; unter dem Limit
  * unverändert.
  */
-export function thinRocks<T extends { kind: string; fp: { x: number; y: number } }>(
+let memo: { sig: string; keep: ReadonlySet<number> } | null = null;
+export function thinRocks<T extends { kind: string; id: number; fp: { x: number; y: number } }>(
   items: readonly T[],
   max: number,
   seed: number,
 ): readonly T[] {
-  const ranks: number[] = [];
-  for (const it of items) if (it.kind === 'rock') ranks.push(rockPriority(seed, it));
-  if (ranks.length <= max) return items;
-  const keep = Math.max(0, max);
-  const cut = keep === 0 ? -1 : ranks.sort((a, b) => a - b)[keep - 1]!;
-  let left = keep;
-  return items.filter((it) => {
-    if (it.kind !== 'rock') return true;
-    if (left > 0 && rockPriority(seed, it) <= cut) {
-      left--;
-      return true;
+  let n = 0,
+    sum = 0,
+    first = -1,
+    last = -1;
+  for (const it of items)
+    if (it.kind === 'rock') {
+      if (n++ === 0) first = it.id;
+      last = it.id;
+      sum += it.id;
     }
-    return false;
-  });
+  if (n <= max) return items;
+  const sig = `${seed}|${max}|${n}|${first}|${last}|${sum}`;
+  if (memo?.sig !== sig) {
+    // gleicher Ausschnitt wie im Vorframe: Wahl wiederverwenden, kein Sortieren je Frame
+    const rocks = items.filter((it) => it.kind === 'rock');
+    rocks.sort((a, b) => rockPriority(seed, a) - rockPriority(seed, b));
+    memo = { sig, keep: new Set(rocks.slice(0, Math.max(0, max)).map((r) => r.id)) };
+  }
+  const keep = memo.keep;
+  return items.filter((it) => it.kind !== 'rock' || keep.has(it.id));
 }

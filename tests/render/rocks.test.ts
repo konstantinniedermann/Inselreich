@@ -21,6 +21,7 @@ import {
   drawRockStamp,
   paintRock,
   resetRockCache,
+  castsRockShadow,
   rockBounds,
   rockCacheBytes,
   rockCacheSize,
@@ -277,6 +278,51 @@ describe('H-R8 AK4 Cap und Cache', () => {
     render(c2, w, cam, layer, null, null, VIEW, { timeMs: 0, reduceMotion: true });
     const red = l2.events.filter((e) => e.op === 'drawImage').length;
     expect(red).toBeLessThanOrEqual(full);
+  });
+});
+
+describe('H-R8 AK4 Frame-Kosten', () => {
+  const frame = (zoom: number) => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    for (const t of w.tiles) if (t.terrain === 'forest') t.terrain = 'grass';
+    w.buildings = {};
+    const VIEW = { w: 1920, h: 1080 };
+    const layer = { width: 2048, height: 2048 } as unknown as HTMLCanvasElement;
+    const cam = { x: 0, y: 0, zoom };
+    centerOn(cam, 32, 32, VIEW, { w: w.width, h: w.height });
+    const { ctx, log } = fakeCtx();
+    render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 0, dayNight: false });
+    return { w, log };
+  };
+  it('AK4 ROCK_CAP normal höchstens 250, reduziert höchstens 100 (Frame-Budget je drawImage)', () => {
+    expect(ROCK_CAP[0]).toBeLessThanOrEqual(250);
+    expect(ROCK_CAP[1]).toBeLessThanOrEqual(100);
+  });
+  it('AK4 castsRockShadow: nur Randfelsen (offene Kachel rechts/unten) werfen Schatten, Binnenfelsen nicht', () => {
+    const { w } = frame(1);
+    const rocks = rocksOf(w);
+    const inner = rocks.filter((r) => !castsRockShadow(w, r));
+    const edge = rocks.filter((r) => castsRockShadow(w, r));
+    expect(inner.length).toBeGreaterThan(0);
+    expect(edge.length).toBeGreaterThan(0);
+    for (const r of inner)
+      for (const [dx, dy] of [
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ] as const)
+        expect(w.tiles[(r.fp.y + dy) * w.width + r.fp.x + dx]?.terrain).toBe('mountain');
+  });
+  it('AK4 Schattenpfad je Frame: Punkte höchstens 8 je Randfels, weniger als bei Schatten für alle sichtbaren', () => {
+    const { w, log } = frame(1);
+    const pts = log.events
+      .filter((e) => e.style === SHADOW)
+      .reduce((n, e) => n + e.points.length, 0);
+    const edgeAll = rocksOf(w).filter((r) => castsRockShadow(w, r)).length;
+    expect(pts).toBeLessThanOrEqual(8 * Math.min(edgeAll, ROCK_CAP[0]));
+    expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(
+      ROCK_CAP[0] + 10,
+    );
   });
 });
 

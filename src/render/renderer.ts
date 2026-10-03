@@ -75,6 +75,7 @@ import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import {
+  castsRockShadow,
   drawRockStamp,
   rockBounds,
   rockClips,
@@ -583,8 +584,10 @@ export function render(
             const b = world.buildings[it.id]!;
             polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
-          else if (it.kind === 'rock') polyPath(ctx, rockShadow(it as RockItem, world.seed));
-          else if (it.kind === 'walker') {
+          else if (it.kind === 'rock') {
+            if (castsRockShadow(world, it as RockItem))
+              polyPath(ctx, rockShadow(it as RockItem, world.seed));
+          } else if (it.kind === 'walker') {
             if ((poses.get(it.id)?.alpha ?? 0) >= 0.5)
               polyPath(ctx, walkerShadow({ x: it.cx, y: it.cy }));
           } else polyPath(ctx, shipShadow({ x: it.cx - 0.5, y: it.cy - 0.5 }));

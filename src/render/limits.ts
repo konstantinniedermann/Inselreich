@@ -16,11 +16,11 @@ export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];
 
 /**
- * Felsstempel je Frame [normal, reduziert] (H-R8). Bei Zoom 0,5 und 1080p sind rund 1000 Gebirgskacheln im Bild; mehr
- * als 600 Stempel verbessern die Lesbarkeit nicht, kosten aber je ein drawImage; reduziert ein Drittel. Eigene
- * Konstante, damit die Setzungen von `CAPS` (Spec 12.2) unverändert bleiben.
+ * Felsstempel je Frame [normal, reduziert] (H-R8). Jeder Stempel kostet ein drawImage (rund 4 µs, gemessen +2,6 ms bei
+ * 600 Stück gegen 1,9 ms Frame); bei 250 bleibt der Berg dicht genug, die übrigen Kacheln zeigen das Geländemuster.
+ * Eigene Konstante, damit die Setzungen von `CAPS` (Spec 12.2) unverändert bleiben.
  */
-export const ROCK_CAP = [600, 200] as const;
+export const ROCK_CAP = [250, 100] as const;
 export const rockCap = (reduce = false): number => ROCK_CAP[reduce ? 1 : 0];
 
 const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
