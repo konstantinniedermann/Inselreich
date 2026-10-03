@@ -37,25 +37,30 @@ export interface VariantLook {
   shutters: string | null;
 }
 
-/** Variante 0 ist der bisherige Look (bytegleich); die übrigen verschieben nur Töne. */
+/**
+ * Variante 0 ist der bisherige Look (bytegleich); die übrigen verschieben Töne deutlich, aber innerhalb der
+ * Farbfamilie des Typs (Mischanteile 13 bis 26 %, Blindtest H-R7: 5 bis 7 % waren bei Standard-Zoom kaum zu sehen).
+ * 1 heller und kühler, 2 dunkler Putz bei hellem Dach, 3 warm und erdig. Die Wandtönung gilt für alle Flächen des
+ * Körpers, trägt also auch Typen ohne Hausdach (Fischerhütte, Glashütte, Steinbruch, Marktplatz, Weberei).
+ */
 export const VARIANT_LOOKS: readonly VariantLook[] = [
   { wall: null, roof: null, chimney: null, shutters: null },
   {
-    wall: ['#ffffff', 0.05],
-    roof: ['#000000', 0.12],
+    wall: ['#ffffff', 0.17],
+    roof: [PALETTE.roofSlate, 0.26],
     chimney: [PALETTE.roofTerracotta, 0.55],
     shutters: PALETTE.wallTimber,
   },
   {
-    wall: ['#000000', 0.05],
-    roof: ['#ffffff', 0.1],
-    chimney: ['#000000', 0.25],
+    wall: ['#000000', 0.13],
+    roof: ['#ffffff', 0.14],
+    chimney: ['#000000', 0.3],
     shutters: PALETTE.roofCopper,
   },
   {
-    wall: [PALETTE.earth, 0.07],
-    roof: [PALETTE.earth, 0.2],
-    chimney: ['#ffffff', 0.2],
+    wall: [PALETTE.earth, 0.18],
+    roof: [PALETTE.earth, 0.24],
+    chimney: ['#ffffff', 0.25],
     shutters: null,
   },
 ];

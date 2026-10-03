@@ -24,7 +24,7 @@ const PAGE = `(async () => {
   for (const id of Object.keys(BUILDING_DEFS))
     for (const tier of id === 'house' ? [1, 2, 3, 4] : [undefined]) entries.push({ id, tier });
   entries.sort((a, b) => hash2(77, a.id.length * 31 + (a.tier ?? 0), a.id.charCodeAt(0)) - hash2(77, b.id.length * 31 + (b.tier ?? 0), b.id.charCodeAt(0)));
-  const cellW = 150 * zoom, cellH = 130 * zoom;
+  const cellW = 150 * zoom, cellH = 210 * zoom;
   const sheets = [], key = [];
   const cache = createSpriteCache({ material: true });
   cache.beginFrame(zoom, dpr); cache.beginFrame(zoom, dpr);
@@ -41,7 +41,7 @@ const PAGE = `(async () => {
       if (e.tier) b.house = { tier: e.tier };
       // Gebäudemitte in die Zellenmitte
       const mx = (b.x - b.y) * 32 + ((def.w - def.h) * 32) / 2, my = (b.x + b.y + (def.w + def.h) / 2) * 16 - 12;
-      const cam = { x: mx - (col * cellW + cellW / 2) / zoom, y: my - cellH / 2 / zoom, zoom };
+      const cam = { x: mx - (col * cellW + cellW / 2) / zoom, y: my - (0.65 * cellH) / zoom, zoom };
       if (!cache.draw(ctx, cam, def, b, undefined, v)) drawBody(ctx, cam, def, b, 0, undefined, v);
     });
     sheets.push(c.toDataURL('image/png'));

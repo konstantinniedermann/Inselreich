@@ -810,7 +810,7 @@ function stall(p: IsoPainter, u0: number, v0: number, h: number, goods: readonly
     const ua = u0 + ((u1 - u0) * i) / stripes,
       ub = u0 + ((u1 - u0) * (i + 1)) / stripes;
     const col = i % 2 === 0 ? PALETTE.roofTimber : PALETTE.wallLime;
-    const r = roofColors(col);
+    const r = roofColors(p.tone(col, p.look.roof));
     p.quad([ua, v0, zE], [ub, v0, zE], [ub, vm, zR], [ua, vm, zR], r.shade, false);
     p.quad([ua, v1, zE], [ub, v1, zE], [ub, vm, zR], [ua, vm, zR], r.light, false);
   }
