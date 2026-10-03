@@ -1289,3 +1289,14 @@ Prüfung ohne Pipe). Nächste Session: M12 „Weite Welt" Brainstorming, paralle
 Irrtum: keine.
 
 Entscheider: L0 · Anlass: Session-Ende-Routine · ADR: —
+
+## R204 · 2026-10-03 · Nutzerauftrag Gebirge, Relief, Kontor am Meer
+
+Ruling: Auslegung in zwei parallelen Häppchen (Stufe leicht). **H-S1** (lead-tech, `src/sim/mapgen.ts`): Kontor
+nur an Meerwasser (mit dem Kartenrand verbundenes Wasser), Gebirgsflecken unter einer Mindestgrösse werden Wiese,
+Mindestgrösse als Wert in `src/sim/defs/`; Kartenänderung bewusst, Balancing grün. **H-R9** (lead-art, `src/render/`):
+grosse Gebirge als zusammenhängende Grossgrafik, Mikrorelief (Hügel) in Wiese und Strand, mehr Wiesenvarianz;
+kleine Flecken alter Spielstände dürfen nicht kaputt aussehen. Merge H-S1 vor H-R9. — Kosten bei Irrtum: Revert je
+Häppchen; alte Spielstände unberührt (Kacheln im Save).
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-03, Beobachtung H-R8 Bergoptik · ADR: —
