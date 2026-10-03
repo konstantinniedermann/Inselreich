@@ -31,8 +31,12 @@ import {
   nodeInside,
   pieceCells,
   pieceNodes,
+  DEBRIS,
+  HILL_AMP,
   ROCK_TONES,
+  SOFT_CUT,
   TONE_FLAT,
+  debrisOf,
   toneStep,
   type MassifComponent,
   type MassifPiece,
@@ -184,6 +188,60 @@ describe('H-R9 A2 Höhenfeld', () => {
     // gleicher Codepfad: der Hügel ist rund (Gipfel innen, nicht am Rand)
     const hill = largest(square(2));
     expect(nodeHeight(hill, (hill.x0 + 1) * SUB, (hill.y0 + 1) * SUB)).toBeCloseTo(maxH(hill), -1);
+  });
+
+  it('A2 Felshügel (Playtest R3): Fleck aus 8 Kacheln hat 1–3 Kuppen, Gipfel ≥ 0,8 ISO_H, Licht- und Schattenseite, Geröll am Fuss, heller Rand', () => {
+    const shapes = [
+      ['MMM', 'MMM', '.MM'],
+      ['MMMMMMMM'], // schmaler Streifen wie im Playtest-Bild 09
+      ['MMMM', '.MMMM'],
+      ['M..', 'MMM', 'MMM', '.M.'],
+    ];
+    for (const [k, rows] of shapes.entries())
+      for (const seed of [5, 11]) {
+        const w = scene(rows, 20, 20, seed);
+        const c = largest(w);
+        expect(c.n).toBeLessThan(SMALL_MASSIF);
+        const top = maxH(c);
+        expect(top, `Form ${k} Seed ${seed}`).toBeGreaterThanOrEqual(0.8 * ISO_H);
+        expect(top).toBeLessThan(1.3 * ISO_H);
+        let peaks = 0;
+        for (const [I, J] of nodes(c)) {
+          const h = nodeHeight(c, I, J);
+          if (h < 0.5 * top) continue;
+          let max = true;
+          for (let dj = -2; dj <= 2 && max; dj++)
+            for (let di = -2; di <= 2; di++)
+              if ((di || dj) && nodeHeight(c, I + di, J + dj) >= h) {
+                max = false;
+                break;
+              }
+          if (max) peaks++;
+        }
+        expect(peaks, `Form ${k} Seed ${seed}`).toBeGreaterThanOrEqual(1);
+        expect(peaks, `Form ${k} Seed ${seed}`).toBeLessThanOrEqual(3);
+        let lit = 0,
+          shade = 0,
+          rub = 0,
+          dark = 0;
+        const rockL = lum(PALETTE.rock);
+        for (const p of massifPieces(w)) {
+          const at = pieceNodes(p);
+          for (const cell of pieceCells(p)) {
+            const nd = at(cell.I, cell.J);
+            if (nd.t > TONE_FLAT + 0.5) lit++;
+            if (nd.t < TONE_FLAT - 0.5) shade++;
+            if (nd.rub > 0.3) rub++;
+            const css = `rgb(${nd.c.map((v) => Math.round(v)).join(',')})`;
+            if (nd.soft < 0.62 && lum(css) < rockL - 5) dark++;
+          }
+        }
+        expect(lit, `Form ${k} Lichtseite`).toBeGreaterThan(0);
+        expect(shade, `Form ${k} Schattenseite`).toBeGreaterThan(0);
+        expect(rub, `Form ${k} Geröll`).toBeGreaterThan(0);
+        expect(dark, `Form ${k} dunkler Rand`).toBe(0);
+      }
+    expect(HILL_AMP).toBeGreaterThanOrEqual(0.8 * ISO_H);
   });
 
   it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite, je Randabstand-Band verglichen (Entscheid lead-art R1: sonst bestimmt die Umrissform das Mittel)', () => {
@@ -419,17 +477,28 @@ describe('H-R9 A3 Färbung', () => {
     expect(high).toBe(0);
   });
 
-  it('A3 Sockel ohne Naht: bei h = 0 Felsgrund, am Rand halb zum Nachbargelände gemischt', () => {
+  it('A3 Sockel (Playtest R3): innen Felsgrund, am Rand helles Schuttband (heller als rock), leicht zum Nachbargelände getönt, nie dunkel', () => {
     const rock = rgbOf(PALETTE.rock);
     const foot = rgbOfCss(cellColor(5, 2.2, 7.7, { ...base, h: 0, hn: 0 }));
     expect(dist3(foot, rock)).toBeLessThan(30);
     const grass = rgbOf(PALETTE.grass);
-    const edge = rgbOfCss(cellColor(5, 2.2, 7.7, { ...base, h: 0, hn: 0, rim: 0, edge: grass }));
-    expect(dist3(edge, grass)).toBeLessThan(dist3(foot, grass) - 20);
-    expect(dist3(edge, rock)).toBeLessThan(dist3(grass, rock));
+    const edgeCss = cellColor(5, 2.2, 7.7, {
+      ...base,
+      h: 0,
+      hn: 0,
+      rim: 0,
+      edge: grass,
+      soft: SOFT_CUT,
+    });
+    const edge = rgbOfCss(edgeCss);
+    const L = (c: readonly number[]): number => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
+    expect(L(edge)).toBeGreaterThan(L(rock));
+    expect(dist3(edge, grass)).toBeLessThan(dist3([...DEBRIS], grass));
+    expect(debrisOf(SOFT_CUT)).toBe(1);
+    expect(debrisOf(0.9)).toBe(0);
   });
 
-  it('A3 Sockel: Deckkraft < 1 nur im flachen Randband (h < RIM_H), an geraden Kanten 0, innen voll deckend (Entscheid lead-art R1: Geländeebene rundet die Kachelkontur)', () => {
+  it('A3 Sockel: Deckkraft < 1 nur an der Kontur (h < RIM_H), an geraden Kanten auf der Kachelgrenze, innen voll deckend (Entscheid lead-art R1, schmal nach Playtest R3)', () => {
     for (const w of [createWorld(7, { unlockAll: true }), square(3), square(10)]) {
       let partial = 0,
         full = 0;
@@ -449,10 +518,11 @@ describe('H-R9 A3 Färbung', () => {
       }
       if (w.seed !== 5 || largest(w).n > 9) expect(full).toBeGreaterThan(partial);
     }
-    // gerade Kante eines Quadrats: Knoten mitten auf der Kante ist durchsichtig
+    // gerade Kante eines Quadrats: die Kontur (SOFT_CUT) liegt auf der Kachelgrenze, einen Knoten innen deckt es voll
     const q = largest(square(10));
     const p = massifPieces(square(10)).find((x) => x.comp.n === q.n)!;
-    expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB).a).toBeLessThan(0.02);
+    expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB).a).toBeLessThanOrEqual(0.55);
+    expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB + 1).a).toBe(1);
   });
 
   it('A3 Sockelfarbe folgt dem Nachbargelände: Aufforsten an einer Randkachel ändert Schlüssel und Farbe, nicht das Höhenfeld', () => {

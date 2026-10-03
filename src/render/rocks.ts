@@ -3,7 +3,10 @@ import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem 
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
 import {
+  DEBRIS,
   EDGE_ON,
+  SOFT_CUT,
+  debrisOf,
   RIDGE_HI,
   RINNE_LO,
   ROCK_TONES,
@@ -149,6 +152,7 @@ const STRATA_BREAK = 0.09;
 const GRAIN = 0.04; // Pixelkorn ±2 %
 /** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
 export const TONE_EDGE_PX = 1.5;
+const DEBRIS_MIX_PX = 0.9; // Schuttband: Anteil der Schuttfarbe am Rand
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
 /** Texturpixel je Weltpixel: Merkmale ≈ 2 px (fein, feiner als die Tonstufen) und ≈ 6 px (Brocken). */
 const TEX_FINE = 4,
@@ -338,7 +342,8 @@ function triangle(
     d1y = (x0 - x2) / area;
   const grad = (va: number, vb: number, vc: number): number =>
     Math.hypot((va - vc) * d0x + (vb - vc) * d1x, (va - vc) * d0y + (vb - vc) * d1y);
-  const hwT = halfWidth(grad(a.t, b.t, c.t)),
+  const hwS = halfWidth(grad(a.soft, b.soft, c.soft)),
+    hwT = halfWidth(grad(a.t, b.t, c.t)),
     hwE = halfWidth(grad(a.e, b.e, c.e)),
     hwV = halfWidth(grad(a.veg, b.veg, c.veg));
   const eps = -1e-7;
@@ -388,6 +393,14 @@ function triangle(
         g += (D[1] - g) * lo;
         bl += (D[2] - bl) * lo;
       }
+      // Schuttband am Fuss (hell), vor der Kontur
+      const soft = lerp(a.soft, b.soft, c.soft);
+      const db = DEBRIS_MIX_PX * debrisOf(soft);
+      if (db > 0) {
+        r += (DEBRIS[0] - r) * db;
+        g += (DEBRIS[1] - g) * db;
+        bl += (DEBRIS[2] - bl) * db;
+      }
       // Textur, Geröll und Schichtbänder in Weltpixeln (stetig über Streifen und Zoomstufen)
       const wx = ox + xc / sx,
         wy = oy + yc / sy;
@@ -395,7 +408,7 @@ function triangle(
       const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
       let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) + 0.45 * tc);
-      const rub = lerp(a.rub, b.rub, c.rub);
+      const rub = Math.max(lerp(a.rub, b.rub, c.rub), 0.8 * debrisOf(soft));
       if (rub > 0.05) {
         const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);
         if (s2 > 0.72)
@@ -417,7 +430,8 @@ function triangle(
         bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
       }
       const o = (y * W + x) * 4;
-      const al = lerp(a.a, b.a, c.a);
+      // Kontur: 1–2 px weich an der Höhenlinie SOFT_CUT; ab RIM_H Höhe immer deckend
+      const al = Math.max(sstep(soft, SOFT_CUT, hwS), lerp(a.ah, b.ah, c.ah));
       if (al >= 0.999) {
         buf[o] = r;
         buf[o + 1] = g;

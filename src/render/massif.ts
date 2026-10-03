@@ -46,6 +46,9 @@ const STAGGER = 0.3;
 const STAGGER_MAX = 0.5;
 const BACK_RATIO = 1.25;
 const BUMP = 0.8; // px Geröll-Buckel am Fuss
+/** Felshügel (< SMALL_MASSIF): Mindestamplitude (px, ≈ 0,9 ISO_H) und Kuppen-Modulation ± HILL_DOME. */
+export const HILL_AMP = 29;
+const HILL_DOME = 0.18;
 /** Obergrenze jeder Massivhöhe (px): Amplitude mal Grate mal Staffelung plus Geröll. */
 export const MASSIF_MAX_H = AMP_CAP * (RIDGE_LO + RIDGE_SPAN) * Math.exp(STAGGER_MAX) + BUMP;
 const ROT_A = 0.61,
@@ -336,13 +339,15 @@ function buildComponent(
     sMax = Math.max(sMax, s);
   }
   const n = tiles.length;
-  const amp = Math.min(
-    AMP_CAP,
-    AMP_K * Math.pow(Math.sqrt(n), AMP_POW),
-    AMP_SLOPE * Math.max(maxD, 0.25),
+  // Felshügel-Mindesthöhe (Playtest R3): auch ein schmaler Fleck aus 8 Kacheln steht als Hügel, nicht als Platte
+  const amp = Math.max(
+    HILL_AMP,
+    Math.min(AMP_CAP, AMP_K * Math.pow(Math.sqrt(n), AMP_POW), AMP_SLOPE * Math.max(maxD, 0.25)),
   );
-  // Grate laufen bei kleinen Komponenten stetig aus: Felshügel ohne Sonderfall
+  // Grate, Verbeulung und Staffelung laufen bei kleinen Komponenten stetig aus: Felshügel ohne Sonderfall
   const ridgeW = smoothstep(SMALL_MASSIF * 0.75, SMALL_MASSIF * 3, n);
+  // Randband nie breiter als der grösste Randabstand: der Hügel erreicht in der Mitte seinen Körper
+  const rimR = Math.min(RIM, Math.max(0.3, 0.9 * maxD));
   const sMid = (sMin + sMax) / 2,
     sHalf = Math.max(1, (sMax - sMin) / 2);
   const seed = w.seed;
@@ -355,13 +360,14 @@ function buildComponent(
       const fx = x0 + i / SUB,
         fy = y0 + j / SUB;
       // Körper: steigt im Randband schnell auf BODY_FLOOR, dann über dem (verbeulten) Randabstand weiter
-      const wob = 0.78 + 0.44 * rotNoise(seed + 305, fx, fy, 0.16, ROT_C);
+      const wob = 1 + ridgeW * (0.44 * rotNoise(seed + 305, fx, fy, 0.16, ROT_C) - 0.22);
       const dn = Math.min(1, (base[k]! / maxBase) * wob);
       const body =
-        smooth01(dist[k]! / RIM) * (BODY_FLOOR + (1 - BODY_FLOOR) * Math.pow(dn, PROFILE));
-      // Grate und Vorberge überall im Massiv (nicht nur am Zentralgipfel); kleine Komponenten bleiben rund
+        smooth01(dist[k]! / rimR) * (BODY_FLOOR + (1 - BODY_FLOOR) * Math.pow(dn, PROFILE));
+      // Grate und Vorberge überall im Massiv (nicht nur am Zentralgipfel); kleine Komponenten: 1–3 runde Kuppen
       const r = ridged(seed, fx, fy);
-      shape[k] = body * (1 + ridgeW * (RIDGE_LO + RIDGE_SPAN * r - 1));
+      const dome = HILL_DOME * (2 * rotNoise(seed + 323, fx, fy, 0.9, ROT_B) - 1);
+      shape[k] = body * (1 + ridgeW * (RIDGE_LO + RIDGE_SPAN * r - 1) + (1 - ridgeW) * dome);
       gs[k] = Math.max(-1, Math.min(1, (sMid - (i + j)) / sHalf));
     }
   // Staffelung: kleinstes β ≥ STAGGER (Schritt 0,05), mit dem die Rückseite im Mittel BACK_RATIO-mal so hoch ist
@@ -384,7 +390,7 @@ function buildComponent(
     }
     if (nb === 0 || nf === 0 || sb / nb >= BACK_RATIO * (sf / nf)) break;
   }
-  beta = Math.min(beta, STAGGER_MAX);
+  beta = Math.min(beta, STAGGER_MAX) * ridgeW;
   const height = new Float32Array(nx * ny);
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -393,7 +399,7 @@ function buildComponent(
       const fx = x0 + i / SUB,
         fy = y0 + j / SUB;
       const dn = Math.min(1, base[k]! / maxBase);
-      const rim = smooth01(dist[k]! / RIM);
+      const rim = smooth01(dist[k]! / rimR);
       const bump = (valueNoise(seed + 307, fx * 1.7, fy * 1.7) - 0.5) * 2 * BUMP * rim * (1 - dn);
       height[k] = Math.max(0, amp * shape[k]! * Math.exp(beta * gs[k]!) + bump);
     }
@@ -577,13 +583,18 @@ const TILE_PX = 45;
 /** Sockel: Mischung ins Nachbargelände nach dem weichen Innen-Anteil (Ecken stärker, gerundet), höchstens EDGE_MIX. */
 const SOFT_LO = 0.2,
   SOFT_HI = 0.85,
-  EDGE_MIX = 0.5;
+  EDGE_MIX = 0.3;
 /**
- * Sockel ohne Naht (A3): Deckkraft läuft im äussersten Band (weicher Innen-Anteil unter SOFT_A_HI, Höhe ≈ 0) auf 0;
- * dort zeigt die Geländeebene ihren eigenen Felsgrund mit der gerundeten Typgrenze. Innen deckt das Netz voll.
+ * Sockel ohne Naht (A3, Entscheid lead-art Runde 1; Playtest Runde 3 schmal statt breit): die Kontur ist die
+ * Höhenlinie SOFT_CUT des weichgezeichneten Innen-Anteils (an geraden Kanten die Kachelgrenze, an Ecken gerundet);
+ * der Rasterizer blendet dort über 1–2 px aus. Davor läuft ein helles Geröll-/Schuttband (DEBRIS).
  */
-export const SOFT_A_LO = 0.5,
-  SOFT_A_HI = 0.85;
+export const SOFT_CUT = 0.52; // Wert an einer geraden Kante (gemessen), Kontur = Kachelgrenze
+const SOFT_A_LO = SOFT_CUT - 0.05,
+  SOFT_A_HI = SOFT_CUT + 0.05;
+/** Schuttband: voll am Rand (Innen-Anteil SOFT_CUT), aus ab DEBRIS_HI. */
+const DEBRIS_HI = 0.74,
+  DEBRIS_MIX = 0.9;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
 const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => {
@@ -616,6 +627,8 @@ export const VEG_TONES: readonly Rgb[] = [
   rgbOf(PALETTE.grassDark),
   mixRgb(rgbOf(PALETTE.grassDark), P.warm, 0.2),
 ];
+/** Helles Geröll-/Schuttband am Massivfuss: rock/rockLight mit etwas sandDry (Playtest R3: kein dunkler Saum). */
+export const DEBRIS: Rgb = mixRgb(mixRgb(P.rock, P.light, 0.6), P.warm, 0.15);
 /** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
 export const TONE_FLAT = 2;
 const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
@@ -644,7 +657,11 @@ export interface CellShade {
   rim: number;
   /** Farbe des Nachbargeländes oder `null` */
   edge: Rgb | null;
+  /** weicher Innen-Anteil (Schuttband am Rand); fehlt = innen */
+  soft?: number;
 }
+/** Anteil des Schuttbands 0…1 aus dem weichen Innen-Anteil. */
+export const debrisOf = (soft: number): number => 1 - smoothstep(SOFT_CUT, DEBRIS_HI, soft);
 
 /** Steilheit 0…1 aus dem Gefälle (px je Kachel). */
 export const steepness = (gx: number, gy: number): number =>
@@ -694,9 +711,7 @@ function vegField(seed: number, fx: number, fy: number, hn: number, steep: numbe
 /** Geröll-Feld 0…1 am Netzpunkt: tiefe, flache Lagen und Fuss der Flanken. */
 function rubbleField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
   const low = 1 - smoothstep(0.08, 0.4, hn);
-  return (
-    low * (0.4 + 0.6 * steep) * smoothstep(0.35, 0.65, rotNoise(seed + 319, fx, fy, 1.7, ROT_B))
-  );
+  return low * (0.4 + 0.6 * steep) * smoothstep(0.3, 0.6, rotNoise(seed + 319, fx, fy, 1.7, ROT_B));
 }
 
 /**
@@ -711,6 +726,7 @@ export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): 
   const e = Math.max(-1, Math.min(1, -s.lap / LAP_REF));
   if (e > EDGE_ON && st >= TONE_FLAT) c = mixRgb(c, ROCK_TONES[4]!, RIDGE_HI);
   if (e < -EDGE_ON) c = mixRgb(c, ROCK_TONES[0]!, RINNE_LO);
+  c = mixRgb(c, DEBRIS, DEBRIS_MIX * debrisOf(s.soft ?? 1));
   if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, EDGE_MIX * (1 - s.rim));
   return c;
 }
@@ -740,6 +756,9 @@ export interface NodeShade {
   /** Bewuchs- und Geröll-Feld */
   veg: number;
   rub: number;
+  /** weicher Innen-Anteil (Kontur bei SOFT_CUT, Schuttband) und Deckkraft aus der Höhe (h ≥ RIM_H deckt immer) */
+  soft: number;
+  ah: number;
   /** Sockel: Anteil und Farbe des Nachbargeländes */
   mix: number;
   ec: Rgb;
@@ -781,13 +800,24 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       fy = J / SUB;
     const hn = h / c.amp;
     const edge = EDGE_COLORS[p.near[ty * W + tx]!] ?? null;
-    const sh: CellShade = { h, hn, gx, gy, lap, rim: smoothstep(SOFT_LO, SOFT_HI, soft), edge };
+    const sh: CellShade = {
+      h,
+      hn,
+      gx,
+      gy,
+      lap,
+      rim: smoothstep(SOFT_LO, SOFT_HI, soft),
+      edge,
+      soft,
+    };
     const steep = steepness(gx, gy);
     const out: NodeShade = {
       c: shadeColor(c.seed, fx, fy, sh),
       // Sockel ohne Naht (Entscheid lead-art Runde 1): nur das flache Randband (h < RIM_H) blendet in die
       // Geländeebene aus; dort zeigt sie ihren eigenen Felsgrund mit gerundeter Typgrenze statt der Kachelkontur
       a: Math.max(smoothstep(SOFT_A_LO, SOFT_A_HI, soft), smoothstep(RIM_H * 0.25, RIM_H, h)),
+      soft,
+      ah: smoothstep(RIM_H * 0.25, RIM_H, h),
       h,
       steep,
       t: toneLevel(c.seed, fx, fy, sh),
