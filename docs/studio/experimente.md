@@ -50,7 +50,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: Handbuch 1.12
 - Bewertung: –
 
-## E-015 · vorgeschlagen · Nachweiszeilen im Lead-Bericht
+## E-015 · laufend · Nachweiszeilen im Lead-Bericht
 
 - Hypothese: Wenn die Berichtsvorlage des Leads für jedes Paket zwei Pflichtzeilen trägt („Rot-Beleg: Commit/Lauf oder Abweichung mit Begründung“, „Nachprüfung nach Review-BEDENKEN: Reviewer, Ergebnis oder entfällt“), dann meldet kein Lead ein Paket „bereit für Gate Merge“ ohne diese Nachweise, und L0 muss sie nicht mehr im Gate nachfordern.
 - Messgrösse: über die nächsten 8 Pakete mit Gate Merge 0 Gate-Rulings, in denen L0 einen fehlenden Rot-Beleg oder eine fehlende Nachprüfung feststellt (Ausgangswert Session 08e7b5f1: 2 von 4 Paketen, R174, R178). Gegenprobe: Lead-Berichte bleiben ≤ 15 Zeilen.
