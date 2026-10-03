@@ -74,3 +74,11 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
   unberührt.
 - **Neuer Zustand `noService`** (ab Task 4, Amtsstube) mit der Prüfreihenfolge Ausfall → Anbindung → Dienst →
   Sturm → Input.
+
+## Nachtrag M11 (2026-10-03): Buchung je Tick, Budget im Wachstumstakt
+
+- `step`-Reihenfolge unverändert. `tickTaxes`/`tickEconomy` buchen je Schritt mit Übertrag; `stats` bleiben
+  Nominalwerte je 100 Ticks.
+- `tickPopulation` rechnet im Wachstumstakt einmal vor der Häuserschleife das Budget (`goodsBalance` aus `flow.ts`);
+  jeder erfolgreiche Aufstieg zieht sein Δ ab (Id-Reihenfolge, deterministisch). Zwischen den Takten keine Berechnung.
+- Begründung: Aufstieg und Buchung im selben Schritt sehen denselben Stand (RF-2). Kosten bei Irrtum: Faktor 1.
