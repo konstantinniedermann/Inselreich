@@ -24,8 +24,7 @@ eigene Statusmarke und gilt nachts als stillstehend (Spec 8). Der Renderer liest
 
 **Erwartete Dateien:** `src/render/ring.ts` (neu), `src/render/statusMarks.ts`, `src/render/daynight.ts` (nur
 Kommentar), `src/render/renderer.ts` (Import + ein Aufruf), `tests/render/ring.test.ts` (neu),
-`tests/render/statusMarks.test.ts`, `tests/render/daynight.test.ts`, `docs/arc42.md` (§5 Render-Bausteine: `ring.ts`,
-`statusMarks.ts`; §6 Ebene 12), `README.md` („Karte lesen": Ring, Marke „kein freier Wald").
+`tests/render/statusMarks.test.ts`, `tests/render/daynight.test.ts`. Doku-Zeilen (arc42 §5 `ring.ts`, `statusMarks.ts`; §6 Ebene 12; README „Karte lesen") trägt D1 nach.
 **Nicht anfassen:** `src/sim/**`, `src/ui/**`, `src/render/sprites.ts`, `src/render/iso.ts` (R2), `src/audio/**`.
 
 - [ ] **Schritt 1: Tests schreiben.** `tests/render/ring.test.ts` (neu; `LEVELS` gemockt wie T10, da R1 vor T07/T09
@@ -112,14 +111,11 @@ describe('M11 Marke noForest (Spec 8)', () => {
   - `daynight.ts:60`: Kommentar um `noService`, `noForest` ergänzen; Code unverändert.
 - [ ] **Schritt 4: Grün.** `npx vitest run tests/render` · `npx tsc --noEmit` · `make check` · Testzählbefehl
       (`ring.test.ts` neu 3, `statusMarks.test.ts` +1). `grep -n "def\.cycle" src/render/ring.ts` → leer.
-- [ ] **Schritt 5: Doku.** `docs/arc42.md` §5 Render-Tabelle: Zeile `ring.ts` (Fortschrittsring, `ringFraction`,
-      Culling, `MAX_RINGS`) und `statusMarks.ts` (Pfeil, Kiste, Baumstumpf; fehlt bisher, H-R3); §6 Ebene 12 um
-      „Statusmarken, Fortschrittsringe". `README.md` „Karte lesen": Ring über jedem Betrieb (läuft grün mit dem Zyklus,
-      grau bei Stillstand); Marke durchgestrichener Baum = kein freier Wald in der Nähe.
+- [ ] **Schritt 5: Doku.** Doku gehört D1 (Ownership, parallel laufender Strang, R190): dieser Task ändert weder `docs/arc42.md` noch `README.md`; die Zeilen für D1 stehen im Bericht. Für D1: §5 Render-Tabelle Zeile `ring.ts` (Fortschrittsring, `ringFraction`, Culling, `MAX_RINGS`) und `statusMarks.ts` (Pfeil, Kiste, Baumstumpf; fehlt bisher); §6 Ebene 12 „Statusmarken, Fortschrittsringe"; README „Karte lesen": Ring über jedem Betrieb (grün mit dem Zyklus, grau bei Stillstand), Marke durchgestrichener Baum = kein freier Wald in der Nähe.
 - [ ] **Schritt 6: Commit und Push.**
 
 ```bash
-git add src/render/ring.ts src/render/statusMarks.ts src/render/daynight.ts src/render/renderer.ts tests/render/ring.test.ts tests/render/statusMarks.test.ts docs/arc42.md README.md
+git add src/render/ring.ts src/render/statusMarks.ts src/render/daynight.ts src/render/renderer.ts tests/render/ring.test.ts tests/render/statusMarks.test.ts
 git commit -m "feat: M11-R1 Fortschrittsring, Marke noForest (Spec 8)"
 git -C .worktrees/m11-render push -u origin feat/m11-render
 ```

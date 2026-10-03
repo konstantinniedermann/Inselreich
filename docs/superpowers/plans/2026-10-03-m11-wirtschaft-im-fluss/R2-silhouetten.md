@@ -32,8 +32,7 @@ src/render/sprites.ts`; `grep -rn -i "cache" src/render/sprites.ts src/render/*.
   Fenster, beide Richtungen).
 
 **Erwartete Dateien:** `src/render/sprites.ts`, `src/render/iso.ts` (`BODY_HEIGHTS`), Cache-Modul aus H-R6 (nur der
-Schlüssel, falls Schritt 0 es verlangt), `tests/render/sprites.test.ts`, `docs/arc42.md` (§5 Zeile `sprites.ts`),
-`README.md` („Karte lesen": Stufen erkennbar), `docs/CREDITS.md` nur falls fremde Vorlage (nicht vorgesehen: eigene Formen).
+Schlüssel, falls Schritt 0 es verlangt), `tests/render/sprites.test.ts`, `docs/CREDITS.md` nur falls fremde Vorlage (nicht vorgesehen: eigene Formen). Doku-Zeilen (arc42 §5 `sprites.ts`, README „Karte lesen") trägt D1 nach.
 **Nicht anfassen:** `src/sim/**`, `src/ui/**`, `src/render/renderer.ts`, `src/render/ring.ts`, `src/render/statusMarks.ts`.
 
 - [ ] **Schritt 1: Tests schreiben** in `tests/render/sprites.test.ts` (Helfer `mk`, `CAM`, `inHull`, `fakeCtx` sind da;
@@ -113,13 +112,11 @@ verschiedene Schlüssel bzw. drei Einträge (Schlüsselfunktion oder Eintragszä
     erfassen Cache (H-R6) und `bodyPolygons` den Aufsatz ohne Sonderweg. `SILHOUETTES.hunter`/`.cattlefarm` eintragen.
 - [ ] **Schritt 4: Grün.** `npx vitest run tests/render` · `npx tsc --noEmit` · `make check` · Testzählbefehl
       (`sprites.test.ts` +2, Cache-Test +1).
-- [ ] **Schritt 5: Doku.** `docs/arc42.md` §5 Zeile `sprites.ts`: Jagdhütte, Rinderfarm, `drawLevelTopper` (Stufe 2
-      Anbau, Stufe 3 Sockel und Fahne), Cache-Schlüssel mit `level`. `README.md` „Karte lesen": ausgebaute Betriebe
-      tragen einen Anbau (Stufe 2) bzw. Anbau, Steinsockel und Fahne (Stufe 3).
+- [ ] **Schritt 5: Doku.** Doku gehört D1 (Ownership, parallel laufender Strang, R190): dieser Task ändert weder `docs/arc42.md` noch `README.md`; die Zeilen für D1 stehen im Bericht. Für D1: §5 Zeile `sprites.ts`: Jagdhütte, Rinderfarm, `drawLevelTopper` (Stufe 2 Anbau, Stufe 3 Sockel und Fahne), Cache-Schlüssel mit `level`; README „Karte lesen": ausgebaute Betriebe tragen einen Anbau (Stufe 2) bzw. Anbau, Steinsockel und Fahne (Stufe 3).
 - [ ] **Schritt 6: Commit und Push.**
 
 ```bash
-git add src/render tests/render docs/arc42.md README.md
+git add src/render tests/render
 git commit -m "feat: M11-R2 Silhouetten Jagdhütte und Rinderfarm, Stufen-Aufsatz (Spec 8)"
 git -C .worktrees/m11-render push -u origin feat/m11-render
 ```

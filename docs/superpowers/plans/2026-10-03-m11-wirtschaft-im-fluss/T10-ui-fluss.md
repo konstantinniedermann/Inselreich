@@ -21,7 +21,7 @@ Anzeige eines stehenden Betriebs liest Zyklus und Unterhalt über `cycleOf(b)`/`
 - Ab T01: `cycleOf`, `upkeepOf` (`src/sim/levels.ts`), `Building.level?`; `LEVELS` (`defs/levels.ts`) leer bis T09.
 
 **Erwartete Dateien:** `src/ui/hud.ts`, `src/ui/app.ts`, `src/ui/texts.ts`, `src/ui/inspect.ts`, `src/ui/hover.ts`,
-`tests/ui/hud.test.ts`, `tests/ui/levelReads.test.ts` (neu), `docs/arc42.md` (§5 Zeile `hud.ts`, §6 HUD-Takt).
+`tests/ui/hud.test.ts`, `tests/ui/levelReads.test.ts` (neu). Doku-Zeilen (arc42 §5 `hud.ts`, §6 HUD-Takt) trägt D1 nach.
 **Nicht anfassen:** `src/sim/**`, `src/render/**`, `src/ui/buildMenu.ts` (Bauleisten-Tooltip bleibt Stufe 1), `index.html`,
 `src/style.css`, bestehende Tests (keine Umschreibung nötig).
 
@@ -129,13 +129,11 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
   - `grep -n "def\.cycle\|def\.upkeep" src/ui/*.ts` → nur `buildMenu.ts` und Struktur-Bedingungen in `inspect.ts`.
 - [ ] **Schritt 4: Grün.** `npx vitest run tests/ui` · `npx tsc --noEmit` · `make check` · Testzählbefehl aus index.md
       (`tests/ui/hud.test.ts` 14 → 15; `levelReads.test.ts` neu 3).
-- [ ] **Schritt 5: Doku.** `docs/arc42.md` §5 Zeile `hud.ts`: „Geld je Frame (`updateMoney`), Bilanz höchstens alle
-      `BALANCE_REFRESH_MS` = 500 ms (`balanceDue`)"; §6 Satz „das HUD wird jeden zehnten Frame aktualisiert" und das
-      Sequenzdiagramm (`refresh()` jeden zehnten Frame) um „Geld je Frame" ergänzen. README ändert D1 (Buchung je Tick).
+- [ ] **Schritt 5: Doku.** Doku gehört D1 (Ownership, parallel laufender Strang, R190): dieser Task ändert weder `docs/arc42.md` noch `README.md`; die Zeilen für D1 stehen im Bericht. Für D1: §5 Zeile `hud.ts` „Geld je Frame (`updateMoney`), Bilanz höchstens alle `BALANCE_REFRESH_MS` = 500 ms (`balanceDue`)"; §6 Satz „das HUD wird jeden zehnten Frame aktualisiert" samt Sequenzdiagramm.
 - [ ] **Schritt 6: Commit und Push.**
 
 ```bash
-git add src/ui/hud.ts src/ui/app.ts src/ui/texts.ts src/ui/inspect.ts src/ui/hover.ts tests/ui/hud.test.ts tests/ui/levelReads.test.ts docs/arc42.md
+git add src/ui/hud.ts src/ui/app.ts src/ui/texts.ts src/ui/inspect.ts src/ui/hover.ts tests/ui/hud.test.ts tests/ui/levelReads.test.ts
 git commit -m "feat: M11-U1 Kontostand je Frame, Bilanz-Drossel, Anzeige über cycleOf/upkeepOf (Spec 7)"
 git -C .worktrees/m11-ui push -u origin feat/m11-ui
 ```

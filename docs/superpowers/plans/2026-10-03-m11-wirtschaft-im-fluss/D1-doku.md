@@ -40,8 +40,8 @@ Den Übertrag der Rulings aus dem Ledger nach `docs/studio/rulings.md` macht der
       Gebäude und Weg, nicht unter dem eigenen Grundriss); Stillstand „Kein freier Wald in der Nähe" mit laufendem
       Unterhalt, Abhilfe Aufforsten. „Aufstieg": bei prospektivem Defizit doppelte Wartezeit (30 s → 60 s, «niedrig»
       15 s → 30 s), kein Verbot. Freischalt-Tabelle: U2 + Jagdhütte, U3 + Rinderfarm, Ausbau Stufe 2, U5 + Ausbau Stufe 3.
-      Was T11/T12/R1/R2 eingetragen haben (Ausbau, Auslastung, Y, Ring, Aufsatz) nur gegenlesen.
-- [ ] **Schritt 2: arc42.** §5 Zeilen `flow.ts` (`goodsBalance`, `upgradeDelta`, `deficitGood`, `upgradeDeficit`;
+      Was T11/T12 eingetragen haben (Ausbau, Auslastung, Y) nur gegenlesen; **Ring, Marke, Aufsatz** (R1/R2) trägt D1 selbst ein (siehe Schritt 2 und „Karte lesen").
+- [ ] **Schritt 2: arc42.** Aus T10/R1/R2 übernommen (Ownership D1): §5 Zeile `hud.ts` („Geld je Frame (`updateMoney`), Bilanz höchstens alle `BALANCE_REFRESH_MS` = 500 ms"), §6 HUD-Takt samt Sequenzdiagramm; §5 Render-Zeilen `ring.ts`, `statusMarks.ts`, `sprites.ts` (Jagdhütte, Rinderfarm, `drawLevelTopper`, Cache-Schlüssel mit `level`), §6 Ebene 12 „Statusmarken, Fortschrittsringe"; README „Karte lesen": Ring (grün mit dem Zyklus, grau bei Stillstand), Marke durchgestrichener Baum, Anbau/Sockel/Fahne je Stufe. Dazu §5 Zeilen `flow.ts` (`goodsBalance`, `upgradeDelta`, `deficitGood`, `upgradeDeficit`;
       importiert weder `population.ts` noch `queries.ts`), `levels.ts` (`cycleOf`, `upkeepOf`, `utilization`, einziger
       Leseort), `upgrade.ts` (`upgradeBuilding`, `paidCost`), `defs/levels.ts` (`LEVELS`); `population.ts`/`economy.ts`
       um Übertrag; `save.ts` Version 6, Kette bis v6 (`migrateV5ToV6`). §6 Tabelle `tickTaxes`, `tickEconomy`: „jeder
