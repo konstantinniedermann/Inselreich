@@ -709,3 +709,21 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     ]);
   });
 });
+
+// Fixture erzeugt auf 7e46aae (src = 4a5130e) mit dem temporären Test tests/sim/gen-save-v5.test.ts (Plan M11 T00):
+// Controller Seed 3, Krisen normal mit Feuerwache, angehalten bei Tick 2650 (Sturm aktiv ab 2601), serialize.
+describe('M11 Fixture save-v5 (Anhang 02 E)', () => {
+  it('T00 save-v5.json roh: version 5, ohne taxCarry/eff/level, Sturm aktiv bei Tick 2650; lädt', () => {
+    const json = readFileSync('tests/sim/fixtures/save-v5.json', 'utf8');
+    const raw = JSON.parse(json) as Record<string, unknown>;
+    expect(raw.version).toBe(5);
+    expect(raw.tick).toBe(2650);
+    expect('taxCarry' in raw || 'upkeepCarry' in raw).toBe(false);
+    const crisis = raw.crisis as { kind: string; from: number };
+    expect(crisis.kind).toBe('storm');
+    expect(crisis.from).toBeLessThanOrEqual(2650);
+    for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>))
+      expect('eff' in b || 'level' in b).toBe(false);
+    expect(deserialize(json).ok).toBe(true); // nach T01: lädt als v6 (AK-SAV-02)
+  });
+});
