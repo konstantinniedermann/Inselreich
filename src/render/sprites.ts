@@ -5,6 +5,7 @@ import { tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { PALETTE, rgbOfCss } from './palette';
+import { VARIANT_LOOKS, keepSaturation, type Mix } from './variants';
 
 /** Mischt zwei CSS-Farben (`#rrggbb` oder `rgb(r,g,b)`, also auch bereits gemischte Töne). */
 function mixHex(a: string, b: string, t: number): string {
@@ -58,6 +59,9 @@ export class IsoPainter {
   env: BodyEnv = {};
   /** Hüllenhöhe des Körpers (für den Kategorie-Fallback, der keine eigene Höhe kennt). */
   height = 0;
+  /** Variante (H-R7): verschiebt nur Töne und Zubehör, nie den Umriss; 0 = bisheriger Look. */
+  variant = 0;
+  private tones = new Map<string, string>();
   constructor(
     readonly ctx: CanvasRenderingContext2D,
     readonly cam: Camera,
@@ -72,8 +76,22 @@ export class IsoPainter {
     return worldToScreen(this.cam, { x: p.x, y: p.y - z });
   }
 
+  /** Farbe mit der Mischung `mix` der Variante; ohne Mischung unverändert. */
+  tone(color: string, mix: Mix | null): string {
+    if (!mix) return color;
+    const k = `${color}|${mix[0]}|${mix[1]}`;
+    let c = this.tones.get(k);
+    if (c === undefined)
+      this.tones.set(k, (c = keepSaturation(color, mixHex(color, mix[0], mix[1]))));
+    return c;
+  }
+  get look() {
+    return VARIANT_LOOKS[this.variant] ?? VARIANT_LOOKS[0]!;
+  }
+
   poly(pts: readonly [number, number, number][], fill: string, outline = true): void {
     const { ctx } = this;
+    fill = this.tone(fill, this.look.wall);
     ctx.beginPath();
     pts.forEach(([u, v, z], i) => {
       const p = this.pt(u, v, z);
@@ -214,7 +232,7 @@ function roofZ(s: Shell, u: number, v: number): number {
 /** Wände (links hell, rechts im Schatten), Giebeldreieck und Dachflächen; Firstlinie trennt Licht und Schatten. */
 function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): void {
   const { u0, u1, v0, v1, um, vm, wz, zr } = s;
-  const r = roofColors(roof);
+  const r = roofColors(p.tone(roof, p.look.roof));
   p.quad([u0, v1, 0], [u1, v1, 0], [u1, v1, wz], [u0, v1, wz], wall.left);
   p.quad([u1, v0, 0], [u1, v1, 0], [u1, v1, wz], [u1, v0, wz], wall.right);
   if (s.kind === 'gable' && s.axis === 'u') {
@@ -322,7 +340,7 @@ function chimneyBox(p: IsoPainter, s: Shell, spot: ChimneySpot, color: string): 
 }
 
 function chimney(p: IsoPainter, s: Shell, h: number, color: string): void {
-  chimneyBox(p, s, { ...chimneySpot(s, h), size: CHIMNEY_SIZE }, color);
+  chimneyBox(p, s, { ...chimneySpot(s, h), size: CHIMNEY_SIZE }, p.tone(color, p.look.chimney));
 }
 
 /** Bodenfläche (Hof) unter dem Körper: Raute des Footprints, minimal eingezogen. */
@@ -335,6 +353,15 @@ function yard(
   v1 = p.h - 0.02,
 ): void {
   p.quad([u0, v0, 0], [u1, v0, 0], [u1, v1, 0], [u0, v1, 0], color, false);
+}
+
+/** Fensterläden (Variante): schmale Streifen links und rechts eines Fensters, innerhalb der Wandfläche. */
+function shutters(p: IsoPainter, s: Shell, ua: number, ub: number, za: number, zb: number): void {
+  const c = p.look.shutters;
+  if (!c) return;
+  const w = 0.035;
+  leftQuad(p, s, ua - w - 0.01, ua - 0.01, za, zb, c);
+  leftQuad(p, s, ub + 0.01, ub + w + 0.01, za, zb, c);
 }
 
 const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
@@ -459,6 +486,7 @@ function houseBody(p: IsoPainter, b: Building): void {
     rightQuad(p, s, s.v0, s.v1, 0.47 * s.wz, 0.47 * s.wz + 2, t.right);
     leftQuad(p, s, 0.28, 0.4, 0.1, 0.6 * s.wz, DOOR);
     leftQuad(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz, WINDOW);
+    shutters(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz);
     chimney(p, s, h, PALETTE.wallStone);
   } else if (tier === 3) {
     // Bürgerhaus: Steinwand, dunkler Ziegel, zwei Geschosse, Gaube (First entlang v)
@@ -479,6 +507,8 @@ function houseBody(p: IsoPainter, b: Building): void {
     leftQuad(p, s, 0.6, 0.72, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
     rightQuad(p, s, 0.22, 0.34, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
     rightQuad(p, s, 0.66, 0.78, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
+    shutters(p, s, 0.6, 0.72, 0.1, 0.4 * s.wz);
+    shutters(p, s, 0.6, 0.72, 0.58 * s.wz, 0.9 * s.wz);
     // Gaube auf der Schattenseite (vorn rechts)
     const ud = 0.74,
       z0 = roofZ(s, ud + 0.06, 0.5),
@@ -781,7 +811,7 @@ function stall(p: IsoPainter, u0: number, v0: number, h: number, goods: readonly
     const ua = u0 + ((u1 - u0) * i) / stripes,
       ub = u0 + ((u1 - u0) * (i + 1)) / stripes;
     const col = i % 2 === 0 ? PALETTE.roofTimber : PALETTE.wallLime;
-    const r = roofColors(col);
+    const r = roofColors(p.tone(col, p.look.roof));
     p.quad([ua, v0, zE], [ub, v0, zE], [ub, vm, zR], [ua, vm, zR], r.shade, false);
     p.quad([ua, v1, zE], [ub, v1, zE], [ub, vm, zR], [ua, vm, zR], r.light, false);
   }
@@ -1709,9 +1739,11 @@ export function drawBody(
   b: Building,
   timeMs: number,
   env?: BodyEnv,
+  variant = 0,
 ): void {
   const p = new IsoPainter(ctx, cam, b.x, b.y, def.w, def.h);
   p.edge = EDGE;
+  p.variant = variant;
   p.height = bodyHeight(def, b);
   if (env) p.env = env;
   (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
@@ -1724,9 +1756,26 @@ export function drawBody(
  * Verläufe (createLinearGradient …) und Clips lieferten dort `undefined` bzw. nichts und würden werfen oder
  * Flächen verlieren. Silhouetten dürfen deshalb keine Verläufe oder Clips benutzen.
  */
-export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
-  const polys: Pt[][] = [];
+export function bodyPolygons(def: BuildingDef, b: Building, variant = 0): Pt[][] {
+  return bodyFaces(def, b, variant).map((f) => f.pts);
+}
+
+/** Gefüllte Fläche des Körpers samt Füllfarbe (für die Materialschicht des Sprite-Caches). */
+export interface BodyFace {
+  pts: Pt[];
+  fill: string;
+}
+
+/** Wie `bodyPolygons`, mit Füllfarbe und frei wählbarer Kamera (Standard: Weltpixel). */
+export function bodyFaces(
+  def: BuildingDef,
+  b: Building,
+  variant = 0,
+  cam: Camera = { x: 0, y: 0, zoom: 1 },
+): BodyFace[] {
+  const faces: BodyFace[] = [];
   let path: Pt[] = [];
+  let fillStyle = '';
   const rec: Record<string, unknown> = {
     beginPath: () => {
       path = [];
@@ -1740,15 +1789,18 @@ export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
     arc: (x: number, y: number, r: number) =>
       path.push({ x: x - r, y }, { x, y: y - r }, { x: x + r, y }, { x, y: y + r }),
     fill: () => {
-      if (path.length >= 3) polys.push(path.slice());
+      if (path.length >= 3) faces.push({ pts: path.slice(), fill: fillStyle });
     },
   };
   const ctx = new Proxy(rec, {
     get: (t, k) => (k in t ? t[k as string] : () => undefined),
-    set: () => true,
+    set: (_t, k, v) => {
+      if (k === 'fillStyle') fillStyle = String(v);
+      return true;
+    },
   }) as unknown as CanvasRenderingContext2D;
-  drawBody(ctx, { x: 0, y: 0, zoom: 1 }, def, b, 0);
-  return polys;
+  drawBody(ctx, cam, def, b, 0, undefined, variant);
+  return faces;
 }
 setBodyShapes(bodyPolygons);
 
