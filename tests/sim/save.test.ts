@@ -37,7 +37,7 @@ function expectFailure(json: string, reason: string): void {
 }
 
 describe('save', () => {
-  it('uses version 3', () => {
+  it('uses version 5', () => {
     expect(SAVE_VERSION).toBe(5);
   });
 
@@ -278,7 +278,7 @@ function burningWorld(): { world: World; id: number } {
 }
 
 describe('M6 Save v3', () => {
-  it('AK-S1-01 createWorld: version 3, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
+  it('AK-S1-01 createWorld: version 5, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
     const a = createWorld(3);
     expect(a.version).toBe(5);
     expect(a.crisisLevel).toBe('off');
