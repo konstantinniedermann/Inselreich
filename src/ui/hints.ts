@@ -60,15 +60,15 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   },
   {
     source: 'placement',
-    pattern: /^Zu wenig (Wald|Weide) in der Nähe$/,
+    pattern: /^Zu wenig (freier |freie )?(Wald|Weide) in der Nähe$/,
     show: (m, _w, c) => {
       if (!c.defId) return null;
-      const terrain = m[1] === 'Wald' ? 'forest' : 'grass';
+      const terrain = m[2] === 'Wald' ? 'forest' : 'grass';
       const rule = BUILDING_DEFS[c.defId].site.find(
         (r) => r.kind === 'radius' && r.terrain === terrain,
       );
       return rule?.kind === 'radius'
-        ? `Zu wenig ${m[1]} in der Nähe: mindestens ${rule.min} ${rule.min === 1 ? 'Feld' : 'Felder'} im Umkreis ${rule.radius}`
+        ? `Zu wenig ${m[1] ?? ''}${m[2]} in der Nähe: mindestens ${rule.min} ${rule.min === 1 ? 'Feld' : 'Felder'} im Umkreis ${rule.radius}`
         : null;
     },
   },

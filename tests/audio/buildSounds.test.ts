@@ -64,8 +64,13 @@ function setup(muted = false) {
 }
 
 describe('Bau-Klanggruppen: Zuordnung', () => {
-  it('deckt alle Gebäude-Ids und den Weg ab', () => {
-    for (const id of [...BUILDING_IDS, 'road']) expect(BUILD_SOUND_OF[id], id).toBeDefined();
+  it('deckt alle Gebäude-Ids und den Weg ab (M11 S2)', () => {
+    // Jagdhütte und Rinderfarm haben bis zur Audio-Runde keine eigene Gruppe: Rückfall (Spec 3.1)
+    const fallback = ['hunter', 'cattlefarm'];
+    for (const id of BUILDING_IDS.filter((b) => !fallback.includes(b)))
+      expect(BUILD_SOUND_OF[id], id).toBeDefined();
+    expect(BUILD_SOUND_OF.road).toBeDefined();
+    for (const id of fallback) expect(buildGroupName(id), id).toBe(BUILD_FALLBACK);
   });
   it('verweist nur auf vorhandene Gruppen', () => {
     for (const g of Object.values(BUILD_SOUND_OF)) expect(BUILD_GROUPS[g]).toBeDefined();

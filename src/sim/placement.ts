@@ -3,7 +3,16 @@ import type { BuildingDefId, Result, SiteRule, Terrain, World } from './types';
 import { fail, ok } from './types';
 import { inSupplyRange } from './supply';
 import { buildLock } from './unlocks';
-import { adjacentOf, center, inBounds, isLand, tileAt, tilesInRadius, type Pos } from './world';
+import {
+  adjacentOf,
+  center,
+  footprint,
+  inBounds,
+  isLand,
+  tileAt,
+  tilesInRadius,
+  type Pos,
+} from './world';
 
 // Karte -> Bauland -> frei, für ein w×h-Rechteck ab (x, y).
 function checkGround(world: World, x: number, y: number, w: number, h: number): Result {
@@ -24,16 +33,28 @@ function adjacentReason(terrain: Terrain): string {
   return terrain === 'water' ? 'Braucht Wasser angrenzend' : 'Braucht Gebirge angrenzend';
 }
 
-function radiusReason(terrain: Terrain): string {
-  return terrain === 'forest' ? 'Zu wenig Wald in der Nähe' : 'Zu wenig Weide in der Nähe';
+function radiusReason(terrain: Terrain, free: boolean): string {
+  if (terrain === 'forest')
+    return free ? 'Zu wenig freier Wald in der Nähe' : 'Zu wenig Wald in der Nähe';
+  return free ? 'Zu wenig freie Weide in der Nähe' : 'Zu wenig Weide in der Nähe';
 }
 
-function checkRule(
+/** Zählt nur Kacheln des Geländes, die unbebaut, ohne Weg und ausserhalb des eigenen Grundrisses sind. */
+function countFreeTerrain(world: World, tiles: Pos[], terrain: Terrain, own: Pos[]): number {
+  return tiles.filter((p) => {
+    const t = tileAt(world, p.x, p.y);
+    if (t === undefined || t.terrain !== terrain || t.buildingId !== null || t.road) return false;
+    return !own.some((o) => o.x === p.x && o.y === p.y);
+  }).length;
+}
+
+/** Prüft eine Standortregel für `defId` mit Grundriss ab (x, y); ohne Wurf, Grund im Ergebnis. */
+export function siteRuleOk(
   world: World,
-  rule: SiteRule,
   defId: BuildingDefId,
   x: number,
   y: number,
+  rule: SiteRule,
 ): Result {
   const def = BUILDING_DEFS[defId];
   const { cx, cy } = center(def, x, y);
@@ -46,11 +67,14 @@ function checkRule(
       return countTerrain(world, adjacentOf(world, x, y, def.w, def.h), rule.terrain) >= rule.min
         ? ok
         : fail(adjacentReason(rule.terrain));
-    case 'radius':
-      return countTerrain(world, tilesInRadius(world, cx, cy, rule.radius), rule.terrain) >=
-        rule.min
-        ? ok
-        : fail(radiusReason(rule.terrain));
+    case 'radius': {
+      const tiles = tilesInRadius(world, cx, cy, rule.radius);
+      const free = rule.free === true;
+      const n = free
+        ? countFreeTerrain(world, tiles, rule.terrain, footprint(def, x, y))
+        : countTerrain(world, tiles, rule.terrain);
+      return n >= rule.min ? ok : fail(radiusReason(rule.terrain, free));
+    }
     case 'supply': {
       const supplied = inSupplyRange(world, cx, cy);
       return supplied ? ok : fail('Ausserhalb der Versorgung');
@@ -77,7 +101,7 @@ export function canPlace(world: World, defId: BuildingDefId, x: number, y: numbe
   const ground = checkGround(world, x, y, def.w, def.h);
   if (!ground.ok) return ground;
   for (const rule of def.site) {
-    const res = checkRule(world, rule, defId, x, y);
+    const res = siteRuleOk(world, defId, x, y, rule);
     if (!res.ok) return res;
   }
   return ok;

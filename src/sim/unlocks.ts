@@ -119,6 +119,8 @@ export function deriveUnlocks(w: World): UnlockId[] {
   for (const b of Object.values(w.buildings)) {
     const e = entryOfBuilding(b.defId);
     if (e !== null) out.add(e.id);
+    if ((b.level ?? 1) >= 2) out.add(FUNCTION_ENTRY.upgrade2);
+    if (b.level === 3) out.add(FUNCTION_ENTRY.upgrade3);
   }
   return inOrder(out);
 }
