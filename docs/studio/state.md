@@ -4,17 +4,19 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-03 (Session-Ende 9b13950a; Wochenfenster nach Reset 0 %)
+Stand: 2026-10-03 (Session-Ende 347a6598; 5-h-Fenster 56 %, Woche 7 %)
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. Live auf main @ 63ed1a9 (CI/Pages grün): M1–M8, **M10 „Schritt für
+- Projekt: **Inselreich**. Live auf main @ c98e23f (CI/Pages grün): M1–M8, **M10 „Schritt für
   Schritt"** (R188), **M11 „Wirtschaft im Fluss"** (R200; Save v6, Fluss je Tick, Dämpfung, Jagdhütte,
   Rinderfarm, Wald `free`, Auslastung, Ausbau Stufen 1–3) und M9-Häppchen H-R1…H-R8 (Welle 2: Sprite-Cache
-  H-R6, Varianz/Material H-R7, Felsmassive + `lineJoin` H-R8).
+  H-R6, Varianz/Material H-R7, Felsmassive + `lineJoin` H-R8) sowie H-S1 (Kontor nur am Meer, `MIN_MOUNTAIN_PATCH = 12`,
+  R205) und H-R9 (Gebirge als Grossgrafik `massif.ts`, Relief/Dünen, Wiesenvarianz, R206).
   Programm Nutzerfeedback: `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`.
 - **M9 „Lebendige Insel" Rest:** G7b Landtiere (`iso.ts`, `wildlife.ts`), K3 aus M10 (Silhouetten statt
-  Kategorie-Symbol, R186), Bergoptik-Feinschliff (H-R8 Blindtest Note 3), Typ-Erkennung kleiner Bauten
+  Kategorie-Symbol, R186), Nutzerurteil zu H-R9 im Spiel abwarten (Wiese bei Zoom 1 noch
+  dezent, Erstbild-Rasterung ~130 ms), Typ-Erkennung kleiner Bauten
   (R195). Häppchen-Format wie H-R6…H-R8 (Kurz-Spec im Briefing, lead-art).
 - **M12 „Weite Welt"** ist der nächste Meilenstein (G5 Fluss, S6 grössere/mehrere Inseln, S7 Expansion,
   S8 Handelsrouten; Programm Zeilen 53–65, 128 ff.): zuerst Brainstorming mit lead-design.
@@ -33,14 +35,13 @@ Stand: 2026-10-03 (Session-Ende 9b13950a; Wochenfenster nach Reset 0 %)
 
 | Session  | Stand         | besitzt     | bis |
 | -------- | ------------- | ----------- | --- |
-| 9b13950a | abgeschlossen | nichts mehr | –   |
+| 347a6598 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Nutzeranweisung „Wochenlimit ignorieren" (R180): M10 Stufe 2, UI, QA, Gate Merge → live (R188); M11 von
-  Design bis Merge in einer Session (R185–R200, 7 Controller-Instanzen); M9 Welle 2 H-R6, H-R7, H-R8 live.
-- CI-Vorfall Experiment-Grenze behoben (R180); Studio-Werkzeug Budget-Alarm je Phase (R198).
-- Retros: Meilenstein M10/M11, Prozess M10/M11, Session 9b13950a; Handbuch 1.14 (R190) und 1.15 (R201).
+- Nutzerauftrag „Gebirge schöner, mehr Relief, Kontor am Meer" (R204): H-S1 (lead-tech, R205) und H-R9
+  (lead-art, R206) parallel umgesetzt, beide live, CI/Pages grün. H-R9 lag weit über Schätzung (~450 statt
+  200 Tools, 5 Fix-Runden; Kurz-Spec nahm bebaubares Gebirge an) → Kurz-Retro session-347a6598.
 
 ## Pausierte Pakete
 
@@ -71,5 +72,5 @@ Keine offenen Freigaben. Alle Pakete dieser Session abgeschlossen.
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
 1. M12 „Weite Welt": Brainstorming mit lead-design (Designvorschlag, Gate Brainstorming), dann Spec, Plan.
-2. Parallel M9-Rest als Häppchen (lead-art): G7b Landtiere, K3, Bergoptik, kleine Bauten.
+2. Parallel M9-Rest als Häppchen (lead-art): G7b Landtiere, K3, kleine Bauten; Feinschliff H-R9 nach Nutzerurteil.
 3. Werkzeug (lead-production): E-023-Vorbereitung, Budget-Alarm-Rest, Integrator-Persona.

@@ -35,3 +35,4 @@
 - Ein Ruling, das eine Schranke ausnahmsweise überschreitet, nennt die Schranke und ihren Geltungsbereich: die +10 %-Schranke aus R195 galt nur H-R7 (R199, Retro M11).
 - Bricht ein Agent mit API 429 (Limit) ab, setzt L0 ihn per `SendMessage` fort statt neu zu starten: Kontext und Worktree-Stand bleiben erhalten (H-R8, Retro session-9b13950a B1).
 - Prüfungen nie in eine Pipe schicken (`make studio-test | tail -1` liefert den Exit-Code von `tail`): `make studio-test >/dev/null && …` (R202, Retro session-9b13950a B2).
+- Kurz-Specs von Render- und UI-Paketen prüfen Annahmen über Sim-Regeln (z. B. Bebaubarkeit) vor dem Start gegen `isLand`/`checkGround`: die falsche Annahme „Gebirge bebaubar“ kostete in H-R9 eine Review- und Fix-Runde (Retro session-347a6598 B2).
