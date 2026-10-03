@@ -1168,3 +1168,15 @@ frei: C2 setzt mit T10 (+ QA-UI) per Fortsetzung fort (Rest 3 Starts M11-C1); C3
 sofort mit 7d588a2 behoben → Retro. — Kosten bei Irrtum: Merge-Konflikte W4, durch Ownership-Matrix begrenzt.
 
 Entscheider: L0 · Anlass: Berichte C1, C2, lead-art M11-R1 · ADR: —
+
+## R194 · 2026-10-03 · M11 W4 abgenommen, AK-P2S2-01
+
+Ruling: Abgenommen: T10 (C2, `feat/m11-ui` @ d268c12), T04–T06 (C3, `feat/m11-sources` @ 3d12868), T07–T08 (C4,
+`feat/m11-upgrade` @ ed4fa1b); jeweils Review OK ohne Fix-Runde, Pins bitgleich T03. Der von C3 gemeldete
+„Spec-Widerspruch" bei `GOODS.food.sell` ist durch Spec 13-15 (R192, Grenzgewinn gewollt) erledigt; die
+Task-Datei T04b trug noch den alten Wortlaut. Auflage für C5/T09: AK-P2S2-01 um die zwei Aussagen der Spec
+ergänzen (Grenzgewinn `sell` − Unterhalt > 0 je Quelle; `sellPrice(w, 'food', 100)` = 164 < 200), Rot-Beleg per
+Mutationsprobe. C5 startet: T09 (merge sources + upgrade in `feat/m11-sim`) und B1 (`feat/m11-scen`), 4 Starts.
+— Kosten bei Irrtum: ein Testnachtrag.
+
+Entscheider: L0 · Anlass: Berichte C2, C3, C4 · ADR: —
