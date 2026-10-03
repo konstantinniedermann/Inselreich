@@ -722,3 +722,8 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - 2026-10-03 · UI (`src/ui/hover.ts`, M10-U3) · Schiffs-Trefferfläche ist genau die Kachel `shipTile`; ob das zum gezeichneten Rumpf passt, prüft QA-U3. Plural „versorgt 1 Haus" weicht von Spec 13.2 ab (Test vorhanden).
 - 2026-10-03 · Render (`src/render/spriteCache.ts`, H-R6 Review) · LRU-Thrash: Ist der Frame-Arbeitssatz grösser als 64 MB, verdrängt die LRU Einträge, die im selben Frame noch gebraucht werden; jeder Frame füllt neu, teurer als direkt zeichnen. Einschätzung: bei heutigen Spritegrössen kaum erreichbar; Absicherung (Cache bei hoher Fehlgriffsquote einige Frames abschalten) nur, wenn die Messung es zeigt.
 - 2026-10-03 · Tests (`tests/render/spriteCache.test.ts`, H-R6 Review) · Bildgleichheit des Cache nur gegen den Fake-Kontext belegt; Browser-Sichtvergleich bei DPR 2 und Zoom 0,75/1,5 offen. Einschätzung: qa-playtester beim Abnahmelauf (siehe `.studio/qa/H-R6/`).
+
+## 2026-10-03 · M11-R1 · 16 Rot-Tests auf feat/m11-sim @ 9ef025f
+- Fundort: `tests/sim` (balance-crises, balance-merchants, economy, merchants, scenario-saves, taxes, unlock-timeline, unlocks), `tests/ui/goal.test.ts`; `make check` dort rot.
+- Beobachtung: vom T01-Stand, nicht von R1; Plan erwartet das bis Neupin (T03, index.md:51). Vom Reviewer bestätigt.
+- Ursprung: M11-R1 (lead-art). Einschätzung: kein Handlungsbedarf, beim Merge nach T03 prüfen.
