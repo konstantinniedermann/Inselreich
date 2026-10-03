@@ -1,10 +1,12 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { LEVELS } from '../sim/defs/levels';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { hash2 } from '../sim/noise';
 import { tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { PALETTE, rgbOfCss } from './palette';
+import { VARIANT_LOOKS, keepSaturation, type Mix } from './variants';
 
 /** Mischt zwei CSS-Farben (`#rrggbb` oder `rgb(r,g,b)`, also auch bereits gemischte Töne). */
 function mixHex(a: string, b: string, t: number): string {
@@ -58,6 +60,9 @@ export class IsoPainter {
   env: BodyEnv = {};
   /** Hüllenhöhe des Körpers (für den Kategorie-Fallback, der keine eigene Höhe kennt). */
   height = 0;
+  /** Variante (H-R7): verschiebt nur Töne und Zubehör, nie den Umriss; 0 = bisheriger Look. */
+  variant = 0;
+  private tones = new Map<string, string>();
   constructor(
     readonly ctx: CanvasRenderingContext2D,
     readonly cam: Camera,
@@ -72,8 +77,22 @@ export class IsoPainter {
     return worldToScreen(this.cam, { x: p.x, y: p.y - z });
   }
 
+  /** Farbe mit der Mischung `mix` der Variante; ohne Mischung unverändert. */
+  tone(color: string, mix: Mix | null): string {
+    if (!mix) return color;
+    const k = `${color}|${mix[0]}|${mix[1]}`;
+    let c = this.tones.get(k);
+    if (c === undefined)
+      this.tones.set(k, (c = keepSaturation(color, mixHex(color, mix[0], mix[1]))));
+    return c;
+  }
+  get look() {
+    return VARIANT_LOOKS[this.variant] ?? VARIANT_LOOKS[0]!;
+  }
+
   poly(pts: readonly [number, number, number][], fill: string, outline = true): void {
     const { ctx } = this;
+    fill = this.tone(fill, this.look.wall);
     ctx.beginPath();
     pts.forEach(([u, v, z], i) => {
       const p = this.pt(u, v, z);
@@ -214,7 +233,7 @@ function roofZ(s: Shell, u: number, v: number): number {
 /** Wände (links hell, rechts im Schatten), Giebeldreieck und Dachflächen; Firstlinie trennt Licht und Schatten. */
 function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): void {
   const { u0, u1, v0, v1, um, vm, wz, zr } = s;
-  const r = roofColors(roof);
+  const r = roofColors(p.tone(roof, p.look.roof));
   p.quad([u0, v1, 0], [u1, v1, 0], [u1, v1, wz], [u0, v1, wz], wall.left);
   p.quad([u1, v0, 0], [u1, v1, 0], [u1, v1, wz], [u1, v0, wz], wall.right);
   if (s.kind === 'gable' && s.axis === 'u') {
@@ -322,7 +341,7 @@ function chimneyBox(p: IsoPainter, s: Shell, spot: ChimneySpot, color: string): 
 }
 
 function chimney(p: IsoPainter, s: Shell, h: number, color: string): void {
-  chimneyBox(p, s, { ...chimneySpot(s, h), size: CHIMNEY_SIZE }, color);
+  chimneyBox(p, s, { ...chimneySpot(s, h), size: CHIMNEY_SIZE }, p.tone(color, p.look.chimney));
 }
 
 /** Bodenfläche (Hof) unter dem Körper: Raute des Footprints, minimal eingezogen. */
@@ -335,6 +354,15 @@ function yard(
   v1 = p.h - 0.02,
 ): void {
   p.quad([u0, v0, 0], [u1, v0, 0], [u1, v1, 0], [u0, v1, 0], color, false);
+}
+
+/** Fensterläden (Variante): schmale Streifen links und rechts eines Fensters, innerhalb der Wandfläche. */
+function shutters(p: IsoPainter, s: Shell, ua: number, ub: number, za: number, zb: number): void {
+  const c = p.look.shutters;
+  if (!c) return;
+  const w = 0.035;
+  leftQuad(p, s, ua - w - 0.01, ua - 0.01, za, zb, c);
+  leftQuad(p, s, ub + 0.01, ub + w + 0.01, za, zb, c);
 }
 
 const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
@@ -459,6 +487,7 @@ function houseBody(p: IsoPainter, b: Building): void {
     rightQuad(p, s, s.v0, s.v1, 0.47 * s.wz, 0.47 * s.wz + 2, t.right);
     leftQuad(p, s, 0.28, 0.4, 0.1, 0.6 * s.wz, DOOR);
     leftQuad(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz, WINDOW);
+    shutters(p, s, 0.6, 0.74, 0.5 * s.wz, 0.82 * s.wz);
     chimney(p, s, h, PALETTE.wallStone);
   } else if (tier === 3) {
     // Bürgerhaus: Steinwand, dunkler Ziegel, zwei Geschosse, Gaube (First entlang v)
@@ -479,6 +508,8 @@ function houseBody(p: IsoPainter, b: Building): void {
     leftQuad(p, s, 0.6, 0.72, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
     rightQuad(p, s, 0.22, 0.34, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
     rightQuad(p, s, 0.66, 0.78, 0.58 * s.wz, 0.9 * s.wz, WINDOW);
+    shutters(p, s, 0.6, 0.72, 0.1, 0.4 * s.wz);
+    shutters(p, s, 0.6, 0.72, 0.58 * s.wz, 0.9 * s.wz);
     // Gaube auf der Schattenseite (vorn rechts)
     const ud = 0.74,
       z0 = roofZ(s, ud + 0.06, 0.5),
@@ -781,7 +812,7 @@ function stall(p: IsoPainter, u0: number, v0: number, h: number, goods: readonly
     const ua = u0 + ((u1 - u0) * i) / stripes,
       ub = u0 + ((u1 - u0) * (i + 1)) / stripes;
     const col = i % 2 === 0 ? PALETTE.roofTimber : PALETTE.wallLime;
-    const r = roofColors(col);
+    const r = roofColors(p.tone(col, p.look.roof));
     p.quad([ua, v0, zE], [ub, v0, zE], [ub, vm, zR], [ua, vm, zR], r.shade, false);
     p.quad([ua, v1, zE], [ub, v1, zE], [ub, vm, zR], [ua, vm, zR], r.light, false);
   }
@@ -1449,6 +1480,107 @@ export const FALLBACKS: Record<Category, SilhouetteFn> = {
   infrastructure: fallbackBody('infrastructure'),
 };
 
+// Jagdhütte (M11-R2): kleine Blockhütte hinten links (Firstrichtung v), Fellgestell rechts, Holzstapel vorn
+function hunterBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.hunter, b);
+  yard(p, mixHex(PALETTE.earth, PALETTE.grass, 0.4));
+  const s = shellAt([I, I, 0.56, 0.6], 0.5 * h, h + ISO_H * I, 'gable', 'v');
+  drawShell(p, s, woodWall(), PALETTE.roofTimber);
+  rightQuad(p, s, 0.2, 0.4, 0.35 * s.wz, 0.8 * s.wz, WINDOW);
+  // Fellgestell rechts: zwei Pfosten, Querholm, zwei gespannte Felle in Erdton
+  const hide = mixHex(PALETTE.earth, PALETTE.roofWood, 0.35);
+  const hideDark = mixHex(PALETTE.earth, PALETTE.rockDark, 0.4);
+  pole(p, 0.74, 0.14, 16, PALETTE.wallTimber);
+  pole(p, 0.74, 0.66, 16, PALETTE.wallTimber);
+  rightPlane(p, 0.76, 0.14, 0.7, 14.5, 16, PALETTE.wallTimber);
+  rightPlane(p, 0.77, 0.2, 0.38, 5, 14.5, hide, true);
+  rightPlane(p, 0.77, 0.44, 0.6, 7, 14.5, hideDark, true);
+  // Holzstapel vorn rechts
+  const log = wallColors(PALETTE.roofWood);
+  cuboid(p, [0.58, 0.74, 0.9, 0.9], 0, 6, log, mixHex(PALETTE.roofWood, '#ffffff', 0.2));
+  cuboid(p, [0.62, 0.76, 0.86, 0.88], 6, 10, log, mixHex(PALETTE.roofWood, '#ffffff', 0.2));
+}
+
+// Rinderfarm (M11-R2): langer Stall links (Firstrichtung v), Weide mit Gatter und Heuballen rechts
+const COWS: ReadonlyArray<readonly [number, number]> = [
+  [1.15, 0.55],
+  [1.5, 1.05],
+  [1.2, 1.5],
+];
+function cattlefarmBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.cattlefarm, b);
+  yard(p, mixHex(PALETTE.grass, PALETTE.earth, 0.25));
+  p.quad(
+    [1.0, 0.2, 0],
+    [p.w - I, 0.2, 0],
+    [p.w - I, p.h - I, 0],
+    [1.0, p.h - I, 0],
+    mixHex(PALETTE.grassLight, PALETTE.grass, 0.6),
+    false,
+  );
+  const s = shellAt([I, I, 0.92, 1.55], 0.5 * h, h + ISO_H * I, 'gable', 'v');
+  drawShell(p, s, wallColors(PALETTE.wallLime), PALETTE.roofWood);
+  rightQuad(p, s, 1.2, 1.4, 0, 0.62 * s.wz, DOOR);
+  rightQuad(p, s, 0.4, 0.62, 0.35 * s.wz, 0.75 * s.wz, WINDOW);
+  // Rinder (braun, Kopf dunkel, Fleck hell), von hinten nach vorn
+  const coat = wallColors(mixHex(PALETTE.earth, PALETTE.rockDark, 0.3));
+  const dark = wallColors(PALETTE.rockDark);
+  const patch = mixHex(PALETTE.wallLime, PALETTE.earth, 0.4);
+  for (const [u, v] of [...COWS].sort((a, c) => a[0] + a[1] - (c[0] + c[1]))) {
+    cuboid(p, [u + 0.03, v + 0.03, u + 0.09, v + 0.12], 0, 3, dark, undefined, false);
+    cuboid(p, [u + 0.17, v + 0.03, u + 0.23, v + 0.12], 0, 3, dark, undefined, false);
+    cuboid(p, [u, v, u + 0.26, v + 0.15], 3, 8, coat);
+    cuboid(p, [u + 0.06, v + 0.04, u + 0.14, v + 0.11], 8, 8.4, wallColors(patch), patch, false);
+    cuboid(p, [u + 0.26, v + 0.03, u + 0.33, v + 0.12], 4, 8, dark, undefined, false);
+  }
+  // Heuballen vorn links der Weide
+  const hay = wallColors(PALETTE.roofThatch);
+  cuboid(p, [1.02, 1.62, 1.24, 1.8], 0, 6, hay, mixHex(PALETTE.roofThatch, '#ffffff', 0.2));
+  // Gatter vorn und rechts: Pfosten und zwei Latten
+  const rail = PALETTE.roofWood;
+  for (const u of [1.0, 1.35, 1.7]) pole(p, u, 1.86, 7, rail);
+  for (const v of [0.3, 0.7, 1.1, 1.5]) pole(p, 1.86, v, 7, rail);
+  pole(p, 1.86, 1.86, 7, rail);
+  leftPlane(p, 1.92, 1.0, 1.9, 3.5, 4.8, rail);
+  leftPlane(p, 1.92, 1.0, 1.9, 5.5, 6.5, rail);
+  rightPlane(p, 1.92, 0.3, 1.9, 3.5, 4.8, rail);
+  rightPlane(p, 1.92, 0.3, 1.9, 5.5, 6.5, rail);
+}
+
+/**
+ * Stufen-Aufsatz (M11-R2) für jeden Betrieb mit `LEVELS`-Eintrag; liest nur `b.level`.
+ * Stufe 2: Anbau vorn links. Stufe 3: zusätzlich Steinsockel auf beiden Aussenwänden und Fahne hinten rechts.
+ */
+export function drawLevelTopper(p: IsoPainter, def: BuildingDef, b: Building): void {
+  const level = b.level ?? 1;
+  if (level < 2) return;
+  const stone = wallColors(PALETTE.wallStone);
+  cuboid(
+    p,
+    [I, def.h - I - 0.3, I + 0.3, def.h - I],
+    0,
+    0.35 * ISO_H,
+    stone,
+    PALETTE.roofTerracotta,
+  );
+  if (level < 3) return;
+  const sock = 0.12 * ISO_H;
+  const band = mixHex(PALETTE.wallStone, '#000000', 0.08);
+  leftPlane(p, def.h - I, I + 0.3, def.w - I, 0, sock, band, true);
+  rightPlane(p, def.w - I, I, def.h - I, 0, sock, mixHex(band, '#000000', 0.18), true);
+  // Fahne an der hinteren rechten Ecke, Wimpel nach innen
+  const [u, v, top] = [def.w - I - 0.05, I, 0.95 * p.height];
+  pole(p, u, v, top, PALETTE.wallTimber, 0.05);
+  p.poly(
+    [
+      [u, v + 0.02, top],
+      [u - 0.24, v + 0.02, top - 2.5],
+      [u, v + 0.02, top - 5],
+    ],
+    PALETTE.roofTerracotta,
+  );
+}
+
 /** Silhouetten aller heutigen Typen; unbekannte Ids zeichnen den Kategorie-Fallback (`FALLBACKS`). */
 export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   house: houseBody,
@@ -1456,6 +1588,8 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   lumberjack: lumberjackBody,
   market: marketBody,
   fisher: fisherBody,
+  hunter: hunterBody, // M11-R2
+  cattlefarm: cattlefarmBody, // M11-R2
   quarry: quarryBody,
   sheepfarm: sheepfarmBody,
   weaver: weaverBody,
@@ -1552,6 +1686,8 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
   lumberjack: (_b, h) => [R(0.4, 0.62, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
   market: () => [L(1.78, 1.88, 14, 24, true)], // Laterne
   fisher: (_b, h) => [R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
+  hunter: (_b, h) => [{ ...R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h), plane: 0.56 }],
+  cattlefarm: (_b, h) => [{ ...R(0.4, 0.62, 0.35 * 0.5 * h, 0.75 * 0.5 * h), plane: 0.92 }],
   quarry: (_b, h) => [R(0.7, 0.85, 0.3 * 0.3 * h, 0.8 * 0.3 * h)],
   sheepfarm: (_b, h) => [
     { ...L(1.2, 1.5, 0.35 * 0.5 * h, 0.7 * 0.5 * h), plane: 1.0 }, // Stallwand liegt bei v = 1,0 (Koppel davor)
@@ -1709,12 +1845,15 @@ export function drawBody(
   b: Building,
   timeMs: number,
   env?: BodyEnv,
+  variant = 0,
 ): void {
   const p = new IsoPainter(ctx, cam, b.x, b.y, def.w, def.h);
   p.edge = EDGE;
+  p.variant = variant;
   p.height = bodyHeight(def, b);
   if (env) p.env = env;
   (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
+  if (b.level !== undefined && LEVELS[def.id]) drawLevelTopper(p, def, b);
 }
 
 /**
@@ -1724,9 +1863,26 @@ export function drawBody(
  * Verläufe (createLinearGradient …) und Clips lieferten dort `undefined` bzw. nichts und würden werfen oder
  * Flächen verlieren. Silhouetten dürfen deshalb keine Verläufe oder Clips benutzen.
  */
-export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
-  const polys: Pt[][] = [];
+export function bodyPolygons(def: BuildingDef, b: Building, variant = 0): Pt[][] {
+  return bodyFaces(def, b, variant).map((f) => f.pts);
+}
+
+/** Gefüllte Fläche des Körpers samt Füllfarbe (für die Materialschicht des Sprite-Caches). */
+export interface BodyFace {
+  pts: Pt[];
+  fill: string;
+}
+
+/** Wie `bodyPolygons`, mit Füllfarbe und frei wählbarer Kamera (Standard: Weltpixel). */
+export function bodyFaces(
+  def: BuildingDef,
+  b: Building,
+  variant = 0,
+  cam: Camera = { x: 0, y: 0, zoom: 1 },
+): BodyFace[] {
+  const faces: BodyFace[] = [];
   let path: Pt[] = [];
+  let fillStyle = '';
   const rec: Record<string, unknown> = {
     beginPath: () => {
       path = [];
@@ -1740,15 +1896,18 @@ export function bodyPolygons(def: BuildingDef, b: Building): Pt[][] {
     arc: (x: number, y: number, r: number) =>
       path.push({ x: x - r, y }, { x, y: y - r }, { x: x + r, y }, { x, y: y + r }),
     fill: () => {
-      if (path.length >= 3) polys.push(path.slice());
+      if (path.length >= 3) faces.push({ pts: path.slice(), fill: fillStyle });
     },
   };
   const ctx = new Proxy(rec, {
     get: (t, k) => (k in t ? t[k as string] : () => undefined),
-    set: () => true,
+    set: (_t, k, v) => {
+      if (k === 'fillStyle') fillStyle = String(v);
+      return true;
+    },
   }) as unknown as CanvasRenderingContext2D;
-  drawBody(ctx, { x: 0, y: 0, zoom: 1 }, def, b, 0);
-  return polys;
+  drawBody(ctx, cam, def, b, 0, undefined, variant);
+  return faces;
 }
 setBodyShapes(bodyPolygons);
 

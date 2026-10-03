@@ -1156,3 +1156,53 @@ Pin-Prüfung T03. Branch `docs/m11-design` geht vorher per Merge nach main. Befu
 über den E-010-Deckel (225k) für die Fix-Runde. — Kosten bei Irrtum: Plan-Nachtrag in einer Controller-Instanz.
 
 Entscheider: L0 · Anlass: Gate-Urteile lead-production und lead-qa M11-PLAN · ADR: —
+
+## R193 · 2026-10-03 · M11 Stufe 1 abgenommen, Stufe 2 frei
+
+Ruling: Abgenommen: T00–T02 (C1, `feat/m11-sim` @ 7363cb0), T03 Neupin (C2, @ b69557c; alle Haupt-Pins gleich
+Spec 14, Mutationsproben nach P-12, Nachprüfung derselben Reviewer-Instanz, make check grün) und R1 Ring/Marke
+(lead-art, `feat/m11-render` @ 3de65ab; Doku-Anteil kollidiert ggf. mit D1, Integrator-Merge regelt das). Stufe 2
+frei: C2 setzt mit T10 (+ QA-UI) per Fortsetzung fort (Rest 3 Starts M11-C1); C3 (T04–T06, `feat/m11-sources`,
+6 Starts) und C4 (T07–T08, `feat/m11-upgrade`, 4 Starts) starten parallel ab b69557c. `stash@{0}` im Worktree
+`m11-sim` bleibt liegen (nur Kopien, §6). Ablauffehler L0: Push trotz rotem prettier-Check (Verkettung mit `;`),
+sofort mit 7d588a2 behoben → Retro. — Kosten bei Irrtum: Merge-Konflikte W4, durch Ownership-Matrix begrenzt.
+
+Entscheider: L0 · Anlass: Berichte C1, C2, lead-art M11-R1 · ADR: —
+
+## R194 · 2026-10-03 · M11 W4 abgenommen, AK-P2S2-01
+
+Ruling: Abgenommen: T10 (C2, `feat/m11-ui` @ d268c12), T04–T06 (C3, `feat/m11-sources` @ 3d12868), T07–T08 (C4,
+`feat/m11-upgrade` @ ed4fa1b); jeweils Review OK ohne Fix-Runde, Pins bitgleich T03. Der von C3 gemeldete
+„Spec-Widerspruch" bei `GOODS.food.sell` ist durch Spec 13-15 (R192, Grenzgewinn gewollt) erledigt; die
+Task-Datei T04b trug noch den alten Wortlaut. Auflage für C5/T09: AK-P2S2-01 um die zwei Aussagen der Spec
+ergänzen (Grenzgewinn `sell` − Unterhalt > 0 je Quelle; `sellPrice(w, 'food', 100)` = 164 < 200), Rot-Beleg per
+Mutationsprobe. C5 startet: T09 (merge sources + upgrade in `feat/m11-sim`) und B1 (`feat/m11-scen`), 4 Starts.
+— Kosten bei Irrtum: ein Testnachtrag.
+
+Entscheider: L0 · Anlass: Berichte C2, C3, C4 · ADR: —
+
+## R195 · 2026-10-03 · Gate Merge H-R7 Varianz und Material
+
+Ruling: Gate Merge H-R7 (G1 + G8) bestanden (`feat/h-r7-varianz` @ 9233c35; Rot-Belege je Runde, Review
+ZURÜCK → BEDENKEN → OK durch dieselbe Instanz, E-015 erfüllt). renderMedian innerhalb +10 %; R191-Pflicht
+Sichtvergleich erfüllt (Stempelversatz < 0,5 Geräte-Pixel, Ursache doppeltes Runden, kein Fix ohne gerasterte
+Kamera). Blindtest mit Vorbehalt (Rater 2 nicht verwertbar); Silhouetten durch Tests und Rater 1 belegt. Schwache
+Typ-Erkennung kleiner Bauten (Weberei, Fischerhütte, Schule, Feuerwache) bestand schon auf main → Auflage für
+M11-R2/K3: Silhouetten-Abgrenzung kleiner Bauten prüfen. `lineJoin='round'` an spitzen Dachwinkeln angenommen,
+umgesetzt im nächsten Render-Häppchen H-R8 (G3 Felsmassive) mit neuen Referenz-Hashes für Variante 0. Merge durch
+production-integrator; H-R7 ist Vorbedingung für M11-R2 (R192). — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R7 · ADR: —
+
+## R196 · 2026-10-03 · M11 T09/B1, Entscheid M-15
+
+Ruling: T09 abgenommen (`feat/m11-sim` @ 7164dc4; Review OK, Rot-Belege inkl. R194-Mutationsprobe, Pins bitgleich
+T03). B1 (`feat/m11-scen` @ 2b43e9d) offen nur wegen M-15/AK-M11B-01. D-C5-M15 entschieden wie empfohlen: Die
+Fischer-Ausbau-Variante darf Werkzeug kaufen; M-15 wird als Messung gepinnt (Sieg 8250, minMoney 71, 11 Fischer
+Stufe 2, nach Nachmessung durch den Reviewer); die Siegschwelle 6750 gilt nur für den Lauf ohne Ausbau. Kein
+Eingriff in die Controller-Reserven (R74 bleibt). Balancing-Signal „Ausbau lohnt im Referenzpfad nicht" geht an
+lead-design für M11-Abschluss/M12 (beobachtungen.md, kein Nutzervorbehalt). `stash@{0}` in `m11-sim` bleibt
+(§6). C6 (T11, T12) startet parallel ab T09; `feat/m11-scen` erst nach B1-Fix holen. — Kosten bei Irrtum:
+Neupin M-15.
+
+Entscheider: L0 · Anlass: Bericht C5 (D-C5-M15) · ADR: —

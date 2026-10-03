@@ -2,7 +2,8 @@ import type { Building, BuildingDef } from '../sim/types';
 import type { Camera } from './camera';
 import { spriteBounds } from './iso';
 import { SPRITE_CACHE_MAX_BYTES, SPRITE_MAX_BYTES } from './limits';
-import { drawBody, type BodyEnv } from './sprites';
+import { drawMaterial } from './material';
+import { bodyFaces, drawBody, type BodyEnv } from './sprites';
 
 // spriteCache.ts — Sprite-Cache der Gebäudekörper (H-R6). Liest die Welt nur, schreibt nie.
 //
@@ -10,9 +11,10 @@ import { drawBody, type BodyEnv } from './sprites';
 //   - `def` (w, h, id, category)                    → Schlüssel: def.id
 //   - `b.house.tier` (Wohnhaus-Stufe, Höhe/Dach)    → Schlüssel: Stufe (für Nicht-Häuser 0)
 //   - `b.x`, `b.y` nur als Ursprung der Projektion  → reine Verschiebung, nicht im Schlüssel
+//   - `b.level` (Ausbaustufe, M11 `drawLevelTopper`) → Schlüssel: Stufe, fehlend = 1
 //   - `env` (Wasserseiten des Kontors)              → Schlüssel: 4 Bits
 //   - Zoom und DPR (Kameraabbildung, Pixelraster)   → Schlüssel
-//   - Variante (heute konstant 0, Platz für G1)     → Schlüssel
+//   - Variante (H-R7, `variantOf(seed, x, y)`)      → Schlüssel; Töne und Zubehör, nie der Umriss
 // Nicht gelesen: `b.id`, `progress`, `state`, `connected`, `outageUntil`, `timeMs`, Zufall oder Positions-Hash
 // (Rauch, Flagge, Wege laufen ausserhalb in `drawAir`/`drawRoads`). Würde eine Silhouette künftig eine davon
 // lesen, muss sie hier in den Schlüssel oder aus dem Cache (`UNCACHED`).
@@ -45,6 +47,8 @@ export interface SpriteCacheOptions {
   factory?: SurfaceFactory | null;
   maxBytes?: number;
   maxSpriteBytes?: number;
+  /** Materialschicht (Fugen, Stroh, Risse, H-R7) beim Füllen; im Renderer an, in Tests der Fläche aus. */
+  material?: boolean;
 }
 
 export function spriteKey(
@@ -62,7 +66,8 @@ export function spriteKey(
       (env.waterU0 ? 4 : 0) |
       (env.waterV0 ? 8 : 0)
     : 0;
-  return `${def.id}|${tier}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}`;
+  const level = b.level ?? 1;
+  return `${def.id}|${tier}|${level}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}`;
 }
 
 interface Entry {
@@ -84,6 +89,7 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
   const factory = opts.factory === undefined ? defaultFactory() : opts.factory;
   const maxBytes = opts.maxBytes ?? SPRITE_CACHE_MAX_BYTES;
   const maxSprite = opts.maxSpriteBytes ?? SPRITE_MAX_BYTES;
+  const material = opts.material ?? false;
   const map = new Map<string, Entry>(); // Einfügereihenfolge = LRU (ältester zuerst)
   let bytes = 0;
   let zoom = NaN,
@@ -133,12 +139,13 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
       def: BuildingDef,
       b: Building,
       env?: BodyEnv,
+      variant = 0,
     ): boolean {
       if (!factory || !warm || UNCACHED.has(def.id) || cam.zoom !== zoom) {
         st.bypassed++;
         return false;
       }
-      const key = spriteKey(def, b, env, zoom, dpr, 0);
+      const key = spriteKey(def, b, env, zoom, dpr, variant);
       const bounds = spriteBounds(def, b);
       const ox = bounds.x - MARGIN,
         oy = bounds.y - MARGIN;
@@ -165,7 +172,11 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
         }
         sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         // Gleiche Befehle wie ungecacht; nur die Kamera ist um den Ursprung der Fläche verschoben.
-        drawBody(sctx, { x: ox, y: oy, zoom }, def, b, 0, env);
+        drawBody(sctx, { x: ox, y: oy, zoom }, def, b, 0, env, variant);
+        if (material) {
+          const sc = { x: ox, y: oy, zoom };
+          drawMaterial(sctx, bodyFaces(def, b, variant, sc), def, b, variant, zoom);
+        }
         evict(size);
         e = { surface, bytes: size, w: pw / dpr, h: ph / dpr, ox, oy };
         map.set(key, e);
@@ -191,7 +202,7 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
 export type SpriteCache = ReturnType<typeof createSpriteCache>;
 
 /** Gemeinsamer Cache des Renderers; ohne DOM (Node) bleibt er aus. */
-export const spriteCache: SpriteCache = createSpriteCache();
+export const spriteCache: SpriteCache = createSpriteCache({ material: true });
 
 /** Körper über den Cache, sonst wie bisher `drawBody`. */
 export function drawBodyCached(
@@ -201,6 +212,8 @@ export function drawBodyCached(
   b: Building,
   timeMs: number,
   env?: BodyEnv,
+  variant = 0,
 ): void {
-  if (!spriteCache.draw(ctx, cam, def, b, env)) drawBody(ctx, cam, def, b, timeMs, env);
+  if (!spriteCache.draw(ctx, cam, def, b, env, variant))
+    drawBody(ctx, cam, def, b, timeMs, env, variant);
 }
