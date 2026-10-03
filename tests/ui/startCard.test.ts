@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_MS } from '../../src/sim/defs/timing';
+import { UNLOCKS } from '../../src/sim/defs/unlocks';
+import type { CrisisLevel } from '../../src/sim/types';
+import { createWorld } from '../../src/sim/world';
+import { nextStep } from '../../src/ui/guide';
+import { placeTownhall, setHouse, village } from '../sim/helpers';
 import {
   STORAGE_NOTES,
+  helpSections,
   startChoices,
   startDismissAction,
   startGoal,
@@ -55,5 +61,47 @@ describe('Startkarte Esc (Spec L1)', () => {
   it('L1 Esc bei offener Bestätigung bricht ab, sonst primärer Knopf', () => {
     expect(startDismissAction(true)).toBe('cancel');
     expect(startDismissAction(false)).toBe('primary');
+  });
+});
+
+describe('M10 Hilfe-Karte (Spec 12.1)', () => {
+  const pioneers = (crisisLevel: CrisisLevel = 'normal') => {
+    const { w, houses } = village(4, { crisisLevel }); // tests/sim/helpers.ts
+    [3, 2, 1, 1].forEach((n, i) => setHouse(houses[i]!, 1, n));
+    return { w, houses };
+  };
+  it('AK-U2-01 Abschnitte, Als Nächstes, Tipps, Erste Schritte, Alles frei, taxBlocks', () => {
+    const { w, houses } = pioneers();
+    const s = helpSections(w);
+    expect(s.map((x) => x.field)).toEqual([
+      'help-now',
+      'help-next',
+      'help-goal',
+      'help-tips',
+      'help-signs',
+      'help-steps',
+    ]);
+    expect(s[0]!.lines).toEqual([nextStep(w)]);
+    expect(s[1]!.lines).toEqual([
+      'Marktplatz — sobald 20 Wohnhäuser stehen (jetzt 4 / 20)',
+      'Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache, Roden, Aufforsten — sobald ein Wohnhaus 4 Pioniere hat (jetzt 3 / 4)',
+    ]);
+    expect(s[3]!.lines[0]).toBe(UNLOCKS[0]!.tip);
+    expect(s[5]!.lines).toEqual(startSteps());
+    setHouse(houses[0]!, 2, 1);
+    expect(helpSections(w).map((x) => x.field)).not.toContain('help-steps');
+    expect(
+      helpSections(createWorld(3, { unlockAll: true })).find((x) => x.field === 'help-next')!.lines,
+    ).toEqual(['Alles freigeschaltet']);
+    const t = createWorld(3, { crisisLevel: 'normal' });
+    t.unlocked = ['U0', 'U2', 'U3'];
+    placeTownhall(t);
+    t.taxLevel = 'high';
+    const next = helpSections(t).find((x) => x.field === 'help-next')!.lines;
+    expect(
+      next
+        .find((l) => l.startsWith('Zuckerrohrplantage'))!
+        .endsWith(" · Steuer ‚hoch' verhindert volle Häuser"),
+    ).toBe(true);
   });
 });

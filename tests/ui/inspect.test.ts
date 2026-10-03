@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  lockMatrix,
   burningText,
   producesText,
   protectedCount,
@@ -18,6 +19,8 @@ import { setHouse, uxWorld } from './worlds';
 import { createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
+import { setGoodLock } from '../../src/sim/tax';
+import { placeTownhall, setHouse as setHouseTo, village } from '../sim/helpers';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -183,5 +186,23 @@ describe('M10 Ruhe-Ansicht Steuer', () => {
     const w = createWorld(3);
     w.taxLevel = 'high';
     expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
+  });
+});
+
+describe('M10 Amtsstuben-Panel (Spec 11.8)', () => {
+  it('RF-5 Sperr-Matrix: Zeile verschwindet bei 0 Einwohnern, Sperre bleibt, kehrt gedrückt zurück', () => {
+    const { w, houses } = village(2, { unlockAll: true });
+    placeTownhall(w);
+    setHouseTo(houses[0]!, 1, 2);
+    setHouseTo(houses[1]!, 2, 3);
+    expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
+    expect(lockMatrix(w).map((r) => r.tier)).toEqual([1, 2]);
+    expect(lockMatrix(w)[1]!.goods.find((g) => g.good === 'cloth')!.locked).toBe(true);
+    setHouseTo(houses[1]!, 1, 3);
+    expect(lockMatrix(w).map((r) => r.tier)).toEqual([1]);
+    expect(w.goodLocks).toEqual([{ tier: 2, good: 'cloth' }]);
+    setHouseTo(houses[1]!, 2, 3);
+    expect(lockMatrix(w)[1]!.goods.find((g) => g.good === 'cloth')!.locked).toBe(true);
+    expect(lockMatrix(createWorld(3)).length).toBe(0); // vor U5 verborgen
   });
 });

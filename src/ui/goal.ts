@@ -3,11 +3,11 @@ import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { FUNCTION_LABELS, UNLOCKS } from '../sim/defs/unlocks';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from '../sim/defs/tiers';
-import { buildLock, buildingShown } from '../sim/unlocks';
+import { buildLock, buildingShown, functionLock } from '../sim/unlocks';
 import type { GoalView } from '../sim/queries';
 import type { BuildingDefId, UnlockDef, UnlockId, World } from '../sim/types';
 import { friendlyReason } from './hints';
-import { hotkeyLabel } from './hotkeys';
+import { hotkeyLabel, toolName } from './hotkeys';
 
 /** Name des zweiten Ziels (Setzung Spec M8 7). */
 export const SECOND_GOAL_NAME = 'Handelsstadt';
@@ -100,8 +100,8 @@ const withKey = (id: BuildingDefId): string =>
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
 export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;
 
-/** Tasten der Forst-Werkzeuge in `FUNCTION_LABELS.forest`-Reihenfolge (Spec 11.2; ab Task 7 aus `hotkeyLabel`). */
-const FOREST_KEYS: readonly string[] = ['C', 'Q'];
+/** Forst-Werkzeuge in `FUNCTION_LABELS.forest`-Reihenfolge (Roden, Aufforsten); Tasten aus `hotkeyLabel`. */
+const FOREST_TOOLS: readonly Tool[] = [{ kind: 'clearForest' }, { kind: 'plantForest' }];
 
 /** Namen mit Taste, die ein Freischalt-Eintrag neu in die Bedienung bringt (Gebäude, dann Funktionen). */
 function entryNames(world: World, def: UnlockDef): string[] {
@@ -110,7 +110,9 @@ function entryNames(world: World, def: UnlockDef): string[] {
   ).map(withKey);
   const functions = def.functions.flatMap((f) =>
     f === 'forest'
-      ? FUNCTION_LABELS.forest.map((label, i) => `${label} (${FOREST_KEYS[i] ?? '?'})`)
+      ? FUNCTION_LABELS.forest.map(
+          (label, i) => `${label} (${hotkeyLabel(FOREST_TOOLS[i]!) ?? '?'})`,
+        )
       : [...FUNCTION_LABELS[f]],
   );
   return [...buildings, ...functions];
@@ -136,8 +138,12 @@ export function frameUnlock(
   return { text: unlockNoticeText(seen, world), seen: [...world.unlocked] };
 }
 
-/** Gesperrte Taste oder gesperrter Eintrag (Spec 11.2): „{Name}: {Grund}" oder null; nur Bau-Werkzeuge. */
+/** Gesperrte Taste oder gesperrter Eintrag (Spec 11.2): „{Name}: {Grund}" oder null; Bau- und Forst-Werkzeuge. */
 export function lockedToolText(world: World, tool: Tool): string | null {
+  if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+    const lock = functionLock(world, 'forest');
+    return lock === null ? null : `${toolName(tool)}: ${friendlyReason(world, lock)}`;
+  }
   if (tool.kind !== 'build') return null;
   const name = BUILDING_DEFS[tool.defId].name;
   const lock = buildLock(world, tool.defId);

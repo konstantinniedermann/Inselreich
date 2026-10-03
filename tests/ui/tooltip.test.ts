@@ -4,6 +4,8 @@ import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { createWorld } from '../../src/sim/world';
 import type { CrisisLevel, UnlockId, World } from '../../src/sim/types';
+import { REASON_TABLE, friendlyReason, placementHint } from '../../src/ui/hints';
+import { forceRect } from '../sim/helpers';
 import {
   CATEGORIES,
   buildEntries,
@@ -150,5 +152,73 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
       public: 5,
     });
     expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);
+  });
+});
+
+describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
+  it('AK-U2-07 placementHint und tooltipLines', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
+    forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
+    expect(placementHint(w, { kind: 'clearForest' }, k.x + 6, k.y + 2)).toMatchObject({
+      tone: 'ok',
+      text: 'Roden: 10 Geld',
+    });
+    expect(placementHint(w, { kind: 'clearForest' }, k.x + 7, k.y + 2)).toMatchObject({
+      tone: 'bad',
+      text: 'Hier ist kein Wald',
+    });
+    expect(placementHint(w, { kind: 'plantForest' }, k.x + 6, k.y + 2)).toMatchObject({
+      tone: 'bad',
+      text: 'Aufforsten geht nur auf Weide',
+    });
+    expect(tooltipLines({ kind: 'build', defId: 'townhall' })).toEqual([
+      'Amtsstube (I)',
+      'Kosten: 200 Geld · 15 Holz · 2 Werkzeug · 5 Stein',
+      'Unterhalt: 120 / min',
+      'Steuer und Ausgabesperre einstellen',
+      'Brennbar',
+      'Standort: frei',
+      'Höchstens eine Amtsstube',
+    ]);
+    expect(tooltipLines({ kind: 'clearForest' })).toEqual([
+      'Roden (C)',
+      'Kosten: 10 Geld',
+      'Wald wird Weide — kein Holz',
+      'Nur auf unbebautem Wald',
+    ]);
+    expect(tooltipLines({ kind: 'plantForest' })).toEqual([
+      'Aufforsten (Q)',
+      'Kosten: 20 Geld',
+      'Weide wird Wald',
+      'Nur auf unbebauter Weide',
+    ]);
+  });
+  it('AK-U2-10 friendlyReason je Zeile 11.9; Vollständigkeitsprüfung grün', () => {
+    const w = createWorld(3);
+    const rows: [string, string][] = [
+      ['Es gibt schon eine Amtsstube', 'Es gibt schon eine Amtsstube — höchstens eine wirkt'],
+      ['Braucht eine Amtsstube', 'Baue zuerst eine Amtsstube (I)'],
+      ['Amtsstube wirkt nicht', 'Die Amtsstube wirkt erst mit Weg und ohne Brand'],
+      ['Kein Wald', 'Hier ist kein Wald'],
+      ['Keine Weide', 'Aufforsten geht nur auf Weide'],
+      ['Erst ab 20 Wohnhäusern', 'Erst ab 20 Wohnhäusern'],
+      ['Erst wenn ein Wohnhaus 4 Pioniere hat', 'Erst wenn ein Wohnhaus 4 Pioniere hat'],
+      ['Erst mit den ersten Siedlern', 'Erst mit den ersten Siedlern'],
+      ['Erst wenn ein Wohnhaus 8 Siedler hat', 'Erst wenn ein Wohnhaus 8 Siedler hat'],
+      ['Erst mit den ersten Bürgern', 'Erst mit den ersten Bürgern'],
+      ['Stoff für Siedler gesperrt', 'Stoff für Siedler gesperrt'],
+      ['Aufstieg in der Amtsstube angehalten', 'Aufstieg in der Amtsstube angehalten'],
+      ['Ungültige Sperre', 'Ungültige Sperre'],
+      ['Erst nach dem Ziel', 'Erst nach dem Ziel (50 Bürger)'],
+    ];
+    for (const [r, t] of rows) {
+      expect(friendlyReason(w, r), r).toBe(t);
+      expect(
+        REASON_TABLE.some((row) => row.pattern.test(r)),
+        `Tabellenzeile für ${r}`,
+      ).toBe(true);
+    }
   });
 });

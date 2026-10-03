@@ -5,6 +5,7 @@ import { GOOD_IDS, GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
+import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { entryOfBuilding, unlockText } from '../sim/unlocks';
 import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
@@ -16,6 +17,7 @@ import type {
   Tier,
   World,
 } from '../sim/types';
+import { crisisLogVisible } from './crisisLog';
 import { hotkeyLabel } from './hotkeys';
 import { unconnectedIds } from './hints';
 import { formatGameTime } from './time';
@@ -63,6 +65,15 @@ function goodSentence(w: World, tierName: string, g: GoodId): string | null {
   }
   if (q) return `${nm(p)} braucht ${GOODS[input!].name}: baue ${nk(q)}`;
   return null;
+}
+
+/** Kassen-Satz in drei Fassungen (Spec 12.3): vor U3, ab U3 ohne aktive Amtsstube, mit aktiver Amtsstube. */
+function cashSentence(w: World): string {
+  const base = 'Deine Kasse schrumpft: versorge mehr Wohnhäuser';
+  if (townhallActive(w)) return `${base}, verkaufe Waren am Kontor oder erhöhe die Steuer`;
+  if (buildLock(w, 'townhall') === null)
+    return `${base}, verkaufe Waren am Kontor oder baue eine ${nk('townhall')}`;
+  return `${base} oder verkaufe Waren am Kontor`;
 }
 
 export function nextStep(w: World): string {
@@ -124,10 +135,10 @@ export function nextStep(w: World): string {
       if (s) return s;
     }
   }
-  if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0)
-    return 'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder erhöhe die Steuer';
-  if (TAX_LEVELS[w.taxLevel].upgradeWait === null && houses.some(canRise))
-    return `Steuer ‚${TAX_LEVELS[w.taxLevel].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
+  if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
+  const tax = effectiveTaxLevel(w);
+  if (TAX_LEVELS[tax].upgradeWait === null && houses.some(canRise))
+    return `Steuer ‚${TAX_LEVELS[tax].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
   return 'Baue weitere Wohnhäuser und versorge sie';
 }
 
@@ -164,6 +175,10 @@ export function remedyText(w: World, b: Building): string | null {
     return `Läuft nach dem Brand von selbst wieder; eine ${nk('firestation')} in der Nähe schützt`;
   if (!b.connected) return `Baue einen Weg (${hotkeyLabel({ kind: 'road' })}) von hier zum Kontor`;
   const def = BUILDING_DEFS[b.defId];
+  if (b.state === 'noService' && def.requiresService) {
+    const school = SERVICE_BUILDING[def.requiresService];
+    return lockedSentence(w, [school]) ?? `Baue eine ${nk(school)} in Reichweite`;
+  }
   if (b.state === 'waitingInput' && def.consumes) {
     const g = missingInputs(w, b)[0] ?? def.consumes[0]!;
     return `Baue ${nk(producerOf(g)!)} oder kaufe ${GOODS[g].name} am Kontor`;
@@ -257,3 +272,13 @@ export const MAP_SIGNS: readonly MapSign[] = [
     color: null,
   },
 ];
+
+/** Renderer-Schlüssel der Legendenzeilen für Brand und Sturm (Kann K4). */
+const CRISIS_SIGNS: readonly string[] = ['drawWarnRing, DIM_FIRE'];
+
+/** Legende der Kartenzeichen; Brand- und Sturmzeilen erst ab der ersten Krisenperiode (Spec 11.10). */
+export function mapSigns(world: World): readonly MapSign[] {
+  return crisisLogVisible(world)
+    ? MAP_SIGNS
+    : MAP_SIGNS.filter((s) => !CRISIS_SIGNS.includes(s.renderer));
+}

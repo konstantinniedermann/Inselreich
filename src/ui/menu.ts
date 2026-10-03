@@ -107,7 +107,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   newBox.append(crisisLabel, unlockLabel, newRow);
   // Karte, Hilfe, Tastenkürzel, Schliessen
   const seed = Object.assign(document.createElement('p'), { textContent: `Karte ${a.seed()}` });
-  const guide = btn('Ziel und erste Schritte', (b) => a.openGuide(b));
+  const guide = btn('Hilfe', (b) => a.openGuide(b));
   const keys = document.createElement('ul');
   keys.className = 'hotkey-list';
   for (const k of a.hotkeys())

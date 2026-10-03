@@ -3,6 +3,8 @@ import { BUILDING_DEFS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
 import { checkAfford, refundCost } from '../sim/economy';
+import { canClearForest, canPlantForest } from '../sim/forest';
+import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
@@ -116,6 +118,20 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   },
   {
     source: 'tax',
+    pattern: /^Amtsstube wirkt nicht$/,
+    show: () => 'Die Amtsstube wirkt erst mit Weg und ohne Brand',
+  },
+  { source: 'tax', pattern: /^Ungültige Sperre$/, show: same },
+  { source: 'forest', pattern: /^Kein Wald$/, show: () => 'Hier ist kein Wald' },
+  { source: 'forest', pattern: /^Keine Weide$/, show: () => 'Aufforsten geht nur auf Weide' },
+  // Sperrtexte der Freischaltung (`lockText`, Spec 4.5) und Folgen der Amtsstube: wörtlich
+  { source: 'unlocks', pattern: /^Erst ab \d+ Wohnhäusern$/, show: same },
+  { source: 'unlocks', pattern: /^Erst wenn ein Wohnhaus \d+ (Pioniere|Siedler) hat$/, show: same },
+  { source: 'unlocks', pattern: /^Erst mit den ersten (Siedlern|Bürgern)$/, show: same },
+  { source: 'upgradeStatus', pattern: /^Aufstieg in der Amtsstube angehalten$/, show: same },
+  { source: 'upgradeStatus', pattern: /^.+ für .+ gesperrt$/, show: same },
+  {
+    source: 'tax',
     pattern: /^Sperrzeit$/,
     show: (_m, w) => `Steuer erst in ${formatGameTime(w.taxLockedUntil - w.tick)} wieder änderbar`,
   },
@@ -213,6 +229,17 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
       tone: 'ok',
       text: `Weg · ${ROAD_COST} Geld · ${linked ? 'verbunden mit dem Kontor' : 'noch nicht mit dem Kontor verbunden'}`,
     };
+  }
+  if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+    const clear = tool.kind === 'clearForest';
+    const r = clear ? canClearForest(world, x, y) : canPlantForest(world, x, y);
+    if (!r.ok) {
+      const cost = clear ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
+      return { tone: 'bad', text: friendlyReason(world, r.reason, { cost }) };
+    }
+    return clear
+      ? { tone: 'ok', text: `Roden: ${CLEAR_FOREST_COST.money} Geld` }
+      : { tone: 'ok', text: `Aufforsten: ${PLANT_FOREST_COST.money} Geld` };
   }
   const tile = tileAt(world, x, y);
   const b = tile?.buildingId != null ? world.buildings[tile.buildingId] : undefined;

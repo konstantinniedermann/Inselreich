@@ -65,6 +65,8 @@ export interface HudActions {
   openSettings(opener?: HTMLElement): void;
   /** Öffnet die Menü-Karte (Speichern, Laden, Neue Insel, Hilfe); `opener` bekommt den Fokus zurück. */
   openMenu(opener: HTMLElement): void;
+  /** Öffnet die Hilfe-Karte; `opener` bekommt beim Schliessen den Fokus zurück. */
+  openHelp(opener: HTMLElement): void;
   /** Wählt die erste aktive Amtsstube und öffnet ihr Info-Panel (Spec 11.8). */
   openTownhall(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
@@ -99,9 +101,10 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     actions.setMuted(muted);
     syncMute(muted);
   });
+  const helpBtn = gameButton('Hilfe', (btn) => actions.openHelp(btn));
   const settingsBtn = gameButton('Einstellungen', (btn) => actions.openSettings(btn));
   const menuBtn = gameButton('Menü', (btn) => actions.openMenu(btn));
-  box.append(mute, settingsBtn, menuBtn);
+  box.append(mute, helpBtn, settingsBtn, menuBtn);
 }
 
 /** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */

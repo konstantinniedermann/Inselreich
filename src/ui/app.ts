@@ -7,7 +7,8 @@ import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { step } from '../sim/tick';
 import { tileAt, createWorld, center } from '../sim/world';
-import type { Category, GoodId, Order, Result, UnlockId, World } from '../sim/types';
+import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
+import type { Category, Cost, GoodId, Order, Result, UnlockId, World } from '../sim/types';
 import { refundText } from './texts';
 import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import { centerOn, clampToMap, createCamera, tileCorners, type Camera } from '../render/camera';
@@ -27,6 +28,8 @@ import {
   type HotkeyAction,
 } from './hotkeys';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
+import { clearForest, plantForest } from '../sim/forest';
+import { setGoodLock, setTaxLevel, setUpgradeStop } from '../sim/tax';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
@@ -40,7 +43,7 @@ import {
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
-import { crisisLogEntries, pushLog, type LogEntry } from './crisisLog';
+import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -201,6 +204,7 @@ function launch(
   });
   let closeSettings: (() => void) | null = null;
   let closeMenu: (() => void) | null = null;
+  let closeHelp: (() => void) | null = null;
   const preview = parseDevParams(location.search, import.meta.env.DEV);
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let prefersReduced = motionQuery.matches;
@@ -286,13 +290,12 @@ function launch(
       restart(root);
     },
     seed: () => world.seed,
-    openGuide: (opener) => {
-      openStartCard(gameEl, { mode: 'help', opener });
-    },
+    openGuide: (opener) => openHelp(opener),
   };
-  /** „Hilfe“-Knopf der Freischalt-Meldung; bis Task 7 die bisherige Karte im Modus `help`. */
-  const openHelp = (): void => {
-    openStartCard(gameEl, { mode: 'help' });
+  /** Hilfe-Karte (Spec 12.1): HUD-Knopf, Taste `?`, Menü und Freischalt-Meldung; Esc schliesst, Fokus zurück zum Öffner. */
+  const openHelp = (opener?: HTMLElement): void => {
+    closeHelp?.();
+    closeHelp = openStartCard(gameEl, { mode: 'help', opener, world });
   };
 
   const actions: HudActions = {
@@ -327,6 +330,7 @@ function launch(
         opener,
       );
     },
+    openHelp: (opener) => openHelp(opener),
     openMenu: (opener) => {
       closeMenu?.();
       closeMenu = openMenu(gameEl, menuActions, opener);
@@ -375,6 +379,21 @@ function launch(
           refresh();
         },
         openTrade: () => setPanel({ kind: 'trade' }),
+        setTax: (level) => {
+          const r = setTaxLevel(world, level);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setGoodLock: (tier, good, locked) => {
+          const r = setGoodLock(world, tier, good, locked);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setUpgradeStop: (tier, stopped) => {
+          const r = setUpgradeStop(world, tier, stopped);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
       });
     } else if (panel.kind === 'trade') {
       state.selectedId = world.kontorId;
@@ -401,12 +420,12 @@ function launch(
     const unlock = frameUnlock(state.unlockedSeen, world);
     state.unlockedSeen = unlock.seen;
     if (unlock.text !== null) {
-      showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: openHelp });
+      showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: () => openHelp() });
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world);
-    updateEventLog(logBox, state.eventLog);
+    updateEventLog(logBox, state.eventLog, crisisLogVisible(world));
     updateBuildMenu(navEl, world);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
@@ -458,6 +477,9 @@ function launch(
 
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
+  let dragForestFailureShown = false;
+  const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
+    tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
   const showRoadFailure = (reason: string, dragging: boolean): void => {
     const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ });
     if (!dragging) {
@@ -481,6 +503,8 @@ function launch(
       selectTool(sameTool(state.tool, h.tool) ? { kind: 'select' } : h.tool);
     } else if (h.kind === 'speed') {
       setSpeed(h.speed);
+    } else if (h.kind === 'help') {
+      openHelp();
     } else {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -521,9 +545,13 @@ function launch(
     }
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
+      dragForestFailureShown = false;
       return;
     }
-    if (!a.dragging) dragMoneyToastShown = false;
+    if (!a.dragging) {
+      dragMoneyToastShown = false;
+      dragForestFailureShown = false;
+    }
     const tool = state.tool;
     const tile = tileAt(world, a.x, a.y);
     if (tool.kind === 'select') {
@@ -543,6 +571,15 @@ function launch(
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'road');
         reportConnections(before);
+      }
+    } else if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+      const r =
+        tool.kind === 'clearForest' ? clearForest(world, a.x, a.y) : plantForest(world, a.x, a.y);
+      if (r.ok) sound.play('build');
+      else if (!dragForestFailureShown) {
+        // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
+        dragForestFailureShown = true;
+        showError(friendlyReason(world, r.reason, { cost: forestCost(tool) }));
       }
     } else if (tile?.buildingId != null) {
       const r = demolishBuilding(tile.buildingId);

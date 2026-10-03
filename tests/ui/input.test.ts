@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PAN_PX_PER_S, exceedsDrag, isClick, panDelta, panKeyAllowed } from '../../src/ui/input';
+import {
+  PAN_PX_PER_S,
+  exceedsDrag,
+  isClick,
+  isDragPaintTool,
+  panDelta,
+  panKeyAllowed,
+} from '../../src/ui/input';
 
 describe('panDelta (Q2, AK-U1a-02)', () => {
   it('Q2: 960 Pixel je Sekunde bei Zoom 1', () => {
@@ -50,5 +57,16 @@ describe('Eingabe M7-UX (AK-UX-12)', () => {
         { x: 2, y: 2 },
       ]),
     ).toBe(true);
+  });
+});
+
+describe('M10 Zieh-Werkzeuge (Kann K5)', () => {
+  it('Weg, Roden und Aufforsten wirken beim Ziehen je Kachel; Bauen, Abriss und Auswahl nicht', () => {
+    expect(isDragPaintTool({ kind: 'road' })).toBe(true);
+    expect(isDragPaintTool({ kind: 'clearForest' })).toBe(true);
+    expect(isDragPaintTool({ kind: 'plantForest' })).toBe(true);
+    expect(isDragPaintTool({ kind: 'demolish' })).toBe(false);
+    expect(isDragPaintTool({ kind: 'select' })).toBe(false);
+    expect(isDragPaintTool({ kind: 'build', defId: 'house' })).toBe(false);
   });
 });

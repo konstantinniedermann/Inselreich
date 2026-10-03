@@ -99,7 +99,9 @@ export type Tool =
   | { kind: 'select' }
   | { kind: 'build'; defId: BuildingDefId }
   | { kind: 'road' }
-  | { kind: 'demolish' };
+  | { kind: 'demolish' }
+  | { kind: 'clearForest' }
+  | { kind: 'plantForest' };
 
 /** Darstellungs-Zusatz je Frame (Spec 11.1); Animation entsteht nur aus `timeMs` und dem Welt-Zustand. */
 export interface RenderFx {
@@ -214,7 +216,8 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
     ctx.lineWidth = 1;
     ctx.stroke();
     drawGhost(ctx, cam, def, hover.x, hover.y); // D-13: halbtransparenter Geist
-  } else if (tool.kind === 'road') {
+  } else if (tool.kind === 'road' || tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+    // Forst-Werkzeuge: Rauten-Umriss der Kachel, Farbe wie die Weg-Vorschau (Spec 11.9)
     ctx.beginPath();
     footprintPath(ctx, cam, hover.x, hover.y, 1, 1);
     ctx.fillStyle = hover.ok ? HOVER_OK : HOVER_BAD;

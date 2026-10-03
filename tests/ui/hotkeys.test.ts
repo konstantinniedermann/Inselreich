@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { createWorld } from '../../src/sim/world';
 import { tooltipLines } from '../../src/ui/buildMenu';
+import { lockedToolText } from '../../src/ui/goal';
 import {
   NAV_KEYS,
   TOOL_HOTKEYS,
@@ -70,14 +71,14 @@ describe('hotkeyAction (AK-U2-02)', () => {
   });
 
   it('AK-U2-02: W/A/S/D, Pfeile, Leertaste, Esc und unbekannte Tasten ergeben null (Pan bleibt)', () => {
-    for (const key of ['w', 'a', 's', 'd', 'W', 'ArrowUp', ' ', 'Escape', 'q', '4', 'Enter']) {
+    for (const key of ['w', 'a', 's', 'd', 'W', 'ArrowUp', ' ', 'Escape', 'y', '4', 'Enter']) {
       expect(hotkeyAction(key, NONE, false)).toBeNull();
     }
   });
 
   it('AK-U2-02: Tabelle enthält keine Pan-Tasten, T gehört dem Werkzeugmacher (S4)', () => {
     for (const key of ['w', 'a', 's', 'd', ' ']) expect(TOOL_HOTKEYS[key]).toBeUndefined();
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(18);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(20);
   });
 
   it('AK-U2-02: T und Shift+T wählen den Werkzeugmacher; Modifier und Formularfeld ergeben null', () => {
@@ -178,8 +179,8 @@ describe('M8 Taste O (AK-S2-18)', () => {
     });
     expect(hotkeyLabel({ kind: 'build', defId: 'glassworks' })).toBe('O');
     const keys = Object.keys(TOOL_HOTKEYS);
-    expect(keys).toHaveLength(18);
-    expect(keys.join('')).toBe('rxhkumflbgvzntejoi');
+    expect(keys).toHaveLength(20);
+    expect(keys.join('')).toBe('rxhkumflbgvzntejoicq');
     expect(
       hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).filter(
         (e) => e.key === 'O',
@@ -196,7 +197,7 @@ describe('M8 Taste O (AK-S2-18)', () => {
 
 describe('M8 U1 Tasten (Bestand nach S2)', () => {
   it('AK-U1-02 17 Werkzeugtasten; J und O je genau einmal mit Namen', () => {
-    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(18);
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(20);
     const list = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true }));
     expect(list.filter((e) => e.key === 'J')).toEqual([
       { key: 'J', label: BUILDING_DEFS.bathhouse.name },
@@ -215,7 +216,7 @@ describe('M10 Taste I', () => {
     });
     expect(hotkeyLabel({ kind: 'build', defId: 'townhall' })).toBe('I');
     const keys = Object.keys(TOOL_HOTKEYS);
-    expect(keys).toHaveLength(18);
+    expect(keys).toHaveLength(20);
     expect(keys.slice(0, 17).join('')).toBe('rxhkumflbgvzntejo');
     expect(tooltipLines({ kind: 'build', defId: 'townhall' })[0]).toBe('Amtsstube (I)');
   });
@@ -234,12 +235,42 @@ describe('M10 Tastenliste nach Freischaltung', () => {
       '2',
       '3',
       'P',
+      '?',
       ...NAV_KEYS.map((n) => n.key),
     ]);
     const all = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).map(
       (e) => e.key,
     );
-    expect(all.slice(0, 18)).toEqual(Object.keys(TOOL_HOTKEYS).map((k) => k.toUpperCase()));
-    expect(all[18]).toBe('1');
+    expect(all.slice(0, 20)).toEqual(Object.keys(TOOL_HOTKEYS).map((k) => k.toUpperCase()));
+    expect(all[20]).toBe('1');
+  });
+});
+
+describe('M10 Tasten C, Q, ? (Spec 11.2)', () => {
+  it('AK-U2-12 lockedToolText Roden; Liste mit „? Hilfe" nach P; unlockAll 20 Werkzeugtasten; ? ist Hilfe', () => {
+    expect(lockedToolText(createWorld(3), { kind: 'clearForest' })).toBe(
+      'Roden: Erst wenn ein Wohnhaus 4 Pioniere hat',
+    );
+    const keys = hotkeyList(createWorld(3)).map((e) => `${e.key} ${e.label}`);
+    expect(keys[keys.indexOf('P Pause / weiter') + 1]).toBe('? Hilfe');
+    expect(keys.some((k) => k.startsWith('C ') || k.startsWith('Q '))).toBe(false);
+    const all = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true }));
+    expect(all.slice(0, 20).map((e) => e.key)).toEqual(
+      Object.keys(TOOL_HOTKEYS).map((k) => k.toUpperCase()),
+    );
+    expect(Object.keys(TOOL_HOTKEYS)).toHaveLength(20);
+    expect(hotkeyAction('?', { ctrl: false, meta: false, alt: false }, false)).toEqual({
+      kind: 'help',
+    });
+    expect(hotkeyAction('?', { ctrl: true, meta: false, alt: false }, false)).toBeNull();
+    expect(hotkeyAction('?', { ctrl: false, meta: false, alt: false }, true)).toBeNull();
+    expect(hotkeyAction('c', { ctrl: false, meta: false, alt: false }, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'clearForest' },
+    });
+    expect(hotkeyAction('q', { ctrl: false, meta: false, alt: false }, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'plantForest' },
+    });
   });
 });

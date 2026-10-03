@@ -1,7 +1,8 @@
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
-import { buildingShown, entryOfBuilding } from '../sim/unlocks';
+import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
+import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -43,7 +44,7 @@ function perInterval(cycle: number): string {
   return `${num(perMinute(1, cycle))} / min`;
 }
 
-function siteText(rule: SiteRule): string {
+export function siteText(rule: SiteRule): string {
   switch (rule.kind) {
     case 'coast':
       return 'Küste (Wasser angrenzend)';
@@ -84,12 +85,29 @@ export function tooltipLines(tool: Tool): string[] {
   if (tool.kind === 'road') {
     return [withKey('Weg'), `Kosten: ${costLine(ROAD_COST_OBJ)}`];
   }
+  if (tool.kind === 'clearForest') {
+    return [
+      withKey('Roden'),
+      `Kosten: ${costLine(CLEAR_FOREST_COST)}`,
+      'Wald wird Weide — kein Holz',
+      'Nur auf unbebautem Wald',
+    ];
+  }
+  if (tool.kind === 'plantForest') {
+    return [
+      withKey('Aufforsten'),
+      `Kosten: ${costLine(PLANT_FOREST_COST)}`,
+      'Weide wird Wald',
+      'Nur auf unbebauter Weide',
+    ];
+  }
   const def = BUILDING_DEFS[tool.defId];
   const lines = [
     withKey(def.name),
     `Kosten: ${costLine(def.cost)}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
+  if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
   }
@@ -102,6 +120,7 @@ export function tooltipLines(tool: Tool): string[] {
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
   lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
+  if (def.maxCount?.n === 1) lines.push(`Höchstens eine ${def.name}`);
   const preview = tierPreviewLine(def.id);
   if (preview) lines.push(preview);
   return lines;
@@ -267,6 +286,20 @@ export function renderBuildMenu(
   addButton(main, 'Auswahl', { kind: 'select' });
   addButton(main, `Weg · ${ROAD_COST} Geld`, { kind: 'road' }, ROAD_COST_OBJ);
   addButton(main, 'Abriss', { kind: 'demolish' });
+  if (functionLock(state.world, 'forest') === null) {
+    addButton(
+      main,
+      `Roden · ${CLEAR_FOREST_COST.money} Geld`,
+      { kind: 'clearForest' },
+      CLEAR_FOREST_COST,
+    );
+    addButton(
+      main,
+      `Aufforsten · ${PLANT_FOREST_COST.money} Geld`,
+      { kind: 'plantForest' },
+      PLANT_FOREST_COST,
+    );
+  }
   for (const cat of CATEGORIES) {
     const btn = document.createElement('button');
     btn.className = 'btn btn-category' + (state.openCategory === cat.id ? ' active' : '');
