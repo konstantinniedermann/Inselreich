@@ -141,6 +141,8 @@ Abschnitt 4.1.
 
 ### 2.8 Wirtschaft
 
+**Änderung M11:** Steuern und Unterhalt werden je Tick mit ganzzahligem Übertrag gebucht, die Raten bleiben «pro 100 Ticks»; siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §3.1 und §12.
+
 **Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §5.2
 
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
