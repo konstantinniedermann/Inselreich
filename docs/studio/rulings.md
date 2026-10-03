@@ -1061,3 +1061,16 @@ angenommen. Parallel startet lead-design den Designvorschlag M11 (S10, S2, S3, S
 `docs/m11-design`, nur Doku. — Kosten bei Irrtum: M11-Vorschlag muss nach M10-Befunden nachgeführt werden.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M10-UI · ADR: —
+
+## R185 · 2026-10-03 · Gate Brainstorming M11
+
+Ruling: Gate Brainstorming M11 „Wirtschaft im Fluss" bestanden (`docs/m11-design` @ 0d583f8). Annahmen A1–A14
+wie empfohlen angenommen: S10 (b) je Tick mit Übertrag und Neupinnen (Siege 7250/7850/11 300, Schwellen bleiben,
+Ruling Balancing nach Programm F5, kein Nutzervorbehalt); Dämpfung prospektiv Faktor 2, Rückfall Faktor 1;
+`levels` in `defs/levels.ts` (Abweichung S12 3.1 bewusst); Save v6; R161 nur Sichtbarkeit. Auflagen für die
+Spec: (1) Ursache des Bruchs +1200 Ticks mit Zerlegung messen (Steuer- vs. Unterhaltsanteil), nicht nur
+vermuten; (2) A9 (`free` am Holzfäller) und das minMoney-20-Szenario (A3) mit Zahlen belegen; (3) Spec ≤ 40 KB.
+Spec startet jetzt, Umsetzung erst nach Gate Merge M10 (Save v5 vorher auf main, A10). — Kosten bei Irrtum: ein
+Spielerlebnis 20 % langsamer bis zum Balancing-Schritt von M11.
+
+Entscheider: L0 · Anlass: Bericht lead-design M11-D · ADR: —
