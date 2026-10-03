@@ -2,7 +2,14 @@ import { hash2, valueNoise } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
-import { FLOWER_TONES, SHRUB_TONES, flowersFor, shrubsFor } from './groundDecor';
+import {
+  FLOWER_TONES,
+  SHRUB_TONES,
+  flowerVeil,
+  flowersFor,
+  meadowWarmth,
+  shrubsFor,
+} from './groundDecor';
 import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
   COAST_BAND,
@@ -23,6 +30,19 @@ const LIGHT = { x: -3 / Math.sqrt(10), y: -1 / Math.sqrt(10) }; // Richtung zum 
 // R149: Abweichung zu M7-Spec 5.1 — Gebirge ±12 %, sonst ±8 %
 const SHADE_MAX = 0.08;
 const SHADE_MAX_MOUNTAIN = 0.12;
+// H-R9 B1: Wiese und Strand tragen mit dem Mikrorelief bis ±14 %; Wald bleibt bei ±8 % (Bäume lesbar)
+const SHADE_MAX_FLUR = 0.14;
+const RELIEF_GAIN = 0.3; // Helligkeit je Höhengefälle des Mikroreliefs (die Kuppen sind flach, ~0,15 Höhe je Kachel)
+const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
+const DUNE_AMP = 1.1; // Höhe der Dünenrücken auf trockenem Sand
+const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
+// H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
+const WARM_MAX = 0.6; // warm/trocken: Mischung zu Strohgrün
+const COOL_MAX = 0.6; // kühl/satt: Mischung zu Tiefgrün
+const VEIL_MAX = 0.3; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
+const TONE_LIGHT = 0.14; // trockene Kuppen bis +14 % Helligkeit
+const TONE_DARK = 0; // satte Senken nicht dunkler: sonst rückt das Gras an den alten Waldgrund (ΔE ≥ 10, I5); die Tiefe trägt das Relief
+const MOTTLE_AMP = 0.06; // feines Mottling ±6 % (Spec: ±3–4 % netto nach Interpolation) Helligkeit
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
 const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreht), trägt die Plastik im Inneren
@@ -50,7 +70,13 @@ const ROCK_GRAIN = 0.05; // R170: Pixelkorn im Fels ±2,5 % Helligkeit (feinkör
 const ROT_PATCH = 1.07,
   ROT_ROCK = 0.41,
   ROT_ROCK2 = 1.23,
-  ROT_HILL = 0.33;
+  ROT_HILL = 0.33,
+  ROT_RELIEF = 0.77,
+  ROT_RELIEF2 = 1.31,
+  ROT_DUNE = 0.55,
+  ROT_DUNE2 = 0.41,
+  ROT_MOTTLE = 0.93,
+  ROT_WARM = 0.6;
 
 export interface TileRect {
   x0: number;
@@ -162,8 +188,10 @@ export function tuftsFor(
   seed: number,
   x: number,
   y: number,
+  lush = 0.5,
 ): { x: number; y: number; tone: 0 | 1 }[] {
-  const n = Math.floor(hash2(seed + 31, x, y) * 3); // 0..2
+  // H-R9 B3: satter Boden (lush 1) trägt bis 3, trockener (0) meist 0–1 Büschel; 0,5 = bisherige 0–2
+  const n = Math.min(3, Math.floor(hash2(seed + 31, x, y) * (3 + 1.8 * (lush - 0.5))));
   const out: { x: number; y: number; tone: 0 | 1 }[] = [];
   for (let k = 0; k < n; k++)
     out.push({
@@ -192,6 +220,14 @@ export interface TerrainGrid {
    * trockene Stellen auf Gras bzw. Lichtungen im Wald. Ein Feld statt zwei spart Rechenzeit im Frame-Budget.
    */
   patch: Float32Array;
+  /** H-R9: Höhe des Mikroreliefs (Wiesenkuppen, trockene Dünen) ≥ 0, ohne Gebirge und ohne Wald; 0 am nassen Saum. */
+  relief: Float32Array;
+  /** H-R9: Wiesenton −1 satt/kühl … +1 trocken/warm (grosser Verlauf, mittlere Flecken, Kuppen trockener). */
+  warm: Float32Array;
+  /** H-R9: feines gedrehtes Mottling −1…1. */
+  mottle: Float32Array;
+  /** H-R9: Blumenschleier 0…1 (dieselbe Verteilung wie `flowersFor`). */
+  veil: Float32Array;
   cls: Uint8Array; // 0 Wasser, 1 + Index in LAND
 }
 
@@ -258,11 +294,21 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     rock = new Float32Array(n),
     shade = new Float32Array(n),
     patch = new Float32Array(n),
+    relief = new Float32Array(n),
+    warm = new Float32Array(n),
+    mottle = new Float32Array(n),
+    veil = new Float32Array(n),
+    gwArr = new Float32Array(n),
+    swArr = new Float32Array(n),
+    hillRaw = new Float32Array(n), // ungewichtet: das Gewicht darf selbst kein Gefälle erzeugen
+    duneRaw = new Float32Array(n),
     height = new Float32Array(n),
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
   const seed = world.seed;
   const mt = LAND.indexOf('mountain');
+  const gr = LAND.indexOf('grass');
+  const sa = LAND.indexOf('sand');
   const step = RASTER / TEX;
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -301,6 +347,44 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
           Math.min(1, (rotNoise(seed + 62, fx, fy, 1.4, ROT_PATCH) - 0.5) * PATCH_SPREAD),
         );
       }
+      // H-R9 B1/B2: Mikrorelief nur auf Gras (Kuppen) und trockenem Sand (Dünen); Wald, Fels, nasser Saum bleiben 0
+      const gw = cls[k] === 0 ? 0 : ind[gr]![k]!;
+      const sw =
+        cls[k] === 0 ? 0 : ind[sa]![k]! * smoothstepClamp((smooth[k]! - WET_SAND) / DUNE_RAMP);
+      if (smooth[k]! > -0.5) {
+        hillRaw[k] =
+          0.62 * rotNoise(seed + 105, fx, fy, 0.23, ROT_RELIEF) +
+          0.38 * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2);
+        // gestreckte Rücken: Rauschen entlang u gedehnt (Frequenz 0,09), quer dazu eng (0,5)
+        const c = Math.cos(ROT_DUNE),
+          sn = Math.sin(ROT_DUNE);
+        const u = c * fx - sn * fy,
+          v = sn * fx + c * fy;
+        duneRaw[k] =
+          0.65 * valueNoise(seed + 107, u * 0.09, v * 0.5) +
+          0.35 * valueNoise(seed + 108, u * 0.2, v * 0.95 + ROT_DUNE2);
+      }
+      const hill = hillRaw[k]!,
+        dune = duneRaw[k]!;
+      if (gw > 0) {
+        warm[k] = Math.max(
+          -1,
+          Math.min(
+            1,
+            1.6 * meadowWarmth(seed, fx, fy) +
+              3.2 * (rotNoise(seed + 102, fx, fy, 0.35, ROT_WARM) - 0.5) +
+              (hill - 0.5) * 1.1,
+          ),
+        );
+        mottle[k] = Math.max(
+          -1,
+          Math.min(1, (rotNoise(seed + 103, fx, fy, 3.8, ROT_MOTTLE) - 0.5) * 3),
+        );
+        veil[k] = flowerVeil(seed, fx, fy);
+      }
+      relief[k] = gw * HILL_AMP * hill + sw * DUNE_AMP * dune;
+      gwArr[k] = gw;
+      swArr[k] = sw;
       height[k] =
         smooth[k]! +
         FOOT_HEIGHT * foot +
@@ -322,10 +406,40 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       const gx = (height[j * nx + ir]! - height[j * nx + il]!) / ((ir - il) * step);
       const gy = (height[jd * nx + i]! - height[ju * nx + i]!) / ((jd - ju) * step);
       const lit = -(gx * LIGHT.x + gy * LIGHT.y);
-      const lim = cls[j * nx + i] === mt + 1 ? SHADE_MAX_MOUNTAIN : SHADE_MAX;
-      shade[j * nx + i] = Math.max(-lim, Math.min(lim, lit * SHADE_GAIN));
+      const c0 = cls[j * nx + i];
+      const lim = c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : SHADE_MAX;
+      let sh = Math.max(-lim, Math.min(lim, lit * SHADE_GAIN));
+      // H-R9: Mikrorelief aus dem eigenen Höhenfeld (ungeglättet, rauscht nicht), Grenze je Knotentyp
+      const hx = (hillRaw[j * nx + ir]! - hillRaw[j * nx + il]!) / ((ir - il) * step);
+      const hy = (hillRaw[jd * nx + i]! - hillRaw[ju * nx + i]!) / ((jd - ju) * step);
+      const dx = (duneRaw[j * nx + ir]! - duneRaw[j * nx + il]!) / ((ir - il) * step);
+      const dy = (duneRaw[jd * nx + i]! - duneRaw[ju * nx + i]!) / ((jd - ju) * step);
+      sh +=
+        -(
+          gwArr[j * nx + i]! * HILL_AMP * (hx * LIGHT.x + hy * LIGHT.y) +
+          swArr[j * nx + i]! * DUNE_AMP * (dx * LIGHT.x + dy * LIGHT.y)
+        ) * RELIEF_GAIN;
+      const cap =
+        c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : c0 === FOREST + 1 ? SHADE_MAX : SHADE_MAX_FLUR;
+      shade[j * nx + i] = Math.max(-cap, Math.min(cap, sh));
     }
-  return { seed, nx, ny, sharp, smooth, ind, grass, rock, shade, patch, cls };
+  return {
+    seed,
+    nx,
+    ny,
+    sharp,
+    smooth,
+    ind,
+    grass,
+    rock,
+    shade,
+    patch,
+    relief,
+    warm,
+    mottle,
+    veil,
+    cls,
+  };
 }
 
 const rgb = (hex: string): [number, number, number] => rgbOf(hex);
@@ -342,6 +456,9 @@ const C = {
   wood: rgbOfCss(FOREST_FLOOR),
   clover: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // kühleres Grün (R149)
   moss: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.crown, 0.55)),
+  dryTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.sandDry, 0.7)), // H-R9: Strohgrün
+  lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterMid, 0.35)), // H-R9: kühles Satt-Grün, ΔE2000 ≥ 12 zum alten Waldgrund
+  veilTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.wallLime, 0.5)), // H-R9: Blumenschleier
   clearing: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.sandDry, 0.45)),
   edgeLight: rgb(PALETTE.sandWet), // warmes Hell am Waldrand: bleibt fern vom alten Waldgrund #3d7a3a
   rock: rgb(PALETTE.rock),
@@ -364,6 +481,8 @@ function waterColor(d: number, o: number[]): void {
 }
 
 const FOREST = LAND.indexOf('forest');
+const GRASS = LAND.indexOf('grass');
+const SAND = LAND.indexOf('sand');
 
 /** Farbe eines Land-Typs `t` an einem Pixel (ohne Relief); `lerp` interpoliert ein Knotenfeld. */
 function landColor(
@@ -386,6 +505,16 @@ function landColor(
       const p = lerp(g.patch);
       if (p > 0.1) mix3(o, C.clover, (p - 0.1) * CLOVER_MAX, o);
       else if (p < -0.1) mix3(o, C.sandDry, (-0.1 - p) * DRY_MAX, o);
+      // H-R9 B3: grosser Warm/Kühl-Verlauf mit Flecken und Kuppen, Blumenschleier, feines Mottling
+      const wm = lerp(g.warm);
+      if (wm > 0) mix3(o, C.dryTone, wm * WARM_MAX, o);
+      else mix3(o, C.lushTone, -wm * COOL_MAX, o);
+      mix3(o, C.veilTone, lerp(g.veil) * VEIL_MAX, o);
+      // Kuppen und Trockenstellen heller, satte Senken dunkler (Höhentönung)
+      const mf = 1 + lerp(g.mottle) * MOTTLE_AMP + wm * (wm > 0 ? TONE_LIGHT : TONE_DARK);
+      o[0] = o[0]! * mf;
+      o[1] = o[1]! * mf;
+      o[2] = o[2]! * mf;
       break;
     }
     case 'forest': {
@@ -458,10 +587,11 @@ export function paintPixels(
         waterColor(Math.max(0, -lerp(smooth)), col);
       } else {
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
-        let wMt: number;
+        let wMt: number, wFlur: number;
         if (pure) {
           landColor(g, c0 - 1, lerp, grain, col);
           wMt = c0 - 1 === mt ? 1 : 0;
+          wFlur = c0 - 1 === GRASS || c0 - 1 === SAND ? 1 : 0;
         } else {
           let sum = 0;
           for (let t = 0; t < LAND.length; t++) {
@@ -480,9 +610,14 @@ export function paintPixels(
             col[2] += tc[2]! * q;
           }
           wMt = wt[mt]! / sum;
+          wFlur = (wt[GRASS]! + wt[SAND]!) / sum;
         }
         // R149: ±12 % nur im Gebirge; R170 stetig: Pixel mit Gebirgsanteil ≤ 50 % tragen höchstens ±8 %
-        const lim = SHADE_MAX + (SHADE_MAX_MOUNTAIN - SHADE_MAX) * smoothstepClamp((wMt - 0.5) * 2);
+        // H-R9: Gras und Strand bis ±14 %, Wald weiter ±8 %; der Grenzwert läuft mit den Typgewichten
+        const lim =
+          SHADE_MAX +
+          (SHADE_MAX_MOUNTAIN - SHADE_MAX) * smoothstepClamp((wMt - 0.5) * 2) +
+          (SHADE_MAX_FLUR - SHADE_MAX) * wFlur;
         const sh = Math.max(-lim, Math.min(lim, lerp(shade)));
         const f = 1 + sh;
         col[0] = col[0]! * f;
@@ -561,7 +696,8 @@ export function paintDecor(
     for (let y = r.y0; y <= r.y1; y++)
       for (let x = r.x0; x <= r.x1; x++) {
         if (!isFreeGrass(world, occ, x, y)) continue;
-        for (const t of tuftsFor(seed, x, y)) {
+        const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
+        for (const t of tuftsFor(seed, x, y, lush)) {
           if (t.tone !== tone) continue;
           const px = (x + t.x) * TEX,
             py = (y + t.y) * TEX;
@@ -698,7 +834,18 @@ export function patchGrid(
       for (let i = inner.i0; i <= inner.i1; i++)
         dst[j * g.nx + i] = src[(j - win.j0) * part.nx + (i - win.i0)]!;
   };
-  for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch'] as const)
+  for (const f of [
+    'sharp',
+    'smooth',
+    'grass',
+    'rock',
+    'shade',
+    'patch',
+    'relief',
+    'warm',
+    'mottle',
+    'veil',
+  ] as const)
     copy(g[f], part[f]);
   copy(g.cls, part.cls);
   for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
