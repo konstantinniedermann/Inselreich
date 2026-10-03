@@ -30,6 +30,8 @@ export interface Ev {
   alpha: number;
   /** `lineWidth` zum Zeitpunkt des Aufrufs. */
   lineWidth: number;
+  /** `lineJoin` zum Zeitpunkt des Aufrufs; nur gesetzt, wenn nicht der Standard `miter` (H-R8, R195). */
+  lineJoin?: string;
   points: P[];
   /** Zum Zeitpunkt des Aufrufs aktive Clips (ältester zuerst); `restore` nimmt sie zurück. */
   clips: readonly ClipRec[];
@@ -51,6 +53,7 @@ export class FakeCtx {
   matrix: Mat = [1, 0, 0, 1, 0, 0];
   lineWidth = 1;
   lineCap = 'butt';
+  lineJoin = 'miter';
   /** Jede Zuweisung an `globalAlpha`. */
   alphaSet: number[] = [];
   private stack: { m: Mat; f: string; s: string; c: string; a: number; k: readonly ClipRec[] }[] =
@@ -109,6 +112,7 @@ export class FakeCtx {
       composite: this._comp,
       alpha: this._alpha,
       lineWidth: this.lineWidth,
+      ...(this.lineJoin !== 'miter' ? { lineJoin: this.lineJoin } : {}),
       points,
       clips: this.clips,
     });

@@ -142,6 +142,31 @@ describe('H-R7 AK1 Determinismus', () => {
   });
 });
 
+describe('H-R8 AK6 lineJoin round an Dachwinkeln', () => {
+  const roofed: [BuildingDefId, Tier?][] = [
+    ['house', 1],
+    ['house', 2],
+    ['house', 3],
+    ['house', 4],
+    ['kontor'],
+    ['lumberjack'],
+  ];
+  for (const [id, tier] of roofed) {
+    it(`AK6 ${id}${tier ?? ''}: Dachstriche mit lineJoin round, Wandstriche und Endzustand miter`, () => {
+      const f = fakeCtx();
+      const cam = { x: 0, y: 0, zoom: 1 };
+      const b = mk(id, 12, 7, tier);
+      drawBody(f.ctx, cam, BUILDING_DEFS[id], b, 0, undefined, 0);
+      const strokes = f.log.events.filter((e) => e.op === 'stroke');
+      const round = strokes.filter((e) => e.lineJoin === 'round');
+      expect(round.length).toBeGreaterThan(0);
+      expect(round.length).toBeLessThan(strokes.length); // nur Dach-/Giebelpfade, nicht jeder Strich
+      expect(f.log.lineJoin).toBe('miter');
+      expect(f.log.saves).toBe(f.log.restores);
+    });
+  }
+});
+
 describe('H-R7 AK2 Varianz sichtbar', () => {
   it('AK2 mindestens 3 Varianten, Look 0 ist neutral', () => {
     expect(VARIANT_COUNT).toBeGreaterThanOrEqual(3);

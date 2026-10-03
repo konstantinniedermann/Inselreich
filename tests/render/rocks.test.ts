@@ -250,10 +250,9 @@ describe('H-R8 AK4 Cap und Cache', () => {
     centerOn(cam, r.fp.x + 0.5, r.fp.y + 0.5, VIEW, { w: w.width, h: w.height });
     expect(c.x).toBeDefined();
     resetRockCache();
-    let n = 0;
     const { ctx, log } = fakeCtx();
     render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 0 });
-    n = log.events.filter((e) => e.op === 'drawImage').length;
+    const n = log.events.filter((e) => e.op === 'drawImage').length;
     expect(n).toBeGreaterThan(0);
     expect(n).toBeLessThanOrEqual(rockCap() + 10); // + Geländeebene und Möwen-/Wellen-Reste
     const full = log.events.filter((e) => e.op === 'drawImage').length;
