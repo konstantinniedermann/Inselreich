@@ -105,6 +105,28 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: –
 - Bewertung: –
 
+## E-025 · vorgeschlagen · L0-Prüfzeile ohne Pipe
+
+- Hypothese: Wenn das Handbuch für L0 eine feste Prüfzeile vorschreibt (`make studio-test >/dev/null && npx prettier --check <dateien>`, nie Pipe oder `;`), dann geht kein roter Lauf mehr durch (R193, R202, Retro 9b13950a B2).
+- Messgrösse: 0 L0-Ablauffehler „roter Lauf übersehen" in M12 (Ausgang: 2 in einer Session, R193 und R202). Gegenprobe: keine zusätzlichen Tool-Aufrufe je Gate (Mittel M11).
+- Zeitraum: M12.
+- Rückfall: Zeile aus dem Handbuch entfernen.
+- Dateien: `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-026 · vorgeschlagen · Integrator-Persona: detached Arbeitsbaum
+
+- Hypothese: Wenn die Persona `production-integrator` den tatsächlich nutzbaren Weg nennt (`git worktree add --detach .worktrees/integrate origin/main`, Push `git push origin HEAD:main`), dann entfällt die stille Abweichung (Retro 9b13950a B4).
+- Messgrösse: 0 Integrator-Berichte mit Abweichung von der Persona-Anweisung in M12 (Ausgang: 1 von 7 Integrator-Instanzen, H-R8). Gegenprobe: kein Merge auf einen veralteten Stand (CI auf main grün).
+- Zeitraum: M12.
+- Rückfall: Persona 1.4 wiederherstellen.
+- Dateien: `.claude/agents/production-integrator.md`, `docs/studio/CHANGELOG.md`
+- Ruling: –
+- Start: –
+- Bewertung: –
+
 ## E-012 · vorgeschlagen · Pages nur bei Spieländerungen
 
 - Hypothese: Wenn `pages.yml` Pushes ignoriert, die nur Nicht-Build-Pfade ändern (`paths-ignore`, z. B. `docs/**`, `.superpowers/**`, `.claude/**`, `tools/studio/**`; vorher prüfen, dass nichts davon in `dist/` landet), dann sinken die Deploys stark und Spiel-Merges werden nicht mehr abgebrochen.
