@@ -1206,3 +1206,16 @@ lead-design für M11-Abschluss/M12 (beobachtungen.md, kein Nutzervorbehalt). `st
 Neupin M-15.
 
 Entscheider: L0 · Anlass: Bericht C5 (D-C5-M15) · ADR: —
+
+## R197 · 2026-10-03 · M11 R2, T11, T12 abgenommen
+
+Ruling: Abgenommen: R2 (lead-art, `feat/m11-render` @ ae72549; Blindtest 22/22 mit Unsicherheiten, Cache-Schranke
+1,25 mit LRU 64 MB angenommen), T11 und T12 (C6, `feat/m11-ui` @ 09a7c1a; Review BEDENKEN → Fix → Nachprüfung
+OK, QA-UI bestanden). Rinderfarm ohne Taste bleibt (Plan orga-02 E6, Ziffern = Tempo). Offen für C7/Final-QA:
+AK-RND-05 Szenenteil und Sichtbarkeit Stufe 2 bei 1280 px mit B1-Szenen (bei Bedarf kräftigerer Aufsatz,
+Fix-Runde lead-art); renderMedian mit Save inkl. neuer Typen; Holzfäller zeigt bei „Kein freier Wald" 95 %
+Auslastung (prüfen, Trivial-Fix wenn Anzeige, sonst Befund); flakiger Test (zweimal gesehen, Name unbekannt) →
+C7 lässt `make check` mehrfach laufen und benennt ihn. C7 startet: Integrations-Merges, D1, Trivial-Fixes. —
+Kosten bei Irrtum: eine weitere Fix-Runde vor dem Gate Merge.
+
+Entscheider: L0 · Anlass: Berichte lead-art M11-R2, C6 · ADR: —
