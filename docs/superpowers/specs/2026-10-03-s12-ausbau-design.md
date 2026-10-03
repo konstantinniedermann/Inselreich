@@ -144,18 +144,18 @@ Rendering liest `building.level`, schreibt nie in die Welt. Kosten-Hinweis: eine
 
 ## 4. Randfälle und entartete Strategien (Prüffrage 4)
 
-| Fall                                     | Verhalten                                                                                                               |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Ausbau mitten im Zyklus                  | `progress` bleibt; Zyklus kann sofort abschliessen                                                                      |
+| Fall                                     | Verhalten                                                                                                              |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Ausbau mitten im Zyklus                  | `progress` bleibt; Zyklus kann sofort abschliessen                                                                     |
 | Gebührenware fehlt (kein Stoff/Rum)      | `{ ok: false, reason: 'Zu wenig Stoff' }`; der Spieler kauft am Kontor (Stoff 30, Rum 40) oder baut die Kette          |
-| Abriss nach Ausbau                       | 50 % der bezahlten Stufenkosten (ohne Gebühr); kein Abriss-Gewinn                                                       |
-| Lager voll (100)                         | schnellerer Zyklus verliert Überschuss wie bisher (`storageFull`)                                                       |
-| Sturm                                    | `stormAffected` halbiert unverändert; Faktor relativ                                                                    |
-| Feuer                                    | Ausfall 200 Ticks, Stufe bleibt                                                                                         |
-| Kettenmismatch (Weberei 2, Schäferei 1)  | Verarbeiter zeigt `waitingInput`, Panel nennt den Grund                                                                 |
+| Abriss nach Ausbau                       | 50 % der bezahlten Stufenkosten (ohne Gebühr); kein Abriss-Gewinn                                                      |
+| Lager voll (100)                         | schnellerer Zyklus verliert Überschuss wie bisher (`storageFull`)                                                      |
+| Sturm                                    | `stormAffected` halbiert unverändert; Faktor relativ                                                                   |
+| Feuer                                    | Ausfall 200 Ticks, Stufe bleibt                                                                                        |
+| Kettenmismatch (Weberei 2, Schäferei 1)  | Verarbeiter zeigt `waitingInput`, Panel nennt den Grund                                                                |
 | Ausbau-Spam zur Geldfabrik               | nein: Verkaufspreis < Kaufpreis, Amortisation zum Verkaufspreis > 5000 Ticks, Preis fällt je Einheit (`SELL_DROP`)     |
 | Holzfäller-Ausbau mit S3 (braucht Wald)  | Ausbau erhöht Holzverbrauch am Wald; Ausstoss hängt in M11 am Wald (S3), Ausbau lohnt dort bewusst weniger (R 1,5–2,1) |
-| Laden eines Standes mit Ausbau vor U3/U5 | `deriveUnlocks` (M10 §8.2): bestehendes `level ≥ 2` schaltet `upgrade2`/`upgrade3` frei (kein verschwundener Ausbau)    |
+| Laden eines Standes mit Ausbau vor U3/U5 | `deriveUnlocks` (M10 §8.2): bestehendes `level ≥ 2` schaltet `upgrade2`/`upgrade3` frei (kein verschwundener Ausbau)   |
 
 ## 5. Einordnung in M11 und Grösse
 
@@ -170,15 +170,15 @@ Rendering liest `building.level`, schreibt nie in die Welt. Kosten-Hinweis: eine
 
 ## 6. Annahmen und Fragen an L0
 
-| #  | Annahme / Frage                                                                                  | Empfehlung                        |
-| -- | ------------------------------------------------------------------------------------------------ | --------------------------------- |
-| A1 | 3 Stufen (Basis, 2, 3); Kaufleute schalten nichts frei                                           | so                                |
-| A2 | Gebühr in Stoff (Stufe 2) und Rum (Stufe 3), nicht erstattet                                     | so (Güter höherer Stufe, Senke)   |
-| A3 | Freischaltung als Funktionen `upgrade2` in U3, `upgrade3` in U5 (kein neuer Auslöser)            | so; M10 bleibt unverändert        |
-| A4 | Ausbau sofort, kein Rückbau, Abriss erstattet 50 % der bezahlten Stufenkosten ohne Gebühr        | so                                |
-| A5 | S12 nach S10 (eine Neumessung); keine Baseline-Änderung durch S12                                | so                                |
-| A6 | Variante C (R ≈ 1 gegen Neubau) statt A/B; ganzzahlig gerundeter Unterhalt (6,5 → 7 usw.)         | so; Feinabstimmung im Playtest    |
-| A7 | Kein Spielerzwang: Ausbau optional, der Neubau bleibt gleichwertig                                | so                                |
+| #   | Annahme / Frage                                                                           | Empfehlung                      |
+| --- | ----------------------------------------------------------------------------------------- | ------------------------------- |
+| A1  | 3 Stufen (Basis, 2, 3); Kaufleute schalten nichts frei                                    | so                              |
+| A2  | Gebühr in Stoff (Stufe 2) und Rum (Stufe 3), nicht erstattet                              | so (Güter höherer Stufe, Senke) |
+| A3  | Freischaltung als Funktionen `upgrade2` in U3, `upgrade3` in U5 (kein neuer Auslöser)     | so; M10 bleibt unverändert      |
+| A4  | Ausbau sofort, kein Rückbau, Abriss erstattet 50 % der bezahlten Stufenkosten ohne Gebühr | so                              |
+| A5  | S12 nach S10 (eine Neumessung); keine Baseline-Änderung durch S12                         | so                              |
+| A6  | Variante C (R ≈ 1 gegen Neubau) statt A/B; ganzzahlig gerundeter Unterhalt (6,5 → 7 usw.) | so; Feinabstimmung im Playtest  |
+| A7  | Kein Spielerzwang: Ausbau optional, der Neubau bleibt gleichwertig                        | so                              |
 
 ## 7. Selbstprüfung Gate Brainstorming
 
