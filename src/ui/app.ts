@@ -50,7 +50,13 @@ import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
 import { openMenu, type MenuActions } from './menu';
 import { closeAllModals, isModalOpen } from './modal';
-import { UNLOCK_EVENTS, actionSound, diffSoundEvents, soundSnapshot } from './soundEvents';
+import {
+  UNLOCK_EVENTS,
+  actionSound,
+  buildSoundKey,
+  diffSoundEvents,
+  soundSnapshot,
+} from './soundEvents';
 import {
   autosaveOnHide,
   currentStorageProblem,
@@ -514,7 +520,7 @@ function launch(
       const r = placeBuilding(world, tool.defId, a.x, a.y);
       if (!r.ok) showError(friendlyReason(world, r.reason, { defId: tool.defId }));
       else {
-        sound.play('build');
+        sound.playBuild(buildSoundKey(tool) ?? 'build');
         reportConnections(before);
       }
     } else if (tool.kind === 'road') {
@@ -522,7 +528,7 @@ function launch(
       const r = placeRoad(world, a.x, a.y);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
       else {
-        sound.play('build');
+        sound.playBuild(buildSoundKey(tool) ?? 'road');
         reportConnections(before);
       }
     } else if (tile?.buildingId != null) {
