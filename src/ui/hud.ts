@@ -107,6 +107,7 @@ function setChip(root: HTMLElement, field: string, v: ChipView): HTMLElement | n
     el.dataset.icon = v.icon;
   }
   if (value.textContent !== v.text) value.textContent = v.text;
+  if (el.getAttribute('role') !== 'img') el.setAttribute('role', 'img'); // aria-label braucht eine Rolle
   if (el.getAttribute('aria-label') !== v.label) el.setAttribute('aria-label', v.label);
   return el;
 }
