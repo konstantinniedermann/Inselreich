@@ -1,4 +1,5 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { LEVELS } from '../sim/defs/levels';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { hash2 } from '../sim/noise';
 import { tileAt } from '../sim/world';
@@ -1481,6 +1482,108 @@ export const FALLBACKS: Record<Category, SilhouetteFn> = {
   infrastructure: fallbackBody('infrastructure'),
 };
 
+// Jagdhütte (M11-R2): kleine Blockhütte hinten links (Firstrichtung v), Fellgestell rechts, Holzstapel vorn
+function hunterBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.hunter, b);
+  yard(p, mixHex(PALETTE.earth, PALETTE.grass, 0.4));
+  const s = shellAt([I, I, 0.56, 0.6], 0.5 * h, h + ISO_H * I, 'gable', 'v');
+  drawShell(p, s, woodWall(), PALETTE.roofTimber);
+  rightQuad(p, s, 0.2, 0.4, 0.35 * s.wz, 0.8 * s.wz, WINDOW);
+  // Fellgestell rechts: zwei Pfosten, Querholm, zwei gespannte Felle in Erdton
+  const hide = mixHex(PALETTE.earth, PALETTE.roofWood, 0.35);
+  const hideDark = mixHex(PALETTE.earth, PALETTE.rockDark, 0.4);
+  pole(p, 0.74, 0.14, 16, PALETTE.wallTimber);
+  pole(p, 0.74, 0.66, 16, PALETTE.wallTimber);
+  rightPlane(p, 0.76, 0.14, 0.7, 14.5, 16, PALETTE.wallTimber);
+  rightPlane(p, 0.77, 0.2, 0.38, 5, 14.5, hide, true);
+  rightPlane(p, 0.77, 0.44, 0.6, 7, 14.5, hideDark, true);
+  // Holzstapel vorn rechts
+  const log = wallColors(PALETTE.roofWood);
+  cuboid(p, [0.58, 0.74, 0.9, 0.9], 0, 6, log, mixHex(PALETTE.roofWood, '#ffffff', 0.2));
+  cuboid(p, [0.62, 0.76, 0.86, 0.88], 6, 10, log, mixHex(PALETTE.roofWood, '#ffffff', 0.2));
+}
+
+// Rinderfarm (M11-R2): langer Stall links (Firstrichtung v), Weide mit Gatter und Heuballen rechts
+const COWS: ReadonlyArray<readonly [number, number]> = [
+  [1.15, 0.55],
+  [1.5, 1.05],
+  [1.2, 1.5],
+];
+function cattlefarmBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.cattlefarm, b);
+  yard(p, mixHex(PALETTE.grass, PALETTE.earth, 0.25));
+  p.quad(
+    [1.0, 0.2, 0],
+    [p.w - I, 0.2, 0],
+    [p.w - I, p.h - I, 0],
+    [1.0, p.h - I, 0],
+    mixHex(PALETTE.grassLight, PALETTE.grass, 0.6),
+    false,
+  );
+  const s = shellAt([I, I, 0.92, 1.55], 0.5 * h, h + ISO_H * I, 'gable', 'v');
+  drawShell(p, s, wallColors(PALETTE.wallLime), PALETTE.roofWood);
+  rightQuad(p, s, 1.2, 1.4, 0, 0.62 * s.wz, DOOR);
+  rightQuad(p, s, 0.4, 0.62, 0.35 * s.wz, 0.75 * s.wz, WINDOW);
+  // Rinder (braun, Kopf dunkel, Fleck hell), von hinten nach vorn
+  const coat = wallColors(mixHex(PALETTE.earth, PALETTE.rockDark, 0.3));
+  const dark = wallColors(PALETTE.rockDark);
+  const patch = mixHex(PALETTE.wallLime, PALETTE.earth, 0.4);
+  for (const [u, v] of [...COWS].sort((a, c) => a[0] + a[1] - (c[0] + c[1]))) {
+    cuboid(p, [u + 0.03, v + 0.03, u + 0.09, v + 0.12], 0, 3, dark, undefined, false);
+    cuboid(p, [u + 0.17, v + 0.03, u + 0.23, v + 0.12], 0, 3, dark, undefined, false);
+    cuboid(p, [u, v, u + 0.26, v + 0.15], 3, 8, coat);
+    cuboid(p, [u + 0.06, v + 0.04, u + 0.14, v + 0.11], 8, 8.4, wallColors(patch), patch, false);
+    cuboid(p, [u + 0.26, v + 0.03, u + 0.33, v + 0.12], 4, 8, dark, undefined, false);
+  }
+  // Heuballen vorn links der Weide
+  const hay = wallColors(PALETTE.roofThatch);
+  cuboid(p, [1.02, 1.62, 1.24, 1.8], 0, 6, hay, mixHex(PALETTE.roofThatch, '#ffffff', 0.2));
+  // Gatter vorn und rechts: Pfosten und zwei Latten
+  const rail = PALETTE.roofWood;
+  for (const u of [1.0, 1.35, 1.7]) pole(p, u, 1.86, 7, rail);
+  for (const v of [0.3, 0.7, 1.1, 1.5]) pole(p, 1.86, v, 7, rail);
+  pole(p, 1.86, 1.86, 7, rail);
+  leftPlane(p, 1.92, 1.0, 1.9, 3.5, 4.8, rail);
+  leftPlane(p, 1.92, 1.0, 1.9, 5.5, 6.5, rail);
+  rightPlane(p, 1.92, 0.3, 1.9, 3.5, 4.8, rail);
+  rightPlane(p, 1.92, 0.3, 1.9, 5.5, 6.5, rail);
+}
+
+/**
+ * Stufen-Aufsatz (M11-R2) für jeden Betrieb mit `LEVELS`-Eintrag; liest nur `b.level`.
+ * Stufe 2: Anbau vorn links. Stufe 3: zusätzlich Steinsockel auf beiden Aussenwänden und Fahne hinten rechts.
+ */
+export function drawLevelTopper(p: IsoPainter, def: BuildingDef, b: Building): void {
+  const level = b.level ?? 1;
+  if (level < 2) return;
+  const stone = wallColors(PALETTE.wallStone);
+  cuboid(
+    p,
+    [I, def.h - I - 0.3, I + 0.3, def.h - I],
+    0,
+    0.35 * ISO_H,
+    stone,
+    PALETTE.roofTerracotta,
+  );
+  if (level < 3) return;
+  const sock = 0.12 * ISO_H;
+  const band = mixHex(PALETTE.wallStone, '#000000', 0.08);
+  leftPlane(p, def.h - I, I + 0.3, def.w - I, 0, sock, band, true);
+  rightPlane(p, def.w - I, I, def.h - I, 0, sock, mixHex(band, '#000000', 0.18), true);
+  // Fahne an der hinteren rechten Ecke: Mast bis zur Hüllenkante (`cap` bei v = I), breiter Wimpel nach innen
+  const [u, v, top] = [def.w - I - 0.09, I, p.height + ISO_H * I - 0.2];
+  pole(p, u, v, top, PALETTE.wallTimber, 0.09);
+  p.poly(
+    [
+      [u, v + 0.02, top],
+      [u - 0.34, v + 0.02, top - 1.5],
+      [u - 0.34, v + 0.02, top - 7.5],
+      [u, v + 0.02, top - 9],
+    ],
+    PALETTE.roofTerracotta,
+  );
+}
+
 /** Silhouetten aller heutigen Typen; unbekannte Ids zeichnen den Kategorie-Fallback (`FALLBACKS`). */
 export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   house: houseBody,
@@ -1488,6 +1591,8 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   lumberjack: lumberjackBody,
   market: marketBody,
   fisher: fisherBody,
+  hunter: hunterBody, // M11-R2
+  cattlefarm: cattlefarmBody, // M11-R2
   quarry: quarryBody,
   sheepfarm: sheepfarmBody,
   weaver: weaverBody,
@@ -1584,6 +1689,8 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
   lumberjack: (_b, h) => [R(0.4, 0.62, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
   market: () => [L(1.78, 1.88, 14, 24, true)], // Laterne
   fisher: (_b, h) => [R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
+  hunter: (_b, h) => [{ ...R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h), plane: 0.56 }],
+  cattlefarm: (_b, h) => [{ ...R(0.4, 0.62, 0.35 * 0.5 * h, 0.75 * 0.5 * h), plane: 0.92 }],
   quarry: (_b, h) => [R(0.7, 0.85, 0.3 * 0.3 * h, 0.8 * 0.3 * h)],
   sheepfarm: (_b, h) => [
     { ...L(1.2, 1.5, 0.35 * 0.5 * h, 0.7 * 0.5 * h), plane: 1.0 }, // Stallwand liegt bei v = 1,0 (Koppel davor)
@@ -1749,6 +1856,7 @@ export function drawBody(
   p.height = bodyHeight(def, b);
   if (env) p.env = env;
   (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
+  if (b.level !== undefined && LEVELS[def.id]) drawLevelTopper(p, def, b);
 }
 
 /**

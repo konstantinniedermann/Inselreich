@@ -16,7 +16,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, idx } from '../../src/sim/world';
 
 /** Seed-3-Welt, Krisen aus, Lager für Glas leer gestartet; Tick 1000 (keine Krisenperiode, kein Auftragsstart). */
 function base(): World {
@@ -47,7 +47,7 @@ const run = (w: World, n: number): void => {
 const clone = (w: World): World => JSON.parse(serialize(w)) as World;
 
 describe('M8 Glashütte: Werte', () => {
-  it('AK-S2-01 glassworks laut Spec 5.2; Ein-Input-Betriebe als Liste; zwölf brennbare Ids', () => {
+  it('AK-S2-01 (M11 S2) glassworks laut Spec 5.2; Ein-Input-Betriebe als Liste; fünfzehn brennbare Ids', () => {
     const g = BUILDING_DEFS.glassworks;
     expect(g).toMatchObject({
       name: 'Glashütte',
@@ -66,7 +66,7 @@ describe('M8 Glashütte: Werte', () => {
     expect(BUILDING_DEFS.weaver.consumes).toEqual(['wool']);
     expect(BUILDING_DEFS.distillery.consumes).toEqual(['cane']);
     expect(BUILDING_DEFS.toolmaker.consumes).toEqual(['wood']);
-    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(13);
+    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(15);
   });
 });
 
@@ -149,10 +149,11 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
     ]);
   });
 
-  it('AK-S2-09 Sturm: Glashütte unberührt, Holzfäller liefert die Hälfte', () => {
+  it('AK-S2-09 Sturm: Glashütte unberührt, Holzfäller liefert die Hälfte (M11 S3)', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
     const lj = direct(w, 'lumberjack', 13);
+    w.tiles[idx(w, 14, 5)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
     w.stock = { ...w.stock, stone: 50, wood: 50 };
     w.crisisLevel = 'normal';
     w.tick = 2400;

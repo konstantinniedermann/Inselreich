@@ -12,6 +12,7 @@ import { worldToScreen, type Camera, type TileRange } from './camera';
 import { project, type Pt } from './iso';
 import { roadGraph, WALKER_H, WALKER_W, type RoadGraph } from './life';
 import { cap } from './limits';
+import { cycleOf } from '../sim/levels';
 import { PALETTE } from './palette';
 
 // --- Darstellungswerte (keine Spielwerte) ---
@@ -252,7 +253,7 @@ export function errandPose(
   g: RoadGraph = roadGraph(world),
 ): ErrandPose | null {
   const def = BUILDING_DEFS[b.defId];
-  if (!def.produces || def.cycle === undefined || b.state !== 'ok' || !b.connected) return null;
+  if (!def.produces || cycleOf(b) === undefined || b.state !== 'ok' || !b.connected) return null;
   if (!Number.isFinite(p)) return null;
   const k = Math.min(1, Math.max(0, p));
   const plan = errandPlan(world, b, g);
@@ -330,7 +331,7 @@ export function errandsFrom(
   const cands: { b: Building; key: number }[] = [];
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (!def.produces || def.cycle === undefined || b.state !== 'ok' || !b.connected) continue;
+    if (!def.produces || cycleOf(b) === undefined || b.state !== 'ok' || !b.connected) continue;
     if (
       b.x < range.x0 - RANGE_PAD ||
       b.x > range.x1 + RANGE_PAD ||
@@ -348,7 +349,7 @@ export function errandsFrom(
   const g = roadGraph(world); // einmal je Frame: `layoutKey` läuft über alle Kacheln
   for (const { b } of cands) {
     if (out.length >= limit) break;
-    const p = Math.min(0.99999, (b.progress + clock.frac) / BUILDING_DEFS[b.defId].cycle!);
+    const p = Math.min(0.99999, (b.progress + clock.frac) / cycleOf(b)!);
     const pose = errandPose(world, b, p, g);
     if (pose && pose.alpha > 0.01) out.push(pose);
   }

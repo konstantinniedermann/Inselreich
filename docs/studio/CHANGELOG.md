@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-03 · Handbuch 1.15
+
+- Anlass: Meilenstein-Retro M11 und Prozess-Retro M11
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m11.md`, `docs/studio/retros/2026-10-03-prozess-retro-m11.md`, `docs/studio/metriken/M11.md`
+- Ruling: R201
+- Änderungen: E-010 behalten (abgeschlossen); E-022 „Merge-Hygiene" gestartet (`.gitattributes` `merge=union` für `docs/beobachtungen.md`, Integrator-Merge im eigenen Worktree, Abschnitt Merge); E-019 erweitert vorgeschlagen; E-023 und E-024 vorgeschlagen; `lernen.md` zwei Zeilen
+
+## 2026-10-03 · Persona production-integrator 1.4
+
+- Anlass: E-022 (Retro M11 B1)
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m11.md`
+- Ruling: R201
+- Änderungen: Merge im eigenen Worktree `.worktrees/integrate`, Push von dort, Hauptcheckout danach `git pull --ff-only`; Branches nie mit `-d`/`-D` löschen (gilt ab einem späteren Zug)
+
+## 2026-10-03 · Persona lead-production 1.6
+
+- Anlass: E-022 (Retro M11 B1)
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m11.md`
+- Ruling: R201
+- Änderungen: Briefing des Integrators verlangt den Merge im eigenen Worktree (gilt ab einem späteren Zug)
+
 ## 2026-10-03 · Handbuch 1.14
 
 - Anlass: Meilenstein-Retro M10 und Prozess-Retro M10

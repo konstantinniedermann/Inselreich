@@ -3,16 +3,26 @@ import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
+import { TAX_CARRY_DIVISOR } from '../../src/sim/defs/tiers';
+import { totalUpkeep, UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { deliverOrder } from '../../src/sim/orders';
 import { buildLock, canPlace } from '../../src/sim/placement';
-import { citizens, merchants, populationByTier, serviceAvailable } from '../../src/sim/population';
+import {
+  citizens,
+  merchants,
+  populationByTier,
+  serviceAvailable,
+  taxUnits,
+} from '../../src/sim/population';
+import { upgradeDeficit } from '../../src/sim/flow';
 import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
+import { upgradeStatus } from '../../src/sim/population';
 import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { sellPrice } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { buildingsOfType, center, idx, inBounds } from '../../src/sim/world';
+import { buildingsOfType, center, idx, inBounds, tilesInRadius } from '../../src/sim/world';
 import { PROBES, SCENARIOS, tickBeforeFirst, writeProbes, writeScenarios } from './scenarios';
 
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
@@ -31,6 +41,7 @@ const WON_AFTER_FIRST_TICK = new Set([
   'm8-kurz-vor-handelsstadt',
   'm8-glashuette-wartet', // Änderung S11: won true (Freischaltung der Glashütte)
   'm8-kaufleute-ohne-glas',
+  'm11-stein', // M11 B1: won true (Freischaltung U6)
 ]);
 
 describe('Szenario-Saves', () => {
@@ -91,6 +102,7 @@ describe('Szenario-Saves', () => {
         'm10-amtsstube',
         'm10-amtsstube-aus',
         'm10-krise-bald',
+        ...M11, // M11 B1
       ].sort(),
     );
   });
@@ -234,8 +246,16 @@ describe('Szenario-Saves', () => {
   });
 });
 
+/** Geld, das ein Schritt bucht (M11 S10, Anhang 02 D): Überträge `c0`, `u0` vor dem Schritt, Raten nach dem Schritt. */
+function booked(w: World, c0: number, u0: number): number {
+  return (
+    Math.floor((c0 + taxUnits(w)) / TAX_CARRY_DIVISOR) -
+    Math.floor((u0 + totalUpkeep(w)) / UPKEEP_INTERVAL)
+  );
+}
+
 describe('M6 Szenarien', () => {
-  it('AK-B2-04 krise-brand: Stufe normal, Tick 2999, eine Brennerei, Zuckerrohr 20, Geld 1000; Brand trifft sie', () => {
+  it('AK-B2-04 krise-brand: Stufe normal, Tick 2999, eine Brennerei, Zuckerrohr 20, Geld 1000; Brand trifft sie (M11 S10)', () => {
     const w = load('krise-brand');
     expect(w.crisisLevel).toBe('normal');
     expect(w.tick).toBe(tickBeforeFirst(w, 'fire'));
@@ -247,20 +267,22 @@ describe('M6 Szenarien', () => {
     expect(flammable[0]!.connected).toBe(true);
     expect(w.stock.cane).toBe(20);
     expect(w.money).toBe(1000);
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.crisis?.kind).toBe('fire');
     expect(w.crisis?.outcome).toBe('burning');
     expect(w.crisis?.target).toBe(flammable[0]!.id);
-    // Tick 3000 bucht auch den Unterhalt (UPKEEP_INTERVAL); der Brand selbst kostet 250.
-    expect(w.money + w.stats.upkeep).toBe(750);
+    // Der Schritt bucht Steuer und Unterhalt mit Übertrag (M11); der Brand selbst kostet 250.
+    expect(w.money).toBe(750 + booked(w, c0, u0));
   });
 
-  it('AK-B2-04 krise-brand-geschuetzt: Brand wird gelöscht, Geld bleibt 1000', () => {
+  it('AK-B2-04 krise-brand-geschuetzt: Brand wird gelöscht, Geld bleibt 1000 (M11 S10)', () => {
     const w = load('krise-brand-geschuetzt');
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.crisis?.kind).toBe('fire');
     expect(w.crisis?.outcome).toBe('extinguished');
-    expect(w.money + w.stats.upkeep).toBe(1000); // nur der Unterhalt von Tick 3000, keine Brandkosten
+    expect(w.money).toBe(1000 + booked(w, c0, u0)); // nur die Buchung des Schritts, keine Brandkosten
   });
 
   it('AK-B2-04 krise-sturm: Tick 2399, Fischer und Holzfäller angebunden, danach Sturm in Warnung', () => {
@@ -477,7 +499,7 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       const r = deserialize(serialize(w));
       expect(r.ok, name).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(5);
+      expect(r.world.version).toBe(6);
       expect(r.world.unlocked, name).toEqual(
         name === 'm10-start' ? ['U0'] : deriveUnlocks(r.world),
       );
@@ -530,18 +552,117 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       expect(dist(b('werkzeug-ohne'), b('schule'))).toBeGreaterThan(10);
     }
   });
-  it('AK-B1-03 writeProbes schreibt je Szenario aus 18.1 genau <name>.probes.json mit den Prüfpunkten', () => {
+  it('AK-B1-03 writeProbes schreibt (M11 B1) je Szenario aus 18.1 genau <name>.probes.json mit den Prüfpunkten', () => {
     const written: [string, string][] = [];
     const fake = (path: string, text: string): void => void written.push([path, text]);
     expect(writeProbes(undefined, fake)).toBe(0);
-    expect(writeProbes('out', fake)).toBe(8);
+    expect(writeProbes('out', fake)).toBe(13);
     expect(written.map(([p]) => p).sort()).toEqual(
-      [...M10, 'galerie'].map((n) => `out/${n}.probes.json`).sort(),
+      [...M10, ...M11, 'galerie'].map((n) => `out/${n}.probes.json`).sort(),
     );
     for (const [p, text] of written) {
       const name = p.slice('out/'.length, -'.probes.json'.length);
       expect(JSON.parse(text)).toEqual(PROBES[name]!(SCENARIOS[name]!()));
     }
+  });
+});
+
+const M11 = ['m11-fluss', 'm11-wald', 'm11-ausbau', 'm11-defizit', 'm11-stein'] as const;
+
+describe('M11 Szenarien (Anhang 02 F)', () => {
+  const at = (w: World, name: string, probe: string): Building => {
+    const p = PROBES[name]!(w)[probe]!;
+    return w.buildings[w.tiles[idx(w, p.x, p.y)]!.buildingId!]!;
+  };
+  const freeForest = (w: World, b: Building, r: number): number => {
+    const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
+    return tilesInRadius(w, c.cx, c.cy, r).filter((p) => {
+      const t = w.tiles[idx(w, p.x, p.y)]!;
+      return t.terrain === 'forest' && t.buildingId === null && !t.road;
+    }).length;
+  };
+
+  it('AK-M11B-02 die fünf Szenen sind wohlgeformt und überstehen deserialize(serialize(w)) gleich', () => {
+    for (const name of M11) {
+      const w = SCENARIOS[name]!();
+      const r = deserialize(serialize(w));
+      expect(r.ok, name).toBe(true);
+      if (!r.ok) continue;
+      expect(serialize(r.world), name).toBe(serialize(w));
+      expect(r.world.crisisLevel, name).toBe('off');
+      expect(JSON.stringify(PROBES[name]!(r.world))).not.toMatch(/Tick/);
+    }
+  });
+
+  it('AK-M11B-02 Prüfpunkte liegen relativ zum Kontor wie in der Tabelle und tragen Gebäude', () => {
+    const expected: Record<string, Record<string, string>> = {
+      'm11-fluss': { kontor: 'kontor', haus: 'house' },
+      'm11-wald': { kontor: 'kontor', jagdhuette: 'hunter', holzfaeller: 'lumberjack' },
+      'm11-ausbau': {
+        kontor: 'kontor',
+        fischer1: 'fisher',
+        fischer2: 'fisher',
+        fischer3: 'fisher',
+        weberei: 'weaver',
+        schaeferei: 'sheepfarm',
+      },
+      'm11-defizit': { kontor: 'kontor', haus: 'house', kapelle: 'chapel', schule: 'school' },
+      'm11-stein': { kontor: 'kontor', haus: 'house', glashuette: 'glassworks' },
+    };
+    for (const name of M11) {
+      const w = SCENARIOS[name]!();
+      for (const [probe, defId] of Object.entries(expected[name]!))
+        expect(at(w, name, probe).defId, `${name}/${probe}`).toBe(defId);
+    }
+  });
+
+  it('AK-M11B-02 Inhalte: Zustände, Stufen, freie Kacheln, Defizit-Gut, Freischaltung', () => {
+    const fluss = SCENARIOS['m11-fluss']!();
+    expect(fluss.tick).toBe(3000);
+    expect(fluss.unlocked).toContain('U4');
+    expect(fluss.won).toBe(false);
+    if (import.meta.env.VITE_BALANCE_LOG)
+      console.log('m11-fluss', fluss.stats, fluss.stats.taxes - fluss.stats.upkeep);
+    expect(fluss.stats.taxes - fluss.stats.upkeep).toBeGreaterThan(0); // Bilanz positiv (Spec-Lücke +500, s. beobachtungen)
+
+    const wald = SCENARIOS['m11-wald']!();
+    const pw = PROBES['m11-wald']!(wald);
+    const hunter = at(wald, 'm11-wald', 'jagdhuette');
+    const lumber = at(wald, 'm11-wald', 'holzfaeller');
+    expect([freeForest(wald, hunter, 3), freeForest(wald, lumber, 2)]).toEqual([10, 1]);
+    expect([hunter.connected, lumber.connected]).toEqual([true, true]);
+    for (const p of ['wald-holzfaeller', 'wald-jagd'])
+      expect(wald.tiles[idx(wald, pw[p]!.x, pw[p]!.y)]!.terrain, p).toBe('forest');
+    expect(wald.unlocked).toEqual(['U0', 'U2', 'U3']);
+
+    const ausbau = SCENARIOS['m11-ausbau']!();
+    expect(
+      ['fischer1', 'fischer2', 'fischer3'].map((p) => at(ausbau, 'm11-ausbau', p).level),
+    ).toEqual([undefined, 2, 3]);
+    const weberei = at(ausbau, 'm11-ausbau', 'weberei');
+    expect([weberei.level, weberei.state]).toEqual([2, 'waitingInput']);
+    expect(at(ausbau, 'm11-ausbau', 'schaeferei').level).toBeUndefined();
+    expect([ausbau.stock.wool, ausbau.stock.cloth, ausbau.stock.rum, ausbau.money]).toEqual([
+      0, 10, 10, 2000,
+    ]);
+    expect(ausbau.unlocked).toEqual(['U0', 'U1', 'U2', 'U3', 'U4', 'U5']);
+
+    const defizit = SCENARIOS['m11-defizit']!();
+    const dh = at(defizit, 'm11-defizit', 'haus');
+    expect([dh.house!.tier, dh.house!.inhabitants]).toEqual([2, 8]);
+    expect(upgradeDeficit(defizit, dh)?.good).toBe('rum');
+    expect(defizit.stock.rum).toBe(40);
+    expect(defizit.unlocked).toContain('U4');
+    expect(buildingsOfType(defizit, 'distillery')).toHaveLength(0);
+
+    const stein = SCENARIOS['m11-stein']!();
+    expect(stein.won).toBe(true);
+    expect(stein.unlocked).toContain('U6');
+    expect(stein.stock.stone).toBe(4);
+    expect(buildingsOfType(stein, 'glassworks')).toHaveLength(1);
+    expect(upgradeStatus(stein, at(stein, 'm11-stein', 'haus')).reasons).toContain(
+      'Zu wenig Stein',
+    );
   });
 });
 

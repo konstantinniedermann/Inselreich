@@ -5,15 +5,16 @@ import { GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { houseDiagnosis, missingInputs, type Diagnosis } from '../sim/queries';
+import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel } from '../sim/townhall';
 import { buildingShown, functionLock } from '../sim/unlocks';
-import { adjacentOf, center, inBounds, tilesInRadius } from '../sim/world';
+import { adjacentOf, center, inBounds } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
-import { protectedCount } from './inspect';
-import { goodList } from './texts';
+import { levelText, protectedCount, utilizationText } from './inspect';
+import { goodList, stateInfo } from './texts';
 import { formatGameTime, perMinute } from './time';
 
 /** Inhalt der Mouse-over-Karte (Spec M10 13): Titel und höchstens drei Zeilen. */
@@ -123,16 +124,11 @@ function workshopInfo(world: World, b: Building): HoverInfo {
       `braucht eine ${BUILDING_DEFS[SERVICE_BUILDING[def.requiresService!]].name} in Reichweite`,
     );
   else if (b.state === 'notConnected') lines.push('nicht angebunden');
-  else lines.push(`arbeitet — ${perMinute(1, def.cycle ?? 1)} ${GOODS[def.produces!].name} / min`);
-  const forest = def.site.find((r) => r.kind === 'radius' && r.terrain === 'forest');
-  if (b.defId === 'lumberjack' && forest && forest.kind === 'radius') {
-    const c = center(def, b.x, b.y);
-    const n = tilesInRadius(world, c.cx, c.cy, forest.radius).filter(
-      (p) => world.tiles[p.y * world.width + p.x]!.terrain === 'forest',
-    ).length;
-    if (n < forest.min) lines.push('kein Wald mehr in der Nähe');
-  }
-  return { title: def.name, lines };
+  else if (b.state === 'noForest') lines.push(stateInfo(b, world.tick).text);
+  else lines.push(`arbeitet — ${perMinute(1, cycleOf(b) ?? 1)} ${GOODS[def.produces!].name} / min`);
+  const level = levelText(b);
+  const title = level === null ? def.name : `${def.name}, ${level} · ${utilizationText(b)}`;
+  return { title, lines };
 }
 
 function serviceInfo(world: World, b: Building): HoverInfo {

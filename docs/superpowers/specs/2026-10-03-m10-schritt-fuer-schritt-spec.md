@@ -329,6 +329,8 @@ nicht (Aufstieg gesperrt). Das ist gewollt. `nextUnlocks` meldet es als `taxBloc
 
 Bei `fail` ändert sich nichts an der Welt.
 
+**Änderung M11:** Ein stehender Holzfäller ohne freien Wald steht still (Zustand `noForest`, Unterhalt läuft weiter); siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §3.4.
+
 **Regeln:** Roden liefert **kein Holz**. Kein Nachwachsen, keine Erstattung. Kein Zufall. Ein stehender Holzfäller,
 dessen Wald gerodet wurde, **arbeitet weiter** (Standortregel nur beim Bau; „braucht Wald" ist M11); Mouse-over warnt
 (13.2). Eine stehende Schäferei oder Plantage verliert durch Aufforsten nichts. Der Kreis Roden → Aufforsten kostet
@@ -492,6 +494,8 @@ Zielplattform Desktop (R78), geprüft bei 1280 × 800 und 1920 × 1080. Alle Zah
 den Sim-Abfragen. Texte mit **Setzung Spec** sind Vorgaben; Wortlaut nach Anmutung durch `lead-art`, Inhalt fest.
 
 ### 11.1 Bauleiste (U1, Forst-Knöpfe U2)
+
+**Änderung M11:** Die Zählung wächst um die Einträge `hunter` (U2) und `cattlefarm` (U3); siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §4.
 
 - Einträge je Kategorie: alle `BUILDING_IDS` ausser `kontor` mit `buildingShown(w, id)`, Reihenfolge `BUILDING_IDS`.
 - **Kategorie-Knopf ohne sichtbaren Eintrag ist verborgen** (`hidden`, **Setzung Spec**). Ist die offene Kategorie
@@ -844,6 +848,7 @@ Prüfpunkt existiert und das genannte Objekt bzw. Gelände trägt.
 
 ### S1 — Freischalt-Sim, Save v5, Option „Alles frei" (Sim-Teil), Fingerabdruck
 
+- **Änderung M11:** `UNLOCKS` bekommt `hunter` (U2), `cattlefarm` (U3) sowie die Funktionen `upgrade2` (U3) und `upgrade3` (U5); siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §4.
 - **AK-S1-01** (Vitest, Defs) `UNLOCKS` hat 7 Einträge U0 … U6 in dieser Reihenfolge mit `trigger`, `buildings`,
   `goods`, `functions` wie 4.2 (U3 `buildings` in S1 leer); U1 `trigger.min` 20. Jede `BuildingDefId` ausser
   `kontor` steht in genau einem Eintrag, jede `GoodId` in genau einem, jede `UnlockFunction` in genau einem.
@@ -937,6 +942,7 @@ Spielstand'`, ohne Ausnahme (Delta R163 B1: `deriveUnlocks` läuft erst nach `is
   `x = width`, `y = height`, `x = 1.5` → `'Ausserhalb der Karte'`; Geld 9 (Roden) bzw. 19 (Aufforsten) →
   `'Zu wenig Geld'`; Geld −5 → `'Kein Geld'`; neue Welt ohne U2 → `'Erst wenn ein Wohnhaus 4 Pioniere hat'` (auch auf Wasser:
   Sperre zuerst).
+- **Änderung M11:** Der Holzfäller-Teil ist umgeschrieben (M11 S3): ohne freien Wald `noForest`, siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §3.4.
 - **AK-F1-05** (Vitest, Holzfäller arbeitet weiter) Angebundener Holzfäller; alle Waldkacheln im Radius 2 gerodet:
   nach 300 Schritten (Krisen „off") Holz **+10**, gleich wie in der Vergleichswelt ohne Rodung; Zustand `ok`.
   Ebenso: Aufforsten aller freien Weidekacheln im Radius 2 einer stehenden, angebundenen Schäferei ändert deren
@@ -1240,7 +1246,7 @@ zuerst). Dazu 4 Punkte „Nutzer-Playtest" (18.2).
 | Alle Güter einer Stufe gesperrt                                                        | erlaubt; Stufe zahlt halb und schrumpft bis 1                                                   | AK-S2-07, AK-S2-08                                         |
 | Knappes Gut, Sperre für die untere Stufe                                               | obere Stufe bekommt die Einheit                                                                 | AK-S2-10                                                   |
 | Schule abgerissen während Werkzeugproduktion                                           | `noService`, `progress` bleibt, Unterhalt läuft                                                 | AK-S2-11                                                   |
-| Roden um einen Holzfäller                                                              | Holzfäller arbeitet weiter, Mouse-over warnt                                                    | AK-F1-05, AK-U3-02                                         |
+| Roden um einen Holzfäller                                                              | Änderung M11: Holzfäller steht still (`noForest`, siehe M11-Spec §3.4), Mouse-over warnt        | AK-F1-05, AK-U3-02                                         |
 | Roden auf Wasser, Sand, Gebirge, Gebäude, Weg, Kontor, Kartenrand, ohne Geld, gesperrt | `fail` mit Grund, Welt unverändert                                                              | AK-F1-04                                                   |
 | Roden → Aufforsten im Kreis                                                            | kostet 30, bringt nichts                                                                        | AK-F1-03                                                   |
 | Bild nach Geländewechsel                                                               | Kachel und Bäume neu gezeichnet, ≤ 100 ms; Tier-Anker und Küste unverändert                     | AK-R1-01 – AK-R1-03, AK-R1-05                              |

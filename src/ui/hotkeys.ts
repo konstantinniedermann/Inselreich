@@ -25,6 +25,8 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   i: { kind: 'build', defId: 'townhall' },
   c: { kind: 'clearForest' },
   q: { kind: 'plantForest' },
+  // M11, Spec 13-10: Rinderfarm bewusst ohne Taste (4 läse sich neben 1/2/3 als Tempo-Taste)
+  y: { kind: 'build', defId: 'hunter' },
 };
 
 export const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };

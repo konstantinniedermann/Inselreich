@@ -57,7 +57,7 @@ export const lumaOf = ([r, g, b]: Mul): number => 0.299 * r + 0.587 * g + 0.114 
 
 /**
  * Leuchten die Fenster des Gebäudes nachts (Spec 6.2)? Bewohnte Häuser und Gebäude im Zustand `ok`; unbewohnte
- * Häuser und stillstehende Betriebe (`waitingInput`, `storageFull`, `notConnected`, `burning`) bleiben dunkel.
+ * Häuser und stillstehende Betriebe (`waitingInput`, `storageFull`, `notConnected`, `burning`, `noService`, `noForest`) bleiben dunkel.
  */
 export function isLit(def: BuildingDef, b: Building): boolean {
   if (def.category === 'housing') return (b.house?.inhabitants ?? 0) > 0;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { deserialize, serialize } from '../../src/sim/save';
+import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import {
@@ -9,6 +10,7 @@ import {
   MAX_TICKS,
   runColony,
   startColony,
+  WIN_TICK_LIMIT,
   type ColonyOptions,
 } from './controller';
 
@@ -25,6 +27,7 @@ function fnv1a32(s: string): number {
 /**
  * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
  * (M8-Spec 16.1): `stock.glass`, `sellPct.glass`, `wonMerchants` und je Haus `services.bath` entfernt.
+ * M11 (Anhang 02 B): zusätzlich `taxCarry`, `upkeepCarry` und je Gebäude `eff`, `level` entfernt.
  */
 function normalized(json: string): string {
   const raw = JSON.parse(json) as Record<string, unknown>;
@@ -37,21 +40,26 @@ function normalized(json: string): string {
   delete raw.unlocked;
   delete raw.goodLocks;
   delete raw.upgradeStops;
+  delete raw.taxCarry;
+  delete raw.upkeepCarry;
   for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>)) {
+    delete b.eff;
+    delete b.level;
     const house = b.house as { services: Record<string, unknown> } | undefined;
     if (house) delete house.services.bath;
   }
   return JSON.stringify(raw);
 }
 
-// `off`-Referenz, gemessen auf dem Code vor M6-S1: main 3fcb678 in .worktrees/m6-balance
-// (Plan M6-Sim, Task 1b/2). Vorabmessung im Plan (main 3f66ddd) identisch.
+// `off`-Referenz. M11 R185/R187, gemessen auf 7363cb0 (T02) mit
+// `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-crises.test.ts --silent=false`;
+// vorher 3850/6050/57/212, `0xbfeac8c6`; Richtwert Anhang 03: `0x701c6da5`.
 const OFF_REFERENCE = {
   firstSettler: 350,
-  firstCitizen: 3850,
-  winTick: 6050,
-  minMoney: 57,
-  endMoney: 212,
+  firstCitizen: 4150,
+  winTick: 6750,
+  minMoney: 117,
+  endMoney: 339,
   buildings: {
     kontor: 1,
     house: 4,
@@ -65,7 +73,7 @@ const OFF_REFERENCE = {
     distillery: 3,
   },
 };
-const OFF_FINGERPRINT = 0xbfeac8c6; // Referenz Plan-Vorabmessung, bestätigt in Task 2
+const OFF_FINGERPRINT = 0x701c6da5; // M11 (M-06), normalized() mit M11-Feldern (Anhang 02 B)
 
 const CRISIS_WIN_STOP = 8000; // Spec 15: Stopp-Schwelle Krisen-Lauf (R102)
 const NORMAL: ColonyOptions = { fireStation: true };
@@ -98,7 +106,7 @@ function counter(): { c: CrisisCount; see: (w: World) => boolean } {
 }
 
 describe('M6 Krisen-Lauf', () => {
-  it('AK-B1-02 Stufe off: Laufdaten und Fingerabdruck der normalisierten Endwelt wie vor M6', () => {
+  it('AK-B1-02 Stufe off: Laufdaten und Fingerabdruck der normalisierten Endwelt wie vor M6 (M11 S10)', () => {
     const w = createWorld(3);
     const t = buildColony(w);
     const fp = fnv1a32(normalized(serialize(w)));
@@ -159,14 +167,69 @@ describe('M6 Krisen-Lauf', () => {
 });
 
 describe('M8 Fingerabdruck (AK-S1-15)', () => {
-  it('AK-S1-15 Stufe off bitgleich bis auf die M8-Felder: Sieg 6050, minMoney 57, Fingerabdruck, Hebel null', () => {
+  it('AK-S1-15 Stufe off bitgleich bis auf die M8-Felder: Sieg 6750, minMoney 117, Fingerabdruck, Hebel null (M11 S10)', () => {
     expect(TIERS[4].unlockCitizens).toBeNull();
     const w = createWorld(3);
     const t = buildColony(w);
-    expect(t.winTick).toBe(6050);
-    expect(t.minMoney).toBe(57);
+    expect(t.winTick).toBe(6750);
+    expect(t.minMoney).toBe(117);
     expect(w.stock.glass).toBe(0);
     expect(w.wonMerchants).toBe(false);
     expect(fnv1a32(normalized(serialize(w)))).toBe(OFF_FINGERPRINT);
+  });
+});
+
+// M11 R185/R187, gemessen auf 7363cb0 mit `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance --silent=false`
+const M11_REF = {
+  firstSettler: 350,
+  firstCitizen: 4150,
+  winTick: 6750,
+  minMoney: 117,
+  endMoney: 339,
+}; // M-01…M-04
+
+describe('M11 Baseline (Spec 6, 14)', () => {
+  it('AK-BAS-01 Referenz off: Sieg 6750, minMoney 117, endMoney 339, Siedler/Bürger 350/4150; zwei Läufe gleich', () => {
+    const [a, b] = [createWorld(3), createWorld(3)];
+    expect(buildColony(a)).toMatchObject(M11_REF);
+    buildColony(b);
+    expect(serialize(a)).toBe(serialize(b));
+  });
+  it('AK-BAS-02 Schwellen: Sieg ≤ 7500 und Geld > 0; normal + Feuerwache 7850 ≤ 8000; mild 7850', () => {
+    const r = createWorld(3);
+    expect(buildColony(r).winTick!).toBeLessThanOrEqual(WIN_TICK_LIMIT);
+    expect(r.money).toBeGreaterThan(0);
+    const n = createWorld(3, { crisisLevel: 'normal' });
+    const tn = buildColony(n, NORMAL);
+    expect([tn.winTick, tn.winTick! <= CRISIS_WIN_STOP, n.money > 0]).toEqual([7850, true, true]);
+    const m = createWorld(3, { crisisLevel: 'mild' });
+    expect([buildColony(m).winTick, m.money > 0]).toEqual([7850, true]);
+  });
+  it('AK-BAS-04 normalized() entfernt taxCarry, upkeepCarry und je Gebäude eff, level', () => {
+    const w = createWorld(3);
+    Object.assign(w, { taxCarry: 5, upkeepCarry: 7 });
+    Object.assign(w.buildings[w.kontorId]!, { eff: 1000, level: 2 });
+    const raw = JSON.parse(normalized(serialize(w))) as Record<string, unknown>;
+    expect('taxCarry' in raw || 'upkeepCarry' in raw).toBe(false);
+    for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>))
+      expect('eff' in b || 'level' in b).toBe(false);
+  });
+  it('AK-BAS-07 Gebäudezahlen (M-05) und Fingerabdruck (M-06) neu gemessen und gepinnt', () => {
+    const w = createWorld(3);
+    expect(buildColony(w).buildings).toEqual(OFF_REFERENCE.buildings);
+    expect(fnv1a32(normalized(serialize(w)))).toBe(OFF_FINGERPRINT);
+  });
+  it('AK-SAV-03 Zwilling mit taxCarry 12 345, upkeepCarry 67: Laden, 300 Schritte, serialize gleich', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    const { layout, t } = startColony(w);
+    expect(runColony(w, layout, t, NORMAL, (x) => x.tick >= 2601)).toBe(true);
+    Object.assign(w, { taxCarry: 12345, upkeepCarry: 67 });
+    const r = deserialize(serialize(w));
+    if (!r.ok) throw new Error(r.reason);
+    for (let i = 0; i < 300; i++) {
+      step(w);
+      step(r.world);
+    }
+    expect(serialize(r.world)).toBe(serialize(w));
   });
 });

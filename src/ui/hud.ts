@@ -97,6 +97,18 @@ export function chipRole(tagName: string): 'img' | null {
   return tagName === 'BUTTON' ? null : 'img';
 }
 
+/** Kontostand; läuft je Frame (Spec 7), ohne Interpolation. */
+export function updateMoney(header: HTMLElement, world: World): void {
+  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
+}
+
+/** Mindestabstand (ms) zwischen zwei Aktualisierungen der Bilanz-Anzeige. */
+export const BALANCE_REFRESH_MS = 500;
+/** Ist die Bilanz-Anzeige wieder fällig? */
+export const balanceDue = (nowMs: number, lastMs: number): boolean =>
+  nowMs - lastMs >= BALANCE_REFRESH_MS;
+const balanceShownAt = new WeakMap<HTMLElement, number>();
+
 /**
  * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
  * ändert sich nur der Wert. Gibt das Element zurück.
@@ -223,11 +235,15 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (soundBox) renderSoundControls(soundBox, actions);
   }
   const { world } = state;
-  const balEl = setChip(header, 'balance', balanceView(world));
-  if (balEl) {
-    const tip = balanceTooltip(world);
-    if (balEl.title !== tip) balEl.title = tip;
-    balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
+  const nowMs = performance.now();
+  if (balanceDue(nowMs, balanceShownAt.get(header) ?? -Infinity)) {
+    balanceShownAt.set(header, nowMs);
+    const balEl = setChip(header, 'balance', balanceView(world));
+    if (balEl) {
+      const tip = balanceTooltip(world);
+      if (balEl.title !== tip) balEl.title = tip;
+      balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
+    }
   }
   for (const tier of TIER_IDS) {
     const chip = setChip(header, `pop-${tier}`, popChipView(world, tier));
@@ -237,7 +253,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const goal = goalTexts(goalView(world));
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
-  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
+  updateMoney(header, world);
   const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
     const b = balance[good];

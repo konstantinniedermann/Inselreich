@@ -76,6 +76,8 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
   market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
   fisher: () => 1.0 * ISO_H,
+  hunter: () => 1.0 * ISO_H, // M11-R2: Blockhütte mit Fellgestell und Holzstapel
+  cattlefarm: () => 1.1 * ISO_H, // M11-R2: Stall mit Weide, Gatter und Heuballen
   quarry: () => 1.1 * ISO_H,
   sheepfarm: () => 1.2 * ISO_H,
   weaver: () => 1.3 * ISO_H,

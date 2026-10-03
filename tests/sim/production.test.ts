@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, idx } from '../../src/sim/world';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { totalUpkeep } from '../../src/sim/economy';
 import { tickProduction } from '../../src/sim/production';
@@ -35,8 +35,9 @@ beforeEach(() => {
 });
 
 describe('tickProduction', () => {
-  it('lumberjack produces 1 wood per 30 ticks when connected', () => {
+  it('lumberjack produces 1 wood per 30 ticks when connected (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
+    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
     const before = w.stock.wood;
     ticks(w, 29);
     expect(w.stock.wood).toBe(before);
@@ -46,8 +47,9 @@ describe('tickProduction', () => {
     expect(lj.state).toBe('ok');
   });
 
-  it('does nothing when not connected and keeps progress', () => {
+  it('does nothing when not connected and keeps progress (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
+    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
     const before = w.stock.wood;
     ticks(w, 10);
     expect(lj.progress).toBe(10);
@@ -88,8 +90,9 @@ describe('tickProduction', () => {
     expect(wv.state).toBe('waitingInput');
   });
 
-  it('drops output when storage is full and marks storageFull', () => {
+  it('drops output when storage is full and marks storageFull (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
+    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
     w.stock.wood = 100;
     ticks(w, 30);
     expect(w.stock.wood).toBe(100);

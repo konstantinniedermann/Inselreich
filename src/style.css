@@ -404,6 +404,9 @@ body {
   margin: 0;
   font-size: 15px;
 }
+.upgrade [hidden] {
+  display: none;
+}
 
 /* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */
 .tooltip {

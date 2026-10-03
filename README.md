@@ -95,8 +95,8 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Standortregel, den Radius und — falls gesperrt — den Grund.
 - **Radiusanzeige beim Platzieren:** Wohnhaus zeigt den Umriss der versorgten Fläche; Marktplatz,
   Kapelle, Schule und Feuerwache zeigen ihren Wirkkreis (in der Isometrie eine Ellipse) um die Vorschau
-  und den Umriss der schon abgedeckten Fläche; Holzfäller, Schäferei und Zuckerrohrplantage zeigen den
-  Standortkreis (Radius 2) mit den passenden Wald- bzw. Graskacheln.
+  und den Umriss der schon abgedeckten Fläche; Holzfäller, Jagdhütte, Rinderfarm, Schäferei und Zuckerrohrplantage
+  zeigen den Standortkreis (Radius 2, bei Jagdhütte und Rinderfarm 3) mit den passenden Wald- bzw. Graskacheln.
 - **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
   Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
   `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,
@@ -123,6 +123,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `E`                    | Feuerwache                                                          |
 | `I`                    | Amtsstube (erst ab U3, höchstens eine)                              |
 | `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                     |
+| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste              |
 | `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                       |
 | `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                    |
 
@@ -139,9 +140,13 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 ### Karte lesen
 
 - **Gebäude** sind gezeichnete Körper mit Wänden und Dach; Dachfarbe und Form zeigen die Art. Wohnhäuser
-  wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden».
+  wachsen mit ihrer Stufe. Ein roter Punkt heisst «nicht angebunden». Jagdhütte und Rinderfarm haben eigene
+  Formen. Ausgebaute Betriebe tragen einen Anbau vorn links (Stufe 2) bzw. Anbau, Steinsockel und Fahne
+  (Stufe 3).
 - **Arbeitsanzeige:** Betriebe, die gerade produzieren, zeigen Rauch bzw. ein Arbeitszeichen; wartende,
   volle, brennende oder nicht angebundene Betriebe stehen still.
+- **Fortschrittsring und Marken:** Über jedem Betrieb zeigt ein Ring den Zyklus (grün, solange er läuft; grau
+  bei Stillstand). Ein durchgestrichener Baum heisst «kein freier Wald in der Nähe».
 - **Bedarfssymbole:** Über einem Wohnhaus, dem etwas fehlt, steht ein Symbol für den wichtigsten
   Mangel (Versorgung vor Ware vor Dienst), bei mehreren Mängeln mit einem Zusatzpunkt. Die Symbole
   erscheinen ab Zoom 0.75. Signale (Symbole, roter Punkt, Auswahl, Umriss beim Überfahren) liegen immer
@@ -195,15 +200,15 @@ frei, sobald der jeweilige Auslöser eintritt; eine Meldung nennt das Neue, und 
 als Nächstes kommt. Gesperrte Werkzeuge nennen auf Tastendruck ihren Grund. Als Auslöser zählt ein volles Wohnhaus der aktuellen Stufe (es wünscht die nächste) oder das erste Wohnhaus
 der nächsten Stufe.
 
-| Schritt | Auslöser                     | Neu                                                                                  |
-| ------- | ---------------------------- | ------------------------------------------------------------------------------------ |
-| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung                   |
-| U1      | 20 Wohnhäuser                | Marktplatz                                                                           |
-| U2      | ein Wohnhaus wünscht Siedler | Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden, Aufforsten |
-| U3      | die ersten Siedler           | Amtsstube; Handelsaufträge                                                           |
-| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                               |
-| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube                                        |
-| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte; Glas                                                            |
+| Schritt | Auslöser                     | Neu                                                                                             |
+| ------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung                              |
+| U1      | 20 Wohnhäuser                | Marktplatz                                                                                      |
+| U2      | ein Wohnhaus wünscht Siedler | Jagdhütte, Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden, Aufforsten |
+| U3      | die ersten Siedler           | Rinderfarm, Amtsstube; Handelsaufträge; Ausbau Stufe 2                                          |
+| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                                          |
+| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube; Ausbau Stufe 3                                   |
+| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte; Glas                                                                       |
 
 Die Feuerwache erscheint bei der Krisenstufe «aus» nicht in der Bauleiste (in der Sim bleibt sie baubar).
 Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei (Test- und Übungsmodus).
@@ -234,26 +239,44 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Anbindung:** Betriebe, Marktplatz, Kapelle, Schule und Feuerwache arbeiten nur, wenn ein Weg an sie grenzt,
   der über Wege mit dem Kontor verbunden ist. Nicht angebundene Gebäude tragen einen roten Punkt.
 - **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
-  angebunden»), Produktion, Fortschritt und Unterhalt.
+  angebunden»), Stufe («Stufe 1» bis «Stufe 3»), Auslastung, Produktion, Fortschritt und Unterhalt. Ab der
+  Freischaltung des Ausbaus steht dort der Abschnitt «Ausbau zu Stufe n» mit Kosten, Gebühr, Vorschau auf
+  Ausstoss und Unterhalt, dem Knopf «Ausbauen» und, falls es nicht geht, dem Grund. Das Mouse-over nennt Stufe
+  und Auslastung.
 
 ### Produktionsketten
 
-| Gebäude            | Erzeugt    | Braucht     | Zyklus | Unterhalt (/ min) | Standort                        |
-| ------------------ | ---------- | ----------- | ------ | ----------------- | ------------------------------- |
-| Fischerhütte       | Nahrung    | —           | 4 s    | 30                | an Wasser angrenzend            |
-| Holzfäller         | Holz       | —           | 3 s    | 30                | mind. 1 Waldkachel im Radius 2  |
-| Steinbruch         | Stein      | —           | 6 s    | 60                | an Gebirge angrenzend           |
-| Schäferei          | Wolle      | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
-| Weberei            | Stoff      | Wolle       | 5 s    | 90                | beliebiges Bauland              |
-| Zuckerrohrplantage | Zuckerrohr | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2 |
-| Brennerei          | Rum        | Zuckerrohr  | 5 s    | 120               | beliebiges Bauland              |
-| Werkzeugmacher     | Werkzeug   | Holz        | 8 s    | 150               | beliebiges Bauland              |
-| Glashütte          | Glas       | Stein, Holz | 5 s    | 150               | beliebiges Bauland              |
+| Gebäude            | Erzeugt    | Braucht     | Zyklus | Unterhalt (/ min) | Standort                                           |
+| ------------------ | ---------- | ----------- | ------ | ----------------- | -------------------------------------------------- |
+| Fischerhütte       | Nahrung    | —           | 4 s    | 30                | an Wasser angrenzend                               |
+| Holzfäller         | Holz       | —           | 3 s    | 30                | mind. 1 freie Waldkachel im Radius 2               |
+| Jagdhütte          | Nahrung    | —           | 5 s    | 30                | mind. 10 freie Waldkacheln im Radius 3 (sturmfest) |
+| Rinderfarm         | Nahrung    | —           | 2 s    | 60                | mind. 16 freie Graskacheln im Radius 3             |
+| Steinbruch         | Stein      | —           | 6 s    | 60                | an Gebirge angrenzend                              |
+| Schäferei          | Wolle      | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2                    |
+| Weberei            | Stoff      | Wolle       | 5 s    | 90                | beliebiges Bauland                                 |
+| Zuckerrohrplantage | Zuckerrohr | —           | 5 s    | 60                | mind. 4 Graskacheln im Radius 2                    |
+| Brennerei          | Rum        | Zuckerrohr  | 5 s    | 120               | beliebiges Bauland                                 |
+| Werkzeugmacher     | Werkzeug   | Holz        | 8 s    | 150               | beliebiges Bauland                                 |
+| Glashütte          | Glas       | Stein, Holz | 5 s    | 150               | beliebiges Bauland                                 |
 
 Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukosten 200 Geld, 15 Holz,
 3 Werkzeug). Er lohnt sich erst, wenn du viel Werkzeug brauchst: Sein Unterhalt läuft auch im
 Leerlauf, und Werkzeug zu verkaufen bringt weniger, als es kostet. Bauland sind Sand, Gras und Wald
 ohne Gebäude oder Weg; Gebirge und Wasser sind unbebaubar.
+
+**Ausbau:** Die meisten Betriebe lassen sich ausbauen. Stufe 2 (ab Freischaltung U3) kostet Geld, Holz und
+Werkzeug sowie 2–3 Stoff als Gebühr, Stufe 3 (ab U5) kostet mehr und 2–3 Rum als Gebühr. Brennerei und Glashütte brauchen dafür auch Stein (Stufe 2: 3 bzw. 5, Stufe 3: 4 bzw. 8). Der Zyklus sinkt auf etwa
+× 0,6 bzw. × 0,4, der Unterhalt steigt (Fischerhütte: 30 → 42 → 54 / min). Baue die Kette gemeinsam aus, sonst
+wartet der nächste Betrieb auf Ware. Ein Abriss erstattet die Hälfte von Bau- und Stufenkosten, die Gebühr nicht.
+
+**Freie Kacheln:** «Frei» heisst ohne Gebäude und ohne Weg; die Kacheln unter dem eigenen Grundriss zählen nicht.
+Holzfäller und Jagdhütte prüfen das laufend: Ist der Wald im Umkreis abgeholzt oder zugebaut, steht der Betrieb still
+(«Kein freier Wald in der Nähe»), ohne Fortschritt und ohne Verbrauch; sein Unterhalt läuft weiter. Abhilfe:
+aufforsten (`Q`) oder weiter weg neu bauen.
+
+**Auslastung:** gleitender Anteil der Zeit, in der der Betrieb arbeitet statt zu warten (100 % = nie ausgebremst). Der Wert ist ein Mittel über etwa 256 Spielschritte und sinkt darum erst nach einigen
+hundert Schritten, wenn ein Betrieb still steht.
 
 Die **Glashütte** (2×2, Baukosten 300 Geld, 20 Holz, 6 Werkzeug, 10 Stein; erst nach dem Bürger-Ziel) braucht
 Stein **und** Holz: Sie entnimmt je Zyklus beides zugleich und nur, wenn beides im Lager liegt; sonst «Wartet auf
@@ -302,8 +325,7 @@ mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird
 
 ### Unterhalt und Geld
 
-- Alle 10 Sekunden wird der Unterhalt aller Gebäude abgezogen (Angaben «/ min» rechnen das auf eine Minute um) — auch nicht angebundener. Im selben Takt
-  kommen die Steuern herein. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
+- Unterhalt und Steuern werden je Spielschritt gebucht, Bruchteile werden mitgeführt (die Kasse zählt stetig); die Angaben «/ min» sind Raten. Der Münzton kommt weiter im 10-Sekunden-Takt. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
   der Tooltip nennt Steuern und Unterhalt je Minute; eine negative Bilanz ist hervorgehoben.
 - Geld darf negativ werden. Solange es negativ ist, sind Bauen, Kaufen und Aufstieg gesperrt, bis
   wieder Geld hereinkommt (Verkauf, Auftrag oder Steuern).
@@ -354,6 +376,11 @@ Ein Haus steigt beim nächsten Wachstumstakt auf, wenn
 - von jeder neuen Ware der nächsten Stufe mindestens eine Einheit im Lager liegt und
 - die Aufstiegskosten bezahlbar sind (sie werden dann abgezogen).
 
+Würde eine Ware der nächsten Stufe durch den Aufstieg ins Minus rutschen (Erzeugung minus Verbrauch, Lagerbestand
+zählt nicht), dauert die Wartezeit doppelt so lange (60 statt 30 Sekunden, «niedrig» 30 statt 15). Das ist ein
+Zögern, kein Verbot: Der Aufstieg bleibt möglich.
+Das Haus-Panel zeigt bei einem solchen Defizit eine Zeile mit dem Restvorrat («Vorrat reicht noch 2 Minuten»); fehlt beim Aufstieg Stein und steht eine Glashütte, nennt es sie als zweiten Steinverbraucher.
+
 Beim Aufstieg wird von jeder neuen Ware eine Einheit aus dem Lager entnommen und direkt ans Haus geliefert.
 
 Die Einwohnerzahl bleibt beim Aufstieg erhalten. Das Info-Panel eines Wohnhauses zeigt Einwohner,
@@ -362,9 +389,9 @@ Kartensymbol), jede noch fehlende Aufstiegsbedingung und die Kosten.
 
 ### Steuern und Steuerregler
 
-Alle 10 Sekunden zahlt jedes Haus Einwohner × Steuersatz seiner Stufe. Sind nicht alle Bedürfnisse und
+Jedes Haus zahlt Einwohner × Steuersatz seiner Stufe, gerechnet als Rate je 10 Sekunden und laufend verbucht. Sind nicht alle Bedürfnisse und
 Dienste erfüllt, zahlt es nur die Hälfte. Die Summe aller Häuser wird mit dem Prozentsatz der
-Steuerstufe verrechnet und einmal abgerundet.
+Steuerstufe verrechnet; Bruchteile eines Geldstücks bleiben als Übertrag stehen und gehen nicht verloren.
 
 Der **Steuerregler** in der Kopfzeile (jeder Knopf nennt im Tooltip Steuersatz, Aufstiegszeit und Belegung) gilt für die ganze Insel:
 

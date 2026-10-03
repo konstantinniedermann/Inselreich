@@ -4,6 +4,8 @@ import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
 import { SCENARIOS } from '../sim/scenarios';
 import {
+  BALANCE_REFRESH_MS,
+  balanceDue,
   balanceText,
   balanceView,
   chipRole,
@@ -166,5 +168,14 @@ describe('M10 Kopfzeilen-Chips, Rolle', () => {
     expect(taxView(w)).not.toBeNull();
     expect(chipRole('BUTTON')).toBeNull();
     expect(chipRole('SPAN')).toBe('img');
+  });
+});
+
+describe('M11 Kopfzeile im Fluss (Spec 7)', () => {
+  it('AK-UI-02 balanceDue: 400 ms → false, 500 ms → true; erster Aufruf immer fällig', () => {
+    expect(BALANCE_REFRESH_MS).toBe(500);
+    expect(balanceDue(1000, 600)).toBe(false);
+    expect(balanceDue(1100, 600)).toBe(true);
+    expect(balanceDue(0, -Infinity)).toBe(true);
   });
 });

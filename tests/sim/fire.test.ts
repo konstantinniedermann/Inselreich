@@ -279,7 +279,7 @@ describe('M6 Brand und Feuerwache', () => {
     expect(d2.state).toBe('ok');
   });
 
-  it('AK-S2-10 Feuerwache und Brennbarkeit laut Spec 4.4/5.5', () => {
+  it('AK-S2-10 (M11 S2) Feuerwache und Brennbarkeit laut Spec 4.4/5.5', () => {
     expect(BUILDING_DEFS.firestation).toMatchObject({
       name: 'Feuerwache',
       w: 1,
@@ -296,10 +296,12 @@ describe('M6 Brand und Feuerwache', () => {
     expect(flammable).toEqual([
       'bathhouse',
       'canefarm',
+      'cattlefarm',
       'chapel',
       'distillery',
       'fisher',
       'glassworks',
+      'hunter',
       'lumberjack',
       'quarry',
       'school',

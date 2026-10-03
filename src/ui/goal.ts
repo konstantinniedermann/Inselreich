@@ -94,8 +94,10 @@ export function goalBanners(
   };
 }
 
-const withKey = (id: BuildingDefId): string =>
-  `${BUILDING_DEFS[id].name} (${hotkeyLabel({ kind: 'build', defId: id })})`;
+const withKey = (id: BuildingDefId): string => {
+  const k = hotkeyLabel({ kind: 'build', defId: id });
+  return k === null ? BUILDING_DEFS[id].name : `${BUILDING_DEFS[id].name} (${k})`;
+};
 
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
 export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;

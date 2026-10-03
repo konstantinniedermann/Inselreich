@@ -19,7 +19,7 @@ const PULSE_MS = 900;
 const OUTLINE = 'rgba(255,255,255,0.85)'; // Umriss Weiss (Signalebene)
 const DARK = PALETTE.wallTimber; // dunkle Kontur für Lesbarkeit auf hellem Grund
 
-export type MarkShape = 'arrow' | 'crate';
+export type MarkShape = 'arrow' | 'crate' | 'stump';
 export interface StatusMark {
   shape: MarkShape;
   color: string;
@@ -28,6 +28,7 @@ export interface StatusMark {
 const MARKS: Readonly<Record<string, StatusMark>> = Object.freeze({
   waitingInput: { shape: 'arrow', color: PALETTE.signalWarn }, // Zufuhr fehlt
   storageFull: { shape: 'crate', color: PALETTE.signalYellow }, // Lager voll
+  noForest: { shape: 'stump', color: PALETTE.signalRed }, // kein freier Wald
 });
 
 /** Marke zu einem Betriebszustand; jeder andere (auch künftige) Zustand liefert `null`, nie eine Ausnahme. */
@@ -51,6 +52,9 @@ function shapePath(
     ctx.lineTo(cx + s / 2, by - s);
     ctx.lineTo(cx, by);
     ctx.closePath();
+  } else if (shape === 'stump') {
+    ctx.arc(cx, by - 0.62 * s, 0.34 * s, 0, Math.PI * 2); // Krone
+    ctx.rect(cx - 0.08 * s, by - 0.3 * s, 0.16 * s, 0.3 * s); // Stamm
   } else {
     ctx.rect(cx - s / 2, by - s, s, s);
   }
@@ -99,6 +103,14 @@ export function drawStatusMarks(
       ctx.lineTo(cx + s / 2, by - s * 0.7);
       ctx.moveTo(cx, by - s * 0.7);
       ctx.lineTo(cx, by);
+      ctx.stroke();
+    }
+    if (mark.shape === 'stump') {
+      // Schrägstrich: „kein Baum"
+      ctx.beginPath();
+      ctx.moveTo(cx - s / 2, by);
+      ctx.lineTo(cx + s / 2, by - s);
+      ctx.strokeStyle = DARK;
       ctx.stroke();
     }
     ctx.restore();

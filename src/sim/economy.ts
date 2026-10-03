@@ -1,6 +1,6 @@
-import { BUILDING_DEFS } from './defs/buildings';
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
+import { upkeepOf } from './levels';
 import type { Cost, GoodId, Result, World } from './types';
 import { fail, ok } from './types';
 
@@ -53,14 +53,18 @@ export function grantRefund(world: World, cost: Cost): void {
   addStock(world, 'stone', cost.stone);
 }
 
+/** Unterhalt als Nominalwert je 100 Ticks. */
 export function totalUpkeep(world: World): number {
   let sum = 0;
-  for (const b of Object.values(world.buildings)) sum += BUILDING_DEFS[b.defId].upkeep;
+  for (const b of Object.values(world.buildings)) sum += upkeepOf(b);
   return sum;
 }
 
+/** Bucht den Unterhalt je Schritt mit ganzzahligem Übertrag; `stats.upkeep` bleibt der Nominalwert. */
 export function tickEconomy(world: World): void {
-  const upkeep = totalUpkeep(world);
-  world.stats.upkeep = upkeep;
-  if (world.tick > 0 && world.tick % UPKEEP_INTERVAL === 0) world.money -= upkeep;
+  world.stats.upkeep = totalUpkeep(world);
+  world.upkeepCarry += world.stats.upkeep;
+  const n = Math.floor(world.upkeepCarry / UPKEEP_INTERVAL);
+  world.money -= n;
+  world.upkeepCarry -= n * UPKEEP_INTERVAL;
 }

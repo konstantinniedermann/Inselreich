@@ -74,3 +74,18 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
   unberührt.
 - **Neuer Zustand `noService`** (ab Task 4, Amtsstube) mit der Prüfreihenfolge Ausfall → Anbindung → Dienst →
   Sturm → Input.
+
+## Nachtrag M11 (2026-10-03): Buchung je Schritt, Dämpfung, `noForest`, `eff`
+
+- `step`-Reihenfolge unverändert. `tickTaxes`/`tickEconomy` buchen je Schritt mit Übertrag; `stats` bleiben
+  Nominalwerte je 100 Ticks.
+- `tickPopulation` rechnet im Wachstumstakt einmal vor der Häuserschleife das Budget (`goodsBalance` aus `flow.ts`);
+  jeder erfolgreiche Aufstieg zieht sein Δ ab (Id-Reihenfolge, deterministisch). Zwischen den Takten keine Berechnung.
+- Begründung: Aufstieg und Buchung im selben Schritt sehen denselben Stand (RF-2). Kosten bei Irrtum: Faktor 1.
+- Prüfreihenfolge in `tickProduction`: Ausfall → Anbindung → Dienst → Wald (`noForest`) → Sturm → Input. `noForest`
+  steht nach `noService` und vor dem Sturm-Aussetzer; es wird nicht gespeichert bewertet, sondern je Schritt neu
+  (`siteRuleOk` mit `free`, Holzfäller und Jagdhütte). Der Betrieb steht still (Fortschritt bleibt stehen), der
+  Unterhalt läuft weiter.
+- `eff` (gleitende Auslastung, `EFF_WINDOW` 256) wird in jedem Zweig nachgeführt, auch bei Stillstand (Zielwert 0).
+  Geld und Waren hängen nicht an `eff`; es ist reine Anzeige- und Diagnosegrösse. Folge: Nach Eintritt von
+  `noForest` fällt die Anzeige erst nach einigen hundert Schritten.

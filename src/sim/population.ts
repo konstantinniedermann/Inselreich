@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { TAX_LEVELS, TIERS, UNSATISFIED_TAX_FACTOR } from './defs/tiers';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { GROWTH_INTERVAL, UPKEEP_INTERVAL } from './defs/timing';
+import { GROWTH_INTERVAL, UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
@@ -13,6 +13,7 @@ import type {
   TierDef,
   World,
 } from './types';
+import { budgetFrom, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { inSupplyRange } from './supply';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
 import { center } from './world';
@@ -117,8 +118,17 @@ function newNeeds(current: TierDef, next: TierDef): GoodId[] {
   return (Object.keys(next.needs) as GoodId[]).filter((g) => !(g in current.needs));
 }
 
-/** Prüft alle Aufstiegsbedingungen und nennt jede unerfüllte als deutschen Grund. */
-export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons: string[] } {
+/**
+ * Prüft alle Aufstiegsbedingungen und nennt jede unerfüllte als deutschen Grund. Drückt der Aufstieg
+ * ein Gut der Zielstufe ins Minus, gilt die Wartezeit `UPGRADE_DEFICIT_WAIT_FACTOR`-fach. Das Budget
+ * kommt vom Wachstumstakt (`tickPopulation`); ohne Angabe (UI) wird es frisch gerechnet. Lager und
+ * Brand zählen nicht (nominell, R115).
+ */
+export function upgradeStatus(
+  world: World,
+  b: Building,
+  budget?: Budget,
+): { ok: boolean; reasons: string[] } {
   const house = b.house;
   if (!house) return { ok: false, reasons: ['Kein Wohnhaus'] };
   const current = TIERS[house.tier];
@@ -129,7 +139,9 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
   if (lock !== null) reasons.push(lock);
   if (upgradeStopActive(world, house.tier)) reasons.push('Aufstieg in der Amtsstube angehalten');
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
-  const wait = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
+  const base = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
+  const damped = base !== null && deficitGood(budget ?? budgetFrom(goodsBalance(world)), house);
+  const wait = base === null ? null : base * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
   if (wait === null) reasons.push('Steuer zu hoch');
   else if (world.tick - house.satisfiedSince < wait)
     reasons.push(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
@@ -151,10 +163,14 @@ export function upgradeStatus(world: World, b: Building): { ok: boolean; reasons
  * Steigt das Haus auf, wenn `upgradeStatus` ok meldet; zieht Kosten ab und entnimmt je neuem
  * Bedarfsgut genau eine Einheit. Sie gilt als ausgeliefert (`demand` 0, `satisfied` true): so
  * nehmen zwei Häuser nicht dieselbe Einheit, und das Haus zählt gleich im selben Tick als versorgt.
+ * Mit `budget` (Wachstumstakt) zieht nur ein erfolgreicher Aufstieg sein Δ ab (Id-Reihenfolge).
  */
-export function tryUpgrade(world: World, b: Building): boolean {
+export function tryUpgrade(world: World, b: Building, budget?: Budget): boolean {
   const house = b.house;
-  if (!house || !upgradeStatus(world, b).ok) return false;
+  if (!house || !upgradeStatus(world, b, budget).ok) return false;
+  const delta = upgradeDelta(house);
+  if (budget)
+    for (const g of Object.keys(delta) as GoodId[]) budget[g] = (budget[g] ?? 0) - delta[g]!;
   const current = TIERS[house.tier];
   const next = TIERS[(house.tier + 1) as Tier];
   pay(world, current.upgradeCost!);
@@ -177,7 +193,10 @@ export function houseCap(world: World, house: HouseState): number {
   );
 }
 
+/** Je Wachstumstakt einmal das Budget (`goodsBalance`), danach je Haus in Id-Reihenfolge. */
 export function tickPopulation(world: World): void {
+  const growth = world.tick % GROWTH_INTERVAL === 0 && world.tick > 0;
+  const budget = growth ? budgetFrom(goodsBalance(world)) : undefined;
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
@@ -187,32 +206,41 @@ export function tickPopulation(world: World): void {
     consume(world, house, tier);
     const met = allNeedsMet(house, tier);
     if (!met) house.satisfiedSince = world.tick;
-    if (world.tick % GROWTH_INTERVAL === 0 && world.tick > 0) {
+    if (growth) {
       const cap = houseCap(world, house);
       if (house.inhabitants > cap) house.inhabitants -= 1;
       else if (met) house.inhabitants = Math.min(cap, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);
-      tryUpgrade(world, b);
+      tryUpgrade(world, b, budget);
     }
   }
 }
 
-/** Steuern je Buchungstakt: Einwohner × Steuersatz, halbiert bei unerfüllten Bedürfnissen, dann × Steuerstufe. Erst summieren, dann einmal abrunden. */
-export function totalTaxes(world: World): number {
+/** Steuereinheiten je Schritt (ganzzahlig): Einwohner × Steuersatz × (erfüllt ? TAX_UNIT : 1), dann × Steuerstufe in Prozent. */
+export function taxUnits(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
     const tier = TIERS[house.tier];
-    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? 1 : UNSATISFIED_TAX_FACTOR);
+    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? TAX_UNIT : 1);
   }
-  return Math.floor((sum * TAX_LEVELS[effectiveTaxLevel(world)].pct) / 100);
+  return sum * TAX_LEVELS[effectiveTaxLevel(world)].pct;
 }
 
-/** Aktualisiert die Steuerstatistik und bucht sie im selben Takt wie den Unterhalt. */
+/** Steuern als Nominalwert je 100 Ticks (Anzeige). Erst summieren, dann einmal abrunden. */
+export function totalTaxes(world: World): number {
+  return Math.floor(taxUnits(world) / (TAX_UNIT * 100));
+}
+
+/** Aktualisiert die Steuerstatistik (Nominalwert je 100 Ticks) und bucht je Schritt mit ganzzahligem Übertrag. */
 export function tickTaxes(world: World): void {
-  world.stats.taxes = totalTaxes(world);
-  if (world.tick > 0 && world.tick % UPKEEP_INTERVAL === 0) world.money += world.stats.taxes;
+  const units = taxUnits(world);
+  world.stats.taxes = Math.floor(units / (TAX_UNIT * 100));
+  world.taxCarry += units;
+  const n = Math.floor(world.taxCarry / TAX_CARRY_DIVISOR);
+  world.money += n;
+  world.taxCarry -= n * TAX_CARRY_DIVISOR;
 }
 
 /** Bürger und höher: Einwohner aller Häuser ab Stufe 3 (M8 4.2; ein Aufstieg 3 → 4 senkt die Zahl nie). */

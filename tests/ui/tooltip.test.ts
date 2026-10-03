@@ -63,12 +63,13 @@ describe('Krisen-Tooltip (M6-AK-U1-05)', () => {
 });
 
 describe('M8 Tooltips (AK-U2-01)', () => {
-  it('AK-U2-01 Glashütte und Badehaus wörtlich nach Spec 14.3; Hebel 40; Weberei wie vor M8', () => {
+  it('AK-U2-01 Glashütte und Badehaus wörtlich nach Spec 14.3; Hebel 40; Weberei wie vor M8 (M11 Ausstoss je Stufe)', () => {
     expect(tooltipLines({ kind: 'build', defId: 'glassworks' })).toEqual([
       'Glashütte (O)',
       'Kosten: 300 Geld · 20 Holz · 6 Werkzeug · 10 Stein',
       'Unterhalt: 150 / min',
       'Erzeugt: Glas 12 / min',
+      'Ausstoss je Stufe: 12 · 20 · 30 / min',
       'Braucht: Stein 12 / min · Holz 12 / min',
       'Brennbar',
       'Standort: frei',
@@ -103,16 +104,16 @@ describe('M8 Tooltips (AK-U2-01)', () => {
 });
 
 describe('M8 Bauleiste (Änderung S11)', () => {
-  it('Spec M8 14.2 Glashütte und Badehaus erst ab der Freischaltung (Vorprüfung AK-U2-06, AK-U2-10)', () => {
+  it('Spec M8 14.2 (M11 S2) Glashütte und Badehaus erst ab der Freischaltung (Vorprüfung AK-U2-06, AK-U2-10)', () => {
     const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // alles ausser U6, wie M8 vor dem Ziel
-    expect(buildEntries(w, 'production')).toHaveLength(8);
+    expect(buildEntries(w, 'production')).toHaveLength(10);
     expect(buildEntries(w, 'production')).not.toContain('glassworks');
     expect(buildEntries(w, 'public')).toHaveLength(4); // M10: + Amtsstube (U3)
     expect(buildEntries(w, 'public')).not.toContain('bathhouse');
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(buildEntries(w, 'production')).toHaveLength(9);
+    expect(buildEntries(w, 'production')).toHaveLength(11);
     expect(buildEntries(w, 'production')).toContain('glassworks');
     expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
@@ -127,29 +128,30 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
     w.unlocked = ids;
     return w;
   };
-  it('AK-U1-01 Zählung je Stand (Krisen normal und off), leere Kategorien verborgen', () => {
+  it('AK-U1-01 (M11 S2) Zählung je Stand (Krisen normal und off), leere Kategorien verborgen', () => {
     expect(count(at(['U0']))).toEqual({ infrastructure: 0, housing: 1, production: 2, public: 0 });
     expect(visibleCategories(at(['U0']))).toEqual(['housing', 'production']);
     expect(buildEntries(at(['U0']), 'production')).toEqual(['fisher', 'lumberjack']);
     expect(count(at(['U0', 'U2']))).toEqual({
       infrastructure: 0,
       housing: 1,
-      production: 5,
+      production: 6,
       public: 2,
     });
     expect(count(at(['U0', 'U2'], 'off')).public).toBe(1);
     expect(count(at(['U0', 'U2', 'U3'])).public).toBe(3);
-    expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 7, public: 4 });
-    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(8);
+    expect(count(at(['U0', 'U2', 'U3'])).production).toBe(7);
+    expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 9, public: 4 });
+    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(10);
     expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']))).toMatchObject({
-      production: 9,
+      production: 11,
       public: 5,
     });
     expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
     expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
       infrastructure: 1,
       housing: 1,
-      production: 9,
+      production: 11,
       public: 5,
     });
     expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);
@@ -225,14 +227,36 @@ describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
 });
 
 describe('M10 Symbole im Einbau (Spec 14)', () => {
-  it('AK-U4-04 (K2) neue Einträge nach U2 tragen „neu" bis zur ersten Wahl; nach Laden keine', () => {
+  it('AK-U4-04 (M11 S2) (K2) neue Einträge nach U2 tragen „neu" bis zur ersten Wahl; nach Laden keine', () => {
     const w = createWorld(3, { crisisLevel: 'normal' });
     const prev = [...w.unlocked];
     w.unlocked = ['U0', 'U2'];
     const fresh = newBuildEntries(prev, w);
-    expect([...fresh]).toEqual(['quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation']);
+    expect([...fresh]).toEqual([
+      'hunter',
+      'quarry',
+      'sheepfarm',
+      'weaver',
+      'chapel',
+      'firestation',
+    ]);
     fresh.delete('chapel'); // erste Wahl
     expect(fresh.has('chapel')).toBe(false);
     expect(newBuildEntries(w.unlocked, w).size).toBe(0); // Laden: Basis = geladener Stand
+  });
+});
+
+describe('M11 Bauleisten-Tooltip (Spec 7)', () => {
+  it('AK-UI-06 Tooltip: „Erzeugt" bleibt Stufe 1, darunter Ausstoss je Stufe; Kapelle ohne', () => {
+    const t = tooltipLines({ kind: 'build', defId: 'fisher' });
+    const i = t.indexOf('Erzeugt: Nahrung 15 / min');
+    expect(i).toBeGreaterThan(0);
+    expect(t[i + 1]).toBe('Ausstoss je Stufe: 15 · 25 · 37.5 / min');
+    expect(tooltipLines({ kind: 'build', defId: 'hunter' })).toContain(
+      'Ausstoss je Stufe: 12 · 20 · 30 / min',
+    );
+    expect(
+      tooltipLines({ kind: 'build', defId: 'chapel' }).some((l) => l.startsWith('Ausstoss')),
+    ).toBe(false);
   });
 });
