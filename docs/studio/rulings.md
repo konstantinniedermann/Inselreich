@@ -955,3 +955,15 @@ Klangqualität prüft der Nutzer im Browser (Hörcheck), Nachbesserung als eigen
 production-integrator. — Kosten bei Irrtum: Revert eines Commits.
 
 Entscheider: L0 · Anlass: Bericht H-A1 · ADR: —
+
+## R175 · 2026-10-03 · M10 Stufe 1, Plan-Widersprüche
+
+Ruling: (1) H-A1 auf main @ aa0c66a (CI, Pages grün), Paket done. (2) M10-S1B abgenommen
+(`feat/m10-sim` @ f811e28, `feat/m10-forest` @ 5a81459 bewusst rot bis T03c; BG-1 winTick 6050,
+minMoney 57). (3) Plan-Widerspruch AK-F1-08: es gilt T03b (Test in `tests/sim/forest.test.ts`).
+AK-F1-09 „mit Speichern" in T04 mit abdecken, sonst offen für T05. Veralteter Testname „uses version 3"
+als Trivial-Fix. (4) Nächste Instanz lead-tech T03c–T04c, Budget +3 (Stufe 1 gesamt 11). (5) Zweiter
+Strang: lead-art H-R3 Statusmarken Kurzdesign (state.md Schritt 2). — Kosten bei Irrtum: ein Test
+wandert die Datei.
+
+Entscheider: L0 · Anlass: Berichte M10-S1B, H-A1-Merge · ADR: —
