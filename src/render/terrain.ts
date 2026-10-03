@@ -31,26 +31,36 @@ const CHUNK = 512; // Ebenen-Pixel je ImageData-Block (begrenzt den Speicher)
 const SHADE_MAX = 0.08;
 const SHADE_MAX_MOUNTAIN = 0.12;
 // H-R9 B1: Wiese und Strand tragen mit dem Mikrorelief bis ±14 %; Wald bleibt bei ±8 % (Bäume lesbar)
-const SHADE_MAX_FLUR = 0.14;
-const RELIEF_GAIN = 0.3; // Helligkeit je Höhengefälle des Mikroreliefs (die Kuppen sind flach, ~0,15 Höhe je Kachel)
+const SHADE_MAX_FLUR = 0.2; // H-R9 R3: ±20 % (Playtest: Wiese bei Zoom 1 kaum von main zu unterscheiden)
+const HOLLOW_GAIN = 2.5; // Senke: Anteil des kühlen Tons je umgewandelter Schattierung (0,12 → 30 %)
+const HOLLOW_FROM = 0; // ab dieser Abdunklung (hier: jeder) wird …
+const HOLLOW_SHARE = 0.6; // … dieser Anteil der weiteren Abdunklung zum kühlen Farbton statt dunkler
+const RELIEF_GAIN = 0.6; // Helligkeit je Höhengefälle des Mikroreliefs (R3: verdoppelt, Hangbeleuchtung sichtbar)
 const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
-const DUNE_AMP = 0.8; // Höhe der Dünenrücken auf trockenem Sand
+const DUNE_AMP = 1.3; // Höhe der Dünenrücken auf trockenem Sand (R3: weniger Fläche, dafür lesbar)
 const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
-const WARM_MAX = 0.9; // warm/trocken: Mischung zu Strohgrün
-const COOL_MAX = 0.7; // kühl/satt: Mischung zu Tiefgrün
-const VEIL_MAX = 0.3; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
+const WARM_MAX = 0.75; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
+const COOL_MAX = 0.9; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
+const VEIL_MAX = 0.42; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
 const TONE_LIGHT = 0.08; // trockene Kuppen bis +8 % Helligkeit (zusammen mit Warmton und Schleier auf `grassLight` gedeckelt)
 const TONE_DARK = 0; // satte Senken nicht dunkler: sonst rückt das Gras an den alten Waldgrund (ΔE ≥ 10, I5); die Tiefe trägt das Relief
 const MOTTLE_AMP = 0.035; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
+/** H-R9 Runde 3: Anteil der Gebirgsfuss-Schattierung, der an Nicht-Gebirgsknoten auf der Schattenseite entfällt. */
+const FOOT_DAMP = 1;
+/** … auch an Gebirgsknoten im Übergangsband (Indikator darunter): dort ragt die Geländeebene unter dem Massiv hervor. */
+const FOOT_DAMP_IND = 0.95;
+/** H-R9 Runde 3: Fels im Übergangsband (Indikator < 1) läuft zum hellen Schutt des Massivfusses statt dunkel. */
+const ROCK_EDGE_DEBRIS = 0.8;
+const ROCK_EDGE_REACH = 2.5; // voll ab Gebirgsanteil 0,6 (≈ 0,1 Kachel innerhalb einer geraden Kante, an Ecken tiefer)
 const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreht), trägt die Plastik im Inneren
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 0.8; // höchstens 72 % Mischung zum Kleegrün ((1 − 0,1) · 0,8 bei Fleckwert 1)
-const DRY_MAX = 0.5; // höchstens 45 % Mischung zu sandDry ((1 − 0,1) · 0,5; darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 1; // höchstens 90 % Mischung zum Kleegrün ((1 − 0,1) · 1 bei Fleckwert 1)
+const DRY_MAX = 0.55; // höchstens 50 % Mischung zu sandDry ((1 − 0,1) · 0,55; darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -73,7 +83,6 @@ const ROT_PATCH = 1.07,
   ROT_HILL = 0.33,
   ROT_RELIEF = 0.77,
   ROT_RELIEF2 = 1.31,
-  ROT_DUNE = 0.55,
   ROT_DUNE2 = 0.41,
   ROT_MOTTLE = 0.93,
   ROT_WARM = 0.6;
@@ -220,6 +229,8 @@ export interface TerrainGrid {
    * trockene Stellen auf Gras bzw. Lichtungen im Wald. Ein Feld statt zwei spart Rechenzeit im Frame-Budget.
    */
   patch: Float32Array;
+  /** H-R9 R3: Gebirgsanteil rein bilinear (ohne Plateau) — Schutt am Gebirgsrand, wo das Massiv die Ecke rundet. */
+  mfoot: Float32Array;
   /** H-R9: Wiesenton −1 satt/kühl … +1 trocken/warm (grosser Verlauf, mittlere Flecken, Kuppen trockener). */
   warm: Float32Array;
   /** H-R9: feines gedrehtes Mottling −1…1. */
@@ -239,21 +250,27 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
   );
 }
 /**
- * H-R9 B2: ungewichteter Dünenrücken 0…1 — gestreckte Rücken: Rauschen entlang u gedehnt (Frequenz 0,09), quer dazu eng
- * (0,5); Richtung variiert tieffrequent, die Rückenstärke läuft längs aus und setzt versetzt neu an (einzelne Dünen).
+ * H-R9 B2 (R3): ungewichteter Dünenrücken 0…1 — einzelne gestreckte Kuppen statt durchgehender Bänder: Richtung
+ * (±0,55 rad) und Wellenlänge (Faktor 0,7–1,3) variieren tieffrequent, die Rücken setzen längs aus (Hüllkurve) und
+ * nur etwa die Hälfte des trockenen Strands trägt überhaupt Dünen (Maske).
  */
+/** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
+export const duneMask = (seed: number, fx: number, fy: number): number =>
+  smoothstepClamp((rotNoise(seed + 111, fx, fy, 0.1, ROT_RELIEF) - 0.515) * 5);
 export function duneRidge(seed: number, fx: number, fy: number): number {
-  const ang = ROT_DUNE + 0.7 * (valueNoise(seed + 110, fx * 0.05, fy * 0.05) - 0.5);
+  const mask = duneMask(seed, fx, fy);
+  if (mask <= 0) return 0;
+  // Richtung π/4 ± 0,55 rad: auf dem Bild waagrecht ± 30°, nie entlang der Kachelachsen (0 bzw. π/2)
+  const ang = Math.PI / 4 + 1.1 * (rotNoise(seed + 110, fx, fy, 0.12, ROT_RELIEF) - 0.5);
+  const q = 0.7 + 0.6 * rotNoise(seed + 112, fx, fy, 0.07, ROT_RELIEF2);
   const c = Math.cos(ang),
     sn = Math.sin(ang);
   const u = c * fx - sn * fy,
     v = sn * fx + c * fy;
-  const env = smoothstepClamp((valueNoise(seed + 109, u * 0.06, v * 0.3) - 0.38) * 3.2);
-  return (
-    env *
-    (0.65 * valueNoise(seed + 107, u * 0.09, v * 0.5) +
-      0.35 * valueNoise(seed + 108, u * 0.2, v * 0.95 + ROT_DUNE2))
-  );
+  // längs kurze Kuppen (≈ 3 Kacheln), je Rücken versetzt
+  const env = smoothstepClamp((valueNoise(seed + 109, u * 0.33, v * 0.28 * q) - 0.45) * 4);
+  const crest = 1 - Math.abs(2 * valueNoise(seed + 107, u * 0.12, v * 0.5 * q + ROT_DUNE2) - 1);
+  return mask * env * crest * crest;
 }
 /** H-R9 B2: Dünengewicht nach Küstenwert: 0 am nassen Saum (< WET_SAND), voll DUNE_RAMP Kacheln dahinter. */
 export const duneWeight = (smooth: number): number =>
@@ -316,6 +333,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     shade = new Float32Array(n),
     patch = new Float32Array(n),
     warm = new Float32Array(n),
+    mfoot = new Float32Array(n),
     mottle = new Float32Array(n),
     veil = new Float32Array(n),
     gwArr = new Float32Array(n),
@@ -323,6 +341,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     hillRaw = new Float32Array(n), // ungewichtet: das Gewicht darf selbst kein Gefälle erzeugen
     duneRaw = new Float32Array(n),
     height = new Float32Array(n),
+    footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
   const seed = world.seed;
@@ -360,6 +379,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       rock[k] = smoothstepClamp((r - 0.5) * 2.2 + 0.5);
       // R149/R170: Gebirgshöhe aus dem Bilinearfeld (sanfter Fuss) plus Kuppen im Gebirge
       const foot = sampleField(fields.types.mountain, wx, wy);
+      mfoot[k] = foot;
       if (cls[k] !== 0) {
         // nur an Landknoten (Wasser braucht keine Flecken); Wert schon geformt, das Pixelfeld interpoliert nur
         patch[k] = Math.max(
@@ -393,17 +413,21 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       }
       gwArr[k] = gw;
       swArr[k] = sw;
+      footH[k] =
+        FOOT_HEIGHT * foot + HILL_HEIGHT * foot * rotNoise(seed + 29, fx, fy, 0.9, ROT_HILL);
       height[k] =
         smooth[k]! +
-        FOOT_HEIGHT * foot +
-        HILL_HEIGHT * foot * rotNoise(seed + 29, fx, fy, 0.9, ROT_HILL) +
-        0.5 * valueNoise(seed + 17, fx * 0.5, fy * 0.5) +
-        MEADOW_WAVE * valueNoise(seed + 61, fx * 0.3, fy * 0.3);
+        footH[k]! +
+        // H-R9 R3: gedreht (die Hangbeleuchtung ist kräftiger, achsparallele Wellen zeigten das Kachelraster)
+        0.5 * rotNoise(seed + 17, fx, fy, 0.5, ROT_HILL) +
+        MEADOW_WAVE * rotNoise(seed + 61, fx, fy, 0.3, ROT_PATCH);
     }
   // R170: Knicke der Bilinearfelder (Kachelmitten) weichzeichnen, bevor das Gefälle das Relief bestimmt
   const tmp = new Float32Array(n);
   boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
+  boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
+  boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -413,8 +437,15 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         jd = Math.min(ny - 1, j + 1);
       const gx = (height[j * nx + ir]! - height[j * nx + il]!) / ((ir - il) * step);
       const gy = (height[jd * nx + i]! - height[ju * nx + i]!) / ((jd - ju) * step);
-      const lit = -(gx * LIGHT.x + gy * LIGHT.y);
+      let lit = -(gx * LIGHT.x + gy * LIGHT.y);
       const c0 = cls[j * nx + i];
+      if (c0 !== mt + 1 || ind[mt]![j * nx + i]! < FOOT_DAMP_IND) {
+        // H-R9 Runde 3: der Gebirgsfuss wirft an der Grasseite keinen dunklen Hof (das Massiv trägt das Relief)
+        const fgx = (footH[j * nx + ir]! - footH[j * nx + il]!) / ((ir - il) * step);
+        const fgy = (footH[jd * nx + i]! - footH[ju * nx + i]!) / ((jd - ju) * step);
+        const litFoot = -(fgx * LIGHT.x + fgy * LIGHT.y);
+        if (litFoot < 0) lit -= FOOT_DAMP * litFoot;
+      }
       const lim = c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : SHADE_MAX;
       let sh = Math.max(-lim, Math.min(lim, lit * SHADE_GAIN));
       // H-R9: Mikrorelief aus dem eigenen Höhenfeld (ungeglättet, rauscht nicht), Grenze je Knotentyp
@@ -443,6 +474,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     shade,
     patch,
     warm,
+    mfoot,
     mottle,
     veil,
     cls,
@@ -464,6 +496,7 @@ const C = {
   clover: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // kühleres Grün (R149)
   moss: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.crown, 0.55)),
   dryTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.sandDry, 0.58)), // H-R9: Goldoliv; der Luma-Deckel hält es auf grassLight
+  hollow: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.4)), // H-R9 R3: Senke kühl und satt (ΔE fern vom alten Waldgrund)
   lushTone: rgbOfCss(mixHex(PALETTE.grass, PALETTE.waterShallow, 0.3)), // H-R9: kühles Satt-Grün, ΔE2000 ≥ 17 zum alten Waldgrund
   veilTone: rgbOfCss(mixHex(PALETTE.grassLight, PALETTE.wallLime, 0.5)), // H-R9: Blumenschleier
   clearing: rgbOfCss(mixHex(FOREST_FLOOR, PALETTE.sandDry, 0.45)),
@@ -471,6 +504,11 @@ const C = {
   rock: rgb(PALETTE.rock),
   rockLight: rgb(PALETTE.rockLight),
   rockDark: rgb(PALETTE.rockDark),
+  // Schutt am Gebirgsfuss wie `DEBRIS` in massif.ts (rock/rockLight mit etwas sandDry)
+  debris: rgb(PALETTE.rock).map((v, i) => {
+    const l = v + (rgb(PALETTE.rockLight)[i]! - v) * 0.6;
+    return l + (rgb(PALETTE.sandDry)[i]! - l) * 0.15;
+  }) as [number, number, number],
 };
 const GRASS_LUMA_CAP =
   0.299 * C.grassLight[0]! + 0.587 * C.grassLight[1]! + 0.114 * C.grassLight[2]!;
@@ -548,6 +586,8 @@ function landColor(
       const n = (lerp(g.rock) - 0.5) * 2;
       if (n >= 0) mix3(C.rock, C.rockLight, n * ROCK_AMP, o);
       else mix3(C.rock, C.rockDark, -n * ROCK_AMP, o);
+      const out = 1 - lerp(g.mfoot);
+      if (out > 0) mix3(o, C.debris, Math.min(1, out * ROCK_EDGE_REACH) * ROCK_EDGE_DEBRIS, o);
       const f = 1 + grain * ROCK_GRAIN;
       o[0] = o[0]! * f;
       o[1] = o[1]! * f;
@@ -635,7 +675,14 @@ export function paintPixels(
           SHADE_MAX +
           (SHADE_MAX_MOUNTAIN - SHADE_MAX) * smoothstepClamp((wMt - 0.5) * 2) +
           (SHADE_MAX_FLUR - SHADE_MAX) * wFlur;
-        const sh = Math.max(-lim, Math.min(lim, lerp(shade)));
+        let sh = Math.max(-lim, Math.min(lim, lerp(shade)));
+        // H-R9 R3: Senken auf Gras/Strand ab HOLLOW_FROM nur noch teils dunkler, sonst kühler und satter (I5: reine
+        // Abdunklung rückt das Gras an den alten Waldgrund)
+        const deep = sh < -HOLLOW_FROM ? (-HOLLOW_FROM - sh) * wFlur * HOLLOW_SHARE : 0;
+        if (deep > 0) {
+          sh += deep;
+          mix3(col, C.hollow, Math.min(1, deep * HOLLOW_GAIN), col);
+        }
         const f = 1 + sh;
         col[0] = col[0]! * f;
         col[1] = col[1]! * f;
@@ -858,6 +905,7 @@ export function patchGrid(
     'rock',
     'shade',
     'patch',
+    'mfoot',
     'warm',
     'mottle',
     'veil',

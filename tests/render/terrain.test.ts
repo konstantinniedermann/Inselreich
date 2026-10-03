@@ -21,6 +21,7 @@ import {
   terrainPatchRect,
   tuftsFor,
   RELIEF_AMP,
+  duneMask,
   duneRidge,
   duneWeight,
   meadowHill,
@@ -199,10 +200,11 @@ describe('Waldboden und Licht', () => {
     const avg = (x0: number, x1: number, y0: number, y1: number) =>
       gs.reduce((a, g) => a + meanShade(g, x0, x1, y0, y1), 0) / gs.length;
     const g = gs[0]!;
+    // H-R9 R3: rechts/unten nur noch auf der Gebirgsseite gemessen; die Wiese davor trägt keinen dunklen Hof mehr
     const left = avg(7.6, 8.4, 9, 15),
-      right = avg(15.6, 16.4, 9, 15),
+      right = avg(15.2, 15.75, 9, 15),
       top = avg(9, 15, 7.6, 8.4),
-      bottom = avg(9, 15, 15.6, 16.4);
+      bottom = avg(9, 15, 15.2, 15.75);
     expect(left).toBeGreaterThan(0.02);
     expect(top).toBeGreaterThan(0.01);
     expect(right).toBeLessThan(-0.02);
@@ -214,11 +216,20 @@ describe('Waldboden und Licht', () => {
     let mtMax = 0;
     for (let k = 0; k < g.shade.length; k++) {
       const a = Math.abs(g.shade[k]!);
-      const limit = g.cls[k] === mtCls ? 0.12 : 0.14;
+      const limit = g.cls[k] === mtCls ? 0.12 : 0.2; // H-R9 R3: Gras/Strand ±20 %
       expect(a).toBeLessThanOrEqual(limit + 1e-6);
       if (g.cls[k] === mtCls) mtMax = Math.max(mtMax, a);
     }
     expect(mtMax).toBeGreaterThan(0.08); // das Gebirge nutzt die höhere Grenze tatsächlich
+  });
+
+  it('H-R9 R3 kein dunkler Hof: Wiese vor dem Gebirgsfuss (rechts/unten, Schattenseite) ist im Mittel kaum dunkler', () => {
+    const gs = Array.from({ length: 8 }, (_, k) => buildGrid(blockWorld(9 + k)));
+    const avg = (x0: number, x1: number, y0: number, y1: number) =>
+      gs.reduce((a, g) => a + meanShade(g, x0, x1, y0, y1), 0) / gs.length;
+    // gegen gleich breite Wiesenbänder weiter weg (das Mikrorelief mittelt sich über 8 Seeds nicht ganz heraus)
+    expect(avg(16.15, 16.9, 9, 15) - avg(20.15, 20.9, 9, 15)).toBeGreaterThan(-0.02);
+    expect(avg(9, 15, 16.15, 16.9) - avg(9, 15, 20.15, 20.9)).toBeGreaterThan(-0.02);
   });
 
   it('R149 Plastik: mittlere |shade| auf Land ≥ 0,035 und auf Gebirge ≥ 0,05 (Seeds 3, 5, 12588)', () => {
@@ -244,14 +255,14 @@ describe('Waldboden und Licht', () => {
     }
   });
 
-  it('R149 Pixel auf Gras tragen höchstens ±14 % Schattierung (H-R9, vorher ±8 %); Gebirgsanteil 0', () => {
-    // Alle Knoten tragen 0,2 bzw. 0,14: Gleiche Pixel auf Gras beweisen, dass paintPixels bei ±14 % klemmt.
+  it('R149 Pixel auf Gras tragen höchstens ±20 % Schattierung (H-R9 R3, vorher ±14 % bzw. ±8 %); Gebirgsanteil 0', () => {
+    // Alle Knoten tragen 0,3 bzw. 0,2: Gleiche Pixel auf Gras beweisen, dass paintPixels bei ±20 % klemmt.
     const g = buildGrid(blockWorld());
-    const hot = { ...g, shade: g.shade.map(() => 0.2) };
-    const flat = { ...g, shade: g.shade.map(() => 0.14) };
+    const hot = { ...g, shade: g.shade.map(() => 0.3) };
+    const flat = { ...g, shade: g.shade.map(() => 0.2) };
     const a = paintPixels(hot, 1, 0, 0, 8 * TEX, 8 * TEX); // Gras links oben (kein Gebirge)
     const b = paintPixels(flat, 1, 0, 0, 8 * TEX, 8 * TEX);
-    expect(Array.from(a)).toEqual(Array.from(b));
+    expect(firstDiff(a, b)).toBe(-1);
   });
 
   it('Spec 5.1 Gras: die Mischung ist gespreizt und nutzt grassDark, grass und grassLight', () => {
@@ -513,7 +524,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     const g = painted.grid;
     const a = paintPixels(g, 1, 100, 100, 16, 16);
     const b = paintPixels(g, 1, 100, 100, 16, 16);
-    expect(Array.from(a)).toEqual(Array.from(b));
+    expect(firstDiff(a, b)).toBe(-1);
     const c = paintPixels(g, 2, 200, 200, 32, 32);
     expect(c.length).toBe(32 * 32 * 4);
     expect(a.every((v) => v >= 0 && v <= 255)).toBe(true);
@@ -723,12 +734,22 @@ describe('M10 Teil-Raster', () => {
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
     for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch', 'cls'] as const)
-      expect(grid[f], f).toEqual(full[f]);
+      expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
 });
 
 // ---------- H-R9 Teil B: Mikrorelief und Wiesenvarianz ----------
+
+/**
+ * Erster abweichender Index zweier gleich langer Zahlenfelder, −1 = gleich (Länge zählt). Statt `toEqual` auf
+ * Millionen Elementen: ein Fehlschlag bleibt so schnell (Beobachtung „Vitest hängt bei grossen Arrays").
+ */
+function firstDiff(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  if (a.length !== b.length) return Math.min(a.length, b.length);
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return i;
+  return -1;
+}
 
 const flat = (n: number, terrain: string, seed: number): World3 =>
   ({
@@ -750,33 +771,34 @@ const stdOf = (a: number[]): number => {
 };
 
 describe('H-R9 B1 Mikrorelief Wiese', () => {
-  it('H-R9 B1 Relief-Streuung: Standardabweichung von shade über Gras ≥ 0,03 (vorher 0,0067)', () => {
+  // R3 gemessen: 0,099/0,104/0,104 (Seeds 7/8/9); vor R3 0,053/0,057/0,056; main 0,0067
+  it('H-R9 B1 Relief-Streuung: Standardabweichung von shade über Gras ≥ 0,085 (R3; vorher 0,03, main 0,0067)', () => {
     for (const seed of [7, 8, 9]) {
       const g = buildGrid(flat(40, 'grass', seed));
-      expect(stdOf(inner(g, g.shade)), `Seed ${seed}`).toBeGreaterThanOrEqual(0.03);
+      expect(stdOf(inner(g, g.shade)), `Seed ${seed}`).toBeGreaterThanOrEqual(0.085);
     }
   });
 
-  it('H-R9 B1 Grenzen: Gras und Strand ≤ ±14 % (und nutzen > 9 %), Wald weiter ≤ ±8 %', () => {
+  it('H-R9 B1 Grenzen: Gras und Strand ≤ ±20 % (und nutzen > 14 %, R3), Wald weiter ≤ ±8 %', () => {
     const grass = buildGrid(flat(40, 'grass', 7));
     const maxG = Math.max(...grass.shade.map(Math.abs));
-    expect(maxG).toBeLessThanOrEqual(0.14 + 1e-6);
-    expect(maxG).toBeGreaterThan(0.09);
+    expect(maxG).toBeLessThanOrEqual(0.2 + 1e-6);
+    expect(maxG).toBeGreaterThan(0.14);
     const sand = buildGrid(flat(40, 'sand', 7));
-    expect(Math.max(...sand.shade.map(Math.abs))).toBeLessThanOrEqual(0.14 + 1e-6);
+    expect(Math.max(...sand.shade.map(Math.abs))).toBeLessThanOrEqual(0.2 + 1e-6);
     const wood = buildGrid(flat(40, 'forest', 7));
     expect(Math.max(...wood.shade.map(Math.abs))).toBeLessThanOrEqual(0.08 + 1e-6);
-    // Pixel: gleiche Klemmung wie am Knoten — Gras bis 14 %, Wald nur 8 %
+    // Pixel: gleiche Klemmung wie am Knoten — Gras bis 20 %, Wald nur 8 %
     const g = buildGrid(flat(12, 'grass', 7));
     const f = buildGrid(flat(12, 'forest', 7));
-    const hot = (gr: typeof g) => ({ ...gr, shade: gr.shade.map(() => 0.2) });
+    const hot = (gr: typeof g) => ({ ...gr, shade: gr.shade.map(() => 0.3) });
     const lim = (gr: typeof g, v: number) => ({ ...gr, shade: gr.shade.map(() => v) });
     const a = paintPixels(hot(g), 1, 64, 64, 64, 64);
-    const b = paintPixels(lim(g, 0.14), 1, 64, 64, 64, 64);
-    expect(Array.from(a)).toEqual(Array.from(b));
+    const b = paintPixels(lim(g, 0.2), 1, 64, 64, 64, 64);
+    expect(firstDiff(a, b)).toBe(-1);
     const c = paintPixels(hot(f), 1, 64, 64, 64, 64);
     const d = paintPixels(lim(f, 0.08), 1, 64, 64, 64, 64);
-    expect(Array.from(c)).toEqual(Array.from(d));
+    expect(firstDiff(c, d)).toBe(-1);
   });
 
   it('H-R9 B1 Kuppen heller, Senken dunkler: shade korreliert mit der Hanglage zur Sonne (Licht links oben)', () => {
@@ -797,15 +819,30 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     expect(sxy / n).toBeGreaterThan(0);
   });
 
+  it('H-R9 R3 Senken über den Farbton: negative Schattierung auf Gras macht kühler/satter statt nur dunkler', () => {
+    const g = buildGrid(flat(12, 'grass', 7));
+    const at = (v: number) => paintPixels({ ...g, shade: g.shade.map(() => v) }, 1, 64, 64, 32, 32);
+    const mean = (a: Uint8ClampedArray, k: number) => {
+      let s = 0;
+      for (let i = k; i < a.length; i += 4) s += a[i]!;
+      return s / (a.length / 4);
+    };
+    const n = at(0),
+      d = at(-0.2);
+    const L = (a: Uint8ClampedArray) =>
+      0.299 * mean(a, 0) + 0.587 * mean(a, 1) + 0.114 * mean(a, 2);
+    // deutlich weniger dunkel als reine Abdunklung um 20 % (≤ 65 %), dafür blauer im Verhältnis zu Rot
+    expect(L(n) - L(d)).toBeLessThan(0.65 * 0.2 * L(n));
+    expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.05 * (mean(n, 2) / mean(n, 0)));
+  });
+
   it('H-R9 B1 Determinismus: gleiche Felder und Pixel bei zweitem Aufbau', () => {
     const w = flat(10, 'grass', 5);
     const a = buildGrid(w),
       b = buildGrid(w);
     for (const f of ['shade', 'warm', 'mottle', 'veil'] as const)
-      expect(Array.from(a[f]), f).toEqual(Array.from(b[f]));
-    expect(Array.from(paintPixels(a, 1, 0, 0, 96, 96))).toEqual(
-      Array.from(paintPixels(b, 1, 0, 0, 96, 96)),
-    );
+      expect(firstDiff(a[f], b[f]), f).toBe(-1);
+    expect(firstDiff(paintPixels(a, 1, 0, 0, 96, 96), paintPixels(b, 1, 0, 0, 96, 96))).toBe(-1);
   });
 });
 
@@ -836,6 +873,63 @@ describe('H-R9 B2 Dünen', () => {
   });
 });
 
+describe('H-R9 R3 Dünen in Teilbereichen', () => {
+  it('H-R9 R3 Dünen: im Mittel 40–60 % des Strands ohne Dünen (je Seed 30–70 %), einzelne Kuppen statt Bänder', () => {
+    let offSum = 0;
+    for (const seed of [3, 5, 7, 11]) {
+      const N = 240,
+        st = 0.25;
+      const v = new Float32Array(N * N);
+      let off = 0;
+      for (let j = 0; j < N; j++)
+        for (let i = 0; i < N; i++) {
+          v[j * N + i] = duneRidge(seed, i * st, j * st);
+          if (duneMask(seed, i * st, j * st) === 0) off++;
+        }
+      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeGreaterThan(0.3);
+      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeLessThan(0.7);
+      offSum += off / (N * N);
+      // Kuppen (Rücken > 0,3) als Zusammenhangskomponenten: viele, keine dominiert (kein durchgehendes Band)
+      const lab = new Int32Array(N * N).fill(-1);
+      const sizes: number[] = [];
+      for (let k = 0; k < N * N; k++) {
+        if (v[k]! <= 0.3 || lab[k]! >= 0) continue;
+        const id = sizes.length;
+        let n = 0;
+        const stack = [k];
+        lab[k] = id;
+        while (stack.length) {
+          const q = stack.pop()!;
+          n++;
+          const x = q % N,
+            y = (q / N) | 0;
+          for (const [dx, dy] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ] as const) {
+            const xx = x + dx,
+              yy = y + dy;
+            if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
+            const kk = yy * N + xx;
+            if (lab[kk]! < 0 && v[kk]! > 0.3) {
+              lab[kk] = id;
+              stack.push(kk);
+            }
+          }
+        }
+        sizes.push(n);
+      }
+      const pos = sizes.reduce((a, b) => a + b, 0);
+      expect(sizes.length, `Seed ${seed} Kuppen`).toBeGreaterThanOrEqual(40);
+      expect(Math.max(...sizes) / pos, `Seed ${seed} grösste Kuppe`).toBeLessThan(0.45);
+    }
+    expect(offSum / 4).toBeGreaterThan(0.4);
+    expect(offSum / 4).toBeLessThan(0.6);
+  });
+});
+
 describe('H-R9 B3 Wiesenvarianz', () => {
   const W = 40 * TEX;
   const paintFlat = (seed: number) => {
@@ -843,8 +937,8 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     return { g, out: paintPixels(g, 1, 0, 0, W, W) };
   };
 
-  // Messwert (H-R9 Fix 2): RMS 5,39 (Seed 7) und 5,50 (Seed 8); Basis main vor H-R9: 5,0
-  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,3 (gemessen 5,39/5,50, main-Basis 5,0; Runde 1: Lime-Töne und 6-%-Mottling entfernt)', () => {
+  // Messwert R3: RMS 5,66 (Seed 7) und 5,71 (Seed 8); vor R3 5,39/5,50; Basis main vor H-R9: 5,0
+  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,6 (gemessen 5,66/5,71, vor R3 5,39/5,50, main-Basis 5,0)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
       const labs: [number, number, number][] = [];
@@ -856,7 +950,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       const mean: [number, number, number] = [0, 0, 0];
       for (const l of labs) for (let c = 0; c < 3; c++) mean[c]! += l[c]! / labs.length;
       const rms = Math.sqrt(labs.reduce((a, l) => a + deltaE2000(l, mean) ** 2, 0) / labs.length);
-      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(5.3);
+      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(5.6);
     }
   });
 
@@ -945,15 +1039,15 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const full = buildGrid(w);
     for (const f of ['shade', 'warm', 'mottle', 'veil'] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
-      expect(grid[f], f).toEqual(full[f]);
+      expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     }
     const x0 = (rect.x0 * TEX) | 0,
       y0 = (rect.y0 * TEX) | 0,
       pw = (rect.x1 - rect.x0 + 1) * TEX,
       ph = (rect.y1 - rect.y0 + 1) * TEX;
-    expect(Array.from(paintPixels(grid, 1, x0, y0, pw, ph))).toEqual(
-      Array.from(paintPixels(full, 1, x0, y0, pw, ph)),
-    );
+    expect(
+      firstDiff(paintPixels(grid, 1, x0, y0, pw, ph), paintPixels(full, 1, x0, y0, pw, ph)),
+    ).toBe(-1);
   }, 30000);
 
   it('H-R9 B4 Teil-Neuzeichnung eines 3 × 3-Rechtecks (Raster + Pixel) ≤ 8 ms (Median)', () => {
