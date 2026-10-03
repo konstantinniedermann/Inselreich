@@ -1,5 +1,6 @@
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem } from './iso';
+import { DEBRIS_MIX } from './light';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
 import {
@@ -152,7 +153,6 @@ const STRATA_BREAK = 0.09;
 const GRAIN = 0.04; // Pixelkorn ±2 %
 /** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
 export const TONE_EDGE_PX = 1.5;
-const DEBRIS_MIX_PX = 0.9; // Schuttband: Anteil der Schuttfarbe am Rand
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
 /** Texturpixel je Weltpixel: Merkmale ≈ 2 px (fein, feiner als die Tonstufen) und ≈ 6 px (Brocken). */
 const TEX_FINE = 4,
@@ -395,7 +395,7 @@ function triangle(
       }
       // Schuttband am Fuss (hell), vor der Kontur
       const soft = lerp(a.soft, b.soft, c.soft);
-      const db = DEBRIS_MIX_PX * debrisOf(soft);
+      const db = DEBRIS_MIX * debrisOf(soft);
       if (db > 0) {
         r += (DEBRIS[0] - r) * db;
         g += (DEBRIS[1] - g) * db;

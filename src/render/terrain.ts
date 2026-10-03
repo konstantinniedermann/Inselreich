@@ -1,5 +1,5 @@
 import { hash2, valueNoise } from '../sim/noise';
-import { LIGHT, rotNoise } from './light';
+import { DEBRIS, LIGHT, rotNoise } from './light';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
@@ -60,8 +60,8 @@ const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreh
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 0.75; // höchstens 90 % Mischung zum Kleegrün ((1 − 0,1) · 1 bei Fleckwert 1)
-const DRY_MAX = 0.35; // höchstens 50 % Mischung zu sandDry ((1 − 0,1) · 0,55; darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 0.75; // höchstens 67,5 % Mischung zum Kleegrün ((1 − 0,1) · 0,75 bei Fleckwert 1)
+const DRY_MAX = 0.35; // höchstens 31,5 % Mischung zu sandDry ((1 − 0,1) · 0,35; darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -250,14 +250,14 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
     0.38 * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2)
   );
 }
+/** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
+export const duneMask = (seed: number, fx: number, fy: number): number =>
+  smoothstepClamp((rotNoise(seed + 111, fx, fy, 0.1, ROT_RELIEF) - 0.515) * 5);
 /**
  * H-R9 B2 (R3): ungewichteter Dünenrücken 0…1 — einzelne gestreckte Kuppen statt durchgehender Bänder: Richtung
  * (±0,55 rad) und Wellenlänge (Faktor 0,7–1,3) variieren tieffrequent, die Rücken setzen längs aus (Hüllkurve) und
  * nur etwa die Hälfte des trockenen Strands trägt überhaupt Dünen (Maske).
  */
-/** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
-export const duneMask = (seed: number, fx: number, fy: number): number =>
-  smoothstepClamp((rotNoise(seed + 111, fx, fy, 0.1, ROT_RELIEF) - 0.515) * 5);
 export function duneRidge(seed: number, fx: number, fy: number): number {
   const mask = duneMask(seed, fx, fy);
   if (mask <= 0) return 0;
@@ -505,11 +505,7 @@ const C = {
   rock: rgb(PALETTE.rock),
   rockLight: rgb(PALETTE.rockLight),
   rockDark: rgb(PALETTE.rockDark),
-  // Schutt am Gebirgsfuss wie `DEBRIS` in massif.ts (rock/rockLight mit etwas sandDry)
-  debris: rgb(PALETTE.rock).map((v, i) => {
-    const l = v + (rgb(PALETTE.rockLight)[i]! - v) * 0.6;
-    return l + (rgb(PALETTE.sandDry)[i]! - l) * 0.15;
-  }) as [number, number, number],
+  debris: [...DEBRIS], // Schutt am Gebirgsfuss wie im Massiv (light.ts)
 };
 const mix3 = (a: number[], b: number[], t: number, o: number[]): void => {
   o[0] = a[0]! + (b[0]! - a[0]!) * t;
@@ -559,7 +555,6 @@ function landColor(
       const wa = Math.max(0, (Math.abs(wm) - WARM_ON) / (1 - WARM_ON));
       if (wm > 0) mix3(o, C.dryTone, wa * WARM_MAX, o);
       else mix3(o, C.lushTone, wa * COOL_MAX, o);
-      // nur Farbton: Helligkeit der Grundstruktur bleibt (sonst ebnet die Mischung die Flecken von main ein)
       mix3(o, C.veilTone, lerp(g.veil) * VEIL_MAX, o);
       // nur Farbton: Helligkeit der Grundstruktur bleibt (sonst ebnet die Mischung die Flecken von main ein) …
       const lw = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
