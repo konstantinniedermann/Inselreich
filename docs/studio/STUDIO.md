@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.13 · Stand: 2026-10-02 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.14 · Stand: 2026-10-03 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -16,11 +16,11 @@ Verbesserung, Teil des Handbuchs) · [CHANGELOG.md](CHANGELOG.md) · [warteschla
 
 ## Organisation
 
-Drei Ebenen. Die Hauptsession ist **L0 Projektleiter** (Studio-Direktor, Rolle `studio-director`):
-Sie ist die einzige Ansprechperson des Nutzers, gibt Budgets frei, entscheidet Gates und Konflikte
-und macht **keine inhaltliche Arbeit selbst**. **L1 Leads** zerlegen, briefen, nehmen ab und
-berichten. **L2 Arbeiter** setzen um. Der **`studio-coach`** ist eine Stabsstelle auf L1 direkt
-unter L0: Er wertet aus und verbessert die Arbeitsweise, arbeitet aber nie an Spiel oder Doku.
+Drei Ebenen. Die Hauptsession ist **L0 Projektleiter** (Rolle `studio-director`): einzige
+Ansprechperson des Nutzers, gibt Budgets frei, entscheidet Gates und Konflikte, macht **keine
+inhaltliche Arbeit selbst**. **L1 Leads** zerlegen, briefen, nehmen ab, berichten. **L2 Arbeiter**
+setzen um. Der **`studio-coach`** ist Stabsstelle unter L0: wertet aus und verbessert die
+Arbeitsweise, arbeitet nie an Spiel oder Doku.
 
 Organigramm, Lead-Tabelle, Namensschema (R11; das Dashboard leitet Ebene und Bereich aus dem Namen
 ab, keine anderen Namen verwenden), Einzeiler je Rolle, Modelle und Anlage neuer Personas:
@@ -43,19 +43,17 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 
 - **Berichtsweg L2 → L1 → L0.** L0 sieht nur Lead- und Coach-Berichte, nie Arbeiter-Ausgaben direkt.
   Nur L0 spricht mit dem Nutzer (Verfassung §2).
-- **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false`; parallel =
-  mehrere Agent-Aufrufe in einer Nachricht; Arbeiter starten keine Agenten; L0 darf Leads im
-  Hintergrund starten. (Ein Lead, der nicht wartet, beendet sich, und der Arbeiterbericht landet
-  bei L0 statt beim Lead — siehe ADR-007.)
+- **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
+  mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
+  Hintergrund starten (ADR-007).
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
   [templates/uebergabe.md](templates/uebergabe.md) unter
   `<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md` (gitignored, Arbeitsstand; nicht im
   Worktree, Hauptrepo via `git rev-parse --git-common-dir`). Ergebnisse mit Bestand gehören in
   Spec, Plan oder Ruling.
 - **Fortsetzen statt neu starten:** Fix-Runden und Rückfragen setzen **denselben** Agenten per
-  `SendMessage` fort — auch einen bereits beendeten; sein Kontext bleibt vollständig erhalten. Nur
-  ein neuer Agent-Start verliert den Kontext und braucht ein vollständiges Briefing. Eine
-  Fortsetzung zählt im Budget nicht als neuer Start.
+  `SendMessage` fort (auch einen beendeten, Kontext bleibt); nur ein Neustart braucht ein volles
+  Briefing. Eine Fortsetzung zählt nicht als neuer Start.
 - **Eskalation:** Konflikt zwischen Bereichen → beide Leads melden ihre Sicht an L0 → L0 entscheidet
   und schreibt ein Ruling. Ein Arbeiter eskaliert nur an seinen Lead.
 - **Bericht** (≤ ~15 Zeilen, [templates/bericht.md](templates/bericht.md)): Ergebnis ·
@@ -75,21 +73,17 @@ Meilenstein: <id>
 Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)
 ```
 
-- `Meilenstein` ordnet den Aufwand einem Meilenstein zu (ohne laufenden Meilenstein: `ohne`).
-- `Schätzung` ist eine **Schätzung** für den ganzen Auftrag inklusive aller Unteraufträge, kein
-  Messwert. Das Dashboard stellt sie der gemessenen Dauer und den Tool-Aufrufen gegenüber.
-- **Hauptgrösse sind die Werkzeugaufrufe.** Sie werden aus den Richtwerten in
-  [metriken/richtwerte.md](metriken/richtwerte.md) abgeleitet (Median je Rolle, Modell und
-  Plan-Art, summiert über die geplanten Starts inkl. Review und Fix-Runden), nicht aus Menschenzeit.
-  Die Minuten sind nur abgeleitet (Tools ÷ 4 bis 8, Richtwert ÷ 6). Experiment E-001.
-- Die Kopfzeile **nennt die verwendete Tabellenzeile** in Klammern (z. B.
-  `(Tabellenzeile: lead-tech opus Spec/offen × 2)`), ohne passende Zeile `(keine Tabellenzeile)`.
-  Die Schätzzahlen stehen vor der Klammer, weil die Telemetrie die jeweils erste Angabe mit „Tools“
-  bzw. „min“ liest.
-
-- **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs** (Format unter „Gates und
-  Dokumentation“), nie einen ganzen Plan oder eine ganze Spec; `rulings.md` wird nie ganz gelesen,
-  nur per `grep` auf die R-Nummern (E-010, R167).
+- `Meilenstein` ordnet den Aufwand zu (ohne laufenden Meilenstein: `ohne`).
+- `Schätzung` gilt für den ganzen Auftrag inklusive Unteraufträge; das Dashboard stellt sie dem
+  Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
+  [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
+  Starts inkl. Review und Fix-Runden); Minuten = Tools ÷ 4 bis 8 (E-001).
+- Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
+Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
+  liest die erste Angabe mit „Tools“ bzw. „min“).
+- **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs**, nie einen ganzen Plan oder eine
+  ganze Spec; `rulings.md` nur per `grep` (E-010, R167).
+- **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 
 Pflichtpunkte laut Vorlage: Persona und Expertise, Ziel mit Warum fürs Spielerlebnis, Kontext,
 Deliverable mit Ablageort, Definition of Done, Grenzen und Datei-Ownership, Schnittstellen,
@@ -116,22 +110,18 @@ Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Mode
 stattdessen herunter (R69, R71).
 
 Die Persona-Frontmatter legt das Standardmodell fest. Weicht ein Einsatz davon ab (z. B.
-`qa-code-reviewer` für das Final-Review), steht das Modell **explizit im Agent-Aufruf** (`model`)
-und in der Kopfzeile `Modell:` des Briefings. Ein Persona-Start als `general-purpose` braucht
-immer `model`; der Guard blockt ihn sonst (R167). Der Controller der Umsetzung (`lead-tech`) und die
-Kurz-Retro des Coachs laufen daher mit `model: sonnet` im Aufruf, der Tech-Lead beim Plan und die
-Meilenstein-Retro auf `opus`.
+`qa-code-reviewer` im Final-Review), steht `model` **explizit im Agent-Aufruf** und in der
+Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht immer `model`
+(Guard, R167): Controller und Kurz-Retro `sonnet`, Tech-Lead beim Plan und Meilenstein-Retro `opus`.
 
 ## Limits und Sessiongrösse
 
 - **Sensor (R68, R80):** `.studio/limits.json` (5-h-, Wochen- und Kontextwert), Details in
   [verbesserung.md](verbesserung.md#limit-sensor).
-- **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 langsam herunter:
-  weniger parallel, weniger Starts, Angefangenes abschliessen, `state.md` nachführen, Session
-  beenden. Ist das Fenster knapp, schliesst L0 zuerst Angefangenes ab (Reviews, Fix-Runden,
-  Merges) und beginnt erst danach Neues (R166). Richtwerte, keine starren Grenzen: ab etwa 60 % keine neuen Wellen; ab etwa 80 %
-  Session-Ende-Routine, keine neuen Starts. Wochenfenster über 80 %: Parallelität reduzieren.
-  Die Modelle bleiben unverändert (kein Downgrade, R71).
+- **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 herunter: weniger
+  parallel, weniger Starts, zuerst Angefangenes abschliessen (Reviews, Fix-Runden, Merges, R166),
+  `state.md` nachführen, Session beenden. Richtwerte: ab etwa 60 % keine neuen Wellen, ab etwa
+  80 % Session-Ende-Routine; Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
   übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
   (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.
@@ -147,18 +137,10 @@ Meilenstein-Retro auf `opus`.
   ist genau die Paket-ID aus der Kopfzeile `Paket:` des Leads, auch je Integrator-Start eine eigene
   Freigabe; sonst zählt das Dashboard den Start auf die jüngste Freigabe (E-013, R166).
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
-  Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 = 14,3 → **15**. Der Puffer deckt
-  Neustarts und Zusatzprüfungen; Fix-Runden per `SendMessage` zählen nicht als Start. Der Tech-Lead
-  stellt den Antrag für die ganze Umsetzungsphase; L0 teilt die Freigabe auf (Stufe voll:
-  Final-Review an `lead-qa`, Rest an `lead-tech`):
-
-  ```bash
-  python3 tools/studio/log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG
-  python3 tools/studio/log.py budget --lead lead-qa --grant 1 --parallel 1 --phase M5-UMSETZUNG
-  ```
-
-  In der Stufe leicht startet der Tech-Lead auch das abschliessende `opus`-Review; die ganze
-  Freigabe geht an `lead-tech`.
+  Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 → **15**. Fix-Runden per `SendMessage`
+  zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;
+  Stufe leicht: alles an `lead-tech`), z. B.
+  `log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG`.
 
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
@@ -183,16 +165,16 @@ L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 
 - Eine **Spec** hat höchstens 40 KB; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
   `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md`, die Spec verweist darauf.
-- Ein **Plan** ist ein Index plus eine Datei je Task unter `docs/superpowers/plans/<plan>/`
-  (`<plan>` = bisheriger Plan-Dateiname ohne `.md`, z. B. `2026-10-02-m10-schritt-fuer-schritt`).
-  Der **Index** `docs/superpowers/plans/<plan>/index.md` enthält: Ziel, Architektur in höchstens 15
-  Zeilen, Datei-Ownership je Strang, Budgetantrag und eine Tabelle mit je einer Zeile je Task
-  (Task-ID, Titel, Dateiname, AK-IDs, Strang, `blocked-by`, Modell). Je Task eine **Task-Datei**
-  `docs/superpowers/plans/<plan>/T<nn>-<kurz>.md` (zweistellig, aufsteigend, `<kurz>` Kleinbuchstaben
-  mit Bindestrich), **höchstens 10 KB**: Kopf (Task-ID, AK-IDs, Strang, erlaubte Dateien,
-  `blocked-by`), Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht. Ein Task, der
-  10 KB überschreitet, wird geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer
-  lesen nur ihre Task-Datei und die in ihr genannten AK-IDs der Spec.
+- Ein **Plan** ist ein Index `docs/superpowers/plans/<plan>/index.md` (Ziel, Architektur in höchstens 15
+  Zeilen, Datei-Ownership je Strang, Budgetantrag, Task-Tabelle mit Task-ID, Titel, Datei, AK-IDs,
+  Strang, `blocked-by`, Modell) plus eine Datei `T<nn>-<kurz>.md` je Task, **höchstens 10 KB** (Kopf,
+  Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht); grössere Tasks werden
+  geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer lesen nur ihre Task-Datei
+  und die genannten AK-IDs.
+- **Doku im Plan (E-017):** README, arc42, ADR und Spec-Verweise sind ein eigener Task mit
+  Eigentümer; das Umsetzer-Briefing erlaubt die D1-Dateien ausdrücklich. Das Final-Review meldet
+  keine fehlende Doku.
+- **Gate Spec (E-010):** `lead-qa` prüft zusätzlich, dass Spec und Plan-Dateien die Grössen einhalten.
 
 Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumentiert:
 
@@ -232,14 +214,11 @@ Auch in der leichten Stufe gilt: nie direkt in die Implementierung springen; ohn
 
 Ablauf eines Meilensteins (Stufe voll):
 
-1. Auftrag (vom Nutzer oder von L0 aus dem Spielkonzept gewählt) → L0 startet den Meilenstein
-   (`log.py milestone --id M5 --status start --title "…"`) und gibt Design ein Budget frei →
-   Design-Lead (superpowers:brainstorming, L0 ist der Gesprächspartner) → Bericht mit
-   Designvorschlag → **Gate Brainstorming** (L0). Rückfragen-Runde: Der Design-Lead bündelt seine
-   Fragen im Bericht, je Frage mit Empfehlung. L0 beantwortet sie per `SendMessage` an denselben
-   Lead (Kontext bleibt erhalten). Berührt eine Frage einen Nutzer-Vorbehalt, kommt sie in die
-   [Warteschlange](#autonomie); die übrigen Fragen gehen weiter. Das wiederholt sich, bis der
-   Designvorschlag steht.
+1. Auftrag → L0 startet den Meilenstein (`log.py milestone --id M5 --status start --title "…"`) und
+   gibt Design ein Budget frei → Design-Lead (superpowers:brainstorming, L0 ist Gesprächspartner) →
+   Bericht mit Designvorschlag → **Gate Brainstorming** (L0). Der Design-Lead bündelt Fragen im
+   Bericht, je Frage mit Empfehlung; L0 antwortet per `SendMessage` an denselben Lead. Berührt eine
+   Frage einen Nutzer-Vorbehalt, kommt sie in die [Warteschlange](#autonomie).
 2. Design-Lead schreibt Spec → **Gate Spec** (L0, Prüfung nach gates.md, Tech-Lead und QA-Lead
    geben ihr Urteil ab).
 3. Tech-Lead schreibt Plan (superpowers:writing-plans) inkl. Datei-Ownership und Budgetantrag →
@@ -247,12 +226,12 @@ Ablauf eines Meilensteins (Stufe voll):
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
-   **Schlanke Steuerung (E-010, angepasst R167):** Ein Lead arbeitet einen Auftrag je Instanz ab
-   (Gate-Urteil, Spec, Plan). Der Controller läuft auf `sonnet` und übernimmt höchstens 4 Tasks je
-   Instanz; danach übergibt er allein per Ledger und einem Satz Status an eine frische
-   `lead-tech`-Instanz, ebenso vor einer Wartezeit über einen 5-h-Reset. Leads warten nicht mit
-   grossem Kontext auf Arbeiter; Doku-Pakete delegiert er. Der Controller liest je Task nur die
-   Task-Datei (siehe „Gates und Dokumentation“).
+   **Schlanke Steuerung (E-010, R167, R190):** Ein Lead arbeitet einen Auftrag je Instanz ab. Der
+   Controller läuft auf `sonnet`, übernimmt höchstens 4 Tasks je Instanz und übergibt spätestens bei
+   200k Kontext oder nach 6 Arbeiter-Starts allein per Ledger und einem Satz Status an eine frische
+   `lead-tech`-Instanz (ebenso vor einer Wartezeit über einen 5-h-Reset). Leads warten nicht mit
+   grossem Kontext auf Arbeiter; Doku-Pakete delegiert er. Je Task liest der Controller nur die
+   Task-Datei.
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
@@ -301,14 +280,11 @@ Regeln dazu:
   und Determinismus (gleicher Seed → gleicher Zustand). Nicht abschwächbar (Verfassung §9).
 - **Report bei Final-Review und Playtests:** kein Report-Dateipfad im Briefing; der archivierte
   Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
-- **Merge:** nur nach dem einen L0-Merge-Gate des Meilensteins, seriell (ein Strang nach dem
-  anderen) durch `production-integrator`: `make check` vor dem ersten Merge; je Strang
-  `git merge --no-ff --no-commit`, dann `make check` — grün: Merge committen, rot:
-  `git merge --abort` und melden. Push laut Verfassung §7 (`make check` grün vor dem Push), danach
-  CI-Status (`gh run list --branch main --limit 3`) und Pages-Deploy prüfen und nach jedem Push
-  `python3 tools/studio/ci.py` ausführen (CI-Läufe als Studio-Events). CI rot → die Behebung
-  hat Vorrang, der Vorfall löst eine Ad-hoc-Retro aus. Bei Konflikten stoppen und melden; nie
-  `--force`, nie `reset --hard` (Verfassung §6).
+- **Merge:** nur nach dem L0-Merge-Gate, seriell durch `production-integrator`: `make check` vor
+  dem ersten Merge; je Strang `git merge --no-ff --no-commit`, dann `make check` — grün: committen,
+  rot: `git merge --abort` und melden. Push laut Verfassung §7, danach CI (`gh run list --branch
+main --limit 3`), Pages und `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-
+  Retro. Bei Konflikten stoppen und melden (Verfassung §6).
 
 ## Autonomie
 
@@ -327,27 +303,22 @@ L0 fragt nicht zurück und wartet nie untätig (Verfassung §5). **Ablauf ohne R
 Aufrufe `log.py queue --help`): Die fragende Stelle legt den Eintrag an (Status `offen`, ID =
 höchste N-Nummer + 1) und nennt die ID im Bericht. Das blockierte Paket geht auf `blocked`
 (`log.py package … --status blocked --blocked-by N-…`), L0 zieht das nächste ungeblockte vor.
-Antworten des Nutzers („N-…: …" im Prompt oder Zeile „Antwort" in der Datei, gilt auch bei Status
-`offen`) setzt L0 **in jeder Session zuerst** um: `--answer` (Status `beantwortet`), umsetzen,
-`--done` (Status `umgesetzt`), Paket wieder freigeben.
+Antworten des Nutzers („N-…: …" im Prompt oder Zeile „Antwort") setzt L0 **in jeder Session
+zuerst** um: `--answer`, umsetzen, `--done`, Paket freigeben.
 
 **Guard** (`tools/studio/guard.py`, PreToolUse-Hook für L0, Leads und Arbeiter; Verfassung §1.3
 und §6). Er weist mit Begründung ab:
 
-| Verboten                                    | Beispiele                                                                                                                                                         |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Force-Push, Löschen entfernter Branches     | `git push --force`, `-f`, `--mirror`, `--delete`, Refspec mit `+` oder `:`                                                                                        |
-| Löschen von Branches mit ungemergter Arbeit | `git branch -D`, `git branch --delete --force`                                                                                                                    |
-| Umschreiben der History                     | `git rebase` (ausser `--abort`), `git reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`/`reflog delete`, `update-ref -d`/`--delete`, `gc --prune=now` |
-| Verlust ungesicherter Arbeit                | `git clean -f`, `git worktree remove --force`, `git stash drop`, `git stash clear`                                                                                |
-| Löschen ausserhalb des Repos                | `rm`, `rmdir`, `unlink`, `find … -delete` ausserhalb des Hauptrepos (erlaubt: Temp- und Scratchpad-Ordner)                                                        |
-| Schreiben auf die Verfassung und den Guard  | Edit/Write auf `VERFASSUNG.md` oder `guard.py`, schreibende Bash-Befehle, die sie nennen                                                                          |
+Verboten sind: Force-Push und Löschen entfernter Branches (`--force`, `-f`, `--mirror`, `--delete`,
+Refspec mit `+` oder `:`); `git branch -D`; Umschreiben der History (`git rebase` ausser `--abort`,
+`reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`/`delete`, `update-ref -d`,
+`gc --prune=now`); Verlust ungesicherter Arbeit (`git clean -f`, `worktree remove --force`,
+`stash drop`/`clear`); `rm`, `rmdir`, `unlink`, `find … -delete` ausserhalb des Hauptrepos (Temp-
+und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`.
 
-- **Bewusst nicht verboten:** Verwerfen ungesicherter Änderungen im Arbeitsbaum
-  (`git checkout -- <pfad>`, `git restore`, `git switch --discard-changes`) — das steht nicht auf
-  der Liste des Nutzers und wird fürs Aufräumen gebraucht.
-- **Stash:** `git stash push`/`apply` sind erlaubt, `drop` und `clear` verboten. Zum Zwischenparken
-  deshalb einen temporären WIP-Commit statt eines Stash verwenden.
+- **Bewusst erlaubt:** Verwerfen ungesicherter Änderungen im Arbeitsbaum (`git checkout -- <pfad>`,
+  `git restore`, `git switch --discard-changes`) und `git stash push`/`apply`; zum Zwischenparken
+  ist ein temporärer WIP-Commit besser.
 - **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
   gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
@@ -360,17 +331,14 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 
 **Tempo-Vorgaben (R65):**
 
-- Echtzeit-Proben dauern höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
+- Echtzeit-Proben höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
 - **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
   Lead per `SendMessage` an und vermerkt es (`log.py status --status waiting --task "Hänger-Alarm
 <agent-id>"`).
 - Minor- und Low-Befunde lösen keine Fix-Runde aus; sie gehen gesammelt ins Final-Review.
-- Kleine Fixes (≤ ~20 Zeilen) prüft der Lead selbst am Diff statt einer vollen Re-Review-Runde.
-  Jede Nachprüfung einer Fix-Runde beantwortet zwei Fragen aus dem Fix-Briefing (R136): Gegenweg
-  geprüft (rückwärts, über das Ende hinaus, Abbruch)? Fundstellen geänderter oder entfernter
-  Symbole per `grep -rn <symbol> README.md docs/` nachgeführt?
-- Browser-Checks laufen parallel (eigener Port je Check); jeder Check prüft jedes geöffnete Panel
-  sofort auf Lesbarkeit und Überlauf.
+- Kleine Fixes (≤ ~20 Zeilen) prüft der Lead am Diff. Jede Nachprüfung einer Fix-Runde fragt
+  (R136): Gegenweg geprüft? Fundstellen per `grep -rn <symbol> README.md docs/` nachgeführt?
+- Browser-Checks laufen parallel (eigener Port je Check) und prüfen jedes Panel auf Lesbarkeit.
 
 ## Messung und Verbesserung
 
@@ -383,11 +351,10 @@ R129). Grundsätze: [Verfassung §8 und §10](VERFASSUNG.md#8-transparenz-und-lo
 Jeder Agent loggt Beginn, Warten bzw. Hindernis, Abschluss und Abbruch explizit mit
 `tools/studio/log.py` — immer als eigener Bash-Aufruf, damit der Hook ihn dem richtigen Agenten
 zuordnet. Alles andere (Start/Stop, Tool-Aufrufe, Briefings, Berichte, Tokens) erfassen die Hooks
-automatisch. Aufrufe und Parameter: `python3 tools/studio/log.py --help` bzw.
-`log.py <befehl> --help` und der Abschnitt „Bericht und Logging" der eigenen Persona; wer wann was
-loggt: [verbesserung.md, Logging im Detail](verbesserung.md#logging-im-detail). Dashboard:
-`make studio` (URL `http://127.0.0.1:8765/`), Metriken `make studio-metrics`. Vor Commits an
-`tools/studio/`: `make studio-lint`.
+automatisch. Aufrufe: `log.py --help`, Abschnitt „Bericht und Logging" der Persona und
+[verbesserung.md](verbesserung.md#logging-im-detail). Dashboard: `make studio`
+(`http://127.0.0.1:8765/`), Metriken `make studio-metrics`; vor Commits an `tools/studio/`:
+`make studio-lint`.
 
 ## Session-Start und -Ende
 
@@ -399,22 +366,18 @@ nachfragen oder warten verlangt; Verfassung §1.4):
    `--resume`. Gekürzte Teile bei Bedarf in den genannten Dateien nachlesen.
 2. `python3 tools/studio/log.py status --role studio-director --status active --task "Session-Start"`.
 3. Dem Nutzer die Dashboard-URL nennen (der Hook hat den Server gestartet; sonst `make studio`).
-4. Bericht in **höchstens 10 Zeilen**: Stand · seit letzter Session erledigt · laufend · offene
-   Nutzerentscheide. Das ist die erste Textausgabe der Session, auch wenn der erste Prompt bereits
-   einen Auftrag enthält: vor jedem Werkzeug für den Auftrag und vor jeder Delegation (Lesen des
+4. Bericht in **höchstens 10 Zeilen** (Stand · erledigt · laufend · offene Nutzerentscheide) als
+   erste Textausgabe, vor jedem Werkzeug für den Auftrag und vor jeder Delegation (Lesen des
    Kontexts ist erlaubt).
 5. Weiterarbeiten ohne Rückfrage: Eine neue Anweisung ist der Auftrag (Auslegung als Ruling);
-   sonst den Plan aus [state.md](state.md) fortsetzen (pausierte Pakete neu briefen; der Stand
-   steht in `state.md` und in den Übergaben unter `.studio/handoffs/`). Beantwortete
-   Warteschlangen-Einträge zuerst umsetzen; offene Vorfälle → Ad-hoc-Retro.
+   sonst den Plan aus [state.md](state.md) fortsetzen (Übergaben unter `.studio/handoffs/`).
+   Beantwortete Warteschlangen-Einträge zuerst; offene Vorfälle → Ad-hoc-Retro.
 
-**Eine aktive L0-Session je Repo** (R129, Experiment E-007): Standard ist genau eine aktive
-L0-Session. Läuft beim Start bereits eine andere (Dashboard, [state.md](state.md)), arbeitet die
-neue nur lesend oder beendet sich; Übernahme oder Parallelität nur per **L0-Ruling mit
-Datei-Eigentum** (welche Session welche geteilten Pfade bis zu welchem Merge besitzt, Reihenfolge der
-Merges, Eintrag in `state.md`). Nur dann gilt zusätzlich: vor jedem Ruling `git fetch` und die
-R-Nummer gegen `origin/main` prüfen, Strang-Branches nach jeder Abnahme pushen (R107), gegen Pfade
-der anderen Session erst nach deren Merge planen.
+**Eine aktive L0-Session je Repo** (R129, E-007): Läuft beim Start bereits eine andere (Dashboard,
+[state.md](state.md)), arbeitet die neue nur lesend oder beendet sich; Parallelität nur per
+**L0-Ruling mit Datei-Eigentum** (Pfade, Merge-Reihenfolge, Eintrag in `state.md`). Dann zusätzlich:
+vor jedem Ruling `git fetch` und R-Nummer gegen `origin/main` prüfen, Strang-Branches nach jeder
+Abnahme pushen (R107).
 
 **Ende:**
 

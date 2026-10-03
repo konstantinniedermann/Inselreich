@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-03 · Handbuch 1.14
+
+- Anlass: Meilenstein-Retro M10 und Prozess-Retro M10
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m10.md`, `docs/studio/retros/2026-10-03-prozess-retro-m10.md`, `docs/studio/metriken/M10.md`
+- Ruling: R190
+- Änderungen: E-010 angepasst (Lead-Übergabe bei 200k Kontext oder 6 Arbeiter-Starts, Gate-Kriterium Spec ≤ 40 KB, Zeitraum M11); E-015 gestartet (Nachweiszeilen in `templates/bericht.md`); E-017 gestartet (Doku als eigener Plan-Task, D1-Dateien im Umsetzer-Briefing erlaubt, `templates/briefing.md`); E-011 und E-013 behalten; STUDIO.md auf 400 Zeilen gekürzt (Guard-Tabelle, Plan-Format, Budget-Beispiel, Session-Abschnitte verdichtet, Inhalt unverändert)
+
+## 2026-10-03 · Persona lead-tech 1.6
+
+- Anlass: Meilenstein-Retro M10 (E-010, E-017)
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m10.md`
+- Ruling: R190
+- Änderungen: Übergabe bei 200k Kontext oder 6 Arbeiter-Starts; Doku als eigener Plan-Task
+
+## 2026-10-03 · Persona lead-qa 1.6
+
+- Anlass: Meilenstein-Retro M10 (E-010)
+- Datenbasis: `docs/studio/retros/2026-10-03-meilenstein-m10.md`
+- Ruling: R190
+- Änderungen: Gate Spec prüft Dateigrössen (Spec ≤ 40 KB, Task-Dateien ≤ 10 KB)
+
 ## 2026-10-02 · Handbuch 1.13
 
 - Anlass: Token-Effizienz-Analyse (Nutzerauftrag), Ad-hoc-Retro

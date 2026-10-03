@@ -20,7 +20,7 @@ Prozessstufe: <leicht|voll>
 3. Kontext (nur diese Dateien lesen): <pfad>, <pfad>
 4. Deliverable: <was> unter <ablageort>   (Final-Review und Playtests: kein Report-Dateipfad, der Schlussbericht ist der Report)
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
-6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>
+6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>; Umsetzer: Doku-Dateien (D1: README, arc42, ADR, Spec-Verweise) des Plan-Tasks sind ausdrücklich erlaubt (E-017)
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>
 8. Logging-Pflicht: siehe Block „Logging"
 
