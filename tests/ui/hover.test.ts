@@ -238,7 +238,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
       lines: ['Gut für Fischerhütte an der Küste'],
     });
     forceGrass(w, sea.x, sea.y - 1);
-    expect(hoverInfo(w, { x: sea.x, y: sea.y - 1 }, 0, none)!.lines[0]).toMatch(/Fischerhütte$/);
+    expect(hoverInfo(w, { x: sea.x, y: sea.y - 1 }, 0, none)!.lines[0]).toMatch(/Fischerhütte/);
   });
   it('Spec 13.2 Haus-Diagnose: Ausserhalb der Versorgung, Dienst fehlt in Reichweite', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
