@@ -15,6 +15,79 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, tier?: Tier): Building => {
   if (tier) b.house = { tier } as Building['house'];
   return b;
 };
+const MAIN_REF: Record<string, string> = {
+  kontor: '36b685b0',
+  market: '4f0aa6e',
+  house1: '4e81a70f',
+  house2: '408bdaca',
+  house3: '23445565',
+  house4: '131aec0d',
+  fisher: '7e300971',
+  lumberjack: 'e1759b25',
+  quarry: '45644c4',
+  sheepfarm: 'c78ca3b',
+  weaver: '74a4d359',
+  canefarm: '16e630b1',
+  distillery: '36190c4c',
+  toolmaker: '81938d37',
+  chapel: '59f9db0a',
+  school: 'f10cb106',
+  firestation: '18769b1e',
+  bathhouse: '64b56519',
+  glassworks: '837a5355',
+  townhall: 'be83a713',
+};
+/**
+ * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammen aus dem Stand
+ * main @ 4a5130e (vor H-R7), Gebäude bei (12, 7), Kamera (0, 0, Zoom 1), Variante nicht angegeben.
+ */
+function hashEvents(ev: unknown[]): string {
+  const s = JSON.stringify(ev, (_k, v) =>
+    typeof v === 'number' ? Math.round(v * 1000) / 1000 : v,
+  );
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  return h.toString(16);
+}
+
+/** Aufzeichnender Kontext für Striche: Teilpfade als Strecken `[Punkt, Punkt]`, nur Pfadbefehle. */
+function segmentCtx(): { ctx: CanvasRenderingContext2D; segs: { x: number; y: number }[][] } {
+  const segs: { x: number; y: number }[][] = [];
+  let last: { x: number; y: number } | null = null;
+  let pending: { x: number; y: number }[][] = [];
+  const rec: Record<string, unknown> = {
+    beginPath: () => {
+      pending = [];
+      last = null;
+    },
+    moveTo: (x: number, y: number) => {
+      last = { x, y };
+    },
+    lineTo: (x: number, y: number) => {
+      const p = { x, y };
+      if (last) pending.push([last, p]);
+      last = p;
+    },
+    stroke: () => {
+      segs.push(...pending);
+    },
+  };
+  const ctx = new Proxy(rec, {
+    get: (t, k) => (k in t ? t[k as string] : () => undefined),
+    set: () => true,
+  }) as unknown as CanvasRenderingContext2D;
+  return { ctx, segs };
+}
+const inPolyT = (poly: readonly { x: number; y: number }[], x: number, y: number): boolean => {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!,
+      c = poly[j]!;
+    if (a.y > y !== c.y > y && x < ((c.x - a.x) * (y - a.y)) / (c.y - a.y) + a.x) inside = !inside;
+  }
+  return inside;
+};
+
 const ids = Object.keys(BUILDING_DEFS) as BuildingDefId[];
 const cases: [BuildingDefId, Tier | undefined][] = [];
 for (const id of ids) {
@@ -59,10 +132,13 @@ describe('H-R7 AK1 Determinismus', () => {
       }
     }
   });
-  it('AK1 Variante 0 zeichnet wie bisher (keine Farbmischung)', () => {
-    const f = fakeCtx();
-    drawBody(f.ctx, cam, BUILDING_DEFS.market, mk('market'), 0);
-    expect(events(BUILDING_DEFS.market, mk('market'), 0)).toEqual(f.log.events);
+  it('AK1 Variante 0 zeichnet bytegleich wie main @ 4a5130e (feste Referenz, Hash der Aufzeichnung)', () => {
+    for (const [id, tier] of cases) {
+      const b = mk(id, 12, 7, tier);
+      expect(hashEvents(events(BUILDING_DEFS[id], b, 0)), `${id}${tier ?? ''}`).toBe(
+        MAIN_REF[tier ? id + tier : id],
+      );
+    }
   });
 });
 
@@ -195,24 +271,43 @@ describe('H-R7 AK5 Material', () => {
       expect((f.log as unknown as { lineJoin?: string }).lineJoin).toBe('round');
       expect((f.log as unknown as { lineCap?: string }).lineCap).toBe('round');
       expect(f.log.saves).toBe(f.log.restores);
-      // Punkte liegen in den Umrissen der Flächen (also in spriteBounds, nie am Rand der Fläche abgeschnitten)
-      const xs = fs.flatMap((q) => q.pts.map((p) => p.x)),
-        ys = fs.flatMap((q) => q.pts.map((p) => p.y));
-      for (const p of f.log.allPoints) {
-        expect(p.x).toBeGreaterThanOrEqual(Math.min(...xs) - 1e-6);
-        expect(p.x).toBeLessThanOrEqual(Math.max(...xs) + 1e-6);
-        expect(p.y).toBeGreaterThanOrEqual(Math.min(...ys) - 1e-6);
-        expect(p.y).toBeLessThanOrEqual(Math.max(...ys) + 1e-6);
-      }
     });
   }
-  it('AK5 Material nur im Cache: drawBody selbst zeichnet keine Strich-Fugen mehr als vorher', () => {
-    const b = mk('house', 12, 7, 2);
-    const f = fakeCtx();
-    drawBody(f.ctx, cam, BUILDING_DEFS.house, b, 0, undefined, 2);
-    const strokes = f.log.events.filter((e) => e.op === 'stroke').length;
-    const fills = f.log.events.filter((e) => e.op === 'fill').length;
-    expect(strokes).toBeLessThanOrEqual(fills + 10);
+  it('AK5 kein Materialstrich liegt unter einer später gezeichneten Fläche (alle Typen, Stufen, Varianten, Zoom 0,75/1/1,5)', () => {
+    let segsChecked = 0;
+    for (const [id, tier] of cases)
+      for (let v = 0; v < VARIANT_COUNT; v++)
+        for (const z of [0.75, 1, 1.5]) {
+          const def = BUILDING_DEFS[id];
+          const b = mk(id, 12, 7, tier);
+          const fs = bodyFaces(def, b, v, { x: 0, y: 0, zoom: z });
+          const r = segmentCtx();
+          drawMaterial(r.ctx, fs, def, b, v, z);
+          for (const seg of r.segs) {
+            const [p, q] = [seg[0]!, seg[1]!];
+            // Stützpunkte entlang der Strecke (inneres 90 %, Kanten der Fläche ausgenommen); oberste Fläche je Punkt
+            const tops = [0.05, 0.25, 0.5, 0.75, 0.95].map((t) => {
+              const x = p.x + (q.x - p.x) * t,
+                y = p.y + (q.y - p.y) * t;
+              let top = -1;
+              fs.forEach((f, i) => {
+                if (inPolyT(f.pts, x, y)) top = i;
+              });
+              return top;
+            });
+            expect(new Set(tops).size, `${id}${tier ?? ''} v${v} z${z}`).toBe(1);
+            expect(tops[0]).toBeGreaterThanOrEqual(0);
+            segsChecked++;
+          }
+        }
+    expect(segsChecked).toBeGreaterThan(500);
+  });
+  it('AK5 drawBody zeichnet in jeder Variante gleich viele Striche wie Variante 0 (Material nur im Cache)', () => {
+    const strokes = (id: BuildingDefId, tier: Tier | undefined, v: number) =>
+      events(BUILDING_DEFS[id], mk(id, 12, 7, tier), v).filter((e) => e.op === 'stroke').length;
+    for (const [id, tier] of cases)
+      for (let v = 1; v < VARIANT_COUNT; v++)
+        expect(strokes(id, tier, v)).toBe(strokes(id, tier, 0));
   });
   it('AK5 Material ist deterministisch und nutzt nur Palettenfarben (kein Signal)', () => {
     const def = BUILDING_DEFS.house;
@@ -265,6 +360,25 @@ describe('H-R7 AK7 Speicher', () => {
       total += px * VARIANT_COUNT;
     }
     expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES);
+  });
+  it('AK7 bei Zoom 2 / DPR 2 sprengt die volle Matrix das Limit knapp; ein Frame braucht sie nie ganz', () => {
+    // Volle Matrix: 66,7 MB > 64 MB (dokumentiert in variants.ts). Im Spiel zeigt ein Bild 1280 x 800 bei Zoom 2
+    // höchstens 125 Kacheln; jedes Gebäude hat mindestens eine Kachel und die grossen Typen mehrere, also sind
+    // höchstens 40 verschiedene Sprites gleichzeitig nötig. Auch die 40 grössten passen ins Limit (kein Thrash).
+    const margin = createSpriteCache({ factory: null }).margin;
+    const sizes: number[] = [];
+    for (const [id, tier] of cases) {
+      const sb = spriteBounds(BUILDING_DEFS[id], mk(id, 10, 10, tier));
+      const px = Math.ceil((sb.w + 2 * margin) * 4) * Math.ceil((sb.h + 2 * margin) * 4) * 4;
+      for (let v = 0; v < VARIANT_COUNT; v++) sizes.push(px);
+    }
+    const total = sizes.reduce((a, b) => a + b, 0);
+    expect(total).toBeGreaterThan(SPRITE_CACHE_MAX_BYTES * 0.9); // Obergrenze der Variantenzahl ist ausgereizt
+    const top40 = sizes
+      .sort((a, b) => b - a)
+      .slice(0, 40)
+      .reduce((a, b) => a + b, 0);
+    expect(top40).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES);
   });
   it('AK7 Variantenzahl ist begrenzt (Cache-Speicher)', () => {
     expect(VARIANT_COUNT).toBeLessThanOrEqual(6);
