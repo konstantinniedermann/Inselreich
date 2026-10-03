@@ -895,3 +895,22 @@ der Hälfte, Modell laut Persona) ist durch Handbuch 1.13 / E-010 überholt; Bud
 falscher Alarm in einer Retro — `docs/studio/retros/2026-10-02-adhoc-token-effizienz.md`
 
 Entscheider: L0 · Anlass: Merge EFF, Hook-Alarme · ADR: —
+
+## R170 · 2026-10-03 · Nutzerfeedback Terrain, Bausound, Ausbau, Freischaltung
+
+Ruling (Auslegung Nutzerauftrag „weiter" + 5 Punkte): (1) **H-R5 Terrain nachbessern** (Berg-Textur,
+sichtbares Quadratraster) ist neues M9-Häppchen, Stufe leicht, lead-art → art-rendering-engineer, nur
+`src/render/terrain*.ts`/`groundDecor.ts`/`palette.ts`; kein `renderer.ts`, kein `sprites.ts` (R159, R164);
+G3 Felsmassive bleibt Welle 2. (2) **H-A1 Bausound** (Platzier-Klang je Gebäudeart) ist neues Häppchen,
+Stufe leicht, lead-art → art-audio-engineer; Klänge prozedural oder Positivliste (ADR-011), Auslöser
+aus `src/ui/`, `src/audio/` importiert nichts aus sim/ui. Startet nach H-R5 (Parallelität 2, Woche > 80 %).
+(3) **Ausbau von Produktionsgebäuden** (Stufen je Gebäude, freigeschaltet über Bevölkerungsstufe) ist
+neues System S12: Brainstorming lead-design jetzt (ohne Code), baut auf `world.unlocked` aus M10 auf;
+Umsetzung im Meilenstein M11 (bricht ohnehin die Baseline), nicht in M10 — M10-Plan bleibt gültig.
+(4) **„Freischaltbar für alle Gebäude"** ist M10 (Baum U0–U6, Start mit Weg, Wohnhaus, Holzfäller,
+Fischerhütte) — bereits geplant. Der thematische Rahmen („ungebildete Fischer gehen an Land") kommt als
+Text-Delta zur M10-Spec von lead-design (Namen und Begründungen in `defs/`, keine Strukturänderung);
+M10 Stufe 1 (T01) startet nach diesem Delta. — Kosten bei Irrtum: Ausbau früher gewollt → M11 vorziehen;
+Thema verlangt Strukturänderung → T01 neu briefen.
+
+Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-03 · ADR: —
