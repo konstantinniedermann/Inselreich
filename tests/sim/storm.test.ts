@@ -86,9 +86,10 @@ describe('M6 Sturm', () => {
     expect(b(w, 'quarry').progress).toBe(b(twin, 'quarry').progress);
   });
 
-  it('AK-S3-01 sturmanfällig genau fisher, lumberjack, sheepfarm, canefarm', () => {
+  it('AK-S3-01 (M11 S2) sturmanfällig genau fisher, lumberjack, sheepfarm, canefarm, cattlefarm', () => {
     expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].stormAffected === true).sort()).toEqual([
       'canefarm',
+      'cattlefarm',
       'fisher',
       'lumberjack',
       'sheepfarm',

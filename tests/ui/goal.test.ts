@@ -155,20 +155,20 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
     return x;
   };
   const tail = '. Mehr unter Hilfe (?)';
-  it('AK-U1-08 Texte je Eintrag wörtlich, Kombination, nur U6 = M8-Text, gleich → null, kein „Tick" (M11 S10)', () => {
+  it('AK-U1-08 (M11 S2) Texte je Eintrag wörtlich, Kombination, nur U6 = M8-Text, gleich → null, kein „Tick" (M11 S10)', () => {
     const t = (prev: UnlockId[], now: UnlockId[], c: CrisisLevel = 'normal') =>
       unlockNoticeText(prev, w(now, c));
     expect(t(['U0'], ['U0', 'U2'])).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+      `Neu: Jagdhütte, Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
     );
     expect(t(['U0'], ['U0', 'U2'], 'off')).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
+      `Neu: Jagdhütte, Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Roden (C), Aufforsten (Q) — deine Pioniere wollen Siedler werden${tail}`,
     );
     expect(t(['U0'], ['U0', 'U1'])).toBe(
       `Neu: Marktplatz (M) — deine Siedlung wächst über das Kontor hinaus${tail}`,
     );
     expect(t(['U0', 'U2'], ['U0', 'U2', 'U3'])).toBe(
-      `Neu: Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
+      `Neu: Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
     );
     expect(t(['U0', 'U2', 'U3'], ['U0', 'U2', 'U3', 'U4'])).toBe(
       `Neu: Zuckerrohrplantage (Z), Brennerei (N), Schule (U) — deine Siedler wollen Bürger werden${tail}`,
@@ -183,7 +183,7 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
       'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
     );
     expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
-      `Neu: Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
+      `Neu: Jagdhütte, Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
     );
     expect(t(['U0', 'U2'], ['U0', 'U2'])).toBeNull();
     for (const s of [t(['U0'], ['U0', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6'])])

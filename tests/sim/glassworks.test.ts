@@ -47,7 +47,7 @@ const run = (w: World, n: number): void => {
 const clone = (w: World): World => JSON.parse(serialize(w)) as World;
 
 describe('M8 Glashütte: Werte', () => {
-  it('AK-S2-01 glassworks laut Spec 5.2; Ein-Input-Betriebe als Liste; zwölf brennbare Ids', () => {
+  it('AK-S2-01 (M11 S2) glassworks laut Spec 5.2; Ein-Input-Betriebe als Liste; fünfzehn brennbare Ids', () => {
     const g = BUILDING_DEFS.glassworks;
     expect(g).toMatchObject({
       name: 'Glashütte',
@@ -66,7 +66,7 @@ describe('M8 Glashütte: Werte', () => {
     expect(BUILDING_DEFS.weaver.consumes).toEqual(['wool']);
     expect(BUILDING_DEFS.distillery.consumes).toEqual(['cane']);
     expect(BUILDING_DEFS.toolmaker.consumes).toEqual(['wood']);
-    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(13);
+    expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].flammable === true)).toHaveLength(15);
   });
 });
 

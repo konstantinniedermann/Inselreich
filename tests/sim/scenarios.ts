@@ -270,6 +270,14 @@ function galerie(): World {
   put(w, 'bathhouse', kx + 11, ky + 1); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
   put(w, 'glassworks', kx + 15, ky + 1); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   put(w, 'townhall', kx + 17, ky + 1); // M10-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  // M11: Jagdhütte und Rinderfarm nördlich, eigener Weg; 12 freie Waldkacheln, auch nach T05 ok
+  roadCol(w, kx + 2, ky - 5, ky - 1);
+  roadRow(w, kx + 3, kx + 11, ky - 5);
+  for (let y = ky - 9; y <= ky - 6; y++)
+    for (let x = kx + 2; x <= kx + 5; x++)
+      if (x !== kx + 3 || y !== ky - 6) setTerrain(w, x, y, 'forest');
+  put(w, 'hunter', kx + 3, ky - 6);
+  put(w, 'cattlefarm', kx + 8, ky - 7);
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;

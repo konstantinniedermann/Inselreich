@@ -32,7 +32,7 @@ import { forceGrass, forceRect, placeService, setHouse, village } from './helper
 const row = (id: UnlockId) => UNLOCKS.find((u) => u.id === id)!;
 
 describe('M10 Freischaltbaum: Defs und Welt', () => {
-  it('AK-S1-01 UNLOCKS: sieben Einträge wie 4.2, Texte 4.5, jede Id genau einmal (M11 S10)', () => {
+  it('AK-S1-01 UNLOCKS: sieben Einträge wie 4.2, Texte 4.5, jede Id genau einmal (M11 S10, M11 S2)', () => {
     expect(UNLOCKS.map((u) => u.id)).toEqual(['U0', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6']);
     expect(UNLOCK_IDS).toEqual(UNLOCKS.map((u) => u.id));
     expect(row('U0')).toMatchObject({
@@ -49,13 +49,13 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
     });
     expect(row('U2')).toMatchObject({
       trigger: { kind: 'tierWish', tier: 2 },
-      buildings: ['quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation'],
+      buildings: ['hunter', 'quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation'],
       goods: ['wool', 'cloth'],
       functions: ['forest'],
     });
     expect(row('U3')).toMatchObject({
       trigger: { kind: 'tierReached', tier: 2 },
-      buildings: ['townhall'],
+      buildings: ['cattlefarm', 'townhall'],
       goods: [],
       functions: ['orders', 'upgrade2'],
     });
@@ -211,7 +211,7 @@ describe('M10 Freischaltung: Auslöser und Kette (Spec 4.2, 4.3)', () => {
 });
 
 describe('M10 nextUnlocks (Spec 12.2)', () => {
-  it('AK-S1-10 neue Welt mit 3/2/1/1 EW: U1 und U2 mit Fortschritt; Kette; U6; unlockAll leer', () => {
+  it('AK-S1-10 (M11 S2) neue Welt mit 3/2/1/1 EW: U1 und U2 mit Fortschritt; Kette; U6; unlockAll leer', () => {
     const { w, houses } = village(4, { crisisLevel: 'normal' });
     [3, 2, 1, 1].forEach((n, i) => setHouse(houses[i]!, 1, n));
     const n = nextUnlocks(w);
@@ -224,7 +224,16 @@ describe('M10 nextUnlocks (Spec 12.2)', () => {
       taxBlocks: false,
     });
     expect(n[1]).toMatchObject({
-      names: ['Steinbruch', 'Schäferei', 'Weberei', 'Kapelle', 'Feuerwache', 'Roden', 'Aufforsten'],
+      names: [
+        'Jagdhütte',
+        'Steinbruch',
+        'Schäferei',
+        'Weberei',
+        'Kapelle',
+        'Feuerwache',
+        'Roden',
+        'Aufforsten',
+      ],
       when: 'sobald ein Wohnhaus 4 Pioniere hat',
       now: 3,
       need: 4,
@@ -233,6 +242,7 @@ describe('M10 nextUnlocks (Spec 12.2)', () => {
     const off = village(4);
     [3, 2, 1, 1].forEach((m, i) => setHouse(off.houses[i]!, 1, m));
     expect(nextUnlocks(off.w)[1]!.names).toEqual([
+      'Jagdhütte',
       'Steinbruch',
       'Schäferei',
       'Weberei',
@@ -341,5 +351,62 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
     expect(
       buildingShown(createWorld(3, { crisisLevel: 'mild', unlockAll: true }), 'firestation'),
     ).toBe(true);
+  });
+});
+
+describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
+  it('AK-UNL-01 U2 hunter, U3 cattlefarm und upgrade2, U5 upgrade3; jede Id und Funktion genau einmal; Labels', () => {
+    expect(row('U2').buildings).toEqual([
+      'hunter',
+      'quarry',
+      'sheepfarm',
+      'weaver',
+      'chapel',
+      'firestation',
+    ]);
+    expect(row('U3').buildings).toEqual(['cattlefarm', 'townhall']);
+    expect(row('U3').functions).toContain('upgrade2');
+    expect(row('U5').functions).toContain('upgrade3');
+    const all = UNLOCKS.flatMap((u) => u.buildings);
+    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor'))
+      expect(
+        all.filter((b) => b === id),
+        id,
+      ).toHaveLength(1);
+    const fns = UNLOCKS.flatMap((u) => u.functions);
+    for (const f of Object.keys(FUNCTION_LABELS))
+      expect(
+        fns.filter((x) => x === f),
+        f,
+      ).toHaveLength(1);
+    expect(FUNCTION_LABELS.upgrade2).toEqual(['Ausbau Stufe 2']);
+    expect(FUNCTION_LABELS.upgrade3).toEqual(['Ausbau Stufe 3']);
+  });
+  it('AK-UNL-02 neue Welt: Jagdhütte erst mit U2, Rinderfarm erst mit U3 (lockText), danach baubar', () => {
+    const x0 = createWorld(3);
+    x0.money = 10_000;
+    const k = x0.buildings[x0.kontorId]!;
+    forceRect(x0, k.x + 3, k.y - 8, 8, 8, 'grass'); // Rinderfarm bei (k.x+5, k.y-5)
+    forceRect(x0, k.x + 3, k.y + 2, 6, 4, 'forest'); // Jagdhütte bei (k.x+5, k.y+3)
+    const [fx, fy, hx, hy] = [k.x + 5, k.y - 5, k.x + 5, k.y + 3];
+    const lock = (id: 'U2' | 'U3') => ({ ok: false, reason: unlockText(row(id), 'lockText') });
+    expect(canPlace(x0, 'hunter', hx, hy)).toEqual(lock('U2'));
+    expect(canPlace(x0, 'cattlefarm', fx, fy)).toEqual(lock('U3'));
+    x0.unlocked = ['U0', 'U2'];
+    expect(canPlace(x0, 'hunter', hx, hy)).toEqual({ ok: true });
+    expect(canPlace(x0, 'cattlefarm', fx, fy)).toEqual(lock('U3'));
+    x0.unlocked = ['U0', 'U2', 'U3'];
+    expect(canPlace(x0, 'cattlefarm', fx, fy)).toEqual({ ok: true });
+  });
+  it('AK-UNL-05 Tipps U2, U3, U5 enthalten die Sätze aus Anhang 01 A.5; kein Text mit "Tick"', () => {
+    expect(row('U2').tip).toContain(
+      'Die Jagdhütte liefert Nahrung aus dem Wald; sie braucht 10 freie Waldfelder im Umkreis.',
+    );
+    expect(row('U3').tip).toContain('Die Rinderfarm braucht viel freie Weide.');
+    expect(row('U3').tip).toContain('Betriebe lassen sich jetzt gegen Stoff ausbauen.');
+    expect(row('U5').tip).toContain('Ausbau Stufe 3 kostet Rum.');
+    for (const u of UNLOCKS)
+      for (const k of ['tip', 'lockText', 'whenText', 'notice'] as const)
+        expect(u[k]).not.toMatch(/Tick/);
   });
 });

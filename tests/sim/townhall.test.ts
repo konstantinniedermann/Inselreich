@@ -33,7 +33,7 @@ function fill(w: World, b: Building, tier: Tier, n: number): void {
 }
 
 describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
-  it('AK-S2-01 Defs Amtsstube, maxCount, requiresService, U3, brennbar', () => {
+  it('AK-S2-01 (M11 S2) Defs Amtsstube, maxCount, requiresService, U3, brennbar', () => {
     const t = BUILDING_DEFS.townhall;
     expect(t).toMatchObject({
       name: 'Amtsstube',
@@ -52,7 +52,7 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
     expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].maxCount !== undefined)).toEqual([
       'townhall',
     ]);
-    expect(UNLOCKS.find((u) => u.id === 'U3')!.buildings).toEqual(['townhall']);
+    expect(UNLOCKS.find((u) => u.id === 'U3')!.buildings).toEqual(['cattlefarm', 'townhall']);
     expect(BUILDING_DEFS.toolmaker.requiresService).toBe('school');
     expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].requiresService !== undefined)).toEqual([
       'toolmaker',

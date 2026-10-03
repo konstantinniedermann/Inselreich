@@ -17,8 +17,8 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(9);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 14 building defs whose goods exist', () => {
-    expect(BUILDING_IDS).toHaveLength(17);
+  it('has 14 building defs whose goods exist (M11 S2)', () => {
+    expect(BUILDING_IDS).toHaveLength(19);
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -134,5 +134,51 @@ describe('M11 Werte P1 (Anhang 01 A.1, A.2)', () => {
   it('AK-P1-01 TAX_UNIT 2, UNSATISFIED_TAX_FACTOR 0,5, TAX_CARRY_DIVISOR 20 000, Faktor 2, EFF 256/1000', () => {
     expect([TAX_UNIT, UNSATISFIED_TAX_FACTOR, TAX_CARRY_DIVISOR]).toEqual([2, 0.5, 20000]);
     expect([UPGRADE_DEFICIT_WAIT_FACTOR, EFF_WINDOW, EFF_MAX]).toEqual([2, 256, 1000]);
+  });
+});
+
+describe('M11 Jagdhütte und Rinderfarm (Spec 3.3)', () => {
+  it('AK-P2S2-01 Felder wie Spec 3.3, Reihenfolge nach fisher, Geld je Einwohner, Nahrungspreis', () => {
+    expect(BUILDING_DEFS.hunter).toEqual({
+      id: 'hunter',
+      name: 'Jagdhütte',
+      w: 1,
+      h: 1,
+      cost: { money: 50, wood: 2, tools: 1, stone: 0 },
+      upkeep: 5,
+      category: 'production',
+      flammable: true,
+      produces: 'food',
+      cycle: 50,
+      site: [{ kind: 'radius', terrain: 'forest', radius: 3, min: 10, free: true }],
+    });
+    expect(BUILDING_DEFS.cattlefarm).toEqual({
+      id: 'cattlefarm',
+      name: 'Rinderfarm',
+      w: 2,
+      h: 2,
+      cost: { money: 250, wood: 15, tools: 3, stone: 0 },
+      upkeep: 10,
+      category: 'production',
+      flammable: true,
+      stormAffected: true,
+      produces: 'food',
+      cycle: 20,
+      site: [{ kind: 'radius', terrain: 'grass', radius: 3, min: 16, free: true }],
+    });
+    expect(BUILDING_IDS.slice(3, 6)).toEqual(['fisher', 'hunter', 'cattlefarm']);
+    const perEw = (id: 'fisher' | 'hunter' | 'cattlefarm') => {
+      const d = BUILDING_DEFS[id];
+      const ew = 100 / d.cycle! / 0.5; // Einwohner je Bau (Anhang 01 A.3)
+      return d.cost.money / ew + (d.upkeep * 60) / ew;
+    };
+    const v = [perEw('fisher'), perEw('hunter'), perEw('cattlefarm')];
+    expect(v).toEqual([80, 87.5, 85]);
+    expect(Math.max(...v)).toBeLessThanOrEqual(1.1 * Math.min(...v));
+    // Unterhalt je Nahrung: 2,0 / 2,5 / 2,0 (Spec-Widerspruch zu "sell <", siehe Risiken T04b): Werte pinnen
+    const per = (id: 'fisher' | 'hunter' | 'cattlefarm') =>
+      BUILDING_DEFS[id].upkeep / (100 / BUILDING_DEFS[id].cycle!);
+    expect([per('fisher'), per('hunter'), per('cattlefarm')]).toEqual([2, 2.5, 2]);
+    expect(GOODS.food.sell).toBe(3);
   });
 });

@@ -1,13 +1,13 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { createWorld, idx, isLand, tileAt } from '../../src/sim/world';
-import { buildLock, canPlace, canPlaceRoad } from '../../src/sim/placement';
+import { createWorld, idx, isLand, tileAt, tilesInRadius } from '../../src/sim/world';
+import { buildLock, canPlace, canPlaceRoad, siteRuleOk } from '../../src/sim/placement';
 import { placeBuilding, placeRoad, removeRoad, demolish } from '../../src/sim/build';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { fail } from '../../src/sim/types';
 import { deriveUnlocks, entryOfBuilding } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
-import { forceGrass } from './helpers';
+import { forceGrass, forceRect } from './helpers';
 
 function landRect(w: World, size: number): { x: number; y: number } {
   for (let y = 1; y < w.height - size; y++)
@@ -297,5 +297,69 @@ describe('M8 Bausperre (Änderung S11)', () => {
     w.unlocked = deriveUnlocks(w);
     expect(buildLock(w, 'glassworks')).toBeNull();
     expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(true);
+  });
+});
+
+describe('M11 Regelfeld free (Spec 3.3)', () => {
+  const w0 = (): World => {
+    const x = createWorld(3, { unlockAll: true });
+    x.money = 10_000;
+    return x;
+  };
+  function hunterSite(x: World): { w: World; x: number; y: number } {
+    const k = x.buildings[x.kontorId]!;
+    forceRect(x, k.x + 2, k.y, 5, 1, 'grass');
+    forceRect(x, k.x + 3, k.y - 4, 7, 7, 'grass');
+    forceRect(x, k.x + 4, k.y - 3, 5, 2, 'forest');
+    for (let i = 2; i <= 6; i++) expect(placeRoad(x, k.x + i, k.y).ok).toBe(true);
+    const site = { x: k.x + 6, y: k.y - 1 };
+    const [cx, cy] = [site.x + 0.5, site.y + 0.5];
+    const free = tilesInRadius(x, cx, cy, 3).filter((p) => {
+      const t = tileAt(x, p.x, p.y)!;
+      return t.terrain === 'forest' && t.buildingId === null && !t.road;
+    });
+    expect(free).toHaveLength(10);
+    return { w: x, ...site };
+  }
+  it('AK-P2S2-02 Jagdhütte: genau 10 freie Waldkacheln ok; Weg, Gebäude oder eigener Grundriss zählen nicht', () => {
+    const reason = { ok: false, reason: 'Zu wenig freier Wald in der Nähe' };
+    const a = hunterSite(w0());
+    expect(canPlace(a.w, 'hunter', a.x, a.y)).toEqual({ ok: true });
+    const b = hunterSite(w0());
+    expect(placeRoad(b.w, b.x - 2, b.y - 1).ok).toBe(true);
+    expect(canPlace(b.w, 'hunter', b.x, b.y)).toEqual(reason);
+    const c = hunterSite(w0());
+    expect(placeBuilding(c.w, 'house', c.x - 2, c.y - 1).ok).toBe(true);
+    expect(canPlace(c.w, 'hunter', c.x, c.y)).toEqual(reason);
+    const d = hunterSite(w0());
+    d.w.tiles[idx(d.w, d.x - 2, d.y - 1)]!.terrain = 'grass'; // 9 frei ...
+    d.w.tiles[idx(d.w, d.x, d.y)]!.terrain = 'forest'; // ... plus Wald unter dem eigenen Grundriss
+    expect(canPlace(d.w, 'hunter', d.x, d.y)).toEqual(reason);
+  });
+  it('AK-P2S2-05 Regeln ohne free zählen wie heute: Schäferei mit Weg auf einer ihrer 4 Weidekacheln bleibt baubar', () => {
+    expect(siteRuleOk).toBeTypeOf('function');
+    const sheep = (): { w: World; x: number; y: number } => {
+      const x = w0();
+      const k = x.buildings[x.kontorId]!;
+      const [X, Y] = [k.x + 6, k.y - 8];
+      forceRect(x, X - 4, Y - 4, 10, 10, 'forest');
+      for (const [gx, gy] of [
+        [X, Y - 1],
+        [X + 1, Y - 1],
+        [X - 1, Y],
+        [X - 1, Y + 1],
+      ] as const)
+        forceGrass(x, gx, gy);
+      expect(placeRoad(x, X - 1, Y).ok).toBe(true); // Weg auf einer der 4 Weidekacheln
+      return { w: x, x: X, y: Y };
+    };
+    const a = sheep();
+    expect(canPlace(a.w, 'sheepfarm', a.x, a.y)).toEqual({ ok: true });
+    const b = sheep();
+    b.w.tiles[idx(b.w, b.x, b.y - 1)]!.terrain = 'forest';
+    expect(canPlace(b.w, 'sheepfarm', b.x, b.y)).toEqual({
+      ok: false,
+      reason: 'Zu wenig Weide in der Nähe',
+    });
   });
 });
