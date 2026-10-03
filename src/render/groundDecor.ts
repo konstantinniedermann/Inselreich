@@ -4,7 +4,7 @@ import { PALETTE, mixHex } from './palette';
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
 // Reine Helfer ohne Canvas; Lage in Kachel-Anteilen, deterministisch aus `hash2`/`valueNoise`.
 // Seed-Versätze: Blumen 60 (Rauschen) und 66–82, Büsche 90–100 (k = 0, 1 mit Schritt 5). Frei von 11, 13, 17, 19,
-// 31–34, 41, 51, 52, den Terrainrauschen 23 (Felskorn), 27 (Fels, 2. Oktave), 29 (Gebirgskuppen), 61/62 in terrain.ts
+// 31–34, 41, 51, 52, 101–110 (H-R9: Wiesenwärme, Flecken, Mottling, Kuppen, Dünen in terrain.ts), den Terrainrauschen 23 (Felskorn), 27 (Fels, 2. Oktave), 29 (Gebirgskuppen), 61/62 in terrain.ts
 // und trees.ts (seed + 68 mit Argumenten `variant, k`, keine Kollision).
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -81,4 +81,18 @@ export function shrubsFor(seed: number, x: number, y: number, sides: ForestSides
     });
   }
   return out;
+}
+
+/**
+ * Grosser Warm/Kühl-Verlauf der Wiese −1…1 (H-R9 B3, ~0,09 Merkmale je Kachel); `terrain.ts` färbt damit den Boden,
+ * die Büschel-Dichte folgt ihm (trockene Stellen karger). Rein, an Kachelkoordinaten (Kommazahlen erlaubt).
+ */
+export function meadowWarmth(seed: number, fx: number, fy: number): number {
+  return Math.max(-1, Math.min(1, (valueNoise(seed + 101, fx * 0.09, fy * 0.09) - 0.5) * 3.6));
+}
+
+/** Blumenschleier 0…1: die Verteilung von `flowersFor` als stetiges Feld (Dichte über 0,55 des Rauschens). */
+export function flowerVeil(seed: number, fx: number, fy: number): number {
+  const field = clamp01((valueNoise(seed + 60, fx * 0.18, fy * 0.18) - 0.5) * 2.6 + 0.5);
+  return Math.max(0, (field - 0.55) / 0.45);
 }
