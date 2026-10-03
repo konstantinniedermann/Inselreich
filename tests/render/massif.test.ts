@@ -37,6 +37,7 @@ import {
 import {
   createMassifCache,
   massifBounds,
+  massifOnScreen,
   massifSilhouette,
   pieceQuads,
   rasterPiece,
@@ -641,6 +642,27 @@ describe('H-R9 A6 Cache und Culling', () => {
       expect(cache.stats().bytes).toBeLessThanOrEqual(limit);
     }
     expect(cache.stats().entries).toBeLessThan(items.length);
+  });
+
+  it('A6 bildfüllendes grosses Massiv (Seed 14) passt bei 1920 × 1080 und DPR 2 auf jeder Zoomstufe unter die Grenze: zweiter Frame ohne Neubau', () => {
+    const w = createWorld(14, { unlockAll: true });
+    const c = largest(w);
+    expect(c.n).toBeGreaterThan(400);
+    const view = { w: 1920, h: 1080 };
+    for (const zoom of [0.5, 1, 1.5, 2]) {
+      const cam2: Camera = { x: 0, y: 0, zoom };
+      centerOn(cam2, (c.x0 + c.x1 + 1) / 2, (c.y0 + c.y1 + 1) / 2, view, { w: 64, h: 64 });
+      const vis = massifItems(w).filter((it) => massifOnScreen(cam2, view, it));
+      const cache = createMassifCache({ factory: fakeCanvas, buildsPerFrame: 1e9 });
+      const { ctx } = fakeCtx();
+      for (let frame = 0; frame < 2; frame++) {
+        cache.beginFrame(2);
+        for (const it of vis) cache.draw(ctx, cam2, it);
+      }
+      const st = cache.stats();
+      expect(st.misses, `Zoom ${zoom}`).toBe(vis.length);
+      expect(st.bytes).toBeLessThanOrEqual(MASSIF_CACHE_MAX_BYTES * 0.75); // Luft für den Zoomwechsel
+    }
   });
 
   it('A6 Culling je Teilstück über die Bildbox; render zeichnet nur sichtbare Teilstücke, save/restore ausgeglichen', () => {

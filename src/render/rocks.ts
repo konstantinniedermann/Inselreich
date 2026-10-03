@@ -1,6 +1,6 @@
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem } from './iso';
-import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES } from './limits';
+import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
 import { SUB, pieceHeight, pieceMesh, type MassifPiece, type MeshCell } from './massif';
 
@@ -408,7 +408,7 @@ export function createMassifCache(
   function build(item: MassifItem, step: number): Entry | null {
     const surface = factory();
     if (!surface) return null;
-    const f = step * dpr;
+    const f = Math.min(step * dpr, MASSIF_MAX_SCALE);
     const b = massifBounds(item);
     const w = Math.max(1, Math.round(STRIP * f)),
       h = Math.max(1, Math.ceil(b.h * f));
