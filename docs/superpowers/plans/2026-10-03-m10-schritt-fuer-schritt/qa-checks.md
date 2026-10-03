@@ -134,7 +134,7 @@ t.terrainStats.patches.length = 0`; dann 10 Forst-Aktionen abwechselnd auf `wald
    Hilfe zeigen Symbole vor den Namen; der Text ohne Symbole (`textContent` der Meldung, Namen im Eintrag per `aria-label`) ist gleich dem aus QA-U1/QA-U2.
 4. **AK-U4-04** (K2, `m10-pionier-fast-voll`): nach Tick 100 tragen die fünf neuen Einträge das Zeichen „neu"
    (`aria-label` „neu"); nach einmaligem Wählen von „Kapelle" fehlt es dort; Speichern, Laden: kein Zeichen.
-5. **AK-U4-05** (K3, `galerie`): Bau-Einträge zeigen die verkleinerte Silhouette; Blindtest wie AK-A1-03 für die
+5. **AK-U4-05** — gestrichen (R186, geht an M9 Welle 2) (K3, `galerie`): Bau-Einträge zeigen die verkleinerte Silhouette; Blindtest wie AK-A1-03 für die
    Einträge (Urteiler `qa-playtester`).
 
 ### QA-ART (lead-art, W7)

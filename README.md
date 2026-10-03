@@ -192,18 +192,18 @@ Ersatzschrift zurück.
 
 Ein neues Spiel zeigt nur, was du gerade brauchst. Weitere Gebäude, Güter und Funktionen schalten sich
 frei, sobald der jeweilige Auslöser eintritt; eine Meldung nennt das Neue, und die Hilfe (`?`) listet, was
-als Nächstes kommt. Gesperrte Werkzeuge nennen auf Tastendruck ihren Grund. Ein Wohnhaus mit Bewohnern der
-nächsten Stufe löst die Wünsche aus; die Stufen kennen Wünsche (`tierWish`) und Erreichen (`tierReached`).
+als Nächstes kommt. Gesperrte Werkzeuge nennen auf Tastendruck ihren Grund. Als Auslöser zählt ein volles Wohnhaus der aktuellen Stufe (es wünscht die nächste) oder das erste Wohnhaus
+der nächsten Stufe.
 
-| Schritt | Auslöser                     | Neu                                                                      |
-| ------- | ---------------------------- | ------------------------------------------------------------------------ |
-| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung       |
-| U1      | 20 Wohnhäuser                | Marktplatz                                                               |
-| U2      | ein Wohnhaus wünscht Siedler | Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden |
-| U3      | die ersten Siedler           | Amtsstube; Handelsaufträge                                               |
-| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                   |
-| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube                            |
-| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte; Glas                                                |
+| Schritt | Auslöser                     | Neu                                                                                  |
+| ------- | ---------------------------- | ------------------------------------------------------------------------------------ |
+| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung                   |
+| U1      | 20 Wohnhäuser                | Marktplatz                                                                           |
+| U2      | ein Wohnhaus wünscht Siedler | Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden, Aufforsten |
+| U3      | die ersten Siedler           | Amtsstube; Handelsaufträge                                                           |
+| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                               |
+| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube                                        |
+| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte; Glas                                                            |
 
 Die Feuerwache erscheint bei der Krisenstufe «aus» nicht in der Bauleiste (in der Sim bleibt sie baubar).
 Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei (Test- und Übungsmodus).
