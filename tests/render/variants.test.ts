@@ -7,7 +7,7 @@ import { bodyFaces, bodyPolygons, drawBody } from '../../src/render/sprites';
 import { VARIANT_COUNT, VARIANT_LOOKS, variantOf } from '../../src/render/variants';
 import { createSpriteCache, spriteKey, type SpriteSurface } from '../../src/render/spriteCache';
 import { drawMaterial, materialDetail } from '../../src/render/material';
-import { PALETTE } from '../../src/render/palette';
+import { PALETTE, rgbOfCss } from '../../src/render/palette';
 import { fakeCtx } from './fakeCtx';
 
 const mk = (defId: BuildingDefId, x = 10, y = 10, tier?: Tier): Building => {
@@ -204,6 +204,75 @@ function coverage(
       if (polys.some((p) => inPoly(p, x, y))) out.push(`${x},${y}`);
   return out;
 }
+
+/** Mindestabstand (RGB, 0..441) zweier Varianten in mindestens einer Füllfarbe: etwa 12 % Mischung auf mittleren Tönen. */
+const MIN_COLOR_DISTANCE = 20;
+
+describe('H-R7 Fix 2 A: Varianz deutlich sichtbar', () => {
+  /** Füllfarben je Fläche (Schlüssel = gerundete Eckpunkte), nur Flächen, die in beiden Varianten vorkommen. */
+  const fills = (id: BuildingDefId, tier: Tier | undefined, v: number): Map<string, string> => {
+    const m = new Map<string, string>();
+    for (const e of events(BUILDING_DEFS[id], mk(id, 12, 7, tier), v))
+      if (e.op === 'fill')
+        m.set(
+          e.points.map((p) => `${Math.round(p.x * 10)},${Math.round(p.y * 10)}`).join(';'),
+          e.style,
+        );
+    return m;
+  };
+  const dist = (a: string, b: string): number => {
+    const [p, q] = [rgbOfCss(a), rgbOfCss(b)];
+    return Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!);
+  };
+  for (const [id, tier] of cases) {
+    it(`Fix2 A ${id}${tier ?? ''}: alle Varianten-Paare unterscheiden sich in einer Füllfarbe um >= ${MIN_COLOR_DISTANCE}`, () => {
+      for (let a = 0; a < VARIANT_COUNT; a++)
+        for (let b = a + 1; b < VARIANT_COUNT; b++) {
+          const fa = fills(id, tier, a),
+            fb = fills(id, tier, b);
+          let max = 0;
+          for (const [k, c] of fa) if (fb.has(k)) max = Math.max(max, dist(c, fb.get(k)!));
+          expect(max, `Varianten ${a}/${b}`).toBeGreaterThanOrEqual(MIN_COLOR_DISTANCE);
+        }
+    });
+  }
+});
+
+describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
+  it('Fix2 B alle Typen: Pfadpunkte samt halber Strichbreite liegen in der Fläche (Zoom 1/1,5/2, DPR 1/2, mit Material)', () => {
+    for (const z of [1, 1.5, 2])
+      for (const dpr of [1, 2])
+        for (const [id, tier] of cases) {
+          const logs: ReturnType<typeof fakeCtx>['log'][] = [];
+          const surfaces: SpriteSurface[] = [];
+          const c = createSpriteCache({
+            material: true,
+            factory: () => {
+              const { ctx, log } = fakeCtx();
+              logs.push(log);
+              const sf = { width: 0, height: 0, getContext: () => ctx } as SpriteSurface;
+              surfaces.push(sf);
+              return sf;
+            },
+          });
+          const t = { drawImage: () => undefined } as unknown as CanvasRenderingContext2D;
+          c.beginFrame(z, dpr);
+          c.beginFrame(z, dpr);
+          const b = mk(id, 12, 7, tier);
+          c.draw(t, { x: 3.3, y: 4.1, zoom: z }, BUILDING_DEFS[id], b, undefined, 3);
+          const sf = surfaces[0]!,
+            log = logs[0]!;
+          const half = dpr / 2; // Umrissstrich 1 CSS-Pixel
+          for (const p of log.allPoints) {
+            const m = `${id}${tier ?? ''} z${z} dpr${dpr}`;
+            expect(p.x, m).toBeGreaterThanOrEqual(half);
+            expect(p.y, m).toBeGreaterThanOrEqual(half);
+            expect(p.x, m).toBeLessThanOrEqual(sf.width - half);
+            expect(p.y, m).toBeLessThanOrEqual(sf.height - half);
+          }
+        }
+  });
+});
 
 describe('H-R7 AK3/AK4 Silhouette und Picking', () => {
   for (const [id, tier] of cases) {
