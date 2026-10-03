@@ -17,7 +17,10 @@ import {
 import { MASSIF_CACHE_MAX_BYTES } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOf, rgbOfCss } from '../../src/render/palette';
 import {
+  AMP_CAP,
+  MASSIF_MAX_H,
   PIECE_RUN,
+  RIM_H,
   SMALL_MASSIF,
   SUB,
   cellColor,
@@ -26,15 +29,16 @@ import {
   nodeHeight,
   nodeInside,
   pieceCells,
+  pieceNodes,
   type MassifComponent,
   type MassifPiece,
 } from '../../src/render/massif';
 import {
   createMassifCache,
-  inflate,
   massifBounds,
   massifSilhouette,
   pieceQuads,
+  rasterPiece,
   setMassifCanvasFactory,
   type MassifItem,
 } from '../../src/render/rocks';
@@ -158,14 +162,19 @@ describe('H-R9 A2 Höhenfeld', () => {
     for (const [i, n] of sizes.entries())
       if (n * n < SMALL_MASSIF) expect(hs[i]!).toBeLessThan(ISO_H);
     expect(hs.at(-1)!).toBeGreaterThan(2.5 * ISO_H);
-    expect(hs.at(-1)!).toBeLessThan(6 * ISO_H); // gedeckelt
+    // gedeckelt: sehr grosse Massive erreichen AMP_CAP, keine Höhe über MASSIF_MAX_H
+    const huge = largest(square(30));
+    expect(huge.amp).toBe(AMP_CAP);
+    expect(maxH(huge)).toBeLessThanOrEqual(MASSIF_MAX_H);
     expect(SMALL_MASSIF).toBe(12);
     // gleicher Codepfad: der Hügel ist rund (Gipfel innen, nicht am Rand)
     const hill = largest(square(2));
     expect(nodeHeight(hill, (hill.x0 + 1) * SUB, (hill.y0 + 1) * SUB)).toBeCloseTo(maxH(hill), -1);
   });
 
-  it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite', () => {
+  it('A2 Höhenstaffelung: Rückseite (kleineres x + y) im Mittel höher als Vorderseite, bei gleichem Randabstand', () => {
+    // Vergleich je Randabstand-Band (halbe Kachel): die Form der Komponente (z. B. schmaler Rücken, breite Front)
+    // soll das Ergebnis nicht bestimmen; zusätzlich für das Quadrat der reine Mittelwert je Hälfte.
     const worlds = [
       square(14),
       createWorld(7, { unlockAll: true }),
@@ -181,6 +190,7 @@ describe('H-R9 A2 Höhenfeld', () => {
           sMax = Math.max(sMax, I + J);
         }
       const mid = (sMin + sMax) / 2;
+      const bands = new Map<number, { b: number; nb: number; f: number; nf: number }>();
       let back = 0,
         nb = 0,
         front = 0,
@@ -188,15 +198,31 @@ describe('H-R9 A2 Höhenfeld', () => {
       for (const [I, J] of nodes(c)) {
         if (!nodeInside(c, I, J)) continue;
         const h = nodeHeight(c, I, J);
+        const d = c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]!;
+        const band = bands.get(Math.round(d * 2)) ?? { b: 0, nb: 0, f: 0, nf: 0 };
         if (I + J < mid) {
           back += h;
           nb++;
+          band.b += h;
+          band.nb++;
         } else if (I + J > mid) {
           front += h;
           nf++;
+          band.f += h;
+          band.nf++;
         }
+        bands.set(Math.round(d * 2), band);
       }
-      expect(back / nb, `Seed ${w.seed}`).toBeGreaterThan(1.1 * (front / nf));
+      let ratio = 0,
+        weight = 0;
+      for (const v of bands.values())
+        if (v.nb > 4 && v.nf > 4 && v.f > 0) {
+          const wgt = Math.min(v.nb, v.nf);
+          ratio += (v.b / v.nb / (v.f / v.nf)) * wgt;
+          weight += wgt;
+        }
+      expect(ratio / weight, `Seed ${w.seed}`).toBeGreaterThan(1.2);
+      if (w.seed === 5) expect(back / nb).toBeGreaterThan(1.2 * (front / nf));
     }
   });
 
@@ -261,6 +287,32 @@ describe('H-R9 A3 Färbung', () => {
     const edge = rgbOfCss(cellColor(5, 2.2, 7.7, { ...base, h: 0, hn: 0, rim: 0, edge: grass }));
     expect(dist3(edge, grass)).toBeLessThan(dist3(foot, grass) - 20);
     expect(dist3(edge, rock)).toBeLessThan(dist3(grass, rock));
+  });
+
+  it('A3 Sockel: Deckkraft < 1 nur im flachen Randband (h < RIM_H), an geraden Kanten 0, innen voll deckend', () => {
+    for (const w of [createWorld(7, { unlockAll: true }), square(3), square(10)]) {
+      let partial = 0,
+        full = 0;
+      for (const p of massifPieces(w)) {
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p))
+          for (const [I, J] of [
+            [c.I, c.J],
+            [c.I + 1, c.J + 1],
+          ] as const) {
+            const n = at(I, J);
+            if (n.a < 1) {
+              partial++;
+              expect(n.h, `${I},${J}`).toBeLessThan(RIM_H);
+            } else full++;
+          }
+      }
+      if (w.seed !== 5 || largest(w).n > 9) expect(full).toBeGreaterThan(partial);
+    }
+    // gerade Kante eines Quadrats: Knoten mitten auf der Kante ist durchsichtig
+    const q = largest(square(10));
+    const p = massifPieces(square(10)).find((x) => x.comp.n === q.n)!;
+    expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB).a).toBeLessThan(0.02);
   });
 
   it('A3 nur Palettentöne: keine Signalfarben, kein Schnee (heller als rockLight/foam-Mischung 30 %)', () => {
@@ -340,7 +392,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
           for (let I = x * SUB; I < (x + 1) * SUB; I++)
             expect(seen.get(`${I},${J}`) ?? 0, `${x},${y}`).toBe(isFree ? 2 : 0);
       }
-    expect(free).toBe(21 - 1);
+    expect(free).toBe(20 - 1); // 20 Gebirgskacheln, eine trägt das Haus (1 × 1)
   });
 
   /** Kachelfolge des Halbstreifens k, die eine Grundfläche `fp` mit positiver Fläche schneidet (Tiefen s). */
@@ -443,7 +495,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       const pieces = massifPieces(w);
       for (const p of pieces) {
         const list = byStrip.get(p.strip) ?? [];
-        for (const q of pieceQuads(p, 0)) list.push(q.pts);
+        for (const q of pieceQuads(p)) list.push(q.pts);
         byStrip.set(p.strip, list);
       }
       let n = 0;
@@ -483,28 +535,40 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     }
   });
 
-  it('A4 keine Antialias-Nähte: Zellen werden um mindestens einen halben Gerätepixel vergrössert gezeichnet', () => {
-    const sq: P[] = [
-      { x: 0, y: 0 },
-      { x: 10, y: 5 },
-      { x: 0, y: 10 },
-      { x: -10, y: 5 },
-    ];
-    const big = inflate(sq, 0.5);
-    for (const p of sq) expect(inPoly(big, p)).toBe(true);
-    for (let i = 0; i < 4; i++) {
-      const a = big[i]!,
-        o = sq[i]!;
-      expect(Math.hypot(a.x - o.x, a.y - o.y)).toBeGreaterThanOrEqual(0.5);
+  it('A4 keine Antialias-Nähte: gerastert ist jeder Pixel deckend, dessen Abtastpunkte in Netzdreiecken liegen', () => {
+    const w = createWorld(7, { unlockAll: true });
+    const pieces = massifPieces(w).filter((_, i) => i % 7 === 0);
+    let inside = 0;
+    for (const f of [1, 2]) {
+      const ss = f < 1.5 ? 2 : 1;
+      for (const p of pieces) {
+        const b = massifBounds({ piece: p });
+        const pw = Math.round((ISO_W / 2) * f),
+          ph = Math.ceil(b.h * f);
+        const px = rasterPiece({ piece: p }, pw, ph, f);
+        // nur voll deckende Dreiecke (Sockelband blendet gewollt in die Geländeebene aus, eigener Test)
+        const tris = pieceQuads(p)
+          .filter((q) => q.alpha >= 1)
+          .map((q) =>
+            q.pts.map((v) => ({
+              x: (v.x - b.x) * (pw / (ISO_W / 2)) * ss,
+              y: (v.y - b.y) * f * ss,
+            })),
+          );
+        const covered = (x: number, y: number): boolean => tris.some((t) => inTri(t, x, y));
+        for (let y = 0; y < ph; y++)
+          for (let x = 0; x < pw; x++) {
+            let all = true;
+            for (let dy = 0; dy < ss && all; dy++)
+              for (let dx = 0; dx < ss && all; dx++)
+                all = covered(x * ss + dx + 0.5, y * ss + dy + 0.5);
+            if (!all) continue;
+            inside++;
+            expect(px[(y * pw + x) * 4 + 3], `f=${f} Teilstück ${p.id} Pixel ${x},${y}`).toBe(255);
+          }
+      }
     }
-    // gemalt: jede Füllung im Teilstück-Canvas ist vergrössert (Faktor 2: 0,6 Gerätepixel = 0,3 Weltpixel)
-    const w = square(4);
-    const p = massifPieces(w)[3]!;
-    const nominal = pieceQuads(p, 0);
-    const grown = pieceQuads(p, 0.3);
-    expect(grown).toHaveLength(nominal.length);
-    for (let i = 0; i < nominal.length; i++)
-      expect(area(grown[i]!.pts)).toBeGreaterThan(area(nominal[i]!.pts));
+    expect(inside).toBeGreaterThan(2000);
   });
 
   it('A5 Sortierung je Halbstreifen: Teilstücke weiter hinten zuerst, Zellen im Teilstück hinten nach vorn', () => {
@@ -643,13 +707,12 @@ describe('H-R9 A7 Picking und Verdeckung', () => {
     let n = 0;
     for (const it of massifItems(w).slice(0, 60)) {
       const sil = massifSilhouette(it);
-      for (const q of pieceQuads(it.piece, 0))
+      for (const q of pieceQuads(it.piece))
         for (const v of q.pts) {
+          // Ecken ausserhalb des Halbstreifens schneidet die Flächenkante ab
           const k = it.piece.strip * (ISO_W / 2);
-          const vx = Math.min(Math.max(v.x, k + 1e-6), k + ISO_W / 2 - 1e-6);
-          expect(inPoly(sil, { x: vx, y: v.y }) || nearPoly(sil, { x: vx, y: v.y }, 0.5)).toBe(
-            true,
-          );
+          if (v.x < k - 1e-9 || v.x > k + ISO_W / 2 + 1e-9) continue;
+          expect(inPoly(sil, v) || nearPoly(sil, v, 0.5)).toBe(true);
           n++;
         }
     }
@@ -657,18 +720,15 @@ describe('H-R9 A7 Picking und Verdeckung', () => {
   });
 
   it('A7 Fensterlicht hinter dem Massiv steht unter einem Clip mit der Massiv-Silhouette', () => {
-    const w = scene(
-      ['........', '........', '..MMMM..', '.MMMMMM.', '.MMMMMM.', '..MMMM..'],
-      20,
-      20,
-    );
-    expect(put(w, 'house', 23, 20)).toBe(true);
+    // Haus direkt hinter einem grossen Massiv (12 × 10 Kacheln ab y = 21)
+    const w = scene(['............', ...Array.from({ length: 10 }, () => 'MMMMMMMMMMMM')], 20, 20);
+    expect(put(w, 'house', 26, 20)).toBe(true);
     const b = Object.values(w.buildings)[0]!;
     b.house = { tier: 3, inhabitants: 20 } as never;
     w.tick = 3600;
     const cam: Camera = { x: 0, y: 0, zoom: 1 };
     const view = { w: 1280, h: 800 };
-    centerOn(cam, 24, 23, view, { w: 64, h: 64 });
+    centerOn(cam, 26, 23, view, { w: 64, h: 64 });
     const layer = { width: 64 * 32, height: 64 * 32 } as unknown as HTMLCanvasElement;
     const { ctx, log } = fakeCtx();
     render(ctx, w, cam, layer, null, null, view, { timeMs: 0, dayNight: true });
@@ -719,9 +779,11 @@ function nearPoly(poly: readonly P[], p: P, tol: number): boolean {
   }
   return false;
 }
-function area(poly: readonly P[]): number {
-  let s = 0;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
-    s += (poly[j]!.x - poly[i]!.x) * (poly[j]!.y + poly[i]!.y);
-  return Math.abs(s / 2);
+function inTri(t: readonly P[], x: number, y: number): boolean {
+  const [a, b, c] = t as [P, P, P];
+  const d = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+  if (Math.abs(d) < 1e-9) return false;
+  const w0 = ((b.x - x) * (c.y - y) - (c.x - x) * (b.y - y)) / d,
+    w1 = ((c.x - x) * (a.y - y) - (a.x - x) * (c.y - y)) / d;
+  return w0 >= 1e-6 && w1 >= 1e-6 && 1 - w0 - w1 >= 1e-6;
 }
