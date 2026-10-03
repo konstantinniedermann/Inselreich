@@ -69,6 +69,7 @@ import {
   drawPlacementOverlay,
   drawUnconnected,
 } from './overlays';
+import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
@@ -685,6 +686,7 @@ export function render(
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);
+  drawStatusMarks(ctx, world, cam, range, fx.timeMs, reduce);
   if (import.meta.env.DEV) collectBadges(world, cam, range);
 
   const sel = selectedId === null ? undefined : world.buildings[selectedId];
