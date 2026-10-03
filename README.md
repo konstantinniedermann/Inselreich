@@ -266,7 +266,7 @@ Leerlauf, und Werkzeug zu verkaufen bringt weniger, als es kostet. Bauland sind 
 ohne Gebäude oder Weg; Gebirge und Wasser sind unbebaubar.
 
 **Ausbau:** Die meisten Betriebe lassen sich ausbauen. Stufe 2 (ab Freischaltung U3) kostet Geld, Holz und
-Werkzeug sowie 2–3 Stoff als Gebühr, Stufe 3 (ab U5) kostet mehr und 2–3 Rum als Gebühr. Der Zyklus sinkt auf etwa
+Werkzeug sowie 2–3 Stoff als Gebühr, Stufe 3 (ab U5) kostet mehr und 2–3 Rum als Gebühr. Brennerei und Glashütte brauchen dafür auch Stein (Stufe 2: 3 bzw. 5, Stufe 3: 4 bzw. 8). Der Zyklus sinkt auf etwa
 × 0,6 bzw. × 0,4, der Unterhalt steigt (Fischerhütte: 30 → 42 → 54 / min). Baue die Kette gemeinsam aus, sonst
 wartet der nächste Betrieb auf Ware. Ein Abriss erstattet die Hälfte von Bau- und Stufenkosten, die Gebühr nicht.
 
