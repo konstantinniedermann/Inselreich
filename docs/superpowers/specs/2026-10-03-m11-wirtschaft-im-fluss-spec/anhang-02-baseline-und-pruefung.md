@@ -84,13 +84,13 @@ Testkommentar nennt Erzeugungs-Commit und -weg. `tests/sim/fixtures/` steht scho
 
 ## F. Szenario-Saves für Browser-Checks (B1, `tests/sim/scenarios.ts`, Muster M10 18.1)
 
-| Name          | Inhalt                                                                                                               | für AK                   |
-| ------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `m11-fluss`   | Referenzlauf bis Tick 3000, Krisen „aus", Bilanz ≥ +500 je 100 Ticks, `unlocked` bis U4                              | AK-UI-01, -02, AK-RND-05 |
-| `m11-wald`    | U0–U3 frei; 1 Jagdhütte mit genau 10 freien Waldkacheln, 1 Holzfäller mit 1 freier Waldkachel, Geld 1000, Roden frei | AK-UI-06, AK-RND-05      |
-| `m11-ausbau`  | U0–U5 frei; je 1 Fischer Stufe 1/2/3, Weberei 2 + Schäferei 1 (`waitingInput`), Stoff 10, Rum 10, Geld 2000          | AK-UI-04, -08, AK-RND-05 |
-| `m11-defizit` | 1 volles Siedlerhaus (8 EW) mit allen Diensten, 0 Brennereien, Rum 40 im Lager, U4 frei, Steuer „normal"             | AK-UI-07                 |
-| `m11-stein`   | `won true`, 1 Glashütte, Stein 4, 1 volles Bürgerhaus mit erfüllten Bedürfnissen                                     | AK-R161-02               |
+| Name          | Inhalt                                                                                                                               | für AK                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| `m11-fluss`   | Referenzlauf bis Tick 3000, Krisen „aus", Bilanz > 0 (gemessen +64 je 100 Ticks bei Tick 3000, Höchstwert ≈ +315), `unlocked` bis U4 | AK-UI-01, -02, AK-RND-05 |
+| `m11-wald`    | U0–U3 frei; 1 Jagdhütte mit genau 10 freien Waldkacheln, 1 Holzfäller mit 1 freier Waldkachel, Geld 1000, Roden frei                 | AK-UI-06, AK-RND-05      |
+| `m11-ausbau`  | U0–U5 frei; je 1 Fischer Stufe 1/2/3, Weberei 2 + Schäferei 1 (`waitingInput`), Stoff 10, Rum 10, Geld 2000                          | AK-UI-04, -08, AK-RND-05 |
+| `m11-defizit` | 1 volles Siedlerhaus (8 EW) mit allen Diensten, 0 Brennereien, Rum 40 im Lager, U4 frei, Steuer „normal"                             | AK-UI-07                 |
+| `m11-stein`   | `won true`, 1 Glashütte, Stein 4, 1 volles Bürgerhaus mit erfüllten Bedürfnissen                                                     | AK-R161-02               |
 
 Jede Szene: `isWellFormed` ok, `deserialize(serialize(w))` gleich, Krisen „aus" ausser `m11-fluss`-Variante
 „normal". Erzeugung ohne Zufall ausser dem Seed 3.

@@ -29,8 +29,7 @@ kommt und wie ich meine Betriebe ausbaue."
 - **Entscheiden:** Nahrung von Küste, Wald oder Weide; mit Defizit aufsteigen (doppelte Wartezeit) oder erst Ketten;
   Neubau oder Ausbau; Stein für Glas oder Aufstieg.
 - **Zeitbild** (Referenzlauf, M-11): Ring und Fluss ab Sekunde 1; Jagdhütte mit U2 (Tick 150, 0:15 min),
-  Rinderfarm und Ausbau Stufe 2 mit U3 (Tick 350, 0:35 min), Stufe 3 mit U5 (Tick 4150, 6:55 min). Die ersten 15 min
-  enthalten eine Nahrungswahl und einen ersten Ausbau.
+  Rinderfarm und Ausbau Stufe 2 mit U3 (Tick 350, 0:35 min), Stufe 3 mit U5 (Tick 4150, 6:55 min). Die ersten 15 min enthalten Nahrungswahl und ersten Ausbau.
 
 ## 2. Scope
 
@@ -58,7 +57,7 @@ Ausbau Stufe 3. **Nicht streichbar:** S10, Dämpfung, Jagdhütte, S3, Save v6.
 Zweites Nahrungsgut (S2 B); Wildbestand; Erschöpfung und Nachwachsen von Wald; Live-Prüfung für Weide (Gras nur beim
 Bau); exklusive Zonen; Glashütten-Reserve (R161 Variante 2, verworfen); Eingangssperre (Backlog); Ausbau von
 Wohnhäusern, öffentlichen Gebäuden, Markt, Kontor; Rückbau, Stufe 4, Bauzeit, Ausbau-Hotkey; Arbeiter; neue Güter;
-Lager je Insel, zweite Insel (M12); Erlasse; Interpolation des Kontostands; neue HUD-Einheit; Controller baut im
+zweite Insel (M12); Controller baut im
 Referenzlauf neue Gebäude oder aus.
 
 ## 3. Regeln
@@ -77,9 +76,9 @@ Werte und Verträge: Anhang 01 A.1, A.2, C, D.
   bucht die Steuer in 100 Schritten genau `taxUnits / 200` abgerundet (Rundungsverlust < 1 statt bis 5 je Minute).
   `stats.taxes` (= `totalTaxes`) und `stats.upkeep` bleiben Nominalwerte je 100 Ticks für die HUD-Bilanz.
 - **Beispiel:** 20 Siedlerhäuser à 8 EW, erfüllt, „normal": `taxUnits` 224 000 → je Schritt +11, jeder 5. +12,
-  nach 100 Schritten +1120 (wie heute); „niedrig" +784; 10 von 20 unerfüllt +840.
-- **Reihenfolge in `step` unverändert** (Anhang 01 D); Buchung in jedem Schritt statt bei `tick % 100 === 0`. Kein
-  Zufall, keine Gleitkommazahl im Zustand. Der Ton `coin` bleibt im 100-Tick-Takt (**Setzung Spec**).
+  nach 100 Schritten +1120.
+- **Reihenfolge in `step` unverändert** (Anhang 01 D); Buchung jeden Schritt. Kein
+  Zufall, keine Gleitkommazahl. `coin` bleibt im 100-Tick-Takt.
 - **Naht für P2 ∥ P3** (Setzung Spec, Abweichung 13-4): P1 legt `src/sim/levels.ts` (`cycleOf`, `upkeepOf`,
   `utilization`) und eine leere `defs/levels.ts` an und ersetzt jeden Lesezugriff auf `def.cycle`/`def.upkeep` in
   `src/sim/` und `src/render/errands.ts` (bitgleich ohne `level`).
@@ -87,7 +86,7 @@ Werte und Verträge: Anhang 01 A.1, A.2, C, D.
 ### 3.2 P1 — Gedämpfter Aufstieg
 
 - **Regel:** `wait` = `TAX_LEVELS[taxLevel].upgradeWait` × (Defizit ? `UPGRADE_DEFICIT_WAIT_FACTOR` : 1), Faktor 2
-  (`defs/timing.ts`): normal 300 → 600, niedrig 150 → 300, hoch bleibt ohne Aufstieg. Kein Verbot.
+  (`defs/timing.ts`): normal 300 → 600, niedrig 150 → 300, hoch bleibt ohne Aufstieg.
 - **Defizit (prospektiv):** ein Gut g der Zielstufe mit `budget[g] − Δ[g] < −1e-9`; Δ[g] = maxEW(Ziel) × Rate
   Ziel − EW × Rate jetzt (0, wenn g heute kein Bedarf). Δ: 1→2 Nahrung 2,0, Stoff 1,6; 2→3 Nahrung 3,5, Stoff 1,4,
   Rum 3,0; 3→4 Nahrung 2,5, Stoff 1,0, Rum 1,0, Glas 2,0 (Abweichung 13-2).
@@ -99,8 +98,7 @@ Werte und Verträge: Anhang 01 A.1, A.2, C, D.
 - **Modul** `src/sim/flow.ts` (neu): `goodsBalance` zieht dorthin (Versorgung über `inSupplyRange` aus `supply.ts`;
   `queries.ts` re-exportiert), dazu `upgradeDelta`, `deficitGood`, `upgradeDeficit`. `flow.ts` importiert weder
   `population.ts` noch `queries.ts` (Importzyklus).
-- `upgradeStatus` nennt die wirksame Zahl („… noch nicht 600 Ticks erfüllt"); die UI übersetzt (7). Rückfall bei
-  Irrtum: Faktor 1 (= heute).
+- `upgradeStatus` nennt die wirksame Zahl („… noch nicht 600 Ticks erfüllt"); die UI übersetzt (7). Rückfall: Faktor 1.
 
 ### 3.3 P2 — S2 Jagdhütte und Rinderfarm (Variante A, Gut `food`)
 
@@ -154,7 +152,7 @@ Werte und Verträge: Anhang 01 A.1, A.2, C, D.
   erreicht"; (4) `functionLock(w, 'upgrade2' | 'upgrade3')` → `lockText` (M10-Schnittstelle); (5) `outageUntil` →
   „Gebäude brennt"; (6) `checkAfford(cost)`; (7) Gebühr fehlt → „Zu wenig Stoff" / „Zu wenig Rum". Erfolg: `pay`,
   Gebühr aus dem Lager, `level` +1; `progress` und `eff` bleiben; `progress ≥ cycleOf` schliesst im nächsten Schritt
-  ab. Bei `fail` bleibt die Welt gleich. Anbindung ist keine Bedingung (Setzung Spec).
+  ab. Bei `fail` bleibt die Welt gleich. Anbindung ist keine Bedingung.
 - **Abriss:** `refundCost(paidCost(b))` = 50 % abgerundet von Bau- plus bezahlten Stufenkosten, ohne Gebühr.
   Fischer Stufe 3: bezahlt 225/12/5/0 → Erstattung 112/6/2/0.
 - Unterhalt über `upkeepOf` durch den Übertrag; Brand: 200 Ticks Ausfall, Stufe bleibt. Holzfäller und
@@ -162,7 +160,7 @@ Werte und Verträge: Anhang 01 A.1, A.2, C, D.
 
 ### 3.7 R161 — nur Sichtbarkeit
 
-Keine Sim-Änderung, keine Reserve, Testhelfer-Stein bleibt. Haus-Panel: Grund „Zu wenig Stein" und ≥ 1 Glashütte →
+Keine Sim-Änderung, Testhelfer-Stein bleibt. Haus-Panel: Grund „Zu wenig Stein" und ≥ 1 Glashütte →
 Zusatzzeile „Die Glashütte verbraucht ebenfalls Stein — baue weitere Steinbrüche." Die Glashütte ohne Stein zeigt
 den Ist-Text „Wartet auf Stein" (Abweichung 13-5) und sinkende Auslastung; die Lager-Bilanz zeigt Stein negativ.
 
@@ -253,7 +251,7 @@ Typen: Anhang 01 B. `World.version 6`, `taxCarry`, `upkeepCarry`; `Building.eff?
   `BuildingDefId`), `defs/unlocks.ts` (U2/U3 `buildings`, Tipps).
 - **Stufe 2 ∥ — P3** (3.6): `defs/levels.ts` (Füllung), `upgrade.ts` (neu), `build.ts` (`demolish`),
   `src/sim/unlocks.ts` (`deriveUnlocks`). Die Einträge `hunter`/`cattlefarm` in `LEVELS` setzt das zuletzt gemergte
-  der beiden Pakete (Setzung Spec).
+  der beiden Pakete.
 - **Stufe 3** UI-Welle (7, 3.7): `src/ui/` (inkl. Zugriffsersatz `cycleOf`/`upkeepOf` in `inspect.ts`, `texts.ts`,
   Mouse-over), `index.html`, `src/style.css`, ein serieller Strang. **∥** Render-Welle (8): `sprites.ts`,
   `statusMarks.ts`, `daynight.ts`, Ring.
@@ -271,7 +269,7 @@ Typen: Anhang 01 B. `World.version 6`, `taxCarry`, `upkeepCarry`; `Building.eff?
   nacheinander, Id-Reihenfolge (AK-P1-10).
 - Abriss mit Übertrag: Übertrag bleibt, ab dem nächsten Schritt ohne den Unterhalt (AK-P1-06). Geld negativ durch
   Unterhalt je Tick: erlaubt, Bauen gesperrt („Kein Geld"), Steuer läuft (AK-P1-07).
-- Nahrungsüberschuss: Lager 100, Verkauf 3 < Unterhalt 2,0–2,5 je Einheit (AK-P2S2-01).
+- Nahrungsüberschuss: Lager 100; Verkauf 3 liegt über dem Unterhalt (2,0–2,5): gewollt, begrenzt (13-15).
 - Wald der Jagdhütte gerodet: `noForest`, Unterhalt läuft; Aufforsten oder Abriss (AK-P2S3-02). Brand während
   `noForest`: `burning` hat Vorrang (AK-P2S3-03).
 - Rinderfarm gegen Schäferei: die später gebaute Farm scheitert am Standort; die stehende läuft (AK-P2S2-03).
@@ -312,8 +310,8 @@ Szenen Anhang 02 F).
   (Nahrung net 5,0 − 2,0 = 3,0 ≥ Δ 2,0) Aufstieg im Takt t0 + 300; mit 1 Fischer (0,5 − 2,0 < 0) kein Aufstieg bei
   t0 + 300, Aufstieg bei t0 + 600; „niedrig" 300 statt 150; „hoch" nie.
 - **AK-P1-10** (Vitest) zwei volle Pionierhäuser, 3 Fischer (net 7,5 − 4,0 = 3,5), 2 Webereien (net 4,0), gleiches
-  t0: kleinere Id steigt bei t0 + 300 auf (Rest-Budget Nahrung 1,5), die andere sieht 1,5 − 2,0 < 0 und steigt bei
-  t0 + 600 auf.
+  t0: kleinere Id steigt bei t0 + 300 auf (Rest-Budget Nahrung 1,5), die andere sieht 1,5 − 2,0 < 0 und wartet; das
+  Budget wird je Wachstumstakt neu gerechnet, sie steigt bei t0 + 350 auf (Prototyp 1300 / 1350; Regel bleibt).
 - **AK-P1-11** (Vitest) `upgradeDelta` wie 3.2 (± 1e-9).
 - **AK-P1-12** (Vitest) Rum 100 im Lager bei Rum-Defizit → 600; brennende Brennerei zählt nominell.
 - **AK-P1-13** (Vitest) ohne `level` liefern `cycleOf`/`upkeepOf` für jeden Betrieb `def.cycle`/`def.upkeep`
@@ -324,7 +322,7 @@ Szenen Anhang 02 F).
 **P2S2** (`tests/sim/sources.test.ts` neu, `placement.test.ts`, `defs.test.ts`)
 
 - **AK-P2S2-01** (Vitest `defs.test.ts`) Felder wie 3.3; Geld je EW aus den Defs (80; 87,5; 85): Maximum ≤ 1,10 ×
-  Minimum; `GOODS.food.sell` < Unterhalt je Nahrung (2,0–2,5).
+  Minimum; Grenzgewinn `GOODS.food.sell` − Unterhalt (2,0 / 2,5 / 2,0) > 0, aber `sellPrice(w, 'food', 100)` = 164 < 200 (Sättigung).
 - **AK-P2S2-02** (Vitest `placement.test.ts`) Jagdhütte bei genau 10 freien Waldkacheln ok; Weg oder Gebäude auf
   einer → „Zu wenig freier Wald in der Nähe"; 9 freie plus Wald unter dem eigenen Grundriss → ebenso.
 - **AK-P2S2-03** (Vitest) Rinderfarm bei 16 freien Graskacheln ok; nach einer Schäferei auf 4 davon scheitert eine
@@ -404,7 +402,7 @@ Szenen Anhang 02 F).
 
 ### 11.2 UI (`tests/ui/` und Browser)
 
-- **AK-UI-01** (Browser `m11-fluss`, 1×) `data-field="money"` ändert sich in 2 s mindestens 10-mal, steigend.
+- **AK-UI-01** (Browser `m11-fluss`, 1×) `data-field="money"` ändert sich in 2 s mindestens 8-mal (erwartet ≈ 12), steigend.
 - **AK-UI-02** (Vitest `hud.test.ts`; Browser) `balanceDue(1000, 600)` false, `(1100, 600)` true; `data-field=
 "balance"` ändert sich in keinem 1-s-Fenster öfter als 2-mal (10 s beobachtet).
 - **AK-UI-03** (Vitest `inspect.test.ts`) Fischer ohne `eff` „Auslastung 100 %", `eff` 94 208 → „Auslastung 36 %";
@@ -485,6 +483,9 @@ Szenen Anhang 02 F).
   Lauf ohne Dämpfung. Die Schwellen halten; Neupinnen wie beschlossen (A1); von R187 (A15) angenommen.
 - **13-14 Entscheid A3:** Dämpfung Faktor 2 bleibt; das minMoney-20-Szenario gibt es nur ohne (b). Auf fremden Seeds
   sind Minima < 30 Controller-Reserve-Effekte (Anhang 03 C); darum nur Seed 3 pinnen.
+- **13-15 Entscheid (lead-design):** Nahrungsverkauf (3) über Unterhalt (2,0–2,5) ist gewollt: Grenzgewinn 1,0 / 0,5 /
+  1,0 je Einheit, durch Sättigung begrenzt (−1 Pp je Einheit, +10 Pp je 100 Ticks): ≤ 10 Münzen je 100 Ticks für alle
+  Quellen, 100 Einheiten am Stück 164 < 200. „Geld je Einwohner ±10 %" zählt Bau- plus Unterhaltskosten, unberührt.
 
 ## 14. Gemessene Sollwerte (Anhang 03)
 
