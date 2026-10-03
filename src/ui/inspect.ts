@@ -6,6 +6,7 @@ import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
+import { cycleOf, upkeepOf } from '../sim/levels';
 import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
@@ -451,7 +452,7 @@ export function renderInspect(
     townhallActions.set(panel, actions);
     renderTownhall(panel, actions);
     addRemedy(panel);
-    addLine(panel, `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`);
+    addLine(panel, '', 'upkeep');
     addLine(panel, '', 'fire-protection');
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   } else {
@@ -461,7 +462,7 @@ export function renderInspect(
       addLine(panel, '', 'state');
       addRemedy(panel);
       if (def.produces && def.cycle !== undefined) {
-        addLine(panel, producesText(def, b.outageUntil !== undefined), 'produces');
+        addLine(panel, producesText(def, b.outageUntil !== undefined, cycleOf(b)), 'produces');
         if (def.consumes) addLine(panel, `Verbraucht ${goodList(def.consumes)}`);
         const bar = document.createElement('div');
         bar.className = 'progress';
@@ -471,7 +472,7 @@ export function renderInspect(
         bar.appendChild(fill);
         panel.appendChild(bar);
       }
-      addLine(panel, `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`);
+      addLine(panel, '', 'upkeep');
       if (def.flammable === true) addLine(panel, '', 'fire-protection');
       if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
@@ -482,6 +483,16 @@ export function renderInspect(
   updateInspect(panel, world, id);
 }
 
+/** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
+export function upkeepText(b: Building): string {
+  return `Unterhalt ${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`;
+}
+
+/** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */
+export function progressPct(b: Building): number {
+  return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
+}
+
 /** Aktualisiert nur Zahlen und Zustandstext des bereits aufgebauten Panels. */
 export function updateInspect(panel: HTMLElement, world: World, id: number): void {
   const b = world.buildings[id];
@@ -490,6 +501,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (b.house) updateHouse(panel, world, b);
   if (b.defId === 'townhall') updateTownhall(panel, world);
   setField(panel, 'refund', refundLine(world, b));
+  setField(panel, 'upkeep', upkeepText(b));
   const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
   if (remedyEl) {
     const text = remedyText(world, b);
@@ -497,7 +509,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
     setField(panel, 'remedy', text ?? '');
   }
   if (def.produces && def.cycle !== undefined) {
-    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined));
+    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined, cycleOf(b)));
   }
   const info = stateInfo(b, world.tick, missingInputs(world, b));
   setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
@@ -509,7 +521,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   }
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   if (fill && def.cycle) {
-    const width = `${Math.min(100, Math.round((b.progress / def.cycle) * 100))}%`;
+    const width = `${progressPct(b)}%`;
     if (fill.style.width !== width) fill.style.width = width;
   }
 }

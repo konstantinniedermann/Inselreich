@@ -5,6 +5,7 @@ import { GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { houseDiagnosis, missingInputs, type Diagnosis } from '../sim/queries';
+import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel } from '../sim/townhall';
 import { buildingShown, functionLock } from '../sim/unlocks';
@@ -123,7 +124,7 @@ function workshopInfo(world: World, b: Building): HoverInfo {
       `braucht eine ${BUILDING_DEFS[SERVICE_BUILDING[def.requiresService!]].name} in Reichweite`,
     );
   else if (b.state === 'notConnected') lines.push('nicht angebunden');
-  else lines.push(`arbeitet — ${perMinute(1, def.cycle ?? 1)} ${GOODS[def.produces!].name} / min`);
+  else lines.push(`arbeitet — ${perMinute(1, cycleOf(b) ?? 1)} ${GOODS[def.produces!].name} / min`);
   const forest = def.site.find((r) => r.kind === 'radius' && r.terrain === 'forest');
   if (b.defId === 'lumberjack' && forest && forest.kind === 'radius') {
     const c = center(def, b.x, b.y);

@@ -18,11 +18,15 @@ export function diagnosisText(d: Diagnosis): string {
 }
 
 /** Erzeugungszeile des Panels; während des Brandausfalls steht dort, dass nichts erzeugt wird. */
-export function producesText(def: { produces?: GoodId; cycle?: number }, burning: boolean): string {
+export function producesText(
+  def: { produces?: GoodId; cycle?: number },
+  burning: boolean,
+  cycle: number = def.cycle ?? 0,
+): string {
   const name = def.produces ? GOODS[def.produces].name : '';
   return burning
     ? `Erzeugt ${name} nicht — Betrieb brennt`
-    : `Erzeugt ${name} alle ${formatGameTime(def.cycle ?? 0)}`;
+    : `Erzeugt ${name} alle ${formatGameTime(cycle)}`;
 }
 
 /** Text für ein brennendes Gebäude (Betrieb oder Dienst): Restdauer bis `outageUntil`. */

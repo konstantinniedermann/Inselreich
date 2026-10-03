@@ -38,7 +38,13 @@ import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
-import { renderNoticeStack, updateHud, updateNoticeStack, type HudActions } from './hud';
+import {
+  renderNoticeStack,
+  updateHud,
+  updateMoney,
+  updateNoticeStack,
+  type HudActions,
+} from './hud';
 import {
   afterPause,
   hotkeyList,
@@ -919,6 +925,7 @@ function launch(
       };
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
       perf?.renderDone(performance.now() - t0);
+      updateMoney(hudEl, world);
       updateHint(frame % HUD_EVERY_FRAMES === 0);
       updateHoverCard(fx, t0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
