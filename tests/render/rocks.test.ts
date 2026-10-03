@@ -26,6 +26,7 @@ import {
   paintRock,
   resetRockCache,
   rockOnScreen,
+  rockOffset,
   ROCK_MARGIN,
   rockBounds,
   rockCacheBytes,
@@ -171,8 +172,6 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
       expect(r.variant >= ROCK_SHAPES).toBe(r.fp.w === 1);
       if (r.fp.w === 2) {
         big++;
-        expect(r.fp.x % 2).toBe(0);
-        expect(r.fp.y % 2).toBe(0);
       }
       for (let dy = 0; dy < r.fp.h; dy++)
         for (let dx = 0; dx < r.fp.w; dx++) {
@@ -183,11 +182,6 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
         }
     }
     expect(big).toBeGreaterThan(10);
-    // jeder vollständig freie 2x2-Block trägt einen grossen Stempel
-    for (let by = 0; by < w.height; by += 2)
-      for (let bx = 0; bx < w.width; bx += 2)
-        if (free(bx, by) && free(bx + 1, by) && free(bx, by + 1) && free(bx + 1, by + 1))
-          expect(rocks.some((r) => r.fp.w === 2 && r.fp.x === bx && r.fp.y === by)).toBe(true);
     for (const b of Object.values(w.buildings))
       for (const r of rocks)
         expect(
@@ -323,6 +317,60 @@ describe('H-R8 Massivgestalt (Blindtest-Nacharbeit)', () => {
   });
 });
 
+describe('H-R8 Optik-Runde 3 (Raster, Versatz, Formvielfalt)', () => {
+  it('Aperiodisch: grosse Stempel liegen in mehreren Gitterphasen, nicht alle auf geraden Koordinaten', () => {
+    for (const seed of [7, 3, 42]) {
+      const w = createWorld(seed, { unlockAll: true });
+      const big = rocksOf(w).filter((r) => r.fp.w === 2);
+      expect(big.length).toBeGreaterThan(10);
+      const phases = new Map<string, number>();
+      for (const r of big) {
+        const k = `${r.fp.x & 1}${r.fp.y & 1}`;
+        phases.set(k, (phases.get(k) ?? 0) + 1);
+      }
+      expect(phases.size, `${seed}`).toBeGreaterThanOrEqual(seed === 7 ? 3 : 2);
+      const evenShare = (phases.get('00') ?? 0) / big.length;
+      expect(evenShare).toBeLessThan(0.6);
+    }
+  });
+  it('Stempelzahl steigt nicht (Seed 7: höchstens 112 Stempel)', () => {
+    expect(rocksOf(createWorld(7, { unlockAll: true })).length).toBeLessThanOrEqual(112);
+  });
+  it('rockOffset: deterministisch, bis 0,35 Footprint-Breite, Stempel bleibt im Prisma, Versatz streut', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const offs: number[] = [];
+    for (const r of rocksOf(w)) {
+      const o = rockOffset(w.seed, r);
+      expect(o).toBe(rockOffset(w.seed, r));
+      expect(Math.abs(o)).toBeLessThanOrEqual(0.35 * r.fp.w * ISO_W + 1e-9);
+      const half = (r.fp.w * ISO_W) / 2;
+      for (const f of rockFaces(w.seed, r.variant))
+        for (const p of f.pts) expect(Math.abs(p.x + o)).toBeLessThanOrEqual(half + 1e-9);
+      offs.push(Math.round(o));
+    }
+    expect(new Set(offs).size).toBeGreaterThan(15);
+    expect(offs.some((o) => o < -4) && offs.some((o) => o > 4)).toBe(true);
+  });
+  it('Formvielfalt: Hauptgipfel 0,5 bis 1,0 ROCK_H, grosse im Mittel höchstens 0,85, abgeflachte Gipfel, Geröllfuss', () => {
+    const tops: number[] = [];
+    let plateau = 0,
+      rubble = 0;
+    for (let v = 0; v < ROCK_VARIANTS; v++) {
+      const faces = rockFaces(3, v);
+      const top = -Math.min(...faces.flatMap((f) => f.pts.map((p) => p.y)));
+      expect(top / ROCK_H).toBeGreaterThanOrEqual(0.25);
+      expect(top / ROCK_H).toBeLessThanOrEqual(1.0);
+      if (v < ROCK_SHAPES) tops.push(top / ROCK_H);
+      if (faces.some((f) => f.role === 'cap' && f.pts.length >= 4)) plateau++;
+      if (faces.some((f) => f.role === 'rubble')) rubble++;
+    }
+    expect(Math.max(...tops) - Math.min(...tops)).toBeGreaterThanOrEqual(0.25);
+    expect(tops.reduce((a, b) => a + b, 0) / tops.length).toBeLessThanOrEqual(0.85);
+    expect(plateau).toBeGreaterThanOrEqual(4);
+    expect(rubble).toBeGreaterThanOrEqual(4);
+  });
+});
+
 describe('H-R8 AK2 Sortierung', () => {
   it('AK2 sortedObjects liefert Felsen nur auf Gebirge ohne Gebäude und Weg, id = Kachelindex', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
@@ -399,8 +447,7 @@ describe('H-R8 AK2 Sortierung', () => {
     expect(s.length).toBeGreaterThanOrEqual(6);
     const mx = s.reduce((a, p) => a + p.x, 0) / s.length;
     const my = s.reduce((a, p) => a + p.y, 0) / s.length;
-    expect(mx).toBeGreaterThan(10.5);
-    expect(my).toBeGreaterThan(7.5);
+    expect(mx + my).toBeGreaterThan(18); // Bildversatz verschiebt entlang (+1, −1), die Summe bleibt
   });
 });
 

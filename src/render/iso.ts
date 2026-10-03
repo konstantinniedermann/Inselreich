@@ -11,7 +11,7 @@ export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
 export const TREE_VARIANTS = 8;
 /** Gestalten eines Felsmassivs; jede gibt es gross und klein (Randblock), also `ROCK_VARIANTS` Stempel. */
-export const ROCK_SHAPES = 12;
+export const ROCK_SHAPES = 16;
 export const ROCK_VARIANTS = 2 * ROCK_SHAPES;
 export const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
@@ -169,22 +169,41 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
         shadow,
       });
     };
-    for (let by = 0; by < world.height; by += 2)
-      for (let bx = 0; bx < world.width; bx += 2) {
-        if (
-          freeMountain(bx, by) &&
-          freeMountain(bx + 1, by) &&
-          freeMountain(bx, by + 1) &&
-          freeMountain(bx + 1, by + 1)
-        ) {
-          pushRock(bx, by, 2);
-          continue;
-        }
-        for (let dy = 0; dy < 2; dy++)
-          for (let dx = 0; dx < 2; dx++)
-            if (freeMountain(bx + dx, by + dy) && hash2(world.seed + 74, bx + dx, by + dy) < 0.55)
-              pushRock(bx + dx, by + dy, 1);
+    // Gitterphase je 8×8-Region (Versatz 0 oder 1 je Achse) und ein Viertel der freien Blöcke ausgelassen:
+    // kein sichtbares Raster; Blöcke bleiben innerhalb ihrer Region, also disjunkt
+    const used = new Set<number>();
+    for (let ry = 0; ry < world.height; ry += 8)
+      for (let rx = 0; rx < world.width; rx += 8) {
+        const ox = hash2(world.seed + 77, rx, ry) < 0.5 ? 0 : 1,
+          oy = hash2(world.seed + 78, rx, ry) < 0.5 ? 0 : 1;
+        for (let by = ry + oy; by + 1 < Math.min(ry + 8, world.height); by += 2)
+          for (let bx = rx + ox; bx + 1 < Math.min(rx + 8, world.width); bx += 2) {
+            if (
+              freeMountain(bx, by) &&
+              freeMountain(bx + 1, by) &&
+              freeMountain(bx, by + 1) &&
+              freeMountain(bx + 1, by + 1) &&
+              hash2(world.seed + 76, bx, by) >= 0.25
+            ) {
+              pushRock(bx, by, 2);
+              for (const [dx, dy] of [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [1, 1],
+              ] as const)
+                used.add((by + dy) * world.width + bx + dx);
+            }
+          }
       }
+    for (let y = 0; y < world.height; y++)
+      for (let x = 0; x < world.width; x++)
+        if (
+          freeMountain(x, y) &&
+          !used.has(y * world.width + x) &&
+          hash2(world.seed + 74, x, y) < 0.3
+        )
+          pushRock(x, y, 1);
     for (let y = 0; y < world.height; y++)
       for (let x = 0; x < world.width; x++) {
         const t = world.tiles[y * world.width + x]!;
