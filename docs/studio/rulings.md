@@ -1118,3 +1118,18 @@ beide Fälle in 3.5). Nächster Schritt: Plan M11 durch lead-tech nach dem Merge
 mit Save v5); `docs/m11-design` geht mit dem Plan nach main. — Kosten bei Irrtum: AK-Nachtrag im Gate Plan.
 
 Entscheider: L0 · Anlass: Fix-Bericht lead-design M11-SPEC · ADR: —
+
+## R190 · 2026-10-03 · Retros M10: Experimente
+
+Ruling: Auf Basis Meilenstein-Retro M10 und Prozess-Retro M10: (1) E-011 behalten, E-013 behalten → beide
+abgeschlossen. (2) E-010 angepasst, läuft über M11 mit unveränderten Schwellen; eingegliedert wird der
+Vorschlag E-016 (Lead-Instanz übergibt spätestens bei 200k Kontext oder nach 6 Arbeiter-Starts) und das
+Gate-Kriterium „Spec ≤ 40 KB" in der lead-qa-Prüfung. (3) E-015 startet jetzt (Platz frei, R180). (4) E-017
+angenommen und gestartet, zusammengeführt mit Prozessvorschlag V1: Doku (README, arc42, ADR, Spec-Verweise) ist
+im Plan ein eigener Task mit Eigentümer, und das Umsetzer-Briefing erlaubt D1-Dateien ausdrücklich; Messung M11:
+0 Final-Reviews mit fehlender Doku. (5) Vorgeschlagen, wartend: E-018 (Blindtest-Probe-Dateien erst nach dem
+Urteil, Rater im Paketbudget), V3 (Parallelität aus Dateimatrix), V5 (Nachführaufwand Parallelstrang als
+Berichtszeile). V4 abgelehnt (V2/E-015 deckt die Ursache). Laufend danach: E-010, E-015, E-017. Handbuch 1.14
+durch studio-coach. — Kosten bei Irrtum: ein Experiment länger als nötig.
+
+Entscheider: L0 · Anlass: `retros/2026-10-03-meilenstein-m10.md`, `retros/2026-10-03-prozess-retro-m10.md` · ADR: —
