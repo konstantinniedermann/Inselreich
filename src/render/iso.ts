@@ -121,7 +121,7 @@ export interface Moving {
 export type SortedItem =
   | { kind: 'building'; id: number; fp: Footprint; key: number }
   | { kind: 'tree'; id: number; fp: Footprint; key: number; variant: number }
-  | { kind: 'rock'; id: number; fp: Footprint; key: number; variant: number }
+  | { kind: 'rock'; id: number; fp: Footprint; key: number; variant: number; shadow: boolean }
   | { kind: Moving['kind']; id: number; fp: Footprint; key: number; cx: number; cy: number };
 const RANK = { rock: 0, tree: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
 const cmp = (a: SortedItem, b: SortedItem): number =>
@@ -145,7 +145,20 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
         if (t.terrain === 'mountain' && t.buildingId === null && !t.road) {
           const fp = { x, y, w: 1, h: 1 };
           const variant = rockVariant(world.seed, x, y);
-          items.push({ kind: 'rock', id: y * world.width + x, fp, key: depthKey(fp), variant });
+          // Schatten fällt nach rechts unten: nur sichtbar, wenn dort offenes Gelände liegt (Binnenfelsen sparen ihn)
+          const open = (dx: number, dy: number): boolean =>
+            x + dx >= world.width ||
+            y + dy >= world.height ||
+            world.tiles[(y + dy) * world.width + x + dx]!.terrain !== 'mountain';
+          const shadow = open(1, 0) || open(0, 1) || open(1, 1);
+          items.push({
+            kind: 'rock',
+            id: y * world.width + x,
+            fp,
+            key: depthKey(fp),
+            variant,
+            shadow,
+          });
           continue;
         }
         if (t.terrain !== 'forest' || t.buildingId !== null || t.road) continue;

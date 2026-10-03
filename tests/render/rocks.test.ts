@@ -10,6 +10,7 @@ import {
   depthKey,
   pickBuilding,
   project,
+  unproject,
   sortedObjects,
   type SortedItem,
 } from '../../src/render/iso';
@@ -21,7 +22,7 @@ import {
   drawRockStamp,
   paintRock,
   resetRockCache,
-  castsRockShadow,
+  rockOnScreen,
   rockBounds,
   rockCacheBytes,
   rockCacheSize,
@@ -46,6 +47,7 @@ const mkRock = (id: number, x: number, y: number, variant = 0): RockItem => ({
   fp: { x, y, w: 1, h: 1 },
   key: depthKey({ x, y, w: 1, h: 1 }),
   variant,
+  shadow: true,
 });
 
 beforeAll(() => {
@@ -294,15 +296,15 @@ describe('H-R8 AK4 Frame-Kosten', () => {
     render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 0, dayNight: false });
     return { w, log };
   };
-  it('AK4 ROCK_CAP normal höchstens 250, reduziert höchstens 100 (Frame-Budget je drawImage)', () => {
-    expect(ROCK_CAP[0]).toBeLessThanOrEqual(250);
-    expect(ROCK_CAP[1]).toBeLessThanOrEqual(100);
+  it('AK4 ROCK_CAP normal höchstens 160, reduziert höchstens 80 (Frame-Budget je drawImage)', () => {
+    expect(ROCK_CAP[0]).toBeLessThanOrEqual(160);
+    expect(ROCK_CAP[1]).toBeLessThanOrEqual(80);
   });
-  it('AK4 castsRockShadow: nur Randfelsen (offene Kachel rechts/unten) werfen Schatten, Binnenfelsen nicht', () => {
+  it('AK4 rock.shadow (beim Aufbau berechnet): nur Randfelsen (offene Kachel rechts/unten) werfen Schatten, Binnenfelsen nicht', () => {
     const { w } = frame(1);
     const rocks = rocksOf(w);
-    const inner = rocks.filter((r) => !castsRockShadow(w, r));
-    const edge = rocks.filter((r) => castsRockShadow(w, r));
+    const inner = rocks.filter((r) => !r.shadow);
+    const edge = rocks.filter((r) => r.shadow);
     expect(inner.length).toBeGreaterThan(0);
     expect(edge.length).toBeGreaterThan(0);
     for (const r of inner)
@@ -318,11 +320,58 @@ describe('H-R8 AK4 Frame-Kosten', () => {
     const pts = log.events
       .filter((e) => e.style === SHADOW)
       .reduce((n, e) => n + e.points.length, 0);
-    const edgeAll = rocksOf(w).filter((r) => castsRockShadow(w, r)).length;
-    expect(pts).toBeLessThanOrEqual(8 * Math.min(edgeAll, ROCK_CAP[0]));
+    const edgeAll = rocksOf(w).filter((r) => r.shadow).length;
+    expect(pts).toBeLessThanOrEqual(8 * Math.min(edgeAll, ROCK_CAP[0]) + 40); // + Schiffsschatten;
     expect(log.events.filter((e) => e.op === 'drawImage').length).toBeLessThanOrEqual(
       ROCK_CAP[0] + 10,
     );
+  });
+});
+
+describe('H-R8 AK4 Auswahl und Culling', () => {
+  const synth = (ids: number[]) =>
+    ids.map((id) => ({ kind: 'rock', id, fp: { x: id * 7, y: id * 3 }, shadow: false }));
+  it('AK4 Memo: anderer Ausschnitt mit gleichem n, first, last und gleicher Summe wird neu berechnet', () => {
+    const A = [...Array(40).keys()].map((i) => i + 1);
+    const B = A.map((i) => (i === 5 ? 4.5 : i === 6 ? 6.5 : i)).map((i) => Math.floor(i * 2) / 2);
+    const A2 = A.filter((i) => i !== 5 && i !== 6).concat([5.25, 5.75]);
+    for (const [x, y] of [
+      [A, B],
+      [A, A2],
+    ] as const) {
+      const sa = synth(x as number[]),
+        sb = synth(y as number[]);
+      thinRocks(sa, 30, 5);
+      const got = thinRocks(sb, 30, 5).map((i) => i.id);
+      thinRocks(sb, 30, 6); // Memo verdrängen
+      const ref = thinRocks(sb, 30, 5).map((i) => i.id);
+      expect(got).toEqual(ref);
+      expect(got).toHaveLength(30);
+    }
+  });
+  it('AK4 Randfelsen (shadow) haben Vorrang: passen alle in den Cap, bleiben alle erhalten', () => {
+    const w = createWorld(WORLD_SEED, { unlockAll: true });
+    const rocks = rocksOf(w);
+    const edge = rocks.filter((r) => r.shadow);
+    expect(edge.length).toBeLessThan(rocks.length);
+    const kept = new Set(thinRocks(rocks, edge.length + 5, w.seed).map((r) => r.id));
+    for (const r of edge) expect(kept.has(r.id)).toBe(true);
+  });
+  it('AK4 rockOnScreen: Stempel im Bild ja, weit links/rechts/oben/unten nein, Stempelspitze ragt von unten ins Bild', () => {
+    const view = { w: 1920, h: 1080 };
+    const cam = { x: 0, y: 0, zoom: 1 };
+    const at = (fx: number, fy: number) => mkRock(0, fx, fy);
+    const c = (sx: number, sy: number) => {
+      // Kachel, deren Mitte bei Bild (sx, sy) liegt
+      const u = unproject(sx, sy);
+      return at(Math.floor(u.x), Math.floor(u.y));
+    };
+    expect(rockOnScreen(cam, view, c(960, 500))).toBe(true);
+    expect(rockOnScreen(cam, view, c(-600, 500))).toBe(false);
+    expect(rockOnScreen(cam, view, c(2600, 500))).toBe(false);
+    expect(rockOnScreen(cam, view, c(960, -300))).toBe(false);
+    expect(rockOnScreen(cam, view, c(960, 1080 + 20))).toBe(true); // Spitze ragt ins Bild
+    expect(rockOnScreen(cam, view, c(960, 1080 + 200))).toBe(false);
   });
 });
 

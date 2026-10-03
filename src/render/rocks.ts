@@ -14,7 +14,6 @@ import {
   type SortedItem,
 } from './iso';
 import { PALETTE, mixHex } from './palette';
-import type { World } from '../sim/types';
 
 // rocks.ts — Felsmassive als aufrechte Stempel über Gebirgskacheln (G3, ADR-012). Reine Darstellung: Gestalt, Grösse
 // und Farbe sind Funktionen von (world.seed, x, y); die Sim kennt keine Höhe. Wie `trees.ts` bleibt jeder Stempel in
@@ -132,23 +131,25 @@ export function rockShadow(item: RockItem, seed: number): Pt[] {
   return pts;
 }
 
-/**
- * Wirft der Fels einen sichtbaren Schatten? Der Schatten fällt nach rechts unten; liegt dort (x+1, y), (x, y+1) und
- * (x+1, y+1) nur Gebirge, deckt der Nachbarfels ihn ab. Spart den Schattenpfad im Binnenland des Massivs.
- */
-export function castsRockShadow(world: World, item: RockItem): boolean {
-  const { x, y } = item.fp;
-  for (const [dx, dy] of [
-    [1, 0],
-    [0, 1],
-    [1, 1],
-  ] as const) {
-    const nx = x + dx,
-      ny = y + dy;
-    if (nx >= world.width || ny >= world.height) return true;
-    if (world.tiles[ny * world.width + nx]!.terrain !== 'mountain') return true;
-  }
-  return false;
+const ROCK_MARGIN = 40; // Rand um die Bildbox für den Schatten nach rechts unten
+
+/** Liegt die Bildbox des Stempels (samt Schattenrand) im Bild? Genauer als der Kachelbereich, der unten `H_TOWER` zugibt. */
+export function rockOnScreen(
+  cam: Pick<Camera, 'x' | 'y' | 'zoom'>,
+  view: { w: number; h: number },
+  item: RockItem,
+): boolean {
+  // Bildbox wie `rockBounds`, ohne Allokation (läuft je Fels und Frame)
+  const cx = (item.fp.x - item.fp.y) * (ISO_W / 2),
+    cy = (item.fp.x + item.fp.y + 1) * (ISO_H / 2);
+  const right = cam.x + view.w / cam.zoom,
+    bottom = cam.y + view.h / cam.zoom;
+  return (
+    cx + ISO_W / 2 >= cam.x - ROCK_MARGIN &&
+    cx - ISO_W / 2 <= right + ROCK_MARGIN &&
+    cy + ISO_H / 2 >= cam.y - ROCK_MARGIN &&
+    cy - ROCK_H <= bottom + ROCK_MARGIN
+  );
 }
 
 /** Silhouetten (Bildschirmpixel) für die Verdeckung von Licht und Feuer: je Gipfel eine Gruppe. */
@@ -237,40 +238,50 @@ export function drawRockStamp(
   ctx.drawImage(stamp, p.x - (ISO_W / 2) * z, p.y - ROCK_H * z, stamp.width * f, stamp.height * f);
 }
 
-/** Stabile Rangzahl eines Felsens aus (Seed, Kachel); unabhängig von Ausschnitt und Listenposition. */
-const rockPriority = (seed: number, it: { fp: { x: number; y: number } }): number =>
-  hash2(seed + 73, it.fp.x, it.fp.y);
+/**
+ * Stabile Rangzahl eines Felsens aus (Seed, Kachel); Randfelsen (Schattenseite offen) liegen vor allen Binnenfelsen,
+ * damit die Silhouette des Massivs erhalten bleibt.
+ */
+const rockPriority = (
+  seed: number,
+  it: { fp: { x: number; y: number }; shadow?: boolean },
+): number => hash2(seed + 73, it.fp.x, it.fp.y) + (it.shadow ? 0 : 1);
+
+/** Letzte Wahl: exakt die Id-Folge des Vorframes (kein Hash, daher keine Kollision) und die behaltenen Ids. */
+let memo: { seed: number; max: number; ids: number[]; keep: Set<number> } | null = null;
 
 /**
- * Begrenzt die Felsen eines Frames auf `max`: behalten werden die mit der kleinsten Rangzahl aus (Seed, Kachel). Die
- * Wahl hängt nicht von der Kamera ab, ein Fels bleibt beim Scrollen gewählt, solange er im Bild ist und nicht mehr
- * Felsen mit kleinerer Rangzahl dazukommen als Platz ist. Andere Arten und die Reihenfolge bleiben; unter dem Limit
- * unverändert.
+ * Begrenzt die Felsen eines Frames auf `max`: behalten werden die mit der kleinsten Rangzahl. Die Wahl hängt nicht von
+ * der Kamera ab, ein Fels bleibt beim Scrollen gewählt, solange er im Bild ist und nicht mehr Felsen mit kleinerer
+ * Rangzahl dazukommen als Platz ist. Andere Arten und die Reihenfolge bleiben; unter dem Limit unverändert. Bei
+ * gleichem Ausschnitt wie im Vorframe (Id-Folge gleich) wird die Wahl wiederverwendet.
  */
-let memo: { sig: string; keep: ReadonlySet<number> } | null = null;
-export function thinRocks<T extends { kind: string; id: number; fp: { x: number; y: number } }>(
-  items: readonly T[],
-  max: number,
-  seed: number,
-): readonly T[] {
-  let n = 0,
-    sum = 0,
-    first = -1,
-    last = -1;
-  for (const it of items)
-    if (it.kind === 'rock') {
-      if (n++ === 0) first = it.id;
-      last = it.id;
-      sum += it.id;
-    }
+export function thinRocks<
+  T extends { kind: string; id: number; fp: { x: number; y: number }; shadow?: boolean },
+>(items: readonly T[], max: number, seed: number): readonly T[] {
+  let n = 0;
+  for (const it of items) if (it.kind === 'rock') n++;
   if (n <= max) return items;
-  const sig = `${seed}|${max}|${n}|${first}|${last}|${sum}`;
-  if (memo?.sig !== sig) {
-    // gleicher Ausschnitt wie im Vorframe: Wahl wiederverwenden, kein Sortieren je Frame
-    const rocks = items.filter((it) => it.kind === 'rock');
-    rocks.sort((a, b) => rockPriority(seed, a) - rockPriority(seed, b));
-    memo = { sig, keep: new Set(rocks.slice(0, Math.max(0, max)).map((r) => r.id)) };
+  let same = memo !== null && memo.seed === seed && memo.max === max && memo.ids.length === n;
+  if (same) {
+    let i = 0;
+    for (const it of items)
+      if (it.kind === 'rock' && memo!.ids[i++] !== it.id) {
+        same = false;
+        break;
+      }
   }
-  const keep = memo.keep;
+  if (!same) {
+    const rocks = items.filter((it) => it.kind === 'rock');
+    const ids = rocks.map((r) => r.id);
+    rocks.sort((a, b) => rockPriority(seed, a) - rockPriority(seed, b));
+    memo = {
+      seed,
+      max,
+      ids,
+      keep: new Set(rocks.slice(0, Math.max(0, max)).map((r) => r.id)),
+    };
+  }
+  const keep = memo!.keep;
   return items.filter((it) => it.kind !== 'rock' || keep.has(it.id));
 }

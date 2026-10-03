@@ -75,7 +75,7 @@ import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import {
-  castsRockShadow,
+  rockOnScreen,
   drawRockStamp,
   rockBounds,
   rockClips,
@@ -556,7 +556,9 @@ export function render(
         if (box.x > right || box.x + box.w < left || box.y > bottom || box.y + box.h < top)
           shadowOnly.add(b.id);
         else buildings.push(b);
-      } else if (it.kind === 'tree' || it.kind === 'rock') {
+      } else if (it.kind === 'rock') {
+        if (!rockOnScreen(cam, view, it as RockItem)) continue;
+      } else if (it.kind === 'tree') {
         if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
           continue;
       } else if (it.kind !== 'ship' && it.kind !== 'walker') continue;
@@ -585,8 +587,7 @@ export function render(
             polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
           else if (it.kind === 'rock') {
-            if (castsRockShadow(world, it as RockItem))
-              polyPath(ctx, rockShadow(it as RockItem, world.seed));
+            if ((it as RockItem).shadow) polyPath(ctx, rockShadow(it as RockItem, world.seed));
           } else if (it.kind === 'walker') {
             if ((poses.get(it.id)?.alpha ?? 0) >= 0.5)
               polyPath(ctx, walkerShadow({ x: it.cx, y: it.cy }));
