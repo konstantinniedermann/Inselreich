@@ -30,7 +30,7 @@ import type {
 } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx } from '../../src/sim/world';
-import { prepareLayout, type Layout } from './controller';
+import { prepareLayout, runColony, startColony, type Layout } from './controller';
 import { forceGrass, forceRect } from './helpers';
 import { verdeckung } from './scenarios-iso';
 
@@ -632,6 +632,75 @@ function m10KriseBald(): World {
   return w;
 }
 
+/** M11: Referenz-Kolonie des Controllers, gelaufen bis Tick 3000 (Krisen aus); `unlocked` bleibt aus dem Lauf. */
+function m11Fluss(): World {
+  const w = createWorld(SEED);
+  const { layout, t } = startColony(w);
+  runColony(w, layout, t, {}, (x) => x.tick >= 3000);
+  return w;
+}
+
+/** M11: Jagdhütte (10 freie Waldkacheln im Radius 3) und Holzfäller (1 freie Waldkachel) an einer Strasse. */
+function m11Wald(): World {
+  const { w, kx, ky } = baseWorld();
+  roadRow(w, kx + 2, kx + 14, ky);
+  for (let y = ky - 3; y <= ky - 2; y++)
+    for (let x = kx + 4; x <= kx + 8; x++) setTerrain(w, x, y, 'forest');
+  put(w, 'hunter', kx + 6, ky - 1);
+  setTerrain(w, kx + 12, ky - 2, 'forest');
+  put(w, 'lumberjack', kx + 12, ky - 1);
+  w.money = 1000;
+  w.unlocked = ['U0', 'U2', 'U3'];
+  return w;
+}
+
+/** M11: drei Fischer auf Stufe 1/2/3, Weberei Stufe 2 ohne Wolle, Schäferei; alle Ausbaustufen frei. */
+function m11Ausbau(): World {
+  const { w, kx, ky } = baseWorld();
+  roadRow(w, kx + 2, kx + 14, ky);
+  const levels = [undefined, 2, 3] as const;
+  [3, 5, 7].forEach((dx, i) => {
+    setTerrain(w, kx + dx, ky - 2, 'water');
+    const f = put(w, 'fisher', kx + dx, ky - 1);
+    if (levels[i] !== undefined) f.level = levels[i];
+  });
+  const weaver = put(w, 'weaver', kx + 9, ky + 1);
+  weaver.level = 2;
+  put(w, 'sheepfarm', kx + 11, ky + 1);
+  w.stock.wool = 0;
+  weaver.state = 'waitingInput';
+  w.stock.cloth = 10;
+  w.stock.rum = 10;
+  w.money = 2000;
+  w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5'];
+  return w;
+}
+
+/** M11: Siedlerhaus (8 EW) mit Kapelle und Schule; Nahrung und Stoff decken das Δ, Rum nicht (Defizitgut Rum). */
+function m11Defizit(): World {
+  const { w, layout } = m10Base();
+  m10House(w, layout.houses[0]!, 2, 8);
+  put(w, 'chapel', layout.chapel[0], layout.chapel[1]);
+  put(w, 'school', layout.school[0], layout.school[1]);
+  for (const slot of layout.fishers.slice(0, 3)) put(w, 'fisher', slot[0], slot[1]);
+  for (const slot of layout.farms.slice(0, 2)) put(w, 'weaver', slot[0], slot[1]);
+  w.stock.rum = 40;
+  w.stock.food = 50;
+  w.stock.cloth = 30;
+  return w;
+}
+
+/** M11: Bürgerhaus voll belegt, Glashütte steht, Stein 4: dem Aufstieg fehlt Stein. */
+function m11Stein(): World {
+  const { w, kx, ky } = smallColony();
+  w.won = true;
+  put(w, 'glassworks', kx + 9, ky - 2);
+  settledHouse(w, kx + 3, ky - 2, 3, 15);
+  stockHouses(w);
+  w.stock.stone = 4;
+  return w;
+}
+
 type Slot = readonly [number, number];
 type Probes = Record<string, { x: number; y: number }>;
 
@@ -657,10 +726,34 @@ const M10_PROBES: Record<string, Record<string, [number, number]>> = {
   'm10-krise-bald': { kontor: [0, 0] },
 };
 
+const M11_PROBES: Record<string, Record<string, [number, number]>> = {
+  'm11-fluss': { kontor: [0, 0], haus: [3, -2] },
+  'm11-wald': {
+    kontor: [0, 0],
+    jagdhuette: [6, -1],
+    holzfaeller: [12, -1],
+    'wald-holzfaeller': [12, -2],
+    'wald-jagd': [4, -2],
+  },
+  'm11-ausbau': {
+    kontor: [0, 0],
+    fischer1: [3, -1],
+    fischer2: [5, -1],
+    fischer3: [7, -1],
+    weberei: [9, 1],
+    schaeferei: [11, 1],
+  },
+  'm11-defizit': { kontor: [0, 0], haus: [3, -2], kapelle: [6, -2], schule: [6, 1] },
+  'm11-stein': { kontor: [0, 0], haus: [3, -2], glashuette: [9, -2] },
+};
+
 function relativeProbes(name: string, w: World): Probes {
   const k = w.buildings[w.kontorId]!;
   return Object.fromEntries(
-    Object.entries(M10_PROBES[name]!).map(([p, [dx, dy]]) => [p, { x: k.x + dx, y: k.y + dy }]),
+    Object.entries({ ...M10_PROBES, ...M11_PROBES }[name]!).map(([p, [dx, dy]]) => [
+      p,
+      { x: k.x + dx, y: k.y + dy },
+    ]),
   );
 }
 
@@ -709,13 +802,18 @@ const RAW_SCENARIOS: Record<string, () => World> = {
   'm10-amtsstube': () => m10Amtsstube([11, -7], 'normal'),
   'm10-amtsstube-aus': () => m10Amtsstube([3, -6], 'high'),
   'm10-krise-bald': m10KriseBald,
+  'm11-fluss': m11Fluss,
+  'm11-wald': m11Wald,
+  'm11-ausbau': m11Ausbau,
+  'm11-defizit': m11Defizit,
+  'm11-stein': m11Stein,
 };
 
 /**
  * Ohne Nachbearbeitung: `verdeckung` (Welt aus `scenarios-iso.ts`, dort nicht Teil von Task 2; ein Test vergleicht sie
  * mit dem Original) und `auftrag` (bleibt „Alles frei", damit der Auftrag lieferbar ist, Spec 4.4).
  */
-const KEEP_UNLOCKS = new Set(['verdeckung', 'auftrag']);
+const KEEP_UNLOCKS = new Set(['verdeckung', 'auftrag', 'm11-fluss', 'm11-wald', 'm11-ausbau']);
 
 export const SCENARIOS: Record<string, () => World> = Object.fromEntries(
   Object.entries(RAW_SCENARIOS).map(([name, build]) => [
@@ -750,7 +848,10 @@ export function writeScenarios(
 /** Prüfpunkte je Szenario aus Spec 18.1 (absolute Kacheln, Name → Kachel). */
 export const PROBES: Record<string, (w: World) => Probes> = {
   ...Object.fromEntries(
-    Object.keys(M10_PROBES).map((n) => [n, (w: World) => relativeProbes(n, w)]),
+    Object.keys({ ...M10_PROBES, ...M11_PROBES }).map((n) => [
+      n,
+      (w: World) => relativeProbes(n, w),
+    ]),
   ),
   galerie: galerieProbes,
 };
