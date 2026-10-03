@@ -114,6 +114,8 @@ jede Zeile mit der Jagdhütte → „Jagdhütte (Y)" (nur falls Schritt 0 (a) ei
 
 ### Browser-Check (qa-playtester)
 
+Playtester-Briefing (Pflicht): eigener Vite-Port je Check (`npx vite --port <frei, z. B. 5200 + Task-Nr.> --strictPort`), Port im Bericht nennen; nach dem Check den Server beenden (Teardown: PID/Port schliessen, Chrome-Instanz beenden, `git worktree remove` des QA-Baums) und im Bericht bestätigen.
+
 `m11-wald` (AK-UI-06): Kategorie Produktion zeigt Fischerhütte, Jagdhütte, Rinderfarm in dieser Reihenfolge; Holzfäller
 anwählen, letzte freie Waldkachel mit C roden (1×) → `state` „Kein freier Wald in der Nähe" binnen 1 s, Marke aus R1
 sichtbar. `m11-defizit` (AK-UI-07): Haus-Panel `deficit` wörtlich „Rum-Bilanz … 2 Minuten". `m11-stein` (AK-R161-02):

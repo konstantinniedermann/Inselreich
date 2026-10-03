@@ -49,7 +49,7 @@ Formel: 1 → × 1,3 = 1,3 → aufgerundet 2
 Beantragt: 2 Starts, Parallelität 1
 ```
 
-- **Summe** 43 + 7 + 2 = **52** (Formel über alles: 17 × 2 + 4 + 1 = 39 → × 1,3 = 50,7 → 51; die Aufrundung je Lead ergibt 52).
+- **Summe** 43 + 7 + 2 = **52** (Formel über alles ergäbe 51; verbindlich ist die Aufrundung je Lead, also **52**).
   Ausserhalb der Formel: **+7 Starts L0** für die E-010-Controller-Instanzen C1 bis C7 ([orga-13](orga-13-e010-controller-wechsel.md)).
   Fix-Runden per `SendMessage` zählen nicht.
 - **Stufung (nach M10-Muster R164):**

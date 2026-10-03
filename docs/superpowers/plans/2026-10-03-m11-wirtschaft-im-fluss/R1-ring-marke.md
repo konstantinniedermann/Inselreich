@@ -9,7 +9,7 @@
 **Ziel:** Jeder Betrieb zeigt seinen Zyklus als Ring (läuft bei `ok`, sonst grau eingefroren); `noForest` bekommt eine
 eigene Statusmarke und gilt nachts als stillstehend (Spec 8). Der Renderer liest nur, schreibt nie in die Welt.
 
-**Code-Fakten (Ist M10 `801c279`, H-R3/H-R4 gemergt):**
+**Code-Fakten (Ist `main` @ `4a5130e`: M10, H-R3/H-R4, H-R6 gemergt):**
 
 - `src/render/statusMarks.ts:22` `MarkShape = 'arrow' | 'crate'`; `:28–31` `MARKS` (nur `waitingInput`, `storageFull`);
   `:34` `statusMarkOf(state)`; `:41–57` `shapePath`; `:63–108` `drawStatusMarks(ctx, world, cam, range, timeMs, reduce)`
@@ -18,7 +18,7 @@ eigene Statusmarke und gilt nachts als stillstehend (Spec 8). Der Renderer liest
   stillstehend (Ist erfüllt AK-RND-03, Teil Tageslicht; nur der Kommentar `:60` nennt die Zustände).
 - `src/render/errands.ts:304` `tickClock(world, timeMs)` → `{ frac, fast }` (in der Pause `frac` 1); `:351` Muster
   `Math.min(0.99999, (b.progress + clock.frac) / cycle)` (nach T01 über `cycleOf`).
-- `src/render/renderer.ts:719–721` Signalebene: `drawNeedSymbols`, `drawUnconnected`, `drawStatusMarks`; R1 ist der
+- `src/render/renderer.ts:732–734` (Stand `4a5130e`; nach H-R7 neu prüfen) Signalebene: `drawNeedSymbols`, `drawUnconnected`, `drawStatusMarks`; R1 ist der
   einzige M11-Task in `renderer.ts` (serielle Ownership; R2 ändert ihn nicht).
 - `src/render/palette.ts`: Signal `signalOk`/`signalRed`/`signalWarn`/`signalYellow`; Grau `rockLight`; Kontur `wallTimber`.
 

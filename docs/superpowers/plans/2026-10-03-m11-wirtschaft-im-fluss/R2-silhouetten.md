@@ -1,6 +1,6 @@
 > **Task-ID:** R2 (Paket M11-R2) — ein Teil
 > **AK-IDs:** AK-RND-01, AK-RND-02 (Vitest); AK-RND-05 (Browser, Urteil lead-art mit lead-qa im QA-ART)
-> **blocked-by:** T09 (Review OK), R1 (Review OK), **H-R6 Sprite-Cache auf `main` gemergt** (orga-08); vorher in
+> **blocked-by:** T09 (Review OK), R1 (Review OK), **H-R7 (Varianz) auf `main` gemergt** (H-R6 ist es seit `4a5130e`) (orga-08); vorher in
 > `feat/m11-render` `feat/m11-sim` @ T09 und `main` mergen (`git merge --no-edit`, orga-09 W6)
 > **Strang:** `feat/m11-render` · `.worktrees/m11-render` · Implementierer `art-rendering-engineer` (sonnet), Controller lead-art
 > **Gemeinsame Regeln:** [index.md](index.md) (Global Constraints) · [orga-07](orga-07-datei-ownership.md) · [orga-08](orga-08-abhaengigkeiten-extern.md)
@@ -10,15 +10,15 @@
 **Ziel:** Jagdhütte und Rinderfarm bekommen eigene Körper (ADR-006, Spec 8); jeder Betrieb mit `LEVELS`-Eintrag zeigt
 Stufe 2 und 3 über einen gemeinsamen Aufsatz, der nur `b.level` liest und nie in die Welt schreibt.
 
-- [ ] **Schritt 0: Code-Fakten nach H-R6 neu prüfen** (Ergebnis in den Bericht): `git log --oneline main -3 --
+- [ ] **Schritt 0: Code-Fakten nach H-R7 neu prüfen (H-R6: `src/render/spriteCache.ts`)** (Ergebnis in den Bericht): `git log --oneline main -3 --
 src/render/sprites.ts`; `grep -rn -i "cache" src/render/sprites.ts src/render/*.ts | head`. Festhalten: Wo liegt der
       Cache, wie heisst die Schlüsselfunktion bzw. woraus wird der Schlüssel gebildet, ruft der Cache weiter
       `drawBody`/`SILHOUETTES` auf? **Pflichtpunkt:** Der Schlüssel enthält `b.level ?? 1` (Programm-Spec
       `2026-10-02-programm-nutzerfeedback.md:221`: „Sprite-Cache je Typ, Stufe, Variante, Zoom und DPR" — „Stufe" meint
-      dort die Hausstufe; für Betriebe ist es `level`). Fehlt `level`, im Cache-Schlüssel ergänzen und testen (Schritt 1 c).
-      Ist H-R6 ausgefallen (orga-09), läuft R2 auf der Ist-`sprites.ts`; 1 c entfällt.
+      dort die Hausstufe; für Betriebe ist es `level`). Der Schlüssel enthält Variante, Material (H-R7: `variants.ts`, `material.ts`) **und** `level`; fehlt `level`, ergänzen und testen (Schritt 1 c). `git log --oneline main -5 -- src/render/variants.ts src/render/material.ts` belegt den H-R7-Merge.
+      Ist H-R7 ausgefallen (orga-09), läuft R2 auf der Ist-`sprites.ts`; 1 c entfällt.
 
-**Code-Fakten (Ist M10 `801c279`, vor H-R6; nach Schritt 0 Zeilen nachführen):**
+**Code-Fakten (Stand `4a5130e`, vor H-R7; nach Schritt 0 Zeilen nachführen):**
 
 - `src/render/sprites.ts:53` `SilhouetteFn = (p: IsoPainter, b: Building) => void`; `:1453–1471` `SILHOUETTES`
   (`Partial<Record<BuildingDefId, …>>`; T04 hat dort ggf. Platzhalter für `hunter`/`cattlefarm` eingetragen — ersetzen);
@@ -31,7 +31,7 @@ src/render/sprites.ts`; `grep -rn -i "cache" src/render/sprites.ts src/render/*.
   rechts), AK-R1-09 (Hof ≥ 80 %), RF-6b (keine `AIR_COLORS`), AK-R2-03 (eigene Silhouette; Fensteranker = gezeichnete
   Fenster, beide Richtungen).
 
-**Erwartete Dateien:** `src/render/sprites.ts`, `src/render/iso.ts` (`BODY_HEIGHTS`), Cache-Modul aus H-R6 (nur der
+**Erwartete Dateien:** `src/render/sprites.ts`, `src/render/iso.ts` (`BODY_HEIGHTS`), Cache-Modul (H-R6/H-R7) (nur der
 Schlüssel, falls Schritt 0 es verlangt), `tests/render/sprites.test.ts`, `docs/CREDITS.md` nur falls fremde Vorlage (nicht vorgesehen: eigene Formen). Doku-Zeilen (arc42 §5 `sprites.ts`, README „Karte lesen") trägt D1 nach.
 **Nicht anfassen:** `src/sim/**`, `src/ui/**`, `src/render/renderer.ts`, `src/render/ring.ts`, `src/render/statusMarks.ts`.
 

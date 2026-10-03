@@ -34,10 +34,11 @@ dadurch roten Tests nach festem Muster umschreiben (kein Test fällt weg) und `m
 
 ```bash
 cd /Users/KN/CAS/projekte/anno-clone/.worktrees/m11-sim
+SCRATCH=<Scratchpad-Verzeichnis der Session>   # nicht /tmp; alternativ .superpowers/sdd/m11/ (Ledger)
 git log -1 --format=%h                                   # = <T02-SHA>, ins Ledger
-npx vitest run 2>&1 | grep -E "^ FAIL" | sort > /tmp/m11-t03-rot.txt; wc -l /tmp/m11-t03-rot.txt   # erwartet 34
+npx vitest run 2>&1 | grep -E "^ FAIL" | sort > $SCRATCH/m11-t03-rot.txt; wc -l $SCRATCH/m11-t03-rot.txt   # erwartet 34
 VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance.test.ts tests/sim/balance-crises.test.ts \
-  tests/sim/balance-merchants.test.ts tests/sim/unlock-timeline.test.ts --silent=false 2>&1 | tee /tmp/m11-t03-mess.log
+  tests/sim/balance-merchants.test.ts tests/sim/unlock-timeline.test.ts --silent=false 2>&1 | tee $SCRATCH/m11-t03-mess.log
 ```
 
 **Vergleich mit Spec 14** (Haupt-Pins). Plan-Prototyp (Scratchpad, M10-Code + S10 + Dämpfung nach Spec 3.2) ergab

@@ -150,6 +150,10 @@ git -C .worktrees/m11-ui push -u origin feat/m11-ui
 
 ### Browser-Check (qa-playtester, nach Review OK)
 
+**AK-UI-01/-02 gelten in T10 als „später belegt in W7" (QA-UI nach T12 an Szene `m11-fluss`);** T10 liefert hier nur den Rauchtest und die Vitest-Teile. Das Review-Urteil OK für T10 hängt nicht am Browser-Beleg der beiden AK.
+
+Playtester-Briefing (Pflicht): eigener Vite-Port je Check (`npx vite --port <frei, z. B. 5200 + Task-Nr.> --strictPort`), Port im Bericht nennen; nach dem Check den Server beenden (Teardown: PID/Port schliessen, Chrome-Instanz beenden, `git worktree remove` des QA-Baums) und im Bericht bestätigen.
+
 AK-UI-01/-02 an Szene `m11-fluss` (B1; ohne B1-Merge die Saves im B1-Worktree mit `SCENARIO_OUT` erzeugen — die Szene
 hat weder `hunter` noch `level`). Fehlt B1 ganz: hier nur Rauchtest mit `m10-amtsstube`, AK-UI-01/-02 im QA-UI-Lauf
 nach T12 (W7). Messung per `MutationObserver` auf `.chip-value` von `money` (2 s: ≥ 10 Änderungen, steigend) und

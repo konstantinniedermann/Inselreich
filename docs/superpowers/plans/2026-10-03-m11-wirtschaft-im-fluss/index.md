@@ -35,7 +35,7 @@ npx vitest run --reporter=verbose 2>&1 | grep -oE "M11[^>]*> (AK-[A-Z0-9]+-[0-9]
 ## Global Constraints
 
 - **Basis:** `<BASIS>` = `main` nach dem Merge von `docs/m11-design` (Spec und Plan, nur Doku) auf dem Stand des M10-Merges
-  (`801c279`, Save v5). Der Controller prüft `git diff --stat 801c279 main -- src` (leer erwartet) und notiert den SHA im
+  (M10 gemergt, Save v5; H-R6 Sprite-Cache seit `4a5130e` auf `main`). Der Controller prüft `git diff --stat 4a5130e main -- src/sim` (leer erwartet; `src/render` darf sich durch H-R7 ändern) und notiert den SHA im
   Ledger `.superpowers/sdd/m11/ledger.md`, bevor der erste Worktree entsteht.
 - `src/sim/` bleibt DOM-frei und deterministisch: kein `Date`, kein `Math.random`, Zufall nur über `src/sim/rng.ts`
   (M11 braucht keinen Zufall). Keine Gleitkommazahl im Zustand: `taxCarry`, `upkeepCarry`, `eff` sind Ganzzahlen.
@@ -117,7 +117,7 @@ Rollen, Wellen und Ablauf: [orga-01](orga-01-tasks-pakete-rollen.md), [orga-09](
 | T11  | UI-2: Betriebs-Panel (Stufe, Auslastung, Ausbau), Mouse-over        | `T11a/b-ui-betrieb.md`         | AK-UI-03, -04, -08, -10 (Browser-Teil)                                          | `feat/m11-ui`           | T09, T10                  | sonnet |
 | T12  | UI-3: Haus-Defizit, R161, Bauleiste, Taste, Meldungen               | `T12a/b-ui-haus-bau.md`        | AK-UI-05, -06, -07, -09; AK-R161-01, -02, -03                                   | `feat/m11-ui`           | T11, R1                   | sonnet |
 | R1   | Render 1: Fortschrittsring, Marke `noForest`, Tageslicht            | `R1-ring-marke.md`             | AK-RND-03, -04                                                                  | `feat/m11-render`       | T01                       | sonnet |
-| R2   | Render 2: Silhouetten, Stufen-Aufsatz `drawLevelTopper`             | `R2-silhouetten.md`            | AK-RND-01, -02, -05                                                             | `feat/m11-render`       | T09, R1, **H-R6 gemergt** | sonnet |
+| R2   | Render 2: Silhouetten, Stufen-Aufsatz `drawLevelTopper`             | `R2-silhouetten.md`            | AK-RND-01, -02, -05                                                             | `feat/m11-render`       | T09, R1, **H-R7 gemergt** | sonnet |
 | B1   | Balancing: Fischer-Ausbau-Variante, Szenarien, Endwelt-Prüfung      | `B1a/b-balancing-szenarien.md` | AK-BAS-05; AK-M11B-01, -02, -03                                                 | `feat/m11-scen`         | T09                       | sonnet |
 | D1   | Doku: README, arc42, ADR-005-Nachtrag, Spec-Verweise, Beobachtungen | `D1-doku.md`                   | AK-M11B-04                                                                      | `feat/m11-ui` (nach QA) | T12, R2, B1               | sonnet |
 

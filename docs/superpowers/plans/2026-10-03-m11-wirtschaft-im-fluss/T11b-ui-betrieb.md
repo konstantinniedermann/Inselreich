@@ -111,6 +111,8 @@ git -C .worktrees/m11-ui push -u origin feat/m11-ui
 
 ### Browser-Check (qa-playtester; Szene `m11-ausbau` aus B1)
 
+Playtester-Briefing (Pflicht): eigener Vite-Port je Check (`npx vite --port <frei, z. B. 5200 + Task-Nr.> --strictPort`), Port im Bericht nennen; nach dem Check den Server beenden (Teardown: PID/Port schliessen, Chrome-Instanz beenden, `git worktree remove` des QA-Baums) und im Bericht bestätigen.
+
 1280 × 800 und 1920 × 1080. **AK-UI-04:** Fischer Stufe 1 anklicken → `level-title` „Ausbau zu Stufe 2", Kosten, Gebühr,
 Vorschau „Ausstoss 15 → 25 / min"; „Ausbauen" → `world().buildings[id].level === 2`; Fischer Stufe 3 → „Höchste Stufe";
 `world().stock.cloth = 0` → „✗ Zu wenig Stoff". **AK-UI-08:** Mouse-over Fischer Stufe 2 → Titel wörtlich.

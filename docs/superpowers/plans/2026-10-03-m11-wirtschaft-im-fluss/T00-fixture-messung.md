@@ -10,7 +10,7 @@
 M10-Basis protokollieren, damit T01 die Migration v5 → v6 an einem echten Stand prüft und T03 gegen den Ist-Stand
 vergleichen kann.
 
-**Code-Fakten (Ist `<BASIS>`, src = `801c279`):**
+**Code-Fakten (Ist `<BASIS>`, src = `4a5130e`, `src/sim` unverändert gegen M10):**
 
 - `tests/sim/controller.ts:279` `startColony(w)` → `{ layout, t }`; `:296` `runColony(w, layout, t, opts, stop?)` hält nach
   dem ersten Schritt mit `stop(w) === true` und gibt `true` zurück; `minMoney`/`endMoney` in `Trajectory` (`:261`).
@@ -32,7 +32,7 @@ vergleichen kann.
 ## Schritte
 
 - [ ] **Schritt 0: Basis prüfen.** `git -C .worktrees/m11-sim log -1 --format=%h` = `<BASIS>`;
-      `git diff --stat 801c279 <BASIS> -- src` leer (sonst Meldung an den Controller, nicht weiterarbeiten).
+      `git diff --stat 4a5130e <BASIS> -- src/sim` leer (sonst Meldung an den Controller, nicht weiterarbeiten).
 
 - [ ] **Schritt 1: Test zuerst** — am Ende von `tests/sim/save.test.ts` (Import `readFileSync` ist schon da, Zeile 1):
 

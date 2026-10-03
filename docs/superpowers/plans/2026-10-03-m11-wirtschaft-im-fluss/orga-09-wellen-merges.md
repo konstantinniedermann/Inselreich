@@ -40,7 +40,7 @@ flowchart LR
   T09 --> B1["B1 Balancing"]
   T09 --> R2["R2 Silhouetten"]
   R1 --> R2
-  HR6["H-R6 Sprite-Cache"] --> R2
+  HR7["H-R7 Varianz"] --> R2
   T12 --> D1["D1 Doku"]
   R2 --> D1
   B1 --> D1
@@ -54,7 +54,7 @@ flowchart LR
 cd /Users/KN/CAS/projekte/anno-clone
 git pull --ff-only
 git rev-parse --short main                       # = <BASIS>, ins Ledger
-git diff --stat 801c279 main -- src              # leer erwartet; sonst melden
+git diff --stat 4a5130e main -- src/sim         # leer erwartet; sonst melden (src/render: H-R7)
 git worktree add .worktrees/m11-sim -b feat/m11-sim main
 ln -s ../../node_modules .worktrees/m11-sim/node_modules
 # nach Review OK von Task 3:
@@ -85,7 +85,7 @@ for w in m11-sources m11-upgrade m11-ui; do ln -s ../../node_modules .worktrees/
 | M11-U2     | UI Betriebs-Panel, Ausbau                    | lead-tech       | M11-INT, M11-U1        |
 | M11-U3     | UI Haus, Bauleiste, Meldungen                | lead-tech       | M11-U2, M11-R1         |
 | M11-R1     | Ring, Marke noForest                         | lead-art        | M11-P1A                |
-| M11-R2     | Silhouetten, Stufen-Aufsatz                  | lead-art        | M11-INT, M11-R1, H-R6  |
+| M11-R2     | Silhouetten, Stufen-Aufsatz                  | lead-art        | M11-INT, M11-R1, H-R7  |
 | M11-B1     | Balancing-Variante, Szenarien                | lead-tech       | M11-INT                |
 | M11-QA-UI  | Browser-Checks T10 bis T12                   | lead-tech       | je UI-Task             |
 | M11-QA-ART | Blindtests Ring, Silhouetten, Stufen         | lead-art        | M11-R2, M11-B1         |
@@ -93,6 +93,11 @@ for w in m11-sources m11-upgrade m11-ui; do ln -s ../../node_modules .worktrees/
 | M11-FR     | Final-Review M11                             | lead-qa         | M11-D1, M11-QA-ART     |
 | M11-MERGE  | Gate Merge M11 (L0, `production-integrator`) | lead-production | M11-FR                 |
 
-**Fremdes Paket:** `H-R6` (Sprite-Cache, M9 Welle 2, lead-art; Branch `feat/h-r6-sprite-cache` steht noch auf `801c279`)
-legt `lead-production` auf dem Board an, falls es fehlt; `M11-R2` ist davon blockiert. Fällt H-R6 aus, läuft R2 ohne Cache
-auf der Ist-`sprites.ts` (Task-Datei R2, Schritt 0).
+**Fremde Pakete:** `H-R6` (Sprite-Cache) ist seit `4a5130e` auf `main` gemergt. `H-R7` (`feat/h-r7-varianz`, lead-art, läuft:
+`sprites.ts`, `spriteCache.ts`, `renderer.ts`, neu `variants.ts`/`material.ts`, `arc42.md`) legt `lead-production` auf dem Board
+an, falls es fehlt; `M11-R2` ist von **H-R7 gemergt** blockiert (nicht mehr von H-R6). R2 Schritt 0 prüft den Stand nach H-R7;
+der Cache-Schlüssel enthält Variante, Material und `level`. Fällt H-R7 aus, läuft R2 auf dem Stand von `main` (Cache H-R6).
+
+**Merge-Konfliktrisiko:** `renderer.ts` und `docs/arc42.md` (H-R7 gegen R1, R2, T04, D1), `tests/render/sprites.test.ts`
+(H-R7 gegen R2 und T04, dort Filter AK-R2-03). Konflikte löst der Controller per Merge (kein Rebase); R1 holt `main` vor
+seinem Merge, wenn H-R7 vorher landet. D1 schreibt arc42 erst nach dem H-R7-Merge.

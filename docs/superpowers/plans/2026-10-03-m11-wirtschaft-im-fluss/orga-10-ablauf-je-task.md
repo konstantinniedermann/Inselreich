@@ -16,4 +16,4 @@
 5. **Abnahme:** SHA ins Ledger, `log.py result`, Board-Paket auf `done`, nächster Task. Nach dem sechsten Arbeiter-Start oder
    200k Kontext Übergabe an die nächste Instanz ([orga-13](orga-13-e010-controller-wechsel.md)).
 6. **Stopp-Regeln:** Abweicht ein Haupt-Pin (R74): Stopp, Bericht an L0, nicht nachstellen. Rot-Beleg unmöglich (Test schon
-   grün): Mutationsprobe im Bericht belegen und zurücknehmen (orga-05 P-12).
+   grün): Mutationsprobe zulässig (R192) mit Auflagen: Bericht enthält Befehl, rote Meldung und Rücknahme; danach `git diff -- src` leer; der Reviewer prüft das (orga-05 P-12).
