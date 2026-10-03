@@ -58,7 +58,7 @@ describe('restView (AK-U2-03)', () => {
       label: 'Nacht',
       symbol: '☾',
       inhabitants: sum,
-      tax: restView(w).tax,
+      tax: taxEffect('normal'), // galerie hat eine aktive Amtsstube: kein Zusatz
     });
   });
   it('alle vier Phasen', () => {

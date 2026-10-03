@@ -23,9 +23,9 @@ export interface DevProbe {
   centerOn(x: number, y: number): void;
 }
 
-/** Hängt die Sonde nur im Dev-Build an `window.__inselDev` (`dev` = `import.meta.env.DEV`); sonst nichts. */
-export function exposeDevProbe(probe: DevProbe, dev: boolean): void {
-  if (dev) window.__inselDev = probe;
+/** Hängt die Sonde nur im Dev-Build an `window.__inselDev` ; sonst nichts. */
+export function exposeDevProbe(probe: DevProbe): void {
+  if (import.meta.env.DEV) window.__inselDev = probe;
 }
 
 /** Median und 95. Perzentil (Nearest-Rank); leere Liste ergibt 0. */

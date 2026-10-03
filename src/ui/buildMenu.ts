@@ -258,7 +258,8 @@ export function renderBuildMenu(
     parent.appendChild(btn);
   };
 
-  // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1)
+  // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1);
+  // Seiteneffekt: setzt `state.openCategory` auf null
   if (state.openCategory !== null && buildEntries(state.world, state.openCategory).length === 0)
     state.openCategory = null;
   const main = document.createElement('div');

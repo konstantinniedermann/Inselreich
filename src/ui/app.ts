@@ -650,19 +650,16 @@ function launch(
   const previewFire = preview.fireIds?.map((id) => ({ id, flames: 1, smoke: 1 }));
   let frame = 0;
   if (import.meta.env.DEV) {
-    exposeDevProbe(
-      {
-        world: () => state.world,
-        // Mitte der Raute (obere und untere Ecke) in CSS-Pixeln der Seite
-        tileCenter: (x, y) => {
-          const c = tileCorners(state.cam, x, y);
-          const r = canvas.getBoundingClientRect();
-          return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
-        },
-        centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, map),
+    exposeDevProbe({
+      world: () => state.world,
+      // Mitte der Raute (obere und untere Ecke) in CSS-Pixeln der Seite
+      tileCenter: (x, y) => {
+        const c = tileCorners(state.cam, x, y);
+        const r = canvas.getBoundingClientRect();
+        return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
       },
-      true,
-    );
+      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, map),
+    });
   }
   let disposed = false;
   let rafId = 0;

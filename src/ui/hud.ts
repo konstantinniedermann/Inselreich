@@ -282,7 +282,9 @@ export function taxButtonText(world: World): string | null {
 /** Tooltip der Bilanz: Steuern und Unterhalt; ohne aktive Amtsstube die Zeile zur Steuer (Spec 11.8). */
 export function balanceTooltip(world: World): string {
   const base = balanceText(world.stats).title;
-  return townhallActive(world) ? base : `${base}\nSteuer: normal (keine Amtsstube)`;
+  return townhallActive(world)
+    ? base
+    : `${base}\nSteuer: ${TAX_LEVELS[effectiveTaxLevel(world)].name} (keine Amtsstube)`;
 }
 
 export function balanceText(stats: { taxes: number; upkeep: number }): {

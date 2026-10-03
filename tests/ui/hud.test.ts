@@ -19,7 +19,6 @@ import { createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
 import { houseNearKontor, placeTownhall } from '../sim/helpers';
-import { taxEffect } from '../../src/ui/guide';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -75,7 +74,7 @@ describe('M8 U1 Kopfzeile', () => {
     expect(popChipHidden(w, 4)).toBe(false);
   });
 
-  it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, andere Güter nie (Vorprüfung AK-U1-04, S11)', () => {
+  it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, Holz, Werkzeug, Stein, Nahrung nie (Vorprüfung AK-U1-04, S11)', () => {
     const w = createWorld(3);
     expect(stockChipHidden(w, 'glass')).toBe(true);
     for (const g of GOOD_IDS.filter((x) => ['wood', 'tools', 'stone', 'food'].includes(x)))
@@ -132,6 +131,5 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
     const w = createWorld(3);
     w.taxLevel = 'high';
     expect(balanceTooltip(w)).toContain('Steuer: normal (keine Amtsstube)');
-    expect(taxEffect('normal')).toBeTruthy();
   });
 });
