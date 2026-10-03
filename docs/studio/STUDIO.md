@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.14 · Stand: 2026-10-03 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.15 · Stand: 2026-10-03 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -280,11 +280,12 @@ Regeln dazu:
   und Determinismus (gleicher Seed → gleicher Zustand). Nicht abschwächbar (Verfassung §9).
 - **Report bei Final-Review und Playtests:** kein Report-Dateipfad im Briefing; der archivierte
   Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
-- **Merge:** nur nach dem L0-Merge-Gate, seriell durch `production-integrator`: `make check` vor
-  dem ersten Merge; je Strang `git merge --no-ff --no-commit`, dann `make check` — grün: committen,
-  rot: `git merge --abort` und melden. Push laut Verfassung §7, danach CI (`gh run list --branch
-main --limit 3`), Pages und `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-
-  Retro. Bei Konflikten stoppen und melden (Verfassung §6).
+- **Merge:** nur nach dem L0-Merge-Gate, seriell durch `production-integrator` im eigenen Worktree
+  `.worktrees/integrate` auf `main` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+  `make check` vor dem ersten Merge; je Strang `git merge --no-ff --no-commit`, dann `make check` — grün:
+  committen, rot: `git merge --abort` und melden. Push laut Verfassung §7, danach CI (`gh run list
+--branch main --limit 3`), Pages und `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang,
+  Ad-hoc-Retro. Bei Konflikten stoppen und melden (Verfassung §6).
 
 ## Autonomie
 
