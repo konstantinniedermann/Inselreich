@@ -373,7 +373,10 @@ export function drawHearthSmoke(
 
 // --- Küstenfeld und Fensteranker (Caches) -------------------------------------------------------------
 
-/** Küstenfeld je Welt (das Terrain ändert sich im Spiel nicht; wie die Wasser-Ebene). */
+/**
+ * Küstenfeld je Welt: gültig, solange Geländewechsel nur Wald ↔ Weide betreffen (Spec M10 7); andere
+ * Geländeänderungen müssen diesen Cache neu bewerten.
+ */
 const coasts = new WeakMap<World, Field>();
 export function coastFor(world: World): Field {
   let f = coasts.get(world);

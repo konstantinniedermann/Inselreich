@@ -784,6 +784,30 @@ body {
   border-color: var(--gold);
 }
 
+.hover-card {
+  position: fixed;
+  max-width: 280px;
+  padding: 6px 10px;
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+  background: var(--parchment);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.3;
+  pointer-events: none;
+  z-index: 20;
+}
+.hover-card[hidden] {
+  display: none;
+}
+.hover-card__title {
+  display: block;
+  font-size: 14px;
+}
+.hover-card__lines p {
+  margin: 0;
+}
+
 .toast--closable {
   pointer-events: auto;
   cursor: pointer;

@@ -71,6 +71,8 @@ export interface InputBinding {
   refreshHover(): void;
   /** Letzte Zeigerposition in Fensterkoordinaten; `null`, wenn der Zeiger die Karte verlassen hat. */
   pointerClient(): { x: number; y: number } | null;
+  /** Läuft gerade eine Zeigeraktion mit gedrückter Taste (Ziehen, Schwenken, Weg-Zug)? */
+  isDragging(): boolean;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
 }
@@ -449,6 +451,7 @@ export function bindInput(
     cancelPointerAction,
     refreshHover: updateHover,
     pointerClient: () => client,
+    isDragging: () => drag !== null,
     unbind,
   };
 }

@@ -11,9 +11,20 @@ import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type { Category, Cost, GoodId, Order, Result, UnlockId, World } from '../sim/types';
 import { refundText } from './texts';
 import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
-import { centerOn, clampToMap, createCamera, tileCorners, type Camera } from '../render/camera';
+import {
+  centerOn,
+  clampToMap,
+  createCamera,
+  screenToTileF,
+  tileCorners,
+  worldToScreen,
+  type Camera,
+} from '../render/camera';
+import { ISO_W, project } from '../render/iso';
+import { shipTile } from '../render/ship';
+import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
-import { render, type Hover, type Tool } from '../render/renderer';
+import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
@@ -27,6 +38,8 @@ import {
   withSpeed,
   type HotkeyAction,
 } from './hotkeys';
+import { hoverInfo, hoverPosition, hoverVisible } from './hover';
+import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setUpgradeStop } from '../sim/tax';
@@ -630,6 +643,118 @@ function launch(
     hintEl.style.top = `${p.top}px`;
   };
 
+  // Mouse-over-Karte (Spec M10 13): nach 400 ms Ruhe über derselben Kachel, nur mit dem Auswahl-Werkzeug
+  const hoverEl = document.createElement('div');
+  hoverEl.className = 'hover-card';
+  hoverEl.setAttribute('role', 'tooltip');
+  hoverEl.hidden = true;
+  document.body.appendChild(hoverEl);
+  const hoverTitle = document.createElement('strong');
+  hoverTitle.className = 'hover-card__title';
+  const hoverLines = document.createElement('div');
+  hoverLines.className = 'hover-card__lines';
+  hoverEl.append(hoverTitle, hoverLines);
+  let hoverTile: string | null = null;
+  let hoverSince = 0;
+  let hoverShown: string | null = null;
+  const hideHoverCard = (): void => {
+    hoverEl.hidden = true;
+    hoverShown = null;
+  };
+  /** Tier unter dem Zeiger: Treffer im Bildraum gegen `project(x, y) − z` und `r` (wildlifeAt-Vertrag). */
+  const animalAt = (
+    fx: RenderFx,
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+  ): string | null => {
+    const range = {
+      x0: Math.max(0, tx - 6),
+      y0: Math.max(0, ty - 6),
+      x1: Math.min(world.width - 1, tx + 6),
+      y1: Math.min(world.height - 1, ty + 6),
+    };
+    let best: { name: string; d: number } | null = null;
+    for (const h of wildlifeAt(world, range, fx.timeMs, wildlifeEnvOf(world, fx))) {
+      const p = project(h.x, h.y);
+      const c = worldToScreen(state.cam, { x: p.x, y: p.y - h.z });
+      const d = Math.hypot(c.x - sx, c.y - sy);
+      if (d <= h.r * (ISO_W / 2) * state.cam.zoom && (!best || d < best.d))
+        best = { name: h.name, d };
+    }
+    return best?.name ?? null;
+  };
+  const updateHoverCard = (fx: RenderFx, now: number): void => {
+    const client = input?.pointerClient() ?? null;
+    const sel: Tool = { kind: 'select' };
+    if (!client || state.tool.kind !== 'select' || isModalOpen()) {
+      hoverTile = null;
+      hideHoverCard();
+      return;
+    }
+    const r = canvas.getBoundingClientRect();
+    const sx = client.x - r.left,
+      sy = client.y - r.top;
+    const t = targetTile(world, state.cam, sel, sx, sy);
+    if (!t) {
+      hoverTile = null;
+      hideHoverCard();
+      return;
+    }
+    const f = screenToTileF(state.cam, sx, sy);
+    const gx = Math.floor(f.x),
+      gy = Math.floor(f.y);
+    const key = `${t.x},${t.y},${gx},${gy}`;
+    const sameTile = key === hoverTile;
+    if (!sameTile) {
+      hoverTile = key;
+      hoverSince = now;
+      hideHoverCard();
+    }
+    if (
+      !hoverVisible({
+        restMs: now - hoverSince,
+        sameTile,
+        dragging: input?.isDragging() ?? false,
+        modalOpen: false,
+        tool: state.tool,
+      })
+    ) {
+      if (input?.isDragging()) hideHoverCard();
+      return;
+    }
+    const ship = shipTile(world);
+    const info = hoverInfo(world, t, fx.timeMs, {
+      ship: ship !== null && ship.x === gx && ship.y === gy,
+      animal: animalAt(fx, sx, sy, gx, gy),
+    });
+    if (!info) {
+      hideHoverCard();
+      return;
+    }
+    const text = `${info.title}\n${info.lines.join('\n')}`;
+    if (text !== hoverShown) {
+      hoverShown = text;
+      hoverTitle.textContent = info.title;
+      hoverLines.replaceChildren(
+        ...info.lines.map((l) => {
+          const p = document.createElement('p');
+          p.textContent = l;
+          return p;
+        }),
+      );
+    }
+    hoverEl.hidden = false;
+    const pos = hoverPosition(
+      client,
+      { w: hoverEl.offsetWidth, h: hoverEl.offsetHeight },
+      { w: innerWidth, h: innerHeight },
+    );
+    hoverEl.style.left = `${pos.x}px`;
+    hoverEl.style.top = `${pos.y}px`;
+  };
+
   // HUD vor dem Zentrieren aufbauen, damit die Spielfläche ihre endgültige Höhe hat
   setPanel({ kind: 'none' });
   refresh();
@@ -769,7 +894,7 @@ function launch(
         sound.setPhase(phase);
       }
       const t0 = performance.now();
-      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, {
+      const fx: RenderFx = {
         timeMs: t0,
         dayNight: settings.dayNight,
         weather,
@@ -777,9 +902,11 @@ function launch(
         fire: previewFire ?? inputs.render.fire,
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
-      });
+      };
+      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
       perf?.renderDone(performance.now() - t0);
       updateHint(frame % HUD_EVERY_FRAMES === 0);
+      updateHoverCard(fx, t0);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);
@@ -811,6 +938,7 @@ function launch(
     sound.dispose();
     logBox.remove();
     hintEl.remove();
+    hoverEl.remove();
     noticeStack.remove();
     unbindMessages();
     hudEl.replaceChildren();

@@ -77,7 +77,7 @@ import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
-import { drawFlocks, drawWaterLife, wildlifeAt } from './wildlife';
+import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildlife';
 import {
   buildingShadow,
   drawAir,
@@ -117,6 +117,18 @@ export interface RenderFx {
   dayNight?: boolean;
   /** Dev: Rautenraster über der Karte (nur unter `import.meta.env.DEV` gesetzt). */
   raster?: boolean;
+}
+
+/**
+ * Umgebung für `wildlifeAt`: Bild und Mouse-over fragen mit derselben Umgebung ab (Spec M10 13.1), sonst nennt
+ * der Mouse-over Tiere, die nicht gezeichnet sind.
+ */
+export function wildlifeEnvOf(world: World, fx: RenderFx): WildlifeEnv {
+  return {
+    phase: lightAt(world.tick).phase,
+    weather: pickWeather(fx.weather, null).kind,
+    reduce: fx.reduceMotion === true,
+  };
 }
 
 /** Signal eines Frames in CSS-Pixeln (Mittelpunkt): Bedarfssymbol oder roter Punkt. */
@@ -448,11 +460,7 @@ export function render(
       x1: Math.min(world.width - 1, range.x1 + 3),
       y1: Math.min(world.height - 1, range.y1 + 3),
     };
-    const wild = wildlifeAt(world, wildRange, fx.timeMs, {
-      phase: light.phase,
-      weather: weather.kind,
-      reduce,
-    });
+    const wild = wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
     drawWaterLife(ctx, cam, wild);
 
     // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)
