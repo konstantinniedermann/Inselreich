@@ -1309,3 +1309,12 @@ in `src/sim/defs/map.ts`. Merge durch production-integrator im eigenen Worktree,
 Revert-Merge; alte Spielstände unberührt.
 
 Entscheider: L0 · Anlass: Bericht lead-tech H-S1 · ADR: —
+
+## R206 · 2026-10-03 · Gate Merge H-R9 Gebirge und Relief
+
+Ruling: Gate Merge H-R9 bestanden (`feat/h-r9-relief` @ 0e9110c; Review OK, Playtest OK, `make check` grün,
+renderMedian +1,8 %). Abweichungen angenommen: Schuttband im Gebirgszweig, Rasterfaktor ≤ 2, Alpha-Rand der Sockel.
+Erstbild-Rasterung ~130 ms beim grössten Massiv und dezente Wiese bei Zoom 1 → Beobachtung; Stilurteil beim Nutzer
+im Spiel. Merge durch production-integrator nach H-S1. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R9 · ADR: —
