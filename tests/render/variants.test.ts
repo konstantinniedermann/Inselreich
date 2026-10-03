@@ -238,6 +238,37 @@ describe('H-R7 Fix 2 A: Varianz deutlich sichtbar', () => {
   }
 });
 
+describe('H-R7 Fix 3: Sättigung bleibt', () => {
+  const sat = (css: string): number => {
+    const [r, g, b] = rgbOfCss(css) as [number, number, number];
+    const mx = Math.max(r, g, b);
+    return mx === 0 ? 0 : (mx - Math.min(r, g, b)) / mx;
+  };
+  /** Ein kräftiger Ton (Sättigung >= 0,25) verliert in einer Variante höchstens 30 % seiner Sättigung (Typ-Identität). */
+  const MIN_KEEP = 0.7;
+  for (const [id, tier] of cases) {
+    it(`Fix3 ${id}${tier ?? ''}: kräftige Töne bleiben in allen Varianten kräftig`, () => {
+      const fills = (v: number) => {
+        const m = new Map<string, string>();
+        for (const e of events(BUILDING_DEFS[id], mk(id, 12, 7, tier), v))
+          if (e.op === 'fill')
+            m.set(
+              e.points.map((p) => `${Math.round(p.x * 10)},${Math.round(p.y * 10)}`).join(';'),
+              e.style,
+            );
+        return m;
+      };
+      const base = fills(0);
+      for (let v = 1; v < VARIANT_COUNT; v++)
+        for (const [k, c] of fills(v)) {
+          const c0 = base.get(k);
+          if (c0 && sat(c0) >= 0.25)
+            expect(sat(c), `v${v} ${c0} -> ${c}`).toBeGreaterThanOrEqual(sat(c0) * MIN_KEEP - 1e-9);
+        }
+    });
+  }
+});
+
 describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
   it('Fix2 B alle Typen: Pfadpunkte samt halber Strichbreite liegen in der Fläche (Zoom 1/1,5/2, DPR 1/2, mit Material)', () => {
     for (const z of [1, 1.5, 2])
