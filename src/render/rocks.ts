@@ -280,6 +280,16 @@ export function strataAt(h: number, steep: number, warp: number, wx: number, wy:
   return BAND[Math.floor((ph - Math.floor(ph)) * 64) & 63]! * on * sm * sm;
 }
 
+/** Seed-Versatz des Felskorns (Liste der Versätze in groundDecor.ts). */
+const GRAIN_SEED = 321;
+/**
+ * Pixelkorn 1 ± GRAIN/2 am Weltpunkt (wx, wy), Zelle = ein Flächenpixel (sx, sy Pixel je Weltpixel), in Weltkoordinaten
+ * verankert: Nachbarstreifen tragen nicht dasselbe Muster.
+ */
+export function grainAt(seed: number, wx: number, wy: number, sx: number, sy: number): number {
+  return 1 + (hash2(seed + GRAIN_SEED, Math.floor(wx * sx), Math.floor(wy * sy)) - 0.5) * GRAIN;
+}
+
 /** Halbe Übergangsbreite (in Einheiten des Werts) für TONE_EDGE_PX Pixel bei Gefälle |∇v| (je Pixel). */
 const halfWidth = (g: number): number => Math.min(0.5, Math.max(0.02, 0.5 * TONE_EDGE_PX * g));
 const sstep = (v: number, t: number, hw: number): number => {
@@ -395,7 +405,7 @@ function triangle(
       k *=
         1 -
         STRATA_DARK * strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
-      k *= 1 + (hash2(seed + 23, x, y) - 0.5) * GRAIN;
+      k *= grainAt(seed, wx, wy, sx, sy);
       r *= k;
       g *= k;
       bl *= k;

@@ -33,8 +33,6 @@ import {
   pieceNodes,
   ROCK_TONES,
   TONE_FLAT,
-  VIEW_CAP,
-  carve,
   toneStep,
   type MassifComponent,
   type MassifPiece,
@@ -45,6 +43,7 @@ import {
   massifOnScreen,
   massifSilhouette,
   pieceQuads,
+  grainAt,
   rasterPiece,
   setMassifCanvasFactory,
   strataAt,
@@ -52,6 +51,7 @@ import {
 } from '../../src/render/rocks';
 import { render } from '../../src/render/renderer';
 import { setCanvasFactory as setTreeCanvasFactory } from '../../src/render/trees';
+import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
@@ -90,7 +90,13 @@ function put(w: World, defId: BuildingDefId, x: number, y: number): boolean {
   const tiles = [];
   for (let dy = 0; dy < d.h; dy++)
     for (let dx = 0; dx < d.w; dx++) tiles.push(w.tiles[(y + dy) * w.width + x + dx]!);
-  if (tiles.some((t) => t.buildingId !== null || t.road || t.terrain === 'water')) return false;
+  // wie `checkGround` der Sim: Gebirge und Wasser sind kein Bauland
+  if (
+    tiles.some(
+      (t) => t.buildingId !== null || t.road || t.terrain === 'water' || t.terrain === 'mountain',
+    )
+  )
+    return false;
   const id = nextId++;
   w.buildings[id] = { id, defId, x, y, connected: true, progress: 0, state: 'ok' };
   for (const t of tiles) t.buildingId = id;
@@ -137,7 +143,7 @@ describe('H-R9 A1 Komponenten', () => {
     const d = massifData(w);
     expect(massifData(w)).toBe(d);
     put(w, 'house', 30, 30);
-    w.tiles[11 * 64 + 11]!.road = true;
+    w.tiles[31 * 64 + 30]!.road = true;
     expect(massifData(w)).toBe(d);
     w.tiles[40 * 64 + 40]!.terrain = 'mountain';
     expect(massifData(w)).not.toBe(d);
@@ -449,6 +455,47 @@ describe('H-R9 A3 Färbung', () => {
     expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB).a).toBeLessThan(0.02);
   });
 
+  it('A3 Sockelfarbe folgt dem Nachbargelände: Aufforsten an einer Randkachel ändert Schlüssel und Farbe, nicht das Höhenfeld', () => {
+    const w = scene(['......', '.MMMM.', '.MMMM.', '.MMMM.', '......'], 20, 20);
+    const data = massifData(w);
+    const before = new Map(massifPieces(w).map((p) => [p.id, p]));
+    w.tiles[23 * 64 + 25]!.terrain = 'forest'; // rechts neben der Randkachel (24, 23)
+    expect(massifData(w)).toBe(data); // Gebirge unverändert: kein Neubau des Höhenfelds
+    const after = massifPieces(w);
+    const changed = after.filter((p) => before.get(p.id)!.key !== p.key);
+    expect(changed.length).toBeGreaterThan(0);
+    expect(changed.length).toBeLessThan(after.length);
+    // Farbe an den Randknoten zwischen (24, 23) und (25, 23) wechselt von Wiese zu Waldboden
+    let diff = 0;
+    for (const p1 of changed) {
+      const n0 = pieceNodes(before.get(p1.id)!),
+        n1 = pieceNodes(p1);
+      for (const c of pieceCells(p1))
+        for (const [I, J] of [
+          [c.I, c.J],
+          [c.I + 1, c.J],
+          [c.I + 1, c.J + 1],
+          [c.I, c.J + 1],
+        ] as const)
+          diff = Math.max(diff, dist3([...n0(I, J).c], [...n1(I, J).c]));
+    }
+    expect(diff).toBeGreaterThan(5);
+  });
+
+  it('A3 Felskorn in Weltkoordinaten: gleiche Lage im Nachbarstreifen trägt ein anderes Korn', () => {
+    let same = 0,
+      n = 0;
+    for (let y = 0; y < 40; y++)
+      for (let x = 0; x < 32; x++) {
+        const a = grainAt(9, 0 * 32 + x + 0.5, y + 0.5, 1, 1),
+          b = grainAt(9, 1 * 32 + x + 0.5, y + 0.5, 1, 1);
+        if (a === b) same++;
+        n++;
+        expect(grainAt(9, x + 0.25, y + 0.25, 1, 1)).toBe(a); // stetig je Flächenpixel
+      }
+    expect(same / n).toBeLessThan(0.05);
+  });
+
   it('A3 nur Palettentöne: keine Signalfarben, kein Schnee (heller als rockLight/foam-Mischung 30 %)', () => {
     const w = createWorld(7, { unlockAll: true });
     const sig = SIGNAL_NAMES.map((n) => rgbOf(PALETTE[n]));
@@ -474,9 +521,8 @@ describe('H-R9 A3 Färbung', () => {
 describe('H-R9 A4/A5 Teilstücke', () => {
   const W = 64;
   const strips = (p: MassifPiece) => p.strip;
-  it('A5 Teilstücke: Läufe freier Gebirgskacheln im Halbstreifen, höchstens PIECE_RUN, Schlüssel = vorderste Kachel', () => {
+  it('A5 Teilstücke: Läufe von Gebirgskacheln im Halbstreifen, höchstens PIECE_RUN, Schlüssel = vorderste Kachel', () => {
     const w = createWorld(7, { unlockAll: true });
-    put(w, 'quarry', 0, 0);
     const items = massifItems(w);
     expect(items.length).toBeGreaterThan(20);
     for (const it of items) {
@@ -489,7 +535,6 @@ describe('H-R9 A4/A5 Teilstücke', () => {
           y = Math.floor(i / W);
         const t = w.tiles[i]!;
         expect(t.terrain).toBe('mountain');
-        expect(t.buildingId === null && !t.road).toBe(true);
         expect([strips(p), strips(p) + 1]).toContain(x - y);
         if (prevS >= 0) expect(x + y).toBe(prevS + 1);
         prevS = x + y;
@@ -501,9 +546,9 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
   });
 
-  it('A5 Teilstücke partitionieren die Netzzellen jeder freien Gebirgskachel und bleiben im Halbstreifen', () => {
+  it('A5 Teilstücke partitionieren die Netzzellen jeder Gebirgskachel und bleiben im Halbstreifen', () => {
     const w = scene(['MMMMM.', 'MM.MMM', 'MMMMMM', '.MMMM.']);
-    put(w, 'house', 13, 11);
+    expect(put(w, 'house', 12, 11)).toBe(true); // in der Bucht
     const seen = new Map<string, number>();
     for (const p of massifPieces(w))
       for (const c of pieceCells(p)) {
@@ -520,13 +565,13 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     for (let y = 0; y < 64; y++)
       for (let x = 0; x < 64; x++) {
         const t = w.tiles[y * 64 + x]!;
-        const isFree = t.terrain === 'mountain' && t.buildingId === null && !t.road;
+        const isFree = t.terrain === 'mountain';
         if (isFree) free++;
         for (let J = y * SUB; J < (y + 1) * SUB; J++)
           for (let I = x * SUB; I < (x + 1) * SUB; I++)
             expect(seen.get(`${I},${J}`) ?? 0, `${x},${y}`).toBe(isFree ? 2 : 0);
       }
-    expect(free).toBe(20 - 1); // 20 Gebirgskacheln, eine trägt das Haus (1 × 1)
+    expect(free).toBe(20);
   });
 
   /** Kachelfolge des Halbstreifens k, die eine Grundfläche `fp` mit positiver Fläche schneidet (Tiefen s). */
@@ -566,9 +611,11 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       8,
       8,
     );
-    // Steinbruch auf Gebirgskacheln, Weg quer durchs Massiv, Häuser und Betriebe in der Bucht und an den Rändern
-    expect(put(w, 'quarry', 8 + 8, 8 + 1)).toBe(true);
-    for (let x = 8 + 2; x <= 8 + 8; x++) w.tiles[(8 + 5) * 64 + x]!.road = true;
+    // Gebirge ist nicht bebaubar: Steinbruch, Weg, Häuser und Betriebe direkt an den Rändern und in den Buchten
+    expect(put(w, 'quarry', 8 + 3, 8 + 2)).toBe(true); // in der Bucht des Rings
+    for (let x = 8; x <= 8 + 8; x++) w.tiles[(8 + 8) * 64 + x]!.road = true; // Weg am Fuss entlang
+    for (let x = 8; x <= 8 + 8; x++)
+      expect(w.tiles[(8 + 8) * 64 + x]!.terrain).not.toBe('mountain');
     const spots: [BuildingDefId, number, number][] = [];
     for (let y = 6; y < 22; y++)
       for (let x = 8; x < 28; x++) spots.push([(x + y) % 3 === 0 ? 'lumberjack' : 'house', x, y]);
@@ -583,7 +630,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     expect(Object.keys(w.buildings).length).toBeGreaterThan(20);
     const free = (x: number, y: number): boolean => {
       const t = w.tiles[y * 64 + x];
-      return !!t && t.terrain === 'mountain' && t.buildingId === null && !t.road;
+      return !!t && t.terrain === 'mountain';
     };
     const movers: Moving[] = [];
     let id = 2000;
@@ -875,55 +922,26 @@ describe('H-R9 A6 Cache und Culling', () => {
 });
 
 describe('H-R9 A7 Picking und Verdeckung', () => {
-  it('A7 Massiv erzeugt keine Hülle; Klick auf das Massiv trifft kein Gebäude', () => {
+  it('A7 Picking der Kacheln unverändert: Klick auf die Rautenmitte jeder Gebirgskachel trifft genau diese Kachel (Auswahl, Abriss, Bau)', () => {
     const w = createWorld(7, { unlockAll: true });
-    const hulls = buildingHulls(w);
-    expect(hulls.length).toBe(Object.keys(w.buildings).length);
-    const c = largest(w);
-    const p = project(c.x0 + 2, c.y0 + 2);
-    const blocked = hulls.some((h) => pickBuilding([h], p.x, p.y - 20) !== null);
-    if (!blocked) expect(pickBuilding(hulls, p.x, p.y - 20)).toBeNull();
-  });
-
-  it('A7 Lesbarkeit (lead-art R1): kein Teilstück deckt die Rautenmitte einer bebauten Gebirgskachel (Weg, Haus, Steinbruch)', () => {
-    const w = square(16);
-    for (let x = 12; x <= 22; x++) w.tiles[18 * 64 + x]!.road = true; // Weg quer durchs Massiv
-    expect(put(w, 'house', 20, 14)).toBe(true);
-    expect(put(w, 'quarry', 13, 22)).toBe(true);
-    expect(put(w, 'house', 24, 23)).toBe(true);
-    const occ: [number, number][] = [];
-    for (let y = 10; y < 26; y++)
-      for (let x = 10; x < 26; x++) {
-        const t = w.tiles[y * 64 + x]!;
-        if (t.road || t.buildingId !== null) occ.push([x, y]);
+    const cam: Camera = { x: -37.5, y: 112.25, zoom: 1.5 };
+    let n = 0;
+    for (const c of massifData(w).comps)
+      for (const t of c.tiles) {
+        const x = t % 64,
+          y = Math.floor(t / 64);
+        const p = project(x + 0.5, y + 0.5);
+        const sx = (p.x - cam.x) * cam.zoom,
+          sy = (p.y - cam.y) * cam.zoom;
+        // Auswahl/Abriss treffen zuerst einen Gebäudekörper davor (gewollt); sonst die Gebirgskachel
+        const hit = pickBuilding(buildingHulls(w), p.x, p.y);
+        const tools =
+          hit === null ? (['select', 'demolish', 'road'] as const) : (['road'] as const);
+        for (const kind of tools)
+          expect(targetTile(w, cam, { kind }, sx, sy), `${x},${y} ${kind}`).toEqual({ x, y });
+        n++;
       }
-    const tris = massifPieces(w).flatMap((p) => pieceQuads(p).map((q) => ({ p, pts: q.pts })));
-    let checked = 0;
-    for (const [x, y] of occ) {
-      const c = project(x + 0.5, y + 0.5);
-      for (const dx of [-0.5, 0.5]) {
-        const pt = { x: c.x + dx, y: c.y };
-        const hit = tris.find((t) => inTri(t.pts, pt.x, pt.y));
-        expect(hit, `Kachel ${x},${y} von Teilstück ${hit?.p.id}`).toBeUndefined();
-        checked++;
-      }
-    }
-    expect(checked).toBeGreaterThan(20);
-  });
-
-  it('A7 Sichtschneise: vor einer bebauten Kachel höchstens VIEW_CAP px je Kachel Tiefe (flacher als der Blick, 16 px)', () => {
-    expect(VIEW_CAP).toBeLessThan(ISO_H / 2);
-    const W = 64,
-      o = 20 * W + 20;
-    for (let ds = 0.25; ds < 12; ds += 0.25)
-      for (const du of [0, 0.25, 0.5]) {
-        const fx = 20.5 + (ds + du) / 2,
-          fy = 20.5 + (ds - du) / 2;
-        expect(carve(500, [o], W, fx, fy)).toBeLessThanOrEqual(VIEW_CAP * ds + 1e-9);
-      }
-    // hinten und weit seitlich wirkt nur der Sattel (1 Kachel)
-    expect(carve(100, [o], W, 18.5, 18.5)).toBeCloseTo(100, 6);
-    expect(carve(100, [o], W, 26, 18)).toBeCloseTo(100, 6);
+    expect(n).toBeGreaterThan(300);
   });
 
   it('A7 Silhouette je Teilstück umschliesst alle gezeichneten Zellen (Licht- und Feuerverdeckung)', () => {

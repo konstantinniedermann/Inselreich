@@ -20,6 +20,10 @@ import {
   terrainLayerSize,
   terrainPatchRect,
   tuftsFor,
+  RELIEF_AMP,
+  duneRidge,
+  duneWeight,
+  meadowHill,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
 import { step } from '../../src/sim/tick';
@@ -777,14 +781,16 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
 
   it('H-R9 B1 Kuppen heller, Senken dunkler: shade korreliert mit der Hanglage zur Sonne (Licht links oben)', () => {
     const g = buildGrid(flat(40, 'grass', 7));
-    expect(g.relief).toBeDefined();
+    // Höhe der Kuppen aus dem reinen Helfer (Knoten i liegt bei i · RASTER / TEX Kacheln)
+    const st = RASTER / TEX;
+    const hill = (i: number, j: number): number => RELIEF_AMP.hill * meadowHill(7, i * st, j * st);
     // Lichtseite = fallende Höhe nach rechts/unten: shade ~ −(gx·Lx + gy·Ly) > 0 im Mittel bei positiver Korrelation
     let sxy = 0,
       n = 0;
     for (let j = 17; j < g.ny - 17; j++)
       for (let i = 17; i < g.nx - 17; i++) {
-        const gx = g.relief[j * g.nx + i + 1]! - g.relief[j * g.nx + i - 1]!;
-        const gy = g.relief[(j + 1) * g.nx + i]! - g.relief[(j - 1) * g.nx + i]!;
+        const gx = hill(i + 1, j) - hill(i - 1, j);
+        const gy = hill(i, j + 1) - hill(i, j - 1);
         sxy += g.shade[j * g.nx + i]! * -(gx * -3 + gy * -1);
         n++;
       }
@@ -795,7 +801,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     const w = flat(10, 'grass', 5);
     const a = buildGrid(w),
       b = buildGrid(w);
-    for (const f of ['shade', 'relief', 'warm', 'mottle', 'veil'] as const)
+    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const)
       expect(Array.from(a[f]), f).toEqual(Array.from(b[f]));
     expect(Array.from(paintPixels(a, 1, 0, 0, 96, 96))).toEqual(
       Array.from(paintPixels(b, 1, 0, 0, 96, 96)),
@@ -812,12 +818,16 @@ describe('H-R9 B2 Dünen', () => {
       dryMax = 0;
     for (let k = 0; k < g.cls.length; k++) {
       if (g.cls[k] !== 1 + sand || g.ind[LAND.indexOf('grass')]![k] !== 0) continue;
+      // Dünenhöhe = Gewicht nach Küstenwert × Rücken (reine Helfer, Knoten k bei (i, j) · RASTER / TEX)
+      const fx = (k % g.nx) * (RASTER / TEX),
+        fy = Math.floor(k / g.nx) * (RASTER / TEX);
+      const dune = duneWeight(g.smooth[k]!) * RELIEF_AMP.dune * duneRidge(g.seed, fx, fy);
       if (g.smooth[k]! < 0.18) {
         wet++;
-        expect(g.relief[k]).toBe(0);
+        expect(dune).toBe(0);
       } else if (g.smooth[k]! > 0.6) {
         dry++;
-        dryMax = Math.max(dryMax, Math.abs(g.relief[k]!));
+        dryMax = Math.max(dryMax, Math.abs(dune));
       }
     }
     expect(wet).toBeGreaterThan(50);
@@ -833,7 +843,8 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     return { g, out: paintPixels(g, 1, 0, 0, W, W) };
   };
 
-  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,3 (vorher 5,0; Runde 1: Lime-Töne und 6-%-Mottling entfernt)', () => {
+  // Messwert (H-R9 Fix 2): RMS 5,39 (Seed 7) und 5,50 (Seed 8); Basis main vor H-R9: 5,0
+  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,3 (gemessen 5,39/5,50, main-Basis 5,0; Runde 1: Lime-Töne und 6-%-Mottling entfernt)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
       const labs: [number, number, number][] = [];
@@ -920,7 +931,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
 });
 
 describe('H-R9 B4 Teil-Neuzeichnung', () => {
-  it('H-R9 B4 patchGrid ergibt auch für relief/warm/mottle/veil dasselbe Raster wie Vollaufbau; Pixel im Rechteck gleich', () => {
+  it('H-R9 B4 patchGrid ergibt auch für shade/warm/mottle/veil dasselbe Raster wie Vollaufbau; Pixel im Rechteck gleich', () => {
     const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[w.kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 4, 3, 'forest');
@@ -932,7 +943,7 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['relief', 'warm', 'mottle', 'veil'] as const) {
+    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
       expect(grid[f], f).toEqual(full[f]);
     }

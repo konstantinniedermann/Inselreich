@@ -1,5 +1,6 @@
 import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
 import { valueNoise } from '../sim/noise';
+import { LIGHT, rotNoise } from './light';
 import type { World } from '../sim/types';
 import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 
@@ -47,17 +48,6 @@ const BACK_RATIO = 1.25;
 const BUMP = 0.8; // px Geröll-Buckel am Fuss
 /** Obergrenze jeder Massivhöhe (px): Amplitude mal Grate mal Staffelung plus Geröll. */
 export const MASSIF_MAX_H = AMP_CAP * (RIDGE_LO + RIDGE_SPAN) * Math.exp(STAGGER_MAX) + BUMP;
-/**
- * Sattel um Gebäude und Wege auf dem Gebirge: die Höhe läuft nach hinten und zur Seite in OCC_FADE Kacheln auf 0,
- * nach vorn (grössere Tiefe x + y) in OCC_FADE_FRONT. Dazu eine Sichtschneise nach vorn: vor der bebauten Kachel
- * steigt das Massiv höchstens um VIEW_CAP px je Kachel Tiefe (flacher als der Blickstrahl, ISO_H/2 = 16 px je
- * Kachel Tiefe), seitlich mit WALL px je Spaltenbreite ansteigend. So verdeckt kein vorderer Grat die Rautenmitte.
- */
-export const OCC_FADE = 1;
-export const OCC_FADE_FRONT = 1.6;
-export const VIEW_CAP = 14;
-const WALL = 40;
-const NOTCH = 0.6; // halbe Breite der Schneisensohle in Spalten (fx − fy)
 const ROT_A = 0.61,
   ROT_B = 1.37,
   ROT_C = 0.23; // Rauschdrehungen (rad): keine achsparallelen Grate
@@ -85,8 +75,6 @@ export interface MassifComponent {
   amp: number;
   /** 1 je Kachel des Rechtecks (Zeilen ab y0), die zur Komponente gehört. */
   mask: Uint8Array;
-  /** Farbe des nächsten Nachbargeländes je Kachel des Rechtecks (für den Sockel), `null` = keine Mischung. */
-  edge: (Rgb | null)[];
   seed: number;
   width: number;
 }
@@ -135,7 +123,6 @@ function buildData(w: MassifWorld, sig: string): MassifData {
     n = W * H;
   const compOf = new Int32Array(n).fill(-1);
   const comps: MassifComponent[] = [];
-  const edge = nearestLand(w);
   const stack: number[] = [];
   for (let i = 0; i < n; i++) {
     if (!isMountain(w, i) || compOf[i]! >= 0) continue;
@@ -163,23 +150,28 @@ function buildData(w: MassifWorld, sig: string): MassifData {
       }
     }
     tiles.sort((p, q) => p - q);
-    comps.push(buildComponent(w, id, Int32Array.from(tiles), compOf, edge));
+    comps.push(buildComponent(w, id, Int32Array.from(tiles), compOf));
   }
   return { sig, seed: w.seed, width: W, height: H, compOf, comps };
 }
 
-/** Geländefarbe des nächsten Nicht-Gebirges je Kachel (4er-Breitensuche, deterministisch), Sockel-Mischung (A3). */
-function nearestLand(w: MassifWorld): (Rgb | null)[] {
+/** Landart des nächsten Nicht-Gebirges (für den Sockel): 0 keine Mischung (Wasser, Rand), sonst Index in EDGE_COLORS. */
+const EDGE_CODE: Partial<Record<string, number>> = { grass: 1, forest: 2, sand: 3 };
+/**
+ * Landart des nächsten Nicht-Gebirges je Kachel (4er-Breitensuche, deterministisch). Hängt von Wald/Gras ab (Roden,
+ * Aufforsten) und wird deshalb je Zerlegung neu gerechnet, nicht mit dem Höhenfeld gemerkt.
+ */
+export function nearestLand(w: PieceWorld): Uint8Array {
   const W = w.width,
     n = W * w.height;
-  const out: (Rgb | null)[] = new Array<Rgb | null>(n).fill(null);
+  const out = new Uint8Array(n);
   const done = new Uint8Array(n);
   const q = new Int32Array(n);
   let head = 0,
     tail = 0;
   for (let i = 0; i < n; i++)
     if (!isMountain(w, i)) {
-      out[i] = LAND_EDGE[w.tiles[i]!.terrain] ?? null;
+      out[i] = EDGE_CODE[w.tiles[i]!.terrain] ?? 0;
       done[i] = 1;
       q[tail++] = i;
     }
@@ -212,12 +204,6 @@ const smooth01 = (t: number): number => {
 };
 const smoothstep = (a: number, b: number, t: number): number => smooth01((t - a) / (b - a));
 
-/** Wertrauschen an gedrehten Koordinaten (keine achsparallelen Merkmale, wie `rotNoise` in terrain.ts). */
-function rotNoise(seed: number, fx: number, fy: number, freq: number, rot: number): number {
-  const c = Math.cos(rot) * freq,
-    s = Math.sin(rot) * freq;
-  return valueNoise(seed, c * fx - s * fy, s * fx + c * fy);
-}
 /** Ridged-Noise 1 − |2n − 1|, zwei Oktaven plus feine Zacken, quadriert (scharfe Grate), 0…1. */
 export function ridged(seed: number, fx: number, fy: number): number {
   const r1 = 1 - Math.abs(2 * rotNoise(seed + 301, fx, fy, 0.3, ROT_A) - 1);
@@ -299,7 +285,6 @@ function buildComponent(
   id: number,
   tiles: Int32Array,
   compOf: Int32Array,
-  nearest: (Rgb | null)[],
 ): MassifComponent {
   const W = w.width;
   let x0 = Infinity,
@@ -412,11 +397,9 @@ function buildComponent(
       const bump = (valueNoise(seed + 307, fx * 1.7, fy * 1.7) - 0.5) * 2 * BUMP * rim * (1 - dn);
       height[k] = Math.max(0, amp * shape[k]! * Math.exp(beta * gs[k]!) + bump);
     }
-  const edge: (Rgb | null)[] = [];
   const mask = new Uint8Array((x1 - x0 + 1) * (y1 - y0 + 1));
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
-      edge.push(nearest[y * W + x]!);
       mask[(y - y0) * (x1 - x0 + 1) + x - x0] = inTile(x, y) ? 1 : 0;
     }
   return {
@@ -434,7 +417,6 @@ function buildComponent(
     height,
     amp,
     mask,
-    edge,
     seed,
     width: W,
   };
@@ -481,47 +463,35 @@ export interface MassifPiece {
   tiles: number[];
   /** Letzte Kachel des vorigen Abschnitts desselben Laufs (wird darunter mitgezeichnet, keine Naht), sonst −1. */
   seam: number;
-  /** Bebaute Kacheln der Komponente, die auf das Teilstück wirken (Sattel und Sichtschneise), aufsteigend. */
-  occ: number[];
-  /** Cache-Schlüssel (Geländeabbild, Lage, Sattel). */
+  /** Landart des nächsten Nicht-Gebirges je Kachel der Welt (`nearestLand`, Sockelfarbe). */
+  near: Uint8Array;
+  /** Cache-Schlüssel (Geländeabbild, Lage, Landart rund um die Kacheln: Roden/Aufforsten ändert den Sockel). */
   key: string;
 }
 
-const occupied = (w: PieceWorld, i: number): boolean =>
-  w.tiles[i]!.buildingId !== null || w.tiles[i]!.road;
-
 /**
- * Zerlegt alle Massive in Teilstücke (A5): je Halbstreifen k die maximalen Läufe freier Gebirgskacheln (ohne
- * Gebäude und Weg) in Tiefenfolge, geteilt in Abschnitte von höchstens `PIECE_RUN` Kacheln. Deterministisch, hinten
+ * Zerlegt alle Massive in Teilstücke (A5): je Halbstreifen k die maximalen Läufe von Gebirgskacheln (Gebirge ist
+ * nicht bebaubar, `isLand` in mapgen.ts; Bebauung grenzt nur aussen an) in Tiefenfolge, geteilt in Abschnitte von höchstens `PIECE_RUN` Kacheln. Deterministisch, hinten
  * nach vorn je Streifen.
  */
 export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): MassifPiece[] {
   const W = w.width,
     H = w.height;
   const out: MassifPiece[] = [];
-  const free = (x: number, y: number): boolean => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return false;
-    const i = y * W + x;
-    return data.compOf[i]! >= 0 && !occupied(w, i);
-  };
-  // bebaute Gebirgskacheln je Komponente
-  const built = new Map<number, number[]>();
-  for (let i = 0; i < W * H; i++)
-    if (data.compOf[i]! >= 0 && occupied(w, i)) {
-      const l = built.get(data.compOf[i]!) ?? [];
-      l.push(i);
-      built.set(data.compOf[i]!, l);
+  const isM = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < W && y < H && data.compOf[y * W + x]! >= 0;
+  const near = nearestLand(w);
+  /** Landart rund um die Kacheln (je 3 × 3), Teil des Cache-Schlüssels. */
+  const around = (ts: readonly number[]): string => {
+    let out = '';
+    for (const t of ts) {
+      const tx = t % W,
+        ty = (t / W) | 0;
+      for (let y = ty - 1; y <= ty + 1; y++)
+        for (let x = tx - 1; x <= tx + 1; x++)
+          out += x < 0 || y < 0 || x >= W || y >= H ? '9' : String(near[y * W + x]);
     }
-  /** Wirkt die bebaute Kachel o auf die Kachel t (Sattel im Umkreis 2, Schneise nach vorn)? */
-  const reach = (o: number, t: number): boolean => {
-    const ox = o % W,
-      oy = (o / W) | 0,
-      tx = t % W,
-      ty = (t / W) | 0;
-    if (Math.abs(ox - tx) <= 2 && Math.abs(oy - ty) <= 2) return true;
-    const ds = tx + ty - (ox + oy),
-      du = Math.abs(tx - ty - (ox - oy));
-    return ds > 0 && ds <= SCHNEISE_DS + 1 && du <= SCHNEISE_DU + 1;
+    return out;
   };
   const flush = (k: number, run: number[]): void => {
     for (let a = 0; a < run.length; a += PIECE_RUN) {
@@ -531,10 +501,6 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
       const fx = front % W,
         fy = (front / W) | 0;
       const seam = a > 0 ? run[a - 1]! : -1;
-      const occ = new Set<number>();
-      for (const t of seam >= 0 ? [seam, ...tiles] : tiles)
-        for (const o of built.get(comp.id) ?? []) if (reach(o, t)) occ.add(o);
-      const occList = [...occ].sort((p, q) => p - q);
       const id = 2 * front + (fx - fy === k ? 0 : 1);
       out.push({
         id,
@@ -542,8 +508,8 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
         strip: k,
         tiles,
         seam,
-        occ: occList,
-        key: `${data.sig}|${id}|${tiles.length}|${occList.join(',')}`,
+        near,
+        key: `${data.sig}|${id}|${tiles.length}|${around(seam >= 0 ? [seam, ...tiles] : tiles)}`,
       });
     }
   };
@@ -553,7 +519,7 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
       const c = (((s - k) % 2) + 2) % 2 === 0 ? k : k + 1; // Spalte x − y hat die Parität von s
       const x = (s + c) / 2,
         y = (s - c) / 2;
-      if (free(x, y)) run.push(y * W + x);
+      if (isM(x, y)) run.push(y * W + x);
       else if (run.length) {
         flush(k, run);
         run = [];
@@ -564,43 +530,9 @@ export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): M
   return out;
 }
 
-/** Tiefe (Kacheln) und Spaltenabstand, bis zu denen die Sichtschneise wirken kann (MASSIF_MAX_H / VIEW_CAP …). */
-const SCHNEISE_DS = Math.ceil(MASSIF_MAX_H / VIEW_CAP),
-  SCHNEISE_DU = Math.ceil(NOTCH + MASSIF_MAX_H / WALL);
-
-/**
- * Höhe am Kachelpunkt (fx, fy) nach Sattel und Sichtschneise aller bebauten Kacheln `occ` (A7, Lesbarkeit): Faktor
- * 0 an der bebauten Kachel, 1 ab OCC_FADE (hinten, seitlich) bzw. OCC_FADE_FRONT (vorn); vor der Kachel höchstens
- * VIEW_CAP px je Kachel Tiefe ab ihrer Mitte, seitlich ab NOTCH Spalten mit WALL px je Spalte ansteigend.
- */
-export function carve(
-  h: number,
-  occ: readonly number[],
-  W: number,
-  fx: number,
-  fy: number,
-): number {
-  let f = 1,
-    cap = Infinity;
-  for (const o of occ) {
-    const ox = o % W,
-      oy = (o / W) | 0;
-    const dx = Math.max(ox - fx, 0, fx - ox - 1),
-      dy = Math.max(oy - fy, 0, fy - oy - 1);
-    const ds = fx + fy - (ox + oy + 1);
-    f *= smooth01(Math.hypot(dx, dy) / (ds > 0 ? OCC_FADE_FRONT : OCC_FADE));
-    if (ds > 0) {
-      const du = Math.abs(fx - fy - (ox - oy));
-      cap = Math.min(cap, VIEW_CAP * ds + WALL * Math.max(0, du - NOTCH));
-    }
-  }
-  return Math.min(h * f, cap);
-}
-/** Höhe am Knoten (I, J) im Teilstück: Grundhöhe nach Sattel und Sichtschneise um Gebäude und Wege. */
-export function pieceHeight(p: MassifPiece, I: number, J: number): number {
-  const h = nodeHeight(p.comp, I, J);
-  return h > 0 && p.occ.length ? carve(h, p.occ, p.comp.width, I / SUB, J / SUB) : h;
-}
+/** Höhe am Knoten (I, J) im Teilstück (Grundhöhe der Komponente). */
+export const pieceHeight = (p: MassifPiece, I: number, J: number): number =>
+  nodeHeight(p.comp, I, J);
 
 export interface PieceCell {
   /** Zelle mit linkem oberem Knoten (I, J): fx ∈ [I/SUB, (I+1)/SUB], fy ∈ [J/SUB, (J+1)/SUB]. */
@@ -634,7 +566,6 @@ export function pieceCells(p: MassifPiece): PieceCell[] {
 
 // ---------- Färbung (A3) ----------
 
-const LIGHT = { x: -3 / Math.sqrt(10), y: -1 / Math.sqrt(10) }; // Richtung zum Licht im Kachelraum (D-11)
 const LIGHT_ELEV = (32 * Math.PI) / 180; // Licht leicht erhöht
 const L3 = {
   x: LIGHT.x * Math.cos(LIGHT_ELEV),
@@ -691,11 +622,13 @@ const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichts
 const TONE_GAIN_SHADE = 1.6; // auf der Schattenseite (die dem Blick zugewandten Flanken sollen nicht absaufen)
 const TONE_NOISE = 0.22; // grossflächige Tönung ± (Stufen): die Stufengrenzen wandern, kein Kachelraster
 const LAP_REF = 16; // px Krümmung für volle Grat- bzw. Rinnenkante
-const LAND_EDGE: Partial<Record<string, Rgb>> = {
-  grass: mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25),
-  forest: rgbOfCss(FOREST_FLOOR),
-  sand: rgbOf(PALETTE.sandDry),
-};
+/** Sockelfarbe je Landart (Index = Code aus `nearestLand`; 0 = keine Mischung). */
+export const EDGE_COLORS: readonly (Rgb | null)[] = [
+  null,
+  mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25),
+  rgbOfCss(FOREST_FLOOR),
+  rgbOf(PALETTE.sandDry),
+];
 
 export interface CellShade {
   /** mittlere Höhe (px) */
@@ -830,7 +763,7 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
     }
     return v;
   };
-  const bw = c.x1 - c.x0 + 1;
+  const W = c.width;
   return (I, J) => {
     const k = J * 100000 + I;
     const hit = nm.get(k);
@@ -847,7 +780,7 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
     const fx = I / SUB,
       fy = J / SUB;
     const hn = h / c.amp;
-    const edge = c.edge[(ty - c.y0) * bw + tx - c.x0] ?? null;
+    const edge = EDGE_COLORS[p.near[ty * W + tx]!] ?? null;
     const sh: CellShade = { h, hn, gx, gy, lap, rim: smoothstep(SOFT_LO, SOFT_HI, soft), edge };
     const steep = steepness(gx, gy);
     const out: NodeShade = {
