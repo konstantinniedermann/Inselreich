@@ -10,7 +10,7 @@ Spec Abschnitt 14 (Anhang 03).
 | S10 Buchung je Tick                 | **bricht**                  | bricht        | Steuer aus dem Tick-Mittel statt aus dem Stand am 100er-Tick |
 | Dämpfung prospektiv                 | **bricht** (Verlauf)        | bricht        | 3 Aufstiege später [Mess]                                    |
 | S2 Jagdhütte, Rinderfarm            | bleibt                      | bleibt        | Controller baut sie nie                                      |
-| S3 `noForest`, `free` am Holzfäller | bleibt, wenn A9 hält (M-09) | bleibt        | Controller rodet nie; Layout hat freien Wald (zu belegen)    |
+| S3 `noForest`, `free` am Holzfäller | bleibt, wenn A9 hält (M-09) | bleibt        | Controller rodet nie; A9 belegt (Anhang 03 B)                |
 | S4 `eff`                            | bleibt                      | normalisiert  | Geld und Waren hängen nicht an `eff`                         |
 | S12 `level`, Ausbau                 | bleibt                      | normalisiert  | Controller baut nie aus                                      |
 | R161 Hinweis                        | bleibt                      | bleibt        | nur UI                                                       |
@@ -27,33 +27,35 @@ gesetzt. Der neue Sollwert `OFF_FINGERPRINT` ist trotzdem neu (Geldverlauf, M-06
 1. Vor P1, auf `main` nach dem M10-Merge: Messung der Ist-Werte (sollen M10 9.3 entsprechen) und Erzeugung der
    Fixture `save-v5.json` (E).
 2. P1 implementiert S10 und Dämpfung; `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance` gibt die Laufdaten aus.
-3. Vergleich mit Anhang 03. **Gleich:** Pins übernehmen. **Abweichend:** nicht nachstellen, Meldung an L0 mit
-   Messwerten (R74-Regel); Schwellen bleiben (≤ 7500, ≤ 8000, ≤ 12 000).
-4. Pins im Test-Code mit Kommentar „M11 R185, gemessen auf <Commit>"; alte Werte im Kommentar.
+3. Haupt-Pins (Siegtick, `minMoney`, `endMoney`, erste Siedler/Bürger, Krisen- und Kaufleute-Sieg,
+   `minMoneyAfterWin`, Freischalt-Ticks) mit Spec 14 vergleichen. **Gleich:** übernehmen. **Abweichend:** nicht
+   nachstellen, Meldung an L0 (R74). **Neupin mit Beleg** (kein R74-Fall): Gebäudezahlen und Fingerabdruck auf dem
+   P1-Code mit Überträgen und M10-`normalized()` messen; Anhang-03-Wert ist Richtwert. Schwellen bleiben (≤ 7500,
+   ≤ 8000, ≤ 12 000).
+4. Pins im Test-Code mit Kommentar „M11 R185/R187, gemessen auf <Commit> mit <Befehl>"; alte Werte im Kommentar.
 
-| Pin (Datei, Konstante/Test)                                | Alt                                | Neu                                       |
-| ---------------------------------------------------------- | ---------------------------------- | ----------------------------------------- |
-| `balance-crises` `OFF_REFERENCE.winTick`                   | 6050                               | 6750 (M-01)                               |
-| `OFF_REFERENCE.minMoney` / `endMoney`                      | 57 / 212                           | 117 (M-02) / 339 (M-03)                   |
-| `OFF_REFERENCE.firstSettler` / `firstCitizen`              | 350 / 3850                         | 350 / 4150 (M-04)                         |
-| `OFF_REFERENCE.buildings` (u. a. `distillery` 3, A13)      | wie Ist                            | Messwert der Umsetzung (M-05)             |
-| `OFF_FINGERPRINT`                                          | 0xbfeac8c6 (M10: neu)              | 0x701c6da5 (M-06)                         |
-| `AK-S1-15` Sieg / minMoney (Stufe `off`)                   | 6050 / 57                          | = M-01 / M-02                             |
-| Krisen „normal" + Feuerwache Sieg (`CRISIS_WIN_STOP` 8000) | 7050                               | 7850 (M-07)                               |
-| `balance-merchants` `WIN_TICK`, Ziel 2 (≤ 12 000)          | 6050 / 10 100                      | 6750 / 11 200 (M-01, M-08)                |
-| `minMoneyAfterWin` (M8 B1)                                 | Ist                                | 320 (M-10)                                |
-| M10 9.3 Freischalt-Ticks U2/U3/U4/U5/U6 (off; „normal")    | 150/350/550/3850/6050; …/4750/7050 | 150/350/550/4150/6750; …/5150/7850 (M-11) |
+| Pin (Datei, Konstante/Test)                                | Alt                                | Neu                                                 |
+| ---------------------------------------------------------- | ---------------------------------- | --------------------------------------------------- |
+| `balance-crises` `OFF_REFERENCE.winTick`                   | 6050                               | 6750 (M-01)                                         |
+| `OFF_REFERENCE.minMoney` / `endMoney`                      | 57 / 212                           | 117 (M-02) / 339 (M-03)                             |
+| `OFF_REFERENCE.firstSettler` / `firstCitizen`              | 350 / 3850                         | 350 / 4150 (M-04)                                   |
+| `OFF_REFERENCE.buildings` (u. a. `distillery` 3, A13)      | wie Ist                            | Neupin mit Beleg in P1 (M-05)                       |
+| `OFF_FINGERPRINT`                                          | 0xbfeac8c6 (M10: neu)              | Neupin mit Beleg in P1, Richtwert 0x701c6da5 (M-06) |
+| M8:AK-S1-15 Sieg / minMoney (Stufe `off`)                  | 6050 / 57                          | = M-01 / M-02                                       |
+| Krisen „normal" + Feuerwache Sieg (`CRISIS_WIN_STOP` 8000) | 7050                               | 7850 (M-07)                                         |
+| `balance-merchants` `WIN_TICK`, Ziel 2 (≤ 12 000)          | 6050 / 10 100                      | 6750 / 11 200 (M-01, M-08)                          |
+| `minMoneyAfterWin` (M8 B1)                                 | Ist                                | 320 (M-10)                                          |
+| M10 9.3 Freischalt-Ticks U2/U3/U4/U5/U6 (off; „normal")    | 150/350/550/3850/6050; …/4750/7050 | 150/350/550/4150/6750; …/5150/7850 (M-11)           |
 
 ## D. Erwartet rote Tests nach P1 und ihre Umschreibung
 
 Messprobe: 14 von 304 Tests rot (Stand `main` 1c7d587, vor M10); nach dem M10-Merge kommen die Freischalt-Pins aus
 M10 9.3 hinzu (Zahl M-12). Die P1-Tasks benennen die endgültige Liste aus dem roten Lauf.
 
-| Gruppe                   | Tests (Kandidaten am Ist-Code)                                                                                                                                                                                                                                                                                                                                                              | Umschreibung                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Exakte Pins (4)          | `balance-crises` AK-B1-02 (`OFF_REFERENCE`, Fingerabdruck), AK-S1-15, `balance-merchants` AK-B1-01 (`WIN_TICK`)                                                                                                                                                                                                                                                                             | Neupin nach C                                                             |
-| Laden im Sturm (1 der 4) | `balance-crises` AK-B2-06 (Laden bei Tick 2601)                                                                                                                                                                                                                                                                                                                                             | **keine** Umschreibung: wird mit Übertrag im Save wieder grün (AK-SAV-03) |
-| Buchungstakt (≈ 10)      | `economy` „sums building upkeep and books it every 100 ticks", „pays and refunds…"; `taxes` „always updates stats but books only every UPKEEP_INTERVAL ticks", „books taxes and upkeep together at tick 100 via step", RF-2 „Umschalten bei Tick 99…"; `merchants` AK-S1-05, AK-S1-10, AK-S1-04; `fire` AK-S2-03/-04/-06/-12; `population` „upgrades pioneer house…", „settler to citizen…" | Muster unten                                                              |
+| Gruppe              | Tests (Kandidaten am Ist-Code)                                                                                                                                                                                                                                                                                                                                                                          | Umschreibung                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Exakte Pins (4)     | `balance-crises` M6:AK-B1-02 (`OFF_REFERENCE`, Fingerabdruck), M8:AK-S1-15, `balance-merchants` M8:AK-B1-01 (`WIN_TICK`), `balance-crises` M6:AK-B2-06 (Laden bei Tick 2601)                                                                                                                                                                                                                            | Neupin nach C; M6:AK-B2-06 **ohne** Umschreibung, wird mit Übertrag im Save grün (AK-SAV-03) |
+| Buchungstakt (≈ 10) | `economy` „sums building upkeep and books it every 100 ticks", „pays and refunds…"; `taxes` „always updates stats but books only every UPKEEP_INTERVAL ticks", „books taxes and upkeep together at tick 100 via step", RF-2 „Umschalten bei Tick 99…"; `merchants` M8:AK-S1-05, M8:AK-S1-10, M8:AK-S1-04; `fire` M6:AK-S2-03/-04/-06/-12; `population` „upgrades pioneer house…", „settler to citizen…" | Muster unten                                                                                 |
 
 **Muster der Umschreibung (Setzung Spec):**
 
@@ -63,9 +65,14 @@ M10 9.3 hinzu (Zahl M-12). Die P1-Tasks benennen die endgültige Liste aus dem r
 - Tests, die nur Kosten oder Erstattung prüfen und vorher `tick = 100` setzen: Überträge vor dem Aufruf auf 0 und
   Steuer/Unterhalt der Testwelt so wählen, dass ein Schritt kein Geld bucht (z. B. Testwelt ohne Häuser, Unterhalt
   < 100 → erste Buchung erst nach ≥ 2 Schritten), oder den Vergleich gegen einen Zwilling ohne die Aktion führen
-  (Muster `fire` AK-S2-12).
-- `merchants` AK-S1-05 „Steuer 300 (ohne Aufstieg 210)": vergleicht `stats.taxes` (bleibt Nominalwert), nicht `money`.
+  (Muster `fire` M6:AK-S2-12).
+- `merchants` M8:AK-S1-05 „Steuer 300 (ohne Aufstieg 210)": vergleicht `stats.taxes` (bleibt Nominalwert), nicht `money`.
 - Kein Test wird gelöscht; jede Umschreibung nennt im Testnamen „(M11 S10)".
+
+**Rot durch P2 (Umschreib-Task in P2):** M10:AK-F1-05, Holzfäller-Teil: alle Waldkacheln im Radius 2 gerodet → nach
+dem nächsten Schritt `noForest`, nach 300 Schritten Holz +0 (Vergleichswelt ohne Rodung +10), Unterhalt gebucht;
+Testname „(M11 S3)". Schäferei-Teil (Aufforsten um eine Schäferei) bleibt unverändert grün. **UI-Welle:**
+M10:AK-U3-02, Holzfäller ohne Wald: Mouse-over zeigt den Zustandstext von `noForest` statt des M10-Hinweises.
 
 ## E. Fixture `tests/sim/fixtures/save-v5.json` (Setzung Spec)
 
