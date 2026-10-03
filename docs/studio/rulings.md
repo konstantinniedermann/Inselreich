@@ -967,3 +967,12 @@ Strang: lead-art H-R3 Statusmarken Kurzdesign (state.md Schritt 2). — Kosten b
 wandert die Datei.
 
 Entscheider: L0 · Anlass: Berichte M10-S1B, H-A1-Merge · ADR: —
+
+## R176 · 2026-10-03 · H-R3 Statusmarken
+
+Ruling: Gate Merge H-R3 bestanden (`feat/h-r3-statusmarks` @ 34f0f41; Rot-Beleg vorhanden, Review OK,
+Playtest-Screenshots lesbar, `make check` grün). Annahmen des Kurzdesigns angenommen (Marke nach Tönung,
+`MAX_MARKS` lokal). Versatz bei 2×2-Betrieben → beobachtungen.md. Merge durch production-integrator;
+danach ist `renderer.ts` frei für H-R4 (R159). — Kosten bei Irrtum: Revert eines Commits.
+
+Entscheider: L0 · Anlass: Bericht H-R3 · ADR: —
