@@ -445,7 +445,9 @@ describe('Renderer', () => {
     const { world, ids } = scene();
     world.order = null;
     world.tick = 3000; // Nacht: keine Möwen und ihre Schatten im Zähler
-    for (const t of world.tiles) if (t.terrain === 'forest') t.terrain = 'grass'; // keine Baumschatten im Zähler
+    // keine Baum- und Felsschatten (H-R8) im Zähler
+    for (const t of world.tiles)
+      if (t.terrain === 'forest' || t.terrain === 'mountain') t.terrain = 'grass';
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
     const box = spriteBounds(BUILDING_DEFS.market, keep);

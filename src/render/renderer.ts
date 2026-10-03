@@ -53,7 +53,7 @@ import {
   type Poly,
   type WalkerPose,
 } from './life';
-import { cap, rainStreaks } from './limits';
+import { cap, rainStreaks, rockCap } from './limits';
 import {
   TEX,
   bodyHull,
@@ -74,6 +74,14 @@ import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
+import {
+  drawRockStamp,
+  rockBounds,
+  rockClips,
+  rockShadow,
+  thinRocks,
+  type RockItem,
+} from './rocks';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
@@ -350,7 +358,7 @@ function collectWindowLights(
   return out;
 }
 
-/** Verdecker je Eintrag von `visible`: Gebäude und Bäume; Figuren und Schiff verdecken nicht. */
+/** Verdecker je Eintrag von `visible`: Gebäude, Bäume und Felsen; Figuren und Schiff verdecken nicht. */
 function occludersOf(
   world: World,
   cam: Camera,
@@ -380,6 +388,13 @@ function occludersOf(
       return {
         box: toScreen(treeBounds(t)),
         clips: once(() => crownPolys(cam, t, world.seed).map((c) => [c])),
+      };
+    }
+    if (it.kind === 'rock') {
+      const r = it as RockItem;
+      return {
+        box: toScreen(rockBounds(r)),
+        clips: once(() => rockClips(cam, r, world.seed).map((c) => [c])),
       };
     }
     return null;
@@ -521,7 +536,7 @@ export function render(
       top = cam.y,
       right = cam.x + view.w / cam.zoom,
       bottom = cam.y + view.h / cam.zoom;
-    const visible: SortedItem[] = [];
+    let visible: SortedItem[] = [];
     const buildings: Building[] = [];
     const shadowOnly = new Set<number>(); // knapp ausserhalb: nur der Schatten
     for (const it of items) {
@@ -540,12 +555,14 @@ export function render(
         if (box.x > right || box.x + box.w < left || box.y > bottom || box.y + box.h < top)
           shadowOnly.add(b.id);
         else buildings.push(b);
-      } else if (it.kind === 'tree') {
+      } else if (it.kind === 'tree' || it.kind === 'rock') {
         if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
           continue;
       } else if (it.kind !== 'ship' && it.kind !== 'walker') continue;
       visible.push(it);
     }
+
+    visible = thinRocks(visible, rockCap(reduce)) as SortedItem[]; // Obergrenze Felsen je Frame
 
     // Verdecker von Licht und Feuer (BUG-LICHT): Objekte, die im sortierten Durchgang nach der Quelle kommen
     const rank = new Map<number, number>();
@@ -566,6 +583,7 @@ export function render(
             const b = world.buildings[it.id]!;
             polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
+          else if (it.kind === 'rock') polyPath(ctx, rockShadow(it as RockItem, world.seed));
           else if (it.kind === 'walker') {
             if ((poses.get(it.id)?.alpha ?? 0) >= 0.5)
               polyPath(ctx, walkerShadow({ x: it.cx, y: it.cy }));
@@ -603,6 +621,7 @@ export function render(
           ctx.restore();
         }
       } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, world.seed);
+      else if (it.kind === 'rock') drawRockStamp(ctx, cam, it as RockItem, world.seed);
       else if (it.kind === 'ship')
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
       else if (it.kind === 'walker') {

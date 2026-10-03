@@ -13,7 +13,7 @@ import {
   sortedObjects,
   type SortedItem,
 } from '../../src/render/iso';
-import { cap, CAPS, SPRITE_CACHE_MAX_BYTES } from '../../src/render/limits';
+import { ROCK_CAP, rockCap, SPRITE_CACHE_MAX_BYTES } from '../../src/render/limits';
 import { PALETTE, SHADOW, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import {
   ROCK_H,
@@ -31,6 +31,7 @@ import {
   thinRocks,
   type RockItem,
 } from '../../src/render/rocks';
+import { setCanvasFactory as setTreeCanvasFactory } from '../../src/render/trees';
 import { render } from '../../src/render/renderer';
 import { centerOn } from '../../src/render/camera';
 import { fakeCtx } from './fakeCtx';
@@ -47,6 +48,10 @@ const mkRock = (id: number, x: number, y: number, variant = 0): RockItem => ({
 });
 
 beforeAll(() => {
+  setTreeCanvasFactory(() => {
+    const { ctx } = fakeCtx();
+    return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
+  });
   setRockCanvasFactory(() => {
     const { ctx } = fakeCtx();
     return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
@@ -204,11 +209,11 @@ describe('H-R8 AK3 kein Picking', () => {
 });
 
 describe('H-R8 AK4 Cap und Cache', () => {
-  it('AK4 CAPS.rocks: normal > reduziert > 0, cap() liefert beide Werte', () => {
-    expect(CAPS.rocks[0]).toBeGreaterThan(CAPS.rocks[1]);
-    expect(CAPS.rocks[1]).toBeGreaterThan(0);
-    expect(cap('rocks')).toBe(CAPS.rocks[0]);
-    expect(cap('rocks', true)).toBe(CAPS.rocks[1]);
+  it('AK4 ROCK_CAP: normal > reduziert > 0, cap() liefert beide Werte', () => {
+    expect(ROCK_CAP[0]).toBeGreaterThan(ROCK_CAP[1]);
+    expect(ROCK_CAP[1]).toBeGreaterThan(0);
+    expect(rockCap()).toBe(ROCK_CAP[0]);
+    expect(rockCap(true)).toBe(ROCK_CAP[1]);
   });
   it('AK4 thinRocks: höchstens cap Felsen, Reihenfolge und andere Arten bleiben, unter dem Limit unverändert', () => {
     const w = createWorld(WORLD_SEED, { unlockAll: true });
@@ -240,7 +245,8 @@ describe('H-R8 AK4 Cap und Cache', () => {
     const layer = { width: 2048, height: 2048 } as unknown as HTMLCanvasElement;
     const r = rocksOf(w)[100]!;
     const c = project(r.fp.x + 0.5, r.fp.y + 0.5);
-    const cam = { x: 0, y: 0, zoom: 0.5 };
+    const cam = { x: 0, y: 0, zoom: 1 };
+    for (const t of w.tiles) if (t.terrain === 'forest') t.terrain = 'grass'; // nur Felsstempel zählen
     centerOn(cam, r.fp.x + 0.5, r.fp.y + 0.5, VIEW, { w: w.width, h: w.height });
     expect(c.x).toBeDefined();
     resetRockCache();
@@ -249,7 +255,7 @@ describe('H-R8 AK4 Cap und Cache', () => {
     render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 0 });
     n = log.events.filter((e) => e.op === 'drawImage').length;
     expect(n).toBeGreaterThan(0);
-    expect(n).toBeLessThanOrEqual(cap('rocks') + 400); // Bäume dürfen dazukommen
+    expect(n).toBeLessThanOrEqual(rockCap() + 10); // + Geländeebene und Möwen-/Wellen-Reste
     const full = log.events.filter((e) => e.op === 'drawImage').length;
     const { ctx: c2, log: l2 } = fakeCtx();
     render(c2, w, cam, layer, null, null, VIEW, { timeMs: 0, reduceMotion: true });

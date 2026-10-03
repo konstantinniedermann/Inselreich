@@ -10,6 +10,7 @@ export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
 export const TREE_VARIANTS = 8;
+export const ROCK_VARIANTS = 8;
 export const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
   x: number;
@@ -48,6 +49,10 @@ export const radiusEllipse = (r: number): { rx: number; ry: number } => ({
 export const zoomStep = (z: number): number => ZOOM_STEPS.find((s) => s >= z - 1e-9) ?? 2;
 export const treeVariant = (seed: number, x: number, y: number): number =>
   Math.floor(hash2(seed + 41, x, y) * TREE_VARIANTS) % TREE_VARIANTS;
+
+/** Gestaltvariante des Felsmassivs auf (x, y): rein aus Seed und Kachel (Darstellung, kein Spielzustand). */
+export const rockVariant = (seed: number, x: number, y: number): number =>
+  Math.floor(hash2(seed + 71, x, y) * ROCK_VARIANTS) % ROCK_VARIANTS;
 
 // iso.ts — Fortsetzung
 /** Platzhalter-Höhe je Kategorie über der oberen Ecke des vollen Footprints (Weltpixel, Zoom 1, D-12). */
@@ -116,13 +121,14 @@ export interface Moving {
 export type SortedItem =
   | { kind: 'building'; id: number; fp: Footprint; key: number }
   | { kind: 'tree'; id: number; fp: Footprint; key: number; variant: number }
+  | { kind: 'rock'; id: number; fp: Footprint; key: number; variant: number }
   | { kind: Moving['kind']; id: number; fp: Footprint; key: number; cx: number; cy: number };
-const RANK = { tree: 0, building: 1, ship: 2, boat: 3, walker: 4 } as const;
+const RANK = { rock: 0, tree: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
 const cmp = (a: SortedItem, b: SortedItem): number =>
   a.key - b.key || a.fp.x - b.fp.x || RANK[a.kind] - RANK[b.kind] || a.id - b.id;
 const fixed = new WeakMap<World, { key: string; items: SortedItem[] }>();
 
-/** Feste Objekte (Gebäude, Baumstempel) gecacht je Welt und `layoutKey`; bewegte je Aufruf eingemischt (D-09). */
+/** Feste Objekte (Gebäude, Baum- und Felsstempel) gecacht je Welt und `layoutKey`; bewegte je Aufruf eingemischt (D-09). */
 export function sortedObjects(world: World, moving: readonly Moving[] = []): readonly SortedItem[] {
   const key = layoutKey(world);
   let c = fixed.get(world);
@@ -136,6 +142,12 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
     for (let y = 0; y < world.height; y++)
       for (let x = 0; x < world.width; x++) {
         const t = world.tiles[y * world.width + x]!;
+        if (t.terrain === 'mountain' && t.buildingId === null && !t.road) {
+          const fp = { x, y, w: 1, h: 1 };
+          const variant = rockVariant(world.seed, x, y);
+          items.push({ kind: 'rock', id: y * world.width + x, fp, key: depthKey(fp), variant });
+          continue;
+        }
         if (t.terrain !== 'forest' || t.buildingId !== null || t.road) continue;
         const fp = { x, y, w: 1, h: 1 };
         const variant = treeVariant(world.seed, x, y);
