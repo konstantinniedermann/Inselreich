@@ -6,11 +6,12 @@ import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Result, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
+import { placeTownhall } from './helpers';
 import { SCENARIOS } from './scenarios';
 
 describe('M5 15-Minuten-Nachweis', () => {
   it('AK-B1-02 genau 10 Aufträge in 9000 Ticks ohne Eingriff', () => {
-    const w = createWorld(3);
+    const w = createWorld(3, { unlockAll: true });
     const seen = new Map<number, number>();
     for (let i = 0; i < 9000; i++) {
       step(w);
@@ -42,6 +43,7 @@ describe('M5 15-Minuten-Nachweis', () => {
     /** Aktionen laufen, wenn `world.tick` den Skript-Tick erreicht hat, vor dem `step` dieses Ticks. */
     function run(reload: boolean): { log: Entry[]; json: string } {
       let w = SCENARIOS['auftrag']!();
+      placeTownhall(w); // M10: Steuerstufen brauchen eine Amtsstube
       const log: Entry[] = [];
       while (w.tick < END) {
         if (reload && w.tick === SAVE_AT) {

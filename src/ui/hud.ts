@@ -2,10 +2,11 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { buildLock } from '../sim/placement';
-import { SERVICE_BUILDING, populationByTier, tierLock } from '../sim/population';
+import { SERVICE_BUILDING, populationByTier } from '../sim/population';
 import { crisisView, goalView, goodsBalance } from '../sim/queries';
-import type { GoodId, TaxLevel, Tier, World } from '../sim/types';
+import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
+import { goodUnlocked, isUnlocked } from '../sim/unlocks';
+import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
@@ -13,7 +14,9 @@ import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { goalTexts } from './goal';
-import { GOODS_BALANCE_TICKS, formatGameTime, perMinute, signedNum } from './time';
+import type { IconId } from './icons';
+import { iconChip } from './messages';
+import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
 const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
@@ -45,11 +48,74 @@ export function balanceLabel(net: number): string {
   return `${trendArrow(net)} ${formatBalance(net)}`;
 }
 
-const TAX_IDS = Object.keys(TAX_LEVELS) as TaxLevel[];
-
 /** Tooltip einer Steuerstufe: Wirkung in Klartext (`taxEffect`, alles aus `TAX_LEVELS`). */
 export function taxTooltip(level: TaxLevel): string {
   return taxEffect(level);
+}
+
+/** Symbol-Chip der Kopfzeile: Symbol, sichtbarer Wert und zugänglicher Name (= bisheriger Text, Spec 14). */
+export interface ChipView {
+  icon: IconId;
+  text: string;
+  label: string;
+}
+
+/** Lager-Chip: Symbol des Guts, „{Bestand} {Pfeil}"; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}". */
+export function chipView(world: World, good: GoodId): ChipView {
+  const text = `${world.stock[good]} ${trendArrow(goodsBalance(world)[good].net)}`;
+  return { icon: good, text, label: `${GOODS[good].name} ${text}` };
+}
+
+/** Einwohner-Chip einer Stufe: Stufen-Symbol und Zahl. */
+export function popChipView(world: World, tier: Tier): ChipView {
+  const n = String(populationByTier(world)[tier]);
+  return { icon: `tier-${tier}`, text: n, label: `${TIERS[tier].name} ${n}` };
+}
+
+export function moneyView(world: World): ChipView {
+  return { icon: 'money', text: String(world.money), label: `Geld ${world.money}` };
+}
+
+const BALANCE_PREFIX = 'Bilanz ';
+
+/** Bilanz: Waage und Wert; `label` ist der bisherige Text. */
+export function balanceView(world: World): ChipView {
+  const { text } = balanceText(world.stats);
+  return { icon: 'balance', text: text.slice(BALANCE_PREFIX.length), label: text };
+}
+
+/** Steuer-Knopf: Steuer-Symbol und Stufenname, oder `null` ohne aktive Amtsstube. */
+export function taxView(world: World): ChipView | null {
+  const label = taxButtonText(world);
+  return label === null
+    ? null
+    : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world)].name, label };
+}
+
+/** Rolle eines Chips: ein Knopf bleibt Knopf (sein `aria-label` ist gültig), alles andere braucht `img`. */
+export function chipRole(tagName: string): 'img' | null {
+  return tagName === 'BUTTON' ? null : 'img';
+}
+
+/**
+ * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
+ * ändert sich nur der Wert. Gibt das Element zurück.
+ */
+function setChip(root: HTMLElement, field: string, v: ChipView): HTMLElement | null {
+  const el = root.querySelector<HTMLElement>(`[data-field="${field}"]`);
+  if (!el) return null;
+  let value = el.querySelector<HTMLElement>('.chip-value');
+  if (!value || el.dataset.icon !== v.icon) {
+    value = document.createElement('span');
+    value.className = 'chip-value';
+    el.replaceChildren(iconChip(v.icon), value);
+    el.dataset.icon = v.icon;
+  }
+  if (value.textContent !== v.text) value.textContent = v.text;
+  const role = chipRole(el.tagName);
+  if (role !== null && el.getAttribute('role') !== role) el.setAttribute('role', role);
+  if (el.getAttribute('aria-label') !== v.label) el.setAttribute('aria-label', v.label);
+  return el;
 }
 
 /** Spielstand-Aktionen, die `app.ts` bereitstellt (das HUD kennt keinen Speicher). */
@@ -66,8 +132,10 @@ export interface HudActions {
   openSettings(opener?: HTMLElement): void;
   /** Öffnet die Menü-Karte (Speichern, Laden, Neue Insel, Hilfe); `opener` bekommt den Fokus zurück. */
   openMenu(opener: HTMLElement): void;
-  /** Schaltet die Steuerstufe; zeigt bei Fehlschlag selbst den Grund. */
-  setTax(level: TaxLevel): void;
+  /** Öffnet die Hilfe-Karte; `opener` bekommt beim Schliessen den Fokus zurück. */
+  openHelp(opener: HTMLElement): void;
+  /** Wählt die erste aktive Amtsstube und öffnet ihr Info-Panel (Spec 11.8). */
+  openTownhall(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
   deliverOrder(): void;
 }
@@ -100,26 +168,10 @@ function renderSoundControls(box: Element, actions: HudActions): void {
     actions.setMuted(muted);
     syncMute(muted);
   });
+  const helpBtn = gameButton('Hilfe', (btn) => actions.openHelp(btn));
   const settingsBtn = gameButton('Einstellungen', (btn) => actions.openSettings(btn));
   const menuBtn = gameButton('Menü', (btn) => actions.openMenu(btn));
-  box.append(mute, settingsBtn, menuBtn);
-}
-
-/** Steuerregler: drei Buttons (nie `disabled`) und der Sperrhinweis. */
-function renderTaxControls(box: Element, actions: HudActions): void {
-  const label = document.createElement('span');
-  label.textContent = 'Steuer';
-  box.appendChild(label);
-  for (const level of TAX_IDS) {
-    const btn = gameButton(TAX_LEVELS[level].name, () => actions.setTax(level));
-    btn.dataset.tax = level;
-    btn.title = taxTooltip(level);
-    box.appendChild(btn);
-  }
-  const lock = document.createElement('span');
-  lock.className = 'tax-lock';
-  lock.dataset.field = 'tax-lock';
-  box.appendChild(lock);
+  box.append(mute, helpBtn, settingsBtn, menuBtn);
 }
 
 /** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */
@@ -128,7 +180,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     header.innerHTML =
       '<div class="hud-row"><span class="hud-balance" data-field="balance"></span>' +
       '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
-      '<span class="hud-money" data-field="money"></span><span class="hud-tax"></span>' +
+      '<span class="hud-money" data-field="money"></span>' +
+      '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
       '<span class="hud-speed"></span><span class="hud-sound"></span></div>' +
       '<div class="stock-row"></div>';
     const popBox = header.querySelector('.pop-chips');
@@ -147,10 +200,6 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       chip.dataset.field = `stock-${good}`;
       stockRow?.appendChild(chip);
     }
-    const lock = document.createElement('span');
-    lock.className = 'tax-lock';
-    lock.dataset.field = 'tax-lock';
-    stockRow?.appendChild(lock);
     const speedBox = header.querySelector('.hud-speed');
     for (const s of SPEEDS) {
       const btn = document.createElement('button');
@@ -165,36 +214,34 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       });
       speedBox?.appendChild(btn);
     }
-    const taxBox = header.querySelector('.hud-tax');
-    if (taxBox) renderTaxControls(taxBox, actions);
+    const taxBtn = header.querySelector<HTMLButtonElement>('[data-field="tax"]');
+    taxBtn?.addEventListener('click', (ev) => {
+      if (blurAfterClick(ev.detail)) taxBtn.blur();
+      actions.openTownhall();
+    });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
   }
   const { world } = state;
-  const bal = balanceText(world.stats);
-  const balEl = setField(header, 'balance', bal.text);
+  const balEl = setChip(header, 'balance', balanceView(world));
   if (balEl) {
-    if (balEl.title !== bal.title) balEl.title = bal.title;
+    const tip = balanceTooltip(world);
+    if (balEl.title !== tip) balEl.title = tip;
     balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
   }
-  const pop = populationByTier(world);
   for (const tier of TIER_IDS) {
-    const chip = setField(header, `pop-${tier}`, `${TIERS[tier].name} ${pop[tier]}`);
+    const chip = setChip(header, `pop-${tier}`, popChipView(world, tier));
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
   }
   const goal = goalTexts(goalView(world));
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
-  setField(header, 'money', `Geld ${world.money}`)?.classList.toggle('negative', world.money < 0);
+  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
   const balance = goodsBalance(world);
   for (const good of GOOD_IDS) {
     const b = balance[good];
-    const chip = setField(
-      header,
-      `stock-${good}`,
-      `${GOODS[good].name} ${world.stock[good]} ${trendArrow(b.net)}`,
-    );
+    const chip = setChip(header, `stock-${good}`, chipView(world, good));
     if (chip) {
       const hide = stockChipHidden(world, good);
       if (chip.hidden !== hide) chip.hidden = hide;
@@ -203,11 +250,16 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       if (chip.title !== tip) chip.title = tip;
     }
   }
-  for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-tax .btn')) {
-    btn.classList.toggle('active', btn.dataset.tax === world.taxLevel);
+  const tax = taxView(world);
+  const taxBox = header.querySelector<HTMLElement>('.hud-tax');
+  if (taxBox) {
+    const hide = tax === null;
+    if (taxBox.hidden !== hide) taxBox.hidden = hide;
+    // `.hud-tax` setzt `display: flex`; das Attribut allein verbirgt es nicht (style.css gehört nicht zu U1)
+    const display = hide ? 'none' : '';
+    if (taxBox.style.display !== display) taxBox.style.display = display;
+    if (tax !== null) setChip(header, 'tax', tax);
   }
-  const left = world.taxLockedUntil - world.tick;
-  setField(header, 'tax-lock', left > 0 ? `Steuer wieder änderbar in ${formatGameTime(left)}` : '');
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
   }
@@ -272,14 +324,31 @@ export function tierPath(): string {
   ).join(' → ');
 }
 
-/** Stufen-Chip verborgen: niemand auf der Stufe und die Stufe noch gesperrt (Spec M8 14.1, ruhige Kopfzeile). */
+/** Freischalt-Eintrag, ab dem der Einwohner-Chip einer Stufe erscheint (reine Zuordnung, kein Spielwert); Stufe 1 immer. */
+const POP_CHIP_UNLOCK: Readonly<Partial<Record<Tier, UnlockId>>> = { 2: 'U3', 3: 'U5', 4: 'U6' };
+
+/** Stufen-Chip verborgen: niemand auf der Stufe und der Eintrag noch nicht frei (Spec 11.3). */
 export function popChipHidden(world: World, tier: Tier): boolean {
-  return populationByTier(world)[tier] === 0 && tierLock(world, tier) !== null;
+  const entry = POP_CHIP_UNLOCK[tier];
+  return populationByTier(world)[tier] === 0 && entry !== undefined && !isUnlocked(world, entry);
 }
 
-/** Glas-Chip verborgen, solange die Glashütte gesperrt und kein Glas im Lager ist (Spec M8 14.1, Änderung S11). */
+/** Lager-Chip verborgen, solange das Gut nicht frei ist und nichts im Lager liegt (Spec 11.3). */
 export function stockChipHidden(world: World, good: GoodId): boolean {
-  return good === 'glass' && buildLock(world, 'glassworks') !== null && world.stock.glass === 0;
+  return !(goodUnlocked(world, good) || world.stock[good] > 0);
+}
+
+/** Steuer-Knopf der Kopfzeile (wirksame Stufe) oder `null` ohne aktive Amtsstube (Spec 11.8). */
+export function taxButtonText(world: World): string | null {
+  return townhallActive(world) ? `Steuer ${TAX_LEVELS[effectiveTaxLevel(world)].name}` : null;
+}
+
+/** Tooltip der Bilanz: Steuern und Unterhalt; ohne aktive Amtsstube die Zeile zur Steuer (Spec 11.8). */
+export function balanceTooltip(world: World): string {
+  const base = balanceText(world.stats).title;
+  return townhallActive(world)
+    ? base
+    : `${base}\nSteuer: ${TAX_LEVELS[effectiveTaxLevel(world)].name} (keine Amtsstube)`;
 }
 
 export function balanceText(stats: { taxes: number; upkeep: number }): {

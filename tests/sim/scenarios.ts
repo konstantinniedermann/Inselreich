@@ -1,8 +1,10 @@
 // Szenario-Saves für die Browser-Checks (Spec 14.1). Kein Produktcode: jedes Szenario baut eine Welt
 // nur über Sim-Funktionen (`createWorld`, `placeBuilding`, `placeRoad`, `step`) und Test-Helfer.
 // Alle Szenarien nutzen Seed 3 (Kontor an der Westküste) und legen ihr Gelände östlich des Kontors selbst an.
+import { writeFileSync } from 'node:fs';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { beginCrisis, flammableRect, rollCrisis } from '../../src/sim/crises';
+import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { CRISIS_LEVELS } from '../../src/sim/defs/crises';
 import {
   CRISIS_FIRST_TICK,
@@ -11,7 +13,7 @@ import {
   UPGRADE_WAIT,
 } from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { maxHouseTier } from '../../src/sim/orders';
+import { maxHouseTier, orderForPeriod } from '../../src/sim/orders';
 import { newHouseState, SERVICE_IDS } from '../../src/sim/population';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { serialize } from '../../src/sim/save';
@@ -26,7 +28,9 @@ import type {
   Tier,
   World,
 } from '../../src/sim/types';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx } from '../../src/sim/world';
+import { prepareLayout, type Layout } from './controller';
 import { forceGrass, forceRect } from './helpers';
 import { verdeckung } from './scenarios-iso';
 
@@ -46,18 +50,9 @@ function withFunds<T>(w: World, fn: () => T): T {
   }
 }
 
-/**
- * Baut Gebäude mit `unlockTier` vor der Freischaltung: `won` für `fn` kurz true, danach zurück. Nur für die
- * Bildergalerie (`galerie`, Spec 18.1); der Zustand „Bad oder Hütte ohne Sieg" ist im Spiel nicht erreichbar.
- */
-function withUnlock<T>(w: World, fn: () => T): T {
-  const won = w.won;
-  w.won = true;
-  try {
-    return fn();
-  } finally {
-    w.won = won;
-  }
+/** Spec 10: am Ende jedes Szenarios gilt, was die gebaute Welt rechtfertigt (`unlockAll` nur zum Bauen). */
+export function finishUnlocks(w: World): void {
+  w.unlocked = deriveUnlocks(w);
 }
 
 function road(w: World, x: number, y: number): void {
@@ -127,7 +122,7 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
 
 /** Seed-3-Welt mit Gras östlich des Kontors: x = kx+2 … kx+19, y = ky-9 … ky+9. Liefert die Kontor-Koordinaten. */
 function baseWorld(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number } {
-  const w = createWorld(SEED, { crisisLevel: level });
+  const w = createWorld(SEED, { crisisLevel: level, unlockAll: true });
   const k = w.buildings[w.kontorId]!;
   forceRect(w, k.x + 2, k.y - 9, 18, 19, 'grass');
   return { w, kx: k.x, ky: k.y };
@@ -209,7 +204,7 @@ function autosaveLauf(): World {
 }
 
 function auftrag(): World {
-  const w = createWorld(SEED);
+  const w = createWorld(SEED, { unlockAll: true });
   w.tick = 595;
   w.stock.wood = 50;
   w.stock.food = 30;
@@ -272,8 +267,9 @@ function galerie(): World {
   put(w, 'quarry', kx + 7, ky + 1);
   put(w, 'toolmaker', kx + 9, ky + 1);
   put(w, 'firestation', kx + 13, ky + 1); // M6-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
-  withUnlock(w, () => put(w, 'bathhouse', kx + 11, ky + 1)); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
-  withUnlock(w, () => put(w, 'glassworks', kx + 15, ky + 1)); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'bathhouse', kx + 11, ky + 1); // M8-S1: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'glassworks', kx + 15, ky + 1); // M8-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
+  put(w, 'townhall', kx + 17, ky + 1); // M10-S2: jeder Gebäudetyp (angebunden, Weg nördlich)
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;
@@ -551,12 +547,126 @@ function m8KaufleuteOhneGlas(): World {
 
 /** M8 AK-U2-07: Glas 10, Verkaufsanteil Glas 100 (Startwert). */
 function m8Handel(): World {
-  const w = createWorld(SEED);
+  const w = createWorld(SEED, { unlockAll: true });
   w.stock.glass = 10;
   return w;
 }
 
-export const SCENARIOS: Record<string, () => World> = {
+/** M10: Seed 3, Gelände und Wege wie der Controller (`prepareLayout`, alle `layout.roads`), noch keine Häuser. */
+function m10Base(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number; layout: Layout } {
+  const w = createWorld(SEED, { crisisLevel: level, unlockAll: true });
+  const layout = prepareLayout(w);
+  for (const [x, y] of layout.roads) road(w, x, y);
+  const k = w.buildings[w.kontorId]!;
+  return { w, kx: k.x, ky: k.y, layout };
+}
+
+/** M10: ein Haus der Stufe `tier` auf Slot `slot` des Controller-Layouts, versorgt, Bedarf und Dienste erfüllt. */
+function m10House(w: World, slot: Slot, tier: Tier, inhabitants: number): Building {
+  return settledHouse(w, slot[0], slot[1], tier, inhabitants);
+}
+
+function m10Start(): World {
+  return createWorld(SEED, { crisisLevel: 'normal' });
+}
+
+function m10PionierFastVoll(): World {
+  const { w, layout } = m10Base('normal');
+  w.tick = GROWTH_INTERVAL * 2 - 1;
+  layout.houses.forEach((slot, i) => m10House(w, slot, 1, i === 0 ? 3 : 2));
+  w.stock.food = 30;
+  w.unlocked = ['U0'];
+  return w;
+}
+
+function m10SiedlerFast(): World {
+  const { w, layout } = m10Base();
+  w.tick = GROWTH_INTERVAL * 31 - 1;
+  put(w, 'chapel', layout.chapel[0], layout.chapel[1]);
+  m10House(w, layout.houses[0]!, 1, TIERS[1].maxInhabitants);
+  w.stock.cloth = 5;
+  w.money = 2000;
+  w.stock.wood = 20;
+  w.stock.tools = 10;
+  const o = orderForPeriod(SEED, 1, maxHouseTier(w));
+  w.order = { period: 1, ...o, due: 2100 };
+  w.unlocked = ['U0', 'U2'];
+  return w;
+}
+
+function m10Wald(): World {
+  const { w, kx, ky, layout } = m10Base();
+  m10House(w, layout.houses[0]!, 1, TIERS[1].maxInhabitants);
+  put(w, 'lumberjack', kx + 19, ky - 5);
+  w.money = 500;
+  w.unlocked = ['U0', 'U2'];
+  return w;
+}
+
+/** Häuser auf den vier Hausplätzen, Kapelle, Schule und zwei Werkzeugmacher (mit/ohne Schule in Reichweite). */
+function m10Amtsstube(townhallAt: [number, number], level: 'normal' | 'high'): World {
+  const { w, kx, ky, layout } = m10Base();
+  const tiers: Tier[] = [1, 2, 3, 3];
+  layout.houses.forEach((slot, i) => m10House(w, slot, tiers[i]!, TIERS[tiers[i]!].maxInhabitants));
+  put(w, 'chapel', layout.chapel[0], layout.chapel[1]);
+  put(w, 'school', layout.school[0], layout.school[1]);
+  put(w, 'toolmaker', kx + 11, ky + 1);
+  put(w, 'toolmaker', kx + 17, ky + 6);
+  put(w, 'townhall', kx + townhallAt[0], ky + townhallAt[1]);
+  w.stock.cloth = 2;
+  w.taxLevel = level === 'high' ? 'high' : w.taxLevel;
+  return w;
+}
+
+function m10KriseBald(): World {
+  const w = createWorld(SEED, { crisisLevel: 'normal' });
+  w.tick = CRISIS_FIRST_TICK - 1;
+  return w;
+}
+
+type Slot = readonly [number, number];
+type Probes = Record<string, { x: number; y: number }>;
+
+const M10_PROBES: Record<string, Record<string, [number, number]>> = {
+  'm10-start': { kontor: [0, 0] },
+  'm10-pionier-fast-voll': { kontor: [0, 0], haus3: [3, -2] },
+  'm10-siedler-fast': { kontor: [0, 0], 'haus-voll': [3, -2], kapelle: [6, -2] },
+  'm10-wald': { kontor: [0, 0], wald: [20, -7], weide: [12, -3], holzfaeller: [19, -5] },
+  'm10-amtsstube': {
+    kontor: [0, 0],
+    amtsstube: [11, -7],
+    schule: [6, 1],
+    'werkzeug-mit': [11, 1],
+    'werkzeug-ohne': [17, 6],
+  },
+  'm10-amtsstube-aus': {
+    kontor: [0, 0],
+    amtsstube: [3, -6],
+    schule: [6, 1],
+    'werkzeug-mit': [11, 1],
+    'werkzeug-ohne': [17, 6],
+  },
+  'm10-krise-bald': { kontor: [0, 0] },
+};
+
+function relativeProbes(name: string, w: World): Probes {
+  const k = w.buildings[w.kontorId]!;
+  return Object.fromEntries(
+    Object.entries(M10_PROBES[name]!).map(([p, [dx, dy]]) => [p, { x: k.x + dx, y: k.y + dy }]),
+  );
+}
+
+/** `galerie`: je Gebäudetyp die Ursprungskachel des ersten gebauten Gebäudes (feste Id-Reihenfolge). */
+function galerieProbes(w: World): Probes {
+  const out: Probes = {};
+  for (const id of BUILDING_IDS) {
+    const b = Object.values(w.buildings).find((x) => x.defId === id);
+    if (b !== undefined) out[id] = { x: b.x, y: b.y };
+  }
+  return out;
+}
+
+const RAW_SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
   'lager-holz-99': lagerHolz99,
@@ -584,7 +694,33 @@ export const SCENARIOS: Record<string, () => World> = {
   'm8-glashuette-wartet': m8GlashuetteWartet,
   'm8-kaufleute-ohne-glas': m8KaufleuteOhneGlas,
   'm8-handel': m8Handel,
+  'm10-start': m10Start,
+  'm10-pionier-fast-voll': m10PionierFastVoll,
+  'm10-siedler-fast': m10SiedlerFast,
+  'm10-wald': m10Wald,
+  'm10-amtsstube': () => m10Amtsstube([11, -7], 'normal'),
+  'm10-amtsstube-aus': () => m10Amtsstube([3, -6], 'high'),
+  'm10-krise-bald': m10KriseBald,
 };
+
+/**
+ * Ohne Nachbearbeitung: `verdeckung` (Welt aus `scenarios-iso.ts`, dort nicht Teil von Task 2; ein Test vergleicht sie
+ * mit dem Original) und `auftrag` (bleibt „Alles frei", damit der Auftrag lieferbar ist, Spec 4.4).
+ */
+const KEEP_UNLOCKS = new Set(['verdeckung', 'auftrag']);
+
+export const SCENARIOS: Record<string, () => World> = Object.fromEntries(
+  Object.entries(RAW_SCENARIOS).map(([name, build]) => [
+    name,
+    KEEP_UNLOCKS.has(name)
+      ? build
+      : (): World => {
+          const w = build();
+          finishUnlocks(w);
+          return w;
+        },
+  ]),
+);
 
 /**
  * Schreibt je Szenario `<out>/<name>.json` über `write` und liefert die Anzahl. Ohne `out` passiert
@@ -598,6 +734,28 @@ export function writeScenarios(
   let n = 0;
   for (const [name, build] of Object.entries(SCENARIOS)) {
     write(`${out}/${name}.json`, serialize(build()));
+    n++;
+  }
+  return n;
+}
+
+/** Prüfpunkte je Szenario aus Spec 18.1 (absolute Kacheln, Name → Kachel). */
+export const PROBES: Record<string, (w: World) => Probes> = {
+  ...Object.fromEntries(
+    Object.keys(M10_PROBES).map((n) => [n, (w: World) => relativeProbes(n, w)]),
+  ),
+  galerie: galerieProbes,
+};
+
+/** Schreibt je Szenario aus `PROBES` die Datei `<out>/<name>.probes.json` und liefert die Anzahl (ohne `out`: 0). */
+export function writeProbes(
+  out: string | undefined,
+  write: (path: string, data: string) => void = writeFileSync,
+): number {
+  if (out === undefined || out === '') return 0;
+  let n = 0;
+  for (const [name, probes] of Object.entries(PROBES)) {
+    write(`${out}/${name}.probes.json`, JSON.stringify(probes(SCENARIOS[name]!())));
     n++;
   }
   return n;

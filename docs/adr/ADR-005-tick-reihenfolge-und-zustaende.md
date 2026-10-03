@@ -61,3 +61,16 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
   danach `wonMerchants` bei `won && merchants ≥ WIN_MERCHANTS`. Beide werden nie zurückgesetzt. Die Reihenfolge der
   Systeme bleibt; die Sperre der Stufe 4 liest `won` aus dem Vorschritt, der früheste Aufstieg 3 → 4 liegt bei
   `W + 50`.
+
+## Nachtrag M10 (2026-10-03): Freischaltung am Ende des Schritts, Zustand `noService`
+
+- **`tickUnlocks` ist der letzte Aufruf in `step`**, nach `checkWin`. Begründung: Der Controller liest vor Schritt
+  t+1 genau den Zustand, den `tickUnlocks` am Ende von Schritt t gesehen hat; nur so ist der Referenzlauf bitgleich
+  (Spec 9.1, BG-1: `winTick` 6050, `minMoney` 57).
+- **Freischaltung ist gespeichert und monoton** (`world.unlocked`, nie zurückgesetzt). Bedingungen, die sich ändern
+  können (Amtsstube aktiv, Schule in Reichweite, Krisenstufe), sind live und nicht gespeichert.
+- **Sperren prüfen zuerst:** `canPlace` (`buildLock`), `buy` (`goodLock`) und `deliverOrder` (`functionLock`)
+  scheitern vor allen anderen Regeln mit dem Sperrgrund; `sell`, `tickOrders` und bereits stehende Gebäude bleiben
+  unberührt.
+- **Neuer Zustand `noService`** (ab Task 4, Amtsstube) mit der Prüfreihenfolge Ausfall → Anbindung → Dienst →
+  Sturm → Input.

@@ -125,17 +125,16 @@ t.terrainStats.patches.length = 0`; dann 10 Forst-Aktionen abwechselnd auf `wald
 
 1. **AK-U4-01** (`m10-start`, 1280 × 800): jeder sichtbare Lager- und Einwohner-Chip, `[data-field=money]` und
    `[data-field=balance]` enthält ein `svg[aria-hidden=true]`; `aria-label` = bisheriger Text (z. B. „Holz 40 →",
-   „Pioniere 4", „Geld 5000" — Vergleich gegen `textContent` aus dem Stand vor Task 9, im Bericht aus QA-U1
-   übernommen); `title` unverändert; `#hud` ≤ 84, `scrollWidth ≤ clientWidth`.
+   „Pioniere 4", „Geld 5000" — Vergleich gegen den bisherigen Text aus dem Stand vor Task 9; gemessen wird `aria-label`, nicht `textContent`, da der Chip nur noch den Wert trägt); `title` unverändert; `#hud` ≤ 84, `scrollWidth ≤ clientWidth`.
 2. **AK-U4-02**: Kategorie-Reiter mit Symbol, `aria-label` und `title` = Kategoriename; Bau-Einträge `aria-label`
    „{Name} · {n} Geld"; Tastatur: `Tab` bis zum Reiter „Produktion", `Enter`, `Tab` zum ersten Eintrag, `Enter` →
    Eintrag `active`.
-3. **AK-U4-03** (`galerie`): Bürgerhaus anklicken: Bedarfe als Symbole mit ✓ / ✗, jedes mit zugänglichem Namen; fehlt
+3. **AK-U4-03** (`galerie`): das Wohnhaus der höchsten in `galerie` vorhandenen Stufe anklicken (`galerie` enthält kein Bürgerhaus): Bedarfe als Symbole mit ✓ / ✗, jedes mit zugänglichem Namen; fehlt
    ein Gut, darunter eine Zeile mit seinem Namen; Freischalt-Meldung (`m10-pionier-fast-voll`, durch Tick 100) und
-   Hilfe zeigen Symbole vor den Namen, `textContent` gleich dem Text aus QA-U1/QA-U2.
+   Hilfe zeigen Symbole vor den Namen; der Text ohne Symbole (`textContent` der Meldung, Namen im Eintrag per `aria-label`) ist gleich dem aus QA-U1/QA-U2.
 4. **AK-U4-04** (K2, `m10-pionier-fast-voll`): nach Tick 100 tragen die fünf neuen Einträge das Zeichen „neu"
    (`aria-label` „neu"); nach einmaligem Wählen von „Kapelle" fehlt es dort; Speichern, Laden: kein Zeichen.
-5. **AK-U4-05** (K3, `galerie`): Bau-Einträge zeigen die verkleinerte Silhouette; Blindtest wie AK-A1-03 für die
+5. **AK-U4-05** — gestrichen (R186, geht an M9 Welle 2) (K3, `galerie`): Bau-Einträge zeigen die verkleinerte Silhouette; Blindtest wie AK-A1-03 für die
    Einträge (Urteiler `qa-playtester`).
 
 ### QA-ART (lead-art, W7)

@@ -12,7 +12,7 @@ import type { GoodId, World } from '../../src/sim/types';
 let w: World;
 
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
 });
 
 describe('buy', () => {
@@ -201,7 +201,7 @@ describe('M6 Boom', () => {
       const { buy: b, sell: s } = GOODS[g];
       expect((s * BOOM_PCT) / 100, g).toBeLessThan(Math.floor(b * ORDER_PREMIUM));
       expect(Math.floor(b * ORDER_PREMIUM), g).toBeLessThan(b);
-      w = createWorld(3);
+      w = createWorld(3, { unlockAll: true });
       boom(g);
       w.stock[g] = 0;
       const m0 = w.money;

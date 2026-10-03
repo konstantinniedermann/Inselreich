@@ -1105,6 +1105,69 @@ function firestationBody(p: IsoPainter, b: Building): void {
   cupola(p, s, h, s.um, s.vm, 0.24);
 }
 
+// Amtsstube (M10-R1): breite Halle mit Holzdach und Treppe, auf dem First ein Uhrturm mit Schieferspitze
+const CLOCK_FACE = mixHex(PALETTE.wallLime, '#ffffff', 0.5);
+const CLOCK_HAND = mixHex(PALETTE.rockDark, '#000000', 0.4);
+const TOWNHALL_TOWER = 0.5; // Kantenlänge des Uhrturms in Kacheln
+function townhallBody(p: IsoPainter, b: Building): void {
+  const h = bodyHeight(BUILDING_DEFS.townhall, b);
+  yard(p, mixHex(PALETTE.sandDry, PALETTE.rock, 0.3));
+  const s = makeShell(p, 0.45 * h, 0.66 * h, 'gable', 'u');
+  drawShell(p, s, wallColors(PALETTE.wallLime), PALETTE.roofWood);
+  leftQuad(p, s, 0.82, 1.18, 0, 0.6 * s.wz, DOOR);
+  for (const [a0, a1] of [
+    [0.22, 0.4],
+    [1.6, 1.78],
+  ] as const)
+    leftQuad(p, s, a0, a1, 0.4 * s.wz, 0.8 * s.wz, WINDOW);
+  for (const [a0, a1] of [
+    [0.3, 0.45],
+    [0.9, 1.05],
+    [1.5, 1.65],
+  ] as const)
+    rightQuad(p, s, a0, a1, 0.4 * s.wz, 0.8 * s.wz, WINDOW);
+  // Eingangstreppe
+  cuboid(p, [0.8, s.v1, 1.2, s.v1 + 0.06], 0, 4, wallColors(PALETTE.wallStone), undefined, false);
+  // Uhrturm auf dem First: Spitze genau auf der Hüllenkante
+  const [uc, vc] = [s.um, s.vm];
+  const half = TOWNHALL_TOWER / 2;
+  const [a, bb, c, d] = [uc - half, vc - half, uc + half, vc + half];
+  const apex = cap(h, uc, vc);
+  const zEave = apex - 30;
+  const base = Math.min(roofZ(s, a, bb), roofZ(s, c, d), roofZ(s, a, d), roofZ(s, c, bb));
+  const stone = wallColors(PALETTE.wallStone);
+  cuboid(p, [a, bb, c, d], base, zEave, stone, PALETTE.wallStone);
+  // Zifferblatt mit Zeigern auf beiden sichtbaren Seiten, darüber die Schallöffnung
+  const z0 = zEave - 22,
+    z1 = zEave - 9,
+    zc = (z0 + z1) / 2;
+  leftPlane(p, d, uc - 0.14, uc + 0.14, z0, z1, CLOCK_FACE);
+  rightPlane(p, c, vc - 0.14, vc + 0.14, z0, z1, CLOCK_FACE);
+  p.line([uc, d, zc], [uc, d, z1 - 2], CLOCK_HAND);
+  p.line([uc, d, zc], [uc + 0.08, d, zc], CLOCK_HAND);
+  p.line([c, vc, zc], [c, vc, z1 - 2], CLOCK_HAND);
+  p.line([c, vc, zc], [c, vc + 0.08, zc], CLOCK_HAND);
+  leftPlane(p, d, uc - 0.07, uc + 0.07, zEave - 7, zEave - 2, WINDOW);
+  rightPlane(p, c, vc - 0.07, vc + 0.07, zEave - 7, zEave - 2, WINDOW);
+  const r = roofColors(PALETTE.roofSlate);
+  p.poly(
+    [
+      [a, d, zEave],
+      [c, d, zEave],
+      [uc, vc, apex],
+    ],
+    r.light,
+  );
+  p.poly(
+    [
+      [c, bb, zEave],
+      [c, d, zEave],
+      [uc, vc, apex],
+    ],
+    r.shade,
+  );
+}
+
 // --- M8-R1: Glashütte und Badehaus (Drehkörper aus Polygonen) ---
 
 /** Dreht ein Profil [Radius, Höhe] um die Senkrechte bei (uc, vc); nur die zugewandte Hälfte, hinten nach vorn. */
@@ -1404,6 +1467,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   firestation: firestationBody,
   bathhouse: bathhouseBody, // M8-R1
   glassworks: glassworksBody, // M8-R1
+  townhall: townhallBody, // M10-R1
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---
@@ -1540,6 +1604,16 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
       { ...L(1.0, 1.12, 0.68 * wz, 0.9 * wz), plane: pl },
       { ...R(0.4, 0.6, 0.5 * wz, 0.85 * wz), plane: BATH_CUBE.u1 },
       { ...R(0.8, 1.0, 0.5 * wz, 0.85 * wz), plane: BATH_CUBE.u1 },
+    ];
+  },
+  townhall: (_b, h) => {
+    const wz = 0.45 * h;
+    return [
+      L(0.22, 0.4, 0.4 * wz, 0.8 * wz),
+      L(1.6, 1.78, 0.4 * wz, 0.8 * wz),
+      R(0.3, 0.45, 0.4 * wz, 0.8 * wz),
+      R(0.9, 1.05, 0.4 * wz, 0.8 * wz),
+      R(1.5, 1.65, 0.4 * wz, 0.8 * wz),
     ];
   },
   school: (_b, h) => [

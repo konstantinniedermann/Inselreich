@@ -460,6 +460,20 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     defId: def.id,
   });
 
+  it('AK-R1-04 Amtsstube zeichnet eine eigene Form, nicht den public-Rückfall', () => {
+    // gleicher Footprint (2 × 2) und gleicher Standort: nur die Silhouette darf den Unterschied machen
+    const pub = fallbackDefs.find((d) => d.category === 'public' && d.w === 2)!;
+    const drawLog = (
+      def: (typeof fallbackDefs)[number] | typeof BUILDING_DEFS.townhall,
+      b: Building,
+    ) => {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, def as never, b, 0);
+      return log.events;
+    };
+    expect(drawLog(BUILDING_DEFS.townhall, mk('townhall'))).not.toEqual(drawLog(pub, unknown(pub)));
+  });
+
   it('AK-R2-03 jede heutige BuildingDefId hat eine eigene Silhouette', () => {
     for (const id of Object.keys(BUILDING_DEFS))
       expect(SILHOUETTES[id as keyof typeof SILHOUETTES], id).toBeDefined();
@@ -578,6 +592,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       chapel: 2,
       school: 2,
       firestation: 2,
+      townhall: 2, // Rückfall public (M10-S2, T-12)
       'fallback public 1': 2,
       'fallback public 2': 2,
     };
@@ -890,6 +905,12 @@ describe('M8 Render-Rückfall Glashütte (AK-S2-17)', () => {
     expect(log.allPoints.length).toBeGreaterThan(20);
     const hull = bodyHull(BUILDING_DEFS.glassworks, gw);
     for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5)).toBe(true);
+  });
+});
+
+describe('M10 Rückfall Amtsstube', () => {
+  it('AK-S2-15 SILHOUETTES.townhall definiert (Rückfall public)', () => {
+    expect(SILHOUETTES.townhall).toBeDefined();
   });
 });
 

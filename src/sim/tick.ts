@@ -4,6 +4,7 @@ import { tickOrders } from './orders';
 import { citizens, merchants, tickPopulation, tickTaxes } from './population';
 import { tickProduction } from './production';
 import { tickMarket } from './trade';
+import { tickUnlocks } from './unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
 import type { World } from './types';
 
@@ -13,7 +14,7 @@ export function checkWin(world: World): void {
   if (world.won && merchants(world) >= WIN_MERCHANTS) world.wonMerchants = true;
 }
 
-/** Ein Simulationsschritt: Zähler, Produktion, Bevölkerung, Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg. */
+/** Ein Simulationsschritt: Zähler, Produktion, Bevölkerung, Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
 export function step(world: World): void {
   world.tick += 1;
   tickProduction(world);
@@ -24,4 +25,5 @@ export function step(world: World): void {
   tickOrders(world);
   tickCrises(world);
   checkWin(world);
+  tickUnlocks(world); // letzter Aufruf: Bitgleichheit, Spec 4.3, ADR-005-Nachtrag
 }

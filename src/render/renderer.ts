@@ -77,7 +77,7 @@ import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
-import { drawFlocks, drawWaterLife, wildlifeAt } from './wildlife';
+import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildlife';
 import {
   buildingShadow,
   drawAir,
@@ -99,7 +99,9 @@ export type Tool =
   | { kind: 'select' }
   | { kind: 'build'; defId: BuildingDefId }
   | { kind: 'road' }
-  | { kind: 'demolish' };
+  | { kind: 'demolish' }
+  | { kind: 'clearForest' }
+  | { kind: 'plantForest' };
 
 /** Darstellungs-Zusatz je Frame (Spec 11.1); Animation entsteht nur aus `timeMs` und dem Welt-Zustand. */
 export interface RenderFx {
@@ -115,6 +117,18 @@ export interface RenderFx {
   dayNight?: boolean;
   /** Dev: Rautenraster über der Karte (nur unter `import.meta.env.DEV` gesetzt). */
   raster?: boolean;
+}
+
+/**
+ * Umgebung für `wildlifeAt`: Bild und Mouse-over fragen mit derselben Umgebung ab (Spec M10 13.1), sonst nennt
+ * der Mouse-over Tiere, die nicht gezeichnet sind.
+ */
+export function wildlifeEnvOf(world: World, fx: RenderFx): WildlifeEnv {
+  return {
+    phase: lightAt(world.tick).phase,
+    weather: pickWeather(fx.weather, null).kind,
+    reduce: fx.reduceMotion === true,
+  };
 }
 
 /** Signal eines Frames in CSS-Pixeln (Mittelpunkt): Bedarfssymbol oder roter Punkt. */
@@ -214,7 +228,8 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
     ctx.lineWidth = 1;
     ctx.stroke();
     drawGhost(ctx, cam, def, hover.x, hover.y); // D-13: halbtransparenter Geist
-  } else if (tool.kind === 'road') {
+  } else if (tool.kind === 'road' || tool.kind === 'clearForest' || tool.kind === 'plantForest') {
+    // Forst-Werkzeuge: Rauten-Umriss der Kachel, Farbe wie die Weg-Vorschau (Spec 11.9)
     ctx.beginPath();
     footprintPath(ctx, cam, hover.x, hover.y, 1, 1);
     ctx.fillStyle = hover.ok ? HOVER_OK : HOVER_BAD;
@@ -445,11 +460,7 @@ export function render(
       x1: Math.min(world.width - 1, range.x1 + 3),
       y1: Math.min(world.height - 1, range.y1 + 3),
     };
-    const wild = wildlifeAt(world, wildRange, fx.timeMs, {
-      phase: light.phase,
-      weather: weather.kind,
-      reduce,
-    });
+    const wild = wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
     drawWaterLife(ctx, cam, wild);
 
     // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)

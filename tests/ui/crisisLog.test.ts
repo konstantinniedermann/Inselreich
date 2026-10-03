@@ -3,7 +3,17 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { crisisView } from '../../src/sim/queries';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
-import { crisisLogEntries, LOG_MAX, logLine, pushLog, type LogEntry } from '../../src/ui/crisisLog';
+import { CRISIS_FIRST_TICK } from '../../src/sim/defs/timing';
+import { createWorld } from '../../src/sim/world';
+import { MAP_SIGNS, mapSigns } from '../../src/ui/guide';
+import {
+  crisisLogEntries,
+  crisisLogVisible,
+  LOG_MAX,
+  logLine,
+  pushLog,
+  type LogEntry,
+} from '../../src/ui/crisisLog';
 import { SCENARIOS } from '../sim/scenarios';
 
 /** Spielt `ticks` Schritte und sammelt die Einträge wie die Frame-Schleife (ein Vergleich je Tick). */
@@ -129,5 +139,21 @@ describe('pushLog (M6-AK-U2-01)', () => {
     const buf = [e(1)];
     pushLog(buf, [e(2)]);
     expect(buf).toHaveLength(1);
+  });
+});
+
+describe('M10 Krisen-Log ab erster Periode (Spec 11.10, Kann K4)', () => {
+  it('AK-U2-11 normal: bei 2399 verborgen, bei 2400 sichtbar; off nie', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    w.tick = CRISIS_FIRST_TICK - 1;
+    expect(crisisLogVisible(w)).toBe(false);
+    expect(mapSigns(w).length).toBe(MAP_SIGNS.length - 1);
+    expect(mapSigns(w).some((s) => s.renderer.includes('DIM_FIRE'))).toBe(false);
+    w.tick = CRISIS_FIRST_TICK;
+    expect(crisisLogVisible(w)).toBe(true);
+    expect(mapSigns(w)).toEqual(MAP_SIGNS);
+    const off = createWorld(3, { crisisLevel: 'off' });
+    off.tick = 9000;
+    expect(crisisLogVisible(off)).toBe(false);
   });
 });

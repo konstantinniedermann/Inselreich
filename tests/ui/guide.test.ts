@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../../src/render/palette';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { idx } from '../../src/sim/world';
+import { deriveUnlocks } from '../../src/sim/unlocks';
+import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
+import type { UnlockId } from '../../src/sim/types';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
+import { createWorld, idx } from '../../src/sim/world';
+import { houseFar, placeTownhall, village } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
 type Extra = 'chapel' | 'weaver' | 'sheepfarm';
@@ -80,6 +84,8 @@ describe('nextStep (AK-UX-08)', () => {
   });
   it('AK-UX-08 R6 Steuer hoch', () => {
     const w = world(1, 2, []);
+    placeTownhall(w); // M10: gespeicherte Stufe wirkt nur mit aktiver Amtsstube
+    connectAll(w);
     w.taxLevel = 'high';
     expect(nextStep(w)).toMatch(/^Steuer ‚hoch' verhindert den Aufstieg: /);
   });
@@ -216,6 +222,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (b) won, Steinbruch und Holzfäller, keine Glashütte → Glashütte bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'quarry');
     addDirect(w, 'lumberjack');
     expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O)');
@@ -223,12 +230,14 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (c) wie (b) ohne Steinbruch → Glashütte und Steinbruch für Stein', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'lumberjack');
     expectStep(w, 'Deine Kaufleute brauchen Glas: baue Glashütte (O) und Steinbruch (B) für Stein');
   });
   it('AK-U2-08 (d) won, Glas-Kette steht, kein Badehaus → Badehaus bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
     expectStep(w, 'Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe');
   });
@@ -239,6 +248,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     let s: string;
     try {
       TIERS[4].unlockCitizens = 40;
+      w.unlocked = deriveUnlocks(w);
       s = nextStep(w);
     } finally {
       TIERS[4].unlockCitizens = null;
@@ -255,6 +265,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
   it('AK-U2-08 (h) won, Glashütte steht, Steinbruch fehlt → Steinbruch bauen', () => {
     const w = citizenWorld();
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     addDirect(w, 'glassworks');
     addDirect(w, 'lumberjack');
     expectStep(w, 'Glashütte braucht Stein: baue Steinbruch (B)');
@@ -278,9 +289,12 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     quarry.state = 'storageFull';
     expect(w.won).toBe(false);
     expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    const beforeGoal = w.unlocked;
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
     w.won = false;
+    w.unlocked = beforeGoal;
     const lj = addDirect(w, 'lumberjack');
     lj.state = 'storageFull';
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
@@ -301,5 +315,73 @@ describe('M8 U2 Kartenzeichen (P3)', () => {
     expect(row.sign).toMatch(/Glocke/);
     expect(row.sign).toMatch(/Buch/);
     expect(row.color).toBeNull();
+  });
+});
+
+describe('M10 nextStep-Filter (Spec 12.3)', () => {
+  it('AK-S1-19 gesperrter Marktplatz: „Marktplatz kommt, …"; mit U1 wörtlich wie heute', () => {
+    const w = createWorld(3);
+    const far = houseFar(w); // Haus ausserhalb der Versorgung, roh gesetzt (tests/sim/helpers.ts)
+    expect(far.house).toBeDefined();
+    expect(nextStep(w)).toBe('Marktplatz kommt, sobald 20 Wohnhäuser stehen');
+    w.unlocked = ['U0', 'U1'];
+    expect(nextStep(w)).toBe(
+      'Ein Wohnhaus liegt ausserhalb der Versorgung: baue einen Marktplatz (M)',
+    );
+  });
+});
+
+describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
+  /** Angebundener Werkzeugmacher im Zustand noService (Schule fehlt). */
+  const toolmakerWorld = (): { w: World; b: Building } => {
+    const { w, kx, ky } = uxWorld();
+    const b = build(w, 'toolmaker', kx + 8, ky + 2);
+    connectAll(w);
+    b.state = 'noService';
+    return { w, b };
+  };
+  /** Holzfäller im Zustand storageFull. */
+  const lumberjackFull = (): { w: World; b: Building } => {
+    const { w, kx, ky } = uxWorld();
+    w.tiles[idx(w, kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
+    const b = build(w, 'lumberjack', kx + 3, ky + 1);
+    b.state = 'storageFull';
+    return { w, b };
+  };
+  /** Erwartungswert heute (vor M10): Holz mit freiem Abnehmer, siehe AK-UX-10. */
+  const REMEDY_TODAY = 'Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)';
+
+  it('AK-U2-02 Kassen-Satz je Stand; gespeichertes hoch ohne Amtsstube ohne Steuer-Satz; Abhilfen', () => {
+    const broke = (ids: UnlockId[], townhall: boolean) => {
+      const { w, houses } = village(1, { unlockAll: true });
+      houses[0]!.house!.satisfied.food = true; // sonst meldet Regel 3 zuerst den Nahrungsmangel
+      w.unlocked = ids;
+      if (townhall) placeTownhall(w);
+      w.money = -10;
+      return nextStep(w);
+    };
+    expect(broke(['U0'], false)).toBe(
+      'Deine Kasse schrumpft: versorge mehr Wohnhäuser oder verkaufe Waren am Kontor',
+    );
+    expect(broke(['U0', 'U2', 'U3'], false)).toBe(
+      'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder baue eine Amtsstube (I)',
+    );
+    expect(broke(['U0', 'U2', 'U3'], true)).toBe(
+      'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder erhöhe die Steuer',
+    );
+    const high = createWorld(3);
+    high.taxLevel = 'high';
+    expect(nextStep(high)).not.toMatch(/Steuer/);
+    // Werkzeugmacher noService: Schule gesperrt (Stand AK-S1-14 c) bzw. frei
+    const tm = toolmakerWorld();
+    tm.w.unlocked = ['U0', 'U5'];
+    expect(remedyText(tm.w, tm.b)).toBe('Schule kommt, sobald ein Wohnhaus 8 Siedler hat');
+    tm.w.unlocked = [...UNLOCK_IDS];
+    expect(remedyText(tm.w, tm.b)).toBe('Baue eine Schule (U) in Reichweite');
+    const lj = lumberjackFull();
+    lj.w.unlocked = ['U0', 'U2', 'U3', 'U4'];
+    expect(remedyText(lj.w, lj.b)).toBe('Verkaufe Holz am Kontor');
+    lj.w.unlocked = [...UNLOCK_IDS];
+    expect(remedyText(lj.w, lj.b)).toBe(REMEDY_TODAY);
   });
 });

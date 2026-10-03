@@ -17,6 +17,7 @@ const DEFAULTS = {
   dayNight: true,
   reduceMotion: 'auto' as const,
   crisisLevel: 'normal' as const,
+  unlockMode: 'stepwise' as const,
 };
 
 describe('parseSettings (AK-U2-05)', () => {
@@ -202,6 +203,7 @@ describe('M7-U1 Einstellungen (AK-U1-01, AK-U1-01b, RF-3a)', () => {
       dayNight: false,
       reduceMotion: 'on',
       crisisLevel: 'mild',
+      unlockMode: 'all',
       zukunft: 1,
     };
     expect(JSON.parse(serializeSettings(parseSettings(JSON.stringify(all))))).toEqual(all);
@@ -235,5 +237,13 @@ describe('M7-U1 Einstellungen (AK-U1-01, AK-U1-01b, RF-3a)', () => {
     expect(resolveReduceMotion('auto', false)).toBe(false);
     expect(resolveReduceMotion('on', false)).toBe(true);
     expect(resolveReduceMotion('off', true)).toBe(false);
+  });
+});
+
+describe('M10 Freischalt-Modus', () => {
+  it('AK-U1-10 unlockMode: Standard stepwise, all gelesen, unbekannt → stepwise', () => {
+    expect(parseSettings(null).unlockMode).toBe('stepwise');
+    expect(parseSettings(JSON.stringify({ unlockMode: 'all' })).unlockMode).toBe('all');
+    expect(parseSettings(JSON.stringify({ unlockMode: 'foo' })).unlockMode).toBe('stepwise');
   });
 });

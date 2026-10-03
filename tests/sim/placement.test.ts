@@ -2,9 +2,10 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { createWorld, idx, isLand, tileAt } from '../../src/sim/world';
 import { buildLock, canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { placeBuilding, placeRoad, removeRoad, demolish } from '../../src/sim/build';
-import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { fail } from '../../src/sim/types';
+import { deriveUnlocks, entryOfBuilding } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
 import { forceGrass } from './helpers';
 
@@ -28,7 +29,7 @@ function landRect(w: World, size: number): { x: number; y: number } {
 let w: World;
 let o: { x: number; y: number };
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
   o = landRect(w, 8);
 });
 
@@ -206,6 +207,9 @@ describe('costs', () => {
 });
 
 describe('M8 Bausperre (Änderung S11)', () => {
+  beforeEach(() => {
+    w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // „Alles frei" ausser U6 (Badehaus, Glashütte), wie M8 vor dem Ziel
+  });
   /** Geld und Lager reichen für jeden Bau; die Sperre ist der einzige mögliche Grund. */
   const fund = (): void => {
     w.money = 10_000;
@@ -232,7 +236,7 @@ describe('M8 Bausperre (Änderung S11)', () => {
   it('AK-S1-21 Badehaus vor dem Sieg gesperrt (auch auf Wasser), placeBuilding bucht nichts; mit won frei', () => {
     fund();
     expect(w.won).toBe(false);
-    expect(BUILDING_DEFS.bathhouse.unlockTier).toBe(4);
+    expect(entryOfBuilding('bathhouse')?.id).toBe('U6');
     expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
     expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
     const sea = water();
@@ -245,6 +249,7 @@ describe('M8 Bausperre (Änderung S11)', () => {
     expect(w.stock).toEqual(stock);
     expect(Object.keys(w.buildings)).toHaveLength(count);
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(buildLock(w, 'bathhouse')).toBeNull();
     expect(placeBuilding(w, 'bathhouse', o.x, o.y + 2).ok).toBe(true);
   });
@@ -257,10 +262,12 @@ describe('M8 Bausperre (Änderung S11)', () => {
       expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
       expect(canPlace(w, 'bathhouse', o.x, o.y + 2)).toEqual(fail('Erst ab 40 Bürgern (jetzt 39)'));
       houses[2]!.house!.inhabitants = 10;
+      w.unlocked = deriveUnlocks(w);
       expect(buildLock(w, 'bathhouse')).toBeNull();
       const r = placeBuilding(w, 'bathhouse', o.x, o.y + 2);
       expect(r.ok).toBe(true);
       houses[2]!.house!.inhabitants = 9; // Sperre greift wieder (Spec 21 Punkt 5)
+      w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // M10: Freischaltung ist gespeichert; der Rückfall wird nachgestellt
       expect(buildLock(w, 'bathhouse')).toBe('Erst ab 40 Bürgern (jetzt 39)');
       expect(w.buildings[r.id!]?.defId).toBe('bathhouse'); // nur Neubau gesperrt
       expect(canPlace(w, 'bathhouse', o.x + 3, o.y + 2)).toEqual(
@@ -271,14 +278,14 @@ describe('M8 Bausperre (Änderung S11)', () => {
     }
   });
 
-  it('AK-S1-21 buildLock ist für jedes Gebäude ohne unlockTier null (auch vor dem Sieg)', () => {
+  it('AK-S1-21 buildLock ist für jedes Gebäude ausserhalb von U6 null (auch vor dem Sieg)', () => {
     for (const id of BUILDING_IDS)
-      if (BUILDING_DEFS[id].unlockTier === undefined) expect(buildLock(w, id), id).toBeNull();
+      if (entryOfBuilding(id)?.id !== 'U6') expect(buildLock(w, id), id).toBeNull();
   });
 
   it('AK-S2-19 Glashütte vor dem Sieg gesperrt, placeBuilding bucht nichts; mit won frei', () => {
     fund();
-    expect(BUILDING_DEFS.glassworks.unlockTier).toBe(4);
+    expect(entryOfBuilding('glassworks')?.id).toBe('U6');
     expect(buildLock(w, 'glassworks')).toBe('Erst nach dem Ziel');
     expect(canPlace(w, 'glassworks', o.x, o.y + 2)).toEqual(fail('Erst nach dem Ziel'));
     const money = w.money;
@@ -287,6 +294,7 @@ describe('M8 Bausperre (Änderung S11)', () => {
     expect(w.money).toBe(money);
     expect(w.stock).toEqual(stock);
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(buildLock(w, 'glassworks')).toBeNull();
     expect(placeBuilding(w, 'glassworks', o.x, o.y + 2).ok).toBe(true);
   });

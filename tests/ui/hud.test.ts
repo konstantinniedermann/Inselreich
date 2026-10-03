@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
 import { SCENARIOS } from '../sim/scenarios';
 import {
   balanceText,
+  balanceView,
+  chipRole,
+  chipView,
+  moneyView,
+  popChipView,
+  balanceTooltip,
+  taxButtonText,
+  taxView,
   popChipHidden,
   speedTooltip,
   stockChipHidden,
@@ -13,6 +22,9 @@ import {
 } from '../../src/ui/hud';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { createWorld } from '../../src/sim/world';
+import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
+import type { Tier } from '../../src/sim/types';
+import { houseNearKontor, placeTownhall } from '../sim/helpers';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -61,20 +73,98 @@ describe('M8 U1 Kopfzeile', () => {
   it('Spec M8 14.1 Kaufleute-Chip verborgen bis zur Freischaltung, Stufen 1–3 nie (Vorprüfung zu AK-U1-04)', () => {
     const w = createWorld(3);
     expect(popChipHidden(w, 4)).toBe(true);
-    for (const tier of [1, 2, 3] as const) expect(popChipHidden(w, tier)).toBe(false);
+    expect(popChipHidden(w, 1)).toBe(false); // M10: Stufen 2 und 3 erscheinen erst mit U3/U5 (AK-U1-05)
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    w.unlocked = deriveUnlocks(w);
     expect(popChipHidden(w, 4)).toBe(false);
   });
 
-  it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, andere Güter nie (Vorprüfung AK-U1-04, S11)', () => {
+  it('Spec M8 14.1 Glas-Chip verborgen bis zur Freischaltung oder Glas > 0, Holz, Werkzeug, Stein, Nahrung nie (Vorprüfung AK-U1-04, S11)', () => {
     const w = createWorld(3);
     expect(stockChipHidden(w, 'glass')).toBe(true);
-    for (const g of GOOD_IDS.filter((x) => x !== 'glass'))
+    for (const g of GOOD_IDS.filter((x) => ['wood', 'tools', 'stone', 'food'].includes(x)))
       expect(stockChipHidden(w, g), g).toBe(false);
     w.stock.glass = 1;
     expect(stockChipHidden(w, 'glass')).toBe(false);
     w.stock.glass = 0;
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    w.unlocked = deriveUnlocks(w);
     expect(stockChipHidden(w, 'glass')).toBe(false);
+  });
+});
+
+describe('M10 Kopfzeile nach Freischaltung', () => {
+  it('AK-U1-04 Lager-Chips: neues Spiel genau Holz, Werkzeug, Stein, Nahrung; Wolle 3 ohne U2 sichtbar', () => {
+    const w = createWorld(3);
+    expect(GOOD_IDS.filter((g) => !stockChipHidden(w, g))).toEqual([
+      'wood',
+      'tools',
+      'stone',
+      'food',
+    ]);
+    w.stock.wool = 3;
+    expect(stockChipHidden(w, 'wool')).toBe(false);
+  });
+  it('AK-U1-05 Einwohner-Chips: pop-1 immer; pop-2 ab U3, pop-3 ab U5, pop-4 ab U6; mit Einwohnern immer', () => {
+    const w = createWorld(3);
+    expect(([1, 2, 3, 4] as Tier[]).map((t) => popChipHidden(w, t))).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ]);
+    w.unlocked = ['U0', 'U2', 'U3'];
+    expect(popChipHidden(w, 2)).toBe(false);
+    w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
+    expect(popChipHidden(w, 3)).toBe(false);
+    expect(popChipHidden(w, 4)).toBe(true);
+    w.unlocked = [...UNLOCK_IDS];
+    expect(popChipHidden(w, 4)).toBe(false);
+    const v = createWorld(3);
+    const h = houseNearKontor(v);
+    h.house!.tier = 3;
+    expect(popChipHidden(v, 3)).toBe(false);
+  });
+  it('AK-U1-11 taxButtonText: ohne aktive Amtsstube null; mit aktiver „Steuer normal" (wirksame Stufe)', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(taxButtonText(w)).toBeNull();
+    placeTownhall(w);
+    expect(taxButtonText(w)).toBe('Steuer normal');
+  });
+  it('AK-U1-13 Bilanz-Tooltip ohne aktive Amtsstube mit „Steuer: normal (keine Amtsstube)"', () => {
+    const w = createWorld(3);
+    w.taxLevel = 'high';
+    expect(balanceTooltip(w)).toContain('Steuer: normal (keine Amtsstube)');
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-01 Chips tragen Symbol; aria-label = bisheriger Text wörtlich', () => {
+    const w = createWorld(3);
+    expect(chipView(w, 'wood')).toEqual({
+      icon: 'wood',
+      text: `${w.stock.wood} →`,
+      label: `Holz ${w.stock.wood} →`,
+    });
+    expect(popChipView(w, 1).label).toBe('Pioniere 0');
+    expect(popChipView(w, 3)).toEqual({ icon: 'tier-3', text: '0', label: 'Bürger 0' });
+    expect(moneyView(w)).toMatchObject({ icon: 'money', label: `Geld ${w.money}` });
+    expect(balanceView(w)).toMatchObject({ icon: 'balance' });
+    expect(balanceView(w).label).toBe(balanceText(w.stats).text);
+  });
+  it('AK-U4-01 jedes Gut hat ein Symbol gleicher Kennung', () => {
+    const w = createWorld(3);
+    for (const g of GOOD_IDS) expect(chipView(w, g).icon).toBe(g);
+  });
+});
+
+describe('M10 Kopfzeilen-Chips, Rolle', () => {
+  it('Steuer-Knopf bleibt Knopf (keine Rolle img), Lager-Chip bekommt sie', () => {
+    const w = SCENARIOS['m10-amtsstube']!();
+    expect(taxView(w)).not.toBeNull();
+    expect(chipRole('BUTTON')).toBeNull();
+    expect(chipRole('SPAN')).toBe('img');
   });
 });

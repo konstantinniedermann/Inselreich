@@ -16,7 +16,7 @@ import type { World } from '../../src/sim/types';
 
 let w: World;
 beforeEach(() => {
-  w = createWorld(3);
+  w = createWorld(3, { unlockAll: true });
 });
 
 describe('stock', () => {

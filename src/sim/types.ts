@@ -17,7 +17,8 @@ export type BuildingDefId =
   | 'toolmaker'
   | 'firestation'
   | 'bathhouse'
-  | 'glassworks';
+  | 'glassworks'
+  | 'townhall';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -42,8 +43,6 @@ export interface BuildingDef {
   produces?: GoodId;
   /** Inputs, je 1 Einheit je Zyklus, atomar entnommen (M8 5.3). */
   consumes?: readonly GoodId[];
-  /** Baubar erst, wenn diese Stufe frei ist (M8 4.3, Änderung S11); fehlt = immer baubar. */
-  unlockTier?: Tier;
   cycle?: number;
   service?: ServiceId;
   serviceRadius?: number;
@@ -54,6 +53,10 @@ export interface BuildingDef {
   stormAffected?: boolean;
   /** Schützt Gebäude im Radius vor Brand (M6). */
   fireProtection?: boolean;
+  /** Produziert nur mit erreichbarem Dienst dieser Art (M10 5.5). */
+  requiresService?: ServiceId;
+  /** Höchstzahl gleichzeitig stehender Gebäude dieser Art (M10 5.1). */
+  maxCount?: { n: number; reason: string };
   site: SiteRule[];
 }
 export interface OrderDef {
@@ -83,7 +86,8 @@ export interface TierDef {
   /** Hebel: frei ab so vielen Bürgern+; `null` = nur nach dem Sieg (M8 4.4). */
   unlockCitizens?: number | null;
 }
-export type BuildingState = 'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning';
+export type BuildingState =
+  'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning' | 'noService';
 export interface HouseState {
   tier: Tier;
   inhabitants: number;
@@ -153,8 +157,31 @@ export interface Crisis {
   /** Nur fire. */
   outcome?: FireOutcome;
 }
+export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
+export type UnlockFunction = 'forest' | 'orders' | 'goodLocks';
+export type UnlockTrigger =
+  | { kind: 'start' }
+  | { kind: 'houses'; min: number }
+  | { kind: 'tierWish'; tier: Tier }
+  | { kind: 'tierReached'; tier: Tier }
+  | { kind: 'tierOpen'; tier: Tier };
+export interface UnlockDef {
+  id: UnlockId;
+  trigger: UnlockTrigger;
+  buildings: readonly BuildingDefId[];
+  goods: readonly GoodId[];
+  functions: readonly UnlockFunction[];
+  lockText: string; // Platzhalter {min}, {max}; '' nur bei U0
+  whenText: string; // Platzhalter {min}, {max}, {WIN_CITIZENS}; '' nur bei U0
+  notice: string; // '' nur bei U0
+  tip: string;
+}
+export interface GoodLock {
+  tier: Tier;
+  good: GoodId;
+}
 export interface World {
-  version: 4;
+  version: 5;
   seed: number;
   width: number;
   height: number;
@@ -175,6 +202,12 @@ export interface World {
   order: Order | null;
   crisisLevel: CrisisLevel;
   crisis: Crisis | null;
+  /** Freigeschaltete Einträge in UNLOCK_IDS-Reihenfolge, monoton (M10 4). */
+  unlocked: UnlockId[];
+  /** Ausgabesperren, sortiert nach Stufe, dann GOOD_IDS-Index, ohne Doppelte (M10 5.3). */
+  goodLocks: GoodLock[];
+  /** Stufen mit Aufstiegsstopp, aufsteigend (M10 5.4). */
+  upgradeStops: Tier[];
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

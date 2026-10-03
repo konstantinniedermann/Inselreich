@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  lockMatrix,
+  needIcons,
   burningText,
   producesText,
   protectedCount,
@@ -16,7 +18,10 @@ import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
 import { createWorld } from '../../src/sim/world';
+import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
+import { setGoodLock } from '../../src/sim/tax';
+import { placeTownhall, setHouse as setHouseTo, village } from '../sim/helpers';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -52,7 +57,13 @@ describe('restView (AK-U2-03)', () => {
     w.tick = 3000;
     const sum = Object.values(w.buildings).reduce((n, b) => n + (b.house?.inhabitants ?? 0), 0);
     expect(sum).toBeGreaterThan(0);
-    expect(restView(w)).toEqual({ phase: 'night', label: 'Nacht', symbol: '☾', inhabitants: sum });
+    expect(restView(w)).toEqual({
+      phase: 'night',
+      label: 'Nacht',
+      symbol: '☾',
+      inhabitants: sum,
+      tax: taxEffect('normal'), // galerie hat eine aktive Amtsstube: kein Zusatz
+    });
   });
   it('alle vier Phasen', () => {
     const w = SCENARIOS.galerie!();
@@ -153,5 +164,60 @@ describe('M8 Info-Texte (AK-U2-02)', () => {
     expect(producesText(BUILDING_DEFS.glassworks, false)).toBe('Erzeugt Glas alle 5 s');
     expect(goodList(['stone', 'wood'])).toBe('Stein und Holz');
     expect(goodList(['wool'])).toBe('Wolle');
+  });
+});
+
+describe('M10 noService', () => {
+  it('AK-S2-17 stateInfo noService nennt die Schule', () => {
+    const tm: Building = {
+      id: 1,
+      defId: 'toolmaker',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'noService',
+    };
+    expect(stateInfo(tm, 0)).toEqual({ text: 'Braucht eine Schule in Reichweite', ok: false });
+  });
+});
+
+describe('M10 Ruhe-Ansicht Steuer', () => {
+  it('AK-U1-13 rest-tax: wirksame Stufe, ohne aktive Amtsstube mit Zusatz', () => {
+    const w = createWorld(3);
+    w.taxLevel = 'high';
+    expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
+  });
+});
+
+describe('M10 Amtsstuben-Panel (Spec 11.8)', () => {
+  it('RF-5 Sperr-Matrix: Zeile verschwindet bei 0 Einwohnern, Sperre bleibt, kehrt gedrückt zurück', () => {
+    const { w, houses } = village(2, { unlockAll: true });
+    placeTownhall(w);
+    setHouseTo(houses[0]!, 1, 2);
+    setHouseTo(houses[1]!, 2, 3);
+    expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
+    expect(lockMatrix(w).map((r) => r.tier)).toEqual([1, 2]);
+    expect(lockMatrix(w)[1]!.goods.find((g) => g.good === 'cloth')!.locked).toBe(true);
+    setHouseTo(houses[1]!, 1, 3);
+    expect(lockMatrix(w).map((r) => r.tier)).toEqual([1]);
+    expect(w.goodLocks).toEqual([{ tier: 2, good: 'cloth' }]);
+    setHouseTo(houses[1]!, 2, 3);
+    expect(lockMatrix(w)[1]!.goods.find((g) => g.good === 'cloth')!.locked).toBe(true);
+    expect(lockMatrix(createWorld(3)).length).toBe(0); // vor U5 verborgen
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-01 Haus-Panel: Bedarfe als Symbole mit erfüllt/offen und Gutname', () => {
+    const { w, house } = uxWorld();
+    setHouse(house, 2, 4, ['food', 'cloth']);
+    house.house!.services = { faith: true };
+    const items = needIcons(w, house);
+    expect(items[0]).toEqual({ icon: 'food', met: true, label: 'Nahrung' });
+    expect(items.map((i) => i.icon)).toEqual(['food', 'cloth', 'faith']);
+    expect(items.every((i) => i.met)).toBe(true);
+    house.house!.satisfied.cloth = false;
+    expect(needIcons(w, house)[1]).toEqual({ icon: 'cloth', met: false, label: 'Stoff' });
   });
 });

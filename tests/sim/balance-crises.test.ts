@@ -34,6 +34,9 @@ function normalized(json: string): string {
   delete (raw.stock as Record<string, unknown>).glass;
   delete (raw.sellPct as Record<string, unknown>).glass;
   delete raw.wonMerchants;
+  delete raw.unlocked;
+  delete raw.goodLocks;
+  delete raw.upgradeStops;
   for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>)) {
     const house = b.house as { services: Record<string, unknown> } | undefined;
     if (house) delete house.services.bath;

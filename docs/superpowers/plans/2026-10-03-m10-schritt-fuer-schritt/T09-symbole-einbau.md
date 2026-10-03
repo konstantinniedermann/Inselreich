@@ -63,7 +63,7 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
       Tab und Enter wie M7-UX (R134).
 - [ ] **Schritt 5 (Kann K2):** Zeichen „neu" (`aria-label` „neu") an Einträgen aus `newBuildEntries`, bis der Spieler
       sie einmal wählt; Merkfeld nur im UI-Zustand (`app.ts`), nicht gespeichert.
-- [ ] **Schritt 6 (Kann K3):** Bau-Einträge zeigen die verkleinerte Silhouette aus `src/render/sprites.ts` (nur
+- [ ] **Schritt 6 (Kann K3) — gestrichen (R186, geht an M9 Welle 2):** Bau-Einträge zeigen die verkleinerte Silhouette aus `src/render/sprites.ts` (nur
       lesend importiert) statt des Kategorie-Symbols.
 - [ ] **Schritt 7: Grün prüfen.** `npx vitest run` (inkl. `tests/ui/contrast.test.ts` unverändert grün); `make check`;
       Commit `git commit -m "feat: M10-U4 Symbole in Kopfzeile, Bauleiste, Haus-Panel und Meldung (Spec 14)"`.

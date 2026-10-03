@@ -1041,3 +1041,80 @@ ab `feat/m10-sim` @ 6912e88, 10 Starts, Parallelität 2) mit Auflage R181; lead-
 (`feat/m10-render`, 3 Starts). QA-U1…U4 und Final-Review folgen über lead-qa vor Gate Merge M10.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M10-S2 · ADR: —
+
+## R183 · 2026-10-03 · M10-R1 abgenommen
+
+Ruling: M10-R1 (Amtsstube-Silhouette, Terrain-Teil-Neuzeichnung) abgenommen auf `feat/m10-render` @ d64a164
+(Review OK, Rot-Beleg AK-R1-01/-04). Abweichung AK-R1-04 gegen 2×2-Rückfall angenommen (Plan-Variante wäre
+vakuös grün). Blindtest gilt mit Vorbehalt (Tester sah vorab `galerie.probes.json`); Nachweis reicht, weil die
+Erkennung über Uhrturm begründet ist — Briefing-Vorlage Playtester: Probe-Dateien erst nach dem Urteil öffnen
+(an die Retro). AK-R1-03 in QA-U2. Merge in `feat/m10-ui` durch lead-tech (T07).
+
+Entscheider: L0 · Anlass: Bericht lead-art M10-R1 · ADR: —
+
+## R184 · 2026-10-03 · M10-UI an QA, M11-Design parallel
+
+Ruling: M10-UI (T06–T09) auf `feat/m10-ui` @ f310abe an lead-qa für QA-U1…U4 und Final-Review (opus). Befund
+E-015-Messung: Fixes T08/T09 ohne erneuten Reviewer-Lauf (R136 verletzt) → Nachprüfung im Final-Review
+nachgeholt; zählt als 1 Paket mit fehlender Nachprüfung. Seriell statt parallel (Dateiüberschneidung)
+angenommen. Parallel startet lead-design den Designvorschlag M11 (S10, S2, S3, S4-Prozent, S12, R161) auf
+`docs/m11-design`, nur Doku. — Kosten bei Irrtum: M11-Vorschlag muss nach M10-Befunden nachgeführt werden.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M10-UI · ADR: —
+
+## R185 · 2026-10-03 · Gate Brainstorming M11
+
+Ruling: Gate Brainstorming M11 „Wirtschaft im Fluss" bestanden (`docs/m11-design` @ 0d583f8). Annahmen A1–A14
+wie empfohlen angenommen: S10 (b) je Tick mit Übertrag und Neupinnen (Siege 7250/7850/11 300, Schwellen bleiben,
+Ruling Balancing nach Programm F5, kein Nutzervorbehalt); Dämpfung prospektiv Faktor 2, Rückfall Faktor 1;
+`levels` in `defs/levels.ts` (Abweichung S12 3.1 bewusst); Save v6; R161 nur Sichtbarkeit. Auflagen für die
+Spec: (1) Ursache des Bruchs +1200 Ticks mit Zerlegung messen (Steuer- vs. Unterhaltsanteil), nicht nur
+vermuten; (2) A9 (`free` am Holzfäller) und das minMoney-20-Szenario (A3) mit Zahlen belegen; (3) Spec ≤ 40 KB.
+Spec startet jetzt, Umsetzung erst nach Gate Merge M10 (Save v5 vorher auf main, A10). — Kosten bei Irrtum: ein
+Spielerlebnis 20 % langsamer bis zum Balancing-Schritt von M11.
+
+Entscheider: L0 · Anlass: Bericht lead-design M11-D · ADR: —
+
+## R186 · 2026-10-03 · M10 Final-Review ZURÜCK, K3 gestrichen
+
+Ruling: Final-Review M10 ZURÜCK angenommen (QA-U1…U4 bestanden). (1) K3 (AK-U4-05, Silhouetten statt
+Kategorie-Symbol, Spec 2.2 „Kann") wird per Streich-Ruling aus M10 genommen und an M9 Welle 2 / G8
+(Sprite-Cache, `sprites.ts`) gegeben; die verletzte Streichreihenfolge K5→K4→K3 wird nachträglich so
+gedeckt, weil K3 als einzige Variante Render-Silhouetten braucht. (2) lead-tech behebt D1 (README, arc42 §5/§8,
+Spec-Verweise) und `hud.ts:110` (`role="img"` auf dem Steuer-Knopf, mit Test), dazu die niedrigen Doku-Punkte
+`abdeckung.md` AK-U2-10, `qa-checks.md` (aria-label statt textContent, galerie ohne Bürgerhaus). (3) Nachprüfung
+durch lead-qa (1 Reservestart), dann Gate Merge. — Kosten bei Irrtum: K3 kommt eine Welle später.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M10-QA · ADR: —
+
+## R187 · 2026-10-03 · Gate Spec M11 BEDENKEN, A15
+
+Ruling: Gate Spec M11 BEDENKEN (lead-qa, `docs/m11-design` @ cb1a1a1): vier blockierende Punkte (AK-Kollisionen
+R136, AK-P1-08…10 hängen an P2, AK-P1-05 unscharf, fehlender UI-AK Stufe ≥ 2) und drei hohe (M10 AK-F1-05 rot
+durch P2, Haupt-Pins statt Gebäudezahl/Fingerabdruck, Zeitbild §1) → Fix-Runde durch dieselbe lead-design-Instanz,
+danach Gate Spec durch L0 anhand des Fix-Berichts (Nachprüfung lead-qa nur bei neuen AK-Lücken). A15 angenommen:
+Pins 6750/7850/11 200 statt R185-Zahlen, nur Seed 3 gepinnt, Schwellen 7500/8000/12 000. — Kosten bei Irrtum:
+Neupinnen im Balancing-Schritt.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M11-SPEC · ADR: —
+
+## R188 · 2026-10-03 · Gate Merge M10
+
+Ruling: Gate Merge M10 „Schritt für Schritt" bestanden: `feat/m10-ui` @ 58c6ce8 (enthält `feat/m10-sim`,
+`feat/m10-render`, `feat/m10-icons`). QA-U1…U4 bestanden, Final-Review (opus) ZURÜCK → Fix-Runde → Nachprüfung
+derselben Instanz BEDENKEN (Doku) → Docs-Commit 58c6ce8, Diff von L0 gesichtet (arc42 B9-Richtung, README U2 und
+Auslöser-Satz, K3-Vermerke). K3 gestrichen (R186). Merge seriell durch lead-production/production-integrator
+(`--no-ff`, make check, CI, Pages), danach Prozess-Retro (R127). Anschliessend frei: M9 Welle 2 (`sprites.ts`,
+R164) und M11-Plan nach Gate Spec. — Kosten bei Irrtum: Revert-Merge auf main (reversibel).
+
+Entscheider: L0 · Anlass: Nachprüfung lead-qa, Fix-Bericht lead-tech · ADR: —
+
+## R189 · 2026-10-03 · Gate Spec M11
+
+Ruling: Gate Spec M11 bestanden (`docs/m11-design` @ 07a45bc, Hauptdatei 39 706 B, 75 AK). Alle vier
+blockierenden und drei hohen Punkte aus R187 behoben (Fix-Bericht lead-design); neue AK-UI-10 und AK-BAS-07
+schliessen genannte Lücken und brauchen keine eigene Nachprüfung. 655 ‰ bleibt (ungerader Sturmstart,
+beide Fälle in 3.5). Nächster Schritt: Plan M11 durch lead-tech nach dem Merge von M10 (Code-Fakten gegen main
+mit Save v5); `docs/m11-design` geht mit dem Plan nach main. — Kosten bei Irrtum: AK-Nachtrag im Gate Plan.
+
+Entscheider: L0 · Anlass: Fix-Bericht lead-design M11-SPEC · ADR: —

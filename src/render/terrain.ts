@@ -8,6 +8,8 @@ import {
   COAST_BAND,
   EDGE_BAND,
   LAND,
+  WARP,
+  coastField,
   sampleField,
   terrainFields,
   warp,
@@ -69,12 +71,13 @@ export function occupancy(world: Pick<World, 'width' | 'height' | 'tiles'>): Uin
   return occ;
 }
 
-/** Geänderte Kacheln plus 1 Kachel Rand, auf die Karte geklemmt; null, wenn nichts geändert ist. */
+/** Geänderte Kacheln plus `border` Kacheln Rand (Vorgabe 1), auf die Karte geklemmt; null, wenn nichts geändert ist. */
 export function dirtyRect(
   prev: Uint8Array,
   next: Uint8Array,
   w: number,
   h: number,
+  border = 1,
 ): TileRect | null {
   let x0 = w,
     y0 = h,
@@ -91,12 +94,46 @@ export function dirtyRect(
     }
   if (x1 < 0) return null;
   return {
-    x0: Math.max(0, x0 - 1),
-    y0: Math.max(0, y0 - 1),
-    x1: Math.min(w - 1, x1 + 1),
-    y1: Math.min(h - 1, y1 + 1),
+    x0: Math.max(0, x0 - border),
+    y0: Math.max(0, y0 - border),
+    x1: Math.min(w - 1, x1 + border),
+    y1: Math.min(h - 1, y1 + border),
   };
 }
+
+/**
+ * Randbreite der Feld-Glättung in Kacheln (M10 Spec 7): Eine Kachel wirkt über das Bilinearfeld bis zur Nachbarmitte
+ * (1 Kachel) plus Rauschverschiebung `WARP`, dazu der Höhen-Weichzeichner (zwei Durchgänge Radius `HEIGHT_BLUR` Knoten)
+ * und ein Knoten fürs Gefälle. Aufgerundet.
+ */
+export const SMOOTH_BORDER = Math.ceil(1 + WARP + (2 * HEIGHT_BLUR + 1) * (RASTER / TEX));
+
+/** Geländeart je Kachel (0 Wasser, 1 + Index in `LAND`); das Abbild, an dem die Teil-Neuzeichnung Wechsel erkennt. */
+export function terrainCodes(world: Pick<World, 'width' | 'height' | 'tiles'>): Uint8Array {
+  const codes = new Uint8Array(world.width * world.height);
+  for (let i = 0; i < codes.length; i++) {
+    const t = world.tiles[i]!.terrain;
+    codes[i] = t === 'water' ? 0 : LAND.indexOf(t) + 1;
+  }
+  return codes;
+}
+
+/** Geänderte Geländekacheln plus Glättungsrand (`SMOOTH_BORDER`), geklemmt; null, wenn das Gelände gleich ist. */
+export function terrainPatchRect(
+  prev: Uint8Array,
+  next: Uint8Array,
+  w: number,
+  h: number,
+): TileRect | null {
+  return dirtyRect(prev, next, w, h, SMOOTH_BORDER);
+}
+
+/** Dev-Zähler: Dauer der letzten Teil-Neuzeichnungen (ms > 0), höchstens 20 Werte. */
+export const terrainStats: { lastPatchMs: number; patches: number[] } = {
+  lastPatchMs: 0,
+  patches: [],
+};
+const STATS_MAX = 20;
 
 /** Teil-Neuzeichnung nur für dieselbe Welt und bei geändertem Layout-Schlüssel (RF-2). */
 export function shouldPatch(
@@ -189,13 +226,31 @@ function boxBlur(f: Float32Array, nx: number, ny: number, r: number, tmp: Float3
   }
 }
 
+/** Knotenfenster (inklusive) im globalen Gitter. */
+interface NodeWindow {
+  i0: number;
+  j0: number;
+  i1: number;
+  j1: number;
+}
+
 /** Rechnet alle Felder auf dem groben Raster (alle `RASTER` Texturpixel ein Knoten). */
 export function buildGrid(
   world: World3,
   fields: TerrainFields = terrainFields(world),
 ): TerrainGrid {
-  const nx = (world.width * TEX) / RASTER + 1,
-    ny = (world.height * TEX) / RASTER + 1;
+  return computeWindow(world, fields, {
+    i0: 0,
+    j0: 0,
+    i1: (world.width * TEX) / RASTER,
+    j1: (world.height * TEX) / RASTER,
+  });
+}
+
+/** Wie `buildGrid`, aber nur im Knotenfenster; `nx`/`ny` des Ergebnisses sind die Fenstermasse. */
+function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): TerrainGrid {
+  const nx = win.i1 - win.i0 + 1,
+    ny = win.j1 - win.j0 + 1;
   const n = nx * ny;
   const sharp = new Float32Array(n),
     smooth = new Float32Array(n),
@@ -212,8 +267,8 @@ export function buildGrid(
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
-      const fx = i * step,
-        fy = j * step;
+      const fx = (win.i0 + i) * step,
+        fy = (win.j0 + j) * step;
       const [wx, wy] = warp(seed, fx, fy);
       sharp[k] = sampleField(fields.coast, wx, wy, COAST_BAND);
       smooth[k] = sampleField(fields.coast, wx, wy);
@@ -450,7 +505,9 @@ interface TerrainMeta {
   world: World;
   scale: number;
   grid: TerrainGrid;
+  fields: TerrainFields;
   occ: Uint8Array;
+  codes: Uint8Array;
   key: string;
   half: HTMLCanvasElement | null;
   buildMs: number;
@@ -581,12 +638,24 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
-  const grid = buildGrid(world);
+  const fields = terrainFields(world);
+  const grid = buildGrid(world, fields);
   paintRegion(ctx, grid, scale, 0, 0, w, h);
   const occ = occupancy(world);
   paintDecor(ctx, world, occ, scale, { x0: 0, y0: 0, x1: world.width - 1, y1: world.height - 1 });
   const buildMs = performance.now() - t0;
-  meta.set(canvas, { world, scale, grid, occ, key: layoutKey(world), half: null, buildMs });
+  const codes = terrainCodes(world);
+  meta.set(canvas, {
+    world,
+    scale,
+    grid,
+    fields,
+    occ,
+    codes,
+    key: layoutKey(world),
+    half: null,
+    buildMs,
+  });
   if (import.meta.env.DEV)
     console.info('[terrain] Aufbau', Math.round(buildMs), 'ms, Faktor', scale);
   return canvas;
@@ -596,7 +665,48 @@ export const terrainScale = (layer: HTMLCanvasElement): number => meta.get(layer
 export const terrainBuildMs = (layer: HTMLCanvasElement): number => meta.get(layer)?.buildMs ?? 0;
 
 /**
- * Zeichnet bei geänderter Belegung (Gebäude, Wege) nur die betroffenen Kacheln plus 1 Kachel Rand neu.
+ * Gleicht Felder und Raster mit dem neuen Gelände ab, nur im Rechteck `r` (Kacheln). Typfelder ändern sich nur an den
+ * geänderten Kacheln; das Küstenfeld (Breitensuche über die Karte) nur, wenn Wasser und Land wechseln (nicht bei Wald ↔ Weide).
+ */
+export function patchGrid(
+  world: World3,
+  fields: TerrainFields,
+  g: TerrainGrid,
+  prev: Uint8Array,
+  next: Uint8Array,
+  r: TileRect,
+): void {
+  let coastChanged = false;
+  for (let i = 0; i < next.length; i++) {
+    if (prev[i] === next[i]) continue;
+    if ((prev[i] === 0) !== (next[i] === 0)) coastChanged = true;
+    for (let t = 0; t < LAND.length; t++) fields.types[LAND[t]!].v[i] = next[i] === t + 1 ? 1 : 0;
+  }
+  if (coastChanged) fields.coast = coastField(world);
+  const k = TEX / RASTER; // Knoten je Kachel
+  const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
+  const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
+  const win = {
+    i0: Math.max(0, inner.i0 - margin),
+    j0: Math.max(0, inner.j0 - margin),
+    i1: Math.min(g.nx - 1, inner.i1 + margin),
+    j1: Math.min(g.ny - 1, inner.j1 + margin),
+  };
+  const part = computeWindow(world, fields, win);
+  const copy = (dst: ArrayLike<number> & { [i: number]: number }, src: ArrayLike<number>): void => {
+    for (let j = inner.j0; j <= inner.j1; j++)
+      for (let i = inner.i0; i <= inner.i1; i++)
+        dst[j * g.nx + i] = src[(j - win.j0) * part.nx + (i - win.i0)]!;
+  };
+  for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch'] as const)
+    copy(g[f], part[f]);
+  copy(g.cls, part.cls);
+  for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
+}
+
+/**
+ * Zeichnet bei geänderter Belegung (Gebäude, Wege) die betroffenen Kacheln plus 1 Kachel Rand neu, bei Geländewechsel
+ * (Roden, Aufforsten) das Raster und die Kacheln samt Glättungsrand. Ein Rechteck, kein Vollaufbau.
  * Eine fremde Welt auf dieser Ebene zeichnet nichts neu (RF-2).
  */
 export function updateTerrainLayer(
@@ -609,10 +719,17 @@ export function updateTerrainLayer(
   if (!shouldPatch(m, world, key)) return { redrawn: false, ms: 0 };
   const t0 = performance.now();
   const next = occupancy(world);
-  const rect = dirtyRect(m.occ, next, world.width, world.height);
+  const occRect = dirtyRect(m.occ, next, world.width, world.height);
+  const codes = terrainCodes(world);
+  const terRect = terrainPatchRect(m.codes, codes, world.width, world.height);
+  const rect = unionRect(occRect, terRect);
   m.key = key;
   m.occ = next;
   if (!rect) return { redrawn: false, ms: performance.now() - t0 };
+  if (terRect) {
+    patchGrid(world, m.fields, m.grid, m.codes, codes, terRect);
+    m.codes = codes;
+  }
   const ctx = layer.getContext('2d');
   if (!ctx) return { redrawn: false, ms: 0 };
   const s = TEX * m.scale;
@@ -630,8 +747,24 @@ export function updateTerrainLayer(
       hc.drawImage(layer, px, py, pw, ph, px / 2, py / 2, pw / 2, ph / 2);
     }
   }
-  return { redrawn: true, ms: performance.now() - t0 };
+  const ms = performance.now() - t0;
+  if (terRect && ms > 0) {
+    terrainStats.lastPatchMs = ms;
+    terrainStats.patches.push(ms);
+    if (terrainStats.patches.length > STATS_MAX) terrainStats.patches.shift();
+  }
+  return { redrawn: true, ms };
 }
+
+const unionRect = (a: TileRect | null, b: TileRect | null): TileRect | null =>
+  !a || !b
+    ? (a ?? b)
+    : {
+        x0: Math.min(a.x0, b.x0),
+        y0: Math.min(a.y0, b.y0),
+        x1: Math.max(a.x1, b.x1),
+        y1: Math.max(a.y1, b.y1),
+      };
 
 /** Einmal vorskalierte Kopie mit halber Kantenlänge (Zoom ≤ 0,5, AK-ISO-19). */
 export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {

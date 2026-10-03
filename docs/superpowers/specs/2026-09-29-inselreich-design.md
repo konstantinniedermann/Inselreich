@@ -29,6 +29,8 @@ gezeichnete Grafik, eigene Zahlen.
 
 ### 2.2 Karte
 
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §6
+
 - 64×64 Kacheln, eine Insel, umgeben von Wasser. Seed-basiert, deterministisch.
 - Terrain: `water`, `sand` (Küste), `grass`, `forest`, `mountain`.
 - Generator: eigenes Value-Noise + radiale Inselmaske; Nachbedingung: ≥ 800 Landkacheln,
@@ -58,6 +60,8 @@ Werkzeugmacher stellt Werkzeug aus Holz her, siehe [M5-Spec](2026-09-30-m5-spiel
 **Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.1
 
 ### 2.4 Gebäude
+
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §4, §5.1, §5.5
 
 Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 
@@ -106,6 +110,8 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 
 ### 2.7 Bevölkerung
 
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §4.6
+
 Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 
 | tier | Name     | max. Einwohner | Bedürfnisse (Güter, Verbrauch je Einwohner pro 100 Ticks) | Dienste       | Steuer je Einwohner pro 100 Ticks | Aufstiegskosten (G/H/W/S) |
@@ -134,6 +140,8 @@ Abschnitt 4.1.
 **Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §4
 
 ### 2.8 Wirtschaft
+
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §5.2
 
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
 - Steuern: je Haus Einwohner × Steuersatz, voll bei erfüllten Bedürfnissen, sonst 50 %.
@@ -217,6 +225,8 @@ Aktuelle Bausteinsicht: [arc42, Abschnitt 5](../../arc42.md#5-bausteinsicht).
 
 ### 3.3 Datenmodell (Kern)
 
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.1
+
 ```ts
 type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
 interface Tile {
@@ -288,6 +298,8 @@ Mit M5 zeichnet der Renderer Silhouetten statt Kurzsymbolen, Animationen, ein H�
 (Radiusanzeige, Bedarfssymbole) und eine Tag-Nacht-Tönung, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 9 und 10.
 
 ### 3.7 Persistenz
+
+**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.2
 
 - `localStorage` Schlüssel `inselreich.save.v1`; Buttons Speichern / Laden / Neu.
 - Serialisierung = World-Objekt als JSON, Deserialisierung validiert Version und Kachelanzahl.

@@ -1,6 +1,7 @@
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import type { Category } from '../sim/types';
+import { buildingShown, functionLock } from '../sim/unlocks';
+import type { Category, World } from '../sim/types';
 
 /** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
@@ -21,12 +22,18 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   e: { kind: 'build', defId: 'firestation' },
   j: { kind: 'build', defId: 'bathhouse' },
   o: { kind: 'build', defId: 'glassworks' },
+  i: { kind: 'build', defId: 'townhall' },
+  c: { kind: 'clearForest' },
+  q: { kind: 'plantForest' },
 };
 
 export const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
 
 export type HotkeyAction =
-  { kind: 'tool'; tool: Tool } | { kind: 'speed'; speed: 1 | 2 | 4 } | { kind: 'pause' };
+  | { kind: 'tool'; tool: Tool }
+  | { kind: 'speed'; speed: 1 | 2 | 4 }
+  | { kind: 'pause' }
+  | { kind: 'help' };
 
 /**
  * Wirkung einer Taste, oder `null` (Modifier gedrückt, Formularfeld, Pan-Taste, Esc, unbekannt).
@@ -40,6 +47,7 @@ export function hotkeyAction(
   if (inFormField || mods.ctrl || mods.meta || mods.alt) return null;
   const k = key.toLowerCase();
   if (k === 'p') return { kind: 'pause' };
+  if (k === '?') return { kind: 'help' }; // Shift erlaubt (Spec 11.2)
   const speed = SPEED_KEYS[k];
   if (speed !== undefined) return { kind: 'speed', speed };
   const tool = TOOL_HOTKEYS[k];
@@ -90,6 +98,8 @@ export function toolName(tool: Tool): string {
   if (tool.kind === 'select') return 'Auswahl';
   if (tool.kind === 'road') return 'Weg';
   if (tool.kind === 'demolish') return 'Abriss';
+  if (tool.kind === 'clearForest') return 'Roden';
+  if (tool.kind === 'plantForest') return 'Aufforsten';
   return BUILDING_DEFS[tool.defId].name;
 }
 
@@ -100,14 +110,29 @@ export function categoryOf(tool: Tool): Category | null {
     : null;
 }
 
-/** Einzige Liste aller Tasten für das Menü (keine zweite Liste, Spec L2). */
-export function hotkeyList(): { key: string; label: string }[] {
-  const tools = Object.entries(TOOL_HOTKEYS).map(([k, t]) => ({
-    key: k.toUpperCase(),
-    label: toolName(t!),
-  }));
+/** Werkzeug ist in der Bedienung sichtbar: Bau-Werkzeuge nur, wenn das Gebäude angezeigt wird (Spec 11.2). */
+export function toolShown(world: World, tool: Tool): boolean {
+  if (tool.kind === 'clearForest' || tool.kind === 'plantForest')
+    return functionLock(world, 'forest') === null;
+  return tool.kind !== 'build' || buildingShown(world, tool.defId);
+}
+
+/** Einzige Liste aller Tasten für das Menü (keine zweite Liste, Spec L2); nur Freigeschaltetes. */
+export function hotkeyList(world: World): { key: string; label: string }[] {
+  const tools = Object.entries(TOOL_HOTKEYS)
+    .filter(([, t]) => toolShown(world, t!))
+    .map(([k, t]) => ({
+      key: k.toUpperCase(),
+      label: toolName(t!),
+    }));
   const speeds = Object.entries(SPEED_KEYS).map(([k, s]) => ({ key: k, label: `Tempo ${s}×` }));
-  return [...tools, ...speeds, { key: 'P', label: 'Pause / weiter' }, ...NAV_KEYS];
+  return [
+    ...tools,
+    ...speeds,
+    { key: 'P', label: 'Pause / weiter' },
+    { key: '?', label: 'Hilfe' },
+    ...NAV_KEYS,
+  ];
 }
 
 export type CategoryEvent = { kind: 'toggle'; category: Category } | { kind: 'tool'; tool: Tool };

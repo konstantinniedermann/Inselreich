@@ -149,6 +149,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     produces: 'tools',
     consumes: ['wood'],
     cycle: 80,
+    requiresService: 'school',
     site: [],
   },
   chapel: {
@@ -200,7 +201,6 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     flammable: true,
     service: 'bath',
     serviceRadius: 10,
-    unlockTier: 4,
     site: [],
   },
   glassworks: {
@@ -216,7 +216,18 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     consumes: ['stone', 'wood'],
     cycle: 50,
     site: [],
-    unlockTier: 4, // Änderung S11: baubar erst ab Freischaltung der Stufe 4
+  },
+  townhall: {
+    id: 'townhall',
+    name: 'Amtsstube',
+    w: 2,
+    h: 2,
+    cost: cost(200, 15, 2, 5),
+    upkeep: 20,
+    category: 'public',
+    flammable: true,
+    maxCount: { n: 1, reason: 'Es gibt schon eine Amtsstube' },
+    site: [],
   },
 };
 export const BUILDING_IDS = Object.keys(BUILDING_DEFS) as BuildingDefId[];

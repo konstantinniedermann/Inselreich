@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { deriveUnlocks } from '../../src/sim/unlocks';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { createWorld } from '../../src/sim/world';
+import type { CrisisLevel, UnlockId, World } from '../../src/sim/types';
+import { REASON_TABLE, friendlyReason, placementHint } from '../../src/ui/hints';
+import { forceRect } from '../sim/helpers';
 import {
+  CATEGORIES,
   buildEntries,
+  visibleCategories,
   crisisTooltipLines,
+  newBuildEntries,
   tierPreviewLine,
   tooltipLines,
   unprotectedLine,
@@ -97,15 +104,135 @@ describe('M8 Tooltips (AK-U2-01)', () => {
 
 describe('M8 Bauleiste (Änderung S11)', () => {
   it('Spec M8 14.2 Glashütte und Badehaus erst ab der Freischaltung (Vorprüfung AK-U2-06, AK-U2-10)', () => {
-    const w = createWorld(3);
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
+    w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5']; // alles ausser U6, wie M8 vor dem Ziel
     expect(buildEntries(w, 'production')).toHaveLength(8);
     expect(buildEntries(w, 'production')).not.toContain('glassworks');
-    expect(buildEntries(w, 'public')).toHaveLength(3);
+    expect(buildEntries(w, 'public')).toHaveLength(4); // M10: + Amtsstube (U3)
     expect(buildEntries(w, 'public')).not.toContain('bathhouse');
     w.won = true;
+    w.unlocked = deriveUnlocks(w);
     expect(buildEntries(w, 'production')).toHaveLength(9);
     expect(buildEntries(w, 'production')).toContain('glassworks');
-    expect(buildEntries(w, 'public')).toHaveLength(4);
+    expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
+  });
+});
+
+describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
+  const count = (w: World) =>
+    Object.fromEntries(CATEGORIES.map((c) => [c.id, buildEntries(w, c.id).length]));
+  const at = (ids: UnlockId[], crisisLevel: CrisisLevel = 'normal') => {
+    const w = createWorld(3, { crisisLevel });
+    w.unlocked = ids;
+    return w;
+  };
+  it('AK-U1-01 Zählung je Stand (Krisen normal und off), leere Kategorien verborgen', () => {
+    expect(count(at(['U0']))).toEqual({ infrastructure: 0, housing: 1, production: 2, public: 0 });
+    expect(visibleCategories(at(['U0']))).toEqual(['housing', 'production']);
+    expect(buildEntries(at(['U0']), 'production')).toEqual(['fisher', 'lumberjack']);
+    expect(count(at(['U0', 'U2']))).toEqual({
+      infrastructure: 0,
+      housing: 1,
+      production: 5,
+      public: 2,
+    });
+    expect(count(at(['U0', 'U2'], 'off')).public).toBe(1);
+    expect(count(at(['U0', 'U2', 'U3'])).public).toBe(3);
+    expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 7, public: 4 });
+    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(8);
+    expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']))).toMatchObject({
+      production: 9,
+      public: 5,
+    });
+    expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
+    expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
+      infrastructure: 1,
+      housing: 1,
+      production: 9,
+      public: 5,
+    });
+    expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);
+  });
+});
+
+describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
+  it('AK-U2-07 placementHint und tooltipLines', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const k = w.buildings[w.kontorId]!;
+    forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
+    forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
+    expect(placementHint(w, { kind: 'clearForest' }, k.x + 6, k.y + 2)).toMatchObject({
+      tone: 'ok',
+      text: 'Roden: 10 Geld',
+    });
+    expect(placementHint(w, { kind: 'clearForest' }, k.x + 7, k.y + 2)).toMatchObject({
+      tone: 'bad',
+      text: 'Hier ist kein Wald',
+    });
+    expect(placementHint(w, { kind: 'plantForest' }, k.x + 6, k.y + 2)).toMatchObject({
+      tone: 'bad',
+      text: 'Aufforsten geht nur auf Weide',
+    });
+    expect(tooltipLines({ kind: 'build', defId: 'townhall' })).toEqual([
+      'Amtsstube (I)',
+      'Kosten: 200 Geld · 15 Holz · 2 Werkzeug · 5 Stein',
+      'Unterhalt: 120 / min',
+      'Steuer und Ausgabesperre einstellen',
+      'Brennbar',
+      'Standort: frei',
+      'Höchstens eine Amtsstube',
+    ]);
+    expect(tooltipLines({ kind: 'clearForest' })).toEqual([
+      'Roden (C)',
+      'Kosten: 10 Geld',
+      'Wald wird Weide — kein Holz',
+      'Nur auf unbebautem Wald',
+    ]);
+    expect(tooltipLines({ kind: 'plantForest' })).toEqual([
+      'Aufforsten (Q)',
+      'Kosten: 20 Geld',
+      'Weide wird Wald',
+      'Nur auf unbebauter Weide',
+    ]);
+  });
+  it('AK-U2-10 friendlyReason je Zeile 11.9; Vollständigkeitsprüfung grün', () => {
+    const w = createWorld(3);
+    const rows: [string, string][] = [
+      ['Es gibt schon eine Amtsstube', 'Es gibt schon eine Amtsstube — höchstens eine wirkt'],
+      ['Braucht eine Amtsstube', 'Baue zuerst eine Amtsstube (I)'],
+      ['Amtsstube wirkt nicht', 'Die Amtsstube wirkt erst mit Weg und ohne Brand'],
+      ['Kein Wald', 'Hier ist kein Wald'],
+      ['Keine Weide', 'Aufforsten geht nur auf Weide'],
+      ['Erst ab 20 Wohnhäusern', 'Erst ab 20 Wohnhäusern'],
+      ['Erst wenn ein Wohnhaus 4 Pioniere hat', 'Erst wenn ein Wohnhaus 4 Pioniere hat'],
+      ['Erst mit den ersten Siedlern', 'Erst mit den ersten Siedlern'],
+      ['Erst wenn ein Wohnhaus 8 Siedler hat', 'Erst wenn ein Wohnhaus 8 Siedler hat'],
+      ['Erst mit den ersten Bürgern', 'Erst mit den ersten Bürgern'],
+      ['Stoff für Siedler gesperrt', 'Stoff für Siedler gesperrt'],
+      ['Aufstieg in der Amtsstube angehalten', 'Aufstieg in der Amtsstube angehalten'],
+      ['Ungültige Sperre', 'Ungültige Sperre'],
+      ['Erst nach dem Ziel', 'Erst nach dem Ziel (50 Bürger)'],
+    ];
+    for (const [r, t] of rows) {
+      expect(friendlyReason(w, r), r).toBe(t);
+      expect(
+        REASON_TABLE.some((row) => row.pattern.test(r)),
+        `Tabellenzeile für ${r}`,
+      ).toBe(true);
+    }
+  });
+});
+
+describe('M10 Symbole im Einbau (Spec 14)', () => {
+  it('AK-U4-04 (K2) neue Einträge nach U2 tragen „neu" bis zur ersten Wahl; nach Laden keine', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    const prev = [...w.unlocked];
+    w.unlocked = ['U0', 'U2'];
+    const fresh = newBuildEntries(prev, w);
+    expect([...fresh]).toEqual(['quarry', 'sheepfarm', 'weaver', 'chapel', 'firestation']);
+    fresh.delete('chapel'); // erste Wahl
+    expect(fresh.has('chapel')).toBe(false);
+    expect(newBuildEntries(w.unlocked, w).size).toBe(0); // Laden: Basis = geladener Stand
   });
 });

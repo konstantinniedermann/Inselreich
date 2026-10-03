@@ -24,9 +24,16 @@ export function renderEventLog(box: HTMLElement): void {
   box.append(toggle, list);
 }
 
-/** Schreibt die Log-Einträge in die Liste; nur bei Änderung. Ohne Einträge ist die Box verborgen. */
-export function updateEventLog(box: HTMLElement, entries: readonly LogEntry[]): void {
-  box.hidden = entries.length === 0;
+/**
+ * Schreibt die Log-Einträge in die Liste; nur bei Änderung. Ohne Einträge oder vor der ersten Krisenperiode
+ * (`visible` false, Spec 11.10) ist die Box verborgen.
+ */
+export function updateEventLog(
+  box: HTMLElement,
+  entries: readonly LogEntry[],
+  visible = true,
+): void {
+  box.hidden = !visible || entries.length === 0;
   const list = box.querySelector<HTMLElement>('[data-field="event-log"]');
   if (!list) return;
   const key = entries.map(logLine).join('\n');

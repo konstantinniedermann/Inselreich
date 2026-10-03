@@ -1,6 +1,6 @@
 import { BOOM_PCT } from '../sim/defs/crises';
 import { GOODS } from '../sim/defs/goods';
-import { BOOM_DURATION, FIRE_OUTAGE, STORM_WARNING } from '../sim/defs/timing';
+import { BOOM_DURATION, CRISIS_FIRST_TICK, FIRE_OUTAGE, STORM_WARNING } from '../sim/defs/timing';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { CrisisView } from '../sim/queries';
 import type { World } from '../sim/types';
@@ -16,6 +16,11 @@ export interface LogEntry {
   toast: 'warn' | 'info' | null;
   /** Tick, zu dem der Eintrag entstand. */
   tick: number;
+}
+
+/** Krisen-Log und Brand-/Sturm-Legende sind sichtbar, sobald Krisen laufen und die erste Periode begonnen hat (Spec 11.10). */
+export function crisisLogVisible(world: Pick<World, 'crisisLevel' | 'tick'>): boolean {
+  return world.crisisLevel !== 'off' && world.tick >= CRISIS_FIRST_TICK;
 }
 
 /** Höchstzahl der Einträge im Log. */
