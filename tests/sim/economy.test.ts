@@ -94,22 +94,24 @@ describe('afford/pay/refund', () => {
 });
 
 describe('upkeep', () => {
-  it('sums building upkeep and books it every 100 ticks', () => {
+  it('sums building upkeep and books it per step with carry (M11 S10)', () => {
     // Kapelle irgendwo auf Gras platzieren
     const spot = findGrass(w);
     expect(placeBuilding(w, 'chapel', spot.x, spot.y).ok).toBe(true);
     expect(totalUpkeep(w)).toBe(15);
     const m0 = w.money;
+    // Anhang 02 D: money = m0 - floor((n * upkeep + u0) / 100), unabhängig von w.tick
     w.tick = 1;
     tickEconomy(w);
     expect(w.money).toBe(m0);
     expect(w.stats.upkeep).toBe(15);
-    w.tick = UPKEEP_INTERVAL;
-    tickEconomy(w);
+    for (let i = 1; i < UPKEEP_INTERVAL; i++) tickEconomy(w);
     expect(w.money).toBe(m0 - 15);
+    expect(w.upkeepCarry).toBe(0);
     w.tick = 0;
     tickEconomy(w);
-    expect(w.money).toBe(m0 - 15); // Tick 0 bucht nicht
+    expect(w.money).toBe(m0 - 15); // 101 Schritte: floor(1515 / 100) = 15
+    expect(w.upkeepCarry).toBe(15);
   });
 });
 

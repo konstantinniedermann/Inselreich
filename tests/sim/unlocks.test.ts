@@ -32,7 +32,7 @@ import { forceGrass, forceRect, placeService, setHouse, village } from './helper
 const row = (id: UnlockId) => UNLOCKS.find((u) => u.id === id)!;
 
 describe('M10 Freischaltbaum: Defs und Welt', () => {
-  it('AK-S1-01 UNLOCKS: sieben Einträge wie 4.2, Texte 4.5, jede Id genau einmal', () => {
+  it('AK-S1-01 UNLOCKS: sieben Einträge wie 4.2, Texte 4.5, jede Id genau einmal (M11 S10)', () => {
     expect(UNLOCKS.map((u) => u.id)).toEqual(['U0', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6']);
     expect(UNLOCK_IDS).toEqual(UNLOCKS.map((u) => u.id));
     expect(row('U0')).toMatchObject({
@@ -57,7 +57,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       trigger: { kind: 'tierReached', tier: 2 },
       buildings: ['townhall'],
       goods: [],
-      functions: ['orders'],
+      functions: ['orders', 'upgrade2'],
     });
     expect(row('U4')).toMatchObject({
       trigger: { kind: 'tierWish', tier: 3 },
@@ -69,7 +69,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       trigger: { kind: 'tierReached', tier: 3 },
       buildings: ['toolmaker'],
       goods: [],
-      functions: ['goodLocks'],
+      functions: ['goodLocks', 'upgrade3'],
     });
     expect(row('U6')).toMatchObject({
       trigger: { kind: 'tierOpen', tier: 4 },
@@ -83,15 +83,23 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
     expect(all).not.toContain('kontor');
     for (const g of GOOD_IDS)
       expect(UNLOCKS.flatMap((u) => u.goods).filter((x) => x === g)).toHaveLength(1);
-    for (const f of ['forest', 'orders', 'goodLocks'] as const)
+    for (const f of ['forest', 'orders', 'goodLocks', 'upgrade2', 'upgrade3'] as const)
       expect(UNLOCKS.flatMap((u) => u.functions).filter((x) => x === f)).toHaveLength(1);
     expect(ONLY_WITH_CRISES).toEqual({ firestation: true });
     expect(UNLOCK_CHAIN).toEqual(['U2', 'U3', 'U4', 'U5', 'U6']);
-    expect(FUNCTION_ENTRY).toEqual({ forest: 'U2', orders: 'U3', goodLocks: 'U5' });
+    expect(FUNCTION_ENTRY).toEqual({
+      forest: 'U2',
+      orders: 'U3',
+      goodLocks: 'U5',
+      upgrade2: 'U3',
+      upgrade3: 'U5',
+    });
     expect(FUNCTION_LABELS).toEqual({
       forest: ['Roden', 'Aufforsten'],
       orders: ['Handelsaufträge'],
       goodLocks: ['Ausgabesperre'],
+      upgrade2: ['Ausbau Stufe 2'],
+      upgrade3: ['Ausbau Stufe 3'],
     });
     for (const u of UNLOCKS) {
       expect(u.tip.length).toBeGreaterThan(0);

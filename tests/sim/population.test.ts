@@ -15,6 +15,7 @@ import {
 import { buy } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import type { Building, World } from '../../src/sim/types';
 import { forceGrass, forceRect, houseFar, houseNearKontor, placeService } from './helpers';
 
@@ -145,7 +146,10 @@ describe('serviceAvailable', () => {
   });
 });
 
-/** Haus bereit für den Aufstieg von Stufe 1: max. Einwohner, 300 Ticks erfüllt, Kapelle, 1 Stoff. */
+/** Defizitwelt (M11 S10): Testwelten ohne Erzeuger haben für jedes Zielgut ein Defizit, die Wartezeit verdoppelt sich. */
+const WAIT = UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR;
+
+/** Haus bereit für den Aufstieg von Stufe 1: max. Einwohner, Wartezeit erfüllt, Kapelle, 1 Stoff. */
 function readyPioneer(): { house: Building; chapel: Building } {
   const house = houseNearKontor(w);
   const chapel = placeService(w, 'chapel', house.x + 9, house.y);
@@ -153,12 +157,12 @@ function readyPioneer(): { house: Building; chapel: Building } {
   house.house!.inhabitants = TIERS[1].maxInhabitants;
   run(w, 1);
   w.stock.cloth = 1;
-  house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+  house.house!.satisfiedSince = w.tick - WAIT;
   return { house, chapel };
 }
 
 describe('tryUpgrade', () => {
-  it('upgrades pioneer house to settler when all conditions hold', () => {
+  it('upgrades pioneer house to settler when all conditions hold (M11 S10)', () => {
     const { house } = readyPioneer();
     expect(house.house!.satisfied.food).toBe(true);
     const { money, stock } = { money: w.money, stock: { ...w.stock } };
@@ -196,10 +200,10 @@ describe('tryUpgrade', () => {
     expectBlocked(house, 'Kapelle fehlt in Reichweite');
   });
 
-  it('does not upgrade before 300 ticks of satisfaction', () => {
+  it('does not upgrade before 600 ticks of satisfaction (M11 S10)', () => {
     const { house } = readyPioneer();
-    house.house!.satisfiedSince = w.tick - (UPGRADE_WAIT - 1);
-    expectBlocked(house, `Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`);
+    house.house!.satisfiedSince = w.tick - (WAIT - 1);
+    expectBlocked(house, `Bedürfnisse noch nicht ${WAIT} Ticks erfüllt`);
   });
 
   it('does not upgrade below max inhabitants', () => {
@@ -214,7 +218,7 @@ describe('tryUpgrade', () => {
     expectBlocked(house, 'Zu wenig Geld');
   });
 
-  it('lists all unmet reasons, not just the first', () => {
+  it('lists all unmet reasons, not just the first (M11 S10)', () => {
     const { house, chapel } = readyPioneer();
     w.stock.cloth = 0;
     chapel.connected = false;
@@ -226,7 +230,7 @@ describe('tryUpgrade', () => {
     ]);
   });
 
-  it('settler to citizen needs faith, school and rum', () => {
+  it('settler to citizen needs faith, school and rum (M11 S10)', () => {
     const { house, chapel } = readyPioneer();
     const hs = house.house!;
     hs.tier = 2;
@@ -271,7 +275,7 @@ describe('tryUpgrade', () => {
     expect(house.house!.tier).toBe(4);
   });
 
-  it('consumes the checked good: two ready houses, one cloth, only one upgrades', () => {
+  it('consumes the checked good: two ready houses, one cloth, only one upgrades (M11 S10)', () => {
     const { house, chapel } = readyPioneer();
     forceGrass(w, house.x, house.y + 1);
     const r = placeBuilding(w, 'house', house.x, house.y + 1);
@@ -291,7 +295,7 @@ describe('tryUpgrade', () => {
     expect(w.stock.cloth).toBe(0);
   });
 
-  it('does not draw a second unit of the new good on the next tick', () => {
+  it('does not draw a second unit of the new good on the next tick (M11 S10)', () => {
     const { house } = readyPioneer();
     w.stock.cloth = 2;
     expect(tryUpgrade(w, house)).toBe(true);
@@ -301,10 +305,10 @@ describe('tryUpgrade', () => {
     expect(house.house!.satisfied.cloth).toBe(true);
   });
 
-  it('taxes a house at the full rate when it upgrades on a booking tick', () => {
+  it('taxes a house at the full rate when it upgrades on a booking tick (M11 S10)', () => {
     const { house } = readyPioneer();
     w.tick = 499;
-    house.house!.satisfiedSince = w.tick - UPGRADE_WAIT;
+    house.house!.satisfiedSince = w.tick - WAIT;
     step(w);
     expect(w.tick % 100).toBe(0);
     expect(house.house!.tier).toBe(2);
@@ -313,10 +317,10 @@ describe('tryUpgrade', () => {
     expect(w.stats.taxes).toBe(full);
   });
 
-  it('is attempted in the growth tick only', () => {
+  it('is attempted in the growth tick only (M11 S10)', () => {
     const { house } = readyPioneer();
     w.tick = 347;
-    house.house!.satisfiedSince = 47;
+    house.house!.satisfiedSince = 47 - (WAIT - UPGRADE_WAIT);
     run(w, 2);
     expect(house.house!.tier).toBe(1);
     run(w, 1);
@@ -326,7 +330,7 @@ describe('tryUpgrade', () => {
 });
 
 describe('satisfiedSince at build time', () => {
-  it('a house built late must wait the full UPGRADE_WAIT before upgrading', () => {
+  it('a house built late must wait the full UPGRADE_WAIT before upgrading (M11 S10)', () => {
     const first = houseNearKontor(w);
     const chapel = placeService(w, 'chapel', first.x + 5, first.y);
     w.stock.cloth = 5;
@@ -345,14 +349,15 @@ describe('satisfiedSince at build time', () => {
     const second = w.buildings[r.id!]!;
     expect(second.house!.satisfiedSince).toBe(400);
 
-    for (let i = 0; i < 200; i++) step(w);
+    for (let i = 0; i < 400; i++) step(w);
     expect(second.house!.tier).toBe(1);
     expect(second.house!.inhabitants).toBe(4);
     expect(upgradeStatus(w, second).reasons).toContain(
-      `Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`,
+      `Bedürfnisse noch nicht ${WAIT} Ticks erfüllt`,
     );
 
     for (let i = 0; i < 200; i++) step(w);
+    expect(w.tick).toBe(1000); // 400 + WAIT
     expect(second.house!.tier).toBe(2);
   });
 });

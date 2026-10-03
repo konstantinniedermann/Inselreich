@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { demolish, placeBuilding } from '../../src/sim/build';
 import { beginCrisis } from '../../src/sim/crises';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { TAX_CARRY_DIVISOR } from '../../src/sim/defs/tiers';
+import { UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
+import { totalUpkeep, UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { buildLock, canPlace } from '../../src/sim/placement';
 import {
   citizens,
   merchants,
   populationByTier,
+  taxUnits,
   tierLock,
+  UPGRADE_WAIT,
   upgradeStatus,
 } from '../../src/sim/population';
 import { deserialize, serialize } from '../../src/sim/save';
@@ -59,6 +64,17 @@ function town(houseCount: number): Town {
   return { w, houses, chapel, school, bath };
 }
 
+/** Geld, das ein Schritt bucht (M11 S10, Anhang 02 D): Überträge `c0`, `u0` vor dem Schritt, Raten nach dem Schritt. */
+function booked(w: World, c0: number, u0: number): number {
+  return (
+    Math.floor((c0 + taxUnits(w)) / TAX_CARRY_DIVISOR) -
+    Math.floor((u0 + totalUpkeep(w)) / UPKEEP_INTERVAL)
+  );
+}
+
+/** Defizitwelt (M11 S10): Testwelten ohne Erzeuger haben für jedes Zielgut ein Defizit, die Wartezeit verdoppelt sich. */
+const WAIT = UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR;
+
 /** Setzt ein Haus direkt auf Stufe `tier` mit `n` Einwohnern; alle Güter der Stufe erfüllt ausser `unmet`. */
 function setHouse(w: World, b: Building, tier: Tier, n: number, unmet: GoodId[] = []): void {
   const goods = Object.keys(TIERS[tier].needs) as GoodId[];
@@ -68,12 +84,12 @@ function setHouse(w: World, b: Building, tier: Tier, n: number, unmet: GoodId[] 
     demand: Object.fromEntries(goods.map((g) => [g, 0])),
     satisfied: Object.fromEntries(goods.map((g) => [g, !unmet.includes(g)])),
     services: {},
-    satisfiedSince: w.tick - 300,
+    satisfiedSince: w.tick - WAIT,
     supplied: true,
   };
 }
 
-/** Volles Bürgerhaus, seit 300 Ticks zufrieden (bereit für den Aufstieg, ausser der Sperre). */
+/** Volles Bürgerhaus, seit der Wartezeit zufrieden (bereit für den Aufstieg, ausser der Sperre). */
 const readyCitizen = (w: World, b: Building): void => setHouse(w, b, 3, 15);
 
 const run = (w: World, n: number): void => {
@@ -93,20 +109,21 @@ describe('M8 Stufe 4: Zählung', () => {
 });
 
 describe('M8 Stufe 4: Sperre und Aufstieg', () => {
-  it('AK-S1-04 vor dem Sieg: einziger Grund „Erst nach dem Ziel“, kein Aufstieg, Geld und Lager unverändert', () => {
+  it('AK-S1-04 vor dem Sieg: einziger Grund „Erst nach dem Ziel“, kein Aufstieg, Geld und Lager unverändert (M11 S10)', () => {
     const { w, houses } = town(1);
     const h = houses[0]!;
     readyCitizen(w, h);
     expect(w.won).toBe(false);
     expect(upgradeStatus(w, h).reasons).toEqual(['Erst nach dem Ziel']);
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.tick).toBe(450);
     expect(h.house!.tier).toBe(3);
-    expect(w.money).toBe(1000);
+    expect(w.money).toBe(1000 + booked(w, c0, u0)); // keine Kosten, nur die Buchung des Schritts
     expect([w.stock.wood, w.stock.tools, w.stock.stone, w.stock.glass]).toEqual([15, 8, 10, 1]);
   });
 
-  it('AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 auf Tick ≡ 50 mod 100, Kosten und Glas, danach Steuer 300 (ohne Aufstieg 210)', () => {
+  it('AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 auf Tick ≡ 50 mod 100, Kosten und Glas, danach Steuer 300 (ohne Aufstieg 210) (M11 S10)', () => {
     const make = (won: boolean): { w: World; h: Building } => {
       const { w, houses } = town(1);
       readyCitizen(w, houses[0]!);
@@ -114,11 +131,12 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
       return { w, h: houses[0]! };
     };
     const { w, h } = make(true);
+    const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
     expect(w.tick % 100).toBe(50);
     const hs = h.house!;
     expect(hs.tier).toBe(4);
-    expect(w.money).toBe(400);
+    expect(w.money).toBe(400 + booked(w, c0, u0)); // 1000 − Kosten 600, dazu die Buchung des Schritts
     expect([w.stock.wood, w.stock.tools, w.stock.stone, w.stock.glass]).toEqual([0, 0, 0, 0]);
     expect(hs.demand.glass).toBe(0);
     expect(hs.satisfied.glass).toBe(true);
@@ -132,7 +150,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     expect(twin.w.stats.taxes).toBe(210);
   });
 
-  it('AK-S1-06 Gründe: ohne Bad, ohne Glas, Steuer hoch; vor dem Sieg Sperrgrund zuerst', () => {
+  it('AK-S1-06 Gründe: ohne Bad, ohne Glas, Steuer hoch; vor dem Sieg Sperrgrund zuerst (M11 S10)', () => {
     const noBath = town(1);
     readyCitizen(noBath.w, noBath.houses[0]!);
     noBath.w.won = true;
@@ -163,7 +181,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     ]);
   });
 
-  it('AK-S1-07 nach dem Aufstieg, alle Güter reichlich: 20 EW nach 5 Wachstumstakten (250 Ticks)', () => {
+  it('AK-S1-07 nach dem Aufstieg, alle Güter reichlich: 20 EW nach 5 Wachstumstakten (250 Ticks) (M11 S10)', () => {
     const { w, houses } = town(1);
     const h = houses[0]!;
     readyCitizen(w, h);
@@ -201,7 +219,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     expect(w.won).toBe(true);
   });
 
-  it('AK-S1-09 Hebel 40: Aufstieg vor dem Sieg mit 45 Bürgern; mit 39 gesperrt; zurück auf null wie AK-S1-04', () => {
+  it('AK-S1-09 Hebel 40: Aufstieg vor dem Sieg mit 45 Bürgern; mit 39 gesperrt; zurück auf null wie AK-S1-04 (M11 S10)', () => {
     try {
       TIERS[4].unlockCitizens = 40;
       const a = town(3);
@@ -244,7 +262,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     expect(tierLock(w, 4)).toBeNull();
   });
 
-  it('AK-S1-10 Massenaufstieg: Glas und Geld entscheiden in Id-Reihenfolge', () => {
+  it('AK-S1-10 Massenaufstieg: Glas und Geld entscheiden in Id-Reihenfolge (M11 S10)', () => {
     const make = (glass: number, money: number): Town => {
       const t = town(2);
       for (const b of t.houses) readyCitizen(t.w, b);
@@ -254,9 +272,10 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
       return t;
     };
     const both = make(2, 1300);
+    const [c0, u0] = [both.w.taxCarry, both.w.upkeepCarry];
     step(both.w);
     expect(both.houses.map((b) => b.house!.tier)).toEqual([4, 4]);
-    expect(both.w.money).toBe(100);
+    expect(both.w.money).toBe(100 + booked(both.w, c0, u0)); // 1300 − 2 × 600 + Buchung
     const oneGlass = make(1, 1300);
     step(oneGlass.w);
     expect(oneGlass.houses[0]!.id).toBeLessThan(oneGlass.houses[1]!.id);

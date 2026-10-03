@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../../src/sim/build';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { UPGRADE_DEFICIT_WAIT_FACTOR, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { UNLOCKS } from '../../src/sim/defs/unlocks';
 import { clearForest, plantForest } from '../../src/sim/forest';
 import { canPlace } from '../../src/sim/placement';
@@ -17,7 +18,7 @@ import { forceRect, placeService, placeTownhall, prepareEast, village } from './
 
 const placeRoadOk = (w: World, x: number, y: number): boolean => placeRoad(w, x, y).ok;
 
-/** Haus auf Stufe/Einwohner, alle Güter und Dienste der Stufe erfüllt, seit 300 zufrieden. */
+/** Haus auf Stufe/Einwohner, alle Güter und Dienste der Stufe erfüllt, seit der (Defizitwelt-)Wartezeit zufrieden (M11 S10). */
 function fill(w: World, b: Building, tier: Tier, n: number): void {
   const goods = Object.keys(TIERS[tier].needs) as GoodId[];
   b.house = {
@@ -26,7 +27,7 @@ function fill(w: World, b: Building, tier: Tier, n: number): void {
     demand: Object.fromEntries(goods.map((g) => [g, 0])),
     satisfied: Object.fromEntries(goods.map((g) => [g, true])),
     services: Object.fromEntries(TIERS[tier].services.map((s) => [s, true])),
-    satisfiedSince: w.tick - 300,
+    satisfiedSince: w.tick - UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR,
     supplied: true,
   };
 }
@@ -298,7 +299,7 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     v.taxLevel = 'high';
     expect(nextUnlocks(v).every((e) => !e.taxBlocks)).toBe(true);
   });
-  it('AK-S2-13 Aufstiegsstopp (K1): angehalten nur mit aktiver Amtsstube; Gründe', () => {
+  it('AK-S2-13 Aufstiegsstopp (K1): angehalten nur mit aktiver Amtsstube; Gründe (M11 S10)', () => {
     const { w, houses } = village(1, { unlockAll: true });
     expect(setUpgradeStop(w, 1, true)).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
     const k = w.buildings[w.kontorId]!;

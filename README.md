@@ -302,8 +302,7 @@ mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird
 
 ### Unterhalt und Geld
 
-- Alle 10 Sekunden wird der Unterhalt aller Gebäude abgezogen (Angaben «/ min» rechnen das auf eine Minute um) — auch nicht angebundener. Im selben Takt
-  kommen die Steuern herein. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
+- Unterhalt und Steuern werden laufend verbucht (die Kasse zählt stetig); die Angaben «/ min» sind Raten. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
   der Tooltip nennt Steuern und Unterhalt je Minute; eine negative Bilanz ist hervorgehoben.
 - Geld darf negativ werden. Solange es negativ ist, sind Bauen, Kaufen und Aufstieg gesperrt, bis
   wieder Geld hereinkommt (Verkauf, Auftrag oder Steuern).
@@ -353,6 +352,9 @@ Ein Haus steigt beim nächsten Wachstumstakt auf, wenn
 - die Dienste der nächsten Stufe in Reichweite sind,
 - von jeder neuen Ware der nächsten Stufe mindestens eine Einheit im Lager liegt und
 - die Aufstiegskosten bezahlbar sind (sie werden dann abgezogen).
+
+Würde eine Ware der nächsten Stufe durch den Aufstieg ins Minus rutschen (Erzeugung minus Verbrauch, Lagerbestand
+zählt nicht), dauert die Wartezeit doppelt so lange (60 statt 30 Sekunden, «niedrig» 30 statt 15).
 
 Beim Aufstieg wird von jeder neuen Ware eine Einheit aus dem Lager entnommen und direkt ans Haus geliefert.
 
