@@ -13,6 +13,7 @@ import type {
   FireOutcome,
   GoodId,
   ServiceId,
+  Terrain,
   World,
 } from './types';
 import { center, idx, tilesInRadius, type Pos } from './world';
@@ -188,11 +189,20 @@ export function effectiveRefund(world: World, cost: Cost): Cost {
   };
 }
 
-/** Cache-Schlüssel des Layouts: ändert sich bei Bau, Abriss, Weg und Anbindung, nicht durch `step()` allein. */
+/** Kodierung der Geländeart im Layout-Schlüssel (kein Spielwert). */
+const TERRAIN_CODE: Record<Terrain, number> = {
+  water: 0,
+  sand: 1,
+  grass: 2,
+  forest: 3,
+  mountain: 4,
+};
+
+/** Cache-Schlüssel des Layouts: ändert sich bei Bau, Abriss, Weg, Anbindung und Geländewechsel, nicht durch `step()` allein. */
 export function layoutKey(world: World): string {
   const h = new LayoutHash();
   h.add(world.nextBuildingId);
-  for (let i = 0; i < world.tiles.length; i++) if (world.tiles[i]!.road) h.add(i);
+  for (const t of world.tiles) h.add(TERRAIN_CODE[t.terrain] * 2 + (t.road ? 1 : 0));
   h.add(-1);
   for (const b of Object.values(world.buildings)) {
     h.add(b.id);
