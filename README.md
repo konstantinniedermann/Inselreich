@@ -461,6 +461,7 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 - Das **Ereignis-Log** schwebt unten links über der Karte, sobald es Einträge gibt. Eingeklappt zeigt es
   nur den neuesten Eintrag; «Ereignisse ▸» klappt die letzten 10 auf («m:ss · …», Spielzeit seit Beginn). Es gehört nicht zum
   Spielstand und ist nach «Neue Insel» und «Laden» leer. Wichtige Ereignisse erscheinen zusätzlich als Meldung.
+  Ein Klick auf eine Brandmeldung zentriert die Karte auf das Gebäude.
 
 ## Speichern, Laden, Neue Insel
 
