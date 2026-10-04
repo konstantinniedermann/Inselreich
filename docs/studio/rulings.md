@@ -1501,3 +1501,29 @@ Keine Spieländerung, daher kein Browser-Lauf (§9.3 betrifft UI-Tasks). Integra
 und pusht; danach CI prüfen — der erste grüne Lauf belegt H-T1 auf dem Runner. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Berichte lead-tech H-T1, lead-production W-V3 · ADR: —
+
+## R221 · 2026-10-04 · H-R12 zurückgestellt, REL-02 ausgelöst
+
+Ruling: H-R12 (Dünen) verfehlt erneut (Deckel 120 mit ≈ 130 gerissen; Sägezahnkante Seed 3 bei Zoom 2; buildMs
++11–14 %, lastPatchMs bis +37 % über §5). Option (a) von lead-art angenommen: H-R12 bleibt draussen, Dünen auf
+main-Stand; nach REL-02 schreibt lead-art eine **neue Kurz-Spec** (Malpfad durchgehend stetig, eigenes
+Perf-Budget, neue Schätzung) — kein weiterer Flickversuch auf ca6a0e1 (Branch bleibt als Material). H-R13
+(Vorberge) startet später neu auf main mit dem vollen Budget (+15 % buildMs) für REL-03 neben H-U1.
+**REL-02 = H-R14 (3dfe714) + H-A2 (c2a07d6)** wird jetzt ausgelöst (2 reife Häppchen, Session läuft lange; E-028
+erlaubt 2–4). Wegwerf-Worktree `/private/tmp/claude-501/main-fd97634` wird entfernt. Der Nutzerpunkt „Dünen sehen
+komisch aus" bleibt offen; Befund für die Retro: zwei Anläufe auf demselben Ansatz. — Kosten bei Irrtum: Dünen
+später; REL-02 ohne Grafik am Boden.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R12/H-R13 · ADR: —
+
+## R222 · 2026-10-04 · Gate Merge Release REL-02
+
+Ruling: Gate Merge Release REL-02 bestanden. Kandidat `rel/rel-02` @ d58560f (H-R14 a06942b, H-A2 d58560f inkl.
+Prettier-Trivial-Fix an `docs/beobachtungen.md` durch den Integrator nach L0-Freigabe — union-Merge E-022 erzeugte
+eine Formatabweichung) auf origin/main fd97634; `make check` nach jedem Merge grün; opus-Review lead-qa OK (nur
+Low); Browser-Lauf OK. Prüfliste UI-Task → Screenshot: H-R14 `.studio/qa/REL-02/h-r14/`, H-A2
+`.studio/qa/REL-02/h-a2/` (Einstellungen `08-einstellungen-effekte0.png`), Regression `.studio/qa/REL-02/gal/`.
+Befund ausserhalb Scope: `renderer.ts:96` `DIM_FIRE` mit Schwarz (S1-Rest) → beobachtungen. Push durch
+production-integrator `HEAD:main`. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Playtest REL-02, opus-Review REL-02 · ADR: —

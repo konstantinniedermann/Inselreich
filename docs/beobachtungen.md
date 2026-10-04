@@ -830,3 +830,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `.studio/qa/H-A2/` (Probe auf `feat/h-a2-hoerbar`), `src/ui/soundEvents.ts` (`diffSoundEvents`), `src/render/camera.ts` (`visibleTileRange`).
 - Beobachtung: (1) Bei 4× Tempo erklingt der Münzton etwa alle 2,5 s (56–60 je Minute) und wirkt dicht. (2) Der Arbeitston nutzt die Bounding-Box `visibleTileRange`, die grösser als das Bild ist; Betriebe bis ~400 px ausserhalb klingen mit (von lead-art als „Kameranähe" angenommen). (3) Ein `make check`-Lauf im Review war einmal mit 1 rotem Test, Name nicht erfasst; zwei Folgeläufe grün.
 - Ursprung: qa-playtester und qa-code-reviewer, Paket H-A2. Einschätzung: (1) Ton-Drosselung je Tempo prüfen, lead-art; (2) nur bei Spielerfeedback enger filtern (Bildschirm-Test statt Kachelbox); (3) zum H-T1-Eintrag oben (Kandidat `tests/ui/hints.test.ts` AK-UX-31).
+
+### 2026-10-04 · Render · S1-Rest `DIM_FIRE` und Gut-Schlüssel im Audio
+
+- Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
+- Beobachtung: Brennende Gebäude werden mit reinem Schwarz abgedunkelt (S1). Die Stimmen-Schlüssel je Gut doppeln die Gut-IDs der Sim ohne Test; Umbenennung fällt still auf die Grundstimme zurück.
+- Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
