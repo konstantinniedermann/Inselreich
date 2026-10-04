@@ -203,7 +203,9 @@ export function createSound(
   const lastBuild = new Map<string, number>();
   const lastShortage = new Map<string, number>();
   let lastShortageAny: number | null = null;
-  let crisisUntil = -Infinity; // Ende der Figur des letzten Krisen-Signals (alarm, stormWarning)
+  // Ende der Figur des letzten Krisen-Signals (alarm, stormWarning); `boom` zählt bewusst nicht:
+  // positives Ereignis, kein Krisen-Signal, der Mangelton darf neben ihm erklingen.
+  let crisisUntil = -Infinity;
   const lastWork = new Map<string, number>();
   let lastWorkAny: number | null = null;
 
