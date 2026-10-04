@@ -50,8 +50,9 @@ describe('H-R10 Schattenseite kühler', () => {
       expect(blueShare(c.right), w).toBeGreaterThan(blueShare(c.left));
       for (const x of [c.left, c.right]) {
         const [r, g, b] = rgbOfCss(x);
+        // Guard: kein (fast) reines Schwarz
         expect(Math.max(r, g, b)).toBeGreaterThanOrEqual(30);
-        expect(Math.min(r, g, b)).toBeLessThan(255);
+        expect(Math.min(r, g, b)).toBeGreaterThan(0);
       }
     }
   });
@@ -61,12 +62,13 @@ describe('H-R10 Schattenseite kühler', () => {
       expect(blueShare(c.shade), r0).toBeGreaterThan(blueShare(c.light));
       for (const x of [c.light, c.shade]) {
         const [r, g, b] = rgbOfCss(x);
+        // Guard: kein (fast) reines Schwarz
         expect(Math.max(r, g, b)).toBeGreaterThanOrEqual(30);
-        expect(Math.min(r, g, b)).toBeLessThan(255);
+        expect(Math.min(r, g, b)).toBeGreaterThan(0);
       }
     }
   });
-  it('S1-Farbe Gebäude (Variante 0 und 2): keine Strich-/Füllfarbe schwarz, keine rgba(0,0,0)', () => {
+  it('S1-Farbe Gebäude (Variante 0 und 2): keine Strich-/Füllfarbe schwarz, Konturen nicht das alte EDGE/OUTLINE', () => {
     const ids = Object.keys(BUILDING_DEFS) as BuildingDefId[];
     for (const variant of [0, 2])
       for (const id of ids) {
@@ -94,6 +96,11 @@ describe('H-R10 Schattenseite kühler', () => {
             ).toBeGreaterThanOrEqual(30);
             expect(e.style).not.toMatch(/^rgba\(0,0,0/);
             expect(e.style).not.toBe('rgb(255,255,255)');
+            if (e.op === 'stroke') {
+              // echte Rot-Probe: weder das alte EDGE von main noch die alte schwarze Kontur
+              expect(e.style, id).not.toBe('rgb(41,27,17)');
+              expect(e.style, id).not.toBe('rgba(0,0,0,0.6)');
+            }
           }
         }
       }

@@ -374,11 +374,14 @@ describe('Baumstempel gerastert', () => {
       for (let v = 0; v < TREE_VARIANTS; v++) {
         const r = new RasterCtx(ISO_W, Math.ceil(TREE_H + ISO_H / 2));
         paintStamp(r as unknown as CanvasRenderingContext2D, seed, v, 1);
-        // H-R10: Kappen in warmer Kappenfarbe je Kronenart (Laub, hell, Nadel)
-        const caps = [PALETTE.crown, LIGHT_CROWN_COLOR, CONIFER_COLOR]
-          .map((base) => components(r, crownCap(base), 4))
-          .reduce((a, b) => a + b, 0);
-        expect(caps, `Seed ${seed} Variante ${v}`).toBeGreaterThanOrEqual(3);
+        // H-R10: Kappen je gezeichneter Kronenart (Laub 0, Nadel 1, hell 2), mindestens eine je Art
+        const bases = [PALETTE.crown, CONIFER_COLOR, LIGHT_CROWN_COLOR];
+        const kinds = new Set(crownsFor(seed, v).map((c) => c.kind));
+        for (const k of kinds)
+          expect(
+            components(r, crownCap(bases[k]!), 4),
+            `Seed ${seed} Variante ${v} Art ${k}`,
+          ).toBeGreaterThanOrEqual(1);
       }
   });
 });

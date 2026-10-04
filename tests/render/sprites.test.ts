@@ -932,13 +932,14 @@ describe('M8 R1 Silhouetten', () => {
 
   it('AK-R1-01 Kaufmannshaus: eigener Dachwert, eigene endliche Höhe', () => {
     expect(styles(house(4)).some(roof)).toBe(true);
-    // H-R10: Fachwerk liegt mit warmem Licht näher an roofTerracottaDark als zuvor; der Dachton selbst bleibt fern (< 30)
-    const d30 = (a: string): boolean => {
-      const x = rgbOfCss(a),
-        y = rgbOfCss(PALETTE.roofTerracottaDark);
-      return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) < 30;
-    };
-    expect(styles(house(4)).some(d30)).toBe(false);
+    // H-R10: das Fachwerk (wallTimber, jetzt mit warmem Licht) ist keine Dachfüllung und wird ausgenommen
+    const timber = new Set([
+      wallColors(PALETTE.wallTimber).left,
+      wallColors(PALETTE.wallTimber).right,
+    ]);
+    expect(
+      styles(house(4)).some((c) => !timber.has(c) && near(c, PALETTE.roofTerracottaDark)),
+    ).toBe(false);
     for (const t of [1, 2, 3] as Tier[])
       expect(styles(house(t)).some(roof), `Stufe ${t}`).toBe(false);
     const h4 = bodyHeight(BUILDING_DEFS.house, house(4));
