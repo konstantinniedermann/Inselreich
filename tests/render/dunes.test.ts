@@ -156,7 +156,9 @@ describe('H-R12 Dünen (Kern)', () => {
     expect(luv).toBeGreaterThan(1.5 * lee);
   });
 
-  it('H-R12-4 Lee 1–2 Stufen dunkler als Luv (auf Küsten beliebiger Ausrichtung)', () => {
+  it('H-R12-4 Lee genau 1 Stufe dunkler als Luv (gestufter Median, S6) auf Küsten beliebiger Ausrichtung', () => {
+    const step = (v: number): number => Math.floor(v + 0.5);
+    const median = (a: number[]): number => a.sort((p, q) => p - q)[a.length >> 1]!;
     for (const [gx, gy] of [
       [0, 1],
       [0, -1],
@@ -166,28 +168,27 @@ describe('H-R12 Dünen (Kern)', () => {
       [-0.7071, -0.7071],
     ] as const) {
       // Küstenwert entlang der Gradientenrichtung: s = gx·x + gy·y; Querversatz so, dass die Düne voll steht
-      let luvT = 0,
-        leeT = 0;
+      const luv: number[] = [],
+        lee: number[] = [];
       const off = fullX(SEED, gx, gy);
-      let nl = 0,
-        ne = 0;
+      let maxJump = 0,
+        prev: number | null = null;
       for (let t = 6; t < 20; t += 0.013) {
         const px = gx * t + off * gy,
           py = gy * t - off * gx;
         const d = duneSample(SEED, px, py, t, gx, gy);
         const d2 = duneSample(SEED, px + gx * 0.02, py + gy * 0.02, t + 0.02, gx, gy);
+        // S6: im Abstand einer Kachel unterscheiden sich die Stufen um höchstens 1 (Sprünge am Kamm eingeschlossen)
+        const st = step(d.tone);
+        if (prev !== null) maxJump = Math.max(maxJump, Math.abs(st - prev));
+        prev = st;
         if (d.h < 0.3) continue;
-        if (d2.h > d.h) {
-          luvT += d.tone;
-          nl++;
-        } else {
-          leeT += d.tone;
-          ne++;
-        }
+        (d2.h > d.h ? luv : lee).push(st);
       }
-      const diff = luvT / nl - leeT / ne;
-      expect(diff).toBeGreaterThanOrEqual(1);
-      expect(diff).toBeLessThanOrEqual(2);
+      expect(luv.length).toBeGreaterThan(20);
+      expect(lee.length).toBeGreaterThan(10);
+      expect(median(luv) - median(lee), `Richtung ${gx},${gy}`).toBe(1);
+      expect(maxJump).toBeLessThanOrEqual(1);
     }
   });
 

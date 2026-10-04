@@ -24,8 +24,9 @@ const CREST_HALF = 0.1; // Halbbreite des Kamms in Perioden
 const GRAIN_AMP = 0.06; // Korn: höchstens ±0,06 Stufen
 const RIPPLE_AMP = 0.18; // Rippeln: höchstens ±0,18 Stufen
 const RIPPLE_LAMBDA = 0.22; // Rippelabstand (Kacheln)
-const TONE_GAIN = 1.15; // Stufen je Hanggefälle · Lichtanteil
-const TONE_MIN = 1.0;
+const TONE_GAIN = 1.6; // Stufen je Hanggefälle · Lichtanteil
+// S6: höchstens 1 Stufe Unterschied innerhalb einer Kachel → der Ton bleibt in [1,5; 3,5), also nur Stufen 2 und 3
+const TONE_MIN = 1.55;
 const BEACH_NARROW = 1.5; // trockene Strandbreite (Kacheln), darunter bleibt der Sand glatt
 const BEACH_OK = 2.5; // ab hier trägt der Strand voll
 const BEACH_WIDE = 4; // ab hier ist die Maske zu 80 % offen (breite Strände tragen Dünen)
@@ -50,14 +51,23 @@ export interface DuneSample {
   ripple: number;
   /** Sandkorn als Tonversatz in Stufen (±GRAIN_AMP). */
   grain: number;
+  /** Rippelgewicht 0…1 (trockener Sand, nicht Lee) und Phasenversatz in Perioden — für `rippleOf` je Pixel. */
+  rip: number;
+  rwarp: number;
 }
 
-const FLAT = (grain: number): DuneSample => ({
+/** Rippeln (Stufen) je Pixel aus Knotenwerten: `rip` Gewicht, `s` Küstenwert am Pixel, `rwarp` Phasenversatz. */
+export const rippleOf = (rip: number, s: number, rwarp: number): number =>
+  RIPPLE_AMP * rip * Math.sin(2 * Math.PI * (s / RIPPLE_LAMBDA + rwarp));
+
+const FLAT = (): DuneSample => ({
   h: 0,
   tone: DUNE_TONE_FLAT,
   crest: 0,
   ripple: 0,
-  grain,
+  grain: 0,
+  rip: 0,
+  rwarp: 0,
 });
 
 const sstep = (a: number, b: number, x: number): number => {
@@ -82,7 +92,7 @@ export function duneSample(
   const dry = sstep(WET_SAND + 0.1, WET_SAND + 0.6, s);
   const gn = (valueNoise(seed + 415, fx * 5, fy * 5) - 0.5) * 2 * GRAIN_AMP * dry;
   const gl = Math.hypot(gx, gy);
-  if (dry <= 0 || gl < 1e-6) return FLAT(0);
+  if (dry <= 0 || gl < 1e-6) return FLAT();
   const nx = gx / gl,
     ny = gy / gl;
 
@@ -142,8 +152,8 @@ export function duneSample(
     (0.55 + 0.45 * Math.min(1, w)) *
     (1 - sstep(0.1, 0.5, -slopeN)) *
     (1 - sstep(1.0, 1.6, slopeN));
-  const q = s / RIPPLE_LAMBDA + 0.8 * (rotNoise(seed + 414, fx, fy, 0.35, ROT_RIP) - 0.5);
-  const ripple = RIPPLE_AMP * rip * Math.sin(2 * Math.PI * q);
+  const rwarp = 0.8 * (rotNoise(seed + 414, fx, fy, 0.35, ROT_RIP) - 0.5);
+  const ripple = rippleOf(rip, s, rwarp);
 
-  return { h, tone, crest, ripple, grain: gn };
+  return { h, tone, crest, ripple, grain: gn, rip, rwarp };
 }
