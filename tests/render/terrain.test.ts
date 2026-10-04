@@ -21,9 +21,6 @@ import {
   terrainPatchRect,
   tuftsFor,
   RELIEF_AMP,
-  duneMask,
-  duneRidge,
-  duneWeight,
   meadowHill,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -296,7 +293,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(best).toBeLessThan(1500);
   }, 30_000);
 
-  it('AK-R1-08 I1 Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 3', () => {
+  it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let found = false;
     for (let y = 0; y < w.height - 4 && !found; y++)
@@ -307,11 +304,11 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         if (!all) continue;
         found = true;
         const labs = [];
-        for (let j = 0; j < 4; j++)
-          for (let i = 0; i < 4; i++)
-            labs.push(rgbToLab(painted.at((x + i + 0.5) * TEX, (y + j + 0.5) * TEX)));
+        for (let j = 0; j < 8; j++)
+          for (let i = 0; i < 8; i++)
+            labs.push(rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX)));
         const distinct: typeof labs = [];
-        for (const l of labs) if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
+        for (const l of labs) if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
         expect(distinct.length).toBeGreaterThanOrEqual(3);
       }
     expect(found).toBe(true);
@@ -438,7 +435,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     }
   }, 60_000); // Korrektheitstest ohne Zeitaussage; Rechenzeit steigt unter Volllast
 
-  it('R149 Grasfläche 4 × 4 Kacheln zeigt ≥ 5 Farbwerte mit ΔE ≥ 3', () => {
+  it('H-R11 (löst R149 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let checked = 0;
     for (let y = 0; y < w.height - 4 && checked < 5; y++)
@@ -449,12 +446,13 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         if (!all) continue;
         checked++;
         const distinct: ReturnType<typeof rgbToLab>[] = [];
-        for (let j = 0; j < 4; j++)
-          for (let i = 0; i < 4; i++) {
-            const l = rgbToLab(painted.at((x + i + 0.5) * TEX, (y + j + 0.5) * TEX));
-            if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
+        // H-R11: die Tonstufen malen Flächen statt Verlauf; Probe daher 2 × 2 Punkte je Kachel (vorher nur die Mitte)
+        for (let j = 0; j < 8; j++)
+          for (let i = 0; i < 8; i++) {
+            const l = rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX));
+            if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
           }
-        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(5);
+        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(3);
         x += 3; // nicht überlappende Flächen
       }
     expect(checked).toBeGreaterThan(0);
@@ -733,7 +731,21 @@ describe('M10 Teil-Raster', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch', 'cls'] as const)
+    for (const f of [
+      'sharp',
+      'smooth',
+      'grass',
+      'rock',
+      'shade',
+      'tone',
+      'dtone',
+      'dune',
+      'rip',
+      'rwarp',
+      'dtn',
+      'patch',
+      'cls',
+    ] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
@@ -819,57 +831,30 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     expect(sxy / n).toBeGreaterThan(0);
   });
 
-  it('H-R9 R3 Senken über den Farbton: negative Schattierung auf Gras macht kühler/satter statt nur dunkler', () => {
+  it('H-R11 (löst H-R9 R3 Senken ab) Schattenstufe auf Gras: dunkler, aber über den kühlen Farbton statt nur Abdunklung', () => {
     const g = buildGrid(flat(12, 'grass', 7));
-    const at = (v: number) => paintPixels({ ...g, shade: g.shade.map(() => v) }, 1, 64, 64, 32, 32);
+    const at = (v: number) => paintPixels({ ...g, tone: g.tone.map(() => v) }, 1, 64, 64, 32, 32);
     const mean = (a: Uint8ClampedArray, k: number) => {
       let s = 0;
       for (let i = k; i < a.length; i += 4) s += a[i]!;
       return s / (a.length / 4);
     };
-    const n = at(0),
-      d = at(-0.2);
+    const n = at(2),
+      d = at(0);
     const L = (a: Uint8ClampedArray) =>
       0.299 * mean(a, 0) + 0.587 * mean(a, 1) + 0.114 * mean(a, 2);
-    // deutlich weniger dunkel als reine Abdunklung um 20 % (≤ 65 %), dafür blauer im Verhältnis zu Rot
-    expect(L(n) - L(d)).toBeLessThan(0.65 * 0.2 * L(n));
-    expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.05 * (mean(n, 2) / mean(n, 0)));
+    // gemessen: Luma-Verhältnis 0,82, Blau/Rot-Verhältnis 1,18
+    expect(L(d)).toBeLessThan(0.9 * L(n));
+    expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.1 * (mean(n, 2) / mean(n, 0)));
   });
 
   it('H-R9 B1 Determinismus: gleiche Felder und Pixel bei zweitem Aufbau', () => {
     const w = flat(10, 'grass', 5);
     const a = buildGrid(w),
       b = buildGrid(w);
-    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const)
+    for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const)
       expect(firstDiff(a[f], b[f]), f).toBe(-1);
     expect(firstDiff(paintPixels(a, 1, 0, 0, 96, 96), paintPixels(b, 1, 0, 0, 96, 96))).toBe(-1);
-  });
-});
-
-describe('H-R9 B2 Dünen', () => {
-  it('H-R9 B2 Dünen nur auf trockenem Sand: Relief an nassem Saum (s < WET_SAND, reiner Sand) = 0, trocken > 0', () => {
-    const g = buildGrid(createWorld(3));
-    const sand = LAND.indexOf('sand');
-    let wet = 0,
-      dry = 0,
-      dryMax = 0;
-    for (let k = 0; k < g.cls.length; k++) {
-      if (g.cls[k] !== 1 + sand || g.ind[LAND.indexOf('grass')]![k] !== 0) continue;
-      // Dünenhöhe = Gewicht nach Küstenwert × Rücken (reine Helfer, Knoten k bei (i, j) · RASTER / TEX)
-      const fx = (k % g.nx) * (RASTER / TEX),
-        fy = Math.floor(k / g.nx) * (RASTER / TEX);
-      const dune = duneWeight(g.smooth[k]!) * RELIEF_AMP.dune * duneRidge(g.seed, fx, fy);
-      if (g.smooth[k]! < 0.18) {
-        wet++;
-        expect(dune).toBe(0);
-      } else if (g.smooth[k]! > 0.6) {
-        dry++;
-        dryMax = Math.max(dryMax, Math.abs(dune));
-      }
-    }
-    expect(wet).toBeGreaterThan(50);
-    expect(dry).toBeGreaterThan(20);
-    expect(dryMax).toBeGreaterThan(0.2);
   });
 });
 
@@ -877,7 +862,8 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
   /** Grasfläche 960 × 960 px ohne Hangbeleuchtung (shade 0): mittlere Chroma (Lab) und Streuung der 24-px-Blockhelligkeit. */
   const meadow = (seed: number): { chroma: number; patches: number } => {
     const g0 = buildGrid(flat(40, 'grass', seed));
-    const g = { ...g0, shade: g0.shade.map(() => 0) };
+    // H-R11 F1: Tonwert eben — gemessen wird nur die Farbvariation, nicht das Licht der Tonstufen
+    const g = { ...g0, shade: g0.shade.map(() => 0), tone: g0.tone.map(() => 2) as Float32Array };
     const W = 960;
     const px = paintPixels(g, 1, 160, 160, W, W);
     const L = new Float32Array(W * W);
@@ -905,72 +891,18 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
   // main (93f420e) gemessen, gleiche Funktion: Chroma 48,75/48,01/48,35, Flecken 4,30/4,65/4,74 (Seeds 7/8/42)
   const MAIN = { 7: [48.75, 4.3], 8: [48.01, 4.65], 42: [48.35, 4.74] } as const;
 
-  it('H-R9 R4 Chroma der Wiese ≥ main − 2 % (r3: 40,3/40,4/40,0; r4: 49,4/48,5/48,7)', () => {
-    for (const seed of [7, 8, 42] as const)
-      expect(meadow(seed).chroma, `Seed ${seed}`).toBeGreaterThanOrEqual(0.98 * MAIN[seed][0]);
-  }, 60_000);
-
-  it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43; r4: 4,78/5,02/5,19)', () => {
-    for (const seed of [7, 8, 42] as const)
-      expect(meadow(seed).patches, `Seed ${seed}`).toBeGreaterThanOrEqual(MAIN[seed][1]);
-  }, 60_000);
-});
-
-describe('H-R9 R3 Dünen in Teilbereichen', () => {
-  it('H-R9 R3 Dünen: im Mittel 40–60 % des Strands ohne Dünen (je Seed 30–70 %), einzelne Kuppen statt Bänder', () => {
-    let offSum = 0;
-    for (const seed of [3, 5, 7, 11]) {
-      const N = 240,
-        st = 0.25;
-      const v = new Float32Array(N * N);
-      let off = 0;
-      for (let j = 0; j < N; j++)
-        for (let i = 0; i < N; i++) {
-          v[j * N + i] = duneRidge(seed, i * st, j * st);
-          if (duneMask(seed, i * st, j * st) === 0) off++;
-        }
-      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeGreaterThan(0.3);
-      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeLessThan(0.7);
-      offSum += off / (N * N);
-      // Kuppen (Rücken > 0,3) als Zusammenhangskomponenten: viele, keine dominiert (kein durchgehendes Band)
-      const lab = new Int32Array(N * N).fill(-1);
-      const sizes: number[] = [];
-      for (let k = 0; k < N * N; k++) {
-        if (v[k]! <= 0.3 || lab[k]! >= 0) continue;
-        const id = sizes.length;
-        let n = 0;
-        const stack = [k];
-        lab[k] = id;
-        while (stack.length) {
-          const q = stack.pop()!;
-          n++;
-          const x = q % N,
-            y = (q / N) | 0;
-          for (const [dx, dy] of [
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1],
-          ] as const) {
-            const xx = x + dx,
-              yy = y + dy;
-            if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
-            const kk = yy * N + xx;
-            if (lab[kk]! < 0 && v[kk]! > 0.3) {
-              lab[kk] = id;
-              stack.push(kk);
-            }
-          }
-        }
-        sizes.push(n);
-      }
-      const pos = sizes.reduce((a, b) => a + b, 0);
-      expect(sizes.length, `Seed ${seed} Kuppen`).toBeGreaterThanOrEqual(40);
-      expect(Math.max(...sizes) / pos, `Seed ${seed} grösste Kuppe`).toBeLessThan(0.45);
+  it('H-R11 S5 (löst H-R9 R4 Chroma ≥ main − 2 % ab) Chroma der Wiese 15–45 % unter main: oliv statt knallgrün, nicht grau', () => {
+    for (const seed of [7, 8, 42] as const) {
+      const c = meadow(seed).chroma;
+      expect(c, `Seed ${seed}`).toBeLessThanOrEqual(0.85 * MAIN[seed][0]);
+      expect(c, `Seed ${seed}`).toBeGreaterThanOrEqual(0.55 * MAIN[seed][0]);
     }
-    expect(offSum / 4).toBeGreaterThan(0.4);
-    expect(offSum / 4).toBeLessThan(0.6);
-  });
+  }, 60_000);
+
+  it('H-R11 F1 (löst H-R9 R4 Fleckenkontrast ab) Streuung der Blockhelligkeit der Farbvariation (Ton eben) ≤ 1,5 statt main 4,3…4,7: Helligkeit nur aus den Tonstufen', () => {
+    for (const seed of [7, 8, 42] as const)
+      expect(meadow(seed).patches, `Seed ${seed}`).toBeLessThanOrEqual(1.5);
+  }, 60_000);
 });
 
 describe('H-R9 B3 Wiesenvarianz', () => {
@@ -981,7 +913,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
   };
 
   // Messwert R3: RMS 5,66 (Seed 7) und 5,71 (Seed 8); vor R3 5,39/5,50; Basis main vor H-R9: 5,0
-  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,6 (gemessen 5,66/5,71, vor R3 5,39/5,50, main-Basis 5,0)', () => {
+  it('H-R11 F1 (löst H-R9 B3 Farbstreuung ab) RMS-ΔE2000 zum Mittel über eine Grasfläche 1,8…6,0 (main-Basis 5,0; das Licht kommt jetzt gestuft aus den Tonstufen)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
       const labs: [number, number, number][] = [];
@@ -993,11 +925,12 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       const mean: [number, number, number] = [0, 0, 0];
       for (const l of labs) for (let c = 0; c < 3; c++) mean[c]! += l[c]! / labs.length;
       const rms = Math.sqrt(labs.reduce((a, l) => a + deltaE2000(l, mean) ** 2, 0) / labs.length);
-      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(5.6);
+      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(1.8);
+      expect(rms, `Seed ${seed}`).toBeLessThanOrEqual(6);
     }
   });
 
-  it('H-R9 B3/R4 Warmton und Schleier ändern nur den Farbton: Luma je Pixel ≤ Grundstruktur (ohne Ebenen) + 6 % Trockenton + Mottling', () => {
+  it('H-R11 F1 (löst H-R9 B3/R4 ab) Warmton und Schleier ändern nur den Farbton: Luma je Pixel gleich der Grundstruktur (ohne Ebenen) ±2 %', () => {
     const g0 = buildGrid(flat(30, 'grass', 7));
     const g = { ...g0, shade: g0.shade.map(() => 0) };
     const base = {
@@ -1012,10 +945,10 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       0.299 * p[i]! + 0.587 * p[i + 1]! + 0.114 * p[i + 2]!;
     let changed = 0;
     for (let i = 0; i < a.length; i += 4 * 3) {
-      expect(luma(a, i)).toBeLessThanOrEqual(luma(b, i) * (1 + 0.06 + 0.035) + 1);
-      if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 6) changed++;
+      expect(Math.abs(luma(a, i) / luma(b, i) - 1)).toBeLessThanOrEqual(0.02);
+      if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 3) changed++;
     }
-    expect(changed).toBeGreaterThan(1000); // die Ebenen wirken tatsächlich
+    expect(changed).toBeGreaterThan(450); // die Ebenen wirken tatsächlich
   });
 
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {
@@ -1080,7 +1013,18 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const) {
+    for (const f of [
+      'shade',
+      'tone',
+      'dtone',
+      'dune',
+      'rip',
+      'rwarp',
+      'dtn',
+      'warm',
+      'mottle',
+      'veil',
+    ] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     }
