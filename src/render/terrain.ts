@@ -1103,35 +1103,38 @@ export function paintPixels(
         const wSand = pure ? (c0 - 1 === SAND ? 1 : 0) : wt[SAND]! / wSum;
         const sPx = wSand > 0 ? lerp(smooth) : 0;
         if (sPx > WET_SAND + 0.1) {
-          const tA = dtone[a]!,
-            tB = dtone[b]!,
-            tC = dtone[c]!,
-            tD = dtone[d]!;
-          const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
-            gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
-          const gpx = Math.sqrt(gxT * gxT + gyT * gyT) * gradScale; // Tongefälle je Ausgabepixel
-          const hw = toneHalfWidth(gpx, GROUND_EDGE_PX);
-          // K1/K2: steigender Ton (Luv) läuft weich und breit hinauf, fallender (Kamm) kippt hart, dahinter der Akzent
-          duneShade(tA * w00 + tB * w10 + tC * w01 + tD * w11, lerp(dtn), hw, gpx, shadeOut);
-          // Fix 5: Präsenz erst nach der Stufung, stetig (am Maskenrand blendet das Muster aus, keine neue Tonkante)
+          // Fix 5: Präsenz erst nach der Stufung, stetig (am Maskenrand blendet das Muster aus, keine neue Tonkante);
+          // ohne Präsenz entfällt die Stufung (Ausgabe gleich: alle Faktoren wären 0)
           const pres = wSand * (dw[a]! * w00 + dw[b]! * w10 + dw[c]! * w01 + dw[d]! * w11);
-          const e = shadeOut.lift,
-            accent = shadeOut.accent;
-          if (e > 0) {
-            const k = e * pres;
-            const m = 1 + TONE_LIGHT_MUL * k;
-            col[0] = col[0]! * m;
-            col[1] = col[1]! * m;
-            col[2] = col[2]! * m;
-            mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
-          }
-          if (accent > 0) {
-            const k = accent * pres;
-            const m = 1 - SAND_ACCENT_MUL * k;
-            col[0] = col[0]! * m;
-            col[1] = col[1]! * m;
-            col[2] = col[2]! * m;
-            mix3(col, DUNE_SHADOW, SAND_ACCENT_MIX * (k / DUNE_ACCENT), col); // k / DUNE_ACCENT: 0…1
+          if (pres > 0) {
+            const tA = dtone[a]!,
+              tB = dtone[b]!,
+              tC = dtone[c]!,
+              tD = dtone[d]!;
+            const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
+              gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
+            const gpx = Math.sqrt(gxT * gxT + gyT * gyT) * gradScale; // Tongefälle je Ausgabepixel
+            const hw = toneHalfWidth(gpx, GROUND_EDGE_PX);
+            // K1/K2: steigender Ton (Luv) läuft weich und breit hinauf, fallender (Kamm) kippt hart, dahinter der Akzent
+            duneShade(tA * w00 + tB * w10 + tC * w01 + tD * w11, lerp(dtn), hw, gpx, shadeOut);
+            const e = shadeOut.lift,
+              accent = shadeOut.accent;
+            if (e > 0) {
+              const k = e * pres;
+              const m = 1 + TONE_LIGHT_MUL * k;
+              col[0] = col[0]! * m;
+              col[1] = col[1]! * m;
+              col[2] = col[2]! * m;
+              mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
+            }
+            if (accent > 0) {
+              const k = accent * pres;
+              const m = 1 - SAND_ACCENT_MUL * k;
+              col[0] = col[0]! * m;
+              col[1] = col[1]! * m;
+              col[2] = col[2]! * m;
+              mix3(col, DUNE_SHADOW, SAND_ACCENT_MIX * (k / DUNE_ACCENT), col); // k / DUNE_ACCENT: 0…1
+            }
           }
           const dry = Math.min(1, (sPx - WET_SAND - 0.1) / 0.5);
           const sm =
