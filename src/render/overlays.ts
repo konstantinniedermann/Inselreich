@@ -10,16 +10,17 @@ import {
 import type { Building, BuildingDefId, GoodId, World } from '../sim/types';
 import { tileCorners, tileToScreen, worldToScreen, type Camera } from './camera';
 import { ISO_H, project, radiusEllipse, spriteBounds } from './iso';
-import { PALETTE } from './palette';
-import { EDGE } from './sprites';
+import { INK_TONE, PALETTE, rgbaOfCss } from './palette';
 
 // --- Darstellungswerte ---
 export const SYMBOL_MIN_ZOOM = 0.75; // darunter keine Bedarfssymbole
+const MARK_EDGE = INK_TONE; // kräftige Kontur der Marken, volle Deckkraft
+// Weisse Auswahl-/Hervorhebungsfarben sind UI-Signal (S4/S5-Ausnahme) und bleiben unverändert.
 const OUTLINE_COLOR = 'rgba(255,255,255,0.85)';
 const CIRCLE_COLOR = 'rgba(255,255,255,0.7)';
 const HIGHLIGHT_FILL = 'rgba(255,255,255,0.28)';
 const BADGE_BG = 'rgba(255,255,255,0.92)';
-const BADGE_EDGE = 'rgba(0,0,0,0.7)';
+const BADGE_EDGE = rgbaOfCss(INK_TONE, 0.85);
 const EXTRA_DOT = '#e02020';
 const SIGN_COLOR = '#8b5a2b';
 const BELL_COLOR = '#e0b020';
@@ -230,7 +231,7 @@ export function drawUnconnected(
     ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
     ctx.fillStyle = PALETTE.signalRed;
     ctx.fill();
-    ctx.strokeStyle = EDGE;
+    ctx.strokeStyle = MARK_EDGE;
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }

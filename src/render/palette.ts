@@ -85,6 +85,11 @@ export function rgbaOf(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+/** `rgba(…)` aus `#rrggbb` oder `rgb(r,g,b)` (für Mischtöne aus `mixHex`). */
+export function rgbaOfCss(css: string, alpha: number | string): string {
+  return `rgba(${rgbOfCss(css).join(',')},${alpha})`;
+}
+
 /** Farbe aus `rgb(r,g,b)` bzw. `#rrggbb` als Tripel (für Zwischentöne aus `mixHex`). */
 export function rgbOfCss(css: string): [number, number, number] {
   if (css.startsWith('#')) return rgbOf(css);

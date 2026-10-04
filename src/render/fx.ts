@@ -1,5 +1,5 @@
 import { fireTongues } from './limits';
-import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
+import { INK_TONE, LIGHT_TONE, PALETTE, rgbOfCss, rgbaOf, rgbaOfCss, toInk } from './palette';
 
 // fx.ts — Krisen-Effekte (Spec 6.5): Feuer mit Rauch, Glühen, Warnring, Boom-Münze. Bildraum, `rect` ist die
 // Bildbox des Gebäudes in CSS-Pixeln. Reine Zeichenfunktionen: kein Weltzugriff, kein Zustand.
@@ -19,14 +19,14 @@ const spread = (i: number, salt: number): number => {
 };
 
 /** Rauchfarbe als `r,g,b`-Tripel (Tests und Renderer erkennen den Rauch daran). */
-export const SMOKE_COLOR = rgbOfCss(mixHex(PALETTE.rockDark, '#000000', 0.7)); // QA-R3 B1: dunkler, auch auf Fels lesbar
+export const SMOKE_COLOR = rgbOfCss(toInk(PALETTE.rockDark, 0.95)); // QA-R3 B1: dunkler, auch auf Fels lesbar
 const SMOKE_PERIOD_MS = 3000;
 const SMOKE_PUFFS = [14, 5] as const; // je Feuer [normal, reduziert]; Summe bleibt unter CAP_SMOKE
 /** Anzahl Rauchpuffs eines Feuers zur Rauchstärke `smoke`. */
 export const smokePuffs = (smoke: number, reduce = false): number =>
   Math.ceil(clamp01(smoke) * SMOKE_PUFFS[reduce ? 1 : 0]);
 const FLAME_PERIOD_MS = 420;
-const DARK_OUTLINE = mixHex(PALETTE.rockDark, '#000000', 0.7);
+const DARK_OUTLINE = toInk(PALETTE.rockDark, 0.95);
 
 export interface FireOpts {
   flames: number;
@@ -166,7 +166,7 @@ export function drawBoomCoin(ctx: CanvasRenderingContext2D, rect: Rect, timeMs: 
   ctx.fill();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = LIGHT_TONE; // warmer Lichtton statt Weiss (S4)
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
@@ -221,8 +221,8 @@ export function drawStormEdge(
     cy = view.h / 2,
     r = Math.hypot(cx, cy);
   const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
-  g.addColorStop(0, 'rgba(0,0,0,0)');
-  g.addColorStop(1, `rgba(0,0,0,${(EDGE_ALPHA * k).toFixed(4)})`);
+  g.addColorStop(0, rgbaOfCss(INK_TONE, 0));
+  g.addColorStop(1, rgbaOfCss(INK_TONE, (EDGE_ALPHA * k).toFixed(4)));
   ctx.save();
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, view.w, view.h);
