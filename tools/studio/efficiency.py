@@ -12,6 +12,7 @@ import json
 import re
 import statistics
 from collections import Counter, defaultdict
+from datetime import datetime
 from pathlib import Path
 
 NOT_MEASURED = "nicht gemessen"
@@ -524,6 +525,60 @@ def render_section(data: dict | None) -> str:
     ] or ["- –"]
     out.append("")
     return "\n".join(out)
+
+
+SESSION_BREAK_MIN = 240  # längere Pausen gelten als Sitzungspause, nicht als Leerlauf
+
+
+def _parse_ts(text: object) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def idle_gaps(events: list[dict], prefix: str = "") -> list[dict]:
+    """Leerlauf je Strang (= Owner): Paket-Status review des Vorgängers bis zum
+    ersten active eines später startenden Nachfolgers. Parallel gestartete Pakete
+    und Pausen über SESSION_BREAK_MIN zählen nicht (E-028, Messgrösse 2).
+    prefix beschränkt beide Seiten auf Paket-IDs mit diesem Anfang (z. B. "H-")."""
+    first_active: dict[str, tuple[datetime, str]] = {}
+    first_review: dict[str, tuple[datetime, str]] = {}
+    for event in events:
+        if event.get("kind") != "package":
+            continue
+        when, pid = _parse_ts(event.get("ts")), event.get("package_id")
+        owner = event.get("owner") or ""
+        if when is None or not pid or not str(pid).startswith(prefix):
+            continue
+        table = {"active": first_active, "review": first_review}.get(
+            event.get("status")
+        )
+        if table is not None and (pid not in table or when < table[pid][0]):
+            table[pid] = (when, owner)
+    gaps: list[dict] = []
+    for pid, (reviewed, owner) in first_review.items():
+        later = [
+            (start, other)
+            for other, (start, o) in first_active.items()
+            if o == owner and other != pid and start > reviewed
+        ]
+        if not later:
+            continue
+        start, other = min(later)
+        minutes = (start - reviewed).total_seconds() / 60
+        if minutes <= SESSION_BREAK_MIN:
+            gaps.append({"owner": owner, "from": pid, "to": other, "minutes": minutes})
+    return sorted(gaps, key=lambda g: (g["owner"], g["from"]))
+
+
+def render_idle(gaps: list[dict]) -> str:
+    head = "Leerlauf der Umsetzungskette (E-028, Messgrösse 2)"
+    if not gaps:
+        return f"- {head}: {NOT_MEASURED} (keine Folgepakete eines Strangs)."
+    median = statistics.median(g["minutes"] for g in gaps)
+    pairs = ", ".join(f"{g['from']} → {g['to']} {g['minutes']:.1f} min" for g in gaps)
+    return f"- {head}: Median {median:.1f} min bei {len(gaps)} Übergängen ({pairs})."
 
 
 def json_safe(data: dict | None) -> dict | None:

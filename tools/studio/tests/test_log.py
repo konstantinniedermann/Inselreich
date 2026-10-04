@@ -260,5 +260,37 @@ class LogTest(unittest.TestCase):
         self.assertIn("keine Events", out)
 
 
+class RetroTriggerWarnTest(LogTest):
+    def test_meilenstein_without_trigger_warns(self):
+        code, _, err = self.run_log(
+            "retro", "--id", "R-1", "--kind", "meilenstein", "--triggers", "ci:1"
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("meilenstein:", err)
+
+    def test_meilenstein_with_trigger_is_quiet(self):
+        code, _, err = self.run_log(
+            "retro",
+            "--id",
+            "R-2",
+            "--kind",
+            "meilenstein",
+            "--triggers",
+            "meilenstein:M5",
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(err, "")
+
+    def test_other_kinds_are_quiet(self):
+        code, _, err = self.run_log("retro", "--id", "R-3", "--kind", "session")
+        self.assertEqual(code, 0)
+        self.assertEqual(err, "")
+
+    def test_event_is_written_despite_warning(self):
+        self.run_log("retro", "--id", "R-4", "--kind", "meilenstein")
+        lines = Path(self.tmp.name, "events.jsonl").read_text("utf-8").splitlines()
+        self.assertEqual(json.loads(lines[-1])["retro_id"], "R-4")
+
+
 if __name__ == "__main__":
     unittest.main()
