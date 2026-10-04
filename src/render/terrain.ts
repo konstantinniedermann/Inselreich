@@ -576,6 +576,15 @@ export function duneInputs(
   fy: number,
 ): DuneInputs {
   const [wx, wy] = warp(world.seed, fx, fy);
+  return duneInputsAt(world, fields, wx, wy);
+}
+/** Wie `duneInputs`, am schon verschobenen Punkt (spart die zweite Verschiebung im Raster). */
+function duneInputsAt(
+  world: FieldWorld,
+  fields: TerrainFields,
+  wx: number,
+  wy: number,
+): DuneInputs {
   const s = sampleField(euclidSmoothOf(world, fields), wx, wy);
   const rest = sampleField(sandRestOf(world, fields), wx, wy);
   // stetiges Gate aus dem glatten Abstand zum Nicht-Sand: 0 an der Sand/Gras-Grenze (Abstand ½), 1 ab SAND_GATE_FULL
@@ -613,6 +622,8 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     hillRaw = new Float32Array(n), // ungewichtet: das Gewicht darf selbst kein Gefälle erzeugen
     height = new Float32Array(n),
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
+    beachArr = new Float32Array(n),
+    sandArr = new Float32Array(n),
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
   const euc = euclidOf(world, fields);
@@ -641,6 +652,11 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         }
       }
       cls[k] = sharp[k]! <= 0 ? 0 : 1 + best;
+      if (se[k]! > -2 && ind[sa]![k]! > 0) {
+        const inp = duneInputsAt(world, fields, wx, wy);
+        beachArr[k] = inp.beach;
+        sandArr[k] = inp.sand;
+      }
       const m =
         0.65 * valueNoise(seed + 11, fx * 0.35, fy * 0.35) +
         0.35 * valueNoise(seed + 13, fx * 1.1, fy * 1.1);
@@ -748,13 +764,12 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
           fy = (win.j0 + j) * step;
         const csx = (sd[j * nx + ir]! - sd[j * nx + il]!) / ((ir - il) * step);
         const csy = (sd[jd * nx + i]! - sd[ju * nx + i]!) / ((jd - ju) * step);
-        const inp = duneInputs(world, fields, fx, fy);
-        const d = duneSample(seed, fx, fy, sE, csx, csy, inp.beach);
+        const d = duneSample(seed, fx, fy, sE, csx, csy, beachArr[j * nx + i]!);
         // weich über 0,5 Kachel einblenden; Front aus dem euklidischen Feld und das Sand-Gate stetig (Fix 4)
-        const front = smoothstepClamp((sE - DUNE_ONSET) / 0.5) * inp.sand;
+        const front = smoothstepClamp((sE - DUNE_ONSET) / 0.5) * sandArr[j * nx + i]!;
         dtone[j * nx + i] = DUNE_TONE_FLAT + (d.tone - DUNE_TONE_FLAT) * front;
         dune[j * nx + i] = d.h * front;
-        rip[j * nx + i] = d.rip * inp.sand;
+        rip[j * nx + i] = d.rip * sandArr[j * nx + i]!;
         rwarp[j * nx + i] = d.rwarp;
       }
       const cap =

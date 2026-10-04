@@ -1,5 +1,5 @@
 import { valueNoise } from '../sim/noise';
-import { LIGHT, rotNoise, smoothstep, toneStep } from './light';
+import { LIGHT, smoothstep, toneStep } from './light';
 import { PALETTE, mixHex, rgbOfCss } from './palette';
 
 // dunes.ts — Dünenfelder als lesbare Sandformen (H-R12, Stilrahmen D7/S2/S3). Reine Mathematik, kein Canvas, keine
@@ -39,6 +39,16 @@ const ROT_MASK = 0.7,
   ROT_ENV = 1.1,
   ROT_WARP = 0.4,
   ROT_RIP = 0.9;
+/** Wie `rotNoise` (gleiches Ergebnis), aber Sinus und Cosinus der festen Drehwinkel nur einmal (Frame-Budget je Knoten). */
+const ROT_TRIG = new Map<number, readonly [number, number]>(
+  [ROT_MASK, ROT_ENV, ROT_WARP, ROT_RIP].map((r) => [r, [Math.cos(r), Math.sin(r)] as const]),
+);
+function rotNoise(seed: number, fx: number, fy: number, freq: number, rot: number): number {
+  const [co, si] = ROT_TRIG.get(rot)!;
+  const c = co * freq,
+    s = si * freq;
+  return valueNoise(seed, c * fx - s * fy, s * fx + c * fy);
+}
 /** Gewicht des Windes im Dünenlicht: Luvseite blickt immer zum Licht, egal wie die Küste zur Sonne liegt. */
 const WIND_LIGHT = 0.85;
 const SUN_LIGHT = 0.3;
@@ -93,22 +103,11 @@ export function duneSample(
   beach = Infinity,
 ): DuneSample {
   const dry = sstep(WET_SAND + 0.1, WET_SAND + 0.6, s);
-  const gn = (valueNoise(seed + 415, fx * 5, fy * 5) - 0.5) * 2 * GRAIN_AMP * dry;
   const gl = Math.hypot(gx, gy);
   if (dry <= 0 || gl < 1e-6) return FLAT();
+  const gn = (valueNoise(seed + 415, fx * 5, fy * 5) - 0.5) * 2 * GRAIN_AMP * dry;
   const nx = gx / gl,
     ny = gy / gl;
-
-  // Phase: Küstenabstand / Wellenlänge + verwirbelte Verschiebung (Gradient des Rauschens per Differenz)
-  const E = 0.1;
-  const w0 = rotNoise(seed + 413, fx, fy, 0.09, ROT_WARP);
-  const wx = (rotNoise(seed + 413, fx + E, fy, 0.09, ROT_WARP) - w0) / E;
-  const wy = (rotNoise(seed + 413, fx, fy + E, 0.09, ROT_WARP) - w0) / E;
-  const p = (s - DUNE_ONSET) / DUNE_LAMBDA + WARP_AMP * (w0 - 0.5);
-  const px = gx / DUNE_LAMBDA + WARP_AMP * wx,
-    py = gy / DUNE_LAMBDA + WARP_AMP * wy;
-  const f = p - Math.floor(p);
-  const c = DUNE_PROFILE_CREST;
 
   // Gewicht: Einsatz, Strandbreite, Strandende, Maske (~Hälfte frei), Hüllkurve längs (Dünen setzen aus)
   let w = 0;
@@ -123,9 +122,27 @@ export function duneSample(
         mask = Math.max(mask, MASK_FLOOR * sstep(2, BEACH_MID, beach));
         mask = Math.max(mask, 0.8 * sstep(BEACH_MID + 0.5, BEACH_WIDE, beach));
       }
-      w *= mask * sstep(0.36, 0.56, rotNoise(seed + 412, fx, fy, 0.11, ROT_ENV));
+      w *= mask;
+      if (w > 0) w *= sstep(0.36, 0.56, rotNoise(seed + 412, fx, fy, 0.11, ROT_ENV));
     }
   }
+
+  // Phase: Küstenabstand / Wellenlänge + verwirbelte Verschiebung (Gradient des Rauschens per Differenz); ohne Gewicht
+  // bleibt die Düne flach, dann entfällt die Phase (Frame-Budget: drei Rauschaufrufe je Knoten)
+  let p = 0,
+    px = 0,
+    py = 0;
+  if (w > 0) {
+    const E = 0.1;
+    const w0 = rotNoise(seed + 413, fx, fy, 0.09, ROT_WARP);
+    const wx = (rotNoise(seed + 413, fx + E, fy, 0.09, ROT_WARP) - w0) / E;
+    const wy = (rotNoise(seed + 413, fx, fy + E, 0.09, ROT_WARP) - w0) / E;
+    p = (s - DUNE_ONSET) / DUNE_LAMBDA + WARP_AMP * (w0 - 0.5);
+    px = gx / DUNE_LAMBDA + WARP_AMP * wx;
+    py = gy / DUNE_LAMBDA + WARP_AMP * wy;
+  }
+  const f = p - Math.floor(p);
+  const c = DUNE_PROFILE_CREST;
 
   // Asymmetrisches Profil: Luv (f < c) wächst langsam, Kamm mit Knick, Lee fällt steil
   let hh: number, dhdf: number;
