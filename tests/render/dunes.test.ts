@@ -1,6 +1,9 @@
+import { PALETTE, rgbOf } from '../../src/render/palette';
 import { describe, expect, it } from 'vitest';
 import {
   DUNE_ACCENT,
+  DUNE_ACCENT_PX,
+  DUNE_SHADOW,
   DUNE_LAMBDA,
   DUNE_ONSET,
   DUNE_PROFILE_CREST,
@@ -329,7 +332,11 @@ describe('H-R12 Dünen (Kern)', () => {
   };
   /** Breite (Kacheln), in der `lift` von 10 % auf 90 % wächst bzw. fällt (erste zusammenhängende Flanke). */
   const edgeWidths = (hw: number) => {
-    const pts = profile().map((p) => ({ s: p.s, dn: p.dn, ...duneShade(p.t, p.dn, hw) }));
+    const pts = profile().map((p) => ({
+      s: p.s,
+      dn: p.dn,
+      ...duneShade(p.t, p.dn, hw, Math.abs(p.dn) / 32),
+    }));
     const lifts = pts.map((p) => p.lift);
     const cross = (from: number, to: number, rising: boolean): number | null => {
       let a: number | null = null;
@@ -364,16 +371,18 @@ describe('H-R12 Dünen (Kern)', () => {
     expect(max).toBeLessThanOrEqual(0.5);
     // Akzent nur dort, wo T landeinwärts fällt: auf dem Anstieg (dn > 0.1) ist er 0
     for (const p of pts) if (p.dn > 0.1) expect(p.accent).toBe(0);
-    // Breite des Akzents ≤ 0,12 Kachel (1–2 px bei Zoom 1: 32 px je Kachel → ≈ 4 px; am Knoten gemessen)
+    // Breite des Akzents ≤ 2 Layer-px (TEX = 32 px je Kachel, Probenabstand 0,005 Kachel), liegt im Lee der Kante
     const acc = pts.filter((p) => p.accent > 0.05);
-    expect(acc.length * 0.005).toBeLessThanOrEqual(0.15);
+    expect(acc.length * 0.005 * 32).toBeLessThanOrEqual(2);
+    expect(DUNE_ACCENT_PX).toBeLessThanOrEqual(2);
+    for (const p of acc) expect(p.dn).toBeLessThan(0);
   });
 
   it('H-R12-14 Luv-Plateau erreicht die Tonobergrenze (lift = 1), Lee und eben bleiben bei 0', () => {
     const { pts } = edgeWidths(0.002);
     expect(Math.max(...pts.map((p) => p.lift))).toBe(1);
-    expect(duneShade(DUNE_TONE_FLAT, 0, 0.002).lift).toBe(0);
-    expect(duneShade(1.55, 0, 0.002).lift).toBe(0);
+    expect(duneShade(DUNE_TONE_FLAT, 0, 0.002, 0).lift).toBe(0);
+    expect(duneShade(1.55, 0, 0.002, 0).lift).toBe(0);
   });
 
   it('H-R12-15 mittlere Strände (trocken 2…3 Kacheln) tragen mässig Dünen, schmale (< 1,5) weiter nicht', () => {
@@ -388,5 +397,15 @@ describe('H-R12 Dünen (Kern)', () => {
       }
     expect(mid / n).toBeGreaterThan(0.4);
     expect(mid / n).toBeLessThan(0.85);
+  });
+
+  it('H-R12-16 Akzentfarbe: warm-kühler Schatten der Sandfarbe, keine Grauung (Blauanteil ≥ Sand, Chroma ≥ 60 %)', () => {
+    const sand = rgbOf(PALETTE.sandDry);
+    const mixed = sand.map((v, i) => v + (DUNE_SHADOW[i]! - v) * 0.22);
+    const share = (c: readonly number[]) => c[2]! / (c[0]! + c[1]! + c[2]!);
+    const chroma = (c: readonly number[]) => Math.max(...c) - Math.min(...c);
+    expect(share(mixed)).toBeGreaterThanOrEqual(share(sand));
+    expect(chroma(mixed)).toBeGreaterThanOrEqual(0.6 * chroma(sand));
+    expect(DUNE_SHADOW[2]!).toBeGreaterThan(DUNE_SHADOW[0]!); // bläulich, nicht grau
   });
 });

@@ -1,5 +1,6 @@
 import { valueNoise } from '../sim/noise';
 import { LIGHT, rotNoise, smoothstep, toneStep } from './light';
+import { PALETTE, mixHex, rgbOfCss } from './palette';
 
 // dunes.ts — Dünenfelder als lesbare Sandformen (H-R12, Stilrahmen D7/S2/S3). Reine Mathematik, kein Canvas, keine
 // Welt: der Aufrufer reicht den Küstenwert `s` (Kacheln, landeinwärts +) und dessen Gradienten durch. Die Kämme sind
@@ -169,20 +170,32 @@ export function duneSample(
 export const DUNE_ACCENT = 0.5;
 /** Ton, ab dem die Luvseite voll auf Stufe „sandDry plus 1“ steht (weiche Fusskante läuft von DUNE_TONE_FLAT bis hier). */
 export const DUNE_LIFT_FULL = 2.7;
-const ACCENT_AT = 2.3; // Ton in der Kammflanke, bei dem der Akzent am stärksten ist
-const ACCENT_HALF = 0.3;
+/** Breite des Akzents in Ausgabe-px hinter der harten Kante (dünner Strich, kein Band). */
+export const DUNE_ACCENT_PX = 1.5;
+/** Schattenfarbe des Akzents: kühl (rockDark ↔ waterDeep), die Sandfarbe mischt dorthin statt zu Grau. */
+export const DUNE_SHADOW: readonly [number, number, number] = rgbOfCss(
+  mixHex(PALETTE.rockDark, PALETTE.waterDeep, 0.5),
+);
+const EDGE_TONE = 2.5; // Stufengrenze, an der die Kammkante kippt
 
 /**
  * Stufung der Düne je Pixel. `t` Tonwert (interpoliert), `dn` sein Gefälle landeinwärts (Stufen je Kachel), `hw` die
- * schmale Kantenhalbbreite des Rasters (`toneHalfWidth`). Liefert `lift` 0…1 (Stufe 2 → 3) und `accent` 0…DUNE_ACCENT.
- * Steigt der Ton landeinwärts (Luvseite), läuft die Stufe weich und breit hinauf (Fusskante, ganze Luvflanke);
- * fällt er (Kamm → Lee), kippt sie hart bei der Stufengrenze, und direkt dahinter liegt der Akzent.
+ * schmale Kantenhalbbreite des Rasters (`toneHalfWidth`), `gpx` das Tongefälle je Ausgabepixel. Liefert `lift` 0…1
+ * (Stufe 2 → 3) und `accent` 0…DUNE_ACCENT. Steigt der Ton landeinwärts (Luvseite), läuft die Stufe weich und breit
+ * hinauf (Fusskante, ganze Luvflanke); fällt er (Kamm → Lee), kippt sie hart, und der Akzent ist ein Strich von
+ * DUNE_ACCENT_PX Ausgabepixeln Breite unmittelbar hinter dieser Kante (Abstand aus Tonabstand / Gefälle je px).
  */
-export function duneShade(t: number, dn: number, hw: number): { lift: number; accent: number } {
+export function duneShade(
+  t: number,
+  dn: number,
+  hw: number,
+  gpx: number,
+): { lift: number; accent: number } {
   const c = smoothstep(0.1, -0.5, dn); // 0 steigend … 1 fallend
   const wide = smoothstep(DUNE_TONE_FLAT, DUNE_LIFT_FULL, t);
   const hard = Math.max(0, Math.min(1, toneStep(t, hw) - DUNE_TONE_FLAT));
   const lift = wide + (hard - wide) * c;
-  const accent = c * DUNE_ACCENT * Math.max(0, 1 - Math.abs(t - ACCENT_AT) / ACCENT_HALF);
+  const px = gpx > 1e-6 && t <= EDGE_TONE ? (EDGE_TONE - t) / gpx : Infinity; // Abstand hinter der Kante in px
+  const accent = c * DUNE_ACCENT * Math.max(0, 1 - px / DUNE_ACCENT_PX);
   return { lift, accent };
 }

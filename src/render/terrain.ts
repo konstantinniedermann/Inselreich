@@ -1,7 +1,7 @@
 import { hash2, valueNoise } from '../sim/noise';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
-import { DUNE_TONE_FLAT, WET_SAND, duneSample, duneShade, rippleOf } from './dunes';
+import { DUNE_SHADOW, DUNE_TONE_FLAT, WET_SAND, duneSample, duneShade, rippleOf } from './dunes';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
 import {
@@ -44,7 +44,8 @@ const RELIEF_GAIN = 0.6; // Helligkeit je Höhengefälle des Mikroreliefs (R3: v
 const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
 // H-R12: Dünen kommen aus dunes.ts (Küstenphase, Tonstufe, Rippeln, Korn); hier nur die Farbzuordnung auf Sand
 const SAND_RIPPLE_MUL = 0.16; // Helligkeit je Rippelwert (RIPPLE_AMP 0,18 → ±2,9 %): Textur unter einer Stufe
-const SAND_ACCENT_MUL = 0.16; // Kammakzent: Abdunklung je Stufe auf Sand (heller Grund, darum stärker als TONE_DARK_MUL)
+const SAND_ACCENT_MUL = 0.08; // Kammakzent: Abdunklung je Stufe auf Sand
+const SAND_ACCENT_MIX = 0.22; // … und Mischung zum kühlen Schatten (DUNE_SHADOW) bei vollem Akzent (0,5 Stufe)
 const SAND_GRAIN = 0.07; // Pixelkorn auf Sand: ± die Hälfte, also ±3,5 % Helligkeit (Zoom 2 sichtbar)
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
 const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 % der Wiese je Seite höchstens)
@@ -951,6 +952,7 @@ export function paintPixels(
             tA * w00 + tB * w10 + tC * w01 + tD * w11,
             lerp(dtn),
             hw,
+            Math.sqrt(gxT * gxT + gyT * gyT) * gradScale,
           );
           if (e > 0) {
             const k = e * wSand;
@@ -966,7 +968,7 @@ export function paintPixels(
             col[0] = col[0]! * m;
             col[1] = col[1]! * m;
             col[2] = col[2]! * m;
-            mix3(col, TONE_COOL, TONE_COOL_MIX * 2 * k, col);
+            mix3(col, DUNE_SHADOW, SAND_ACCENT_MIX * k * 2, col);
           }
           const dry = Math.min(1, (sPx - WET_SAND - 0.1) / 0.5);
           const sm =
