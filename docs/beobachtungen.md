@@ -806,3 +806,21 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tools/studio/log.py retro`, Metrik E-028.
 - Beobachtung: Meilenstein-Retros M10/M11 ohne `meilenstein:`-Trigger geloggt (Alarm blieb offen); für E-028 fehlt ein Ereignis „Häppchen n+1 gestartet", Leerlauf nicht messbar.
 - Ursprung: Session-Retro e13c3631. Einschätzung: lead-production, nächste Session (R217 V3).
+
+### 2026-10-04 · Render · `EDGE` in `sprites.ts` weiter intern genutzt
+
+- Fundort: `src/render/sprites.ts:30` (Definition), `:832–834` (Linien), Folge des Eintrags zu `EDGE`/`overlays.ts` aus H-R10.
+- Beobachtung: `overlays.ts` importiert `EDGE` seit H-R14 nicht mehr (eigene Konstante `MARK_EDGE`). `sprites.ts` zeichnet damit aber noch selbst drei Linien; der Export kann erst entfallen, wenn diese Stelle auf einen lokalen Eigenton umgestellt ist.
+- Ursprung: H-R14 (art-rendering-engineer). Einschätzung: niedrig; beim nächsten Häppchen, das `sprites.ts` besitzt, mitziehen.
+
+### 2026-10-04 · Render-QA · Schiff in Seed 1 vom Kontor verdeckt
+
+- Fundort: Galerie-Szene Seed 1 (Schiffskachel 19,16, Kontor 19,17), `.studio/qa/H-R14/skripte/shots.mjs`.
+- Beobachtung: Das Schiff liegt nördlich hinter dem Kontor und ist nur halb sichtbar; für den Bildnachweis musste das Kontor an eine andere Küstenstelle verschoben werden (`shots-r1.mjs`). Im Spiel kann der Liegeplatz damit generell hinter dem Kontor liegen.
+- Ursprung: H-R14 (qa-playtester). Einschätzung: niedrig bis mittel; prüfen, ob die Liegeplatzwahl die Seite vor dem Kontor (Blickrichtung) bevorzugen soll; beim Versionieren der Galerie (`tools/render-qa/`) eine Schiffskamera mit freiem Liegeplatz aufnehmen.
+
+### 2026-10-04 · Render (Overlays) · Braune Ringe neben roten Marken
+
+- Fundort: `.studio/qa/H-R14/crops/*-02-schiff.png`, `*-04-brand.png` (brauner Ring neben der roten Marke über Kontor bzw. Steinbruch).
+- Beobachtung: Der Playtester konnte das Zeichen nicht zuordnen; vermutlich ein Bedarfs-/Versorgungssymbol (`SIGN_COLOR` in `overlays.ts`). Lesbarkeit: zwei Marken dicht nebeneinander, Bedeutung für Spieler unklar.
+- Ursprung: H-R14 (qa-playtester). Einschätzung: niedrig; bei der nächsten Overlay-/Lesbarkeitsrunde Bedeutung prüfen und ggf. in der Legende erklären.
