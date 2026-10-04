@@ -1393,3 +1393,14 @@ Release-Gate verlangt Galerie 01–15 vorher/nachher, A/B-Perf-Delta, Blindtest 
 H-U2. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten; main unberührt bis Gate Merge Release.
 
 Entscheider: L0 · Anlass: Bericht lead-art ART-STIL-01 · ADR: —
+
+## R212 · 2026-10-04 · Guard-Erweiterung N-92 und N-93
+
+Ruling: Nutzerfreigabe „VERFASSUNG ÄNDERN" (Hauptsession 2026-10-04) für N-92 und N-93 umgesetzt, durch L0 selbst,
+weil die Freigabe nur für die Hauptsession gilt (Verfassung §1.3). Guard sperrt zusätzlich `git pull --rebase`,
+`-r`, `--rebase=<an>`, `git config pull.rebase|branch.<x>.rebase <an>` und `git -c pull.rebase=<an>` (§6.3) sowie
+Agent/Task-Starts als `general-purpose` mit Kopfzeile `Persona:` ohne `model` (R167). Tests zuerst rot, dann grün;
+unabhängiges Review durch qa-code-reviewer (§9.1). Handbuch 1.17. — Kosten bei Irrtum: Revert des Commits; der
+Guard wird nur strenger.
+
+Entscheider: L0 · Anlass: Nutzerfreigabe N-92/N-93 · ADR: —

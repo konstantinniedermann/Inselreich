@@ -64,7 +64,7 @@ schliesst den Eintrag.
 - Von: lead-qa
 - Antwort: Ohne Nutzer beantwortet (R119 c): INT-Check auf Mac M1 Pro, Sturm+Feuer, 1920x1080 DPR 2: 120 fps (Bildschirmgrenze), renderMedian 2,6 ms
 
-## N-92 · offen · 2026-10-02 · Guard soll auch git pull --rebase blocken
+## N-92 · umgesetzt · 2026-10-02 · Guard soll auch git pull --rebase blocken
 
 - Frage: Der Guard-Hook (tools/studio/guard.py) blockt heute nur 'git rebase', nicht 'git pull --rebase'. In dieser Session hat L0 einmal 'pull --rebase' ausgeführt (Verstoss gegen Verfassung §6.3, zweiter Vorfall dieser Art). Darf das Team den Guard so erweitern? Dazu müsstest du in einem eigenen Prompt 'VERFASSUNG ÄNDERN' schreiben (gilt eine Session).
 - Empfehlung: Freigeben: Guard um 'pull --rebase', 'pull -r' und 'config pull.rebase true' erweitern, mit Test.
@@ -72,9 +72,9 @@ schliesst den Eintrag.
 - Kosten des Wartens: Gering: Bis dahin schützt nur die Regel in Briefing-Vorlage und lernen.md; ein erneuter Rebase lokaler, ungepushter Commits wäre ärgerlich, aber selten folgenschwer.
 - Blockiert: nichts (E-011 läuft ohne Guard-Teil)
 - Von: studio-director
-- Antwort: –
+- Antwort: Freigegeben (VERFASSUNG ÄNDERN, 2026-10-04)
 
-## N-93 · offen · 2026-10-03 · Guard soll Persona-Starts ohne Modell blocken
+## N-93 · umgesetzt · 2026-10-03 · Guard soll Persona-Starts ohne Modell blocken
 
 - Frage: Darf guard.py die Regel 'general-purpose mit Persona-Zeile braucht model' bekommen? (Diff fertig und getestet, Scratchpad gp/guard-persona.diff + test_guard.diff)
 - Empfehlung: Freigeben, zusammen mit N-92 in einem Guard-Commit
@@ -82,7 +82,7 @@ schliesst den Eintrag.
 - Kosten des Wartens: Bis zur Freigabe nur Handbuchregel, Risiko weiterer ungewollter opus-Starts in M10
 - Blockiert: nichts (Guard-Matcher steht schon, Regel fehlt)
 - Von: studio-director
-- Antwort: –
+- Antwort: Freigegeben (VERFASSUNG ÄNDERN, 2026-10-04)
 
 ## N-94 · umgesetzt · 2026-10-04 · Löschen ausserhalb des Repos: verboten lassen oder auf Nachfrage?
 

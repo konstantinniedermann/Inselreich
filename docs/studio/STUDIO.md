@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.16 · Stand: 2026-10-04 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.17 · Stand: 2026-10-04 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -311,10 +311,11 @@ und §6). Er weist mit Begründung ab:
 
 Verboten sind: Force-Push und Löschen entfernter Branches (`--force`, `-f`, `--mirror`, `--delete`,
 Refspec mit `+` oder `:`); `git branch -D`; Umschreiben der History (`git rebase` ausser `--abort`,
-`reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`/`delete`, `update-ref -d`,
+`pull --rebase`/`-r`, `pull.rebase`/`branch.*.rebase` an, `reset --hard`, `filter-branch`/`filter-repo`, `reflog expire`/`delete`, `update-ref -d`,
 `gc --prune=now`); Verlust ungesicherter Arbeit (`git clean -f`, `worktree remove --force`,
 `stash drop`/`clear`); `rm`, `rmdir`, `unlink`, `find … -delete` ausserhalb des Hauptrepos (Temp-
-und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`.
+und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`; Persona-Start als
+`general-purpose` ohne `model` (R167).
 
 - **Bewusst erlaubt:** Verwerfen ungesicherter Änderungen im Arbeitsbaum (`git checkout -- <pfad>`,
   `git restore`, `git switch --discard-changes`) und `git stash push`/`apply`; zum Zwischenparken
