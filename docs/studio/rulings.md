@@ -1415,3 +1415,41 @@ Patch-Pfad messen. Aufwand H-R11/H-R12 ≈ 570 Tools (Selbstangabe) gegen Schät
 Session-Retro. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten, Kandidat frisch aufbauen.
 
 Entscheider: L0 · Anlass: Berichte lead-art H-R10, H-R11/H-R12 · ADR: —
+
+## R214 · 2026-10-04 · REL-01 Dünen-Stufenkanten: Extra-Fix-Runde mit Rückfall
+
+Ruling: Release-Lauf REL-01: H-U2, H-R10, H-R11 OK; opus-Review BEDENKEN (nur arc42, behoben in
+`docs/rel-01-arc42` @ 9d5205e). Playtest-Befund hoch zu H-R12: Dünen mit rechtwinkligen Stufenkanten entlang des
+Kachelrasters bei Seed 2 und 5 (`.studio/qa/REL-01/h-r12/seed2-z2.png`, `seed5-z1.png`). Da der Nutzer die Dünen
+ausdrücklich bemängelt hat, geht H-R12 so nicht live. Ausnahme von R211 (höchstens 2 Bild-Fix-Runden): **eine**
+gezielte dritte Runde nur für die Kachelkanten, Deckel ≈ 60 Tools, mit Delta-Review und Nachweis auf Seed 1/2/3/5.
+Rückfall, falls der Deckel reisst oder der Nachweis fehlt: REL-01 mit `feat/h-r11-relief` statt `feat/h-r12-duenen`,
+Dünen ins REL-02. In beiden Fällen wird der Kandidat frisch aufgebaut (gates.md), dazu `docs/rel-01-arc42`. — Kosten
+bei Irrtum: Verzögerung von REL-01 um eine Fix-Runde.
+
+Entscheider: L0 · Anlass: Playtest-Report REL-01, opus-Review REL-01 · ADR: —
+
+## R215 · 2026-10-04 · REL-01 Rückfall ohne neue Dünen
+
+Ruling: Die Extra-Fix-Runde H-R12 (R214) hat das Ziel verfehlt (Stufenkanten auf Seed 2 schwächer, aber sichtbar;
+Deckel 60 Tools mit ≈ 125 gerissen; Zwischenstand `feat/h-r12-duenen` @ 14fd4cf ohne Delta-Review, nicht
+release-reif). Rückfall greift: **REL-01 = H-U2 + H-R10 + H-R11 (`feat/h-r11-relief` @ b548f8c) + Doku**. Dünen
+bleiben auf main-Stand; H-R12 wird erstes Häppchen von REL-02 auf 14fd4cf (stetige Strandbreite und Maske, ≈ 60
+Tools, Lead verlangt Zwischenstand bei halbem Deckel). `docs/rel-01-arc42` wird um dunes.ts und `sandRest`
+bereinigt. Kandidat frisch aufbauen, Delta-Browser-Lauf (Sand/Strand-Regression, Smoke H-U2/H-R10/H-R11), dann
+Gate. Vorfall „Agent gescheitert" geht in die Session-Retro. — Kosten bei Irrtum: REL-01 ohne Dünen-Verbesserung;
+Nutzerpunkt Dünen offen bis REL-02.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R12 Fix 3 · ADR: —
+
+## R216 · 2026-10-04 · Gate Merge Release REL-01
+
+Ruling: Gate Merge Release REL-01 bestanden. Kandidat `rel/rel-01b` @ e19b44d (H-U2 c6b64de, H-R10 c31d9b5, H-R11
+4740b26, Doku e19b44d) auf origin/main 3da4cb2; `make check` nach jedem Merge grün; opus-Review lead-qa über den
+Obermengen-Kandidaten (BEDENKEN nur arc42, behoben in `docs/rel-01b-arc42`); Browser-Lauf REL-01 und Delta-Lauf
+REL-01b OK. Prüfliste UI-Task → Screenshot: H-U2 `.studio/qa/REL-01b/h-u2/` (+ REL-01/h-u2), H-R10
+`.studio/qa/REL-01/gal/05,06,11,12`, H-R11 `.studio/qa/REL-01/gal/01–06,13`, Sand-Regression
+`.studio/qa/REL-01b/seeds/`. Push durch production-integrator `HEAD:main`, danach CI und Pages. — Kosten bei
+Irrtum: Revert-Merge der vier Merge-Commits.
+
+Entscheider: L0 · Anlass: Playtest REL-01b, opus-Review REL-01 · ADR: —
