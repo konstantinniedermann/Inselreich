@@ -3,7 +3,8 @@ import { adjacentOf, tileAt, type Pos } from '../sim/world';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, project, type Pt } from './iso';
-import { PALETTE, mixHex } from './palette';
+import { LIGHT } from './light';
+import { PALETTE, mixHex, rgbaOfCss, toInk } from './palette';
 
 const BOB_PERIOD_MS = 2600;
 /** Höhe des Schiffs über der Rautenmitte (Weltpixel, Zoom 1). */
@@ -12,13 +13,13 @@ const SHIP_W = 0.8 * ISO_W;
 const SHIP_SPAN = 0.7; // Anteil der Formhöhe, der über SHIP_H liegt (Mast bis Kiel)
 const BOB_AMPLITUDE = 0.04; // Anteil der Kachelhöhe
 const TILT_MAX = 0.06; // rad
-const HULL = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
+export const HULL = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
 const SAIL = PALETTE.wallLime;
-const OUTLINE = 'rgba(0,0,0,0.6)';
+export const OUTLINE = rgbaOfCss(toInk(HULL, 0.75), 0.75); // S4: dunkler Eigenton des Rumpfs, nie Schwarz
 const SHADOW_SHIFT = 0.15; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
   SHADOW_B = 0.22; // Halbachsen des Rumpfschattens (Kachelraum)
-const SHADOW_DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) };
+export const SHADOW_DIR = { x: -LIGHT.x, y: -LIGHT.y }; // Schatten fällt nach -LIGHT
 
 /** Schattenpolygon des Schiffs im Kachelraum (Ellipse um die Rautenmitte, nach rechts unten versetzt); Schattendurchgang. */
 export function shipShadow(tile: Pos): Pt[] {

@@ -9,7 +9,8 @@ import { worldToScreen, type Camera, type TileRange } from './camera';
 import type { Phase } from './daynight';
 import { ISO_H, ISO_W, TREE_VARIANTS, project, type Pt } from './iso';
 import { cap } from './limits';
-import { PALETTE, mixHex, rgbOfCss, rgbaOf } from './palette';
+import { LIGHT } from './light';
+import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, type Field } from './terrainField';
 import { crownsFor, type TreeItem } from './trees';
@@ -129,7 +130,7 @@ export function walkerAt(
 }
 
 /** Schattenrichtung (+3, +1) normiert, wie Schiff und Gebäude (D-11). */
-const SHADOW_DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) };
+export const SHADOW_DIR = { x: -LIGHT.x, y: -LIGHT.y }; // Schatten fällt nach -LIGHT
 
 /** Schattenellipse im Kachelraum, nach rechts unten um `shift` versetzt; gleiche Orientierung wie `shipShadow`. */
 function ellipsePoly(cx: number, cy: number, a: number, b: number, shift: number, n: number): Pt[] {
@@ -163,7 +164,7 @@ export const CLOTHES: readonly string[] = [
   PALETTE.roofThatch,
 ];
 const SKIN = mixHex(PALETTE.wallLime, PALETTE.earth, 0.45);
-const OUTLINE = rgbaCss(mixHex(PALETTE.wallTimber, '#000000', 0.55), 0.8);
+export const OUTLINE = rgbaCss(toInk(PALETTE.wallTimber, 0.55), 0.8);
 
 /** Kleiderfarbe der Figur `i`. */
 export const clothesOf = (seed: number, i: number): string =>
