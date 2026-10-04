@@ -438,6 +438,14 @@ function sandRestField(world: FieldWorld): Field {
   return { w, h, v: d };
 }
 
+/** Je Felder-Satz ein `sandRestField` (genau eines je Welt, fällt mit den Feldern weg); `patchGrid` verwirft es bei Geländewechsel. */
+const sandRestCache = new WeakMap<TerrainFields, Field>();
+function sandRestOf(world: FieldWorld, fields: TerrainFields): Field {
+  let f = sandRestCache.get(fields);
+  if (!f) sandRestCache.set(fields, (f = sandRestField(world)));
+  return f;
+}
+
 /** Wie `buildGrid`, aber nur im Knotenfenster; `nx`/`ny` des Ergebnisses sind die Fenstermasse. */
 function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): TerrainGrid {
   const nx = win.i1 - win.i0 + 1,
@@ -595,7 +603,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
           fy = (win.j0 + j) * step;
         const csx = (smooth[j * nx + ir]! - smooth[j * nx + il]!) / ((ir - il) * step);
         const csy = (smooth[jd * nx + i]! - smooth[ju * nx + i]!) / ((jd - ju) * step);
-        rest ??= sandRestField(world);
+        rest ??= sandRestOf(world, fields);
         const [wx, wy] = warp(seed, fx, fy);
         const beach = sK + sampleField(rest, wx, wy) - 0.5 - WET_SAND;
         const d = duneSample(seed, fx, fy, sK, csx, csy, beach);
@@ -1141,13 +1149,18 @@ export function patchGrid(
   next: Uint8Array,
   r: TileRect,
 ): void {
-  let coastChanged = false;
+  let coastChanged = false,
+    sandChanged = false;
+  const sandCode = LAND.indexOf('sand') + 1;
   for (let i = 0; i < next.length; i++) {
     if (prev[i] === next[i]) continue;
     if ((prev[i] === 0) !== (next[i] === 0)) coastChanged = true;
+    if ((prev[i] === sandCode) !== (next[i] === sandCode)) sandChanged = true;
     for (let t = 0; t < LAND.length; t++) fields.types[LAND[t]!].v[i] = next[i] === t + 1 ? 1 : 0;
   }
   if (coastChanged) fields.coast = coastField(world);
+  // Abstand zum Nicht-Sand ändert sich nur, wenn Sand oder Wasser kommt bzw. geht (Roden: Wald → Gras bleibt gleich)
+  if (coastChanged || sandChanged) sandRestCache.delete(fields);
   const k = TEX / RASTER; // Knoten je Kachel
   const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
   const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
