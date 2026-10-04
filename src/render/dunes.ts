@@ -1,0 +1,149 @@
+import { valueNoise } from '../sim/noise';
+import { LIGHT, rotNoise } from './light';
+
+// dunes.ts — Dünenfelder als lesbare Sandformen (H-R12, Stilrahmen D7/S2/S3). Reine Mathematik, kein Canvas, keine
+// Welt: der Aufrufer reicht den Küstenwert `s` (Kacheln, landeinwärts +) und dessen Gradienten durch. Die Kämme sind
+// Höhenlinien einer Phase p(s) und laufen darum automatisch küstenparallel; die Phase wird längs verwirbelt.
+
+/** Spec 5.1: sandWet bei 0 ≤ s < 0,18 (gleicher Wert wie in terrain.ts). */
+export const WET_SAND = 0.18;
+/** Ab diesem Küstenwert (≥ 1 Kachel hinter dem nassen Saum) darf eine Düne stehen; davor ist alles 0. */
+export const DUNE_ONSET = WET_SAND + 1;
+/** Abstand der Kämme quer zur Küste (Kacheln). */
+export const DUNE_LAMBDA = 2.4;
+/** Kammlage im Profil (Anteil der Periode ab dem Trog, seewärts → landeinwärts): lange Luv-, kurze Leeseite. */
+export const DUNE_PROFILE_CREST = 0.7;
+/** Tonstufe von sandDry auf der 0…4-Skala der Tonleiter (wie `TONE_FLAT` im Massiv). */
+export const DUNE_TONE_FLAT = 2;
+/** Obergrenze für Ton samt Rippeln und Korn: sandDry plus 1 Stufe (Stilrahmen Dünen (2)). */
+export const DUNE_TONE_MAX = DUNE_TONE_FLAT + 1;
+
+const ONSET_RAMP = 0.9; // Breite (Kacheln) des weichen Einsatzes hinter DUNE_ONSET
+const WARP_AMP = 0.8; // Phasenverwirbelung in Perioden (Kämme mäandern, bleiben aber küstenparallel)
+const CREST_HALF = 0.1; // Halbbreite des Kamms in Perioden
+const GRAIN_AMP = 0.06; // Korn: höchstens ±0,06 Stufen
+const RIPPLE_AMP = 0.18; // Rippeln: höchstens ±0,18 Stufen
+const RIPPLE_LAMBDA = 0.22; // Rippelabstand (Kacheln)
+const TONE_GAIN = 1.15; // Stufen je Hanggefälle · Lichtanteil
+const TONE_MIN = 1.0;
+const BEACH_NARROW = 1.5; // trockene Strandbreite (Kacheln), darunter bleibt der Sand glatt
+const BEACH_OK = 2.5; // ab hier trägt der Strand voll
+const BEACH_WIDE = 4; // ab hier ist die Maske zu 80 % offen (breite Strände tragen Dünen)
+const END_FADE = 1; // Kacheln, auf denen die Dünen vor dem Strandende auslaufen
+// Drehungen (rad) der Rauschfelder: keine achsparallelen Muster
+const ROT_MASK = 0.7,
+  ROT_ENV = 1.1,
+  ROT_WARP = 0.4,
+  ROT_RIP = 0.9;
+/** Gewicht des Windes im Dünenlicht: Luvseite blickt immer zum Licht, egal wie die Küste zur Sonne liegt. */
+const WIND_LIGHT = 0.85;
+const SUN_LIGHT = 0.3;
+
+export interface DuneSample {
+  /** Höhe 0…1 (mal Amplitude im Aufrufer); 0 für s < DUNE_ONSET. */
+  h: number;
+  /** Kontinuierlicher Tonwert 0…4 aus Hanggefälle · Licht (nur Dünenform), ≤ DUNE_TONE_MAX − Rippeln − Korn. */
+  tone: number;
+  /** Kammstärke 0…1 (scharfe Kammlinie, Knick im Profil). */
+  crest: number;
+  /** Rippeln als Tonversatz in Stufen (±RIPPLE_AMP, küstenparallel, nicht auf der Leeseite). */
+  ripple: number;
+  /** Sandkorn als Tonversatz in Stufen (±GRAIN_AMP). */
+  grain: number;
+}
+
+const FLAT = (grain: number): DuneSample => ({
+  h: 0,
+  tone: DUNE_TONE_FLAT,
+  crest: 0,
+  ripple: 0,
+  grain,
+});
+
+const sstep = (a: number, b: number, x: number): number => {
+  const t = x <= a ? 0 : x >= b ? 1 : (x - a) / (b - a);
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * Düne an einem Kachelpunkt. `s` Küstenwert (landeinwärts +), `(gx, gy)` sein Gradient im Kachelraum (≈ Einheitsvektor
+ * landeinwärts), `beach` die trockene Strandbreite an dieser Stelle (Kacheln; Standard unbegrenzt) — schmale Strände
+ * (< 1,5) bleiben glatt, kurz vor dem Strandende (s − WET_SAND → beach) laufen die Dünen aus.
+ */
+export function duneSample(
+  seed: number,
+  fx: number,
+  fy: number,
+  s: number,
+  gx: number,
+  gy: number,
+  beach = Infinity,
+): DuneSample {
+  const dry = sstep(WET_SAND + 0.1, WET_SAND + 0.6, s);
+  const gn = (valueNoise(seed + 415, fx * 5, fy * 5) - 0.5) * 2 * GRAIN_AMP * dry;
+  const gl = Math.hypot(gx, gy);
+  if (dry <= 0 || gl < 1e-6) return FLAT(0);
+  const nx = gx / gl,
+    ny = gy / gl;
+
+  // Phase: Küstenabstand / Wellenlänge + verwirbelte Verschiebung (Gradient des Rauschens per Differenz)
+  const E = 0.1;
+  const w0 = rotNoise(seed + 413, fx, fy, 0.09, ROT_WARP);
+  const wx = (rotNoise(seed + 413, fx + E, fy, 0.09, ROT_WARP) - w0) / E;
+  const wy = (rotNoise(seed + 413, fx, fy + E, 0.09, ROT_WARP) - w0) / E;
+  const p = (s - DUNE_ONSET) / DUNE_LAMBDA + WARP_AMP * (w0 - 0.5);
+  const px = gx / DUNE_LAMBDA + WARP_AMP * wx,
+    py = gy / DUNE_LAMBDA + WARP_AMP * wy;
+  const f = p - Math.floor(p);
+  const c = DUNE_PROFILE_CREST;
+
+  // Gewicht: Einsatz, Strandbreite, Strandende, Maske (~Hälfte frei), Hüllkurve längs (Dünen setzen aus)
+  let w = 0;
+  if (s > DUNE_ONSET) {
+    w = sstep(DUNE_ONSET, DUNE_ONSET + ONSET_RAMP, s);
+    if (beach !== Infinity) {
+      w *= sstep(BEACH_NARROW, BEACH_OK, beach) * sstep(0, END_FADE, beach + WET_SAND - s);
+    }
+    if (w > 0) {
+      let mask = sstep(0.46, 0.58, rotNoise(seed + 411, fx, fy, 0.06, ROT_MASK));
+      if (beach !== Infinity) mask = Math.max(mask, 0.8 * sstep(BEACH_OK + 0.5, BEACH_WIDE, beach));
+      w *= mask * sstep(0.36, 0.56, rotNoise(seed + 412, fx, fy, 0.11, ROT_ENV));
+    }
+  }
+
+  // Asymmetrisches Profil: Luv (f < c) wächst langsam, Kamm mit Knick, Lee fällt steil
+  let hh: number, dhdf: number;
+  if (f < c) {
+    const u = f / c;
+    hh = Math.pow(u, 1.6);
+    dhdf = (1.6 * Math.pow(u, 0.6)) / c;
+  } else {
+    const v = (f - c) / (1 - c);
+    hh = Math.pow(1 - v, 1.5);
+    dhdf = (-1.5 * Math.sqrt(1 - v)) / (1 - c);
+  }
+  const h = w * hh;
+  const tent = Math.max(0, 1 - Math.abs(f - c) / CREST_HALF);
+  const crest = w * tent * tent * (3 - 2 * tent);
+
+  // Licht: Gefälle gegen eine Lichtrichtung, die zur Hälfte der Wind (seewärts) ist → Luv hell, Lee dunkel
+  const dhx = w * dhdf * px,
+    dhy = w * dhdf * py;
+  const lx = SUN_LIGHT * LIGHT.x - WIND_LIGHT * nx,
+    ly = SUN_LIGHT * LIGHT.y - WIND_LIGHT * ny;
+  const lit = -(dhx * lx + dhy * ly);
+  const body = DUNE_TONE_MAX - RIPPLE_AMP - GRAIN_AMP;
+  const tone = Math.max(TONE_MIN, Math.min(body, DUNE_TONE_FLAT + TONE_GAIN * lit));
+
+  // Rippeln: quer zum Wind (Phase aus s), nur Luv/flach, auf glattem Sand schwächer
+  const slopeN = dhx * nx + dhy * ny; // > 0 Luv (steigt landeinwärts), < 0 Lee
+  const rip =
+    dry *
+    (0.55 + 0.45 * Math.min(1, w)) *
+    (1 - sstep(0.1, 0.5, -slopeN)) *
+    (1 - sstep(1.0, 1.6, slopeN));
+  const q = s / RIPPLE_LAMBDA + 0.8 * (rotNoise(seed + 414, fx, fy, 0.35, ROT_RIP) - 0.5);
+  const ripple = RIPPLE_AMP * rip * Math.sin(2 * Math.PI * q);
+
+  return { h, tone, crest, ripple, grain: gn };
+}
