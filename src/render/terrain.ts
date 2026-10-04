@@ -1,7 +1,7 @@
 import { hash2, valueNoise } from '../sim/noise';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
-import { DUNE_TONE_FLAT, WET_SAND, duneSample, rippleOf } from './dunes';
+import { DUNE_TONE_FLAT, WET_SAND, duneSample, duneShade, rippleOf } from './dunes';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
 import {
@@ -44,6 +44,7 @@ const RELIEF_GAIN = 0.6; // Helligkeit je Höhengefälle des Mikroreliefs (R3: v
 const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
 // H-R12: Dünen kommen aus dunes.ts (Küstenphase, Tonstufe, Rippeln, Korn); hier nur die Farbzuordnung auf Sand
 const SAND_RIPPLE_MUL = 0.16; // Helligkeit je Rippelwert (RIPPLE_AMP 0,18 → ±2,9 %): Textur unter einer Stufe
+const SAND_ACCENT_MUL = 0.16; // Kammakzent: Abdunklung je Stufe auf Sand (heller Grund, darum stärker als TONE_DARK_MUL)
 const SAND_GRAIN = 0.07; // Pixelkorn auf Sand: ± die Hälfte, also ±3,5 % Helligkeit (Zoom 2 sichtbar)
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
 const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 % der Wiese je Seite höchstens)
@@ -294,6 +295,8 @@ export interface TerrainGrid {
   dune: Float32Array;
   rip: Float32Array;
   rwarp: Float32Array;
+  /** H-R12: Gefälle von `dtone` landeinwärts (Stufen je Kachel) — unterscheidet Fusskante (steigt) von Kammkante (fällt). */
+  dtn: Float32Array;
   shade: Float32Array; // Relief −0,08…0,08 (Gebirgsknoten −0,12…0,12, R149)
   /**
    * Fleckenfeld −1…1 (R149, vorgeformt, Rauschen um 0 gespreizt): positiv Klee auf Gras bzw. Moos im Wald, negativ
@@ -469,6 +472,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     dune = new Float32Array(n),
     rip = new Float32Array(n),
     rwarp = new Float32Array(n),
+    dtn = new Float32Array(n),
     hillRaw = new Float32Array(n), // ungewichtet: das Gewicht darf selbst kein Gefälle erzeugen
     height = new Float32Array(n),
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
@@ -616,6 +620,23 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : c0 === FOREST + 1 ? SHADE_MAX : SHADE_MAX_FLUR;
       shade[j * nx + i] = Math.max(-cap, Math.min(cap, sh));
     }
+  // H-R12: Gefälle des Dünentons landeinwärts (zweiter Durchgang, braucht alle Nachbarn von `dtone`)
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      if (dtone[k] === DUNE_TONE_FLAT && dune[k] === 0) continue;
+      const il = Math.max(0, i - 1),
+        ir = Math.min(nx - 1, i + 1),
+        ju = Math.max(0, j - 1),
+        jd = Math.min(ny - 1, j + 1);
+      const sx = (smooth[j * nx + ir]! - smooth[j * nx + il]!) / ((ir - il) * step);
+      const sy = (smooth[jd * nx + i]! - smooth[ju * nx + i]!) / ((jd - ju) * step);
+      const sl = Math.hypot(sx, sy);
+      if (sl < 1e-6) continue;
+      const tx = (dtone[j * nx + ir]! - dtone[j * nx + il]!) / ((ir - il) * step);
+      const ty = (dtone[jd * nx + i]! - dtone[ju * nx + i]!) / ((jd - ju) * step);
+      dtn[k] = (tx * sx + ty * sy) / sl;
+    }
   return {
     seed,
     nx,
@@ -631,6 +652,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     dune,
     rip,
     rwarp,
+    dtn,
     patch,
     warm,
     mfoot,
@@ -791,7 +813,7 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, tone, dtone, rip, rwarp, cls } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, dtone, dtn, rip, rwarp, cls } = g;
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const col = [0, 0, 0],
     tc = [0, 0, 0];
@@ -924,9 +946,11 @@ export function paintPixels(
           const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
             gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
           const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
-          const e = Math.max(
-            0,
-            Math.min(1, toneStep(tA * w00 + tB * w10 + tC * w01 + tD * w11, hw) - DUNE_TONE_FLAT),
+          // K1/K2: steigender Ton (Luv) läuft weich und breit hinauf, fallender (Kamm) kippt hart, dahinter der Akzent
+          const { lift: e, accent } = duneShade(
+            tA * w00 + tB * w10 + tC * w01 + tD * w11,
+            lerp(dtn),
+            hw,
           );
           if (e > 0) {
             const k = e * wSand;
@@ -935,6 +959,14 @@ export function paintPixels(
             col[1] = col[1]! * m;
             col[2] = col[2]! * m;
             mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
+          }
+          if (accent > 0) {
+            const k = accent * wSand;
+            const m = 1 - SAND_ACCENT_MUL * k;
+            col[0] = col[0]! * m;
+            col[1] = col[1]! * m;
+            col[2] = col[2]! * m;
+            mix3(col, TONE_COOL, TONE_COOL_MIX * 2 * k, col);
           }
           const dry = Math.min(1, (sPx - WET_SAND - 0.1) / 0.5);
           const sm =
@@ -1187,6 +1219,7 @@ export function patchGrid(
     'dune',
     'rip',
     'rwarp',
+    'dtn',
     'patch',
     'mfoot',
     'warm',

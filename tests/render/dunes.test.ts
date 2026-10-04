@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DUNE_ACCENT,
   DUNE_LAMBDA,
   DUNE_ONSET,
   DUNE_PROFILE_CREST,
@@ -7,6 +8,7 @@ import {
   DUNE_TONE_MAX,
   WET_SAND,
   duneSample,
+  duneShade,
   type DuneSample,
 } from '../../src/render/dunes';
 
@@ -303,5 +305,88 @@ describe('H-R12 Dünen (Kern)', () => {
       }
     expect(on / n).toBeGreaterThan(0.3);
     expect(on / n).toBeLessThan(0.7);
+  });
+
+  // Profil quer zur Küste (gerade Küste, voll stehende Düne): Ton T(s), Gefälle dn landeinwärts (Stufen je Kachel)
+  const profile = () => {
+    const x = fullX();
+    const NODE = 0.125; // Knotenabstand des Rasters (Kacheln): der Ton wird dort gerechnet und dazwischen linear gemischt
+    const toneAt = (s: number) => duneSample(SEED, x, s, s, 0, 1).tone;
+    const s0 = DUNE_ONSET + DUNE_LAMBDA;
+    const pts: { s: number; t: number; dn: number }[] = [];
+    for (let s = s0; s < s0 + DUNE_LAMBDA; s += 0.005) {
+      const k = Math.floor((s - s0) / NODE),
+        f = (s - s0) / NODE - k;
+      const n = (i: number) => s0 + i * NODE;
+      const dnAt = (i: number) => (toneAt(n(i + 1)) - toneAt(n(i - 1))) / (2 * NODE);
+      pts.push({
+        s,
+        t: toneAt(n(k)) * (1 - f) + toneAt(n(k + 1)) * f,
+        dn: dnAt(k) * (1 - f) + dnAt(k + 1) * f,
+      });
+    }
+    return pts;
+  };
+  /** Breite (Kacheln), in der `lift` von 10 % auf 90 % wächst bzw. fällt (erste zusammenhängende Flanke). */
+  const edgeWidths = (hw: number) => {
+    const pts = profile().map((p) => ({ s: p.s, dn: p.dn, ...duneShade(p.t, p.dn, hw) }));
+    const lifts = pts.map((p) => p.lift);
+    const cross = (from: number, to: number, rising: boolean): number | null => {
+      let a: number | null = null;
+      for (let i = 1; i < pts.length; i++) {
+        const prev = lifts[i - 1]!,
+          cur = lifts[i]!;
+        const up = rising ? prev < from && cur >= from : prev > to && cur <= to;
+        if (up) a = pts[i]!.s;
+        const done = rising ? prev < to && cur >= to : prev > from && cur <= from;
+        if (done && a !== null) return pts[i]!.s - a;
+      }
+      return null;
+    };
+    return { foot: cross(0.1, 0.9, true), crest: cross(0.1, 0.9, false), pts };
+  };
+
+  it('H-R12-12 asymmetrische Kanten: Kammkante schmaler als die Fusskante (Fuss ≥ 0,3 Kachel, Kamm ≤ 0,05)', () => {
+    const { foot, crest } = edgeWidths(0.002);
+    expect(foot).not.toBeNull();
+    expect(crest).not.toBeNull();
+    expect(foot!).toBeGreaterThanOrEqual(0.3);
+    expect(crest!).toBeLessThanOrEqual(0.05);
+    expect(foot!).toBeGreaterThan(5 * crest!);
+  });
+
+  it('H-R12-13 Kammakzent: dunkle Linie im Lee hinter dem Kamm, ≤ 0,5 Stufe, nie auf der Luvseite', () => {
+    const { pts } = edgeWidths(0.002);
+    let max = 0;
+    for (const p of pts) max = Math.max(max, p.accent);
+    expect(DUNE_ACCENT).toBeLessThanOrEqual(0.5);
+    expect(max).toBeGreaterThan(0.3); // sichtbar
+    expect(max).toBeLessThanOrEqual(0.5);
+    // Akzent nur dort, wo T landeinwärts fällt: auf dem Anstieg (dn > 0.1) ist er 0
+    for (const p of pts) if (p.dn > 0.1) expect(p.accent).toBe(0);
+    // Breite des Akzents ≤ 0,12 Kachel (1–2 px bei Zoom 1: 32 px je Kachel → ≈ 4 px; am Knoten gemessen)
+    const acc = pts.filter((p) => p.accent > 0.05);
+    expect(acc.length * 0.005).toBeLessThanOrEqual(0.15);
+  });
+
+  it('H-R12-14 Luv-Plateau erreicht die Tonobergrenze (lift = 1), Lee und eben bleiben bei 0', () => {
+    const { pts } = edgeWidths(0.002);
+    expect(Math.max(...pts.map((p) => p.lift))).toBe(1);
+    expect(duneShade(DUNE_TONE_FLAT, 0, 0.002).lift).toBe(0);
+    expect(duneShade(1.55, 0, 0.002).lift).toBe(0);
+  });
+
+  it('H-R12-15 mittlere Strände (trocken 2…3 Kacheln) tragen mässig Dünen, schmale (< 1,5) weiter nicht', () => {
+    let mid = 0,
+      n = 0;
+    for (let x = 0; x < 400; x += 2)
+      for (const seed of [1, 2, 3, 4]) {
+        n++;
+        let m = 0;
+        for (let y = 1.3; y < 5; y += 0.4) m = Math.max(m, duneSample(seed, x, y, y, 0, 1, 2.6).h);
+        if (m > 0.05) mid++;
+      }
+    expect(mid / n).toBeGreaterThan(0.4);
+    expect(mid / n).toBeLessThan(0.85);
   });
 });

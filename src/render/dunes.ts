@@ -1,5 +1,5 @@
 import { valueNoise } from '../sim/noise';
-import { LIGHT, rotNoise } from './light';
+import { LIGHT, rotNoise, smoothstep, toneStep } from './light';
 
 // dunes.ts — Dünenfelder als lesbare Sandformen (H-R12, Stilrahmen D7/S2/S3). Reine Mathematik, kein Canvas, keine
 // Welt: der Aufrufer reicht den Küstenwert `s` (Kacheln, landeinwärts +) und dessen Gradienten durch. Die Kämme sind
@@ -28,7 +28,9 @@ const TONE_GAIN = 1.6; // Stufen je Hanggefälle · Lichtanteil
 // S6: höchstens 1 Stufe Unterschied innerhalb einer Kachel → der Ton bleibt in [1,5; 3,5), also nur Stufen 2 und 3
 const TONE_MIN = 1.55;
 const BEACH_NARROW = 1.5; // trockene Strandbreite (Kacheln), darunter bleibt der Sand glatt
-const BEACH_OK = 2.5; // ab hier trägt der Strand voll
+const BEACH_OK = 2.2; // ab hier trägt der Strand voll
+const BEACH_MID = 3; // K3: ab hier öffnet die Maske mindestens zu `MASK_FLOOR` (mittlere Strände tragen einzelne Kämme)
+const MASK_FLOOR = 0.45;
 const BEACH_WIDE = 4; // ab hier ist die Maske zu 80 % offen (breite Strände tragen Dünen)
 const END_FADE = 1; // Kacheln, auf denen die Dünen vor dem Strandende auslaufen
 // Drehungen (rad) der Rauschfelder: keine achsparallelen Muster
@@ -116,7 +118,10 @@ export function duneSample(
     }
     if (w > 0) {
       let mask = sstep(0.46, 0.58, rotNoise(seed + 411, fx, fy, 0.06, ROT_MASK));
-      if (beach !== Infinity) mask = Math.max(mask, 0.8 * sstep(BEACH_OK + 0.5, BEACH_WIDE, beach));
+      if (beach !== Infinity) {
+        mask = Math.max(mask, MASK_FLOOR * sstep(2, BEACH_MID, beach));
+        mask = Math.max(mask, 0.8 * sstep(BEACH_MID + 0.5, BEACH_WIDE, beach));
+      }
       w *= mask * sstep(0.36, 0.56, rotNoise(seed + 412, fx, fy, 0.11, ROT_ENV));
     }
   }
@@ -125,8 +130,8 @@ export function duneSample(
   let hh: number, dhdf: number;
   if (f < c) {
     const u = f / c;
-    hh = Math.pow(u, 1.6);
-    dhdf = (1.6 * Math.pow(u, 0.6)) / c;
+    hh = Math.pow(u, 1.8);
+    dhdf = (1.8 * Math.pow(u, 0.8)) / c;
   } else {
     const v = (f - c) / (1 - c);
     hh = Math.pow(1 - v, 1.5);
@@ -156,4 +161,28 @@ export function duneSample(
   const ripple = rippleOf(rip, s, rwarp);
 
   return { h, tone, crest, ripple, grain: gn, rip, rwarp };
+}
+
+// ---------- Kanten und Kammakzent je Pixel (K1, K2) ----------
+
+/** Kammakzent: dunkle Linie im Lee hinter dem Kamm, höchstens 0,5 Stufe (Textur unter einer Stufe, zählt nicht für S6). */
+export const DUNE_ACCENT = 0.5;
+/** Ton, ab dem die Luvseite voll auf Stufe „sandDry plus 1“ steht (weiche Fusskante läuft von DUNE_TONE_FLAT bis hier). */
+export const DUNE_LIFT_FULL = 2.7;
+const ACCENT_AT = 2.3; // Ton in der Kammflanke, bei dem der Akzent am stärksten ist
+const ACCENT_HALF = 0.3;
+
+/**
+ * Stufung der Düne je Pixel. `t` Tonwert (interpoliert), `dn` sein Gefälle landeinwärts (Stufen je Kachel), `hw` die
+ * schmale Kantenhalbbreite des Rasters (`toneHalfWidth`). Liefert `lift` 0…1 (Stufe 2 → 3) und `accent` 0…DUNE_ACCENT.
+ * Steigt der Ton landeinwärts (Luvseite), läuft die Stufe weich und breit hinauf (Fusskante, ganze Luvflanke);
+ * fällt er (Kamm → Lee), kippt sie hart bei der Stufengrenze, und direkt dahinter liegt der Akzent.
+ */
+export function duneShade(t: number, dn: number, hw: number): { lift: number; accent: number } {
+  const c = smoothstep(0.1, -0.5, dn); // 0 steigend … 1 fallend
+  const wide = smoothstep(DUNE_TONE_FLAT, DUNE_LIFT_FULL, t);
+  const hard = Math.max(0, Math.min(1, toneStep(t, hw) - DUNE_TONE_FLAT));
+  const lift = wide + (hard - wide) * c;
+  const accent = c * DUNE_ACCENT * Math.max(0, 1 - Math.abs(t - ACCENT_AT) / ACCENT_HALF);
+  return { lift, accent };
 }
