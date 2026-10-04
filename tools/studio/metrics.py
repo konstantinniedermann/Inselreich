@@ -385,11 +385,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--sessions", type=int, default=None, help="mit --efficiency: letzte N Sessions"
     )
+    parser.add_argument(
+        "--idle-prefix",
+        default="",
+        help="mit --efficiency: Leerlauf nur für Pakete mit dieser ID-Vorsilbe (z. B. H-)",
+    )
     args = parser.parse_args(argv)
     if args.efficiency:
         files = latest_transcripts(paths.repo_root(), args.sessions)
         data = efficiency.compute(files)
         print(efficiency.render_section(data))
+        gaps = efficiency.idle_gaps(load_events(paths.studio_home()), args.idle_prefix)
+        print(efficiency.render_idle(gaps))
         return 0
     result = build(args)
     if result is None:

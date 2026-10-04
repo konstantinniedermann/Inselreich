@@ -1465,3 +1465,39 @@ REL-02; Schutz bleibt das A/B-Perf-Delta im Release-Gate (R211). Offener Alarm `
 bleibt bis Beleg. — Kosten bei Irrtum: lernen.md-Zeilen streichen; Schwelle zurücksetzen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach RETRO-S-2026-10-04 · ADR: —
+
+## R218 · 2026-10-04 · Auftrag „mach weiter": REL-02 und IDEEN-02
+
+Ruling: Auslegung „mach weiter" als Fortsetzung von state.md in derselben Session (Nutzerwunsch geht der
+L0-Übergaberegel E-010 bei 25 % Kontext vor; L0 hält Briefings knapp). **REL-02** = H-R12 Dünen (auf 14fd4cf),
+H-R13 Vorberge (seriell nach H-R12, gleiche Instanz, Eigentum `terrain.ts`/`dunes.ts`/`massif.ts`), H-R14
+S4-Rest Schiff/Figuren/Effekte (`ship.ts`, `life.ts`, `fx.ts`, `overlays.ts`), H-T1 Zeit-Test AK-R1-06
+CI-Schwelle ×1,5 (nur diese Testzeile plus Helfer; R217 V4). Schätzungen mit Optik-Faktor ×2 (R217 V2),
+Zwischenstand bei halbem Deckel (V1). Parallel: **IDEEN-02** (E-027, fällig nach Release-Merge REL-01) und
+Werkzeug V3 + Leerlauf-Ereignis E-028 (lead-production). M12-Brainstorming folgt nach REL-02. — Kosten bei
+Irrtum: Häppchen einzeln verwerfbar; main unberührt bis Gate Merge Release.
+
+Entscheider: L0 · Anlass: Nutzer „ok, mach weiter" · ADR: —
+
+## R219 · 2026-10-04 · Gate Ideen-Runde IDEEN-02, Zuschnitt REL-02
+
+Ruling: IDEEN-02 entschieden. **I-009 „Hörbarer Mangel"** zusammen mit der kleinen Fassung von **I-005** (Ton je
+Produktionszyklus) als Häppchen **H-A2 „Hörbare Wirtschaft"** auf dem Studio-Platz von REL-02 (lead-art/Audio,
+`src/audio/`, `src/ui/soundEvents.ts`; dateifrei zu den Grafik-Häppchen). **I-007 „Fest in der Kapelle"**
+eingeplant auf dem Studio-Platz von REL-04 (REL-03 trägt H-U1; Save-Feld mit Migration, Abklingzeit, Werte in
+`src/sim/defs/`). I-006 und I-008 geparkt fürs M12-Brainstorming (Handel bzw. Wirtschaft). Zuschnitt angepasst:
+**REL-02 = H-R12, H-R13, H-R14, H-A2**; H-T1 (Zeit-Test) und W-V3 (Studio-Werkzeug) sind keine Spieländerungen und
+gehen als Werkzeug-Merge ausserhalb des Release (Review + `make check`, kein Browser-Lauf nötig), damit main nicht
+weiter flaky rot wird. — Kosten bei Irrtum: H-A2 einzeln verwerfbar; Ideen-Status in docs/ideen.md änderbar.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-02 · ADR: —
+
+## R220 · 2026-10-04 · Gate Werkzeug-Merge H-T1 und W-V3
+
+Ruling: Werkzeug-Merge ausserhalb des Release (R219) freigegeben: `fix/h-t1-zeittest` @ 01302f5 (AK-R1-06 CI-Schwelle
+×1,5 über `tests/helpers/perfBudget.ts`, Review OK, `make check` und `CI=true` grün) und `tools/w-v3` @ 0840121
+(Retro-Trigger-Warnung, Leerlauf-Messung E-028, Review OK, Owner-Fix nachgeprüft am Diff, studio-test 403 grün).
+Keine Spieländerung, daher kein Browser-Lauf (§9.3 betrifft UI-Tasks). Integrator mergt seriell mit `make check`
+und pusht; danach CI prüfen — der erste grüne Lauf belegt H-T1 auf dem Runner. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Berichte lead-tech H-T1, lead-production W-V3 · ADR: —
