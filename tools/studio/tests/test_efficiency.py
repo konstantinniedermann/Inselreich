@@ -374,5 +374,94 @@ def unittest_env(values: dict):
     return mock.patch.dict("os.environ", values)
 
 
+def pkg(ts, pid, status, owner="lead-art"):
+    return {
+        "kind": "package",
+        "ts": ts,
+        "package_id": pid,
+        "status": status,
+        "owner": owner,
+    }
+
+
+class IdleGapTest(unittest.TestCase):
+    def test_gap_review_to_next_first_active(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "active"),
+            pkg("2026-10-03T10:30:00Z", "A", "review"),
+            pkg("2026-10-03T10:37:30Z", "B", "active"),
+        ]
+        gaps = efficiency.idle_gaps(events)
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual((gaps[0]["from"], gaps[0]["to"]), ("A", "B"))
+        self.assertAlmostEqual(gaps[0]["minutes"], 7.5)
+
+    def test_parallel_start_has_no_gap(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "active"),
+            pkg("2026-10-03T10:00:01Z", "B", "active"),
+            pkg("2026-10-03T10:30:00Z", "A", "review"),
+        ]
+        self.assertEqual(efficiency.idle_gaps(events), [])
+
+    def test_other_owner_is_other_strand(self):
+        events = [
+            pkg("2026-10-03T10:30:00Z", "A", "review", "lead-art"),
+            pkg("2026-10-03T10:31:00Z", "B", "active", "lead-tech"),
+        ]
+        self.assertEqual(efficiency.idle_gaps(events), [])
+
+    def test_reactivation_is_not_a_new_start(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "active"),
+            pkg("2026-10-03T10:10:00Z", "A", "review"),
+            pkg("2026-10-03T10:20:00Z", "A", "active"),
+        ]
+        self.assertEqual(efficiency.idle_gaps(events), [])
+
+    def test_session_break_is_excluded(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "review"),
+            pkg("2026-10-04T08:00:00Z", "B", "active"),
+        ]
+        self.assertEqual(efficiency.idle_gaps(events), [])
+
+    def test_owner_taken_from_first_active(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "active", "lead-design"),
+            pkg("2026-10-03T10:30:00Z", "A", "review", "lead-qa"),
+            pkg("2026-10-03T10:35:00Z", "B", "active", "lead-design"),
+        ]
+        gaps = efficiency.idle_gaps(events)
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0]["owner"], "lead-design")
+        self.assertAlmostEqual(gaps[0]["minutes"], 5.0)
+
+    def test_prefix_filters_both_sides(self):
+        events = [
+            pkg("2026-10-03T09:00:00Z", "H-A", "active"),
+            pkg("2026-10-03T10:00:00Z", "H-A", "review"),
+            pkg("2026-10-03T10:05:00Z", "X-B", "active"),
+            pkg("2026-10-03T10:09:00Z", "H-C", "active"),
+        ]
+        gaps = efficiency.idle_gaps(events, "H-")
+        self.assertEqual([(g["from"], g["to"]) for g in gaps], [("H-A", "H-C")])
+
+    def test_render_line(self):
+        events = [
+            pkg("2026-10-03T09:00:00Z", "A", "active"),
+            pkg("2026-10-03T10:00:00Z", "A", "review"),
+            pkg("2026-10-03T10:04:00Z", "B", "active"),
+            pkg("2026-10-03T10:20:00Z", "B", "review"),
+            pkg("2026-10-03T10:30:00Z", "C", "active"),
+        ]
+        text = efficiency.render_idle(efficiency.idle_gaps(events))
+        self.assertIn("Median 7", text)
+        self.assertIn("A → B", text)
+
+    def test_render_without_data(self):
+        self.assertIn("nicht gemessen", efficiency.render_idle([]))
+
+
 if __name__ == "__main__":
     unittest.main()
