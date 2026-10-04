@@ -439,6 +439,7 @@ class IdleGapTest(unittest.TestCase):
 
     def test_prefix_filters_both_sides(self):
         events = [
+            pkg("2026-10-03T09:00:00Z", "H-A", "active"),
             pkg("2026-10-03T10:00:00Z", "H-A", "review"),
             pkg("2026-10-03T10:05:00Z", "X-B", "active"),
             pkg("2026-10-03T10:09:00Z", "H-C", "active"),
@@ -448,6 +449,7 @@ class IdleGapTest(unittest.TestCase):
 
     def test_render_line(self):
         events = [
+            pkg("2026-10-03T09:00:00Z", "A", "active"),
             pkg("2026-10-03T10:00:00Z", "A", "review"),
             pkg("2026-10-03T10:04:00Z", "B", "active"),
             pkg("2026-10-03T10:20:00Z", "B", "review"),
