@@ -36,7 +36,7 @@ Stand: 2026-10-04 (Session-Ende e13c3631, Teil 2; 5-h-Fenster 17 %, Woche 15 %)
   Perf-Budget; Branch `feat/h-r12-duenen` @ ca6a0e1 nur als Material, R221) · H-R13 Vorberge neu auf main (Budget
   +15 % buildMs; CI-Zeit AK-R1-06 ≈ 1,86 s von 2,25 s) · H-U1 „Anbinden auf Knopfdruck" (I-001, Studio-Platz) ·
   S1-Rest `DIM_FIRE`/Audio-Gut-Schlüssel (beobachtungen.md). REL-04: I-007 „Fest in der Kapelle" (Studio-Platz).
-- **Hotfix H-T2** (R223): weitere Zeit-Tests mit `perfBudget` — prüfen, ob gemergt; sonst zuerst abschliessen.
+- Hotfix H-T2 live @ a26ee26 (R223, R224).
 - **M9 Rest:** G7b Landtiere, K3 Silhouetten (R186), Typ-Erkennung kleiner Bauten (R195).
 - **M12 „Weite Welt"** danach: Brainstorming mit lead-design; Baustein I-004 Lagerhaus (geparkt, R210).
 - Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; kein Rebase (§6.3, Guard sperrt
@@ -48,9 +48,9 @@ Stand: 2026-10-04 (Session-Ende e13c3631, Teil 2; 5-h-Fenster 17 %, Woche 15 %)
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt                       | bis |
-| -------- | ------------- | ----------------------------- | --- |
-| e13c3631 | abgeschlossen | nichts mehr (H-T2 ggf. offen) | –   |
+| Session  | Stand         | besitzt     | bis |
+| -------- | ------------- | ----------- | --- |
+| e13c3631 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
@@ -64,7 +64,7 @@ Stand: 2026-10-04 (Session-Ende e13c3631, Teil 2; 5-h-Fenster 17 %, Woche 15 %)
 ## Pausierte Pakete
 
 - H-R12 (Dünen) offen, neue Kurz-Spec nötig; Branch `feat/h-r12-duenen` @ ca6a0e1 (Material, nicht release-reif).
-- Worktrees: `.worktrees/integrate` (bleibt), `.worktrees/h-r12`, `h-r14`, `h-a2` (h-r14/h-a2 gemergt, entfernbar).
+- Worktrees: `.worktrees/integrate` (bleibt) und `.worktrees/h-r12` (Material).
 - Remote-Branches überholt, nicht gemergt: `rel/rel-01` (mit altem H-R12), `docs/rel-01-arc42`; `rel/rel-01b`
   und `rel/rel-02` sind in main. Löschen entfernter Branches ist verboten (§6.1) — bleiben stehen.
 - Lokaler Branch `feat/m7-fx` @ 4489bdd, Remote `wip/r118a-render-aufraeumen`, `stash@{0}`: unverändert, bis Ruling.
@@ -86,7 +86,7 @@ Keine offenen Freigaben.
 ## Nächste Schritte
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. H-T2 prüfen/abschliessen (Werkzeug-Merge); Vorschläge der Retro-Nachträge entscheiden.
+1. Retro-Regeln aus R224 umsetzen lassen (studio-coach: E-028, lernen.md kürzen; lead-production: Integrator-Persona).
 2. Nutzerurteil zu REL-01/REL-02 umsetzen (Ruling), dann Ideen-Runde IDEEN-03.
 3. REL-03 schneiden: H-R12 neue Kurz-Spec, H-R13, H-U1, S1-Rest (Dateimatrix, parallel).
 4. M12 „Weite Welt": Brainstorming mit lead-design parallel zu REL-03 (Bausteine I-004, I-006, I-008).
