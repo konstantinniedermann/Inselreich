@@ -4,6 +4,7 @@ import { TEX } from '../../src/render/iso';
 import { DUNE_ONSET, DUNE_TONE_FLAT } from '../../src/render/dunes';
 import {
   buildGrid,
+  duneInputs,
   paintPixels,
   patchGrid,
   terrainCodes,
@@ -65,7 +66,9 @@ describe('H-R12 Dünen im Terrain', () => {
       }
     expect(before).toBeGreaterThan(200);
     expect(after).toBeGreaterThan(50);
-    expect(maxBefore).toBe(0);
+    // Fix 4: die Front folgt dem euklidischen Feld (Kacheln, geglättet), `smooth` ist der Chebyshev-Abstand; beide weichen
+    // um Bruchteile einer Kachel ab, die Einblendung (0,5 Kachel) lässt dort höchstens einen Hauch Höhe zu
+    expect(maxBefore).toBeLessThan(0.05);
     expect(maxAfter).toBeGreaterThan(0.5);
   });
 
@@ -165,4 +168,58 @@ describe('H-R12 Dünen im Terrain', () => {
       if (big > 30) expect(onLines / big, `Seed ${seed} (${onLines}/${big})`).toBeLessThan(0.38);
     }
   }, 60_000);
+
+  it('H-R12 Fix 4: keine Kachelstruktur in den Eingangsgewichten (diagonale Küste und Sand/Gras-Grenze)', () => {
+    // Küste und Sand/Gras-Grenze laufen exakt diagonal (x + y = const): ein Kachelfeld (Chebyshev, harter Gate) zeigt dort
+    // Treppen mit der Periode √2 Kacheln entlang der Linie. Gemessen wird die Amplitude dieser Periode (und der halben)
+    // entlang küstenparalleler Linien in Schritten von 1/16 Kachel.
+    const world = createWorld(2, { unlockAll: true });
+    const COAST = 50, // x + y < COAST: Wasser
+      EDGE = COAST + 9; // dann Sand, ab EDGE Gras
+    for (let y = 0; y < world.height; y++)
+      for (let x = 0; x < world.width; x++)
+        world.tiles[y * world.width + x]!.terrain =
+          x + y < COAST ? 'water' : x + y < EDGE ? 'sand' : 'grass';
+    const fields = terrainFields(world);
+    // Linie u = fx + fy = c; ein Schritt von 1/16 in fx (und −1/16 in fy) ist 1/16 Periode der Kachelstufen
+    const N = 16 * 8; // 8 Perioden
+    const amp = (c: number, pick: (r: ReturnType<typeof duneInputs>) => number): number => {
+      const v: number[] = [];
+      for (let k = 0; k < N; k++)
+        v.push(pick(duneInputs(world, fields, c / 2 - 4 + k / 16, c / 2 + 4 - k / 16)));
+      const mean = v.reduce((a, b) => a + b, 0) / N;
+      let best = 0;
+      for (const h of [1, 2]) {
+        let re = 0,
+          im = 0;
+        for (let k = 0; k < N; k++) {
+          const ph = (2 * Math.PI * h * k) / 16;
+          re += (v[k]! - mean) * Math.cos(ph);
+          im += (v[k]! - mean) * Math.sin(ph);
+        }
+        best = Math.max(best, (2 * Math.hypot(re, im)) / N);
+      }
+      return best;
+    };
+    const weight = (r: ReturnType<typeof duneInputs>): number =>
+      r.sand * Math.min(1, Math.max(0, (r.s - DUNE_ONSET) / 0.5));
+    const worst = { s: 0, beach: 0, weight: 0 };
+    const line = (sPerp: number): number => COAST + 1 + sPerp * Math.SQRT2; // Linie im Abstand sPerp von der Küste
+    for (const d of [2, 3, 4]) {
+      worst.s = Math.max(
+        worst.s,
+        amp(line(d), (r) => r.s),
+      );
+      worst.beach = Math.max(
+        worst.beach,
+        amp(line(d), (r) => r.beach),
+      );
+    }
+    // Gewicht: am Dünenansatz und nahe der Sand/Gras-Grenze (Sand bis EDGE + 1 − 0,5)
+    for (const c of [line(1.3), line(1.6), EDGE + 0.4, EDGE + 0.7, EDGE + 1.0])
+      worst.weight = Math.max(worst.weight, amp(c, weight));
+    expect(worst.s).toBeLessThan(0.03);
+    expect(worst.beach).toBeLessThan(0.04);
+    expect(worst.weight).toBeLessThan(0.03);
+  });
 });
