@@ -12,7 +12,8 @@ import {
   type Pt,
   type SortedItem,
 } from './iso';
-import { PALETTE, mixHex } from './palette';
+import { LIGHT } from './light';
+import { PALETTE, mixHex, shadeSide, toLight } from './palette';
 
 // trees.ts — aufrechte Baumstempel (ISO §6, D-08, D-12). Kronen liegen in der Spaltenbreite ihrer Kachel.
 export type TreeItem = Extract<SortedItem, { kind: 'tree' }>;
@@ -42,7 +43,21 @@ const CONIFER_TOP = 1.6; // Spitze des Nadelbaums über dem Kronenmittelpunkt, i
 const SHADOW_SHIFT = 0.19; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
   SHADOW_B = 0.3;
-const DIR = { x: 3 / Math.sqrt(10), y: 1 / Math.sqrt(10) };
+const DIR = { x: -LIGHT.x, y: -LIGHT.y }; // vom Licht weg (Kachelraum)
+/** Richtung zum Licht im Bild (Einheitsvektor, aus `LIGHT` projiziert; links oben). */
+const LIGHT_PX = (() => {
+  const p = project(LIGHT.x, LIGHT.y);
+  const n = Math.hypot(p.x, p.y);
+  return { x: p.x / n, y: p.y / n };
+})();
+/** Kappenversatz in Kronenradien (Richtung Licht) und Anteil des Schattenmonds. */
+const CAP_SHIFT = 0.4,
+  MOON_SHIFT = 0.14,
+  MOON_SHRINK = 0.9;
+/** Kronentöne (S2): kühler Schatten, Mitte, warme Kappe. */
+export const crownShade = (base: string): string => shadeSide(base, 0.3);
+export const crownCap = (base: string): string =>
+  toLight(mixHex(base, PALETTE.grassLight, 0.3), 0.2);
 
 /**
  * Feste Kronenplätze in Kachel-Anteilen (Ecken und Mitte der Raute). Bei Zoom 1 liegen die Plätze mindestens 6 px
@@ -128,36 +143,58 @@ export function paintStamp(
     ctx.rect(x - 1.5, cyc, 3, c.h);
     ctx.fill();
     if (c.kind === 1) {
-      // Nadelbaum: zwei Dreiecksstufen, die obere trägt die Lichtkappe
-      ctx.fillStyle = CONIFER_COLOR;
+      // Nadelbaum: zwei Dreiecksstufen; Schattenhälfte auf der lichtabgewandten Seite, Kappe an der Lichtseite
+      const sd = LIGHT_PX.x > 0 ? -1 : 1; // Seite des Schattens im Bild
+      const tier = (apexY: number, half: number, baseY: number): void => {
+        ctx.fillStyle = CONIFER_COLOR;
+        ctx.beginPath();
+        ctx.moveTo(x, apexY);
+        ctx.lineTo(x + half, baseY);
+        ctx.lineTo(x - half, baseY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = crownShade(CONIFER_COLOR);
+        ctx.beginPath();
+        ctx.moveTo(x, apexY);
+        ctx.lineTo(x + sd * half, baseY);
+        ctx.lineTo(x, baseY);
+        ctx.closePath();
+        ctx.fill();
+      };
+      tier(cyc - 0.4 * ry, rx, cyc + 0.9 * ry);
+      tier(cyc - CONIFER_TOP * ry, 0.75 * rx, cyc + 0.25 * ry);
+      ctx.fillStyle = crownCap(CONIFER_COLOR);
       ctx.beginPath();
-      ctx.moveTo(x, cyc - 0.4 * ry);
-      ctx.lineTo(x + rx, cyc + 0.9 * ry);
-      ctx.lineTo(x - rx, cyc + 0.9 * ry);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x, cyc - CONIFER_TOP * ry);
-      ctx.lineTo(x + 0.75 * rx, cyc + 0.25 * ry);
-      ctx.lineTo(x - 0.75 * rx, cyc + 0.25 * ry);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = PALETTE.crownLight;
-      ctx.beginPath();
-      ctx.moveTo(x - 0.05 * rx, cyc - (CONIFER_TOP - 0.1) * ry);
-      ctx.lineTo(x - 0.05 * rx, cyc + 0.1 * ry);
-      ctx.lineTo(x - 0.7 * rx, cyc + 0.1 * ry);
+      ctx.moveTo(x + sd * -0.05 * rx, cyc - (CONIFER_TOP - 0.1) * ry);
+      ctx.lineTo(x + sd * -0.05 * rx, cyc + 0.1 * ry);
+      ctx.lineTo(x + sd * -0.7 * rx, cyc + 0.1 * ry);
       ctx.closePath();
       ctx.fill();
       continue;
     }
-    ctx.fillStyle = c.kind === 2 ? LIGHT_CROWN_COLOR : PALETTE.crown;
+    const base = c.kind === 2 ? LIGHT_CROWN_COLOR : PALETTE.crown;
+    // Schattenmond: volle Krone im kühlen Ton, Mitte und Kappe sitzen zum Licht versetzt darüber
+    ctx.fillStyle = crownShade(base);
     ctx.beginPath();
     ctx.ellipse(x, cyc, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = PALETTE.crownLight;
+    const mx = x + LIGHT_PX.x * MOON_SHIFT * rx,
+      my = cyc + LIGHT_PX.y * MOON_SHIFT * ry;
+    ctx.fillStyle = base;
     ctx.beginPath();
-    ctx.ellipse(x - 0.28 * rx, cyc - 0.3 * ry, 0.55 * rx, 0.5 * ry, 0, 0, Math.PI * 2);
+    ctx.ellipse(mx, my, MOON_SHRINK * rx, MOON_SHRINK * ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = crownCap(base);
+    ctx.beginPath();
+    ctx.ellipse(
+      mx + LIGHT_PX.x * CAP_SHIFT * rx,
+      my + LIGHT_PX.y * CAP_SHIFT * ry,
+      0.5 * rx,
+      0.45 * ry,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   ctx.restore();
