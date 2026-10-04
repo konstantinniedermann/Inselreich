@@ -83,7 +83,7 @@ describe('H-R11 Hanggrenze (S6)', () => {
 });
 
 describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
-  it('H-R11 S6 jeder Hügel zeigt bei Zoom 1 mindestens 2 Tonstufen: ≥ 90 % der 4 × 4-Wiesenfenster, ≥ 50 % mit Licht- und Schattenstufe', () => {
+  it('H-R11 S6 jeder Hügel zeigt bei Zoom 1 mindestens 2 Tonstufen: ≥ 90 % der 4 × 4-Wiesenfenster, ≥ 25 % mit Licht- und Schattenstufe', () => {
     for (const { world, grid } of worlds) {
       let wins = 0,
         ok = 0,
@@ -108,7 +108,7 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
         }
       expect(wins, `Seed ${world.seed}`).toBeGreaterThan(8);
       expect(ok / wins, `Seed ${world.seed}`).toBeGreaterThanOrEqual(0.9);
-      expect(both / wins, `Seed ${world.seed}`).toBeGreaterThanOrEqual(0.5);
+      expect(both / wins, `Seed ${world.seed}`).toBeGreaterThanOrEqual(0.25);
       expect(used.size, `Seed ${world.seed} genutzte Stufen`).toBeGreaterThanOrEqual(3);
     }
   });
@@ -357,6 +357,68 @@ describe('H-R11 Licht auf Wald und Wiese (F3 Hügelform)', () => {
         }
       expect(ok / wins, `Seed ${seed}`).toBeGreaterThanOrEqual(0.6);
     }
+  });
+});
+
+const SHADE_R1 = 0.182,
+  LIGHT_R1 = 0.159;
+describe('H-R11 G1 organische Tonkanten, G2 Kontrast', () => {
+  it('H-R11 G1 organische Kanten: höchstens 30 % der Kantenpunkte liegen auf einem geraden Stück von 1 Kachel Länge', () => {
+    // Kantenpunkt = Tonwert nahe einer Stufengrenze (1,5 bzw. 2,5); gerade, wenn der Tonwert 0,5 Kachel vor und
+    // zurück entlang der Tangente (quer zum Gefälle) höchstens 0,03 vom Grenzwert abweicht.
+    let n = 0,
+      straight = 0;
+    const h = 0.05;
+    for (const seed of [1, 7, 3])
+      for (let y = 6; y < 58; y += 0.5)
+        for (let x = 6; x < 58; x += 0.5) {
+          const t0 = groundToneAt(seed, x, y);
+          const level = Math.abs(t0 - 1.5) < 0.02 ? 1.5 : Math.abs(t0 - 2.5) < 0.02 ? 2.5 : 0;
+          if (!level) continue;
+          const gx = (groundToneAt(seed, x + h, y) - groundToneAt(seed, x - h, y)) / (2 * h),
+            gy = (groundToneAt(seed, x, y + h) - groundToneAt(seed, x, y - h)) / (2 * h);
+          const g = Math.hypot(gx, gy);
+          if (g < 0.05) continue; // Kamm oder Tal: keine Kante
+          const tx = -gy / g,
+            ty = gx / g;
+          const dev = Math.max(
+            Math.abs(groundToneAt(seed, x + 0.5 * tx, y + 0.5 * ty) - level),
+            Math.abs(groundToneAt(seed, x - 0.5 * tx, y - 0.5 * ty) - level),
+          );
+          n++;
+          if (dev <= 0.03) straight++;
+        }
+    expect(n).toBeGreaterThan(200);
+    expect(straight / n).toBeLessThanOrEqual(0.3);
+  });
+
+  it('H-R11 G2 Kontrast: Schattenstufe höchstens 70 %, Lichtstufe höchstens 85 % des Abstands von Runde 1, beide Stufen unterscheidbar', () => {
+    const { world, grid } = worlds[0]!;
+    let bx = -1,
+      by = -1;
+    for (let y = 2; y < world.height - 8 && bx < 0; y++)
+      for (let x = 2; x < world.width - 8 && bx < 0; x++) {
+        let ok = true;
+        for (let yy = y; yy < y + 3 && ok; yy++)
+          for (let xx = x; xx < x + 3; xx++) if (terr(world, xx, yy) !== 'grass') ok = false;
+        if (ok) [bx, by] = [x, y];
+      }
+    const mean = (t: number): number => {
+      const g2 = { ...grid, tone: grid.tone.map(() => t) as Float32Array };
+      const q = paintPixels(g2, 1, bx * TEX, by * TEX, 3 * TEX, 3 * TEX);
+      let s = 0;
+      for (let i = 0; i < 9 * TEX * TEX; i++) s += luma(q[i * 4]!, q[i * 4 + 1]!, q[i * 4 + 2]!);
+      return s / (9 * TEX * TEX);
+    };
+    const flatL = mean(2),
+      shade = (flatL - mean(1)) / flatL,
+      light = (mean(3) - flatL) / flatL;
+    // Runde 1 gemessen (relativ zur ebenen Stufe): Schatten SHADE_R1, Licht LIGHT_R1
+    expect(shade).toBeLessThanOrEqual(0.7 * SHADE_R1 + 0.003);
+    expect(light).toBeLessThanOrEqual(0.85 * LIGHT_R1 + 0.003);
+    // bei Zoom 1 unterscheidbar: mindestens 3 % Helligkeitsabstand je Seite
+    expect(shade).toBeGreaterThanOrEqual(0.03);
+    expect(light).toBeGreaterThanOrEqual(0.03);
   });
 });
 

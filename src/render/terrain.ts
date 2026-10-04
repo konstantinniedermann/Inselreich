@@ -100,11 +100,11 @@ export const GROUND_FLAT = 2;
  * Stufe je Kachel). Rauschen nur als langsame Phasenverschiebung und Amplitudenmodulation.
  */
 const GROUND_WAVES: readonly { lambda: number; dAng: number; amp: number }[] = [
-  { lambda: 8, dAng: 0.35, amp: 0.7 },
-  { lambda: 5.6, dAng: -0.95, amp: 0.4 },
-  { lambda: 4, dAng: 0.7, amp: 0.2 },
+  { lambda: 8, dAng: 0.35, amp: 0.55 },
+  { lambda: 5.6, dAng: -0.95, amp: 0.3 },
+  { lambda: 4, dAng: 0.7, amp: 0.15 },
 ];
-const GROUND_WARP = 0.15; // Phasenverschiebung durch Rauschen (Perioden)
+const GROUND_SWIRL = 0.9; // Domain-Warp: Verschiebung ± die Hälfte, in Kacheln
 const LIGHT_ANGLE = Math.atan2(LIGHT.y, LIGHT.x);
 /** Parabelprofil, dessen Ableitung ein Dreieck ist (−1…1, Periode 1): glatte Kuppen und Mulden. */
 const waveProfile = (u: number): number => {
@@ -121,10 +121,10 @@ const GROUND_SPAN = 1.1;
 const GROUND_EDGE_PX = 0.4;
 /** Pixelkorn des Bodens: ± die Hälfte, also ±2,5 % Helligkeit (wie ROCK_GRAIN im Fels). */
 const GROUND_GRAIN = 0.05;
-const TONE_DARK_MUL = 0.12;
-const TONE_COOL_MIX = 0.22;
-const TONE_LIGHT_MUL = 0.1;
-const TONE_WARM_MIX = 0.16;
+const TONE_DARK_MUL = 0.08;
+const TONE_COOL_MIX = 0.145;
+const TONE_LIGHT_MUL = 0.085;
+const TONE_WARM_MIX = 0.136;
 /** Wiese: Mischung zum Oliv gleicher Helligkeit (Sättigung des Bodens unter Gebäuden und Bäumen, S5). */
 /** Anteil der weichen Grundfarb-Streuung (grassDark … grassLight) an der Wiese; der Rest ist die Mittelfarbe. */
 const GRASS_FIELD_KEEP = 0.5;
@@ -318,20 +318,20 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
  * H-R11: Höhenfeld des Bodens (Wiese und Wald) in Kachelhöhen: Hügel von 2–4 Kacheln (`meadowHill`) plus Mikro-
  * Unebenheit von 0,3–0,6 Kachel. Es steht nur im Bild (S6), nie in der Geometrie.
  */
-export function groundHeight(seed: number, fx: number, fy: number): number {
+export function groundHeight(seed: number, fx0: number, fy0: number): number {
+  // G1: tieffrequenter Domain-Warp der Eingangskoordinaten (gedreht, Merkmal ≈ 2–3 Kacheln): die Tonkanten laufen
+  // Bögen statt gerader Facettenkanten. Rauschen nur hier, einmal je Punkt (nicht je Welle und nicht je Pixel).
+  const fx = fx0 + GROUND_SWIRL * (rotNoise(seed + 127, fx0, fy0, 0.5, ROT_RELIEF) - 0.5),
+    fy = fy0 + GROUND_SWIRL * (rotNoise(seed + 128, fx0, fy0, 0.5, ROT_RELIEF2) - 0.5);
+  const mod = 0.85 + 0.3 * rotNoise(seed + 126, fx0, fy0, 0.1, ROT_PATCH);
   let h = 0;
   for (let k = 0; k < GROUND_WAVES.length; k++) {
     const w = GROUND_WAVES[k]!;
     const ang = LIGHT_ANGLE + w.dAng + 0.26 * (hash2(seed + 120, k, 0) - 0.5);
     const lam = w.lambda * (0.9 + 0.2 * hash2(seed + 121, k, 0));
-    // Phase: ebene Welle, gewellt durch langsames Rauschen (organische statt gerade Reihen)
-    const u =
-      (Math.cos(ang) * fx + Math.sin(ang) * fy) / lam +
-      hash2(seed + 122, k, 0) +
-      GROUND_WARP * (rotNoise(seed + 123 + k, fx, fy, 0.13, ROT_HILL + k) - 0.5);
+    const u = (Math.cos(ang) * fx + Math.sin(ang) * fy) / lam + hash2(seed + 122, k, 0);
     // Höhe der Welle: ihr Licht (Tonwert) soll die Amplitude `w.amp` Stufen haben, a = amp · λ / |n · L|
     const nl = Math.max(0.35, Math.abs(Math.cos(ang - LIGHT_ANGLE)));
-    const mod = 0.85 + 0.3 * rotNoise(seed + 126 + k, fx, fy, 0.1, ROT_PATCH + k);
     h += mod * ((w.amp * lam) / nl) * waveProfile(u);
   }
   return h;
