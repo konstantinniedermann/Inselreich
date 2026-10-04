@@ -731,7 +731,21 @@ describe('M10 Teil-Raster', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'tone', 'patch', 'cls'] as const)
+    for (const f of [
+      'sharp',
+      'smooth',
+      'grass',
+      'rock',
+      'shade',
+      'tone',
+      'dtone',
+      'dune',
+      'rip',
+      'rwarp',
+      'dtn',
+      'patch',
+      'cls',
+    ] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
@@ -999,7 +1013,18 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const) {
+    for (const f of [
+      'shade',
+      'tone',
+      'dtone',
+      'dune',
+      'rip',
+      'rwarp',
+      'dtn',
+      'warm',
+      'mottle',
+      'veil',
+    ] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     }

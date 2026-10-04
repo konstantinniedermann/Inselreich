@@ -2,8 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import { TEX } from '../../src/render/iso';
 import { DUNE_ONSET, DUNE_TONE_FLAT } from '../../src/render/dunes';
-import { LAND } from '../../src/render/terrainField';
-import { buildGrid, paintPixels, patchGrid } from '../../src/render/terrain';
+import {
+  buildGrid,
+  paintPixels,
+  patchGrid,
+  terrainCodes,
+  terrainPatchRect,
+} from '../../src/render/terrain';
+import { LAND, terrainFields } from '../../src/render/terrainField';
 
 // H-R12 — Dünen im Sandzweig des Terrains (Stilrahmen D7, S2, S6).
 
@@ -98,11 +104,40 @@ describe('H-R12 Dünen im Terrain', () => {
     expect(litAll).toBeGreaterThan(50); // Luvseiten sind heller
   });
 
-  it('H-R12 patchGrid hält dtone, dune, rip und rwarp wie ein Neuaufbau', () => {
-    const w = createWorld(7, { unlockAll: true });
-    const full = buildGrid(w);
-    expect(full.dtone.length).toBe(full.cls.length);
-    expect(full.rip.some((v) => v > 0)).toBe(true);
-    expect(typeof patchGrid).toBe('function');
-  });
+  it('H-R12 Sandwechsel: patchGrid gleicht im Rechteck dem Neuaufbau (dtone, dune, rip, rwarp, dtn), der sandRest-Cache wird verworfen', () => {
+    const { world: w0 } = worlds[1]!; // Seed 7
+    const at = (w: typeof w0, x: number, y: number) => w.tiles[y * w.width + x]!;
+    const sandNear = (x: number, y: number): boolean =>
+      [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ].some(([dx, dy]) => at(w0, x + dx!, y + dy!).terrain === 'sand');
+    let checked = 0,
+      withDune = 0;
+    for (let y = 2; y < w0.height - 2 && checked < 6; y++)
+      for (let x = 2; x < w0.width - 2 && checked < 6; x++) {
+        if (at(w0, x, y).terrain !== 'grass' || !sandNear(x, y)) continue;
+        const w = createWorld(7, { unlockAll: true });
+        const fields = terrainFields(w);
+        const grid = buildGrid(w, fields); // füllt den Cache mit dem Abstand vor dem Wechsel
+        const prev = terrainCodes(w);
+        at(w, x, y).terrain = 'sand';
+        const next = terrainCodes(w);
+        const rect = terrainPatchRect(prev, next, w.width, w.height)!;
+        patchGrid(w, fields, grid, prev, next, rect);
+        const full = buildGrid(w);
+        for (const f of ['dtone', 'dune', 'rip', 'rwarp', 'dtn'] as const)
+          for (let j = rect.y0 * NODES; j <= (rect.y1 + 1) * NODES; j++)
+            for (let i = rect.x0 * NODES; i <= (rect.x1 + 1) * NODES; i++) {
+              const k = j * grid.nx + i;
+              expect(grid[f][k], `${f} Kachel ${x},${y} Knoten ${i},${j}`).toBe(full[f][k]);
+              if (f === 'dune' && full.dune[k]! > 0) withDune++;
+            }
+        checked++;
+      }
+    expect(checked).toBe(6);
+    expect(withDune).toBeGreaterThan(0); // der Vergleich trifft wirklich Dünenknoten
+  }, 60_000);
 });

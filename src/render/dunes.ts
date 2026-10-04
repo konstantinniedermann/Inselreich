@@ -184,18 +184,20 @@ const EDGE_TONE = 2.5; // Stufengrenze, an der die Kammkante kippt
  * (Stufe 2 → 3) und `accent` 0…DUNE_ACCENT. Steigt der Ton landeinwärts (Luvseite), läuft die Stufe weich und breit
  * hinauf (Fusskante, ganze Luvflanke); fällt er (Kamm → Lee), kippt sie hart, und der Akzent ist ein Strich von
  * DUNE_ACCENT_PX Ausgabepixeln Breite unmittelbar hinter dieser Kante (Abstand aus Tonabstand / Gefälle je px).
+ * `out` wird wiederverwendet (kein Objekt je Pixel).
  */
 export function duneShade(
   t: number,
   dn: number,
   hw: number,
   gpx: number,
+  out: { lift: number; accent: number } = { lift: 0, accent: 0 },
 ): { lift: number; accent: number } {
   const c = smoothstep(0.1, -0.5, dn); // 0 steigend … 1 fallend
   const wide = smoothstep(DUNE_TONE_FLAT, DUNE_LIFT_FULL, t);
   const hard = Math.max(0, Math.min(1, toneStep(t, hw) - DUNE_TONE_FLAT));
-  const lift = wide + (hard - wide) * c;
   const px = gpx > 1e-6 && t <= EDGE_TONE ? (EDGE_TONE - t) / gpx : Infinity; // Abstand hinter der Kante in px
-  const accent = c * DUNE_ACCENT * Math.max(0, 1 - px / DUNE_ACCENT_PX);
-  return { lift, accent };
+  out.lift = wide + (hard - wide) * c;
+  out.accent = c * DUNE_ACCENT * Math.max(0, 1 - px / DUNE_ACCENT_PX);
+  return out;
 }

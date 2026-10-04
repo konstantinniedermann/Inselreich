@@ -1,7 +1,15 @@
 import { hash2, valueNoise } from '../sim/noise';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
-import { DUNE_SHADOW, DUNE_TONE_FLAT, WET_SAND, duneSample, duneShade, rippleOf } from './dunes';
+import {
+  DUNE_ACCENT,
+  DUNE_SHADOW,
+  DUNE_TONE_FLAT,
+  WET_SAND,
+  duneSample,
+  duneShade,
+  rippleOf,
+} from './dunes';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
 import {
@@ -816,6 +824,7 @@ export function paintPixels(
 ): Uint8ClampedArray {
   const { nx, ny, sharp, smooth, ind, shade, tone, dtone, dtn, rip, rwarp, cls } = g;
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
+  const shadeOut = { lift: 0, accent: 0 }; // wiederverwendeter Ausgabepuffer von `duneShade`
   const col = [0, 0, 0],
     tc = [0, 0, 0];
   const mt = LAND.indexOf('mountain');
@@ -946,14 +955,12 @@ export function paintPixels(
             tD = dtone[d]!;
           const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
             gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
-          const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
+          const gpx = Math.sqrt(gxT * gxT + gyT * gyT) * gradScale; // Tongefälle je Ausgabepixel
+          const hw = toneHalfWidth(gpx, GROUND_EDGE_PX);
           // K1/K2: steigender Ton (Luv) läuft weich und breit hinauf, fallender (Kamm) kippt hart, dahinter der Akzent
-          const { lift: e, accent } = duneShade(
-            tA * w00 + tB * w10 + tC * w01 + tD * w11,
-            lerp(dtn),
-            hw,
-            Math.sqrt(gxT * gxT + gyT * gyT) * gradScale,
-          );
+          duneShade(tA * w00 + tB * w10 + tC * w01 + tD * w11, lerp(dtn), hw, gpx, shadeOut);
+          const e = shadeOut.lift,
+            accent = shadeOut.accent;
           if (e > 0) {
             const k = e * wSand;
             const m = 1 + TONE_LIGHT_MUL * k;
@@ -968,7 +975,7 @@ export function paintPixels(
             col[0] = col[0]! * m;
             col[1] = col[1]! * m;
             col[2] = col[2]! * m;
-            mix3(col, DUNE_SHADOW, SAND_ACCENT_MIX * k * 2, col);
+            mix3(col, DUNE_SHADOW, SAND_ACCENT_MIX * (k / DUNE_ACCENT), col); // k / DUNE_ACCENT: 0…1
           }
           const dry = Math.min(1, (sPx - WET_SAND - 0.1) / 0.5);
           const sm =
@@ -1193,7 +1200,9 @@ export function patchGrid(
     for (let t = 0; t < LAND.length; t++) fields.types[LAND[t]!].v[i] = next[i] === t + 1 ? 1 : 0;
   }
   if (coastChanged) fields.coast = coastField(world);
-  // Abstand zum Nicht-Sand ändert sich nur, wenn Sand oder Wasser kommt bzw. geht (Roden: Wald → Gras bleibt gleich)
+  // Abstand zum Nicht-Sand ändert sich nur, wenn Sand oder Wasser kommt bzw. geht (Roden: Wald → Gras bleibt gleich).
+  // Im Spiel wechseln Sand und Küste nie (`forest.ts` tauscht nur Wald und Gras); die Strandbreite reicht bei einem
+  // Wechsel über den Patch-Rand hinaus, darum gilt der Neuaufbau im Rechteck nur dort (Test H-R12 Sandwechsel).
   if (coastChanged || sandChanged) sandRestCache.delete(fields);
   const k = TEX / RASTER; // Knoten je Kachel
   const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
