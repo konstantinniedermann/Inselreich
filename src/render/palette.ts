@@ -86,7 +86,7 @@ export function rgbaOf(hex: string, alpha: number): string {
 }
 
 /** `rgba(…)` aus `#rrggbb` oder `rgb(r,g,b)` (für Mischtöne aus `mixHex`). */
-export function rgbaOfCss(css: string, alpha: number): string {
+export function rgbaOfCss(css: string, alpha: number | string): string {
   return `rgba(${rgbOfCss(css).join(',')},${alpha})`;
 }
 

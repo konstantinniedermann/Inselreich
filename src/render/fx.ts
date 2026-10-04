@@ -1,5 +1,5 @@
 import { fireTongues } from './limits';
-import { INK_TONE, LIGHT_TONE, PALETTE, rgbOfCss, rgbaOf, toInk } from './palette';
+import { INK_TONE, LIGHT_TONE, PALETTE, rgbOfCss, rgbaOf, rgbaOfCss, toInk } from './palette';
 
 // fx.ts — Krisen-Effekte (Spec 6.5): Feuer mit Rauch, Glühen, Warnring, Boom-Münze. Bildraum, `rect` ist die
 // Bildbox des Gebäudes in CSS-Pixeln. Reine Zeichenfunktionen: kein Weltzugriff, kein Zustand.
@@ -221,8 +221,8 @@ export function drawStormEdge(
     cy = view.h / 2,
     r = Math.hypot(cx, cy);
   const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
-  g.addColorStop(0, `rgba(${rgbOfCss(INK_TONE).join(',')},0)`);
-  g.addColorStop(1, `rgba(${rgbOfCss(INK_TONE).join(',')},${(EDGE_ALPHA * k).toFixed(4)})`);
+  g.addColorStop(0, rgbaOfCss(INK_TONE, 0));
+  g.addColorStop(1, rgbaOfCss(INK_TONE, (EDGE_ALPHA * k).toFixed(4)));
   ctx.save();
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, view.w, view.h);

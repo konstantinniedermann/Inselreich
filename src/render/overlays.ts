@@ -14,8 +14,8 @@ import { INK_TONE, PALETTE, rgbaOfCss } from './palette';
 
 // --- Darstellungswerte ---
 export const SYMBOL_MIN_ZOOM = 0.75; // darunter keine Bedarfssymbole
-// Weisse Auswahl-/Hervorhebungsfarben sind UI-Signal (S4/S5-Ausnahme) und bleiben unverändert.
 const MARK_EDGE = INK_TONE; // kräftige Kontur der Marken, volle Deckkraft
+// Weisse Auswahl-/Hervorhebungsfarben sind UI-Signal (S4/S5-Ausnahme) und bleiben unverändert.
 const OUTLINE_COLOR = 'rgba(255,255,255,0.85)';
 const CIRCLE_COLOR = 'rgba(255,255,255,0.7)';
 const HIGHLIGHT_FILL = 'rgba(255,255,255,0.28)';
