@@ -181,6 +181,10 @@ Tab verborgen ist.
 - **Effekte:** Klicks beim Bauen und Abreissen, Münzen bei Steuern und Verkauf, Signale für neue und
   gelieferte Aufträge, Aufstieg, Fehler und Sieg; bei Krisen Glocke (Brand), Nebelhorn (Sturmwarnung)
   und Fanfare (Boom). Wichtige Signale senken Musik und Umgebung kurz ab.
+  Geht ein Gut aus, das deine Häuser brauchen, ertönt ein tiefer Doppelton (je Gut höchstens einmal pro
+  Minute; Krisensignale haben Vorrang). Betriebe im Bild geben beim Fertigstellen einer Lieferung ein
+  leises Arbeitsgeräusch von sich (Klopfen, Tick, Plätschern), nie dichter als etwa einmal pro Sekunde.
+  Beides hängt am Effekte-Regler.
 - **Umgebung:** folgt dem Bildausschnitt — Meer, Wind, Vögel am Tag, Grillen in der Nacht, Möwen an der
   Küste, Stadtgeräusch bei vielen Einwohnern im Blick; Regen, Sturm und Feuer bei Krisen. Nah gezoomt
   wird die Stadt lauter, weit gezoomt der Wind.

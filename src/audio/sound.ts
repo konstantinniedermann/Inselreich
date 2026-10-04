@@ -19,6 +19,19 @@ import {
   type SampleLoader,
 } from './ambience';
 import { BUILD_GROUPS, buildGroupName } from './buildSounds';
+import {
+  SHORTAGE_FIGURE_S,
+  SHORTAGE_GAP_S,
+  SHORTAGE_GLOBAL_S,
+  SHORTAGE_PEAK,
+  SHORTAGE_PER_GOOD_S,
+  SHORTAGE_TONE_S,
+  WORK_GLOBAL_MS,
+  WORK_GROUPS,
+  WORK_PER_KIND_MS,
+  shortageVoice,
+  workGroupName,
+} from './economySounds';
 import { SFX_FILES } from './manifest';
 import { createMusicPlayer, type MusicPlayer } from './music';
 
@@ -80,6 +93,10 @@ export interface Sound {
   play(e: SoundEvent): void;
   /** Bauklang je Gebäudeart (Id-String oder 'road'); unbekannt -> Holz. */
   playBuild(kind: string): void;
+  /** Mangel-Doppelton für ein Gut (Id-String); entprellt, weicht Krisen-Signalen. */
+  playShortage(good: string): void;
+  /** Arbeitston je Gebäudeart (Id-String); gedrosselt, duckt nichts. */
+  playWork(kind: string): void;
   setMuted(b: boolean): void;
   setVolume(v: number): void;
   setBus(bus: Bus, v: number): void;
@@ -184,6 +201,11 @@ export function createSound(
   let music: MusicPlayer | null = null;
   const lastPlayed = new Map<SoundEvent, number>();
   const lastBuild = new Map<string, number>();
+  const lastShortage = new Map<string, number>();
+  let lastShortageAny: number | null = null;
+  let crisisUntil = -Infinity; // Ende der Figur des letzten Krisen-Signals (alarm, stormWarning)
+  const lastWork = new Map<string, number>();
+  let lastWorkAny: number | null = null;
 
   const safe = (fn: () => void) => {
     try {
@@ -467,6 +489,8 @@ export function createSound(
       lastPlayed.set(e, now);
       safe(figures[e]);
       const figS = FIGURE_S[e];
+      if ((e === 'alarm' || e === 'stormWarning') && figS !== undefined)
+        crisisUntil = Math.max(crisisUntil, now + figS);
       if (figS !== undefined) {
         signals.push({ t0: now, durS: figS });
         safe(() => scheduleDuck(now));
@@ -481,6 +505,39 @@ export function createSound(
       if (last !== undefined && now - last + EPS < group.throttleMs / 1000) return;
       lastBuild.set(name, now);
       for (const st of group.steps) {
+        if (st.k === 'tone') {
+          safe(() => tone(st.freq, st.at, st.dur, st.peak * FX, st.type ?? 'sine', st.freqEnd));
+        } else {
+          safe(() => burst(st.at, st.dur, st.peak * FX, st.from, st.to, st.filter));
+        }
+      }
+    },
+    playShortage(good) {
+      if (!unlocked || disposed || muted || !ctx) return;
+      const key = typeof good === 'string' ? good : '';
+      const now = ctx.currentTime;
+      if (now < crisisUntil) return; // Krise hat Vorrang; verbraucht die Entprellung nicht
+      const last = lastShortage.get(key);
+      if (last !== undefined && now - last + EPS < SHORTAGE_PER_GOOD_S) return;
+      if (lastShortageAny !== null && now - lastShortageAny + EPS < SHORTAGE_GLOBAL_S) return;
+      lastShortage.set(key, now);
+      lastShortageAny = now;
+      const v = shortageVoice(key);
+      safe(() => tone(v.f1, 0, SHORTAGE_TONE_S, SHORTAGE_PEAK, v.type));
+      safe(() => tone(v.f2, SHORTAGE_GAP_S, SHORTAGE_TONE_S, SHORTAGE_PEAK, v.type));
+      signals.push({ t0: now, durS: SHORTAGE_FIGURE_S });
+      safe(() => scheduleDuck(now));
+    },
+    playWork(kind) {
+      if (!unlocked || disposed || muted || !ctx) return;
+      const key = typeof kind === 'string' ? kind : '';
+      const now = ctx.currentTime;
+      if (lastWorkAny !== null && now - lastWorkAny + EPS < WORK_GLOBAL_MS / 1000) return;
+      const last = lastWork.get(key);
+      if (last !== undefined && now - last + EPS < WORK_PER_KIND_MS / 1000) return;
+      lastWorkAny = now;
+      lastWork.set(key, now);
+      for (const st of WORK_GROUPS[workGroupName(key)].steps) {
         if (st.k === 'tone') {
           safe(() => tone(st.freq, st.at, st.dur, st.peak * FX, st.type ?? 'sine', st.freqEnd));
         } else {
