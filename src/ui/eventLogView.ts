@@ -1,4 +1,5 @@
 import { logLine, type LogEntry } from './crisisLog';
+import type { LogTarget } from './logTarget';
 
 /** Ereignis-Log (M6 13.4): Kopf mit Einklappen, Liste neuester oben; Standard eingeklappt (R112). */
 export function renderEventLog(box: HTMLElement): void {
@@ -32,18 +33,34 @@ export function updateEventLog(
   box: HTMLElement,
   entries: readonly LogEntry[],
   visible = true,
+  onTarget?: (target: LogTarget) => void,
 ): void {
   box.hidden = !visible || entries.length === 0;
   const list = box.querySelector<HTMLElement>('[data-field="event-log"]');
   if (!list) return;
-  const key = entries.map(logLine).join('\n');
+  // Ort gehört in den Schlüssel, sonst ginge die Klickbarkeit beim Cachen verloren
+  const key = entries
+    .map((e) =>
+      e.target ? `${logLine(e)}@${e.target.id}:${e.target.x},${e.target.y}` : logLine(e),
+    )
+    .join('\n');
   if (list.dataset.key === key) return;
   list.dataset.key = key;
   list.replaceChildren(
     ...entries.map((e) => {
       const li = document.createElement('li');
       li.className = 'event-log__item';
-      li.textContent = logLine(e);
+      const target = e.target;
+      if (target && onTarget) {
+        // Mit Ort: echter Button im li, per Tastatur erreichbar
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'event-log__link';
+        btn.textContent = logLine(e);
+        btn.title = 'Auf der Karte zeigen';
+        btn.addEventListener('click', () => onTarget(target));
+        li.appendChild(btn);
+      } else li.textContent = logLine(e);
       return li;
     }),
   );

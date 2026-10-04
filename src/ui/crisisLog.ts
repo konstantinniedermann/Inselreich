@@ -5,6 +5,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { CrisisView } from '../sim/queries';
 import type { World } from '../sim/types';
 import { repairFee, targetName } from './crisis';
+import { logTargetFor, type LogTarget } from './logTarget';
 import { formatClock, formatGameTime } from './time';
 
 /** Ereignis-Log (M6 13.4): Einträge aus dem Vergleich zweier `crisisView`-Stände; kein Teil des Spielstands. */
@@ -16,6 +17,8 @@ export interface LogEntry {
   toast: 'warn' | 'info' | null;
   /** Tick, zu dem der Eintrag entstand. */
   tick: number;
+  /** Schauplatz (Gebäude und Kachel); fehlt bei Einträgen ohne Ort. */
+  target?: LogTarget;
 }
 
 /** Krisen-Log und Brand-/Sturm-Legende sind sichtbar, sobald Krisen laufen und die erste Periode begonnen hat (Spec 11.10). */
@@ -42,8 +45,8 @@ export function crisisLogEntries(
   tick: number,
 ): LogEntry[] {
   const out: LogEntry[] = [];
-  const add = (text: string, toast: LogEntry['toast']): void => {
-    out.push({ text, toast, tick });
+  const add = (text: string, toast: LogEntry['toast'], target?: LogTarget): void => {
+    out.push(target ? { text, toast, tick, target } : { text, toast, tick });
   };
   const samePeriod = prev.phase !== 'none' && cur.phase !== 'none' && prev.period === cur.period;
 
@@ -52,7 +55,8 @@ export function crisisLogEntries(
       // Nur ein Ausfall, dessen Gebäude noch steht, endet mit einem Eintrag
       if (prev.outcome === 'burning' && prev.target !== undefined) {
         const b = world.buildings[prev.target];
-        if (b) add(`${BUILDING_DEFS[b.defId].name} wieder in Betrieb`, null);
+        if (b)
+          add(`${BUILDING_DEFS[b.defId].name} wieder in Betrieb`, null, logTargetFor(prev, world));
       }
     } else if (prev.kind === 'storm') add('Sturm vorüber', null);
     else add('Boom vorbei', null);
@@ -73,9 +77,9 @@ export function crisisLogEntries(
       const fee = repairFee(cur, world);
       const feeText =
         fee === null ? '' : ` — Instandsetzung ${fee}, ${formatGameTime(FIRE_OUTAGE)} Ausfall`;
-      add(`Brand: ${name} brennt${feeText}`, 'warn');
+      add(`Brand: ${name} brennt${feeText}`, 'warn', logTargetFor(cur, world));
     } else if (cur.outcome === 'extinguished') {
-      add(`Brand gelöscht: ${name} (Feuerwache)`, 'info');
+      add(`Brand gelöscht: ${name} (Feuerwache)`, 'info', logTargetFor(cur, world));
     } else add('Brand ohne Schaden', null);
   } else if (cur.kind === 'storm') {
     if (cur.phase === 'warning')
