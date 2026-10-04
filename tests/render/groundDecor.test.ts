@@ -4,6 +4,7 @@ import {
   SHRUB_TONES,
   flowersFor,
   shrubsFor,
+  tuftColor,
   type ForestSides,
 } from '../../src/render/groundDecor';
 import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
@@ -163,5 +164,38 @@ describe('Boden-Deko: paintDecor', () => {
     const shrubFills = a.log.events.filter((e) => SHRUB_TONES.includes(e.style));
     expect(shrubFills.length).toBeGreaterThan(0);
     expect(b.log.events.filter((e) => SHRUB_TONES.includes(e.style)).length).toBe(0);
+  });
+});
+
+describe('H-R11 Büschel-Ton', () => {
+  it('H-R11 tuftColor koppelt die Farbe an die Tonstufe: Schattenseite dunkler und kühler, Lichtseite heller und wärmer', () => {
+    for (const tone of [0, 1] as const) {
+      const shade = rgbOfCss(tuftColor(tone, 1)),
+        mid = rgbOfCss(tuftColor(tone, 2)),
+        light = rgbOfCss(tuftColor(tone, 3));
+      const l = (c: number[]): number => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
+      expect(l(shade)).toBeLessThan(l(mid));
+      expect(l(mid)).toBeLessThan(l(light));
+      const blue = (c: number[]): number => c[2]! / (c[0]! + c[1]! + c[2]!);
+      expect(blue(shade)).toBeGreaterThan(blue(light));
+    }
+    // helles Büschel bleibt heller als dunkles
+    const l = (c: number[]): number => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
+    expect(l(rgbOfCss(tuftColor(0, 2)))).toBeGreaterThan(l(rgbOfCss(tuftColor(1, 2))));
+  });
+
+  it('H-R11 paintDecor setzt Büschelfarben je Tonstufe: mehr als zwei Strichfarben auf hügeliger Wiese, Dichte unverändert', () => {
+    const n = 24;
+    const tiles = Array.from({ length: n * n }, () => ({
+      terrain: 'grass',
+      buildingId: null,
+      road: false,
+    }));
+    const w = { width: n, height: n, seed: 3, tiles } as unknown as World;
+    const f = fakeCtx();
+    paintDecor(f.ctx, w, new Uint8Array(n * n), 1, { x0: 0, y0: 0, x1: n - 1, y1: n - 1 });
+    const colors = new Set(f.log.strokeSet);
+    expect(colors.size).toBeGreaterThan(2);
+    expect(colors.size).toBeLessThanOrEqual(6);
   });
 });

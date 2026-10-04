@@ -1,8 +1,23 @@
 import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
 import { valueNoise } from '../sim/noise';
-import { DEBRIS, DEBRIS_MIX, LIGHT, rotNoise } from './light';
+import {
+  DEBRIS,
+  DEBRIS_MIX,
+  LIGHT,
+  LIGHT_COLORS,
+  ROCK_TONES,
+  mixRgb,
+  rotNoise,
+  smoothstep,
+  toneColor,
+  toneStep,
+  type Rgb,
+} from './light';
 import type { World } from '../sim/types';
 import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
+
+// Tonleiter (H-R11): lebt in light.ts; hier zur Rückwärtsverträglichkeit weiter ausgeführt.
+export { ROCK_TONES, toneColor, toneStep };
 
 // massif.ts — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (H-R9 Teil A, Kurz-Spec A1–A5). Reine
 // Mathematik im Kachelraum: Komponenten, Höhenfeld auf einem Untergitter (SUB Knoten je Kachel), Zerlegung in
@@ -10,7 +25,6 @@ import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 // Welt nur. Höhen in Weltpixeln (Zoom 1), Darstellungswerte, keine Spielwerte.
 
 export type MassifWorld = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
-type Rgb = readonly [number, number, number];
 
 /** Knoten je Kachel und Achse (Richtwert der Spec: 4). */
 export const SUB = 4;
@@ -206,7 +220,6 @@ const smooth01 = (t: number): number => {
   const v = t < 0 ? 0 : t > 1 ? 1 : t;
   return v * v * (3 - 2 * v);
 };
-const smoothstep = (a: number, b: number, t: number): number => smooth01((t - a) / (b - a));
 
 /** Ridged-Noise 1 − |2n − 1|, zwei Oktaven plus feine Zacken, quadriert (scharfe Grate), 0…1. */
 export function ridged(seed: number, fx: number, fy: number): number {
@@ -640,28 +653,7 @@ const SOFT_A_LO = SOFT_CUT - 0.05,
 const DEBRIS_HI = 0.8;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
-const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => {
-  const k = t < 0 ? 0 : t > 1 ? 1 : t;
-  return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
-};
-const P = {
-  rock: rgbOf(PALETTE.rock),
-  light: rgbOf(PALETTE.rockLight),
-  dark: rgbOf(PALETTE.rockDark),
-  cool: rgbOf(PALETTE.waterDeep),
-  warm: rgbOf(PALETTE.sandDry),
-};
-/**
- * Tonstufen des Felses (A3, Abnahme lead-art Runde 1: „gemalte Low-Poly-Felsen“ statt stufenloser Beleuchtung),
- * dunkel nach hell: Schattenseite kühl (rockDark mit waterDeep), Lichtseite warm (rockLight mit sandDry ≤ 20 %).
- */
-export const ROCK_TONES: readonly Rgb[] = [
-  mixRgb(P.dark, P.cool, 0.22),
-  mixRgb(mixRgb(P.dark, P.rock, 0.35), P.cool, 0.12),
-  mixRgb(P.rock, P.dark, 0.12),
-  mixRgb(mixRgb(P.rock, P.light, 0.55), P.warm, 0.08),
-  mixRgb(P.light, P.warm, 0.18),
-];
+const P = LIGHT_COLORS;
 /** Bewuchs in denselben Stufen (grassDark/crown, gering eingesetzt). */
 export const VEG_TONES: readonly Rgb[] = [
   mixRgb(rgbOf(PALETTE.crown), P.dark, 0.45),
@@ -731,21 +723,6 @@ export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): n
     2 * TONE_NOISE * tone +
     0.35 * (Math.min(1, s.hn) - 0.4);
   return Math.max(0, TONE_FLAT - 2 * (1 - top), Math.min(ROCK_TONES.length - 1, t));
-}
-
-/**
- * Stufung: T wird auf ganze Stufen gerundet, mit einem weichen Übergang der halben Breite `hw` (in Stufen) um jede
- * Stufengrenze k + 0,5. Der Rasterizer setzt `hw` aus dem Gefälle von T so, dass der Übergang 1–2 px breit ist.
- */
-export function toneStep(t: number, hw: number): number {
-  const n = Math.floor(t),
-    f = t - n;
-  return n + (hw <= 0 ? (f >= 0.5 ? 1 : 0) : smoothstep(0.5 - hw, 0.5 + hw, f));
-}
-/** Farbe zur gestuften Tonstufe `st` (0…4), Rampe `ramp`. */
-export function toneColor(st: number, ramp: readonly Rgb[] = ROCK_TONES): Rgb {
-  const n = Math.max(0, Math.min(ramp.length - 1, Math.floor(st)));
-  return n >= ramp.length - 1 ? ramp[n]! : mixRgb(ramp[n]!, ramp[n + 1]!, st - n);
 }
 
 /** Bewuchs-Feld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern): Flecken nur in tiefen, flachen Lagen. */
