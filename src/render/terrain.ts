@@ -79,6 +79,8 @@ const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
  * Weichzeichner (Radius in Knoten, 2 Durchgänge ≈ 1,25 Kacheln Stützweite).
  */
 const DUNE_BLUR = 5;
+/** Durchgänge des 3×3-Mittels auf dem Abstand zum Nicht-Sand (die Sand/Gras-Grenze ist ein Kachelrand, Fix 5). */
+const REST_SMOOTH = 2;
 const SAND_GATE_FULL = 1.2; // Abstand zum Nicht-Sand (Kacheln), ab dem das Dünengewicht voll gilt (stetiges Gate, Fix 4)
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
@@ -310,6 +312,8 @@ export interface TerrainGrid {
   /** H-R12: Tonwert der Dünenform auf Sand 0…4 (2 = eben, nur Stufen 2 und 3), Dünenhöhe 0…1, Rippelgewicht und -phase. */
   dtone: Float32Array;
   dune: Float32Array;
+  /** H-R12 Fix 5: Präsenz der Düne 0…1 (Maske, Hülle, Strandbreite, Front, Sand-Gate); wirkt erst nach der Stufung. */
+  dw: Float32Array;
   rip: Float32Array;
   rwarp: Float32Array;
   /** H-R12: Gefälle von `dtone` landeinwärts (Stufen je Kachel) — unterscheidet Fusskante (steigt) von Kammkante (fällt). */
@@ -548,7 +552,7 @@ function sandRestField(world: FieldWorld): Field {
   });
   const v = new Float32Array(w * h);
   for (let i = 0; i < v.length; i++) v[i] = Math.min(Math.sqrt(d2[i]!), MAX_DIST);
-  boxTiles(v, w, h, 2);
+  boxTiles(v, w, h, REST_SMOOTH);
   return { w, h, v };
 }
 
@@ -616,6 +620,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     gwArr = new Float32Array(n),
     dtone = new Float32Array(n).fill(DUNE_TONE_FLAT),
     dune = new Float32Array(n),
+    dw = new Float32Array(n),
     rip = new Float32Array(n),
     rwarp = new Float32Array(n),
     dtn = new Float32Array(n),
@@ -652,7 +657,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         }
       }
       cls[k] = sharp[k]! <= 0 ? 0 : 1 + best;
-      if (se[k]! > -2 && ind[sa]![k]! > 0) {
+      if (se[k]! > -0.3 && ind[sa]![k]! > 0) {
         const inp = duneInputsAt(world, fields, wx, wy);
         beachArr[k] = inp.beach;
         sandArr[k] = inp.sand;
@@ -767,7 +772,8 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         const d = duneSample(seed, fx, fy, sE, csx, csy, beachArr[j * nx + i]!);
         // weich über 0,5 Kachel einblenden; Front aus dem euklidischen Feld und das Sand-Gate stetig (Fix 4)
         const front = smoothstepClamp((sE - DUNE_ONSET) / 0.5) * sandArr[j * nx + i]!;
-        dtone[j * nx + i] = DUNE_TONE_FLAT + (d.tone - DUNE_TONE_FLAT) * front;
+        dtone[j * nx + i] = d.formTone;
+        dw[j * nx + i] = d.pres * front;
         dune[j * nx + i] = d.h * front;
         rip[j * nx + i] = d.rip * sandArr[j * nx + i]!;
         rwarp[j * nx + i] = d.rwarp;
@@ -780,7 +786,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
-      if (dtone[k] === DUNE_TONE_FLAT && dune[k] === 0) continue;
+      if (dtone[k] === DUNE_TONE_FLAT && dw[k] === 0) continue;
       const il = Math.max(0, i - 1),
         ir = Math.min(nx - 1, i + 1),
         ju = Math.max(0, j - 1),
@@ -806,6 +812,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     tone,
     dtone,
     dune,
+    dw,
     rip,
     rwarp,
     dtn,
@@ -969,7 +976,7 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, tone, dtone, dtn, rip, rwarp, cls } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, dtone, dtn, dw, rip, rwarp, cls } = g;
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const shadeOut = { lift: 0, accent: 0 }; // wiederverwendeter Ausgabepuffer von `duneShade`
   const col = [0, 0, 0],
@@ -1106,10 +1113,12 @@ export function paintPixels(
           const hw = toneHalfWidth(gpx, GROUND_EDGE_PX);
           // K1/K2: steigender Ton (Luv) läuft weich und breit hinauf, fallender (Kamm) kippt hart, dahinter der Akzent
           duneShade(tA * w00 + tB * w10 + tC * w01 + tD * w11, lerp(dtn), hw, gpx, shadeOut);
+          // Fix 5: Präsenz erst nach der Stufung, stetig (am Maskenrand blendet das Muster aus, keine neue Tonkante)
+          const pres = wSand * (dw[a]! * w00 + dw[b]! * w10 + dw[c]! * w01 + dw[d]! * w11);
           const e = shadeOut.lift,
             accent = shadeOut.accent;
           if (e > 0) {
-            const k = e * wSand;
+            const k = e * pres;
             const m = 1 + TONE_LIGHT_MUL * k;
             col[0] = col[0]! * m;
             col[1] = col[1]! * m;
@@ -1117,7 +1126,7 @@ export function paintPixels(
             mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
           }
           if (accent > 0) {
-            const k = accent * wSand;
+            const k = accent * pres;
             const m = 1 - SAND_ACCENT_MUL * k;
             col[0] = col[0]! * m;
             col[1] = col[1]! * m;
@@ -1183,6 +1192,20 @@ const isFreeGrass = (world: World, occ: Uint8Array, x: number, y: number): boole
   return world.tiles[i]!.terrain === 'grass' && occ[i] !== 1;
 };
 
+/** Tonstufe (1…3, 0 = offen) je Büschel (höchstens 3 je Kachel) der zuletzt gezeichneten Welt: ein Feld, Obergrenze 3 B je Kachel. */
+let levelSeed = NaN,
+  levelDims = '',
+  levelCache = new Uint8Array(0);
+function tuftLevels(seed: number, w: number, h: number): Uint8Array {
+  const dims = `${w}x${h}`;
+  if (seed !== levelSeed || dims !== levelDims) {
+    levelSeed = seed;
+    levelDims = dims;
+    levelCache = new Uint8Array(w * h * 3);
+  }
+  return levelCache;
+}
+
 /**
  * Deko auf unbelegten Grasskacheln im Rechteck (Texturpixel × `scale`): Büschel, Büsche am Waldrand, Blumen.
  * Je Farbe ein Pfad; belegte Kacheln und Nicht-Gras bekommen nichts (R149).
@@ -1203,21 +1226,28 @@ export function paintDecor(
   ctx.lineCap = 'round';
   // H-R11: Farbe nach der Tonstufe des Bodens darunter (Schatten 1, eben 2, Licht 3), Dichte unverändert.
   // Büschel und Stufe einmal je Kachel vorberechnen, dann je Farbe ein Pfad.
+  const levels = tuftLevels(seed, w, h);
   const tufts: { px: number; py: number; tone: 0 | 1; level: 1 | 2 | 3 }[] = [];
   for (let y = r.y0; y <= r.y1; y++)
     for (let x = r.x0; x <= r.x1; x++) {
       if (!isFreeGrass(world, occ, x, y)) continue;
       const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
-      for (const t of tuftsFor(seed, x, y, lush))
+      const ts = tuftsFor(seed, x, y, lush);
+      for (let q = 0; q < ts.length; q++) {
+        const t = ts[q]!;
+        const ci = (y * w + x) * 3 + q;
+        let level = levels[ci]!;
+        if (level === 0) {
+          level = Math.max(1, Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)));
+          levels[ci] = level; // der Ton hängt nur von Seed und Position ab: einmal rechnen, auch bei Teil-Neuzeichnung
+        }
         tufts.push({
           px: (x + t.x) * TEX,
           py: (y + t.y) * TEX,
           tone: t.tone,
-          level: Math.max(
-            1,
-            Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)),
-          ) as 1 | 2 | 3,
+          level: level as 1 | 2 | 3,
         });
+      }
     }
   for (const tone of [0, 1] as const)
     for (const st of [1, 2, 3] as const) {
@@ -1379,6 +1409,7 @@ export function patchGrid(
     'tone',
     'dtone',
     'dune',
+    'dw',
     'rip',
     'rwarp',
     'dtn',

@@ -222,4 +222,43 @@ describe('H-R12 Dünen im Terrain', () => {
     expect(worst.beach).toBeLessThan(0.04);
     expect(worst.weight).toBeLessThan(0.03);
   });
+
+  it('H-R12 Fix 5: Präsenz wirkt nach der Stufung stetig — Helligkeitssprung zwischen Nachbarknoten ≤ Stufe · Präsenz (Seeds 1, 2, 5)', () => {
+    // Form (dtone) ist ungewichtet; am Maskenrand fällt nur `dw` von 1 auf 0. Eine Tonkante dort wäre ein Sprung ohne
+    // Präsenz. Gemessen an Knotenpixeln (Zoom 1, Knoten = jedes 4. Texel) auf reinem Sand gegen dasselbe Bild mit
+    // flachem dtone: der Quotient weicht nur um (Stufe 2→3 ≈ 0,12) · dw ab.
+    const STEP = 0.2; // Stufe 2→3 (Licht, Wärme, Akzent) mit Reserve; entscheidend ist der Faktor dmax bei kleiner Präsenz
+    let pairs = 0,
+      lowPairs = 0;
+    for (const seed of [1, 2, 5]) {
+      const world = createWorld(seed, { unlockAll: true });
+      const g = buildGrid(world);
+      const W = world.width * TEX,
+        H = world.height * TEX;
+      const flat = { ...g, dtone: g.dtone.map(() => DUNE_TONE_FLAT) as Float32Array };
+      const a = paintPixels(g, 1, 0, 0, W, H);
+      const b = paintPixels(flat, 1, 0, 0, W, H);
+      const ratio = (i: number, j: number): number => {
+        const o = (j * 4 * W + i * 4) * 4;
+        return (a[o]! + a[o + 1]! + a[o + 2]!) / (b[o]! + b[o + 1]! + b[o + 2]! + 1e-6);
+      };
+      const sandAt = (i: number, j: number): boolean =>
+        world.tiles[Math.floor((j * 4) / TEX) * world.width + Math.floor((i * 4) / TEX)]!
+          .terrain === 'sand';
+      for (let j = 2; j < g.ny - 2; j += 1)
+        for (let i = 2; i < g.nx - 2; i += 1) {
+          if (!sandAt(i, j) || !sandAt(i + 1, j)) continue;
+          const k = j * g.nx + i;
+          const dmax = Math.max(g.dw[k]!, g.dw[k + 1]!);
+          pairs++;
+          if (dmax < 0.15) lowPairs++;
+          expect(
+            Math.abs(ratio(i, j) - ratio(i + 1, j)),
+            `Seed ${seed} Knoten ${i},${j}`,
+          ).toBeLessThan(STEP * dmax + 0.02);
+        }
+    }
+    expect(pairs).toBeGreaterThan(5000);
+    expect(lowPairs).toBeGreaterThan(500);
+  }, 120_000);
 });

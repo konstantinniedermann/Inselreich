@@ -58,6 +58,10 @@ export interface DuneSample {
   h: number;
   /** Kontinuierlicher Tonwert 0…4 aus Hanggefälle · Licht (nur Dünenform), ≤ DUNE_TONE_MAX − Rippeln − Korn. */
   tone: number;
+  /** Dünenform-Ton ohne Präsenzgewicht (volle Düne); die Präsenz `pres` blendet erst nach der Stufung ein (Fix 5). */
+  formTone: number;
+  /** Präsenzgewicht 0…1 (Einsatz × Strandbreite × Strandende × Maske × Hüllkurve). */
+  pres: number;
   /** Kammstärke 0…1 (scharfe Kammlinie, Knick im Profil). */
   crest: number;
   /** Rippeln als Tonversatz in Stufen (±RIPPLE_AMP, küstenparallel, nicht auf der Leeseite). */
@@ -76,6 +80,8 @@ export const rippleOf = (rip: number, s: number, rwarp: number): number =>
 const FLAT = (): DuneSample => ({
   h: 0,
   tone: DUNE_TONE_FLAT,
+  formTone: DUNE_TONE_FLAT,
+  pres: 0,
   crest: 0,
   ripple: 0,
   grain: 0,
@@ -127,20 +133,15 @@ export function duneSample(
     }
   }
 
-  // Phase: Küstenabstand / Wellenlänge + verwirbelte Verschiebung (Gradient des Rauschens per Differenz); ohne Gewicht
-  // bleibt die Düne flach, dann entfällt die Phase (Frame-Budget: drei Rauschaufrufe je Knoten)
-  let p = 0,
-    px = 0,
-    py = 0;
-  if (w > 0) {
-    const E = 0.1;
-    const w0 = rotNoise(seed + 413, fx, fy, 0.09, ROT_WARP);
-    const wx = (rotNoise(seed + 413, fx + E, fy, 0.09, ROT_WARP) - w0) / E;
-    const wy = (rotNoise(seed + 413, fx, fy + E, 0.09, ROT_WARP) - w0) / E;
-    p = (s - DUNE_ONSET) / DUNE_LAMBDA + WARP_AMP * (w0 - 0.5);
-    px = gx / DUNE_LAMBDA + WARP_AMP * wx;
+  // Phase: Küstenabstand / Wellenlänge + verwirbelte Verschiebung (Gradient des Rauschens per Differenz); die Form gilt
+  // ungewichtet (Fix 5), das Präsenzgewicht `w` blendet erst der Aufrufer nach der Stufung ein
+  const E = 0.1;
+  const w0 = rotNoise(seed + 413, fx, fy, 0.09, ROT_WARP);
+  const wx = (rotNoise(seed + 413, fx + E, fy, 0.09, ROT_WARP) - w0) / E;
+  const wy = (rotNoise(seed + 413, fx, fy + E, 0.09, ROT_WARP) - w0) / E;
+  const p = (s - DUNE_ONSET) / DUNE_LAMBDA + WARP_AMP * (w0 - 0.5);
+  const px = gx / DUNE_LAMBDA + WARP_AMP * wx,
     py = gy / DUNE_LAMBDA + WARP_AMP * wy;
-  }
   const f = p - Math.floor(p);
   const c = DUNE_PROFILE_CREST;
 
@@ -167,6 +168,9 @@ export function duneSample(
   const lit = -(dhx * lx + dhy * ly);
   const body = DUNE_TONE_MAX - RIPPLE_AMP - GRAIN_AMP;
   const tone = Math.max(TONE_MIN, Math.min(body, DUNE_TONE_FLAT + TONE_GAIN * lit));
+  // Form ohne Gewicht: dieselbe Rechnung mit w = 1 (Fix 5: der Gewichtsrand soll keine Tonkante erzeugen)
+  const litForm = -(dhdf * (px * lx + py * ly));
+  const formTone = Math.max(TONE_MIN, Math.min(body, DUNE_TONE_FLAT + TONE_GAIN * litForm));
 
   // Rippeln: quer zum Wind (Phase aus s), nur Luv/flach, auf glattem Sand schwächer
   const slopeN = dhx * nx + dhy * ny; // > 0 Luv (steigt landeinwärts), < 0 Lee
@@ -178,7 +182,7 @@ export function duneSample(
   const rwarp = 0.8 * (rotNoise(seed + 414, fx, fy, 0.35, ROT_RIP) - 0.5);
   const ripple = rippleOf(rip, s, rwarp);
 
-  return { h, tone, crest, ripple, grain: gn, rip, rwarp };
+  return { h, tone, formTone, pres: w, crest, ripple, grain: gn, rip, rwarp };
 }
 
 // ---------- Kanten und Kammakzent je Pixel (K1, K2) ----------
