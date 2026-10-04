@@ -1527,3 +1527,28 @@ Befund ausserhalb Scope: `renderer.ts:96` `DIM_FIRE` mit Schwarz (S1-Rest) → b
 production-integrator `HEAD:main`. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Playtest REL-02, opus-Review REL-02 · ADR: —
+
+## R223 · 2026-10-04 · Hotfix H-T2 weitere Zeit-Tests
+
+Ruling: CI auf main rot bei 2bfa38c (nur Doku) durch Zeit-Test `tests/render/terrain.test.ts` „H-R9 B4 Teil-Neuzeichnung
+≤ 8 ms" (Runner 9,3 ms); Folgelauf 9ff5502 grün. Vorrang nach Verfassung §7.2. **H-T2** (lead-tech, Hotfix ausserhalb
+eines Release): `perfBudget` aus H-T1 auch auf H-R9 B4 und `tests/ui/hints.test.ts` AK-UX-31 (≤ 0,5 ms) anwenden,
+Review, `make check`, Werkzeug-Merge durch Integrator. Ad-hoc-Retro-Anlass geht in die Session-Retro. — Kosten bei
+Irrtum: Revert; echte Perf-Regressionen fängt weiter das A/B-Perf-Delta im Release-Gate (R211).
+
+Entscheider: L0 · Anlass: CI-Lauf 37203760767 · ADR: —
+
+## R224 · 2026-10-04 · Gate H-T2, Retro-Nachtrag Teil 2
+
+Ruling: **H-T2** `fix/h-t2-zeittests` @ a1e2cf1 freigegeben. Das unabhängige Review (§9.1) machte L0 am Diff, weil
+lead-tech den Fix selbst schrieb (3 Testzeilen + Import + Beobachtung, `make check` und `CI=true` grün laut
+Bericht). Werkzeug-Merge durch den Integrator. Vorschläge des Retro-Nachtrags: (1) E-028: Auslöser bleibt 2–4,
+Messgrösse 1 wird für Releases mit 2 Häppchen auf ≤ 0,5 gelesen; Leerlauf nach Ursache trennen (wartet auf L0 /
+Review / frei) — studio-coach passt E-028 an. (2) Integrator macht Fix-Commits statt `--amend` (lead-production,
+Persona); keine Warteschlange, weil L0 das als Arbeitsregel festlegt. (3) Zwischenstand bei halbem Deckel wird als
+`log.py status --status waiting --task "Zwischenstand …"` geloggt und in der Retro gezählt. (4) Gemeldete Kandidaten
+desselben Fehlermechanismus kommen ins selbe Ruling (Zuschnitt oder Beobachtung mit Frist). (5) E-027 zählt eine Idee
+als eingeplant, wenn ein Ruling sie mit Release- oder M-Ziel nennt. lernen.md (41 Zeilen) kürzt der studio-coach in
+der nächsten Session. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-T2, Retro-Nachtrag e13c3631 · ADR: —
