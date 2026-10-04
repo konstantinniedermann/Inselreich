@@ -45,7 +45,7 @@ const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 
 const WARM_MAX = 0.25; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
 const COOL_MAX = 0.25; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
 const VEIL_MAX = 0.05; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
-const MOTTLE_AMP = 0.01; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
+const MOTTLE_AMP = 0.01; // H-R11 F1: feines Mottling nur noch ±1 % Helligkeit; das Licht tragen die Tonstufen
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
 /** H-R9 Runde 3: Anteil der Gebirgsfuss-Schattierung, der an Nicht-Gebirgsknoten auf der Schattenseite entfällt. */
@@ -59,8 +59,8 @@ const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreh
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 0.4; // höchstens 67,5 % Mischung zum Kleegrün ((1 − 0,1) · 0,75 bei Fleckwert 1)
-const DRY_MAX = 0.2; // höchstens 31,5 % Mischung zu sandDry ((1 − 0,1) · 0,35; darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 0.4; // H-R11 F1: höchstens 36 % Mischung zum Kleegrün ((1 − 0,1) · 0,4 bei Fleckwert 1)
+const DRY_MAX = 0.2; // H-R11 F1: höchstens 18 % Mischung zu sandDry ((1 − 0,1) · 0,2; darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -113,21 +113,20 @@ const waveProfile = (u: number): number => {
 };
 const GROUND_MICRO = 0.05;
 const GROUND_MICRO_FREQ = 2.2;
-/** Stufen je Einheit Licht auf dem Hang (−∇H · LIGHT, pro Kachel). */
 /** Weiche Sättigung der Abweichung von der Ebene (Stufen): steile Kuppen und Mulden laufen nicht über die Rampe hinaus. */
 const GROUND_SPAN = 1.1;
-/** Tonkanten des Bodens: Helligkeit und Anteil des kühlen bzw. warmen Lichttons je Stufe ±1 (e = (Stufe − 2)). */
 /** Kantenbreite der Bodentöne in Ebenenpixeln: schmaler als im Massiv, weil die Ebene beim Zeichnen weich skaliert wird (Zoom 2: ≤ 2 CSS-px). */
 const GROUND_EDGE_PX = 0.4;
 /** Pixelkorn des Bodens: ± die Hälfte, also ±2,5 % Helligkeit (wie ROCK_GRAIN im Fels). */
 const GROUND_GRAIN = 0.05;
+/** Tonkanten des Bodens: Helligkeit und Anteil des kühlen bzw. warmen Lichttons je Stufe ±1 (e = Stufe − 2). */
 const TONE_DARK_MUL = 0.08;
 const TONE_COOL_MIX = 0.145;
 const TONE_LIGHT_MUL = 0.085;
 const TONE_WARM_MIX = 0.136;
-/** Wiese: Mischung zum Oliv gleicher Helligkeit (Sättigung des Bodens unter Gebäuden und Bäumen, S5). */
 /** Anteil der weichen Grundfarb-Streuung (grassDark … grassLight) an der Wiese; der Rest ist die Mittelfarbe. */
 const GRASS_FIELD_KEEP = 0.5;
+/** Wiese: Mischung zum Oliv gleicher Helligkeit (Sättigung des Bodens unter Gebäuden und Bäumen, S5). */
 const MEADOW_OLIVE_MIX = 0.72;
 const C_GRASS = rgbOf(PALETTE.grass);
 const OLIVE: readonly [number, number, number] = rgbOfCss(
@@ -139,8 +138,7 @@ const OLIVE_LUMA = 0.299 * OLIVE[0] + 0.587 * OLIVE[1] + 0.114 * OLIVE[2];
 /** Wiesenfarbe entsättigt Richtung Oliv, Helligkeit bleibt (S5: Boden ist der ruhigste Bildteil). */
 export function meadowTint(c: readonly [number, number, number]): [number, number, number] {
   const l = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
-  const lo = 0.299 * OLIVE[0] + 0.587 * OLIVE[1] + 0.114 * OLIVE[2];
-  const k = lo > 0 ? l / lo : 1;
+  const k = OLIVE_LUMA > 0 ? l / OLIVE_LUMA : 1;
   const t = MEADOW_OLIVE_MIX;
   return [
     c[0] + (OLIVE[0] * k - c[0]) * t,
@@ -940,33 +938,38 @@ export function paintDecor(
   ctx.scale(scale, scale);
   ctx.lineWidth = 1;
   ctx.lineCap = 'round';
-  // H-R11: Farbe nach der Tonstufe des Bodens darunter (Schatten 1, eben 2, Licht 3), Dichte unverändert
+  // H-R11: Farbe nach der Tonstufe des Bodens darunter (Schatten 1, eben 2, Licht 3), Dichte unverändert.
+  // Büschel und Stufe einmal je Kachel vorberechnen, dann je Farbe ein Pfad.
+  const tufts: { px: number; py: number; tone: 0 | 1; level: 1 | 2 | 3 }[] = [];
+  for (let y = r.y0; y <= r.y1; y++)
+    for (let x = r.x0; x <= r.x1; x++) {
+      if (!isFreeGrass(world, occ, x, y)) continue;
+      const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
+      for (const t of tuftsFor(seed, x, y, lush))
+        tufts.push({
+          px: (x + t.x) * TEX,
+          py: (y + t.y) * TEX,
+          tone: t.tone,
+          level: Math.max(
+            1,
+            Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)),
+          ) as 1 | 2 | 3,
+        });
+    }
   for (const tone of [0, 1] as const)
     for (const st of [1, 2, 3] as const) {
       ctx.beginPath();
       let any = false;
-      for (let y = r.y0; y <= r.y1; y++)
-        for (let x = r.x0; x <= r.x1; x++) {
-          if (!isFreeGrass(world, occ, x, y)) continue;
-          const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
-          for (const t of tuftsFor(seed, x, y, lush)) {
-            if (t.tone !== tone) continue;
-            const level = Math.max(
-              1,
-              Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)),
-            );
-            if (level !== st) continue;
-            const px = (x + t.x) * TEX,
-              py = (y + t.y) * TEX;
-            ctx.moveTo(px - 1.5, py);
-            ctx.lineTo(px - 0.5, py - 3.5);
-            ctx.moveTo(px, py);
-            ctx.lineTo(px, py - 4.5);
-            ctx.moveTo(px + 1.5, py);
-            ctx.lineTo(px + 0.5, py - 3.5);
-            any = true;
-          }
-        }
+      for (const t of tufts) {
+        if (t.tone !== tone || t.level !== st) continue;
+        ctx.moveTo(t.px - 1.5, t.py);
+        ctx.lineTo(t.px - 0.5, t.py - 3.5);
+        ctx.moveTo(t.px, t.py);
+        ctx.lineTo(t.px, t.py - 4.5);
+        ctx.moveTo(t.px + 1.5, t.py);
+        ctx.lineTo(t.px + 0.5, t.py - 3.5);
+        any = true;
+      }
       if (!any) continue;
       ctx.strokeStyle = tuftColor(tone, st);
       ctx.stroke();

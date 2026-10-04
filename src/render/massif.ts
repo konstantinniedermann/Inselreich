@@ -13,11 +13,11 @@ import {
   toneStep,
   type Rgb,
 } from './light';
+import type { World } from '../sim/types';
+import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 
 // Tonleiter (H-R11): lebt in light.ts; hier zur Rückwärtsverträglichkeit weiter ausgeführt.
 export { ROCK_TONES, toneColor, toneStep };
-import type { World } from '../sim/types';
-import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 
 // massif.ts — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (H-R9 Teil A, Kurz-Spec A1–A5). Reine
 // Mathematik im Kachelraum: Komponenten, Höhenfeld auf einem Untergitter (SUB Knoten je Kachel), Zerlegung in

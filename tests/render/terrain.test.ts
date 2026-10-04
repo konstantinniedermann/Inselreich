@@ -296,7 +296,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(best).toBeLessThan(1500);
   }, 30_000);
 
-  it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 2 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
+  it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let found = false;
     for (let y = 0; y < w.height - 4 && !found; y++)
@@ -312,7 +312,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
             labs.push(rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX)));
         const distinct: typeof labs = [];
         for (const l of labs) if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
-        expect(distinct.length).toBeGreaterThanOrEqual(2);
+        expect(distinct.length).toBeGreaterThanOrEqual(3);
       }
     expect(found).toBe(true);
   });
@@ -438,7 +438,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     }
   }, 60_000); // Korrektheitstest ohne Zeitaussage; Rechenzeit steigt unter Volllast
 
-  it('H-R11 (löst R149 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 2 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
+  it('H-R11 (löst R149 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let checked = 0;
     for (let y = 0; y < w.height - 4 && checked < 5; y++)
@@ -455,7 +455,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
             const l = rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX));
             if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
           }
-        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(2);
+        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(3);
         x += 3; // nicht überlappende Flächen
       }
     expect(checked).toBeGreaterThan(0);
@@ -734,7 +734,7 @@ describe('M10 Teil-Raster', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'patch', 'cls'] as const)
+    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'tone', 'patch', 'cls'] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
@@ -832,15 +832,16 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
       d = at(0);
     const L = (a: Uint8ClampedArray) =>
       0.299 * mean(a, 0) + 0.587 * mean(a, 1) + 0.114 * mean(a, 2);
-    expect(L(d)).toBeLessThan(L(n));
-    expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.05 * (mean(n, 2) / mean(n, 0)));
+    // gemessen: Luma-Verhältnis 0,82, Blau/Rot-Verhältnis 1,18
+    expect(L(d)).toBeLessThan(0.9 * L(n));
+    expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.1 * (mean(n, 2) / mean(n, 0)));
   });
 
   it('H-R9 B1 Determinismus: gleiche Felder und Pixel bei zweitem Aufbau', () => {
     const w = flat(10, 'grass', 5);
     const a = buildGrid(w),
       b = buildGrid(w);
-    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const)
+    for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const)
       expect(firstDiff(a[f], b[f]), f).toBe(-1);
     expect(firstDiff(paintPixels(a, 1, 0, 0, 96, 96), paintPixels(b, 1, 0, 0, 96, 96))).toBe(-1);
   });
@@ -1020,7 +1021,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       expect(Math.abs(luma(a, i) / luma(b, i) - 1)).toBeLessThanOrEqual(0.02);
       if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 3) changed++;
     }
-    expect(changed).toBeGreaterThan(300); // die Ebenen wirken tatsächlich
+    expect(changed).toBeGreaterThan(450); // die Ebenen wirken tatsächlich
   });
 
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {
@@ -1085,7 +1086,7 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['shade', 'warm', 'mottle', 'veil'] as const) {
+    for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     }
