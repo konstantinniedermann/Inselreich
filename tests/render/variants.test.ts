@@ -15,27 +15,28 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, tier?: Tier): Building => {
   if (tier) b.house = { tier } as Building['house'];
   return b;
 };
+// Stand H-R10 (Ein Licht, R211): Referenzhashes nach der Umstellung auf LIGHT_TONE/SHADE_TONE und Eigenton-Kontur neu gesetzt.
 const MAIN_REF: Record<string, string> = {
-  kontor: 'cdb73f3a',
-  market: '4f0aa6e',
-  house1: '2b818d3',
-  house2: 'fcb1611c',
-  house3: 'd960b6b7',
-  house4: 'cd7c81b7',
-  fisher: '97e5e56f',
-  lumberjack: 'cd4b4bbb',
-  quarry: '17dc728c',
-  sheepfarm: 'c7335de5',
-  weaver: 'dfe8697d',
-  canefarm: 'c9a4ecbf',
-  distillery: '8268f8fa',
-  toolmaker: 'b16776b5',
-  chapel: '2c2767fa',
-  school: 'f373ff1a',
-  firestation: 'f7660e2c',
-  bathhouse: '64b56519',
-  glassworks: '2c73b56b',
-  townhall: 'ab173eb7',
+  kontor: 'a630d7cc',
+  market: '61e6db9a',
+  house1: '14861ff2',
+  house2: '4c80cd28',
+  house3: '611f4b70',
+  house4: 'ce4a8339',
+  fisher: 'a1b70b5a',
+  lumberjack: 'b27952d8',
+  quarry: '8eff9a26',
+  sheepfarm: '10e3ecec',
+  weaver: '20175742',
+  canefarm: 'c2e5e10',
+  distillery: '3a7d2e85',
+  toolmaker: 'd5f25f4a',
+  chapel: '8ff21308',
+  school: 'daa74c30',
+  firestation: '36618272',
+  bathhouse: '3d41c34f',
+  glassworks: 'cf4dd49d',
+  townhall: '56e4c56',
 };
 /**
  * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammten aus dem Stand

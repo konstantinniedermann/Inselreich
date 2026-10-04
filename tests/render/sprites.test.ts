@@ -11,7 +11,7 @@ import {
   spriteBounds,
 } from '../../src/render/iso';
 import { drawShip, SHIP_H } from '../../src/render/ship';
-import { PALETTE, SHADOW, mixHex, rgbOfCss } from '../../src/render/palette';
+import { PALETTE, SHADOW, rgbOfCss } from '../../src/render/palette';
 import {
   AIR_COLORS,
   BODY_INSET,
@@ -30,6 +30,8 @@ import {
   wallPolygon,
   SILHOUETTES,
   FALLBACKS,
+  LAMP,
+  WINDOW,
   type LightAnchor,
 } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
@@ -586,8 +588,6 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
   });
 
   it('AK-R2-03 (ISO) Fensteranker und gezeichnete Fensterfüllungen stimmen überein (beide Richtungen)', () => {
-    const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
-    const LAMP = mixHex(PALETTE.window, '#000000', 0.5);
     const glass = new Set([WINDOW, LAMP, wallColors(LAMP).left]);
     // Fenster ausserhalb der Wandanker: Gaube (Bürgerhaus), Schallöffnungen von Dachreiter und Turm (Kapelle, Schule, öffentlicher Fallback)
     const roofOnly: Record<string, number> = {
@@ -932,7 +932,14 @@ describe('M8 R1 Silhouetten', () => {
 
   it('AK-R1-01 Kaufmannshaus: eigener Dachwert, eigene endliche Höhe', () => {
     expect(styles(house(4)).some(roof)).toBe(true);
-    expect(styles(house(4)).some((c) => near(c, PALETTE.roofTerracottaDark))).toBe(false);
+    // H-R10: das Fachwerk (wallTimber, jetzt mit warmem Licht) ist keine Dachfüllung und wird ausgenommen
+    const timber = new Set([
+      wallColors(PALETTE.wallTimber).left,
+      wallColors(PALETTE.wallTimber).right,
+    ]);
+    expect(
+      styles(house(4)).some((c) => !timber.has(c) && near(c, PALETTE.roofTerracottaDark)),
+    ).toBe(false);
     for (const t of [1, 2, 3] as Tier[])
       expect(styles(house(t)).some(roof), `Stufe ${t}`).toBe(false);
     const h4 = bodyHeight(BUILDING_DEFS.house, house(4));
@@ -988,7 +995,6 @@ describe('M8 R1 Silhouetten', () => {
     }
     // Gezeichnete Fensterfüllungen (WINDOW-Farbe) gegen Anker, beide Richtungen; Giebel und Luke nutzen DOOR bzw. Wandfarben,
     // daher keine Fenster ohne Anker (roofOnly house4 = 0)
-    const WINDOW = mixHex(PALETTE.roofSlate, '#000000', 0.4);
     const area = (q: P[]): number =>
       q.reduce((s, p, i) => s + p.x * q[(i + 1) % q.length]!.y - q[(i + 1) % q.length]!.x * p.y, 0);
     const { ctx, log } = fakeCtx();
@@ -1064,10 +1070,7 @@ describe('M11 Silhouetten und Stufen-Aufsatz (Spec 8)', () => {
     }
   });
   it('AK-RND-02 je LEVELS-Typ: Stufe 1, 2, 3 verschieden, alles in bodyHull, keine Fensterfarben im Aufsatz; Welt unverändert', () => {
-    const glass = new Set([
-      mixHex(PALETTE.roofSlate, '#000000', 0.4),
-      mixHex(PALETTE.window, '#000000', 0.5),
-    ]);
+    const glass = new Set([WINDOW, LAMP]);
     const glassFills = (l: ReturnType<typeof draw>) =>
       l.events.filter((e) => e.op === 'fill' && glass.has(e.style)).length;
     const ids = Object.keys(LEVELS) as BuildingDefId[];
@@ -1187,7 +1190,9 @@ describe('M11 Stufe 3 deutlich lesbar (R199)', () => {
       const mast = extra.filter(
         (e) =>
           e.op === 'fill' &&
-          (e.style === PALETTE.wallTimber || e.style === wallColors(PALETTE.wallTimber).right),
+          (e.style === PALETTE.wallTimber ||
+            e.style === wallColors(PALETTE.wallTimber).left ||
+            e.style === wallColors(PALETTE.wallTimber).right),
       );
       expect(mast.length, id).toBeGreaterThan(0);
       const mb = bbox(mast.flatMap((e) => e.points));

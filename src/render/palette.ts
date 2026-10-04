@@ -75,8 +75,8 @@ export function rgbOf(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 export function mixHex(a: string, b: string, t: number): string {
-  const p = rgbOf(a),
-    q = rgbOf(b),
+  const p = rgbOfCss(a),
+    q = rgbOfCss(b),
     k = Math.min(1, Math.max(0, t));
   return `rgb(${p.map((v, i) => Math.round(v + (q[i]! - v) * k)).join(',')})`;
 }
@@ -94,3 +94,22 @@ export function rgbOfCss(css: string): [number, number, number] {
 
 /** Waldboden (Spec 4.4 I5: nicht farbnah zum alten Waldgrund #3d7a3a): moosig-erdiges Dunkelgrün aus Palettenfarben. */
 export const FOREST_FLOOR = mixHex(PALETTE.crown, PALETTE.wallTimber, 0.4);
+
+// --- Ein Licht (H-R10, R211): warme Lichter und kühle Schatten statt Weiss und Schwarz (Stilrahmen S1, S4) ---
+
+/** Lichtton (warm): Lichtseiten, Oberflächen und Kronenkappen mischen hierhin, nie zu Weiss. */
+export const LIGHT_TONE = PALETTE.sandDry;
+/** Schattenton (kühl): Mischung aus `waterDeep` und `rockDark` (Startwert 50/50), nie Schwarz. */
+export const SHADE_TONE = mixHex(PALETTE.waterDeep, PALETTE.rockDark, 0.5);
+/** Tiefer Eigenton für Fenster, Türen, Öffnungen und Silhouetten: SHADE_TONE auf 45 % Helligkeit, nie Schwarz. */
+export const INK_TONE = `rgb(${rgbOfCss(SHADE_TONE)
+  .map((v) => Math.round(v * 0.45))
+  .join(',')})`;
+/** Mischt `color` (`#rrggbb` oder `rgb(r,g,b)`) um den Anteil `t` zum warmen Lichtton. */
+export const toLight = (color: string, t: number): string => mixHex(color, LIGHT_TONE, t);
+/** Mischt `color` um den Anteil `t` zum kühlen Schattenton. */
+export const toShade = (color: string, t: number): string => mixHex(color, SHADE_TONE, t);
+/** Mischt `color` um den Anteil `t` zum tiefen Eigenton (dunkle Details, Kontur). */
+export const toInk = (color: string, t: number): string => mixHex(color, INK_TONE, t);
+/** Schattenseite einer Fläche: kühler Schattenton plus ein Hauch tiefer Eigenton, damit auch dunkle Töne dunkler werden. */
+export const shadeSide = (color: string, t: number): string => toShade(toInk(color, 0.12), t);
