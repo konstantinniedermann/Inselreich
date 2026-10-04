@@ -240,6 +240,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("decision braucht --for und --question oder --resolution")
     if args.kind == "queue" and not QUEUE_ID.fullmatch(args.id):
         parser.exit(2, f"studio-log: --id {args.id!r} ist keine N-<Nummer>\n")
+    if (
+        args.kind == "retro"
+        and args.retro_kind == "meilenstein"
+        and not any(t.startswith("meilenstein:") for t in _split(args.triggers))
+    ):
+        print(
+            "studio-log: Warnung: Meilenstein-Retro ohne Trigger "
+            "'meilenstein:<ID>' – der Retro-Alarm bleibt offen",
+            file=sys.stderr,
+        )
     event = make_event(args)
     if args.kind == "queue":
         try:
