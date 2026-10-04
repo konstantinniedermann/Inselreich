@@ -90,6 +90,33 @@ describe('shortageEvents (H-A2)', () => {
   });
 });
 
+describe('Absicherung (Fix-Runde 1)', () => {
+  it('Bestand >0 nach 0 nach >0 innerhalb eines Frames ergibt kein Ereignis', () => {
+    const w = createWorld(1);
+    addHouse(w, { food: 0.5 });
+    w.stock.food = 3;
+    const before = shortageSnapshot(w);
+    w.stock.food = 0;
+    w.stock.food = 2;
+    expect(shortageEvents(before, shortageSnapshot(w))).toEqual([]);
+  });
+  it('Zyklusende bei storageFull wird gemeldet (Arbeit lief)', () => {
+    const w = createWorld(1);
+    const id = addWorker(w, 'lumberjack', 5, 5, 7);
+    const prev = workProgress(w);
+    w.buildings[id]!.progress = 0;
+    w.buildings[id]!.state = 'storageFull';
+    expect(workCycleKinds(prev, w, { x0: 0, y0: 0, x1: 20, y1: 20 })).toEqual(['lumberjack']);
+  });
+  it('mehrere Zyklen in einem Frame ergeben höchstens ein Ereignis je Gebäude', () => {
+    const w = createWorld(1);
+    const id = addWorker(w, 'lumberjack', 5, 5, 9);
+    const prev = workProgress(w);
+    w.buildings[id]!.progress = 3; // zwei Zyklen übersprungen, wieder angestiegen
+    expect(workCycleKinds(prev, w, { x0: 0, y0: 0, x1: 20, y1: 20 })).toEqual(['lumberjack']);
+  });
+});
+
 describe('workCycleKinds (H-A2)', () => {
   const view = { x0: 0, y0: 0, x1: 20, y1: 20 };
   it('progress fällt: Zyklusende, Rückgabe ist die Gebäudeart', () => {
