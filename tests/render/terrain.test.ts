@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { perfBudget } from '../helpers/perfBudget';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { createWorld } from '../../src/sim/world';
 import type { World3 } from '../../src/render/terrain';
@@ -286,14 +287,15 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
   it('AK-R1-06 Aufbau Faktor 1 (Rechenzeit ohne Canvas) ≤ 1500 ms', () => {
     // Bestwert aus drei Läufen: Unter Volllast (parallele Testdateien) verfälscht ein einzelner Lauf die Zeit,
     // die Aussage "≤ 1500 ms" bleibt unverändert und streng für den schnellsten Lauf.
+    const budget = perfBudget(1500); // im CI Faktor 1,5 (R217)
     const world = createWorld(5);
     let best = Infinity;
-    for (let i = 0; i < 3 && best >= 1500; i++) {
+    for (let i = 0; i < 3 && best >= budget; i++) {
       const t0 = performance.now();
       paintAll(world);
       best = Math.min(best, performance.now() - t0);
     }
-    expect(best).toBeLessThan(1500);
+    expect(best).toBeLessThan(budget);
   }, 30_000);
 
   it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {

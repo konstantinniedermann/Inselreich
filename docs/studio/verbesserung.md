@@ -251,6 +251,18 @@ beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`
 verdichten mit `make studio-metrics`. Vor Commits an `tools/studio/`: `make studio-lint` (Ruff über
 `uvx`; bewusst nicht Teil von `make check`).
 
+**Retro-Trigger (R217 V3):** `log.py retro --kind meilenstein` ohne Trigger der Form
+`meilenstein:<ID>` schreibt das Ereignis trotzdem (Exit 0), warnt aber auf stderr; ohne diesen
+Trigger bleibt der Retro-Alarm des Meilensteins offen.
+
+**Leerlauf der Umsetzungskette (E-028, Messgrösse 2):** kein eigenes Ereignis nötig. Aus den
+`package`-Ereignissen leitet `python3 tools/studio/metrics.py --efficiency [--idle-prefix H-]`
+den Leerlauf ab: Strang = Owner; Intervall vom ersten Status `review` eines Pakets bis zum ersten
+`active` eines später startenden Pakets desselben Owners. Parallel gestartete Pakete, erneute
+Aktivierungen und Pausen über 240 min (Sitzungspause) zählen nicht. Ausgegeben werden Median und
+Einzelübergänge. Voraussetzung: Leads führen `package … --status active` beim Start und `review`
+bei der Abgabe nach (wie bisher Pflicht).
+
 ## Limit-Sensor
 
 **Sensor (R68, Paket STUDIO-LIMIT, in Betrieb seit R80):** Die Statuszeile von Claude Code
