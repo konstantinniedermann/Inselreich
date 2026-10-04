@@ -754,6 +754,29 @@ body {
 .log-box .event-log {
   width: 100%;
 }
+.event-log__link {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  white-space: inherit;
+  overflow: inherit;
+  text-overflow: inherit;
+}
+.event-log__link:hover {
+  text-decoration: underline;
+  background: rgba(0, 0, 0, 0.06);
+}
+.event-log__link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
 .event-log--collapsed .event-log__item:first-child {
   white-space: nowrap;
   overflow: hidden;
