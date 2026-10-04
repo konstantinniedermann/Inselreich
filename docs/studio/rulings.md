@@ -1318,3 +1318,38 @@ Erstbild-Rasterung ~130 ms beim grössten Massiv und dezente Wiese bei Zoom 1 �
 im Spiel. Merge durch production-integrator nach H-S1. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-art H-R9 · ADR: —
+
+## R207 · 2026-10-04 · Nutzerfeedback Kreativität, Tempo, Löschrechte
+
+Ruling: Auslegung als drei Prozessaufträge. (1) **Kreativabteilung:** Das Studio soll von sich aus Funktionen
+(Inhalt, Grafik, Ton, Bedienung …) vorschlagen, bewerten und einplanen oder verwerfen; die Form (Rolle, Takt,
+Ideen-Pool, Bewertungsraster, Entscheidweg) erarbeitet `studio-process-coach` auf Datenbasis als Experiment,
+L0 entscheidet. Richtungswechsel (Titel, Genre, Kernsäulen) bleiben Vorbehalt des Nutzers (Verfassung §5.3).
+(2) **Tempo / Release-Bündel:** Kleine Änderungen werden gebündelt integriert und gemeinsam getestet
+(Browser-QA und Nutzer-Playtest je Release statt je Häppchen); §9 bleibt unberührt (Review je Task, QA mit
+Screenshots je UI-Task, `make check` vor jedem Merge). Zuschnitt und Messgrösse liefert `studio-process-coach`.
+(3) **Löschrechte:** Löschen im Repo (`rm`, `rmdir`, `unlink`, `git rm`) braucht keine manuelle Freigabe mehr
+(Allow-Regeln in `.claude/settings.json`); der Guard verbietet Löschen ausserhalb von Repo und Temp weiterhin
+(§6.4), Repo-Wurzel und `.git` bleiben geschützt. Zweck der Anweisung: das Spiel entwickelt sich schneller und
+eigenständiger weiter, ohne dass der Nutzer Routine-Freigaben gibt; die Auslegung widerspricht ihm nicht, weil
+sie Freigaben im Repo abbaut und nur die Verfassungsgrenzen stehen lässt. — Kosten bei Irrtum: Experimente
+zurücknehmen; Allow-Regeln entfernen.
+
+Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-04 · ADR: —
+
+## R208 · 2026-10-04 · Prozess-Retro Kreativität und Tempo angenommen
+
+Ruling: Vorschläge V1–V4 der Prozess-Retro `retros/2026-10-04-prozess-kreativitaet-tempo.md` angenommen.
+(V4) E-015 und E-017 abgeschlossen, beide **behalten**; E-022 läuft weiter. (V1) **E-028 Release-Bündel** startet
+heute: Häppchen werden nach Review und Abnahme „release-reif", 2–4 je Release (Auslöser 3 reif, Session-Ende oder
+Meilenstein-Merge; Hotfix einzeln), ein Kandidat, ein Browser-Lauf mit eigenem Screenshot-Abschnitt je UI-Task,
+ein opus-Review über den Kandidaten, ein Gate Merge Release, ein Nutzer-Playtest mit Release-Notiz; nächstes
+Häppchen startet nach Review-OK. (V2) **E-027 Discovery-Strang** startet heute: `lead-design` verantwortet
+Ideen-Runden (`IDEEN-nn`) mit neuem L2 `design-idea-scout` (ersetzt den Abruf-Platzhalter
+`design-genre-researcher`), Pool `docs/ideen.md`, Raster und ein reservierter Studio-Platz je Release; je Runde
+≤ 2 Starts, ≤ 80 Tools. (V3) Bildziel-Zeile in `lernen.md`. Die übrigen vorgeschlagenen Experimente rücken nach
+hinten. Umsetzung: `studio-coach` (Handbuch 1.16, gates, Integrator/Playtester, Vorlage, experimente, lernen,
+CHANGELOG), `lead-production` (Onboarding Scout, roster, lead-design, `docs/ideen.md`). — Kosten bei Irrtum:
+Rückfallzustände laut E-027/E-028.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach P-R207 · ADR: —

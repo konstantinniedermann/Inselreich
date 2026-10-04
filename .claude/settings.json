@@ -1,5 +1,8 @@
 {
   "outputStyle": "Projektleiter",
+  "permissions": {
+    "allow": ["Bash(rm:*)", "Bash(rmdir:*)", "Bash(unlink:*)", "Bash(git rm:*)"]
+  },
   "statusLine": {
     "type": "command",
     "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/studio/statusline.py\""

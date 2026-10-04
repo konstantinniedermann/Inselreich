@@ -83,3 +83,13 @@ schliesst den Eintrag.
 - Blockiert: nichts (Guard-Matcher steht schon, Regel fehlt)
 - Von: studio-director
 - Antwort: –
+
+## N-94 · offen · 2026-10-04 · Löschen ausserhalb des Repos: verboten lassen oder auf Nachfrage?
+
+- Frage: Heute verbietet Verfassung §6.4 jedes Löschen ausserhalb von Repo und Temp-Ordner hart (Guard). Du wünschst: ausserhalb nur mit deiner Freigabe. Soll §6.4 so geändert werden, dass der Guard dort nachfragt statt sperrt?
+- Empfehlung: Verboten lassen. Löschen ausserhalb des Repos kommt im Studio praktisch nicht vor; falls doch, meldet L0 den Pfad und du löschst selbst.
+- Begründung: Eine Nachfrage-Stufe braucht eine Verfassungs- und Guard-Änderung (nur du, mit 'VERFASSUNG ÄNDERN') und schwächt den Schutz gegen Versehen; der Nutzen ist klein.
+- Kosten des Wartens: Keine: nichts ist blockiert, Löschen im Repo ist seit R207 freigegeben.
+- Blockiert: nichts
+- Von: studio-director
+- Antwort: –
