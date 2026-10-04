@@ -182,7 +182,7 @@ Tab verborgen ist.
   gelieferte Aufträge, Aufstieg, Fehler und Sieg; bei Krisen Glocke (Brand), Nebelhorn (Sturmwarnung)
   und Fanfare (Boom). Wichtige Signale senken Musik und Umgebung kurz ab.
   Geht ein Gut aus, das deine Häuser brauchen, ertönt ein tiefer Doppelton (je Gut höchstens einmal pro
-  Minute; Krisensignale haben Vorrang). Betriebe im Bild geben beim Fertigstellen einer Lieferung ein
+  Minute; Krisensignale haben Vorrang). Betriebe in Kameranähe geben beim Fertigstellen einer Lieferung ein
   leises Arbeitsgeräusch von sich (Klopfen, Tick, Plätschern), nie dichter als etwa einmal pro Sekunde.
   Beides hängt am Effekte-Regler.
 - **Umgebung:** folgt dem Bildausschnitt — Meer, Wind, Vögel am Tag, Grillen in der Nacht, Möwen an der
