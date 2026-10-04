@@ -806,3 +806,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tools/studio/log.py retro`, Metrik E-028.
 - Beobachtung: Meilenstein-Retros M10/M11 ohne `meilenstein:`-Trigger geloggt (Alarm blieb offen); für E-028 fehlt ein Ereignis „Häppchen n+1 gestartet", Leerlauf nicht messbar.
 - Ursprung: Session-Retro e13c3631. Einschätzung: lead-production, nächste Session (R217 V3).
+
+### 2026-10-04 · Render · S1-Rest `DIM_FIRE` und Gut-Schlüssel im Audio
+
+- Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
+- Beobachtung: Brennende Gebäude werden mit reinem Schwarz abgedunkelt (S1). Die Stimmen-Schlüssel je Gut doppeln die Gut-IDs der Sim ohne Test; Umbenennung fällt still auf die Grundstimme zurück.
+- Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
