@@ -140,4 +140,29 @@ describe('H-R12 Dünen im Terrain', () => {
     expect(checked).toBe(6);
     expect(withDune).toBeGreaterThan(0); // der Vergleich trifft wirklich Dünenknoten
   }, 60_000);
+
+  it('H-R12 Fix 3: dtone springt nicht an den Kachelmittellinien (keine achsparallelen Stufen, Seeds 1, 2, 3, 5)', () => {
+    // Das Küstenfeld ist je Kachel gestuft (Chebyshev-Abstand): sein Gefälle knickt an den Kachelmitten (Knoten 4 mod 8).
+    // Ungeglättet ging das Gefälle in den Dünenton ein → Sprünge dort. Geglättet verteilen sich Sprünge gleichmässig.
+    for (const seed of [1, 2, 3, 5]) {
+      const g = buildGrid(createWorld(seed, { unlockAll: true }));
+      let big = 0,
+        onLines = 0;
+      for (let j = 1; j < g.ny - 1; j++)
+        for (let i = 1; i < g.nx - 1; i++) {
+          const k = j * g.nx + i;
+          if (g.dune[k]! < 0.2) continue;
+          if (g.dune[k + 1]! >= 0.2 && Math.abs(g.dtone[k + 1]! - g.dtone[k]!) > 0.12) {
+            big++;
+            if (i % 8 === 3 || i % 8 === 4) onLines++;
+          }
+          if (g.dune[k + g.nx]! >= 0.2 && Math.abs(g.dtone[k + g.nx]! - g.dtone[k]!) > 0.12) {
+            big++;
+            if (j % 8 === 3 || j % 8 === 4) onLines++;
+          }
+        }
+      // gleichverteilt wären 2 von 8 Positionen = 25 %; die Stufen lagen bei 52…70 %
+      if (big > 30) expect(onLines / big, `Seed ${seed} (${onLines}/${big})`).toBeLessThan(0.38);
+    }
+  }, 60_000);
 });

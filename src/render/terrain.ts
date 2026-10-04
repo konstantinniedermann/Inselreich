@@ -3,6 +3,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import {
   DUNE_ACCENT,
+  DUNE_ONSET,
   DUNE_SHADOW,
   DUNE_TONE_FLAT,
   WET_SAND,
@@ -72,6 +73,12 @@ const ROCK_EDGE_DEBRIS = 0.8;
 const ROCK_EDGE_REACH = 2.5; // voll ab Gebirgsanteil 0,6 (≈ 0,1 Kachel innerhalb einer geraden Kante, an Ecken tiefer)
 const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreht), trägt die Plastik im Inneren
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
+/**
+ * H-R12 Fix 3: Das Küstenfeld ist je Kachel gestuft (Chebyshev-Abstand), sein Gefälle knickt an den Kachelmitten und
+ * ging ungeglättet in den Dünenton ein → achsparallele Stufen. Darum Phase und Gefälle der Dünen aus einem Box-
+ * Weichzeichner (Radius in Knoten, 2 Durchgänge ≈ 1,25 Kacheln Stützweite).
+ */
+const DUNE_BLUR = 5;
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
 const CLOVER_MAX = 0.4; // H-R11 F1: höchstens 36 % Mischung zum Kleegrün ((1 − 0,1) · 0,4 bei Fleckwert 1)
@@ -447,7 +454,103 @@ function sandRestField(world: FieldWorld): Field {
         }
       }
   }
+  // Fix 3: Chebyshev-Abstände knicken an Kachelmitten; 3×3-Mittel (2 Durchgänge) macht die Strandbreite glatter
+  const tmpV = new Float32Array(n);
+  for (let pass = 0; pass < 2; pass++) {
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        let s = 0;
+        for (let dx = -1; dx <= 1; dx++) s += d[y * w + Math.min(w - 1, Math.max(0, x + dx))]!;
+        tmpV[y * w + x] = s / 3;
+      }
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) s += tmpV[Math.min(h - 1, Math.max(0, y + dy)) * w + x]!;
+        d[y * w + x] = s / 3;
+      }
+  }
   return { w, h, v: d };
+}
+
+/** 1D-Distanztransformation (Felzenszwalb): quadratischer Abstand zur nächsten Quelle (f = 0) entlang einer Zeile. */
+function edt1d(
+  f: Float64Array,
+  n: number,
+  out: Float64Array,
+  v: Int32Array,
+  z: Float64Array,
+): void {
+  let k = 0;
+  v[0] = 0;
+  z[0] = -Infinity;
+  z[1] = Infinity;
+  for (let q = 1; q < n; q++) {
+    let s: number;
+    for (;;) {
+      const p = v[k]!;
+      s = (f[q]! + q * q - (f[p]! + p * p)) / (2 * q - 2 * p);
+      if (s <= z[k]! && k > 0) k--;
+      else break;
+    }
+    if (s <= z[k]!) s = z[k]!;
+    k++;
+    v[k] = q;
+    z[k] = s;
+    z[k + 1] = Infinity;
+  }
+  k = 0;
+  for (let q = 0; q < n; q++) {
+    while (z[k + 1]! < q) k++;
+    out[q] = (q - v[k]!) ** 2 + f[v[k]!]!;
+  }
+}
+/**
+ * H-R12 Fix 3: vorzeichenbehafteter euklidischer Küstenabstand (Kacheln; Land +, Wasser −) auf der Kachelmitte.
+ * Anders als der Chebyshev-Abstand des Küstenfelds hat er keine achsparallelen Höhenlinien: Dünenkämme folgen der
+ * Küste als Bögen statt als Treppe mit rechten Winkeln.
+ */
+function euclidField(world: FieldWorld): Field {
+  const { width: w, height: h } = world;
+  const n = w * h;
+  const BIG = 1e9;
+  const m = Math.max(w, h);
+  const out = new Float64Array(m),
+    v = new Int32Array(m),
+    z = new Float64Array(m + 1);
+  const edt = (sourceIsLand: boolean): Float64Array => {
+    const g = new Float64Array(n);
+    for (let i = 0; i < n; i++)
+      g[i] = (world.tiles[i]!.terrain !== 'water') === sourceIsLand ? 0 : BIG;
+    const col = new Float64Array(m);
+    for (let x = 0; x < w; x++) {
+      for (let y = 0; y < h; y++) col[y] = g[y * w + x]!;
+      edt1d(col, h, out, v, z);
+      for (let y = 0; y < h; y++) g[y * w + x] = out[y]!;
+    }
+    const row = new Float64Array(m);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) row[x] = g[y * w + x]!;
+      edt1d(row, w, out, v, z);
+      for (let x = 0; x < w; x++) g[y * w + x] = out[x]!;
+    }
+    return g;
+  };
+  const toWater = edt(false),
+    toLand = edt(true);
+  const f = new Float32Array(n);
+  for (let i = 0; i < n; i++)
+    f[i] =
+      world.tiles[i]!.terrain !== 'water'
+        ? Math.min(Math.sqrt(toWater[i]!), MAX_DIST)
+        : -Math.min(Math.sqrt(toLand[i]!), MAX_DIST);
+  return { w, h, v: f };
+}
+const euclidCache = new WeakMap<TerrainFields, Field>();
+function euclidOf(world: FieldWorld, fields: TerrainFields): Field {
+  let f = euclidCache.get(fields);
+  if (!f) euclidCache.set(fields, (f = euclidField(world)));
+  return f;
 }
 
 /** Je Felder-Satz ein `sandRestField` (genau eines je Welt, fällt mit den Feldern weg); `patchGrid` verwirft es bei Geländewechsel. */
@@ -465,6 +568,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   const n = nx * ny;
   const sharp = new Float32Array(n),
     smooth = new Float32Array(n),
+    se = new Float32Array(n),
     grass = new Float32Array(n),
     rock = new Float32Array(n),
     shade = new Float32Array(n),
@@ -487,6 +591,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
+  const euc = euclidOf(world, fields);
   let rest: Field | null = null; // Abstand zum Nicht-Sand, erst beim ersten Sandknoten
   const seed = world.seed;
   const mt = LAND.indexOf('mountain');
@@ -501,6 +606,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       const [wx, wy] = warp(seed, fx, fy);
       sharp[k] = sampleField(fields.coast, wx, wy, COAST_BAND);
       smooth[k] = sampleField(fields.coast, wx, wy);
+      se[k] = sampleField(euc, wx, wy);
       let best = 0,
         bestV = -Infinity;
       for (let t = 0; t < LAND.length; t++) {
@@ -578,6 +684,9 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
+  const sd = se; // geglätteter euklidischer Küstenabstand für die Dünen (Fix 3)
+  boxBlur(sd, nx, ny, DUNE_BLUR, tmp);
+  boxBlur(sd, nx, ny, DUNE_BLUR, tmp);
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -614,14 +723,18 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       if (cls[j * nx + i] !== 0 && ind[sa]![j * nx + i]! > 0 && sK > WET_SAND + 0.1) {
         const fx = (win.i0 + i) * step,
           fy = (win.j0 + j) * step;
-        const csx = (smooth[j * nx + ir]! - smooth[j * nx + il]!) / ((ir - il) * step);
-        const csy = (smooth[jd * nx + i]! - smooth[ju * nx + i]!) / ((jd - ju) * step);
+        const csx = (sd[j * nx + ir]! - sd[j * nx + il]!) / ((ir - il) * step);
+        const csy = (sd[jd * nx + i]! - sd[ju * nx + i]!) / ((jd - ju) * step);
         rest ??= sandRestOf(world, fields);
         const [wx, wy] = warp(seed, fx, fy);
         const beach = sK + sampleField(rest, wx, wy) - 0.5 - WET_SAND;
-        const d = duneSample(seed, fx, fy, sK, csx, csy, beach);
-        dtone[j * nx + i] = d.tone;
-        dune[j * nx + i] = d.h;
+        // Phase und Gefälle aus dem geglätteten Feld (ein Min mit dem Kachelfeld würde an den Kachelmitten knicken);
+        // der Saumabstand gilt am echten Küstenfeld: davor bleibt die Düne flach (der Einsatz ist dort ohnehin < 8 %)
+        const d = duneSample(seed, fx, fy, sd[j * nx + i]!, csx, csy, beach);
+        // weich über 0,5 Kachel einblenden (ein harter Schnitt folgte der Kachelstufe von sK als gezackte Kante)
+        const front = smoothstepClamp((sK - DUNE_ONSET) / 0.5);
+        dtone[j * nx + i] = DUNE_TONE_FLAT + (d.tone - DUNE_TONE_FLAT) * front;
+        dune[j * nx + i] = d.h * front;
         rip[j * nx + i] = d.rip;
         rwarp[j * nx + i] = d.rwarp;
       }
@@ -638,8 +751,8 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         ir = Math.min(nx - 1, i + 1),
         ju = Math.max(0, j - 1),
         jd = Math.min(ny - 1, j + 1);
-      const sx = (smooth[j * nx + ir]! - smooth[j * nx + il]!) / ((ir - il) * step);
-      const sy = (smooth[jd * nx + i]! - smooth[ju * nx + i]!) / ((jd - ju) * step);
+      const sx = (sd[j * nx + ir]! - sd[j * nx + il]!) / ((ir - il) * step);
+      const sy = (sd[jd * nx + i]! - sd[ju * nx + i]!) / ((jd - ju) * step);
       const sl = Math.hypot(sx, sy);
       if (sl < 1e-6) continue;
       const tx = (dtone[j * nx + ir]! - dtone[j * nx + il]!) / ((ir - il) * step);
@@ -1204,8 +1317,9 @@ export function patchGrid(
   // Im Spiel wechseln Sand und Küste nie (`forest.ts` tauscht nur Wald und Gras); die Strandbreite reicht bei einem
   // Wechsel über den Patch-Rand hinaus, darum gilt der Neuaufbau im Rechteck nur dort (Test H-R12 Sandwechsel).
   if (coastChanged || sandChanged) sandRestCache.delete(fields);
+  if (coastChanged) euclidCache.delete(fields);
   const k = TEX / RASTER; // Knoten je Kachel
-  const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
+  const margin = Math.max(2 * HEIGHT_BLUR, 2 * DUNE_BLUR) + 2; // Reichweite von Weichzeichner und Gefälle in Knoten
   const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
   const win = {
     i0: Math.max(0, inner.i0 - margin),

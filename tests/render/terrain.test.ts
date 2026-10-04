@@ -731,22 +731,16 @@ describe('M10 Teil-Raster', () => {
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of [
-      'sharp',
-      'smooth',
-      'grass',
-      'rock',
-      'shade',
-      'tone',
-      'dtone',
-      'dune',
-      'rip',
-      'rwarp',
-      'dtn',
-      'patch',
-      'cls',
-    ] as const)
+    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'tone', 'patch', 'cls'] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
+    // Dünenfelder: Sand wechselt hier künstlich (im Spiel nie); die Strandbreite reicht über das Rechteck hinaus,
+    // darum gilt der Vergleich nur im Rechteck selbst (Test „H-R12 Sandwechsel“ in terrainDunes.test.ts)
+    for (const f of ['dtone', 'dune', 'rip', 'rwarp', 'dtn'] as const)
+      for (let jn = rect.y0 * 8; jn <= (rect.y1 + 1) * 8; jn++)
+        for (let inn = rect.x0 * 8; inn <= (rect.x1 + 1) * 8; inn++)
+          expect(grid[f][jn * grid.nx + inn], `${f} ${inn},${jn}`).toBe(
+            full[f][jn * grid.nx + inn],
+          );
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
 });
