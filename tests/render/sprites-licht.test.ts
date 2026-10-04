@@ -98,7 +98,7 @@ describe('H-R10 Schattenseite kühler', () => {
             expect(e.style).not.toBe('rgb(255,255,255)');
             if (e.op === 'stroke') {
               // echte Rot-Probe: weder das alte EDGE von main noch die alte schwarze Kontur
-              expect(e.style, id).not.toBe('rgb(41,27,17)');
+              expect(e.style, id).not.toBe('rgb(40,27,17)'); // EDGE auf main (98f7034)
               expect(e.style, id).not.toBe('rgba(0,0,0,0.6)');
             }
           }
