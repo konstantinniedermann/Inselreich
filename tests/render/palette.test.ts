@@ -4,9 +4,16 @@ import {
   SHADOW,
   SIGNAL_NAMES,
   SURFACE_NAMES,
+  INK_TONE,
+  LIGHT_TONE,
+  SHADE_TONE,
   mixHex,
   rgbOf,
+  rgbOfCss,
   rgbaOf,
+  toInk,
+  toLight,
+  toShade,
 } from '../../src/render/palette';
 import { lightAt } from '../../src/render/daynight';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
@@ -111,5 +118,29 @@ describe('Palette', () => {
           ).toBeGreaterThanOrEqual(15);
       }
     }
+  });
+});
+
+describe('H-R10 AK-d Helfer für Licht und Schatten (additiv)', () => {
+  it('d) Hex-Ergebnisse von mixHex bleiben bytegleich, rgb()-Eingaben werden angenommen', () => {
+    expect(mixHex('#000000', '#ffffff', 0.5)).toBe('rgb(128,128,128)');
+    expect(mixHex(mixHex('#000000', '#ffffff', 0.5), '#ffffff', 1)).toBe('rgb(255,255,255)');
+    expect(mixHex(PALETTE.crown, PALETTE.rockDark, 0.35)).toBe('rgb(64,100,61)');
+  });
+  it('d) LIGHT_TONE ist sandDry, SHADE_TONE mischt waterDeep und rockDark 50/50, INK_TONE ist dunkel aber nicht schwarz', () => {
+    expect(LIGHT_TONE).toBe(PALETTE.sandDry);
+    expect(SHADE_TONE).toBe(mixHex(PALETTE.waterDeep, PALETTE.rockDark, 0.5));
+    const ink = rgbOfCss(INK_TONE);
+    expect(Math.max(...ink)).toBeGreaterThanOrEqual(30);
+    expect(Math.max(...ink)).toBeLessThan(80);
+  });
+  it('d) toLight/toShade/toInk mischen zum jeweiligen Ton; t = 0 ändert nichts, t = 1 ergibt den Ton', () => {
+    expect(toLight(PALETTE.wallLime, 0)).toBe(mixHex(PALETTE.wallLime, PALETTE.wallLime, 0));
+    expect(rgbOfCss(toLight(PALETTE.wallLime, 1))).toEqual(rgbOf(PALETTE.sandDry));
+    expect(rgbOfCss(toShade('rgb(10,20,30)', 1))).toEqual(rgbOfCss(SHADE_TONE));
+    expect(rgbOfCss(toInk(PALETTE.wallLime, 1))).toEqual(rgbOfCss(INK_TONE));
+    const s = rgbOfCss(toShade(PALETTE.wallLime, 0.2));
+    const w = rgbOf(PALETTE.wallLime);
+    expect(s[0]).toBeLessThan(w[0]);
   });
 });
