@@ -1,5 +1,5 @@
 import { hash2, valueNoise } from '../sim/noise';
-import { PALETTE, mixHex } from './palette';
+import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
 // Reine Helfer ohne Canvas; Lage in Kachel-Anteilen, deterministisch aus `hash2`/`valueNoise`.
@@ -21,6 +21,25 @@ export const SHRUB_TONES: readonly [string, string] = [
   mixHex(PALETTE.crown, PALETTE.grassDark, 0.7),
   mixHex(PALETTE.crown, PALETTE.grassDark, 0.85),
 ];
+
+/**
+ * H-R11: Büschelfarbe je Tonstufe des Bodens darunter (Stilrahmen S2/S3). `tone` 0 hell, 1 dunkel; `st` ist die
+ * Tonstufe 0…4 (2 = eben). Schattenseiten mischen kühl (waterDeep/rockDark), Lichtseiten warm (sandDry), nie Schwarz
+ * oder Weiss. Akzent statt Textur: die Büschel tragen die Stufe, in der sie stehen.
+ */
+export function tuftColor(tone: 0 | 1, st: number): string {
+  const base = rgbOfCss(
+    tone === 0 ? PALETTE.grassLight : mixHex(PALETTE.grassDark, PALETTE.grass, 0.4),
+  );
+  const e = Math.max(-1, Math.min(1, (st - 2) / 2));
+  const mix = (a: readonly number[], b: readonly number[], t: number): number[] =>
+    a.map((v, i) => v + (b[i]! - v) * t);
+  const c =
+    e < 0
+      ? mix(mix(base, rgbOf(PALETTE.rockDark), 0.2 * -e), rgbOf(PALETTE.waterDeep), 0.3 * -e)
+      : mix(base, rgbOf(PALETTE.sandDry), 0.35 * e);
+  return `rgb(${c.map((v) => Math.round(v)).join(',')})`;
+}
 
 export interface Flower {
   x: number;
