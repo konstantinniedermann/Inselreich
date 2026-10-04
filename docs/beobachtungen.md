@@ -793,3 +793,15 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - 2026-10-04 · Render (`src/render/terrain.ts`, `sandRestField`/`patchGrid`) · Ändern sich Sand oder Küste, reicht die Strandbreite über den Patch-Rand hinaus, und am Fensterrand wären Nahtkanten möglich. Heute tauscht das Spiel nur Wald und Gras, deshalb steht nur ein Kommentar im Code. Ursprung: Review H-R12. Einschätzung: niedrig; erst relevant, wenn eine Funktion Sand oder Küste ändert (z. B. Aufschütten).
 - 2026-10-04 · Render (Seed 1, Dünen) · Auf Seed 1 sind die meisten Strände schmal (2–3 Kacheln) und tragen deshalb keine Dünen; die Galerie-Kamera 07/08 zeigt nur Rippeln. Dünenfelder sind nur an breiten Stränden zu sehen (Beleg 07b/08b bei Kachel 44,47). Ursprung: H-R12. Einschätzung: niedrig; im Playtest REL-01 auf weiteren Seeds prüfen, ob Dünen oft genug vorkommen.
 - 2026-10-04 · Render (REL-01 opus-Review, Sammeleintrag, alle niedrig) · (1) Kühler Schattenton 4× definiert: `palette.SHADE_TONE`, `dunes.DUNE_SHADOW`, `terrain.TONE_COOL`, `light.LIGHT_COLORS`; auf eine Quelle zusammenführen. (2) `meadowTint` ist exportiert, aber in `landColor` inline dupliziert. (3) `landShares` wird nur von Tests genutzt. (4) `DuneSample` berechnet `crest`/`ripple`/`grain` je Sandknoten, gelesen nur in Tests. (5) Veralteter Kommentar `WET_SAND` in `dunes.ts`. (6) `paintDecor` rechnet `groundToneAt` je Büschel neu und kostet `buildMs`/`lastPatchMs`; je Kachel cachen. (7) Dünenlicht 85 % Wind/30 % Sonne weicht von S1 ab: Frage an lead-art für REL-02. (8) `variants.ts` nutzt `#000000`/`#ffffff` und setzt zur Laufzeit um, schwer lesbar. (9) S4 bei `ship.ts:17` und `life.ts:166` noch offen (REL-02-Kandidat). Ursprung: REL-01 opus-Review. Einschätzung: niedrig; (1), (6), (9) als REL-02-Kandidaten bündeln. Die Punkte zu `dunes.ts` ((4), (5), (7)) betreffen H-R12, also REL-02.
+
+### 2026-10-04 · CI · Zeit-Test AK-R1-06 flaky auf dem Runner
+
+- Fundort: `tests/render/terrain.test.ts` AK-R1-06 „Aufbau Faktor 1 ≤ 1500 ms"; main-Läufe 37147743622, 37180893425, 37182089359 rot.
+- Beobachtung: GitHub-Runner liegt dauerhaft an der 1500-ms-Grenze; lokal grün.
+- Ursprung: Session-Retro e13c3631. Einschätzung: als H-T1 in REL-02 (CI-Schwelle ×1,5, R217).
+
+### 2026-10-04 · Studio-Werkzeug · Retro-Trigger und Leerlauf-Messung
+
+- Fundort: `tools/studio/log.py retro`, Metrik E-028.
+- Beobachtung: Meilenstein-Retros M10/M11 ohne `meilenstein:`-Trigger geloggt (Alarm blieb offen); für E-028 fehlt ein Ereignis „Häppchen n+1 gestartet", Leerlauf nicht messbar.
+- Ursprung: Session-Retro e13c3631. Einschätzung: lead-production, nächste Session (R217 V3).

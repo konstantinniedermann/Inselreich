@@ -1453,3 +1453,15 @@ REL-01b OK. Prüfliste UI-Task → Screenshot: H-U2 `.studio/qa/REL-01b/h-u2/` (
 Irrtum: Revert-Merge der vier Merge-Commits.
 
 Entscheider: L0 · Anlass: Playtest REL-01b, opus-Review REL-01 · ADR: —
+
+## R217 · 2026-10-04 · Session-Retro e13c3631
+
+Ruling: Vorschläge der Kurz-Retro `retros/2026-10-04-session-e13c3631.md`: **V1** (Zwischenstand bei halbem
+Deckel) und **V2** (Optik-Schätzfaktor ×2 plus eine Bild-Fix-Runde) angenommen als lernen.md-Regeln ohne
+Experiment-Platz (Plätze voll); Wirkung prüft die nächste Retro an H-R12/H-R13. **V3** angenommen: lead-production
+lässt `log.py retro` bei `--kind meilenstein` ohne `meilenstein:`-Trigger warnen (Werkzeug, nächste Session).
+**V4** angenommen, Option (a): AK-R1-06 bekommt im CI eine Schwelle ×1,5 (lokal 1500 ms), als Häppchen H-T1 in
+REL-02; Schutz bleibt das A/B-Perf-Delta im Release-Gate (R211). Offener Alarm `budget:lead-production:M5-01-merge`
+bleibt bis Beleg. — Kosten bei Irrtum: lernen.md-Zeilen streichen; Schwelle zurücksetzen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-S-2026-10-04 · ADR: —

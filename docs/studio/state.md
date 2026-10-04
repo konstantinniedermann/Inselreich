@@ -4,73 +4,79 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-03 (Session-Ende 347a6598; 5-h-Fenster 56 %, Woche 7 %)
+Stand: 2026-10-04 (Session-Ende e13c3631; 5-h-Fenster 38 %, Woche 13 %)
+
+## Release-Notiz REL-01 „Aus einem Guss" (live @ 6dc3dc1, R216)
+
+- **Neu:** Häuser und Bäume im Licht des Gebirges (keine schwarzen Konturen, kühle Schatten; H-R10). Wiese
+  und Waldboden mit Unebenheiten in Tonstufen, ruhigere Wiese (H-R11). Klick auf eine Brandmeldung im
+  Ereignis-Log springt zum Gebäude, auch per Tastatur (H-U2, **vom Studio vorgeschlagen**, I-002).
+- **Bitte testen:** Passen Häuser, Bäume, Wiese und Gebirge jetzt zusammen? Wiese bei Zoom 1 zu ruhig oder zu
+  unruhig? Hebt sich jedes Gebäude ab? Brandmeldung anklicken (auch nach Abriss).
+- **Nicht drin:** Dünen neu (H-R12) — Stufenkanten auf manchen Karten, kommt in REL-02 (R215).
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. Live auf main @ c98e23f (CI/Pages grün): M1–M8, **M10 „Schritt für
-  Schritt"** (R188), **M11 „Wirtschaft im Fluss"** (R200; Save v6, Fluss je Tick, Dämpfung, Jagdhütte,
-  Rinderfarm, Wald `free`, Auslastung, Ausbau Stufen 1–3) und M9-Häppchen H-R1…H-R8 (Welle 2: Sprite-Cache
-  H-R6, Varianz/Material H-R7, Felsmassive + `lineJoin` H-R8) sowie H-S1 (Kontor nur am Meer, `MIN_MOUNTAIN_PATCH = 12`,
-  R205) und H-R9 (Gebirge als Grossgrafik `massif.ts`, Relief/Dünen, Wiesenvarianz, R206).
-  Programm Nutzerfeedback: `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`.
-- **M9 „Lebendige Insel" Rest:** G7b Landtiere (`iso.ts`, `wildlife.ts`), K3 aus M10 (Silhouetten statt
-  Kategorie-Symbol, R186), Nutzerurteil zu H-R9 im Spiel abwarten (Wiese bei Zoom 1 noch
-  dezent, Erstbild-Rasterung ~130 ms), Typ-Erkennung kleiner Bauten
-  (R195). Häppchen-Format wie H-R6…H-R8 (Kurz-Spec im Briefing, lead-art).
-- **M12 „Weite Welt"** ist der nächste Meilenstein (G5 Fluss, S6 grössere/mehrere Inseln, S7 Expansion,
-  S8 Handelsrouten; Programm Zeilen 53–65, 128 ff.): zuerst Brainstorming mit lead-design.
-- Balancing-Signale für M12/Backlog (beobachtungen.md): Ausbau lohnt im Referenzpfad nicht (M-15, R196);
-  Holzfäller-Auslastung sinkt bei „Kein freier Wald" nur langsam; Render-Basis nach M11 bei 1920×1080/DPR 2
-  ~4,0 ms → Messung für M12 unter gleichen Bedingungen neu aufsetzen (R202).
-- Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; kein Rebase (§6.3), Branches
-  holen main per Merge; Strang-Branches nach jedem abgenommenen Commit pushen; **Integrator mergt im eigenen
-  Worktree** `.worktrees/integrate` (detached auf origin/main, `push origin HEAD:main`; E-022, Handbuch 1.15);
-  **L0 committet nie im Hauptcheckout, solange dort jemand anderes arbeitet** (R198); L0-Prüfzeile ohne Pipe
-  (`make studio-test >/dev/null && …`, R202).
-- Token-Effizienz: E-010 behalten (R201): Leads ein Auftrag je Instanz, Controller `sonnet`, Deckel 200k
-  Kontext / 6 Arbeiter-Starts, Spec ≤ 40 KB, L0-Übergabe nach Gate-Block bzw. 25 % Kontext.
+- Projekt: **Inselreich**. Live auf main @ 6dc3dc1 (CI/Pages grün): M1–M8, M10, M11, M9-Häppchen H-R1…H-R11,
+  H-S1, H-U2. Programm Nutzerfeedback: `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`.
+- **Arbeitsweise neu (Handbuch 1.17):** Release-Bündel E-028 (Häppchen → „release-reif", 2–4 je Release,
+  ein Browser-Lauf, ein opus-Review, ein Gate, ein Nutzertest; gates.md „Gate Merge Release") und
+  Discovery-Strang E-027 (Ideen-Runde `IDEEN-nn` durch lead-design + `design-idea-scout` nach jedem Release,
+  Pool `docs/ideen.md`, ein Studio-Platz je Release). Stilrahmen für alle Grafik:
+  `docs/superpowers/specs/2026-10-04-stilrahmen.md` (S1–S6, R211).
+- **REL-02 (Kandidaten):** H-R12 Dünen auf `feat/h-r12-duenen` @ 14fd4cf weiterführen (stetige Strandbreite
+  und Maske, ≈ 60 Tools, Zwischenstand bei halbem Deckel; R215) · H-R13 Vorberge (vorher Patch-Pfad messen,
+  `lastPatchMs` fast ausgeschöpft, R213) · H-T1 flaky Zeit-Test AK-R1-06 (`tests/render/terrain.test.ts`,
+  ≤ 1500 ms, CI-Runner 1517 ms bei 5f75b26) robust machen · S4-Rest Schiff/Figuren (`ship.ts:17`, `life.ts:166`)
+  · Sammelbefund REL-01-Review (beobachtungen.md). Studio-Platz: H-U1 „Anbinden auf Knopfdruck" (I-001) erst
+  im übernächsten Release.
+- **M9 Rest:** G7b Landtiere, K3 Silhouetten (R186), Typ-Erkennung kleiner Bauten (R195).
+- **M12 „Weite Welt"** danach: Brainstorming mit lead-design; Baustein I-004 Lagerhaus (geparkt, R210).
+- Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; kein Rebase (§6.3, Guard sperrt
+  jetzt auch `pull --rebase`, R212); Integrator mergt im Worktree `.worktrees/integrate`; L0 committet nie im
+  Hauptcheckout, solange dort jemand arbeitet (R198); Persona-Start als `general-purpose` braucht `model`
+  (Guard, R212); Löschen im Repo ohne Rückfrage, ausserhalb verboten (R207, N-94).
+- Token-Effizienz: E-010 (Leads ein Auftrag je Instanz, Controller `sonnet`, Deckel 200k Kontext / 6
+  Arbeiter-Starts, L0-Übergabe nach Gate-Block bzw. 25 % Kontext).
 
 ## Parallele Sessions
 
 | Session  | Stand         | besitzt     | bis |
 | -------- | ------------- | ----------- | --- |
-| 347a6598 | abgeschlossen | nichts mehr | –   |
+| e13c3631 | abgeschlossen | nichts mehr | –   |
 
 ## Seit letzter Session erledigt
 
-- Nutzerauftrag „Gebirge schöner, mehr Relief, Kontor am Meer" (R204): H-S1 (lead-tech, R205) und H-R9
-  (lead-art, R206) parallel umgesetzt, beide live, CI/Pages grün. H-R9 lag weit über Schätzung (~450 statt
-  200 Tools, 5 Fix-Runden; Kurz-Spec nahm bebaubares Gebirge an) → Kurz-Retro session-347a6598.
+- Nutzerfeedback zum Studio (R207): Prozess-Retro mit Messdaten → Release-Bündel E-028, Discovery-Strang E-027,
+  Bildziel vor Code (R208, Handbuch 1.16); Löschrechte im Repo; Guard N-92/N-93 (R212, Handbuch 1.17).
+- Erste Ideen-Runde IDEEN-01 (R210): 5 Ideen, I-002 live, I-001 eingeplant, 3 geparkt.
+- Stil-Diagnose ART-STIL-01 → Stilrahmen (R211) → REL-01 live (R216). H-R12 im Rückfall (R214, R215).
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: nur `.worktrees/integrate` (Integrator, bleibt).
-- Lokaler Branch `feat/m7-fx` @ 4489bdd (alte R5-Umsetzung, ungemergt, behalten §6.2).
-- Remote `wip/r118a-render-aufraeumen` ändert Render-Tests: nur per Ruling aufnehmen.
-- `stash@{0}` (alter WIP T02 aus m11-sim, inhaltlich im Branch): bleibt bis Ruling.
+- H-R12 (Dünen) offen für REL-02, Branch `feat/h-r12-duenen` @ 14fd4cf (ohne Delta-Review).
+- Worktrees: `.worktrees/integrate` (bleibt) und `.worktrees/h-r12` (für REL-02); h-u2, h-r10, h-r11 entfernt.
+- Remote-Branches überholt, nicht gemergt: `rel/rel-01` (mit altem H-R12), `docs/rel-01-arc42`; `rel/rel-01b`
+  ist in main. Löschen entfernter Branches ist verboten (§6.1) — bleiben stehen.
+- Lokaler Branch `feat/m7-fx` @ 4489bdd, Remote `wip/r118a-render-aufraeumen`, `stash@{0}`: unverändert, bis Ruling.
 
 ## Budget
 
-Keine offenen Freigaben. Alle Pakete dieser Session abgeschlossen.
+Keine offenen Freigaben.
 
 ## Offene Entscheide
 
-- L0: Experiment-Plätze voll (E-015, E-017, E-022, alle bis M12). Wartend, Reihenfolge laut Session-Retro:
-  E-025 (feste L0-Prüfzeile ohne Pipe/`;`), E-023, E-026 (Integrator-Persona präzisieren); dazu E-019 (Parallelität aus
-  Dateimatrix + Abhängigkeits-Prüfung im Gate Plan), E-023 (letzten roten Testlauf sichern — flakiger Test
-  viermal gesehen, nie benannt), E-024, E-018, E-020. Vorschläge der Session-Retro 9b13950a sichten.
-- Budget-Alarme nach Werkzeug-Fix teils noch falsch (lead-production 4/1, lead-tech 6/2): Ursache offen.
-- STUDIO.md hat 401 Zeilen (E-009-Grenze 400): studio-coach kürzt bei der nächsten Handbuch-Änderung.
+- L0: Vorschläge der Session-Retro 2026-10-04-session-e13c3631 sichten (Deckel-Zwischenstand, Schätzung
+  Optik-Häppchen, flaky Test).
+- L0: Experiment-Plätze voll (E-022, E-027, E-028). Wartend: E-025, E-023, E-026, E-019, E-024, E-018, E-020,
+  E-012, E-006.
 - CI: `ubuntu-latest` wechselt ab 2026-10-19 auf Ubuntu 26 (beobachtungen.md).
-- Nutzer: Abnahme im Spiel von M10, M11 und den neuen Grafiken; Tempo M11 (Referenzsieg 6750 statt 6050
-  Ticks, R185/R192) — bei Einwand Ruling Balancing. S12-Annahmen A1–A7 (bei Einwand Ruling anpassen).
-- Nutzer: N-92 und N-93 (Guard: `pull --rebase` und Persona-Starts ohne `model`). Optional: echtes
-  Arbeitskräfte-System statt Freischaltung (R148 F3, Backlog).
+- Nutzer: Test von REL-01 (Release-Notiz oben); Abnahme M10/M11 im Spiel und Tempo M11 (R185/R192).
+- Warteschlange leer.
 
 ## Nächste Schritte
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. M12 „Weite Welt": Brainstorming mit lead-design (Designvorschlag, Gate Brainstorming), dann Spec, Plan.
-2. Parallel M9-Rest als Häppchen (lead-art): G7b Landtiere, K3, kleine Bauten; Feinschliff H-R9 nach Nutzerurteil.
-3. Werkzeug (lead-production): E-023-Vorbereitung, Budget-Alarm-Rest, Integrator-Persona.
+1. Nutzerurteil zu REL-01 umsetzen (Ruling), dann Ideen-Runde IDEEN-02 (E-027: nach jedem Release).
+2. REL-02 schneiden: H-R12, H-T1, H-R13, S4-Rest (lead-art/lead-tech parallel nach Dateimatrix).
+3. M12 „Weite Welt": Brainstorming mit lead-design parallel zu REL-02.
