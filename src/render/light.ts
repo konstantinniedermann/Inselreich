@@ -71,10 +71,11 @@ export const ROCK_TONES: readonly Rgb[] = [
 export const TONE_EDGE_PX = 1.5;
 /**
  * Halbe Übergangsbreite für `toneStep` (in Stufen) bei einem Gefälle von `g` Stufen je Ausgabepixel, so dass die
- * Kante `TONE_EDGE_PX` Pixel breit ist. Nach unten 0,02 (nie ganz hart), nach oben 0,5 (flache Hänge).
+ * Kante `TONE_EDGE_PX` Pixel breit ist. Nach unten 0,002 (nie ganz hart, auch auf flachem Hang bleibt die Kante
+ * schmal), nach oben 0,5 (steile Hänge). `edgePx` überschreibt die Kantenbreite (Boden: `GROUND_EDGE_PX`).
  */
-export const toneHalfWidth = (g: number): number =>
-  Math.min(0.5, Math.max(0.02, 0.5 * TONE_EDGE_PX * g));
+export const toneHalfWidth = (g: number, edgePx: number = TONE_EDGE_PX): number =>
+  Math.min(0.5, Math.max(0.002, 0.5 * edgePx * g));
 /**
  * Stufung: T wird auf ganze Stufen gerundet, mit einem weichen Übergang der halben Breite `hw` (in Stufen) um jede
  * Stufengrenze k + 0,5. Der Rasterizer setzt `hw` aus dem Gefälle von T so, dass der Übergang 1–2 px breit ist.

@@ -449,9 +449,10 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         if (!all) continue;
         checked++;
         const distinct: ReturnType<typeof rgbToLab>[] = [];
-        for (let j = 0; j < 4; j++)
-          for (let i = 0; i < 4; i++) {
-            const l = rgbToLab(painted.at((x + i + 0.5) * TEX, (y + j + 0.5) * TEX));
+        // H-R11: die Tonstufen malen Flächen statt Verlauf; Probe daher 2 × 2 Punkte je Kachel (vorher nur die Mitte)
+        for (let j = 0; j < 8; j++)
+          for (let i = 0; i < 8; i++) {
+            const l = rgbToLab(painted.at((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX));
             if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
           }
         expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(5);
@@ -819,20 +820,19 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     expect(sxy / n).toBeGreaterThan(0);
   });
 
-  it('H-R9 R3 Senken über den Farbton: negative Schattierung auf Gras macht kühler/satter statt nur dunkler', () => {
+  it('H-R11 (löst H-R9 R3 Senken ab) Schattenstufe auf Gras: dunkler, aber über den kühlen Farbton statt nur Abdunklung', () => {
     const g = buildGrid(flat(12, 'grass', 7));
-    const at = (v: number) => paintPixels({ ...g, shade: g.shade.map(() => v) }, 1, 64, 64, 32, 32);
+    const at = (v: number) => paintPixels({ ...g, tone: g.tone.map(() => v) }, 1, 64, 64, 32, 32);
     const mean = (a: Uint8ClampedArray, k: number) => {
       let s = 0;
       for (let i = k; i < a.length; i += 4) s += a[i]!;
       return s / (a.length / 4);
     };
-    const n = at(0),
-      d = at(-0.2);
+    const n = at(2),
+      d = at(0);
     const L = (a: Uint8ClampedArray) =>
       0.299 * mean(a, 0) + 0.587 * mean(a, 1) + 0.114 * mean(a, 2);
-    // deutlich weniger dunkel als reine Abdunklung um 20 % (≤ 65 %), dafür blauer im Verhältnis zu Rot
-    expect(L(n) - L(d)).toBeLessThan(0.65 * 0.2 * L(n));
+    expect(L(d)).toBeLessThan(L(n));
     expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.05 * (mean(n, 2) / mean(n, 0)));
   });
 
@@ -905,9 +905,12 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
   // main (93f420e) gemessen, gleiche Funktion: Chroma 48,75/48,01/48,35, Flecken 4,30/4,65/4,74 (Seeds 7/8/42)
   const MAIN = { 7: [48.75, 4.3], 8: [48.01, 4.65], 42: [48.35, 4.74] } as const;
 
-  it('H-R9 R4 Chroma der Wiese ≥ main − 2 % (r3: 40,3/40,4/40,0; r4: 49,4/48,5/48,7)', () => {
-    for (const seed of [7, 8, 42] as const)
-      expect(meadow(seed).chroma, `Seed ${seed}`).toBeGreaterThanOrEqual(0.98 * MAIN[seed][0]);
+  it('H-R11 S5 (löst H-R9 R4 Chroma ≥ main − 2 % ab) Chroma der Wiese 15–45 % unter main: oliv statt knallgrün, nicht grau', () => {
+    for (const seed of [7, 8, 42] as const) {
+      const c = meadow(seed).chroma;
+      expect(c, `Seed ${seed}`).toBeLessThanOrEqual(0.85 * MAIN[seed][0]);
+      expect(c, `Seed ${seed}`).toBeGreaterThanOrEqual(0.55 * MAIN[seed][0]);
+    }
   }, 60_000);
 
   it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43; r4: 4,78/5,02/5,19)', () => {

@@ -1,5 +1,5 @@
 import { hash2, valueNoise } from '../sim/noise';
-import { DEBRIS, LIGHT, rotNoise } from './light';
+import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
 import { TEX } from './iso';
@@ -10,6 +10,7 @@ import {
   flowersFor,
   meadowWarmth,
   shrubsFor,
+  tuftColor,
 } from './groundDecor';
 import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
@@ -65,7 +66,9 @@ const DRY_MAX = 0.35; // höchstens 31,5 % Mischung zu sandDry ((1 − 0,1) · 0
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
-const PATCH_SPREAD = 5; // R170: weicher als 10 — die Flecken laufen aus statt als Kante zu enden
+const PATCH_SPREAD = 2.8; // H-R11 D8: Gewinn vor tanh (vorher 5 mit hartem Klemmen)
+const PATCH_FREQ = 0.95,
+  PATCH_FREQ2 = 1.7; // Rauschfrequenzen je Kachel der beiden Oktaven
 const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
@@ -86,7 +89,51 @@ const ROT_PATCH = 1.07,
   ROT_RELIEF2 = 1.31,
   ROT_DUNE2 = 0.41,
   ROT_MOTTLE = 0.93,
-  ROT_WARM = 0.6;
+  ROT_WARM = 0.6,
+  ROT_PATCH2 = 2.17;
+
+// ---------- H-R11: Bodenrelief in gestuften Tonflächen (Stilrahmen S2, S5, S6) ----------
+/** Mitte der Tonleiter: ebener Boden (Stufe 2 von 0…4). */
+export const GROUND_FLAT = 2;
+/** Höhe der Hügel (Merkmale 2–4 Kacheln, `meadowHill`) in Kachelhöhen und der Mikro-Unebenheit (0,3–0,6 Kachel). */
+const GROUND_HILL = 4.4;
+const GROUND_MICRO = 0.14;
+const GROUND_W1 = 0.95; // Anteil der grossen Hügel (≈ 4 Kacheln) gegen die kleinen (≈ 2 Kacheln)
+const GROUND_MICRO_FREQ = 2.2;
+/** Stufen je Einheit Licht auf dem Hang (−∇H · LIGHT, pro Kachel). */
+/** Weiche Sättigung der Abweichung von der Ebene (Stufen): steile Kuppen und Mulden laufen nicht über die Rampe hinaus. */
+const GROUND_SPAN = 2.0;
+/** Stufen je Hügelhöhe (relativ): Kuppen insgesamt heller, Mulden dunkler (Höhe wie bei den Bergen). */
+const GROUND_ELEV = 2.4;
+const GROUND_GAIN = 0.4;
+/** Tonkanten des Bodens: Helligkeit und Anteil des kühlen bzw. warmen Lichttons je Stufe ±1 (e = (Stufe − 2)). */
+/** Kantenbreite der Bodentöne in Ebenenpixeln: schmaler als im Massiv, weil die Ebene beim Zeichnen weich skaliert wird (Zoom 2: ≤ 2 CSS-px). */
+const GROUND_EDGE_PX = 0.4;
+const TONE_DARK_MUL = 0.12;
+const TONE_COOL_MIX = 0.22;
+const TONE_LIGHT_MUL = 0.1;
+const TONE_WARM_MIX = 0.16;
+/** Wiese: Mischung zum Oliv gleicher Helligkeit (Sättigung des Bodens unter Gebäuden und Bäumen, S5). */
+/** Anteil der weichen Grundfarb-Streuung (grassDark … grassLight) an der Wiese; der Rest ist die Mittelfarbe. */
+const GRASS_FIELD_KEEP = 0.75;
+const MEADOW_OLIVE_MIX = 0.65;
+const OLIVE: readonly [number, number, number] = rgbOfCss(
+  mixHex(PALETTE.grassDark, PALETTE.sandDry, 0.35),
+);
+const OLIVE_LUMA = 0.299 * OLIVE[0] + 0.587 * OLIVE[1] + 0.114 * OLIVE[2];
+/** Wiesenfarbe entsättigt Richtung Oliv, Helligkeit bleibt (S5: Boden ist der ruhigste Bildteil). */
+export function meadowTint(c: readonly [number, number, number]): [number, number, number] {
+  const l = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+  const lo = 0.299 * OLIVE[0] + 0.587 * OLIVE[1] + 0.114 * OLIVE[2];
+  const k = lo > 0 ? l / lo : 1;
+  const t = MEADOW_OLIVE_MIX;
+  return [
+    c[0] + (OLIVE[0] * k - c[0]) * t,
+    c[1] + (OLIVE[1] * k - c[1]) * t,
+    c[2] + (OLIVE[2] * k - c[2]) * t,
+  ];
+}
+const TONE_COOL = mixRgb(LIGHT_COLORS.cool, LIGHT_COLORS.dark, 0.5);
 
 export interface TileRect {
   x0: number;
@@ -224,6 +271,8 @@ export interface TerrainGrid {
   ind: Float32Array[]; // Land-Indikatoren in der Reihenfolge von LAND
   grass: Float32Array; // Grasmischung 0..1
   rock: Float32Array; // Felsrauschen 0..1
+  /** H-R11: Tonwert des Bodens 0…4 (stetig; die Stufung folgt je Pixel in `paintPixels`). */
+  tone: Float32Array;
   shade: Float32Array; // Relief −0,08…0,08 (Gebirgsknoten −0,12…0,12, R149)
   /**
    * Fleckenfeld −1…1 (R149, vorgeformt, Rauschen um 0 gespreizt): positiv Klee auf Gras bzw. Moos im Wald, negativ
@@ -250,6 +299,37 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
     0.38 * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2)
   );
 }
+/**
+ * H-R11: Höhenfeld des Bodens (Wiese und Wald) in Kachelhöhen: Hügel von 2–4 Kacheln (`meadowHill`) plus Mikro-
+ * Unebenheit von 0,3–0,6 Kachel. Es steht nur im Bild (S6), nie in der Geometrie.
+ */
+export function groundHeight(seed: number, fx: number, fy: number): number {
+  return (
+    GROUND_HILL *
+    (GROUND_W1 * rotNoise(seed + 105, fx, fy, 0.23, ROT_RELIEF) +
+      (1 - GROUND_W1) * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2))
+  );
+}
+/** H-R11: Mikro-Unebenheit des Tonwerts (Merkmale 0,3–0,6 Kachel) in Stufen, ± halbe Amplitude; wirkt als Korn der Kanten. */
+const groundMicro = (seed: number, fx: number, fy: number): number =>
+  GROUND_MICRO * (rotNoise(seed + 113, fx, fy, GROUND_MICRO_FREQ, ROT_MOTTLE) - 0.5);
+const toneOf = (h: number, hx: number, hy: number, micro: number): number =>
+  GROUND_FLAT +
+  GROUND_SPAN *
+    Math.tanh(
+      (GROUND_GAIN * -(hx * LIGHT.x + hy * LIGHT.y) +
+        GROUND_ELEV * (h / GROUND_HILL - 0.5) +
+        micro) /
+        GROUND_SPAN,
+    );
+/** H-R11: stetiger Tonwert 0…4 (Stufen) des Bodens an einem Kachelpunkt; Lichtseite links oben (LIGHT). */
+export function groundToneAt(seed: number, fx: number, fy: number): number {
+  const d = RASTER / TEX; // Knotenabstand in Kacheln: dieselbe Differenz wie im Raster
+  const hx = (groundHeight(seed, fx + d, fy) - groundHeight(seed, fx - d, fy)) / (2 * d);
+  const hy = (groundHeight(seed, fx, fy + d) - groundHeight(seed, fx, fy - d)) / (2 * d);
+  return toneOf(groundHeight(seed, fx, fy), hx, hy, groundMicro(seed, fx, fy));
+}
+
 /** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
 export const duneMask = (seed: number, fx: number, fy: number): number =>
   smoothstepClamp((rotNoise(seed + 111, fx, fy, 0.1, ROT_RELIEF) - 0.515) * 5);
@@ -332,6 +412,9 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     grass = new Float32Array(n),
     rock = new Float32Array(n),
     shade = new Float32Array(n),
+    tone = new Float32Array(n).fill(GROUND_FLAT),
+    groundH = new Float32Array(n),
+    groundM = new Float32Array(n),
     patch = new Float32Array(n),
     warm = new Float32Array(n),
     mfoot = new Float32Array(n),
@@ -383,14 +466,23 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       mfoot[k] = foot;
       if (cls[k] !== 0) {
         // nur an Landknoten (Wasser braucht keine Flecken); Wert schon geformt, das Pixelfeld interpoliert nur
-        patch[k] = Math.max(
-          -1,
-          Math.min(1, (rotNoise(seed + 62, fx, fy, 1.4, ROT_PATCH) - 0.5) * PATCH_SPREAD),
+        // H-R11 D8: zwei gedrehte Oktaven und weiche Sättigung (tanh) statt hartem Klemmen des 5-fach gespreizten
+        // Wertrauschens: Plateaus mit Randlinien sahen wie eckige, kachelparallele Flecken aus
+        patch[k] = Math.tanh(
+          (0.6 * rotNoise(seed + 62, fx, fy, PATCH_FREQ, ROT_PATCH) +
+            0.4 * rotNoise(seed + 114, fx, fy, PATCH_FREQ2, ROT_PATCH2) -
+            0.5) *
+            PATCH_SPREAD,
         );
       }
       // H-R9 B1/B2: Mikrorelief nur auf Gras (Kuppen) und trockenem Sand (Dünen); Wald, Fels, nasser Saum bleiben 0
       const gw = cls[k] === 0 ? 0 : ind[gr]![k]!;
       const sw = cls[k] === 0 ? 0 : ind[sa]![k]! * duneWeight(smooth[k]!);
+      // H-R11: Bodenhöhe etwas weiter ins Wasser, damit der Tonwert am Ufer keinen Sprung durch fehlende Nachbarn hat
+      if (smooth[k]! > -1.5) {
+        groundH[k] = groundHeight(seed, fx, fy);
+        groundM[k] = groundMicro(seed, fx, fy);
+      }
       if (smooth[k]! > -0.5) {
         hillRaw[k] = meadowHill(seed, fx, fy);
         duneRaw[k] = duneRidge(seed, fx, fy);
@@ -452,6 +544,13 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       // H-R9: Mikrorelief aus dem eigenen Höhenfeld (ungeglättet, rauscht nicht), Grenze je Knotentyp
       const hx = (hillRaw[j * nx + ir]! - hillRaw[j * nx + il]!) / ((ir - il) * step);
       const hy = (hillRaw[jd * nx + i]! - hillRaw[ju * nx + i]!) / ((jd - ju) * step);
+      // H-R11: Tonwert des Bodens aus dem Gefälle des Bodenhöhenfelds (gleiche Differenz wie `groundToneAt`)
+      tone[j * nx + i] = toneOf(
+        groundH[j * nx + i]!,
+        (groundH[j * nx + ir]! - groundH[j * nx + il]!) / ((ir - il) * step),
+        (groundH[jd * nx + i]! - groundH[ju * nx + i]!) / ((jd - ju) * step),
+        groundM[j * nx + i]!,
+      );
       const dx = (duneRaw[j * nx + ir]! - duneRaw[j * nx + il]!) / ((ir - il) * step);
       const dy = (duneRaw[jd * nx + i]! - duneRaw[ju * nx + i]!) / ((jd - ju) * step);
       sh +=
@@ -473,6 +572,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     grass,
     rock,
     shade,
+    tone,
     patch,
     warm,
     mfoot,
@@ -507,7 +607,7 @@ const C = {
   rockDark: rgb(PALETTE.rockDark),
   debris: [...DEBRIS], // Schutt am Gebirgsfuss wie im Massiv (light.ts)
 };
-const mix3 = (a: number[], b: number[], t: number, o: number[]): void => {
+const mix3 = (a: readonly number[], b: readonly number[], t: number, o: number[]): void => {
   o[0] = a[0]! + (b[0]! - a[0]!) * t;
   o[1] = a[1]! + (b[1]! - a[1]!) * t;
   o[2] = a[2]! + (b[2]! - a[2]!) * t;
@@ -544,6 +644,8 @@ function landColor(
       const m = lerp(g.grass);
       if (m < 0.4) mix3(C.grassDark, C.grass, m / 0.4, o);
       else mix3(C.grass, C.grassLight, (m - 0.4) / 0.6, o);
+      // H-R11 S3/S5: die weiche Helligkeitsstreuung der Grundfarbe tritt zurück, das Licht tragen die scharfen Tonstufen
+      mix3(C.grass, o, GRASS_FIELD_KEEP, o);
       const p = lerp(g.patch);
       if (p > 0.1) mix3(o, C.clover, (p - 0.1) * CLOVER_MAX, o);
       else if (p < -0.1) mix3(o, C.sandDry, (-0.1 - p) * DRY_MAX, o);
@@ -565,6 +667,12 @@ function landColor(
       o[0] = o[0]! * mf;
       o[1] = o[1]! * mf;
       o[2] = o[2]! * mf;
+      // H-R11 S5: Richtung Oliv entsättigt, Helligkeit bleibt
+      const kOl = ((0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!) / OLIVE_LUMA) * MEADOW_OLIVE_MIX;
+      const keep = 1 - MEADOW_OLIVE_MIX;
+      o[0] = o[0]! * keep + OLIVE[0] * kOl;
+      o[1] = o[1]! * keep + OLIVE[1] * kOl;
+      o[2] = o[2]! * keep + OLIVE[2] * kOl;
       break;
     }
     case 'forest': {
@@ -592,6 +700,31 @@ function landColor(
 }
 
 /**
+ * Anteil je Land-Typ (Reihenfolge `LAND`, Summe 1; alles 0 im Wasser) an einem Kachelpunkt (fx, fy): dieselben
+ * Gewichte (Indikator^TYPE_BLEND_POW), mit denen `paintPixels` die Farben mischt. Für Prüfungen (Waldboden-Hof).
+ */
+export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
+  const gx = (fx * TEX) / RASTER,
+    gy = (fy * TEX) / RASTER;
+  const i = Math.min(Math.max(Math.floor(gx), 0), g.nx - 2),
+    j = Math.min(Math.max(Math.floor(gy), 0), g.ny - 2);
+  const tx = Math.min(Math.max(gx - i, 0), 1),
+    ty = Math.min(Math.max(gy - j, 0), 1);
+  const a = j * g.nx + i;
+  const out = LAND.map((_, t) => {
+    const f = g.ind[t]!;
+    const v =
+      f[a]! * (1 - tx) * (1 - ty) +
+      f[a + 1]! * tx * (1 - ty) +
+      f[a + g.nx]! * (1 - tx) * ty +
+      f[a + g.nx + 1]! * tx * ty;
+    return v > 0 ? v ** TYPE_BLEND_POW : 0;
+  });
+  const sum = out.reduce((p, q) => p + q, 0);
+  return sum > 0 ? out.map((q) => q / sum) : out;
+}
+
+/**
  * Pixel eines Ausschnitts der Ebene (RGBA). `px0/py0/w/h` in Ebenenpixeln, `scale` = Auflösungsfaktor. Rein, ohne Canvas.
  * R170: Land-Typen mischen ihre Farben nach Gewichten (Indikator^TYPE_BLEND_POW); reine Zellen rechnen nur einen Typ.
  */
@@ -604,7 +737,8 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, cls } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, cls } = g;
+  const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const col = [0, 0, 0],
     tc = [0, 0, 0];
   const mt = LAND.indexOf('mountain');
@@ -639,7 +773,9 @@ export function paintPixels(
         waterColor(Math.max(0, -lerp(smooth)), col);
       } else {
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
-        let wMt: number, wFlur: number;
+        let wMt: number,
+          wFlur: number,
+          wSum = 1;
         if (pure) {
           landColor(g, c0 - 1, lerp, grain, col);
           wMt = c0 - 1 === mt ? 1 : 0;
@@ -661,6 +797,7 @@ export function paintPixels(
             col[1] += tc[1]! * q;
             col[2] += tc[2]! * q;
           }
+          wSum = sum;
           wMt = wt[mt]! / sum;
           wFlur = (wt[GRASS]! + wt[SAND]!) / sum;
         }
@@ -670,7 +807,13 @@ export function paintPixels(
           SHADE_MAX +
           (SHADE_MAX_MOUNTAIN - SHADE_MAX) * smoothstepClamp((wMt - 0.5) * 2) +
           (SHADE_MAX_FLUR - SHADE_MAX) * wFlur;
-        let sh = Math.max(-lim, Math.min(lim, lerp(shade)));
+        // H-R11: auf Gras und Wald trägt die gestufte Tonleiter das Licht (unten), die weiche Schattierung entfällt dort
+        const wTone = pure
+          ? c0 - 1 === GRASS || c0 - 1 === FOREST
+            ? 1
+            : 0
+          : (wt[GRASS]! + wt[FOREST]!) / wSum;
+        let sh = Math.max(-lim, Math.min(lim, lerp(shade))) * (1 - wTone);
         // H-R9 R3: Senken auf Gras/Strand ab HOLLOW_FROM nur noch teils dunkler, sonst kühler und satter (I5: reine
         // Abdunklung rückt das Gras an den alten Waldgrund)
         const deep = sh < -HOLLOW_FROM ? (-HOLLOW_FROM - sh) * wFlur * HOLLOW_SHARE : 0;
@@ -682,6 +825,35 @@ export function paintPixels(
         col[0] = col[0]! * f;
         col[1] = col[1]! * f;
         col[2] = col[2]! * f;
+        if (wTone > 0) {
+          // Stufung je Pixel nach der Interpolation (S2); Kantenbreite aus dem Gefälle des Tonwerts je Ausgabepixel
+          const tA = tone[a]!,
+            tB = tone[b]!,
+            tC = tone[c]!,
+            tD = tone[d]!;
+          const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
+            gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
+          const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
+          const e = Math.max(
+            -1.5,
+            Math.min(1.5, toneStep(tA * w00 + tB * w10 + tC * w01 + tD * w11, hw) - GROUND_FLAT),
+          );
+          if (e < 0) {
+            const k = -e * wTone;
+            const m = 1 - TONE_DARK_MUL * k;
+            col[0] = col[0]! * m;
+            col[1] = col[1]! * m;
+            col[2] = col[2]! * m;
+            mix3(col, TONE_COOL, TONE_COOL_MIX * k, col);
+          } else if (e > 0) {
+            const k = e * wTone;
+            const m = 1 + TONE_LIGHT_MUL * k;
+            col[0] = col[0]! * m;
+            col[1] = col[1]! * m;
+            col[2] = col[2]! * m;
+            mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
+          }
+        }
       }
       const o = (py * w + px) * 4;
       out[o] = col[0]!;
@@ -749,28 +921,37 @@ export function paintDecor(
   ctx.scale(scale, scale);
   ctx.lineWidth = 1;
   ctx.lineCap = 'round';
-  const tones = [PALETTE.grassLight, mixHex(PALETTE.grassDark, PALETTE.grass, 0.4)];
-  for (const tone of [0, 1] as const) {
-    ctx.beginPath();
-    for (let y = r.y0; y <= r.y1; y++)
-      for (let x = r.x0; x <= r.x1; x++) {
-        if (!isFreeGrass(world, occ, x, y)) continue;
-        const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
-        for (const t of tuftsFor(seed, x, y, lush)) {
-          if (t.tone !== tone) continue;
-          const px = (x + t.x) * TEX,
-            py = (y + t.y) * TEX;
-          ctx.moveTo(px - 1.5, py);
-          ctx.lineTo(px - 0.5, py - 3.5);
-          ctx.moveTo(px, py);
-          ctx.lineTo(px, py - 4.5);
-          ctx.moveTo(px + 1.5, py);
-          ctx.lineTo(px + 0.5, py - 3.5);
+  // H-R11: Farbe nach der Tonstufe des Bodens darunter (Schatten 1, eben 2, Licht 3), Dichte unverändert
+  for (const tone of [0, 1] as const)
+    for (const st of [1, 2, 3] as const) {
+      ctx.beginPath();
+      let any = false;
+      for (let y = r.y0; y <= r.y1; y++)
+        for (let x = r.x0; x <= r.x1; x++) {
+          if (!isFreeGrass(world, occ, x, y)) continue;
+          const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
+          for (const t of tuftsFor(seed, x, y, lush)) {
+            if (t.tone !== tone) continue;
+            const level = Math.max(
+              1,
+              Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)),
+            );
+            if (level !== st) continue;
+            const px = (x + t.x) * TEX,
+              py = (y + t.y) * TEX;
+            ctx.moveTo(px - 1.5, py);
+            ctx.lineTo(px - 0.5, py - 3.5);
+            ctx.moveTo(px, py);
+            ctx.lineTo(px, py - 4.5);
+            ctx.moveTo(px + 1.5, py);
+            ctx.lineTo(px + 0.5, py - 3.5);
+            any = true;
+          }
         }
-      }
-    ctx.strokeStyle = tones[tone]!;
-    ctx.stroke();
-  }
+      if (!any) continue;
+      ctx.strokeStyle = tuftColor(tone, st);
+      ctx.stroke();
+    }
   // flache Büsche auf der Waldseite
   for (const tone of [0, 1] as const) {
     ctx.beginPath();
@@ -899,6 +1080,7 @@ export function patchGrid(
     'grass',
     'rock',
     'shade',
+    'tone',
     'patch',
     'mfoot',
     'warm',
