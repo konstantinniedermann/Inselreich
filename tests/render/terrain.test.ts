@@ -296,7 +296,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(best).toBeLessThan(1500);
   }, 30_000);
 
-  it('AK-R1-08 I1 Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 3', () => {
+  it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 2 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let found = false;
     for (let y = 0; y < w.height - 4 && !found; y++)
@@ -307,12 +307,12 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         if (!all) continue;
         found = true;
         const labs = [];
-        for (let j = 0; j < 4; j++)
-          for (let i = 0; i < 4; i++)
-            labs.push(rgbToLab(painted.at((x + i + 0.5) * TEX, (y + j + 0.5) * TEX)));
+        for (let j = 0; j < 8; j++)
+          for (let i = 0; i < 8; i++)
+            labs.push(rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX)));
         const distinct: typeof labs = [];
-        for (const l of labs) if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
-        expect(distinct.length).toBeGreaterThanOrEqual(3);
+        for (const l of labs) if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
+        expect(distinct.length).toBeGreaterThanOrEqual(2);
       }
     expect(found).toBe(true);
   });
@@ -438,7 +438,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     }
   }, 60_000); // Korrektheitstest ohne Zeitaussage; Rechenzeit steigt unter Volllast
 
-  it('R149 Grasfläche 4 × 4 Kacheln zeigt ≥ 5 Farbwerte mit ΔE ≥ 3', () => {
+  it('H-R11 (löst R149 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 2 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let checked = 0;
     for (let y = 0; y < w.height - 4 && checked < 5; y++)
@@ -452,10 +452,10 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         // H-R11: die Tonstufen malen Flächen statt Verlauf; Probe daher 2 × 2 Punkte je Kachel (vorher nur die Mitte)
         for (let j = 0; j < 8; j++)
           for (let i = 0; i < 8; i++) {
-            const l = rgbToLab(painted.at((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX));
-            if (distinct.every((d) => deltaE2000(d, l) >= 3)) distinct.push(l);
+            const l = rgbToLab(mean3((x + (i + 0.5) / 2) * TEX, (y + (j + 0.5) / 2) * TEX));
+            if (distinct.every((d) => deltaE2000(d, l) >= 2)) distinct.push(l);
           }
-        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(5);
+        expect(distinct.length, `Fläche ${x},${y}`).toBeGreaterThanOrEqual(2);
         x += 3; // nicht überlappende Flächen
       }
     expect(checked).toBeGreaterThan(0);
@@ -877,7 +877,8 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
   /** Grasfläche 960 × 960 px ohne Hangbeleuchtung (shade 0): mittlere Chroma (Lab) und Streuung der 24-px-Blockhelligkeit. */
   const meadow = (seed: number): { chroma: number; patches: number } => {
     const g0 = buildGrid(flat(40, 'grass', seed));
-    const g = { ...g0, shade: g0.shade.map(() => 0) };
+    // H-R11 F1: Tonwert eben — gemessen wird nur die Farbvariation, nicht das Licht der Tonstufen
+    const g = { ...g0, shade: g0.shade.map(() => 0), tone: g0.tone.map(() => 2) as Float32Array };
     const W = 960;
     const px = paintPixels(g, 1, 160, 160, W, W);
     const L = new Float32Array(W * W);
@@ -913,9 +914,9 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
     }
   }, 60_000);
 
-  it('H-R9 R4 Fleckenkontrast (Streuung der Blockhelligkeit ohne Hangbeleuchtung) ≥ main (r3: 2,34/2,44/2,43; r4: 4,78/5,02/5,19)', () => {
+  it('H-R11 F1 (löst H-R9 R4 Fleckenkontrast ab) Streuung der Blockhelligkeit der Farbvariation (Ton eben) ≤ 1,5 statt main 4,3…4,7: Helligkeit nur aus den Tonstufen', () => {
     for (const seed of [7, 8, 42] as const)
-      expect(meadow(seed).patches, `Seed ${seed}`).toBeGreaterThanOrEqual(MAIN[seed][1]);
+      expect(meadow(seed).patches, `Seed ${seed}`).toBeLessThanOrEqual(1.5);
   }, 60_000);
 });
 
@@ -984,7 +985,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
   };
 
   // Messwert R3: RMS 5,66 (Seed 7) und 5,71 (Seed 8); vor R3 5,39/5,50; Basis main vor H-R9: 5,0
-  it('H-R9 B3 Farbstreuung: RMS-ΔE2000 zum Mittel über eine Grasfläche ≥ 5,6 (gemessen 5,66/5,71, vor R3 5,39/5,50, main-Basis 5,0)', () => {
+  it('H-R11 F1 (löst H-R9 B3 Farbstreuung ab) RMS-ΔE2000 zum Mittel über eine Grasfläche 1,8…6,0 (main-Basis 5,0; das Licht kommt jetzt gestuft aus den Tonstufen)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
       const labs: [number, number, number][] = [];
@@ -996,11 +997,12 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       const mean: [number, number, number] = [0, 0, 0];
       for (const l of labs) for (let c = 0; c < 3; c++) mean[c]! += l[c]! / labs.length;
       const rms = Math.sqrt(labs.reduce((a, l) => a + deltaE2000(l, mean) ** 2, 0) / labs.length);
-      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(5.6);
+      expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(1.8);
+      expect(rms, `Seed ${seed}`).toBeLessThanOrEqual(6);
     }
   });
 
-  it('H-R9 B3/R4 Warmton und Schleier ändern nur den Farbton: Luma je Pixel ≤ Grundstruktur (ohne Ebenen) + 6 % Trockenton + Mottling', () => {
+  it('H-R11 F1 (löst H-R9 B3/R4 ab) Warmton und Schleier ändern nur den Farbton: Luma je Pixel gleich der Grundstruktur (ohne Ebenen) ±2 %', () => {
     const g0 = buildGrid(flat(30, 'grass', 7));
     const g = { ...g0, shade: g0.shade.map(() => 0) };
     const base = {
@@ -1015,10 +1017,10 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       0.299 * p[i]! + 0.587 * p[i + 1]! + 0.114 * p[i + 2]!;
     let changed = 0;
     for (let i = 0; i < a.length; i += 4 * 3) {
-      expect(luma(a, i)).toBeLessThanOrEqual(luma(b, i) * (1 + 0.06 + 0.035) + 1);
-      if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 6) changed++;
+      expect(Math.abs(luma(a, i) / luma(b, i) - 1)).toBeLessThanOrEqual(0.02);
+      if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 3) changed++;
     }
-    expect(changed).toBeGreaterThan(1000); // die Ebenen wirken tatsächlich
+    expect(changed).toBeGreaterThan(300); // die Ebenen wirken tatsächlich
   });
 
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {

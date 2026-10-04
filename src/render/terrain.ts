@@ -42,12 +42,10 @@ const DUNE_AMP = 1.3; // Höhe der Dünenrücken auf trockenem Sand (R3: weniger
 const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
 const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 % der Wiese je Seite höchstens)
-const WARM_MAX = 0.5; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
-const COOL_MAX = 0.5; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
-const VEIL_MAX = 0.1; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
-const TONE_LIGHT = 0.06; // H-R9 R4: trockene Teilflächen bis +6 % Helligkeit (Farbton und Schleier ändern die Helligkeit nicht)
-const TONE_DARK = 0; // satte Teilflächen nicht dunkler (I5: sonst rückt das Gras an den alten Waldgrund); sie tragen nur Farbton
-const MOTTLE_AMP = 0.035; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
+const WARM_MAX = 0.25; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
+const COOL_MAX = 0.25; // kühl/satt: Mischung zu Tiefgrün (R3: Senken über den Farbton statt dunkler, I5)
+const VEIL_MAX = 0.05; // Blumenschleier: Mischung zu Kalkgrün (passend zu flowersFor)
+const MOTTLE_AMP = 0.01; // feines Mottling ±3,5 % Helligkeit (Spec ±3–4 %); die Varianz tragen die grossen und mittleren Flecken
 const SHADE_GAIN = 0.075; // Darstellungswert: Helligkeit je Höhengefälle pro Kachel (R149: mehr Plastik)
 const FOOT_HEIGHT = 3.4; // R170: Gebirgshöhe nur aus dem Bilinearfeld (kein Plateau-Sprung an der Kachelkante)
 /** H-R9 Runde 3: Anteil der Gebirgsfuss-Schattierung, der an Nicht-Gebirgsknoten auf der Schattenseite entfällt. */
@@ -61,8 +59,8 @@ const HILL_HEIGHT = 1.6; // R170: sanfte Kuppen im Gebirge (tieffrequent, gedreh
 const MEADOW_WAVE = 0.3; // Amplitude der sanften Wiesenwelle in der Höhe
 const HEIGHT_BLUR = 3; // R170: Box-Radius in Knoten (2 Durchgänge ≈ Gauss über ~0,7 Kachel), glättet Knicke der Bilinearfelder
 // Flecken im Pixelfeld (R149): Schwellen auf den gespreizten Rauschfeldern 0..1
-const CLOVER_MAX = 0.75; // höchstens 67,5 % Mischung zum Kleegrün ((1 − 0,1) · 0,75 bei Fleckwert 1)
-const DRY_MAX = 0.35; // höchstens 31,5 % Mischung zu sandDry ((1 − 0,1) · 0,35; darf nicht wie ein Weg aussehen)
+const CLOVER_MAX = 0.4; // höchstens 67,5 % Mischung zum Kleegrün ((1 − 0,1) · 0,75 bei Fleckwert 1)
+const DRY_MAX = 0.2; // höchstens 31,5 % Mischung zu sandDry ((1 − 0,1) · 0,35; darf nicht wie ein Weg aussehen)
 const MOSS_MAX = 0.55;
 const MOSS_EDGE_FADE = 0.7; // R170: Moosanteil am Waldrand (Indikator ≤ 0,5) auf 30 %
 const CLEARING_MAX = 0.5;
@@ -95,31 +93,48 @@ const ROT_PATCH = 1.07,
 // ---------- H-R11: Bodenrelief in gestuften Tonflächen (Stilrahmen S2, S5, S6) ----------
 /** Mitte der Tonleiter: ebener Boden (Stufe 2 von 0…4). */
 export const GROUND_FLAT = 2;
-/** Höhe der Hügel (Merkmale 2–4 Kacheln, `meadowHill`) in Kachelhöhen und der Mikro-Unebenheit (0,3–0,6 Kachel). */
-const GROUND_HILL = 4.4;
-const GROUND_MICRO = 0.14;
-const GROUND_W1 = 0.95; // Anteil der grossen Hügel (≈ 4 Kacheln) gegen die kleinen (≈ 2 Kacheln)
+/**
+ * Wellen des Bodenhöhenfelds: Wellenlänge (Kacheln; Hügelgrösse = halbe Wellenlänge, also 2–4 Kacheln), Winkel zur
+ * Lichtachse und Tonamplitude in Stufen. Die Welle hat ein Dreiecksprofil im Licht (Parabelbögen in der Höhe): das
+ * Gefälle des Tonwerts ist konstant `4 · amp / λ`, die Summe bleibt unter 0,7 Stufen je Kachel (S6: höchstens eine
+ * Stufe je Kachel). Rauschen nur als langsame Phasenverschiebung und Amplitudenmodulation.
+ */
+const GROUND_WAVES: readonly { lambda: number; dAng: number; amp: number }[] = [
+  { lambda: 8, dAng: 0.35, amp: 0.7 },
+  { lambda: 5.6, dAng: -0.95, amp: 0.4 },
+  { lambda: 4, dAng: 0.7, amp: 0.2 },
+];
+const GROUND_WARP = 0.15; // Phasenverschiebung durch Rauschen (Perioden)
+const LIGHT_ANGLE = Math.atan2(LIGHT.y, LIGHT.x);
+/** Parabelprofil, dessen Ableitung ein Dreieck ist (−1…1, Periode 1): glatte Kuppen und Mulden. */
+const waveProfile = (u: number): number => {
+  const f = u - Math.floor(u);
+  return f < 0.5 ? -f + 2 * f * f : -2 * f * f + 3 * f - 1;
+};
+const GROUND_MICRO = 0.05;
 const GROUND_MICRO_FREQ = 2.2;
 /** Stufen je Einheit Licht auf dem Hang (−∇H · LIGHT, pro Kachel). */
 /** Weiche Sättigung der Abweichung von der Ebene (Stufen): steile Kuppen und Mulden laufen nicht über die Rampe hinaus. */
-const GROUND_SPAN = 2.0;
-/** Stufen je Hügelhöhe (relativ): Kuppen insgesamt heller, Mulden dunkler (Höhe wie bei den Bergen). */
-const GROUND_ELEV = 2.4;
-const GROUND_GAIN = 0.4;
+const GROUND_SPAN = 1.1;
 /** Tonkanten des Bodens: Helligkeit und Anteil des kühlen bzw. warmen Lichttons je Stufe ±1 (e = (Stufe − 2)). */
 /** Kantenbreite der Bodentöne in Ebenenpixeln: schmaler als im Massiv, weil die Ebene beim Zeichnen weich skaliert wird (Zoom 2: ≤ 2 CSS-px). */
 const GROUND_EDGE_PX = 0.4;
+/** Pixelkorn des Bodens: ± die Hälfte, also ±2,5 % Helligkeit (wie ROCK_GRAIN im Fels). */
+const GROUND_GRAIN = 0.05;
 const TONE_DARK_MUL = 0.12;
 const TONE_COOL_MIX = 0.22;
 const TONE_LIGHT_MUL = 0.1;
 const TONE_WARM_MIX = 0.16;
 /** Wiese: Mischung zum Oliv gleicher Helligkeit (Sättigung des Bodens unter Gebäuden und Bäumen, S5). */
 /** Anteil der weichen Grundfarb-Streuung (grassDark … grassLight) an der Wiese; der Rest ist die Mittelfarbe. */
-const GRASS_FIELD_KEEP = 0.75;
-const MEADOW_OLIVE_MIX = 0.65;
+const GRASS_FIELD_KEEP = 0.5;
+const MEADOW_OLIVE_MIX = 0.72;
+const C_GRASS = rgbOf(PALETTE.grass);
 const OLIVE: readonly [number, number, number] = rgbOfCss(
   mixHex(PALETTE.grassDark, PALETTE.sandDry, 0.35),
 );
+/** Helligkeit der Wiese vor den Tonstufen: die Grundfarbe `grass`. */
+const GRASS_LUMA = 0.299 * C_GRASS[0] + 0.587 * C_GRASS[1] + 0.114 * C_GRASS[2];
 const OLIVE_LUMA = 0.299 * OLIVE[0] + 0.587 * OLIVE[1] + 0.114 * OLIVE[2];
 /** Wiesenfarbe entsättigt Richtung Oliv, Helligkeit bleibt (S5: Boden ist der ruhigste Bildteil). */
 export function meadowTint(c: readonly [number, number, number]): [number, number, number] {
@@ -304,30 +319,34 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
  * Unebenheit von 0,3–0,6 Kachel. Es steht nur im Bild (S6), nie in der Geometrie.
  */
 export function groundHeight(seed: number, fx: number, fy: number): number {
-  return (
-    GROUND_HILL *
-    (GROUND_W1 * rotNoise(seed + 105, fx, fy, 0.23, ROT_RELIEF) +
-      (1 - GROUND_W1) * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2))
-  );
+  let h = 0;
+  for (let k = 0; k < GROUND_WAVES.length; k++) {
+    const w = GROUND_WAVES[k]!;
+    const ang = LIGHT_ANGLE + w.dAng + 0.26 * (hash2(seed + 120, k, 0) - 0.5);
+    const lam = w.lambda * (0.9 + 0.2 * hash2(seed + 121, k, 0));
+    // Phase: ebene Welle, gewellt durch langsames Rauschen (organische statt gerade Reihen)
+    const u =
+      (Math.cos(ang) * fx + Math.sin(ang) * fy) / lam +
+      hash2(seed + 122, k, 0) +
+      GROUND_WARP * (rotNoise(seed + 123 + k, fx, fy, 0.13, ROT_HILL + k) - 0.5);
+    // Höhe der Welle: ihr Licht (Tonwert) soll die Amplitude `w.amp` Stufen haben, a = amp · λ / |n · L|
+    const nl = Math.max(0.35, Math.abs(Math.cos(ang - LIGHT_ANGLE)));
+    const mod = 0.85 + 0.3 * rotNoise(seed + 126 + k, fx, fy, 0.1, ROT_PATCH + k);
+    h += mod * ((w.amp * lam) / nl) * waveProfile(u);
+  }
+  return h;
 }
 /** H-R11: Mikro-Unebenheit des Tonwerts (Merkmale 0,3–0,6 Kachel) in Stufen, ± halbe Amplitude; wirkt als Korn der Kanten. */
 const groundMicro = (seed: number, fx: number, fy: number): number =>
   GROUND_MICRO * (rotNoise(seed + 113, fx, fy, GROUND_MICRO_FREQ, ROT_MOTTLE) - 0.5);
-const toneOf = (h: number, hx: number, hy: number, micro: number): number =>
-  GROUND_FLAT +
-  GROUND_SPAN *
-    Math.tanh(
-      (GROUND_GAIN * -(hx * LIGHT.x + hy * LIGHT.y) +
-        GROUND_ELEV * (h / GROUND_HILL - 0.5) +
-        micro) /
-        GROUND_SPAN,
-    );
+const toneOf = (hx: number, hy: number, micro: number): number =>
+  GROUND_FLAT + GROUND_SPAN * Math.tanh((-(hx * LIGHT.x + hy * LIGHT.y) + micro) / GROUND_SPAN);
 /** H-R11: stetiger Tonwert 0…4 (Stufen) des Bodens an einem Kachelpunkt; Lichtseite links oben (LIGHT). */
 export function groundToneAt(seed: number, fx: number, fy: number): number {
   const d = RASTER / TEX; // Knotenabstand in Kacheln: dieselbe Differenz wie im Raster
   const hx = (groundHeight(seed, fx + d, fy) - groundHeight(seed, fx - d, fy)) / (2 * d);
   const hy = (groundHeight(seed, fx, fy + d) - groundHeight(seed, fx, fy - d)) / (2 * d);
-  return toneOf(groundHeight(seed, fx, fy), hx, hy, groundMicro(seed, fx, fy));
+  return toneOf(hx, hy, groundMicro(seed, fx, fy));
 }
 
 /** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
@@ -546,7 +565,6 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       const hy = (hillRaw[jd * nx + i]! - hillRaw[ju * nx + i]!) / ((jd - ju) * step);
       // H-R11: Tonwert des Bodens aus dem Gefälle des Bodenhöhenfelds (gleiche Differenz wie `groundToneAt`)
       tone[j * nx + i] = toneOf(
-        groundH[j * nx + i]!,
         (groundH[j * nx + ir]! - groundH[j * nx + il]!) / ((ir - il) * step),
         (groundH[jd * nx + i]! - groundH[ju * nx + i]!) / ((jd - ju) * step),
         groundM[j * nx + i]!,
@@ -649,21 +667,17 @@ function landColor(
       const p = lerp(g.patch);
       if (p > 0.1) mix3(o, C.clover, (p - 0.1) * CLOVER_MAX, o);
       else if (p < -0.1) mix3(o, C.sandDry, (-0.1 - p) * DRY_MAX, o);
-      // H-R9 R4: Helligkeit der Grundstruktur (wie main); der Deckel unten greift nur, was die neuen Ebenen aufhellen
-      const luma0 = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
-      // H-R9 B3: grosser Warm/Kühl-Verlauf mit Flecken und Kuppen, Blumenschleier, feines Mottling
+      // H-R9 B3: grosser Warm/Kühl-Verlauf mit Flecken und Kuppen, Blumenschleier
       const wm = lerp(g.warm);
-      // H-R9 R4: nur in Teilflächen (|wm| > WARM_ON), die Grundstruktur grassDark/grassLight bleibt sonst wie main
+      // nur in Teilflächen (|wm| > WARM_ON)
       const wa = Math.max(0, (Math.abs(wm) - WARM_ON) / (1 - WARM_ON));
       if (wm > 0) mix3(o, C.dryTone, wa * WARM_MAX, o);
       else mix3(o, C.lushTone, wa * COOL_MAX, o);
       mix3(o, C.veilTone, lerp(g.veil) * VEIL_MAX, o);
-      // nur Farbton: Helligkeit der Grundstruktur bleibt (sonst ebnet die Mischung die Flecken von main ein) …
+      // H-R11 F1: die Farbvariation ist luminanzneutral (nur Farbton), Helligkeit kommt aus den Tonstufen und dem Korn;
+      // ein Rest von ±MOTTLE_AMP bleibt als feines Mottling
       const lw = 0.299 * o[0]! + 0.587 * o[1]! + 0.114 * o[2]!;
-      // … plus Mottling und Teilflächen-Tönung: trockene Stellen etwas heller, satte etwas dunkler (verstärkt die Flecken)
-      const mf =
-        (lw > 0 ? luma0 / lw : 1) *
-        (1 + lerp(g.mottle) * MOTTLE_AMP + wa * (wm > 0 ? TONE_LIGHT : -TONE_DARK));
+      const mf = (lw > 0 ? GRASS_LUMA / lw : 1) * (1 + lerp(g.mottle) * MOTTLE_AMP);
       o[0] = o[0]! * mf;
       o[1] = o[1]! * mf;
       o[2] = o[2]! * mf;
@@ -853,6 +867,11 @@ export function paintPixels(
             col[2] = col[2]! * m;
             mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
           }
+          // H-R11 F2: Pixelkorn (1 Ebenenpixel, deterministisch aus dem Hash) auf Wiese und Waldboden
+          const gm = 1 + grain * GROUND_GRAIN * wTone;
+          col[0] = col[0]! * gm;
+          col[1] = col[1]! * gm;
+          col[2] = col[2]! * gm;
         }
       }
       const o = (py * w + px) * 4;

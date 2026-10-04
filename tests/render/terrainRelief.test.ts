@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import { TEX, TREE_VARIANTS } from '../../src/render/iso';
-import { TONE_EDGE_PX } from '../../src/render/light';
+import { LIGHT, TONE_EDGE_PX } from '../../src/render/light';
 import { PALETTE, rgbOf } from '../../src/render/palette';
 import { crownsFor } from '../../src/render/trees';
 import { LAND } from '../../src/render/terrainField';
 import {
   GROUND_FLAT,
   buildGrid,
+  groundHeight,
   groundToneAt,
   landShares,
   meadowTint,
@@ -82,10 +83,11 @@ describe('H-R11 Hanggrenze (S6)', () => {
 });
 
 describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
-  it('H-R11 S6 jeder Hügel zeigt bei Zoom 1 mindestens 2 Tonstufen: ≥ 90 % der 4 × 4-Wiesenfenster', () => {
+  it('H-R11 S6 jeder Hügel zeigt bei Zoom 1 mindestens 2 Tonstufen: ≥ 90 % der 4 × 4-Wiesenfenster, ≥ 50 % mit Licht- und Schattenstufe', () => {
     for (const { world, grid } of worlds) {
       let wins = 0,
-        ok = 0;
+        ok = 0,
+        both = 0;
       const used = new Set<number>();
       for (let y0 = 0; y0 + 4 <= world.height; y0 += 2)
         for (let x0 = 0; x0 + 4 <= world.width; x0 += 2) {
@@ -102,9 +104,11 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
             }
           wins++;
           if (seen.size >= 2) ok++;
+          if (seen.has(1) && seen.has(3)) both++;
         }
       expect(wins, `Seed ${world.seed}`).toBeGreaterThan(8);
       expect(ok / wins, `Seed ${world.seed}`).toBeGreaterThanOrEqual(0.9);
+      expect(both / wins, `Seed ${world.seed}`).toBeGreaterThanOrEqual(0.5);
       expect(used.size, `Seed ${world.seed} genutzte Stufen`).toBeGreaterThanOrEqual(3);
     }
   });
@@ -131,31 +135,40 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
       }
     expect(bx).toBeGreaterThanOrEqual(0);
     for (let j = 0; j < grid.ny; j++)
-      for (let i = 0; i < grid.nx; i++) grid.tone[j * grid.nx + i] = 0.6 + 0.2 * (i - bx * NODES);
+      for (let i = 0; i < grid.nx; i++) grid.tone[j * grid.nx + i] = 0.6 + 0.07 * (i - bx * NODES);
     const w = 5 * TEX,
-      h = 4;
+      h = 24;
     const px = paintPixels(grid, 1, bx * TEX, by * TEX + 2 * TEX, w, h);
-    const row = 1;
-    const col = (x: number): string => {
-      const o = (row * w + x) * 4;
-      return `${px[o]},${px[o + 1]},${px[o + 2]}`;
+    // Referenzhelligkeiten der Plateaus (Stufe 1, 2, 3, Korn gemittelt) und Spaltenmittel über h Zeilen (Korn fällt heraus)
+    const refOf = (t: number): number => {
+      const g2 = { ...grid, tone: grid.tone.map(() => t) as Float32Array };
+      const q = paintPixels(g2, 1, bx * TEX, by * TEX + 2 * TEX, w, h);
+      let sum = 0;
+      for (let i = 0; i < w * h; i++) sum += luma(q[i * 4]!, q[i * 4 + 1]!, q[i * 4 + 2]!);
+      return sum / (w * h);
     };
+    const refs = [1, 2, 3].map(refOf);
+    const gap = Math.min(refs[1]! - refs[0]!, refs[2]! - refs[1]!);
+    expect(gap).toBeGreaterThan(0);
     let run = 0,
       maxRun = 0;
-    const distinct = new Set<string>();
-    for (let x = 1; x < w - 1; x++) {
-      const plateau = col(x) === col(x - 1) || col(x) === col(x + 1);
-      if (plateau) {
-        run = 0;
-        distinct.add(col(x));
-      } else {
+    const seen = new Set<number>();
+    for (let x = 0; x < w; x++) {
+      let m = 0;
+      for (let y = 0; y < h; y++)
+        m += luma(px[(y * w + x) * 4]!, px[(y * w + x) * 4 + 1]!, px[(y * w + x) * 4 + 2]!);
+      m /= h;
+      const near = refs.reduce((b, r, k) => (Math.abs(m - r) < Math.abs(m - refs[b]!) ? k : b), 0);
+      if (Math.abs(m - refs[near]!) > 0.3 * gap) {
         run++;
         maxRun = Math.max(maxRun, run);
+      } else {
+        run = 0;
+        seen.add(near);
       }
     }
-    const plateaus = distinct.size;
     expect(maxRun).toBeLessThanOrEqual(Math.ceil(TONE_EDGE_PX));
-    expect(plateaus).toBeGreaterThanOrEqual(3);
+    expect(seen.size).toBeGreaterThanOrEqual(3);
   });
 
   it('H-R11 D8 Flecken (patch) laufen weich aus: höchstens 10 % der Landknoten gesättigt, 99-%-Knotensprung ≤ 0,3', () => {
@@ -288,17 +301,121 @@ describe('H-R11 Wald (D9)', () => {
   });
 });
 
-describe('H-R11 Licht auf Wald und Wiese', () => {
-  it('H-R11 Lichtseite links oben: Hänge zur Sonne haben höhere Tonwerte als abgewandte (Korrelation > 0)', () => {
-    const { grid } = worlds[0]!;
-    // Tonwert ist stetig und trägt die Ebene (GROUND_FLAT) als Mitte
+describe('H-R11 Licht auf Wald und Wiese (F3 Hügelform)', () => {
+  /** Kuppen: lokale Maxima der Bodenhöhe (Abstand 1 Kachel zu allen 8 Nachbarn tiefer). */
+  const hills = (seed: number, x0: number, y0: number, x1: number, y1: number) => {
+    const out: { x: number; y: number }[] = [];
+    for (let y = y0; y <= y1; y += 0.25)
+      for (let x = x0; x <= x1; x += 0.25) {
+        const h = groundHeight(seed, x, y);
+        let top = true;
+        for (let k = 0; k < 8 && top; k++) {
+          const a = (k * Math.PI) / 4;
+          if (groundHeight(seed, x + Math.cos(a), y + Math.sin(a)) >= h) top = false;
+        }
+        if (top) out.push({ x, y });
+      }
+    return out;
+  };
+  it('H-R11 F3 Tonwert kommt aus Gefälle · LIGHT: Kuppen sind links oben heller als rechts unten', () => {
     expect(GROUND_FLAT).toBe(2);
-    let up = 0,
-      down = 0;
-    for (const v of grid.tone)
-      if (v > 2.2) up++;
-      else if (v < 1.8) down++;
-    expect(up).toBeGreaterThan(0);
-    expect(down).toBeGreaterThan(0);
+    let n = 0,
+      lit = 0,
+      sum = 0;
+    for (const seed of [1, 7, 3]) {
+      for (const h of hills(seed, 3, 3, 60, 60)) {
+        const d = 0.9;
+        const a = groundToneAt(seed, h.x + LIGHT.x * d, h.y + LIGHT.y * d), // Lichtseite
+          b = groundToneAt(seed, h.x - LIGHT.x * d, h.y - LIGHT.y * d); // Schattenseite
+        n++;
+        sum += a - b;
+        if (a > b) lit++;
+      }
+    }
+    expect(n).toBeGreaterThan(100);
+    expect(lit / n).toBeGreaterThanOrEqual(0.95);
+    expect(sum / n).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it('H-R11 F3 Formlesbarkeit: in einem Zoom-1-Ausschnitt (16 × 10 Kacheln) mindestens 3 Kuppen mit hellerer Stufe links oben und dunklerer rechts unten', () => {
+    // sichtbare Kuppe = Lichtseite mindestens eine Stufe über der Schattenseite, beide in ganzen Stufen
+    const step = (v: number): number => Math.floor(v + 0.5);
+    for (const seed of [1, 7]) {
+      let wins = 0,
+        ok = 0;
+      for (let y0 = 4; y0 + 10 <= 58; y0 += 10)
+        for (let x0 = 4; x0 + 16 <= 58; x0 += 16) {
+          let visible = 0;
+          for (const h of hills(seed, x0, y0, x0 + 16, y0 + 10)) {
+            const d = 1.0;
+            const a = step(groundToneAt(seed, h.x + LIGHT.x * d, h.y + LIGHT.y * d)),
+              b = step(groundToneAt(seed, h.x - LIGHT.x * d, h.y - LIGHT.y * d));
+            if (a - b >= 1) visible++;
+          }
+          wins++;
+          if (visible >= 3) ok++;
+        }
+      expect(ok / wins, `Seed ${seed}`).toBeGreaterThanOrEqual(0.6);
+    }
+  });
+});
+
+describe('H-R11 F1 luminanzneutrale Farbvariation, F2 Korn', () => {
+  const { world, grid } = worlds[0]!;
+  // 6 × 6 Wiesenkacheln finden
+  let bx = -1,
+    by = -1;
+  for (let y = 2; y < world.height - 8 && bx < 0; y++)
+    for (let x = 2; x < world.width - 8 && bx < 0; x++) {
+      let ok = true;
+      for (let yy = y - 1; yy < y + 7 && ok; yy++)
+        for (let xx = x - 1; xx < x + 7; xx++) if (terr(world, xx, yy) !== 'grass') ok = false;
+      if (ok) [bx, by] = [x, y];
+    }
+  const flatTone = { ...grid, tone: grid.tone.map(() => GROUND_FLAT) as Float32Array };
+  const W = 6 * TEX;
+  const px = paintPixels(flatTone, 1, bx * TEX, by * TEX, W, W);
+  const L = (i: number): number => luma(px[i * 4]!, px[i * 4 + 1]!, px[i * 4 + 2]!);
+
+  it('H-R11 F1 bei gleicher Tonstufe schwankt die Helligkeit über die Farbvariation nur um ±2 % (Blockmittel 12 × 12 px)', () => {
+    expect(bx).toBeGreaterThanOrEqual(0);
+    const B = 12,
+      means: number[] = [];
+    for (let y = 0; y + B <= W; y += B)
+      for (let x = 0; x + B <= W; x += B) {
+        let s = 0;
+        for (let j = 0; j < B; j++) for (let i = 0; i < B; i++) s += L((y + j) * W + x + i);
+        means.push(s / (B * B));
+      }
+    const mu = means.reduce((p, q) => p + q, 0) / means.length;
+    for (const m of means) expect(Math.abs(m / mu - 1)).toBeLessThanOrEqual(0.02);
+    // der Farbton variiert trotzdem (nicht eine einzige Farbe)
+    const hue = (i: number): number => px[i * 4 + 1]! / (px[i * 4]! + 1);
+    let lo = 9,
+      hi = 0;
+    for (let i = 0; i < W * W; i += 7) {
+      lo = Math.min(lo, hue(i));
+      hi = Math.max(hi, hue(i));
+    }
+    expect(hi - lo).toBeGreaterThan(0.03);
+  });
+
+  it('H-R11 F2 Pixelkorn: ±2–3 % je Ebenenpixel, deterministisch, Nachbarn unterscheiden sich', () => {
+    let s = 0,
+      s2 = 0,
+      diff = 0;
+    const n = W * W;
+    for (let i = 0; i < n; i++) {
+      s += L(i);
+      s2 += L(i) * L(i);
+      if (i % W > 0 && Math.abs(L(i) - L(i - 1)) > 0.2) diff++;
+    }
+    const mu = s / n,
+      sd = Math.sqrt(s2 / n - mu * mu);
+    expect(sd / mu).toBeGreaterThanOrEqual(0.008);
+    expect(sd / mu).toBeLessThanOrEqual(0.02);
+    expect(diff / n).toBeGreaterThan(0.6);
+    const again = paintPixels(flatTone, 1, bx * TEX, by * TEX, W, W);
+    expect(again).toEqual(px);
   });
 });
