@@ -10,7 +10,7 @@ from unittest import mock
 import log
 
 
-class LogTest(unittest.TestCase):
+class LogBase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.docs = os.path.join(self.tmp.name, "docs")
@@ -38,6 +38,8 @@ class LogTest(unittest.TestCase):
                 code = exc.code
         return code, out.getvalue(), err.getvalue()
 
+
+class LogTest(LogBase):
     def events(self):
         path = Path(self.tmp.name) / "events.jsonl"
         if not path.exists():
@@ -260,7 +262,7 @@ class LogTest(unittest.TestCase):
         self.assertIn("keine Events", out)
 
 
-class RetroTriggerWarnTest(LogTest):
+class RetroTriggerWarnTest(LogBase):
     def test_meilenstein_without_trigger_warns(self):
         code, _, err = self.run_log(
             "retro", "--id", "R-1", "--kind", "meilenstein", "--triggers", "ci:1"

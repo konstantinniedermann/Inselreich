@@ -426,6 +426,17 @@ class IdleGapTest(unittest.TestCase):
         ]
         self.assertEqual(efficiency.idle_gaps(events), [])
 
+    def test_owner_taken_from_first_active(self):
+        events = [
+            pkg("2026-10-03T10:00:00Z", "A", "active", "lead-design"),
+            pkg("2026-10-03T10:30:00Z", "A", "review", "lead-qa"),
+            pkg("2026-10-03T10:35:00Z", "B", "active", "lead-design"),
+        ]
+        gaps = efficiency.idle_gaps(events)
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0]["owner"], "lead-design")
+        self.assertAlmostEqual(gaps[0]["minutes"], 5.0)
+
     def test_prefix_filters_both_sides(self):
         events = [
             pkg("2026-10-03T10:00:00Z", "H-A", "review"),

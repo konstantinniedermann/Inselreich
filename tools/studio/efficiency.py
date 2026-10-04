@@ -543,21 +543,27 @@ def idle_gaps(events: list[dict], prefix: str = "") -> list[dict]:
     und Pausen über SESSION_BREAK_MIN zählen nicht (E-028, Messgrösse 2).
     prefix beschränkt beide Seiten auf Paket-IDs mit diesem Anfang (z. B. "H-")."""
     first_active: dict[str, tuple[datetime, str]] = {}
-    first_review: dict[str, tuple[datetime, str]] = {}
+    first_review: dict[str, datetime] = {}
     for event in events:
         if event.get("kind") != "package":
             continue
         when, pid = _parse_ts(event.get("ts")), event.get("package_id")
-        owner = event.get("owner") or ""
         if when is None or not pid or not str(pid).startswith(prefix):
             continue
-        table = {"active": first_active, "review": first_review}.get(
-            event.get("status")
-        )
-        if table is not None and (pid not in table or when < table[pid][0]):
-            table[pid] = (when, owner)
+        status = event.get("status")
+        if status == "active" and (
+            pid not in first_active or when < first_active[pid][0]
+        ):
+            first_active[pid] = (when, event.get("owner") or "")
+        elif status == "review" and (
+            pid not in first_review or when < first_review[pid]
+        ):
+            first_review[pid] = when
     gaps: list[dict] = []
-    for pid, (reviewed, owner) in first_review.items():
+    for pid, reviewed in first_review.items():
+        if pid not in first_active:
+            continue
+        owner = first_active[pid][1]
         later = [
             (start, other)
             for other, (start, o) in first_active.items()
