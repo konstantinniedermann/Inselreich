@@ -799,7 +799,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tests/render/terrain.test.ts` AK-R1-06 „Aufbau Faktor 1 ≤ 1500 ms"; main-Läufe 37147743622, 37180893425, 37182089359 rot.
 - Beobachtung: GitHub-Runner liegt dauerhaft an der 1500-ms-Grenze; lokal grün.
 - Ursprung: Session-Retro e13c3631. Einschätzung: als H-T1 in REL-02 (CI-Schwelle ×1,5, R217).
-- Ergebnis H-T1: Helfer `tests/helpers/perfBudget.ts`, CI-Faktor 1,5, nur AK-R1-06 angewendet; weitere Kandidaten: `tests/render/terrain.test.ts` H-R9 B4 (Median ≤ 8 ms, Z. ~1104–1111) und `tests/ui/hints.test.ts` AK-UX-31 (Median ≤ 0,5 ms, Z. ~353–365). Weitere feste ms-Grenzen mit `performance.now`/`Date.now` gibt es in `tests/` nicht.
+- Ergebnis H-T1: Helfer `tests/helpers/perfBudget.ts`, CI-Faktor 1,5, nur AK-R1-06 angewendet; weitere Kandidaten (erledigt in H-T2, ebenfalls mit perfBudget): `tests/render/terrain.test.ts` H-R9 B4 (Median ≤ 8 ms, Z. ~1104–1111) und `tests/ui/hints.test.ts` AK-UX-31 (Median ≤ 0,5 ms, Z. ~353–365). Weitere feste ms-Grenzen mit `performance.now`/`Date.now` gibt es in `tests/` nicht.
 
 ### 2026-10-04 · Studio-Werkzeug · Retro-Trigger und Leerlauf-Messung
 

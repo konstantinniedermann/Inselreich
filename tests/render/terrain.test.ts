@@ -1110,6 +1110,6 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
       ts.push(performance.now() - t0);
     }
     ts.sort((a, b) => a - b);
-    expect(ts[4]!).toBeLessThanOrEqual(8);
+    expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8));
   });
 });

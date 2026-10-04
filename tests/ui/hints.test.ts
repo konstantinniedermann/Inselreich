@@ -35,6 +35,7 @@ import { formatGameTime } from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
+import { perfBudget } from '../helpers/perfBudget';
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -361,7 +362,7 @@ it('AK-UX-31 placementHint in leistung-50, ungünstigster Fall: Median je Aufruf
   const m = median(medians);
   const report = `Median ${m.toFixed(4)} ms, Läufe ${medians.map((x) => x.toFixed(4)).join(', ')}`;
   if (process.env.PERF_LOG) console.info(`AK-UX-31 ${report}`);
-  expect(m, report).toBeLessThanOrEqual(0.5);
+  expect(m, report).toBeLessThanOrEqual(perfBudget(0.5));
 }, 60_000);
 
 describe('friendlyReason Mehrzahl (Fix Task 6)', () => {
