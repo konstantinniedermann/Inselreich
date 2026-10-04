@@ -1404,3 +1404,14 @@ unabhängiges Review durch qa-code-reviewer (§9.1). Handbuch 1.17. — Kosten b
 Guard wird nur strenger.
 
 Entscheider: L0 · Anlass: Nutzerfreigabe N-92/N-93 · ADR: —
+
+## R213 · 2026-10-04 · REL-01 Auslösung, lastPatchMs-Abweichung
+
+Ruling: Alle vier Häppchen von REL-01 release-reif (H-U2 @ b3d17f8, H-R10 @ b9bedd4, H-R11 @ b548f8c in H-R12
+@ 794d0d9). Release-Lauf REL-01 ausgelöst (gates.md „Gate Merge Release"). Abweichung angenommen: `lastPatchMs`
+H-R11+H-R12 zusammen ≈ +50 % (je Häppchen ≤ +30 % eingehalten, §5 nennt keine Gesamtgrenze); Kosten fallen nur je
+Bau-/Rodeaktion an, `renderMedian` −0,2 ms, `buildMs` +32 % (Budget 50 %). Für H-R13 bleibt kaum Luft → vor H-R13
+Patch-Pfad messen. Aufwand H-R11/H-R12 ≈ 570 Tools (Selbstangabe) gegen Schätzung 250 → Befund für die
+Session-Retro. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten, Kandidat frisch aufbauen.
+
+Entscheider: L0 · Anlass: Berichte lead-art H-R10, H-R11/H-R12 · ADR: —
