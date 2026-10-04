@@ -22,6 +22,41 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-04 · Handbuch 1.16
+
+- Anlass: Prozess-Retro Kreativität und Tempo (R207)
+- Datenbasis: `docs/studio/retros/2026-10-04-prozess-kreativitaet-tempo.md` (B1, B2, V1–V4)
+- Ruling: R208
+- Änderungen: E-028 „Release-Bündel“ gestartet (Umsetzungszyklus Stufe leicht Schritt 6/7 und Absatz „Merge“ ersetzt: release-reif, Auslöser, Grösse, Hotfix, Pipelining, Konfliktregeln, Paket-ID `REL-nn`, Release-Notiz); E-027 „Discovery-Strang“ gestartet (Absatz, Ideen-Runden `IDEEN-nn`); `gates.md`: Gate Merge Release, Gate Ideen-Runde, Plan-/Spec-Format dorthin ausgelagert (STUDIO.md 401 → 400 Zeilen); E-015 und E-017 behalten (abgeschlossen); `lernen.md` Bildziel-Zeile; lead-design 1.6 (Discovery-Strang, Ideen-Runden) und design-idea-scout 1.0 (neu, ersetzt Abruf-Rolle design-genre-researcher); Verfassung §9 unverändert
+
+## 2026-10-04 · Persona production-integrator 1.5
+
+- Anlass: E-028 (R208)
+- Datenbasis: `docs/studio/retros/2026-10-04-prozess-kreativitaet-tempo.md` V1
+- Ruling: R208
+- Änderungen: Release-Lauf (Kandidat aus 2–4 Branches, Paket `REL-nn`, Push erst nach Gate Merge Release, frischer Aufbau statt Reset)
+
+## 2026-10-04 · Persona qa-playtester 1.6
+
+- Anlass: E-028 (R208)
+- Datenbasis: `docs/studio/retros/2026-10-04-prozess-kreativitaet-tempo.md` V1
+- Ruling: R208
+- Änderungen: Release-Lauf (ein Lauf am Kandidaten, je UI-Task eigener Abschnitt mit Screenshots; Vorlage `playtest-report.md` ergänzt)
+
+## 2026-10-04 · Persona lead-design 1.6
+
+- Anlass: E-027 (R208)
+- Datenbasis: `docs/studio/retros/2026-10-04-prozess-kreativitaet-tempo.md` V2
+- Ruling: R208
+- Änderungen: Discovery-Strang, Ideen-Runden `IDEEN-nn` (angelegt von lead-production)
+
+## 2026-10-04 · Persona design-idea-scout 1.0
+
+- Anlass: E-027 (R208)
+- Datenbasis: `docs/studio/retros/2026-10-04-prozess-kreativitaet-tempo.md` V2
+- Ruling: R208
+- Änderungen: neu, ersetzt die Abruf-Rolle `design-genre-researcher` (angelegt von lead-production)
+
 ## 2026-10-03 · Handbuch 1.15
 
 - Anlass: Meilenstein-Retro M11 und Prozess-Retro M11

@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.15 · Stand: 2026-10-03 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.16 · Stand: 2026-10-04 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -161,20 +161,8 @@ L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 | Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
 | Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                      |
 
-**Plan- und Spec-Format (E-010, R167):**
-
-- Eine **Spec** hat höchstens 40 KB; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
-  `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md`, die Spec verweist darauf.
-- Ein **Plan** ist ein Index `docs/superpowers/plans/<plan>/index.md` (Ziel, Architektur in höchstens 15
-  Zeilen, Datei-Ownership je Strang, Budgetantrag, Task-Tabelle mit Task-ID, Titel, Datei, AK-IDs,
-  Strang, `blocked-by`, Modell) plus eine Datei `T<nn>-<kurz>.md` je Task, **höchstens 10 KB** (Kopf,
-  Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht); grössere Tasks werden
-  geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer lesen nur ihre Task-Datei
-  und die genannten AK-IDs.
-- **Doku im Plan (E-017):** README, arc42, ADR und Spec-Verweise sind ein eigener Task mit
-  Eigentümer; das Umsetzer-Briefing erlaubt die D1-Dateien ausdrücklich. Das Final-Review meldet
-  keine fehlende Doku.
-- **Gate Spec (E-010):** `lead-qa` prüft zusätzlich, dass Spec und Plan-Dateien die Grössen einhalten.
+**Plan- und Spec-Format** (Spec ≤ 40 KB mit Anhängen, Plan als Index plus Task-Dateien ≤ 10 KB, Doku als
+eigener Plan-Task, E-010, E-017): [gates.md](gates.md#plan--und-spec-format-e-010-r167).
 
 Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumentiert:
 
@@ -251,9 +239,11 @@ Ablauf eines Auftrags (Stufe leicht):
    „Kombiniertes Gate (Stufe leicht)"); danach Umsetzungsbudget freigeben.
 5. Umsetzung: je Paket Implementierer + `qa-code-reviewer`, UI-Pakete zusätzlich `qa-playtester`.
    Ein Worktree genügt.
-6. Kein separates Final-Review: Der letzte Task-Review läuft auf `opus` über die ganze Branch und
-   zählt als Final-Review (im Budget das „+1").
-7. **Gate Merge** durch L0 → `production-integrator` merged.
+6. Kein separates Final-Review je Häppchen: Nach Review je Task und Abnahme durch den Lead
+   (`log.py result`) ist das Häppchen **release-reif**; das `opus`-Review läuft einmal über den Kandidaten.
+7. **Release-Bündel (E-028, R208):** 2–4 release-reife Häppchen → ein Kandidat (`production-integrator`,
+   Paket-ID `REL-nn`), ein Browser-Lauf mit eigenem Screenshot-Abschnitt je UI-Task, ein `opus`-Review
+   über den Kandidaten, **Gate Merge Release** (L0, [gates.md](gates.md#gate-merge-release)), ein Push.
 
 Regeln dazu:
 
@@ -280,12 +270,21 @@ Regeln dazu:
   und Determinismus (gleicher Seed → gleicher Zustand). Nicht abschwächbar (Verfassung §9).
 - **Report bei Final-Review und Playtests:** kein Report-Dateipfad im Briefing; der archivierte
   Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
-- **Merge:** nur nach dem L0-Merge-Gate, seriell durch `production-integrator` im eigenen Worktree
-  `.worktrees/integrate` auf `main` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
-  `make check` vor dem ersten Merge; je Strang `git merge --no-ff --no-commit`, dann `make check` — grün:
-  committen, rot: `git merge --abort` und melden. Push laut Verfassung §7, danach CI (`gh run list
---branch main --limit 3`), Pages und `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang,
-  Ad-hoc-Retro. Bei Konflikten stoppen und melden (Verfassung §6).
+- **Release (Stufe leicht, E-028):** Auslöser: 3 Häppchen release-reif, Session-Ende mit ≥ 1 reifem
+  Häppchen oder Meilenstein-Merge; höchstens 4 je Release; Hotfix (CI rot, Absturz, defekter Spielstand)
+  einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
+  parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
+  UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
+- **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, seriell durch `production-integrator` im
+  Worktree `.worktrees/integrate` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+  je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
+  melden. Push laut Verfassung §7, danach CI (`gh run list --branch main --limit 3`), Pages und
+  `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
+
+- **Discovery-Strang (E-027, R208):** `lead-design` verantwortet Ideen-Runden (`IDEEN-nn`) nach jedem
+  Release- oder Meilenstein-Merge, spätestens jede zweite Session; Pool `docs/ideen.md`, ein Studio-Platz
+  je Release, je Runde ≤ 2 Starts und ≤ 80 Tools, ein Ruling je Runde ([gates.md](gates.md#gate-ideen-runde));
+  Säulenwechsel → Warteschlange. Details: Persona `design-idea-scout`, `docs/ideen.md`.
 
 ## Autonomie
 

@@ -185,3 +185,66 @@ stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach Auftrag an
 `lead-production`: `production-integrator` merged die Stränge seriell, mit `make check` nach jedem
 Merge.
+
+## Gate Merge Release
+
+Gilt für Häppchen der Stufe leicht (E-028, R208); Meilenstein-Merges bleiben beim Gate Merge oben.
+Prüfen: `lead-qa` (`opus`, Review über den Kandidaten, CI) · `lead-art` nur bei Assets.
+
+**Auslöser:** 3 Häppchen „release-reif“ (Review-OK, Abnahme durch den Lead, `make check` grün, `log.py
+result` mit Häppchen-ID), oder Session-Ende mit ≥ 1 release-reifem Häppchen, oder ein Meilenstein-Merge
+(fertige Häppchen fahren im selben Lauf mit). Höchstens 4 Häppchen je Release. **Hotfix** (CI auf main
+rot, Absturz, defekter Spielstand) geht einzeln.
+
+**Ablauf (Paket-ID `REL-nn` für Integrator, Release-Lauf, Review, Gate):**
+
+1. Dateimatrix vor dem Start: gleiche Datei in zwei Häppchen → Stapel auf derselben Branch, nie
+   parallel; fachliche Abhängigkeit → abhängiges Häppchen zweigt von der Branch des Vorgängers ab.
+2. `production-integrator` baut den Kandidaten im Worktree `.worktrees/integrate`: je Häppchen
+   `git merge --no-ff --no-commit`, `make check`, grün committen (Verfassung §9.2).
+3. Ein Browser-Lauf `qa-playtester` am Kandidaten, je UI-Task eigener Abschnitt mit Screenshots (§9.3).
+4. Ein `opus`-Review über den Kandidaten-Diff (ersetzt den Schlussreview je Häppchen).
+5. Gate (L0, ein Ruling), ein Push, CI und Pages; Release-Notiz in [state.md](state.md) („Neu“,
+   „Bitte testen“, ≤ 10 Zeilen, Studio-Ideen als „vom Studio vorgeschlagen“).
+
+**Konflikte:** Konflikt im Kandidaten → Integrator stoppt und meldet (§6); der Eigentümer des späteren
+Häppchens holt den Kandidaten per Merge (kein Rebase), Delta-Review. Fällt ein Häppchen durch: Fix auf
+seiner Branch mit Review oder raus; der Kandidat wird frisch aufgebaut (`git worktree add --detach`
+auf origin/main), nie zurückgesetzt. `docs/beobachtungen.md` hat `merge=union` (E-022).
+
+**Pipelining:** Das nächste Häppchen startet nach Review-OK des vorigen, nicht nach dem Merge;
+Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
+
+**Prüfliste (Pflicht, L0 prüft sie im Gate):** jede Zeile ein UI-Task → Pfad des Screenshots
+(`.studio/qa/REL-nn/…`) und Playtest-Abschnitt. **Fehlt ein Eintrag, gibt es keinen Merge.** Zusätzlich
+`make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt.
+
+**Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Ruling, danach Push durch den Integrator.
+
+## Gate Ideen-Runde
+
+Prüfen: `lead-design` (Bewertung nach Raster in `docs/ideen.md`, Pitch ≤ 2 Ideen) · entscheidet **L0**.
+
+**Auslöser:** Bericht von `lead-design` zu einer Runde `IDEEN-nn` (nach einem Release- oder
+Meilenstein-Merge, spätestens jede zweite Session; höchstens eine Runde je Session).
+
+**Ein Ruling je Runde** mit je Idee **einplanen** (S: Häppchen im Studio-Platz des nächsten Releases,
+M/L: Baustein fürs nächste Meilenstein-Brainstorming), **parken** (bis Anlass) oder **verwerfen**
+(Grund); `docs/ideen.md` nennt den Ruling-Verweis. Eine Idee, die Kernsäule, Genre oder Titel ändert,
+geht in die Warteschlange (§5.3). Ein Nutzer-Einwand gegen eine live gegangene Studio-Idee wird zum
+Ruling „verwerfen“. Eingeplante Ideen durchlaufen den normalen Zyklus; keine Prüfung entfällt.
+
+## Plan- und Spec-Format (E-010, R167)
+
+- Eine **Spec** hat höchstens 40 KB; Details (Tabellen, Werte, Herleitungen) stehen in Anhängen
+  `docs/superpowers/specs/<spec>/anhang-<nn>-<kurz>.md`, die Spec verweist darauf.
+- Ein **Plan** ist ein Index `docs/superpowers/plans/<plan>/index.md` (Ziel, Architektur in höchstens 15
+  Zeilen, Datei-Ownership je Strang, Budgetantrag, Task-Tabelle mit Task-ID, Titel, Datei, AK-IDs,
+  Strang, `blocked-by`, Modell) plus eine Datei `T<nn>-<kurz>.md` je Task, **höchstens 10 KB** (Kopf,
+  Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht); grössere Tasks werden
+  geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer lesen nur ihre Task-Datei
+  und die genannten AK-IDs.
+- **Doku im Plan (E-017):** README, arc42, ADR und Spec-Verweise sind ein eigener Task mit
+  Eigentümer; das Umsetzer-Briefing erlaubt die D1-Dateien ausdrücklich. Das Final-Review meldet
+  keine fehlende Doku.
+- **Gate Spec (E-010):** `lead-qa` prüft zusätzlich, dass Spec und Plan-Dateien die Grössen einhalten.

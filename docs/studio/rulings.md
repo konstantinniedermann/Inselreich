@@ -1353,3 +1353,43 @@ CHANGELOG), `lead-production` (Onboarding Scout, roster, lead-design, `docs/idee
 Rückfallzustände laut E-027/E-028.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach P-R207 · ADR: —
+
+## R209 · 2026-10-04 · Nutzerurteil H-R9 und Auftrag Stil-Einheit
+
+Ruling: Nutzerurteil zu H-R9: Gebirge gelungen („sieht wie ein echtes Gebirge aus"). N-94 beantwortet: Löschen
+ausserhalb des Repos bleibt verboten. Neuer Auftrag, ausgelegt als Art-Strang unter `lead-art` in zwei Phasen:
+(1) **ART-STIL-01** Stil-Diagnose und Stilrahmen: Bestandsaufnahme, warum Terrains (Wiese, Wald, Strand/Dünen,
+Wasser, Gebirge) und Häuser stilistisch nicht zusammenpassen; ein knapper Stilrahmen (Lichtrichtung, Palette und
+Sättigung, Kontur, Detaildichte und Massstab, Relief-Sprache) mit Bildziel je Element (lernen.md, Bildziel vor
+Code) und Zuschnitt in Häppchen für ein Release (E-028). Das Gebirge aus H-R9 ist Referenz, an der sich die übrigen
+Terrains orientieren. (2) Umsetzung der Häppchen nach Gate: Relief/Unebenheiten für die übrigen Terrains, Dünen neu,
+Angleichung der Häuser an den Stilrahmen. Zweck: ein stimmiges Gesamtbild; die Auslegung widerspricht ihm nicht,
+weil sie vor dem Code die gemeinsame Richtung festlegt, statt Terrain für Terrain nachzubessern (H-R7…H-R9: 3–5
+Review-Runden). — Kosten bei Irrtum: Phase 1 ist reine Analyse (~1 Lead-Instanz); Häppchen einzeln revertierbar.
+
+Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-04 · ADR: —
+
+## R210 · 2026-10-04 · Gate Ideen-Runde IDEEN-01
+
+Ruling: Erste Ideen-Runde (E-027) entschieden. **I-002 „Meldung führt zum Ort"** eingeplant als H-U2 auf dem
+Studio-Platz von REL-01 (nur UI, ohne Risiko). **I-001 „Anbinden auf Knopfdruck"** eingeplant als H-U1 fürs
+übernächste Release (Sim+UI, Randfälle kein Pfad / zu wenig Geld / Flächenverbrauch in die Kurz-Spec). I-003
+„Baustelle" geparkt bis zum Stilrahmen ART-STIL-01; I-004 „Lagerhaus" geparkt fürs M12-Brainstorming; I-005
+„Arbeitsgeräusche" geparkt, kleine Fassung bei freiem Studio-Platz. Befund: Playtest-Ordner enthalten keine
+Textberichte als Ideen-Quelle → Beobachtung. — Kosten bei Irrtum: Häppchen nicht starten; Nutzer-Einwand →
+Ruling „verwerfen".
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-01 · ADR: —
+
+## R211 · 2026-10-04 · Gate Stilrahmen und Inhalt REL-01
+
+Ruling: Stilrahmen `specs/2026-10-04-stilrahmen.md` (S1–S6, Gebirge H-R9 als Referenz, Bildziele §3,
+Performance-Budget §5) freigegeben. **REL-01 „Aus einem Guss"** = H-U2 (release-reif @ b3d17f8) + H-R10 (Ein Licht
+für Häuser und Bäume) + H-R11 (Bodenrelief Wiese und Wald) + H-R12 (Dünen neu); damit ist die Höchstgrösse 4
+erreicht, H-R13 (Vorberge) ist erstes Häppchen von REL-02. Steuerung: zwei lead-art-Instanzen — A: H-R10;
+B: H-R11 und H-R12 (Eigentum `terrain.ts`; H-R12-Kern `dunes.ts` parallel, Andocken auf der H-R11-Branch nach
+deren Review-OK, E-028 Konfliktregel 2). Je Häppchen höchstens 2 Bild-Fix-Runden; danach meldet der Lead an L0.
+Release-Gate verlangt Galerie 01–15 vorher/nachher, A/B-Perf-Delta, Blindtest Häuser und die UI-Prüfpunkte von
+H-U2. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten; main unberührt bis Gate Merge Release.
+
+Entscheider: L0 · Anlass: Bericht lead-art ART-STIL-01 · ADR: —

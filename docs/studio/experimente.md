@@ -17,28 +17,6 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 
 ---
 
-## E-015 · laufend · Nachweiszeilen im Lead-Bericht
-
-- Hypothese: Wenn die Berichtsvorlage des Leads für jedes Paket zwei Pflichtzeilen trägt („Rot-Beleg: Commit/Lauf oder Abweichung mit Begründung“, „Nachprüfung nach Review-BEDENKEN: Reviewer, Ergebnis oder entfällt“), dann meldet kein Lead ein Paket „bereit für Gate Merge“ ohne diese Nachweise, und L0 muss sie nicht mehr im Gate nachfordern.
-- Messgrösse: über die nächsten 8 Pakete mit Gate Merge 0 Gate-Rulings, in denen L0 einen fehlenden Rot-Beleg oder eine fehlende Nachprüfung feststellt (Ausgangswert Session 08e7b5f1: 2 von 4 Paketen, R174, R178). Gegenprobe: Lead-Berichte bleiben ≤ 15 Zeilen.
-- Zeitraum: die nächsten 8 Pakete mit Gate Merge (rund M10 Stufe 1/2).
-- Rückfall: `docs/studio/templates/bericht.md` und Handbuch ohne die zwei Zeilen (Handbuch 1.13, `git show HEAD:docs/studio/templates/bericht.md`).
-- Dateien: `docs/studio/templates/bericht.md`, `docs/studio/STUDIO.md` (Version), `docs/studio/CHANGELOG.md`
-- Ruling: R179, R180, R190 (Start)
-- Start: Handbuch 1.14
-- Bewertung: –
-
-## E-017 · laufend · Doku als eigener Plan-Task mit Eigentümer
-
-- Hypothese: Wenn der Plan die Doku (README, arc42, ADR, Spec-Verweise) als eigenen Task mit Eigentümer führt und das Umsetzer-Briefing die D1-Dateien ausdrücklich erlaubt, dann schreibt kein Lead D1 selbst und das Final-Review meldet keine fehlende Doku (Retro M10 B3; Prozess-Retro M10 V1).
-- Messgrösse: in M11 0 Final-Reviews mit fehlender Doku und 0 Lead-Commits mit Doku-Inhalt statt Umsetzer-Commits (Ausgang M10: 1 von 1; M8: 1 zweite Doku-Runde). Gegenprobe: Ownership-Überschneidungen zwischen parallelen Instanzen 0.
-- Zeitraum: M11.
-- Rückfall: `docs/studio/templates/briefing.md` und Persona `lead-tech` ohne die Zeile (Handbuch 1.13, `git show HEAD~1:docs/studio/templates/briefing.md`).
-- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md` (Briefing-Standard, Plan-Format), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
-- Ruling: R190
-- Start: Handbuch 1.14
-- Bewertung: –
-
 ## E-022 · laufend · Merge-Hygiene
 
 - Hypothese: Wenn `.gitattributes` für `docs/beobachtungen.md` `merge=union` setzt und der `production-integrator` in einem eigenen Worktree (`git worktree add .worktrees/integrate main`, Push von dort, Hauptcheckout danach `git pull --ff-only`) statt im Hauptcheckout mergt, dann entstehen keine Konflikte im Anhänge-Journal und keine Vorfälle durch den geteilten Arbeitsbaum (Retro M11 B1, B4; R196, R198).
@@ -48,6 +26,28 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `.gitattributes`, `.claude/agents/production-integrator.md`, `.claude/agents/lead-production.md`, `docs/studio/STUDIO.md` (Merge), `docs/studio/CHANGELOG.md`
 - Ruling: R201
 - Start: Handbuch 1.15 (Persona-Fassungen gelten ab einem späteren Zug)
+- Bewertung: –
+
+## E-027 · laufend · Discovery-Strang mit Ideen-Pool
+
+- Hypothese: Wenn `lead-design` nach jedem Release- oder Meilenstein-Merge (spätestens jede zweite Session) eine Ideen-Runde verantwortet, in der `design-idea-scout` höchstens 5 Ideen in `docs/ideen.md` einträgt, `lead-design` sie mit dem Raster (Spielspass ×2, Säulen-Passung, Aufwand, Risiko) bewertet und höchstens 2 an L0 pitcht, L0 je Runde ein Ruling fällt und jedes Release einen Platz für eine Studio-Idee reserviert, dann entwickelt sich das Spiel auch ohne Nutzer-Input weiter, zu begrenzten Kosten (R207 (1); Prozess-Retro 2026-10-04 B1).
+- Messgrösse: Anteil der im Zeitraum eingeplanten Bausteine (Häppchen und Meilenstein-Bausteine) mit Studio-Ursprung (Verweis auf `I-nnn` im Ruling) ≥ 25 % und ≥ 2 Studio-Ideen live (Ausgang: 0 von 20 Programmpunkten, 0 Häppchen). Gegenproben: je Runde ≤ 2 Starts und ≤ 80 Tool-Aufrufe (Paket-ID `IDEEN-nn`); von live gegangenen Studio-Ideen höchstens 1 von 3 per Nutzer-Einwand verworfen oder zurückgenommen.
+- Zeitraum: 3 Ideen-Runden (voraussichtlich M12 und die Releases daneben).
+- Rückfall: keine Ideen-Runden; `docs/ideen.md` bleibt als Archiv; `design-idea-scout` zurück nach „Auf Abruf“ als `design-genre-researcher`; `lead-design` 1.5 (`git show HEAD:.claude/agents/lead-design.md`).
+- Dateien: `docs/studio/STUDIO.md` (Discovery-Strang), `.claude/agents/lead-design.md`, `.claude/agents/design-idea-scout.md` (neu), `docs/studio/roster.md`, `tools/studio/tests/test_model.py` (`PERSONA_NAMES`), `docs/ideen.md` (neu), `docs/studio/CHANGELOG.md`
+- Ruling: R208
+- Start: 2026-10-04 (Handbuch 1.16)
+- Bewertung: –
+
+## E-028 · laufend · Release-Bündel für Häppchen
+
+- Hypothese: Wenn Häppchen (Stufe leicht, ohne Save-Format- oder Architekturänderung) nach Review und Abnahme nur „release-reif“ werden und erst gebündelt (2–4 je Release; Auslöser 3 reif, Session-Ende oder Meilenstein-Merge; Hotfix einzeln) in einen Kandidaten integriert, in einem Browser-Lauf mit eigenem Screenshot-Abschnitt je UI-Task geprüft, mit einem Gate Merge Release veröffentlicht und vom Nutzer einmal getestet werden, und das nächste Häppchen nach Review-OK statt nach dem Merge startet, dann sinken die Fixkosten je Häppchen und der Leerlauf der Umsetzungskette, ohne dass ein UI-Task ungeprüft live geht (R207 (2); Prozess-Retro 2026-10-04 B2).
+- Messgrösse: (1) Integrator-Instanzen, Gate-Merge-Rulings und Pushes auf main mit Spieländerung je Häppchen jeweils ≤ 0,4 (Ausgang 9 Häppchen H-R3…H-R9, H-A1, H-S1: je 1,0). (2) Leerlauf Umsetzungsstrang zwischen aufeinanderfolgenden Häppchen Median ≤ 2 min (Ausgang 7,5 min). (3) Releases mit Spieländerung je Session ≤ 2 (Ausgang 2026-10-03: 13 Merges auf main, 8 davon Häppchen). Gegenproben: 100 % der UI-Tasks mit eigenem Screenshot-Abschnitt im Release-Lauf, 0 Merges ohne grünes `make check`; Fix-Commits auf main für Fehler aus einem Release vor dem nächsten Release ≤ 1 je Release (Ausgang beim ersten Release erheben); Cache-Write 5 min ≤ 26,8 %. Abbruch: ein UI-Task geht ohne Screenshots live oder ein Release wird per Revert zurückgenommen.
+- Zeitraum: die nächsten 3 Releases, mindestens 8 Häppchen (M9-Rest, Nebenstränge zu M12).
+- Rückfall: Merge je Häppchen mit eigenem Gate (Handbuch 1.15, Umsetzungszyklus „Ablauf eines Auftrags (Stufe leicht)“ Schritt 6–7 und Absatz „Merge“; `git show HEAD:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/gates.md` (Gate Merge Release, Gate Ideen-Runde), `.claude/agents/production-integrator.md`, `.claude/agents/qa-playtester.md`, `docs/studio/templates/playtest-report.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R208
+- Start: 2026-10-04 (Handbuch 1.16)
 - Bewertung: –
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
@@ -218,3 +218,13 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 ## E-021 · abgelehnt · QA-Stichprobe nach der Hälfte der UI-Strecke
 
 - Ruling: R190 (V4 der Prozess-Retro M10 abgelehnt; die Ursache deckt E-015 billiger ab)
+
+## E-015 · behalten · Nachweiszeilen im Lead-Bericht
+
+- Ruling: R179, R180, R190 (Start), R208 (Abschluss)
+- Bewertung: 7 von 8 Gate-Merge-Paketen erreicht, 0 Beanstandungen (Schwelle 0 erfüllt); R206 nennt die Nachweise nicht, die Regel misst nur Beanstandungen ([Prozess-Retro](retros/2026-10-04-prozess-kreativitaet-tempo.md) V4). Vor E-028 abgeschlossen, damit weniger Gate-Merges die Messgrundlage nicht verdünnen.
+
+## E-017 · behalten · Doku als eigener Plan-Task mit Eigentümer
+
+- Ruling: R190 (Start), R208 (Abschluss)
+- Bewertung: Zeitraum M11 vorbei; Schwelle „0 Final-Reviews mit fehlender Doku“ verfehlt (ein niedriger Doku-Nachtrag, R199 Punkt 3), die Fehlerklasse ist aber von „fehlt“ zu „Nachtrag niedrig“ gewandert und die Zeile kostet wenig ([Prozess-Retro](retros/2026-10-04-prozess-kreativitaet-tempo.md) V4)

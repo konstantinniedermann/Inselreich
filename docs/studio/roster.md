@@ -17,6 +17,7 @@ flowchart TD
   P --> P1[production-integrator]
   D --> D1[design-spec-author]
   D --> D2[design-economy-designer]
+  D --> D3[design-idea-scout]
   T --> T1[tech-sim-engineer]
   T --> T2[tech-ui-engineer]
   A --> A1[art-license-checker]
@@ -30,7 +31,7 @@ flowchart TD
 | ----------------- | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `studio-coach`    | Auswertung, Retros, Experimente, lernen.md               | keine Arbeiter                                                        | —                                                                               |
 | `lead-production` | Board, Budget-Überblick, Merges, Onboarding neuer Rollen | `production-integrator`                                               | `production-studio-ops`, `production-onboarding-analyst`, `production-chronist` |
-| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer`                       | `design-genre-researcher`, `design-balancing-analyst`                           |
+| `lead-design`     | Spielerlebnis, Regeln, Wirtschaft, Specs                 | `design-spec-author`, `design-economy-designer`, `design-idea-scout`  | `design-balancing-analyst`                                                      |
 | `lead-tech`       | Architektur, Pläne, Umsetzung `src/`                     | `tech-sim-engineer`, `tech-ui-engineer`                               | `tech-save-engineer`, `tech-plan-architect`                                     |
 | `lead-art`        | Grafik und Audio, Asset-Lizenzen, CREDITS                | `art-license-checker`, `art-rendering-engineer`, `art-audio-engineer` | `art-asset-scout`                                                               |
 | `lead-qa`         | Reviews, Playtests, Determinismus, Regression            | `qa-code-reviewer`, `qa-playtester`                                   | `qa-determinism-checker`                                                        |
@@ -60,25 +61,26 @@ stark = `opus`, mittel = `sonnet`, klein = `haiku`. Einsatzregeln: STUDIO.md, Ab
 
 ## Aktive Personas
 
-| Name                      | Persona          | Titel                    | Emoji | Ebene | Bereich    | Modell   | Version | Zweck                                                                                                      |
-| ------------------------- | ---------------- | ------------------------ | ----- | ----- | ---------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `studio-coach`            | Coach-Carla      | Studio-Coach             | 🧭    | L1    | studio     | `opus`   | 1.2     | Stabsstelle: Retros, Metriken, Experimente, lernen.md; setzt Handbuch-Änderungen nach Ruling um            |
-| `studio-process-coach`    | Takt-Tilda       | Prozess-Coach            | 🔭    | L1    | studio     | `opus`   | 1.1     | Stabsstelle: neutrale Prozess-Aussensicht nach jedem Release; Prozess-Retro-Berichte und Vorschläge (R127) |
-| `lead-production`         | Planungs-Paula   | Produktionschefin        | 📋    | L1    | production | `sonnet` | 1.5     | Studio-Produzent: Board, Budget-Überblick, state.md-Entwurf, Merges, Onboarding                            |
-| `lead-design`             | Ideen-Ida        | Design-Chefin            | 💡    | L1    | design     | `opus`   | 1.5     | Spielerlebnis und Regeln: Brainstorming mit L0, Specs, Wirtschaft                                          |
-| `lead-tech`               | Technik-Toni     | Tech-Chef                | 🔧    | L1    | tech       | `opus`   | 1.5     | Architektur, Implementierungspläne, Controller der Umsetzung im Worktree                                   |
-| `lead-art`                | Pinsel-Pia       | Kunst-Chefin             | 🎨    | L1    | art        | `opus`   | 1.4     | Art Direction und Audio, Asset-Scouting, Lizenzen, CREDITS                                                 |
-| `lead-qa`                 | Prüf-Peter       | QA-Chef                  | 🔍    | L1    | qa         | `sonnet` | 1.5     | Testmanagement, Reviews, Final-Review, Determinismus und Regression                                        |
-| `production-integrator`   | Merge-Moritz     | Zusammenführer           | 🔀    | L2    | production | `sonnet` | 1.3     | Merged nach dem Merge-Gate seriell, prüft `make check`, CI und Pages                                       |
-| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin         | 📝    | L2    | design     | `opus`   | 1.3     | Schreibt Specs mit testbaren Abnahmekriterien nach `docs/superpowers/specs/`                               |
-| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner        | 💰    | L2    | design     | `opus`   | 1.1     | Produktionsketten, Kreisläufe, Steuern und Unterhalt; rechnet Bilanzen je Einwohner                        |
-| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler    | ⚙️    | L2    | tech       | `sonnet` | 1.3     | Setzt Regeln in `src/sim/` um: DOM-frei, deterministisch, TDD, Save-Migrationen                            |
-| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    | L2    | tech       | `sonnet` | 1.5     | Setzt Bedienung und Darstellung in `src/ui/`, `src/render/` um (Card-UI, desktop-first)                    |
-| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    | L2    | art        | `opus`   | 1.1     | Prüft jede Asset-Quelle gegen Positiv-/Negativliste, trägt CREDITS ein, hat Veto                           |
-| `art-rendering-engineer`  | Render-Rudi      | Darstellungs-Entwickler  | 🖼️    | L2    | art        | `sonnet` | 1.0     | Setzt Darstellung in `src/render/` um: Canvas 2D, Isometrie (ADR-012), prozedurale Grafik, Licht, Wetter   |
-| `art-audio-engineer`      | Klang-Klara      | Audio-Entwicklerin       | 🎧    | L2    | art        | `sonnet` | 1.0     | Setzt Ton in `src/audio/` um (Busse, Umgebung, Musik-Streaming); schneidet und belegt Assets (ADR-011)     |
-| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    | L2    | qa         | `sonnet` | 1.4     | Prüft Diffs gegen Brief und Spec, Urteil OK/BEDENKEN/ZURÜCK, ändert keinen Code                            |
-| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                            |
+| Name                      | Persona          | Titel                    | Emoji | Ebene | Bereich    | Modell   | Version | Zweck                                                                                                             |
+| ------------------------- | ---------------- | ------------------------ | ----- | ----- | ---------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `studio-coach`            | Coach-Carla      | Studio-Coach             | 🧭    | L1    | studio     | `opus`   | 1.2     | Stabsstelle: Retros, Metriken, Experimente, lernen.md; setzt Handbuch-Änderungen nach Ruling um                   |
+| `studio-process-coach`    | Takt-Tilda       | Prozess-Coach            | 🔭    | L1    | studio     | `opus`   | 1.1     | Stabsstelle: neutrale Prozess-Aussensicht nach jedem Release; Prozess-Retro-Berichte und Vorschläge (R127)        |
+| `lead-production`         | Planungs-Paula   | Produktionschefin        | 📋    | L1    | production | `sonnet` | 1.5     | Studio-Produzent: Board, Budget-Überblick, state.md-Entwurf, Merges, Onboarding                                   |
+| `lead-design`             | Ideen-Ida        | Design-Chefin            | 💡    | L1    | design     | `opus`   | 1.6     | Spielerlebnis und Regeln: Brainstorming mit L0, Specs, Wirtschaft                                                 |
+| `lead-tech`               | Technik-Toni     | Tech-Chef                | 🔧    | L1    | tech       | `opus`   | 1.5     | Architektur, Implementierungspläne, Controller der Umsetzung im Worktree                                          |
+| `lead-art`                | Pinsel-Pia       | Kunst-Chefin             | 🎨    | L1    | art        | `opus`   | 1.4     | Art Direction und Audio, Asset-Scouting, Lizenzen, CREDITS                                                        |
+| `lead-qa`                 | Prüf-Peter       | QA-Chef                  | 🔍    | L1    | qa         | `sonnet` | 1.5     | Testmanagement, Reviews, Final-Review, Determinismus und Regression                                               |
+| `production-integrator`   | Merge-Moritz     | Zusammenführer           | 🔀    | L2    | production | `sonnet` | 1.3     | Merged nach dem Merge-Gate seriell, prüft `make check`, CI und Pages                                              |
+| `design-spec-author`      | Spec-Sabine      | Spec-Schreiberin         | 📝    | L2    | design     | `opus`   | 1.3     | Schreibt Specs mit testbaren Abnahmekriterien nach `docs/superpowers/specs/`                                      |
+| `design-economy-designer` | Taler-Theo       | Wirtschaftsplaner        | 💰    | L2    | design     | `opus`   | 1.1     | Produktionsketten, Kreisläufe, Steuern und Unterhalt; rechnet Bilanzen je Einwohner                               |
+| `design-idea-scout`       | Kreativ-Kai      | Ideen-Scout              | 🌱    | L2    | design     | `sonnet` | 1.0     | Trägt je Ideen-Runde höchstens 5 Funktionsideen in `docs/ideen.md` ein (E-027); ersetzt `design-genre-researcher` |
+| `tech-sim-engineer`       | Logik-Lars       | Spiellogik-Entwickler    | ⚙️    | L2    | tech       | `sonnet` | 1.3     | Setzt Regeln in `src/sim/` um: DOM-frei, deterministisch, TDD, Save-Migrationen                                   |
+| `tech-ui-engineer`        | UI-Ursula        | Oberflächen-Entwicklerin | 🖱️    | L2    | tech       | `sonnet` | 1.5     | Setzt Bedienung und Darstellung in `src/ui/`, `src/render/` um (Card-UI, desktop-first)                           |
+| `art-license-checker`     | Paragraphen-Paul | Lizenzprüfer             | ⚖️    | L2    | art        | `opus`   | 1.1     | Prüft jede Asset-Quelle gegen Positiv-/Negativliste, trägt CREDITS ein, hat Veto                                  |
+| `art-rendering-engineer`  | Render-Rudi      | Darstellungs-Entwickler  | 🖼️    | L2    | art        | `sonnet` | 1.0     | Setzt Darstellung in `src/render/` um: Canvas 2D, Isometrie (ADR-012), prozedurale Grafik, Licht, Wetter          |
+| `art-audio-engineer`      | Klang-Klara      | Audio-Entwicklerin       | 🎧    | L2    | art        | `sonnet` | 1.0     | Setzt Ton in `src/audio/` um (Busse, Umgebung, Musik-Streaming); schneidet und belegt Assets (ADR-011)            |
+| `qa-code-reviewer`        | Review-Rita      | Code-Prüferin            | 👓    | L2    | qa         | `sonnet` | 1.4     | Prüft Diffs gegen Brief und Spec, Urteil OK/BEDENKEN/ZURÜCK, ändert keinen Code                                   |
+| `qa-playtester`           | Zocker-Zoe       | Spieltesterin            | 🎮    | L2    | qa         | `sonnet` | 1.5     | Browser-Check per Headless-Chrome, Screenshots, Playtest-Report                                                   |
 
 **Persona-Versionen:** Frontmatter-Feld `version` in `.claude/agents/<name>.md`. Erhöht wird sie nur
 über die [Verbesserungsschleife](verbesserung.md#verbesserungsschleife) mit Eintrag in
@@ -93,7 +95,6 @@ Noch keine Persona-Datei. Entsteht, wenn ein Paket die Rolle braucht (R1).
 | `production-studio-ops`         | `lead-production` | `sonnet`           | Wartet die Studio-Werkzeuge (Dashboard, Hooks, `log.py`, Make-Ziele)                   |
 | `production-onboarding-analyst` | `lead-production` | `sonnet`           | Prüft neue Personas und Briefings auf Vollständigkeit gegen STUDIO.md                  |
 | `production-chronist`           | `lead-production` | `sonnet`           | Fasst Chronik, Rulings und Pakete zu Meilenstein-Rückblicken und state.md-Entwürfen    |
-| `design-genre-researcher`       | `lead-design`     | `sonnet`           | Recherchiert Mechaniken vergleichbarer Aufbauspiele (nur Mechaniken, ADR-006)          |
 | `design-balancing-analyst`      | `lead-design`     | `sonnet`           | Rechnet und simuliert Balancing-Szenarien, schlägt Werte für `src/sim/defs/` vor       |
 | `tech-save-engineer`            | `lead-tech`       | `sonnet`           | Save-Format: Versionierung, Migrationen, Tests für alte Spielstände                    |
 | `tech-plan-architect`           | `lead-tech`       | `opus`             | Schreibt Implementierungspläne für grosse Meilensteine im Auftrag des Tech-Leads       |

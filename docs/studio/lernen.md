@@ -36,3 +36,4 @@
 - Bricht ein Agent mit API 429 (Limit) ab, setzt L0 ihn per `SendMessage` fort statt neu zu starten: Kontext und Worktree-Stand bleiben erhalten (H-R8, Retro session-9b13950a B1).
 - Prüfungen nie in eine Pipe schicken (`make studio-test | tail -1` liefert den Exit-Code von `tail`): `make studio-test >/dev/null && …` (R202, Retro session-9b13950a B2).
 - Kurz-Specs von Render- und UI-Paketen prüfen Annahmen über Sim-Regeln (z. B. Bebaubarkeit) vor dem Start gegen `isLand`/`checkGround`: die falsche Annahme „Gebirge bebaubar“ kostete in H-R9 eine Review- und Fix-Runde (Retro session-347a6598 B2).
+- Optik-Häppchen: Die Kurz-Spec nennt vor dem ersten Engineer-Start ein Bildziel (Referenz aus vorhandenem Screenshot plus höchstens 3 prüfbare Bild-Kriterien) und prüft ihre Prämissen gegen die Sim-Regeln (z. B. `isLand`, `checkGround`); Ausgang 3,7 Review-Runden in H-R7…H-R9, Schwelle im Mittel ≤ 2 über die nächsten 4 Optik-Häppchen (Prozess-Retro 2026-10-04 V3, R208).

@@ -44,6 +44,12 @@ Schwere: **blockend** = Abnahmekriterium verfehlt oder Absturz · **hoch** = Spi
 deutlich · **niedrig** = Kosmetik. Befunde ausserhalb des Pakets gehen nach
 `docs/beobachtungen.md`.
 
+**Release-Lauf (E-028):** Der Report gilt für einen Kandidaten aus mehreren Branches (`<paket>` = `REL-nn`,
+Commit des Kandidaten, Branches im Kopf). Die Abschnitte Szenario bis Befunde stehen **je UI-Task**
+(Überschrift `## UI-Task <ID>`), Screenshots unter `.studio/qa/REL-nn/<ui-task>/`; die Empfehlung am
+Schluss gilt für den Kandidaten. Am Ende steht die Prüfliste „UI-Task → Screenshot-Pfad“, die das Gate
+Merge Release abgleicht ([gates.md](../gates.md#gate-merge-release)); ein UI-Task ohne Pfad ist blockend.
+
 ## Beispiel
 
 ```markdown

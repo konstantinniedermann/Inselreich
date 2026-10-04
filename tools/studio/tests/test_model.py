@@ -403,7 +403,9 @@ class BudgetBoardDecisionTest(unittest.TestCase):
             ev("heartbeat", 4, agent_id="x2", tool="Read"),
         ]
         rows = [b for b in build(events)["budgets"] if b["lead"] == "studio-director"]
-        self.assertEqual([(r["phase"], r["used"], r["overrun"]) for r in rows], [("EFF", 1, False)])
+        self.assertEqual(
+            [(r["phase"], r["used"], r["overrun"]) for r in rows], [("EFF", 1, False)]
+        )
 
     def test_package_event_without_id_is_ignored(self):
         events = [
@@ -1394,6 +1396,11 @@ PERSONA_NAMES = {
         "name": "Taler-Theo",
         "title": "Wirtschaftsplaner",
         "emoji": "💰",
+    },
+    "design-idea-scout": {
+        "name": "Kreativ-Kai",
+        "title": "Ideen-Scout",
+        "emoji": "🌱",
     },
     "tech-sim-engineer": {
         "name": "Logik-Lars",
