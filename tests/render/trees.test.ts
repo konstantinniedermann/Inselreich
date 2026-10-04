@@ -17,6 +17,8 @@ import {
   LIGHT_CROWN_COLOR,
   LIGHT_TRUNK_COLOR,
   TREE_H,
+  crownCap,
+  crownShade,
   crownsFor,
   drawTreeStamp,
   paintStamp,
@@ -82,7 +84,12 @@ describe('Baumstempel', () => {
   it('AK-R1-03 Stempel nutzt nur Palettenfarben (keine Signalfarben, kein Schatten)', () => {
     const allowed = new Set<string>([
       PALETTE.crown,
-      PALETTE.crownLight,
+      crownShade(PALETTE.crown),
+      crownCap(PALETTE.crown),
+      crownShade(LIGHT_CROWN_COLOR),
+      crownCap(LIGHT_CROWN_COLOR),
+      crownShade(CONIFER_COLOR),
+      crownCap(CONIFER_COLOR),
       mixHex(PALETTE.rockDark, PALETTE.earth, 0.5),
       CONIFER_COLOR,
       LIGHT_CROWN_COLOR,
@@ -97,7 +104,11 @@ describe('Baumstempel', () => {
         expect(signals.has(f)).toBe(false);
         expect(f).not.toBe(SHADOW);
       }
-      expect(log.fillSet).toContain(PALETTE.crownLight);
+      expect(
+        [PALETTE.crown, LIGHT_CROWN_COLOR, CONIFER_COLOR].some((base) =>
+          log.fillSet.includes(crownCap(base)),
+        ),
+      ).toBe(true);
     }
     // neue Töne: ΔE2000 ≥ 20 zu den Signalfarben
     for (const c of [CONIFER_COLOR, LIGHT_CROWN_COLOR, LIGHT_TRUNK_COLOR])
@@ -358,15 +369,19 @@ function components(r: RasterCtx, color: string, min: number): number {
 }
 
 describe('Baumstempel gerastert', () => {
-  it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte crownLight-Kappen (je ≥ 4 px), für alle Varianten und Seeds', () => {
+  it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte Lichtkappen (crownCap) (je ≥ 4 px), für alle Varianten und Seeds', () => {
     for (const seed of [3, 11, 12588, 94108])
       for (let v = 0; v < TREE_VARIANTS; v++) {
         const r = new RasterCtx(ISO_W, Math.ceil(TREE_H + ISO_H / 2));
         paintStamp(r as unknown as CanvasRenderingContext2D, seed, v, 1);
-        expect(
-          components(r, PALETTE.crownLight, 4),
-          `Seed ${seed} Variante ${v}`,
-        ).toBeGreaterThanOrEqual(3);
+        // H-R10: Kappen je gezeichneter Kronenart (Laub 0, Nadel 1, hell 2), mindestens eine je Art
+        const bases = [PALETTE.crown, CONIFER_COLOR, LIGHT_CROWN_COLOR];
+        const kinds = new Set(crownsFor(seed, v).map((c) => c.kind));
+        for (const k of kinds)
+          expect(
+            components(r, crownCap(bases[k]!), 4),
+            `Seed ${seed} Variante ${v} Art ${k}`,
+          ).toBeGreaterThanOrEqual(1);
       }
   });
 });

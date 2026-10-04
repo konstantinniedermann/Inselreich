@@ -37,7 +37,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Discovery-Strang), `.claude/agents/lead-design.md`, `.claude/agents/design-idea-scout.md` (neu), `docs/studio/roster.md`, `tools/studio/tests/test_model.py` (`PERSONA_NAMES`), `docs/ideen.md` (neu), `docs/studio/CHANGELOG.md`
 - Ruling: R208
 - Start: 2026-10-04 (Handbuch 1.16)
-- Bewertung: –
+- Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus)
 
 ## E-028 · laufend · Release-Bündel für Häppchen
 
@@ -48,7 +48,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/gates.md` (Gate Merge Release, Gate Ideen-Runde), `.claude/agents/production-integrator.md`, `.claude/agents/qa-playtester.md`, `docs/studio/templates/playtest-report.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R208
 - Start: 2026-10-04 (Handbuch 1.16)
-- Bewertung: –
+- Bewertung: – (Datenpunkt 1 von 3 Releases, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: REL-01 mit 3 Häppchen, Gate-Merge-Rulings, Integrator-Instanzen und Pushes je Häppchen 0,33; Leerlauf nicht erhoben; 1 Release in der Session; UI-Task mit Screenshot 1 von 1; Cache-Write 5 min 25,9 %; H-R12 per Rückfall ausgeschieden)
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 

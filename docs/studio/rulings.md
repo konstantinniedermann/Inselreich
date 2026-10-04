@@ -1393,3 +1393,75 @@ Release-Gate verlangt Galerie 01–15 vorher/nachher, A/B-Perf-Delta, Blindtest 
 H-U2. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten; main unberührt bis Gate Merge Release.
 
 Entscheider: L0 · Anlass: Bericht lead-art ART-STIL-01 · ADR: —
+
+## R212 · 2026-10-04 · Guard-Erweiterung N-92 und N-93
+
+Ruling: Nutzerfreigabe „VERFASSUNG ÄNDERN" (Hauptsession 2026-10-04) für N-92 und N-93 umgesetzt, durch L0 selbst,
+weil die Freigabe nur für die Hauptsession gilt (Verfassung §1.3). Guard sperrt zusätzlich `git pull --rebase`,
+`-r`, `--rebase=<an>`, `git config pull.rebase|branch.<x>.rebase <an>` und `git -c pull.rebase=<an>` (§6.3) sowie
+Agent/Task-Starts als `general-purpose` mit Kopfzeile `Persona:` ohne `model` (R167). Tests zuerst rot, dann grün;
+unabhängiges Review durch qa-code-reviewer (§9.1). Handbuch 1.17. — Kosten bei Irrtum: Revert des Commits; der
+Guard wird nur strenger.
+
+Entscheider: L0 · Anlass: Nutzerfreigabe N-92/N-93 · ADR: —
+
+## R213 · 2026-10-04 · REL-01 Auslösung, lastPatchMs-Abweichung
+
+Ruling: Alle vier Häppchen von REL-01 release-reif (H-U2 @ b3d17f8, H-R10 @ b9bedd4, H-R11 @ b548f8c in H-R12
+@ 794d0d9). Release-Lauf REL-01 ausgelöst (gates.md „Gate Merge Release"). Abweichung angenommen: `lastPatchMs`
+H-R11+H-R12 zusammen ≈ +50 % (je Häppchen ≤ +30 % eingehalten, §5 nennt keine Gesamtgrenze); Kosten fallen nur je
+Bau-/Rodeaktion an, `renderMedian` −0,2 ms, `buildMs` +32 % (Budget 50 %). Für H-R13 bleibt kaum Luft → vor H-R13
+Patch-Pfad messen. Aufwand H-R11/H-R12 ≈ 570 Tools (Selbstangabe) gegen Schätzung 250 → Befund für die
+Session-Retro. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten, Kandidat frisch aufbauen.
+
+Entscheider: L0 · Anlass: Berichte lead-art H-R10, H-R11/H-R12 · ADR: —
+
+## R214 · 2026-10-04 · REL-01 Dünen-Stufenkanten: Extra-Fix-Runde mit Rückfall
+
+Ruling: Release-Lauf REL-01: H-U2, H-R10, H-R11 OK; opus-Review BEDENKEN (nur arc42, behoben in
+`docs/rel-01-arc42` @ 9d5205e). Playtest-Befund hoch zu H-R12: Dünen mit rechtwinkligen Stufenkanten entlang des
+Kachelrasters bei Seed 2 und 5 (`.studio/qa/REL-01/h-r12/seed2-z2.png`, `seed5-z1.png`). Da der Nutzer die Dünen
+ausdrücklich bemängelt hat, geht H-R12 so nicht live. Ausnahme von R211 (höchstens 2 Bild-Fix-Runden): **eine**
+gezielte dritte Runde nur für die Kachelkanten, Deckel ≈ 60 Tools, mit Delta-Review und Nachweis auf Seed 1/2/3/5.
+Rückfall, falls der Deckel reisst oder der Nachweis fehlt: REL-01 mit `feat/h-r11-relief` statt `feat/h-r12-duenen`,
+Dünen ins REL-02. In beiden Fällen wird der Kandidat frisch aufgebaut (gates.md), dazu `docs/rel-01-arc42`. — Kosten
+bei Irrtum: Verzögerung von REL-01 um eine Fix-Runde.
+
+Entscheider: L0 · Anlass: Playtest-Report REL-01, opus-Review REL-01 · ADR: —
+
+## R215 · 2026-10-04 · REL-01 Rückfall ohne neue Dünen
+
+Ruling: Die Extra-Fix-Runde H-R12 (R214) hat das Ziel verfehlt (Stufenkanten auf Seed 2 schwächer, aber sichtbar;
+Deckel 60 Tools mit ≈ 125 gerissen; Zwischenstand `feat/h-r12-duenen` @ 14fd4cf ohne Delta-Review, nicht
+release-reif). Rückfall greift: **REL-01 = H-U2 + H-R10 + H-R11 (`feat/h-r11-relief` @ b548f8c) + Doku**. Dünen
+bleiben auf main-Stand; H-R12 wird erstes Häppchen von REL-02 auf 14fd4cf (stetige Strandbreite und Maske, ≈ 60
+Tools, Lead verlangt Zwischenstand bei halbem Deckel). `docs/rel-01-arc42` wird um dunes.ts und `sandRest`
+bereinigt. Kandidat frisch aufbauen, Delta-Browser-Lauf (Sand/Strand-Regression, Smoke H-U2/H-R10/H-R11), dann
+Gate. Vorfall „Agent gescheitert" geht in die Session-Retro. — Kosten bei Irrtum: REL-01 ohne Dünen-Verbesserung;
+Nutzerpunkt Dünen offen bis REL-02.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R12 Fix 3 · ADR: —
+
+## R216 · 2026-10-04 · Gate Merge Release REL-01
+
+Ruling: Gate Merge Release REL-01 bestanden. Kandidat `rel/rel-01b` @ e19b44d (H-U2 c6b64de, H-R10 c31d9b5, H-R11
+4740b26, Doku e19b44d) auf origin/main 3da4cb2; `make check` nach jedem Merge grün; opus-Review lead-qa über den
+Obermengen-Kandidaten (BEDENKEN nur arc42, behoben in `docs/rel-01b-arc42`); Browser-Lauf REL-01 und Delta-Lauf
+REL-01b OK. Prüfliste UI-Task → Screenshot: H-U2 `.studio/qa/REL-01b/h-u2/` (+ REL-01/h-u2), H-R10
+`.studio/qa/REL-01/gal/05,06,11,12`, H-R11 `.studio/qa/REL-01/gal/01–06,13`, Sand-Regression
+`.studio/qa/REL-01b/seeds/`. Push durch production-integrator `HEAD:main`, danach CI und Pages. — Kosten bei
+Irrtum: Revert-Merge der vier Merge-Commits.
+
+Entscheider: L0 · Anlass: Playtest REL-01b, opus-Review REL-01 · ADR: —
+
+## R217 · 2026-10-04 · Session-Retro e13c3631
+
+Ruling: Vorschläge der Kurz-Retro `retros/2026-10-04-session-e13c3631.md`: **V1** (Zwischenstand bei halbem
+Deckel) und **V2** (Optik-Schätzfaktor ×2 plus eine Bild-Fix-Runde) angenommen als lernen.md-Regeln ohne
+Experiment-Platz (Plätze voll); Wirkung prüft die nächste Retro an H-R12/H-R13. **V3** angenommen: lead-production
+lässt `log.py retro` bei `--kind meilenstein` ohne `meilenstein:`-Trigger warnen (Werkzeug, nächste Session).
+**V4** angenommen, Option (a): AK-R1-06 bekommt im CI eine Schwelle ×1,5 (lokal 1500 ms), als Häppchen H-T1 in
+REL-02; Schutz bleibt das A/B-Perf-Delta im Release-Gate (R211). Offener Alarm `budget:lead-production:M5-01-merge`
+bleibt bis Beleg. — Kosten bei Irrtum: lernen.md-Zeilen streichen; Schwelle zurücksetzen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-S-2026-10-04 · ADR: —

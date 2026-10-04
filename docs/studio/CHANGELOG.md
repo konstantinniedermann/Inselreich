@@ -22,6 +22,15 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-04 · Handbuch 1.17
+
+- Anlass: Nutzerfreigabe „VERFASSUNG ÄNDERN" für N-92 und N-93
+- Datenbasis: Warteschlange N-92 (zwei Rebase-Vorfälle), N-93 (41 ungewollte opus-Starts, Effizienz-Ampel rot)
+- Ruling: R212
+- Änderungen: Abschnitt Autonomie/Guard nennt die neuen Sperren `git pull --rebase`/`-r`, Rebase-Konfiguration
+  (`pull.rebase`, `branch.*.rebase`, auch per `git -c`) und Persona-Start als `general-purpose` ohne `model`;
+  Handbuch und lernen.md behaupteten die Modell-Sperre schon vorher, jetzt stimmt es
+
 ## 2026-10-04 · Handbuch 1.16
 
 - Anlass: Prozess-Retro Kreativität und Tempo (R207)

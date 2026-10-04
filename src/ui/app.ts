@@ -69,6 +69,7 @@ import {
   unconnectedIds,
   type ReasonCtx,
 } from './hints';
+import { resolveLogClick } from './logTarget';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
@@ -466,7 +467,11 @@ function launch(
     }
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world);
-    updateEventLog(logBox, state.eventLog, crisisLogVisible(world));
+    updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
+      const r = resolveLogClick(t, world);
+      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, map);
+      if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
+    });
     updateBuildMenu(navEl, world);
     const panel = state.panel;
     if (panel.kind === 'inspect') {

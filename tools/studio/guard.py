@@ -42,7 +42,13 @@ FORBIDDEN = "Irreversible Aktion ist verboten"
 PROTECTED = "Verfassung und Guard ändert nur der Nutzer (Vorschlag einreihen)"
 SUFFIX = " (Verfassung §6)"
 PROTECTED_SUFFIX = " (Verfassung §1.3)"
+MODEL_MISSING = "Persona-Start als general-purpose braucht `model` im Agent-Aufruf"
+MODEL_SUFFIX = " (R167, Handbuch Modellwahl)"
 READ_ONLY = {"ls", "cat", "test", "[", "grep", "rg", "head", "tail", "wc"}
+REBASE_KEY = re.compile(r"^(pull\.rebase|branch\..+\.rebase)$", re.IGNORECASE)
+REBASE_OFF = {"false", "no", "off", "0"}
+PERSONA_LINE = re.compile(r"^Persona:[ \t]*\S", re.MULTILINE)
+AGENT_TOOLS = ("Agent", "Task")
 
 
 def strip_heredocs(command: str) -> str:
@@ -231,12 +237,55 @@ def _git_sub(args: list[str]) -> tuple[str | None, list[str]]:
     return args[index], args[index + 1 :]
 
 
+def _rebase_setting(key: str, value: str | None) -> bool:
+    """Schaltet `key=value` Rebase beim Pull ein (pull.rebase, branch.<x>.rebase)?"""
+    return (
+        bool(REBASE_KEY.match(key))
+        and value is not None
+        and value.lower() not in REBASE_OFF
+    )
+
+
+def _pull_short_rebase(rest: list[str]) -> bool:
+    """`-r` in einem Kurz-Bündel; ab einem Flag mit angehängtem Wert (-X, -S, -s, -j) endet das Bündel."""
+    for arg in rest:
+        if arg.startswith("-") and not arg.startswith("--"):
+            for char in arg[1:]:
+                if char in "XSsj":
+                    break
+                if char == "r":
+                    return True
+    return False
+
+
 def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
     sub, rest = _git_sub(args)
+    options = args[: len(args) - len(rest) - (sub is not None)]
+    for index, arg in enumerate(options):
+        pair = options[index + 1 : index + 2] if arg == "-c" else [arg[2:]]
+        if arg.startswith("-c") and pair and pair[0]:
+            key, sep, value = pair[0].partition("=")
+            if _rebase_setting(key, value if sep else "true"):
+                return f"{FORBIDDEN}: git -c {pair[0]}"
     if sub is None:
         return None
     shorts = _short_flags(rest)
-    if sub == "push":
+    if sub == "pull":
+        for arg in rest:
+            on = arg == "--rebase" or (
+                arg.startswith("--rebase=") and arg[9:].lower() not in REBASE_OFF
+            )
+            if on:
+                return f"{FORBIDDEN}: git pull {arg}"
+        if _pull_short_rebase(rest):
+            return f"{FORBIDDEN}: git pull -r"
+    elif sub == "config":
+        plain = [arg for arg in rest if not arg.startswith("-")]
+        if plain[:1] == ["set"]:
+            plain = plain[1:]
+        if plain and _rebase_setting(plain[0], plain[1] if len(plain) > 1 else None):
+            return f"{FORBIDDEN}: git config {plain[0]} {plain[1]}"
+    elif sub == "push":
         for arg in rest:
             if arg.startswith("--force") or arg in ("--mirror", "--delete"):
                 return f"{FORBIDDEN}: git push {arg}"
@@ -436,12 +485,31 @@ def decide(
     if tool in FILE_TOOLS:
         path = data.get("file_path") or data.get("notebook_path") or ""
         return file_reason(str(path), allow)
+    if tool in AGENT_TOOLS:
+        return agent_reason(data)
+    return None
+
+
+def agent_reason(data: Mapping) -> str | None:
+    """Persona-Start ohne Persona-Datei erbt sonst das Session-Modell (R167)."""
+    kind = data.get("subagent_type") or "general-purpose"
+    prompt = str(data.get("prompt", ""))
+    if (
+        kind == "general-purpose"
+        and PERSONA_LINE.search(prompt)
+        and not data.get("model")
+    ):
+        return MODEL_MISSING
     return None
 
 
 def deny_text(found: str) -> str:
-    """Begründung mit Fundstelle: Schutz der Verfassung §1.3, sonst §6."""
-    return found + (PROTECTED_SUFFIX if found == PROTECTED else SUFFIX)
+    """Begründung mit Fundstelle: §1.3, R167 (Modell), sonst §6."""
+    if found == PROTECTED:
+        return found + PROTECTED_SUFFIX
+    if found == MODEL_MISSING:
+        return found + MODEL_SUFFIX
+    return found + SUFFIX
 
 
 def _record_approval(payload: dict, marker_dir: Path) -> None:

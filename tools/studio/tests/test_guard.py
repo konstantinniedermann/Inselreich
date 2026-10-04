@@ -343,3 +343,92 @@ class FixRound3Test(unittest.TestCase):
         cwd = Path("/repo/docs/studio")
         self.assertIsNotNone(reason("echo x > VERFASSUNG.md", cwd=cwd))
         self.assertIsNone(reason("echo x > VERFASSUNG.md", allow=True, cwd=cwd))
+
+
+class PullRebaseTest(unittest.TestCase):
+    """N-92: `git pull --rebase` und Rebase-Konfiguration sind Rebase (Verfassung §6.3)."""
+
+    def test_allowed(self):
+        for cmd in [
+            "git pull --ff-only",
+            "git pull --no-rebase origin main",
+            "git pull --rebase=false",
+            "git pull",
+            "git config pull.rebase false",
+            "git config --get pull.rebase",
+            "git config pull.ff only",
+            "git pull -Xours",
+            "git pull -Xtheirs origin main",
+            "git pull -s recursive -X ours",
+            "git pull -v",
+            "git -c core.editor=vim pull",
+            "git -c pull.rebase=false pull",
+            "git config --unset pull.rebase",
+            "git config set pull.rebase false",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
+    def test_forbidden(self):
+        for cmd in [
+            "git pull --rebase",
+            "git pull -r",
+            "git pull -r origin main",
+            "git pull -rv",
+            "git pull -vr",
+            "git config set pull.rebase true",
+            "git -cpull.rebase=true pull",
+            "git pull --rebase=merges",
+            "git pull --rebase=interactive origin main",
+            "git -C /repo pull --rebase",
+            "git -c pull.rebase=true pull",
+            "git config pull.rebase true",
+            "git config --global pull.rebase true",
+            "git config branch.main.rebase true",
+            "git config rebase.autoStash true && git pull --rebase",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd))
+                self.assertIsNotNone(reason(cmd, allow=True))
+
+
+class PersonaModelTest(unittest.TestCase):
+    """N-93: Persona-Start als general-purpose braucht `model` (R167)."""
+
+    def payload(self, **tool_input):
+        return {"tool_name": "Agent", "tool_input": tool_input}
+
+    def decide(self, payload):
+        return guard.decide(payload, ROOT, Path("/nope"), ENV)
+
+    def test_forbidden_without_model(self):
+        prompt = "Persona: design-genre-researcher\nPaket: X\n..."
+        for tool_input in [
+            {"subagent_type": "general-purpose", "prompt": prompt},
+            {"prompt": prompt},
+            {"subagent_type": "general-purpose", "prompt": prompt, "model": ""},
+        ]:
+            with self.subTest(tool_input=tool_input):
+                found = self.decide(self.payload(**tool_input))
+                self.assertIsNotNone(found)
+                self.assertIn("model", found)
+        task = {"tool_name": "Task", "tool_input": {"prompt": prompt}}
+        self.assertIsNotNone(self.decide(task))
+
+    def test_allowed(self):
+        prompt = "Persona: design-genre-researcher\nPaket: X"
+        for tool_input in [
+            {"subagent_type": "general-purpose", "prompt": prompt, "model": "sonnet"},
+            {"subagent_type": "lead-art", "prompt": prompt},
+            {"subagent_type": "general-purpose", "prompt": "Suche X im Repo"},
+            {"subagent_type": "Explore", "prompt": prompt},
+            {"subagent_type": "general-purpose", "prompt": "Persona:\n\nkeine Rolle"},
+        ]:
+            with self.subTest(tool_input=tool_input):
+                self.assertIsNone(self.decide(self.payload(**tool_input)))
+
+    def test_deny_text_cites_ruling(self):
+        found = self.decide(self.payload(prompt="Persona: x"))
+        text = guard.deny_text(found)
+        self.assertIn("R167", text)
+        self.assertNotIn("Verfassung §6", text)
