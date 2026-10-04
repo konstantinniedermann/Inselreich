@@ -824,3 +824,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `.studio/qa/H-R14/crops/*-02-schiff.png`, `*-04-brand.png` (brauner Ring neben der roten Marke über Kontor bzw. Steinbruch).
 - Beobachtung: Der Playtester konnte das Zeichen nicht zuordnen; vermutlich ein Bedarfs-/Versorgungssymbol (`SIGN_COLOR` in `overlays.ts`). Lesbarkeit: zwei Marken dicht nebeneinander, Bedeutung für Spieler unklar.
 - Ursprung: H-R14 (qa-playtester). Einschätzung: niedrig; bei der nächsten Overlay-/Lesbarkeitsrunde Bedeutung prüfen und ggf. in der Legende erklären.
+
+### 2026-10-04 · Ton · Befunde aus der Browser-Probe H-A2
+
+- Fundort: `.studio/qa/H-A2/` (Probe auf `feat/h-a2-hoerbar`), `src/ui/soundEvents.ts` (`diffSoundEvents`), `src/render/camera.ts` (`visibleTileRange`).
+- Beobachtung: (1) Bei 4× Tempo erklingt der Münzton etwa alle 2,5 s (56–60 je Minute) und wirkt dicht. (2) Der Arbeitston nutzt die Bounding-Box `visibleTileRange`, die grösser als das Bild ist; Betriebe bis ~400 px ausserhalb klingen mit (von lead-art als „Kameranähe" angenommen). (3) Ein `make check`-Lauf im Review war einmal mit 1 rotem Test, Name nicht erfasst; zwei Folgeläufe grün.
+- Ursprung: qa-playtester und qa-code-reviewer, Paket H-A2. Einschätzung: (1) Ton-Drosselung je Tempo prüfen, lead-art; (2) nur bei Spielerfeedback enger filtern (Bildschirm-Test statt Kachelbox); (3) zum H-T1-Eintrag oben (Kandidat `tests/ui/hints.test.ts` AK-UX-31).

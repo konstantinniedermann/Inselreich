@@ -27,6 +27,7 @@ import {
   createCamera,
   screenToTileF,
   tileCorners,
+  visibleTileRange,
   worldToScreen,
   type Camera,
 } from '../render/camera';
@@ -88,7 +89,11 @@ import {
   actionSound,
   buildSoundKey,
   diffSoundEvents,
+  shortageEvents,
+  shortageSnapshot,
   soundSnapshot,
+  workCycleKinds,
+  workProgress,
 } from './soundEvents';
 import {
   autosaveOnHide,
@@ -833,6 +838,9 @@ function launch(
   let autoMs = 0;
   let autoErrorShown = false;
   let prevSnap = soundSnapshot(world);
+  let prevShortage = shortageSnapshot(world);
+  let prevWork = workProgress(world);
+  let prevEconTick = world.tick;
   let prevOrderVisible = orderVisible(world);
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
@@ -874,6 +882,16 @@ function launch(
       const snap = soundSnapshot(world);
       for (const e of diffSoundEvents(prevSnap, snap)) sound.play(e);
       prevSnap = snap;
+      // Wirtschaftstöne nur auswerten, wenn die Sim weitergelaufen ist (Pause und Stillstand allozieren nichts)
+      if (world.tick !== prevEconTick) {
+        prevEconTick = world.tick;
+        const shortage = shortageSnapshot(world);
+        for (const g of shortageEvents(prevShortage, shortage)) sound.playShortage(g);
+        prevShortage = shortage;
+        for (const k of workCycleKinds(prevWork, world, visibleTileRange(state.cam, view, map)))
+          sound.playWork(k);
+        prevWork = workProgress(world);
+      }
       const curCrisis = crisisView(world);
       fireMemo = nextFireMemo(
         fireMemo,
