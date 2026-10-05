@@ -329,7 +329,7 @@ const FOOTHILL_RISE = 4;
  * Vorberg-Rücken: Höhe (Kacheln) einer Welle, deren Phase das breite Gebirgsfeld ist — die Rücken laufen als Bögen parallel
  * zum Massivrand (Merkmal 2–4 Kacheln), zeigen über die Kuppe 2 Stufen, je Kachel höchstens 1 (S6 prüft die Krümmung).
  */
-const FOOTHILL_RIDGE_H = 1.6;
+const FOOTHILL_RIDGE_H = 1;
 const FOOTHILL_RIDGE_K = 2.2; // Zyklen je Anteil des breiten Feldes (≈ 1 Rücken je 6–7 Kacheln)
 const FOOTHILL_RIDGE_ENV = 8; // Einsatz der Rücken: voll ab Anteil 1/8
 /** Wertverschiebung ohne Gefälle: Mischung zum kühlen Schattenton (Schattenseite des Massivs) bzw. warmen Lichtton, je ≤ 15 %. */
