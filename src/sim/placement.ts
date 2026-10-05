@@ -115,6 +115,7 @@ export function canPlaceRoad(world: World, x: number, y: number, island: number 
 export { buildLock } from './unlocks';
 
 const NO_KONTOR = 'Erst ein Kontor auf dieser Insel';
+const NO_SEAFARING = 'Seefahrt mit den Kaufleuten';
 
 /** Grund (b): Auf einer fernen Insel ohne Kontor ist ausser dem Kontor II nichts baubar; sonst `null`. */
 export function noKontorReason(world: World, island: number): string | null {
@@ -134,9 +135,7 @@ export function affordBuild(
 ): Result {
   if (island === HOME) return checkAfford(world, world.islands[HOME]!, cost);
   const where = fromHome ? 'in der Heimat' : `auf ${islandName(world, island)}`;
-  const res = checkAfford(world, fromHome ? home(world) : world.islands[island]!, cost, where);
-  if (res.ok || !res.reason.endsWith(where)) return res;
-  return fail(res.reason.replace(/^Zu wenig /, 'Nicht genug '));
+  return checkAfford(world, fromHome ? home(world) : world.islands[island]!, cost, where);
 }
 
 export function canPlace(
@@ -149,8 +148,7 @@ export function canPlace(
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
   if (island >= 1 && defId === 'kontor2') {
-    const seafaring = functionLock(world, 'seafaring');
-    if (seafaring !== null) return fail(seafaring);
+    if (functionLock(world, 'seafaring') !== null) return fail(NO_SEAFARING);
   }
   const gate = defId === 'kontor2' ? null : noKontorReason(world, island);
   if (gate !== null) return fail(gate);

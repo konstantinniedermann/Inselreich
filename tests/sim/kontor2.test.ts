@@ -82,7 +82,7 @@ describe('M12 E2 Kontor II', () => {
     const s = kontorSite(locked, B);
     expect(canPlace(locked, 'kontor2', s.x, s.y, B)).toEqual({
       ok: false,
-      reason: 'Erst nach dem Ziel', // Sim-Grund aus functionLock; „Seefahrt mit den Kaufleuten“ ist UI-Hovertext
+      reason: 'Seefahrt mit den Kaufleuten',
     });
     const w = seaWorld();
     home(w).stock.wood = 100;

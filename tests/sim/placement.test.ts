@@ -427,7 +427,7 @@ describe('M12 Seefahrt Platzregeln (T02)', () => {
     home(w).stock.stone = 0;
     expect(checkAfford(w, home(w), cost)).toEqual(fail('Zu wenig Stein'));
     expect(checkAfford(w, home(w), cost, 'in der Heimat')).toEqual(
-      fail('Zu wenig Stein in der Heimat'),
+      fail('Nicht genug Stein in der Heimat'),
     );
     home(w).stock.stone = 10;
     expect(checkAfford(w, home(w), cost, 'in der Heimat')).toEqual({ ok: true });
