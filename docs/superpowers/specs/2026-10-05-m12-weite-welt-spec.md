@@ -14,7 +14,9 @@ Dichte-Szene D1, Fold-back, Testwelt, Randfälle;
 [02](2026-10-05-m12-weite-welt-spec/anhang-02-e1-archipel-und-render.md) E1: Inseln, Generator, Darstellung,
 Render-Messprotokoll, Streichvariante;
 [03](2026-10-05-m12-weite-welt-spec/anhang-03-e2-e4-regeln-und-werte.md) E2–E6: Werte je `src/sim/defs/`-Eintrag,
-Save v8–v10, Routenablauf, Panel; [04](2026-10-05-m12-weite-welt-spec/anhang-04-ak-liste.md) alle AK E1–E6, Auflagen für die Pläne.
+Save v8–v10, Routenablauf, Panel; [04](2026-10-05-m12-weite-welt-spec/anhang-04-ak-liste.md) alle AK E1–E6, Auflagen für die Pläne;
+[05](2026-10-05-m12-weite-welt-spec/anhang-05-drittes-ziel-gewuerzstadt.md) Nachtrag R238: drittes Ziel
+«Gewürzstadt» (Regel, Werte, Save v9, AK-Z3, Auflagen ans Seefahrt-Bündel).
 
 Kennzeichnung: **Setzung Spec** (in der Spec neu gesetzt, nicht im Vorschlag), **[Tech]** (Umsetzungsdetail; lead-tech
 entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest), **Phase 2** (Regel wird in E1–E4 erweitert).
@@ -348,6 +350,10 @@ bitgleich (`fire.test.ts`); **AK-E2-11** Browser, Klickzählung wie AK-E4-13; **
 
 **Wichtigste AK:** **AK-E3-01** Werte; **AK-E3-02** Plantage nur mit Merkmal (`spice.test.ts` neu); **AK-E3-04**
 Auftragsziehung gleich; **AK-E3-05** Neupin samt Pin-Liste; **AK-E3-07** Übergangsbestand und Meldung (`save.test.ts`).
+
+**Drittes Ziel «Gewürzstadt»** (Nachtrag R238, I-010, [Anhang 05](2026-10-05-m12-weite-welt-spec/anhang-05-drittes-ziel-gewuerzstadt.md)):
+nach Handelsstadt 80 Kaufleute, seit 60 s voll versorgt inklusive Gewürz, und eine Schiffsroute holt Gewürz von einer
+eigenen Plantage heim; Flagge `wonSpice` mit Save v9, nie zurück; Controller unverändert, Baseline bitgleich.
 
 **Nicht in E3:** zweiter Gewürz-Betrieb, Gewürz als Auftragsgut, Standortgüte (I-008).
 

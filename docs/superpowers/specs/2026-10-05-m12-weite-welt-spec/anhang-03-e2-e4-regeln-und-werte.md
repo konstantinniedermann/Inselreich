@@ -38,11 +38,11 @@ fehlt (Vorschlag Spec). Einheiten: Unterhalt und Steuer je 100 Ticks, Takt in Ti
 Jede Zustandsänderung bekommt je Merge eine eigene `SAVE_VERSION` (F-S1); die Kette v1 → … → aktuelle Version läuft
 für jeden alten Stand. Fixture der Vorgängerversion je Version als erster Commit der jeweiligen Branch.
 
-| Version | Merge                                                                | Neue Felder                                                                                       | Fixture (erster Commit)             |
-| ------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| v8      | E1                                                                   | `islands[i]` + `kind`, `ox`, `oy`, `anchor`; `kontorId` `number \| null`; Fremdinseln A, B        | `save-v7.json` (E1-Branch)          |
-| v9      | Seefahrt-Bündel E2 + E3 + E4, ein Merge über eine Integrationsbranch | `crisis.tile.island`; `spice` in jedem `islands[i].stock` und in `sellPct`; `ships`, `nextShipId` | `save-v8.json` (Integrationsbranch) |
-| v10     | E6 (nur bei Aufnahme)                                                | `offer: Offer \| null`                                                                            | `save-v9.json` (E6-Branch)          |
+| Version | Merge                                                                | Neue Felder                                                                                                                 | Fixture (erster Commit)             |
+| ------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| v8      | E1                                                                   | `islands[i]` + `kind`, `ox`, `oy`, `anchor`; `kontorId` `number \| null`; Fremdinseln A, B                                  | `save-v7.json` (E1-Branch)          |
+| v9      | Seefahrt-Bündel E2 + E3 + E4, ein Merge über eine Integrationsbranch | `crisis.tile.island`; `spice` in jedem `islands[i].stock` und in `sellPct`; `ships`, `nextShipId`; `wonSpice` (Anhang 05 E) | `save-v8.json` (Integrationsbranch) |
+| v10     | E6 (nur bei Aufnahme)                                                | `offer: Offer \| null`                                                                                                      | `save-v9.json` (E6-Branch)          |
 
 `Ship = { id, port, to, left, cargo, route, homing }`: `port` Inselindex des letzten Hafens; `to` Zielinsel oder
 `null` (liegt im Hafen); `left` Restticks ≥ 0; `cargo` Gut → Menge (Ganzzahl ≥ 1, Summe ≤ 50); `route`
