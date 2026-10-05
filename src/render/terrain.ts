@@ -22,6 +22,7 @@ import {
   sampleField,
   terrainFields,
   warp,
+  type Field,
   type TerrainFields,
 } from './terrainField';
 
@@ -294,6 +295,10 @@ export interface TerrainGrid {
   patch: Float32Array;
   /** H-R9 R3: Gebirgsanteil rein bilinear (ohne Plateau) — Schutt am Gebirgsrand, wo das Massiv die Ecke rundet. */
   mfoot: Float32Array;
+  /** H-R13: Schuttanteil 0…1 der Wiese am Gebirgsfuss (stetig aus dem geglätteten Gebirgsfeld). */
+  scree: Float32Array;
+  /** H-R13: Wertverschiebung −1 (kühl, Schattenseite) … +1 (warm, Lichtseite) der Wiese vor dem Massiv, ohne Gefälle. */
+  tint: Float32Array;
   /** H-R9: Wiesenton −1 satt/kühl … +1 trocken/warm (grosser Verlauf, mittlere Flecken, Kuppen trockener). */
   warm: Float32Array;
   /** H-R9: feines gedrehtes Mottling −1…1. */
@@ -312,11 +317,67 @@ export function meadowHill(seed: number, fx: number, fy: number): number {
     0.38 * rotNoise(seed + 106, fx, fy, 0.51, ROT_RELIEF2)
   );
 }
+// ---------- H-R13: Vorberge und Gebirgsfuss (Stilrahmen D6) ----------
+/**
+ * Vorberge: Faktor je Welle auf die Amplitude bei Nähe 1. S6 begrenzt die Summe der Tongefälle (Krümmung der Höhe),
+ * deshalb wächst nur die lange Welle (grosse Hügel), die kurzen treten zurück.
+ */
+const FOOTHILL_WAVE_GAIN: readonly number[] = [0.5, -0.5, -1];
+/** Aufstieg des Geländes zum Massiv: Höhe (Kacheln) je Anteil des breiten Gebirgsfelds; verschiebt den Ton lichtseitig. */
+const FOOTHILL_RISE = 4;
+/**
+ * Vorberg-Rücken: Höhe (Kacheln) einer Welle, deren Phase das breite Gebirgsfeld ist — die Rücken laufen als Bögen parallel
+ * zum Massivrand (Merkmal 2–4 Kacheln), zeigen über die Kuppe 2 Stufen, je Kachel höchstens 1 (S6 prüft die Krümmung).
+ */
+const FOOTHILL_RIDGE_H = 1;
+const FOOTHILL_RIDGE_K = 2.2; // Zyklen je Anteil des breiten Feldes (≈ 1 Rücken je 6–7 Kacheln)
+const FOOTHILL_RIDGE_ENV = 8; // Einsatz der Rücken: voll ab Anteil 1/8
+/** Wertverschiebung ohne Gefälle: Mischung zum kühlen Schattenton (Schattenseite des Massivs) bzw. warmen Lichtton, je ≤ 15 %. */
+const FOOTHILL_TINT_MAX = 0.15;
+const FOOTHILL_TINT_GAIN = 14; // Feldwert je Gefälle des breiten Feldes gegen das Licht (≈ voll bei 0,07 je Kachel)
+/** Weichzeichner des Gebirgsfelds in Kacheln (Box-Radius, 2 Durchgänge ≈ Gauss σ 2): Nähe reicht ≈ 4 Kacheln vor das Massiv. */
+const FOOTHILL_BLUR = 2;
+/** Weichzeichner des Aufstiegs (Radius, 3 Durchgänge): breite, flache Rampe, deren Krümmung S6 nicht stört. */
+const FOOTHILL_WIDE_BLUR = 4;
+/** Anstieg der Nähe je Anteil des geglätteten Felds: flacher = geringere Krümmung der Amplitude (S6). */
+const FOOTHILL_PROX_K = 1.8;
+/** Schuttband: Anteil des Schuttes im Wiesenton direkt am Fuss, und Nähewerte, zwischen denen er einsetzt. */
+const SCREE_MAX = 0.75;
+const SCREE_FROM = 0.1,
+  SCREE_SPAN = 0.28;
+const smoothUnit = (v: number): number => {
+  const t = v < 0 ? 0 : v > 1 ? 1 : v;
+  return t * t * (3 - 2 * t);
+};
+/** H-R13: geglättete Gebirgsfelder auf dem Kachelraster: `near` für Vorberg-Amplitude und Schutt, `wide` für den Aufstieg. */
+export interface Foothills {
+  near: Field;
+  wide: Field;
+}
+export function foothillField(fields: TerrainFields): Foothills {
+  const m = fields.types.mountain;
+  const blur = (r: number, passes: number): Field => {
+    const v = Float32Array.from(m.v);
+    const tmp = new Float32Array(v.length);
+    for (let q = 0; q < passes; q++) boxBlur(v, m.w, m.h, r, tmp);
+    return { w: m.w, h: m.h, v };
+  };
+  return { near: blur(FOOTHILL_BLUR, 2), wide: blur(FOOTHILL_WIDE_BLUR, 3) };
+}
+/** H-R13: Nähe zum Gebirge 0…1 (stetig, 0 ab ≈ 4–5 Kacheln Abstand) an einem Kachelpunkt. */
+export const foothillProx = (fh: Foothills, fx: number, fy: number): number =>
+  smoothUnit(sampleField(fh.near, fx, fy) * FOOTHILL_PROX_K);
+/** H-R13: Aufstieg 0…1 (breites geglättetes Gebirgsfeld) an einem Kachelpunkt. */
+export const foothillRise = (fh: Foothills, fx: number, fy: number): number =>
+  sampleField(fh.wide, fx, fy);
+/** H-R13: Schuttanteil 0…1 aus dem geglätteten Gebirgsfeld; setzt erst nahe am Fuss ein. */
+const screeOf = (b: number): number => smoothUnit((b - SCREE_FROM) / SCREE_SPAN);
+
 /**
  * H-R11: Höhenfeld des Bodens (Wiese und Wald) in Kachelhöhen: Hügel von 2–4 Kacheln (`meadowHill`) plus Mikro-
  * Unebenheit von 0,3–0,6 Kachel. Es steht nur im Bild (S6), nie in der Geometrie.
  */
-export function groundHeight(seed: number, fx0: number, fy0: number): number {
+export function groundHeight(seed: number, fx0: number, fy0: number, prox = 0, rise = 0): number {
   // G1: tieffrequenter Domain-Warp der Eingangskoordinaten (gedreht, Merkmal ≈ 2–3 Kacheln): die Tonkanten laufen
   // Bögen statt gerader Facettenkanten. Rauschen nur hier, einmal je Punkt (nicht je Welle und nicht je Pixel).
   const fx = fx0 + GROUND_SWIRL * (rotNoise(seed + 127, fx0, fy0, 0.5, ROT_RELIEF) - 0.5),
@@ -330,9 +391,15 @@ export function groundHeight(seed: number, fx0: number, fy0: number): number {
     const u = (Math.cos(ang) * fx + Math.sin(ang) * fy) / lam + hash2(seed + 122, k, 0);
     // Höhe der Welle: ihr Licht (Tonwert) soll die Amplitude `w.amp` Stufen haben, a = amp · λ / |n · L|
     const nl = Math.max(0.35, Math.abs(Math.cos(ang - LIGHT_ANGLE)));
-    h += mod * ((w.amp * lam) / nl) * waveProfile(u);
+    h += mod * (1 + FOOTHILL_WAVE_GAIN[k]! * prox) * ((w.amp * lam) / nl) * waveProfile(u);
   }
-  return h;
+  if (rise > 0) {
+    const env = smoothUnit(rise * FOOTHILL_RIDGE_ENV);
+    const ph =
+      rise * FOOTHILL_RIDGE_K + 1.4 * (rotNoise(seed + 131, fx0, fy0, 0.12, ROT_RELIEF2) - 0.5);
+    h += env * FOOTHILL_RIDGE_H * waveProfile(ph);
+  }
+  return h + FOOTHILL_RISE * rise;
 }
 /** H-R11: Mikro-Unebenheit des Tonwerts (Merkmale 0,3–0,6 Kachel) in Stufen, ± halbe Amplitude; wirkt als Korn der Kanten. */
 const groundMicro = (seed: number, fx: number, fy: number): number =>
@@ -340,10 +407,11 @@ const groundMicro = (seed: number, fx: number, fy: number): number =>
 const toneOf = (hx: number, hy: number, micro: number): number =>
   GROUND_FLAT + GROUND_SPAN * Math.tanh((-(hx * LIGHT.x + hy * LIGHT.y) + micro) / GROUND_SPAN);
 /** H-R11: stetiger Tonwert 0…4 (Stufen) des Bodens an einem Kachelpunkt; Lichtseite links oben (LIGHT). */
-export function groundToneAt(seed: number, fx: number, fy: number): number {
+export function groundToneAt(seed: number, fx: number, fy: number, prox = 0, rise = 0): number {
   const d = RASTER / TEX; // Knotenabstand in Kacheln: dieselbe Differenz wie im Raster
-  const hx = (groundHeight(seed, fx + d, fy) - groundHeight(seed, fx - d, fy)) / (2 * d);
-  const hy = (groundHeight(seed, fx, fy + d) - groundHeight(seed, fx, fy - d)) / (2 * d);
+  const gh = (x: number, y: number): number => groundHeight(seed, x, y, prox, rise);
+  const hx = (gh(fx + d, fy) - gh(fx - d, fy)) / (2 * d);
+  const hy = (gh(fx, fy + d) - gh(fx, fy - d)) / (2 * d);
   return toneOf(hx, hy, groundMicro(seed, fx, fy));
 }
 
@@ -435,6 +503,8 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     patch = new Float32Array(n),
     warm = new Float32Array(n),
     mfoot = new Float32Array(n),
+    scree = new Float32Array(n),
+    tint = new Float32Array(n),
     mottle = new Float32Array(n),
     veil = new Float32Array(n),
     gwArr = new Float32Array(n),
@@ -450,6 +520,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   const gr = LAND.indexOf('grass');
   const sa = LAND.indexOf('sand');
   const step = RASTER / TEX;
+  const foothills = foothillField(fields); // H-R13
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
@@ -497,7 +568,21 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       const sw = cls[k] === 0 ? 0 : ind[sa]![k]! * duneWeight(smooth[k]!);
       // H-R11: Bodenhöhe etwas weiter ins Wasser, damit der Tonwert am Ufer keinen Sprung durch fehlende Nachbarn hat
       if (smooth[k]! > -1.5) {
-        groundH[k] = groundHeight(seed, fx, fy);
+        // H-R13: Vorberge, nur nahe am Gebirge ungleich 0
+        const nb = sampleField(foothills.near, wx, wy);
+        scree[k] = screeOf(nb);
+        const rise = foothillRise(foothills, wx, wy);
+        groundH[k] = groundHeight(seed, fx, fy, smoothUnit(nb * FOOTHILL_PROX_K), rise);
+        if (rise > 0) {
+          // Gefälle des breiten Felds (zeigt zum Massiv) gegen das Licht: Lichtseite warm, Schattenseite kühl
+          const rx =
+              foothillRise(foothills, wx + 0.25, wy) - foothillRise(foothills, wx - 0.25, wy),
+            ry = foothillRise(foothills, wx, wy + 0.25) - foothillRise(foothills, wx, wy - 0.25);
+          tint[k] = Math.max(
+            -1,
+            Math.min(1, -(rx * LIGHT.x + ry * LIGHT.y) * 2 * FOOTHILL_TINT_GAIN),
+          );
+        }
         groundM[k] = groundMicro(seed, fx, fy);
       }
       if (smooth[k]! > -0.5) {
@@ -592,6 +677,8 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     patch,
     warm,
     mfoot,
+    scree,
+    tint,
     mottle,
     veil,
     cls,
@@ -685,6 +772,13 @@ function landColor(
       o[0] = o[0]! * keep + OLIVE[0] * kOl;
       o[1] = o[1]! * keep + OLIVE[1] * kOl;
       o[2] = o[2]! * keep + OLIVE[2] * kOl;
+      // H-R13: Schuttband am Gebirgsfuss in den Wiesenstufen: Kies in die Grundfarbe (nach der Luminanz-Angleichung),
+      // die Tonstufen liegen darüber
+      const sc = lerp(g.scree);
+      if (sc > 0) mix3(o, C.debris, Math.min(1, sc * (0.25 + 1.5 * lerp(g.rock))) * SCREE_MAX, o);
+      const ti = lerp(g.tint);
+      if (ti > 0) mix3(o, LIGHT_COLORS.warm, ti * FOOTHILL_TINT_MAX, o);
+      else if (ti < 0) mix3(o, TONE_COOL, -ti * FOOTHILL_TINT_MAX, o);
       break;
     }
     case 'forest': {
@@ -1105,6 +1199,8 @@ export function patchGrid(
     'tone',
     'patch',
     'mfoot',
+    'scree',
+    'tint',
     'warm',
     'mottle',
     'veil',
