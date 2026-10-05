@@ -3,6 +3,7 @@ import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
 import { DEFAULT_TAX_LEVEL } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
+import { generateForeignIslands, homeAnchor } from './islands';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
 import type {
   Building,
@@ -21,7 +22,9 @@ export { isLand } from './mapgen';
 
 /** Inselindex der Heimat (Struktur, kein Spielwert). */
 export const HOME = 0;
-export const home = (w: World): Island => w.islands[HOME]!;
+/** Die Heimat hat immer ein Kontor (Ladeprüfung v8); der Rückgabetyp trägt das, damit `kontorId` eine Zahl bleibt. */
+export type HomeIsland = Island & { kontorId: number };
+export const home = (w: World): HomeIsland => w.islands[HOME] as HomeIsland;
 export const islandOf = (w: World, b: Building): Island => w.islands[b.island]!;
 
 export const idx = (isl: Island, x: number, y: number): number => y * isl.width + x;
@@ -72,16 +75,46 @@ export function buildingsOfType(world: World, defId: BuildingDefId): Building[] 
   return Object.values(world.buildings).filter((b) => b.defId === defId);
 }
 
+const emptyStock = (): Record<GoodId, number> =>
+  Object.fromEntries(GOOD_IDS.map((g) => [g, 0])) as Record<GoodId, number>;
+
+/** Fremdinseln A, B in `ISLANDS`-Reihenfolge: nur Gelände, kein Kontor, leeres Lager. */
+function foreignIslands(seed: number, homeIsland: Island): Island[] {
+  return generateForeignIslands(seed, homeIsland).map((p) => ({
+    kind: p.kind,
+    width: p.width,
+    height: p.height,
+    tiles: p.terrain.map((t): Tile => ({ terrain: t, buildingId: null, road: false })),
+    kontorId: null,
+    stock: emptyStock(),
+    ox: p.ox,
+    oy: p.oy,
+    anchor: p.anchor,
+  }));
+}
+
 export function createWorld(
   seed: number,
   opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean } = {},
 ): World {
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
+  const anchor = homeAnchor(terrain, MAP_W, MAP_H, kontor);
+  const homeIsland: Island = {
+    kind: 'home',
+    width: MAP_W,
+    height: MAP_H,
+    tiles,
+    kontorId: 1,
+    stock: { ...START_STOCK },
+    ox: 0,
+    oy: 0,
+    anchor,
+  };
   const world: World = {
-    version: 7,
+    version: 8,
     seed: seedUsed,
-    islands: [{ width: MAP_W, height: MAP_H, tiles, kontorId: 1, stock: { ...START_STOCK } }],
+    islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
     buildings: {},
     nextBuildingId: 2,

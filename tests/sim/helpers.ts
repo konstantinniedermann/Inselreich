@@ -300,7 +300,21 @@ export function twoIslandWorld(): World {
   stock.wood = 50;
   stock.tools = 50;
   const id = w.nextBuildingId++;
-  w.islands.push({ width: h.width, height: h.height, tiles, kontorId: id, stock });
+  // Testwelt: Insel 1 ersetzt die Fremdinseln (in E0 gab es nur zwei Inseln), Lage und Anker wie die Heimat.
+  w.islands = [
+    h,
+    {
+      kind: 'A',
+      width: h.width,
+      height: h.height,
+      tiles,
+      kontorId: id,
+      stock,
+      ox: h.ox,
+      oy: h.oy,
+      anchor: h.anchor,
+    },
+  ];
   w.buildings[id] = {
     id,
     defId: 'kontor',
