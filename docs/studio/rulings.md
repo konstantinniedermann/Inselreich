@@ -1568,3 +1568,19 @@ Der Release wird erst nach Gate gebündelt; IDEEN-03 folgt nach REL-03. — Kost
 dem Nutzerurteil zu REL-01/02 muss eventuell nachgeschärft werden.
 
 Entscheider: L0 · Anlass: Nutzer „mach weiter" (Session 2026-10-05) · ADR: —
+
+## R226 · 2026-10-05 · Gate Brainstorming M12 „Weite Welt"
+
+Ruling: Gate Brainstorming M12 bestanden (Selbstprüfung lead-design OK, L0-Prüfung der fünf Fragen OK). Vorschlag
+`docs/m12-brainstorming` @ a8734e0 (`docs/superpowers/specs/2026-10-05-m12-weite-welt-design.md`, Anhang 01).
+Entscheide: F-01 Ansatz C „Archipel im gemeinsamen Meer", B als Streichvariante der Darstellung. F-02 Auslegung:
+R90 „grössere Karte" = grössere **Welt** aus mehreren Inseln, Heimatinsel bleibt 64×64 — kein Richtungswechsel
+(§5.3), geht in den Nutzerbericht, damit der Nutzer sie kippen kann. F-03 bewusster Bruch `balance-merchants`
+angenommen (Gewürz 0,1 je Kaufmann, Steuer 20 → 22, Controller kauft zu, Baseline neu messen; Eskalation Steuer 24,
+dann Grenze 13 000); `balance.test.ts` bleibt bitgleich. F-04 Seefahrt mit U6. F-05 I-004/I-008 geparkt, I-006 als
+Kann-Häppchen E6. F-06 E0 (Inseln im Weltzustand, Save v7, bitgleich) als Werkzeug-Merge vorab. F-07 drei
+Fremdinseln, Insel C zuerst streichbar. Bedenken Render-Last und Routen-Bedienung prüfen lead-art und lead-tech im
+Gate Spec. Nächster Schritt: Spec durch design-spec-author (unter lead-design), E0 zuerst spezifiziert. — Kosten bei
+Irrtum: Spec-Arbeit für einen verworfenen Ansatz; Rückfall auf B ohne Sim-Änderung.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-BRAIN · ADR: —
