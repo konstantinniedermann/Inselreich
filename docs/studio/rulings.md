@@ -1813,3 +1813,15 @@ Freigabe ab M0. **Studioweite Obergrenze 5 gleichzeitig laufende Arbeiter** (Ris
 D-142 zurück auf Spec-Wortlaut (Neupin-Risiko R-2).
 
 Entscheider: L0 · Anlass: Gate Plan lead-qa, lead-production, Designurteil lead-design · ADR: —
+
+## R242 · 2026-10-05 · M12-E0 C2 abgenommen, Start E0 C3 und E1 C1
+
+Ruling: E0 T03–T05 (`feat/m12-e0` @ 0428c15) angenommen. Abweichungen vom Plan übernommen: `fieldWorld(world)` in
+`src/render/terrainField.ts`, `islandAt()` in `placement.ts`, `isSupplySource` in `coverage.ts`, `upgradeView`-Fix in
+`inspect.ts` (T02-Fehler), mechanische Typ-Fixes (`connect.ts`, `roads.ts`, `soundEvents.ts`, `sprites.ts`). Start
+**E0 C3** (T06 + Final-Review lead-qa; Final-Review prüft zusätzlich die Testlücke Schlüsselreihenfolge
+`migrateV6ToV7`) und parallel **E1 C1** (Sim T00–T02 ab E0 @ 0428c15). H-I007 bleibt vor E0 auf main (R240 D-141): E0
+holt main nach dem REL-04-Merge erneut; Final-Review E0 erst danach endgültig, falls H-I007 vor dem E0-Merge landet.
+— Kosten bei Irrtum: Abweichungen einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C2 · ADR: —
