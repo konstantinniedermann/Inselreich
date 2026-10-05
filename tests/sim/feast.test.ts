@@ -300,24 +300,42 @@ describe('feastBlockReason', () => {
 });
 
 describe('M12 E1 Fest bei mehreren Inseln', () => {
+  /** Kapelle direkt in den Weltzustand gesetzt (nicht über placeBuilding), gehört zu islands[1]. */
+  const foreignChapel = (): Building => {
+    const id = w.nextBuildingId++;
+    const b: Building = {
+      id,
+      defId: 'chapel',
+      x: 5,
+      y: 5,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 1,
+    };
+    w.buildings[id] = b;
+    return b;
+  };
   it('Fest zieht Rum vom Lager der Kapellen-Insel', () => {
-    expect(w.islands.length).toBeGreaterThanOrEqual(3);
-    expect(islandOf(w, chapel)).toBe(w.islands[0]);
+    const c = foreignChapel();
+    expect(islandOf(w, c)).toBe(w.islands[1]);
+    home(w).stock.rum = 0;
     w.islands[1]!.stock.rum = 40;
     w.islands[2]!.stock.rum = 50;
-    const before = [w.islands[1]!.stock, w.islands[2]!.stock].map((s) => ({ ...s }));
-    expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
-    expect(islandOf(w, chapel).stock.rum).toBe(30 - FEAST_RUM);
-    expect(w.islands[1]!.stock).toEqual(before[0]);
-    expect(w.islands[2]!.stock).toEqual(before[1]);
+    expect(holdFeast(w, c.id)).toEqual({ ok: true });
+    expect(w.islands[1]!.stock.rum).toBe(40 - FEAST_RUM);
+    expect(home(w).stock.rum).toBe(0);
+    expect(w.islands[2]!.stock.rum).toBe(50);
+    expect(c.feastAt).toBe(1000);
   });
-  it('Rum nur auf einer Fremdinsel, Heimat-Lager leer: Fest scheitert', () => {
-    home(w).stock.rum = 0;
-    w.islands[1]!.stock.rum = 99;
-    const r = holdFeast(w, chapel.id);
+  it('Rum nur im Heimatlager: Fest der Fremdinsel-Kapelle scheitert', () => {
+    const c = foreignChapel();
+    home(w).stock.rum = 99;
+    w.islands[1]!.stock.rum = 0;
+    const r = holdFeast(w, c.id);
     expect(r.ok).toBe(false);
     expect(reasonOf(r)).toContain('Zu wenig Rum');
-    expect(w.islands[1]!.stock.rum).toBe(99);
-    expect(chapel.feastAt).toBeUndefined();
+    expect(home(w).stock.rum).toBe(99);
+    expect(c.feastAt).toBeUndefined();
   });
 });
