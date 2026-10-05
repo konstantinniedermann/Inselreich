@@ -1552,3 +1552,19 @@ als eingeplant, wenn ein Ruling sie mit Release- oder M-Ziel nennt. lernen.md (4
 der nächsten Session. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech H-T2, Retro-Nachtrag e13c3631 · ADR: —
+
+## R225 · 2026-10-05 · „mach weiter": Plan aus state.md, REL-03 und M12 parallel
+
+Ruling: Auslegung „mach weiter" als Fortsetzung der Nächsten Schritte aus `state.md` ohne neues Nutzerurteil zu
+REL-01/REL-02 (steht aus, Punkt 2 läuft um ihn herum). Zweck der Anweisung: Fortschritt ohne Rückfrage; Auslegung
+widerspricht ihm nicht, weil alle Schritte bereits geplant und freigegeben sind. Ampel grün, volle Parallelität:
+(1) studio-coach setzt R224 (1)/(3)/(4)/(5) um (E-028, Zählregeln) und kürzt `lernen.md` auf ≤ 40 Zeilen;
+lead-production setzt R224 (2) in der Persona `production-integrator` um. (2) **REL-03 Art-Strang** an lead-art:
+H-R12 neue Kurz-Spec (R221), danach H-R13 Vorberge neu auf main und S1-Rest (`DIM_FIRE`, Audio-Gut-Schlüssel);
+Reihenfolge und Parallelität nach Dateimatrix durch lead-art. (3) **REL-03 H-U1** „Anbinden auf Knopfdruck" (I-001)
+an lead-tech: Kurz-Spec mit den Randfällen aus `docs/ideen.md`, Plan, Umsetzung bis release-reif. (4) **M12 „Weite
+Welt"** Brainstorming an lead-design (Bausteine I-004, I-006, I-008), Ergebnis Designvorschlag für das L0-Gate.
+Der Release wird erst nach Gate gebündelt; IDEEN-03 folgt nach REL-03. — Kosten bei Irrtum: Arbeit an REL-03 vor
+dem Nutzerurteil zu REL-01/02 muss eventuell nachgeschärft werden.
+
+Entscheider: L0 · Anlass: Nutzer „mach weiter" (Session 2026-10-05) · ADR: —
