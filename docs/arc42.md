@@ -149,7 +149,8 @@ flowchart TB
 | `types.ts`                                               | Datentypen (`World`, `Tile`, `Building`, `HouseState`, `Order`, `TaxLevel`, `CrisisLevel`, `Crisis`, `Result`) und die Helfer `ok`/`fail`.                                                                                                                                                                                                                                                                                                                                                                                |
 | `noise.ts`, `rng.ts`                                     | Seed-basiertes Value-Noise für die Karte; `rng.ts` (mulberry32) liefert je Auftrags- und je Krisenperiode eine neue Zufallsfolge (ADR-010).                                                                                                                                                                                                                                                                                                                                                                               |
 | `mapgen.ts`                                              | Erzeugt die Insel aus einem Seed, prüft die Nachbedingungen, sucht den Kontor-Standort am Meer (nie an einem Binnensee); Gebirgsflecken unter `MIN_MOUNTAIN_PATCH` werden Wiese.                                                                                                                                                                                                                                                                                                                                          |
-| `world.ts`                                               | `createWorld(seed, { crisisLevel? })` (Standard `off`) und Zugriffshelfer (Kachel, Footprint, Nachbarn, Radius, Mittelpunkt).                                                                                                                                                                                                                                                                                                                                                                                             |
+| `world.ts`                                               | `createWorld(seed, { crisisLevel? })` (Standard `off`; eine Insel in `islands[0]`) und Zugriffshelfer, die die Insel als Parameter nehmen (`idx`, `inBounds`, `tileAt`, Footprint, Nachbarn, Radius, Mittelpunkt) sowie `HOME`, `home`, `islandOf` (ADR-013).                                                                                                                                                                                                                                                             |
+| `coverage.ts`                                            | Quellen der Abdeckung je Insel: `isSupplySource` (Kontor der eigenen Insel oder angebundener Markt), `serviceBuildings` (Id-Reihenfolge), `buildCoverage` (ein Durchlauf, nur innerhalb von `tickPopulation`, nie im Save), `distance` (ADR-013).                                                                                                                                                                                                                                                                         |
 | `placement.ts`                                           | `canPlace`/`canPlaceRoad`: Bausperre `buildLock` (M10: Sperre aus `unlocks.ts`, geprüft zuerst; `buy` prüft `goodLock`, `deliverOrder` `functionLock`), Kartenrand, Bauland, Belegung und Standortregeln, mit deutschem Grund. M11: `siteRuleOk` (exportiert, für die Live-Prüfung in `production.ts`); Regelfeld `free` zählt nur freie Kacheln ausserhalb des eigenen Grundrisses.                                                                                                                                      |
 | `build.ts`                                               | `placeBuilding`, `placeRoad`, `demolish`, `removeRoad`: prüfen, bezahlen, Kacheln belegen, Rückerstattung (M11: 50 % aus `paidCost`, auch für ausgebaute Betriebe).                                                                                                                                                                                                                                                                                                                                                       |
 | `roads.ts`                                               | `recomputeConnectivity`: Breitensuche über Wege ab dem Kontor, setzt `connected` und `notConnected`; `burning` hat Vorrang. `needsConnection(defId)`: welche Gebäude einen Weg brauchen.                                                                                                                                                                                                                                                                                                                                  |
@@ -171,6 +172,24 @@ flowchart TB
 | `upgrade.ts`                                             | `upgradeBuilding` (sieben Gründe, Kosten und Gebühr, `level` +1), `paidCost` für die Abriss-Erstattung (M11, Spec 3.6).                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `save.ts`                                                | `serialize`/`deserialize` (Version 7) mit Migrationskette v1 → v2 → v3 → v4 → v5 → v6 → v7 (`migrateV3ToV4`: Glas in Lager und `sellPct`, `wonMerchants`, Dienst `bath`; `migrateV4ToV5`: Freischaltungen, Gütersperren, Aufstiegsstopps; `migrateV5ToV6`: Überträge 0; `migrateV6ToV7`: Raster, Kontor und Lager wandern in `islands[0]`, je Gebäude `island: 0`) und Strukturprüfung; leitet die Anbindung nach dem Laden neu ab.                                                                                       |
 | `tick.ts`                                                | `step(world)`: Tick-Zähler, dann alle Systeme in fester Reihenfolge; `checkWin` (setzt erst `won`, dann `wonMerchants`).                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+### Weltzustand: Insel und global (ADR-013)
+
+```mermaid
+flowchart TB
+  W["World"] --> I["islands[i]: width, height, tiles, kontorId, stock"]
+  W --> B["buildings (global, Id-Reihenfolge)"]
+  W --> G["global: tick, money, nextBuildingId, Steuer, Auftrag, Krise, Statistik"]
+  B -- "island (Pflichtfeld)" --> I
+  B --> C["coverage.ts: buildCoverage je Tick"]
+  C --> P["tickPopulation"]
+```
+
+Raster, Kontor und Lager gehören zur Insel; die Gebäudeliste und die Id-Vergabe sind global, jedes Gebäude trägt
+`island`. Es gibt keine Aliase auf `World`; Zugriffe laufen über die Helfer in `world.ts`. Ein ungültiger Inselindex
+bei einer Aktion ergibt `{ ok: false, reason }` (`islandAt` in `placement.ts`). Der Renderer bildet seine Geländefelder
+aus der Heimatinsel über `fieldWorld(world)` (`src/render/terrainField.ts`, flache Kopie samt Seed, je Welt
+zwischengespeichert).
 
 ### Ebene 2: `src/render/`
 
@@ -353,6 +372,27 @@ M10 hängt `tickUnlocks` als letzten Aufruf an (ADR-005, Nachtrag M10): Der Cont
 Auftragstakt hat einen Versatz von 600 (Nachtrag in ADR-005). Die Höchststufe für den Güterpool eines
 Auftrags stammt aus dem Zustand nach `tickPopulation` desselben Ticks. Krisen beginnen bei `tick ≥ 2400 && (tick − 2400) % P === 0` (Nachtrag M6 in ADR-005); der Krisenschritt läuft
 nach Bevölkerung und Buchung (Boom-Pool aus der Höchststufe desselben Ticks) und vor dem Sieg, auch nach dem Sieg weiter.
+
+### Abdeckung je `tickPopulation` (ADR-013)
+
+```mermaid
+sequenceDiagram
+  participant T as tickPopulation
+  participant C as buildCoverage
+  participant H as Haus (Id-Reihenfolge)
+  T->>C: einmal je Aufruf
+  C-->>T: cov (Quellen je Insel)
+  loop jedes Wohnhaus
+    T->>H: isSupplied(world, b, cov)
+    T->>H: serviceAvailable(world, b, s, cov)
+  end
+  Note over T,C: cov wird verworfen, nie gespeichert
+```
+
+`buildCoverage` läuft einmal am Anfang von `tickPopulation` über alle Gebäude (Id-Reihenfolge) und sammelt je Insel
+Versorgungs- und Dienstquellen. Ein Haus liest nur die Quellen seiner eigenen Insel (`cov.supply[b.island]`,
+`cov.service[b.island]`). `cov` reicht bis in `upgradeStatus` und `tryUpgrade`. Aufrufer ohne `cov` (UI, `queries.ts`)
+filtern je Aufruf frisch über `serviceBuildings`; `Coverage` lebt ausserhalb von `tickPopulation` nicht weiter.
 
 ### Eine Bauaktion
 
@@ -733,6 +773,8 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   u. a.) nehmen `island = HOME` als letzten Parameter; Regeln mit Gebäude lesen `b.island`. Versorgung, Dienste,
   Wege und Feuerschutz gelten je Insel; Auftrag, Bilanz und Brandziel nur für die Heimat; Zählungen (Bürger,
   Kaufleute, Ziele, Unterhalt) bleiben global.
+- Abgeleitete Abdeckung (`Coverage`) und `connected` stehen nie im Save. Jede Formänderung bekommt je Merge eine eigene
+  `SAVE_VERSION`; v7 ist eingefroren, E1 lockert die Ladeprüfung von einer auf n Inseln ([ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md)).
 - `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
   `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
   `crisisLevel = 'off'`, `crisis = null`) → v4 (`migrateV3ToV4`: `stock.glass = 0`, `sellPct.glass = 100`,
@@ -750,7 +792,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   `eff` nur bei Betrieben mit `produces` und ganzzahlig 0 … 256 000, `level` nur bei Betrieben mit Ausbau-Eintrag und 2 oder 3). Fehler ergeben
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
   Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`, ein
-  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`.
+  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`. Die Fixtures `save-v6.json` und `save-v6-locks.json` belegen die Migration v6 → v7.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
   Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
   (`CRISIS_FIRST_TICK`, Periodenlängen, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`) gehen dagegen in die
@@ -852,6 +894,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 | M5: Steuerregler, Sättigung, Aufträge, Ambiente, Save v2                                         | [M5-Spec](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md)      |
 | Asset-Pipeline: Ablage `public/`, Formate, Budget, Laden nach Bedarf, Manifest, Nachweis         | [ADR-011](adr/ADR-011-asset-pipeline.md)                                |
 | Isometrische Darstellung, Kachelraum bleibt die Wahrheit, Picking über den Körper                | [ADR-012](adr/ADR-012-isometrische-darstellung.md)                      |
+| Inselmodell im Weltzustand: Raster, Kontor und Lager je Insel, Gebäudeliste global, Save v7      | [ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md)                    |
 | M6: Krisen, Feuerwache, Save v3                                                                  | [M6-Spec](superpowers/specs/2026-09-30-m6-krisen-design.md)             |
 | M7: Licht, Wetter, Leben, Ton mit Bussen, Einstellungen                                          | [M7-Spec](superpowers/specs/2026-09-30-m7-stimmung-design.md)           |
 | M7: Isometrie im Detail (Projektion, Ebenen, Picking, Tests)                                     | [Nachtrag M7-ISO](superpowers/specs/2026-10-01-m7-iso-design.md)        |
