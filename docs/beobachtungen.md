@@ -898,3 +898,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tests/helpers/perfBudget.ts:2` (`CI_FACTOR`), Nutzer u. a. `tests/sim/perf.test.ts`.
 - Beobachtung: Der Standardfaktor 1,5 bildet den Abstand Runner/lokal (≈ 4×, H-T3) nicht ab; jeder Zeittest braucht einen eigenen Faktor (R235, T05-Lasttest jetzt 4).
 - Ursprung: Review T05 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; Standardfaktor prüfen oder anheben, sobald weitere Zeittests dazukommen.
+
+### 2026-10-05 · Sim · Inselgenerator: Fussabdruck-Literale und Math.cos/sin
+
+- Fundort: `src/sim/islands.ts` (Kontor-Mass 2 × 2, Steinbruch 1 × 1 als Literale; Lage über `Math.cos`/`Math.sin`).
+- Beobachtung: Mass besser aus `BUILDING_DEFS` lesen; `Math.cos`/`Math.sin` sind nicht engine-übergreifend bitgleich, Ergebnis wird aber mit `Math.round` gerundet (Risiko gering).
+- Ursprung: Review T01 (qa-code-reviewer), M12-E1-C1. Einschätzung: niedrig; bei einem Cross-Engine-Replay-Test prüfen.
