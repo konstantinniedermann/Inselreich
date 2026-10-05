@@ -1759,3 +1759,15 @@ in dieser Session; Pflicht-Retros und Session-Ende-Routine bleiben. Budget E0 ne
 bei Irrtum: Handbuch-Nachführung eine Session später.
 
 Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
+
+## R238 · 2026-10-05 · Gate IDEEN-03
+
+Ruling: Empfehlungen lead-design übernommen. **I-010 „Drittes Ziel «Gewürzstadt»" eingeplant** als Zusatz zum
+Seefahrt-Bündel E2+E3+E4: lead-design schreibt einen Spec-Nachtrag (Anhang zur M12-Spec auf `docs/m12-brainstorming`)
+mit testbaren AK, Wert n rechnet design-economy-designer gegen die Gewürz-Erzeugung (Vorschlag 80); Ziel-Flagge läuft
+mit Save v9; Determinismus-Risiko (Controller nach zweitem Ziel, Neupin `feedSpice`/`wonMerchantsTick`) als Auflage an
+den Bündel-Plan. I-011, I-012, I-014 geparkt; I-013 verworfen. Befund „Geldschwemme ab Kaufleuten" kommt als
+Beobachtung in `docs/beobachtungen.md` (Input fürs nächste Wirtschafts-Brainstorming). `docs/ideen-03` @ dffcdbd geht
+mit dem nächsten Integrator-Lauf nach main. — Kosten bei Irrtum: Nachtrag verwerfen, Bündel ohne drittes Ziel.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-03 · ADR: —
