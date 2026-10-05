@@ -291,7 +291,7 @@ Archipel. Noch nichts ist dort baubar (E2). Details, Generator, Messprotokoll: A
 - **Generator** aus eigenem Strom `ISLANDS_SALT`; Garantien (Kontor-, Plantagen-, Steinbruchplätze) geprüft, sonst
   neuer Versuch, nach 50 eine feste Ersatzform. Heimat, Auftrags- und Krisenstrom unberührt.
 - **Archipel:** Versatz `ox`, `oy`, Heimat (0, 0); Rechtecke ≥ 8 Kacheln Abstand; Fahrlinie Anker → ≤ 2 Wegpunkte →
-  Anker, `d` = aufgerundete Länge; Rahmen `W + H ≤ 300` (ganzer Archipel bei Zoom 0,125 auch in 1280 × 800).
+  Anker, `d` = aufgerundete Länge auf offener See (ausserhalb der Inselrechtecke, D-139); Rahmen `W + H ≤ 300` (ganzer Archipel bei Zoom 0,125 auch in 1280 × 800).
 - **Save v8** (= E1, R228 (3)): `Island` + `kind`, `ox`, `oy`, `anchor`; `kontorId` darf `null` sein; Migration
   v7 → v8 erzeugt A und B aus `world.seed`; Fixture `save-v7.json` als erster Commit der E1-Branch (Anhang 03 B).
 - **Render:** Meer als eine Fläche in `waterDeep`, die äussersten 2 Kacheln jedes Inselcaches laufen darauf aus;

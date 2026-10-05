@@ -33,7 +33,9 @@ entscheidet im Plan; **[Art]** = lead-art entscheidet. Save **v8** = E1 (R228 (3
   im eigenen Raster, 4er-angrenzend an Land, über Wasser mit dem Rand verbunden); Heimat: nächste solche Kachel zum
   Heimatkontor (Mitte zu Mitte, bei Gleichstand kleinstes `y`, dann `x`).
 - **Fahrlinie** zwischen zwei Inseln: Polylinie Anker → höchstens 2 Wegpunkte → Anker; kein Segment schneidet ein
-  Inselrechteck ausser die Endsegmente innerhalb der eigenen Randzone. `d` = aufgerundete Länge in Kacheln. Linien und
+  Inselrechteck ausser die Endsegmente innerhalb der eigenen Randzone. `d` = aufgerundete Länge des Teils der Linie **ausserhalb aller Inselrechtecke** (offene See, D-139; die
+  Strecke vom Anker bis zum Rand des eigenen Rechtecks zählt nicht, weil der Heimatanker 13–31 Kacheln tief im
+  Heimatrechteck liegt). Der Renderer verteilt den Fortschritt trotzdem über die ganze Polylinie. Linien und
   `d` sind eine reine Funktion `seaLanes(islands)` aus `ox`, `oy`, `anchor`, `width`, `height` (nicht im Save).
 - **Band:** `d(0, i)` liegt im Band der Insel (A). `d(i, j)` zwischen Fremdinseln ist frei (Ergebnis der Linie).
 - **Rahmen:** Achsenparalleles Rechteck um alle Inseln mit `W + H ≤ 300` Kacheln (`sea.ts` `ARCHIPEL_SPAN_MAX`);
