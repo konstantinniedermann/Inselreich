@@ -8,6 +8,7 @@ import { beginCrisis, type CrisisRoll } from '../../src/sim/crises';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from '../../src/sim/defs/goods';
 import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { ISLANDS } from '../../src/sim/defs/sea';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
@@ -24,11 +25,13 @@ import {
   forceRect,
   fnv1a32,
   foldBackToV6,
+  foldBackToV7,
   prepareEast,
   setHouse,
   sortedJson,
   village,
 } from './helpers';
+import { perfBudget } from '../helpers/perfBudget';
 
 let w: World;
 let k: Building;
@@ -1124,5 +1127,161 @@ describe('M12 E1 Schritt 0 (Anhang 03 B)', () => {
       const s = serialize(w);
       expect({ hash: fnv1a32(s), length: s.length }, k).toEqual(V7_FORMS[k]);
     }
+  });
+});
+
+describe('M12 E1 Save v8', () => {
+  type Raw = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const FIX7 = 'tests/sim/fixtures/save-v7.json';
+  const load = (json: string): World => {
+    const r = deserialize(json);
+    if (!r.ok) throw new Error(r.reason);
+    return r.world;
+  };
+  const rawOf = (world: World): Raw => JSON.parse(serialize(world));
+  const foreignOf = (world: World): Island[] => createWorld(world.seed).islands.slice(1);
+  const hashOf = (s: string): { hash: number; length: number } => ({
+    hash: fnv1a32(s),
+    length: s.length,
+  });
+
+  it('AK-E1-05 createWorld(3): Heimat plus A und B, Fremdinseln ohne Kontor und Lager 0', () => {
+    const fresh = createWorld(3);
+    expect(SAVE_VERSION).toBe(8);
+    expect(fresh.version).toBe(8);
+    expect(fresh.islands).toHaveLength(3);
+    expect(fresh.islands.map((i) => i.kind)).toEqual(['home', ...ISLANDS.map((d) => d.kind)]);
+    expect(ISLANDS.some((d) => (d.kind as string) === 'home')).toBe(false);
+    expect(Object.keys(fresh.islands[0]!)).toEqual([
+      'kind',
+      'width',
+      'height',
+      'tiles',
+      'kontorId',
+      'stock',
+      'ox',
+      'oy',
+      'anchor',
+    ]);
+    for (const isl of fresh.islands.slice(1)) {
+      expect(isl.kontorId).toBeNull();
+      expect(GOOD_IDS.every((g) => isl.stock[g] === 0)).toBe(true);
+      expect(isl.tiles).toHaveLength(isl.width * isl.height);
+    }
+    expect(home(fresh).ox).toBe(0);
+    expect(home(fresh).oy).toBe(0);
+  });
+
+  it('AK-E1-05 save-v7.json lädt als v8 mit den Fremdinseln von createWorld(seed)', () => {
+    const world = load(readFileSync(FIX7, 'utf8'));
+    expect(world.version).toBe(8);
+    expect(world.islands).toHaveLength(3);
+    expect(world.islands.slice(1)).toEqual(foreignOf(world));
+  });
+
+  it('AK-E1-05 Round-trip: createWorld(3) und geladenes v7', () => {
+    const fresh = createWorld(3);
+    expect(serialize(load(serialize(fresh)))).toBe(serialize(fresh));
+    const once = serialize(load(readFileSync(FIX7, 'utf8')));
+    expect(serialize(load(once))).toBe(once);
+  });
+
+  it.each(['off', 'unlockAll', 'mild', 'normal'])('Bitgleich Heimat: Form %s = V7_FORMS', (k) => {
+    const forms: Record<string, World> = {
+      off: createWorld(3),
+      unlockAll: createWorld(3, { unlockAll: true }),
+      mild: createWorld(3, { crisisLevel: 'mild' }),
+      normal: createWorld(3, { crisisLevel: 'normal' }),
+    };
+    expect(hashOf(JSON.stringify(foldBackToV7(rawOf(forms[k]!))))).toEqual(V7_FORMS[k]);
+  });
+
+  it('Bitgleich Heimat: Fold-back des geladenen save-v7.json = Datei', () => {
+    const world = load(readFileSync(FIX7, 'utf8'));
+    expect(JSON.stringify(foldBackToV7(rawOf(world)))).toBe(readFileSync(FIX7, 'utf8'));
+  });
+
+  describe('AK-E1-06 Ladeprüfung', () => {
+    type Edit = (r: Raw) => void;
+    const base = (): Raw => rawOf(createWorld(3));
+    const cases: Array<[string, Edit]> = [
+      ['L01 Länge 2', (r) => r.islands.pop()],
+      ['L02 Kinds B, A', (r) => ([r.islands[1], r.islands[2]] = [r.islands[2], r.islands[1]])],
+      ['L03 Kind C', (r) => (r.islands[1].kind = 'C')],
+      ['L04 Heimat-Kind A', (r) => (r.islands[0].kind = 'A')],
+      ['L05 A width 25', (r) => (r.islands[1].width = 25)],
+      ['L06 B height 37', (r) => (r.islands[2].height = 37)],
+      ['L07 tiles zu kurz', (r) => r.islands[1].tiles.pop()],
+      ['L08 Heimat kontorId null', (r) => (r.islands[0].kontorId = null)],
+      ['L09 A kontorId 1', (r) => (r.islands[1].kontorId = 1)],
+      ['L10 ox 1,5', (r) => (r.islands[1].ox = 1.5)],
+      ['L11 anchor fehlt', (r) => delete r.islands[1].anchor],
+      ['L12 Heimat oy 3', (r) => (r.islands[0].oy = 3)],
+      ['L13 Gebäude island 3', (r) => (r.buildings[1].island = 3)],
+      ['L14 A ohne stock.food', (r) => delete r.islands[1].stock.food],
+    ];
+    it.each(cases)('%s', (_name, edit) => {
+      const r = base();
+      edit(r);
+      const json = JSON.stringify(r);
+      expect(() => deserialize(json)).not.toThrow();
+      expect(deserialize(json)).toEqual({ ok: false, reason: 'Beschädigter Spielstand' });
+    });
+
+    it('Gebäude auf Fremdinsel ohne Kontor lädt', () => {
+      const r = base();
+      r.buildings[2] = { ...r.buildings[1], id: 2, defId: 'chapel', x: 5, y: 5, island: 1 };
+      r.nextBuildingId = 3;
+      r.islands[1].tiles[5 * r.islands[1].width + 5].buildingId = 2;
+      expect(r.islands[1].kontorId).toBeNull();
+      expect(deserialize(JSON.stringify(r)).ok).toBe(true);
+    });
+
+    it('negatives ox/oy (ganzzahlig) lädt', () => {
+      const r = base();
+      r.islands[1].ox = -40;
+      r.islands[1].oy = -3;
+      expect(deserialize(JSON.stringify(r)).ok).toBe(true);
+    });
+
+    it.each([
+      ['version 7 ohne Rest', { version: 7 }],
+      ['islands null', { version: 7, islands: null }],
+      ['leere Insel', { version: 7, seed: 'x', islands: [{}] }],
+    ])('Garbage %s wirft nicht', (_n, obj) => {
+      const json = JSON.stringify(obj);
+      expect(() => deserialize(json)).not.toThrow();
+      expect(deserialize(json).ok).toBe(false);
+    });
+
+    it('version 9 → Unbekannte Version', () => {
+      expect(deserialize(tampered(createWorld(3), (r) => (r.version = 9)))).toEqual({
+        ok: false,
+        reason: 'Unbekannte Version',
+      });
+    });
+  });
+
+  describe('AK-M12-B5 Kette', () => {
+    it.each([1, 2, 3, 4, 5, 6, 7])('save-v%i lädt als v8, Kettenhash über Fold-back', (n) => {
+      const world = load(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
+      expect(world.version).toBe(8);
+      if (n <= 5)
+        expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(rawOf(world)))))).toBe(CHAIN_HASHES[n]);
+    });
+
+    it.each([1, 2, 3, 4, 5, 6, 7])('qa-B4 save-v%i: Fremdinseln wie createWorld(seed)', (n) => {
+      const world = load(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
+      expect(world.islands.slice(1)).toEqual(foreignOf(world));
+      expect(world.islands.map((i) => i.kind)).toEqual(['home', 'A', 'B']);
+    });
+  });
+
+  it('B6 createWorld gesamt: Mittel über Seeds 1…50 im Budget', () => {
+    createWorld(1);
+    const t0 = performance.now();
+    for (let s = 1; s <= 50; s++) createWorld(s);
+    const mean = (performance.now() - t0) / 50;
+    expect(mean).toBeLessThanOrEqual(perfBudget(5));
   });
 });

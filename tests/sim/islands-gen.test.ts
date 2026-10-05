@@ -20,6 +20,8 @@ import {
   type Pt,
   type Rect,
 } from '../../src/sim/islands';
+import { canPlace } from '../../src/sim/placement';
+import { createWorld } from '../../src/sim/world';
 import { generateMap, isLand, MAP_H, MAP_W, seaMask } from '../../src/sim/mapgen';
 
 const SEEDS_200 = Array.from({ length: 200 }, (_, i) => i + 1);
@@ -228,5 +230,19 @@ describe('M12 E1 Generator', () => {
 
   it('B6: islands.ts nutzt kein Math.hypot', () => {
     expect(readFileSync('src/sim/islands.ts', 'utf8')).not.toContain('Math.hypot');
+  });
+});
+
+describe('M12 E1 AK-E1-01 Kreuzprobe canPlace', () => {
+  it('Seeds 1…200: jeder quarrySites-Platz von B ist mit canPlace belegbar', () => {
+    for (const seed of SEEDS_200) {
+      const w = createWorld(seed, { unlockAll: true });
+      const b = generateForeignIslands(w.seed, homeOf(w.seed)).find((i) => i.kind === 'B')!;
+      expect(b.quarrySites.length).toBeGreaterThan(0);
+      for (const p of b.quarrySites) {
+        const r = canPlace(w, 'quarry', p.x, p.y, 2);
+        expect(r.ok, `Seed ${seed} (${p.x},${p.y})`).toBe(true);
+      }
+    }
   });
 });
