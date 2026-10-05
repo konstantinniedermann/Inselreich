@@ -10,7 +10,7 @@ import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
-import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
+import { SAVE_VERSION, deserialize, migrateV6ToV7, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
@@ -994,6 +994,19 @@ describe('M12 E0 Save v7', () => {
     expect(serialize(loaded)).toBe(serialize(live));
   });
 
+  it('AK-E0-05c Schlüsselreihenfolge der Migration = Live-Welt', () => {
+    const migrated = rawOf(FIX);
+    migrateV6ToV7(migrated);
+    const live = JSON.parse(serialize(fixtureV6Run().w)) as Raw;
+    expect(Object.keys(migrated)).toEqual(Object.keys(live));
+    expect(Object.keys(migrated.islands[0])).toEqual(Object.keys(live.islands[0]));
+    expect(Object.keys(migrated.buildings)).toEqual(Object.keys(live.buildings));
+    for (const id of Object.keys(live.buildings)) {
+      expect(Object.keys(migrated.buildings[id])).toEqual(Object.keys(live.buildings[id]));
+    }
+    expect(() => migrateV6ToV7({ version: 6, buildings: 5 })).not.toThrow();
+  });
+
   it.each([
     [1000, (w: World) => expect(w.order).not.toBeNull()],
     [2650, (w: World) => expect(w.crisis?.kind).toBe('storm')],
@@ -1060,7 +1073,6 @@ describe('M12 E0 Save v7', () => {
       ['N18 island -1', base, (r) => (r.buildings[1].island = -1)],
       ['N19 island 0,5', base, (r) => (r.buildings[1].island = 0.5)],
       ['N20 island "0"', base, (r) => (r.buildings[1].island = '0')],
-      ['N21 tiles zusätzlich oben', base, (r) => (r.tiles = isl(r).tiles)],
     ];
     it.each(cases)('%s', (_name, make, edit) => {
       const r = make();
@@ -1069,6 +1081,17 @@ describe('M12 E0 Save v7', () => {
       expect(() => deserialize(json)).not.toThrow();
       expect(deserialize(json)).toEqual({ ok: false, reason: 'Beschädigter Spielstand' });
     });
+    it.each(['width', 'height', 'tiles', 'kontorId', 'stock'])(
+      'N21 v6-Rest %s zusätzlich oben',
+      (key) => {
+        const r = base();
+        r[key] = isl(r)[key];
+        expect(deserialize(JSON.stringify(r))).toEqual({
+          ok: false,
+          reason: 'Beschädigter Spielstand',
+        });
+      },
+    );
   });
 
   it('AK-E0-08 Round-trip: Start, Endwelt, Welt im Brand', () => {
