@@ -366,6 +366,16 @@ export function foothillField(fields: TerrainFields): Foothills {
   };
   return { near: blur(FOOTHILL_BLUR, 2), wide: blur(FOOTHILL_WIDE_BLUR, 3) };
 }
+/** H-T3: Cache je Felder (Obergrenze: ein Eintrag je Welt, fällt mit den Feldern weg); `patchGrid` invalidiert ihn. */
+const foothillCache = new WeakMap<TerrainFields, Foothills>();
+export function foothillsFor(fields: TerrainFields): Foothills {
+  let fh = foothillCache.get(fields);
+  if (!fh) {
+    fh = foothillField(fields);
+    foothillCache.set(fields, fh);
+  }
+  return fh;
+}
 /** H-R13: Nähe zum Gebirge 0…1 (stetig, 0 ab ≈ 4–5 Kacheln Abstand) an einem Kachelpunkt. */
 export const foothillProx = (fh: Foothills, fx: number, fy: number): number =>
   smoothUnit(sampleField(fh.near, fx, fy) * FOOTHILL_PROX_K);
@@ -516,7 +526,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   const mt = LAND.indexOf('mountain');
   const gr = LAND.indexOf('grass');
   const step = RASTER / TEX;
-  const foothills = foothillField(fields); // H-R13
+  const foothills = foothillsFor(fields); // H-R13, H-T3 gecacht
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
@@ -1280,8 +1290,10 @@ export function patchGrid(
   r: TileRect,
 ): void {
   let coastChanged = false;
+  const mtCode = LAND.indexOf('mountain') + 1;
   for (let i = 0; i < next.length; i++) {
     if (prev[i] === next[i]) continue;
+    if (prev[i] === mtCode || next[i] === mtCode) foothillCache.delete(fields);
     if ((prev[i] === 0) !== (next[i] === 0)) coastChanged = true;
     for (let t = 0; t < LAND.length; t++) fields.types[LAND[t]!].v[i] = next[i] === t + 1 ? 1 : 0;
   }

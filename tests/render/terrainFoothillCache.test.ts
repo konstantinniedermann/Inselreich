@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
+import { TEX } from '../../src/render/iso';
 import { terrainFields } from '../../src/render/terrainField';
 import {
   buildGrid,
   foothillField,
   foothillsFor,
   patchGrid,
+  RASTER,
   terrainCodes,
   terrainPatchRect,
 } from '../../src/render/terrain';
@@ -47,8 +49,8 @@ describe('H-T3 foothillsFor (Cache je Felder)', () => {
     const grid = buildGrid(w, fields);
     const before = foothillsFor(fields);
     const prev = terrainCodes(w);
-    const k = grassNearMountain(w);
-    w.tiles[k]!.terrain = 'mountain';
+    const t = grassNearMountain(w);
+    w.tiles[t]!.terrain = 'mountain';
     const next = terrainCodes(w);
     const rect = terrainPatchRect(prev, next, w.width, w.height)!;
     patchGrid(w, fields, grid, prev, next, rect);
@@ -58,8 +60,12 @@ describe('H-T3 foothillsFor (Cache je Felder)', () => {
     expect(firstDiff(after.wide.v, foothillField(fields).wide.v)).toBe(-1);
     expect(firstDiff(after.near.v, before.near.v)).not.toBe(-1);
     const full = buildGrid(w);
+    // patchGrid gleicht nur das Rechteck ab (Knoten je Kachel: TEX / RASTER); dort muss es dem Vollaufbau gleichen
+    const k = TEX / RASTER;
     for (const f of ['scree', 'tint', 'tone', 'shade', 'mfoot', 'patch', 'warm'] as const)
-      expect(firstDiff(grid[f], full[f]), f).toBe(-1);
+      for (let j = rect.y0 * k; j <= (rect.y1 + 1) * k; j++)
+        for (let i = rect.x0 * k; i <= (rect.x1 + 1) * k; i++)
+          expect(grid[f][j * grid.nx + i], `${f} ${i},${j}`).toBe(full[f][j * grid.nx + i]);
   }, 30000);
 
   it('H-T3 patchGrid ohne Gebirgsänderung (Wald ↔ Wiese) behält die Instanz', () => {
