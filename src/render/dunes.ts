@@ -1,4 +1,5 @@
-import { LIGHT, rotNoise, smoothstep } from './light';
+import { valueNoise } from '../sim/noise';
+import { LIGHT, smoothstep } from './light';
 import type { Field } from './terrainField';
 
 // dunes.ts — Dünen auf trockenem Sand (H-R12b, Kurz-Spec 2026-10-05). Reine Mathematik, ohne Canvas.
@@ -32,8 +33,13 @@ export const RIPPLE_DEPTH = 0.03;
 export const GRAIN_AMP = 0.05;
 /** Präsenz: Einsatz hinter dem nassen Saum (Kacheln, relativ zu `WET_SAND`) von … bis …. */
 export const DUNE_ONSET = { from: 1, to: 2.1 } as const;
-const ROT_PHASE = 0.61,
-  ROT_ENV = 1.17;
+// gedrehtes Wertrauschen wie `rotNoise`, mit vorab berechneter Drehung (Sinus/Kosinus je Knoten sparen)
+const ENV_FREQ = 0.08,
+  PHASE_FREQ = 0.17;
+const ENV_C = Math.cos(1.17) * ENV_FREQ,
+  ENV_S = Math.sin(1.17) * ENV_FREQ,
+  PHASE_C = Math.cos(0.61) * PHASE_FREQ,
+  PHASE_S = Math.sin(0.61) * PHASE_FREQ;
 
 /** Dünenprofil `h(φ) = sin(φ + k·sin φ)` (C¹, ohne Knick). */
 export const duneProfile = (phi: number, k: number): number => Math.sin(phi + k * Math.sin(phi));
@@ -73,7 +79,7 @@ export function dunePresence(
   if (onset <= 0) return 0;
   const sandF = Math.min(1, Math.max(0, (sand - 0.05) / 0.5));
   if (sandF <= 0) return 0;
-  const n = rotNoise(seed + 131, fx, fy, 0.08, ROT_ENV);
+  const n = valueNoise(seed + 131, ENV_C * fx - ENV_S * fy, ENV_S * fx + ENV_C * fy);
   return onset * sandF * smoothstep(0.05, 0.35, n);
 }
 
@@ -105,7 +111,8 @@ export function duneNode(
   if (rel <= DUNE_ONSET.from - 0.4 || sand <= 0) return;
   const phi =
     (2 * Math.PI * (rel - DUNE_ONSET.from)) / DUNE_LAMBDA +
-    PHASE_WARP * (2 * rotNoise(seed + 133, fx, fy, 0.17, ROT_PHASE) - 1);
+    PHASE_WARP *
+      (2 * valueNoise(seed + 133, PHASE_C * fx - PHASE_S * fy, PHASE_S * fx + PHASE_C * fy) - 1);
   o.phase = phi;
   // Licht auf dem Gefälle (n · L), M5: Amplitude wie `groundHeight` mit 1 / max(0,35, |n·L|) ausgeglichen
   const dn = (gx * LIGHT.x + gy * LIGHT.y) / Math.max(grad, 0.5);

@@ -589,6 +589,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       if (
         sandT !== null &&
         coastT !== null &&
+        smooth[j * nx + i]! > WET_SAND + 0.1 &&
         tileNear![
           Math.min(sandT.h - 1, ((j + win.j0) * step) | 0) * sandT.w +
             Math.min(sandT.w - 1, ((i + win.i0) * step) | 0)
@@ -808,7 +809,7 @@ function duneContrast(
     w01 = (1 - tx) * ty,
     w11 = tx * ty;
   const pD = wSand * (dpres[a]! * w00 + dpres[b]! * w10 + dpres[c]! * w01 + dpres[d]! * w11);
-  if (pD <= 0.03) return; // unter 3 % Präsenz wirkt der Kontrast nicht sichtbar
+  if (pD <= 0.08) return; // unter 8 % Präsenz wirkt der Kontrast nicht sichtbar
   const tA = dune[a]!,
     tB = dune[b]!,
     tC = dune[c]!,
