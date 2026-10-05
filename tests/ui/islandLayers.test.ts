@@ -69,4 +69,55 @@ describe('M12 E1 Inselebenen', () => {
     expect(calls).toEqual([]);
     expect(queue.length).toBe(0);
   });
+
+  const drain = (queue: (() => void)[], max: number): number => {
+    let n = 0;
+    while (queue.length > 0 && n < max) {
+      queue.shift()!();
+      n++;
+    }
+    return n;
+  };
+
+  it('plant weiter, wenn idle() 0 ms meldet, aber noch nicht alles fertig ist', () => {
+    const left: Record<number, number> = { 1: 2, 2: 2 };
+    const queue: (() => void)[] = [];
+    const layers = createIslandLayers<string>({
+      home: 'H',
+      plan: {
+        idle: () => {
+          for (const k of [1, 2]) if (left[k]! > 0) left[k]!--;
+          return 0; // grobe Uhr: Scheibe gelaufen, 0 ms gemessen
+        },
+        finish: () => 0,
+        done: (i) => (left[i] ?? 0) <= 0,
+      },
+      layerOf: (i) => `L${i}`,
+      islands: 3,
+      schedule: (cb) => queue.push(cb),
+    });
+    layers.frameDone();
+    drain(queue, 100);
+    expect(layers.ready()).toBe(true);
+    expect(layers.emergencyFrames).toBe(0);
+  });
+
+  it('bricht bei dauerhaft 0 ms ohne Fortschritt ab (keine Endlosschleife)', () => {
+    const queue: (() => void)[] = [];
+    let calls = 0;
+    const layers = createIslandLayers<string>({
+      home: 'H',
+      plan: {
+        idle: () => (calls++, 0),
+        finish: () => 0,
+        done: () => false,
+      },
+      layerOf: (i) => `L${i}`,
+      islands: 3,
+      schedule: (cb) => queue.push(cb),
+    });
+    layers.frameDone();
+    expect(drain(queue, 10000)).toBeLessThan(10000);
+    expect(calls).toBeGreaterThan(0);
+  });
 });
