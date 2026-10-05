@@ -24,7 +24,7 @@ Rahmen: Eine Session, 468 min, 517 Agenten-Einträge (davon 482 `studio-director
 
 ### B3 · Wartezeiten auf L0-Gates (Frage c): praktisch keine, Warten steckt woanders
 
-- Beobachtung: Zwischen Prüferbericht und Ruling-Commit liegen ≤ 1 min (Prüferberichte 08:36Z, 08:51Z, 09:06Z, 09:11Z, 09:17Z, 09:37Z, 10:10Z gegen `10:36`, `10:51`, `11:07`, `11:12`, `11:17`, `11:37`, `12:10` lokal in den Commits `1827ab1`, `020850e`, `872af96`, `88931da`, `5d286bb`, `d0db854`, `04725ca`). Die Pipeline überlappt: Spec E1–E6 wurde geschrieben, während Gate E0 und Plan E0 liefen (09:02Z Spec komplett).
+- Beobachtung: Zwischen Prüferbericht und Ruling-Commit liegen ≤ 1 min (Prüferberichte 08:36Z, 08:51Z, 09:06Z, 09:11Z, 09:17Z, 09:37Z, 10:10Z gegen `10:36`, `10:51`, `11:07`, `11:12`, `11:17`, `11:37`, `12:10` lokal in den Commits `17cbafb`, `020850e`, `872af96`, `88931da`, `5d286bb`, `d0db854`, `04725ca`). Die Pipeline überlappt: Spec E1–E6 wurde geschrieben, während Gate E0 und Plan E0 liefen (09:02Z Spec komplett).
 - Echte Wartestrecken: (1) `lead-tech` C1 liegt 09:15–09:43Z in 6 Turn-Enden "ich warte auf Implementierer/Review" (09:15, 09:21, 09:25, 09:32, 09:33, 09:40Z), Parallelität 1 laut R227; (2) `lead-design` wartet 08:28–08:33Z auf den Wirtschafts-Anhang; (3) H-U1 ist seit 08:48Z fertig und liegt bis zum Release-Review 10:03Z (≈ 75 min) auf der Branch, der Review startet erst nach dem letzten Häppchen; (4) M12-E1-Render und E0 warten auf REL-03 auf main (R229–R231).
 - Deutung: Das Gate-Latenzproblem existiert nicht; Wartezeit ist Strang-Serialisierung (Ownership, Merge-Reihenfolge), die bewusst gewählt wurde (R229 holt H-U1 per Merge in E0, damit T01 nicht wartet: gute Entscheidung, T01 begann 09:22Z). Kostenrelevant ist das Warten der Leads als Turn-Ende: jedes Aufwachen liest den Lead-Kontext (Median 85k, `lead-tech` Max 254k) neu, nach > 5 min Pause wird der 5-min-Cache neu geschrieben.
 
@@ -37,16 +37,16 @@ Rahmen: Eine Session, 468 min, 517 Agenten-Einträge (davon 482 `studio-director
 
 Quelle: `python3 tools/studio/metrics.py --efficiency`, Abschnitt der Sessiondatei (1 Session) und Gesamtlauf (21 Sessions).
 
-| Kennzahl                          | Session | Gesamt | Ampel (Session / Gesamt) | Befund / Ursache                                                                    |
-| --------------------------------- | ------- | ------ | ------------------------ | ----------------------------------------------------------------------------------- |
-| Steuerungsanteil (L0 + Leads)     | 64,8 %  | 56,2 % | rot / rot                | B3: Leads als wartende Relais (L0 nur 7,0 %, Leads 57,9 %); V1                      |
-| Umsetzeranteil                    | 18,5 %  | 14,1 % | grün / gelb              | Session besser als Verlauf; kein Befund                                             |
-| Cache-Write 5 min                 | 28,8 %  | 25,3 % | rot / rot                | B3: Aufwachen nach > 5 min Pause (Wartepausen der Leads); V1                        |
-| Lead-Kontext Median               | 61k     | 80k    | grün / grün              | –                                                                                   |
-| L0-Kontext Max                    | 242k    | 774k   | grün / rot               | Gesamt-Rot stammt aus früheren Sessions, hier nicht belegt                          |
-| opus-Anteil                       | 77,4 %  | 76,9 % | gelb / gelb              | Gates und Leads auf opus; V2 senkt minimal, kein eigener Vorschlag                  |
-| Persona-Starts general-purpose/opus | 0     | 44     | grün / rot               | Session sauber, Gesamt-Rot Historie früherer Sessions; keine Aktion        |
-| Grösste gelesene Datei            | 46,8 KB | 59 KB  | gelb / gelb              | `anh.diff` und Spec 37 KB (M12): Grenze der Spec-Grösse; V3 (Selbstcheck) mindert   |
+| Kennzahl                            | Session | Gesamt | Ampel (Session / Gesamt) | Befund / Ursache                                                                  |
+| ----------------------------------- | ------- | ------ | ------------------------ | --------------------------------------------------------------------------------- |
+| Steuerungsanteil (L0 + Leads)       | 64,8 %  | 56,2 % | rot / rot                | B3: Leads als wartende Relais (L0 nur 7,0 %, Leads 57,9 %); V1                    |
+| Umsetzeranteil                      | 18,5 %  | 14,1 % | grün / gelb              | Session besser als Verlauf; kein Befund                                           |
+| Cache-Write 5 min                   | 28,8 %  | 25,3 % | rot / rot                | B3: Aufwachen nach > 5 min Pause (Wartepausen der Leads); V1                      |
+| Lead-Kontext Median                 | 61k     | 80k    | grün / grün              | –                                                                                 |
+| L0-Kontext Max                      | 242k    | 774k   | grün / rot               | Gesamt-Rot stammt aus früheren Sessions, hier nicht belegt                        |
+| opus-Anteil                         | 77,4 %  | 76,9 % | gelb / gelb              | Gates und Leads auf opus; V2 senkt minimal, kein eigener Vorschlag                |
+| Persona-Starts general-purpose/opus | 0       | 44     | grün / rot               | Session sauber, Gesamt-Rot Historie früherer Sessions; keine Aktion               |
+| Grösste gelesene Datei              | 46,8 KB | 59 KB  | gelb / gelb              | `anh.diff` und Spec 37 KB (M12): Grenze der Spec-Grösse; V3 (Selbstcheck) mindert |
 
 ## Vorschläge
 
