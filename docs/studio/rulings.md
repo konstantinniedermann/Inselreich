@@ -1950,3 +1950,15 @@ Integrator mergt nach `main`, `make check`, Push, CI- und Pages-Lauf prüfen. Da
 Plan-Index → hiermit erlaubt, nur dieser Merge). — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E030 · ADR: —
+
+## R253 · 2026-10-05 · ZEITTESTS-Einträge für E1-Zeittests
+
+Ruling: Nach Merge von `main` @ 39f0b5f (E-030) meldet der Wächter `make zeittests` zwei E1-Zeittests ausserhalb der
+Liste: `tests/render/renderer.test.ts` (R3-Verhältnis) und `tests/sim/save.test.ts` (B6). Freigabe für lead-tech E1:
+genau diese zwei Einträge in `ZEITTESTS` in `vite.config.ts` auf `feat/m12-e1`, ein eigener Commit `test:`, sonst
+nichts an `vite.config.ts`. `feat/m12-see` trägt beide Tests seit M0 ebenfalls: lead-tech See übernimmt nach seinem
+Main-Merge **genau diesen Commit per `git cherry-pick`** (inhaltsgleich, damit der spätere E1-Merge konfliktfrei
+bleibt), nicht von Hand nachschreiben. Neue Zeittests der Stränge tragen sich künftig selbst in `ZEITTESTS` ein
+(gehört zur Testdatei). — Kosten bei Irrtum: Merge-Konflikt in einer Listenzeile.
+
+Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 · ADR: —
