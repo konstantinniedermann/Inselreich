@@ -40,6 +40,7 @@ export const GOOD_COLORS: Partial<Record<GoodId, string>> = {
   cane: '#7fae4a',
   rum: '#7a2a2a',
   glass: '#4aa8d8', // Azurblau, ΔE2000 ≥ 10 zu jeder anderen Warenfarbe (getestet)
+  spice: '#d4a017', // Safrangelb, D-144 Regel (2): eigener Farbton (getestet)
 };
 
 // --- Abdeckungs-Cache ---

@@ -151,7 +151,7 @@ export function beginCrisis(world: World, k: number, roll: CrisisRoll): void {
   if (roll.kind === 'boom' && roll.good !== undefined) crisis.good = roll.good;
   if (roll.kind === 'fire') {
     crisis.outcome = 'miss';
-    if (roll.tile) crisis.tile = { x: roll.tile.x, y: roll.tile.y };
+    if (roll.tile) crisis.tile = { x: roll.tile.x, y: roll.tile.y, island: HOME };
   }
   world.crisis = crisis;
   if (roll.kind === 'fire' && roll.tile) ignite(world, crisis, roll.tile);

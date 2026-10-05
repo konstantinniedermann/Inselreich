@@ -62,6 +62,15 @@ const NEIGHBORS: readonly Pt[] = [
 
 export const travelTicks = (d: number): number => SHIP_TICKS_PER_SEA_TILE * d;
 
+/** Fahrzeit zwischen zwei Inseln in Ticks (Lane `{min, max}`); `a === b` → 0. */
+export function laneTicks(islands: readonly LaneIsland[], a: number, b: number): number {
+  if (a === b) return 0;
+  const lo = Math.min(a, b);
+  const hi = Math.max(a, b);
+  const lane = seaLanes(islands).find((l) => l.a === lo && l.b === hi);
+  return lane === undefined ? 0 : travelTicks(lane.d);
+}
+
 // ---------- Anker ----------
 
 /** Wasserkachel (Meer, 4er an Land) mit kleinstem Abstand zur Kontormitte; Gleichstand: y, dann x. */

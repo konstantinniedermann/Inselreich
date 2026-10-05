@@ -74,7 +74,8 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
     expect(row('U6')).toMatchObject({
       trigger: { kind: 'tierOpen', tier: 4 },
       buildings: ['bathhouse', 'glassworks'],
-      goods: ['glass'],
+      // bewusst, R230 B1; spice vorgezogen aus T02 (C1-2), T02 ergänzt kontor2/spicefarm/seafaring
+      goods: ['glass', 'spice'],
       functions: [],
     });
     const all = UNLOCKS.flatMap((u) => u.buildings);

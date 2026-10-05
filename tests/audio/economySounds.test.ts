@@ -324,7 +324,7 @@ describe('playWork', () => {
 
 describe('S1-Rest Mangelstimmen-Schlüssel', () => {
   // Waren, die bewusst auf die Grundstimme fallen; eine neue Ware muss hier oder in SHORTAGE_VOICES landen.
-  const BASE_VOICE_GOODS = ['tools', 'cane'];
+  const BASE_VOICE_GOODS = ['tools', 'cane', 'spice'];
   it('S1-Rest: jeder Schlüssel von SHORTAGE_VOICES ist eine echte Gut-ID der Sim', () => {
     for (const k of Object.keys(SHORTAGE_VOICES)) expect(GOOD_IDS as string[]).toContain(k);
   });

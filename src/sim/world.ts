@@ -112,7 +112,7 @@ export function createWorld(
     anchor,
   };
   const world: World = {
-    version: 8,
+    version: 9,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -133,6 +133,9 @@ export function createWorld(
     upgradeStops: [],
     taxCarry: 0,
     upkeepCarry: 0,
+    ships: [],
+    nextShipId: 1,
+    wonSpice: false,
   };
   world.buildings[1] = {
     id: 1,

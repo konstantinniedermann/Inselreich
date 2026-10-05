@@ -12,6 +12,7 @@ const EXPECTED = [
   'cane',
   'rum',
   'glass',
+  'spice',
   'tier-1',
   'tier-2',
   'tier-3',
@@ -31,9 +32,9 @@ const EXPECTED = [
 const EMOJI = /\p{Extended_Pictographic}/u;
 
 describe('M10 Symbolsatz (Spec 14)', () => {
-  it('AK-A1-01 genau 24 Ids; Label eindeutig; Pfade nur SVG-Befehle; kein url(, href, http, Emoji', () => {
+  it('AK-A1-01 genau 25 Ids; Label eindeutig; Pfade nur SVG-Befehle; kein url(, href, http, Emoji', () => {
     expect([...ICON_IDS].sort()).toEqual([...EXPECTED].sort());
-    expect(new Set(ICON_IDS.map((id) => ICONS[id].label)).size).toBe(24);
+    expect(new Set(ICON_IDS.map((id) => ICONS[id].label)).size).toBe(25);
     for (const id of ICON_IDS) {
       const i = ICONS[id];
       expect(i.label.length).toBeGreaterThan(0);

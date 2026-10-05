@@ -10,6 +10,7 @@ export const GOODS: Record<GoodId, GoodDef> = {
   cane: { id: 'cane', name: 'Zuckerrohr', buy: 12, sell: 5, order: { tier: 3, min: 10, max: 20 } },
   rum: { id: 'rum', name: 'Rum', buy: 40, sell: 18, order: { tier: 3, min: 6, max: 12 } },
   glass: { id: 'glass', name: 'Glas', buy: 50, sell: 20, order: { tier: 4, min: 4, max: 8 } },
+  spice: { id: 'spice', name: 'Gewürz', buy: 40, sell: 12 },
 };
 export const GOOD_IDS = Object.keys(GOODS) as GoodId[];
 /** Untergrenze für den Verkaufsanteil je Gut (in %). */
@@ -30,4 +31,8 @@ export const START_STOCK: Record<GoodId, number> = {
   cane: 0,
   rum: 0,
   glass: 0,
+  spice: 0,
 };
+/** Übergangsbestand Gewürz je Haus der Stufe 4 beim Laden alter Spielstände (v8 → v9). */
+export const SPICE_GRACE_PER_HOUSE = 10;
+export const SPICE_GRACE_MAX = 100;

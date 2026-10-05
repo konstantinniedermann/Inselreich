@@ -1,3 +1,10 @@
+/** Höchstzahl Schiffe (M12 Seefahrt). */
+export const SHIP_MAX = 4;
+export const SHIP = { capacity: 50 } as const;
+/** Routen (T02 bestätigt): Güter je Richtung und Reserve in Prozent. */
+export const ROUTE_GOODS_PER_DIRECTION = 2;
+export const ROUTE_RESERVE = { default: 10, step: 10, max: 90 } as const;
+
 export type IslandKind = 'A' | 'B';
 export type IslandTrait = 'spice' | 'mountain';
 

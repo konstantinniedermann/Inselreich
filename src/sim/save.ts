@@ -1,7 +1,7 @@
 import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS } from './defs/crises';
-import { GOODS, GOOD_IDS, SELL_FLOOR } from './defs/goods';
+import { GOODS, GOOD_IDS, SELL_FLOOR, SPICE_GRACE_MAX, SPICE_GRACE_PER_HOUSE } from './defs/goods';
 import {
   CRISIS_FIRST_TICK,
   FIRE_OUTAGE,
@@ -15,8 +15,8 @@ import {
 import { LEVELS } from './defs/levels';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
-import { ISLANDS } from './defs/sea';
-import { generateForeignIslands, homeAnchor } from './islands';
+import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
+import { generateForeignIslands, homeAnchor, laneTicks, type LaneIsland } from './islands';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { deriveUnlocks } from './unlocks';
@@ -25,14 +25,19 @@ import type {
   CrisisKind,
   CrisisLevel,
   GoodId,
+  LoadResult,
   Terrain,
   UnlockId,
   World,
 } from './types';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
-export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
+export type { LoadResult };
+
+/** Meldung beim ersten Laden eines alten Standes mit Übergangsbestand Gewürz (v8 → v9). */
+export const SPICE_GRACE_NOTICE =
+  'Deine Kaufleute wünschen jetzt Gewürz — kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel.';
 
 export function serialize(world: World): string {
   return JSON.stringify(world);
@@ -102,8 +107,15 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
 const FIRE_OUTCOMES: readonly string[] = ['burning', 'extinguished', 'miss'];
 
-const isValidTile = (t: unknown): boolean =>
-  isObject(t) && isInt(t.x) && isInt(t.y) && t.x >= 0 && t.y >= 0 && t.x < MAP_W && t.y < MAP_H;
+const isValidTile = (t: unknown, islandCount: number): boolean =>
+  isObject(t) &&
+  isInt(t.x) &&
+  isInt(t.y) &&
+  t.x >= 0 &&
+  t.y >= 0 &&
+  t.x < MAP_W &&
+  t.y < MAP_H &&
+  isIntBetween(t.island, 0, islandCount - 1);
 
 /**
  * Krise: `null` oder eine Krise, die zu Stufe, Periode und Tick passt (Spec M6 9.2): Stufe mit Periode `P`,
@@ -111,7 +123,12 @@ const isValidTile = (t: unknown): boolean =>
  * Auftragsdefinition. Brand: `outcome` bekannt, `target` ganzzahlig genau dann, wenn nicht `miss`, `tile` fehlt
  * oder liegt ganzzahlig in der Karte.
  */
-function isValidCrisis(c: unknown, level: CrisisLevel, tick: unknown): boolean {
+function isValidCrisis(
+  c: unknown,
+  level: CrisisLevel,
+  tick: unknown,
+  islandCount: number,
+): boolean {
   if (c === null) return true;
   if (!isObject(c) || !isInt(tick) || !isInt(c.period) || c.period < 0) return false;
   const period = CRISIS_LEVELS[level].period;
@@ -132,7 +149,7 @@ function isValidCrisis(c: unknown, level: CrisisLevel, tick: unknown): boolean {
     const hasTarget = c.target !== undefined;
     if (hasTarget && !isInt(c.target)) return false;
     if (hasTarget !== (c.outcome !== 'miss')) return false;
-    return c.tile === undefined || isValidTile(c.tile);
+    return c.tile === undefined || isValidTile(c.tile, islandCount);
   }
   return true;
 }
@@ -154,7 +171,8 @@ function isValidOutage(b: Record<string, unknown>, tick: unknown): boolean {
 function isValidV3Fields(raw: Record<string, unknown>): boolean {
   const { crisisLevel, tick } = raw;
   if (typeof crisisLevel !== 'string' || !Object.hasOwn(CRISIS_LEVELS, crisisLevel)) return false;
-  if (!isValidCrisis(raw.crisis, crisisLevel as CrisisLevel, tick)) return false;
+  const islandCount = Array.isArray(raw.islands) ? raw.islands.length : 0;
+  if (!isValidCrisis(raw.crisis, crisisLevel as CrisisLevel, tick, islandCount)) return false;
   const buildings = raw.buildings as Record<string, Record<string, unknown>>;
   return Object.values(buildings).every((b) => isValidOutage(b, tick));
 }
@@ -292,6 +310,47 @@ function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unk
   raw.islands = [homeIsland, ...foreign];
 }
 
+const isTier4House = (b: unknown): boolean =>
+  isObject(b) && isObject(b.house) && b.house.tier === 4;
+
+/** Übergangsbestand: je Haus der Stufe 4 `SPICE_GRACE_PER_HOUSE`, höchstens `SPICE_GRACE_MAX`. */
+function spiceGrace(buildings: unknown): number {
+  const houses = isObject(buildings) ? Object.values(buildings).filter(isTier4House).length : 0;
+  return Math.min(SPICE_GRACE_MAX, SPICE_GRACE_PER_HOUSE * houses);
+}
+
+function addSpiceToIslands(raw: Record<string, unknown>): number {
+  if (!Array.isArray(raw.islands)) return 0;
+  for (const isl of raw.islands) {
+    if (isObject(isl) && isObject(isl.stock)) isl.stock.spice ??= 0;
+  }
+  const homeIsl: unknown = raw.islands[0];
+  if (!isObject(homeIsl) || !isObject(homeIsl.stock)) return 0;
+  homeIsl.stock.spice = spiceGrace(raw.buildings);
+  return homeIsl.stock.spice as number;
+}
+
+/**
+ * v8 → v9 (M12 Seefahrt): wirft nie. Gewürz je Insel 0 (`sellPct` 100), Krisen-`tile` bekommt `island 0`,
+ * `ships`, `nextShipId`, `wonSpice` neu. Die Heimat bekommt den Übergangsbestand (gesetzt, nicht addiert);
+ * Rückgabe: dieser Bestand, 0 wenn nichts gelegt wurde.
+ */
+export function migrateV8ToV9(raw: Record<string, unknown>): number {
+  let grace = 0;
+  try {
+    grace = addSpiceToIslands(raw);
+    if (isObject(raw.sellPct)) raw.sellPct.spice ??= 100;
+    if (isObject(raw.crisis) && isObject(raw.crisis.tile)) raw.crisis.tile.island = 0;
+  } catch {
+    // unbrauchbarer Stand: die Ladeprüfung meldet ihn
+  }
+  raw.ships = [];
+  raw.nextShipId = 1;
+  raw.wonSpice = false;
+  raw.version = 9;
+  return grace;
+}
+
 function isUnlockList(v: unknown): boolean {
   if (!Array.isArray(v) || !v.includes('U0')) return false;
   let last = -1;
@@ -419,15 +478,34 @@ function isValidHome(isl: Record<string, unknown>): boolean {
   );
 }
 
-/** Fremdinsel: Raster höchstens `size`, in E1 noch ohne Kontor. */
-function isValidForeign(isl: Record<string, unknown>, size: number): boolean {
-  return hasValidRaster(isl, size, size) && isl.kontorId === null && isInt(isl.ox) && isInt(isl.oy);
+/** Kontor einer Fremdinsel: `null` oder Id eines `kontor2` auf genau dieser Insel (`kontor2` kommt mit M12 Seefahrt T02). */
+function isForeignKontor(kontorId: unknown, index: number, buildings: unknown): boolean {
+  if (kontorId === null) return true;
+  if (!isInt(kontorId) || !isObject(buildings)) return false;
+  const b = buildings[kontorId];
+  return isObject(b) && b.defId === 'kontor2' && b.island === index;
 }
 
-function isValidIsland(isl: unknown, i: number): boolean {
+/** Fremdinsel: Raster höchstens `size`, Kontor `null` oder `kontor2` der Insel. */
+function isValidForeign(
+  isl: Record<string, unknown>,
+  size: number,
+  index: number,
+  buildings: unknown,
+): boolean {
+  return (
+    hasValidRaster(isl, size, size) &&
+    isForeignKontor(isl.kontorId, index, buildings) &&
+    isInt(isl.ox) &&
+    isInt(isl.oy)
+  );
+}
+
+function isValidIsland(isl: unknown, i: number, buildings: unknown): boolean {
   if (!isObject(isl) || isl.kind !== (i === 0 ? 'home' : ISLANDS[i - 1]!.kind)) return false;
   if (!hasFullStock(isl.stock)) return false;
-  const shapeOk = i === 0 ? isValidHome(isl) : isValidForeign(isl, ISLANDS[i - 1]!.size);
+  const shapeOk =
+    i === 0 ? isValidHome(isl) : isValidForeign(isl, ISLANDS[i - 1]!.size, i, buildings);
   return shapeOk && isAnchorInside(isl.anchor, isl.width as number, isl.height as number);
 }
 
@@ -437,12 +515,70 @@ function isValidIslands(raw: Record<string, unknown>): boolean {
   if (!isObject(buildings) || !Array.isArray(islands)) return false;
   if (islands.length !== 1 + ISLANDS.length) return false;
   if (ISLAND_KEYS_V6.some((k) => Object.hasOwn(raw, k))) return false;
-  if (!islands.every((isl, i) => isValidIsland(isl, i))) return false;
+  if (!islands.every((isl, i) => isValidIsland(isl, i, buildings))) return false;
   const home = islands[0] as Record<string, unknown>;
   const kontor = buildings[home.kontorId as number];
   if (!isObject(kontor) || kontor.defId !== 'kontor' || kontor.island !== 0) return false;
   const all = Object.values(buildings);
   return all.every(isValidBuilding) && all.every((b) => hasValidIslandIndex(b, islands.length));
+}
+
+const hasKontor = (islands: Record<string, unknown>[], i: unknown): boolean =>
+  isInt(i) && isObject(islands[i]) && islands[i].kontorId !== null;
+
+const isValidReserveGood = (g: unknown): g is Record<string, unknown> =>
+  isObject(g) &&
+  GOOD_IDS.includes(g.good as GoodId) &&
+  isIntBetween(g.reserve, 0, ROUTE_RESERVE.max) &&
+  (g.reserve as number) % ROUTE_RESERVE.step === 0;
+
+function isValidRoute(r: unknown, islands: Record<string, unknown>[]): boolean {
+  if (r === null) return true;
+  if (!isObject(r) || r.a === r.b || !hasKontor(islands, r.a) || !hasKontor(islands, r.b))
+    return false;
+  const { ab, ba } = r;
+  if (!Array.isArray(ab) || !Array.isArray(ba)) return false;
+  if (ab.length > ROUTE_GOODS_PER_DIRECTION || ba.length > ROUTE_GOODS_PER_DIRECTION) return false;
+  const all = [...ab, ...ba];
+  if (!all.every(isValidReserveGood)) return false;
+  const goods = all.map((g) => (g as Record<string, unknown>).good);
+  return new Set(goods).size === goods.length;
+}
+
+function isValidCargo(c: unknown): boolean {
+  if (!isObject(c)) return false;
+  let sum = 0;
+  for (const [good, n] of Object.entries(c)) {
+    if (!GOOD_IDS.includes(good as GoodId) || !isInt(n) || n < 1) return false;
+    sum += n;
+  }
+  return sum <= SHIP.capacity;
+}
+
+function isValidShip(s: unknown, islands: Record<string, unknown>[]): boolean {
+  if (!isObject(s) || !isIntBetween(s.port, 0, islands.length - 1)) return false;
+  const port = s.port as number;
+  if (s.to !== null) {
+    if (!hasKontor(islands, s.to) || s.to === port) return false;
+  }
+  const maxLeft =
+    s.to === null ? 0 : laneTicks(islands as unknown as LaneIsland[], port, s.to as number);
+  if (!isIntBetween(s.left, 0, maxLeft)) return false;
+  if (!isValidCargo(s.cargo) || !isValidRoute(s.route, islands)) return false;
+  return typeof s.homing === 'boolean' && (!s.homing || s.route === null);
+}
+
+/** Felder von Save v9 (M12 Seefahrt): Schiffe, Zähler, drittes Ziel. */
+function isValidV9Fields(raw: Record<string, unknown>): boolean {
+  const { ships, nextShipId } = raw;
+  const islands = raw.islands as Record<string, unknown>[];
+  if (typeof raw.wonSpice !== 'boolean' || (raw.wonSpice && raw.wonMerchants !== true))
+    return false;
+  if (!Array.isArray(ships) || ships.length > SHIP_MAX) return false;
+  if (!ships.every((s) => isValidShip(s, islands))) return false;
+  const ids = ships.map((s) => (s as Record<string, unknown>).id);
+  if (!ids.every((id) => isInt(id) && id >= 1) || new Set(ids).size !== ids.length) return false;
+  return isInt(nextShipId) && ids.every((id) => (nextShipId as number) > (id as number));
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
@@ -455,6 +591,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV4Fields(raw)) return false;
   if (!isValidV5Fields(raw)) return false;
   if (!isValidV6Fields(raw)) return false;
+  if (!isValidV9Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -462,6 +599,15 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
     typeof raw.tick === 'number' &&
     typeof raw.nextBuildingId === 'number'
   );
+}
+
+/** `isWellFormed`, aber unbrauchbare Strukturen führen zu `false` statt zu einer Ausnahme. */
+function isWellFormedSafe(raw: Record<string, unknown>): boolean {
+  try {
+    return isWellFormed(raw);
+  } catch {
+    return false;
+  }
 }
 
 /** Liest einen Spielstand; wirft nie, sondern meldet den Grund. */
@@ -481,8 +627,9 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 5) migrateV5ToV6(raw);
   if (raw.version === 6) migrateV6ToV7(raw);
   if (raw.version === 7) migrateV7ToV8(raw);
+  const grace = raw.version === 8 ? migrateV8ToV9(raw) : 0;
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
-  if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
+  if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;
   try {
     // Persistiertes `connected` nicht übernehmen, sondern aus den Wegen neu ableiten
@@ -491,5 +638,5 @@ export function deserialize(json: string): LoadResult {
   } catch {
     return { ok: false, reason: 'Beschädigter Spielstand' };
   }
-  return { ok: true, world };
+  return grace > 0 ? { ok: true, world, notice: SPICE_GRACE_NOTICE } : { ok: true, world };
 }

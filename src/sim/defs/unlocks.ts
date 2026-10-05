@@ -74,7 +74,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
     id: 'U6',
     trigger: { kind: 'tierOpen', tier: 4 },
     buildings: ['bathhouse', 'glassworks'],
-    goods: ['glass'],
+    goods: ['glass', 'spice'],
     functions: [],
     lockText: 'Erst nach dem Ziel',
     whenText: 'nach dem Ziel ({WIN_CITIZENS} Bürger)',

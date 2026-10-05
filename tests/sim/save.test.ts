@@ -83,6 +83,20 @@ const withoutIsland = (world: World): Record<string, unknown> =>
     }),
   );
 
+/** Krise wie nach v8 → v9: gespeichertes `tile` trägt `island 0`. */
+const withTileIsland = (c: unknown): unknown => {
+  const crisis = c as { tile?: object } | null;
+  return crisis?.tile ? { ...crisis, tile: { ...crisis.tile, island: 0 } } : crisis;
+};
+
+/** Wert eines alten Feldes nach der Migration: `sellPct` bekommt Gewürz 100, `crisis` das Insel-`tile`. */
+const expectedV9 = (key: string, old: unknown): unknown =>
+  key === 'sellPct'
+    ? { ...(old as object), spice: 100 }
+    : key === 'crisis'
+      ? withTileIsland(old)
+      : old;
+
 /** Insel 0 im rohen v7-Objekt. */
 const isl0 = (raw: Record<string, unknown>): Record<string, unknown> =>
   (raw.islands as Record<string, unknown>[])[0]!;
@@ -122,7 +136,7 @@ describe('save', () => {
     expect(loaded.order).toBeNull();
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.money).toBe(before.money);
-    expect(home(loaded).stock).toEqual({ ...(before.stock as object), glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...(before.stock as object), glass: 0, spice: 0 });
     expect(Object.keys(loaded.buildings)).toEqual(Object.keys(before.buildings as object));
   });
 
@@ -357,7 +371,7 @@ describe('M6 Save v3', () => {
     const b = createWorld(3, { crisisLevel: 'normal' });
     expect(b.crisisLevel).toBe('normal');
     expect({ ...b, crisisLevel: 'off' }).toEqual(a);
-    expect(Object.keys(a).slice(-7, -5)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
+    expect(Object.keys(a).slice(-10, -8)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
   });
 
   // Fixture erzeugt auf main 3fcb678 über den temporären Test tests/sim/gen-save-v2.test.ts
@@ -377,11 +391,11 @@ describe('M6 Save v3', () => {
     const shape = (x: World | V6Json): unknown[] =>
       Object.values(x.buildings).map((b) => [b.id, b.defId, b.x, b.y, b.progress, b.state]);
     expect(shape(loaded)).toEqual(shape(before));
-    expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0, spice: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.taxLevel).toBe(before.taxLevel);
-    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100 });
+    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100, spice: 100 });
     expect(loaded.order).toEqual(before.order);
     expect(before.order).not.toBeNull();
     expect(before.sellPct.wood).toBeLessThan(100);
@@ -515,7 +529,7 @@ describe('M8 Save v4', () => {
     expect(a.sellPct.glass).toBe(100);
     const keys = Object.keys(a);
     expect(keys.indexOf('wonMerchants')).toBe(keys.indexOf('won') + 1);
-    expect(keys.slice(-7, -5)).toEqual(['crisisLevel', 'crisis']);
+    expect(keys.slice(-10, -8)).toEqual(['crisisLevel', 'crisis']);
   });
 
   it('AK-S1-11 lädt einen echten v3-Stand und migriert ihn nach v4', () => {
@@ -536,14 +550,14 @@ describe('M8 Save v4', () => {
     expect(loaded.sellPct.glass).toBe(100);
     expect(loaded.wonMerchants).toBe(false);
     expect(withoutIsland(loaded)).toEqual(before.buildings);
-    expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0, spice: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.taxLevel).toBe(before.taxLevel);
-    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100 });
+    expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100, spice: 100 });
     expect(loaded.order).toEqual(before.order);
     expect(loaded.crisisLevel).toBe(before.crisisLevel);
-    expect(loaded.crisis).toEqual(before.crisis);
+    expect(loaded.crisis).toEqual(withTileIsland(before.crisis));
   });
 
   it('AK-S1-12 v1 und v2 laden über alle Migrationen nach v4', () => {
@@ -667,8 +681,8 @@ describe('M10 Save v5 (Spec 8.2)', () => {
       'won',
       'wonMerchants',
     ] as const)
-      expect(w[k]).toEqual(raw[k]);
-    expect(home(w).stock).toEqual(raw.stock);
+      expect(w[k]).toEqual(expectedV9(k, raw[k]));
+    expect(home(w).stock).toEqual({ ...(raw.stock as object), spice: 0 });
     const bare = Object.values(w.buildings).map(({ island, ...b }) => ({ island, b }));
     expect(bare.every((e) => e.island === 0)).toBe(true);
     expect(Object.fromEntries(bare.map((e) => [e.b.id, e.b]))).toEqual(raw.buildings);
@@ -818,14 +832,14 @@ const addRawB = (w: World, defId: BuildingDefId): Building => {
 describe('M11 Save v6 (Spec 5)', () => {
   it('AK-SAV-01 createWorld: version 6, Überträge 0; nach 1000 Schritten Round-trip gleich', () => {
     const w = createWorld(3);
-    expect([w.version, w.taxCarry, w.upkeepCarry]).toEqual([8, 0, 0]);
+    expect([w.version, w.taxCarry, w.upkeepCarry]).toEqual([9, 0, 0]);
     const v = village(4);
     for (let i = 0; i < 1000; i++) step(v.w);
     expect(loadOk(serialize(v.w))).toEqual(v.w);
   });
   it('AK-SAV-02 save-v5.json lädt als v6 (Überträge 0, ohne eff/level, Auslastung 1000); v1–v4 durch die Kette', () => {
     const w = loadOk(readFileSync('tests/sim/fixtures/save-v5.json', 'utf8'));
-    expect([w.version, w.taxCarry, w.upkeepCarry]).toEqual([8, 0, 0]);
+    expect([w.version, w.taxCarry, w.upkeepCarry]).toEqual([9, 0, 0]);
     for (const b of Object.values(w.buildings)) {
       expect([b.eff, b.level]).toEqual([undefined, undefined]);
       expect(utilization(b)).toBe(BUILDING_DEFS[b.defId].produces ? 1000 : null);
@@ -1000,7 +1014,7 @@ describe('M12 E0 Save v7', () => {
     const fixture = rawOf(FIX);
     const world = load(readFileSync(FIX, 'utf8'));
     expect(world.version).toBe(9);
-    expect(world.islands[0]!.stock).toEqual(fixture.stock);
+    expect(world.islands[0]!.stock).toEqual({ ...fixture.stock, spice: 0 });
     const back = JSON.parse(folded(world)) as Raw;
     const strip = (r: Raw): Raw => {
       const c = JSON.parse(JSON.stringify(r)) as Raw;
@@ -1034,6 +1048,7 @@ describe('M12 E0 Save v7', () => {
     const migrated = rawOf(FIX);
     migrateV6ToV7(migrated);
     migrateV7ToV8(migrated);
+    migrateV8ToV9(migrated);
     const live = JSON.parse(serialize(fixtureV6Run().w)) as Raw;
     expect(Object.keys(migrated)).toEqual(Object.keys(live));
     expect(Object.keys(migrated.islands[0])).toEqual(Object.keys(live.islands[0]));
@@ -1370,10 +1385,12 @@ describe('M12 Seefahrt Schritt 0 (Anhang 03 B)', () => {
     const json = readFileSync(FIX8, 'utf8');
     const r = deserialize(json);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(serialize(r.world)).toBe(json);
+    if (r.ok) expect(JSON.stringify(foldBackToV8(JSON.parse(serialize(r.world))))).toBe(json);
   });
   it('T00 Rezept = Fixture v8', () => {
-    expect(serialize(fixtureV8Run())).toBe(readFileSync(FIX8, 'utf8'));
+    expect(JSON.stringify(foldBackToV8(JSON.parse(serialize(fixtureV8Run()))))).toBe(
+      readFileSync(FIX8, 'utf8'),
+    );
   });
   it('T00 Pins', () => {
     for (const seed of SEE_SEEDS) {

@@ -44,7 +44,7 @@ export const walkersLeft = (walkers: number, errands: number, reduce = false): n
 export const errandCap = (reduce = false): number => (reduce ? MAX_ERRANDS_REDUCED : MAX_ERRANDS);
 
 /** Lastfarbe je Ware (Palette, keine Signalfarben). */
-const LOAD_COLOR: Readonly<Record<GoodId, string>> = {
+export const LOAD_COLOR: Readonly<Record<GoodId, string>> = {
   wood: PALETTE.roofWood,
   tools: PALETTE.rock,
   stone: PALETTE.rockLight,
@@ -54,6 +54,7 @@ const LOAD_COLOR: Readonly<Record<GoodId, string>> = {
   cane: PALETTE.grassLight,
   rum: PALETTE.roofTerracotta,
   glass: PALETTE.waterMid,
+  spice: PALETTE.roofThatch,
 };
 const LOAD_OUTLINE = PALETTE.wallTimber;
 const LOAD_MIN_PX = 2.5;
