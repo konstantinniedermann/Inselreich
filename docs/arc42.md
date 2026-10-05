@@ -169,7 +169,7 @@ flowchart TB
 | `flow.ts`                                                | `goodsBalance` (nominell: Lager und Brand zählen nicht), `budgetFrom`, `upgradeDelta`, `deficitGood`, `upgradeDeficit` (M11, Spec 3.2); importiert weder `population.ts` noch `queries.ts`.                                                                                                                                                                                                                                                                                                                               |
 | `levels.ts`                                              | `cycleOf`, `upkeepOf`, `utilization`: einziger Leseort für Zyklus und Unterhalt (M11); Ausbau-Werte in `defs/levels.ts` (`LEVELS` je Betrieb: Zyklus, Unterhalt, Kosten, Gebühr der Stufen 2 und 3, alle 11 Betriebe).                                                                                                                                                                                                                                                                                                    |
 | `upgrade.ts`                                             | `upgradeBuilding` (sieben Gründe, Kosten und Gebühr, `level` +1), `paidCost` für die Abriss-Erstattung (M11, Spec 3.6).                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `save.ts`                                                | `serialize`/`deserialize` (Version 6) mit Migrationskette v1 → v2 → v3 → v4 → v5 → v6 (`migrateV3ToV4`: Glas in Lager und `sellPct`, `wonMerchants`, Dienst `bath`; `migrateV4ToV5`: Freischaltungen, Gütersperren, Aufstiegsstopps; `migrateV5ToV6`: Überträge 0) und Strukturprüfung; leitet die Anbindung nach dem Laden neu ab.                                                                                                                                                                                       |
+| `save.ts`                                                | `serialize`/`deserialize` (Version 7) mit Migrationskette v1 → v2 → v3 → v4 → v5 → v6 → v7 (`migrateV3ToV4`: Glas in Lager und `sellPct`, `wonMerchants`, Dienst `bath`; `migrateV4ToV5`: Freischaltungen, Gütersperren, Aufstiegsstopps; `migrateV5ToV6`: Überträge 0; `migrateV6ToV7`: Raster, Kontor und Lager wandern in `islands[0]`, je Gebäude `island: 0`) und Strukturprüfung; leitet die Anbindung nach dem Laden neu ab.                                                                                       |
 | `tick.ts`                                                | `step(world)`: Tick-Zähler, dann alle Systeme in fester Reihenfolge; `checkWin` (setzt erst `won`, dann `wonMerchants`).                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Ebene 2: `src/render/`
@@ -726,16 +726,17 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 
 ### Persistenz
 
-- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 6`,
-  `SAVE_VERSION`). Gespeichert wird immer Version 6.
+- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 7`,
+  `SAVE_VERSION`). Gespeichert wird immer Version 7: Raster, Kontor und Lager liegen je Insel in `islands[i]`
+  (`width`, `height`, `tiles`, `kontorId`, `stock`), jedes Gebäude trägt `island` (Index); E0 kennt genau eine Insel.
 - `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
   `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
   `crisisLevel = 'off'`, `crisis = null`) → v4 (`migrateV3ToV4`: `stock.glass = 0`, `sellPct.glass = 100`,
   `wonMerchants = false`; Gebäude und Häuser unberührt) → v5 (`migrateV4ToV5`: `unlocked = ['U0']`, `goodLocks = []`,
   `upgradeStops = []`; nach `isWellFormed` setzt `deriveUnlocks` den echten Stand aus der Welt) → v6 (`migrateV5ToV6`:
-  `taxCarry = 0`, `upkeepCarry = 0`; `eff`/`level` fehlen = volle Auslastung bzw. Stufe 1); danach prüft sie
-  JSON, Version, Kartengrösse und Kachelanzahl, die Gebäude (bekannte `defId`, Koordinaten), das Kontor,
-  alle Güter im Lager, `stats`, `won`, `tick`, `nextBuildingId` und die v2-Felder (`taxLevel`,
+  `taxCarry = 0`, `upkeepCarry = 0`; `eff`/`level` fehlen = volle Auslastung bzw. Stufe 1) → v7 (`migrateV6ToV7`, wurffrei und reihenfolgetreu: `islands = [{ width, height, tiles, kontorId, stock }]`,
+  je Gebäude `island: 0` nach `state`); danach prüft sie
+  JSON, Version, genau eine Insel (Kartengrösse, Kachelanzahl, alle Güter im Lager, `kontorId` auf ein Kontor mit `island 0`, keine v6-Schlüssel oben), die Gebäude (bekannte `defId`, Koordinaten, `island` ganzzahlig im Indexbereich), `stats`, `won`, `tick`, `nextBuildingId` und die v2-Felder (`taxLevel`,
   `taxLockedUntil`, `sellPct` ganzzahlig 30…100, `order` passend zu Tick und Periode), die v3-Felder (`crisisLevel` bekannt; `crisis` passend zu Stufe,
   Periode und Tick; je Gebäude `outageUntil` nur mit `state 'burning'` und `tick < outageUntil ≤ tick + 200`) und die v4-Felder
   (`wonMerchants` boolean und nur mit `won`; je Wohnhaus `house.tier` ganzzahlig 1 … 4; Stufe 4 nur mit `won`

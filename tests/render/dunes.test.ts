@@ -1,5 +1,6 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { TEX } from '../../src/render/iso';
 import { LIGHT } from '../../src/render/light';
 import { PALETTE, rgbOf } from '../../src/render/palette';
@@ -38,7 +39,7 @@ const grids = new Map<number, { w: ReturnType<typeof createWorld>; g: TerrainGri
 const gridOf = (seed: number) => {
   if (!grids.has(seed)) {
     const w = createWorld(seed);
-    grids.set(seed, { w, g: buildGrid(w) });
+    grids.set(seed, { w, g: buildGrid(fieldWorld(w)) });
   }
   return grids.get(seed)!;
 };
@@ -61,8 +62,8 @@ function duneWindow(seed: number, T = 10): { tx: number; ty: number } {
   let best = -1,
     bx = 0,
     by = 0;
-  for (let ty = 0; ty + T <= w.height; ty += 2)
-    for (let tx = 0; tx + T <= w.width; tx += 2) {
+  for (let ty = 0; ty + T <= home(w).height; ty += 2)
+    for (let tx = 0; tx + T <= home(w).width; tx += 2) {
       let s = 0;
       for (let j = ty * NODES; j < (ty + T) * NODES; j += 2)
         for (let i = tx * NODES; i < (tx + T) * NODES; i += 2)
@@ -234,9 +235,9 @@ describe('H-R12b K6 S6 auf Sand', () => {
     let tiles = 0;
     for (const seed of SEEDS) {
       const { w, g } = gridOf(seed);
-      for (let y = 0; y < w.height; y++)
-        for (let x = 0; x < w.width; x++) {
-          if (w.tiles[y * w.width + x]!.terrain !== 'sand') continue;
+      for (let y = 0; y < home(w).height; y++)
+        for (let x = 0; x < home(w).width; x++) {
+          if (home(w).tiles[y * home(w).width + x]!.terrain !== 'sand') continue;
           let lo = 99,
             hi = -99,
             pres = 0;
@@ -402,15 +403,15 @@ describe('H-R12b K7 Teil-Neuzeichnung mit Dünen', () => {
   it('H-R12b K7 patchGrid im Rechteck ergibt dasselbe Raster und dieselben Pixel wie der Vollaufbau; SMOOTH_BORDER wächst höchstens um 1', () => {
     expect(SMOOTH_BORDER).toBeLessThanOrEqual(2 + 1);
     const w = createWorld(5, { unlockAll: true });
-    const full0 = buildGrid(w);
+    const full0 = buildGrid(fieldWorld(w));
     // dünenreichste Sandkachel (Präsenz im Knoten der Kachelmitte), sie wird zu Gras
     const sa = LAND.indexOf('sand');
     let best = -1,
       bx = 0,
       by = 0;
-    for (let y = 2; y < w.height - 2; y++)
-      for (let x = 2; x < w.width - 2; x++) {
-        if (w.tiles[y * w.width + x]!.terrain !== 'sand') continue;
+    for (let y = 2; y < home(w).height - 2; y++)
+      for (let x = 2; x < home(w).width - 2; x++) {
+        if (home(w).tiles[y * home(w).width + x]!.terrain !== 'sand') continue;
         const v = full0.dpres[(y * NODES + NODES / 2) * full0.nx + x * NODES + NODES / 2]!;
         if (v > best) {
           best = v;
@@ -420,14 +421,14 @@ describe('H-R12b K7 Teil-Neuzeichnung mit Dünen', () => {
       }
     expect(best).toBeGreaterThan(0.5);
     expect(sa).toBeGreaterThanOrEqual(0);
-    const fields = terrainFields(w);
-    const grid = buildGrid(w, fields);
-    const prev = terrainCodes(w);
-    w.tiles[by * w.width + bx]!.terrain = 'grass';
-    const next = terrainCodes(w);
-    const rect = terrainPatchRect(prev, next, w.width, w.height)!;
-    patchGrid(w, fields, grid, prev, next, rect);
-    const full = buildGrid(w);
+    const fields = terrainFields(fieldWorld(w));
+    const grid = buildGrid(fieldWorld(w), fields);
+    const prev = terrainCodes(fieldWorld(w));
+    home(w).tiles[by * home(w).width + bx]!.terrain = 'grass';
+    const next = terrainCodes(fieldWorld(w));
+    const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
+    patchGrid(fieldWorld(w), fields, grid, prev, next, rect);
+    const full = buildGrid(fieldWorld(w));
     for (const f of ['dune', 'dpres', 'dphase', 'smooth', 'tone', 'shade', 'cls'] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     const x0 = rect.x0 * TEX,

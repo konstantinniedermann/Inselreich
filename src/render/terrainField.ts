@@ -1,7 +1,23 @@
 import { valueNoise } from '../sim/noise';
 import type { Island, Terrain, World } from '../sim/types';
+import { home } from '../sim/world';
 
 export type FieldWorld = Pick<Island, 'width' | 'height' | 'tiles'> & Pick<World, 'seed'>;
+type SeededIsland = Island & Pick<World, 'seed'>;
+const views = new WeakMap<World, SeededIsland>();
+/**
+ * Heimatinsel samt Welt-Seed als Eingabe der Geländefelder: flache Kopie der Inselfelder (schneller Zugriff in den
+ * Schleifen), je Welt einmal angelegt (stabiler Cache-Schlüssel) und neu gebildet, sobald die Kacheln wechseln.
+ */
+export function fieldWorld(world: World): SeededIsland {
+  const isl = home(world);
+  let v = views.get(world);
+  if (!v || v.tiles !== isl.tiles || v.width !== isl.width || v.height !== isl.height) {
+    v = { ...isl, seed: world.seed };
+    views.set(world, v);
+  }
+  return v;
+}
 /** Ein Wert je Kachelmitte. */
 export interface Field {
   w: number;

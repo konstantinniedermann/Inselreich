@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { centerOn, visibleTileRange, type TileRange } from '../../src/render/camera';
 import { phaseAt } from '../../src/render/daynight';
@@ -143,7 +144,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       whales = 0;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
-      const f = coastField(world);
+      const f = coastField(fieldWorld(world));
       const s = (x: number, y: number) => f.v[Math.floor(y) * f.w + Math.floor(x)]!;
       for (const hit of wildlifeAt(world, FULL, 5000, DAY).filter((x) => x.kind === 'fish')) {
         fish++;
@@ -257,7 +258,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     let n = 0;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
-      const f = coastField(world);
+      const f = coastField(fieldWorld(world));
       for (const a of flockAnchors(world, 'day', false))
         for (let i = 0; i < 200; i++) {
           const p = flockPose(a, seed, i * 997, false);

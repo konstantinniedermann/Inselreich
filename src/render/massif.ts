@@ -515,7 +515,7 @@ export function nodeHeight(c: MassifComponent, I: number, J: number): number {
 
 // ---------- Teilstücke (A5) ----------
 
-export type PieceWorld = MassifWorld & Pick<World, 'tiles'>;
+export type PieceWorld = MassifWorld & Pick<Island, 'tiles'>;
 export interface MassifPiece {
   /** Eindeutig je Welt: 2 × Index der vordersten Kachel + Hälfte (0 rechte, 1 linke Kachelhälfte im Streifen). */
   id: number;

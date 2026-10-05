@@ -40,6 +40,7 @@ function addHouse(world: World, tier: Tier, inhabitants: number, met: boolean): 
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier,
       inhabitants,
@@ -166,10 +167,11 @@ function readyHouse(world: World, tier: Tier, inhabitants: number, slot: number)
     connected: false,
     progress: 0,
     state: 'ok',
+    island: 0,
     house,
   };
   world.buildings[id] = b;
-  home(world).tiles[y * world.width + x]!.buildingId = id;
+  home(world).tiles[y * home(world).width + x]!.buildingId = id;
   return b;
 }
 

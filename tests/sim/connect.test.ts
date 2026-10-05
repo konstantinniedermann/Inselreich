@@ -104,8 +104,8 @@ function minNewTiles(world: World, id: number): number | null {
       [0, 1],
       [0, -1],
     ] as const) {
-      const nx = (cur % world.width) + dx;
-      const ny = Math.floor(cur / world.width) + dy;
+      const nx = (cur % home(world).width) + dx;
+      const ny = Math.floor(cur / home(world).width) + dy;
       if (!inBounds(home(world), nx, ny)) continue;
       const c = cost(nx, ny);
       const ni = idx(home(world), nx, ny);

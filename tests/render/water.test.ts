@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { PALETTE, SIGNAL_NAMES, rgbOf } from '../../src/render/palette';
 import {
@@ -20,13 +21,17 @@ import { fakeCtx } from './fakeCtx';
 /** w = Wasser, g = Gras (Kartengrösse aus den Zeilen). */
 const mini = (rows: string[]): World =>
   ({
-    width: rows[0]!.length,
-    height: rows.length,
     seed: 5,
-    tiles: rows
-      .join('')
-      .split('')
-      .map((c) => ({ terrain: c === 'w' ? 'water' : 'grass', buildingId: null, road: false })),
+    islands: [
+      {
+        width: rows[0]!.length,
+        height: rows.length,
+        tiles: rows
+          .join('')
+          .split('')
+          .map((c) => ({ terrain: c === 'w' ? 'water' : 'grass', buildingId: null, road: false })),
+      },
+    ],
   }) as unknown as World;
 
 const alphaOf = (css: string): number => Number(/,([\d.]+)\)$/.exec(css)![1]);
@@ -138,7 +143,7 @@ describe('Wasser (Spec 5.2)', () => {
 
   it('Spec 5.2 Schaumlinie ist eine Höhenlinie des Küstenfelds: nach warp an der gezeichneten Küste', () => {
     const w = createWorld(3);
-    const f = terrainFields(w);
+    const f = terrainFields(fieldWorld(w));
     let n = 0,
       minF = Infinity,
       maxF = -Infinity;

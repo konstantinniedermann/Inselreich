@@ -21,7 +21,7 @@ function buildWorld(): { world: World; o: { x: number; y: number } } {
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(home(world).stock) as (keyof World['stock'])[])
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
     home(world).stock[g] = 1000;
   return { world, o };
 }

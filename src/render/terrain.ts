@@ -26,6 +26,7 @@ import {
   warp,
   type Field,
   type TerrainFields,
+  fieldWorld,
 } from './terrainField';
 
 // terrain.ts — Terrain-Ebene (Spec 5.1, ISO §6). Keine Baumkronen: die kommen als Stempel aus trees.ts (D-08).
@@ -1245,16 +1246,16 @@ export const defaultTerrainScale = (
 /** Baut die Terrain-Ebene einmal je Welt: Canvas `width·TEX·scale`; Aufbau gemessen. */
 export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): HTMLCanvasElement {
   const t0 = performance.now();
-  const { w, h } = terrainLayerSize(world, scale)[0]!;
+  const { w, h } = terrainLayerSize(home(world), scale)[0]!;
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
-  const fields = terrainFields(world);
-  const grid = buildGrid(world, fields);
+  const fields = terrainFields(fieldWorld(world));
+  const grid = buildGrid(fieldWorld(world), fields);
   paintRegion(ctx, grid, scale, 0, 0, w, h);
-  const occ = occupancy(world);
+  const occ = occupancy(home(world));
   paintDecor(ctx, world, occ, scale, {
     x0: 0,
     y0: 0,
@@ -1262,7 +1263,7 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
     y1: home(world).height - 1,
   });
   const buildMs = performance.now() - t0;
-  const codes = terrainCodes(world);
+  const codes = terrainCodes(home(world));
   meta.set(canvas, {
     world,
     scale,
@@ -1355,16 +1356,16 @@ export function updateTerrainLayer(
   const key = layoutKey(world);
   if (!shouldPatch(m, world, key)) return { redrawn: false, ms: 0 };
   const t0 = performance.now();
-  const next = occupancy(world);
+  const next = occupancy(home(world));
   const occRect = dirtyRect(m.occ, next, home(world).width, home(world).height);
-  const codes = terrainCodes(world);
+  const codes = terrainCodes(home(world));
   const terRect = terrainPatchRect(m.codes, codes, home(world).width, home(world).height);
   const rect = unionRect(occRect, terRect);
   m.key = key;
   m.occ = next;
   if (!rect) return { redrawn: false, ms: performance.now() - t0 };
   if (terRect) {
-    patchGrid(world, m.fields, m.grid, m.codes, codes, terRect);
+    patchGrid(fieldWorld(world), m.fields, m.grid, m.codes, codes, terRect);
     m.codes = codes;
   }
   const ctx = layer.getContext('2d');

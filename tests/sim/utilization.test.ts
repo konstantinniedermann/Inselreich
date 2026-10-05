@@ -19,6 +19,7 @@ function prod(w: World, defId: BuildingDefId, x: number, y: number): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   return b;

@@ -184,7 +184,7 @@ describe('Szenario-Saves', () => {
     expect(a.tick).toBe(0);
     expect(b.tick).toBe(3000);
     expect(b.won).toBe(false);
-    expect(b.tiles.map((t) => t.terrain)).toEqual(a.tiles.map((t) => t.terrain));
+    expect(home(b).tiles.map((t) => t.terrain)).toEqual(home(a).tiles.map((t) => t.terrain));
     const pos = (w: World): string[] =>
       Object.values(w.buildings).map((x) => `${x.defId}@${x.x},${x.y}`);
     expect(pos(b)).toEqual(pos(a));
@@ -210,9 +210,9 @@ describe('Szenario-Saves', () => {
     expect(home(w).stock.wool).toBe(0);
     // längste zusammenhängende Wegzeile
     let best = 0;
-    for (let y = 0; y < w.height; y++) {
+    for (let y = 0; y < home(w).height; y++) {
       let run = 0;
-      for (let x = 0; x < w.width; x++) {
+      for (let x = 0; x < home(w).width; x++) {
         run = home(w).tiles[idx(home(w), x, y)]!.road ? run + 1 : 0;
         best = Math.max(best, run);
       }
@@ -509,7 +509,7 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       const r = deserialize(serialize(w));
       expect(r.ok, name).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(6);
+      expect(r.world.version).toBe(7);
       expect(r.world.unlocked, name).toEqual(
         name === 'm10-start' ? ['U0'] : deriveUnlocks(r.world),
       );
@@ -642,7 +642,7 @@ describe('M11 Szenarien (Anhang 02 F)', () => {
     expect([freeForest(wald, hunter, 3), freeForest(wald, lumber, 2)]).toEqual([10, 1]);
     expect([hunter.connected, lumber.connected]).toEqual([true, true]);
     for (const p of ['wald-holzfaeller', 'wald-jagd'])
-      expect(wald.tiles[idx(wald, pw[p]!.x, pw[p]!.y)]!.terrain, p).toBe('forest');
+      expect(home(wald).tiles[idx(home(wald), pw[p]!.x, pw[p]!.y)]!.terrain, p).toBe('forest');
     expect(wald.unlocked).toEqual(['U0', 'U2', 'U3']);
 
     const ausbau = SCENARIOS['m11-ausbau']!();
@@ -664,14 +664,14 @@ describe('M11 Szenarien (Anhang 02 F)', () => {
     const dh = at(defizit, 'm11-defizit', 'haus');
     expect([dh.house!.tier, dh.house!.inhabitants]).toEqual([2, 8]);
     expect(upgradeDeficit(defizit, dh)?.good).toBe('rum');
-    expect(defizit.stock.rum).toBe(40);
+    expect(home(defizit).stock.rum).toBe(40);
     expect(defizit.unlocked).toContain('U4');
     expect(buildingsOfType(defizit, 'distillery')).toHaveLength(0);
 
     const stein = SCENARIOS['m11-stein']!();
     expect(stein.won).toBe(true);
     expect(stein.unlocked).toContain('U6');
-    expect(stein.stock.stone).toBe(4);
+    expect(home(stein).stock.stone).toBe(4);
     expect(buildingsOfType(stein, 'glassworks')).toHaveLength(1);
     expect(upgradeStatus(stein, at(stein, 'm11-stein', 'haus')).reasons).toContain(
       'Zu wenig Stein',

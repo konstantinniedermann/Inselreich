@@ -13,7 +13,7 @@ import { cap } from './limits';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
-import { coastField, type Field } from './terrainField';
+import { coastField, fieldWorld, type Field } from './terrainField';
 import { crownsFor, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
@@ -384,7 +384,7 @@ const coasts = new WeakMap<World, Field>();
 export function coastFor(world: World): Field {
   let f = coasts.get(world);
   if (!f) {
-    f = coastField(world);
+    f = coastField(fieldWorld(world));
     coasts.set(world, f);
   }
   return f;

@@ -11,11 +11,10 @@ import {
   runColony,
   startColony,
   WIN_TICK_LIMIT,
-  type ColonyOptions,
 } from './controller';
 import { RANDOM_SEQUENCE } from './e0Pins';
-import { randomSequence } from './fixtureV6';
-import { fnv1a32 } from './helpers';
+import { NORMAL, randomSequence } from './fixtureV6';
+import { fnv1a32, foldBackToV6 } from './helpers';
 
 /**
  * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
@@ -23,7 +22,7 @@ import { fnv1a32 } from './helpers';
  * M11 (Anhang 02 B): zusätzlich `taxCarry`, `upkeepCarry` und je Gebäude `eff`, `level` entfernt.
  */
 function normalized(json: string): string {
-  const raw = JSON.parse(json) as Record<string, unknown>;
+  const raw = foldBackToV6(JSON.parse(json) as Record<string, unknown>);
   raw.version = 2;
   delete raw.crisisLevel;
   delete raw.crisis;
@@ -69,7 +68,6 @@ const OFF_REFERENCE = {
 const OFF_FINGERPRINT = 0x701c6da5; // M11 (M-06), normalized() mit M11-Feldern (Anhang 02 B)
 
 const CRISIS_WIN_STOP = 8000; // Spec 15: Stopp-Schwelle Krisen-Lauf (R102)
-const NORMAL: ColonyOptions = { fireStation: true };
 
 interface CrisisCount {
   fires: number;

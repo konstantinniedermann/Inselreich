@@ -10,8 +10,8 @@ import type { World } from '../../src/sim/types';
 import { forceGrass, forceRect } from './helpers';
 
 function landRect(w: World, size: number): { x: number; y: number } {
-  for (let y = 1; y < w.height - size; y++)
-    for (let x = 1; x < w.width - size; x++) {
+  for (let y = 1; y < home(w).height - size; y++)
+    for (let x = 1; x < home(w).width - size; x++) {
       let ok = true;
       for (let dy = 0; dy < size && ok; dy++)
         for (let dx = 0; dx < size; dx++) {
@@ -100,8 +100,8 @@ describe('site rules', () => {
     const kx = k.x + 1;
     const ky = k.y + 1;
     const findFree = (pred: (dist: number) => boolean): { x: number; y: number; dist: number } => {
-      for (let y = 0; y < w.height; y++)
-        for (let x = 0; x < w.width; x++) {
+      for (let y = 0; y < home(w).height; y++)
+        for (let x = 0; x < home(w).width; x++) {
           const t = tileAt(home(w), x, y)!;
           const dist = Math.hypot(x + 0.5 - kx, y + 0.5 - ky);
           if (isLand(t.terrain) && t.buildingId === null && !t.road && pred(dist))
@@ -229,8 +229,8 @@ describe('M8 Bausperre (Änderung S11)', () => {
       return h;
     });
   const water = (): { x: number; y: number } => {
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++)
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++)
         if (!isLand(tileAt(home(w), x, y)!.terrain)) return { x, y };
     throw new Error('kein Wasser');
   };
@@ -309,15 +309,15 @@ describe('M11 Regelfeld free (Spec 3.3)', () => {
     return x;
   };
   function hunterSite(x: World): { w: World; x: number; y: number } {
-    const k = x.buildings[x.kontorId]!;
+    const k = x.buildings[home(x).kontorId]!;
     forceRect(x, k.x + 2, k.y, 5, 1, 'grass');
     forceRect(x, k.x + 3, k.y - 4, 7, 7, 'grass');
     forceRect(x, k.x + 4, k.y - 3, 5, 2, 'forest');
     for (let i = 2; i <= 6; i++) expect(placeRoad(x, k.x + i, k.y).ok).toBe(true);
     const site = { x: k.x + 6, y: k.y - 1 };
     const [cx, cy] = [site.x + 0.5, site.y + 0.5];
-    const free = tilesInRadius(x, cx, cy, 3).filter((p) => {
-      const t = tileAt(x, p.x, p.y)!;
+    const free = tilesInRadius(home(x), cx, cy, 3).filter((p) => {
+      const t = tileAt(home(x), p.x, p.y)!;
       return t.terrain === 'forest' && t.buildingId === null && !t.road;
     });
     expect(free).toHaveLength(10);
@@ -334,15 +334,15 @@ describe('M11 Regelfeld free (Spec 3.3)', () => {
     expect(placeBuilding(c.w, 'house', c.x - 2, c.y - 1).ok).toBe(true);
     expect(canPlace(c.w, 'hunter', c.x, c.y)).toEqual(reason);
     const d = hunterSite(w0());
-    home(d.w).tiles[idx(d.w, d.x - 2, d.y - 1)]!.terrain = 'grass'; // 9 frei ...
-    home(d.w).tiles[idx(d.w, d.x, d.y)]!.terrain = 'forest'; // ... plus Wald unter dem eigenen Grundriss
+    home(d.w).tiles[idx(home(d.w), d.x - 2, d.y - 1)]!.terrain = 'grass'; // 9 frei ...
+    home(d.w).tiles[idx(home(d.w), d.x, d.y)]!.terrain = 'forest'; // ... plus Wald unter dem eigenen Grundriss
     expect(canPlace(d.w, 'hunter', d.x, d.y)).toEqual(reason);
   });
   it('AK-P2S2-05 Regeln ohne free zählen wie heute: Schäferei mit Weg auf einer ihrer 4 Weidekacheln bleibt baubar', () => {
     expect(siteRuleOk).toBeTypeOf('function');
     const sheep = (): { w: World; x: number; y: number } => {
       const x = w0();
-      const k = x.buildings[x.kontorId]!;
+      const k = x.buildings[home(x).kontorId]!;
       const [X, Y] = [k.x + 6, k.y - 8];
       forceRect(x, X - 4, Y - 4, 10, 10, 'forest');
       for (const [gx, gy] of [
@@ -358,7 +358,7 @@ describe('M11 Regelfeld free (Spec 3.3)', () => {
     const a = sheep();
     expect(canPlace(a.w, 'sheepfarm', a.x, a.y)).toEqual({ ok: true });
     const b = sheep();
-    home(b.w).tiles[idx(b.w, b.x, b.y - 1)]!.terrain = 'forest';
+    home(b.w).tiles[idx(home(b.w), b.x, b.y - 1)]!.terrain = 'forest';
     expect(canPlace(b.w, 'sheepfarm', b.x, b.y)).toEqual({
       ok: false,
       reason: 'Zu wenig Weide in der Nähe',

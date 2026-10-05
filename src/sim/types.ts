@@ -107,6 +107,8 @@ export interface Building {
   connected: boolean;
   progress: number;
   state: BuildingState;
+  /** Index der Insel in `World.islands`. */
+  island: number;
   /** Letzter Ausfall-Tick; nur bei state 'burning'. */
   outageUntil?: number;
   /** Auslastung in Promille × `EFF_WINDOW` (0 … 256 000); fehlt = 256 000 (volle Auslastung). */
@@ -187,16 +189,12 @@ export interface GoodLock {
   good: GoodId;
 }
 export interface World {
-  version: 6;
+  version: 7;
   seed: number;
-  width: number;
-  height: number;
+  islands: Island[];
   tick: number;
-  tiles: Tile[];
   buildings: Record<number, Building>;
   nextBuildingId: number;
-  kontorId: number;
-  stock: Record<GoodId, number>;
   money: number;
   stats: { taxes: number; upkeep: number };
   won: boolean;
@@ -220,8 +218,14 @@ export interface World {
   upkeepCarry: number;
 }
 
-/** Insel-Sicht auf Raster, Kontor und Lager; T03 ersetzt den Alias durch ein eigenes Interface. */
-export type Island = Pick<World, 'width' | 'height' | 'tiles' | 'kontorId' | 'stock'>;
+/** Eine Insel: Raster, Kontor und Lager (M12 E0). */
+export interface Island {
+  width: number;
+  height: number;
+  tiles: Tile[];
+  kontorId: number;
+  stock: Record<GoodId, number>;
+}
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });
 export const fail = (reason: string): Result => ({ ok: false, reason });

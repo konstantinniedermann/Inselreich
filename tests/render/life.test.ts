@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
 import { ISO_H, pointBounds } from '../../src/render/iso';
@@ -218,7 +219,7 @@ describe('Spaziergänger (Spec 5.6)', () => {
 
 describe('Möwen und Herdrauch (Spec 5.6)', () => {
   const world = createWorld(7);
-  const field = coastField(world);
+  const field = coastField(fieldWorld(world));
   const full = { x0: 0, y0: 0, x1: home(world).width - 1, y1: home(world).height - 1 };
 
   it('AK-R4-03 Herdrauch nur Morgen/Abend und nur bewohnt', () => {
@@ -262,7 +263,7 @@ describe('Möwen und Herdrauch (Spec 5.6)', () => {
   it('AK-R4-03 (R114) Kamera um wenige Kacheln verschieben ändert die Möwen im inneren Bildbereich nicht', () => {
     for (const seed of [3, 7, 11]) {
       const w = createWorld(seed);
-      const f = coastField(w);
+      const f = coastField(fieldWorld(w));
       const inner = { x0: 20, y0: 20, x1: 44, y1: 44 };
       const inInner = (g: { tx: number; ty: number }): boolean =>
         g.tx >= inner.x0 && g.tx <= inner.x1 && g.ty >= inner.y0 && g.ty <= inner.y1;

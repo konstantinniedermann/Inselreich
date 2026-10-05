@@ -30,6 +30,7 @@ describe('H-R4 Fix: Weggraph je Frame', () => {
         connected: true,
         progress: 15,
         state: 'ok',
+        island: 0,
       };
       world.buildings[b.id] = b;
       home(world).tiles[idx(home(world), b.x, b.y)]!.buildingId = b.id;

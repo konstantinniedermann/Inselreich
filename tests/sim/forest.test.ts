@@ -36,7 +36,7 @@ const houseOn = (s: { w: World; x: number; y: number }, t: Terrain): void => {
   s.w.money = 10_000;
   const r = placeBuilding(s.w, 'house', s.x, s.y);
   if (!r.ok) throw new Error(r.reason);
-  home(s.w).tiles[idx(s.w, s.x, s.y)]!.terrain = t; // roh: Gelände unter dem Gebäude
+  home(s.w).tiles[idx(home(s.w), s.x, s.y)]!.terrain = t; // roh: Gelände unter dem Gebäude
   s.w.money = 100;
 };
 
@@ -79,7 +79,7 @@ const CASES: Case[] = [
     kind: 'clear',
     prep: () => {
       const s = site('forest');
-      home(s.w).tiles[idx(s.w, s.x, s.y)]!.road = true;
+      home(s.w).tiles[idx(home(s.w), s.x, s.y)]!.road = true;
       return s;
     },
     reason: 'Bereits bebaut',
@@ -128,7 +128,7 @@ const CASES: Case[] = [
     kind: 'clear',
     prep: () => {
       const s = site('forest');
-      return { ...s, x: cx === 'W' ? s.w.width : cx, y: cy === 'H' ? s.w.height : cy };
+      return { ...s, x: cx === 'W' ? home(s.w).width : cx, y: cy === 'H' ? home(s.w).height : cy };
     },
     reason: 'Ausserhalb der Karte',
   })),

@@ -122,7 +122,7 @@ function scene(): { world: World; ids: Record<string, number> } {
   const k = world.buildings[home(world).kontorId]!;
   forceRect(world, k.x + 3, k.y + 3, 6, 6, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(home(world).stock) as (keyof World['stock'])[])
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
     home(world).stock[g] = 1000;
   const ids: Record<string, number> = {};
   const put = (d: BuildingDefId, x: number, y: number): void => {
@@ -142,6 +142,7 @@ function scene(): { world: World; ids: Record<string, number> } {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   for (const p of [0, 1, 2, 3])
     home(world).tiles[(k.y + 6 + (p >> 1)) * home(world).width + k.x + 6 + (p & 1)]!.buildingId = w;
@@ -647,6 +648,7 @@ describe('Renderer', () => {
             connected: true,
             progress: 0,
             state: 'ok',
+            island: 0,
           };
           fire.push({ id, flames: 1, smoke: 1 });
         }
@@ -913,6 +915,7 @@ describe('Renderer', () => {
                 connected: true,
                 progress: 0,
                 state: 'ok',
+                island: 0,
                 ...(i % 2
                   ? {
                       house: {

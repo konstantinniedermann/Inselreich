@@ -23,6 +23,7 @@ function citizenHouse(world: World, inhabitants: number): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier: 3,
       inhabitants,

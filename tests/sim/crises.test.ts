@@ -150,6 +150,7 @@ describe('M6 Krisenkern', () => {
       connected: false,
       progress: 0,
       state: 'ok',
+      island: 0,
       house: {
         tier: 2,
         inhabitants: 1,

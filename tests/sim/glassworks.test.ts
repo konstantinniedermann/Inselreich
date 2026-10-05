@@ -36,6 +36,7 @@ function direct(w: World, defId: BuildingDefId, x: number, connected = true): Bu
     connected,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   return b;
@@ -210,7 +211,7 @@ describe('M8 Glas im Handel, in Aufträgen und Booms (Spec 5.1, 5.4)', () => {
     expect(w.money - m0).toBe(191);
     expect(w.sellPct.glass).toBe(90);
     const b = base();
-    b.stock.glass = 10;
+    home(b).stock.glass = 10;
     b.crisisLevel = 'normal';
     b.tick = 2400;
     beginCrisis(b, 0, { kind: 'boom', good: 'glass' });
@@ -278,7 +279,7 @@ describe('M8 Glas im Handel, in Aufträgen und Booms (Spec 5.1, 5.4)', () => {
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
     const delivered = clone(w);
-    delivered.stock.glass = 6;
+    home(delivered).stock.glass = 6;
     expect(deliverOrder(delivered).ok).toBe(true);
     while (w.tick < 2100) step(w);
     expect(w.order).toMatchObject({ good: 'glass', due: 2100 });

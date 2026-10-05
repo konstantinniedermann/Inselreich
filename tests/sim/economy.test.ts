@@ -116,12 +116,12 @@ describe('upkeep', () => {
 });
 
 function findGrass(w: World): { x: number; y: number } {
-  for (let y = 1; y < w.height - 2; y++)
-    for (let x = 1; x < w.width - 2; x++) {
+  for (let y = 1; y < home(w).height - 2; y++)
+    for (let x = 1; x < home(w).width - 2; x++) {
       let ok = true;
       for (let dy = 0; dy < 2; dy++)
         for (let dx = 0; dx < 2; dx++) {
-          const t = home(w).tiles[(y + dy) * w.width + x + dx]!;
+          const t = home(w).tiles[(y + dy) * home(w).width + x + dx]!;
           if (t.terrain !== 'grass' || t.buildingId !== null || t.road) ok = false;
         }
       if (ok) return { x, y };
@@ -132,7 +132,16 @@ function findGrass(w: World): { x: number; y: number } {
 /** Betrieb ohne Kacheln (Muster addHouse in taxes.test.ts); zählt für Unterhalt und Bilanz. */
 function addRaw(world: World, defId: BuildingDefId): Building {
   const id = world.nextBuildingId++;
-  const b: Building = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok' };
+  const b: Building = {
+    id,
+    defId,
+    x: 0,
+    y: 0,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+    island: 0,
+  };
   world.buildings[id] = b;
   return b;
 }
@@ -183,7 +192,16 @@ describe('M11 Unterhalt je Tick (Spec 3.1)', () => {
     expect(placeBuilding(w, 'house', k.x + 2, k.y)).toEqual({ ok: false, reason: 'Kein Geld' });
     const id = w.nextBuildingId++;
     w.buildings[id] = {
-      ...{ id, defId: 'house', x: k.x + 2, y: k.y, connected: true, progress: 0, state: 'ok' },
+      ...{
+        id,
+        defId: 'house',
+        x: k.x + 2,
+        y: k.y,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        island: 0,
+      },
       house: {
         tier: 1,
         inhabitants: 4,

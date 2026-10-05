@@ -202,6 +202,7 @@ describe('Baumstempel und Bebauung', () => {
         connected: false,
         progress: 0,
         state: 'ok',
+        island: 0,
       };
       home(world).tiles[mid]!.buildingId = bid;
     }

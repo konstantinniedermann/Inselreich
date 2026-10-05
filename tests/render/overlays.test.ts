@@ -153,6 +153,7 @@ describe('M8 R1 Symbole und Farben', () => {
         connected: true,
         progress: 0,
         state: 'ok',
+        island: 0,
         ...extra,
       };
     };

@@ -39,7 +39,7 @@ function worldWith(list: [BuildingDefId, number, number, BuildingState][]): Worl
   const world = createWorld(3);
   let id = 1000;
   for (const [defId, x, y, state] of list) {
-    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state };
+    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state, island: 0 };
     world.buildings[b.id] = b;
   }
   return world;
@@ -181,6 +181,7 @@ describe('H-R3 Anschluss im Renderer', () => {
       connected: true,
       progress: 0,
       state: 'waitingInput',
+      island: 0,
     };
     world.buildings[b.id] = b;
     const cam = camAt(world, 1);

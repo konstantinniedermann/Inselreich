@@ -434,6 +434,7 @@ describe('M11 Ausbau-Gründe (Spec 3.6)', () => {
         connected: true,
         progress: 0,
         state: 'ok',
+        island: 0,
         ...extra,
       } as Building;
       w.buildings[b.id] = b;
@@ -481,6 +482,7 @@ describe('M11 R161 Stein-Hinweis (Spec 3.7)', () => {
       connected: true,
       progress: 0,
       state: 'waitingInput',
+      island: 0,
     };
     expect(glassStoneHint(w, ['Haus nicht voll belegt', 'Zu wenig Stein'])).toBe(text);
     expect(glassStoneHint(w, ['Zu wenig Holz'])).toBeNull();

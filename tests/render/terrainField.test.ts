@@ -1,5 +1,6 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { ISO_H, ISO_W, project } from '../../src/render/iso';
 import {
   COAST_BAND,
@@ -32,10 +33,11 @@ const mini = (rows: string[]) => ({
 
 /** AK-R1-02: 8×8-Raster je Kachel, ≥ 48 von 64 Punkten eigener Typ, Abweichungen nur im Randband ¼. */
 function checkTiles(world: ReturnType<typeof mini> | ReturnType<typeof createWorld>) {
-  const f = terrainFields(world);
-  for (let y = 0; y < world.height; y++)
-    for (let x = 0; x < world.width; x++) {
-      const own = world.tiles[y * world.width + x]!.terrain;
+  const isl = 'islands' in world ? fieldWorld(world) : world;
+  const f = terrainFields(isl);
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++) {
+      const own = isl.tiles[y * isl.width + x]!.terrain;
       let hits = 0;
       for (let j = 0; j < 8; j++)
         for (let i = 0; i < 8; i++) {
@@ -51,24 +53,24 @@ function checkTiles(world: ReturnType<typeof mini> | ReturnType<typeof createWor
 describe('Küstenfeld', () => {
   it('AK-R1-01 coastField ist deterministisch, Land > 0, Wasser < 0, Küstenland in (0, 1]', () => {
     const w = createWorld(3);
-    const a = coastField(w),
-      b = coastField(w);
+    const a = coastField(fieldWorld(w)),
+      b = coastField(fieldWorld(w));
     expect(Array.from(a.v)).toEqual(Array.from(b.v));
     let coastLand = 0;
-    w.tiles.forEach((t, i) => {
+    home(w).tiles.forEach((t, i) => {
       const s = a.v[i]!;
       if (t.terrain === 'water') expect(s).toBeLessThan(0);
       else expect(s).toBeGreaterThan(0);
       if (t.terrain !== 'water') {
-        const x = i % w.width,
-          y = (i / w.width) | 0;
+        const x = i % home(w).width,
+          y = (i / home(w).width) | 0;
         let touches = false;
         for (let dy = -1; dy <= 1; dy++)
           for (let dx = -1; dx <= 1; dx++) {
             const nx = x + dx,
               ny = y + dy;
-            if (nx < 0 || ny < 0 || nx >= w.width || ny >= w.height) continue;
-            if (w.tiles[ny * w.width + nx]!.terrain === 'water') touches = true;
+            if (nx < 0 || ny < 0 || nx >= home(w).width || ny >= home(w).height) continue;
+            if (home(w).tiles[ny * home(w).width + nx]!.terrain === 'water') touches = true;
           }
         if (touches) {
           coastLand++;
@@ -86,22 +88,22 @@ describe('Küstenfeld', () => {
     const quote: number[] = [];
     for (const seed of [3, 1, 42, 12588]) {
       const w = createWorld(seed);
-      const f = terrainFields(w);
+      const f = terrainFields(fieldWorld(w));
       const land = (x: number, y: number) => {
-        const t = w.tiles[y * w.width + x];
+        const t = home(w).tiles[y * home(w).width + x];
         return (
           t !== undefined &&
           t.terrain !== 'water' &&
           x >= 0 &&
           y >= 0 &&
-          x < w.width &&
-          y < w.height
+          x < home(w).width &&
+          y < home(w).height
         );
       };
       const wat = (x: number, y: number) =>
-        x >= 0 && y >= 0 && x < w.width && y < w.height && !land(x, y);
-      for (let y = 2; y < w.height - 2; y++)
-        for (let x = 2; x < w.width - 2; x++) {
+        x >= 0 && y >= 0 && x < home(w).width && y < home(w).height && !land(x, y);
+      for (let y = 2; y < home(w).height - 2; y++)
+        for (let x = 2; x < home(w).width - 2; x++) {
           if (!land(x, y)) continue;
           // konvexe Ecke: Wasser an zwei Seiten und der Diagonale, Land dahinter
           for (const a of [-1, 1])
@@ -174,12 +176,12 @@ describe('Küstenfeld', () => {
 
   it('AK-R1-01 sampleField klemmt am Kartenrand und depthAt ist ≥ 0', () => {
     const w = createWorld(3);
-    const f = terrainFields(w);
+    const f = terrainFields(fieldWorld(w));
     for (const [x, y] of [
       [-5, -5],
       [0, 0],
-      [w.width + 5, w.height + 5],
-      [w.width / 2, 0.01],
+      [home(w).width + 5, home(w).height + 5],
+      [home(w).width / 2, 0.01],
     ] as const) {
       expect(Number.isFinite(sampleField(f.coast, x, y, EDGE_BAND))).toBe(true);
       expect(depthAt(f, x, y)).toBeGreaterThanOrEqual(0);

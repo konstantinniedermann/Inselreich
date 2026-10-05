@@ -47,10 +47,10 @@ describe('generateMap', () => {
     }
     const m = generateMap(s);
     expect(m.seedUsed).toBeGreaterThan(s);
-    expect(createWorld(m.seedUsed).tiles).toEqual(createWorld(s).tiles);
+    expect(home(createWorld(m.seedUsed)).tiles).toEqual(home(createWorld(s)).tiles);
   });
   it('round-trips the seed of a created world', () => {
-    expect(createWorld(createWorld(5).seed).tiles).toEqual(createWorld(5).tiles);
+    expect(home(createWorld(createWorld(5).seed)).tiles).toEqual(home(createWorld(5)).tiles);
   });
   it('keeps the border water', () => {
     const m = generateMap(5);
@@ -100,7 +100,9 @@ describe('world helpers', () => {
   it('tilesInRadius stays in bounds and includes the centre tile', () => {
     const w = createWorld(3);
     const near = tilesInRadius(home(w), 0, 0, 3);
-    expect(near.every((p) => p.x >= 0 && p.y >= 0 && p.x < w.width && p.y < w.height)).toBe(true);
+    expect(
+      near.every((p) => p.x >= 0 && p.y >= 0 && p.x < home(w).width && p.y < home(w).height),
+    ).toBe(true);
     expect(near).toContainEqual({ x: 0, y: 0 });
   });
   it('tilesInRadius is symmetric around a tile centre', () => {

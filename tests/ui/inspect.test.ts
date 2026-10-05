@@ -84,7 +84,15 @@ describe('restView (AK-U2-03)', () => {
 });
 
 describe('burningText (M6-AK-U1-08)', () => {
-  const base = { id: 1, x: 0, y: 0, connected: true, progress: 0, state: 'burning' as const };
+  const base = {
+    id: 1,
+    x: 0,
+    y: 0,
+    connected: true,
+    progress: 0,
+    state: 'burning' as const,
+    island: 0,
+  };
   it('M6-AK-U1-08: Betrieb nennt outageUntil - tick', () => {
     expect(burningText({ ...base, defId: 'lumberjack', outageUntil: 150 }, 100)).toBe(
       'Brennt — wieder in Betrieb in 5 s',
@@ -102,7 +110,7 @@ describe('burningText (M6-AK-U1-08)', () => {
       x: number,
       connected = true,
     ) => {
-      w.buildings[id] = { id, defId, x, y: 50, connected, progress: 0, state: 'ok' };
+      w.buildings[id] = { id, defId, x, y: 50, connected, progress: 0, state: 'ok', island: 0 };
       return w.buildings[id];
     };
     const st = mk(901, 'firestation', 10);
@@ -125,7 +133,16 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
   it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {
     const w = createWorld(3);
     const mk = (id: number, defId: 'firestation' | 'distillery', x: number) => {
-      w.buildings[id] = { id, defId, x, y: 50, connected: true, progress: 0, state: 'ok' };
+      w.buildings[id] = {
+        id,
+        defId,
+        x,
+        y: 50,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        island: 0,
+      };
       return w.buildings[id];
     };
     const a = mk(901, 'firestation', 10);
@@ -161,6 +178,7 @@ describe('M8 Info-Texte (AK-U2-02)', () => {
       connected: true,
       progress: 0,
       state: 'waitingInput',
+      island: 0,
     };
     expect(stateInfo(gw, 0, ['wood'])).toEqual({ text: 'Wartet auf Holz', ok: false });
     expect(stateInfo(gw, 0, ['stone', 'wood']).text).toBe('Wartet auf Stein und Holz');
@@ -185,6 +203,7 @@ describe('M10 noService', () => {
       connected: true,
       progress: 0,
       state: 'noService',
+      island: 0,
     };
     expect(stateInfo(tm, 0)).toEqual({ text: 'Braucht eine Schule in Reichweite', ok: false });
   });
@@ -241,6 +260,7 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
       ...extra,
     };
     w.buildings[b.id] = b;
@@ -306,6 +326,7 @@ describe('M11 Rückerstattung nach Ausbau (paidCost)', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
       level: 2,
     };
     w.buildings[b.id] = b;
@@ -346,7 +367,16 @@ describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
     setHouseTo(h, 2, 8);
     const add = (defId: BuildingDefId) => {
       const id = w.nextBuildingId++;
-      w.buildings[id] = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok' };
+      w.buildings[id] = {
+        id,
+        defId,
+        x: 0,
+        y: 0,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        island: 0,
+      };
     };
     for (let i = 0; i < 3; i++) add('fisher'); // Nahrung 7,5 − 4,0 = 3,5 = Δ 3,5 (dämpft nicht)
     add('weaver');

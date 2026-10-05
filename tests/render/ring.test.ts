@@ -35,7 +35,7 @@ function worldWith(list: [BuildingDefId, number, number, BuildingState][]): Worl
   const world = createWorld(3);
   let id = 1000;
   for (const [defId, x, y, state] of list) {
-    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state };
+    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state, island: 0 };
     world.buildings[b.id] = b;
   }
   return world;
@@ -57,6 +57,7 @@ describe('M11 Fortschrittsring (Spec 8)', () => {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     ...extra,
   });
   it('AK-RND-04 ringFraction: Fischer progress 20 → 0,5; Stufe 2 progress 12 → 0,5; höchstens 0,99999', () => {

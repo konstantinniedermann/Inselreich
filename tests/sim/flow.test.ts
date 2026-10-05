@@ -19,7 +19,17 @@ const hs = (tier: Tier, inhabitants: number): HouseState => ({
 /** Angebundener Betrieb ohne Kacheln; nach allen Bauaktionen anlegen (recomputeConnectivity). */
 function addRaw(w: World, defId: BuildingDefId, extra: Partial<Building> = {}): void {
   const id = w.nextBuildingId++;
-  w.buildings[id] = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok', ...extra };
+  w.buildings[id] = {
+    id,
+    defId,
+    x: 0,
+    y: 0,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+    island: 0,
+    ...extra,
+  };
 }
 /** n volle Pionierhäuser (4 EW), Kapelle, Fischer, Webereien; Lager voll genug; t0 = 1000 (Vielfaches von 50). */
 function ready(n: number, fishers: number, weavers: number, tax?: 'low' | 'high') {

@@ -597,7 +597,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
   const next = levels[lvl - 1]!;
   const probe = {
     ...world,
-    stock: { ...home(world).stock },
+    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
     buildings: { ...world.buildings, [b.id]: { ...b } },
   };
   const r = upgradeBuilding(probe, b.id);

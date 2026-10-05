@@ -50,6 +50,7 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, extra: Partial<Building> = {})
   connected: true,
   progress: 0,
   state: 'ok',
+  island: 0,
   ...extra,
 });
 const DEFS = Object.values(BUILDING_DEFS);

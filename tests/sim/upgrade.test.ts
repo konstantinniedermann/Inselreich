@@ -24,6 +24,7 @@ function fisherAt(w: World, x = 0, y = 0): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   home(w).tiles[idx(home(w), x, y)]!.buildingId = b.id;
@@ -205,6 +206,7 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
       connected: true,
       progress: 7,
       state: 'noForest',
+      island: 0,
       eff: 1000,
     };
     w.buildings[l.id] = l;
@@ -232,6 +234,7 @@ describe('M11 Kette und Auslastung (Spec 10)', () => {
         connected: true,
         progress: 0,
         state: 'ok',
+        island: 0,
       };
       w.buildings[b.id] = b;
       return b;

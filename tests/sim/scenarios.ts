@@ -88,6 +88,7 @@ function insertHouse(w: World, x: number, y: number): Building {
     connected: false,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: newHouseState(w),
   };
   w.buildings[id] = b;

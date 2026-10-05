@@ -77,6 +77,7 @@ describe('Bilanz bei Brandausfall (R115: Dauerleistung)', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
     };
     w.buildings[2] = {
       id: 2,
@@ -86,6 +87,7 @@ describe('Bilanz bei Brandausfall (R115: Dauerleistung)', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
     };
     const nominal = goodsBalance(w).rum.produced;
     expect(nominal).toBeGreaterThan(0);

@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { perfBudget } from '../helpers/perfBudget';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
@@ -45,7 +46,7 @@ const labOfCss = (c: string) => rgbToLab(rgbOfCss(c));
 
 /** Ganze Karte bei Faktor 1 als RGBA (Texturpixel). */
 function paintAll(world: World) {
-  const grid = buildGrid(world);
+  const grid = buildGrid(fieldWorld(world));
   const w = home(world).width * TEX,
     h = home(world).height * TEX;
   const out = paintPixels(grid, 1, 0, 0, w, h);
@@ -100,13 +101,14 @@ describe('Terrain-Helfer', () => {
     const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 3, k.y + 3, 4, 2, 'grass');
     w.money = 100000;
-    for (const g of Object.keys(home(w).stock) as (keyof World['stock'])[]) home(w).stock[g] = 1000;
-    const before = occupancy(w);
+    for (const g of Object.keys(home(w).stock) as (keyof ReturnType<typeof home>['stock'])[])
+      home(w).stock[g] = 1000;
+    const before = occupancy(fieldWorld(w));
     expect(before.length).toBe(home(w).width * home(w).height);
     expect(before[(k.y + 3) * home(w).width + k.x + 3]).toBe(0);
     expect(placeBuilding(w, 'house', k.x + 3, k.y + 3).ok).toBe(true);
     expect(placeRoad(w, k.x + 5, k.y + 4).ok).toBe(true);
-    const after = occupancy(w);
+    const after = occupancy(fieldWorld(w));
     expect(after[(k.y + 3) * home(w).width + k.x + 3]).toBe(1);
     expect(after[(k.y + 4) * home(w).width + k.x + 5]).toBe(1);
     expect(after[(k.y + 3) * home(w).width + k.x + 4]).toBe(0);
@@ -116,12 +118,18 @@ describe('Terrain-Helfer', () => {
 
   it('AK-ISO-19 terrainLayerSize: Faktor 1 und 2 sowie halbe Kopie je Canvas ≤ 16 777 216 Pixel', () => {
     for (const scale of [1, 2]) {
-      const sizes = terrainLayerSize(createWorld(3), scale);
+      const sizes = terrainLayerSize(fieldWorld(createWorld(3)), scale);
       expect(sizes.length).toBe(2);
       for (const s of sizes) expect(s.w * s.h).toBeLessThanOrEqual(16777216);
     }
-    expect(terrainLayerSize(createWorld(3), 1)[0]).toEqual({ w: 64 * TEX, h: 64 * TEX });
-    expect(terrainLayerSize(createWorld(3), 2)[1]).toEqual({ w: 64 * TEX, h: 64 * TEX });
+    expect(terrainLayerSize(fieldWorld(createWorld(3)), 1)[0]).toEqual({
+      w: 64 * TEX,
+      h: 64 * TEX,
+    });
+    expect(terrainLayerSize(fieldWorld(createWorld(3)), 2)[1]).toEqual({
+      w: 64 * TEX,
+      h: 64 * TEX,
+    });
   });
 
   it('RF-2 shouldPatch: fremde Welt oder gleicher Schlüssel zeichnet nichts teilweise neu', () => {
@@ -233,7 +241,7 @@ describe('Waldboden und Licht', () => {
   it('R149 Plastik: mittlere |shade| auf Land ≥ 0,035 und auf Gebirge ≥ 0,05 (Seeds 3, 5, 12588)', () => {
     const mtCls = 1 + LAND.indexOf('mountain');
     for (const seed of [3, 5, 12588]) {
-      const g = buildGrid(createWorld(seed));
+      const g = buildGrid(fieldWorld(createWorld(seed)));
       let sl = 0,
         cl = 0,
         sm = 0,
@@ -318,7 +326,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
 
   it('AK-R1-08 I2 Flachwasser ~ waterShallow, Tiefwasser ~ waterDeep, Schaum am Saum', () => {
     const w = world3;
-    const f = terrainFields(w);
+    const f = terrainFields(fieldWorld(w));
     let shallow = 0,
       shallowOk = 0,
       deep = 0,
@@ -678,12 +686,12 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
     const x = k.x + 6,
       y = k.y + 2;
     forceRect(w, x, y, 1, 1, 'forest');
-    const a = terrainCodes(w);
+    const a = terrainCodes(fieldWorld(w));
     const key = layoutKey(w);
     step(w);
     expect(shouldPatch({ world: w, key }, w, layoutKey(w))).toBe(false);
     expect(clearForest(w, x, y).ok).toBe(true);
-    const b = terrainCodes(w);
+    const b = terrainCodes(fieldWorld(w));
     expect([...a.keys()].filter((i) => a[i] !== b[i])).toEqual([y * home(w).width + x]);
     const r = terrainPatchRect(a, b, home(w).width, home(w).height)!;
     expect(r.x0).toBeLessThanOrEqual(x - SMOOTH_BORDER);
@@ -710,7 +718,7 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
     const snap = () => ({
       fish: fishAnchors(w),
       flock: flockAnchors(w, phaseAt(w.tick)),
-      coast: coastField(w),
+      coast: coastField(fieldWorld(w)),
     });
     const before = snap();
     expect(clearForest(w, k.x + 6, k.y + 2).ok).toBe(true);
@@ -724,15 +732,15 @@ describe('M10 Teil-Raster', () => {
     const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 2, 1, 'forest');
-    const fields = terrainFields(w);
-    const grid = buildGrid(w, fields);
-    const prev = terrainCodes(w);
+    const fields = terrainFields(fieldWorld(w));
+    const grid = buildGrid(fieldWorld(w), fields);
+    const prev = terrainCodes(fieldWorld(w));
     home(w).tiles[(k.y + 2) * home(w).width + k.x + 6]!.terrain = 'grass';
     home(w).tiles[(k.y + 2) * home(w).width + k.x + 7]!.terrain = 'sand';
-    const next = terrainCodes(w);
+    const next = terrainCodes(fieldWorld(w));
     const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
-    patchGrid(w, fields, grid, prev, next, rect);
-    const full = buildGrid(w);
+    patchGrid(fieldWorld(w), fields, grid, prev, next, rect);
+    const full = buildGrid(fieldWorld(w));
     for (const f of [
       'sharp',
       'smooth',
@@ -860,7 +868,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
 
 describe('H-R9 B2 Dünen', () => {
   it('H-R12b (löst H-R9 B2 Dünen nur auf trockenem Sand ab) Dünenpräsenz am nassen Saum (s < WET_SAND) = 0, auf trockenem Sand > 0', () => {
-    const g = buildGrid(createWorld(3));
+    const g = buildGrid(fieldWorld(createWorld(3)));
     const sand = LAND.indexOf('sand');
     let wet = 0,
       dry = 0,
@@ -932,7 +940,7 @@ describe('H-R9 R3 Dünen in Teilbereichen', () => {
   it('H-R12b (löst H-R9 R3 Dünen in Teilbereichen ab) Dünen setzen längs aus: auf jedem Seed 1–10 tragen 15–85 % des trockenen Sands Präsenz > 0,5 (gepoolt in dunes.test.ts: 30–70 %)', () => {
     const sa = LAND.indexOf('sand');
     for (let seed = 1; seed <= 10; seed++) {
-      const g = buildGrid(createWorld(seed));
+      const g = buildGrid(fieldWorld(createWorld(seed)));
       let dry = 0,
         hi = 0;
       for (let k = 0; k < g.cls.length; k++) {
@@ -1046,14 +1054,14 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 4, 3, 'forest');
-    const fields = terrainFields(w);
-    const grid = buildGrid(w, fields);
-    const prev = terrainCodes(w);
+    const fields = terrainFields(fieldWorld(w));
+    const grid = buildGrid(fieldWorld(w), fields);
+    const prev = terrainCodes(fieldWorld(w));
     home(w).tiles[(k.y + 3) * home(w).width + k.x + 7]!.terrain = 'grass';
-    const next = terrainCodes(w);
+    const next = terrainCodes(fieldWorld(w));
     const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
-    patchGrid(w, fields, grid, prev, next, rect);
-    const full = buildGrid(w);
+    patchGrid(fieldWorld(w), fields, grid, prev, next, rect);
+    const full = buildGrid(fieldWorld(w));
     for (const f of [
       'shade',
       'tone',

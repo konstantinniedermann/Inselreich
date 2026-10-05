@@ -117,7 +117,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
 
   it('AK-S1-02 createWorld: version 5, v5-Felder; unlockAll ändert nur unlocked', () => {
     const w = createWorld(3);
-    expect(w.version).toBe(6);
+    expect(w.version).toBe(7);
     expect(w.unlocked).toEqual(['U0']);
     expect(w.goodLocks).toEqual([]);
     expect(w.upgradeStops).toEqual([]);
@@ -331,7 +331,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
     }
     expect(a.order).not.toBeNull();
     expect(a.order).toEqual(b.order);
-    a.stock[a.order!.good] = 99;
+    home(a).stock[a.order!.good] = 99;
     const before = serialize(a);
     expect(deliverOrder(a)).toEqual({ ok: false, reason: 'Erst mit den ersten Siedlern' });
     expect(serialize(a)).toBe(before);
@@ -385,7 +385,7 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
   it('AK-UNL-02 neue Welt: Jagdhütte erst mit U2, Rinderfarm erst mit U3 (lockText), danach baubar', () => {
     const x0 = createWorld(3);
     x0.money = 10_000;
-    const k = x0.buildings[x0.kontorId]!;
+    const k = x0.buildings[home(x0).kontorId]!;
     forceRect(x0, k.x + 3, k.y - 8, 8, 8, 'grass'); // Rinderfarm bei (k.x+5, k.y-5)
     forceRect(x0, k.x + 3, k.y + 2, 6, 4, 'forest'); // Jagdhütte bei (k.x+5, k.y+3)
     const [fx, fy, hx, hy] = [k.x + 5, k.y - 5, k.x + 5, k.y + 3];

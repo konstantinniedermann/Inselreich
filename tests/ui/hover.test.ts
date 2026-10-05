@@ -76,7 +76,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   ): Building {
     const id = w.nextBuildingId++;
     const d = BUILDING_DEFS[defId];
-    const b: Building = { id, defId, x, y, connected: true, progress: 0, state };
+    const b: Building = { id, defId, x, y, connected: true, progress: 0, state, island: 0 };
     w.buildings[id] = b;
     for (let dy = 0; dy < d.h; dy++)
       for (let dx = 0; dx < d.w; dx++) {
@@ -181,7 +181,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
     raw(w, 'house', ...at(6, 10)).house = newHouseState(w);
     expect(hoverInfo(w, chapel, 0, none)!.lines).toEqual(['versorgt 1 Haus']); // Abweichung von Spec 13.2 (Einzahl)
     const w2 = createWorld(3, { crisisLevel: 'off', unlockAll: true }); // ohne Haus in Reichweite
-    const k2 = w2.buildings[w2.kontorId]!;
+    const k2 = w2.buildings[home(w2).kontorId]!;
     const school = raw(w2, 'school', k2.x + 4, k2.y + 14);
     expect(hoverInfo(w2, school, 0, none)).toEqual({
       title: 'Schule',
@@ -297,6 +297,7 @@ describe('M11 Mouse-over Betrieb (Spec 7)', () => {
         connected: true,
         progress: 0,
         state: 'ok',
+        island: 0,
         ...extra,
       };
       w.buildings[b.id] = b;

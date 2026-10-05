@@ -34,6 +34,7 @@ const mk = (defId: Building['defId'], extra: Partial<Building> = {}): Building =
   connected: true,
   progress: 0,
   state: 'ok',
+  island: 0,
   ...extra,
 });
 

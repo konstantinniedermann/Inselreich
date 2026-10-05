@@ -47,6 +47,7 @@ function direct(world: World, defId: BuildingDefId, connected: boolean): Buildin
     connected,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   world.buildings[b.id] = b;
   return b;
@@ -62,6 +63,7 @@ function directHouse(world: World, x: number, y: number, tier: 1 | 2 | 3, suppli
     connected: false,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier,
       inhabitants: 4,
@@ -125,14 +127,14 @@ describe('queries', () => {
 
   it('AK-S3-03 coverageMask stimmt für alle Kacheln mit inSupplyRange und serviceAvailable überein', () => {
     const mask = coverageMask(w, 'supply');
-    expect(mask).toHaveLength(w.width * w.height);
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++)
-        expect(mask[y * w.width + x], `${x},${y}`).toBe(inSupplyRange(w, x + 0.5, y + 0.5));
+    expect(mask).toHaveLength(home(w).width * home(w).height);
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++)
+        expect(mask[y * home(w).width + x], `${x},${y}`).toBe(inSupplyRange(w, x + 0.5, y + 0.5));
     const chapel = placeService(w, 'chapel', k.x + 3, k.y + 3);
     const faith = coverageMask(w, 'faith');
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         const probe = {
           id: -1,
           defId: 'house',
@@ -142,7 +144,7 @@ describe('queries', () => {
           progress: 0,
           state: 'ok',
         } as Building;
-        expect(faith[y * w.width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
+        expect(faith[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
       }
     expect(chapel.connected).toBe(true);
     // Schule fehlt: Maske leer
@@ -255,24 +257,24 @@ describe('queries', () => {
   it('layoutKey kollidiert nicht bei gleicher Wegindex-Summe (5+10 gegen 15)', () => {
     const a = createWorld(3, { unlockAll: true });
     const b = createWorld(3, { unlockAll: true });
-    for (const i of [5, 10]) a.tiles[i]!.road = true;
-    b.tiles[15]!.road = true;
+    for (const i of [5, 10]) home(a).tiles[i]!.road = true;
+    home(b).tiles[15]!.road = true;
     expect(layoutKey(a)).not.toBe(layoutKey(b));
   });
 
   it('layoutKey kollidiert nicht bei gleicher Wegzahl und -summe an anderen Kacheln (1+4 gegen 2+3)', () => {
     const a = createWorld(3, { unlockAll: true });
     const b = createWorld(3, { unlockAll: true });
-    for (const i of [1, 4]) a.tiles[i]!.road = true;
-    for (const i of [2, 3]) b.tiles[i]!.road = true;
+    for (const i of [1, 4]) home(a).tiles[i]!.road = true;
+    for (const i of [2, 3]) home(b).tiles[i]!.road = true;
     expect(layoutKey(a)).not.toBe(layoutKey(b));
   });
 
   it('layoutKey erkennt ein verschobenes Gebäude bei gleicher Anzahl und gleicher ID', () => {
     const a = createWorld(3, { unlockAll: true });
     const b = createWorld(3, { unlockAll: true });
-    const ka = a.buildings[a.kontorId]!;
-    const kb = b.buildings[b.kontorId]!;
+    const ka = a.buildings[home(a).kontorId]!;
+    const kb = b.buildings[home(b).kontorId]!;
     expect(layoutKey(a)).toBe(layoutKey(b));
     kb.x = ka.x + 1;
     expect(layoutKey(a)).not.toBe(layoutKey(b));
@@ -313,6 +315,7 @@ function station(world: World, x: number, y: number, connected: boolean): Buildi
     connected,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   world.buildings[b.id] = b;
   return b;
@@ -337,8 +340,8 @@ describe('M6 Abfragen', () => {
     const chapel = placeService(
       f,
       'chapel',
-      f.buildings[f.kontorId]!.x + 3,
-      f.buildings[f.kontorId]!.y + 3,
+      f.buildings[home(f).kontorId]!.x + 3,
+      f.buildings[home(f).kontorId]!.y + 3,
     );
     f.tick = 2400;
     beginCrisis(f, 0, { kind: 'fire', tile: { x: chapel.x, y: chapel.y } });
@@ -368,8 +371,8 @@ describe('M6 Abfragen', () => {
     const s = station(w, k.x + 6, k.y + 4, true);
     const mask = coverageMask(w, 'fire');
     expect(mask).toHaveLength(4096);
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         const probe = {
           id: -1,
           defId: 'fisher',
@@ -379,7 +382,7 @@ describe('M6 Abfragen', () => {
           progress: 0,
           state: 'ok',
         } as Building;
-        expect(mask[y * w.width + x], `${x},${y}`).toBe(isProtected(w, probe));
+        expect(mask[y * home(w).width + x], `${x},${y}`).toBe(isProtected(w, probe));
       }
     s.connected = false;
     expect(coverageMask(w, 'fire').some(Boolean)).toBe(false);
@@ -393,8 +396,8 @@ describe('M6 Abfragen', () => {
     expect(chapel.outageUntil).toBeDefined();
     expect(coverageMask(w, 'faith').some(Boolean)).toBe(false);
     const faith = coverageMask(w, 'faith');
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         const probe = {
           id: -1,
           defId: 'house',
@@ -404,7 +407,7 @@ describe('M6 Abfragen', () => {
           progress: 0,
           state: 'ok',
         } as Building;
-        expect(faith[y * w.width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
+        expect(faith[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
       }
   });
 
@@ -427,7 +430,7 @@ describe('M6 Abfragen', () => {
     expect(layoutKey(w)).toBe(k0);
 
     const calm = createWorld(3, { unlockAll: true });
-    const kc = calm.buildings[calm.kontorId]!;
+    const kc = calm.buildings[home(calm).kontorId]!;
     prepareEast(calm, kc);
     const c0 = layoutKey(calm);
     for (let i = 0; i < 100; i++) step(calm);
@@ -444,6 +447,7 @@ describe('M6 Abfragen', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
     };
     w.buildings[sheep.id] = sheep;
     houseNearKontor(w);
@@ -490,8 +494,8 @@ describe('M8 Abfragen', () => {
     const bath = placeService(w, 'bathhouse', k.x + 3, k.y + 3);
     const probeAll = (): void => {
       const mask = coverageMask(w, 'bath');
-      for (let y = 0; y < w.height; y++)
-        for (let x = 0; x < w.width; x++) {
+      for (let y = 0; y < home(w).height; y++)
+        for (let x = 0; x < home(w).width; x++) {
           const probe = {
             id: -1,
             defId: 'house',
@@ -501,7 +505,7 @@ describe('M8 Abfragen', () => {
             progress: 0,
             state: 'ok',
           } as Building;
-          expect(mask[y * w.width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'bath'));
+          expect(mask[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'bath'));
         }
     };
     expect(coverageMask(w, 'bath').some(Boolean)).toBe(true);

@@ -2,7 +2,7 @@ import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
 import { orderVisible } from './order';
-import type { CrisisKind, Result, World } from '../sim/types';
+import type { CrisisKind, GoodId, Result, World } from '../sim/types';
 import type { SoundEvent } from '../audio/sound';
 
 /** Die Grössen, die je Frame verglichen werden (Spec 9.4). */
@@ -114,7 +114,7 @@ export function shortageSnapshot(world: World): ShortageSnapshot {
     for (const [good, d] of Object.entries(b.house.demand)) if ((d ?? 0) > 0) demanded.add(good);
   }
   const stock: Record<string, number> = {};
-  for (const g of demanded) stock[g] = home(world).stock[g as keyof World['stock']] ?? 0;
+  for (const g of demanded) stock[g] = home(world).stock[g as GoodId] ?? 0;
   return { demanded: [...demanded], stock };
 }
 

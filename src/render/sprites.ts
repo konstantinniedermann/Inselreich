@@ -2,7 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { LEVELS } from '../sim/defs/levels';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { hash2 } from '../sim/noise';
-import { home, tileAt } from '../sim/world';
+import { HOME, home, tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { LIGHT } from './light';
@@ -1932,7 +1932,16 @@ export function drawGhost(
   x: number,
   y: number,
 ): void {
-  const b: Building = { id: -1, defId: def.id, x, y, connected: true, progress: 0, state: 'ok' };
+  const b: Building = {
+    id: -1,
+    defId: def.id,
+    x,
+    y,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+    island: HOME,
+  };
   ctx.save();
   ctx.globalAlpha = GHOST_ALPHA;
   drawBody(ctx, cam, def, b, 0);

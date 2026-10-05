@@ -47,6 +47,7 @@ function insertHouse(w: World, x: number, y: number): Building {
     connected: false,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: newHouseState(w),
   };
   w.buildings[id] = b;
@@ -89,7 +90,16 @@ function baseWorld(): { w: World; kx: number; ky: number } {
 /** Holzfäller ohne Platzierungsregeln (Wald in der Nähe ist für die Darstellung unerheblich). */
 function insertLumberjack(w: World, x: number, y: number): Building {
   const id = w.nextBuildingId++;
-  const b: Building = { id, defId: 'lumberjack', x, y, connected: false, progress: 0, state: 'ok' };
+  const b: Building = {
+    id,
+    defId: 'lumberjack',
+    x,
+    y,
+    connected: false,
+    progress: 0,
+    state: 'ok',
+    island: 0,
+  };
   w.buildings[id] = b;
   home(w).tiles[idx(home(w), x, y)]!.buildingId = id;
   return b;
@@ -98,7 +108,16 @@ function insertLumberjack(w: World, x: number, y: number): Building {
 /** Kapelle ohne Platzierungsregeln (2 × 2, nur für die Darstellung: hoher Körper vor einem niedrigeren). */
 function insertChapel(w: World, x: number, y: number): Building {
   const id = w.nextBuildingId++;
-  const b: Building = { id, defId: 'chapel', x, y, connected: false, progress: 0, state: 'ok' };
+  const b: Building = {
+    id,
+    defId: 'chapel',
+    x,
+    y,
+    connected: false,
+    progress: 0,
+    state: 'ok',
+    island: 0,
+  };
   w.buildings[id] = b;
   for (let dy = 0; dy < 2; dy++)
     for (let dx = 0; dx < 2; dx++) {
@@ -138,7 +157,7 @@ function layout(kx: number, ky: number) {
 /** Lagen mit absoluten Kachelkoordinaten (Seed 3 legt den Kontor fest). */
 export const VERDECKUNG = (() => {
   const k = createWorld(SEED);
-  const b = k.buildings[k.kontorId]!;
+  const b = k.buildings[home(k).kontorId]!;
   return layout(b.x, b.y);
 })();
 

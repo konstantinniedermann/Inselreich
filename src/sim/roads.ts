@@ -18,8 +18,8 @@ export function reachableRoads(world: World): Set<number> {
   const queue = [...seen];
   for (let head = 0; head < queue.length; head++) {
     const cur = queue[head]!;
-    const cx = cur % world.width;
-    const cy = Math.floor(cur / world.width);
+    const cx = cur % home(world).width;
+    const cy = Math.floor(cur / home(world).width);
     for (const [dx, dy] of [
       [1, 0],
       [-1, 0],

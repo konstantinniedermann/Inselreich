@@ -50,7 +50,17 @@ const put = (
   y: number,
   o: Partial<Building> = {},
 ): Building => {
-  const b: Building = { id, defId, x, y, connected: true, progress: 0, state: 'ok', ...o };
+  const b: Building = {
+    id,
+    defId,
+    x,
+    y,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+    island: 0,
+    ...o,
+  };
   w.buildings[id] = b;
   const d = BUILDING_DEFS[defId];
   for (let dy = 0; dy < d.h; dy++)

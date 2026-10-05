@@ -21,9 +21,8 @@ export { isLand } from './mapgen';
 
 /** Inselindex der Heimat (Struktur, kein Spielwert). */
 export const HOME = 0;
-export const home = (w: World): Island => w;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- T03 wählt die Insel über b.island
-export const islandOf = (w: World, _b: Building): Island => w;
+export const home = (w: World): Island => w.islands[HOME]!;
+export const islandOf = (w: World, b: Building): Island => w.islands[b.island]!;
 
 export const idx = (isl: Island, x: number, y: number): number => y * isl.width + x;
 
@@ -80,16 +79,12 @@ export function createWorld(
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 6,
+    version: 7,
     seed: seedUsed,
-    width: MAP_W,
-    height: MAP_H,
+    islands: [{ width: MAP_W, height: MAP_H, tiles, kontorId: 1, stock: { ...START_STOCK } }],
     tick: 0,
-    tiles,
     buildings: {},
     nextBuildingId: 2,
-    kontorId: 1,
-    stock: { ...START_STOCK },
     money: START_MONEY,
     stats: { taxes: 0, upkeep: 0 },
     won: false,
@@ -114,9 +109,10 @@ export function createWorld(
     connected: true,
     progress: 0,
     state: 'ok',
+    island: HOME,
   };
   for (const p of footprint(BUILDING_DEFS.kontor, kontor.x, kontor.y)) {
-    const tile = tileAt(world, p.x, p.y);
+    const tile = tileAt(home(world), p.x, p.y);
     if (tile) tile.buildingId = 1;
   }
   return world;

@@ -21,6 +21,7 @@ function connectedBuilding(world: World, defId: BuildingDefId): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   world.buildings[b.id] = b;
   return b;

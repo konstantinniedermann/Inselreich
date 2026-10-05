@@ -87,8 +87,8 @@ export function houseFar(world: World): Building {
   const k = world.buildings[home(world).kontorId]!;
   const kc = center(BUILDING_DEFS.kontor, k.x, k.y);
   const supplyRadius = BUILDING_DEFS.kontor.supplyRadius ?? 0;
-  for (let y = 0; y < world.height; y++) {
-    for (let x = 0; x < world.width; x++) {
+  for (let y = 0; y < home(world).height; y++) {
+    for (let x = 0; x < home(world).width; x++) {
       const h = center(BUILDING_DEFS.house, x, y);
       if (Math.hypot(h.cx - kc.cx, h.cy - kc.cy) <= supplyRadius + 1) continue;
       if (home(world).tiles[idx(home(world), x, y)]!.buildingId !== null) continue;
@@ -102,6 +102,7 @@ export function houseFar(world: World): Building {
         connected: false,
         progress: 0,
         state: 'ok',
+        island: 0,
         house: newHouseState(world),
       };
       world.buildings[id] = house;

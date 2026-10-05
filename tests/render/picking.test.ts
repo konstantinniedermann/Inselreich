@@ -94,6 +94,7 @@ describe('bodyPolygons für alle Typen (R113)', () => {
     connected: true,
     progress: 1,
     state: 'ok',
+    island: 0,
     ...(tier
       ? {
           house: {

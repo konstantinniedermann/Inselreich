@@ -6,7 +6,7 @@ import { recomputeConnectivity } from './roads';
 import type { Building, BuildingDefId, Result, World } from './types';
 import { fail, ok } from './types';
 import { paidCost } from './upgrade';
-import { footprint, home, islandOf, tileAt } from './world';
+import { HOME, footprint, home, islandOf, tileAt } from './world';
 
 export function placeRoad(world: World, x: number, y: number): Result {
   const res = canPlaceRoad(world, x, y);
@@ -40,7 +40,16 @@ export function placeBuilding(
   if (!afford.ok) return afford;
   pay(world, home(world), BUILDING_DEFS[defId].cost);
   const id = world.nextBuildingId++;
-  const building: Building = { id, defId, x, y, connected: false, progress: 0, state: 'ok' };
+  const building: Building = {
+    id,
+    defId,
+    x,
+    y,
+    connected: false,
+    progress: 0,
+    state: 'ok',
+    island: HOME,
+  };
   if (defId === 'house') {
     building.house = newHouseState(world);
   }

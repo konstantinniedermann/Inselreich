@@ -4,7 +4,7 @@ import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
 import type { Weather } from './daynight';
 import { CLEAR } from './weather';
-import { coastField, coastValue, terrainFields } from './terrainField';
+import { coastField, coastValue, fieldWorld, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
 export const FOAM_PERIOD_MS = 3200; // Spec 5.2: Periode des Schaumsaums
@@ -52,7 +52,7 @@ const cache = new WeakMap<World, WaterInfo>();
 function contour(world: World, depth: Float32Array, start: Int32Array): number[] {
   const isl = home(world);
   const { width: w, height: h } = isl;
-  const fields = terrainFields(world);
+  const fields = terrainFields(fieldWorld(world));
   const flat: number[] = [];
   const normal = (x: number, y: number): [number, number] => {
     const gx = coastValue(fields, x + GRAD_H, y) - coastValue(fields, x - GRAD_H, y);
@@ -154,7 +154,7 @@ function infoFor(world: World): WaterInfo {
   if (hit) return hit;
   const { width: w, height: h } = home(world);
   const { seed } = world;
-  const field = coastField(world);
+  const field = coastField(fieldWorld(world));
   const n = w * h;
   const depth = new Float32Array(n);
   const phase = new Float32Array(n);

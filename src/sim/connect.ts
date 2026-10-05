@@ -42,7 +42,7 @@ export function connectPath(world: World, id: number): ConnectPath {
   if (b.connected) return { ok: false, reason: 'Schon angebunden' };
   const def = BUILDING_DEFS[b.defId];
   const targets = targetSet(world);
-  const n = world.width * world.height;
+  const n = home(world).width * home(world).height;
   const dist = new Int32Array(n).fill(-1);
   const prev = new Int32Array(n).fill(-1);
   const done = new Uint8Array(n);
@@ -80,8 +80,8 @@ export function connectPath(world: World, id: number): ConnectPath {
     if (done[cur]) continue;
     done[cur] = 1;
     if (targets.has(cur)) return { ok: true, tiles: collectNew(world, prev, cur) };
-    const cx = cur % world.width;
-    const cy = Math.floor(cur / world.width);
+    const cx = cur % home(world).width;
+    const cy = Math.floor(cur / home(world).width);
     for (const [dx, dy] of NEIGHBOURS) {
       const nx = cx + dx;
       const ny = cy + dy;
@@ -105,7 +105,7 @@ function collectNew(world: World, prev: Int32Array, end: number): Pos[] {
   const tiles: Pos[] = [];
   for (let i = end; i !== -1; i = prev[i]!) {
     if (home(world).tiles[i]!.road) continue;
-    tiles.push({ x: i % world.width, y: Math.floor(i / world.width) });
+    tiles.push({ x: i % home(world).width, y: Math.floor(i / home(world).width) });
   }
   return tiles.reverse();
 }
