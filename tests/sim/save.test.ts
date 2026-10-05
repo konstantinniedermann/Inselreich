@@ -11,7 +11,7 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { ISLANDS } from '../../src/sim/defs/sea';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
-import { SAVE_VERSION, deserialize, migrateV6ToV7, serialize } from '../../src/sim/save';
+import { SAVE_VERSION, deserialize, migrateV6ToV7, migrateV7ToV8, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
@@ -1007,6 +1007,7 @@ describe('M12 E0 Save v7', () => {
   it('AK-E0-05c Schlüsselreihenfolge der Migration = Live-Welt', () => {
     const migrated = rawOf(FIX);
     migrateV6ToV7(migrated);
+    migrateV7ToV8(migrated);
     const live = JSON.parse(serialize(fixtureV6Run().w)) as Raw;
     expect(Object.keys(migrated)).toEqual(Object.keys(live));
     expect(Object.keys(migrated.islands[0])).toEqual(Object.keys(live.islands[0]));
