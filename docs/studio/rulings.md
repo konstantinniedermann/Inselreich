@@ -1785,3 +1785,16 @@ Szenario-Tests statt Balancing-Pin) gehen an den Plan des Seefahrt-Bündels E2+E
 vor E0-Merge, R237). — Kosten bei Irrtum: B.2/AK-Z3-04 streichen.
 
 Entscheider: L0 · Anlass: Bericht lead-design M12-I010 · ADR: —
+
+## R240 · 2026-10-05 · Kombiniertes Gate Spec/Plan H-I007 „Fest in der Kapelle"
+
+Ruling: Kurzdesign lead-design (AK-I007-01…12, Werte FEAST_RUM 10 / FEAST_DURATION 600 / FEAST_COOLDOWN 1800) und Plan
+lead-tech (P1 Sim+Save, P2 UI + Browser-Check; `.studio/handoffs/2026-10-05-h-i007-{kurzdesign,plan}.md`) angenommen,
+Umsetzungsbudget 7 Starts. **D-140:** `feastAt` als optionales, geprüftes Gebäudefeld **ohne neue Save-Version** —
+Auslegung der festen Regel „versionieren und migrieren": Zweck (alte Spielstände laden, mit Test AK-09; ungültige Werte
+abgewiesen AK-10) ist erfüllt; ein Versionswechsel hätte eine leere Migration und kollidierte mit v7 aus E0. Weil das
+eine Auslegung einer Verfassungsregel ohne Präzedenz ist, geht ein Vorbehalt in die Warteschlange; vor dem Release
+REL-04 umkehrbar. **D-141:** H-I007 geht vor E0 nach main; E0 holt es per Merge (wie H-U1/REL-03). Sim-Riegel vor U4
+entfällt (Rum-Bestand genügt, YAGNI). — Kosten bei Irrtum: Versionswechsel v6→v7 nachziehen und E0-Versionen schieben.
+
+Entscheider: L0 · Anlass: Berichte lead-design/lead-tech H-I007 · ADR: —
