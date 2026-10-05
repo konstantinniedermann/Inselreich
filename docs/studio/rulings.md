@@ -1749,3 +1749,52 @@ Briefings mit CI-Prüfung nennen Lauf-ID und Workflow-Namen (CI ≠ Pages). Drit
 R233 durch studio-coach. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Ad-hoc-Retro CI rot, CI-Lauf 37295831843 · ADR: —
+
+## R237 · 2026-10-05 · Session-Fokus Spielinhalte
+
+Ruling: Nutzerauftrag „weiter, Fokus auf Spielinhalte" heisst: Vorrang für Arbeit, die das Spiel inhaltlich erweitert —
+M12 „Weite Welt" (E0 C2 → C3, danach E1 und Plan Seefahrt-Bündel) und Ideen-Runde IDEEN-03. Prozessarbeit (Handbuch-
+Umsetzung R233/R236 durch studio-coach) und Technik ohne Spielwirkung (REL-04-Kandidat paintPixels-Performance) ruhen
+in dieser Session; Pflicht-Retros und Session-Ende-Routine bleiben. Budget E0 neu geloggt (Session-Wechsel). — Kosten
+bei Irrtum: Handbuch-Nachführung eine Session später.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
+
+## R238 · 2026-10-05 · Gate IDEEN-03
+
+Ruling: Empfehlungen lead-design übernommen. **I-010 „Drittes Ziel «Gewürzstadt»" eingeplant** als Zusatz zum
+Seefahrt-Bündel E2+E3+E4: lead-design schreibt einen Spec-Nachtrag (Anhang zur M12-Spec auf `docs/m12-brainstorming`)
+mit testbaren AK, Wert n rechnet design-economy-designer gegen die Gewürz-Erzeugung (Vorschlag 80); Ziel-Flagge läuft
+mit Save v9; Determinismus-Risiko (Controller nach zweitem Ziel, Neupin `feedSpice`/`wonMerchantsTick`) als Auflage an
+den Bündel-Plan. I-011, I-012, I-014 geparkt; I-013 verworfen. Befund „Geldschwemme ab Kaufleuten" kommt als
+Beobachtung in `docs/beobachtungen.md` (Input fürs nächste Wirtschafts-Brainstorming). `docs/ideen-03` @ dffcdbd geht
+mit dem nächsten Integrator-Lauf nach main. — Kosten bei Irrtum: Nachtrag verwerfen, Bündel ohne drittes Ziel.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-03 · ADR: —
+
+## R239 · 2026-10-05 · Gate Spec-Nachtrag I-010 (Anhang 05)
+
+Ruling: Anhang 05 „Drittes Ziel «Gewürzstadt»" (`docs/m12-brainstorming` @ 619eea5) angenommen: n = 80
+(`WIN_SPICE_MERCHANTS`), Haltezeit 600 Ticks (`WIN_SPICE_HOLD`), Save-v9-Feld `wonSpice`, AK-Z3-01…14. (1)
+**Schleifen-Bedingung übernommen** (Ziel zählt nur mit Schiffsroute, die Gewürz von einer Fremdinsel mit eigener
+Plantage heimholt; Zukauf bleibt Notversorgung) — sonst wäre das Ziel „20 Kaufleute mehr". (2) **Plantagenplätze
+Felsbucht bleiben 3** (E1/Anhang 02 A unverändert; Zukauf schliesst die Lücke, Inselwahl bleibt eine Abwägung). (3)
+Änderungen abgenommener AK laut Anhang 05 I (AK-S3-03 Phase `'spice'`, AK-U1-01 Texte, RF-4 `wonSpiceShown`,
+AK-M12-B2 Fold-back) sind mitbeschlossen. Auflagen J (u. a. Neupin `wonMerchantsTick` auf der Integrationsbranch,
+Szenario-Tests statt Balancing-Pin) gehen an den Plan des Seefahrt-Bündels E2+E3+E4, der jetzt startet (vorgezogen
+vor E0-Merge, R237). — Kosten bei Irrtum: B.2/AK-Z3-04 streichen.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-I010 · ADR: —
+
+## R240 · 2026-10-05 · Kombiniertes Gate Spec/Plan H-I007 „Fest in der Kapelle"
+
+Ruling: Kurzdesign lead-design (AK-I007-01…12, Werte FEAST_RUM 10 / FEAST_DURATION 600 / FEAST_COOLDOWN 1800) und Plan
+lead-tech (P1 Sim+Save, P2 UI + Browser-Check; `.studio/handoffs/2026-10-05-h-i007-{kurzdesign,plan}.md`) angenommen,
+Umsetzungsbudget 7 Starts. **D-140:** `feastAt` als optionales, geprüftes Gebäudefeld **ohne neue Save-Version** —
+Auslegung der festen Regel „versionieren und migrieren": Zweck (alte Spielstände laden, mit Test AK-09; ungültige Werte
+abgewiesen AK-10) ist erfüllt; ein Versionswechsel hätte eine leere Migration und kollidierte mit v7 aus E0. Weil das
+eine Auslegung einer Verfassungsregel ohne Präzedenz ist, geht ein Vorbehalt in die Warteschlange; vor dem Release
+REL-04 umkehrbar. **D-141:** H-I007 geht vor E0 nach main; E0 holt es per Merge (wie H-U1/REL-03). Sim-Riegel vor U4
+entfällt (Rum-Bestand genügt, YAGNI). — Kosten bei Irrtum: Versionswechsel v6→v7 nachziehen und E0-Versionen schieben.
+
+Entscheider: L0 · Anlass: Berichte lead-design/lead-tech H-I007 · ADR: —
