@@ -94,11 +94,23 @@ import {
 import { drawBodyCached, spriteCache } from './spriteCache';
 import { variantOf } from './variants';
 
-/** Abdunklung eines brennenden Gebäudes (Spec 6.5): kühler Schattenton der Lichtsprache (S1), nie Schwarz. */
-export const DIM_FIRE = (() => {
-  const [r, g, b] = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
-  return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.7)`;
+/**
+ * Abdunklung eines brennenden Gebäudes (Spec 6.5, S1): Multiplikation mit einem kühlen Faktor. Der Luma-Faktor bleibt
+ * bei 0,65 (wie die frühere Schwarzfüllung mit 35 %), der Farbstich stammt aus dem Schattenton der Lichtsprache
+ * (dark/cool); `DIM_FIRE_TINT` hält ihn dezent, damit Dachfarbe und Gebäudetyp lesbar bleiben.
+ */
+export const DIM_FIRE_LUMA = 0.65;
+const DIM_FIRE_TINT = 0.3;
+export const DIM_FIRE_FACTORS: readonly [number, number, number] = (() => {
+  const t = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
+  const y = 0.2126 * t[0] + 0.7152 * t[1] + 0.0722 * t[2];
+  return t.map((v) => DIM_FIRE_LUMA * (1 + DIM_FIRE_TINT * (v / y - 1))) as [
+    number,
+    number,
+    number,
+  ];
 })();
+export const DIM_FIRE = `rgb(${DIM_FIRE_FACTORS.map((f) => Math.round(f * 255)).join(',')})`;
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
 const HOVER_OK = rgbaOf(PALETTE.signalOk, 0.35);
 const HOVER_BAD = rgbaOf(PALETTE.signalRed, 0.35);
@@ -616,6 +628,7 @@ export function render(
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
         if ((fires.get(b.id)?.flames ?? 0) > 0) {
           ctx.save();
+          ctx.globalCompositeOperation = 'multiply';
           ctx.beginPath();
           hullPath(ctx, cam, b);
           ctx.fillStyle = DIM_FIRE;

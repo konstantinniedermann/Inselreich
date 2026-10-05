@@ -270,7 +270,8 @@ describe('Renderer', () => {
     // 7 Luft nach dem letzten Körper, vor der Tönung
     const airs = h.calls.filter((c) => c.kind === 'air');
     expect(airs.length).toBeGreaterThan(0);
-    const mul = ev.findIndex((e) => e.composite === 'multiply');
+    // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+    const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
     expect(mul).toBeGreaterThan(0);
     for (const a of airs) {
       expect(a.at).toBeGreaterThanOrEqual(bodies[bodies.length - 1]!.at);
@@ -539,7 +540,8 @@ describe('Renderer', () => {
 
     it('M7-R3 Sturm-Randschatten (Ebene 8) vor dem Multiply, normales source-over', () => {
       const { ev } = frame({ weather: storm, dayNight: false });
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const edge = ev
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fillRect' && e.style.startsWith('gradient('));
@@ -573,6 +575,9 @@ describe('Renderer', () => {
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fill' && e.style === DARK);
       expect(dark).toHaveLength(1);
+      expect(dark[0]!.e.composite).toBe('multiply');
+      expect(log.events[dark[0]!.i + 1]?.composite ?? 'source-over').toBe('source-over');
+      expect(ctx.globalCompositeOperation).toBe('source-over');
       expect(dark[0]!.i).toBeGreaterThan(burning.at);
       expect(dark[0]!.i).toBeLessThan(next.at);
     });
@@ -606,7 +611,8 @@ describe('Renderer', () => {
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fill' && e.style.startsWith('gradient('));
       expect(grad).toHaveLength(1); // Flammen des einen bekannten Gebäudes
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const lastBody = h.calls.filter((c) => c.kind === 'body').pop()!;
       expect(grad[0]!.i).toBeGreaterThan(lastBody.at);
       expect(grad[0]!.i).toBeLessThan(mul);
@@ -681,7 +687,8 @@ describe('Renderer', () => {
         weather: storm,
         timeMs: 100, // Plateau: volle Deckkraft
       });
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const ring = ev
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'strokeRect' && e.style === PALETTE.signalWarn);
@@ -752,7 +759,8 @@ describe('Renderer', () => {
         PALETTE.signalOk,
         PALETTE.signalWarn,
       ];
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       expect(mul).toBeGreaterThan(0);
       // vor der Tönung (Terrain, Gebäude, Leben, Wetter) keine Signalfarbe; danach nur Signale
       expect(ev.slice(0, mul).filter((e) => names.includes(e.style.toLowerCase()))).toHaveLength(0);
@@ -844,7 +852,8 @@ describe('Renderer', () => {
 
     it('Spec 5.6 Figuren tragen keine Signalfarbe und stehen vor der Tönung; Episodenrand blendet aus (keine Figur bei alpha 0)', () => {
       const { ev } = life({ dayNight: true }, 3000);
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       expect(ev.slice(0, mul).filter((e) => SIGNALS.includes(e.style.toLowerCase()))).toHaveLength(
         0,
       );
@@ -1040,14 +1049,21 @@ describe('Renderer', () => {
 });
 
 describe('S1-Rest DIM_FIRE', () => {
-  it('S1-Rest DIM_FIRE: kein reines Schwarz, kühl, aus dem Lichtton', () => {
-    const m = /^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/.exec(DIM_FIRE);
-    expect(m).not.toBeNull();
-    const [r, g, b] = [Number(m![1]), Number(m![2]), Number(m![3])];
+  const rgb = (c: string): number[] => /\d+/g[Symbol.match](c)!.map(Number);
+  it('S1-Rest DIM_FIRE: kein Schwarz/Weiss, Luma-Faktor 0,62–0,68, Blau mindestens 0,08 über Rot', () => {
+    const [r, g, b] = rgb(DIM_FIRE).map((v) => v / 255) as [number, number, number];
     expect(r + g + b).toBeGreaterThan(0);
-    expect(b / (r + g + b)).toBeGreaterThan(1 / 3);
-    const want = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6).map(Math.round);
-    expect([r, g, b]).toEqual(want);
-    expect(Number(m![4])).toBeGreaterThanOrEqual(0.35);
+    expect(Math.min(r, g, b)).toBeGreaterThan(0.3);
+    expect(Math.max(r, g, b)).toBeLessThan(1);
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    expect(luma).toBeGreaterThanOrEqual(0.62);
+    expect(luma).toBeLessThanOrEqual(0.68);
+    expect(b - r).toBeGreaterThanOrEqual(0.08);
+  });
+  it('S1-Rest DIM_FIRE: Farbstich in Richtung des Lichtton-Schattens (dark/cool)', () => {
+    const t = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
+    const f = rgb(DIM_FIRE);
+    // gleiche Rangfolge der Kanäle wie der Schattenton
+    expect(f[2]! > f[1]! && f[1]! > f[0]!).toBe(t[2] > t[1] && t[1] > t[0]);
   });
 });
