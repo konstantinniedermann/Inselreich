@@ -9,7 +9,10 @@ import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
 import { spiceLoop, spiceMerchants } from './goal3';
 import type { World } from './types';
 
-/** Setzt erst `won` (genug Bürger+), dann `wonMerchants` (genug Kaufleute, nur nach `won`); beide nie zurück (M8 7). */
+/**
+ * Setzt erst `won` (genug Bürger+), dann `wonMerchants` (genug Kaufleute, nur nach `won`), dann `wonSpice`
+ * (drittes Ziel, nur nach `wonMerchants`: Haltezeit und Gewürzschleife, Anhang 05 B/J); alle nie zurück (M8 7).
+ */
 export function checkWin(world: World): void {
   if (citizens(world) >= WIN_CITIZENS) world.won = true;
   if (world.won && merchants(world) >= WIN_MERCHANTS) world.wonMerchants = true;
