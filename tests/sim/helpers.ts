@@ -3,7 +3,14 @@ import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, footprint, idx, home } from '../../src/sim/world';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
-import type { Building, BuildingDefId, CrisisLevel, Tier, World } from '../../src/sim/types';
+import type {
+  Building,
+  BuildingDefId,
+  CrisisLevel,
+  ServiceId,
+  Tier,
+  World,
+} from '../../src/sim/types';
 
 /** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
 export function prepareEast(world: World, kontor: Building): void {
@@ -299,4 +306,66 @@ export function putBuilding(
     t.buildingId = id;
   }
   return b;
+}
+
+function naiveDistance(a: Building, b: Building): number {
+  const ca = center(BUILDING_DEFS[a.defId], a.x, a.y);
+  const cb = center(BUILDING_DEFS[b.defId], b.x, b.y);
+  return Math.hypot(ca.cx - cb.cx, ca.cy - cb.cy);
+}
+
+/** Naive Referenz (Code vor T05 mit Inselfilter aus T04): durchsucht je Aufruf alle Gebäude. */
+export function serviceAvailableNaive(world: World, house: Building, service: ServiceId): boolean {
+  return Object.values(world.buildings).some((b) => {
+    const def = BUILDING_DEFS[b.defId];
+    return (
+      def.service === service &&
+      b.island === house.island &&
+      b.connected &&
+      b.outageUntil === undefined &&
+      naiveDistance(house, b) <= (def.serviceRadius ?? 0)
+    );
+  });
+}
+
+/** Naive Referenz der Versorgung: Kontor der Insel oder angebundener Markt im Radius (Mitte zu Mitte). */
+export function isSuppliedNaive(world: World, house: Building): boolean {
+  const c = center(BUILDING_DEFS[house.defId], house.x, house.y);
+  const kontorId = world.islands[house.island]?.kontorId;
+  return Object.values(world.buildings).some((b) => {
+    if (b.island !== house.island) return false;
+    if (!((b.defId === 'kontor' && b.id === kontorId) || (b.defId === 'market' && b.connected)))
+      return false;
+    const def = BUILDING_DEFS[b.defId];
+    const m = center(def, b.x, b.y);
+    return Math.hypot(c.cx - m.cx, c.cy - m.cy) <= (def.supplyRadius ?? 0);
+  });
+}
+
+const DENSE_SERVICES = ['chapel', 'school', 'bathhouse'] as const;
+
+/**
+ * Dichte-Szene D1 (Anhang 01 D): `createWorld(3, { unlockAll: true })`, Gebäude direkt in `buildings`,
+ * ohne Kachelbelegung, alle angebunden, Insel 0. 484 Häuser (Stufe 4, 20 EW) auf (3i, 3j), 64 Dienstgebäude
+ * auf (1 + 8i, 1 + 8j) reihum Kapelle, Schule, Badehaus. Mit `toolmakers` zusätzlich 4 Werkzeugmacher auf (2 + 16i, 2).
+ */
+export function denseScene(opts: { toolmakers?: boolean } = {}): World {
+  const w = createWorld(3, { unlockAll: true });
+  const add = (defId: BuildingDefId, x: number, y: number): Building => {
+    const id = w.nextBuildingId++;
+    const b: Building = { id, defId, x, y, connected: true, progress: 0, state: 'ok', island: 0 };
+    w.buildings[id] = b;
+    return b;
+  };
+  for (let i = 0; i < 22; i++) {
+    for (let j = 0; j < 22; j++) {
+      const h = add('house', 3 * i, 3 * j);
+      h.house = { ...newHouseState(w), tier: 4, inhabitants: 20, supplied: true };
+    }
+  }
+  let k = 0;
+  for (let i = 0; i < 8; i++)
+    for (let j = 0; j < 8; j++) add(DENSE_SERVICES[k++ % 3]!, 1 + 8 * i, 1 + 8 * j);
+  if (opts.toolmakers) for (let i = 0; i < 4; i++) add('toolmaker', 2 + 16 * i, 2);
+  return w;
 }
