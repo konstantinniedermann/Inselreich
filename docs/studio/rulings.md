@@ -1849,3 +1849,16 @@ Kapelle. Ad-hoc-Hinweis „Agent unbekannt inaktiv" geht an die Session-Retro (l
 Kosten bei Irrtum: Hotfix auf main.
 
 Entscheider: L0 · Anlass: Bericht lead-production REL-04 · ADR: —
+
+## R245 · 2026-10-05 · M12-E0 C3 abgenommen, Delta-Merge main vor Gate Merge
+
+Ruling: E0 T06 und Final-Review (lead-qa BEDENKEN, vier niedrige Befunde, zwei behoben; `feat/m12-e0` @ 6c64aab)
+angenommen. (1) CI-Faktor 4 im Lasttest `tests/sim/perf.test.ts` (lokal Pin 2,5 ms, CI 10 ms) als Abweichung von
+P-8/R-3 **genehmigt** (Runner ≈ 4× langsamer, vgl. R235). (2) Rot-Commit dcecfdf ohne Beleg im Text: **keine
+Historien-Änderung** (§6). (3) Da REL-04 (H-I007) jetzt auf main ist (50deea8), holt E0 main per Merge; Konflikte in
+`types.ts`/`save.ts` und der semantische Konflikt `world.stock` → Insel-Lager in `src/sim/feast.ts` werden auf
+`feat/m12-e0` gelöst (Rum vom Lager der Kapellen-Insel, wie lead-design im Kurzdesign vorgesehen), mit Delta-Review
+durch qa-code-reviewer; `make check`/`CI=true make check` grün und AK-I007-Tests grün. Danach Gate Merge E0 durch L0.
+— Kosten bei Irrtum: Faktor 4 verdeckt Sim-Regressionen bis +60 % im CI.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C3 · ADR: —
