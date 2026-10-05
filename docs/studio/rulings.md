@@ -1914,3 +1914,18 @@ studio-coach ruht nicht länger — sie läuft in der nächsten Session parallel
 für den Vorrang). — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Retros `docs/studio/retros/2026-10-05-session-6a98e530.md`, `…-prozess-rel04-e0.md` · ADR: —
+
+## R250 · 2026-10-05 · Session-Plan: vier Stränge, Lastregel für Messungen
+
+Ruling: Nutzer-Auftrag „starte" = Plan aus state.md fortsetzen (R248, R249). Vier Stränge parallel: **(A)** lead-tech
+E1 C3 (T06 UI inkl. Baumstempel-Seed-Test, T07 Browser-Messung, Playtests) in `.worktrees/m12-e1`, höchstens 2
+Arbeiter gleichzeitig; **(B)** lead-tech Seefahrt C1 (T00–T02) in `.worktrees/m12-see`, Budget aus R241, höchstens 2
+Arbeiter; **(C)** lead-tech Werkzeug-Paket E-030 „Zeittests lokal seriell" (R249 (3)) in eigenem Worktree ab `main`,
+nur `vite.config.ts`/`Makefile`/Doku, 1 Arbeiter; **(D)** studio-coach Handbuch-Umsetzung R233/R236 (b)/(c) und R249
+(1)–(3), (5) — Eigentum `docs/studio/STUDIO.md`, `templates/`, `experimente.md`, `lernen.md`; `rulings.md` und
+`state.md` bleiben bei L0. Summe ≤ 5 Arbeiter (R241). **Lastregel:** Browser-Messung T07 und rote Zeittests gelten nur
+ohne parallele `vitest`/`make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst warten bzw. Wiederholung allein);
+Last-Zustand steht im Bericht. E-030 startet als Experiment mit diesem Paket. — Kosten bei Irrtum: verzerrte
+Messwerte, Wiederholung der Messung.
+
+Entscheider: L0 · Anlass: Session-Start, state.md · ADR: —
