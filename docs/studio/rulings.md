@@ -1568,3 +1568,93 @@ Der Release wird erst nach Gate gebündelt; IDEEN-03 folgt nach REL-03. — Kost
 dem Nutzerurteil zu REL-01/02 muss eventuell nachgeschärft werden.
 
 Entscheider: L0 · Anlass: Nutzer „mach weiter" (Session 2026-10-05) · ADR: —
+
+## R226 · 2026-10-05 · Gate Brainstorming M12 „Weite Welt"
+
+Ruling: Gate Brainstorming M12 bestanden (Selbstprüfung lead-design OK, L0-Prüfung der fünf Fragen OK). Vorschlag
+`docs/m12-brainstorming` @ a8734e0 (`docs/superpowers/specs/2026-10-05-m12-weite-welt-design.md`, Anhang 01).
+Entscheide: F-01 Ansatz C „Archipel im gemeinsamen Meer", B als Streichvariante der Darstellung. F-02 Auslegung:
+R90 „grössere Karte" = grössere **Welt** aus mehreren Inseln, Heimatinsel bleibt 64×64 — kein Richtungswechsel
+(§5.3), geht in den Nutzerbericht, damit der Nutzer sie kippen kann. F-03 bewusster Bruch `balance-merchants`
+angenommen (Gewürz 0,1 je Kaufmann, Steuer 20 → 22, Controller kauft zu, Baseline neu messen; Eskalation Steuer 24,
+dann Grenze 13 000); `balance.test.ts` bleibt bitgleich. F-04 Seefahrt mit U6. F-05 I-004/I-008 geparkt, I-006 als
+Kann-Häppchen E6. F-06 E0 (Inseln im Weltzustand, Save v7, bitgleich) als Werkzeug-Merge vorab. F-07 drei
+Fremdinseln, Insel C zuerst streichbar. Bedenken Render-Last und Routen-Bedienung prüfen lead-art und lead-tech im
+Gate Spec. Nächster Schritt: Spec durch design-spec-author (unter lead-design), E0 zuerst spezifiziert. — Kosten bei
+Irrtum: Spec-Arbeit für einen verworfenen Ansatz; Rückfall auf B ohne Sim-Änderung.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-BRAIN · ADR: —
+
+## R227 · 2026-10-05 · Gate Spec M12 Teil E0
+
+Ruling: Gate Spec E0 mit **BEDENKEN** bestanden (lead-tech BEDENKEN B1–B4, lead-qa BEDENKEN 1–9, kein ZURÜCK);
+Spec-Stand `docs/m12-brainstorming` @ 7c706d3. **Auflagen an die Spec** (Spec-Autor, vor dem Gate Plan): Zählung in
+4.8 auf ≈ 146 Zugriffe in `src/` korrigieren (B1); Schritt 0 = erster Commit der E0-Branch auf main-Stand, nicht
+auf main (B2); AK-E0-04 Hash über sortiert serialisiertes JSON (QA 1); Schritt-0-Liste und Seed für AK-E0-02/-17
+vervollständigen (QA 2); Referenz und Ticks für AK-E0-05 festlegen (QA 3); AK-E0-10/-11 auf alle Zeilen von R-E0-3
+erweitern, AK für R-E0-4 ergänzen (QA 4); Verweis `M6:AK-B2-05/06`. **Im Plan festzulegen** (lead-tech): B3
+Migration wirft nie auf Rohdaten; B4 Minimum aus 3 Läufen mit `perfBudget`; QA 5–9 (Gründe/`isSupplied`,
+Einstiegspunkte Brand, N01–N20 vollständig, Timeout Lasttest, Origin des v6-Autosaves, `save.test.ts` auf v8
+umstellen); Review verlangt mechanischen Diff in `tests/sim/controller.ts`. F-S1 ja mit Präzisierung (jede
+Zustandsform je Merge eigene `SAVE_VERSION`, v7 ab E0-Merge eingefroren); F-S2 Pflichtfeld, keine Kompatibilitäts-
+Zugriffe auf `World`; F-S3 **eigenes ADR-013 „Inselmodell im Weltzustand"** statt Nachtrag zu ADR-002; F-S4 ≤ 6 ms
+nach Messung gepinnt, Verhältnis ≥ 5× hart. **Budget E0** (Plan + Umsetzung + Reviews + Final-Review): lead-tech 21
+Starts, Parallelität 1, Richtwert ≈ 500 Tools. — Kosten bei Irrtum: v7 geht mit dem E0-Merge in Autosaves und ist
+danach nicht mehr umkehrbar; deshalb Final-Review opus und Browser-Check AK-E0-20 vor dem Merge-Gate.
+
+Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa M12-E0-GATE-SPEC · ADR: ADR-013 (folgt)
+
+## R228 · 2026-10-05 · Gate Spec M12 Teil E1–E6: Nachbesserung
+
+Ruling: Gate Spec E1–E6 (Spec @ 95ed26e) **noch nicht bestanden**: lead-tech BEDENKEN B1–B6, lead-art BEDENKEN B1–B6,
+lead-qa BEDENKEN A1–A8 (A1 blockend: unladbare Autosaves). Kein ZURÜCK. Nachbesserung durch design-spec-author
+unter lead-design, danach **Delta-Gate durch lead-qa** (nur die Änderungen). Entscheide jetzt: (1) Ladeprüfung:
+Schiff-`port` nur gültiger Inselindex, Regel „`kontorId null` ⇒ kein Gebäude" gestrichen (nur „kein Kontor");
+damit ist A1 / tech-B1/B2 gelöst; Fall in AK-E2-03. (2) **Insel C gestrichen** (R226 F-07 geändert: zwei
+Fremdinseln) — später hinzufügen ist billig, nach dem Merge entfernen kostet Spielerfortschritt; ≈ 9,4 MB Cache
+weniger. (3) F-P9: v8 = E1; v9 = Seefahrt-Bündel E2+E3+E4 über eine Integrationsbranch, ein Merge; v10 = E6.
+(4) F-P2 2 × Heimat bei Zoom 1 hart (nach Aufwärmen), F-P3 Leerlauf-Rasterung in Scheiben ≤ 8 ms, F-P4 Mindestzoom
+0,125. (5) Render-Auflagen lead-art B1–B6 als AK in Anhang 02/04 (Scheiben, Messaufbau `--focus home`, Meerkante
+auf `waterDeep`, Speicher ehrlich in `limits.ts`, Detailstufe ≤ 0,25 mit Viertel-Kopie, Schiffe in Tiefensortierung
+mit Mindestgrösse); R4 (kein Frame > 50 ms) als AK. (6) lead-qa A2–A8 in die Spec (betroffene alte Pins mit
+Meilenstein R226 F-03 zuordnen, Verhalten alter Spielstände mit Kaufleuten als AK — Spielurteil lead-design,
+AK-M12-B3 „jeweils gültiger Pin", Klickzählung AK-E2-11 eindeutig, fehlende Regel-AK). (7) Auflagen für die Pläne:
+lead-tech B3 (k = 0, Kamera im Startzustand, kein `replaceChildren` je Tick für Knöpfe), B4 (Migration idempotent
+gegen aktuelles `GOOD_IDS`), B5 ADR-005-Nachtrag `tickShips`, B6 (`createWorld` ≤ 5 ms, `Math.sqrt`), lead-qa Teil B.
+E1-Render startet erst nach dem REL-03-Merge. — Kosten bei Irrtum: eine weitere Spec-Runde; ohne (1) unladbare
+Autosaves.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, lead-art, lead-qa M12-GATE-SPEC · ADR: ADR-005-Nachtrag (folgt)
+
+## R229 · 2026-10-05 · Gate Plan M12-E0
+
+Ruling: Gate Plan M12-E0 (`feat/m12-e0` @ 635dbae) mit **BEDENKEN** bestanden (lead-qa B1–B5, lead-production
+B1–B4, kein ZURÜCK). **Plan-Nachtrag durch lead-tech vor T00** (ohne Zweitprüfung): prod-B1 H-U1
+(`feat/h-u1-anbinden` @ a852d4a, release-reif) wird **vor T01 per Merge in `feat/m12-e0` geholt**, damit
+`connect.ts` mit umgestellt wird — T01 wartet nicht auf REL-03; prod-B2 T06 bekommt einen eigenen Doku-Umsetzer
+(15 Starts); prod-B3 Ersatz-Implementierer bei C1/C2 löst Übergabe an eine neue Controller-Instanz aus; qa-B2
+Timeout 120 000 für AK-E0-12(a); qa-B3 Lasttest AK-E0-15 in T05 vor der Umsetzung (Platzhalter-Pin 6, rot), nach
+Messung pinnen; qa-B4 v6-Autosave für AK-E0-20 vom Spiel auf main-Stand erzeugt (Weg und Haus), Sichtvergleich
+„Neues Spiel Seed 3" auf beiden Builds; qa-B5 Fall I16 (Wache auf Insel 1 schützt nichts auf Insel 0).
+**P-14 angenommen mit Auflage:** T00 erzeugt auf v6-Code einen zweiten echten Stand `save-v6-locks.json`
+(`unlockAll`, Amtsstube, `setGoodLock`, `setUpgradeStop`, Glas gekauft); AK-E0-06 lädt ihn; `upkeepCarry` 0
+hingenommen; Anhang 01 C gleicht der Spec-Autor an. **Final-Review** opus durch **lead-qa** (qa-B1): 1 Start von
+lead-tech an lead-qa (lead-tech 20, lead-qa 1). Merge-Reihenfolge: REL-03 (H-U1 → S1-Rest → H-R13 → H-R12b, H-R12b
+fällt raus, wenn nicht fertig) vor E0; E0 erst nach REL-03 auf main (sonst v7 ungewollt mit REL-03 in Autosaves).
+— Kosten bei Irrtum: Merge-Konflikt H-U1 in E0 doppelt zu lösen; v7 nach Merge nicht umkehrbar.
+
+Entscheider: L0 · Anlass: Berichte lead-qa und lead-production M12-E0-GATE-PLAN · ADR: —
+
+## R230 · 2026-10-05 · Gate Spec M12 E1–E6 bestanden
+
+Ruling: Delta-Gate lead-qa (95ed26e → 37850ad) BEDENKEN nicht blockend → **Gate Spec M12 E1–E6 bestanden** mit
+Auflage B1: lead-design ergänzt vor dem Plan des Seefahrt-Bündels die Pin-Liste in Anhang 03 D um die durch E2
+gebrochenen Pins `M8:AK-S1-01` (U6-Zeile `unlocks.test.ts`) und `M11:AK-U1-08` (`UNLOCK_NOTICE`) mit Bezug R226
+F-03 und entscheidet den künftigen U6-Meldungstext. Die Plan-Punkte von lead-qa (AK-E2-03 Schiff in Felsbucht beim
+Abriss, Rezept `save-v8.json`, Übergangsbestand über die Kette ab v7, Browser-Check Lade-Meldung, Aufwärmen AK-E1-16,
+Notfall-Frames AK-E1-18, Messbedingungen AK-E1-19) ergänzt lead-design in Teil B der Plan-Auflagen. Spielurteil
+QA-A3 (Übergangsbestand Gewürz, AK-E3-07) angenommen. F-P7 (Werte E6) prüft design-economy-designer vor dem E6-Plan.
+Nächster Schritt: E1-Plan durch lead-tech auf Basis E0-Plan; E1-Render-Umsetzung erst nach REL-03 auf main. —
+Kosten bei Irrtum: alte Pins ohne Ruling-Bezug geändert; U6-Text vom Umsetzer entschieden.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M12-GATE-SPEC-DELTA · ADR: —
