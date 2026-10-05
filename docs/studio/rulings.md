@@ -1862,3 +1862,16 @@ durch qa-code-reviewer; `make check`/`CI=true make check` grün und AK-I007-Test
 — Kosten bei Irrtum: Faktor 4 verdeckt Sim-Regressionen bis +60 % im CI.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C3 · ADR: —
+
+## R246 · 2026-10-05 · M12-E1 C1 abgenommen
+
+Ruling: E1 T00–T02 (`feat/m12-e1` @ fdad208, Save v8, Migration v7→v8, Reviews OK Runde 0) angenommen. Abweichungen
+übernommen: `home()` liefert `HomeIsland` (Cast), Fremdinseln mit möglicherweise negativen `ox`/`oy`, Plantagen-
+Platzsuche zählt den Kandidaten als belegt, Zusatzwerte `FALLBACK_DIRECTIONS`/`FALLBACK_MOUNTAIN_SIDE` in `sea.ts`,
+mechanische Test-Anpassungen (`islands.test.ts`, `scenario-saves.test.ts`, `unlocks.test.ts`). Hinweis: Zusatzwerte
+gehören laut Architekturregel nach `src/sim/defs/` — falls es Spielwerte sind, verschiebt C2 sie dorthin (Review
+prüft). **E1 C2 startet nach dem Delta-Merge main → E0 (R245)** mit dem Merge des dann aktuellen E0 (enthält H-I007);
+damit ist M0 des Seefahrt-Bündels erfüllt (E1-T02 OK + H-I007 in `feat/m12-e1`). — Kosten bei Irrtum: Abweichungen
+einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C1 · ADR: —
