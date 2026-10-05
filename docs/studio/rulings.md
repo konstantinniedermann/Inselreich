@@ -1837,3 +1837,15 @@ Vorbehalt N-95 (D-140) bleibt offen; ein späteres Nein heisst Versionswechsel m
 Irrtum: ein zusätzlicher Release-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech H-I007 · ADR: —
+
+## R244 · 2026-10-05 · Gate Merge Release REL-04
+
+Ruling: Gate Merge Release REL-04 **OK** (Kandidat `.worktrees/integrate` @ 50deea8: H-I007 + `docs/ideen-03`;
+`make check` und `CI=true make check` grün; Prüfliste vollständig `.studio/qa/REL-04/h-i007/`; opus-Review OK mit drei
+niedrigen Befunden). Push durch den Integrator. Befunde in `docs/beobachtungen.md`: Kapelle in `save.ts` per `defId`,
+in `feast.ts` per `service` erkannt; arc42 ohne `feastAt`-Prüfung/`feastBlockReason`; `formatClock` zeigt in den
+letzten Ticks „0:00"; Sperrgrund-Zeile fehlt bei laufendem Fest/Abklingzeit; Knopf-Umbruch bei nicht angebundener
+Kapelle. Ad-hoc-Hinweis „Agent unbekannt inaktiv" geht an die Session-Retro (lernen.md: bekanntes Messartefakt). —
+Kosten bei Irrtum: Hotfix auf main.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-04 · ADR: —

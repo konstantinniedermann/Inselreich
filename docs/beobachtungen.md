@@ -875,3 +875,16 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Beobachtung: Ab der Stufe Kaufleute wächst das Geld schneller, als es Senken gibt. 60 Kaufleute zahlen brutto 60 × 20 = 1200 je 10 s (7200 Geld/min), 100 Kaufleute 12 000 Geld/min; Aufstiegskosten und Unterhalt holen das nicht ein. Folge in IDEEN-03: Geld-Ziele (Scout-Fassung I-010 «12 000 Geld angespart») sind eine Minute Warten, Geld-Belohnungen (I-011 Hauswunsch) tragen nicht, Zukauf zu Kaufpreis ist keine echte Abwägung mehr (gilt auch für Gewürz zu 40).
 - Ursprung: Ideen-Runde IDEEN-03 (lead-design), Ruling R238.
 - Einschätzung: mittel, spätes Spiel; Input fürs nächste Wirtschafts-Brainstorming (Geld-Senken ab Stufe 4, z. B. Unterhalt ausgebauter Betriebe statt neuer Mechanik, vgl. I-013-Begründung). Balancing-Test und `balance-merchants` unberührt, solange nichts umgesetzt wird.
+
+### 2026-10-05 · Sim/UI/Doku · Nachträge opus-Review und Browser-Lauf REL-04 (H-I007)
+
+- Fundort: `src/sim/save.ts:283` (Kapelle per `defId`) gegen `src/sim/feast.ts:66` (Kapelle per `service`); `docs/arc42.md` (Bausteinsicht); `src/ui/feast.ts` / `formatClock`; Kapellen-Panel in `src/ui/inspect.ts`.
+- Beobachtung: (1) Zwei Kriterien für „ist Kapelle" — bekommt ein weiteres `faith`-Gebäude ein Fest, weichen Ladeprüfung und Aktion ab. (2) arc42 nennt weder die `feastAt`-Prüfung noch `feastBlockReason`. (3) `formatClock` rundet ab, der Knopf zeigt in den letzten Ticks „0:00". (4) Bei laufendem Fest/Abklingzeit keine eigene Sperrgrund-Zeile; bei nicht angebundener Kapelle brechen die Knöpfe um. (5) Dev-Server ohne `favicon.ico`; Hover-Tooltip überdeckt ein Gebäude-Label.
+- Ursprung: Release REL-04 (qa-code-reviewer opus, qa-playtester), R244.
+- Einschätzung: niedrig, kosmetisch bzw. Doku; (1) bei nächster Änderung an Kapelle/Save vereinheitlichen.
+
+### 2026-10-05 · CI · Node-20-Abkündigung der Actions
+
+- Fundort: `.github/workflows/` (`actions/checkout@v4`, `actions/setup-node@v4`), CI-Lauf 37346620948.
+- Beobachtung: CI meldet die Abkündigung von Node.js 20 für diese Actions; zusätzlich wechselt `ubuntu-latest` ab 2026-10-19 auf Ubuntu 26 (state.md, offene Entscheide).
+- Ursprung: REL-04-Push (production-integrator), R244. Einschätzung: niedrig bis mittel, vor 2026-10-19 Actions-Versionen und Runner prüfen (Zeittests!).
