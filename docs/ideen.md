@@ -50,23 +50,9 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 
 ## Ideen
 
-### I-001 · eingeplant · Anbinden auf Knopfdruck
+### I-001 · live · Anbinden auf Knopfdruck — R210 → H-U1, live mit REL-03 (R232)
 
-- Bereich: Bedienung · Säule: Insel besiedeln · Quelle: Genre-Mechanik: Aufbauspiele schlagen beim Platzieren eine Wegverbindung zum Netz vor und bauen sie auf Wunsch in einem Zug; Nutzer-Startkarte (Pfad `README.md`, Abschnitt „Start": „mit einem Weg zum Kontor verbinden" ist der dritte der ersten drei Schritte)
-- Spielerwirkung: „Der Spieler klickt im Info-Panel eines nicht angebundenen Betriebs auf «Anbinden (n Wege · x Geld)» und bekommt den kürzesten Weg zum Netz gebaut, statt den roten Punkt selbst aufzulösen."
-- Grösse: S · Risiko: keins (reine, deterministische Wegsuche über freie Kacheln in `src/sim/`, Bau über die vorhandene Weg-Aktion; Controller nutzt sie nicht → Baseline bitgleich; kein neues Save-Feld)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
-- Bewertung lead-design: Scout-Fassung (Vorschau beim Platzieren, M, 13) auf die S-Fassung im Panel gekürzt; Spass 3 → 2, weil es Bequemlichkeit ist, keine neue Entscheidung (Weg ziehen per Maus gibt es). Randfälle: kein Pfad (Gebirge/Wasser) → blasser Knopf mit Grund; Geld reicht nicht für alle Kacheln → Grund statt Teilbau; Pfad frisst bebaubare Fläche → Vorschau beim Überfahren des Knopfs. Die Layout-Entscheidung bleibt beim Spieler, weil der Knopf nur auf Wunsch wirkt.
-- Entscheid: R210 → eingeplant H-U1 (übernächstes Release, lead-tech; Randfälle in die Kurz-Spec)
-
-### I-002 · eingeplant · Meldung führt zum Ort
-
-- Bereich: Bedienung · Säule: Produktionsketten · Quelle: Genre-Mechanik: Ein Klick auf eine Ereignismeldung zentriert die Kamera auf den Schauplatz; Pfad `src/ui/crisisLog.ts` (`LogEntry` ohne Ortsangabe) und `src/ui/app.ts` (`centerOn` wird nur beim Start genutzt)
-- Spielerwirkung: „Der Spieler klickt auf eine Brand-, Sturm- oder Mangelmeldung und sieht sofort das betroffene Gebäude in der Bildmitte, statt es in einer wachsenden Stadt zu suchen."
-- Grösse: S · Risiko: keins (Log gehört nicht zum Spielstand; `LogEntry` bekommt ein optionales Ziel)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
-- Bewertung lead-design: Bewertung des Scouts bestätigt. Gilt für Einträge mit Ort (Brand, Anbindung, Aufstieg); Einträge ohne Ort (Boom, Auftrag) bleiben nicht klickbar und sind so erkennbar. Randfall: Gebäude inzwischen abgerissen → Kamera springt auf die Kachel, Meldung „Gebäude nicht mehr vorhanden". Wird in M12 (mehrere Inseln) wertvoller; dort nicht doppeln.
-- Entscheid: R210 → eingeplant H-U2 (Studio-Platz REL-01, lead-tech/UI)
+### I-002 · live · Meldung führt zum Ort — R210 → H-U2, live mit REL-01 (R216)
 
 ### I-003 · geparkt · Baustelle statt Sofort-Gebäude
 
@@ -86,14 +72,7 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Bewertung lead-design: Risiko 2 → 1, weil Save und Baseline zugleich berührt sind (Raster: mehrere = 1). Wahl-Bedenken: Aufträge verlangen höchstens 40, die Sättigung erholt sich 1 %/s; ein reines Grenz-Plus wäre ab mittlerem Spiel eine dominante Pflichtinvestition. Stärker als räumliches Lager (zweiter Sammelpunkt, Anbindung im Inland) — das gehört zu „Lager je Insel" und mehreren Startpunkten in M12. Baustein fürs M12-Brainstorming.
 - Entscheid: R210 → geparkt bis M12-Brainstorming (Lager je Insel)
 
-### I-005 · eingeplant · Arbeitsgeräusche der Betriebe
-
-- Bereich: Ton · Säule: Produktionsketten · Quelle: Genre-Mechanik: Betriebe klingen hörbar nach ihrer Arbeit, wenn die Kamera nah ist; Pfad `README.md` („Umgebung folgt dem Bildausschnitt", Effekte nur für Bauen, Münzen, Krisen) und `src/audio/`
-- Spielerwirkung: „Der Spieler hört beim Heranzoomen Sägen am Holzfäller, Hämmern am Werkzeugmacher und Wellen am Fischer und erkennt an Stille, welcher Betrieb gerade steht."
-- Grösse: M · Risiko: Perf (zunächst synthetisch aus Rauschen und Filtern, keine fremden Dateien; offen lizenzierte Klänge nur über `art-license-checker`)
-- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10
-- Bewertung lead-design: bestätigt, unter der Pitch-Schwelle. Kleinere Fassung möglich: ein kurzer synthetischer Ton je abgeschlossenem Produktionszyklus der Betriebe im Bild, mit Obergrenze je Sekunde (S, lead-art). Parken bis zum nächsten Ton-Anlass.
-- Entscheid: R219 → kleine Fassung eingeplant in H-A2 (REL-02) zusammen mit I-009
+### I-005 · live · Arbeitsgeräusche der Betriebe — R219 → kleine Fassung in H-A2, live mit REL-02 (R222); volle Fassung (M) nicht weiter verfolgt
 
 ### I-006 · geparkt · Händler-Sonderangebot
 
@@ -128,13 +107,78 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Bewertung lead-design: Aufwand 3 → 2: Bonus heisst Balancing-Neumessung, Anpassung des Controllers, Platzier-Vorschau und Panel-Anzeige (2 Pakete, nicht 1 Häppchen). Die Wahl Fläche gegen Ausstoss ist gut, aber der Bonus von +25 % auf Nahrung und Wolle verschiebt die Bilanz je Einwohner — gehört in ein Balancing-Paket mit `design-economy-designer`. Die Vorschau ohne Bonus allein ist Bedienung ohne Entscheidung. Baustein für ein späteres Wirtschafts-Brainstorming (M12 verteilt Betriebe auf neue Inseln, dort wird Standortwahl ohnehin neu gedacht), nicht gepitcht (Deckel 2).
 - Entscheid: R219 → geparkt fürs M12-/Wirtschafts-Brainstorming (Balancing-Neumessung)
 
-### I-009 · eingeplant · Hörbarer Mangel
+### I-009 · live · Hörbarer Mangel — R219 → H-A2 „Hörbare Wirtschaft“, live mit REL-02 (R222)
 
-- Bereich: Ton · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik: Ein dezenter Warnton meldet, dass Bewohner hungern oder frieren, auch wenn der Spieler gerade woanders hinsieht; Pfad `src/audio/sound.ts` (`SoundEvent` kennt Bauen, Münzen, Aufträge, Aufstieg, Krisen, aber keinen Versorgungsmangel), `README.md` (Mangel zeigt sich nur als Kartensymbol und Text)
-- Spielerwirkung: „Der Spieler hört einen kurzen, tiefen Doppelton, sobald ein Bedürfnis im Lager ausgeht (Nahrung höher, Stoff weicher), und schaut nach, noch bevor ein Haus schrumpft."
-- Grösse: S · Risiko: keins (synthetisch aus Oszillator und Hüllkurve wie `buildSounds.ts`, keine fremden Dateien, keine Lizenz; Auslöser aus dem vorhandenen Mangel-Zustand, nicht im Spielstand)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
-- Randfälle: Dauer-Mangel → Ton nur beim Wechsel von „gedeckt" zu „fehlt" je Gut, mit globaler Drosselung (mind. 20 s Abstand), kein Dauerpiepen; Stumm oder Effekte-Regler 0 → nichts; Ton zugleich mit Krisenalarm → Krise hat Vorrang (Ducking der vorhandenen Signale nutzen).
-- Doppelung: keine; I-005 sind Arbeitsgeräusche der Betriebe (Produktionszyklus), dies ist ein Warnsignal der Versorgung; I-002 führt zum Ort, dies meldet nur hörbar.
-- Bewertung lead-design: bestätigt (12). Auslöser: Lagerbestand eines Bedürfnis-Guts fällt auf 0, während versorgte Häuser es verbrauchen (Übergang, nicht Zustand); die UI meldet das Ereignis an `src/audio/`, das nichts aus `src/sim/` importiert. Kein Ton vor dem ersten Haus mit diesem Bedürfnis, nicht nach Laden/Neue Insel für schon leere Güter. Passt mit der kleinen Fassung von I-005 (Ton je Produktionszyklus) zu einem Ton-Häppchen „hörbare Wirtschaft“ für `art-audio-engineer` (gleiche Dateien, ein Browser-Lauf).
-- Entscheid: R219 → eingeplant H-A2 „Hörbare Wirtschaft“ (REL-02, Studio-Platz)
+### I-010 · gepitcht · Drittes Ziel «Gewürzstadt»
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Playtest-Beobachtung des Studios: Nach «Handelsstadt» (60 Kaufleute) gibt es nur freies Weiterspielen ohne Ziel (Pfad `README.md`, Abschnitt „Ziel"); Genre-Mechanik: Aufbauspiele geben nach dem Hauptziel eine Kette weiterer Meilensteine; **M12-Baustein E3/E4** (Fassung lead-design)
+- Spielerwirkung: „Der Spieler sieht nach der Handelsstadt im Ziel-Chip «Gewürzstadt n / 80 Kaufleute mit Gewürz» und hat erstmals ein Ziel, das ihn über Kontor II, Plantage und Route auf die Fremdinseln führt."
+- Grösse: S · Risiko: Save (erreichtes Ziel als Flagge im Weltzustand, Migration mit Standardwert «offen»; Ziele stehen als Daten in `src/sim/defs/`); Baseline bleibt bitgleich, solange der Controller nach dem zweiten Ziel nicht weiterläuft
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Randfälle: Geld ist beim Erreichen kurz hoch und fällt (Aufstiegskosten) → Ziel zählt «einmal erreicht, bleibt erreicht», nie rückgängig; Steuerstufe «hoch» wird zur Abkürzung → die Kaufleute-Zahl muss zugleich gehalten sein (Stand beim Prüfen, nicht Spitzenwert früher); Abriss danach ändert nichts; Spielstand, der schon über der Marke liegt → Meldung beim Laden nur einmal, kein Rückwirkend-Spam.
+- Doppelung: keine; I-001 bis I-009 berühren Ziele nicht; M12 verlangt kein neues Ziel (Kapitel 3: U6 «Seefahrt» ist Freischaltung, kein Ziel). Wenn M12 ein eigenes Archipel-Ziel einführt, ersetzt es diese Fassung.
+- Bewertung lead-design: Lücke bestätigt, Fassung umgebaut. **Entartung der Scout-Fassung:** 100 Kaufleute zahlen
+  brutto 100 × 20 je 10 s = 12 000 Geld/min; «12 000 Geld angespart» ist damit eine Minute Warten, keine Planung, und
+  «100 statt 60 Kaufleute» ist mehr vom Gleichen. Neue Fassung als **M12-Baustein E3/E4**: M12 hat kein Ziel, obwohl
+  Gewürz «der Grund zur Expansion» ist (Spec Kap. 7). Drittes Ziel «Gewürzstadt»: n Kaufleute (Vorschlag 80) in
+  Häusern, die seit 60 s voll versorgt sind, **einschliesslich Gewürz**. Das verlangt die ganze M12-Schleife
+  (Fremdinsel, Kontor II, Plantage, Route) und gibt dem Archipel einen Spannungsbogen; Zukauf (40 je Gewürz) bleibt als
+  teurer Notweg, also kein zwingender Bankrott. Erreichtes Ziel ist eine Flagge, «einmal erreicht, bleibt erreicht»,
+  Meldung beim Laden nur einmal; Flagge reitet auf der Save-Migration v9 des Seefahrt-Bündels mit (keine eigene
+  Version). Controller läuft nach dem zweiten Ziel nicht weiter → Baseline bitgleich. Spass bleibt 2 (spätes Spiel,
+  nicht erste Stunde). Wert n mit `design-economy-designer` gegen die Gewürz-Erzeugung rechnen.
+
+### I-011 · bewertet · Hauswunsch
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik: Einzelne Bewohner äussern Sonderwünsche, deren Erfüllung belohnt (Gespür für «Persönlichkeit»); Pfad `README.md` (Häuser sind austauschbar, Info-Panel zeigt nur Bedürfnisse)
+- Spielerwirkung: „Der Spieler sieht über einem vollen Haus der Stufe Bürger oder höher ein Sprechblasen-Symbol («Möchte 5 Glas · noch 2:00»), liefert die Ware aus dem Lager mit einem Klick und bekommt dafür 120 Geld und 5 Minuten lang +20 % Steuer von diesem Haus; er entscheidet, ob Glas für Kaufleute-Bedarf, Verkauf oder Wunsch bestimmt ist."
+- Grösse: M · Risiko: Save und Baseline (Wunsch mit Ablauf am Haus, Ziehung über den seeded RNG nur je höchstens 1 Haus zugleich; Controller erfüllt keine Wünsche → Steuer-Fingerabdruck bleibt gleich, solange die Ziehung den RNG-Strom der Krisen und Aufträge nicht verschiebt, eigener Strom nötig)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10
+- Randfälle: Ware fehlt im Lager → Knopf blass mit Grund, Wunsch verfällt ohne Strafe; Haus wird abgerissen oder steigt auf → Wunsch endet, kein Bonus; Spieler lässt Wünsche immer verfallen → keine Strafe, nur entgangener Gewinn; Wunschware billiger zuzukaufen als der Bonus wert → Zukaufspreis (5 Glas = 250) muss über Belohnung plus Steuerbonus liegen, sonst Dauer-Zukauf (Werte mit `design-economy-designer`).
+- Doppelung: keine; Handelsaufträge sind global und kommen vom Händler, dies ist lokal und kommt vom Haus. I-007 (Fest) belohnt Aufstieg per Rum, hier gibt es Einzelwünsche; beide dürfen nicht zugleich dasselbe Haus beschleunigen (Reihenfolge klären).
+- Bewertung lead-design: Spass 3 → 2, weil die Belohnung in der Scout-Fassung dominiert: +20 % Steuer eines vollen
+  Kaufleute-Hauses (20 × 20 je 10 s) bringen 480 Geld/min, über 5 min 2400 plus 120 — Zukauf von 5 Glas kostet 250.
+  Jeder Wunsch würde immer erfüllt, notfalls zugekauft; keine Entscheidung. Geld ist im späten Spiel ohnehin
+  reichlich, eine Geldbelohnung trägt dort nicht. Tragfähiger wäre eine nicht-monetäre Belohnung (Haus überspringt die
+  Aufstiegs-Wartezeit), die aber I-007 (Fest) doppelt. Erst nach dem Spielurteil zu I-007 (REL-04) neu fassen.
+
+### I-012 · bewertet · Endliche Vorkommen
+
+- Bereich: Inhalt · Säule: Produktionsketten · Quelle: Genre-Mechanik: Rohstoffvorkommen erschöpfen sich und zwingen zum Umziehen oder Expandieren; **M12-Baustein E1/E2** (Fremdinseln mit eigenem Gebirge geben dem Erschöpfen einen Grund zum Kontor II); Pfad `README.md` (Steinbruch, Fisch und Wald sind unerschöpflich)
+- Spielerwirkung: „Der Spieler sieht im Panel des Steinbruchs «Vorkommen 600 / 600 Stein» sinken und entscheidet zwischen einem zweiten Steinbruch, Zukauf (15 je Stein) oder dem Weg auf eine Fremdinsel, wenn das Gebirge an der Heimatinsel leer ist."
+- Grösse: M · Risiko: Save und Baseline (Restmenge je Vorkommen im Weltzustand; Controller baut Steinbrüche → Fingerabdruck und Sieg-Zeit ändern sich, Neumessung per Ruling); nur Stein, nicht Fisch und Wald, damit der Umfang klein bleibt
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10
+- Randfälle: Vorkommen leer → Betrieb steht still mit klarem Grund und bleibt abreissbar, Unterhalt läuft weiter (Warnung vorab ab 20 %); Abriss und Neubau darf das Vorkommen nicht auffüllen (Rest gehört zur Kachel, nicht zum Gebäude); alle Steinvorkommen der Heimat reichen nicht für die Aufstiegsziele → Mindestmenge so wählen, dass das Siegziel ohne Fremdinsel erreichbar bleibt, sonst wird M12 Pflicht.
+- Doppelung: keine; I-008 (Standortgüte) ändert Ausstoss nach Lage, dies die Menge. M12 §10 schliesst «Erz und Minen» aus, Stein im bestehenden Gebirge ist nicht davon betroffen. Bei einer Aufnahme in M12 mit E1 abstimmen.
+- Bewertung lead-design: starke Rückkopplung im Sinne von M12 (Bremse daheim, Zug zur Fremdinsel), Zukauf zu 15 hält
+  sie weich. Spass 3 → 2: Die Erschöpfung greift erst mit Glashütte und Aufstiegen zu Bürgern und Kaufleuten, also im
+  späten Spiel. Nicht in M12 nachschieben: Die Spec ist durch die Gates (R227–R231), und es braucht Rest je Vorkommen
+  im Weltzustand, Controller-Anpassung und Neumessung der Pins. Vereinfachung prüfen: Rest je Steinbruch-Standort
+  (Gebirgskacheln im Umkreis), nicht je Kachel. Baustein für das Brainstorming nach M12, mit `design-economy-designer`.
+
+### I-013 · bewertet · Verschleiss und Instandhaltung
+
+- Bereich: Inhalt · Säule: Produktionsketten · Quelle: Genre-Mechanik: Betriebe verschleissen und verlangen Material zur Pflege; Pfad `README.md` (Werkzeug nur noch als Baustoff; Werkzeugmacher «lohnt sich erst, wenn du viel Werkzeug brauchst», Werkzeug wird nicht bestellt)
+- Spielerwirkung: „Der Spieler sieht an einem Betrieb nach 10 Minuten «Instandhaltung fällig (2 Werkzeug)» und entscheidet, ob er pflegt oder 25 % Leistung verliert; der Werkzeugmacher wird zur laufenden Entscheidung statt zur Randnotiz."
+- Grösse: M · Risiko: Save und Baseline (Alter je Betrieb im Weltzustand; Controller müsste pflegen → Fingerabdruck ändert sich; ohne Controller-Anpassung sinkt die Leistung, Sieg-Zeit verschiebt sich)
+- Raster: Spass 1 · Passung 2 · Aufwand 2 · Risiko 1 = 7
+- Randfälle: Kein Werkzeug im Lager → Betrieb läuft mit −25 %, nie Stillstand (kein Todesspirale-Effekt, weil Werkzeugmacher selbst Werkzeug braucht); Dauerklick bei 30 Betrieben → Knopf «Alle pflegen (n Werkzeug)» nötig, sonst Mikromanagement; Abriss und Neubau setzt das Alter zurück (kostenlose Pflege) → Neubaukosten müssen über 2 Werkzeug Pflege liegen (heute 2–10 Werkzeug, Prüfung nötig).
+- Doppelung: keine; die Feuerwache und Brandausfall sind Zufallsereignisse, dies ein planbarer Verbrauch. Risiko: Mikromanagement, daher nur Empfehlung für spätere Parkplätze, nicht für den Pitch.
+- Bewertung lead-design: Spass 2 → 1, Passung 3 → 2. «Pflegen» dominiert immer (2 Werkzeug = 80 Geld gegen 25 %
+  Ausstoss); mit dem nötigen Knopf «Alle pflegen» bleibt eine reine Werkzeug-Senke im Klicktakt, keine Entscheidung,
+  und Pflegepflicht schwächt das Gefühl einer wachsenden Wirtschaft. Das Problem «Werkzeug ohne Entscheidung» bleibt
+  gültig; einfacher wäre Werkzeug als Teil des Unterhalts ausgebauter Betriebe (Stufe 3) — gehört ins nächste
+  Wirtschafts-Brainstorming, nicht als eigene Mechanik.
+
+### I-014 · bewertet · Sturm auf See
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik: Wetter wirkt auf Seewege und verlangt eine Abwägung; **M12-Baustein E4** (Schiffe und Routen); Pfad `README.md` (Sturm betrifft nur Fischer, Holzfäller, Schäferei, Zuckerrohr)
+- Spielerwirkung: „Der Spieler sieht bei einer Sturmwarnung am Schiff auf der Route «Hafen anlaufen» (Fahrt pausiert 30 s, Ladung sicher) und entscheidet zwischen Zeitverlust und dem Risiko, 20 % der Ladung (z. B. 2 von 10 Gewürz) zu verlieren."
+- Grösse: M · Risiko: Save und Baseline (Schiffszustand «Hafen angelaufen» erst nach E4; Verlust über den seeded RNG, nicht über Zufall in der UI; Krisenverteilung bleibt unberührt, wenn der Seesturm den vorhandenen Sturm mitnutzt statt eine vierte Krisenart einzuführen, sonst `balance-crises.test.ts`)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
+- Randfälle: Spieler läuft immer den Hafen an → Zeitverlust 30 s je Sturm macht es zur gleichwertigen sicheren Wahl, aber nie Gewinn (kein Dominanz-Pfad, da Sturm höchstens alle 4 Minuten); Schiff ohne Ladung oder bei leerem Lager am Ziel → kein Verlust, kein Knopf; Abriss des Kontors II während der Fahrt → Schiff kehrt zurück, Ladung bleibt (Regel aus E4 übernehmen).
+- Doppelung: keine; M12 enthält Schiffe und Routen, aber keinen Wettereinfluss (Piraten, Kampf, Nebel sind ausdrücklich ausgeschlossen, §10). Setzt E4 voraus; nicht vorher einplanbar.
+- Bewertung lead-design: Passung 3 → 2 (stärkt Handel nur indirekt). Routen laufen automatisch, der Spieler schaut
+  beim Sturm meist woanders hin; eine Abfrage je Sturm wird verpasst. Einfachere Fassung: Daueranweisung je Route
+  («bei Sturm anlegen / weiterfahren»). Bei 2 von 10 Gewürz (≈ 80 Geld) gegen 30 s ist die Wahl im späten Spiel
+  belanglos; trägt erst mit grösseren Ladungen. Baustein nach E4, nicht gepitcht.
