@@ -848,3 +848,8 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/ui/storage.ts` (Slot-Liste, Autosave-Prüfung); `src/sim/save.ts` (`raw.version !== SAVE_VERSION`).
 - Beobachtung: Ein Build vor M12-E0 lehnt einen v7-Stand korrekt mit „Unbekannte Version" ab, die Slot-Liste blendet solche Stände aber still aus und markiert den Autosave als beschädigt. Ungeprüft: ob der alte Build den v7-Autosave danach überschreibt (Datenverlust bei Rückkehr auf einen älteren Stand, z. B. Pages-Rollback).
 - Ursprung: `design-spec-author`, Spec M12 Phase 1 (M12-SPEC). Einschätzung: klein; im E0-Plan prüfen, ob „neuere Version" als eigener Grund angezeigt und der Autosave nicht überschrieben wird.
+### 2026-10-05 · Sim/Design · Anbinden-Pfad läuft auch durch Wald
+
+- Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
+- Beobachtung: Der Knopf «Anbinden» (H-U1) wählt den Weg mit den wenigsten neuen Kacheln; Wald kostet wie Gras. Ein Weg durch Wald senkt die freie Waldfläche, die Holzfäller und Jagdhütte zählen (`radius`-Regel mit `free`). Die Vorschau zeigt das vor dem Klick, die Wahl bleibt beim Spieler.
+- Ursprung: Browser-Check H-U1 (Screenshot `.studio/qa/REL-03/h-u1/2_hover_vorschau.png`), lead-tech. Einschätzung: Design-Frage an lead-design — bei Gleichstand Gras vor Wald bevorzugen (kleine Änderung der Gleichstandsregel, kein Save, Baseline unberührt) oder so lassen.
