@@ -47,6 +47,7 @@ interface Call {
 }
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
+  treeSeeds: [] as number[],
   terrain: {
     scale: 1,
     patch: { redrawn: false, ms: 0 },
@@ -86,6 +87,7 @@ vi.mock('../../src/render/trees', async (orig) => {
     ...m,
     drawTreeStamp: (...a: Parameters<typeof m.drawTreeStamp>) => {
       h.calls.push({ kind: 'tree', id: a[2].id, at: at(a[0]) });
+      h.treeSeeds.push(a[3]);
       return m.drawTreeStamp(...a);
     },
   };
@@ -1129,6 +1131,7 @@ describe('M12 E1 Renderer', () => {
   };
   const run = (world: World, cam: ReturnType<typeof camOn>, fx: Partial<RenderFx> = {}) => {
     h.calls.length = 0;
+    h.treeSeeds.length = 0;
     const f = fakeCtx();
     render(f.ctx, world, cam, layers, null, null, V, { timeMs: 5000, dayNight: true, ...fx });
     return { calls: h.calls.slice(), log: f.log };
@@ -1232,5 +1235,14 @@ describe('M12 E1 Renderer', () => {
     world.tick += 5;
     expect(v.tick).toBe(world.tick);
     expect(islandCam({ x: 0, y: 0, zoom: 1 }, world.islands[0]!)).toEqual({ x: 0, y: 0, zoom: 1 });
+  });
+
+  it('Fremdinsel-Bäume nutzen den Seed der echten Welt, nicht den der Inselansicht', () => {
+    const { world } = scene();
+    const a = world.islands[1]!;
+    run(world, camOn(a.ox + a.width / 2, a.oy + a.height / 2, 1));
+    expect(h.treeSeeds.length).toBeGreaterThan(0);
+    expect(islandView(world, 1).seed).not.toBe(world.seed);
+    expect(new Set(h.treeSeeds)).toEqual(new Set([world.seed]));
   });
 });
