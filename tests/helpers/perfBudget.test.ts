@@ -15,4 +15,9 @@ describe('RF-H-T1 perfBudget', () => {
     expect(perfBudget(1500, { CI: 'false' })).toBe(1500);
     expect(perfBudget(1500, { CI: '' })).toBe(1500);
   });
+  it('RF-H-T1 R235 eigener Faktor nur bei CI, Default bleibt 1,5', () => {
+    expect(perfBudget(8, { CI: 'true' }, 2.5)).toBe(20);
+    expect(perfBudget(8, {}, 2.5)).toBe(8);
+    expect(perfBudget(8, { CI: 'true' })).toBe(12);
+  });
 });

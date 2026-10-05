@@ -7,7 +7,12 @@ type Env = Record<string, string | undefined>;
 const processEnv = (): Env =>
   (globalThis as unknown as { process?: { env?: Env } }).process?.env ?? {};
 
-export function perfBudget(ms: number, env: Env = processEnv()): number {
+// R235: optionaler Faktor je Test (Default CI_FACTOR); lokal gilt immer `ms`.
+export function perfBudget(
+  ms: number,
+  env: Env = processEnv(),
+  ciFactor: number = CI_FACTOR,
+): number {
   const ci = env.CI === 'true' || env.CI === '1';
-  return ci ? ms * CI_FACTOR : ms;
+  return ci ? ms * ciFactor : ms;
 }
