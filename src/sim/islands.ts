@@ -9,13 +9,14 @@ import {
   ISLAND_TRIES,
   ISLANDS,
   ISLANDS_SALT,
+  HOME_NAME,
   PLANTATION_SITE,
   SHIP_TICKS_PER_SEA_TILE,
   type IslandDef,
   type IslandKind,
 } from './defs/sea';
 import { findKontorSite, generateTerrain, isLand, seaMask } from './mapgen';
-import type { Terrain } from './types';
+import type { Terrain, World } from './types';
 
 export type Pt = { x: number; y: number };
 export interface Rect {
@@ -59,6 +60,12 @@ const NEIGHBORS: readonly Pt[] = [
   { x: 1, y: 0 },
   { x: 0, y: 1 },
 ];
+
+/** Anzeigename der Insel: „Heimat“ für 0, sonst der Name ihrer Art aus `ISLANDS`. */
+export function islandName(world: World, i: number): string {
+  const kind = world.islands[i]?.kind;
+  return ISLANDS.find((d) => d.kind === kind)?.name ?? HOME_NAME;
+}
 
 export const travelTicks = (d: number): number => SHIP_TICKS_PER_SEA_TILE * d;
 

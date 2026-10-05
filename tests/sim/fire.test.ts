@@ -307,6 +307,7 @@ describe('M6 Brand und Feuerwache', () => {
       'quarry',
       'school',
       'sheepfarm',
+      'spicefarm', // M12 T02
       'toolmaker',
       'townhall',
       'weaver',

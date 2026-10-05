@@ -20,12 +20,14 @@ export function takeStock(isl: Island, good: GoodId, n: number): boolean {
   return true;
 }
 
-export function checkAfford(world: World, isl: Island, cost: Cost): Result {
+/** Prüft Geld und Lager; `where` (z. B. „in der Heimat“) wird an die Warengründe gehängt. */
+export function checkAfford(world: World, isl: Island, cost: Cost, where?: string): Result {
+  const at = where === undefined ? '' : ` ${where}`;
   if (world.money < 0) return fail('Kein Geld');
   if (world.money < cost.money) return fail('Zu wenig Geld');
-  if (isl.stock.wood < cost.wood) return fail('Zu wenig Holz');
-  if (isl.stock.tools < cost.tools) return fail('Zu wenig Werkzeug');
-  if (isl.stock.stone < cost.stone) return fail('Zu wenig Stein');
+  if (isl.stock.wood < cost.wood) return fail(`Zu wenig Holz${at}`);
+  if (isl.stock.tools < cost.tools) return fail(`Zu wenig Werkzeug${at}`);
+  if (isl.stock.stone < cost.stone) return fail(`Zu wenig Stein${at}`);
   return ok;
 }
 

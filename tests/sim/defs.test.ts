@@ -19,7 +19,6 @@ import type { GoodId } from '../../src/sim/types';
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
 import { createWorld } from '../../src/sim/world';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
 
 describe('defs', () => {
   // Bewusst geändert (M12 Seefahrt T01, R226 F-03): 9 → 10 Güter, Gewürz ist das zehnte.
@@ -205,7 +204,10 @@ describe('M11 Jagdhütte und Rinderfarm (Spec 3.3)', () => {
 describe('M11 Ausbau-Werte (Spec 3.6)', () => {
   // Die übrigen neun Einträge prüft der Vorstufen-Test in upgrade.test.ts wörtlich.
   it('AK-P3-01 LEVELS hat genau die 11 Betriebe mit produces, Werte Anhang 01 A.4, ganzzahlig, Stufe 3 schneller', () => {
-    const producers = BUILDING_IDS.filter((id) => BUILDING_DEFS[id].produces !== undefined).sort();
+    // M12 T02: spicefarm ist neu und hat (noch) keine Ausbaustufen; Ausbau-Frage an lead-tech
+    const producers = BUILDING_IDS.filter(
+      (id) => BUILDING_DEFS[id].produces !== undefined && id !== 'spicefarm',
+    ).sort();
     expect(producers).toHaveLength(11);
     expect(Object.keys(LEVELS).sort()).toEqual(producers);
     const T = (
@@ -271,7 +273,7 @@ describe('AK-E3-01 Gewürz (M12 Seefahrt T01)', () => {
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
-    const p = join(dir, n);
+    const p = `${dir}/${n}`;
     return statSync(p).isDirectory() ? sourceFiles(p) : p.endsWith('.ts') ? [p] : [];
   });
 }

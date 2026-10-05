@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { BuildingDefId, Island, Result, SiteRule, Terrain, World } from './types';
 import { fail, ok } from './types';
+import { ISLANDS } from './defs/sea';
 import { inSupplyRange } from './supply';
 import { buildLock } from './unlocks';
 import {
@@ -88,6 +89,15 @@ export function siteRuleOk(
       const supplied = inSupplyRange(world, island, cx, cy);
       return supplied ? ok : fail('Ausserhalb der Versorgung');
     }
+    case 'islandTrait': {
+      const def = ISLANDS.find((d) => d.kind === isl.kind);
+      return island >= 1 && def?.traits.includes(rule.trait) === true
+        ? ok
+        : fail('Hier wächst kein Gewürz');
+    }
+    case 'foreignNoKontor':
+      if (island === HOME) return fail('Nur auf einer fernen Insel');
+      return isl.kontorId === null ? ok : fail('Auf dieser Insel steht schon ein Kontor');
   }
 }
 

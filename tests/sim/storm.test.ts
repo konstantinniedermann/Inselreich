@@ -93,6 +93,7 @@ describe('M6 Sturm', () => {
       'fisher',
       'lumberjack',
       'sheepfarm',
+      'spicefarm', // M12 T02
     ]);
   });
 });

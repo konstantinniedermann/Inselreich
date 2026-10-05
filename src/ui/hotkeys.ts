@@ -29,6 +29,10 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
   y: { kind: 'build', defId: 'hunter' },
 };
 
+/** Inselwechsel: Heimat und der Reihe nach durch die Inseln (T07, T12 lesen dieselbe Quelle). */
+export const ISLAND_HOME_KEY = '0';
+export const ISLAND_CYCLE_KEY = '9';
+
 export const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
 
 export type HotkeyAction =

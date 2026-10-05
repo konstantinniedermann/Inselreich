@@ -66,6 +66,10 @@ export function siteText(rule: SiteRule): string {
       return `${TERRAIN_NAMES[rule.terrain]} im Radius ${rule.radius}${rule.min > 1 ? ` (mind. ${rule.min})` : ''}`;
     case 'supply':
       return 'Im Versorgungsradius von Kontor oder Marktplatz';
+    case 'islandTrait':
+      return 'Nur auf Inseln mit Gewürz';
+    case 'foreignNoKontor':
+      return 'Nur auf einer fernen Insel ohne Kontor';
   }
 }
 

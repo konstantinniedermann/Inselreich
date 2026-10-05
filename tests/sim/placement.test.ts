@@ -388,7 +388,7 @@ describe('M12 Seefahrt Platzregeln (T02)', () => {
       foundKontor2Literal(sw, island);
       for (const site of plantationSites(sw, island)) {
         expect(siteRuleOk(sw, 'spicefarm', site.x, site.y, TRAIT, island)).toEqual({ ok: true });
-        expect(canPlace(sw, 'spicefarm', site.x, site.y, island).reason).not.toBe(NO_SPICE.reason);
+        expect(canPlace(sw, 'spicefarm', site.x, site.y, island)).not.toEqual(NO_SPICE);
       }
     }
   });

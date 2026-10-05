@@ -95,7 +95,9 @@ describe('M8 Tooltips (AK-U2-01)', () => {
       TIERS[4].unlockCitizens = null;
     }
     expect(tooltipLines({ kind: 'build', defId: 'weaver' })).toContain('Braucht: Wolle 12 / min');
-    for (const id of BUILDING_IDS.filter((x) => x !== 'glassworks' && x !== 'bathhouse'))
+    // M12 T02: kontor2 und spicefarm hängen an U6 und zeigen vorerst denselben Hinweis (UI-Strang prüft den Text)
+    const withHint = ['glassworks', 'bathhouse', 'kontor2', 'spicefarm'];
+    for (const id of BUILDING_IDS.filter((x) => !withHint.includes(x)))
       expect(tierPreviewLine(id), id).toBeNull();
     for (const id of BUILDING_IDS)
       for (const line of tooltipLines({ kind: 'build', defId: id }))
@@ -113,7 +115,7 @@ describe('M8 Bauleiste (Änderung S11)', () => {
     expect(buildEntries(w, 'public')).not.toContain('bathhouse');
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(buildEntries(w, 'production')).toHaveLength(11);
+    expect(buildEntries(w, 'production')).toHaveLength(12); // M12 T02: + spicefarm
     expect(buildEntries(w, 'production')).toContain('glassworks');
     expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
@@ -144,14 +146,14 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
     expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 9, public: 4 });
     expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(10);
     expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']))).toMatchObject({
-      production: 11,
+      production: 12, // M12 T02: + spicefarm
       public: 5,
     });
     expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
     expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
-      infrastructure: 1,
+      infrastructure: 2, // M12 T02: + kontor2
       housing: 1,
-      production: 11,
+      production: 12, // M12 T02: + spicefarm
       public: 5,
     });
     expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);

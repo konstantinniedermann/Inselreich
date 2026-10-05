@@ -1,10 +1,12 @@
-import type { IslandKind } from './defs/sea';
+import type { IslandKind, IslandTrait } from './defs/sea';
 
 export type GoodId =
   'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass' | 'spice';
 export type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
 export type BuildingDefId =
   | 'kontor'
+  | 'kontor2'
+  | 'spicefarm'
   | 'market'
   | 'house'
   | 'fisher'
@@ -35,7 +37,9 @@ export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
-  | { kind: 'supply' }; // im Radius von Kontor oder Markt
+  | { kind: 'supply' } // im Radius von Kontor oder Markt
+  | { kind: 'islandTrait'; trait: IslandTrait } // Insel trägt das Merkmal (nur ferne Inseln)
+  | { kind: 'foreignNoKontor' }; // ferne Insel ohne Kontor
 export interface BuildingDef {
   id: BuildingDefId;
   name: string;
@@ -170,7 +174,8 @@ export interface Crisis {
   outcome?: FireOutcome;
 }
 export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
-export type UnlockFunction = 'forest' | 'orders' | 'goodLocks' | 'upgrade2' | 'upgrade3';
+export type UnlockFunction =
+  'forest' | 'orders' | 'goodLocks' | 'upgrade2' | 'upgrade3' | 'seafaring';
 export type UnlockTrigger =
   | { kind: 'start' }
   | { kind: 'houses'; min: number }

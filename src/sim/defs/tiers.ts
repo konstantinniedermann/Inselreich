@@ -51,6 +51,9 @@ export const TIERS: Record<Tier, TierDef> = {
 export const WIN_CITIZENS = 50;
 /** Zweites Ziel „Handelsstadt“: so viele Einwohner der Stufe 4 (M8 7; Rückfallwert 40). */
 export const WIN_MERCHANTS = 60;
+/** Drittes Ziel „Gewürzstadt“: so viele Kaufleute, so viele Ticks gehalten (M12). */
+export const WIN_SPICE_MERCHANTS = 80;
+export const WIN_SPICE_HOLD = 600;
 
 export const TAX_LEVELS: Record<TaxLevel, TaxLevelDef> = {
   low: { name: 'niedrig', pct: 70, upgradeWait: 150, occupancy: 1 },

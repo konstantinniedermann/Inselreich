@@ -73,13 +73,13 @@ export const UNLOCKS: readonly UnlockDef[] = [
   {
     id: 'U6',
     trigger: { kind: 'tierOpen', tier: 4 },
-    buildings: ['bathhouse', 'glassworks'],
+    buildings: ['bathhouse', 'glassworks', 'kontor2', 'spicefarm'],
     goods: ['glass', 'spice'],
-    functions: [],
+    functions: ['seafaring'],
     lockText: 'Erst nach dem Ziel',
     whenText: 'nach dem Ziel ({WIN_CITIZENS} Bürger)',
     notice: 'deine Bürger wollen Kaufleute werden',
-    tip: 'Bürger wollen Hygiene und helle Fenster. Kaufleute brauchen Glas und ein Badehaus.',
+    tip: 'Bürger wollen Hygiene und helle Fenster. Kaufleute brauchen Glas und ein Badehaus. Kaufleute brauchen Gewürz von einer fernen Insel: gründe dort ein Kontor.',
   },
 ];
 
@@ -96,6 +96,7 @@ export const FUNCTION_LABELS: Readonly<Record<UnlockFunction, readonly string[]>
   goodLocks: ['Ausgabesperre'],
   upgrade2: ['Ausbau Stufe 2'],
   upgrade3: ['Ausbau Stufe 3'],
+  seafaring: ['Seefahrt', 'Handelsschiff'],
 };
 /** Eintrag je Funktion, aus UNLOCKS abgeleitet (für das Blatt-Modul townhall.ts, Entscheid B9). */
 export const FUNCTION_ENTRY = Object.fromEntries(
