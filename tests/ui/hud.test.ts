@@ -35,8 +35,9 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
       'Siedler: Einwohner der Stufe 2 · brauchen Nahrung, Stoff, Kapelle',
     );
     expect(tierTooltip(1)).toBe('Pioniere: Einwohner der Stufe 1 · brauchen Nahrung');
+    // R226 F-03: Kaufleute brauchen zusätzlich Gewürz
     expect(tierPath()).toBe(
-      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Gewürz, Badehaus)',
     );
   });
   it('AK-UX-07 balanceText je Minute', () => {
@@ -62,11 +63,12 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
 
 describe('M8 Stufenpfad (AK-S1-18)', () => {
   it('AK-S1-18 tierPath endet mit den Kaufleuten, tierTooltip(4) nennt alle Bedarfe', () => {
+    // R226 F-03: Kaufleute brauchen zusätzlich Gewürz
     expect(tierPath()).toBe(
-      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Gewürz, Badehaus)',
     );
     expect(tierTooltip(4)).toBe(
-      'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Kapelle, Schule, Badehaus',
+      'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Gewürz, Kapelle, Schule, Badehaus',
     );
   });
 });

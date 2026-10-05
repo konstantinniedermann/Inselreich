@@ -1,11 +1,15 @@
 // Rezept für save-v8.json (M12 Seefahrt T00, Anhang 03 B): Kaufleute-Controller bis genau 3 Häuser der Stufe 4.
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { CRISIS_FIRST_TICK } from '../../src/sim/defs/timing';
+import { TIERS } from '../../src/sim/defs/tiers';
 import type { GoodId, Result, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { startColony } from './controller';
 import { forceRect } from './helpers';
 import { newMerchantTrajectory, runMerchants } from './merchantsController';
+
+/** Steuer der Kaufleute im v8-Stand (vor R226 F-03). */
+const V8_MERCHANT_TAX = 20;
 
 export const tier4Houses = (w: World): number =>
   Object.values(w.buildings).filter((b) => b.house?.tier === 4).length;
@@ -15,10 +19,19 @@ export const tier4Houses = (w: World): number =>
  * `wonMerchants`: nach dem ersten Schritt mit 3 Häusern der Stufe 4. Gleiche Aufrufe, gleiche Reihenfolge.
  */
 export function fixtureV8Run(): World {
-  const w = createWorld(3);
-  const { layout } = startColony(w);
-  runMerchants(w, layout, newMerchantTrajectory(), (x) => tier4Houses(x) >= 3);
-  return w;
+  // R256 (D-146): Die Fixture ist ein v8-Stand, also mit den v8-Werten der Kaufleute (ohne Gewürz, Steuer 20).
+  const { needs, tax } = TIERS[4];
+  try {
+    TIERS[4].needs = Object.fromEntries(Object.entries(needs).filter(([g]) => g !== 'spice'));
+    TIERS[4].tax = V8_MERCHANT_TAX;
+    const w = createWorld(3);
+    const { layout } = startColony(w);
+    runMerchants(w, layout, newMerchantTrajectory(), (x) => tier4Houses(x) >= 3);
+    return w;
+  } finally {
+    TIERS[4].needs = needs;
+    TIERS[4].tax = tax;
+  }
 }
 
 /** Wirft im Test mit Grund, wenn eine Bauaktion fehlschlägt. */
