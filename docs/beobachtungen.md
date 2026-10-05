@@ -848,3 +848,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/ui/storage.ts` (Slot-Liste, Autosave-Prüfung); `src/sim/save.ts` (`raw.version !== SAVE_VERSION`).
 - Beobachtung: Ein Build vor M12-E0 lehnt einen v7-Stand korrekt mit „Unbekannte Version" ab, die Slot-Liste blendet solche Stände aber still aus und markiert den Autosave als beschädigt. Ungeprüft: ob der alte Build den v7-Autosave danach überschreibt (Datenverlust bei Rückkehr auf einen älteren Stand, z. B. Pages-Rollback).
 - Ursprung: `design-spec-author`, Spec M12 Phase 1 (M12-SPEC). Einschätzung: klein; im E0-Plan prüfen, ob „neuere Version" als eigener Grund angezeigt und der Autosave nicht überschrieben wird.
+
+### 2026-10-05 · Studio (Gate Spec) · Prüfbefehl für AK-Kennungen unvollständig
+
+- Fundort: `docs/studio/gates.md`, Gate Spec Prüffrage 4 (Einzeiler mit `grep -o 'AK-[A-Z0-9]*-[0-9]*'`).
+- Beobachtung: Das Muster verlangt nach dem zweiten Bindestrich nur Ziffern und findet darum Kennungen wie `AK-M12-B1` bis `AK-M12-B4` nicht; ausserdem durchsucht `docs/superpowers/specs/*.md` keine Anhang-Ordner (E-010), in denen seit M11 die meisten AK stehen. Doppelte Kennungen in Anhängen bleiben so unentdeckt.
+- Ursprung: lead-qa, Gate Spec M12 E1–E6 (R228). Einschätzung: klein; Muster auf `AK-[A-Z0-9]*-[A-Z0-9]*` erweitern und rekursiv über `docs/superpowers/specs/` suchen (Handbuch-Änderung, studio-coach).

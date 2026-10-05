@@ -64,19 +64,24 @@ Sieg dieses Laufs: 7850 (wie `balance-crises`). Ob der Controller einen Auftrag 
 verlangt beim Speichern den genannten Zustand (`crisis.kind`, `state 'burning'`, `order !== null`) und wird sonst
 rot, nicht still grün.
 
-**Rezept `save-v6.json`:**
+**Rezept `save-v6.json`** (R229 P-14):
 
-1. Lauf wie oben bis Tick 3000.
-2. Über Sim-Aktionen (nicht von Hand im JSON): Amtsstube bauen, falls nötig; eine Ausgabesperre und einen
-   Aufstiegsstopp setzen; einen Betrieb auf `level 2` ausbauen; jedes der 9 Güter ≠ 0 (sonst Kauf am Kontor).
-   `taxCarry` und `upkeepCarry` ≠ 0 prüfen. Die Aktionen liegen zwischen zwei Schritten, nicht davor.
-3. `serialize` → `tests/sim/fixtures/save-v6.json`. Rohtest wie M11 T00: `version 6`, Brand aktiv, Auftrag offen,
-   Lagerwerte, Sperren vorhanden.
-4. Das Rezept (Schritte 1–2) bleibt als Testhelfer `fixtureV6Run()` im E0-Code und liefert für AK-E0-05 den Lauf
-   ohne Speichern und Laden; die Fold-back-Stände bei 1000, 2650 und 4300 entstehen aus demselben Lauf ohne die
-   Aktionen aus Schritt 2.
+1. Lauf wie oben bis Tick 3000, dann `serialize` → `tests/sim/fixtures/save-v6.json`. Keine Aktionen von Hand; der
+   Stand enthält, was der Controller-Lauf dort liefert: Brand, offenen Auftrag, `upkeepCarry` ≠ 0 (Wert wie der Lauf
+   ihn ergibt). Er enthält **keine** Ausgabesperre, keinen Aufstiegsstopp und kein Glas.
+2. Rohtest wie M11 T00: `version 6`, Brand aktiv, Auftrag offen, `upkeepCarry` ≠ 0.
+3. Der Lauf (Schritt 1) bleibt als Testhelfer `fixtureV6Run()` im E0-Code und liefert für AK-E0-05 den Lauf ohne
+   Speichern und Laden; die Fold-back-Stände bei 1000, 2650 und 4300 entstehen aus demselben Lauf.
 
-**Weitere Pins in Schritt 0:**
+**Rezept `save-v6-locks.json`** (R229 P-14, ebenfalls in T00 auf v6-Code):
+
+1. `createWorld(3, { unlockAll: true })`, Amtsstube bauen und anbinden, `setGoodLock` (mindestens eine Sperre),
+   `setUpgradeStop` (mindestens ein Stopp), Glas am Kontor kaufen.
+2. `serialize` → `tests/sim/fixtures/save-v6-locks.json`. Rohtest: `version 6`, `goodLocks` und `upgradeStops` nicht
+   leer, `stock.glass` > 0. `upkeepCarry` 0 wird hingenommen (R229).
+3. Verwendung: AK-E0-06 (wörtliche Übernahme von `unlocked`, `goodLocks`, `upgradeStops`, Glas).
+
+**Weitere Pins in Schritt 0** (neben den beiden Fixtures):
 
 - v6-Serialisierung (zeichengleich, als Datei oder Zeichenkette) von `createWorld(3)`,
   `createWorld(3, { unlockAll: true })`, `createWorld(3, { crisisLevel: 'mild' })` und
@@ -147,21 +152,21 @@ Fälle (je ein `it`; „nur Insel 1" heisst: `islands[0].stock` vorher und nachh
 
 ## G. Randfälle E0 (Tabelle zu Spec 4.6)
 
-| Fall                                                              | Erwartung                                                        | AK       |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------- | -------- |
-| v6 mit laufendem Brand (`burning`, `outageUntil`, Krise)          | lädt; Weiterlauf wie ohne Speichern/Laden                        | AK-E0-05 |
-| v6 mit aktivem Sturm, mit Boom, mit offenem Auftrag               | lädt; Weiterlauf identisch; Auftrag weiter lieferbar             | AK-E0-05 |
-| v6-`stock` mit allen 9 Gütern ≠ 0                                 | Werte landen unverändert in `islands[0].stock`                   | AK-E0-03 |
-| v6-`stock` ohne ein Gut                                           | „Beschädigter Spielstand"                                        | AK-E0-07 |
-| v6 nur mit Kontor (sonst keine Gebäude)                           | lädt; `islands[0].kontorId` = Kontor, Kontor `island 0`          | AK-E0-06 |
-| v6 mit `buildings: {}` (kein Kontor)                              | „Beschädigter Spielstand", keine Ausnahme (wie heute)            | AK-E0-07 |
-| v6 mit `unlocked`, `goodLocks`, `upgradeStops`                    | unverändert übernommen, keine Neuableitung (nur ab v4 wie heute) | AK-E0-06 |
-| v4 und älter                                                      | Kette bis v7; `deriveUnlocks` wie heute                          | AK-E0-04 |
-| v7 speichern, laden, speichern                                    | Text identisch                                                   | AK-E0-08 |
-| v7 mit 0 oder 2 Inseln, falscher Inselgrösse                      | „Beschädigter Spielstand" (E0 kennt genau eine Insel)            | AK-E0-07 |
-| Gebäude ohne `island`, mit `island` 1 oder `-1`                   | „Beschädigter Spielstand"                                        | AK-E0-07 |
-| v7-Stand in einem Build vor E0                                    | „Unbekannte Version"                                             | AK-E0-09 |
-| v8-Stand in einem E0-Build                                        | „Unbekannte Version"                                             | AK-E0-09 |
-| Dienstgebäude genau auf Radiusgrenze                              | gleiches Ergebnis wie naive Referenz (`≤`)                       | AK-E0-12 |
-| Dienstgebäude gebaut, abgerissen, Brand, Weg weg — ohne Tick      | Abdeckung sofort aktuell                                         | AK-E0-13 |
-| Kapelle auf Insel 1 im Radius eines Hauses auf Insel 0 (Testwelt) | keine Abdeckung (fremde Insel)                                   | AK-E0-11 |
+| Fall                                                              | Erwartung                                                        | AK                 |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------ |
+| v6 mit laufendem Brand (`burning`, `outageUntil`, Krise)          | lädt; Weiterlauf wie ohne Speichern/Laden                        | AK-E0-05           |
+| v6 mit aktivem Sturm, mit Boom, mit offenem Auftrag               | lädt; Weiterlauf identisch; Auftrag weiter lieferbar             | AK-E0-05           |
+| v6-`stock` mit allen 9 Gütern (Glas > 0 in `save-v6-locks.json`)  | Werte landen unverändert in `islands[0].stock`                   | AK-E0-03, AK-E0-06 |
+| v6-`stock` ohne ein Gut                                           | „Beschädigter Spielstand"                                        | AK-E0-07           |
+| v6 nur mit Kontor (sonst keine Gebäude)                           | lädt; `islands[0].kontorId` = Kontor, Kontor `island 0`          | AK-E0-06           |
+| v6 mit `buildings: {}` (kein Kontor)                              | „Beschädigter Spielstand", keine Ausnahme (wie heute)            | AK-E0-07           |
+| `save-v6-locks.json` mit `unlocked`, `goodLocks`, `upgradeStops`  | unverändert übernommen, keine Neuableitung (nur ab v4 wie heute) | AK-E0-06           |
+| v4 und älter                                                      | Kette bis v7; `deriveUnlocks` wie heute                          | AK-E0-04           |
+| v7 speichern, laden, speichern                                    | Text identisch                                                   | AK-E0-08           |
+| v7 mit 0 oder 2 Inseln, falscher Inselgrösse                      | „Beschädigter Spielstand" (E0 kennt genau eine Insel)            | AK-E0-07           |
+| Gebäude ohne `island`, mit `island` 1 oder `-1`                   | „Beschädigter Spielstand"                                        | AK-E0-07           |
+| v7-Stand in einem Build vor E0                                    | „Unbekannte Version"                                             | AK-E0-09           |
+| v8-Stand in einem E0-Build                                        | „Unbekannte Version"                                             | AK-E0-09           |
+| Dienstgebäude genau auf Radiusgrenze                              | gleiches Ergebnis wie naive Referenz (`≤`)                       | AK-E0-12           |
+| Dienstgebäude gebaut, abgerissen, Brand, Weg weg — ohne Tick      | Abdeckung sofort aktuell                                         | AK-E0-13           |
+| Kapelle auf Insel 1 im Radius eines Hauses auf Insel 0 (Testwelt) | keine Abdeckung (fremde Insel)                                   | AK-E0-11           |
