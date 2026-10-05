@@ -1521,8 +1521,8 @@ export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   return quarter;
 }
 
-const GRID_BAND_ROWS = 4; // Knotenzeilen je Gitterband (M12 E1)
-const SLICE_ROWS = 32; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
+export const GRID_BAND_ROWS = 2; // Knotenzeilen je Gitterband (M12 E1)
+export const SLICE_ROWS = 16; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
 
 /**
  * Inselcache in Schritten (M12 E1): gleiche Arbeit wie `buildTerrainLayer`, aber als Liste kleiner Schritte für den

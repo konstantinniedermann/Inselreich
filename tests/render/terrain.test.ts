@@ -26,6 +26,8 @@ import {
   meadowHill,
   buildTerrainLayer,
   gridBands,
+  GRID_BAND_ROWS,
+  SLICE_ROWS,
   halfLayer,
   quarterLayer,
   terrainJob,
@@ -1217,6 +1219,16 @@ describe('M12 E1 Terrain', () => {
       expect(decorCalls(layer)).toEqual(decorCalls(ref));
       expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
     });
+
+  it('AK-E1-19 Malbänder feiner: SLICE_ROWS 16, GRID_BAND_ROWS 2; Schritte ≥ Höhe / SLICE_ROWS (T07, Scheiben ≤ 8 ms)', () => {
+    expect(SLICE_ROWS).toBe(16);
+    expect(GRID_BAND_ROWS).toBe(2);
+    const world = view();
+    const job = terrainJob(world, 2);
+    expect(job.steps.length).toBeGreaterThanOrEqual(
+      Math.ceil((job.layer as unknown as FakeCanvas).height / SLICE_ROWS),
+    );
+  });
 
   it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16 und 13, Heimat und Inselansicht)', () => {
     for (const w of [view(), createWorld(3)]) {
