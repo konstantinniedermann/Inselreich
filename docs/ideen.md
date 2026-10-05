@@ -109,7 +109,7 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 
 ### I-009 · live · Hörbarer Mangel — R219 → H-A2 „Hörbare Wirtschaft“, live mit REL-02 (R222)
 
-### I-010 · gepitcht · Drittes Ziel «Gewürzstadt»
+### I-010 · eingeplant · Drittes Ziel «Gewürzstadt»
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Playtest-Beobachtung des Studios: Nach «Handelsstadt» (60 Kaufleute) gibt es nur freies Weiterspielen ohne Ziel (Pfad `README.md`, Abschnitt „Ziel"); Genre-Mechanik: Aufbauspiele geben nach dem Hauptziel eine Kette weiterer Meilensteine; **M12-Baustein E3/E4** (Fassung lead-design)
 - Spielerwirkung: „Der Spieler sieht nach der Handelsstadt im Ziel-Chip «Gewürzstadt n / 80 Kaufleute mit Gewürz» und hat erstmals ein Ziel, das ihn über Kontor II, Plantage und Route auf die Fremdinseln führt."
@@ -127,8 +127,9 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
   Meldung beim Laden nur einmal; Flagge reitet auf der Save-Migration v9 des Seefahrt-Bündels mit (keine eigene
   Version). Controller läuft nach dem zweiten Ziel nicht weiter → Baseline bitgleich. Spass bleibt 2 (spätes Spiel,
   nicht erste Stunde). Wert n mit `design-economy-designer` gegen die Gewürz-Erzeugung rechnen.
+- Entscheid: R238 → eingeplant als Zusatz zum M12-Seefahrt-Bündel E2+E3+E4 (Spec-Nachtrag M12, Anhang 05; Flagge mit Save v9)
 
-### I-011 · bewertet · Hauswunsch
+### I-011 · geparkt · Hauswunsch
 
 - Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik: Einzelne Bewohner äussern Sonderwünsche, deren Erfüllung belohnt (Gespür für «Persönlichkeit»); Pfad `README.md` (Häuser sind austauschbar, Info-Panel zeigt nur Bedürfnisse)
 - Spielerwirkung: „Der Spieler sieht über einem vollen Haus der Stufe Bürger oder höher ein Sprechblasen-Symbol («Möchte 5 Glas · noch 2:00»), liefert die Ware aus dem Lager mit einem Klick und bekommt dafür 120 Geld und 5 Minuten lang +20 % Steuer von diesem Haus; er entscheidet, ob Glas für Kaufleute-Bedarf, Verkauf oder Wunsch bestimmt ist."
@@ -141,8 +142,9 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
   Jeder Wunsch würde immer erfüllt, notfalls zugekauft; keine Entscheidung. Geld ist im späten Spiel ohnehin
   reichlich, eine Geldbelohnung trägt dort nicht. Tragfähiger wäre eine nicht-monetäre Belohnung (Haus überspringt die
   Aufstiegs-Wartezeit), die aber I-007 (Fest) doppelt. Erst nach dem Spielurteil zu I-007 (REL-04) neu fassen.
+- Entscheid: R238 → geparkt bis Spielurteil I-007 (REL-04); nicht-monetäre Belohnung neu fassen
 
-### I-012 · bewertet · Endliche Vorkommen
+### I-012 · geparkt · Endliche Vorkommen
 
 - Bereich: Inhalt · Säule: Produktionsketten · Quelle: Genre-Mechanik: Rohstoffvorkommen erschöpfen sich und zwingen zum Umziehen oder Expandieren; **M12-Baustein E1/E2** (Fremdinseln mit eigenem Gebirge geben dem Erschöpfen einen Grund zum Kontor II); Pfad `README.md` (Steinbruch, Fisch und Wald sind unerschöpflich)
 - Spielerwirkung: „Der Spieler sieht im Panel des Steinbruchs «Vorkommen 600 / 600 Stein» sinken und entscheidet zwischen einem zweiten Steinbruch, Zukauf (15 je Stein) oder dem Weg auf eine Fremdinsel, wenn das Gebirge an der Heimatinsel leer ist."
@@ -155,22 +157,11 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
   späten Spiel. Nicht in M12 nachschieben: Die Spec ist durch die Gates (R227–R231), und es braucht Rest je Vorkommen
   im Weltzustand, Controller-Anpassung und Neumessung der Pins. Vereinfachung prüfen: Rest je Steinbruch-Standort
   (Gebirgskacheln im Umkreis), nicht je Kachel. Baustein für das Brainstorming nach M12, mit `design-economy-designer`.
+- Entscheid: R238 → geparkt bis Brainstorming nach M12 (Wirtschaft)
 
-### I-013 · bewertet · Verschleiss und Instandhaltung
+### I-013 · verworfen · Verschleiss und Instandhaltung — R238 (Pflegen dominiert immer, reine Werkzeug-Senke; das Problem „Werkzeug ohne Entscheidung" geht ins nächste Wirtschafts-Brainstorming)
 
-- Bereich: Inhalt · Säule: Produktionsketten · Quelle: Genre-Mechanik: Betriebe verschleissen und verlangen Material zur Pflege; Pfad `README.md` (Werkzeug nur noch als Baustoff; Werkzeugmacher «lohnt sich erst, wenn du viel Werkzeug brauchst», Werkzeug wird nicht bestellt)
-- Spielerwirkung: „Der Spieler sieht an einem Betrieb nach 10 Minuten «Instandhaltung fällig (2 Werkzeug)» und entscheidet, ob er pflegt oder 25 % Leistung verliert; der Werkzeugmacher wird zur laufenden Entscheidung statt zur Randnotiz."
-- Grösse: M · Risiko: Save und Baseline (Alter je Betrieb im Weltzustand; Controller müsste pflegen → Fingerabdruck ändert sich; ohne Controller-Anpassung sinkt die Leistung, Sieg-Zeit verschiebt sich)
-- Raster: Spass 1 · Passung 2 · Aufwand 2 · Risiko 1 = 7
-- Randfälle: Kein Werkzeug im Lager → Betrieb läuft mit −25 %, nie Stillstand (kein Todesspirale-Effekt, weil Werkzeugmacher selbst Werkzeug braucht); Dauerklick bei 30 Betrieben → Knopf «Alle pflegen (n Werkzeug)» nötig, sonst Mikromanagement; Abriss und Neubau setzt das Alter zurück (kostenlose Pflege) → Neubaukosten müssen über 2 Werkzeug Pflege liegen (heute 2–10 Werkzeug, Prüfung nötig).
-- Doppelung: keine; die Feuerwache und Brandausfall sind Zufallsereignisse, dies ein planbarer Verbrauch. Risiko: Mikromanagement, daher nur Empfehlung für spätere Parkplätze, nicht für den Pitch.
-- Bewertung lead-design: Spass 2 → 1, Passung 3 → 2. «Pflegen» dominiert immer (2 Werkzeug = 80 Geld gegen 25 %
-  Ausstoss); mit dem nötigen Knopf «Alle pflegen» bleibt eine reine Werkzeug-Senke im Klicktakt, keine Entscheidung,
-  und Pflegepflicht schwächt das Gefühl einer wachsenden Wirtschaft. Das Problem «Werkzeug ohne Entscheidung» bleibt
-  gültig; einfacher wäre Werkzeug als Teil des Unterhalts ausgebauter Betriebe (Stufe 3) — gehört ins nächste
-  Wirtschafts-Brainstorming, nicht als eigene Mechanik.
-
-### I-014 · bewertet · Sturm auf See
+### I-014 · geparkt · Sturm auf See
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik: Wetter wirkt auf Seewege und verlangt eine Abwägung; **M12-Baustein E4** (Schiffe und Routen); Pfad `README.md` (Sturm betrifft nur Fischer, Holzfäller, Schäferei, Zuckerrohr)
 - Spielerwirkung: „Der Spieler sieht bei einer Sturmwarnung am Schiff auf der Route «Hafen anlaufen» (Fahrt pausiert 30 s, Ladung sicher) und entscheidet zwischen Zeitverlust und dem Risiko, 20 % der Ladung (z. B. 2 von 10 Gewürz) zu verlieren."
@@ -182,3 +173,4 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
   beim Sturm meist woanders hin; eine Abfrage je Sturm wird verpasst. Einfachere Fassung: Daueranweisung je Route
   («bei Sturm anlegen / weiterfahren»). Bei 2 von 10 Gewürz (≈ 80 Geld) gegen 30 s ist die Wahl im späten Spiel
   belanglos; trägt erst mit grösseren Ladungen. Baustein nach E4, nicht gepitcht.
+- Entscheid: R238 → geparkt bis nach dem v9-Merge (E4 Schiffe und Routen); Fassung als Daueranweisung je Route prüfen
