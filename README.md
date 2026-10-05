@@ -506,6 +506,12 @@ make dev       # Dev-Server starten
 make check     # Lint, Tests und Build wie in der CI
 ```
 
+Der Testlauf (`make test`, `make check`) hat zwei Gruppen: erst alle Tests parallel, danach die
+Zeittests (Tests, die Wandzeit messen) allein und seriell, damit sie unter Last nicht flackern.
+`make zeittests` findet Tests mit `performance.now(` oder `Date.now(`, die in der Liste `ZEITTESTS`
+in `vite.config.ts` fehlen, und lässt `make check` dann scheitern. Neuer Zeittest: Schwelle über
+`perfBudget` ableiten und die Datei in `ZEITTESTS` eintragen.
+
 Studio-Dashboard (lokal, nicht Teil des Spiels; Python 3, nur Standardbibliothek):
 
 ```bash

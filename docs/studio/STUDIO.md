@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.18 · Stand: 2026-10-05 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.20 · Stand: 2026-10-05 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -84,6 +84,15 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
 - **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs**, nie einen ganzen Plan oder eine
   ganze Spec; `rulings.md` nur per `grep` (E-010, R167).
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
+- **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
+  `make check` grün als Pflicht.
+- **Messauftrag (R233 (4)):** „Messproben nie im Hauptcheckout und nie als `*.test.ts` unter
+  `tests/`, nur im Worktree oder Scratchpad“; dazu die Lastregel (Abschnitt
+  [Tempo](#arbeitsprinzipien-und-tempo)).
+- **Hotfix (R236 (b)):** trennt Beobachtung mit Beleg (Log, Messung, Lauf) von Vermutung;
+  Vermutungen stehen als „unbelegt“ da und sind nie Fix-Vorgabe.
+- **CI-Prüfung (R236 (c)):** nennt Lauf-ID und Workflow-Namen (`gh run view <id>`; CI ≠ Pages).
+- **Integrator (R249 (5)):** übernimmt den Attributions-Trailer der Session unverändert.
 
 Pflichtpunkte laut Vorlage: Persona und Expertise, Ziel mit Warum fürs Spielerlebnis, Kontext,
 Deliverable mit Ablageort, Definition of Done, Grenzen und Datei-Ownership, Schnittstellen,
@@ -135,7 +144,9 @@ Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht im
   Eine Freigabe gilt für die Session, in der L0 sie loggt; Budgets zählen je Lead, Phase und
   Session. Nach `/clear` oder einem Session-Wechsel loggt L0 laufende Freigaben neu. Die Phase
   ist genau die Paket-ID aus der Kopfzeile `Paket:` des Leads, auch je Integrator-Start eine eigene
-  Freigabe; sonst zählt das Dashboard den Start auf die jüngste Freigabe (E-013, R166).
+  Freigabe; sonst zählt das Dashboard den Start auf die jüngste Freigabe (E-013, R166). Phasenlabels
+  sind je Session eindeutig: ein Paket, das in einer späteren Session weiterläuft, bekommt ein Suffix
+  (z. B. Datum), weil `effort.py` je `lead:phase` über alle Sessions zählt (R233 (6)).
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 → **15**. Fix-Runden per `SendMessage`
   zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;
@@ -157,13 +168,13 @@ Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht im
 Vier Gates in der Stufe voll, zwei in der Stufe leicht (kombiniertes Gate und Merge), jeweils von
 L0 entschieden; Prüffragen, Rollen und Urteile in [gates.md](gates.md):
 
-| Gate                                | Nach                                                                     | Prüfen                                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Brainstorming                       | Designvorschlag des Design-Leads                                         | `lead-design`                                                                                         |
-| Spec                                | Spec in `docs/superpowers/specs/`                                        | `lead-tech`, `lead-qa`                                                                                |
-| Plan                                | Plan in `docs/superpowers/plans/`                                        | `lead-qa`, `lead-production`                                                                          |
-| Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst |
-| Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                      |
+| Gate                                | Nach                                                                     | Prüfen                                                                                                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brainstorming                       | Designvorschlag des Design-Leads                                         | `lead-design`                                                                                                                                                               |
+| Spec                                | Spec in `docs/superpowers/specs/`                                        | `lead-tech`, `lead-qa`                                                                                                                                                      |
+| Plan                                | Plan in `docs/superpowers/plans/`                                        | `lead-qa`, `lead-production`; Folgeplan auf gegatetem Plan: nur `lead-qa`, Ownership/Budget prüft L0, `lead-production` nur bei neuer Branch- oder Merge-Struktur (R233 V2) |
+| Spec/Plan kombiniert (Stufe leicht) | Kurzdesign und Plan in den Berichten; Folgepaket: ein Dokument Spec+Plan | `lead-qa`, bei Folgepaketen zusätzlich `lead-tech`; Ownership, Budget, Abhängigkeiten prüft L0 selbst                                                                       |
+| Merge                               | Final-Review aller Stränge (eines je Meilenstein)                        | `lead-qa`, bei Assets `lead-art`                                                                                                                                            |
 
 **Plan- und Spec-Format** (Spec ≤ 40 KB mit Anhängen, Plan als Index plus Task-Dateien ≤ 10 KB, Doku als
 eigener Plan-Task, E-010, E-017): [gates.md](gates.md#plan--und-spec-format-e-010-r167).
@@ -215,7 +226,9 @@ Ablauf eines Meilensteins (Stufe voll):
    Bericht, je Frage mit Empfehlung; L0 antwortet per `SendMessage` an denselben Lead. Berührt eine
    Frage einen Nutzer-Vorbehalt, kommt sie in die [Warteschlange](#autonomie).
 2. Design-Lead schreibt Spec → **Gate Spec** (L0, Prüfung nach gates.md, Tech-Lead und QA-Lead
-   geben ihr Urteil ab).
+   geben ihr Urteil ab). Mit der Spec liefert der Spec-Autor einen Selbstcheck in drei Zeilen:
+   Zählungen gegen `src/` geprüft, AK- und Pin-Verweise vollständig, je Mechanik mit Zahlen ein
+   Rechenbeispiel mit realen Weltmassen (R233 V3).
 3. Tech-Lead schreibt Plan (superpowers:writing-plans) inkl. Datei-Ownership und Budgetantrag →
    **Gate Plan** (L0).
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
@@ -226,7 +239,9 @@ Ablauf eines Meilensteins (Stufe voll):
    200k Kontext oder nach 6 Arbeiter-Starts allein per Ledger und einem Satz Status an eine frische
    `lead-tech`-Instanz (ebenso vor einer Wartezeit über einen 5-h-Reset). Leads warten nicht mit
    grossem Kontext auf Arbeiter; Doku-Pakete delegiert er. Je Task liest der Controller nur die
-   Task-Datei.
+   Task-Datei. **Warten (R233 V1):** Unabhängige kleine Tasks desselben Pakets bündelt der Lead in
+   einen Implementierer-Start, statt Turn für Turn zu warten; jedes Warten loggt er als
+   `status --status waiting`.
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
@@ -282,6 +297,14 @@ Regeln dazu:
   einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
+  **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
+  Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
+  (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;
+  Browser nur für Neues); ein Delta in `src/` führt zum vollen Release-Review.
+- **Häppchen auf Etappen-Dateien (R249 (2)):** Berührt ein Häppchen Dateien, die eine laufende Etappe
+  exklusiv hält, nennt das Reihenfolge-Ruling den erwarteten Etappen-Merge. Fällt er in dieselbe
+  Session, setzt das Häppchen auf der Etappen-Branch auf und geht mit ihr nach main (kein eigenes
+  Release); sonst main zuerst. Geprüft wird bei der Auswahl, nicht erst im Plan.
 - **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, seriell durch `production-integrator` im
   Worktree `.worktrees/integrate` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
@@ -340,6 +363,12 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 **Tempo-Vorgaben (R65):**
 
 - Echtzeit-Proben höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
+- **Lastregel (R249 (3), R250, E-030):** Rote Zeittests (`perfBudget`) und Browser-Messungen gelten
+  nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst
+  warten oder allein wiederholen); der Bericht nennt den Last-Zustand. Eine Schwelle wird erst
+  gelockert, wenn ein Lauf ohne Last rot ist.
+- **Bildrunden (R233 V3):** höchstens 2 je Häppchen; danach Stopp-Bericht an L0 und Gate-Entscheid
+  statt eines dritten Anlaufs.
 - **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
   Lead per `SendMessage` an und vermerkt es (`log.py status --status waiting --task "Hänger-Alarm
 <agent-id>"`).

@@ -1862,3 +1862,91 @@ durch qa-code-reviewer; `make check`/`CI=true make check` grün und AK-I007-Test
 — Kosten bei Irrtum: Faktor 4 verdeckt Sim-Regressionen bis +60 % im CI.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C3 · ADR: —
+
+## R246 · 2026-10-05 · M12-E1 C1 abgenommen
+
+Ruling: E1 T00–T02 (`feat/m12-e1` @ fdad208, Save v8, Migration v7→v8, Reviews OK Runde 0) angenommen. Abweichungen
+übernommen: `home()` liefert `HomeIsland` (Cast), Fremdinseln mit möglicherweise negativen `ox`/`oy`, Plantagen-
+Platzsuche zählt den Kandidaten als belegt, Zusatzwerte `FALLBACK_DIRECTIONS`/`FALLBACK_MOUNTAIN_SIDE` in `sea.ts`,
+mechanische Test-Anpassungen (`islands.test.ts`, `scenario-saves.test.ts`, `unlocks.test.ts`). Hinweis: Zusatzwerte
+gehören laut Architekturregel nach `src/sim/defs/` — falls es Spielwerte sind, verschiebt C2 sie dorthin (Review
+prüft). **E1 C2 startet nach dem Delta-Merge main → E0 (R245)** mit dem Merge des dann aktuellen E0 (enthält H-I007);
+damit ist M0 des Seefahrt-Bündels erfüllt (E1-T02 OK + H-I007 in `feat/m12-e1`). — Kosten bei Irrtum: Abweichungen
+einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C1 · ADR: —
+
+## R247 · 2026-10-05 · Gate Merge M12-E0 (Etappen-Merge)
+
+Ruling: Gate Merge für die Etappe E0 **OK** (`feat/m12-e0` @ 21ac49b). Auslegung: M12 merged etappenweise (R228:
+Save-Versionen je Etappe, Merge-Reihenfolge main → E0 → E1 → Seefahrt-Bündel); das Gate je Etappe ersetzt das eine
+Meilenstein-Gate, das Final-Review auf opus über die ganze Etappen-Branch ist Pflicht und liegt vor (lead-qa, R245).
+Prüffragen: `make check`/`CI=true make check` grün (1720 Tests); Final-Review ohne ZURÜCK, BEDENKEN behoben bzw. in
+R245 geregelt; Delta-Merge REL-04 mit Review OK; ADR-013, arc42, `docs/index.md` nachgeführt, README ohne
+Bedienänderung; Commit-Konvention eingehalten. Risiko R-4 (Pages-Rollback nach v7-Autosave) akzeptiert. Merge durch
+den Integrator, danach CI und Pages. Parallel startet **E1 C2** auf Basis E0 @ 21ac49b. — Kosten bei Irrtum: Revert
+des Merge-Commits; v7-Autosaves wären dann im alten Build unladbar.
+
+Entscheider: L0 · Anlass: Berichte lead-tech M12-E0 C3, Final-Review lead-qa · ADR: ADR-013
+
+## R248 · 2026-10-05 · M12-E1 C2 abgenommen, Session-Übergabe
+
+Ruling: E1 C2 (`feat/m12-e1` @ 218b191: Merge E0 766df67, T03–T05, Fest-Rum-Test mit Kapelle auf `islands[1]`)
+angenommen; Abweichungen AK-ISO-04 (`ZOOM_STEPS[0]`) und grössere Fixture `water.test.ts` übernommen. Die Fix-Runden
+T03/T04 ohne Zweit-Review deckt das Final-Review von C4 ab — Auftrag an lead-qa: Delta der Fix-Commits ausdrücklich
+prüfen. **M0 Seefahrt-Bündel erfüllt ab 766df67.** Weiter in der nächsten Session (L0-Kontext ≈ 25 %): E1 C3 (T06 UI
+inkl. Baumstempel-Seed-Test, T07 Browser-Messung Malbänder/`SLICE_ROWS`, Playtests) ∥ Seefahrt C1 (T00–T02 auf der
+Integrationsbranch, Budget R241), Obergrenze 5 Arbeiter. — Kosten bei Irrtum: Fix-Runden-Fehler erst im Final-Review.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C2 · ADR: —
+
+## R249 · 2026-10-05 · Vorschläge Kurz-Retro S-6a98e530 und Prozess-Retro REL-04/E0
+
+Ruling: (1) **Release mit einem Häppchen** prüft im Release-Review nur das Delta seit dem Final-Review (Prozess-Retro
+V1) — angenommen. (2) **Reihenfolge-Entscheide mit Prognose:** Berührt ein Häppchen Dateien, die eine laufende Etappe
+exklusiv hält, nennt das Ruling den erwarteten Etappen-Merge; fällt er in dieselbe Session, fährt das Häppchen mit der
+Etappe (Lehre aus D-141) — angenommen. (3) **Zeittests nicht unter paralleler Last** (Prozess-Retro V3 = E-030):
+angenommen als Regel; Umsetzung (`vite.config.ts`/`Makefile`) als kleines Werkzeug-Paket an lead-tech in der nächsten
+Session; Schwellen werden erst gelockert, wenn ein Lauf ohne Last rot ist. (4) E-029 (Steuerung je Tätigkeit, Lead-
+Übergabe bei 200k) wartet auf einen Experiment-Platz, erster Nachrücker. (5) Integrator-Briefings übernehmen den
+Attributions-Trailer unverändert aus der Session. (6) Die Handbuch-Umsetzung R233/R236 (b)/(c) und (1)–(3), (5) durch
+studio-coach ruht nicht länger — sie läuft in der nächsten Session parallel zu den Inhaltssträngen (R237 gilt nur
+für den Vorrang). — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Retros `docs/studio/retros/2026-10-05-session-6a98e530.md`, `…-prozess-rel04-e0.md` · ADR: —
+
+## R250 · 2026-10-05 · Session-Plan: vier Stränge, Lastregel für Messungen
+
+Ruling: Nutzer-Auftrag „starte" = Plan aus state.md fortsetzen (R248, R249). Vier Stränge parallel: **(A)** lead-tech
+E1 C3 (T06 UI inkl. Baumstempel-Seed-Test, T07 Browser-Messung, Playtests) in `.worktrees/m12-e1`, höchstens 2
+Arbeiter gleichzeitig; **(B)** lead-tech Seefahrt C1 (T00–T02) in `.worktrees/m12-see`, Budget aus R241, höchstens 2
+Arbeiter; **(C)** lead-tech Werkzeug-Paket E-030 „Zeittests lokal seriell" (R249 (3)) in eigenem Worktree ab `main`,
+nur `vite.config.ts`/`Makefile`/Doku, 1 Arbeiter; **(D)** studio-coach Handbuch-Umsetzung R233/R236 (b)/(c) und R249
+(1)–(3), (5) — Eigentum `docs/studio/STUDIO.md`, `templates/`, `experimente.md`, `lernen.md`; `rulings.md` und
+`state.md` bleiben bei L0. Summe ≤ 5 Arbeiter (R241). **Lastregel:** Browser-Messung T07 und rote Zeittests gelten nur
+ohne parallele `vitest`/`make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst warten bzw. Wiederholung allein);
+Last-Zustand steht im Bericht. E-030 startet als Experiment mit diesem Paket. — Kosten bei Irrtum: verzerrte
+Messwerte, Wiederholung der Messung.
+
+Entscheider: L0 · Anlass: Session-Start, state.md · ADR: —
+
+## R251 · 2026-10-05 · Handbuch 1.19 abgenommen, E-028 bewerten, E-030 nachrücken
+
+Ruling: Handbuch 1.19 (`196bcce`) angenommen. **E-028** hat seinen Zeitraum erreicht (REL-01…REL-04 ≥ 3 Releases) →
+studio-coach bewertet und schliesst es; danach rückt **E-030** auf den freien Platz (laufend ab dieser Session, Start
+R250; Verfassung §10 höchstens 3). Bewährt sich E-028, bleibt die Arbeitsweise als Regel im Handbuch. `docs/studio/
+gates.md` „Gate Plan" bekommt den Satz zum Folgeplan-Gate (R233 V2) durch studio-coach. V1 (Warte-Turn-Enden als
+`waiting`) nimmt L0 ab sofort in Lead-Briefings auf. — Kosten bei Irrtum: E-028 wieder öffnen, E-030 zurückstellen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach PROZ-HB-R233 · ADR: —
+
+## R252 · 2026-10-05 · Gate Werkzeug-Merge TOOL-E030
+
+Ruling: Werkzeug-Merge ausserhalb eines Release (wie R220) freigegeben: `tool/e030-zeittests-seriell` @ 37e393a
+(Vitest-Projekte `parallel` → `zeit` seriell, Wächter `make zeittests`, README; Review OK, Testzahl unverändert
+1721, `make check` und `CI=true make check` grün, kein Diff in `tests/`). Keine Spieländerung, daher kein Browser-Lauf.
+Integrator mergt nach `main`, `make check`, Push, CI- und Pages-Lauf prüfen. Danach holen `feat/m12-e1` und
+`feat/m12-see` `main` per Merge an ihrem nächsten Task-Ende (E1 nach R250 normal; See nur per L0-Ruling laut
+Plan-Index → hiermit erlaubt, nur dieser Merge). — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E030 · ADR: —
