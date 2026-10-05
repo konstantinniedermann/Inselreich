@@ -578,7 +578,8 @@ function isValidV9Fields(raw: Record<string, unknown>): boolean {
   if (!ships.every((s) => isValidShip(s, islands))) return false;
   const ids = ships.map((s) => (s as Record<string, unknown>).id);
   if (!ids.every((id) => isInt(id) && id >= 1) || new Set(ids).size !== ids.length) return false;
-  return isInt(nextShipId) && ids.every((id) => (nextShipId as number) > (id as number));
+  if (!isInt(nextShipId) || nextShipId < 1) return false;
+  return ids.every((id) => nextShipId > (id as number));
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
