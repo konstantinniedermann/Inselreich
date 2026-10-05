@@ -842,3 +842,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/sim/defs/tiers.ts` (Steuer), Regel „unversorgt zahlt halbe Steuer"; `src/sim/defs/buildings.ts` (`house`, Standort `supply`).
 - Beobachtung: Ein Pionierhaus ohne jede Ware zahlt 1 Geld je 100 Ticks bei rund 80 Baukosten (Amortisation ≈ 13 min). Wer viele Häuser ohne Versorgung in Kontor- oder Marktradius stellt, hat eine kleine, aber dauerhafte Steuerquelle; mit M12 (grosse Fremdinseln, eigener Kontorradius) wächst der Platz dafür.
 - Ursprung: `design-economy-designer`, Anhang 01 zum M12-Designvorschlag (M12-BRAIN). Einschätzung: gedeckelt durch Markt-Unterhalt und Radius; im M12-Spec-Gate prüfen, ob unversorgte Häuser auf Fremdinseln zahlen sollen (Kandidat: keine Steuer ohne erfülltes Grundbedürfnis).
+
+### 2026-10-05 · UI (Speichern) · Neuerer Spielstand im älteren Build
+
+- Fundort: `src/ui/storage.ts` (Slot-Liste, Autosave-Prüfung); `src/sim/save.ts` (`raw.version !== SAVE_VERSION`).
+- Beobachtung: Ein Build vor M12-E0 lehnt einen v7-Stand korrekt mit „Unbekannte Version" ab, die Slot-Liste blendet solche Stände aber still aus und markiert den Autosave als beschädigt. Ungeprüft: ob der alte Build den v7-Autosave danach überschreibt (Datenverlust bei Rückkehr auf einen älteren Stand, z. B. Pages-Rollback).
+- Ursprung: `design-spec-author`, Spec M12 Phase 1 (M12-SPEC). Einschätzung: klein; im E0-Plan prüfen, ob „neuere Version" als eigener Grund angezeigt und der Autosave nicht überschrieben wird.
