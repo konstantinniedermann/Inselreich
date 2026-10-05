@@ -8,7 +8,8 @@ import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { createWorld, idx, home } from '../../src/sim/world';
-import { forceRect } from './helpers';
+import { forceRect, putBuilding } from './helpers';
+import { foundKontor2Literal, seaWorld } from './seaHelpers';
 
 const T = CRISIS_FIRST_TICK;
 let w: World;
@@ -95,5 +96,29 @@ describe('M6 Sturm', () => {
       'sheepfarm',
       'spicefarm', // M12 T02
     ]);
+  });
+});
+
+describe('M12 E2 Sturm auf fernen Inseln (AK-E2-08)', () => {
+  it('halbiert die Produktion eines sturmanfälligen Betriebs auf Insel 2', () => {
+    const s = seaWorld();
+    const k2 = foundKontor2Literal(s, 2);
+    const f = putBuilding(s, 2, 'fisher', k2.x + 4, k2.y);
+    const twin = JSON.parse(serialize(s)) as World;
+    s.tick = twin.tick = T;
+    beginCrisis(s, 0, { kind: 'storm' });
+    for (let i = 0; i < 200; i++) {
+      step(s);
+      step(twin);
+    }
+    f.progress = 0;
+    twin.buildings[f.id]!.progress = 0;
+    const before = [s.islands[2]!.stock.food, twin.islands[2]!.stock.food];
+    for (let i = 0; i < 300; i++) {
+      step(s);
+      step(twin);
+    }
+    expect(s.islands[2]!.stock.food - before[0]!).toBe(3);
+    expect(twin.islands[2]!.stock.food - before[1]!).toBe(7);
   });
 });

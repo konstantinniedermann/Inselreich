@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../../src/sim/build';
-import { beginCrisis, fireTarget, flammableRect, isProtected } from '../../src/sim/crises';
+import {
+  beginCrisis,
+  fireRect,
+  fireTarget,
+  fireTile,
+  flammableRect,
+  isProtected,
+  rollCrisis,
+} from '../../src/sim/crises';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { CRISIS_FIRST_TICK } from '../../src/sim/defs/timing';
 import { totalUpkeep } from '../../src/sim/economy';
@@ -8,7 +16,10 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { forceRect, houseNearKontor, placeService } from './helpers';
+import { forceRect, houseNearKontor, placeService, putBuilding } from './helpers';
+import { fireWorld } from './fixtureV8';
+import { foundKontor2Literal, seaWorld } from './seaHelpers';
+import { FIRE_PINS, SEE_SEEDS } from './seePins';
 
 const T = CRISIS_FIRST_TICK; // Periode 0 bei Stufe normal
 
@@ -378,5 +389,100 @@ describe('M6 Brand und Feuerwache', () => {
     expect(deserialize(serialize(w)).ok).toBe(true);
     while (w.tick < T + 200) step(w);
     expect(w.crisis).toBeNull();
+  });
+});
+
+describe('M12 E2 Brand je Insel (AK-E2-07, AK-E2-08)', () => {
+  const orNull = (r: ReturnType<typeof rollCrisis>, w: World) => {
+    const fire = fireRect(w);
+    return r.tile && fire ? fireTile(fire, r.tile) : null;
+  };
+
+  it('nur Heimat brennbar: Rückrechnung = FIRE_PINS mit island 0, Seeds und k 0 … 29', () => {
+    for (const seed of SEE_SEEDS) {
+      const fw = fireWorld(seed);
+      const got = Array.from({ length: 30 }, (_, k) =>
+        orNull(rollCrisis(seed, k, 4, fireRect(fw)!.rect), fw),
+      );
+      expect(got, `Seed ${seed}`).toEqual(
+        FIRE_PINS[seed]!.map((p) => (p ? { ...p, island: 0 } : null)),
+      );
+    }
+  });
+
+  it('nur Heimat mit mehreren brennbaren Gebäuden: Rechteck und Ziel wie flammableRect', () => {
+    for (const seed of SEE_SEEDS) {
+      const fw = fireWorld(seed);
+      const kk = fw.buildings[home(fw).kontorId]!;
+      putBuilding(fw, 0, 'weaver', kk.x + 9, kk.y - 2);
+      putBuilding(fw, 0, 'weaver', kk.x + 12, kk.y + 2);
+      putBuilding(fw, 0, 'distillery', kk.x + 6, kk.y - 3);
+      const fire = fireRect(fw)!;
+      expect(fire.rect).toEqual(flammableRect(fw));
+      expect(fire.parts).toHaveLength(1);
+      for (let k = 0; k < 60; k++) {
+        const roll = rollCrisis(seed, k, 4, fire.rect);
+        const expected = roll.tile ? { ...roll.tile, island: 0 } : null;
+        expect(orNull(roll, fw), `Seed ${seed} k ${k}`).toEqual(expected);
+      }
+    }
+  });
+
+  /** Heimat (eine Brennerei) + Insel 2 mit zwei Webereien weit auseinander (breiterer, höherer Teil). */
+  const wide = (): World => {
+    const s = fireWorld(3);
+    const k2 = foundKontor2Literal(s, 2);
+    putBuilding(s, 2, 'weaver', k2.x + 3, k2.y);
+    putBuilding(s, 2, 'weaver', k2.x + 12, k2.y + 4);
+    return s;
+  };
+
+  it('Gesamtrechteck: Höhe = Summe, Breite = Maximum; es gibt ein Ziel auf Insel 2', () => {
+    const s = wide();
+    const fire = fireRect(s)!;
+    expect(fire.parts.map((p) => p.island)).toEqual([0, 2]);
+    const h = (r: { y0: number; y1: number }): number => r.y1 - r.y0 + 1;
+    const wd = (r: { x0: number; x1: number }): number => r.x1 - r.x0 + 1;
+    expect(h(fire.rect)).toBe(fire.parts.reduce((a, p) => a + h(p.r), 0));
+    expect(wd(fire.rect)).toBe(Math.max(...fire.parts.map((p) => wd(p.r))));
+    let onTwo = 0;
+    for (let k = 0; k < 200; k++) {
+      const roll = rollCrisis(3, k, 4, fire.rect);
+      if (roll.tile && fireTile(fire, roll.tile)?.island === 2) onTwo++;
+    }
+    expect(onTwo).toBeGreaterThan(0);
+  });
+
+  it('Treffer rechts ausserhalb des schmaleren Teils ist ein Fehlschlag (null)', () => {
+    const s = wide();
+    const fire = fireRect(s)!;
+    const [a, b] = fire.parts;
+    expect(b!.r.x1 - b!.r.x0).toBeGreaterThan(a!.r.x1 - a!.r.x0);
+    expect(fireTile(fire, { x: fire.rect.x1, y: fire.rect.y0 })).toBeNull();
+  });
+
+  it('Ziel auf Insel 2: beginCrisis speichert island, Standard ist Heimat', () => {
+    const s = wide();
+    const target = Object.values(s.buildings).find((b) => b.island === 2 && b.defId === 'weaver')!;
+    s.tick = T;
+    beginCrisis(s, 0, { kind: 'fire', tile: { x: target.x, y: target.y, island: 2 } });
+    expect(s.crisis!.tile).toEqual({ x: target.x, y: target.y, island: 2 });
+    expect(s.crisis!.target).toBe(target.id);
+    expect(s.crisis!.outcome).toBe('burning');
+    const s2 = wide();
+    beginCrisis(s2, 0, { kind: 'fire', tile: { x: 1, y: 1 } });
+    expect(s2.crisis!.tile!.island).toBe(0);
+  });
+
+  it('Feuerwache auf Insel 2 schützt die Kapelle der Heimat an gleichen Koordinaten nicht', () => {
+    const s = seaWorld();
+    const k2 = foundKontor2Literal(s, 2);
+    const kk = s.buildings[home(s).kontorId]!;
+    const chapel = putBuilding(s, 0, 'chapel', kk.x + 5, kk.y + 5);
+    putBuilding(s, 2, 'firestation', kk.x + 5, kk.y + 5);
+    expect(k2.island).toBe(2);
+    expect(isProtected(s, chapel)).toBe(false);
+    const chapel2 = putBuilding(s, 2, 'chapel', kk.x + 7, kk.y + 5);
+    expect(isProtected(s, chapel2)).toBe(true);
   });
 });
