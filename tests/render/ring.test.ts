@@ -16,7 +16,7 @@ import { PALETTE } from '../../src/render/palette';
 import { MAX_RINGS, drawProgressRings, ringFraction, ringView } from '../../src/render/ring';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld } from '../../src/sim/world';
+import { home, center, createWorld } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, World } from '../../src/sim/types';
 import { fakeCtx } from './fakeCtx';
 
@@ -35,16 +35,16 @@ function worldWith(list: [BuildingDefId, number, number, BuildingState][]): Worl
   const world = createWorld(3);
   let id = 1000;
   for (const [defId, x, y, state] of list) {
-    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state };
+    const b: Building = { id: ++id, defId, x, y, connected: true, progress: 0, state, island: 0 };
     world.buildings[b.id] = b;
   }
   return world;
 }
 const camAt = (world: World, zoom: number): Camera => {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx, c.cy, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx, c.cy, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 
@@ -57,6 +57,7 @@ describe('M11 Fortschrittsring (Spec 8)', () => {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     ...extra,
   });
   it('AK-RND-04 ringFraction: Fischer progress 20 → 0,5; Stufe 2 progress 12 → 0,5; höchstens 0,99999', () => {

@@ -2,7 +2,7 @@ import { screenToTileF, screenToWorld, type Camera } from '../render/camera';
 import { buildingHulls, footprintOrigin, pickBuilding, type Pt } from '../render/iso';
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import { inBounds } from '../sim/world';
+import { home, inBounds } from '../sim/world';
 import type { World } from '../sim/types';
 
 /**
@@ -27,7 +27,7 @@ export function targetTile(
   }
   const f = screenToTileF(cam, sx, sy);
   const t = { x: Math.floor(f.x), y: Math.floor(f.y) };
-  if (!inBounds(world, t.x, t.y)) return null;
+  if (!inBounds(home(world), t.x, t.y)) return null;
   if (tool.kind === 'build') {
     const def = BUILDING_DEFS[tool.defId];
     return footprintOrigin(f.x, f.y, def.w, def.h);

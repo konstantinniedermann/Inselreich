@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { totalUpkeep } from '../../src/sim/economy';
 import { tickProduction } from '../../src/sim/production';
@@ -21,6 +21,7 @@ function connectedBuilding(world: World, defId: BuildingDefId): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   world.buildings[b.id] = b;
   return b;
@@ -37,47 +38,47 @@ beforeEach(() => {
 describe('tickProduction', () => {
   it('lumberjack produces 1 wood per 30 ticks when connected (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
-    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
-    const before = w.stock.wood;
+    home(w).tiles[idx(home(w), 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
+    const before = home(w).stock.wood;
     ticks(w, 29);
-    expect(w.stock.wood).toBe(before);
+    expect(home(w).stock.wood).toBe(before);
     ticks(w, 1);
-    expect(w.stock.wood).toBe(before + 1);
+    expect(home(w).stock.wood).toBe(before + 1);
     expect(lj.progress).toBe(0);
     expect(lj.state).toBe('ok');
   });
 
   it('does nothing when not connected and keeps progress (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
-    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
-    const before = w.stock.wood;
+    home(w).tiles[idx(home(w), 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
+    const before = home(w).stock.wood;
     ticks(w, 10);
     expect(lj.progress).toBe(10);
     lj.connected = false;
     ticks(w, 50);
     expect(lj.progress).toBe(10);
     expect(lj.state).toBe('notConnected');
-    expect(w.stock.wood).toBe(before);
+    expect(home(w).stock.wood).toBe(before);
   });
 
   it('weaver waits for wool, takes 1 wool at cycle start, outputs cloth at cycle end', () => {
     const wv = connectedBuilding(w, 'weaver');
     const cycle = BUILDING_DEFS.weaver.cycle!;
-    w.stock.wool = 0;
-    w.stock.cloth = 0;
+    home(w).stock.wool = 0;
+    home(w).stock.cloth = 0;
     ticks(w, 10);
     expect(wv.progress).toBe(0);
     expect(wv.state).toBe('waitingInput');
-    expect(w.stock.cloth).toBe(0);
+    expect(home(w).stock.cloth).toBe(0);
 
-    w.stock.wool = 1;
+    home(w).stock.wool = 1;
     ticks(w, 1);
-    expect(w.stock.wool).toBe(0);
+    expect(home(w).stock.wool).toBe(0);
     expect(wv.progress).toBe(1);
     expect(wv.state).toBe('ok');
 
     ticks(w, cycle - 1);
-    expect(w.stock.cloth).toBe(1);
+    expect(home(w).stock.cloth).toBe(1);
     expect(wv.progress).toBe(0);
 
     // Verbindung verlieren, dann wieder anbinden (Reconnect-Regel setzt 'ok'); Wolle fehlt weiter.
@@ -92,37 +93,37 @@ describe('tickProduction', () => {
 
   it('drops output when storage is full and marks storageFull (M11 S3)', () => {
     const lj = connectedBuilding(w, 'lumberjack');
-    w.tiles[idx(w, 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
-    w.stock.wood = 100;
+    home(w).tiles[idx(home(w), 1, 0)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
+    home(w).stock.wood = 100;
     ticks(w, 30);
-    expect(w.stock.wood).toBe(100);
+    expect(home(w).stock.wood).toBe(100);
     expect(lj.state).toBe('storageFull');
     expect(lj.progress).toBe(0);
     ticks(w, 5);
     expect(lj.state).toBe('storageFull');
-    w.stock.wood = 50;
+    home(w).stock.wood = 50;
     ticks(w, BUILDING_DEFS.lumberjack.cycle!);
-    expect(w.stock.wood).toBe(51);
+    expect(home(w).stock.wood).toBe(51);
     expect(lj.state).toBe('ok');
   });
 });
 
 describe('step', () => {
   it('runs production then economy and increments tick', () => {
-    prepareEast(w, w.buildings[w.kontorId]!);
-    const k = w.buildings[w.kontorId]!;
+    prepareEast(w, w.buildings[home(w).kontorId]!);
+    const k = w.buildings[home(w).kontorId]!;
     for (let i = 0; i < 4; i++) expect(placeRoad(w, k.x + 2 + i, k.y).ok).toBe(true);
     const res = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
     expect(res.ok).toBe(true);
     expect(w.buildings[res.id!]!.connected).toBe(true);
 
-    const wood = w.stock.wood;
+    const wood = home(w).stock.wood;
     const money = w.money;
     const upkeep = totalUpkeep(w);
     for (let i = 0; i < 300; i++) step(w);
 
     expect(w.tick).toBe(300);
-    expect(w.stock.wood).toBe(wood + 10);
+    expect(home(w).stock.wood).toBe(wood + 10);
     expect(w.money).toBe(money - 3 * upkeep);
   });
 });
@@ -133,10 +134,18 @@ describe('M8 Ein-Input-Betriebe bitgleich (Spec 5.3)', () => {
     const distillery = connectedBuilding(w, 'distillery');
     const toolmaker = connectedBuilding(w, 'toolmaker');
     connectedBuilding(w, 'school'); // M10: der Werkzeugmacher arbeitet nur mit Schule in Reichweite (Spec 5.5)
-    w.stock = { ...w.stock, wool: 3, cane: 2, wood: 1, cloth: 0, rum: 0, tools: 0 };
+    home(w).stock = { ...home(w).stock, wool: 3, cane: 2, wood: 1, cloth: 0, rum: 0, tools: 0 };
     ticks(w, 200);
-    expect([w.stock.cloth, w.stock.wool, weaver.state]).toEqual([3, 0, 'waitingInput']);
-    expect([w.stock.rum, w.stock.cane, distillery.state]).toEqual([2, 0, 'waitingInput']);
-    expect([w.stock.tools, w.stock.wood, toolmaker.state]).toEqual([1, 0, 'waitingInput']);
+    expect([home(w).stock.cloth, home(w).stock.wool, weaver.state]).toEqual([3, 0, 'waitingInput']);
+    expect([home(w).stock.rum, home(w).stock.cane, distillery.state]).toEqual([
+      2,
+      0,
+      'waitingInput',
+    ]);
+    expect([home(w).stock.tools, home(w).stock.wood, toolmaker.state]).toEqual([
+      1,
+      0,
+      'waitingInput',
+    ]);
   });
 });

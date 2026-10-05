@@ -45,8 +45,10 @@ const STORE = (seed) =>
         return 1;
       })()`;
 /** Seitenskript: Mitte der grössten Gebirgskomponente (4er-Nachbarschaft) als Kachel, sonst null. */
-const MOUNTAIN = `(() => {
-  const w = window.__inselDev?.world(); if (!w) return null;
+const MOUNTAIN = `(async () => {
+  const { home } = await import('/src/sim/world.ts');
+  const world = window.__inselDev?.world(); if (!world) return null;
+  const w = home(world);
   const seen = new Int32Array(w.width * w.height).fill(-1); let best = null;
   for (let i = 0; i < seen.length; i++) {
     if (w.tiles[i].terrain !== 'mountain' || seen[i] >= 0) continue;

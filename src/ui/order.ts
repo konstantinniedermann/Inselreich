@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { GOODS } from '../sim/defs/goods';
 import { nextOrderTick } from '../sim/orders';
 import { functionLock } from '../sim/unlocks';
@@ -16,7 +17,7 @@ export function orderCardText(world: World): string {
   const name = GOODS[o.good].name;
   return (
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
-    ` · Lager ${world.stock[o.good]}/${o.amount}`
+    ` · Lager ${home(world).stock[o.good]}/${o.amount}`
   );
 }
 
@@ -82,6 +83,6 @@ export function updateOrder(el: HTMLElement, world: World): void {
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
   if (btn && world.order !== null) {
-    btn.classList.toggle('unaffordable', world.stock[world.order.good] < world.order.amount);
+    btn.classList.toggle('unaffordable', home(world).stock[world.order.good] < world.order.amount);
   }
 }

@@ -12,7 +12,7 @@ import { upgradeBuilding } from '../../src/sim/upgrade';
 import type { Layout, Trajectory } from './controller';
 import { runColony, startColony, type ColonyOptions } from './controller';
 import type { Result, World } from '../../src/sim/types';
-import { adjacentOf, buildingsOfType, createWorld, idx } from '../../src/sim/world';
+import { adjacentOf, buildingsOfType, createWorld, idx, home } from '../../src/sim/world';
 
 export const NORMAL: ColonyOptions = { fireStation: true };
 
@@ -35,14 +35,15 @@ export function normalRunTo(
 /** Stellen in Zeilenfolge (y, dann x). */
 function rowOrder(w: World): { x: number; y: number }[] {
   const out: { x: number; y: number }[] = [];
-  for (let y = 0; y < w.height; y++) for (let x = 0; x < w.width; x++) out.push({ x, y });
+  for (let y = 0; y < home(w).height; y++)
+    for (let x = 0; x < home(w).width; x++) out.push({ x, y });
   return out;
 }
 
 function topUpBuildCost(w: World): void {
   const cost = BUILDING_DEFS.townhall.cost;
   for (const g of ['wood', 'tools', 'stone'] as const) {
-    const missing = cost[g] - w.stock[g];
+    const missing = cost[g] - home(w).stock[g];
     if (missing > 0) must(buy(w, g, missing), `buy ${g} ${missing}`);
   }
 }
@@ -52,7 +53,8 @@ function placeConnectedTownhall(w: World): void {
   const roads = reachableRoads(w);
   for (const { x, y } of rowOrder(w)) {
     if (!canPlace(w, 'townhall', x, y).ok) continue;
-    if (!adjacentOf(w, x, y, def.w, def.h).some((p) => roads.has(idx(w, p.x, p.y)))) continue;
+    if (!adjacentOf(home(w), x, y, def.w, def.h).some((p) => roads.has(idx(home(w), p.x, p.y))))
+      continue;
     must(placeBuilding(w, 'townhall', x, y), 'Amtsstube bauen');
     return;
   }
@@ -72,7 +74,8 @@ export function fixtureV6Run(): { w: World; layout: Layout; t: Trajectory } {
   const lumber = buildingsOfType(w, 'lumberjack')[0];
   if (!lumber) throw new Error('T00: kein Holzfäller');
   must(upgradeBuilding(w, lumber.id), 'upgradeBuilding');
-  for (const g of GOOD_IDS) if (g !== 'glass' && w.stock[g] === 0) must(buy(w, g, 3), `buy ${g}`);
+  for (const g of GOOD_IDS)
+    if (g !== 'glass' && home(w).stock[g] === 0) must(buy(w, g, 3), `buy ${g}`);
   return run;
 }
 
@@ -80,9 +83,9 @@ export function fixtureV6Run(): { w: World; layout: Layout; t: Trajectory } {
 export function locksV6Run(): World {
   const w = createWorld(3, { unlockAll: true });
   topUpBuildCost(w);
-  const kontor = w.buildings[w.kontorId]!;
+  const kontor = w.buildings[home(w).kontorId]!;
   const kd = BUILDING_DEFS[kontor.defId];
-  const roadSpot = adjacentOf(w, kontor.x, kontor.y, kd.w, kd.h).sort(
+  const roadSpot = adjacentOf(home(w), kontor.x, kontor.y, kd.w, kd.h).sort(
     (a, b) => a.y - b.y || a.x - b.x,
   );
   let road: { x: number; y: number } | null = null;
@@ -95,7 +98,8 @@ export function locksV6Run(): World {
   const td = BUILDING_DEFS.townhall;
   let built = false;
   for (const { x, y } of rowOrder(w)) {
-    if (!adjacentOf(w, x, y, td.w, td.h).some((p) => p.x === road!.x && p.y === road!.y)) continue;
+    if (!adjacentOf(home(w), x, y, td.w, td.h).some((p) => p.x === road!.x && p.y === road!.y))
+      continue;
     if (!canPlace(w, 'townhall', x, y).ok) continue;
     if (placeBuilding(w, 'townhall', x, y).ok) {
       built = true;

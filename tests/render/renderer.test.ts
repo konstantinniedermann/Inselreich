@@ -6,6 +6,8 @@ import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
+import { islandCam, islandView } from '../../src/render/archipel';
+import { project } from '../../src/render/iso';
 import {
   render,
   renderStats,
@@ -24,12 +26,16 @@ import {
   GLOW_RADIUS,
   GLOW_RING_COUNT,
 } from '../../src/render/life';
+import { DIM_FIRE } from '../../src/render/renderer';
+import { LIGHT_COLORS, mixRgb } from '../../src/render/light';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
-import { center, createWorld, idx } from '../../src/sim/world';
+import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
-import { forceRect } from '../sim/helpers';
+import { readFileSync } from 'node:fs';
+import { deserialize } from '../../src/sim/save';
+import { fnv1a32, forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
 interface Call {
@@ -41,7 +47,12 @@ interface Call {
 }
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
-  terrain: { scale: 1, patch: { redrawn: false, ms: 0 }, halfCalls: 0 },
+  terrain: {
+    scale: 1,
+    patch: { redrawn: false, ms: 0 },
+    halfCalls: 0,
+    quarter: { width: 512, height: 512 },
+  },
 }));
 const at = (ctx: unknown): number => (ctx as { events: unknown[] }).events.length;
 
@@ -99,6 +110,7 @@ vi.mock('../../src/render/terrain', async (orig) => {
       h.terrain.halfCalls++;
       return l;
     },
+    quarterLayer: () => h.terrain.quarter,
   };
 });
 
@@ -117,10 +129,11 @@ const isRoadStroke = (e: Ev): boolean =>
 /** Welt mit Kontor, Haus, Markt, Weberei (roh gesetzt, raucht) und einem Weg (ISO §5: Wege vor den Körpern). */
 function scene(): { world: World; ids: Record<string, number> } {
   const world = createWorld(3, { unlockAll: true });
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   forceRect(world, k.x + 3, k.y + 3, 6, 6, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(world.stock) as (keyof World['stock'])[]) world.stock[g] = 1000;
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[g] = 1000;
   const ids: Record<string, number> = {};
   const put = (d: BuildingDefId, x: number, y: number): void => {
     const r = placeBuilding(world, d, k.x + x, k.y + y);
@@ -139,18 +152,19 @@ function scene(): { world: World; ids: Record<string, number> } {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   for (const p of [0, 1, 2, 3])
-    world.tiles[(k.y + 6 + (p >> 1)) * world.width + k.x + 6 + (p & 1)]!.buildingId = w;
+    home(world).tiles[(k.y + 6 + (p >> 1)) * home(world).width + k.x + 6 + (p & 1)]!.buildingId = w;
   ids.weaver = w;
-  for (let y = 3; y < 9; y++) world.tiles[idx(world, k.x + 5, k.y + y)]!.road = true; // Weg
+  for (let y = 3; y < 9; y++) home(world).tiles[idx(home(world), k.x + 5, k.y + y)]!.road = true; // Weg
   return { world, ids };
 }
 const camFor = (world: World, zoom: number) => {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx + 3, c.cy + 3, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx + 3, c.cy + 3, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 const order = { period: 1, good: 'wood' as const, amount: 5, reward: 100, due: 999 };
@@ -179,7 +193,7 @@ describe('Renderer', () => {
           world.order = order;
           world.tick = 3000;
           const cam = camFor(world, zoom);
-          const k = world.buildings[world.kontorId]!;
+          const k = world.buildings[home(world).kontorId]!;
           if (empty) {
             world.buildings = {};
             world.nextBuildingId = 2;
@@ -268,7 +282,8 @@ describe('Renderer', () => {
     // 7 Luft nach dem letzten Körper, vor der Tönung
     const airs = h.calls.filter((c) => c.kind === 'air');
     expect(airs.length).toBeGreaterThan(0);
-    const mul = ev.findIndex((e) => e.composite === 'multiply');
+    // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+    const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
     expect(mul).toBeGreaterThan(0);
     for (const a of airs) {
       expect(a.at).toBeGreaterThanOrEqual(bodies[bodies.length - 1]!.at);
@@ -288,7 +303,7 @@ describe('Renderer', () => {
   it('ISO §5 Schatten: ein Pfad mit Gebäuden, Baumstempeln und Schiff', () => {
     const { world } = scene();
     world.order = order;
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x + 9, k.y + 2, 2, 1, 'forest');
     const cam = camFor(world, 1);
     const run = (w: World) => {
@@ -308,11 +323,11 @@ describe('Renderer', () => {
   it('ISO D-09 (AK-ISO-10) Baumstempel im sortierten Durchgang: Reihenfolge wie sortedObjects, nur sichtbare Kacheln', () => {
     const { world } = scene();
     world.order = order;
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x + 9, k.y + 2, 4, 4, 'forest');
     forceRect(world, k.x > 32 ? 1 : 58, k.y > 32 ? 1 : 58, 3, 3, 'forest'); // ausserhalb des Bildes
     const cam = camFor(world, 1);
-    const range = visibleTileRange(cam, VIEW, { w: world.width, h: world.height });
+    const range = visibleTileRange(cam, VIEW, { w: home(world).width, h: home(world).height });
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     const seq = h.calls.filter((c) => c.kind !== 'air');
@@ -382,7 +397,7 @@ describe('Renderer', () => {
     const { world, ids } = scene();
     world.tick = 3000;
     const cam = camFor(world, 1);
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     world.buildings[ids.weaver!]!.connected = false;
     const hover: Hover = {
       x: k.x + 3,
@@ -422,10 +437,11 @@ describe('Renderer', () => {
 
   it('Spec 5.5 waterSides wertet alle vier Seiten aus: Wasser nur hinten → nur hinten, vorn → vorn, keins → keine', () => {
     const { world } = scene();
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x - 2, k.y - 2, 6, 6, 'grass');
-    for (const y of [k.y, k.y + 1]) world.tiles[idx(world, k.x, y)]!.buildingId = k.id;
-    const set = (x: number, y: number) => (world.tiles[idx(world, x, y)]!.terrain = 'water');
+    for (const y of [k.y, k.y + 1]) home(world).tiles[idx(home(world), k.x, y)]!.buildingId = k.id;
+    const set = (x: number, y: number) =>
+      (home(world).tiles[idx(home(world), x, y)]!.terrain = 'water');
     const none = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
     expect(waterSides(world, k)).toEqual(none);
     set(k.x - 1, k.y);
@@ -446,7 +462,7 @@ describe('Renderer', () => {
     world.order = null;
     world.tick = 3000; // Nacht: keine Möwen und ihre Schatten im Zähler
     // keine Baum- und Felsschatten (H-R8) im Zähler
-    for (const t of world.tiles)
+    for (const t of home(world).tiles)
       if (t.terrain === 'forest' || t.terrain === 'mountain') t.terrain = 'grass';
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
@@ -470,7 +486,7 @@ describe('Renderer', () => {
     const rainStyle = rgbaOf(PALETTE.foam, 0.25);
     const first = (world: World) =>
       sortedObjects(world, []).filter((i) => i.kind === 'building')[0]!.id;
-    const DARK = 'rgba(0,0,0,0.35)';
+    const DARK = DIM_FIRE;
     function frame(fx: Partial<RenderFx>, mk?: (w: World) => void, tick = 3000) {
       const { world, ids } = scene();
       world.order = order;
@@ -537,7 +553,8 @@ describe('Renderer', () => {
 
     it('M7-R3 Sturm-Randschatten (Ebene 8) vor dem Multiply, normales source-over', () => {
       const { ev } = frame({ weather: storm, dayNight: false });
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const edge = ev
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fillRect' && e.style.startsWith('gradient('));
@@ -571,6 +588,9 @@ describe('Renderer', () => {
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fill' && e.style === DARK);
       expect(dark).toHaveLength(1);
+      expect(dark[0]!.e.composite).toBe('multiply');
+      expect(log.events[dark[0]!.i + 1]?.composite ?? 'source-over').toBe('source-over');
+      expect(ctx.globalCompositeOperation).toBe('source-over');
       expect(dark[0]!.i).toBeGreaterThan(burning.at);
       expect(dark[0]!.i).toBeLessThan(next.at);
     });
@@ -604,7 +624,8 @@ describe('Renderer', () => {
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'fill' && e.style.startsWith('gradient('));
       expect(grad).toHaveLength(1); // Flammen des einen bekannten Gebäudes
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const lastBody = h.calls.filter((c) => c.kind === 'body').pop()!;
       expect(grad[0]!.i).toBeGreaterThan(lastBody.at);
       expect(grad[0]!.i).toBeLessThan(mul);
@@ -625,7 +646,7 @@ describe('Renderer', () => {
         const sc = scene();
         sc.world.order = order;
         sc.world.tick = 3000;
-        const k = sc.world.buildings[sc.world.kontorId]!;
+        const k = sc.world.buildings[home(sc.world).kontorId]!;
         const fire = [];
         for (let i = 0; i < 20; i++) {
           const id = sc.world.nextBuildingId++;
@@ -637,6 +658,7 @@ describe('Renderer', () => {
             connected: true,
             progress: 0,
             state: 'ok',
+            island: 0,
           };
           fire.push({ id, flames: 1, smoke: 1 });
         }
@@ -679,7 +701,8 @@ describe('Renderer', () => {
         weather: storm,
         timeMs: 100, // Plateau: volle Deckkraft
       });
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       const ring = ev
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.op === 'strokeRect' && e.style === PALETTE.signalWarn);
@@ -694,7 +717,7 @@ describe('Renderer', () => {
       expect(coin.length).toBeGreaterThan(0);
       expect(coin[coin.length - 1]!.i).toBeGreaterThan(mul);
       // Münze über dem Kontor: Bildbox-Mitte x
-      const k = world.buildings[world.kontorId]!;
+      const k = world.buildings[home(world).kontorId]!;
       const box = spriteBounds(BUILDING_DEFS.kontor, k);
       const cam = camFor(world, 1);
       const cx = (box.x + box.w / 2 - cam.x) * cam.zoom;
@@ -750,7 +773,8 @@ describe('Renderer', () => {
         PALETTE.signalOk,
         PALETTE.signalWarn,
       ];
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       expect(mul).toBeGreaterThan(0);
       // vor der Tönung (Terrain, Gebäude, Leben, Wetter) keine Signalfarbe; danach nur Signale
       expect(ev.slice(0, mul).filter((e) => names.includes(e.style.toLowerCase()))).toHaveLength(0);
@@ -835,14 +859,15 @@ describe('Renderer', () => {
         none.ev.find((e) => e.style === SHADOW)!.points.length,
       );
       life({}, 0, (w) => {
-        for (const t of w.tiles) t.road = false;
+        for (const t of home(w).tiles) t.road = false;
       });
       expect(h.calls.some((c) => c.kind === 'walker')).toBe(false);
     });
 
     it('Spec 5.6 Figuren tragen keine Signalfarbe und stehen vor der Tönung; Episodenrand blendet aus (keine Figur bei alpha 0)', () => {
       const { ev } = life({ dayNight: true }, 3000);
-      const mul = ev.findIndex((e) => e.composite === 'multiply');
+      // die Brand-Abdunklung (DIM_FIRE) multipliziert je Gebäude lokal und ist nicht die Tönung
+      const mul = ev.findIndex((e) => e.composite === 'multiply' && e.style !== DIM_FIRE);
       expect(ev.slice(0, mul).filter((e) => SIGNALS.includes(e.style.toLowerCase()))).toHaveLength(
         0,
       );
@@ -889,7 +914,7 @@ describe('Renderer', () => {
         const many = (fire: boolean) => {
           const fireList: { id: number; flames: number; smoke: number }[] = []; // je Aufruf frisch
           return life({ reduceMotion: reduce, fire: fire ? fireList : [] }, 4700, (w) => {
-            const k = w.buildings[w.kontorId]!;
+            const k = w.buildings[home(w).kontorId]!;
             for (let i = 0; i < 80; i++) {
               const id = w.nextBuildingId++;
               w.buildings[id] = {
@@ -900,6 +925,7 @@ describe('Renderer', () => {
                 connected: true,
                 progress: 0,
                 state: 'ok',
+                island: 0,
                 ...(i % 2
                   ? {
                       house: {
@@ -1034,5 +1060,177 @@ describe('Renderer', () => {
     expect(
       wildlifeEnvOf(w, { timeMs: 0, weather: { kind: 'storm', w: 1 }, reduceMotion: true }),
     ).toMatchObject({ weather: 'storm', reduce: true });
+  });
+});
+
+describe('S1-Rest DIM_FIRE', () => {
+  const rgb = (c: string): number[] => /\d+/g[Symbol.match](c)!.map(Number);
+  it('S1-Rest DIM_FIRE: kein Schwarz/Weiss, Luma-Faktor 0,62–0,68, Blau mindestens 0,08 über Rot', () => {
+    const [r, g, b] = rgb(DIM_FIRE).map((v) => v / 255) as [number, number, number];
+    expect(r + g + b).toBeGreaterThan(0);
+    expect(Math.min(r, g, b)).toBeGreaterThan(0.3);
+    expect(Math.max(r, g, b)).toBeLessThan(1);
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    expect(luma).toBeGreaterThanOrEqual(0.62);
+    expect(luma).toBeLessThanOrEqual(0.68);
+    expect(b - r).toBeGreaterThanOrEqual(0.08);
+  });
+  it('S1-Rest DIM_FIRE: Farbstich in Richtung des Lichtton-Schattens (dark/cool)', () => {
+    const t = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
+    const f = rgb(DIM_FIRE);
+    // gleiche Rangfolge der Kanäle wie der Schattenton
+    expect(f[2]! > f[1]! && f[1]! > f[0]!).toBe(t[2] > t[1] && t[1] > t[0]);
+  });
+});
+
+describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
+  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  const V1280 = { w: 1280, h: 800 };
+  /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
+  const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
+    h.calls.length = 0;
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, view, { timeMs: 5000, dayNight: true });
+    return h.calls.slice();
+  };
+  it('Heimat-Aufrufliste bei 1280 × 800, Zoom 1 und 2 unverändert (vor dem Terrain-Merge gepinnt)', () => {
+    const loaded = deserialize(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    const world = loaded.world;
+    const hm = home(world);
+    const all: Call[][] = [];
+    for (const zoom of [1, 2]) {
+      const cam = { x: 0, y: 0, zoom };
+      centerOn(cam, hm.width / 2, hm.height / 2, V1280, { w: hm.width, h: hm.height });
+      const r = visibleTileRange(cam, V1280, { w: hm.width, h: hm.height });
+      for (const v of [r.x0, r.y0, r.x1, r.y1]) expect(v).toBeGreaterThanOrEqual(4);
+      for (const v of [r.x1, r.y1]) expect(v).toBeLessThanOrEqual(59);
+      all.push(callList(world, cam, V1280));
+    }
+    const json = JSON.stringify(all);
+    expect({ hash: fnv1a32(json), length: json.length }).toEqual(HOME_CALLS);
+  });
+});
+
+describe('M12 E1 Renderer', () => {
+  const V = { w: 1280, h: 800 };
+  const camOn = (fx: number, fy: number, zoom: number): { x: number; y: number; zoom: number } => {
+    const p = project(fx, fy);
+    return { x: p.x - V.w / 2 / zoom, y: p.y - V.h / 2 / zoom, zoom };
+  };
+  const stubs = new Map<number, HTMLCanvasElement>();
+  const layers = {
+    get: (i: number): HTMLCanvasElement | null => {
+      if (i === 0) return layer;
+      if (!stubs.has(i))
+        stubs.set(i, { width: 36 * 32, height: 36 * 32 } as unknown as HTMLCanvasElement);
+      return stubs.get(i)!;
+    },
+  };
+  const run = (world: World, cam: ReturnType<typeof camOn>, fx: Partial<RenderFx> = {}) => {
+    h.calls.length = 0;
+    const f = fakeCtx();
+    render(f.ctx, world, cam, layers, null, null, V, { timeMs: 5000, dayNight: true, ...fx });
+    return { calls: h.calls.slice(), log: f.log };
+  };
+  const homeOnly = (w: World): World => ({ ...w, islands: [w.islands[0]!] });
+
+  it('AK-E1-10 Kamera über der Heimat: Aufrufliste gleich der Welt ohne Fremdinseln', () => {
+    const { world } = scene();
+    const cam = camFor(world, 1);
+    const a = run(world, cam);
+    const b = run(homeOnly(world), cam);
+    expect(a.calls).toEqual(b.calls);
+    expect(a.log.events.length).toBe(b.log.events.length);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('AK-E1-10 Kamera über Insel A: genau eine Insel, erste Bildquelle ist ihre Ebene', () => {
+    const { world } = scene();
+    const a = world.islands[1]!;
+    const cam = camOn(a.ox + a.width / 2, a.oy + a.height / 2, 2);
+    const { log } = run(world, cam);
+    expect(renderStats.islandsDrawn).toBe(1);
+    expect(log.images[0]).toBe(layers.get(1));
+  });
+
+  it('AK-E1-12 jump, aktive Insel 0, Zoom 0,125 über der Rahmenmitte: Aufrufliste gleich der Heimat-Welt', () => {
+    const { world } = scene();
+    const cam = camOn(10, 20, 0.125);
+    const a = run(world, cam, { archipelView: 'jump', activeIsland: 0 });
+    const b = run(homeOnly(world), cam, { archipelView: 'jump', activeIsland: 0 });
+    expect(a.calls).toEqual(b.calls);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('AK-E1-22 Detailstufe: bei Zoom 0,25 und 0,125 keine Figuren, Tiere, Rauch, Wellen; Boden aus quarterLayer', () => {
+    for (const zoom of [0.25, 0.125]) {
+      const { world } = scene();
+      world.order = order;
+      Object.values(world.buildings)
+        .filter((b) => b.defId === 'house')
+        .forEach((b) => (b.house!.inhabitants = 40));
+      const cam = camFor(world, zoom);
+      const { log } = run(world, cam, { timeMs: EPISODE_MS / 2 });
+      expect(renderStats.walkersDrawn).toBe(0);
+      expect(renderStats.wildDrawn).toBe(0);
+      expect(renderStats.smokeDrawn).toBe(0);
+      expect(renderStats.wavesDrawn).toBe(0);
+      expect(renderStats.errands).toBe(0);
+      expect(log.images[0]).toBe(h.terrain.quarter);
+    }
+  });
+
+  it('AK-E1-22 Zoom 0,5 wie heute: Figuren, Rauch, Wellen gezeichnet, Boden aus halfLayer', () => {
+    const { world } = scene();
+    world.order = order;
+    Object.values(world.buildings)
+      .filter((b) => b.defId === 'house')
+      .forEach((b) => (b.house!.inhabitants = 40));
+    const { log } = run(world, camFor(world, 0.5), { timeMs: EPISODE_MS / 2 });
+    expect(renderStats.walkersDrawn).toBeGreaterThan(0);
+    expect(renderStats.smokeDrawn).toBeGreaterThan(0);
+    expect(renderStats.wavesDrawn).toBe(1);
+    expect(h.terrain.halfCalls).toBeGreaterThan(0);
+    expect(log.images[0]).toBe(layer);
+  });
+
+  it('AK-E1-22 Inselansicht ist nur lesend: Welt bleibt unverändert', () => {
+    const { world } = scene();
+    const before = JSON.stringify(world);
+    const a = world.islands[1]!;
+    run(world, camOn(a.ox + a.width / 2, a.oy + a.height / 2, 1));
+    run(world, camOn(0, 0, 0.125));
+    expect(JSON.stringify(world)).toBe(before);
+  });
+
+  it('R3 Übersicht bei Zoom 0,125: höchstens doppelt so viele Zeichenereignisse wie die Heimat allein', () => {
+    const { world } = scene();
+    const cam = camOn(-5, 40, 0.125);
+    const all = run(world, cam);
+    expect(renderStats.islandsDrawn).toBe(3);
+    const solo = run(homeOnly(world), cam);
+    expect(all.log.events.length).toBeLessThanOrEqual(2 * solo.log.events.length);
+    const t = (w: World): number => {
+      const t0 = performance.now();
+      for (let k = 0; k < 20; k++) run(w, cam);
+      return performance.now() - t0;
+    };
+    t(world);
+    const ratio = t(world) / Math.max(1, t(homeOnly(world)));
+    console.info('R3 Zeitverhältnis Archipel/Heimat bei Zoom 0,125:', ratio.toFixed(2));
+    expect(ratio).toBeLessThan(4); // CI-Reserve: Vorgabe 2, Messung siehe Bericht
+  });
+
+  it('islandView: Heimat ist die Welt, Fremdinsel folgt dem Tick, zweimal dieselbe Identität', () => {
+    const { world } = scene();
+    expect(islandView(world, 0)).toBe(world);
+    const v = islandView(world, 1);
+    expect(islandView(world, 1)).toBe(v);
+    expect(v.islands).toEqual([world.islands[1]]);
+    expect(v.buildings).toEqual({});
+    world.tick += 5;
+    expect(v.tick).toBe(world.tick);
+    expect(islandCam({ x: 0, y: 0, zoom: 1 }, world.islands[0]!)).toEqual({ x: 0, y: 0, zoom: 1 });
   });
 });

@@ -10,7 +10,7 @@ import {
 import { maxHouseTier, orderPool } from './orders';
 import { createRng } from './rng';
 import type { Building, Crisis, CrisisKind, GoodId, Tier, World } from './types';
-import { center } from './world';
+import { center, HOME } from './world';
 
 /** Krisen (Spec M6 4, 10): Ziehung je Periode, Krisenschritt, Brandfolgen. Rein bis auf beginCrisis/tickCrises. */
 
@@ -68,7 +68,7 @@ export function flammableRect(world: World): TileRect | null {
   let rect: TileRect | null = null;
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (def.flammable !== true) continue;
+    if (def.flammable !== true || b.island !== HOME) continue; // Brandziel nur Heimat (P-15)
     const x1 = b.x + def.w - 1;
     const y1 = b.y + def.h - 1;
     rect =
@@ -102,7 +102,7 @@ export function fireTarget(world: World, tile: { x: number; y: number }): Buildi
   let bestD = Infinity;
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (def.flammable !== true) continue;
+    if (def.flammable !== true || b.island !== HOME) continue;
     const dx = Math.max(b.x - tile.x, 0, tile.x - (b.x + def.w - 1));
     const dy = Math.max(b.y - tile.y, 0, tile.y - (b.y + def.h - 1));
     const d = Math.max(dx, dy);
@@ -120,7 +120,7 @@ export function isProtected(world: World, b: Building): boolean {
   const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
   return Object.values(world.buildings).some((s) => {
     const def = BUILDING_DEFS[s.defId];
-    if (def.fireProtection !== true || !s.connected) return false;
+    if (def.fireProtection !== true || !s.connected || s.island !== b.island) return false;
     const sc = center(def, s.x, s.y);
     return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (def.serviceRadius ?? 0);
   });

@@ -1,5 +1,6 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { TEX, TREE_VARIANTS } from '../../src/render/iso';
 import { LIGHT, TONE_EDGE_PX } from '../../src/render/light';
 import { PALETTE, rgbOf } from '../../src/render/palette';
@@ -31,7 +32,7 @@ const hslS = (r: number, g: number, b: number): number => {
 const luma = (r: number, g: number, b: number): number => 0.299 * r + 0.587 * g + 0.114 * b;
 const worlds = [1, 7].map((seed) => {
   const world = createWorld(seed, { unlockAll: true });
-  return { seed, world, grid: buildGrid(world) };
+  return { seed, world, grid: buildGrid(fieldWorld(world)) };
 });
 const terr = (w: { width: number; tiles: { terrain: string }[] }, x: number, y: number): string =>
   w.tiles[y * w.width + x]?.terrain ?? 'water';
@@ -42,9 +43,9 @@ describe('H-R11 Hanggrenze (S6)', () => {
   it('H-R11 S6 auf bebaubaren Kacheln ändert sich die Tonstufe innerhalb einer Kachel um höchstens 1 (Seeds 1, 7)', () => {
     let tiles = 0;
     for (const { world, grid } of worlds)
-      for (let y = 0; y < world.height; y++)
-        for (let x = 0; x < world.width; x++) {
-          const t = terr(world, x, y);
+      for (let y = 0; y < home(world).height; y++)
+        for (let x = 0; x < home(world).width; x++) {
+          const t = terr(fieldWorld(world), x, y);
           if (t !== 'grass' && t !== 'forest' && t !== 'sand') continue;
           let lo = 99,
             hi = -99;
@@ -56,6 +57,17 @@ describe('H-R11 Hanggrenze (S6)', () => {
             }
           tiles++;
           expect(hi - lo, `Kachel ${x},${y} ${t}`).toBeLessThanOrEqual(1);
+          if (t !== 'sand') continue;
+          // H-R12b K6: auch der Dünenton auf Sand bleibt innerhalb einer Kachel bei höchstens 1 Stufe
+          let dlo = 99,
+            dhi = -99;
+          for (let j = 0; j <= NODES; j++)
+            for (let i = 0; i <= NODES; i++) {
+              const s = Math.floor(grid.dune[(y * NODES + j) * grid.nx + x * NODES + i]! + 0.5);
+              dlo = Math.min(dlo, s);
+              dhi = Math.max(dhi, s);
+            }
+          expect(dhi - dlo, `Kachel ${x},${y} Düne`).toBeLessThanOrEqual(1);
         }
     expect(tiles).toBeGreaterThan(1500);
   });
@@ -67,7 +79,7 @@ describe('H-R11 Hanggrenze (S6)', () => {
       [20, 30],
       [8, 25],
     ] as const)
-      if (terr(world, x, y) === 'grass') {
+      if (terr(fieldWorld(world), x, y) === 'grass') {
         const i = x * NODES + 3,
           j = y * NODES + 5;
         expect(grid.tone[j * grid.nx + i]).toBeCloseTo(
@@ -89,11 +101,12 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
         ok = 0,
         both = 0;
       const used = new Set<number>();
-      for (let y0 = 0; y0 + 4 <= world.height; y0 += 2)
-        for (let x0 = 0; x0 + 4 <= world.width; x0 += 2) {
+      for (let y0 = 0; y0 + 4 <= home(world).height; y0 += 2)
+        for (let x0 = 0; x0 + 4 <= home(world).width; x0 += 2) {
           let pure = true;
           for (let y = y0; y < y0 + 4 && pure; y++)
-            for (let x = x0; x < x0 + 4; x++) if (terr(world, x, y) !== 'grass') pure = false;
+            for (let x = x0; x < x0 + 4; x++)
+              if (terr(fieldWorld(world), x, y) !== 'grass') pure = false;
           if (!pure) continue;
           const seen = new Set<number>();
           for (let j = y0 * NODES; j <= (y0 + 4) * NODES; j++)
@@ -116,7 +129,7 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
   it('H-R11 S2 gestufte Kanten: Übergänge zwischen Tonflächen höchstens 2 px breit, mehrere Plateaus', () => {
     // Gleichmässige Wiese (alle Farbfelder konstant), Tonwert als Rampe: nur die Stufung färbt.
     const { world } = worlds[0]!;
-    const grid = buildGrid(world);
+    const grid = buildGrid(fieldWorld(world));
     grid.grass.fill(0.5);
     grid.patch.fill(0);
     grid.warm.fill(0);
@@ -126,11 +139,12 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
     // Block aus 5 × 3 Wiesenkacheln suchen
     let bx = -1,
       by = -1;
-    for (let y = 2; y < world.height - 6 && bx < 0; y++)
-      for (let x = 2; x < world.width - 8 && bx < 0; x++) {
+    for (let y = 2; y < home(world).height - 6 && bx < 0; y++)
+      for (let x = 2; x < home(world).width - 8 && bx < 0; x++) {
         let ok = true;
         for (let yy = y - 1; yy < y + 4 && ok; yy++)
-          for (let xx = x - 1; xx < x + 6; xx++) if (terr(world, xx, yy) !== 'grass') ok = false;
+          for (let xx = x - 1; xx < x + 6; xx++)
+            if (terr(fieldWorld(world), xx, yy) !== 'grass') ok = false;
         if (ok) [bx, by] = [x, y];
       }
     expect(bx).toBeGreaterThanOrEqual(0);
@@ -214,7 +228,8 @@ describe('H-R11 Sättigung (S5)', () => {
       n = 0;
     for (let y = 0; y < H * TEX; y++)
       for (let x = 0; x < W * TEX; x++) {
-        if (terr(world, x0 + ((x / TEX) | 0), y0 + ((y / TEX) | 0)) !== 'grass') continue;
+        if (terr(fieldWorld(world), x0 + ((x / TEX) | 0), y0 + ((y / TEX) | 0)) !== 'grass')
+          continue;
         const o = (y * W * TEX + x) * 4;
         s += hslS(px[o]!, px[o + 1]!, px[o + 2]!);
         n++;
@@ -236,9 +251,9 @@ describe('H-R11 Wald (D9)', () => {
     let edges = 0,
       worst = 0;
     for (const { world, grid } of worlds)
-      for (let y = 1; y < world.height - 1; y++)
-        for (let x = 1; x < world.width - 1; x++) {
-          if (terr(world, x, y) !== 'forest') continue;
+      for (let y = 1; y < home(world).height - 1; y++)
+        for (let x = 1; x < home(world).width - 1; x++) {
+          if (terr(fieldWorld(world), x, y) !== 'forest') continue;
           for (const [dx, dy] of [
             [1, 0],
             [-1, 0],
@@ -257,7 +272,7 @@ describe('H-R11 Wald (D9)', () => {
             ] as const) {
               const tx = x + dx * k + (dx === 0 ? side : 0),
                 ty = y + dy * k + (dy === 0 ? side : 0);
-              if (terr(world, tx, ty) !== 'grass') free = false;
+              if (terr(fieldWorld(world), tx, ty) !== 'grass') free = false;
             }
             if (!free) continue;
             edges++;
@@ -281,9 +296,9 @@ describe('H-R11 Wald (D9)', () => {
       nf = 0,
       lg = 0,
       ng = 0;
-    for (let y = 2; y < world.height - 2; y += 1)
-      for (let x = 2; x < world.width - 2; x += 1) {
-        const t = terr(world, x, y);
+    for (let y = 2; y < home(world).height - 2; y += 1)
+      for (let x = 2; x < home(world).width - 2; x += 1) {
+        const t = terr(fieldWorld(world), x, y);
         if (t !== 'forest' && t !== 'grass') continue;
         const px = paintPixels(grid, 1, x * TEX + 8, y * TEX + 8, 16, 16);
         let l = 0;
@@ -396,11 +411,12 @@ describe('H-R11 G1 organische Tonkanten, G2 Kontrast', () => {
     const { world, grid } = worlds[0]!;
     let bx = -1,
       by = -1;
-    for (let y = 2; y < world.height - 8 && bx < 0; y++)
-      for (let x = 2; x < world.width - 8 && bx < 0; x++) {
+    for (let y = 2; y < home(world).height - 8 && bx < 0; y++)
+      for (let x = 2; x < home(world).width - 8 && bx < 0; x++) {
         let ok = true;
         for (let yy = y; yy < y + 3 && ok; yy++)
-          for (let xx = x; xx < x + 3; xx++) if (terr(world, xx, yy) !== 'grass') ok = false;
+          for (let xx = x; xx < x + 3; xx++)
+            if (terr(fieldWorld(world), xx, yy) !== 'grass') ok = false;
         if (ok) [bx, by] = [x, y];
       }
     const mean = (t: number): number => {
@@ -427,11 +443,12 @@ describe('H-R11 F1 luminanzneutrale Farbvariation, F2 Korn', () => {
   // 6 × 6 Wiesenkacheln finden
   let bx = -1,
     by = -1;
-  for (let y = 2; y < world.height - 8 && bx < 0; y++)
-    for (let x = 2; x < world.width - 8 && bx < 0; x++) {
+  for (let y = 2; y < home(world).height - 8 && bx < 0; y++)
+    for (let x = 2; x < home(world).width - 8 && bx < 0; x++) {
       let ok = true;
       for (let yy = y - 1; yy < y + 7 && ok; yy++)
-        for (let xx = x - 1; xx < x + 7; xx++) if (terr(world, xx, yy) !== 'grass') ok = false;
+        for (let xx = x - 1; xx < x + 7; xx++)
+          if (terr(fieldWorld(world), xx, yy) !== 'grass') ok = false;
       if (ok) [bx, by] = [x, y];
     }
   const flatTone = { ...grid, tone: grid.tone.map(() => GROUND_FLAT) as Float32Array };

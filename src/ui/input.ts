@@ -1,7 +1,7 @@
 import { canClearForest, canPlantForest } from '../sim/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import type { World } from '../sim/types';
-import { tileAt } from '../sim/world';
+import { home, tileAt } from '../sim/world';
 import { clampToMap, zoomAt } from '../render/camera';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
@@ -42,8 +42,10 @@ export function isClick(start: Pt, path: readonly Pt[]): boolean {
 
 /** Abriss-Vorschau rot: Gebäude (ausser Kontor) oder Weg auf der Kachel. */
 export function canDemolishTile(world: World, x: number, y: number): boolean {
-  const tile = tileAt(world, x, y);
-  return !!tile && ((tile.buildingId !== null && tile.buildingId !== world.kontorId) || tile.road);
+  const tile = tileAt(home(world), x, y);
+  return (
+    !!tile && ((tile.buildingId !== null && tile.buildingId !== home(world).kontorId) || tile.road)
+  );
 }
 
 /** Schlüssel für den Cursor-Hinweis: der Text ändert sich nur mit Kachel oder Werkzeug. */
@@ -116,7 +118,7 @@ export function bindInput(
   const clamp = (): void => {
     clampToMap(
       state.cam,
-      { w: state.world.width, h: state.world.height },
+      { w: home(state.world).width, h: home(state.world).height },
       canvas.clientWidth,
       canvas.clientHeight,
     );
@@ -243,7 +245,7 @@ export function bindInput(
             g.mx,
             g.my,
             { w: canvas.clientWidth, h: canvas.clientHeight },
-            { w: state.world.width, h: state.world.height },
+            { w: home(state.world).width, h: home(state.world).height },
           );
           clamp();
         }
@@ -352,7 +354,7 @@ export function bindInput(
       p.sx,
       p.sy,
       { w: canvas.clientWidth, h: canvas.clientHeight },
-      { w: state.world.width, h: state.world.height },
+      { w: home(state.world).width, h: home(state.world).height },
     );
     updateHover();
   };

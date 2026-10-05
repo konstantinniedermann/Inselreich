@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 // life.ts — Leben (Spec 5.6, ISO §5 Ebenen 5 bis 7): Spaziergänger, Möwen, Herdrauch, Fensterlicht-Hilfen.
 // Kosmetisch und deterministisch aus `timeMs` und dem Welt-Zustand; kein Zustand ausser Caches je Welt, kein
 // Schreibzugriff auf die Welt. Die Mathematik (Weggraph, Positionen, Anker) ist rein; die Zeichner sind dünn.
@@ -12,7 +13,7 @@ import { cap } from './limits';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
-import { coastField, type Field } from './terrainField';
+import { coastField, fieldWorld, type Field } from './terrainField';
 import { crownsFor, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
@@ -41,9 +42,10 @@ export function roadGraph(world: World): RoadGraph {
   const key = layoutKey(world);
   const hit = graphs.get(world);
   if (hit && hit.key === key) return hit.graph;
-  const { width: w, height: h } = world;
+  const isl = home(world);
+  const { width: w, height: h } = isl;
   const road = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < w && y < h && world.tiles[y * w + x]!.road === true;
+    x >= 0 && y >= 0 && x < w && y < h && isl.tiles[y * w + x]!.road === true;
   const nodes: number[] = [];
   const nbrs = new Map<number, number[]>();
   for (let y = 0; y < h; y++)
@@ -382,7 +384,7 @@ const coasts = new WeakMap<World, Field>();
 export function coastFor(world: World): Field {
   let f = coasts.get(world);
   if (!f) {
-    f = coastField(world);
+    f = coastField(fieldWorld(world));
     coasts.set(world, f);
   }
   return f;

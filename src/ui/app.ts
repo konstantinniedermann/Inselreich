@@ -4,10 +4,12 @@ import { crisisView } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
+import { connectBuilding } from '../sim/connect';
 import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
+import { holdFeast } from '../sim/feast';
 import { upgradeBuilding } from '../sim/upgrade';
-import { tileAt, createWorld, center } from '../sim/world';
+import { home, tileAt, createWorld, center, type Pos } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -37,6 +39,8 @@ import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
+import { drawPathPreview } from '../render/pathPreview';
+import { connectView } from './connect';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
@@ -289,7 +293,7 @@ function launch(
 
   const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
 
-  const map = { w: world.width, h: world.height };
+  const map = { w: home(world).width, h: home(world).height };
   const view = { w: 1, h: 1 };
 
   /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */
@@ -401,9 +405,13 @@ function launch(
   /** Auftrag im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
   let prevOrder: Order | null = world.order ? { ...world.order } : null;
 
+  /** Pfad-Vorschau des Knopfs „Anbinden" (nur beim Überfahren), wird nach dem Zeichnen der Karte gemalt. */
+  let connectPreview: readonly Pos[] | null = null;
+
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
+    connectPreview = null;
     panelEl.classList.toggle('card--rest', panel.kind === 'none');
     if (panel.kind === 'inspect') {
       state.selectedId = panel.id;
@@ -435,6 +443,32 @@ function launch(
           if (!r.ok) showError(friendlyReason(world, r.reason));
           refresh();
         },
+        connect: (id) => {
+          connectPreview = null;
+          const b = world.buildings[id];
+          const v = b ? connectView(world, b) : null;
+          if (v && !v.ok) showError(v.reason ?? v.label);
+          else if (v) {
+            const before = unconnectedIds(world);
+            const r = connectBuilding(world, id);
+            if (r.ok) {
+              sound.playBuild(buildSoundKey({ kind: 'road' }) ?? 'road');
+              reportConnections(before);
+            } else {
+              showError(friendlyReason(world, r.reason, { cost: v.cost }));
+            }
+          }
+          refresh();
+        },
+        holdFeast: (id) => {
+          const r = holdFeast(world, id);
+          if (r.ok) sound.play('build');
+          else showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        previewConnect: (tiles) => {
+          connectPreview = tiles;
+        },
         setUpgradeStop: (tier, stopped) => {
           const r = setUpgradeStop(world, tier, stopped);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -442,9 +476,9 @@ function launch(
         },
       });
     } else if (panel.kind === 'trade') {
-      state.selectedId = world.kontorId;
+      state.selectedId = home(world).kontorId;
       renderTrade(panelEl, world, {
-        back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
+        back: () => setPanel({ kind: 'inspect', id: home(world).kontorId }),
         changed: (op, r, good, n) => {
           if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
           else if (op === 'sell') sound.play('coin');
@@ -519,7 +553,7 @@ function launch(
     const panel = state.panel;
     if (id === null) {
       setPanel({ kind: 'none' });
-    } else if (id === world.kontorId) {
+    } else if (id === home(world).kontorId) {
       // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
       if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
@@ -601,7 +635,7 @@ function launch(
       dragForestFailureShown = false;
     }
     const tool = state.tool;
-    const tile = tileAt(world, a.x, a.y);
+    const tile = tileAt(home(world), a.x, a.y);
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
@@ -707,8 +741,8 @@ function launch(
     const range = {
       x0: Math.max(0, tx - 6),
       y0: Math.max(0, ty - 6),
-      x1: Math.min(world.width - 1, tx + 6),
-      y1: Math.min(world.height - 1, ty + 6),
+      x1: Math.min(home(world).width - 1, tx + 6),
+      y1: Math.min(home(world).height - 1, ty + 6),
     };
     let best: { name: string; d: number } | null = null;
     for (const h of wildlifeAt(world, range, fx.timeMs, wildlifeEnvOf(world, fx))) {
@@ -814,7 +848,7 @@ function launch(
   }
 
   // Kamera auf das Kontor zentrieren
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   const resize = (): void => {
     const w = Math.max(1, gameEl.clientWidth);
     const h = Math.max(1, gameEl.clientHeight);
@@ -952,6 +986,7 @@ function launch(
         raster: preview.raster === true,
       };
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
+      if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);
       perf?.renderDone(performance.now() - t0);
       updateMoney(hudEl, world);
       updateHint(frame % HUD_EVERY_FRAMES === 0);

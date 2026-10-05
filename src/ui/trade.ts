@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
@@ -33,7 +34,7 @@ export function boomGood(world: World, good: GoodId): boolean {
 
 /** Handelszeilen (Spec 11.4): Güter, die frei sind oder im Lager liegen; Kaufen nur für freie Güter. */
 export function tradeRows(world: World): { good: GoodId; canBuy: boolean }[] {
-  return GOOD_IDS.filter((g) => goodUnlocked(world, g) || world.stock[g] > 0).map((good) => ({
+  return GOOD_IDS.filter((g) => goodUnlocked(world, g) || home(world).stock[g] > 0).map((good) => ({
     good,
     canBuy: goodUnlocked(world, good),
   }));
@@ -128,7 +129,7 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
 /** Aktualisiert Lagerbestände und dämpft Buttons, die sicher scheitern würden (bleiben klickbar). */
 export function updateTrade(panel: HTMLElement, world: World): void {
   for (const good of GOOD_IDS) {
-    setField(panel, `stock-${good}`, `Lager ${world.stock[good]}`);
+    setField(panel, `stock-${good}`, `Lager ${home(world).stock[good]}`);
     setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
@@ -138,8 +139,8 @@ export function updateTrade(panel: HTMLElement, world: World): void {
     const n = Number(btn.dataset.n);
     const unaffordable =
       btn.dataset.op === 'buy'
-        ? buyPrice(good, n) > world.money || world.stock[good] + n > STORAGE_CAP
-        : world.stock[good] < n;
+        ? buyPrice(good, n) > world.money || home(world).stock[good] + n > STORAGE_CAP
+        : home(world).stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
     if (btn.dataset.op === 'sell') {
       const t = sellTexts(world, good, n);

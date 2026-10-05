@@ -1,3 +1,5 @@
+import type { IslandKind } from './defs/sea';
+
 export type GoodId =
   'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass';
 export type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
@@ -107,12 +109,16 @@ export interface Building {
   connected: boolean;
   progress: number;
   state: BuildingState;
+  /** Index der Insel in `World.islands`. */
+  island: number;
   /** Letzter Ausfall-Tick; nur bei state 'burning'. */
   outageUntil?: number;
   /** Auslastung in Promille × `EFF_WINDOW` (0 … 256 000); fehlt = 256 000 (volle Auslastung). */
   eff?: number;
   /** Ausbaustufe; fehlt = Stufe 1. */
   level?: 2 | 3;
+  /** Beginn des letzten Fests (Tick); nur an der Kapelle, fehlt = noch nie gefeiert. */
+  feastAt?: number;
   house?: HouseState;
 }
 export interface Tile {
@@ -187,16 +193,12 @@ export interface GoodLock {
   good: GoodId;
 }
 export interface World {
-  version: 6;
+  version: 8;
   seed: number;
-  width: number;
-  height: number;
+  islands: Island[];
   tick: number;
-  tiles: Tile[];
   buildings: Record<number, Building>;
   nextBuildingId: number;
-  kontorId: number;
-  stock: Record<GoodId, number>;
   money: number;
   stats: { taxes: number; upkeep: number };
   won: boolean;
@@ -218,6 +220,23 @@ export interface World {
   taxCarry: number;
   /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
   upkeepCarry: number;
+}
+
+/** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
+export interface Island {
+  /** `home` für die Heimat, sonst die Art der Fremdinsel (M12 E1). */
+  kind: 'home' | IslandKind;
+  width: number;
+  height: number;
+  tiles: Tile[];
+  /** Kontor der Insel; `null` = noch keines (Fremdinseln in E1). Die Heimat hat immer eine Zahl. */
+  kontorId: number | null;
+  stock: Record<GoodId, number>;
+  /** Lage der Insel im Archipel in Kacheln (Heimat 0/0; Fremdinseln können negativ sein). */
+  ox: number;
+  oy: number;
+  /** Ankerkachel für den Seeweg, innerhalb der Insel. */
+  anchor: { x: number; y: number };
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { centerOn, visibleTileRange, type TileRange } from '../../src/render/camera';
 import { phaseAt } from '../../src/render/daynight';
@@ -28,7 +29,7 @@ import {
 } from '../../src/render/wildlife';
 import { shipTile } from '../../src/render/ship';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld } from '../../src/sim/world';
+import { home, center, createWorld } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import { fakeCtx, type Ev } from './fakeCtx';
@@ -88,21 +89,21 @@ const worldOf = (seed: number): World => {
 };
 
 function frame(world: World, zoom: number, fx: Partial<RenderFx>): Ev[] {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx, c.cy, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx, c.cy, VIEW, { w: home(world).width, h: home(world).height });
   const { ctx, log } = fakeCtx();
   h.calls.length = 0;
   render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 1000, ...fx });
   return log.events;
 }
 const kontorRange = (world: World, zoom: number): TileRange => {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx, c.cy, VIEW, { w: world.width, h: world.height });
-  return visibleTileRange(cam, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx, c.cy, VIEW, { w: home(world).width, h: home(world).height });
+  return visibleTileRange(cam, VIEW, { w: home(world).width, h: home(world).height });
 };
 
 const gullStrokes = (ev: Ev[]) =>
@@ -143,7 +144,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       whales = 0;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
-      const f = coastField(world);
+      const f = coastField(fieldWorld(world));
       const s = (x: number, y: number) => f.v[Math.floor(y) * f.w + Math.floor(x)]!;
       for (const hit of wildlifeAt(world, FULL, 5000, DAY).filter((x) => x.kind === 'fish')) {
         fish++;
@@ -152,7 +153,9 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       }
       for (const a of flockAnchors(world, DAY.phase!, false)) {
         flocks++;
-        expect(['forest', 'grass']).toContain(world.tiles[a.ty * world.width + a.tx]!.terrain);
+        expect(['forest', 'grass']).toContain(
+          home(world).tiles[a.ty * home(world).width + a.tx]!.terrain,
+        );
         expect(s(a.tx, a.ty)).toBeGreaterThanOrEqual(2);
       }
       for (let e = 0; e < 60; e++)
@@ -255,7 +258,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     let n = 0;
     for (const seed of SEEDS) {
       const world = worldOf(seed);
-      const f = coastField(world);
+      const f = coastField(fieldWorld(world));
       for (const a of flockAnchors(world, 'day', false))
         for (let i = 0; i < 200; i++) {
           const p = flockPose(a, seed, i * 997, false);
@@ -491,10 +494,10 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     const bad: number[] = [];
     for (let seed = 1; seed <= 40; seed++) {
       const world = createWorld(seed);
-      const k = world.buildings[world.kontorId]!;
+      const k = world.buildings[home(world).kontorId]!;
       const c = center(BUILDING_DEFS[k.defId], k.x, k.y);
       const cam = { x: 0, y: 0, zoom: 1 };
-      const map = { w: world.width, h: world.height };
+      const map = { w: home(world).width, h: home(world).height };
       centerOn(cam, c.cx, c.cy, view, map);
       const r = visibleTileRange(cam, view, map);
       for (const t of [3000, 17000, 41000, 77000]) {

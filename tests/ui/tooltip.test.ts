@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import type { CrisisLevel, UnlockId, World } from '../../src/sim/types';
 import { REASON_TABLE, friendlyReason, placementHint } from '../../src/ui/hints';
 import { forceRect } from '../sim/helpers';
@@ -161,7 +161,7 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
 describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
   it('AK-U2-07 placementHint und tooltipLines', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
     forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
     expect(placementHint(w, { kind: 'clearForest' }, k.x + 6, k.y + 2)).toMatchObject({

@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
@@ -13,6 +14,7 @@ import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
+import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
 import type { Building, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
@@ -24,6 +26,9 @@ import type { IconId } from './icons';
 import { iconChip } from './messages';
 import { tierPath } from './hud';
 import { formatGameTime, perMinute } from './time';
+import { needsConnection } from '../sim/roads';
+import { connectView } from './connect';
+import type { Pos } from '../sim/world';
 
 export {
   burningText,
@@ -43,6 +48,12 @@ export interface InspectActions {
   setTax(level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
+  /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
+  connect(id: number): void;
+  /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
+  holdFeast(id: number): void;
+  /** Pfad-Vorschau auf der Karte setzen (`null` löscht sie). */
+  previewConnect(tiles: readonly Pos[] | null): void;
 }
 
 export interface LockRow {
@@ -132,6 +143,40 @@ function addButton(parent: HTMLElement, label: string, onClick: () => void, fiel
   parent.appendChild(btn);
 }
 
+/** Aktionen je Panel-Element (für das Nachführen der Vorschau im Update). */
+const panelActions = new WeakMap<HTMLElement, InspectActions>();
+
+/** Letzte Vorschau-Kacheln je Anbinden-Knopf und ob er gerade überfahren/fokussiert ist. */
+const connectState = new WeakMap<HTMLElement, { tiles: Pos[]; active: boolean }>();
+
+/** Knopf „Anbinden" mit Pfad-Vorschau beim Überfahren; die Grundzeile folgt nach dem Knopfblock. */
+function addConnectButton(parent: HTMLElement, id: number, actions: InspectActions): void {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn';
+  btn.dataset.field = 'connect';
+  btn.textContent = 'Anbinden';
+  const st = { tiles: [] as Pos[], active: false };
+  connectState.set(btn, st);
+  const show = (): void => {
+    st.active = true;
+    actions.previewConnect(st.tiles.length > 0 ? st.tiles : null);
+  };
+  const hide = (): void => {
+    st.active = false;
+    actions.previewConnect(null);
+  };
+  btn.addEventListener('mouseenter', show);
+  btn.addEventListener('focus', show);
+  btn.addEventListener('mouseleave', hide);
+  btn.addEventListener('blur', hide);
+  btn.addEventListener('click', () => {
+    btn.blur();
+    actions.connect(id);
+  });
+  parent.appendChild(btn);
+}
+
 interface ListItem {
   text: string;
   ok: boolean;
@@ -206,6 +251,7 @@ function addRemedy(parent: HTMLElement): void {
 function renderHouse(panel: HTMLElement): void {
   addLine(panel, '', 'inhabitants');
   addLine(panel, '', 'supplied');
+  addLine(panel, '', 'feast').hidden = true;
   addList(panel, 'reasons', 'diagnosis');
   addRemedy(panel);
   addList(panel, 'needs', 'needs');
@@ -241,7 +287,7 @@ export function deficitLine(world: World, b: Building): string | null {
   const tier = TIERS[house.tier];
   if (tier.upgradeCost === null || house.inhabitants !== tier.maxInhabitants) return null;
   const d = upgradeDeficit(world, b);
-  return d ? deficitText(d.good, world.stock[d.good], d.net) : null;
+  return d ? deficitText(d.good, home(world).stock[d.good], d.net) : null;
 }
 
 /** Setzt Text und Sichtbarkeit einer optionalen Panel-Zeile (`null` → verborgen). */
@@ -312,7 +358,6 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
 }
 
 /** Aktionen des Amtsstuben-Panels je Panel-Element (für den Neuaufbau von Matrix und Schaltern im Update). */
-const townhallActions = new WeakMap<HTMLElement, InspectActions>();
 
 /** Zeile aus Beschriftung und Knöpfen (Sperr-Matrix, Aufstiegsstopp). */
 function toggleRow(label: string): HTMLElement {
@@ -372,7 +417,7 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
 
 /** Führt das Amtsstuben-Panel nach; baut Matrix und Schalter nur bei geänderter Struktur neu. */
 function updateTownhall(panel: HTMLElement, world: World): void {
-  const actions = townhallActions.get(panel);
+  const actions = panelActions.get(panel);
   if (!actions) return;
   const active = townhallActive(world);
   const state = panel.querySelector<HTMLElement>('[data-field="townhall-state"]');
@@ -461,6 +506,7 @@ export function renderInspect(
   actions: InspectActions,
 ): void {
   panel.replaceChildren();
+  panelActions.set(panel, actions);
   const b = world.buildings[id];
   if (!b) return;
   const def = BUILDING_DEFS[b.defId];
@@ -479,7 +525,6 @@ export function renderInspect(
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
   } else if (b.defId === 'townhall') {
-    townhallActions.set(panel, actions);
     renderTownhall(panel, actions);
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
@@ -509,9 +554,21 @@ export function renderInspect(
       if (def.flammable === true) addLine(panel, '', 'fire-protection');
       if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
     }
+    if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
+    if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
+  if (buttons.querySelector('[data-field="connect"]')) {
+    const reason = addLine(panel, '', 'connect-reason');
+    reason.classList.add('negative');
+    reason.hidden = true;
+  }
+  if (def.service === 'faith') {
+    const hint = addLine(panel, '', 'feast-reason');
+    hint.classList.add('negative');
+    hint.hidden = true;
+  }
   if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
 }
@@ -550,7 +607,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
   const next = levels[lvl - 1]!;
   const probe = {
     ...world,
-    stock: { ...world.stock },
+    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
     buildings: { ...world.buildings, [b.id]: { ...b } },
   };
   const r = upgradeBuilding(probe, b.id);
@@ -622,6 +679,65 @@ export function progressPct(b: Building): number {
   return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
 }
 
+/** Setzt Anbinden-Knopf und Grundzeile; führt die Vorschau nach, solange der Knopf überfahren ist. */
+function updateConnect(panel: HTMLElement, world: World, b: Building): void {
+  const btn = panel.querySelector<HTMLButtonElement>('[data-field="connect"]');
+  if (!btn) return;
+  const v = connectView(world, b);
+  const st = connectState.get(btn);
+  btn.hidden = v === null;
+  if (v) {
+    btn.textContent = v.label;
+    btn.classList.toggle('unaffordable', !v.ok);
+  }
+  const reason = panel.querySelector<HTMLElement>('[data-field="connect-reason"]');
+  if (reason) {
+    reason.hidden = v?.reason == null;
+    reason.textContent = v?.reason ?? '';
+  }
+  if (!st) return;
+  if (v === null) {
+    if (st.active) panelActions.get(panel)?.previewConnect(null);
+    st.active = false;
+    st.tiles = [];
+    return;
+  }
+  const key = (t: Pos[]): string => t.map((p) => `${p.x},${p.y}`).join(';');
+  const tiles = v?.tiles ?? [];
+  const changed = key(tiles) !== key(st.tiles);
+  st.tiles = tiles;
+  if (st.active && changed) {
+    panelActions.get(panel)?.previewConnect(tiles.length > 0 ? tiles : null);
+  }
+}
+
+/** Kapelle: Knopf „Fest feiern" nachführen; Haus: Zeile, solange ein Fest wirkt. */
+function updateFeast(panel: HTMLElement, world: World, b: Building): void {
+  if (b.house) {
+    const line = houseFeastLine(world, b);
+    const el = panel.querySelector<HTMLElement>('[data-field="feast"]');
+    if (el) {
+      el.hidden = line === null;
+      el.textContent = line ?? '';
+    }
+    return;
+  }
+  const btn = panel.querySelector<HTMLButtonElement>('button[data-field="feast"]');
+  if (!btn) return;
+  const v = feastView(world, b);
+  btn.hidden = v === null;
+  if (v) {
+    btn.textContent = v.label;
+    btn.disabled = v.disabled;
+    btn.title = v.reason ?? '';
+  }
+  const hint = panel.querySelector<HTMLElement>('[data-field="feast-reason"]');
+  if (hint) {
+    hint.hidden = v?.reason == null;
+    hint.textContent = v?.reason ?? '';
+  }
+}
+
 /** Aktualisiert nur Zahlen und Zustandstext des bereits aufgebauten Panels. */
 export function updateInspect(panel: HTMLElement, world: World, id: number): void {
   const b = world.buildings[id];
@@ -634,6 +750,8 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   setField(panel, 'level', levelText(b) ?? '');
   setField(panel, 'utilization', utilizationText(b) ?? '');
   updateUpgradeBox(panel, world, b);
+  updateConnect(panel, world, b);
+  updateFeast(panel, world, b);
   const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
   if (remedyEl) {
     const text = remedyText(world, b);

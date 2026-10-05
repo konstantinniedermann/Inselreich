@@ -7,7 +7,7 @@ import { totalUpkeep } from '../../src/sim/economy';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { forceRect, houseNearKontor, placeService } from './helpers';
 
 const T = CRISIS_FIRST_TICK; // Periode 0 bei Stufe normal
@@ -19,7 +19,7 @@ let ky: number;
 /** Seed 3, Stufe normal; Gras östlich des Kontors, Hauptweg (kx+2 … kx+13, ky). */
 beforeEach(() => {
   w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   kx = k.x;
   ky = k.y;
   forceRect(w, kx + 2, ky - 3, 14, 7, 'grass');
@@ -31,14 +31,14 @@ beforeEach(() => {
 /** Baut mit vollen Mitteln; danach gelten Geld und Lager wie vorher (Tests vergleichen sauber). */
 function withFunds<R>(fn: () => R): R {
   const money = w.money;
-  const stock = { ...w.stock };
+  const stock = { ...home(w).stock };
   w.money = 1_000_000;
-  for (const g of Object.keys(w.stock) as GoodId[]) w.stock[g] = 100;
+  for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
   try {
     return fn();
   } finally {
     w.money = money;
-    w.stock = stock;
+    home(w).stock = stock;
   }
 }
 
@@ -55,7 +55,7 @@ function put(defId: BuildingDefId, x: number, y: number): Building {
 /** Angebundene Brennerei (kx+3, ky+1), Zuckerrohr 10, Tick T. */
 function distillery(): Building {
   const d = put('distillery', kx + 3, ky + 1);
-  w.stock.cane = 10;
+  home(w).stock.cane = 10;
   w.tick = T;
   return d;
 }
@@ -76,6 +76,7 @@ function direct(defId: BuildingDefId, x: number, y: number): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   return b;
@@ -106,8 +107,8 @@ describe('M6 Brand und Feuerwache', () => {
     expect(d.outageUntil).toBeUndefined();
     run(w, 200);
     run(twin, 200);
-    expect([w.stock.rum, w.stock.cane]).toEqual([4, 6]);
-    expect([twin.stock.rum, twin.stock.cane]).toEqual([8, 2]);
+    expect([home(w).stock.rum, home(w).stock.cane]).toEqual([4, 6]);
+    expect([home(twin).stock.rum, home(twin).stock.cane]).toEqual([8, 2]);
   });
 
   it('AK-S2-02 Fortschritt verloren, entnommener Input kommt nicht zurück', () => {
@@ -115,7 +116,7 @@ describe('M6 Brand und Feuerwache', () => {
     d.progress = 30;
     burnAt(d);
     expect(d.progress).toBe(0);
-    expect(w.stock.cane).toBe(10);
+    expect(home(w).stock.cane).toBe(10);
   });
 
   it('AK-S2-03 geschützt nur mit angebundener Wache im Mittenabstand ≤ 8', () => {
@@ -130,9 +131,9 @@ describe('M6 Brand und Feuerwache', () => {
     expect(w.money).toBe(m0);
     run(w, 400);
     run(twin, 400);
-    expect([w.stock.rum, w.stock.cane, w.money]).toEqual([
-      twin.stock.rum,
-      twin.stock.cane,
+    expect([home(w).stock.rum, home(w).stock.cane, w.money]).toEqual([
+      home(twin).stock.rum,
+      home(twin).stock.cane,
       twin.money,
     ]);
   });
@@ -209,8 +210,8 @@ describe('M6 Brand und Feuerwache', () => {
       satisfiedSince: T - 1000,
       supplied: true,
     } as typeof house.house;
-    w.stock.food = 100;
-    w.stock.cloth = 100;
+    home(w).stock.food = 100;
+    home(w).stock.cloth = 100;
     const chapel = placeService(w, 'chapel', kx + 3, ky - 3);
     w.tick = T;
     const twin = clone(w);
@@ -238,12 +239,12 @@ describe('M6 Brand und Feuerwache', () => {
     const d = distillery();
     burnAt(d);
     const m1 = w.money;
-    const s = { ...w.stock };
+    const s = { ...home(w).stock };
     expect(demolish(w, d.id)).toEqual({ ok: true });
     expect(w.money - m1).toBe(125);
-    expect(w.stock.wood - s.wood).toBe(7);
-    expect(w.stock.tools - s.tools).toBe(2);
-    expect(w.stock.stone - s.stone).toBe(2);
+    expect(home(w).stock.wood - s.wood).toBe(7);
+    expect(home(w).stock.tools - s.tools).toBe(2);
+    expect(home(w).stock.stone - s.stone).toBe(2);
     expect(w.crisis).toMatchObject({ target: d.id });
     run(w, 199);
     expect(w.crisis).not.toBeNull();
@@ -262,7 +263,7 @@ describe('M6 Brand und Feuerwache', () => {
     expect(d.state).toBe('notConnected');
 
     w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     kx = k.x;
     ky = k.y;
     forceRect(w, kx + 2, ky - 3, 14, 7, 'grass');
@@ -327,7 +328,7 @@ describe('M6 Brand und Feuerwache', () => {
     run(w, 50);
     w = reload(w);
     run(w, 350);
-    expect([w.stock.rum, w.stock.cane]).toEqual([4, 6]);
+    expect([home(w).stock.rum, home(w).stock.cane]).toEqual([4, 6]);
   });
 
   it('AK-S2-12 Unterhalt läuft während des Ausfalls weiter', () => {

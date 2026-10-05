@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { centerOn, visibleTileRange, type Camera } from '../../src/render/camera';
 import { project } from '../../src/render/iso';
 import { viewStats } from '../../src/render/viewStats';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Terrain, World } from '../../src/sim/types';
 import { SCENARIOS } from '../sim/scenarios';
 
@@ -10,18 +10,21 @@ const VIEW = { w: 1280, h: 720 };
 const sum = (s: ReturnType<typeof viewStats>) => s.water + s.green + s.forest + s.rock + s.coast;
 const seaWorld = (): World => {
   const w = createWorld(1);
-  for (const t of w.tiles) t.terrain = 'water';
+  for (const t of home(w).tiles) t.terrain = 'water';
   return w;
 };
 const setT = (w: World, x: number, y: number, t: Terrain) => {
-  w.tiles[idx(w, x, y)]!.terrain = t;
+  home(w).tiles[idx(home(w), x, y)]!.terrain = t;
 };
 
 describe('viewStats', () => {
   it('AK-R5-01 Ausschnitt nur über Wasser: water 1, inhabitants 0', () => {
     const w = seaWorld();
     const cam: Camera = { x: 0, y: 0, zoom: 1 };
-    centerOn(cam, w.width / 2, w.height / 2, VIEW, { w: w.width, h: w.height });
+    centerOn(cam, home(w).width / 2, home(w).height / 2, VIEW, {
+      w: home(w).width,
+      h: home(w).height,
+    });
     const s = viewStats(w, cam, VIEW);
     expect(s.water).toBe(1);
     expect(s.inhabitants).toBe(0);
@@ -33,7 +36,7 @@ describe('viewStats', () => {
     const houses = Object.values(w.buildings).filter((b) => b.house);
     const total = houses.reduce((a, b) => a + b.house!.inhabitants, 0);
     expect(total).toBeGreaterThan(0);
-    const map = { w: w.width, h: w.height };
+    const map = { w: home(w).width, h: home(w).height };
     const h0 = houses[0]!;
     // weit herausgezoomt über der Stadt: alle Häuser im Bild
     const wide: Camera = { x: 0, y: 0, zoom: 0.5 };
@@ -62,7 +65,8 @@ describe('viewStats', () => {
 
   it('AK-R5-01 Bereiche ausserhalb der Karte zählen nicht', () => {
     const w = seaWorld();
-    for (let y = 0; y < w.height; y++) for (let x = 0; x < w.width; x++) setT(w, x, y, 'grass');
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) setT(w, x, y, 'grass');
     // Kamera links oben über die Kartenecke hinaus: ausserhalb läge Wasser, wird aber nie gezählt
     const cam: Camera = { x: -400, y: -200, zoom: 1 };
     const s = viewStats(w, cam, VIEW);
@@ -97,7 +101,7 @@ describe('viewStats', () => {
     for (const zoom of [0.5, 1, 2]) {
       // Mitte 5 Bildpixel links ausserhalb, vertikal mittig
       const out: Camera = { x: mid.x + 5 / zoom, y: mid.y - VIEW.h / 2 / zoom, zoom };
-      const r = visibleTileRange(out, VIEW, { w: w.width, h: w.height });
+      const r = visibleTileRange(out, VIEW, { w: home(w).width, h: home(w).height });
       expect(tx >= r.x0 && tx <= r.x1 && ty >= r.y0 && ty <= r.y1).toBe(true);
       const s = viewStats(w, out, VIEW);
       expect(s.green).toBe(0);

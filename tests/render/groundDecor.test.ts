@@ -1,3 +1,4 @@
+import { home } from '../../src/sim/world';
 import { describe, expect, it } from 'vitest';
 import {
   FLOWER_TONES,
@@ -129,7 +130,7 @@ describe('Boden-Deko: paintDecor', () => {
       buildingId: null,
       road: false,
     }));
-    return { width: n, height: n, seed: 3, tiles } as unknown as World;
+    return { seed: 3, islands: [{ width: n, height: n, tiles }] } as unknown as World;
   };
   const rect = { x0: 0, y0: 0, x1: 11, y1: 11 };
 
@@ -154,7 +155,7 @@ describe('Boden-Deko: paintDecor', () => {
   it('R149 Büsche nur auf Gras neben Wald', () => {
     const w = mk('grass');
     // Wald in Spalte 6: Büsche erscheinen auf Gras der Spalten 5 und 7
-    for (let y = 0; y < 12; y++) w.tiles[y * 12 + 6]!.terrain = 'forest';
+    for (let y = 0; y < 12; y++) home(w).tiles[y * 12 + 6]!.terrain = 'forest';
     const a = fakeCtx();
     paintDecor(a.ctx, w, new Uint8Array(144), 1, rect);
     const b = fakeCtx();
@@ -191,7 +192,7 @@ describe('H-R11 Büschel-Ton', () => {
       buildingId: null,
       road: false,
     }));
-    const w = { width: n, height: n, seed: 3, tiles } as unknown as World;
+    const w = { seed: 3, islands: [{ width: n, height: n, tiles }] } as unknown as World;
     const f = fakeCtx();
     paintDecor(f.ctx, w, new Uint8Array(n * n), 1, { x0: 0, y0: 0, x1: n - 1, y1: n - 1 });
     const colors = new Set(f.log.strokeSet);

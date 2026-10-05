@@ -3,7 +3,7 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import {
   buildColony,
   layoutFor,
@@ -11,11 +11,10 @@ import {
   runColony,
   startColony,
   WIN_TICK_LIMIT,
-  type ColonyOptions,
 } from './controller';
 import { RANDOM_SEQUENCE } from './e0Pins';
-import { randomSequence } from './fixtureV6';
-import { fnv1a32 } from './helpers';
+import { NORMAL, randomSequence } from './fixtureV6';
+import { fnv1a32, foldBackToV6, foldBackToV7 } from './helpers';
 
 /**
  * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
@@ -23,7 +22,7 @@ import { fnv1a32 } from './helpers';
  * M11 (Anhang 02 B): zusätzlich `taxCarry`, `upkeepCarry` und je Gebäude `eff`, `level` entfernt.
  */
 function normalized(json: string): string {
-  const raw = JSON.parse(json) as Record<string, unknown>;
+  const raw = foldBackToV6(foldBackToV7(JSON.parse(json) as Record<string, unknown>));
   raw.version = 2;
   delete raw.crisisLevel;
   delete raw.crisis;
@@ -69,7 +68,6 @@ const OFF_REFERENCE = {
 const OFF_FINGERPRINT = 0x701c6da5; // M11 (M-06), normalized() mit M11-Feldern (Anhang 02 B)
 
 const CRISIS_WIN_STOP = 8000; // Spec 15: Stopp-Schwelle Krisen-Lauf (R102)
-const NORMAL: ColonyOptions = { fireStation: true };
 
 interface CrisisCount {
   fires: number;
@@ -166,7 +164,7 @@ describe('M8 Fingerabdruck (AK-S1-15)', () => {
     const t = buildColony(w);
     expect(t.winTick).toBe(6750);
     expect(t.minMoney).toBe(117);
-    expect(w.stock.glass).toBe(0);
+    expect(home(w).stock.glass).toBe(0);
     expect(w.wonMerchants).toBe(false);
     expect(fnv1a32(normalized(serialize(w)))).toBe(OFF_FINGERPRINT);
   });
@@ -201,7 +199,7 @@ describe('M11 Baseline (Spec 6, 14)', () => {
   it('AK-BAS-04 normalized() entfernt taxCarry, upkeepCarry und je Gebäude eff, level', () => {
     const w = createWorld(3);
     Object.assign(w, { taxCarry: 5, upkeepCarry: 7 });
-    Object.assign(w.buildings[w.kontorId]!, { eff: 1000, level: 2 });
+    Object.assign(w.buildings[home(w).kontorId]!, { eff: 1000, level: 2 });
     const raw = JSON.parse(normalized(serialize(w))) as Record<string, unknown>;
     expect('taxCarry' in raw || 'upkeepCarry' in raw).toBe(false);
     for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>))

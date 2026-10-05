@@ -93,3 +93,13 @@ schliesst den Eintrag.
 - Blockiert: nichts
 - Von: studio-director
 - Antwort: Verboten lassen (Nutzer 2026-10-04)
+
+## N-95 · offen · 2026-10-05 · Spielstand-Feld ohne neue Versionsnummer (Fest in der Kapelle)
+
+- Frage: Darf ein neues optionales Feld im Spielstand (Fest-Zeitpunkt an der Kapelle) ohne neue Save-Versionsnummer kommen? Die Verfassung sagt 'Save-Format versionieren und migrieren, mit Test für alte Spielstände'.
+- Empfehlung: Ja: alte Spielstände laden nachweislich (Test), ungültige Werte werden abgewiesen; eine neue Nummer hätte eine leere Migration und kollidiert mit M12 (v7).
+- Begründung: Auslegung einer festen Verfassungsregel ohne Präzedenz (R240 D-140)
+- Kosten des Wartens: Keine: Arbeit läuft; bei Nein vor REL-04 Versionswechsel nachziehen (~1 Paket)
+- Blockiert: nichts (Release REL-04 erst danach endgültig)
+- Von: l0
+- Antwort: –

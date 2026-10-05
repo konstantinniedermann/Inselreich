@@ -1603,3 +1603,262 @@ Starts, Parallelität 1, Richtwert ≈ 500 Tools. — Kosten bei Irrtum: v7 geht
 danach nicht mehr umkehrbar; deshalb Final-Review opus und Browser-Check AK-E0-20 vor dem Merge-Gate.
 
 Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa M12-E0-GATE-SPEC · ADR: ADR-013 (folgt)
+
+## R228 · 2026-10-05 · Gate Spec M12 Teil E1–E6: Nachbesserung
+
+Ruling: Gate Spec E1–E6 (Spec @ 95ed26e) **noch nicht bestanden**: lead-tech BEDENKEN B1–B6, lead-art BEDENKEN B1–B6,
+lead-qa BEDENKEN A1–A8 (A1 blockend: unladbare Autosaves). Kein ZURÜCK. Nachbesserung durch design-spec-author
+unter lead-design, danach **Delta-Gate durch lead-qa** (nur die Änderungen). Entscheide jetzt: (1) Ladeprüfung:
+Schiff-`port` nur gültiger Inselindex, Regel „`kontorId null` ⇒ kein Gebäude" gestrichen (nur „kein Kontor");
+damit ist A1 / tech-B1/B2 gelöst; Fall in AK-E2-03. (2) **Insel C gestrichen** (R226 F-07 geändert: zwei
+Fremdinseln) — später hinzufügen ist billig, nach dem Merge entfernen kostet Spielerfortschritt; ≈ 9,4 MB Cache
+weniger. (3) F-P9: v8 = E1; v9 = Seefahrt-Bündel E2+E3+E4 über eine Integrationsbranch, ein Merge; v10 = E6.
+(4) F-P2 2 × Heimat bei Zoom 1 hart (nach Aufwärmen), F-P3 Leerlauf-Rasterung in Scheiben ≤ 8 ms, F-P4 Mindestzoom
+0,125. (5) Render-Auflagen lead-art B1–B6 als AK in Anhang 02/04 (Scheiben, Messaufbau `--focus home`, Meerkante
+auf `waterDeep`, Speicher ehrlich in `limits.ts`, Detailstufe ≤ 0,25 mit Viertel-Kopie, Schiffe in Tiefensortierung
+mit Mindestgrösse); R4 (kein Frame > 50 ms) als AK. (6) lead-qa A2–A8 in die Spec (betroffene alte Pins mit
+Meilenstein R226 F-03 zuordnen, Verhalten alter Spielstände mit Kaufleuten als AK — Spielurteil lead-design,
+AK-M12-B3 „jeweils gültiger Pin", Klickzählung AK-E2-11 eindeutig, fehlende Regel-AK). (7) Auflagen für die Pläne:
+lead-tech B3 (k = 0, Kamera im Startzustand, kein `replaceChildren` je Tick für Knöpfe), B4 (Migration idempotent
+gegen aktuelles `GOOD_IDS`), B5 ADR-005-Nachtrag `tickShips`, B6 (`createWorld` ≤ 5 ms, `Math.sqrt`), lead-qa Teil B.
+E1-Render startet erst nach dem REL-03-Merge. — Kosten bei Irrtum: eine weitere Spec-Runde; ohne (1) unladbare
+Autosaves.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, lead-art, lead-qa M12-GATE-SPEC · ADR: ADR-005-Nachtrag (folgt)
+
+## R229 · 2026-10-05 · Gate Plan M12-E0
+
+Ruling: Gate Plan M12-E0 (`feat/m12-e0` @ 635dbae) mit **BEDENKEN** bestanden (lead-qa B1–B5, lead-production
+B1–B4, kein ZURÜCK). **Plan-Nachtrag durch lead-tech vor T00** (ohne Zweitprüfung): prod-B1 H-U1
+(`feat/h-u1-anbinden` @ a852d4a, release-reif) wird **vor T01 per Merge in `feat/m12-e0` geholt**, damit
+`connect.ts` mit umgestellt wird — T01 wartet nicht auf REL-03; prod-B2 T06 bekommt einen eigenen Doku-Umsetzer
+(15 Starts); prod-B3 Ersatz-Implementierer bei C1/C2 löst Übergabe an eine neue Controller-Instanz aus; qa-B2
+Timeout 120 000 für AK-E0-12(a); qa-B3 Lasttest AK-E0-15 in T05 vor der Umsetzung (Platzhalter-Pin 6, rot), nach
+Messung pinnen; qa-B4 v6-Autosave für AK-E0-20 vom Spiel auf main-Stand erzeugt (Weg und Haus), Sichtvergleich
+„Neues Spiel Seed 3" auf beiden Builds; qa-B5 Fall I16 (Wache auf Insel 1 schützt nichts auf Insel 0).
+**P-14 angenommen mit Auflage:** T00 erzeugt auf v6-Code einen zweiten echten Stand `save-v6-locks.json`
+(`unlockAll`, Amtsstube, `setGoodLock`, `setUpgradeStop`, Glas gekauft); AK-E0-06 lädt ihn; `upkeepCarry` 0
+hingenommen; Anhang 01 C gleicht der Spec-Autor an. **Final-Review** opus durch **lead-qa** (qa-B1): 1 Start von
+lead-tech an lead-qa (lead-tech 20, lead-qa 1). Merge-Reihenfolge: REL-03 (H-U1 → S1-Rest → H-R13 → H-R12b, H-R12b
+fällt raus, wenn nicht fertig) vor E0; E0 erst nach REL-03 auf main (sonst v7 ungewollt mit REL-03 in Autosaves).
+— Kosten bei Irrtum: Merge-Konflikt H-U1 in E0 doppelt zu lösen; v7 nach Merge nicht umkehrbar.
+
+Entscheider: L0 · Anlass: Berichte lead-qa und lead-production M12-E0-GATE-PLAN · ADR: —
+
+## R230 · 2026-10-05 · Gate Spec M12 E1–E6 bestanden
+
+Ruling: Delta-Gate lead-qa (95ed26e → 37850ad) BEDENKEN nicht blockend → **Gate Spec M12 E1–E6 bestanden** mit
+Auflage B1: lead-design ergänzt vor dem Plan des Seefahrt-Bündels die Pin-Liste in Anhang 03 D um die durch E2
+gebrochenen Pins `M8:AK-S1-01` (U6-Zeile `unlocks.test.ts`) und `M11:AK-U1-08` (`UNLOCK_NOTICE`) mit Bezug R226
+F-03 und entscheidet den künftigen U6-Meldungstext. Die Plan-Punkte von lead-qa (AK-E2-03 Schiff in Felsbucht beim
+Abriss, Rezept `save-v8.json`, Übergangsbestand über die Kette ab v7, Browser-Check Lade-Meldung, Aufwärmen AK-E1-16,
+Notfall-Frames AK-E1-18, Messbedingungen AK-E1-19) ergänzt lead-design in Teil B der Plan-Auflagen. Spielurteil
+QA-A3 (Übergangsbestand Gewürz, AK-E3-07) angenommen. F-P7 (Werte E6) prüft design-economy-designer vor dem E6-Plan.
+Nächster Schritt: E1-Plan durch lead-tech auf Basis E0-Plan; E1-Render-Umsetzung erst nach REL-03 auf main. —
+Kosten bei Irrtum: alte Pins ohne Ruling-Bezug geändert; U6-Text vom Umsetzer entschieden.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M12-GATE-SPEC-DELTA · ADR: —
+
+## R231 · 2026-10-05 · Gate Plan M12-E1, D-139
+
+Ruling: **D-139:** Fahrstrecke `d` zählt nur die offene See ausserhalb aller Inselrechtecke (Heimatanker liegt 13–31
+Kacheln tief im Rechteck, Band 25–30 sonst unerreichbar); Bänder und Wirtschaft unverändert; Spec @ fbeebca.
+**Gate Plan M12-E1** (`feat/m12-e1` @ 1acbc40) mit BEDENKEN bestanden (lead-production B1–B4, lead-qa B1–B7, kein
+ZURÜCK). Plan-Nachtrag durch lead-tech vor dem jeweiligen Task, ohne Zweitprüfung: prod-B1 T02 `blocked-by` E0-T05
+(Review OK), Neu-Merge falls E0 danach `src/sim` ändert; prod-B2 Merge-Fluss nur main → E0 → E1 (E1 holt main
+direkt nur per L0-Ruling); prod-B3 fällt H-R12b aus REL-03, wartet es bis E1 auf main; prod-B4/qa-B7 Ownership und
+Index-Tabelle vervollständigen, L0 startet die Controller ausserhalb der Formel; qa-B1 `HOME_CALLS` vor dem
+Terrain-Merge erzeugen, Kamera schliesst den 4-Kachel-Rand aus (sonst unter R-4 benennen); qa-B2 Helfer
+`createIslandLayers` mit Test zuerst, Browser-Schritt „direkt nach Laden auf 0,125"; qa-B3 AK-E1-17 als Vitest
+Seeds 1…200; qa-B4 Fremdinseln nach Migration aus v1…v6 gleich; qa-B5 P-5 an Spec angleichen; qa-B6 Quelle des
+v7-Autosaves nennen. Merge-Reihenfolge main: REL-03 → E0 → E1. **Budget E1:** lead-tech 27 Starts (Parallelität 2
+nur T03/T04), lead-qa 1. Umsetzung beginnt, wenn E0-T03 (Sim) bzw. REL-03 auf main (Render) erreicht sind. —
+Kosten bei Irrtum: Neu-Merges E0 → E1; Regressionsschutz Heimatbild schwächer ohne qa-B1.
+
+Entscheider: L0 · Anlass: Berichte lead-qa, lead-production M12-E1-GATE-PLAN; D-139 lead-tech · ADR: —
+
+## R232 · 2026-10-05 · Gate Merge Release REL-03
+
+Ruling: Gate Merge Release REL-03 bestanden. Kandidat `rel/rel-03` @ aa2ee4b auf main d0db854: H-U1 (0760dc9),
+S1-Rest (cba13ab), H-R13 (fb29bd2), H-R12b (aa2ee4b); `make check` nach jedem Merge und `CI=true make check` grün
+(1588 Tests). opus-Review lead-qa BEDENKEN nicht blockend; Perf A/B im Stilrahmen §5 (`buildMs` +9–13 %,
+`lastPatchMs` +17–18 %, `renderMedian` +0,1 ms). Browser-Lauf OK. Prüfliste UI-Task → Screenshot: H-U1
+`.studio/qa/REL-03/kandidat/h-u1/`, S1-Rest `…/kandidat/s1-rest/`, H-R13 `…/kandidat/h-r13/`, H-R12b
+`…/kandidat/h-r12b/`, Regression `…/kandidat/regression/`. **Auflage vor dem Push:** B1 — Merge-Artefakt in
+`docs/beobachtungen.md` (Zeile „Ergebnis: erledigt in fix/s1-rest" vom Wald-Eintrag in den S1-Rest-Eintrag
+verschieben) als eigener Fix-Commit des Integrators; B2 (`connectBuilding` multipliziert nur Geld) und
+CI-Zeitreserve AK-R1-06 (≈ 2,0–2,05 s von 2,25 s) als Beobachtungen. Die Leistungs-Einschätzung von lead-art
+(„Ruling" im Bericht) gilt erst mit diesem Ruling; Leads treffen keine Rulings (Retro). Wald-Gleichstand H-U1 bleibt
+so (Vorschau zeigt den Weg), Frage an lead-design über beobachtungen. H-R12b ist der dritte Dünen-Anlauf; Nutzerpunkt
+„Dünen sehen komisch aus" gilt nach dem Nutzertest als erledigt oder offen. Push durch production-integrator
+`HEAD:main`. — Kosten bei Irrtum: Revert-Merge; CI-Zeittest kann rot werden (dann Hotfix nach §7.2).
+
+Entscheider: L0 · Anlass: opus-Review und Playtest REL-03 · ADR: —
+
+## R233 · 2026-10-05 · Retro-Vorschläge Session ad51d3c5 und Prozess-Retro REL-03
+
+Ruling: Angenommen aus der Kurz-Retro (`docs/studio/retros/2026-10-05-session-ad51d3c5.md`): (1) Briefing jeder
+Persona-Änderung nennt CHANGELOG-Eintrag und `make check` als Pflicht; (3) Berichtsvorlage sagt „Einschätzung" statt
+„Ruling" — Leads treffen keine Rulings; (4) Briefings mit Messaufträgen enthalten „Messproben nie im Hauptcheckout,
+nur Worktree oder Scratchpad"; (6) Phasen-Labels je Session eindeutig vergeben, Zählweise von `effort.py` als
+Beobachtung. Punkte (2), (5), (7) ohne Massnahme (Einzelfall bzw. Messartefakt; Muster weiter beobachten). Aus der
+Prozess-Retro (`docs/studio/retros/2026-10-05-prozess-retro-rel-03.md`): **V1** angenommen (Warte-Turn-Enden der Leads
+senken, als `waiting` loggen); **V2** angenommen (Folgeplan-Gate eines bereits gegateten Meilensteins mit einem
+Prüfer lead-qa + L0 für Ownership/Budget); **V3** angenommen (Spec-Selbstcheck mit Zahlenbeispiel vor dem Gate;
+höchstens 2 Bildrunden je Häppchen, dann Gate-Entscheid); **V4** zurückgestellt (nur, wenn Review-Starts nicht
+steigen — Messung zuerst); **V5** festgestellt (Gates der Stufe voll unverändert). Umsetzung der Handbuch-Änderungen
+durch studio-coach in der nächsten Session. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Kurz-Retro und Prozess-Retro 2026-10-05 · ADR: —
+
+## R234 · 2026-10-05 · Hotfix H-T3 Teil-Neuzeichnung nach REL-03
+
+Ruling: CI auf main rot bei 1188514 (nur Doku) durch `tests/render/terrain.test.ts` „H-R9 B4 Teil-Neuzeichnung ≤ 8 ms"
+(Runner 14,7 ms > 12 ms mit CI-Faktor); REL-03-Lauf 1a24d25 war grün. Ursache vermutet: `foothillField` (H-R13)
+rechnet je Patch zwei Box-Blur über das ganze Gebirgsfeld (beobachtungen.md, REL-03-Eintrag (1); opus-Review
+`lastPatchMs` +17–18 %). Vorrang nach Verfassung §7.2. **H-T3** an lead-art: Ursache messen (A/B gegen d0db854), Fix
+durch Cache von `foothillField` je `fields` (kein Lockern der Schwelle, solange ein Fix möglich ist), Review,
+`make check` und `CI=true make check`, Werkzeug-Merge durch den Integrator. Ad-hoc-Retro-Anlass: Release-Gate
+akzeptierte `lastPatchMs` +17 % ohne Blick auf die CI-Reserve von H-R9 B4 (nur AK-R1-06 geprüft). — Kosten bei
+Irrtum: Revert H-R13; Schwelle nur per weiterem Ruling.
+
+Entscheider: L0 · Anlass: CI-Lauf 37295831843 · ADR: —
+
+## R235 · 2026-10-05 · Gate H-T3, CI-Grenze H-R9 B4
+
+Ruling: Befund H-T3: Ursache des roten H-R9 B4 ist nicht `foothillField`, sondern `paintPixels` (+≈ 10 % durch REL-03)
+bei einem Runner, der für diesen Test ≈ 4× langsamer ist als lokal; Neustart des CI-Laufs erneut rot (13,9 ms > 12 ms).
+Entscheid D-H-T3: (1) Cache `foothillsFor` (`fix/h-t3-patchzeit` @ a54ce52, Review OK, pixelgleich, `make check` und
+`CI=true` grün) wird gemergt. (2) CI-Grenze nur für H-R9 B4 auf **20 ms** (lokal bleibt 8 ms) über einen optionalen
+Faktor-Parameter von `perfBudget` (Faktor 2,5, mit Kommentar R235) — Umsetzung als Fortsetzung des Arbeiters auf
+derselben Branch, Review am Diff durch L0. Echte Regressionen fängt das A/B-Perf-Delta im Release-Gate (R211); ab
+jetzt prüft das Release-Gate die CI-Reserve **aller** Zeittests im Render-Diff, nicht nur AK-R1-06. (3) Paket
+„paintPixels-Performance" (Vorberechnung je Zelle) als Kandidat REL-04/M9 in beobachtungen. Kein Rückbau von H-R12b/
+H-R13. — Kosten bei Irrtum: eine Perf-Regression bis +40 % auf dem Runner bleibt im CI unbemerkt bis zum nächsten
+Release-Gate.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-T3, CI-Läufe 37295831843 (2×) · ADR: —
+
+## R236 · 2026-10-05 · Ad-hoc-Retro CI rot (H-T3)
+
+Ruling: Vorschläge der Ad-hoc-Retro (Abschnitt in `docs/studio/retros/2026-10-05-session-ad51d3c5.md`) angenommen:
+(a) Release-Gate prüft die CI-Reserve aller Zeittests im Diff (bereits R235); (b) Hotfix-Briefings trennen
+Beobachtung/Beleg von Vermutung, Vermutungen als „unbelegt" markiert, keine Fix-Vorgabe aus einer Vermutung; (c)
+Briefings mit CI-Prüfung nennen Lauf-ID und Workflow-Namen (CI ≠ Pages). Dritter Zeittest-Fall dieser Klasse
+(AK-R1-06, H-R9 B4 ×2): Paket „paintPixels-Performance" bekommt in REL-04 Vorrang. Umsetzung (b)/(c) im Handbuch mit
+R233 durch studio-coach. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro CI rot, CI-Lauf 37295831843 · ADR: —
+
+## R237 · 2026-10-05 · Session-Fokus Spielinhalte
+
+Ruling: Nutzerauftrag „weiter, Fokus auf Spielinhalte" heisst: Vorrang für Arbeit, die das Spiel inhaltlich erweitert —
+M12 „Weite Welt" (E0 C2 → C3, danach E1 und Plan Seefahrt-Bündel) und Ideen-Runde IDEEN-03. Prozessarbeit (Handbuch-
+Umsetzung R233/R236 durch studio-coach) und Technik ohne Spielwirkung (REL-04-Kandidat paintPixels-Performance) ruhen
+in dieser Session; Pflicht-Retros und Session-Ende-Routine bleiben. Budget E0 neu geloggt (Session-Wechsel). — Kosten
+bei Irrtum: Handbuch-Nachführung eine Session später.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
+
+## R238 · 2026-10-05 · Gate IDEEN-03
+
+Ruling: Empfehlungen lead-design übernommen. **I-010 „Drittes Ziel «Gewürzstadt»" eingeplant** als Zusatz zum
+Seefahrt-Bündel E2+E3+E4: lead-design schreibt einen Spec-Nachtrag (Anhang zur M12-Spec auf `docs/m12-brainstorming`)
+mit testbaren AK, Wert n rechnet design-economy-designer gegen die Gewürz-Erzeugung (Vorschlag 80); Ziel-Flagge läuft
+mit Save v9; Determinismus-Risiko (Controller nach zweitem Ziel, Neupin `feedSpice`/`wonMerchantsTick`) als Auflage an
+den Bündel-Plan. I-011, I-012, I-014 geparkt; I-013 verworfen. Befund „Geldschwemme ab Kaufleuten" kommt als
+Beobachtung in `docs/beobachtungen.md` (Input fürs nächste Wirtschafts-Brainstorming). `docs/ideen-03` @ dffcdbd geht
+mit dem nächsten Integrator-Lauf nach main. — Kosten bei Irrtum: Nachtrag verwerfen, Bündel ohne drittes Ziel.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-03 · ADR: —
+
+## R239 · 2026-10-05 · Gate Spec-Nachtrag I-010 (Anhang 05)
+
+Ruling: Anhang 05 „Drittes Ziel «Gewürzstadt»" (`docs/m12-brainstorming` @ 619eea5) angenommen: n = 80
+(`WIN_SPICE_MERCHANTS`), Haltezeit 600 Ticks (`WIN_SPICE_HOLD`), Save-v9-Feld `wonSpice`, AK-Z3-01…14. (1)
+**Schleifen-Bedingung übernommen** (Ziel zählt nur mit Schiffsroute, die Gewürz von einer Fremdinsel mit eigener
+Plantage heimholt; Zukauf bleibt Notversorgung) — sonst wäre das Ziel „20 Kaufleute mehr". (2) **Plantagenplätze
+Felsbucht bleiben 3** (E1/Anhang 02 A unverändert; Zukauf schliesst die Lücke, Inselwahl bleibt eine Abwägung). (3)
+Änderungen abgenommener AK laut Anhang 05 I (AK-S3-03 Phase `'spice'`, AK-U1-01 Texte, RF-4 `wonSpiceShown`,
+AK-M12-B2 Fold-back) sind mitbeschlossen. Auflagen J (u. a. Neupin `wonMerchantsTick` auf der Integrationsbranch,
+Szenario-Tests statt Balancing-Pin) gehen an den Plan des Seefahrt-Bündels E2+E3+E4, der jetzt startet (vorgezogen
+vor E0-Merge, R237). — Kosten bei Irrtum: B.2/AK-Z3-04 streichen.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-I010 · ADR: —
+
+## R240 · 2026-10-05 · Kombiniertes Gate Spec/Plan H-I007 „Fest in der Kapelle"
+
+Ruling: Kurzdesign lead-design (AK-I007-01…12, Werte FEAST_RUM 10 / FEAST_DURATION 600 / FEAST_COOLDOWN 1800) und Plan
+lead-tech (P1 Sim+Save, P2 UI + Browser-Check; `.studio/handoffs/2026-10-05-h-i007-{kurzdesign,plan}.md`) angenommen,
+Umsetzungsbudget 7 Starts. **D-140:** `feastAt` als optionales, geprüftes Gebäudefeld **ohne neue Save-Version** —
+Auslegung der festen Regel „versionieren und migrieren": Zweck (alte Spielstände laden, mit Test AK-09; ungültige Werte
+abgewiesen AK-10) ist erfüllt; ein Versionswechsel hätte eine leere Migration und kollidierte mit v7 aus E0. Weil das
+eine Auslegung einer Verfassungsregel ohne Präzedenz ist, geht ein Vorbehalt in die Warteschlange; vor dem Release
+REL-04 umkehrbar. **D-141:** H-I007 geht vor E0 nach main; E0 holt es per Merge (wie H-U1/REL-03). Sim-Riegel vor U4
+entfällt (Rum-Bestand genügt, YAGNI). — Kosten bei Irrtum: Versionswechsel v6→v7 nachziehen und E0-Versionen schieben.
+
+Entscheider: L0 · Anlass: Berichte lead-design/lead-tech H-I007 · ADR: —
+
+## R241 · 2026-10-05 · Gate Plan Seefahrt-Bündel E2+E3+E4
+
+Ruling: Gate Plan (`feat/m12-see` @ 9a1fe08) mit **BEDENKEN** bestanden (lead-qa B1–B7, lead-production B1–B7, kein
+ZURÜCK; `.studio/handoffs/2026-10-05-m12-see-gate-{qa,prod}.md`). **Plan-Nachtrag durch lead-tech** vor T00 ohne
+Zweitprüfung. Designfragen nach Urteil lead-design (`.studio/handoffs/2026-10-05-m12-see-design-d142-144.md`):
+**D-142** Gut mit `islandTrait`-Betrieben dämpft den Hausaufstieg nur auf Inseln mit diesem Merkmal (Gewürz dämpft in
+der Heimat nie); „Schiffsladung zählt in die Bilanz" verworfen. **D-143** vor `seafaring` ist die aktive Insel immer
+die Heimat (Index 0), Lagerleiste ohne Inselnamen; ab `seafaring` C.1. **D-144** Platzhalter aus vorhandenen Formen mit
+drei Mindestregeln (eigener Palettenton Gewürzplantage, eigene Chip-Farbe Gewürz, Schiff nach AK-E4-15); lead-art
+urteilt über T15-Screenshots, Nacharbeit = eigenes Art-Paket. Budget **50 Starts** (lead-tech 49, lead-qa 1),
+Freigabe ab M0. **Studioweite Obergrenze 5 gleichzeitig laufende Arbeiter** (Risiko prod). — Kosten bei Irrtum:
+D-142 zurück auf Spec-Wortlaut (Neupin-Risiko R-2).
+
+Entscheider: L0 · Anlass: Gate Plan lead-qa, lead-production, Designurteil lead-design · ADR: —
+
+## R242 · 2026-10-05 · M12-E0 C2 abgenommen, Start E0 C3 und E1 C1
+
+Ruling: E0 T03–T05 (`feat/m12-e0` @ 0428c15) angenommen. Abweichungen vom Plan übernommen: `fieldWorld(world)` in
+`src/render/terrainField.ts`, `islandAt()` in `placement.ts`, `isSupplySource` in `coverage.ts`, `upgradeView`-Fix in
+`inspect.ts` (T02-Fehler), mechanische Typ-Fixes (`connect.ts`, `roads.ts`, `soundEvents.ts`, `sprites.ts`). Start
+**E0 C3** (T06 + Final-Review lead-qa; Final-Review prüft zusätzlich die Testlücke Schlüsselreihenfolge
+`migrateV6ToV7`) und parallel **E1 C1** (Sim T00–T02 ab E0 @ 0428c15). H-I007 bleibt vor E0 auf main (R240 D-141): E0
+holt main nach dem REL-04-Merge erneut; Final-Review E0 erst danach endgültig, falls H-I007 vor dem E0-Merge landet.
+— Kosten bei Irrtum: Abweichungen einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C2 · ADR: —
+
+## R243 · 2026-10-05 · H-I007 abgenommen, REL-04 vorgezogen
+
+Ruling: H-I007 „Fest in der Kapelle" (`feat/h-i007-fest` @ 6205dae) release-reif angenommen; P2-Abweichung (rein
+lesende `feastBlockReason` in `src/sim/feast.ts`) übernommen. **REL-04 startet jetzt mit H-I007 allein** (Ausnahme zur
+Auslösung „3 Häppchen", Grund: kritischer Pfad — M0 des Seefahrt-Bündels verlangt H-I007 in main → E0 → E1, R241);
+dazu die Doku-Branch `docs/ideen-03` @ eafa57c. paintPixels-Performance bleibt nach R237 ausserhalb. Der Browser-Lauf
+am Kandidaten prüft zusätzlich die Sperrgrund-Zeile am Fest-Knopf (nach dem H-I007-Browser-Check entstanden).
+Vorbehalt N-95 (D-140) bleibt offen; ein späteres Nein heisst Versionswechsel mit Identitäts-Migration. — Kosten bei
+Irrtum: ein zusätzlicher Release-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-I007 · ADR: —
+
+## R244 · 2026-10-05 · Gate Merge Release REL-04
+
+Ruling: Gate Merge Release REL-04 **OK** (Kandidat `.worktrees/integrate` @ 50deea8: H-I007 + `docs/ideen-03`;
+`make check` und `CI=true make check` grün; Prüfliste vollständig `.studio/qa/REL-04/h-i007/`; opus-Review OK mit drei
+niedrigen Befunden). Push durch den Integrator. Befunde in `docs/beobachtungen.md`: Kapelle in `save.ts` per `defId`,
+in `feast.ts` per `service` erkannt; arc42 ohne `feastAt`-Prüfung/`feastBlockReason`; `formatClock` zeigt in den
+letzten Ticks „0:00"; Sperrgrund-Zeile fehlt bei laufendem Fest/Abklingzeit; Knopf-Umbruch bei nicht angebundener
+Kapelle. Ad-hoc-Hinweis „Agent unbekannt inaktiv" geht an die Session-Retro (lernen.md: bekanntes Messartefakt). —
+Kosten bei Irrtum: Hotfix auf main.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-04 · ADR: —
+
+## R245 · 2026-10-05 · M12-E0 C3 abgenommen, Delta-Merge main vor Gate Merge
+
+Ruling: E0 T06 und Final-Review (lead-qa BEDENKEN, vier niedrige Befunde, zwei behoben; `feat/m12-e0` @ 6c64aab)
+angenommen. (1) CI-Faktor 4 im Lasttest `tests/sim/perf.test.ts` (lokal Pin 2,5 ms, CI 10 ms) als Abweichung von
+P-8/R-3 **genehmigt** (Runner ≈ 4× langsamer, vgl. R235). (2) Rot-Commit dcecfdf ohne Beleg im Text: **keine
+Historien-Änderung** (§6). (3) Da REL-04 (H-I007) jetzt auf main ist (50deea8), holt E0 main per Merge; Konflikte in
+`types.ts`/`save.ts` und der semantische Konflikt `world.stock` → Insel-Lager in `src/sim/feast.ts` werden auf
+`feat/m12-e0` gelöst (Rum vom Lager der Kapellen-Insel, wie lead-design im Kurzdesign vorgesehen), mit Delta-Review
+durch qa-code-reviewer; `make check`/`CI=true make check` grün und AK-I007-Tests grün. Danach Gate Merge E0 durch L0.
+— Kosten bei Irrtum: Faktor 4 verdeckt Sim-Regressionen bis +60 % im CI.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C3 · ADR: —

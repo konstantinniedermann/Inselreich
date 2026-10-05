@@ -1,7 +1,7 @@
 // viewStats.ts — Sichtbezug für den Umgebungsklang (Spec 7.2, ISO §4). Reine Funktion, liest die Welt nur.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { World } from '../sim/types';
-import { center } from '../sim/world';
+import { home, center } from '../sim/world';
 import { visibleTileRange, worldToScreen, type Camera } from './camera';
 import { project } from './iso';
 
@@ -30,7 +30,8 @@ const SHARES = ['water', 'green', 'forest', 'rock', 'coast'] as const;
  * die Anteile. Ohne zählbare Kachel (Ausschnitt ausserhalb der Karte) gilt offenes Meer: water 1.
  */
 export function viewStats(world: World, cam: Camera, view: { w: number; h: number }): ViewStats {
-  const r = visibleTileRange(cam, view, { w: world.width, h: world.height });
+  const isl = home(world);
+  const r = visibleTileRange(cam, view, { w: isl.width, h: isl.height });
   const out: ViewStats = {
     water: 0,
     green: 0,
@@ -48,7 +49,7 @@ export function viewStats(world: World, cam: Camera, view: { w: number; h: numbe
   for (let y = r.y0; y <= r.y1; y++)
     for (let x = r.x0; x <= r.x1; x++) {
       if (!inView(x + 0.5, y + 0.5)) continue;
-      const t = world.tiles[y * world.width + x];
+      const t = isl.tiles[y * isl.width + x];
       if (!t) continue;
       out[KEY[t.terrain]] += 1;
       n++;

@@ -19,7 +19,7 @@ import { bodyPolygons } from '../../src/render/sprites';
 import { resetTreeCache, setCanvasFactory, type TreeItem } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, World } from '../../src/sim/types';
-import { tileAt } from '../../src/sim/world';
+import { home, tileAt } from '../../src/sim/world';
 import { forceGrass, forceRect } from '../sim/helpers';
 import { VERDECKUNG, verdeckung } from '../sim/scenarios-iso';
 import { fakeCtx, type Ev, type FakeCtx, type P } from './fakeCtx';
@@ -31,7 +31,7 @@ const layer = { width: 64 * 32, height: 64 * 32 } as unknown as HTMLCanvasElemen
 
 let world: World;
 const at = (p: { x: number; y: number }): Building => {
-  const id = tileAt(world, p.x, p.y)?.buildingId;
+  const id = tileAt(home(world), p.x, p.y)?.buildingId;
   if (id == null) throw new Error(`kein Gebäude bei ${p.x},${p.y}`);
   return world.buildings[id]!;
 };
@@ -45,7 +45,7 @@ function frame(
   w.tick = tick;
   const h = at(focus);
   const cam: Camera = { x: 0, y: 0, zoom: 1 };
-  centerOn(cam, h.x + 0.5, h.y + 0.5, VIEW, { w: w.width, h: w.height });
+  centerOn(cam, h.x + 0.5, h.y + 0.5, VIEW, { w: home(w).width, h: home(w).height });
   const { ctx, log } = fakeCtx();
   render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 0, dayNight: true, fire });
   return { log, cam };
@@ -98,9 +98,9 @@ describe('RF-LICHT Fensterlicht hinter Verdeckern', () => {
   /** Welt mit nur den Gebäuden `keep` (Positionen), ohne Wald: nichts steht davor, ausser was der Test setzt. */
   function isolated(keep: { x: number; y: number }[]): World {
     const w = verdeckung();
-    const ids = new Set(keep.map((p) => tileAt(w, p.x, p.y)!.buildingId!));
-    ids.add(w.kontorId);
-    for (const t of w.tiles) {
+    const ids = new Set(keep.map((p) => tileAt(home(w), p.x, p.y)!.buildingId!));
+    ids.add(home(w).kontorId);
+    for (const t of home(w).tiles) {
       if (t.buildingId !== null && !ids.has(t.buildingId)) t.buildingId = null;
       if (t.terrain === 'forest') t.terrain = 'grass';
     }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { checkWin, step } from '../../src/sim/tick';
 import { WIN_CITIZENS } from '../../src/sim/defs/tiers';
@@ -23,6 +23,7 @@ function citizenHouse(world: World, inhabitants: number): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier: 3,
       inhabitants,
@@ -62,8 +63,8 @@ describe('checkWin', () => {
 
 describe('step order', () => {
   it('runs tick, production, population, taxes and economy within 100 steps', () => {
-    prepareEast(w, w.buildings[w.kontorId]!);
-    const k = w.buildings[w.kontorId]!;
+    prepareEast(w, w.buildings[home(w).kontorId]!);
+    const k = w.buildings[home(w).kontorId]!;
     for (let i = 0; i < 4; i++) expect(placeRoad(w, k.x + 2 + i, k.y).ok).toBe(true);
     const lj = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
     expect(lj.ok).toBe(true);
@@ -73,14 +74,14 @@ describe('step order', () => {
     const house = w.buildings[placed.id!]!;
     house.house!.inhabitants = 4;
 
-    const wood = w.stock.wood;
-    const food = w.stock.food;
+    const wood = home(w).stock.wood;
+    const food = home(w).stock.food;
     const m0 = w.money;
     for (let i = 0; i < 100; i++) step(w);
 
     expect(w.tick).toBe(100);
-    expect(w.stock.wood).toBeGreaterThan(wood);
-    expect(w.stock.food).toBeLessThan(food);
+    expect(home(w).stock.wood).toBeGreaterThan(wood);
+    expect(home(w).stock.food).toBeLessThan(food);
     expect(w.stats.taxes).toBeGreaterThan(0);
     expect(w.stats.upkeep).toBeGreaterThan(0);
     expect(w.money).toBe(m0 + w.stats.taxes - w.stats.upkeep);
@@ -102,7 +103,7 @@ describe('step order: Markt und Aufträge', () => {
     w.tick = 599;
     house.house!.inhabitants = TIERS[1].maxInhabitants;
     house.house!.satisfiedSince = w.tick - UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR; // Defizitwelt
-    w.stock.cloth = 1;
+    home(w).stock.cloth = 1;
     expect(w.order).toBeNull();
     step(w);
     expect(w.tick).toBe(600);

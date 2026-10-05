@@ -42,6 +42,7 @@ describe('diffSoundEvents (Spec 9.4)', () => {
       connected: true,
       progress: 0,
       state: 'ok',
+      island: 0,
       house: {
         tier: 1,
         inhabitants: 1,

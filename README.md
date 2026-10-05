@@ -34,7 +34,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
 
 - **Startkarte:** Beim Laden der Seite liegt über einer neuen, noch stehenden Insel («Pausiert») eine Karte
   mit dem Ziel und drei ersten Schritten: ein Wohnhaus nahe dem Kontor bauen, Fischerhütte am Wasser und
-  Holzfäller am Wald bauen, die Betriebe mit einem Weg zum Kontor verbinden (Wohnhäuser brauchen keinen Weg).
+  Holzfäller am Wald bauen, die Betriebe mit einem Weg zum Kontor verbinden (oder im Info-Panel «Anbinden»; Wohnhäuser brauchen keinen Weg).
   Knöpfe: «Fortsetzen — Autosave (Spielzeit m:ss)», «Gespeichertes Spiel laden (Spielzeit m:ss)» und «Neue
   Insel» bzw. «Los geht's», wenn es nichts zu laden gibt. `Esc` oder ein Klick daneben löst den hervorgehobenen
   Knopf aus. Gibt es einen Stand, fragt «Neue Insel» zuerst nach («Ja, neue Insel» / «Abbrechen»). Ist ein
@@ -97,6 +97,10 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Kapelle, Schule und Feuerwache zeigen ihren Wirkkreis (in der Isometrie eine Ellipse) um die Vorschau
   und den Umriss der schon abgedeckten Fläche; Holzfäller, Jagdhütte, Rinderfarm, Schäferei und Zuckerrohrplantage
   zeigen den Standortkreis (Radius 2, bei Jagdhütte und Rinderfarm 3) mit den passenden Wald- bzw. Graskacheln.
+- **Fest feiern** (ab U4, Rum freigeschaltet): Im Panel einer Kapelle kostet «Fest feiern (10 Rum)» 10 Rum aus dem
+  Lager. Während des Fests (1 Minute Spielzeit) steigen Wohnhäuser im Wirkkreis der Kapelle schneller auf; im
+  Haus-Panel steht dann «Fest: schnellerer Aufstieg». Danach sperrt eine Abklingzeit (3 Minuten ab Festbeginn), der Knopf zeigt «Nächstes
+  Fest in m:ss». Ohne Wirkung bei Steuer «niedrig», ohne Aufstieg bei «hoch»; eine abgelehnte Aktion nennt den Grund.
 - **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
   Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
   `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,
@@ -242,6 +246,10 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Baukosten:** Geld und teils Holz, Werkzeug oder Stein; sie stehen in der Bauleiste.
 - **Anbindung:** Betriebe, Marktplatz, Kapelle, Schule und Feuerwache arbeiten nur, wenn ein Weg an sie grenzt,
   der über Wege mit dem Kontor verbunden ist. Nicht angebundene Gebäude tragen einen roten Punkt.
+  Im Info-Panel eines nicht angebundenen Betriebs baut der Knopf «Anbinden (n Wege · x Geld)» den kürzesten
+  Weg zum Kontor über freie Kacheln; vorhandene Wegstücke werden mitbenutzt. Die Kosten sind n × 5 Geld, es
+  wird nie nur ein Teil gebaut. Fehlt der Pfad oder das Geld, ist der Knopf blass und eine Zeile nennt den
+  Grund. Beim Überfahren (oder Fokussieren) zeigt die Karte den geplanten Weg als helle Rauten.
 - **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
   angebunden»), Stufe («Stufe 1» bis «Stufe 3»), Auslastung, Produktion, Fortschritt und Unterhalt. Ab der
   Freischaltung des Ausbaus steht dort der Abschnitt «Ausbau zu Stufe n» mit Kosten, Gebühr, Vorschau auf

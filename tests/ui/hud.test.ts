@@ -23,7 +23,7 @@ import {
   tierTooltip,
 } from '../../src/ui/hud';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
 import { houseNearKontor, placeTownhall } from '../sim/helpers';
@@ -51,7 +51,7 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
     const b = goodsBalance(w).wood;
     const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
     expect(stockTooltip(w, 'wood')).toBe(
-      `Holz ${w.stock.wood} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
+      `Holz ${home(w).stock.wood} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
         `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`,
     );
   });
@@ -87,9 +87,9 @@ describe('M8 U1 Kopfzeile', () => {
     expect(stockChipHidden(w, 'glass')).toBe(true);
     for (const g of GOOD_IDS.filter((x) => ['wood', 'tools', 'stone', 'food'].includes(x)))
       expect(stockChipHidden(w, g), g).toBe(false);
-    w.stock.glass = 1;
+    home(w).stock.glass = 1;
     expect(stockChipHidden(w, 'glass')).toBe(false);
-    w.stock.glass = 0;
+    home(w).stock.glass = 0;
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     w.unlocked = deriveUnlocks(w);
@@ -106,7 +106,7 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
       'stone',
       'food',
     ]);
-    w.stock.wool = 3;
+    home(w).stock.wool = 3;
     expect(stockChipHidden(w, 'wool')).toBe(false);
   });
   it('AK-U1-05 Einwohner-Chips: pop-1 immer; pop-2 ab U3, pop-3 ab U5, pop-4 ab U6; mit Einwohnern immer', () => {
@@ -147,8 +147,8 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
     const w = createWorld(3);
     expect(chipView(w, 'wood')).toEqual({
       icon: 'wood',
-      text: `${w.stock.wood} →`,
-      label: `Holz ${w.stock.wood} →`,
+      text: `${home(w).stock.wood} →`,
+      label: `Holz ${home(w).stock.wood} →`,
     });
     expect(popChipView(w, 1).label).toBe('Pioniere 0');
     expect(popChipView(w, 3)).toEqual({ icon: 'tier-3', text: '0', label: 'Bürger 0' });

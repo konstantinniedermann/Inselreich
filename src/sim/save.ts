@@ -15,12 +15,22 @@ import {
 import { LEVELS } from './defs/levels';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
+import { ISLANDS } from './defs/sea';
+import { generateForeignIslands, homeAnchor } from './islands';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { deriveUnlocks } from './unlocks';
-import type { BuildingState, CrisisKind, CrisisLevel, GoodId, UnlockId, World } from './types';
+import type {
+  BuildingState,
+  CrisisKind,
+  CrisisLevel,
+  GoodId,
+  Terrain,
+  UnlockId,
+  World,
+} from './types';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 8;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -198,6 +208,90 @@ export function migrateV5ToV6(raw: Record<string, unknown>): void {
   raw.version = 6;
 }
 
+/** Schlüssel der obersten Ebene von v6, die in v7 in die Insel wandern (P-5). */
+const ISLAND_KEYS_V6 = ['width', 'height', 'tiles', 'kontorId', 'stock'] as const;
+
+/**
+ * v6 → v7 (M12 E0): wirft nie. Schlüssel in Originalreihenfolge neu einsetzen; `width` wird durch `islands`
+ * ersetzt, `height`, `tiles`, `kontorId`, `stock` wandern in Insel 0; je Gebäude `island: 0` direkt nach `state`.
+ */
+export function migrateV6ToV7(raw: Record<string, unknown>): void {
+  const island: Record<string, unknown> = {};
+  for (const k of ISLAND_KEYS_V6) island[k] = raw[k];
+  const entries = Object.entries(raw);
+  for (const [k] of entries) delete raw[k];
+  for (const [k, v] of entries) {
+    if (k === 'width') raw.islands = [island];
+    else if ((ISLAND_KEYS_V6 as readonly string[]).includes(k)) continue;
+    else raw[k] = k === 'buildings' ? withIsland(v) : v;
+  }
+  if (!('islands' in raw)) raw.islands = [island];
+  raw.version = 7;
+}
+
+function withIsland(buildings: unknown): unknown {
+  if (!isObject(buildings)) return buildings;
+  for (const [id, b] of Object.entries(buildings)) if (isObject(b)) buildings[id] = insertIsland(b);
+  return buildings;
+}
+
+function insertIsland(b: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(b)) {
+    out[k] = v;
+    if (k === 'state') out.island = 0;
+  }
+  if (!('state' in out)) out.island = 0;
+  return out;
+}
+
+/** Heimat im rohen v7-Objekt, wenn sie sich sicher neu aufbauen lässt; sonst `null`. */
+function rebuildableHome(raw: Record<string, unknown>): Record<string, unknown> | null {
+  const { islands, buildings, seed } = raw;
+  if (!Array.isArray(islands) || !isObject(islands[0]) || !isObject(buildings)) return null;
+  const isl = islands[0];
+  if (!Array.isArray(isl.tiles) || isl.tiles.length !== MAP_W * MAP_H) return null;
+  if (!isl.tiles.every(isObject) || typeof seed !== 'number' || !Number.isFinite(seed)) return null;
+  const kontor = typeof isl.kontorId === 'number' ? buildings[isl.kontorId] : undefined;
+  return isObject(kontor) && kontor.defId === 'kontor' ? isl : null;
+}
+
+/**
+ * v7 → v8 (M12 E1): wirft nie. Heimat bekommt `kind` vorn sowie `ox`, `oy`, `anchor` hinten, die Fremdinseln
+ * A und B hängen an (aus `seed` erzeugt, wie `createWorld`). Lässt sich das nicht sicher aufbauen, wird nur die
+ * Version gesetzt; die Ladeprüfung lehnt den Stand dann ab.
+ */
+export function migrateV7ToV8(raw: Record<string, unknown>): void {
+  try {
+    const isl = rebuildableHome(raw);
+    if (isl !== null) addForeignIslands(raw, isl);
+  } catch {
+    // unbrauchbarer Stand: die Ladeprüfung meldet ihn
+  }
+  raw.version = 8;
+}
+
+function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unknown>): void {
+  const tiles = isl.tiles as Array<Record<string, unknown>>;
+  const kontor = (raw.buildings as Record<number, Record<string, number>>)[isl.kontorId as number]!;
+  const terrain = tiles.map((t) => t.terrain) as Terrain[];
+  const anchor = homeAnchor(terrain, MAP_W, MAP_H, { x: kontor.x!, y: kontor.y! });
+  const homeIsland = { kind: 'home', ...isl, ox: 0, oy: 0, anchor };
+  const layout = { ox: 0, oy: 0, width: MAP_W, height: MAP_H, anchor };
+  const foreign = generateForeignIslands(raw.seed as number, layout).map((p) => ({
+    kind: p.kind,
+    width: p.width,
+    height: p.height,
+    tiles: p.terrain.map((t) => ({ terrain: t, buildingId: null, road: false })),
+    kontorId: null,
+    stock: Object.fromEntries(GOOD_IDS.map((g) => [g, 0])),
+    ox: p.ox,
+    oy: p.oy,
+    anchor: p.anchor,
+  }));
+  raw.islands = [homeIsland, ...foreign];
+}
+
 function isUnlockList(v: unknown): boolean {
   if (!Array.isArray(v) || !v.includes('U0')) return false;
   let last = -1;
@@ -277,25 +371,85 @@ function isValidV6Building(b: unknown): boolean {
   return true;
 }
 
+/** `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version). */
+function isValidFeast(b: unknown, tick: unknown): boolean {
+  if (!isObject(b) || b.feastAt === undefined) return true;
+  return b.defId === 'chapel' && isInt(tick) && isIntBetween(b.feastAt, 0, tick);
+}
+
 function isValidV6Fields(raw: Record<string, unknown>): boolean {
   return (
     isIntBetween(raw.taxCarry, 0, TAX_CARRY_DIVISOR - 1) &&
     isIntBetween(raw.upkeepCarry, 0, UPKEEP_INTERVAL - 1) &&
-    Object.values(raw.buildings as Record<string, unknown>).every(isValidV6Building)
+    Object.values(raw.buildings as Record<string, unknown>).every(
+      (b) => isValidV6Building(b) && isValidFeast(b, raw.tick),
+    )
   );
+}
+
+const hasValidIslandIndex = (b: unknown, count: number): boolean =>
+  isObject(b) && isInt(b.island) && b.island >= 0 && b.island < count;
+
+const hasFullStock = (stock: unknown): boolean =>
+  isObject(stock) && GOOD_IDS.every((g) => typeof stock[g] === 'number');
+
+const isAnchorInside = (a: unknown, w: number, h: number): boolean =>
+  isObject(a) && isIntBetween(a.x, 0, w - 1) && isIntBetween(a.y, 0, h - 1);
+
+/** Raster der Insel: Kantenlängen ganzzahlig 1 … `maxSize`, genau `w · h` Kacheln als Objekte. */
+function hasValidRaster(isl: Record<string, unknown>, maxW: number, maxH: number): boolean {
+  const { width, height, tiles } = isl;
+  if (!isIntBetween(width, 1, maxW) || !isIntBetween(height, 1, maxH)) return false;
+  return (
+    Array.isArray(tiles) &&
+    tiles.length === (width as number) * (height as number) &&
+    tiles.every(isObject)
+  );
+}
+
+/** Heimat (Index 0): feste Grösse, Ursprung 0/0, Kontor als Zahl. */
+function isValidHome(isl: Record<string, unknown>): boolean {
+  return (
+    isl.width === MAP_W &&
+    isl.height === MAP_H &&
+    hasValidRaster(isl, MAP_W, MAP_H) &&
+    isl.ox === 0 &&
+    isl.oy === 0 &&
+    typeof isl.kontorId === 'number'
+  );
+}
+
+/** Fremdinsel: Raster höchstens `size`, in E1 noch ohne Kontor. */
+function isValidForeign(isl: Record<string, unknown>, size: number): boolean {
+  return hasValidRaster(isl, size, size) && isl.kontorId === null && isInt(isl.ox) && isInt(isl.oy);
+}
+
+function isValidIsland(isl: unknown, i: number): boolean {
+  if (!isObject(isl) || isl.kind !== (i === 0 ? 'home' : ISLANDS[i - 1]!.kind)) return false;
+  if (!hasFullStock(isl.stock)) return false;
+  const shapeOk = i === 0 ? isValidHome(isl) : isValidForeign(isl, ISLANDS[i - 1]!.size);
+  return shapeOk && isAnchorInside(isl.anchor, isl.width as number, isl.height as number);
+}
+
+/** Raster, Lager, Kontor und Inselbezug der Gebäude (v8: Heimat plus alle `ISLANDS`, keine v6-Reste oben). */
+function isValidIslands(raw: Record<string, unknown>): boolean {
+  const { islands, buildings } = raw;
+  if (!isObject(buildings) || !Array.isArray(islands)) return false;
+  if (islands.length !== 1 + ISLANDS.length) return false;
+  if (ISLAND_KEYS_V6.some((k) => Object.hasOwn(raw, k))) return false;
+  if (!islands.every((isl, i) => isValidIsland(isl, i))) return false;
+  const home = islands[0] as Record<string, unknown>;
+  const kontor = buildings[home.kontorId as number];
+  if (!isObject(kontor) || kontor.defId !== 'kontor' || kontor.island !== 0) return false;
+  const all = Object.values(buildings);
+  return all.every(isValidBuilding) && all.every((b) => hasValidIslandIndex(b, islands.length));
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
-  const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
-  if (width !== MAP_W || height !== MAP_H) return false;
-  if (!Array.isArray(tiles) || tiles.length !== MAP_W * MAP_H) return false;
-  if (!tiles.every(isObject)) return false;
+  const { stats } = raw;
   if (typeof raw.money !== 'number') return false;
-  if (typeof kontorId !== 'number' || !isObject(buildings) || !isObject(buildings[kontorId]))
-    return false;
-  if (!Object.values(buildings).every(isValidBuilding)) return false;
-  if (!isObject(stock) || !GOOD_IDS.every((g) => typeof stock[g] === 'number')) return false;
+  if (!isValidIslands(raw)) return false;
   if (!isValidV2Fields(raw)) return false;
   if (!isValidV3Fields(raw)) return false;
   if (!isValidV4Fields(raw)) return false;
@@ -325,6 +479,8 @@ export function deserialize(json: string): LoadResult {
   const fromV4 = raw.version === 4;
   if (fromV4) migrateV4ToV5(raw);
   if (raw.version === 5) migrateV5ToV6(raw);
+  if (raw.version === 6) migrateV6ToV7(raw);
+  if (raw.version === 7) migrateV7ToV8(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

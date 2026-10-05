@@ -5,6 +5,8 @@ import { addStock, takeStock } from './economy';
 import { goodLock } from './unlocks';
 import type { GoodId, Result, World } from './types';
 import { fail, ok } from './types';
+import { islandAt } from './placement';
+import { HOME } from './world';
 
 export function buyPrice(good: GoodId, n: number): number {
   return n * GOODS[good].buy;
@@ -23,7 +25,9 @@ export function sellPrice(world: World, good: GoodId, n: number): number {
   return Math.floor(acc / 10000);
 }
 
-export function buy(world: World, good: GoodId, n: number): Result {
+export function buy(world: World, good: GoodId, n: number, island: number = HOME): Result {
+  const isl = islandAt(world, island);
+  if (isl === null) return fail('Unbekannte Insel');
   const lock = goodLock(world, good);
   if (lock !== null) return fail(lock);
 
@@ -38,7 +42,7 @@ export function buy(world: World, good: GoodId, n: number): Result {
   }
 
   // Lagergrenze prüfen
-  if (world.stock[good] + n > STORAGE_CAP) {
+  if (isl.stock[good] + n > STORAGE_CAP) {
     return fail('Lager voll');
   }
 
@@ -50,23 +54,25 @@ export function buy(world: World, good: GoodId, n: number): Result {
 
   world.money -= price;
   // Rückgabe bewusst ignoriert: nach der Lagergrenzen-Prüfung wird immer die volle Menge eingelagert
-  addStock(world, good, n);
+  addStock(isl, good, n);
   return ok;
 }
 
-export function sell(world: World, good: GoodId, n: number): Result {
+export function sell(world: World, good: GoodId, n: number, island: number = HOME): Result {
+  const isl = islandAt(world, island);
+  if (isl === null) return fail('Unbekannte Insel');
   // Menge muss eine positive ganze Zahl sein
   if (!Number.isInteger(n) || n < 1) {
     return fail('Ungültige Menge');
   }
 
   // Genug Ware im Lager?
-  if (world.stock[good] < n) {
+  if (isl.stock[good] < n) {
     return fail('Nicht genug Ware');
   }
 
   // Rückgabe bewusst ignoriert: nach der Bestandsprüfung ist die Entnahme immer erfolgreich
-  takeStock(world, good, n);
+  takeStock(isl, good, n);
   // Preis vor dem Absenken des Verkaufsanteils berechnen
   world.money += sellPrice(world, good, n);
   world.sellPct[good] = Math.max(SELL_FLOOR, world.sellPct[good] - n * SELL_DROP);

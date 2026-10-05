@@ -1,7 +1,23 @@
 import { valueNoise } from '../sim/noise';
-import type { Terrain, World } from '../sim/types';
+import type { Island, Terrain, World } from '../sim/types';
+import { home } from '../sim/world';
 
-export type FieldWorld = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
+export type FieldWorld = Pick<Island, 'width' | 'height' | 'tiles'> & Pick<World, 'seed'>;
+type SeededIsland = Island & Pick<World, 'seed'>;
+const views = new WeakMap<World, SeededIsland>();
+/**
+ * Heimatinsel samt Welt-Seed als Eingabe der Geländefelder: flache Kopie der Inselfelder (schneller Zugriff in den
+ * Schleifen), je Welt einmal angelegt (stabiler Cache-Schlüssel) und neu gebildet, sobald die Kacheln wechseln.
+ */
+export function fieldWorld(world: World): SeededIsland {
+  const isl = home(world);
+  let v = views.get(world);
+  if (!v || v.tiles !== isl.tiles || v.width !== isl.width || v.height !== isl.height) {
+    v = { ...isl, seed: world.seed };
+    views.set(world, v);
+  }
+  return v;
+}
 /** Ein Wert je Kachelmitte. */
 export interface Field {
   w: number;
@@ -36,10 +52,10 @@ export const EDGE_BAND = 0.29;
 export const COAST_BAND = 0.35;
 
 /** s = +Abstand Land→nächstes Wasser, −Abstand Wasser→nächstes Land (Kacheln, 8er-Breitensuche, gekappt). */
-export function coastField(world: FieldWorld): Field {
-  const { width: w, height: h } = world;
+export function coastField(isl: FieldWorld): Field {
+  const { width: w, height: h } = isl;
   const n = w * h;
-  const isLand = (i: number) => world.tiles[i]!.terrain !== 'water';
+  const isLand = (i: number) => isl.tiles[i]!.terrain !== 'water';
   const distTo = (sourceIsLand: boolean): Float32Array => {
     const d = new Float32Array(n).fill(MAX_DIST);
     const q = new Int32Array(n);
@@ -76,15 +92,15 @@ export function coastField(world: FieldWorld): Field {
   return { w, h, v };
 }
 
-export function terrainFields(world: FieldWorld): TerrainFields {
-  const n = world.width * world.height;
+export function terrainFields(isl: FieldWorld): TerrainFields {
+  const n = isl.width * isl.height;
   const types = {} as Record<Land, Field>;
   for (const t of LAND) {
     const v = new Float32Array(n);
-    for (let i = 0; i < n; i++) v[i] = world.tiles[i]!.terrain === t ? 1 : 0;
-    types[t] = { w: world.width, h: world.height, v };
+    for (let i = 0; i < n; i++) v[i] = isl.tiles[i]!.terrain === t ? 1 : 0;
+    types[t] = { w: isl.width, h: isl.height, v };
   }
-  return { seed: world.seed, coast: coastField(world), types };
+  return { seed: isl.seed, coast: coastField(isl), types };
 }
 
 function ramp(t: number, band: number): number {
@@ -145,3 +161,10 @@ export function depthAt(f: TerrainFields, fx: number, fy: number): number {
   const [wx, wy] = warp(f.seed, fx, fy);
   return Math.max(0, -sampleField(f.coast, wx, wy));
 }
+
+/**
+ * Gewicht der Meerkante (M12 E1): 0 in den äussersten 2 Kacheln der Inselansicht, bis 4 Kacheln Abstand linear auf 1.
+ * `fx`/`fy` in Kacheln, `w`/`h` Kantenlänge der Ansicht in Kacheln.
+ */
+export const rimWeight = (fx: number, fy: number, w: number, h: number): number =>
+  Math.min(1, Math.max(0, (Math.min(fx, fy, w - fx, h - fy) - 2) / 2));
