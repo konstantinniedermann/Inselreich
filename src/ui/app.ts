@@ -42,7 +42,7 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { cameraBounds, islandView } from '../render/archipel';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
-import { createIslandLayers } from './islandLayers';
+import { createIslandLayers, idleSchedule } from './islandLayers';
 import { drawPathPreview } from '../render/pathPreview';
 import { connectView } from './connect';
 import { phaseAt } from '../render/daynight';
@@ -330,10 +330,7 @@ function launch(
     },
     layerOf: (i) => (planOf(), fremd.get(i)!),
     islands: world.islands.length,
-    schedule: (cb) => {
-      if (typeof requestIdleCallback === 'function') requestIdleCallback(() => cb());
-      else setTimeout(cb, 0);
-    },
+    schedule: idleSchedule(window),
   });
 
   /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */

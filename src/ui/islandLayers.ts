@@ -85,3 +85,19 @@ export function createIslandLayers<C>(opts: {
     ready,
   };
 }
+
+/** Obergrenze (ms), nach der ein Leerlauf-Slot trotz voller Hauptlast läuft (Darstellungswert). Ohne sie käme bei
+ * Dauerlast (z. B. 1920 × 1080, DPR 2) nie ein Leerlauf und der Plan nie voran; jede Scheibe bleibt ≤ SLICE_MS. */
+export const IDLE_TIMEOUT_MS = 100;
+
+/** Zeitplaner für `createIslandLayers`: `requestIdleCallback` mit Timeout, sonst `setTimeout(0)`. */
+export function idleSchedule(win: {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => unknown;
+  setTimeout: (cb: () => void, ms: number) => unknown;
+}): (cb: () => void) => void {
+  return (cb) => {
+    if (typeof win.requestIdleCallback === 'function')
+      win.requestIdleCallback(() => cb(), { timeout: IDLE_TIMEOUT_MS });
+    else win.setTimeout(cb, 0);
+  };
+}
