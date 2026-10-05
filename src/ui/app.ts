@@ -1,4 +1,4 @@
-import { BUILDING_DEFS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
+import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
@@ -454,8 +454,7 @@ function launch(
               sound.playBuild(buildSoundKey({ kind: 'road' }) ?? 'road');
               reportConnections(before);
             } else {
-              const cost = { ...ROAD_COST_OBJ, money: ROAD_COST * v.tiles.length };
-              showError(friendlyReason(world, r.reason, { cost }));
+              showError(friendlyReason(world, r.reason, { cost: v.cost }));
             }
           }
           refresh();

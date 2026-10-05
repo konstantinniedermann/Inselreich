@@ -25,8 +25,10 @@ beforeEach(() => {
 describe('connectView (AK-08)', () => {
   it('is null for kontor and house', () => {
     expect(connectView(w, k)).toBeNull();
-    const h = placeBuilding(w, 'house', k.x - 3, k.y);
-    if (h.ok && h.id !== undefined) expect(connectView(w, w.buildings[h.id]!)).toBeNull();
+    forceGrass(w, k.x + 2, k.y);
+    const h = placeBuilding(w, 'house', k.x + 2, k.y);
+    expect(h.ok).toBe(true);
+    expect(connectView(w, w.buildings[h.id!]!)).toBeNull();
   });
 
   it('is null for a connected building', () => {
@@ -78,6 +80,7 @@ describe('connectView (AK-08)', () => {
       ok: false,
       reason: 'Kein Weg zum Kontor möglich',
       tiles: [],
+      cost: { money: 0, wood: 0, tools: 0, stone: 0 },
     });
   });
 });

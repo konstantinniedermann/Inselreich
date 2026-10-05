@@ -353,7 +353,6 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
 }
 
 /** Aktionen des Amtsstuben-Panels je Panel-Element (für den Neuaufbau von Matrix und Schaltern im Update). */
-const townhallActions = new WeakMap<HTMLElement, InspectActions>();
 
 /** Zeile aus Beschriftung und Knöpfen (Sperr-Matrix, Aufstiegsstopp). */
 function toggleRow(label: string): HTMLElement {
@@ -413,7 +412,7 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
 
 /** Führt das Amtsstuben-Panel nach; baut Matrix und Schalter nur bei geänderter Struktur neu. */
 function updateTownhall(panel: HTMLElement, world: World): void {
-  const actions = townhallActions.get(panel);
+  const actions = panelActions.get(panel);
   if (!actions) return;
   const active = townhallActive(world);
   const state = panel.querySelector<HTMLElement>('[data-field="townhall-state"]');
@@ -521,7 +520,6 @@ export function renderInspect(
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
   } else if (b.defId === 'townhall') {
-    townhallActions.set(panel, actions);
     renderTownhall(panel, actions);
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
@@ -687,6 +685,12 @@ function updateConnect(panel: HTMLElement, world: World, b: Building): void {
     reason.textContent = v?.reason ?? '';
   }
   if (!st) return;
+  if (v === null) {
+    if (st.active) panelActions.get(panel)?.previewConnect(null);
+    st.active = false;
+    st.tiles = [];
+    return;
+  }
   const key = (t: Pos[]): string => t.map((p) => `${p.x},${p.y}`).join(';');
   const tiles = v?.tiles ?? [];
   const changed = key(tiles) !== key(st.tiles);
