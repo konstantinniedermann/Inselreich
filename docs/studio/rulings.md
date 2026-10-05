@@ -1584,3 +1584,22 @@ Gate Spec. Nächster Schritt: Spec durch design-spec-author (unter lead-design),
 Irrtum: Spec-Arbeit für einen verworfenen Ansatz; Rückfall auf B ohne Sim-Änderung.
 
 Entscheider: L0 · Anlass: Bericht lead-design M12-BRAIN · ADR: —
+
+## R227 · 2026-10-05 · Gate Spec M12 Teil E0
+
+Ruling: Gate Spec E0 mit **BEDENKEN** bestanden (lead-tech BEDENKEN B1–B4, lead-qa BEDENKEN 1–9, kein ZURÜCK);
+Spec-Stand `docs/m12-brainstorming` @ 7c706d3. **Auflagen an die Spec** (Spec-Autor, vor dem Gate Plan): Zählung in
+4.8 auf ≈ 146 Zugriffe in `src/` korrigieren (B1); Schritt 0 = erster Commit der E0-Branch auf main-Stand, nicht
+auf main (B2); AK-E0-04 Hash über sortiert serialisiertes JSON (QA 1); Schritt-0-Liste und Seed für AK-E0-02/-17
+vervollständigen (QA 2); Referenz und Ticks für AK-E0-05 festlegen (QA 3); AK-E0-10/-11 auf alle Zeilen von R-E0-3
+erweitern, AK für R-E0-4 ergänzen (QA 4); Verweis `M6:AK-B2-05/06`. **Im Plan festzulegen** (lead-tech): B3
+Migration wirft nie auf Rohdaten; B4 Minimum aus 3 Läufen mit `perfBudget`; QA 5–9 (Gründe/`isSupplied`,
+Einstiegspunkte Brand, N01–N20 vollständig, Timeout Lasttest, Origin des v6-Autosaves, `save.test.ts` auf v8
+umstellen); Review verlangt mechanischen Diff in `tests/sim/controller.ts`. F-S1 ja mit Präzisierung (jede
+Zustandsform je Merge eigene `SAVE_VERSION`, v7 ab E0-Merge eingefroren); F-S2 Pflichtfeld, keine Kompatibilitäts-
+Zugriffe auf `World`; F-S3 **eigenes ADR-013 „Inselmodell im Weltzustand"** statt Nachtrag zu ADR-002; F-S4 ≤ 6 ms
+nach Messung gepinnt, Verhältnis ≥ 5× hart. **Budget E0** (Plan + Umsetzung + Reviews + Final-Review): lead-tech 21
+Starts, Parallelität 1, Richtwert ≈ 500 Tools. — Kosten bei Irrtum: v7 geht mit dem E0-Merge in Autosaves und ist
+danach nicht mehr umkehrbar; deshalb Final-Review opus und Browser-Check AK-E0-20 vor dem Merge-Gate.
+
+Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa M12-E0-GATE-SPEC · ADR: ADR-013 (folgt)
