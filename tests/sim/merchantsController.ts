@@ -169,7 +169,8 @@ const SPICE_STOCK_MAX = 100;
  * nächsten 100 Ticks (aufgerundet), Kauf in einem Zug, höchstens bis SPICE_STOCK_MAX. Kauft nur am Heimatkontor.
  */
 function feedSpice(w: World): void {
-  const need = Math.ceil(merchants(w) * (TIERS[4].needs.spice ?? 0));
+  if ((TIERS[4].needs.spice ?? 0) <= 0) return; // Stand ohne Gewürzbedarf (v8-Rezept der Fixture): kein Kauf
+  const need = Math.ceil(merchants(w) * TIERS[4].needs.spice!);
   const want = Math.min(SPICE_STOCK_MAX, Math.max(need, 1));
   const n = want - home(w).stock.spice;
   if (n > 0 && w.money - buyPrice('spice', n) >= RESERVE) expect(buy(w, 'spice', n).ok).toBe(true);
