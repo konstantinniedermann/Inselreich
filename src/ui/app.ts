@@ -1,13 +1,14 @@
-import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
+import { BUILDING_DEFS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
+import { connectBuilding } from '../sim/connect';
 import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
 import { upgradeBuilding } from '../sim/upgrade';
-import { tileAt, createWorld, center } from '../sim/world';
+import { tileAt, createWorld, center, type Pos } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -37,6 +38,8 @@ import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { buildTerrainLayer } from '../render/terrain';
+import { drawPathPreview } from '../render/pathPreview';
+import { connectView } from './connect';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
@@ -401,9 +404,13 @@ function launch(
   /** Auftrag im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
   let prevOrder: Order | null = world.order ? { ...world.order } : null;
 
+  /** Pfad-Vorschau des Knopfs „Anbinden" (nur beim Überfahren), wird nach dem Zeichnen der Karte gemalt. */
+  let connectPreview: readonly Pos[] | null = null;
+
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
+    connectPreview = null;
     panelEl.classList.toggle('card--rest', panel.kind === 'none');
     if (panel.kind === 'inspect') {
       state.selectedId = panel.id;
@@ -434,6 +441,27 @@ function launch(
           const r = setGoodLock(world, tier, good, locked);
           if (!r.ok) showError(friendlyReason(world, r.reason));
           refresh();
+        },
+        connect: (id) => {
+          connectPreview = null;
+          const b = world.buildings[id];
+          const v = b ? connectView(world, b) : null;
+          if (v && !v.ok) showError(v.reason ?? v.label);
+          else if (v) {
+            const before = unconnectedIds(world);
+            const r = connectBuilding(world, id);
+            if (r.ok) {
+              sound.playBuild(buildSoundKey({ kind: 'road' }) ?? 'road');
+              reportConnections(before);
+            } else {
+              const cost = { ...ROAD_COST_OBJ, money: ROAD_COST * v.tiles.length };
+              showError(friendlyReason(world, r.reason, { cost }));
+            }
+          }
+          refresh();
+        },
+        previewConnect: (tiles) => {
+          connectPreview = tiles;
         },
         setUpgradeStop: (tier, stopped) => {
           const r = setUpgradeStop(world, tier, stopped);
@@ -952,6 +980,7 @@ function launch(
         raster: preview.raster === true,
       };
       render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
+      if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);
       perf?.renderDone(performance.now() - t0);
       updateMoney(hudEl, world);
       updateHint(frame % HUD_EVERY_FRAMES === 0);

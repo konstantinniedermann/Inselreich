@@ -22,7 +22,7 @@ describe('drawPathPreview', () => {
     expect(log.events.filter((e) => e.op === 'stroke')).toHaveLength(2);
     const first = log.events.find((e) => e.op === 'fill')!;
     expect(first.points).toEqual(tileCorners(cam, 3, 4));
-    expect(first.alpha).toBeLessThan(1);
+    expect(first.style).toMatch(/^rgba\(.*, 0\.\d+\)$/);
     expect(log.saves).toBeGreaterThan(0);
     expect(log.saves).toBe(log.restores);
     expect(log.underflow).toBe(0);
