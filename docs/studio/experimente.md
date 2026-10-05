@@ -50,6 +50,24 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: 2026-10-04 (Handbuch 1.16)
 - Bewertung: – (Datenpunkt 1 von 3 Releases, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: REL-01 mit 3 Häppchen, Gate-Merge-Rulings, Integrator-Instanzen und Pushes je Häppchen 0,33; Leerlauf nicht erhoben; 1 Release in der Session; UI-Task mit Screenshot 1 von 1; Cache-Write 5 min 25,9 %; H-R12 per Rückfall ausgeschieden); Datenpunkt 2 von 3 Releases, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: REL-02 mit 2 Häppchen (H-R14, H-A2), Messgrösse 1 = 0,5 (bei 2 Häppchen konstruktiv das Minimum, Schwelle ≤ 0,4), Werkzeug-Merge H-T1/W-V3 separat (R220), Releases mit Spieländerung in der Session 2, UI-Tasks mit Screenshot 2 von 2, Leerlauf-Median 19,5 min bei 7 Übergängen, aber ursachengemischt) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 mit 4 Häppchen, 1 Gate-Merge-Ruling (R232), 1 Push, je Häppchen 0,25; Leerlauf nicht erhoben.
 
+## E-029 · vorgeschlagen · Lead-Übergabe bei 200k mit Aufschlüsselung der Steuerung
+
+- Hypothese: Wenn der Steuerungsanteil je Tätigkeit (Gate, Spec, Plan, Controller, Warten) aufgeschlüsselt und jede Lead-Instanz bei 200k Kontext per Ledger übergibt (R190), dann sinken Lead-Kontext Max und Steuerungsanteil, und die Ursache der zweiten roten Session in Folge wird lesbar (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) E1).
+- Messgrösse: Lead-Kontext Max ≤ 300k und Steuerungsanteil ≤ 55 % (Session-Zeile, `metrics.py --efficiency`; Ausgang 343k, 64,3 %).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: Zustand wie jetzt (R190 ohne Durchsetzung).
+- Dateien: `tools/studio/metrics.py` (Aufschlüsselung), `.claude/agents/lead-tech.md`
+- Ruling: –
+
+## E-030 · vorgeschlagen · Zeittests lokal seriell
+
+- Hypothese: Wenn `perfBudget`-Zeittests lokal nach dem parallelen Testlauf allein laufen, flackern sie nicht mehr unter Mehrfachlast (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) B1).
+- Messgrösse: 0 lokale Flackerfälle in `docs/beobachtungen.md` und Lead-Berichten in 2 Sessions (Ausgang ≥ 5 Fälle in 3 Sessions).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: `vitest`-Konfiguration und `make check` auf den Stand vor der Änderung.
+- Dateien: `vitest.config.ts`, `Makefile`
+- Ruling: –
+
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
 - Hypothese: Wenn die Briefing-Vorlage des `qa-playtester` bei Blindtests vorschreibt, Probe-Dateien (z. B. `galerie.probes.json`) erst nach dem schriftlichen Urteil zu öffnen, und der Rater-Start im Paketbudget des Lead-Auftrags steht, dann gibt es keine Blindtests mit Vorbehalt und keine Budgetüberschreitung durch den Rater (Retro M10 B5, R181, R183).
