@@ -161,7 +161,7 @@ describe('Iso-Kamera: Klemmen, Zoom, Zentrieren', () => {
       }
   });
 
-  it('AK-ISO-04 zoomAt hält den Weltpunkt unter dem Cursor (±1 px), 20 × hinein = 2, 40 × hinaus = 0,5, nie NaN', () => {
+  it('AK-ISO-04 zoomAt hält den Weltpunkt unter dem Cursor (±1 px), 20 × hinein = 2, 40 × hinaus = ZOOM_STEPS[0] (0,125 seit M12 E1), nie NaN', () => {
     for (const map of MAPS) {
       const c = { x: 0, y: 0, zoom: 1 };
       centerOn(c, map.w / 2, map.h / 2, VIEW, map);
@@ -176,7 +176,7 @@ describe('Iso-Kamera: Klemmen, Zoom, Zentrieren', () => {
       for (let i = 0; i < 20; i++) zoomAt(c, 1.25, sx, sy, VIEW, map);
       expect(c.zoom).toBe(2);
       for (let i = 0; i < 40; i++) zoomAt(c, 0.8, sx, sy, VIEW, map);
-      expect(c.zoom).toBe(0.5);
+      expect(c.zoom).toBe(ZOOM_STEPS[0]);
       for (const v of [c.x, c.y, c.zoom]) expect(Number.isFinite(v)).toBe(true);
       zoomAt(c, NaN, sx, sy, VIEW, map);
       for (const v of [c.x, c.y, c.zoom]) expect(Number.isFinite(v)).toBe(true);

@@ -33,7 +33,7 @@ const camOn = (fx: number, fy: number, zoom: number, view = VIEW): Camera => {
 describe('M12 E1 Archipel', () => {
   it('AK-E1-07 visibleIslands: Heimat, Meer, Übersicht in Tiefenfolge, Insel halb im Bild', () => {
     expect(visibleIslands(camOn(32, 32, 1), VIEW, ISLANDS)).toEqual([0]);
-    expect(visibleIslands(camOn(80, 80, 1), VIEW, ISLANDS)).toEqual([]);
+    expect(visibleIslands(camOn(110, 80, 1), VIEW, ISLANDS)).toEqual([]);
     const r = archipelRect(ISLANDS);
     expect(
       visibleIslands(camOn((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, 0.125), VIEW, ISLANDS),
