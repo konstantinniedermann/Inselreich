@@ -15,7 +15,7 @@ import {
   UNLOCK_IDS,
   UNLOCKS,
 } from '../../src/sim/defs/unlocks';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { UnlockId, World } from '../../src/sim/types';
 import {
@@ -23,12 +23,15 @@ import {
   buildLock,
   nextUnlocks,
   tickUnlocks,
+  deriveUnlocks,
   unlockText,
 } from '../../src/sim/unlocks';
 import { createWorld, home } from '../../src/sim/world';
 import { buildColony } from './controller';
 import { forceGrass, forceRect, placeService, setHouse, village } from './helpers';
 
+// Anzahl der Einträge ohne U1 (Häuserzahl-Auslöser), gemessen vor T02
+const EXPECTED_PREFIX: Record<string, number> = { 'save-v7.json': 4, 'save-v8.json': 6 };
 const row = (id: UnlockId) => UNLOCKS.find((u) => u.id === id)!;
 
 describe('M10 Freischaltbaum: Defs und Welt', () => {
@@ -73,18 +76,21 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
     });
     expect(row('U6')).toMatchObject({
       trigger: { kind: 'tierOpen', tier: 4 },
-      buildings: ['bathhouse', 'glassworks'],
-      // bewusst, R230 B1; spice vorgezogen aus T02 (C1-2), T02 ergänzt kontor2/spicefarm/seafaring
+      // bewusst geändert (M12 T02, R230 B1): U6 bringt Kontor II, Gewürzplantage, Gewürz, Seefahrt
+      buildings: ['bathhouse', 'glassworks', 'kontor2', 'spicefarm'],
       goods: ['glass', 'spice'],
-      functions: [],
+      functions: ['seafaring'],
     });
+    expect(row('U6').tip).toMatch(
+      / Kaufleute brauchen Gewürz von einer fernen Insel: gründe dort ein Kontor\.$/,
+    );
     const all = UNLOCKS.flatMap((u) => u.buildings);
     for (const id of BUILDING_IDS.filter((b) => b !== 'kontor'))
       expect(all.filter((b) => b === id)).toHaveLength(1);
     expect(all).not.toContain('kontor');
     for (const g of GOOD_IDS)
       expect(UNLOCKS.flatMap((u) => u.goods).filter((x) => x === g)).toHaveLength(1);
-    for (const f of ['forest', 'orders', 'goodLocks', 'upgrade2', 'upgrade3'] as const)
+    for (const f of ['forest', 'orders', 'goodLocks', 'upgrade2', 'upgrade3', 'seafaring'] as const)
       expect(UNLOCKS.flatMap((u) => u.functions).filter((x) => x === f)).toHaveLength(1);
     expect(ONLY_WITH_CRISES).toEqual({ firestation: true });
     expect(UNLOCK_CHAIN).toEqual(['U2', 'U3', 'U4', 'U5', 'U6']);
@@ -94,6 +100,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       goodLocks: 'U5',
       upgrade2: 'U3',
       upgrade3: 'U5',
+      seafaring: 'U6',
     });
     expect(FUNCTION_LABELS).toEqual({
       forest: ['Roden', 'Aufforsten'],
@@ -101,6 +108,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       goodLocks: ['Ausgabesperre'],
       upgrade2: ['Ausbau Stufe 2'],
       upgrade3: ['Ausbau Stufe 3'],
+      seafaring: ['Seefahrt', 'Handelsschiff'],
     });
     for (const u of UNLOCKS) {
       expect(u.tip.length).toBeGreaterThan(0);
@@ -409,5 +417,25 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
     for (const u of UNLOCKS)
       for (const k of ['tip', 'lockText', 'whenText', 'notice'] as const)
         expect(u[k]).not.toMatch(/Tick/);
+  });
+});
+
+describe('M12 U6 Seefahrt (T02)', () => {
+  it('AK-E2-09 nach U6 ist unlocked gleich UNLOCK_IDS; Kontor II und Plantage hängen an U6', () => {
+    const w = createWorld(3);
+    w.won = true;
+    step(w);
+    expect(w.unlocked).toEqual([...UNLOCK_IDS].filter((id) => id !== 'U1'));
+    expect(UNLOCKS.find((u) => u.buildings.includes('kontor2'))?.id).toBe('U6');
+    expect(UNLOCKS.find((u) => u.buildings.includes('spicefarm'))?.id).toBe('U6');
+  });
+  it('AK-E2-09 deriveUnlocks auf save-v7 und save-v8 unverändert (Wert aus UNLOCK_IDS-Präfix)', () => {
+    for (const f of ['save-v7.json', 'save-v8.json']) {
+      const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
+      if (!r.ok) throw new Error(f);
+      expect(deriveUnlocks(r.world), f).toEqual(
+        UNLOCK_IDS.filter((id) => id !== 'U1').slice(0, EXPECTED_PREFIX[f]!),
+      );
+    }
   });
 });

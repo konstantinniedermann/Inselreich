@@ -8,13 +8,18 @@ import {
   UNSATISFIED_TAX_FACTOR,
   WIN_CITIZENS,
   WIN_MERCHANTS,
+  WIN_SPICE_HOLD,
+  WIN_SPICE_MERCHANTS,
 } from '../../src/sim/defs/tiers';
 import { EFF_MAX, EFF_WINDOW, UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';
 import type { GoodId } from '../../src/sim/types';
+import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
 import { createWorld } from '../../src/sim/world';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('defs', () => {
   // Bewusst geändert (M12 Seefahrt T01, R226 F-03): 9 → 10 Güter, Gewürz ist das zehnte.
@@ -23,7 +28,7 @@ describe('defs', () => {
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
   it('has 14 building defs whose goods exist (M11 S2)', () => {
-    expect(BUILDING_IDS).toHaveLength(19);
+    expect(BUILDING_IDS).toHaveLength(21); // bewusst, M12 T02: kontor2, spicefarm
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -261,5 +266,67 @@ describe('AK-E3-01 Gewürz (M12 Seefahrt T01)', () => {
   it('GOODS.spice 40/12 ohne order, Startbestand 0', () => {
     expect(GOODS.spice).toEqual({ id: 'spice', name: 'Gewürz', buy: 40, sell: 12 });
     expect(START_STOCK.spice).toBe(0);
+  });
+});
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((n) => {
+    const p = join(dir, n);
+    return statSync(p).isDirectory() ? sourceFiles(p) : p.endsWith('.ts') ? [p] : [];
+  });
+}
+
+describe('M12 Seefahrt Werte (T02)', () => {
+  it('AK-E3-01 spicefarm: Kosten, Takt, Unterhalt, Eigenschaften', () => {
+    expect(BUILDING_DEFS.spicefarm).toMatchObject({
+      name: 'Gewürzplantage',
+      w: 2,
+      h: 2,
+      cost: { money: 200, wood: 12, tools: 3, stone: 0 },
+      cycle: 50,
+      upkeep: 15,
+      produces: 'spice',
+      flammable: true,
+      stormAffected: true,
+      site: [
+        { kind: 'radius', terrain: 'grass', radius: 2, min: 4 },
+        { kind: 'islandTrait', trait: 'spice' },
+      ],
+    });
+  });
+  it('AK-E2-09 kontor2: Kosten, Unterhalt, Versorgungsradius, Platzregeln', () => {
+    expect(BUILDING_DEFS.kontor2).toMatchObject({
+      name: 'Kontor',
+      w: 2,
+      h: 2,
+      cost: { money: 800, wood: 20, tools: 8, stone: 10 },
+      upkeep: 10,
+      supplyRadius: 8,
+      site: [...BUILDING_DEFS.kontor.site, { kind: 'foreignNoKontor' }],
+    });
+  });
+  it('AK-E2-09 Schiff und Routen', () => {
+    expect(SHIP).toEqual({
+      cost: { money: 1200, wood: 25, tools: 10, stone: 0 },
+      upkeep: 15,
+      capacity: 50,
+    });
+    expect(SHIP_MAX).toBe(4);
+    expect(ROUTE_GOODS_PER_DIRECTION).toBe(2);
+    expect(ROUTE_RESERVE).toEqual({ default: 10, step: 10, max: 90 });
+  });
+  it('AK-Z3-01 Gewürzstadt-Ziel steht in den Defs', () => {
+    expect(WIN_SPICE_MERCHANTS).toBe(80);
+    expect(WIN_SPICE_HOLD).toBe(600);
+  });
+  it('AK-Z3-01 kein Literal 80 oder 600 ausserhalb der Defs in Dateien zum Gewürzziel', () => {
+    const files = [...sourceFiles('src/sim'), ...sourceFiles('src/ui')].filter(
+      (f) => !f.includes('/defs/'),
+    );
+    for (const f of files) {
+      const text = readFileSync(f, 'utf8');
+      if (!/wonSpice|WIN_SPICE/.test(text)) continue;
+      expect(/\b(80|600)\b/.test(text), f).toBe(false);
+    }
   });
 });
