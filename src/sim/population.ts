@@ -2,6 +2,7 @@ import { BUILDING_DEFS } from './defs/buildings';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS } from './defs/tiers';
 import { GOODS } from './defs/goods';
 import { GROWTH_INTERVAL, UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
+import { feastActive } from './feast';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
@@ -122,7 +123,7 @@ function newNeeds(current: TierDef, next: TierDef): GoodId[] {
  * Prüft alle Aufstiegsbedingungen und nennt jede unerfüllte als deutschen Grund. Drückt der Aufstieg
  * ein Gut der Zielstufe ins Minus, gilt die Wartezeit `UPGRADE_DEFICIT_WAIT_FACTOR`-fach. Das Budget
  * kommt vom Wachstumstakt (`tickPopulation`); ohne Angabe (UI) wird es frisch gerechnet. Lager und
- * Brand zählen nicht (nominell, R115).
+ * Brand zählen nicht (nominell, R115). Ein Fest der Kapelle (`feastActive`) kürzt die Wartezeit auf die der Stufe «niedrig».
  */
 export function upgradeStatus(
   world: World,
@@ -141,7 +142,9 @@ export function upgradeStatus(
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
   const base = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
   const damped = base !== null && deficitGood(budget ?? budgetFrom(goodsBalance(world)), house);
-  const wait = base === null ? null : base * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
+  const festive = base !== null && feastActive(world, b);
+  const waitBase = festive ? Math.min(base, TAX_LEVELS.low.upgradeWait ?? base) : base;
+  const wait = waitBase === null ? null : waitBase * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
   if (wait === null) reasons.push('Steuer zu hoch');
   else if (world.tick - house.satisfiedSince < wait)
     reasons.push(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
