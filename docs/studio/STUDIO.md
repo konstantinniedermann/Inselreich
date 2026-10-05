@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.17 · Stand: 2026-10-04 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.18 · Stand: 2026-10-05 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -145,6 +145,10 @@ Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht im
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
+- **Zwischenstand bei halbem Deckel (R224 (3)):** Hat ein Auftrag oder eine Fix-Runde einen Deckel
+  (Tools oder Starts), meldet der Lead bei der Hälfte einen Zwischenstand an L0, loggt ihn als
+  `log.py status --status waiting --task "Zwischenstand <Paket>: <Stand>"` und hält an, bis L0
+  fortsetzt oder abbricht (R214, R215). Die Retro zählt diese Einträge.
 - **Zählung und Vorfall:** zählt das Dashboard ([verbesserung.md](verbesserung.md#budget-zählung)); Leads
   nennen „verbraucht/frei" trotzdem in jedem Bericht.
 
@@ -172,6 +176,9 @@ Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumen
   in 1–3 Sätzen, warum, Kosten bei Irrtum, Pfad zu Bericht, Plan oder Retro; Richtwert **≤ 60
   Wörter**, keine Listen aus Gate-Berichten, Planpflege, Messwerte oder Zeitabläufe. Abnahmen ohne
   Alternative nur per `log.py result`, kein Ruling.
+- **Kandidaten desselben Fehlermechanismus (R224 (4)):** Meldet ein Lead mehrere Kandidaten
+  desselben Fehlermechanismus, entscheidet L0 sie im selben Ruling: Zuschnitt (gemeinsames Paket)
+  oder Beobachtung mit Frist.
 - **ADR** unter `docs/adr/`, wo es ein „Warum" mit Bestand gibt (Architektur, Formate,
   Abhängigkeiten, Organisation).
 - Der superpowers-Ledger unter `.superpowers/sdd/` bleibt Arbeitsdatei (gitignored, wird gelöscht).
