@@ -448,8 +448,9 @@ describe('M12 E4 tickShips', () => {
     tickShips(w);
     expect(s).toMatchObject({ to: 1, left: 10 * D_HOME_A_AT_SEED_D37, cargo: { food: 5 } });
     expect(home(w).stock.food).toBe(0);
-    calls(w, 10 * D_HOME_A_AT_SEED_D37 - 1);
-    expect(s).toMatchObject({ port: 1, to: 2, cargo: { food: 5, tools: 45 } });
+    calls(w, 10 * D_HOME_A_AT_SEED_D37);
+    expect(s).toMatchObject({ port: 1, to: 2, cargo: { tools: 50 } });
+    expect(w.islands[1]!.stock.food).toBe(5);
     expect(s.left).toBe(laneTicks(w.islands, 1, 2));
   });
 

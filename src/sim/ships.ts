@@ -1,6 +1,7 @@
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
+import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { checkAfford, pay } from './economy';
-import { islandName } from './islands';
+import { islandName, laneTicks } from './islands';
 import { fail, ok } from './types';
 import type { GoodId, Result, Route, RouteGood, Ship, World } from './types';
 import { functionLock, goodLock } from './unlocks';
@@ -131,8 +132,104 @@ export function freeShipAtHome(world: World): Ship | null {
   return best;
 }
 
-/** Gerüst: Bewegung und Umschlag folgen in T09. */
+type Cargo = Ship['cargo'];
+
+const onBoard = (cargo: Cargo): number =>
+  Object.values(cargo).reduce<number>((sum, n) => sum + (n ?? 0), 0);
+
+const otherPort = (route: Route, port: number): number => (port === route.a ? route.b : route.a);
+
+function depart(world: World, ship: Ship, to: number): void {
+  ship.to = to;
+  ship.left = laneTicks(world.islands, ship.port, to);
+}
+
+/** Entlädt jedes Gut ausserhalb `keep` in `GOOD_IDS`-Reihenfolge bis zur Lagergrenze; Rest bleibt an Bord. */
+function unload(world: World, ship: Ship, keep: readonly GoodId[]): void {
+  const stock = world.islands[ship.port]!.stock;
+  for (const good of GOOD_IDS) {
+    const have = ship.cargo[good] ?? 0;
+    if (have === 0 || keep.includes(good)) continue;
+    const n = Math.min(have, Math.max(0, STORAGE_CAP - stock[good]));
+    stock[good] += n;
+    if (have - n > 0) ship.cargo[good] = have - n;
+    else delete ship.cargo[good];
+  }
+}
+
+function addCargo(ship: Ship, stock: Record<GoodId, number>, good: GoodId, n: number): void {
+  if (n <= 0) return;
+  stock[good] -= n;
+  ship.cargo[good] = (ship.cargo[good] ?? 0) + n;
+}
+
+/** Zwei Durchgänge: erst gleiche Anteile `⌊frei₀ / k⌋`, dann Rest der Kapazität in Listenfolge. */
+function load(world: World, ship: Ship, list: readonly RouteGood[]): void {
+  if (list.length === 0) return;
+  const stock = world.islands[ship.port]!.stock;
+  const avail = list.map((g) => Math.max(0, stock[g.good] - g.reserve));
+  const free0 = SHIP.capacity - onBoard(ship.cargo);
+  const share = Math.floor(free0 / list.length);
+  let free = free0;
+  const taken = list.map(() => 0);
+  list.forEach((g, i) => {
+    const x = Math.min(avail[i]!, share);
+    taken[i] = x;
+    free -= x;
+    addCargo(ship, stock, g.good, x);
+  });
+  list.forEach((g, i) => {
+    const x = Math.min(avail[i]! - taken[i]!, free);
+    free -= x;
+    addCargo(ship, stock, g.good, x);
+  });
+}
+
+/** Heimkehr: entlädt bis zur Lagergrenze, der Rest verfällt und wird gemeldet. */
+function unloadAtHome(world: World, ship: Ship, lost: ShipLoss[]): void {
+  unload(world, ship, []);
+  for (const good of GOOD_IDS) {
+    const n = ship.cargo[good] ?? 0;
+    if (n > 0) lost.push({ ship: ship.id, good, n });
+  }
+  ship.cargo = {};
+  ship.homing = false;
+}
+
+function handleDocked(world: World, ship: Ship, lost: ShipLoss[]): void {
+  const route = ship.route;
+  if (route !== null) {
+    if (ship.port !== route.a && ship.port !== route.b) {
+      depart(world, ship, route.a);
+      return;
+    }
+    const list = ship.port === route.a ? route.ab : route.ba;
+    unload(
+      world,
+      ship,
+      list.map((g) => g.good),
+    );
+    load(world, ship, list);
+    depart(world, ship, otherPort(route, ship.port));
+  } else if (ship.homing) {
+    if (ship.port !== 0) depart(world, ship, 0);
+    else unloadAtHome(world, ship, lost);
+  }
+}
+
+/** Fahrt, Umschlag und Abfahrt je Schiff in `id`-Reihenfolge; liefert verfallene Ladung. */
 export function tickShips(world: World): ShipLoss[] {
-  void world;
-  return [];
+  const lost: ShipLoss[] = [];
+  const ordered = [...world.ships].sort((a, b) => a.id - b.id);
+  for (const ship of ordered) {
+    if (ship.to !== null) {
+      ship.left -= 1;
+      if (ship.left === 0) {
+        ship.port = ship.to;
+        ship.to = null;
+      }
+    }
+    if (ship.to === null) handleDocked(world, ship, lost);
+  }
+  return lost;
 }
