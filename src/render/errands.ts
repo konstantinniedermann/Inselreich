@@ -7,7 +7,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { hash2 } from '../sim/noise';
 import type { Building, GoodId, SiteRule, Terrain, World } from '../sim/types';
-import { adjacentOf, idx, inBounds, tilesInRadius } from '../sim/world';
+import { home, adjacentOf, idx, inBounds, tilesInRadius } from '../sim/world';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { project, type Pt } from './iso';
 import { roadGraph, WALKER_H, WALKER_W, type RoadGraph } from './life';
@@ -119,18 +119,20 @@ function edgePoint(b: Building, toward: Pt): Pt {
 }
 
 const walkable = (world: World, x: number, y: number): boolean => {
-  const t = world.tiles[idx(world, x, y)];
+  const isl = home(world);
+  const t = isl.tiles[idx(isl, x, y)];
   return !!t && t.terrain !== 'water' && t.buildingId === null;
 };
 
 const SAMPLE_STEP = 0.5;
 /** Liegt auf der Linie `a`–`b` (Schritt höchstens 0,5 Kachel, beide Enden inklusive) keine Wasserkachel? */
 function dryLine(world: World, a: Pt, b: Pt): boolean {
+  const isl = home(world);
   const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / SAMPLE_STEP));
   for (let i = 0; i <= n; i++) {
     const x = Math.floor(a.x + ((b.x - a.x) * i) / n),
       y = Math.floor(a.y + ((b.y - a.y) * i) / n);
-    if (inBounds(world, x, y) && world.tiles[idx(world, x, y)]!.terrain === 'water') return false;
+    if (inBounds(isl, x, y) && isl.tiles[idx(isl, x, y)]!.terrain === 'water') return false;
   }
   return true;
 }
@@ -141,13 +143,14 @@ function gatherPath(world: World, b: Building, target: Target): Pt[] | null {
     cy = b.y + d.h / 2;
   const R = target.kind === 'coast' ? 2.5 : target.radius;
   let best: { x: number; y: number; score: number } | null = null;
-  for (const p of tilesInRadius(world, cx, cy, R)) {
+  const isl = home(world);
+  for (const p of tilesInRadius(isl, cx, cy, R)) {
     if (!walkable(world, p.x, p.y)) continue;
     if (target.kind === 'terrain') {
-      if (world.tiles[idx(world, p.x, p.y)]!.terrain !== target.terrain) continue;
+      if (isl.tiles[idx(isl, p.x, p.y)]!.terrain !== target.terrain) continue;
     } else {
       const wet = (x: number, y: number): boolean =>
-        inBounds(world, x, y) && world.tiles[idx(world, x, y)]!.terrain === 'water';
+        inBounds(isl, x, y) && isl.tiles[idx(isl, x, y)]!.terrain === 'water';
       if (!(wet(p.x + 1, p.y) || wet(p.x - 1, p.y) || wet(p.x, p.y + 1) || wet(p.x, p.y - 1)))
         continue;
     }
@@ -169,7 +172,7 @@ function carryPath(world: World, g: RoadGraph, b: Building): Pt[] | null {
   for (const s of Object.values(world.buildings)) {
     if (!(s.defId === 'kontor' || (s.defId === 'market' && s.connected))) continue;
     const sd = BUILDING_DEFS[s.defId];
-    for (const p of adjacentOf(world, s.x, s.y, sd.w, sd.h)) {
+    for (const p of adjacentOf(home(world), s.x, s.y, sd.w, sd.h)) {
       const i = p.y * w + p.x;
       if (g.nbrs.has(i) && !goals.has(i)) goals.set(i, s);
     }
@@ -178,7 +181,7 @@ function carryPath(world: World, g: RoadGraph, b: Building): Pt[] | null {
   const bd = BUILDING_DEFS[b.defId];
   const parent = new Map<number, number>();
   const queue: number[] = [];
-  for (const p of adjacentOf(world, b.x, b.y, bd.w, bd.h)) {
+  for (const p of adjacentOf(home(world), b.x, b.y, bd.w, bd.h)) {
     const i = p.y * w + p.x;
     if (g.nbrs.has(i) && !parent.has(i)) {
       parent.set(i, -1);

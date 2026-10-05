@@ -10,18 +10,19 @@ import {
   project,
 } from '../../src/render/iso';
 import { placeBuilding } from '../../src/sim/build';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
 
 /** Welt mit freier Grasfläche östlich des Kontors, Geld im Überfluss. */
 function buildWorld(): { world: World; o: { x: number; y: number } } {
   const world = createWorld(1, { unlockAll: true });
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(world.stock) as (keyof World['stock'])[]) world.stock[g] = 1000;
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[g] = 1000;
   return { world, o };
 }
 function place(world: World, defId: Building['defId'], x: number, y: number): Building {
@@ -135,7 +136,7 @@ describe.each([1, 0.5])('targetTile bei Zoom %s', (zoom) => {
     expect(pickBuilding(buildingHulls(world), wx, wy)).toBeNull();
     const { sx, sy } = scr(cam, wx, wy);
     const g = screenToTile(cam, sx, sy);
-    world.tiles[g.y * world.width + g.x]!.road = true;
+    home(world).tiles[g.y * home(world).width + g.x]!.road = true;
     expect(targetTile(world, cam, { kind: 'demolish' }, sx, sy)).toEqual(g);
   });
 
@@ -153,8 +154,8 @@ describe.each([1, 0.5])('targetTile bei Zoom %s', (zoom) => {
     for (const [fx, fy] of [
       [-3.5, 2.5],
       [2.5, -3.5],
-      [world.width + 2.5, 5.5],
-      [5.5, world.height + 2.5],
+      [home(world).width + 2.5, 5.5],
+      [5.5, home(world).height + 2.5],
     ] as const) {
       const { sx, sy } = scrT(cam, fx, fy);
       expect(targetTile(world, cam, { kind: 'build', defId: 'house' }, sx, sy)).toBeNull();

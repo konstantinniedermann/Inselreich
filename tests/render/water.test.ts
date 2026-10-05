@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { PALETTE, SIGNAL_NAMES, rgbOf } from '../../src/render/palette';
 import {
@@ -12,7 +13,7 @@ import {
 } from '../../src/render/water';
 import type { Weather } from '../../src/render/daynight';
 import type { World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { coastValue, terrainFields } from '../../src/render/terrainField';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import { fakeCtx } from './fakeCtx';
@@ -20,19 +21,23 @@ import { fakeCtx } from './fakeCtx';
 /** w = Wasser, g = Gras (Kartengrösse aus den Zeilen). */
 const mini = (rows: string[]): World =>
   ({
-    width: rows[0]!.length,
-    height: rows.length,
     seed: 5,
-    tiles: rows
-      .join('')
-      .split('')
-      .map((c) => ({ terrain: c === 'w' ? 'water' : 'grass', buildingId: null, road: false })),
+    islands: [
+      {
+        width: rows[0]!.length,
+        height: rows.length,
+        tiles: rows
+          .join('')
+          .split('')
+          .map((c) => ({ terrain: c === 'w' ? 'water' : 'grass', buildingId: null, road: false })),
+      },
+    ],
   }) as unknown as World;
 
 const alphaOf = (css: string): number => Number(/,([\d.]+)\)$/.exec(css)![1]);
 const foamRgb = rgbOf(PALETTE.foam).join(',');
 const isFoam = (css: string) => css.startsWith(`rgba(${foamRgb},`);
-const ALL = (w: World) => ({ x0: 0, y0: 0, x1: w.width - 1, y1: w.height - 1 });
+const ALL = (w: World) => ({ x0: 0, y0: 0, x1: home(w).width - 1, y1: home(w).height - 1 });
 
 function frame(world: World, t: number) {
   const { ctx, log } = fakeCtx();
@@ -138,7 +143,7 @@ describe('Wasser (Spec 5.2)', () => {
 
   it('Spec 5.2 Schaumlinie ist eine Höhenlinie des Küstenfelds: nach warp an der gezeichneten Küste', () => {
     const w = createWorld(3);
-    const f = terrainFields(w);
+    const f = terrainFields(fieldWorld(w));
     let n = 0,
       minF = Infinity,
       maxF = -Infinity;

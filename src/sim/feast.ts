@@ -5,7 +5,7 @@ import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from './defs/timing';
 import { takeStock } from './economy';
 import { effectiveTaxLevel } from './townhall';
 import { fail, ok, type Building, type Result, type World } from './types';
-import { center } from './world';
+import { center, islandOf } from './world';
 
 /** Stand des Fests einer Kapelle: bereit, läuft oder Abklingzeit; `remaining` in Ticks bis zum Phasenende. */
 export type FeastState = { phase: 'ready' | 'active' | 'cooldown'; remaining: number };
@@ -25,16 +25,17 @@ function chapelWorks(chapel: Building): boolean {
 }
 
 /** Rum-Prüfung ohne Abbuchung: Grund bei zu geringem Bestand, sonst null. */
-function rumShortage(world: World): string | null {
-  if (world.stock[GOODS.rum.id] >= FEAST_RUM) return null;
-  return `Zu wenig Rum (${Math.floor(world.stock[GOODS.rum.id])} / ${FEAST_RUM})`;
+function rumShortage(world: World, chapel: Building): string | null {
+  const rum = islandOf(world, chapel).stock[GOODS.rum.id];
+  if (rum >= FEAST_RUM) return null;
+  return `Zu wenig Rum (${Math.floor(rum)} / ${FEAST_RUM})`;
 }
 
-/** Einziger Rum-Zugriff des Fests: prüft den Bestand und entnimmt `FEAST_RUM`. */
-function spendRum(world: World): Result {
-  const short = rumShortage(world);
+/** Einziger Rum-Zugriff des Fests: prüft das Lager der Kapellen-Insel und entnimmt `FEAST_RUM`. */
+function spendRum(world: World, chapel: Building): Result {
+  const short = rumShortage(world, chapel);
   if (short !== null) return fail(short);
-  takeStock(world, 'rum', FEAST_RUM);
+  takeStock(islandOf(world, chapel), 'rum', FEAST_RUM);
   return ok;
 }
 
@@ -54,7 +55,7 @@ function feastBlock(world: World, chapel: Building): string | null {
 
 /** Sperrgrund für ein Fest an dieser Kapelle (inkl. Rum-Bestand, ohne Abbuchung), sonst null. Rein lesend. */
 export function feastBlockReason(world: World, chapel: Building): string | null {
-  return feastBlock(world, chapel) ?? rumShortage(world);
+  return feastBlock(world, chapel) ?? rumShortage(world, chapel);
 }
 
 /** Fest an der Kapelle `id`: verbraucht `FEAST_RUM` Rum und setzt `feastAt`. Wirft nie; bei fail bleibt die Welt unverändert. */
@@ -64,7 +65,7 @@ export function holdFeast(world: World, id: number): Result {
     return fail('Keine Kapelle');
   const block = feastBlock(world, chapel);
   if (block !== null) return fail(block);
-  const paid = spendRum(world);
+  const paid = spendRum(world, chapel);
   if (!paid.ok) return paid;
   chapel.feastAt = world.tick;
   return ok;

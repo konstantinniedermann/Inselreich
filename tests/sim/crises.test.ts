@@ -13,7 +13,7 @@ import { step } from '../../src/sim/tick';
 import type { CrisisKind, CrisisLevel } from '../../src/sim/types';
 import { UPGRADE_WAIT } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { houseNearKontor, placeService, prepareEast } from './helpers';
 
 const SEQ_SEED3 = [
@@ -150,6 +150,7 @@ describe('M6 Krisenkern', () => {
       connected: false,
       progress: 0,
       state: 'ok',
+      island: 0,
       house: {
         tier: 2,
         inhabitants: 1,
@@ -171,13 +172,13 @@ describe('M6 Krisenkern', () => {
 
   it('RF-2 Aufstieg im Tick des Periodenstarts bestimmt den Boom-Pool (M11 S10)', () => {
     const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
-    prepareEast(w, w.buildings[w.kontorId]!);
+    prepareEast(w, w.buildings[home(w).kontorId]!);
     const house = houseNearKontor(w);
     placeService(w, 'chapel', house.x + 9, house.y);
     w.tick = 4199; // k = 3 ist bei Seed 3 ein Boom
     house.house!.inhabitants = TIERS[1].maxInhabitants;
     house.house!.satisfiedSince = w.tick - UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR; // Defizitwelt
-    w.stock.cloth = 1;
+    home(w).stock.cloth = 1;
     expect(house.house!.tier).toBe(1);
     step(w);
     expect(w.tick).toBe(4200);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { houseNearKontor, placeService, placeTownhall } from '../sim/helpers';
 import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
@@ -17,7 +17,7 @@ function setup(): { w: World; chapel: Building; house: Building } {
 describe('feastView (AK-I007-11)', () => {
   it('zeigt bereit: Knopf mit Rumpreis, aktiv', () => {
     const { w, chapel } = setup();
-    w.stock.rum = 30;
+    home(w).stock.rum = 30;
     chapel.connected = true;
     const v = feastView(w, chapel)!;
     expect(v.label).toBe('Fest feiern (10 Rum)');
@@ -30,7 +30,7 @@ describe('feastView (AK-I007-11)', () => {
     it('zu wenig Rum', () => {
       const { w, chapel } = setup();
       chapel.connected = true;
-      w.stock.rum = 3;
+      home(w).stock.rum = 3;
       expect(feastView(w, chapel)).toMatchObject({
         disabled: true,
         reason: 'Zu wenig Rum (3 / 10)',
@@ -38,20 +38,20 @@ describe('feastView (AK-I007-11)', () => {
     });
     it('Kapelle nicht angebunden', () => {
       const { w, chapel } = setup();
-      w.stock.rum = 30;
+      home(w).stock.rum = 30;
       chapel.connected = false;
       expect(reasonOf(w, chapel)).toBe('Kapelle nicht angebunden');
     });
     it('Kapelle brennt', () => {
       const { w, chapel } = setup();
-      w.stock.rum = 30;
+      home(w).stock.rum = 30;
       chapel.outageUntil = w.tick + 100;
       expect(reasonOf(w, chapel)).toBe('Kapelle brennt');
       expect(feastView(w, chapel)!.disabled).toBe(true);
     });
     it.each(['low', 'high'] as const)('Steuer %s', (level) => {
       const { w, chapel } = setup();
-      w.stock.rum = 30;
+      home(w).stock.rum = 30;
       placeTownhall(w);
       chapel.connected = true;
       w.taxLevel = level;
@@ -94,7 +94,7 @@ describe('feastView (AK-I007-11)', () => {
     const { w, chapel } = setup();
     chapel.feastAt = w.tick;
     w.tick += FEAST_COOLDOWN;
-    w.stock.rum = 30;
+    home(w).stock.rum = 30;
     chapel.connected = true;
     expect(feastView(w, chapel)?.disabled).toBe(false);
   });

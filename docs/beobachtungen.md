@@ -844,6 +844,18 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
 - Ergebnis: erledigt in fix/s1-rest
 
+### 2026-10-05 · Wirtschaft · Unversorgte Häuser als Steuerquelle
+
+- Fundort: `src/sim/defs/tiers.ts` (Steuer), Regel „unversorgt zahlt halbe Steuer"; `src/sim/defs/buildings.ts` (`house`, Standort `supply`).
+- Beobachtung: Ein Pionierhaus ohne jede Ware zahlt 1 Geld je 100 Ticks bei rund 80 Baukosten (Amortisation ≈ 13 min). Wer viele Häuser ohne Versorgung in Kontor- oder Marktradius stellt, hat eine kleine, aber dauerhafte Steuerquelle; mit M12 (grosse Fremdinseln, eigener Kontorradius) wächst der Platz dafür.
+- Ursprung: `design-economy-designer`, Anhang 01 zum M12-Designvorschlag (M12-BRAIN). Einschätzung: gedeckelt durch Markt-Unterhalt und Radius; im M12-Spec-Gate prüfen, ob unversorgte Häuser auf Fremdinseln zahlen sollen (Kandidat: keine Steuer ohne erfülltes Grundbedürfnis).
+
+### 2026-10-05 · UI (Speichern) · Neuerer Spielstand im älteren Build
+
+- Fundort: `src/ui/storage.ts` (Slot-Liste, Autosave-Prüfung); `src/sim/save.ts` (`raw.version !== SAVE_VERSION`).
+- Beobachtung: Ein Build vor M12-E0 lehnt einen v7-Stand korrekt mit „Unbekannte Version" ab, die Slot-Liste blendet solche Stände aber still aus und markiert den Autosave als beschädigt. Ungeprüft: ob der alte Build den v7-Autosave danach überschreibt (Datenverlust bei Rückkehr auf einen älteren Stand, z. B. Pages-Rollback).
+- Ursprung: `design-spec-author`, Spec M12 Phase 1 (M12-SPEC). Einschätzung: klein; im E0-Plan prüfen, ob „neuere Version" als eigener Grund angezeigt und der Autosave nicht überschrieben wird.
+
 ### 2026-10-05 · Sim/Design · Anbinden-Pfad läuft auch durch Wald
 
 - Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
@@ -868,6 +880,24 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Beobachtung: (1) `patchGrid` gleicht nur das Rechteck plus `2 · HEIGHT_BLUR + 1` Knoten ab; nach einem Wechsel von oder zu Gebirge reichen die Vorberg-Felder (scree, tint, Anstieg; Blur bis ≈ 12 Kacheln) weiter, ausserhalb des Rechtecks bleibt bis zum Vollaufbau der alte Stand stehen (seit H-R13). (2) H-R9 B4 misst nur `paintPixels` (lokal ≈ 3,5–4 ms, Runner 13,9–14,7 ms in zwei Versuchen von CI-Lauf 37295831843); der CI-Faktor 1,5 bildet den Abstand Runner/lokal (≈ 4×) für diesen Test nicht ab, REL-03 (+≈ 10 % `paintPixels`) hat die knappe Reserve aufgebraucht.
 - Ursprung: Hotfix H-T3 (art-rendering-engineer, lead-art), R234, R235. Einschätzung: (1) mittel, sichtbar nur beim Bauen/Abreissen am Gebirge, Patch-Rand aus der Blur-Reichweite ableiten; (2) per R235 CI-Grenze H-R9 B4 auf 20 ms (lokal 8 ms).
 - Paket-Kandidat (R235): **paintPixels-Performance (Vorberechnung je Zelle), REL-04/M9** — Bilinear-Gewichte und Feldwerte je Knotenzelle statt je Pixel (heute eine `lerp`-Closure und ≈ 8 Abtastungen je Pixel), pixelgleich; Ziel: Reserve so weit zurück, dass H-R9 B4 wieder mit dem Standard-Faktor 1,5 läuft.
+
+### 2026-10-05 · Sim/UI · Heimat-Bilanz und Rückerstattung bei Häusern auf Nebeninseln
+
+- Fundort: `src/sim/population.ts` (`upgradeStatus`, `upgradeDeficit`), `src/sim/flow.ts` (`goodsBalance`), `src/sim/queries.ts` (`effectiveRefund`).
+- Beobachtung: Seit M12-E0 T04 dämpfen Bilanz-Defizit und Rückerstattungs-Vorschau nur nach Heimat-Bilanz bzw. Heimat-Lager. Für Gebäude auf weiteren Inseln stimmt das nicht (bei einer Insel unkritisch).
+- Ursprung: Review T04 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; in T05/E1 je Insel bilanzieren oder bewusst dokumentieren.
+
+### 2026-10-05 · Tests · Standard-CI_FACTOR 1,5 passt nicht zum Runner-Abstand
+
+- Fundort: `tests/helpers/perfBudget.ts:2` (`CI_FACTOR`), Nutzer u. a. `tests/sim/perf.test.ts`.
+- Beobachtung: Der Standardfaktor 1,5 bildet den Abstand Runner/lokal (≈ 4×, H-T3) nicht ab; jeder Zeittest braucht einen eigenen Faktor (R235, T05-Lasttest jetzt 4).
+- Ursprung: Review T05 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; Standardfaktor prüfen oder anheben, sobald weitere Zeittests dazukommen.
+
+### 2026-10-05 · Tests · Lasttest 15a und Vitest-Flakes unter paralleler Studio-Last
+
+- Fundort: `tests/sim/perf.test.ts` (PERF_PIN 2,5 ms, CI-Faktor 4), vereinzelt `tests/render`/`tests/ui`.
+- Beobachtung: Laufen Reviewer, Playtester und Vite parallel (Load 10–12), wird der Lasttest bzw. ein Render-/UI-Test einmal rot; Wiederholung bei Load < 7 grün (`make check` und `CI=true make check` je grün, 1674 Tests).
+- Ursprung: M12-E0 C3 (T06-Doku-Review, Browser-Check). Einschätzung: niedrig; Zeittests nur bei ruhiger Maschine als Abnahmebeleg werten, Mehrfachmessung (Median) im Lasttest erwägen.
 
 ### 2026-10-05 · Wirtschaft/Design · Geldschwemme ab Kaufleuten
 

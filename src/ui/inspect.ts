@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
@@ -286,7 +287,7 @@ export function deficitLine(world: World, b: Building): string | null {
   const tier = TIERS[house.tier];
   if (tier.upgradeCost === null || house.inhabitants !== tier.maxInhabitants) return null;
   const d = upgradeDeficit(world, b);
-  return d ? deficitText(d.good, world.stock[d.good], d.net) : null;
+  return d ? deficitText(d.good, home(world).stock[d.good], d.net) : null;
 }
 
 /** Setzt Text und Sichtbarkeit einer optionalen Panel-Zeile (`null` → verborgen). */
@@ -606,7 +607,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
   const next = levels[lvl - 1]!;
   const probe = {
     ...world,
-    stock: { ...world.stock },
+    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
     buildings: { ...world.buildings, [b.id]: { ...b } },
   };
   const r = upgradeBuilding(probe, b.id);

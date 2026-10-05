@@ -29,7 +29,7 @@ import { LIGHT_COLORS, mixRgb } from '../../src/render/light';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
-import { center, createWorld, idx } from '../../src/sim/world';
+import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
@@ -119,10 +119,11 @@ const isRoadStroke = (e: Ev): boolean =>
 /** Welt mit Kontor, Haus, Markt, Weberei (roh gesetzt, raucht) und einem Weg (ISO §5: Wege vor den Körpern). */
 function scene(): { world: World; ids: Record<string, number> } {
   const world = createWorld(3, { unlockAll: true });
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   forceRect(world, k.x + 3, k.y + 3, 6, 6, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(world.stock) as (keyof World['stock'])[]) world.stock[g] = 1000;
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[g] = 1000;
   const ids: Record<string, number> = {};
   const put = (d: BuildingDefId, x: number, y: number): void => {
     const r = placeBuilding(world, d, k.x + x, k.y + y);
@@ -141,18 +142,19 @@ function scene(): { world: World; ids: Record<string, number> } {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   for (const p of [0, 1, 2, 3])
-    world.tiles[(k.y + 6 + (p >> 1)) * world.width + k.x + 6 + (p & 1)]!.buildingId = w;
+    home(world).tiles[(k.y + 6 + (p >> 1)) * home(world).width + k.x + 6 + (p & 1)]!.buildingId = w;
   ids.weaver = w;
-  for (let y = 3; y < 9; y++) world.tiles[idx(world, k.x + 5, k.y + y)]!.road = true; // Weg
+  for (let y = 3; y < 9; y++) home(world).tiles[idx(home(world), k.x + 5, k.y + y)]!.road = true; // Weg
   return { world, ids };
 }
 const camFor = (world: World, zoom: number) => {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx + 3, c.cy + 3, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx + 3, c.cy + 3, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 const order = { period: 1, good: 'wood' as const, amount: 5, reward: 100, due: 999 };
@@ -181,7 +183,7 @@ describe('Renderer', () => {
           world.order = order;
           world.tick = 3000;
           const cam = camFor(world, zoom);
-          const k = world.buildings[world.kontorId]!;
+          const k = world.buildings[home(world).kontorId]!;
           if (empty) {
             world.buildings = {};
             world.nextBuildingId = 2;
@@ -291,7 +293,7 @@ describe('Renderer', () => {
   it('ISO §5 Schatten: ein Pfad mit Gebäuden, Baumstempeln und Schiff', () => {
     const { world } = scene();
     world.order = order;
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x + 9, k.y + 2, 2, 1, 'forest');
     const cam = camFor(world, 1);
     const run = (w: World) => {
@@ -311,11 +313,11 @@ describe('Renderer', () => {
   it('ISO D-09 (AK-ISO-10) Baumstempel im sortierten Durchgang: Reihenfolge wie sortedObjects, nur sichtbare Kacheln', () => {
     const { world } = scene();
     world.order = order;
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x + 9, k.y + 2, 4, 4, 'forest');
     forceRect(world, k.x > 32 ? 1 : 58, k.y > 32 ? 1 : 58, 3, 3, 'forest'); // ausserhalb des Bildes
     const cam = camFor(world, 1);
-    const range = visibleTileRange(cam, VIEW, { w: world.width, h: world.height });
+    const range = visibleTileRange(cam, VIEW, { w: home(world).width, h: home(world).height });
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     const seq = h.calls.filter((c) => c.kind !== 'air');
@@ -385,7 +387,7 @@ describe('Renderer', () => {
     const { world, ids } = scene();
     world.tick = 3000;
     const cam = camFor(world, 1);
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     world.buildings[ids.weaver!]!.connected = false;
     const hover: Hover = {
       x: k.x + 3,
@@ -425,10 +427,11 @@ describe('Renderer', () => {
 
   it('Spec 5.5 waterSides wertet alle vier Seiten aus: Wasser nur hinten → nur hinten, vorn → vorn, keins → keine', () => {
     const { world } = scene();
-    const k = world.buildings[world.kontorId]!;
+    const k = world.buildings[home(world).kontorId]!;
     forceRect(world, k.x - 2, k.y - 2, 6, 6, 'grass');
-    for (const y of [k.y, k.y + 1]) world.tiles[idx(world, k.x, y)]!.buildingId = k.id;
-    const set = (x: number, y: number) => (world.tiles[idx(world, x, y)]!.terrain = 'water');
+    for (const y of [k.y, k.y + 1]) home(world).tiles[idx(home(world), k.x, y)]!.buildingId = k.id;
+    const set = (x: number, y: number) =>
+      (home(world).tiles[idx(home(world), x, y)]!.terrain = 'water');
     const none = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
     expect(waterSides(world, k)).toEqual(none);
     set(k.x - 1, k.y);
@@ -449,7 +452,7 @@ describe('Renderer', () => {
     world.order = null;
     world.tick = 3000; // Nacht: keine Möwen und ihre Schatten im Zähler
     // keine Baum- und Felsschatten (H-R8) im Zähler
-    for (const t of world.tiles)
+    for (const t of home(world).tiles)
       if (t.terrain === 'forest' || t.terrain === 'mountain') t.terrain = 'grass';
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
@@ -633,7 +636,7 @@ describe('Renderer', () => {
         const sc = scene();
         sc.world.order = order;
         sc.world.tick = 3000;
-        const k = sc.world.buildings[sc.world.kontorId]!;
+        const k = sc.world.buildings[home(sc.world).kontorId]!;
         const fire = [];
         for (let i = 0; i < 20; i++) {
           const id = sc.world.nextBuildingId++;
@@ -645,6 +648,7 @@ describe('Renderer', () => {
             connected: true,
             progress: 0,
             state: 'ok',
+            island: 0,
           };
           fire.push({ id, flames: 1, smoke: 1 });
         }
@@ -703,7 +707,7 @@ describe('Renderer', () => {
       expect(coin.length).toBeGreaterThan(0);
       expect(coin[coin.length - 1]!.i).toBeGreaterThan(mul);
       // Münze über dem Kontor: Bildbox-Mitte x
-      const k = world.buildings[world.kontorId]!;
+      const k = world.buildings[home(world).kontorId]!;
       const box = spriteBounds(BUILDING_DEFS.kontor, k);
       const cam = camFor(world, 1);
       const cx = (box.x + box.w / 2 - cam.x) * cam.zoom;
@@ -845,7 +849,7 @@ describe('Renderer', () => {
         none.ev.find((e) => e.style === SHADOW)!.points.length,
       );
       life({}, 0, (w) => {
-        for (const t of w.tiles) t.road = false;
+        for (const t of home(w).tiles) t.road = false;
       });
       expect(h.calls.some((c) => c.kind === 'walker')).toBe(false);
     });
@@ -900,7 +904,7 @@ describe('Renderer', () => {
         const many = (fire: boolean) => {
           const fireList: { id: number; flames: number; smoke: number }[] = []; // je Aufruf frisch
           return life({ reduceMotion: reduce, fire: fire ? fireList : [] }, 4700, (w) => {
-            const k = w.buildings[w.kontorId]!;
+            const k = w.buildings[home(w).kontorId]!;
             for (let i = 0; i < 80; i++) {
               const id = w.nextBuildingId++;
               w.buildings[id] = {
@@ -911,6 +915,7 @@ describe('Renderer', () => {
                 connected: true,
                 progress: 0,
                 state: 'ok',
+                island: 0,
                 ...(i % 2
                   ? {
                       house: {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
 import { deserialize, serialize } from '../../src/sim/save';
 import { upgradeStatus } from '../../src/sim/population';
@@ -28,19 +28,19 @@ beforeEach(() => {
   house = houseNearKontor(w);
   chapel = placeService(w, 'chapel', house.x + 5, house.y);
   w.tick = 1000;
-  w.stock.rum = 30;
+  home(w).stock.rum = 30;
 });
 
 describe('AK-I007-01 Fest feiern', () => {
   it('zieht FEAST_RUM Rum ab und setzt feastAt auf den Tick', () => {
     expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
-    expect(w.stock.rum).toBe(30 - FEAST_RUM);
+    expect(home(w).stock.rum).toBe(30 - FEAST_RUM);
     expect(chapel.feastAt).toBe(1000);
   });
   it('liefert bei unbekannter Id oder Nicht-Kapelle ok:false statt zu werfen', () => {
     expect(holdFeast(w, 987654).ok).toBe(false);
     expect(holdFeast(w, house.id).ok).toBe(false);
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
   });
   it('negatives Geld sperrt nicht', () => {
     w.money = -50;
@@ -56,23 +56,23 @@ describe('AK-I007-05 Sperren', () => {
     expect(chapel.feastAt).toBeUndefined();
   };
   it('zu wenig Rum', () => {
-    w.stock.rum = 9;
+    home(w).stock.rum = 9;
     blocked('Zu wenig Rum (9 / 10)');
-    expect(w.stock.rum).toBe(9);
+    expect(home(w).stock.rum).toBe(9);
   });
   it('Steuer hoch', () => {
     placeTownhall(w);
     chapel.connected = true; // placeTownhall berechnet die Anbindung neu
     w.taxLevel = 'high';
     blocked('Steuer «hoch»: kein Aufstieg');
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
   });
   it('Steuer niedrig', () => {
     placeTownhall(w);
     chapel.connected = true; // placeTownhall berechnet die Anbindung neu
     w.taxLevel = 'low';
     blocked('Steuer «niedrig»: Fest ohne Wirkung');
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
   });
   it('Steuerstufe ohne Amtsstube gilt als normal', () => {
     w.taxLevel = 'high';
@@ -81,24 +81,24 @@ describe('AK-I007-05 Sperren', () => {
   it('Kapelle nicht angebunden', () => {
     chapel.connected = false;
     blocked('Kapelle nicht angebunden');
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
   });
   it('Kapelle brennt', () => {
     chapel.outageUntil = w.tick + 100;
     chapel.state = 'burning';
     blocked('Kapelle brennt');
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
   });
   it('Fest läuft und Abklingzeit, danach wieder frei', () => {
     expect(holdFeast(w, chapel.id).ok).toBe(true);
-    w.stock.rum = 30;
+    home(w).stock.rum = 30;
     w.tick = 1000 + FEAST_DURATION - 1;
     expect(reasonOf(holdFeast(w, chapel.id))).toBe('Fest läuft');
     w.tick = 1000 + FEAST_DURATION;
     expect(reasonOf(holdFeast(w, chapel.id))).toBe('Abklingzeit');
     w.tick = 1000 + FEAST_COOLDOWN - 1;
     expect(reasonOf(holdFeast(w, chapel.id))).toBe('Abklingzeit');
-    expect(w.stock.rum).toBe(30);
+    expect(home(w).stock.rum).toBe(30);
     w.tick = 1000 + FEAST_COOLDOWN;
     expect(holdFeast(w, chapel.id).ok).toBe(true);
     expect(chapel.feastAt).toBe(w.tick);
@@ -220,7 +220,7 @@ describe('AK-I007-08 Fest ersetzt keine Ware', () => {
   it('fehlende Ware bleibt Aufstiegsgrund, nur die Wartezeit ändert sich', () => {
     holdFeast(w, chapel.id);
     house.house!.inhabitants = TIERS[1].maxInhabitants;
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     waited(house, 150);
     const s = upgradeStatus(w, house, NO_DEFICIT);
     expect(s.ok).toBe(false);
@@ -289,12 +289,12 @@ describe('Aufbau von feast.ts', () => {
 
 describe('feastBlockReason', () => {
   it('liefert denselben Grund wie holdFeast und ändert die Welt nicht', () => {
-    w.stock.rum = 3;
+    home(w).stock.rum = 3;
     const before = JSON.stringify(w);
     const reason = feastBlockReason(w, chapel);
     expect(JSON.stringify(w)).toBe(before);
     expect(reason).toBe(reasonOf(holdFeast(w, chapel.id)));
-    w.stock.rum = 30;
+    home(w).stock.rum = 30;
     expect(feastBlockReason(w, chapel)).toBeNull();
   });
 });

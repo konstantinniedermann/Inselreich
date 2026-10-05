@@ -10,6 +10,7 @@ import type {
   BuildingDefId,
   CrisisLevel,
   GoodId,
+  Island,
   Tile,
   World,
 } from './types';
@@ -18,13 +19,18 @@ export type Pos = { x: number; y: number };
 
 export { isLand } from './mapgen';
 
-export const idx = (world: World, x: number, y: number): number => y * world.width + x;
+/** Inselindex der Heimat (Struktur, kein Spielwert). */
+export const HOME = 0;
+export const home = (w: World): Island => w.islands[HOME]!;
+export const islandOf = (w: World, b: Building): Island => w.islands[b.island]!;
 
-export const inBounds = (world: World, x: number, y: number): boolean =>
-  x >= 0 && y >= 0 && x < world.width && y < world.height;
+export const idx = (isl: Island, x: number, y: number): number => y * isl.width + x;
 
-export const tileAt = (world: World, x: number, y: number): Tile | undefined =>
-  inBounds(world, x, y) ? world.tiles[idx(world, x, y)] : undefined;
+export const inBounds = (isl: Island, x: number, y: number): boolean =>
+  x >= 0 && y >= 0 && x < isl.width && y < isl.height;
+
+export const tileAt = (isl: Island, x: number, y: number): Tile | undefined =>
+  inBounds(isl, x, y) ? isl.tiles[idx(isl, x, y)] : undefined;
 
 export function footprint(def: BuildingDef, x: number, y: number): Pos[] {
   const out: Pos[] = [];
@@ -33,7 +39,7 @@ export function footprint(def: BuildingDef, x: number, y: number): Pos[] {
   return out;
 }
 
-export function adjacentOf(world: World, x: number, y: number, w: number, h: number): Pos[] {
+export function adjacentOf(isl: Island, x: number, y: number, w: number, h: number): Pos[] {
   const out: Pos[] = [];
   for (let dx = 0; dx < w; dx++) {
     out.push({ x: x + dx, y: y - 1 }, { x: x + dx, y: y + h });
@@ -41,10 +47,10 @@ export function adjacentOf(world: World, x: number, y: number, w: number, h: num
   for (let dy = 0; dy < h; dy++) {
     out.push({ x: x - 1, y: y + dy }, { x: x + w, y: y + dy });
   }
-  return out.filter((p) => inBounds(world, p.x, p.y));
+  return out.filter((p) => inBounds(isl, p.x, p.y));
 }
 
-export function tilesInRadius(world: World, cx: number, cy: number, r: number): Pos[] {
+export function tilesInRadius(isl: Island, cx: number, cy: number, r: number): Pos[] {
   const out: Pos[] = [];
   const x0 = Math.floor(cx - r);
   const x1 = Math.ceil(cx + r);
@@ -52,7 +58,7 @@ export function tilesInRadius(world: World, cx: number, cy: number, r: number): 
   const y1 = Math.ceil(cy + r);
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
-      if (inBounds(world, x, y) && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) out.push({ x, y });
+      if (inBounds(isl, x, y) && Math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r) out.push({ x, y });
     }
   }
   return out;
@@ -73,16 +79,12 @@ export function createWorld(
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
   const world: World = {
-    version: 6,
+    version: 7,
     seed: seedUsed,
-    width: MAP_W,
-    height: MAP_H,
+    islands: [{ width: MAP_W, height: MAP_H, tiles, kontorId: 1, stock: { ...START_STOCK } }],
     tick: 0,
-    tiles,
     buildings: {},
     nextBuildingId: 2,
-    kontorId: 1,
-    stock: { ...START_STOCK },
     money: START_MONEY,
     stats: { taxes: 0, upkeep: 0 },
     won: false,
@@ -107,9 +109,10 @@ export function createWorld(
     connected: true,
     progress: 0,
     state: 'ok',
+    island: HOME,
   };
   for (const p of footprint(BUILDING_DEFS.kontor, kontor.x, kontor.y)) {
-    const tile = tileAt(world, p.x, p.y);
+    const tile = tileAt(home(world), p.x, p.y);
     if (tile) tile.buildingId = 1;
   }
   return world;

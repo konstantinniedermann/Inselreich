@@ -20,7 +20,7 @@ import { recomputeConnectivity } from './roads';
 import { deriveUnlocks } from './unlocks';
 import type { BuildingState, CrisisKind, CrisisLevel, GoodId, UnlockId, World } from './types';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export type LoadResult = { ok: true; world: World } | { ok: false; reason: string };
 
@@ -198,6 +198,43 @@ export function migrateV5ToV6(raw: Record<string, unknown>): void {
   raw.version = 6;
 }
 
+/** Schlüssel der obersten Ebene von v6, die in v7 in die Insel wandern (P-5). */
+const ISLAND_KEYS_V6 = ['width', 'height', 'tiles', 'kontorId', 'stock'] as const;
+
+/**
+ * v6 → v7 (M12 E0): wirft nie. Schlüssel in Originalreihenfolge neu einsetzen; `width` wird durch `islands`
+ * ersetzt, `height`, `tiles`, `kontorId`, `stock` wandern in Insel 0; je Gebäude `island: 0` direkt nach `state`.
+ */
+export function migrateV6ToV7(raw: Record<string, unknown>): void {
+  const island: Record<string, unknown> = {};
+  for (const k of ISLAND_KEYS_V6) island[k] = raw[k];
+  const entries = Object.entries(raw);
+  for (const [k] of entries) delete raw[k];
+  for (const [k, v] of entries) {
+    if (k === 'width') raw.islands = [island];
+    else if ((ISLAND_KEYS_V6 as readonly string[]).includes(k)) continue;
+    else raw[k] = k === 'buildings' ? withIsland(v) : v;
+  }
+  if (!('islands' in raw)) raw.islands = [island];
+  raw.version = 7;
+}
+
+function withIsland(buildings: unknown): unknown {
+  if (!isObject(buildings)) return buildings;
+  for (const [id, b] of Object.entries(buildings)) if (isObject(b)) buildings[id] = insertIsland(b);
+  return buildings;
+}
+
+function insertIsland(b: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(b)) {
+    out[k] = v;
+    if (k === 'state') out.island = 0;
+  }
+  if (!('state' in out)) out.island = 0;
+  return out;
+}
+
 function isUnlockList(v: unknown): boolean {
   if (!Array.isArray(v) || !v.includes('U0')) return false;
   let last = -1;
@@ -293,17 +330,35 @@ function isValidV6Fields(raw: Record<string, unknown>): boolean {
   );
 }
 
+const hasValidIslandIndex = (b: unknown, count: number): boolean =>
+  isObject(b) && isInt(b.island) && b.island >= 0 && b.island < count;
+
+function isValidIslandShape(isl: unknown): isl is Record<string, unknown> {
+  if (!isObject(isl) || isl.width !== MAP_W || isl.height !== MAP_H) return false;
+  const { tiles, stock } = isl;
+  if (!Array.isArray(tiles) || tiles.length !== MAP_W * MAP_H || !tiles.every(isObject))
+    return false;
+  return isObject(stock) && GOOD_IDS.every((g) => typeof stock[g] === 'number');
+}
+
+/** Raster, Lager, Kontor und Inselbezug der Gebäude (v7: genau eine Insel, keine v6-Reste oben). */
+function isValidIslands(raw: Record<string, unknown>): boolean {
+  const { islands, buildings } = raw;
+  if (!isObject(buildings) || !Array.isArray(islands) || islands.length !== 1) return false;
+  if (ISLAND_KEYS_V6.some((k) => Object.hasOwn(raw, k))) return false;
+  const isl = islands[0];
+  if (!isValidIslandShape(isl)) return false;
+  const kontor = typeof isl.kontorId === 'number' ? buildings[isl.kontorId] : undefined;
+  if (!isObject(kontor) || kontor.defId !== 'kontor' || kontor.island !== 0) return false;
+  const all = Object.values(buildings);
+  return all.every(isValidBuilding) && all.every((b) => hasValidIslandIndex(b, islands.length));
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
-  const { width, height, tiles, buildings, kontorId, stock, stats } = raw;
-  if (width !== MAP_W || height !== MAP_H) return false;
-  if (!Array.isArray(tiles) || tiles.length !== MAP_W * MAP_H) return false;
-  if (!tiles.every(isObject)) return false;
+  const { stats } = raw;
   if (typeof raw.money !== 'number') return false;
-  if (typeof kontorId !== 'number' || !isObject(buildings) || !isObject(buildings[kontorId]))
-    return false;
-  if (!Object.values(buildings).every(isValidBuilding)) return false;
-  if (!isObject(stock) || !GOOD_IDS.every((g) => typeof stock[g] === 'number')) return false;
+  if (!isValidIslands(raw)) return false;
   if (!isValidV2Fields(raw)) return false;
   if (!isValidV3Fields(raw)) return false;
   if (!isValidV4Fields(raw)) return false;
@@ -333,6 +388,7 @@ export function deserialize(json: string): LoadResult {
   const fromV4 = raw.version === 4;
   if (fromV4) migrateV4ToV5(raw);
   if (raw.version === 5) migrateV5ToV6(raw);
+  if (raw.version === 6) migrateV6ToV7(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormed(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

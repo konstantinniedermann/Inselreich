@@ -6,7 +6,7 @@ import { deriveUnlocks } from '../../src/sim/unlocks';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { UnlockId } from '../../src/sim/types';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import { houseFar, placeTownhall, village } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
@@ -26,7 +26,7 @@ function world(tier: 1 | 2, inhabitants: number, extras: Extra[]): World {
   for (const e of extras) build(w, e, ...at[e]);
   connectAll(w);
   setHouse(house, tier, inhabitants, ['food']);
-  w.stock.food = 50;
+  home(w).stock.food = 50;
   w.money = 1000;
   w.taxLevel = 'normal';
   w.stats = { taxes: 10, upkeep: 5 };
@@ -110,7 +110,7 @@ describe('taxEffect und remedyText (AK-UX-10)', () => {
     weaver.connected = true;
     weaver.state = 'waitingInput';
     expect(remedyText(w, weaver)).toBe('Baue Schäferei (G) oder kaufe Wolle am Kontor');
-    w.tiles[idx(w, kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
+    home(w).tiles[idx(home(w), kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
     const lj = build(w, 'lumberjack', kx + 3, ky + 1); // grenzt an den Weg (kx+3, ky): angebunden
     lj.state = 'storageFull';
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
@@ -213,6 +213,7 @@ function addDirect(w: World, defId: BuildingDefId): Building {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   return b;
@@ -277,13 +278,13 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     const { w } = uxWorld();
     const gw = addDirect(w, 'glassworks');
     gw.state = 'waitingInput';
-    w.stock.stone = 5;
-    w.stock.wood = 0;
+    home(w).stock.stone = 5;
+    home(w).stock.wood = 0;
     expect(remedyText(w, gw)).toBe('Baue Holzfäller (L) oder kaufe Holz am Kontor');
-    w.stock.stone = 0;
+    home(w).stock.stone = 0;
     expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
-    w.stock.stone = 5;
-    w.stock.wood = 5;
+    home(w).stock.stone = 5;
+    home(w).stock.wood = 5;
     expect(remedyText(w, gw)).toBe('Baue Steinbruch (B) oder kaufe Stein am Kontor');
     const quarry = addDirect(w, 'quarry');
     quarry.state = 'storageFull';
@@ -300,7 +301,7 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
     const weaver = addDirect(w, 'weaver');
     weaver.state = 'waitingInput';
-    w.stock.wool = 0;
+    home(w).stock.wool = 0;
     expect(remedyText(w, weaver)).toBe('Baue Schäferei (G) oder kaufe Wolle am Kontor');
   });
 });
@@ -343,7 +344,7 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
   /** Holzfäller im Zustand storageFull. */
   const lumberjackFull = (): { w: World; b: Building } => {
     const { w, kx, ky } = uxWorld();
-    w.tiles[idx(w, kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
+    home(w).tiles[idx(home(w), kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
     const b = build(w, 'lumberjack', kx + 3, ky + 1);
     b.state = 'storageFull';
     return { w, b };

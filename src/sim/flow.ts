@@ -1,10 +1,11 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOOD_IDS } from './defs/goods';
 import { TIERS } from './defs/tiers';
+import type { Coverage } from './coverage';
 import { cycleOf } from './levels';
 import { inSupplyRange } from './supply';
 import type { Building, GoodId, HouseState, Tier, World } from './types';
-import { center } from './world';
+import { center, HOME } from './world';
 
 /** Netto je Gut über 100 Ticks; fehlt ein Gut, zählt 0 (Spec 3.2). */
 export type Budget = Partial<Record<GoodId, number>>;
@@ -14,13 +15,15 @@ const DEFICIT_EPSILON = 1e-9;
 /** Erzeugung und Verbrauch je Gut über 100 Ticks (nominal, ungerundet; Lager und Brand zählen nicht). */
 export function goodsBalance(
   world: World,
+  cov?: Coverage,
 ): Record<GoodId, { produced: number; consumed: number; net: number }> {
   const out = {} as Record<GoodId, { produced: number; consumed: number; net: number }>;
   for (const g of GOOD_IDS) out[g] = { produced: 0, consumed: 0, net: 0 };
   for (const b of Object.values(world.buildings)) {
+    if (b.island !== HOME) continue; // Bilanz nur Heimat (P-15)
     if (b.house) {
       const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
-      if (!inSupplyRange(world, c.cx, c.cy)) continue;
+      if (!inSupplyRange(world, HOME, c.cx, c.cy, cov?.supply[HOME])) continue;
       const needs = TIERS[b.house.tier].needs;
       for (const g of Object.keys(needs) as GoodId[])
         out[g].consumed += b.house.inhabitants * needs[g]!;

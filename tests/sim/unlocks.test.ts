@@ -25,7 +25,7 @@ import {
   tickUnlocks,
   unlockText,
 } from '../../src/sim/unlocks';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { buildColony } from './controller';
 import { forceGrass, forceRect, placeService, setHouse, village } from './helpers';
 
@@ -117,7 +117,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
 
   it('AK-S1-02 createWorld: version 5, v5-Felder; unlockAll ändert nur unlocked', () => {
     const w = createWorld(3);
-    expect(w.version).toBe(6);
+    expect(w.version).toBe(7);
     expect(w.unlocked).toEqual(['U0']);
     expect(w.goodLocks).toEqual([]);
     expect(w.upgradeStops).toEqual([]);
@@ -182,7 +182,7 @@ describe('M10 Freischaltung: Auslöser und Kette (Spec 4.2, 4.3)', () => {
   });
   it('AK-S1-05 (a) U2 direkt nach dem Schritt, in dem das Haus 4 EW erreicht', () => {
     const { w, houses } = village(1);
-    w.stock.food = 100;
+    home(w).stock.food = 100;
     setHouse(houses[0]!, 1, 3);
     for (let i = 0; i < 400 && houses[0]!.house!.inhabitants < 4; i++) {
       expect(w.unlocked).not.toContain('U2');
@@ -262,7 +262,7 @@ describe('M10 nextUnlocks (Spec 12.2)', () => {
 describe('M10 Sperren in der Sim (Spec 4.4)', () => {
   it('AK-S1-06 Bausperre zuerst, auch auf Wasser; nichts gebucht; frei nach U2; U0-Gebäude und Kontor nie gesperrt', () => {
     const w = createWorld(3);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
     const reason = 'Erst wenn ein Wohnhaus 4 Pioniere hat';
     expect(buildLock(w, 'chapel')).toBe(reason);
@@ -283,7 +283,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
   });
   it('AK-S1-07 roh gesetzte Schule ohne U4 versorgt, lässt sich abreissen, zweiter Bau scheitert mit U4-Grund', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceGrass(w, k.x + 2, k.y);
     const r = placeBuilding(w, 'house', k.x + 2, k.y);
     if (!r.ok || r.id === undefined) throw new Error('Haus');
@@ -311,12 +311,12 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
     });
     expect(serialize(w)).toBe(before);
     expect(buy(w, 'wood', 1).ok).toBe(true);
-    w.stock.wool = 5;
+    home(w).stock.wool = 5;
     const price = sellPrice(w, 'wool', 5);
     const m = w.money;
     expect(sell(w, 'wool', 5).ok).toBe(true);
     expect(w.money - m).toBe(price);
-    w.stock.wool = 5;
+    home(w).stock.wool = 5;
     expect(sell(w, 'wool', 6)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
     w.unlocked = ['U0', 'U2'];
     expect(buy(w, 'wool', 1).ok).toBe(true);
@@ -331,7 +331,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
     }
     expect(a.order).not.toBeNull();
     expect(a.order).toEqual(b.order);
-    a.stock[a.order!.good] = 99;
+    home(a).stock[a.order!.good] = 99;
     const before = serialize(a);
     expect(deliverOrder(a)).toEqual({ ok: false, reason: 'Erst mit den ersten Siedlern' });
     expect(serialize(a)).toBe(before);
@@ -343,7 +343,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
   });
   it('AK-S1-18 Feuerwache bei Krisen off: nicht angezeigt, aber baubar; bei mild angezeigt', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
     expect(buildingShown(w, 'firestation')).toBe(false);
     expect(buildLock(w, 'firestation')).toBeNull();
@@ -385,7 +385,7 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
   it('AK-UNL-02 neue Welt: Jagdhütte erst mit U2, Rinderfarm erst mit U3 (lockText), danach baubar', () => {
     const x0 = createWorld(3);
     x0.money = 10_000;
-    const k = x0.buildings[x0.kontorId]!;
+    const k = x0.buildings[home(x0).kontorId]!;
     forceRect(x0, k.x + 3, k.y - 8, 8, 8, 'grass'); // Rinderfarm bei (k.x+5, k.y-5)
     forceRect(x0, k.x + 3, k.y + 2, 6, 4, 'forest'); // Jagdhütte bei (k.x+5, k.y+3)
     const [fx, fy, hx, hy] = [k.x + 5, k.y - 5, k.x + 5, k.y + 3];

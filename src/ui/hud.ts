@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
@@ -62,7 +63,7 @@ export interface ChipView {
 
 /** Lager-Chip: Symbol des Guts, „{Bestand} {Pfeil}"; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}". */
 export function chipView(world: World, good: GoodId): ChipView {
-  const text = `${world.stock[good]} ${trendArrow(goodsBalance(world)[good].net)}`;
+  const text = `${home(world).stock[good]} ${trendArrow(goodsBalance(world)[good].net)}`;
   return { icon: good, text, label: `${GOODS[good].name} ${text}` };
 }
 
@@ -351,7 +352,7 @@ export function popChipHidden(world: World, tier: Tier): boolean {
 
 /** Lager-Chip verborgen, solange das Gut nicht frei ist und nichts im Lager liegt (Spec 11.3). */
 export function stockChipHidden(world: World, good: GoodId): boolean {
-  return !(goodUnlocked(world, good) || world.stock[good] > 0);
+  return !(goodUnlocked(world, good) || home(world).stock[good] > 0);
 }
 
 /** Steuer-Knopf der Kopfzeile (wirksame Stufe) oder `null` ohne aktive Amtsstube (Spec 11.8). */
@@ -382,7 +383,7 @@ export function stockTooltip(world: World, good: GoodId): string {
   const b = goodsBalance(world)[good];
   const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
   return (
-    `${GOODS[good].name} ${world.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
+    `${GOODS[good].name} ${home(world).stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
     `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 import {
   shortageEvents,
@@ -19,6 +19,7 @@ function addHouse(w: World, demand: Partial<Record<GoodId, number>>): void {
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier: 1,
       inhabitants: 1,
@@ -32,7 +33,7 @@ function addHouse(w: World, demand: Partial<Record<GoodId, number>>): void {
 }
 function addWorker(w: World, defId: BuildingDefId, x: number, y: number, progress: number): number {
   const id = nextId++;
-  w.buildings[id] = { id, defId, x, y, connected: true, progress, state: 'ok' };
+  w.buildings[id] = { id, defId, x, y, connected: true, progress, state: 'ok', island: 0 };
   return id;
 }
 
@@ -40,15 +41,15 @@ describe('shortageEvents (H-A2)', () => {
   it('Übergang Bestand > 0 nach 0 bei nachgefragtem Gut ergibt das Gut', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0.5 });
-    w.stock.food = 3;
+    home(w).stock.food = 3;
     const before = shortageSnapshot(w);
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     expect(shortageEvents(before, shortageSnapshot(w))).toEqual(['food']);
   });
   it('ohne Vorgänger (erster Snapshot) und bei schon leerem Gut kein Ereignis', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0.5 });
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     const a = shortageSnapshot(w);
     expect(shortageEvents(null, a)).toEqual([]);
     expect(shortageEvents(a, shortageSnapshot(w))).toEqual([]);
@@ -56,36 +57,36 @@ describe('shortageEvents (H-A2)', () => {
   it('nicht nachgefragtes Gut und Gut ohne Haus-Bedürfnis: kein Ereignis', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0.5 });
-    w.stock.wood = 5;
+    home(w).stock.wood = 5;
     const before = shortageSnapshot(w);
-    w.stock.wood = 0;
+    home(w).stock.wood = 0;
     expect(shortageEvents(before, shortageSnapshot(w))).toEqual([]);
     const w2 = createWorld(1);
-    w2.stock.food = 5;
+    home(w2).stock.food = 5;
     const b2 = shortageSnapshot(w2);
-    w2.stock.food = 0; // noch kein Haus mit diesem Bedürfnis
+    home(w2).stock.food = 0; // noch kein Haus mit diesem Bedürfnis
     expect(shortageEvents(b2, shortageSnapshot(w2))).toEqual([]);
   });
   it('Nachfrage 0 zählt nicht; Nachfrage erst im aktuellen Frame zählt nicht', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0 });
-    w.stock.food = 2;
+    home(w).stock.food = 2;
     const a = shortageSnapshot(w);
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     expect(shortageEvents(a, shortageSnapshot(w))).toEqual([]);
     const w2 = createWorld(1);
-    w2.stock.food = 2;
+    home(w2).stock.food = 2;
     const b = shortageSnapshot(w2);
     addHouse(w2, { food: 1 });
-    w2.stock.food = 0;
+    home(w2).stock.food = 0;
     expect(shortageEvents(b, shortageSnapshot(w2))).toEqual([]);
   });
   it('Wiederauffüllen ist kein Ereignis', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0.5 });
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     const a = shortageSnapshot(w);
-    w.stock.food = 4;
+    home(w).stock.food = 4;
     expect(shortageEvents(a, shortageSnapshot(w))).toEqual([]);
   });
 });
@@ -94,10 +95,10 @@ describe('Absicherung (Fix-Runde 1)', () => {
   it('Bestand >0 nach 0 nach >0 innerhalb eines Frames ergibt kein Ereignis', () => {
     const w = createWorld(1);
     addHouse(w, { food: 0.5 });
-    w.stock.food = 3;
+    home(w).stock.food = 3;
     const before = shortageSnapshot(w);
-    w.stock.food = 0;
-    w.stock.food = 2;
+    home(w).stock.food = 0;
+    home(w).stock.food = 2;
     expect(shortageEvents(before, shortageSnapshot(w))).toEqual([]);
   });
   it('Zyklusende bei storageFull wird gemeldet (Arbeit lief)', () => {

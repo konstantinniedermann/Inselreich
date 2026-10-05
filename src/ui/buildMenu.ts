@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
@@ -314,7 +315,7 @@ export function renderBuildMenu(
       if (blurAfterClick(ev.detail)) btn.blur();
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
-      const afford = cost ? checkAfford(state.world, cost) : null;
+      const afford = cost ? checkAfford(state.world, home(state.world), cost) : null;
       if (afford && !afford.ok)
         showMessage(friendlyReason(state.world, afford.reason, { cost }), 'error');
     });
@@ -394,7 +395,7 @@ export function updateBuildMenu(nav: HTMLElement, world: World): void {
   for (const btn of nav.querySelectorAll<HTMLButtonElement>('button')) {
     const cost = buttonCost.get(btn);
     if (!cost) continue;
-    const r = checkAfford(world, cost);
+    const r = checkAfford(world, home(world), cost);
     btn.classList.toggle('unaffordable', !r.ok);
     const reason = btn.querySelector('.tt-reason');
     const text = r.ok ? '' : friendlyReason(world, r.reason, { cost });

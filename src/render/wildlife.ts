@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 // wildlife.ts — Wasser- und Luftleben (H-R2): Fischschwärme mit Sprüngen, seltener Wal, Vogelschwärme.
 // Kosmetisch und deterministisch aus `timeMs`, `world.seed`, Küstenfeld und Kachelart (nur `hash2`, nie
 // `Math.random`); kein Zustand ausser Caches je Welt, kein Schreibzugriff auf die Welt. `wildlifeAt` ist die
@@ -174,7 +175,7 @@ function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
   if (!c) {
     const f = coastFor(world);
     const all: TileRange = { x0: 0, y0: 0, x1: f.w - 1, y1: f.h - 1 };
-    const k = world.buildings[world.kontorId];
+    const k = world.buildings[home(world).kontorId];
     const kd = k ? BUILDING_DEFS[k.defId] : null;
     const near = k && kd ? { x: k.x + kd.w / 2, y: k.y + kd.h / 2 } : { x: f.w / 2, y: f.h / 2 };
     const make = (reduce: boolean) => ({
@@ -197,7 +198,7 @@ function anchorsOf(world: World): { fish: Anchor[][]; flocks: Anchor[][] } {
         FLOCK_SHARE,
         71,
         (x, y, s) => {
-          const t = world.tiles[y * world.width + x]?.terrain;
+          const t = home(world).tiles[y * home(world).width + x]?.terrain;
           // der Schwarm bleibt über Land: Abstand zum Wasser ≥ Schleifenradius + 1
           return (t === 'forest' || t === 'grass') && s >= flockRadius(world.seed, x, y) + 1;
         },

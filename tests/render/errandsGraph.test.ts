@@ -13,14 +13,14 @@ vi.mock('../../src/sim/queries', async (orig) => {
 });
 
 import { errandsFrom } from '../../src/render/errands';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Building } from '../../src/sim/types';
 
 describe('H-R4 Fix: Weggraph je Frame', () => {
   it('RF-8 errandsFrom holt den Weggraph (layoutKey) genau einmal, nicht je Betrieb', () => {
     const world = createWorld(3);
     for (let y = 30; y <= 50; y++)
-      for (let x = 30; x <= 60; x++) world.tiles[idx(world, x, y)]!.terrain = 'grass';
+      for (let x = 30; x <= 60; x++) home(world).tiles[idx(home(world), x, y)]!.terrain = 'grass';
     for (let i = 0; i < 10; i++) {
       const b: Building = {
         id: 4000 + i,
@@ -30,10 +30,11 @@ describe('H-R4 Fix: Weggraph je Frame', () => {
         connected: true,
         progress: 15,
         state: 'ok',
+        island: 0,
       };
       world.buildings[b.id] = b;
-      world.tiles[idx(world, b.x, b.y)]!.buildingId = b.id;
-      world.tiles[idx(world, b.x + 1, b.y)]!.terrain = 'forest';
+      home(world).tiles[idx(home(world), b.x, b.y)]!.buildingId = b.id;
+      home(world).tiles[idx(home(world), b.x + 1, b.y)]!.terrain = 'forest';
     }
     calls.layoutKey = 0;
     const poses = errandsFrom(world, { x0: 0, y0: 0, x1: 63, y1: 63 }, { frac: 0, fast: false });

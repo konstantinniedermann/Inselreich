@@ -1,3 +1,4 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { lightAt } from '../../src/render/daynight';
 import { ISO_H, pointBounds } from '../../src/render/iso';
@@ -28,18 +29,18 @@ import {
 import { CAPS } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
 import { coastField } from '../../src/render/terrainField';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import { fakeCtx } from './fakeCtx';
 
 /** Welt mit einem Weg-Kreuz und einer Schleife; liefert die Wegkacheln. */
 function worldWithRoads(): { world: World; roads: Set<number> } {
   const world = createWorld(3);
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const roads = new Set<number>();
   const put = (x: number, y: number): void => {
-    const i = idx(world, x, y);
-    world.tiles[i]!.road = true;
+    const i = idx(home(world), x, y);
+    home(world).tiles[i]!.road = true;
     roads.add(i);
   };
   for (let d = 0; d < 8; d++) {
@@ -52,13 +53,13 @@ function worldWithRoads(): { world: World; roads: Set<number> } {
 const onOrBetween = (world: World, roads: Set<number>, x: number, y: number): boolean => {
   const tx = Math.floor(x),
     ty = Math.floor(y);
-  if (roads.has(idx(world, tx, ty))) return true;
+  if (roads.has(idx(home(world), tx, ty))) return true;
   // zwischen zwei Mitten: eine Koordinate ist Kachelmitte, die andere liegt auf einer Wegkachel-Kante
   const near = (v: number): number[] =>
     Math.abs(v - Math.round(v - 0.5) - 0.5) < 1e-9
       ? [Math.floor(v)]
       : [Math.floor(v - 0.5), Math.floor(v + 0.5)];
-  return near(x).every((a) => near(y).every((b) => roads.has(idx(world, a, b))));
+  return near(x).every((a) => near(y).every((b) => roads.has(idx(home(world), a, b))));
 };
 
 describe('Spaziergänger (Spec 5.6)', () => {
@@ -97,8 +98,8 @@ describe('Spaziergänger (Spec 5.6)', () => {
     const { world } = worldWithRoads();
     const g = roadGraph(world);
     expect(roadGraph(world)).toBe(g);
-    const k = world.buildings[world.kontorId]!;
-    world.tiles[idx(world, k.x + 9, k.y + 7)]!.road = true;
+    const k = world.buildings[home(world).kontorId]!;
+    home(world).tiles[idx(home(world), k.x + 9, k.y + 7)]!.road = true;
     const g2 = roadGraph(world);
     expect(g2).not.toBe(g);
     expect(g2.nodes.length).toBe(g.nodes.length + 1);
@@ -218,8 +219,8 @@ describe('Spaziergänger (Spec 5.6)', () => {
 
 describe('Möwen und Herdrauch (Spec 5.6)', () => {
   const world = createWorld(7);
-  const field = coastField(world);
-  const full = { x0: 0, y0: 0, x1: world.width - 1, y1: world.height - 1 };
+  const field = coastField(fieldWorld(world));
+  const full = { x0: 0, y0: 0, x1: home(world).width - 1, y1: home(world).height - 1 };
 
   it('AK-R4-03 Herdrauch nur Morgen/Abend und nur bewohnt', () => {
     expect(hearthSmoke('morning', 3)).toBe(true);
@@ -262,7 +263,7 @@ describe('Möwen und Herdrauch (Spec 5.6)', () => {
   it('AK-R4-03 (R114) Kamera um wenige Kacheln verschieben ändert die Möwen im inneren Bildbereich nicht', () => {
     for (const seed of [3, 7, 11]) {
       const w = createWorld(seed);
-      const f = coastField(w);
+      const f = coastField(fieldWorld(w));
       const inner = { x0: 20, y0: 20, x1: 44, y1: 44 };
       const inInner = (g: { tx: number; ty: number }): boolean =>
         g.tx >= inner.x0 && g.tx <= inner.x1 && g.ty >= inner.y0 && g.ty <= inner.y1;

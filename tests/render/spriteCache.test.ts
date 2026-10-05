@@ -8,7 +8,7 @@ import { createSpriteCache, spriteKey, type SpriteSurface } from '../../src/rend
 import { fakeCtx, type FakeCtx } from './fakeCtx';
 
 const mk = (defId: BuildingDefId, x = 10, y = 10, tier?: Tier): Building => {
-  const b: Building = { id: 1, defId, x, y, connected: true, progress: 0, state: 'ok' };
+  const b: Building = { id: 1, defId, x, y, connected: true, progress: 0, state: 'ok', island: 0 };
   if (tier) b.house = { tier } as Building['house'];
   return b;
 };
