@@ -1798,3 +1798,30 @@ REL-04 umkehrbar. **D-141:** H-I007 geht vor E0 nach main; E0 holt es per Merge 
 entfällt (Rum-Bestand genügt, YAGNI). — Kosten bei Irrtum: Versionswechsel v6→v7 nachziehen und E0-Versionen schieben.
 
 Entscheider: L0 · Anlass: Berichte lead-design/lead-tech H-I007 · ADR: —
+
+## R241 · 2026-10-05 · Gate Plan Seefahrt-Bündel E2+E3+E4
+
+Ruling: Gate Plan (`feat/m12-see` @ 9a1fe08) mit **BEDENKEN** bestanden (lead-qa B1–B7, lead-production B1–B7, kein
+ZURÜCK; `.studio/handoffs/2026-10-05-m12-see-gate-{qa,prod}.md`). **Plan-Nachtrag durch lead-tech** vor T00 ohne
+Zweitprüfung. Designfragen nach Urteil lead-design (`.studio/handoffs/2026-10-05-m12-see-design-d142-144.md`):
+**D-142** Gut mit `islandTrait`-Betrieben dämpft den Hausaufstieg nur auf Inseln mit diesem Merkmal (Gewürz dämpft in
+der Heimat nie); „Schiffsladung zählt in die Bilanz" verworfen. **D-143** vor `seafaring` ist die aktive Insel immer
+die Heimat (Index 0), Lagerleiste ohne Inselnamen; ab `seafaring` C.1. **D-144** Platzhalter aus vorhandenen Formen mit
+drei Mindestregeln (eigener Palettenton Gewürzplantage, eigene Chip-Farbe Gewürz, Schiff nach AK-E4-15); lead-art
+urteilt über T15-Screenshots, Nacharbeit = eigenes Art-Paket. Budget **50 Starts** (lead-tech 49, lead-qa 1),
+Freigabe ab M0. **Studioweite Obergrenze 5 gleichzeitig laufende Arbeiter** (Risiko prod). — Kosten bei Irrtum:
+D-142 zurück auf Spec-Wortlaut (Neupin-Risiko R-2).
+
+Entscheider: L0 · Anlass: Gate Plan lead-qa, lead-production, Designurteil lead-design · ADR: —
+
+## R242 · 2026-10-05 · M12-E0 C2 abgenommen, Start E0 C3 und E1 C1
+
+Ruling: E0 T03–T05 (`feat/m12-e0` @ 0428c15) angenommen. Abweichungen vom Plan übernommen: `fieldWorld(world)` in
+`src/render/terrainField.ts`, `islandAt()` in `placement.ts`, `isSupplySource` in `coverage.ts`, `upgradeView`-Fix in
+`inspect.ts` (T02-Fehler), mechanische Typ-Fixes (`connect.ts`, `roads.ts`, `soundEvents.ts`, `sprites.ts`). Start
+**E0 C3** (T06 + Final-Review lead-qa; Final-Review prüft zusätzlich die Testlücke Schlüsselreihenfolge
+`migrateV6ToV7`) und parallel **E1 C1** (Sim T00–T02 ab E0 @ 0428c15). H-I007 bleibt vor E0 auf main (R240 D-141): E0
+holt main nach dem REL-04-Merge erneut; Final-Review E0 erst danach endgültig, falls H-I007 vor dem E0-Merge landet.
+— Kosten bei Irrtum: Abweichungen einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C2 · ADR: —
