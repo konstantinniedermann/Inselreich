@@ -22,6 +22,25 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-05 · Persona production-integrator 1.6
+
+- Anlass: Retro-Nachtrag session-e13c3631, Vorschlag (2); Eintrag vom studio-coach nachgetragen,
+  weil Commit 15a99d8 die Version ohne Eintrag hob
+- Datenbasis: [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) (Nachtrag)
+- Ruling: R224
+- Änderungen: Korrekturen nach dem Merge-Commit oder auf dem Kandidaten als eigener Fix-Commit,
+  nie `git commit --amend`
+
+## 2026-10-05 · Handbuch 1.18
+
+- Anlass: Retro-Nachtrag session-e13c3631, Vorschläge (1), (3), (4), (5)
+- Datenbasis: [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) (Nachtrag N4, N5)
+- Ruling: R224
+- Änderungen: Budget „Zwischenstand bei halbem Deckel“ (Log als `status waiting`, Retro zählt);
+  Rulings „Kandidaten desselben Fehlermechanismus“ in einem Ruling; E-028 Messgrösse 1 bei 2
+  Häppchen ≤ 0,5, Leerlauf nach Ursache getrennt; E-027 Zählregel „eingeplant“; `lernen.md` um 7
+  im Handbuch abgedeckte oder doppelte Einträge gekürzt (37 → 30 Inhaltszeilen)
+
 ## 2026-10-04 · Handbuch 1.17
 
 - Anlass: Nutzerfreigabe „VERFASSUNG ÄNDERN" für N-92 und N-93
