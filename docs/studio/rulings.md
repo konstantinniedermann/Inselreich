@@ -1990,3 +1990,18 @@ tech-ui-engineer (E1 C3, T07):** Heartbeats alle ~10 min aus langen Bash-Messlä
 keine Ad-hoc-Retro. — Kosten bei Irrtum: Retro nachholen; C2-Entscheide in T15 vereinheitlichen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C2, Hook-Meldung · ADR: —
+
+## R256 · 2026-10-05 · D-146 Folgen von TIERS[4] in Fremddateien (Seefahrt T05)
+
+Ruling: Empfehlung lead-tech angenommen. (a) e3 darf `tests/sim/fixtureV8.ts` (Eigentum int, dort ruht die Arbeit bis
+T14) so ändern, dass das Rezept mit den v8-Werten rechnet (`TIERS[4]` ohne Gewürz, Steuer 20; `feedSpice` nur, wenn
+die Stufe Gewürz verlangt); Fixture und `save.test.ts` bleiben bytegleich. (b) e3 passt die Pins in `tests/ui/hud.test.ts`
+(AK-UX-07, AK-S1-18), `tests/render/overlays.test.ts` (AK-R1-03) und `flow.test.ts` (AK-P1-11) an, je Kommentar
+`R226 F-03`; die Pin-Liste Anhang 03 D wird im e3-Ledger erweitert, T16 überträgt sie in die Spec. (c) Hinweistext
+`guide.ts` AK-U2-08 (d): Wortlaut nach Spec Anhang 03 D „kaufe es am Kontor oder gründe ein Kontor auf einer
+Gewürzinsel", ohne Tastenklammer, wenn das Gebäude in der Heimat nicht baubar ist (leere „()" ist ein Fehler); kein
+eigener lead-design-Start, weil der Wortlaut aus der Spec kommt; e3 setzt ihn in der T05-Fix-Runde um, T07 übernimmt
+ihn. Ownership-Ausnahmen gelten nur für diese Dateien und Stellen; T14 prüft die Zusammenführung. Alternative „alles
+in T14" verworfen (roter Strang). — Kosten bei Irrtum: Pins in T14 nachziehen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 (D-146) · ADR: —
