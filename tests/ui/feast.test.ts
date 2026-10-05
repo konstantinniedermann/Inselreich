@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
-import { houseNearKontor, placeService } from '../sim/helpers';
+import { houseNearKontor, placeService, placeTownhall } from '../sim/helpers';
+import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
 import { feastView, houseFeastLine } from '../../src/ui/feast';
 import { formatClock } from '../../src/ui/time';
@@ -16,7 +17,48 @@ function setup(): { w: World; chapel: Building; house: Building } {
 describe('feastView (AK-I007-11)', () => {
   it('zeigt bereit: Knopf mit Rumpreis, aktiv', () => {
     const { w, chapel } = setup();
-    expect(feastView(w, chapel)).toEqual({ label: 'Fest feiern (10 Rum)', disabled: false });
+    w.stock.rum = 30;
+    chapel.connected = true;
+    const v = feastView(w, chapel)!;
+    expect(v.label).toBe('Fest feiern (10 Rum)');
+    expect(v.reason).toBeNull();
+    expect(v.disabled).toBe(false);
+  });
+
+  describe('Sperrgrund im Zustand bereit', () => {
+    const reasonOf = (w: World, c: Building): string | null => feastView(w, c)!.reason;
+    it('zu wenig Rum', () => {
+      const { w, chapel } = setup();
+      chapel.connected = true;
+      w.stock.rum = 3;
+      expect(feastView(w, chapel)).toMatchObject({
+        disabled: true,
+        reason: 'Zu wenig Rum (3 / 10)',
+      });
+    });
+    it('Kapelle nicht angebunden', () => {
+      const { w, chapel } = setup();
+      w.stock.rum = 30;
+      chapel.connected = false;
+      expect(reasonOf(w, chapel)).toBe('Kapelle nicht angebunden');
+    });
+    it('Kapelle brennt', () => {
+      const { w, chapel } = setup();
+      w.stock.rum = 30;
+      chapel.outageUntil = w.tick + 100;
+      expect(reasonOf(w, chapel)).toBe('Kapelle brennt');
+      expect(feastView(w, chapel)!.disabled).toBe(true);
+    });
+    it.each(['low', 'high'] as const)('Steuer %s', (level) => {
+      const { w, chapel } = setup();
+      w.stock.rum = 30;
+      placeTownhall(w);
+      chapel.connected = true;
+      w.taxLevel = level;
+      const r = reasonOf(w, chapel);
+      expect(r).toContain(`«${TAX_LEVELS[level].name}»`);
+      expect(feastView(w, chapel)!.disabled).toBe(true);
+    });
   });
 
   it('ist erst ab U4 (Rum) sichtbar', () => {
@@ -52,6 +94,8 @@ describe('feastView (AK-I007-11)', () => {
     const { w, chapel } = setup();
     chapel.feastAt = w.tick;
     w.tick += FEAST_COOLDOWN;
+    w.stock.rum = 30;
+    chapel.connected = true;
     expect(feastView(w, chapel)?.disabled).toBe(false);
   });
 });

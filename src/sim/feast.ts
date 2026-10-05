@@ -24,12 +24,17 @@ function chapelWorks(chapel: Building): boolean {
   return chapel.connected && chapel.outageUntil === undefined;
 }
 
+/** Rum-Prüfung ohne Abbuchung: Grund bei zu geringem Bestand, sonst null. */
+function rumShortage(world: World): string | null {
+  if (world.stock[GOODS.rum.id] >= FEAST_RUM) return null;
+  return `Zu wenig Rum (${Math.floor(world.stock[GOODS.rum.id])} / ${FEAST_RUM})`;
+}
+
 /** Einziger Rum-Zugriff des Fests: prüft den Bestand und entnimmt `FEAST_RUM`. */
 function spendRum(world: World): Result {
-  if (!takeStock(world, 'rum', FEAST_RUM)) {
-    const have = Math.floor(world.stock[GOODS.rum.id]);
-    return fail(`Zu wenig Rum (${have} / ${FEAST_RUM})`);
-  }
+  const short = rumShortage(world);
+  if (short !== null) return fail(short);
+  takeStock(world, 'rum', FEAST_RUM);
   return ok;
 }
 
@@ -45,6 +50,11 @@ function feastBlock(world: World, chapel: Building): string | null {
     return `Steuer «${TAX_LEVELS[level].name}»: kein Aufstieg`;
   if (level === 'low') return `Steuer «${TAX_LEVELS[level].name}»: Fest ohne Wirkung`;
   return null;
+}
+
+/** Sperrgrund für ein Fest an dieser Kapelle (inkl. Rum-Bestand, ohne Abbuchung), sonst null. Rein lesend. */
+export function feastBlockReason(world: World, chapel: Building): string | null {
+  return feastBlock(world, chapel) ?? rumShortage(world);
 }
 
 /** Fest an der Kapelle `id`: verbraucht `FEAST_RUM` Rum und setzt `feastAt`. Wirft nie; bei fail bleibt die Welt unverändert. */

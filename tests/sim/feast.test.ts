@@ -286,3 +286,15 @@ describe('Aufbau von feast.ts', () => {
     expect(src.match(/'rum'/g)).toHaveLength(1);
   });
 });
+
+describe('feastBlockReason', () => {
+  it('liefert denselben Grund wie holdFeast und ändert die Welt nicht', () => {
+    w.stock.rum = 3;
+    const before = JSON.stringify(w);
+    const reason = feastBlockReason(w, chapel);
+    expect(JSON.stringify(w)).toBe(before);
+    expect(reason).toBe(reasonOf(holdFeast(w, chapel.id)));
+    w.stock.rum = 30;
+    expect(feastBlockReason(w, chapel)).toBeNull();
+  });
+});

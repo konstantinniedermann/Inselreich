@@ -563,6 +563,11 @@ export function renderInspect(
     reason.classList.add('negative');
     reason.hidden = true;
   }
+  if (def.service === 'faith') {
+    const hint = addLine(panel, '', 'feast-reason');
+    hint.classList.add('negative');
+    hint.hidden = true;
+  }
   if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
 }
@@ -723,6 +728,12 @@ function updateFeast(panel: HTMLElement, world: World, b: Building): void {
   if (v) {
     btn.textContent = v.label;
     btn.disabled = v.disabled;
+    btn.title = v.reason ?? '';
+  }
+  const hint = panel.querySelector<HTMLElement>('[data-field="feast-reason"]');
+  if (hint) {
+    hint.hidden = v?.reason == null;
+    hint.textContent = v?.reason ?? '';
   }
 }
 
