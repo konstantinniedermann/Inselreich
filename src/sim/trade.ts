@@ -5,6 +5,7 @@ import { addStock, takeStock } from './economy';
 import { goodLock } from './unlocks';
 import type { GoodId, Result, World } from './types';
 import { fail, ok } from './types';
+import { islandName } from './islands';
 import { islandAt } from './placement';
 import { HOME } from './world';
 
@@ -25,9 +26,19 @@ export function sellPrice(world: World, good: GoodId, n: number): number {
   return Math.floor(acc / 10000);
 }
 
+/** Grund „Kein Kontor auf <Name>“ oder `null`: Handel läuft nur über ein Kontor der Insel. */
+export function noKontorTrade(world: World, island: number): string | null {
+  const isl = islandAt(world, island);
+  return isl !== null && isl.kontorId === null
+    ? `Kein Kontor auf ${islandName(world, island)}`
+    : null;
+}
+
 export function buy(world: World, good: GoodId, n: number, island: number = HOME): Result {
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
+  const noKontor = noKontorTrade(world, island);
+  if (noKontor !== null) return fail(noKontor);
   const lock = goodLock(world, good);
   if (lock !== null) return fail(lock);
 
@@ -61,6 +72,8 @@ export function buy(world: World, good: GoodId, n: number, island: number = HOME
 export function sell(world: World, good: GoodId, n: number, island: number = HOME): Result {
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
+  const noKontor = noKontorTrade(world, island);
+  if (noKontor !== null) return fail(noKontor);
   // Menge muss eine positive ganze Zahl sein
   if (!Number.isInteger(n) || n < 1) {
     return fail('Ungültige Menge');

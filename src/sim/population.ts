@@ -14,7 +14,7 @@ import type {
   TierDef,
   World,
 } from './types';
-import { budgetFrom, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
+import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
@@ -138,7 +138,12 @@ export function upgradeStatus(
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
   const base = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
   const damped =
-    base !== null && deficitGood(budget ?? budgetFrom(goodsBalance(world, cov)), house);
+    base !== null &&
+    deficitGood(
+      budget ?? budgetFrom(goodsBalance(world, b.island, cov)),
+      house,
+      (g) => !dampsOn(world, b.island, g),
+    );
   const festive = base !== null && feastActive(world, b);
   const waitBase = festive ? Math.min(base, TAX_LEVELS.low.upgradeWait ?? base) : base;
   const wait = waitBase === null ? null : waitBase * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
@@ -193,11 +198,16 @@ export function houseCap(world: World, house: HouseState): number {
   );
 }
 
-/** Je Wachstumstakt einmal das Budget (`goodsBalance`), danach je Haus in Id-Reihenfolge. */
+/** Je Wachstumstakt einmal das Budget je Insel (`goodsBalance`, nur Inseln mit Häusern), danach je Haus in Id-Reihenfolge. */
 export function tickPopulation(world: World): void {
   const growth = world.tick % GROWTH_INTERVAL === 0 && world.tick > 0;
   const cov = buildCoverage(world);
-  const budget = growth ? budgetFrom(goodsBalance(world, cov)) : undefined;
+  // Vor der Schleife: das Budget einer Insel gilt für den Stand vor allen Änderungen dieses Takts.
+  const budgets = new Map<number, Budget>();
+  if (growth)
+    for (const b of Object.values(world.buildings))
+      if (b.house && !budgets.has(b.island))
+        budgets.set(b.island, budgetFrom(goodsBalance(world, b.island, cov)));
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
@@ -212,7 +222,7 @@ export function tickPopulation(world: World): void {
       if (house.inhabitants > cap) house.inhabitants -= 1;
       else if (met) house.inhabitants = Math.min(cap, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);
-      tryUpgrade(world, b, budget, cov);
+      tryUpgrade(world, b, budgets.get(b.island), cov);
     }
   }
 }
