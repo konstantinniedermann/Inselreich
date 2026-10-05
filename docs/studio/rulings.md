@@ -1723,3 +1723,18 @@ akzeptierte `lastPatchMs` +17 % ohne Blick auf die CI-Reserve von H-R9 B4 (nur A
 Irrtum: Revert H-R13; Schwelle nur per weiterem Ruling.
 
 Entscheider: L0 · Anlass: CI-Lauf 37295831843 · ADR: —
+
+## R235 · 2026-10-05 · Gate H-T3, CI-Grenze H-R9 B4
+
+Ruling: Befund H-T3: Ursache des roten H-R9 B4 ist nicht `foothillField`, sondern `paintPixels` (+≈ 10 % durch REL-03)
+bei einem Runner, der für diesen Test ≈ 4× langsamer ist als lokal; Neustart des CI-Laufs erneut rot (13,9 ms > 12 ms).
+Entscheid D-H-T3: (1) Cache `foothillsFor` (`fix/h-t3-patchzeit` @ a54ce52, Review OK, pixelgleich, `make check` und
+`CI=true` grün) wird gemergt. (2) CI-Grenze nur für H-R9 B4 auf **20 ms** (lokal bleibt 8 ms) über einen optionalen
+Faktor-Parameter von `perfBudget` (Faktor 2,5, mit Kommentar R235) — Umsetzung als Fortsetzung des Arbeiters auf
+derselben Branch, Review am Diff durch L0. Echte Regressionen fängt das A/B-Perf-Delta im Release-Gate (R211); ab
+jetzt prüft das Release-Gate die CI-Reserve **aller** Zeittests im Render-Diff, nicht nur AK-R1-06. (3) Paket
+„paintPixels-Performance" (Vorberechnung je Zelle) als Kandidat REL-04/M9 in beobachtungen. Kein Rückbau von H-R12b/
+H-R13. — Kosten bei Irrtum: eine Perf-Regression bis +40 % auf dem Runner bleibt im CI unbemerkt bis zum nächsten
+Release-Gate.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-T3, CI-Läufe 37295831843 (2×) · ADR: —
