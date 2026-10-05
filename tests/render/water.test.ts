@@ -44,8 +44,8 @@ function frame(world: World, t: number) {
   drawWaves(ctx, world, ALL(world), t);
   return log;
 }
-const sea = () =>
-  mini(['gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww']);
+// 15 x 14: gross genug, dass die Meerkante (M12 E1: 4 Kacheln) Wellenstriche mit vollem Gewicht übrig lässt
+const sea = () => mini(Array.from({ length: 14 }, () => 'g' + 'w'.repeat(14)));
 
 describe('Wasser (Spec 5.2)', () => {
   it('RF-1e Karte ohne Land: kein Schaum, nur endliche Wellenpunkte; Karte ohne Wasser: nichts', () => {
@@ -62,7 +62,7 @@ describe('Wasser (Spec 5.2)', () => {
       const log = frame(w, t);
       const foam = log.strokeSet.filter(isFoam).map(alphaOf);
       expect(foam.length).toBeGreaterThan(0);
-      alphas.push(...foam.filter((a) => a !== WAVE_ALPHA && a < 0.8));
+      alphas.push(...foam.filter((a) => a > WAVE_ALPHA && a < 0.8)); // Wellenstriche (Rand: kleiner) ausschliessen
     }
     expect(FOAM_ALPHA).toEqual([0.35, 0.7]);
     expect(Math.min(...alphas)).toBeGreaterThanOrEqual(0.35 - 1e-9);

@@ -27,6 +27,7 @@ import {
   type Field,
   type TerrainFields,
   fieldWorld,
+  rimWeight,
 } from './terrainField';
 
 // terrain.ts — Terrain-Ebene (Spec 5.1, ISO §6). Keine Baumkronen: die kommen als Stempel aus trees.ts (D-08).
@@ -964,6 +965,10 @@ export function paintPixels(
   const mt = LAND.indexOf('mountain');
   const wt = new Array<number>(LAND.length).fill(0);
   const grainSeed = g.seed + 23;
+  // Meerkante (M12 E1): Ansichtsgrösse in Kacheln aus dem Gitter
+  const tilesW = ((nx - 1) * RASTER) / TEX,
+    tilesH = ((ny - 1) * RASTER) / TEX;
+  const pxTile = 1 / (scale * TEX);
   for (let py = 0; py < h; py++) {
     const gy = (py0 + py + 0.5) / scale / RASTER;
     const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
@@ -991,6 +996,8 @@ export function paintPixels(
       const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
       if (water) {
         waterColor(Math.max(0, -lerp(smooth)), col);
+        const rim = rimWeight((px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, tilesW, tilesH);
+        if (rim < 1) mix3(C.deep, col, rim, col);
       } else {
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
         let wMt: number,
@@ -1107,6 +1114,7 @@ interface TerrainMeta {
   codes: Uint8Array;
   key: string;
   half: HTMLCanvasElement | null;
+  quarter: HTMLCanvasElement | null;
   buildMs: number;
 }
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
@@ -1273,6 +1281,7 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
     codes,
     key: layoutKey(world),
     half: null,
+    quarter: null,
     buildMs,
   });
   if (import.meta.env.DEV)
@@ -1384,6 +1393,14 @@ export function updateTerrainLayer(
       hc.clearRect(px / 2, py / 2, pw / 2, ph / 2);
       hc.drawImage(layer, px, py, pw, ph, px / 2, py / 2, pw / 2, ph / 2);
     }
+    if (m.quarter) {
+      const qc = m.quarter.getContext('2d');
+      if (qc) {
+        qc.imageSmoothingQuality = 'high';
+        qc.clearRect(px / 4, py / 4, pw / 4, ph / 4);
+        qc.drawImage(m.half, px / 2, py / 2, pw / 2, ph / 2, px / 4, py / 4, pw / 4, ph / 4);
+      }
+    }
   }
   const ms = performance.now() - t0;
   if (terRect && ms > 0) {
@@ -1418,4 +1435,97 @@ export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   }
   if (m) m.half = half;
   return half;
+}
+
+/** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
+export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
+  const m = meta.get(layer);
+  if (m?.quarter) return m.quarter;
+  const half = halfLayer(layer);
+  const quarter = document.createElement('canvas');
+  quarter.width = Math.ceil(half.width / 2);
+  quarter.height = Math.ceil(half.height / 2);
+  const ctx = quarter.getContext('2d');
+  if (ctx) {
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(half, 0, 0, half.width, half.height, 0, 0, quarter.width, quarter.height);
+  }
+  if (m) m.quarter = quarter;
+  return quarter;
+}
+
+const SLICE_ROWS = 32; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
+
+/**
+ * Inselcache in Schritten (M12 E1): gleiche Arbeit wie `buildTerrainLayer`, aber als Liste kleiner Schritte für den
+ * Cache-Plan. `world` ist die Inselansicht (die Insel steht an `home`). Die Ebene ist sofort da, ihre Pixel entstehen
+ * mit den Schritten; das Ergebnis ist pixelgleich zu `buildTerrainLayer`. Das Gitter ist ein Schritt (die Glättung
+ * der Felder reicht über Fenstergrenzen).
+ */
+export function terrainJob(
+  world: World,
+  scale: number,
+): { layer: HTMLCanvasElement; steps: (() => void)[] } {
+  const { w, h } = terrainLayerSize(home(world), scale)[0]!;
+  const layer = document.createElement('canvas');
+  layer.width = w;
+  layer.height = h;
+  const ctx = layer.getContext('2d');
+  if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
+  let fields: TerrainFields;
+  let grid: TerrainGrid;
+  let occ: Uint8Array;
+  let spent = 0;
+  const timed =
+    (f: () => void): (() => void) =>
+    () => {
+      const t0 = performance.now();
+      f();
+      spent += performance.now() - t0;
+    };
+  const steps: (() => void)[] = [
+    timed(() => {
+      fields = terrainFields(fieldWorld(world));
+    }),
+    timed(() => {
+      grid = buildGrid(fieldWorld(world), fields);
+    }),
+  ];
+  for (let y = 0; y < h; y += SLICE_ROWS)
+    steps.push(
+      timed(() => {
+        const rows = Math.min(SLICE_ROWS, h - y);
+        const img = ctx.createImageData(w, rows);
+        paintPixels(grid, scale, 0, y, w, rows, img.data);
+        ctx.putImageData(img, 0, y);
+      }),
+    );
+  steps.push(
+    timed(() => {
+      occ = occupancy(home(world));
+      paintDecor(ctx, world, occ, scale, {
+        x0: 0,
+        y0: 0,
+        x1: home(world).width - 1,
+        y1: home(world).height - 1,
+      });
+    }),
+    timed(() => {
+      meta.set(layer, {
+        world,
+        scale,
+        grid,
+        fields,
+        occ,
+        codes: terrainCodes(home(world)),
+        key: layoutKey(world),
+        half: null,
+        quarter: null,
+        buildMs: spent,
+      });
+    }),
+    timed(() => void halfLayer(layer)),
+    timed(() => void quarterLayer(layer)),
+  );
+  return { layer, steps };
 }

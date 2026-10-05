@@ -1201,7 +1201,8 @@ describe('M12 E1 Terrain', () => {
     expect(layer.width).toBe(ref.width);
     expect(layer.height).toBe(ref.height);
     expect(ref.px).not.toBeNull();
-    expect(Buffer.from(layer.px!.buffer).equals(Buffer.from(ref.px!.buffer))).toBe(true);
+    expect(layer.px!.length).toBe(ref.px!.length);
+    expect(layer.px!.every((v, i) => v === ref.px![i])).toBe(true);
     expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
   });
 

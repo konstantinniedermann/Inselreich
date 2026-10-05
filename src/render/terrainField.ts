@@ -161,3 +161,10 @@ export function depthAt(f: TerrainFields, fx: number, fy: number): number {
   const [wx, wy] = warp(f.seed, fx, fy);
   return Math.max(0, -sampleField(f.coast, wx, wy));
 }
+
+/**
+ * Gewicht der Meerkante (M12 E1): 0 in den äussersten 2 Kacheln der Inselansicht, bis 4 Kacheln Abstand linear auf 1.
+ * `fx`/`fy` in Kacheln, `w`/`h` Kantenlänge der Ansicht in Kacheln.
+ */
+export const rimWeight = (fx: number, fy: number, w: number, h: number): number =>
+  Math.min(1, Math.max(0, (Math.min(fx, fy, w - fx, h - fy) - 2) / 2));
