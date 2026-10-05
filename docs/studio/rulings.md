@@ -1771,3 +1771,17 @@ Beobachtung in `docs/beobachtungen.md` (Input fürs nächste Wirtschafts-Brainst
 mit dem nächsten Integrator-Lauf nach main. — Kosten bei Irrtum: Nachtrag verwerfen, Bündel ohne drittes Ziel.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-03 · ADR: —
+
+## R239 · 2026-10-05 · Gate Spec-Nachtrag I-010 (Anhang 05)
+
+Ruling: Anhang 05 „Drittes Ziel «Gewürzstadt»" (`docs/m12-brainstorming` @ 619eea5) angenommen: n = 80
+(`WIN_SPICE_MERCHANTS`), Haltezeit 600 Ticks (`WIN_SPICE_HOLD`), Save-v9-Feld `wonSpice`, AK-Z3-01…14. (1)
+**Schleifen-Bedingung übernommen** (Ziel zählt nur mit Schiffsroute, die Gewürz von einer Fremdinsel mit eigener
+Plantage heimholt; Zukauf bleibt Notversorgung) — sonst wäre das Ziel „20 Kaufleute mehr". (2) **Plantagenplätze
+Felsbucht bleiben 3** (E1/Anhang 02 A unverändert; Zukauf schliesst die Lücke, Inselwahl bleibt eine Abwägung). (3)
+Änderungen abgenommener AK laut Anhang 05 I (AK-S3-03 Phase `'spice'`, AK-U1-01 Texte, RF-4 `wonSpiceShown`,
+AK-M12-B2 Fold-back) sind mitbeschlossen. Auflagen J (u. a. Neupin `wonMerchantsTick` auf der Integrationsbranch,
+Szenario-Tests statt Balancing-Pin) gehen an den Plan des Seefahrt-Bündels E2+E3+E4, der jetzt startet (vorgezogen
+vor E0-Merge, R237). — Kosten bei Irrtum: B.2/AK-Z3-04 streichen.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-I010 · ADR: —
