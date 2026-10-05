@@ -60,12 +60,17 @@ export function connectPath(world: World, id: number): ConnectPath {
     size++;
   };
 
-  for (const p of adjacentOf(world, b.x, b.y, def.w, def.h)) {
-    const c = stepCost(world, p.x, p.y);
-    const i = idx(world, p.x, p.y);
-    if (c < 0 || dist[i] !== -1) continue;
-    dist[i] = c;
-    pushBack(i);
+  // Start nach Kosten stabil sortiert (Weg zuerst), damit die Deque monoton bleibt.
+  const starts = adjacentOf(world, b.x, b.y, def.w, def.h).map((p) => ({
+    i: idx(world, p.x, p.y),
+    c: stepCost(world, p.x, p.y),
+  }));
+  for (const cost of [0, 1]) {
+    for (const { i, c } of starts) {
+      if (c !== cost || dist[i] !== -1) continue;
+      dist[i] = c;
+      pushBack(i);
+    }
   }
 
   while (size > 0) {
