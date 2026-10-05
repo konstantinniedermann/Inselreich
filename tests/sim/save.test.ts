@@ -4,7 +4,9 @@ import v1Json from './fixtures/save-v1.json?raw';
 import v2Json from './fixtures/save-v2.json?raw';
 import v3Json from './fixtures/save-v3.json?raw';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
-import { beginCrisis, type CrisisRoll } from '../../src/sim/crises';
+import { beginCrisis, flammableRect, rollCrisis, type CrisisRoll } from '../../src/sim/crises';
+import { seaLanes } from '../../src/sim/islands';
+import { orderForPeriod } from '../../src/sim/orders';
 import { GOODS, GOOD_IDS, SELL_FLOOR } from '../../src/sim/defs/goods';
 import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
@@ -26,6 +28,8 @@ import { fixtureV6Run, locksV6Run, normalRunTo } from './fixtureV6';
 import { CHAIN_HASHES, V6_FORMS } from './e0Pins';
 import { V7_FORMS } from './e1Pins';
 import { fixtureV7Run } from './fixtureV7';
+import { fireWorld, fixtureV8Run, tier4Houses } from './fixtureV8';
+import { D_HOME_A_AT_SEED_D37, FIRE_PINS, ORDER_PINS, SEED_D37, SEE_SEEDS } from './seePins';
 import {
   forceGrass,
   forceRect,
@@ -1320,5 +1324,51 @@ describe('M12 E1 Save v8', () => {
     for (let s = 1; s <= 50; s++) createWorld(s);
     const mean = (performance.now() - t0) / 50;
     expect(mean).toBeLessThanOrEqual(perfBudget(5));
+  });
+});
+
+describe('M12 Seefahrt Schritt 0 (Anhang 03 B)', () => {
+  const FIX8 = 'tests/sim/fixtures/save-v8.json';
+  /** C1-1: Messwert des Controller-Laufs (3 Kaufmannshäuser + 1 Bürgerhaus); „11 Häuser" baut T01 aus village(11). */
+  const FIX8_HOUSES = 4;
+  const houseCount = (w: World): number =>
+    Object.values(w.buildings).filter((b) => b.defId === 'house').length;
+  it('T00 save-v8.json roh', () => {
+    const r = JSON.parse(readFileSync(FIX8, 'utf8'));
+    expect(r.version).toBe(8);
+    expect(r.islands).toHaveLength(3);
+    expect(readFileSync(FIX8, 'utf8')).not.toContain('spice');
+    const w = deserialize(readFileSync(FIX8, 'utf8'));
+    expect(w.ok).toBe(true);
+    if (!w.ok) return;
+    expect(tier4Houses(w.world)).toBe(3);
+    expect(houseCount(w.world)).toBe(FIX8_HOUSES);
+  });
+  it('T00 save-v8.json lädt (v8)', () => {
+    const json = readFileSync(FIX8, 'utf8');
+    const r = deserialize(json);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(serialize(r.world)).toBe(json);
+  });
+  it('T00 Rezept = Fixture v8', () => {
+    expect(serialize(fixtureV8Run())).toBe(readFileSync(FIX8, 'utf8'));
+  });
+  it('T00 Pins', () => {
+    for (const seed of SEE_SEEDS) {
+      const orders = Array.from({ length: 20 }, (_, k) => {
+        const o = orderForPeriod(seed, k, 4);
+        return [o.good, o.amount];
+      });
+      expect(orders, `Aufträge Seed ${seed}`).toEqual(ORDER_PINS[seed]);
+      const fw = fireWorld(seed);
+      const fires = Array.from(
+        { length: 30 },
+        (_, k) => rollCrisis(seed, k, 4, flammableRect(fw)).tile ?? null,
+      );
+      expect(fires, `Brand Seed ${seed}`).toEqual(FIRE_PINS[seed]);
+    }
+    const lanes = seaLanes(createWorld(SEED_D37).islands);
+    expect(lanes.find((l) => l.a === 0 && l.b === 2)!.d).toBe(37);
+    expect(lanes.find((l) => l.a === 0 && l.b === 1)!.d).toBe(D_HOME_A_AT_SEED_D37);
   });
 });
