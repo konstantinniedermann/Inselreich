@@ -1,14 +1,17 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import type { BuildingDefId, Island, Result, SiteRule, Terrain, World } from './types';
+import type { BuildingDefId, Cost, Island, Result, SiteRule, Terrain, World } from './types';
 import { fail, ok } from './types';
 import { ISLANDS } from './defs/sea';
 import { inSupplyRange } from './supply';
-import { buildLock } from './unlocks';
+import { buildLock, functionLock } from './unlocks';
+import { checkAfford } from './economy';
+import { islandName } from './islands';
 import {
   adjacentOf,
   center,
   footprint,
   HOME,
+  home,
   inBounds,
   isLand,
   tileAt,
@@ -104,10 +107,37 @@ export function siteRuleOk(
 export function canPlaceRoad(world: World, x: number, y: number, island: number = HOME): Result {
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
+  const gate = noKontorReason(world, island);
+  if (gate !== null) return fail(gate);
   return checkGround(isl, x, y, 1, 1);
 }
 
 export { buildLock } from './unlocks';
+
+const NO_KONTOR = 'Erst ein Kontor auf dieser Insel';
+
+/** Grund (b): Auf einer fernen Insel ohne Kontor ist ausser dem Kontor II nichts baubar; sonst `null`. */
+export function noKontorReason(world: World, island: number): string | null {
+  const isl = islandAt(world, island);
+  return island >= 1 && isl !== null && isl.kontorId === null ? NO_KONTOR : null;
+}
+
+/**
+ * Kostenprüfung des Baus auf `island`: `kontor2` zahlt aus dem Heimatlager, alles andere aus dem Lager
+ * der Insel. Fehlt auf einer fernen Insel eine Ware, nennt der Grund den Ort („Nicht genug Holz auf X").
+ */
+export function affordBuild(
+  world: World,
+  island: number,
+  cost: Cost,
+  fromHome: boolean = false,
+): Result {
+  if (island === HOME) return checkAfford(world, world.islands[HOME]!, cost);
+  const where = fromHome ? 'in der Heimat' : `auf ${islandName(world, island)}`;
+  const res = checkAfford(world, fromHome ? home(world) : world.islands[island]!, cost, where);
+  if (res.ok || !res.reason.endsWith(where)) return res;
+  return fail(res.reason.replace(/^Zu wenig /, 'Nicht genug '));
+}
 
 export function canPlace(
   world: World,
@@ -118,6 +148,12 @@ export function canPlace(
 ): Result {
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
+  if (island >= 1 && defId === 'kontor2') {
+    const seafaring = functionLock(world, 'seafaring');
+    if (seafaring !== null) return fail(seafaring);
+  }
+  const gate = defId === 'kontor2' ? null : noKontorReason(world, island);
+  if (gate !== null) return fail(gate);
   const lock = buildLock(world, defId);
   if (lock !== null) return fail(lock); // zuerst: auch auf Wasser oder belegtem Boden gilt der Sperrgrund
   const def = BUILDING_DEFS[defId];

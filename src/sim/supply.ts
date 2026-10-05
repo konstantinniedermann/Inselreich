@@ -1,12 +1,15 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { isSupplySource } from './coverage';
 import type { Building, World } from './types';
-import { center } from './world';
+import { center, isKontor } from './world';
 
-/** Versorgende Gebäude einer Insel: ihr Kontor immer, Märkte der Insel nur, wenn sie angebunden sind. */
+const isOwnKontor = (world: World, b: Building): boolean =>
+  isKontor(b.defId) && world.islands[b.island]?.kontorId === b.id;
+
+/** Versorgende Gebäude einer Insel: ihr Kontor (auch Kontor II) immer, Märkte nur, wenn sie angebunden sind. */
 export function supplyBuildings(world: World, island: number): Building[] {
   return Object.values(world.buildings).filter(
-    (b) => b.island === island && isSupplySource(world, b),
+    (b) => b.island === island && (isSupplySource(world, b) || isOwnKontor(world, b)),
   );
 }
 

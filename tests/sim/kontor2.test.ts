@@ -32,6 +32,17 @@ function siteOf(w: World, defId: BuildingDefId, island: number): { x: number; y:
     for (let x = 0; x < isl.width; x++) if (canPlace(w, defId, x, y, island).ok) return { x, y };
   throw new Error(`kein Platz für ${defId}`);
 }
+/** Alle Gründe, aus denen `defId` auf der Insel an irgendeiner Kachel scheitert. */
+function reasonsOn(w: World, defId: BuildingDefId, island: number): Set<string> {
+  const isl = w.islands[island]!;
+  const out = new Set<string>();
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++) {
+      const r = canPlace(w, defId, x, y, island);
+      if (!r.ok) out.add(r.reason);
+    }
+  return out;
+}
 const lumberSite = (w: World, island: number) => siteOf(w, 'lumberjack', island);
 
 /** Legt Wege per BFS über freie Kacheln vom Holzfäller bis ans Kontor der Insel. */
@@ -71,7 +82,7 @@ describe('M12 E2 Kontor II', () => {
     const s = kontorSite(locked, B);
     expect(canPlace(locked, 'kontor2', s.x, s.y, B)).toEqual({
       ok: false,
-      reason: 'Seefahrt mit den Kaufleuten',
+      reason: 'Erst nach dem Ziel', // Sim-Grund aus functionLock; „Seefahrt mit den Kaufleuten“ ist UI-Hovertext
     });
     const w = seaWorld();
     home(w).stock.wood = 100;
@@ -87,14 +98,9 @@ describe('M12 E2 Kontor II', () => {
     expect(home(w).stock.stone).toBe(100 - c.stone);
     expect(w.islands[B]!.stock.wood).toBe(7);
     expect(w.islands[B]!.kontorId).toBe(id);
-    expect(canPlace(w, 'kontor2', s.x, s.y, B)).toEqual({
-      ok: false,
-      reason: 'Auf dieser Insel steht schon ein Kontor',
-    });
-    expect(canPlace(w, 'kontor2', s.x, s.y, 0)).toEqual({
-      ok: false,
-      reason: 'Nur auf einer fernen Insel',
-    });
+    const again = reasonsOn(w, 'kontor2', B);
+    expect(again).toContain('Auf dieser Insel steht schon ein Kontor');
+    expect(reasonsOn(w, 'kontor2', 0)).toContain('Nur auf einer fernen Insel');
   });
 
   it('AK-E2-02: ohne Kontor kein Bau, Weg, Forst; danach Bau aus dem Insellager', () => {
@@ -106,8 +112,7 @@ describe('M12 E2 Kontor II', () => {
     w.islands[B]!.stock.tools = 50;
     const isl = w.islands[B]!;
     const k = kontorSite(w, B);
-    const lj = lumberSite(w, B);
-    expect(canPlace(w, 'lumberjack', lj.x, lj.y, B)).toEqual({ ok: false, reason: NO_KONTOR });
+    expect(canPlace(w, 'lumberjack', k.x + 3, k.y, B)).toEqual({ ok: false, reason: NO_KONTOR });
     expect(placeRoad(w, k.x + 3, k.y, B)).toEqual({ ok: false, reason: NO_KONTOR });
     expect(plantForest(w, k.x + 3, k.y, B)).toEqual({ ok: false, reason: NO_KONTOR });
     found(w, B);

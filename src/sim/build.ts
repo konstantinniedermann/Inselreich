@@ -1,18 +1,19 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
-import { checkAfford, grantRefund, pay, refundCost } from './economy';
+import { grantRefund, pay, refundCost } from './economy';
 import { newHouseState } from './population';
-import { canPlace, canPlaceRoad, islandAt } from './placement';
+import { affordBuild, canPlace, canPlaceRoad, islandAt } from './placement';
+import { effectiveRefund } from './queries';
 import { recomputeConnectivity } from './roads';
 import type { Building, BuildingDefId, Result, World } from './types';
 import { fail, ok } from './types';
 import { paidCost } from './upgrade';
-import { HOME, footprint, islandOf, tileAt } from './world';
+import { HOME, footprint, home, islandOf, tileAt } from './world';
 
 export function placeRoad(world: World, x: number, y: number, island: number = HOME): Result {
   const res = canPlaceRoad(world, x, y, island);
   if (!res.ok) return res;
   const isl = islandAt(world, island)!;
-  const afford = checkAfford(world, isl, ROAD_COST_OBJ);
+  const afford = affordBuild(world, island, ROAD_COST_OBJ);
   if (!afford.ok) return afford;
   pay(world, isl, ROAD_COST_OBJ);
   tileAt(isl, x, y)!.road = true;
@@ -41,9 +42,11 @@ export function placeBuilding(
   const res = canPlace(world, defId, x, y, island);
   if (!res.ok) return res;
   const isl = islandAt(world, island)!;
-  const afford = checkAfford(world, isl, BUILDING_DEFS[defId].cost);
+  const cost = BUILDING_DEFS[defId].cost;
+  const fromHome = defId === 'kontor2';
+  const afford = affordBuild(world, island, cost, fromHome);
   if (!afford.ok) return afford;
-  pay(world, isl, BUILDING_DEFS[defId].cost);
+  pay(world, fromHome ? home(world) : isl, cost);
   const id = world.nextBuildingId++;
   const building: Building = {
     id,
@@ -60,20 +63,31 @@ export function placeBuilding(
   }
   world.buildings[id] = building;
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(isl, p.x, p.y)!.buildingId = id;
+  if (fromHome) isl.kontorId = id;
   recomputeConnectivity(world);
   return { ok: true, id };
+}
+
+/** Ein Schiff mit Route über `island` oder Ziel `island` braucht das Kontor; ein Hafen allein nicht. */
+function shipNeedsIsland(world: World, island: number): boolean {
+  return world.ships.some((s) => s.route?.a === island || s.route?.b === island || s.to === island);
 }
 
 export function demolish(world: World, id: number): Result {
   const b = world.buildings[id];
   if (!b) return fail('Gebäude nicht gefunden');
   if (b.defId === 'kontor') return fail('Kontor kann nicht abgerissen werden');
+  const isFar = b.defId === 'kontor2';
+  if (isFar && shipNeedsIsland(world, b.island)) return fail('Erst Route auflösen');
   for (const p of footprint(BUILDING_DEFS[b.defId], b.x, b.y)) {
     const tile = tileAt(islandOf(world, b), p.x, p.y);
     if (tile) tile.buildingId = null;
   }
   delete world.buildings[id];
-  grantRefund(world, islandOf(world, b), refundCost(paidCost(b)));
+  if (isFar) {
+    world.islands[b.island]!.kontorId = null;
+    grantRefund(world, home(world), effectiveRefund(world, paidCost(b)));
+  } else grantRefund(world, islandOf(world, b), refundCost(paidCost(b)));
   recomputeConnectivity(world);
   return ok;
 }
