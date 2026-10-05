@@ -886,3 +886,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/sim/population.ts` (`upgradeStatus`, `upgradeDeficit`), `src/sim/flow.ts` (`goodsBalance`), `src/sim/queries.ts` (`effectiveRefund`).
 - Beobachtung: Seit M12-E0 T04 dämpfen Bilanz-Defizit und Rückerstattungs-Vorschau nur nach Heimat-Bilanz bzw. Heimat-Lager. Für Gebäude auf weiteren Inseln stimmt das nicht (bei einer Insel unkritisch).
 - Ursprung: Review T04 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; in T05/E1 je Insel bilanzieren oder bewusst dokumentieren.
+
+### 2026-10-05 · Tests · Standard-CI_FACTOR 1,5 passt nicht zum Runner-Abstand
+
+- Fundort: `tests/helpers/perfBudget.ts:2` (`CI_FACTOR`), Nutzer u. a. `tests/sim/perf.test.ts`.
+- Beobachtung: Der Standardfaktor 1,5 bildet den Abstand Runner/lokal (≈ 4×, H-T3) nicht ab; jeder Zeittest braucht einen eigenen Faktor (R235, T05-Lasttest jetzt 4).
+- Ursprung: Review T05 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; Standardfaktor prüfen oder anheben, sobald weitere Zeittests dazukommen.

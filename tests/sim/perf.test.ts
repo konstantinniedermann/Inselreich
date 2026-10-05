@@ -23,7 +23,10 @@ describe('M12 E0 Last', () => {
     const t0 = performance.now();
     for (let i = 0; i < STEPS; i++) step(w);
     const mean = (performance.now() - t0) / STEPS;
-    expect(mean, `Mittel ${mean.toFixed(2)} ms/Schritt`).toBeLessThanOrEqual(perfBudget(PERF_PIN));
+    // CI-Faktor 4 statt 1,5: der Runner liegt laut H-T3 bei ca. 4x lokal (wie terrain.test.ts, H-R9 B4).
+    // Lokal gilt der Pin streng (2,5 ms), im CI 10 ms; der naive Code (18,6 ms) bleibt auch dort rot.
+    const budget = perfBudget(PERF_PIN, undefined, 4);
+    expect(mean, `Mittel ${mean.toFixed(2)} ms/Schritt`).toBeLessThanOrEqual(budget);
   }, 120_000);
 
   it('AK-E0-15b D1: Abdeckung per buildCoverage mindestens 5 mal schneller als naiv', () => {
