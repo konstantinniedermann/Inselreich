@@ -43,3 +43,15 @@ export const STORM_DURATION = 300;
 export const FIRE_OUTAGE = 200;
 /** Dauer eines Booms (Verkaufs-Ticks ab Periodenstart). */
 export const BOOM_DURATION = 300;
+
+/*
+ * Fest in der Kapelle (H-I007): Rum je Fest, Wirkdauer und Abklingzeit ab Festbeginn (Ticks, 1× = 10 Ticks/s).
+ * Die verkürzte Aufstiegs-Wartezeit ist `TAX_LEVELS.low.upgradeWait`. Die Save-Prüfung liest `feastAt`
+ * nur gegen den Tick, die Werte hier ändern also keine alten Stände.
+ */
+/** Rum, den ein Fest aus dem Lager verbraucht. */
+export const FEAST_RUM = 10;
+/** Wirkdauer eines Fests (60 s bei 1×). */
+export const FEAST_DURATION = 600;
+/** Abklingzeit je Kapelle ab Festbeginn (3 min bei 1×); länger als die Wirkdauer. */
+export const FEAST_COOLDOWN = 1800;
