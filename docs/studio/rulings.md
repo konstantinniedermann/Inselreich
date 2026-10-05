@@ -1929,3 +1929,13 @@ Last-Zustand steht im Bericht. E-030 startet als Experiment mit diesem Paket. �
 Messwerte, Wiederholung der Messung.
 
 Entscheider: L0 · Anlass: Session-Start, state.md · ADR: —
+
+## R251 · 2026-10-05 · Handbuch 1.19 abgenommen, E-028 bewerten, E-030 nachrücken
+
+Ruling: Handbuch 1.19 (`196bcce`) angenommen. **E-028** hat seinen Zeitraum erreicht (REL-01…REL-04 ≥ 3 Releases) →
+studio-coach bewertet und schliesst es; danach rückt **E-030** auf den freien Platz (laufend ab dieser Session, Start
+R250; Verfassung §10 höchstens 3). Bewährt sich E-028, bleibt die Arbeitsweise als Regel im Handbuch. `docs/studio/
+gates.md` „Gate Plan" bekommt den Satz zum Folgeplan-Gate (R233 V2) durch studio-coach. V1 (Warte-Turn-Enden als
+`waiting`) nimmt L0 ab sofort in Lead-Briefings auf. — Kosten bei Irrtum: E-028 wieder öffnen, E-030 zurückstellen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach PROZ-HB-R233 · ADR: —
