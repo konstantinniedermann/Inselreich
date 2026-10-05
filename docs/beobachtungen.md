@@ -842,10 +842,16 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
 - Beobachtung: Brennende Gebäude werden mit reinem Schwarz abgedunkelt (S1). Die Stimmen-Schlüssel je Gut doppeln die Gut-IDs der Sim ohne Test; Umbenennung fällt still auf die Grundstimme zurück.
 - Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
+- Ergebnis: erledigt in fix/s1-rest
 
 ### 2026-10-05 · Sim/Design · Anbinden-Pfad läuft auch durch Wald
 
 - Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
 - Beobachtung: Der Knopf «Anbinden» (H-U1) wählt den Weg mit den wenigsten neuen Kacheln; Wald kostet wie Gras. Ein Weg durch Wald senkt die freie Waldfläche, die Holzfäller und Jagdhütte zählen (`radius`-Regel mit `free`). Die Vorschau zeigt das vor dem Klick, die Wahl bleibt beim Spieler.
 - Ursprung: Browser-Check H-U1 (Screenshot `.studio/qa/REL-03/h-u1/2_hover_vorschau.png`), lead-tech. Einschätzung: Design-Frage an lead-design — bei Gleichstand Gras vor Wald bevorzugen (kleine Änderung der Gleichstandsregel, kein Save, Baseline unberührt) oder so lassen.
-- Ergebnis: erledigt in fix/s1-rest
+
+### 2026-10-05 · Sim/Render · Nachträge opus-Review REL-03
+
+- Fundort: `src/sim/connect.ts:118` (`connectBuilding`); `tests/render/terrain.test.ts` (AK-R1-06).
+- Beobachtung: (1) `connectBuilding` multipliziert nur die Geldkosten mit n; bekommt ein Weg später Material-Kosten, wäre ein Teilbau möglich und AK-06 verletzt. (2) CI-Zeitreserve AK-R1-06 nach REL-03 ≈ 2,0–2,05 s von 2,25 s.
+- Ursprung: opus-Review REL-03 (lead-qa), R232. Einschätzung: niedrig; (2) beobachten.
