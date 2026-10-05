@@ -17,7 +17,7 @@
 //   --warm <ms>     (Standard 5000) Warten auf `cachesReady()` (Limit 60 s, sonst Fehler), dann Zoom/Fokus setzen,
 //                   `--warm` ms warten, dann Messfenster 15 s. Ohne `cachesReady` (main) entfällt nur das Warten darauf.
 //   --idle          Messfenster ab erstem Frame nach dem Laden (Fortsetzen) bis `cachesReady()`; ausgegeben werden
-//                   `frameMax` (ohne Notfall-Frames), `emergencyFrames` getrennt sowie Median/p95/Maximum von
+//                   `frameMax` (Probe, ohne Notfall-Frames), `frameMaxAfterBuild` (eigener rAF-Schreiber ab dem 6. Frame nach Fortsetzen), `emergencyFrames` getrennt sowie Median/p95/Maximum von
 //                   `slices()` (Leerlauf-Scheiben, ms) und `emergency()`. Die Probe hält ein Fenster von 600 Frames.
 // Ausgabe: Kopfzeile (CPU, OS, Node, Chrome, DPR, Fenster, Seed, Zoom, Fokus), je Lauf eine Ergebniszeile je Seite
 // mit `buildMs` (Konsole `[terrain] Aufbau <ms> ms`), am Ende die Zusammenfassung. Je Seed ein eigener Aufruf, kein
@@ -104,6 +104,7 @@ const MOUNTAIN = `(async () => {
   return { x: Math.round(cx), y: Math.round(cy), n: best.length };
 })()`;
 
+const GAP_SKIP = 5;
 const READY_LIMIT_MS = 60000;
 const BUILD_RE = /\[terrain\] Aufbau\s+([\d.,]+)\s*ms/;
 const stats = (v) => {
@@ -158,6 +159,10 @@ async function once(root, n) {
         if (caps.focus && (focus === 'home' || focus === 'archipel'))
           await c.ev(`window.__inselDev.focus(${JSON.stringify(focus)})`);
       };
+      if (idle)
+        await c.ev(
+          `window.__gaps = []; (() => { let prev = null; const f = (t) => { if (prev !== null) window.__gaps.push([t, t - prev]); prev = t; requestAnimationFrame(f); }; requestAnimationFrame(f); })(); 1`,
+        );
       await click('Fortsetzen');
       let at = null;
       let measured = {};
@@ -181,6 +186,16 @@ async function once(root, n) {
         const list = async (fn) =>
           JSON.parse(await c.ev(`JSON.stringify(window.__inselDev.${fn}?.() ?? [])`));
         measured = { slices: stats(await list('slices')), emergency: await list('emergency') };
+        if (idle) {
+          // Eigener rAF-Schreiber: Lücken ab dem ersten Frame nach dem Heimataufbau (die ersten GAP_SKIP Frames
+          // nach Fortsetzen enthalten den Aufbau und werden getrennt ausgewiesen).
+          const gaps = JSON.parse(await c.ev('JSON.stringify(window.__gaps)'));
+          measured.buildGaps = gaps.slice(0, GAP_SKIP).map(([, g]) => +g.toFixed(1));
+          const rest = gaps.slice(GAP_SKIP).map(([, g]) => g);
+          measured.frameMaxAfterBuild = +Math.max(0, ...rest).toFixed(1);
+          measured.framesAfterBuild = rest.length;
+          measured.framesOver50 = rest.filter((g) => g > 50).length;
+        }
       }
       const r = await c.ev('JSON.stringify(globalThis.__inselRender ?? null)');
       return {
@@ -234,6 +249,10 @@ try {
           renderP95: r.renderP95,
           frameMedian: r.frameMedian,
           frameMax: r.frameMax,
+          frameMaxAfterBuild: r.frameMaxAfterBuild,
+          framesOver50: r.framesOver50,
+          framesAfterBuild: r.framesAfterBuild,
+          buildGaps: r.buildGaps,
           emergencyFrames: r.emergencyFrames,
           n: r.n,
           buildMs: r.buildMs,
@@ -278,6 +297,7 @@ console.log(
     buildMsA: buildOf(res.A),
     buildMsB: buildOf(res.B),
     ...(idle && {
+      frameMaxAfterBuildB: res.B.map((r) => r.frameMaxAfterBuild),
       frameMaxB: med(res.B.map((r) => r.frameMax ?? 0)),
       emergencyFramesB: res.B.map((r) => r.emergencyFrames ?? 0),
       slicesMaxB: Math.max(...res.B.map((r) => r.slices?.max ?? 0)),
