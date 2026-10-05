@@ -936,3 +936,10 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/render/terrain.ts` (`terrainJob`, `gridBands`), Messung Node mit Fake-Kontext, 36 × 36 bei Faktor 2, Last hoch (Load ≈ 14).
 - Beobachtung: Das Gitter ist in Bänder à 4 Knotenzeilen geteilt (bitgleich zu `buildGrid`, Test); Schritt ca. 7 ms (Rand von 7 Knoten je Seite macht die Summe etwa 5 × teurer als ungeteilt, ca. 0,5 s). Malbänder à 32 Zeilen: Median ca. 8 ms, einzelne Spitzen 15 – 50 ms (Land mit Wald, Fels, Dünen), Summe ca. 1,5 s.
 - Ursprung: M12-E1-T04 Fix-Runde. Einschätzung: mittel; im Browser messen (T07), ggf. `SLICE_ROWS` auf 16 und `GRID_BAND_ROWS` anpassen.
+
+## 2026-10-05 · M12-E1 T05-Review: Baumstempel-Seed ohne Test, `errands` je Frame genullt
+
+- **Fundort:** `src/render/renderer.ts` (Baumstempel, Kronen-Verdecker), `renderStats.errands`.
+- **Beobachtung:** Fremdinsel-Bäume nutzen den Seed der echten Welt (nicht den Inselseed der `islandView`); kein Test belegt das. `renderStats.errands` wird jetzt je Frame genullt und je Insel summiert (vorher blieb der Wert bei leerem Bildbereich stehen).
+- **Ursprung:** M12-E1 T05, Review OK.
+- **Einschätzung:** Test in T06 nachziehen (klein); `errands` harmlos.
