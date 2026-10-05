@@ -10,11 +10,13 @@ import {
   validRoute,
 } from '../../src/sim/ships';
 import { totalUpkeep } from '../../src/sim/economy';
+import { functionLock, goodLock } from '../../src/sim/unlocks';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Result, Route, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { foundKontor2Literal, seaWorld, shipLiteral } from './seaHelpers';
+import { SEED_D37 } from './seePins';
 
 function richWorld(): World {
   const w = seaWorld();
@@ -81,7 +83,9 @@ describe('M12 E4 Schiffe Aktionen', () => {
       const w = createWorld(3);
       w.money = 10000;
       const before = serialize(w);
-      expect(reason(buyShip(w))).toContain('Seefahrt mit den Kaufleuten');
+      const lock = functionLock(w, 'seafaring');
+      expect(lock).not.toBeNull();
+      expect(reason(buyShip(w))).toBe(lock);
       expect(serialize(w)).toBe(before);
     });
 
@@ -179,10 +183,11 @@ describe('M12 E4 Schiffe Aktionen', () => {
 
     it('Gut nicht freigeschaltet liefert den Sperrtext', () => {
       const w = routeWorld();
-      const w0 = createWorld(3);
-      const lock = reason(validRoute(w0, route({ ab: [{ good: 'spice', reserve: 0 }], ba: [] })));
-      expect(lock).not.toBe('');
-      expect(lock).not.toContain('Kein Kontor');
+      const w0 = createWorld(SEED_D37);
+      foundKontor2Literal(w0, 1);
+      const spice = route({ ab: [{ good: 'spice', reserve: 0 }], ba: [] });
+      expect(goodLock(w0, 'spice')).not.toBeNull();
+      expect(reason(validRoute(w0, spice))).toBe(goodLock(w0, 'spice'));
       expect(validRoute(w, route()).ok).toBe(true);
     });
   });
