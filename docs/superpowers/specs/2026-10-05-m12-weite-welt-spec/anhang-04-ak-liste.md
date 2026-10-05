@@ -130,4 +130,10 @@ Verweis aus Spec §9.2. lead-tech übernimmt sie in die Teilpläne; lead-qa prü
   AK-E4-03; Szenario für AK-E4-11 mit Round-trip v9 inklusive Schiffe; „Steuer 22 je EW" über `taxUnits` prüfen
   (AK-E3-03); AK-E1-14 je Seed einzeln ausweisen; M8:AK-B1-02/-04 grün mit `feedSpice`; Browser-Check Gewürz-Chip
   und Hilfe-Schritt Anhang 03 C.11.
+- **lead-qa Teil B, Nachtrag R230:** AK-E2-03 mit Schiff liegend in der Felsbucht beim Abriss von `kontor2`
+  (speichern, laden); Rezept für `save-v8.json` (erster Commit der Integrationsbranch, analog Anhang 01 C);
+  Übergangsbestand Gewürz über die ganze Kette ab v7 (v7 → v8 → v9 legt ihn genau einmal); Browser-Check der
+  Lade-Meldung (einmalig, nicht nach erneutem Laden); AK-E1-16 mit festgelegtem Aufwärmen vor der Messung;
+  AK-E1-18 Notfall-Frames getrennt ausweisen; AK-E1-19 Messbedingungen (Maschine, DPR, Fenster, Seed, Fokus)
+  im Plan fixieren.
 - **Reihenfolge:** E1-Render startet erst nach dem REL-03-Merge.

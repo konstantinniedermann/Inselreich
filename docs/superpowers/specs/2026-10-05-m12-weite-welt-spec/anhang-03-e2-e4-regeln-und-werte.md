@@ -131,6 +131,19 @@ Heimat `kind 'home'`, `ox = oy = 0`, `anchor` nach Regel; `version 8`.
   | M11:AK-BAS-02         | `balance-merchants.test.ts`                    | `[6750, 11200, 320]` → neu gemessen                                    |
   | M12:AK-E0-18          | `balance-merchants.test.ts`                    | dito; gilt bis zum v9-Merge                                            |
 
+- **Alte Pins, die E2 bewusst ändert** (R226 F-03, R230 B1; Neupin im Seefahrt-Bündel v9 mit Befehl und Commit):
+
+  | Pin          | Datei                                     | Grund                                                                     |
+  | ------------ | ----------------------------------------- | ------------------------------------------------------------------------- |
+  | M8:AK-S1-01  | `unlocks.test.ts` (U6-Zeile)              | U6 bringt zusätzlich `kontor2`, `spicefarm`, `spice` und `seafaring`      |
+  | M11:AK-U1-08 | `tests/ui/goal.test.ts` (`UNLOCK_NOTICE`) | „nur U6 = M8-Text" gilt nicht mehr; neuer U6-Text unten, wörtlich gepinnt |
+
+- **U6-Meldungstext** (Entscheid lead-design, R230 B1): `UNLOCK_NOTICE` in `src/ui/goal.ts` wird zu
+  „Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden;
+  Kaufleute brauchen Gewürz von fernen Inseln". Namen, Tasten und Stufen kommen wie heute aus den Defs
+  (`withKey`, `TIERS`, `GOODS.spice.name`, Label `seafaring` aus `FUNCTION_LABELS`, Taste aus `hotkeyLabel`); der
+  Text oben ist der erwartete Wortlaut mit den heutigen Tasten. README (Abschnitt Ziel) zitiert ihn mit dem v9-Merge.
+
 - **Alte Spielstände mit Kaufleuten** (Spielurteil lead-design, R228 (6) A3): Die Migration v8 → v9 legt einmalig
   `min(100, SPICE_GRACE_PER_HOUSE × Häuser der Stufe 4)` Gewürz ins Heimatlager. Beim Laden erscheint einmalig die
   Meldung „Deine Kaufleute wünschen jetzt Gewürz — kaufe es am Kontor oder gründe ein Kontor auf einer
