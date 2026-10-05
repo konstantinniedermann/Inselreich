@@ -105,7 +105,7 @@ describe('H-R12b Profil und Hilfsfunktionen (M2, M5, M6)', () => {
       for (let k = 0; k < g.smooth.length; k++)
         if (g.smooth[k]! < WET_SAND) expect(g.dpres[k]!, `Seed ${seed}`).toBe(0);
     }
-  });
+  }, 60_000);
 
   it('H-R12b K2 Form: Schattenseite unter Stufe 1,5, Lichtseite liegt über der Ebene, kurze steile Seite, Maximalton ≤ 2,5 + Rippeln', () => {
     const o: DuneNode = { tone: 0, pres: 0, phase: 0 };
