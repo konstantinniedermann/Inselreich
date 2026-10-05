@@ -25,6 +25,7 @@ import {
   RELIEF_AMP,
   meadowHill,
   buildTerrainLayer,
+  gridBands,
   halfLayer,
   quarterLayer,
   terrainJob,
@@ -1125,6 +1126,7 @@ describe('M12 E1 Terrain', () => {
     width: number;
     height: number;
     px: Uint8ClampedArray | null;
+    calls: string[];
     getContext: () => unknown;
   }
   const saved = (globalThis as { document?: unknown }).document;
@@ -1136,21 +1138,25 @@ describe('M12 E1 Terrain', () => {
           width: 0,
           height: 0,
           px: null,
+          calls: [],
           getContext: () => ctx,
         };
         const base = {
           createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
           putImageData: (img: { data: Uint8ClampedArray }, x: number, y: number) => {
             c.px ??= new Uint8ClampedArray(c.width * c.height * 4);
-            const w = Math.round(
-              img.data.length / 4 / Math.max(1, rowsOf(img.data.length, c.width)),
-            );
+            const w = c.width;
             for (let r = 0; r < img.data.length / 4 / w; r++)
               c.px.set(img.data.subarray(r * w * 4, (r + 1) * w * 4), ((y + r) * c.width + x) * 4);
           },
         };
         const ctx = new Proxy(base as Record<string, unknown>, {
-          get: (t, k: string) => (k in t ? t[k] : () => undefined),
+          get: (t, k: string) =>
+            k in t
+              ? t[k]
+              : (...a: unknown[]) => {
+                  c.calls.push(`${k}(${JSON.stringify(a)})`);
+                },
           set: () => true,
         });
         return c;
@@ -1160,7 +1166,6 @@ describe('M12 E1 Terrain', () => {
   afterAll(() => {
     (globalThis as { document?: unknown }).document = saved;
   });
-  const rowsOf = (len: number, width: number): number => len / 4 / width;
 
   it('AK-E1-20 rimWeight: Kachel 0 und 1,9 gleich 0, ab 4 gleich 1, dazwischen linear', () => {
     expect(rimWeight(0, 12, 24, 24)).toBe(0);
@@ -1190,20 +1195,62 @@ describe('M12 E1 Terrain', () => {
     expect(rim).toBeGreaterThan(0);
   });
 
-  it('AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor 1)', () => {
-    const world = view();
-    const ref = buildTerrainLayer(world, 1) as unknown as FakeCanvas;
-    const job = terrainJob(world, 1);
-    const layer = job.layer as unknown as FakeCanvas;
-    expect(job.steps.length).toBeGreaterThan(10);
-    expect(layer.px).toBeNull();
-    for (const s of job.steps) s();
-    expect(layer.width).toBe(ref.width);
-    expect(layer.height).toBe(ref.height);
-    expect(ref.px).not.toBeNull();
-    expect(layer.px!.length).toBe(ref.px!.length);
-    expect(layer.px!.every((v, i) => v === ref.px![i])).toBe(true);
-    expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
+  // Zeichenaufrufe von paintDecor: alles ausser Pixelblöcken und Kopien (die unterscheiden sich im Schnitt der Schritte)
+  const decorCalls = (c: FakeCanvas): string[] =>
+    c.calls.filter((k) => !/^(createImageData|putImageData|drawImage|clearRect)\(/.test(k));
+
+  for (const scale of [1, 2])
+    it(`AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor ${scale}), samt Dekor`, () => {
+      const world = view();
+      const ref = buildTerrainLayer(world, scale) as unknown as FakeCanvas;
+      const job = terrainJob(world, scale);
+      const layer = job.layer as unknown as FakeCanvas;
+      expect(job.steps.length).toBeGreaterThan(10);
+      expect(layer.px).toBeNull();
+      for (const s of job.steps) s();
+      expect(layer.width).toBe(ref.width);
+      expect(layer.height).toBe(ref.height);
+      expect(ref.px).not.toBeNull();
+      expect(layer.px!.length).toBe(ref.px!.length);
+      expect(layer.px!.every((v, i) => v === ref.px![i])).toBe(true);
+      expect(decorCalls(ref).length).toBeGreaterThan(0);
+      expect(decorCalls(layer)).toEqual(decorCalls(ref));
+      expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
+    });
+
+  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16 und 13, Heimat und Inselansicht)', () => {
+    for (const w of [view(), createWorld(3)]) {
+      const isl = fieldWorld(w);
+      const fields = terrainFields(isl);
+      const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
+      for (const rows of [16, 13]) {
+        const bands = gridBands(isl, fields, rows);
+        expect(bands.steps.length).toBeGreaterThan(2);
+        for (const s of bands.steps) s();
+        const g = bands.grid() as unknown as Record<string, unknown>;
+        for (const k of Object.keys(ref)) {
+          if (k === 'ind') {
+            const a = g[k] as Float32Array[],
+              b = ref[k] as Float32Array[];
+            a.forEach((f, t) =>
+              expect(
+                f.every((v, i) => v === b[t]![i]),
+                `ind ${t}`,
+              ).toBe(true),
+            );
+          } else if (typeof ref[k] === 'number') expect(g[k]).toBe(ref[k]);
+          else {
+            const a = g[k] as Float32Array,
+              b = ref[k] as Float32Array;
+            expect(a.length, k).toBe(b.length);
+            expect(
+              a.every((v, i) => v === b[i]),
+              k,
+            ).toBe(true);
+          }
+        }
+      }
+    }
   });
 
   it('quarterLayer: Kante gleich ceil(halfLayer / 2), zweiter Aufruf liefert dasselbe Objekt', () => {

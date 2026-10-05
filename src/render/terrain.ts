@@ -1351,6 +1351,73 @@ export function patchGrid(
   for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
 }
 
+const GRID_FLOAT_FIELDS = [
+  'sharp',
+  'smooth',
+  'grass',
+  'rock',
+  'shade',
+  'tone',
+  'patch',
+  'mfoot',
+  'scree',
+  'tint',
+  'warm',
+  'mottle',
+  'veil',
+  'dune',
+  'dpres',
+  'dphase',
+] as const;
+
+/**
+ * Das Gitter von `buildGrid` in Knoten-Zeilenbändern (M12 E1): jeder Schritt rechnet ein Fenster mit Rand
+ * (`2 · HEIGHT_BLUR + 1` Knoten, wie `patchGrid`) und übernimmt nur die Bandzeilen. Das Ergebnis ist bitgleich zu
+ * `buildGrid`. `grid()` liefert das Gitter nach dem letzten Schritt.
+ */
+export function gridBands(
+  isl: World3,
+  fields: TerrainFields | (() => TerrainFields),
+  bandRows = 16,
+): { steps: (() => void)[]; grid: () => TerrainGrid } {
+  const nx = (isl.width * TEX) / RASTER + 1,
+    ny = (isl.height * TEX) / RASTER + 1;
+  const n = nx * ny;
+  const g = {
+    seed: isl.seed,
+    nx,
+    ny,
+    ind: LAND.map(() => new Float32Array(n)),
+    cls: new Uint8Array(n),
+  } as Record<string, unknown> as unknown as TerrainGrid;
+  for (const f of GRID_FLOAT_FIELDS) g[f] = new Float32Array(n);
+  const margin = 2 * HEIGHT_BLUR + 1;
+  const steps: (() => void)[] = [];
+  for (let j0 = 0; j0 < ny; j0 += bandRows) {
+    const j1 = Math.min(ny - 1, j0 + bandRows - 1);
+    steps.push(() => {
+      const win = {
+        i0: 0,
+        i1: nx - 1,
+        j0: Math.max(0, j0 - margin),
+        j1: Math.min(ny - 1, j1 + margin),
+      };
+      const part = computeWindow(isl, typeof fields === 'function' ? fields() : fields, win);
+      const copy = (
+        dst: ArrayLike<number> & { [i: number]: number },
+        src: ArrayLike<number>,
+      ): void => {
+        for (let j = j0; j <= j1; j++)
+          for (let i = 0; i < nx; i++) dst[j * nx + i] = src[(j - win.j0) * nx + i]!;
+      };
+      for (const f of GRID_FLOAT_FIELDS) copy(g[f], part[f]);
+      copy(g.cls, part.cls);
+      for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
+    });
+  }
+  return { steps, grid: () => g };
+}
+
 /**
  * Zeichnet bei geänderter Belegung (Gebäude, Wege) die betroffenen Kacheln plus 1 Kachel Rand neu, bei Geländewechsel
  * (Roden, Aufforsten) das Raster und die Kacheln samt Glättungsrand. Ein Rechteck, kein Vollaufbau.
@@ -1454,13 +1521,13 @@ export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   return quarter;
 }
 
+const GRID_BAND_ROWS = 4; // Knotenzeilen je Gitterband (M12 E1)
 const SLICE_ROWS = 32; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
 
 /**
  * Inselcache in Schritten (M12 E1): gleiche Arbeit wie `buildTerrainLayer`, aber als Liste kleiner Schritte für den
  * Cache-Plan. `world` ist die Inselansicht (die Insel steht an `home`). Die Ebene ist sofort da, ihre Pixel entstehen
- * mit den Schritten; das Ergebnis ist pixelgleich zu `buildTerrainLayer`. Das Gitter ist ein Schritt (die Glättung
- * der Felder reicht über Fenstergrenzen).
+ * mit den Schritten; das Ergebnis ist pixelgleich zu `buildTerrainLayer`. Das Gitter entsteht in Zeilenbändern.
  */
 export function terrainJob(
   world: World,
@@ -1487,10 +1554,14 @@ export function terrainJob(
     timed(() => {
       fields = terrainFields(fieldWorld(world));
     }),
-    timed(() => {
-      grid = buildGrid(fieldWorld(world), fields);
-    }),
   ];
+  const bands = gridBands(fieldWorld(world), () => fields, GRID_BAND_ROWS);
+  for (const b of bands.steps) steps.push(timed(b));
+  steps.push(
+    timed(() => {
+      grid = bands.grid();
+    }),
+  );
   for (let y = 0; y < h; y += SLICE_ROWS)
     steps.push(
       timed(() => {
