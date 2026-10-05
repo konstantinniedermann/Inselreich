@@ -1962,3 +1962,17 @@ bleibt), nicht von Hand nachschreiben. Neue Zeittests der Stränge tragen sich k
 (gehört zur Testdatei). — Kosten bei Irrtum: Merge-Konflikt in einer Listenzeile.
 
 Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 · ADR: —
+
+## R254 · 2026-10-05 · Seefahrt C1 abgenommen, D-145, Start C2 (e2 ∥ e4)
+
+Ruling: Seefahrt C1 (`feat/m12-see` @ 7ddcfb5: T00–T02 je Review OK, T02 nach einer Fix-Runde; Merges M0, main
+39f0b5f, Cherry-pick R253 = fcdabe9) angenommen, ebenso die Controller-Entscheide C1-1 (Fixture mit 4 Häusern, Fall
+„11 Häuser" über `village(11)`) und C1-2 (Gewürz in U6 und Routen-Werte aus T02 vorgezogen). Ledger-Pfad
+`.superpowers/sdd/m12-see/int.md` nach Plan-Konvention übernommen. **D-145:** Schranke Sprite-Speicher (H-R7 AK7,
+`variants.test`) 1,25 → 1,30 angenommen (+26 % durch `kontor2`/`spicefarm`, LRU-gedeckelt); der render-Strang misst
+bei jedem weiteren Gebäudetyp neu, T10/T11 entfernen die Fallback-Ausnahmen. **C2 startet** mit neuem lead-tech
+(Kontext des C1-Leads > 160k, Lead-Übergabe): Stränge **e2** (T03, T04) und **e4** (T08, T09) parallel ab 7ddcfb5;
+render wartet auf M1 (E1-T08 OK), e3 auf T04 OK. Budget aus R241: 12 Starts, Parallelität 3 (studioweit ≤ 5 neben
+E1 C3). — Kosten bei Irrtum: Schranke zurück auf 1,25 mit eigener Silhouette.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C1 · ADR: —
