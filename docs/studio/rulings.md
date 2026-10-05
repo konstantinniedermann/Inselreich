@@ -1899,3 +1899,18 @@ inkl. Baumstempel-Seed-Test, T07 Browser-Messung Malbänder/`SLICE_ROWS`, Playte
 Integrationsbranch, Budget R241), Obergrenze 5 Arbeiter. — Kosten bei Irrtum: Fix-Runden-Fehler erst im Final-Review.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C2 · ADR: —
+
+## R249 · 2026-10-05 · Vorschläge Kurz-Retro S-6a98e530 und Prozess-Retro REL-04/E0
+
+Ruling: (1) **Release mit einem Häppchen** prüft im Release-Review nur das Delta seit dem Final-Review (Prozess-Retro
+V1) — angenommen. (2) **Reihenfolge-Entscheide mit Prognose:** Berührt ein Häppchen Dateien, die eine laufende Etappe
+exklusiv hält, nennt das Ruling den erwarteten Etappen-Merge; fällt er in dieselbe Session, fährt das Häppchen mit der
+Etappe (Lehre aus D-141) — angenommen. (3) **Zeittests nicht unter paralleler Last** (Prozess-Retro V3 = E-030):
+angenommen als Regel; Umsetzung (`vite.config.ts`/`Makefile`) als kleines Werkzeug-Paket an lead-tech in der nächsten
+Session; Schwellen werden erst gelockert, wenn ein Lauf ohne Last rot ist. (4) E-029 (Steuerung je Tätigkeit, Lead-
+Übergabe bei 200k) wartet auf einen Experiment-Platz, erster Nachrücker. (5) Integrator-Briefings übernehmen den
+Attributions-Trailer unverändert aus der Session. (6) Die Handbuch-Umsetzung R233/R236 (b)/(c) und (1)–(3), (5) durch
+studio-coach ruht nicht länger — sie läuft in der nächsten Session parallel zu den Inhaltssträngen (R237 gilt nur
+für den Vorrang). — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Retros `docs/studio/retros/2026-10-05-session-6a98e530.md`, `…-prozess-rel04-e0.md` · ADR: —

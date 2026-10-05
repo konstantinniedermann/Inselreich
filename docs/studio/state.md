@@ -89,7 +89,7 @@ Gesamtbild, Wiese?
   Versionswechsel mit Identitäts-Migration.
 - Nutzer: Test REL-01…REL-04 (oben); R90-Auslegung „grössere Karte" = grössere Welt (R226 F-02) — kippbar; Abnahme
   M10/M11 im Spiel und Tempo M11 (R185/R192).
-- L0: Vorschläge aus Kurz-Retro und Prozess-Retro dieser Session; Handbuch-Umsetzung R233/R236 (b)/(c) ruht (R237).
+- Retro-Vorschläge dieser Session entschieden (R249); E-029 erster Nachrücker für einen Experiment-Platz.
 - L0: Experiment-Plätze voll (E-022, E-027, E-028). Wartend: E-025, E-023, E-026, E-019, E-024, E-018, E-020,
   E-012, E-006.
 - CI: Node-20-Abkündigung der Actions und `ubuntu-latest` → Ubuntu 26 ab 2026-10-19 (beobachtungen.md); Zeittests
@@ -98,7 +98,8 @@ Gesamtbild, Wiese?
 ## Nächste Schritte
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. Retro-Vorschläge dieser Session entscheiden (Ruling).
+1. studio-coach setzt R233, R236 (b)/(c) und R249 (1)–(3), (5) ins Handbuch um; lead-tech Werkzeug-Paket „Zeittests
+   allein laufen lassen" (R249 (3)).
 2. Parallel: **E1 C3** (lead-tech sonnet, Übergabe C2→C3) ∥ **Seefahrt C1** (T00–T02 auf Integrationsbranch,
    `feat/m12-see` holt E1 @ 766df67 oder neuer per Merge), Obergrenze 5 Arbeiter.
 3. Danach E1 C4 (T08 + Final-Review) → Gate Merge E1 (Etappe) → Seefahrt-Stränge e2/e3/e4/render ab M1.
