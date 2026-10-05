@@ -40,8 +40,9 @@ export const tier4Houses = (w: World): number =>
 ```
 
       Der Implementierer ersetzt den Kommentar durch die echte Schleife aus `runMerchants` (gleiche Aufrufe,
-      gleiche Reihenfolge). Ergebnis muss **genau 3** Häuser der Stufe 4 haben und mindestens 11 Häuser insgesamt
-      (für AK-E3-07 „11 Häuser → 100"); sonst Meldung an den Controller.
+      gleiche Reihenfolge). Ergebnis muss **genau 3** Häuser der Stufe 4 haben; sonst Meldung an den Controller.
+      **Controller-Entscheid C1-1:** keine Mindestzahl Häuser (der Controller baut 3 Kaufmannshäuser + 1 Bürgerhaus);
+      der Fall „11 Häuser → 100" (AK-E3-07) entsteht in T01 aus `village(11)`.
 
 - [ ] **2 Fixture schreiben** (einmalig per Scratch-Test im Scratchpad, nicht eingecheckt):
       `writeFileSync('tests/sim/fixtures/save-v8.json', serialize(fixtureV8Run()))`. Prüfen: `"version":8`,
@@ -72,7 +73,7 @@ export const D_HOME_A_AT_SEED_D37 = 0;
       nicht still auf ein anderes `d` umgedeutet.
 
 - [ ] **4 Tests** in `save.test.ts`, `describe('M12 Seefahrt Schritt 0 (Anhang 03 B)')`:
-  - `T00 save-v8.json roh`: Datei parst, `version 8`, drei Inseln, `tier4Houses = 3`, Häuser ≥ 11.
+  - `T00 save-v8.json roh`: Datei parst, `version 8`, drei Inseln, `tier4Houses = 3`, Häuserzahl = Messwert (C1-1).
   - `T00 save-v8.json lädt (v8)`: `deserialize` → `ok`, `serialize(world) === Datei` (zeichengleich).
   - `T00 Pins`: `orderForPeriod` und `rollCrisis` je Seed/k gleich `ORDER_PINS`/`FIRE_PINS`; `SEED_D37` liefert
     `d(0, 2) === 37` und `d(0, 1) === D_HOME_A_AT_SEED_D37`.

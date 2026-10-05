@@ -83,8 +83,8 @@ SPICE_GRACE_PER_HOUSE × Häuser mit house.tier === 4)` (gesetzt, nicht addiert)
   - **AK-E3-06** `save-v8.json` → `version 9`, jede Insel `stock.spice` definiert, `sellPct.spice === 100`, `ships []`,
     `nextShipId 1`, `wonSpice false`; Round-trip `serialize(deserialize(serialize(w)).world) === serialize(w)`.
   - **AK-E3-07** `save-v8.json` (3 Häuser Stufe 4) → Heimat `spice 30`, `notice === SPICE_GRACE_NOTICE`; speichern,
-    laden → kein `notice`, `spice 30`; danach 1000 `step` ohne Ausnahme. Roh-JSON mit 11 Häusern `house.tier 4`
-    (8 weitere umstellen, Ladeprüfung muss halten) → 100. `save-v7.json` (keine Kaufleute) → 0, kein `notice`.
+    laden → kein `notice`, `spice 30`; danach 1000 `step` ohne Ausnahme. 11 Häuser → 100 (C1-1): `village(11)` (helpers.ts),
+    alle per `setHouse` auf Stufe 4, `serialize` → `foldBackToV8` → `deserialize` → Heimat `spice 100` (Ladeprüfung hält). `save-v7.json` (keine Kaufleute) → 0, kein `notice`.
     **R230:** `foldBackToV7(foldBackToV8(v9 aus save-v8))` als v7-Stand laden → `spice 30` genau einmal.
   - **AK-Z3-09** v8 mit `wonMerchants true` → `wonSpice false`; Round-trip v9 erhält `wonSpice true` (mit
     `wonMerchants true`); `wonSpice true` + `wonMerchants false` und `wonSpice 1` → „Beschädigter Spielstand".
