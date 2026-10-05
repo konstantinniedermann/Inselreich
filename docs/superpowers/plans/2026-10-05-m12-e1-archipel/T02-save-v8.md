@@ -1,5 +1,5 @@
 > **Task-ID:** T02 · **AK-IDs:** AK-E1-01 (Kreuzprobe `canPlace`), AK-E1-03, AK-E1-05, AK-E1-06; AK-M12-B1 … B5; B6
-> **blocked-by:** T01, **E0-T04** (Inselparameter `canPlace(…, island)`, `tests/sim/helpers.ts`) · **Strang:** sim,
+> **blocked-by:** T01, **E0-T05 mit Review OK** (R231 prod-B1; enthält Inselparameter aus E0-T04) · **Strang:** sim,
 > `.worktrees/m12-e1` · `tech-sim-engineer` (sonnet)
 > **Regeln:** [index.md](index.md) Global Constraints, P-5, P-6 · Spec Anhang 02 C, Anhang 03 B (v8), Anhang 04
 
@@ -39,7 +39,8 @@ t, buildingId: null, road: false })), kontorId: null, stock: alle GOOD_IDS 0, ox
 
 ## Schritte
 
-- [ ] **0 Basis:** `git merge feat/m12-e0` (bis E0-T04), `make check` grün.
+- [ ] **0 Basis:** `git merge feat/m12-e0` (bis E0-T05, Review OK), `make check` grün. Ändert E0 danach `src/sim`
+      (E0-T06, Final-Review), merged der Controller neu und der T02-Reviewer prüft den Merge nach.
 - [ ] **1 Tests zuerst**, `describe('M12 E1 Save v8')` in `save.test.ts`, Rot-Beleg vor der Umsetzung:
   - **AK-E1-05** `createWorld(3)`: `islands.length === 3`, Kinds `home, A, B`, Fremdinseln `kontorId null`, Lager 0; Heimat `kind 'home'` ohne `ISLANDS`-Eintrag (nie `spice`);
     `save-v7.json` lädt (`ok`), `version 8`, `islands[1..2]` tief gleich `createWorld(world.seed)`-Fremdinseln;
@@ -53,13 +54,16 @@ t, buildingId: null, road: false })), kontorId: null, stock: alle GOOD_IDS 0, ox
     `{version:7}`, `{version:7, islands:null}`, `{version:7, seed:'x', islands:[{}]}` → kein Wurf.
     `version 9` → „Unbekannte Version"; die Alt-Tests mit `version 8` auf `9` umstellen (nicht löschen).
   - **AK-M12-B5** Kette `save-v1.json` … `save-v7.json` → `version 8`, `ok`; Kettenhashes über
-    `sortedJson(foldBackToV6(foldBackToV7(…)))` = `CHAIN_HASHES`.
+    `sortedJson(foldBackToV6(foldBackToV7(…)))` = `CHAIN_HASHES`. **qa-B4:** je `save-v1` … `save-v6` sind
+    `islands[1..2]` nach der Migration tief gleich den Fremdinseln von `createWorld(world.seed)`, und die AK-E1-02-Prüfung
+    (Disjunktheit, Lücke ≥ 8, Band, Linien, Rahmen) aus `islands-gen.test.ts` ist erfüllt.
   - **AK-E1-01 Kreuzprobe** (`islands-gen.test.ts`): Seeds 1…200, `createWorld(s, { unlockAll: true })`: für B jeder
     `quarrySites`-Platz (aus `generateForeignIslands(w.seed, home)`) → `canPlace(w, 'quarry', x, y, 2).ok`.
   - **AK-E1-03** `tests/sim/islands-rng.test.ts` (eigene Datei wegen `vi.mock`): `createRng` per `vi.mock` mitschneiden;
     `createWorld(3)` ruft ihn genau einmal mit `(w.seed ^ ISLANDS_SALT) >>> 0`; 6000 `step` „normal" ziehen diesen Wert
     nie; zweimal `createWorld(3)` tief gleich; Heimat-`tiles` = `generateMap(3).terrain`.
-  - **B6** `createWorld(s)` Mittel über Seeds 1…50 ≤ `perfBudget(5)` ms (`tests/helpers/perfBudget`).
+  - **B6** `createWorld(s)` **gesamt** (Heimat + Fremdinseln), Mittel über Seeds 1…50 ≤ `perfBudget(5)` ms
+    (`tests/helpers/perfBudget`; P-5, Spec-Wortlaut).
 - [ ] **2 Rot-Beleg** `npx vitest run tests/sim/save.test.ts tests/sim/islands-gen.test.ts tests/sim/islands-rng.test.ts
 -t "M12 E1"` → Commit `test: M12 E1 Save v8 (rot)`.
 - [ ] **3 Umsetzung** nach „Form"; `npx tsc --noEmit` meldet jede `kontorId`-Stelle → Null-Fall behandeln.
@@ -67,5 +71,5 @@ t, buildingId: null, road: false })), kontorId: null, stock: alle GOOD_IDS 0, ox
 - [ ] **5 Prüfen:** `make check`, `CI=true make check` grün; `git diff main -- tests/sim/balance.test.ts` leer;
       `balance-merchants` `[6750, 11200, 320]`; Zufallsfolge AK-E0-19 grün. Commit `feat: M12 E1 Fremdinseln im Weltzustand, Save v8`.
 
-**Review-Fokus:** Migration wirft nie, Reihenfolge; Heimat bitgleich (V7_FORMS); L01–L14 vollständig; `null`-Fälle
+**Review-Fokus:** Migration wurffrei, Reihenfolge; Heimat bitgleich (V7_FORMS); L01–L14 vollständig; `null`-Fälle
 ohne Verhaltensänderung der Heimat; nur ein neuer `createRng`.

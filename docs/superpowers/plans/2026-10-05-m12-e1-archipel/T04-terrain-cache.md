@@ -1,6 +1,6 @@
 > **Task-ID:** T04 · **AK-IDs:** AK-E1-11, AK-E1-20, AK-E1-21
-> **blocked-by:** T02, **REL-03 auf `main`** · **Strang:** terrain, Branch `feat/m12-e1-terrain`, Worktree
-> `.worktrees/m12-e1-terrain` (von `feat/m12-e1` nach T02 + `main`-Merge) · `tech-ui-engineer` (sonnet) · **parallel zu T03**
+> **blocked-by:** T02, **REL-03 über `feat/m12-e0`** (R231 prod-B2) · **Strang:** terrain, Branch `feat/m12-e1-terrain`, Worktree
+> `.worktrees/m12-e1-terrain` (von `feat/m12-e1` nach T02 + E0-Merge mit REL-03) · `tech-ui-engineer` (sonnet) · **parallel zu T03**
 > **Regeln:** [index.md](index.md) Global Constraints, P-8 · Spec Anhang 02 D (Meerkante, Terrain-Cache, Speicher,
 > Detailstufe/Viertel-Kopie)
 
@@ -67,7 +67,7 @@ export const ARCHIPEL_EXTRA_BYTES =
 ## Schritte
 
 - [ ] **0 Basis:** `git worktree add -b feat/m12-e1-terrain .worktrees/m12-e1-terrain feat/m12-e1` (nach T02 und
-      `main`-Merge in `feat/m12-e1`), `make check` grün.
+      dem Merge `feat/m12-e0` → `feat/m12-e1` mit REL-03, T03 Schritt 0), `make check` grün.
 - [ ] **1 Tests zuerst**, `describe('M12 E1 Terrain')`:
   - **AK-E1-20** (`terrain.test.ts`): Inselansicht 24 × 24 (Literal-Welt mit Land in `[4, 19]`), `paintPixels` über die
     ganze Ebene: jedes Pixel mit `fx < 2 ∨ fy < 2 ∨ fx ≥ 22 ∨ fy ≥ 22` = RGB von `PALETTE.waterDeep`; `rimWeight` an

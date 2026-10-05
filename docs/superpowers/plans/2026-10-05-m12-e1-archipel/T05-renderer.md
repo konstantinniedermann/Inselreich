@@ -53,10 +53,8 @@ export const LOD_ZOOM = 0.25; // Detailstufe ab Zoom ≤ 0,25 (lead-art B5)
 
 ## Schritte
 
-- [ ] **0 Pin vor dem Umbau:** in `renderer.test.ts` Helfer `callList(world, cam)` (fakeCtx, View 1920 × 1080,
-      `fx.timeMs 5000`), Welt `deserialize(save-v7.json)` → v8; drei Kameras über der Heimatmitte (Zoom 0,5 / 1 / 2, Rand
-      nicht im Bild). `fnv1a32(JSON.stringify(calls))` und Länge als `HOME_CALLS` pinnen (Werte aus dem Lauf, auf dem
-      T05-Basisstand vor jeder Änderung an `renderer.ts`). Commit `test: M12 E1 Heimat-Aufrufliste gepinnt`.
+- [ ] **0 Vorbedingung:** `HOME_CALLS` und `callList` liegen aus T03 Schritt 5 vor (vor dem Terrain-Merge erzeugt,
+      R231 qa-B1) und sind auf dem T05-Basisstand grün. **Nicht** neu pinnen; ist der Test rot, anhalten (Controller).
 - [ ] **1 Tests zuerst**, `describe('M12 E1 Renderer')`:
   - **AK-E1-10** `HOME_CALLS` nach dem Umbau gleich; Welt `w` mit A, B gegen `wHome` (gleiche Welt, `islands` nur
     Heimat): Kamera über der Heimat → Aufruflisten gleich (unsichtbare Insel erzeugt keinen Aufruf); Kamera über A →

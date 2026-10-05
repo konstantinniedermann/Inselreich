@@ -13,7 +13,7 @@ Doku beschreibt Archipel, Render je Insel und Save v8, und der Final-Review ist 
 
 ## Schritte
 
-- [ ] **1 Merges:** `git merge main`, `git merge feat/m12-e0` (falls neuer). Konflikte nur in Doku selbst lösen; in
+- [ ] **1 Merges (prod-B2):** `git merge feat/m12-e0`; ist E0 schon auf `main`, stattdessen `git merge main`. Konflikte nur in Doku selbst lösen; in
       `src/`/`tests/` → anhalten, Controller.
 - [ ] **2 Nachweise** (Ausgabe in den Ledger):
   - AK-M12-B1: `git diff main -- tests/sim/balance.test.ts` leer, `npx vitest run tests/sim/balance.test.ts` grün.

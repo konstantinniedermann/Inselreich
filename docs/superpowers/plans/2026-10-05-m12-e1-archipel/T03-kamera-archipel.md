@@ -1,5 +1,5 @@
-> **Task-ID:** T03 · **AK-IDs:** AK-E1-07, AK-E1-08, AK-E1-09, AK-E1-12 (Mathe-Teil), AK-E1-13 (Stufen, Grenze)
-> **blocked-by:** T02, **REL-03 auf `main`** · **Strang:** render, `.worktrees/m12-e1` · `tech-ui-engineer` (sonnet)
+> **Task-ID:** T03 · **AK-IDs:** AK-E1-07, -08, -09, -12 (Mathe), -13 (Stufen, Grenze), -17 (Vitest), -10 (Pin)
+> **blocked-by:** T02, **REL-03 auf `main`, geholt über `feat/m12-e0`** (R231 prod-B2) · **Strang:** render, `.worktrees/m12-e1` · `tech-ui-engineer` (sonnet)
 > · läuft **parallel zu T04** (anderer Worktree, andere Dateien)
 > **Regeln:** [index.md](index.md) Global Constraints, P-7 · Spec Anhang 02 D (Weltkoordinaten, Culling, Picking,
 > Zoom), F (Streichvariante)
@@ -14,7 +14,8 @@ darf die Kamera. Noch kein Zeichnen (T05) und keine Bedienung (T06).
 map)`, `screenToTileF`. Seit T02: `Island` mit `ox`, `oy`, `width`, `height`, `anchor`.
 
 **Dateien:** neu `src/render/archipel.ts`, `tests/render/archipel.test.ts`; `src/render/camera.ts`, `iso.ts`;
-`tests/render/camera.test.ts`, `iso.test.ts`. **Nicht:** `renderer.ts`, `src/ui/` (T05/T06), `terrain.ts` (T04).
+`tests/render/camera.test.ts`, `iso.test.ts`, `renderer.test.ts` (nur `HOME_CALLS`, Schritt 5). **Nicht:** `renderer.ts`,
+`src/ui/`, `terrain.ts` (T04).
 
 ## Schnittstellen (Produces)
 
@@ -72,7 +73,8 @@ y: floor(f.y − oy) }`; sonst `null`. `'jump'` prüft nur `active`.
 
 ## Schritte
 
-- [ ] **0 Basis:** `git merge main` (REL-03 enthalten: `git log main --oneline | grep -i "REL-03\|h-r13"`), `make check` grün.
+- [ ] **0 Basis:** `git merge feat/m12-e0` (E0 hat `main` mit REL-03 gemerged: `git log feat/m12-e0 --oneline | grep -i "h-r13"`
+      trifft); `main` direkt nur per L0-Ruling. `make check` grün.
 - [ ] **1 Tests zuerst** `tests/render/archipel.test.ts`, `describe('M12 E1 Archipel')`, Testinseln als Literale
       (Heimat `{ox:0,oy:0,width:64,height:64}`, A `{ox:90,oy:10,width:24,height:24}`, B `{ox:20,oy:100,width:36,height:36}`),
       View 1920 × 1080:
@@ -88,12 +90,19 @@ y: floor(f.y − oy) }`; sonst `null`. `'jump'` prüft nur `active`.
     `pickArchipel` auf Heimat → `null`.
   - **AK-E1-13** (`camera.test.ts`): `ZOOM_STEPS[0] === 0.125`; zehnmal `zoomAt(c, 0.5, …)` → `zoom === 0.125`;
     `clampToMap` gleich `clampToRect` mit `{0,0,w,h}` für 20 Stellungen; `cameraBounds('sea')` = Rahmen ± 8.
+  - **AK-E1-17 (Vitest, qa-B3)** Seeds 1…200, `createWorld(s).islands`: Bildbox des `archipelRect` bei Zoom 0,125
+    (vier Ecken projiziert, oben `H_TOWER`) ≤ 1280 × 800 CSS-px; Kamera `centerOn` Rahmenmitte → `visibleIslands` = alle.
 - [ ] **2 Rot-Beleg** `npx vitest run tests/render/archipel.test.ts tests/render/camera.test.ts` → Commit
       `test: M12 E1 Archipel-Kamera (rot)`.
 - [ ] **3 Umsetzung** nach „Schnittstellen". `grep -rn "ZOOM_STEPS\|0\.5" src/ui src/render | grep -i zoom` —
       Stellen, die `ZOOM_STEPS[0]` als 0,5 annehmen, melden (nicht ändern; T06).
 - [ ] **4 Prüfen:** `make check`, `CI=true make check` grün; bestehende `camera`/`iso`/`picking`-Tests unverändert grün.
       Commit `feat: M12 E1 Archipel-Kamera, Culling, Picking, Zoom 0,125`.
+- [ ] **5 `HOME_CALLS` (AK-E1-10, qa-B1)** — vor dem Terrain-Merge, `renderer.ts` unverändert: in `renderer.test.ts`
+      Helfer `callList(world, cam, view)` (fakeCtx, `fx.timeMs 5000`); Welt `deserialize(save-v7.json)`; View 1280 × 800,
+      Heimatmitte, Zoom 1 und 2. Der Test prüft zuerst, dass `visibleTileRange` je Kamera in `[4, 59]` liegt (4-Kachel-Rand
+      nicht im Bild), dann `fnv1a32(JSON.stringify(calls))` + Länge = `HOME_CALLS` (Werte aus dem Lauf). Commit
+      `test: M12 E1 Heimat-Aufrufliste gepinnt`. Der Controller merged `feat/m12-e1-terrain` erst danach.
 
 **Review-Fokus:** `clampToMap` zahlengleich; reine Funktionen ohne Weltzugriff; Tiefenfolge; `'jump'` vollständig in
 `src/render/`.
