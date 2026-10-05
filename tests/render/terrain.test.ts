@@ -1085,6 +1085,7 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
       ts.push(performance.now() - t0);
     }
     ts.sort((a, b) => a - b);
-    expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8));
+    // R235: Runner für paintPixels ≈ 4× langsamer als lokal; lokal bleibt 8 ms, CI 20 ms
+    expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8, undefined, 2.5));
   });
 });

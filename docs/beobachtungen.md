@@ -861,3 +861,10 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tools/studio/effort.py` (Budget-Vergleich je Phase); Retro-Alarm „Budget von lead-production überschritten: 4 von 1".
 - Beobachtung: Das Phasen-Label `M5-01-merge` wurde in zwei Sessions verwendet; die Starts werden über die ganze Historie summiert und lösen einen falschen Budget-Alarm aus.
 - Ursprung: Kurz-Retro Session ad51d3c5 (studio-coach), R233. Einschätzung: niedrig; Labels eindeutig vergeben oder je Session zählen.
+
+### 2026-10-05 · Render · Teil-Neuzeichnung nach Gebirgsänderung und CI-Reserve H-R9 B4
+
+- Fundort: `src/render/terrain.ts` (`patchGrid`, `paintPixels`), `tests/render/terrain.test.ts` (H-R9 B4), `tests/helpers/perfBudget.ts`.
+- Beobachtung: (1) `patchGrid` gleicht nur das Rechteck plus `2 · HEIGHT_BLUR + 1` Knoten ab; nach einem Wechsel von oder zu Gebirge reichen die Vorberg-Felder (scree, tint, Anstieg; Blur bis ≈ 12 Kacheln) weiter, ausserhalb des Rechtecks bleibt bis zum Vollaufbau der alte Stand stehen (seit H-R13). (2) H-R9 B4 misst nur `paintPixels` (lokal ≈ 3,5–4 ms, Runner 13,9–14,7 ms in zwei Versuchen von CI-Lauf 37295831843); der CI-Faktor 1,5 bildet den Abstand Runner/lokal (≈ 4×) für diesen Test nicht ab, REL-03 (+≈ 10 % `paintPixels`) hat die knappe Reserve aufgebraucht.
+- Ursprung: Hotfix H-T3 (art-rendering-engineer, lead-art), R234, R235. Einschätzung: (1) mittel, sichtbar nur beim Bauen/Abreissen am Gebirge, Patch-Rand aus der Blur-Reichweite ableiten; (2) per R235 CI-Grenze H-R9 B4 auf 20 ms (lokal 8 ms).
+- Paket-Kandidat (R235): **paintPixels-Performance (Vorberechnung je Zelle), REL-04/M9** — Bilinear-Gewichte und Feldwerte je Knotenzelle statt je Pixel (heute eine `lerp`-Closure und ≈ 8 Abtastungen je Pixel), pixelgleich; Ziel: Reserve so weit zurück, dass H-R9 B4 wieder mit dem Standard-Faktor 1,5 läuft.
