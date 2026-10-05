@@ -1939,3 +1939,14 @@ gates.md` „Gate Plan" bekommt den Satz zum Folgeplan-Gate (R233 V2) durch stud
 `waiting`) nimmt L0 ab sofort in Lead-Briefings auf. — Kosten bei Irrtum: E-028 wieder öffnen, E-030 zurückstellen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach PROZ-HB-R233 · ADR: —
+
+## R252 · 2026-10-05 · Gate Werkzeug-Merge TOOL-E030
+
+Ruling: Werkzeug-Merge ausserhalb eines Release (wie R220) freigegeben: `tool/e030-zeittests-seriell` @ 37e393a
+(Vitest-Projekte `parallel` → `zeit` seriell, Wächter `make zeittests`, README; Review OK, Testzahl unverändert
+1721, `make check` und `CI=true make check` grün, kein Diff in `tests/`). Keine Spieländerung, daher kein Browser-Lauf.
+Integrator mergt nach `main`, `make check`, Push, CI- und Pages-Lauf prüfen. Danach holen `feat/m12-e1` und
+`feat/m12-see` `main` per Merge an ihrem nächsten Task-Ende (E1 nach R250 normal; See nur per L0-Ruling laut
+Plan-Index → hiermit erlaubt, nur dieser Merge). — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E030 · ADR: —
