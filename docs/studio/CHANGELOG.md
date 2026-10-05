@@ -22,6 +22,33 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-05 · Handbuch 1.20
+
+- Anlass: Abnahme Handbuch 1.19, Zeitraum E-028 erreicht
+- Datenbasis: E-028-Datenpunkte REL-01…REL-04 ([experimente.md](experimente.md)), Rulings R232, R244
+- Ruling: R251
+- Änderungen: E-028 „Release-Bündel“ abgeschlossen (`behalten`, Arbeitsweise bleibt Regel);
+  E-030 „Zeittests lokal seriell“ auf `laufend` (Paket TOOL-E030); `gates.md` „Gate Plan“: Satz
+  zum Folgeplan-Gate (R233 V2)
+
+## 2026-10-05 · Handbuch 1.19
+
+- Anlass: Kurz-Retro session-ad51d3c5 mit Ad-hoc-Retro CI rot, Prozess-Retro REL-03, Kurz-Retro
+  session-6a98e530, Prozess-Retro REL-04/E0
+- Datenbasis: [session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md) (B1, B3, B4, B6, a–c),
+  [prozess-retro-rel-03](retros/2026-10-05-prozess-retro-rel-03.md) (V1–V3),
+  [session-6a98e530](retros/2026-10-05-session-6a98e530.md) (B1, B4),
+  [prozess-rel04-e0](retros/2026-10-05-prozess-rel04-e0.md) (V1–V3)
+- Ruling: R233, R236, R249, R250
+- Änderungen: Briefing-Standard um Pflichtzeilen je Auftragsart (Persona-Änderung, Messauftrag,
+  Hotfix, CI-Prüfung, Integrator-Trailer); Budget: Phasenlabels je Session eindeutig; Gate Plan:
+  Folgeplan mit einem Prüfer; Gate Spec: Selbstcheck in drei Zeilen; Schlanke Steuerung: Tasks
+  bündeln, Warten als `waiting` loggen; Release mit einem Häppchen nur auf das Delta; Häppchen auf
+  Etappen-Dateien mit Merge-Prognose; Tempo: Lastregel für Zeittests und Messungen, höchstens 2
+  Bildrunden; Vorlage Bericht „Einschätzung“ statt „Ruling“, Vorlage Briefing verweist auf die
+  Pflichtzeilen; E-030 angenommen, wartet auf Platz; `lernen.md` um 2 nun im Handbuch geregelte
+  Zeilen gekürzt
+
 ## 2026-10-05 · Persona production-integrator 1.6
 
 - Anlass: Retro-Nachtrag session-e13c3631, Vorschlag (2); Eintrag vom studio-coach nachgetragen,

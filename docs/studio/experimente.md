@@ -39,16 +39,25 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: 2026-10-04 (Handbuch 1.16)
 - Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus); Datenpunkt 2 von 3 Runden, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: IDEEN-02 mit 1 Start, 2 von 4 Ideen eingeplant (H-A2 live in REL-02, I-007 für REL-04), 2 Studio-Ideen live (Schwelle ≥ 2 erreicht), Studio-Anteil live 2 von 5 Häppchen, eingeplant je nach Zählregel offen; Nutzer-Einwände 0) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 Studio-Anteil 1 von 4 = 25 % (H-U1/I-001), M12-Bausteine I-004/I-006/I-008 eingeplant (R225); IDEEN-02 offen.
 
-## E-028 · laufend · Release-Bündel für Häppchen
+## E-030 · laufend · Zeittests lokal seriell
 
-- Hypothese: Wenn Häppchen (Stufe leicht, ohne Save-Format- oder Architekturänderung) nach Review und Abnahme nur „release-reif“ werden und erst gebündelt (2–4 je Release; Auslöser 3 reif, Session-Ende oder Meilenstein-Merge; Hotfix einzeln) in einen Kandidaten integriert, in einem Browser-Lauf mit eigenem Screenshot-Abschnitt je UI-Task geprüft, mit einem Gate Merge Release veröffentlicht und vom Nutzer einmal getestet werden, und das nächste Häppchen nach Review-OK statt nach dem Merge startet, dann sinken die Fixkosten je Häppchen und der Leerlauf der Umsetzungskette, ohne dass ein UI-Task ungeprüft live geht (R207 (2); Prozess-Retro 2026-10-04 B2).
-- Messgrösse: (1) Integrator-Instanzen, Gate-Merge-Rulings und Pushes auf main mit Spieländerung je Häppchen jeweils ≤ 0,4, bei Releases mit 2 Häppchen ≤ 0,5 (dort konstruktives Minimum; Auslöser 2–4 bleibt, R224 (1)) (Ausgang 9 Häppchen H-R3…H-R9, H-A1, H-S1: je 1,0). (2) Leerlauf Umsetzungsstrang zwischen aufeinanderfolgenden Häppchen Median ≤ 2 min, getrennt nach Ursache erhoben (wartet auf L0 / wartet auf Review / frei); die Schwelle gilt für „frei“, die anderen beiden werden berichtet (Ausgang 7,5 min, ungetrennt). (3) Releases mit Spieländerung je Session ≤ 2 (Ausgang 2026-10-03: 13 Merges auf main, 8 davon Häppchen). Gegenproben: 100 % der UI-Tasks mit eigenem Screenshot-Abschnitt im Release-Lauf, 0 Merges ohne grünes `make check`; Fix-Commits auf main für Fehler aus einem Release vor dem nächsten Release ≤ 1 je Release (Ausgang beim ersten Release erheben); Cache-Write 5 min ≤ 26,8 %. Abbruch: ein UI-Task geht ohne Screenshots live oder ein Release wird per Revert zurückgenommen.
-- Zeitraum: die nächsten 3 Releases, mindestens 8 Häppchen (M9-Rest, Nebenstränge zu M12).
-- Rückfall: Merge je Häppchen mit eigenem Gate (Handbuch 1.15, Umsetzungszyklus „Ablauf eines Auftrags (Stufe leicht)“ Schritt 6–7 und Absatz „Merge“; `git show HEAD:docs/studio/STUDIO.md`).
-- Dateien: `docs/studio/STUDIO.md` (Umsetzungszyklus), `docs/studio/gates.md` (Gate Merge Release, Gate Ideen-Runde), `.claude/agents/production-integrator.md`, `.claude/agents/qa-playtester.md`, `docs/studio/templates/playtest-report.md`, `docs/studio/CHANGELOG.md`
-- Ruling: R208, Lesart angepasst R224 (1) (Handbuch 1.18)
-- Start: 2026-10-04 (Handbuch 1.16)
-- Bewertung: – (Datenpunkt 1 von 3 Releases, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: REL-01 mit 3 Häppchen, Gate-Merge-Rulings, Integrator-Instanzen und Pushes je Häppchen 0,33; Leerlauf nicht erhoben; 1 Release in der Session; UI-Task mit Screenshot 1 von 1; Cache-Write 5 min 25,9 %; H-R12 per Rückfall ausgeschieden); Datenpunkt 2 von 3 Releases, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: REL-02 mit 2 Häppchen (H-R14, H-A2), Messgrösse 1 = 0,5 (bei 2 Häppchen konstruktiv das Minimum, Schwelle ≤ 0,4), Werkzeug-Merge H-T1/W-V3 separat (R220), Releases mit Spieländerung in der Session 2, UI-Tasks mit Screenshot 2 von 2, Leerlauf-Median 19,5 min bei 7 Übergängen, aber ursachengemischt) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 mit 4 Häppchen, 1 Gate-Merge-Ruling (R232), 1 Push, je Häppchen 0,25; Leerlauf nicht erhoben.
+- Hypothese: Wenn `perfBudget`-Zeittests lokal nach dem parallelen Testlauf allein laufen, flackern sie nicht mehr unter Mehrfachlast (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) B1).
+- Messgrösse: 0 lokale Flackerfälle in `docs/beobachtungen.md` und Lead-Berichten in 2 Sessions (Ausgang ≥ 5 Fälle in 3 Sessions).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: `vitest`-Konfiguration und `make check` auf den Stand vor der Änderung.
+- Dateien: `vite.config.ts`, `Makefile` (Paket TOOL-E030, lead-tech); `docs/studio/STUDIO.md` (Lastregel, Handbuch 1.19)
+- Ruling: R249 (3), R250 (Start), R251 (Platz nach Abschluss E-028)
+- Start: 2026-10-05 (Handbuch 1.20, Paket TOOL-E030)
+- Bewertung: –
+
+## E-029 · vorgeschlagen · Lead-Übergabe bei 200k mit Aufschlüsselung der Steuerung
+
+- Hypothese: Wenn der Steuerungsanteil je Tätigkeit (Gate, Spec, Plan, Controller, Warten) aufgeschlüsselt und jede Lead-Instanz bei 200k Kontext per Ledger übergibt (R190), dann sinken Lead-Kontext Max und Steuerungsanteil, und die Ursache der zweiten roten Session in Folge wird lesbar (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) E1).
+- Messgrösse: Lead-Kontext Max ≤ 300k und Steuerungsanteil ≤ 55 % (Session-Zeile, `metrics.py --efficiency`; Ausgang 343k, 64,3 %).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: Zustand wie jetzt (R190 ohne Durchsetzung).
+- Dateien: `tools/studio/metrics.py` (Aufschlüsselung), `.claude/agents/lead-tech.md`
+- Ruling: –
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -228,3 +237,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 
 - Ruling: R190 (Start), R208 (Abschluss)
 - Bewertung: Zeitraum M11 vorbei; Schwelle „0 Final-Reviews mit fehlender Doku“ verfehlt (ein niedriger Doku-Nachtrag, R199 Punkt 3), die Fehlerklasse ist aber von „fehlt“ zu „Nachtrag niedrig“ gewandert und die Zeile kostet wenig ([Prozess-Retro](retros/2026-10-04-prozess-kreativitaet-tempo.md) V4)
+
+## E-028 · behalten · Release-Bündel für Häppchen
+
+- Ruling: R208 (Start), R224 (1) (Lesart), R251 (Abschluss)
+- Bewertung: Zeitraum erreicht, 4 Releases mit 10 Häppchen. (1) Gate-Merge-Rulings und Pushes je Häppchen gesamt 4/10 = 0,4, Schwelle erfüllt (REL-01 0,33; REL-02 0,5 bei 2 Häppchen; REL-03 0,25; REL-04 1,0 als Ausnahme kritischer Pfad, R243, seit Handbuch 1.19 durch R249 (1), (2) geregelt); Integrator-Instanzen nicht vollständig erhoben. (2) Leerlauf nach Ursache getrennt nie erhoben (REL-02 19,5 min ursachengemischt): unbelegt, nicht verfehlt. (3) Releases mit Spieländerung je Session 2, 1, 1 (≤ 2 erfüllt). Gegenproben: UI-Tasks mit Screenshot-Abschnitt in allen 4 Releases (R232, R244); `make check` vor jedem Merge grün; Fix-Commits auf main je Release ≤ 1 (REL-03: Hotfix H-T3, R234, R235); Cache-Write 5 min 25,9 %, 25,3 %, 25,7 % (≤ 26,8 %); kein Abbruch. Die Arbeitsweise bleibt Regel (STUDIO.md Umsetzungszyklus Stufe leicht, [gates.md](gates.md#gate-merge-release)); Belege: [Retro e13c3631](retros/2026-10-04-session-e13c3631.md), [Retro ad51d3c5](retros/2026-10-05-session-ad51d3c5.md), [Prozess-Retro REL-04](retros/2026-10-05-prozess-rel04-e0.md).
