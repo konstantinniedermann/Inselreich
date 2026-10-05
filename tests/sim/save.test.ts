@@ -15,7 +15,17 @@ import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld } from '../../src/sim/world';
-import { forceGrass, forceRect, prepareEast, setHouse, village } from './helpers';
+import { fixtureV6Run, locksV6Run } from './fixtureV6';
+import { CHAIN_HASHES, V6_FORMS } from './e0Pins';
+import {
+  forceGrass,
+  forceRect,
+  fnv1a32,
+  prepareEast,
+  setHouse,
+  sortedJson,
+  village,
+} from './helpers';
 
 let w: World;
 let k: Building;
@@ -794,5 +804,62 @@ describe('M11 Save v6 (Spec 5)', () => {
       ok: false,
       reason: 'Unbekannte Version',
     });
+  });
+});
+
+describe('M12 E0 Schritt 0 (Anhang 01 C)', () => {
+  const FIX = 'tests/sim/fixtures/save-v6.json';
+  const LOCKS = 'tests/sim/fixtures/save-v6-locks.json';
+  const raw = (path: string): Record<string, any> => JSON.parse(readFileSync(path, 'utf8')); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  it('T00 save-v6.json roh', () => {
+    const json = readFileSync(FIX, 'utf8');
+    const r = raw(FIX);
+    expect(r.version).toBe(6);
+    expect(r.tick).toBe(3000);
+    const bs = Object.values(r.buildings) as Record<string, any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(bs.some((b) => b.state === 'burning' && b.outageUntil !== undefined)).toBe(true);
+    expect(r.crisis.kind).toBe('fire');
+    expect(r.order.period).toBe(2);
+    expect(r.upgradeStops).toEqual([1]);
+    expect(bs.filter((b) => b.level === 2).length).toBeGreaterThanOrEqual(1);
+    const stock = Object.values(r.stock) as number[];
+    expect(stock).toHaveLength(9);
+    expect(stock.filter((n) => n > 0)).toHaveLength(8);
+    expect(r.taxCarry).toBeGreaterThan(0);
+    expect(deserialize(json).ok).toBe(true);
+  });
+  it('T00 Rezept = Fixture', () => {
+    expect(serialize(fixtureV6Run().w)).toBe(readFileSync(FIX, 'utf8'));
+  });
+  it('T00 save-v6-locks.json roh', () => {
+    const json = readFileSync(LOCKS, 'utf8');
+    const r = raw(LOCKS);
+    expect(r.version).toBe(6);
+    expect(r.goodLocks).toEqual([{ tier: 1, good: 'food' }]);
+    expect(r.upgradeStops).toEqual([1]);
+    const bs = Object.values(r.buildings) as Record<string, any>[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(bs.filter((b) => b.defId === 'townhall')).toHaveLength(1);
+    expect(r.stock.glass).toBeGreaterThan(0);
+    expect(r.unlocked).toHaveLength(7);
+    expect(deserialize(json).ok).toBe(true);
+    expect(serialize(locksV6Run())).toBe(json);
+  });
+  it('T00 v6-Formen', () => {
+    const forms = {
+      off: createWorld(3),
+      unlockAll: createWorld(3, { unlockAll: true }),
+      mild: createWorld(3, { crisisLevel: 'mild' }),
+      normal: createWorld(3, { crisisLevel: 'normal' }),
+    };
+    for (const [k, w] of Object.entries(forms)) {
+      const s = serialize(w);
+      expect({ hash: fnv1a32(s), length: s.length }, k).toEqual(V6_FORMS[k]);
+    }
+  });
+  it.each([1, 2, 3, 4, 5])('T00 Kette save-v%i', (n) => {
+    const r = deserialize(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(fnv1a32(sortedJson(r.world))).toBe(CHAIN_HASHES[n]);
   });
 });

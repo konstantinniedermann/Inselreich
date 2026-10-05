@@ -13,16 +13,9 @@ import {
   WIN_TICK_LIMIT,
   type ColonyOptions,
 } from './controller';
-
-/** FNV-1a, 32 Bit, über die UTF-16-Codeeinheiten (Test-Helfer, keine Abhängigkeit). */
-function fnv1a32(s: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h;
-}
+import { RANDOM_SEQUENCE } from './e0Pins';
+import { randomSequence } from './fixtureV6';
+import { fnv1a32 } from './helpers';
 
 /**
  * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
@@ -231,5 +224,11 @@ describe('M11 Baseline (Spec 6, 14)', () => {
       step(r.world);
     }
     expect(serialize(r.world)).toBe(serialize(w));
+  });
+});
+
+describe('M12 E0 Zufallsfolge', () => {
+  it('AK-E0-19 Krisen und Aufträge im Lauf normal bis zum Sieg bleiben bitgleich', () => {
+    expect(randomSequence()).toEqual(RANDOM_SEQUENCE);
   });
 });

@@ -155,3 +155,31 @@ export function placeTownhall(world: World): Building {
   if (!b.connected) throw new Error('nicht angebunden');
   return b;
 }
+
+/** FNV-1a, 32 Bit, über die UTF-16-Codeeinheiten (Test-Helfer, keine Abhängigkeit). */
+export function fnv1a32(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+function sortKeys(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(sortKeys);
+  if (typeof v === 'object' && v !== null) {
+    const o = v as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(o)
+        .sort()
+        .map((k) => [k, sortKeys(o[k])]),
+    );
+  }
+  return v;
+}
+
+/** `JSON.stringify` mit rekursiv nach Schlüssel sortierten Objekten (Arrays behalten ihre Reihenfolge). */
+export function sortedJson(v: unknown): string {
+  return JSON.stringify(sortKeys(v));
+}
