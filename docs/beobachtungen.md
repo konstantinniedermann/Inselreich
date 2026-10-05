@@ -836,9 +836,3 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
 - Beobachtung: Brennende Gebäude werden mit reinem Schwarz abgedunkelt (S1). Die Stimmen-Schlüssel je Gut doppeln die Gut-IDs der Sim ohne Test; Umbenennung fällt still auf die Grundstimme zurück.
 - Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
-
-### 2026-10-05 · Studio-Tests · `test_persona_versions` auf main rot
-
-- Fundort: `tools/studio/tests/test_docs.py:33`; `.claude/agents/production-integrator.md` (version 1.6) gegen `docs/studio/CHANGELOG.md` (letzter Eintrag „Persona production-integrator 1.5").
-- Beobachtung: Seit main `15a99d8` (R224) ist `make studio-test` und damit `make check` rot; der CHANGELOG-Eintrag zur Persona-Version 1.6 fehlt.
-- Ursprung: Baseline-Lauf lead-tech H-U1. Einschätzung: Ein-Zeilen-Nachtrag im CHANGELOG durch den Studio-Strang (L0/lead-production), vor dem REL-03-Merge.
