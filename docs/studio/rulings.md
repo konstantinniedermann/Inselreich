@@ -1976,3 +1976,17 @@ render wartet auf M1 (E1-T08 OK), e3 auf T04 OK. Budget aus R241: 12 Starts, Par
 E1 C3). — Kosten bei Irrtum: Schranke zurück auf 1,25 mit eigener Silhouette.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C1 · ADR: —
+
+## R255 · 2026-10-05 · Seefahrt C2 abgenommen, Start C3 (e3), Inaktiv-Meldung
+
+Ruling: Seefahrt C2 angenommen: e2 `feat/m12-see-e2` @ 570420b (T03, T04), e4 `feat/m12-see-e4` @ 5ba5905 (T08, T09),
+je Review OK, Pins unverändert. Controller-Entscheide **C2-1 … C2-5 bestätigt**; C2-3 berührt `economy.ts`
+(`checkAfford`) und `placement.test.ts` ausserhalb der e2-Ownership — nachträglich genehmigt, T14 prüft die
+Zusammenführung mit dem e4-Hunk; C2-5 (`islands-gen.test.ts`) ist Merge-Punkt für M2. Commit-Text 1d77725
+(`RED_PLACEHOLDER`) bleibt, Beleg in c70d887. Überschreitung der Übergabeschwelle (8 Starts in einer Instanz, R190)
+als Befund an die Kurz-Retro. **C3 startet** mit neuem lead-tech: Strang **e3** (T05–T07) ab 7ddcfb5 mit Quer-Merge e2
+@ 570420b; Budget aus R241: 8 Starts, Parallelität 2. render und e2-UI (T10–T13) warten auf M1. **Inaktiv-Meldung
+tech-ui-engineer (E1 C3, T07):** Heartbeats alle ~10 min aus langen Bash-Messläufen — Messartefakt nach lernen.md,
+keine Ad-hoc-Retro. — Kosten bei Irrtum: Retro nachholen; C2-Entscheide in T15 vereinheitlichen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C2, Hook-Meldung · ADR: —
