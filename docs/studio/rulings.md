@@ -1625,3 +1625,22 @@ E1-Render startet erst nach dem REL-03-Merge. — Kosten bei Irrtum: eine weiter
 Autosaves.
 
 Entscheider: L0 · Anlass: Berichte lead-tech, lead-art, lead-qa M12-GATE-SPEC · ADR: ADR-005-Nachtrag (folgt)
+
+## R229 · 2026-10-05 · Gate Plan M12-E0
+
+Ruling: Gate Plan M12-E0 (`feat/m12-e0` @ 635dbae) mit **BEDENKEN** bestanden (lead-qa B1–B5, lead-production
+B1–B4, kein ZURÜCK). **Plan-Nachtrag durch lead-tech vor T00** (ohne Zweitprüfung): prod-B1 H-U1
+(`feat/h-u1-anbinden` @ a852d4a, release-reif) wird **vor T01 per Merge in `feat/m12-e0` geholt**, damit
+`connect.ts` mit umgestellt wird — T01 wartet nicht auf REL-03; prod-B2 T06 bekommt einen eigenen Doku-Umsetzer
+(15 Starts); prod-B3 Ersatz-Implementierer bei C1/C2 löst Übergabe an eine neue Controller-Instanz aus; qa-B2
+Timeout 120 000 für AK-E0-12(a); qa-B3 Lasttest AK-E0-15 in T05 vor der Umsetzung (Platzhalter-Pin 6, rot), nach
+Messung pinnen; qa-B4 v6-Autosave für AK-E0-20 vom Spiel auf main-Stand erzeugt (Weg und Haus), Sichtvergleich
+„Neues Spiel Seed 3" auf beiden Builds; qa-B5 Fall I16 (Wache auf Insel 1 schützt nichts auf Insel 0).
+**P-14 angenommen mit Auflage:** T00 erzeugt auf v6-Code einen zweiten echten Stand `save-v6-locks.json`
+(`unlockAll`, Amtsstube, `setGoodLock`, `setUpgradeStop`, Glas gekauft); AK-E0-06 lädt ihn; `upkeepCarry` 0
+hingenommen; Anhang 01 C gleicht der Spec-Autor an. **Final-Review** opus durch **lead-qa** (qa-B1): 1 Start von
+lead-tech an lead-qa (lead-tech 20, lead-qa 1). Merge-Reihenfolge: REL-03 (H-U1 → S1-Rest → H-R13 → H-R12b, H-R12b
+fällt raus, wenn nicht fertig) vor E0; E0 erst nach REL-03 auf main (sonst v7 ungewollt mit REL-03 in Autosaves).
+— Kosten bei Irrtum: Merge-Konflikt H-U1 in E0 doppelt zu lösen; v7 nach Merge nicht umkehrbar.
+
+Entscheider: L0 · Anlass: Berichte lead-qa und lead-production M12-E0-GATE-PLAN · ADR: —
