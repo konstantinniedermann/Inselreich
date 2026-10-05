@@ -56,6 +56,17 @@ describe('H-R11 Hanggrenze (S6)', () => {
             }
           tiles++;
           expect(hi - lo, `Kachel ${x},${y} ${t}`).toBeLessThanOrEqual(1);
+          if (t !== 'sand') continue;
+          // H-R12b K6: auch der Dünenton auf Sand bleibt innerhalb einer Kachel bei höchstens 1 Stufe
+          let dlo = 99,
+            dhi = -99;
+          for (let j = 0; j <= NODES; j++)
+            for (let i = 0; i <= NODES; i++) {
+              const s = Math.floor(grid.dune[(y * NODES + j) * grid.nx + x * NODES + i]! + 0.5);
+              dlo = Math.min(dlo, s);
+              dhi = Math.max(dhi, s);
+            }
+          expect(dhi - dlo, `Kachel ${x},${y} Düne`).toBeLessThanOrEqual(1);
         }
     expect(tiles).toBeGreaterThan(1500);
   });

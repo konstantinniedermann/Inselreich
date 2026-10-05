@@ -22,9 +22,6 @@ import {
   terrainPatchRect,
   tuftsFor,
   RELIEF_AMP,
-  duneMask,
-  duneRidge,
-  duneWeight,
   meadowHill,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -736,7 +733,19 @@ describe('M10 Teil-Raster', () => {
     const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'tone', 'patch', 'cls'] as const)
+    for (const f of [
+      'sharp',
+      'smooth',
+      'grass',
+      'rock',
+      'shade',
+      'tone',
+      'patch',
+      'cls',
+      'dune',
+      'dpres',
+      'dphase',
+    ] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
   }, 30000);
@@ -850,7 +859,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
 });
 
 describe('H-R9 B2 Dünen', () => {
-  it('H-R9 B2 Dünen nur auf trockenem Sand: Relief an nassem Saum (s < WET_SAND, reiner Sand) = 0, trocken > 0', () => {
+  it('H-R12b (löst H-R9 B2 Dünen nur auf trockenem Sand ab) Dünenpräsenz am nassen Saum (s < WET_SAND) = 0, auf trockenem Sand > 0', () => {
     const g = buildGrid(createWorld(3));
     const sand = LAND.indexOf('sand');
     let wet = 0,
@@ -858,21 +867,17 @@ describe('H-R9 B2 Dünen', () => {
       dryMax = 0;
     for (let k = 0; k < g.cls.length; k++) {
       if (g.cls[k] !== 1 + sand || g.ind[LAND.indexOf('grass')]![k] !== 0) continue;
-      // Dünenhöhe = Gewicht nach Küstenwert × Rücken (reine Helfer, Knoten k bei (i, j) · RASTER / TEX)
-      const fx = (k % g.nx) * (RASTER / TEX),
-        fy = Math.floor(k / g.nx) * (RASTER / TEX);
-      const dune = duneWeight(g.smooth[k]!) * RELIEF_AMP.dune * duneRidge(g.seed, fx, fy);
       if (g.smooth[k]! < 0.18) {
         wet++;
-        expect(dune).toBe(0);
-      } else if (g.smooth[k]! > 0.6) {
+        expect(g.dpres[k]).toBe(0);
+      } else if (g.smooth[k]! > 1.5) {
         dry++;
-        dryMax = Math.max(dryMax, Math.abs(dune));
+        dryMax = Math.max(dryMax, g.dpres[k]!);
       }
     }
     expect(wet).toBeGreaterThan(50);
     expect(dry).toBeGreaterThan(20);
-    expect(dryMax).toBeGreaterThan(0.2);
+    expect(dryMax).toBeGreaterThan(0.5);
   });
 });
 
@@ -924,60 +929,21 @@ describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
 });
 
 describe('H-R9 R3 Dünen in Teilbereichen', () => {
-  it('H-R9 R3 Dünen: im Mittel 40–60 % des Strands ohne Dünen (je Seed 30–70 %), einzelne Kuppen statt Bänder', () => {
-    let offSum = 0;
-    for (const seed of [3, 5, 7, 11]) {
-      const N = 240,
-        st = 0.25;
-      const v = new Float32Array(N * N);
-      let off = 0;
-      for (let j = 0; j < N; j++)
-        for (let i = 0; i < N; i++) {
-          v[j * N + i] = duneRidge(seed, i * st, j * st);
-          if (duneMask(seed, i * st, j * st) === 0) off++;
-        }
-      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeGreaterThan(0.3);
-      expect(off / (N * N), `Seed ${seed} ohne Dünen`).toBeLessThan(0.7);
-      offSum += off / (N * N);
-      // Kuppen (Rücken > 0,3) als Zusammenhangskomponenten: viele, keine dominiert (kein durchgehendes Band)
-      const lab = new Int32Array(N * N).fill(-1);
-      const sizes: number[] = [];
-      for (let k = 0; k < N * N; k++) {
-        if (v[k]! <= 0.3 || lab[k]! >= 0) continue;
-        const id = sizes.length;
-        let n = 0;
-        const stack = [k];
-        lab[k] = id;
-        while (stack.length) {
-          const q = stack.pop()!;
-          n++;
-          const x = q % N,
-            y = (q / N) | 0;
-          for (const [dx, dy] of [
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1],
-          ] as const) {
-            const xx = x + dx,
-              yy = y + dy;
-            if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
-            const kk = yy * N + xx;
-            if (lab[kk]! < 0 && v[kk]! > 0.3) {
-              lab[kk] = id;
-              stack.push(kk);
-            }
-          }
-        }
-        sizes.push(n);
+  it('H-R12b (löst H-R9 R3 Dünen in Teilbereichen ab) Dünen setzen längs aus: auf jedem Seed 1–10 tragen 15–85 % des trockenen Sands Präsenz > 0,5 (gepoolt in dunes.test.ts: 30–70 %)', () => {
+    const sa = LAND.indexOf('sand');
+    for (let seed = 1; seed <= 10; seed++) {
+      const g = buildGrid(createWorld(seed));
+      let dry = 0,
+        hi = 0;
+      for (let k = 0; k < g.cls.length; k++) {
+        if (g.cls[k] !== 1 + sa || g.smooth[k]! < 1.18) continue;
+        dry++;
+        if (g.dpres[k]! > 0.5) hi++;
       }
-      const pos = sizes.reduce((a, b) => a + b, 0);
-      expect(sizes.length, `Seed ${seed} Kuppen`).toBeGreaterThanOrEqual(40);
-      expect(Math.max(...sizes) / pos, `Seed ${seed} grösste Kuppe`).toBeLessThan(0.45);
+      expect(hi / dry, `Seed ${seed}`).toBeGreaterThan(0.15);
+      expect(hi / dry, `Seed ${seed}`).toBeLessThan(0.85);
     }
-    expect(offSum / 4).toBeGreaterThan(0.4);
-    expect(offSum / 4).toBeLessThan(0.6);
-  });
+  }, 60_000);
 });
 
 describe('H-R9 B3 Wiesenvarianz', () => {
@@ -1088,7 +1054,16 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
-    for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const) {
+    for (const f of [
+      'shade',
+      'tone',
+      'warm',
+      'mottle',
+      'veil',
+      'dune',
+      'dpres',
+      'dphase',
+    ] as const) {
       expect(grid[f], `${f} vorhanden`).toBeDefined();
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     }
@@ -1110,6 +1085,7 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
       ts.push(performance.now() - t0);
     }
     ts.sort((a, b) => a - b);
-    expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8));
+    // R235: Runner für paintPixels ≈ 4× langsamer als lokal; lokal bleibt 8 ms, CI 20 ms
+    expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8, undefined, 2.5));
   });
 });
