@@ -943,3 +943,4 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Beobachtung:** Fremdinsel-Bäume nutzen den Seed der echten Welt (nicht den Inselseed der `islandView`); kein Test belegt das. `renderStats.errands` wird jetzt je Frame genullt und je Insel summiert (vorher blieb der Wert bei leerem Bildbereich stehen).
 - **Ursprung:** M12-E1 T05, Review OK.
 - **Einschätzung:** Test in T06 nachziehen (klein); `errands` harmlos.
+- **Test nachgezogen:** b59ac28 (Baumstempel-Seed; Mutationsprobe rot/grün).
