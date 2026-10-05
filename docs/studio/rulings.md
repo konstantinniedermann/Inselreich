@@ -2018,3 +2018,14 @@ zur Messbedingung im E1-Ledger, T08 (Doku) überträgt ihn. — Kosten bei Irrtu
 nachholen (N-91-Weg).
 
 Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 (D-147) · ADR: —
+
+## R258 · 2026-10-05 · Seefahrt C3 (e3) abgenommen
+
+Ruling: e3 `feat/m12-see-e3` @ e3afd51 (T05–T07 je Review OK, `make check`/`CI=true` grün ohne Last, Neupin
+`balance-merchants` vorläufig [6750, 11500, 320]) angenommen, ebenso C3-1 (zweite leere Tastenklammer im Mangeltext
+mit Spec-Wortlaut behoben). C3-2 (AK-Z3-06 nur über Reihenfolge prüfbar) und C3-3 (Merkfeld drittes Banner optional)
+zur Kenntnis; **Pflicht für T15:** `app.ts` übernimmt das Merkfeld (Zeilen in der Übergabe C3 → C4), sonst erscheint
+das Banner nach dem Sieg je Frame neu. Seefahrt wartet jetzt auf M1 (E1-Final-Review OK) für render (T10/T11) und
+e2-UI (T12/T13). — Kosten bei Irrtum: Nacharbeit in T14/T15.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 · ADR: —
