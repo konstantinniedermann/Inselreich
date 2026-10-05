@@ -81,5 +81,6 @@ describe('M11 Baseline Kaufleute (Spec 14)', () => {
     expect([t.winTick, t.wonMerchantsTick, t.minMoneyAfterWin]).toEqual([6750, 11500, 320]); // M-01, M-08, M-10
     expect(t.wonMerchantsTick!).toBeLessThanOrEqual(MERCHANT_TICK_LIMIT);
     expect(w.money).toBeGreaterThan(0);
+    expect(w.wonSpice).toBe(false); // AK-Z3-13 (Teil): der Controller erreicht das dritte Ziel nicht
   });
 });
