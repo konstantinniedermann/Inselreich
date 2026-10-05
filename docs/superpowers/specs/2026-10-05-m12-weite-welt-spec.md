@@ -1,7 +1,7 @@
 # M12 „Weite Welt" — Design-Spec
 
-Datum: 2026-10-05 · Paket M12-SPEC · Meilenstein M12 · Status: **Spec vollständig (E0 nach Gate Spec E0, R227;
-E1–E6 Entwurf zum Gate Spec)** · Prozessstufe voll (Save v7 und v8, `balance-merchants`-Bruch nur in E3)
+Datum: 2026-10-05 · Paket M12-SPEC-FIX · Meilenstein M12 · Status: **Nachbesserung R228, Delta-Gate lead-qa** (E0
+nach R227 bestanden) · Prozessstufe voll (Save v7 bis v10, `balance-merchants`-Bruch nur in E3)
 
 Grundlage: [Vorschlag M12](2026-10-05-m12-weite-welt-design.md) mit
 [Anhang 01 Wirtschaft](2026-10-05-m12-weite-welt-design/anhang-01-wirtschaft.md); Ruling **R226** (Gate
@@ -14,7 +14,7 @@ Dichte-Szene D1, Fold-back, Testwelt, Randfälle;
 [02](2026-10-05-m12-weite-welt-spec/anhang-02-e1-archipel-und-render.md) E1: Inseln, Generator, Darstellung,
 Render-Messprotokoll, Streichvariante;
 [03](2026-10-05-m12-weite-welt-spec/anhang-03-e2-e4-regeln-und-werte.md) E2–E6: Werte je `src/sim/defs/`-Eintrag,
-Save v8, Routenablauf, Panel; [04](2026-10-05-m12-weite-welt-spec/anhang-04-ak-liste.md) alle AK E1–E6.
+Save v8–v10, Routenablauf, Panel; [04](2026-10-05-m12-weite-welt-spec/anhang-04-ak-liste.md) alle AK E1–E6, Auflagen für die Pläne.
 
 Kennzeichnung: **Setzung Spec** (in der Spec neu gesetzt, nicht im Vorschlag), **[Tech]** (Umsetzungsdetail; lead-tech
 entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest), **Phase 2** (Regel wird in E1–E4 erweitert).
@@ -124,10 +124,10 @@ Feld für Feld, Ladeprüfung im Detail und Fixture-Rezept: Anhang 01 A–C.
   „Unbekannte Version" ab (heutige Zeile `raw.version !== SAVE_VERSION`); er lädt ihn nie still mit fehlenden Daten.
 - Abgeleitete Daten (Index aus 4.4, Anbindung) sind **nicht** Teil des Saves; `connected` wird wie heute nach dem
   Laden neu abgeleitet.
-- **Fixture** `tests/sim/fixtures/save-v6.json` entsteht in **Schritt 0**, dem ersten Commit der E0-Branch auf dem
-  Stand `main` 17cbafb, vor jeder Änderung in `src/` (nicht direkt auf `main`; dort committet nur der Integrator).
-  Rezept und vollständige Schritt-0-Liste: Anhang 01 C (Controller Seed 3, Krisen „normal", Feuerwache, Tick 3000
-  mit Brand und offenem Auftrag, Sperren gesetzt). Commit und Befehl stehen im Testkommentar.
+- **Fixtures** `save-v6.json` (Controller Seed 3, „normal", Feuerwache, Tick 3000, Brand und offener Auftrag) und
+  `save-v6-locks.json` (`unlockAll`, Amtsstube, Ausgabesperre, Aufstiegsstopp, Glas; R229 P-14) entstehen in
+  **Schritt 0**, dem ersten Commit der E0-Branch auf v6-Code, vor jeder Änderung in `src/` (nicht direkt auf `main`).
+  Rezepte: Anhang 01 C. Commit und Befehl stehen im Testkommentar.
 
 ### 4.4 Dienst-Abdeckung als Index
 
@@ -194,8 +194,8 @@ Vitest in CI (`make test`); „neu" = neue Datei. Testwelt mit zwei Inseln: Helf
   und Laden. Geladen werden `save-v6.json` (Tick 3000, Brand und Auftrag) und Fold-back-v6-Stände desselben Laufs bei
   Tick 1000 (Auftrag offen), 2650 (Sturm aktiv) und 4300 (Boom); der Test prüft zuerst, dass der Zustand beim
   Speichern vorliegt. Nach 300 Schritten ist `serialize` gleich dem Lauf ohne Speichern und Laden (Anhang 01 C).
-- **AK-E0-06** Ein v6-Stand nur mit Kontor lädt (Kontor `island 0`); `unlocked`, `goodLocks`, `upgradeStops` eines
-  v6-Stands sind nach dem Laden wörtlich gleich.
+- **AK-E0-06** Ein v6-Stand nur mit Kontor lädt (Kontor `island 0`); `save-v6-locks.json` lädt, `unlocked`,
+  `goodLocks`, `upgradeStops` und `islands[0].stock.glass` sind wörtlich gleich dem Fixture.
 - **AK-E0-07** Negativfälle einzeln → „Beschädigter Spielstand", ohne Ausnahme (Liste Anhang 01 B, mindestens: v6
   ohne Gut, v6 `buildings {}`, v7 ohne `islands`, `islands` leer, zwei Inseln, Insel 63 × 64, 4095 Kacheln, Kachel
   `null`, `kontorId` ohne Gebäude, `kontorId` auf Nicht-Kontor, Gebäude ohne `island`, `island` 1, `island` −1,
@@ -259,8 +259,8 @@ Vitest in CI (`make test`); „neu" = neue Datei. Testwelt mit zwei Inseln: Helf
   (mechanisch); `tools/render-qa/perf.mjs` (liest heute `w.tiles`, `w.width`; mechanisch auf Insel 0, sonst bricht
   die Render-Messung mit dem E0-Merge, lead-design); `tests/`. `types.ts` und `save.ts` gehören in M12 bis zum
   E0-Merge nur E0.
-- **Schritt 0** = erster Commit der E0-Branch auf `main` 17cbafb, vor jeder Änderung in `src/`: Fixture, v6-Formen,
-  Hashes, Zufallsfolge (Liste Anhang 01 C).
+- **Schritt 0** = erster Commit der E0-Branch auf `main` 17cbafb, vor jeder Änderung in `src/`: Fixtures `save-v6.json`
+  und `save-v6-locks.json`, v6-Formen, Hashes, Zufallsfolge (Liste Anhang 01 C).
 - **Umfang** (Gate Spec E0, R227 B1): ≈ 146 direkte Zugriffe in `src/` (render ≈ 60 und 6 Destrukturierungen, ui
   ≈ 40, sim ≈ 36) und ≈ 990 Treffer in `tests/` auf `stock`, `tiles`, `kontorId`, `width`/`height`; der mechanische
   Task ist damit gut doppelt so gross wie zuerst geschätzt. **[Tech]** Zugriffshelfer und eine mechanische Umstellung als eigener
@@ -281,203 +281,175 @@ je Insel, Brand über mehrere Inseln, jede neue Zahl in `src/sim/defs/`.
 
 ## 5. Teil E1 — Fremdinseln und Archipel
 
-**Zweck:** Drei Fremdinseln liegen sichtbar im Meer um die Heimat; die Kamera schwenkt und zoomt über den ganzen
-Archipel. Noch nichts ist dort baubar (E2). Details, Generator und Messprotokoll: Anhang 02.
+**Zweck:** Zwei Fremdinseln liegen sichtbar im Meer um die Heimat; die Kamera schwenkt und zoomt über den ganzen
+Archipel. Noch nichts ist dort baubar (E2). Details, Generator, Messprotokoll: Anhang 02.
 
 **Kernregeln**
 
 - **Inseln** (`sea.ts` `ISLANDS`): A „Möweninsel" `d` 25–30, ≤ 24 × 24, Gewürz; B „Felsbucht" 35–40, ≤ 36 × 36,
-  Gewürz + Gebirge; C „Grünland" 55–65, ≤ 48 × 48, Gras/Wald/Gebirge, kein Gewürz — **C ist die erste Streichung**.
-  Fahrzeit `10 × d` Ticks (`SHIP_TICKS_PER_SEA_TILE`). Heimat nie Gewürz. Erz und Minen gestrichen.
-- **Generator** aus eigenem Strom `ISLANDS_SALT`; Garantien (Kontorplatz, Plantagen- und Steinbruchplätze) geprüft,
-  sonst neuer Versuch, nach 50 eine feste Ersatzform. Heimat, Auftrags- und Krisenstrom unberührt.
-- **Archipel:** Versatz `ox`, `oy` je Insel, Heimat (0, 0); Rechtecke mit ≥ 8 Kacheln Abstand; Fahrlinie Anker →
-  ≤ 2 Wegpunkte → Anker, `d` = aufgerundete Länge; Rahmen `W + H ≤ 440`.
-- **Save v8 (oder je Merge eine Version, F-S1):** `Island` + `kind`, `ox`, `oy`, `anchor`, `kontorId` darf `null`
-  sein; Migration v7 → v8 erzeugt die Fremdinseln aus `world.seed`; Fixture `save-v7.json` als erster Commit der
-  E1-Branch (Anhang 03 B).
-- **Render:** offenes Meer als eine Fläche; Inseln mit Versatz projiziert; Culling und Picking je Insel; neue
-  Zoomstufen 0,25 und 0,125. **Terrain-Cache je Insel:** Heimat sofort zum Erstbild, Fremdinseln **im Leerlauf nach
-  dem Erstbild** (A, B, C), Notfall-Rasterung, falls eine Insel vorher ins Bild kommt. Begründung: Das Erstbild
-  bleibt beim heutigen Aufwand, der Schwenk ruckelt nicht; Speicher +≈ 17 MB bei Faktor 1 (Anhang 02 D).
-- **Streichvariante B:** Schalter `ARCHIPEL_VIEW 'jump'` zeichnet nur die aktive Insel ohne Meer dazwischen,
-  Inselwechsel per Kamerasprung; Sim, Save und UI bleiben unverändert.
+  Gewürz + Gebirge. Insel C ist gestrichen (R228 (2)). Fahrzeit `10 × d` Ticks. Heimat nie Gewürz.
+- **Generator** aus eigenem Strom `ISLANDS_SALT`; Garantien (Kontor-, Plantagen-, Steinbruchplätze) geprüft, sonst
+  neuer Versuch, nach 50 eine feste Ersatzform. Heimat, Auftrags- und Krisenstrom unberührt.
+- **Archipel:** Versatz `ox`, `oy`, Heimat (0, 0); Rechtecke ≥ 8 Kacheln Abstand; Fahrlinie Anker → ≤ 2 Wegpunkte →
+  Anker, `d` = aufgerundete Länge; Rahmen `W + H ≤ 300` (ganzer Archipel bei Zoom 0,125 auch in 1280 × 800).
+- **Save v8** (= E1, R228 (3)): `Island` + `kind`, `ox`, `oy`, `anchor`; `kontorId` darf `null` sein; Migration
+  v7 → v8 erzeugt A und B aus `world.seed`; Fixture `save-v7.json` als erster Commit der E1-Branch (Anhang 03 B).
+- **Render:** Meer als eine Fläche in `waterDeep`, die äussersten 2 Kacheln jedes Inselcaches laufen darauf aus;
+  Culling und Picking je Insel; Mindestzoom **0,125**; ab Zoom ≤ 0,25 Detailstufe ohne Figuren, Tiere, Rauch, Schaum,
+  Wellen, Böden aus einer Viertel-Kopie. **Terrain-Cache:** Heimat sofort, Fremdinseln im Leerlauf nach dem Erstbild
+  in Scheiben ≤ 8 ms, Notfall synchron. Speicher ≈ 44,5 MB zusätzlich als Eintrag in `limits.ts` (Faktor 2).
+- **Streichvariante B:** `ARCHIPEL_VIEW 'jump'` zeichnet nur die aktive Insel; Sim, Save und UI unverändert.
 
-**Wichtigste AK** (vollständig Anhang 04): **AK-E1-02** Seeds 1 … 200 ohne Überlappung, Bänder eingehalten, keine
-Linie durch ein Inselrechteck (`islands-gen.test.ts`). **AK-E1-07/09** Culling und Picking je Insel als reine
-Mathematik (`tests/render/archipel.test.ts`). **AK-E1-10** nur Heimat im Bild → Zeichenaufrufe der Heimat gleich
-`main` (`fakeCtx`). **Render-Last** (A/B mit `tools/render-qa/perf.mjs`, DPR 2, 1920 × 1080, Seeds 14 und 3):
-**AK-E1-14** Heimatansicht Zoom 1, nur Heimat im Bild: `renderMedian` höchstens +0,2 ms gegen `main` (Stilrahmen §5);
-**AK-E1-15** Heimat-`buildMs` höchstens +30 %; **AK-E1-16** Zoom 0,125 mit allen Inseln: `renderMedian` höchstens
-2 × Heimatansicht Zoom 1 derselben Maschine — **Vorschlag, lead-art bestätigt im Gate Spec**. **AK-E1-12**
-Streichvariante ändert nur `src/render/`.
+**Wichtigste AK** (alle: Anhang 04): **AK-E1-02** Seeds 1 … 200 ohne Überlappung, Bänder, keine Linie durch eine
+Insel. **AK-E1-07/09/10** Culling, Picking, Heimat-Zeichenaufrufe gleich `main` (`tests/render/archipel.test.ts`).
+**Render-Last** (A/B `perf.mjs`, Headless, DPR 2, 1920 × 1080, je Seed 14 und 3): **AK-E1-14** Zoom 1 `--focus home`
+`renderMedian` ≤ +0,2 ms; **AK-E1-15** Heimat-`buildMs` ≤ +30 %; **AK-E1-16** Zoom 0,125 nach Aufbau aller Caches
+≤ 2 × Zoom 1, hart; **AK-E1-18** kein Frame > 50 ms während der Leerlauf-Rasterung; **AK-E1-11/19** Scheiben ≤ 8 ms.
 
 **Nicht in E1:** Bauen auf Fremdinseln, Kontor II, Schiffe, Gewürz-Produktion, Seekarte (E5).
 
 ## 6. Teil E2 — Kontor II, Bauen auf Fremdinseln, Seefahrt
 
-**Zweck:** Mit U6 gründet der Spieler auf einer Fremdinsel ein Kontor und baut dort nach den heutigen Regeln. Details:
-Anhang 03 C.
+**Zweck:** Mit U6 gründet der Spieler auf einer Fremdinsel ein Kontor und baut dort nach heutigen Regeln. Details:
+Anhang 03 C. E2, E3 und E4 kommen als **Seefahrt-Bündel** über eine Integrationsbranch mit einem Merge (Save v9).
 
 **Kernregeln**
 
-- **U6** (`unlocks.ts`) erhält `kontor2` und die Funktion `seafaring` (mit E3 auch `spicefarm`, `spice`);
-  `unlocked` und `deriveUnlocks` bleiben unverändert.
-- **`kontor2`:** Küste, nur Fremdinsel ohne Kontor, Kosten 800 Geld, 20 Holz, 8 Werkzeug, 10 Stein **aus dem
-  Heimatlager**, Unterhalt 10 (60/min), Versorgungsradius 8. Vorher auf der Insel nur das Kontor baubar. Abriss
-  gesperrt, solange eine Route es nutzt („Erst Route auflösen").
-- **Lager je Insel:** Bauen, Betriebe, Häuser, Aufstieg nur aus dem eigenen Lager (R-E0-3). **Handel an jedem
-  Kontor**, Kaufpreise fest, **Sättigung global** je Gut. **Aufträge an jedem Kontor**, aus dessen Lager.
-- **Bilanz und Lagerleiste je Insel:** `goodsBalance(world, insel)`; die Lagerleiste zeigt die aktive Insel (Bildmitte)
-  mit Namen. Dämpfung beim Aufstieg nach der Bilanz der Insel des Hauses.
-- **Brand** wählt über alle Inseln: Rechtecke je Insel untereinander, dieselben zwei Ziehungen wie heute; nur Heimat
-  brennbar → bitgleich. Sturm überall, Boom global.
-- **Bedienung:** ab `seafaring` Taste `0` (Heimat), `9` (nächste Insel reihum), Knopf „Inseln" (1 Klick je Ziel).
-  Mouse-over einer Fremdinsel vor U6: „… · Seefahrt mit den Kaufleuten".
-- Unversorgte Häuser auf Fremdinseln: heutige Regel, keine Änderung (Beobachtung eingetragen, Vorschlag §7).
+- **U6** erhält `kontor2`, `seafaring` (mit E3 `spicefarm`, `spice`); `unlocked`, `deriveUnlocks` unverändert.
+- **`kontor2`:** Küste, Fremdinsel ohne Kontor, 800 Geld, 20 Holz, 8 Werkzeug, 10 Stein **aus dem Heimatlager**,
+  Unterhalt 10, Radius 8. Vorher auf der Insel nur das Kontor baubar. Abriss gesperrt, solange eine Route es nutzt.
+- **Lager je Insel** (R-E0-3); **Handel und Aufträge an jedem Kontor** aus dessen Lager; **Sättigung global**.
+- **Bilanz und Lagerleiste je Insel** (aktive Insel = Bildmitte); Dämpfung nach der Bilanz der Insel des Hauses.
+- **Brand** über alle Inseln: Rechtecke untereinander, dieselben zwei Ziehungen; nur Heimat brennbar → bitgleich.
+- **Bedienung** ab `seafaring`: Taste `0` Heimat, `9` reihum; Knopf „Inseln" 2 Klicks je Ziel. Mouse-over einer
+  Fremdinsel vor U6: „… · Seefahrt mit den Kaufleuten". Unversorgte Häuser dort: heutige Regel.
 
-**Wichtigste AK:** **AK-E2-01** Gründen vor/nach `seafaring`, Kosten aus dem Heimatlager (`kontor2.test.ts` neu).
-**AK-E2-04** Verkauf an zwei Kontoren senkt denselben `sellPct` (`trade.test.ts`). **AK-E2-05** Auftrag aus dem
-Fremdlager (`orders.test.ts`). **AK-E2-07** Brandziel: nur Heimat brennbar → Ziel gleich heute für 30 Perioden;
-mit Insel → Ziel auf der Insel möglich, je Periode genau zwei Ziehungen nach der Art (`fire.test.ts`). **AK-E2-11**
-Browser: Lagerleiste je Insel, Tasten, Knopf, Mouse-over vor U6.
+**Wichtigste AK:** **AK-E2-01** Gründen, Kosten aus der Heimat (`kontor2.test.ts` neu); **AK-E2-03** Abriss-Sperre
+und Fall „Schiff lag in der Felsbucht, Abriss, laden"; **AK-E2-04** `sellPct` global; **AK-E2-07** Brandziel
+bitgleich (`fire.test.ts`); **AK-E2-11** Browser, Klickzählung wie AK-E4-13; **AK-E2-12…14** Gründe.
 
-**Nicht in E2:** Schiffe (E4), Gewürz (E3), Bevölkerungswanderung, Lagerleiste „alle" (Kann, nicht geplant).
+**Nicht in E2:** Schiffe (E4), Gewürz (E3), Bevölkerungswanderung, Lagerleiste „alle".
 
 ## 7. Teil E3 — Gewürz
 
-**Zweck:** Kaufleute brauchen ein Gut, das nur auf Fremdinseln wächst — der Grund für die Expansion. Details und
-Werte: Anhang 03 A und D.
+**Zweck:** Kaufleute brauchen ein Gut, das nur auf Fremdinseln wächst — der Grund zur Expansion. Anhang 03 A, D.
 
 **Kernregeln**
 
-- Gut **„Gewürz"** (endgültiger Name, A-08): `GOODS.spice` Kauf 40, Verkauf 12, **kein Auftragsgut**, `spice` **am
-  Ende** von `GOOD_IDS`, `START_STOCK.spice` 0.
-- **Gewürzplantage** `spicefarm`: 200 Geld, 12 Holz, 3 Werkzeug; Takt 50, Unterhalt 15 (90/min); Gras r2 min4 wie
-  Zuckerrohr + Inselmerkmal `spice` (neue Regel `islandTrait`). Keine Verarbeitung.
+- **„Gewürz"** (endgültig, A-08): Kauf 40, Verkauf 12, **kein Auftragsgut**, am **Ende** von `GOOD_IDS`, Start 0.
+- **Gewürzplantage:** 200 Geld, 12 Holz, 3 Werkzeug; Takt 50, Unterhalt 15; Gras r2 min4 + Inselmerkmal `spice`.
 - **Kaufleute:** `TIERS[4].needs.spice` 0,1, `TIERS[4].tax` 20 → 22.
-- **Bewusster Bruch `balance-merchants` (R226 F-03):** Controller `feedSpice` kauft Gewürz am Heimatkontor zu, nutzt
-  keine Insel; `wonMerchantsTick` und `minMoneyAfterWin` werden neu gemessen und gepinnt, `winTick` 6750 bleibt.
-  Eskalation: erst Steuer 24, dann `MERCHANT_TICK_LIMIT` 13 000 — **jede Stufe nur mit Ruling**.
-- **`balance.test.ts` bleibt bitgleich:** Gewürz wirkt erst nach dem Sieg; Auftrags- und Boom-Pool ohne Gewürz.
+- **Bewusster Bruch (R226 F-03):** Controller `feedSpice`, Neupin von `wonMerchantsTick` und `minMoneyAfterWin`,
+  `winTick` 6750 bleibt; betroffene alte Pins mit Meilenstein in Anhang 03 D. Eskalation erst Steuer 24, dann Grenze
+  13 000, je nur mit Ruling. `balance.test.ts` bleibt bitgleich.
+- **Alte Stände mit Kaufleuten** (Spielurteil lead-design): Migration v8 → v9 legt einmalig
+  `min(100, SPICE_GRACE_PER_HOUSE (10) × Häuser Stufe 4)` Gewürz ins Heimatlager; einmalige Meldung beim Laden; sonst
+  heutige Regel. Weicher Übergang, Zukauf hält Kaufleute über Bürger-Niveau.
 
-**Wichtigste AK:** **AK-E3-01** Werte (`defs.test.ts`). **AK-E3-02** Plantage nur mit Merkmal (`spice.test.ts` neu).
-**AK-E3-04** Auftragsziehung für Seeds 1, 3, 42 × 20 Perioden gleich (`orders.test.ts`). **AK-E3-05** Neupin
-`balance-merchants` mit Befehl und Commit, Ziel 2 ≤ 12 000, `minMoneyAfterWin` > 0.
+**Wichtigste AK:** **AK-E3-01** Werte; **AK-E3-02** Plantage nur mit Merkmal (`spice.test.ts` neu); **AK-E3-04**
+Auftragsziehung gleich; **AK-E3-05** Neupin samt Pin-Liste; **AK-E3-07** Übergangsbestand und Meldung (`save.test.ts`).
 
 **Nicht in E3:** zweiter Gewürz-Betrieb, Gewürz als Auftragsgut, Standortgüte (I-008).
 
 ## 8. Teil E4 — Schiffe und Routen
 
-**Zweck:** Ein Schiff bringt Ware zwischen zwei Kontoren hin und her, ohne Zufall und ohne Warten. Ablauf, Panel und
-Gründe: Anhang 03 E und F.
+**Zweck:** Ein Schiff bringt Ware zwischen zwei Kontoren hin und her, ohne Zufall und ohne Warten. Anhang 03 E, F.
 
 **Kernregeln**
 
-- **Handelsschiff** (`sea.ts` `SHIP`): am Heimatkontor 1200 Geld, 25 Holz, 10 Werkzeug; Unterhalt 15 (90/min);
-  Ladung 50; **höchstens 4** (`SHIP_MAX`). Ausmustern nur leer in der Heimat, ohne Erstattung (Setzung Spec).
-- **Route** = zwei Kontore, je Richtung bis zu 2 Güter (`ROUTE_GOODS_PER_DIRECTION`), Reserve je Gut 0–90 in Zehnern,
-  Standard 10. Ein Gut nur in einer Richtung.
-- **Ankunft:** **erst entladen** (bis Ziellager 100, Rest bleibt an Bord und geht bei der nächsten Ankunft zuerst),
-  **dann laden** (je Gut zuerst `⌊frei / k⌋`, Rest an das erste Gut; Reserve bleibt im Quelllager), **Abfahrt im
-  selben Tick, nie warten**, auch leer. Fahrzeit `10 × d`. Alles ganzzahlig, ohne `createRng`.
-- `tickShips` nach der Produktion, vor Verbrauch und Steuer; Schiffe in `id`-Reihenfolge.
-- **Route auflösen:** Schiff beendet die Fahrt, fährt heim, entlädt bis 100, Rest verfällt mit Meldung.
-- Geld negativ: Kauf gesperrt, Routen und Unterhalt laufen.
+- **Handelsschiff:** am Heimatkontor 1200 Geld, 25 Holz, 10 Werkzeug; Unterhalt 15; Ladung 50; **höchstens 4**.
+  Ausmustern nur leer in der Heimat, ohne Erstattung.
+- **Route** = zwei Kontore, je Richtung ≤ 2 Güter, Reserve 0–90 in Zehnern (Standard 10); ein Gut nur in einer
+  Richtung. Liegt der Hafen nicht auf der Route, erst Anfahrt ohne Umladung.
+- **Ankunft:** erst **entladen** (bis 100, Rest bleibt an Bord), dann **laden** (je Gut `⌊frei / k⌋`, Rest ans erste),
+  **Abfahrt im selben Tick, nie warten**. Fahrzeit `10 × d`. Ganzzahlig, ohne `createRng`. `tickShips` nach der
+  Produktion, vor Verbrauch und Steuer, in `id`-Reihenfolge.
+- **Route auflösen:** Fahrt beenden, heim, entladen bis 100, Rest verfällt mit Meldung. Geld < 0: Kauf gesperrt.
 
-**Routen-Bedienung (AK-E4-13, Browser-Check, lead-tech prüft):** Startzustand: Seed 3, „Alles frei", `kontor2` auf
-der Felsbucht, genau ein Handelsschiff liegt frei im Heimathafen, Lager der Felsbucht Gewürz 30, Panel des
-**Heimatkontors offen**, keine Auswahl offen. **Gezählt** wird jeder primäre Mausklick (Drücken und Loslassen der
-linken Taste) ab diesem Zustand; Mausbewegung, Mouse-over und Mausrad zählen nicht, Tastatur wird nicht benutzt.
-**Erwartet:** Klick 1 „Route nach Felsbucht" → Güterauswahl im Panel; Klick 2 „Gewürz" in der Gruppe „Holen" → Route
-Felsbucht → Heimat, Gewürz, Reserve 10. **Bestanden**, wenn nach höchstens 2 Klicks und spätestens 1 s Tempo 1 die
-Schiffszeile „unterwegs nach Felsbucht" mit Restzeit zeigt und das Schiff im Bild ablegt.
+**Routen-Bedienung (AK-E4-13, Browser-Check):** Start: Seed 3, „Alles frei", `kontor2` auf der Felsbucht, ein freies
+Schiff im Heimathafen, Felsbucht-Gewürz 30, Panel des **Heimatkontors offen**, keine Auswahl offen. **Gezählt** wird
+jeder primäre Mausklick (Drücken und Loslassen links); Bewegung, Mouse-over, Mausrad zählen nicht, keine Tastatur.
+Klick 1 „Route nach Felsbucht" → Güterauswahl; Klick 2 „Gewürz" in „Holen" → Route mit Reserve 10. **Bestanden**,
+wenn nach höchstens 2 Klicks und spätestens 1 s (Tempo 1) „unterwegs nach Felsbucht" mit Restzeit steht.
 
-**Wichtigste AK:** **AK-E4-04** erst entladen, dann laden; **AK-E4-05** halbe Ladung je Gut, leere Abfahrt;
-**AK-E4-06** Reserve; **AK-E4-07** Validierung (Gut in beiden Richtungen, 3 Güter, Ziel ohne Kontor); **AK-E4-01**
-fünftes Schiff abgewiesen; **AK-E4-08** Auflösen mit Rest; **AK-E2-03** Abriss `kontor2` gesperrt; **AK-E4-10**
-zwei Läufe gleich, kein `createRng` (alle `tests/sim/ships.test.ts` neu); **AK-E4-12** Schiffsposition auf der Linie
-(`tests/render/shipLane.test.ts` neu).
+**Wichtigste AK** (`tests/sim/ships.test.ts` neu): **AK-E4-04** erst entladen, dann laden; **-05** halbe Ladung,
+leere Abfahrt; **-06** Reserve; **-07** Validierung; **-08** Auflösen mit Rest; **-10** kein `createRng`;
+**-16…19** Ausmustern, Anfahrt, Ändern unterwegs, Auflösen im Heimathafen; **-12/-15** Schiff auf der Linie, in der
+Tiefensortierung, ≥ 12 CSS-px bei Zoom ≤ 0,25 (`tests/render/shipLane.test.ts` neu).
 
-**Nicht in E4:** Routen mit mehr als zwei Häfen, freie Wegpunkte, Werft, Schiffstypen, Verkauf von Ladung an Bord.
+**Nicht in E4:** mehr als zwei Häfen, freie Wegpunkte, Werft, Schiffstypen, Verkauf von Ladung an Bord.
 
 ## 9. Kann-Teile E5 und E6
 
 Streichbar in dieser Reihenfolge: E6, dann E5. AK nur bei Aufnahme in den Plan (Anhang 04).
 
-- **E5 Seekarte und Gründungsfahrt** (UI/Render, kein Sim-Zustand): kleine Karte im Knopf „Inseln" mit Silhouetten,
-  Linien, Schiffspunkten; einmalige Fahrt-Darstellung nach dem Gründen.
-- **E6 Händlerschiff (I-006):** Angebot ≤ 20 % unter Kaufpreis, höchstens 20 Einheiten, mit Restzeit, an einem Kontor;
-  eigener Zufallsstrom. Periode und Dauer sind Vorschlag Spec (Anhang 03 G, F-P7).
+- **E5 Seekarte und Gründungsfahrt** (UI/Render, kein Sim-Zustand): kleine Karte im Knopf „Inseln"; einmalige
+  Fahrt-Darstellung nach dem Gründen.
+- **E6 Händlerschiff (I-006):** Angebot ≤ 20 % unter Kaufpreis, ≤ 20 Einheiten, mit Restzeit; eigener Zufallsstrom;
+  Save v10. Periode und Dauer: Vorschlag Spec (Anhang 03 G, F-P7).
 
 ### 9.1 Bitgleichheit über E1–E6
 
-`balance.test.ts` unverändert in jedem Teil. `OFF_REFERENCE`, `OFF_FINGERPRINT 0x701c6da5`, „normal"/„mild" 7850
-und die Zufallsfolge aus AK-E0-19 bleiben in **allen** Teilen; erlaubt ist nur, dass `normalized()` die neuen
-v8-Felder entfernt (Liste AK-M12-B2). `balance-merchants` `[6750, 11200, 320]` bleibt in E1, E2, E4–E6 und bricht
-nur in E3 bewusst.
+`balance.test.ts` unverändert. `OFF_REFERENCE`, `OFF_FINGERPRINT 0x701c6da5`, „normal"/„mild" 7850 und die
+Zufallsfolge (AK-E0-19) bleiben in allen Teilen; erlaubt ist nur, dass `normalized()` die neuen Felder je Version
+entfernt (AK-M12-B2). `balance-merchants` gleich dem jeweils gültigen Pin; nur das Seefahrt-Bündel (E3) ändert ihn.
 
 ### 9.2 Paketschnitt M12
 
-| Teil | Owner                              | Dateien (Schwerpunkt)                                                                                                                                                            | hängt ab | parallel zu                                     |
-| ---- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| E1   | lead-tech (Sim), lead-art (Render) | `islands.ts` neu, `defs/sea.ts` neu, `save.ts`, `types.ts`; `render/camera.ts`, `iso.ts`, `terrain.ts`, `renderer.ts`, `limits.ts`; `tools/render-qa/perf.mjs`                   | E0       | E1-Sim ∥ E1-Render nach Schnittstelle `islands` |
-| E2   | lead-tech                          | `build.ts`, `placement.ts`, `trade.ts`, `orders.ts`, `flow.ts`, `crises.ts`, `defs/unlocks.ts`, `defs/buildings.ts`; `ui/hud.ts`, `trade.ts`, `order.ts`, `input.ts`, `guide.ts` | E1       | E3                                              |
-| E3   | lead-tech, Werte lead-design       | `defs/goods.ts`, `tiers.ts`, `buildings.ts`, `unlocks.ts`; `tests/sim/merchantsController.ts`, `balance-merchants.test.ts`                                                       | E1       | E2, E4                                          |
-| E4   | lead-tech, Render lead-art         | `ships.ts` neu, `tick.ts`, `defs/sea.ts`, `save.ts`; `ui/inspect.ts` (Panel); `render/ship.ts`                                                                                   | E2       | E3                                              |
-| E5   | lead-art, UI lead-tech             | `ui/` (Inselliste), `render/`                                                                                                                                                    | E4       | E6                                              |
-| E6   | lead-tech                          | `offer.ts` neu, `defs/sea.ts`, `ui/`, `render/ship.ts`                                                                                                                           | E4       | E5                                              |
+| Teil  | Owner                  | Dateien (Schwerpunkt)                                                                                         | ab  | parallel     |
+| ----- | ---------------------- | ------------------------------------------------------------------------------------------------------------- | --- | ------------ |
+| E1    | lead-tech, lead-art    | `islands.ts`, `defs/sea.ts` neu; `save.ts`, `types.ts`; `render/` Kamera, Terrain, `limits.ts`; `perf.mjs`    | E0  | Sim ∥ Render |
+| E2    | lead-tech              | `build.ts`, `placement.ts`, `trade.ts`, `orders.ts`, `flow.ts`, `crises.ts`, `defs/`; `ui/` Kopfzeile, Handel | E1  | E3, E4       |
+| E3    | lead-tech, lead-design | `defs/goods.ts`, `tiers.ts`, `buildings.ts`, `unlocks.ts`; Controller, Balance-Tests                          | E1  | E2, E4       |
+| E4    | lead-tech, lead-art    | `ships.ts` neu, `tick.ts`, `save.ts`; `ui/inspect.ts`; `render/ship.ts`                                       | E2  | E3           |
+| E5/E6 | lead-art / lead-tech   | `ui/`, `render/`; `offer.ts` neu, `save.ts`                                                                   | E4  | einander     |
 
-- **Gemeinsame Dateien:** `defs/buildings.ts` und `defs/unlocks.ts` (E2 ∥ E3), `defs/sea.ts` (E1 → E4 → E6),
-  `save.ts`/`types.ts` (E1, E3, E4): je Paket eigener Block, das zweite holt `main` per Merge (kein Rebase).
-  E2 und E4 werden nur zusammen released.
-- **Konflikte mit E0:** E0 stellt alle Zugriffe auf `islands` um; jeder Teil startet erst nach dem E0-Merge.
-  `tools/render-qa/perf.mjs` stellt E0 mechanisch auf Insel 0 um (§4.8); E1 erweitert die Sonde um die
-  Archipel-Ansicht (AK-E1-14 bis -16).
-- **Konflikte mit REL-03:** H-R12/H-R13 schreiben `render/terrain.ts` (E1), H-U1 „Anbinden auf Knopfdruck" schreibt
-  `roads.ts` und UI (E0, E2). E1-Render startet nach dem REL-03-Merge oder holt ihn per Merge; die
-  Render-A/B-Messung läuft gegen den `main` nach REL-03.
+- E2, E3, E4 = **Seefahrt-Bündel**: drei Teilbranches auf eine Integrationsbranch, ein Merge, Save v9. Gemeinsame
+  Dateien (`defs/`, `save.ts`, `types.ts`) mit eigenem Block je Paket, Abgleich per Merge (kein Rebase).
+- **E0:** Jeder Teil startet nach dem E0-Merge; `perf.mjs` stellt E0 auf Insel 0 um, E1 erweitert es.
+- **REL-03:** H-R12/H-R13 schreiben `render/terrain.ts`, H-U1 `roads.ts` und UI. **E1-Render startet erst nach dem
+  REL-03-Merge**; A/B gegen diesen `main`.
+- **Auflagen für die Pläne** (R228 (7)): Anhang 04, letzter Abschnitt.
 
 ### 9.3 Doku je Teil
 
-README mit dem Teil, der die Bedienung oder Werte ändert: E2 Freischalttabelle U6, „Lager je Insel", Tasten `0`/`9`,
-neuer Abschnitt „Seefahrt"; E3 Handelstabelle und Bedarf Kaufleute; E4 Schiffe und Routen. `docs/arc42.md`: E1
-Bausteine Archipel und Render je Insel, E4 Tick-Ablauf mit `tickShips`, Persistenz v8. ADR-013 erhält mit E1 den
-Nachtrag Darstellung (Ansatz C, Streichvariante B).
+README mit dem Teil, der Bedienung oder Werte ändert (E2 U6, Lager je Insel, Tasten, „Seefahrt"; E3 Handel,
+Kaufleute; E4 Schiffe). `docs/arc42.md`: E1 Archipel und Render je Insel, v9 Tick-Ablauf und Persistenz. **ADR-005-
+Nachtrag** „Tick-Reihenfolge mit `tickShips`" mit dem v9-Merge; ADR-013 mit E1 um die Darstellung ergänzt.
 
 ## 10. Nicht im Scope M12
 
 Kampf, Piraten, Gegenspieler, Erkundung oder Nebel, Kartengrösse als Spieloption, grössere Heimatinsel, Fluss (G5),
 Lagerhaus (I-004), Standortgüte (I-008), Erz und Minen, Routen mit mehr als zwei Häfen, freie Wegpunkte, Werft und
-Schiffstypen, Bevölkerungswanderung zwischen Inseln, Inselchronik je Insel, Politik/Erlasse, Stufe 5.
+Schiffstypen, Bevölkerungswanderung zwischen Inseln, Inselchronik je Insel, Politik/Erlasse, Stufe 5, **dritte
+Fremdinsel** (später billig hinzufügbar; nach einem Merge zu entfernen kostete Spielerfortschritt).
 
 ## 11. Offene Punkte
 
-**Entschieden (R227, Gate Spec E0):**
+**Entschieden (R227, Gate Spec E0):** **F-S1** je Merge eine eigene `SAVE_VERSION`, v7 ab E0-Merge eingefroren.
+**F-S2** `Building.island` Pflicht, keine Kompatibilitäts-Zugriffe. **F-S3** ADR-013 mit E0. **F-S4** AK-E0-15 ≤ 6 ms
+nach Messung gepinnt, Verhältnis ≥ 5× hart.
 
-- **F-S1** Jede Änderung der Zustandsform bekommt je Merge eine eigene `SAVE_VERSION`; v7 ist ab dem E0-Merge
-  eingefroren. Gebündelt (v8) wird nur, wenn E1–E4 gemeinsam gemergt werden; das entscheidet der E1-Plan.
-- **F-S2** `Building.island` ist Pflichtfeld; keine Kompatibilitäts-Zugriffe auf `World`.
-- **F-S3** Eigenes ADR-013 „Inselmodell im Weltzustand" mit E0.
-- **F-S4** Last-Schwelle AK-E0-15: Obergrenze ≤ 6 ms, nach Messung gepinnt; Verhältnis ≥ 5× ist hart.
+**Entschieden (lead-design, Phase 2):** **F-P1** Namen Möweninsel, Felsbucht (ADR-006). **F-P5** Tasten `0`/`9`
+(in `src/ui/` frei). **F-P6** Ausmustern nur leer in der Heimat, ohne Erstattung. **F-P8** Abriss `kontor2`
+erstattet die Hälfte ins Heimatlager, das Insellager bleibt für ein neues Kontor.
 
-**Entschieden durch lead-design (Abnahme Phase 2):**
+**Entschieden (R228, Gate Spec E1–E6):** **F-P2** Archipel-Ansicht ≤ 2 × Heimat Zoom 1, hart, nach Aufwärmen.
+**F-P3** Leerlauf-Rasterung in Scheiben ≤ 8 ms, Notfall restliche Scheiben synchron. **F-P4** Mindestzoom 0,125.
+**F-P9** v8 = E1, v9 = Seefahrt-Bündel E2+E3+E4, v10 = E6. **F-07 geändert:** zwei Fremdinseln, C gestrichen.
 
-- **F-P1** Inselnamen Möweninsel, Felsbucht, Grünland (allgemeine Wörter, ADR-006) und Garantien für C wie Anhang 02.
-- **F-P5** Tasten `0` (Heimat) und `9` (nächste Insel); geprüft: in `src/ui/` nicht belegt.
-- **F-P6** Ausmustern eines Schiffs nur leer in der Heimat, ohne Erstattung (Unterhalt kann enden, kein Geldkreislauf).
-- **F-P8** Abriss `kontor2` erstattet die Hälfte ins Heimatlager (dort wurde bezahlt), das Insellager bleibt für ein
-  neues Kontor erhalten.
+**Offen:** **F-P7 Werte E6** (Periode 3000, Dauer 600, erster Tick 3600): design-economy-designer prüft, bevor E6
+in einen Plan kommt. Wer: lead-design.
 
-**Offen für das Gate Spec M12 (Phase 2):**
+**Änderungsvermerk Delta zu 95ed26e (R228, für das Delta-Gate lead-qa):**
 
-- **F-P2 Budget Archipel-Ansicht** (AK-E1-16, 2 × Heimat Zoom 1). Empfehlung: übernehmen, nach erster Messung in E1
-  bestätigen. Wer: lead-art.
-- **F-P3 Cache-Zeitpunkt** (Leerlauf nach dem Erstbild statt erster Sichtkontakt). Empfehlung: Leerlauf, weil kein
-  Ruckler beim Schwenken und Erstbild unverändert. Wer: lead-art.
-- **F-P4 Mindestzoom 0,125** mit neuen Stufen 0,25 und 0,125, Detailstufe darunter. Empfehlung: ja, sonst ist der
-  Archipel nie ganz im Bild (Designseite: ja, lead-design). Wer: lead-art.
-- **F-P7 Werte E6** (Periode 3000, Dauer 600, erster Tick 3600). Empfehlung: von design-economy-designer prüfen
-  lassen, bevor E6 in einen Plan kommt. Wer: lead-design.
-- **F-P9 Save-Bündelung** E1–E4 in v8 oder je Merge eine Version (F-S1). Empfehlung: entscheidet der E1-Plan;
-  Anhang 03 B ist als v8 geschrieben und gilt sinngemäss je Teil. Wer: lead-tech.
+- (1) Ladeprüfung `port`/`kontorId null`: Anhang 03 B; AK-E2-03, AK-E1-06 (Anhang 04).
+- (2) Insel C gestrichen: §5, §10, §11; Anhang 02 A, B, D (Rahmen 300, Speicher); AK-E1-01/02/05/17.
+- (3) Save v8/v9/v10, Fixtures je Version: §5, §6, §9; Anhang 03 B; AK-M12-B5, AK-E3-06, AK-E4-11, AK-E6-01.
+- (4) F-P2/3/4 entschieden: §5, §11; Anhang 02 D, E; AK-E1-11, -16.
+- (5) Render-Auflagen lead-art: Anhang 02 D, E; AK-E1-17…22, AK-E4-15.
+- (6) lead-qa A2–A8: Pin-Liste und Übergangsbestand Anhang 03 A, D (`SPICE_GRACE_PER_HOUSE`); §7; AK-M12-B3,
+  AK-E2-11…14, AK-E3-05, -07, AK-E4-16…19.
+- (7) Auflagen für die Pläne: Anhang 04, letzter Abschnitt; Verweis §9.2; ADR-005-Nachtrag §9.3.
+- (8) R229 P-14: zweiter v6-Stand `save-v6-locks.json`; `save-v6.json` ohne Sperren und Glas: §4.3, §4.8,
+  AK-E0-06; Anhang 01 C, G.
