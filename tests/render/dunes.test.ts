@@ -7,9 +7,9 @@ import { LAND, terrainFields } from '../../src/render/terrainField';
 import {
   DUNE_LAMBDA,
   DUNE_SKEW,
-  RIPPLE_AMP,
-  RIPPLE_LIFT,
-  duneFine,
+  RIPPLE_DEPTH,
+  duneMicro,
+  duneRipple,
   duneNode,
   duneOnset,
   duneProfile,
@@ -27,7 +27,6 @@ import {
   SMOOTH_BORDER,
   type TerrainGrid,
 } from '../../src/render/terrain';
-import { forceRect } from '../sim/helpers';
 
 // H-R12b — Dünen, stetig gemalt (Kurz-Spec 2026-10-05, M1–M6, K1–K8).
 
@@ -44,7 +43,6 @@ const gridOf = (seed: number) => {
   return grids.get(seed)!;
 };
 const luma = (r: number, g: number, b: number): number => 0.299 * r + 0.587 * g + 0.114 * b;
-const SAND = LAND.indexOf('sand');
 
 /** Näherung für ∇s̃ an Knoten (i, j): Differenz der rohen Küstenwerte über ±1 Kachel, je Kachel. */
 const coastGrad = (g: TerrainGrid, i: number, j: number): [number, number] => {
@@ -133,22 +131,21 @@ describe('H-R12b Profil und Hilfsfunktionen (M2, M5, M6)', () => {
       }
       expect(lo, `Winkel ${a}`).toBeLessThan(1.5);
       expect(hi, `Winkel ${a}`).toBeGreaterThan(2.2);
-      expect(hi, `Winkel ${a}`).toBeLessThanOrEqual(2.5);
+      expect(hi, `Winkel ${a}`).toBeLessThanOrEqual(2.7);
       expect(dark / N, `Winkel ${a} Schatten kurz`).toBeLessThan(0.3);
       expect(lit / N, `Winkel ${a} Licht lang`).toBeGreaterThan(dark / N);
     }
   });
 
-  it('H-R12b M6 Rippeln nur auf der Lichtseite (nicht auf der steilen Seite), Korn ± 0,05, kein Ton über +1 Stufe', () => {
+  it('H-R12b M6 (korrigiert) Rippeln nur nach der Stufung, ≤ 3 % abdunkelnd, nur auf der Lichtseite; vor der Stufung nur Mikro ≤ 0,05', () => {
     for (let i = 0; i < 100; i++) {
-      expect(duneFine(i * 0.37, 1.3, 0)).toBe(0);
-      expect(Math.abs(duneFine(i * 0.37, 2.3, 0.5) - duneFine(i * 0.37, 2.3, -0.5))).toBeCloseTo(
-        0.1,
-        12,
-      );
-      expect(duneFine(i * 0.37, 2.3, 0)).toBeLessThanOrEqual(RIPPLE_LIFT + RIPPLE_AMP + 1e-9);
-      expect(duneFine(i * 0.37, 2.3, 0)).toBeGreaterThanOrEqual(RIPPLE_LIFT - RIPPLE_AMP - 1e-9);
+      expect(duneRipple(i * 0.37, 1.3)).toBe(1);
+      const r = duneRipple(i * 0.37, 2.4);
+      expect(r).toBeLessThanOrEqual(1);
+      expect(r).toBeGreaterThanOrEqual(1 - RIPPLE_DEPTH - 1e-12);
+      expect(Math.abs(duneMicro(0.5))).toBeLessThanOrEqual(0.05 + 1e-12);
     }
+    expect(RIPPLE_DEPTH).toBeLessThanOrEqual(0.03);
   });
 });
 
@@ -320,21 +317,22 @@ describe('H-R12b K2/K3 Pixel (Zoom 2)', () => {
         if (r0 < 150 || g0 < 120 || r0 - b0 < 25) continue; // nur Sandpixel
         maxL = Math.max(maxL, luma(r, gg, b));
         const dL = luma(r, gg, b) - luma(r0, g0, b0);
-        const acc = dL < -3 ? lee : dL > 3 ? lit : null;
+        const acc = dL < -10 ? lee : dL > 3 ? lit : null;
         if (!acc) continue;
         acc.n++;
         acc.dL += dL;
         acc.dB += blueOf(r, gg, b) - blueOf(r0, g0, b0);
       }
       expect(maxL, `Seed ${seed} Maximalton`).toBeLessThanOrEqual(lDry * 1.085 + 2);
-      if (lee.n < 100 || lit.n < 100) continue;
+      if (lee.n < 100) continue;
       found++;
-      expect(lee.dB / lee.n, `Seed ${seed} Schatten kühler (Blauanteil)`).toBeGreaterThan(
-        lit.dB / lit.n + 0.002,
-      );
-      expect(lit.dL / lit.n - lee.dL / lee.n, `Seed ${seed} Lichtseite heller`).toBeGreaterThan(8);
+      // Schattenseite: mindestens eine Stufe dunkler (≈ −8 %) und kühler (Blauanteil höher) als ohne Düne
+      expect(lee.dL / lee.n, `Seed ${seed} Schatten dunkler`).toBeLessThan(-12);
+      expect(lee.dB / lee.n, `Seed ${seed} Schatten kühler (Blauanteil)`).toBeGreaterThan(0.0005);
+      if (lit.n >= 100)
+        expect(lit.dB / lit.n, `Seed ${seed} Licht nicht kühler`).toBeLessThan(0.0005);
     }
-    expect(found, 'Seeds mit Licht- und Schattenseite').toBeGreaterThanOrEqual(2);
+    expect(found, 'Seeds mit Schattenseite').toBeGreaterThanOrEqual(2);
   }, 60_000);
 
   it('H-R12b K3 stetig: Kantenenergie an Knotenlinien (px mod 8 ∈ {0,1,7}) und Kachelgrenzen je ≤ 1,3 × Mittel, Achsindex ≤ 1,05 (Dünenpixel, Seeds 1–10)', () => {

@@ -1,13 +1,5 @@
 import { hash2, valueNoise } from '../sim/noise';
-import {
-  DUNE_BLUR,
-  DUNE_PRES_BLUR,
-  DUNE_REACH,
-  duneFine,
-  duneNode,
-  duneOnset,
-  type DuneNode,
-} from './dunes';
+import { duneMicro, duneNode, duneRipple, sampleCubic, type DuneNode } from './dunes';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
@@ -31,6 +23,7 @@ import {
   sampleField,
   terrainFields,
   warp,
+  type Field,
   type TerrainFields,
 } from './terrainField';
 
@@ -208,9 +201,7 @@ export function dirtyRect(
  * (1 Kachel) plus Rauschverschiebung `WARP`, dazu der Höhen-Weichzeichner (zwei Durchgänge Radius `HEIGHT_BLUR` Knoten)
  * und ein Knoten fürs Gefälle. Aufgerundet.
  */
-export const SMOOTH_BORDER = Math.ceil(
-  1 + WARP + Math.max(2 * HEIGHT_BLUR + 1, DUNE_REACH) * (RASTER / TEX),
-);
+export const SMOOTH_BORDER = Math.ceil(1 + WARP + (2 * HEIGHT_BLUR + 1) * (RASTER / TEX));
 
 /** Geländeart je Kachel (0 Wasser, 1 + Index in `LAND`); das Abbild, an dem die Teil-Neuzeichnung Wechsel erkennt. */
 export function terrainCodes(world: Pick<World, 'width' | 'height' | 'tiles'>): Uint8Array {
@@ -384,6 +375,26 @@ function boxBlur(f: Float32Array, nx: number, ny: number, r: number, tmp: Float3
   }
 }
 
+/** Kachelfeld `f` n-mal 3 × 3 weichgezeichnet (Ränder geklemmt): Wirkradius n Kacheln, unabhängig vom Knotenfenster. */
+function blurTiles(f: Field, passes: number): Field {
+  let src = f.v;
+  for (let p = 0; p < passes; p++) {
+    const v = new Float32Array(src.length);
+    for (let y = 0; y < f.h; y++)
+      for (let x = 0; x < f.w; x++) {
+        let acc = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const row = Math.min(f.h - 1, Math.max(0, y + dy)) * f.w;
+          for (let dx = -1; dx <= 1; dx++)
+            acc += src[row + Math.min(f.w - 1, Math.max(0, x + dx))]!;
+        }
+        v[y * f.w + x] = acc / 9;
+      }
+    src = v;
+  }
+  return { w: f.w, h: f.h, v: src };
+}
+
 /** Knotenfenster (inklusive) im globalen Gitter. */
 interface NodeWindow {
   i0: number;
@@ -435,7 +446,6 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   const seed = world.seed;
   const mt = LAND.indexOf('mountain');
   const gr = LAND.indexOf('grass');
-  const sa = LAND.indexOf('sand');
   const step = RASTER / TEX;
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -522,38 +532,29 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
-  // H-R12b M3: Küstenwert und Sandanteil nur geglättet in die Dünen (Wirkradius ≈ 1 Kachel, zwei Durchgänge)
+  // H-R12b M3: Küstenwert und Sandanteil gehen nur geglättet in die Dünen ein, auf Kachelebene vorgeglättet (Küste
+  // 2 ×, Sand 1 × 3 × 3, danach bilinear): stetig, ohne Kachelwelle und ohne Abhängigkeit vom Knotenfenster
   let anySand = false;
-  for (let k = 0; k < n && !anySand; k++) anySand = cls[k] === sa + 1;
-  const sBlur = new Float32Array(smooth),
-    sandBlur = new Float32Array(ind[sa]!);
-  if (anySand) {
-    for (const f of [sBlur, sandBlur]) {
-      boxBlur(f, nx, ny, DUNE_BLUR, tmp);
-      boxBlur(f, nx, ny, DUNE_BLUR, tmp);
-    }
+  const sandTiles = fields.types.sand.v;
+  for (let k = 0; k < sandTiles.length && !anySand; k++) anySand = sandTiles[k]! > 0;
+  const sandT = anySand ? blurTiles(fields.types.sand, 1) : null;
+  const coastT = anySand ? blurTiles(fields.coast, 2) : null;
+  // Kachel-Vorfilter: nur Knoten, deren 3 × 3 Kachelumgebung Sandanteil trägt, können Dünen haben
+  let tileNear: Uint8Array | null = null;
+  if (sandT !== null) {
+    tileNear = new Uint8Array(sandT.v.length);
+    for (let y = 0; y < sandT.h; y++)
+      for (let x = 0; x < sandT.w; x++)
+        if (sandT.v[y * sandT.w + x]! > 0)
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+              const xx = x + dx,
+                yy = y + dy;
+              if (xx >= 0 && yy >= 0 && xx < sandT.w && yy < sandT.h)
+                tileNear[yy * sandT.w + xx] = 1;
+            }
   }
   const dn: DuneNode = { tone: GROUND_FLAT, pres: 0, phase: 0 };
-  const done = new Uint8Array(anySand ? n : 0);
-  const evalDune = (i: number, j: number, kk: number, withPres: boolean): void => {
-    const il = Math.max(0, i - 1),
-      ir = Math.min(nx - 1, i + 1),
-      ju = Math.max(0, j - 1),
-      jd = Math.min(ny - 1, j + 1);
-    duneNode(
-      seed,
-      (win.i0 + i) * step,
-      (win.j0 + j) * step,
-      sBlur[kk]! - WET_SAND,
-      sandBlur[kk]!,
-      (sBlur[j * nx + ir]! - sBlur[j * nx + il]!) / ((ir - il) * step),
-      (sBlur[jd * nx + i]! - sBlur[ju * nx + i]!) / ((jd - ju) * step),
-      dn,
-    );
-    dune[kk] = dn.tone;
-    if (withPres) dpres[kk] = dn.pres;
-    dphase[kk] = dn.phase;
-  };
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -584,45 +585,44 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         groundM[j * nx + i]!,
       );
       sh += -(gwArr[j * nx + i]! * HILL_AMP * (hx * LIGHT.x + hy * LIGHT.y)) * RELIEF_GAIN;
-      // H-R12b: Dünen nur auf Sandknoten im Dünenband; Ton, Präsenz und Phase aus dem geglätteten Küstenwert
-      const kk = j * nx + i;
-      if (anySand && sandBlur[kk]! > 0 && sBlur[kk]! > WET_SAND) {
-        evalDune(i, j, kk, true);
-        done[kk] = 1;
+      // H-R12b: Dünen nur im Dünenband hinter dem nassen Saum, wo Sand in der Nähe liegt
+      if (
+        sandT !== null &&
+        coastT !== null &&
+        tileNear![
+          Math.min(sandT.h - 1, ((j + win.j0) * step) | 0) * sandT.w +
+            Math.min(sandT.w - 1, ((i + win.i0) * step) | 0)
+        ] === 1
+      ) {
+        const fx = (win.i0 + i) * step,
+          fy = (win.j0 + j) * step;
+        const sand = sampleField(sandT, fx, fy);
+        if (sand > 0) {
+          const sm = sampleCubic(coastT, fx, fy);
+          if (sm > WET_SAND + 0.6) {
+            const kk = j * nx + i;
+            duneNode(
+              seed,
+              fx,
+              fy,
+              sm - WET_SAND,
+              sand,
+              (sampleCubic(coastT, fx + step, fy) - sampleCubic(coastT, fx - step, fy)) /
+                (2 * step),
+              (sampleCubic(coastT, fx, fy + step) - sampleCubic(coastT, fx, fy - step)) /
+                (2 * step),
+              dn,
+            );
+            dune[kk] = dn.tone;
+            dpres[kk] = dn.pres;
+            dphase[kk] = dn.phase;
+          }
+        }
       }
       const cap =
         c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : c0 === FOREST + 1 ? SHADE_MAX : SHADE_MAX_FLUR;
       shade[j * nx + i] = Math.max(-cap, Math.min(cap, sh));
     }
-  if (anySand) {
-    // M1: Präsenz ≤ 0,15 je Knoten (ein Durchgang Radius DUNE_PRES_BLUR), danach der Einsatz hinter dem nassen Saum
-    boxBlur(dpres, nx, ny, DUNE_PRES_BLUR, tmp);
-    for (let k = 0; k < n; k++) {
-      if (dpres[k]! <= 0) {
-        dpres[k] = 0; // die Weichzeichnung lässt winzige negative Reste (Laufsumme)
-        continue;
-      }
-      const rel = sBlur[k]! - WET_SAND;
-      dpres[k] = dpres[k]! * duneOnset(rel);
-      // die Weichzeichnung trägt Präsenz an Knoten ohne eigenen Dünenton: nachrechnen (stetiger Ton, M1)
-      if (dpres[k]! > 0 && !done[k]) {
-        evalDune(k % nx, (k / nx) | 0, k, false);
-        done[k] = 1;
-      }
-    }
-    // ein Knoten Rand um die Präsenz: der Ton läuft stetig bis auf Präsenz 0 aus (M1)
-    for (let k = 0; k < n; k++) {
-      if (done[k]) continue;
-      const i = k % nx;
-      if (
-        (i > 0 && dpres[k - 1]! > 0) ||
-        (i < nx - 1 && dpres[k + 1]! > 0) ||
-        (k >= nx && dpres[k - nx]! > 0) ||
-        (k < n - nx && dpres[k + nx]! > 0)
-      )
-        evalDune(i, (k / nx) | 0, k, false);
-    }
-  }
   return {
     seed,
     nx,
@@ -785,6 +785,63 @@ export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
 }
 
 /**
+ * H-R12b: Dünenkontrast eines Sandpixels. Stufung je Pixel nach der Interpolation (S2); die Präsenz skaliert nur den
+ * Kontrast des gestuften Tons (M4), sie verschiebt keine Kante. `a` = Knoten links oben der Zelle, `nx` = Knotenbreite.
+ */
+function duneContrast(
+  g: TerrainGrid,
+  col: number[],
+  a: number,
+  nx: number,
+  tx: number,
+  ty: number,
+  wSand: number,
+  grain: number,
+  gradScale: number,
+): void {
+  const { dune, dpres, dphase } = g;
+  const b = a + 1,
+    c = a + nx,
+    d = c + 1;
+  const w00 = (1 - tx) * (1 - ty),
+    w10 = tx * (1 - ty),
+    w01 = (1 - tx) * ty,
+    w11 = tx * ty;
+  const pD = wSand * (dpres[a]! * w00 + dpres[b]! * w10 + dpres[c]! * w01 + dpres[d]! * w11);
+  if (pD <= 0.03) return; // unter 3 % Präsenz wirkt der Kontrast nicht sichtbar
+  const tA = dune[a]!,
+    tB = dune[b]!,
+    tC = dune[c]!,
+    tD = dune[d]!;
+  const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
+    gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
+  const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
+  const tPix = tA * w00 + tB * w10 + tC * w01 + tD * w11;
+  const phase = dphase[a]! * w00 + dphase[b]! * w10 + dphase[c]! * w01 + dphase[d]! * w11;
+  const t = tPix + duneMicro(grain);
+  const e = Math.max(-1.5, Math.min(1, toneStep(t, hw) - GROUND_FLAT));
+  if (e < 0) {
+    const k = -e * pD;
+    const m = 1 - TONE_DARK_MUL * k;
+    col[0] = col[0]! * m;
+    col[1] = col[1]! * m;
+    col[2] = col[2]! * m;
+    mix3(col, TONE_COOL, TONE_COOL_MIX * k, col);
+  } else if (e > 0) {
+    const k = e * pD;
+    const m = 1 + TONE_LIGHT_MUL * k;
+    col[0] = col[0]! * m;
+    col[1] = col[1]! * m;
+    col[2] = col[2]! * m;
+    mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
+  }
+  const rp = 1 - (1 - duneRipple(phase, tPix)) * pD;
+  col[0] = col[0]! * rp;
+  col[1] = col[1]! * rp;
+  col[2] = col[2]! * rp;
+}
+
+/**
  * Pixel eines Ausschnitts der Ebene (RGBA). `px0/py0/w/h` in Ebenenpixeln, `scale` = Auflösungsfaktor. Rein, ohne Canvas.
  * R170: Land-Typen mischen ihre Farben nach Gewichten (Indikator^TYPE_BLEND_POW); reine Zellen rechnen nur einen Typ.
  */
@@ -797,7 +854,7 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, tone, cls, dune, dpres, dphase } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, cls, dpres } = g;
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const col = [0, 0, 0],
     tc = [0, 0, 0];
@@ -919,35 +976,11 @@ export function paintPixels(
           col[1] = col[1]! * gm;
           col[2] = col[2]! * gm;
         }
-        // H-R12b: Dünen auf Sand. Stufung je Pixel nach der Interpolation; die Präsenz skaliert nur den Kontrast.
-        const wSand = pure ? (c0 - 1 === SAND ? 1 : 0) : wt[SAND]! / wSum;
-        const pD = wSand > 0 ? wSand * lerp(dpres) : 0;
-        if (pD > 0.004) {
-          const tA = dune[a]!,
-            tB = dune[b]!,
-            tC = dune[c]!,
-            tD = dune[d]!;
-          const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
-            gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
-          const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
-          const tPix = tA * w00 + tB * w10 + tC * w01 + tD * w11;
-          const t = tPix + duneFine(lerp(dphase), tPix, grain);
-          const e = Math.max(-1.5, Math.min(1, toneStep(t, hw) - GROUND_FLAT));
-          if (e < 0) {
-            const k = -e * pD;
-            const m = 1 - TONE_DARK_MUL * k;
-            col[0] = col[0]! * m;
-            col[1] = col[1]! * m;
-            col[2] = col[2]! * m;
-            mix3(col, TONE_COOL, TONE_COOL_MIX * k, col);
-          } else if (e > 0) {
-            const k = e * pD;
-            const m = 1 + TONE_LIGHT_MUL * k;
-            col[0] = col[0]! * m;
-            col[1] = col[1]! * m;
-            col[2] = col[2]! * m;
-            mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
-          }
+        // H-R12b: Dünen auf Sand (eigene Funktion: hält die heisse Schleife klein)
+        if (pure ? c0 - 1 === SAND : wt[SAND]! > 0) {
+          const wSand = pure ? 1 : wt[SAND]! / wSum;
+          if (dpres[a]! + dpres[b]! + dpres[c]! + dpres[d]! > 0)
+            duneContrast(g, col, a, nx, tx, ty, wSand, grain, gradScale);
         }
       }
       const o = (py * w + px) * 4;
@@ -1160,7 +1193,7 @@ export function patchGrid(
   }
   if (coastChanged) fields.coast = coastField(world);
   const k = TEX / RASTER; // Knoten je Kachel
-  const margin = Math.max(2 * HEIGHT_BLUR + 1, DUNE_REACH); // Reichweite von Weichzeichner und Gefälle in Knoten
+  const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
   const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
   const win = {
     i0: Math.max(0, inner.i0 - margin),

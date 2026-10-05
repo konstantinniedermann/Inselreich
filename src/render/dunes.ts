@@ -1,4 +1,5 @@
 import { LIGHT, rotNoise, smoothstep } from './light';
+import type { Field } from './terrainField';
 
 // dunes.ts — Dünen auf trockenem Sand (H-R12b, Kurz-Spec 2026-10-05). Reine Mathematik, ohne Canvas.
 //
@@ -10,38 +11,29 @@ import { LIGHT, rotNoise, smoothstep } from './light';
 
 /** Mitte der Tonleiter (wie `GROUND_FLAT` in terrain.ts). */
 const FLAT = 2;
-/** Weichzeichner-Radius der Küsten- und Sandfelder in Knoten (zwei Durchgänge, Wirkradius ≈ 1 Kachel bei 8 Knoten je Kachel). */
-export const DUNE_BLUR = 4;
-/** Weichzeichner-Radius der Präsenz in Knoten (ein Durchgang: Nachbarknoten ändern sich um höchstens 1 / (2 · 5 + 1)). */
-export const DUNE_PRES_BLUR = 5;
-/** Reichweite aller Dünen-Weichzeichner und des Gefälles in Knoten (Rand des Teilfensters, `SMOOTH_BORDER`). */
-export const DUNE_REACH = 2 * DUNE_BLUR + DUNE_PRES_BLUR + 1;
 /** Kammabstand in Kacheln (Wellenlänge senkrecht zur Küste). */
-export const DUNE_LAMBDA = 6;
+export const DUNE_LAMBDA = 9;
 /** Schiefe des Profils `sin(φ + k·sin φ)` (M2: k ≤ 0,8); wächst mit der Lichtlage der Küste (siehe `duneSkew`). */
 export const DUNE_SKEW = 0.5;
 /**
  * Tonamplitude in Stufen je Einheit Profilgefälle. Gemessen (S6, K6): Der Ton ändert sich je Kachel um höchstens
  * 1 Stufe, deshalb bleibt die Amplitude klein und der Kammabstand gross; die Schattenseite liegt unter 1,5 (Stufe −1).
  */
-const TONE_AMP = 0.55;
+const TONE_AMP = 0.65;
 /** Grundaufhellung der Lichtseite (Stufen). */
-const TONE_BIAS = 0;
+const TONE_BIAS = 0.05;
 /** Sättigung des Tons (Stufen um `FLAT`): nie heller als +1 Stufe, nie dunkler als −2 Stufen. */
-const TONE_SPAN = 0.9;
+const TONE_SPAN = 1.25;
 /** Phasenversatz der Kämme durch tieffrequentes Rauschen (rad): die Kämme schwingen, bleiben aber küstenparallel. */
-const PHASE_WARP = 0.9;
-/** Rippeln: Abstand in Kacheln, Tonamplitude in Stufen, Korn in Stufen. */
+const PHASE_WARP = 5.4 / DUNE_LAMBDA;
+/** Rippeln: Abstand in Kacheln, Tiefe als Luma-Anteil (höchstens 3 %); Korn in Stufen. */
 export const RIPPLE_PERIOD = 0.2;
-export const RIPPLE_AMP = 0.2;
-/** Mittlere Anhebung der Rippeln auf der Lichtseite (Stufen): die Lichtseite liegt knapp unter der Stufenschwelle 2,5. */
-export const RIPPLE_LIFT = 0.15;
+export const RIPPLE_DEPTH = 0.03;
 export const GRAIN_AMP = 0.05;
 /** Präsenz: Einsatz hinter dem nassen Saum (Kacheln, relativ zu `WET_SAND`) von … bis …. */
-export const DUNE_ONSET = { from: 1, to: 2.3 } as const;
+export const DUNE_ONSET = { from: 1, to: 2.1 } as const;
 const ROT_PHASE = 0.61,
-  ROT_ENV = 1.17,
-  ROT_ENV2 = 0.29;
+  ROT_ENV = 1.17;
 
 /** Dünenprofil `h(φ) = sin(φ + k·sin φ)` (C¹, ohne Knick). */
 export const duneProfile = (phi: number, k: number): number => Math.sin(phi + k * Math.sin(phi));
@@ -66,19 +58,23 @@ export const duneOnset = (rel: number): number => {
 };
 
 /**
- * Präsenz ohne Einsatz: Produkt stetiger Faktoren aus geglättetem Sandanteil, Küstengefälle und tieffrequenter
- * Hüllkurve (Kuppen setzen längs der Kämme aus). Terrain weichzeichnet sie (M1: ≤ 0,15 je Knoten) und multipliziert
- * danach `duneOnset`.
+ * Präsenz: Produkt stetiger, langsam veränderlicher Faktoren (M4) — Einsatz hinter dem nassen Saum, Sandanteil (auf
+ * Kachelebene geglättet) und eine sehr tieffrequente Hüllkurve (Kuppen setzen längs der Kämme aus). Jeder Faktor ändert
+ * sich je Knoten um höchstens 0,1 (M1: ≤ 0,15). Wo das Küstengefälle verschwindet, verschwindet der Ton, nicht die Präsenz.
  */
-export function duneBase(seed: number, fx: number, fy: number, sand: number, grad: number): number {
-  const sandF = smoothstep(0.05, 0.5, sand);
+export function dunePresence(
+  seed: number,
+  fx: number,
+  fy: number,
+  rel: number,
+  sand: number,
+): number {
+  const onset = duneOnset(rel);
+  if (onset <= 0) return 0;
+  const sandF = Math.min(1, Math.max(0, (sand - 0.05) / 0.5));
   if (sandF <= 0) return 0;
-  const gradF = smoothstep(0.35, 0.8, grad);
-  if (gradF <= 0) return 0;
-  const n =
-    0.65 * rotNoise(seed + 131, fx, fy, 0.11, ROT_ENV) +
-    0.35 * rotNoise(seed + 132, fx, fy, 0.27, ROT_ENV2);
-  return sandF * gradF * smoothstep(0.2, 0.38, n);
+  const n = rotNoise(seed + 131, fx, fy, 0.08, ROT_ENV);
+  return onset * sandF * smoothstep(0.05, 0.35, n);
 }
 
 /**
@@ -89,7 +85,7 @@ export const duneSkew = (dn: number): number => DUNE_SKEW * Math.tanh(dn / 0.5);
 
 /**
  * Dünenwerte an einem Knoten (fx, fy in Kacheln). `rel` = s̃ − WET_SAND, `sand` = geglätteter Sandanteil,
- * (gx, gy) = Gefälle von s̃ je Kachel. Schreibt nach `o` (`pres` ist die Basis ohne Einsatz, siehe `duneBase`).
+ * (gx, gy) = Gefälle von s̃ je Kachel. Schreibt nach `o`.
  */
 export function duneNode(
   seed: number,
@@ -102,7 +98,7 @@ export function duneNode(
   o: DuneNode,
 ): void {
   const grad = Math.hypot(gx, gy);
-  o.pres = duneBase(seed, fx, fy, sand, grad);
+  o.pres = dunePresence(seed, fx, fy, rel, sand);
   o.tone = FLAT;
   o.phase = 0;
   // Ton und Phase auch knapp ausserhalb der Präsenz (stetiger Verlauf bis zum Rand, M1); weit weg bleibt FLAT
@@ -121,11 +117,59 @@ export function duneNode(
 }
 
 /**
- * Rippeln und Korn je Pixel (Stufen, vor der Stufung addiert): feine Rippeln längs der Kämme (`phase` · Kammabstand /
- * Rippelabstand), nur auf der Lichtseite (nicht auf der steilen Seite), plus Korn `grain` ∈ −0,5…0,5.
+ * Mikro-Unebenheit je Pixel vor der Stufung (Stufen, wie `groundMicro`): Korn `grain` ∈ −0,5…0,5, höchstens ±0,05.
+ * Rippeln gehen nicht vor die Stufung ein (sonst kippt jede Rippel über die Schwelle und wird zum Strich, D7).
  */
-export function duneFine(phase: number, tone: number, grain: number): number {
+export const duneMicro = (grain: number): number => 2 * GRAIN_AMP * grain;
+
+/**
+ * Rippeln nach der Stufung: Helligkeitsfaktor 1 − 0…`RIPPLE_DEPTH` (nur abdunkelnd: der Maximalton bleibt sandDry +
+ * 1 Stufe), nur auf der Lichtseite (Ton über der Ebene) und längs der Kämme (`phase` · Kammabstand / Rippelabstand).
+ */
+export function duneRipple(phase: number, tone: number): number {
   const lit = smoothstep(FLAT, FLAT + 0.3, tone);
-  const ripple = Math.sin((phase * DUNE_LAMBDA) / RIPPLE_PERIOD);
-  return lit * (RIPPLE_LIFT + RIPPLE_AMP * ripple) + 2 * GRAIN_AMP * grain;
+  if (lit <= 0) return 1;
+  const u = (phase * DUNE_LAMBDA) / (RIPPLE_PERIOD * 2 * Math.PI);
+  const f = u - Math.floor(u);
+  const w = 4 * f * (1 - f); // Parabelwelle 0…1, C⁰-stetig im Maximum glatt, billig
+  return 1 - lit * RIPPLE_DEPTH * w;
+}
+
+/**
+ * Kachelfeld mit Catmull-Rom (C¹) statt bilinear abgetastet (Kachelmitten bei i + 0,5, Ränder geklemmt). Bilinear
+ * hätte an den Zellgrenzen einen Gefällesprung; der würde im Ton zur Kachelwelle (M3).
+ */
+export function sampleCubic(f: Field, fx: number, fy: number): number {
+  const u = fx - 0.5,
+    v = fy - 0.5;
+  const x0 = Math.floor(u),
+    y0 = Math.floor(v);
+  const tx = u - x0,
+    ty = v - y0;
+  const w = f.w,
+    mx = w - 1,
+    my = f.h - 1;
+  const xa = Math.min(mx, Math.max(0, x0 - 1)),
+    xb = Math.min(mx, Math.max(0, x0)),
+    xc = Math.min(mx, Math.max(0, x0 + 1)),
+    xd = Math.min(mx, Math.max(0, x0 + 2));
+  const t2 = tx * tx,
+    t3 = t2 * tx;
+  // Catmull-Rom-Gewichte
+  const c0 = 0.5 * (-t3 + 2 * t2 - tx),
+    c1 = 0.5 * (3 * t3 - 5 * t2 + 2),
+    c2 = 0.5 * (-3 * t3 + 4 * t2 + tx),
+    c3 = 0.5 * (t3 - t2);
+  const s2 = ty * ty,
+    s3 = s2 * ty;
+  const d0 = 0.5 * (-s3 + 2 * s2 - ty),
+    d1 = 0.5 * (3 * s3 - 5 * s2 + 2),
+    d2 = 0.5 * (-3 * s3 + 4 * s2 + ty),
+    d3 = 0.5 * (s3 - s2);
+  const vv = f.v;
+  const row = (y: number): number => {
+    const o = Math.min(my, Math.max(0, y)) * w;
+    return c0 * vv[o + xa]! + c1 * vv[o + xb]! + c2 * vv[o + xc]! + c3 * vv[o + xd]!;
+  };
+  return d0 * row(y0 - 1) + d1 * row(y0) + d2 * row(y0 + 1) + d3 * row(y0 + 2);
 }
