@@ -8,10 +8,10 @@ import { PALETTE, rgbOfCss } from './palette';
 /**
  * Zahl der Varianten je Typ und Stufe. Obergrenze Speicher: Der Sprite-Cache hält je Typ, Stufe, Variante, Zoom
  * und DPR ein Sprite. Die volle Matrix (alle Typen und Stufen x 4 Varianten) belegt bei Zoom 1 / DPR 2 16,7 MB,
- * bei Zoom 2 / DPR 2 aber 76,1 MB (M11: mit Jagdhütte und Rinderfarm, vorher 66,7 MB) und liegt damit 19 % über
- * `SPRITE_CACHE_MAX_BYTES` (64 MB, per LRU gedeckelt, unverändert; Test-Schranke 1,25). Ein Bild
- * 1280 x 800 zeigt bei Zoom 2 rund 250 Kacheln (1280 x 800 / (128 x 64 / 2)); alle 80 Kombinationen belegen etwa
- * 224 Kacheln und könnten also zugleich im Bild sein. Das ist selten (so viele verschiedene Typen, Stufen und
+ * bei Zoom 2 / DPR 2 aber 80,9 MB (M12 T02: mit Kontor II und Gewürzplantage, vorher 76,1 MB) und liegt damit
+ * 26 % über `SPRITE_CACHE_MAX_BYTES` (64 MB, per LRU gedeckelt, unverändert; Test-Schranke 1,30). Ein Bild
+ * 1280 x 800 zeigt bei Zoom 2 rund 250 Kacheln (1280 x 800 / (128 x 64 / 2)); alle 96 Kombinationen (24 Typ-
+ * und Stufenfälle x 4 Varianten) belegen etwa 269 Kacheln (96 x 2,8, Faktor wie bisher 224 / 80) und könnten also zugleich im Bild sein. Das ist selten (so viele verschiedene Typen, Stufen und
  * Varianten gleichzeitig), tritt es ein, verdrängt die LRU Einträge desselben Frames (LRU-Thrash, siehe
  * `docs/beobachtungen.md`). Mehr als 4 Varianten trennt Betrachter kaum noch, kostet aber linear Speicher.
  */

@@ -502,8 +502,8 @@ describe('H-R7 AK7 Speicher', () => {
     }
     expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES);
   });
-  it('AK7 bei Zoom 2 / DPR 2 überschreitet die volle Matrix das Limit um höchstens 40 % (dokumentiert in variants.ts)', () => {
-    // M12 T02: kontor2 und spicefarm dazu, 80,9 MB (+26 %), Grenze auf +40 % angehoben (Rückfrage an lead-tech).
+  it('AK7 bei Zoom 2 / DPR 2 überschreitet die volle Matrix das Limit um höchstens 30 % (dokumentiert in variants.ts)', () => {
+    // M12 T02: kontor2 und spicefarm dazu, 80,9 MB (+26 %), Grenze 1,30 (C1-3, Ruling bei L0 beantragt)
     // Volle Matrix 76,1 MB gegen 64 MB (+19 %, M11: hunter und cattlefarm dazu; vorher 66,7 MB); der Cache bleibt per LRU auf
     // SPRITE_CACHE_MAX_BYTES gedeckelt. Alle Kombinationen zugleich im Bild sind möglich, aber selten.
     const margin = createSpriteCache({ factory: null }).margin;
@@ -514,7 +514,7 @@ describe('H-R7 AK7 Speicher', () => {
       total += px * VARIANT_COUNT;
     }
     expect(total).toBeGreaterThan(SPRITE_CACHE_MAX_BYTES * 0.9);
-    expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES * 1.4);
+    expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES * 1.3);
   });
   it('AK7 Variantenzahl ist begrenzt (Cache-Speicher)', () => {
     expect(VARIANT_COUNT).toBeLessThanOrEqual(6);

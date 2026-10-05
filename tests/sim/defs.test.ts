@@ -26,7 +26,7 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(10);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 14 building defs whose goods exist (M11 S2)', () => {
+  it('has 21 building defs whose goods exist (M11 S2)', () => {
     expect(BUILDING_IDS).toHaveLength(21); // bewusst, M12 T02: kontor2, spicefarm
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
@@ -208,6 +208,7 @@ describe('M11 Ausbau-Werte (Spec 3.6)', () => {
     const producers = BUILDING_IDS.filter(
       (id) => BUILDING_DEFS[id].produces !== undefined && id !== 'spicefarm',
     ).sort();
+    expect(LEVELS.spicefarm).toBeUndefined(); // bewusst ohne Ausbaustufen
     expect(producers).toHaveLength(11);
     expect(Object.keys(LEVELS).sort()).toEqual(producers);
     const T = (
