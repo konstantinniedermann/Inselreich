@@ -65,7 +65,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Messgrösse: 0 lokale Flackerfälle in `docs/beobachtungen.md` und Lead-Berichten in 2 Sessions (Ausgang ≥ 5 Fälle in 3 Sessions).
 - Zeitraum: die nächsten 2 Sessions.
 - Rückfall: `vitest`-Konfiguration und `make check` auf den Stand vor der Änderung.
-- Dateien: `vitest.config.ts`, `Makefile`
+- Dateien: `vite.config.ts`, `Makefile`
 - Ruling: –
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
