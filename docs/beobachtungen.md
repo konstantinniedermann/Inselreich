@@ -904,6 +904,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/sim/islands.ts` (Kontor-Mass 2 × 2, Steinbruch 1 × 1 als Literale; Lage über `Math.cos`/`Math.sin`).
 - Beobachtung: Mass besser aus `BUILDING_DEFS` lesen; `Math.cos`/`Math.sin` sind nicht engine-übergreifend bitgleich, Ergebnis wird aber mit `Math.round` gerundet (Risiko gering).
 - Ursprung: Review T01 (qa-code-reviewer), M12-E1-C1. Einschätzung: niedrig; bei einem Cross-Engine-Replay-Test prüfen.
+
 ### 2026-10-05 · Tests · Lasttest 15a und Vitest-Flakes unter paralleler Studio-Last
 
 - Fundort: `tests/sim/perf.test.ts` (PERF_PIN 2,5 ms, CI-Faktor 4), vereinzelt `tests/render`/`tests/ui`.
