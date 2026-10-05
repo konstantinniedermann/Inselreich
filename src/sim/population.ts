@@ -16,7 +16,7 @@ import type {
 import { budgetFrom, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { inSupplyRange } from './supply';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
-import { center, home, islandOf } from './world';
+import { center, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
 
@@ -40,7 +40,7 @@ function distance(a: Building, b: Building): number {
 /** Versorgt: Kontor im Radius oder ein angebundener Markt im Radius (Mitte zu Mitte). */
 export function isSupplied(world: World, house: Building): boolean {
   const c = center(BUILDING_DEFS[house.defId], house.x, house.y);
-  return inSupplyRange(world, c.cx, c.cy);
+  return inSupplyRange(world, house.island, c.cx, c.cy);
 }
 
 /** Neues Haus: Bedarf 1 je Bedarfsgut der Stufe 1, damit die erste Entnahme sofort erfolgt. */
@@ -63,6 +63,7 @@ export function serviceAvailable(world: World, house: Building, service: Service
     const def = BUILDING_DEFS[b.defId];
     return (
       def.service === service &&
+      b.island === house.island &&
       b.connected &&
       b.outageUntil === undefined &&
       distance(house, b) <= (def.serviceRadius ?? 0)
@@ -86,7 +87,7 @@ export function allNeedsMet(house: HouseState, tier: TierDef): boolean {
  * `satisfied` bleibt true, bis der nächste Entnahmeversuch scheitert; dazwischen ändert
  * sich der Wert nicht.
  */
-function consume(world: World, house: HouseState, tier: TierDef): void {
+function consume(world: World, b: Building, house: HouseState, tier: TierDef): void {
   for (const [good, rate] of Object.entries(tier.needs) as [GoodId, number][]) {
     if (!house.supplied) {
       house.satisfied[good] = false;
@@ -100,7 +101,7 @@ function consume(world: World, house: HouseState, tier: TierDef): void {
     }
     const demand = (house.demand[good] ?? 0) + (house.inhabitants * rate) / 100;
     if (demand >= 1 - EPSILON) {
-      if (takeStock(home(world), good, 1)) {
+      if (takeStock(islandOf(world, b), good, 1)) {
         house.demand[good] = demand - 1;
         house.satisfied[good] = true;
       } else {
@@ -203,7 +204,7 @@ export function tickPopulation(world: World): void {
     const tier = TIERS[house.tier];
     house.supplied = isSupplied(world, b);
     for (const s of SERVICE_IDS) house.services[s] = serviceAvailable(world, b, s);
-    consume(world, house, tier);
+    consume(world, b, house, tier);
     const met = allNeedsMet(house, tier);
     if (!met) house.satisfiedSince = world.tick;
     if (growth) {

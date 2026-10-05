@@ -16,7 +16,9 @@ const stormActive = (world: World): boolean =>
 const forestOk = (world: World, b: Building): boolean =>
   BUILDING_DEFS[b.defId].site.every(
     (r) =>
-      r.kind !== 'radius' || r.terrain !== 'forest' || siteRuleOk(world, b.defId, b.x, b.y, r).ok,
+      r.kind !== 'radius' ||
+      r.terrain !== 'forest' ||
+      siteRuleOk(world, b.defId, b.x, b.y, r, b.island).ok,
   );
 
 /** Ein Schritt eines Betriebs (Prüfreihenfolge Anhang 01 D); true, wenn progress in diesem Schritt gestiegen ist. */

@@ -9,7 +9,7 @@ import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel } from '../sim/townhall';
 import { buildingShown, functionLock } from '../sim/unlocks';
-import { home, adjacentOf, center, inBounds } from '../sim/world';
+import { HOME, home, adjacentOf, center, inBounds } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
@@ -180,7 +180,7 @@ function buildingInfo(world: World, b: Building): HoverInfo {
 /** Gebäude, für die ein Geländetyp taugt (nur angezeigte, Spec 13.2), in Bauleisten-Reihenfolge. */
 function goodFor(world: World, x: number, y: number, terrain: Terrain): string {
   const shown = (id: BuildingDefId): boolean => buildingShown(world, id);
-  const supplied = inSupplyRange(world, x + 0.5, y + 0.5);
+  const supplied = inSupplyRange(world, HOME, x + 0.5, y + 0.5);
   const ids = new Set<BuildingDefId>();
   if (terrain === 'forest') ids.add('lumberjack');
   if (terrain === 'grass')
@@ -212,7 +212,7 @@ function terrainInfo(world: World, x: number, y: number): HoverInfo {
     if (tile.terrain === 'forest') lines.push(`Roden: ${costLine(CLEAR_FOREST_COST)}`);
     else if (tile.terrain === 'grass') lines.push(`Aufforsten: ${costLine(PLANT_FOREST_COST)}`);
   }
-  if (tile.terrain !== 'water' && !inSupplyRange(world, x + 0.5, y + 0.5))
+  if (tile.terrain !== 'water' && !inSupplyRange(world, HOME, x + 0.5, y + 0.5))
     lines.push('Ausserhalb der Versorgung');
   return { title: TERRAIN_TITLES[tile.terrain], lines };
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld, idx, tilesInRadius, home } from '../../src/sim/world';
+import { createWorld, idx, tilesInRadius, home, HOME } from '../../src/sim/world';
 import { beginCrisis, isProtected } from '../../src/sim/crises';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../../src/sim/build';
 import { totalUpkeep } from '../../src/sim/economy';
@@ -130,7 +130,9 @@ describe('queries', () => {
     expect(mask).toHaveLength(home(w).width * home(w).height);
     for (let y = 0; y < home(w).height; y++)
       for (let x = 0; x < home(w).width; x++)
-        expect(mask[y * home(w).width + x], `${x},${y}`).toBe(inSupplyRange(w, x + 0.5, y + 0.5));
+        expect(mask[y * home(w).width + x], `${x},${y}`).toBe(
+          inSupplyRange(w, HOME, x + 0.5, y + 0.5),
+        );
     const chapel = placeService(w, 'chapel', k.x + 3, k.y + 3);
     const faith = coverageMask(w, 'faith');
     for (let y = 0; y < home(w).height; y++)
@@ -143,6 +145,7 @@ describe('queries', () => {
           connected: false,
           progress: 0,
           state: 'ok',
+          island: 0,
         } as Building;
         expect(faith[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
       }
@@ -381,6 +384,7 @@ describe('M6 Abfragen', () => {
           connected: true,
           progress: 0,
           state: 'ok',
+          island: 0,
         } as Building;
         expect(mask[y * home(w).width + x], `${x},${y}`).toBe(isProtected(w, probe));
       }
@@ -406,6 +410,7 @@ describe('M6 Abfragen', () => {
           connected: false,
           progress: 0,
           state: 'ok',
+          island: 0,
         } as Building;
         expect(faith[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'faith'));
       }
@@ -504,6 +509,7 @@ describe('M8 Abfragen', () => {
             connected: false,
             progress: 0,
             state: 'ok',
+            island: 0,
           } as Building;
           expect(mask[y * home(w).width + x], `${x},${y}`).toBe(serviceAvailable(w, probe, 'bath'));
         }

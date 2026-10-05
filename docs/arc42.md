@@ -729,6 +729,10 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 - `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 7`,
   `SAVE_VERSION`). Gespeichert wird immer Version 7: Raster, Kontor und Lager liegen je Insel in `islands[i]`
   (`width`, `height`, `tiles`, `kontorId`, `stock`), jedes Gebäude trägt `island` (Index); E0 kennt genau eine Insel.
+- Inselbezug der Regeln (E0): Aktionen mit Bauplatz (`placeBuilding`, `placeRoad`, `buy`, `sell`, Wald, `coverageMask`
+  u. a.) nehmen `island = HOME` als letzten Parameter; Regeln mit Gebäude lesen `b.island`. Versorgung, Dienste,
+  Wege und Feuerschutz gelten je Insel; Auftrag, Bilanz und Brandziel nur für die Heimat; Zählungen (Bürger,
+  Kaufleute, Ziele, Unterhalt) bleiben global.
 - `deserialize(json)` wirft nie. Ältere Stände durchlaufen die Migrationskette v1 → v2 (`migrateV1ToV2`:
   `taxLevel = 'normal'`, `taxLockedUntil = 0`, `sellPct` überall 100, `order = null`) → v3 (`migrateV2ToV3`:
   `crisisLevel = 'off'`, `crisis = null`) → v4 (`migrateV3ToV4`: `stock.glass = 0`, `sellPct.glass = 100`,

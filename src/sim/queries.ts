@@ -16,7 +16,7 @@ import type {
   Terrain,
   World,
 } from './types';
-import { center, home, idx, islandOf, tilesInRadius, type Pos } from './world';
+import { center, HOME, home, idx, islandOf, tilesInRadius, type Pos } from './world';
 
 /** Reine Abfragen für UI und Renderer: lesen die Welt, verändern sie nie. */
 
@@ -102,12 +102,14 @@ export function houseDiagnosis(world: World, b: Building): Diagnosis[] {
 function coverageSources(
   world: World,
   kind: CoverageKind,
+  island: number,
 ): { cx: number; cy: number; radius: number }[] {
   const buildings =
     kind === 'supply'
-      ? supplyBuildings(world)
+      ? supplyBuildings(world, island)
       : Object.values(world.buildings).filter(
           (b) =>
+            b.island === island &&
             b.connected &&
             (kind === 'fire'
               ? BUILDING_DEFS[b.defId].fireProtection === true
@@ -121,12 +123,14 @@ function coverageSources(
 }
 
 /** Wahr, wo ein 1×1-Haus versorgt wäre bzw. den Dienst hätte (Index y × width + x). */
-export function coverageMask(world: World, kind: CoverageKind): boolean[] {
-  const sources = coverageSources(world, kind);
-  const mask = new Array<boolean>(home(world).width * home(world).height).fill(false);
-  for (let y = 0; y < home(world).height; y++) {
-    for (let x = 0; x < home(world).width; x++) {
-      mask[idx(home(world), x, y)] = sources.some(
+export function coverageMask(world: World, kind: CoverageKind, island: number = HOME): boolean[] {
+  const isl = world.islands[island];
+  if (!isl) return [];
+  const sources = coverageSources(world, kind, island);
+  const mask = new Array<boolean>(isl.width * isl.height).fill(false);
+  for (let y = 0; y < isl.height; y++) {
+    for (let x = 0; x < isl.width; x++) {
+      mask[idx(isl, x, y)] = sources.some(
         (s) => Math.hypot(x + 0.5 - s.cx, y + 0.5 - s.cy) <= s.radius,
       );
     }
@@ -140,17 +144,20 @@ export function placementZone(
   defId: BuildingDefId,
   x: number,
   y: number,
+  island: number = HOME,
 ): { cx: number; cy: number; radius: number; tiles: Pos[] } | null {
+  const isl = world.islands[island];
+  if (!isl) return null;
   const def = BUILDING_DEFS[defId];
   const c = center(def, x, y);
   const circle = def.supplyRadius ?? def.serviceRadius;
   if (circle !== undefined) {
-    return { ...c, radius: circle, tiles: tilesInRadius(home(world), c.cx, c.cy, circle) };
+    return { ...c, radius: circle, tiles: tilesInRadius(isl, c.cx, c.cy, circle) };
   }
   const zone = siteZone(defId);
   if (!zone) return null;
-  const tiles = tilesInRadius(home(world), c.cx, c.cy, zone.radius).filter(
-    (p) => home(world).tiles[idx(home(world), p.x, p.y)]!.terrain === zone.terrain,
+  const tiles = tilesInRadius(isl, c.cx, c.cy, zone.radius).filter(
+    (p) => isl.tiles[idx(isl, p.x, p.y)]!.terrain === zone.terrain,
   );
   return { ...c, radius: zone.radius, tiles };
 }
@@ -180,7 +187,8 @@ const TERRAIN_CODE: Record<Terrain, number> = {
 export function layoutKey(world: World): string {
   const h = new LayoutHash();
   h.add(world.nextBuildingId);
-  for (const t of home(world).tiles) h.add(TERRAIN_CODE[t.terrain] * 2 + (t.road ? 1 : 0));
+  for (const isl of world.islands)
+    for (const t of isl.tiles) h.add(TERRAIN_CODE[t.terrain] * 2 + (t.road ? 1 : 0));
   h.add(-1);
   for (const b of Object.values(world.buildings)) {
     h.add(b.id);

@@ -3,37 +3,57 @@ import { checkAfford, pay } from './economy';
 import type { Cost, Result, Terrain, World } from './types';
 import { fail, ok } from './types';
 import { functionLock } from './unlocks';
-import { home, inBounds, tileAt } from './world';
+import { islandAt } from './placement';
+import { HOME, inBounds, tileAt } from './world';
 
 /** Prüfreihenfolge Spec 6: Sperre, Karte, bebaut, Gelände, Geld. Ändert nichts. */
-function check(w: World, x: number, y: number, from: Terrain, wrong: string, cost: Cost): Result {
+function check(
+  w: World,
+  x: number,
+  y: number,
+  from: Terrain,
+  wrong: string,
+  cost: Cost,
+  island: number,
+): Result {
   const lock = functionLock(w, 'forest');
   if (lock !== null) return fail(lock);
-  if (!Number.isInteger(x) || !Number.isInteger(y) || !inBounds(home(w), x, y))
+  const isl = islandAt(w, island);
+  if (isl === null) return fail('Unbekannte Insel');
+  if (!Number.isInteger(x) || !Number.isInteger(y) || !inBounds(isl, x, y))
     return fail('Ausserhalb der Karte');
-  const t = tileAt(home(w), x, y)!;
+  const t = tileAt(isl, x, y)!;
   if (t.buildingId !== null || t.road) return fail('Bereits bebaut');
   if (t.terrain !== from) return fail(wrong);
-  return checkAfford(w, home(w), cost);
+  return checkAfford(w, isl, cost);
 }
 
-export function canClearForest(w: World, x: number, y: number): Result {
-  return check(w, x, y, 'forest', 'Kein Wald', CLEAR_FOREST_COST);
+export function canClearForest(w: World, x: number, y: number, island: number = HOME): Result {
+  return check(w, x, y, 'forest', 'Kein Wald', CLEAR_FOREST_COST, island);
 }
-export function canPlantForest(w: World, x: number, y: number): Result {
-  return check(w, x, y, 'grass', 'Keine Weide', PLANT_FOREST_COST);
+export function canPlantForest(w: World, x: number, y: number, island: number = HOME): Result {
+  return check(w, x, y, 'grass', 'Keine Weide', PLANT_FOREST_COST, island);
 }
-function apply(w: World, x: number, y: number, r: Result, to: Terrain, cost: Cost): Result {
+function apply(
+  w: World,
+  x: number,
+  y: number,
+  r: Result,
+  to: Terrain,
+  cost: Cost,
+  island: number,
+): Result {
   if (!r.ok) return r;
-  pay(w, home(w), cost);
-  tileAt(home(w), x, y)!.terrain = to;
+  const isl = islandAt(w, island)!;
+  pay(w, isl, cost);
+  tileAt(isl, x, y)!.terrain = to;
   return ok;
 }
 /** Wald → Weide; kein Holz, kein Zufall (Spec 6). */
-export function clearForest(w: World, x: number, y: number): Result {
-  return apply(w, x, y, canClearForest(w, x, y), 'grass', CLEAR_FOREST_COST);
+export function clearForest(w: World, x: number, y: number, island: number = HOME): Result {
+  return apply(w, x, y, canClearForest(w, x, y, island), 'grass', CLEAR_FOREST_COST, island);
 }
 /** Weide → Wald (Spec 6). */
-export function plantForest(w: World, x: number, y: number): Result {
-  return apply(w, x, y, canPlantForest(w, x, y), 'forest', PLANT_FOREST_COST);
+export function plantForest(w: World, x: number, y: number, island: number = HOME): Result {
+  return apply(w, x, y, canPlantForest(w, x, y, island), 'forest', PLANT_FOREST_COST, island);
 }
