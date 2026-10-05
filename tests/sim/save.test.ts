@@ -1486,10 +1486,15 @@ describe('M12 Seefahrt Save v9', () => {
       v.won = true;
       home(v).stock.spice = 7;
       const v8 = foldBackToV8(JSON.parse(serialize(v)));
-      home(v).stock.spice = 0;
       const r = loadOk(JSON.stringify(v8));
       expect(SPICE_GRACE_MAX).toBe(100);
       expect(home(r.world).stock.spice).toBe(100);
+    });
+    it('AK-E3-07 v8-Stand mit vorhandenem stock.spice = 7 und 3 Häusern Stufe 4 → 30, nicht 37', () => {
+      const raw = JSON.parse(fix8());
+      raw.islands[0].stock.spice = 7;
+      const r = loadOk(JSON.stringify(raw));
+      expect(home(r.world).stock.spice).toBe(SPICE_GRACE_PER_HOUSE * 3);
     });
     it('save-v7.json (keine Kaufleute) → 0, keine Meldung', () => {
       const r = loadOk(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
@@ -1606,6 +1611,7 @@ describe('M12 Seefahrt Save v9', () => {
       ],
       ['V13 homing mit Route', () => withShips([ship({ homing: true, route: route() })])],
       ['V14 nextShipId <= id', () => withShips([ship({ id: 3 })], (r) => (r.nextShipId = 3))],
+      ['V14b nextShipId 0 bei leerer Schiffsliste', () => withShips([], (r) => (r.nextShipId = 0))],
       ['V15 doppelte id', () => withShips([ship(), ship()])],
       [
         'V16 crisis.tile.island 5',
