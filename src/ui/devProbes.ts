@@ -12,6 +12,10 @@ declare global {
       renderMedian: number;
       renderP95: number;
       n: number;
+      /** Grösster Frame-Abstand im Fenster, ohne Notfall-Frames. */
+      frameMax: number;
+      /** Anzahl Notfall-Frames seit Start/Laden. */
+      emergencyFrames: number;
     };
   }
 }
@@ -21,6 +25,16 @@ export interface DevProbe {
   world(): World;
   tileCenter(x: number, y: number): { x: number; y: number };
   centerOn(x: number, y: number): void;
+  /** Zoom um die Bildmitte, geklemmt auf die Zoomstufen. */
+  setZoom(z: number): void;
+  /** Heimatkontor bzw. Mitte des Kamera-Rahmens in die Bildmitte. */
+  focus(kind: 'home' | 'archipel'): void;
+  /** Alle Fremdinseln gerastert? */
+  cachesReady(): boolean;
+  /** Kopie der Scheibendauern (ms) seit Start/Laden. */
+  slices(): number[];
+  /** Kopie der Notfall-Dauern (ms) seit Start/Laden. */
+  emergency(): number[];
 }
 
 /** Hängt die Sonde nur im Dev-Build an `window.__inselDev` ; sonst nichts. */
@@ -52,7 +66,7 @@ const LOG_MS = 5000;
 
 export interface PerfProbe {
   /** Am Anfang jedes Frames mit der rAF-Zeit. */
-  frame(now: number): void;
+  frame(now: number, emergencyPrev?: boolean, emergencyFrames?: number): void;
   /** Um `render()`. */
   renderDone(ms: number): void;
 }
@@ -60,6 +74,8 @@ export interface PerfProbe {
 export function createPerfProbe(): PerfProbe {
   const frames: number[] = [];
   const renders: number[] = [];
+  const normal: number[] = []; // Frame-Abstände ohne Notfall-Frames
+  let emergencyCount = 0;
   let prev: number | null = null;
   let lastLog = 0;
   const push = (a: number[], v: number): void => {
@@ -75,11 +91,17 @@ export function createPerfProbe(): PerfProbe {
       renderMedian: r.median,
       renderP95: r.p95,
       n: frames.length,
+      frameMax: normal.reduce((m, v) => Math.max(m, v), 0),
+      emergencyFrames: emergencyCount,
     };
   };
   return {
-    frame(now) {
-      if (prev !== null) push(frames, now - prev);
+    frame(now, emergencyPrev = false, emergencyFrames = 0) {
+      emergencyCount = emergencyFrames;
+      if (prev !== null) {
+        push(frames, now - prev);
+        if (!emergencyPrev) push(normal, now - prev);
+      }
       prev = now;
       if (now - lastLog >= LOG_MS) {
         lastLog = now;

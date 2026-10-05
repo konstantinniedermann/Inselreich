@@ -47,9 +47,7 @@ describe('M12 E1 Inselebenen', () => {
     expect(calls).toEqual(['idle', 'idle']);
     expect(layers.get(1)).toBe('L1');
     expect(layers.get(2)).toBe('L2');
-    expect(queue.length).toBe(1);
-    queue.shift()!(); // alle fertig: kein weiterer Slot
-    expect(queue.length).toBe(0);
+    expect(queue.length).toBe(0); // alle fertig: kein weiterer Slot
     layers.frameDone();
     expect(queue.length).toBe(0);
   });
