@@ -831,6 +831,12 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Beobachtung: (1) Bei 4× Tempo erklingt der Münzton etwa alle 2,5 s (56–60 je Minute) und wirkt dicht. (2) Der Arbeitston nutzt die Bounding-Box `visibleTileRange`, die grösser als das Bild ist; Betriebe bis ~400 px ausserhalb klingen mit (von lead-art als „Kameranähe" angenommen). (3) Ein `make check`-Lauf im Review war einmal mit 1 rotem Test, Name nicht erfasst; zwei Folgeläufe grün.
 - Ursprung: qa-playtester und qa-code-reviewer, Paket H-A2. Einschätzung: (1) Ton-Drosselung je Tempo prüfen, lead-art; (2) nur bei Spielerfeedback enger filtern (Bildschirm-Test statt Kachelbox); (3) zum H-T1-Eintrag oben (Kandidat `tests/ui/hints.test.ts` AK-UX-31).
 
+### 2026-10-05 · Render · REL-03 Art-Strang (H-R13, H-R12b), Sammeleintrag
+
+- Fundort: `src/render/terrain.ts` (`foothillField`, Vorberge), `tests/render/terrain.test.ts` (Zeit-Tests), Stilrahmen S6.
+- Beobachtung: (1) `foothillField` rechnet je `computeWindow`, also auch je Patch, zwei Box-Blur über das ganze Gebirgsfeld; gemessen unauffällig (`terrainPatchMs` +2 %), Cache je `fields` möglich. (2) Vorberge bleiben als Form schwach: S6 (höchstens 1 Tonstufe je bebaubarer Kachel) begrenzt die Rückenhöhe; der Übergang trägt sich über Schuttband und Warm/Kühl-Verschiebung. Stärkere Vorberge nur über längere Rücken oder eine S6-Ausnahme auf Kacheln ohne Baurecht. (3) Kombiniert (H-R13 + H-R12b) `lastPatchMs` ≈ +16–17 %, `buildMs` ≈ +11 %, AK-R1-06 lokal +7,8 %; Zeit-Tests (AK-R1-06, H-R9 B4, K1-Einsatztest) schlagen unter paralleler Last gelegentlich an und sind einzeln grün.
+- Ursprung: Review und Messungen REL-03 (lead-art). Einschätzung: niedrig; (2) Designfrage für ein späteres Gebirgs-Häppchen, (3) beobachten, ob CI stabil bleibt.
+
 ### 2026-10-04 · Render · S1-Rest `DIM_FIRE` und Gut-Schlüssel im Audio
 
 - Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
