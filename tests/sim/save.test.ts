@@ -17,6 +17,8 @@ import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, home } from '../../src/sim/world';
 import { fixtureV6Run, locksV6Run, normalRunTo } from './fixtureV6';
 import { CHAIN_HASHES, V6_FORMS } from './e0Pins';
+import { V7_FORMS } from './e1Pins';
+import { fixtureV7Run } from './fixtureV7';
 import {
   forceGrass,
   forceRect,
@@ -1091,5 +1093,36 @@ describe('M12 E0 Save v7', () => {
       ok: false,
       reason: 'Unbekannte Version',
     });
+  });
+});
+
+describe('M12 E1 Schritt 0 (Anhang 03 B)', () => {
+  const FIX7 = 'tests/sim/fixtures/save-v7.json';
+  it('T00 save-v7.json roh', () => {
+    const json = readFileSync(FIX7, 'utf8');
+    const r = JSON.parse(json);
+    expect(r.version).toBe(7);
+    expect(r.tick).toBe(3000);
+    expect(r.islands).toHaveLength(1);
+    expect(r.width).toBeUndefined();
+    expect(Object.values(r.buildings).every((b: any) => b.island === 0)).toBe(true); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(r.crisis.kind).toBe('fire');
+    expect(r.upgradeStops).toEqual([1]);
+    expect(deserialize(json).ok).toBe(true);
+  });
+  it('T00 Rezept = Fixture v7', () => {
+    expect(serialize(fixtureV7Run())).toBe(readFileSync(FIX7, 'utf8'));
+  });
+  it('T00 v7-Formen', () => {
+    const forms = {
+      off: createWorld(3),
+      unlockAll: createWorld(3, { unlockAll: true }),
+      mild: createWorld(3, { crisisLevel: 'mild' }),
+      normal: createWorld(3, { crisisLevel: 'normal' }),
+    };
+    for (const [k, w] of Object.entries(forms)) {
+      const s = serialize(w);
+      expect({ hash: fnv1a32(s), length: s.length }, k).toEqual(V7_FORMS[k]);
+    }
   });
 });
