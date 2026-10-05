@@ -137,3 +137,6 @@ Verweis aus Spec §9.2. lead-tech übernimmt sie in die Teilpläne; lead-qa prü
   AK-E1-18 Notfall-Frames getrennt ausweisen; AK-E1-19 Messbedingungen (Maschine, DPR, Fenster, Seed, Fokus)
   im Plan fixieren.
 - **Reihenfolge:** E1-Render startet erst nach dem REL-03-Merge.
+- **Nachtrag R238 (drittes Ziel):** AK-Z3-01 … -14, geänderte Pins und Determinismus-Auflagen an den Bündel-Plan
+  E2+E3+E4 in [Anhang 05](anhang-05-drittes-ziel-gewuerzstadt.md) H–J; Fold-back von AK-M12-B2 entfernt zusätzlich
+  `wonSpice`.
