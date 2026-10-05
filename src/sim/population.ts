@@ -14,6 +14,7 @@ import type {
   World,
 } from './types';
 import { budgetFrom, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
+import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
 import { center, islandOf } from './world';
@@ -31,16 +32,10 @@ export const SERVICE_IDS: readonly ServiceId[] = ['faith', 'school', 'bath'];
 /** Toleranz für die Gleitkomma-Summe von 50 × 0.02. */
 const EPSILON = 1e-9;
 
-function distance(a: Building, b: Building): number {
-  const ca = center(BUILDING_DEFS[a.defId], a.x, a.y);
-  const cb = center(BUILDING_DEFS[b.defId], b.x, b.y);
-  return Math.hypot(ca.cx - cb.cx, ca.cy - cb.cy);
-}
-
 /** Versorgt: Kontor im Radius oder ein angebundener Markt im Radius (Mitte zu Mitte). */
-export function isSupplied(world: World, house: Building): boolean {
+export function isSupplied(world: World, house: Building, cov?: Coverage): boolean {
   const c = center(BUILDING_DEFS[house.defId], house.x, house.y);
-  return inSupplyRange(world, house.island, c.cx, c.cy);
+  return inSupplyRange(world, house.island, c.cx, c.cy, cov?.supply[house.island]);
 }
 
 /** Neues Haus: Bedarf 1 je Bedarfsgut der Stufe 1, damit die erste Entnahme sofort erfolgt. */
@@ -58,17 +53,16 @@ export function newHouseState(world: World): HouseState {
   };
 }
 
-export function serviceAvailable(world: World, house: Building, service: ServiceId): boolean {
-  return Object.values(world.buildings).some((b) => {
-    const def = BUILDING_DEFS[b.defId];
-    return (
-      def.service === service &&
-      b.island === house.island &&
-      b.connected &&
-      b.outageUntil === undefined &&
-      distance(house, b) <= (def.serviceRadius ?? 0)
-    );
-  });
+/** Dienst in Reichweite: Quellen aus `cov` (Tick) oder frisch gefiltert (UI, Abfragen); je Haus nur die der eigenen Insel. */
+export function serviceAvailable(
+  world: World,
+  house: Building,
+  service: ServiceId,
+  cov?: Coverage,
+): boolean {
+  const sources =
+    cov?.service[house.island]?.[service] ?? serviceBuildings(world, house.island, service);
+  return sources.some((b) => distance(house, b) <= (BUILDING_DEFS[b.defId].serviceRadius ?? 0));
 }
 
 export function allNeedsMet(house: HouseState, tier: TierDef): boolean {
@@ -129,6 +123,7 @@ export function upgradeStatus(
   world: World,
   b: Building,
   budget?: Budget,
+  cov?: Coverage,
 ): { ok: boolean; reasons: string[] } {
   const house = b.house;
   if (!house) return { ok: false, reasons: ['Kein Wohnhaus'] };
@@ -141,13 +136,14 @@ export function upgradeStatus(
   if (upgradeStopActive(world, house.tier)) reasons.push('Aufstieg in der Amtsstube angehalten');
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
   const base = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
-  const damped = base !== null && deficitGood(budget ?? budgetFrom(goodsBalance(world)), house);
+  const damped =
+    base !== null && deficitGood(budget ?? budgetFrom(goodsBalance(world, cov)), house);
   const wait = base === null ? null : base * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
   if (wait === null) reasons.push('Steuer zu hoch');
   else if (world.tick - house.satisfiedSince < wait)
     reasons.push(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
   for (const s of next.services) {
-    if (!serviceAvailable(world, b, s))
+    if (!serviceAvailable(world, b, s, cov))
       reasons.push(`${BUILDING_DEFS[SERVICE_BUILDING[s]].name} fehlt in Reichweite`);
   }
   for (const g of newNeeds(current, next)) {
@@ -166,9 +162,9 @@ export function upgradeStatus(
  * nehmen zwei Häuser nicht dieselbe Einheit, und das Haus zählt gleich im selben Tick als versorgt.
  * Mit `budget` (Wachstumstakt) zieht nur ein erfolgreicher Aufstieg sein Δ ab (Id-Reihenfolge).
  */
-export function tryUpgrade(world: World, b: Building, budget?: Budget): boolean {
+export function tryUpgrade(world: World, b: Building, budget?: Budget, cov?: Coverage): boolean {
   const house = b.house;
-  if (!house || !upgradeStatus(world, b, budget).ok) return false;
+  if (!house || !upgradeStatus(world, b, budget, cov).ok) return false;
   const delta = upgradeDelta(house);
   if (budget)
     for (const g of Object.keys(delta) as GoodId[]) budget[g] = (budget[g] ?? 0) - delta[g]!;
@@ -197,13 +193,14 @@ export function houseCap(world: World, house: HouseState): number {
 /** Je Wachstumstakt einmal das Budget (`goodsBalance`), danach je Haus in Id-Reihenfolge. */
 export function tickPopulation(world: World): void {
   const growth = world.tick % GROWTH_INTERVAL === 0 && world.tick > 0;
-  const budget = growth ? budgetFrom(goodsBalance(world)) : undefined;
+  const cov = buildCoverage(world);
+  const budget = growth ? budgetFrom(goodsBalance(world, cov)) : undefined;
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
     const tier = TIERS[house.tier];
-    house.supplied = isSupplied(world, b);
-    for (const s of SERVICE_IDS) house.services[s] = serviceAvailable(world, b, s);
+    house.supplied = isSupplied(world, b, cov);
+    for (const s of SERVICE_IDS) house.services[s] = serviceAvailable(world, b, s, cov);
     consume(world, b, house, tier);
     const met = allNeedsMet(house, tier);
     if (!met) house.satisfiedSince = world.tick;
@@ -212,7 +209,7 @@ export function tickPopulation(world: World): void {
       if (house.inhabitants > cap) house.inhabitants -= 1;
       else if (met) house.inhabitants = Math.min(cap, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);
-      tryUpgrade(world, b, budget);
+      tryUpgrade(world, b, budget, cov);
     }
   }
 }

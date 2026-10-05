@@ -4,6 +4,7 @@ import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
 import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
 import { citizens, isSupplied, merchants, serviceAvailable } from './population';
+import { serviceBuildings } from './coverage';
 import { supplyBuildings } from './supply';
 import type {
   Building,
@@ -107,14 +108,12 @@ function coverageSources(
   const buildings =
     kind === 'supply'
       ? supplyBuildings(world, island)
-      : Object.values(world.buildings).filter(
-          (b) =>
-            b.island === island &&
-            b.connected &&
-            (kind === 'fire'
-              ? BUILDING_DEFS[b.defId].fireProtection === true
-              : BUILDING_DEFS[b.defId].service === kind && b.outageUntil === undefined),
-        );
+      : kind === 'fire'
+        ? Object.values(world.buildings).filter(
+            (b) =>
+              b.island === island && b.connected && BUILDING_DEFS[b.defId].fireProtection === true,
+          )
+        : serviceBuildings(world, island, kind);
   return buildings.map((b) => {
     const def = BUILDING_DEFS[b.defId];
     const c = center(def, b.x, b.y);

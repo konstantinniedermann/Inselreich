@@ -5,8 +5,13 @@ import { step } from '../../src/sim/tick';
 import { perfBudget } from '../helpers/perfBudget';
 import { denseScene, serviceAvailableNaive } from './helpers';
 
-/** Platzhalter (rot-Beleg auf dem naiven Code); der gemessene Pin folgt im grünen Commit. */
-const PERF_PIN = 6;
+/**
+ * Pin = min(6, aufrunden auf 0,5 (1,5 × lokales Mittel)). Messung: `npx vitest run tests/sim/perf.test.ts`
+ * (Pin temporär 0, Meldung gelesen), Entwicklerrechner (macOS, Darwin 25.6), 2026-10-05: Mittel 1,59 / 1,55 /
+ * 1,57 ms je Schritt → 1,5 × 1,59 = 2,39 → 2,5. Vorher (naiv): 18,61 ms. AK-E0-15b: naiv 1606–1659 ms,
+ * Index 131–135 ms, Verhältnis ≈ 12,3.
+ */
+const PERF_PIN = 2.5;
 const STEPS = 1000;
 const ROUNDS = 100;
 const RUNS = 3;
