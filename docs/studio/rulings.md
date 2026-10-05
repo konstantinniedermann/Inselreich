@@ -2005,3 +2005,16 @@ ihn. Ownership-Ausnahmen gelten nur für diese Dateien und Stellen; T14 prüft d
 in T14" verworfen (roter Strang). — Kosten bei Irrtum: Pins in T14 nachziehen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 (D-146) · ADR: —
+
+## R257 · 2026-10-05 · D-147 Messbedingung AK-E1-18 (frameMax im Leerlauf)
+
+Ruling: Empfehlung lead-tech angenommen. AK-E1-18 „frameMax ≤ 50 ms im Leerlauf" wird unter Headless-Chrome bei
+1920 × 1080 und **DPR 1** gemessen und entschieden (Grundframe 16,7 ms); Grenze 50 ms unverändert. Die DPR-2-Werte
+(Grundframe dort bereits 50 ms, Software-Rendering, Vsync-Raster) stehen informativ im Bericht, zusätzlich als
+„Zuwachs über Grundframe" (Variante b, nur informativ). AK-E1-19 (Scheiben ≤ 8 ms) bleibt mit unveränderter Grenze;
+Teilen des `quarterLayer` in Streifen ist der planmässige Weg. Die erste Messserie ist wegen eines liegengebliebenen
+Headless-Chrome ungültig und wird wiederholt; Befund an die Kurz-Retro (Aufräumen von Probe-Prozessen). Spec-Nachtrag
+zur Messbedingung im E1-Ledger, T08 (Doku) überträgt ihn. — Kosten bei Irrtum: Messung bei DPR 2 auf echter GPU
+nachholen (N-91-Weg).
+
+Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 (D-147) · ADR: —
