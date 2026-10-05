@@ -13,6 +13,9 @@ dev: ## Vite-Dev-Server starten
 zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) steht
 	@fail=0; for f in $$(grep -rlE 'performance\.now\(|Date\.now\(' tests --include='*.ts' | sort); do \
 	  grep -qF "'$$f'" vite.config.ts || { echo "Zeittest nicht in ZEITTESTS (vite.config.ts): $$f"; fail=1; }; \
+	done; \
+	for f in $$(grep -oE "'tests/[^']+\.test\.ts'" vite.config.ts | tr -d "'"); do \
+	  test -f "$$f" || { echo "ZEITTESTS-Eintrag ohne Datei (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
 test: ## Tests ausführen (Vitest)
@@ -48,4 +51,4 @@ studio-metrics: ## Studio-Metriken der letzten Session verdichten
 pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle 50 %)
 	node tools/pages/check.ts dist
 
-check: lint zeittests test studio-test build pages-limit ## Gleich wie CI: lint, test, studio-test, build, pages-limit
+check: lint zeittests test studio-test build pages-limit ## Gleich wie CI: lint, zeittests, test, studio-test, build, pages-limit
