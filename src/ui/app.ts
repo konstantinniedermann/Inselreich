@@ -7,6 +7,7 @@ import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { connectBuilding } from '../sim/connect';
 import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
+import { holdFeast } from '../sim/feast';
 import { upgradeBuilding } from '../sim/upgrade';
 import { tileAt, createWorld, center, type Pos } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
@@ -457,6 +458,12 @@ function launch(
               showError(friendlyReason(world, r.reason, { cost: v.cost }));
             }
           }
+          refresh();
+        },
+        holdFeast: (id) => {
+          const r = holdFeast(world, id);
+          if (r.ok) sound.play('build');
+          else showError(friendlyReason(world, r.reason));
           refresh();
         },
         previewConnect: (tiles) => {
