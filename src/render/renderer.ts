@@ -413,39 +413,42 @@ function occludersOf(
   });
 }
 
-/**
- * Zeichnet einen Frame (Ebenen nach ISO §5, soweit es sie in R1b gibt). `ctx` muss bereits per
- * devicePixelRatio skaliert sein; `view` ist die Ansichtsgrösse in CSS-Pixeln.
- */
-export function render(
+/** Frame-weite Werte, die jede Insel braucht (einmal je `render` berechnet). */
+interface FrameEnv {
+  weather: ReturnType<typeof pickWeather>;
+  reduce: boolean;
+  light: ReturnType<typeof lightAt>;
+}
+
+/** Was Schritte 8–12 von einer gezeichneten Insel brauchen. */
+interface IslandFrame {
+  v: World;
+  ci: Camera;
+  range: TileRange;
+  empty: boolean;
+  lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[];
+  fireClips: Poly[][][];
+  windowLights: WindowLights;
+}
+
+/** Schritte 2–7 (Boden bis Luft) einer Insel; `v` ist die Welt bzw. die Inselansicht, `ci` die Inselkamera. */
+function drawIsland(
   ctx: CanvasRenderingContext2D,
-  world: World,
-  cam: Camera,
+  v: World,
+  ci: Camera,
   terrainLayer: HTMLCanvasElement,
-  hover: Hover | null,
-  selectedId: number | null,
   view: { w: number; h: number },
-  fx: RenderFx = { timeMs: 0 },
-): void {
-  renderStats.multiplyFills = 0;
-  renderStats.shadowFills = 0;
-  renderStats.badges.length = 0;
-  // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
-  const dpr = ctx.getTransform?.()?.a;
-  spriteCache.beginFrame(cam.zoom, dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
-  massifCache.beginFrame(dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
-  const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
-  const reduce = fx.reduceMotion === true;
-  const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
+  fx: RenderFx,
+  env: FrameEnv,
+): IslandFrame {
+  const { weather, reduce, light } = env;
+  const world = v;
+  const cam = ci;
   const fires = new Map<number, { id: number; flames: number; smoke: number }>();
   for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
 
   let windowLights: WindowLights = { groups: [], k: 0 };
   let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
-
-  // 1 Hintergrund
-  ctx.fillStyle = PALETTE.waterDeep;
-  ctx.fillRect(0, 0, view.w, view.h);
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
@@ -703,6 +706,41 @@ export function render(
       rank,
     );
   }
+  return { v, ci, range, empty, lit, fireClips, windowLights };
+}
+
+/**
+ * Zeichnet einen Frame (Ebenen nach ISO §5, soweit es sie in R1b gibt). `ctx` muss bereits per
+ * devicePixelRatio skaliert sein; `view` ist die Ansichtsgrösse in CSS-Pixeln.
+ */
+export function render(
+  ctx: CanvasRenderingContext2D,
+  world: World,
+  cam: Camera,
+  terrainLayer: HTMLCanvasElement,
+  hover: Hover | null,
+  selectedId: number | null,
+  view: { w: number; h: number },
+  fx: RenderFx = { timeMs: 0 },
+): void {
+  renderStats.multiplyFills = 0;
+  renderStats.shadowFills = 0;
+  renderStats.badges.length = 0;
+  // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
+  const dpr = ctx.getTransform?.()?.a;
+  spriteCache.beginFrame(cam.zoom, dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
+  massifCache.beginFrame(dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
+  const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
+  const reduce = fx.reduceMotion === true;
+  const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
+
+  // 1 Hintergrund
+  ctx.fillStyle = PALETTE.waterDeep;
+  ctx.fillRect(0, 0, view.w, view.h);
+
+  // 2–7 Boden bis Luft
+  const fr = drawIsland(ctx, world, cam, terrainLayer, view, fx, { weather, reduce, light });
+  const { range, empty, lit, fireClips, windowLights } = fr;
 
   // 8 Sturm-Randschatten
   if (weather.kind === 'storm') drawStormEdge(ctx, view, weather.w);
