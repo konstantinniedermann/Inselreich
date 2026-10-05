@@ -6,7 +6,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { upgradeStatus } from '../../src/sim/population';
 import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { feastActive, feastState, holdFeast } from '../../src/sim/feast';
+import { feastActive, feastBlockReason, feastState, holdFeast } from '../../src/sim/feast';
 import type { Building, World } from '../../src/sim/types';
 import { houseFar, houseNearKontor, placeService, placeTownhall } from './helpers';
 
