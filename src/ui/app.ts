@@ -318,11 +318,15 @@ function launch(
     return cachePlan;
   };
   const layers = createIslandLayers<HTMLCanvasElement>({
+    // Laden und „Neue Insel" bauen das Spiel immer über `restart`/`launch` neu auf: Heimatebene und Plan gelten
+    // je Spiel, die hier einmal erfasste Heimatebene wird nie ersetzt.
     home: state.terrainLayer,
+    // Der Plan entsteht erst bei `idle`/`finish` (nach dem ersten Frame bzw. im Notfall); `done` legt ihn nie an,
+    // damit `cachesReady()` der Dev-Sonde vorher `false` meldet und das Erstbild nur die Heimat zeichnet.
     plan: {
       idle: () => planOf().idle(),
       finish: (i) => planOf().finish(i),
-      done: (i) => planOf().done(i),
+      done: (i) => cachePlan?.done(i) ?? false,
     },
     layerOf: (i) => (planOf(), fremd.get(i)!),
     islands: world.islands.length,

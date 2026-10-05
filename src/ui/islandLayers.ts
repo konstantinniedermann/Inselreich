@@ -16,6 +16,8 @@ export interface IslandLayerSet<C> {
   ready(): boolean;
 }
 
+const MAX_IDLE_ZERO = 200;
+
 export function createIslandLayers<C>(opts: {
   home: C;
   plan: Pick<CachePlan, 'idle' | 'finish' | 'done'>;
@@ -33,10 +35,23 @@ export function createIslandLayers<C>(opts: {
     for (let i = 1; i < islands; i++) if (!plan.done(i)) return false;
     return true;
   };
+  const doneCount = (): number => {
+    let n = 0;
+    for (let i = 1; i < islands; i++) if (plan.done(i)) n++;
+    return n;
+  };
+  // Neuplanung hängt an `ready()`, nicht an der Dauer: eine schnelle Scheibe kann bei grober Uhr 0 ms messen.
+  // Abbruch gegen Endlosschleifen: `idle()` meldet 0 ms und es wird keine Insel fertig, MAX_IDLE_ZERO Slots lang
+  // (Plan ohne Arbeit); jede Dauer > 0 oder jede neu fertige Insel setzt den Zähler zurück. Danach greift der Notfall.
+  let zeroRun = 0;
+  let doneSeen = doneCount();
   const slot = (): void => {
     if (disposed) return;
     const ms = plan.idle();
-    if (ms > 0 && !ready()) schedule(slot);
+    const d = doneCount();
+    zeroRun = ms > 0 || d > doneSeen ? 0 : zeroRun + 1;
+    doneSeen = d;
+    if (d < islands - 1 && zeroRun < MAX_IDLE_ZERO) schedule(slot);
   };
   return {
     get(i) {
