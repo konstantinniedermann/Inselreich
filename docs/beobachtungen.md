@@ -842,3 +842,4 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
 - Beobachtung: Der Knopf «Anbinden» (H-U1) wählt den Weg mit den wenigsten neuen Kacheln; Wald kostet wie Gras. Ein Weg durch Wald senkt die freie Waldfläche, die Holzfäller und Jagdhütte zählen (`radius`-Regel mit `free`). Die Vorschau zeigt das vor dem Klick, die Wahl bleibt beim Spieler.
 - Ursprung: Browser-Check H-U1 (Screenshot `.studio/qa/REL-03/h-u1/2_hover_vorschau.png`), lead-tech. Einschätzung: Design-Frage an lead-design — bei Gleichstand Gras vor Wald bevorzugen (kleine Änderung der Gleichstandsregel, kein Save, Baseline unberührt) oder so lassen.
+- Ergebnis: erledigt in fix/s1-rest

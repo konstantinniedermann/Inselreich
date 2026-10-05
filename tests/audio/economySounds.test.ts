@@ -15,6 +15,7 @@ import {
   workGroupName,
 } from '../../src/audio/economySounds';
 import { createSound } from '../../src/audio/sound';
+import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 
 interface FakeNode {
@@ -318,5 +319,18 @@ describe('playWork', () => {
     expect(() => d.s.playWork('lumberjack')).not.toThrow();
     expect(d.log.nodes).toBe(m);
     expect(() => a.s.playWork(undefined as unknown as string)).not.toThrow();
+  });
+});
+
+describe('S1-Rest Mangelstimmen-Schlüssel', () => {
+  // Waren, die bewusst auf die Grundstimme fallen; eine neue Ware muss hier oder in SHORTAGE_VOICES landen.
+  const BASE_VOICE_GOODS = ['tools', 'cane'];
+  it('S1-Rest: jeder Schlüssel von SHORTAGE_VOICES ist eine echte Gut-ID der Sim', () => {
+    for (const k of Object.keys(SHORTAGE_VOICES)) expect(GOOD_IDS as string[]).toContain(k);
+  });
+  it('S1-Rest: jede Sim-Ware hat eine eigene Stimme oder steht in der Grundstimmen-Liste', () => {
+    const own = Object.keys(SHORTAGE_VOICES);
+    const rest = (GOOD_IDS as string[]).filter((g) => !own.includes(g)).sort();
+    expect(rest).toEqual([...BASE_VOICE_GOODS].sort());
   });
 });
