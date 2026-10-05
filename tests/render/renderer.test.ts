@@ -24,6 +24,8 @@ import {
   GLOW_RADIUS,
   GLOW_RING_COUNT,
 } from '../../src/render/life';
+import { DIM_FIRE } from '../../src/render/renderer';
+import { LIGHT_COLORS, mixRgb } from '../../src/render/light';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
@@ -470,7 +472,7 @@ describe('Renderer', () => {
     const rainStyle = rgbaOf(PALETTE.foam, 0.25);
     const first = (world: World) =>
       sortedObjects(world, []).filter((i) => i.kind === 'building')[0]!.id;
-    const DARK = 'rgba(0,0,0,0.35)';
+    const DARK = DIM_FIRE;
     function frame(fx: Partial<RenderFx>, mk?: (w: World) => void, tick = 3000) {
       const { world, ids } = scene();
       world.order = order;
@@ -1034,5 +1036,18 @@ describe('Renderer', () => {
     expect(
       wildlifeEnvOf(w, { timeMs: 0, weather: { kind: 'storm', w: 1 }, reduceMotion: true }),
     ).toMatchObject({ weather: 'storm', reduce: true });
+  });
+});
+
+describe('S1-Rest DIM_FIRE', () => {
+  it('S1-Rest DIM_FIRE: kein reines Schwarz, kühl, aus dem Lichtton', () => {
+    const m = /^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/.exec(DIM_FIRE);
+    expect(m).not.toBeNull();
+    const [r, g, b] = [Number(m![1]), Number(m![2]), Number(m![3])];
+    expect(r + g + b).toBeGreaterThan(0);
+    expect(b / (r + g + b)).toBeGreaterThan(1 / 3);
+    const want = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6).map(Math.round);
+    expect([r, g, b]).toEqual(want);
+    expect(Number(m![4])).toBeGreaterThanOrEqual(0.35);
   });
 });

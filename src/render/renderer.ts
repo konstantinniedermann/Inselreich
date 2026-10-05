@@ -73,6 +73,7 @@ import { drawErrandLoad, errandsFrom, tickClock, walkersLeft, type ErrandPose } 
 import { drawProgressRings } from './ring';
 import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
+import { LIGHT_COLORS, mixRgb } from './light';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { massifBounds, massifCache, massifClips, massifOnScreen, type MassifItem } from './rocks';
@@ -93,7 +94,11 @@ import {
 import { drawBodyCached, spriteCache } from './spriteCache';
 import { variantOf } from './variants';
 
-const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
+/** Abdunklung eines brennenden Gebäudes (Spec 6.5): kühler Schattenton der Lichtsprache (S1), nie Schwarz. */
+export const DIM_FIRE = (() => {
+  const [r, g, b] = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
+  return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.7)`;
+})();
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
 const HOVER_OK = rgbaOf(PALETTE.signalOk, 0.35);
 const HOVER_BAD = rgbaOf(PALETTE.signalRed, 0.35);
