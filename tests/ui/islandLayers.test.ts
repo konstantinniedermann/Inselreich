@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createIslandLayers } from '../../src/ui/islandLayers';
+import { IDLE_TIMEOUT_MS, createIslandLayers, idleSchedule } from '../../src/ui/islandLayers';
 
 function setup(doneAfter: Record<number, number> = { 1: 1, 2: 1 }) {
   const calls: string[] = [];
@@ -119,5 +119,33 @@ describe('M12 E1 Inselebenen', () => {
     layers.frameDone();
     expect(drain(queue, 10000)).toBeLessThan(10000);
     expect(calls).toBeGreaterThan(0);
+  });
+});
+
+describe('M12 E1 Leerlauf-Planung', () => {
+  it('ruft requestIdleCallback mit timeout auf', () => {
+    const calls: { cb: () => void; opts: unknown }[] = [];
+    const win = {
+      requestIdleCallback: (cb: () => void, opts?: unknown) => calls.push({ cb, opts }),
+      setTimeout: () => {
+        throw new Error('kein Rückfall erwartet');
+      },
+    };
+    let ran = 0;
+    idleSchedule(win)(() => ran++);
+    expect(calls.length).toBe(1);
+    expect(calls[0]!.opts).toEqual({ timeout: IDLE_TIMEOUT_MS });
+    calls[0]!.cb();
+    expect(ran).toBe(1);
+  });
+
+  it('ohne requestIdleCallback: setTimeout(0)', () => {
+    const calls: { cb: () => void; ms: number }[] = [];
+    const win = { setTimeout: (cb: () => void, ms: number) => calls.push({ cb, ms }) };
+    let ran = 0;
+    idleSchedule(win)(() => ran++);
+    expect(calls.map((c) => c.ms)).toEqual([0]);
+    calls[0]!.cb();
+    expect(ran).toBe(1);
   });
 });
