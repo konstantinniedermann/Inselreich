@@ -1504,19 +1504,52 @@ export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   return half;
 }
 
+export const QUARTER_STRIPS = 8; // Streifen der Viertel-Kopie (M12 E1, AK-E1-19: ein Schritt deutlich unter 8 ms)
+
+/**
+ * Streifen der Viertel-Kopie: Quellzeilen der halben Kopie (gerade Grenzen, 2:1) und Zielzeilen der Viertel-Kopie.
+ * Die Streifen decken beide Seiten lückenlos und ohne Überlappung; der letzte Streifen nimmt den Rest (ungerade Höhe).
+ */
+export function quarterStrips(
+  halfHeight: number,
+  n = QUARTER_STRIPS,
+): { sy: number; sh: number; dy: number; dh: number }[] {
+  const qh = Math.ceil(halfHeight / 2);
+  const rows = 2 * Math.ceil(halfHeight / (2 * n));
+  const out: { sy: number; sh: number; dy: number; dh: number }[] = [];
+  for (let y = 0; y < halfHeight; y += rows) {
+    const sh = Math.min(rows, halfHeight - y);
+    const dy = y / 2;
+    out.push({ sy: y, sh, dy, dh: y + sh >= halfHeight ? qh - dy : sh / 2 });
+  }
+  return out;
+}
+
+function newQuarter(half: HTMLCanvasElement): HTMLCanvasElement {
+  const quarter = document.createElement('canvas');
+  quarter.width = Math.ceil(half.width / 2);
+  quarter.height = Math.ceil(half.height / 2);
+  return quarter;
+}
+
+function paintQuarterStrip(
+  quarter: HTMLCanvasElement,
+  half: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = quarter.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
+}
+
 /** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
 export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   const m = meta.get(layer);
   if (m?.quarter) return m.quarter;
   const half = halfLayer(layer);
-  const quarter = document.createElement('canvas');
-  quarter.width = Math.ceil(half.width / 2);
-  quarter.height = Math.ceil(half.height / 2);
-  const ctx = quarter.getContext('2d');
-  if (ctx) {
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(half, 0, 0, half.width, half.height, 0, 0, quarter.width, quarter.height);
-  }
+  const quarter = newQuarter(half);
+  for (const st of quarterStrips(half.height)) paintQuarterStrip(quarter, half, st);
   if (m) m.quarter = quarter;
   return quarter;
 }
@@ -1596,7 +1629,22 @@ export function terrainJob(
       });
     }),
     timed(() => void halfLayer(layer)),
-    timed(() => void quarterLayer(layer)),
   );
+  // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
+  let quarter: HTMLCanvasElement | null = null;
+  const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
+  for (let i = 0; i < QUARTER_STRIPS; i++)
+    steps.push(
+      timed(() => {
+        const m = meta.get(layer);
+        if (!m || m.quarter) return;
+        const half = halfLayer(layer);
+        const list = stripsOf();
+        const st = list[i];
+        quarter ??= newQuarter(half);
+        if (st) paintQuarterStrip(quarter, half, st);
+        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.quarter = quarter;
+      }),
+    );
   return { layer, steps };
 }

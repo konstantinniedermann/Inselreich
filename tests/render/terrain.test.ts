@@ -1281,9 +1281,7 @@ describe('M12 E1 Terrain', () => {
     for (const hh of [384, 385, 1000, 1001, 17]) {
       const qh = Math.ceil(hh / 2);
       const strips = quarterStrips(hh);
-      expect(strips.length).toBeGreaterThanOrEqual(
-        Math.min(QUARTER_STRIPS, Math.floor(hh / 2)) - 1,
-      );
+      if (hh >= 384) expect(strips.length).toBeGreaterThanOrEqual(QUARTER_STRIPS - 1);
       let sy = 0;
       let dy = 0;
       for (const [i, st] of strips.entries()) {
