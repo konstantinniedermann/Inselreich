@@ -1738,3 +1738,14 @@ H-R13. — Kosten bei Irrtum: eine Perf-Regression bis +40 % auf dem Runner blei
 Release-Gate.
 
 Entscheider: L0 · Anlass: Bericht lead-art H-T3, CI-Läufe 37295831843 (2×) · ADR: —
+
+## R236 · 2026-10-05 · Ad-hoc-Retro CI rot (H-T3)
+
+Ruling: Vorschläge der Ad-hoc-Retro (Abschnitt in `docs/studio/retros/2026-10-05-session-ad51d3c5.md`) angenommen:
+(a) Release-Gate prüft die CI-Reserve aller Zeittests im Diff (bereits R235); (b) Hotfix-Briefings trennen
+Beobachtung/Beleg von Vermutung, Vermutungen als „unbelegt" markiert, keine Fix-Vorgabe aus einer Vermutung; (c)
+Briefings mit CI-Prüfung nennen Lauf-ID und Workflow-Namen (CI ≠ Pages). Dritter Zeittest-Fall dieser Klasse
+(AK-R1-06, H-R9 B4 ×2): Paket „paintPixels-Performance" bekommt in REL-04 Vorrang. Umsetzung (b)/(c) im Handbuch mit
+R233 durch studio-coach. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro CI rot, CI-Lauf 37295831843 · ADR: —

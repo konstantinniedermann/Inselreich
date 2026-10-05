@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 61 %, Woche 23 %)
+Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 64 %, Woche 24 %)
 
 ## Release-Notizen
 
@@ -30,8 +30,8 @@ Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 61 %, Woche 23 %)
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. Live auf main @ 1a24d25 (CI/Pages grün): M1–M8, M10, M11, M9-Häppchen H-R1…H-R14,
-  H-R12b, H-S1, H-U1, H-U2, H-A2, S1-Rest; Werkzeug H-T1, H-T2, W-V3. Programm Nutzerfeedback:
+- Projekt: **Inselreich**. Live auf main @ 1ee86f7 (CI/Pages grün): M1–M8, M10, M11, M9-Häppchen H-R1…H-R14,
+  H-R12b, H-S1, H-U1, H-U2, H-A2, S1-Rest; Werkzeug H-T1, H-T2, W-V3; Hotfix H-T3 (Cache Vorberge, CI-Grenze H-R9 B4 20 ms, R234–R236). Programm Nutzerfeedback:
   `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`.
 - **Arbeitsweise (Handbuch 1.18):** Release-Bündel E-028, Discovery-Strang E-027, Stilrahmen
   `docs/superpowers/specs/2026-10-04-stilrahmen.md` (S1–S6, R211).
@@ -48,7 +48,7 @@ Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 61 %, Woche 23 %)
     aber über E0 holen.
   - Seefahrt-Bündel E2+E3+E4: Plan fehlt (Auflagen Anhang 04 Teil B, R228 (7)). E6-Werte F-P7 prüft
     design-economy-designer vor dem E6-Plan.
-- **REL-04 (Kandidaten):** I-007 „Fest in der Kapelle" (Studio-Platz); M9 Rest: G7b Landtiere, K3 Silhouetten
+- **REL-04 (Kandidaten):** **paintPixels-Performance mit Vorrang (R236)** · I-007 „Fest in der Kapelle" (Studio-Platz); M9 Rest: G7b Landtiere, K3 Silhouetten
   (R186), Typ-Erkennung kleiner Bauten (R195). Ideen-Runde IDEEN-03 nach REL-03 fällig.
 - Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; kein Rebase (§6.3, R212); Integrator
   mergt im Worktree `.worktrees/integrate`; L0 committet nie im Hauptcheckout, solange dort jemand arbeitet (R198);
@@ -67,12 +67,13 @@ Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 61 %, Woche 23 %)
 
 - „mach weiter" (R225): R224-Regeln umgesetzt (Handbuch 1.18, Integrator-Persona 1.6).
 - M12: Brainstorming (R226) → Spec mit Gates (R227, R228, R230) → Plan E0 (R229) → Plan E1 (R231); E0 T00–T02.
-- REL-03 live (R232): H-U1, S1-Rest, H-R13, H-R12b.
+- REL-03 live (R232): H-U1, S1-Rest, H-R13, H-R12b. Danach CI rot → Hotfix H-T3 live (R234–R236).
+- Retros: Kurz-Retro, Prozess-Retro REL-03, Ad-hoc-Retro CI → R233, R236.
 
 ## Pausierte Pakete
 
 - Worktrees: `.worktrees/integrate` (bleibt), `.worktrees/m12-design`, `.worktrees/m12-e0`, `.worktrees/m12-e1`
-  (laufend); `.worktrees/h-u1`, `.worktrees/rel03-*` und `.worktrees/h-r12` (gemergt bzw. Material) können weg.
+  (laufend); `.worktrees/h-u1`, `.worktrees/h-t3`, `.worktrees/rel03-*` und `.worktrees/h-r12` (gemergt bzw. Material) können weg.
 - Remote-Branches überholt, nicht gemergt: `rel/rel-01`, `docs/rel-01-arc42`. Löschen entfernter Branches ist
   verboten (§6.1) — bleiben stehen.
 - Lokaler Branch `feat/m7-fx` @ 4489bdd, Remote `wip/r118a-render-aufraeumen`, `stash@{0}`: unverändert, bis Ruling.
@@ -97,7 +98,7 @@ Stand: 2026-10-05 (Session-Ende ad51d3c5; 5-h-Fenster 61 %, Woche 23 %)
 ## Nächste Schritte
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. studio-coach setzt R233 ins Handbuch um (V1–V3, Briefing-/Berichtsvorlage).
+1. studio-coach setzt R233 und R236 (b)/(c) ins Handbuch um (V1–V3, Briefing-/Berichtsvorlage).
 2. M12-E0 fortsetzen: main per Merge in `feat/m12-e0`, C2 (T03–T05) starten, dann C3 (T06) und Final-Review.
 3. Parallel IDEEN-03 (lead-design) und E1-Render T03 ff. sobald E0 main enthält; E1-Sim nach E0-T03.
 4. Plan Seefahrt-Bündel E2+E3+E4 (lead-tech, opus), sobald E0 gemergt oder kurz davor.
