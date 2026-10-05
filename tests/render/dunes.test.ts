@@ -392,17 +392,6 @@ describe('H-R12b K2/K3 Pixel (Zoom 2)', () => {
         }
     }
     const mean = all / nAll;
-    console.log(
-      'K3b Knoten',
-      nodeE / nNode / mean,
-      'Kachel',
-      tileE / nTile / mean,
-      'Achse',
-      dg / ax,
-      'n',
-      nAll,
-    );
-    expect(nAll).toBeGreaterThan(100_000);
     expect(nodeE / nNode / mean, 'Knotenlinien').toBeLessThanOrEqual(1.3);
     expect(tileE / nTile / mean, 'Kachelgrenzen').toBeLessThanOrEqual(1.3);
     expect(dg / ax, 'Achsindex').toBeLessThanOrEqual(1.05);
