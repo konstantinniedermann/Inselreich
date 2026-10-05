@@ -13,7 +13,7 @@ import {
   toneStep,
   type Rgb,
 } from './light';
-import type { World } from '../sim/types';
+import type { Island, World } from '../sim/types';
 import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
 
 // Tonleiter (H-R11): lebt in light.ts; hier zur Rückwärtsverträglichkeit weiter ausgeführt.
@@ -24,7 +24,7 @@ export { ROCK_TONES, toneColor, toneStep };
 // Teilstücke (Halbkachel-Streifen) und Zellfarben. Keine Projektion, kein Canvas (das macht `rocks.ts`); liest die
 // Welt nur. Höhen in Weltpixeln (Zoom 1), Darstellungswerte, keine Spielwerte.
 
-export type MassifWorld = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
+export type MassifWorld = Island & Pick<World, 'seed'>;
 
 /** Knoten je Kachel und Achse (Richtwert der Spec: 4). */
 export const SUB = 4;
@@ -108,42 +108,42 @@ export interface MassifData {
 
 // ---------- Komponenten (A1) ----------
 
-const isMountain = (w: MassifWorld, i: number): boolean => w.tiles[i]!.terrain === 'mountain';
+const isMountain = (isl: MassifWorld, i: number): boolean => isl.tiles[i]!.terrain === 'mountain';
 
 /** Signatur des Geländeabbilds (nur Gebirge zählt): zwei FNV-Bahnen über die Gebirgskacheln. */
-function signature(w: MassifWorld): string {
+function signature(isl: MassifWorld): string {
   let a = 0x811c9dc5,
-    b = 0x9e3779b9 ^ w.seed;
-  for (let i = 0; i < w.tiles.length; i++)
-    if (isMountain(w, i)) {
+    b = 0x9e3779b9 ^ isl.seed;
+  for (let i = 0; i < isl.tiles.length; i++)
+    if (isMountain(isl, i)) {
       a = Math.imul(a ^ (i + 1), 0x01000193) >>> 0;
       b = Math.imul(b ^ (i + 7), 0x85ebca6b) >>> 0;
       b ^= b >>> 13;
     }
-  return `${w.seed}|${w.width}x${w.height}|${a.toString(36)}${b.toString(36)}`;
+  return `${isl.seed}|${isl.width}x${isl.height}|${a.toString(36)}${b.toString(36)}`;
 }
 
 const cache = new WeakMap<object, MassifData>();
 
 /** Komponenten und Höhenfelder, gemerkt je Welt und Geländeabbild; Bauen und Wege ändern nichts (A1). */
-export function massifData(w: MassifWorld): MassifData {
-  const sig = signature(w);
-  const hit = cache.get(w);
+export function massifData(isl: MassifWorld): MassifData {
+  const sig = signature(isl);
+  const hit = cache.get(isl);
   if (hit && hit.sig === sig) return hit;
-  const data = buildData(w, sig);
-  cache.set(w, data);
+  const data = buildData(isl, sig);
+  cache.set(isl, data);
   return data;
 }
 
-function buildData(w: MassifWorld, sig: string): MassifData {
-  const W = w.width,
-    H = w.height,
+function buildData(isl: MassifWorld, sig: string): MassifData {
+  const W = isl.width,
+    H = isl.height,
     n = W * H;
   const compOf = new Int32Array(n).fill(-1);
   const comps: MassifComponent[] = [];
   const stack: number[] = [];
   for (let i = 0; i < n; i++) {
-    if (!isMountain(w, i) || compOf[i]! >= 0) continue;
+    if (!isMountain(isl, i) || compOf[i]! >= 0) continue;
     const id = comps.length;
     const tiles: number[] = [];
     compOf[i] = id;
@@ -161,16 +161,16 @@ function buildData(w: MassifWorld, sig: string): MassifData {
       ] as const) {
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const k = ny * W + nx;
-        if (compOf[k]! < 0 && isMountain(w, k)) {
+        if (compOf[k]! < 0 && isMountain(isl, k)) {
           compOf[k] = id;
           stack.push(k);
         }
       }
     }
     tiles.sort((p, q) => p - q);
-    comps.push(buildComponent(w, id, Int32Array.from(tiles), compOf));
+    comps.push(buildComponent(isl, id, Int32Array.from(tiles), compOf));
   }
-  return { sig, seed: w.seed, width: W, height: H, compOf, comps };
+  return { sig, seed: isl.seed, width: W, height: H, compOf, comps };
 }
 
 /** Landart des nächsten Nicht-Gebirges (für den Sockel): 0 keine Mischung (Wasser, Rand), sonst Index in EDGE_COLORS. */
@@ -179,17 +179,17 @@ const EDGE_CODE: Partial<Record<string, number>> = { grass: 1, forest: 2, sand: 
  * Landart des nächsten Nicht-Gebirges je Kachel (4er-Breitensuche, deterministisch). Hängt von Wald/Gras ab (Roden,
  * Aufforsten) und wird deshalb je Zerlegung neu gerechnet, nicht mit dem Höhenfeld gemerkt.
  */
-export function nearestLand(w: PieceWorld): Uint8Array {
-  const W = w.width,
-    n = W * w.height;
+export function nearestLand(isl: PieceWorld): Uint8Array {
+  const W = isl.width,
+    n = W * isl.height;
   const out = new Uint8Array(n);
   const done = new Uint8Array(n);
   const q = new Int32Array(n);
   let head = 0,
     tail = 0;
   for (let i = 0; i < n; i++)
-    if (!isMountain(w, i)) {
-      out[i] = EDGE_CODE[w.tiles[i]!.terrain] ?? 0;
+    if (!isMountain(isl, i)) {
+      out[i] = EDGE_CODE[isl.tiles[i]!.terrain] ?? 0;
       done[i] = 1;
       q[tail++] = i;
     }
@@ -203,7 +203,7 @@ export function nearestLand(w: PieceWorld): Uint8Array {
       [x, y + 1],
       [x, y - 1],
     ] as const) {
-      if (nx < 0 || ny < 0 || nx >= W || ny >= w.height) continue;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= isl.height) continue;
       const k = ny * W + nx;
       if (done[k]) continue;
       done[k] = 1;
@@ -298,12 +298,12 @@ function boxBlur(f: Float32Array, nx: number, ny: number, r: number): void {
 }
 
 function buildComponent(
-  w: MassifWorld,
+  isl: MassifWorld,
   id: number,
   tiles: Int32Array,
   compOf: Int32Array,
 ): MassifComponent {
-  const W = w.width;
+  const W = isl.width;
   let x0 = Infinity,
     y0 = Infinity,
     x1 = -Infinity,
@@ -319,7 +319,7 @@ function buildComponent(
   const nx = (x1 - x0 + 1) * SUB + 1,
     ny = (y1 - y0 + 1) * SUB + 1;
   const inTile = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < W && y < w.height && compOf[y * W + x] === id;
+    x >= 0 && y >= 0 && x < W && y < isl.height && compOf[y * W + x] === id;
   // Knoten innen, wenn alle berührenden Kacheln zur Komponente gehören; sonst Quelle des Abstands
   const src = new Uint8Array(nx * ny);
   for (let j = 0; j < ny; j++)
@@ -397,7 +397,7 @@ function buildComponent(
   const kuppen = Math.max(1, Math.min(3, Math.round(len / 3)));
   const sMid = (sMin + sMax) / 2,
     sHalf = Math.max(1, (sMax - sMin) / 2);
-  const seed = w.seed;
+  const seed = isl.seed;
   const shape = new Float32Array(nx * ny),
     gs = new Float32Array(nx * ny);
   for (let j = 0; j < ny; j++)
@@ -515,7 +515,7 @@ export function nodeHeight(c: MassifComponent, I: number, J: number): number {
 
 // ---------- Teilstücke (A5) ----------
 
-export type PieceWorld = MassifWorld & Pick<World, 'tiles'>;
+export type PieceWorld = MassifWorld & Pick<Island, 'tiles'>;
 export interface MassifPiece {
   /** Eindeutig je Welt: 2 × Index der vordersten Kachel + Hälfte (0 rechte, 1 linke Kachelhälfte im Streifen). */
   id: number;
@@ -537,13 +537,13 @@ export interface MassifPiece {
  * nicht bebaubar, `isLand` in mapgen.ts; Bebauung grenzt nur aussen an) in Tiefenfolge, geteilt in Abschnitte von höchstens `PIECE_RUN` Kacheln. Deterministisch, hinten
  * nach vorn je Streifen.
  */
-export function massifPieces(w: PieceWorld, data: MassifData = massifData(w)): MassifPiece[] {
-  const W = w.width,
-    H = w.height;
+export function massifPieces(isl: PieceWorld, data: MassifData = massifData(isl)): MassifPiece[] {
+  const W = isl.width,
+    H = isl.height;
   const out: MassifPiece[] = [];
   const isM = (x: number, y: number): boolean =>
     x >= 0 && y >= 0 && x < W && y < H && data.compOf[y * W + x]! >= 0;
-  const near = nearestLand(w);
+  const near = nearestLand(isl);
   /** Landart rund um die Kacheln (je 3 × 3), Teil des Cache-Schlüssels. */
   const around = (ts: readonly number[]): string => {
     let out = '';

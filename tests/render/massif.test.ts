@@ -1,8 +1,9 @@
+import { fieldWorld } from '../../src/render/terrainField';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
 import type { BuildingDefId, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { centerOn, type Camera } from '../../src/render/camera';
 import {
   ISO_H,
@@ -72,7 +73,7 @@ beforeAll(() => {
 /** Leere Welt (alles Gras, keine Gebäude) mit `rows` ab (ox, oy): M Gebirge, F Wald, ~ Wasser, S Sand, sonst Gras. */
 function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
   const w = createWorld(seed, { unlockAll: true });
-  for (const t of w.tiles) {
+  for (const t of home(w).tiles) {
     t.terrain = 'grass';
     t.buildingId = null;
     t.road = false;
@@ -81,7 +82,7 @@ function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
   const T = { M: 'mountain', F: 'forest', '~': 'water', S: 'sand' } as const;
   rows.forEach((r, y) =>
     [...r].forEach((c, x) => {
-      const t = w.tiles[(oy + y) * w.width + ox + x]!;
+      const t = home(w).tiles[(oy + y) * home(w).width + ox + x]!;
       t.terrain = c in T ? T[c as keyof typeof T] : 'grass';
     }),
   );
@@ -90,10 +91,10 @@ function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
 let nextId = 500;
 function put(w: World, defId: BuildingDefId, x: number, y: number): boolean {
   const d = BUILDING_DEFS[defId];
-  if (x < 0 || y < 0 || x + d.w > w.width || y + d.h > w.height) return false;
+  if (x < 0 || y < 0 || x + d.w > home(w).width || y + d.h > home(w).height) return false;
   const tiles = [];
   for (let dy = 0; dy < d.h; dy++)
-    for (let dx = 0; dx < d.w; dx++) tiles.push(w.tiles[(y + dy) * w.width + x + dx]!);
+    for (let dx = 0; dx < d.w; dx++) tiles.push(home(w).tiles[(y + dy) * home(w).width + x + dx]!);
   // wie `checkGround` der Sim: Gebirge und Wasser sind kein Bauland
   if (
     tiles.some(
@@ -102,14 +103,14 @@ function put(w: World, defId: BuildingDefId, x: number, y: number): boolean {
   )
     return false;
   const id = nextId++;
-  w.buildings[id] = { id, defId, x, y, connected: true, progress: 0, state: 'ok' };
+  w.buildings[id] = { id, defId, x, y, connected: true, progress: 0, state: 'ok', island: 0 };
   for (const t of tiles) t.buildingId = id;
   w.nextBuildingId = nextId;
   return true;
 }
 const square = (n: number): World => scene(Array.from({ length: n }, () => 'M'.repeat(n)));
 const largest = (w: World): MassifComponent =>
-  [...massifData(w).comps].sort((a, b) => b.n - a.n)[0]!;
+  [...massifData(fieldWorld(w)).comps].sort((a, b) => b.n - a.n)[0]!;
 /** Alle Knoten (globale Knotenkoordinaten) im Rechteck der Komponente. */
 function* nodes(c: MassifComponent): Generator<[number, number]> {
   for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
@@ -132,8 +133,8 @@ const dist3 = (a: number[], b: number[]): number =>
 describe('H-R9 A1 Komponenten', () => {
   it('A1 4er-Nachbarschaft, deterministisch, Reihenfolge nach kleinstem Kachelindex', () => {
     const rows = ['MM..M', 'MM...', '..M..', '...MM'];
-    const a = massifData(scene(rows)),
-      b = massifData(scene(rows));
+    const a = massifData(fieldWorld(scene(rows))),
+      b = massifData(fieldWorld(scene(rows)));
     const sets = a.comps.map((c) =>
       [...c.tiles].map((i) => `${(i % 64) - 10},${Math.floor(i / 64) - 10}`),
     );
@@ -144,13 +145,13 @@ describe('H-R9 A1 Komponenten', () => {
 
   it('A1 gemerkt je Welt und Geländeabbild: Bauen und Wege lösen keinen Neubau aus, neues Gebirge schon', () => {
     const w = square(6);
-    const d = massifData(w);
-    expect(massifData(w)).toBe(d);
+    const d = massifData(fieldWorld(w));
+    expect(massifData(fieldWorld(w))).toBe(d);
     put(w, 'house', 30, 30);
-    w.tiles[31 * 64 + 30]!.road = true;
-    expect(massifData(w)).toBe(d);
-    w.tiles[40 * 64 + 40]!.terrain = 'mountain';
-    expect(massifData(w)).not.toBe(d);
+    home(w).tiles[31 * 64 + 30]!.road = true;
+    expect(massifData(fieldWorld(w))).toBe(d);
+    home(w).tiles[40 * 64 + 40]!.terrain = 'mountain';
+    expect(massifData(fieldWorld(w))).not.toBe(d);
   });
 });
 
@@ -161,7 +162,7 @@ describe('H-R9 A2 Höhenfeld', () => {
       square(5),
       scene(['MMM.', 'M.MM', 'MMMM']),
     ])
-      for (const c of massifData(w).comps)
+      for (const c of massifData(fieldWorld(w)).comps)
         for (const [I, J] of nodes(c)) {
           const h = nodeHeight(c, I, J);
           if (!nodeInside(c, I, J)) expect(h, `${I},${J}`).toBe(0);
@@ -225,7 +226,7 @@ describe('H-R9 A2 Höhenfeld', () => {
           rub = 0,
           dark = 0;
         const rockL = lum(PALETTE.rock);
-        for (const p of massifPieces(w)) {
+        for (const p of massifPieces(fieldWorld(w))) {
           const at = pieceNodes(p);
           for (const cell of pieceCells(p)) {
             const nd = at(cell.I, cell.J);
@@ -260,7 +261,7 @@ describe('H-R9 A2 Höhenfeld', () => {
         let lit = 0,
           n = 0,
           darkTop = 0;
-        for (const p of massifPieces(w)) {
+        for (const p of massifPieces(fieldWorld(w))) {
           const at = pieceNodes(p);
           for (const cell of pieceCells(p)) {
             const nd = at(cell.I, cell.J);
@@ -453,7 +454,7 @@ describe('H-R9 A3 Färbung', () => {
     expect(toneStep(2.7, 0)).toBe(3);
     // gerastert: im grossen Massiv liegen höchstens 30 % der Pixel im Übergang zwischen zwei Stufen
     const w = createWorld(14, { unlockAll: true });
-    const ps = massifPieces(w).filter((_, i) => i % 9 === 0);
+    const ps = massifPieces(fieldWorld(w)).filter((_, i) => i % 9 === 0);
     let n = 0,
       mid = 0;
     const tones = ROCK_TONES.map((c) => [...c]);
@@ -495,7 +496,7 @@ describe('H-R9 A3 Färbung', () => {
     const w = createWorld(14, { unlockAll: true });
     let low = 0,
       high = 0;
-    for (const p of massifPieces(w)) {
+    for (const p of massifPieces(fieldWorld(w))) {
       const at = pieceNodes(p);
       for (const c of pieceCells(p)) {
         const nd = at(c.I, c.J);
@@ -533,7 +534,7 @@ describe('H-R9 A3 Färbung', () => {
     for (const w of [createWorld(7, { unlockAll: true }), square(3), square(10)]) {
       let partial = 0,
         full = 0;
-      for (const p of massifPieces(w)) {
+      for (const p of massifPieces(fieldWorld(w))) {
         const at = pieceNodes(p);
         for (const c of pieceCells(p))
           for (const [I, J] of [
@@ -551,18 +552,18 @@ describe('H-R9 A3 Färbung', () => {
     }
     // gerade Kante eines Quadrats: die Kontur (SOFT_CUT) liegt auf der Kachelgrenze, einen Knoten innen deckt es voll
     const q = largest(square(10));
-    const p = massifPieces(square(10)).find((x) => x.comp.n === q.n)!;
+    const p = massifPieces(fieldWorld(square(10))).find((x) => x.comp.n === q.n)!;
     expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB).a).toBeLessThanOrEqual(0.55);
     expect(pieceNodes(p)((q.x0 + 5) * SUB, q.y0 * SUB + 1).a).toBe(1);
   });
 
   it('A3 Sockelfarbe folgt dem Nachbargelände: Aufforsten an einer Randkachel ändert Schlüssel und Farbe, nicht das Höhenfeld', () => {
     const w = scene(['......', '.MMMM.', '.MMMM.', '.MMMM.', '......'], 20, 20);
-    const data = massifData(w);
-    const before = new Map(massifPieces(w).map((p) => [p.id, p]));
-    w.tiles[23 * 64 + 25]!.terrain = 'forest'; // rechts neben der Randkachel (24, 23)
-    expect(massifData(w)).toBe(data); // Gebirge unverändert: kein Neubau des Höhenfelds
-    const after = massifPieces(w);
+    const data = massifData(fieldWorld(w));
+    const before = new Map(massifPieces(fieldWorld(w)).map((p) => [p.id, p]));
+    home(w).tiles[23 * 64 + 25]!.terrain = 'forest'; // rechts neben der Randkachel (24, 23)
+    expect(massifData(fieldWorld(w))).toBe(data); // Gebirge unverändert: kein Neubau des Höhenfelds
+    const after = massifPieces(fieldWorld(w));
     const changed = after.filter((p) => before.get(p.id)!.key !== p.key);
     expect(changed.length).toBeGreaterThan(0);
     expect(changed.length).toBeLessThan(after.length);
@@ -606,7 +607,7 @@ describe('H-R9 A3 Färbung', () => {
         .join(',')})`,
     );
     let n = 0;
-    for (const p of massifPieces(w))
+    for (const p of massifPieces(fieldWorld(w)))
       for (const q of pieceQuads(p)) {
         const c = rgbOfCss(q.fill);
         for (const s of sig) expect(dist3(c, s)).toBeGreaterThan(60);
@@ -634,7 +635,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       for (const i of p.tiles) {
         const x = i % W,
           y = Math.floor(i / W);
-        const t = w.tiles[i]!;
+        const t = home(w).tiles[i]!;
         expect(t.terrain).toBe('mountain');
         expect([strips(p), strips(p) + 1]).toContain(x - y);
         if (prevS >= 0) expect(x + y).toBe(prevS + 1);
@@ -651,7 +652,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     const w = scene(['MMMMM.', 'MM.MMM', 'MMMMMM', '.MMMM.']);
     expect(put(w, 'house', 12, 11)).toBe(true); // in der Bucht
     const seen = new Map<string, number>();
-    for (const p of massifPieces(w))
+    for (const p of massifPieces(fieldWorld(w)))
       for (const c of pieceCells(p)) {
         if (c.seam) continue;
         // Zelle (I, J): u = fx − fy in [(I − J − 1)/SUB, (I − J + 1)/SUB]; Teil 1 links, 2 rechts der Mitte
@@ -665,7 +666,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     let free = 0;
     for (let y = 0; y < 64; y++)
       for (let x = 0; x < 64; x++) {
-        const t = w.tiles[y * 64 + x]!;
+        const t = home(w).tiles[y * 64 + x]!;
         const isFree = t.terrain === 'mountain';
         if (isFree) free++;
         for (let J = y * SUB; J < (y + 1) * SUB; J++)
@@ -714,9 +715,9 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     );
     // Gebirge ist nicht bebaubar: Steinbruch, Weg, Häuser und Betriebe direkt an den Rändern und in den Buchten
     expect(put(w, 'quarry', 8 + 3, 8 + 2)).toBe(true); // in der Bucht des Rings
-    for (let x = 8; x <= 8 + 8; x++) w.tiles[(8 + 8) * 64 + x]!.road = true; // Weg am Fuss entlang
+    for (let x = 8; x <= 8 + 8; x++) home(w).tiles[(8 + 8) * 64 + x]!.road = true; // Weg am Fuss entlang
     for (let x = 8; x <= 8 + 8; x++)
-      expect(w.tiles[(8 + 8) * 64 + x]!.terrain).not.toBe('mountain');
+      expect(home(w).tiles[(8 + 8) * 64 + x]!.terrain).not.toBe('mountain');
     const spots: [BuildingDefId, number, number][] = [];
     for (let y = 6; y < 22; y++)
       for (let x = 8; x < 28; x++) spots.push([(x + y) % 3 === 0 ? 'lumberjack' : 'house', x, y]);
@@ -730,7 +731,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       put(w, 'market', x, y);
     expect(Object.keys(w.buildings).length).toBeGreaterThan(20);
     const free = (x: number, y: number): boolean => {
-      const t = w.tiles[y * 64 + x];
+      const t = home(w).tiles[y * 64 + x];
       return !!t && t.terrain === 'mountain';
     };
     const movers: Moving[] = [];
@@ -774,7 +775,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       scene(['MMMM', 'M.MM', 'MMMM', '..M.']),
     ]) {
       const byStrip = new Map<number, P[][]>();
-      const pieces = massifPieces(w);
+      const pieces = massifPieces(fieldWorld(w));
       for (const p of pieces) {
         const list = byStrip.get(p.strip) ?? [];
         for (const q of pieceQuads(p)) list.push(q.pts);
@@ -819,7 +820,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
 
   it('A4 keine Antialias-Nähte: gerastert ist jeder Pixel deckend, dessen Abtastpunkte in Netzdreiecken liegen', () => {
     const w = createWorld(7, { unlockAll: true });
-    const pieces = massifPieces(w).filter((_, i) => i % 7 === 0);
+    const pieces = massifPieces(fieldWorld(w)).filter((_, i) => i % 7 === 0);
     let inside = 0;
     for (const f of [1, 2]) {
       const ss = f < 1.5 ? 2 : 1;
@@ -1027,7 +1028,7 @@ describe('H-R9 A7 Picking und Verdeckung', () => {
     const w = createWorld(7, { unlockAll: true });
     const cam: Camera = { x: -37.5, y: 112.25, zoom: 1.5 };
     let n = 0;
-    for (const c of massifData(w).comps)
+    for (const c of massifData(fieldWorld(w)).comps)
       for (const t of c.tiles) {
         const x = t % 64,
           y = Math.floor(t / 64);

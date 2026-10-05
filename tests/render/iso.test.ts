@@ -22,7 +22,7 @@ import {
 } from '../../src/render/iso';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { demolish, placeBuilding } from '../../src/sim/build';
-import { createWorld, tilesInRadius } from '../../src/sim/world';
+import { home, createWorld, tilesInRadius } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -43,16 +43,18 @@ const mkBuilding = (id: number, defId: Building['defId'], x: number, y: number):
   connected: true,
   progress: 0,
   state: 'ok',
+  island: 0,
 });
 
 /** Welt mit freier Grasfläche östlich des Kontors (Versorgungsradius), Geld im Überfluss. */
 function buildWorld(): { world: World; o: Pt } {
   const world = createWorld(3, { unlockAll: true });
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const o = { x: k.x + 3, y: k.y + 3 };
   forceRect(world, o.x, o.y, 5, 5, 'grass');
   world.money = 100000;
-  for (const g of Object.keys(world.stock) as (keyof World['stock'])[]) world.stock[g] = 1000;
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[g] = 1000;
   return { world, o };
 }
 
@@ -143,19 +145,21 @@ describe('Radius', () => {
         [31, 17.5],
         [1, 62],
       ] as const) {
-        const inSim = new Set(tilesInRadius(world, cx, cy, r).map((p) => p.y * world.width + p.x));
+        const inSim = new Set(
+          tilesInRadius(home(world), cx, cy, r).map((p) => p.y * home(world).width + p.x),
+        );
         const { rx, ry } = radiusEllipse(r);
         expect(rx).toBeCloseTo(r * 32 * Math.SQRT2, 9);
         expect(ry).toBeCloseTo(r * 16 * Math.SQRT2, 9);
         const c = project(cx, cy);
         let checked = 0;
-        for (let y = 0; y < world.height; y++)
-          for (let x = 0; x < world.width; x++) {
+        for (let y = 0; y < home(world).height; y++)
+          for (let x = 0; x < home(world).width; x++) {
             if (Math.abs(Math.hypot(x + 0.5 - cx, y + 0.5 - cy) - r) <= 1e-9) continue;
             const p = project(x + 0.5, y + 0.5);
             const inEllipse = ((p.x - c.x) / rx) ** 2 + ((p.y - c.y) / ry) ** 2 <= 1;
             expect(inEllipse, `r${r} (${cx},${cy}) Kachel (${x},${y})`).toBe(
-              inSim.has(y * world.width + x),
+              inSim.has(y * home(world).width + x),
             );
             checked++;
           }
@@ -216,7 +220,7 @@ describe('Picking', () => {
     const tree = items.find((i) => i.kind === 'tree');
     expect(tree).toBeDefined();
     const c = project(tree!.fp.x + 0.5, tree!.fp.y + 0.5);
-    const kontor = world.buildings[world.kontorId]!;
+    const kontor = world.buildings[home(world).kontorId]!;
     const kp = project(kontor.x + 1, kontor.y + 1);
     // Baum weit genug vom Kontor entfernt, sonst wäre der Test nicht aussagekräftig
     expect(Math.hypot(c.x - kp.x, c.y - kp.y)).toBeGreaterThan(200);
@@ -328,12 +332,13 @@ describe('Sortierung und Cache', () => {
 
 it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer mit treeVariant', () => {
   const w = createWorld(3, { unlockAll: true });
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const x = k.x + 6;
   const y = k.y + 2;
   forceRect(w, x, y, 1, 1, 'forest');
   w.money = 1000;
-  const trees = () => sortedObjects(w).filter((o) => o.kind === 'tree' && o.id === y * w.width + x);
+  const trees = () =>
+    sortedObjects(w).filter((o) => o.kind === 'tree' && o.id === y * home(w).width + x);
   expect(trees()).toHaveLength(1);
   expect(clearForest(w, x, y).ok).toBe(true);
   expect(trees()).toHaveLength(0);

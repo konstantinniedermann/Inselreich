@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad, removeRoad } from '../../src/sim/build';
 import {
   isBuildingConnected,
@@ -15,7 +15,7 @@ let k: Building;
 
 beforeEach(() => {
   w = createWorld(3);
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
   prepareEast(w, k);
 });
 
@@ -48,7 +48,7 @@ describe('connectivity', () => {
   });
 
   it('building adjacent to kontor without any road is not connected', () => {
-    w.tiles[idx(w, k.x + 2, k.y - 1)]!.terrain = 'forest';
+    home(w).tiles[idx(home(w), k.x + 2, k.y - 1)]!.terrain = 'forest';
     const res = placeBuilding(w, 'lumberjack', k.x + 2, k.y);
     expect(res.ok).toBe(true);
     const lj = w.buildings[res.id!]!;
@@ -59,10 +59,10 @@ describe('connectivity', () => {
   it('reachableRoads only contains roads linked to the kontor', () => {
     placeRoad(w, k.x + 2, k.y);
     placeRoad(w, k.x + 4, k.y); // Lücke bei +3
-    expect(kontorRoadRoots(w)).toContain(idx(w, k.x + 2, k.y));
+    expect(kontorRoadRoots(w)).toContain(idx(home(w), k.x + 2, k.y));
     const set = reachableRoads(w);
-    expect(set.has(idx(w, k.x + 2, k.y))).toBe(true);
-    expect(set.has(idx(w, k.x + 4, k.y))).toBe(false);
+    expect(set.has(idx(home(w), k.x + 2, k.y))).toBe(true);
+    expect(set.has(idx(home(w), k.x + 4, k.y))).toBe(false);
   });
 
   it('restores only notConnected to ok; other states are not restored', () => {

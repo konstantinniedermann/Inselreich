@@ -1,6 +1,6 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { houseDiagnosis } from '../sim/queries';
-import { tileAt } from '../sim/world';
+import { home, tileAt } from '../sim/world';
 import type { Building, BuildingDefId, World } from '../sim/types';
 import {
   tileCorners,
@@ -73,6 +73,7 @@ import { drawErrandLoad, errandsFrom, tickClock, walkersLeft, type ErrandPose } 
 import { drawProgressRings } from './ring';
 import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
+import { LIGHT_COLORS, mixRgb } from './light';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
 import { massifBounds, massifCache, massifClips, massifOnScreen, type MassifItem } from './rocks';
@@ -93,7 +94,23 @@ import {
 import { drawBodyCached, spriteCache } from './spriteCache';
 import { variantOf } from './variants';
 
-const DIM_FIRE = 'rgba(0,0,0,0.35)'; // Abdunklung eines brennenden Gebäudes (Spec 6.5)
+/**
+ * Abdunklung eines brennenden Gebäudes (Spec 6.5, S1): Multiplikation mit einem kühlen Faktor. Der Luma-Faktor bleibt
+ * bei 0,65 (wie die frühere Schwarzfüllung mit 35 %), der Farbstich stammt aus dem Schattenton der Lichtsprache
+ * (dark/cool); `DIM_FIRE_TINT` hält ihn dezent, damit Dachfarbe und Gebäudetyp lesbar bleiben.
+ */
+export const DIM_FIRE_LUMA = 0.65;
+const DIM_FIRE_TINT = 0.3;
+export const DIM_FIRE_FACTORS: readonly [number, number, number] = (() => {
+  const t = mixRgb(LIGHT_COLORS.dark, LIGHT_COLORS.cool, 0.6);
+  const y = 0.2126 * t[0] + 0.7152 * t[1] + 0.0722 * t[2];
+  return t.map((v) => DIM_FIRE_LUMA * (1 + DIM_FIRE_TINT * (v / y - 1))) as [
+    number,
+    number,
+    number,
+  ];
+})();
+export const DIM_FIRE = `rgb(${DIM_FIRE_FACTORS.map((f) => Math.round(f * 255)).join(',')})`;
 const HOVER_LINE = '#fff'; // Umriss Weiss (Signal)
 const HOVER_OK = rgbaOf(PALETTE.signalOk, 0.35);
 const HOVER_BAD = rgbaOf(PALETTE.signalRed, 0.35);
@@ -213,7 +230,7 @@ function hullPath(ctx: CanvasRenderingContext2D, cam: Camera, b: Building): void
 }
 
 const buildingAt = (world: World, x: number, y: number): Building | undefined => {
-  const id = tileAt(world, x, y)?.buildingId;
+  const id = tileAt(home(world), x, y)?.buildingId;
   return id != null ? world.buildings[id] : undefined;
 };
 
@@ -272,7 +289,7 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
 /** Wasser an den vier Seiten des Footprints (für die Kaimauer): +v links, +u rechts, −u und −v hinten. */
 export function waterSides(world: World, b: Building): Required<BodyEnv> {
   const def = BUILDING_DEFS[b.defId];
-  const water = (x: number, y: number): boolean => tileAt(world, x, y)?.terrain === 'water';
+  const water = (x: number, y: number): boolean => tileAt(home(world), x, y)?.terrain === 'water';
   const r = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
   for (let i = 0; i < def.h; i++) {
     r.waterRight ||= water(b.x + def.w, b.y + i);
@@ -430,7 +447,7 @@ export function render(
   ctx.fillStyle = PALETTE.waterDeep;
   ctx.fillRect(0, 0, view.w, view.h);
 
-  const range = visibleTileRange(cam, view, { w: world.width, h: world.height });
+  const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
 
   // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
@@ -477,8 +494,8 @@ export function render(
     const wildRange = {
       x0: Math.max(0, range.x0 - 3),
       y0: Math.max(0, range.y0 - 3),
-      x1: Math.min(world.width - 1, range.x1 + 3),
-      y1: Math.min(world.height - 1, range.y1 + 3),
+      x1: Math.min(home(world).width - 1, range.x1 + 3),
+      y1: Math.min(home(world).height - 1, range.y1 + 3),
     };
     const wild = wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
     drawWaterLife(ctx, cam, wild);
@@ -611,6 +628,7 @@ export function render(
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
         if ((fires.get(b.id)?.flames ?? 0) > 0) {
           ctx.save();
+          ctx.globalCompositeOperation = 'multiply';
           ctx.beginPath();
           hullPath(ctx, cam, b);
           ctx.fillStyle = DIM_FIRE;
@@ -749,7 +767,7 @@ export function render(
     drawPlacementOverlay(ctx, world, cam, range, hover.tool.defId, hover.x, hover.y);
   }
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);

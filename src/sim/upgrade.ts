@@ -4,6 +4,7 @@ import { LEVELS } from './defs/levels';
 import { checkAfford, pay, takeStock } from './economy';
 import { fail, ok, type Building, type Cost, type Result, type World } from './types';
 import { functionLock } from './unlocks';
+import { islandOf } from './world';
 
 /** Ausbau eines Betriebs um eine Stufe (Spec 3.6). Wirft nie; bei fail bleibt die Welt unverändert. */
 export function upgradeBuilding(world: World, id: number): Result {
@@ -17,12 +18,12 @@ export function upgradeBuilding(world: World, id: number): Result {
   if (lock !== null) return fail(lock);
   if (b.outageUntil !== undefined) return fail('Gebäude brennt');
   const next = levels[level - 1]!; // Stufe 1 → Index 0 (Stufe 2)
-  const afford = checkAfford(world, next.cost);
+  const afford = checkAfford(world, islandOf(world, b), next.cost);
   if (!afford.ok) return afford;
-  if (world.stock[next.fee.good] < next.fee.amount)
+  if (islandOf(world, b).stock[next.fee.good] < next.fee.amount)
     return fail(`Zu wenig ${GOODS[next.fee.good].name}`);
-  pay(world, next.cost);
-  takeStock(world, next.fee.good, next.fee.amount);
+  pay(world, islandOf(world, b), next.cost);
+  takeStock(islandOf(world, b), next.fee.good, next.fee.amount);
   b.level = level === 1 ? 2 : 3; // progress, eff, state bleiben (Spec 3.6)
   return ok;
 }

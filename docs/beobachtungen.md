@@ -831,11 +831,18 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Beobachtung: (1) Bei 4× Tempo erklingt der Münzton etwa alle 2,5 s (56–60 je Minute) und wirkt dicht. (2) Der Arbeitston nutzt die Bounding-Box `visibleTileRange`, die grösser als das Bild ist; Betriebe bis ~400 px ausserhalb klingen mit (von lead-art als „Kameranähe" angenommen). (3) Ein `make check`-Lauf im Review war einmal mit 1 rotem Test, Name nicht erfasst; zwei Folgeläufe grün.
 - Ursprung: qa-playtester und qa-code-reviewer, Paket H-A2. Einschätzung: (1) Ton-Drosselung je Tempo prüfen, lead-art; (2) nur bei Spielerfeedback enger filtern (Bildschirm-Test statt Kachelbox); (3) zum H-T1-Eintrag oben (Kandidat `tests/ui/hints.test.ts` AK-UX-31).
 
+### 2026-10-05 · Render · REL-03 Art-Strang (H-R13, H-R12b), Sammeleintrag
+
+- Fundort: `src/render/terrain.ts` (`foothillField`, Vorberge), `tests/render/terrain.test.ts` (Zeit-Tests), Stilrahmen S6.
+- Beobachtung: (1) `foothillField` rechnet je `computeWindow`, also auch je Patch, zwei Box-Blur über das ganze Gebirgsfeld; gemessen unauffällig (`terrainPatchMs` +2 %), Cache je `fields` möglich. (2) Vorberge bleiben als Form schwach: S6 (höchstens 1 Tonstufe je bebaubarer Kachel) begrenzt die Rückenhöhe; der Übergang trägt sich über Schuttband und Warm/Kühl-Verschiebung. Stärkere Vorberge nur über längere Rücken oder eine S6-Ausnahme auf Kacheln ohne Baurecht. (3) Kombiniert (H-R13 + H-R12b) `lastPatchMs` ≈ +16–17 %, `buildMs` ≈ +11 %, AK-R1-06 lokal +7,8 %; Zeit-Tests (AK-R1-06, H-R9 B4, K1-Einsatztest) schlagen unter paralleler Last gelegentlich an und sind einzeln grün.
+- Ursprung: Review und Messungen REL-03 (lead-art). Einschätzung: niedrig; (2) Designfrage für ein späteres Gebirgs-Häppchen, (3) beobachten, ob CI stabil bleibt.
+
 ### 2026-10-04 · Render · S1-Rest `DIM_FIRE` und Gut-Schlüssel im Audio
 
 - Fundort: `src/render/renderer.ts:96` (`DIM_FIRE = 'rgba(0,0,0,0.35)'`); `src/audio/economySounds.ts` `SHORTAGE_VOICES`.
 - Beobachtung: Brennende Gebäude werden mit reinem Schwarz abgedunkelt (S1). Die Stimmen-Schlüssel je Gut doppeln die Gut-IDs der Sim ohne Test; Umbenennung fällt still auf die Grundstimme zurück.
 - Ursprung: opus-Review REL-02. Einschätzung: nächster S1/S4-Rest bzw. kleiner Test, Kandidat REL-03.
+- Ergebnis: erledigt in fix/s1-rest
 
 ### 2026-10-05 · Wirtschaft · Unversorgte Häuser als Steuerquelle
 
@@ -854,3 +861,39 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `docs/studio/gates.md`, Gate Spec Prüffrage 4 (Einzeiler mit `grep -o 'AK-[A-Z0-9]*-[0-9]*'`).
 - Beobachtung: Das Muster verlangt nach dem zweiten Bindestrich nur Ziffern und findet darum Kennungen wie `AK-M12-B1` bis `AK-M12-B4` nicht; ausserdem durchsucht `docs/superpowers/specs/*.md` keine Anhang-Ordner (E-010), in denen seit M11 die meisten AK stehen. Doppelte Kennungen in Anhängen bleiben so unentdeckt.
 - Ursprung: lead-qa, Gate Spec M12 E1–E6 (R228). Einschätzung: klein; Muster auf `AK-[A-Z0-9]*-[A-Z0-9]*` erweitern und rekursiv über `docs/superpowers/specs/` suchen (Handbuch-Änderung, studio-coach).
+### 2026-10-05 · Sim/Design · Anbinden-Pfad läuft auch durch Wald
+
+- Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
+- Beobachtung: Der Knopf «Anbinden» (H-U1) wählt den Weg mit den wenigsten neuen Kacheln; Wald kostet wie Gras. Ein Weg durch Wald senkt die freie Waldfläche, die Holzfäller und Jagdhütte zählen (`radius`-Regel mit `free`). Die Vorschau zeigt das vor dem Klick, die Wahl bleibt beim Spieler.
+- Ursprung: Browser-Check H-U1 (Screenshot `.studio/qa/REL-03/h-u1/2_hover_vorschau.png`), lead-tech. Einschätzung: Design-Frage an lead-design — bei Gleichstand Gras vor Wald bevorzugen (kleine Änderung der Gleichstandsregel, kein Save, Baseline unberührt) oder so lassen.
+
+### 2026-10-05 · Sim/Render · Nachträge opus-Review REL-03
+
+- Fundort: `src/sim/connect.ts:118` (`connectBuilding`); `tests/render/terrain.test.ts` (AK-R1-06).
+- Beobachtung: (1) `connectBuilding` multipliziert nur die Geldkosten mit n; bekommt ein Weg später Material-Kosten, wäre ein Teilbau möglich und AK-06 verletzt. (2) CI-Zeitreserve AK-R1-06 nach REL-03 ≈ 2,0–2,05 s von 2,25 s.
+- Ursprung: opus-Review REL-03 (lead-qa), R232. Einschätzung: niedrig; (2) beobachten.
+
+### 2026-10-05 · Studio-Werkzeug · `effort.py` summiert Starts über wiederverwendete Phasen-Labels
+
+- Fundort: `tools/studio/effort.py` (Budget-Vergleich je Phase); Retro-Alarm „Budget von lead-production überschritten: 4 von 1".
+- Beobachtung: Das Phasen-Label `M5-01-merge` wurde in zwei Sessions verwendet; die Starts werden über die ganze Historie summiert und lösen einen falschen Budget-Alarm aus.
+- Ursprung: Kurz-Retro Session ad51d3c5 (studio-coach), R233. Einschätzung: niedrig; Labels eindeutig vergeben oder je Session zählen.
+
+### 2026-10-05 · Render · Teil-Neuzeichnung nach Gebirgsänderung und CI-Reserve H-R9 B4
+
+- Fundort: `src/render/terrain.ts` (`patchGrid`, `paintPixels`), `tests/render/terrain.test.ts` (H-R9 B4), `tests/helpers/perfBudget.ts`.
+- Beobachtung: (1) `patchGrid` gleicht nur das Rechteck plus `2 · HEIGHT_BLUR + 1` Knoten ab; nach einem Wechsel von oder zu Gebirge reichen die Vorberg-Felder (scree, tint, Anstieg; Blur bis ≈ 12 Kacheln) weiter, ausserhalb des Rechtecks bleibt bis zum Vollaufbau der alte Stand stehen (seit H-R13). (2) H-R9 B4 misst nur `paintPixels` (lokal ≈ 3,5–4 ms, Runner 13,9–14,7 ms in zwei Versuchen von CI-Lauf 37295831843); der CI-Faktor 1,5 bildet den Abstand Runner/lokal (≈ 4×) für diesen Test nicht ab, REL-03 (+≈ 10 % `paintPixels`) hat die knappe Reserve aufgebraucht.
+- Ursprung: Hotfix H-T3 (art-rendering-engineer, lead-art), R234, R235. Einschätzung: (1) mittel, sichtbar nur beim Bauen/Abreissen am Gebirge, Patch-Rand aus der Blur-Reichweite ableiten; (2) per R235 CI-Grenze H-R9 B4 auf 20 ms (lokal 8 ms).
+- Paket-Kandidat (R235): **paintPixels-Performance (Vorberechnung je Zelle), REL-04/M9** — Bilinear-Gewichte und Feldwerte je Knotenzelle statt je Pixel (heute eine `lerp`-Closure und ≈ 8 Abtastungen je Pixel), pixelgleich; Ziel: Reserve so weit zurück, dass H-R9 B4 wieder mit dem Standard-Faktor 1,5 läuft.
+
+### 2026-10-05 · Sim/UI · Heimat-Bilanz und Rückerstattung bei Häusern auf Nebeninseln
+
+- Fundort: `src/sim/population.ts` (`upgradeStatus`, `upgradeDeficit`), `src/sim/flow.ts` (`goodsBalance`), `src/sim/queries.ts` (`effectiveRefund`).
+- Beobachtung: Seit M12-E0 T04 dämpfen Bilanz-Defizit und Rückerstattungs-Vorschau nur nach Heimat-Bilanz bzw. Heimat-Lager. Für Gebäude auf weiteren Inseln stimmt das nicht (bei einer Insel unkritisch).
+- Ursprung: Review T04 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; in T05/E1 je Insel bilanzieren oder bewusst dokumentieren.
+
+### 2026-10-05 · Tests · Standard-CI_FACTOR 1,5 passt nicht zum Runner-Abstand
+
+- Fundort: `tests/helpers/perfBudget.ts:2` (`CI_FACTOR`), Nutzer u. a. `tests/sim/perf.test.ts`.
+- Beobachtung: Der Standardfaktor 1,5 bildet den Abstand Runner/lokal (≈ 4×, H-T3) nicht ab; jeder Zeittest braucht einen eigenen Faktor (R235, T05-Lasttest jetzt 4).
+- Ursprung: Review T05 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; Standardfaktor prüfen oder anheben, sobald weitere Zeittests dazukommen.

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { UPKEEP_INTERVAL, totalUpkeep } from '../../src/sim/economy';
 import { step } from '../../src/sim/tick';
 import {
@@ -40,6 +40,7 @@ function addHouse(world: World, tier: Tier, inhabitants: number, met: boolean): 
     connected: true,
     progress: 0,
     state: 'ok',
+    island: 0,
     house: {
       tier,
       inhabitants,
@@ -129,7 +130,7 @@ describe('populationByTier', () => {
 
 /** Versorgte Kolonie: Kontor, Kapelle und Schule in Reichweite; Häuser werden direkt eingefügt. */
 function colony(world: World): void {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const chapel = placeService(world, 'chapel', k.x + 2, k.y + 2);
   const school = placeService(world, 'school', k.x + 4, k.y + 2);
   // Das Platzieren der Schule hat die Anbindung neu berechnet; die Dienste gelten hier als angebunden.
@@ -140,12 +141,12 @@ function colony(world: World): void {
 
 /** Lager und Kasse auffüllen, damit Versorgung und Aufstiegskosten nie am Vorrat scheitern. */
 function feed(world: World): void {
-  for (const g of Object.keys(world.stock) as GoodId[]) world.stock[g] = 100;
+  for (const g of Object.keys(home(world).stock) as GoodId[]) home(world).stock[g] = 100;
   world.money = 1_000_000;
 }
 
 function readyHouse(world: World, tier: Tier, inhabitants: number, slot: number): Building {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const x = k.x + (slot % 4);
   const y = k.y - 2 - Math.floor(slot / 4);
   forceGrass(world, x, y);
@@ -166,10 +167,11 @@ function readyHouse(world: World, tier: Tier, inhabitants: number, slot: number)
     connected: false,
     progress: 0,
     state: 'ok',
+    island: 0,
     house,
   };
   world.buildings[id] = b;
-  world.tiles[y * world.width + x]!.buildingId = id;
+  home(world).tiles[y * home(world).width + x]!.buildingId = id;
   return b;
 }
 

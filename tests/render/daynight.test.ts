@@ -15,6 +15,7 @@ const mkB = (
   connected: state !== 'notConnected',
   progress: 0,
   state,
+  island: 0,
   ...(inhabitants === undefined
     ? {}
     : { house: { tier: 1 as Tier, inhabitants } as unknown as Building['house'] }),

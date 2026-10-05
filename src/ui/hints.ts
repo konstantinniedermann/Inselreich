@@ -10,7 +10,7 @@ import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
 import { paidCost } from '../sim/upgrade';
 import type { Building, BuildingDefId, Cost, GoodId, World } from '../sim/types';
-import { adjacentOf, idx, tileAt } from '../sim/world';
+import { home, adjacentOf, idx, tileAt } from '../sim/world';
 import { costLine } from './dom';
 import { hotkeyLabel } from './hotkeys';
 import { diagnosisText, refundText, stateText } from './texts';
@@ -103,7 +103,7 @@ export const REASON_TABLE: readonly ReasonRow[] = [
       const cost = costOf(c);
       const g = COST_GOODS.find((x) => GOODS[x].name === m[1]);
       return cost && g
-        ? `Zu wenig ${m[1]}: ${cost[g]} nötig, ${w.stock[g]} vorhanden · kaufbar am Kontor`
+        ? `Zu wenig ${m[1]}: ${cost[g]} nötig, ${home(w).stock[g]} vorhanden · kaufbar am Kontor`
         : null;
     },
   },
@@ -144,7 +144,7 @@ export const REASON_TABLE: readonly ReasonRow[] = [
     pattern: /^Nicht genug Ware$/,
     show: (_m, w, c) =>
       c.good && c.amount !== undefined
-        ? `Nicht genug ${GOODS[c.good].name}: ${c.amount} nötig, ${w.stock[c.good]} vorhanden`
+        ? `Nicht genug ${GOODS[c.good].name}: ${c.amount} nötig, ${home(w).stock[c.good]} vorhanden`
         : null,
   },
   { source: 'trade', pattern: /^Ungültige Menge$/, show: same },
@@ -198,7 +198,7 @@ function touchesReachable(
   h: number,
   roads: Set<number>,
 ): boolean {
-  return adjacentOf(world, x, y, w, h).some((p) => roads.has(idx(world, p.x, p.y)));
+  return adjacentOf(home(world), x, y, w, h).some((p) => roads.has(idx(home(world), p.x, p.y)));
 }
 
 /** Satzteil „danach mit Weg (Taste) …"; ohne Taste entfällt die Klammer. */
@@ -211,7 +211,7 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
   if (tool.kind === 'build') {
     const def = BUILDING_DEFS[tool.defId];
     const r = canPlace(world, tool.defId, x, y);
-    const a = r.ok ? checkAfford(world, def.cost) : r;
+    const a = r.ok ? checkAfford(world, home(world), def.cost) : r;
     if (!a.ok) return { tone: 'bad', text: friendlyReason(world, a.reason, { defId: tool.defId }) };
     if (tool.defId === 'house') return { tone: 'ok', text: 'Baubar · im Versorgungsgebiet' };
     return touchesReachable(world, x, y, def.w, def.h, reachableRoads(world))
@@ -220,13 +220,14 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
   }
   if (tool.kind === 'road') {
     const r = canPlaceRoad(world, x, y);
-    const a = r.ok ? checkAfford(world, ROAD_COST_OBJ) : r;
+    const a = r.ok ? checkAfford(world, home(world), ROAD_COST_OBJ) : r;
     if (!a.ok)
       return { tone: 'bad', text: friendlyReason(world, a.reason, { cost: ROAD_COST_OBJ }) };
     const roads = reachableRoads(world);
-    const linked = adjacentOf(world, x, y, 1, 1).some(
+    const linked = adjacentOf(home(world), x, y, 1, 1).some(
       (p) =>
-        roads.has(idx(world, p.x, p.y)) || tileAt(world, p.x, p.y)?.buildingId === world.kontorId,
+        roads.has(idx(home(world), p.x, p.y)) ||
+        tileAt(home(world), p.x, p.y)?.buildingId === home(world).kontorId,
     );
     return {
       tone: 'ok',
@@ -244,10 +245,10 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
       ? { tone: 'ok', text: `Roden: ${CLEAR_FOREST_COST.money} Geld` }
       : { tone: 'ok', text: `Aufforsten: ${PLANT_FOREST_COST.money} Geld` };
   }
-  const tile = tileAt(world, x, y);
+  const tile = tileAt(home(world), x, y);
   const b = tile?.buildingId != null ? world.buildings[tile.buildingId] : undefined;
   if (tool.kind === 'demolish') {
-    if (b?.id === world.kontorId)
+    if (b?.id === home(world).kontorId)
       return { tone: 'info', text: 'Kontor kann nicht abgerissen werden' };
     if (b) {
       const cost = paidCost(b);
@@ -261,7 +262,7 @@ export function placementHint(world: World, tool: Tool, x: number, y: number): H
     return null;
   }
   if (!b) return null;
-  if (b.id === world.kontorId) return { tone: 'info', text: 'Kontor · klicken zum Handeln' };
+  if (b.id === home(world).kontorId) return { tone: 'info', text: 'Kontor · klicken zum Handeln' };
   const name = BUILDING_DEFS[b.defId].name;
   if (b.house) {
     const d = houseDiagnosis(world, b)[0];
@@ -292,7 +293,7 @@ export function hintPosition(
 export function unconnectedIds(world: World): Set<number> {
   const out = new Set<number>();
   for (const b of Object.values(world.buildings)) {
-    if (!b.connected && b.defId !== 'house' && b.id !== world.kontorId) out.add(b.id);
+    if (!b.connected && b.defId !== 'house' && b.id !== home(world).kontorId) out.add(b.id);
   }
   return out;
 }

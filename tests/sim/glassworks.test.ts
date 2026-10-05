@@ -16,13 +16,13 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 
 /** Seed-3-Welt, Krisen aus, Lager für Glas leer gestartet; Tick 1000 (keine Krisenperiode, kein Auftragsstart). */
 function base(): World {
   const w = createWorld(3, { unlockAll: true });
   w.tick = 1000;
-  w.stock = { ...w.stock, stone: 0, wood: 0, glass: 0 };
+  home(w).stock = { ...home(w).stock, stone: 0, wood: 0, glass: 0 };
   return w;
 }
 
@@ -36,6 +36,7 @@ function direct(w: World, defId: BuildingDefId, x: number, connected = true): Bu
     connected,
     progress: 0,
     state: 'ok',
+    island: 0,
   };
   w.buildings[b.id] = b;
   return b;
@@ -74,10 +75,10 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
   it('AK-S2-02 Glashütte allein, Stein 3, Holz 2, 200 Schritte: Glas 2, Stein 1, Holz 0, waitingInput', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
-    w.stock.stone = 3;
-    w.stock.wood = 2;
+    home(w).stock.stone = 3;
+    home(w).stock.wood = 2;
     run(w, 200);
-    expect([w.stock.glass, w.stock.stone, w.stock.wood]).toEqual([2, 1, 0]);
+    expect([home(w).stock.glass, home(w).stock.stone, home(w).stock.wood]).toEqual([2, 1, 0]);
     expect(gw.state).toBe('waitingInput');
     expect(gw.progress).toBe(0);
   });
@@ -85,9 +86,9 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
   it('AK-S2-03 ein Input fehlt: Stein 0, Holz 5, 100 Schritte: Holz 5, Glas 0, waitingInput', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
-    w.stock.wood = 5;
+    home(w).stock.wood = 5;
     run(w, 100);
-    expect([w.stock.wood, w.stock.glass]).toEqual([5, 0]);
+    expect([home(w).stock.wood, home(w).stock.glass]).toEqual([5, 0]);
     expect(gw.state).toBe('waitingInput');
   });
 
@@ -97,41 +98,41 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
     direct(w, 'school', 10); // M10: Werkzeugmacher braucht eine Schule in Reichweite
     const gw = direct(w, 'glassworks', 13);
     expect(tm.id).toBeLessThan(gw.id);
-    w.stock.wood = 1;
-    w.stock.stone = 1;
+    home(w).stock.wood = 1;
+    home(w).stock.stone = 1;
     step(w);
     expect(tm.progress).toBe(1);
     expect(gw.state).toBe('waitingInput');
     expect(gw.progress).toBe(0);
-    expect([w.stock.stone, w.stock.wood]).toEqual([1, 0]);
+    expect([home(w).stock.stone, home(w).stock.wood]).toEqual([1, 0]);
   });
 
   it('AK-S2-06 Lager voll: Stein und Holz je −1, Glas bleibt 100, storageFull', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
-    w.stock = { ...w.stock, glass: 100, stone: 5, wood: 5 };
+    home(w).stock = { ...home(w).stock, glass: 100, stone: 5, wood: 5 };
     run(w, 50);
-    expect([w.stock.stone, w.stock.wood, w.stock.glass]).toEqual([4, 4, 100]);
+    expect([home(w).stock.stone, home(w).stock.wood, home(w).stock.glass]).toEqual([4, 4, 100]);
     expect(gw.state).toBe('storageFull');
   });
 
   it('AK-S2-07 Abriss im Zyklus: Rückerstattung 150 / 10 / 3 / 5, Inputs des Zyklus verloren', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
-    w.stock = { ...w.stock, stone: 3, wood: 3, tools: 0 };
+    home(w).stock = { ...home(w).stock, stone: 3, wood: 3, tools: 0 };
     run(w, 25);
     expect(gw.progress).toBe(25);
-    expect([w.stock.stone, w.stock.wood]).toEqual([2, 2]);
+    expect([home(w).stock.stone, home(w).stock.wood]).toEqual([2, 2]);
     const m0 = w.money;
     expect(demolish(w, gw.id).ok).toBe(true);
     expect(w.money - m0).toBe(150);
-    expect([w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([12, 3, 7]);
+    expect([home(w).stock.wood, home(w).stock.tools, home(w).stock.stone]).toEqual([12, 3, 7]);
   });
 
   it('AK-S2-08 Brand bei progress 20: −300 Geld, Glas 4 statt 8, Entnahmen 4 statt 8, progress 0 statt 20', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
-    w.stock = { ...w.stock, stone: 50, wood: 50 };
+    home(w).stock = { ...home(w).stock, stone: 50, wood: 50 };
     gw.progress = 20;
     const twin = clone(w);
     beginCrisis(w, 0, { kind: 'fire', tile: { x: gw.x, y: gw.y } });
@@ -140,21 +141,27 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
     run(twin, 400);
     expect(w.tick).toBe(1400);
     expect(w.money - twin.money).toBe(-300);
-    expect([w.stock.glass, 50 - w.stock.stone, 50 - w.stock.wood, gw.progress]).toEqual([
-      4, 4, 4, 0,
-    ]);
+    expect([
+      home(w).stock.glass,
+      50 - home(w).stock.stone,
+      50 - home(w).stock.wood,
+      gw.progress,
+    ]).toEqual([4, 4, 4, 0]);
     const tg = twin.buildings[gw.id]!;
-    expect([twin.stock.glass, 50 - twin.stock.stone, 50 - twin.stock.wood, tg.progress]).toEqual([
-      8, 8, 8, 20,
-    ]);
+    expect([
+      home(twin).stock.glass,
+      50 - home(twin).stock.stone,
+      50 - home(twin).stock.wood,
+      tg.progress,
+    ]).toEqual([8, 8, 8, 20]);
   });
 
   it('AK-S2-09 Sturm: Glashütte unberührt, Holzfäller liefert die Hälfte (M11 S3)', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10);
     const lj = direct(w, 'lumberjack', 13);
-    w.tiles[idx(w, 14, 5)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
-    w.stock = { ...w.stock, stone: 50, wood: 50 };
+    home(w).tiles[idx(home(w), 14, 5)]!.terrain = 'forest'; // M11 S3: Holzfäller braucht freien Wald
+    home(w).stock = { ...home(w).stock, stone: 50, wood: 50 };
     w.crisisLevel = 'normal';
     w.tick = 2400;
     const twin = clone(w);
@@ -165,15 +172,15 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
       x.buildings[gw.id]!.progress = 0;
       x.buildings[lj.id]!.progress = 0;
     }
-    const s0 = { ...w.stock };
-    const t0 = { ...twin.stock };
+    const s0 = { ...home(w).stock };
+    const t0 = { ...home(twin).stock };
     run(w, 300);
     run(twin, 300);
-    expect(w.stock.glass - s0.glass).toBe(6);
-    expect(twin.stock.glass - t0.glass).toBe(6);
+    expect(home(w).stock.glass - s0.glass).toBe(6);
+    expect(home(twin).stock.glass - t0.glass).toBe(6);
     // Holz: Zugang des Holzfällers minus 6 Einheiten für die Glashütte
-    expect(w.stock.wood - s0.wood + 6).toBe(5);
-    expect(twin.stock.wood - t0.wood + 6).toBe(10);
+    expect(home(w).stock.wood - s0.wood + 6).toBe(5);
+    expect(home(twin).stock.wood - t0.wood + 6).toBe(10);
   });
 
   it('AK-S2-16 goodsBalance: Glas produced 2, Stein consumed 2, Holz consumed 2 je 100 Ticks', () => {
@@ -188,23 +195,23 @@ describe('M8 Zwei-Input-Produktion (Spec 5.3)', () => {
   it('RF-2 nicht angebundene Glashütte mit vollem Lager: notConnected, nichts entnommen', () => {
     const w = base();
     const gw = direct(w, 'glassworks', 10, false);
-    w.stock = { ...w.stock, stone: 100, wood: 100 };
+    home(w).stock = { ...home(w).stock, stone: 100, wood: 100 };
     run(w, 100);
     expect(gw.state).toBe('notConnected');
-    expect([w.stock.stone, w.stock.wood, w.stock.glass]).toEqual([100, 100, 0]);
+    expect([home(w).stock.stone, home(w).stock.wood, home(w).stock.glass]).toEqual([100, 100, 0]);
   });
 });
 
 describe('M8 Glas im Handel, in Aufträgen und Booms (Spec 5.1, 5.4)', () => {
   it('AK-S2-11 Glas-Verkauf: 10 Glas +191, sellPct 90; im Boom +286', () => {
     const w = base();
-    w.stock.glass = 10;
+    home(w).stock.glass = 10;
     const m0 = w.money;
     expect(sell(w, 'glass', 10).ok).toBe(true);
     expect(w.money - m0).toBe(191);
     expect(w.sellPct.glass).toBe(90);
     const b = base();
-    b.stock.glass = 10;
+    home(b).stock.glass = 10;
     b.crisisLevel = 'normal';
     b.tick = 2400;
     beginCrisis(b, 0, { kind: 'boom', good: 'glass' });
@@ -220,11 +227,11 @@ describe('M8 Glas im Handel, in Aufträgen und Booms (Spec 5.1, 5.4)', () => {
     const w = base();
     w.tick = 1500;
     w.order = { period: 1, good: 'glass', amount: 8, reward: 296, due: 2100 };
-    w.stock.glass = 8;
+    home(w).stock.glass = 8;
     const m0 = w.money;
     expect(deliverOrder(w).ok).toBe(true);
     expect(w.money - m0).toBe(296);
-    expect(w.stock.glass).toBe(0);
+    expect(home(w).stock.glass).toBe(0);
   });
 
   it('AK-S2-13 Stufe 4: Pool mit 8 Gütern, Glas zuletzt; über k 0 … 199 (Seed 3) kommt Glas vor', () => {
@@ -272,7 +279,7 @@ describe('M8 Glas im Handel, in Aufträgen und Booms (Spec 5.1, 5.4)', () => {
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
     const delivered = clone(w);
-    delivered.stock.glass = 6;
+    home(delivered).stock.glass = 6;
     expect(deliverOrder(delivered).ok).toBe(true);
     while (w.tick < 2100) step(w);
     expect(w.order).toMatchObject({ good: 'glass', due: 2100 });

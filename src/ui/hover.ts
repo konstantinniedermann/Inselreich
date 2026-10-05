@@ -9,7 +9,7 @@ import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel } from '../sim/townhall';
 import { buildingShown, functionLock } from '../sim/unlocks';
-import { adjacentOf, center, inBounds } from '../sim/world';
+import { HOME, home, adjacentOf, center, inBounds } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
@@ -180,7 +180,7 @@ function buildingInfo(world: World, b: Building): HoverInfo {
 /** Gebäude, für die ein Geländetyp taugt (nur angezeigte, Spec 13.2), in Bauleisten-Reihenfolge. */
 function goodFor(world: World, x: number, y: number, terrain: Terrain): string {
   const shown = (id: BuildingDefId): boolean => buildingShown(world, id);
-  const supplied = inSupplyRange(world, x + 0.5, y + 0.5);
+  const supplied = inSupplyRange(world, HOME, x + 0.5, y + 0.5);
   const ids = new Set<BuildingDefId>();
   if (terrain === 'forest') ids.add('lumberjack');
   if (terrain === 'grass')
@@ -188,8 +188,8 @@ function goodFor(world: World, x: number, y: number, terrain: Terrain): string {
   if (terrain === 'sand') ids.add('house');
   if (terrain === 'grass' || terrain === 'sand') {
     if (
-      adjacentOf(world, x, y, 1, 1).some(
-        (p) => world.tiles[p.y * world.width + p.x]!.terrain === 'water',
+      adjacentOf(home(world), x, y, 1, 1).some(
+        (p) => home(world).tiles[p.y * home(world).width + p.x]!.terrain === 'water',
       )
     )
       ids.add('fisher');
@@ -204,7 +204,7 @@ function goodFor(world: World, x: number, y: number, terrain: Terrain): string {
 }
 
 function terrainInfo(world: World, x: number, y: number): HoverInfo {
-  const tile = world.tiles[y * world.width + x]!;
+  const tile = home(world).tiles[y * home(world).width + x]!;
   const lines: string[] = [];
   const good = goodFor(world, x, y, tile.terrain);
   if (good) lines.push(good);
@@ -212,7 +212,7 @@ function terrainInfo(world: World, x: number, y: number): HoverInfo {
     if (tile.terrain === 'forest') lines.push(`Roden: ${costLine(CLEAR_FOREST_COST)}`);
     else if (tile.terrain === 'grass') lines.push(`Aufforsten: ${costLine(PLANT_FOREST_COST)}`);
   }
-  if (tile.terrain !== 'water' && !inSupplyRange(world, x + 0.5, y + 0.5))
+  if (tile.terrain !== 'water' && !inSupplyRange(world, HOME, x + 0.5, y + 0.5))
     lines.push('Ausserhalb der Versorgung');
   return { title: TERRAIN_TITLES[tile.terrain], lines };
 }
@@ -237,8 +237,8 @@ export function hoverInfo(
       );
     return { title: 'Händlerschiff', lines };
   }
-  if (!inBounds(world, tile.x, tile.y)) return null;
-  const t = world.tiles[tile.y * world.width + tile.x]!;
+  if (!inBounds(home(world), tile.x, tile.y)) return null;
+  const t = home(world).tiles[tile.y * home(world).width + tile.x]!;
   const b = t.buildingId === null ? undefined : world.buildings[t.buildingId];
   if (b) return buildingInfo(world, b);
   if (t.road) return { title: 'Weg', lines: ['Verbindet Betriebe mit dem Kontor'] };

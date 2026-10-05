@@ -11,7 +11,7 @@ import { reachableRoads } from '../../src/sim/roads';
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice } from '../../src/sim/trade';
 import type { Building, BuildingDefId, Cost, World } from '../../src/sim/types';
-import { adjacentOf, buildingsOfType, center, idx } from '../../src/sim/world';
+import { adjacentOf, buildingsOfType, center, idx, home } from '../../src/sim/world';
 import { CONTROL_INTERVAL, control, type Layout } from './controller';
 
 /** Grenze aus Spec 16.3: `wonMerchants` bis zu diesem Tick. */
@@ -74,7 +74,7 @@ export function citizenEndState(w: World): boolean {
 
 /** Erweiterungswege (Spec 16.3): Spalten kx+2 und kx+5, je ky−1 … ky−9 und ky+1 … ky+9. */
 export function extensionRoads(w: World): Slot[] {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const out: Slot[] = [];
   for (const dx of [2, 5])
     for (let dy = 1; dy <= 9; dy++) out.push([k.x + dx, k.y - dy], [k.x + dx, k.y + dy]);
@@ -83,8 +83,8 @@ export function extensionRoads(w: World): Slot[] {
 
 /** Merkmal „Erweiterung angelegt": Weg auf der ersten Erweiterungskachel. */
 function hasExtension(w: World): boolean {
-  const k = w.buildings[w.kontorId]!;
-  return w.tiles[idx(w, k.x + 2, k.y - 1)]!.road;
+  const k = w.buildings[home(w).kontorId]!;
+  return home(w).tiles[idx(home(w), k.x + 2, k.y - 1)]!.road;
 }
 
 /** Phase 3: nach dem Sieg und entweder im Bürger-Endzustand oder mit angelegter Erweiterung (bleibt nach dem ersten Aufstieg). */
@@ -95,7 +95,7 @@ export function merchantPhase(w: World): boolean {
 /** Legt fehlende Erweiterungswege an; false, wenn das Geld (mit Reserve) nicht reicht. */
 function ensureExtension(w: World): boolean {
   for (const [x, y] of extensionRoads(w)) {
-    if (w.tiles[idx(w, x, y)]!.road) continue;
+    if (home(w).tiles[idx(home(w), x, y)]!.road) continue;
     if (w.money - ROAD_COST < RESERVE) return false;
     expect(placeRoad(w, x, y).ok, `Weg ${x},${y}`).toBe(true);
   }
@@ -111,13 +111,14 @@ function freeSlot(
   defId: BuildingDefId,
   accept: (x: number, y: number) => boolean = () => true,
 ): Slot {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const def = BUILDING_DEFS[defId];
   const roads = reachableRoads(w);
   for (let y = k.y - 9; y <= k.y + 9; y++)
     for (let x = k.x + 1; x <= k.x + 19; x++) {
       if (!canPlace(w, defId, x, y).ok || !accept(x, y)) continue;
-      if (adjacentOf(w, x, y, def.w, def.h).some((p) => roads.has(idx(w, p.x, p.y)))) return [x, y];
+      if (adjacentOf(home(w), x, y, def.w, def.h).some((p) => roads.has(idx(home(w), p.x, p.y))))
+        return [x, y];
     }
   throw new Error(`kein freier Erweiterungsplatz für ${defId}`);
 }
@@ -136,7 +137,7 @@ function bathCovers(w: World, x: number, y: number): boolean {
 /** Kauft fehlendes Holz, Werkzeug und Stein für `cost`; nur wenn danach `cost.money` + RESERVE bleiben. */
 function buyFor(w: World, cost: Cost): boolean {
   const goods = ['wood', 'tools', 'stone'] as const;
-  const missing = goods.map((g) => [g, Math.max(0, cost[g] - w.stock[g])] as const);
+  const missing = goods.map((g) => [g, Math.max(0, cost[g] - home(w).stock[g])] as const);
   const price = missing.reduce((sum, [g, n]) => sum + buyPrice(g, n), 0);
   if (w.money - price - cost.money < RESERVE) return false;
   for (const [g, n] of missing) if (n > 0) expect(buy(w, g, n).ok).toBe(true);
@@ -155,7 +156,7 @@ function build(w: World, defId: BuildingDefId, slot: Slot): boolean {
 function feedGlassworks(w: World): void {
   const want = FEED_PER_WORKS * count(w, 'glassworks');
   for (const g of ['stone', 'wood'] as const) {
-    const n = want - w.stock[g];
+    const n = want - home(w).stock[g];
     if (n > 0 && w.money - buyPrice(g, n) >= RESERVE) expect(buy(w, g, n).ok).toBe(true);
   }
 }
@@ -204,7 +205,7 @@ function prepareUpgrade(w: World): void {
   const base = TIERS[3].upgradeCost!;
   const cost = { ...base, stone: base.stone + count(w, 'glassworks') };
   if (!buyFor(w, cost)) return;
-  if (w.stock.glass < 1 && w.money - buyPrice('glass', 1) - cost.money >= RESERVE)
+  if (home(w).stock.glass < 1 && w.money - buyPrice('glass', 1) - cost.money >= RESERVE)
     expect(buy(w, 'glass', 1).ok).toBe(true);
 }
 

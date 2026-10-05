@@ -13,7 +13,7 @@ import { step } from '../../src/sim/tick';
 import { effectiveTaxLevel, townhallActive } from '../../src/sim/townhall';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
 import { nextUnlocks } from '../../src/sim/unlocks';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { forceRect, placeService, placeTownhall, prepareEast, village } from './helpers';
 
 const placeRoadOk = (w: World, x: number, y: number): boolean => placeRoad(w, x, y).ok;
@@ -61,7 +61,7 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
   it('AK-S2-02 höchstens eine Amtsstube, auch wenn die erste brennt oder unverbunden ist; nach Abriss wieder baubar', () => {
     const w = createWorld(3, { unlockAll: true });
     const t = placeTownhall(w);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 3, k.y + 3, 2, 2, 'grass');
     const second = { ok: false, reason: 'Es gibt schon eine Amtsstube' };
     expect(canPlace(w, 'townhall', k.x + 3, k.y + 3)).toEqual(second);
@@ -81,7 +81,7 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
     t.outageUntil = w.tick + 10;
     expect(townhallActive(w)).toBe(false);
     t.outageUntil = undefined;
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect(removeRoad(w, k.x, k.y + 2).ok).toBe(true);
     expect(townhallActive(w)).toBe(false);
   });
@@ -110,7 +110,7 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
     expect(setTaxLevel(w, 'high')).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
     expect(keep()).toEqual(s0);
     const t = placeTownhall(w);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect(removeRoad(w, k.x, k.y + 2).ok).toBe(true);
     expect(setTaxLevel(w, 'high')).toEqual({ ok: false, reason: 'Amtsstube wirkt nicht' });
     expect(keep()).toEqual(s0);
@@ -174,23 +174,23 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
   it('AK-S2-08 Sperre in consume: kein Stoff, halbe Steuer 28, nach Tick 101 Stoff 50 und 6 EW; nach Abriss wieder Entnahme', () => {
     const { w, houses } = village(1, { unlockAll: true });
     const h = houses[0]!;
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     placeService(w, 'chapel', k.x + 8, k.y - 2);
     const t = placeTownhall(w);
     fill(w, h, 2, 8);
-    w.stock.food = 50;
-    w.stock.cloth = 50;
+    home(w).stock.food = 50;
+    home(w).stock.cloth = 50;
     expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
     w.tick = 0;
     step(w);
     expect(h.house!.satisfied.cloth).toBe(false);
     expect(w.stats.taxes).toBe(28);
     while (w.tick < 101) step(w);
-    expect(w.stock.cloth).toBe(50);
+    expect(home(w).stock.cloth).toBe(50);
     expect(h.house!.inhabitants).toBe(6);
     expect(demolish(w, t.id).ok).toBe(true);
     for (let i = 0; i < 60; i++) step(w);
-    expect(w.stock.cloth).toBeLessThan(50);
+    expect(home(w).stock.cloth).toBeLessThan(50);
     expect(w.goodLocks).toEqual([{ tier: 2, good: 'cloth' }]);
   });
   it('AK-S2-09 Sperre eines neuen Bedarfsguts blockiert den Aufstieg; Sperre eines alten nicht', () => {
@@ -198,7 +198,7 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
     const h = houses[0]!;
     placeTownhall(w);
     fill(w, h, 1, 4);
-    w.stock.cloth = 10;
+    home(w).stock.cloth = 10;
     w.money = 10_000;
     expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
     expect(upgradeStatus(w, h).reasons).toContain('Stoff für Siedler gesperrt');
@@ -213,7 +213,7 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
       fill(w, houses[0]!, 2, 8);
       fill(w, houses[1]!, 3, 15);
       for (const b of houses) b.house!.demand.cloth = 1;
-      w.stock.cloth = 1;
+      home(w).stock.cloth = 1;
       if (locked) expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
       step(w);
       return {
@@ -227,21 +227,21 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
   // Alle Fälle in createWorld(3, { unlockAll: true }): die Bedingung gilt auch bei „Alles frei" (Delta R163 B-2)
   const setup = (): { w: World; tm: Building } => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     prepareEast(w, k);
     w.money = 100_000;
     expect(placeRoadOk(w, k.x + 2, k.y)).toBe(true);
     forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
     const r = placeBuilding(w, 'toolmaker', k.x + 3, k.y);
     if (!r.ok || r.id === undefined) throw new Error('Werkzeugmacher');
-    w.stock.wood = 10;
-    w.stock.tools = 0;
+    home(w).stock.wood = 10;
+    home(w).stock.tools = 0;
     return { w, tm: w.buildings[r.id]! };
   };
   it('AK-S2-11 Werkzeugmacher braucht Schule in Reichweite; progress bleibt; Unterhalt läuft; unlockAll ohne Schule', () => {
     const a = setup();
     for (let i = 0; i < 100; i++) step(a.w);
-    expect([a.tm.state, a.tm.progress, a.w.stock.wood, a.w.stock.tools]).toEqual([
+    expect([a.tm.state, a.tm.progress, home(a.w).stock.wood, home(a.w).stock.tools]).toEqual([
       'noService',
       0,
       10,
@@ -250,38 +250,38 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
     expect(a.w.stats.upkeep).toBeGreaterThanOrEqual(25);
     // Schule mit Mittenabstand genau 10 (dx 10, dy 0): Werkzeugmacher-Mitte (kx+4, ky+1) → Schule-Mitte (kx+14, ky+1)
     const b = setup();
-    const sb = b.w.buildings[b.w.kontorId]!;
+    const sb = b.w.buildings[home(b.w).kontorId]!;
     placeService(b.w, 'school', sb.x + 13, sb.y);
     for (let i = 0; i < 80; i++) step(b.w);
-    expect([b.w.stock.tools, b.w.stock.wood]).toEqual([1, 9]);
+    expect([home(b.w).stock.tools, home(b.w).stock.wood]).toEqual([1, 9]);
     const c = setup();
-    const sc = c.w.buildings[c.w.kontorId]!;
+    const sc = c.w.buildings[home(c.w).kontorId]!;
     placeService(c.w, 'school', sc.x + 14, sc.y); // Mittenabstand 11
     for (let i = 0; i < 100; i++) step(c.w);
     expect(c.tm.state).toBe('noService');
   });
   it('AK-S2-11 Schule brennt, unverbunden oder abgerissen → noService; progress bleibt; nach Neubau weiter ab 40', () => {
     const fire = setup();
-    const fk = fire.w.buildings[fire.w.kontorId]!;
+    const fk = fire.w.buildings[home(fire.w).kontorId]!;
     placeService(fire.w, 'school', fk.x + 13, fk.y).outageUntil = 10_000;
     for (let i = 0; i < 100; i++) step(fire.w);
     expect(fire.tm.state).toBe('noService');
     const unc = setup();
-    const uk = unc.w.buildings[unc.w.kontorId]!;
+    const uk = unc.w.buildings[home(unc.w).kontorId]!;
     placeService(unc.w, 'school', uk.x + 13, uk.y).connected = false;
     for (let i = 0; i < 100; i++) step(unc.w);
     expect(unc.tm.state).toBe('noService');
     const dem = setup();
-    const dk = dem.w.buildings[dem.w.kontorId]!;
+    const dk = dem.w.buildings[home(dem.w).kontorId]!;
     const s = placeService(dem.w, 'school', dk.x + 13, dk.y);
     while (dem.tm.progress < 40) step(dem.w);
     expect(demolish(dem.w, s.id).ok).toBe(true);
     for (let i = 0; i < 100; i++) step(dem.w);
     expect(dem.tm.progress).toBe(40);
-    const tools = dem.w.stock.tools;
+    const tools = home(dem.w).stock.tools;
     placeService(dem.w, 'school', dk.x + 13, dk.y);
     for (let i = 0; i < 40; i++) step(dem.w);
-    expect(dem.w.stock.tools).toBe(tools + 1);
+    expect(home(dem.w).stock.tools).toBe(tools + 1);
   });
 });
 
@@ -302,7 +302,7 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
   it('AK-S2-13 Aufstiegsstopp (K1): angehalten nur mit aktiver Amtsstube; Gründe (M11 S10)', () => {
     const { w, houses } = village(1, { unlockAll: true });
     expect(setUpgradeStop(w, 1, true)).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     placeService(w, 'chapel', k.x - 2, k.y + 2); // am Weg der Amtsstube: angebunden, in Reichweite
     const t = placeTownhall(w);
     expect(setUpgradeStop(w, 4, true)).toEqual({ ok: false, reason: 'Ungültige Stufe' });
@@ -310,7 +310,7 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     expect(w.upgradeStops).toEqual([1]);
     fill(w, houses[0]!, 1, 4);
     w.money = 10_000;
-    w.stock = { ...w.stock, cloth: 10, wood: 50, tools: 50, stone: 50 };
+    home(w).stock = { ...home(w).stock, cloth: 10, wood: 50, tools: 50, stone: 50 };
     expect(upgradeStatus(w, houses[0]!).reasons[0]).toBe('Aufstieg in der Amtsstube angehalten');
     w.tick = 49;
     step(w);
@@ -322,7 +322,7 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     const w = createWorld(3, { unlockAll: true });
     placeTownhall(w);
     w.money = 1000;
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 3, 1, 1, 'forest');
     expect(clearForest(w, k.x + 6, k.y + 3).ok).toBe(true);
     expect(plantForest(w, k.x + 6, k.y + 3).ok).toBe(true);
@@ -339,19 +339,19 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     const { w, houses } = village(1, { unlockAll: true });
     const t = placeTownhall(w);
     fill(w, houses[0]!, 2, 8);
-    w.stock.cloth = 50;
-    w.stock.food = 50;
+    home(w).stock.cloth = 50;
+    home(w).stock.food = 50;
     expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
     w.taxLevel = 'high';
     t.outageUntil = w.tick + 1000;
     houses[0]!.house!.demand.cloth = 1;
     step(w);
-    expect(w.stock.cloth).toBe(49);
+    expect(home(w).stock.cloth).toBe(49);
     expect(effectiveTaxLevel(w)).toBe('normal');
     t.outageUntil = undefined;
     houses[0]!.house!.demand.cloth = 1;
     step(w);
-    expect(w.stock.cloth).toBe(49);
+    expect(home(w).stock.cloth).toBe(49);
     expect(effectiveTaxLevel(w)).toBe('high');
     expect([w.goodLocks, w.taxLevel]).toEqual([[{ tier: 2, good: 'cloth' }], 'high']);
   });

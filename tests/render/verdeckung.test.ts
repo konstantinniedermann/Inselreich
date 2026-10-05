@@ -23,7 +23,7 @@ import {
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { houseDiagnosis } from '../../src/sim/queries';
 import type { Building, World } from '../../src/sim/types';
-import { tileAt } from '../../src/sim/world';
+import { home, tileAt } from '../../src/sim/world';
 import { VERDECKUNG, verdeckung } from '../sim/scenarios-iso';
 import { SCENARIOS } from '../sim/scenarios';
 import { fakeCtx, inHull, type P } from './fakeCtx';
@@ -33,7 +33,7 @@ const VIEW = { w: 1280, h: 800 };
 const layer = { width: 64 * 32, height: 64 * 32 } as unknown as HTMLCanvasElement;
 let world: World;
 const at = (p: { x: number; y: number }): Building => {
-  const id = tileAt(world, p.x, p.y)?.buildingId;
+  const id = tileAt(home(world), p.x, p.y)?.buildingId;
   if (id == null) throw new Error(`kein Gebäude bei ${p.x},${p.y}`);
   return world.buildings[id]!;
 };
@@ -45,7 +45,7 @@ const key = (b: Building): number => {
 const cameraOnH = (): Camera => {
   const h = at(VERDECKUNG.H);
   const cam: Camera = { x: 0, y: 0, zoom: 1 };
-  centerOn(cam, h.x + 0.5, h.y + 0.5, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, h.x + 0.5, h.y + 0.5, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 const trees = (): TreeItem[] =>
@@ -110,7 +110,7 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
     for (let dy = -1; dy <= 1; dy++)
       for (let dx = -1; dx <= 1; dx++) {
         if (dx === 0 && dy === 0) continue;
-        const t = tileAt(world, L2.x + dx, L2.y + dy)!;
+        const t = tileAt(home(world), L2.x + dx, L2.y + dy)!;
         expect(t.buildingId, `Nachbar ${dx},${dy}`).toBeNull();
         expect(t.terrain).not.toBe('forest');
       }

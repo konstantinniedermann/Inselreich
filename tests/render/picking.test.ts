@@ -3,7 +3,7 @@ import { bodyHull, buildingHulls, pickBuilding, type Hull } from '../../src/rend
 import { SILHOUETTES, bodyPolygons } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { BuildingDef, BuildingDefId, Building, Tier, World } from '../../src/sim/types';
-import { tileAt } from '../../src/sim/world';
+import { home, tileAt } from '../../src/sim/world';
 import { VERDECKUNG, verdeckung } from '../sim/scenarios-iso';
 import { inHull, type P } from './fakeCtx';
 
@@ -12,7 +12,7 @@ let world: World;
 let chapel: Building;
 beforeAll(() => {
   world = verdeckung();
-  const id = tileAt(world, VERDECKUNG.C.x, VERDECKUNG.C.y)?.buildingId;
+  const id = tileAt(home(world), VERDECKUNG.C.x, VERDECKUNG.C.y)?.buildingId;
   if (id == null) throw new Error('keine Kapelle im Szenario');
   chapel = world.buildings[id]!;
 });
@@ -94,6 +94,7 @@ describe('bodyPolygons für alle Typen (R113)', () => {
     connected: true,
     progress: 1,
     state: 'ok',
+    island: 0,
     ...(tier
       ? {
           house: {

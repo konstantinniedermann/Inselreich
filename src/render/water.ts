@@ -1,9 +1,10 @@
+import { home } from '../sim/world';
 import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
 import type { Weather } from './daynight';
 import { CLEAR } from './weather';
-import { coastField, coastValue, terrainFields } from './terrainField';
+import { coastField, coastValue, fieldWorld, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
 export const FOAM_PERIOD_MS = 3200; // Spec 5.2: Periode des Schaumsaums
@@ -49,8 +50,9 @@ const cache = new WeakMap<World, WaterInfo>();
  * auf einem Raster von 1/CELLS Kachel, nur in Kacheln mit Landkontakt. Die Normale kommt aus dem Gefälle von F.
  */
 function contour(world: World, depth: Float32Array, start: Int32Array): number[] {
-  const { width: w, height: h } = world;
-  const fields = terrainFields(world);
+  const isl = home(world);
+  const { width: w, height: h } = isl;
+  const fields = terrainFields(fieldWorld(world));
   const flat: number[] = [];
   const normal = (x: number, y: number): [number, number] => {
     const gx = coastValue(fields, x + GRAD_H, y) - coastValue(fields, x - GRAD_H, y);
@@ -68,8 +70,8 @@ function contour(world: World, depth: Float32Array, start: Int32Array): number[]
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       start[i] = flat.length / SEG;
-      if (Math.abs(depth[i]!) > 1.5 && world.tiles[i]!.terrain === 'water') continue;
-      if (world.tiles[i]!.terrain !== 'water' && !touchesWater(world, x, y)) continue;
+      if (Math.abs(depth[i]!) > 1.5 && isl.tiles[i]!.terrain === 'water') continue;
+      if (isl.tiles[i]!.terrain !== 'water' && !touchesWater(world, x, y)) continue;
       for (let j = 0; j <= CELLS; j++)
         for (let k = 0; k <= CELLS; k++)
           F[j * (CELLS + 1) + k] = coastValue(fields, x + k / CELLS, y + j / CELLS);
@@ -136,12 +138,13 @@ function contour(world: World, depth: Float32Array, start: Int32Array): number[]
 }
 
 function touchesWater(world: World, x: number, y: number): boolean {
+  const isl = home(world);
   for (let dy = -1; dy <= 1; dy++)
     for (let dx = -1; dx <= 1; dx++) {
       const nx = x + dx,
         ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= world.width || ny >= world.height) continue;
-      if (world.tiles[ny * world.width + nx]!.terrain === 'water') return true;
+      if (nx < 0 || ny < 0 || nx >= isl.width || ny >= isl.height) continue;
+      if (isl.tiles[ny * isl.width + nx]!.terrain === 'water') return true;
     }
   return false;
 }
@@ -149,8 +152,9 @@ function touchesWater(world: World, x: number, y: number): boolean {
 function infoFor(world: World): WaterInfo {
   const hit = cache.get(world);
   if (hit) return hit;
-  const { width: w, height: h, seed } = world;
-  const field = coastField(world);
+  const { width: w, height: h } = home(world);
+  const { seed } = world;
+  const field = coastField(fieldWorld(world));
   const n = w * h;
   const depth = new Float32Array(n);
   const phase = new Float32Array(n);
@@ -185,7 +189,8 @@ export function drawWaves(
   reduce = false,
 ): void {
   const info = infoFor(world);
-  const { width: w, height: h } = world;
+  const isl = home(world);
+  const { width: w, height: h } = isl;
   const x0 = Math.max(0, range.x0),
     x1 = Math.min(w - 1, range.x1),
     y0 = Math.max(0, range.y0),
@@ -243,7 +248,7 @@ export function drawWaves(
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
       const i = y * w + x;
-      if (world.tiles[i]!.terrain !== 'water' || info.depth[i]! < WAVE_MIN_DEPTH) continue;
+      if (isl.tiles[i]!.terrain !== 'water' || info.depth[i]! < WAVE_MIN_DEPTH) continue;
       const ph = info.phase[i]!;
       const wy = y + info.lift[i]! + Math.sin(t + ph) * WAVE_AMPLITUDE * ampK;
       ctx.moveTo(x + 0.2 - ext, wy);

@@ -8,7 +8,7 @@ import { citizens, populationByTier, serviceAvailable } from '../../src/sim/popu
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice, sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, Cost, GoodId, Tier, World } from '../../src/sim/types';
-import { buildingsOfType } from '../../src/sim/world';
+import { buildingsOfType, home } from '../../src/sim/world';
 import { forceRect } from './helpers';
 
 /** Obergrenze der Spielzeit, in der 50 Bürger erreicht sein müssen (Kurz-Spec Balancing). */
@@ -71,7 +71,7 @@ const NO_COST: Cost = { money: 0, wood: 0, tools: 0, stone: 0 };
  * Betriebe, eine Wasserspalte für die Fischer, ein Waldstreifen für Holzfäller.
  */
 function forceTerrain(w: World): void {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const kx = k.x;
   const ky = k.y;
   forceRect(w, kx + 2, ky - 9, 18, 19, 'grass');
@@ -82,7 +82,7 @@ function forceTerrain(w: World): void {
 
 /** Alle Bauplätze und Wege aus der Kontor-Lage; ändert die Welt nicht (auch nach dem Laden nutzbar). */
 export function layoutFor(w: World): Layout {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const kx = k.x;
   const ky = k.y;
   const roads: Slot[] = [];
@@ -163,7 +163,7 @@ function upgradeReserve(w: World): Cost {
     if (!cost || next === tier) continue;
     if (!TIERS[next].services.every((s) => serviceAvailable(w, b, s))) continue;
     const newNeeds = Object.keys(TIERS[next].needs).filter((g) => !(g in TIERS[tier].needs));
-    if (newNeeds.every((g) => w.stock[g as GoodId] >= 1)) return cost;
+    if (newNeeds.every((g) => home(w).stock[g as GoodId] >= 1)) return cost;
   }
   return NO_COST;
 }
@@ -175,7 +175,9 @@ function upgradeReserve(w: World): Cost {
 function buyMissing(w: World, cost: Cost, keep = RESERVE): boolean {
   const reserve = upgradeReserve(w);
   const goods = ['wood', 'tools', 'stone'] as const;
-  const missing = goods.map((g) => [g, Math.max(0, cost[g] + reserve[g] - w.stock[g])] as const);
+  const missing = goods.map(
+    (g) => [g, Math.max(0, cost[g] + reserve[g] - home(w).stock[g])] as const,
+  );
   const price = missing.reduce((sum, [g, n]) => sum + buyPrice(g, n), 0);
   if (w.money - price - cost.money - reserve.money < keep) return false;
   for (const [g, n] of missing) if (n > 0) expect(buy(w, g, n).ok).toBe(true);
@@ -195,7 +197,8 @@ function fullPrice(cost: Cost): number {
 /** Verkauft Fertigwaren und Holz ab `SURPLUS_AT` zurück auf `SURPLUS_KEEP`. */
 function sellSurplus(w: World): void {
   for (const g of SURPLUS_GOODS)
-    if (w.stock[g] >= SURPLUS_AT) expect(sell(w, g, w.stock[g] - SURPLUS_KEEP).ok).toBe(true);
+    if (home(w).stock[g] >= SURPLUS_AT)
+      expect(sell(w, g, home(w).stock[g] - SURPLUS_KEEP).ok).toBe(true);
 }
 
 /** Baut `defId` auf dem ersten passenden freien Platz; false, wenn das Geld (noch) nicht reicht. */
