@@ -184,3 +184,64 @@ function sortKeys(v: unknown): unknown {
 export function sortedJson(v: unknown): string {
   return JSON.stringify(sortKeys(v));
 }
+
+const V6_KEYS = [
+  'version',
+  'seed',
+  'width',
+  'height',
+  'tick',
+  'tiles',
+  'buildings',
+  'nextBuildingId',
+  'kontorId',
+  'stock',
+  'money',
+  'stats',
+  'won',
+  'wonMerchants',
+  'taxLevel',
+  'taxLockedUntil',
+  'sellPct',
+  'order',
+  'crisisLevel',
+  'crisis',
+  'unlocked',
+  'goodLocks',
+  'upgradeStops',
+  'taxCarry',
+  'upkeepCarry',
+] as const;
+const ISLAND_KEYS = ['width', 'height', 'tiles', 'kontorId', 'stock'] as const;
+
+/**
+ * Formt ein v7-JSON-Objekt mit genau einer Insel in die v6-Form zurück (Anhang 01 E): v6-Schlüsselreihenfolge,
+ * je Gebäude ohne `island`. Unbekannte Schlüssel oder mehr als eine Insel → Fehler im Test.
+ */
+export function foldBackToV6(v7: Record<string, unknown>): Record<string, unknown> {
+  const islands = v7.islands as Record<string, unknown>[];
+  if (!Array.isArray(islands) || islands.length !== 1)
+    throw new Error('foldBackToV6: genau eine Insel erwartet');
+  const isl = islands[0]!;
+  const flat: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(v7)) if (k !== 'islands') flat[k] = v;
+  for (const k of Object.keys(isl)) {
+    if (!(ISLAND_KEYS as readonly string[]).includes(k))
+      throw new Error(`foldBackToV6: unbekannter Inselschlüssel ${k}`);
+    flat[k] = isl[k];
+  }
+  for (const k of Object.keys(flat))
+    if (!(V6_KEYS as readonly string[]).includes(k))
+      throw new Error(`foldBackToV6: unbekannter Schlüssel ${k}`);
+  const out: Record<string, unknown> = {};
+  for (const k of V6_KEYS) if (k in flat) out[k] = flat[k];
+  out.version = 6;
+  const buildings: Record<string, unknown> = {};
+  for (const [id, b] of Object.entries(out.buildings as Record<string, Record<string, unknown>>)) {
+    const c = { ...b };
+    delete c.island;
+    buildings[id] = c;
+  }
+  out.buildings = buildings;
+  return out;
+}
