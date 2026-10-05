@@ -9,6 +9,9 @@ import {
   foothillRise,
   groundHeight,
   paintPixels,
+  patchGrid,
+  terrainCodes,
+  terrainPatchRect,
 } from '../../src/render/terrain';
 
 // H-R13 — Vorberge und Gebirgsfuss (Stilrahmen D6, S6): stetiges Nähefeld statt Kachel-Gate.
@@ -181,3 +184,48 @@ describe('H-R13 Vorberge', () => {
     expect(checked).toBeGreaterThan(0);
   });
 });
+
+describe('H-R13 Teil-Neuzeichnung', () => {
+  it('H-R13 patchGrid am Gebirgsfuss ergibt für scree/tint/shade/tone dasselbe Raster wie der Vollaufbau; Pixel im Rechteck gleich', () => {
+    for (const seed of [14, 1]) {
+      const w = createWorld(seed, { unlockAll: true });
+      // Wiesenkachel mit Gebirge in 1–2 Kacheln Abstand, die bebaubar ist (Roden/Aufforsten: Gras → Wald)
+      let tx = -1,
+        ty = -1;
+      for (let y = 2; y < w.height - 2 && tx < 0; y++)
+        for (let x = 2; x < w.width - 2 && tx < 0; x++)
+          if (terr(w, x, y) === 'grass' && mdist(w, x, y) <= 2 && mdist(w, x, y) >= 1)
+            [tx, ty] = [x, y];
+      expect(tx, `Seed ${seed}`).toBeGreaterThanOrEqual(0);
+      const fields = terrainFields(w);
+      const grid = buildGrid(w, fields);
+      const prev = terrainCodes(w);
+      w.tiles[ty * w.width + tx]!.terrain = 'forest';
+      const next = terrainCodes(w);
+      const rect = terrainPatchRect(prev, next, w.width, w.height)!;
+      // Rechteck vorher verderben: ohne Abgleich im Patch bliebe es falsch
+      const k = TEX / 4;
+      for (const f of ['scree', 'tint', 'shade', 'tone'] as const)
+        for (let j = rect.y0 * k; j <= (rect.y1 + 1) * k; j++)
+          for (let i = rect.x0 * k; i <= (rect.x1 + 1) * k; i++) grid[f][j * grid.nx + i] = 9;
+      patchGrid(w, fields, grid, prev, next, rect);
+      const full = buildGrid(w);
+      for (const f of ['scree', 'tint', 'shade', 'tone'] as const)
+        expect(firstDiff(grid[f], full[f]), `Seed ${seed} ${f}`).toBe(-1);
+      const x0 = rect.x0 * TEX,
+        y0 = rect.y0 * TEX,
+        pw = (rect.x1 - rect.x0 + 1) * TEX,
+        ph = (rect.y1 - rect.y0 + 1) * TEX;
+      expect(
+        firstDiff(paintPixels(grid, 1, x0, y0, pw, ph), paintPixels(full, 1, x0, y0, pw, ph)),
+        `Seed ${seed} Pixel`,
+      ).toBe(-1);
+    }
+  }, 30000);
+});
+
+const firstDiff = (a: ArrayLike<number>, b: ArrayLike<number>): number => {
+  if (a.length !== b.length) return 0;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return i;
+  return -1;
+};
