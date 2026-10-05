@@ -1875,3 +1875,16 @@ damit ist M0 des Seefahrt-Bündels erfüllt (E1-T02 OK + H-I007 in `feat/m12-e1`
 einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C1 · ADR: —
+
+## R247 · 2026-10-05 · Gate Merge M12-E0 (Etappen-Merge)
+
+Ruling: Gate Merge für die Etappe E0 **OK** (`feat/m12-e0` @ 21ac49b). Auslegung: M12 merged etappenweise (R228:
+Save-Versionen je Etappe, Merge-Reihenfolge main → E0 → E1 → Seefahrt-Bündel); das Gate je Etappe ersetzt das eine
+Meilenstein-Gate, das Final-Review auf opus über die ganze Etappen-Branch ist Pflicht und liegt vor (lead-qa, R245).
+Prüffragen: `make check`/`CI=true make check` grün (1720 Tests); Final-Review ohne ZURÜCK, BEDENKEN behoben bzw. in
+R245 geregelt; Delta-Merge REL-04 mit Review OK; ADR-013, arc42, `docs/index.md` nachgeführt, README ohne
+Bedienänderung; Commit-Konvention eingehalten. Risiko R-4 (Pages-Rollback nach v7-Autosave) akzeptiert. Merge durch
+den Integrator, danach CI und Pages. Parallel startet **E1 C2** auf Basis E0 @ 21ac49b. — Kosten bei Irrtum: Revert
+des Merge-Commits; v7-Autosaves wären dann im alten Build unladbar.
+
+Entscheider: L0 · Anlass: Berichte lead-tech M12-E0 C3, Final-Review lead-qa · ADR: ADR-013
