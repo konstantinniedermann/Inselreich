@@ -1,4 +1,13 @@
 import { hash2, valueNoise } from '../sim/noise';
+import {
+  DUNE_BLUR,
+  DUNE_PRES_BLUR,
+  DUNE_REACH,
+  duneFine,
+  duneNode,
+  duneOnset,
+  type DuneNode,
+} from './dunes';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
 import type { World } from '../sim/types';
@@ -38,8 +47,6 @@ const HOLLOW_FROM = 0; // ab dieser Abdunklung (hier: jeder) wird …
 const HOLLOW_SHARE = 0.6; // … dieser Anteil der weiteren Abdunklung zum kühlen Farbton statt dunkler
 const RELIEF_GAIN = 0.6; // Helligkeit je Höhengefälle des Mikroreliefs (R3: verdoppelt, Hangbeleuchtung sichtbar)
 const HILL_AMP = 2.1; // Höhe der Wiesenkuppen (Merkmale ~0,23 und ~0,5 je Kachel, 2 Oktaven)
-const DUNE_AMP = 1.3; // Höhe der Dünenrücken auf trockenem Sand (R3: weniger Fläche, dafür lesbar)
-const DUNE_RAMP = 0.5; // Küstenwert-Breite (Kacheln), über die die Dünen hinter dem nassen Saum einsetzen
 // H-R9 B3: Wiesenfarbe — Stärke der Mischungen (Anteile 0..1 bei Feldwert ±1)
 const WARM_ON = 0.55; // H-R9 R4: Warm-/Kühlton erst ab |Feld| > 0,55 (rund 30 % der Wiese je Seite höchstens)
 const WARM_MAX = 0.25; // warm/trocken: Mischung zu Strohgrün (R3: weniger, sonst wirkt die Wiese ausgeblichen)
@@ -85,7 +92,6 @@ const ROT_PATCH = 1.07,
   ROT_HILL = 0.33,
   ROT_RELIEF = 0.77,
   ROT_RELIEF2 = 1.31,
-  ROT_DUNE2 = 0.41,
   ROT_MOTTLE = 0.93,
   ROT_WARM = 0.6,
   ROT_PATCH2 = 2.17;
@@ -202,7 +208,9 @@ export function dirtyRect(
  * (1 Kachel) plus Rauschverschiebung `WARP`, dazu der Höhen-Weichzeichner (zwei Durchgänge Radius `HEIGHT_BLUR` Knoten)
  * und ein Knoten fürs Gefälle. Aufgerundet.
  */
-export const SMOOTH_BORDER = Math.ceil(1 + WARP + (2 * HEIGHT_BLUR + 1) * (RASTER / TEX));
+export const SMOOTH_BORDER = Math.ceil(
+  1 + WARP + Math.max(2 * HEIGHT_BLUR + 1, DUNE_REACH) * (RASTER / TEX),
+);
 
 /** Geländeart je Kachel (0 Wasser, 1 + Index in `LAND`); das Abbild, an dem die Teil-Neuzeichnung Wechsel erkennt. */
 export function terrainCodes(world: Pick<World, 'width' | 'height' | 'tiles'>): Uint8Array {
@@ -298,6 +306,10 @@ export interface TerrainGrid {
   warm: Float32Array;
   /** H-R9: feines gedrehtes Mottling −1…1. */
   mottle: Float32Array;
+  /** H-R12b: Dünenton 0…4 vor der Stufung, Präsenz 0…1 und Phase (rad) je Knoten; siehe `dunes.ts`. */
+  dune: Float32Array;
+  dpres: Float32Array;
+  dphase: Float32Array;
   /** H-R9: Blumenschleier 0…1 (dieselbe Verteilung wie `flowersFor`). */
   veil: Float32Array;
   cls: Uint8Array; // 0 Wasser, 1 + Index in LAND
@@ -347,34 +359,8 @@ export function groundToneAt(seed: number, fx: number, fy: number): number {
   return toneOf(hx, hy, groundMicro(seed, fx, fy));
 }
 
-/** H-R9 B2 (R3): Dünenmaske 0…1 — etwa die Hälfte des trockenen Strands bleibt ohne Dünen. */
-export const duneMask = (seed: number, fx: number, fy: number): number =>
-  smoothstepClamp((rotNoise(seed + 111, fx, fy, 0.1, ROT_RELIEF) - 0.515) * 5);
-/**
- * H-R9 B2 (R3): ungewichteter Dünenrücken 0…1 — einzelne gestreckte Kuppen statt durchgehender Bänder: Richtung
- * (±0,55 rad) und Wellenlänge (Faktor 0,7–1,3) variieren tieffrequent, die Rücken setzen längs aus (Hüllkurve) und
- * nur etwa die Hälfte des trockenen Strands trägt überhaupt Dünen (Maske).
- */
-export function duneRidge(seed: number, fx: number, fy: number): number {
-  const mask = duneMask(seed, fx, fy);
-  if (mask <= 0) return 0;
-  // Richtung π/4 ± 0,55 rad: auf dem Bild waagrecht ± 30°, nie entlang der Kachelachsen (0 bzw. π/2)
-  const ang = Math.PI / 4 + 1.1 * (rotNoise(seed + 110, fx, fy, 0.12, ROT_RELIEF) - 0.5);
-  const q = 0.7 + 0.6 * rotNoise(seed + 112, fx, fy, 0.07, ROT_RELIEF2);
-  const c = Math.cos(ang),
-    sn = Math.sin(ang);
-  const u = c * fx - sn * fy,
-    v = sn * fx + c * fy;
-  // längs kurze Kuppen (≈ 3 Kacheln), je Rücken versetzt
-  const env = smoothstepClamp((valueNoise(seed + 109, u * 0.33, v * 0.28 * q) - 0.45) * 4);
-  const crest = 1 - Math.abs(2 * valueNoise(seed + 107, u * 0.12, v * 0.5 * q + ROT_DUNE2) - 1);
-  return mask * env * crest * crest;
-}
-/** H-R9 B2: Dünengewicht nach Küstenwert: 0 am nassen Saum (< WET_SAND), voll DUNE_RAMP Kacheln dahinter. */
-export const duneWeight = (smooth: number): number =>
-  smoothstepClamp((smooth - WET_SAND) / DUNE_RAMP);
-/** Höhe der Wiesenkuppen bzw. Dünenrücken (Faktoren auf `meadowHill`/`duneRidge`, für Tests). */
-export const RELIEF_AMP = { hill: HILL_AMP, dune: DUNE_AMP } as const;
+/** Höhe der Wiesenkuppen (Faktor auf `meadowHill`, für Tests). */
+export const RELIEF_AMP = { hill: HILL_AMP } as const;
 
 /** Separabler Box-Weichzeichner mit Radius `r` (Knoten), Ränder geklemmt; `tmp` gleich gross wie `f`. */
 function boxBlur(f: Float32Array, nx: number, ny: number, r: number, tmp: Float32Array): void {
@@ -438,9 +424,10 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     mottle = new Float32Array(n),
     veil = new Float32Array(n),
     gwArr = new Float32Array(n),
-    swArr = new Float32Array(n),
     hillRaw = new Float32Array(n), // ungewichtet: das Gewicht darf selbst kein Gefälle erzeugen
-    duneRaw = new Float32Array(n),
+    dune = new Float32Array(n).fill(GROUND_FLAT),
+    dpres = new Float32Array(n),
+    dphase = new Float32Array(n),
     height = new Float32Array(n),
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
     cls = new Uint8Array(n);
@@ -494,7 +481,6 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       }
       // H-R9 B1/B2: Mikrorelief nur auf Gras (Kuppen) und trockenem Sand (Dünen); Wald, Fels, nasser Saum bleiben 0
       const gw = cls[k] === 0 ? 0 : ind[gr]![k]!;
-      const sw = cls[k] === 0 ? 0 : ind[sa]![k]! * duneWeight(smooth[k]!);
       // H-R11: Bodenhöhe etwas weiter ins Wasser, damit der Tonwert am Ufer keinen Sprung durch fehlende Nachbarn hat
       if (smooth[k]! > -1.5) {
         groundH[k] = groundHeight(seed, fx, fy);
@@ -502,7 +488,6 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
       }
       if (smooth[k]! > -0.5) {
         hillRaw[k] = meadowHill(seed, fx, fy);
-        duneRaw[k] = duneRidge(seed, fx, fy);
       }
       const hill = hillRaw[k]!;
       if (gw > 0) {
@@ -522,7 +507,6 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         veil[k] = flowerVeil(seed, fx, fy);
       }
       gwArr[k] = gw;
-      swArr[k] = sw;
       footH[k] =
         FOOT_HEIGHT * foot + HILL_HEIGHT * foot * rotNoise(seed + 29, fx, fy, 0.9, ROT_HILL);
       height[k] =
@@ -538,6 +522,38 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
   boxBlur(height, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
   boxBlur(footH, nx, ny, HEIGHT_BLUR, tmp);
+  // H-R12b M3: Küstenwert und Sandanteil nur geglättet in die Dünen (Wirkradius ≈ 1 Kachel, zwei Durchgänge)
+  let anySand = false;
+  for (let k = 0; k < n && !anySand; k++) anySand = cls[k] === sa + 1;
+  const sBlur = new Float32Array(smooth),
+    sandBlur = new Float32Array(ind[sa]!);
+  if (anySand) {
+    for (const f of [sBlur, sandBlur]) {
+      boxBlur(f, nx, ny, DUNE_BLUR, tmp);
+      boxBlur(f, nx, ny, DUNE_BLUR, tmp);
+    }
+  }
+  const dn: DuneNode = { tone: GROUND_FLAT, pres: 0, phase: 0 };
+  const done = new Uint8Array(anySand ? n : 0);
+  const evalDune = (i: number, j: number, kk: number, withPres: boolean): void => {
+    const il = Math.max(0, i - 1),
+      ir = Math.min(nx - 1, i + 1),
+      ju = Math.max(0, j - 1),
+      jd = Math.min(ny - 1, j + 1);
+    duneNode(
+      seed,
+      (win.i0 + i) * step,
+      (win.j0 + j) * step,
+      sBlur[kk]! - WET_SAND,
+      sandBlur[kk]!,
+      (sBlur[j * nx + ir]! - sBlur[j * nx + il]!) / ((ir - il) * step),
+      (sBlur[jd * nx + i]! - sBlur[ju * nx + i]!) / ((jd - ju) * step),
+      dn,
+    );
+    dune[kk] = dn.tone;
+    if (withPres) dpres[kk] = dn.pres;
+    dphase[kk] = dn.phase;
+  };
   // Relief: Gefälle von h gegen die Lichtrichtung (links oben im Kachelraum)
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -567,17 +583,46 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
         (groundH[jd * nx + i]! - groundH[ju * nx + i]!) / ((jd - ju) * step),
         groundM[j * nx + i]!,
       );
-      const dx = (duneRaw[j * nx + ir]! - duneRaw[j * nx + il]!) / ((ir - il) * step);
-      const dy = (duneRaw[jd * nx + i]! - duneRaw[ju * nx + i]!) / ((jd - ju) * step);
-      sh +=
-        -(
-          gwArr[j * nx + i]! * HILL_AMP * (hx * LIGHT.x + hy * LIGHT.y) +
-          swArr[j * nx + i]! * DUNE_AMP * (dx * LIGHT.x + dy * LIGHT.y)
-        ) * RELIEF_GAIN;
+      sh += -(gwArr[j * nx + i]! * HILL_AMP * (hx * LIGHT.x + hy * LIGHT.y)) * RELIEF_GAIN;
+      // H-R12b: Dünen nur auf Sandknoten im Dünenband; Ton, Präsenz und Phase aus dem geglätteten Küstenwert
+      const kk = j * nx + i;
+      if (anySand && sandBlur[kk]! > 0 && sBlur[kk]! > WET_SAND) {
+        evalDune(i, j, kk, true);
+        done[kk] = 1;
+      }
       const cap =
         c0 === mt + 1 ? SHADE_MAX_MOUNTAIN : c0 === FOREST + 1 ? SHADE_MAX : SHADE_MAX_FLUR;
       shade[j * nx + i] = Math.max(-cap, Math.min(cap, sh));
     }
+  if (anySand) {
+    // M1: Präsenz ≤ 0,15 je Knoten (ein Durchgang Radius DUNE_PRES_BLUR), danach der Einsatz hinter dem nassen Saum
+    boxBlur(dpres, nx, ny, DUNE_PRES_BLUR, tmp);
+    for (let k = 0; k < n; k++) {
+      if (dpres[k]! <= 0) {
+        dpres[k] = 0; // die Weichzeichnung lässt winzige negative Reste (Laufsumme)
+        continue;
+      }
+      const rel = sBlur[k]! - WET_SAND;
+      dpres[k] = dpres[k]! * duneOnset(rel);
+      // die Weichzeichnung trägt Präsenz an Knoten ohne eigenen Dünenton: nachrechnen (stetiger Ton, M1)
+      if (dpres[k]! > 0 && !done[k]) {
+        evalDune(k % nx, (k / nx) | 0, k, false);
+        done[k] = 1;
+      }
+    }
+    // ein Knoten Rand um die Präsenz: der Ton läuft stetig bis auf Präsenz 0 aus (M1)
+    for (let k = 0; k < n; k++) {
+      if (done[k]) continue;
+      const i = k % nx;
+      if (
+        (i > 0 && dpres[k - 1]! > 0) ||
+        (i < nx - 1 && dpres[k + 1]! > 0) ||
+        (k >= nx && dpres[k - nx]! > 0) ||
+        (k < n - nx && dpres[k + nx]! > 0)
+      )
+        evalDune(i, (k / nx) | 0, k, false);
+    }
+  }
   return {
     seed,
     nx,
@@ -594,6 +639,9 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     mfoot,
     mottle,
     veil,
+    dune,
+    dpres,
+    dphase,
     cls,
   };
 }
@@ -749,7 +797,7 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, tone, cls } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, cls, dune, dpres, dphase } = g;
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const col = [0, 0, 0],
     tc = [0, 0, 0];
@@ -870,6 +918,36 @@ export function paintPixels(
           col[0] = col[0]! * gm;
           col[1] = col[1]! * gm;
           col[2] = col[2]! * gm;
+        }
+        // H-R12b: Dünen auf Sand. Stufung je Pixel nach der Interpolation; die Präsenz skaliert nur den Kontrast.
+        const wSand = pure ? (c0 - 1 === SAND ? 1 : 0) : wt[SAND]! / wSum;
+        const pD = wSand > 0 ? wSand * lerp(dpres) : 0;
+        if (pD > 0.004) {
+          const tA = dune[a]!,
+            tB = dune[b]!,
+            tC = dune[c]!,
+            tD = dune[d]!;
+          const gxT = (tB - tA) * (1 - ty) + (tD - tC) * ty,
+            gyT = (tC - tA) * (1 - tx) + (tD - tB) * tx;
+          const hw = toneHalfWidth(Math.sqrt(gxT * gxT + gyT * gyT) * gradScale, GROUND_EDGE_PX);
+          const tPix = tA * w00 + tB * w10 + tC * w01 + tD * w11;
+          const t = tPix + duneFine(lerp(dphase), tPix, grain);
+          const e = Math.max(-1.5, Math.min(1, toneStep(t, hw) - GROUND_FLAT));
+          if (e < 0) {
+            const k = -e * pD;
+            const m = 1 - TONE_DARK_MUL * k;
+            col[0] = col[0]! * m;
+            col[1] = col[1]! * m;
+            col[2] = col[2]! * m;
+            mix3(col, TONE_COOL, TONE_COOL_MIX * k, col);
+          } else if (e > 0) {
+            const k = e * pD;
+            const m = 1 + TONE_LIGHT_MUL * k;
+            col[0] = col[0]! * m;
+            col[1] = col[1]! * m;
+            col[2] = col[2]! * m;
+            mix3(col, LIGHT_COLORS.warm, TONE_WARM_MIX * k, col);
+          }
         }
       }
       const o = (py * w + px) * 4;
@@ -1082,7 +1160,7 @@ export function patchGrid(
   }
   if (coastChanged) fields.coast = coastField(world);
   const k = TEX / RASTER; // Knoten je Kachel
-  const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
+  const margin = Math.max(2 * HEIGHT_BLUR + 1, DUNE_REACH); // Reichweite von Weichzeichner und Gefälle in Knoten
   const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
   const win = {
     i0: Math.max(0, inner.i0 - margin),
@@ -1108,6 +1186,9 @@ export function patchGrid(
     'warm',
     'mottle',
     'veil',
+    'dune',
+    'dpres',
+    'dphase',
   ] as const)
     copy(g[f], part[f]);
   copy(g.cls, part.cls);
