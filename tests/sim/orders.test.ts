@@ -2,12 +2,19 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../../src/sim/defs/timing';
-import { deliverOrder, nextOrderTick, orderForPeriod, tickOrders } from '../../src/sim/orders';
+import {
+  deliverOrder,
+  nextOrderTick,
+  orderForPeriod,
+  orderPool,
+  tickOrders,
+} from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Tier, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
+import { ORDER_PINS, SEE_SEEDS } from './seePins';
 
 let w: World;
 
@@ -220,5 +227,20 @@ describe('M12 E2 Aufträge je Insel (AK-E2-05, AK-E2-14)', () => {
     const before = serialize(s);
     expect(deliverOrder(s, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
     expect(serialize(s)).toBe(before);
+  });
+});
+
+describe('AK-E3-04 Gewürz ist kein Auftrags- und Boomgut', () => {
+  it('orderPool für Stufe 0 … 4 enthält nie spice', () => {
+    for (const t of [0, 1, 2, 3, 4] as Tier[]) expect(orderPool(t)).not.toContain('spice');
+  });
+  it('orderForPeriod für SEE_SEEDS × k 0 … 19 bleibt gleich ORDER_PINS', () => {
+    for (const seed of SEE_SEEDS)
+      expect(
+        Array.from({ length: 20 }, (_, k) => {
+          const o = orderForPeriod(seed, k, 4);
+          return [o.good, o.amount];
+        }),
+      ).toEqual(ORDER_PINS[seed]);
   });
 });
