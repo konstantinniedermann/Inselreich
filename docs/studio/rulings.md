@@ -2054,3 +2054,13 @@ Bis dahin tragen Briefings unter dem Regelblock die Zeile „Spielstand: R260 �
 — Kosten bei Irrtum: Migrationen für betroffene Versionen nachbauen.
 
 Entscheider: Nutzer, ausgelegt durch L0 · Anlass: Nutzernachricht · ADR: —
+
+## R261 · 2026-10-05 · Verfassung 1.2: Spielstände ohne Rückwärtskompatibilität
+
+Ruling: Nutzer hat per `VERFASSUNG ÄNDERN` freigegeben (N-96). Feste Regel §3 lautet jetzt: „Save-Format versionieren;
+ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz;
+Test für das Abweisen." Verfassung 1.2; der wörtlich kopierte Regelblock in `templates/briefing.md` ist nachgeführt;
+die Zusatzzeile aus R260 entfällt. Sonst keine Änderung an der Verfassung. — Kosten bei Irrtum: Nutzer stellt den
+alten Wortlaut wieder her.
+
+Entscheider: Nutzer, umgesetzt durch L0 · Anlass: N-96 · ADR: —

@@ -1,7 +1,7 @@
 # Verfassung des Inselreich-Studios
 
-Version: 1.1 · Stand: 2026-09-30 · Status: in Kraft, bestätigt durch den Nutzer (Warteschlange
-N-001, mit den Änderungen aus Ruling R67)
+Version: 1.2 · Stand: 2026-10-05 · Status: in Kraft, bestätigt durch den Nutzer (Warteschlange
+N-001, mit den Änderungen aus Ruling R67; §3 Spielstände geändert durch den Nutzer, N-96, R261)
 
 Diese Verfassung enthält die Regeln des Nutzers. Das Team (Projektleiter, Leads, Stabsstellen,
 Arbeiter) wendet sie an, ändert sie aber nie. Alles andere regelt das veränderbare Handbuch
@@ -38,7 +38,7 @@ Diesen Block kopiert jede Delegation wörtlich ins Briefing:
 Feste Regeln (unverändert, gelten immer):
 - Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
-- Save-Format versionieren und migrieren, mit Test für alte Spielstände.
+- Save-Format versionieren; ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz; Test für das Abweisen.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
 - Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
 ```

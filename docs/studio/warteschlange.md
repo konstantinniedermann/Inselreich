@@ -104,7 +104,7 @@ schliesst den Eintrag.
 - Von: l0
 - Antwort: Nutzer 2026-10-05: überlässt solche Entscheide L0; L0 entscheidet Ja (Empfehlung), R260
 
-## N-96 · offen · 2026-10-05 · Verfassung §3: Spielstände ohne Rückwärtskompatibilität (Wortlaut)
+## N-96 · beantwortet · 2026-10-05 · Verfassung §3: Spielstände ohne Rückwärtskompatibilität (Wortlaut)
 
 - Frage: Du hast entschieden: Spielstände müssen künftig nicht rückwärtskompatibel sein. Die Verfassung (§3, feste Regel 'Save-Format versionieren und migrieren, mit Test für alte Spielstände') ist schreibgeschützt; nur du gibst sie frei. Neuer Wortlaut: 'Save-Format versionieren; ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz; Test für das Abweisen.'
 - Empfehlung: In einem eigenen Prompt 'VERFASSUNG ÄNDERN' schreiben; L0 setzt dann genau diesen Wortlaut (Version 1.2) und zieht Briefing-Vorlage nach.
@@ -112,4 +112,4 @@ schliesst den Eintrag.
 - Kosten des Wartens: Keine: Dein Entscheid gilt ab sofort per Ruling R260; nur der Verfassungstext und der wörtlich kopierte Regelblock in Briefings bleiben bis dahin veraltet.
 - Blockiert: nichts
 - Von: l0
-- Antwort: –
+- Antwort: Nutzer 2026-10-05: VERFASSUNG ÄNDERN; Wortlaut gesetzt, Verfassung 1.2 (R261)
