@@ -201,8 +201,9 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
     expect(t(['U0', 'U2', 'U3', 'U4', 'U5'], ['U0', 'U2', 'U3', 'U4', 'U5', 'U6'])).toBe(
       UNLOCK_NOTICE,
     );
+    // R230 B1: neuer Wortlaut mit Seefahrt und Gewürz-Bedarf.
     expect(UNLOCK_NOTICE).toBe(
-      'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
+      'Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln',
     );
     expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
       `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
