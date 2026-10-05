@@ -2,11 +2,12 @@
 
 Antwort jedes Agenten an seine Auftraggeber-Ebene. Höchstens 15 Zeilen; Details stehen in Dateien,
 der Bericht nennt die Pfade. Die Zeile „Aufwand" ist eine Selbstangabe (Schätzung); die
-gemessenen Werte (Dauer, Tool-Aufrufe, Tokens) liefert das Dashboard.
+gemessenen Werte (Dauer, Tool-Aufrufe, Tokens) liefert das Dashboard. Rulings trifft nur L0; Leads
+und Arbeiter schreiben „Einschätzung“ oder „Empfehlung“, nie „Ruling“ (R233 (3)).
 
 ```text
 Ergebnis: <was erreicht ist, mit Pfaden/Commits>
-Entscheidungsbedarf: <Frage> — Empfehlung: <Option und warum> (oder „keiner")
+Entscheidungsbedarf: <Frage> — Empfehlung bzw. Einschätzung: <Option und warum> (oder „keiner")
 Risiken: <was schiefgehen kann> (oder „keine bekannten")
 Befunde ausserhalb Scope: <eingetragen in docs/beobachtungen.md: Titel> (oder „keine")
 Budget: <verbraucht>/<frei> Starts, Parallelität max <k> (Arbeiter: „—")

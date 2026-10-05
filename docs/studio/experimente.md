@@ -65,8 +65,8 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Messgrösse: 0 lokale Flackerfälle in `docs/beobachtungen.md` und Lead-Berichten in 2 Sessions (Ausgang ≥ 5 Fälle in 3 Sessions).
 - Zeitraum: die nächsten 2 Sessions.
 - Rückfall: `vitest`-Konfiguration und `make check` auf den Stand vor der Änderung.
-- Dateien: `vite.config.ts`, `Makefile`
-- Ruling: –
+- Dateien: `vite.config.ts`, `Makefile` (Paket TOOL-E030, lead-tech); `docs/studio/STUDIO.md` (Lastregel, Handbuch 1.19)
+- Ruling: R249 (3), R250 — angenommen, wartet auf Platz (3 laufend, Verfassung §10); Start nach Bewertung von E-027 oder E-028
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 

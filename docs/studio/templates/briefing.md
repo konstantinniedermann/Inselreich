@@ -2,7 +2,8 @@
 
 Für jede Delegation (L0 → L1, L1 → L2). Die Kopfzeilen stehen ganz oben im Prompt, weil die
 Telemetrie die ersten 400 Zeichen liest. Hauptgrösse der Schätzung sind die Werkzeugaufrufe; die
-Kopfzeile nennt die verwendete Zeile aus `metriken/richtwerte.md` (Experiment E-001). Regeln: [STUDIO.md](../STUDIO.md), „Briefing-Standard".
+Kopfzeile nennt die verwendete Zeile aus `metriken/richtwerte.md` (Experiment E-001). Regeln: [STUDIO.md](../STUDIO.md), „Briefing-Standard";
+dort auch die Pflichtzeilen je Auftragsart (Persona-Änderung, Messauftrag, Hotfix, CI-Prüfung, Integrator).
 Der Block „Feste Regeln" steht wörtlich so in [VERFASSUNG.md §3](../VERFASSUNG.md#3-feste-regeln)
 und wird unverändert kopiert.
 
