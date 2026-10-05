@@ -1199,6 +1199,8 @@ export function patchGrid(
     'tone',
     'patch',
     'mfoot',
+    'scree',
+    'tint',
     'warm',
     'mottle',
     'veil',
