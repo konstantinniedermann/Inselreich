@@ -1,8 +1,9 @@
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld, idx, home } from '../../src/sim/world';
-import type { Building, CrisisLevel, Tier, World } from '../../src/sim/types';
+import { center, createWorld, footprint, idx, home } from '../../src/sim/world';
+import { GOOD_IDS } from '../../src/sim/defs/goods';
+import type { Building, BuildingDefId, CrisisLevel, Tier, World } from '../../src/sim/types';
 
 /** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
 export function prepareEast(world: World, kontor: Building): void {
@@ -245,4 +246,57 @@ export function foldBackToV6(v7: Record<string, unknown>): Record<string, unknow
   }
   out.buildings = buildings;
   return out;
+}
+
+/**
+ * Testwelt mit zwei Inseln (Anhang 01 F), nur im Speicher, nie gespeichert: Insel 1 = Kopie der Heimat-Kacheln
+ * ohne Belegung und Wege, eigenes Kontor auf derselben Position (neue Id, `island 1`), Lager 0 ausser
+ * Holz und Werkzeug je 50.
+ */
+export function twoIslandWorld(): World {
+  const w = createWorld(3, { unlockAll: true });
+  const h = home(w);
+  const k0 = w.buildings[h.kontorId]!;
+  const tiles = h.tiles.map((t) => ({ ...t, buildingId: null as number | null, road: false }));
+  const stock = Object.fromEntries(
+    GOOD_IDS.map((g) => [g, 0]),
+  ) as World['islands'][number]['stock'];
+  stock.wood = 50;
+  stock.tools = 50;
+  const id = w.nextBuildingId++;
+  w.islands.push({ width: h.width, height: h.height, tiles, kontorId: id, stock });
+  w.buildings[id] = {
+    id,
+    defId: 'kontor',
+    x: k0.x,
+    y: k0.y,
+    connected: true,
+    progress: 0,
+    state: 'ok',
+    island: 1,
+  };
+  for (const p of footprint(BUILDING_DEFS.kontor, k0.x, k0.y))
+    tiles[idx(h, p.x, p.y)]!.buildingId = id;
+  return w;
+}
+
+/** Setzt ein Gebäude direkt auf `island` (ohne Platzierungsprüfung, Geld und Lager unberührt); angebunden. */
+export function putBuilding(
+  world: World,
+  island: number,
+  defId: BuildingDefId,
+  x: number,
+  y: number,
+): Building {
+  const isl = world.islands[island]!;
+  const id = world.nextBuildingId++;
+  const b: Building = { id, defId, x, y, connected: true, progress: 0, state: 'ok', island };
+  if (defId === 'house') b.house = newHouseState(world);
+  world.buildings[id] = b;
+  for (const p of footprint(BUILDING_DEFS[defId], x, y)) {
+    const t = isl.tiles[idx(isl, p.x, p.y)]!;
+    t.terrain = 'grass';
+    t.buildingId = id;
+  }
+  return b;
 }
