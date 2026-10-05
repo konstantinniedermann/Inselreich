@@ -1,5 +1,6 @@
 // archipel.ts — Archipel-Mathematik (Spec M12 Anhang 02 D/F). Darstellungswerte, keine Spielwerte; rein, ohne Weltzugriff.
-import type { Island } from '../sim/types';
+import { HOME } from '../sim/world';
+import type { Island, World } from '../sim/types';
 import { screenToTileF, type Camera, type TileRect, type View } from './camera';
 import { H_TOWER, project } from './iso';
 
@@ -101,4 +102,29 @@ export function cameraBounds(
     x1: r.x1 + CAMERA_MARGIN,
     y1: r.y1 + CAMERA_MARGIN,
   };
+}
+
+/** Detailstufe ab Zoom ≤ 0,25: keine Figuren, Tiere, Wellen, Rauch; Boden aus der Viertel-Kopie (lead-art B5). */
+export const LOD_ZOOM = 0.25;
+
+const views = new WeakMap<World, Map<number, World>>();
+
+/**
+ * Insel `i` als Welt mit einer Insel (nur lesend, Gebäude ab E2). Die Heimat ist die Welt selbst. Alles andere
+ * (Tick, Wetter-Basis, Zähler) folgt der Welt über die Prototypkette; die Ansicht wird nie beschrieben.
+ */
+export function islandView(world: World, i: number): World {
+  if (i === HOME) return world;
+  let m = views.get(world);
+  if (!m) views.set(world, (m = new Map()));
+  let v = m.get(i);
+  if (!v || v.islands[0] !== world.islands[i]) {
+    v = Object.create(world, {
+      islands: { value: [world.islands[i]!] },
+      buildings: { value: {} },
+      seed: { value: (world.seed ^ Math.imul(i, 0x9e3779b1)) >>> 0 }, // Bildvariante, kein Sim-Zug
+    }) as World;
+    m.set(i, v);
+  }
+  return v;
 }

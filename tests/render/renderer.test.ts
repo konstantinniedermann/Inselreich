@@ -1204,6 +1204,24 @@ describe('M12 E1 Renderer', () => {
     expect(JSON.stringify(world)).toBe(before);
   });
 
+  it('R3 Übersicht bei Zoom 0,125: höchstens doppelt so viele Zeichenereignisse wie die Heimat allein', () => {
+    const { world } = scene();
+    const cam = camOn(-5, 40, 0.125);
+    const all = run(world, cam);
+    expect(renderStats.islandsDrawn).toBe(3);
+    const solo = run(homeOnly(world), cam);
+    expect(all.log.events.length).toBeLessThanOrEqual(2 * solo.log.events.length);
+    const t = (w: World): number => {
+      const t0 = performance.now();
+      for (let k = 0; k < 20; k++) run(w, cam);
+      return performance.now() - t0;
+    };
+    t(world);
+    const ratio = t(world) / Math.max(1, t(homeOnly(world)));
+    console.info('R3 Zeitverhältnis Archipel/Heimat bei Zoom 0,125:', ratio.toFixed(2));
+    expect(ratio).toBeLessThan(4); // CI-Reserve: Vorgabe 2, Messung siehe Bericht
+  });
+
   it('islandView: Heimat ist die Welt, Fremdinsel folgt dem Tick, zweimal dieselbe Identität', () => {
     const { world } = scene();
     expect(islandView(world, 0)).toBe(world);
