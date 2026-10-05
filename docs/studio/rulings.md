@@ -1749,3 +1749,13 @@ Briefings mit CI-Prüfung nennen Lauf-ID und Workflow-Namen (CI ≠ Pages). Drit
 R233 durch studio-coach. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Ad-hoc-Retro CI rot, CI-Lauf 37295831843 · ADR: —
+
+## R237 · 2026-10-05 · Session-Fokus Spielinhalte
+
+Ruling: Nutzerauftrag „weiter, Fokus auf Spielinhalte" heisst: Vorrang für Arbeit, die das Spiel inhaltlich erweitert —
+M12 „Weite Welt" (E0 C2 → C3, danach E1 und Plan Seefahrt-Bündel) und Ideen-Runde IDEEN-03. Prozessarbeit (Handbuch-
+Umsetzung R233/R236 durch studio-coach) und Technik ohne Spielwirkung (REL-04-Kandidat paintPixels-Performance) ruhen
+in dieser Session; Pflicht-Retros und Session-Ende-Routine bleiben. Budget E0 neu geloggt (Session-Wechsel). — Kosten
+bei Irrtum: Handbuch-Nachführung eine Session später.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
