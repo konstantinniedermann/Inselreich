@@ -94,12 +94,22 @@ schliesst den Eintrag.
 - Von: studio-director
 - Antwort: Verboten lassen (Nutzer 2026-10-04)
 
-## N-95 · offen · 2026-10-05 · Spielstand-Feld ohne neue Versionsnummer (Fest in der Kapelle)
+## N-95 · beantwortet · 2026-10-05 · Spielstand-Feld ohne neue Versionsnummer (Fest in der Kapelle)
 
 - Frage: Darf ein neues optionales Feld im Spielstand (Fest-Zeitpunkt an der Kapelle) ohne neue Save-Versionsnummer kommen? Die Verfassung sagt 'Save-Format versionieren und migrieren, mit Test für alte Spielstände'.
 - Empfehlung: Ja: alte Spielstände laden nachweislich (Test), ungültige Werte werden abgewiesen; eine neue Nummer hätte eine leere Migration und kollidiert mit M12 (v7).
 - Begründung: Auslegung einer festen Verfassungsregel ohne Präzedenz (R240 D-140)
 - Kosten des Wartens: Keine: Arbeit läuft; bei Nein vor REL-04 Versionswechsel nachziehen (~1 Paket)
 - Blockiert: nichts (Release REL-04 erst danach endgültig)
+- Von: l0
+- Antwort: Nutzer 2026-10-05: überlässt solche Entscheide L0; L0 entscheidet Ja (Empfehlung), R260
+
+## N-96 · offen · 2026-10-05 · Verfassung §3: Spielstände ohne Rückwärtskompatibilität (Wortlaut)
+
+- Frage: Du hast entschieden: Spielstände müssen künftig nicht rückwärtskompatibel sein. Die Verfassung (§3, feste Regel 'Save-Format versionieren und migrieren, mit Test für alte Spielstände') ist schreibgeschützt; nur du gibst sie frei. Neuer Wortlaut: 'Save-Format versionieren; ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz; Test für das Abweisen.'
+- Empfehlung: In einem eigenen Prompt 'VERFASSUNG ÄNDERN' schreiben; L0 setzt dann genau diesen Wortlaut (Version 1.2) und zieht Briefing-Vorlage nach.
+- Begründung: Nur der Nutzer ändert die Verfassung (§1.2/§1.3, Guard-Hook).
+- Kosten des Wartens: Keine: Dein Entscheid gilt ab sofort per Ruling R260; nur der Verfassungstext und der wörtlich kopierte Regelblock in Briefings bleiben bis dahin veraltet.
+- Blockiert: nichts
 - Von: l0
 - Antwort: –

@@ -2039,3 +2039,18 @@ Code-Änderung; Ergebnis entscheidet L0 vor einem E6-Plan. Budget 2 Starts. Ob E
 werden, bleibt offen bis nach dem Seefahrt-Merge. — Kosten bei Irrtum: ein verworfener Wertevorschlag.
 
 Entscheider: L0 · Anlass: Leerlauf Seefahrt bis M1, state.md · ADR: —
+
+## R260 · 2026-10-05 · Nutzerentscheide: N-95 an L0, Spielstände ohne Rückwärtskompatibilität
+
+Ruling: Nutzer (2026-10-05): „ich überlasse solche entscheidungen dir. spielstände müssen in zukunft nicht
+rückwärtskompatibel sein." (1) **N-95** entscheidet L0: Ja (neues optionales Feld ohne neue Versionsnummer, wie
+empfohlen). Auslegungsfragen zu Spielstand und Technik kommen nicht mehr in die Warteschlange; Vorbehalte nach §5.3
+bleiben. (2) **Spielstände:** Ab sofort müssen ältere Spielstände nicht mehr ladbar sein. Weiter gilt: Format
+versionieren; ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz, mit Test für das Abweisen.
+Keine neuen Migrationen (z. B. E6/v10). Bestehende Migrationen v1…v9 (inkl. E1 v8, Seefahrt v9) bleiben, da gebaut und
+getestet; Entfernen nur, wenn sie Aufwand verursachen (eigenes Paket). Der Verfassungstext §3 („migrieren, mit Test für
+alte Spielstände") ist schreibgeschützt; die Wortlaut-Änderung liegt als **N-96** beim Nutzer (`VERFASSUNG ÄNDERN`).
+Bis dahin tragen Briefings unter dem Regelblock die Zeile „Spielstand: R260 — keine Rückwärtskompatibilität nötig".
+— Kosten bei Irrtum: Migrationen für betroffene Versionen nachbauen.
+
+Entscheider: Nutzer, ausgelegt durch L0 · Anlass: Nutzernachricht · ADR: —
