@@ -30,6 +30,8 @@ import {
   SLICE_ROWS,
   halfLayer,
   quarterLayer,
+  quarterStrips,
+  QUARTER_STRIPS,
   terrainJob,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -1273,5 +1275,42 @@ describe('M12 E1 Terrain', () => {
     expect(q.height).toBe(Math.ceil(half.height / 2));
     expect(q.width).toBe(192);
     expect(quarterLayer(layer)).toBe(q);
+  });
+
+  it('AK-E1-19 quarterStrips: Streifen decken die halbe Kopie lückenlos, ohne Überlappung, mit geraden Quellgrenzen (2:1)', () => {
+    for (const hh of [384, 385, 1000, 1001, 17]) {
+      const qh = Math.ceil(hh / 2);
+      const strips = quarterStrips(hh);
+      expect(strips.length).toBeGreaterThanOrEqual(
+        Math.min(QUARTER_STRIPS, Math.floor(hh / 2)) - 1,
+      );
+      let sy = 0;
+      let dy = 0;
+      for (const [i, st] of strips.entries()) {
+        expect(st.sy).toBe(sy);
+        expect(st.dy).toBe(dy);
+        expect(st.sy % 2).toBe(0);
+        if (i < strips.length - 1) expect(st.dh * 2).toBe(st.sh);
+        sy += st.sh;
+        dy += st.dh;
+      }
+      expect(sy).toBe(hh);
+      expect(dy).toBe(qh);
+    }
+  });
+
+  it('AK-E1-19 terrainJob: Viertel-Kopie in Streifenschritten, Ergebnis gleich quarterLayer', () => {
+    const world = view();
+    const job = terrainJob(world, 1);
+    const ref = buildTerrainLayer(world, 1);
+    const before = job.steps.length;
+    expect(before).toBeGreaterThanOrEqual(
+      Math.ceil((job.layer as unknown as FakeCanvas).height / SLICE_ROWS) + QUARTER_STRIPS,
+    );
+    for (const s of job.steps) s();
+    const q = quarterLayer(job.layer);
+    expect(q.width).toBe(quarterLayer(ref).width);
+    expect(q.height).toBe(quarterLayer(ref).height);
+    expect(quarterLayer(job.layer)).toBe(q);
   });
 });
