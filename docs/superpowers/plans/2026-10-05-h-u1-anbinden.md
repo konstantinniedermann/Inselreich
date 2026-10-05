@@ -19,18 +19,18 @@ Worktree `.worktrees/h-u1` · Controller lead-tech · Kein Merge nach main (L0 b
 
 ## Datei-Ownership
 
-| Task | Dateien                                                                                                                                 |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| T1   | `src/sim/roads.ts`, `src/sim/connect.ts`, `tests/sim/connect.test.ts`                                                                   |
-| T2   | `src/ui/connect.ts`, `src/ui/inspect.ts`, `src/ui/app.ts`, `src/style.css` (nur falls nötig), `src/render/pathPreview.ts`, `tests/ui/connect.test.ts`, `tests/render/pathPreview.test.ts`, `README.md` |
-| lead-tech | Spec, dieser Plan, `docs/arc42.md` (Modulzeilen), `.studio/handoffs/H-U1-*.md`                                                 |
+| Task      | Dateien                                                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| T1        | `src/sim/roads.ts`, `src/sim/connect.ts`, `tests/sim/connect.test.ts`                                                                                                                                  |
+| T2        | `src/ui/connect.ts`, `src/ui/inspect.ts`, `src/ui/app.ts`, `src/style.css` (nur falls nötig), `src/render/pathPreview.ts`, `tests/ui/connect.test.ts`, `tests/render/pathPreview.test.ts`, `README.md` |
+| lead-tech | Spec, dieser Plan, `docs/arc42.md` (Modulzeilen), `.studio/handoffs/H-U1-*.md`                                                                                                                         |
 
 ## Tasks
 
-| Task | Titel                       | AK-IDs            | Strang | blocked-by | Modell | Review                 |
-| ---- | --------------------------- | ----------------- | ------ | ---------- | ------ | ---------------------- |
-| T1   | Sim: Wegsuche und Aktion    | AK-01 … AK-07     | h-u1   | —          | sonnet | qa-code-reviewer sonnet |
-| T2   | UI: Knopf, Vorschau, README | AK-08 … AK-12     | h-u1   | T1         | sonnet | Final-Review opus (Branch) + qa-playtester |
+| Task | Titel                       | AK-IDs        | Strang | blocked-by | Modell | Review                                     |
+| ---- | --------------------------- | ------------- | ------ | ---------- | ------ | ------------------------------------------ |
+| T1   | Sim: Wegsuche und Aktion    | AK-01 … AK-07 | h-u1   | —          | sonnet | qa-code-reviewer sonnet                    |
+| T2   | UI: Knopf, Vorschau, README | AK-08 … AK-12 | h-u1   | T1         | sonnet | Final-Review opus (Branch) + qa-playtester |
 
 Je Task Test zuerst rot, dann grün; `make check` und `CI=true make check` grün.
 
