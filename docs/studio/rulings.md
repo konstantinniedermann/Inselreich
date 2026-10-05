@@ -1825,3 +1825,15 @@ holt main nach dem REL-04-Merge erneut; Final-Review E0 erst danach endgültig, 
 — Kosten bei Irrtum: Abweichungen einzeln zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E0 C2 · ADR: —
+
+## R243 · 2026-10-05 · H-I007 abgenommen, REL-04 vorgezogen
+
+Ruling: H-I007 „Fest in der Kapelle" (`feat/h-i007-fest` @ 6205dae) release-reif angenommen; P2-Abweichung (rein
+lesende `feastBlockReason` in `src/sim/feast.ts`) übernommen. **REL-04 startet jetzt mit H-I007 allein** (Ausnahme zur
+Auslösung „3 Häppchen", Grund: kritischer Pfad — M0 des Seefahrt-Bündels verlangt H-I007 in main → E0 → E1, R241);
+dazu die Doku-Branch `docs/ideen-03` @ eafa57c. paintPixels-Performance bleibt nach R237 ausserhalb. Der Browser-Lauf
+am Kandidaten prüft zusätzlich die Sperrgrund-Zeile am Fest-Knopf (nach dem H-I007-Browser-Check entstanden).
+Vorbehalt N-95 (D-140) bleibt offen; ein späteres Nein heisst Versionswechsel mit Identitäts-Migration. — Kosten bei
+Irrtum: ein zusätzlicher Release-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-I007 · ADR: —
