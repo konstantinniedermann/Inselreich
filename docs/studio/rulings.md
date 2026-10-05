@@ -2029,3 +2029,13 @@ das Banner nach dem Sieg je Frame neu. Seefahrt wartet jetzt auf M1 (E1-Final-Re
 e2-UI (T12/T13). — Kosten bei Irrtum: Nacharbeit in T14/T15.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 · ADR: —
+
+## R259 · 2026-10-05 · F-P7 Werte E6 prüfen lassen (Wartezeit bis M1 nutzen)
+
+Ruling: Während Seefahrt auf M1 wartet, prüft lead-design mit design-economy-designer die offenen E6-Werte **F-P7**
+(Händlerschiff: Periode 3000, Dauer 600, erster Tick 3600; Angebot ≤ 20 % unter Kaufpreis, ≤ 20 Einheiten) gegen die
+Wirtschaft nach Seefahrt-Bündel (Neupin `balance-merchants` vorläufig). Nur Empfehlung als Handoff, keine Spec- oder
+Code-Änderung; Ergebnis entscheidet L0 vor einem E6-Plan. Budget 2 Starts. Ob E5/E6 (Kann-Teile) überhaupt geplant
+werden, bleibt offen bis nach dem Seefahrt-Merge. — Kosten bei Irrtum: ein verworfener Wertevorschlag.
+
+Entscheider: L0 · Anlass: Leerlauf Seefahrt bis M1, state.md · ADR: —
