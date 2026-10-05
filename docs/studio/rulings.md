@@ -1888,3 +1888,14 @@ den Integrator, danach CI und Pages. Parallel startet **E1 C2** auf Basis E0 @ 2
 des Merge-Commits; v7-Autosaves wären dann im alten Build unladbar.
 
 Entscheider: L0 · Anlass: Berichte lead-tech M12-E0 C3, Final-Review lead-qa · ADR: ADR-013
+
+## R248 · 2026-10-05 · M12-E1 C2 abgenommen, Session-Übergabe
+
+Ruling: E1 C2 (`feat/m12-e1` @ 218b191: Merge E0 766df67, T03–T05, Fest-Rum-Test mit Kapelle auf `islands[1]`)
+angenommen; Abweichungen AK-ISO-04 (`ZOOM_STEPS[0]`) und grössere Fixture `water.test.ts` übernommen. Die Fix-Runden
+T03/T04 ohne Zweit-Review deckt das Final-Review von C4 ab — Auftrag an lead-qa: Delta der Fix-Commits ausdrücklich
+prüfen. **M0 Seefahrt-Bündel erfüllt ab 766df67.** Weiter in der nächsten Session (L0-Kontext ≈ 25 %): E1 C3 (T06 UI
+inkl. Baumstempel-Seed-Test, T07 Browser-Messung Malbänder/`SLICE_ROWS`, Playtests) ∥ Seefahrt C1 (T00–T02 auf der
+Integrationsbranch, Budget R241), Obergrenze 5 Arbeiter. — Kosten bei Irrtum: Fix-Runden-Fehler erst im Final-Review.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1 C2 · ADR: —
