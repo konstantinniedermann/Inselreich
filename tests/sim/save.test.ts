@@ -11,7 +11,13 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { ISLANDS } from '../../src/sim/defs/sea';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
-import { SAVE_VERSION, deserialize, migrateV6ToV7, migrateV7ToV8, serialize } from '../../src/sim/save';
+import {
+  SAVE_VERSION,
+  deserialize,
+  migrateV6ToV7,
+  migrateV7ToV8,
+  serialize,
+} from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
