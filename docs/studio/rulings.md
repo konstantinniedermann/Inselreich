@@ -2064,3 +2064,17 @@ die Zusatzzeile aus R260 entfällt. Sonst keine Änderung an der Verfassung. —
 alten Wortlaut wieder her.
 
 Entscheider: Nutzer, umgesetzt durch L0 · Anlass: N-96 · ADR: —
+
+## R262 · 2026-10-05 · F-P7 Werte E6 Händlerschiff entschieden
+
+Ruling: Empfehlung lead-design (`.studio/handoffs/2026-10-05-m12-fp7-werte-e6.md`) angenommen: Periode 3000, Dauer
+600, erster Tick 3600, Menge 10–20, Rabatt 20 %, Wahl unter allen Kontoren — unverändert. **Neu:** Angebote nur für
+Güter mit Kaufpreis ≥ 30 (`OFFER_MIN_BUY`; heute Werkzeug, Stoff, Rum, Glas, Gewürz), damit Angebote nie wertlos sind.
+Rabatt bleibt unter 25 % (sonst lohnt Auftragsbedienung mit Angebotsware). Für einen E6-Plan gelten: eigener
+Zufallsstrom, `normalized()` entfernt `offer`, Ladeprüfung v10 erlaubt nach Teilkauf Mengen 1–20; nach R261 **keine
+Migration** auf v10 (alter Spielstand wird mit Hinweis abgewiesen). Die vorgeschlagenen defs-Tests (Angebotspreis >
+Auftragsprämie und > Boom-Verkaufserlös; Zufallsströme ohne Überschneidung) und der Ablageort der `OFFER_*`-Konstanten
+gehen in den E6-Plan. Ob E5/E6 geplant werden, entscheidet L0 nach dem Seefahrt-Merge. — Kosten bei Irrtum: ein Wert
+in `src/sim/defs/`.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-FP7 · ADR: —
