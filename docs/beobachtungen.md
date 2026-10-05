@@ -892,3 +892,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `tests/helpers/perfBudget.ts:2` (`CI_FACTOR`), Nutzer u. a. `tests/sim/perf.test.ts`.
 - Beobachtung: Der Standardfaktor 1,5 bildet den Abstand Runner/lokal (≈ 4×, H-T3) nicht ab; jeder Zeittest braucht einen eigenen Faktor (R235, T05-Lasttest jetzt 4).
 - Ursprung: Review T05 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; Standardfaktor prüfen oder anheben, sobald weitere Zeittests dazukommen.
+
+### 2026-10-05 · Tests · Lasttest 15a und Vitest-Flakes unter paralleler Studio-Last
+
+- Fundort: `tests/sim/perf.test.ts` (PERF_PIN 2,5 ms, CI-Faktor 4), vereinzelt `tests/render`/`tests/ui`.
+- Beobachtung: Laufen Reviewer, Playtester und Vite parallel (Load 10–12), wird der Lasttest bzw. ein Render-/UI-Test einmal rot; Wiederholung bei Load < 7 grün (`make check` und `CI=true make check` je grün, 1674 Tests).
+- Ursprung: M12-E0 C3 (T06-Doku-Review, Browser-Check). Einschätzung: niedrig; Zeittests nur bei ruhiger Maschine als Abnahmebeleg werten, Mehrfachmessung (Median) im Lasttest erwägen.
