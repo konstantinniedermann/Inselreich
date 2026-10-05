@@ -861,6 +861,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `docs/studio/gates.md`, Gate Spec Prüffrage 4 (Einzeiler mit `grep -o 'AK-[A-Z0-9]*-[0-9]*'`).
 - Beobachtung: Das Muster verlangt nach dem zweiten Bindestrich nur Ziffern und findet darum Kennungen wie `AK-M12-B1` bis `AK-M12-B4` nicht; ausserdem durchsucht `docs/superpowers/specs/*.md` keine Anhang-Ordner (E-010), in denen seit M11 die meisten AK stehen. Doppelte Kennungen in Anhängen bleiben so unentdeckt.
 - Ursprung: lead-qa, Gate Spec M12 E1–E6 (R228). Einschätzung: klein; Muster auf `AK-[A-Z0-9]*-[A-Z0-9]*` erweitern und rekursiv über `docs/superpowers/specs/` suchen (Handbuch-Änderung, studio-coach).
+
 ### 2026-10-05 · Sim/Design · Anbinden-Pfad läuft auch durch Wald
 
 - Fundort: `src/sim/connect.ts` (`stepCost` über `canPlaceRoad`; Wald ist Bauland, `isLand` in `src/sim/mapgen.ts:11`).
