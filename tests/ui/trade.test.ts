@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { boomGood, tradeRows } from '../../src/ui/trade';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
@@ -19,7 +19,7 @@ describe('M10 Handelszeilen nach Freischaltung', () => {
   it('AK-U1-06 Handelszeilen: neue Welt Holz, Werkzeug, Stein, Nahrung; Wolle 3 ohne U2: verkaufbar, nicht kaufbar', () => {
     const w = createWorld(3);
     expect(tradeRows(w).map((r) => r.good)).toEqual(['wood', 'tools', 'stone', 'food']);
-    w.stock.wool = 3;
+    home(w).stock.wool = 3;
     expect(tradeRows(w).find((r) => r.good === 'wool')).toEqual({ good: 'wool', canBuy: false });
   });
 });

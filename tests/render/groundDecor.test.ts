@@ -1,3 +1,4 @@
+import { home } from '../../src/sim/world';
 import { describe, expect, it } from 'vitest';
 import {
   FLOWER_TONES,
@@ -154,7 +155,7 @@ describe('Boden-Deko: paintDecor', () => {
   it('R149 Büsche nur auf Gras neben Wald', () => {
     const w = mk('grass');
     // Wald in Spalte 6: Büsche erscheinen auf Gras der Spalten 5 und 7
-    for (let y = 0; y < 12; y++) w.tiles[y * 12 + 6]!.terrain = 'forest';
+    for (let y = 0; y < 12; y++) home(w).tiles[y * 12 + 6]!.terrain = 'forest';
     const a = fakeCtx();
     paintDecor(a.ctx, w, new Uint8Array(144), 1, rect);
     const b = fakeCtx();

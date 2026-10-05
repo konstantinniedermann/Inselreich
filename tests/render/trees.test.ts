@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { placeBuilding } from '../../src/sim/build';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import {
   ISO_H,
@@ -166,12 +166,13 @@ describe('Baumstempel', () => {
 
 function forestWorld(): { world: World; ids: number[] } {
   const world = createWorld(3);
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const x0 = k.x + 4,
     y0 = k.y + 4;
   forceRect(world, x0, y0, 3, 3, 'forest');
   const ids: number[] = [];
-  for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) ids.push((y0 + j) * world.width + x0 + i);
+  for (let j = 0; j < 3; j++)
+    for (let i = 0; i < 3; i++) ids.push((y0 + j) * home(world).width + x0 + i);
   return { world, ids };
 }
 const treeIds = (w: World) =>
@@ -186,8 +187,8 @@ describe('Baumstempel und Bebauung', () => {
     for (const id of ids) expect(before.has(id)).toBe(true);
     // Haus auf die Mitte: placeBuilding verlangt freies Gras; die Wahl der Kachel ändert den Stempel-Test nicht
     const mid = ids[4]!;
-    const mx = mid % world.width,
-      my = (mid / world.width) | 0;
+    const mx = mid % home(world).width,
+      my = (mid / home(world).width) | 0;
     world.money = 100000;
     const r = placeBuilding(world, 'house', mx, my);
     if (!r.ok) {
@@ -202,7 +203,7 @@ describe('Baumstempel und Bebauung', () => {
         progress: 0,
         state: 'ok',
       };
-      world.tiles[mid]!.buildingId = bid;
+      home(world).tiles[mid]!.buildingId = bid;
     }
     const after = new Set(treeIds(world));
     expect(after.has(mid)).toBe(false);

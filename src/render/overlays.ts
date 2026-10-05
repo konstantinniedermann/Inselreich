@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import {
   coverageMask,
@@ -90,7 +91,7 @@ export function createCoverageCache(
     get: (world, kind) => entryFor(world, kind).mask,
     outline: (world, kind) => {
       const e = entryFor(world, kind);
-      e.segments ??= outlineSegments(e.mask, world.width);
+      e.segments ??= outlineSegments(e.mask, home(world).width);
       return e.segments;
     },
   };

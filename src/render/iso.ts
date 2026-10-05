@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { hash2 } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
@@ -139,18 +140,19 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
     }
     // Gebirgsmassiv (H-R9, A5): Teilstücke = Läufe freier Gebirgskacheln je Halbstreifen, Schlüssel und Grundfläche
     // der vordersten Kachel; jedes Objekt liegt im Halbstreifen ganz vor oder hinter einem Teilstück
+    const isl = home(world);
     for (const piece of massifPieces(world)) {
       const f = piece.tiles[piece.tiles.length - 1]!;
-      const fp = { x: f % world.width, y: Math.floor(f / world.width), w: 1, h: 1 };
+      const fp = { x: f % isl.width, y: Math.floor(f / isl.width), w: 1, h: 1 };
       items.push({ kind: 'massif', id: piece.id, fp, key: depthKey(fp), piece });
     }
-    for (let y = 0; y < world.height; y++)
-      for (let x = 0; x < world.width; x++) {
-        const t = world.tiles[y * world.width + x]!;
+    for (let y = 0; y < isl.height; y++)
+      for (let x = 0; x < isl.width; x++) {
+        const t = isl.tiles[y * isl.width + x]!;
         if (t.terrain !== 'forest' || t.buildingId !== null || t.road) continue;
         const fp = { x, y, w: 1, h: 1 };
         const variant = treeVariant(world.seed, x, y);
-        items.push({ kind: 'tree', id: y * world.width + x, fp, key: depthKey(fp), variant });
+        items.push({ kind: 'tree', id: y * isl.width + x, fp, key: depthKey(fp), variant });
       }
     items.sort(cmp);
     c = { key, items };

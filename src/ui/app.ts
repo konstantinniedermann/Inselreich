@@ -8,7 +8,7 @@ import { connectBuilding } from '../sim/connect';
 import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
 import { upgradeBuilding } from '../sim/upgrade';
-import { tileAt, createWorld, center, type Pos } from '../sim/world';
+import { home, tileAt, createWorld, center, type Pos } from '../sim/world';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -292,7 +292,7 @@ function launch(
 
   const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
 
-  const map = { w: world.width, h: world.height };
+  const map = { w: home(world).width, h: home(world).height };
   const view = { w: 1, h: 1 };
 
   /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */
@@ -469,9 +469,9 @@ function launch(
         },
       });
     } else if (panel.kind === 'trade') {
-      state.selectedId = world.kontorId;
+      state.selectedId = home(world).kontorId;
       renderTrade(panelEl, world, {
-        back: () => setPanel({ kind: 'inspect', id: world.kontorId }),
+        back: () => setPanel({ kind: 'inspect', id: home(world).kontorId }),
         changed: (op, r, good, n) => {
           if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
           else if (op === 'sell') sound.play('coin');
@@ -546,7 +546,7 @@ function launch(
     const panel = state.panel;
     if (id === null) {
       setPanel({ kind: 'none' });
-    } else if (id === world.kontorId) {
+    } else if (id === home(world).kontorId) {
       // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
       if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
@@ -628,7 +628,7 @@ function launch(
       dragForestFailureShown = false;
     }
     const tool = state.tool;
-    const tile = tileAt(world, a.x, a.y);
+    const tile = tileAt(home(world), a.x, a.y);
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
@@ -734,8 +734,8 @@ function launch(
     const range = {
       x0: Math.max(0, tx - 6),
       y0: Math.max(0, ty - 6),
-      x1: Math.min(world.width - 1, tx + 6),
-      y1: Math.min(world.height - 1, ty + 6),
+      x1: Math.min(home(world).width - 1, tx + 6),
+      y1: Math.min(home(world).height - 1, ty + 6),
     };
     let best: { name: string; d: number } | null = null;
     for (const h of wildlifeAt(world, range, fx.timeMs, wildlifeEnvOf(world, fx))) {
@@ -841,7 +841,7 @@ function launch(
   }
 
   // Kamera auf das Kontor zentrieren
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   const resize = (): void => {
     const w = Math.max(1, gameEl.clientWidth);
     const h = Math.max(1, gameEl.clientHeight);

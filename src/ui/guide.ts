@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 // guide.ts — rein: nächster Schritt, Steuerwirkung, Abhilfe und Kartenzeichen als Klartext (Spec L5–L7).
 import { PALETTE } from '../render/palette';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
@@ -156,7 +157,7 @@ export function taxEffect(level: TaxLevel): string {
 }
 
 export function remedyText(w: World, b: Building): string | null {
-  if (b.id === w.kontorId) return null;
+  if (b.id === home(w).kontorId) return null;
   if (b.house) {
     const d = houseDiagnosis(w, b)[0];
     if (!d) return null;

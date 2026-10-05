@@ -1,7 +1,7 @@
 import { valueNoise } from '../sim/noise';
-import type { Terrain, World } from '../sim/types';
+import type { Island, Terrain, World } from '../sim/types';
 
-export type FieldWorld = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
+export type FieldWorld = Pick<Island, 'width' | 'height' | 'tiles'> & Pick<World, 'seed'>;
 /** Ein Wert je Kachelmitte. */
 export interface Field {
   w: number;
@@ -36,10 +36,10 @@ export const EDGE_BAND = 0.29;
 export const COAST_BAND = 0.35;
 
 /** s = +Abstand Land→nächstes Wasser, −Abstand Wasser→nächstes Land (Kacheln, 8er-Breitensuche, gekappt). */
-export function coastField(world: FieldWorld): Field {
-  const { width: w, height: h } = world;
+export function coastField(isl: FieldWorld): Field {
+  const { width: w, height: h } = isl;
   const n = w * h;
-  const isLand = (i: number) => world.tiles[i]!.terrain !== 'water';
+  const isLand = (i: number) => isl.tiles[i]!.terrain !== 'water';
   const distTo = (sourceIsLand: boolean): Float32Array => {
     const d = new Float32Array(n).fill(MAX_DIST);
     const q = new Int32Array(n);
@@ -76,15 +76,15 @@ export function coastField(world: FieldWorld): Field {
   return { w, h, v };
 }
 
-export function terrainFields(world: FieldWorld): TerrainFields {
-  const n = world.width * world.height;
+export function terrainFields(isl: FieldWorld): TerrainFields {
+  const n = isl.width * isl.height;
   const types = {} as Record<Land, Field>;
   for (const t of LAND) {
     const v = new Float32Array(n);
-    for (let i = 0; i < n; i++) v[i] = world.tiles[i]!.terrain === t ? 1 : 0;
-    types[t] = { w: world.width, h: world.height, v };
+    for (let i = 0; i < n; i++) v[i] = isl.tiles[i]!.terrain === t ? 1 : 0;
+    types[t] = { w: isl.width, h: isl.height, v };
   }
-  return { seed: world.seed, coast: coastField(world), types };
+  return { seed: isl.seed, coast: coastField(isl), types };
 }
 
 function ramp(t: number, band: number): number {

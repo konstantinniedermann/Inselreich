@@ -25,7 +25,7 @@ import { deficitText, demolishText, goodList, stateInfo } from '../../src/ui/tex
 import { GROWTH_INTERVAL } from '../../src/sim/defs/timing';
 import { formatGameTime } from '../../src/ui/time';
 import { setHouse, uxWorld } from './worlds';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
 import { setGoodLock } from '../../src/sim/tax';
@@ -262,8 +262,8 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     expect(upgradeView(w0, put(w0, 'fisher'))).toBeNull();
     const w = createWorld(3, { unlockAll: true });
     w.money = 1000;
-    w.stock.cloth = 2;
-    w.stock.rum = 2;
+    home(w).stock.cloth = 2;
+    home(w).stock.rum = 2;
     const f = put(w, 'fisher');
     const before = serialize(w);
     expect(upgradeView(w, f)).toEqual({
@@ -275,9 +275,9 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
       ok: true,
     });
     expect(serialize(w)).toBe(before); // Vorschau ändert die Welt nicht
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff']);
-    w.stock.cloth = 2;
+    home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(upgradeView(w, f)!.preview).toBe('Ausstoss 25 → 37.5 / min · Unterhalt 42 → 54 / min');
     w.unlocked = w.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
@@ -309,8 +309,8 @@ describe('M11 Rückerstattung nach Ausbau (paidCost)', () => {
       level: 2,
     };
     w.buildings[b.id] = b;
-    w.stock.wood = 0;
-    w.stock.tools = 0;
+    home(w).stock.wood = 0;
+    home(w).stock.tools = 0;
     return { w, b };
   };
   it('Panelzeile: Fischer Stufe 2 erstattet die Hälfte von Bau plus Stufe (150/8/3)', () => {
@@ -351,9 +351,9 @@ describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
     for (let i = 0; i < 3; i++) add('fisher'); // Nahrung 7,5 − 4,0 = 3,5 = Δ 3,5 (dämpft nicht)
     add('weaver');
     add('weaver'); // Stoff 4,0 − 1,6 = 2,4 ≥ Δ 1,4
-    w.stock.rum = 40;
+    home(w).stock.rum = 40;
     expect(deficitLine(w, h)).toBe(`${pre}Vorrat reicht noch 2 Minuten`);
-    w.stock.rum = 0;
+    home(w).stock.rum = 0;
     expect(deficitLine(w, h)).toBe(`${pre}Vorrat leer`);
     setHouseTo(h, 2, 7);
     expect(deficitLine(w, h)).toBeNull();

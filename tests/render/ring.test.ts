@@ -16,7 +16,7 @@ import { PALETTE } from '../../src/render/palette';
 import { MAX_RINGS, drawProgressRings, ringFraction, ringView } from '../../src/render/ring';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld } from '../../src/sim/world';
+import { home, center, createWorld } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, World } from '../../src/sim/types';
 import { fakeCtx } from './fakeCtx';
 
@@ -41,10 +41,10 @@ function worldWith(list: [BuildingDefId, number, number, BuildingState][]): Worl
   return world;
 }
 const camAt = (world: World, zoom: number): Camera => {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const c = center(BUILDING_DEFS.kontor, k.x, k.y);
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, c.cx, c.cy, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, c.cx, c.cy, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 

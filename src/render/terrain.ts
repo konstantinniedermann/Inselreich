@@ -1,7 +1,8 @@
+import { home } from '../sim/world';
 import { hash2, valueNoise } from '../sim/noise';
 import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep } from './light';
 import { layoutKey } from '../sim/queries';
-import type { World } from '../sim/types';
+import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
 import {
   FLOWER_TONES,
@@ -158,10 +159,10 @@ export interface TileRect {
 // ---------- reine Helfer ----------
 
 /** 1 für Kacheln mit Gebäude oder Weg. */
-export function occupancy(world: Pick<World, 'width' | 'height' | 'tiles'>): Uint8Array {
-  const occ = new Uint8Array(world.width * world.height);
+export function occupancy(isl: Pick<Island, 'width' | 'height' | 'tiles'>): Uint8Array {
+  const occ = new Uint8Array(isl.width * isl.height);
   for (let i = 0; i < occ.length; i++) {
-    const t = world.tiles[i]!;
+    const t = isl.tiles[i]!;
     occ[i] = t.buildingId !== null || t.road ? 1 : 0;
   }
   return occ;
@@ -205,10 +206,10 @@ export function dirtyRect(
 export const SMOOTH_BORDER = Math.ceil(1 + WARP + (2 * HEIGHT_BLUR + 1) * (RASTER / TEX));
 
 /** Geländeart je Kachel (0 Wasser, 1 + Index in `LAND`); das Abbild, an dem die Teil-Neuzeichnung Wechsel erkennt. */
-export function terrainCodes(world: Pick<World, 'width' | 'height' | 'tiles'>): Uint8Array {
-  const codes = new Uint8Array(world.width * world.height);
+export function terrainCodes(isl: Pick<Island, 'width' | 'height' | 'tiles'>): Uint8Array {
+  const codes = new Uint8Array(isl.width * isl.height);
   for (let i = 0; i < codes.length; i++) {
-    const t = world.tiles[i]!.terrain;
+    const t = isl.tiles[i]!.terrain;
     codes[i] = t === 'water' ? 0 : LAND.indexOf(t) + 1;
   }
   return codes;
@@ -242,11 +243,11 @@ export function shouldPatch(
 
 /** Grösse der Ebene und ihrer halben Kopie in Pixeln (AK-ISO-19). */
 export function terrainLayerSize(
-  world: Pick<World, 'width' | 'height'>,
+  isl: Pick<Island, 'width' | 'height'>,
   scale: number,
 ): { w: number; h: number }[] {
-  const w = Math.round(world.width * TEX * scale),
-    h = Math.round(world.height * TEX * scale);
+  const w = Math.round(isl.width * TEX * scale),
+    h = Math.round(isl.height * TEX * scale);
   return [
     { w, h },
     { w: Math.ceil(w / 2), h: Math.ceil(h / 2) },
@@ -274,7 +275,7 @@ export function tuftsFor(
 
 // ---------- Knotengitter und Pixel ----------
 
-export type World3 = Pick<World, 'width' | 'height' | 'tiles' | 'seed'>;
+export type World3 = Pick<Island, 'width' | 'height' | 'tiles'> & Pick<World, 'seed'>;
 export interface TerrainGrid {
   seed: number;
   nx: number;
@@ -407,20 +408,17 @@ interface NodeWindow {
 }
 
 /** Rechnet alle Felder auf dem groben Raster (alle `RASTER` Texturpixel ein Knoten). */
-export function buildGrid(
-  world: World3,
-  fields: TerrainFields = terrainFields(world),
-): TerrainGrid {
-  return computeWindow(world, fields, {
+export function buildGrid(isl: World3, fields: TerrainFields = terrainFields(isl)): TerrainGrid {
+  return computeWindow(isl, fields, {
     i0: 0,
     j0: 0,
-    i1: (world.width * TEX) / RASTER,
-    j1: (world.height * TEX) / RASTER,
+    i1: (isl.width * TEX) / RASTER,
+    j1: (isl.height * TEX) / RASTER,
   });
 }
 
 /** Wie `buildGrid`, aber nur im Knotenfenster; `nx`/`ny` des Ergebnisses sind die Fenstermasse. */
-function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): TerrainGrid {
+function computeWindow(isl: World3, fields: TerrainFields, win: NodeWindow): TerrainGrid {
   const nx = win.i1 - win.i0 + 1,
     ny = win.j1 - win.j0 + 1;
   const n = nx * ny;
@@ -445,7 +443,7 @@ function computeWindow(world: World3, fields: TerrainFields, win: NodeWindow): T
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
     cls = new Uint8Array(n);
   const ind = LAND.map(() => new Float32Array(n));
-  const seed = world.seed;
+  const seed = isl.seed;
   const mt = LAND.indexOf('mountain');
   const gr = LAND.indexOf('grass');
   const sa = LAND.indexOf('sand');
@@ -916,8 +914,8 @@ function paintRegion(
 
 /** Kachel ist unbelegtes Gras. */
 const isFreeGrass = (world: World, occ: Uint8Array, x: number, y: number): boolean => {
-  const i = y * world.width + x;
-  return world.tiles[i]!.terrain === 'grass' && occ[i] !== 1;
+  const i = y * home(world).width + x;
+  return home(world).tiles[i]!.terrain === 'grass' && occ[i] !== 1;
 };
 
 /**
@@ -931,9 +929,11 @@ export function paintDecor(
   scale: number,
   r: TileRect,
 ): void {
-  const { width: w, height: h, seed } = world;
+  const isl = home(world);
+  const { width: w, height: h } = isl;
+  const { seed } = world;
   const forestAt = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < w && y < h && world.tiles[y * w + x]!.terrain === 'forest';
+    x >= 0 && y >= 0 && x < w && y < h && isl.tiles[y * w + x]!.terrain === 'forest';
   ctx.save();
   ctx.scale(scale, scale);
   ctx.lineWidth = 1;
@@ -1040,7 +1040,12 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
   const grid = buildGrid(world, fields);
   paintRegion(ctx, grid, scale, 0, 0, w, h);
   const occ = occupancy(world);
-  paintDecor(ctx, world, occ, scale, { x0: 0, y0: 0, x1: world.width - 1, y1: world.height - 1 });
+  paintDecor(ctx, world, occ, scale, {
+    x0: 0,
+    y0: 0,
+    x1: home(world).width - 1,
+    y1: home(world).height - 1,
+  });
   const buildMs = performance.now() - t0;
   const codes = terrainCodes(world);
   meta.set(canvas, {
@@ -1067,7 +1072,7 @@ export const terrainBuildMs = (layer: HTMLCanvasElement): number => meta.get(lay
  * geänderten Kacheln; das Küstenfeld (Breitensuche über die Karte) nur, wenn Wasser und Land wechseln (nicht bei Wald ↔ Weide).
  */
 export function patchGrid(
-  world: World3,
+  isl: World3,
   fields: TerrainFields,
   g: TerrainGrid,
   prev: Uint8Array,
@@ -1080,7 +1085,7 @@ export function patchGrid(
     if ((prev[i] === 0) !== (next[i] === 0)) coastChanged = true;
     for (let t = 0; t < LAND.length; t++) fields.types[LAND[t]!].v[i] = next[i] === t + 1 ? 1 : 0;
   }
-  if (coastChanged) fields.coast = coastField(world);
+  if (coastChanged) fields.coast = coastField(isl);
   const k = TEX / RASTER; // Knoten je Kachel
   const margin = 2 * HEIGHT_BLUR + 1; // Reichweite von Weichzeichner und Gefälle in Knoten
   const inner = { i0: r.x0 * k, j0: r.y0 * k, i1: (r.x1 + 1) * k, j1: (r.y1 + 1) * k };
@@ -1090,7 +1095,7 @@ export function patchGrid(
     i1: Math.min(g.nx - 1, inner.i1 + margin),
     j1: Math.min(g.ny - 1, inner.j1 + margin),
   };
-  const part = computeWindow(world, fields, win);
+  const part = computeWindow(isl, fields, win);
   const copy = (dst: ArrayLike<number> & { [i: number]: number }, src: ArrayLike<number>): void => {
     for (let j = inner.j0; j <= inner.j1; j++)
       for (let i = inner.i0; i <= inner.i1; i++)
@@ -1129,9 +1134,9 @@ export function updateTerrainLayer(
   if (!shouldPatch(m, world, key)) return { redrawn: false, ms: 0 };
   const t0 = performance.now();
   const next = occupancy(world);
-  const occRect = dirtyRect(m.occ, next, world.width, world.height);
+  const occRect = dirtyRect(m.occ, next, home(world).width, home(world).height);
   const codes = terrainCodes(world);
-  const terRect = terrainPatchRect(m.codes, codes, world.width, world.height);
+  const terRect = terrainPatchRect(m.codes, codes, home(world).width, home(world).height);
   const rect = unionRect(occRect, terRect);
   m.key = key;
   m.occ = next;

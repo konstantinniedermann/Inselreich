@@ -10,13 +10,13 @@ import {
   orderVisible,
 } from '../../src/ui/order';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 
 describe('orderCardText (Spec 10.7)', () => {
   it('zeigt den aktiven Auftrag mit Lagerstand', () => {
     const w = createWorld(1);
     w.tick = 1300;
-    w.stock.wood = 12;
+    home(w).stock.wood = 12;
     w.order = { period: 0, good: 'wood', amount: 20, reward: 150, due: 2400 };
     expect(orderCardText(w)).toBe('Auftrag: 20 Holz · Prämie 150 · noch 1:50 · Lager 12/20');
   });

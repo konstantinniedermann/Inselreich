@@ -22,7 +22,7 @@ import { render, renderStats } from '../../src/render/renderer';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { TICK_MS } from '../../src/sim/defs/timing';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, Terrain, World } from '../../src/sim/types';
 import { fakeCtx } from './fakeCtx';
 
@@ -40,7 +40,7 @@ beforeAll(() => {
 });
 
 const setTerrain = (w: World, x: number, y: number, t: Terrain): void => {
-  w.tiles[idx(w, x, y)]!.terrain = t;
+  home(w).tiles[idx(home(w), x, y)]!.terrain = t;
 };
 const put = (
   w: World,
@@ -54,7 +54,7 @@ const put = (
   w.buildings[id] = b;
   const d = BUILDING_DEFS[defId];
   for (let dy = 0; dy < d.h; dy++)
-    for (let dx = 0; dx < d.w; dx++) w.tiles[idx(w, x + dx, y + dy)]!.buildingId = id;
+    for (let dx = 0; dx < d.w; dx++) home(w).tiles[idx(home(w), x + dx, y + dy)]!.buildingId = id;
   return b;
 };
 
@@ -74,12 +74,12 @@ function scene(opts: { road?: boolean; state?: BuildingState } = {}): {
     setTerrain(world, x, y, 'forest');
   put(world, 2002, 'market', 50, 40);
   if (opts.road !== false)
-    for (let x = 41; x <= 49; x++) world.tiles[idx(world, x, 40)]!.road = true;
+    for (let x = 41; x <= 49; x++) home(world).tiles[idx(home(world), x, 40)]!.road = true;
   return { world, lj };
 }
 const camAt = (world: World, zoom = 1): Camera => {
   const cam = { x: 0, y: 0, zoom };
-  centerOn(cam, 44, 40, VIEW, { w: world.width, h: world.height });
+  centerOn(cam, 44, 40, VIEW, { w: home(world).width, h: home(world).height });
   return cam;
 };
 const deepFreeze = <T>(o: T): T => {
@@ -120,7 +120,7 @@ describe('H-R4 errandPlan', () => {
     expect(plan.gather).not.toBeNull();
     const [from, to] = plan.gather!;
     expect(to!.x).toBeGreaterThan(36);
-    const t = world.tiles[idx(world, Math.floor(to!.x), Math.floor(to!.y))]!;
+    const t = home(world).tiles[idx(home(world), Math.floor(to!.x), Math.floor(to!.y))]!;
     expect(t.terrain).toBe('forest');
     expect(Math.hypot(to!.x - 40.5, to!.y - 40.5)).toBeLessThanOrEqual(
       BUILDING_DEFS.lumberjack.site[0]!.kind === 'radius' ? 3.5 : 3,
@@ -138,12 +138,12 @@ describe('H-R4 errandPlan', () => {
     const [, to] = errandPlan(world, f).gather!;
     const tx = Math.floor(to!.x),
       ty = Math.floor(to!.y);
-    expect(world.tiles[idx(world, tx, ty)]!.terrain).not.toBe('water');
+    expect(home(world).tiles[idx(home(world), tx, ty)]!.terrain).not.toBe('water');
     expect([
-      world.tiles[idx(world, tx, ty + 1)]!.terrain,
-      world.tiles[idx(world, tx, ty - 1)]!.terrain,
-      world.tiles[idx(world, tx + 1, ty)]!.terrain,
-      world.tiles[idx(world, tx - 1, ty)]!.terrain,
+      home(world).tiles[idx(home(world), tx, ty + 1)]!.terrain,
+      home(world).tiles[idx(home(world), tx, ty - 1)]!.terrain,
+      home(world).tiles[idx(home(world), tx + 1, ty)]!.terrain,
+      home(world).tiles[idx(home(world), tx - 1, ty)]!.terrain,
     ]).toContain('water');
   });
   it('RF-2 ohne passende Zielkachel kein Sammelweg; Betriebe ohne Standortregel (Weber) sammeln nie', () => {
@@ -202,7 +202,7 @@ describe('H-R4 errandPlan', () => {
     const { world, lj } = scene();
     const p1 = errandPlan(world, lj);
     expect(errandPlan(world, lj)).toBe(p1);
-    world.tiles[idx(world, 49, 40)]!.road = false; // neues Layout
+    home(world).tiles[idx(home(world), 49, 40)]!.road = false; // neues Layout
     const p2 = errandPlan(world, lj);
     expect(p2).not.toBe(p1);
     expect(p2.carry).toBeNull();
@@ -283,7 +283,7 @@ describe('H-R4 errandsFrom', () => {
     for (let i = 0; i < 60; i++) {
       const x = 31 + (i % 14) * 2;
       const y = [31, 34, 43, 46, 49][Math.floor(i / 14)]!;
-      if (world.tiles[idx(world, x, y)]!.buildingId !== null) continue;
+      if (home(world).tiles[idx(home(world), x, y)]!.buildingId !== null) continue;
       put(world, 3000 + i, 'lumberjack', x, y, { progress: 15 });
       setTerrain(world, x + 1, y, 'forest');
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { perfBudget } from '../helpers/perfBudget';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import type { World3 } from '../../src/render/terrain';
 import type { World } from '../../src/sim/types';
 import { FOREST_FLOOR, PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
@@ -49,8 +49,8 @@ const labOfCss = (c: string) => rgbToLab(rgbOfCss(c));
 /** Ganze Karte bei Faktor 1 als RGBA (Texturpixel). */
 function paintAll(world: World) {
   const grid = buildGrid(world);
-  const w = world.width * TEX,
-    h = world.height * TEX;
+  const w = home(world).width * TEX,
+    h = home(world).height * TEX;
   const out = paintPixels(grid, 1, 0, 0, w, h);
   const at = (px: number, py: number): [number, number, number] => {
     const cx = Math.min(w - 1, Math.max(0, Math.floor(px))),
@@ -80,7 +80,7 @@ const mean3 = (px: number, py: number): [number, number, number] => {
     }
   return [sum[0]! / 9, sum[1]! / 9, sum[2]! / 9];
 };
-const terrainOf = (w: World, x: number, y: number) => w.tiles[y * w.width + x]?.terrain;
+const terrainOf = (w: World, x: number, y: number) => home(w).tiles[y * home(w).width + x]?.terrain;
 
 describe('Terrain-Helfer', () => {
   it('AK-R1-06 dirtyRect liefert die geänderten Kacheln plus 1 Kachel Rand, geklemmt', () => {
@@ -100,21 +100,21 @@ describe('Terrain-Helfer', () => {
 
   it('AK-R1-06 occupancy markiert Gebäude- und Wegkacheln', () => {
     const w = createWorld(3);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 3, k.y + 3, 4, 2, 'grass');
     w.money = 100000;
-    for (const g of Object.keys(w.stock) as (keyof World['stock'])[]) w.stock[g] = 1000;
+    for (const g of Object.keys(home(w).stock) as (keyof World['stock'])[]) home(w).stock[g] = 1000;
     const before = occupancy(w);
-    expect(before.length).toBe(w.width * w.height);
-    expect(before[(k.y + 3) * w.width + k.x + 3]).toBe(0);
+    expect(before.length).toBe(home(w).width * home(w).height);
+    expect(before[(k.y + 3) * home(w).width + k.x + 3]).toBe(0);
     expect(placeBuilding(w, 'house', k.x + 3, k.y + 3).ok).toBe(true);
     expect(placeRoad(w, k.x + 5, k.y + 4).ok).toBe(true);
     const after = occupancy(w);
-    expect(after[(k.y + 3) * w.width + k.x + 3]).toBe(1);
-    expect(after[(k.y + 4) * w.width + k.x + 5]).toBe(1);
-    expect(after[(k.y + 3) * w.width + k.x + 4]).toBe(0);
+    expect(after[(k.y + 3) * home(w).width + k.x + 3]).toBe(1);
+    expect(after[(k.y + 4) * home(w).width + k.x + 5]).toBe(1);
+    expect(after[(k.y + 3) * home(w).width + k.x + 4]).toBe(0);
     // Kontor-Kacheln sind belegt
-    expect(after[k.y * w.width + k.x]).toBe(1);
+    expect(after[k.y * home(w).width + k.x]).toBe(1);
   });
 
   it('AK-ISO-19 terrainLayerSize: Faktor 1 und 2 sowie halbe Kopie je Canvas ≤ 16 777 216 Pixel', () => {
@@ -301,8 +301,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
   it('H-R11 (löst AK-R1-08 I1 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let found = false;
-    for (let y = 0; y < w.height - 4 && !found; y++)
-      for (let x = 0; x < w.width - 4 && !found; x++) {
+    for (let y = 0; y < home(w).height - 4 && !found; y++)
+      for (let x = 0; x < home(w).width - 4 && !found; x++) {
         let all = true;
         for (let j = 0; j < 4 && all; j++)
           for (let i = 0; i < 4; i++) if (terrainOf(w, x + i, y + j) !== 'grass') all = false;
@@ -328,8 +328,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       deepOk = 0,
       foamTiles = 0,
       coastTiles = 0;
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         if (terrainOf(w, x, y) !== 'water') continue;
         const d = depthAt(f, x + 0.5, y + 0.5);
         const c = painted.at((x + 0.5) * TEX, (y + 0.5) * TEX);
@@ -379,8 +379,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       crownPix = 0,
       light = 0,
       dark = 0;
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         const t = terrainOf(w, x, y);
         if (t === 'forest') {
           forest++;
@@ -421,8 +421,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       const p = seed === 3 ? painted : paintAll(w);
       let rock = 0,
         both = 0;
-      for (let y = 0; y < w.height; y++)
-        for (let x = 0; x < w.width; x++) {
+      for (let y = 0; y < home(w).height; y++)
+        for (let x = 0; x < home(w).width; x++) {
           if (terrainOf(w, x, y) !== 'mountain') continue;
           rock++;
           let l = 0,
@@ -443,8 +443,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
   it('H-R11 (löst R149 ab) Grasfläche 4 × 4 Kacheln zeigt ≥ 3 Farbwerte mit ΔE ≥ 2 (3 × 3-Mittel, ohne Korn)', () => {
     const w = world3;
     let checked = 0;
-    for (let y = 0; y < w.height - 4 && checked < 5; y++)
-      for (let x = 0; x < w.width - 4 && checked < 5; x++) {
+    for (let y = 0; y < home(w).height - 4 && checked < 5; y++)
+      for (let x = 0; x < home(w).width - 4 && checked < 5; x++) {
         let all = true;
         for (let j = 0; j < 4 && all; j++)
           for (let i = 0; i < 4; i++) if (terrainOf(w, x + i, y + j) !== 'grass') all = false;
@@ -471,8 +471,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       iSum = 0,
       iN = 0;
     const dirs = [-1, 0, 1];
-    for (let y = 1; y < w.height - 1; y++)
-      for (let x = 1; x < w.width - 1; x++) {
+    for (let y = 1; y < home(w).height - 1; y++)
+      for (let x = 1; x < home(w).width - 1; x++) {
         if (terrainOf(w, x, y) !== 'forest') continue;
         let nForest = 0;
         for (const dy of dirs)
@@ -499,8 +499,8 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     const labs = [PALETTE.earth, PALETTE.earthEdge].map((c) => hexToLab(c));
     let n = 0,
       minDe = Infinity;
-    for (let y = 0; y < w.height; y++)
-      for (let x = 0; x < w.width; x++) {
+    for (let y = 0; y < home(w).height; y++)
+      for (let x = 0; x < home(w).width; x++) {
         if (terrainOf(w, x, y) !== 'grass') continue;
         // Kachelinneres: am Rand zeigt eine Grasskachel auch Felspixel des Nachbarn (Typ je Pixel, nicht je Kachel)
         for (let py = 10; py < TEX - 9; py += 4)
@@ -542,22 +542,22 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
  * - blob: Streuung der 8 × 8-Pixel-Mittel in Gebirgskacheln mit Gebirge rundum; grosse Flecken = gross
  */
 function rasterStats(world: World, out: Uint8ClampedArray) {
-  const W = world.width * TEX,
-    H = world.height * TEX;
+  const W = home(world).width * TEX,
+    H = home(world).height * TEX;
   const L = new Float32Array(W * H);
   for (let k = 0; k < W * H; k++)
     L[k] = 0.2126 * out[k * 4]! + 0.7152 * out[k * 4 + 1]! + 0.0722 * out[k * 4 + 2]!;
   const T = (tx: number, ty: number) => terrainOf(world, tx, ty);
-  const inland = new Uint8Array(world.width * world.height);
-  for (let ty = 1; ty < world.height - 1; ty++)
-    for (let tx = 1; tx < world.width - 1; tx++) {
+  const inland = new Uint8Array(home(world).width * home(world).height);
+  for (let ty = 1; ty < home(world).height - 1; ty++)
+    for (let tx = 1; tx < home(world).width - 1; tx++) {
       let ok = true;
       for (let dy = -1; dy <= 1; dy++)
         for (let dx = -1; dx <= 1; dx++) if (T(tx + dx, ty + dy) === 'water') ok = false;
-      inland[ty * world.width + tx] = ok ? 1 : 0;
+      inland[ty * home(world).width + tx] = ok ? 1 : 0;
     }
   const land = (px: number, py: number) =>
-    inland[((py / TEX) | 0) * world.width + ((px / TEX) | 0)] === 1;
+    inland[((py / TEX) | 0) * home(world).width + ((px / TEX) | 0)] === 1;
   const nearEdge = (q: number) => q <= 2 || q >= TEX - 2;
   let seam = 0,
     nSeam = 0,
@@ -596,8 +596,8 @@ function rasterStats(world: World, out: Uint8ClampedArray) {
     }
   const rim: number[] = [];
   const blocks: number[] = [];
-  for (let ty = 1; ty < world.height - 1; ty++)
-    for (let tx = 1; tx < world.width - 1; tx++) {
+  for (let ty = 1; ty < home(world).height - 1; ty++)
+    for (let tx = 1; tx < home(world).width - 1; tx++) {
       if (T(tx, ty) !== 'mountain') continue;
       let all9 = true;
       for (const [dx, dy] of [
@@ -677,7 +677,7 @@ describe('Auflösungsfaktor', () => {
 describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
   it('AK-R1-01 Gelände-Abbild unterscheidet sich genau in (x, y); Rechteck mit Glättungsrand, geklemmt; step allein patcht nicht', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const x = k.x + 6,
       y = k.y + 2;
     forceRect(w, x, y, 1, 1, 'forest');
@@ -687,26 +687,26 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
     expect(shouldPatch({ world: w, key }, w, layoutKey(w))).toBe(false);
     expect(clearForest(w, x, y).ok).toBe(true);
     const b = terrainCodes(w);
-    expect([...a.keys()].filter((i) => a[i] !== b[i])).toEqual([y * w.width + x]);
-    const r = terrainPatchRect(a, b, w.width, w.height)!;
+    expect([...a.keys()].filter((i) => a[i] !== b[i])).toEqual([y * home(w).width + x]);
+    const r = terrainPatchRect(a, b, home(w).width, home(w).height)!;
     expect(r.x0).toBeLessThanOrEqual(x - SMOOTH_BORDER);
     expect(r.x1).toBeGreaterThanOrEqual(x + SMOOTH_BORDER);
-    expect(terrainPatchRect(b, b, w.width, w.height)).toBeNull();
+    expect(terrainPatchRect(b, b, home(w).width, home(w).height)).toBeNull();
     const edge = terrainPatchRect(
-      new Uint8Array(w.width * w.height),
+      new Uint8Array(home(w).width * home(w).height),
       (() => {
-        const c = new Uint8Array(w.width * w.height);
+        const c = new Uint8Array(home(w).width * home(w).height);
         c[0] = 1;
         return c;
       })(),
-      w.width,
-      w.height,
+      home(w).width,
+      home(w).height,
     )!;
     expect([edge.x0, edge.y0]).toEqual([0, 0]);
   });
   it('AK-R1-05 Tier-Anker (Fische, Vögel) und Küstenfeld (water.ts und life.ts nutzen coastField) bleiben gleich', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
     forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
     w.money = 1000;
@@ -725,15 +725,15 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
 describe('M10 Teil-Raster', () => {
   it('AK-R1-01 patchGrid im Rechteck ergibt dasselbe Raster wie ein Vollaufbau (Roden und Aufforsten)', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 2, 1, 'forest');
     const fields = terrainFields(w);
     const grid = buildGrid(w, fields);
     const prev = terrainCodes(w);
-    w.tiles[(k.y + 2) * w.width + k.x + 6]!.terrain = 'grass';
-    w.tiles[(k.y + 2) * w.width + k.x + 7]!.terrain = 'sand';
+    home(w).tiles[(k.y + 2) * home(w).width + k.x + 6]!.terrain = 'grass';
+    home(w).tiles[(k.y + 2) * home(w).width + k.x + 7]!.terrain = 'sand';
     const next = terrainCodes(w);
-    const rect = terrainPatchRect(prev, next, w.width, w.height)!;
+    const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
     for (const f of ['sharp', 'smooth', 'grass', 'rock', 'shade', 'tone', 'patch', 'cls'] as const)
@@ -1078,14 +1078,14 @@ describe('H-R9 B3 Wiesenvarianz', () => {
 describe('H-R9 B4 Teil-Neuzeichnung', () => {
   it('H-R9 B4 patchGrid ergibt auch für shade/warm/mottle/veil dasselbe Raster wie Vollaufbau; Pixel im Rechteck gleich', () => {
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 4, 3, 'forest');
     const fields = terrainFields(w);
     const grid = buildGrid(w, fields);
     const prev = terrainCodes(w);
-    w.tiles[(k.y + 3) * w.width + k.x + 7]!.terrain = 'grass';
+    home(w).tiles[(k.y + 3) * home(w).width + k.x + 7]!.terrain = 'grass';
     const next = terrainCodes(w);
-    const rect = terrainPatchRect(prev, next, w.width, w.height)!;
+    const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
     patchGrid(w, fields, grid, prev, next, rect);
     const full = buildGrid(w);
     for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const) {

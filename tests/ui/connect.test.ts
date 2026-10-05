@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { placeBuilding } from '../../src/sim/build';
 import { ROAD_COST } from '../../src/sim/defs/buildings';
 import { connectPath } from '../../src/sim/connect';
-import { adjacentOf, createWorld, idx } from '../../src/sim/world';
+import { home, adjacentOf, createWorld, idx } from '../../src/sim/world';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, World } from '../../src/sim/types';
 import { connectView } from '../../src/ui/connect';
@@ -14,7 +14,7 @@ let lj: Building;
 
 beforeEach(() => {
   w = createWorld(3);
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
   prepareEast(w, k);
   const res = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
   if (!res.ok || res.id === undefined) throw new Error('lumberjack not placed');
@@ -52,7 +52,7 @@ describe('connectView (AK-08)', () => {
     // Weg bis auf eine Kachel vorhanden: Kontor-Ostkante bis zum Betrieb
     const p = connectPath(w, lj.id);
     if (!p.ok) throw new Error('no path');
-    for (const t of p.tiles.slice(1)) w.tiles[idx(w, t.x, t.y)]!.road = true;
+    for (const t of p.tiles.slice(1)) home(w).tiles[idx(home(w), t.x, t.y)]!.road = true;
     const v = connectView(w, lj)!;
     expect(v.label).toBe(`Anbinden (1 Weg · ${ROAD_COST} Geld)`);
     expect(v.tiles).toHaveLength(1);
@@ -71,9 +71,9 @@ describe('connectView (AK-08)', () => {
 
   it('reports a missing way', () => {
     const def = BUILDING_DEFS[lj.defId];
-    for (const p of adjacentOf(w, lj.x, lj.y, def.w, def.h)) {
+    for (const p of adjacentOf(home(w), lj.x, lj.y, def.w, def.h)) {
       forceGrass(w, p.x, p.y);
-      w.tiles[idx(w, p.x, p.y)]!.terrain = 'water';
+      home(w).tiles[idx(home(w), p.x, p.y)]!.terrain = 'water';
     }
     expect(connectView(w, lj)).toEqual({
       label: 'Anbinden',

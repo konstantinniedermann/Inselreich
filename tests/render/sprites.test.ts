@@ -38,7 +38,7 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { serialize } from '../../src/sim/save';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import { fakeCtx, inHull, type P } from './fakeCtx';
 
 const CAM = { x: 0, y: 0, zoom: 1 };
@@ -784,8 +784,8 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
   // --- Erdwege (Spec 5.4, ISO §6): Aufruf im Kachelraum unter der Bodenmatrix ---
   function roadWorld(tiles: [number, number][]) {
     const w = createWorld(3);
-    for (const t of w.tiles) t.road = false;
-    for (const [x, y] of tiles) w.tiles[idx(w, x, y)]!.road = true;
+    for (const t of home(w).tiles) t.road = false;
+    for (const [x, y] of tiles) home(w).tiles[idx(home(w), x, y)]!.road = true;
     return w;
   }
   function recordWidths(ctx: CanvasRenderingContext2D): {

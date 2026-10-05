@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { cycleOf } from '../../src/sim/levels';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Building } from '../../src/sim/types';
 import { producesText } from '../../src/ui/texts';
 import { upkeepText, progressPct } from '../../src/ui/inspect';
@@ -66,11 +66,11 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
   });
   it('AK-UI-10 Vorlauf: Mouse-over Fischer Stufe 2 „arbeitet — 25 Nahrung / min"', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const b = mk('fisher', { id: w.nextBuildingId++, x: k.x + 4, y: k.y - 6, level: 2 });
     w.buildings[b.id] = b;
     forceGrass(w, b.x, b.y);
-    w.tiles[idx(w, b.x, b.y)]!.buildingId = b.id;
+    home(w).tiles[idx(home(w), b.x, b.y)]!.buildingId = b.id;
     const none = { ship: false, animal: null };
     expect(hoverInfo(w, b, 0, none)!.lines[0]).toBe('arbeitet — 25 Nahrung / min');
   });

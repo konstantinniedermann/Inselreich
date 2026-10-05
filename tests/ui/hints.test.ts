@@ -19,7 +19,7 @@ import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { createRng } from '../../src/sim/rng';
 import type { Building, BuildingDefId, GoodId, TaxLevel } from '../../src/sim/types';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Tool } from '../../src/render/renderer';
 import {
   REASON_TABLE,
@@ -42,7 +42,7 @@ declare const process: { env: Record<string, string | undefined> };
 describe('friendlyReason (AK-UX-03)', () => {
   it('AK-UX-03 Pflichtfälle aus der Spec', () => {
     const { w } = uxWorld();
-    w.stock.wood = 1;
+    home(w).stock.wood = 1;
     expect(friendlyReason(w, 'Zu wenig Holz', { defId: 'house' })).toBe(
       'Zu wenig Holz: 3 nötig, 1 vorhanden · kaufbar am Kontor',
     );
@@ -53,7 +53,7 @@ describe('friendlyReason (AK-UX-03)', () => {
     expect(friendlyReason(w, 'Zu wenig Geld', { cost: ROAD_COST_OBJ })).toBe(
       `Zu wenig Geld: ${ROAD_COST} nötig, ${w.money} vorhanden`,
     );
-    w.stock.wood = 5;
+    home(w).stock.wood = 5;
     expect(friendlyReason(w, 'Nicht genug Ware', { good: 'wood', amount: 20 })).toBe(
       'Nicht genug Holz: 20 nötig, 5 vorhanden',
     );
@@ -114,12 +114,12 @@ describe('friendlyReason (AK-UX-03)', () => {
       [
         'Zu wenig Werkzeug',
         { defId: 'chapel' },
-        `Zu wenig Werkzeug: ${d.chapel.cost.tools} nötig, ${w.stock.tools} vorhanden · kaufbar am Kontor`,
+        `Zu wenig Werkzeug: ${d.chapel.cost.tools} nötig, ${home(w).stock.tools} vorhanden · kaufbar am Kontor`,
       ],
       [
         'Zu wenig Stein',
         { defId: 'chapel' },
-        `Zu wenig Stein: ${d.chapel.cost.stone} nötig, ${w.stock.stone} vorhanden · kaufbar am Kontor`,
+        `Zu wenig Stein: ${d.chapel.cost.stone} nötig, ${home(w).stock.stone} vorhanden · kaufbar am Kontor`,
       ],
       ['Zu wenig Stein', {}, SAME],
       ['Ungültige Stufe', {}, SAME],
@@ -161,40 +161,41 @@ describe('friendlyReason (AK-UX-03)', () => {
     push(canPlace(w, 'lumberjack', kx + 10, ky - 6)); // Zu wenig Wald in der Nähe
     // Zu wenig Weide: Waldblock 7 × 7 (Testgelände), Schäferei in der Mitte
     for (let y = ky + 3; y <= ky + 9; y++)
-      for (let x = kx + 12; x <= kx + 18; x++) w.tiles[idx(w, x, y)]!.terrain = 'forest';
+      for (let x = kx + 12; x <= kx + 18; x++)
+        home(w).tiles[idx(home(w), x, y)]!.terrain = 'forest';
     push(canPlace(w, 'sheepfarm', kx + 14, ky + 5));
     push(canPlaceRoad(w, -1, -1));
     push(canPlace(w, 'house', kx + 12, ky - 8)); // Ausserhalb der Versorgung (wie Szenario `bedarf`)
     w.money = -1;
-    push(checkAfford(w, { money: 1, wood: 0, tools: 0, stone: 0 }));
+    push(checkAfford(w, home(w), { money: 1, wood: 0, tools: 0, stone: 0 }));
     w.money = 0;
-    push(checkAfford(w, { money: 1, wood: 0, tools: 0, stone: 0 }));
+    push(checkAfford(w, home(w), { money: 1, wood: 0, tools: 0, stone: 0 }));
     w.money = 1000;
     for (const g of ['wood', 'tools', 'stone'] as const) {
-      const s = { ...w.stock };
-      w.stock[g] = 0;
+      const s = { ...home(w).stock };
+      home(w).stock[g] = 0;
       push(
-        checkAfford(w, {
+        checkAfford(w, home(w), {
           money: 0,
           wood: g === 'wood' ? 1 : 0,
           tools: g === 'tools' ? 1 : 0,
           stone: g === 'stone' ? 1 : 0,
         }),
       );
-      w.stock = s;
+      home(w).stock = s;
     }
     push(removeRoad(w, kx + 10, ky + 5));
     push(demolish(w, 99999));
-    push(demolish(w, w.kontorId));
+    push(demolish(w, home(w).kontorId));
     push(setTaxLevel(w, 'x' as TaxLevel));
     push(setTaxLevel(w, w.taxLevel));
     push(setTaxLevel(w, 'high'));
     push(setTaxLevel(w, 'low')); // Sperrzeit
     reasons.push('Es gibt schon eine Amtsstube', 'Braucht eine Amtsstube');
     push(buy(w, 'wood', 0));
-    w.stock.wood = 100;
+    home(w).stock.wood = 100;
     push(buy(w, 'wood', 1)); // Lager voll
-    w.stock.wood = 0;
+    home(w).stock.wood = 0;
     w.money = 0;
     push(buy(w, 'rum', 1)); // Zu wenig Geld
     w.money = -1;
@@ -244,8 +245,12 @@ describe('placementHint (AK-UX-04)', () => {
       'Abreissen: Fischerhütte · zurück 50 Geld · 2 Holz · 1 Werkzeug',
     );
     expect(
-      placementHint(w, { kind: 'demolish' }, w.buildings[w.kontorId]!.x, w.buildings[w.kontorId]!.y)
-        ?.tone,
+      placementHint(
+        w,
+        { kind: 'demolish' },
+        w.buildings[home(w).kontorId]!.x,
+        w.buildings[home(w).kontorId]!.y,
+      )?.tone,
     ).toBe('info');
     expect(placementHint(w, { kind: 'demolish' }, kx + 12, ky + 6)).toBeNull();
     expect(placementHint(w, { kind: 'select' }, kx + 12, ky + 6)).toBeNull();
@@ -275,7 +280,7 @@ describe('placementHint (AK-UX-04)', () => {
   it('AK-UX-04 Weberei bei vollem Holzlager nennt den Verfall', () => {
     const { w, kx, ky } = uxWorld();
     const weaver = build(w, 'weaver', kx + 10, ky + 2);
-    w.stock.wood = 100;
+    home(w).stock.wood = 100;
     expect(placementHint(w, { kind: 'demolish' }, weaver.x, weaver.y)?.text).toContain(
       'verfallen – Lager voll)',
     );
@@ -283,7 +288,8 @@ describe('placementHint (AK-UX-04)', () => {
   it('RF-4 Rand: halb ausserhalb → Kartenrand; Schild bleibt im Fenster', () => {
     const { w } = uxWorld();
     expect(
-      placementHint(w, { kind: 'build', defId: 'weaver' }, w.width - 1, w.height - 1)?.text,
+      placementHint(w, { kind: 'build', defId: 'weaver' }, home(w).width - 1, home(w).height - 1)
+        ?.text,
     ).toBe('Reicht über den Kartenrand hinaus');
     expect(hintPosition(1270, 790, 200, 30, 1280, 800)).toEqual({ left: 1076, top: 766 });
     expect(hintPosition(0, 0, 200, 30, 1280, 800)).toEqual({ left: 16, top: 16 });
@@ -326,7 +332,7 @@ it('AK-UX-31 placementHint in leistung-50, ungünstigster Fall: Median je Aufruf
   // Ungünstigster Fall (R125 a): Land, Platzierung ok, Kosten gedeckt → placementHint läuft bis zum BFS
   // über reachableRoads (Bau- und Weg-Werkzeug), ohne Cache.
   w.money = 1_000_000;
-  for (const g of Object.keys(w.stock) as GoodId[]) w.stock[g] = 100;
+  for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
   const tools: Tool[] = [
     { kind: 'road' },
     ...BUILDING_IDS.filter((id) => id !== 'kontor' && id !== 'house').map((defId) => ({
@@ -341,8 +347,8 @@ it('AK-UX-31 placementHint in leistung-50, ungünstigster Fall: Median je Aufruf
   const rng = createRng(31);
   const pairs: { tool: Tool; x: number; y: number }[] = [];
   for (let guard = 0; pairs.length < 500 && guard < 200_000; guard++) {
-    const x = Math.floor(rng() * w.width);
-    const y = Math.floor(rng() * w.height);
+    const x = Math.floor(rng() * home(w).width);
+    const y = Math.floor(rng() * home(w).height);
     const tool = tools[Math.floor(rng() * tools.length)]!;
     if (ok(tool, x, y)) pairs.push({ tool, x, y });
   }
@@ -439,7 +445,7 @@ describe('M11 Ausbau-Gründe (Spec 3.6)', () => {
       upgradeBuilding(w, add('fisher', { level: 3 })), // Höchste Stufe erreicht
       upgradeBuilding(w, add('fisher', { outageUntil: w.tick + 200 })), // Gebäude brennt
     ].map((r) => (r.ok ? '' : r.reason));
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     const r = upgradeBuilding(w, add('fisher'));
     reasons.push(r.ok ? '' : r.reason); // Zu wenig Stoff
     for (const x of reasons)

@@ -11,7 +11,7 @@ import {
 import { fakeCtx } from './fakeCtx';
 import { placeRoad } from '../../src/sim/build';
 import { coverageMask, layoutKey } from '../../src/sim/queries';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { deltaE2000, hexToLab } from './deltaE';
 import type { Building, World } from '../../src/sim/types';
 
@@ -20,7 +20,7 @@ let k: Building;
 
 beforeEach(() => {
   w = createWorld(3);
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
 });
 
 describe('overlays', () => {
@@ -138,7 +138,7 @@ describe('M8 R1 Symbole und Farben', () => {
 
   it('AK-R1-03 drawNeedSymbols zeichnet bei Bad-Mangel mit der Bad-Farbe, nicht mit der Buchfarbe', () => {
     const world = createWorld(3);
-    const kk = world.buildings[world.kontorId]!;
+    const kk = world.buildings[home(world).kontorId]!;
     const mkB = (
       id: number,
       defId: Building['defId'],

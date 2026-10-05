@@ -2,7 +2,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { LEVELS } from '../sim/defs/levels';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { hash2 } from '../sim/noise';
-import { tileAt } from '../sim/world';
+import { home, tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { LIGHT } from './light';
@@ -2063,7 +2063,7 @@ export function drawRoads(
   world: World,
   range: { x0: number; y0: number; x1: number; y1: number },
 ): void {
-  const road = (x: number, y: number): boolean => tileAt(world, x, y)?.road === true;
+  const road = (x: number, y: number): boolean => tileAt(home(world), x, y)?.road === true;
   const seed = world.seed;
   const segs: [Pt, Pt][] = [];
   const dots: Pt[] = [];

@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { connectPath } from '../sim/connect';
 import { checkAfford } from '../sim/economy';
@@ -34,7 +35,7 @@ export function connectView(world: World, b: Building): ConnectView | null {
   const n = path.tiles.length;
   const cost = { ...ROAD_COST_OBJ, money: n * ROAD_COST };
   const label = `Anbinden (${n} ${n === 1 ? 'Weg' : 'Wege'} · ${cost.money} Geld)`;
-  const afford = checkAfford(world, cost);
+  const afford = checkAfford(world, home(world), cost);
   return {
     label,
     ok: afford.ok,

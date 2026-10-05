@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
 import type { BuildingDefId, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
 import { centerOn, type Camera } from '../../src/render/camera';
 import {
   ISO_H,
@@ -72,7 +72,7 @@ beforeAll(() => {
 /** Leere Welt (alles Gras, keine Gebäude) mit `rows` ab (ox, oy): M Gebirge, F Wald, ~ Wasser, S Sand, sonst Gras. */
 function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
   const w = createWorld(seed, { unlockAll: true });
-  for (const t of w.tiles) {
+  for (const t of home(w).tiles) {
     t.terrain = 'grass';
     t.buildingId = null;
     t.road = false;
@@ -81,7 +81,7 @@ function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
   const T = { M: 'mountain', F: 'forest', '~': 'water', S: 'sand' } as const;
   rows.forEach((r, y) =>
     [...r].forEach((c, x) => {
-      const t = w.tiles[(oy + y) * w.width + ox + x]!;
+      const t = home(w).tiles[(oy + y) * home(w).width + ox + x]!;
       t.terrain = c in T ? T[c as keyof typeof T] : 'grass';
     }),
   );
@@ -90,10 +90,10 @@ function scene(rows: string[], ox = 10, oy = 10, seed = 5): World {
 let nextId = 500;
 function put(w: World, defId: BuildingDefId, x: number, y: number): boolean {
   const d = BUILDING_DEFS[defId];
-  if (x < 0 || y < 0 || x + d.w > w.width || y + d.h > w.height) return false;
+  if (x < 0 || y < 0 || x + d.w > home(w).width || y + d.h > home(w).height) return false;
   const tiles = [];
   for (let dy = 0; dy < d.h; dy++)
-    for (let dx = 0; dx < d.w; dx++) tiles.push(w.tiles[(y + dy) * w.width + x + dx]!);
+    for (let dx = 0; dx < d.w; dx++) tiles.push(home(w).tiles[(y + dy) * home(w).width + x + dx]!);
   // wie `checkGround` der Sim: Gebirge und Wasser sind kein Bauland
   if (
     tiles.some(
@@ -147,9 +147,9 @@ describe('H-R9 A1 Komponenten', () => {
     const d = massifData(w);
     expect(massifData(w)).toBe(d);
     put(w, 'house', 30, 30);
-    w.tiles[31 * 64 + 30]!.road = true;
+    home(w).tiles[31 * 64 + 30]!.road = true;
     expect(massifData(w)).toBe(d);
-    w.tiles[40 * 64 + 40]!.terrain = 'mountain';
+    home(w).tiles[40 * 64 + 40]!.terrain = 'mountain';
     expect(massifData(w)).not.toBe(d);
   });
 });
@@ -560,7 +560,7 @@ describe('H-R9 A3 Färbung', () => {
     const w = scene(['......', '.MMMM.', '.MMMM.', '.MMMM.', '......'], 20, 20);
     const data = massifData(w);
     const before = new Map(massifPieces(w).map((p) => [p.id, p]));
-    w.tiles[23 * 64 + 25]!.terrain = 'forest'; // rechts neben der Randkachel (24, 23)
+    home(w).tiles[23 * 64 + 25]!.terrain = 'forest'; // rechts neben der Randkachel (24, 23)
     expect(massifData(w)).toBe(data); // Gebirge unverändert: kein Neubau des Höhenfelds
     const after = massifPieces(w);
     const changed = after.filter((p) => before.get(p.id)!.key !== p.key);
@@ -634,7 +634,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       for (const i of p.tiles) {
         const x = i % W,
           y = Math.floor(i / W);
-        const t = w.tiles[i]!;
+        const t = home(w).tiles[i]!;
         expect(t.terrain).toBe('mountain');
         expect([strips(p), strips(p) + 1]).toContain(x - y);
         if (prevS >= 0) expect(x + y).toBe(prevS + 1);
@@ -665,7 +665,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     let free = 0;
     for (let y = 0; y < 64; y++)
       for (let x = 0; x < 64; x++) {
-        const t = w.tiles[y * 64 + x]!;
+        const t = home(w).tiles[y * 64 + x]!;
         const isFree = t.terrain === 'mountain';
         if (isFree) free++;
         for (let J = y * SUB; J < (y + 1) * SUB; J++)
@@ -714,9 +714,9 @@ describe('H-R9 A4/A5 Teilstücke', () => {
     );
     // Gebirge ist nicht bebaubar: Steinbruch, Weg, Häuser und Betriebe direkt an den Rändern und in den Buchten
     expect(put(w, 'quarry', 8 + 3, 8 + 2)).toBe(true); // in der Bucht des Rings
-    for (let x = 8; x <= 8 + 8; x++) w.tiles[(8 + 8) * 64 + x]!.road = true; // Weg am Fuss entlang
+    for (let x = 8; x <= 8 + 8; x++) home(w).tiles[(8 + 8) * 64 + x]!.road = true; // Weg am Fuss entlang
     for (let x = 8; x <= 8 + 8; x++)
-      expect(w.tiles[(8 + 8) * 64 + x]!.terrain).not.toBe('mountain');
+      expect(home(w).tiles[(8 + 8) * 64 + x]!.terrain).not.toBe('mountain');
     const spots: [BuildingDefId, number, number][] = [];
     for (let y = 6; y < 22; y++)
       for (let x = 8; x < 28; x++) spots.push([(x + y) % 3 === 0 ? 'lumberjack' : 'house', x, y]);
@@ -730,7 +730,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       put(w, 'market', x, y);
     expect(Object.keys(w.buildings).length).toBeGreaterThan(20);
     const free = (x: number, y: number): boolean => {
-      const t = w.tiles[y * 64 + x];
+      const t = home(w).tiles[y * 64 + x];
       return !!t && t.terrain === 'mountain';
     };
     const movers: Moving[] = [];

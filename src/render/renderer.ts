@@ -1,6 +1,6 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { houseDiagnosis } from '../sim/queries';
-import { tileAt } from '../sim/world';
+import { home, tileAt } from '../sim/world';
 import type { Building, BuildingDefId, World } from '../sim/types';
 import {
   tileCorners,
@@ -213,7 +213,7 @@ function hullPath(ctx: CanvasRenderingContext2D, cam: Camera, b: Building): void
 }
 
 const buildingAt = (world: World, x: number, y: number): Building | undefined => {
-  const id = tileAt(world, x, y)?.buildingId;
+  const id = tileAt(home(world), x, y)?.buildingId;
   return id != null ? world.buildings[id] : undefined;
 };
 
@@ -272,7 +272,7 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
 /** Wasser an den vier Seiten des Footprints (für die Kaimauer): +v links, +u rechts, −u und −v hinten. */
 export function waterSides(world: World, b: Building): Required<BodyEnv> {
   const def = BUILDING_DEFS[b.defId];
-  const water = (x: number, y: number): boolean => tileAt(world, x, y)?.terrain === 'water';
+  const water = (x: number, y: number): boolean => tileAt(home(world), x, y)?.terrain === 'water';
   const r = { waterLeft: false, waterRight: false, waterU0: false, waterV0: false };
   for (let i = 0; i < def.h; i++) {
     r.waterRight ||= water(b.x + def.w, b.y + i);
@@ -430,7 +430,7 @@ export function render(
   ctx.fillStyle = PALETTE.waterDeep;
   ctx.fillRect(0, 0, view.w, view.h);
 
-  const range = visibleTileRange(cam, view, { w: world.width, h: world.height });
+  const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
 
   // sichtbare Feuer-Gebäude (Bildbox schneidet das Bild)
@@ -477,8 +477,8 @@ export function render(
     const wildRange = {
       x0: Math.max(0, range.x0 - 3),
       y0: Math.max(0, range.y0 - 3),
-      x1: Math.min(world.width - 1, range.x1 + 3),
-      y1: Math.min(world.height - 1, range.y1 + 3),
+      x1: Math.min(home(world).width - 1, range.x1 + 3),
+      y1: Math.min(home(world).height - 1, range.y1 + 3),
     };
     const wild = wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
     drawWaterLife(ctx, cam, wild);
@@ -749,7 +749,7 @@ export function render(
     drawPlacementOverlay(ctx, world, cam, range, hover.tool.defId, hover.x, hover.y);
   }
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, world, cam, range);
   drawUnconnected(ctx, world, cam, range);

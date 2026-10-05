@@ -1,3 +1,4 @@
+import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
 import { orderVisible } from './order';
@@ -113,7 +114,7 @@ export function shortageSnapshot(world: World): ShortageSnapshot {
     for (const [good, d] of Object.entries(b.house.demand)) if ((d ?? 0) > 0) demanded.add(good);
   }
   const stock: Record<string, number> = {};
-  for (const g of demanded) stock[g] = world.stock[g as keyof World['stock']] ?? 0;
+  for (const g of demanded) stock[g] = home(world).stock[g as keyof World['stock']] ?? 0;
   return { demanded: [...demanded], stock };
 }
 

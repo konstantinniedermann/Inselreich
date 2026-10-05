@@ -5,7 +5,7 @@ import { pickWeather } from '../../src/render/weather';
 import { wildlifeAt } from '../../src/render/wildlife';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { newHouseState } from '../../src/sim/population';
-import { createWorld, idx } from '../../src/sim/world';
+import { home, createWorld, idx } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, Order, World } from '../../src/sim/types';
 import { friendlyReason } from '../../src/ui/hints';
 import { hoverInfo, hoverPosition, hoverVisible, type HoverState } from '../../src/ui/hover';
@@ -19,19 +19,20 @@ function readyPioneer(w: World, h: Building): void {
   setHouse(h, 1, 4);
   h.house!.supplied = true;
   h.house!.satisfied = { food: true };
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   placeService(w, 'chapel', k.x + 2, k.y + 4); // Aufstieg zu Stufe 2 verlangt eine Kapelle in Reichweite
   w.tick = 100_000;
   h.house!.satisfiedSince = 0;
   w.money = 100_000;
-  for (const g of Object.keys(w.stock) as (keyof typeof w.stock)[]) w.stock[g] = 100;
+  const stock = home(w).stock;
+  for (const g of Object.keys(stock) as (keyof typeof stock)[]) stock[g] = 100;
 }
 
 /** Erste Gebirgskachel der Karte (Seed 3). */
 function mountainTile(w: World): { x: number; y: number } {
-  for (let y = 0; y < w.height; y++)
-    for (let x = 0; x < w.width; x++)
-      if (w.tiles[idx(w, x, y)]!.terrain === 'mountain') return { x, y };
+  for (let y = 0; y < home(w).height; y++)
+    for (let x = 0; x < home(w).width; x++)
+      if (home(w).tiles[idx(home(w), x, y)]!.terrain === 'mountain') return { x, y };
   throw new Error('kein Gebirge');
 }
 
@@ -80,13 +81,13 @@ describe('M10 Mouse-over (Spec 13)', () => {
     for (let dy = 0; dy < d.h; dy++)
       for (let dx = 0; dx < d.w; dx++) {
         forceGrass(w, x + dx, y + dy);
-        w.tiles[idx(w, x + dx, y + dy)]!.buildingId = id;
+        home(w).tiles[idx(home(w), x + dx, y + dy)]!.buildingId = id;
       }
     return b;
   }
   it('AK-U3-02 Betrieb, Dienst, Amtsstube: Zustandszeilen wörtlich (10 Fälle) (M11 S3)', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const p = (dx: number, dy: number): [number, number] => [k.x + dx, k.y + dy];
     const first = (b: Building): string => hoverInfo(w, b, 0, none)!.lines[0]!;
     forceRect(w, k.x + 2, k.y + 4, 6, 5, 'grass'); // Holzfäller ohne Wald im Radius 2
@@ -117,7 +118,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('AK-U3-03 Gelände, Schiff, Tier', () => {
     const w = createWorld(3);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 1, 1, 'forest');
     forceRect(w, k.x + 7, k.y + 2, 1, 1, 'grass');
     const wald = { x: k.x + 6, y: k.y + 2 };
@@ -155,7 +156,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   // Umgebung liegt in tests/render/renderer.test.ts (wildlifeEnvOf). Hier zählt: hoverInfo bricht ohne Treffer nicht.
   it('AK-U3-06 Tiere: ohne Abfrage-Treffer bricht nichts; gleiche env wie der Renderer (Regen, reduziert)', () => {
     const w = createWorld(3);
-    const range = { x0: 0, y0: 0, x1: w.width - 1, y1: w.height - 1 };
+    const range = { x0: 0, y0: 0, x1: home(w).width - 1, y1: home(w).height - 1 };
     for (const fx of [
       { timeMs: 5000 },
       { timeMs: 5000, weather: rainWeather(), reduceMotion: true },
@@ -174,7 +175,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('Spec 13.2 Dienst: Einzahl, Schule und Badehaus, nicht angebunden und brennend', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const at = (dx: number, dy: number): [number, number] => [k.x + dx, k.y + dy];
     const chapel = raw(w, 'chapel', ...at(4, 10));
     raw(w, 'house', ...at(6, 10)).house = newHouseState(w);
@@ -197,7 +198,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('Spec 13.2 Amtsstube wirkt nicht: nicht angebunden, brennend', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const t = raw(w, 'townhall', k.x + 4, k.y + 10);
     t.connected = false;
     expect(hoverInfo(w, t, 0, none)!.lines[2]).toBe('Wirkt nicht: nicht angebunden');
@@ -207,7 +208,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('Spec 13.2 Kontor, Marktplatz, Weg', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect(hoverInfo(w, k, 0, none)).toEqual({
       title: 'Kontor',
       lines: ['Versorgung im Radius 8', 'Handel: klicken'],
@@ -218,7 +219,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
       lines: ['Versorgung im Radius 8'],
     });
     forceGrass(w, k.x + 8, k.y + 10);
-    w.tiles[idx(w, k.x + 8, k.y + 10)]!.road = true;
+    home(w).tiles[idx(home(w), k.x + 8, k.y + 10)]!.road = true;
     expect(hoverInfo(w, { x: k.x + 8, y: k.y + 10 }, 0, none)).toEqual({
       title: 'Weg',
       lines: ['Verbindet Betriebe mit dem Kontor'],
@@ -226,10 +227,10 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('Spec 13.2 Gelände: Sand, Wasser, Fischerhütte neben Wasser', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const sand = { x: k.x + 6, y: k.y + 3 };
     forceGrass(w, sand.x, sand.y);
-    w.tiles[idx(w, sand.x, sand.y)]!.terrain = 'sand';
+    home(w).tiles[idx(home(w), sand.x, sand.y)]!.terrain = 'sand';
     expect(hoverInfo(w, sand, 0, none)).toEqual({ title: 'Sand', lines: ['Gut für Wohnhaus'] });
     const sea = { x: k.x + 6, y: k.y + 12 };
     forceRect(w, sea.x, sea.y, 1, 1, 'water');
@@ -250,7 +251,7 @@ describe('M10 Mouse-over (Spec 13)', () => {
   });
   it('Spec 13.1 Vorrang: Schiff vor Gebäude, Tier vor Schiff', () => {
     const w = createWorld(3);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect(hoverInfo(w, k, 0, { ship: true, animal: null })!.title).toBe('Händlerschiff');
     expect(hoverInfo(w, k, 0, { ship: true, animal: 'Wal' })!.title).toBe('Wal');
   });
@@ -281,7 +282,7 @@ describe('M11 Mouse-over Betrieb (Spec 7)', () => {
   const none = { ship: false, animal: null };
   it('AK-UI-08 Fischer Stufe 2: Titel „Fischerhütte, Stufe 2 · Auslastung 100 %"; Kapelle ohne Stufe', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const put = (
       defId: BuildingDefId,
       x: number,
@@ -300,7 +301,7 @@ describe('M11 Mouse-over Betrieb (Spec 7)', () => {
       };
       w.buildings[b.id] = b;
       forceGrass(w, x, y);
-      w.tiles[idx(w, x, y)]!.buildingId = b.id;
+      home(w).tiles[idx(home(w), x, y)]!.buildingId = b.id;
       return b;
     };
     const f = put('fisher', k.x + 4, k.y - 6, { level: 2 });
