@@ -1676,3 +1676,21 @@ nur T03/T04), lead-qa 1. Umsetzung beginnt, wenn E0-T03 (Sim) bzw. REL-03 auf ma
 Kosten bei Irrtum: Neu-Merges E0 → E1; Regressionsschutz Heimatbild schwächer ohne qa-B1.
 
 Entscheider: L0 · Anlass: Berichte lead-qa, lead-production M12-E1-GATE-PLAN; D-139 lead-tech · ADR: —
+
+## R232 · 2026-10-05 · Gate Merge Release REL-03
+
+Ruling: Gate Merge Release REL-03 bestanden. Kandidat `rel/rel-03` @ aa2ee4b auf main d0db854: H-U1 (0760dc9),
+S1-Rest (cba13ab), H-R13 (fb29bd2), H-R12b (aa2ee4b); `make check` nach jedem Merge und `CI=true make check` grün
+(1588 Tests). opus-Review lead-qa BEDENKEN nicht blockend; Perf A/B im Stilrahmen §5 (`buildMs` +9–13 %,
+`lastPatchMs` +17–18 %, `renderMedian` +0,1 ms). Browser-Lauf OK. Prüfliste UI-Task → Screenshot: H-U1
+`.studio/qa/REL-03/kandidat/h-u1/`, S1-Rest `…/kandidat/s1-rest/`, H-R13 `…/kandidat/h-r13/`, H-R12b
+`…/kandidat/h-r12b/`, Regression `…/kandidat/regression/`. **Auflage vor dem Push:** B1 — Merge-Artefakt in
+`docs/beobachtungen.md` (Zeile „Ergebnis: erledigt in fix/s1-rest" vom Wald-Eintrag in den S1-Rest-Eintrag
+verschieben) als eigener Fix-Commit des Integrators; B2 (`connectBuilding` multipliziert nur Geld) und
+CI-Zeitreserve AK-R1-06 (≈ 2,0–2,05 s von 2,25 s) als Beobachtungen. Die Leistungs-Einschätzung von lead-art
+(„Ruling" im Bericht) gilt erst mit diesem Ruling; Leads treffen keine Rulings (Retro). Wald-Gleichstand H-U1 bleibt
+so (Vorschau zeigt den Weg), Frage an lead-design über beobachtungen. H-R12b ist der dritte Dünen-Anlauf; Nutzerpunkt
+„Dünen sehen komisch aus" gilt nach dem Nutzertest als erledigt oder offen. Push durch production-integrator
+`HEAD:main`. — Kosten bei Irrtum: Revert-Merge; CI-Zeittest kann rot werden (dann Hotfix nach §7.2).
+
+Entscheider: L0 · Anlass: opus-Review und Playtest REL-03 · ADR: —
