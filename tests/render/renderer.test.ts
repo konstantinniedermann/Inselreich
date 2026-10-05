@@ -31,7 +31,9 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
 import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
-import { forceRect } from '../sim/helpers';
+import { readFileSync } from 'node:fs';
+import { deserialize } from '../../src/sim/save';
+import { fnv1a32, forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
 interface Call {
@@ -1070,5 +1072,34 @@ describe('S1-Rest DIM_FIRE', () => {
     const f = rgb(DIM_FIRE);
     // gleiche Rangfolge der Kanäle wie der Schattenton
     expect(f[2]! > f[1]! && f[1]! > f[0]!).toBe(t[2] > t[1] && t[1] > t[0]);
+  });
+});
+
+describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
+  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  const V1280 = { w: 1280, h: 800 };
+  /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
+  const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
+    h.calls.length = 0;
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, view, { timeMs: 5000, dayNight: true });
+    return h.calls.slice();
+  };
+  it('Heimat-Aufrufliste bei 1280 × 800, Zoom 1 und 2 unverändert (vor dem Terrain-Merge gepinnt)', () => {
+    const loaded = deserialize(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    const world = loaded.world;
+    const hm = home(world);
+    const all: Call[][] = [];
+    for (const zoom of [1, 2]) {
+      const cam = { x: 0, y: 0, zoom };
+      centerOn(cam, hm.width / 2, hm.height / 2, V1280, { w: hm.width, h: hm.height });
+      const r = visibleTileRange(cam, V1280, { w: hm.width, h: hm.height });
+      for (const v of [r.x0, r.y0, r.x1, r.y1]) expect(v).toBeGreaterThanOrEqual(4);
+      for (const v of [r.x1, r.y1]) expect(v).toBeLessThanOrEqual(59);
+      all.push(callList(world, cam, V1280));
+    }
+    const json = JSON.stringify(all);
+    expect({ hash: fnv1a32(json), length: json.length }).toEqual(HOME_CALLS);
   });
 });
