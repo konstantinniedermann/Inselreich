@@ -117,6 +117,8 @@ export interface Building {
   eff?: number;
   /** Ausbaustufe; fehlt = Stufe 1. */
   level?: 2 | 3;
+  /** Beginn des letzten Fests (Tick); nur an der Kapelle, fehlt = noch nie gefeiert. */
+  feastAt?: number;
   house?: HouseState;
 }
 export interface Tile {

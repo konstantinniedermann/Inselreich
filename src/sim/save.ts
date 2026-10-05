@@ -371,11 +371,19 @@ function isValidV6Building(b: unknown): boolean {
   return true;
 }
 
+/** `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version). */
+function isValidFeast(b: unknown, tick: unknown): boolean {
+  if (!isObject(b) || b.feastAt === undefined) return true;
+  return b.defId === 'chapel' && isInt(tick) && isIntBetween(b.feastAt, 0, tick);
+}
+
 function isValidV6Fields(raw: Record<string, unknown>): boolean {
   return (
     isIntBetween(raw.taxCarry, 0, TAX_CARRY_DIVISOR - 1) &&
     isIntBetween(raw.upkeepCarry, 0, UPKEEP_INTERVAL - 1) &&
-    Object.values(raw.buildings as Record<string, unknown>).every(isValidV6Building)
+    Object.values(raw.buildings as Record<string, unknown>).every(
+      (b) => isValidV6Building(b) && isValidFeast(b, raw.tick),
+    )
   );
 }
 
