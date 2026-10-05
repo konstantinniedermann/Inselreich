@@ -219,6 +219,9 @@ export interface World {
   /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
   upkeepCarry: number;
 }
+
+/** Insel-Sicht auf Raster, Kontor und Lager; T03 ersetzt den Alias durch ein eigenes Interface. */
+export type Island = Pick<World, 'width' | 'height' | 'tiles' | 'kontorId' | 'stock'>;
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });
 export const fail = (reason: string): Result => ({ ok: false, reason });

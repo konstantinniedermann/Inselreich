@@ -1,40 +1,40 @@
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
 import { upkeepOf } from './levels';
-import type { Cost, GoodId, Result, World } from './types';
+import type { Cost, GoodId, Island, Result, World } from './types';
 import { fail, ok } from './types';
 
 export { UPKEEP_INTERVAL } from './defs/timing';
 
 /** Lagert ein und liefert die tatsächlich eingelagerte Menge (Kappung bei STORAGE_CAP). */
-export function addStock(world: World, good: GoodId, n: number): number {
-  const accepted = Math.max(0, Math.min(n, STORAGE_CAP - world.stock[good]));
-  world.stock[good] += accepted;
+export function addStock(isl: Island, good: GoodId, n: number): number {
+  const accepted = Math.max(0, Math.min(n, STORAGE_CAP - isl.stock[good]));
+  isl.stock[good] += accepted;
   return accepted;
 }
 
 /** Entnimmt n; bei zu wenig Bestand false und keine Änderung. */
-export function takeStock(world: World, good: GoodId, n: number): boolean {
-  if (n < 0 || world.stock[good] < n) return false;
-  world.stock[good] -= n;
+export function takeStock(isl: Island, good: GoodId, n: number): boolean {
+  if (n < 0 || isl.stock[good] < n) return false;
+  isl.stock[good] -= n;
   return true;
 }
 
-export function checkAfford(world: World, cost: Cost): Result {
+export function checkAfford(world: World, isl: Island, cost: Cost): Result {
   if (world.money < 0) return fail('Kein Geld');
   if (world.money < cost.money) return fail('Zu wenig Geld');
-  if (world.stock.wood < cost.wood) return fail('Zu wenig Holz');
-  if (world.stock.tools < cost.tools) return fail('Zu wenig Werkzeug');
-  if (world.stock.stone < cost.stone) return fail('Zu wenig Stein');
+  if (isl.stock.wood < cost.wood) return fail('Zu wenig Holz');
+  if (isl.stock.tools < cost.tools) return fail('Zu wenig Werkzeug');
+  if (isl.stock.stone < cost.stone) return fail('Zu wenig Stein');
   return ok;
 }
 
 /** Zieht die Kosten ohne Prüfung ab; der Aufrufer prüft vorher checkAfford. */
-export function pay(world: World, cost: Cost): void {
+export function pay(world: World, isl: Island, cost: Cost): void {
   world.money -= cost.money;
-  world.stock.wood -= cost.wood;
-  world.stock.tools -= cost.tools;
-  world.stock.stone -= cost.stone;
+  isl.stock.wood -= cost.wood;
+  isl.stock.tools -= cost.tools;
+  isl.stock.stone -= cost.stone;
 }
 
 export function refundCost(cost: Cost): Cost {
@@ -46,11 +46,11 @@ export function refundCost(cost: Cost): Cost {
   };
 }
 
-export function grantRefund(world: World, cost: Cost): void {
+export function grantRefund(world: World, isl: Island, cost: Cost): void {
   world.money += cost.money;
-  addStock(world, 'wood', cost.wood);
-  addStock(world, 'tools', cost.tools);
-  addStock(world, 'stone', cost.stone);
+  addStock(isl, 'wood', cost.wood);
+  addStock(isl, 'tools', cost.tools);
+  addStock(isl, 'stone', cost.stone);
 }
 
 /** Unterhalt als Nominalwert je 100 Ticks. */

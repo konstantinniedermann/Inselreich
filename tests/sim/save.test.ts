@@ -14,7 +14,7 @@ import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { fixtureV6Run, locksV6Run } from './fixtureV6';
 import { CHAIN_HASHES, V6_FORMS } from './e0Pins';
 import {
@@ -32,7 +32,7 @@ let k: Building;
 
 beforeEach(() => {
   w = createWorld(42);
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
   prepareEast(w, k);
 });
 
@@ -78,7 +78,7 @@ describe('save', () => {
     expect(loaded.order).toBeNull();
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.money).toBe(before.money);
-    expect(loaded.stock).toEqual({ ...(before.stock as object), glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...(before.stock as object), glass: 0 });
     expect(Object.keys(loaded.buildings)).toEqual(Object.keys(before.buildings as object));
   });
 
@@ -225,7 +225,7 @@ describe('save', () => {
 
   it('rejects a building with an unknown defId', () => {
     const json = tampered(w, (raw) => {
-      const b = (raw.buildings as Record<string, Building>)[String(w.kontorId)]!;
+      const b = (raw.buildings as Record<string, Building>)[String(home(w).kontorId)]!;
       (b as { defId: string }).defId = 'castle';
     });
     expectFailure(json, 'Beschädigter Spielstand');
@@ -318,7 +318,7 @@ describe('M6 Save v3', () => {
     const shape = (x: World): unknown[] =>
       Object.values(x.buildings).map((b) => [b.id, b.defId, b.x, b.y, b.progress, b.state]);
     expect(shape(loaded)).toEqual(shape(before));
-    expect(loaded.stock).toEqual({ ...before.stock, glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...home(before).stock, glass: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.taxLevel).toBe(before.taxLevel);
@@ -349,7 +349,7 @@ describe('M6 Save v3', () => {
     ];
     for (const make of cases) {
       w = createWorld(42);
-      k = w.buildings[w.kontorId]!;
+      k = w.buildings[home(w).kontorId]!;
       prepareEast(w, k);
       const world = make();
       const r = deserialize(serialize(world));
@@ -372,7 +372,7 @@ describe('M6 Save v3', () => {
     };
     const fire = (): { world: World; id: number } => {
       w = createWorld(42);
-      k = w.buildings[w.kontorId]!;
+      k = w.buildings[home(w).kontorId]!;
       prepareEast(w, k);
       return burningWorld();
     };
@@ -473,11 +473,11 @@ describe('M8 Save v4', () => {
     if (!r.ok) return;
     const loaded = r.world;
     expect(loaded.version).toBe(6);
-    expect(loaded.stock.glass).toBe(0);
+    expect(home(loaded).stock.glass).toBe(0);
     expect(loaded.sellPct.glass).toBe(100);
     expect(loaded.wonMerchants).toBe(false);
     expect(loaded.buildings).toEqual(before.buildings);
-    expect(loaded.stock).toEqual({ ...before.stock, glass: 0 });
+    expect(home(loaded).stock).toEqual({ ...home(before).stock, glass: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
     expect(loaded.taxLevel).toBe(before.taxLevel);
@@ -495,7 +495,7 @@ describe('M8 Save v4', () => {
       if (!r.ok) continue;
       expect(r.world.version).toBe(6);
       expect(r.world.wonMerchants).toBe(false);
-      expect(r.world.stock.glass).toBe(0);
+      expect(home(r.world).stock.glass).toBe(0);
       expect(r.world.sellPct.glass).toBe(100);
       expect(r.world.crisisLevel).toBe('off');
       expect(r.world.crisis).toBeNull();
@@ -512,7 +512,7 @@ describe('M8 Save v4', () => {
     w.buildings[h.id!]!.house!.inhabitants = 20;
     w.won = true;
     w.wonMerchants = true;
-    w.stock.glass = 7;
+    home(w).stock.glass = 7;
     w.sellPct.glass = 90;
     expect(w.version).toBe(6);
     const r = deserialize(serialize(w));
@@ -569,7 +569,7 @@ const loadOk = (json: string): World => {
 };
 /** Angebundener Werkzeugmacher östlich des Kontors (wie tests/sim/toolmaker.test.ts). */
 function connectedToolmaker(w: World): Building {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   prepareEast(w, k);
   expect(placeRoad(w, k.x + 2, k.y).ok).toBe(true);
   forceRect(w, k.x + 3, k.y, 2, 2, 'grass');
@@ -710,10 +710,10 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     c.stock.wood = 10;
     tm.progress = 20;
     const w = loadOk(asV4(c));
-    const tools = w.stock.tools;
+    const tools = home(w).stock.tools;
     for (let i = 0; i < 100; i++) step(w);
     const b = w.buildings[tm.id]!;
-    expect([b.state, b.progress, w.stock.wood, w.stock.tools]).toEqual([
+    expect([b.state, b.progress, home(w).stock.wood, home(w).stock.tools]).toEqual([
       'noService',
       20,
       10,

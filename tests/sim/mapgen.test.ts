@@ -19,6 +19,7 @@ import {
   isLand,
   footprint,
   tilesInRadius,
+  home,
 } from '../../src/sim/world';
 
 const count = (t: string[], k: string) => t.filter((x) => x === k).length;
@@ -63,20 +64,20 @@ describe('generateMap', () => {
 describe('createWorld', () => {
   it('places the kontor on land next to water', () => {
     const w = createWorld(3);
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect(k.defId).toBe('kontor');
     for (let dy = 0; dy < 2; dy++)
       for (let dx = 0; dx < 2; dx++) {
-        const t = tileAt(w, k.x + dx, k.y + dy)!;
+        const t = tileAt(home(w), k.x + dx, k.y + dy)!;
         expect(isLand(t.terrain)).toBe(true);
         expect(t.buildingId).toBe(k.id);
       }
-    const waterAdj = adjacentOf(w, k.x, k.y, 2, 2).some(
-      (p) => tileAt(w, p.x, p.y)!.terrain === 'water',
+    const waterAdj = adjacentOf(home(w), k.x, k.y, 2, 2).some(
+      (p) => tileAt(home(w), p.x, p.y)!.terrain === 'water',
     );
     expect(waterAdj).toBe(true);
     expect(w.money).toBe(5000);
-    expect(w.stock.wood).toBe(40);
+    expect(home(w).stock.wood).toBe(40);
     expect(w.seed).toBeGreaterThanOrEqual(3);
   });
 });
@@ -87,7 +88,7 @@ describe('world helpers', () => {
   });
   it('adjacentOf a 2x2 returns the 8 edge neighbours, no corners, none inside', () => {
     const w = createWorld(3);
-    const adj = adjacentOf(w, 10, 10, 2, 2);
+    const adj = adjacentOf(home(w), 10, 10, 2, 2);
     expect(adj).toHaveLength(8);
     for (const p of adj) {
       const inside = p.x >= 10 && p.x <= 11 && p.y >= 10 && p.y <= 11;
@@ -98,13 +99,15 @@ describe('world helpers', () => {
   });
   it('tilesInRadius stays in bounds and includes the centre tile', () => {
     const w = createWorld(3);
-    const near = tilesInRadius(w, 0, 0, 3);
+    const near = tilesInRadius(home(w), 0, 0, 3);
     expect(near.every((p) => p.x >= 0 && p.y >= 0 && p.x < w.width && p.y < w.height)).toBe(true);
     expect(near).toContainEqual({ x: 0, y: 0 });
   });
   it('tilesInRadius is symmetric around a tile centre', () => {
     const w = createWorld(3);
-    const set = new Set(tilesInRadius(w, 10.5, 10.5, 2).map((p) => `${p.x - 10},${p.y - 10}`));
+    const set = new Set(
+      tilesInRadius(home(w), 10.5, 10.5, 2).map((p) => `${p.x - 10},${p.y - 10}`),
+    );
     expect(set.has('0,0')).toBe(true);
     for (const k of set) {
       const [dx, dy] = k.split(',').map(Number) as [number, number];

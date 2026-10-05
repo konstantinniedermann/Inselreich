@@ -1,15 +1,15 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { Building, BuildingDefId, World } from './types';
-import { adjacentOf, idx, inBounds } from './world';
+import { adjacentOf, home, idx, inBounds } from './world';
 
 /** Wegkacheln (Tile-Indizes), die 4er-angrenzend an den Kontor-Footprint liegen. */
 export function kontorRoadRoots(world: World): number[] {
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   if (!kontor) return [];
   const def = BUILDING_DEFS[kontor.defId];
-  return adjacentOf(world, kontor.x, kontor.y, def.w, def.h)
-    .map((p) => idx(world, p.x, p.y))
-    .filter((i) => world.tiles[i]!.road);
+  return adjacentOf(home(world), kontor.x, kontor.y, def.w, def.h)
+    .map((p) => idx(home(world), p.x, p.y))
+    .filter((i) => home(world).tiles[i]!.road);
 }
 
 /** BFS über Wegkacheln ab den Kontor-Roots. Das Set ist lokal und wird nicht im World gespeichert. */
@@ -28,9 +28,9 @@ export function reachableRoads(world: World): Set<number> {
     ] as const) {
       const nx = cx + dx;
       const ny = cy + dy;
-      if (!inBounds(world, nx, ny)) continue;
-      const ni = idx(world, nx, ny);
-      if (seen.has(ni) || !world.tiles[ni]!.road) continue;
+      if (!inBounds(home(world), nx, ny)) continue;
+      const ni = idx(home(world), nx, ny);
+      if (seen.has(ni) || !home(world).tiles[ni]!.road) continue;
       seen.add(ni);
       queue.push(ni);
     }
@@ -42,7 +42,9 @@ export function isBuildingConnected(world: World, b: Building, roads: Set<number
   if (b.defId === 'kontor') return true;
   if (b.defId === 'house') return false; // Versorgung läuft über Radius (M3), nicht über Wege
   const def = BUILDING_DEFS[b.defId];
-  return adjacentOf(world, b.x, b.y, def.w, def.h).some((p) => roads.has(idx(world, p.x, p.y)));
+  return adjacentOf(home(world), b.x, b.y, def.w, def.h).some((p) =>
+    roads.has(idx(home(world), p.x, p.y)),
+  );
 }
 
 /** Ob ein Gebäudetyp einen Weg zum Kontor braucht (Betriebe, Dienste, Versorger ausser Kontor). */

@@ -3,7 +3,7 @@ import { beginCrisis } from '../../src/sim/crises';
 import { BOOM_PCT } from '../../src/sim/defs/crises';
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
 import { deliverOrder } from '../../src/sim/orders';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice, sell, sellPrice, tickMarket } from '../../src/sim/trade';
@@ -19,13 +19,13 @@ describe('buy', () => {
   it('buys 10 tools: money -400, tools +10', () => {
     expect(buy(w, 'tools', 10)).toEqual({ ok: true });
     expect(w.money).toBe(4600);
-    expect(w.stock.tools).toBe(30);
+    expect(home(w).stock.tools).toBe(30);
   });
 
   it('fails with Lager voll and changes nothing', () => {
-    w.stock.tools = 95;
+    home(w).stock.tools = 95;
     expect(buy(w, 'tools', 10)).toEqual({ ok: false, reason: 'Lager voll' });
-    expect(w.stock.tools).toBe(95);
+    expect(home(w).stock.tools).toBe(95);
     expect(w.money).toBe(5000);
   });
 
@@ -33,7 +33,7 @@ describe('buy', () => {
     w.money = 30;
     expect(buy(w, 'tools', 1)).toEqual({ ok: false, reason: 'Zu wenig Geld' });
     expect(w.money).toBe(30);
-    expect(w.stock.tools).toBe(20);
+    expect(home(w).stock.tools).toBe(20);
   });
 
   it('fails with Kein Geld when money is negative', () => {
@@ -44,7 +44,7 @@ describe('buy', () => {
 
   it('Lager voll takes precedence over Zu wenig Geld', () => {
     w.money = 30;
-    w.stock.tools = 95;
+    home(w).stock.tools = 95;
     expect(buy(w, 'tools', 10)).toEqual({ ok: false, reason: 'Lager voll' });
   });
 
@@ -59,14 +59,14 @@ describe('buy', () => {
 describe('sell', () => {
   it('fails with Nicht genug Ware and changes nothing', () => {
     expect(sell(w, 'food', 25)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
-    expect(w.stock.food).toBe(20);
+    expect(home(w).stock.food).toBe(20);
     expect(w.money).toBe(5000);
   });
 
   it('sells 10 food: money +28, food 10', () => {
     expect(sell(w, 'food', 10)).toEqual({ ok: true });
     expect(w.money).toBe(5028); // Abschlag 1: 3 × (100 + … + 91) / 100
-    expect(w.stock.food).toBe(10);
+    expect(home(w).stock.food).toBe(10);
   });
 
   it('is allowed with negative money', () => {
@@ -78,7 +78,7 @@ describe('sell', () => {
   it('rejects non-integer amounts', () => {
     expect(sell(w, 'food', 1.5)).toEqual({ ok: false, reason: 'Ungültige Menge' });
     expect(sell(w, 'food', 0)).toEqual({ ok: false, reason: 'Ungültige Menge' });
-    expect(w.stock.food).toBe(20);
+    expect(home(w).stock.food).toBe(20);
   });
 });
 
@@ -91,7 +91,7 @@ describe('prices', () => {
 
 describe('Verkaufssättigung', () => {
   it('AK-S2-01 Abschlag 1: 10 Holz bringen +38, 100 Holz +219', () => {
-    w.stock.wood = 100;
+    home(w).stock.wood = 100;
     w.sellPct.wood = 100;
     const m0 = w.money;
     expect(sell(w, 'wood', 10).ok).toBe(true);
@@ -99,7 +99,7 @@ describe('Verkaufssättigung', () => {
     expect(w.sellPct.wood).toBe(90);
     for (let i = 0; i < 100; i++) step(w);
     expect(w.sellPct.wood).toBe(100);
-    w.stock.wood = 100;
+    home(w).stock.wood = 100;
     const m1 = w.money; // step bucht Unterhalt/Steuern: Geld direkt vor dem Verkauf merken
     expect(sell(w, 'wood', 100).ok).toBe(true);
     expect(w.money - m1).toBe(219);
@@ -156,12 +156,12 @@ describe('Verkaufssättigung', () => {
   it('AK-S2-14 erfolgloses sell ändert sellPct, Geld und Lager nicht', () => {
     w.sellPct.wood = 80;
     const money = w.money;
-    const wood = w.stock.wood;
+    const wood = home(w).stock.wood;
     expect(sell(w, 'wood', 0).ok).toBe(false);
     expect(sell(w, 'wood', wood + 1)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
     expect(w.sellPct.wood).toBe(80);
     expect(w.money).toBe(money);
-    expect(w.stock.wood).toBe(wood);
+    expect(home(w).stock.wood).toBe(wood);
   });
 });
 
@@ -174,7 +174,7 @@ function boom(good: GoodId): void {
 
 describe('M6 Boom', () => {
   it('AK-S3-03 Rum-Boom: 10 Rum 257 statt 171, Sättigung wie gewohnt; Holz unberührt', () => {
-    w.stock.rum = 10;
+    home(w).stock.rum = 10;
     const plain = sellPrice(w, 'rum', 10);
     boom('rum');
     expect(plain).toBe(171);
@@ -203,7 +203,7 @@ describe('M6 Boom', () => {
       expect(Math.floor(b * ORDER_PREMIUM), g).toBeLessThan(b);
       w = createWorld(3, { unlockAll: true });
       boom(g);
-      w.stock[g] = 0;
+      home(w).stock[g] = 0;
       const m0 = w.money;
       expect(buy(w, g, 1).ok).toBe(true);
       expect(sell(w, g, 1).ok).toBe(true);
@@ -212,7 +212,7 @@ describe('M6 Boom', () => {
   });
 
   it('AK-S3-06 Sättigung im Boom: sellPct 30 → +81 statt +54, bleibt 30', () => {
-    w.stock.rum = 10;
+    home(w).stock.rum = 10;
     w.sellPct.rum = 30;
     expect(sellPrice(w, 'rum', 10)).toBe(54);
     boom('rum');
@@ -227,7 +227,7 @@ describe('M6 Boom', () => {
     expect(sellPrice(w, 'wood', 10)).toBe(38);
     boom('wood');
     w.order = { period: 2, good: 'wood', amount: 25, reward: 175, due: 3000 }; // Angebot 2400
-    w.stock.wood = 25;
+    home(w).stock.wood = 25;
     const m0 = w.money;
     expect(deliverOrder(w)).toEqual({ ok: true });
     expect(w.money - m0).toBe(175);

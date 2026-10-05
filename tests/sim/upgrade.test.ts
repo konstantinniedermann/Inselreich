@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 import { totalUpkeep } from '../../src/sim/economy';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
@@ -26,15 +26,15 @@ function fisherAt(w: World, x = 0, y = 0): Building {
     state: 'ok',
   };
   w.buildings[b.id] = b;
-  w.tiles[idx(w, x, y)]!.buildingId = b.id;
+  home(w).tiles[idx(home(w), x, y)]!.buildingId = b.id;
   return b;
 }
 const world = (): World => {
   const w = createWorld(3);
   w.unlocked = ['U0', 'U2', 'U3']; // U3 frei, U5 nicht
   w.money = 1000;
-  w.stock.cloth = 2;
-  w.stock.rum = 0;
+  home(w).stock.cloth = 2;
+  home(w).stock.rum = 0;
   return w;
 };
 
@@ -80,14 +80,14 @@ describe('M11 Ausbau (Spec 3.6)', () => {
   it('AK-P3-02 Fischer Stufe 1 → 2: Kosten und Gebühr gebucht, cycleOf 24, upkeepOf 7, Bilanz und Unterhalt folgen', () => {
     const w = world();
     const f = fisherAt(w);
-    const s = { ...w.stock };
+    const s = { ...home(w).stock };
     const up = totalUpkeep(w);
     expect(upgradeBuilding(w, f.id)).toEqual({ ok: true });
     expect([
       w.money,
-      s.wood - w.stock.wood,
-      s.tools - w.stock.tools,
-      s.cloth - w.stock.cloth,
+      s.wood - home(w).stock.wood,
+      s.tools - home(w).stock.tools,
+      s.cloth - home(w).stock.cloth,
     ]).toEqual([950, 3, 1, 2]);
     expect([f.level, cycleOf(f), upkeepOf(f)]).toEqual([2, 24, 7]);
     expect(goodsBalance(w).food.produced).toBeCloseTo(100 / 24, 9);
@@ -106,9 +106,9 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     f.outageUntil = w.tick + 100;
     f.state = 'burning';
     w.money = 0;
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     no(9999, 'Gebäude nicht gefunden'); // (1)
-    no(w.kontorId, 'Kann nicht ausgebaut werden'); // (2) kein LEVELS-Eintrag
+    no(home(w).kontorId, 'Kann nicht ausgebaut werden'); // (2) kein LEVELS-Eintrag
     f.level = 3;
     no(f.id, 'Höchste Stufe erreicht'); // (3)
     delete f.level;
@@ -120,7 +120,7 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     no(f.id, 'Zu wenig Geld'); // (6) checkAfford
     w.money = 1000;
     no(f.id, 'Zu wenig Stoff'); // (7) Gebühr Stufe 2
-    w.stock.cloth = 2;
+    home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
     no(f.id, 'Zu wenig Rum'); // (7) Gebühr Stufe 3
@@ -129,11 +129,11 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     const w = world();
     const f = fisherAt(w);
     f.progress = 30;
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(f.progress).toBe(30); // progress bleibt beim Ausbau
     step(w);
-    expect([w.stock.food, f.progress]).toEqual([1, 0]);
+    expect([home(w).stock.food, f.progress]).toEqual([1, 0]);
   });
   it('AK-UNL-03 Ausbau vor U3 → U3-lockText; Stufe 2 → 3 vor U5 → U5-lockText', () => {
     const w = world();
@@ -145,7 +145,7 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     });
     w.unlocked = ['U0', 'U2', 'U3'];
     f.level = 2;
-    w.stock.rum = 5;
+    home(w).stock.rum = 5;
     expect(upgradeBuilding(w, f.id)).toEqual({
       ok: false,
       reason: unlockText(UNLOCKS[5]!, 'lockText'),
@@ -158,15 +158,17 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
     const w = world();
     const f = fisherAt(w);
     w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
-    w.stock.rum = 2;
+    home(w).stock.rum = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(paidCost(f)).toEqual({ money: 225, wood: 12, tools: 5, stone: 0 });
     const m = w.money,
-      s = { ...w.stock };
+      s = { ...home(w).stock };
     expect(demolish(w, f.id).ok).toBe(true);
-    expect([w.money - m, w.stock.wood - s.wood, w.stock.tools - s.tools]).toEqual([112, 6, 2]);
-    expect([w.stock.cloth, w.stock.rum]).toEqual([s.cloth, s.rum]);
+    expect([w.money - m, home(w).stock.wood - s.wood, home(w).stock.tools - s.tools]).toEqual([
+      112, 6, 2,
+    ]);
+    expect([home(w).stock.cloth, home(w).stock.rum]).toEqual([s.cloth, s.rum]);
   });
   it('AK-P3-06 Brand: Stufe bleibt; Ausbau während des Ausfalls → „Gebäude brennt"; nach dem Ausfall Stufe 2', () => {
     const w = world();
@@ -174,7 +176,7 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     beginCrisis(w, 0, { kind: 'fire', tile: { x: f.x, y: f.y } }); // keine Feuerwache: brennt
     expect([f.state, f.level]).toEqual(['burning', 2]);
-    w.stock.cloth = 2;
+    home(w).stock.cloth = 2;
     w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
     expect(upgradeBuilding(w, f.id)).toEqual({ ok: false, reason: 'Gebäude brennt' });
     for (let i = 0; i <= FIRE_OUTAGE; i++) step(w);
@@ -206,9 +208,9 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
       eff: 1000,
     };
     w.buildings[l.id] = l;
-    w.stock.cloth = 2;
+    home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, l.id).ok).toBe(true);
-    expect([l.level, l.state, l.eff, l.progress, w.stock.cloth]).toEqual([
+    expect([l.level, l.state, l.eff, l.progress, home(w).stock.cloth]).toEqual([
       2,
       'noForest',
       1000,
@@ -237,7 +239,7 @@ describe('M11 Kette und Auslastung (Spec 10)', () => {
     put('sheepfarm', 0);
     const weaver = put('weaver', 3);
     weaver.level = 2;
-    w.stock.wool = 0;
+    home(w).stock.wool = 0;
     let waited = false;
     for (let i = 0; i < 600; i++) {
       step(w);

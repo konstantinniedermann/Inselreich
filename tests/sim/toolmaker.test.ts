@@ -7,7 +7,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { forceRect, placeService, prepareEast } from './helpers';
 
 let w: World;
@@ -28,18 +28,18 @@ function placeToolmaker(): Building {
 
 beforeEach(() => {
   w = createWorld(3, { unlockAll: true });
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
 });
 
 describe('Werkzeugmacher (S4)', () => {
   it('AK-S4-01 800 Ticks: Werkzeug 10, Holz 90, Unterhalt 200; Verkauf 10 Werkzeug bringt +143', () => {
     placeToolmaker();
-    w.stock.wood = 100;
-    w.stock.tools = 0;
+    home(w).stock.wood = 100;
+    home(w).stock.tools = 0;
     const money = w.money;
     for (let i = 0; i < 800; i++) step(w);
-    expect(w.stock.tools).toBe(10);
-    expect(w.stock.wood).toBe(90);
+    expect(home(w).stock.tools).toBe(10);
+    expect(home(w).stock.wood).toBe(90);
     // Unterhalt: Werkzeugmacher 8 × 25 = 200, dazu die Schule (M10)
     expect(money - w.money - 8 * BUILDING_DEFS.school.upkeep).toBe(200);
     const before = w.money;
@@ -49,35 +49,35 @@ describe('Werkzeugmacher (S4)', () => {
 
   it('AK-S4-02 ohne Holz: waitingInput, Unterhalt läuft weiter', () => {
     const tm = placeToolmaker();
-    w.stock.wood = 0;
-    w.stock.tools = 0;
+    home(w).stock.wood = 0;
+    home(w).stock.tools = 0;
     const money = w.money;
     for (let i = 0; i < 100; i++) step(w);
     expect(tm.state).toBe('waitingInput');
-    expect(w.stock.tools).toBe(0);
+    expect(home(w).stock.tools).toBe(0);
     expect(money - w.money - BUILDING_DEFS.school.upkeep).toBe(BUILDING_DEFS.toolmaker.upkeep);
   });
 
   it('AK-S4-03 Abriss während Produktion: Holz verloren, kein Werkzeug, 50 % zurück, kein Unterhalt', () => {
     const tm = placeToolmaker();
-    w.stock.wood = 10;
-    w.stock.tools = 0;
+    home(w).stock.wood = 10;
+    home(w).stock.tools = 0;
     for (let i = 0; i < 20; i++) step(w);
-    expect(w.stock.wood).toBe(9);
+    expect(home(w).stock.wood).toBe(9);
     expect(tm.progress).toBe(20);
 
     const expected = effectiveRefund(w, BUILDING_DEFS.toolmaker.cost);
     expect(expected).toEqual({ money: 100, wood: 7, tools: 1, stone: 0 });
-    const before = { money: w.money, wood: w.stock.wood, tools: w.stock.tools };
+    const before = { money: w.money, wood: home(w).stock.wood, tools: home(w).stock.tools };
     const upkeepBefore = totalUpkeep(w);
     expect(demolish(w, tm.id).ok).toBe(true);
     expect(w.money - before.money).toBe(expected.money);
-    expect(w.stock.wood - before.wood).toBe(expected.wood);
-    expect(w.stock.tools - before.tools).toBe(expected.tools);
-    expect(w.stock.wood).toBe(9 + 7);
+    expect(home(w).stock.wood - before.wood).toBe(expected.wood);
+    expect(home(w).stock.tools - before.tools).toBe(expected.tools);
+    expect(home(w).stock.wood).toBe(9 + 7);
     expect(totalUpkeep(w)).toBe(upkeepBefore - BUILDING_DEFS.toolmaker.upkeep);
     for (let i = 0; i < 100; i++) step(w);
-    expect(w.stock.tools).toBe(before.tools + expected.tools);
+    expect(home(w).stock.tools).toBe(before.tools + expected.tools);
   });
 
   it('Spielstand mit Werkzeugmacher besteht deserialize (SAVE_VERSION unverändert)', () => {

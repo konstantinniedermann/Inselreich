@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld, adjacentOf, idx, inBounds } from '../../src/sim/world';
+import { createWorld, adjacentOf, idx, inBounds, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { BUILDING_DEFS, ROAD_COST } from '../../src/sim/defs/buildings';
 import { canPlaceRoad } from '../../src/sim/placement';
@@ -15,7 +15,7 @@ let lj: Building;
 /** Holzfäller 4 Kacheln östlich der Kontor-Ostkante, ohne Weg dazwischen. */
 beforeEach(() => {
   w = createWorld(3);
-  k = w.buildings[w.kontorId]!;
+  k = w.buildings[home(w).kontorId]!;
   prepareEast(w, k);
   const res = placeBuilding(w, 'lumberjack', k.x + 6, k.y);
   if (!res.ok || res.id === undefined) throw new Error('lumberjack not placed');
@@ -80,14 +80,15 @@ function minNewTiles(world: World, id: number): number | null {
   const def = BUILDING_DEFS[b.defId];
   const targets = reachableRoads(world);
   const kd = BUILDING_DEFS.kontor;
-  const kb = world.buildings[world.kontorId]!;
-  for (const p of adjacentOf(world, kb.x, kb.y, kd.w, kd.h)) targets.add(idx(world, p.x, p.y));
+  const kb = world.buildings[home(world).kontorId]!;
+  for (const p of adjacentOf(home(world), kb.x, kb.y, kd.w, kd.h))
+    targets.add(idx(home(world), p.x, p.y));
   const cost = (x: number, y: number): number =>
-    world.tiles[idx(world, x, y)]!.road ? 0 : canPlaceRoad(world, x, y).ok ? 1 : -1;
+    home(world).tiles[idx(home(world), x, y)]!.road ? 0 : canPlaceRoad(world, x, y).ok ? 1 : -1;
   const dist = new Map<number, number>();
-  for (const p of adjacentOf(world, b.x, b.y, def.w, def.h)) {
+  for (const p of adjacentOf(home(world), b.x, b.y, def.w, def.h)) {
     const c = cost(p.x, p.y);
-    if (c >= 0) dist.set(idx(world, p.x, p.y), c);
+    if (c >= 0) dist.set(idx(home(world), p.x, p.y), c);
   }
   const open = new Set(dist.keys());
   let best: number | null = null;
@@ -105,9 +106,9 @@ function minNewTiles(world: World, id: number): number | null {
     ] as const) {
       const nx = (cur % world.width) + dx;
       const ny = Math.floor(cur / world.width) + dy;
-      if (!inBounds(world, nx, ny)) continue;
+      if (!inBounds(home(world), nx, ny)) continue;
       const c = cost(nx, ny);
-      const ni = idx(world, nx, ny);
+      const ni = idx(home(world), nx, ny);
       if (c < 0 || (dist.has(ni) && dist.get(ni)! <= d + c)) continue;
       dist.set(ni, d + c);
       open.add(ni);
@@ -126,13 +127,13 @@ describe('connectPath is minimal on mixed start costs (AK-01)', () => {
     let checked = 0;
     for (let round = 0; round < 150; round++) {
       const world = createWorld(3);
-      const kon = world.buildings[world.kontorId]!;
+      const kon = world.buildings[home(world).kontorId]!;
       prepareEast(world, kon);
       const res = placeBuilding(world, 'lumberjack', kon.x + 6, kon.y);
       if (!res.ok || res.id === undefined) continue;
       for (let y = kon.y - 3; y <= kon.y + 4; y++)
         for (let x = kon.x + 2; x <= kon.x + 9; x++) {
-          const t = world.tiles[idx(world, x, y)]!;
+          const t = home(world).tiles[idx(home(world), x, y)]!;
           if (t.buildingId !== null) continue;
           t.terrain = 'grass';
           const r = rnd();
@@ -168,9 +169,9 @@ describe('connectPath determinism and purity (AK-02)', () => {
 describe('connectPath without a way (AK-03)', () => {
   it('fails when the building is enclosed by water', () => {
     const def = BUILDING_DEFS[lj.defId];
-    for (const p of adjacentOf(w, lj.x, lj.y, def.w, def.h)) {
+    for (const p of adjacentOf(home(w), lj.x, lj.y, def.w, def.h)) {
       forceGrass(w, p.x, p.y);
-      w.tiles[idx(w, p.x, p.y)]!.terrain = 'water';
+      home(w).tiles[idx(home(w), p.x, p.y)]!.terrain = 'water';
     }
     const before = snapshot(w);
     expect(connectPath(w, lj.id)).toEqual({ ok: false, reason: 'Kein Weg zum Kontor möglich' });
@@ -181,7 +182,7 @@ describe('connectPath without a way (AK-03)', () => {
 describe('connectPath not applicable (AK-04)', () => {
   it('rejects unknown ids, kontor, house and connected buildings', () => {
     expect(connectPath(w, 99999)).toEqual({ ok: false, reason: 'Kein Gebäude' });
-    expect(connectPath(w, w.kontorId)).toEqual({ ok: false, reason: 'Braucht keinen Weg' });
+    expect(connectPath(w, home(w).kontorId)).toEqual({ ok: false, reason: 'Braucht keinen Weg' });
     for (let i = 2; i < 6; i++) expect(placeRoad(w, k.x + i, k.y).ok).toBe(true);
     expect(lj.connected).toBe(true);
     expect(connectPath(w, lj.id)).toEqual({ ok: false, reason: 'Schon angebunden' });

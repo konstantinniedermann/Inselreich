@@ -6,21 +6,21 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { newHouseState } from '../../src/sim/population';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import type { Building, GoodId, ServiceId, Tier, World } from '../../src/sim/types';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 import { forceGrass, forceRect } from './helpers';
 
 const SEED = 3;
 
 function withFunds<T>(w: World, fn: () => T): T {
   const money = w.money;
-  const stock = { ...w.stock };
+  const stock = { ...home(w).stock };
   w.money = 1_000_000;
-  for (const g of Object.keys(w.stock) as GoodId[]) w.stock[g] = 100;
+  for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
   try {
     return fn();
   } finally {
     w.money = money;
-    w.stock = stock;
+    home(w).stock = stock;
   }
 }
 
@@ -50,7 +50,7 @@ function insertHouse(w: World, x: number, y: number): Building {
     house: newHouseState(w),
   };
   w.buildings[id] = b;
-  w.tiles[idx(w, x, y)]!.buildingId = id;
+  home(w).tiles[idx(home(w), x, y)]!.buildingId = id;
   return b;
 }
 
@@ -81,7 +81,7 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
 
 function baseWorld(): { w: World; kx: number; ky: number } {
   const w = createWorld(SEED);
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   forceRect(w, k.x + 2, k.y - 9, 18, 19, 'grass');
   return { w, kx: k.x, ky: k.y };
 }
@@ -91,7 +91,7 @@ function insertLumberjack(w: World, x: number, y: number): Building {
   const id = w.nextBuildingId++;
   const b: Building = { id, defId: 'lumberjack', x, y, connected: false, progress: 0, state: 'ok' };
   w.buildings[id] = b;
-  w.tiles[idx(w, x, y)]!.buildingId = id;
+  home(w).tiles[idx(home(w), x, y)]!.buildingId = id;
   return b;
 }
 
@@ -103,7 +103,7 @@ function insertChapel(w: World, x: number, y: number): Building {
   for (let dy = 0; dy < 2; dy++)
     for (let dx = 0; dx < 2; dx++) {
       forceGrass(w, x + dx, y + dy);
-      w.tiles[idx(w, x + dx, y + dy)]!.buildingId = id;
+      home(w).tiles[idx(home(w), x + dx, y + dy)]!.buildingId = id;
     }
   return b;
 }

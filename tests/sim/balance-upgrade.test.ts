@@ -4,7 +4,7 @@ import { upgradeBuilding } from '../../src/sim/upgrade';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { functionLock } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { CONTROL_INTERVAL, runColony, startColony, type Trajectory } from './controller';
 
 const UPGRADE_RESERVE = 300; // Geld nach dem Ausbau, wie RESERVE im Controller (dort nicht exportiert)
@@ -19,12 +19,12 @@ function upgradeFishers(w: World): void {
     const lv = b.level ?? 1;
     if (functionLock(w, lv === 1 ? 'upgrade2' : 'upgrade3') !== null) continue;
     const next = LEVELS.fisher![lv - 1]!;
-    const missing = Math.max(0, next.cost.tools - w.stock.tools);
+    const missing = Math.max(0, next.cost.tools - home(w).stock.tools);
     const toolPrice = missing > 0 ? buyPrice('tools', missing) : 0;
     if (w.money - next.cost.money - toolPrice < UPGRADE_RESERVE) continue;
-    if (w.stock.wood < next.cost.wood) continue;
+    if (home(w).stock.wood < next.cost.wood) continue;
     if (missing > 0 && !buy(w, 'tools', missing).ok) continue;
-    if (w.stock[next.fee.good] - next.fee.amount < FEE_RESERVE) continue;
+    if (home(w).stock[next.fee.good] - next.fee.amount < FEE_RESERVE) continue;
     if (upgradeBuilding(w, b.id).ok) return;
   }
 }

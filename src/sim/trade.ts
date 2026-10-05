@@ -5,6 +5,7 @@ import { addStock, takeStock } from './economy';
 import { goodLock } from './unlocks';
 import type { GoodId, Result, World } from './types';
 import { fail, ok } from './types';
+import { home } from './world';
 
 export function buyPrice(good: GoodId, n: number): number {
   return n * GOODS[good].buy;
@@ -38,7 +39,7 @@ export function buy(world: World, good: GoodId, n: number): Result {
   }
 
   // Lagergrenze prüfen
-  if (world.stock[good] + n > STORAGE_CAP) {
+  if (home(world).stock[good] + n > STORAGE_CAP) {
     return fail('Lager voll');
   }
 
@@ -50,7 +51,7 @@ export function buy(world: World, good: GoodId, n: number): Result {
 
   world.money -= price;
   // Rückgabe bewusst ignoriert: nach der Lagergrenzen-Prüfung wird immer die volle Menge eingelagert
-  addStock(world, good, n);
+  addStock(home(world), good, n);
   return ok;
 }
 
@@ -61,12 +62,12 @@ export function sell(world: World, good: GoodId, n: number): Result {
   }
 
   // Genug Ware im Lager?
-  if (world.stock[good] < n) {
+  if (home(world).stock[good] < n) {
     return fail('Nicht genug Ware');
   }
 
   // Rückgabe bewusst ignoriert: nach der Bestandsprüfung ist die Entnahme immer erfolgreich
-  takeStock(world, good, n);
+  takeStock(home(world), good, n);
   // Preis vor dem Absenken des Verkaufsanteils berechnen
   world.money += sellPrice(world, good, n);
   world.sellPct[good] = Math.max(SELL_FLOOR, world.sellPct[good] - n * SELL_DROP);

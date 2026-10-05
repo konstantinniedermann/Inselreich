@@ -1,22 +1,22 @@
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld, idx } from '../../src/sim/world';
+import { center, createWorld, idx, home } from '../../src/sim/world';
 import type { Building, CrisisLevel, Tier, World } from '../../src/sim/types';
 
 /** Deterministisches Layout: 6 freie Grasskacheln ab der Ostkante des Kontors, Wald nördlich von Kachel 5. */
 export function prepareEast(world: World, kontor: Building): void {
   for (let i = 0; i < 6; i++) {
-    const t = world.tiles[idx(world, kontor.x + 2 + i, kontor.y)]!;
+    const t = home(world).tiles[idx(home(world), kontor.x + 2 + i, kontor.y)]!;
     t.terrain = 'grass';
     t.buildingId = null;
     t.road = false;
   }
-  world.tiles[idx(world, kontor.x + 2 + 4, kontor.y - 1)]!.terrain = 'forest';
+  home(world).tiles[idx(home(world), kontor.x + 2 + 4, kontor.y - 1)]!.terrain = 'forest';
 }
 
 export function forceGrass(world: World, x: number, y: number): void {
-  const t = world.tiles[idx(world, x, y)]!;
+  const t = home(world).tiles[idx(home(world), x, y)]!;
   t.terrain = 'grass';
   t.buildingId = null;
   t.road = false;
@@ -34,7 +34,7 @@ export function forceRect(
   for (let y = y0; y < y0 + h; y++) {
     for (let x = x0; x < x0 + w; x++) {
       forceGrass(world, x, y);
-      world.tiles[idx(world, x, y)]!.terrain = terrain;
+      home(world).tiles[idx(home(world), x, y)]!.terrain = terrain;
     }
   }
 }
@@ -50,16 +50,16 @@ export function placeService(
   y: number,
 ): Building {
   const money = world.money;
-  const stock = { ...world.stock };
+  const stock = { ...home(world).stock };
   forceRect(world, x, y, BUILDING_DEFS[defId].w, BUILDING_DEFS[defId].h, 'grass');
   // Ausreichend Mittel für die Baukosten (Schule braucht mehr Stein als das Startlager)
   world.money = 1_000_000;
-  for (const good of Object.keys(world.stock) as (keyof typeof world.stock)[])
-    world.stock[good] = 100;
+  for (const good of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[good] = 100;
   const r = placeBuilding(world, defId, x, y);
   if (!r.ok || r.id === undefined) throw new Error(`${defId} not placed`);
   world.money = money;
-  world.stock = stock;
+  home(world).stock = stock;
   const b = world.buildings[r.id]!;
   b.connected = true;
   return b;
@@ -73,7 +73,7 @@ function placedHouse(world: World, x: number, y: number): Building {
 
 /** Haus auf einer Kachel, die 4er-angrenzend (Ostseite) am Kontor-Footprint liegt. */
 export function houseNearKontor(world: World): Building {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const x = k.x + BUILDING_DEFS.kontor.w;
   forceGrass(world, x, k.y);
   return placedHouse(world, x, k.y);
@@ -84,14 +84,14 @@ export function houseNearKontor(world: World): Building {
  * Wird direkt eingefügt, ohne `placeBuilding`: die Platzierung verweigert unversorgte Orte zu Recht.
  */
 export function houseFar(world: World): Building {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   const kc = center(BUILDING_DEFS.kontor, k.x, k.y);
   const supplyRadius = BUILDING_DEFS.kontor.supplyRadius ?? 0;
   for (let y = 0; y < world.height; y++) {
     for (let x = 0; x < world.width; x++) {
       const h = center(BUILDING_DEFS.house, x, y);
       if (Math.hypot(h.cx - kc.cx, h.cy - kc.cy) <= supplyRadius + 1) continue;
-      if (world.tiles[idx(world, x, y)]!.buildingId !== null) continue;
+      if (home(world).tiles[idx(home(world), x, y)]!.buildingId !== null) continue;
       forceGrass(world, x, y);
       const id = world.nextBuildingId++;
       const house: Building = {
@@ -105,7 +105,7 @@ export function houseFar(world: World): Building {
         house: newHouseState(world),
       };
       world.buildings[id] = house;
-      world.tiles[idx(world, x, y)]!.buildingId = id;
+      home(world).tiles[idx(home(world), x, y)]!.buildingId = id;
       return house;
     }
   }
@@ -119,8 +119,8 @@ export function village(
 ): { w: World; houses: Building[] } {
   const w = createWorld(3, { crisisLevel: opts.crisisLevel ?? 'off', unlockAll: opts.unlockAll });
   w.money = 100_000;
-  w.stock.wood = 200;
-  const k = w.buildings[w.kontorId]!;
+  home(w).stock.wood = 200;
+  const k = w.buildings[home(w).kontorId]!;
   const houses: Building[] = [];
   for (let i = 0; i < n; i++) {
     const x = k.x + 2 + (i % 5);
@@ -140,17 +140,18 @@ export const setHouse = (b: Building, tier: Tier, n: number): void => {
 
 /** Angebundene Amtsstube südlich des Kontors: Weg (kx, ky+2), Amtsstube 2×2 ab (kx, ky+3). Welt braucht U3. Geld und Lager unverändert. */
 export function placeTownhall(world: World): Building {
-  const k = world.buildings[world.kontorId]!;
+  const k = world.buildings[home(world).kontorId]!;
   forceRect(world, k.x, k.y + 2, 2, 3, 'grass');
   const money = world.money;
-  const stock = { ...world.stock };
+  const stock = { ...home(world).stock };
   world.money = 1_000_000;
-  for (const g of Object.keys(world.stock) as (keyof typeof world.stock)[]) world.stock[g] = 100;
+  for (const g of Object.keys(home(world).stock) as (keyof ReturnType<typeof home>['stock'])[])
+    home(world).stock[g] = 100;
   if (!placeRoad(world, k.x, k.y + 2).ok) throw new Error('Weg');
   const r = placeBuilding(world, 'townhall', k.x, k.y + 3);
   if (!r.ok || r.id === undefined) throw new Error(r.ok ? 'ohne Id' : r.reason);
   world.money = money;
-  world.stock = stock;
+  home(world).stock = stock;
   const b = world.buildings[r.id]!;
   if (!b.connected) throw new Error('nicht angebunden');
   return b;

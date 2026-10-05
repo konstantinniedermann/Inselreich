@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import {
   allNeedsMet,
@@ -36,7 +36,7 @@ describe('tickPopulation', () => {
   it('new house pulls food immediately and is satisfied', () => {
     const h = houseNearKontor(w);
     run(w, 1);
-    expect(w.stock.food).toBe(19);
+    expect(home(w).stock.food).toBe(19);
     expect(h.house!.satisfied.food).toBe(true);
     expect(h.house!.supplied).toBe(true);
   });
@@ -45,16 +45,16 @@ describe('tickPopulation', () => {
     const h = houseNearKontor(w);
     h.house!.inhabitants = 4;
     run(w, 1);
-    expect(w.stock.food).toBe(19);
+    expect(home(w).stock.food).toBe(19);
     run(w, 48);
-    expect(w.stock.food).toBe(19);
+    expect(home(w).stock.food).toBe(19);
     run(w, 2);
-    expect(w.stock.food).toBe(18);
+    expect(home(w).stock.food).toBe(18);
   });
 
   it('unsatisfied when stock empty, demand capped at 1', () => {
     const h = houseNearKontor(w);
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     run(w, 30);
     expect(h.house!.satisfied.food).toBe(false);
     expect(h.house!.demand.food).toBeLessThanOrEqual(1);
@@ -74,17 +74,17 @@ describe('tickPopulation', () => {
     expect(h.house!.inhabitants).toBe(4);
     run(w, 50);
     expect(h.house!.inhabitants).toBe(4);
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     run(w, 400);
     expect(h.house!.inhabitants).toBe(1);
   });
 
   it('house outside supply radius never consumes and never grows', () => {
     const h = houseFar(w);
-    const food = w.stock.food;
+    const food = home(w).stock.food;
     run(w, 200);
     expect(h.house!.supplied).toBe(false);
-    expect(w.stock.food).toBe(food);
+    expect(home(w).stock.food).toBe(food);
     expect(h.house!.inhabitants).toBe(1);
     expect(h.house!.satisfied.food).toBe(false);
   });
@@ -109,11 +109,11 @@ describe('tickPopulation', () => {
     const h = houseNearKontor(w);
     run(w, 10);
     expect(h.house!.satisfiedSince).toBe(0);
-    w.stock.food = 0;
+    home(w).stock.food = 0;
     h.house!.demand.food = 1;
     run(w, 1);
     expect(h.house!.satisfiedSince).toBe(w.tick);
-    w.stock.food = 5;
+    home(w).stock.food = 5;
     run(w, 1);
     expect(h.house!.satisfiedSince).toBe(w.tick - 1);
     expect(allNeedsMet(h.house!, TIERS[1])).toBe(true);
@@ -124,7 +124,7 @@ describe('tickPopulation', () => {
   it('is called from step', () => {
     houseNearKontor(w);
     step(w);
-    expect(w.stock.food).toBe(19);
+    expect(home(w).stock.food).toBe(19);
   });
 });
 
@@ -156,7 +156,7 @@ function readyPioneer(): { house: Building; chapel: Building } {
   w.tick = 400;
   house.house!.inhabitants = TIERS[1].maxInhabitants;
   run(w, 1);
-  w.stock.cloth = 1;
+  home(w).stock.cloth = 1;
   house.house!.satisfiedSince = w.tick - WAIT;
   return { house, chapel };
 }
@@ -165,17 +165,17 @@ describe('tryUpgrade', () => {
   it('upgrades pioneer house to settler when all conditions hold (M11 S10)', () => {
     const { house } = readyPioneer();
     expect(house.house!.satisfied.food).toBe(true);
-    const { money, stock } = { money: w.money, stock: { ...w.stock } };
+    const { money, stock } = { money: w.money, stock: { ...home(w).stock } };
     expect(upgradeStatus(w, house)).toEqual({ ok: true, reasons: [] });
     expect(tryUpgrade(w, house)).toBe(true);
     expect(house.house!.tier).toBe(2);
     expect(w.money).toBe(money - 100);
-    expect(w.stock.wood).toBe(stock.wood - 5);
-    expect(w.stock.tools).toBe(stock.tools - 2);
-    expect(w.stock.stone).toBe(stock.stone);
+    expect(home(w).stock.wood).toBe(stock.wood - 5);
+    expect(home(w).stock.tools).toBe(stock.tools - 2);
+    expect(home(w).stock.stone).toBe(stock.stone);
     expect(house.house!.demand.cloth).toBe(0);
     expect(house.house!.satisfied.cloth).toBe(true);
-    expect(w.stock.cloth).toBe(0);
+    expect(home(w).stock.cloth).toBe(0);
     expect(house.house!.satisfiedSince).toBe(w.tick);
   });
 
@@ -190,7 +190,7 @@ describe('tryUpgrade', () => {
 
   it('does not upgrade without cloth in stock', () => {
     const { house } = readyPioneer();
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     expectBlocked(house, 'Kein Stoff im Lager');
   });
 
@@ -220,7 +220,7 @@ describe('tryUpgrade', () => {
 
   it('lists all unmet reasons, not just the first (M11 S10)', () => {
     const { house, chapel } = readyPioneer();
-    w.stock.cloth = 0;
+    home(w).stock.cloth = 0;
     chapel.connected = false;
     house.house!.inhabitants = 3;
     expect(upgradeStatus(w, house).reasons).toEqual([
@@ -235,21 +235,21 @@ describe('tryUpgrade', () => {
     const hs = house.house!;
     hs.tier = 2;
     hs.inhabitants = TIERS[2].maxInhabitants;
-    w.stock.rum = 1;
+    home(w).stock.rum = 1;
     expectSettlerBlocked(house);
     const school = placeService(w, 'school', house.x + 9, house.y + 2);
     chapel.connected = true; // Platzieren berechnet die Anbindung neu und setzt sie zurück
     const money = w.money;
-    const stone = w.stock.stone;
+    const stone = home(w).stock.stone;
     expect(school.connected).toBe(true);
     expect(upgradeStatus(w, house)).toEqual({ ok: true, reasons: [] });
     expect(tryUpgrade(w, house)).toBe(true);
     expect(hs.tier).toBe(3);
     expect(w.money).toBe(money - 300);
-    expect(w.stock.stone).toBe(stone - 5);
+    expect(home(w).stock.stone).toBe(stone - 5);
     expect(hs.demand.rum).toBe(0);
     expect(hs.satisfied.rum).toBe(true);
-    expect(w.stock.rum).toBe(0);
+    expect(home(w).stock.rum).toBe(0);
     expect(hs.satisfiedSince).toBe(w.tick);
   });
 
@@ -288,20 +288,20 @@ describe('tryUpgrade', () => {
       satisfied: { ...house.house!.satisfied },
       services: { ...house.house!.services },
     };
-    w.stock.cloth = 1;
+    home(w).stock.cloth = 1;
     const results = [tryUpgrade(w, house), tryUpgrade(w, second)];
     expect(results.filter(Boolean)).toHaveLength(1);
     expect([house.house!.tier, second.house!.tier].sort()).toEqual([1, 2]);
-    expect(w.stock.cloth).toBe(0);
+    expect(home(w).stock.cloth).toBe(0);
   });
 
   it('does not draw a second unit of the new good on the next tick (M11 S10)', () => {
     const { house } = readyPioneer();
-    w.stock.cloth = 2;
+    home(w).stock.cloth = 2;
     expect(tryUpgrade(w, house)).toBe(true);
-    expect(w.stock.cloth).toBe(1);
+    expect(home(w).stock.cloth).toBe(1);
     run(w, 1);
-    expect(w.stock.cloth).toBe(1);
+    expect(home(w).stock.cloth).toBe(1);
     expect(house.house!.satisfied.cloth).toBe(true);
   });
 
@@ -333,15 +333,16 @@ describe('satisfiedSince at build time', () => {
   it('a house built late must wait the full UPGRADE_WAIT before upgrading (M11 S10)', () => {
     const first = houseNearKontor(w);
     const chapel = placeService(w, 'chapel', first.x + 5, first.y);
-    w.stock.cloth = 5;
-    w.stock.food = 100;
+    home(w).stock.cloth = 5;
+    home(w).stock.food = 100;
     for (let i = 0; i < 400; i++) step(w);
     expect(w.tick).toBe(400);
 
     // Zweites Haus, gleiche Kontor-Nähe, andere Kachel; Ressourcen für den Aufstieg bereitstellen
     forceGrass(w, first.x, first.y + 1);
     w.money = 1_000_000;
-    for (const good of Object.keys(w.stock) as (keyof typeof w.stock)[]) w.stock[good] = 100;
+    for (const good of Object.keys(home(w).stock) as (keyof ReturnType<typeof home>['stock'])[])
+      home(w).stock[good] = 100;
     const r = placeBuilding(w, 'house', first.x, first.y + 1);
     expect(r.ok).toBe(true);
     // Bauen berechnet die Anbindung neu; die Kapelle hat in diesem Test keinen Weg
@@ -364,7 +365,7 @@ describe('satisfiedSince at build time', () => {
 
 describe('smoke: scripted colony', () => {
   it('reaches settlers within 3000 steps', () => {
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const { x: kx, y: ky } = k;
     forceRect(w, kx + 2, ky - 3, 12, 8, 'grass');
     forceRect(w, kx + 3, ky - 4, 4, 1, 'water');

@@ -7,6 +7,7 @@ import {
   adjacentOf,
   center,
   footprint,
+  home,
   inBounds,
   isLand,
   tileAt,
@@ -19,15 +20,15 @@ function checkGround(world: World, x: number, y: number, w: number, h: number): 
   const tiles: Pos[] = [];
   for (let dy = 0; dy < h; dy++)
     for (let dx = 0; dx < w; dx++) tiles.push({ x: x + dx, y: y + dy });
-  if (!tiles.every((p) => inBounds(world, p.x, p.y))) return fail('Ausserhalb der Karte');
-  const tileList = tiles.map((p) => tileAt(world, p.x, p.y)!);
+  if (!tiles.every((p) => inBounds(home(world), p.x, p.y))) return fail('Ausserhalb der Karte');
+  const tileList = tiles.map((p) => tileAt(home(world), p.x, p.y)!);
   if (!tileList.every((t) => isLand(t.terrain))) return fail('Kein Bauland');
   if (tileList.some((t) => t.buildingId !== null || t.road)) return fail('Bereits bebaut');
   return ok;
 }
 
 const countTerrain = (world: World, tiles: Pos[], terrain: Terrain): number =>
-  tiles.filter((p) => tileAt(world, p.x, p.y)?.terrain === terrain).length;
+  tiles.filter((p) => tileAt(home(world), p.x, p.y)?.terrain === terrain).length;
 
 function adjacentReason(terrain: Terrain): string {
   return terrain === 'water' ? 'Braucht Wasser angrenzend' : 'Braucht Gebirge angrenzend';
@@ -42,7 +43,7 @@ function radiusReason(terrain: Terrain, free: boolean): string {
 /** Zählt nur Kacheln des Geländes, die unbebaut, ohne Weg und ausserhalb des eigenen Grundrisses sind. */
 function countFreeTerrain(world: World, tiles: Pos[], terrain: Terrain, own: Pos[]): number {
   return tiles.filter((p) => {
-    const t = tileAt(world, p.x, p.y);
+    const t = tileAt(home(world), p.x, p.y);
     if (t === undefined || t.terrain !== terrain || t.buildingId !== null || t.road) return false;
     return !own.some((o) => o.x === p.x && o.y === p.y);
   }).length;
@@ -60,15 +61,16 @@ export function siteRuleOk(
   const { cx, cy } = center(def, x, y);
   switch (rule.kind) {
     case 'coast':
-      return countTerrain(world, adjacentOf(world, x, y, def.w, def.h), 'water') >= 1
+      return countTerrain(world, adjacentOf(home(world), x, y, def.w, def.h), 'water') >= 1
         ? ok
         : fail(adjacentReason('water'));
     case 'adjacent':
-      return countTerrain(world, adjacentOf(world, x, y, def.w, def.h), rule.terrain) >= rule.min
+      return countTerrain(world, adjacentOf(home(world), x, y, def.w, def.h), rule.terrain) >=
+        rule.min
         ? ok
         : fail(adjacentReason(rule.terrain));
     case 'radius': {
-      const tiles = tilesInRadius(world, cx, cy, rule.radius);
+      const tiles = tilesInRadius(home(world), cx, cy, rule.radius);
       const free = rule.free === true;
       const n = free
         ? countFreeTerrain(world, tiles, rule.terrain, footprint(def, x, y))

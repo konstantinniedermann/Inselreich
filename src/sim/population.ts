@@ -16,7 +16,7 @@ import type {
 import { budgetFrom, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { inSupplyRange } from './supply';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
-import { center } from './world';
+import { center, home, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
 
@@ -100,7 +100,7 @@ function consume(world: World, house: HouseState, tier: TierDef): void {
     }
     const demand = (house.demand[good] ?? 0) + (house.inhabitants * rate) / 100;
     if (demand >= 1 - EPSILON) {
-      if (takeStock(world, good, 1)) {
+      if (takeStock(home(world), good, 1)) {
         house.demand[good] = demand - 1;
         house.satisfied[good] = true;
       } else {
@@ -152,9 +152,9 @@ export function upgradeStatus(
   for (const g of newNeeds(current, next)) {
     if (goodLockActive(world, next.tier, g))
       reasons.push(`${GOODS[g].name} für ${next.name} gesperrt`);
-    else if (world.stock[g] < 1) reasons.push(`Kein ${GOODS[g].name} im Lager`);
+    else if (islandOf(world, b).stock[g] < 1) reasons.push(`Kein ${GOODS[g].name} im Lager`);
   }
-  const afford = checkAfford(world, current.upgradeCost);
+  const afford = checkAfford(world, islandOf(world, b), current.upgradeCost);
   if (!afford.ok) reasons.push(afford.reason);
   return { ok: reasons.length === 0, reasons };
 }
@@ -173,11 +173,11 @@ export function tryUpgrade(world: World, b: Building, budget?: Budget): boolean 
     for (const g of Object.keys(delta) as GoodId[]) budget[g] = (budget[g] ?? 0) - delta[g]!;
   const current = TIERS[house.tier];
   const next = TIERS[(house.tier + 1) as Tier];
-  pay(world, current.upgradeCost!);
+  pay(world, islandOf(world, b), current.upgradeCost!);
   house.tier = next.tier;
   for (const g of newNeeds(current, next)) {
     // Rückgabewert ignoriert: upgradeStatus hat ≥ 1 geprüft, und pay zieht die neuen Bedarfsgüter nicht ab.
-    takeStock(world, g, 1);
+    takeStock(islandOf(world, b), g, 1);
     house.demand[g] = 0;
     house.satisfied[g] = true;
   }

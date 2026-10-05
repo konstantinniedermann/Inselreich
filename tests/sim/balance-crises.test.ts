@@ -3,7 +3,7 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import {
   buildColony,
   layoutFor,
@@ -166,7 +166,7 @@ describe('M8 Fingerabdruck (AK-S1-15)', () => {
     const t = buildColony(w);
     expect(t.winTick).toBe(6750);
     expect(t.minMoney).toBe(117);
-    expect(w.stock.glass).toBe(0);
+    expect(home(w).stock.glass).toBe(0);
     expect(w.wonMerchants).toBe(false);
     expect(fnv1a32(normalized(serialize(w)))).toBe(OFF_FINGERPRINT);
   });
@@ -201,7 +201,7 @@ describe('M11 Baseline (Spec 6, 14)', () => {
   it('AK-BAS-04 normalized() entfernt taxCarry, upkeepCarry und je Gebäude eff, level', () => {
     const w = createWorld(3);
     Object.assign(w, { taxCarry: 5, upkeepCarry: 7 });
-    Object.assign(w.buildings[w.kontorId]!, { eff: 1000, level: 2 });
+    Object.assign(w.buildings[home(w).kontorId]!, { eff: 1000, level: 2 });
     const raw = JSON.parse(normalized(serialize(w))) as Record<string, unknown>;
     expect('taxCarry' in raw || 'upkeepCarry' in raw).toBe(false);
     for (const b of Object.values(raw.buildings as Record<string, Record<string, unknown>>))

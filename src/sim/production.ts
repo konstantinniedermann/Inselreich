@@ -6,6 +6,7 @@ import { cycleOf } from './levels';
 import { siteRuleOk } from './placement';
 import { serviceAvailable } from './population';
 import type { Building, World } from './types';
+import { islandOf } from './world';
 
 /** Sturm wirkt (nach der Vorwarnung): Schritte `from … until` (Spec 6). */
 const stormActive = (world: World): boolean =>
@@ -43,16 +44,16 @@ function advance(world: World, b: Building): boolean {
   if (def.stormAffected === true && stormActive(world) && world.tick % STORM_TICK_DIVISOR !== 0)
     return false; // halbe Leistung: bei ungeradem Tick passiert nichts, der Zustand bleibt
   if (b.progress === 0 && def.consumes) {
-    if (def.consumes.some((g) => world.stock[g] < 1)) {
+    if (def.consumes.some((g) => islandOf(world, b).stock[g] < 1)) {
       b.state = 'waitingInput';
       return false;
     }
-    for (const g of def.consumes) takeStock(world, g, 1);
+    for (const g of def.consumes) takeStock(islandOf(world, b), g, 1);
   }
   b.progress += 1;
   if (b.state !== 'storageFull') b.state = 'ok';
   if (b.progress >= cycle) {
-    const accepted = addStock(world, def.produces, 1);
+    const accepted = addStock(islandOf(world, b), def.produces, 1);
     b.state = accepted === 1 ? 'ok' : 'storageFull';
     b.progress = 0;
   }

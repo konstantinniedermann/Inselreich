@@ -5,7 +5,7 @@ import { canPlaceRoad } from './placement';
 import { needsConnection, reachableRoads } from './roads';
 import { fail, ok } from './types';
 import type { Result, World } from './types';
-import { adjacentOf, idx, inBounds } from './world';
+import { adjacentOf, home, idx, inBounds } from './world';
 import type { Pos } from './world';
 
 export type ConnectPath = { ok: true; tiles: Pos[] } | { ok: false; reason: string };
@@ -19,18 +19,18 @@ const NEIGHBOURS = [
 
 /** Kosten einer Kachel: vorhandener Weg 0, freie Kachel 1, sonst nicht begehbar (-1). */
 function stepCost(world: World, x: number, y: number): number {
-  if (world.tiles[idx(world, x, y)]!.road) return 0;
+  if (home(world).tiles[idx(home(world), x, y)]!.road) return 0;
   return canPlaceRoad(world, x, y).ok ? 1 : -1;
 }
 
 /** Zielkacheln: erreichbares Netz plus alle Kacheln 4er-angrenzend am Kontor-Grundriss. */
 function targetSet(world: World): Set<number> {
   const targets = reachableRoads(world);
-  const kontor = world.buildings[world.kontorId];
+  const kontor = world.buildings[home(world).kontorId];
   if (!kontor) return targets;
   const def = BUILDING_DEFS[kontor.defId];
-  for (const p of adjacentOf(world, kontor.x, kontor.y, def.w, def.h))
-    targets.add(idx(world, p.x, p.y));
+  for (const p of adjacentOf(home(world), kontor.x, kontor.y, def.w, def.h))
+    targets.add(idx(home(world), p.x, p.y));
   return targets;
 }
 
@@ -61,8 +61,8 @@ export function connectPath(world: World, id: number): ConnectPath {
   };
 
   // Start nach Kosten stabil sortiert (Weg zuerst), damit die Deque monoton bleibt.
-  const starts = adjacentOf(world, b.x, b.y, def.w, def.h).map((p) => ({
-    i: idx(world, p.x, p.y),
+  const starts = adjacentOf(home(world), b.x, b.y, def.w, def.h).map((p) => ({
+    i: idx(home(world), p.x, p.y),
     c: stepCost(world, p.x, p.y),
   }));
   for (const cost of [0, 1]) {
@@ -85,10 +85,10 @@ export function connectPath(world: World, id: number): ConnectPath {
     for (const [dx, dy] of NEIGHBOURS) {
       const nx = cx + dx;
       const ny = cy + dy;
-      if (!inBounds(world, nx, ny)) continue;
+      if (!inBounds(home(world), nx, ny)) continue;
       const c = stepCost(world, nx, ny);
       if (c < 0) continue;
-      const ni = idx(world, nx, ny);
+      const ni = idx(home(world), nx, ny);
       const nd = dist[cur]! + c;
       if (dist[ni] !== -1 && dist[ni]! <= nd) continue;
       dist[ni] = nd;
@@ -104,7 +104,7 @@ export function connectPath(world: World, id: number): ConnectPath {
 function collectNew(world: World, prev: Int32Array, end: number): Pos[] {
   const tiles: Pos[] = [];
   for (let i = end; i !== -1; i = prev[i]!) {
-    if (world.tiles[i]!.road) continue;
+    if (home(world).tiles[i]!.road) continue;
     tiles.push({ x: i % world.width, y: Math.floor(i / world.width) });
   }
   return tiles.reverse();
@@ -115,7 +115,10 @@ export function connectBuilding(world: World, id: number): Result & { built?: nu
   const path = connectPath(world, id);
   if (!path.ok) return fail(path.reason);
   const n = path.tiles.length;
-  const afford = checkAfford(world, { ...ROAD_COST_OBJ, money: ROAD_COST_OBJ.money * n });
+  const afford = checkAfford(world, home(world), {
+    ...ROAD_COST_OBJ,
+    money: ROAD_COST_OBJ.money * n,
+  });
   if (!afford.ok) return afford;
   for (const p of path.tiles) {
     const res = placeRoad(world, p.x, p.y);

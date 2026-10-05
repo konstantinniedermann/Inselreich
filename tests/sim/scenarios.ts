@@ -29,7 +29,7 @@ import type {
   World,
 } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { createWorld, idx } from '../../src/sim/world';
+import { createWorld, idx, home } from '../../src/sim/world';
 import { prepareLayout, runColony, startColony, type Layout } from './controller';
 import { forceGrass, forceRect } from './helpers';
 import { verdeckung } from './scenarios-iso';
@@ -39,14 +39,14 @@ const SEED = 3;
 /** Geld und Lager, mit denen gebaut wird; danach gilt wieder der vorherige Stand. */
 function withFunds<T>(w: World, fn: () => T): T {
   const money = w.money;
-  const stock = { ...w.stock };
+  const stock = { ...home(w).stock };
   w.money = 1_000_000;
-  for (const g of Object.keys(w.stock) as GoodId[]) w.stock[g] = 100;
+  for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
   try {
     return fn();
   } finally {
     w.money = money;
-    w.stock = stock;
+    home(w).stock = stock;
   }
 }
 
@@ -91,7 +91,7 @@ function insertHouse(w: World, x: number, y: number): Building {
     house: newHouseState(w),
   };
   w.buildings[id] = b;
-  w.tiles[idx(w, x, y)]!.buildingId = id;
+  home(w).tiles[idx(home(w), x, y)]!.buildingId = id;
   return b;
 }
 
@@ -123,13 +123,13 @@ function setHouse(w: World, b: Building, s: HouseSpec): void {
 /** Seed-3-Welt mit Gras östlich des Kontors: x = kx+2 … kx+19, y = ky-9 … ky+9. Liefert die Kontor-Koordinaten. */
 function baseWorld(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number } {
   const w = createWorld(SEED, { crisisLevel: level, unlockAll: true });
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   forceRect(w, k.x + 2, k.y - 9, 18, 19, 'grass');
   return { w, kx: k.x, ky: k.y };
 }
 
 const setTerrain = (w: World, x: number, y: number, t: 'water' | 'forest' | 'mountain'): void => {
-  w.tiles[idx(w, x, y)]!.terrain = t;
+  home(w).tiles[idx(home(w), x, y)]!.terrain = t;
 };
 
 /** Startgrundriss der Kleinszenarien: Hauptstrasse ab Kontor, Wasserspalte, Waldkachel. */
@@ -156,14 +156,14 @@ function bilanzNahrung(): World {
       metGoods: ['food'],
     });
   }
-  w.stock.food = 50;
+  home(w).stock.food = 50;
   return w;
 }
 
 function lagerHolz99(): World {
   const { w, kx, ky } = smallColony();
   put(w, 'market', kx + 4, ky + 1); // 2×2, Weg nördlich
-  w.stock.wood = 99;
+  home(w).stock.wood = 99;
   return w;
 }
 
@@ -206,8 +206,8 @@ function autosaveLauf(): World {
 function auftrag(): World {
   const w = createWorld(SEED, { unlockAll: true });
   w.tick = 595;
-  w.stock.wood = 50;
-  w.stock.food = 30;
+  home(w).stock.wood = 50;
+  home(w).stock.food = 30;
   return w;
 }
 
@@ -281,7 +281,7 @@ function galerie(): World {
   // Sonderfälle: Holzfäller ohne Weg (Wald ringsum, keine Wegkachel angrenzend), Weberei ohne Wolle
   put(w, 'lumberjack', kx + 12, ky + 4);
   const weaver = Object.values(w.buildings).find((b) => b.defId === 'weaver')!;
-  w.stock.food = 100; // Lagerobergrenze; deckt den Verbrauch der drei Häuser weit über 1000 Ticks
+  home(w).stock.food = 100; // Lagerobergrenze; deckt den Verbrauch der drei Häuser weit über 1000 Ticks
   weaver.state = 'waitingInput'; // wie `tickProduction` es beim ersten Tick ohne Wolle setzen würde
   return w;
 }
@@ -343,7 +343,7 @@ function kriseBrandWelt(guarded: boolean): World {
   const { w, kx, ky } = smallColony('normal'); // Weg kx+2 … kx+12
   put(w, 'distillery', kx + 3, ky + 1);
   if (guarded) put(w, 'firestation', kx + 6, ky + 1); // Mittenabstand 2.55
-  w.stock.cane = 20;
+  home(w).stock.cane = 20;
   w.money = 1000;
   w.tick = tickBeforeFirst(w, 'fire'); // Seed 3: 2999
   return w;
@@ -375,8 +375,8 @@ function sturmKlar(): World {
 
 function kriseBoom(): World {
   const { w } = baseWorld('normal');
-  w.stock.wood = 50;
-  w.stock.food = 50;
+  home(w).stock.wood = 50;
+  home(w).stock.food = 50;
   w.tick = tickBeforeFirst(w, 'boom'); // Seed 3: 4199
   return w;
 }
@@ -461,9 +461,9 @@ function settledHouse(
 
 /** Lager für Häuser der Stufen 3 und 4: Nahrung, Stoff und Rum reichen weit über 300 Ticks. */
 function stockHouses(w: World): void {
-  w.stock.food = 50;
-  w.stock.cloth = 30;
-  w.stock.rum = 30;
+  home(w).stock.food = 50;
+  home(w).stock.cloth = 30;
+  home(w).stock.rum = 30;
 }
 
 /** M8 AK-U1-04, AK-U1-09, AK-U2-03, -06: vor dem Sieg, 45 Bürger, Kapelle und Schule, kein Bad, Glas 0. */
@@ -477,10 +477,10 @@ function m8VorSieg(): World {
   settledHouse(w, kx + 3, ky + 1, 3, TIERS[3].maxInhabitants);
   stockHouses(w);
   w.money = 3000;
-  w.stock.wood = 60;
-  w.stock.tools = 20;
-  w.stock.stone = 30;
-  w.stock.glass = 0;
+  home(w).stock.wood = 60;
+  home(w).stock.tools = 20;
+  home(w).stock.stone = 30;
+  home(w).stock.glass = 0;
   return w;
 }
 
@@ -497,10 +497,10 @@ function m8KurzVorSieg(): World {
   settledHouse(w, kx + 3, ky + 1, 3, 4);
   stockHouses(w);
   w.money = 3000;
-  w.stock.wood = 30;
-  w.stock.tools = 20;
-  w.stock.stone = 20;
-  w.stock.glass = 5;
+  home(w).stock.wood = 30;
+  home(w).stock.tools = 20;
+  home(w).stock.stone = 20;
+  home(w).stock.glass = 5;
   return w;
 }
 
@@ -521,7 +521,7 @@ function m8KurzVorHandelsstadt(): World {
   settledHouse(w, kx + 4, ky - 2, 4, TIERS[4].maxInhabitants);
   settledHouse(w, kx + 3, ky + 1, 4, TIERS[4].maxInhabitants - 1);
   stockHouses(w);
-  w.stock.glass = 20;
+  home(w).stock.glass = 20;
   w.money = 3000;
   return w;
 }
@@ -531,8 +531,8 @@ function m8GlashuetteWartet(): World {
   const { w, kx, ky } = smallColony();
   w.won = true; // Änderung S11: Glashütte erst nach der Freischaltung
   const works = put(w, 'glassworks', kx + 9, ky - 2);
-  w.stock.stone = 5;
-  w.stock.wood = 0;
+  home(w).stock.stone = 5;
+  home(w).stock.wood = 0;
   works.state = 'waitingInput';
   return w;
 }
@@ -545,18 +545,18 @@ function m8KaufleuteOhneGlas(): World {
   const goods = (Object.keys(TIERS[4].needs) as GoodId[]).filter((g) => g !== 'glass');
   settledHouse(w, kx + 3, ky - 2, 4, TIERS[4].maxInhabitants, goods);
   stockHouses(w);
-  w.stock.glass = 0;
+  home(w).stock.glass = 0;
   w.money = 3000; // Änderung S11: für AK-U2-06/-10 (Badehaus bauen)
-  w.stock.wood = 60;
-  w.stock.tools = 20;
-  w.stock.stone = 30;
+  home(w).stock.wood = 60;
+  home(w).stock.tools = 20;
+  home(w).stock.stone = 30;
   return w;
 }
 
 /** M8 AK-U2-07: Glas 10, Verkaufsanteil Glas 100 (Startwert). */
 function m8Handel(): World {
   const w = createWorld(SEED, { unlockAll: true });
-  w.stock.glass = 10;
+  home(w).stock.glass = 10;
   return w;
 }
 
@@ -565,7 +565,7 @@ function m10Base(level: CrisisLevel = 'off'): { w: World; kx: number; ky: number
   const w = createWorld(SEED, { crisisLevel: level, unlockAll: true });
   const layout = prepareLayout(w);
   for (const [x, y] of layout.roads) road(w, x, y);
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   return { w, kx: k.x, ky: k.y, layout };
 }
 
@@ -582,7 +582,7 @@ function m10PionierFastVoll(): World {
   const { w, layout } = m10Base('normal');
   w.tick = GROWTH_INTERVAL * 2 - 1;
   layout.houses.forEach((slot, i) => m10House(w, slot, 1, i === 0 ? 3 : 2));
-  w.stock.food = 30;
+  home(w).stock.food = 30;
   w.unlocked = ['U0'];
   return w;
 }
@@ -592,10 +592,10 @@ function m10SiedlerFast(): World {
   w.tick = GROWTH_INTERVAL * 31 - 1;
   put(w, 'chapel', layout.chapel[0], layout.chapel[1]);
   m10House(w, layout.houses[0]!, 1, TIERS[1].maxInhabitants);
-  w.stock.cloth = 5;
+  home(w).stock.cloth = 5;
   w.money = 2000;
-  w.stock.wood = 20;
-  w.stock.tools = 10;
+  home(w).stock.wood = 20;
+  home(w).stock.tools = 10;
   const o = orderForPeriod(SEED, 1, maxHouseTier(w));
   w.order = { period: 1, ...o, due: 2100 };
   w.unlocked = ['U0', 'U2'];
@@ -621,7 +621,7 @@ function m10Amtsstube(townhallAt: [number, number], level: 'normal' | 'high'): W
   put(w, 'toolmaker', kx + 11, ky + 1);
   put(w, 'toolmaker', kx + 17, ky + 6);
   put(w, 'townhall', kx + townhallAt[0], ky + townhallAt[1]);
-  w.stock.cloth = 2;
+  home(w).stock.cloth = 2;
   w.taxLevel = level === 'high' ? 'high' : w.taxLevel;
   return w;
 }
@@ -667,10 +667,10 @@ function m11Ausbau(): World {
   const weaver = put(w, 'weaver', kx + 9, ky + 1);
   weaver.level = 2;
   put(w, 'sheepfarm', kx + 11, ky + 1);
-  w.stock.wool = 0;
+  home(w).stock.wool = 0;
   weaver.state = 'waitingInput';
-  w.stock.cloth = 10;
-  w.stock.rum = 10;
+  home(w).stock.cloth = 10;
+  home(w).stock.rum = 10;
   w.money = 2000;
   w.unlocked = ['U0', 'U1', 'U2', 'U3', 'U4', 'U5'];
   return w;
@@ -684,9 +684,9 @@ function m11Defizit(): World {
   put(w, 'school', layout.school[0], layout.school[1]);
   for (const slot of layout.fishers.slice(0, 3)) put(w, 'fisher', slot[0], slot[1]);
   for (const slot of layout.farms.slice(0, 2)) put(w, 'weaver', slot[0], slot[1]);
-  w.stock.rum = 40;
-  w.stock.food = 50;
-  w.stock.cloth = 30;
+  home(w).stock.rum = 40;
+  home(w).stock.food = 50;
+  home(w).stock.cloth = 30;
   return w;
 }
 
@@ -697,7 +697,7 @@ function m11Stein(): World {
   put(w, 'glassworks', kx + 9, ky - 2);
   settledHouse(w, kx + 3, ky - 2, 3, 15);
   stockHouses(w);
-  w.stock.stone = 4;
+  home(w).stock.stone = 4;
   return w;
 }
 
@@ -748,7 +748,7 @@ const M11_PROBES: Record<string, Record<string, [number, number]>> = {
 };
 
 function relativeProbes(name: string, w: World): Probes {
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   return Object.fromEntries(
     Object.entries({ ...M10_PROBES, ...M11_PROBES }[name]!).map(([p, [dx, dy]]) => [
       p,

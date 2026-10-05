@@ -19,7 +19,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { fail } from '../../src/sim/types';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { forceGrass, forceRect, placeService, placeTownhall } from './helpers';
 
 interface Town {
@@ -37,7 +37,7 @@ interface Town {
  */
 function town(houseCount: number): Town {
   const w = createWorld(3, { unlockAll: true });
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   const houses: Building[] = [];
   for (let i = 0; i < houseCount; i++) {
     forceGrass(w, k.x + 2, k.y + i);
@@ -51,8 +51,8 @@ function town(houseCount: number): Town {
   for (const s of [chapel, school, bath]) s.connected = true; // Platzieren setzt die Anbindung zurück
   w.tick = 449;
   w.money = 1000;
-  w.stock = {
-    ...w.stock,
+  home(w).stock = {
+    ...home(w).stock,
     food: 100,
     cloth: 100,
     rum: 100,
@@ -120,7 +120,12 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     expect(w.tick).toBe(450);
     expect(h.house!.tier).toBe(3);
     expect(w.money).toBe(1000 + booked(w, c0, u0)); // keine Kosten, nur die Buchung des Schritts
-    expect([w.stock.wood, w.stock.tools, w.stock.stone, w.stock.glass]).toEqual([15, 8, 10, 1]);
+    expect([
+      home(w).stock.wood,
+      home(w).stock.tools,
+      home(w).stock.stone,
+      home(w).stock.glass,
+    ]).toEqual([15, 8, 10, 1]);
   });
 
   it('AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 auf Tick ≡ 50 mod 100, Kosten und Glas, danach Steuer 300 (ohne Aufstieg 210) (M11 S10)', () => {
@@ -137,7 +142,12 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     const hs = h.house!;
     expect(hs.tier).toBe(4);
     expect(w.money).toBe(400 + booked(w, c0, u0)); // 1000 − Kosten 600, dazu die Buchung des Schritts
-    expect([w.stock.wood, w.stock.tools, w.stock.stone, w.stock.glass]).toEqual([0, 0, 0, 0]);
+    expect([
+      home(w).stock.wood,
+      home(w).stock.tools,
+      home(w).stock.stone,
+      home(w).stock.glass,
+    ]).toEqual([0, 0, 0, 0]);
     expect(hs.demand.glass).toBe(0);
     expect(hs.satisfied.glass).toBe(true);
     expect(hs.satisfiedSince).toBe(450);
@@ -161,7 +171,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     const noGlass = town(1);
     readyCitizen(noGlass.w, noGlass.houses[0]!);
     noGlass.w.won = true;
-    noGlass.w.stock.glass = 0;
+    home(noGlass.w).stock.glass = 0;
     expect(upgradeStatus(noGlass.w, noGlass.houses[0]!).reasons).toEqual(['Kein Glas im Lager']);
     const high = town(1);
     readyCitizen(high.w, high.houses[0]!);
@@ -173,7 +183,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     const locked = town(1);
     readyCitizen(locked.w, locked.houses[0]!);
     locked.bath.connected = false;
-    locked.w.stock.glass = 0;
+    home(locked.w).stock.glass = 0;
     expect(upgradeStatus(locked.w, locked.houses[0]!).reasons).toEqual([
       'Erst nach dem Ziel',
       'Badehaus fehlt in Reichweite',
@@ -189,7 +199,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     step(w);
     expect(h.house!.tier).toBe(4);
     expect(h.house!.inhabitants).toBe(15);
-    w.stock = { ...w.stock, food: 100, cloth: 100, rum: 100, glass: 100 };
+    home(w).stock = { ...home(w).stock, food: 100, cloth: 100, rum: 100, glass: 100 };
     run(w, 249);
     expect(h.house!.inhabitants).toBe(19);
     step(w);
@@ -203,7 +213,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     w.won = true;
     w.tick = 450;
     setHouse(w, h, 4, 20, ['glass']);
-    w.stock.glass = 0;
+    home(w).stock.glass = 0;
     expect(h.house!.satisfied.glass).toBe(false);
     step(w);
     expect(w.tick % 50).not.toBe(0);
@@ -267,7 +277,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
       const t = town(2);
       for (const b of t.houses) readyCitizen(t.w, b);
       t.w.won = true;
-      t.w.stock = { ...t.w.stock, wood: 30, tools: 16, stone: 20, glass };
+      home(t.w).stock = { ...home(t.w).stock, wood: 30, tools: 16, stone: 20, glass };
       t.w.money = money;
       return t;
     };
@@ -294,7 +304,7 @@ describe('M8 Review Focus S1', () => {
     w.won = true;
     w.tick = 450;
     setHouse(w, h, 4, 20);
-    w.stock.glass = 10;
+    home(w).stock.glass = 10;
     step(w);
     expect(h.house!.services.bath).toBe(true);
     expect(w.stats.taxes).toBe(400);
@@ -314,7 +324,7 @@ describe('M8 Review Focus S1', () => {
       const { w, houses } = town(2);
       setHouse(w, houses[0]!, 4, 20);
       readyCitizen(w, houses[1]!);
-      w.stock.glass = 5;
+      home(w).stock.glass = 5;
       expect(citizens(w)).toBe(35);
       expect(upgradeStatus(w, houses[1]!).reasons[0]).toBe('Erst ab 40 Bürgern (jetzt 35)');
       step(w);
@@ -336,7 +346,7 @@ describe('M8 Brand am Badehaus (Spec 9)', () => {
       t.w.won = true;
       t.w.tick = 460; // T; T + 1 = 461 ≢ 0 mod 50
       setHouse(t.w, t.houses[0]!, 4, 20);
-      t.w.stock.glass = 20;
+      home(t.w).stock.glass = 20;
       return t;
     };
     const { w, houses, bath } = make();
@@ -371,7 +381,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
     setHouse(w, houses[0]!, 4, 20);
     setHouse(w, houses[1]!, 4, 20);
     setHouse(w, houses[2]!, 4, 19);
-    w.stock.glass = 50;
+    home(w).stock.glass = 50;
     step(w);
     expect(w.tick % 50).not.toBe(0);
     expect(merchants(w)).toBe(59);
@@ -379,7 +389,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
     while (w.tick < 450) step(w);
     expect(merchants(w)).toBe(60);
     expect(w.wonMerchants).toBe(true);
-    w.stock.glass = 0;
+    home(w).stock.glass = 0;
     while (merchants(w) > 55 && w.tick < 2000) step(w);
     expect(merchants(w)).toBe(54); // drei Häuser schrumpfen im selben Wachstumstakt: 60 → 57 → 54
     expect(w.wonMerchants).toBe(true);
@@ -391,7 +401,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
       TIERS[4].unlockCitizens = 40;
       const { w, houses } = town(3);
       for (const b of houses) setHouse(w, b, 4, 20);
-      w.stock.glass = 50;
+      home(w).stock.glass = 50;
       expect(w.won).toBe(false);
       step(w);
       expect([w.won, w.wonMerchants]).toEqual([true, true]);
@@ -403,7 +413,7 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
   it('AK-S3-08 Freischaltung im Siegtick: bei W − 1 Badehaus gesperrt, ab W Bad und Hütte frei, merchants 0 bei W', () => {
     // Änderung S11: Welt wie m8-kurz-vor-sieg, ohne Badehaus (vorher „Vorbereitung zahlt sich aus")
     const w = createWorld(3, { unlockAll: true });
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     const at: [number, number, number][] = [
       [k.x + 2, k.y - 6, 15],
       [k.x + 2, k.y + 7, 15],
@@ -428,8 +438,8 @@ describe('M8 Zweites Ziel (Spec 7, 11.1)', () => {
     w.tick = 50 * 9 - 1;
     for (const h of houses) h.house!.satisfiedSince = w.tick - 300;
     w.money = 3000;
-    w.stock = {
-      ...w.stock,
+    home(w).stock = {
+      ...home(w).stock,
       glass: 5,
       wood: 30,
       tools: 20,

@@ -4,6 +4,7 @@ import { createRng } from './rng';
 import { functionLock } from './unlocks';
 import type { GoodId, Result, Tier, World } from './types';
 import { fail, ok } from './types';
+import { home } from './world';
 
 /** Höchste Hausstufe aller Häuser; ohne Häuser 1 (auch Eingabe des Boom-Pools, M6). */
 export function maxHouseTier(world: World): Tier {
@@ -68,8 +69,8 @@ export function deliverOrder(world: World): Result {
   if (lock !== null) return fail(lock);
   const o = world.order;
   if (o === null) return fail('Kein Auftrag');
-  if (world.stock[o.good] < o.amount) return fail('Nicht genug Ware');
-  world.stock[o.good] -= o.amount;
+  if (home(world).stock[o.good] < o.amount) return fail('Nicht genug Ware');
+  home(world).stock[o.good] -= o.amount;
   world.money += o.reward;
   world.order = null;
   return ok;

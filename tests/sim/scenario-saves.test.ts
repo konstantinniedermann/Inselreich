@@ -22,7 +22,7 @@ import { sellPrice } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { buildingsOfType, center, idx, inBounds, tilesInRadius } from '../../src/sim/world';
+import { buildingsOfType, center, idx, inBounds, tilesInRadius, home } from '../../src/sim/world';
 import { PROBES, SCENARIOS, tickBeforeFirst, writeProbes, writeScenarios } from './scenarios';
 
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
@@ -119,15 +119,15 @@ describe('Szenario-Saves', () => {
       expect(h.house!.supplied).toBe(true);
       expect(h.house!.satisfied.food).toBe(true);
     }
-    expect(w.stock.food).toBe(50);
-    for (const g of GOOD_IDS) if (g !== 'food') expect(w.stock[g]).toBe(START_STOCK[g]);
+    expect(home(w).stock.food).toBe(50);
+    for (const g of GOOD_IDS) if (g !== 'food') expect(home(w).stock[g]).toBe(START_STOCK[g]);
     step(w);
     expect(populationByTier(w)[1]).toBe(16);
   });
 
   it('lager-holz-99: Holz 99, ein angebundener Marktplatz', () => {
     const w = load('lager-holz-99');
-    expect(w.stock.wood).toBe(99);
+    expect(home(w).stock.wood).toBe(99);
     const markets = buildingsOfType(w, 'market');
     expect(markets).toHaveLength(1);
     expect(markets[0]!.connected).toBe(true);
@@ -139,7 +139,7 @@ describe('Szenario-Saves', () => {
     const chapels = buildingsOfType(w, 'chapel');
     expect(chapels).toHaveLength(1);
     expect(chapels[0]!.connected).toBe(true);
-    expect(w.stock.cloth).toBe(0);
+    expect(home(w).stock.cloth).toBe(0);
     const check = (): void => {
       const hs = houses(w);
       const unsupplied = hs.filter((h) => !h.house!.supplied);
@@ -170,8 +170,8 @@ describe('Szenario-Saves', () => {
     const w = load('auftrag');
     expect(w.tick).toBe(595);
     expect(houses(w)).toHaveLength(0);
-    expect(w.stock.wood).toBe(50);
-    expect(w.stock.food).toBe(30);
+    expect(home(w).stock.wood).toBe(50);
+    expect(home(w).stock.food).toBe(30);
     expect(w.order).toBeNull();
     for (let i = 0; i < 5; i++) step(w);
     expect(w.order).not.toBeNull();
@@ -207,13 +207,13 @@ describe('Szenario-Saves', () => {
     }
     const weavers = buildingsOfType(w, 'weaver');
     expect(weavers.some((b) => b.state === 'waitingInput')).toBe(true);
-    expect(w.stock.wool).toBe(0);
+    expect(home(w).stock.wool).toBe(0);
     // längste zusammenhängende Wegzeile
     let best = 0;
     for (let y = 0; y < w.height; y++) {
       let run = 0;
       for (let x = 0; x < w.width; x++) {
-        run = w.tiles[idx(w, x, y)]!.road ? run + 1 : 0;
+        run = home(w).tiles[idx(home(w), x, y)]!.road ? run + 1 : 0;
         best = Math.max(best, run);
       }
     }
@@ -265,7 +265,7 @@ describe('M6 Szenarien', () => {
     );
     expect(flammable.map((b) => b.defId)).toEqual(['distillery']);
     expect(flammable[0]!.connected).toBe(true);
-    expect(w.stock.cane).toBe(20);
+    expect(home(w).stock.cane).toBe(20);
     expect(w.money).toBe(1000);
     const [c0, u0] = [w.taxCarry, w.upkeepCarry];
     step(w);
@@ -313,8 +313,8 @@ describe('M6 Szenarien', () => {
     const w = load('krise-boom');
     expect(w.tick).toBe(4199);
     expect(houses(w)).toHaveLength(0);
-    expect(w.stock.wood).toBe(50);
-    expect(w.stock.food).toBe(50);
+    expect(home(w).stock.wood).toBe(50);
+    expect(home(w).stock.food).toBe(50);
     step(w);
     expect(w.crisis?.kind).toBe('boom');
     expect(['wood', 'food']).toContain(w.crisis?.good);
@@ -372,7 +372,12 @@ describe('M8 Szenarien', () => {
       expect(buildingsOfType(w, id)[0]!.connected, id).toBe(true);
     expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0);
     expect(w.money).toBe(3000);
-    expect([w.stock.glass, w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([0, 60, 20, 30]);
+    expect([
+      home(w).stock.glass,
+      home(w).stock.wood,
+      home(w).stock.tools,
+      home(w).stock.stone,
+    ]).toEqual([0, 60, 20, 30]);
     satisfiedLongEnough(w);
     step(w);
     satisfiedLongEnough(w);
@@ -392,7 +397,12 @@ describe('M8 Szenarien', () => {
     expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0); // Änderung S11
     expect(buildLock(w, 'bathhouse')).toBe('Erst nach dem Ziel');
     expect(w.money).toBe(3000);
-    expect([w.stock.glass, w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([5, 30, 20, 20]);
+    expect([
+      home(w).stock.glass,
+      home(w).stock.wood,
+      home(w).stock.tools,
+      home(w).stock.stone,
+    ]).toEqual([5, 30, 20, 20]);
     satisfiedLongEnough(w);
     step(w);
     expect(w.won).toBe(true);
@@ -426,10 +436,10 @@ describe('M8 Szenarien', () => {
     expect(works).toHaveLength(1);
     expect(works[0]!.connected).toBe(true);
     expect(works[0]!.state).toBe('waitingInput');
-    expect([w.stock.stone, w.stock.wood]).toEqual([5, 0]);
+    expect([home(w).stock.stone, home(w).stock.wood]).toEqual([5, 0]);
     step(w);
     expect(buildingsOfType(w, 'glassworks')[0]!.state).toBe('waitingInput');
-    expect([w.stock.stone, w.stock.wood, w.stock.glass]).toEqual([5, 0, 0]);
+    expect([home(w).stock.stone, home(w).stock.wood, home(w).stock.glass]).toEqual([5, 0, 0]);
   });
 
   it('AK-B2-01 m8-kaufleute-ohne-glas: won, 1 Kaufmannshaus 20 EW, alle Dienste, Glas 0, satisfied.glass false', () => {
@@ -437,25 +447,25 @@ describe('M8 Szenarien', () => {
     expect(w.won).toBe(true);
     expect(shape(w)).toEqual([[4, 20]]);
     const h = houses(w)[0]!;
-    expect(w.stock.glass).toBe(0);
+    expect(home(w).stock.glass).toBe(0);
     expect(h.house!.satisfied.glass).toBe(false);
     expect(h.house!.services).toEqual({ faith: true, school: true, bath: true });
     expect(houseDiagnosis(w, h)).toEqual([{ kind: 'good', good: 'glass' }]);
     // Änderung S11: Mittel für AK-U2-06 (Badehaus mit J bauen) und AK-U2-10
     expect(w.money).toBe(3000);
-    expect([w.stock.wood, w.stock.tools, w.stock.stone]).toEqual([60, 20, 30]);
+    expect([home(w).stock.wood, home(w).stock.tools, home(w).stock.stone]).toEqual([60, 20, 30]);
     // R152 (Gate-Risiko): fester freier, angebundener 2×2-Platz für AK-U1-07/AK-U2-06 (QA nennt ihn: kx+9, ky+1)
-    const k = w.buildings[w.kontorId]!;
+    const k = w.buildings[home(w).kontorId]!;
     expect([k.x + 9, k.y + 1]).toEqual([41, 32]); // Seed 3, Kontor (32, 31)
     expect(canPlace(w, 'bathhouse', k.x + 9, k.y + 1).ok).toBe(true);
-    expect(w.tiles[idx(w, k.x + 9, k.y)]!.road).toBe(true); // Weg nördlich → angebunden
+    expect(home(w).tiles[idx(home(w), k.x + 9, k.y)]!.road).toBe(true); // Weg nördlich → angebunden
     step(w);
     expect(houses(w)[0]!.house!.satisfied.glass).toBe(false);
   });
 
   it('AK-B2-01 m8-handel: Glas 10, Verkaufsanteil 100, 10 Glas bringen 191', () => {
     const w = load('m8-handel');
-    expect(w.stock.glass).toBe(10);
+    expect(home(w).stock.glass).toBe(10);
     expect(w.sellPct.glass).toBe(100);
     expect(sellPrice(w, 'glass', 10)).toBe(191);
   });
@@ -515,14 +525,14 @@ describe('M10 Szenarien (Spec 18.1)', () => {
   it('AK-B1-03 Prüfpunkte: vorhanden, auf der Karte, tragen Gebäude bzw. Gelände; Abstände; amtsstube-aus nicht angebunden', () => {
     for (const name of M10) {
       const w = SCENARIOS[name]!();
-      const k = w.buildings[w.kontorId]!;
+      const k = w.buildings[home(w).kontorId]!;
       const probes = PROBES[name]!(w);
       for (const [p, [dx, dy]] of Object.entries(PROBE_SPEC[name]!)) {
         expect(probes[p], `${name}/${p}`).toEqual({ x: k.x + dx, y: k.y + dy });
-        expect(inBounds(w, k.x + dx, k.y + dy)).toBe(true);
+        expect(inBounds(home(w), k.x + dx, k.y + dy)).toBe(true);
       }
     }
-    const at = (w: World, p: { x: number; y: number }) => w.tiles[idx(w, p.x, p.y)]!;
+    const at = (w: World, p: { x: number; y: number }) => home(w).tiles[idx(home(w), p.x, p.y)]!;
     const wald = SCENARIOS['m10-wald']!();
     const pw = PROBES['m10-wald']!(wald);
     expect([
@@ -572,12 +582,12 @@ const M11 = ['m11-fluss', 'm11-wald', 'm11-ausbau', 'm11-defizit', 'm11-stein'] 
 describe('M11 Szenarien (Anhang 02 F)', () => {
   const at = (w: World, name: string, probe: string): Building => {
     const p = PROBES[name]!(w)[probe]!;
-    return w.buildings[w.tiles[idx(w, p.x, p.y)]!.buildingId!]!;
+    return w.buildings[home(w).tiles[idx(home(w), p.x, p.y)]!.buildingId!]!;
   };
   const freeForest = (w: World, b: Building, r: number): number => {
     const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
-    return tilesInRadius(w, c.cx, c.cy, r).filter((p) => {
-      const t = w.tiles[idx(w, p.x, p.y)]!;
+    return tilesInRadius(home(w), c.cx, c.cy, r).filter((p) => {
+      const t = home(w).tiles[idx(home(w), p.x, p.y)]!;
       return t.terrain === 'forest' && t.buildingId === null && !t.road;
     }).length;
   };
@@ -642,9 +652,12 @@ describe('M11 Szenarien (Anhang 02 F)', () => {
     const weberei = at(ausbau, 'm11-ausbau', 'weberei');
     expect([weberei.level, weberei.state]).toEqual([2, 'waitingInput']);
     expect(at(ausbau, 'm11-ausbau', 'schaeferei').level).toBeUndefined();
-    expect([ausbau.stock.wool, ausbau.stock.cloth, ausbau.stock.rum, ausbau.money]).toEqual([
-      0, 10, 10, 2000,
-    ]);
+    expect([
+      home(ausbau).stock.wool,
+      home(ausbau).stock.cloth,
+      home(ausbau).stock.rum,
+      ausbau.money,
+    ]).toEqual([0, 10, 10, 2000]);
     expect(ausbau.unlocked).toEqual(['U0', 'U1', 'U2', 'U3', 'U4', 'U5']);
 
     const defizit = SCENARIOS['m11-defizit']!();

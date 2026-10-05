@@ -16,7 +16,7 @@ import type {
   Terrain,
   World,
 } from './types';
-import { center, idx, tilesInRadius, type Pos } from './world';
+import { center, home, idx, islandOf, tilesInRadius, type Pos } from './world';
 
 /** Reine Abfragen für UI und Renderer: lesen die Welt, verändern sie nie. */
 
@@ -63,7 +63,7 @@ export { goodsBalance } from './flow';
 
 /** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
 export function missingInputs(world: World, b: Building): GoodId[] {
-  return (BUILDING_DEFS[b.defId].consumes ?? []).filter((g) => world.stock[g] < 1);
+  return (BUILDING_DEFS[b.defId].consumes ?? []).filter((g) => islandOf(world, b).stock[g] < 1);
 }
 
 export function goalView(world: World): GoalView {
@@ -123,10 +123,10 @@ function coverageSources(
 /** Wahr, wo ein 1×1-Haus versorgt wäre bzw. den Dienst hätte (Index y × width + x). */
 export function coverageMask(world: World, kind: CoverageKind): boolean[] {
   const sources = coverageSources(world, kind);
-  const mask = new Array<boolean>(world.width * world.height).fill(false);
-  for (let y = 0; y < world.height; y++) {
-    for (let x = 0; x < world.width; x++) {
-      mask[idx(world, x, y)] = sources.some(
+  const mask = new Array<boolean>(home(world).width * home(world).height).fill(false);
+  for (let y = 0; y < home(world).height; y++) {
+    for (let x = 0; x < home(world).width; x++) {
+      mask[idx(home(world), x, y)] = sources.some(
         (s) => Math.hypot(x + 0.5 - s.cx, y + 0.5 - s.cy) <= s.radius,
       );
     }
@@ -145,12 +145,12 @@ export function placementZone(
   const c = center(def, x, y);
   const circle = def.supplyRadius ?? def.serviceRadius;
   if (circle !== undefined) {
-    return { ...c, radius: circle, tiles: tilesInRadius(world, c.cx, c.cy, circle) };
+    return { ...c, radius: circle, tiles: tilesInRadius(home(world), c.cx, c.cy, circle) };
   }
   const zone = siteZone(defId);
   if (!zone) return null;
-  const tiles = tilesInRadius(world, c.cx, c.cy, zone.radius).filter(
-    (p) => world.tiles[idx(world, p.x, p.y)]!.terrain === zone.terrain,
+  const tiles = tilesInRadius(home(world), c.cx, c.cy, zone.radius).filter(
+    (p) => home(world).tiles[idx(home(world), p.x, p.y)]!.terrain === zone.terrain,
   );
   return { ...c, radius: zone.radius, tiles };
 }
@@ -158,7 +158,7 @@ export function placementZone(
 /** Rückerstattung, wie `grantRefund` sie einlagert: Güter auf den freien Lagerplatz gekappt. */
 export function effectiveRefund(world: World, cost: Cost): Cost {
   const r = refundCost(cost);
-  const room = (g: GoodId): number => Math.max(0, STORAGE_CAP - world.stock[g]);
+  const room = (g: GoodId): number => Math.max(0, STORAGE_CAP - home(world).stock[g]);
   return {
     money: r.money,
     wood: Math.min(r.wood, room('wood')),
@@ -180,7 +180,7 @@ const TERRAIN_CODE: Record<Terrain, number> = {
 export function layoutKey(world: World): string {
   const h = new LayoutHash();
   h.add(world.nextBuildingId);
-  for (const t of world.tiles) h.add(TERRAIN_CODE[t.terrain] * 2 + (t.road ? 1 : 0));
+  for (const t of home(world).tiles) h.add(TERRAIN_CODE[t.terrain] * 2 + (t.road ? 1 : 0));
   h.add(-1);
   for (const b of Object.values(world.buildings)) {
     h.add(b.id);

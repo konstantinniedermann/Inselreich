@@ -6,7 +6,7 @@ import { deliverOrder, nextOrderTick, orderForPeriod, tickOrders } from '../../s
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Tier, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 
 let w: World;
 
@@ -41,7 +41,7 @@ describe('Handelsaufträge', () => {
   it('AK-S2-06 zu wenig Ware oder kein Auftrag: fail, nichts verändert', () => {
     expect(deliverOrder(w)).toEqual({ ok: false, reason: 'Kein Auftrag' });
     w.order = { period: 0, good: 'wood', amount: 20, reward: 140, due: 1200 };
-    w.stock.wood = 19;
+    home(w).stock.wood = 19;
     const money = w.money;
     const before = JSON.stringify(w);
     expect(deliverOrder(w)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
@@ -52,11 +52,11 @@ describe('Handelsaufträge', () => {
   it('AK-S2-07 volles Lager: Liefern zieht amount ab, bucht reward, sellPct unverändert', () => {
     w.tick = 700;
     w.order = { period: 0, good: 'wood', amount: 25, reward: 175, due: 1200 };
-    w.stock.wood = 100;
+    home(w).stock.wood = 100;
     w.sellPct.wood = 77;
     const money = w.money;
     expect(deliverOrder(w)).toEqual({ ok: true });
-    expect(w.stock.wood).toBe(75);
+    expect(home(w).stock.wood).toBe(75);
     expect(w.money).toBe(money + 175);
     expect(w.order).toBeNull();
     expect(w.sellPct.wood).toBe(77);
@@ -68,7 +68,7 @@ describe('Handelsaufträge', () => {
     const copy = deserialize(serialize(w));
     expect(copy.ok).toBe(true);
     if (copy.ok) {
-      copy.world.stock[copy.world.order!.good] = 100;
+      home(copy.world).stock[copy.world.order!.good] = 100;
       expect(deliverOrder(copy.world)).toEqual({ ok: true });
     }
     w.tick = 1201;
@@ -122,7 +122,7 @@ describe('Handelsaufträge', () => {
     step(w);
     expect(w.tick).toBe(1500);
     expect(w.order?.period).toBe(1);
-    w.stock[w.order!.good] = 100;
+    home(w).stock[w.order!.good] = 100;
     expect(deliverOrder(w)).toEqual({ ok: true });
     expect(w.won).toBe(true);
   });
@@ -152,7 +152,7 @@ describe('Handelsaufträge', () => {
 
   it('RF-3b deliverOrder ist bei negativem Geld erlaubt', () => {
     w.order = { period: 0, good: 'wood', amount: 20, reward: 140, due: w.tick + 10 };
-    w.stock.wood = 20;
+    home(w).stock.wood = 20;
     w.money = -100;
     expect(deliverOrder(w)).toEqual({ ok: true });
     expect(w.money).toBe(40);

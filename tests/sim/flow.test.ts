@@ -5,6 +5,7 @@ import { setTaxLevel } from '../../src/sim/tax';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, HouseState, Tier, World } from '../../src/sim/types';
 import { placeService, placeTownhall, setHouse, village } from './helpers';
+import { home } from '../../src/sim/world';
 
 const hs = (tier: Tier, inhabitants: number): HouseState => ({
   tier,
@@ -23,7 +24,7 @@ function addRaw(w: World, defId: BuildingDefId, extra: Partial<Building> = {}): 
 /** n volle Pionierhäuser (4 EW), Kapelle, Fischer, Webereien; Lager voll genug; t0 = 1000 (Vielfaches von 50). */
 function ready(n: number, fishers: number, weavers: number, tax?: 'low' | 'high') {
   const { w, houses } = village(n, { unlockAll: true });
-  const k = w.buildings[w.kontorId]!;
+  const k = w.buildings[home(w).kontorId]!;
   if (tax) {
     placeTownhall(w); // vor der Kapelle: Bauen setzt connected neu
     expect(setTaxLevel(w, tax).ok).toBe(true);
@@ -31,7 +32,7 @@ function ready(n: number, fishers: number, weavers: number, tax?: 'low' | 'high'
   placeService(w, 'chapel', k.x + 2, k.y + 2);
   for (let i = 0; i < fishers; i++) addRaw(w, 'fisher'); // je 2,5 Nahrung / 100 Ticks
   for (let i = 0; i < weavers; i++) addRaw(w, 'weaver'); // je 2,0 Stoff (nominell, ohne Wolle)
-  Object.assign(w.stock, { food: 100, cloth: 100, wood: 100, tools: 50 });
+  Object.assign(home(w).stock, { food: 100, cloth: 100, wood: 100, tools: 50 });
   w.tick = 1000;
   for (const h of houses) {
     setHouse(h, 1, 4);
@@ -95,7 +96,7 @@ describe('M11 Gedämpfter Aufstieg (Spec 3.2)', () => {
     for (let i = 0; i < 2; i++) addRaw(w, 'weaver'); // Stoff 4,0 − 1,6 = 2,4 ≥ 1,4
     const burning = { state: 'burning', outageUntil: 1_000_000 } as const;
     addRaw(w, 'distillery', burning); // Rum 2,0 nominell < Δ 3,0
-    w.stock.rum = 100;
+    home(w).stock.rum = 100;
     w.tick = 1300;
     h.house!.satisfiedSince = 1000;
     expect(upgradeStatus(w, h).reasons).toContain('Bedürfnisse noch nicht 600 Ticks erfüllt');
