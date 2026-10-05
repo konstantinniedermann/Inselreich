@@ -1644,3 +1644,17 @@ fällt raus, wenn nicht fertig) vor E0; E0 erst nach REL-03 auf main (sonst v7 u
 — Kosten bei Irrtum: Merge-Konflikt H-U1 in E0 doppelt zu lösen; v7 nach Merge nicht umkehrbar.
 
 Entscheider: L0 · Anlass: Berichte lead-qa und lead-production M12-E0-GATE-PLAN · ADR: —
+
+## R230 · 2026-10-05 · Gate Spec M12 E1–E6 bestanden
+
+Ruling: Delta-Gate lead-qa (95ed26e → 37850ad) BEDENKEN nicht blockend → **Gate Spec M12 E1–E6 bestanden** mit
+Auflage B1: lead-design ergänzt vor dem Plan des Seefahrt-Bündels die Pin-Liste in Anhang 03 D um die durch E2
+gebrochenen Pins `M8:AK-S1-01` (U6-Zeile `unlocks.test.ts`) und `M11:AK-U1-08` (`UNLOCK_NOTICE`) mit Bezug R226
+F-03 und entscheidet den künftigen U6-Meldungstext. Die Plan-Punkte von lead-qa (AK-E2-03 Schiff in Felsbucht beim
+Abriss, Rezept `save-v8.json`, Übergangsbestand über die Kette ab v7, Browser-Check Lade-Meldung, Aufwärmen AK-E1-16,
+Notfall-Frames AK-E1-18, Messbedingungen AK-E1-19) ergänzt lead-design in Teil B der Plan-Auflagen. Spielurteil
+QA-A3 (Übergangsbestand Gewürz, AK-E3-07) angenommen. F-P7 (Werte E6) prüft design-economy-designer vor dem E6-Plan.
+Nächster Schritt: E1-Plan durch lead-tech auf Basis E0-Plan; E1-Render-Umsetzung erst nach REL-03 auf main. —
+Kosten bei Irrtum: alte Pins ohne Ruling-Bezug geändert; U6-Text vom Umsetzer entschieden.
+
+Entscheider: L0 · Anlass: Bericht lead-qa M12-GATE-SPEC-DELTA · ADR: —
