@@ -45,6 +45,7 @@ export function goalTexts(view: GoalView): GoalTexts {
       };
     }
     case 'merchants':
+    case 'spice': // Brücke T06, Texte in T07
       return {
         chip: `Ziel ${view.current} / ${view.target} ${merchant.name}`,
         title: `Zweites Ziel: ${view.target} ${merchant.name} — Einwohner der Stufe ${merchant.tier}`,

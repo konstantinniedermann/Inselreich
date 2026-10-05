@@ -99,8 +99,10 @@ export function spiceGoalScenario(opts: SpiceGoalOptions = {}): World {
     if (!r.ok || r.id === undefined) throw new Error(`Haus ${i} nicht gesetzt`);
     ids.push(w.buildings[r.id]!);
   }
-  for (const [i, defId] of (['chapel', 'school', 'bathhouse'] as const).entries())
-    placeService(w, defId, k.x + 4 + i * 2, k.y).connected = true;
+  const services = (['chapel', 'school', 'bathhouse'] as const).map((defId, i) =>
+    placeService(w, defId, k.x + 4 + i * 2, k.y),
+  );
+  for (const s of services) s.connected = true; // Platzieren setzt die Anbindung zurück
   w.tick = 449;
   w.money = 1_000_000;
   for (const b of ids) {
