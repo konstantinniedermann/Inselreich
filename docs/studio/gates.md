@@ -92,6 +92,10 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
 Prüfen: `lead-qa` (`opus`, Review- und Testabdeckung) · `lead-production` (`opus`, Budget,
 Ownership, Parallelität)
 
+**Folgeplan (R233 V2):** Baut ein Plan auf einem bereits gegateten Plan auf (z. B. E1 nach E0),
+prüft nur `lead-qa`; Ownership und Budget prüft L0 selbst, `lead-production` kommt nur bei neuer
+Branch- oder Merge-Struktur dazu.
+
 **Auslöser:** Tech-Lead hat den Plan unter `docs/superpowers/plans/` samt Budgetantrag
 ([templates/budgetantrag.md](templates/budgetantrag.md)) fertig.
 

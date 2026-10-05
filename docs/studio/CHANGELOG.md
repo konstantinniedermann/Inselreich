@@ -22,6 +22,15 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-05 · Handbuch 1.20
+
+- Anlass: Abnahme Handbuch 1.19, Zeitraum E-028 erreicht
+- Datenbasis: E-028-Datenpunkte REL-01…REL-04 ([experimente.md](experimente.md)), Rulings R232, R244
+- Ruling: R251
+- Änderungen: E-028 „Release-Bündel“ abgeschlossen (`behalten`, Arbeitsweise bleibt Regel);
+  E-030 „Zeittests lokal seriell“ auf `laufend` (Paket TOOL-E030); `gates.md` „Gate Plan“: Satz
+  zum Folgeplan-Gate (R233 V2)
+
 ## 2026-10-05 · Handbuch 1.19
 
 - Anlass: Kurz-Retro session-ad51d3c5 mit Ad-hoc-Retro CI rot, Prozess-Retro REL-03, Kurz-Retro
