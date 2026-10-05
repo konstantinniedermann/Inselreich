@@ -14,7 +14,7 @@ alle Stränge haben dieselbe Testwelt. `TIERS[4]` bleibt unverändert (Bruch nur
 `render/sprites.ts` `SILHOUETTES` (Partial), `ui/hotkeys.ts` `categoryOf`.
 
 **Dateien:** `src/sim/types.ts`, `defs/buildings.ts`, `defs/unlocks.ts`, `defs/sea.ts`, `defs/tiers.ts` (nur
-`WIN_SPICE_*`), `world.ts` (`isKontor`), `islands.ts` (`islandName`), `placement.ts` (nur zwei Regel-Fälle);
+`WIN_SPICE_*`), `world.ts` (`isKontor`), `economy.ts` (nur `checkAfford`-Parameter `where`), `islands.ts` (`islandName`), `placement.ts` (nur zwei Regel-Fälle);
 neu `tests/sim/seaHelpers.ts`; `tests/sim/defs.test.ts`, `unlocks.test.ts`, `placement.test.ts`; Platzhalter-Einträge
 in erschöpfenden UI-/Render-Tabellen, falls `tsc` sie verlangt (keine Logik).
 
@@ -53,6 +53,9 @@ sind verbindlich. `kontor2.site` übernimmt die Küstenregel von `kontor` wörtl
   - `foreignNoKontor`: `island === HOME` → **„Nur auf einer fernen Insel"**; `islands[island].kontorId !== null` →
     **„Auf dieser Insel steht schon ein Kontor"**.
 - `world.ts`: `isKontor(defId) = defId === 'kontor' || defId === 'kontor2'` (P-6; Verwendung ab T03).
+- `economy.ts` (prod-B1, hier statt in T03/T08, weil beide Stränge es nutzen): `checkAfford(world, isl, cost,
+where?: string)` hängt `where` an den Grund an („Nicht genug Stein in der Heimat"); ohne `where` Text unverändert.
+  Test in `placement.test.ts`: mit und ohne `where`.
 - `islands.ts`: `islandName(world, i)` = `HOME_NAME` für 0, sonst Name aus `ISLANDS` nach `kind`.
 - `src/ui/hotkeys.ts` (nur zwei Konstanten, damit T07 und T12 dieselbe Quelle lesen):
   `export const ISLAND_HOME_KEY = '0'; export const ISLAND_CYCLE_KEY = '9';`
@@ -83,7 +86,8 @@ sind verbindlich. `kontor2.site` übernimmt die Küstenregel von `kontor` wörtl
     Platzregeln (Kosten-/Freischalt-Gründe ausgeblendet: `unlockAll`, Geld/Waren per Literal gesetzt).
 - [ ] **2 Rot-Beleg** → Commit `test: M12 Seefahrt Werte und Bauregeln (rot)`.
 - [ ] **3 Umsetzung**; `tsc` zeigt erschöpfende Tabellen → Platzhalter (Silhouette `kontor2` = `kontor`,
-      `spicefarm` = Zuckerrohr-Form; Kategorie wie Kontor bzw. Zuckerrohr; keine Taste).
+      `spicefarm` = Zuckerrohr-Form; Kategorie wie Kontor bzw. Zuckerrohr; keine Taste). Den eigenen Palettenton der
+      Plantage (D-144 Regel 1) setzt T10.
 - [ ] **4 Prüfen:** Bitgleich (AK-M12-B1…B4, `balance-merchants [6750, 11200, 320]`), `make check`,
       `CI=true make check` → Commit `feat: M12 Seefahrt Werte, Bauregeln, Testwelt`.
 

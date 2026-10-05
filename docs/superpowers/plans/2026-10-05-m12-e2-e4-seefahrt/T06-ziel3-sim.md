@@ -52,8 +52,12 @@ withFarm?: boolean; spiceInStock?: boolean; wonMerchants?: boolean })`: `seaWorl
   4 Kaufmannshäuser zu 20 EW in der Heimat mit allen Diensten, alle Bedarfsgüter (inkl. Gewürz 100) im Heimatlager,
   `won = wonMerchants = true`. Häuser per Literal mit `satisfiedSince = tick`; Lager je 100 Ticks nachfüllen ist
   Teil der Testschleife (`refill(w)`), nicht des Helfers.
-- **Fixture für AK-Z3-14** `tests/sim/fixtures/z3-scenario-v9.json` = `serialize(spiceGoalScenario())`, einmal per
-  Scratch-Test geschrieben; ein Test prüft `deserialize(...).ok` und Gleichheit mit dem Helfer.
+- **Fixture für AK-Z3-14** `tests/sim/fixtures/z3-scenario-v9.json` = `serialize(spiceGoalScenario({ forBrowser:
+true }))`, einmal per Scratch-Test geschrieben; ein Test prüft `deserialize(...).ok` und Gleichheit mit dem Helfer.
+  **qa-B1:** `forBrowser` bemisst das Rezept so, dass der Stand **ohne Nachfüllen** das Ziel erreicht: je Bedarfsgut
+  der Kaufleute Heimatlager ≥ 7 × Bedarf je 100 Ticks (höchstens 100; reicht 100 nicht, versorgt ein angebundener
+  Betrieb in der Heimat), `satisfiedSince = tick`, Gewürz-Route und Plantage wie im Szenario. Der Nachweis
+  (`WIN_SPICE_HOLD + 100` Schritte mit `tickShips` → `wonSpice true`) läuft in T14.
 
 ## Schritte
 
@@ -69,8 +73,10 @@ withFarm?: boolean; spiceInStock?: boolean; wonMerchants?: boolean })`: `seaWorl
     und `won true` → `wonMerchants` und `wonSpice` im selben `step` (Haltezeit erfüllt).
   - **AK-Z3-07** nach `true`: alle Plantagen und Häuser per `demolish`, Route `null` (Literal), 1000 Ticks → `true`;
     `goalView(w).phase === 'done'`.
-  - **AK-Z3-08** Szenario zweimal → gleicher Setz-Tick, `serialize` gleich; `vi.spyOn` auf `createRng`: in
-    `checkWin`/`spiceMerchants`/`spiceLoop` 0 Aufrufe (eigene Datei `goal3-rng.test.ts` falls `vi.mock` nötig).
+  - **AK-Z3-08** Szenario zweimal → gleicher Setz-Tick, `serialize` gleich. **qa-B4:** eigene Datei
+    `tests/sim/goal3-rng.test.ts` mit `vi.mock('../../src/sim/rng')` (Zähler um `createRng`); `checkWin`,
+    `spiceMerchants`, `spiceLoop` je 100× **direkt** aufrufen (nicht über `step`) → 0 Aufrufe; dazu
+    `grep -c createRng src/sim/goal3.ts` = 0 als Test (Datei lesen, Vorkommen zählen).
   - `queries.test.ts` **AK-Z3-10** + Pin **M8 AK-S3-03** (bewusst, R239 (3)): `wonMerchants` ohne `wonSpice` →
     `'spice'` mit `current` (B.1) und `loop` (B.2); `'done'` erst mit `wonSpice`; vorher wie heute.
   - **AK-Z3-13 (Teil)** `balance-merchants.test.ts`: Ende des Controller-Laufs `wonSpice === false`; vorläufiger Pin

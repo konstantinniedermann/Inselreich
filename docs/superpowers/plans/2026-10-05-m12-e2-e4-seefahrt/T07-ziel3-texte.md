@@ -14,8 +14,8 @@
 `WIN_SPICE_MERCHANTS` (T02); `GoalView` Phase `'spice'` (T06). Aufrufer: `hud.ts:254`, `inspect.ts:838`,
 `startCard.ts:108`, Banner-Schleife in `app.ts` (generisch über `texts`, Ton `win` je Frame höchstens einmal).
 
-**Dateien:** `src/ui/goal.ts`; `tests/ui/goal.test.ts`. `app.ts` nur, wenn die Banner-Schleife nicht generisch ist
-(dann Meldung an den Controller vor der Änderung).
+**Dateien:** `src/ui/goal.ts`; `tests/ui/goal.test.ts`. **Kein `app.ts`** (prod-B5): Ist die Banner-Schleife nicht
+generisch, notiert der Controller das im Ledger; die `app.ts`-Änderung macht T15 auf der Integrationsbranch.
 
 ## Texte (verbindlich, Zahlen und Namen aus `defs`)
 

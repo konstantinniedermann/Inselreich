@@ -9,7 +9,7 @@
 mustert leere Schiffe aus. Bewegung und Umschlag folgen in T09.
 
 **Code-Fakten:** `types.ts` `Ship`, `Route`, `RouteGood`, `World.ships`, `nextShipId` (T01); `defs/sea.ts` `SHIP`,
-`SHIP_MAX`, `ROUTE_GOODS_PER_DIRECTION`, `ROUTE_RESERVE` (T02); `world.ts` `home`, `checkAfford`, `pay`; `unlocks.ts`
+`SHIP_MAX`, `ROUTE_GOODS_PER_DIRECTION`, `ROUTE_RESERVE` (T02); `world.ts` `home`; `economy.ts` `checkAfford`, `pay` (unverändert nutzen, `where` nicht nötig); `unlocks.ts`
 `functionLock(w, 'seafaring')`; `economy.ts` `totalUpkeep(world)` (Summe über Gebäude), `tickEconomy`
 (`upkeepCarry`); `goodUnlocked`. Testwelt `seaHelpers.ts` (`seaWorld`, `foundKontor2Literal`, `shipLiteral`).
 

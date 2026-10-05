@@ -15,7 +15,8 @@ auf der Insel unter dem Mauszeiger. Die Heimat bleibt Aufruf für Aufruf gleich.
 mit `island`-Parameter aus E0); `tests/render/renderer.test.ts` `HOME_CALLS` (E1, Heimat-Aufrufliste);
 `tests/render/fakeCtx.ts`.
 
-**Dateien:** `src/render/archipel.ts`, `renderer.ts`, `overlays.ts` (nur Inselbezug); `tests/render/archipel.test.ts`,
+**Dateien:** `src/render/archipel.ts`, `renderer.ts`, `overlays.ts` (nur Inselbezug), `sprites.ts`/`palette.ts` (nur
+Palettenton `spicefarm`, D-144); `tests/render/archipel.test.ts`,
 `renderer.test.ts`. Keine Datei in `src/sim/`, `src/ui/`.
 
 ## Regeln (verbindlich)
@@ -29,6 +30,8 @@ mit `island`-Parameter aus E0); `tests/render/renderer.test.ts` `HOME_CALLS` (E1
   `islandCam` dieser Insel und `placementZone`/`coverageMask(…, hover.island)`. `island` fehlt → `0` (Heimat-Aufrufe
   gleich).
 - **Auswahl:** `selectedId` eines Gebäudes auf `i ≥ 1` hebt es in der Ansicht von `i` hervor (Id in der Kopie gleich).
+- **D-144 Regel (1) (R241):** `spicefarm` nutzt die Zuckerrohr-Form mit einem **eigenen Palettenton** (neuer
+  `PALETTE`-Eintrag nach Stilrahmen §2); Test im Fake-Kontext: Füllfarben von `spicefarm` ≠ `sugarfarm`.
 - Kontor-Zierschiff (`shipTile`) erscheint am `kontor2` wie am Heimatkontor (folgt aus `islandView`); keine weitere
   Änderung (Handelsschiffe: T11).
 - Caches: Terrain-Cache je Insel bleibt unverändert (Wege liegen in `tiles`, Gebäude werden je Frame gezeichnet). Wenn

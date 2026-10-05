@@ -100,8 +100,10 @@ SPICE_GRACE_PER_HOUSE × Häuser mit house.tier === 4)` (gesetzt, nicht addiert)
     letztes `spice`; `GOODS.spice` 40/12 ohne `order` (AK-E3-01 Teil).
 - [ ] **2 Rot-Beleg** `npx vitest run tests/sim/save.test.ts tests/sim/defs.test.ts -t "M12 Seefahrt|AK-E3"` →
       Commit `test: M12 Seefahrt Save v9 (rot)`.
-- [ ] **3 Umsetzung** nach „Form"; `npx tsc --noEmit` zeigt jede erschöpfende Tabelle → `spice` ergänzen (Farbe
-      Platzhalter `PALETTE`-Ton, kein neuer Wert in `src/sim/`).
+- [ ] **3 Umsetzung** nach „Form"; `npx tsc --noEmit` zeigt jede erschöpfende Tabelle → `spice` ergänzen; **D-144
+      Regel (2):** Gewürz bekommt einen **eigenen** Farbton (Chip, `GOOD_COLORS`, `LOAD_COLOR`), verschieden von allen
+      anderen Gütern — Test in `tests/render/` bzw. `tests/ui/`: Farbe von `spice` ≠ Farbe jedes anderen Guts. Kein
+      neuer Wert in `src/sim/`.
 - [ ] **4 `normalized()`** umstellen; `OFF_FINGERPRINT 0x701c6da5` grün **ohne** Pin-Änderung; `balance-merchants`
       `[6750, 11200, 320]` grün; `balance.test.ts` unverändert. Weicht etwas ab → anhalten (R74).
 - [ ] **5 Prüfen:** `make check`, `CI=true make check` → Commit `feat: M12 Seefahrt Save v9, Gut Gewürz`.

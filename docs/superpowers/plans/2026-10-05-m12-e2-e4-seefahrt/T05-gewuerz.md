@@ -1,6 +1,6 @@
 > **Task-ID:** T05 · **AK-IDs:** AK-E3-01 (`TIERS[4]`), AK-E3-02 (Produktion), AK-E3-03, AK-E3-04, AK-E3-05
 > (vorläufiger Pin), AK-M12-B3; Pin-Liste Anhang 03 D (E3-Teil); lead-qa Teil B (`taxUnits`, M8:AK-B1-02/-04)
-> **blocked-by:** T02, **T04 (Review OK, per Merge `feat/m12-see-e2` → `feat/m12-see-e3`)**, Entscheid D-142 ·
+> **blocked-by:** T02, **T04 (Review OK, per Merge `feat/m12-see-e2` → `feat/m12-see-e3`)** ·
 > **Strang:** e3, `feat/m12-see-e3`, Worktree `.worktrees/m12-see-e3` · `tech-sim-engineer` (sonnet)
 > **Regeln:** Spec §7, Anhang 03 D; Anhang 05 J.1, J.2; Index P-8, R-2
 
@@ -35,8 +35,9 @@ Test-Controller kauft Gewürz (`feedSpice`) und erreicht das zweite Ziel weiter 
     geänderte Zeile ein Kommentar `// R226 F-03: <Grund>`: `merchants.test.ts` M8:AK-S1-05 (Steuer 300 mit Satz 22),
     -07, -08, -10 (je Test prüfen: Gewürz ins Lager legen, wo der Test „alles versorgt" meint; Erwartungswert neu,
     wo er die Steuer misst); `scenario-saves.test.ts` M8:AK-B2-01 (Gewürz im Kaufleute-Szenario).
-  - **D-142-Wirkung** (nur Ruling-Variante, `flow.test.ts`): Heimat-Haus Stufe 3 voll, Gewürz-Bilanz −8 → Wartezeit
-    einfach (nicht ×2); auf B gleiche Lage → ×2.
+  - **D-142-Wirkung (R241, AK-E2-06-Zusatz, Pflicht, `flow.test.ts`):** Haus Stufe 3 voll in der Heimat, Gewürz-
+    Bilanz der Heimat −8 (keine Plantage), sonst alles erfüllt → `upgradeStatus` verlangt die einfache Wartezeit
+    (nicht × `UPGRADE_DEFICIT_WAIT_FACTOR`); gleiche Lage auf B (Kontor per Literal, Haus auf B) → Wartezeit ×2.
 - [ ] **2 Rot-Beleg** → Commit `test: M12 E3 Gewürz und Kaufleute (rot)`.
 - [ ] **3 Umsetzung:** `TIERS[4].needs.spice = 0.1`, `TIERS[4].tax = 22` — sonst kein Wert.
 - [ ] **4 Controller `feedSpice`** (`merchantsController.ts`, Muster `feedGlassworks`, Testhelfer, kein Spielwert):

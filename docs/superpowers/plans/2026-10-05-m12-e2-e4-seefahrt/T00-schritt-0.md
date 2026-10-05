@@ -22,8 +22,9 @@ Funktion in `merchantsController.ts`, falls die Schrittfunktion nicht exportiert
 ## Schritte
 
 - [ ] **0 Basis (M0):** `git merge docs/m12-brainstorming` (619eea5, nur `docs/`), dann `git merge feat/m12-e1`
-      am SHA „E1-T02 OK" aus `.superpowers/sdd/m12-e1/ledger.md`. `grep -n "SAVE_VERSION = 8" src/sim/save.ts`
-      trifft; `make check` grün. SHAs ins Ledger `.superpowers/sdd/m12-see/ledger.md`.
+      am SHA „E1-T02 OK" aus dem E1-Ledger. **prod-B4:** `feat/m12-e1` enthält H-I007 (Fluss main → E0 → E1;
+      `git log feat/m12-e1 --oneline | grep -i "H-I007"` trifft), sonst M0 nicht erreicht → warten, melden.
+      `grep -n "SAVE_VERSION = 8" src/sim/save.ts` trifft; `make check` grün. SHAs ins Strang-Ledger `/Users/KN/CAS/projekte/anno-clone/.superpowers/sdd/m12-see/int.md`.
 - [ ] **1 Rezept** `tests/sim/fixtureV8.ts`:
 
 ```ts
@@ -66,7 +67,9 @@ export const D_HOME_A_AT_SEED_D37 = 0;
       `fireWorld(seed)` = `fixtureV8Run`-unabhängige, kleine Testwelt: `createWorld(seed, { unlockAll: true })` mit
       den brennbaren Gebäuden aus dem bestehenden `fire.test.ts`-Helfer (vorhandenen Helfer nutzen und im Kommentar
       nennen). `amount` und Felder von `orderForPeriod` so pinnen, wie die Funktion sie heute liefert (Typ anpassen).
-      `SEED_D37`: Suche über `seaLanes(createWorld(s).islands)`, Lane `a = 0, b = 2`, `d === 37`.
+      `SEED_D37`: Suche über `seaLanes(createWorld(s).islands)`, Lane `a = 0, b = 2`, `d === 37`. **qa-B5:** Findet
+      die Suche in Seeds 1 … 500 keinen Treffer → **anhalten und melden** (Controller → lead-tech); AK-E4-03 wird
+      nicht still auf ein anderes `d` umgedeutet.
 
 - [ ] **4 Tests** in `save.test.ts`, `describe('M12 Seefahrt Schritt 0 (Anhang 03 B)')`:
   - `T00 save-v8.json roh`: Datei parst, `version 8`, drei Inseln, `tier4Houses = 3`, Häuser ≥ 11.

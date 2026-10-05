@@ -63,7 +63,10 @@ export function shipTooltip(world: World, id: number): string; // „Handelsschi
 - **B3 / P-9:** DOM des Abschnitts nur neu aufbauen, wenn `shipsKey` sich ändert; je Tick nur Texte (`data-field`).
 - **Mouse-over Schiff** (`shipAt`) → `shipTooltip`; Klick öffnet das Panel des Heimatkontors mit hervorgehobener
   Schiffszeile.
-- **Verlust-Meldung:** je `StepReport.lost`-Eintrag „<n> <Gut> verloren" über den bestehenden Meldungsweg.
+- **Verlust-Meldung (qa-B6):** Bei Tempo > 1 laufen mehrere `step` je Frame; reiner Helfer
+  `lossMessages(reports: readonly StepReport[]): string[]` sammelt alle `lost`-Einträge des Frames (je Schiff und
+  Gut summiert, Reihenfolge Schiff-`id`, dann `GOOD_IDS`) zu „<n> <Gut> verloren"; Ausgabe über den bestehenden
+  Meldungsweg. Falls T07 eine Banner-Änderung in `app.ts` im Ledger vermerkt hat (prod-B5), hier mit umsetzen.
 
 ## Schritte
 
@@ -72,7 +75,8 @@ export function shipTooltip(world: World, id: number): string; // „Handelsschi
       zuerst in `fetch`, weil 30 > 10); `routeFromClick(0, 2, 'spice', 'fetch')` = `{ a: 0, b: 2, ab: [], ba: [{ good:
 'spice', reserve: 10 }] }`; nach `setRoute` + 1 `step`: `shipRows(w, 0)[0].target` = „unterwegs nach Felsbucht",
       `rest` „0:37" o. ä. (aus `laneTicks`); `routeLine`; `shipTooltip`; `shipsKey` ändert sich bei Route an/aus, nicht
-      bei `left`.
+      bei `left`. **qa-B6:** `lossMessages` mit zwei Reports (Tempo 2): gleiches Schiff/Gut summiert, Reihenfolge
+      nach `id`, leere Reports → `[]`.
 - [ ] **2 Rot-Beleg** → Commit `test: M12 E4 UI Schiffe und Routen (rot)`.
 - [ ] **3 Umsetzung** → `make check`, `CI=true make check` → Commit `feat: M12 E4 Schiffe und Routen im Kontor-Panel`.
 - [ ] **4 Browser-Check `qa-playtester`** (`.studio/qa/M12-SEE/T15/`, 1280 × 800 und 1920 × 1080, Tempo 1):
@@ -82,7 +86,10 @@ export function shipTooltip(world: World, id: number): string; // „Handelsschi
   - **AK-E4-14:** Zeile zeigt Ladung, Ziel, m:ss; Mouse-over Schiff auf See gleiche Angaben; „Route auflösen" 1 Klick.
   - **AK-Z3-14:** `z3-scenario-v9.json` laden: Chip „Ziel n / 80 Kaufleute mit Gewürz"; Route auflösen → „Fehlt: …"
     im Tooltip/Chronik; neu laden, warten bis erreicht → Banner einmal.
-  - Sicht für lead-art (D-144): Schiff auf See bei Zoom 1, 0,25, 0,125; Gewürzplantage; Screenshots beilegen.
+  - **D-144 (R241):** Screenshots für lead-art: Schiff auf See bei Zoom 1, 0,25, 0,125; Gewürzplantage neben einer
+    Zuckerrohrplantage; Lagerleiste mit Chip „Gewürz". Prüfen der drei Mindestregeln: (1) Plantage durch eigenen
+    Palettenton unterscheidbar, (2) Gewürz-Chip mit eigener Farbe, (3) Schiff ≥ 12 CSS-px bei 0,25 und 0,125. Nur ein
+    Verstoss blockiert den Merge; weitere Nacharbeit = eigenes Art-Paket.
 
-**Review-Fokus:** 2-Klick-Weg ohne Tastatur; kein Neuaufbau je Tick; Gründe aus der Sim; Restzeit bei Tempo 1;
+**Review-Fokus:** 2-Klick-Weg ohne Tastatur; Verlustmeldungen bei Tempo 4 vollständig (qa-B6); kein Neuaufbau je Tick; Gründe aus der Sim; Restzeit bei Tempo 1;
 Panel jedes Kontors, nicht nur der Heimat.

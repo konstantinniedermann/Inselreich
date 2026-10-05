@@ -11,7 +11,9 @@
 
 ## Schritte
 
-- [ ] **0 Merges (Controller, vor dem Implementierer)** in dieser Reihenfolge, je `make check` danach, SHAs ins Ledger:
+- [ ] **0 Ledger (prod-B6):** C7 liest die Strang-Ledger `/Users/KN/CAS/projekte/anno-clone/.superpowers/sdd/m12-see/
+{e2,e3,e4,render}.md` und überträgt SHAs, Pins und Befunde ins Ledger `int.md`.
+- [ ] **0b Merges (Controller, vor dem Implementierer)** in dieser Reihenfolge, je `make check` danach, SHAs ins Ledger:
       (M2) `feat/m12-e1` Endstand bzw. `main`, wenn E1 dort ist; `feat/m12-see-e2` (enthält `render` bis T10);
       `feat/m12-see-e3` (enthält `e2` bis T04); `feat/m12-see-e4`; `feat/m12-see-render`. Erwartete Berührung: `tick.ts`
       (`checkWin` aus e3, `step` aus e4 — getrennte Funktionen). Ein inhaltlicher Konflikt (beide Seiten ändern
@@ -30,6 +32,10 @@
     zusätzlich **Ende-zu-Ende**: Szenario mit echter Plantage auf 2 (Lager 2 Gewürz 20) und echtem Schiff → bei der
     ersten Ankunft in der Heimat steigt Heimat-Gewürz um die entladene Menge (Ladung vor minus nach dem Umschlag);
     nach der Haltezeit `wonSpice true`.
+  - **qa-B1:** `z3-scenario-v9.json` laden, **ohne** Nachfüllen `WIN_SPICE_HOLD + 100` `step` (mit `tickShips`) →
+    `wonSpice true`. Rot → Rezept in `scenariosSea.ts` (Lager, `satisfiedSince`) nachbemessen, Fixture neu schreiben.
+  - **qa-B7:** Save/Load in der Haltezeit: `spiceGoalScenario()` 300 Schritte; Zweig A weiter, Zweig B `serialize` →
+    `deserialize` → weiter; Ziel im selben Tick gesetzt, `serialize(A) === serialize(B)` nach dem Setzen.
 - [ ] **2 Rot-Beleg** (wo rot; Tests, die schon grün sind, im Commit-Text als „Querschnitt, grün nach Merge" nennen)
       → Commit `test: M12 Seefahrt Querschnitt (rot)`.
 - [ ] **3 Neupin endgültig (J.2, P-8):** `npx vitest run tests/sim/balance-merchants.test.ts` auf `feat/m12-see`
@@ -48,4 +54,4 @@
       (Befehl, SHA und Werte im Commit-Text).
 
 **Review-Fokus:** Merge-Reihenfolge und -Konflikte; Neupin gleich T05 oder Halt; Querschnittsfälle echt über die
-Aktionen (nicht nur Literale); Fixture-Rezept reproduzierbar.
+Aktionen (nicht nur Literale); Fixture-Rezepte reproduzierbar; Browser-Fixture erreicht das Ziel ohne Nachfüllen.

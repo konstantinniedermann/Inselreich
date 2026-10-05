@@ -1,6 +1,6 @@
 > **Task-ID:** T12 · **AK-IDs:** AK-E2-10, AK-E2-11; Anhang 03 C.1, C.10, C.11; Auflage lead-qa Teil B (Browser-Check
 > Gewürz-Chip und Hilfe-Schritt)
-> **blocked-by:** T04, Merge-Punkt **M1** (E1 fertig), Entscheid **D-143** · **Strang:** e2, `.worktrees/m12-see-e2` ·
+> **blocked-by:** T04, Merge-Punkt **M1** (E1 fertig) · **Strang:** e2, `.worktrees/m12-see-e2` ·
 > `tech-ui-engineer` (sonnet), danach `qa-playtester`
 > **Regeln:** Spec §6 „Bedienung", Anhang 03 C.1, C.10, C.11, D (Chip „Gewürz"); desktop-first ab 1280 px
 
@@ -32,6 +32,7 @@ export interface IslandRect {
 export function activeIsland(
   rects: readonly IslandRect[],
   center: { x: number; y: number },
+  seafaring: boolean, // D-143 (R241): false → immer 0
 ): number;
 // center im Rechteck → dieses; sonst nächste Mitte (Math.sqrt), Gleichstand kleinerer Index
 export function islandRects(world: World): IslandRect[]; // ox, oy, width, height je Insel
@@ -44,10 +45,11 @@ export function islandList(world: World): { index: number; label: string }[]; //
 ## Regeln (verbindlich)
 
 - **Aktive Insel** (UI-Zustand, nicht im Save) aus der Bildmitte je Frame (`screenToTileF` der Canvas-Mitte).
-  **D-143:** ohne Ruling Spec-Wortlaut (gilt immer); mit Ruling-Empfehlung: vor `seafaring` immer `0`. Wählt E1
+  **D-143 (R241):** vor `seafaring` ist die aktive Insel immer die Heimat (0), ab `seafaring` C.1. Bauregeln und
+  Gründe kommen weiter aus der Sim je angeklickter Kachel. Wählt E1
   `ARCHIPEL_VIEW 'jump'`, ist die aktive Insel die gesprungene.
 - **Lagerleiste, Warenbilanz, Tooltips** lesen `islands[aktiv].stock` und `goodsBalance(world, aktiv)`; vor den Chips
-  steht der Name: „Felsbucht · …" (Element `data-field="island-name"`). Chip „Gewürz" sichtbar ab U6 oder sobald
+  steht ab `seafaring` der Name: „Felsbucht · …" (Element `data-field="island-name"`); vor `seafaring` kein Name. Chip „Gewürz" sichtbar ab U6 oder sobald
   Gewürz > 0 auf der aktiven Insel (Regel wie Glas, `stockChipHidden`). Geld bleibt global.
 - **Tasten** (nur mit `seafaring`, sonst stumm; bei offener Karte/Modal stumm wie alle Kürzel): `ISLAND_HOME_KEY` →
   Kamera auf `jumpTarget(0)`; `ISLAND_CYCLE_KEY` → `jumpTarget(nextIsland(aktiv, 3))` (Heimat → Möweninsel →
@@ -62,10 +64,11 @@ export function islandList(world: World): { index: number; label: string }[]; //
 
 - [ ] **1 Tests zuerst** (`describe('M12 E2 UI Inseln')`):
   - `activeIsland.test.ts` **AK-E2-10**: Mitte in Rechteck 2 → 2; auf Meer näher an 1 → 1; genau gleich weit von 0 und
-    1 → 0; Rechtecke aus `islandRects(createWorld(3))` (Heimat 0,0).
+    1 → 0; Rechtecke aus `islandRects(createWorld(3))` (Heimat 0,0); **D-143:** gleiche Fälle mit `seafaring false` → je 0.
   - `islandJump.test.ts`: `nextIsland` 0→1→2→0; `jumpTarget` mit `kontor2` auf 2 = Kontor-Mitte in Archipel-Koordinaten,
     ohne = Rechteckmitte; `islandList` Labels.
-  - `hud.test.ts`: `chipView(world, good, island)` liest Lager 2; Name-Präfix „Felsbucht"; Gewürz-Chip-Regel.
+  - `hud.test.ts`: `chipView(world, good, island)` liest Lager 2; `stockPrefix(world, aktiv)` = „Felsbucht" mit
+    `seafaring`, `null` ohne (D-143); Gewürz-Chip-Regel.
   - `hotkeys.test.ts`: ohne `seafaring` liefern `0`/`9` keine Aktion; mit → `{ kind: 'islandHome' }` /
     `{ kind: 'islandCycle' }`.
   - `guide.test.ts`: U6 erreicht, kein `kontor2` → Text C.11; mit `kontor2` → nicht mehr.
@@ -76,7 +79,7 @@ Lagerleiste je Insel`.
       `.studio/qa/M12-SEE/T12/`): **AK-E2-11** Kamera auf Felsbucht → „Felsbucht · …" mit deren Lager; `0` springt
       heim, `9` reihum; „Inseln": Klick 1 Liste, Klick 2 Sprung — **2 primäre Mausklicks** ab geschlossener Liste;
       neues Spiel ohne „Alles frei": `0`/`9` stumm, Knopf verborgen, Mouse-over Fremdinsel nennt „Seefahrt mit den
-      Kaufleuten"; **Gewürz-Chip** sichtbar ab U6; **Hilfe-Schritt** C.11 sichtbar bis zum ersten `kontor2`.
+      Kaufleuten", **D-143:** Kamera auf Felsbucht → Lagerleiste zeigt das Heimatlager ohne Inselnamen; **Gewürz-Chip** sichtbar ab U6; **Hilfe-Schritt** C.11 sichtbar bis zum ersten `kontor2`.
 
 **Review-Fokus:** reine Helfer getestet; Tasten/Knopf vor `seafaring` stumm/verborgen; keine Spielwerte in `src/ui/`;
-kein Neuaufbau der Liste je Tick; D-143 nach Ruling.
+kein Neuaufbau der Liste je Tick; D-143 (vor `seafaring` Heimat, ohne Namen).

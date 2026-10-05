@@ -1,5 +1,5 @@
 > **Task-ID:** T04 · **AK-IDs:** AK-E2-04, AK-E2-05, AK-E2-06, AK-E2-07, AK-E2-08, AK-E2-14
-> **blocked-by:** T03; Entscheid **D-142** (L0, Gate Plan) · **Strang:** e2, `.worktrees/m12-see-e2` ·
+> **blocked-by:** T03 · **Strang:** e2, `.worktrees/m12-see-e2` ·
 > `tech-sim-engineer` (sonnet)
 > **Regeln:** Spec Anhang 03 C.4–C.8; Index P-5; Pins `tests/sim/seePins.ts` (T00)
 
@@ -28,10 +28,10 @@ Inseln treffen, ohne eine zusätzliche Ziehung. Mit nur der Heimat brennbar ist 
   `inSupplyRange(world, island, …)`. Wachstumstakt (`population.ts`): Budget **je Insel** einmal je Takt
   (`Map<number, Budget>` lazy), Haus nutzt das Budget seiner Insel; Abzug nach Aufstieg im Budget dieser Insel.
   `upgradeDeficit(world, b)` mit `b.island`.
-- **D-142 (Dämpfung bei Gewürz):** Ohne Ruling gilt Spec-Wortlaut (Gewürz-Defizit dämpft den Aufstieg 3 → 4 auch in
-  der Heimat). Entscheidet L0 die Empfehlung („Güter, die auf der Hausinsel nicht erzeugt werden können, dämpfen
-  nicht"), dann überspringt `deficitGood` solche Güter (Test D1 unten). Beides bitgleich, solange `TIERS[4]` kein
-  Gewürz braucht (vor T05).
+- **D-142 (entschieden R241):** Ein Gut, dessen Betriebe ein Inselmerkmal verlangen (`islandTrait`), löst die
+  Dämpfung beim Hausaufstieg nur auf Inseln mit diesem Merkmal aus — Gewürz dämpft in der Heimat nie. Statische
+  Prüfung aus den Defs (`site`-Regeln der Betriebe mit `produces g`), keine Bauplatz-Suche. „Schiffsladung zählt in
+  die Bilanz" ist verworfen. Bitgleich, solange `TIERS[4]` kein Gewürz braucht (vor T05).
 - **Brand (P-5):** `fireRect(world): { rect: TileRect; parts: { island: number; r: TileRect }[] } | null` — Teile
   = `flammableRect` je Insel (nur Inseln mit brennbaren Gebäuden, Inselfolge), Gesamt = `{ x0: R_f.x0, y0: R_f.y0,
 x1: R_f.x0 + Wmax − 1, y1: R_f.y0 + ΣH − 1 }` (`R_f` = erster Teil). `rollCrisis(seed, k, maxTier, fire.rect)`
@@ -53,10 +53,10 @@ x1: R_f.x0 + Wmax − 1, y1: R_f.y0 + ΣH − 1 }` (`R_f` = erster Teil). `rollC
     Prämie. **AK-E2-14** `deliverOrder(w, 1)` (A ohne Kontor) → „Kein Kontor auf Möweninsel", `serialize` gleich.
   - `flow.test.ts` **AK-E2-06**: Wohnhaus und Fischer auf 2 → `goodsBalance(w, 2)` zählt sie, `goodsBalance(w, 0)`
     nicht; Defizit Nahrung auf 2 → Heimat-Haus steigt ohne Dämpfung (`upgradeStatus` Wartezeit einfach) und umgekehrt.
-    **D1** (nur bei Ruling-Variante): `importOnly(world, island, g)` (`flow.ts`, rein) = kein Gebäude mit
-    `produces g` hat auf dieser Insel ein erfüllbares `islandTrait` → `importOnly(w, 0, 'spice') === true`,
-    `importOnly(w, 2, 'spice') === false`, `importOnly(w, 0, 'food') === false`. `deficitGood(budget, house, skip)`
-    bekommt `skip: (g: GoodId) => boolean` (Standard `() => false`); Aufrufer übergeben `g => importOnly(w, i, g)`.
+    **D1 (D-142, Pflicht):** `dampsOn(world, island, g)` (`flow.ts`, rein) = `false`, wenn jeder Betrieb mit
+    `produces g` eine `islandTrait`-Regel hat, deren Merkmal der Insel fehlt; sonst `true` →
+    `dampsOn(w, 0, 'spice') === false`, `dampsOn(w, 2, 'spice') === true`, `dampsOn(w, 0, 'food') === true`. `deficitGood(budget, house, skip)`
+    bekommt `skip: (g: GoodId) => boolean` (Standard `() => false`); Aufrufer übergeben `g => !dampsOn(w, i, g)`.
     Die Wirkung (Heimat-Aufstieg 3 → 4 ohne Dämpfung trotz Gewürz-Defizit) prüft T05, sobald `TIERS[4]` Gewürz braucht.
   - `fire.test.ts` **AK-E2-07**: Seeds `SEE_SEEDS`, `k` 0 … 29, nur Heimat brennbar → `fireTile(fireRect(w), roll.tile)`
     = `FIRE_PINS` mit `island 0`; Heimat + Plantage/Holzfäller auf 2 brennbar → Gesamtrechteck Höhe = Summe, Breite =
@@ -72,4 +72,4 @@ x1: R_f.x0 + Wmax − 1, y1: R_f.y0 + ΣH − 1 }` (`R_f` = erster Teil). `rollC
       `feat: M12 E2 Handel, Aufträge, Bilanz und Brand je Insel`.
 
 **Review-Fokus:** genau zwei Brand-Ziehungen; Rückrechnung inklusive Fehlschlag; Budget je Insel einmal je Takt (keine
-Mehrkosten mit einer Insel); Heimat-Texte unverändert; D-142 nach Ruling umgesetzt.
+Mehrkosten mit einer Insel); Heimat-Texte unverändert; D-142 als statische Regel aus den Defs (R241).

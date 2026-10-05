@@ -27,7 +27,9 @@ checkWin → tickUnlocks`; Begründung (Ladung, die ankommt, deckt den Bedarf de
       „Ziel": drittes Ziel statt „danach spielst du frei weiter" (Anhang 05 F), U6-Meldungstext zitiert.
 - [ ] **4 Beobachtungen:** prüfen, ob „Geldschwemme ab Kaufleuten" (R238) und „unversorgte Häuser auf Fremdinseln"
       (Anhang 03 C.12) eingetragen sind; fehlt einer, ergänzen (Datum, Fundort, Beobachtung, Ursprung, Einschätzung).
-      Befunde aus den Ledgern der Stränge, die ausserhalb Scope liegen, ebenso.
+      **prod-B3:** Befunde ausserhalb Scope stehen während der Umsetzung nur in den Strang-Ledgern
+      (`/Users/KN/CAS/projekte/anno-clone/.superpowers/sdd/m12-see/<strang>.md`); T16 überträgt sie gesammelt (keine Konflikte am Dateiende), dazu „Plan E0 P-2 nennt
+      Helfer in `world.ts`, umgesetzt in `economy.ts` (nur Doku)".
 - [ ] **5 Prüfen:** Prettier über alle Doku-Dateien; Links prüfen; Commit `docs: M12 Seefahrt ADR-005-Nachtrag,
 arc42, README`.
 

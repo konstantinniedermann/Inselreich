@@ -9,12 +9,12 @@
 er dort wie in der Heimat aus dem Insellager. Abriss ist gesperrt, solange Schiffe die Insel brauchen.
 
 **Code-Fakten:** `placement.ts` `canPlace(world, defId, x, y, island = HOME)`; `build.ts` `placeBuilding(…, island)`,
-`placeRoad(…, island)`, `demolish(world, id)`; `forest.ts` `canClearForest`/`canPlantForest(…, island)`; `world.ts`
-`checkAfford(world, isl, cost)`, `pay`, `grantRefund`, `isKontor`; `queries.ts` `effectiveRefund`; `roads.ts`
+`placeRoad(…, island)`, `demolish(world, id)`; `forest.ts` `canClearForest`/`canPlantForest(…, island)`; `economy.ts`
+`checkAfford(world, isl, cost, where?)` (Parameter seit T02), `pay`, `grantRefund`; `world.ts` `isKontor`; `queries.ts` `effectiveRefund`; `roads.ts`
 `kontorRoadRoots(world, island)`; `supply.ts` `supplyBuildings(world, island)`; `unlocks.ts` `functionLock`;
 `islands.ts` `islandName`. Testwelt: `tests/sim/seaHelpers.ts`.
 
-**Dateien:** `src/sim/placement.ts`, `build.ts`, `world.ts` (nur `checkAfford`-Zusatz), `roads.ts`, `supply.ts`,
+**Dateien:** `src/sim/placement.ts`, `build.ts`, `roads.ts`, `supply.ts`,
 `forest.ts` (nur Kontor-Gate); neu `tests/sim/kontor2.test.ts`.
 
 ## Regeln (verbindlich)
@@ -25,8 +25,8 @@ er dort wie in der Heimat aus dem Insellager. Abriss ist gesperrt, solange Schif
    Platzregeln, Kosten). Auf der Heimat ändert sich nichts.
 2. **Kosten:** `kontor2` prüft und zahlt Waren aus `home(world).stock` (Geld global); Grund **„Nicht genug <Gut> in
    der Heimat"**. Jeder andere Bau auf `island ≥ 1` zahlt aus `islands[island].stock`; Grund **„Nicht genug <Gut> auf
-   <Name>"**. Auf der Heimat bleibt der heutige Text. Umsetzung: `checkAfford(world, isl, cost, where?: string)` hängt
-   `where` an den Grund an; ohne `where` unverändert.
+   <Name>"**. Auf der Heimat bleibt der heutige Text. Umsetzung: `checkAfford(…, where)` aus T02 mit
+   `' in der Heimat'` bzw. `` ` auf ${name}` `` aufrufen.
 3. **Wege und Forst** auf `island ≥ 1` ohne Kontor (`placeRoad`, `clearForest`, `plantForest`): Grund (b).
 4. **Gründen:** `placeBuilding` setzt bei `kontor2` `islands[island].kontorId = id`; das vorhandene Insellager bleibt
    (übernimmt ein früheres); `recomputeConnectivity`. Anbindung über Wege zum Kontor der eigenen Insel; Versorgung
