@@ -855,3 +855,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `src/sim/connect.ts:118` (`connectBuilding`); `tests/render/terrain.test.ts` (AK-R1-06).
 - Beobachtung: (1) `connectBuilding` multipliziert nur die Geldkosten mit n; bekommt ein Weg später Material-Kosten, wäre ein Teilbau möglich und AK-06 verletzt. (2) CI-Zeitreserve AK-R1-06 nach REL-03 ≈ 2,0–2,05 s von 2,25 s.
 - Ursprung: opus-Review REL-03 (lead-qa), R232. Einschätzung: niedrig; (2) beobachten.
+
+### 2026-10-05 · Studio-Werkzeug · `effort.py` summiert Starts über wiederverwendete Phasen-Labels
+
+- Fundort: `tools/studio/effort.py` (Budget-Vergleich je Phase); Retro-Alarm „Budget von lead-production überschritten: 4 von 1".
+- Beobachtung: Das Phasen-Label `M5-01-merge` wurde in zwei Sessions verwendet; die Starts werden über die ganze Historie summiert und lösen einen falschen Budget-Alarm aus.
+- Ursprung: Kurz-Retro Session ad51d3c5 (studio-coach), R233. Einschätzung: niedrig; Labels eindeutig vergeben oder je Session zählen.

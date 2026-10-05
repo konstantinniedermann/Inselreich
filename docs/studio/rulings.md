@@ -1694,3 +1694,19 @@ so (Vorschau zeigt den Weg), Frage an lead-design über beobachtungen. H-R12b is
 `HEAD:main`. — Kosten bei Irrtum: Revert-Merge; CI-Zeittest kann rot werden (dann Hotfix nach §7.2).
 
 Entscheider: L0 · Anlass: opus-Review und Playtest REL-03 · ADR: —
+
+## R233 · 2026-10-05 · Retro-Vorschläge Session ad51d3c5 und Prozess-Retro REL-03
+
+Ruling: Angenommen aus der Kurz-Retro (`docs/studio/retros/2026-10-05-session-ad51d3c5.md`): (1) Briefing jeder
+Persona-Änderung nennt CHANGELOG-Eintrag und `make check` als Pflicht; (3) Berichtsvorlage sagt „Einschätzung" statt
+„Ruling" — Leads treffen keine Rulings; (4) Briefings mit Messaufträgen enthalten „Messproben nie im Hauptcheckout,
+nur Worktree oder Scratchpad"; (6) Phasen-Labels je Session eindeutig vergeben, Zählweise von `effort.py` als
+Beobachtung. Punkte (2), (5), (7) ohne Massnahme (Einzelfall bzw. Messartefakt; Muster weiter beobachten). Aus der
+Prozess-Retro (`docs/studio/retros/2026-10-05-prozess-retro-rel-03.md`): **V1** angenommen (Warte-Turn-Enden der Leads
+senken, als `waiting` loggen); **V2** angenommen (Folgeplan-Gate eines bereits gegateten Meilensteins mit einem
+Prüfer lead-qa + L0 für Ownership/Budget); **V3** angenommen (Spec-Selbstcheck mit Zahlenbeispiel vor dem Gate;
+höchstens 2 Bildrunden je Häppchen, dann Gate-Entscheid); **V4** zurückgestellt (nur, wenn Review-Starts nicht
+steigen — Messung zuerst); **V5** festgestellt (Gates der Stufe voll unverändert). Umsetzung der Handbuch-Änderungen
+durch studio-coach in der nächsten Session. — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Kurz-Retro und Prozess-Retro 2026-10-05 · ADR: —
