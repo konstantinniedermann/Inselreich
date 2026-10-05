@@ -48,7 +48,7 @@ export function buildCoverage(world: World): Coverage; // ein Durchlauf über al
       `(2 + 16i, 2)`, `i = 0 … 3` (direkt geschrieben wie D1, Überlappung egal); prüfen, dass mindestens einer
       innerhalb und einer ausserhalb eines Schulradius liegt.
 - [ ] **2 Tests zuerst** (`population.test.ts`, `describe('M12 E0 Abdeckung')`):
-  - **AK-E0-12** (a) D1: 1000 × `step`, alle 100 Schritte für jedes Haus × 3 Dienste `serviceAvailable` mit und ohne
+  - **AK-E0-12** (a) D1, `it(…, 120_000)` (R229 qa-B2): 1000 × `step`, alle 100 Schritte für jedes Haus × 3 Dienste `serviceAvailable` mit und ohne
     `buildCoverage` gleich `serviceAvailableNaive`; `isSupplied` gleich `isSuppliedNaive`; `houseDiagnosis`-Dienste
     gleich der aus der Referenz abgeleiteten Liste. (b) dasselbe im `off`-Referenzlauf (`buildColony`, Stopp-Funktion
     alle 100 Ticks). (c) `denseScene({ toolmakers: true })`: je Werkzeugmacher `serviceAvailable(w, b, 'school')`
@@ -58,9 +58,12 @@ export function buildCoverage(world: World): Coverage; // ein Durchlauf über al
     (`removeRoad`), Brand beginnen (`beginCrisis(w, k, { kind: 'fire', tile: { x, y } })` auf die Kapellenkachel,
     keine Wache), Brand enden (`w.tick = chapel.outageUntil!; tickCrises(w)`) — nach jeder Aktion ohne `step`
     Abdeckung aller Häuser gleich Referenz; `serialize(w)` vor und nach `serviceAvailable`/`buildCoverage` gleich.
-  - Rot-Beleg (Import `coverage.ts` fehlt) → Commit `test: M12 E0 Abdeckung (rot)`.
+  - **Lasttest vor der Umsetzung** (R229 qa-B3) `tests/sim/perf.test.ts`, `describe('M12 E0 Last')`,
+    `it(…, 120_000)` (P-8), mit **Platzhalter `PERF_PIN = 6`**: AK-E0-15a und -15b wie in Schritt 4; Rot-Beleg auf
+    dem naiven Code (Mittel ≈ 19 ms > 6, Verhältnis ≈ 1).
+  - Rot-Beleg (Import `coverage.ts` fehlt; Lasttest rot) → Commit `test: M12 E0 Abdeckung und Last (rot)`.
 - [ ] **3 Umsetzung** nach „Form"; `tests/sim/imports.test.ts` grün (kein Importkreis).
-- [ ] **4 Lasttest** `tests/sim/perf.test.ts`, `describe('M12 E0 Last')`, `it(…, 120_000)` (P-8):
+- [ ] **4 Lasttest messen und pinnen** (Test aus Schritt 2, P-8):
   - **AK-E0-15a** `denseScene()`, 1000 × `step`, Mittel ms/Schritt ≤ `perfBudget(PERF_PIN)`.
   - **AK-E0-15b** je 100 Runden „alle Häuser × 3 Dienste": naiv vs. `buildCoverage` + Abfragen mit `cov`; je Seite
     Minimum aus 3 Läufen; `naiv / index ≥ 5`.

@@ -1,4 +1,4 @@
-> **Task-ID:** T00 · **AK-IDs:** AK-E0-19 (Test entsteht hier); Vorbedingung für AK-E0-02, -03, -04, -05, -17
+> **Task-ID:** T00 · **AK-IDs:** AK-E0-19 (Test entsteht hier); Vorbedingung für AK-E0-02, -03, -04, -05, -06, -17
 > **blocked-by:** Gate Plan · **Strang:** `feat/m12-e0`, Worktree `.worktrees/m12-e0` · `tech-sim-engineer` (sonnet)
 > **Regeln:** [index.md](index.md) Global Constraints · Spec §4.3, §4.5, Anhang 01 C und E
 
@@ -22,7 +22,7 @@ später bitgleich geprüft wird. **Dieser Task ändert keine Datei unter `src/`.
 32/224 @2400 · C1 fire 7 burning @3000 · O3 wood 23/161 @3300 · C2 storm @3600 · C3 boom stone @4200 · O4 wool 12/108
 @4200 · C4 fire 22 extinguished @4800 · …` bis `O8 food 10/60 @7800`.
 
-**Dateien:** neu `tests/sim/fixtures/save-v6.json`, `tests/sim/fixtureV6.ts`, `tests/sim/e0Pins.ts`; ändern
+**Dateien:** neu `tests/sim/fixtures/save-v6.json`, `tests/sim/fixtures/save-v6-locks.json` (R229), `tests/sim/fixtureV6.ts`, `tests/sim/e0Pins.ts`; ändern
 `tests/sim/helpers.ts` (`fnv1a32`, `sortedJson`), `tests/sim/balance-crises.test.ts` (nur `fnv1a32` aus `helpers`
 importieren statt lokal, plus neuer `describe` AK-E0-19), `tests/sim/save.test.ts` (neuer `describe` am Ende).
 **Nicht anfassen:** `src/**`, `tests/sim/controller.ts`, alte Fixtures.
@@ -43,13 +43,21 @@ importieren statt lokal, plus neuer `describe` AK-E0-19), `tests/sim/save.test.t
        `setUpgradeStop(w, 1, true)` muss `ok` sein. Findet sich keine Stelle: `Error` und Meldung an den Controller.
     3. `upgradeBuilding` auf den ersten Holzfäller in Id-Reihenfolge → `ok`.
     4. Je Gut mit Bestand 0 ausser `glass`: `buy(w, g, 3)` → `ok`.
-  - Abweichung von Anhang 01 C (Entscheid P-14): keine Ausgabesperre, Glas 0, `upkeepCarry` 0. Im Kopfkommentar
-    nennen.
+  - Abweichung von Anhang 01 C (P-14, angenommen R229): keine Ausgabesperre, Glas 0, `upkeepCarry` 0. Im
+    Kopfkommentar nennen.
+  - **`locksV6Run()`** (R229, zweiter echter v6-Stand): `createWorld(3, { unlockAll: true })`; fehlende Baustoffe
+    per `buy`; ein Weg auf der ersten Kachel in Zeilenfolge neben dem Kontor-Fussabdruck, auf der `placeRoad` ok ist;
+    Amtsstube an der ersten Position in Zeilenfolge, deren Fussabdruck an diese Wegkachel grenzt und für die
+    `placeBuilding` ok ist; `setGoodLock(w, 1, 'food', true)` und `setUpgradeStop(w, 1, true)` beide `ok`;
+    `buy(w, 'glass', 3)` `ok`. Ohne `step`. Schlägt eine Aktion fehl: `Error` und Meldung an den Controller.
 - [ ] **4 Test zuerst** (`save.test.ts`, `describe('M12 E0 Schritt 0 (Anhang 01 C)')`):
   - `T00 save-v6.json roh`: `version 6`, `tick 3000`, ein Gebäude `burning` mit `outageUntil`, `crisis.kind 'fire'`,
     `order.period 2`, `upgradeStops` `[1]`, ein Gebäude `level 2`, `stock` mit allen 9 Gütern, 8 davon > 0,
     `taxCarry > 0`; `deserialize(json).ok` true.
   - `T00 Rezept = Fixture`: `serialize(fixtureV6Run().w) === readFileSync(fixture)` (zeichengleich).
+  - `T00 save-v6-locks.json roh` (R229): `version 6`, `goodLocks` `[{ tier: 1, good: 'food' }]`, `upgradeStops` `[1]`,
+    eine Amtsstube, `stock.glass > 0`, `unlocked` alle sieben; `deserialize(json).ok` true; `serialize(locksV6Run())`
+    zeichengleich mit der Datei.
   - `T00 v6-Formen` (AK-E0-02/17-Vorbedingung): für `createWorld(3)`, `{ unlockAll: true }`, `{ crisisLevel: 'mild' }`,
     `{ crisisLevel: 'normal' }`: `fnv1a32(serialize(w))` und `.length` gleich `V6_FORMS` aus `e0Pins.ts` (P-9).
   - `T00 Kette` (AK-E0-04-Vorbedingung): je `save-v1` … `save-v5`: `fnv1a32(sortedJson(deserialize(json).world))`
@@ -60,7 +68,7 @@ importieren statt lokal, plus neuer `describe` AK-E0-19), `tests/sim/save.test.t
 - [ ] **5 Rot-Beleg:** `npx vitest run tests/sim/save.test.ts tests/sim/balance-crises.test.ts -t "T00|AK-E0-19"` → rot
       (ENOENT Fixture; Platzhalter-Pins `0`/`[]`). Commit `test: M12 E0 Schritt 0 Tests (rot)` mit Ausgabe-Auszug.
 - [ ] **6 Erzeugen:** temporärer Erzeuger `tests/sim/gen-e0.test.ts` (**nicht einchecken**),
-      `it.runIf(import.meta.env.VITE_GEN_E0)`: schreibt `save-v6.json` per `writeFileSync` (Shim `node-shim.d.ts` deklariert es)
+      `it.runIf(import.meta.env.VITE_GEN_E0)`: schreibt `save-v6.json` und `save-v6-locks.json` per `writeFileSync` (Shim `node-shim.d.ts` deklariert es)
       und gibt `V6_FORMS`, `CHAIN_HASHES` (hex) und `RANDOM_SEQUENCE` als TS-Literal aus. Befehl:
       `VITE_GEN_E0=1 npx vitest run tests/sim/gen-e0.test.ts --silent=false`. Werte nach `tests/sim/e0Pins.ts` mit
       Kopfkommentar: Commit-SHA (Basis), Befehl, Datum. Erzeuger löschen.
@@ -68,6 +76,6 @@ importieren statt lokal, plus neuer `describe` AK-E0-19), `tests/sim/save.test.t
       `.prettierignore` deckt `tests/sim/fixtures/` (prüfen). Commit
       `test: M12 E0 Schritt 0 Fixture, Pins, Zufallsfolge` mit Befehl und SHA im Text.
 
-**Review-Fokus (qa-code-reviewer):** keine Datei in `src/`; Fixture über Sim-Aktionen entstanden (Rezept = Fixture
+**Review-Fokus (qa-code-reviewer):** keine Datei in `src/`; beide Fixtures über Sim-Aktionen entstanden (Rezept = Fixture
 zeichengleich); Pins mit Beleg; `fnv1a32`-Verschiebung ändert `OFF_FINGERPRINT`-Test nicht; Zufallsfolge vollständig
 bis zum Sieg; Abweichung P-14 im Kommentar.

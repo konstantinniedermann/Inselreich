@@ -21,7 +21,7 @@ Darstellungslogik, Konstanten.
 
 ## Schritte
 
-- [ ] **0 Basis:** Controller hat `main` gemerged, falls dort neue Commits liegen (REL-03, H-U1); neue Dateien aus
+- [ ] **0 Basis:** H-U1 ist seit T01 im Baum (R229); der Controller hat `main` gemerged, falls dort neue REL-03-Commits liegen; neue Dateien aus
       diesen Branches (z. B. `src/render/dunes.ts`, `src/ui/connect.ts`, `src/render/pathPreview.ts`) gehören mit zur
       Umstellung. Ledger-SHA = `HEAD`.
 - [ ] **1 Test zuerst:** in `tests/render/` ein Wächtertest `PLAN-W1 src/render und src/ui lesen Raster und Lager nur

@@ -52,9 +52,9 @@ upkeepCarry`; Insel `{ width, height, tiles, kontorId: 1, stock }`; Kontor-Liter
     `normalRunTo(1000)` (Auftrag offen), `normalRunTo(2650)` (`crisis.kind 'storm'`), `normalRunTo(4300)`
     (`'boom'`): Zustand erst prüfen, dann `foldBackToV6` → JSON → `deserialize`; beide Welten je 300 × `step`
     ohne Controller; `serialize` zeichengleich.
-  - **AK-E0-06** v6 nur mit Kontor (aus `foldBackToV6` von `createWorld(3)`) lädt, Kontor `island 0`; Sperren:
-    `createWorld(3, { unlockAll: true })`, Amtsstube angebunden bauen (Muster `fixtureV6.ts`), `setGoodLock`,
-    `setUpgradeStop` → Fold-back → laden → `unlocked`, `goodLocks`, `upgradeStops` tief gleich (P-14).
+  - **AK-E0-06** v6 nur mit Kontor (aus `foldBackToV6` von `createWorld(3)`) lädt, Kontor `island 0`; Sperren
+    (R229): `tests/sim/fixtures/save-v6-locks.json` (aus T00) laden → `unlocked`, `goodLocks`, `upgradeStops` tief
+    gleich dem rohen JSON; `islands[0].stock.glass` gleich Fixture-Wert.
   - **AK-E0-07** je Fall N01–N20 aus Anhang 01 B plus **N21** (`tiles` zusätzlich oben in v7) ein Eintrag in einer
     Tabelle, je → „Beschädigter Spielstand", `not.toThrow()`.
   - **Garbage (P-4, P-11):** bestehender Test „never throws on garbage input" zusätzlich mit `{version:6,

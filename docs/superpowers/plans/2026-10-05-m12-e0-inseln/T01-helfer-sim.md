@@ -16,7 +16,7 @@ Formwechsel in T03 eine Änderung an wenigen Stellen. **Kein Verhalten ändert s
 
 **Dateien:** `src/sim/types.ts` (nur `Island`-Alias), `world.ts`, `economy.ts`, `build.ts`, `placement.ts`,
 `roads.ts`, `forest.ts`, `production.ts`, `population.ts`, `queries.ts`, `trade.ts`, `orders.ts`, `upgrade.ts`,
-`supply.ts`, `flow.ts`, `crises.ts` (nur falls Raster-Helfer); `tests/sim/**` ausser `balance.test.ts`; neu
+`supply.ts`, `flow.ts`, `crises.ts` (nur falls Raster-Helfer), `connect.ts` (aus H-U1); `tests/sim/**` ausser `balance.test.ts`; neu
 `tests/sim/islands.test.ts`. **Nicht:** `src/render`, `src/ui` (T02), `save.ts` (T03), `src/sim/defs/**`.
 
 ## API (verbindlich, Entscheid P-2)
@@ -45,7 +45,9 @@ auf `World` (F-S2).
 
 ## Schritte
 
-- [ ] **0 Basis:** Ledger-SHA von T00 = `HEAD`; hat `main` neue Commits, merged der Controller vorher.
+- [ ] **0 Basis (R229 prod-B1):** Der Controller hat nach T00 `feat/h-u1-anbinden` @ a852d4a per `git merge` geholt
+      (Merge-Commit im Ledger); damit liegt `src/sim/connect.ts` (≈ 16 Zugriffe) im Baum und wird in Schritt 3 mit
+      umgestellt, ebenso `tests/sim/connect.test.ts`. T01 wartet nicht auf REL-03. `make check` vor Beginn grün.
 - [ ] **1 Test zuerst** `tests/sim/islands.test.ts`, `describe('M12 E0 Helfer')`:
       `PLAN-H1 home/islandOf liefern Raster, Lager und Kontor der Heimat` — `createWorld(3)`: `home(w).tiles.length`
       4096, `home(w).kontorId` 1, `home(w).stock` gleich `START_STOCK`, `islandOf(w, w.buildings[1]!)` ===

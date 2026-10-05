@@ -43,7 +43,7 @@ Signatur bricht (dann Standardwert nutzen, keine Logik).
 
 ## Schritte
 
-- [ ] **0 Basis:** Controller hat `main` gemerged (H-U1, REL-03, falls neu); `npx tsc --noEmit` grün.
+- [ ] **0 Basis:** Controller hat `main` gemerged, falls dort neue REL-03-Commits liegen (H-U1 seit T01 im Baum); `npx tsc --noEmit` grün.
 - [ ] **1 Helfer** `twoIslandWorld()` in `tests/sim/helpers.ts` nach Anhang 01 F (Insel 1 = Kopie der Heimat-Kacheln
       ohne Belegung und Wege, eigenes Kontor gleiche Position, neue Id, `island 1`, Lager 0 ausser Holz/Werkzeug 50;
       Kacheln des Kontors belegt). Nie speichern.
@@ -51,7 +51,9 @@ Signatur bricht (dann Standardwert nutzen, keine Logik).
       **AK-E0-10** I01–I12 (Anhang 01 F; „nur Insel 1" = `islands[0].stock` vorher/nachher tief gleich, Geld
       global); **AK-E0-11** I13, I14 (Kontor, Markt, Kapelle auf Insel 1 an Koordinaten im Radius eines Hauses auf
       Insel 0 → `isSupplied` false, `serviceAvailable` false, `houseDiagnosis` meldet `supply`; Weg auf Insel 1 an
-      gleicher Koordinate bindet kein Gebäude auf Insel 0 an); **AK-E0-14** (Geld für genau einen Aufstieg; kleinere
+      gleicher Koordinate bindet kein Gebäude auf Insel 0 an; **I16** (R229 qa-B5): angebundene Feuerwache auf Insel 1
+      an Koordinaten im Radius einer Kapelle auf Insel 0 → `isProtected` false, Brand per `beginCrisis` auf die Kapelle
+      endet mit `outcome 'burning'`); **AK-E0-14** (Geld für genau einen Aufstieg; kleinere
       Id auf Insel 1 steigt auf, grössere auf Insel 0 nicht; ein `step` am Wachstumstakt); **AK-E0-21** I15 (30
       Bürger Insel 0 + 20 Insel 1 → `won` nach `step`; `houses`, `tierWish`, `tierReached`, `tierOpen`,
       `maxHouseTier`, `merchants` zählen beide Inseln).
