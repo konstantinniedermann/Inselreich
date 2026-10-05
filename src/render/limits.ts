@@ -1,4 +1,8 @@
 // limits.ts — Obergrenzen der Darstellung (Spec 12.2). Darstellungswerte, keine Spielwerte.
+import { ISLANDS } from '../sim/defs/sea';
+import { MAP_W } from '../sim/mapgen';
+import { TEX } from './iso';
+
 /** Setzung Spec 12.2: [normal, reduziert]. */
 export const CAPS = {
   walkers: [40, 12],
@@ -44,3 +48,11 @@ export const fireTongues = (flames: number, reduce = false): number =>
 export const SPRITE_CACHE_MAX_BYTES = 64 * 1024 * 1024;
 /** Obergrenze eines einzelnen Sprites (RGBA-Bytes); grössere Körper gehen den ungecachten Weg. */
 export const SPRITE_MAX_BYTES = 4 * 1024 * 1024;
+
+/** Ebenen-Faktor bei DPR 2 (`defaultTerrainScale`); nicht senken (lead-art B4). */
+export const ARCHIPEL_LAYER_SCALE = 2;
+const layerBytes = (tiles: number): number => (tiles * TEX * ARCHIPEL_LAYER_SCALE) ** 2 * 4;
+/** Zusatz durch den Archipel: Fremdinsel-Ebenen + halbe + Viertel-Kopien, Viertel-Kopie der Heimat (≈ 44,5 MB). */
+export const ARCHIPEL_EXTRA_BYTES =
+  ISLANDS.reduce((s, d) => s + layerBytes(d.size) * (1 + 1 / 4 + 1 / 16), 0) +
+  layerBytes(MAP_W) / 16;

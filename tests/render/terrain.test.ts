@@ -1,5 +1,5 @@
 import { fieldWorld } from '../../src/render/terrainField';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { perfBudget } from '../helpers/perfBudget';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { home, createWorld } from '../../src/sim/world';
@@ -7,7 +7,7 @@ import type { World3 } from '../../src/render/terrain';
 import type { World } from '../../src/sim/types';
 import { FOREST_FLOOR, PALETTE, SIGNAL_NAMES } from '../../src/render/palette';
 import { TEX } from '../../src/render/iso';
-import { LAND, depthAt, terrainFields } from '../../src/render/terrainField';
+import { LAND, depthAt, rimWeight, terrainFields } from '../../src/render/terrainField';
 import {
   RASTER,
   SMOOTH_BORDER,
@@ -24,6 +24,11 @@ import {
   tuftsFor,
   RELIEF_AMP,
   meadowHill,
+  buildTerrainLayer,
+  gridBands,
+  halfLayer,
+  quarterLayer,
+  terrainJob,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
 import { step } from '../../src/sim/tick';
@@ -1095,5 +1100,166 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     ts.sort((a, b) => a - b);
     // R235: Runner für paintPixels ≈ 4× langsamer als lokal; lokal bleibt 8 ms, CI 20 ms
     expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8, undefined, 2.5));
+  });
+});
+
+describe('M12 E1 Terrain', () => {
+  /** Inselansicht 24 x 24: Land nur in [4, 19] (wie eine Fremdinsel, P-2). */
+  const view = (): World => {
+    const tiles = [];
+    for (let y = 0; y < 24; y++)
+      for (let x = 0; x < 24; x++)
+        tiles.push({
+          terrain: x >= 4 && x <= 19 && y >= 4 && y <= 19 ? 'grass' : 'water',
+          buildingId: null,
+          road: false,
+        });
+    return {
+      seed: 5,
+      islands: [{ width: 24, height: 24, tiles }],
+      buildings: {},
+      nextBuildingId: 1,
+    } as unknown as World;
+  };
+
+  interface FakeCanvas {
+    width: number;
+    height: number;
+    px: Uint8ClampedArray | null;
+    calls: string[];
+    getContext: () => unknown;
+  }
+  const saved = (globalThis as { document?: unknown }).document;
+  beforeAll(() => {
+    // Node hat kein document: Fake-Canvas, der putImageData in einen Pixelpuffer schreibt, sonst No-Ops
+    (globalThis as { document?: unknown }).document = {
+      createElement: (): FakeCanvas => {
+        const c: FakeCanvas = {
+          width: 0,
+          height: 0,
+          px: null,
+          calls: [],
+          getContext: () => ctx,
+        };
+        const base = {
+          createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
+          putImageData: (img: { data: Uint8ClampedArray }, x: number, y: number) => {
+            c.px ??= new Uint8ClampedArray(c.width * c.height * 4);
+            const w = c.width;
+            for (let r = 0; r < img.data.length / 4 / w; r++)
+              c.px.set(img.data.subarray(r * w * 4, (r + 1) * w * 4), ((y + r) * c.width + x) * 4);
+          },
+        };
+        const ctx = new Proxy(base as Record<string, unknown>, {
+          get: (t, k: string) =>
+            k in t
+              ? t[k]
+              : (...a: unknown[]) => {
+                  c.calls.push(`${k}(${JSON.stringify(a)})`);
+                },
+          set: () => true,
+        });
+        return c;
+      },
+    };
+  });
+  afterAll(() => {
+    (globalThis as { document?: unknown }).document = saved;
+  });
+
+  it('AK-E1-20 rimWeight: Kachel 0 und 1,9 gleich 0, ab 4 gleich 1, dazwischen linear', () => {
+    expect(rimWeight(0, 12, 24, 24)).toBe(0);
+    expect(rimWeight(1.9, 12, 24, 24)).toBe(0);
+    expect(rimWeight(3, 12, 24, 24)).toBeCloseTo(0.5, 9);
+    expect(rimWeight(4, 12, 24, 24)).toBe(1);
+    expect(rimWeight(12, 22.5, 24, 24)).toBe(0);
+    expect(rimWeight(12, 12, 24, 24)).toBe(1);
+  });
+
+  it('AK-E1-20 paintPixels: die äussersten 2 Kacheln sind exakt waterDeep, ohne Schaum', () => {
+    const world = view();
+    const grid = buildGrid(fieldWorld(world));
+    const size = 24 * TEX;
+    const out = paintPixels(grid, 1, 0, 0, size, size);
+    const deep = rgbOfCss(PALETTE.waterDeep);
+    let rim = 0;
+    for (let py = 0; py < size; py++)
+      for (let px = 0; px < size; px++) {
+        const fx = (px + 0.5) / TEX,
+          fy = (py + 0.5) / TEX;
+        if (!(fx < 2 || fy < 2 || fx >= 22 || fy >= 22)) continue;
+        rim++;
+        const o = (py * size + px) * 4;
+        expect([out[o], out[o + 1], out[o + 2]]).toEqual(deep);
+      }
+    expect(rim).toBeGreaterThan(0);
+  });
+
+  // Zeichenaufrufe von paintDecor: alles ausser Pixelblöcken und Kopien (die unterscheiden sich im Schnitt der Schritte)
+  const decorCalls = (c: FakeCanvas): string[] =>
+    c.calls.filter((k) => !/^(createImageData|putImageData|drawImage|clearRect)\(/.test(k));
+
+  for (const scale of [1, 2])
+    it(`AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor ${scale}), samt Dekor`, () => {
+      const world = view();
+      const ref = buildTerrainLayer(world, scale) as unknown as FakeCanvas;
+      const job = terrainJob(world, scale);
+      const layer = job.layer as unknown as FakeCanvas;
+      expect(job.steps.length).toBeGreaterThan(10);
+      expect(layer.px).toBeNull();
+      for (const s of job.steps) s();
+      expect(layer.width).toBe(ref.width);
+      expect(layer.height).toBe(ref.height);
+      expect(ref.px).not.toBeNull();
+      expect(layer.px!.length).toBe(ref.px!.length);
+      expect(layer.px!.every((v, i) => v === ref.px![i])).toBe(true);
+      expect(decorCalls(ref).length).toBeGreaterThan(0);
+      expect(decorCalls(layer)).toEqual(decorCalls(ref));
+      expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
+    });
+
+  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16 und 13, Heimat und Inselansicht)', () => {
+    for (const w of [view(), createWorld(3)]) {
+      const isl = fieldWorld(w);
+      const fields = terrainFields(isl);
+      const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
+      for (const rows of [16, 13]) {
+        const bands = gridBands(isl, fields, rows);
+        expect(bands.steps.length).toBeGreaterThan(2);
+        for (const s of bands.steps) s();
+        const g = bands.grid() as unknown as Record<string, unknown>;
+        for (const k of Object.keys(ref)) {
+          if (k === 'ind') {
+            const a = g[k] as Float32Array[],
+              b = ref[k] as Float32Array[];
+            a.forEach((f, t) =>
+              expect(
+                f.every((v, i) => v === b[t]![i]),
+                `ind ${t}`,
+              ).toBe(true),
+            );
+          } else if (typeof ref[k] === 'number') expect(g[k]).toBe(ref[k]);
+          else {
+            const a = g[k] as Float32Array,
+              b = ref[k] as Float32Array;
+            expect(a.length, k).toBe(b.length);
+            expect(
+              a.every((v, i) => v === b[i]),
+              k,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('quarterLayer: Kante gleich ceil(halfLayer / 2), zweiter Aufruf liefert dasselbe Objekt', () => {
+    const layer = buildTerrainLayer(view(), 1);
+    const half = halfLayer(layer);
+    const q = quarterLayer(layer);
+    expect(q.width).toBe(Math.ceil(half.width / 2));
+    expect(q.height).toBe(Math.ceil(half.height / 2));
+    expect(q.width).toBe(192);
+    expect(quarterLayer(layer)).toBe(q);
   });
 });

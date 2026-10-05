@@ -930,3 +930,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Fundort: `.github/workflows/` (`actions/checkout@v4`, `actions/setup-node@v4`), CI-Lauf 37346620948.
 - Beobachtung: CI meldet die Abkündigung von Node.js 20 für diese Actions; zusätzlich wechselt `ubuntu-latest` ab 2026-10-19 auf Ubuntu 26 (state.md, offene Entscheide).
 - Ursprung: REL-04-Push (production-integrator), R244. Einschätzung: niedrig bis mittel, vor 2026-10-19 Actions-Versionen und Runner prüfen (Zeittests!).
+
+### 2026-10-05 · Terrain-Cache · Malbänder und Gitterbänder gegen SLICE_MS
+
+- Fundort: `src/render/terrain.ts` (`terrainJob`, `gridBands`), Messung Node mit Fake-Kontext, 36 × 36 bei Faktor 2, Last hoch (Load ≈ 14).
+- Beobachtung: Das Gitter ist in Bänder à 4 Knotenzeilen geteilt (bitgleich zu `buildGrid`, Test); Schritt ca. 7 ms (Rand von 7 Knoten je Seite macht die Summe etwa 5 × teurer als ungeteilt, ca. 0,5 s). Malbänder à 32 Zeilen: Median ca. 8 ms, einzelne Spitzen 15 – 50 ms (Land mit Wald, Fels, Dünen), Summe ca. 1,5 s.
+- Ursprung: M12-E1-T04 Fix-Runde. Einschätzung: mittel; im Browser messen (T07), ggf. `SLICE_ROWS` auf 16 und `GRID_BAND_ROWS` anpassen.
