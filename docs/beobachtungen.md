@@ -880,3 +880,9 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Beobachtung: (1) `patchGrid` gleicht nur das Rechteck plus `2 · HEIGHT_BLUR + 1` Knoten ab; nach einem Wechsel von oder zu Gebirge reichen die Vorberg-Felder (scree, tint, Anstieg; Blur bis ≈ 12 Kacheln) weiter, ausserhalb des Rechtecks bleibt bis zum Vollaufbau der alte Stand stehen (seit H-R13). (2) H-R9 B4 misst nur `paintPixels` (lokal ≈ 3,5–4 ms, Runner 13,9–14,7 ms in zwei Versuchen von CI-Lauf 37295831843); der CI-Faktor 1,5 bildet den Abstand Runner/lokal (≈ 4×) für diesen Test nicht ab, REL-03 (+≈ 10 % `paintPixels`) hat die knappe Reserve aufgebraucht.
 - Ursprung: Hotfix H-T3 (art-rendering-engineer, lead-art), R234, R235. Einschätzung: (1) mittel, sichtbar nur beim Bauen/Abreissen am Gebirge, Patch-Rand aus der Blur-Reichweite ableiten; (2) per R235 CI-Grenze H-R9 B4 auf 20 ms (lokal 8 ms).
 - Paket-Kandidat (R235): **paintPixels-Performance (Vorberechnung je Zelle), REL-04/M9** — Bilinear-Gewichte und Feldwerte je Knotenzelle statt je Pixel (heute eine `lerp`-Closure und ≈ 8 Abtastungen je Pixel), pixelgleich; Ziel: Reserve so weit zurück, dass H-R9 B4 wieder mit dem Standard-Faktor 1,5 läuft.
+
+### 2026-10-05 · Sim/UI · Heimat-Bilanz und Rückerstattung bei Häusern auf Nebeninseln
+
+- Fundort: `src/sim/population.ts` (`upgradeStatus`, `upgradeDeficit`), `src/sim/flow.ts` (`goodsBalance`), `src/sim/queries.ts` (`effectiveRefund`).
+- Beobachtung: Seit M12-E0 T04 dämpfen Bilanz-Defizit und Rückerstattungs-Vorschau nur nach Heimat-Bilanz bzw. Heimat-Lager. Für Gebäude auf weiteren Inseln stimmt das nicht (bei einer Insel unkritisch).
+- Ursprung: Review T04 (qa-code-reviewer), M12-E0-C2. Einschätzung: niedrig; in T05/E1 je Insel bilanzieren oder bewusst dokumentieren.
