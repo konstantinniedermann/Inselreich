@@ -236,6 +236,60 @@ const V8_ISLAND_KEYS = [
 ] as const;
 const V8_ADDED_KEYS = ['kind', 'ox', 'oy', 'anchor'] as const;
 
+const V9_ADDED_WORLD_KEYS = ['ships', 'nextShipId', 'wonSpice'] as const;
+const V9_WORLD_KEYS = [
+  'version',
+  'seed',
+  'islands',
+  'tick',
+  'buildings',
+  'nextBuildingId',
+  'money',
+  'stats',
+  'won',
+  'wonMerchants',
+  'taxLevel',
+  'taxLockedUntil',
+  'sellPct',
+  'order',
+  'crisisLevel',
+  'crisis',
+  'unlocked',
+  'goodLocks',
+  'upgradeStops',
+  'taxCarry',
+  'upkeepCarry',
+  ...V9_ADDED_WORLD_KEYS,
+] as const;
+
+/**
+ * Formt ein v9-JSON-Objekt in die v8-Form zurück (M12 Seefahrt): ohne `ships`, `nextShipId`, `wonSpice`,
+ * `crisis.tile.island`, `stock.spice` je Insel und `sellPct.spice`; `version 8`. Unbekannter Schlüssel → Fehler im Test.
+ */
+export function foldBackToV8(v9: Record<string, unknown>): Record<string, unknown> {
+  for (const k of Object.keys(v9))
+    if (!(V9_WORLD_KEYS as readonly string[]).includes(k))
+      throw new Error(`foldBackToV8: unbekannter Schlüssel ${k}`);
+  const out: Record<string, unknown> = { ...v9 };
+  for (const k of V9_ADDED_WORLD_KEYS) delete out[k];
+  out.version = 8;
+  out.islands = (v9.islands as Record<string, unknown>[]).map((isl) => {
+    const stock = { ...(isl.stock as Record<string, unknown>) };
+    delete stock.spice;
+    return { ...isl, stock };
+  });
+  const sellPct = { ...(v9.sellPct as Record<string, unknown>) };
+  delete sellPct.spice;
+  out.sellPct = sellPct;
+  const crisis = v9.crisis as Record<string, unknown> | null;
+  if (crisis && crisis.tile) {
+    const tile = { ...(crisis.tile as Record<string, unknown>) };
+    delete tile.island;
+    out.crisis = { ...crisis, tile };
+  }
+  return out;
+}
+
 /**
  * Formt ein v8-JSON-Objekt in die v7-Form zurück (M12 E1): nur die Heimat bleibt, ohne `kind`, `ox`, `oy`,
  * `anchor`; `version 7`. Unbekannter Inselschlüssel → Fehler im Test.

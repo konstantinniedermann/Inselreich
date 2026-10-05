@@ -17,8 +17,9 @@ import type { GoodId } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 
 describe('defs', () => {
-  it('has 8 goods with buy > sell', () => {
-    expect(GOOD_IDS).toHaveLength(9);
+  // Bewusst geändert (M12 Seefahrt T01, R226 F-03): 9 → 10 Güter, Gewürz ist das zehnte.
+  it('has 10 goods with buy > sell', () => {
+    expect(GOOD_IDS).toHaveLength(10);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
   it('has 14 building defs whose goods exist (M11 S2)', () => {
@@ -112,8 +113,10 @@ describe('M8 defs', () => {
       sell: 20,
       order: { tier: 4, min: 4, max: 8 },
     });
-    expect(GOOD_IDS).toHaveLength(9);
-    expect(GOOD_IDS[GOOD_IDS.length - 1]).toBe('glass');
+    // Bewusst geändert (R226 F-03): Glas war das letzte Gut, jetzt steht Gewürz am Ende.
+    expect(GOOD_IDS).toHaveLength(10);
+    expect(GOOD_IDS[8]).toBe('glass');
+    expect(GOOD_IDS[GOOD_IDS.length - 1]).toBe('spice');
     expect(START_STOCK.glass).toBe(0);
     const bath = BUILDING_DEFS.bathhouse;
     expect(bath).toMatchObject({
@@ -237,5 +240,26 @@ describe('M11 Ausbau-Werte (Spec 3.6)', () => {
       expect(s3.cycle, id).toBeLessThan(s2.cycle);
       expect([s2.fee.good, s3.fee.good], id).toEqual(['cloth', 'rum']);
     }
+  });
+});
+
+describe('AK-E3-01 Gewürz (M12 Seefahrt T01)', () => {
+  it('erste neun Güter unverändert, Gewürz am Ende', () => {
+    expect(GOOD_IDS.slice(0, 9)).toEqual([
+      'wood',
+      'tools',
+      'stone',
+      'food',
+      'wool',
+      'cloth',
+      'cane',
+      'rum',
+      'glass',
+    ]);
+    expect(GOOD_IDS[9]).toBe('spice');
+  });
+  it('GOODS.spice 40/12 ohne order, Startbestand 0', () => {
+    expect(GOODS.spice).toEqual({ id: 'spice', name: 'Gewürz', buy: 40, sell: 12 });
+    expect(START_STOCK.spice).toBe(0);
   });
 });

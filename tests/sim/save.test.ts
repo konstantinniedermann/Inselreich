@@ -5,17 +5,26 @@ import v2Json from './fixtures/save-v2.json?raw';
 import v3Json from './fixtures/save-v3.json?raw';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { beginCrisis, flammableRect, rollCrisis, type CrisisRoll } from '../../src/sim/crises';
-import { seaLanes } from '../../src/sim/islands';
+import { laneTicks, seaLanes } from '../../src/sim/islands';
 import { orderForPeriod } from '../../src/sim/orders';
-import { GOODS, GOOD_IDS, SELL_FLOOR } from '../../src/sim/defs/goods';
+import {
+  GOODS,
+  GOOD_IDS,
+  SELL_FLOOR,
+  SPICE_GRACE_MAX,
+  SPICE_GRACE_PER_HOUSE,
+} from '../../src/sim/defs/goods';
 import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { ISLANDS } from '../../src/sim/defs/sea';
+import { ISLANDS, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
 import {
   SAVE_VERSION,
+  SPICE_GRACE_NOTICE,
   deserialize,
+  migrateV1ToV2,
+  migrateV8ToV9,
   migrateV6ToV7,
   migrateV7ToV8,
   serialize,
@@ -36,6 +45,7 @@ import {
   fnv1a32,
   foldBackToV6,
   foldBackToV7,
+  foldBackToV8,
   prepareEast,
   setHouse,
   sortedJson,
@@ -84,12 +94,12 @@ function expectFailure(json: string, reason: string): void {
 
 describe('save', () => {
   it('uses version 5', () => {
-    expect(SAVE_VERSION).toBe(8);
+    expect(SAVE_VERSION).toBe(9);
   });
 
   it('AK-S1-01 createWorld starts with the v2 fields', () => {
     const fresh = createWorld(3);
-    expect(fresh.version).toBe(8);
+    expect(fresh.version).toBe(9);
     expect(fresh.taxLevel).toBe('normal');
     expect(fresh.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => fresh.sellPct[g] === 100)).toBe(true);
@@ -105,7 +115,7 @@ describe('save', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(8);
+    expect(loaded.version).toBe(9);
     expect(loaded.taxLevel).toBe('normal');
     expect(loaded.taxLockedUntil).toBe(0);
     expect(GOOD_IDS.every((g) => loaded.sellPct[g] === 100)).toBe(true);
@@ -143,7 +153,7 @@ describe('save', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 9)),
+      tampered(w, (r) => (r.version = 10)),
       'Unbekannte Version',
     );
   });
@@ -224,7 +234,7 @@ describe('save', () => {
   });
 
   it('rejects an unknown version', () => {
-    expectFailure(JSON.stringify({ ...w, version: 9 }), 'Unbekannte Version');
+    expectFailure(JSON.stringify({ ...w, version: 10 }), 'Unbekannte Version');
   });
 
   it('rejects invalid JSON', () => {
@@ -341,7 +351,7 @@ function burningWorld(): { world: World; id: number } {
 describe('M6 Save v3', () => {
   it('AK-S1-01 createWorld: version 5, Stufe off, keine Krise; Option setzt nur die Stufe', () => {
     const a = createWorld(3);
-    expect(a.version).toBe(8);
+    expect(a.version).toBe(9);
     expect(a.crisisLevel).toBe('off');
     expect(a.crisis).toBeNull();
     const b = createWorld(3, { crisisLevel: 'normal' });
@@ -360,7 +370,7 @@ describe('M6 Save v3', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(8);
+    expect(loaded.version).toBe(9);
     expect(loaded.crisisLevel).toBe('off');
     expect(loaded.crisis).toBeNull();
     expect(Object.values(loaded.buildings).some((b) => b.outageUntil !== undefined)).toBe(false);
@@ -381,7 +391,7 @@ describe('M6 Save v3', () => {
     const r = deserialize(v1Json);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.world.version).toBe(8);
+    expect(r.world.version).toBe(9);
     expect(r.world.crisisLevel).toBe('off');
     expect(r.world.crisis).toBeNull();
     expect(r.world.taxLevel).toBe('normal');
@@ -464,7 +474,7 @@ describe('M6 Save v3', () => {
       );
     }
     expectFailure(
-      tampered(storm(), (r) => (r.version = 9)),
+      tampered(storm(), (r) => (r.version = 10)),
       'Unbekannte Version',
     );
   });
@@ -499,7 +509,7 @@ describe('M6 Save v3', () => {
 describe('M8 Save v4', () => {
   it('AK-S1-02 createWorld: version 4, wonMerchants false, Glas 0 / 100, übrige Felder wie nach M6', () => {
     const a = createWorld(3);
-    expect(a.version).toBe(8);
+    expect(a.version).toBe(9);
     expect(a.wonMerchants).toBe(false);
     expect(home(a).stock.glass).toBe(0);
     expect(a.sellPct.glass).toBe(100);
@@ -521,7 +531,7 @@ describe('M8 Save v4', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const loaded = r.world;
-    expect(loaded.version).toBe(8);
+    expect(loaded.version).toBe(9);
     expect(home(loaded).stock.glass).toBe(0);
     expect(loaded.sellPct.glass).toBe(100);
     expect(loaded.wonMerchants).toBe(false);
@@ -542,7 +552,7 @@ describe('M8 Save v4', () => {
       const r = deserialize(json);
       expect(r.ok).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(8);
+      expect(r.world.version).toBe(9);
       expect(r.world.wonMerchants).toBe(false);
       expect(home(r.world).stock.glass).toBe(0);
       expect(r.world.sellPct.glass).toBe(100);
@@ -563,7 +573,7 @@ describe('M8 Save v4', () => {
     w.wonMerchants = true;
     home(w).stock.glass = 7;
     w.sellPct.glass = 90;
-    expect(w.version).toBe(8);
+    expect(w.version).toBe(9);
     const r = deserialize(serialize(w));
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.world).toEqual(w);
@@ -590,7 +600,7 @@ describe('M8 Save v4', () => {
     ];
     for (const edit of bad) expectFailure(tampered(w, edit), 'Beschädigter Spielstand');
     expectFailure(
-      tampered(w, (r) => (r.version = 9)),
+      tampered(w, (r) => (r.version = 10)),
       'Unbekannte Version',
     );
     try {
@@ -641,7 +651,7 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     const json = readFileSync('tests/sim/fixtures/save-v4.json', 'utf8');
     const raw = JSON.parse(json) as Record<string, unknown>;
     const w = loadOk(json);
-    expect(w.version).toBe(8);
+    expect(w.version).toBe(9);
     expect(w.unlocked).toEqual(['U0', 'U2', 'U3', 'U4', 'U5']);
     expect(w.goodLocks).toEqual([]);
     expect(w.upgradeStops).toEqual([]);
@@ -665,11 +675,11 @@ describe('M10 Save v5 (Spec 8.2)', () => {
   });
   it('AK-S1-13 Kette: save-v3 → U0, U2 … U5; save-v1, save-v2 → v5 mit deriveUnlocks', () => {
     const v3 = loadOk(readFileSync('tests/sim/fixtures/save-v3.json', 'utf8'));
-    expect(v3.version).toBe(8);
+    expect(v3.version).toBe(9);
     expect(v3.unlocked).toEqual(['U0', 'U2', 'U3', 'U4', 'U5']);
     for (const f of ['save-v1.json', 'save-v2.json']) {
       const w = loadOk(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
-      expect(w.version).toBe(8);
+      expect(w.version).toBe(9);
       expect(w.unlocked).toEqual(deriveUnlocks(w));
       expect(w.goodLocks).toEqual([]);
       expect(w.upgradeStops).toEqual([]);
@@ -745,7 +755,7 @@ describe('M10 Save v5 (Spec 8.2)', () => {
     delete noHouse.buildings[String(v.houses[0]!.id)]!.house;
     expect(() => deserialize(JSON.stringify(noHouse))).not.toThrow();
     expect(deserialize(JSON.stringify(noHouse))).toEqual(damaged);
-    expect(bad((r) => (r.version = 9))).toEqual({ ok: false, reason: 'Unbekannte Version' });
+    expect(bad((r) => (r.version = 10))).toEqual({ ok: false, reason: 'Unbekannte Version' });
   });
   it('RF-1 gespeicherte Freischaltung gilt: U6 ohne won bleibt, U2 … U5 werden nicht nachgezogen', () => {
     const w = createWorld(3);
@@ -824,7 +834,7 @@ describe('M11 Save v6 (Spec 5)', () => {
       for (let i = 0; i < 100; i++) step(w);
     }).not.toThrow();
     for (const f of ['save-v1.json', 'save-v2.json', 'save-v3.json', 'save-v4.json'])
-      expect(loadOk(readFileSync(`tests/sim/fixtures/${f}`, 'utf8')).version, f).toBe(8);
+      expect(loadOk(readFileSync(`tests/sim/fixtures/${f}`, 'utf8')).version, f).toBe(9);
   });
   it('AK-SAV-04 Beschädigter Spielstand bei kaputten Überträgen, eff, level, state; noForest angenommen', () => {
     const { w: v, houses } = village(1);
@@ -859,8 +869,8 @@ describe('M11 Save v6 (Spec 5)', () => {
       expect(deserialize(tampered(v, ok)).ok).toBe(true);
   });
   it('AK-SAV-05 version 7 → Unbekannte Version; SAVE_VERSION 6', () => {
-    expect(SAVE_VERSION).toBe(8);
-    expect(deserialize(tampered(createWorld(3), (r) => (r.version = 9)))).toEqual({
+    expect(SAVE_VERSION).toBe(9);
+    expect(deserialize(tampered(createWorld(3), (r) => (r.version = 10)))).toEqual({
       ok: false,
       reason: 'Unbekannte Version',
     });
@@ -891,7 +901,9 @@ describe('M12 E0 Schritt 0 (Anhang 01 C)', () => {
   });
   it('T00 Rezept = Fixture', () => {
     expect(
-      JSON.stringify(foldBackToV6(foldBackToV7(JSON.parse(serialize(fixtureV6Run().w))))),
+      JSON.stringify(
+        foldBackToV6(foldBackToV7(foldBackToV8(JSON.parse(serialize(fixtureV6Run().w))))),
+      ),
     ).toBe(readFileSync(FIX, 'utf8'));
   });
   it('T00 save-v6-locks.json roh', () => {
@@ -905,9 +917,9 @@ describe('M12 E0 Schritt 0 (Anhang 01 C)', () => {
     expect(r.stock.glass).toBeGreaterThan(0);
     expect(r.unlocked).toHaveLength(7);
     expect(deserialize(json).ok).toBe(true);
-    expect(JSON.stringify(foldBackToV6(foldBackToV7(JSON.parse(serialize(locksV6Run())))))).toBe(
-      json,
-    );
+    expect(
+      JSON.stringify(foldBackToV6(foldBackToV7(foldBackToV8(JSON.parse(serialize(locksV6Run())))))),
+    ).toBe(json);
   });
   it('T00 v6-Formen', () => {
     const forms = {
@@ -917,7 +929,7 @@ describe('M12 E0 Schritt 0 (Anhang 01 C)', () => {
       normal: createWorld(3, { crisisLevel: 'normal' }),
     };
     for (const [k, w] of Object.entries(forms)) {
-      const s = JSON.stringify(foldBackToV6(foldBackToV7(JSON.parse(serialize(w)))));
+      const s = JSON.stringify(foldBackToV6(foldBackToV7(foldBackToV8(JSON.parse(serialize(w))))));
       expect({ hash: fnv1a32(s), length: s.length }, k).toEqual(V6_FORMS[k]);
     }
   });
@@ -925,9 +937,11 @@ describe('M12 E0 Schritt 0 (Anhang 01 C)', () => {
     const r = deserialize(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
     expect(r.ok).toBe(true);
     if (r.ok)
-      expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(JSON.parse(serialize(r.world))))))).toBe(
-        CHAIN_HASHES[n],
-      );
+      expect(
+        fnv1a32(
+          sortedJson(foldBackToV6(foldBackToV7(foldBackToV8(JSON.parse(serialize(r.world)))))),
+        ),
+      ).toBe(CHAIN_HASHES[n]);
   });
 });
 
@@ -943,7 +957,7 @@ describe('M12 E0 Save v7', () => {
     return r.world;
   };
   const folded = (world: World): string =>
-    JSON.stringify(foldBackToV6(foldBackToV7(v7Json(world))));
+    JSON.stringify(foldBackToV6(foldBackToV7(foldBackToV8(v7Json(world)))));
   const hashOf = (s: string): { hash: number; length: number } => ({
     hash: fnv1a32(s),
     length: s.length,
@@ -961,8 +975,8 @@ describe('M12 E0 Save v7', () => {
 
   it('AK-E0-01 createWorld: Heimat als Insel 0 (v7-Form nach Fold-back), Kontor island 0', () => {
     const fresh = createWorld(3);
-    expect(fresh.version).toBe(8);
-    const v7 = foldBackToV7(v7Json(fresh)) as Raw;
+    expect(fresh.version).toBe(9);
+    const v7 = foldBackToV7(foldBackToV8(v7Json(fresh))) as Raw;
     expect(v7.version).toBe(7);
     expect(v7.islands).toHaveLength(1);
     const isl = v7.islands[0] as Raw;
@@ -975,7 +989,7 @@ describe('M12 E0 Save v7', () => {
     const keys = Object.keys(fresh);
     for (const gone of ['width', 'height', 'tiles', 'kontorId', 'stock'])
       expect(keys).not.toContain(gone);
-    expect(SAVE_VERSION).toBe(8);
+    expect(SAVE_VERSION).toBe(9);
   });
 
   it.each(Object.keys(FORMS))('AK-E0-02 Fold-back der Form %s = V6_FORMS', (k) => {
@@ -985,7 +999,7 @@ describe('M12 E0 Save v7', () => {
   it('AK-E0-03 save-v6.json lädt als v7; Fold-back = Fixture ohne connected', () => {
     const fixture = rawOf(FIX);
     const world = load(readFileSync(FIX, 'utf8'));
-    expect(world.version).toBe(8);
+    expect(world.version).toBe(9);
     expect(world.islands[0]!.stock).toEqual(fixture.stock);
     const back = JSON.parse(folded(world)) as Raw;
     const strip = (r: Raw): Raw => {
@@ -998,8 +1012,10 @@ describe('M12 E0 Save v7', () => {
 
   it.each([1, 2, 3, 4, 5])('AK-E0-04 Kette save-v%i (Hash über Fold-back)', (n) => {
     const world = load(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
-    expect(world.version).toBe(8);
-    expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(v7Json(world)))))).toBe(CHAIN_HASHES[n]);
+    expect(world.version).toBe(9);
+    expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(foldBackToV8(v7Json(world))))))).toBe(
+      CHAIN_HASHES[n],
+    );
   });
 
   const stepTimes = (world: World, n: number): void => {
@@ -1131,7 +1147,7 @@ describe('M12 E0 Save v7', () => {
   });
 
   it('AK-E0-09 version 9 → Unbekannte Version', () => {
-    expect(deserialize(tampered(createWorld(3), (r) => (r.version = 9)))).toEqual({
+    expect(deserialize(tampered(createWorld(3), (r) => (r.version = 10)))).toEqual({
       ok: false,
       reason: 'Unbekannte Version',
     });
@@ -1153,7 +1169,7 @@ describe('M12 E1 Schritt 0 (Anhang 03 B)', () => {
     expect(deserialize(json).ok).toBe(true);
   });
   it('T00 Rezept = Fixture v7', () => {
-    expect(JSON.stringify(foldBackToV7(JSON.parse(serialize(fixtureV7Run()))))).toBe(
+    expect(JSON.stringify(foldBackToV7(foldBackToV8(JSON.parse(serialize(fixtureV7Run())))))).toBe(
       readFileSync(FIX7, 'utf8'),
     );
   });
@@ -1165,7 +1181,7 @@ describe('M12 E1 Schritt 0 (Anhang 03 B)', () => {
       normal: createWorld(3, { crisisLevel: 'normal' }),
     };
     for (const [k, w] of Object.entries(forms)) {
-      const s = JSON.stringify(foldBackToV7(JSON.parse(serialize(w))));
+      const s = JSON.stringify(foldBackToV7(foldBackToV8(JSON.parse(serialize(w)))));
       expect({ hash: fnv1a32(s), length: s.length }, k).toEqual(V7_FORMS[k]);
     }
   });
@@ -1188,8 +1204,8 @@ describe('M12 E1 Save v8', () => {
 
   it('AK-E1-05 createWorld(3): Heimat plus A und B, Fremdinseln ohne Kontor und Lager 0', () => {
     const fresh = createWorld(3);
-    expect(SAVE_VERSION).toBe(8);
-    expect(fresh.version).toBe(8);
+    expect(SAVE_VERSION).toBe(9);
+    expect(fresh.version).toBe(9);
     expect(fresh.islands).toHaveLength(3);
     expect(fresh.islands.map((i) => i.kind)).toEqual(['home', ...ISLANDS.map((d) => d.kind)]);
     expect(ISLANDS.some((d) => (d.kind as string) === 'home')).toBe(false);
@@ -1215,7 +1231,7 @@ describe('M12 E1 Save v8', () => {
 
   it('AK-E1-05 save-v7.json lädt als v8 mit den Fremdinseln von createWorld(seed)', () => {
     const world = load(readFileSync(FIX7, 'utf8'));
-    expect(world.version).toBe(8);
+    expect(world.version).toBe(9);
     expect(world.islands).toHaveLength(3);
     expect(world.islands.slice(1)).toEqual(foreignOf(world));
   });
@@ -1234,12 +1250,16 @@ describe('M12 E1 Save v8', () => {
       mild: createWorld(3, { crisisLevel: 'mild' }),
       normal: createWorld(3, { crisisLevel: 'normal' }),
     };
-    expect(hashOf(JSON.stringify(foldBackToV7(rawOf(forms[k]!))))).toEqual(V7_FORMS[k]);
+    expect(hashOf(JSON.stringify(foldBackToV7(foldBackToV8(rawOf(forms[k]!)))))).toEqual(
+      V7_FORMS[k],
+    );
   });
 
   it('Bitgleich Heimat: Fold-back des geladenen save-v7.json = Datei', () => {
     const world = load(readFileSync(FIX7, 'utf8'));
-    expect(JSON.stringify(foldBackToV7(rawOf(world)))).toBe(readFileSync(FIX7, 'utf8'));
+    expect(JSON.stringify(foldBackToV7(foldBackToV8(rawOf(world))))).toBe(
+      readFileSync(FIX7, 'utf8'),
+    );
   });
 
   describe('AK-E1-06 Ladeprüfung', () => {
@@ -1296,7 +1316,7 @@ describe('M12 E1 Save v8', () => {
     });
 
     it('version 9 → Unbekannte Version', () => {
-      expect(deserialize(tampered(createWorld(3), (r) => (r.version = 9)))).toEqual({
+      expect(deserialize(tampered(createWorld(3), (r) => (r.version = 10)))).toEqual({
         ok: false,
         reason: 'Unbekannte Version',
       });
@@ -1306,9 +1326,11 @@ describe('M12 E1 Save v8', () => {
   describe('AK-M12-B5 Kette', () => {
     it.each([1, 2, 3, 4, 5, 6, 7])('save-v%i lädt als v8, Kettenhash über Fold-back', (n) => {
       const world = load(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
-      expect(world.version).toBe(8);
+      expect(world.version).toBe(9);
       if (n <= 5)
-        expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(rawOf(world)))))).toBe(CHAIN_HASHES[n]);
+        expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(foldBackToV8(rawOf(world))))))).toBe(
+          CHAIN_HASHES[n],
+        );
     });
 
     it.each([1, 2, 3, 4, 5, 6, 7])('qa-B4 save-v%i: Fremdinseln wie createWorld(seed)', (n) => {
@@ -1370,5 +1392,265 @@ describe('M12 Seefahrt Schritt 0 (Anhang 03 B)', () => {
     const lanes = seaLanes(createWorld(SEED_D37).islands);
     expect(lanes.find((l) => l.a === 0 && l.b === 2)!.d).toBe(37);
     expect(lanes.find((l) => l.a === 0 && l.b === 1)!.d).toBe(D_HOME_A_AT_SEED_D37);
+  });
+});
+
+describe('M12 Seefahrt Save v9', () => {
+  type Raw = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const FIX8 = 'tests/sim/fixtures/save-v8.json';
+  const fix8 = (): string => readFileSync(FIX8, 'utf8');
+  const loadOk = (json: string): { world: World; notice?: string } => {
+    const r = deserialize(json);
+    if (!r.ok) throw new Error(r.reason);
+    return r;
+  };
+  const rawOf = (world: World): Raw => JSON.parse(serialize(world));
+  const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
+
+  describe('AK-E3-06 Felder', () => {
+    it('save-v8.json lädt als v9 mit neuen Feldern', () => {
+      const { world } = loadOk(fix8());
+      expect(world.version).toBe(9);
+      expect(SAVE_VERSION).toBe(9);
+      for (const isl of world.islands) expect(isl.stock.spice).toBeDefined();
+      expect(world.sellPct.spice).toBe(100);
+      expect(world.ships).toEqual([]);
+      expect(world.nextShipId).toBe(1);
+      expect(world.wonSpice).toBe(false);
+    });
+    it('Schlüsselreihenfolge P-2 und Round-trip', () => {
+      const { world } = loadOk(fix8());
+      expect(Object.keys(rawOf(world)).slice(-4)).toEqual([
+        'upkeepCarry',
+        'ships',
+        'nextShipId',
+        'wonSpice',
+      ]);
+      const again = deserialize(serialize(world));
+      expect(again.ok && serialize(again.world)).toBe(serialize(world));
+    });
+    it('createWorld hat die v9-Felder, Lager und Verkaufsanteil für Gewürz', () => {
+      const fresh = createWorld(3);
+      expect([fresh.version, fresh.ships, fresh.nextShipId, fresh.wonSpice]).toEqual([
+        9,
+        [],
+        1,
+        false,
+      ]);
+      expect(home(fresh).stock.spice).toBe(0);
+      expect(fresh.sellPct.spice).toBe(100);
+      expect(Object.keys(home(fresh).stock)).toEqual([...GOOD_IDS]);
+    });
+    it('Krise: gespeichertes tile trägt island = Heimat', () => {
+      const world = inCrisis({ kind: 'fire', tile: { x: k.x + 6, y: k.y } });
+      expect(world.crisis!.tile).toEqual({ x: k.x + 6, y: k.y, island: 0 });
+    });
+    it('SHIP_MAX und SHIP.capacity in den Defs', () => {
+      expect([SHIP_MAX, SHIP.capacity]).toEqual([4, 50]);
+    });
+  });
+
+  describe('AK-E3-07 Übergangsbestand Gewürz', () => {
+    it('3 Häuser Stufe 4 → Heimat 30, Meldung einmalig, 1000 Schritte', () => {
+      expect(SPICE_GRACE_PER_HOUSE * 3).toBe(30);
+      const r = loadOk(fix8());
+      expect(home(r.world).stock.spice).toBe(30);
+      expect(r.notice).toBe(SPICE_GRACE_NOTICE);
+      const again = loadOk(serialize(r.world));
+      expect(again.notice).toBeUndefined();
+      expect(home(again.world).stock.spice).toBe(30);
+      expect(() => {
+        for (let i = 0; i < 1000; i++) step(again.world);
+      }).not.toThrow();
+    });
+    it('C1-1: 11 Häuser Stufe 4 → Heimat 100 (Deckel), gesetzt statt addiert', () => {
+      const { w: v, houses } = village(11);
+      for (const h of houses) setHouse(h, 4, 20);
+      v.won = true;
+      home(v).stock.spice = 7;
+      const v8 = foldBackToV8(JSON.parse(serialize(v)));
+      home(v).stock.spice = 0;
+      const r = loadOk(JSON.stringify(v8));
+      expect(SPICE_GRACE_MAX).toBe(100);
+      expect(home(r.world).stock.spice).toBe(100);
+    });
+    it('save-v7.json (keine Kaufleute) → 0, keine Meldung', () => {
+      const r = loadOk(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
+      expect(home(r.world).stock.spice).toBe(0);
+      expect(r.notice).toBeUndefined();
+    });
+    it('R230: v7-Form des v8-Standes → Gewürz 30, genau einmal', () => {
+      const v7 = foldBackToV7(foldBackToV8(rawOf(loadOk(fix8()).world)));
+      expect(v7.version).toBe(7);
+      const r = loadOk(JSON.stringify(v7));
+      expect(home(r.world).stock.spice).toBe(30);
+      expect(r.notice).toBe(SPICE_GRACE_NOTICE);
+      expect(loadOk(serialize(r.world)).notice).toBeUndefined();
+    });
+    it('migrateV8ToV9 wirft nie und gibt den Bestand zurück', () => {
+      expect(() => migrateV8ToV9({ version: 8 })).not.toThrow();
+      expect(() => migrateV8ToV9({ version: 8, islands: null })).not.toThrow();
+      expect(() => migrateV8ToV9({ version: 8, islands: [null, 3], crisis: 5 })).not.toThrow();
+      const raw = JSON.parse(fix8());
+      expect(migrateV8ToV9(raw)).toBe(30);
+      expect(raw.version).toBe(9);
+    });
+    it('Garbage {version:8} lädt nicht und wirft nicht', () => {
+      for (const o of [{ version: 8 }, { version: 8, islands: null }]) {
+        expect(() => deserialize(JSON.stringify(o))).not.toThrow();
+        expect(deserialize(JSON.stringify(o)).ok).toBe(false);
+      }
+    });
+  });
+
+  describe('AK-Z3-09 wonSpice', () => {
+    const tamperedFix = (edit: (r: Raw) => void): string => {
+      const r = rawOf(loadOk(fix8()).world);
+      edit(r);
+      return JSON.stringify(r);
+    };
+    it('v8 mit wonMerchants → wonSpice false', () => {
+      const r = JSON.parse(fix8());
+      r.won = true;
+      r.wonMerchants = true;
+      expect(loadOk(JSON.stringify(r)).world.wonSpice).toBe(false);
+    });
+    it('Round-trip erhält wonSpice true', () => {
+      const json = tamperedFix((r) => {
+        r.won = true;
+        r.wonMerchants = true;
+        r.wonSpice = true;
+      });
+      expect(loadOk(json).world.wonSpice).toBe(true);
+      expect(serialize(loadOk(json).world)).toBe(json);
+    });
+    it('wonSpice ohne wonMerchants und Nicht-boolean → beschädigt', () => {
+      expect(deserialize(tamperedFix((r) => (r.wonSpice = true)))).toEqual(BAD);
+      expect(deserialize(tamperedFix((r) => (r.wonSpice = 1)))).toEqual(BAD);
+    });
+  });
+
+  describe('Ladeprüfung v9', () => {
+    const ship = (o: Raw = {}): Raw => ({
+      id: 1,
+      port: 0,
+      to: null,
+      left: 0,
+      cargo: {},
+      route: null,
+      homing: false,
+      ...o,
+    });
+    const route = (o: Raw = {}): Raw => ({ a: 0, b: 1, ab: [], ba: [], ...o });
+    const withShips = (ships: Raw[], extra: (r: Raw) => void = () => undefined): string => {
+      const r = rawOf(loadOk(fix8()).world);
+      r.ships = ships;
+      r.nextShipId = 1 + Math.max(0, ...ships.map((x) => x.id as number));
+      extra(r);
+      return JSON.stringify(r);
+    };
+    const lane20 = (): number => laneTicks(createWorld(3).islands, 2, 0);
+    const cases: Array<[string, () => string]> = [
+      ['V01 5 Schiffe', () => withShips([1, 2, 3, 4, 5].map((id) => ship({ id })))],
+      ['V02 port 3', () => withShips([ship({ port: 3 })])],
+      ['V03 to ohne Kontor', () => withShips([ship({ to: 1 })])],
+      ['V04 to = port', () => withShips([ship({ to: 0 })])],
+      ['V05 left > Lane', () => withShips([ship({ port: 2, to: 0, left: lane20() + 1 })])],
+      ['V06 cargo.spice 51', () => withShips([ship({ cargo: { spice: 51 } })])],
+      ['V07 cargo.foo', () => withShips([ship({ cargo: { foo: 1 } })])],
+      ['V08 cargo.wood 0', () => withShips([ship({ cargo: { wood: 0 } })])],
+      ['V09 Route a = b', () => withShips([ship({ route: route({ a: 0, b: 0 }) })])],
+      [
+        'V10 3 Güter in ab',
+        () =>
+          withShips([
+            ship({
+              route: route({
+                ab: ['wood', 'tools', 'stone'].map((good) => ({ good, reserve: 0 })),
+              }),
+            }),
+          ]),
+      ],
+      [
+        'V11 Gut in ab und ba',
+        () =>
+          withShips([
+            ship({
+              route: route({
+                ab: [{ good: 'wood', reserve: 0 }],
+                ba: [{ good: 'wood', reserve: 0 }],
+              }),
+            }),
+          ]),
+      ],
+      [
+        'V12 reserve 15',
+        () => withShips([ship({ route: route({ ab: [{ good: 'wood', reserve: 15 }] }) })]),
+      ],
+      ['V13 homing mit Route', () => withShips([ship({ homing: true, route: route() })])],
+      ['V14 nextShipId <= id', () => withShips([ship({ id: 3 })], (r) => (r.nextShipId = 3))],
+      ['V15 doppelte id', () => withShips([ship(), ship()])],
+      [
+        'V16 crisis.tile.island 5',
+        () => {
+          const world = inCrisis({ kind: 'fire', tile: { x: k.x + 6, y: k.y } });
+          return tampered(world, (r) => ((r.crisis as Raw).tile.island = 5));
+        },
+      ],
+    ];
+    it.each(cases)('%s → Beschädigter Spielstand', (_n, make) => {
+      const json = make();
+      expect(() => deserialize(json)).not.toThrow();
+      expect(deserialize(json)).toEqual(BAD);
+    });
+    it('Ausgangslage der Tabelle lädt (Kontrolle)', () => {
+      expect(deserialize(withShips([ship()])).ok).toBe(true);
+    });
+    it('R228 (1): Schiff in Hafen ohne Kontor mit Ziel Heimat lädt', () => {
+      const json = withShips([ship({ port: 2, to: 0, left: Math.min(5, lane20()) })]);
+      expect(deserialize(json).ok).toBe(true);
+    });
+    it('Schiff mit Ladung, Summe ≤ 50, lädt', () => {
+      const json = withShips([ship({ cargo: { wood: 30, spice: 20 } })]);
+      expect(deserialize(json).ok).toBe(true);
+    });
+    it('Fremdinsel-kontorId ≠ null ohne kontor2 → beschädigt', () => {
+      const r = rawOf(loadOk(fix8()).world);
+      r.islands[1].kontorId = 1;
+      expect(deserialize(JSON.stringify(r))).toEqual(BAD);
+    });
+  });
+
+  describe('AK-M12-B5 Kette und B4', () => {
+    it.each([1, 2, 3, 4, 5, 6, 7, 8])('save-v%i lädt als v9', (n) => {
+      const r = loadOk(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
+      expect(r.world.version).toBe(9);
+      if (n <= 5)
+        expect(fnv1a32(sortedJson(foldBackToV6(foldBackToV7(foldBackToV8(rawOf(r.world))))))).toBe(
+          CHAIN_HASHES[n],
+        );
+    });
+    it('version 10 → Unbekannte Version', () => {
+      const r = rawOf(createWorld(3));
+      r.version = 10;
+      expect(deserialize(JSON.stringify(r))).toEqual({ ok: false, reason: 'Unbekannte Version' });
+    });
+    it('B4 migrateV1ToV2 ist idempotent und deckt GOOD_IDS inkl. Gewürz ab', () => {
+      const once = JSON.parse(readFileSync('tests/sim/fixtures/save-v1.json', 'utf8'));
+      migrateV1ToV2(once);
+      expect(Object.keys(once.sellPct)).toEqual([...GOOD_IDS]);
+      const twice = structuredClone(once);
+      twice.version = 1;
+      migrateV1ToV2(twice);
+      expect(twice).toEqual(once);
+    });
+    it('B4 Stand ohne stock.spice ist beschädigt', () => {
+      const r = rawOf(createWorld(3));
+      delete r.islands[0].stock.spice;
+      expect(deserialize(JSON.stringify(r))).toEqual(BAD);
+      const q = rawOf(createWorld(3));
+      delete q.sellPct.spice;
+      expect(deserialize(JSON.stringify(q))).toEqual(BAD);
+    });
   });
 });
