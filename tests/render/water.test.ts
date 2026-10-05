@@ -312,3 +312,30 @@ describe('Wasser (Spec 5.2)', () => {
     });
   });
 });
+
+describe('M12 E1 Terrain', () => {
+  it('AK-E1-20 drawWaves: kein Strich in den äussersten 2 Kacheln einer Inselansicht', () => {
+    const rows: string[] = [];
+    for (let y = 0; y < 24; y++)
+      rows.push(
+        Array.from({ length: 24 }, (_, x) =>
+          x >= 4 && x <= 19 && y >= 4 && y <= 19 ? 'g' : 'w',
+        ).join(''),
+      );
+    const w = mini(rows);
+    for (const t of [0, 700, 1500]) {
+      const pts = frame(w, t).allPoints;
+      expect(pts.length).toBeGreaterThan(0);
+      for (const p of pts) expect(p.x < 2 || p.y < 2 || p.x >= 22 || p.y >= 22).toBe(false);
+    }
+  });
+
+  it('AK-E1-20 drawWaves: Deckkraft der Wellen wächst mit dem Randgewicht', () => {
+    const rows = Array.from({ length: 24 }, () => 'w'.repeat(24));
+    const alphas = new Set(frame(mini(rows), 300).strokeSet.map(alphaOf));
+    expect(alphas.has(WAVE_ALPHA)).toBe(true);
+    expect(alphas.has(WAVE_ALPHA * 0.25)).toBe(true);
+    expect(alphas.has(WAVE_ALPHA * 0.75)).toBe(true);
+    expect(Math.max(...alphas)).toBeLessThanOrEqual(WAVE_ALPHA);
+  });
+});
