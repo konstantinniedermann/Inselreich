@@ -2,12 +2,12 @@
 // ins Lager ihrer Insel.
 import { describe, expect, it } from 'vitest';
 import { placeBuilding } from '../../src/sim/build';
-import { TAX_LEVELS, TAX_UNIT } from '../../src/sim/defs/tiers';
+import { TAX_LEVELS, TAX_UNIT, TIERS } from '../../src/sim/defs/tiers';
 import { taxUnits, upgradeStatus } from '../../src/sim/population';
 import { step } from '../../src/sim/tick';
-import type { Building, World } from '../../src/sim/types';
-import { home } from '../../src/sim/world';
-import { placeService, setHouse, village } from './helpers';
+import type { Building, GoodId, World } from '../../src/sim/types';
+import { createWorld, home } from '../../src/sim/world';
+import { forceGrass, placeService, setHouse } from './helpers';
 import { foundKontor2Literal, plantationSites, seaWorld } from './seaHelpers';
 
 const run = (w: World, n: number): void => {
@@ -34,12 +34,26 @@ describe('AK-E3-02 Gewürzplantage liefert ins Lager ihrer Insel', () => {
 
 /** Kaufmannshaus mit 20 EW in der Heimat; Kapelle, Schule und Bad in Reichweite, alle anderen Güter reichlich. */
 function merchantTown(spice: number): { w: World; h: Building } {
-  const { w, houses } = village(1, { unlockAll: true });
+  const w = createWorld(3, { unlockAll: true });
   const k = w.buildings[home(w).kontorId]!;
-  for (const [i, id] of (['chapel', 'school', 'bathhouse'] as const).entries())
-    placeService(w, id, k.x + 4 + 2 * i, k.y).connected = true;
-  const h = houses[0]!;
-  setHouse(h, 4, 20);
+  forceGrass(w, k.x + 2, k.y);
+  const placed = placeBuilding(w, 'house', k.x + 2, k.y);
+  expect(placed.ok).toBe(true);
+  const services = (['chapel', 'school', 'bathhouse'] as const).map((id, i) =>
+    placeService(w, id, k.x + 4 + 2 * i, k.y),
+  );
+  for (const sv of services) sv.connected = true; // Platzieren setzt die Anbindung zurück
+  const h = w.buildings[placed.id!]!;
+  const goods = Object.keys(TIERS[4].needs) as GoodId[];
+  h.house = {
+    tier: 4,
+    inhabitants: 20,
+    demand: Object.fromEntries(goods.map((g) => [g, 0])),
+    satisfied: Object.fromEntries(goods.map((g) => [g, true])),
+    services: {},
+    satisfiedSince: w.tick,
+    supplied: true,
+  };
   w.won = true;
   Object.assign(home(w).stock, { food: 1000, cloth: 1000, rum: 1000, glass: 1000, spice });
   return { w, h };
@@ -53,13 +67,14 @@ describe('AK-E3-03 Kaufleute verbrauchen Gewürz', () => {
   });
   it('Gewürz 0: Bedarf unerfüllt, halbe Steuer', () => {
     const { w, h } = merchantTown(0);
-    run(w, 10);
+    run(w, 60); // erste Entnahme nach 50 Schritten
     expect(h.house!.satisfied.spice).toBe(false);
-    expect(taxUnits(w)).toBe(20 * 22 * TAX_LEVELS.normal.pct);
+    expect(h.house!.inhabitants).toBe(19); // schrumpft um eins im Wachstumstakt
+    expect(taxUnits(w)).toBe(19 * 22 * TAX_LEVELS.normal.pct); // Faktor 1 statt TAX_UNIT
   });
   it('mit allem: 22 Steuer je Einwohner (über taxUnits)', () => {
     const { w, h } = merchantTown(10);
-    run(w, 10);
+    run(w, 60);
     expect(h.house!.satisfied.spice).toBe(true);
     expect(taxUnits(w)).toBe(20 * 22 * TAX_UNIT * TAX_LEVELS.normal.pct);
   });

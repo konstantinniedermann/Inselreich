@@ -161,6 +161,20 @@ function feedGlassworks(w: World): void {
   }
 }
 
+/** Obergrenze des Gewürzbestands beim Zukauf (Testhelfer-Regel, kein Spielwert). */
+const SPICE_STOCK_MAX = 100;
+
+/**
+ * Hält Gewürz im Heimatlager (R226 F-03): vor dem ersten Aufstieg 3 → 4 genau 1, danach mindestens den Bedarf der
+ * nächsten 100 Ticks (aufgerundet), Kauf in einem Zug, höchstens bis SPICE_STOCK_MAX. Kauft nur am Heimatkontor.
+ */
+function feedSpice(w: World): void {
+  const need = Math.ceil(merchants(w) * (TIERS[4].needs.spice ?? 0));
+  const want = Math.min(SPICE_STOCK_MAX, Math.max(need, 1));
+  const n = want - home(w).stock.spice;
+  if (n > 0 && w.money - buyPrice('spice', n) >= RESERVE) expect(buy(w, 'spice', n).ok).toBe(true);
+}
+
 /**
  * Verarbeiter für `good`, wenn `planned` Häuser Kaufleute sind: bestehende Kaufmannshäuser zählen mit Stufe 4,
  * dazu so viele Bürgerhäuser (aufsteigende Id), bis `planned` erreicht ist. Gleiche Formel wie
@@ -215,6 +229,7 @@ function merchantControl(w: World, layout: Layout): void {
   if (chainsCover(w, merchantHouses(w))) control(w, layout, {});
   if (!ensureExtension(w)) return;
   feedGlassworks(w);
+  feedSpice(w);
   if (
     count(w, 'bathhouse') === 0 &&
     !build(
