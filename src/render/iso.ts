@@ -65,6 +65,7 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   // Hütte, Fachwerk, Bürgerhaus mit Gaube, Kaufmannshaus mit Treppengiebel (M8-R1, Spitze 2,08 · ISO_H < H_TOWER)
   house: (b) => [0.8, 1.2, 1.6, 2.0][Math.min(b.house?.tier ?? 1, 4) - 1]! * ISO_H,
   kontor: () => 1.4 * ISO_H, // Lagerhaus
+  kontor2: () => 1.4 * ISO_H, // M12: Aussenkontor, Form des Lagerhauses
   lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
   // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
   market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
@@ -75,6 +76,7 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   sheepfarm: () => 1.2 * ISO_H,
   weaver: () => 1.3 * ISO_H,
   canefarm: () => 0.6 * ISO_H, // Halme; die Hütte steht vorn
+  spicefarm: () => 0.6 * ISO_H, // M12: Zuckerrohr-Form mit eigenem Ton (D-144)
   distillery: () => 1.4 * ISO_H,
   toolmaker: () => 1.3 * ISO_H,
   chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER

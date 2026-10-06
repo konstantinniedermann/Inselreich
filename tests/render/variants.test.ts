@@ -37,6 +37,9 @@ const MAIN_REF: Record<string, string> = {
   bathhouse: '3d41c34f',
   glassworks: 'cf4dd49d',
   townhall: '56e4c56',
+  // M12 T10: Stand der neuen Silhouetten (kein Main-Referenzstand), gesetzt beim Einbau
+  kontor2: '99c6cbdf',
+  spicefarm: '66a02042',
 };
 /**
  * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammten aus dem Stand
@@ -139,8 +142,7 @@ describe('H-R7 AK1 Determinismus', () => {
     for (const [id, tier] of cases) {
       // hunter/cattlefarm (M11) existierten auf 4a5130e nicht; ihr Variante-0-Determinismus ist durch den
       // Zweimal-Test oben gedeckt.
-      if (id === 'hunter' || id === 'cattlefarm' || id === 'kontor2' || id === 'spicefarm')
-        continue;
+      if (id === 'hunter' || id === 'cattlefarm') continue;
       const b = mk(id, 12, 7, tier);
       expect(hashEvents(events(BUILDING_DEFS[id], b, 0)), `${id}${tier ?? ''}`).toBe(
         MAIN_REF[tier ? id + tier : id],
@@ -503,6 +505,7 @@ describe('H-R7 AK7 Speicher', () => {
     expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES);
   });
   it('AK7 bei Zoom 2 / DPR 2 überschreitet die volle Matrix das Limit um höchstens 30 % (dokumentiert in variants.ts)', () => {
+    // M12 T10 gemessen: 84 115 456 Byte (1,253 x Limit; spicefarm 0,6 statt 1,2 Höhe), Schranke 1,30 unverändert.
     // M12 T02: kontor2 und spicefarm dazu, 80,9 MB (+26 %), Grenze 1,30 (C1-3, Ruling bei L0 beantragt)
     // Volle Matrix 76,1 MB gegen 64 MB (+19 %, M11: hunter und cattlefarm dazu; vorher 66,7 MB); der Cache bleibt per LRU auf
     // SPRITE_CACHE_MAX_BYTES gedeckelt. Alle Kombinationen zugleich im Bild sind möglich, aber selten.

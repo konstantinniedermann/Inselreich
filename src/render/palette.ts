@@ -23,6 +23,7 @@ export const PALETTE = {
   roofSlate: '#4f6478',
   roofTimber: '#6b4a2b',
   roofCopper: '#5e9488', // M8 R1: Kupferdach mit Grünspan (Kaufmannshaus)
+  spiceLeaf: '#b8683a', // M12 D-144: Gewürzstauden (rotbraun), eigener Ton neben dem Grün des Zuckerrohrs
   wallLime: '#efe6d2',
   wallTimber: '#5a3d25',
   wallStone: '#b9ad97',

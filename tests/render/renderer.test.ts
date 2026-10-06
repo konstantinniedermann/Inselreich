@@ -1312,7 +1312,7 @@ describe('M12 E2 Render Fremdinseln', () => {
 
   it('(b) Kamera auf Insel 2: Kontor und Holzfäller werden mit islandCam gezeichnet', () => {
     const { world, kontor, lj, isl } = withIsland2();
-    const cam = camOn(isl.ox + isl.width / 2, isl.oy + isl.height / 2, 2);
+    const cam = camOn(isl.ox + (lj.x + kontor.x) / 2, isl.oy + (lj.y + kontor.y) / 2, 1);
     const { calls } = draw(world, cam);
     expect(renderStats.islandsDrawn).toBe(1);
     const bodies = calls.filter((c) => c.kind === 'body').map((c) => c.id);
