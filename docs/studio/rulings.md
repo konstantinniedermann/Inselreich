@@ -2515,3 +2515,13 @@ Integrator, ein Browser-Lauf mit allen blinden Bildfragen und L3-Blindtest, ein 
 gestapelt auf L4. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten.
 
 Entscheider: L0 · Anlass: Berichte lead-art L4, L6 · ADR: —
+
+## R298 · 2026-10-06 · Gate REL-06: ZURÜCK für L1, L3-Kriterium ausgelegt
+
+Ruling: REL-06 nicht gepusht. L1 bekommt eine Fix-Runde (Bildfrage 2 durchgefallen: Kugelraster Laubwald Seed 1,
+Nadelreihen Seed 7) — der Nutzerauftrag war genau „Wald nicht repetitiv", ein Nachziehen in L6 widerspräche dem
+Zweck; Fix ohne Mehrkosten (Seed 7 +0,5 ms an der Grenze), danach Rater-Nachprüfung Fragen 1–2 und A/B. L3 nach
+Auslegung „kein Rückschritt gegenüber vorher" bestanden (Paarvergleich 20/23 = 20/23). L2, L4 OK. Doku-Nachtrag
+arc42 und Salzkopf in der Fix-Runde. — Kosten bei Irrtum: eine Session Verzug für Release A.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-06, `.studio/qa/rel-06/` · ADR: —
