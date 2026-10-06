@@ -1,5 +1,5 @@
 // camera.ts — alles, was eine Kamera braucht (Setzung Spec D-03 bis D-06, ISO §4)
-import { H_TOWER, ISO_H, ISO_W, project, unproject, type Pt } from './iso';
+import { H_TOWER, ISO_H, ISO_W, ZOOM_STEPS, project, unproject, type Pt } from './iso';
 export interface Camera {
   x: number;
   y: number;
@@ -48,36 +48,54 @@ export const tileCorners = (c: Camera, tx: number, ty: number): [Pt, Pt, Pt, Pt]
   tileToScreen(c, tx + 1, ty + 1),
   tileToScreen(c, tx, ty + 1),
 ];
-export function clampToMap(c: Camera, map: MapSize, viewW: number, viewH: number): void {
+/** Archipel-Kacheln, x1/y1 exklusiv. */
+export interface TileRect {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+export function clampToRect(c: Camera, r: TileRect, viewW: number, viewH: number): void {
   const hw = viewW / 2 / c.zoom,
     hh = viewH / 2 / c.zoom;
   const t = unproject(c.x + hw, c.y + hh);
-  const fx = Number.isFinite(t.x) ? Math.min(Math.max(t.x, 0), map.w) : map.w / 2;
-  const fy = Number.isFinite(t.y) ? Math.min(Math.max(t.y, 0), map.h) : map.h / 2;
+  const fx = Number.isFinite(t.x) ? Math.min(Math.max(t.x, r.x0), r.x1) : (r.x0 + r.x1) / 2;
+  const fy = Number.isFinite(t.y) ? Math.min(Math.max(t.y, r.y0), r.y1) : (r.y0 + r.y1) / 2;
   const p = project(fx, fy);
   c.x = p.x - hw;
   c.y = p.y - hh;
 }
+export function clampToMap(c: Camera, map: MapSize, viewW: number, viewH: number): void {
+  clampToRect(c, { x0: 0, y0: 0, x1: map.w, y1: map.h }, viewW, viewH);
+}
+const asRect = (b: MapSize | TileRect): TileRect =>
+  'x0' in b ? b : { x0: 0, y0: 0, x1: b.w, y1: b.h };
 export function zoomAt(
   c: Camera,
   f: number,
   sx: number,
   sy: number,
   view: View,
-  map: MapSize,
+  bounds: MapSize | TileRect,
 ): void {
-  const nz = Math.min(2, Math.max(0.5, c.zoom * f));
+  const nz = Math.min(ZOOM_STEPS.at(-1)!, Math.max(ZOOM_STEPS[0], c.zoom * f));
   const w = screenToWorld(c, sx, sy);
   c.zoom = Number.isFinite(nz) ? nz : 1;
   c.x = w.x - sx / c.zoom;
   c.y = w.y - sy / c.zoom;
-  clampToMap(c, map, view.w, view.h);
+  clampToRect(c, asRect(bounds), view.w, view.h);
 }
-export function centerOn(c: Camera, fx: number, fy: number, view: View, map: MapSize): void {
+export function centerOn(
+  c: Camera,
+  fx: number,
+  fy: number,
+  view: View,
+  bounds: MapSize | TileRect,
+): void {
   const p = project(fx, fy);
   c.x = p.x - view.w / 2 / c.zoom;
   c.y = p.y - view.h / 2 / c.zoom;
-  clampToMap(c, map, view.w, view.h);
+  clampToRect(c, asRect(bounds), view.w, view.h);
 }
 export function visibleTileRange(c: Camera, view: View, map: MapSize): TileRange {
   const x0 = c.x,

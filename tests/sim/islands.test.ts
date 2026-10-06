@@ -58,7 +58,7 @@ describe('M12 E0 Inselbezug', () => {
   it('AK-E0-10 I00 Testwelt: zwei Inseln, Kontor auf Insel 1 mit eigener Id', () => {
     const w = twoIslandWorld();
     expect(w.islands.length).toBe(2);
-    const k1 = w.buildings[w.islands[1]!.kontorId]!;
+    const k1 = w.buildings[w.islands[1]!.kontorId!]!;
     expect(k1.island).toBe(1);
     expect(k1.id).not.toBe(home(w).kontorId);
     expect(w.islands[1]!.stock.wood).toBe(50);
@@ -238,7 +238,7 @@ describe('M12 E0 Inselbezug', () => {
   it('AK-E0-11 I13 Haus auf Insel 0 bleibt ohne Versorgung und Dienst durch Kontor, Markt, Kapelle auf Insel 1', () => {
     const w = twoIslandWorld();
     const house = houseFar(w);
-    const k1 = w.buildings[w.islands[1]!.kontorId]!;
+    const k1 = w.buildings[w.islands[1]!.kontorId!]!;
     k1.x = house.x;
     k1.y = house.y;
     putBuilding(w, 1, 'market', house.x, house.y + 2);
@@ -352,6 +352,6 @@ describe('M12 E0 Inselbezug', () => {
       if (!r.ok) expect(r.reason).toBe('Unbekannte Insel');
     }
     expect(Object.values(w.buildings).filter((b) => b.defId === 'house').length).toBe(0);
-    expect(islandOf(w, w.buildings[w.islands[1]!.kontorId]!)).toBe(w.islands[1]);
+    expect(islandOf(w, w.buildings[w.islands[1]!.kontorId!]!)).toBe(w.islands[1]);
   });
 });

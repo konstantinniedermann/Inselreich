@@ -1,0 +1,151 @@
+import { describe, expect, it } from 'vitest';
+import { IDLE_TIMEOUT_MS, createIslandLayers, idleSchedule } from '../../src/ui/islandLayers';
+
+function setup(doneAfter: Record<number, number> = { 1: 1, 2: 1 }) {
+  const calls: string[] = [];
+  const left: Record<number, number> = { ...doneAfter };
+  const queue: (() => void)[] = [];
+  const plan = {
+    idle: () => {
+      calls.push('idle');
+      for (const k of [1, 2]) if (left[k]! > 0) return (left[k]!--, 1);
+      return 0;
+    },
+    finish: (i: number) => {
+      calls.push(`finish${i}`);
+      left[i] = 0;
+      return 1;
+    },
+    done: (i: number) => (left[i] ?? 0) <= 0,
+  };
+  const layers = createIslandLayers<string>({
+    home: 'H',
+    plan,
+    layerOf: (i) => `L${i}`,
+    islands: 3,
+    schedule: (cb) => queue.push(cb),
+  });
+  return { calls, queue, layers };
+}
+
+describe('M12 E1 Inselebenen', () => {
+  it('vor frameDone() kein schedule und kein idle; get(0) ohne Plan-Zugriff', () => {
+    const { calls, queue, layers } = setup();
+    expect(layers.get(0)).toBe('H');
+    expect(queue.length).toBe(0);
+    expect(calls).toEqual([]);
+  });
+
+  it('nach frameDone() je Slot ein idle(), Neuplanung bis alle fertig', () => {
+    const { calls, queue, layers } = setup();
+    layers.frameDone();
+    expect(queue.length).toBe(1);
+    queue.shift()!();
+    expect(calls).toEqual(['idle']);
+    expect(queue.length).toBe(1);
+    queue.shift()!();
+    expect(calls).toEqual(['idle', 'idle']);
+    expect(layers.get(1)).toBe('L1');
+    expect(layers.get(2)).toBe('L2');
+    expect(queue.length).toBe(0); // alle fertig: kein weiterer Slot
+    layers.frameDone();
+    expect(queue.length).toBe(0);
+  });
+
+  it('get(2) vor done(2) ruft finish(2) im selben Aufruf, zaehlt Notfall-Frame einmal je Frame', () => {
+    const { calls, layers } = setup();
+    expect(layers.get(2)).toBe('L2');
+    expect(calls).toEqual(['finish2']);
+    expect(layers.emergencyFrames).toBe(1);
+    layers.get(2); // fertig: kein zweiter Notfall
+    expect(layers.emergencyFrames).toBe(1);
+  });
+
+  it('nach dispose() fuehrt ein ausstehender Slot nichts aus', () => {
+    const { calls, queue, layers } = setup();
+    layers.frameDone();
+    layers.dispose();
+    queue.shift()!();
+    expect(calls).toEqual([]);
+    expect(queue.length).toBe(0);
+  });
+
+  const drain = (queue: (() => void)[], max: number): number => {
+    let n = 0;
+    while (queue.length > 0 && n < max) {
+      queue.shift()!();
+      n++;
+    }
+    return n;
+  };
+
+  it('plant weiter, wenn idle() 0 ms meldet, aber noch nicht alles fertig ist', () => {
+    const left: Record<number, number> = { 1: 2, 2: 2 };
+    const queue: (() => void)[] = [];
+    const layers = createIslandLayers<string>({
+      home: 'H',
+      plan: {
+        idle: () => {
+          for (const k of [1, 2]) if (left[k]! > 0) left[k]!--;
+          return 0; // grobe Uhr: Scheibe gelaufen, 0 ms gemessen
+        },
+        finish: () => 0,
+        done: (i) => (left[i] ?? 0) <= 0,
+      },
+      layerOf: (i) => `L${i}`,
+      islands: 3,
+      schedule: (cb) => queue.push(cb),
+    });
+    layers.frameDone();
+    drain(queue, 100);
+    expect(layers.ready()).toBe(true);
+    expect(layers.emergencyFrames).toBe(0);
+  });
+
+  it('bricht bei dauerhaft 0 ms ohne Fortschritt ab (keine Endlosschleife)', () => {
+    const queue: (() => void)[] = [];
+    let calls = 0;
+    const layers = createIslandLayers<string>({
+      home: 'H',
+      plan: {
+        idle: () => (calls++, 0),
+        finish: () => 0,
+        done: () => false,
+      },
+      layerOf: (i) => `L${i}`,
+      islands: 3,
+      schedule: (cb) => queue.push(cb),
+    });
+    layers.frameDone();
+    expect(drain(queue, 10000)).toBeLessThan(10000);
+    expect(calls).toBeGreaterThan(0);
+  });
+});
+
+describe('M12 E1 Leerlauf-Planung', () => {
+  it('ruft requestIdleCallback mit timeout auf', () => {
+    const calls: { cb: () => void; opts: unknown }[] = [];
+    const win = {
+      requestIdleCallback: (cb: () => void, opts?: unknown) => calls.push({ cb, opts }),
+      setTimeout: () => {
+        throw new Error('kein Rückfall erwartet');
+      },
+    };
+    let ran = 0;
+    idleSchedule(win)(() => ran++);
+    expect(calls.length).toBe(1);
+    expect(calls[0]!.opts).toEqual({ timeout: IDLE_TIMEOUT_MS });
+    calls[0]!.cb();
+    expect(ran).toBe(1);
+  });
+
+  it('ohne requestIdleCallback: setTimeout(0)', () => {
+    const calls: { cb: () => void; ms: number }[] = [];
+    const win = { setTimeout: (cb: () => void, ms: number) => calls.push({ cb, ms }) };
+    let ran = 0;
+    idleSchedule(win)(() => ran++);
+    expect(calls.map((c) => c.ms)).toEqual([0]);
+    calls[0]!.cb();
+    expect(ran).toBe(1);
+  });
+});

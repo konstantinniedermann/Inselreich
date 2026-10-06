@@ -62,7 +62,11 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
 Die Karte ist isometrisch: Jede Kachel ist eine Raute, die Kachel oben in der Ecke ist der Kartenursprung.
 Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was dahinter steht.
 
-- **Zoomen:** Mausrad (Stufen 0,5 bis 2); auf Touch mit zwei Fingern (Pinch).
+- **Zoomen:** Mausrad (Stufen 1/8 bis 2); auf Touch mit zwei Fingern (Pinch). Bei 1/8 ist die ganze Inselwelt zu
+  sehen. Ab Zoom 1/4 zeigt die Karte nur noch Gelände ohne Figuren, Tiere, Rauch und Wellen.
+- **Ferne Inseln:** Neben deiner Insel liegen zwei weitere, die Möweninsel und die Felsbucht. Fährst du mit dem
+  Mauszeiger über eine von ihnen, nennt eine Karte Name, Grösse, Merkmale und Fahrzeit. Bauen kannst du dort noch nicht;
+  du siehst sie nur.
 - **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen, im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen (ab 4 Pixel Bewegung schwenkt die Karte, es wird
   nichts ausgewählt) — oder WASD/Pfeiltasten; diese wirken auch, wenn nach einem Klick ein Knopf den

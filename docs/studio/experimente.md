@@ -125,17 +125,6 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: –
 - Bewertung: –
 
-## E-026 · vorgeschlagen · Integrator-Persona: detached Arbeitsbaum
-
-- Hypothese: Wenn die Persona `production-integrator` den tatsächlich nutzbaren Weg nennt (`git worktree add --detach .worktrees/integrate origin/main`, Push `git push origin HEAD:main`), dann entfällt die stille Abweichung (Retro 9b13950a B4).
-- Messgrösse: 0 Integrator-Berichte mit Abweichung von der Persona-Anweisung in M12 (Ausgang: 1 von 7 Integrator-Instanzen, H-R8). Gegenprobe: kein Merge auf einen veralteten Stand (CI auf main grün).
-- Zeitraum: M12.
-- Rückfall: Persona 1.4 wiederherstellen.
-- Dateien: `.claude/agents/production-integrator.md`, `docs/studio/CHANGELOG.md`
-- Ruling: –
-- Start: –
-- Bewertung: –
-
 ## E-012 · vorgeschlagen · Pages nur bei Spieländerungen
 
 - Hypothese: Wenn `pages.yml` Pushes ignoriert, die nur Nicht-Build-Pfade ändern (`paths-ignore`, z. B. `docs/**`, `.superpowers/**`, `.claude/**`, `tools/studio/**`; vorher prüfen, dass nichts davon in `dist/` landet), dann sinken die Deploys stark und Spiel-Merges werden nicht mehr abgebrochen.
@@ -242,3 +231,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 
 - Ruling: R208 (Start), R224 (1) (Lesart), R251 (Abschluss)
 - Bewertung: Zeitraum erreicht, 4 Releases mit 10 Häppchen. (1) Gate-Merge-Rulings und Pushes je Häppchen gesamt 4/10 = 0,4, Schwelle erfüllt (REL-01 0,33; REL-02 0,5 bei 2 Häppchen; REL-03 0,25; REL-04 1,0 als Ausnahme kritischer Pfad, R243, seit Handbuch 1.19 durch R249 (1), (2) geregelt); Integrator-Instanzen nicht vollständig erhoben. (2) Leerlauf nach Ursache getrennt nie erhoben (REL-02 19,5 min ursachengemischt): unbelegt, nicht verfehlt. (3) Releases mit Spieländerung je Session 2, 1, 1 (≤ 2 erfüllt). Gegenproben: UI-Tasks mit Screenshot-Abschnitt in allen 4 Releases (R232, R244); `make check` vor jedem Merge grün; Fix-Commits auf main je Release ≤ 1 (REL-03: Hotfix H-T3, R234, R235); Cache-Write 5 min 25,9 %, 25,3 %, 25,7 % (≤ 26,8 %); kein Abbruch. Die Arbeitsweise bleibt Regel (STUDIO.md Umsetzungszyklus Stufe leicht, [gates.md](gates.md#gate-merge-release)); Belege: [Retro e13c3631](retros/2026-10-04-session-e13c3631.md), [Retro ad51d3c5](retros/2026-10-05-session-ad51d3c5.md), [Prozess-Retro REL-04](retros/2026-10-05-prozess-rel04-e0.md).
+
+## E-026 · übernommen R264 · Integrator-Persona: detached Arbeitsbaum
+
+- Ruling: R264 (als Persona-Korrektur ohne Experiment übernommen, Persona production-integrator 1.7; Belege Retro 9b13950a B4 und [adhoc-e1-c3](retros/2026-10-06-adhoc-e1-c3.md) B5)

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { H_TOWER, footprintOrigin, project, type Pt } from '../../src/render/iso';
+import { H_TOWER, ZOOM_STEPS, footprintOrigin, project, type Pt } from '../../src/render/iso';
 import {
   type Camera,
   centerOn,
   clampToMap,
+  clampToRect,
   groundMatrix,
   screenToTile,
   screenToTileF,
@@ -160,7 +161,7 @@ describe('Iso-Kamera: Klemmen, Zoom, Zentrieren', () => {
       }
   });
 
-  it('AK-ISO-04 zoomAt hält den Weltpunkt unter dem Cursor (±1 px), 20 × hinein = 2, 40 × hinaus = 0,5, nie NaN', () => {
+  it('AK-ISO-04 zoomAt hält den Weltpunkt unter dem Cursor (±1 px), 20 × hinein = 2, 40 × hinaus = ZOOM_STEPS[0] (0,125 seit M12 E1), nie NaN', () => {
     for (const map of MAPS) {
       const c = { x: 0, y: 0, zoom: 1 };
       centerOn(c, map.w / 2, map.h / 2, VIEW, map);
@@ -175,7 +176,7 @@ describe('Iso-Kamera: Klemmen, Zoom, Zentrieren', () => {
       for (let i = 0; i < 20; i++) zoomAt(c, 1.25, sx, sy, VIEW, map);
       expect(c.zoom).toBe(2);
       for (let i = 0; i < 40; i++) zoomAt(c, 0.8, sx, sy, VIEW, map);
-      expect(c.zoom).toBe(0.5);
+      expect(c.zoom).toBe(ZOOM_STEPS[0]);
       for (const v of [c.x, c.y, c.zoom]) expect(Number.isFinite(v)).toBe(true);
       zoomAt(c, NaN, sx, sy, VIEW, map);
       for (const v of [c.x, c.y, c.zoom]) expect(Number.isFinite(v)).toBe(true);
@@ -306,5 +307,29 @@ describe('Iso-Kamera: Bau-Anker', () => {
     expect(footprintOrigin(0.2, 0.2, 2, 2)).toEqual({ x: -1, y: -1 });
     expect(footprintOrigin(63.9, 63.9, 2, 2)).toEqual({ x: 63, y: 63 });
     expect(() => footprintOrigin(-3, 70, 3, 3)).not.toThrow();
+  });
+});
+
+describe('M12 E1 Zoom 0,125 und clampToRect', () => {
+  it('AK-E1-13 ZOOM_STEPS[0] = 0,125; zehnmal hinaus = 0,125', () => {
+    expect(ZOOM_STEPS[0]).toBe(0.125);
+    const c: Camera = { x: 0, y: 0, zoom: 1 };
+    for (let i = 0; i < 10; i++) zoomAt(c, 0.5, 600, 300, VIEW, { w: 64, h: 64 });
+    expect(c.zoom).toBe(0.125);
+  });
+  it('AK-E1-13 clampToMap gleich clampToRect mit {0,0,w,h}', () => {
+    const map = { w: 64, h: 48 };
+    for (let i = 0; i < 20; i++) {
+      const a: Camera = { x: -2000 + i * 230, y: -900 + i * 120, zoom: ZOOMS[i % ZOOMS.length]! };
+      const b = { ...a };
+      clampToMap(a, map, VIEW.w, VIEW.h);
+      clampToRect(b, { x0: 0, y0: 0, x1: map.w, y1: map.h }, VIEW.w, VIEW.h);
+      expect(b).toEqual(a);
+    }
+  });
+  it('zoomAt akzeptiert ein TileRect', () => {
+    const c: Camera = { x: 0, y: 0, zoom: 1 };
+    zoomAt(c, 0.5, 600, 300, VIEW, { x0: -8, y0: -8, x1: 120, y1: 140 });
+    expect(c.zoom).toBe(0.5);
   });
 });

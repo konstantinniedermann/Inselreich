@@ -6,7 +6,7 @@ import { adjacentOf, HOME, idx, inBounds } from './world';
 export function kontorRoadRoots(world: World, island: number = HOME): number[] {
   const isl = world.islands[island];
   if (!isl) return [];
-  const kontor = world.buildings[isl.kontorId];
+  const kontor = isl.kontorId === null ? undefined : world.buildings[isl.kontorId];
   if (!kontor) return [];
   const def = BUILDING_DEFS[kontor.defId];
   return adjacentOf(isl, kontor.x, kontor.y, def.w, def.h)

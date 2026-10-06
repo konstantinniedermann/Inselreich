@@ -5,6 +5,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
+import type { CacheStep } from './cachePlan';
 import {
   FLOWER_TONES,
   SHRUB_TONES,
@@ -27,6 +28,7 @@ import {
   type Field,
   type TerrainFields,
   fieldWorld,
+  rimWeight,
 } from './terrainField';
 
 // terrain.ts — Terrain-Ebene (Spec 5.1, ISO §6). Keine Baumkronen: die kommen als Stempel aus trees.ts (D-08).
@@ -964,6 +966,10 @@ export function paintPixels(
   const mt = LAND.indexOf('mountain');
   const wt = new Array<number>(LAND.length).fill(0);
   const grainSeed = g.seed + 23;
+  // Meerkante (M12 E1): Ansichtsgrösse in Kacheln aus dem Gitter
+  const tilesW = ((nx - 1) * RASTER) / TEX,
+    tilesH = ((ny - 1) * RASTER) / TEX;
+  const pxTile = 1 / (scale * TEX);
   for (let py = 0; py < h; py++) {
     const gy = (py0 + py + 0.5) / scale / RASTER;
     const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
@@ -991,6 +997,8 @@ export function paintPixels(
       const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
       if (water) {
         waterColor(Math.max(0, -lerp(smooth)), col);
+        const rim = rimWeight((px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, tilesW, tilesH);
+        if (rim < 1) mix3(C.deep, col, rim, col);
       } else {
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
         let wMt: number,
@@ -1107,6 +1115,7 @@ interface TerrainMeta {
   codes: Uint8Array;
   key: string;
   half: HTMLCanvasElement | null;
+  quarter: HTMLCanvasElement | null;
   buildMs: number;
 }
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
@@ -1273,6 +1282,7 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
     codes,
     key: layoutKey(world),
     half: null,
+    quarter: null,
     buildMs,
   });
   if (import.meta.env.DEV)
@@ -1342,6 +1352,73 @@ export function patchGrid(
   for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
 }
 
+const GRID_FLOAT_FIELDS = [
+  'sharp',
+  'smooth',
+  'grass',
+  'rock',
+  'shade',
+  'tone',
+  'patch',
+  'mfoot',
+  'scree',
+  'tint',
+  'warm',
+  'mottle',
+  'veil',
+  'dune',
+  'dpres',
+  'dphase',
+] as const;
+
+/**
+ * Das Gitter von `buildGrid` in Knoten-Zeilenbändern (M12 E1): jeder Schritt rechnet ein Fenster mit Rand
+ * (`2 · HEIGHT_BLUR + 1` Knoten, wie `patchGrid`) und übernimmt nur die Bandzeilen. Das Ergebnis ist bitgleich zu
+ * `buildGrid`. `grid()` liefert das Gitter nach dem letzten Schritt.
+ */
+export function gridBands(
+  isl: World3,
+  fields: TerrainFields | (() => TerrainFields),
+  bandRows = 16,
+): { steps: (() => void)[]; grid: () => TerrainGrid } {
+  const nx = (isl.width * TEX) / RASTER + 1,
+    ny = (isl.height * TEX) / RASTER + 1;
+  const n = nx * ny;
+  const g = {
+    seed: isl.seed,
+    nx,
+    ny,
+    ind: LAND.map(() => new Float32Array(n)),
+    cls: new Uint8Array(n),
+  } as Record<string, unknown> as unknown as TerrainGrid;
+  for (const f of GRID_FLOAT_FIELDS) g[f] = new Float32Array(n);
+  const margin = 2 * HEIGHT_BLUR + 1;
+  const steps: (() => void)[] = [];
+  for (let j0 = 0; j0 < ny; j0 += bandRows) {
+    const j1 = Math.min(ny - 1, j0 + bandRows - 1);
+    steps.push(() => {
+      const win = {
+        i0: 0,
+        i1: nx - 1,
+        j0: Math.max(0, j0 - margin),
+        j1: Math.min(ny - 1, j1 + margin),
+      };
+      const part = computeWindow(isl, typeof fields === 'function' ? fields() : fields, win);
+      const copy = (
+        dst: ArrayLike<number> & { [i: number]: number },
+        src: ArrayLike<number>,
+      ): void => {
+        for (let j = j0; j <= j1; j++)
+          for (let i = 0; i < nx; i++) dst[j * nx + i] = src[(j - win.j0) * nx + i]!;
+      };
+      for (const f of GRID_FLOAT_FIELDS) copy(g[f], part[f]);
+      copy(g.cls, part.cls);
+      for (let t = 0; t < LAND.length; t++) copy(g.ind[t]!, part.ind[t]!);
+    });
+  }
+  return { steps, grid: () => g };
+}
+
 /**
  * Zeichnet bei geänderter Belegung (Gebäude, Wege) die betroffenen Kacheln plus 1 Kachel Rand neu, bei Geländewechsel
  * (Roden, Aufforsten) das Raster und die Kacheln samt Glättungsrand. Ein Rechteck, kein Vollaufbau.
@@ -1384,6 +1461,14 @@ export function updateTerrainLayer(
       hc.clearRect(px / 2, py / 2, pw / 2, ph / 2);
       hc.drawImage(layer, px, py, pw, ph, px / 2, py / 2, pw / 2, ph / 2);
     }
+    if (m.quarter) {
+      const qc = m.quarter.getContext('2d');
+      if (qc) {
+        qc.imageSmoothingQuality = 'high';
+        qc.clearRect(px / 4, py / 4, pw / 4, ph / 4);
+        qc.drawImage(m.half, px / 2, py / 2, pw / 2, ph / 2, px / 4, py / 4, pw / 4, ph / 4);
+      }
+    }
   }
   const ms = performance.now() - t0;
   if (terRect && ms > 0) {
@@ -1404,13 +1489,41 @@ const unionRect = (a: TileRect | null, b: TileRect | null): TileRect | null =>
         y1: Math.max(a.y1, b.y1),
       };
 
+function newHalf(layer: HTMLCanvasElement): HTMLCanvasElement {
+  const half = document.createElement('canvas');
+  half.width = Math.ceil(layer.width / 2);
+  half.height = Math.ceil(layer.height / 2);
+  return half;
+}
+
+function paintHalfStrip(
+  half: HTMLCanvasElement,
+  layer: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = half.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(layer, 0, st.sy, layer.width, st.sh, 0, st.dy, half.width, st.dh);
+}
+
+/**
+ * Erzwingt die aufgeschobene Rasterung von `canvas` (Chrome zeichnet eine Ebene erst, wenn sie als Quelle gelesen
+ * wird): ein Ein-Pixel-Lesen in eine Wegwerf-Fläche, ohne Rücklesen in den Speicher (M12 E1, AK-E1-19: die Rasterung
+ * der halben Kopie lief sonst gebündelt im ersten Viertel-Streifen, 10–25 ms).
+ */
+function flushRaster(canvas: HTMLCanvasElement): void {
+  const probe = document.createElement('canvas');
+  probe.width = 1;
+  probe.height = 1;
+  probe.getContext('2d')?.drawImage(canvas, 0, 0, 1, 1, 0, 0, 1, 1);
+}
+
 /** Einmal vorskalierte Kopie mit halber Kantenlänge (Zoom ≤ 0,5, AK-ISO-19). */
 export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   const m = meta.get(layer);
   if (m?.half) return m.half;
-  const half = document.createElement('canvas');
-  half.width = Math.ceil(layer.width / 2);
-  half.height = Math.ceil(layer.height / 2);
+  const half = newHalf(layer);
   const ctx = half.getContext('2d');
   if (ctx) {
     ctx.imageSmoothingQuality = 'high';
@@ -1418,4 +1531,167 @@ export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   }
   if (m) m.half = half;
   return half;
+}
+
+export const QUARTER_STRIPS = 8; // Streifen der Viertel-Kopie (M12 E1, AK-E1-19: ein Schritt deutlich unter 8 ms)
+
+/**
+ * Streifen der Viertel-Kopie: Quellzeilen der halben Kopie (gerade Grenzen, 2:1) und Zielzeilen der Viertel-Kopie.
+ * Die Streifen decken beide Seiten lückenlos und ohne Überlappung; der letzte Streifen nimmt den Rest (ungerade Höhe).
+ */
+export function quarterStrips(
+  halfHeight: number,
+  n = QUARTER_STRIPS,
+): { sy: number; sh: number; dy: number; dh: number }[] {
+  const qh = Math.ceil(halfHeight / 2);
+  const rows = 2 * Math.ceil(halfHeight / (2 * n));
+  const out: { sy: number; sh: number; dy: number; dh: number }[] = [];
+  for (let y = 0; y < halfHeight; y += rows) {
+    const sh = Math.min(rows, halfHeight - y);
+    const dy = y / 2;
+    out.push({ sy: y, sh, dy, dh: y + sh >= halfHeight ? qh - dy : sh / 2 });
+  }
+  return out;
+}
+
+function newQuarter(half: HTMLCanvasElement): HTMLCanvasElement {
+  const quarter = document.createElement('canvas');
+  quarter.width = Math.ceil(half.width / 2);
+  quarter.height = Math.ceil(half.height / 2);
+  return quarter;
+}
+
+function paintQuarterStrip(
+  quarter: HTMLCanvasElement,
+  half: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = quarter.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
+}
+
+/** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
+export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
+  const m = meta.get(layer);
+  if (m?.quarter) return m.quarter;
+  const half = halfLayer(layer);
+  const quarter = newQuarter(half);
+  for (const st of quarterStrips(half.height)) paintQuarterStrip(quarter, half, st);
+  if (m) m.quarter = quarter;
+  return quarter;
+}
+
+export const GRID_BAND_ROWS = 2; // Knotenzeilen je Gitterband (M12 E1)
+export const SLICE_ROWS = 16; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
+
+/**
+ * Inselcache in Schritten (M12 E1): gleiche Arbeit wie `buildTerrainLayer`, aber als Liste kleiner Schritte für den
+ * Cache-Plan. `world` ist die Inselansicht (die Insel steht an `home`). Die Ebene ist sofort da, ihre Pixel entstehen
+ * mit den Schritten; das Ergebnis ist pixelgleich zu `buildTerrainLayer`. Das Gitter entsteht in Zeilenbändern.
+ */
+export function terrainJob(
+  world: World,
+  scale: number,
+): { layer: HTMLCanvasElement; steps: CacheStep[] } {
+  const { w, h } = terrainLayerSize(home(world), scale)[0]!;
+  const layer = document.createElement('canvas');
+  layer.width = w;
+  layer.height = h;
+  const ctx = layer.getContext('2d');
+  if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
+  let fields: TerrainFields;
+  let grid: TerrainGrid;
+  let occ: Uint8Array;
+  let spent = 0;
+  const timed =
+    (f: () => void): (() => void) =>
+    () => {
+      const t0 = performance.now();
+      f();
+      spent += performance.now() - t0;
+    };
+  const steps: CacheStep[] = [
+    timed(() => {
+      fields = terrainFields(fieldWorld(world));
+    }),
+  ];
+  const bands = gridBands(fieldWorld(world), () => fields, GRID_BAND_ROWS);
+  for (const b of bands.steps) steps.push(timed(b));
+  steps.push(
+    timed(() => {
+      grid = bands.grid();
+    }),
+  );
+  for (let y = 0; y < h; y += SLICE_ROWS)
+    steps.push(
+      timed(() => {
+        const rows = Math.min(SLICE_ROWS, h - y);
+        const img = ctx.createImageData(w, rows);
+        paintPixels(grid, scale, 0, y, w, rows, img.data);
+        ctx.putImageData(img, 0, y);
+      }),
+    );
+  steps.push(
+    timed(() => {
+      occ = occupancy(home(world));
+      paintDecor(ctx, world, occ, scale, {
+        x0: 0,
+        y0: 0,
+        x1: home(world).width - 1,
+        y1: home(world).height - 1,
+      });
+    }),
+    timed(() => {
+      meta.set(layer, {
+        world,
+        scale,
+        grid,
+        fields,
+        occ,
+        codes: terrainCodes(home(world)),
+        key: layoutKey(world),
+        half: null,
+        quarter: null,
+        buildMs: spent,
+      });
+    }),
+  );
+  // Halbe Kopie in Streifen, je Streifen mit erzwungener Rasterung (AK-E1-19); ruft der Renderer `halfLayer` früher,
+  // bleiben die Streifen wirkungslos.
+  let halfWip: HTMLCanvasElement | null = null;
+  for (let i = 0; i < QUARTER_STRIPS; i++) {
+    const strip: CacheStep = timed(() => {
+      const m = meta.get(layer);
+      if (!m || m.half) return;
+      const list = quarterStrips(layer.height);
+      const st = list[i];
+      halfWip ??= newHalf(layer);
+      if (st) {
+        paintHalfStrip(halfWip, layer, st);
+        flushRaster(halfWip);
+      }
+      if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.half = halfWip;
+    });
+    if (i === 0) strip.solo = true; // erste Lesung der Ebene (Textur, aufgeschobene Rasterung): allein in einer Scheibe
+    steps.push(strip);
+  }
+  // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
+  let quarter: HTMLCanvasElement | null = null;
+  const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
+  for (let i = 0; i < QUARTER_STRIPS; i++)
+    steps.push(
+      timed(() => {
+        const m = meta.get(layer);
+        if (!m || m.quarter) return;
+        const half = halfLayer(layer);
+        const list = stripsOf();
+        const st = list[i];
+        quarter ??= newQuarter(half);
+        if (st) paintQuarterStrip(quarter, half, st);
+        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.quarter = quarter;
+      }),
+    );
+  return { layer, steps };
 }

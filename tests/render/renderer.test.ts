@@ -6,6 +6,8 @@ import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
+import { islandCam, islandView } from '../../src/render/archipel';
+import { project } from '../../src/render/iso';
 import {
   render,
   renderStats,
@@ -31,7 +33,9 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding } from '../../src/sim/build';
 import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
-import { forceRect } from '../sim/helpers';
+import { readFileSync } from 'node:fs';
+import { deserialize } from '../../src/sim/save';
+import { fnv1a32, forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
 interface Call {
@@ -43,7 +47,13 @@ interface Call {
 }
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
-  terrain: { scale: 1, patch: { redrawn: false, ms: 0 }, halfCalls: 0 },
+  treeSeeds: [] as number[],
+  terrain: {
+    scale: 1,
+    patch: { redrawn: false, ms: 0 },
+    halfCalls: 0,
+    quarter: { width: 512, height: 512 },
+  },
 }));
 const at = (ctx: unknown): number => (ctx as { events: unknown[] }).events.length;
 
@@ -77,6 +87,7 @@ vi.mock('../../src/render/trees', async (orig) => {
     ...m,
     drawTreeStamp: (...a: Parameters<typeof m.drawTreeStamp>) => {
       h.calls.push({ kind: 'tree', id: a[2].id, at: at(a[0]) });
+      h.treeSeeds.push(a[3]);
       return m.drawTreeStamp(...a);
     },
   };
@@ -101,6 +112,7 @@ vi.mock('../../src/render/terrain', async (orig) => {
       h.terrain.halfCalls++;
       return l;
     },
+    quarterLayer: () => h.terrain.quarter,
   };
 });
 
@@ -1070,5 +1082,187 @@ describe('S1-Rest DIM_FIRE', () => {
     const f = rgb(DIM_FIRE);
     // gleiche Rangfolge der Kanäle wie der Schattenton
     expect(f[2]! > f[1]! && f[1]! > f[0]!).toBe(t[2] > t[1] && t[1] > t[0]);
+  });
+});
+
+describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
+  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  const V1280 = { w: 1280, h: 800 };
+  /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
+  const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
+    h.calls.length = 0;
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, view, { timeMs: 5000, dayNight: true });
+    return h.calls.slice();
+  };
+  it('Heimat-Aufrufliste bei 1280 × 800, Zoom 1 und 2 unverändert (vor dem Terrain-Merge gepinnt)', () => {
+    const loaded = deserialize(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    const world = loaded.world;
+    const hm = home(world);
+    const all: Call[][] = [];
+    for (const zoom of [1, 2]) {
+      const cam = { x: 0, y: 0, zoom };
+      centerOn(cam, hm.width / 2, hm.height / 2, V1280, { w: hm.width, h: hm.height });
+      const r = visibleTileRange(cam, V1280, { w: hm.width, h: hm.height });
+      for (const v of [r.x0, r.y0, r.x1, r.y1]) expect(v).toBeGreaterThanOrEqual(4);
+      for (const v of [r.x1, r.y1]) expect(v).toBeLessThanOrEqual(59);
+      all.push(callList(world, cam, V1280));
+    }
+    const json = JSON.stringify(all);
+    expect({ hash: fnv1a32(json), length: json.length }).toEqual(HOME_CALLS);
+  });
+});
+
+describe('M12 E1 Renderer', () => {
+  const V = { w: 1280, h: 800 };
+  const camOn = (fx: number, fy: number, zoom: number): { x: number; y: number; zoom: number } => {
+    const p = project(fx, fy);
+    return { x: p.x - V.w / 2 / zoom, y: p.y - V.h / 2 / zoom, zoom };
+  };
+  const stubs = new Map<number, HTMLCanvasElement>();
+  const layers = {
+    get: (i: number): HTMLCanvasElement | null => {
+      if (i === 0) return layer;
+      if (!stubs.has(i))
+        stubs.set(i, { width: 36 * 32, height: 36 * 32 } as unknown as HTMLCanvasElement);
+      return stubs.get(i)!;
+    },
+  };
+  const run = (world: World, cam: ReturnType<typeof camOn>, fx: Partial<RenderFx> = {}) => {
+    h.calls.length = 0;
+    h.treeSeeds.length = 0;
+    const f = fakeCtx();
+    render(f.ctx, world, cam, layers, null, null, V, { timeMs: 5000, dayNight: true, ...fx });
+    return { calls: h.calls.slice(), log: f.log };
+  };
+  const homeOnly = (w: World): World => ({ ...w, islands: [w.islands[0]!] });
+
+  it('AK-E1-10 Kamera über der Heimat: Aufrufliste gleich der Welt ohne Fremdinseln', () => {
+    const { world } = scene();
+    const cam = camFor(world, 1);
+    const a = run(world, cam);
+    const b = run(homeOnly(world), cam);
+    expect(a.calls).toEqual(b.calls);
+    expect(a.log.events.length).toBe(b.log.events.length);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('AK-E1-10 Kamera über Insel A: genau eine Insel, erste Bildquelle ist ihre Ebene', () => {
+    const { world } = scene();
+    const a = world.islands[1]!;
+    const cam = camOn(a.ox + a.width / 2, a.oy + a.height / 2, 2);
+    const { log } = run(world, cam);
+    expect(renderStats.islandsDrawn).toBe(1);
+    expect(log.images[0]).toBe(layers.get(1));
+  });
+
+  it('AK-E1-12 jump, aktive Insel 0, Zoom 0,125 über der Rahmenmitte: Aufrufliste gleich der Heimat-Welt', () => {
+    const { world } = scene();
+    const cam = camOn(10, 20, 0.125);
+    const a = run(world, cam, { archipelView: 'jump', activeIsland: 0 });
+    const b = run(homeOnly(world), cam, { archipelView: 'jump', activeIsland: 0 });
+    expect(a.calls).toEqual(b.calls);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('AK-E1-22 Detailstufe: bei Zoom 0,25 und 0,125 keine Figuren, Tiere, Rauch, Wellen; Boden aus quarterLayer', () => {
+    for (const zoom of [0.25, 0.125]) {
+      const { world } = scene();
+      world.order = order;
+      Object.values(world.buildings)
+        .filter((b) => b.defId === 'house')
+        .forEach((b) => (b.house!.inhabitants = 40));
+      const cam = camFor(world, zoom);
+      const { log } = run(world, cam, { timeMs: EPISODE_MS / 2 });
+      expect(renderStats.walkersDrawn).toBe(0);
+      expect(renderStats.wildDrawn).toBe(0);
+      expect(renderStats.smokeDrawn).toBe(0);
+      expect(renderStats.wavesDrawn).toBe(0);
+      expect(renderStats.errands).toBe(0);
+      expect(log.images[0]).toBe(h.terrain.quarter);
+    }
+  });
+
+  it('AK-E1-22 Detailstufe: Möwen (Flügelstriche) und Vogelschwärme fallen weg, bei Zoom 0,5 sind die Möwen da', () => {
+    const gullStrokes = (
+      events: readonly { op?: string; style?: unknown; lineWidth?: number }[],
+      z: number,
+    ) =>
+      events.filter(
+        (e) =>
+          e.op === 'stroke' && e.style === PALETTE.foam && e.lineWidth === Math.max(1, 1.5 * z),
+      );
+    const { world } = scene();
+    world.tick = 0; // Tag: Möwen fliegen
+    const half = run(world, camFor(world, 0.5), { dayNight: false });
+    expect(gullStrokes(half.log.events, 0.5).length).toBeGreaterThan(0); // Gegenprobe: Möwen sind im Bild
+    for (const zoom of [0.25, 0.125]) {
+      const { log } = run(world, camFor(world, zoom), { dayNight: false });
+      expect(gullStrokes(log.events, zoom)).toHaveLength(0);
+      expect(renderStats.wildDrawn).toBe(0);
+    }
+  });
+
+  it('AK-E1-22 Zoom 0,5 wie heute: Figuren, Rauch, Wellen gezeichnet, Boden aus halfLayer', () => {
+    const { world } = scene();
+    world.order = order;
+    Object.values(world.buildings)
+      .filter((b) => b.defId === 'house')
+      .forEach((b) => (b.house!.inhabitants = 40));
+    const { log } = run(world, camFor(world, 0.5), { timeMs: EPISODE_MS / 2 });
+    expect(renderStats.walkersDrawn).toBeGreaterThan(0);
+    expect(renderStats.smokeDrawn).toBeGreaterThan(0);
+    expect(renderStats.wavesDrawn).toBe(1);
+    expect(h.terrain.halfCalls).toBeGreaterThan(0);
+    expect(log.images[0]).toBe(layer);
+  });
+
+  it('AK-E1-22 Inselansicht ist nur lesend: Welt bleibt unverändert', () => {
+    const { world } = scene();
+    const before = JSON.stringify(world);
+    const a = world.islands[1]!;
+    run(world, camOn(a.ox + a.width / 2, a.oy + a.height / 2, 1));
+    run(world, camOn(0, 0, 0.125));
+    expect(JSON.stringify(world)).toBe(before);
+  });
+
+  it('R3 Übersicht bei Zoom 0,125: höchstens doppelt so viele Zeichenereignisse wie die Heimat allein', () => {
+    const { world } = scene();
+    const cam = camOn(-5, 40, 0.125);
+    const all = run(world, cam);
+    expect(renderStats.islandsDrawn).toBe(3);
+    const solo = run(homeOnly(world), cam);
+    expect(all.log.events.length).toBeLessThanOrEqual(2 * solo.log.events.length);
+    const t = (w: World): number => {
+      const t0 = performance.now();
+      for (let k = 0; k < 20; k++) run(w, cam);
+      return performance.now() - t0;
+    };
+    t(world);
+    const ratio = t(world) / Math.max(1, t(homeOnly(world)));
+    console.info('R3 Zeitverhältnis Archipel/Heimat bei Zoom 0,125:', ratio.toFixed(2));
+    expect(ratio).toBeLessThan(4); // CI-Reserve: Vorgabe 2, Messung siehe Bericht
+  });
+
+  it('islandView: Heimat ist die Welt, Fremdinsel folgt dem Tick, zweimal dieselbe Identität', () => {
+    const { world } = scene();
+    expect(islandView(world, 0)).toBe(world);
+    const v = islandView(world, 1);
+    expect(islandView(world, 1)).toBe(v);
+    expect(v.islands).toEqual([world.islands[1]]);
+    expect(v.buildings).toEqual({});
+    world.tick += 5;
+    expect(v.tick).toBe(world.tick);
+    expect(islandCam({ x: 0, y: 0, zoom: 1 }, world.islands[0]!)).toEqual({ x: 0, y: 0, zoom: 1 });
+  });
+
+  it('Fremdinsel-Bäume nutzen den Seed der echten Welt, nicht den der Inselansicht', () => {
+    const { world } = scene();
+    const a = world.islands[1]!;
+    run(world, camOn(a.ox + a.width / 2, a.oy + a.height / 2, 1));
+    expect(h.treeSeeds.length).toBeGreaterThan(0);
+    expect(islandView(world, 1).seed).not.toBe(world.seed);
+    expect(new Set(h.treeSeeds)).toEqual(new Set([world.seed]));
   });
 });

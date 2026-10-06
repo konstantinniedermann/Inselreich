@@ -223,6 +223,35 @@ const V6_KEYS = [
 ] as const;
 const ISLAND_KEYS = ['width', 'height', 'tiles', 'kontorId', 'stock'] as const;
 
+const V8_ISLAND_KEYS = [
+  'kind',
+  'width',
+  'height',
+  'tiles',
+  'kontorId',
+  'stock',
+  'ox',
+  'oy',
+  'anchor',
+] as const;
+const V8_ADDED_KEYS = ['kind', 'ox', 'oy', 'anchor'] as const;
+
+/**
+ * Formt ein v8-JSON-Objekt in die v7-Form zurück (M12 E1): nur die Heimat bleibt, ohne `kind`, `ox`, `oy`,
+ * `anchor`; `version 7`. Unbekannter Inselschlüssel → Fehler im Test.
+ */
+export function foldBackToV7(v8: Record<string, unknown>): Record<string, unknown> {
+  const islands = v8.islands as Record<string, unknown>[];
+  if (!Array.isArray(islands) || islands.length < 1)
+    throw new Error('foldBackToV7: mindestens eine Insel erwartet');
+  const homeIsl: Record<string, unknown> = { ...islands[0]! };
+  for (const k of Object.keys(homeIsl))
+    if (!(V8_ISLAND_KEYS as readonly string[]).includes(k))
+      throw new Error(`foldBackToV7: unbekannter Inselschlüssel ${k}`);
+  for (const k of V8_ADDED_KEYS) delete homeIsl[k];
+  return { ...v8, islands: [homeIsl], version: 7 };
+}
+
 /**
  * Formt ein v7-JSON-Objekt mit genau einer Insel in die v6-Form zurück (Anhang 01 E): v6-Schlüsselreihenfolge,
  * je Gebäude ohne `island`. Unbekannte Schlüssel oder mehr als eine Insel → Fehler im Test.
@@ -271,7 +300,21 @@ export function twoIslandWorld(): World {
   stock.wood = 50;
   stock.tools = 50;
   const id = w.nextBuildingId++;
-  w.islands.push({ width: h.width, height: h.height, tiles, kontorId: id, stock });
+  // Testwelt: Insel 1 ersetzt die Fremdinseln (in E0 gab es nur zwei Inseln), Lage und Anker wie die Heimat.
+  w.islands = [
+    h,
+    {
+      kind: 'A',
+      width: h.width,
+      height: h.height,
+      tiles,
+      kontorId: id,
+      stock,
+      ox: h.ox,
+      oy: h.oy,
+      anchor: h.anchor,
+    },
+  ];
   w.buildings[id] = {
     id,
     defId: 'kontor',

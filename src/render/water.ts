@@ -4,7 +4,7 @@ import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
 import type { Weather } from './daynight';
 import { CLEAR } from './weather';
-import { coastField, coastValue, fieldWorld, terrainFields } from './terrainField';
+import { coastField, coastValue, fieldWorld, rimWeight, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
 export const FOAM_PERIOD_MS = 3200; // Spec 5.2: Periode des Schaumsaums
@@ -245,18 +245,38 @@ export function drawWaves(
   const ext = STORM_WAVE_LENGTH * sw;
   ctx.beginPath();
   let waves = false;
+  // Meerkante (M12 E1): Kacheln am Rand der Inselansicht bekommen weniger oder keine Striche; je Gewicht ein eigener Pfad
+  const faded = new Map<number, [number, number, number][]>();
+  const stroke = (x: number, wy: number, ph: number): void => {
+    ctx.moveTo(x + 0.2 - ext, wy);
+    ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * ampK * Math.cos(t + ph), x + 0.8 + ext, wy);
+  };
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
       const i = y * w + x;
       if (isl.tiles[i]!.terrain !== 'water' || info.depth[i]! < WAVE_MIN_DEPTH) continue;
+      const rim = rimWeight(x + 0.5, y + 0.5, w, h);
+      if (rim === 0) continue;
       const ph = info.phase[i]!;
       const wy = y + info.lift[i]! + Math.sin(t + ph) * WAVE_AMPLITUDE * ampK;
-      ctx.moveTo(x + 0.2 - ext, wy);
-      ctx.quadraticCurveTo(x + 0.5, wy - 0.1 * ampK * Math.cos(t + ph), x + 0.8 + ext, wy);
+      if (rim < 1) {
+        const list = faded.get(rim) ?? [];
+        list.push([x, wy, ph]);
+        faded.set(rim, list);
+        continue;
+      }
+      stroke(x, wy, ph);
       waves = true;
     }
+  const alphaW = stormWaveAlpha(sw);
   if (waves) {
-    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(stormWaveAlpha(sw).toFixed(4)));
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(alphaW.toFixed(4)));
+    ctx.stroke();
+  }
+  for (const [rim, list] of faded) {
+    ctx.beginPath();
+    for (const [x, wy, ph] of list) stroke(x, wy, ph);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number((alphaW * rim).toFixed(4)));
     ctx.stroke();
   }
 }
