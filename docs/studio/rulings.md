@@ -2393,3 +2393,13 @@ Figuren-Tempo (Streuung ≤ 1,5 : 1) als eigenes Render-Häppchen, nicht in ART-
 nicht). — Kosten bei Irrtum: ein Häppchen wird umsortiert.
 
 Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R286 · 2026-10-06 · Playtest: Geisterbauten und Träger-Tempo
+
+Ruling: Diagnose DIAG-PT1 angenommen (Einträge in `docs/beobachtungen.md`). Geisterbauten auf der Heimat sind ein
+Live-Fehler aus M12-E2 und werden in der nächsten Session als erstes Häppchen (Hotfix H-F1, Render/UI, Reihentest
+über alle Heimat-Iteratoren) vor allen Folgepaketen umgesetzt. Träger-Tempo wird ein Render-Häppchen zusammen mit
+der Schiffs-Glättung (R285). In dieser Session keine Umsetzung (Nutzer-Auftrag). — Kosten bei Irrtum: Fehler bleibt
+eine Session länger live.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —

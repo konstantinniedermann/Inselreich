@@ -1198,3 +1198,30 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   nicht abgedeckt und wäre ein eigenes kleines Häppchen oder ein Anhang an L1 (gleiche Datei: Ownership beachten).
   **Ursprung:** Nutzer-Playtest REL-05 (IDEEN-04b).
 
+
+### 2026-10-06 · Render/UI · Fremdinsel-Gebäude erscheinen auf der Heimat (Playtest, hoch)
+
+- Fundort: `src/render/archipel.ts:117` (`islandView(world, HOME)` gibt die ungefilterte Welt zurück; nur Fremdinseln
+  filtern nach `island`, `:131-132`); Hauptstelle `src/render/iso.ts:139` `sortedObjects` ohne `b.island`-Prüfung →
+  `renderer.ts:588`. Gleiches Muster: `overlays.ts:228,251`, `ring.ts:45`, `statusMarks.ts:78`, `viewStats.ts:59`,
+  `renderer.ts:346`, `errands.ts:173,336` (Geister-Träger), Picking `ui/target.ts:24` über `iso.ts:196`
+  `buildingHulls`, `ui/hover.ts:150`, `life.ts:77` (Einwohnerzahl über alle Inseln).
+- Beobachtung: Nutzer-Playtest: Gebäude der Nebeninseln stehen zusätzlich auf der Hauptinsel im Wasser (lokale
+  Inselkoordinaten auf Heimatkacheln). Bild und Picking/Hover betroffen, Sim nicht (`tile.buildingId` je Insel stimmt).
+- Ursprung: Nutzer-Playtest REL-05, Diagnose DIAG-PT1 (qa-code-reviewer), eingeführt mit M12-E2.
+- Einschätzung: hoch, live sichtbar. Fix-Richtung: `islandView` auch für HOME gefiltert, oder alle Heimat-Iteratoren
+  auf `b.island === HOME`. Fehlender Test: Insel-2-Gebäude mit lokalen Koordinaten innerhalb der Heimatfläche darf
+  in `sortedObjects`, gezeichneten Körpern, `buildingHulls` und `pickBuilding` der Heimat nicht vorkommen
+  (Reihentest über alle Heimat-Iteratoren). Vorrang vor allen Folgepaketen (R286).
+
+### 2026-10-06 · Render · Warenträger laufen zu schnell (Playtest, mittel)
+
+- Fundort: `src/render/errands.ts:279-285` `errandPose`, `:21-22` `CARRY_START`, `:65-80` `pointAlong`.
+- Beobachtung: Die Laufzeit der Träger ist ein festes Phasenfenster des Produktionszyklus (0,70–1,0 bzw. 0,75–1,0),
+  unabhängig von der Weglänge; ×2/×4 skaliert linear mit. Zyklus 50: 3 Kacheln = 2 K/s, 10 = 6,7 K/s, 20 = 13 K/s
+  bei ×1 (×4: bis 53 K/s). Passanten konstant 1,2 K/s (`life.ts:24`). Ergänzt den Eintrag „Figuren-Tempo“ oben:
+  Ursache sind die Träger, nicht die Passanten.
+- Ursprung: Nutzer-Playtest REL-05 („das sind wohl die leute die waren transportieren“), Diagnose DIAG-PT1.
+- Einschätzung: mittel, rein visuell. Fix-Richtung: Laufzeit = Weglänge / Soll-Tempo (≈ `WALK_SPEED`), Start =
+  1 − Laufzeit/Zyklus, Obergrenze, wenn es nicht in den Zyklus passt; Wunsch Nutzer: Streuung erlaubt, im Verhältnis.
+  Fehlender Test: Obergrenze K/s aus `errandPose` bei kurzem und langem Weg, ×1/×4.
