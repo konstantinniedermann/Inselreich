@@ -28,7 +28,7 @@ function stepCost(world: World, island: number, x: number, y: number): number {
 function targetSet(world: World, island: number): Set<number> {
   const isl = world.islands[island]!;
   const targets = reachableRoads(world, island);
-  const kontor = world.buildings[isl.kontorId];
+  const kontor = isl.kontorId === null ? undefined : world.buildings[isl.kontorId];
   if (!kontor) return targets;
   const def = BUILDING_DEFS[kontor.defId];
   for (const p of adjacentOf(isl, kontor.x, kontor.y, def.w, def.h))

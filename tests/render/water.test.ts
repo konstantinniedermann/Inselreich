@@ -44,8 +44,8 @@ function frame(world: World, t: number) {
   drawWaves(ctx, world, ALL(world), t);
   return log;
 }
-const sea = () =>
-  mini(['gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww', 'gwwwwwwww']);
+// 15 x 14: gross genug, dass die Meerkante (M12 E1: 4 Kacheln) Wellenstriche mit vollem Gewicht übrig lässt
+const sea = () => mini(Array.from({ length: 14 }, () => 'g' + 'w'.repeat(14)));
 
 describe('Wasser (Spec 5.2)', () => {
   it('RF-1e Karte ohne Land: kein Schaum, nur endliche Wellenpunkte; Karte ohne Wasser: nichts', () => {
@@ -62,7 +62,7 @@ describe('Wasser (Spec 5.2)', () => {
       const log = frame(w, t);
       const foam = log.strokeSet.filter(isFoam).map(alphaOf);
       expect(foam.length).toBeGreaterThan(0);
-      alphas.push(...foam.filter((a) => a !== WAVE_ALPHA && a < 0.8));
+      alphas.push(...foam.filter((a) => a > WAVE_ALPHA && a < 0.8)); // Wellenstriche (Rand: kleiner) ausschliessen
     }
     expect(FOAM_ALPHA).toEqual([0.35, 0.7]);
     expect(Math.min(...alphas)).toBeGreaterThanOrEqual(0.35 - 1e-9);
@@ -310,5 +310,32 @@ describe('Wasser (Spec 5.2)', () => {
       expect(run(w, 800, storm(NaN)).events).toEqual(run(w, 800).events);
       expect(run(w, 800, storm(5)).events).toEqual(run(w, 800, storm(1)).events);
     });
+  });
+});
+
+describe('M12 E1 Terrain', () => {
+  it('AK-E1-20 drawWaves: kein Strich in den äussersten 2 Kacheln einer Inselansicht', () => {
+    const rows: string[] = [];
+    for (let y = 0; y < 24; y++)
+      rows.push(
+        Array.from({ length: 24 }, (_, x) =>
+          x >= 4 && x <= 19 && y >= 4 && y <= 19 ? 'g' : 'w',
+        ).join(''),
+      );
+    const w = mini(rows);
+    for (const t of [0, 700, 1500]) {
+      const pts = frame(w, t).allPoints;
+      expect(pts.length).toBeGreaterThan(0);
+      for (const p of pts) expect(p.x < 2 || p.y < 2 || p.x >= 22 || p.y >= 22).toBe(false);
+    }
+  });
+
+  it('AK-E1-20 drawWaves: Deckkraft der Wellen wächst mit dem Randgewicht', () => {
+    const rows = Array.from({ length: 24 }, () => 'w'.repeat(24));
+    const alphas = new Set(frame(mini(rows), 300).strokeSet.map(alphaOf));
+    expect(alphas.has(WAVE_ALPHA)).toBe(true);
+    expect(alphas.has(WAVE_ALPHA * 0.25)).toBe(true);
+    expect(alphas.has(WAVE_ALPHA * 0.75)).toBe(true);
+    expect(Math.max(...alphas)).toBeLessThanOrEqual(WAVE_ALPHA);
   });
 });

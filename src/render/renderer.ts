@@ -1,6 +1,6 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { houseDiagnosis } from '../sim/queries';
-import { home, tileAt } from '../sim/world';
+import { HOME, home, tileAt } from '../sim/world';
 import type { Building, BuildingDefId, World } from '../sim/types';
 import {
   tileCorners,
@@ -75,7 +75,15 @@ import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { LIGHT_COLORS, mixRgb } from './light';
 import { drawShip, shipShadow, shipTile } from './ship';
-import { halfLayer, terrainScale, updateTerrainLayer } from './terrain';
+import { halfLayer, quarterLayer, terrainScale, updateTerrainLayer } from './terrain';
+import {
+  ARCHIPEL_VIEW,
+  LOD_ZOOM,
+  islandCam,
+  islandView,
+  visibleIslands,
+  type ArchipelView,
+} from './archipel';
 import { massifBounds, massifCache, massifClips, massifOnScreen, type MassifItem } from './rocks';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
@@ -138,6 +146,15 @@ export interface RenderFx {
   dayNight?: boolean;
   /** Dev: Rautenraster über der Karte (nur unter `import.meta.env.DEV` gesetzt). */
   raster?: boolean;
+  /** Archipel-Ansicht (Standard `ARCHIPEL_VIEW`); `jump`: nur die aktive Insel. */
+  archipelView?: ArchipelView;
+  /** Aktive Insel (Standard 0): Mouse-over, Auswahl und Signale gehören ihr. */
+  activeIsland?: number;
+}
+
+/** Bodenebenen der Inseln; `get` darf im Notfall synchron rastern, `null` lässt die Insel in diesem Frame aus. */
+export interface IslandLayers {
+  get(i: number): HTMLCanvasElement | null;
 }
 
 /**
@@ -184,6 +201,12 @@ export const renderStats = {
   massifDraws: 0,
   massifMisses: 0,
   massifBytes: 0,
+  /** Zähler des letzten Frames (M12 E1): gezeichnete Inseln, Wellen-Aufrufe, Figuren, Tiere, Rauchwolken. */
+  islandsDrawn: 0,
+  wavesDrawn: 0,
+  walkersDrawn: 0,
+  wildDrawn: 0,
+  smokeDrawn: 0,
 };
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
 
@@ -379,6 +402,7 @@ function occludersOf(
   cam: Camera,
   visible: readonly SortedItem[],
   shadowOnly: ReadonlySet<number>,
+  stampSeed: number,
 ): (Occluder | null)[] {
   const toScreen = (r: { x: number; y: number; w: number; h: number }): LightRect => {
     const a = worldToScreen(cam, { x: r.x, y: r.y });
@@ -402,7 +426,7 @@ function occludersOf(
       const t = it as TreeItem;
       return {
         box: toScreen(treeBounds(t)),
-        clips: once(() => crownPolys(cam, t, world.seed).map((c) => [c])),
+        clips: once(() => crownPolys(cam, t, stampSeed).map((c) => [c])),
       };
     }
     if (it.kind === 'massif') {
@@ -413,39 +437,47 @@ function occludersOf(
   });
 }
 
-/**
- * Zeichnet einen Frame (Ebenen nach ISO §5, soweit es sie in R1b gibt). `ctx` muss bereits per
- * devicePixelRatio skaliert sein; `view` ist die Ansichtsgrösse in CSS-Pixeln.
- */
-export function render(
+/** Frame-weite Werte, die jede Insel braucht (einmal je `render` berechnet). */
+interface FrameEnv {
+  weather: ReturnType<typeof pickWeather>;
+  reduce: boolean;
+  light: ReturnType<typeof lightAt>;
+  /** Detailstufe (Zoom ≤ `LOD_ZOOM`). */
+  lod: boolean;
+  /** Seed der Welt für den Baumstempel-Cache; die Inselansichten haben eigene Seeds, der Cache gilt je Seed. */
+  seed: number;
+}
+
+/** Was Schritte 8–12 von einer gezeichneten Insel brauchen. */
+interface IslandFrame {
+  island: number;
+  v: World;
+  ci: Camera;
+  range: TileRange;
+  empty: boolean;
+  lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[];
+  fireClips: Poly[][][];
+  windowLights: WindowLights;
+}
+
+/** Schritte 2–7 (Boden bis Luft) einer Insel; `v` ist die Welt bzw. die Inselansicht, `ci` die Inselkamera. */
+function drawIsland(
   ctx: CanvasRenderingContext2D,
-  world: World,
-  cam: Camera,
+  v: World,
+  ci: Camera,
   terrainLayer: HTMLCanvasElement,
-  hover: Hover | null,
-  selectedId: number | null,
   view: { w: number; h: number },
-  fx: RenderFx = { timeMs: 0 },
-): void {
-  renderStats.multiplyFills = 0;
-  renderStats.shadowFills = 0;
-  renderStats.badges.length = 0;
-  // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
-  const dpr = ctx.getTransform?.()?.a;
-  spriteCache.beginFrame(cam.zoom, dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
-  massifCache.beginFrame(dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
-  const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
-  const reduce = fx.reduceMotion === true;
-  const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
+  fx: RenderFx,
+  env: FrameEnv,
+): IslandFrame {
+  const { weather, reduce, light, lod } = env;
+  const world = v;
+  const cam = ci;
   const fires = new Map<number, { id: number; flames: number; smoke: number }>();
   for (const f of fx.fire ?? []) if (world.buildings[f.id]) fires.set(f.id, f);
 
   let windowLights: WindowLights = { groups: [], k: 0 };
   let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
-
-  // 1 Hintergrund
-  ctx.fillStyle = PALETTE.waterDeep;
-  ctx.fillRect(0, 0, view.w, view.h);
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
@@ -468,11 +500,11 @@ export function render(
   }
 
   if (!empty) {
-    // Boden: nur das Quell-Teilrechteck der sichtbaren Kacheln; bei Zoom ≤ 0,5 die halbe Kopie
+    // Boden: nur das Quell-Teilrechteck der sichtbaren Kacheln; bei Zoom ≤ 0,5 die halbe, ≤ 0,25 die Viertel-Kopie
     const half = cam.zoom <= 0.5;
-    const src = half ? halfLayer(terrainLayer) : terrainLayer;
+    const src = lod ? quarterLayer(terrainLayer) : half ? halfLayer(terrainLayer) : terrainLayer;
     if (half) renderStats.halfDraws++;
-    const per = (TEX * terrainScale(terrainLayer)) / (half ? 2 : 1); // Quellpixel je Kachel
+    const per = (TEX * terrainScale(terrainLayer)) / (lod ? 4 : half ? 2 : 1); // Quellpixel je Kachel
     const sx = range.x0 * per,
       sy = range.y0 * per;
     const sw = Math.min(src.width - sx, (range.x1 - range.x0 + 1) * per);
@@ -486,7 +518,10 @@ export function render(
 
     // 3 Wasser, 4 Wege: unter der Bodenmatrix
     withGround(ctx, cam, () => {
-      drawWaves(ctx, world, range, fx.timeMs, weather, reduce);
+      if (!lod) {
+        drawWaves(ctx, world, range, fx.timeMs, weather, reduce);
+        renderStats.wavesDrawn++;
+      }
       drawRoads(ctx, world, range);
     });
 
@@ -497,8 +532,9 @@ export function render(
       x1: Math.min(home(world).width - 1, range.x1 + 3),
       y1: Math.min(home(world).height - 1, range.y1 + 3),
     };
-    const wild = wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
-    drawWaterLife(ctx, cam, wild);
+    const wild = lod ? [] : wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
+    if (!lod) drawWaterLife(ctx, cam, wild);
+    renderStats.wildDrawn += wild.length;
 
     // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)
     const poses = new Map<number, WalkerPose>();
@@ -506,7 +542,7 @@ export function render(
     const ship = shipTile(world);
     if (ship) moving.push({ kind: 'ship', id: 0, cx: ship.x + 0.5, cy: ship.y + 0.5 });
     // Laufwege (H-R4) zuerst: sie zählen gegen das Figurenlimit, Spaziergänger bekommen den Rest
-    const errands = errandsFrom(world, range, tickClock(world, fx.timeMs), reduce);
+    const errands = lod ? [] : errandsFrom(world, range, tickClock(world, fx.timeMs), reduce);
     const errandPoses = new Map<number, ErrandPose>();
     for (const e of errands) {
       const tx = Math.floor(e.x),
@@ -516,12 +552,10 @@ export function render(
       poses.set(e.id, { x: e.x, y: e.y, alpha: e.alpha });
       moving.push({ kind: 'walker', id: e.id, cx: e.x, cy: e.y });
     }
-    renderStats.errands = errandPoses.size;
-    const count = walkersLeft(
-      walkerCount(totalInhabitants(world), reduce),
-      errandPoses.size,
-      reduce,
-    );
+    renderStats.errands += errandPoses.size;
+    const count = lod
+      ? 0
+      : walkersLeft(walkerCount(totalInhabitants(world), reduce), errandPoses.size, reduce);
     if (count > 0) {
       const graph = roadGraph(world);
       for (let i = 0; i < count; i++) {
@@ -537,7 +571,7 @@ export function render(
     // Möwen: Kreisbahnen über der Küste im Bild, nicht nachts
     // (bei Regen und Sturm bleiben sie am Boden: keine Möwen)
     const gulls: GullPose[] =
-      weather.kind === 'rain' || weather.kind === 'storm'
+      lod || weather.kind === 'rain' || weather.kind === 'storm'
         ? []
         : gullAnchors(coastFor(world), range, world.seed, light.phase, reduce).map((a) =>
             gullPose(a, world.seed, fx.timeMs),
@@ -580,7 +614,7 @@ export function render(
     // Verdecker von Licht und Feuer (BUG-LICHT): Objekte, die im sortierten Durchgang nach der Quelle kommen
     const rank = new Map<number, number>();
     visible.forEach((it, i) => it.kind === 'building' && rank.set(it.id, i));
-    const occ = occludersOf(world, cam, visible, shadowOnly);
+    const occ = occludersOf(world, cam, visible, shadowOnly, env.seed);
     fireClips = lit.map(({ f, rect }) => {
       const at = rank.get(f.id);
       if (at === undefined) return [];
@@ -635,13 +669,16 @@ export function render(
           ctx.fill();
           ctx.restore();
         }
-      } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, world.seed);
+      } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, env.seed);
       else if (it.kind === 'massif') massifCache.draw(ctx, cam, it as MassifItem);
       else if (it.kind === 'ship')
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
       else if (it.kind === 'walker') {
         const pose = poses.get(it.id);
-        if (pose) drawWalker(ctx, cam, pose, clothesOf(world.seed, it.id));
+        if (pose) {
+          drawWalker(ctx, cam, pose, clothesOf(world.seed, it.id));
+          renderStats.walkersDrawn++;
+        }
         const er = errandPoses.get(it.id);
         if (er) drawErrandLoad(ctx, cam, er);
       }
@@ -657,29 +694,32 @@ export function render(
     renderStats.massifBytes = mc.bytes;
 
     // 7 Luft. Rauch-Budget CAP_SMOKE: zuerst Feuer (Krisensignal), dann Betriebe, dann Herdrauch
-    let budget = cap('smoke', reduce);
+    let budget = lod ? 0 : cap('smoke', reduce);
     const own = lit.map(({ f }) => {
       const n = Math.min(smokePuffs(f.smoke, reduce), budget);
       budget -= n;
+      renderStats.smokeDrawn += n;
       return n;
     });
-    for (const b of buildings) {
+    for (const b of lod ? [] : buildings) {
       const def = BUILDING_DEFS[b.defId];
       const n = Math.min(operatingPuffs(def, b), budget);
       budget -= n;
+      renderStats.smokeDrawn += n;
       drawAir(ctx, cam, def, b, fx.timeMs, n);
     }
-    for (const b of buildings) {
+    for (const b of lod ? [] : buildings) {
       const inh = b.house?.inhabitants ?? 0;
       if (budget <= 0 || !hearthSmoke(light.phase, inh)) continue;
       const at = hearthAnchor(BUILDING_DEFS[b.defId], b, cam);
       if (!at) continue;
       const n = Math.min(HEARTH_PUFFS, budget);
       budget -= n;
+      renderStats.smokeDrawn += n;
       drawHearthSmoke(ctx, cam, at, b.id, fx.timeMs, n);
     }
     for (const g of gulls) drawGull(ctx, cam, g);
-    drawFlocks(ctx, cam, wild);
+    if (!lod) drawFlocks(ctx, cam, wild);
     // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
     lit.forEach(({ f, rect }, i) => {
       const clip = fireClips[i]!;
@@ -703,6 +743,83 @@ export function render(
       rank,
     );
   }
+  return { island: -1, v, ci, range, empty, lit, fireClips, windowLights };
+}
+
+/**
+ * Zeichnet einen Frame (Ebenen nach ISO §5, soweit es sie in R1b gibt). `ctx` muss bereits per
+ * devicePixelRatio skaliert sein; `view` ist die Ansichtsgrösse in CSS-Pixeln.
+ */
+export function render(
+  ctx: CanvasRenderingContext2D,
+  world: World,
+  cam: Camera,
+  layers: HTMLCanvasElement | IslandLayers,
+  hover: Hover | null,
+  selectedId: number | null,
+  view: { w: number; h: number },
+  fx: RenderFx = { timeMs: 0 },
+): void {
+  renderStats.multiplyFills = 0;
+  renderStats.shadowFills = 0;
+  renderStats.badges.length = 0;
+  renderStats.islandsDrawn = 0;
+  renderStats.wavesDrawn = 0;
+  renderStats.walkersDrawn = 0;
+  renderStats.wildDrawn = 0;
+  renderStats.smokeDrawn = 0;
+  renderStats.errands = 0;
+  // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
+  const dpr = ctx.getTransform?.()?.a;
+  spriteCache.beginFrame(cam.zoom, dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
+  massifCache.beginFrame(dpr && Number.isFinite(dpr) && dpr > 0 ? dpr : 1);
+  const weather = pickWeather(fx.weather, null); // nur Klemmen; die Wahl trifft die UI
+  const reduce = fx.reduceMotion === true;
+  const light = lightAt(world.tick); // Phase für Leben und Fensterlicht (läuft auch bei dayNight false weiter)
+
+  // 1 Hintergrund
+  ctx.fillStyle = PALETTE.waterDeep;
+  ctx.fillRect(0, 0, view.w, view.h);
+
+  // 2–7 Boden bis Luft
+  const mode = fx.archipelView ?? ARCHIPEL_VIEW;
+  const active = world.islands[fx.activeIsland ?? HOME] ? (fx.activeIsland ?? HOME) : HOME;
+  const layerOf = (i: number): HTMLCanvasElement | null =>
+    'get' in layers && typeof layers.get === 'function'
+      ? layers.get(i)
+      : i === HOME
+        ? (layers as HTMLCanvasElement)
+        : null;
+  const camOf = (i: number): Camera => (i === HOME ? cam : islandCam(cam, world.islands[i]!));
+  const env: FrameEnv = { weather, reduce, light, lod: cam.zoom <= LOD_ZOOM, seed: world.seed };
+  const frames: IslandFrame[] = [];
+  for (const i of visibleIslands(cam, view, world.islands, active, mode)) {
+    const layer = layerOf(i);
+    if (!layer) continue;
+    renderStats.islandsDrawn++;
+    frames.push({
+      ...drawIsland(ctx, islandView(world, i), camOf(i), layer, view, fx, env),
+      island: i,
+    });
+  }
+  // Signale, Auswahl und Mouse-over gehören der aktiven Insel; ist sie nicht im Bild, gilt ein leerer Bereich
+  const act: IslandFrame = frames.find((f) => f.island === active) ?? {
+    island: active,
+    v: islandView(world, active),
+    ci: camOf(active),
+    range: { x0: 0, y0: 0, x1: -1, y1: -1 },
+    empty: true,
+    lit: [],
+    fireClips: [],
+    windowLights: { groups: [], k: 0 },
+  };
+  const { range, empty } = act;
+  const lit = frames.flatMap((f) => f.lit);
+  const fireClips = frames.flatMap((f) => f.fireClips);
+  const windowLights: WindowLights = {
+    groups: frames.flatMap((f) => f.windowLights.groups),
+    k: frames[0]?.windowLights.k ?? 0,
+  };
 
   // 8 Sturm-Randschatten
   if (weather.kind === 'storm') drawStormEdge(ctx, view, weather.w);
@@ -762,40 +879,42 @@ export function render(
   if (weather.kind === 'rain' || weather.kind === 'storm')
     drawRain(ctx, view, cam.zoom, weather.kind, rainStreaks(weather.w, reduce), fx.timeMs);
 
-  // 12 Signale (Bildraum, ungetönt, nie unter der Bodenmatrix)
+  // 12 Signale (Bildraum, ungetönt, nie unter der Bodenmatrix) der aktiven Insel
+  const av = act.v;
+  const acam = act.ci;
   if (hover?.tool?.kind === 'build') {
-    drawPlacementOverlay(ctx, world, cam, range, hover.tool.defId, hover.x, hover.y);
+    drawPlacementOverlay(ctx, av, acam, range, hover.tool.defId, hover.x, hover.y);
   }
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
-  const kontor = world.buildings[home(world).kontorId];
-  if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(cam, kontor), fx.timeMs);
-  drawNeedSymbols(ctx, world, cam, range);
-  drawUnconnected(ctx, world, cam, range);
-  drawStatusMarks(ctx, world, cam, range, fx.timeMs, reduce);
-  drawProgressRings(ctx, world, cam, range, tickClock(world, fx.timeMs).frac);
-  if (import.meta.env.DEV) collectBadges(world, cam, range);
+  const kontor = av.buildings[home(av).kontorId];
+  if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(acam, kontor), fx.timeMs);
+  drawNeedSymbols(ctx, av, acam, range);
+  drawUnconnected(ctx, av, acam, range);
+  drawStatusMarks(ctx, av, acam, range, fx.timeMs, reduce);
+  drawProgressRings(ctx, av, acam, range, tickClock(av, fx.timeMs).frac);
+  if (import.meta.env.DEV) collectBadges(av, acam, range);
 
-  const sel = selectedId === null ? undefined : world.buildings[selectedId];
+  const sel = selectedId === null ? undefined : av.buildings[selectedId];
   if (sel) {
     const def = BUILDING_DEFS[sel.defId];
     ctx.save();
     ctx.beginPath();
-    footprintPath(ctx, cam, sel.x, sel.y, def.w, def.h);
-    hullPath(ctx, cam, sel);
+    footprintPath(ctx, acam, sel.x, sel.y, def.w, def.h);
+    hullPath(ctx, acam, sel);
     ctx.strokeStyle = PALETTE.signalYellow;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
   }
 
-  if (hover) drawHover(ctx, world, cam, hover);
+  if (hover) drawHover(ctx, av, acam, hover);
 
   if (fx.raster === true && !empty) {
     ctx.save();
     ctx.beginPath();
     for (let y = range.y0; y <= range.y1; y++)
       for (let x = range.x0; x <= range.x1; x++) {
-        const [a, b, c, d] = tileCorners(cam, x, y);
+        const [a, b, c, d] = tileCorners(acam, x, y);
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
         ctx.lineTo(c.x, c.y);

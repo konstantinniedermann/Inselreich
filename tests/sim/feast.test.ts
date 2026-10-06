@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { createWorld, home } from '../../src/sim/world';
+import { createWorld, home, islandOf } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
 import { deserialize, serialize } from '../../src/sim/save';
 import { upgradeStatus } from '../../src/sim/population';
@@ -296,5 +296,46 @@ describe('feastBlockReason', () => {
     expect(reason).toBe(reasonOf(holdFeast(w, chapel.id)));
     home(w).stock.rum = 30;
     expect(feastBlockReason(w, chapel)).toBeNull();
+  });
+});
+
+describe('M12 E1 Fest bei mehreren Inseln', () => {
+  /** Kapelle direkt in den Weltzustand gesetzt (nicht über placeBuilding), gehört zu islands[1]. */
+  const foreignChapel = (): Building => {
+    const id = w.nextBuildingId++;
+    const b: Building = {
+      id,
+      defId: 'chapel',
+      x: 5,
+      y: 5,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 1,
+    };
+    w.buildings[id] = b;
+    return b;
+  };
+  it('Fest zieht Rum vom Lager der Kapellen-Insel', () => {
+    const c = foreignChapel();
+    expect(islandOf(w, c)).toBe(w.islands[1]);
+    home(w).stock.rum = 0;
+    w.islands[1]!.stock.rum = 40;
+    w.islands[2]!.stock.rum = 50;
+    expect(holdFeast(w, c.id)).toEqual({ ok: true });
+    expect(w.islands[1]!.stock.rum).toBe(40 - FEAST_RUM);
+    expect(home(w).stock.rum).toBe(0);
+    expect(w.islands[2]!.stock.rum).toBe(50);
+    expect(c.feastAt).toBe(1000);
+  });
+  it('Rum nur im Heimatlager: Fest der Fremdinsel-Kapelle scheitert', () => {
+    const c = foreignChapel();
+    home(w).stock.rum = 99;
+    w.islands[1]!.stock.rum = 0;
+    const r = holdFeast(w, c.id);
+    expect(r.ok).toBe(false);
+    expect(reasonOf(r)).toContain('Zu wenig Rum');
+    expect(home(w).stock.rum).toBe(99);
+    expect(c.feastAt).toBeUndefined();
   });
 });

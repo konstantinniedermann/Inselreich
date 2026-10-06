@@ -1,3 +1,5 @@
+import { pickArchipel } from '../render/archipel';
+import type { Camera } from '../render/camera';
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
@@ -13,6 +15,7 @@ import { HOME, home, adjacentOf, center, inBounds } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
+import { islandCard } from './islandCard';
 import { levelText, protectedCount, utilizationText } from './inspect';
 import { goodList, stateInfo } from './texts';
 import { formatGameTime, perMinute } from './time';
@@ -243,4 +246,19 @@ export function hoverInfo(
   if (b) return buildingInfo(world, b);
   if (t.road) return { title: 'Weg', lines: ['Verbindet Betriebe mit dem Kontor'] };
   return terrainInfo(world, tile.x, tile.y);
+}
+
+/** Fremdinsel unter dem Zeiger: Landkachel einer Insel ausserhalb der Heimat zeigt die Inselkarte, Meer nichts. */
+export function foreignHover(
+  world: World,
+  cam: Camera,
+  sx: number,
+  sy: number,
+): { island: number; x: number; y: number; info: HoverInfo } | null {
+  const hit = pickArchipel(cam, sx, sy, world.islands);
+  if (!hit || hit.island === HOME) return null;
+  const isl = world.islands[hit.island]!;
+  if (isl.tiles[hit.y * isl.width + hit.x]?.terrain === 'water') return null;
+  const text = islandCard(world, hit.island);
+  return text === null ? null : { ...hit, info: { title: text, lines: [] } };
 }

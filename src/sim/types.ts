@@ -1,3 +1,5 @@
+import type { IslandKind } from './defs/sea';
+
 export type GoodId =
   'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass';
 export type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
@@ -191,7 +193,7 @@ export interface GoodLock {
   good: GoodId;
 }
 export interface World {
-  version: 7;
+  version: 8;
   seed: number;
   islands: Island[];
   tick: number;
@@ -220,13 +222,21 @@ export interface World {
   upkeepCarry: number;
 }
 
-/** Eine Insel: Raster, Kontor und Lager (M12 E0). */
+/** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
 export interface Island {
+  /** `home` für die Heimat, sonst die Art der Fremdinsel (M12 E1). */
+  kind: 'home' | IslandKind;
   width: number;
   height: number;
   tiles: Tile[];
-  kontorId: number;
+  /** Kontor der Insel; `null` = noch keines (Fremdinseln in E1). Die Heimat hat immer eine Zahl. */
+  kontorId: number | null;
   stock: Record<GoodId, number>;
+  /** Lage der Insel im Archipel in Kacheln (Heimat 0/0; Fremdinseln können negativ sein). */
+  ox: number;
+  oy: number;
+  /** Ankerkachel für den Seeweg, innerhalb der Insel. */
+  anchor: { x: number; y: number };
 }
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });

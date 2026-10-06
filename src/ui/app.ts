@@ -25,8 +25,9 @@ import { demolishText } from './texts';
 import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
   centerOn,
-  clampToMap,
+  clampToRect,
   createCamera,
+  zoomAt,
   screenToTileF,
   tileCorners,
   visibleTileRange,
@@ -38,7 +39,10 @@ import { shipTile } from '../render/ship';
 import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
-import { buildTerrainLayer } from '../render/terrain';
+import { cameraBounds, islandView } from '../render/archipel';
+import { createCachePlan, type CachePlan } from '../render/cachePlan';
+import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
+import { createIslandLayers, idleSchedule } from './islandLayers';
 import { drawPathPreview } from '../render/pathPreview';
 import { connectView } from './connect';
 import { phaseAt } from '../render/daynight';
@@ -59,7 +63,7 @@ import {
   withSpeed,
   type HotkeyAction,
 } from './hotkeys';
-import { hoverInfo, hoverPosition, hoverVisible } from './hover';
+import { foreignHover, hoverInfo, hoverPosition, hoverVisible } from './hover';
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
@@ -294,7 +298,40 @@ function launch(
   const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
 
   const map = { w: home(world).width, h: home(world).height };
+  const bounds = cameraBounds(world.islands); // Kamera-Rahmen: Archipel + Rand
   const view = { w: 1, h: 1 };
+
+  // Fremdinsel-Ebenen: Plan erst nach dem ersten Frame (Erstbild nur Heimat), je Leerlauf-Slot eine Scheibe
+  let cachePlan: CachePlan | null = null;
+  const fremd = new Map<number, HTMLCanvasElement>();
+  const planOf = (): CachePlan => {
+    if (!cachePlan) {
+      const scale = defaultTerrainScale();
+      const jobs = world.islands.flatMap((_, i) => {
+        if (i === 0) return [];
+        const job = terrainJob(islandView(world, i), scale);
+        fremd.set(i, job.layer);
+        return [{ island: i, steps: job.steps }];
+      });
+      cachePlan = createCachePlan(jobs, () => performance.now());
+    }
+    return cachePlan;
+  };
+  const layers = createIslandLayers<HTMLCanvasElement>({
+    // Laden und „Neue Insel" bauen das Spiel immer über `restart`/`launch` neu auf: Heimatebene und Plan gelten
+    // je Spiel, die hier einmal erfasste Heimatebene wird nie ersetzt.
+    home: state.terrainLayer,
+    // Der Plan entsteht erst bei `idle`/`finish` (nach dem ersten Frame bzw. im Notfall); `done` legt ihn nie an,
+    // damit `cachesReady()` der Dev-Sonde vorher `false` meldet und das Erstbild nur die Heimat zeichnet.
+    plan: {
+      idle: () => planOf().idle(),
+      finish: (i) => planOf().finish(i),
+      done: (i) => cachePlan?.done(i) ?? false,
+    },
+    layerOf: (i) => (planOf(), fremd.get(i)!),
+    islands: world.islands.length,
+    schedule: idleSchedule(window),
+  });
 
   /** Laden aus Menü oder Startkarte: erst prüfen, dann ersetzen; das neue Spiel startet pausiert. */
   const loadSlotPaused = (slot: Slot): void => {
@@ -508,7 +545,7 @@ function launch(
     updateNoticeStack(noticeStack, world);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
       const r = resolveLogClick(t, world);
-      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, map);
+      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, bounds);
       if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
     });
     updateBuildMenu(navEl, world);
@@ -766,7 +803,8 @@ function launch(
     const sx = client.x - r.left,
       sy = client.y - r.top;
     const t = targetTile(world, state.cam, sel, sx, sy);
-    if (!t) {
+    const foreign = t ? null : foreignHover(world, state.cam, sx, sy);
+    if (!t && !foreign) {
       hoverTile = null;
       hideHoverCard();
       return;
@@ -774,7 +812,9 @@ function launch(
     const f = screenToTileF(state.cam, sx, sy);
     const gx = Math.floor(f.x),
       gy = Math.floor(f.y);
-    const key = `${t.x},${t.y},${gx},${gy}`;
+    const key = foreign
+      ? `i${foreign.island},${foreign.x},${foreign.y}`
+      : `${t!.x},${t!.y},${gx},${gy}`;
     const sameTile = key === hoverTile;
     if (!sameTile) {
       hoverTile = key;
@@ -794,10 +834,12 @@ function launch(
       return;
     }
     const ship = shipTile(world);
-    const info = hoverInfo(world, t, fx.timeMs, {
-      ship: ship !== null && ship.x === gx && ship.y === gy,
-      animal: animalAt(fx, sx, sy, gx, gy),
-    });
+    const info =
+      foreign?.info ??
+      hoverInfo(world, t!, fx.timeMs, {
+        ship: ship !== null && ship.x === gx && ship.y === gy,
+        animal: animalAt(fx, sx, sy, gx, gy),
+      });
     if (!info) {
       hideHoverCard();
       return;
@@ -858,14 +900,14 @@ function launch(
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     view.w = w;
     view.h = h;
-    clampToMap(state.cam, map, w, h);
+    clampToRect(state.cam, bounds, w, h);
   };
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
   resize();
   if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
-    centerOn(state.cam, c.cx, c.cy, view, map);
+    centerOn(state.cam, c.cx, c.cy, view, bounds);
   }
 
   let acc = 0;
@@ -892,7 +934,25 @@ function launch(
         const r = canvas.getBoundingClientRect();
         return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
       },
-      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, map),
+      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, bounds),
+      setZoom: (z) => zoomAt(state.cam, z / state.cam.zoom, view.w / 2, view.h / 2, view, bounds),
+      focus: (kind) => {
+        if (kind === 'archipel')
+          centerOn(
+            state.cam,
+            (bounds.x0 + bounds.x1) / 2,
+            (bounds.y0 + bounds.y1) / 2,
+            view,
+            bounds,
+          );
+        else if (kontor) {
+          const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
+          centerOn(state.cam, c.cx, c.cy, view, bounds);
+        }
+      },
+      cachesReady: () => layers.ready(),
+      slices: () => [...(cachePlan?.sliceMs ?? [])],
+      emergency: () => [...(cachePlan?.emergencyMs ?? [])],
     });
   }
   let disposed = false;
@@ -959,7 +1019,7 @@ function launch(
           }
         }
       }
-      perf?.frame(now);
+      perf?.frame(now, layers.lastFrameEmergency, layers.emergencyFrames);
       const reduce = resolveReduceMotion(settings.reduceMotion, prefersReduced);
       const inputs = frameInputs(crisisFx(curCrisis, world.tick, fireMemo), null);
       const weather = preview.weather ?? inputs.render.weather ?? CLEAR;
@@ -985,9 +1045,10 @@ function launch(
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
       };
-      render(ctx, world, state.cam, state.terrainLayer, state.hover, state.selectedId, view, fx);
+      render(ctx, world, state.cam, layers, state.hover, state.selectedId, view, fx);
       if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);
       perf?.renderDone(performance.now() - t0);
+      layers.frameDone();
       updateMoney(hudEl, world);
       updateHint(frame % HUD_EVERY_FRAMES === 0);
       updateHoverCard(fx, t0);
@@ -1009,6 +1070,7 @@ function launch(
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(rafId);
+    layers.dispose();
     resizeObserver.disconnect();
     input?.unbind();
     closeAllModals();

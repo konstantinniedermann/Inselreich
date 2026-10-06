@@ -13,7 +13,7 @@ export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
 export const TREE_VARIANTS = 8;
-export const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2] as const;
+export const ZOOM_STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
   x: number;
   y: number;
