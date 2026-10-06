@@ -151,7 +151,7 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
     });
     expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
     expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
-      infrastructure: 2, // M12 T02: + kontor2
+      infrastructure: 1, // M12 T12: kontor2 nicht in der Heimat-Bauleiste
       housing: 1,
       production: 12, // M12 T02: + spicefarm
       public: 5,
@@ -260,5 +260,22 @@ describe('M11 Bauleisten-Tooltip (Spec 7)', () => {
     expect(
       tooltipLines({ kind: 'build', defId: 'chapel' }).some((l) => l.startsWith('Ausstoss')),
     ).toBe(false);
+  });
+});
+
+describe('M12 E2 UI Inseln: kontor2 und spicefarm in der Bauleiste', () => {
+  it('(c) kontor2 steht nicht in der Heimat-Bauleiste, nur auf Fremdinseln', () => {
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
+    expect(buildEntries(w, 'infrastructure')).not.toContain('kontor2');
+    expect(buildEntries(w, 'infrastructure', 0)).not.toContain('kontor2');
+    expect(buildEntries(w, 'infrastructure', 2)).toContain('kontor2');
+    expect(visibleCategories(w)).not.toContain('infrastructure');
+    expect(visibleCategories(w, 1)).toContain('infrastructure');
+  });
+  it('(d) tierPreviewLine: kein „Für Kaufleute (Stufe 4)" für kontor2 und spicefarm', () => {
+    expect(tierPreviewLine('kontor2')).toBe('Für Fremdinseln (Seefahrt)');
+    expect(tierPreviewLine('spicefarm')).toBe('Für Inseln mit Gewürz (Seefahrt)');
+    for (const id of ['kontor2', 'spicefarm'] as const)
+      expect(tooltipLines({ kind: 'build', defId: id }).join('\n')).not.toContain('Kaufleute');
   });
 });

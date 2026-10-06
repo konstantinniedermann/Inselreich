@@ -386,3 +386,20 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
     expect(remedyText(lj.w, lj.b)).toBe(REMEDY_TODAY);
   });
 });
+
+describe('M12 E2 UI Inseln: Hilfe-Schritt Kontor auf Gewürzinsel (C.11)', () => {
+  const C11 = 'Gründe ein Kontor auf einer Insel mit Gewürz';
+  it('nach U6 ohne kontor2 → C.11; mit kontor2 nicht mehr; vor U6 nicht', () => {
+    const w = citizenWorld();
+    expect(nextStep(w)).not.toBe(C11);
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    expect(w.unlocked).toContain('U6');
+    addDirect(w, 'glassworks');
+    addDirect(w, 'lumberjack');
+    addDirect(w, 'quarry');
+    expect(nextStep(w)).toBe(C11);
+    addDirect(w, 'kontor2');
+    expect(nextStep(w)).not.toBe(C11);
+  });
+});

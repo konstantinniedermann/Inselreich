@@ -8,7 +8,14 @@ import { newHouseState } from '../../src/sim/population';
 import { home, createWorld, idx } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, Order, World } from '../../src/sim/types';
 import { friendlyReason } from '../../src/ui/hints';
-import { hoverInfo, hoverPosition, hoverVisible, type HoverState } from '../../src/ui/hover';
+import { deriveUnlocks } from '../../src/sim/unlocks';
+import {
+  foreignHoverTitle,
+  hoverInfo,
+  hoverPosition,
+  hoverVisible,
+  type HoverState,
+} from '../../src/ui/hover';
 import { protectedCount } from '../../src/ui/inspect';
 import { forceGrass, forceRect, houseFar, placeService, setHouse, village } from '../sim/helpers';
 
@@ -311,5 +318,17 @@ describe('M11 Mouse-over Betrieb (Spec 7)', () => {
     const half = put('fisher', k.x + 6, k.y - 6, { eff: 128_000 });
     expect(hoverInfo(w, half, 0, none)!.title).toBe('Fischerhütte, Stufe 1 · Auslastung 50 %');
     expect(hoverInfo(w, put('chapel', k.x + 8, k.y - 6), 0, none)!.title).toBe('Kapelle');
+  });
+});
+
+describe('M12 E2 UI Inseln: Fremdinsel vor seafaring', () => {
+  it('Inselkartentitel nennt vor seafaring die Seefahrt, danach nicht', () => {
+    const w = createWorld(3);
+    expect(foreignHoverTitle(w, 'Möweninsel · 24 × 24')).toBe(
+      'Möweninsel · 24 × 24 · Seefahrt mit den Kaufleuten',
+    );
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    expect(foreignHoverTitle(w, 'Möweninsel · 24 × 24')).toBe('Möweninsel · 24 × 24');
   });
 });
