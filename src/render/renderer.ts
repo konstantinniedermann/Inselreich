@@ -613,7 +613,13 @@ function drawIsland(
       } else if (it.kind === 'massif') {
         if (!massifOnScreen(cam, view, it as MassifItem)) continue;
       } else if (it.kind === 'tree') {
-        if (it.fp.x < range.x0 || it.fp.x > range.x1 || it.fp.y < range.y0 || it.fp.y > range.y1)
+        // 1 Kachel Zuschlag: Kronen ragen bis 0,35 Kachel über die Kachel, der Stempelversatz bis 0,3 (L1-Befund)
+        if (
+          it.fp.x < range.x0 - 1 ||
+          it.fp.x > range.x1 + 1 ||
+          it.fp.y < range.y0 - 1 ||
+          it.fp.y > range.y1 + 1
+        )
           continue;
       } else if (it.kind !== 'ship' && it.kind !== 'walker') continue;
       visible.push(it);

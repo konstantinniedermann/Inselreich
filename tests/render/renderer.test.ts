@@ -348,15 +348,30 @@ describe('Renderer', () => {
       (i) =>
         i.kind === 'building' ||
         (i.kind === 'tree' &&
-          i.fp.x >= range.x0 &&
-          i.fp.x <= range.x1 &&
-          i.fp.y >= range.y0 &&
-          i.fp.y <= range.y1),
+          i.fp.x >= range.x0 - 1 &&
+          i.fp.x <= range.x1 + 1 &&
+          i.fp.y >= range.y0 - 1 &&
+          i.fp.y <= range.y1 + 1),
     );
     expect(items.filter((i) => i.kind === 'tree').length).toBeGreaterThanOrEqual(16);
     expect(seq.filter((c) => c.kind !== 'ship').map((c) => `${c.kind}${c.id}`)).toEqual(
       items.map((i) => `${i.kind === 'tree' ? 'tree' : 'body'}${i.id}`),
     );
+  });
+
+  it('L1-Befund Culling: ein Baum eine Kachel hinter dem Kachelbereich wird noch gezeichnet (Zuschlag), zwei Kacheln dahinter nicht', () => {
+    const { world } = scene();
+    const cam = camFor(world, 1);
+    const isl = home(world);
+    const range = visibleTileRange(cam, VIEW, { w: isl.width, h: isl.height });
+    const y = Math.floor((range.y0 + range.y1) / 2);
+    expect(range.x1 + 2).toBeLessThan(isl.width);
+    for (const dx of [1, 2]) forceRect(world, range.x1 + dx, y, 1, 1, 'forest');
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
+    const drawn = new Set(h.calls.filter((c) => c.kind === 'tree').map((c) => c.id));
+    expect(drawn.has(y * isl.width + range.x1 + 1)).toBe(true);
+    expect(drawn.has(y * isl.width + range.x1 + 2)).toBe(false);
   });
 
   it('ISO §5 (N2) Bruchprobe-Szene: der Weg liegt vor dem ersten Körper — nach den Körpern gezeichnete Wege würden diesen Test röten', () => {
@@ -1095,7 +1110,9 @@ describe('S1-Rest DIM_FIRE', () => {
 });
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
-  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  // Bewusst neu gepinnt (ART-STIL-02 L4, fix: Baum-Culling mit 1 Kachel Zuschlag): mehr Baumstempel am Bildrand, die
+  // Aufrufliste wächst um 520 Zeichen (12339 → 12859); sonst unverändert.
+  const HOME_CALLS = { hash: 298504614, length: 12859 };
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
