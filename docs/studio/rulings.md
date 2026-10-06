@@ -2439,3 +2439,12 @@ erst nach der Auswertung. H-F1 geht als Hotfix-Release einzeln vor REL-A auf mai
 Nacharbeit in `iso.ts`/`life.ts` für L1.
 
 Entscheider: L0 · Anlass: Nachricht Parallel-Session (vom Nutzer übermittelt) · ADR: —
+
+## R290 · 2026-10-06 · Gate H-F1 und CI-Formatfehler
+
+Ruling: Kurzplan H-F1 freigegeben, Alternative B (Helfer `homeBuildings`, Einzeilen-Umstellung je rot belegter
+Stelle) statt gefiltertem `islandView`, weil kleiner und konfliktarm zu ART-STIL-02. Browser-Check gebündelt im
+Hotfix-Release-Lauf (R282). CI rot auf main (R288/R289: Prettier in `beobachtungen.md`) per `prettier --write`
+behoben (dc91839, R278 (1) sinngemäss). — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-F1, CI 37488497826 · ADR: —
