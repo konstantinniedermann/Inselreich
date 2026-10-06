@@ -7,6 +7,13 @@ import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 // 31–34, 41, 51, 52, 101–112 (H-R9: Wiesenwärme, Flecken, Mottling, Kuppen, Dünen in terrain.ts), den Terrainrauschen 23 (Felskorn), 27 (Fels, 2. Oktave), 29 (Gebirgskuppen), 61/62 in terrain.ts,
 // 301–319 (Gebirgsmassiv in massif.ts: Grate, Verbeulung, Geröll, Tönung, Schichtversatz, Bewuchs) und 321 (Felskorn
 // des Massivs in rocks.ts) und trees.ts (seed + 68 mit Argumenten `variant, k`, keine Kollision).
+// ART-STIL-02 (Spec 4 R1, Anhang 0.2): 500 Inselcharakter `hash2(seed + 500, 0, k)` (k 0 Waldtyp, L1 in forest.ts;
+// k 3 Gebirge, L2 in massif.ts) ·
+// 501–519 L1 Wald: 501 Akzentart, 502/503 Bestandsfelder, 504/505/514 Randversatz, 506/507 Kern-Streuung, 508 Lichtung,
+// 509/510 Riesenbaum, 511 Formreihenfolge (alle forest.ts), 512 Kronen je Variante, 513 Kronenform (trees.ts) ·
+// 520–539 L2 Gebirge (belegt 530–539, massif.ts/rocks.ts, 539 in terrain.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
+// 533 Schneerand, 534 Baumauswahl, 535 Baumform, 536 Baumhöhe, 537 Baumneigung (534 + 1…3), 538 Wiesenfuss, 539 Findlinge im Boden (terrain.ts, Task B) ·
+// 540–559 L4 · 560–574 L5 · 575–584 L6 · 585–594 L7 · 595–599 L8.
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 

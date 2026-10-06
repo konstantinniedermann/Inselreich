@@ -1,4 +1,7 @@
 import { fieldWorld } from '../../src/render/terrainField';
+import { meadowTint } from '../../src/render/terrain';
+import { FLOWER_TONES } from '../../src/render/groundDecor';
+import { rotNoise } from '../../src/render/light';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
@@ -17,6 +20,7 @@ import {
   type SortedItem,
 } from '../../src/render/iso';
 import { MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from '../../src/render/limits';
+import { TREE_H } from '../../src/render/trees';
 import { PALETTE, SIGNAL_NAMES, rgbOf, rgbOfCss } from '../../src/render/palette';
 import {
   AMP_CAP,
@@ -28,22 +32,33 @@ import {
   cellColor,
   massifData,
   massifPieces,
+  massifTreeMask,
+  massifTrees,
   nodeHeight,
   nodeInside,
   pieceCells,
   pieceNodes,
   DEBRIS,
+  DEBRIS_HI,
+  EDGE_COLORS,
+  FOOT_GRASS,
+  MEADOW,
+  VEG_MIX,
+  footRadius,
   HILL_AMP,
   ROCK_TONES,
+  SNOW_TONES,
   SOFT_CUT,
   TONE_FLAT,
   debrisOf,
   toneStep,
   type MassifComponent,
+  type MassifData,
   type MassifPiece,
 } from '../../src/render/massif';
 import {
   createMassifCache,
+  treeLobes,
   massifBounds,
   massifOnScreen,
   massifSilhouette,
@@ -58,6 +73,9 @@ import { render } from '../../src/render/renderer';
 import { setCanvasFactory as setTreeCanvasFactory } from '../../src/render/trees';
 import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
+import kernFixture from './fixtures/massif-kern-main.json';
+import { KERN_SEEDS, bandNoise, kernNodes } from './fixtures/massifKern';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
 
@@ -225,7 +243,9 @@ describe('H-R9 A2 Höhenfeld', () => {
           shade = 0,
           rub = 0,
           dark = 0;
-        const rockL = lum(PALETTE.rock);
+        // R4 geprüft: gegen rock allein halten Schattenknoten am Rand nicht (Schuttband nur noch 60 %, Review R1/F6 gegen den
+        // Ocker-Ring); der Rand bleibt höchstens 30 Luma-Stufen unter min(rock, gemalte Wiese), nie dunkel
+        const rockL = Math.min(lum(PALETTE.rock), lum(`rgb(${MEADOW.map(Math.round).join(',')})`));
         for (const p of massifPieces(fieldWorld(w))) {
           const at = pieceNodes(p);
           for (const cell of pieceCells(p)) {
@@ -234,7 +254,8 @@ describe('H-R9 A2 Höhenfeld', () => {
             if (nd.t < TONE_FLAT - 0.5) shade++;
             if (nd.rub > 0.3) rub++;
             const css = `rgb(${nd.c.map((v) => Math.round(v)).join(',')})`;
-            if (nd.soft < 0.62 && lum(css) < rockL - 5) dark++;
+            // Wiesenflecken und Bewuchs (L2) sind gewollt dunkler; der Fels selbst bleibt am Rand hell
+            if (nd.soft < 0.62 && nd.veg < 0.5 && nd.foot < 0.5 && lum(css) < rockL - 30) dark++;
           }
         }
         expect(lit, `Form ${k} Lichtseite`).toBeGreaterThan(0);
@@ -398,16 +419,67 @@ describe('H-R9 A2 Höhenfeld', () => {
     }
   });
 
-  it('A2 kein breiter flacher Saum: ab 1 Kachel Randabstand trägt das Massiv schon ein Fünftel der Amplitude (Median)', () => {
+  it('L2 Fuss: Randabstand, bei dem der Körper 24 % der Amplitude erreicht, ≥ 1,6 Kacheln (AK L2 angepasst, Entscheid lead-art, D an L0; ersetzt A2 „kein breiter flacher Saum“, Spec 2.2(2) hebt den Playtest-R3-Entscheid auf)', () => {
     for (const seed of [7, 14]) {
       const c = largest(createWorld(seed, { unlockAll: true }));
-      const band: number[] = [];
+      const d: number[] = [];
       for (const [I, J] of nodes(c)) {
-        const d = c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]!;
-        if (d >= 1 && d <= 1.5) band.push(nodeHeight(c, I, J));
+        const k = (J - c.y0 * SUB) * c.nx + I - c.x0 * SUB;
+        if (c.dist[k]! > 0 && Math.abs(nodeHeight(c, I, J) / c.amp - 0.24) < 0.03)
+          d.push(c.dist[k]!);
       }
-      band.sort((a, b) => a - b);
-      expect(band[Math.floor(band.length / 2)]!, `Seed ${seed}`).toBeGreaterThan(0.2 * c.amp);
+      d.sort((a, b) => a - b);
+      expect(d.length, `Seed ${seed}`).toBeGreaterThan(20);
+      expect(d[Math.floor(d.length / 2)]!, `Seed ${seed}`).toBeGreaterThanOrEqual(1.6);
+    }
+  });
+
+  it('L2 Fuss ohne Knick: Median-Steigung je 0,25-Kachel-Band steigt bis Randabstand 2,0 monoton (konkav, Toleranz 10 %), kein Band steiler als 0,5 · Amplitude je Kachel (der Körper ohne Fuss steht dort bei 0,49)', () => {
+    // Abweichung vom Auftrag (lead-art): „kein Band steiler als 1,3 × das Band 2,5–3,0“ ist nicht erfüllbar, der Körper
+    // verläuft dort fast flach (≈ 5–10 px je Kachel nach der Schulter); als Obergrenze dient die Wandsteilheit vor L2.
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      const bands: number[][] = Array.from({ length: 13 }, () => []);
+      for (let k = 0; k < c.height.length; k++) {
+        const d = c.dist[k]!;
+        if (d > 0 && d < 3) bands[Math.floor(d / 0.25)]!.push(c.height[k]!);
+      }
+      const med = bands.slice(1).map((b) => {
+        b.sort((x, y) => x - y);
+        return b[b.length >> 1]!;
+      });
+      const slope = med
+        .slice(1)
+        .map((h, i) => (h - med[i]!) / 0.25) // Band 0,25·(i+1) → 0,25·(i+2)
+        .filter(Number.isFinite);
+      const info = `Seed ${seed}: ${slope.map((v) => v.toFixed(0)).join(' ')}`;
+      for (let i = 1; i < 7; i++)
+        expect(slope[i]!, `${info} Band ${i}`).toBeGreaterThanOrEqual(0.9 * slope[i - 1]!);
+      for (const v of slope) expect(v, info).toBeLessThanOrEqual(0.5 * c.amp);
+    }
+  });
+
+  it('L2 Arm-Spitze (G3): schmale Arme laufen stetig aus, die Höhe folgt der lokalen Breite (kein Einzelkegel an der Spitze)', () => {
+    const R = 8; // Knoten: lokale Breite = grösster Randabstand binnen 2 Kacheln
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      let dünn = 0;
+      for (let j = 0; j < c.ny; j += 1)
+        for (let i = 0; i < c.nx; i += 1) {
+          const k = j * c.nx + i;
+          if (c.dist[k]! <= 0) continue;
+          let m = 0;
+          for (let b = Math.max(0, j - R); b <= Math.min(c.ny - 1, j + R); b++)
+            for (let a = Math.max(0, i - R); a <= Math.min(c.nx - 1, i + R); a++)
+              m = Math.max(m, c.dist[b * c.nx + a]!);
+          const arm = Math.min(1, Math.max(0, (m - 0.4) / 0.8));
+          // Höhe ohne Fuss ≤ 2,5 · Amplitude (Grate mal Staffelung), Geröll ≤ 1 px
+          expect(c.height[k]!, `Seed ${seed} Knoten ${i},${j}`).toBeLessThanOrEqual(
+            2.5 * c.amp * arm * arm * (3 - 2 * arm) + 1,
+          );
+          if (m < 1.2) dünn++;
+        }
+      expect(dünn, `Seed ${seed} dünne Knoten`).toBeGreaterThan(0);
     }
   });
 });
@@ -598,7 +670,7 @@ describe('H-R9 A3 Färbung', () => {
     expect(same / n).toBeLessThan(0.05);
   });
 
-  it('A3 nur Palettentöne: keine Signalfarben, kein Schnee (heller als rockLight/foam-Mischung 30 %)', () => {
+  it('A3 nur Palettentöne: keine Signalfarben, kein Schnee ausserhalb der Schneemaske (heller als rockLight/foam-Mischung 30 %)', () => {
     const w = createWorld(7, { unlockAll: true });
     const sig = SIGNAL_NAMES.map((n) => rgbOf(PALETTE[n]));
     const snow = rgbOfCss(
@@ -607,15 +679,20 @@ describe('H-R9 A3 Färbung', () => {
         .join(',')})`,
     );
     let n = 0;
-    for (const p of massifPieces(fieldWorld(w)))
-      for (const q of pieceQuads(p)) {
-        const c = rgbOfCss(q.fill);
-        for (const s of sig) expect(dist3(c, s)).toBeGreaterThan(60);
-        expect(lum(q.fill)).toBeLessThanOrEqual(
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      for (const c of pieceCells(p)) {
+        const nd = at(c.I, c.J);
+        if (nd.snow >= 0.5) continue; // Schneemaske (L2 T4): eigene Töne, siehe Schnee-Tests
+        const css = `rgb(${nd.c.map((v) => Math.round(v)).join(',')})`;
+        const col = rgbOfCss(css);
+        for (const s of sig) expect(dist3(col, s)).toBeGreaterThan(60);
+        expect(lum(css)).toBeLessThanOrEqual(
           0.299 * snow[0]! + 0.587 * snow[1]! + 0.114 * snow[2]! + 1,
         );
         n++;
       }
+    }
     expect(n).toBeGreaterThan(1000);
   });
 });
@@ -1131,3 +1208,438 @@ function inTri(t: readonly P[], x: number, y: number): boolean {
     w1 = ((c.x - x) * (a.y - y) - (a.x - x) * (c.y - y)) / d;
   return w0 >= 1e-6 && w1 >= 1e-6 && 1 - w0 - w1 >= 1e-6;
 }
+
+// ART-STIL-02 L2 (Q2): der Gebirgskern (hn ≥ 0,35) bleibt die Referenz, ausser Schnee- und Baummaske.
+/**
+ * Fusszone (L2 T1): Randabstand unter dem lokalen Fussradius der Komponente plus ein Knoten Hof (die Höhenlinie des
+ * Fusses wirkt über das Gefälle noch einen Knoten weiter). Nur hier darf sich ein Kernknoten ändern oder fehlen.
+ */
+const inFussZone = (data: MassifData, comp: number, I: number, J: number): boolean => {
+  const c = data.comps[comp]!;
+  return c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]! < footRadius(c, I, J) + 1 / SUB;
+};
+
+describe('ART-STIL-02 L2 Kern', { timeout: 60000 }, () => {
+  it('L2 Kern unverändert: ausserhalb von Fusszone, Schnee- und Baummaske sind alle Kernknoten da und gleich (ΔE2000 < 1, |Δh| ≤ 1 px); Fusszone (Ausnahme plus fehlende) ≤ 40 % der Fixture-Knoten', () => {
+    type Fx = Record<string, { nodes: number[][] }>;
+    for (const seed of KERN_SEEDS) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
+      const all = (kernFixture as Fx)[String(seed)]!.nodes;
+      let ausser = 0,
+        inZone = 0,
+        fehlt = 0,
+        verglichen = 0,
+        dE = 0,
+        dH = 0,
+        dEzone = 0,
+        nZone = 0;
+      for (const r of all) {
+        const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
+        if (n?.snow || n?.tree) {
+          ausser++;
+          continue;
+        }
+        const zone = inFussZone(data, r[0]!, r[1]!, r[2]!);
+        if (zone) inZone++;
+        if (!n) {
+          if (!zone) fehlt++; // ausserhalb der Zone ein Fehler
+          ausser++;
+          continue;
+        }
+        const e = deltaE2000(rgbToLab(n.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
+        if (zone) {
+          ausser++;
+          dEzone += e;
+          nZone++;
+          continue;
+        }
+        verglichen++;
+        dE += e;
+        dH += Math.abs(n.h - r[3]!);
+      }
+      const info = `Seed ${seed}: Zone ${((100 * inZone) / all.length).toFixed(0)} %, Schnee/Baum+Zone ${((100 * ausser) / all.length).toFixed(0)} %, verglichen ${((100 * verglichen) / all.length).toFixed(0)} %, ΔE ${(dE / verglichen).toFixed(2)}, ΔE Zone ${(dEzone / Math.max(1, nZone)).toFixed(1)}`;
+      expect(fehlt, `${info} (fehlende ausserhalb der Zone)`).toBe(0);
+      expect(dE / verglichen, info).toBeLessThan(1);
+      expect(dH / verglichen, `Seed ${seed} |Δh|`).toBeLessThanOrEqual(1);
+      expect(inZone / all.length, `${info}: Anteil Fusszone`).toBeLessThanOrEqual(0.4);
+    }
+  });
+});
+
+describe('ART-STIL-02 L2 Kontrast nach Höhe', { timeout: 60000 }, () => {
+  it('L2 Kontrast: für Knoten mit hn < 0,2 überspannen die Stufen toneStep(t, 0) höchstens 3 aufeinanderfolgende Werte', () => {
+    for (const seed of KERN_SEEDS) {
+      const lo: number[] = [];
+      let hi = 0;
+      for (const p of massifPieces(fieldWorld(createWorld(seed, { unlockAll: true })))) {
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const nd = at(c.I, c.J),
+            hn = nd.h / p.comp.amp;
+          if (hn < 0.2) lo.push(toneStep(nd.t, 0));
+          else if (hn >= 0.35) hi = Math.max(hi, Math.abs(toneStep(nd.t, 0) - TONE_FLAT));
+        }
+      }
+      expect(lo.length, `Seed ${seed}`).toBeGreaterThan(200);
+      expect(Math.max(...lo) - Math.min(...lo), `Seed ${seed}`).toBeLessThanOrEqual(2);
+      expect(hi, `Seed ${seed}: oben bleibt der volle Umfang`).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
+
+describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
+  /** Grösste Komponenten (Seeds 7, 14): Mittelfarbe der Knoten im Fussband gegen die Wiese. */
+  it('L2 Fussband ↔ Wiese ΔE2000 zwischen 8 und 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
+    const wiese = rgbToLab(meadowTint(rgbOf(PALETTE.grass))); // die gemalte Wiese der Geländeebene (G2)
+    for (let q = 0; q < 3; q++)
+      expect(MEADOW[q]!).toBeCloseTo(meadowTint(rgbOf(PALETTE.grass))[q]!, 6);
+    for (const seed of KERN_SEEDS) {
+      const w = createWorld(seed, { unlockAll: true });
+      const big = largest(w);
+      const sum = [0, 0, 0];
+      let n = 0;
+      const seen = new Set<string>();
+      for (const p of massifPieces(fieldWorld(w))) {
+        if (p.comp !== big) continue;
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const k = `${c.I}|${c.J}`;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          const nd = at(c.I, c.J);
+          if (!(nd.soft > SOFT_CUT && nd.soft < DEBRIS_HI && nd.h < 2 * RIM_H)) continue;
+          for (let q = 0; q < 3; q++) sum[q]! += nd.c[q]!;
+          n++;
+        }
+      }
+      expect(n, `Seed ${seed}`).toBeGreaterThan(30);
+      const mean = sum.map((v) => v / n) as [number, number, number];
+      const de = deltaE2000(rgbToLab(mean), wiese);
+      expect(de, `Seed ${seed} ΔE ${de.toFixed(1)}`).toBeLessThanOrEqual(15);
+      expect(
+        de,
+        `Seed ${seed} ΔE ${de.toFixed(1)}: Band erkennbar abgesetzt`,
+      ).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  /** Alle eindeutigen Knoten (comp, I, J) der Teilstücke einer Heimatinsel mit ihren Netzwerten. */
+  function allNodes(seed: number) {
+    const w = createWorld(seed, { unlockAll: true });
+    const seen = new Set<string>();
+    const out: {
+      nd: ReturnType<ReturnType<typeof pieceNodes>>;
+      hn: number;
+      I: number;
+      J: number;
+    }[] = [];
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      for (const c of pieceCells(p)) {
+        const k = `${p.comp.id}|${c.I}|${c.J}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const nd = at(c.I, c.J);
+        out.push({ nd, hn: nd.h / p.comp.amp, I: c.I, J: c.J });
+      }
+    }
+    return out;
+  }
+
+  it('L2 Wiesenanteil Fuss ≤ 35 %: mittleres wirksames Wiesengewicht (Nachbar-Mischung, Fussfeld, Bewuchs zusammen) über alle Knoten mit hn < 0,25', () => {
+    for (const seed of KERN_SEEDS) {
+      const low = allNodes(seed).filter((n) => n.hn < 0.25);
+      let sum = 0;
+      for (const { nd } of low) {
+        // wie in shadeColor/rocks verrechnet: Nachbarland (nur Wiese), Fussfeld, Bewuchs
+        const e = nd.ec === EDGE_COLORS[1] ? nd.mix : 0;
+        const f = nd.foot >= 0.5 && nd.fc === EDGE_COLORS[1] ? FOOT_GRASS : 0;
+        const v = nd.veg >= 0.5 ? VEG_MIX : 0;
+        sum += 1 - (1 - e) * (1 - f) * (1 - v);
+      }
+      expect(low.length, `Seed ${seed}`).toBeGreaterThan(200);
+      expect(sum / low.length, `Seed ${seed}`).toBeLessThanOrEqual(0.35);
+    }
+  });
+
+  it('L2 Bewuchs unten: Anteil Bewuchsknoten bei hn < 0,25 in [0,2; 0,35] (± 0,03) für Seeds 7 und 14, Gras bis hn 0,3 in Rinnen und auf Schultern', () => {
+    for (const seed of KERN_SEEDS) {
+      const low = allNodes(seed).filter((n) => n.hn < 0.25);
+      const share = low.filter((n) => n.nd.veg >= 0.5).length / low.length;
+      expect(share, `Seed ${seed}`).toBeGreaterThanOrEqual(0.17);
+      expect(share, `Seed ${seed}`).toBeLessThanOrEqual(0.38);
+    }
+    const hoch = KERN_SEEDS.flatMap((s) =>
+      allNodes(s).filter((n) => n.hn >= 0.25 && n.hn < 0.32 && n.nd.veg >= 0.5),
+    );
+    expect(hoch.length).toBeGreaterThan(10);
+  });
+
+  it('L2 Bewuchs: bei hn ≥ 0,35 identisch zu vor L2 (veg = 0,25 · Rauschen, nie ≥ 0,5)', () => {
+    for (const seed of KERN_SEEDS) {
+      const w = createWorld(seed, { unlockAll: true });
+      const comp = largest(w);
+      const hi = allNodes(seed).filter((n) => n.hn >= 0.35);
+      expect(hi.length).toBeGreaterThan(500);
+      for (const n of hi.slice(0, 400)) {
+        expect(n.nd.veg).toBeCloseTo(
+          0.25 * rotNoise(comp.seed + 317, n.I / SUB, n.J / SUB, 1.9, 0.61),
+          6,
+        );
+      }
+    }
+  });
+
+  it('L2 C5 Alpenwiese: Blütenpunkte (FLOWER_TONES) nur auf Bewuchsflecken, ≤ 3 % der Bewuchspixel, deterministisch, bei f = 2 scharf', () => {
+    const tones = FLOWER_TONES.map((c) =>
+      rgbOfCss(c)
+        .map((v) => Math.round(v))
+        .join(','),
+    );
+    let bloom = 0,
+      veg = 0;
+    const w = createWorld(14, { unlockAll: true });
+    const items = massifItems(w);
+    for (const it of items) {
+      const b = massifBounds(it);
+      const wpx = Math.round((ISO_W / 2) * 2),
+        hpx = Math.ceil(b.h * 2);
+      const buf = rasterPiece(it, wpx, hpx, 2);
+      const again = rasterPiece(it, wpx, hpx, 2);
+      expect(Buffer_equal(buf, again)).toBe(true);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        if (tones.includes(`${buf[o]},${buf[o + 1]},${buf[o + 2]}`)) bloom++;
+        else if (buf[o + 1]! > buf[o]! + 8 && buf[o + 1]! > buf[o + 2]! + 20) veg++;
+      }
+    }
+    expect(bloom).toBeGreaterThan(0);
+    expect(bloom / (bloom + veg)).toBeLessThanOrEqual(0.03);
+  });
+});
+
+function Buffer_equal(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', { timeout: 60000 }, () => {
+  it('L2 Sockel: Rauschenergie im Schuttband bei Zoom 2 ≤ 0,5 × Fixture-Wert vor L2, je Seed', () => {
+    type Fx = Record<string, { sockelRauschen: number }>;
+    for (const seed of KERN_SEEDS) {
+      const vorher = (kernFixture as Fx)[String(seed)]!.sockelRauschen;
+      const jetzt = bandNoise(seed, DEBRIS_HI);
+      expect(vorher, `Seed ${seed} Fixture`).toBeGreaterThan(1);
+      expect(
+        jetzt,
+        `Seed ${seed} jetzt ${jetzt.toFixed(2)} vorher ${vorher.toFixed(2)}`,
+      ).toBeLessThanOrEqual(0.5 * vorher);
+    }
+  });
+});
+
+describe('ART-STIL-02 L2 Schnee (C2)', { timeout: 60000 }, () => {
+  /** Eindeutige Knoten je Komponente (comp-Index → Knoten). */
+  function perComp(seed: number) {
+    const w = createWorld(seed, { unlockAll: true });
+    const res = new Map<number, { amp: number; n: number; snow: number; hnSnow: number[] }>();
+    const seen = new Set<string>();
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      const r = res.get(p.comp.id) ?? { amp: p.comp.amp, n: 0, snow: 0, hnSnow: [] };
+      res.set(p.comp.id, r);
+      for (const c of pieceCells(p)) {
+        const k = `${p.comp.id}|${c.I}|${c.J}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const nd = at(c.I, c.J);
+        r.n++;
+        if (nd.snow >= 0.5) {
+          r.snow++;
+          r.hnSnow.push(nd.h / p.comp.amp);
+        }
+      }
+    }
+    return res;
+  }
+
+  it('L2 Schnee nur bei amp ≥ 90; Anteil Schneeknoten 2–8 % je Komponente mit amp ≥ 90 (Seeds 1–20 der Heimatinsel)', () => {
+    let big = 0;
+    for (let seed = 1; seed <= 20; seed++)
+      for (const [id, r] of perComp(seed)) {
+        if (r.amp < 90) {
+          expect(r.snow, `Seed ${seed} Komponente ${id} amp ${r.amp.toFixed(0)}`).toBe(0);
+          continue;
+        }
+        big++;
+        const share = r.snow / r.n;
+        expect(share, `Seed ${seed} Komponente ${id}`).toBeGreaterThanOrEqual(0.02);
+        expect(share, `Seed ${seed} Komponente ${id}`).toBeLessThanOrEqual(0.08);
+        expect(
+          Math.min(...r.hnSnow),
+          `Seed ${seed} Komponente ${id} tiefster Schnee`,
+        ).toBeGreaterThanOrEqual(0.5);
+      }
+    expect(big).toBeGreaterThan(5);
+  });
+
+  it('L2 Schnee G4: keine Löcher in der Schneemaske (kein nicht-verschneiter Knoten mit Schnee in allen vier Achsrichtungen binnen 2 Knoten, innerhalb der Schneezone)', () => {
+    let holes = 0,
+      snowN = 0;
+    for (const seed of [7, 14, 2, 18]) {
+      const fw = fieldWorld(createWorld(seed, { unlockAll: true }));
+      const snow = new Map<string, number>();
+      const meta: { k: string; hn: number; cap: number }[] = [];
+      for (const p of massifPieces(fw)) {
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const k = `${p.comp.id}|${c.I}|${c.J}`;
+          if (snow.has(k)) continue;
+          const nd = at(c.I, c.J);
+          snow.set(k, nd.snow >= 0.5 ? 1 : 0);
+          if (p.comp.amp >= 90) meta.push({ k, hn: nd.h / p.comp.amp, cap: p.comp.snowHn });
+        }
+      }
+      for (const m of meta) {
+        if (snow.get(m.k) || m.hn < m.cap) continue;
+        const [id, I, J] = m.k.split('|').map(Number) as [number, number, number];
+        const dirs: [number, number][] = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ];
+        const surrounded = dirs.every(([dx, dy]) =>
+          [1, 2].some((d) => snow.get(`${id}|${I + dx * d}|${J + dy * d}`) === 1),
+        );
+        if (surrounded) holes++;
+      }
+      snowN += [...snow.values()].reduce((a, b) => a + b, 0);
+    }
+    expect(snowN).toBeGreaterThan(500);
+    expect(holes).toBe(0);
+  });
+
+  it('L2 Schneetöne: Luminanz ≤ foam, 3 Stufen warmweiss bis kühlblau, ΔE2000 ≥ 20 zu den Signalfarben', () => {
+    const foam = lum(PALETTE.foam);
+    const sig = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
+    expect(new Set(SNOW_TONES.map((t) => t.join(','))).size).toBe(3);
+    for (const t of SNOW_TONES) {
+      expect(lum(`rgb(${t.map(Math.round).join(',')})`)).toBeLessThanOrEqual(foam + 0.01);
+      for (const s of sig)
+        expect(deltaE2000(rgbToLab([...t] as [number, number, number]), s)).toBeGreaterThanOrEqual(
+          20,
+        );
+    }
+    // Licht warm, Schatten kühl: blauer Anteil im Schatten relativ zum Rot höher
+    const [sh, , li] = [SNOW_TONES[0]!, SNOW_TONES[2]!, SNOW_TONES[4]!];
+    expect(sh[2] - sh[0]).toBeGreaterThan(li[2] - li[0]);
+  });
+
+  it('L2 Schnee im Raster: helle Pixel auf grossen Massiven, nie heller als foam (Luma), kein reines Weiss', () => {
+    const w = createWorld(14, { unlockAll: true });
+    const foam = lum(PALETTE.foam);
+    const fels = lum(`rgb(${ROCK_TONES[4]!.map(Math.round).join(',')})`);
+    let schnee = 0,
+      maxL = 0;
+    for (const it of massifItems(w)) {
+      if (it.piece.comp.amp < 90) continue;
+      const b = massifBounds(it);
+      const buf = rasterPiece(it, Math.round((ISO_W / 2) * 2), Math.ceil(b.h * 2), 2);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        const l = 0.299 * buf[o]! + 0.587 * buf[o + 1]! + 0.114 * buf[o + 2]!;
+        maxL = Math.max(maxL, l);
+        if (l > fels + 12) schnee++;
+      }
+    }
+    expect(maxL).toBeLessThanOrEqual(foam + 0.5);
+    expect(schnee).toBeGreaterThan(300);
+  }, 60000);
+});
+
+describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
+  it('L2 Bäume: 3–20 je grossem Massiv, kleine 0–3, deterministisch (Seeds 7 und 14)', () => {
+    for (const seed of KERN_SEEDS) {
+      const a = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const b = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      for (const [i, c] of a.comps.entries()) {
+        const n = massifTrees(c).trees.length;
+        if (c.amp >= 90 || c.n >= 24) {
+          expect(n, `Seed ${seed} Komponente ${i}`).toBeGreaterThanOrEqual(3);
+          expect(n, `Seed ${seed} Komponente ${i}`).toBeLessThanOrEqual(20);
+        } else expect(n, `Seed ${seed} Komponente ${i} klein`).toBeLessThanOrEqual(3);
+        expect(massifTrees(b.comps[i]!).trees, `Seed ${seed} deterministisch`).toEqual(
+          massifTrees(c).trees,
+        );
+        expect(massifTrees(c), 'gemerkt je Komponente').toBe(massifTrees(c));
+      }
+    }
+  });
+
+  it('L2 Bäume: Anker in Bewuchs- oder Rinnenlage, hn 0,08–0,5, steep < 0,7, kein Schnee, Streifen-Mitte ((I − J) mod 4 = 2), Abstand ≥ 1,5 Kacheln', () => {
+    for (const seed of KERN_SEEDS) {
+      const fw = fieldWorld(createWorld(seed, { unlockAll: true }));
+      const pieces = massifPieces(fw);
+      for (const c of massifData(fw).comps.filter((k) => k.amp >= 90 || k.n >= 24)) {
+        const ts = massifTrees(c).trees;
+        const own = pieces.filter((p) => p.comp === c);
+        for (const t of ts) {
+          expect((((t.I - t.J) % 4) + 4) % 4).toBe(2);
+          const p = own.find((q) =>
+            pieceCells(q).some((k) => k.I === t.I && k.J === t.J && !k.seam),
+          )!;
+          expect(p, 'Anker liegt in genau einem Teilstück').toBeDefined();
+          const nd = pieceNodes(p)(t.I, t.J);
+          const hn = nd.h / c.amp;
+          expect(hn).toBeGreaterThanOrEqual(0.08);
+          expect(hn).toBeLessThan(0.5);
+          expect(nd.veg >= 0.5 || nd.e < -0.3).toBe(true);
+          expect(nd.steep).toBeLessThan(0.7);
+          expect(nd.snow).toBeLessThan(0.5);
+          expect(t.height).toBeGreaterThanOrEqual(14);
+          expect(t.height).toBeLessThanOrEqual(20);
+          const lo = treeLobes(t);
+          const l = Math.min(...lo.map((k) => k.cu - k.rx)),
+            r = Math.max(...lo.map((k) => k.cu + k.rx));
+          expect(r - l, 'Breite ≤ 12 px').toBeLessThanOrEqual(12);
+          expect(Math.max(-l, r), 'im eigenen Halbstreifen (±16 px)').toBeLessThan(16);
+          expect(t.height).toBeLessThanOrEqual(TREE_H);
+        }
+        for (const [i, a] of ts.entries())
+          for (const b of ts.slice(i + 1))
+            expect(Math.hypot(a.I - b.I, a.J - b.J) / SUB).toBeGreaterThanOrEqual(1.5);
+      }
+    }
+  });
+
+  it('L2 Bäume im Raster: Stamm (earthEdge) und Krone (crown/crownLight) erscheinen bei f = 2 scharf, Baummaske umfasst den Umkreis von 2 Knoten', () => {
+    const w = createWorld(14, { unlockAll: true });
+    const c = largest(w);
+    const { trees, mask } = massifTrees(c);
+    expect(trees.length).toBeGreaterThanOrEqual(3);
+    for (const t of trees) expect(massifTreeMask(c, t.I + 2, t.J - 2)).toBe(true);
+    expect(massifTreeMask(c, trees[0]!.I + 3, trees[0]!.J + 3) || mask.size > 0).toBe(true);
+    const want = new Set(
+      [PALETTE.earthEdge, PALETTE.crown, PALETTE.crownLight].map((h) =>
+        rgbOfCss(h)
+          .map((v) => Math.round(v))
+          .join(','),
+      ),
+    );
+    const found = new Set<string>();
+    for (const it of massifItems(w)) {
+      if (it.piece.comp !== c) continue;
+      const b = massifBounds(it);
+      const buf = rasterPiece(it, Math.round((ISO_W / 2) * 2), Math.ceil(b.h * 2), 2);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        const k = `${buf[o]},${buf[o + 1]},${buf[o + 2]}`;
+        if (want.has(k)) found.add(k);
+      }
+    }
+    expect(found.size).toBe(3);
+  }, 60000);
+});

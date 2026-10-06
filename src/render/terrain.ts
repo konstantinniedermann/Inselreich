@@ -5,6 +5,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
+import { forestClearing, forestEdgeShift } from './forest';
 import type { CacheStep } from './cachePlan';
 import {
   FLOWER_TONES,
@@ -72,6 +73,9 @@ const CLEARING_MAX = 0.5;
 const PATCH_SPREAD = 2.8; // H-R11 D8: Gewinn vor tanh (vorher 5 mit hartem Klemmen)
 const PATCH_FREQ = 0.95,
   PATCH_FREQ2 = 1.7; // Rauschfrequenzen je Kachel der beiden Oktaven
+const FOREST_EDGE_SHIFT = 2; // L1: Waldboden folgt den Kronen: Randversatz a (±0,3 Kachel) verschiebt die Randaufhellung um a × 2
+const FOREST_EDGE_MEADOW = 0.7; // Fix 5: am Aussenrand reicht der Wiesenton bis an die Kronen, der dunkle Boden bleibt unter ihnen
+const FOREST_CLEARING_LIGHT = 0.55; // L1 B2: Lichtung (Feld 0…1) hellt den Waldboden im Kern bis zu diesem Anteil auf
 const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
@@ -349,9 +353,17 @@ const FOOTHILL_WIDE_BLUR = 4;
 /** Anstieg der Nähe je Anteil des geglätteten Felds: flacher = geringere Krümmung der Amplitude (S6). */
 const FOOTHILL_PROX_K = 1.8;
 /** Schuttband: Anteil des Schuttes im Wiesenton direkt am Fuss, und Nähewerte, zwischen denen er einsetzt. */
-const SCREE_MAX = 0.75;
-const SCREE_FROM = 0.1,
-  SCREE_SPAN = 0.28;
+/**
+ * L2 Task B: schmal und ruhig. Der Schutt liegt nur ≈ 1 Kachel vor dem Fuss (0 ab ≈ 1,2 Kacheln Abstand, ausser in
+ * Buchten, wo das geglättete Feld höher bleibt), höchstens zu SCREE_MAX, Fleckung höchstens ± SCREE_MOD.
+ */
+export const SCREE_MAX = 0.35;
+const SCREE_FROM = 0.35,
+  SCREE_SPAN = 0.24;
+const SCREE_MOD = 0.2;
+/** Schuttgewicht im Wiesenton aus Schuttanteil `sc` (0…1) und Felsrauschen `rock` (0…1). */
+export const screeWeight = (sc: number, rock: number): number =>
+  Math.min(1, sc * (1 - SCREE_MOD + 2 * SCREE_MOD * rock)) * SCREE_MAX;
 const smoothUnit = (v: number): number => {
   const t = v < 0 ? 0 : v > 1 ? 1 : v;
   return t * t * (3 - 2 * t);
@@ -789,6 +801,91 @@ const FOREST = LAND.indexOf('forest');
 const GRASS = LAND.indexOf('grass');
 const SAND = LAND.indexOf('sand');
 
+// ---------- L2 C11: Findlinge als Bodenton ----------
+/** Salz der Findlinge (Block 520–539, Liste in groundDecor.ts): `hash2(seed + 539, …)`. */
+const BOULDER_SALT = 539;
+/** Anteil der Kacheln (nahe am Fuss) mit einem Findling, grösster Radius (Kachel: Durchmesser ≤ 0,3) und Reichweite. */
+export const BOULDER_P = 0.25;
+const BOULDER_R_MAX = 0.15,
+  BOULDER_R_MIN = 0.08,
+  BOULDER_REACH = 2; // Kacheln vor dem Fuss
+export interface Boulder {
+  /** Mitte in Kachelanteilen (0…1) und Radius in Kacheln */
+  cx: number;
+  cy: number;
+  r: number;
+}
+/** Findling der Kachel (tx, ty) oder `null`: höchstens einer je Kachel, nur auf Gras, ≤ BOULDER_REACH vor dem Fuss. */
+export function boulderOf(g: TerrainGrid, tx: number, ty: number): Boulder | null {
+  if (hash2(g.seed + BOULDER_SALT, tx, ty) >= BOULDER_P) return null;
+  const r =
+    BOULDER_R_MIN + (BOULDER_R_MAX - BOULDER_R_MIN) * hash2(g.seed + BOULDER_SALT, tx + 4096, ty);
+  const cx = 0.25 + 0.5 * hash2(g.seed + BOULDER_SALT, tx, ty + 4096),
+    cy = 0.25 + 0.5 * hash2(g.seed + BOULDER_SALT, tx + 4096, ty + 4096);
+  const nodeAt = (fx: number, fy: number): number => {
+    const i = Math.round((fx * TEX) / RASTER),
+      j = Math.round((fy * TEX) / RASTER);
+    return i < 0 || j < 0 || i >= g.nx || j >= g.ny ? -1 : j * g.nx + i;
+  };
+  const k0 = nodeAt(tx + cx, ty + cy);
+  if (k0 < 0 || g.cls[k0] !== GRASS + 1 || g.ind[GRASS]![k0]! < 1) return null;
+  const mt = g.ind[LAND.indexOf('mountain')]!;
+  for (let step = 1; step <= 4; step++)
+    for (let a = 0; a < 12; a++) {
+      const k = nodeAt(
+        tx + cx + Math.cos((a * Math.PI) / 6) * step * (BOULDER_REACH / 4),
+        ty + cy + Math.sin((a * Math.PI) / 6) * step * (BOULDER_REACH / 4),
+      );
+      if (k >= 0 && mt[k]! >= 0.5) return { cx, cy, r };
+    }
+  return null;
+}
+/** Steintöne: Lichtseite (oben links) rockLight warm, Unterseite rock/dunkel, Schlagschatten dunkel. */
+export const BOULDER_TONES: readonly (readonly [number, number, number])[] = [
+  mix3c(rgbOf(PALETTE.rockLight), rgbOf(PALETTE.foam), 0.3), // Licht: kühles Hellgrau, ΔE ≥ 15 zu earth/earthEdge (R149)
+  mix3c(rgbOf(PALETTE.rock), rgbOf(PALETTE.waterDeep), 0.25), // Unterseite
+  mix3c(rgbOf(PALETTE.rockDark), rgbOf(PALETTE.waterDeep), 0.3), // Schlagschatten
+];
+function mix3c(a: readonly number[], b: readonly number[], t: number): [number, number, number] {
+  return [a[0]! + (b[0]! - a[0]!) * t, a[1]! + (b[1]! - a[1]!) * t, a[2]! + (b[2]! - a[2]!) * t];
+}
+/** Färbt `o` mit dem Findling an (u, v) Kachelanteilen: scharfe Steinkante, kurzer weicher Schatten rechts unten. */
+function boulderPixel(b: Boulder, u: number, v: number, o: number[]): void {
+  const dx = (u - b.cx) / b.r,
+    dy = (v - b.cy) / b.r;
+  const q = dx * dx + dy * dy;
+  if (q <= 1) {
+    const lit = -0.6 * dx - 0.8 * dy > 0.15;
+    const t = lit ? BOULDER_TONES[0]! : BOULDER_TONES[1]!;
+    o[0] = t[0];
+    o[1] = t[1];
+    o[2] = t[2];
+    return;
+  }
+  const sx = dx - 0.5,
+    sy = dy - 0.6;
+  const sq = sx * sx + sy * sy;
+  if (sq < 1.4)
+    mix3(
+      o,
+      BOULDER_TONES[2] as unknown as number[],
+      0.3 * (1 - smoothstepClamp((sq - 0.7) / 0.7)),
+      o,
+    );
+}
+/** Findling je Kachel, gemerkt für den laufenden `paintPixels`-Aufruf (nie über Aufrufe, `patchGrid` ändert das Gitter). */
+let boulderGrid: TerrainGrid | null = null;
+let boulderTiles = new Map<number, Boulder | null>();
+function boulderFor(tx: number, ty: number): Boulder | null {
+  const key = ty * 65536 + tx;
+  let b = boulderTiles.get(key);
+  if (b === undefined) {
+    b = boulderGrid ? boulderOf(boulderGrid, tx, ty) : null;
+    boulderTiles.set(key, b);
+  }
+  return b;
+}
+
 /** Farbe eines Land-Typs `t` an einem Pixel (ohne Relief); `lerp` interpoliert ein Knotenfeld. */
 function landColor(
   g: TerrainGrid,
@@ -796,6 +893,8 @@ function landColor(
   lerp: (f: Float32Array) => number,
   grain: number,
   o: number[],
+  fx: number,
+  fy: number,
 ): void {
   switch (LAND[t]) {
     case 'sand': {
@@ -835,7 +934,10 @@ function landColor(
       // H-R13: Schuttband am Gebirgsfuss in den Wiesenstufen: Kies in die Grundfarbe (nach der Luminanz-Angleichung),
       // die Tonstufen liegen darüber
       const sc = lerp(g.scree);
-      if (sc > 0) mix3(o, C.debris, Math.min(1, sc * (0.25 + 1.5 * lerp(g.rock))) * SCREE_MAX, o);
+      if (sc > 0) mix3(o, C.debris, screeWeight(sc, lerp(g.rock)), o);
+      // L2 C11: Findling als Bodenton (kein Stempel), Lage und Grösse rein aus Seed und Kachel
+      const bd = boulderFor(Math.floor(fx), Math.floor(fy));
+      if (bd) boulderPixel(bd, fx - Math.floor(fx), fy - Math.floor(fy), o);
       const ti = lerp(g.tint);
       if (ti > 0) mix3(o, LIGHT_COLORS.warm, ti * FOOTHILL_TINT_MAX, o);
       else if (ti < 0) mix3(o, TONE_COOL, -ti * FOOTHILL_TINT_MAX, o);
@@ -843,11 +945,27 @@ function landColor(
     }
     case 'forest': {
       const p = lerp(g.patch);
-      const edge = smoothstepClamp((1 - lerp(g.ind[FOREST]!)) * 2); // innen 0, Rand ~1
+      // L1: derselbe Randversatz wie die Platzierung der Kronen (`forestEdgeShift`): wo die Krone vorragt (a > 0),
+      // reicht der dunkle Waldboden weiter hinaus, wo sie zurückweicht (a < 0), hellt der Boden früher auf
+      const inner = 1 - lerp(g.ind[FOREST]!);
+      let shifted = inner;
+      if (inner > 0 && inner < 0.95) {
+        const bump = Math.min(1, inner * 4) * (1 - Math.min(1, Math.max(0, (inner - 0.7) * 4)));
+        shifted -= forestEdgeShift(g.seed, fx, fy) * FOREST_EDGE_SHIFT * 0.5 * bump;
+      }
+      const edge = smoothstepClamp(shifted * 2); // innen 0, Rand ~1
       // R170: am sonnigen Rand weniger Moos — sonst ergibt Moos + Klee im Übergang einen Kronenton
       if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX * (1 - MOSS_EDGE_FADE * edge), o);
       else mix3(C.wood, C.clearing, -p * CLEARING_MAX, o);
       if (edge > 0) mix3(o, C.edgeLight, edge * FOREST_EDGE_LIGHT, o);
+      if (edge > 0) mix3(o, C.grass, edge * edge * FOREST_EDGE_MEADOW, o);
+      if (edge < 0.4)
+        mix3(
+          o,
+          C.clearing,
+          forestClearing(g.seed, fx, fy) * FOREST_CLEARING_LIGHT * (1 - edge / 0.4),
+          o,
+        );
       break;
     }
     default: {
@@ -961,6 +1079,8 @@ export function paintPixels(
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
   const { nx, ny, sharp, smooth, ind, shade, tone, cls, dpres } = g;
+  boulderGrid = g;
+  boulderTiles = new Map();
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
   const col = [0, 0, 0],
     tc = [0, 0, 0];
@@ -1006,7 +1126,15 @@ export function paintPixels(
           wFlur: number,
           wSum = 1;
         if (pure) {
-          landColor(g, c0 - 1, lerp, grain, col);
+          landColor(
+            g,
+            c0 - 1,
+            lerp,
+            grain,
+            col,
+            (px0 + px + 0.5) * pxTile,
+            (py0 + py + 0.5) * pxTile,
+          );
           wMt = c0 - 1 === mt ? 1 : 0;
           wFlur = c0 - 1 === GRASS || c0 - 1 === SAND ? 1 : 0;
         } else {
@@ -1021,7 +1149,7 @@ export function paintPixels(
           for (let t = 0; t < LAND.length; t++) {
             const q = wt[t]! / sum;
             if (q <= 0) continue;
-            landColor(g, t, lerp, grain, tc);
+            landColor(g, t, lerp, grain, tc, (px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile);
             col[0] += tc[0]! * q;
             col[1] += tc[1]! * q;
             col[2] += tc[2]! * q;
@@ -1102,6 +1230,8 @@ export function paintPixels(
       out[o + 3] = 255;
     }
   }
+  boulderGrid = null; // Gitter nicht über den Aufruf hinaus halten
+  boulderTiles = new Map();
   return out;
 }
 
