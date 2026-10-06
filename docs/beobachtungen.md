@@ -1132,6 +1132,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   Meeresfarben nur schwach ab (Playtest C5). **Einschätzung:** kosmetisch bis mittel; Folgepaket mit lead-art, nach F2
   (Mindestbreite) erneut sichten. **Ursprung:** Gate Seefahrt R274.
 - Die Folgepakete Fahrlinie über Land (b), Heimatkontor-Klick und „spiel frei weiter" (c) stehen oben unter „Playtest T15".
+
 ## 2026-10-06 · H-R15 Review: Zustand der Viertel-Kopie dezentral
 
 - **Fundort / Beobachtung:** `terrainJob` und `updateTerrainLayer` (`src/render/terrain.ts`) kennen den Zustand der
