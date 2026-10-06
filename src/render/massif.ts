@@ -1,4 +1,5 @@
 import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
+import { ISO_H } from './iso';
 import { hash2, valueNoise } from '../sim/noise';
 import {
   DEBRIS,
@@ -23,6 +24,9 @@ export { ROCK_TONES, toneColor, toneStep };
 // Mathematik im Kachelraum: Komponenten, Höhenfeld auf einem Untergitter (SUB Knoten je Kachel), Zerlegung in
 // Teilstücke (Halbkachel-Streifen) und Zellfarben. Keine Projektion, kein Canvas (das macht `rocks.ts`); liest die
 // Welt nur. Höhen in Weltpixeln (Zoom 1), Darstellungswerte, keine Spielwerte.
+// Salze (ART-STIL-02 L6, Block 576–584, Eintrag im zentralen Kopf von groundDecor.ts macht der Release-Merge):
+// 576 Bergsee-Los, 577 Bergsee-Form, 578 Wasserfall-Los, 579 Wasserfall-Form, 580 Höhlen-Los, 581 Höhlen-Form,
+// 582 Steinmännchen-Los, 583 Steinmännchen-Form (alle hier), 584 Farn (trees.ts).
 
 export type MassifWorld = Island & Pick<World, 'seed'>;
 
@@ -725,6 +729,8 @@ export interface MassifPiece {
   /** Eindeutig je Welt: 2 × Index der vordersten Kachel + Hälfte (0 rechte, 1 linke Kachelhälfte im Streifen). */
   id: number;
   comp: MassifComponent;
+  /** Die Daten der Karte (L6: Entdeckungs-Elemente gelten kartenweit). */
+  data: MassifData;
   /** Halbstreifen k: Bild-x ∈ [k · ISO_W/2, (k + 1) · ISO_W/2], Kachelspalten x − y ∈ {k, k + 1}. */
   strip: number;
   /** Kachelindizes hinten nach vorn (Tiefe s = x + y steigt je Schritt um 1). */
@@ -773,6 +779,7 @@ export function massifPieces(isl: PieceWorld, data: MassifData = massifData(isl)
       out.push({
         id,
         comp,
+        data,
         strip: k,
         tiles,
         seam,
@@ -1359,3 +1366,547 @@ export function massifTrees(c: MassifComponent): MassifTrees {
 /** Knoten (I, J) liegt in der Baummaske (Umkreis von 2 Knoten um einen Anker). */
 export const massifTreeMask = (c: MassifComponent, I: number, J: number): boolean =>
   massifTrees(c).mask.has(J * 100000 + I);
+
+// ---------- Entdecken (L6 C6–C9): Bergsee, Wasserfall, Höhle, Steinmännchen ----------
+//
+// Je Karte (über alle Komponenten) höchstens ein Element je Art. Erst die Eignung (das Gelände entscheidet: Mulde,
+// Rinne, Schattenflanke, höchster Gipfel), dann das Los (`hash2(seed + Salz, 0, 0) < p`, p aus der gemessenen
+// Eignungsrate, damit der Anteil über alle Seeds im Quotenband liegt). Die Elemente ändern die Höhen nicht (kein
+// Eingriff ins Netz): sie sind Abziehbilder bzw. ein kleines Objekt, die `rocks.ts` im Dreiecks-Shader bzw. wie
+// einen Baum zeichnet. Reine Mathematik, keine Projektion ausser den Bildpunkt-Formeln der Geometrie.
+
+export const L6_LAKE_SALT = 576, // Los, +1 Form (Uferradien)
+  L6_FALL_SALT = 578, // Los, +1 Form (Breite)
+  L6_CAVE_SALT = 580, // Los, +1 Form (Umriss)
+  L6_CAIRN_SALT = 582; // Los, +1 Form (Steine)
+/**
+ * Lospunkte p = min(1, Quote / Eignungsrate). Messung (`createWorld(seed, { unlockAll: true })`, Seeds 1–400):
+ * Eignungsrate Bergsee 34,8 %, Wasserfall 53,5 %, Höhle 88,3 %, Steinmännchen 94,5 %; Quoten 25 / 20 / 20 / 45 %.
+ * Ergebnis mit Los und Überlappungsprüfung: Seeds 1–100 27 / 19 / 22 / 46 %, Seeds 1–400 21,0 / 15,5 / 24,8 / 42,8 %.
+ */
+export const L6_LOT = { lake: 0.72, fall: 0.37, cave: 0.23, cairn: 0.48 } as const;
+
+interface NodeInfo {
+  h: number;
+  hn: number;
+  steep: number;
+  lap: number;
+  /** Grat (+1) bzw. Rinne (−1) wie `NodeShade.e` */
+  e: number;
+  rl: number;
+  /** Gefälle-Vektor (px je Kachel), Gefälle abwärts = −(gx, gy) */
+  gx: number;
+  gy: number;
+}
+function nodeInfo(c: MassifComponent, I: number, J: number): NodeInfo {
+  const h = nodeHeight(c, I, J);
+  const gx = ((nodeHeight(c, I + 1, J) - nodeHeight(c, I - 1, J)) / 2) * SUB,
+    gy = ((nodeHeight(c, I, J + 1) - nodeHeight(c, I, J - 1)) / 2) * SUB;
+  const lap =
+    nodeHeight(c, I - 1, J) +
+    nodeHeight(c, I + 1, J) +
+    nodeHeight(c, I, J - 1) +
+    nodeHeight(c, I, J + 1) -
+    4 * h;
+  return {
+    h,
+    hn: h / c.amp,
+    steep: steepness(gx, gy),
+    lap,
+    e: Math.max(-1, Math.min(1, -lap / LAP_REF)),
+    rl: relLight(gx, gy),
+    gx,
+    gy,
+  };
+}
+const nodeSnow = (c: MassifComponent, I: number, J: number, n: NodeInfo): boolean =>
+  c.snowFill[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB] === 1 ||
+  snowField(c.seed, I / SUB, J / SUB, c.amp, c.snowHn, n.hn, n.steep, n.lap) >= 0.5;
+const nkey = (I: number, J: number): number => J * 100000 + I;
+/** Liegt einer der Knoten im Schnee? */
+function snowIn(c: MassifComponent, nodes: Set<number>): boolean {
+  for (const k of nodes) {
+    const I = k % 100000,
+      J = (k - I) / 100000;
+    if (nodeSnow(c, I, J, nodeInfo(c, I, J))) return true;
+  }
+  return false;
+}
+/** Alle Knoten (I ± r, J ± r) innen? */
+function boxInside(c: MassifComponent, I: number, J: number, r: number): boolean {
+  for (let j = J - r; j <= J + r; j++)
+    for (let i = I - r; i <= I + r; i++) if (!nodeInside(c, i, j)) return false;
+  return true;
+}
+/** Höhe (px) an einem Kachelpunkt, bilinear zwischen den Knoten. */
+export function heightAtF(c: MassifComponent, fx: number, fy: number): number {
+  const u = fx * SUB,
+    v = fy * SUB;
+  const I = Math.floor(u),
+    J = Math.floor(v),
+    tx = u - I,
+    ty = v - J;
+  const a = nodeHeight(c, I, J) + (nodeHeight(c, I + 1, J) - nodeHeight(c, I, J)) * tx,
+    b = nodeHeight(c, I, J + 1) + (nodeHeight(c, I + 1, J + 1) - nodeHeight(c, I, J + 1)) * tx;
+  return a + (b - a) * ty;
+}
+
+/** Höchste Massivhöhe (px) an einem Kachelpunkt über alle Komponenten der Karte (0 ausserhalb). */
+function heightAnywhere(data: MassifData, fx: number, fy: number): number {
+  let m = 0;
+  for (const c of data.comps)
+    if (fx >= c.x0 && fx <= c.x1 + 1 && fy >= c.y0 && fy <= c.y1 + 1)
+      m = Math.max(m, heightAtF(c, fx, fy));
+  return m;
+}
+/** Blick von vorn (Kamera schaut Richtung −x −y) und Mindestabstand: so viele Kacheln nach +x +y wird geprüft. */
+const SIGHT_RANGE = 4,
+  SIGHT_STEP = 0.1;
+/**
+ * Liegt der Kachelpunkt (fx, fy) in Höhe h frei im Bild? Entlang der Blicklinie nach vorn (+x +y, gleiche Bild-x) darf
+ * kein Gelände den Punkt verdecken: das Bild-y der Fläche davor (32 px je Kachel nach unten, minus ihre Höhe) liegt
+ * mindestens `margin` px unter dem des Punkts.
+ */
+function sightFree(data: MassifData, fx: number, fy: number, h: number, margin: number): boolean {
+  for (let t = SIGHT_STEP; t <= SIGHT_RANGE; t += SIGHT_STEP)
+    if (heightAnywhere(data, fx + t, fy + t) - h > 2 * SUB * (ISO_H / 2 / SUB) * t - margin)
+      return false;
+  return true;
+}
+/** Knoten im Umkreis `r` (Kacheln) um (cx, cy). */
+function discNodes(cx: number, cy: number, r: number): Set<number> {
+  const out = new Set<number>();
+  const R = Math.ceil(r * SUB) + 1;
+  const I0 = Math.round(cx * SUB),
+    J0 = Math.round(cy * SUB);
+  for (let J = J0 - R; J <= J0 + R; J++)
+    for (let I = I0 - R; I <= I0 + R; I++)
+      if (Math.hypot(I / SUB - cx, J / SUB - cy) <= r) out.add(nkey(I, J));
+  return out;
+}
+function boxNodes(I: number, J: number, r: number): Set<number> {
+  const out = new Set<number>();
+  for (let j = J - r; j <= J + r; j++) for (let i = I - r; i <= I + r; i++) out.add(nkey(i, j));
+  return out;
+}
+
+// --- C6 Bergsee ---
+const LAKE_RAYS = 16,
+  LAKE_STEP = 0.05, // Kacheln
+  LAKE_RISE = 3, // px: das Ufer liegt dort, wo das Gelände so viel über den Spiegel steigt
+  LAKE_R_MIN = 0.4,
+  LAKE_R_MAX = 0.7,
+  LAKE_RAW_MIN = 0.3, // kleinere Mulden taugen nicht
+  LAKE_HN_LO = 0.4,
+  LAKE_HN_HI = 0.7,
+  LAKE_STEEP_MAX = 0.19,
+  LAKE_LAP_MIN = 0.8, // konkav (Mulde, nicht Grat), px
+  LAKE_SIGHT = 1, // px Mindestabstand zur Verdeckung
+  LAKE_RING_STEEP = 0.4; // mittlere Steilheit auf dem Ring um den Mittelpunkt
+export interface MassifLake {
+  comp: MassifComponent;
+  /** Mittelknoten (global) und Mittelpunkt in Kachelkoordinaten */
+  I: number;
+  J: number;
+  cx: number;
+  cy: number;
+  /** Ufer-Radius in Kacheln je Richtung (LAKE_RAYS Richtungen, Winkel k · 2π / LAKE_RAYS im Kachelraum, 0,4 … 0,7) */
+  radii: number[];
+  /** Knoten, deren Zellen der See berührt (Umkreis grösster Radius + eine Zelle) */
+  nodes: Set<number>;
+}
+/** Ufer-Radius (Kacheln) in Richtung `th` (rad, im Kachelraum): zyklisch geglättet zwischen den Strahlen. */
+export function lakeRadius(l: Pick<MassifLake, 'radii'>, th: number): number {
+  const n = l.radii.length;
+  const t = ((th / (2 * Math.PI)) % 1) * n;
+  const u = t < 0 ? t + n : t;
+  const k = Math.floor(u),
+    f = u - k;
+  const s = f * f * (3 - 2 * f);
+  return l.radii[k % n]! + (l.radii[(k + 1) % n]! - l.radii[k % n]!) * s;
+}
+function findLake(
+  data: MassifData,
+  c: MassifComponent,
+  trees: Set<number>,
+): { lake: MassifLake; score: number } | null {
+  let best: { lake: MassifLake; score: number; r: number } | null = null;
+  for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
+    for (let I = c.x0 * SUB; I <= (c.x1 + 1) * SUB; I++) {
+      if (!nodeInside(c, I, J)) continue;
+      const hn = nodeHeight(c, I, J) / c.amp;
+      if (hn < LAKE_HN_LO || hn > LAKE_HN_HI) continue;
+      const n = nodeInfo(c, I, J);
+      if (n.steep >= LAKE_STEEP_MAX || n.lap <= LAKE_LAP_MIN || nodeSnow(c, I, J, n)) continue;
+      const cx = I / SUB,
+        cy = J / SUB;
+      const raw: number[] = [];
+      for (let k = 0; k < LAKE_RAYS; k++) {
+        const th = (k * 2 * Math.PI) / LAKE_RAYS;
+        let s = LAKE_STEP;
+        while (s < LAKE_R_MAX + 0.2) {
+          if (heightAtF(c, cx + Math.cos(th) * s, cy + Math.sin(th) * s) - n.h > LAKE_RISE) break;
+          s += LAKE_STEP;
+        }
+        raw.push(s - LAKE_STEP / 2);
+      }
+      if (Math.min(...raw) < LAKE_RAW_MIN) continue;
+      // 3-Punkt-Glättung, auf 0,42 … 0,66 gestaucht (kein Sättigen an den Klemmen: der Rand bleibt unregelmässig), dazu
+      // Formrauschen ±0,04 (Salz 577), Klemme auf 0,4 … 0,7
+      const radii = raw.map((_, k) => {
+        const m =
+          (raw[(k + LAKE_RAYS - 1) % LAKE_RAYS]! + 2 * raw[k]! + raw[(k + 1) % LAKE_RAYS]!) / 4;
+        const q = 0.42 + (Math.max(0.3, Math.min(0.9, m)) - 0.3) * 0.4;
+        const w = (hash2(c.seed + L6_LAKE_SALT + 1, I * 31 + k, J) - 0.5) * 0.08;
+        return Math.max(LAKE_R_MIN, Math.min(LAKE_R_MAX, q + w));
+      });
+      const rMax = Math.max(...radii);
+      const reach = rMax + 0.36;
+      const R = Math.ceil(reach * SUB) + 1;
+      if (!boxInside(c, I, J, R)) continue;
+      const nodes = discNodes(cx, cy, reach);
+      let bad = false;
+      for (const k of nodes) if (trees.has(k)) bad = true;
+      if (bad) continue;
+      // frei im Bild: Mitte und Ring bei 60 % des Radius (keine Bergflanke davor)
+      let hidden = !sightFree(data, cx, cy, n.h, LAKE_SIGHT);
+      for (let k = 0; k < 8 && !hidden; k++) {
+        const th = (k * 2 * Math.PI) / 8,
+          px = cx + Math.cos(th) * 0.6 * rMax,
+          py = cy + Math.sin(th) * 0.6 * rMax;
+        hidden = !sightFree(data, px, py, heightAtF(c, px, py), LAKE_SIGHT);
+      }
+      if (hidden) continue;
+      // Ring bei 0,35 Kacheln: mittlere Steilheit (flach = gut), Wert je Mulde
+      let ring = 0;
+      for (let k = 0; k < 8; k++) {
+        const th = (k * 2 * Math.PI) / 8;
+        const Ik = Math.round((cx + Math.cos(th) * 0.35) * SUB),
+          Jk = Math.round((cy + Math.sin(th) * 0.35) * SUB);
+        ring += nodeInfo(c, Ik, Jk).steep / 8;
+      }
+      if (ring > LAKE_RING_STEEP) continue;
+      if (snowIn(c, nodes)) continue;
+      const score =
+        ring + n.steep - 0.02 * Math.min(1, n.lap) + 0.001 * hash2(c.seed + L6_LAKE_SALT, I, J);
+      if (!best || score < best.score)
+        best = { lake: { comp: c, I, J, cx, cy, radii, nodes }, score, r: rMax };
+    }
+  return best;
+}
+
+// --- C7 Wasserfall (statisch) ---
+const FALL_HN_LO = 0.45,
+  FALL_HN_HI = 0.75,
+  FALL_HN_END = 0.15, // endet im Schutt
+  FALL_START_STEEP = 0.5,
+  FALL_START_E = -0.3,
+  FALL_MAX_STEPS = 90,
+  FALL_MIN_STEPS = 8,
+  FALL_SIGHT = 1.5, // px
+  FALL_SHOWN = 0.8, // Anteil der Pfadpunkte, der frei im Bild liegt
+  FALL_RINNE_SHARE = 0.4; // Anteil der Pfadknoten in einer Rinne (e < −0,1)
+export interface MassifFallPoint {
+  I: number;
+  J: number;
+  /** Geländehöhe (px) */
+  h: number;
+  /** Bandbreite in Weltpixeln, 1 … 1,5 (steil breiter) */
+  w: number;
+  /** Steilheit 0…1 (steil heller) */
+  steep: number;
+}
+export interface MassifFall {
+  comp: MassifComponent;
+  /**
+   * Polylinie von oben (Start) nach unten (Schutt am Fuss), Höhe strikt fallend: reine Daten für Glitzern (L7). Der
+   * steilste Abstieg über die Knoten, einmal geglättet (I und J darum auch gebrochen, Höhe ist die der Knotenlinie).
+   */
+  path: MassifFallPoint[];
+  /** Knoten, deren Zellen das Band berühren (Pfad ± 1 Knoten) */
+  nodes: Set<number>;
+}
+/** Eine Runde Eckenschneiden (Chaikin), Endpunkte bleiben: der Lauf wird weich, Höhe bleibt strikt fallend. */
+function chaikin(pts: MassifFallPoint[]): MassifFallPoint[] {
+  const mixP = (a: MassifFallPoint, b: MassifFallPoint, t: number): MassifFallPoint => ({
+    I: a.I + (b.I - a.I) * t,
+    J: a.J + (b.J - a.J) * t,
+    h: a.h + (b.h - a.h) * t,
+    w: a.w + (b.w - a.w) * t,
+    steep: a.steep + (b.steep - a.steep) * t,
+  });
+  const out: MassifFallPoint[] = [pts[0]!];
+  for (let k = 0; k + 1 < pts.length; k++) {
+    out.push(mixP(pts[k]!, pts[k + 1]!, 0.25), mixP(pts[k]!, pts[k + 1]!, 0.75));
+  }
+  out.push(pts[pts.length - 1]!);
+  return out;
+}
+const NEIGH8: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [-1, -1],
+  [1, -1],
+  [-1, 1],
+];
+function findFall(
+  data: MassifData,
+  c: MassifComponent,
+  trees: Set<number>,
+): { fall: MassifFall; score: number } | null {
+  let best: { fall: MassifFall; score: number } | null = null;
+  for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
+    for (let I = c.x0 * SUB; I <= (c.x1 + 1) * SUB; I++) {
+      if (!nodeInside(c, I, J)) continue;
+      const hn0 = nodeHeight(c, I, J) / c.amp;
+      if (hn0 < FALL_HN_LO || hn0 > FALL_HN_HI) continue;
+      const n0 = nodeInfo(c, I, J);
+      if (n0.steep < FALL_START_STEEP || n0.e >= FALL_START_E) continue;
+      // steilster Abstieg über die Knoten (8er-Nachbarschaft)
+      const path: MassifFallPoint[] = [];
+      let i = I,
+        j = J,
+        ok = false;
+      for (let step = 0; step < FALL_MAX_STEPS; step++) {
+        const n = nodeInfo(c, i, j);
+        if (!boxInside(c, i, j, 1) || nodeSnow(c, i, j, n) || trees.has(nkey(i, j))) break;
+        path.push({
+          I: i,
+          J: j,
+          h: n.h,
+          w: 1 + 0.5 * n.steep,
+          steep: n.steep,
+        });
+        if (n.hn < FALL_HN_END) {
+          ok = path.length >= FALL_MIN_STEPS;
+          break;
+        }
+        let bi = i,
+          bj = j,
+          bd = 0;
+        for (const [di, dj] of NEIGH8) {
+          const d = (n.h - nodeHeight(c, i + di, j + dj)) / Math.hypot(di, dj);
+          if (d > bd) {
+            bd = d;
+            bi = i + di;
+            bj = j + dj;
+          }
+        }
+        if (bd <= 0) break;
+        i = bi;
+        j = bj;
+      }
+      if (!ok) continue;
+      let rinne = 0,
+        steepSum = 0,
+        shown = 0;
+      for (const q of path) {
+        const nq = nodeInfo(c, q.I, q.J);
+        if (nq.e < -0.1) rinne++;
+        if (sightFree(data, q.I / SUB, q.J / SUB, q.h, FALL_SIGHT)) shown++;
+        steepSum += q.steep;
+      }
+      if (rinne / path.length < FALL_RINNE_SHARE || shown / path.length < FALL_SHOWN) continue;
+      const nodes = new Set<number>();
+      for (const q of path) for (const k of boxNodes(q.I, q.J, 1)) nodes.add(k);
+      if (snowIn(c, nodes)) continue; // auch der Hof des Bandes bleibt schneefrei
+      const score =
+        path.length + 10 * (steepSum / path.length) + 0.001 * hash2(c.seed + L6_FALL_SALT, I, J);
+      if (!best || score > best.score) {
+        // Breite mit Formrauschen (Salz 579): ± 0,1 px je Punkt, in 1 … 1,5 gehalten
+        const jittered = path.map((q, k) => ({
+          ...q,
+          w: Math.max(
+            1,
+            Math.min(1.5, q.w + (hash2(c.seed + L6_FALL_SALT + 1, q.I, q.J * 7 + k) - 0.5) * 0.2),
+          ),
+        }));
+        best = { fall: { comp: c, path: chaikin(jittered), nodes }, score };
+      }
+    }
+  return best;
+}
+
+// --- C8 Höhle ---
+const CAVE_HN_LO = 0.25,
+  CAVE_HN_HI = 0.55,
+  CAVE_STEEP_MIN = 0.6,
+  CAVE_REL_MAX = 0, // relLight < 0: Schattenseite
+  CAVE_SIGHT = 5, // px: Öffnung samt Sturz bleibt frei
+  CAVE_FACE_COS = 0.8; // Gefälle nach unten ≈ Richtung +x +y (zur Kamera)
+export interface MassifCave {
+  comp: MassifComponent;
+  /** Anker: Knoten (I − J) mod 4 = 2 (Mitte des Halbstreifens) */
+  I: number;
+  J: number;
+  h: number;
+  /** Halbachsen der Öffnung (Weltpixel, ≈ 6 × 5 gesamt) */
+  rx: number;
+  ry: number;
+  /** Radiusfaktoren des unregelmässigen Umrisses (8 Richtungen, 0,8 … 1,2) */
+  shape: number[];
+  nodes: Set<number>;
+}
+function findCave(
+  data: MassifData,
+  c: MassifComponent,
+  trees: Set<number>,
+): { cave: MassifCave; score: number } | null {
+  let best: { cave: MassifCave; score: number } | null = null;
+  for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
+    for (let I = c.x0 * SUB; I <= (c.x1 + 1) * SUB; I++) {
+      if ((((I - J) % 4) + 4) % 4 !== 2 || !boxInside(c, I, J, 3)) continue;
+      const hn = nodeHeight(c, I, J) / c.amp;
+      if (hn < CAVE_HN_LO || hn > CAVE_HN_HI) continue;
+      const n = nodeInfo(c, I, J);
+      if (n.steep < CAVE_STEEP_MIN || n.rl >= CAVE_REL_MAX || nodeSnow(c, I, J, n)) continue;
+      const down = -(n.gx + n.gy) / Math.SQRT2; // abwärts Richtung (+x, +y)
+      if (down / Math.hypot(n.gx, n.gy) < CAVE_FACE_COS) continue;
+      if (!sightFree(data, I / SUB, J / SUB, n.h, CAVE_SIGHT)) continue;
+      const nodes = boxNodes(I, J, 2);
+      if (snowIn(c, nodes)) continue;
+      let bad = false;
+      for (const k of nodes) if (trees.has(k)) bad = true;
+      if (bad) continue;
+      const score = n.steep - n.rl + 0.001 * hash2(c.seed + L6_CAVE_SALT, I, J);
+      if (!best || score > best.score) {
+        const shape = Array.from(
+          { length: 8 },
+          (_, k) => 0.82 + 0.36 * hash2(c.seed + L6_CAVE_SALT + 1, I * 13 + k, J),
+        );
+        best = {
+          cave: { comp: c, I, J, h: n.h, rx: 3.2, ry: 2.6, shape, nodes },
+          score,
+        };
+      }
+    }
+  return best;
+}
+
+// --- C9 Steinmännchen ---
+const CAIRN_MIN_AMP = 45; // Felshügel (amp ≈ 29) bekommen keines
+export interface MassifCairn {
+  comp: MassifComponent;
+  I: number;
+  J: number;
+  h: number;
+  /** Höhe über dem Anker (px) und Steine unten nach oben: Breite, Höhe, Versatz (px) */
+  height: number;
+  stones: { w: number; h: number; dx: number }[];
+  nodes: Set<number>;
+}
+function findCairn(data: MassifData): MassifCairn | null {
+  let best: { c: MassifComponent; I: number; J: number; h: number } | null = null;
+  for (const c of data.comps) {
+    if (c.amp < CAIRN_MIN_AMP) continue;
+    for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
+      for (let I = c.x0 * SUB; I <= (c.x1 + 1) * SUB; I++) {
+        if ((((I - J) % 4) + 4) % 4 !== 2) continue;
+        const h = nodeHeight(c, I, J);
+        if (best && h <= best.h) continue;
+        if (!boxInside(c, I, J, 1)) continue;
+        const trees = massifTrees(c).mask;
+        if ([...boxNodes(I, J, 2)].some((k) => trees.has(k))) continue; // keine Baummaske
+        best = { c, I, J, h };
+      }
+  }
+  if (!best) return null;
+  const { c, I, J, h } = best;
+  const cnt = hash2(c.seed + L6_CAIRN_SALT + 1, I, J) < 0.5 ? 3 : 4;
+  const stones: { w: number; h: number; dx: number }[] = [];
+  let total = 0;
+  for (let k = 0; k < cnt; k++) {
+    const w = 3 - k * (cnt === 3 ? 0.9 : 0.6),
+      sh = cnt === 3 ? 1.7 : 1.25;
+    stones.push({
+      w,
+      h: sh,
+      dx: (hash2(c.seed + L6_CAIRN_SALT + 1, I * 7 + k, J) - 0.5) * 0.5,
+    });
+    total += sh;
+  }
+  return { comp: c, I, J, h, height: total, stones, nodes: boxNodes(I, J, 2) };
+}
+
+export interface MassifFeatures {
+  lake: MassifLake | null;
+  fall: MassifFall | null;
+  cave: MassifCave | null;
+  cairn: MassifCairn | null;
+  /** Vereinigung der Knotenmasken aller vorhandenen Elemente (Schlüssel J · 100000 + I) */
+  mask: Set<number>;
+}
+/** Eignung je Art (vor dem Los): bestes Gelände der ganzen Karte, ohne Los und ohne Überlappungsprüfung. */
+export interface MassifSuitable {
+  lake: MassifLake | null;
+  fall: MassifFall | null;
+  cave: MassifCave | null;
+  cairn: MassifCairn | null;
+}
+const suitCache = new WeakMap<MassifData, MassifSuitable>();
+export function massifSuitable(data: MassifData): MassifSuitable {
+  const hit = suitCache.get(data);
+  if (hit) return hit;
+  let lake: { lake: MassifLake; score: number } | null = null,
+    fall: { fall: MassifFall; score: number } | null = null,
+    cave: { cave: MassifCave; score: number } | null = null;
+  for (const c of data.comps) {
+    if (c.n < SMALL_MASSIF) continue; // Felshügel: keine Elemente
+    const trees = massifTrees(c).mask;
+    const a = findLake(data, c, trees);
+    if (a && (!lake || a.score < lake.score)) lake = a;
+    const b = findFall(data, c, trees);
+    if (b && (!fall || b.score > fall.score)) fall = b;
+    const d = findCave(data, c, trees);
+    if (d && (!cave || d.score > cave.score)) cave = d;
+  }
+  const out = {
+    lake: lake?.lake ?? null,
+    fall: fall?.fall ?? null,
+    cave: cave?.cave ?? null,
+    cairn: findCairn(data),
+  };
+  suitCache.set(data, out);
+  return out;
+}
+
+const featCache = new WeakMap<MassifData, MassifFeatures>();
+const overlaps = (a: Set<number>, b: Set<number>): boolean => {
+  for (const k of a) if (b.has(k)) return true;
+  return false;
+};
+/**
+ * Die Entdeckungs-Elemente der Karte (gemerkt je Daten): Eignung (`massifSuitable`), dann Los, dann kein Überlappen
+ * mit einem früheren Element (Reihenfolge See, Wasserfall, Höhle, Steinmännchen). Rein.
+ */
+export function massifFeatures(data: MassifData): MassifFeatures {
+  const hit = featCache.get(data);
+  if (hit) return hit;
+  const s = massifSuitable(data);
+  const lot = (salt: number, p: number): boolean => hash2(data.seed + salt, 0, 0) < p;
+  const mask = new Set<number>();
+  const take = <T extends { nodes: Set<number> }>(
+    e: T | null,
+    salt: number,
+    p: number,
+  ): T | null => {
+    if (!e || !lot(salt, p) || overlaps(e.nodes, mask)) return null;
+    for (const k of e.nodes) mask.add(k);
+    return e;
+  };
+  const out: MassifFeatures = {
+    lake: take(s.lake, L6_LAKE_SALT, L6_LOT.lake),
+    fall: take(s.fall, L6_FALL_SALT, L6_LOT.fall),
+    cave: take(s.cave, L6_CAVE_SALT, L6_LOT.cave),
+    cairn: take(s.cairn, L6_CAIRN_SALT, L6_LOT.cairn),
+    mask,
+  };
+  featCache.set(data, out);
+  return out;
+}
+/** Knoten (I, J) liegt in der Maske eines Entdeckungs-Elements (für Referenz-Tests: dort darf sich der Kern ändern). */
+export const massifFeatureMask = (data: MassifData, I: number, J: number): boolean =>
+  massifFeatures(data).mask.has(nkey(I, J));

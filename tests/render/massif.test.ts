@@ -31,6 +31,8 @@ import {
   SUB,
   cellColor,
   massifData,
+  massifFeatureMask,
+  massifFeatures,
   massifPieces,
   massifTreeMask,
   massifTrees,
@@ -51,6 +53,7 @@ import {
   SOFT_CUT,
   TONE_FLAT,
   debrisOf,
+  steepness,
   toneStep,
   type MassifComponent,
   type MassifData,
@@ -1237,7 +1240,7 @@ describe('ART-STIL-02 L2 Kern', { timeout: 60000 }, () => {
         nZone = 0;
       for (const r of all) {
         const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
-        if (n?.snow || n?.tree) {
+        if (n?.snow || n?.tree || massifFeatureMask(data, r[1]!, r[2]!)) {
           ausser++;
           continue;
         }
@@ -1647,15 +1650,17 @@ describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
 
 // ART-STIL-02 L6-T0 (Anhang 0.4): Referenz der Kernknoten (hn ≥ 0,35) auf der Basis nach L2.
 describe('ART-STIL-02 L6 Referenz', { timeout: 60000 }, () => {
-  it('L6-T0 Kern nach L2 unverändert: alle Kernknoten gleich der Fixture (RGB ± 0, ΔE2000 im Mittel < 1)', () => {
+  it('L6-T0 Kern nach L2 unverändert: alle Kernknoten ausser denen in den Elementmasken gleich der Fixture (RGB ± 0, ΔE2000 im Mittel < 1)', () => {
     type Fx = Record<string, { nodes: number[][] }>;
     for (const seed of KERN_SEEDS) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
       const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
       const all = (kernL2 as Fx)[String(seed)]!.nodes;
       expect(now.size, `Seed ${seed}: Knotenzahl`).toBe(all.length);
       let dE = 0,
         n = 0;
       for (const r of all) {
+        if (massifFeatureMask(data, r[1]!, r[2]!)) continue; // Elementmasken (L6): dort darf sich der Kern ändern
         const k = `${r[0]}|${r[1]}|${r[2]}`;
         const q = now.get(k);
         expect(q, `Seed ${seed}: Knoten ${k} fehlt`).toBeDefined();
@@ -1665,5 +1670,34 @@ describe('ART-STIL-02 L6 Referenz', { timeout: 60000 }, () => {
       }
       expect(dE / n, `Seed ${seed}: mittleres ΔE`).toBeLessThan(1);
     }
+  });
+});
+
+// ART-STIL-02 L6 (Anhang 0.1): roter Starttest, Bergsee nur in der Mulde.
+describe('ART-STIL-02 L6 Bergsee', { timeout: 60000 }, () => {
+  it('Bergsee nur in einer Mulde (Steilheit < 0,2, hn 0,4–0,7)', () => {
+    let seen = 0;
+    for (let seed = 1; seed <= 60; seed++) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const lake = massifFeatures(data).lake;
+      if (!lake) continue;
+      seen++;
+      const c = lake.comp;
+      const h = nodeHeight(c, lake.I, lake.J);
+      const gx =
+          ((nodeHeight(c, lake.I + 1, lake.J) - nodeHeight(c, lake.I - 1, lake.J)) / 2) * SUB,
+        gy = ((nodeHeight(c, lake.I, lake.J + 1) - nodeHeight(c, lake.I, lake.J - 1)) / 2) * SUB;
+      const lap =
+        nodeHeight(c, lake.I - 1, lake.J) +
+        nodeHeight(c, lake.I + 1, lake.J) +
+        nodeHeight(c, lake.I, lake.J - 1) +
+        nodeHeight(c, lake.I, lake.J + 1) -
+        4 * h;
+      expect(steepness(gx, gy), `Seed ${seed}: Steilheit`).toBeLessThan(0.2);
+      expect(h / c.amp, `Seed ${seed}: hn`).toBeGreaterThanOrEqual(0.4);
+      expect(h / c.amp, `Seed ${seed}: hn`).toBeLessThanOrEqual(0.7);
+      expect(lap, `Seed ${seed}: Mulde (konkav)`).toBeGreaterThan(0);
+    }
+    expect(seen, 'es gibt Seeds mit Bergsee').toBeGreaterThan(5);
   });
 });

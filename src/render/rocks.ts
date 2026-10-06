@@ -5,7 +5,7 @@ import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } fro
 import { hash2 } from '../sim/noise';
 import { FLOWER_TONES } from './groundDecor';
 import { PALETTE, rgbOf, rgbOfCss } from './palette';
-import { mixRgb, LIGHT_COLORS } from './light';
+import { mixRgb, LIGHT_COLORS, type Rgb } from './light';
 import {
   DEBRIS,
   EDGE_ON,
@@ -23,11 +23,17 @@ import {
   VEG_GRASS_TONES,
   VEG_MIX,
   VEG_TONES,
+  lakeRadius,
+  massifFeatures,
   massifTrees,
   pieceCells,
   pieceHeight,
   pieceMesh,
   toneStep,
+  type MassifCairn,
+  type MassifCave,
+  type MassifFall,
+  type MassifLake,
   type MassifPiece,
   type MassifTree,
   type MeshCell,
@@ -139,6 +145,19 @@ export function pieceTrees(p: MassifPiece): MassifTree[] {
   return out;
 }
 
+const cairnOf = new WeakMap<MassifPiece, MassifCairn | null>();
+/** Steinmännchen (L6 C9), das ein Teilstück malt: Ankerzelle unter den Zellen des Teilstücks (auch Nahtzellen), sonst null. */
+export function pieceCairn(p: MassifPiece): MassifCairn | null {
+  let out = cairnOf.get(p);
+  if (out === undefined) {
+    const c = massifFeatures(p.data).cairn;
+    out =
+      c && c.comp === p.comp && pieceCells(p).some((q) => q.I === c.I && q.J === c.J) ? c : null;
+    cairnOf.set(p, out);
+  }
+  return out;
+}
+
 const boxes = new WeakMap<MassifPiece, Box>();
 /** Bildbox eines Teilstücks (Weltpixel): Halbstreifen × Silhouette samt Rand. */
 export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
@@ -153,6 +172,8 @@ export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
       y1 = Math.max(y1, q.y);
     }
     for (const t of pieceTrees(p)) y0 = Math.min(y0, (t.I + t.J) * NY - t.h - t.height); // Bäume ragen über die Silhouette
+    const cairn = pieceCairn(p);
+    if (cairn) y0 = Math.min(y0, (cairn.I + cairn.J) * NY - cairn.h - cairn.height - 1); // ragt über die Silhouette
     b = { x: p.strip * STRIP, y: y0 - PAD, w: STRIP, h: y1 - y0 + 2 * PAD };
     boxes.set(p, b);
   }
@@ -250,6 +271,7 @@ export function rasterPiece(
   w: number,
   h: number,
   f: number,
+  features = true,
 ): Uint8ClampedArray {
   const ss = f < 1.5 ? 2 : 1;
   const W = w * ss,
@@ -262,20 +284,30 @@ export function rasterPiece(
   const px = new Float64Array(4),
     py = new Float64Array(4);
   const trees = pieceTrees(item.piece);
-  let ti = 0;
+  const cairn = features && f >= CAIRN_F ? pieceCairn(item.piece) : null;
+  const decals = features ? pieceDecals(item.piece, f) : null;
+  let ti = 0,
+    ci = cairn ? 0 : 1;
   for (const c of pieceMesh(item.piece)) {
     // Bäume nach den Zellen bis zur Tiefe ihres Ankers: davor liegende Zellen überdecken den Fuss
     while (ti < trees.length && trees[ti]!.I + trees[ti]!.J < c.I + c.J)
       drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
+    if (ci === 0 && cairn!.I + cairn!.J < c.I + c.J) {
+      drawCairn(buf, W, H, cairn!, b.x, b.y, sx, sy);
+      ci = 1;
+    }
     const I = [c.I, c.I + 1, c.I + 1, c.I],
       J = [c.J, c.J, c.J + 1, c.J + 1];
     for (let k = 0; k < 4; k++) {
       px[k] = ((I[k]! - J[k]!) * NX - b.x) * sx;
       py[k] = ((I[k]! + J[k]!) * NY - c.n[k]!.h - b.y) * sy;
     }
-    for (const t of cellTris(c.n)) triangle(buf, W, H, px, py, t, c.n, seed, b.x, b.y, sx, sy);
+    const dec = decals ? cellDecal(decals, c.I, c.J) : null;
+    for (const t of cellTris(c.n))
+      triangle(buf, W, H, px, py, t, c.n, seed, b.x, b.y, sx, sy, dec, I, J);
   }
   while (ti < trees.length) drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
+  if (ci === 0) drawCairn(buf, W, H, cairn!, b.x, b.y, sx, sy);
   if (ss === 1) {
     // ImageData erwartet unvormultiplizierte Farben (nur im Sockelband nötig)
     for (let o = 0; o < buf.length; o += 4) {
@@ -314,6 +346,202 @@ export function rasterPiece(
       }
     }
   return out;
+}
+
+// ---------- Entdecken (L6): Bergsee, Wasserfall, Höhle, Steinmännchen ----------
+//
+// Alle Töne aus der Palette gemischt (2–3 Stufen, Kontur als dunkler Eigenton, nie Schwarz, nichts heller als foam).
+// Sichtbarkeit je Rasterfaktor f (Cache je Zoomstufe): See ab 0,5, Wasserfall ab 0,75, Höhle ab 1, Steinmännchen ab 1,5.
+
+export const LAKE_F = 0.5,
+  FALL_F = 0.75,
+  CAVE_F = 1,
+  CAIRN_F = 1.5;
+const L = LIGHT_COLORS;
+/** Bergsee: dunkler, entsättigter Spiegel (waterDeep mit 30 % Fels/kühl), hellere Spiegelung hinten, Schuttufer. */
+export const LAKE_DEEP: Rgb = mixRgb(rgbOf(PALETTE.waterDeep), L.dark, 0.3),
+  LAKE_SKY: Rgb = mixRgb(mixRgb(rgbOf(PALETTE.waterMid), L.dark, 0.25), L.light, 0.3),
+  LAKE_LINE: Rgb = mixRgb(LAKE_DEEP, ROCK_TONES[0]!, 0.5),
+  LAKE_SHORE: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.4);
+/** Wasserfall: foam mit waterMid gemischt, steil heller; am Fuss Gischt und Tümpel. */
+export const FALL_BAND: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.4),
+  FALL_BAND_HI: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.2),
+  FALL_SPRAY: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.1),
+  FALL_POOL: Rgb = mixRgb(rgbOf(PALETTE.waterMid), L.dark, 0.35);
+/** Höhle: dunkelster Felston, kühl abgedunkelt (nicht Schwarz); Sturz hell (Licht oben links). */
+const dim = (c: Rgb, k: number): Rgb => [c[0] * k, c[1] * k, c[2] * k];
+export const CAVE_IN: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.62),
+  CAVE_FLOOR: Rgb = mixRgb(CAVE_IN, ROCK_TONES[1]!, 0.35),
+  CAVE_LINE: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.3),
+  CAVE_LINTEL: Rgb = ROCK_TONES[3]!,
+  CAVE_LINTEL_SHADE: Rgb = ROCK_TONES[2]!;
+/** Steinmännchen: Felstöne mit Licht oben links, Kontur dunkler Eigenton. */
+export const CAIRN_LIT: Rgb = ROCK_TONES[3]!,
+  CAIRN_MID: Rgb = ROCK_TONES[2]!,
+  CAIRN_SHADE: Rgb = ROCK_TONES[1]!,
+  CAIRN_LINE: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.25);
+const PX_TILE = 1 / 30; // Kachel je Weltpixel (Näherung für Uferbreiten)
+
+/** Abziehbilder einer Zelle (nur die sichtbaren Arten dieses Faktors). */
+export interface CellDecal {
+  lake: MassifLake | null;
+  fall: MassifFall | null;
+  cave: MassifCave | null;
+}
+interface PieceDecals {
+  lake: MassifLake | null;
+  fall: MassifFall | null;
+  cave: MassifCave | null;
+}
+const touches = (nodes: Set<number>, I: number, J: number): boolean =>
+  nodes.has(J * 100000 + I) ||
+  nodes.has(J * 100000 + I + 1) ||
+  nodes.has((J + 1) * 100000 + I) ||
+  nodes.has((J + 1) * 100000 + I + 1);
+/** Sichtbare Abziehbilder dieses Teilstücks bei Faktor f (null, wenn die Karte keine hat). */
+function pieceDecals(p: MassifPiece, f: number): PieceDecals | null {
+  const m = massifFeatures(p.data);
+  const lake = m.lake && m.lake.comp === p.comp && f >= LAKE_F ? m.lake : null,
+    fall = m.fall && m.fall.comp === p.comp && f >= FALL_F ? m.fall : null,
+    cave = m.cave && m.cave.comp === p.comp && f >= CAVE_F ? m.cave : null;
+  return lake || fall || cave ? { lake, fall, cave } : null;
+}
+function cellDecal(d: PieceDecals, I: number, J: number): CellDecal | null {
+  const lake = d.lake && touches(d.lake.nodes, I, J) ? d.lake : null,
+    fall = d.fall && touches(d.fall.nodes, I, J) ? d.fall : null,
+    cave = d.cave && touches(d.cave.nodes, I, J) ? d.cave : null;
+  return lake || fall || cave ? { lake, fall, cave } : null;
+}
+
+const segDist = (
+  x: number,
+  y: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): { d: number; t: number } => {
+  const dx = bx - ax,
+    dy = by - ay;
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+  return { d: Math.hypot(ax + t * dx - x, ay + t * dy - y), t };
+};
+
+/** Farbe des Abziehbilds am Punkt (Kachelpunkt fx, fy; Bildpunkt wx, wy in Weltpixeln) oder null. */
+function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: number): Rgb | null {
+  const lake = dec.lake;
+  if (lake) {
+    const dx = fx - lake.cx,
+      dy = fy - lake.cy;
+    const d = Math.hypot(dx, dy);
+    const r = lakeRadius(lake, Math.atan2(dy, dx));
+    if (d < r) {
+      if (d > r - PX_TILE) return LAKE_LINE; // Kontur: 1 px dunkler Eigenton
+      // Spiegelung am hinteren Ufer (Himmel): Richtung −x −y
+      const q = (dx + dy) / (Math.SQRT2 * r);
+      return q < -0.42 + 0.1 * Math.sin(dx * 23 + dy * 11) ? LAKE_SKY : LAKE_DEEP;
+    }
+    if (d < r + 2 * PX_TILE) return LAKE_SHORE; // schmales Ufer aus Schutt
+  }
+  const fall = dec.fall;
+  if (fall) {
+    const pts = fall.path;
+    let best = Infinity,
+      wBand = 1,
+      hi = 0;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const a = pts[k]!,
+        b = pts[k + 1]!;
+      const ax = (a.I - a.J) * NX,
+        ay = (a.I + a.J) * NY - a.h,
+        bx = (b.I - b.J) * NX,
+        by = (b.I + b.J) * NY - b.h;
+      const { d, t } = segDist(wx, wy, ax, ay, bx, by);
+      const wd = a.w + (b.w - a.w) * t;
+      if (d - wd / 2 < best) {
+        best = d - wd / 2;
+        wBand = wd;
+        hi = a.steep + (b.steep - a.steep) * t;
+      }
+    }
+    const e = pts[pts.length - 1]!;
+    const ex = wx - (e.I - e.J) * NX,
+      ey = wy - ((e.I + e.J) * NY - e.h);
+    // Tümpel und Gischt am Fuss
+    if ((ex / 3.4) ** 2 + (ey / 1.7) ** 2 < 1)
+      return (ex / 1.7) ** 2 + ((ey + 0.3) / 0.9) ** 2 < 1 ? FALL_SPRAY : FALL_POOL;
+    if (best <= 0 && wBand > 0) return hi > 0.6 ? FALL_BAND_HI : FALL_BAND;
+  }
+  const cave = dec.cave;
+  if (cave) {
+    const ax = (cave.I - cave.J) * NX,
+      ay = (cave.I + cave.J) * NY - cave.h;
+    const u = (wx - ax) / cave.rx;
+    let v = (wy - ay + 0.4) / cave.ry;
+    if (v > 0) v *= 1.2; // flacherer Boden
+    const ang = Math.atan2(v, u);
+    const n = cave.shape.length;
+    const tt = ((ang / (2 * Math.PI) + 1) % 1) * n,
+      k = Math.floor(tt),
+      fr = tt - k;
+    const fac =
+      cave.shape[k % n]! +
+      (cave.shape[(k + 1) % n]! - cave.shape[k % n]!) * (fr * fr * (3 - 2 * fr));
+    const q = Math.hypot(u, v) / fac;
+    if (q < 1) return q > 0.86 ? CAVE_LINE : v > 0.55 ? CAVE_FLOOR : CAVE_IN;
+    // Sturz/Überhang: schmaler heller Streifen über dem oberen Rand
+    if (v < 0.1 && q < 1.5 + 0.1 * (cave.shape[0]! - 1))
+      return u < 0.3 ? CAVE_LINTEL : CAVE_LINTEL_SHADE;
+  }
+  return null;
+}
+
+/** Steinmännchen (L6 C9) am Anker: gestapelte Steine, nach oben kleiner, Felstöne mit Licht oben links, Kontur. */
+function drawCairn(
+  buf: Uint8ClampedArray,
+  W: number,
+  H: number,
+  t: MassifCairn,
+  ox: number,
+  oy: number,
+  sx: number,
+  sy: number,
+): void {
+  const fx = (t.I - t.J) * NX,
+    fy = (t.I + t.J) * NY - t.h;
+  const x0 = Math.max(0, Math.floor((fx - 3 - ox) * sx)),
+    x1 = Math.min(W - 1, Math.ceil((fx + 3 - ox) * sx)),
+    y0 = Math.max(0, Math.floor((fy - t.height - 1 - oy) * sy)),
+    y1 = Math.min(H - 1, Math.ceil((fy + 0.5 - oy) * sy));
+  // Steine mit Mittelpunkt (cu, cv) und Halbachsen
+  const st: { cu: number; cv: number; rx: number; ry: number }[] = [];
+  let base = 0;
+  for (const s of t.stones) {
+    st.push({ cu: s.dx, cv: base + s.h * 0.5, rx: s.w * 0.5, ry: s.h * 0.62 });
+    base += s.h * 0.92;
+  }
+  for (let y = y0; y <= y1; y++)
+    for (let x = x0; x <= x1; x++) {
+      const u = ox + (x + 0.5) / sx - fx,
+        v = fy - (oy + (y + 0.5) / sy);
+      let c: Rgb | null = null;
+      for (let i = 0; i < st.length; i++) {
+        const l = st[i]!;
+        const qu = (u - l.cu) / l.rx,
+          qv = (v - l.cv) / l.ry;
+        const q = qu * qu + qv * qv;
+        if (q > 1) continue;
+        const rim = (1 - Math.sqrt(q)) * Math.min(l.rx, l.ry) < 0.35;
+        const lit = -0.6 * qu + 0.8 * qv;
+        c = rim ? CAIRN_LINE : lit > 0.25 ? CAIRN_LIT : lit < -0.45 ? CAIRN_SHADE : CAIRN_MID;
+      }
+      if (!c) continue;
+      const o = (y * W + x) * 4;
+      buf[o] = c[0];
+      buf[o + 1] = c[1];
+      buf[o + 2] = c[2];
+      buf[o + 3] = 255;
+    }
 }
 
 const TREE_CROWN = rgbOf(PALETTE.crown),
@@ -444,6 +672,9 @@ function triangle(
   oy: number,
   sx: number,
   sy: number,
+  dec: CellDecal | null = null,
+  cI: readonly number[] = [],
+  cJ: readonly number[] = [],
 ): void {
   const [i0, i1, i2] = t;
   const x0 = px[i0]!,
@@ -615,6 +846,17 @@ function triangle(
           r = f[0];
           g = f[1];
           bl = f[2];
+        }
+      }
+      if (dec) {
+        // L6: Abziehbilder (See, Wasserfall, Höhle) nach Weltpunkt bzw. Bildpunkt, ersetzen die Zellfarbe
+        const fx = (cI[i0]! * w0 + cI[i1]! * w1 + cI[i2]! * w2) / SUB,
+          fy = (cJ[i0]! * w0 + cJ[i1]! * w1 + cJ[i2]! * w2) / SUB;
+        const q = decalColor(dec, fx, fy, wx, wy);
+        if (q) {
+          r = q[0];
+          g = q[1];
+          bl = q[2];
         }
       }
       const o = (y * W + x) * 4;
