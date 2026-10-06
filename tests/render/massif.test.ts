@@ -1,4 +1,5 @@
 import { fieldWorld } from '../../src/render/terrainField';
+import { meadowTint } from '../../src/render/terrain';
 import { FLOWER_TONES } from '../../src/render/groundDecor';
 import { rotNoise } from '../../src/render/light';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -40,6 +41,7 @@ import {
   DEBRIS,
   DEBRIS_HI,
   EDGE_COLORS,
+  MEADOW,
   footRadius,
   HILL_AMP,
   ROCK_TONES,
@@ -412,7 +414,7 @@ describe('H-R9 A2 Höhenfeld', () => {
     }
   });
 
-  it('L2 Fuss: Randabstand, bei dem der Körper 24 % der Amplitude erreicht, ≥ 1,8 Kacheln (ersetzt A2 „kein breiter flacher Saum“, Spec 2.2(2) hebt den Playtest-R3-Entscheid auf)', () => {
+  it('L2 Fuss: Randabstand, bei dem der Körper 24 % der Amplitude erreicht, ≥ 1,6 Kacheln (AK L2 angepasst, Entscheid lead-art, D an L0; ersetzt A2 „kein breiter flacher Saum“, Spec 2.2(2) hebt den Playtest-R3-Entscheid auf)', () => {
     for (const seed of [7, 14]) {
       const c = largest(createWorld(seed, { unlockAll: true }));
       const d: number[] = [];
@@ -423,7 +425,56 @@ describe('H-R9 A2 Höhenfeld', () => {
       }
       d.sort((a, b) => a - b);
       expect(d.length, `Seed ${seed}`).toBeGreaterThan(20);
-      expect(d[Math.floor(d.length / 2)]!, `Seed ${seed}`).toBeGreaterThanOrEqual(1.8);
+      expect(d[Math.floor(d.length / 2)]!, `Seed ${seed}`).toBeGreaterThanOrEqual(1.6);
+    }
+  });
+
+  it('L2 Fuss ohne Knick: Median-Steigung je 0,25-Kachel-Band steigt bis Randabstand 2,0 monoton (konkav, Toleranz 10 %), kein Band steiler als 0,5 · Amplitude je Kachel (der Körper ohne Fuss steht dort bei 0,49)', () => {
+    // Abweichung vom Auftrag (lead-art): „kein Band steiler als 1,3 × das Band 2,5–3,0“ ist nicht erfüllbar, der Körper
+    // verläuft dort fast flach (≈ 5–10 px je Kachel nach der Schulter); als Obergrenze dient die Wandsteilheit vor L2.
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      const bands: number[][] = Array.from({ length: 13 }, () => []);
+      for (let k = 0; k < c.height.length; k++) {
+        const d = c.dist[k]!;
+        if (d > 0 && d < 3) bands[Math.floor(d / 0.25)]!.push(c.height[k]!);
+      }
+      const med = bands.slice(1).map((b) => {
+        b.sort((x, y) => x - y);
+        return b[b.length >> 1]!;
+      });
+      const slope = med
+        .slice(1)
+        .map((h, i) => (h - med[i]!) / 0.25) // Band 0,25·(i+1) → 0,25·(i+2)
+        .filter(Number.isFinite);
+      const info = `Seed ${seed}: ${slope.map((v) => v.toFixed(0)).join(' ')}`;
+      for (let i = 1; i < 7; i++)
+        expect(slope[i]!, `${info} Band ${i}`).toBeGreaterThanOrEqual(0.9 * slope[i - 1]!);
+      for (const v of slope) expect(v, info).toBeLessThanOrEqual(0.5 * c.amp);
+    }
+  });
+
+  it('L2 Arm-Spitze (G3): schmale Arme laufen stetig aus, die Höhe folgt der lokalen Breite (kein Einzelkegel an der Spitze)', () => {
+    const R = 8; // Knoten: lokale Breite = grösster Randabstand binnen 2 Kacheln
+    for (const seed of [7, 14]) {
+      const c = largest(createWorld(seed, { unlockAll: true }));
+      let dünn = 0;
+      for (let j = 0; j < c.ny; j += 1)
+        for (let i = 0; i < c.nx; i += 1) {
+          const k = j * c.nx + i;
+          if (c.dist[k]! <= 0) continue;
+          let m = 0;
+          for (let b = Math.max(0, j - R); b <= Math.min(c.ny - 1, j + R); b++)
+            for (let a = Math.max(0, i - R); a <= Math.min(c.nx - 1, i + R); a++)
+              m = Math.max(m, c.dist[b * c.nx + a]!);
+          const arm = Math.min(1, Math.max(0, (m - 0.4) / 0.8));
+          // Höhe ohne Fuss ≤ 2,5 · Amplitude (Grate mal Staffelung), Geröll ≤ 1 px
+          expect(c.height[k]!, `Seed ${seed} Knoten ${i},${j}`).toBeLessThanOrEqual(
+            2.5 * c.amp * arm * arm * (3 - 2 * arm) + 1,
+          );
+          if (m < 1.2) dünn++;
+        }
+      expect(dünn, `Seed ${seed} dünne Knoten`).toBeGreaterThan(0);
     }
   });
 });
@@ -1235,7 +1286,9 @@ describe('ART-STIL-02 L2 Kontrast nach Höhe', { timeout: 60000 }, () => {
 describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
   /** Grösste Komponenten (Seeds 7, 14): Mittelfarbe der Knoten im Fussband gegen die Wiese. */
   it('L2 Fussband ↔ Wiese ΔE2000 ≤ 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
-    const wiese = rgbToLab(EDGE_COLORS[1] as [number, number, number]);
+    const wiese = rgbToLab(meadowTint(rgbOf(PALETTE.grass))); // die gemalte Wiese der Geländeebene (G2)
+    for (let q = 0; q < 3; q++)
+      expect(MEADOW[q]!).toBeCloseTo(meadowTint(rgbOf(PALETTE.grass))[q]!, 6);
     for (const seed of KERN_SEEDS) {
       const w = createWorld(seed, { unlockAll: true });
       const big = largest(w);
@@ -1404,6 +1457,43 @@ describe('ART-STIL-02 L2 Schnee (C2)', { timeout: 60000 }, () => {
         ).toBeGreaterThanOrEqual(0.5);
       }
     expect(big).toBeGreaterThan(5);
+  });
+
+  it('L2 Schnee G4: keine Löcher in der Schneemaske (kein nicht-verschneiter Knoten mit Schnee in allen vier Achsrichtungen binnen 2 Knoten, innerhalb der Schneezone)', () => {
+    let holes = 0,
+      snowN = 0;
+    for (const seed of [7, 14, 2, 18]) {
+      const fw = fieldWorld(createWorld(seed, { unlockAll: true }));
+      const snow = new Map<string, number>();
+      const meta: { k: string; hn: number; cap: number }[] = [];
+      for (const p of massifPieces(fw)) {
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const k = `${p.comp.id}|${c.I}|${c.J}`;
+          if (snow.has(k)) continue;
+          const nd = at(c.I, c.J);
+          snow.set(k, nd.snow >= 0.5 ? 1 : 0);
+          if (p.comp.amp >= 90) meta.push({ k, hn: nd.h / p.comp.amp, cap: p.comp.snowHn });
+        }
+      }
+      for (const m of meta) {
+        if (snow.get(m.k) || m.hn < m.cap) continue;
+        const [id, I, J] = m.k.split('|').map(Number) as [number, number, number];
+        const dirs: [number, number][] = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ];
+        const surrounded = dirs.every(([dx, dy]) =>
+          [1, 2].some((d) => snow.get(`${id}|${I + dx * d}|${J + dy * d}`) === 1),
+        );
+        if (surrounded) holes++;
+      }
+      snowN += [...snow.values()].reduce((a, b) => a + b, 0);
+    }
+    expect(snowN).toBeGreaterThan(500);
+    expect(holes).toBe(0);
   });
 
   it('L2 Schneetöne: Luminanz ≤ foam, 3 Stufen warmweiss bis kühlblau, ΔE2000 ≥ 20 zu den Signalfarben', () => {

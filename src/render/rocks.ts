@@ -17,6 +17,7 @@ import {
   SUB,
   TONE_FLAT,
   SNOW_TONES,
+  FOOT_GRASS,
   L2_FLOWER_SALT,
   L2_FLOWER_TONE_SALT,
   VEG_GRASS_TONES,
@@ -461,7 +462,8 @@ function triangle(
     hwT = halfWidth(grad(a.t, b.t, c.t)),
     hwE = halfWidth(grad(a.e, b.e, c.e)),
     hwV = halfWidth(grad(a.veg, b.veg, c.veg)),
-    hwN = halfWidth(grad(a.snow, b.snow, c.snow));
+    hwN = halfWidth(grad(a.snow, b.snow, c.snow)),
+    hwF = halfWidth(grad(a.foot, b.foot, c.foot));
   const eps = -1e-7;
   const top = ROCK_TONES.length - 1;
   for (let y = minY; y <= maxY; y++) {
@@ -572,6 +574,16 @@ function triangle(
         r += (lerp(a.ec[0], b.ec[0], c.ec[0]) - r) * mx;
         g += (lerp(a.ec[1], b.ec[1], c.ec[1]) - g) * mx;
         bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
+      }
+      // Wiesenfuss (G2): gestufte Kante, 1–2 px, Rand per Rauschen gebrochen
+      const fv = a.foot + b.foot + c.foot;
+      if (fv > 0.15) {
+        const fm = FOOT_GRASS * sstep(lerp(a.foot, b.foot, c.foot) + 0.25 * brk, 0.5, hwF);
+        if (fm > 0) {
+          r += (lerp(a.fc[0], b.fc[0], c.fc[0]) - r) * fm;
+          g += (lerp(a.fc[1], b.fc[1], c.fc[1]) - g) * fm;
+          bl += (lerp(a.fc[2], b.fc[2], c.fc[2]) - bl) * fm;
+        }
       }
       // C5 Alpenwiese: vereinzelte Blütenpunkte auf flachen Bewuchsflecken, Zelle = 1 Weltpixel (weltfest, kein Flimmern)
       if (vg >= 0.9 * VEG_MIX && lerp(a.flower, b.flower, c.flower) > 0.5) {

@@ -14,7 +14,7 @@ import {
   type Rgb,
 } from './light';
 import type { Island, World } from '../sim/types';
-import { FOREST_FLOOR, PALETTE, rgbOf, rgbOfCss } from './palette';
+import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 
 // Tonleiter (H-R11): lebt in light.ts; hier zur Rückwärtsverträglichkeit weiter ausgeführt.
 export { ROCK_TONES, toneColor, toneStep };
@@ -65,11 +65,14 @@ const BUMP = 0.8; // px Geröll-Buckel am Fuss
  * (dist / r)^FOOT_P gedämpft (1 ab r): das Massiv wächst aus dem Land statt als Wand zu stehen. An Rinnenausgängen
  * (Krümmung > 0 vor dem Fuss) läuft der Fuss bis FOOT_FAN Kacheln weiter hinaus (Schwemmkegel).
  */
-export const FOOT_R = 2.2,
-  FOOT_P = 3,
+export const FOOT_R = 2.45,
+  FOOT_P = 1.6,
   FOOT_FAN = 0.5,
   FOOT_BACK = 0.3;
 /** Fussradius je Knoten höchstens FOOT_WIDTH_K · lokaler grösster Randabstand (≈ 0,5 · lokale Breite): schmale Arme behalten ihren Grat. */
+/** G3: Arm-Auslauf: lokale Breite (grösster Randabstand in 2 Kacheln) von ARM_LO bis ARM_HI Kacheln blendet die Höhe ein. */
+const ARM_LO = 0.4,
+  ARM_HI = 1.2;
 const FOOT_WIDTH_K = 1,
   FOOT_LOCAL = 2 * SUB; // Radius des Max-Filters (Knoten)
 /** Felshügel (< SMALL_MASSIF): Mindestamplitude (px, ≈ 0,9 ISO_H) und Kuppen-Modulation ± HILL_DOME. */
@@ -105,6 +108,8 @@ export interface MassifComponent {
   amp: number;
   /** Schneegrenze (hn) für flache Lagen dieser Komponente (L2 C2), Bisektion in SNOW_HN_MIN … SNOW_HN_MAX */
   snowHn: number;
+  /** Schnee-Füllung (G4): Knoten (1) in Löchern der Schneemaske, per Schliessen (Dilatation, Erosion) geschlossen */
+  snowFill: Uint8Array;
   /** Fussradius je Knoten in Kacheln (L2 T1): unter diesem Randabstand ist der Körper gedämpft; 0 = kein Fuss */
   footR: Float32Array;
   /** 1 je Kachel des Rechtecks (Zeilen ab y0), die zur Komponente gehört. */
@@ -502,10 +507,17 @@ function buildComponent(
           Math.min(FOOT_R, FOOT_WIDTH_K * localMax[k]!) +
           FOOT_FAN * smoothstep(0.2 * LAP_REF, 0.6 * LAP_REF, lap);
         footR[k] = r;
+        // G3: schmale Arme laufen zur Spitze stetig aus (Höhe folgt der lokalen Breite), keine Einzelzacke
+        const arm = smoothstep(ARM_LO, ARM_HI, localMax[k]!);
+        if (arm < 1) {
+          foot[k] = 1 - footW * (1 - arm);
+          footR[k] = Math.max(r, localMax[k]! + 0.05);
+        }
         if (dist[k]! >= r) continue;
         // Rückseite (gs > 0) steht höher (Staffelung): ihr Fuss ist flacher gedämpft, die Vorderseite stärker
-        const depth = footW * (1 - Math.pow(dist[k]! / r, FOOT_P)) * (1 - FOOT_BACK * gs[k]!);
-        foot[k] = Math.max(0, 1 - depth);
+        const depth =
+          footW * (1 - Math.pow(smooth01(dist[k]! / r), FOOT_P)) * (1 - FOOT_BACK * gs[k]!);
+        foot[k] = Math.max(0, 1 - depth) * foot[k]!;
       }
   const height = new Float32Array(nx * ny);
   for (let j = 0; j < ny; j++)
@@ -520,6 +532,7 @@ function buildComponent(
       height[k] = Math.max(0, pre[k]! * foot[k]! + bump);
     }
   const snowHn = snowLine(seed, x0, y0, nx, ny, src, height, amp);
+  const snowFill = snowFillMask(seed, x0, y0, nx, ny, src, height, amp, snowHn);
   const mask = new Uint8Array((x1 - x0 + 1) * (y1 - y0 + 1));
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
@@ -540,6 +553,7 @@ function buildComponent(
     height,
     amp,
     snowHn,
+    snowFill,
     footR,
     mask,
     seed,
@@ -601,6 +615,75 @@ function snowLine(
   return (lo + hi) / 2;
 }
 
+/**
+ * Löcher der Schneemaske schliessen (G4): Knotenmaske um SNOW_CLOSE Knoten dilatieren, dann erodieren; neu gefüllt
+ * werden nur Knoten innerhalb der Schneezone (hn ≥ Schneegrenze minus Rinnenabfall). Die Ränder behalten ihr
+ * Rauschen, weil nur Knoten zugefügt werden, die die Maske rundum umschliesst.
+ */
+function snowFillMask(
+  seed: number,
+  x0: number,
+  y0: number,
+  nx: number,
+  ny: number,
+  src: Uint8Array,
+  height: Float32Array,
+  amp: number,
+  snowHn: number,
+): Uint8Array {
+  const fill = new Uint8Array(nx * ny);
+  if (amp < SNOW_MIN_AMP) return fill;
+  const raw = new Uint8Array(nx * ny);
+  let any = false;
+  for (let j = 1; j < ny - 1; j++)
+    for (let i = 1; i < nx - 1; i++) {
+      const k = j * nx + i;
+      if (src[k]) continue;
+      const h = height[k]!;
+      const steep = steepness(
+        ((height[k + 1]! - height[k - 1]!) / 2) * SUB,
+        ((height[k + nx]! - height[k - nx]!) / 2) * SUB,
+      );
+      const lap = height[k - 1]! + height[k + 1]! + height[k - nx]! + height[k + nx]! - 4 * h;
+      if (snowField(seed, x0 + i / SUB, y0 + j / SUB, amp, snowHn, h / amp, steep, lap) >= 0.5) {
+        raw[k] = 1;
+        any = true;
+      }
+    }
+  if (!any) return fill;
+  const morph = (m: Uint8Array, grow: boolean): Uint8Array => {
+    const tmp = new Uint8Array(m.length),
+      out = new Uint8Array(m.length);
+    const r = SNOW_CLOSE;
+    for (let j = 0; j < ny; j++)
+      for (let i = 0; i < nx; i++) {
+        let v = grow ? 0 : 1;
+        for (let a = Math.max(0, i - r); a <= Math.min(nx - 1, i + r); a++)
+          if (grow ? m[j * nx + a] : !m[j * nx + a]) {
+            v = grow ? 1 : 0;
+            break;
+          }
+        tmp[j * nx + i] = v;
+      }
+    for (let j = 0; j < ny; j++)
+      for (let i = 0; i < nx; i++) {
+        let v = grow ? 0 : 1;
+        for (let b = Math.max(0, j - r); b <= Math.min(ny - 1, j + r); b++)
+          if (grow ? tmp[b * nx + i] : !tmp[b * nx + i]) {
+            v = grow ? 1 : 0;
+            break;
+          }
+        out[j * nx + i] = v;
+      }
+    return out;
+  };
+  const closed = morph(morph(raw, true), false);
+  for (let k = 0; k < fill.length; k++)
+    if (closed[k] && !raw[k] && !src[k] && height[k]! / amp >= snowHn - SNOW_GULLY_DROP)
+      fill[k] = 1;
+  return fill;
+}
+
 /** Knoten (I, J) innen: alle Kacheln, die ihn berühren, erfüllen `inTile`. */
 function insideNode(inTile: (x: number, y: number) => boolean, I: number, J: number): boolean {
   const xs = I % SUB === 0 ? [I / SUB - 1, I / SUB] : [Math.floor(I / SUB)];
@@ -621,11 +704,11 @@ export const inComp = (c: MassifComponent, x: number, y: number): boolean =>
 export function nodeInside(c: MassifComponent, I: number, J: number): boolean {
   return insideNode((x, y) => inComp(c, x, y), I, J);
 }
-/** Fussradius (Kacheln) am Knoten (I, J); 0 ausserhalb oder ohne Fuss. */
+/** Wirksamer Fussradius (Kacheln) am Knoten (I, J): bis 88 % des Radius dämpft der Fuss um mehr als 3 %; 0 ausserhalb oder ohne Fuss. */
 export function footRadius(c: MassifComponent, I: number, J: number): number {
   const i = I - c.x0 * SUB,
     j = J - c.y0 * SUB;
-  return i < 0 || j < 0 || i >= c.nx || j >= c.ny ? 0 : c.footR[j * c.nx + i]!;
+  return i < 0 || j < 0 || i >= c.nx || j >= c.ny ? 0 : 0.88 * c.footR[j * c.nx + i]!;
 }
 /** Grundhöhe am Knoten (I, J) in Weltpixeln; 0 ausserhalb. */
 export function nodeHeight(c: MassifComponent, I: number, J: number): number {
@@ -787,10 +870,26 @@ export const VEG_TONES: readonly Rgb[] = [
 ];
 /** Helles Geröll-/Schuttband am Massivfuss: rock/rockLight mit etwas sandDry (Playtest R3: kein dunkler Saum). */
 export { DEBRIS };
+/**
+ * Die gemalte Wiese der Geländeebene (G2): `meadowTint` aus terrain.ts auf `grass` (Oliv-Entsättigung bei gleicher
+ * Helligkeit). Dort nachgebildet, weil terrain.ts über iso.ts dieses Modul lädt (Zyklus); der Test prüft die Gleichheit.
+ */
+const MEADOW_OLIVE = rgbOfCss(mixHex(PALETTE.grassDark, PALETTE.sandDry, 0.35)),
+  MEADOW_OLIVE_MIX = 0.72;
+const luma = (c: Rgb): number => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+export const MEADOW: Rgb = (() => {
+  const g = rgbOf(PALETTE.grass),
+    k = luma(g) / luma(MEADOW_OLIVE);
+  return mixRgb(
+    g,
+    [MEADOW_OLIVE[0] * k, MEADOW_OLIVE[1] * k, MEADOW_OLIVE[2] * k],
+    MEADOW_OLIVE_MIX,
+  );
+})();
 /** Bewuchs unten (L2): Wiesentöne wie die Wiese (grassDark … grassLight), nicht die dunklen Kronentöne. */
 export const VEG_GRASS_TONES: readonly Rgb[] = (() => {
   // F4: die gedämpften Oliv-Töne der Geländeebene (wie EDGE_COLORS[1]), nach Tonstufe gestuft
-  const w = mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25);
+  const w = MEADOW;
   return [
     mixRgb(mixRgb(w, P.dark, 0.3), P.cool, 0.15),
     mixRgb(w, P.dark, 0.15),
@@ -828,6 +927,7 @@ const SNOW_HN_MIN = 0.66,
   SNOW_HN_MAX = 1.1,
   SNOW_TARGET = 0.045, // Anteil der Komponentenknoten mit Schnee (Bisektion der Schneegrenze)
   SNOW_GULLY_DROP = 0.12, // Rinnen: Schneegrenze so viel tiefer (≈ 0,65 bei Grenze 0,8)
+  SNOW_CLOSE = 2, // Knoten: Schliessen der Schneemaske (Dilatation, dann Erosion)
   SNOW_JITTER = 0.05,
   SNOW_STEEP = 0.45;
 export const L2_SNOW_SALT = 533;
@@ -875,17 +975,27 @@ const LAP_REF = 16; // px Krümmung für volle Grat- bzw. Rinnenkante
 /** Sockelfarbe je Landart (Index = Code aus `nearestLand`; 0 = keine Mischung). */
 export const EDGE_COLORS: readonly (Rgb | null)[] = [
   null,
-  mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25),
+  MEADOW,
   rgbOfCss(FOREST_FLOOR),
   rgbOf(PALETTE.sandDry),
 ];
 
-/** F3: der flache Fuss (hn < FOOT_GRASS_HN) ist Wiese mit Kies; Übergang zum Fels bis hn FOOT_GRASS_TO. */
-const FOOT_GRASS = 0.75,
-  FOOT_GRASS_HN = 0.12,
-  FOOT_GRASS_TO = 0.28;
-const footMix = (hn: number, e: Rgb | null): number =>
-  e === null ? 0 : FOOT_GRASS * (1 - smoothstep(FOOT_GRASS_HN, FOOT_GRASS_TO, hn));
+/**
+ * Wiesenfuss (F3, G2): unter einer Schwelle auf hn (0,2 ± 0,08 nach Rauschen, Salz 535) ist der Fuss Wiese mit Kies.
+ * Das Feld (0…1, Schwelle 0,5) wird je Pixel gestuft (1–2 px Übergang wie die Bewuchsflecken): Fels läuft in Zungen
+ * und Rinnen in die Wiese, die Wiese in Bändern hinauf.
+ */
+export const FOOT_GRASS = 0.85,
+  L2_FOOT_SALT = 535;
+const FOOT_HN = 0.2,
+  FOOT_JITTER = 0.08,
+  FOOT_STEP = 0.1;
+export function footField(seed: number, fx: number, fy: number, hn: number, e: Rgb | null): number {
+  if (e === null) return 0;
+  const edgeHn =
+    FOOT_HN + FOOT_JITTER * (2 * rotNoise(seed + L2_FOOT_SALT, fx, fy, 1.3, ROT_A) - 1);
+  return Math.max(0, Math.min(1, 0.5 + (edgeHn - hn) / FOOT_STEP));
+}
 /** Zielfarbe des Fusses: Nachbargelände, bei Wald und Wasser die Wiese. */
 const footTarget = (e: Rgb | null): Rgb => (e && e !== EDGE_COLORS[2] ? e : EDGE_COLORS[1]!);
 const edgeMix = (e: Rgb): number => (e === EDGE_COLORS[2] ? EDGE_MIX_FOREST : EDGE_MIX);
@@ -909,6 +1019,8 @@ export interface CellShade {
   /** Amplitude der Komponente (px): Schnee nur ab SNOW_MIN_AMP; fehlt = kein Schnee */
   amp?: number;
   snowHn?: number;
+  /** Knoten in einem geschlossenen Schneeloch */
+  snowFill?: boolean;
 }
 /** Anteil des Schuttbands 0…1 aus dem weichen Innen-Anteil. */
 export const debrisOf = (soft: number): number => 1 - smoothstep(SOFT_CUT, DEBRIS_HI, soft);
@@ -1004,13 +1116,12 @@ export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): 
   if (e < -EDGE_ON) c = mixRgb(c, ROCK_TONES[0]!, RINNE_LO);
   if (
     s.amp !== undefined &&
-    snowField(seed, fx, fy, s.amp, s.snowHn ?? 1, s.hn, steep, s.lap) >= 0.5
+    (s.snowFill || snowField(seed, fx, fy, s.amp, s.snowHn ?? 1, s.hn, steep, s.lap) >= 0.5)
   )
     c = toneColor(st, SNOW_TONES);
   c = mixRgb(c, DEBRIS, DEBRIS_MIX * debrisOf(s.soft ?? 1));
   if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, edgeMix(s.edge) * (1 - s.rim));
-  const fm = footMix(s.hn, s.edge);
-  if (fm > 0) c = mixRgb(c, footTarget(s.edge), fm);
+  if (footField(seed, fx, fy, s.hn, s.edge) >= 0.5) c = mixRgb(c, footTarget(s.edge), FOOT_GRASS);
   return c;
 }
 /** Bewuchsanteil eines Flecks, Schwellen der Grat- und Rinnenkante und ihre Stärke. */
@@ -1041,6 +1152,9 @@ export interface NodeShade {
   /** Anteil der Wiesentöne an der Bewuchsfarbe (1 unten, 0 ab hn 0,35) und Blütenbereich (0…1, hn 0,2–0,35, flach) */
   vlow: number;
   flower: number;
+  /** Wiesenfuss-Feld 0…1 (Schwelle 0,5) und Zielfarbe */
+  foot: number;
+  fc: Rgb;
   /** Schneefeld 0…1 (Schwelle 0,5), nur Komponenten mit amp ≥ SNOW_MIN_AMP */
   snow: number;
   rub: number;
@@ -1099,6 +1213,7 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       soft,
       amp: c.amp,
       snowHn: c.snowHn,
+      snowFill: c.snowFill[j * c.nx + i] === 1,
     };
     const steep = steepness(gx, gy);
     const out: NodeShade = {
@@ -1113,15 +1228,17 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       t: toneLevel(c.seed, fx, fy, sh),
       e: Math.max(-1, Math.min(1, -lap / LAP_REF)),
       veg: vegField(c.seed, fx, fy, hn, steep, lap),
-      snow: snowField(c.seed, fx, fy, c.amp, c.snowHn, hn, steep, lap),
+      snow: Math.max(
+        snowField(c.seed, fx, fy, c.amp, c.snowHn, hn, steep, lap),
+        c.snowFill[j * c.nx + i] ? 1 : 0,
+      ),
       vlow: 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn),
       flower: flowerWeight(hn, steep),
       rub: rubbleField(c.seed, fx, fy, hn, steep),
-      mix: Math.max(edge ? edgeMix(edge) * (1 - sh.rim) : 0, footMix(hn, edge)),
-      ec:
-        footMix(hn, edge) > (edge ? edgeMix(edge) * (1 - sh.rim) : 0)
-          ? footTarget(edge)
-          : (edge ?? ROCK_TONES[TONE_FLAT]!),
+      mix: edge ? edgeMix(edge) * (1 - sh.rim) : 0,
+      ec: edge ?? ROCK_TONES[TONE_FLAT]!,
+      foot: footField(c.seed, fx, fy, hn, edge),
+      fc: footTarget(edge),
       warp: 3.2 * rotNoise(c.seed + 313, fx, fy, 0.7, ROT_B),
     };
     nm.set(k, out);
