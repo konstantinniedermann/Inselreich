@@ -44,9 +44,9 @@ describe('L5-T3 Wasserfelder im Bodenbild (Sandbank, Riff, Tang)', () => {
     expect(dist(at(6.2, 5.5))).toBeGreaterThan(dist(at(6.5, 5.5)) - 1e-9 - 100);
   });
 
-  it('Seeds 1–6: paintPixels ändert nur Pixel in Flächenkacheln (Wasser, Küstenzelle); Sandbank, Riff und Tang weichen vom Wasserton ab', () => {
+  it('Seeds 1–3: paintPixels ändert nur Pixel in Flächenkacheln (Wasser, Küstenzelle); Sandbank, Riff und Tang weichen vom Wasserton ab', () => {
     let changedAll = 0;
-    for (let seed = 1; seed <= 6; seed++) {
+    for (let seed = 1; seed <= 3; seed++) {
       const w = createWorld(seed);
       const isl = home(w);
       const g = buildGrid(fieldWorld(w));

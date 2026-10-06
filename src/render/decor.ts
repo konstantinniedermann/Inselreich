@@ -87,7 +87,13 @@ export type GroundKind =
   | 'carpet' // A13 (eine Kachel des Teppichs)
   | 'toadstools' // B6
   | 'deadwood' // B7
-  | 'ferns'; // B8
+  | 'ferns' // B8
+  | 'beachStone' // D2 (L5): Steine am Strand
+  | 'driftwood' // D3: Treibholz am Spülsaum
+  | 'shell' // D4: Muscheln und Seesterne (arg 0 Muschel, 1 Seestern)
+  | 'beachGrass' // D5: Strandhafer auf den Dünen
+  | 'tidePool' // D6: Gezeitentümpel zwischen Strandsteinen
+  | 'crate'; // D9: Kiste (arg 0) bzw. Flaschenpost (arg 1) am Spülsaum
 
 export interface GroundElement {
   kind: GroundKind;
@@ -249,6 +255,9 @@ interface StaticPlan {
   gEligible: number[];
   /** 0 frei, sonst 1 + Index in `sites` (Fussabdruck bzw. Teppichkacheln). */
   reserved: Uint8Array;
+  /** Strand (L5): Kiste/Flaschenpost D9 (E, höchstens eine) und Gezeitentümpel D6 (G) je Kachel (1 = Tümpel). */
+  crate: Pos | null;
+  pool: Uint8Array;
 }
 
 /** Eignung eines Ankers für ein S/E-Element: nur statisches Gelände (D1). */
@@ -443,11 +452,14 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
     g: new Uint8Array(w * h),
     gEligible: [0, 0, 0, 0],
     reserved: new Uint8Array(w * h),
+    crate: null,
+    pool: new Uint8Array(w * h),
   };
   planRare(p, w, h);
   planStamps(p, w, h);
   planPalms(p, w, h);
   planGround(p, w, h);
+  planBeach(p, w, h);
   plans.set(isl, p);
   return p;
 }
@@ -697,6 +709,94 @@ function planGround(p: StaticPlan, w: number, h: number): void {
       p.g[c.i] = ki + 1;
     }
   });
+}
+
+// ---------- Strand (D2–D6, D9; L5) ----------
+
+/** Eintrittswahrscheinlichkeit je Sandkachel (Würfel je Art, Salze 561–564): nasser Saum und trockener Sand. */
+const BEACH_BAND = {
+  wood: 0.03,
+  shell: 0.07,
+  stoneWet: 0.08,
+  stoneDry: 0.025,
+  /** Strandhafer auf Dünenkämmen: je nach Küstenvariante; Rauschschwelle des Kamms und Anteil auf dem Kamm. */
+  grass: { palm: [0.58, 0.3], pine: [0.52, 0.4], dune: [0.4, 0.45] },
+} as const;
+export const CRATE_P = 0.15;
+export const TIDEPOOL_MAX = 6;
+/** Tümpel brauchen Felsküste: Gebirge höchstens so viele Kacheln entfernt. */
+const POOL_MTN_REACH = 6;
+
+/**
+ * Statische Strand-Kandidaten (D1): Kiste D9 (Los `hash2(seed + 565, 0, 0) < CRATE_P`, Ort = bester Rang unter den nassen
+ * Sandkacheln, nie zweimal) und Gezeitentümpel D6 (nasser Sand mit Gebirge in der Nähe, Abstand ≥ 4, höchstens
+ * `TIDEPOOL_MAX`). Ob sie gezeigt werden, entscheidet nur die Belegung (`groundElements`).
+ */
+function planBeach(p: StaticPlan, w: number, h: number): void {
+  const seed = p.seed;
+  const wet: { x: number; y: number; i: number }[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (p.cls[i] === 1 && p.coast[i] === 1) wet.push({ x, y, i });
+    }
+  if (hash2(seed + 565, 0, 0) < CRATE_P && wet.length) {
+    let best = wet[0]!,
+      bs = -1;
+    for (const c of wet) {
+      const r = hash2(seed + 565, c.x + 1, c.y + 1);
+      if (r > bs) {
+        bs = r;
+        best = c;
+      }
+    }
+    p.crate = { x: best.x, y: best.y };
+  }
+  const cand = wet
+    .filter(
+      (c) => p.mtn[c.i]! <= POOL_MTN_REACH && !(p.crate && p.crate.x === c.x && p.crate.y === c.y),
+    )
+    .map((c) => ({ ...c, r: hash2(seed + 561, c.x * 64 + 63, c.y) }))
+    .sort((a, b) => a.r - b.r);
+  const n = Math.min(TIDEPOOL_MAX, gCount(seed, 561, 6, TIDEPOOL_MAX));
+  const taken: { x: number; y: number }[] = [];
+  for (const c of cand) {
+    if (taken.length >= n) break;
+    if (taken.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < G_SPACING)) continue;
+    taken.push(c);
+    p.pool[c.i] = 1;
+  }
+}
+
+/** Das Strand-Element einer freien Sandkachel (höchstens eines), `null` ohne. Nur Kachel und Küstenvariante (D2). */
+function sandKind(
+  seed: number,
+  plan: StaticPlan,
+  w: number,
+  x: number,
+  y: number,
+): { kind: GroundKind; arg: number } | null {
+  const i = y * w + x;
+  if (plan.crate && plan.crate.x === x && plan.crate.y === y)
+    return { kind: 'crate', arg: hash2(seed + 565, -1, -1) < 0.4 ? 1 : 0 };
+  if (plan.pool[i]) return { kind: 'tidePool', arg: 0 };
+  const c = plan.coast[i]!;
+  if (c === 1) {
+    if (hash2(seed + 562, x, y) < BEACH_BAND.wood) return { kind: 'driftwood', arg: 0 };
+    if (hash2(seed + 563, x, y) < BEACH_BAND.shell)
+      return { kind: 'shell', arg: hash2(seed + 563, x + 77, y) < 0.3 ? 1 : 0 };
+    if (hash2(seed + 561, x, y) < BEACH_BAND.stoneWet) return { kind: 'beachStone', arg: 0 };
+    return null;
+  }
+  if (hash2(seed + 561, x + 31, y) < BEACH_BAND.stoneDry) return { kind: 'beachStone', arg: 0 };
+  const [thr, share] = BEACH_BAND.grass[coastKind(seed)];
+  if (
+    c <= 6 &&
+    valueNoise(seed + 564, (x + 0.5) / 3.5, (y + 0.5) / 3.5) > thr &&
+    hash2(seed + 564, x, y) < share
+  )
+    return { kind: 'beachGrass', arg: 0 };
+  return null;
 }
 
 /** Statisch zulässige Kacheln je Boden-G-Art in der Reihenfolge von `G_KINDS` (Test: „das Gelände lässt es zu“). */
@@ -1243,7 +1343,15 @@ export function groundElements(
   for (let y = Math.max(0, r.y0); y <= Math.min(h - 1, r.y1); y++)
     for (let x = Math.max(0, r.x0); x <= Math.min(w - 1, r.x1); x++) {
       const i = y * w + x;
-      if (!footprintFree(isl, occ, x, y, 1, 1)) continue;
+      if (!footprintFree(isl, occ, x, y, 1, 1)) {
+        // L5: freier Sand (kein Gebäude, kein Weg) trägt Strand-Elemente
+        if (isl.tiles[i]!.terrain === 'sand' && occ[i] !== 1) {
+          const sk = sandKind(seed, plan, w, x, y);
+          if (sk)
+            out.push({ kind: sk.kind, x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: sk.arg });
+        }
+        continue;
+      }
       const res = plan.reserved[i]!;
       if (res) {
         const s = sites[res - 1]!;

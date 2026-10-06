@@ -427,7 +427,13 @@ describe('L4 D2/D3 Fussabdruck, Seltenheit', () => {
         expect(e.w).toBeLessThanOrEqual(2);
         expect(e.h).toBeLessThanOrEqual(2);
         expect(e.box).toEqual({ x0: e.x, y0: e.y, x1: e.x + e.w - 1, y1: e.y + e.h - 1 });
-        expect(footprintFree(isl, occ, e.x, e.y, e.w, e.h), key(e)).toBe(true);
+        if (
+          ['beachStone', 'driftwood', 'shell', 'beachGrass', 'tidePool', 'crate'].includes(e.kind)
+        ) {
+          // L5: Strand-Elemente stehen auf freiem Sand (kein Gebäude, kein Weg)
+          expect(isl.tiles[e.y * isl.width + e.x]!.terrain, key(e)).toBe('sand');
+          expect(occ[e.y * isl.width + e.x], key(e)).not.toBe(1);
+        } else expect(footprintFree(isl, occ, e.x, e.y, e.w, e.h), key(e)).toBe(true);
       }
     }
   });
