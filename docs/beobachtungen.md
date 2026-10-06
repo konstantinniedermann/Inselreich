@@ -1151,3 +1151,14 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   sind fast reine Rauten; ihr Saum folgt der Küste und läuft deshalb weiter spitz nach Ost/West aus. Ursache ist die
   Inselform (Erzeugung), nicht der Saum. **Einschätzung:** niedrig, kosmetisch; bei der nächsten Arbeit an der
   Fremdinsel-Erzeugung die Umrisse unregelmässiger machen (lead-art). **Ursprung:** H-R15 Bildurteil lead-art.
+
+### 2026-10-06 · Laden/Werkzeuge · Nachträge Release-Lauf REL-05 und Session-Ende
+
+- **Fundort / Beobachtung:** Laden eines Spielstands mit neuerer Version (z. B. `version: 99`) zeigt dieselbe Meldung
+  wie ein kaputter Stand („Ein Spielstand ist beschädigt …"). **Einschätzung:** niedrig; „Spielstand aus neuerer
+  Version" wäre treffender (passt zu Verfassung 1.2, Abweisen mit Hinweis). **Ursprung:** Release-Lauf REL-05
+  (qa-playtester), R277.
+- **Fundort / Beobachtung:** `$TMPDIR` enthält 7 alte `renderqa-*`-Verzeichnisse (4.–6. Oktober) aus abgebrochenen
+  Messläufen vor dem Mess-Wächter. **Einschätzung:** niedrig; ausserhalb des Repos (Löschen dort nur durch den Nutzer,
+  R207); `lib.mjs` räumt künftig auf — prüfen, ob es auch das Temp-Verzeichnis entfernt. **Ursprung:**
+  TOOL-MESSWAECHTER, R269.
