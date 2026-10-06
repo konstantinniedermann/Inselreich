@@ -312,3 +312,19 @@ RENDER-LOOK-01 erst danach.
   Kronenwert ins Salz statt dem Schema `seed + Salz` zu folgen. Keine Kollision gefunden. **Einschätzung:**
   niedrig; bei der nächsten Änderung an trees.ts (L6) auf `seed + 513` mit `s` als Argument umstellen.
   **Ursprung:** ART-STIL-02 L1, qa-code-reviewer.
+
+### 2026-10-06 · Render · Befunde aus ART-STIL-02 L4 (Deko)
+
+- **Fundort / Beobachtung:** `src/render/decor.ts` (`decorHill`) dupliziert `meadowHill` aus `terrain.ts`, um einen
+  Import-Zyklus zu vermeiden; die Gleichheit sichert nur ein Test. **Einschätzung:** niedrig; beim nächsten Umbau von
+  `terrain.ts` in ein reines Feldmodul zusammenführen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
+- **Fundort / Beobachtung:** `src/render/renderer.ts`: Der Culling-Zuschlag von 1 Kachel für Bäume und Deko-Stempel
+  setzt voraus, dass Kronen höchstens eine Kachel über ihre Kachel hinausragen. **Einschätzung:** niedrig; bei
+  grösseren Kronen in `trees.ts` (L6, Riesenbaum) den Zuschlag mitprüfen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
+- **Fundort / Beobachtung:** `src/render/decor.ts`: S/E-Orte sind statisch (D1) und meiden den „Urwald-Schätzer"
+  (`generateTerrain` lesend). Nach Aufforsten können gelöste S/E-Elemente unsichtbar werden. **Einschätzung:**
+  niedrig; L8 soll beim 3–6-Band die sichtbaren Elemente zählen, nicht die gelösten. **Ursprung:** ART-STIL-02 L4,
+  art-rendering-engineer.
+- **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
+  `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
+  verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
