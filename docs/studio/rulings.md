@@ -2183,3 +2183,16 @@ ungültiger Serien beginnt im Seefahrt-Bündel). Alte `renderqa-*`-Verzeichnisse
 (Löschen dort verboten, R207) — Hinweis an den Nutzer, kein Eingriff. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSWAECHTER · ADR: —
+
+## R270 · 2026-10-06 · Vorschläge Ad-hoc-Retro CI H-T4
+
+Ruling: Retro `docs/studio/retros/2026-10-06-adhoc-ci-ht4.md` angenommen, V1–V3 als **Regeln** (kein Experiment):
+**V1** Gate Merge und Gate Merge Release prüfen die CI-Reserve aller Zeittests im Diff — ausdrücklich auch Änderungen
+aus Fix-Runden nach dem Final-Review; der Integrator führt vor jedem Push `CI=true make check; echo EXIT=$?` aus
+(Schwelle: 0 rote CI-Läufe durch Zeittests in den nächsten 3 Merges); hebt die R237-Pause für diese Zeile in
+`gates.md` auf. **V2** Integrator meldet einen Pages-`deploy`-Job, der > 10 min `queued` steht; Workflow unverändert.
+**V3** Status `failed` nur bei nicht erfülltem Auftrag, sonst `done` mit Vermerk (z. B. „CI rot"); Controller nennen
+Exit-Codes im Bericht und begründen eingesparte Arbeiter-Starts. Umsetzung durch studio-coach in `gates.md`,
+`production-integrator.md`, `lead-tech.md` (Versionen, CHANGELOG). — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-ADHOC-HT4 · ADR: —
