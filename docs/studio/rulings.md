@@ -2279,3 +2279,14 @@ melden. (2) qa-playtester am Kandidaten, je UI-Task ein Abschnitt (T12, T13, T15
 (4) Gate durch L0, dann Push. — Kosten bei Irrtum: Kandidat frisch aufbauen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-F2 · ADR: —
+
+## R276 · 2026-10-06 · REL-05: Formatfix nach Union-Merge freigegeben
+
+Ruling: Kandidat REL-05 Merge 1 (`feat/m12-see` → 5c52eed, `make check`/`CI=true` EXIT=0) steht. Merge 2
+(`feat/h-r15-saum`) konfliktfrei, aber `prettier --check` rot: `merge=union` in `docs/beobachtungen.md` liess eine
+Leerzeile fehlen. Freigabe an den Integrator: Merge 2 erneut, dann `npx prettier --write docs/beobachtungen.md` (nur
+diese Datei), beide Checks, als **eigener Commit** `docs: Leerzeile nach Union-Merge (REL-05)` nach dem Merge-Commit;
+dann `rel/rel-05` setzen. Wiederkehrendes Risiko (Union-Merge + Prettier) → Beobachtung für ein kleines Werkzeug
+(z. B. Prettier im Merge-Ablauf des Integrators). — Kosten bei Irrtum: keine (Doku-Format).
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-05 · ADR: —
