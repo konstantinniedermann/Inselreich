@@ -2429,3 +2429,13 @@ Release (R287 (a)) entfällt. R287 (b) und (c) gelten weiter. — Kosten bei Irr
 Aufräumen statt mit Inhalt.
 
 Entscheider: L0 · Anlass: Nutzervorschlag 2026-10-06 · ADR: —
+
+## R289 · 2026-10-06 · Aufträge aus der Parallel-Session und R288-Übergang
+
+Ruling: Vom Nutzer übermittelte Aufträge der Parallel-Session übernommen: Hotfix H-F1 (lead-tech) und Auswertung
+`docs/beobachtungen.md` (lead-production) starten sofort parallel, R288-Umsetzung durch studio-coach. ART-STIL-02
+läuft weiter: gestartet vor R288, kein neuer Start; weitere Funktionsarbeit (L4 ff., Träger-Tempo, Seefahrt-Hilfe)
+erst nach der Auswertung. H-F1 geht als Hotfix-Release einzeln vor REL-A auf main. — Kosten bei Irrtum: Merge-
+Nacharbeit in `iso.ts`/`life.ts` für L1.
+
+Entscheider: L0 · Anlass: Nachricht Parallel-Session (vom Nutzer übermittelt) · ADR: —
