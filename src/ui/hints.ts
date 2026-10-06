@@ -224,6 +224,7 @@ export function placementHint(
     const a = r.ok ? toolAfford(world, tool, island) : r;
     if (!a.ok) return { tone: 'bad', text: friendlyReason(world, a.reason, { defId: tool.defId }) };
     if (tool.defId === 'house') return { tone: 'ok', text: 'Baubar · im Versorgungsgebiet' };
+    if (tool.defId === 'kontor2') return { tone: 'ok', text: 'Baubar · Kosten aus der Heimat' };
     return touchesReachable(world, x, y, def.w, def.h, reachableRoads(world, island), island)
       ? { tone: 'ok', text: 'Baubar · wird an den Kontor angebunden' }
       : { tone: 'ok', text: `Baubar · ${connectAdvice(road)}` };

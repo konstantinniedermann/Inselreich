@@ -1007,3 +1007,16 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Fundort / Beobachtung (Q8e):** Viertel-Kopie der Heimat entsteht synchron beim ersten Zoom ≤ 0,25; das fehlt in R4
   (Spec, Leistungsabschnitt). **Einschätzung:** Doku-Lücke, kein Fehler; im Spec-Nachtrag oder in ADR-013 vermerken
   und prüfen, ob ein Frame dabei die 50 ms überschreitet. **Ursprung:** F1/Final-Review M12-E1.
+
+## 2026-10-06 · M12-E2 T13 UI Bauen und Handeln: Befunde ausserhalb des Scopes
+
+- **Fundort / Beobachtung:** `src/ui/hints.ts` (`REASON_TABLE`, Zeilen „Zu wenig <Gut>“, „Nicht genug Ware“) und
+  `src/ui/inspect.ts` (`deficitLine`, Ausbau-Grund): Die Texte nennen den Lagerstand der Heimat (`home(w).stock`).
+  Im Browser (Seed 3, Felsbucht) zeigt der Ausbau eines Holzfällers dort „1 nötig, 12 vorhanden · kaufbar am Kontor“ mit dem
+  Heimat-Bestand, obwohl das Insellager gemeint ist. **Einschätzung:** mittel (irreführende Zahl auf Fremdinseln); die
+  Texte brauchen die Insel des Gebäudes. Betrifft auch den Ausbau-Pfad (`upgradeBuilding`, Sim) und
+  `missingInputs`. **Ursprung:** T13 Browser-Eigencheck.
+- **Fundort / Beobachtung:** `src/ui/messages.ts` (`showMessage`, Dedupe): Die Fehlermeldung beim Klick auf ein blasses
+  Werkzeug und die gleiche Meldung beim ersten Bauversuch erscheinen nur einmal (gleicher Text innerhalb `DEDUPE_MS`).
+  **Einschätzung:** niedrig, gewollt; für Playtester vermerkt, damit der „fehlende“ zweite Toast nicht als Fehler gilt.
+  **Ursprung:** T13 Browser-Eigencheck.

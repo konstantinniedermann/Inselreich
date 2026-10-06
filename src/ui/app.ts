@@ -66,7 +66,13 @@ import {
   withSpeed,
   type HotkeyAction,
 } from './hotkeys';
-import { foreignHover, hoverInfo, hoverPosition, hoverVisible } from './hover';
+import {
+  foreignBuildingHover,
+  foreignHover,
+  hoverInfo,
+  hoverPosition,
+  hoverVisible,
+} from './hover';
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
@@ -856,7 +862,9 @@ function launch(
     const sx = client.x - r.left,
       sy = client.y - r.top;
     const t = targetTile(world, state.cam, sel, sx, sy);
-    const foreign = t ? null : foreignHover(world, state.cam, sx, sy);
+    const foreign = t
+      ? null
+      : (foreignBuildingHover(world, state.cam, sx, sy) ?? foreignHover(world, state.cam, sx, sy));
     if (!t && !foreign) {
       hoverTile = null;
       hideHoverCard();

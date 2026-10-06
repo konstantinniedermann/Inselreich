@@ -7,6 +7,7 @@ import { HOME, createWorld, home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import { placementHint } from '../../src/ui/hints';
 import { canDemolishTile } from '../../src/ui/input';
+import { foreignBuildingHover } from '../../src/ui/hover';
 import { pickTarget, toolAfford, toolBlockReason, toolTarget } from '../../src/ui/islandTools';
 import { buildEntries } from '../../src/ui/buildMenu';
 
@@ -103,5 +104,21 @@ describe('M12 E2 UI Bauen und Handeln: Hinweis und Vorschau je Insel', () => {
     const b = w.buildings[id]!;
     expect(canDemolishTile(w, b.x, b.y, B)).toBe(true);
     expect(canDemolishTile(w, b.x, b.y, HOME)).toBe(false);
+  });
+});
+
+describe('M12 E2 UI Bauen und Handeln: Hover auf Fremdinsel', () => {
+  it('foreignBuildingHover zeigt das Gebäude der Fremdinsel, auf leerem Boden nichts', () => {
+    const w = seaWorld();
+    const id = found(w, B);
+    const b = w.buildings[id]!;
+    const isl = w.islands[B]!;
+    const cam = createCamera();
+    const p = project(isl.ox + b.x + 1, isl.oy + b.y + 1);
+    const hit = foreignBuildingHover(w, cam, p.x, p.y - 12);
+    expect(hit?.island).toBe(B);
+    expect(hit?.info.title).toBe('Kontor');
+    const far = project(isl.ox + 1.5, isl.oy + 1.5);
+    expect(foreignBuildingHover(w, cam, far.x, far.y)).toBeNull();
   });
 });

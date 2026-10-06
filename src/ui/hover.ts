@@ -1,4 +1,5 @@
-import { pickArchipel } from '../render/archipel';
+import { islandView, pickArchipel } from '../render/archipel';
+import { pickTarget } from './islandTools';
 import type { Camera } from '../render/camera';
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
@@ -263,6 +264,24 @@ export function foreignHover(
   return text === null
     ? null
     : { ...hit, info: { title: foreignHoverTitle(world, text), lines: [] } };
+}
+
+/**
+ * Gebäude einer Fremdinsel unter dem Zeiger (Auswahl): zeigt dessen Karte statt der Inselkarte; sonst `null`.
+ * Gelesen wird die Inselansicht (`islandView`), nie die Welt selbst.
+ */
+export function foreignBuildingHover(
+  world: World,
+  cam: Camera,
+  sx: number,
+  sy: number,
+): { island: number; x: number; y: number; info: HoverInfo } | null {
+  const t = pickTarget(world, cam, { kind: 'select' }, sx, sy);
+  if (!t || t.island === HOME) return null;
+  const view = islandView(world, t.island);
+  const tile = view.islands[0]!.tiles[t.y * view.islands[0]!.width + t.x];
+  const b = tile?.buildingId == null ? undefined : view.buildings[tile.buildingId];
+  return b ? { ...t, info: buildingInfo(view, b) } : null;
 }
 
 /** Vor `seafaring` hängt die Inselkarte den Hinweis auf die Seefahrt an (Spec M12 C.10). */
