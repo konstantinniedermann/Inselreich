@@ -1198,7 +1198,6 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   nicht abgedeckt und wäre ein eigenes kleines Häppchen oder ein Anhang an L1 (gleiche Datei: Ownership beachten).
   **Ursprung:** Nutzer-Playtest REL-05 (IDEEN-04b).
 
-
 ### 2026-10-06 · Render/UI · Fremdinsel-Gebäude erscheinen auf der Heimat (Playtest, hoch)
 
 - Fundort: `src/render/archipel.ts:117` (`islandView(world, HOME)` gibt die ungefilterte Welt zurück; nur Fremdinseln
