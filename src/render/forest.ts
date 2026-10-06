@@ -3,7 +3,7 @@ import { hash2, valueNoise } from '../sim/noise';
 // forest.ts — reine Platzierung des Waldes (ART-STIL-02 L1, Spec 2.1 / 3.2 B1–B5 / 3.7). Kein Canvas, kein DOM.
 // Je freier Waldkachel genau ein Stempel: Rolle (Kern, Rand, Eng), Art-Slot (Bestand), Form, Versatz, Riesenbaum.
 // Alles ist eine reine Funktion von (Seed, Kachel); nur `hash2` und `valueNoise`. Salze 500 und 501–519 (s. Kopf von
-// groundDecor.ts): 500 Waldtyp · 501 Akzentart · 502 Bestandsfeld · 503 Akzentfeld · 504 Randversatz ·
+// groundDecor.ts): 500 Waldtyp · 501 Akzentart · 502 Bestandsfeld · 503 Akzentfeld · 504/514 Randversatz ·
 // 505 Hash-Streuung Rand · 506/507 Kern-Streuung x/y · 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel ·
 // 510 Riesenbaum ja/nein · 511 Formreihenfolge. Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68 und 512–519).
 
@@ -66,11 +66,16 @@ const AMP = 0.3;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 /** Randversatz-Betrag in Kacheln an einem Kachelpunkt: Rauschen (Periode ≈ 4,5 Kacheln), in [−0,3; +0,3]. */
 export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
-  clamp((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.6, -AMP, AMP);
+  AMP *
+  Math.tanh(
+    ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
+      (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 2.2) /
+      AMP,
+  );
 /** Lichtungsfeld 0…1 (Merkmal ≈ 5 Kacheln); ab 0,5 lichtet sich der Kern. */
 export const forestClearing = (seed: number, fx: number, fy: number): number => {
   const n = valueNoise(seed + 508, fx / 5, fy / 5);
-  const t = clamp((n - 0.6) / 0.12, 0, 1);
+  const t = clamp((n - 0.78) / 0.1, 0, 1);
   return t * t * (3 - 2 * t);
 };
 
@@ -149,7 +154,7 @@ export function forestLayout(
         }
         const len = Math.hypot(sx, sy) || 1;
         const a = clamp(
-          forestEdgeShift(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 0.08,
+          forestEdgeShift(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 0.18,
           -AMP,
           AMP,
         );

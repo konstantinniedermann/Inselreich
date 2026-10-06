@@ -61,7 +61,7 @@ function perCrown(seed: number, v: number): { shade: Ell[]; mid: Ell[]; cap: Ell
   const order = [...crownsFor(seed, v)].sort((a, b) => a.cx + a.cy - (b.cx + b.cy)); // wie paintStamp: hinten zuerst
   for (const c of order.filter((k) => !(k.kind === 1 && !k.bush))) {
     const n = crownGeom(c).lobes.length;
-    const m = Math.min(n, c.bush ? 1 : 2);
+    const m = Math.min(n, c.bush ? 1 : c.kind === 3 ? 3 : 2);
     out.push({
       shade: e.slice(i, i + n),
       mid: e.slice(i + n, i + 2 * n),

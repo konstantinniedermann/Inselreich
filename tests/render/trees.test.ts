@@ -41,11 +41,11 @@ const item = (id: number, x: number, y: number, variant: number) =>
   ({ kind: 'tree', id, fp: { x, y, w: 1, h: 1 }, key: 2 * x + 1 + 2 * y + 1, variant }) as const;
 
 describe('Baumstempel', () => {
-  it('ISO §6 crownsFor (L1): 2–8 Kronen je Variante, deterministisch, Fusspunkt höchstens 0,35 Kachel über der Kachel', () => {
+  it('ISO §6 crownsFor (L1): 2–10 Kronen je Variante, deterministisch, Fusspunkt höchstens 0,35 Kachel über der Kachel', () => {
     for (let v = 0; v < TREE_VARIANTS; v++) {
       const c = crownsFor(3, v);
       expect(c.length).toBeGreaterThanOrEqual(2);
-      expect(c.length).toBeLessThanOrEqual(8);
+      expect(c.length).toBeLessThanOrEqual(10);
       expect(crownsFor(3, v)).toEqual(c);
       for (const k of c) {
         expect(k.cx - k.r).toBeGreaterThanOrEqual(-0.35 - 1e-9);

@@ -33,6 +33,8 @@ export interface Crown {
   h: number;
   bush: boolean;
   s: number;
+  /** Jungbaum (Rand, Eng): breiter als hoch, tief ansetzende Krone (kein „Lutscher“). */
+  young?: boolean;
 }
 
 /** Stempelhöhe über der Rautenmitte (Weltpixel). */
@@ -110,11 +112,12 @@ export interface CrownGeom {
 }
 const CONIFER_TOP = 1.6; // Spitze des Nadelbaums über dem Kronenmittelpunkt, in Kronenhöhen (ry)
 const CONIFER_BOTTOM = 0.9;
-const PINE_FLAT = 0.4; // Pinienschirm: Höhe im Verhältnis zur Breite
+const PINE_FLAT = 0.64; // Pinienschirm: Höhe im Verhältnis zur Breite
 const BUSH_FLAT = 0.7;
+const YOUNG_FLAT = 0.7;
 
 /** Form einer Krone aus (Art, Radius, Formwert, Busch); eine reine Funktion, kein Seed nötig. */
-export function crownGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush'>): CrownGeom {
+export function crownGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'young'>): CrownGeom {
   const q = (i: number, j: number): number => hash2(513 + Math.floor(c.s * 65536), i, j);
   const rx0 = c.r * ISO_W;
   const lobes: Lobe[] = [];
@@ -131,15 +134,21 @@ export function crownGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush'>): CrownGeo
       tiers.push({ ax: lean, ay: by - th, hw, bx: (q(i, 7) - 0.5) * 0.08 * hw, by, th });
     }
   } else {
-    const flat = c.kind === 3 ? PINE_FLAT : c.bush ? BUSH_FLAT : CROWN_RY;
+    const flat = c.kind === 3 ? PINE_FLAT : c.bush ? BUSH_FLAT : c.young ? YOUNG_FLAT : CROWN_RY;
     const ry0 = rx0 * flat;
     if (c.kind === 3) {
-      for (const [x, y, w] of [
-        [-0.42, 0.06, 0.58],
-        [0, -0.1, 0.64],
-        [0.42, 0.08, 0.55],
-      ] as const)
-        lobes.push({ x: x * rx0, y: y * ry0, rx: w * rx0, ry: w * ry0 });
+      // Schirm aus 3–5 überlappenden Lappen (Dach), die Lappen sitzen leicht versetzt nebeneinander
+      const n = 3 + Math.floor(q(0, 1) * 3);
+      for (let i = 0; i < n; i++) {
+        const x = ((i / (n - 1)) * 2 - 1) * 0.4 * rx0;
+        const rr = 0.5 + 0.07 * q(i, 4);
+        lobes.push({
+          x,
+          y: (q(i, 3) - 0.5) * 0.5 * ry0 + (i % 2 === 0 ? 0.08 : -0.08) * ry0,
+          rx: rr * rx0,
+          ry: rr * ry0,
+        });
+      }
     } else {
       const n = c.bush ? 3 : 3 + Math.floor(q(0, 1) * 4); // 3–6 Lappen
       for (let i = 0; i < n; i++) {
@@ -214,24 +223,6 @@ export function slotKind(seed: number, slot: number): CrownKind {
   return k ?? (accentIsMaple(seed) ? 4 : 2);
 }
 
-interface Spec {
-  n: number;
-  rMin: number;
-  rMax: number;
-  lo: number; // Lage der Fusspunkte in Kachel-Anteilen
-  hi: number;
-  hf0: number; // Höhe des Kronenmittelpunkts in Kronenhöhen (hh)
-  hf1: number;
-  dMin: number; // Mindestabstand der Kronenmitten
-}
-const SPECS: readonly Spec[] = [
-  // Kern: grosse, überlappende Kronen, Stämme kaum sichtbar
-  { n: 5, rMin: 0.15, rMax: 0.27, lo: -0.02, hi: 1.02, hf0: 0.95, hf1: 1.1, dMin: 0.3 },
-  // Rand: Jungbäume mit sichtbaren Stämmen (dazu Büsche)
-  { n: 3, rMin: 0.08, rMax: 0.14, lo: 0, hi: 1, hf0: 2, hf1: 2.8, dMin: 0.28 },
-  // Eng: Kronen innerhalb der eigenen Kachel
-  { n: 4, rMin: 0.1, rMax: 0.15, lo: 0, hi: 1, hf0: 1.5, hf1: 2.2, dMin: 0.26 },
-];
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
 const crownCache = new Map<string, Crown[]>();
@@ -249,7 +240,6 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
   const { slot, role, form } = variantParts(variant);
   const base = slotKind(seed, slot);
   const alt = slotKind(seed, (slot + 1) % 3);
-  const spec = SPECS[role]!;
   const rnd = (k: number, j: number): number => hash2(seed + 512, variant * 32 + k, j);
   const out: Crown[] = [];
   const limitTop = TREE_H;
@@ -263,18 +253,29 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
     hf: number,
     s: number,
     top: number,
+    young = false,
   ): void => {
-    let r = r0 * (kind === 3 && !bush ? 1.25 : 1);
+    // Pinienschirme sind breiter, Nadelbäume im Kern ebenfalls (dichtes Dach, kaum Boden dazwischen)
+    let r =
+      r0 *
+      (kind === 3 && !bush
+        ? role === 0
+          ? 1.55
+          : 1.45
+        : kind === 1 && role === 0 && !bush
+          ? 1.35
+          : 1);
+    r = Math.min(r, OVERHANG);
     for (let i = 0; i < 8; i++, r *= 0.88) {
       const cx =
         role === 2 && !bush ? clamp(px, r, 1 - r) : clamp(px, r - OVERHANG, 1 + OVERHANG - r);
       const cy =
         role === 2 && !bush ? clamp(py, r, 1 - r) : clamp(py, r - OVERHANG, 1 + OVERHANG - r);
-      const g = crownGeom({ kind, r, s, bush });
+      const g = crownGeom({ kind, r, s, bush, young });
       const ground = ((cx + cy - 1) * ISO_H) / 2;
       const hCap = top - 0.5 - g.hh + ground;
       if (hCap < (bush ? 0.45 : 0.95) * g.hh) continue;
-      out.push({ kind, cx, cy, r, h: Math.min(hf * g.hh, hCap), bush, s });
+      out.push({ kind, cx, cy, r, h: Math.min(hf * g.hh, hCap), bush, s, young });
       return;
     }
   };
@@ -305,23 +306,104 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
     }
     return pts;
   };
-  const n = spec.n + (form % 2); // Kern 5–6, Rand 3–4, Eng 4–5
-  const pts = spread(n, 0, spec.dMin, spec.lo, spec.hi);
-  pts.forEach(([px, py], i) => {
-    // Beimischung: etwa jede achte Krone nimmt die Nebenart (kein Reinbestand), nie auf Eng-Kacheln
-    const kind = role !== 2 && rnd(i, 1) < 0.12 ? alt : base;
-    const r = spec.rMin + (spec.rMax - spec.rMin) * rnd(i, 2);
-    const hf = spec.hf0 + (spec.hf1 - spec.hf0) * rnd(i, 3);
-    add(kind, false, r, px, py, hf, rnd(i, 4), limitTop);
-  });
-  if (role === 1) {
-    // Saum (B1): Büsche auf der Waldkachel, eine Form mit einem Überhälter
-    const nb = 1 + (form % 2);
-    spread(nb, 8, 0.3, 0.05, 0.95).forEach(([px, py], i) =>
-      add(0, true, 0.05 + 0.025 * rnd(8 + i, 2), px, py, 0.55, rnd(8 + i, 4), limitTop),
-    );
-    if (form === 1)
-      add(base, false, 0.18, 0.5 + (rnd(12, 0) - 0.5) * 0.5, 0.5, 1.5, rnd(12, 4), limitTop);
+  const jit = (i: number, k: number, d: number): number => (rnd(i, k) - 0.5) * 2 * d;
+  const kindFor = (i: number): CrownKind => (role !== 2 && rnd(i, 1) < 0.12 ? alt : base);
+  const hfFor = (kind: CrownKind, lo: number, hi: number, i: number): number =>
+    kind === 3 ? (role === 0 ? 0.7 : 1.1) + 0.2 * rnd(i, 3) : lo + (hi - lo) * rnd(i, 3); // Pinie: kurzer Stamm
+  if (role === 0) {
+    // Kern: Ankerpunkte (Mitte, Ecken, ein Zufallspunkt) halten die Rautenfläche dicht unter grossen Kronen
+    const anchors: [number, number][] = [
+      [0.5, 0.5],
+      [0.2, 0.2],
+      [0.86, 0.22],
+      [0.22, 0.86],
+      [0.84, 0.84],
+      [0.92, 0.55],
+      [0.55, 0.92],
+    ];
+    anchors.forEach(([ax, ay], i) => {
+      const kind = kindFor(i);
+      add(
+        kind,
+        false,
+        0.21 + 0.1 * rnd(i, 2),
+        ax + jit(i, 40, 0.09),
+        ay + jit(i, 41, 0.09),
+        hfFor(kind, 0.8, 0.95, i),
+        rnd(i, 4),
+        limitTop,
+      );
+    });
+  } else if (role === 1) {
+    // Saum (B1): 1–2 Kronen in Kerngrösse zur Kachelmitte, davor Jungbäume (buschig, tief ansetzend) und Büsche
+    const nBig = 2;
+    for (let i = 0; i < nBig; i++) {
+      const kind = kindFor(i);
+      add(
+        kind,
+        false,
+        0.22 + 0.07 * rnd(i, 2),
+        (i === 0 ? 0.36 : 0.66) + jit(i, 40, 0.1),
+        (i === 0 ? 0.62 : 0.38) + jit(i, 41, 0.1),
+        hfFor(kind, 0.8, 0.95, i),
+        rnd(i, 4),
+        limitTop,
+      );
+    }
+    const yAnchors: [number, number][] = [
+      [0.2, 0.25],
+      [0.82, 0.22],
+      [0.3, 0.9],
+      [0.9, 0.86],
+    ];
+    const young = yAnchors.map(([ax, ay], i): [number, number] => [
+      clamp(ax + jit(4 + i, 40, 0.1), 0.05, 0.95),
+      clamp(ay + jit(4 + i, 41, 0.1), 0.05, 0.95),
+    ]);
+    young.forEach(([px, py], i) => {
+      const kind = kindFor(4 + i);
+      add(
+        kind,
+        false,
+        0.15 + 0.05 * rnd(4 + i, 2),
+        px,
+        py,
+        hfFor(kind, 0.95, 1.25, 4 + i),
+        rnd(4 + i, 4),
+        limitTop,
+        true,
+      );
+    });
+    const nb = 2 + (form % 2);
+    for (let i = 0; i < nb; i++) {
+      const [tx, ty] = young[i % young.length]!;
+      add(
+        0,
+        true,
+        0.055 + 0.025 * rnd(10 + i, 2),
+        tx + jit(10 + i, 40, 0.1),
+        ty + 0.07 + 0.05 * rnd(10 + i, 41),
+        0.55,
+        rnd(10 + i, 4),
+        limitTop,
+      );
+    }
+  } else {
+    // Eng: Kronen innerhalb der eigenen Kachel, buschig
+    spread(4 + (form % 2), 0, 0.26, 0, 1).forEach(([px, py], i) => {
+      const kind = kindFor(i);
+      add(
+        kind,
+        false,
+        0.1 + 0.05 * rnd(i, 2),
+        px,
+        py,
+        hfFor(kind, 1.2, 1.8, i),
+        rnd(i, 4),
+        limitTop,
+        true,
+      );
+    });
   }
   if (giant) {
     const behind = out.filter((c) => c.cx + c.cy <= 1);
@@ -340,7 +422,7 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
 const itemOffset = (item: TreeItem): Pt => project(item.ox ?? 0, item.oy ?? 0);
 
 /** Halbe Breite und Platz unter der Rautenmitte der Bildbox je Rolle (Kern, Rand, Eng); Eng bleibt in der Kachel. */
-const BOX_HALF = [52, 46, ISO_W / 2] as const;
+const BOX_HALF = [56, 46, ISO_W / 2] as const;
 const BOX_BELOW = [STAMP_BELOW, 22, ISO_H / 2] as const;
 
 /**
@@ -360,15 +442,18 @@ export function treeBounds(item: TreeItem): Box {
   };
 }
 
-/** Schattenpolygon im Kachelraum, nach rechts unten (+3, +1) versetzt, mit Stempelversatz und Grösse nach Rolle. */
+/**
+ * Schattenpolygon im Kachelraum (Ellipse unter der Kronenmasse, nach rechts unten (+3, +1) versetzt, mit Stempelversatz).
+ * Er ist kleiner als die Kronendecke, damit er zwischen den Kronen nicht als eigene Fläche erscheint.
+ */
 export function treeShadow(item: TreeItem): Pt[] {
   const role = variantParts(item.variant % TREE_VARIANTS).role;
-  const k = item.giant ? GIANT_SCALE : role === 0 ? 1 : 0.8;
-  const mx = item.fp.x + 0.5 + (item.ox ?? 0) + DIR.x * SHADOW_SHIFT * k,
-    my = item.fp.y + 0.5 + (item.oy ?? 0) + DIR.y * SHADOW_SHIFT * k;
+  const k = item.giant ? 1.1 : role === 0 ? 0.55 : 0.5;
+  const mx = item.fp.x + 0.5 + (item.ox ?? 0) + DIR.x * SHADOW_SHIFT,
+    my = item.fp.y + 0.5 + (item.oy ?? 0) + DIR.y * SHADOW_SHIFT;
   const pts: Pt[] = [];
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
     const u = Math.cos(a) * SHADOW_A * k,
       v = Math.sin(a) * SHADOW_B * k;
     pts.push({ x: mx + DIR.x * u - DIR.y * v, y: my + DIR.y * u + DIR.x * v });
@@ -434,28 +519,29 @@ export function paintCrown(ctx: CanvasRenderingContext2D, c: Crown, x: number, y
   const lobes = [...g.lobes].sort((a, b) => a.y - b.y); // hinten zuerst
   // Schattenmond: alle Lappen im kühlen Ton (die gezackte Silhouette)
   for (const l of lobes) ellipse(ctx, crownShade(base), x + l.x, y + l.y, l.rx, l.ry);
-  // Mitte: Lappen zum Licht versetzt und etwas kleiner
+  // Mitte: Lappen zum Licht versetzt und etwas kleiner (Pinie: nach oben, die Unterseite bleibt dunkel)
+  const pine = c.kind === 3;
   for (const l of lobes)
     ellipse(
       ctx,
       base,
       x + l.x + LIGHT_PX.x * MOON_SHIFT * l.rx,
-      y + l.y + LIGHT_PX.y * MOON_SHIFT * l.ry,
-      MOON_SHRINK * l.rx,
-      MOON_SHRINK * l.ry,
+      y + l.y + (pine ? -0.2 * l.ry : LIGHT_PX.y * MOON_SHIFT * l.ry),
+      (pine ? 0.94 : MOON_SHRINK) * l.rx,
+      (pine ? 0.8 : MOON_SHRINK) * l.ry,
     );
-  // Kappe: die am stärksten zum Licht liegenden Lappen (bei Büschen einer)
+  // Kappe: die am stärksten zum Licht liegenden Lappen (bei Büschen einer, beim Schirm oben)
   const lit = [...lobes]
     .sort((a, b) => b.x * LIGHT_PX.x + b.y * LIGHT_PX.y - (a.x * LIGHT_PX.x + a.y * LIGHT_PX.y))
-    .slice(0, c.bush ? 1 : 2);
+    .slice(0, c.bush ? 1 : pine ? 3 : 2);
   for (const l of lit)
     ellipse(
       ctx,
       crownCap(base),
       x + l.x + LIGHT_PX.x * (MOON_SHIFT + CAP_SHIFT) * l.rx,
-      y + l.y + LIGHT_PX.y * (MOON_SHIFT + CAP_SHIFT) * l.ry,
+      y + l.y + (pine ? -0.5 * l.ry : LIGHT_PX.y * (MOON_SHIFT + CAP_SHIFT) * l.ry),
       0.55 * l.rx,
-      0.5 * l.ry,
+      (pine ? 0.4 : 0.5) * l.ry,
     );
 }
 

@@ -452,16 +452,185 @@ describe('L1 Waldboden folgt den Kronen (terrain.ts, nur Waldzweig)', () => {
             if (isl.tiles[(y + dy) * isl.width + x + dx]!.terrain !== 'forest') all = false;
         if (!all) continue;
         const c = forestClearing(world.seed, x + 0.5, y + 0.5);
-        if (c > 0.05 && c < 0.95) continue;
+        if (c > 0.05 && c < 0.9) continue;
         const px = paintPixels(grid, 1, x * TEX + 8, y * TEX + 8, 16, 16);
         let l = 0;
         for (let k = 0; k < 256; k++) l += lum(px[k * 4]!, px[k * 4 + 1]!, px[k * 4 + 2]!);
-        const bin = c >= 0.95 ? acc.clear : acc.dense;
+        const bin = c >= 0.9 ? acc.clear : acc.dense;
         bin[0]! += l / 256;
         bin[1]!++;
       }
-    expect(acc.clear[1]).toBeGreaterThan(3);
+    expect(acc.clear[1]).toBeGreaterThan(1);
     expect(acc.dense[1]).toBeGreaterThan(20);
     expect(acc.clear[0]! / acc.clear[1]!).toBeGreaterThan(acc.dense[0]! / acc.dense[1]! + 3);
   });
 });
+
+// ---------------------------------------------------------------------------------------------------------------
+// Bild-Fix-Runde 1: Kronendeckung, Schatten, Jungbäume, Pinie, Nadelkern, Lichtung
+import { treeShadow } from '../../src/render/trees';
+
+/** Anteil der Rautenfläche einer Kachel (Bildraum), der unter den Kronen der Variante liegt (echte Formen). */
+function coverage(seed: number, variant: number): number {
+  const crowns = crownsFor(seed, variant).map((c) => ({ c, s: crownScreen(c), g: crownGeom(c) }));
+  let hit = 0,
+    n = 0;
+  for (let i = 0; i < 24; i++)
+    for (let j = 0; j < 24; j++) {
+      const u = (i + 0.5) / 24,
+        v = (j + 0.5) / 24;
+      const px = (u - v) * (ISO_W / 2),
+        py = ((u + v - 1) * 32) / 2;
+      n++;
+      const covered = crowns.some(({ s, g }) => {
+        const dx = px - s.x,
+          dy = py - s.y;
+        if (g.tiers.length > 0)
+          return g.tiers.some((t) => {
+            const yy = dy - t.ay,
+              hgt = t.by - t.ay;
+            if (yy < 0 || yy > hgt) return false;
+            const k = yy / hgt;
+            const cxk = t.ax + (t.bx - t.ax) * k;
+            return Math.abs(dx - cxk) <= t.hw * k;
+          });
+        return g.lobes.some((l) => ((dx - l.x) / l.rx) ** 2 + ((dy - l.y) / l.ry) ** 2 <= 1);
+      });
+      if (covered) hit++;
+    }
+  return hit / n;
+}
+
+describe('Fix 1 Kronendeckung', () => {
+  it('Fix-1 Kronendeckung je Kachel: Rand ≥ 60 %, Kern ≥ 85 % (alle Varianten, Seeds 1/2/5/7)', () => {
+    for (const seed of SEEDS)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        const role = variantParts(v).role;
+        if (role === 2) continue;
+        expect(
+          coverage(seed, v),
+          `Seed ${seed} Variante ${v} Rolle ${role}`,
+        ).toBeGreaterThanOrEqual(role === 0 ? 0.85 : 0.6);
+      }
+  });
+
+  it('Fix-1 Lichtungen bleiben selten: höchstens 8 % der Kernkacheln', () => {
+    let kern = 0,
+      clear = 0;
+    for (const seed of [1, 2, 5, 7, 11, 14]) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const free = (x: number, y: number) => {
+        const t = isl.tiles[y * isl.width + x];
+        return !!t && t.terrain === 'forest' && t.buildingId === null && !t.road;
+      };
+      for (const t of trees(w)) {
+        let all = true;
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) if (!free(t.fp.x + dx, t.fp.y + dy)) all = false;
+        if (!all) continue;
+        kern++;
+        if (variantParts(t.variant).role === 1) clear++;
+      }
+    }
+    expect(kern).toBeGreaterThan(200);
+    expect(clear / kern).toBeLessThanOrEqual(0.08);
+  });
+});
+
+describe('Fix 2 Schatten', () => {
+  it('Fix-2 treeShadow liegt unter der Kronenmasse: Halbachse ≤ 0,3 Kachel (Riesenbaum ≤ 0,6), Versatz nach rechts unten', () => {
+    for (let v = 0; v < TREE_VARIANTS; v++)
+      for (const giant of [false, true]) {
+        if (giant && variantParts(v).role !== 0) continue;
+        const poly = treeShadow(mk(3, v, 0, 0, giant));
+        const cx = poly.reduce((a, p) => a + p.x, 0) / poly.length,
+          cy = poly.reduce((a, p) => a + p.y, 0) / poly.length;
+        expect(cx).toBeGreaterThan(10.5);
+        expect(cy).toBeGreaterThan(7.5);
+        for (const p of poly)
+          expect(Math.hypot(p.x - cx, p.y - cy), `Variante ${v}`).toBeLessThanOrEqual(
+            giant ? 0.6 : 0.3,
+          );
+      }
+  });
+});
+
+describe('Fix 3 Jungbäume ohne Lutscher-Look', () => {
+  it('Fix-3 Laub-Jungbäume am Rand: Stamm höchstens 1/3 der Gesamthöhe sichtbar, Krone breiter als hoch', () => {
+    let n = 0;
+    for (const seed of SEEDS)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        if (variantParts(v).role !== 1) continue;
+        for (const c of crownsFor(seed, v)) {
+          if (c.bush || c.kind === 1) continue;
+          const g = crownGeom(c);
+          const visible = c.h - g.hh,
+            total = c.h + g.hh;
+          expect(visible / total, `Seed ${seed} v${v}`).toBeLessThanOrEqual(1 / 3 + 1e-6);
+          if (c.r < 0.15) expect(g.hh / g.hw, `Seed ${seed} v${v}`).toBeLessThan(0.85);
+          n++;
+        }
+      }
+    expect(n).toBeGreaterThan(50);
+  });
+
+  it('Fix-3 jede Rand-Variante trägt mindestens einen Busch und 1–2 Kronen in Kerngrösse (r ≥ 0,15)', () => {
+    for (const seed of SEEDS)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        if (variantParts(v).role !== 1) continue;
+        const cs = crownsFor(seed, v);
+        expect(cs.filter((c) => c.bush).length, `Seed ${seed} v${v}`).toBeGreaterThanOrEqual(1);
+        const big = cs.filter((c) => !c.bush && !c.young && c.r >= 0.15).length;
+        expect(big, `Seed ${seed} v${v}`).toBeGreaterThanOrEqual(1);
+        expect(big).toBeLessThanOrEqual(3);
+      }
+  });
+});
+
+describe('Fix 4 Pinie und Nadelkern', () => {
+  it('Fix-4 Pinie: Schirm aus 3–5 überlappenden Lappen, oben hell (Kappe), kurzer Stamm', () => {
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++)
+      for (let v = 0; v < TREE_VARIANTS; v++)
+        for (const c of crownsFor(seed, v)) {
+          if (c.kind !== 3 || c.bush) continue;
+          const g = crownGeom(c);
+          expect(g.lobes.length).toBeGreaterThanOrEqual(3);
+          expect(g.lobes.length).toBeLessThanOrEqual(5);
+          g.lobes.forEach((l, i) => {
+            const near = g.lobes.some(
+              (m, j) => j !== i && Math.hypot(m.x - l.x, (m.y - l.y) * 2) < (l.rx + m.rx) * 0.9,
+            );
+            expect(near).toBe(true);
+          });
+          expect(c.h - g.hh).toBeLessThanOrEqual(1.2 * g.hh + 1e-6);
+          n++;
+        }
+    expect(n).toBeGreaterThan(20);
+  });
+
+  it('Fix-4 Nadel-Kern: 5–7 Bäume je Kachel, Etagenbasis breit (≥ 0,16 Kachel Halbbreite)', () => {
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        const p = variantParts(v);
+        if (p.role !== 0 || crownsFor(seed, v).every((c) => c.kind !== 1)) continue;
+        if (slotKindMain(seed, v) !== 1) continue;
+        const cs = crownsFor(seed, v).filter((c) => !c.bush);
+        expect(cs.length, `Seed ${seed} v${v}`).toBeGreaterThanOrEqual(5);
+        expect(cs.length).toBeLessThanOrEqual(7);
+        const wide = cs.filter((c) => c.kind === 1 && crownGeom(c).hw / ISO_W >= 0.16).length;
+        expect(wide, `Seed ${seed} v${v}`).toBeGreaterThanOrEqual(3);
+        n++;
+      }
+    expect(n).toBeGreaterThan(20);
+  });
+});
+
+function slotKindMain(seed: number, variant: number): number {
+  const cs = crownsFor(seed, variant).filter((c) => !c.bush);
+  const cnt = [0, 0, 0, 0, 0];
+  for (const c of cs) cnt[c.kind]!++;
+  return cnt.indexOf(Math.max(...cnt));
+}
