@@ -2403,3 +2403,16 @@ der Schiffs-Glättung (R285). In dieser Session keine Umsetzung (Nutzer-Auftrag)
 eine Session länger live.
 
 Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R287 · 2026-10-06 · Beobachtungen: fester Auswertungs-Takt
+
+Ruling: Befund auf Nutzerfrage: letzte Auswertung von `docs/beobachtungen.md` am 2026-09-30, seither rund 175
+neue Einträge (1227 Zeilen) ohne Sichtung; das Handbuch kennt keinen Takt. Neu: (a) Auswertung mit Skill
+`beobachtungen-auswerten` durch `lead-production` nach jedem Release (Merge auf main/Pages) und spätestens, wenn
+seit der letzten Auswertung 40 Einträge dazugekommen sind; (b) Ergebnis je Eintrag: erledigt (streichen),
+abgehakt, Paket-Kandidat (Board) oder Idee (`docs/ideen.md`); (c) Kopfzeile „Letzte Auswertung“ ist Pflicht und
+erscheint im Start-Bericht von L0. Erste Auswertung in der nächsten Session parallel zum Hotfix H-F1 (nur Doku,
+disjunkte Dateien). Handbuch-Änderung setzt `studio-coach` beim Session-Ende um. — Kosten bei Irrtum: eine
+Auswertung pro Release zu viel.
+
+Entscheider: L0 · Anlass: Nutzerfrage 2026-10-06 · ADR: —
