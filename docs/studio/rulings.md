@@ -2448,3 +2448,13 @@ Hotfix-Release-Lauf (R282). CI rot auf main (R288/R289: Prettier in `beobachtung
 behoben (dc91839, R278 (1) sinngemäss). — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech H-F1, CI 37488497826 · ADR: —
+
+## R291 · 2026-10-06 · Auswertung BEOB-AUSW-01 und Reihenfolge
+
+Ruling: Auswertung angenommen (13 Paket-Kandidaten auf dem Board, Marke „Letzte Auswertung: 2026-10-06"); R288
+ist erfüllt, Funktionsarbeit darf wieder starten. Merge zusammen mit `tool/r288-beob-zaehler` (Handbuch 1.22)
+durch den Integrator. Reihenfolge: H-F1 → CI-ACTIONS-NODE (Frist 2026-10-19) → ART-STIL-02 L4–L8 → SEE-F2-UX,
+SEE-F1-FAHRLINIE → H-TRAEGER-TEMPO, RENDER-LOOK-01 (nach ART-STIL-02, Dateien `life.ts`/`terrain.ts`). — Kosten
+bei Irrtum: Reihenfolge per Ruling umstellen.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-01 · ADR: —
