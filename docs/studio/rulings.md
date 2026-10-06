@@ -2340,3 +2340,12 @@ mehr zu entdecken in einem Guss; die Auslegung widerspricht ihm nicht, weil sie 
 Kosten bei Irrtum: Phase 1 ist reine Analyse; Häppchen einzeln revertierbar.
 
 Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-06 · ADR: —
+
+## R281 · 2026-10-06 · ART-STIL-02 direkt in die Produktion
+
+Ruling: Nutzer: „ich muss nichts testen, setze es um, ich teste an der Produktion." ART-STIL-02 läuft ohne
+Nutzer-Zwischenstände bis Pages durch: L0 entscheidet das kombinierte Gate sofort nach Eingang, Häppchen folgen
+ohne Pause, Release nach Gate Merge. Interne Prüfungen (Review je Task, Browser-Check, opus-Review) bleiben
+(Verfassung §9). — Kosten bei Irrtum: Revert des Release-Merges.
+
+Entscheider: Nutzer · Anlass: Nutzerantwort 2026-10-06 · ADR: —
