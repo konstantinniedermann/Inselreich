@@ -1227,9 +1227,10 @@ describe('L5 Meer-Plan und R4', () => {
       expect(plan.rocks.length, `Seed ${seed}`).toBeLessThanOrEqual(12);
       for (const e of seaElementTiles(plan)) {
         expect(cls[e.y * isl.width + e.x], `Seed ${seed} ${e.kind} liegt im Wasser`).toBe(0);
-        if (e.kind === 'wreck' || e.kind === 'rock')
-          (expect(depth(e.x, e.y)).toBeGreaterThanOrEqual(1),
-            expect(depth(e.x, e.y)).toBeLessThanOrEqual(5));
+        if (e.kind === 'wreck' || e.kind === 'rock') {
+          expect(depth(e.x, e.y)).toBeGreaterThanOrEqual(1);
+          expect(depth(e.x, e.y)).toBeLessThanOrEqual(5);
+        }
         if (e.kind === 'islet')
           expect(depth(e.x, e.y), `Seed ${seed} Eiland`).toBeGreaterThanOrEqual(4);
         if (e.kind === 'sandbank' || e.kind === 'kelp')
