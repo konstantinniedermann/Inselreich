@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from studio_docs import experiments as read_experiments
@@ -12,6 +13,11 @@ STATE_MAX = 3500
 LERNEN_MAX = 2500
 LIST_MAX = 8
 LINE_MAX = 300
+OBS_LIMIT = 30  # R288: mehr ungesichtete Einträge → Auswertung ist das erste Paket
+OBS_MARK_RE = re.compile(
+    r"^[\s>*_-]*Letzte Auswertung:?\**\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE
+)
+OBS_HEAD_RE = re.compile(r"^(#{2,3})\s+(\S.*)$")
 QUEUE_SHOWN = ("offen", "beantwortet")
 EXPERIMENT_SHOWN = ("laufend", "vorgeschlagen")
 START_ROUTINE = (
@@ -32,6 +38,54 @@ def shorten(text: str, limit: int, name: str) -> str:
         return text
     note = f"… (gekürzt, siehe docs/studio/{name})"
     return text[: max(limit - len(note), 0)].rstrip() + note
+
+
+def observation_status(path: Path) -> tuple[int, str | None]:
+    """(Anzahl Einträge unter der Marke „Letzte Auswertung: JJJJ-MM-TT“, Datum).
+
+    Eintrag = Überschrift der Ebene 2/3 ausser den Abschnittsköpfen „Offen …“ und
+    „Ausgewertet …“. Alles unter „Ausgewertet …“ zählt nicht, bis zur nächsten
+    Überschrift derselben oder einer höheren Ebene. Ohne Marke zählen alle Einträge,
+    das Datum ist ``None``.
+    """
+    lines = read_text(path).splitlines()
+    mark_at, date = -1, None
+    for index, line in enumerate(lines):
+        found = OBS_MARK_RE.match(line)
+        if found:
+            mark_at, date = index, found.group(1)  # letzte Marke gilt
+    count, skip_level = 0, 0  # skip_level > 0: innerhalb „Ausgewertet …“
+    for line in lines[mark_at + 1 :]:
+        head = OBS_HEAD_RE.match(line)
+        if not head:
+            continue
+        level, title = len(head.group(1)), head.group(2)
+        if re.match(r"Ausgewertet\b", title):
+            skip_level = level
+        elif re.match(r"Offen\b", title):
+            skip_level = 0
+        elif not skip_level or level <= skip_level:
+            skip_level = 0
+            count += 1
+    return count, date
+
+
+def observations_line(path: Path) -> str:
+    if not path.is_file():
+        return "Beobachtungen: docs/beobachtungen.md fehlt."
+    count, date = observation_status(path)
+    if date is None:
+        head = f"Beobachtungen: Marke fehlt, alle {count} Einträge zählen"
+    else:
+        head = f"Beobachtungen: {count} Einträge seit der letzten Auswertung ({date})"
+    if count > OBS_LIMIT:
+        return (
+            f"PFLICHT (R288): {head}, Schwelle {OBS_LIMIT}. Die Auswertung "
+            "(lead-production, Skill beobachtungen-auswerten) ist das erste Paket "
+            "der Session; bis sie fertig ist, keine neue Funktionsarbeit (Ausnahme: "
+            "Hotfix für einen Live-Fehler)."
+        )
+    return head + "."
 
 
 def _line(text: str) -> str:
@@ -83,6 +137,7 @@ def build_context(docs: Path, incidents: list[dict], port: str) -> str:
         role,
         f"Dashboard: http://127.0.0.1:{port}/",
         START_ROUTINE,
+        observations_line(docs.parent / "beobachtungen.md"),
     ]
     lists = [
         _section("Warteschlange", _queue_lines(docs)),

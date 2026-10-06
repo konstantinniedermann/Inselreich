@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 // ring.ts — Fortschrittsring je Betrieb (M11 R1, Spec 8): zeigt den Zyklus als Bogen (grün = läuft, grau =
 // steht). Liest nur die Welt, schreibt nie hinein. Signalebene: Bildraum, ungetönt, nie unter der Bodenmatrix.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
@@ -42,7 +43,7 @@ export function drawProgressRings(
   const s = Math.min(RING_MAX_PX, Math.max(MARK_MIN_PX, RING_BASE_PX * cam.zoom));
   const w = Math.max(2, s / 6);
   let n = 0;
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (n >= MAX_RINGS) break;
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const view = ringView(b, frac);
