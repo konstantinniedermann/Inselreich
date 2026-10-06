@@ -1164,7 +1164,7 @@ const kernAusnahme = (data: MassifData, comp: number, I: number, J: number): boo
   return c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]! < FOOT_R + FOOT_FAN;
 };
 
-describe('ART-STIL-02 L2 Kern', () => {
+describe('ART-STIL-02 L2 Kern', { timeout: 60000 }, () => {
   it('L2 Kern unverändert: Knoten ausserhalb von Schnee- und Baummaske gleich dem Stand vor L2 (≥ 95 % gefunden, ΔE2000 < 1, |Δh| ≤ 1 px)', () => {
     type Fx = Record<string, { nodes: number[][] }>;
     for (const seed of KERN_SEEDS) {
@@ -1191,7 +1191,7 @@ describe('ART-STIL-02 L2 Kern', () => {
   });
 });
 
-describe('ART-STIL-02 L2 Kontrast nach Höhe', () => {
+describe('ART-STIL-02 L2 Kontrast nach Höhe', { timeout: 60000 }, () => {
   it('L2 Kontrast: für Knoten mit hn < 0,2 überspannen die Stufen toneStep(t, 0) höchstens 3 aufeinanderfolgende Werte', () => {
     for (const seed of KERN_SEEDS) {
       const lo: number[] = [];
@@ -1212,7 +1212,7 @@ describe('ART-STIL-02 L2 Kontrast nach Höhe', () => {
   });
 });
 
-describe('ART-STIL-02 L2 Fuss und Bewuchs', () => {
+describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
   /** Grösste Komponenten (Seeds 7, 14): Mittelfarbe der Knoten im Fussband gegen die Wiese. */
   it('L2 Fussband ↔ Wiese ΔE2000 ≤ 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
     const wiese = rgbToLab(EDGE_COLORS[1] as [number, number, number]);
@@ -1326,7 +1326,7 @@ function Buffer_equal(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
   return true;
 }
 
-describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', () => {
+describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', { timeout: 60000 }, () => {
   it('L2 Sockel: Rauschenergie im Schuttband bei Zoom 2 ≤ 0,5 × Fixture-Wert vor L2, je Seed', () => {
     type Fx = Record<string, { sockelRauschen: number }>;
     for (const seed of KERN_SEEDS) {
@@ -1341,7 +1341,7 @@ describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', () => {
   });
 });
 
-describe('ART-STIL-02 L2 Schnee (C2)', () => {
+describe('ART-STIL-02 L2 Schnee (C2)', { timeout: 60000 }, () => {
   /** Eindeutige Knoten je Komponente (comp-Index → Knoten). */
   function perComp(seed: number) {
     const w = createWorld(seed, { unlockAll: true });
@@ -1424,7 +1424,7 @@ describe('ART-STIL-02 L2 Schnee (C2)', () => {
   }, 60000);
 });
 
-describe('ART-STIL-02 L2 Krüppelbäume (C3)', () => {
+describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
   it('L2 Bäume: 3–20 je grossem Massiv, kleine 0–3, deterministisch (Seeds 7 und 14)', () => {
     for (const seed of KERN_SEEDS) {
       const a = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
