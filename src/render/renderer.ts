@@ -88,7 +88,14 @@ import {
   type ArchipelView,
 } from './archipel';
 import { massifBounds, massifCache, massifClips, massifOnScreen, type MassifItem } from './rocks';
-import { DECOR_MIN_ZOOM, decorShadow, drawDecorStamp, type DecorItem } from './decorStamps';
+import {
+  DECOR_MIN_ZOOM,
+  decorCacheBytes,
+  decorCacheClears,
+  decorShadow,
+  drawDecorStamp,
+  type DecorItem,
+} from './decorStamps';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
@@ -205,6 +212,9 @@ export const renderStats = {
   massifDraws: 0,
   massifMisses: 0,
   massifBytes: 0,
+  /** Deko-Stempel-Cache (L4): Leerungen wegen Seed-Wechsels seit Start und Bytes jetzt. */
+  decorClears: 0,
+  decorBytes: 0,
   /** Zähler des letzten Frames (M12 E1): gezeichnete Inseln, Wellen-Aufrufe, Figuren, Tiere, Rauchwolken. */
   islandsDrawn: 0,
   wavesDrawn: 0,
@@ -721,6 +731,8 @@ function drawIsland(
     renderStats.massifDraws = mc.draws;
     renderStats.massifMisses = mc.misses;
     renderStats.massifBytes = mc.bytes;
+    renderStats.decorClears = decorCacheClears();
+    renderStats.decorBytes = decorCacheBytes();
 
     // 7 Luft. Rauch-Budget CAP_SMOKE: zuerst Feuer (Krisensignal), dann Betriebe, dann Herdrauch
     let budget = lod ? 0 : cap('smoke', reduce);

@@ -5,7 +5,7 @@ import { ISO_H, ZOOM_STEPS, project, zoomStep, type Pt, type SortedItem } from '
 import { DECOR_CACHE_MAX_BYTES } from './limits';
 import { LIGHT } from './light';
 import { PALETTE, mixHex } from './palette';
-import { crownBase, crownCap, crownShade } from './trees';
+import { crownGeom, paintCrown, type Crown } from './trees';
 import type { StampKind } from './decor';
 
 // decorStamps.ts — Zeichner und Cache der Deko-Stempel (ART-STIL-02 L4): A5 Solitärbaum, A6 Obstbaum, A9 Menhir, A14
@@ -29,30 +29,67 @@ export const DECOR_STAMP_TONES = {
   orchardCrown: mixHex(PALETTE.crown, PALETTE.grassLight, 0.3),
   blossomWhite: PALETTE.wallLime,
   blossomPink: mixHex(PALETTE.wallLime, PALETTE.roofTerracotta, 0.28),
+  // Mauerreste: Felstöne eine Stufe zum Gras hin gesenkt (weniger Kontrast), Moos und Gras am Fuss und oben
+  ruinSide: mixHex(DECOR_TONES.rockMid, PALETTE.grass, 0.28),
+  ruinShade: mixHex(DECOR_TONES.rockShade, PALETTE.grassDark, 0.3),
+  ruinTop: mixHex(DECOR_TONES.rockLight, PALETTE.grass, 0.35),
 } as const;
 
 /** Feste Box des Stempel-Canvas relativ zur Rautenmitte (Weltpixel). */
 export const STAMP_BOX = { x0: -40, y0: -46, x1: 40, y1: 20 } as const;
 const VARIANTS = 4;
 
-interface Lobe {
-  x: number;
-  y: number;
-  rx: number;
-  ry: number;
+/** Gesamthöhe (Krone ohne Stamm) der Bäume in Weltpixeln: Solitär grösser als ein Waldbaum, Obstbaum kleiner. */
+const CROWN_H = { solitaire: 27, orchard: 17 } as const;
+/** Sichtbare Stammlänge unter der Krone. */
+const TRUNK_H = 6;
+const TREE_KIND = { solitaire: 0, orchard: 2 } as const; // Laub bzw. helle Krone (L1-Töne)
+
+export interface TreeShape {
+  crown: Crown;
+  /** Zahl der Lappen der Krone. */
+  lobes: number;
+  /** Halbe Breite und Höhe der Krone und Mittelpunkt über dem Boden (Weltpixel). */
+  hw: number;
+  hh: number;
+  cy: number;
 }
-/** Kronenlappen des Solitärbaums: breiter als hoch; Spitze bei −34 (≤ `TREE_H` = 35,2). */
-const SOLITAIRE_LOBES: readonly Lobe[] = [
-  { x: 0, y: -21, rx: 22, ry: 12 },
-  { x: -14, y: -18, rx: 13, ry: 9 },
-  { x: 14, y: -18, rx: 13, ry: 9 },
-  { x: -5, y: -26, rx: 12, ry: 8 },
-  { x: 8, y: -25, rx: 10, ry: 7 },
-];
-const SOLITAIRE_SCALE = [1, 0.92, 0.97, 0.88] as const;
-const ORCHARD_SCALE = [0.62, 0.56, 0.6, 0.52] as const;
+const shapes = new Map<string, TreeShape>();
+/**
+ * Krone aus der Kronensprache von L1 (`crownGeom`/`paintCrown`): 5–6 überlappende runde Lappen, Höhe ≈ 0,7 × Breite
+ * (Jungbaum-Flachheit), Formwert `s` so gewählt, dass es mindestens 5 Lappen gibt. Radius so, dass die Krone `CROWN_H` hoch ist.
+ */
+export function treeShape(kind: 'solitaire' | 'orchard', v: number): TreeShape {
+  const key = `${kind}|${v}`;
+  let t = shapes.get(key);
+  if (t) return t;
+  let s = 0,
+    seen = -1;
+  for (let i = 0; i < 400 && seen < v; i++) {
+    s = (i + 0.5) / 400;
+    if (crownGeom({ kind: TREE_KIND[kind], r: 0.3, s, bush: false, young: true }).lobes.length >= 5)
+      seen += i % 3 === 0 ? 1 : 0;
+  }
+  const g0 = crownGeom({ kind: TREE_KIND[kind], r: 0.3, s, bush: false, young: true });
+  const r = (0.3 * CROWN_H[kind]) / 2 / g0.hh;
+  const g = crownGeom({ kind: TREE_KIND[kind], r, s, bush: false, young: true });
+  const crown: Crown = {
+    kind: TREE_KIND[kind],
+    cx: 0.5,
+    cy: 0.5,
+    r,
+    h: 0,
+    bush: false,
+    s,
+    young: true,
+  };
+  t = { crown, lobes: g.lobes.length, hw: g.hw, hh: g.hh, cy: g.hh + TRUNK_H };
+  shapes.set(key, t);
+  return t;
+}
+
 /** Mauerreste: Blöcke (Kachelanteile relativ zur Mitte, Höhe in Weltpixeln), je Variante, ≤ 0,35 `ISO_H` hoch. */
-interface Block {
+export interface Block {
   x0: number;
   y0: number;
   x1: number;
@@ -60,42 +97,49 @@ interface Block {
   h: number;
 }
 export const RUIN_H_MAX = 0.35 * ISO_H;
-function ruinBlocks(variant: number): Block[] {
-  const mirror = variant & 1,
-    flip = variant & 2;
-  const hs = [
-    [11, 7, 9, 10, 5, 8],
-    [9, 11, 6, 7, 10, 5],
-    [8, 10, 11, 9, 6, 10],
-    [10, 6, 8, 11, 9, 7],
+/** Gebrochene Mauerlinie: 4 ungleich hohe, ungleich lange Segmente mit Lücken (niedrig und lang, ≤ 0,35 `ISO_H`). */
+export function ruinBlocks(variant: number): Block[] {
+  const lens = [
+    [0.2, 0.14, 0.22, 0.12],
+    [0.14, 0.22, 0.12, 0.2],
+    [0.22, 0.12, 0.2, 0.14],
+    [0.12, 0.2, 0.14, 0.22],
   ][variant % VARIANTS]!;
+  const hs = [
+    [8, 5, 9, 4],
+    [6, 9, 4, 7],
+    [9, 6, 5, 8],
+    [5, 8, 9, 6],
+  ][variant % VARIANTS]!;
+  const alongY = (variant & 2) !== 0;
+  const t = 0.09; // Wanddicke in Kacheln
+  const gap = 0.05;
+  const total = lens.reduce((a, b) => a + b, 0) + gap * 3;
+  let p = -total / 2;
   const out: Block[] = [];
-  const t = 0.1; // Wanddicke in Kacheln
-  for (let i = 0; i < 3; i++) {
-    // Schenkel entlang x: drei Blöcke, dazwischen Lücken (gebrochen)
-    const x0 = -0.32 + i * 0.2;
-    out.push({ x0, y0: -0.3, x1: x0 + 0.17, y1: -0.3 + t, h: hs[i]! });
-    // Schenkel entlang y
-    const y0 = -0.2 + i * 0.14;
-    out.push({ x0: -0.32, y0, x1: -0.32 + t, y1: y0 + 0.12, h: hs[3 + i]! });
-  }
-  return out.map((b) => {
-    let { x0, y0, x1, y1 } = b;
-    if (mirror) [x0, x1] = [-x1, -x0];
-    if (flip) [y0, y1] = [-y1, -y0];
-    return { x0, y0, x1, y1, h: b.h };
+  lens.forEach((l, i) => {
+    const off = (i % 2 ? 0.035 : -0.03) - t / 2; // leicht versetzt: keine gerade Latte
+    out.push(
+      alongY
+        ? { x0: off, y0: p, x1: off + t, y1: p + l, h: hs[i]! }
+        : { x0: p, y0: off, x1: p + l, y1: off + t, h: hs[i]! },
+    );
+    p += l + gap;
   });
+  return (variant & 1) === 1
+    ? out.map((b) => ({ x0: -b.x1, y0: b.y0, x1: -b.x0, y1: b.y1, h: b.h })).reverse()
+    : out;
 }
 
 /** Höhe des gezeichneten Stempels über dem Boden in Weltpixeln (aus der Formtabelle, ohne Rasterung). */
 export function stampHeight(kind: StampKind, variant: number): number {
   const v = ((variant % VARIANTS) + VARIANTS) % VARIANTS;
   if (kind === 'solitaire' || kind === 'orchard') {
-    const s = kind === 'solitaire' ? SOLITAIRE_SCALE[v]! : ORCHARD_SCALE[v]!;
-    return Math.max(...SOLITAIRE_LOBES.map((l) => -(l.y - l.ry))) * s;
+    const t = treeShape(kind, v);
+    return t.cy + t.hh;
   }
   if (kind === 'menhir') return MENHIR_H[v]!;
-  return Math.max(...ruinBlocks(v).map((b) => b.h));
+  return Math.max(...ruinBlocks(v).map((b) => b.h)) + 1.5; // plus Bewuchs oben
 }
 const MENHIR_H = [21, 19, 22, 20] as const;
 const MENHIR_W = 10;
@@ -126,12 +170,6 @@ export function decorShadow(item: DecorItem): Pt[] | null {
 
 // ---------- Zeichnen ----------
 
-const LIGHT_PX = (() => {
-  const p = project(-LIGHT.x, -LIGHT.y);
-  const n = Math.hypot(p.x, p.y);
-  return { x: -p.x / n, y: -p.y / n };
-})();
-
 function ell(
   ctx: CanvasRenderingContext2D,
   color: string,
@@ -153,64 +191,27 @@ function poly(ctx: CanvasRenderingContext2D, color: string, pts: readonly Pt[]):
   ctx.fill();
 }
 
-function paintCrownLobes(
-  ctx: CanvasRenderingContext2D,
-  base: string,
-  s: number,
-  mirror: boolean,
-): void {
-  const lobes = SOLITAIRE_LOBES.map((l) => ({
-    x: (mirror ? -l.x : l.x) * s,
-    y: l.y * s,
-    rx: l.rx * s,
-    ry: l.ry * s,
-  })).sort((a, b) => a.y - b.y);
-  for (const l of lobes) ell(ctx, crownShade(base), l.x, l.y, l.rx, l.ry);
-  for (const l of lobes)
-    ell(
-      ctx,
-      base,
-      l.x + LIGHT_PX.x * 0.14 * l.rx,
-      l.y + LIGHT_PX.y * 0.14 * l.ry,
-      0.9 * l.rx,
-      0.9 * l.ry,
-    );
-  for (const l of [...lobes]
-    .sort((a, b) => b.x * LIGHT_PX.x + b.y * LIGHT_PX.y - (a.x * LIGHT_PX.x + a.y * LIGHT_PX.y))
-    .slice(0, 2))
-    ell(
-      ctx,
-      crownCap(base),
-      l.x + LIGHT_PX.x * 0.54 * l.rx,
-      l.y + LIGHT_PX.y * 0.54 * l.ry,
-      0.55 * l.rx,
-      0.5 * l.ry,
-    );
-}
-
 function paintTree(ctx: CanvasRenderingContext2D, kind: 'solitaire' | 'orchard', v: number): void {
-  const s = kind === 'solitaire' ? SOLITAIRE_SCALE[v]! : ORCHARD_SCALE[v]!;
-  const mirror = (v & 1) === 1;
-  // Stamm
-  const th = (kind === 'solitaire' ? 15 : 10) * (kind === 'solitaire' ? 1 : 0.9);
+  const t = treeShape(kind, v);
+  const k = kind === 'solitaire' ? 1 : 0.7;
+  // Stamm: kurz und kräftig, unten verbreitert, oben in der Krone verschwindend
   ctx.fillStyle = DECOR_STAMP_TONES.trunk;
   ctx.beginPath();
-  ctx.moveTo(-2.6 * s - 1, 0);
-  ctx.lineTo(-1.8 * s - 0.5, -th);
-  ctx.lineTo(1.8 * s + 0.5, -th);
-  ctx.lineTo(2.6 * s + 1, 0);
+  ctx.moveTo(-4.2 * k, 0.5);
+  ctx.quadraticCurveTo(-2.6 * k, -3, -2.8 * k, -t.cy);
+  ctx.lineTo(2.8 * k, -t.cy);
+  ctx.quadraticCurveTo(2.6 * k, -3, 4.2 * k, 0.5);
   ctx.closePath();
   ctx.fill();
-  const base = kind === 'solitaire' ? crownBase(0) : DECOR_STAMP_TONES.orchardCrown;
-  paintCrownLobes(ctx, base, s, mirror);
+  paintCrown(ctx, t.crown, 0, -t.cy);
   if (kind === 'orchard') {
     // Blütentupfen weiss und rosa auf der Krone: je Variante fest (Salz 552 als Konstante, kein Seed nötig)
     const n = 12 + (v % 2) * 3;
     for (let i = 0; i < n; i++) {
       const a = hash2(552, v * 64 + i, 1) * Math.PI * 2,
         r = Math.sqrt(hash2(552, v * 64 + i, 2));
-      const x = Math.cos(a) * r * 22 * s * (mirror ? -1 : 1),
-        y = -21 * s + Math.sin(a) * r * 10 * s;
+      const x = Math.cos(a) * r * t.hw * 0.8,
+        y = -t.cy + Math.sin(a) * r * t.hh * 0.7;
       ctx.fillStyle =
         hash2(552, v * 64 + i, 3) < 0.55
           ? DECOR_STAMP_TONES.blossomWhite
@@ -259,19 +260,24 @@ function paintMenhir(ctx: CanvasRenderingContext2D, v: number): void {
 function paintRuin(ctx: CanvasRenderingContext2D, v: number): void {
   // Blöcke hinten zuerst (x + y aufsteigend)
   const blocks = ruinBlocks(v).sort((a, b) => a.x0 + a.y0 - (b.x0 + b.y0));
+  const T = DECOR_STAMP_TONES;
   for (const b of blocks) {
     const A = project(b.x0, b.y0),
       B = project(b.x1, b.y0),
       C = project(b.x1, b.y1),
       D = project(b.x0, b.y1);
     const up = (p: Pt): Pt => ({ x: p.x, y: p.y - b.h });
-    poly(ctx, DECOR_TONES.rockMid, [D, C, up(C), up(D)]); // Seite links unten (Licht)
-    poly(ctx, DECOR_TONES.rockShade, [C, B, up(B), up(C)]); // Seite rechts unten (Schatten)
-    poly(ctx, DECOR_TONES.rockLight, [up(A), up(B), up(C), up(D)]); // Oberkante
-    // oben bewachsen: kleine Gras- und Moosflecken
+    // Bewuchs am Fuss: Gras vor und neben der Mauer
+    const f = project((b.x0 + b.x1) / 2, b.y1 + 0.03);
+    ell(ctx, DECOR_TONES.tallDark, f.x, f.y, (C.x - D.x) / 2 + 3, 2);
+    poly(ctx, T.ruinSide, [D, C, up(C), up(D)]); // Seite links unten (Licht)
+    poly(ctx, T.ruinShade, [C, B, up(B), up(C)]); // Seite rechts unten (Schatten)
+    poly(ctx, T.ruinTop, [up(A), up(B), up(C), up(D)]); // Oberkante
+    // oben bewachsen: Gras- und Moosflecken über die Oberkante, einzelne Halme am Fuss
     const m = project((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2);
-    ell(ctx, DECOR_TONES.tallDark, m.x, m.y - b.h, 3.2, 1.6);
-    ell(ctx, DECOR_TONES.tallLight, m.x - 1, m.y - b.h - 0.6, 1.8, 0.9);
+    ell(ctx, DECOR_TONES.tallDark, m.x, m.y - b.h, (B.x - A.x) / 2 + 1.5, 2.1);
+    ell(ctx, DECOR_TONES.tallLight, m.x - 1, m.y - b.h - 0.8, (B.x - A.x) / 3, 1.2);
+    ell(ctx, DECOR_TONES.tallLight, f.x - 2, f.y - 1.2, 2.6, 1.2);
   }
 }
 
@@ -316,6 +322,8 @@ export const decorCacheSize = (): number => cache.size;
 export const decorCacheBytes = (): number => cacheBytes;
 /** Wie oft der Cache wegen eines Seed-Wechsels (`cacheSeed`) geleert wurde (Dev-Zähler, Test L4-T1). */
 export const decorCacheClears = (): number => clears;
+/** Seed, für den der Cache gerade gefüllt ist (null: leer). */
+export const decorCacheSeed = (): number | null => cacheSeed;
 export function resetDecorCache(): void {
   cache.clear();
   cacheBytes = 0;
