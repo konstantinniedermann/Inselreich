@@ -852,7 +852,7 @@ describe('H-R9 A4/A5 Teilstücke', () => {
       }
     }
     expect(inside).toBeGreaterThan(2000);
-  });
+  }, 30_000); // H-T5: CI bis 3,9 s (Default 5 s); lokal CI=true ≈ 1,5 s, Timeout > 3 ×, Reserve für den Runner
 
   it('A5 Sortierung je Halbstreifen: Teilstücke weiter hinten zuerst, Zellen im Teilstück hinten nach vorn', () => {
     const w = createWorld(7, { unlockAll: true });

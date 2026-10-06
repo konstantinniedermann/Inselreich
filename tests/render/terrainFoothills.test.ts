@@ -107,7 +107,7 @@ describe('H-R13 Nähefeld (B3 stetig)', () => {
       expect(sum, `Seed ${world.seed}`).toBeGreaterThan(5);
       expect(farSum, `Seed ${world.seed}`).toBe(0);
     }
-  });
+  }, 30_000); // H-T5: CI bis 3,6 s (Default 5 s); lokal CI=true ≈ 1,5 s, Timeout > 3 ×, Reserve für den Runner
 });
 
 describe('H-R13 Vorberge', () => {

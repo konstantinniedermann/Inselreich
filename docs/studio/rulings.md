@@ -2172,3 +2172,42 @@ Datei-Eigentum nur Wasser-/Terrain-Malcode und dessen Tests — nicht die Dateie
 Abnahme release-reif (Release-Bündel REL-05). — Kosten bei Irrtum: Konflikt beim T14-Merge in einer Malroutine.
 
 Entscheider: L0 · Anlass: Bericht production-integrator H-T4, Pages-Lauf · ADR: —
+
+## R269 · 2026-10-06 · Gate Werkzeug-Merge Mess-Wächter
+
+Ruling: `tool/messfenster` @ e5bcc9d (Review OK nach 2 Runden; Selbsttest „belegt"/„frei", kein Chrome/Vite nach Lauf
+und `kill -INT`; `make check` grün; `CI=true make check` rot nur am H-T4-Fall vor dessen Merge) freigegeben wie R252:
+Werkzeug-Merge ausserhalb eines Release, Integrator mergt in `.worktrees/integrate` auf aktuellen `main` (mit H-T4)
+und belegt `make check` mit Exit-Code, danach CI. Ab dem Merge nutzen Messpakete `make messfenster` (R264 V1; Zählung
+ungültiger Serien beginnt im Seefahrt-Bündel). Alte `renderqa-*`-Verzeichnisse in `$TMPDIR` liegen ausserhalb des Repos
+(Löschen dort verboten, R207) — Hinweis an den Nutzer, kein Eingriff. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSWAECHTER · ADR: —
+
+## R270 · 2026-10-06 · Vorschläge Ad-hoc-Retro CI H-T4
+
+Ruling: Retro `docs/studio/retros/2026-10-06-adhoc-ci-ht4.md` angenommen, V1–V3 als **Regeln** (kein Experiment):
+**V1** Gate Merge und Gate Merge Release prüfen die CI-Reserve aller Zeittests im Diff — ausdrücklich auch Änderungen
+aus Fix-Runden nach dem Final-Review; der Integrator führt vor jedem Push `CI=true make check; echo EXIT=$?` aus
+(Schwelle: 0 rote CI-Läufe durch Zeittests in den nächsten 3 Merges); hebt die R237-Pause für diese Zeile in
+`gates.md` auf. **V2** Integrator meldet einen Pages-`deploy`-Job, der > 10 min `queued` steht; Workflow unverändert.
+**V3** Status `failed` nur bei nicht erfülltem Auftrag, sonst `done` mit Vermerk (z. B. „CI rot"); Controller nennen
+Exit-Codes im Bericht und begründen eingesparte Arbeiter-Starts. Umsetzung durch studio-coach in `gates.md`,
+`production-integrator.md`, `lead-tech.md` (Versionen, CHANGELOG). — Kosten bei Irrtum: Regeln einzeln zurücknehmen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-ADHOC-HT4 · ADR: —
+
+## R271 · 2026-10-06 · CI rot nach Mess-Wächter-Merge: Hotfix H-T5 mit Zeitreserve-Audit
+
+Ruling: Beobachtung: Workflow „CI" Lauf 37441859308 auf `main` @ f10b479 rot — `tests/sim/islands-gen.test.ts:171`
+AK-E1-01 „Seeds 1…200" im 5-s-Timeout; derselbe Test lief im grünen Lauf 37440669276 bereits mit 4992 ms (Reserve
+≈ 0). Der Merge (nur `tools/render-qa`, `Makefile`, README) ist nicht Ursache; Pages Lauf 37441859292 grün. Ursache:
+Test aus E1-T01 ohne CI-Reserve — die Regel R270 V1 greift nur für Tests **im Diff**, nicht für Bestand. **Hotfix
+H-T5** durch lead-tech (sonnet, 2 Starts): (a) AK-E1-01 mit Reserve (aufteilen wie H-T4, Aussage unverändert, Rot-
+Beleg); (b) **Audit:** alle Tests, die im CI-Log von 37441859308 > 2,5 s ohne eigenes Timeout bzw. > 50 % ihres
+Timeouts liefen, auflisten und mit Reserve versehen (Aufteilen bevorzugt, sonst begründetes Timeout). Änderungen an
+`islands-gen.test.ts` minimal halten (e2 änderte die Datei, C2-5) und im Seefahrt-Ledger für T14 vermerken. Keine
+eigene Ad-hoc-Retro: gleiche Klasse wie RETRO-ADHOC-HT4 (dort angenommen); das Audit ist die Massnahme, der Fall zählt
+als Datenpunkt für R270 V1. — Kosten bei Irrtum: weitere rote Läufe durch Bestandstests.
+
+Entscheider: L0 · Anlass: Bericht production-integrator TOOL-MESSWAECHTER · ADR: —

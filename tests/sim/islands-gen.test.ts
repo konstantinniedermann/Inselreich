@@ -25,6 +25,8 @@ import { createWorld } from '../../src/sim/world';
 import { generateMap, isLand, MAP_H, MAP_W, seaMask } from '../../src/sim/mapgen';
 
 const SEEDS_200 = Array.from({ length: 200 }, (_, i) => i + 1);
+// 8 Blöcke à 25 Seeds: je Block eigene CI-Zeitreserve (H-T5), zusammen alle 200 Seeds.
+const SEED_BLOCKS = Array.from({ length: 8 }, (_, k) => SEEDS_200.slice(k * 25, k * 25 + 25));
 
 function homeOf(seed: number): LaneIsland {
   const { terrain, kontor } = generateMap(seed);
@@ -168,14 +170,17 @@ function checkLayout(home: LaneIsland, isles: PlacedIsland[]): void {
 }
 
 describe('M12 E1 Generator', () => {
-  it('AK-E1-01: Gelände, Plätze und Anker für Seeds 1…200', () => {
-    for (const seed of SEEDS_200) {
-      const isles = generateForeignIslands(seed, homeOf(seed));
-      expect(isles.map((i) => i.kind)).toEqual(['A', 'B']);
-      checkTerrainGuarantees(isles[0]!, 'A');
-      checkTerrainGuarantees(isles[1]!, 'B');
-    }
-  });
+  it.each(SEED_BLOCKS)(
+    'AK-E1-01: Gelände, Plätze und Anker für Seeds 1…200 (Block ab %i)',
+    (...seeds) => {
+      for (const seed of seeds) {
+        const isles = generateForeignIslands(seed, homeOf(seed));
+        expect(isles.map((i) => i.kind)).toEqual(['A', 'B']);
+        checkTerrainGuarantees(isles[0]!, 'A');
+        checkTerrainGuarantees(isles[1]!, 'B');
+      }
+    },
+  );
 
   it('AK-E1-02: Lage, Lücken, Seewege und Rahmen für Seeds 1…200', () => {
     for (const seed of SEEDS_200) {
@@ -234,15 +239,18 @@ describe('M12 E1 Generator', () => {
 });
 
 describe('M12 E1 AK-E1-01 Kreuzprobe canPlace', () => {
-  it('Seeds 1…200: jeder quarrySites-Platz von B ist mit canPlace belegbar', () => {
-    for (const seed of SEEDS_200) {
-      const w = createWorld(seed, { unlockAll: true });
-      const b = generateForeignIslands(w.seed, homeOf(w.seed)).find((i) => i.kind === 'B')!;
-      expect(b.quarrySites.length).toBeGreaterThan(0);
-      for (const p of b.quarrySites) {
-        const r = canPlace(w, 'quarry', p.x, p.y, 2);
-        expect(r.ok, `Seed ${seed} (${p.x},${p.y})`).toBe(true);
+  it.each(SEED_BLOCKS)(
+    'Seeds 1…200: jeder quarrySites-Platz von B ist mit canPlace belegbar (Block ab %i)',
+    (...seeds) => {
+      for (const seed of seeds) {
+        const w = createWorld(seed, { unlockAll: true });
+        const b = generateForeignIslands(w.seed, homeOf(w.seed)).find((i) => i.kind === 'B')!;
+        expect(b.quarrySites.length).toBeGreaterThan(0);
+        for (const p of b.quarrySites) {
+          const r = canPlace(w, 'quarry', p.x, p.y, 2);
+          expect(r.ok, `Seed ${seed} (${p.x},${p.y})`).toBe(true);
+        }
       }
-    }
-  });
+    },
+  );
 });

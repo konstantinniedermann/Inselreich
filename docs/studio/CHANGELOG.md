@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-06 · Persona production-integrator 1.8
+
+- Anlass: Ad-hoc-Retro CI H-T4, B1/B2/B4
+- Datenbasis: [Retro adhoc-ci-ht4](retros/2026-10-06-adhoc-ci-ht4.md)
+- Ruling: R270 (V1–V3)
+- Änderungen: vor jedem Push `make check` und `CI=true make check` mit Exit-Code; Pages-`deploy` > 10 min `queued` melden, nicht abbrechen; `failed` nur bei gescheitertem Merge, sonst `done` mit Vermerk
+
+## 2026-10-06 · Persona lead-tech 1.8
+
+- Anlass: Ad-hoc-Retro CI H-T4, B3/B4
+- Datenbasis: [Retro adhoc-ci-ht4](retros/2026-10-06-adhoc-ci-ht4.md)
+- Ruling: R270 (V3)
+- Änderungen: Exit-Codes im Bericht; eingesparte Arbeiter-Starts begründen; Status-Semantik `failed`/`done`
+
+## 2026-10-06 · Handbuch 1.21
+
+- Anlass: Ad-hoc-Retro CI H-T4, B1 (Zeittest nach Final-Review rot)
+- Datenbasis: [Retro adhoc-ci-ht4](retros/2026-10-06-adhoc-ci-ht4.md)
+- Ruling: R270 (V1)
+- Änderungen: `gates.md` Gate Merge (Prüffrage 5) und Gate Merge Release (Prüfliste): CI-Reserve aller Zeittests im Diff, auch Fix-Runden nach dem Final-Review
+
 ## 2026-10-06 · Persona production-integrator 1.7
 
 - Anlass: Ad-hoc-Retro E1 C3, B5: Merge TOOL-E030 im Hauptcheckout statt `.worktrees/integrate`

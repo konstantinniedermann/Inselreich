@@ -178,6 +178,7 @@ stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist
    `docs/beobachtungen.md` festgehalten?
 3. Sind README (Bedienung, Spielwerte) und arc42 (Module, Tick-Ablauf, Persistenz) nachgeführt?
 4. Keine Secrets, OWASP-konform, Commit-Konvention eingehalten?
+5. Zeittests im Diff: lokale Laufzeit unter `CI=true` höchstens 50 % des Test-Timeouts, auch bei Änderungen aus Fix-Runden nach dem Final-Review (R270)?
 
 **Prüffragen `lead-art` (nur bei Assets; Grundlage [Verfassung §4](VERFASSUNG.md#4-asset--und-lizenzregeln)):**
 
@@ -221,7 +222,7 @@ Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 
 **Prüfliste (Pflicht, L0 prüft sie im Gate):** jede Zeile ein UI-Task → Pfad des Screenshots
 (`.studio/qa/REL-nn/…`) und Playtest-Abschnitt. **Fehlt ein Eintrag, gibt es keinen Merge.** Zusätzlich
-`make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt.
+`make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt, CI-Reserve aller Zeittests im Diff (lokal unter `CI=true` ≤ 50 % des Timeouts, auch Fix-Runden nach dem Final-Review, R270).
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Ruling, danach Push durch den Integrator.
 
