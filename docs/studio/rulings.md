@@ -2476,3 +2476,14 @@ der Wechsel auf Ubuntu 26 kein ungeplantes Ereignis wird; Umstieg auf 26 später
 lead-production, Review `qa-code-reviewer`. — Kosten bei Irrtum: CI rot, Revert des Commits.
 
 Entscheider: L0 · Anlass: BEOB-AUSW-01, Frist 2026-10-19 · ADR: —
+
+## R294 · 2026-10-06 · Union-Merge holt ausgewertete Beobachtungen zurück
+
+Ruling: `merge=union` auf `docs/beobachtungen.md` hat beim H-F1-Merge rund 490 von der Auswertung gestrichene Zeilen
+zurückgeholt (Branch zweigte vor 13316d9 ab). Reparatur durch den Integrator (Fassung 13316d9 + Einträge der
+Branch). Regel bis zu einem Werkzeug-Fix: Bei jedem Merge einer Branch mit Basis vor 13316d9 übernimmt der
+Integrator für diese Datei die main-Fassung und hängt nur die von der Branch **neu** hinzugefügten Einträge an
+(`git diff <merge-base> <branch> -- docs/beobachtungen.md`); danach `context.py` ≤ 30 prüfen. Betrifft alle
+ART-STIL-02-Branches. — Kosten bei Irrtum: verlorener Eintrag, auffindbar in der Branch-Historie.
+
+Entscheider: L0 · Anlass: Integrator-Bericht DOC-MERGE-01 · ADR: —
