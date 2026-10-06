@@ -69,17 +69,19 @@ export function isForeign(cwd, root) {
   return !(cwd === root || cwd.startsWith(root.endsWith(sep) ? root : root + sep));
 }
 
-/** PIDs, die nicht zählen: `self`, alle Vorfahren und alle Nachfahren. */
+/** PIDs, die nicht zählen: `self`, seine Vorfahren und seine Nachfahren (nicht die Nachfahren der Vorfahren). */
 export function ownPids(procs, self) {
   const byPid = new Map(procs.map((p) => [p.pid, p]));
   const own = new Set([self]);
   for (let p = byPid.get(self); p && !own.has(p.ppid) && p.ppid > 1; p = byPid.get(p.ppid))
     own.add(p.ppid);
+  const down = new Set([self]);
   let grew = true;
   while (grew) {
     grew = false;
     for (const p of procs)
-      if (!own.has(p.pid) && own.has(p.ppid)) {
+      if (!down.has(p.pid) && down.has(p.ppid)) {
+        down.add(p.pid);
         own.add(p.pid);
         grew = true;
       }
@@ -152,11 +154,20 @@ function selftest() {
     bad++;
     console.error(`FALSCH: findForeign -> ${f.join()} (erwartet 300,301), ${procs.length} Zeilen`);
   }
+  // Geschwister: claude -> zsh -> make -> messfenster, daneben claude -> zsh -> vitest (gleiches Elternteil).
+  const sib = parseProcs(
+    '  10     1 09:00 claude\n  11    10 09:00 -zsh\n  12    11 00:10 make messfenster\n  13    12 00:10 node messfenster.mjs\n  14    11 05:00 node /r/node_modules/.bin/vitest --watch=true\n  15    10 05:00 -zsh\n  16    15 05:00 npx vite --port 5173\n',
+  );
+  const fs = findForeign(sib, 13).map((p) => p.pid);
+  if (fs.join() !== '14,16') {
+    bad++;
+    console.error(`FALSCH: Geschwister -> ${fs.join()} (erwartet 14,16)`);
+  }
   if (isForeign('/a/b/c', '/a/b') || !isForeign('/a/bc', '/a/b') || !isForeign('/x', '/a/b')) {
     bad++;
     console.error('FALSCH: isForeign');
   }
-  console.log(bad ? `selftest: ${bad} Fehler` : `selftest: ok (${cases.length + 2} Prüfungen)`);
+  console.log(bad ? `selftest: ${bad} Fehler` : `selftest: ok (${cases.length + 3} Prüfungen)`);
   return bad ? 1 : 0;
 }
 
