@@ -16,6 +16,7 @@ import {
   unproject,
   zoomStep,
   treeVariant,
+  TREE_VARIANTS,
   type Footprint,
   type Hull,
   type Pt,
@@ -80,11 +81,11 @@ describe('Projektion', () => {
     expect(zoomStep(3)).toBe(2);
     for (let z = 0.5; z <= 2; z += 0.01) expect(ZOOM_STEPS).toContain(zoomStep(z));
   });
-  it('ISO D-13 treeVariant ist deterministisch und liegt in 0 … 7', () => {
+  it('ISO D-13 treeVariant (L1: Vorgabe-Variante) ist deterministisch und liegt in 0 … TREE_VARIANTS - 1', () => {
     for (let i = 0; i < 200; i++) {
       const v = treeVariant(7, i % 64, (i * 7) % 64);
       expect(v).toBe(treeVariant(7, i % 64, (i * 7) % 64));
-      expect(Number.isInteger(v) && v >= 0 && v < 8).toBe(true);
+      expect(Number.isInteger(v) && v >= 0 && v < TREE_VARIANTS).toBe(true);
     }
   });
 });
@@ -330,7 +331,7 @@ describe('Sortierung und Cache', () => {
   });
 });
 
-it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer mit treeVariant', () => {
+it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer (L1: Variante aus forestLayout)', () => {
   const w = createWorld(3, { unlockAll: true });
   const k = w.buildings[home(w).kontorId]!;
   const x = k.x + 6;
@@ -343,5 +344,9 @@ it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantFore
   expect(clearForest(w, x, y).ok).toBe(true);
   expect(trees()).toHaveLength(0);
   expect(plantForest(w, x, y).ok).toBe(true);
-  expect(trees()).toEqual([expect.objectContaining({ variant: treeVariant(w.seed, x, y) })]);
+  expect(trees()).toEqual([
+    expect.objectContaining({ variant: expect.any(Number), ox: expect.any(Number) }),
+  ]);
+  const v = (trees()[0] as { variant: number }).variant;
+  expect(v >= 0 && v < TREE_VARIANTS).toBe(true);
 });

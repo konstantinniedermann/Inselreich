@@ -5,6 +5,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
+import { forestClearing, forestEdgeShift } from './forest';
 import type { CacheStep } from './cachePlan';
 import {
   FLOWER_TONES,
@@ -72,6 +73,9 @@ const CLEARING_MAX = 0.5;
 const PATCH_SPREAD = 2.8; // H-R11 D8: Gewinn vor tanh (vorher 5 mit hartem Klemmen)
 const PATCH_FREQ = 0.95,
   PATCH_FREQ2 = 1.7; // Rauschfrequenzen je Kachel der beiden Oktaven
+const FOREST_EDGE_SHIFT = 2; // L1: Waldboden folgt den Kronen: Randversatz a (±0,3 Kachel) verschiebt die Randaufhellung um a × 2
+const FOREST_EDGE_MEADOW = 0.7; // Fix 5: am Aussenrand reicht der Wiesenton bis an die Kronen, der dunkle Boden bleibt unter ihnen
+const FOREST_CLEARING_LIGHT = 0.55; // L1 B2: Lichtung (Feld 0…1) hellt den Waldboden im Kern bis zu diesem Anteil auf
 const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
@@ -796,6 +800,8 @@ function landColor(
   lerp: (f: Float32Array) => number,
   grain: number,
   o: number[],
+  fx: number,
+  fy: number,
 ): void {
   switch (LAND[t]) {
     case 'sand': {
@@ -843,11 +849,27 @@ function landColor(
     }
     case 'forest': {
       const p = lerp(g.patch);
-      const edge = smoothstepClamp((1 - lerp(g.ind[FOREST]!)) * 2); // innen 0, Rand ~1
+      // L1: derselbe Randversatz wie die Platzierung der Kronen (`forestEdgeShift`): wo die Krone vorragt (a > 0),
+      // reicht der dunkle Waldboden weiter hinaus, wo sie zurückweicht (a < 0), hellt der Boden früher auf
+      const inner = 1 - lerp(g.ind[FOREST]!);
+      let shifted = inner;
+      if (inner > 0 && inner < 0.95) {
+        const bump = Math.min(1, inner * 4) * (1 - Math.min(1, Math.max(0, (inner - 0.7) * 4)));
+        shifted -= forestEdgeShift(g.seed, fx, fy) * FOREST_EDGE_SHIFT * 0.5 * bump;
+      }
+      const edge = smoothstepClamp(shifted * 2); // innen 0, Rand ~1
       // R170: am sonnigen Rand weniger Moos — sonst ergibt Moos + Klee im Übergang einen Kronenton
       if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX * (1 - MOSS_EDGE_FADE * edge), o);
       else mix3(C.wood, C.clearing, -p * CLEARING_MAX, o);
       if (edge > 0) mix3(o, C.edgeLight, edge * FOREST_EDGE_LIGHT, o);
+      if (edge > 0) mix3(o, C.grass, edge * edge * FOREST_EDGE_MEADOW, o);
+      if (edge < 0.4)
+        mix3(
+          o,
+          C.clearing,
+          forestClearing(g.seed, fx, fy) * FOREST_CLEARING_LIGHT * (1 - edge / 0.4),
+          o,
+        );
       break;
     }
     default: {
@@ -1006,7 +1028,15 @@ export function paintPixels(
           wFlur: number,
           wSum = 1;
         if (pure) {
-          landColor(g, c0 - 1, lerp, grain, col);
+          landColor(
+            g,
+            c0 - 1,
+            lerp,
+            grain,
+            col,
+            (px0 + px + 0.5) * pxTile,
+            (py0 + py + 0.5) * pxTile,
+          );
           wMt = c0 - 1 === mt ? 1 : 0;
           wFlur = c0 - 1 === GRASS || c0 - 1 === SAND ? 1 : 0;
         } else {
@@ -1021,7 +1051,7 @@ export function paintPixels(
           for (let t = 0; t < LAND.length; t++) {
             const q = wt[t]! / sum;
             if (q <= 0) continue;
-            landColor(g, t, lerp, grain, tc);
+            landColor(g, t, lerp, grain, tc, (px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile);
             col[0] += tc[0]! * q;
             col[1] += tc[1]! * q;
             col[2] += tc[2]! * q;

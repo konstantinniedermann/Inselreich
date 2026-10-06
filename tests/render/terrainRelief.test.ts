@@ -247,7 +247,9 @@ describe('H-R11 Wald (D9)', () => {
     for (let v = 0; v < TREE_VARIANTS; v++)
       for (const c of crownsFor(1, v))
         gap = Math.min(gap, c.cx - c.r, 1 - c.cx - c.r, c.cy - c.r, 1 - c.cy - c.r);
-    expect(gap).toBeGreaterThan(0);
+    // L1: Kronen dürfen bis 0,35 Kachel über die eigene Kachel ragen (Spec 2.1 (1)); der Hof misst ab der äussersten Krone
+    expect(gap).toBeGreaterThanOrEqual(-0.35 - 1e-9);
+    expect(gap).toBeLessThan(0);
     let edges = 0,
       worst = 0;
     for (const { world, grid } of worlds)
