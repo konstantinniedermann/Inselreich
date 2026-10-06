@@ -19,6 +19,7 @@ import {
   fringeEnds,
   G_KINDS,
   G_MAX,
+  gCount,
   groundEligible,
   groundElements,
   kontorPos,
@@ -997,14 +998,41 @@ describe('L4 Stempelliste rückt nicht nach (D1)', () => {
 });
 
 describe('L4 G-Anzahl: 2–12 je Insel (Katalog), statische Kandidatenliste', () => {
-  it('Seeds 1–50, frisch erzeugte Heimat: sichtbare Solitärbäume (A5) in [2, 12] für ≥ 90 % der Seeds, nie mehr als 12', () => {
+  it('Kandidatenzahlen zweier Arten sind über die Seeds 1–200 unkorreliert (|r| < 0,3), A5 in 3–8, Boden-Arten in 3–12', () => {
+    const salts = [540, 545, 546, 547, 549];
+    const xs = salts.map((salt, k) =>
+      Array.from({ length: 200 }, (_v, i) => gCount(i + 1, salt, k, k === 0 ? 8 : 12)),
+    );
+    xs.forEach((a, k) => {
+      expect(Math.min(...a)).toBeGreaterThanOrEqual(3);
+      expect(Math.max(...a)).toBeLessThanOrEqual(k === 0 ? 8 : 12);
+    });
+    const corr = (a: number[], b: number[]): number => {
+      const ma = a.reduce((x, y) => x + y, 0) / a.length,
+        mb = b.reduce((x, y) => x + y, 0) / b.length;
+      let sab = 0,
+        saa = 0,
+        sbb = 0;
+      for (let i = 0; i < a.length; i++) {
+        sab += (a[i]! - ma) * (b[i]! - mb);
+        saa += (a[i]! - ma) ** 2;
+        sbb += (b[i]! - mb) ** 2;
+      }
+      return sab / Math.sqrt(saa * sbb);
+    };
+    for (let i = 0; i < xs.length; i++)
+      for (let j = i + 1; j < xs.length; j++)
+        expect(Math.abs(corr(xs[i]!, xs[j]!)), `Arten ${i}/${j}`).toBeLessThan(0.3);
+  });
+
+  it('Seeds 1–50, frisch erzeugte Heimat: sichtbare Solitärbäume (A5) in [2, 8] für ≥ 90 % der Seeds, nie mehr als 8', () => {
     let inBand = 0;
     for (let seed = 1; seed <= 50; seed++) {
       const w = createWorld(seed);
       const n = stampPlacements(seed, home(w), kontorOf(w)).filter(
         (s) => s.kind === 'solitaire',
       ).length;
-      expect(n, `Seed ${seed}`).toBeLessThanOrEqual(12);
+      expect(n, `Seed ${seed}`).toBeLessThanOrEqual(8); // Katalog 2–12, Deckel 8 (Release-Budget)
       if (n >= 2) inBand++;
     }
     expect(inBand / 50).toBeGreaterThanOrEqual(0.9);

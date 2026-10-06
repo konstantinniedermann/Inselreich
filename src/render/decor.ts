@@ -38,15 +38,18 @@ export const STAMP_MAX = 300;
 /** Solitärbaum (A5): Mindestabstand zum Wald (Kacheln, Chebyshev), Abstand zwischen Stempeln und Obergrenze je Insel. */
 export const SOLITAIRE_FOREST_GAP = 2;
 export const STAMP_SPACING = 3;
-export const SOLITAIRE_MAX = 12;
+export const SOLITAIRE_MAX = 8;
 /** G-Elemente (Katalog: 2–12 je Insel): Zahl der statischen Kandidaten je Insel liegt in [G_MIN, G_MAX]. */
 export const G_MIN = 3;
 export const G_MAX = 12;
 /** Mindestabstand der Kandidaten gleicher Art (Kacheln, Chebyshev) bei den Boden-G-Elementen. */
 const G_SPACING = 4;
-/** Zahl der Kandidaten einer G-Art je Insel: `G_MIN`…`G_MAX`, aus dem Salz der Art (Argumente −1, −1). */
-export const gCount = (seed: number, salt: number): number =>
-  G_MIN + Math.floor(hash2(seed + salt, -1, -1) * (G_MAX - G_MIN + 1));
+/**
+ * Zahl der Kandidaten einer G-Art je Insel: `G_MIN`…`max` aus `hash2(seed + salt, 977 + 131 · k, 613 + 31 · seed)`; `k` ist der Artindex
+ * (A5 = 0, `G_KINDS` = 1…4), so sind die Zahlen verschiedener Arten nicht nur gegeneinander verschoben.
+ */
+export const gCount = (seed: number, salt: number, k: number, max = G_MAX): number =>
+  G_MIN + Math.floor(hash2(seed + salt, 977 + 131 * k, 613 + 31 * seed) * (max - G_MIN + 1));
 /** Mauerreste (A14): Mindestabstand zum Kontor in Kacheln. */
 export const RUIN_KONTOR_GAP = 8;
 
@@ -538,7 +541,7 @@ function planStamps(p: StaticPlan, w: number, h: number): void {
     }
   cand.sort((a, b) => a.r - b.r);
   // G (2–12 je Insel): feste Zahl von Kandidaten aus dem Rang, nicht aus einem Los je Kachel
-  const target = gCount(seed, 540);
+  const target = gCount(seed, 540, 0, SOLITAIRE_MAX);
   let solitaires = 0;
   for (const c of cand) {
     if (solitaires >= Math.min(target, SOLITAIRE_MAX) || out.length >= limit) break;
@@ -580,7 +583,7 @@ function planGround(p: StaticPlan, w: number, h: number): void {
       }
     p.gEligible[ki] = cand.length;
     cand.sort((a, b) => a.r - b.r);
-    const n = gCount(seed, salt);
+    const n = gCount(seed, salt, ki + 1);
     const taken: { x: number; y: number }[] = [];
     for (const c of cand) {
       if (taken.length >= n) break;
