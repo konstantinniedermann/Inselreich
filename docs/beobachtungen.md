@@ -1224,3 +1224,10 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Einschätzung: mittel, rein visuell. Fix-Richtung: Laufzeit = Weglänge / Soll-Tempo (≈ `WALK_SPEED`), Start =
   1 − Laufzeit/Zyklus, Obergrenze, wenn es nicht in den Zyklus passt; Wunsch Nutzer: Streuung erlaubt, im Verhältnis.
   Fehlender Test: Obergrenze K/s aus `errandPose` bei kurzem und langem Weg, ×1/×4.
+
+### 2026-10-06 · UI · Weitere Iteratoren über alle Inseln ohne Insel-Filter (H-F1, Lesung, mittel)
+
+- Fundort: `src/ui/inspect.ts:72` (`inhabitantsOf`), `:107` (`protectedCount`, „schützt N Gebäude" zählt Fremdinsel-Gebäude mit; vom H-F1-Implementierer belegt gelesen), `:432` (Rathaus-Suche), `:818` (Einwohner im Panel); `ui/guide.ts:30,101`, `ui/hints.ts:307,324`, `ui/soundEvents.ts:28,112,144`, `ui/startCard.ts:124`, `ui/app.ts:458`.
+- Beobachtung: Diese Stellen iterieren `world.buildings` über alle Inseln. Ob das Absicht ist (z. B. Spielfortschritt, Ton, Anleitung) oder derselbe Fehler wie die Geisterbauten, ist je Stelle **unbelegt**; nur `protectedCount` ist sicher falsch (Schutzreichweite in Heimatkoordinaten gegen Gebäude anderer Inseln).
+- Ursprung: Nebenbefund H-F1 (Geisterbauten, R286/R290), Prüfung ohne Test.
+- Einschätzung: mittel, nur Zahlen und Texte, nicht das Bild. Je Stelle erst roter Test, dann Entscheid; Helfer `homeBuildings` (`src/render/homeBuildings.ts`) liegt bereit.
