@@ -958,3 +958,32 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Beobachtung:** Die Inselkarte bricht bei 1280 px mitten im Text um („Fahrzeit / 0:26“). Im Flachwasser-Saum der Inseln sind bei Zoom ≤ 0,25 weiche waagrechte Schlieren etwa im Kachelzeilen-Abstand sichtbar (keine Streifennaht, nicht bei Zoom 1).
 - **Ursprung:** M12-E1 T06/T07 Playtests (qa-playtester).
 - **Einschätzung:** niedrig; Umbruch kosmetisch (z. B. geschütztes Leerzeichen vor der Zeit). Schlieren beurteilt lead-art im Merge-Gate E1.
+
+## 2026-10-06 · M12-E1 Abschluss (T08): Befunde C1–C3b für E2 und Aufräumen
+
+- **Fundort / Beobachtung (a):** `src/render/archipel.ts` `islandView`: setzt `buildings: {}`. Gebäude auf Fremdinseln
+  sind in E1 nicht sichtbar. **Einschätzung:** Der Seefahrt-Plan (E2) muss Gebäude je Insel in die Ansicht bringen
+  (Risiko R-6); Zeichner, Culling und Picking lesen nur die Ansicht. **Ursprung:** M12-E1 T05.
+- **(b)** `src/sim/islands.ts`, `src/sim/defs/sea.ts`: Die Bauplätze von A und B sind in E1 nur per Geländeregel geprüft
+  (P-3). **Einschätzung:** E2/E3 prüfen sie per `canPlace` für `kontor2` und `spicefarm`; `spicefarm.site` muss
+  `PLANTATION_SITE` enthalten, sonst passt die Plantage nicht zu den erzeugten Plätzen. **Ursprung:** M12-E1 T01/T02.
+- **(c)** `src/ui/app.ts` `planOf`: Pro Seite entstehen zwei Cache-Pläne; Plan 1 läuft etwa 22 Schritte und steht dann.
+  Vermutung: eine App-Instanz vor „Fortsetzen" (Startkarte über Hintergrundwelt). **Einschätzung:** nicht untersucht;
+  harmlos, aber unnötiger Aufwand und ein Grund für verschobene Messfenster; vor E2 prüfen, ob die Hintergrundwelt keinen
+  Plan braucht. **Ursprung:** M12-E1 C3b (T07).
+- **(d)** `tests/render/terrain.test.ts`: Zwei H-R11-Tests waren im Review-Lauf unter hoher Last rot (im `make check`
+  grün; Namen nicht festgehalten). **Einschätzung:** vermutlich Zeitgrenzen unter Last; der Zeittest-Wächter
+  (`ZEITTESTS` in `vite.config.ts`) zeigt, welche Dateien als Zeittests laufen; bei erneutem Auftreten bei ruhiger
+  Maschine wiederholen, sonst Timeout mit Begründung. **Ursprung:** M12-E1 T07-Review.
+- **(e)** `src/render/cachePlan.ts` `finish`, `src/ui/islandLayers.ts`: Die Notfall-Rasterung beim Sofort-Zoom auf noch
+  nicht gebaute Fremdinseln blockiert einen Frame 160–450 ms. **Einschätzung:** planmässig synchron (ADR-013 Nachtrag);
+  tritt nur vor Abschluss des Leerlauf-Aufbaus (etwa 27 s bei DPR 2) auf. **Ursprung:** M12-E1 T06-Playtest.
+- **(f)** AK-E1-19: Rest-Maximum 8,4–10,1 ms (p95 7,7–7,9) ist eine periodische Spitze etwa alle 16 Malschritte
+  (3,3–4,4 ms statt 0,6–1,3 ms), gleicher Index, kein GC. **Einschätzung:** Ursache unbelegt, Vermutung Browser-Flush der
+  Aufzeichnung; weitere Teilung half nicht, Flush je Schritt verschlechterte das Maximum. Bei Bedarf Chrome-Trace.
+  Entscheid R265: p95 zählt. **Ursprung:** M12-E1 C3b (T07).
+- **(g)** Worktrees `.worktrees/m12-e1-perf` (Branch gemerged) und `.worktrees/m12-e1-terrain` sind entfernbar.
+  **Einschätzung:** nur Hinweis, Aufräumen durch den Integrator nach dem Merge. **Ursprung:** M12-E1 C3.
+- Die Inselkarte, die bei 1280 px umbricht, und die Schlieren im Flachwasser-Saum stehen schon im Eintrag vom
+  2026-10-06 (C3 Playtests); die `.env.example` gibt es im Repo nicht (keine Umgebungsvariablen nötig, `docs/arc42.md`
+  nennt keine).

@@ -137,3 +137,9 @@ Verweis aus Spec §9.2. lead-tech übernimmt sie in die Teilpläne; lead-qa prü
   AK-E1-18 Notfall-Frames getrennt ausweisen; AK-E1-19 Messbedingungen (Maschine, DPR, Fenster, Seed, Fokus)
   im Plan fixieren.
 - **Reihenfolge:** E1-Render startet erst nach dem REL-03-Merge.
+
+## Nachträge E1
+
+Zu AK-E1-18 und AK-E1-19 gelten die Nachträge in der Spec, Abschnitt 5 „Nachträge E1 (R257, R265)": AK-E1-18 wird bei
+1920 × 1080 und DPR 1 entschieden (Grenze 50 ms unverändert; DPR 2 nur informativ); AK-E1-19 entscheidet p95 ≤ 8 ms je
+Scheibe, das Maximum ist informativ (≤ 12 ms). Die Zeilen oben bleiben unverändert.
