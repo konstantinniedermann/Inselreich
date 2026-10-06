@@ -377,9 +377,9 @@ export function renderNoticeStack(
 }
 
 /** Aktualisiert Auftrag und Krisenkarte; eine leere Krisenkarte ist verborgen. */
-export function updateNoticeStack(stack: HTMLElement, world: World): void {
+export function updateNoticeStack(stack: HTMLElement, world: World, island: number = HOME): void {
   const orderEl = stack.querySelector<HTMLElement>('.order-card');
-  if (orderEl) updateOrder(orderEl, world);
+  if (orderEl) updateOrder(orderEl, world, island);
   const crisis = crisisCardText(crisisView(world), world);
   const crisisEl = setField(stack, 'crisis-card', crisis.text);
   if (crisisEl) {

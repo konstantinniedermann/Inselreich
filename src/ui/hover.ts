@@ -11,7 +11,7 @@ import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel } from '../sim/townhall';
 import { buildingShown, functionLock } from '../sim/unlocks';
-import { HOME, home, adjacentOf, center, inBounds } from '../sim/world';
+import { HOME, home, adjacentOf, center, inBounds, isKontor } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
@@ -172,7 +172,7 @@ function buildingInfo(world: World, b: Building): HoverInfo {
   if (b.defId === 'townhall') return townhallInfo(world, b);
   if (def.supplyRadius !== undefined) {
     const lines = [`Versorgung im Radius ${def.supplyRadius}`];
-    if (b.defId === 'kontor') lines.push('Handel: klicken');
+    if (isKontor(b.defId)) lines.push('Handel: klicken');
     return { title: def.name, lines };
   }
   if (def.service !== undefined || def.fireProtection === true) return serviceInfo(world, b);

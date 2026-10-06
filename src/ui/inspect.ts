@@ -1,4 +1,4 @@
-import { home } from '../sim/world';
+import { home, isKontor } from '../sim/world';
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
@@ -16,7 +16,7 @@ import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
 import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
-import type { Building, GoodId, TaxLevel, Tier, World } from '../sim/types';
+import type { Building, BuildingDefId, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
@@ -498,6 +498,15 @@ function updateTownhall(panel: HTMLElement, world: World): void {
   }
 }
 
+/**
+ * Knöpfe des Kontor-Panels: beide Kontore handeln; abreissen lässt sich nur das zweite (der Grund
+ * „Erst Route auflösen“ kommt aus der Sim). Kein Kontor ergibt `null`.
+ */
+export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish: boolean } | null {
+  if (!isKontor(defId)) return null;
+  return { trade: true, demolish: defId === 'kontor2' };
+}
+
 /** Baut den Panel-Inhalt für ein Gebäude neu auf (nur bei Auswahlwechsel aufrufen). */
 export function renderInspect(
   panel: HTMLElement,
@@ -521,9 +530,11 @@ export function renderInspect(
   const buttons = document.createElement('div');
   buttons.className = 'panel-actions';
 
-  if (b.defId === 'kontor') {
+  const kontor = kontorActions(b.defId);
+  if (kontor !== null) {
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
+    if (kontor.demolish) addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   } else if (b.defId === 'townhall') {
     renderTownhall(panel, actions);
     addRemedy(panel);

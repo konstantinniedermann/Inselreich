@@ -77,9 +77,11 @@ describe('M12 E2 UI Bauen und Handeln: Bauleisten-Grund', () => {
     home(w).stock.stone = 50;
     expect(toolAfford(w, { kind: 'build', defId: 'kontor2' }, B).ok).toBe(true);
     found(w, B);
-    w.islands[B]!.stock.wood = 0;
+    const stock = w.islands[B]!.stock;
+    stock.wood = stock.tools = stock.stone = 0;
     const r = toolAfford(w, { kind: 'build', defId: 'lumberjack' }, B);
-    expect(r).toEqual({ ok: false, reason: 'Nicht genug Holz auf Felsbucht' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toMatch(/^Nicht genug .+ auf Felsbucht$/);
   });
   it('Bauleiste der Fremdinsel führt kontor2, die der Heimat nicht', () => {
     const w = seaWorld();

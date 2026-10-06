@@ -1,7 +1,6 @@
-import { HOME, home } from '../sim/world';
+import { HOME } from '../sim/world';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
-import { checkAfford } from '../sim/economy';
 import { UNLOCKS } from '../sim/defs/unlocks';
 import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
@@ -23,6 +22,7 @@ import type { GameState } from './app';
 import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { friendlyReason } from './hints';
+import { paidFromHome, toolAfford, toolBlockReason } from './islandTools';
 import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
@@ -120,7 +120,7 @@ export function tooltipLines(tool: Tool): string[] {
   const def = BUILDING_DEFS[tool.defId];
   const lines = [
     withKey(def.name),
-    `Kosten: ${costLine(def.cost)}`,
+    `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
@@ -252,8 +252,16 @@ function attachTooltip(
   btn.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-/** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
-const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
+/** Merkt sich Werkzeug und Kosten je Bau-Button für die Leistbarkeitsprüfung. */
+const buttonCost = new WeakMap<HTMLButtonElement, { tool: Tool; cost: Cost }>();
+
+/** Grund, warum das Werkzeug auf der Insel nicht geht (fehlendes Kontor vor Kosten), sonst `null`. */
+export function toolReason(world: World, tool: Tool, island: number): string | null {
+  const gate = toolBlockReason(world, tool, island);
+  if (gate !== null) return gate;
+  const r = toolAfford(world, tool, island);
+  return r.ok ? null : r.reason;
+}
 
 /** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und nur Angezeigtes (Spec 11.1). */
 export function buildEntries(
@@ -312,7 +320,7 @@ export function renderBuildMenu(
     icon?: IconId,
   ): void => {
     const btn = document.createElement('button');
-    if (cost) buttonCost.set(btn, cost);
+    if (cost) buttonCost.set(btn, { tool, cost });
     btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
     btn.setAttribute('aria-label', label);
     btn.textContent = label;
@@ -336,9 +344,8 @@ export function renderBuildMenu(
       if (blurAfterClick(ev.detail)) btn.blur();
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
-      const afford = cost ? checkAfford(state.world, home(state.world), cost) : null;
-      if (afford && !afford.ok)
-        showMessage(friendlyReason(state.world, afford.reason, { cost }), 'error');
+      const reason = cost ? toolReason(state.world, tool, state.activeIsland) : null;
+      if (reason !== null) showMessage(friendlyReason(state.world, reason, { cost }), 'error');
     });
     parent.appendChild(btn);
   };
@@ -403,26 +410,27 @@ export function renderBuildMenu(
     }
     nav.appendChild(sub);
   }
-  updateBuildMenu(nav, state.world);
+  updateBuildMenu(nav, state.world, state.activeIsland);
   if (focusKey !== undefined) {
     nav.querySelector<HTMLElement>(`[data-key="${CSS.escape(focusKey)}"]`)?.focus();
   }
 }
 
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
-export function updateBuildMenu(nav: HTMLElement, world: World): void {
+export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);
     if (live.textContent !== text) live.textContent = text;
   }
   for (const btn of nav.querySelectorAll<HTMLButtonElement>('button')) {
-    const cost = buttonCost.get(btn);
-    if (!cost) continue;
-    const r = checkAfford(world, home(world), cost);
-    btn.classList.toggle('unaffordable', !r.ok);
+    const meta = buttonCost.get(btn);
+    if (!meta) continue;
+    const { tool, cost } = meta;
+    const why = toolReason(world, tool, island);
+    btn.classList.toggle('unaffordable', why !== null);
     const reason = btn.querySelector('.tt-reason');
-    const text = r.ok ? '' : friendlyReason(world, r.reason, { cost });
+    const text = why === null ? '' : friendlyReason(world, why, { cost });
     if (reason && reason.textContent !== text) reason.textContent = text;
   }
 }
