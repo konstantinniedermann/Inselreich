@@ -2349,3 +2349,14 @@ ohne Pause, Release nach Gate Merge. Interne Prüfungen (Review je Task, Browser
 (Verfassung §9). — Kosten bei Irrtum: Revert des Release-Merges.
 
 Entscheider: Nutzer · Anlass: Nutzerantwort 2026-10-06 · ADR: —
+
+## R282 · 2026-10-06 · Bündeln von Prüfungen (ART-STIL-02)
+
+Ruling: Nutzer: „Sachen bündeln, visuelle Tests und Playtests bündeln." Ausgelegt für ART-STIL-02: kein
+qa-playtester je Häppchen, sondern **ein** Browser-Lauf je Release über alle Häppchen; Bildurteil je Häppchen
+nur per Galerie-Skript durch lead-art (kein Agent-Start); unabhängige kleine Tasks eines Häppchens in einen
+Engineer-Start (R233 V1); Blindtest L3 im Release-Lauf A. Review je Task und opus-Review je Release bleiben
+(§9). Zweck: Zeit und Tokens sparen; Auslegung widerspricht ihm nicht, weil Prüftiefe am Release erhalten
+bleibt. — Kosten bei Irrtum: Fehler fallen später auf, Fix-Runde im Release-Lauf.
+
+Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-06 · ADR: —
