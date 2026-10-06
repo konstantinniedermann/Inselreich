@@ -1716,7 +1716,7 @@ function findFall(
       const score =
         path.length + 10 * (steepSum / path.length) + 0.001 * hash2(c.seed + L6_FALL_SALT, I, J);
       if (!best || score > best.score) {
-        // Breite mit Formrauschen (Salz 579): ± 0,1 px je Punkt, in 1 … 1,5 gehalten
+        // Breite mit Formrauschen (Salz 579): ± 0,1 px je Punkt, in 1 … 3 px gehalten (steil breiter)
         const jittered = path.map((q, k) => ({
           ...q,
           w: Math.max(
