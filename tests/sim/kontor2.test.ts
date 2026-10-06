@@ -222,6 +222,14 @@ describe('M12 E2 Kontor II', () => {
       expect(w.islands[B]!.stock).toEqual(stockB);
     });
 
+    it('N2 Abriss eines fremden kontor2 laesst ein anderes kontorId der Insel stehen', () => {
+      const w = seaWorld();
+      const id = found(w, B);
+      w.islands[B]!.kontorId = id + 1000;
+      expect(demolish(w, id)).toEqual({ ok: true });
+      expect(w.islands[B]!.kontorId).toBe(id + 1000);
+    });
+
     it('(d) Schiff im Hafen B auf Heimfahrt ohne Route sperrt nicht', () => {
       const { w, id } = setup();
       shipLiteral(w, { port: B, to: 0, left: 10, route: null, homing: true });

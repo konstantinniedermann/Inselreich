@@ -1164,7 +1164,7 @@ describe('M12 E0 Save v7', () => {
     expect(serialize(load(once))).toBe(once);
   });
 
-  it('AK-E0-09 version 9 → Unbekannte Version', () => {
+  it('AK-E0-09 version 10 → Unbekannte Version', () => {
     expect(deserialize(tampered(createWorld(3), (r) => (r.version = 10)))).toEqual({
       ok: false,
       reason: 'Unbekannte Version',
@@ -1333,7 +1333,7 @@ describe('M12 E1 Save v8', () => {
       expect(deserialize(json).ok).toBe(false);
     });
 
-    it('version 9 → Unbekannte Version', () => {
+    it('version 10 → Unbekannte Version', () => {
       expect(deserialize(tampered(createWorld(3), (r) => (r.version = 10)))).toEqual({
         ok: false,
         reason: 'Unbekannte Version',
@@ -1581,6 +1581,7 @@ describe('M12 Seefahrt Save v9', () => {
       ['V03 to ohne Kontor', () => withShips([ship({ to: 1 })])],
       ['V04 to = port', () => withShips([ship({ to: 0 })])],
       ['V05 left > Lane', () => withShips([ship({ port: 2, to: 0, left: lane20() + 1 })])],
+      ['V05b unterwegs mit left 0', () => withShips([ship({ port: 2, to: 0, left: 0 })])],
       ['V06 cargo.spice 51', () => withShips([ship({ cargo: { spice: 51 } })])],
       ['V07 cargo.foo', () => withShips([ship({ cargo: { foo: 1 } })])],
       ['V08 cargo.wood 0', () => withShips([ship({ cargo: { wood: 0 } })])],
