@@ -141,7 +141,6 @@ Verweis aus Spec §9.2. lead-tech übernimmt sie in die Teilpläne; lead-qa prü
   E2+E3+E4 in [Anhang 05](anhang-05-drittes-ziel-gewuerzstadt.md) H–J; Fold-back von AK-M12-B2 entfernt zusätzlich
   `wonSpice`.
 
-
 ## Nachträge E1
 
 Zu AK-E1-18 und AK-E1-19 gelten die Nachträge in der Spec, Abschnitt 5 „Nachträge E1 (R257, R265)": AK-E1-18 wird bei
