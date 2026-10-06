@@ -1233,12 +1233,18 @@ describe('M12 E1 Terrain', () => {
     );
   });
 
-  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16, 13 und GRID_BAND_ROWS, Heimat und Inselansicht)', () => {
-    for (const w of [view(), createWorld(3)]) {
-      const isl = fieldWorld(w);
-      const fields = terrainFields(isl);
-      const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
-      for (const rows of [16, 13, GRID_BAND_ROWS]) {
+  // Je Welt und Bandhöhe ein eigener Test (H-T4): lokal höchstens 2,9 s (Inselansicht, Höhe 2),
+  // daher Timeout 15 s (> 5 × Reserve für den CI-Runner).
+  describe.each([
+    ['Heimat', () => view()],
+    ['Inselansicht', () => createWorld(3)],
+  ] as const)('AK-E1-11 gridBands (%s)', (_name, mk) => {
+    it.each([16, 13, GRID_BAND_ROWS])(
+      'Gitter aus Bändern der Höhe %i gleich buildGrid',
+      (rows) => {
+        const isl = fieldWorld(mk());
+        const fields = terrainFields(isl);
+        const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
         const bands = gridBands(isl, fields, rows);
         expect(bands.steps.length).toBeGreaterThan(2);
         for (const s of bands.steps) s();
@@ -1264,8 +1270,9 @@ describe('M12 E1 Terrain', () => {
             ).toBe(true);
           }
         }
-      }
-    }
+      },
+      15_000,
+    );
   });
 
   it('quarterLayer: Kante gleich ceil(halfLayer / 2), zweiter Aufruf liefert dasselbe Objekt', () => {
