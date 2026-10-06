@@ -2172,3 +2172,14 @@ Datei-Eigentum nur Wasser-/Terrain-Malcode und dessen Tests — nicht die Dateie
 Abnahme release-reif (Release-Bündel REL-05). — Kosten bei Irrtum: Konflikt beim T14-Merge in einer Malroutine.
 
 Entscheider: L0 · Anlass: Bericht production-integrator H-T4, Pages-Lauf · ADR: —
+
+## R269 · 2026-10-06 · Gate Werkzeug-Merge Mess-Wächter
+
+Ruling: `tool/messfenster` @ e5bcc9d (Review OK nach 2 Runden; Selbsttest „belegt"/„frei", kein Chrome/Vite nach Lauf
+und `kill -INT`; `make check` grün; `CI=true make check` rot nur am H-T4-Fall vor dessen Merge) freigegeben wie R252:
+Werkzeug-Merge ausserhalb eines Release, Integrator mergt in `.worktrees/integrate` auf aktuellen `main` (mit H-T4)
+und belegt `make check` mit Exit-Code, danach CI. Ab dem Merge nutzen Messpakete `make messfenster` (R264 V1; Zählung
+ungültiger Serien beginnt im Seefahrt-Bündel). Alte `renderqa-*`-Verzeichnisse in `$TMPDIR` liegen ausserhalb des Repos
+(Löschen dort verboten, R207) — Hinweis an den Nutzer, kein Eingriff. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSWAECHTER · ADR: —
