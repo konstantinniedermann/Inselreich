@@ -8,7 +8,9 @@ import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import { islandCam, islandView } from '../../src/render/archipel';
 import { tileToScreen } from '../../src/render/camera';
-import { foundKontor2Literal } from '../sim/seaHelpers';
+import { foundKontor2Literal, seaWorld, shipLiteral } from '../sim/seaHelpers';
+import { seaShipAfter, shipPose, shipScale } from '../../src/render/shipLane';
+import { SHIP_W_PX } from '../../src/render/ship';
 import { lumberjackLiteral } from './seaRender';
 import { project } from '../../src/render/iso';
 import {
@@ -52,6 +54,7 @@ const h = vi.hoisted(() => ({
   calls: [] as Call[],
   bodyCams: new Map<number, { x: number; y: number; zoom: number }>(),
   treeSeeds: [] as number[],
+  shipScales: [] as number[],
   terrain: {
     scale: 1,
     patch: { redrawn: false, ms: 0 },
@@ -103,6 +106,7 @@ vi.mock('../../src/render/ship', async (orig) => {
     ...m,
     drawShip: (...a: Parameters<typeof m.drawShip>) => {
       h.calls.push({ kind: 'ship', id: 0, at: at(a[0]) });
+      h.shipScales.push(a[4] ?? 1);
       return m.drawShip(...a);
     },
   };
@@ -1373,5 +1377,81 @@ describe('M12 E2 Render Fremdinseln', () => {
     expect(
       sel[0]!.points.some((p) => Math.abs(p.x - o.x) < 1e-6 && Math.abs(p.y - o.y) < 1e-6),
     ).toBe(true);
+  });
+});
+
+describe('M12 E4 Schiffe im Renderer (AK-E4-15)', () => {
+  it('AK-E4-15 (a) Schiff im Rechteck der Heimat zwischen zwei Gebäuden: Gebäude kleiner Tiefe, Schiff, Gebäude grösserer Tiefe', () => {
+    const { world } = scene();
+    const k = world.buildings[home(world).kontorId]!;
+    const isl = home(world);
+    isl.anchor = { x: k.x + 4, y: k.y + 5 }; // Tiefe der Schiffsmitte: 2 · (ax + ay + 1)
+    shipLiteral(world, { port: 0, to: null });
+    const shipKey = 2 * (isl.anchor.x + isl.anchor.y + 1);
+    const keyOf = (id: number): number => {
+      const b = world.buildings[id]!;
+      const d = BUILDING_DEFS[b.defId];
+      return 2 * b.x + d.w + 2 * b.y + d.h;
+    };
+    h.calls.length = 0;
+    const f = fakeCtx();
+    render(f.ctx, world, camFor(world, 1), layer, null, null, VIEW, { timeMs: 0 });
+    const calls = h.calls.slice();
+    const i = calls.findIndex((c) => c.kind === 'ship');
+    expect(i).toBeGreaterThanOrEqual(0);
+    const before = calls.slice(0, i).filter((c) => c.kind === 'body');
+    const after = calls.slice(i + 1).filter((c) => c.kind === 'body');
+    expect(before.length).toBeGreaterThan(0);
+    expect(after.length).toBeGreaterThan(0);
+    for (const c of before) expect(keyOf(c.id)).toBeLessThan(shipKey);
+    for (const c of after) expect(keyOf(c.id)).toBeGreaterThan(shipKey);
+  });
+
+  it('AK-E4-15 (b) Schiff auf See: nach Insel 1 gezeichnet genau dann, wenn seaShipAfter', () => {
+    const w = seaWorld();
+    const k2 = foundKontor2Literal(w, 1);
+    const isl = w.islands[1]!;
+    const V = { w: 1280, h: 800 };
+    const layers = {
+      get: (i: number): HTMLCanvasElement | null =>
+        i === 0 ? layer : ({ width: 36 * 32, height: 36 * 32 } as unknown as HTMLCanvasElement),
+    };
+    const p = project(isl.ox + isl.width / 2, isl.oy + isl.height / 2);
+    const cam = { x: p.x - V.w / 2 / 0.25, y: p.y - V.h / 2 / 0.25, zoom: 0.25 };
+    const seen = { after: 0, before: 0 };
+    for (const from of [0, 2]) {
+      for (let left = 5; left < 400; left += 7) {
+        w.ships.length = 0;
+        const ship = shipLiteral(w, { port: from, to: 1, left });
+        const pose = shipPose(w, ship);
+        if (pose.island !== null) continue;
+        h.calls.length = 0;
+        render(fakeCtx().ctx, w, cam, layers, null, null, V, { timeMs: 0 });
+        const calls = h.calls.slice();
+        const si = calls.findIndex((c) => c.kind === 'ship');
+        const bi = calls.findIndex((c) => c.kind === 'body' && c.id === k2.id);
+        if (si < 0 || bi < 0) continue; // nicht im Bild
+        const after = si > bi;
+        expect(after).toBe(seaShipAfter(pose, isl));
+        seen[after ? 'after' : 'before']++;
+      }
+    }
+    expect(seen.after + seen.before).toBeGreaterThan(0);
+  });
+
+  it('AK-E4-15 (c) Mindestgrösse: Schiff bei Zoom 0,25 und 0,125 mindestens 12 CSS-px breit, bei Zoom 1 Faktor 1', () => {
+    for (const z of [0.25, 0.125]) expect(shipScale(z) * SHIP_W_PX * z).toBeGreaterThanOrEqual(12);
+    expect(shipScale(1)).toBe(1);
+    const w = seaWorld();
+    shipLiteral(w, { port: 0, to: null });
+    const cam = { x: 0, y: 0, zoom: 0.125 };
+    const a = home(w).anchor;
+    const pt = project(a.x + 0.5, a.y + 0.5);
+    cam.x = pt.x - 640 / 0.125;
+    cam.y = pt.y - 400 / 0.125;
+    h.calls.length = 0;
+    h.shipScales.length = 0;
+    render(fakeCtx().ctx, w, cam, layer, null, null, { w: 1280, h: 800 }, { timeMs: 0 });
+    expect(h.shipScales).toEqual([shipScale(0.125)]);
   });
 });
