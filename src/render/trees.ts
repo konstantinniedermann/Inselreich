@@ -702,8 +702,8 @@ function stampFor(seed: number, variant: number, step: number): HTMLCanvasElemen
 
 // ---------------------------------------------------------------------------------------------------------------
 // Farn auf Lichtungen (ART-STIL-02 L6, B2 Stempelteil). Salz 584 (Block 576–584, Eintrag im zentralen Kopf von
-// groundDecor.ts macht der Release-Merge). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln), gezeichnet vor dem
-// Baumstempel der Kachel; eigener kleiner Cache (FERN_FORMS × ZOOM_STEPS), `TREE_VARIANTS` bleibt unverändert.
+// groundDecor.ts macht der Release-Merge). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln), gezeichnet nach dem
+// Baumstempel der Kachel (vordere Hälfte, hinter den Kronen der vorderen Nachbarn); eigener kleiner Cache (FERN_FORMS × ZOOM_STEPS), `TREE_VARIANTS` bleibt unverändert.
 
 export const FERN_SALT = 584;
 export const FERN_FORMS = 4;
@@ -712,13 +712,13 @@ export const FERN_MIN_ZOOM = 0.5;
 /** Höhe eines Büschels (Weltpixel) höchstens ein Viertel der Stempelhöhe. */
 export const FERN_H = 0.25 * TREE_H;
 /** Frisches Hellgrün, heller als die Kronen: crownLight mit grassLight; Kontur dunkler Eigenton (nie Schwarz). */
-export const FERN_LIGHT = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.55);
-export const FERN_MID = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.3);
+export const FERN_LIGHT = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.85);
+export const FERN_MID = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.6);
 export const FERN_LINE = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
 export interface FernTuft {
   /** Form 0 … FERN_FORMS − 1 */
   form: number;
-  /** Fusspunkt in Kachel-Anteilen (0,15 … 0,85) */
+  /** Fusspunkt in Kachel-Anteilen, vordere Hälfte (0,5 … 0,95): dort fehlen die eigenen Kronen, der Farn schaut zwischen ihnen hervor */
   u: number;
   v: number;
 }
@@ -729,17 +729,17 @@ export function fernTufts(seed: number, x: number, y: number): FernTuft[] {
   for (let k = 0; k < n; k++)
     out.push({
       form: Math.floor(hash2(seed + FERN_SALT, x * 16 + k + 1, y) * FERN_FORMS) % FERN_FORMS,
-      u: 0.15 + 0.7 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 1000),
-      v: 0.15 + 0.7 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 2000),
+      u: 0.5 + 0.45 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 1000),
+      v: 0.5 + 0.45 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 2000),
     });
   return out.sort((a, b) => a.u + a.v - (b.u + b.v));
 }
 /** Fläche eines Büschel-Canvas in Weltpixeln: Fusspunkt unten in der Mitte. */
-const FERN_BOX = { w: 18, h: 11, cx: 9, cy: 10 };
+const FERN_BOX = { w: 22, h: 11, cx: 11, cy: 10 };
 /** Zeichnet ein Büschel (Fusspunkt bei (0, 0), Wedel nach oben) in Weltpixeln; Eigenkontur zuerst, dann 2 Töne. */
 export function paintFern(ctx: CanvasRenderingContext2D, seed: number, form: number): void {
   const n = 5 + (form % 3);
-  const H = FERN_H * (0.8 + 0.2 * (form / (FERN_FORMS - 1)));
+  const H = FERN_H * (0.9 + 0.1 * (form / (FERN_FORMS - 1)));
   const fronds: { tx: number; ty: number; qx: number; qy: number; lit: boolean }[] = [];
   for (let i = 0; i < n; i++) {
     const a =
@@ -772,8 +772,8 @@ export function paintFern(ctx: CanvasRenderingContext2D, seed: number, form: num
       ctx.stroke();
     }
   };
-  pass(2.3, () => FERN_LINE);
-  pass(1.1, (f) => (f.lit ? FERN_LIGHT : FERN_MID));
+  pass(2.9, () => FERN_LINE);
+  pass(1.6, (f) => (f.lit ? FERN_LIGHT : FERN_MID));
   ctx.restore();
 }
 const fernCache = new Map<number, HTMLCanvasElement>();
@@ -834,7 +834,6 @@ export function drawTreeStamp(
   const z = cam.zoom,
     step = zoomStep(z);
   const variant = item.variant % TREE_VARIANTS;
-  drawFern(ctx, cam, item, seed); // Lichtung (L6 B2): Farn vor den Kronen
   const p = worldToScreen(
     cam,
     project(item.fp.x + 0.5 + (item.ox ?? 0), item.fp.y + 0.5 + (item.oy ?? 0)),
@@ -851,4 +850,5 @@ export function drawTreeStamp(
   const f = z / step;
   const b = stampBox(seed, variant);
   ctx.drawImage(stamp, p.x + b.x0 * z, p.y + b.y0 * z, stamp.width * f, stamp.height * f);
+  drawFern(ctx, cam, item, seed); // Lichtung (L6 B2): Farn in der vorderen Hälfte, vor den eigenen, hinter den vorderen Nachbarn
 }

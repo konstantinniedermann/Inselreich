@@ -87,7 +87,7 @@ describe('L6 B2 Farn auf Lichtungen', () => {
     resetTreeCache();
   });
 
-  it('B2 2–4 Büschel je Kachel, vor dem Baumstempel (zuletzt kommt der Stempel), Kachel bleibt Wald (≥ 2 Kronen)', () => {
+  it('B2 2–4 Büschel je Kachel, in der vorderen Hälfte nach dem eigenen Baumstempel (zuerst kommt der Stempel), Kachel bleibt Wald (≥ 2 Kronen)', () => {
     setCanvasFactory(factory);
     let n = 0;
     for (let seed = 1; seed <= 20; seed++) {
@@ -102,8 +102,8 @@ describe('L6 B2 Farn auf Lichtungen', () => {
         expect(tufts, `Seed ${seed}`).toBeGreaterThanOrEqual(2);
         expect(tufts, `Seed ${seed}`).toBeLessThanOrEqual(4);
         expect(tufts).toBe(fernTufts(ws, t.fp.x, t.fp.y).length);
-        const stamp = log.images[log.images.length - 1] as { width: number };
-        for (const im of log.images.slice(0, -1))
+        const stamp = log.images[0] as { width: number };
+        for (const im of log.images.slice(1))
           expect((im as { width: number }).width, 'Büschel kleiner als der Stempel').toBeLessThan(
             stamp.width,
           );
@@ -206,10 +206,10 @@ describe('L6 B2 Farn auf Lichtungen', () => {
         expect(a.length).toBeGreaterThanOrEqual(2);
         expect(a.length).toBeLessThanOrEqual(4);
         for (const t of a) {
-          expect(t.u).toBeGreaterThanOrEqual(0.15);
-          expect(t.u).toBeLessThanOrEqual(0.85);
-          expect(t.v).toBeGreaterThanOrEqual(0.15);
-          expect(t.v).toBeLessThanOrEqual(0.85);
+          expect(t.u).toBeGreaterThanOrEqual(0.5);
+          expect(t.u).toBeLessThanOrEqual(0.95);
+          expect(t.v).toBeGreaterThanOrEqual(0.5);
+          expect(t.v).toBeLessThanOrEqual(0.95);
           expect(t.form).toBeGreaterThanOrEqual(0);
           expect(t.form).toBeLessThan(FERN_FORMS);
         }

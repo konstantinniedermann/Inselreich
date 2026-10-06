@@ -1611,7 +1611,7 @@ export interface MassifFallPoint {
   J: number;
   /** Geländehöhe (px) */
   h: number;
-  /** Bandbreite in Weltpixeln, 1 … 1,5 (steil breiter) */
+  /** Bandbreite in Weltpixeln: flach 1, ab Steilheit 0,5 zwei bis drei (steil breiter) */
   w: number;
   /** Steilheit 0…1 (steil heller) */
   steep: number;
@@ -1677,7 +1677,7 @@ function findFall(
           I: i,
           J: j,
           h: n.h,
-          w: 1 + 0.5 * n.steep,
+          w: n.steep >= 0.5 ? 2 + (n.steep - 0.5) * 2 : 1 + n.steep * 2,
           steep: n.steep,
         });
         if (n.hn < FALL_HN_END) {
@@ -1721,7 +1721,7 @@ function findFall(
           ...q,
           w: Math.max(
             1,
-            Math.min(1.5, q.w + (hash2(c.seed + L6_FALL_SALT + 1, q.I, q.J * 7 + k) - 0.5) * 0.2),
+            Math.min(3, q.w + (hash2(c.seed + L6_FALL_SALT + 1, q.I, q.J * 7 + k) - 0.5) * 0.2),
           ),
         }));
         best = { fall: { comp: c, path: chaikin(jittered), nodes }, score };
@@ -1743,7 +1743,7 @@ export interface MassifCave {
   I: number;
   J: number;
   h: number;
-  /** Halbachsen der Öffnung (Weltpixel, ≈ 6 × 5 gesamt) */
+  /** Halbachsen der Öffnung (Weltpixel, ≈ 8 × 5 gesamt) */
   rx: number;
   ry: number;
   /** Radiusfaktoren des unregelmässigen Umrisses (8 Richtungen, 0,8 … 1,2) */
@@ -1778,7 +1778,7 @@ function findCave(
           (_, k) => 0.82 + 0.36 * hash2(c.seed + L6_CAVE_SALT + 1, I * 13 + k, J),
         );
         best = {
-          cave: { comp: c, I, J, h: n.h, rx: 3.2, ry: 2.6, shape, nodes },
+          cave: { comp: c, I, J, h: n.h, rx: 4, ry: 2.5, shape, nodes },
           score,
         };
       }

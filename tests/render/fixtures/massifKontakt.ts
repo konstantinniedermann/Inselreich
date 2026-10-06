@@ -19,23 +19,31 @@ const NX = ISO_W / 2 / SUB,
   NY = ISO_H / 2 / SUB;
 
 /** Mittelpunkt (Weltpixel) des Elements dieser Art auf der Karte des Seeds, oder null. */
-export function elementPunkt(seed: number, art: KontaktArt): { x: number; y: number } | null {
+export function elementPunkt(
+  seed: number,
+  art: KontaktArt,
+): { x: number; y: number; w: number; h: number } | null {
   const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
   const m = massifFeatures(data);
   const pt = (I: number, J: number, h: number) => ({ x: (I - J) * NX, y: (I + J) * NY - h });
   if (art === 'see' && m.lake) {
     const l = m.lake;
-    return pt(l.cx * SUB, l.cy * SUB, heightAtF(l.comp, l.cx, l.cy));
+    return { ...pt(l.cx * SUB, l.cy * SUB, heightAtF(l.comp, l.cx, l.cy)), w: 70, h: 50 };
   }
   if (art === 'wasserfall' && m.fall) {
-    const p = m.fall.path[Math.floor(m.fall.path.length / 2)]!;
-    return pt(p.I, p.J, p.h);
+    // der ganze Lauf samt Tümpel am Fuss
+    const ps = m.fall.path.map((q) => pt(q.I, q.J, q.h));
+    const x0 = Math.min(...ps.map((q) => q.x)),
+      x1 = Math.max(...ps.map((q) => q.x)),
+      y0 = Math.min(...ps.map((q) => q.y)),
+      y1 = Math.max(...ps.map((q) => q.y));
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, w: x1 - x0 + 40, h: y1 - y0 + 30 };
   }
-  if (art === 'hoehle' && m.cave) return pt(m.cave.I, m.cave.J, m.cave.h);
+  if (art === 'hoehle' && m.cave) return { ...pt(m.cave.I, m.cave.J, m.cave.h), w: 70, h: 50 };
   if (art === 'steinmaennchen' && m.cairn) {
     const c = m.cairn;
     const q = pt(c.I, c.J, c.h);
-    return { x: q.x, y: q.y - c.height / 2 };
+    return { x: q.x, y: q.y - c.height / 2, w: 70, h: 50 };
   }
   return null;
 }

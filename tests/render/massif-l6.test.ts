@@ -26,13 +26,15 @@ import {
   CAIRN_MID,
   CAIRN_SHADE,
   CAVE_F,
-  CAVE_FLOOR,
+  CAVE_IN_TOP,
+  CAVE_FAN,
+  FALL_EDGE,
+  FALL_WET,
+  LAKE_SHORE_BACK,
   CAVE_IN,
   CAVE_LINE,
   CAVE_LINTEL,
-  CAVE_LINTEL_SHADE,
   FALL_BAND,
-  FALL_BAND_HI,
   FALL_F,
   FALL_POOL,
   FALL_SPRAY,
@@ -140,7 +142,7 @@ describe('L6 Elemente je Karte', { timeout: 60000 }, () => {
     expect(round, 'Seen mit fast kreisrundem Rand').toBeLessThanOrEqual(Math.floor(seen * 0.1));
   });
 
-  it('L6 Wasserfall: Start in einer steilen Rinne bei hn 0,45–0,75, fällt monoton, endet im Schutt (hn < 0,15), Band 1–1,5 px', () => {
+  it('L6 Wasserfall: Start in einer steilen Rinne bei hn 0,45–0,75, fällt monoton, endet im Schutt (hn < 0,15), Band flach 1 px, steil 2–3 px', () => {
     let seen = 0;
     for (const seed of SEEDS100) {
       const f = feats(seed).fall;
@@ -159,7 +161,9 @@ describe('L6 Elemente je Karte', { timeout: 60000 }, () => {
         expect(p[k]!.h, `Seed ${seed}: Punkt ${k} fällt`).toBeLessThan(p[k - 1]!.h);
       for (const q of p) {
         expect(q.w).toBeGreaterThanOrEqual(1 - 1e-9);
-        expect(q.w).toBeLessThanOrEqual(1.5 + 1e-9);
+        expect(q.w).toBeLessThanOrEqual(3 + 1e-9);
+        if (q.steep >= 0.55) expect(q.w, 'steil 2–3 px').toBeGreaterThanOrEqual(1.9);
+        if (q.steep < 0.2) expect(q.w, 'flach schmal').toBeLessThanOrEqual(1.6);
       }
       // steiler = breiter: das Mittel der Breite über die steilere Hälfte ist nicht kleiner
       const hi = p.filter((q) => q.steep >= 0.6),
@@ -186,8 +190,9 @@ describe('L6 Elemente je Karte', { timeout: 60000 }, () => {
       expect(-n.gx, 'abwärts nach +x').toBeGreaterThan(0);
       expect(-n.gy, 'abwärts nach +y').toBeGreaterThan(0);
       expect((((c.I - c.J) % 4) + 4) % 4).toBe(2);
-      expect(c.rx * 2).toBeGreaterThanOrEqual(5.5);
-      expect(c.rx * 2).toBeLessThanOrEqual(7);
+      expect(c.rx * 2).toBeGreaterThanOrEqual(7.5);
+      expect(c.rx * 2).toBeLessThanOrEqual(8.5);
+      expect(c.rx, 'breiter als hoch').toBeGreaterThan(c.ry);
       expect(c.ry * 2).toBeGreaterThanOrEqual(4.5);
       expect(c.ry * 2).toBeLessThanOrEqual(6);
     }
@@ -304,14 +309,16 @@ describe('L6 Farben', () => {
     ['LAKE_LINE', LAKE_LINE],
     ['LAKE_SHORE', LAKE_SHORE],
     ['FALL_BAND', FALL_BAND],
-    ['FALL_BAND_HI', FALL_BAND_HI],
+    ['FALL_EDGE', FALL_EDGE],
+    ['FALL_WET', FALL_WET],
+    ['LAKE_SHORE_BACK', LAKE_SHORE_BACK],
     ['FALL_SPRAY', FALL_SPRAY],
     ['FALL_POOL', FALL_POOL],
     ['CAVE_IN', CAVE_IN],
-    ['CAVE_FLOOR', CAVE_FLOOR],
+    ['CAVE_IN_TOP', CAVE_IN_TOP],
+    ['CAVE_FAN', CAVE_FAN],
     ['CAVE_LINE', CAVE_LINE],
     ['CAVE_LINTEL', CAVE_LINTEL],
-    ['CAVE_LINTEL_SHADE', CAVE_LINTEL_SHADE],
     ['CAIRN_LIT', CAIRN_LIT],
     ['CAIRN_MID', CAIRN_MID],
     ['CAIRN_SHADE', CAIRN_SHADE],
@@ -336,6 +343,11 @@ describe('L6 Farben', () => {
       expect(luma(c), `${name} nicht Schwarz`).toBeGreaterThan(25);
       expect(Math.min(...c), `${name} nicht Weiss`).toBeLessThan(235);
     }
+  });
+  it('L6 Höhle: oben dunkler als unten, beide nicht Schwarz; Überhang genau ROCK_TONES[3], nie fast weiss', () => {
+    expect(luma(CAVE_IN_TOP)).toBeLessThan(luma(CAVE_IN));
+    expect(luma(CAVE_IN_TOP)).toBeGreaterThan(25);
+    expect(luma(CAVE_LINTEL)).toBeLessThan(0.75 * luma(rgbOf(PALETTE.foam)));
   });
   it('L6 Bergsee dunkel und entsättigt: dunkler als waterMid, Spiegelung heller als der See, Ufer heller als beides', () => {
     expect(luma(LAKE_DEEP)).toBeLessThan(luma(rgbOf(PALETTE.waterMid)));
@@ -503,6 +515,50 @@ describe('L6 Raster', { timeout: 120000 }, () => {
     expect(changed(cave, 'cave', 1), 'Höhle bei 1').toBeGreaterThan(0);
     expect(changed(cairn, 'cairn', 1), 'Steinmännchen bei 1').toBe(0);
     expect(changed(cairn, 'cairn', 1.5), 'Steinmännchen bei 1,5').toBeGreaterThan(0);
+  });
+
+  it('L6 Sichtbarkeit hängt an der Zoomstufe, nicht an f = Zoom × DPR (Höhle ab 1, Steinmännchen ab 1,5, Wasserfall ab 0,75, See ab 0,5)', () => {
+    const changed = (
+      seed: number,
+      k: 'lake' | 'fall' | 'cave' | 'cairn',
+      f: number,
+      step: number,
+    ) => {
+      const { data, isl } = mapOf(seed);
+      const m = massifFeatures(data);
+      let n = 0;
+      for (const p of massifPieces(isl, data)) {
+        if (p.comp !== m[k]!.comp) continue;
+        const b = massifBounds({ piece: p });
+        const w = Math.round((ISO_W / 2) * f),
+          h = Math.ceil(b.h * f);
+        const on = rasterPiece({ piece: p }, w, h, f, true, step),
+          off = rasterPiece({ piece: p }, w, h, f, false, step);
+        const r = { w, h, b, on, off };
+        n += diff(
+          r,
+          regions(p, m[k]!.nodes, w, b, f, 2),
+          k === 'cairn' ? cairnBox(p, r, f, 2) : null,
+        ).inside;
+      }
+      return n;
+    };
+    const seeds = { lake: 0, fall: 0, cave: 0, cairn: 0 };
+    for (const k of ['lake', 'fall', 'cave', 'cairn'] as const)
+      seeds[k] = SEEDS100.find((s) => feats(s)[k] !== null)!;
+    // DPR 2 (f = 2·Zoom): unterhalb der Schwelle der Zoomstufe nichts, ab der Schwelle etwas
+    expect(changed(seeds.lake, 'lake', 0.5, 0.25), 'See Zoom 0,25 DPR 2').toBe(0);
+    expect(changed(seeds.lake, 'lake', 1, 0.5), 'See Zoom 0,5 DPR 2').toBeGreaterThan(0);
+    expect(changed(seeds.fall, 'fall', 1, 0.5), 'Wasserfall Zoom 0,5 DPR 2').toBe(0);
+    expect(changed(seeds.fall, 'fall', 1.5, 0.75), 'Wasserfall Zoom 0,75 DPR 2').toBeGreaterThan(0);
+    expect(changed(seeds.cave, 'cave', 1.5, 0.75), 'Höhle Zoom 0,75 DPR 2').toBe(0);
+    expect(changed(seeds.cave, 'cave', 2, 1), 'Höhle Zoom 1 DPR 2').toBeGreaterThan(0);
+    expect(changed(seeds.cairn, 'cairn', 2, 1), 'Steinmännchen Zoom 1 DPR 2').toBe(0);
+    expect(changed(seeds.cairn, 'cairn', 3, 1.5), 'Steinmännchen Zoom 1,5 DPR 2').toBeGreaterThan(
+      0,
+    );
+    // DPR 1 wie zuvor
+    expect(changed(seeds.cave, 'cave', 1, 1), 'Höhle Zoom 1 DPR 1').toBeGreaterThan(0);
   });
 
   it('L6 Streifennähte: der See malt sich über die Halbstreifen, an der gemeinsamen Kante sind die Spalten ohne Sprung', () => {

@@ -2,7 +2,7 @@ import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem } from './iso';
 import { DEBRIS_MIX } from './light';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
-import { hash2 } from '../sim/noise';
+import { hash2, valueNoise } from '../sim/noise';
 import { FLOWER_TONES } from './groundDecor';
 import { PALETTE, rgbOf, rgbOfCss } from './palette';
 import { mixRgb, LIGHT_COLORS, type Rgb } from './light';
@@ -272,6 +272,7 @@ export function rasterPiece(
   h: number,
   f: number,
   features = true,
+  step = f,
 ): Uint8ClampedArray {
   const ss = f < 1.5 ? 2 : 1;
   const W = w * ss,
@@ -284,8 +285,8 @@ export function rasterPiece(
   const px = new Float64Array(4),
     py = new Float64Array(4);
   const trees = pieceTrees(item.piece);
-  const cairn = features && f >= CAIRN_F ? pieceCairn(item.piece) : null;
-  const decals = features ? pieceDecals(item.piece, f) : null;
+  const cairn = features && step >= CAIRN_F ? pieceCairn(item.piece) : null;
+  const decals = features ? pieceDecals(item.piece, step) : null;
   let ti = 0,
     ci = cairn ? 0 : 1;
   for (const c of pieceMesh(item.piece)) {
@@ -351,30 +352,32 @@ export function rasterPiece(
 // ---------- Entdecken (L6): Bergsee, Wasserfall, Höhle, Steinmännchen ----------
 //
 // Alle Töne aus der Palette gemischt (2–3 Stufen, Kontur als dunkler Eigenton, nie Schwarz, nichts heller als foam).
-// Sichtbarkeit je Rasterfaktor f (Cache je Zoomstufe): See ab 0,5, Wasserfall ab 0,75, Höhle ab 1, Steinmännchen ab 1,5.
+// Sichtbarkeit je Zoomstufe `step` (unabhängig von der DPR; Cache je Zoomstufe): See ab 0,5, Wasserfall ab 0,75, Höhle ab 1, Steinmännchen ab 1,5.
 
 export const LAKE_F = 0.5,
   FALL_F = 0.75,
   CAVE_F = 1,
   CAIRN_F = 1.5;
 const L = LIGHT_COLORS;
-/** Bergsee: dunkler, entsättigter Spiegel (waterDeep mit 30 % Fels/kühl), hellere Spiegelung hinten, Schuttufer. */
+/** Bergsee: dunkler, entsättigter Spiegel (waterDeep mit 30 % Fels/kühl), hellere Spiegelung hinten, Ufer vorn hell, hinten Fels. */
 export const LAKE_DEEP: Rgb = mixRgb(rgbOf(PALETTE.waterDeep), L.dark, 0.3),
   LAKE_SKY: Rgb = mixRgb(mixRgb(rgbOf(PALETTE.waterMid), L.dark, 0.25), L.light, 0.3),
   LAKE_LINE: Rgb = mixRgb(LAKE_DEEP, ROCK_TONES[0]!, 0.5),
-  LAKE_SHORE: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.4);
-/** Wasserfall: foam mit waterMid gemischt, steil heller; am Fuss Gischt und Tümpel. */
-export const FALL_BAND: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.4),
-  FALL_BAND_HI: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.2),
-  FALL_SPRAY: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.1),
+  LAKE_SHORE: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.4),
+  LAKE_SHORE_BACK: Rgb = ROCK_TONES[1]!;
+/** Wasserfall: heller Kern (foam/waterMid), Randton (waterMid mit Fels), Nassfels daneben, Gischt, Tümpel. */
+export const FALL_BAND: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.3),
+  FALL_EDGE: Rgb = mixRgb(rgbOf(PALETTE.waterMid), ROCK_TONES[2]!, 0.35),
+  FALL_WET: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.2),
+  FALL_SPRAY: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.12),
   FALL_POOL: Rgb = mixRgb(rgbOf(PALETTE.waterMid), L.dark, 0.35);
-/** Höhle: dunkelster Felston, kühl abgedunkelt (nicht Schwarz); Sturz hell (Licht oben links). */
+/** Höhle: zwei dunkle Töne (oben dunkler, nicht Schwarz), weicher Felsband-Überhang, Schuttfächer darunter. */
 const dim = (c: Rgb, k: number): Rgb => [c[0] * k, c[1] * k, c[2] * k];
-export const CAVE_IN: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.62),
-  CAVE_FLOOR: Rgb = mixRgb(CAVE_IN, ROCK_TONES[1]!, 0.35),
+export const CAVE_IN: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.7),
+  CAVE_IN_TOP: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.52),
   CAVE_LINE: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.3),
   CAVE_LINTEL: Rgb = ROCK_TONES[3]!,
-  CAVE_LINTEL_SHADE: Rgb = ROCK_TONES[2]!;
+  CAVE_FAN: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.35);
 /** Steinmännchen: Felstöne mit Licht oben links, Kontur dunkler Eigenton. */
 export const CAIRN_LIT: Rgb = ROCK_TONES[3]!,
   CAIRN_MID: Rgb = ROCK_TONES[2]!,
@@ -399,11 +402,11 @@ const touches = (nodes: Set<number>, I: number, J: number): boolean =>
   nodes.has((J + 1) * 100000 + I) ||
   nodes.has((J + 1) * 100000 + I + 1);
 /** Sichtbare Abziehbilder dieses Teilstücks bei Faktor f (null, wenn die Karte keine hat). */
-function pieceDecals(p: MassifPiece, f: number): PieceDecals | null {
+function pieceDecals(p: MassifPiece, step: number): PieceDecals | null {
   const m = massifFeatures(p.data);
-  const lake = m.lake && m.lake.comp === p.comp && f >= LAKE_F ? m.lake : null,
-    fall = m.fall && m.fall.comp === p.comp && f >= FALL_F ? m.fall : null,
-    cave = m.cave && m.cave.comp === p.comp && f >= CAVE_F ? m.cave : null;
+  const lake = m.lake && m.lake.comp === p.comp && step >= LAKE_F ? m.lake : null,
+    fall = m.fall && m.fall.comp === p.comp && step >= FALL_F ? m.fall : null,
+    cave = m.cave && m.cave.comp === p.comp && step >= CAVE_F ? m.cave : null;
   return lake || fall || cave ? { lake, fall, cave } : null;
 }
 function cellDecal(d: PieceDecals, I: number, J: number): CellDecal | null {
@@ -431,24 +434,36 @@ const segDist = (
 function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: number): Rgb | null {
   const lake = dec.lake;
   if (lake) {
+    const sd = lake.comp.seed;
     const dx = fx - lake.cx,
       dy = fy - lake.cy;
     const d = Math.hypot(dx, dy);
-    const r = lakeRadius(lake, Math.atan2(dy, dx));
+    // Wasserkante folgt einem Rauschen (± ≈ 1 px), kein glattes Oval
+    const r =
+      lakeRadius(lake, Math.atan2(dy, dx)) +
+      (valueNoise(sd + 577, fx * 7, fy * 7) - 0.5) * 2.4 * PX_TILE;
+    const front = dx + dy > 0; // zur Kamera
     if (d < r) {
       if (d > r - PX_TILE) return LAKE_LINE; // Kontur: 1 px dunkler Eigenton
       // Spiegelung am hinteren Ufer (Himmel): Richtung −x −y
       const q = (dx + dy) / (Math.SQRT2 * r);
       return q < -0.42 + 0.1 * Math.sin(dx * 23 + dy * 11) ? LAKE_SKY : LAKE_DEEP;
     }
-    if (d < r + 2 * PX_TILE) return LAKE_SHORE; // schmales Ufer aus Schutt
+    // Ufer ≈ 1 px und unterbrochen: vorn heller Kiesstrand, hinten der Schattenton des Felses
+    if (d < r + PX_TILE) {
+      const g = hash2(sd + 577, Math.floor(fx * 26), Math.floor(fy * 26));
+      if (front ? g > 0.22 : g > 0.55) return front ? LAKE_SHORE : LAKE_SHORE_BACK;
+    }
   }
   const fall = dec.fall;
   if (fall) {
     const pts = fall.path;
+    const sd = fall.comp.seed;
     let best = Infinity,
       wBand = 1,
-      hi = 0;
+      hi = 0,
+      side = 0,
+      spray = false;
     for (let k = 0; k + 1 < pts.length; k++) {
       const a = pts[k]!,
         b = pts[k + 1]!;
@@ -462,7 +477,11 @@ function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: numb
         best = d - wd / 2;
         wBand = wd;
         hi = a.steep + (b.steep - a.steep) * t;
+        side = wx - (ax + (bx - ax) * t);
       }
+      // Knick von steil zu flach: kleiner Gischtfleck (3–4 px)
+      if (a.steep >= 0.5 && b.steep < 0.5 && Math.hypot((wx - bx) / 1.9, (wy - by) / 1.2) < 1)
+        spray = true;
     }
     const e = pts[pts.length - 1]!;
     const ex = wx - (e.I - e.J) * NX,
@@ -470,15 +489,20 @@ function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: numb
     // Tümpel und Gischt am Fuss
     if ((ex / 3.4) ** 2 + (ey / 1.7) ** 2 < 1)
       return (ex / 1.7) ** 2 + ((ey + 0.3) / 0.9) ** 2 < 1 ? FALL_SPRAY : FALL_POOL;
-    if (best <= 0 && wBand > 0) return hi > 0.6 ? FALL_BAND_HI : FALL_BAND;
+    if (spray) return FALL_SPRAY;
+    // ausgefranste Ränder: fester Hash je halbem Weltpixel (± 0,5 px), kein Blinken
+    const ed = best + (hash2(sd + 579, Math.floor(wx * 2), Math.floor(wy * 2)) - 0.5);
+    if (ed <= 0) return ed < -0.25 - 0.1 * wBand || hi > 0.8 ? FALL_BAND : FALL_EDGE;
+    if (ed <= 1 && side > 0) return FALL_WET; // Nassfels, 1 px auf der Schattenseite
   }
   const cave = dec.cave;
   if (cave) {
+    const sd = cave.comp.seed;
     const ax = (cave.I - cave.J) * NX,
       ay = (cave.I + cave.J) * NY - cave.h;
-    const u = (wx - ax) / cave.rx;
-    let v = (wy - ay + 0.4) / cave.ry;
-    if (v > 0) v *= 1.2; // flacherer Boden
+    let v = (wy - ay + 0.3) / cave.ry;
+    const u = (wx - ax) / cave.rx + 0.22 * v; // schief: unsymmetrisch
+    if (v > 0) v *= 1.25; // flacherer Boden
     const ang = Math.atan2(v, u);
     const n = cave.shape.length;
     const tt = ((ang / (2 * Math.PI) + 1) % 1) * n,
@@ -488,10 +512,14 @@ function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: numb
       cave.shape[k % n]! +
       (cave.shape[(k + 1) % n]! - cave.shape[k % n]!) * (fr * fr * (3 - 2 * fr));
     const q = Math.hypot(u, v) / fac;
-    if (q < 1) return q > 0.86 ? CAVE_LINE : v > 0.55 ? CAVE_FLOOR : CAVE_IN;
-    // Sturz/Überhang: schmaler heller Streifen über dem oberen Rand
-    if (v < 0.1 && q < 1.5 + 0.1 * (cave.shape[0]! - 1))
-      return u < 0.3 ? CAVE_LINTEL : CAVE_LINTEL_SHADE;
+    if (q < 1) return q > 0.88 ? CAVE_LINE : v < -0.15 ? CAVE_IN_TOP : CAVE_IN;
+    // Überhang: weiches Felsband (1–2 px), läuft an den Enden aus
+    if (v < -0.2 && q < 1 + 0.5 * Math.max(0, 1 - u * u)) return CAVE_LINTEL;
+    // kleiner Schuttfächer unter dem Eingang
+    if (v > 0.8 && v < 2 && Math.abs(u) < 0.3 + 0.55 * (v - 0.8)) {
+      if (hash2(sd + 581, Math.floor(wx * 2), Math.floor(wy * 2)) < 0.95 - 0.45 * (v - 0.8))
+        return CAVE_FAN;
+    }
   }
   return null;
 }
@@ -886,12 +914,13 @@ export function paintPiece(
   w: number,
   h: number,
   f: number,
+  step = f,
 ): void {
   const img = (
     ctx.createImageData as ((w: number, h: number) => ImageData | undefined) | undefined
   )?.(w, h);
   if (!img) return;
-  img.data.set(rasterPiece(item, w, h, f));
+  img.data.set(rasterPiece(item, w, h, f, true, step));
   ctx.putImageData(img, 0, 0);
 }
 
@@ -971,7 +1000,7 @@ export function createMassifCache(
     surface.height = h;
     const c = surface.getContext('2d');
     if (!c) return null;
-    paintPiece(c, item, w, h, f);
+    paintPiece(c, item, w, h, f, step);
     return { surface, bytes: w * h * 4, w, h, f, frame };
   }
   function stamp(ctx: CanvasRenderingContext2D, cam: Camera, item: MassifItem, e: Entry): void {
