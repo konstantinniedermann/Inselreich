@@ -1122,3 +1122,13 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Fundort / Beobachtung:** Der Plan E0 (P-2) nennt die Helfer-API in `world.ts`; umgesetzt sind `addStock`,
   `takeStock` und `checkAfford` in `economy.ts` (nur Doku). **Einschätzung:** keine Wirkung auf den Code; bei künftigen
   Plänen den Ort aus dem Code lesen. **Ursprung:** E0-Plan, T16.
+
+**Gate Seefahrt F2 (R274, 2026-10-06):**
+
+- **Fundort / Beobachtung (N4):** `src/ui/ships.ts:151` (`shipsKey`): Der Schlüssel enthält neu freigeschaltete Güter
+  nicht; das Schiffspanel baut sich beim Freischalten erst beim nächsten anderen Anlass neu auf. **Einschätzung:**
+  niedrig (kosmetisch); Freischaltstand in `shipsKey` aufnehmen. **Ursprung:** Review T15/C5, F2.
+- **Fundort / Beobachtung (Schiffskontrast):** `src/render/ship.ts`: Rumpf (`HULL`) und Segel heben sich auf manchen
+  Meeresfarben nur schwach ab (Playtest C5). **Einschätzung:** kosmetisch bis mittel; Folgepaket mit lead-art, nach F2
+  (Mindestbreite) erneut sichten. **Ursprung:** Gate Seefahrt R274.
+- Die Folgepakete Fahrlinie über Land (b), Heimatkontor-Klick und „spiel frei weiter" (c) stehen oben unter „Playtest T15".
