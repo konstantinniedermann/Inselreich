@@ -68,4 +68,39 @@ describe('M12 E1 Terrain', () => {
     expect(ran).toEqual(['A0']);
     expect(plan.sliceMs).toEqual([11]);
   });
+
+  it('AK-E1-19 ein teurer Schritt früher begrenzt die Folgescheiben (Schätzung über Scheiben hinweg, klingt ab)', () => {
+    // 5 ms zuerst, dann sieben Schritte à 1 ms, wieder 5 ms: mit Scheibenschätzung 1 ms käme 2 + 5 + ... über 8 ms
+    const costs = [5, ...same(7, 1), 5, ...same(7, 1), 5, ...same(7, 1)];
+    const { plan } = setup({ a: costs, b: [] });
+    let guard = 0;
+    while (!plan.done(1) && guard++ < 60) plan.idle();
+    expect(plan.done(1)).toBe(true);
+    expect(Math.max(...plan.sliceMs)).toBeLessThanOrEqual(SLICE_MS);
+  });
+
+  it('AK-E1-19 solo-Schritt: läuft allein in einer Scheibe, auch nach leichten Schritten', () => {
+    let t = 0;
+    const ran: string[] = [];
+    const step = (n: string, c: number, solo = false): (() => void) & { solo?: true } => {
+      const f: (() => void) & { solo?: true } = () => {
+        ran.push(n);
+        t += c;
+      };
+      if (solo) f.solo = true;
+      return f;
+    };
+    const plan = createCachePlan(
+      [{ island: 1, steps: [step('a', 1), step('b', 1), step('c', 6, true), step('d', 1)] }],
+      () => t,
+    );
+    plan.idle();
+    expect(ran).toEqual(['a', 'b']);
+    plan.idle();
+    expect(ran).toEqual(['a', 'b', 'c']);
+    expect(plan.sliceMs).toEqual([2, 6]);
+    plan.idle();
+    expect(plan.done(1)).toBe(true);
+    expect(plan.sliceMs).toEqual([2, 6, 1]);
+  });
 });

@@ -1400,4 +1400,12 @@ describe('M12 E1 Terrain', () => {
       expectCovered(stripCalls(half), job.layer.height, half.height);
     });
   });
+
+  it('AK-E1-19 terrainJob: genau der erste Schritt der halben Kopie ist solo (erste Lesung der Ebene, teuer)', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      const solo = job.steps.flatMap((s, i) => (s.solo ? [i] : []));
+      expect(solo).toEqual([job.steps.length - 2 * QUARTER_STRIPS]);
+    });
+  });
 });
