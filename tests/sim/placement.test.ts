@@ -7,7 +7,10 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { fail } from '../../src/sim/types';
 import { deriveUnlocks, entryOfBuilding } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
+import { checkAfford } from '../../src/sim/economy';
+import { generateForeignIslands } from '../../src/sim/islands';
 import { forceGrass, forceRect } from './helpers';
+import { foundKontor2Literal, plantationSites, seaWorld } from './seaHelpers';
 
 function landRect(w: World, size: number): { x: number; y: number } {
   for (let y = 1; y < home(w).height - size; y++)
@@ -363,5 +366,70 @@ describe('M11 Regelfeld free (Spec 3.3)', () => {
       ok: false,
       reason: 'Zu wenig Weide in der Nähe',
     });
+  });
+});
+
+describe('M12 Seefahrt Platzregeln (T02)', () => {
+  const NO_SPICE = fail('Hier wächst kein Gewürz');
+  const TRAIT = { kind: 'islandTrait', trait: 'spice' } as const;
+  const FOREIGN = { kind: 'foreignNoKontor' } as const;
+
+  it('AK-E3-02 spicefarm: Heimat und Insel ohne Gewürz → „Hier wächst kein Gewürz"', () => {
+    expect(siteRuleOk(w, 'spicefarm', o.x, o.y, TRAIT, 0)).toEqual(NO_SPICE);
+    expect(canPlace(w, 'spicefarm', o.x, o.y)).toEqual(NO_SPICE);
+    const sw = seaWorld();
+    const site = plantationSites(sw, 1)[0]!;
+    sw.islands[1]!.kind = 'home'; // Kopie ohne Merkmal: keine Art in ISLANDS
+    expect(siteRuleOk(sw, 'spicefarm', site.x, site.y, TRAIT, 1)).toEqual(NO_SPICE);
+  });
+  it('AK-E3-02 spicefarm auf A und B an plantationSites: kein Grund aus islandTrait', () => {
+    const sw = seaWorld();
+    for (const island of [1, 2]) {
+      foundKontor2Literal(sw, island);
+      for (const site of plantationSites(sw, island)) {
+        expect(siteRuleOk(sw, 'spicefarm', site.x, site.y, TRAIT, island)).toEqual({ ok: true });
+        expect(canPlace(sw, 'spicefarm', site.x, site.y, island)).not.toEqual(NO_SPICE);
+      }
+    }
+  });
+  it('AK-E2-09 kontor2: Heimat → „Nur auf einer fernen Insel"', () => {
+    expect(siteRuleOk(w, 'kontor2', o.x, o.y, FOREIGN, 0)).toEqual(
+      fail('Nur auf einer fernen Insel'),
+    );
+  });
+  it('AK-E2-09 zweites kontor2 auf B → „Auf dieser Insel steht schon ein Kontor"', () => {
+    const sw = seaWorld();
+    const site = generateForeignIslands(sw.seed, home(sw))[1]!.kontorSite;
+    expect(siteRuleOk(sw, 'kontor2', site.x, site.y, FOREIGN, 2)).toEqual({ ok: true });
+    foundKontor2Literal(sw, 2);
+    expect(siteRuleOk(sw, 'kontor2', site.x, site.y, FOREIGN, 2)).toEqual(
+      fail('Auf dieser Insel steht schon ein Kontor'),
+    );
+    expect(siteRuleOk(sw, 'kontor2', site.x, site.y, FOREIGN, 1)).toEqual({ ok: true });
+  });
+  it('E1-Übergabe: kontor2 am kontorSite auf A und B für Seeds 1 … 50 ohne Platzregelgrund', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const sw = seaWorld(seed);
+      const placed = generateForeignIslands(sw.seed, home(sw));
+      for (const island of [1, 2]) {
+        const site = placed[island - 1]!.kontorSite;
+        expect(
+          canPlace(sw, 'kontor2', site.x, site.y, island),
+          `seed ${seed} insel ${island}`,
+        ).toEqual({
+          ok: true,
+        });
+      }
+    }
+  });
+  it('checkAfford: mit where hängt der Ort an den Grund, ohne bleibt der Text', () => {
+    const cost = { money: 0, wood: 0, tools: 0, stone: 10 };
+    home(w).stock.stone = 0;
+    expect(checkAfford(w, home(w), cost)).toEqual(fail('Zu wenig Stein'));
+    expect(checkAfford(w, home(w), cost, 'in der Heimat')).toEqual(
+      fail('Nicht genug Stein in der Heimat'),
+    );
+    home(w).stock.stone = 10;
+    expect(checkAfford(w, home(w), cost, 'in der Heimat')).toEqual({ ok: true });
   });
 });

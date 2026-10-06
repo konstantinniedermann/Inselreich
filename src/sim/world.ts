@@ -24,6 +24,9 @@ export { isLand } from './mapgen';
 export const HOME = 0;
 /** Die Heimat hat immer ein Kontor (Ladeprüfung v8); der Rückgabetyp trägt das, damit `kontorId` eine Zahl bleibt. */
 export type HomeIsland = Island & { kontorId: number };
+/** Kontor der Heimat oder Kontor II einer fernen Insel. */
+export const isKontor = (defId: BuildingDefId): boolean =>
+  defId === 'kontor' || defId === 'kontor2';
 export const home = (w: World): HomeIsland => w.islands[HOME] as HomeIsland;
 export const islandOf = (w: World, b: Building): Island => w.islands[b.island]!;
 
@@ -112,7 +115,7 @@ export function createWorld(
     anchor,
   };
   const world: World = {
-    version: 8,
+    version: 9,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -133,6 +136,9 @@ export function createWorld(
     upgradeStops: [],
     taxCarry: 0,
     upkeepCarry: 0,
+    ships: [],
+    nextShipId: 1,
+    wonSpice: false,
   };
   world.buildings[1] = {
     id: 1,

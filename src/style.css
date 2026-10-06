@@ -868,6 +868,10 @@ body {
   display: inline-flex;
   align-items: center;
 }
+/* `display: inline-flex` überschreibt das hidden-Attribut: verborgene Chips (Spec 11.3) blieben sichtbar */
+.chip[hidden] {
+  display: none;
+}
 .btn-category .icon-chip {
   margin-right: 0;
 }
@@ -888,4 +892,108 @@ body {
   color: var(--ink);
   font-size: 11px;
   font-weight: 700;
+}
+
+/* M12 E2: Inselname vor den Lager-Chips und Knopf „Inseln" mit Liste (nur mit Seefahrt sichtbar) */
+.island-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.hud-islands {
+  position: relative;
+  display: flex;
+}
+.island-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(20, 30, 35, 0.95);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+}
+.island-list[hidden] {
+  display: none;
+}
+.island-list .btn {
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Schiffe und Routen im Kontor-Panel (M12 E4) */
+.ships {
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--parchment-edge);
+}
+.ships h3,
+.ship-picker-title {
+  margin: 0;
+  font-size: 15px;
+}
+.ship-picker-title {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.ship-row {
+  margin: 4px 0;
+  padding: 3px 5px;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 3px;
+}
+.ship-row--hl {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.ship-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: bold;
+}
+.ship-good {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+.ship-good-name {
+  flex: 1;
+}
+.ship-reserve {
+  color: var(--parchment-muted);
+}
+.ship-adders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.ship-add {
+  font: inherit;
+  font-size: 13px;
+  max-width: 100%;
+}
+.ship-picker {
+  margin-top: 6px;
+  padding: 4px 5px;
+  border: 1px dashed var(--gold);
+}
+.ship-goods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 3px 0;
+}
+.ships .negative:empty {
+  display: none;
 }

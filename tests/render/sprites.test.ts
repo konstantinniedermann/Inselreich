@@ -54,7 +54,7 @@ const mk = (defId: BuildingDefId, x = 10, y = 10, extra: Partial<Building> = {})
   ...extra,
 });
 const DEFS = Object.values(BUILDING_DEFS);
-const SLICE = new Set<BuildingDefId>(['house', 'kontor', 'lumberjack']);
+const SLICE = new Set<BuildingDefId>(['house', 'kontor', 'kontor2', 'lumberjack']); // kontor2: Fahne und Laterne wie kontor
 const OTHERS = DEFS.filter((d) => !SLICE.has(d.id));
 const house = (tier: Tier, x = 10, y = 10): Building =>
   mk('house', x, y, { house: { tier } as unknown as Building['house'] });
@@ -673,9 +673,11 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     const always = (id: BuildingDefId): LightAnchor[] =>
       lightAnchors(BUILDING_DEFS[id], mk(id)).filter((a) => a.always);
     expect(always('kontor')).toHaveLength(1);
+    expect(always('kontor2')).toHaveLength(1); // M12: Aussenkontor wie das Heimatkontor
     expect(always('market')).toHaveLength(1);
     for (const d of DEFS)
-      if (d.id !== 'kontor' && d.id !== 'market') expect(always(d.id), d.id).toHaveLength(0);
+      if (d.id !== 'kontor' && d.id !== 'kontor2' && d.id !== 'market')
+        expect(always(d.id), d.id).toHaveLength(0);
     for (const d of DEFS) expect(lightAnchors(d, mk(d.id)).length, d.id).toBeGreaterThan(0);
   });
 
@@ -1204,5 +1206,38 @@ describe('M11 Stufe 3 deutlich lesbar (R199)', () => {
       expect(inHull(hull, top.x, top.y, 0), `${id} in Hülle`).toBe(true);
       expect(inHull(hull, top.x, top.y - 4, 0), `${id} bis zur Kante`).toBe(false);
     }
+  });
+});
+
+describe('M12 E2 Render Fremdinseln: Silhouetten und Palette', () => {
+  const fills = (id: BuildingDefId): Set<string> => {
+    const { ctx, log } = fakeCtx();
+    drawBody(ctx, CAM, BUILDING_DEFS[id], mk(id), 0);
+    return new Set(log.events.filter((e) => e.op === 'fill').map((e) => e.style));
+  };
+  it('D-144 Regel 1: spicefarm hat den eigenen Palettenton, Füllfarben ≠ canefarm', () => {
+    const spice = fills('spicefarm'),
+      cane = fills('canefarm');
+    expect(PALETTE.spiceLeaf).not.toBe(PALETTE.grassLight);
+    expect([...spice].sort()).not.toEqual([...cane].sort());
+    // gleiche Form: gleiche Anzahl Füllungen
+    const count = (id: BuildingDefId): number => {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, BUILDING_DEFS[id], mk(id), 0);
+      return log.events.filter((e) => e.op === 'fill').length;
+    };
+    expect(count('spicefarm')).toBe(count('canefarm'));
+    // der Ton selbst steckt in den Füllfarben (Halme: Mischung aus spiceLeaf und crown)
+    expect([...spice].filter((c) => !cane.has(c)).length).toBeGreaterThan(0);
+  });
+  it('kontor2 hat eine eigene Silhouette (Lagerhaus-Form, anderes Dach als kontor)', () => {
+    expect(SILHOUETTES.kontor2).toBeDefined();
+    expect(SILHOUETTES.spicefarm).toBeDefined();
+    const a = fills('kontor2'),
+      b = fills('kontor');
+    expect([...a].sort()).not.toEqual([...b].sort());
+    expect(bodyHeight(BUILDING_DEFS.kontor2, mk('kontor2'))).toBe(
+      bodyHeight(BUILDING_DEFS.kontor, mk('kontor')),
+    );
   });
 });

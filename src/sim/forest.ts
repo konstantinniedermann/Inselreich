@@ -1,9 +1,9 @@
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from './defs/forest';
-import { checkAfford, pay } from './economy';
+import { pay } from './economy';
 import type { Cost, Result, Terrain, World } from './types';
 import { fail, ok } from './types';
 import { functionLock } from './unlocks';
-import { islandAt } from './placement';
+import { affordBuild, islandAt, noKontorReason } from './placement';
 import { HOME, inBounds, tileAt } from './world';
 
 /** Prüfreihenfolge Spec 6: Sperre, Karte, bebaut, Gelände, Geld. Ändert nichts. */
@@ -20,12 +20,14 @@ function check(
   if (lock !== null) return fail(lock);
   const isl = islandAt(w, island);
   if (isl === null) return fail('Unbekannte Insel');
+  const gate = noKontorReason(w, island);
+  if (gate !== null) return fail(gate);
   if (!Number.isInteger(x) || !Number.isInteger(y) || !inBounds(isl, x, y))
     return fail('Ausserhalb der Karte');
   const t = tileAt(isl, x, y)!;
   if (t.buildingId !== null || t.road) return fail('Bereits bebaut');
   if (t.terrain !== from) return fail(wrong);
-  return checkAfford(w, isl, cost);
+  return affordBuild(w, island, cost);
 }
 
 export function canClearForest(w: World, x: number, y: number, island: number = HOME): Result {

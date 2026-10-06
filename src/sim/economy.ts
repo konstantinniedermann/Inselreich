@@ -1,3 +1,4 @@
+import { SHIP } from './defs/sea';
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
 import { upkeepOf } from './levels';
@@ -20,12 +21,15 @@ export function takeStock(isl: Island, good: GoodId, n: number): boolean {
   return true;
 }
 
-export function checkAfford(world: World, isl: Island, cost: Cost): Result {
+/** Prüft Geld und Lager; `where` (z. B. „in der Heimat“) wird an die Warengründe gehängt. */
+export function checkAfford(world: World, isl: Island, cost: Cost, where?: string): Result {
+  const at = where === undefined ? '' : ` ${where}`;
+  const lack = where === undefined ? 'Zu wenig' : 'Nicht genug';
   if (world.money < 0) return fail('Kein Geld');
   if (world.money < cost.money) return fail('Zu wenig Geld');
-  if (isl.stock.wood < cost.wood) return fail('Zu wenig Holz');
-  if (isl.stock.tools < cost.tools) return fail('Zu wenig Werkzeug');
-  if (isl.stock.stone < cost.stone) return fail('Zu wenig Stein');
+  if (isl.stock.wood < cost.wood) return fail(`${lack} Holz${at}`);
+  if (isl.stock.tools < cost.tools) return fail(`${lack} Werkzeug${at}`);
+  if (isl.stock.stone < cost.stone) return fail(`${lack} Stein${at}`);
   return ok;
 }
 
@@ -57,7 +61,7 @@ export function grantRefund(world: World, isl: Island, cost: Cost): void {
 export function totalUpkeep(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) sum += upkeepOf(b);
-  return sum;
+  return sum + world.ships.length * SHIP.upkeep;
 }
 
 /** Bucht den Unterhalt je Schritt mit ganzzahligem Übertrag; `stats.upkeep` bleibt der Nominalwert. */

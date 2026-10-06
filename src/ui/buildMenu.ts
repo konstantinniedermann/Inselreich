@@ -1,7 +1,6 @@
-import { home } from '../sim/world';
+import { HOME } from '../sim/world';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
-import { checkAfford } from '../sim/economy';
 import { UNLOCKS } from '../sim/defs/unlocks';
 import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
@@ -23,6 +22,7 @@ import type { GameState } from './app';
 import { blurAfterClick, costLine } from './dom';
 import { hotkeyLabel, sameTool } from './hotkeys';
 import { friendlyReason } from './hints';
+import { paidFromHome, toolAfford, toolBlockReason } from './islandTools';
 import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
@@ -66,6 +66,10 @@ export function siteText(rule: SiteRule): string {
       return `${TERRAIN_NAMES[rule.terrain]} im Radius ${rule.radius}${rule.min > 1 ? ` (mind. ${rule.min})` : ''}`;
     case 'supply':
       return 'Im Versorgungsradius von Kontor oder Marktplatz';
+    case 'islandTrait':
+      return 'Nur auf Inseln mit Gewürz';
+    case 'foreignNoKontor':
+      return 'Nur auf einer fernen Insel ohne Kontor';
   }
 }
 
@@ -116,7 +120,7 @@ export function tooltipLines(tool: Tool): string[] {
   const def = BUILDING_DEFS[tool.defId];
   const lines = [
     withKey(def.name),
-    `Kosten: ${costLine(def.cost)}`,
+    `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
@@ -143,12 +147,20 @@ export function tooltipLines(tool: Tool): string[] {
   return lines;
 }
 
+/** Eigene Vorschau-Zeilen der Seefahrts-Gebäude: sie hängen an U6, sind aber keine Kaufleute-Stufe (T12). */
+const SEAFARING_PREVIEW: Readonly<Partial<Record<BuildingDefId, string>>> = {
+  kontor2: 'Für Fremdinseln (Seefahrt)',
+  spicefarm: 'Für Inseln mit Gewürz (Seefahrt)',
+};
+
 /**
  * Stufen-Zeile (M8 4.3 Punkt 4): für welche Stufe das Gebäude freigeschaltet wird, aus dem Freischalt-Eintrag
  * (Auslöser `tierOpen`); ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht.
  * `null` für Gebäude anderer Einträge. Task 6 ersetzt die Zeile durch den Freischalt-Hinweis.
  */
 export function tierPreviewLine(defId: BuildingDefId): string | null {
+  const own = SEAFARING_PREVIEW[defId];
+  if (own !== undefined) return own;
   const t = entryOfBuilding(defId)?.trigger;
   return t === undefined || t.kind !== 'tierOpen'
     ? null
@@ -240,13 +252,29 @@ function attachTooltip(
   btn.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-/** Merkt sich die Kosten je Bau-Button für die Leistbarkeitsprüfung. */
-const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
+/** Merkt sich Werkzeug und Kosten je Bau-Button für die Leistbarkeitsprüfung. */
+const buttonCost = new WeakMap<HTMLButtonElement, { tool: Tool; cost: Cost }>();
+
+/** Grund, warum das Werkzeug auf der Insel nicht geht (fehlendes Kontor vor Kosten), sonst `null`. */
+export function toolReason(world: World, tool: Tool, island: number): string | null {
+  const gate = toolBlockReason(world, tool, island);
+  if (gate !== null) return gate;
+  const r = toolAfford(world, tool, island);
+  return r.ok ? null : r.reason;
+}
 
 /** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und nur Angezeigtes (Spec 11.1). */
-export function buildEntries(world: World, category: Category): BuildingDefId[] {
+export function buildEntries(
+  world: World,
+  category: Category,
+  island: number = HOME,
+): BuildingDefId[] {
   return BUILDING_IDS.filter(
-    (id) => id !== 'kontor' && BUILDING_DEFS[id].category === category && buildingShown(world, id),
+    (id) =>
+      id !== 'kontor' &&
+      !(id === 'kontor2' && island === HOME) && // das zweite Kontor gründet man nur auf einer Fremdinsel
+      BUILDING_DEFS[id].category === category &&
+      buildingShown(world, id),
   );
 }
 
@@ -258,14 +286,15 @@ export function newBuildEntries(prev: readonly UnlockId[], world: World): Set<Bu
   const out = new Set<BuildingDefId>();
   for (const u of UNLOCKS) {
     if (!world.unlocked.includes(u.id) || prev.includes(u.id)) continue;
-    for (const id of u.buildings) if (id !== 'kontor' && buildingShown(world, id)) out.add(id);
+    for (const id of u.buildings)
+      if (id !== 'kontor' && id !== 'kontor2' && buildingShown(world, id)) out.add(id); // kontor2 nur auf Fremdinseln
   }
   return out;
 }
 
 /** Kategorien mit mindestens einem Eintrag, in `CATEGORIES`-Reihenfolge. */
-export function visibleCategories(world: World): Category[] {
-  return CATEGORIES.filter((c) => buildEntries(world, c.id).length > 0).map((c) => c.id);
+export function visibleCategories(world: World, island: number = HOME): Category[] {
+  return CATEGORIES.filter((c) => buildEntries(world, c.id, island).length > 0).map((c) => c.id);
 }
 
 /**
@@ -291,7 +320,7 @@ export function renderBuildMenu(
     icon?: IconId,
   ): void => {
     const btn = document.createElement('button');
-    if (cost) buttonCost.set(btn, cost);
+    if (cost) buttonCost.set(btn, { tool, cost });
     btn.className = 'btn' + (sameTool(state.tool, tool) ? ' active' : '');
     btn.setAttribute('aria-label', label);
     btn.textContent = label;
@@ -315,16 +344,22 @@ export function renderBuildMenu(
       if (blurAfterClick(ev.detail)) btn.blur();
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
-      const afford = cost ? checkAfford(state.world, home(state.world), cost) : null;
-      if (afford && !afford.ok)
-        showMessage(friendlyReason(state.world, afford.reason, { cost }), 'error');
+      const reason = cost ? toolReason(state.world, tool, state.activeIsland) : null;
+      if (reason !== null)
+        showMessage(
+          friendlyReason(state.world, reason, { cost, island: state.activeIsland }),
+          'error',
+        );
     });
     parent.appendChild(btn);
   };
 
   // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1);
   // Seiteneffekt: setzt `state.openCategory` auf null
-  if (state.openCategory !== null && buildEntries(state.world, state.openCategory).length === 0)
+  if (
+    state.openCategory !== null &&
+    buildEntries(state.world, state.openCategory, state.activeIsland).length === 0
+  )
     state.openCategory = null;
   const main = document.createElement('div');
   main.className = 'buildbar-main';
@@ -354,7 +389,7 @@ export function renderBuildMenu(
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
     btn.dataset.key = cat.id;
-    btn.hidden = buildEntries(state.world, cat.id).length === 0;
+    btn.hidden = buildEntries(state.world, cat.id, state.activeIsland).length === 0;
     btn.addEventListener('click', (ev) => {
       if (blurAfterClick(ev.detail)) btn.blur();
       onToggle(cat.id);
@@ -366,7 +401,7 @@ export function renderBuildMenu(
   if (state.openCategory !== null) {
     const sub = document.createElement('div');
     sub.className = 'buildbar-sub';
-    const ids = buildEntries(state.world, state.openCategory);
+    const ids = buildEntries(state.world, state.openCategory, state.activeIsland);
     for (const id of ids) {
       const def = BUILDING_DEFS[id];
       addButton(
@@ -379,26 +414,27 @@ export function renderBuildMenu(
     }
     nav.appendChild(sub);
   }
-  updateBuildMenu(nav, state.world);
+  updateBuildMenu(nav, state.world, state.activeIsland);
   if (focusKey !== undefined) {
     nav.querySelector<HTMLElement>(`[data-key="${CSS.escape(focusKey)}"]`)?.focus();
   }
 }
 
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
-export function updateBuildMenu(nav: HTMLElement, world: World): void {
+export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);
     if (live.textContent !== text) live.textContent = text;
   }
   for (const btn of nav.querySelectorAll<HTMLButtonElement>('button')) {
-    const cost = buttonCost.get(btn);
-    if (!cost) continue;
-    const r = checkAfford(world, home(world), cost);
-    btn.classList.toggle('unaffordable', !r.ok);
+    const meta = buttonCost.get(btn);
+    if (!meta) continue;
+    const { tool, cost } = meta;
+    const why = toolReason(world, tool, island);
+    btn.classList.toggle('unaffordable', why !== null);
     const reason = btn.querySelector('.tt-reason');
-    const text = r.ok ? '' : friendlyReason(world, r.reason, { cost });
+    const text = why === null ? '' : friendlyReason(world, why, { cost, island });
     if (reason && reason.textContent !== text) reason.textContent = text;
   }
 }

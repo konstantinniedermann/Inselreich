@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { WIN_CITIZENS, WIN_MERCHANTS } from '../../src/sim/defs/tiers';
+import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from '../../src/sim/defs/tiers';
 import { goalView, type GoalView } from '../../src/sim/queries';
 import { createWorld } from '../../src/sim/world';
 import type { CrisisLevel, UnlockId } from '../../src/sim/types';
@@ -8,6 +8,8 @@ import type { Tool } from '../../src/render/renderer';
 import {
   FIRST_GOAL_BANNER,
   SECOND_GOAL_BANNER,
+  THIRD_GOAL_BANNER,
+  applyGoalShown,
   goalBanners,
   goalTexts,
   UNLOCK_NOTICE,
@@ -25,7 +27,13 @@ const citizensView = (current: number, unlockCitizens: number | null): GoalView 
   next: { tierName: 'Kaufleute', target: WIN_MERCHANTS, unlockCitizens },
 });
 const merchantsView: GoalView = { phase: 'merchants', current: 15, target: WIN_MERCHANTS };
-const doneView: GoalView = { phase: 'done', current: 60, target: WIN_MERCHANTS };
+const doneView: GoalView = { phase: 'done', current: 80, target: WIN_SPICE_MERCHANTS };
+const spiceView = (loop: boolean): GoalView => ({
+  phase: 'spice',
+  current: 20,
+  target: WIN_SPICE_MERCHANTS,
+  loop,
+});
 
 describe('M8 U1 Zielanzeige (Spec 14.1)', () => {
   it('AK-U1-01 Phase citizens: Texte wörtlich wie Tabelle 14.1, fillPct 90 bei 45 / 50', () => {
@@ -50,28 +58,37 @@ describe('M8 U1 Zielanzeige (Spec 14.1)', () => {
     });
   });
 
-  it('AK-U1-01 Phase merchants: 15 / 60, next null, fillPct 25', () => {
+  // R239 (3): Phase merchants hat jetzt einen Ausblick auf das dritte Ziel (vorher null).
+  it('AK-U1-01 Phase merchants: 15 / 60, next Ausblick Gewürzstadt, fillPct 25', () => {
     expect(goalTexts(merchantsView)).toEqual({
       chip: 'Ziel 15 / 60 Kaufleute',
       title: 'Zweites Ziel: 60 Kaufleute — Einwohner der Stufe 4',
       rest: '15 / 60 Kaufleute',
-      next: null,
+      next: 'Danach: Gewürzstadt — 80 Kaufleute mit Gewürz von einer fernen Insel',
       fillPct: 25,
     });
   });
 
-  it('AK-U1-01 Phase done: Handelsstadt, next null, fillPct 100', () => {
+  // R239 (3): Phase done meint jetzt das dritte Ziel (Gewürzstadt).
+  it('AK-U1-01 Phase done: Gewürzstadt, next null, fillPct 100', () => {
     expect(goalTexts(doneView)).toEqual({
-      chip: 'Handelsstadt · 60 Kaufleute',
-      title: 'Beide Ziele erreicht — freies Spiel',
-      rest: 'Handelsstadt erreicht · 60 Kaufleute',
+      chip: 'Gewürzstadt · 80 Kaufleute',
+      title: 'Alle drei Ziele erreicht — freies Spiel',
+      rest: 'Gewürzstadt erreicht · 80 Kaufleute',
       next: null,
       fillPct: 100,
     });
   });
 
   it('AK-U1-01 kein Text enthält „Tick"; Ausblick ab Tick 0 über goalView', () => {
-    const views = [citizensView(45, null), citizensView(45, 40), merchantsView, doneView];
+    const views = [
+      citizensView(45, null),
+      citizensView(45, 40),
+      merchantsView,
+      spiceView(false),
+      spiceView(true),
+      doneView,
+    ];
     for (const v of views) {
       const t = goalTexts(v);
       for (const s of [t.chip, t.title, t.rest, t.next ?? '']) expect(s, s).not.toMatch(/Tick/);
@@ -93,9 +110,14 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
     w.wonMerchants = true;
     const r = goalBanners(shown, w);
     expect(r.texts).toEqual([FIRST_GOAL_BANNER, SECOND_GOAL_BANNER]);
+    expect(THIRD_GOAL_BANNER).toBeTypeOf('string');
     expect(FIRST_GOAL_BANNER).toBe('Ziel erreicht: 50 Bürger! Das Spiel läuft weiter.');
     expect(SECOND_GOAL_BANNER).toBe('Zweites Ziel erreicht: 60 Kaufleute! Das Spiel läuft weiter.');
-    expect(r.shown).toEqual({ wonShown: true, wonMerchantsShown: true });
+    expect(r.shown).toEqual({
+      wonShown: true,
+      wonMerchantsShown: true,
+      wonSpiceShown: false,
+    });
     expect(goalBanners(r.shown, w).texts).toEqual([]);
     expect(diffSoundEvents(prevSnap, soundSnapshot(w)).filter((e) => e === 'win')).toEqual(['win']);
     // Laden: der geladene Stand ist Basis für Merkfelder und Ton
@@ -108,7 +130,7 @@ describe('M8 U1 Banner (Spec 14.1, Review Focus 4)', () => {
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     const shown = initialGoalShown(w);
-    expect(shown).toEqual({ wonShown: true, wonMerchantsShown: false });
+    expect(shown).toEqual({ wonShown: true, wonMerchantsShown: false, wonSpiceShown: false });
     w.wonMerchants = true;
     const r = goalBanners(shown, w);
     expect(r.texts).toEqual([SECOND_GOAL_BANNER]);
@@ -134,8 +156,9 @@ describe('M8 U1 Freischaltung (Änderung S11)', () => {
     expect(unlockNoticeText(before, w)).toBeNull();
     w.won = true;
     w.unlocked = deriveUnlocks(w);
+    // R230 B1: U6 nennt auch die Seefahrt und den Gewürz-Bedarf der Kaufleute.
     expect(unlockNoticeText(['U0', 'U2', 'U3', 'U4', 'U5'], w)).toBe(
-      'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
+      'Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln',
     );
     expect(unlockNoticeText(w.unlocked, w)).toBeNull();
     expect(UNLOCK_NOTICE).not.toContain('Tick');
@@ -179,8 +202,9 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
     expect(t(['U0', 'U2', 'U3', 'U4', 'U5'], ['U0', 'U2', 'U3', 'U4', 'U5', 'U6'])).toBe(
       UNLOCK_NOTICE,
     );
+    // R230 B1: neuer Wortlaut mit Seefahrt und Gewürz-Bedarf.
     expect(UNLOCK_NOTICE).toBe(
-      'Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden',
+      'Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln',
     );
     expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
       `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,
@@ -237,5 +261,67 @@ describe('M11 Freischalt-Meldungen (Spec 4)', () => {
       `Neu: Werkzeugmacher (T), Ausgabesperre, Ausbau Stufe 3 — die ersten Bürger sind da${tail}`,
     );
     for (const s of [u2, u3, u5]) expect(s).not.toMatch(/null|Tick/);
+  });
+});
+
+describe('M12 Z3 Texte', () => {
+  it('AK-Z3-11 Phase spice: alle Felder wörtlich, next je loop', () => {
+    expect(goalTexts(spiceView(false))).toEqual({
+      chip: 'Ziel 20 / 80 Kaufleute mit Gewürz',
+      title:
+        'Drittes Ziel: 80 Kaufleute, 60 s voll versorgt — Gewürz per Schiff von deiner eigenen Plantage',
+      rest: '20 / 80 Kaufleute mit Gewürz',
+      next: 'Fehlt: Schiffsroute, die Gewürz von deiner Plantage heimholt',
+      fillPct: 25,
+    });
+    expect(goalTexts(spiceView(true)).next).toBeNull();
+  });
+
+  it('AK-Z3-11 Phase merchants: Ausblick wörtlich', () => {
+    expect(goalTexts(merchantsView).next).toBe(
+      'Danach: Gewürzstadt — 80 Kaufleute mit Gewürz von einer fernen Insel',
+    );
+  });
+
+  it('AK-Z3-12 Banner drittes Ziel wörtlich', () => {
+    expect(THIRD_GOAL_BANNER).toBe(
+      'Drittes Ziel erreicht: Gewürzstadt mit 80 Kaufleuten! Das Spiel läuft weiter.',
+    );
+  });
+
+  it('AK-Z3-12 alle drei Flaggen im selben Aufruf: drei Banner in Reihenfolge; danach keines', () => {
+    const w = createWorld(3);
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = true;
+    const r = goalBanners(initialGoalShown(createWorld(3)), w);
+    expect(r.texts).toEqual([FIRST_GOAL_BANNER, SECOND_GOAL_BANNER, THIRD_GOAL_BANNER]);
+    expect(r.shown).toEqual({ wonShown: true, wonMerchantsShown: true, wonSpiceShown: true });
+    expect(goalBanners(r.shown, w).texts).toEqual([]);
+  });
+
+  it('AK-Z3-12 geladener Stand mit wonSpice zeigt kein Banner; fehlendes wonSpiceShown gilt als nicht gezeigt', () => {
+    const w = createWorld(3);
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = true;
+    expect(goalBanners(initialGoalShown(w), w).texts).toEqual([]);
+    const r = goalBanners({ wonShown: true, wonMerchantsShown: true }, w);
+    expect(r.texts).toEqual([THIRD_GOAL_BANNER]);
+  });
+});
+
+describe('M12 Z3 Merkfeld drittes Banner (R258, C3-3)', () => {
+  it('applyGoalShown schreibt alle drei Merkfelder in den Spielzustand: drittes Banner erscheint nur einmal', () => {
+    const w = createWorld(3);
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = true;
+    const state = { ...initialGoalShown(createWorld(3)) };
+    const first = goalBanners(state, w);
+    expect(first.texts).toContain(THIRD_GOAL_BANNER);
+    applyGoalShown(state, first.shown);
+    expect(state).toEqual({ wonShown: true, wonMerchantsShown: true, wonSpiceShown: true });
+    expect(goalBanners(state, w).texts).toEqual([]);
   });
 });

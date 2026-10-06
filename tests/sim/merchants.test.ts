@@ -60,6 +60,7 @@ function town(houseCount: number): Town {
     tools: 8,
     stone: 10,
     glass: 1,
+    spice: 1, // R226 F-03: der Aufstieg 3 → 4 nimmt eine Einheit Gewürz
   };
   return { w, houses, chapel, school, bath };
 }
@@ -128,7 +129,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     ]).toEqual([15, 8, 10, 1]);
   });
 
-  it('AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 auf Tick ≡ 50 mod 100, Kosten und Glas, danach Steuer 300 (ohne Aufstieg 210) (M11 S10)', () => {
+  it('AK-S1-05 nach dem Sieg: Aufstieg 3 → 4 auf Tick ≡ 50 mod 100, Kosten und Glas, danach Steuer 330 (ohne Aufstieg 210) (M11 S10)', () => {
     const make = (won: boolean): { w: World; h: Building } => {
       const { w, houses } = town(1);
       readyCitizen(w, houses[0]!);
@@ -147,13 +148,14 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
       home(w).stock.tools,
       home(w).stock.stone,
       home(w).stock.glass,
-    ]).toEqual([0, 0, 0, 0]);
+      home(w).stock.spice, // R226 F-03: der Aufstieg nimmt auch das Gewürz
+    ]).toEqual([0, 0, 0, 0, 0]);
     expect(hs.demand.glass).toBe(0);
     expect(hs.satisfied.glass).toBe(true);
     expect(hs.satisfiedSince).toBe(450);
     step(w);
     expect(w.tick % 100).toBe(51);
-    expect(w.stats.taxes).toBe(300);
+    expect(w.stats.taxes).toBe(330); // R226 F-03: 15 EW × Satz 22 statt 20
     const twin = make(false);
     run(twin.w, 2);
     expect(twin.h.house!.tier).toBe(3);
@@ -199,7 +201,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     step(w);
     expect(h.house!.tier).toBe(4);
     expect(h.house!.inhabitants).toBe(15);
-    home(w).stock = { ...home(w).stock, food: 100, cloth: 100, rum: 100, glass: 100 };
+    home(w).stock = { ...home(w).stock, food: 100, cloth: 100, rum: 100, glass: 100, spice: 100 }; // R226 F-03: Gewürz
     run(w, 249);
     expect(h.house!.inhabitants).toBe(19);
     step(w);
@@ -214,10 +216,11 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
     w.tick = 450;
     setHouse(w, h, 4, 20, ['glass']);
     home(w).stock.glass = 0;
+    home(w).stock.spice = 100; // R226 F-03: nur Glas fehlt
     expect(h.house!.satisfied.glass).toBe(false);
     step(w);
     expect(w.tick % 50).not.toBe(0);
-    expect(w.stats.taxes).toBe(200);
+    expect(w.stats.taxes).toBe(220); // R226 F-03: halbe Steuer 20 EW × 22 / 2
     while (w.tick < 1399) step(w);
     expect(h.house!.inhabitants).toBe(2);
     step(w);
@@ -277,7 +280,7 @@ describe('M8 Stufe 4: Sperre und Aufstieg', () => {
       const t = town(2);
       for (const b of t.houses) readyCitizen(t.w, b);
       t.w.won = true;
-      home(t.w).stock = { ...home(t.w).stock, wood: 30, tools: 16, stone: 20, glass };
+      home(t.w).stock = { ...home(t.w).stock, wood: 30, tools: 16, stone: 20, glass, spice: 2 }; // R226 F-03: je Aufstieg 1 Gewürz
       t.w.money = money;
       return t;
     };
@@ -305,15 +308,16 @@ describe('M8 Review Focus S1', () => {
     w.tick = 450;
     setHouse(w, h, 4, 20);
     home(w).stock.glass = 10;
+    home(w).stock.spice = 100; // R226 F-03: Gewürz reicht
     step(w);
     expect(h.house!.services.bath).toBe(true);
-    expect(w.stats.taxes).toBe(400);
+    expect(w.stats.taxes).toBe(440); // R226 F-03: 20 EW × Satz 22
     expect(demolish(w, bath.id).ok).toBe(true);
     chapel.connected = true; // Abriss berechnet die Anbindung neu (keine Wege im Test)
     school.connected = true;
     step(w);
     expect(h.house!.services.bath).toBe(false);
-    expect(w.stats.taxes).toBe(200);
+    expect(w.stats.taxes).toBe(220); // R226 F-03: halbe Steuer mit Satz 22
     expect(h.house!.tier).toBe(4);
     expect(upgradeStatus(w, h)).toEqual({ ok: false, reasons: ['Höchste Stufe erreicht'] });
   });
@@ -347,6 +351,7 @@ describe('M8 Brand am Badehaus (Spec 9)', () => {
       t.w.tick = 460; // T; T + 1 = 461 ≢ 0 mod 50
       setHouse(t.w, t.houses[0]!, 4, 20);
       home(t.w).stock.glass = 20;
+      home(t.w).stock.spice = 100; // R226 F-03: Gewürz reicht
       return t;
     };
     const { w, houses, bath } = make();
@@ -357,8 +362,8 @@ describe('M8 Brand am Badehaus (Spec 9)', () => {
     step(w);
     step(twin.w);
     expect(w.tick % 50).not.toBe(0);
-    expect(w.stats.taxes).toBe(200);
-    expect(twin.w.stats.taxes).toBe(400);
+    expect(w.stats.taxes).toBe(220); // R226 F-03: halbe Steuer mit Satz 22
+    expect(twin.w.stats.taxes).toBe(440); // R226 F-03: 20 EW × 22
     const seen: boolean[] = [h.house!.services.bath!];
     while (w.tick < 660) {
       step(w);

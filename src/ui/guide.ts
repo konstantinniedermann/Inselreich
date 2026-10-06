@@ -7,7 +7,7 @@ import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
-import { entryOfBuilding, unlockText } from '../sim/unlocks';
+import { entryOfBuilding, isUnlocked, unlockText } from '../sim/unlocks';
 import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
   Building,
@@ -45,8 +45,27 @@ function lockedSentence(w: World, ids: readonly (BuildingDefId | undefined)[]): 
   return null;
 }
 
+/** Hat jeder Erzeuger von `g` eine Bauregel `islandTrait`? Dann ist `g` in der Heimat nicht baubar (heute Gewürz). */
+export function needsForeignIsland(g: GoodId): boolean {
+  const producers = BUILDING_IDS.filter((id) => BUILDING_DEFS[id].produces === g);
+  return (
+    producers.length > 0 &&
+    producers.every((id) => BUILDING_DEFS[id].site.some((r) => r.kind === 'islandTrait'))
+  );
+}
+
+/** Satz für ein Gut von einer fernen Insel: kaufen oder ein Kontor gründen; nie ein Betrieb mit Taste. */
+function foreignGoodHint(g: GoodId): string {
+  const name = GOODS[g].name;
+  return `kaufe es am Kontor oder gründe ein Kontor auf einer ${name}insel`;
+}
+
 /** Satz zu einem fehlenden Gut, oder null, wenn Erzeuger und Vorstufe stehen (dann weiterschalten). */
 function goodSentence(w: World, tierName: string, g: GoodId): string | null {
+  if (needsForeignIsland(g))
+    return home(w).stock[g] >= 1
+      ? null
+      : `Deine ${tierName} brauchen ${GOODS[g].name}: ${foreignGoodHint(g)}`;
   const p = producerOf(g);
   if (!p) return null;
   const input = (BUILDING_DEFS[p].consumes ?? []).find((i) => {
@@ -136,6 +155,9 @@ export function nextStep(w: World): string {
       if (s) return s;
     }
   }
+  // C.11: ab U6 bis zum ersten Kontor auf einer Fremdinsel
+  if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
+    return 'Gründe ein Kontor auf einer Insel mit Gewürz';
   if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
   const tax = effectiveTaxLevel(w);
   if (TAX_LEVELS[tax].upgradeWait === null && houses.some(canRise))
@@ -166,8 +188,9 @@ export function remedyText(w: World, b: Building): string | null {
       const id = SERVICE_BUILDING[d.service];
       return `${nm(id)} fehlt: baue ${nk(id)} in Reichweite`;
     }
-    const p = producerOf(d.good)!;
     const g = GOODS[d.good].name;
+    if (needsForeignIsland(d.good)) return `${g} fehlt: ${foreignGoodHint(d.good)}`;
+    const p = producerOf(d.good)!;
     return has(w, p)
       ? `${g} fehlt: baue mehr ${nm(p)} oder kaufe ${g} am Kontor`
       : `${g} fehlt: baue ${nk(p)}`;

@@ -8,6 +8,7 @@ import { orderForPeriod } from '../../src/sim/orders';
 import { UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import { UPGRADE_WAIT } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { seaWorld, shipLiteral } from './seaHelpers';
 import { forceGrass, houseNearKontor, placeService, prepareEast } from './helpers';
 
 let w: World;
@@ -131,5 +132,75 @@ describe('M6 step: Krisen', () => {
     expect(at.get(3000)).toMatchObject({ kind: 'fire', period: 1, outcome: 'miss' });
     expect(at.get(3600)).toMatchObject({ kind: 'storm', period: 2 });
     expect(world.won).toBe(true);
+  });
+});
+
+describe('M12 E4 step und Schiffe', () => {
+  const homeRoute = {
+    a: 0,
+    b: 1,
+    ab: [{ good: 'wood' as const, reserve: 0 }],
+    ba: [],
+  };
+
+  it('AK-E4-09 Ladung vom selben Schritt deckt den Bedarf', () => {
+    const world = seaWorld();
+    const h = houseNearKontor(world);
+    home(world).stock.food = 0;
+    home(world).stock.wood = 0;
+    shipLiteral(world, { port: 1, to: 0, left: 1, cargo: { food: 10 }, route: homeRoute });
+    expect(h.house!.satisfied.food).not.toBe(true);
+    step(world);
+    expect(h.house!.satisfied.food).toBe(true);
+  });
+
+  it('AK-E4-09 Gewürz vom selben Schritt deckt den Kaufmannsbedarf (Querschnitt, grün nach Merge)', () => {
+    const world = seaWorld();
+    const h = houseNearKontor(world);
+    h.house!.tier = 4;
+    h.house!.demand = { spice: 1 }; // Entnahme im nächsten Schritt fällig
+    h.house!.inhabitants = TIERS[4].maxInhabitants;
+    home(world).stock.spice = 0;
+    shipLiteral(world, {
+      port: 2,
+      to: 0,
+      left: 1,
+      cargo: { spice: 10 },
+      route: { a: 0, b: 2, ab: [], ba: [{ good: 'spice', reserve: 0 }] },
+    });
+    step(world);
+    expect(h.house!.satisfied.spice).toBe(true);
+  });
+
+  it('AK-E4-09 kleinere id entlädt zuerst', () => {
+    const world = seaWorld();
+    home(world).stock.food = 50;
+    home(world).stock.wood = 0;
+    const first = shipLiteral(world, {
+      port: 1,
+      to: 0,
+      left: 1,
+      cargo: { food: 60 },
+      route: homeRoute,
+    });
+    const second = shipLiteral(world, {
+      port: 1,
+      to: 0,
+      left: 1,
+      cargo: { food: 60 },
+      route: homeRoute,
+    });
+    step(world);
+    expect(home(world).stock.food).toBe(100);
+    expect(first.cargo.food).toBe(10);
+    expect(second.cargo.food).toBe(60);
+  });
+
+  it('AK-E4-09 step liefert die Verluste', () => {
+    const world = seaWorld();
+    expect(step(world)).toEqual({ lost: [] });
+    home(world).stock.spice = 70;
+    const s = shipLiteral(world, { cargo: { spice: 40 }, homing: true });
+    expect(step(world).lost).toEqual([{ ship: s.id, good: 'spice', n: 10 }]);
   });
 });

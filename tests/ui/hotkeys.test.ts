@@ -293,3 +293,24 @@ describe('M11 Taste Y (Spec 7, 13-10)', () => {
     expect(tooltipLines({ kind: 'build', defId: 'cattlefarm' })[0]).toBe('Rinderfarm');
   });
 });
+
+describe('M12 E2 UI Inseln: Tasten 0 und 9', () => {
+  it('ohne seafaring stumm, auch mit Parameter false', () => {
+    expect(hotkeyAction('0', NONE, false)).toBeNull();
+    expect(hotkeyAction('9', NONE, false)).toBeNull();
+    expect(hotkeyAction('0', NONE, false, false)).toBeNull();
+  });
+  it('mit seafaring Inselsprung; Formularfeld und Modifier bleiben stumm', () => {
+    expect(hotkeyAction('0', NONE, false, true)).toEqual({ kind: 'islandHome' });
+    expect(hotkeyAction('9', NONE, false, true)).toEqual({ kind: 'islandCycle' });
+    expect(hotkeyAction('0', NONE, true, true)).toBeNull();
+    expect(hotkeyAction('9', { ...NONE, ctrl: true }, false, true)).toBeNull();
+  });
+  it('hotkeyList nennt 0 und 9 erst ab seafaring', () => {
+    const keys = (w: ReturnType<typeof createWorld>) => hotkeyList(w).map((e) => e.key);
+    expect(keys(createWorld(3))).not.toContain('0');
+    const all = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
+    expect(keys(all).filter((k) => k === '0')).toHaveLength(1);
+    expect(keys(all).filter((k) => k === '9')).toHaveLength(1);
+  });
+});

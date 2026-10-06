@@ -1,6 +1,6 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { Building, ServiceId, World } from './types';
-import { center } from './world';
+import { center, isKontor } from './world';
 
 /** Alle Dienste; Schlüssel von `Coverage.service` (Bezeichner, keine Spielwerte). */
 const SERVICES: readonly ServiceId[] = ['faith', 'school', 'bath'];
@@ -15,7 +15,7 @@ export function distance(a: Building, b: Building): number {
 /** Versorgt `b` seine Insel: ihr Kontor immer, ein Markt nur, wenn er angebunden ist. */
 export function isSupplySource(world: World, b: Building): boolean {
   const kontorId = world.islands[b.island]?.kontorId;
-  return (b.defId === 'kontor' && b.id === kontorId) || (b.defId === 'market' && b.connected);
+  return (isKontor(b.defId) && b.id === kontorId) || (b.defId === 'market' && b.connected);
 }
 
 /** Erbringt `b` den Dienst: angebunden und ohne Ausfall. */

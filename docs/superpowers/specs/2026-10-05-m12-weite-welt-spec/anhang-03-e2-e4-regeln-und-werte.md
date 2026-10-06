@@ -38,11 +38,11 @@ fehlt (Vorschlag Spec). Einheiten: Unterhalt und Steuer je 100 Ticks, Takt in Ti
 Jede Zustandsänderung bekommt je Merge eine eigene `SAVE_VERSION` (F-S1); die Kette v1 → … → aktuelle Version läuft
 für jeden alten Stand. Fixture der Vorgängerversion je Version als erster Commit der jeweiligen Branch.
 
-| Version | Merge                                                                | Neue Felder                                                                                       | Fixture (erster Commit)             |
-| ------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| v8      | E1                                                                   | `islands[i]` + `kind`, `ox`, `oy`, `anchor`; `kontorId` `number \| null`; Fremdinseln A, B        | `save-v7.json` (E1-Branch)          |
-| v9      | Seefahrt-Bündel E2 + E3 + E4, ein Merge über eine Integrationsbranch | `crisis.tile.island`; `spice` in jedem `islands[i].stock` und in `sellPct`; `ships`, `nextShipId` | `save-v8.json` (Integrationsbranch) |
-| v10     | E6 (nur bei Aufnahme)                                                | `offer: Offer \| null`                                                                            | `save-v9.json` (E6-Branch)          |
+| Version | Merge                                                                | Neue Felder                                                                                                                 | Fixture (erster Commit)             |
+| ------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| v8      | E1                                                                   | `islands[i]` + `kind`, `ox`, `oy`, `anchor`; `kontorId` `number \| null`; Fremdinseln A, B                                  | `save-v7.json` (E1-Branch)          |
+| v9      | Seefahrt-Bündel E2 + E3 + E4, ein Merge über eine Integrationsbranch | `crisis.tile.island`; `spice` in jedem `islands[i].stock` und in `sellPct`; `ships`, `nextShipId`; `wonSpice` (Anhang 05 E) | `save-v8.json` (Integrationsbranch) |
+| v10     | E6 (nur bei Aufnahme)                                                | `offer: Offer \| null`                                                                                                      | `save-v9.json` (E6-Branch)          |
 
 `Ship = { id, port, to, left, cargo, route, homing }`: `port` Inselindex des letzten Hafens; `to` Zielinsel oder
 `null` (liegt im Hafen); `left` Restticks ≥ 0; `cargo` Gut → Menge (Ganzzahl ≥ 1, Summe ≤ 50); `route`
@@ -120,16 +120,21 @@ Heimat `kind 'home'`, `ox = oy = 0`, `anchor` nach Regel; `version 8`.
   nur mit Ruling L0, kein stilles Nachstellen.
 - **Alte Pins, die E3 bewusst ändert** (R226 F-03, R228 (6) A2; Neupin mit Befehl und Commit, kein Test gelöscht):
 
-  | Pin                   | Datei                                          | Grund                                                                  |
-  | --------------------- | ---------------------------------------------- | ---------------------------------------------------------------------- |
-  | M8:AK-S1-01           | `defs.test.ts`                                 | `TIERS[4]` mit `needs.spice` und Steuer 22                             |
-  | M8 defs „8 Güter"     | `defs.test.ts` (`GOOD_IDS` 9, letztes `glass`) | 10 Güter, letztes `spice`                                              |
-  | M8:AK-S1-05           | `merchants.test.ts`                            | Steuer nach Aufstieg (300) mit Satz 22                                 |
-  | M8:AK-S1-07, -08, -10 | `merchants.test.ts`                            | Wachstum braucht Gewürz; halbe Steuer mit Satz 22 (Plan prüft je Test) |
-  | M8:AK-B2-01           | `scenario-saves.test.ts` (Kaufleute-Szenarien) | Gewürz im Szenario oder neuer Erwartungswert                           |
-  | M8:AK-B1-01, -02, -04 | `balance-merchants.test.ts`                    | grün mit `feedSpice`, Werte neu                                        |
-  | M11:AK-BAS-02         | `balance-merchants.test.ts`                    | `[6750, 11200, 320]` → neu gemessen                                    |
-  | M12:AK-E0-18          | `balance-merchants.test.ts`                    | dito; gilt bis zum v9-Merge                                            |
+  | Pin                   | Datei                                          | Grund                                                                               |
+  | --------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+  | M8:AK-S1-01           | `defs.test.ts`                                 | `TIERS[4]` mit `needs.spice` und Steuer 22                                          |
+  | M8 defs „8 Güter"     | `defs.test.ts` (`GOOD_IDS` 9, letztes `glass`) | 10 Güter, letztes `spice`                                                           |
+  | M8:AK-S1-05           | `merchants.test.ts`                            | Steuer nach Aufstieg (300) mit Satz 22                                              |
+  | M8:AK-S1-07, -08, -10 | `merchants.test.ts`                            | Wachstum braucht Gewürz; halbe Steuer mit Satz 22 (Plan prüft je Test)              |
+  | M8:AK-B2-01           | `scenario-saves.test.ts` (Kaufleute-Szenarien) | Gewürz im Szenario oder neuer Erwartungswert                                        |
+  | M8:AK-B1-01, -02, -04 | `balance-merchants.test.ts`                    | grün mit `feedSpice`, Werte neu                                                     |
+  | M11:AK-BAS-02         | `balance-merchants.test.ts`                    | `[6750, 11200, 320]` → neu gemessen                                                 |
+  | M12:AK-E0-18          | `balance-merchants.test.ts`                    | dito; gilt bis zum v9-Merge                                                         |
+  | M11:AK-P1-11          | `tests/sim/flow.test.ts`                       | Δ-Gewürz 2,0 beim Aufstieg 3 → 4 (R256-Erweiterung, `R226 F-03`)                    |
+  | AK-UX-07, M8:AK-S1-18 | `tests/ui/hud.test.ts`                         | `tierPath`/`tierTooltip` nennen Gewürz (R256)                                       |
+  | M8:AK-R1-03           | `tests/render/overlays.test.ts`                | Haus Stufe 4 mit Gewürz versorgt, damit nur das Bad fehlt (R256)                    |
+  | M8:AK-U2-08 (d)       | `tests/ui/guide.test.ts`                       | Gewürz im Szenario-Lager; neu (d2) Gewürz-Satz und „kein ()" (R256)                 |
+  | T00 Rezept v8         | `tests/sim/fixtureV8.ts`                       | Rezept mit v8-Werten (`TIERS[4]` ohne Gewürz, Steuer 20), Fixture bytegleich (R256) |
 
 - **Alte Pins, die E2 bewusst ändert** (R226 F-03, R230 B1; Neupin im Seefahrt-Bündel v9 mit Befehl und Commit):
 

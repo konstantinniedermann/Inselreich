@@ -1,4 +1,5 @@
-import { home } from '../sim/world';
+import { HOME } from '../sim/world';
+import { islandName } from '../sim/islands';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
@@ -33,11 +34,20 @@ export function boomGood(world: World, good: GoodId): boolean {
 }
 
 /** Handelszeilen (Spec 11.4): Güter, die frei sind oder im Lager liegen; Kaufen nur für freie Güter. */
-export function tradeRows(world: World): { good: GoodId; canBuy: boolean }[] {
-  return GOOD_IDS.filter((g) => goodUnlocked(world, g) || home(world).stock[g] > 0).map((good) => ({
+export function tradeRows(
+  world: World,
+  island: number = HOME,
+): { good: GoodId; canBuy: boolean }[] {
+  const stock = world.islands[island]!.stock;
+  return GOOD_IDS.filter((g) => goodUnlocked(world, g) || stock[g] > 0).map((good) => ({
     good,
     canBuy: goodUnlocked(world, good),
   }));
+}
+
+/** Titel des Handelsdialogs: Heimat wie bisher, Fremdinsel mit Namen. */
+export function tradeTitle(world: World, island: number = HOME): string {
+  return island === HOME ? 'Handel am Kontor' : `Handel · ${islandName(world, island)}`;
 }
 
 /** Handelsmengen pro Klick (reine Bedienung, keine Spielwerte). */
@@ -52,12 +62,17 @@ function cell(parent: HTMLElement, className: string, text?: string): HTMLElemen
 }
 
 /** Baut den Handelsdialog des Kontors auf. */
-export function renderTrade(panel: HTMLElement, world: World, actions: TradeActions): void {
+export function renderTrade(
+  panel: HTMLElement,
+  world: World,
+  actions: TradeActions,
+  island: number = HOME,
+): void {
   panel.replaceChildren();
   const head = cell(panel, 'panel-head');
   const title = document.createElement('h2');
   title.className = 'panel-title';
-  title.textContent = 'Handel am Kontor';
+  title.textContent = tradeTitle(world, island);
   const back = document.createElement('button');
   back.className = 'btn';
   back.textContent = 'Zurück';
@@ -90,13 +105,13 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
       : `${n} ${GOODS[good].name} kaufen für ${buyPrice(good, n)} Geld`;
     btn.addEventListener('click', () => {
       btn.blur();
-      const r = op === 'buy' ? buy(world, good, n) : sell(world, good, n);
+      const r = op === 'buy' ? buy(world, good, n, island) : sell(world, good, n, island);
       actions.changed(op, r, good, n);
     });
     parent.appendChild(btn);
   };
 
-  for (const { good, canBuy } of tradeRows(world)) {
+  for (const { good, canBuy } of tradeRows(world, island)) {
     const name = cell(table, 'trade-good', GOODS[good].name);
     // Boom-Marke direkt hinter den Gutnamen; bei Platzmangel wandern Lager und Preis in die nächste Zeile
     const boom = document.createElement('span');
@@ -123,13 +138,14 @@ export function renderTrade(panel: HTMLElement, world: World, actions: TradeActi
     for (const n of AMOUNTS) addTradeButton(sellCell, good, 'sell', n);
   }
 
-  updateTrade(panel, world);
+  updateTrade(panel, world, island);
 }
 
 /** Aktualisiert Lagerbestände und dämpft Buttons, die sicher scheitern würden (bleiben klickbar). */
-export function updateTrade(panel: HTMLElement, world: World): void {
+export function updateTrade(panel: HTMLElement, world: World, island: number = HOME): void {
+  const stock = world.islands[island]!.stock;
   for (const good of GOOD_IDS) {
-    setField(panel, `stock-${good}`, `Lager ${home(world).stock[good]}`);
+    setField(panel, `stock-${good}`, `Lager ${stock[good]}`);
     setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
@@ -139,8 +155,8 @@ export function updateTrade(panel: HTMLElement, world: World): void {
     const n = Number(btn.dataset.n);
     const unaffordable =
       btn.dataset.op === 'buy'
-        ? buyPrice(good, n) > world.money || home(world).stock[good] + n > STORAGE_CAP
-        : home(world).stock[good] < n;
+        ? buyPrice(good, n) > world.money || stock[good] + n > STORAGE_CAP
+        : stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
     if (btn.dataset.op === 'sell') {
       const t = sellTexts(world, good, n);

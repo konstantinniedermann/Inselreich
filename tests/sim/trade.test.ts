@@ -8,6 +8,7 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import { buy, buyPrice, sell, sellPrice, tickMarket } from '../../src/sim/trade';
 import type { GoodId, World } from '../../src/sim/types';
+import { foundKontor2Literal, seaWorld } from './seaHelpers';
 
 let w: World;
 
@@ -231,5 +232,39 @@ describe('M6 Boom', () => {
     const m0 = w.money;
     expect(deliverOrder(w)).toEqual({ ok: true });
     expect(w.money - m0).toBe(175);
+  });
+});
+
+describe('M12 E2 Handel je Insel (AK-E2-04)', () => {
+  it('Kauf auf Insel 2 bucht dort, Heimat unverändert; Grenze 100 je Insel', () => {
+    const s = seaWorld();
+    foundKontor2Literal(s, 2);
+    s.money = 100_000;
+    const homeWood = home(s).stock.wood;
+    expect(buy(s, 'wood', 10, 2)).toEqual({ ok: true });
+    expect(s.islands[2]!.stock.wood).toBe(10);
+    expect(home(s).stock.wood).toBe(homeWood);
+    s.islands[2]!.stock.wood = 95;
+    expect(buy(s, 'wood', 10, 2)).toEqual({ ok: false, reason: 'Lager voll' });
+    expect(s.islands[2]!.stock.wood).toBe(95);
+  });
+  it('Verkauf Heimat + Insel 2 senkt sellPct global um 20 Punkte', () => {
+    const s = seaWorld();
+    foundKontor2Literal(s, 2);
+    const start = s.sellPct.tools;
+    home(s).stock.tools = 10;
+    s.islands[2]!.stock.tools = 10;
+    expect(sell(s, 'tools', 10)).toEqual({ ok: true });
+    expect(sell(s, 'tools', 10, 2)).toEqual({ ok: true });
+    expect(s.islands[2]!.stock.tools).toBe(0);
+    expect(s.sellPct.tools).toBe(start - 20);
+  });
+  it('ohne Kontor: Kein Kontor auf Möweninsel, Welt unverändert', () => {
+    const s = seaWorld();
+    s.money = 100_000;
+    const before = serialize(s);
+    expect(buy(s, 'wood', 1, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
+    expect(sell(s, 'wood', 1, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
+    expect(serialize(s)).toBe(before);
   });
 });

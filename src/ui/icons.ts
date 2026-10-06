@@ -1,4 +1,4 @@
-// icons.ts — Symbolsatz Schritt 1 (M10 Spec 14): 24 prozedurale SVG-Silhouetten, Farben nur aus PALETTE.
+// icons.ts — Symbolsatz Schritt 1 (M10 Spec 14): 25 prozedurale SVG-Silhouetten, Farben nur aus PALETTE.
 import { PALETTE } from '../render/palette';
 
 export const ICON_IDS = [
@@ -11,6 +11,7 @@ export const ICON_IDS = [
   'cane',
   'rum',
   'glass',
+  'spice',
   'tier-1',
   'tier-2',
   'tier-3',
@@ -94,6 +95,11 @@ export const ICONS: Record<IconId, IconDef> = {
     label: 'Glas',
     paths: ['M3 1h10l-1 6c-.5 2-2 3-3.5 3.5V13h3v2H4.5v-2h3v-2.5C6 10 4.5 9 4 7z'],
     color: 'foam',
+  },
+  spice: {
+    label: 'Gewürz',
+    paths: ['M8 1c3 3 5 6 5 9a5 5 0 0 1 -10 0c0-3 2-6 5-9z'],
+    color: 'window', // D-144: Bernsteingelb, eigene Chip-Farbe (nicht Braun wie Holz)
   },
   'tier-1': { label: 'Pioniere', paths: tierPaths(1), color: 'sandDry' },
   'tier-2': { label: 'Siedler', paths: tierPaths(2), color: 'grassLight' },

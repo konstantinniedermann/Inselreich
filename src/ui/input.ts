@@ -1,17 +1,20 @@
 import { canClearForest, canPlantForest } from '../sim/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
+import { functionLock } from '../sim/unlocks';
 import type { World } from '../sim/types';
-import { home, tileAt } from '../sim/world';
+import { HOME, tileAt } from '../sim/world';
 import { cameraBounds } from '../render/archipel';
 import { clampToRect, zoomAt } from '../render/camera';
+import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
 import { isModalOpen } from './modal';
-import { targetTile } from './target';
+import { pickTarget, type IslandTile } from './islandTools';
 
 export type InputAction =
-  | { type: 'tile'; x: number; y: number; dragging: boolean }
+  | { type: 'tile'; island: number; x: number; y: number; dragging: boolean }
+  | { type: 'ship'; id: number }
   | { type: 'cancel' }
   | { type: 'hotkey'; action: HotkeyAction }
   | { type: 'dragEnd' };
@@ -36,23 +39,36 @@ export function exceedsDrag(start: Pt, p: Pt): boolean {
   return Math.hypot(p.x - start.x, p.y - start.y) > DRAG_THRESHOLD;
 }
 
+/** Schlüssel einer Zielkachel samt Insel (Weg-Zug: Vergleich mit der letzten Kachel). */
+function tileKey(t: IslandTile): string {
+  return `${t.island}:${t.x},${t.y}`;
+}
+
 /** Klick, wenn der Zeiger auf dem ganzen Weg unter der Schwelle blieb. */
 export function isClick(start: Pt, path: readonly Pt[]): boolean {
   return !path.some((p) => exceedsDrag(start, p));
 }
 
 /** Abriss-Vorschau rot: Gebäude (ausser Kontor) oder Weg auf der Kachel. */
-export function canDemolishTile(world: World, x: number, y: number): boolean {
-  const tile = tileAt(home(world), x, y);
-  return (
-    !!tile && ((tile.buildingId !== null && tile.buildingId !== home(world).kontorId) || tile.road)
-  );
+export function canDemolishTile(
+  world: World,
+  x: number,
+  y: number,
+  island: number = HOME,
+): boolean {
+  const isl = world.islands[island];
+  const tile = isl ? tileAt(isl, x, y) : undefined;
+  if (!tile || !isl) return false;
+  // Das Kontor der Heimat bleibt stehen; das zweite Kontor meldet seinen Grund beim Abriss (Sim)
+  if (tile.buildingId !== null && (island !== HOME || tile.buildingId !== isl.kontorId))
+    return true;
+  return tile.road;
 }
 
 /** Schlüssel für den Cursor-Hinweis: der Text ändert sich nur mit Kachel oder Werkzeug. */
-export function hintKey(h: { x: number; y: number; tool: Tool | null }): string {
+export function hintKey(h: { island?: number; x: number; y: number; tool: Tool | null }): string {
   const t = h.tool;
-  return `${h.x},${h.y},${t ? `${t.kind}:${t.kind === 'build' ? t.defId : ''}` : 'none'}`;
+  return `${h.island ?? HOME}:${h.x},${h.y},${t ? `${t.kind}:${t.kind === 'build' ? t.defId : ''}` : 'none'}`;
 }
 
 /** Werkzeuge, die beim Ziehen über mehrere Kacheln je Kachel einmal wirken: Weg, Roden, Aufforsten (Spec K5). */
@@ -104,7 +120,7 @@ export function bindInput(
     /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
     touch: boolean;
     /** Zielkachel beim Drücken; `null` ausserhalb der Karte. */
-    downTile: { x: number; y: number } | null;
+    downTile: IslandTile | null;
     /** Maus-Auswahl: wirkt erst beim Loslassen, Ziehen ab der Schwelle schwenkt stattdessen. */
     select: boolean;
   } | null = null;
@@ -131,24 +147,25 @@ export function bindInput(
       return;
     }
     const tool = state.tool;
-    const t = targetTile(state.world, state.cam, tool, pointer.sx, pointer.sy);
+    const t = pickTarget(state.world, state.cam, tool, pointer.sx, pointer.sy);
     if (!t) {
       state.hover = null;
       return;
     }
+    const w = state.world;
     let ok = true;
-    if (tool.kind === 'build') ok = canPlace(state.world, tool.defId, t.x, t.y).ok;
-    else if (tool.kind === 'road') ok = canPlaceRoad(state.world, t.x, t.y).ok;
-    else if (tool.kind === 'demolish') ok = canDemolishTile(state.world, t.x, t.y);
-    else if (tool.kind === 'clearForest') ok = canClearForest(state.world, t.x, t.y).ok;
-    else if (tool.kind === 'plantForest') ok = canPlantForest(state.world, t.x, t.y).ok;
-    state.hover = { x: t.x, y: t.y, tool, ok };
+    if (tool.kind === 'build') ok = canPlace(w, tool.defId, t.x, t.y, t.island).ok;
+    else if (tool.kind === 'road') ok = canPlaceRoad(w, t.x, t.y, t.island).ok;
+    else if (tool.kind === 'demolish') ok = canDemolishTile(w, t.x, t.y, t.island);
+    else if (tool.kind === 'clearForest') ok = canClearForest(w, t.x, t.y, t.island).ok;
+    else if (tool.kind === 'plantForest') ok = canPlantForest(w, t.x, t.y, t.island).ok;
+    state.hover = { island: t.island, x: t.x, y: t.y, tool, ok };
   };
 
   const tileAction = (sx: number, sy: number, dragging: boolean): void => {
-    const t = targetTile(state.world, state.cam, state.tool, sx, sy);
+    const t = pickTarget(state.world, state.cam, state.tool, sx, sy);
     if (!t) return;
-    onAction({ type: 'tile', x: t.x, y: t.y, dragging });
+    onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging });
   };
 
   /** Bricht Ein-Zeiger-Aktion ab; eine Weg-Zug-Serie wird mit `dragEnd` sauber beendet. */
@@ -212,13 +229,13 @@ export function bindInput(
       road: !wantsPan && isDragPaintTool(state.tool),
       pointerId: e.pointerId,
       touch: isTouch,
-      downTile: targetTile(state.world, state.cam, state.tool, p.sx, p.sy),
+      downTile: pickTarget(state.world, state.cam, state.tool, p.sx, p.sy),
       select: !wantsPan && !isTouch && state.tool.kind === 'select',
     };
     if (wantsPan) return;
     if (drag.road && !isTouch) {
       // Maus: erste Weg-Kachel sofort; Touch wartet auf Ziehen oder Loslassen (Zwei-Finger-Geste baut nichts)
-      drag.lastTile = drag.downTile ? `${drag.downTile.x},${drag.downTile.y}` : null;
+      drag.lastTile = drag.downTile ? tileKey(drag.downTile) : null;
       tileAction(p.sx, p.sy, false);
       pointer = p;
       updateHover();
@@ -276,24 +293,33 @@ export function bindInput(
             updateHover();
             return;
           }
-          drag.lastTile = `${drag.downTile.x},${drag.downTile.y}`;
+          drag.lastTile = tileKey(drag.downTile);
           tileAction(drag.startX, drag.startY, false);
         }
-        // Weg-Zug immer über die Bodenkachel; ausserhalb der Karte ignorieren
-        const t = targetTile(state.world, state.cam, state.tool, p.sx, p.sy);
-        const key = t ? `${t.x},${t.y}` : null;
+        // Weg-Zug immer über die Bodenkachel; ausserhalb der Karte (Meer) ignorieren
+        const t = pickTarget(state.world, state.cam, state.tool, p.sx, p.sy);
+        const key = t ? tileKey(t) : null;
         if (t && key !== drag.lastTile) {
           // Start ausserhalb der Karte: erste Kachel im Feld selbst setzen
-          if (drag.lastTile === null) onAction({ type: 'tile', x: t.x, y: t.y, dragging: true });
-          const from = drag.lastTile?.split(',').map(Number) ?? [t.x, t.y];
+          if (drag.lastTile === null)
+            onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging: true });
+          const from =
+            drag.lastTile !== null && drag.lastTile.startsWith(`${t.island}:`)
+              ? drag.lastTile
+                  .slice(drag.lastTile.indexOf(':') + 1)
+                  .split(',')
+                  .map(Number)
+              : [t.x, t.y]; // andere Insel: nicht über das Meer interpolieren
           let cx = from[0] ?? t.x;
           let cy = from[1] ?? t.y;
           // Kachelweise von der letzten zur neuen Kachel laufen, damit keine Lücken entstehen
           while (cx !== t.x || cy !== t.y) {
             if (Math.abs(t.x - cx) >= Math.abs(t.y - cy)) cx += Math.sign(t.x - cx);
             else cy += Math.sign(t.y - cy);
-            onAction({ type: 'tile', x: cx, y: cy, dragging: true });
+            onAction({ type: 'tile', island: t.island, x: cx, y: cy, dragging: true });
           }
+          if (drag.lastTile !== null && !drag.lastTile.startsWith(`${t.island}:`))
+            onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging: true });
           drag.lastTile = key;
         }
       }
@@ -315,18 +341,41 @@ export function bindInput(
     if (d.panning || d.button !== 0) return;
     if (d.select && !d.touch) {
       const up = local(e);
-      if (d.downTile && !exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })) {
-        onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+      const ship = exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })
+        ? null
+        : shipAt(state.world, state.cam, up.sx, up.sy);
+      if (ship !== null) {
+        onAction({ type: 'ship', id: ship });
+      } else if (d.downTile && !exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })) {
+        onAction({
+          type: 'tile',
+          island: d.downTile.island,
+          x: d.downTile.x,
+          y: d.downTile.y,
+          dragging: false,
+        });
       }
     } else if (d.road) {
       // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
       if (d.touch && d.lastTile === null && d.downTile) {
-        onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+        onAction({
+          type: 'tile',
+          island: d.downTile.island,
+          x: d.downTile.x,
+          y: d.downTile.y,
+          dragging: false,
+        });
       }
       onAction({ type: 'dragEnd' });
     } else if (d.touch && d.downTile) {
       // Touch: Aktion beim Loslassen, aber auf der Drück-Kachel
-      onAction({ type: 'tile', x: d.downTile.x, y: d.downTile.y, dragging: false });
+      onAction({
+        type: 'tile',
+        island: d.downTile.island,
+        x: d.downTile.x,
+        y: d.downTile.y,
+        dragging: false,
+      });
     }
     // Maus: Bau/Abriss/Strassen liefen schon beim Drücken; Auswahl beim Loslassen (oben)
     updateHover();
@@ -377,6 +426,7 @@ export function bindInput(
       e.key,
       { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
       isTextField(e.target) || modal,
+      functionLock(state.world, 'seafaring') === null,
     );
     if (hot) {
       if (!e.repeat) onAction({ type: 'hotkey', action: hot });

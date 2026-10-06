@@ -209,8 +209,10 @@ describe('playShortage', () => {
 
 describe('Arbeitston: Daten', () => {
   it('jede produzierende Art hat eine Gruppe; Rückfall für Unbekanntes', () => {
-    for (const id of BUILDING_IDS.filter((b) => BUILDING_DEFS[b].produces))
+    // M12 T02: spicefarm ohne eigene Gruppe, bis der Audio-Strang sie zuordnet (Rückfall)
+    for (const id of BUILDING_IDS.filter((b) => BUILDING_DEFS[b].produces && b !== 'spicefarm'))
       expect(WORK_SOUND_OF[id], id).toBeDefined();
+    expect(workGroupName('spicefarm')).toBe(WORK_FALLBACK);
     for (const g of Object.values(WORK_SOUND_OF)) expect(WORK_GROUPS[g]).toBeDefined();
     expect(workGroupName('xyz')).toBe(WORK_FALLBACK);
     expect(workGroupName('constructor')).toBe(WORK_FALLBACK);
@@ -324,7 +326,7 @@ describe('playWork', () => {
 
 describe('S1-Rest Mangelstimmen-Schlüssel', () => {
   // Waren, die bewusst auf die Grundstimme fallen; eine neue Ware muss hier oder in SHORTAGE_VOICES landen.
-  const BASE_VOICE_GOODS = ['tools', 'cane'];
+  const BASE_VOICE_GOODS = ['tools', 'cane', 'spice'];
   it('S1-Rest: jeder Schlüssel von SHORTAGE_VOICES ist eine echte Gut-ID der Sim', () => {
     for (const k of Object.keys(SHORTAGE_VOICES)) expect(GOOD_IDS as string[]).toContain(k);
   });
