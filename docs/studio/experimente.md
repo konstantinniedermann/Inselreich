@@ -26,7 +26,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `.gitattributes`, `.claude/agents/production-integrator.md`, `.claude/agents/lead-production.md`, `docs/studio/STUDIO.md` (Merge), `docs/studio/CHANGELOG.md`
 - Ruling: R201
 - Start: Handbuch 1.15 (Persona-Fassungen gelten ab einem späteren Zug)
-- Bewertung: – (Datenpunkt, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N4: 1 Formatabweichung in `docs/beobachtungen.md` nach union-Merge in REL-02, vom Integrator behoben; 0 Konflikte; Zeitraum M12 nicht begonnen)
+- Bewertung: – (Datenpunkt, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N4: 1 Formatabweichung in `docs/beobachtungen.md` nach union-Merge in REL-02, vom Integrator behoben; 0 Konflikte; Zeitraum M12 nicht begonnen); Datenpunkt 2 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md) B3): 0 Konflikte, 1 Formatabweichung nach Union-Merge in REL-05 (R276), keine Hauptcheckout-Vorfälle belegt → weiter beobachten
 
 ## E-027 · laufend · Discovery-Strang mit Ideen-Pool
 
@@ -37,7 +37,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `docs/studio/STUDIO.md` (Discovery-Strang), `.claude/agents/lead-design.md`, `.claude/agents/design-idea-scout.md` (neu), `docs/studio/roster.md`, `tools/studio/tests/test_model.py` (`PERSONA_NAMES`), `docs/ideen.md` (neu), `docs/studio/CHANGELOG.md`
 - Ruling: R208, Zählregel R224 (5) (Handbuch 1.18)
 - Start: 2026-10-04 (Handbuch 1.16)
-- Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus); Datenpunkt 2 von 3 Runden, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: IDEEN-02 mit 1 Start, 2 von 4 Ideen eingeplant (H-A2 live in REL-02, I-007 für REL-04), 2 Studio-Ideen live (Schwelle ≥ 2 erreicht), Studio-Anteil live 2 von 5 Häppchen, eingeplant je nach Zählregel offen; Nutzer-Einwände 0) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 Studio-Anteil 1 von 4 = 25 % (H-U1/I-001), M12-Bausteine I-004/I-006/I-008 eingeplant (R225); IDEEN-02 offen.
+- Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus); Datenpunkt 2 von 3 Runden, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: IDEEN-02 mit 1 Start, 2 von 4 Ideen eingeplant (H-A2 live in REL-02, I-007 für REL-04), 2 Studio-Ideen live (Schwelle ≥ 2 erreicht), Studio-Anteil live 2 von 5 Häppchen, eingeplant je nach Zählregel offen; Nutzer-Einwände 0) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 Studio-Anteil 1 von 4 = 25 % (H-U1/I-001), M12-Bausteine I-004/I-006/I-008 eingeplant (R225); IDEEN-02 offen. Messwert 3 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md)): R250–R277 ohne `I-nnn`-Ruling, IDEEN-03 nicht belegt und fällig → weiter beobachten.
 
 ## E-030 · laufend · Zeittests lokal seriell
 
@@ -48,7 +48,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Dateien: `vite.config.ts`, `Makefile` (Paket TOOL-E030, lead-tech); `docs/studio/STUDIO.md` (Lastregel, Handbuch 1.19)
 - Ruling: R249 (3), R250 (Start), R251 (Platz nach Abschluss E-028)
 - Start: 2026-10-05 (Handbuch 1.20, Paket TOOL-E030)
-- Bewertung: –
+- Bewertung: Datenpunkt 1 von 2 Sessions ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md)): 0 neue Flacker-Einträge seit dem Start, zwei rote CI-Läufe waren fehlende Runner-Reserve, kein lokales Flackern; Lead-Berichte nicht ausgewertet → weiter beobachten
 
 ## E-029 · vorgeschlagen · Lead-Übergabe bei 200k mit Aufschlüsselung der Steuerung
 
