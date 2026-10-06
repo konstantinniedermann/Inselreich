@@ -145,10 +145,12 @@ flowchart TB
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `defs/goods.ts`, `buildings.ts`, `tiers.ts`, `timing.ts` | Spielwerte: Güter und Preise, Verkaufssättigung (`SELL_DROP`, `SELL_FLOOR`), Auftragsgüter und `ORDER_PREMIUM`, Lagerkapazität, Startkapital; Gebäude mit Kosten, Unterhalt, Zyklus, Standortregeln und Krisen-Flags (`flammable`, `stormAffected`, `fireProtection`); Stufen mit Bedürfnissen, Diensten, Steuern, Aufstiegskosten, Siegziel, Steuerstufen (`TAX_LEVELS`); Takte (Buchung, Wachstum, Steuersperre, Markt-Erholung, Aufträge, Krisen: `CRISIS_FIRST_TICK`, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`).                       |
 | `defs/map.ts`                                            | Kartenwert `MIN_MOUNTAIN_PATCH`: kleinste zulässige Gebirgsfläche in Kacheln.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `defs/sea.ts`                                            | Inselwerte (M12 E1): `ISLANDS` (A „Möweninsel" 24 × 24, B „Felsbucht" 36 × 36, Merkmale, Seeweg `dMin`/`dMax`, Plantagen- und Steinbruchplätze), `ISLANDS_SALT`, `ISLAND_TRIES`, `ISLAND_GAP_MIN`, `ARCHIPEL_SPAN_MAX`, `ISLAND_RIM`, `SHIP_TICKS_PER_SEA_TILE`, Ersatzform-Werte `FALLBACK_*`, `PLANTATION_SITE`, `TRAIT_LABELS`.                                                                                                                                                                                                          |
 | `defs/crises.ts`                                         | Krisenwerte: Stufen `CRISIS_LEVELS` (`off`, `mild`, `normal` mit Periode), Standardstufen für Welt und neues Spiel, Gewichte `CRISIS_WEIGHTS`, `FIRE_HIT_RADIUS`, `BOOM_PCT`, `STORM_TICK_DIVISOR`, `CRISIS_SALT` (ADR-010).                                                                                                                                                                                                                                                                                                                |
 | `types.ts`                                               | Datentypen (`World`, `Tile`, `Building`, `HouseState`, `Order`, `TaxLevel`, `CrisisLevel`, `Crisis`, `Result`) und die Helfer `ok`/`fail`.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `noise.ts`, `rng.ts`                                     | Seed-basiertes Value-Noise für die Karte; `rng.ts` (mulberry32) liefert je Auftrags- und je Krisenperiode eine neue Zufallsfolge (ADR-010).                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `mapgen.ts`                                              | Erzeugt die Insel aus einem Seed, prüft die Nachbedingungen, sucht den Kontor-Standort am Meer (nie an einem Binnensee); Gebirgsflecken unter `MIN_MOUNTAIN_PATCH` werden Wiese.                                                                                                                                                                                                                                                                                                                                                            |
+| `islands.ts`                                             | Fremdinseln und Archipel (M12 E1, ADR-013 Nachtrag): `generateForeignIslands(seed, home)` (eigener Strom `seed ^ ISLANDS_SALT`, Lage nach Richtung und Seeweg, danach 16 feste Ersatzrichtungen; Form samt Bauplätzen und Anker mit Ersatzform), `homeAnchor`, `seaLanes`/`seaLength` (Seeweg `d` nur ausserhalb der Inselrechtecke, D-139), `travelTicks`. Rein, ohne Weltzugriff.                                                                                                                                                         |
 | `world.ts`                                               | `createWorld(seed, { crisisLevel? })` (Standard `off`; eine Insel in `islands[0]`) und Zugriffshelfer, die die Insel als Parameter nehmen (`idx`, `inBounds`, `tileAt`, Footprint, Nachbarn, Radius, Mittelpunkt) sowie `HOME`, `home`, `islandOf` (ADR-013).                                                                                                                                                                                                                                                                               |
 | `coverage.ts`                                            | Quellen der Abdeckung je Insel: `isSupplySource` (Kontor der eigenen Insel oder angebundener Markt), `serviceBuildings` (Id-Reihenfolge), `buildCoverage` (ein Durchlauf, nur innerhalb von `tickPopulation`, nie im Save), `distance` (ADR-013).                                                                                                                                                                                                                                                                                           |
 | `placement.ts`                                           | `canPlace`/`canPlaceRoad`: Bausperre `buildLock` (M10: Sperre aus `unlocks.ts`, geprüft zuerst; `buy` prüft `goodLock`, `deliverOrder` `functionLock`), Kartenrand, Bauland, Belegung und Standortregeln, mit deutschem Grund. M11: `siteRuleOk` (exportiert, für die Live-Prüfung in `production.ts`); Regelfeld `free` zählt nur freie Kacheln ausserhalb des eigenen Grundrisses.                                                                                                                                                        |
@@ -178,7 +180,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  W["World"] --> I["islands[i]: width, height, tiles, kontorId, stock"]
+  W["World"] --> I["islands[i]: kind, width, height, tiles, kontorId, stock, ox, oy, anchor"]
   W --> B["buildings (global, Id-Reihenfolge)"]
   W --> G["global: tick, money, nextBuildingId, Steuer, Auftrag, Krise, Statistik"]
   B -- "island (Pflichtfeld)" --> I
@@ -189,8 +191,13 @@ flowchart TB
 Raster, Kontor und Lager gehören zur Insel; die Gebäudeliste und die Id-Vergabe sind global, jedes Gebäude trägt
 `island`. Es gibt keine Aliase auf `World`; Zugriffe laufen über die Helfer in `world.ts`. Ein ungültiger Inselindex
 bei einer Aktion ergibt `{ ok: false, reason }` (`islandAt` in `placement.ts`). Der Renderer bildet seine Geländefelder
-aus der Heimatinsel über `fieldWorld(world)` (`src/render/terrainField.ts`, flache Kopie samt Seed, je Welt
-zwischengespeichert).
+aus einer Insel über `fieldWorld(world)` (`src/render/terrainField.ts`, flache Kopie samt Seed, je Welt
+zwischengespeichert); ab E1 bekommt jede Fremdinsel ihre Felder aus `islandView(world, i)` (`archipel.ts`).
+
+Ab E1 (Save v8) tragen die Inseln zusätzlich `kind` (`home`, `A`, `B`), `ox`, `oy` (Ursprung im Archipel) und
+`anchor` (Wasserkachel für den Seeweg); die Heimat liegt bei 0/0, die Fremdinseln haben `kontorId null` und Lager 0.
+Darstellung des Archipels: siehe Querschnitt „Darstellung des Archipels" und den Nachtrag in
+[ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md).
 
 ### Ebene 2: `src/render/`
 
@@ -204,6 +211,8 @@ Modulschnitt nach ISO §4: `iso.ts` kennt keine Kamera und importiert `sprites.t
 | `palette.ts`      | Alle Farben (Spec 4.2) und Mischhelfer; andere Module leiten Zwischentöne daraus ab.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `terrainField.ts` | Reine Felder im Kachelraum: Küstenabstand, Terrainanteile, Verwerfung (`warp`), Tiefe; Grundlage für Boden, Schaum, Möwen und Klang.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `terrain.ts`      | Bodentextur im Kachelraum in einer Offscreen-Ebene (`TEX` = 32 px je Kachel × Faktor 1, ab DPR 1,5 Faktor 2; halbe Kopie für Zoom ≤ 0,5); Teil-Neuzeichnung nach Bauaktionen über `layoutKey`. Ohne Baumkronen. H-R13: Aus dem geglätteten Gebirgsfeld (`foothillField`) wachsen vor dem Massiv Vorberge (Rücken parallel zum Massivrand, Aufstieg, weiche Warm/Kühl-Verschiebung je Lichtseite), die Hanggrenze S6 bleibt gewahrt; am Fuss mischt ein stetiges Schuttband (`scree`) den Kies des Massivs in die Wiesenstufen, das Massiv-Innere bleibt unverändert.                                                                                                                                                                                                                               |
+| `archipel.ts`     | Archipel-Mathematik (M12 E1), rein: `islandCam` (Inselkamera), `visibleIslands` (Culling, Tiefenfolge `ox + oy`), `pickArchipel`, `archipelRect`, `cameraBounds` (Rahmen + `CAMERA_MARGIN` 8), `islandView` (Welt mit einer Insel, nur lesend, `buildings` leer), `LOD_ZOOM` 0,25, `ARCHIPEL_VIEW` (`sea`; Streichvariante `jump`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `cachePlan.ts`    | Cache-Aufbau in Scheiben (M12 E1), rein, Uhr eingespeist: `createCachePlan` (`idle` höchstens `SLICE_MS` = 8 ms je Scheibe, Kostenschätzung mit `WORST_DECAY`, `solo`-Schritte, `finish` als Notfall), Dev-Messreihen `sliceMs`/`emergencyMs`. `terrainJob` in `terrain.ts` liefert die Schritte (`GRID_BAND_ROWS`, `SLICE_ROWS`, `QUARTER_STRIPS`).                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `dunes.ts`        | Reine Dünen-Mathematik (H-R12b, D1, E-017): schiefer Sinus über dem auf Kachelebene geglätteten Küstenwert, Ton aus dem Lichtgefälle je Knoten, Präsenz als Produkt stetiger Faktoren, Rippeln nach der Stufung; `terrain.ts` stuft je Pixel (Sandzweig).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `groundDecor.ts`  | Reine Deko-Helfer für die Bodentextur (R149): Blumen auf Gras, Büsche am Waldrand, deterministisch aus Seed und Kachel; `terrain.ts` zeichnet sie in die Ebene.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `trees.ts`        | Baumstempel je Variante (8) aus drei Arten (Laub-, Nadel-, heller Laubbaum, R149), gecacht als kleine Canvas; Schatten und Bildbox je Baum.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -264,6 +273,8 @@ Modulschnitt nach ISO §4: `iso.ts` kennt keine Kamera und importiert `sprites.t
 | `messages.ts`      | Meldungen (Toasts), begrenzt und entdoppelt; Warn-Toast; sticky Meldungen für Fehler; Sieg-Toast per Klick, Esc oder Rechtsklick schliessbar (`closeClosableToast`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `storage.ts`       | Adapter zu `localStorage` für manuellen Platz und Autosave; listet ladbare Stände; `storageProblem` (nicht verfügbar, beschädigt) für Startkarte und Menü; `autosaveOnHide` (still, nie bei Tick 0); fängt Speicherfehler ab und liefert `Result`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `hover.ts`         | Mouse-over-Karte (M10, Spec 13), rein: `hoverInfo` (Priorität Tier > Schiff > Gebäude > Weg > Gelände), `hoverVisible` (400 ms Ruhe, `HOVER_DELAY_MS`), `hoverPosition`; Betriebstitel mit Stufe und Auslastung, Zustand `noForest` aus der Sim; DOM-Karte baut `app.ts`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `islandLayers.ts`  | Ebenen der Fremdinseln (M12 E1), rein: `createIslandLayers` (Heimat sofort, Plan nach dem ersten Frame, Notfall zählt `emergencyFrames`), `idleSchedule` (`requestIdleCallback` mit `IDLE_TIMEOUT_MS` 100, sonst `setTimeout`). `app.ts` hält den Plan (`planOf`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `islandCard.ts`    | Text der Inselkarte beim Mouse-over über einer Fremdinsel (`formatIslandCard`, `islandCard`): Name, Grösse, Merkmale, Fahrzeit; `hover.ts` ruft `foreignHover` über `pickArchipel`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `icons.ts`         | Symbolsatz (M10, Spec 14): 24 Symbole als statisches SVG (`ICONS`, `iconSvg`); eingesetzt nur auf dunklen Chips (`iconChip` in `messages.ts`, Auflage R181).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `dom.ts`           | Kleine DOM-Helfer (`setField`, `costLine` „50 Geld · 2 Holz · 1 Werkzeug", `blurAfterClick` nur bei Mausklick).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
@@ -478,6 +489,38 @@ sequenceDiagram
 
 Esc und Hintergrund-Klick lösen die primäre Wahl aus; bei offener Bestätigung brechen sie ab. Die Startkarte
 öffnet dieselbe Karte im Hilfe-Modus aus dem Menü („Ziel und erste Schritte", ohne Wahl, Tempo bleibt).
+
+### Start: Heimat sofort, Fremdinseln im Leerlauf (M12 E1)
+
+```mermaid
+sequenceDiagram
+  participant App as app.ts
+  participant L as islandLayers
+  participant P as cachePlan
+  participant T as terrain.terrainJob
+  participant R as renderer
+  App->>R: erster Frame, nur Heimatebene
+  R->>L: get(0) liefert die Heimatebene
+  R->>App: Frame fertig
+  App->>L: frameDone()
+  L->>L: Leerlauf planen, requestIdleCallback mit Timeout 100 ms
+  loop je Leerlauf-Slot, bis alle Fremdinseln fertig
+    L->>App: plan.idle() über planOf()
+    App->>T: beim ersten Mal terrainJob(islandView(world, i)) je Fremdinsel
+    App->>P: createCachePlan(jobs, Uhr)
+    P->>P: Schritte bis SLICE_MS = 8 ms, solo-Schritt allein
+  end
+  R->>L: get(i) für eine Fremdinsel im Bild
+  alt Ebene nicht fertig
+    L->>P: finish(i), Notfall synchron
+    L->>L: emergencyFrames zählt einmal je Frame
+  end
+```
+
+Der Plan entsteht erst bei `idle`/`finish`; `done` legt ihn nie an, damit `cachesReady()` der Dev-Sonde vor dem ersten
+Frame `false` meldet. Die Neuplanung hängt an `ready()`, nicht an der Scheibendauer; nach `MAX_IDLE_ZERO` = 200
+Slots ohne Fortschritt greift der Notfall. Jede Scheibe ist höchstens `SLICE_MS` lang (Messung: AK-E1-19, ADR-013
+Nachtrag).
 
 ## 7. Verteilungssicht
 
@@ -765,6 +808,20 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   der Credits-Dialog listet Manifest und `FONT_CREDITS`. Nur bei leerer Liste zeigt er „Fremde Assets sind derzeit
   nicht eingebunden".
 
+### Darstellung des Archipels (M12 E1, ADR-013 Nachtrag)
+
+- **Koordinaten:** Inseln liegen bei `ox`, `oy` im Archipel-Raum; jeder Zeichner rechnet in Inselkoordinaten, die
+  Kamera je Insel liefert `islandCam`. Culling (`visibleIslands`) und Picking (`pickArchipel`) laufen je Insel; die
+  Kamera bleibt im Rahmen `cameraBounds` (Archipel + 8 Kacheln). Mindestzoom 0,125 (`ZOOM_STEPS`).
+- **Detailstufe:** Ab Zoom ≤ `LOD_ZOOM` (0,25) entfallen Figuren, Tiere, Rauch, Schaum und Wellen; der Boden kommt aus
+  der Viertel-Kopie (halbe Kopie bei Zoom ≤ 0,5, `terrain.ts`).
+- **Speicher:** `ARCHIPEL_EXTRA_BYTES` in `limits.ts` (≈ 44,5 MB bei `ARCHIPEL_LAYER_SCALE` 2) zusätzlich zu Sprite-
+  und Massiv-Cache.
+- **Last:** Fremdinseln werden im Leerlauf in Scheiben ≤ 8 ms gerastert, nie im Erstbild; der Notfall rastert
+  synchron (ein Frame kann 160–450 ms dauern). Die Heimat bleibt bildgleich und im Takt gleich zu E0.
+- **Ansicht:** `islandView` ist nur lesend; Gebäude auf Fremdinseln folgen mit E2. `ARCHIPEL_VIEW 'jump'` ist die
+  Streichvariante (nur die aktive Insel).
+
 ### Persistenz
 
 - `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 8`,
@@ -796,6 +853,12 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
   Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`, ein
   v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`. Die Fixtures `save-v6.json` und `save-v6-locks.json` belegen die Migration v6 → v7.
+- **Save v8 und Ladeprüfung (M12 E1):** `migrateV7ToV8` wirft nie; aus einem v7-Stand baut sie die Heimat um
+  (`kind`, `ox`, `oy`, `anchor` über `homeAnchor`) und erzeugt A und B aus `seed` (`generateForeignIslands`). Lässt sich
+  der Stand nicht aufbauen, setzt sie nur die Version, und die Prüfung meldet `Beschädigter Spielstand`. Die Prüfung
+  verlangt `1 + ISLANDS.length` Inseln, die Art je Index, Rastergrenzen je Insel, ganzzahlige `ox`/`oy`, `anchor` im
+  Raster und für Fremdinseln `kontorId null`. Eine unbekannte Version (zum Beispiel 9) ergibt `Unbekannte Version`. Nach
+  R261 müssen ältere Stände nicht ladbar sein; dass v7 hier trotzdem lädt, ist ein Entgegenkommen des Codes.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
   Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
   (`CRISIS_FIRST_TICK`, Periodenlängen, `STORM_*`, `FIRE_OUTAGE`, `BOOM_DURATION`) gehen dagegen in die
@@ -881,27 +944,27 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 
 ## 9. Architekturentscheidungen
 
-| Entscheidung                                                                                     | Dokument                                                                |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| TypeScript, Vite, Canvas 2D, keine Laufzeit-Abhängigkeiten (Ausnahmen nur per ADR und L0-Ruling) | [ADR-001](adr/ADR-001-tech-stack.md)                                    |
-| Simulation als reines Datenmodell, getrennt von Darstellung                                      | [ADR-002](adr/ADR-002-sim-render-trennung.md)                           |
-| Top-down statt Isometrie im MVP (ersetzt durch ADR-012)                                          | [ADR-003](adr/ADR-003-topdown-statt-isometrie.md)                       |
-| Eigener Titel, eigene Grafik, eigene Spielwerte (abgelöst)                                       | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
-| Tick-Reihenfolge und Zustandssemantik der Gebäude                                                | [ADR-005](adr/ADR-005-tick-reihenfolge-und-zustaende.md)                |
-| Eigene oder offen lizenzierte Inhalte mit Nachweis                                               | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
-| Studio-Hierarchie                                                                                | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
-| Studio-Telemetrie                                                                                | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
-| Studio-Autonomie und Lernen                                                                      | [ADR-009](adr/ADR-009-studio-autonomie-und-lernen.md)                   |
-| Zufall je Auftragsperiode aus dem Seed statt RNG-Strom                                           | [ADR-010](adr/ADR-010-zufall-je-periode.md)                             |
-| Balancing-Revision (Steuern, Luxusverbrauch)                                                     | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
-| M5: Steuerregler, Sättigung, Aufträge, Ambiente, Save v2                                         | [M5-Spec](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md)      |
-| Asset-Pipeline: Ablage `public/`, Formate, Budget, Laden nach Bedarf, Manifest, Nachweis         | [ADR-011](adr/ADR-011-asset-pipeline.md)                                |
-| Isometrische Darstellung, Kachelraum bleibt die Wahrheit, Picking über den Körper                | [ADR-012](adr/ADR-012-isometrische-darstellung.md)                      |
-| Inselmodell im Weltzustand: Raster, Kontor und Lager je Insel, Gebäudeliste global, Save v7      | [ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md)                    |
-| M6: Krisen, Feuerwache, Save v3                                                                  | [M6-Spec](superpowers/specs/2026-09-30-m6-krisen-design.md)             |
-| M7: Licht, Wetter, Leben, Ton mit Bussen, Einstellungen                                          | [M7-Spec](superpowers/specs/2026-09-30-m7-stimmung-design.md)           |
-| M7: Isometrie im Detail (Projektion, Ebenen, Picking, Tests)                                     | [Nachtrag M7-ISO](superpowers/specs/2026-10-01-m7-iso-design.md)        |
-| Picking über die gezeichnete Silhouette (Auslegung ADR-012 Punkt 6)                              | Ruling R113 (`docs/studio/rulings.md`)                                  |
+| Entscheidung                                                                                                                                 | Dokument                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| TypeScript, Vite, Canvas 2D, keine Laufzeit-Abhängigkeiten (Ausnahmen nur per ADR und L0-Ruling)                                             | [ADR-001](adr/ADR-001-tech-stack.md)                                    |
+| Simulation als reines Datenmodell, getrennt von Darstellung                                                                                  | [ADR-002](adr/ADR-002-sim-render-trennung.md)                           |
+| Top-down statt Isometrie im MVP (ersetzt durch ADR-012)                                                                                      | [ADR-003](adr/ADR-003-topdown-statt-isometrie.md)                       |
+| Eigener Titel, eigene Grafik, eigene Spielwerte (abgelöst)                                                                                   | [ADR-004](adr/ADR-004-eigene-assets.md)                                 |
+| Tick-Reihenfolge und Zustandssemantik der Gebäude                                                                                            | [ADR-005](adr/ADR-005-tick-reihenfolge-und-zustaende.md)                |
+| Eigene oder offen lizenzierte Inhalte mit Nachweis                                                                                           | [ADR-006](adr/ADR-006-offene-lizenzen.md)                               |
+| Studio-Hierarchie                                                                                                                            | [ADR-007](adr/ADR-007-studio-hierarchie.md)                             |
+| Studio-Telemetrie                                                                                                                            | [ADR-008](adr/ADR-008-studio-telemetrie.md)                             |
+| Studio-Autonomie und Lernen                                                                                                                  | [ADR-009](adr/ADR-009-studio-autonomie-und-lernen.md)                   |
+| Zufall je Auftragsperiode aus dem Seed statt RNG-Strom                                                                                       | [ADR-010](adr/ADR-010-zufall-je-periode.md)                             |
+| Balancing-Revision (Steuern, Luxusverbrauch)                                                                                                 | [Kurz-Spec Balancing](superpowers/specs/2026-09-30-balancing-design.md) |
+| M5: Steuerregler, Sättigung, Aufträge, Ambiente, Save v2                                                                                     | [M5-Spec](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md)      |
+| Asset-Pipeline: Ablage `public/`, Formate, Budget, Laden nach Bedarf, Manifest, Nachweis                                                     | [ADR-011](adr/ADR-011-asset-pipeline.md)                                |
+| Isometrische Darstellung, Kachelraum bleibt die Wahrheit, Picking über den Körper                                                            | [ADR-012](adr/ADR-012-isometrische-darstellung.md)                      |
+| Inselmodell im Weltzustand: Raster, Kontor und Lager je Insel, Gebäudeliste global, Save v7; Nachtrag E1: Darstellung des Archipels, Save v8 | [ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md)                    |
+| M6: Krisen, Feuerwache, Save v3                                                                                                              | [M6-Spec](superpowers/specs/2026-09-30-m6-krisen-design.md)             |
+| M7: Licht, Wetter, Leben, Ton mit Bussen, Einstellungen                                                                                      | [M7-Spec](superpowers/specs/2026-09-30-m7-stimmung-design.md)           |
+| M7: Isometrie im Detail (Projektion, Ebenen, Picking, Tests)                                                                                 | [Nachtrag M7-ISO](superpowers/specs/2026-10-01-m7-iso-design.md)        |
+| Picking über die gezeichnete Silhouette (Auslegung ADR-012 Punkt 6)                                                                          | Ruling R113 (`docs/studio/rulings.md`)                                  |
 
 ## 10. Qualitätsanforderungen
 
