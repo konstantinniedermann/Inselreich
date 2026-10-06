@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 const registry = new Set();
 const profiles = new Set();
 const killGroup = (pid, sig) => {
+  if (!Number.isInteger(pid) || pid <= 1) return;
   try {
     process.kill(-pid, sig);
   } catch {
@@ -24,16 +25,17 @@ export function spawnTracked(cmd, args, opts = {}) {
   const child = spawn(cmd, args, { stdio: 'ignore', ...opts, detached: true });
   child.exited = new Promise((r) => child.once('exit', r));
   registry.add(child);
+  child.once('exit', () => registry.delete(child));
   return child;
 }
 
-/** SIGTERM an die Gruppe, nach kurzer Frist SIGKILL auf dieselbe Gruppe. */
+/** SIGTERM an die Gruppe; SIGKILL nur, wenn das Kind nach kurzer Frist noch läuft (nie nach bestätigtem Exit). */
 export async function stopTracked(child, graceMs = 1500) {
-  if (child.pid) {
+  const alive = () => child.exitCode === null && child.signalCode === null;
+  if (child.pid && alive()) {
     killGroup(child.pid, 'SIGTERM');
-    if (child.exitCode === null && child.signalCode === null)
-      await Promise.race([child.exited, sleep(graceMs)]);
-    killGroup(child.pid, 'SIGKILL');
+    await Promise.race([child.exited, sleep(graceMs)]);
+    if (alive()) killGroup(child.pid, 'SIGKILL');
   }
   registry.delete(child);
 }
