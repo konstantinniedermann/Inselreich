@@ -1950,3 +1950,225 @@ Integrator mergt nach `main`, `make check`, Push, CI- und Pages-Lauf prüfen. Da
 Plan-Index → hiermit erlaubt, nur dieser Merge). — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E030 · ADR: —
+
+## R253 · 2026-10-05 · ZEITTESTS-Einträge für E1-Zeittests
+
+Ruling: Nach Merge von `main` @ 39f0b5f (E-030) meldet der Wächter `make zeittests` zwei E1-Zeittests ausserhalb der
+Liste: `tests/render/renderer.test.ts` (R3-Verhältnis) und `tests/sim/save.test.ts` (B6). Freigabe für lead-tech E1:
+genau diese zwei Einträge in `ZEITTESTS` in `vite.config.ts` auf `feat/m12-e1`, ein eigener Commit `test:`, sonst
+nichts an `vite.config.ts`. `feat/m12-see` trägt beide Tests seit M0 ebenfalls: lead-tech See übernimmt nach seinem
+Main-Merge **genau diesen Commit per `git cherry-pick`** (inhaltsgleich, damit der spätere E1-Merge konfliktfrei
+bleibt), nicht von Hand nachschreiben. Neue Zeittests der Stränge tragen sich künftig selbst in `ZEITTESTS` ein
+(gehört zur Testdatei). — Kosten bei Irrtum: Merge-Konflikt in einer Listenzeile.
+
+Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 · ADR: —
+
+## R254 · 2026-10-05 · Seefahrt C1 abgenommen, D-145, Start C2 (e2 ∥ e4)
+
+Ruling: Seefahrt C1 (`feat/m12-see` @ 7ddcfb5: T00–T02 je Review OK, T02 nach einer Fix-Runde; Merges M0, main
+39f0b5f, Cherry-pick R253 = fcdabe9) angenommen, ebenso die Controller-Entscheide C1-1 (Fixture mit 4 Häusern, Fall
+„11 Häuser" über `village(11)`) und C1-2 (Gewürz in U6 und Routen-Werte aus T02 vorgezogen). Ledger-Pfad
+`.superpowers/sdd/m12-see/int.md` nach Plan-Konvention übernommen. **D-145:** Schranke Sprite-Speicher (H-R7 AK7,
+`variants.test`) 1,25 → 1,30 angenommen (+26 % durch `kontor2`/`spicefarm`, LRU-gedeckelt); der render-Strang misst
+bei jedem weiteren Gebäudetyp neu, T10/T11 entfernen die Fallback-Ausnahmen. **C2 startet** mit neuem lead-tech
+(Kontext des C1-Leads > 160k, Lead-Übergabe): Stränge **e2** (T03, T04) und **e4** (T08, T09) parallel ab 7ddcfb5;
+render wartet auf M1 (E1-T08 OK), e3 auf T04 OK. Budget aus R241: 12 Starts, Parallelität 3 (studioweit ≤ 5 neben
+E1 C3). — Kosten bei Irrtum: Schranke zurück auf 1,25 mit eigener Silhouette.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C1 · ADR: —
+
+## R255 · 2026-10-05 · Seefahrt C2 abgenommen, Start C3 (e3), Inaktiv-Meldung
+
+Ruling: Seefahrt C2 angenommen: e2 `feat/m12-see-e2` @ 570420b (T03, T04), e4 `feat/m12-see-e4` @ 5ba5905 (T08, T09),
+je Review OK, Pins unverändert. Controller-Entscheide **C2-1 … C2-5 bestätigt**; C2-3 berührt `economy.ts`
+(`checkAfford`) und `placement.test.ts` ausserhalb der e2-Ownership — nachträglich genehmigt, T14 prüft die
+Zusammenführung mit dem e4-Hunk; C2-5 (`islands-gen.test.ts`) ist Merge-Punkt für M2. Commit-Text 1d77725
+(`RED_PLACEHOLDER`) bleibt, Beleg in c70d887. Überschreitung der Übergabeschwelle (8 Starts in einer Instanz, R190)
+als Befund an die Kurz-Retro. **C3 startet** mit neuem lead-tech: Strang **e3** (T05–T07) ab 7ddcfb5 mit Quer-Merge e2
+@ 570420b; Budget aus R241: 8 Starts, Parallelität 2. render und e2-UI (T10–T13) warten auf M1. **Inaktiv-Meldung
+tech-ui-engineer (E1 C3, T07):** Heartbeats alle ~10 min aus langen Bash-Messläufen — Messartefakt nach lernen.md,
+keine Ad-hoc-Retro. — Kosten bei Irrtum: Retro nachholen; C2-Entscheide in T15 vereinheitlichen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C2, Hook-Meldung · ADR: —
+
+## R256 · 2026-10-05 · D-146 Folgen von TIERS[4] in Fremddateien (Seefahrt T05)
+
+Ruling: Empfehlung lead-tech angenommen. (a) e3 darf `tests/sim/fixtureV8.ts` (Eigentum int, dort ruht die Arbeit bis
+T14) so ändern, dass das Rezept mit den v8-Werten rechnet (`TIERS[4]` ohne Gewürz, Steuer 20; `feedSpice` nur, wenn
+die Stufe Gewürz verlangt); Fixture und `save.test.ts` bleiben bytegleich. (b) e3 passt die Pins in `tests/ui/hud.test.ts`
+(AK-UX-07, AK-S1-18), `tests/render/overlays.test.ts` (AK-R1-03) und `flow.test.ts` (AK-P1-11) an, je Kommentar
+`R226 F-03`; die Pin-Liste Anhang 03 D wird im e3-Ledger erweitert, T16 überträgt sie in die Spec. (c) Hinweistext
+`guide.ts` AK-U2-08 (d): Wortlaut nach Spec Anhang 03 D „kaufe es am Kontor oder gründe ein Kontor auf einer
+Gewürzinsel", ohne Tastenklammer, wenn das Gebäude in der Heimat nicht baubar ist (leere „()" ist ein Fehler); kein
+eigener lead-design-Start, weil der Wortlaut aus der Spec kommt; e3 setzt ihn in der T05-Fix-Runde um, T07 übernimmt
+ihn. Ownership-Ausnahmen gelten nur für diese Dateien und Stellen; T14 prüft die Zusammenführung. Alternative „alles
+in T14" verworfen (roter Strang). — Kosten bei Irrtum: Pins in T14 nachziehen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 (D-146) · ADR: —
+
+## R257 · 2026-10-05 · D-147 Messbedingung AK-E1-18 (frameMax im Leerlauf)
+
+Ruling: Empfehlung lead-tech angenommen. AK-E1-18 „frameMax ≤ 50 ms im Leerlauf" wird unter Headless-Chrome bei
+1920 × 1080 und **DPR 1** gemessen und entschieden (Grundframe 16,7 ms); Grenze 50 ms unverändert. Die DPR-2-Werte
+(Grundframe dort bereits 50 ms, Software-Rendering, Vsync-Raster) stehen informativ im Bericht, zusätzlich als
+„Zuwachs über Grundframe" (Variante b, nur informativ). AK-E1-19 (Scheiben ≤ 8 ms) bleibt mit unveränderter Grenze;
+Teilen des `quarterLayer` in Streifen ist der planmässige Weg. Die erste Messserie ist wegen eines liegengebliebenen
+Headless-Chrome ungültig und wird wiederholt; Befund an die Kurz-Retro (Aufräumen von Probe-Prozessen). Spec-Nachtrag
+zur Messbedingung im E1-Ledger, T08 (Doku) überträgt ihn. — Kosten bei Irrtum: Messung bei DPR 2 auf echter GPU
+nachholen (N-91-Weg).
+
+Entscheider: L0 · Anlass: Rückfrage lead-tech M12-E1-C3 (D-147) · ADR: —
+
+## R258 · 2026-10-05 · Seefahrt C3 (e3) abgenommen
+
+Ruling: e3 `feat/m12-see-e3` @ e3afd51 (T05–T07 je Review OK, `make check`/`CI=true` grün ohne Last, Neupin
+`balance-merchants` vorläufig [6750, 11500, 320]) angenommen, ebenso C3-1 (zweite leere Tastenklammer im Mangeltext
+mit Spec-Wortlaut behoben). C3-2 (AK-Z3-06 nur über Reihenfolge prüfbar) und C3-3 (Merkfeld drittes Banner optional)
+zur Kenntnis; **Pflicht für T15:** `app.ts` übernimmt das Merkfeld (Zeilen in der Übergabe C3 → C4), sonst erscheint
+das Banner nach dem Sieg je Frame neu. Seefahrt wartet jetzt auf M1 (E1-Final-Review OK) für render (T10/T11) und
+e2-UI (T12/T13). — Kosten bei Irrtum: Nacharbeit in T14/T15.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C3 · ADR: —
+
+## R259 · 2026-10-05 · F-P7 Werte E6 prüfen lassen (Wartezeit bis M1 nutzen)
+
+Ruling: Während Seefahrt auf M1 wartet, prüft lead-design mit design-economy-designer die offenen E6-Werte **F-P7**
+(Händlerschiff: Periode 3000, Dauer 600, erster Tick 3600; Angebot ≤ 20 % unter Kaufpreis, ≤ 20 Einheiten) gegen die
+Wirtschaft nach Seefahrt-Bündel (Neupin `balance-merchants` vorläufig). Nur Empfehlung als Handoff, keine Spec- oder
+Code-Änderung; Ergebnis entscheidet L0 vor einem E6-Plan. Budget 2 Starts. Ob E5/E6 (Kann-Teile) überhaupt geplant
+werden, bleibt offen bis nach dem Seefahrt-Merge. — Kosten bei Irrtum: ein verworfener Wertevorschlag.
+
+Entscheider: L0 · Anlass: Leerlauf Seefahrt bis M1, state.md · ADR: —
+
+## R260 · 2026-10-05 · Nutzerentscheide: N-95 an L0, Spielstände ohne Rückwärtskompatibilität
+
+Ruling: Nutzer (2026-10-05): „ich überlasse solche entscheidungen dir. spielstände müssen in zukunft nicht
+rückwärtskompatibel sein." (1) **N-95** entscheidet L0: Ja (neues optionales Feld ohne neue Versionsnummer, wie
+empfohlen). Auslegungsfragen zu Spielstand und Technik kommen nicht mehr in die Warteschlange; Vorbehalte nach §5.3
+bleiben. (2) **Spielstände:** Ab sofort müssen ältere Spielstände nicht mehr ladbar sein. Weiter gilt: Format
+versionieren; ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz, mit Test für das Abweisen.
+Keine neuen Migrationen (z. B. E6/v10). Bestehende Migrationen v1…v9 (inkl. E1 v8, Seefahrt v9) bleiben, da gebaut und
+getestet; Entfernen nur, wenn sie Aufwand verursachen (eigenes Paket). Der Verfassungstext §3 („migrieren, mit Test für
+alte Spielstände") ist schreibgeschützt; die Wortlaut-Änderung liegt als **N-96** beim Nutzer (`VERFASSUNG ÄNDERN`).
+Bis dahin tragen Briefings unter dem Regelblock die Zeile „Spielstand: R260 — keine Rückwärtskompatibilität nötig".
+— Kosten bei Irrtum: Migrationen für betroffene Versionen nachbauen.
+
+Entscheider: Nutzer, ausgelegt durch L0 · Anlass: Nutzernachricht · ADR: —
+
+## R261 · 2026-10-05 · Verfassung 1.2: Spielstände ohne Rückwärtskompatibilität
+
+Ruling: Nutzer hat per `VERFASSUNG ÄNDERN` freigegeben (N-96). Feste Regel §3 lautet jetzt: „Save-Format versionieren;
+ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz;
+Test für das Abweisen." Verfassung 1.2; der wörtlich kopierte Regelblock in `templates/briefing.md` ist nachgeführt;
+die Zusatzzeile aus R260 entfällt. Sonst keine Änderung an der Verfassung. — Kosten bei Irrtum: Nutzer stellt den
+alten Wortlaut wieder her.
+
+Entscheider: Nutzer, umgesetzt durch L0 · Anlass: N-96 · ADR: —
+
+## R262 · 2026-10-05 · F-P7 Werte E6 Händlerschiff entschieden
+
+Ruling: Empfehlung lead-design (`.studio/handoffs/2026-10-05-m12-fp7-werte-e6.md`) angenommen: Periode 3000, Dauer
+600, erster Tick 3600, Menge 10–20, Rabatt 20 %, Wahl unter allen Kontoren — unverändert. **Neu:** Angebote nur für
+Güter mit Kaufpreis ≥ 30 (`OFFER_MIN_BUY`; heute Werkzeug, Stoff, Rum, Glas, Gewürz), damit Angebote nie wertlos sind.
+Rabatt bleibt unter 25 % (sonst lohnt Auftragsbedienung mit Angebotsware). Für einen E6-Plan gelten: eigener
+Zufallsstrom, `normalized()` entfernt `offer`, Ladeprüfung v10 erlaubt nach Teilkauf Mengen 1–20; nach R261 **keine
+Migration** auf v10 (alter Spielstand wird mit Hinweis abgewiesen). Die vorgeschlagenen defs-Tests (Angebotspreis >
+Auftragsprämie und > Boom-Verkaufserlös; Zufallsströme ohne Überschneidung) und der Ablageort der `OFFER_*`-Konstanten
+gehen in den E6-Plan. Ob E5/E6 geplant werden, entscheidet L0 nach dem Seefahrt-Merge. — Kosten bei Irrtum: ein Wert
+in `src/sim/defs/`.
+
+Entscheider: L0 · Anlass: Bericht lead-design M12-FP7 · ADR: —
+
+## R263 · 2026-10-06 · E1 C3: T06 abgenommen, T07 in C3b, Ad-hoc-Retro
+
+Ruling: T06 (`feat/m12-e1`, Review OK nach einer Fix-Runde, Playtest a–g OK) angenommen; Fixes 332336e
+(`requestIdleCallback`-Timeout) und 26dec9c angenommen. **T07** läuft in einer neuen Controller-Instanz **C3b**
+(lead-tech auf `sonnet` nach Handbuch, 6 freie Starts aus R250, Übergabe `.studio/handoffs/2026-10-05-m12-e1-C3-an-C4.md`).
+**Auslegung AK-E1-19 vorab:** Zuerst Ursache der Spitzen isolieren. Liegt sie in unserem Code (unteilbare Arbeit in
+einer Scheibe), wird sie behoben, Grenze 8 ms auf das Maximum. Liegt sie nachweislich ausserhalb (Speicherbereinigung,
+Compositor, Browser), entscheidet **p95 ≤ 8 ms**, das Maximum steht informativ im Bericht. AK-E1-14 Seed 14 mit 7
+Läufen nachmessen. Ein lastfreier `make check` und `CI=true make check` auf dem Endstand ist Pflicht vor C4.
+**Verbot:** `pkill`/`killall` auf allgemeine Prozessnamen (`node`, `chrome`) — nur eigene PIDs beenden. **Ad-hoc-Retro**
+durch studio-coach: Dauer E1 C3 (≈ 11,6 h statt ~20 min Schätzung), Messumgebung (Fremdlast, Ruhezustand,
+liegengebliebenes Chrome, `pkill -x node`), qa-playtester ohne Lebenszeichen 2,5 h, Controller auf opus statt sonnet
+(Handbuch Z. 124), Integrator-Merge im Hauptcheckout statt `.worktrees/integrate`. — Kosten bei Irrtum: AK-E1-19 in
+C4 neu auslegen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3, Hook-Meldung Inaktivität · ADR: —
+
+## R264 · 2026-10-06 · Vorschläge Ad-hoc-Retro E1 C3
+
+Ruling: Retro `docs/studio/retros/2026-10-06-adhoc-e1-c3.md` angenommen, Vorschläge als **Fehlerbehebungen** (Verfassung
+§10.5: offensichtliche Fehler brauchen keine Datenbasis; kein Experiment-Platz nötig): **V1** `tools/render-qa/perf.mjs`
+beendet sein Chrome nur per eigener PID; ein Messfenster-Wächter (Last, vitest/vite/Chrome fremder Worktrees,
+`caffeinate -i` gegen Ruhezustand) läuft vor jeder Messserie — als kleines Werkzeug-Paket **nach** E1 C3b (gleiche
+Dateien), Ziel ≤ 1 ungültige Serie je Messpaket. **V2** statt Guard-Regel: Persona `lead-tech` bekommt `model: sonnet`
+als Vorgabe; Plan, Plan-Überarbeitung und Meilenstein-Retro startet L0 ausdrücklich mit `opus` (Handbuch Z. 124
+unverändert); Messung: 0 Controller-Starts auf opus je Session. **V3** E-026 als Persona-Korrektur ohne Experiment:
+`production-integrator` merged in `.worktrees/integrate` (detached, `git push origin HEAD:main`) und prüft vorher
+`git rev-parse --show-toplevel`; E-026 wird als „übernommen R264" geschlossen. Umsetzung V2/V3 durch studio-coach
+(Persona-Version + CHANGELOG). B3 (verwaister Playtester-Start) beobachten, keine Massnahme. — Kosten bei Irrtum:
+Persona-Versionen zurücksetzen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-ADHOC-E1C3 · ADR: —
+
+## R265 · 2026-10-06 · E1 C3b abgenommen, AK-E1-19 nach p95, Start C4
+
+Ruling: T07 (`feat/m12-e1` @ 3727c3f, Review OK, `make check`/`CI=true` grün — „unter Last" durch macOS-Dienste,
+gekennzeichnet) angenommen. **AK-E1-19:** Die Spitzen 15–30 ms lagen in unserem Code (unteilbare Halbkopie) und sind
+behoben; das Rest-Maximum 8,4–10,1 ms (periodisch, Ursache unbelegt, weitere Teilung ohne Wirkung) liegt deutlich unter
+einem Frame (16,7 ms). Abweichend von R263 entscheidet **p95 ≤ 8 ms** (gemessen 7,7–7,9); das Maximum steht als
+informative Grenze ≤ 12 ms im Spec-Nachtrag. Kein weiterer Start für einen Chrome-Trace. **C4** startet: lead-tech
+(sonnet) T08 Doku inkl. Spec-Nachträge R257/R265 und Übertrag der C3/C3b-Befunde (zwei Cache-Pläne je Seite in
+`app.ts`, H-R11-Tests unter Last rot, Inselkarte 1280 px, Flachwasser-Schlieren) nach `docs/beobachtungen.md`; danach
+Final-Review lead-qa auf opus über `feat/m12-e1` (Fix-Runden T03/T04 ausdrücklich, R248). Budget: 2 Starts lead-tech
+aus R250-Rest, 1 Start lead-qa. Mess-Wächter (R264 V1) folgt nach dem E1-Merge auf main. — Kosten bei Irrtum:
+Nachmessung mit Trace in einem Häppchen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3B · ADR: —
+
+## R266 · 2026-10-06 · Gate Merge M12-E1 mit BEDENKEN, Fix-Runde F1
+
+Ruling: Final-Review lead-qa (`feat/m12-e1` @ 2282086: BEDENKEN, nur niedrige Befunde, Fix-Runden T03/T04 bestätigt,
+Determinismus-Probe Seeds 3/14/77 und Fixtures v3–v7 grün) und Bildurteil lead-art (BEDENKEN, Schlieren nicht
+blockierend → Häppchen **H-R15** „Saum Fernansicht" nach dem Merge) angenommen. **Merge freigegeben unter Bedingung:**
+vorher kurze Fix-Runde **F1** durch lead-tech (sonnet, 2 Starts: Umsetzer + Review): Q1 (Viertel-Streifen-Test muss
+rot werden können), Q2 (`GRID_BAND_ROWS` 2 im Gittertest), Q3 (Detailstufe ohne Möwen/Vogelschwärme testen), Q5
+(`perf.mjs`-Texte auf R257/R265), Q6 (ADR-013 einheitlich 8,4–10,1 ms), arc42 `save-v7.json`; Q4, Q8 und die
+Ausser-Scope-Befunde (Gebäudekoordinaten gegen Inselgrösse ab E2, Fremdinsel-Felder in `limits.ts`, Rastern im Modus
+`jump`, Viertel-Kopie synchron beim ersten Zoom) nach `docs/beobachtungen.md`. **Q7** angenommen: Seed 3 misst der
+Mess-Wächter (R264 V1) mit. Sind F1-Review OK und `make check`/`CI=true make check` grün, mergt production-integrator
+ohne weiteres Gate in `.worktrees/integrate` nach `main` (Save v8 live). Danach ist **M1** für das Seefahrt-Bündel
+erfüllt. — Kosten bei Irrtum: Revert-Merge; v8-Spielstände wären im alten Build unladbar (nach R261 hingenommen).
+
+Entscheider: L0 · Anlass: Final-Review lead-qa, Urteil lead-art · ADR: —
+
+## R267 · 2026-10-06 · CI rot nach E1-Merge: Hotfix H-T4, Ad-hoc-Retro
+
+Ruling: Beobachtung: Workflow **CI**, Lauf 37438286587 auf `main` @ d2d08fb rot — 1 von 1835 Tests:
+`tests/render/terrain.test.ts:1236` AK-E1-11 „gridBands … GRID_BAND_ROWS" → „Test timed out in 5000ms"; lokal und im
+Integrations-Worktree grün. Workflow **Pages** Lauf 37438286556 stand > 10 min in `queued`. Vermutung (unbelegt): F1 Q2
+hat den Gittertest auf dem CI-Runner über das Vitest-Timeout gehoben. Kein Revert: E1 bleibt auf `main`, Hotfix
+**H-T4** durch lead-tech (sonnet, 2 Starts) auf `fix/h-t4-gridbands-timeout` ab `origin/main`: Ursache belegen
+(Laufzeit des Tests lokal und unter `CI=true`, Vergleich vor/nach F1), dann kleinste Korrektur (Test verkleinern oder
+begründetes Test-Timeout; keine Schwelle einer Leistungsprüfung lockern), Review, `CI=true make check`; Merge durch
+production-integrator ohne weiteres Gate, sobald Review OK. **M1** für das Seefahrt-Bündel gilt erst mit grüner CI.
+Ad-hoc-Retro (CI rot, Integrator `failed`) durch studio-coach nach dem Hotfix; Prüffrage: Warum lief der nach dem
+Final-Review geänderte Zeittest nicht durch die CI-Reserve-Prüfung (R236 (a))? — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht production-integrator M12-E1-MERGE, Hook-Meldung · ADR: —
+
+## R268 · 2026-10-06 · E1 live, M1 erfüllt; Start Seefahrt C4 und H-R15
+
+Ruling: H-T4 (7b4fde0) gemergt, Workflow „CI" Lauf 37440669276 grün, Workflow „Pages" Lauf 37440669368 grün —
+**M12-E1 ist live** (Save v8). Der hängende Pages-Lauf 37438286556 (Job `deploy` > 24 min `queued`, blockierte über
+die Concurrency-Gruppe `pages` den Folgelauf) wurde von L0 abgebrochen; der Folgelauf deployte denselben Stand plus
+H-T4. **M1 erfüllt.** Start **Seefahrt C4** (lead-tech, sonnet): `main` in `feat/m12-see` mergen (Plan: nach dem
+E1-Merge nur noch `main`), dann Strang **render** (T10, T11) und Strang **e2-UI** (T12, T13 mit Quer-Merge render
+nach T10) parallel; Budget aus R241: 12 Starts, Parallelität 3. Start **H-R15 „Saum Fernansicht"** (lead-art mit
+art-rendering-engineer, Stufe leicht, höchstens eine Bild-Fix-Runde, Abnahme nach Urteil lead-art R266) ab `main`;
+Datei-Eigentum nur Wasser-/Terrain-Malcode und dessen Tests — nicht die Dateien des render-Strangs (`archipel.ts`,
+`renderer.ts`, `ship.ts`, `shipLane.ts`, `overlays.ts`, `sprites.ts`, `palette.ts`); Budget 4 Starts. H-R15 wird nach
+Abnahme release-reif (Release-Bündel REL-05). — Kosten bei Irrtum: Konflikt beim T14-Merge in einer Malroutine.
+
+Entscheider: L0 · Anlass: Bericht production-integrator H-T4, Pages-Lauf · ADR: —

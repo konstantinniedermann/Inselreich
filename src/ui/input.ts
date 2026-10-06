@@ -2,7 +2,8 @@ import { canClearForest, canPlantForest } from '../sim/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
 import type { World } from '../sim/types';
 import { home, tileAt } from '../sim/world';
-import { clampToMap, zoomAt } from '../render/camera';
+import { cameraBounds } from '../render/archipel';
+import { clampToRect, zoomAt } from '../render/camera';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
@@ -116,9 +117,9 @@ export function bindInput(
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
   const clamp = (): void => {
-    clampToMap(
+    clampToRect(
       state.cam,
-      { w: home(state.world).width, h: home(state.world).height },
+      cameraBounds(state.world.islands),
       canvas.clientWidth,
       canvas.clientHeight,
     );
@@ -245,7 +246,7 @@ export function bindInput(
             g.mx,
             g.my,
             { w: canvas.clientWidth, h: canvas.clientHeight },
-            { w: home(state.world).width, h: home(state.world).height },
+            cameraBounds(state.world.islands),
           );
           clamp();
         }
@@ -354,7 +355,7 @@ export function bindInput(
       p.sx,
       p.sy,
       { w: canvas.clientWidth, h: canvas.clientHeight },
-      { w: home(state.world).width, h: home(state.world).height },
+      cameraBounds(state.world.islands),
     );
     updateHover();
   };

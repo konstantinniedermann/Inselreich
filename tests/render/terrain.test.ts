@@ -26,8 +26,12 @@ import {
   meadowHill,
   buildTerrainLayer,
   gridBands,
+  GRID_BAND_ROWS,
+  SLICE_ROWS,
   halfLayer,
   quarterLayer,
+  quarterStrips,
+  QUARTER_STRIPS,
   terrainJob,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -1155,7 +1159,8 @@ describe('M12 E1 Terrain', () => {
             k in t
               ? t[k]
               : (...a: unknown[]) => {
-                  c.calls.push(`${k}(${JSON.stringify(a)})`);
+                  // drawImage: Quelle (Canvas samt Pixelpuffer) nicht serialisieren
+                  c.calls.push(`${k}(${JSON.stringify(k === 'drawImage' ? a.slice(1) : a)})`);
                 },
           set: () => true,
         });
@@ -1218,12 +1223,28 @@ describe('M12 E1 Terrain', () => {
       expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
     });
 
-  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16 und 13, Heimat und Inselansicht)', () => {
-    for (const w of [view(), createWorld(3)]) {
-      const isl = fieldWorld(w);
-      const fields = terrainFields(isl);
-      const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
-      for (const rows of [16, 13]) {
+  it('AK-E1-19 Malbänder feiner: SLICE_ROWS 16, GRID_BAND_ROWS 2; Schritte ≥ Höhe / SLICE_ROWS (T07, Scheiben ≤ 8 ms)', () => {
+    expect(SLICE_ROWS).toBe(16);
+    expect(GRID_BAND_ROWS).toBe(2);
+    const world = view();
+    const job = terrainJob(world, 2);
+    expect(job.steps.length).toBeGreaterThanOrEqual(
+      Math.ceil((job.layer as unknown as FakeCanvas).height / SLICE_ROWS),
+    );
+  });
+
+  // Je Welt und Bandhöhe ein eigener Test (H-T4): lokal höchstens 2,9 s (Inselansicht, Höhe 2),
+  // daher Timeout 15 s (> 5 × Reserve für den CI-Runner).
+  describe.each([
+    ['Heimat', () => view()],
+    ['Inselansicht', () => createWorld(3)],
+  ] as const)('AK-E1-11 gridBands (%s)', (_name, mk) => {
+    it.each([16, 13, GRID_BAND_ROWS])(
+      'Gitter aus Bändern der Höhe %i gleich buildGrid',
+      (rows) => {
+        const isl = fieldWorld(mk());
+        const fields = terrainFields(isl);
+        const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
         const bands = gridBands(isl, fields, rows);
         expect(bands.steps.length).toBeGreaterThan(2);
         for (const s of bands.steps) s();
@@ -1249,8 +1270,9 @@ describe('M12 E1 Terrain', () => {
             ).toBe(true);
           }
         }
-      }
-    }
+      },
+      15_000,
+    );
   });
 
   it('quarterLayer: Kante gleich ceil(halfLayer / 2), zweiter Aufruf liefert dasselbe Objekt', () => {
@@ -1261,5 +1283,147 @@ describe('M12 E1 Terrain', () => {
     expect(q.height).toBe(Math.ceil(half.height / 2));
     expect(q.width).toBe(192);
     expect(quarterLayer(layer)).toBe(q);
+  });
+
+  it('AK-E1-19 quarterStrips: Streifen decken die halbe Kopie lückenlos, ohne Überlappung, mit geraden Quellgrenzen (2:1)', () => {
+    for (const hh of [384, 385, 1000, 1001, 17]) {
+      const qh = Math.ceil(hh / 2);
+      const strips = quarterStrips(hh);
+      if (hh >= 384) expect(strips.length).toBeGreaterThanOrEqual(QUARTER_STRIPS - 1);
+      let sy = 0;
+      let dy = 0;
+      for (const [i, st] of strips.entries()) {
+        expect(st.sy).toBe(sy);
+        expect(st.dy).toBe(dy);
+        expect(st.sy % 2).toBe(0);
+        if (i < strips.length - 1) expect(st.dh * 2).toBe(st.sh);
+        sy += st.sh;
+        dy += st.dh;
+      }
+      expect(sy).toBe(hh);
+      expect(dy).toBe(qh);
+    }
+  });
+
+  /** Leichter Fake-Canvas: protokolliert nur die Zahlen der Neun-Argument-`drawImage`-Aufrufe (kein JSON der Quelle). */
+  interface LightCanvas {
+    width: number;
+    height: number;
+    draws: number[][];
+    getContext: () => unknown;
+  }
+  const withLightDocument = (fn: (created: LightCanvas[]) => void): void => {
+    const created: LightCanvas[] = [];
+    const doc = (globalThis as { document?: unknown }).document;
+    (globalThis as { document?: unknown }).document = {
+      createElement: (): LightCanvas => {
+        const c: LightCanvas = { width: 0, height: 0, draws: [], getContext: () => ctx };
+        const ctx = new Proxy({} as Record<string, unknown>, {
+          get: (_t, k: string) =>
+            k === 'createImageData'
+              ? (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) })
+              : k === 'drawImage'
+                ? (_src: unknown, ...a: number[]) => {
+                    if (a.length === 8) c.draws.push([a[1]!, a[3]!, a[5]!, a[7]!]);
+                  }
+                : () => undefined,
+          set: () => true,
+        });
+        created.push(c);
+        return c;
+      },
+    };
+    try {
+      fn(created);
+    } finally {
+      (globalThis as { document?: unknown }).document = doc;
+    }
+  };
+  const stripCalls = (q: unknown): number[][] => (q as LightCanvas).draws;
+  /** Summe der Höhen, lückenlos und ohne Überlappung in Quelle und Ziel. */
+  const expectCovered = (rows: number[][], srcH: number, dstH: number): void => {
+    let sy = 0;
+    let dy = 0;
+    for (const [rsy, rsh, rdy, rdh] of rows) {
+      expect(rsy).toBe(sy);
+      expect(rdy).toBe(dy);
+      sy += rsh!;
+      dy += rdh!;
+    }
+    expect(sy).toBe(srcH);
+    expect(dy).toBe(dstH);
+  };
+
+  it('AK-E1-19 terrainJob: Viertel-Kopie in Streifenschritten deckt das ganze Bild (Quelle und Ziel, ohne Lücke und Überlappung)', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      expect(job.steps.length).toBeGreaterThanOrEqual(
+        Math.ceil(job.layer.height / SLICE_ROWS) + QUARTER_STRIPS,
+      );
+      for (const s of job.steps) s();
+      const half = halfLayer(job.layer);
+      const q = quarterLayer(job.layer);
+      expect(q.width).toBe(Math.ceil(half.width / 2));
+      const rows = stripCalls(q);
+      expect(rows.length).toBe(quarterStrips(half.height).length);
+      expect(rows.length).toBeGreaterThan(1);
+      expectCovered(rows, half.height, q.height);
+      expect(quarterLayer(job.layer)).toBe(q);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: ruft der Renderer quarterLayer nach Streifen 3, ist das Bild vollständig und die Reststreifen malen nicht mehr', () => {
+    withLightDocument((created) => {
+      const job = terrainJob(view(), 1);
+      const first = job.steps.length - QUARTER_STRIPS;
+      const total = (): number => created.reduce((n, c) => n + c.draws.length, 0);
+      for (let i = 0; i < first + 3; i++) job.steps[i]!();
+      const half = halfLayer(job.layer);
+      const before = total();
+      const q = quarterLayer(job.layer);
+      const strips = quarterStrips(half.height).length;
+      // Der vorzeitige Aufruf malt alle Streifen selbst (nicht nur die drei fehlenden).
+      expect(total() - before).toBe(strips);
+      expect(stripCalls(q).length).toBe(strips);
+      const afterCall = total();
+      for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
+      // Reststreifen: keine einzige weitere Zeichnung, auf keiner Ebene (auch nicht auf einer Arbeitskopie).
+      expect(total()).toBe(afterCall);
+      expect(quarterLayer(job.layer)).toBe(q);
+      expectCovered(stripCalls(q), half.height, q.height);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: halbe Kopie in Streifenschritten (je Streifen eine Zeichnung, deckt die Ebene lückenlos)', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      for (const s of job.steps) s();
+      const half = halfLayer(job.layer);
+      const rows = stripCalls(half);
+      expect(rows.length).toBe(quarterStrips(job.layer.height).length);
+      expect(rows.length).toBeGreaterThanOrEqual(QUARTER_STRIPS - 1);
+      expectCovered(rows, job.layer.height, half.height);
+      expect(halfLayer(job.layer)).toBe(half);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: ruft der Renderer halfLayer mitten in den Streifen, ist die Kopie vollständig und die Reststreifen malen nicht mehr', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      const first = job.steps.length - QUARTER_STRIPS - QUARTER_STRIPS;
+      for (let i = 0; i < first + 3; i++) job.steps[i]!();
+      const half = halfLayer(job.layer);
+      for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
+      expect(halfLayer(job.layer)).toBe(half);
+      expectCovered(stripCalls(half), job.layer.height, half.height);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: genau der erste Schritt der halben Kopie ist solo (erste Lesung der Ebene, teuer)', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      const solo = job.steps.flatMap((s, i) => (s.solo ? [i] : []));
+      expect(solo).toEqual([job.steps.length - 2 * QUARTER_STRIPS]);
+    });
   });
 });
