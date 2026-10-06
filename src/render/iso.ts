@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { hash2 } from '../sim/noise';
@@ -136,7 +137,7 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
   let c = fixed.get(world);
   if (!c || c.key !== key) {
     const items: SortedItem[] = [];
-    for (const b of Object.values(world.buildings)) {
+    for (const b of homeBuildings(world)) {
       const d = BUILDING_DEFS[b.defId];
       const fp = { x: b.x, y: b.y, w: d.w, h: d.h };
       items.push({ kind: 'building', id: b.id, fp, key: depthKey(fp) });

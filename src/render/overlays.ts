@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import {
@@ -225,7 +226,7 @@ export function drawUnconnected(
   range: Range,
 ): void {
   const r = ISO_H * cam.zoom * 0.14;
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (b.connected || b.defId === 'house' || b.defId === 'kontor') continue;
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const a = topAnchor(cam, BUILDING_DEFS[b.defId], b);
@@ -248,7 +249,7 @@ export function drawNeedSymbols(
 ): void {
   if (cam.zoom < SYMBOL_MIN_ZOOM) return;
   const r = ISO_H * cam.zoom * 0.2;
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (!b.house || b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const diag = houseDiagnosis(world, b);
     const first = diag[0];
