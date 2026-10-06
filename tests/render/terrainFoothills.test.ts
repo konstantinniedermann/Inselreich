@@ -362,4 +362,38 @@ describe('ART-STIL-02 L2 Task B Findlinge (C11)', () => {
         );
     expect(rgbOf(PALETTE.rock)).toBeDefined();
   });
+
+  it('L2 Findlinge: patchGrid am Gebirgsfuss gleich Vollaufbau, Pixel im Patch-Rechteck mit Findling gleich', () => {
+    for (const seed of [14, 1, 7]) {
+      const w = createWorld(seed, { unlockAll: true });
+      const g0 = buildGrid(fieldWorld(w), terrainFields(fieldWorld(w)));
+      // Kachel mit Findling, deren rechter Nachbar Gras ist (wird zu Wald): das Patch-Rechteck umfasst sie
+      let tx = -1,
+        ty = -1;
+      for (let y = 2; y < home(w).height - 2 && tx < 0; y++)
+        for (let x = 2; x < home(w).width - 3 && tx < 0; x++)
+          if (boulderOf(g0, x, y) && terr(fieldWorld(w), x + 1, y) === 'grass') [tx, ty] = [x, y];
+      expect(tx, `Seed ${seed}: Findling gefunden`).toBeGreaterThanOrEqual(0);
+      const fields = terrainFields(fieldWorld(w));
+      const grid = buildGrid(fieldWorld(w), fields);
+      const prev = terrainCodes(fieldWorld(w));
+      home(w).tiles[ty * home(w).width + tx + 1]!.terrain = 'forest';
+      const next = terrainCodes(fieldWorld(w));
+      const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
+      expect(
+        tx >= rect.x0 && tx <= rect.x1 && ty >= rect.y0 && ty <= rect.y1,
+        'Findling im Rechteck',
+      ).toBe(true);
+      patchGrid(fieldWorld(w), fields, grid, prev, next, rect);
+      const full = buildGrid(fieldWorld(w));
+      const x0 = rect.x0 * TEX,
+        y0 = rect.y0 * TEX,
+        pw = (rect.x1 - rect.x0 + 1) * TEX,
+        ph = (rect.y1 - rect.y0 + 1) * TEX;
+      expect(
+        firstDiff(paintPixels(grid, 1, x0, y0, pw, ph), paintPixels(full, 1, x0, y0, pw, ph)),
+        `Seed ${seed} Pixel`,
+      ).toBe(-1);
+    }
+  }, 30000);
 });

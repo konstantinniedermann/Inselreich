@@ -1230,6 +1230,8 @@ export function paintPixels(
       out[o + 3] = 255;
     }
   }
+  boulderGrid = null; // Gitter nicht über den Aufruf hinaus halten
+  boulderTiles = new Map();
   return out;
 }
 
