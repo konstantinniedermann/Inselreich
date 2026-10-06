@@ -32,6 +32,8 @@ export const CONTOUR_WIDTH = 0.75;
 export const CONTOUR_ALPHA = 0.65;
 /** Bis zu diesem Zoom gibt es keine Silhouette; bis Zoom 1 wächst die Breite linear. */
 export const CONTOUR_MIN_ZOOM = 0.5;
+/** Kleinste Bildbox (Weltpixel²) einer Fläche, die zur Silhouette beiträgt. */
+const SIL_MIN_BOX = 300;
 /** Lichtkante: Breite in CSS-px und Deckkraft. */
 export const LIGHT_EDGE_WIDTH = 0.9;
 export const LIGHT_EDGE_ALPHA = 0.7;
@@ -234,11 +236,12 @@ export class IsoPainter {
 
   poly(pts: readonly [number, number, number][], fill: string, outline = true): void {
     const { ctx } = this;
-    fill = this.tone(fill, this.look.wall);
     if (this.recording) {
-      if (outline) this.recording.push({ pts, fill });
+      if (outline && this.bigFace(pts))
+        this.recording.push({ pts, fill: this.tone(fill, this.look.wall) });
       return;
     }
+    fill = this.tone(fill, this.look.wall);
     if (this.hand && outline && this.silhouette) {
       const faces = this.silhouette;
       this.silhouette = null;
@@ -264,6 +267,19 @@ export class IsoPainter {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+  }
+
+  /** Nur grosse Flächen (Wände, Dächer, Anbauten) bilden die Silhouette; Kamine, Kisten u. Ä. liegen innen oder am Boden. */
+  private bigFace(pts: readonly T3[]): boolean {
+    let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
+    for (const [u, v, z] of pts) {
+      const q = this.pt(u, v, z);
+      x0 = Math.min(x0, q.x);
+      x1 = Math.max(x1, q.x);
+      y0 = Math.min(y0, q.y);
+      y1 = Math.max(y1, q.y);
+    }
+    return (x1 - x0) * (y1 - y0) >= SIL_MIN_BOX * this.cam.zoom * this.cam.zoom;
   }
 
   /** Setzt die aufgezeichneten Flächen (Durchgang 2); die Silhouette entsteht vor der ersten Fläche mit Umriss. */
@@ -2193,8 +2209,9 @@ export function lightAnchors(def: BuildingDef, b: Building): LightAnchor[] {
 }
 
 /** Kontext ohne Wirkung für den Aufzeichnungsdurchgang der Silhouette (nur Pfad- und Stilaufrufe). */
+const NOOP = (): undefined => undefined;
 const NOOP_CTX = new Proxy({} as Record<string, unknown>, {
-  get: () => () => undefined,
+  get: () => NOOP, // eine gemeinsame Funktion: keine Allokation je Aufruf
   set: () => true,
 }) as unknown as CanvasRenderingContext2D;
 

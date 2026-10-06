@@ -352,4 +352,18 @@ describe('L3 Kanten: Pinselkorn (material.ts)', () => {
     }
     expect(log.events.some((e) => e.style === ROW_DARK)).toBe(true);
   });
+  it('AK-L3-perf Material gebündelt: höchstens ein Strich je Gruppe, Fläche und Tonstufe (Cache-Aufbau)', async () => {
+    const { drawMaterial } = await import('../../src/render/material');
+    const { bodyFaces } = await import('../../src/render/sprites');
+    for (const c of CASES.filter((x) => x.variant === 1)) {
+      const faces = bodyFaces(c.def, c.b, 1, { x: 0, y: 0, zoom: 1.5 });
+      const { ctx, log } = fakeCtx();
+      drawMaterial(ctx, faces, c.def, c.b, 1, 1.5);
+      const st = log.events.filter((e) => e.op === 'stroke');
+      // Fugen, Stroh hell/dunkel, Risse, Dachreihen: je ein Strich; Korn: je Fläche und Tonstufe ein Strich
+      expect(st.length, c.name).toBeLessThanOrEqual(5 + 2 * faces.length);
+      const grain = st.filter((e) => e.style === GRAIN_LIGHT || e.style === GRAIN_DARK);
+      expect(grain.length, c.name).toBeLessThanOrEqual(2 * faces.length);
+    }
+  });
 });
