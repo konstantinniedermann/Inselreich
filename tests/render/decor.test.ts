@@ -1334,4 +1334,37 @@ describe('L5 Meer-Plan und R4', () => {
       expect(new Set(st.map((s) => s.id)).size).toBe(st.length);
     }
   });
+
+  it('T6 Palmenküste wirkt locker bewaldet: ≥ 1 Palme je ~4 geeignete Strandkacheln (Mittel ≥ 0,2), Dünen- und Kiefernküste bleiben dünner', () => {
+    const acc: Record<string, { palms: number; suit: number; n: number }> = {
+      palm: { palms: 0, suit: 0, n: 0 },
+      pine: { palms: 0, suit: 0, n: 0 },
+      dune: { palms: 0, suit: 0, n: 0 },
+    };
+    for (const { seed, w } of W200) {
+      const isl = home(w);
+      const cls = staticClasses(isl);
+      let suit = 0;
+      for (let y = 0; y < isl.height; y++)
+        for (let x = 0; x < isl.width; x++) {
+          if (cls[y * isl.width + x] !== 1) continue;
+          let near = false;
+          for (let dy = -1; dy <= 1 && !near; dy++)
+            for (let dx = -1; dx <= 1; dx++)
+              if (cls[(y + dy) * isl.width + x + dx] === 0) near = true;
+          if (!near) suit++;
+        }
+      const palms = stampPlacements(seed, isl, kontorOf(w), seaContext(w)).filter(
+        (s) => s.kind === 'palm',
+      ).length;
+      const a = acc[coastKind(seed)]!;
+      a.palms += palms;
+      a.suit += suit;
+      a.n++;
+    }
+    const rate = (k: string): number => acc[k]!.palms / Math.max(1, acc[k]!.suit);
+    expect(rate('palm'), 'Palmen je geeignete Kachel').toBeGreaterThanOrEqual(0.2);
+    expect(rate('pine')).toBeLessThan(0.05);
+    expect(acc.dune!.palms).toBe(0);
+  });
 });

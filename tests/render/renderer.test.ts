@@ -1147,8 +1147,8 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
   // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
   // G-Anzahl (b537908).
-  // L5: Palmen und Meer-Stempel (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter (+3 Zeichen).
-  const HOME_CALLS = { hash: 3287991724, length: 12862 };
+  // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter (+12 Zeichen).
+  const HOME_CALLS = { hash: 954837645, length: 12871 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3670334885, length: 3662 };
   const V1280 = { w: 1280, h: 800 };

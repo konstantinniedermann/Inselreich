@@ -10,6 +10,9 @@ import {
   STAMP_BOX,
   VARIANT_COUNT,
   decorShadow,
+  needleGeom,
+  minStampScale,
+  stampWidthPx,
   drawDecorStamp,
   paintDecorStamp,
   palmGeom,
@@ -133,7 +136,14 @@ describe('L5 Zeichner: Grenzen und Form', () => {
         (Math.atan2(Math.abs(bow.y - stern.y), Math.abs(bow.x - stern.x)) * 180) / Math.PI;
       expect(ang, `Variante ${v}`).toBeGreaterThanOrEqual(20);
       const xs = g.hull.map((p) => p.x);
-      expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(1.5 * ISO_W * 0.75);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(1.3 * ISO_W);
+      // T6: ≈ 1–1,2 Kacheln lang, aufgebrochener Rumpf (gezackte Lücke, 2–4 sichtbare Spanten), Maststumpf mit Bruchkante
+      expect(Math.max(...xs) - Math.min(...xs), `Länge ${v}`).toBeGreaterThanOrEqual(0.9 * ISO_W);
+      expect(g.gap.length, 'gezackte Lücke').toBeGreaterThanOrEqual(6);
+      expect(g.ribs.length).toBeGreaterThanOrEqual(2);
+      expect(g.ribs.length).toBeLessThanOrEqual(4);
+      expect(g.mast.length, 'Bruchkante').toBeGreaterThanOrEqual(6);
+      expect(Math.max(...g.hull.map((p) => p.y)), 'ein Ende unter Wasser').toBeGreaterThan(4);
       const mh = Math.max(...g.mast.map((p) => p.y)) - Math.min(...g.mast.map((p) => p.y));
       expect(mh).toBeLessThanOrEqual(11);
       const f = paint('wreck', v);
@@ -166,9 +176,20 @@ describe('L5 Zeichner: Grenzen und Form', () => {
     const styles = new Set(f.log.events.map((e) => e.style));
     expect(styles.has(DECOR_STAMP_TONES.rockWet)).toBe(true);
     expect(f.log.events.some((e) => e.op === 'stroke')).toBe(true);
-    const n = paint('seaRock', 6);
-    const xs = n.log.allPoints.map((p) => p.x);
-    expect(Math.max(...xs) - Math.min(...xs), 'Nadel ist schmal').toBeLessThanOrEqual(22);
+    for (const v of [6, 7]) {
+      const g = needleGeom(v);
+      const h = stampHeight('seaRock', v);
+      expect(h, 'Nadel ≤ 0,8 TREE_H').toBeLessThanOrEqual(0.8 * TREE_H);
+      expect(g.pillar.length, 'kein Dreieck').toBeGreaterThanOrEqual(8);
+      const foot = g.pillar.filter((p) => p.y >= -1).map((p) => p.x);
+      expect(Math.max(...foot) - Math.min(...foot), 'Fuss ≥ 0,45 × Höhe').toBeGreaterThanOrEqual(
+        0.45 * h,
+      );
+      expect(g.side.length, '1–2 Nebenbrocken').toBeGreaterThanOrEqual(1);
+      expect(g.side.length).toBeLessThanOrEqual(2);
+      const tops = g.pillar.filter((p) => p.y < -h + 4);
+      expect(tops.length, 'abgebrochene Spitze: mehrere Punkte oben').toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('E8 Felseiland: ≤ 1 Kachel, genau eine Palme, keine grüne Grasfläche', () => {
@@ -190,6 +211,31 @@ describe('L5 Zeichner: Grenzen und Form', () => {
         if (w > 30) expect(la < -12 && lb > 20, `${e.style} ist keine Grasfläche`).toBe(false);
       }
     }
+  });
+
+  it('T6 Palme: weicher Kontaktschatten im Stempel (halbtransparent, am Fuss, Richtung −LIGHT), nicht über decorShadow', () => {
+    const f = paint('palm', 0);
+    const sh = f.log.events.filter((e) => e.op === 'fill' && e.alpha < 1 && e.alpha > 0.1);
+    expect(sh.length).toBeGreaterThan(0);
+    const e = sh[0]!;
+    const cx = e.points.reduce((a, p) => a + p.x, 0) / e.points.length;
+    const cy = e.points.reduce((a, p) => a + p.y, 0) / e.points.length;
+    expect(Math.abs(cy)).toBeLessThan(6); // am Fuss
+    expect(cx, 'Schatten fällt nach rechts (−LIGHT.x > 0)').toBeGreaterThan(0);
+    expect(decorShadow(item('palm'))).toBeNull();
+  });
+
+  it('T6 Wrack und Felseiland haben bei Zoom ≤ 0,25 mindestens ≈ 10 CSS-px Breite, aber weniger als das Schiff (16 px)', () => {
+    for (const k of ['wreck', 'islet'] as const)
+      for (let v = 0; v < 4; v++)
+        for (const z of [0.125, 0.25]) {
+          const px = stampWidthPx(k, v) * z * minStampScale(k, v, z);
+          expect(px, `${k}${v}@${z}`).toBeGreaterThanOrEqual(10 - 1e-6);
+          // die Mindestbreite greift nur, wo der Stempel kleiner wäre, und bleibt unter dem Schiff (16 px)
+          if (minStampScale(k, v, z) > 1) expect(px).toBeCloseTo(10, 6);
+        }
+    expect(minStampScale('wreck', 0, 1)).toBe(1);
+    expect(minStampScale('seaRock', 0, 0.25)).toBe(1);
   });
 
   it('Zoomschwellen und Fern-Pfad: Wrack, Felsen und Eiland ab 0,25, Palme ab 0,5', () => {

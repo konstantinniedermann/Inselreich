@@ -591,7 +591,9 @@ export function coastKind(seed: number): CoastKind {
   return u < 0.5 ? 'palm' : u < 0.75 ? 'pine' : 'dune';
 }
 /** Abstand der Palmengruppen (Chebyshev) und Zahl der Formen; Richtungen 0 = +x, 1 = +y, 2 = −x, 3 = −y (Kachelraum). */
-const PALM_GROUP_GAP = 6;
+const PALM_GROUP_GAP = 3;
+/** Palmenküste: eine Palme je so viele geeignete Strandkacheln (Ziel, R6 deckelt). */
+export const PALM_PER_TILES = 4;
 export const PALM_SHAPES = 3;
 
 /** Richtung (0…3) vom Land zum nächsten Wasser, auf die 4 Kachelachsen gerundet (= die 4 Iso-Richtungen). */
@@ -622,14 +624,8 @@ function seaward(p: StaticPlan, w: number, h: number, x: number, y: number): num
 function planPalms(p: StaticPlan, w: number, h: number): void {
   const seed = p.seed;
   const kind = coastKind(seed);
-  const groups =
-    kind === 'palm'
-      ? gCount(seed, 560, 0, 10)
-      : kind === 'pine'
-        ? Math.floor(hash2(seed + 560, -5, -5) * 2)
-        : 0;
   p.palms = [];
-  if (!groups) return;
+  if (kind === 'dune') return;
   const cand: { x: number; y: number; r: number }[] = [];
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -637,14 +633,21 @@ function planPalms(p: StaticPlan, w: number, h: number): void {
       if (p.cls[i] === 1 && p.coast[i]! >= 2) cand.push({ x, y, r: hash2(seed + 560, x, y) });
     }
   cand.sort((a, b) => a.r - b.r);
+  // Palmenküste: ≥ 1 Palme je ~4 geeignete Strandkacheln (locker bewaldet), Gruppen zu 2–3 häufiger als Einzelne;
+  // Kiefernküste: höchstens eine kleine Gruppe
+  const target =
+    kind === 'palm'
+      ? Math.max(gCount(seed, 560, 0, 10), Math.ceil(cand.length / PALM_PER_TILES))
+      : Math.floor(hash2(seed + 560, -5, -5) * 2) * 2;
+  const gap = kind === 'palm' ? PALM_GROUP_GAP : PALM_GROUP_GAP + 3;
   const used = new Set<number>();
   const centres: Pos[] = [];
   for (const c of cand) {
-    if (centres.length >= groups) break;
-    if (centres.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < PALM_GROUP_GAP))
-      continue;
+    if (p.palms.length >= target) break;
+    if (centres.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < gap)) continue;
     centres.push(c);
-    const size = 1 + Math.floor(hash2(seed + 560, c.x * 64 + 1, c.y) * 3);
+    const u = hash2(seed + 560, c.x * 64 + 1, c.y);
+    const size = u < 0.2 ? 1 : u < 0.6 ? 2 : 3; // Gruppen 2–3 häufiger als einzeln
     const members = [c];
     for (const m of cand) {
       if (members.length >= size) break;
