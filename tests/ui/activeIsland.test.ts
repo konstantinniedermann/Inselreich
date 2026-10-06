@@ -18,7 +18,7 @@ describe('M12 E2 UI Inseln: aktive Insel (AK-E2-10)', () => {
   });
   it('auf dem Meer die Insel mit der nächsten Mitte', () => {
     expect(activeIsland(rects, { x: 22, y: 5 }, true)).toBe(1);
-    expect(activeIsland(rects, { x: 5, y: 25 }, true)).toBe(2);
+    expect(activeIsland(rects, { x: 5, y: 30 }, true)).toBe(2);
   });
   it('gleich weit von 0 und 1 → 0 (kleinerer Index)', () => {
     expect(activeIsland(rects, { x: 20, y: 5 }, true)).toBe(0);

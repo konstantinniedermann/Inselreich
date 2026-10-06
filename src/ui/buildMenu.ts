@@ -1,4 +1,4 @@
-import { home } from '../sim/world';
+import { HOME, home } from '../sim/world';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { checkAfford } from '../sim/economy';
@@ -147,12 +147,20 @@ export function tooltipLines(tool: Tool): string[] {
   return lines;
 }
 
+/** Eigene Vorschau-Zeilen der Seefahrts-Gebäude: sie hängen an U6, sind aber keine Kaufleute-Stufe (T12). */
+const SEAFARING_PREVIEW: Readonly<Partial<Record<BuildingDefId, string>>> = {
+  kontor2: 'Für Fremdinseln (Seefahrt)',
+  spicefarm: 'Für Inseln mit Gewürz (Seefahrt)',
+};
+
 /**
  * Stufen-Zeile (M8 4.3 Punkt 4): für welche Stufe das Gebäude freigeschaltet wird, aus dem Freischalt-Eintrag
  * (Auslöser `tierOpen`); ohne Hebel-Variante, weil der Eintrag vorher nicht in der Bauleiste steht.
  * `null` für Gebäude anderer Einträge. Task 6 ersetzt die Zeile durch den Freischalt-Hinweis.
  */
 export function tierPreviewLine(defId: BuildingDefId): string | null {
+  const own = SEAFARING_PREVIEW[defId];
+  if (own !== undefined) return own;
   const t = entryOfBuilding(defId)?.trigger;
   return t === undefined || t.kind !== 'tierOpen'
     ? null
@@ -248,9 +256,17 @@ function attachTooltip(
 const buttonCost = new WeakMap<HTMLButtonElement, Cost>();
 
 /** Einträge einer Kategorie in `BUILDING_IDS`-Reihenfolge, ohne Kontor und nur Angezeigtes (Spec 11.1). */
-export function buildEntries(world: World, category: Category): BuildingDefId[] {
+export function buildEntries(
+  world: World,
+  category: Category,
+  island: number = HOME,
+): BuildingDefId[] {
   return BUILDING_IDS.filter(
-    (id) => id !== 'kontor' && BUILDING_DEFS[id].category === category && buildingShown(world, id),
+    (id) =>
+      id !== 'kontor' &&
+      !(id === 'kontor2' && island === HOME) && // das zweite Kontor gründet man nur auf einer Fremdinsel
+      BUILDING_DEFS[id].category === category &&
+      buildingShown(world, id),
   );
 }
 
@@ -262,14 +278,15 @@ export function newBuildEntries(prev: readonly UnlockId[], world: World): Set<Bu
   const out = new Set<BuildingDefId>();
   for (const u of UNLOCKS) {
     if (!world.unlocked.includes(u.id) || prev.includes(u.id)) continue;
-    for (const id of u.buildings) if (id !== 'kontor' && buildingShown(world, id)) out.add(id);
+    for (const id of u.buildings)
+      if (id !== 'kontor' && id !== 'kontor2' && buildingShown(world, id)) out.add(id); // kontor2 nur auf Fremdinseln
   }
   return out;
 }
 
 /** Kategorien mit mindestens einem Eintrag, in `CATEGORIES`-Reihenfolge. */
-export function visibleCategories(world: World): Category[] {
-  return CATEGORIES.filter((c) => buildEntries(world, c.id).length > 0).map((c) => c.id);
+export function visibleCategories(world: World, island: number = HOME): Category[] {
+  return CATEGORIES.filter((c) => buildEntries(world, c.id, island).length > 0).map((c) => c.id);
 }
 
 /**
@@ -328,7 +345,10 @@ export function renderBuildMenu(
 
   // Ist die offene Kategorie leer, schliesst die Einträge-Leiste (Spec 11.1);
   // Seiteneffekt: setzt `state.openCategory` auf null
-  if (state.openCategory !== null && buildEntries(state.world, state.openCategory).length === 0)
+  if (
+    state.openCategory !== null &&
+    buildEntries(state.world, state.openCategory, state.activeIsland).length === 0
+  )
     state.openCategory = null;
   const main = document.createElement('div');
   main.className = 'buildbar-main';
@@ -358,7 +378,7 @@ export function renderBuildMenu(
     btn.dataset.category = cat.id;
     btn.setAttribute('aria-expanded', String(state.openCategory === cat.id));
     btn.dataset.key = cat.id;
-    btn.hidden = buildEntries(state.world, cat.id).length === 0;
+    btn.hidden = buildEntries(state.world, cat.id, state.activeIsland).length === 0;
     btn.addEventListener('click', (ev) => {
       if (blurAfterClick(ev.detail)) btn.blur();
       onToggle(cat.id);
@@ -370,7 +390,7 @@ export function renderBuildMenu(
   if (state.openCategory !== null) {
     const sub = document.createElement('div');
     sub.className = 'buildbar-sub';
-    const ids = buildEntries(state.world, state.openCategory);
+    const ids = buildEntries(state.world, state.openCategory, state.activeIsland);
     for (const id of ids) {
       const def = BUILDING_DEFS[id];
       addButton(

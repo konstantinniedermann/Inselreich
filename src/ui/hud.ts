@@ -1,4 +1,5 @@
-import { home } from '../sim/world';
+import { HOME } from '../sim/world';
+import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
@@ -6,7 +7,7 @@ import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, populationByTier } from '../sim/population';
 import { crisisView, goalView, goodsBalance } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
-import { goodUnlocked, isUnlocked } from '../sim/unlocks';
+import { functionLock, goodUnlocked, isUnlocked } from '../sim/unlocks';
 import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
@@ -16,6 +17,7 @@ import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
+import { islandList } from './islandJump';
 import { iconChip } from './messages';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
@@ -62,8 +64,8 @@ export interface ChipView {
 }
 
 /** Lager-Chip: Symbol des Guts, „{Bestand} {Pfeil}"; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}". */
-export function chipView(world: World, good: GoodId): ChipView {
-  const text = `${home(world).stock[good]} ${trendArrow(goodsBalance(world)[good].net)}`;
+export function chipView(world: World, good: GoodId, island: number = HOME): ChipView {
+  const text = `${world.islands[island]!.stock[good]} ${trendArrow(goodsBalance(world, island)[good].net)}`;
   return { icon: good, text, label: `${GOODS[good].name} ${text}` };
 }
 
@@ -151,6 +153,8 @@ export interface HudActions {
   openTownhall(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
   deliverOrder(): void;
+  /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
+  jumpToIsland(index: number): void;
 }
 
 function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): HTMLButtonElement {
@@ -195,8 +199,10 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
+      '<span class="hud-islands" hidden><button class="btn" data-field="islands" type="button" aria-haspopup="true" aria-expanded="false">Inseln</button>' +
+      '<ul class="island-list" role="menu" hidden></ul></span>' +
       '<span class="hud-speed"></span><span class="hud-sound"></span></div>' +
-      '<div class="stock-row"></div>';
+      '<div class="stock-row"><span class="island-name" data-field="island-name" hidden></span></div>';
     const popBox = header.querySelector('.pop-chips');
     for (const tier of TIER_IDS) {
       const chip = document.createElement('span');
@@ -234,6 +240,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
+    bindIslandMenu(header, state, actions);
   }
   const { world } = state;
   const nowMs = performance.now();
@@ -255,15 +262,32 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
   updateMoney(header, world);
-  const balance = goodsBalance(world);
+  const island = state.activeIsland;
+  const prefix = stockPrefix(world, island);
+  const nameEl = header.querySelector<HTMLElement>('[data-field="island-name"]');
+  if (nameEl) {
+    const text = prefix === null ? '' : `${prefix} ·`;
+    if (nameEl.textContent !== text) nameEl.textContent = text;
+    if (nameEl.hidden !== (prefix === null)) nameEl.hidden = prefix === null;
+  }
+  const seafaring = functionLock(world, 'seafaring') === null;
+  const islandsBox = header.querySelector<HTMLElement>('.hud-islands');
+  if (islandsBox) {
+    if (islandsBox.hidden === seafaring) islandsBox.hidden = !seafaring;
+    // `.hud-islands` setzt `display: flex`; das Attribut allein verbirgt es nicht
+    const display = seafaring ? '' : 'none';
+    if (islandsBox.style.display !== display) islandsBox.style.display = display;
+    if (!seafaring) closeIslandMenu(islandsBox);
+  }
+  const balance = goodsBalance(world, island);
   for (const good of GOOD_IDS) {
     const b = balance[good];
-    const chip = setChip(header, `stock-${good}`, chipView(world, good));
+    const chip = setChip(header, `stock-${good}`, chipView(world, good, island));
     if (chip) {
-      const hide = stockChipHidden(world, good);
+      const hide = stockChipHidden(world, good, island);
       if (chip.hidden !== hide) chip.hidden = hide;
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
-      const tip = stockTooltip(world, good);
+      const tip = stockTooltip(world, good, island);
       if (chip.title !== tip) chip.title = tip;
     }
   }
@@ -280,6 +304,55 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
   }
+}
+
+function closeIslandMenu(box: HTMLElement): void {
+  const list = box.querySelector<HTMLElement>('.island-list');
+  const btn = box.querySelector<HTMLElement>('[data-field="islands"]');
+  if (list && !list.hidden) list.hidden = true;
+  btn?.setAttribute('aria-expanded', 'false');
+}
+
+/**
+ * Knopf „Inseln": Klick 1 baut die Liste beim Öffnen auf (nicht je Tick), Klick 2 auf einen Eintrag springt und
+ * schliesst sie. Ein Klick daneben oder Esc schliesst ebenfalls.
+ */
+function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActions): void {
+  const box = header.querySelector<HTMLElement>('.hud-islands');
+  const btn = box?.querySelector<HTMLButtonElement>('[data-field="islands"]');
+  const list = box?.querySelector<HTMLElement>('.island-list');
+  if (!box || !btn || !list) return;
+  const close = (): void => closeIslandMenu(box);
+  btn.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) btn.blur();
+    if (!list.hidden) return close();
+    list.replaceChildren(
+      ...islandList(state.world).map((e) => {
+        const li = document.createElement('li');
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'btn';
+        item.setAttribute('role', 'menuitem');
+        item.dataset.island = String(e.index);
+        item.textContent = e.label;
+        item.addEventListener('click', () => {
+          item.blur();
+          close();
+          actions.jumpToIsland(e.index);
+        });
+        li.appendChild(item);
+        return li;
+      }),
+    );
+    list.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+  });
+  document.addEventListener('pointerdown', (ev) => {
+    if (!list.hidden && ev.target instanceof Node && !box.contains(ev.target)) close();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && !list.hidden) close();
+  });
 }
 
 /** Legt den Meldungsstapel oben rechts in `#game` an: Auftrag und Krisenkarte (Spec L2). */
@@ -351,8 +424,16 @@ export function popChipHidden(world: World, tier: Tier): boolean {
 }
 
 /** Lager-Chip verborgen, solange das Gut nicht frei ist und nichts im Lager liegt (Spec 11.3). */
-export function stockChipHidden(world: World, good: GoodId): boolean {
-  return !(goodUnlocked(world, good) || home(world).stock[good] > 0);
+export function stockChipHidden(world: World, good: GoodId, island: number = HOME): boolean {
+  return !(goodUnlocked(world, good) || world.islands[island]!.stock[good] > 0);
+}
+
+/**
+ * Inselname vor den Lager-Chips: erst mit `seafaring` (D-143), davor `null` (die Leiste zeigt dann stets die
+ * Heimat, ohne Namen).
+ */
+export function stockPrefix(world: World, island: number): string | null {
+  return functionLock(world, 'seafaring') === null ? islandName(world, island) : null;
 }
 
 /** Steuer-Knopf der Kopfzeile (wirksame Stufe) oder `null` ohne aktive Amtsstube (Spec 11.8). */
@@ -379,11 +460,11 @@ export function balanceText(stats: { taxes: number; upkeep: number }): {
   };
 }
 
-export function stockTooltip(world: World, good: GoodId): string {
-  const b = goodsBalance(world)[good];
+export function stockTooltip(world: World, good: GoodId, island: number = HOME): string {
+  const b = goodsBalance(world, island)[good];
   const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
   return (
-    `${GOODS[good].name} ${home(world).stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
+    `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
     `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`
   );
 }

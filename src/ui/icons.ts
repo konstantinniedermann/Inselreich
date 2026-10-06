@@ -99,7 +99,7 @@ export const ICONS: Record<IconId, IconDef> = {
   spice: {
     label: 'Gewürz',
     paths: ['M8 1c3 3 5 6 5 9a5 5 0 0 1 -10 0c0-3 2-6 5-9z'],
-    color: 'roofTimber',
+    color: 'window', // D-144: Bernsteingelb, eigene Chip-Farbe (nicht Braun wie Holz)
   },
   'tier-1': { label: 'Pioniere', paths: tierPaths(1), color: 'sandDry' },
   'tier-2': { label: 'Siedler', paths: tierPaths(2), color: 'grassLight' },

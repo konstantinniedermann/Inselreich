@@ -7,7 +7,7 @@ import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
-import { entryOfBuilding, unlockText } from '../sim/unlocks';
+import { entryOfBuilding, isUnlocked, unlockText } from '../sim/unlocks';
 import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
   Building,
@@ -136,6 +136,9 @@ export function nextStep(w: World): string {
       if (s) return s;
     }
   }
+  // C.11: ab U6 bis zum ersten Kontor auf einer Fremdinsel
+  if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
+    return 'Gründe ein Kontor auf einer Insel mit Gewürz';
   if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
   const tax = effectiveTaxLevel(w);
   if (TAX_LEVELS[tax].upgradeWait === null && houses.some(canRise))

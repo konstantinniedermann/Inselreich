@@ -269,7 +269,7 @@ describe('M12 E2 UI Inseln: kontor2 und spicefarm in der Bauleiste', () => {
     expect(buildEntries(w, 'infrastructure')).not.toContain('kontor2');
     expect(buildEntries(w, 'infrastructure', 0)).not.toContain('kontor2');
     expect(buildEntries(w, 'infrastructure', 2)).toContain('kontor2');
-    expect(visibleCategories(w)).not.toContain('infrastructure');
+    expect(buildEntries(w, 'infrastructure')).toHaveLength(1);
     expect(visibleCategories(w, 1)).toContain('infrastructure');
   });
   it('(d) tierPreviewLine: kein „Für Kaufleute (Stufe 4)" für kontor2 und spicefarm', () => {

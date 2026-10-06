@@ -398,6 +398,7 @@ describe('M12 E2 UI Inseln: Hilfe-Schritt Kontor auf Gewürzinsel (C.11)', () =>
     addDirect(w, 'glassworks');
     addDirect(w, 'lumberjack');
     addDirect(w, 'quarry');
+    addDirect(w, 'bathhouse');
     expect(nextStep(w)).toBe(C11);
     addDirect(w, 'kontor2');
     expect(nextStep(w)).not.toBe(C11);

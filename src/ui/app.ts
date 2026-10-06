@@ -9,7 +9,8 @@ import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
 import { holdFeast } from '../sim/feast';
 import { upgradeBuilding } from '../sim/upgrade';
-import { home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { HOME, home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -40,6 +41,8 @@ import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { cameraBounds, islandView } from '../render/archipel';
+import { activeIsland, islandRects } from './activeIsland';
+import { jumpTarget, nextIsland } from './islandJump';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -138,6 +141,8 @@ export interface GameState {
   newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
+  /** Insel, die der Spieler gerade ansieht (aus der Bildmitte, D-143); nur UI-Zustand, nicht gespeichert. */
+  activeIsland: number;
 }
 
 const MAX_TICKS_PER_FRAME = 20;
@@ -240,6 +245,7 @@ function launch(
     unlockedSeen: [...world.unlocked],
     newEntries: new Set(),
     eventLog: [],
+    activeIsland: 0,
   };
   const sound = createSound({
     muted: settings.muted,
@@ -377,7 +383,16 @@ function launch(
     closeHelp = openStartCard(gameEl, { mode: 'help', opener, world });
   };
 
+  /** Kamera auf die Insel `i` (Kontor-Mitte bzw. Inselmitte), Zoom bleibt; ohne Seefahrt stumm. */
+  const jumpToIsland = (i: number): void => {
+    if (functionLock(world, 'seafaring') !== null || !world.islands[i]) return;
+    const t = jumpTarget(world, i);
+    centerOn(state.cam, t.x, t.y, view, bounds);
+    refresh();
+  };
+
   const actions: HudActions = {
+    jumpToIsland,
     setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
@@ -530,6 +545,13 @@ function launch(
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
+    // Aktive Insel aus der Bildmitte (D-143: vor der Seefahrt immer die Heimat); bei Wechsel Bauleiste neu aufbauen
+    const mid = screenToTileF(state.cam, view.w / 2, view.h / 2);
+    const active = activeIsland(islandRects(world), mid, functionLock(world, 'seafaring') === null);
+    if (active !== state.activeIsland) {
+      state.activeIsland = active;
+      renderBuildMenu(navEl, state, selectTool, toggleCategory);
+    }
     const goal = goalBanners(state, world);
     state.wonShown = goal.shown.wonShown;
     state.wonMerchantsShown = goal.shown.wonMerchantsShown;
@@ -628,6 +650,10 @@ function launch(
       setSpeed(h.speed);
     } else if (h.kind === 'help') {
       openHelp();
+    } else if (h.kind === 'islandHome') {
+      jumpToIsland(HOME);
+    } else if (h.kind === 'islandCycle') {
+      jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
     } else {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }

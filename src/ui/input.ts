@@ -1,5 +1,6 @@
 import { canClearForest, canPlantForest } from '../sim/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
+import { functionLock } from '../sim/unlocks';
 import type { World } from '../sim/types';
 import { home, tileAt } from '../sim/world';
 import { cameraBounds } from '../render/archipel';
@@ -377,6 +378,7 @@ export function bindInput(
       e.key,
       { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
       isTextField(e.target) || modal,
+      functionLock(state.world, 'seafaring') === null,
     );
     if (hot) {
       if (!e.repeat) onAction({ type: 'hotkey', action: hot });

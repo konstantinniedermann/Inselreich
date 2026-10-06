@@ -260,5 +260,12 @@ export function foreignHover(
   const isl = world.islands[hit.island]!;
   if (isl.tiles[hit.y * isl.width + hit.x]?.terrain === 'water') return null;
   const text = islandCard(world, hit.island);
-  return text === null ? null : { ...hit, info: { title: text, lines: [] } };
+  return text === null
+    ? null
+    : { ...hit, info: { title: foreignHoverTitle(world, text), lines: [] } };
+}
+
+/** Vor `seafaring` hängt die Inselkarte den Hinweis auf die Seefahrt an (Spec M12 C.10). */
+export function foreignHoverTitle(world: World, card: string): string {
+  return functionLock(world, 'seafaring') === null ? card : `${card} · Seefahrt mit den Kaufleuten`;
 }
