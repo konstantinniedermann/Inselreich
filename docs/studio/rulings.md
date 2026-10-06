@@ -2266,3 +2266,16 @@ offenem drittem Ziel), Art-Paket Schiffskontrast (heller Rand/Kielwasser). Nach 
 Seefahrt + H-R15 durch L0. — Kosten bei Irrtum: Schiff in der Fernansicht weiter kaum sichtbar.
 
 Entscheider: L0 · Anlass: Final-Review lead-qa, Urteil lead-art · ADR: —
+
+## R275 · 2026-10-06 · F2 abgenommen, Kandidat REL-05 bauen
+
+Ruling: F2 (`feat/m12-see` @ 0c759f1: Schiff gezeichnet 16 px bei Zoom 0,25/0,125, N1/N2/N3/N5, Review OK, Playtest
+OK, lead-art OK Regel 3, `make check`/`CI=true` EXIT=0 — Messfenster „belegt" durch Last 4,38 ohne Fremdprozesse,
+für Breitenmessung unerheblich) angenommen. **REL-05** nach Gate Merge Release: (1) production-integrator baut den
+Kandidaten in `.worktrees/integrate` ab `origin/main`: `feat/m12-see` @ 0c759f1, dann `feat/h-r15-saum` @ 55e5da1, je
+`--no-ff --no-commit`, `make check` + `CI=true make check`, grün committen, **noch kein Push**; Konflikt → stoppen und
+melden. (2) qa-playtester am Kandidaten, je UI-Task ein Abschnitt (T12, T13, T15, H-R15) unter `.studio/qa/REL-05/`.
+(3) lead-qa (opus) Delta-Review über Kandidat: F2-Delta seit dem Final-Review, H-R15 und die Merge-Stellen (R249 (1)).
+(4) Gate durch L0, dann Push. — Kosten bei Irrtum: Kandidat frisch aufbauen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-F2 · ADR: —
