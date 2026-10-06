@@ -2467,3 +2467,12 @@ gemergten Auswertung (51f28ac); der Zähler-Branch folgt nach der Fix-Runde einz
 `homeBuildings.ts` → Beobachtung. — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-HF1 · ADR: —
+
+## R293 · 2026-10-06 · Gate CI-ACTIONS-NODE (Kurzentscheid)
+
+Ruling: Kleinpaket ohne `src/`-Änderung, Gate durch L0 im Briefing (R260): Actions auf die neuesten Major-Versionen
+mit Node-24-Laufzeit heben (per `gh api` belegt), Runner auf `ubuntu-24.04` festnageln statt `ubuntu-latest`, damit
+der Wechsel auf Ubuntu 26 kein ungeplantes Ereignis wird; Umstieg auf 26 später als eigenes Paket. Umsetzung
+lead-production, Review `qa-code-reviewer`. — Kosten bei Irrtum: CI rot, Revert des Commits.
+
+Entscheider: L0 · Anlass: BEOB-AUSW-01, Frist 2026-10-19 · ADR: —
