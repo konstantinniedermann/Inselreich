@@ -1007,3 +1007,18 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Fundort / Beobachtung (Q8e):** Viertel-Kopie der Heimat entsteht synchron beim ersten Zoom ≤ 0,25; das fehlt in R4
   (Spec, Leistungsabschnitt). **Einschätzung:** Doku-Lücke, kein Fehler; im Spec-Nachtrag oder in ADR-013 vermerken
   und prüfen, ob ein Frame dabei die 50 ms überschreitet. **Ursprung:** F1/Final-Review M12-E1.
+
+## 2026-10-06 · H-R15 Review: Zustand der Viertel-Kopie dezentral
+
+- **Fundort / Beobachtung:** `terrainJob` und `updateTerrainLayer` (`src/render/terrain.ts`) kennen den Zustand der
+  Viertel-Kopie nicht zentral; jede Neumalung der Kopie (Streifen, Patch, `quarterLayer`) muss selbst an
+  `repaintFarWater` denken. **Einschätzung:** niedrig; bei weiterer Arbeit an der Kopie Zustand und Neumalen in eine
+  Stelle bündeln. **Ursprung:** H-R15-Review.
+- **Fundort / Beobachtung:** `perf.mjs`: `buildMs` schwankt zwischen Läufen um etwa ±15 %; das Kriterium B/A ≤ 1,1
+  hat bei Einzelläufen wenig Aussagekraft. **Einschätzung:** niedrig; Median über mehr Läufe oder Spanne angeben.
+- **Fundort / Beobachtung:** Bildvergleich im Browser: Wasserglanz und Schaum sind zeitabhängig, ein Frame-Pixeldiff ist
+  nur mit pausierter Animation deterministisch; sonst Ebenen-Hash (`buildTerrainLayer`, `halfLayer`) vergleichen.
+  **Einschätzung:** niedrig; im Messwerkzeug einen Pausen-Schalter oder Ebenen-Hash ergänzen. **Ursprung:** H-R15.
+- **Fundort / Beobachtung:** Heimat-Viertel-Kopie entsteht synchron beim ersten Zoom ≤ 0,25 (siehe Q8e); mit H-R15
+  kostet das etwa 33 ms statt 22 ms (Last 4, Seed 14/3). **Einschätzung:** unter 50 ms, aber knapp bei langsameren
+  Rechnern; die Heimat wie die Fremdinseln über Schritte aufbauen. **Ursprung:** H-R15.

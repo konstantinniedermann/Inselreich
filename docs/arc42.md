@@ -814,7 +814,9 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   Kamera je Insel liefert `islandCam`. Culling (`visibleIslands`) und Picking (`pickArchipel`) laufen je Insel; die
   Kamera bleibt im Rahmen `cameraBounds` (Archipel + 8 Kacheln). Mindestzoom 0,125 (`ZOOM_STEPS`).
 - **Detailstufe:** Ab Zoom ≤ `LOD_ZOOM` (0,25) entfallen Figuren, Tiere, Rauch, Schaum und Wellen; der Boden kommt aus
-  der Viertel-Kopie (halbe Kopie bei Zoom ≤ 0,5, `terrain.ts`).
+  der Viertel-Kopie (halbe Kopie bei Zoom ≤ 0,5, `terrain.ts`). Die Viertel-Kopie malt das Flachwasser aus dem
+  euklidischen Küstenabstand neu (`saum.ts`, `repaintFarWater`): runde Abstandslinien statt der Rauten des
+  8er-Küstenfelds; der Boden bei Zoom 1 und 2 bleibt unverändert.
 - **Speicher:** `ARCHIPEL_EXTRA_BYTES` in `limits.ts` (≈ 44,5 MB bei `ARCHIPEL_LAYER_SCALE` 2) zusätzlich zu Sprite-
   und Massiv-Cache.
 - **Last:** Fremdinseln werden im Leerlauf in Scheiben ≤ 8 ms gerastert, nie im Erstbild; der Notfall rastert
