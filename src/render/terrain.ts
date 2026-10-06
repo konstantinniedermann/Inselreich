@@ -5,6 +5,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
+import type { CacheStep } from './cachePlan';
 import {
   FLOWER_TONES,
   SHRUB_TONES,
@@ -1488,13 +1489,41 @@ const unionRect = (a: TileRect | null, b: TileRect | null): TileRect | null =>
         y1: Math.max(a.y1, b.y1),
       };
 
+function newHalf(layer: HTMLCanvasElement): HTMLCanvasElement {
+  const half = document.createElement('canvas');
+  half.width = Math.ceil(layer.width / 2);
+  half.height = Math.ceil(layer.height / 2);
+  return half;
+}
+
+function paintHalfStrip(
+  half: HTMLCanvasElement,
+  layer: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = half.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(layer, 0, st.sy, layer.width, st.sh, 0, st.dy, half.width, st.dh);
+}
+
+/**
+ * Erzwingt die aufgeschobene Rasterung von `canvas` (Chrome zeichnet eine Ebene erst, wenn sie als Quelle gelesen
+ * wird): ein Ein-Pixel-Lesen in eine Wegwerf-Fläche, ohne Rücklesen in den Speicher (M12 E1, AK-E1-19: die Rasterung
+ * der halben Kopie lief sonst gebündelt im ersten Viertel-Streifen, 10–25 ms).
+ */
+function flushRaster(canvas: HTMLCanvasElement): void {
+  const probe = document.createElement('canvas');
+  probe.width = 1;
+  probe.height = 1;
+  probe.getContext('2d')?.drawImage(canvas, 0, 0, 1, 1, 0, 0, 1, 1);
+}
+
 /** Einmal vorskalierte Kopie mit halber Kantenlänge (Zoom ≤ 0,5, AK-ISO-19). */
 export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   const m = meta.get(layer);
   if (m?.half) return m.half;
-  const half = document.createElement('canvas');
-  half.width = Math.ceil(layer.width / 2);
-  half.height = Math.ceil(layer.height / 2);
+  const half = newHalf(layer);
   const ctx = half.getContext('2d');
   if (ctx) {
     ctx.imageSmoothingQuality = 'high';
@@ -1504,25 +1533,58 @@ export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   return half;
 }
 
+export const QUARTER_STRIPS = 8; // Streifen der Viertel-Kopie (M12 E1, AK-E1-19: ein Schritt deutlich unter 8 ms)
+
+/**
+ * Streifen der Viertel-Kopie: Quellzeilen der halben Kopie (gerade Grenzen, 2:1) und Zielzeilen der Viertel-Kopie.
+ * Die Streifen decken beide Seiten lückenlos und ohne Überlappung; der letzte Streifen nimmt den Rest (ungerade Höhe).
+ */
+export function quarterStrips(
+  halfHeight: number,
+  n = QUARTER_STRIPS,
+): { sy: number; sh: number; dy: number; dh: number }[] {
+  const qh = Math.ceil(halfHeight / 2);
+  const rows = 2 * Math.ceil(halfHeight / (2 * n));
+  const out: { sy: number; sh: number; dy: number; dh: number }[] = [];
+  for (let y = 0; y < halfHeight; y += rows) {
+    const sh = Math.min(rows, halfHeight - y);
+    const dy = y / 2;
+    out.push({ sy: y, sh, dy, dh: y + sh >= halfHeight ? qh - dy : sh / 2 });
+  }
+  return out;
+}
+
+function newQuarter(half: HTMLCanvasElement): HTMLCanvasElement {
+  const quarter = document.createElement('canvas');
+  quarter.width = Math.ceil(half.width / 2);
+  quarter.height = Math.ceil(half.height / 2);
+  return quarter;
+}
+
+function paintQuarterStrip(
+  quarter: HTMLCanvasElement,
+  half: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = quarter.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
+}
+
 /** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
 export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   const m = meta.get(layer);
   if (m?.quarter) return m.quarter;
   const half = halfLayer(layer);
-  const quarter = document.createElement('canvas');
-  quarter.width = Math.ceil(half.width / 2);
-  quarter.height = Math.ceil(half.height / 2);
-  const ctx = quarter.getContext('2d');
-  if (ctx) {
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(half, 0, 0, half.width, half.height, 0, 0, quarter.width, quarter.height);
-  }
+  const quarter = newQuarter(half);
+  for (const st of quarterStrips(half.height)) paintQuarterStrip(quarter, half, st);
   if (m) m.quarter = quarter;
   return quarter;
 }
 
-const GRID_BAND_ROWS = 4; // Knotenzeilen je Gitterband (M12 E1)
-const SLICE_ROWS = 32; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
+export const GRID_BAND_ROWS = 2; // Knotenzeilen je Gitterband (M12 E1)
+export const SLICE_ROWS = 16; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
 
 /**
  * Inselcache in Schritten (M12 E1): gleiche Arbeit wie `buildTerrainLayer`, aber als Liste kleiner Schritte für den
@@ -1532,7 +1594,7 @@ const SLICE_ROWS = 32; // Pixelzeilen je Malschritt des Inselcaches (M12 E1)
 export function terrainJob(
   world: World,
   scale: number,
-): { layer: HTMLCanvasElement; steps: (() => void)[] } {
+): { layer: HTMLCanvasElement; steps: CacheStep[] } {
   const { w, h } = terrainLayerSize(home(world), scale)[0]!;
   const layer = document.createElement('canvas');
   layer.width = w;
@@ -1550,7 +1612,7 @@ export function terrainJob(
       f();
       spent += performance.now() - t0;
     };
-  const steps: (() => void)[] = [
+  const steps: CacheStep[] = [
     timed(() => {
       fields = terrainFields(fieldWorld(world));
     }),
@@ -1595,8 +1657,41 @@ export function terrainJob(
         buildMs: spent,
       });
     }),
-    timed(() => void halfLayer(layer)),
-    timed(() => void quarterLayer(layer)),
   );
+  // Halbe Kopie in Streifen, je Streifen mit erzwungener Rasterung (AK-E1-19); ruft der Renderer `halfLayer` früher,
+  // bleiben die Streifen wirkungslos.
+  let halfWip: HTMLCanvasElement | null = null;
+  for (let i = 0; i < QUARTER_STRIPS; i++) {
+    const strip: CacheStep = timed(() => {
+      const m = meta.get(layer);
+      if (!m || m.half) return;
+      const list = quarterStrips(layer.height);
+      const st = list[i];
+      halfWip ??= newHalf(layer);
+      if (st) {
+        paintHalfStrip(halfWip, layer, st);
+        flushRaster(halfWip);
+      }
+      if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.half = halfWip;
+    });
+    if (i === 0) strip.solo = true; // erste Lesung der Ebene (Textur, aufgeschobene Rasterung): allein in einer Scheibe
+    steps.push(strip);
+  }
+  // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
+  let quarter: HTMLCanvasElement | null = null;
+  const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
+  for (let i = 0; i < QUARTER_STRIPS; i++)
+    steps.push(
+      timed(() => {
+        const m = meta.get(layer);
+        if (!m || m.quarter) return;
+        const half = halfLayer(layer);
+        const list = stripsOf();
+        const st = list[i];
+        quarter ??= newQuarter(half);
+        if (st) paintQuarterStrip(quarter, half, st);
+        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.quarter = quarter;
+      }),
+    );
   return { layer, steps };
 }

@@ -943,3 +943,67 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Beobachtung:** Fremdinsel-Bäume nutzen den Seed der echten Welt (nicht den Inselseed der `islandView`); kein Test belegt das. `renderStats.errands` wird jetzt je Frame genullt und je Insel summiert (vorher blieb der Wert bei leerem Bildbereich stehen).
 - **Ursprung:** M12-E1 T05, Review OK.
 - **Einschätzung:** Test in T06 nachziehen (klein); `errands` harmlos.
+- **Test nachgezogen:** b59ac28 (Baumstempel-Seed; Mutationsprobe rot/grün).
+
+## 2026-10-06 · M12-E1 C3: Messumgebung und Werkzeug-Fallen
+
+- **Fundort:** `tools/render-qa/perf.mjs`-Läufe, Arbeiter-Skripte im Scratchpad, Entwickler-Mac.
+- **Beobachtung:** (1) Ein Probe-Skript liess Vite (Port 5180) und Headless-Chrome 75 min laufen; die Messserie in dieser Zeit war ungültig — die R250-Prüfung `ps | grep vitest` erkennt solche Prozesse nicht. (2) Ein Arbeiter räumte mit `pkill -x node` auf; das trifft auch Vite-/vitest-Prozesse anderer Stränge. (3) macOS-Hintergrunddienste (Spotlight `mds`, `AddressBookSourceSync`) hielten die Last über Stunden bei 5–7; ein `make check` zeigte Testdauern um 925 s (vermutlich Ruhezustand des Rechners) — solche Läufe taugen nicht als Beleg. (4) `timeout` fehlt auf macOS.
+- **Ursprung:** M12-E1 C3 (T07).
+- **Einschätzung:** mittel. Lastprüfung um `vite|headless` erweitern und Aufräumen nur per eigener PID (R257 deckt das für Messserien ab); für E-030/Handbuch prüfen, ob die Systemlast (`uptime`) als Vorbedingung für Zeittests und Messungen gilt.
+
+## 2026-10-06 · M12-E1 C3 Playtests: Inselkarte bricht um, Schlieren im Flachwasser-Saum
+
+- **Fundort:** `src/ui/hover.ts`/Tooltip (Inselkarte), Viertel-Kopie bei Zoom 0,25 und 0,125 (`.studio/qa/m12-e1-c3/T07/b_s14_1920_zoom0.25_clip_mitte_x3.png`, `b_s3_1920_zoom0.125_heimat_x4.png`).
+- **Beobachtung:** Die Inselkarte bricht bei 1280 px mitten im Text um („Fahrzeit / 0:26“). Im Flachwasser-Saum der Inseln sind bei Zoom ≤ 0,25 weiche waagrechte Schlieren etwa im Kachelzeilen-Abstand sichtbar (keine Streifennaht, nicht bei Zoom 1).
+- **Ursprung:** M12-E1 T06/T07 Playtests (qa-playtester).
+- **Einschätzung:** niedrig; Umbruch kosmetisch (z. B. geschütztes Leerzeichen vor der Zeit). Schlieren beurteilt lead-art im Merge-Gate E1.
+
+## 2026-10-06 · M12-E1 Abschluss (T08): Befunde C1–C3b für E2 und Aufräumen
+
+- **Fundort / Beobachtung (a):** `src/render/archipel.ts` `islandView`: setzt `buildings: {}`. Gebäude auf Fremdinseln
+  sind in E1 nicht sichtbar. **Einschätzung:** Der Seefahrt-Plan (E2) muss Gebäude je Insel in die Ansicht bringen
+  (Risiko R-6); Zeichner, Culling und Picking lesen nur die Ansicht. **Ursprung:** M12-E1 T05.
+- **(b)** `src/sim/islands.ts`, `src/sim/defs/sea.ts`: Die Bauplätze von A und B sind in E1 nur per Geländeregel geprüft
+  (P-3). **Einschätzung:** E2/E3 prüfen sie per `canPlace` für `kontor2` und `spicefarm`; `spicefarm.site` muss
+  `PLANTATION_SITE` enthalten, sonst passt die Plantage nicht zu den erzeugten Plätzen. **Ursprung:** M12-E1 T01/T02.
+- **(c)** `src/ui/app.ts` `planOf`: Pro Seite entstehen zwei Cache-Pläne; Plan 1 läuft etwa 22 Schritte und steht dann.
+  Vermutung: eine App-Instanz vor „Fortsetzen" (Startkarte über Hintergrundwelt). **Einschätzung:** nicht untersucht;
+  harmlos, aber unnötiger Aufwand und ein Grund für verschobene Messfenster; vor E2 prüfen, ob die Hintergrundwelt keinen
+  Plan braucht. **Ursprung:** M12-E1 C3b (T07).
+- **(d)** `tests/render/terrain.test.ts`: Zwei H-R11-Tests waren im Review-Lauf unter hoher Last rot (im `make check`
+  grün; Namen nicht festgehalten). **Einschätzung:** vermutlich Zeitgrenzen unter Last; der Zeittest-Wächter
+  (`ZEITTESTS` in `vite.config.ts`) zeigt, welche Dateien als Zeittests laufen; bei erneutem Auftreten bei ruhiger
+  Maschine wiederholen, sonst Timeout mit Begründung. **Ursprung:** M12-E1 T07-Review.
+- **(e)** `src/render/cachePlan.ts` `finish`, `src/ui/islandLayers.ts`: Die Notfall-Rasterung beim Sofort-Zoom auf noch
+  nicht gebaute Fremdinseln blockiert einen Frame 160–450 ms. **Einschätzung:** planmässig synchron (ADR-013 Nachtrag);
+  tritt nur vor Abschluss des Leerlauf-Aufbaus (etwa 27 s bei DPR 2) auf. **Ursprung:** M12-E1 T06-Playtest.
+- **(f)** AK-E1-19: Rest-Maximum 8,4–10,1 ms (p95 7,7–7,9) ist eine periodische Spitze etwa alle 16 Malschritte
+  (3,3–4,4 ms statt 0,6–1,3 ms), gleicher Index, kein GC. **Einschätzung:** Ursache unbelegt, Vermutung Browser-Flush der
+  Aufzeichnung; weitere Teilung half nicht, Flush je Schritt verschlechterte das Maximum. Bei Bedarf Chrome-Trace.
+  Entscheid R265: p95 zählt. **Ursprung:** M12-E1 C3b (T07).
+- **(g)** Worktrees `.worktrees/m12-e1-perf` (Branch gemerged) und `.worktrees/m12-e1-terrain` sind entfernbar.
+  **Einschätzung:** nur Hinweis, Aufräumen durch den Integrator nach dem Merge. **Ursprung:** M12-E1 C3.
+- Die Inselkarte, die bei 1280 px umbricht, und die Schlieren im Flachwasser-Saum stehen schon im Eintrag vom
+  2026-10-06 (C3 Playtests); die `.env.example` gibt es im Repo nicht (keine Umgebungsvariablen nötig, `docs/arc42.md`
+  nennt keine).
+
+## 2026-10-06 · M12-E1 Fix-Runde F1 / Final-Review: Befunde ausserhalb des Scopes
+
+- **Fundort / Beobachtung (Q4):** `tests/render/camera.test.ts:320`: Die Prüfung ist tautologisch (kann nicht rot werden).
+  **Einschätzung:** niedrig; bei der nächsten Arbeit an der Kamera mit einer echten Gegenprobe ersetzen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8a):** `src/sim/world.ts:82` und `src/sim/save.ts:281`: Die Fremdinsel-Erzeugung steht doppelt
+  (`createWorld` und `migrateV7ToV8`). **Einschätzung:** niedrig (DRY); eine gemeinsame Funktion, sonst laufen beide Wege
+  bei einer Änderung auseinander. Der Commit `0108a67` trägt das Präfix `style:` statt der Konvention
+  (`feat:`/`fix:`/`docs:`/`refactor:`/`test:`); nicht änderbar (kein Umschreiben der Historie), nur Hinweis. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8b):** `src/sim/save.ts:44`: Die Ladeprüfung prüft Gebäudekoordinaten nicht gegen die
+  Inselgrösse. **Einschätzung:** ab E2 relevant (Gebäude auf Fremdinseln), dann Koordinaten je `island` gegen
+  `width`/`height` prüfen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8c):** `src/sim/limits.ts`: Gitter und Felder der Fremdinseln (etwa 10 MB) sind in den
+  Obergrenzen nicht erfasst. **Einschätzung:** niedrig; bei der nächsten Änderung an `limits.ts` aufnehmen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8d):** Archipel-Ansicht im Modus `jump`: Fremdinseln werden im Leerlauf gerastert, obwohl
+  die Ansicht sie nicht zeigt. **Einschätzung:** unnötiger Leerlaufaufwand; prüfen, ob `jump` die Pläne der Fremdinseln
+  zurückstellen kann. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8e):** Viertel-Kopie der Heimat entsteht synchron beim ersten Zoom ≤ 0,25; das fehlt in R4
+  (Spec, Leistungsabschnitt). **Einschätzung:** Doku-Lücke, kein Fehler; im Spec-Nachtrag oder in ADR-013 vermerken
+  und prüfen, ob ein Frame dabei die 50 ms überschreitet. **Ursprung:** F1/Final-Review M12-E1.

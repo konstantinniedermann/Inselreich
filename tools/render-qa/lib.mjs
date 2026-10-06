@@ -72,8 +72,10 @@ export async function withBrowser(
     await new Promise((r) => ws.addEventListener('open', r));
     let id = 0;
     const pend = new Map();
+    const listeners = new Map();
     ws.addEventListener('message', (m) => {
       const d = JSON.parse(m.data);
+      if (d.method) for (const l of listeners.get(d.method) ?? []) l(d.params);
       if (d.id && pend.has(d.id)) {
         const { res, rej } = pend.get(d.id);
         pend.delete(d.id);
@@ -106,7 +108,9 @@ export async function withBrowser(
       deviceScaleFactor: dpr,
       mobile: false,
     });
-    return await fn({ ev, send, close: () => ws.close() });
+    /** Hört auf CDP-Ereignisse, z. B. `Runtime.consoleAPICalled`. */
+    const on = (method, l) => listeners.set(method, [...(listeners.get(method) ?? []), l]);
+    return await fn({ ev, send, on, chromePort, close: () => ws.close() });
   } finally {
     for (const p of procs) p.kill('SIGTERM');
     await sleep(300);

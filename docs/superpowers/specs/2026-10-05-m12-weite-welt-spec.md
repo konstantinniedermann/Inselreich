@@ -310,6 +310,20 @@ Insel. **AK-E1-07/09/10** Culling, Picking, Heimat-Zeichenaufrufe gleich `main` 
 
 **Nicht in E1:** Bauen auf Fremdinseln, Kontor II, Schiffe, Gewürz-Produktion, Seekarte (E5).
 
+### Nachträge E1 (R257, R265)
+
+Die AK-Zeilen in Anhang 04 bleiben unverändert; diese Nachträge legen Messbedingung und entscheidende Grösse fest.
+Messwerte stehen im Nachtrag von [ADR-013](../../adr/ADR-013-inselmodell-im-weltzustand.md).
+
+- **AK-E1-18 (R257, D-147):** Gemessen und entschieden wird bei 1920 × 1080 und **DPR 1** (Headless-Chrome); die Grenze
+  frameMax ≤ 50 ms bleibt. Die DPR-2-Werte (Grundframe dort bereits 50 ms) und der „Zuwachs über Grundframe" sind nur
+  informativ. Vor jeder Messserie dürfen keine fremden Chrome-, Vite- oder vitest-Prozesse laufen; Probe-Prozesse werden
+  danach per PID beendet.
+- **AK-E1-19 (R265, ersetzt die Auslegung R263):** Entscheidend ist **p95 ≤ 8 ms je Leerlauf-Scheibe**. Das Maximum ist
+  informativ mit Richtwert ≤ 12 ms, keine Abnahmegrenze. Gemessen: p95 7,7–7,9 ms (DPR 2), Maximum 8,4–10,1 ms. Das
+  Rest-Maximum ist eine periodische Spitze etwa alle 16 Malschritte; die Ursache ist unbelegt (Vermutung:
+  Browser-Flush der Aufzeichnung).
+
 ## 6. Teil E2 — Kontor II, Bauen auf Fremdinseln, Seefahrt
 
 **Zweck:** Mit U6 gründet der Spieler auf einer Fremdinsel ein Kontor und baut dort nach heutigen Regeln. Details:

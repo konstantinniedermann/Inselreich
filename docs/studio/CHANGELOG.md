@@ -22,6 +22,22 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-06 · Persona production-integrator 1.7
+
+- Anlass: Ad-hoc-Retro E1 C3, B5: Merge TOOL-E030 im Hauptcheckout statt `.worktrees/integrate`
+- Datenbasis: [Retro adhoc-e1-c3](retros/2026-10-06-adhoc-e1-c3.md) B5, Retro 9b13950a B4
+- Ruling: R264 (V3, E-026 ohne Experiment übernommen)
+- Änderungen: Merge immer in `.worktrees/integrate` (detached auf origin/main, `git worktree add --detach`
+  falls fehlend), Pflichtprüfung `git rev-parse --show-toplevel`, Push `git push origin HEAD:main`
+
+## 2026-10-06 · Persona lead-tech 1.7
+
+- Anlass: Ad-hoc-Retro E1 C3, B4: fünf Controller-Starts auf opus statt sonnet
+- Datenbasis: [Retro adhoc-e1-c3](retros/2026-10-06-adhoc-e1-c3.md) B4, Handbuch Modellwahl
+- Ruling: R264 (V2)
+- Änderungen: Frontmatter `model: sonnet`; Satz: Plan, Plan-Überarbeitung und Meilenstein-Retro startet L0
+  ausdrücklich mit `opus`. Roster-Zeilen lead-tech und production-integrator nachgezogen
+
 ## 2026-10-05 · Handbuch 1.20
 
 - Anlass: Abnahme Handbuch 1.19, Zeitraum E-028 erreicht
