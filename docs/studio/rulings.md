@@ -2111,3 +2111,18 @@ unverändert); Messung: 0 Controller-Starts auf opus je Session. **V3** E-026 al
 Persona-Versionen zurücksetzen.
 
 Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-ADHOC-E1C3 · ADR: —
+
+## R265 · 2026-10-06 · E1 C3b abgenommen, AK-E1-19 nach p95, Start C4
+
+Ruling: T07 (`feat/m12-e1` @ 3727c3f, Review OK, `make check`/`CI=true` grün — „unter Last" durch macOS-Dienste,
+gekennzeichnet) angenommen. **AK-E1-19:** Die Spitzen 15–30 ms lagen in unserem Code (unteilbare Halbkopie) und sind
+behoben; das Rest-Maximum 8,4–10,1 ms (periodisch, Ursache unbelegt, weitere Teilung ohne Wirkung) liegt deutlich unter
+einem Frame (16,7 ms). Abweichend von R263 entscheidet **p95 ≤ 8 ms** (gemessen 7,7–7,9); das Maximum steht als
+informative Grenze ≤ 12 ms im Spec-Nachtrag. Kein weiterer Start für einen Chrome-Trace. **C4** startet: lead-tech
+(sonnet) T08 Doku inkl. Spec-Nachträge R257/R265 und Übertrag der C3/C3b-Befunde (zwei Cache-Pläne je Seite in
+`app.ts`, H-R11-Tests unter Last rot, Inselkarte 1280 px, Flachwasser-Schlieren) nach `docs/beobachtungen.md`; danach
+Final-Review lead-qa auf opus über `feat/m12-e1` (Fix-Runden T03/T04 ausdrücklich, R248). Budget: 2 Starts lead-tech
+aus R250-Rest, 1 Start lead-qa. Mess-Wächter (R264 V1) folgt nach dem E1-Merge auf main. — Kosten bei Irrtum:
+Nachmessung mit Trace in einem Häppchen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3B · ADR: —
