@@ -2238,3 +2238,15 @@ geht H-R15 am Session-Ende allein als REL-05 (Auslöser Session-Ende). Erster Zo
 (< 50 ms) hingenommen, Beobachtung bleibt. — Kosten bei Irrtum: H-R15 später, Konflikt dann in `terrain.ts`.
 
 Entscheider: L0 · Anlass: Bericht lead-art H-R15 · ADR: —
+
+## R274 · 2026-10-06 · Hex-Raster-Demo als Wegwerf-Prototyp ausserhalb des Spiels
+
+Ruling: Nutzerauftrag „quick und dirty eine Demo mit hexagonalem Raster" wird als **Discovery-Prototyp** ausgelegt
+(E-027), nicht als Umstellung des Spiels. Eine eigenständige HTML-Datei (Canvas 2D, ohne Abhängigkeiten) im
+Session-Scratchpad, kein Code in `src/`, keine Spec, kein Plan, kein Review-Gate; ein Arbeiter (art-rendering-engineer,
+sonnet) baut sie, L0 veröffentlicht sie als privates Artifact. Inhalt: Hex-Insel mit Terrain, Bauen per Klick,
+Einflussradius, Strassen-Pfadsuche, Umschalter Quadrat/Hex zum Vergleich. Ein Umbau des Spiels auf Hex wäre ein
+eigener Meilenstein mit Brainstorming und ADR (bricht ADR-012 Isometrie und alle Spielstände). — Kosten bei Irrtum:
+eine Wegwerf-Datei, kein Eingriff in laufende Stränge.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
