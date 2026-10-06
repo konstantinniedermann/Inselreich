@@ -1,5 +1,7 @@
 import { hash2, valueNoise } from '../sim/noise';
-import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
+import type { GroundElement } from './decor';
+import { ROCK_TONES } from './light';
+import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './palette';
 
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
 // Reine Helfer ohne Canvas; Lage in Kachel-Anteilen, deterministisch aus `hash2`/`valueNoise`.
@@ -10,7 +12,12 @@ import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 // ART-STIL-02 (Spec 4 R1, Anhang 0.2): 500 Inselcharakter `hash2(seed + 500, 0, k)` (k 0 Waldtyp, L1 in forest.ts) ·
 // 501–519 L1 Wald: 501 Akzentart, 502/503 Bestandsfelder, 504/505/514 Randversatz, 506/507 Kern-Streuung, 508 Lichtung,
 // 509/510 Riesenbaum, 511 Formreihenfolge (alle forest.ts), 512 Kronen je Variante, 513 Kronenform (trees.ts) ·
-// 520–539 L2 · 540–559 L4 · 560–574 L5 · 575–584 L6 · 585–594 L7 · 595–599 L8.
+// 520–539 L2 · 540–559 L4 (decor.ts, groundDecor.ts, decorStamps.ts) · 560–574 L5 · 575–584 L6 · 585–594 L7 · 595–599 L8.
+// L4 im Einzelnen: 540 Solitärbaum je Kachel · 541 Wiesenart A2 · 542 Buschgruppe A3 · 543 Kiesel A4 · 544 Findling A4 ·
+// 545 Lesesteinhaufen A7 · 546 Maulwurfshügel A11 · 547 Binsen A12 · 548 Pilze B6 · 549 Totholz B7 · 550 Farnsaum B8 ·
+// 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 frei · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
+// 556 Mauerreste A14 · 557 Obstbaum A6 · 558 Menhir A9 · 559 Pilzring A10. Dazu die Blütenpalette je Insel über
+// `hash2(seed + 500, 0, 1)` (Inselcharakter k = 1, Anhang 0.2).
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -119,4 +126,494 @@ export function meadowWarmth(seed: number, fx: number, fy: number): number {
 export function flowerVeil(seed: number, fx: number, fy: number): number {
   const field = clamp01((valueNoise(seed + 60, fx * 0.18, fy * 0.18) - 0.5) * 2.6 + 0.5);
   return Math.max(0, (field - 0.55) / 0.45);
+}
+
+// ---------- ART-STIL-02 L4: Blütenpalette (A1) und Formen der Boden-Elemente ----------
+
+const BLOOM_SLATE = mixHex(PALETTE.roofSlate, PALETTE.roofTerracotta, 0.22);
+/** Mohn: gedämpftes Terrakotta-Rot mit Erdstich (ΔE2000 ≥ 20 zu signalRed und signalWarn). */
+export const POPPY = mixHex(PALETTE.roofTerracotta, PALETTE.grassDark, 0.2);
+/** Kornblume: kühles Blauviolett, hell genug, damit sie nie als Wasser liest (ΔE2000 ≥ 10 zu den Wassertönen). */
+export const CORNFLOWER = mixHex(BLOOM_SLATE, PALETTE.wallLime, 0.12);
+/** Lavendel: helles, gedämpftes Violett. */
+export const LAVENDER = mixHex(BLOOM_SLATE, PALETTE.wallLime, 0.5);
+/** Butterblume: Gelb als Mischung aus Stroh und Sand (ΔE2000 ≥ 20 zu signalYellow). */
+export const BUTTERCUP = mixHex(PALETTE.roofThatch, PALETTE.roofTerracotta, 0.15);
+
+/** Blütenpaletten je Insel (Spec 3.7): 0 Kalk und Stroh (bisher) · 1 Mohn und Kornblume · 2 Lavendel und Kalk · 3 Butterblume und Kalk. */
+export const FLOWER_PALETTES: readonly (readonly [string, string, string])[] = [
+  FLOWER_TONES,
+  [POPPY, CORNFLOWER, PALETTE.wallLime],
+  [LAVENDER, mixHex(LAVENDER, PALETTE.wallLime, 0.5), PALETTE.wallLime],
+  [BUTTERCUP, mixHex(BUTTERCUP, PALETTE.roofWood, 0.3), PALETTE.wallLime],
+];
+/** Blütenpalette der Insel 0…3 aus `hash2(seed + 500, 0, 1)`; für die Heimat und jede Inselansicht mit ihrem Ansicht-Seed. */
+export const flowerPalette = (seed: number): number =>
+  Math.min(3, Math.floor(hash2(seed + 500, 0, 1) * 4));
+export const flowerTonesFor = (seed: number): readonly [string, string, string] =>
+  FLOWER_PALETTES[flowerPalette(seed)]!;
+
+const rockCss = (i: number): string => `rgb(${ROCK_TONES[i]!.map((v) => Math.round(v)).join(',')})`;
+
+/** Töne der Boden-Elemente (Mischungen aus `palette.ts`); Test: ΔE2000 ≥ 20 zu den Signalfarben. */
+export const DECOR_TONES = {
+  tallDark: mixHex(PALETTE.grassDark, PALETTE.crown, 0.35),
+  tallLight: PALETTE.grass,
+  clover: mixHex(PALETTE.grassDark, PALETTE.crown, 0.55),
+  dryDark: mixHex(PALETTE.grass, PALETTE.roofThatch, 0.45),
+  dryLight: mixHex(PALETTE.grassLight, PALETTE.roofThatch, 0.35),
+  shrubDark: mixHex(SHRUB_TONES[0], PALETTE.grassDark, 0.35),
+  shrubMid: mixHex(SHRUB_TONES[1], PALETTE.grassLight, 0.2),
+  shrubEdge: mixHex(mixHex(SHRUB_TONES[1], PALETTE.grassLight, 0.2), LIGHT_TONE, 0.35),
+  rockDark: rockCss(0),
+  rockShade: rockCss(1),
+  rockMid: rockCss(2),
+  rockLight: rockCss(3),
+  ringDark: mixHex(PALETTE.grass, PALETTE.grassDark, 0.55),
+  ringDot: mixHex(PALETTE.wallLime, PALETTE.sandWet, 0.3),
+  earth: PALETTE.earth,
+  earthLight: toLight(PALETTE.earth, 0.3),
+  reed: mixHex(PALETTE.grassDark, PALETTE.waterDeep, 0.2),
+  reedLight: mixHex(PALETTE.grass, PALETTE.waterDeep, 0.1),
+  toadstool: mixHex(PALETTE.roofTerracotta, PALETTE.roofTerracottaDark, 0.5),
+  toadstoolStem: mixHex(PALETTE.wallLime, PALETTE.sandWet, 0.4),
+  wood: PALETTE.roofWood,
+  woodDark: PALETTE.roofTimber,
+  woodLight: toLight(PALETTE.roofWood, 0.3),
+  woodEnd: toInk(PALETTE.roofTimber, 0.25),
+  fern: mixHex(PALETTE.grass, PALETTE.roofThatch, 0.15),
+  fernDark: mixHex(PALETTE.grass, PALETTE.grassDark, 0.4),
+} as const;
+
+/**
+ * Zeichenelement einer Boden-Deko in Kachelkoordinaten (x, y; ganz innerhalb des Fussabdrucks). Grössen in Kacheln
+ * (1 Texturpixel = 1/32). `z` ordnet die Lagen (0 Körper, 1 Licht/Detail); gezeichnet wird je (z, Farbe) ein Pfad.
+ */
+export type Prim =
+  | { k: 'rect'; c: string; z: number; x: number; y: number; w: number; h: number }
+  | { k: 'ell'; c: string; z: number; x: number; y: number; rx: number; ry: number }
+  | { k: 'poly'; c: string; z: number; pts: readonly number[] };
+
+const PX = 1 / 32;
+/** Schmales Blatt von (x0, y0) nach (x1, y1) als Vieleck: Breite `wpx` Texturpixel am Fuss, Spitze in (x1, y1). */
+function blade(
+  c: string,
+  z: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  wpx: number,
+): Prim {
+  const dx = x1 - x0,
+    dy = y1 - y0,
+    len = Math.hypot(dx, dy) || 1;
+  const nx = (-dy / len) * wpx * PX * 0.5,
+    ny = (dx / len) * wpx * PX * 0.5;
+  return { k: 'poly', c, z, pts: [x0 - nx, y0 - ny, x1, y1, x0 + nx, y0 + ny] };
+}
+const dot = (c: string, z: number, x: number, y: number, sizePx: number): Prim => ({
+  k: 'rect',
+  c,
+  z,
+  x,
+  y,
+  w: sizePx * PX,
+  h: sizePx * PX,
+});
+
+/**
+ * Formen eines Boden-Elements (Katalog A2–A4, A7, A8, A10–A13, B6–B8), deterministisch aus Seed und Kachel
+ * (Salze 541–550, 554, 555, 559). Licht kommt von links oben: helle Kanten oben links, Schatten unten rechts.
+ */
+export function groundShapes(el: GroundElement, seed: number): Prim[] {
+  const out: Prim[] = [];
+  const { x: tx, y: ty } = el;
+  const rnd = (salt: number, k: number): number => hash2(seed + salt, tx * 64 + k, ty);
+  const D = DECOR_TONES;
+  switch (el.kind) {
+    case 'tuftTall': {
+      // hohes Gras: 2 Gruppen aus je 3 langen Halmen (A2 feucht)
+      for (let g = 0; g < 2; g++) {
+        const bx = tx + 0.22 + 0.56 * hash2(seed + 541, tx * 64 + g * 3, ty),
+          by = ty + 0.55 + 0.35 * hash2(seed + 541, tx * 64 + g * 3 + 1, ty);
+        for (let b = -1; b <= 1; b++) {
+          const lean = b * 0.045 + 0.02 * (rnd(541, 10 + g * 3 + b) - 0.5);
+          out.push(
+            blade(
+              D.tallDark,
+              0,
+              bx + b * 0.02,
+              by,
+              bx + lean,
+              by - 0.2 - 0.07 * rnd(541, 20 + g * 3 + b),
+              1.5,
+            ),
+          );
+        }
+        out.push(blade(D.tallLight, 1, bx, by, bx + 0.01, by - 0.18, 1));
+      }
+      break;
+    }
+    case 'clover': {
+      // Kleegruppe: 3 runde Punkte in dunklem Grün
+      const bx = tx + 0.25 + 0.5 * rnd(541, 0),
+        by = ty + 0.3 + 0.4 * rnd(541, 1);
+      for (const [dx, dy] of [
+        [0, 0],
+        [0.07, 0.02],
+        [0.035, -0.05],
+      ] as const)
+        out.push({ k: 'ell', c: D.clover, z: 0, x: bx + dx, y: by + dy, rx: 0.035, ry: 0.03 });
+      break;
+    }
+    case 'tuftDry': {
+      // Trockenrasen: kürzere, strohstichige, lichtere Büschel
+      const bx = tx + 0.25 + 0.5 * rnd(541, 0),
+        by = ty + 0.5 + 0.35 * rnd(541, 1);
+      for (const b of [-1, 0, 1])
+        out.push(
+          blade(
+            b === 0 ? D.dryLight : D.dryDark,
+            0,
+            bx + b * 0.025,
+            by,
+            bx + b * 0.05,
+            by - 0.1 - 0.03 * rnd(541, 4 + b),
+            1.3,
+          ),
+        );
+      break;
+    }
+    case 'shrubs': {
+      // Gruppe aus 1–3 Büschen, Radius 0,06–0,12; zwei Grüntöne und eine Lichtkante oben (nie Kronenfarbe)
+      const n = 1 + Math.floor(rnd(542, 0) * 3);
+      const cx = tx + 0.35 + 0.3 * rnd(542, 1),
+        cy = ty + 0.4 + 0.2 * rnd(542, 2);
+      for (let i = 0; i < n; i++) {
+        const r = 0.06 + 0.06 * rnd(542, 3 + i * 4);
+        const x = Math.min(
+          tx + 1 - r - 0.04,
+          Math.max(
+            tx + r + 0.04,
+            cx + (i - (n - 1) / 2) * 0.16 + 0.04 * (rnd(542, 4 + i * 4) - 0.5),
+          ),
+        );
+        const y = Math.min(
+          ty + 1 - r * 0.8 - 0.04,
+          Math.max(ty + r + 0.04, cy + 0.06 * (rnd(542, 5 + i * 4) - 0.5)),
+        );
+        out.push({
+          k: 'ell',
+          c: rnd(542, 6 + i * 4) < 0.5 ? D.shrubDark : D.shrubMid,
+          z: 0,
+          x,
+          y,
+          rx: r,
+          ry: r * 0.75,
+        });
+        out.push({
+          k: 'ell',
+          c: D.shrubEdge,
+          z: 1,
+          x: x - r * 0.25,
+          y: y - r * 0.4,
+          rx: r * 0.55,
+          ry: r * 0.28,
+        });
+      }
+      break;
+    }
+    case 'pebble': {
+      const n = 1 + Math.floor(rnd(543, 0) * 2);
+      for (let i = 0; i < n; i++) {
+        const x = tx + 0.15 + 0.7 * rnd(543, 1 + i * 3),
+          y = ty + 0.15 + 0.7 * rnd(543, 2 + i * 3);
+        const s = 1 + Math.floor(rnd(543, 3 + i * 3) * 2); // 1–2 px
+        out.push(dot(rnd(543, 7 + i) < 0.5 ? D.rockMid : D.rockShade, 0, x, y, s));
+        out.push(dot(D.rockLight, 1, x, y, 1));
+      }
+      break;
+    }
+    case 'boulder': {
+      // Findling ≤ 0,3 Kachel: Körper, helle Lichtseite oben links, dunkle Kontur unten rechts
+      const r = 0.07 + 0.07 * rnd(544, 0); // Halbbreite ≤ 0,14 → Breite ≤ 0,28
+      const x = tx + 0.2 + 0.6 * rnd(544, 1),
+        y = ty + 0.3 + 0.4 * rnd(544, 2);
+      out.push({
+        k: 'ell',
+        c: D.rockDark,
+        z: 0,
+        x: x + r * 0.12,
+        y: y + r * 0.12,
+        rx: r,
+        ry: r * 0.72,
+      });
+      out.push({ k: 'ell', c: D.rockMid, z: 0, x, y, rx: r * 0.92, ry: r * 0.66 });
+      out.push({
+        k: 'ell',
+        c: D.rockLight,
+        z: 1,
+        x: x - r * 0.3,
+        y: y - r * 0.28,
+        rx: r * 0.5,
+        ry: r * 0.3,
+      });
+      break;
+    }
+    case 'stoneHeap': {
+      // Lesesteinhaufen: 5–8 Steine in ≤ 0,35 Kachel
+      const n = 5 + Math.floor(rnd(545, 0) * 4);
+      const cx = tx + 0.5,
+        cy = ty + 0.55;
+      for (let i = 0; i < n; i++) {
+        const a = rnd(545, 1 + i * 3) * Math.PI * 2,
+          d = 0.085 * Math.sqrt(rnd(545, 2 + i * 3));
+        const x = cx + Math.cos(a) * d * 1.4,
+          y = cy + Math.sin(a) * d;
+        const r = 0.025 + 0.02 * rnd(545, 3 + i * 3);
+        out.push({ k: 'ell', c: i % 2 ? D.rockShade : D.rockMid, z: 0, x, y, rx: r, ry: r * 0.75 });
+        out.push({
+          k: 'ell',
+          c: D.rockLight,
+          z: 1,
+          x: x - r * 0.3,
+          y: y - r * 0.35,
+          rx: r * 0.45,
+          ry: r * 0.25,
+        });
+      }
+      break;
+    }
+    case 'stoneCircle': {
+      // Steinkreis: 7–9 Steine im Ring (Radius 0,45–0,6) um die Mitte des 2 × 2-Fussabdrucks
+      const n = 7 + Math.floor(rnd(554, 0) * 3);
+      const R = 0.45 + 0.15 * rnd(554, 1);
+      const cx = tx + 1,
+        cy = ty + 1,
+        ph = rnd(554, 2) * Math.PI * 2;
+      for (let i = 0; i < n; i++) {
+        const a = ph + (i / n) * Math.PI * 2 + 0.12 * (rnd(554, 3 + i * 2) - 0.5);
+        const x = cx + Math.cos(a) * R,
+          y = cy + Math.sin(a) * R * 0.8;
+        const r = 0.035 + 0.02 * rnd(554, 4 + i * 2);
+        out.push({
+          k: 'ell',
+          c: D.rockDark,
+          z: 0,
+          x: x + r * 0.15,
+          y: y + r * 0.15,
+          rx: r,
+          ry: r * 0.8,
+        });
+        out.push({ k: 'ell', c: D.rockMid, z: 0, x, y, rx: r * 0.9, ry: r * 0.7 });
+        out.push({
+          k: 'ell',
+          c: D.rockLight,
+          z: 1,
+          x: x - r * 0.3,
+          y: y - r * 0.3,
+          rx: r * 0.5,
+          ry: r * 0.3,
+        });
+      }
+      break;
+    }
+    case 'mushRing': {
+      // Pilzring: dunklerer Grasring, 8–12 helle 1-px-Punkte (Radius ≈ 0,3)
+      const cx = tx + 0.5,
+        cy = ty + 0.5;
+      const m = 14;
+      for (let i = 0; i < m; i++) {
+        const a = (i / m) * Math.PI * 2;
+        out.push({
+          k: 'ell',
+          c: D.ringDark,
+          z: 0,
+          x: cx + Math.cos(a) * 0.3,
+          y: cy + Math.sin(a) * 0.3 * 0.8,
+          rx: 0.045,
+          ry: 0.036,
+        });
+      }
+      const n = 8 + Math.floor(rnd(559, 0) * 5);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + 0.2 * rnd(559, 1 + i);
+        out.push(dot(D.ringDot, 1, cx + Math.cos(a) * 0.3, cy + Math.sin(a) * 0.3 * 0.8, 1));
+      }
+      break;
+    }
+    case 'molehills': {
+      // 3–6 kleine Erdhäufchen, Licht oben links
+      const n = 3 + Math.floor(rnd(546, 0) * 4);
+      for (let i = 0; i < n; i++) {
+        const x = tx + 0.2 + 0.6 * rnd(546, 1 + i * 2),
+          y = ty + 0.25 + 0.5 * rnd(546, 2 + i * 2);
+        out.push({ k: 'ell', c: D.earth, z: 0, x, y, rx: 0.045, ry: 0.03 });
+        out.push({
+          k: 'ell',
+          c: D.earthLight,
+          z: 1,
+          x: x - 0.012,
+          y: y - 0.012,
+          rx: 0.025,
+          ry: 0.014,
+        });
+      }
+      break;
+    }
+    case 'reeds': {
+      // Binsen: dunkle, kühle Grünstriche, keine Fläche
+      const n = 4 + Math.floor(rnd(547, 0) * 4);
+      const cx = tx + 0.3 + 0.4 * rnd(547, 1),
+        cy = ty + 0.55 + 0.3 * rnd(547, 2);
+      for (let i = 0; i < n; i++) {
+        const bx = cx + (rnd(547, 3 + i * 3) - 0.5) * 0.3,
+          by = cy + (rnd(547, 4 + i * 3) - 0.5) * 0.12;
+        out.push(
+          blade(
+            i % 3 ? D.reed : D.reedLight,
+            0,
+            bx,
+            by,
+            bx + 0.02 * ((i % 3) - 1),
+            by - 0.13 - 0.08 * rnd(547, 5 + i * 3),
+            1,
+          ),
+        );
+      }
+      break;
+    }
+    case 'carpet': {
+      // Blütenteppich: dicht, eine Farbe (Ton der Blütenpalette)
+      const c = flowerTonesFor(seed)[el.arg === 1 ? 1 : 0];
+      const n = 9 + Math.floor(hash2(seed + 555, tx * 64, ty) * 6);
+      for (let i = 0; i < n; i++)
+        out.push(
+          dot(
+            c,
+            0,
+            tx + 0.06 + 0.84 * hash2(seed + 555, tx * 64 + 1 + i * 2, ty),
+            ty + 0.06 + 0.84 * hash2(seed + 555, tx * 64 + 2 + i * 2, ty),
+            1 + (i % 3 === 0 ? 0.5 : 0),
+          ),
+        );
+      break;
+    }
+    case 'toadstools': {
+      // Pilze: Terrakotta-Punkte an der Waldkante
+      const n = 2 + Math.floor(rnd(548, 0) * 3);
+      const [sx, sy] = sidePoint(el.arg, rnd(548, 1), 0.25);
+      for (let i = 0; i < n; i++) {
+        const x = Math.min(
+            tx + 0.92,
+            Math.max(tx + 0.05, tx + sx + (rnd(548, 2 + i * 2) - 0.5) * 0.2),
+          ),
+          y = Math.min(ty + 0.92, Math.max(ty + 0.05, ty + sy + (rnd(548, 3 + i * 2) - 0.5) * 0.2));
+        out.push(dot(D.toadstoolStem, 0, x, y + 1.5 * PX, 1));
+        out.push(dot(D.toadstool, 1, x, y, 2));
+      }
+      break;
+    }
+    case 'deadwood': {
+      // liegender Stamm 0,4–0,7 Kachel: zwei Brauntöne, Lichtkante oben, dunkle Stirnseite
+      const len = 0.4 + 0.3 * rnd(549, 0),
+        a = (rnd(549, 1) - 0.5) * 1.0;
+      const [sx, sy] = sidePoint(el.arg, rnd(549, 2), 0.3);
+      const cx = Math.min(tx + 0.62, Math.max(tx + 0.38, tx + sx)),
+        cy = Math.min(ty + 0.7, Math.max(ty + 0.3, ty + sy));
+      const ux = Math.cos(a) * len * 0.5,
+        uy = Math.sin(a) * len * 0.5 * 0.8;
+      const th = 0.05; // halbe Dicke
+      out.push({
+        k: 'poly',
+        c: D.woodDark,
+        z: 0,
+        pts: [
+          cx - ux,
+          cy - uy - th * 0.2,
+          cx + ux,
+          cy + uy - th * 0.2,
+          cx + ux,
+          cy + uy + th,
+          cx - ux,
+          cy - uy + th,
+        ],
+      });
+      out.push({
+        k: 'poly',
+        c: D.wood,
+        z: 0,
+        pts: [
+          cx - ux,
+          cy - uy - th,
+          cx + ux,
+          cy + uy - th,
+          cx + ux,
+          cy + uy + th * 0.3,
+          cx - ux,
+          cy - uy + th * 0.3,
+        ],
+      });
+      out.push({
+        k: 'poly',
+        c: D.woodLight,
+        z: 1,
+        pts: [
+          cx - ux,
+          cy - uy - th,
+          cx + ux,
+          cy + uy - th,
+          cx + ux,
+          cy + uy - th * 0.45,
+          cx - ux,
+          cy - uy - th * 0.45,
+        ],
+      });
+      out.push({
+        k: 'ell',
+        c: D.woodEnd,
+        z: 1,
+        x: cx + ux,
+        y: cy + uy,
+        rx: th * 0.45,
+        ry: th * 0.95,
+      });
+      break;
+    }
+    case 'ferns': {
+      // Farnsaum: Fächer aus 3–5 kurzen, frischgrünen Wedeln auf der Grasseite des Waldrands
+      const n = 3 + Math.floor(rnd(550, 0) * 3);
+      const [sx, sy, dx, dy] = sidePoint(el.arg, rnd(550, 1), 0.2);
+      const bx = tx + Math.min(0.9, Math.max(0.1, sx)),
+        by = ty + Math.min(0.9, Math.max(0.1, sy));
+      const base = Math.atan2(dy, dx);
+      for (let i = 0; i < n; i++) {
+        const a = base + (n === 1 ? 0 : (i / (n - 1) - 0.5) * 1.3) + 0.12 * (rnd(550, 2 + i) - 0.5);
+        const len = 0.1 + 0.05 * rnd(550, 8 + i);
+        out.push(
+          blade(
+            i % 2 ? D.fernDark : D.fern,
+            0,
+            bx,
+            by,
+            bx + Math.cos(a) * len,
+            by + Math.sin(a) * len,
+            1.6,
+          ),
+        );
+      }
+      break;
+    }
+  }
+  return out;
+}
+
+/** Punkt am Waldrand einer Kachel (`mask` = Waldseiten) und Richtung weg vom Wald: [x, y, dx, dy] in Kachelanteilen. */
+function sidePoint(mask: number, t: number, inset: number): [number, number, number, number] {
+  const along = 0.15 + 0.7 * t;
+  if (mask & 1) return [inset * 0.4, along, 1, 0];
+  if (mask & 2) return [1 - inset * 0.4, along, -1, 0];
+  if (mask & 4) return [along, inset * 0.5, 0, 1];
+  return [along, 1 - inset * 0.5, 0, -1];
 }
