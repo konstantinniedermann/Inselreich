@@ -39,7 +39,9 @@ export type HotkeyAction =
   | { kind: 'tool'; tool: Tool }
   | { kind: 'speed'; speed: 1 | 2 | 4 }
   | { kind: 'pause' }
-  | { kind: 'help' };
+  | { kind: 'help' }
+  | { kind: 'islandHome' }
+  | { kind: 'islandCycle' };
 
 /**
  * Wirkung einer Taste, oder `null` (Modifier gedrückt, Formularfeld, Pan-Taste, Esc, unbekannt).
@@ -49,9 +51,13 @@ export function hotkeyAction(
   key: string,
   mods: { ctrl: boolean; meta: boolean; alt: boolean },
   inFormField: boolean,
+  seafaring = false,
 ): HotkeyAction | null {
   if (inFormField || mods.ctrl || mods.meta || mods.alt) return null;
   const k = key.toLowerCase();
+  // Inselsprung nur mit der Seefahrt, sonst stumm (M12 E2)
+  if (k === ISLAND_HOME_KEY) return seafaring ? { kind: 'islandHome' } : null;
+  if (k === ISLAND_CYCLE_KEY) return seafaring ? { kind: 'islandCycle' } : null;
   if (k === 'p') return { kind: 'pause' };
   if (k === '?') return { kind: 'help' }; // Shift erlaubt (Spec 11.2)
   const speed = SPEED_KEYS[k];
@@ -132,11 +138,19 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
       label: toolName(t!),
     }));
   const speeds = Object.entries(SPEED_KEYS).map(([k, s]) => ({ key: k, label: `Tempo ${s}×` }));
+  const islands =
+    functionLock(world, 'seafaring') === null
+      ? [
+          { key: ISLAND_HOME_KEY, label: 'Zur Heimatinsel springen' },
+          { key: ISLAND_CYCLE_KEY, label: 'Zur nächsten Insel springen' },
+        ]
+      : [];
   return [
     ...tools,
     ...speeds,
     { key: 'P', label: 'Pause / weiter' },
     { key: '?', label: 'Hilfe' },
+    ...islands,
     ...NAV_KEYS,
   ];
 }

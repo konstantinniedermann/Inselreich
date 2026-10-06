@@ -868,6 +868,10 @@ body {
   display: inline-flex;
   align-items: center;
 }
+/* `display: inline-flex` überschreibt das hidden-Attribut: verborgene Chips (Spec 11.3) blieben sichtbar */
+.chip[hidden] {
+  display: none;
+}
 .btn-category .icon-chip {
   margin-right: 0;
 }
@@ -888,4 +892,39 @@ body {
   color: var(--ink);
   font-size: 11px;
   font-weight: 700;
+}
+
+/* M12 E2: Inselname vor den Lager-Chips und Knopf „Inseln" mit Liste (nur mit Seefahrt sichtbar) */
+.island-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.hud-islands {
+  position: relative;
+  display: flex;
+}
+.island-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(20, 30, 35, 0.95);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+}
+.island-list[hidden] {
+  display: none;
+}
+.island-list .btn {
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
 }

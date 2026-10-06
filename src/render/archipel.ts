@@ -110,7 +110,7 @@ export const LOD_ZOOM = 0.25;
 const views = new WeakMap<World, Map<number, World>>();
 
 /**
- * Insel `i` als Welt mit einer Insel (nur lesend, Gebäude ab E2). Die Heimat ist die Welt selbst. Alles andere
+ * Insel `i` als Welt mit einer Insel (nur lesend; Gebäude als Kopien mit island 0, je Aufruf neu gefüllt). Die Heimat ist die Welt selbst. Alles andere
  * (Tick, Wetter-Basis, Zähler) folgt der Welt über die Prototypkette; die Ansicht wird nie beschrieben.
  */
 export function islandView(world: World, i: number): World {
@@ -121,10 +121,15 @@ export function islandView(world: World, i: number): World {
   if (!v || v.islands[0] !== world.islands[i]) {
     v = Object.create(world, {
       islands: { value: [world.islands[i]!] },
-      buildings: { value: {} },
+      buildings: { value: {}, writable: true }, // nur die Ansicht wird neu gefüllt, nie die Welt
       seed: { value: (world.seed ^ Math.imul(i, 0x9e3779b1)) >>> 0 }, // Bildvariante, kein Sim-Zug
     }) as World;
     m.set(i, v);
   }
+  // Gebäude der Insel als flache Kopien mit island 0 (so lesen alle Zeichner die Ansicht wie die Heimat); nach Id
+  const copies: World['buildings'] = {};
+  for (const b of Object.values(world.buildings))
+    if (b.island === i) copies[b.id] = { ...b, island: HOME };
+  v.buildings = copies;
   return v;
 }

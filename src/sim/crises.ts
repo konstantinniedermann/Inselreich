@@ -22,7 +22,7 @@ export interface TileRect {
 }
 export interface CrisisRoll {
   kind: CrisisKind;
-  tile?: { x: number; y: number };
+  tile?: { x: number; y: number; island?: number };
   good?: GoodId;
 }
 
@@ -63,12 +63,12 @@ export function rollCrisis(
   return { kind };
 }
 
-/** Kleinstes Rechteck um die Grundflächen aller brennbaren Gebäude (Grenzen inklusive); `null` ohne solche. */
-export function flammableRect(world: World): TileRect | null {
+/** Kleinstes Rechteck um die Grundflächen der brennbaren Gebäude auf `island`; `null` ohne solche. */
+export function flammableRect(world: World, island: number = HOME): TileRect | null {
   let rect: TileRect | null = null;
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (def.flammable !== true || b.island !== HOME) continue; // Brandziel nur Heimat (P-15)
+    if (def.flammable !== true || b.island !== island) continue;
     const x1 = b.x + def.w - 1;
     const y1 = b.y + def.h - 1;
     rect =
@@ -84,6 +84,58 @@ export function flammableRect(world: World): TileRect | null {
   return rect;
 }
 
+export interface FireRect {
+  rect: TileRect;
+  parts: { island: number; r: TileRect }[];
+}
+
+/**
+ * Brand-Rechteck über alle Inseln mit brennbaren Gebäuden (Inselfolge): Teile übereinander gestapelt, Breite =
+ * Maximum, Höhe = Summe, Ursprung = erster Teil. So bleibt es bei genau zwei Ziehungen (x, y) je Brand (P-5).
+ */
+export function fireRect(world: World): FireRect | null {
+  const parts: FireRect['parts'] = [];
+  for (let island = 0; island < world.islands.length; island++) {
+    const r = flammableRect(world, island);
+    if (r !== null) parts.push({ island, r });
+  }
+  const first = parts[0];
+  if (first === undefined) return null;
+  let width = 0;
+  let height = 0;
+  for (const { r } of parts) {
+    width = Math.max(width, r.x1 - r.x0 + 1);
+    height += r.y1 - r.y0 + 1;
+  }
+  return {
+    rect: {
+      x0: first.r.x0,
+      y0: first.r.y0,
+      x1: first.r.x0 + width - 1,
+      y1: first.r.y0 + height - 1,
+    },
+    parts,
+  };
+}
+
+/** Rechnet eine Kachel des Gesamtrechtecks auf Insel und Inselkachel zurück; `null` = Fehlschlag (neben dem Teil). */
+export function fireTile(
+  fire: FireRect,
+  tile: { x: number; y: number },
+): { x: number; y: number; island: number } | null {
+  let dy = tile.y - fire.rect.y0;
+  const dx = tile.x - fire.rect.x0;
+  for (const { island, r } of fire.parts) {
+    const h = r.y1 - r.y0 + 1;
+    if (dy >= h) {
+      dy -= h;
+      continue;
+    }
+    return dx >= r.x1 - r.x0 + 1 ? null : { island, x: r.x0 + dx, y: r.y0 + dy };
+  }
+  return null;
+}
+
 /** Wirkfenster einer Krise mit Periodenstart `start` (Spec 4.3); auch Grundlage der Save-Prüfung. */
 export function crisisWindow(kind: CrisisKind, start: number): { from: number; until: number } {
   switch (kind) {
@@ -96,13 +148,17 @@ export function crisisWindow(kind: CrisisKind, start: number): { from: number; u
   }
 }
 
-/** Nächstes brennbares Gebäude mit Chebyshev-Abstand ≤ FIRE_HIT_RADIUS zur Grundfläche; Gleichstand: kleinste Id. */
-export function fireTarget(world: World, tile: { x: number; y: number }): Building | null {
+/** Nächstes brennbares Gebäude auf der Insel der Kachel mit Chebyshev-Abstand ≤ FIRE_HIT_RADIUS zur Grundfläche; Gleichstand: kleinste Id. */
+export function fireTarget(
+  world: World,
+  tile: { x: number; y: number; island?: number },
+): Building | null {
+  const island = tile.island ?? HOME;
   let best: Building | null = null;
   let bestD = Infinity;
   for (const b of Object.values(world.buildings)) {
     const def = BUILDING_DEFS[b.defId];
-    if (def.flammable !== true || b.island !== HOME) continue;
+    if (def.flammable !== true || b.island !== island) continue;
     const dx = Math.max(b.x - tile.x, 0, tile.x - (b.x + def.w - 1));
     const dy = Math.max(b.y - tile.y, 0, tile.y - (b.y + def.h - 1));
     const d = Math.max(dx, dy);
@@ -127,7 +183,11 @@ export function isProtected(world: World, b: Building): boolean {
 }
 
 /** Brandfolgen (Spec 5.2–5.4): löschen oder Gebühr (auch ins Minus), Fortschritt 0, Ausfall bis `until`. */
-function ignite(world: World, crisis: Crisis, tile: { x: number; y: number }): void {
+function ignite(
+  world: World,
+  crisis: Crisis,
+  tile: { x: number; y: number; island: number },
+): void {
   const target = fireTarget(world, tile);
   if (target === null) return;
   crisis.target = target.id;
@@ -151,10 +211,11 @@ export function beginCrisis(world: World, k: number, roll: CrisisRoll): void {
   if (roll.kind === 'boom' && roll.good !== undefined) crisis.good = roll.good;
   if (roll.kind === 'fire') {
     crisis.outcome = 'miss';
-    if (roll.tile) crisis.tile = { x: roll.tile.x, y: roll.tile.y, island: HOME };
+    if (roll.tile)
+      crisis.tile = { x: roll.tile.x, y: roll.tile.y, island: roll.tile.island ?? HOME };
   }
   world.crisis = crisis;
-  if (roll.kind === 'fire' && roll.tile) ignite(world, crisis, roll.tile);
+  if (roll.kind === 'fire' && crisis.tile) ignite(world, crisis, crisis.tile);
 }
 
 /** Krisenschritt nach den Aufträgen (Spec 10.1): Ausfälle beenden, Krise beenden, Periodenstart. Prüft `won` nicht. */
@@ -170,7 +231,15 @@ export function tickCrises(world: World): void {
   const period = CRISIS_LEVELS[world.crisisLevel].period;
   if (period === null || t < CRISIS_FIRST_TICK || (t - CRISIS_FIRST_TICK) % period !== 0) return;
   const k = (t - CRISIS_FIRST_TICK) / period;
-  beginCrisis(world, k, rollCrisis(world.seed, k, maxHouseTier(world), flammableRect(world)));
+  const fire = fireRect(world);
+  const roll = rollCrisis(world.seed, k, maxHouseTier(world), fire?.rect ?? null);
+  if (roll.kind === 'fire' && roll.tile !== undefined && fire !== null) {
+    const hit = fireTile(fire, roll.tile);
+    if (hit === null)
+      delete roll.tile; // neben dem schmaleren Teil: Fehlschlag wie ohne Gebäude
+    else roll.tile = hit;
+  }
+  beginCrisis(world, k, roll);
 }
 
 /** Tick des nächsten Periodenstarts strikt nach `tick` (vor dem ersten: CRISIS_FIRST_TICK); `null` bei `off`. */

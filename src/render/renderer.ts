@@ -211,6 +211,8 @@ export const renderStats = {
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
 
 export interface Hover {
+  /** Insel unter dem Mauszeiger (M12 E2); fehlt sie, gilt die aktive Insel (Standard Heimat). */
+  island?: number;
   x: number;
   y: number;
   tool: Tool | null;
@@ -656,7 +658,7 @@ function drawIsland(
           def,
           b,
           fx.timeMs,
-          def.id === 'kontor' ? waterSides(world, b) : undefined,
+          def.id === 'kontor' || def.id === 'kontor2' ? waterSides(world, b) : undefined,
           variantOf(world.seed, b.x, b.y),
         );
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
@@ -882,9 +884,16 @@ export function render(
   // 12 Signale (Bildraum, ungetönt, nie unter der Bodenmatrix) der aktiven Insel
   const av = act.v;
   const acam = act.ci;
-  if (hover?.tool?.kind === 'build') {
-    drawPlacementOverlay(ctx, av, acam, range, hover.tool.defId, hover.x, hover.y);
-  }
+  // Bau-Vorschau, Zonen, Abdeckung und Mouse-over gehören der Insel unter dem Mauszeiger (M12 E2);
+  // fehlt `hover.island`, gilt die aktive Insel. Liegt sie nicht im Bild, entfällt die Anzeige.
+  const hf = hover
+    ? hover.island === undefined
+      ? act
+      : frames.find((f) => f.island === hover.island)
+    : undefined;
+  if (hover && hf && hover.tool?.kind === 'build')
+    drawPlacementOverlay(ctx, hf.v, hf.ci, hf.range, hover.tool.defId, hover.x, hover.y);
+
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
   const kontor = av.buildings[home(av).kontorId];
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(acam, kontor), fx.timeMs);
@@ -894,20 +903,23 @@ export function render(
   drawProgressRings(ctx, av, acam, range, tickClock(av, fx.timeMs).frac);
   if (import.meta.env.DEV) collectBadges(av, acam, range);
 
-  const sel = selectedId === null ? undefined : av.buildings[selectedId];
-  if (sel) {
+  // Auswahl: das Gebäude hebt sich in der Ansicht seiner Insel ab (Id in der Kopie gleich)
+  const selB = selectedId === null ? undefined : world.buildings[selectedId];
+  const sf = selB ? frames.find((f) => f.island === selB.island) : undefined;
+  const sel = sf ? sf.v.buildings[selectedId!] : undefined;
+  if (sel && sf) {
     const def = BUILDING_DEFS[sel.defId];
     ctx.save();
     ctx.beginPath();
-    footprintPath(ctx, acam, sel.x, sel.y, def.w, def.h);
-    hullPath(ctx, acam, sel);
+    footprintPath(ctx, sf.ci, sel.x, sel.y, def.w, def.h);
+    hullPath(ctx, sf.ci, sel);
     ctx.strokeStyle = PALETTE.signalYellow;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
   }
 
-  if (hover) drawHover(ctx, av, acam, hover);
+  if (hover && hf) drawHover(ctx, hf.v, hf.ci, hover);
 
   if (fx.raster === true && !empty) {
     ctx.save();

@@ -1,4 +1,5 @@
-import { home } from '../sim/world';
+import { HOME } from '../sim/world';
+import { islandName } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
 import { nextOrderTick } from '../sim/orders';
 import { functionLock } from '../sim/unlocks';
@@ -7,17 +8,18 @@ import { setField } from './dom';
 import { formatGameTime } from './time';
 
 export interface OrderActions {
+  /** Liefert aus dem Lager der aktiven Insel. */
   deliver(): void;
 }
 
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
-export function orderCardText(world: World): string {
+export function orderCardText(world: World, island: number = HOME): string {
   const o = world.order;
   if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
   const name = GOODS[o.good].name;
   return (
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
-    ` · Lager ${home(world).stock[o.good]}/${o.amount}`
+    ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}`
   );
 }
 
@@ -58,8 +60,18 @@ export function deliveredMessage(o: Order): string {
   return `Auftrag geliefert: ${o.amount} ${GOODS[o.good].name} · +${o.reward} Geld`;
 }
 
+/** Knopftext: „Liefern“, ausserhalb der Heimat mit dem Namen der Insel. */
+export function deliverLabel(world: World, island: number = HOME): string {
+  return island === HOME ? 'Liefern' : `Liefern · ${islandName(world, island)}`;
+}
+
 /** Baut die Auftragskarte auf: Text und „Liefern" (immer klickbar, der Grund kommt als Toast). */
-export function renderOrder(el: HTMLElement, world: World, actions: OrderActions): void {
+export function renderOrder(
+  el: HTMLElement,
+  world: World,
+  actions: OrderActions,
+  island: number = HOME,
+): void {
   el.replaceChildren();
   const text = document.createElement('span');
   text.dataset.field = 'order-text';
@@ -72,17 +84,24 @@ export function renderOrder(el: HTMLElement, world: World, actions: OrderActions
     actions.deliver();
   });
   el.append(text, btn);
-  updateOrder(el, world);
+  updateOrder(el, world, island);
 }
 
 /** Aktualisiert Text und Sichtbarkeit des Buttons. */
-export function updateOrder(el: HTMLElement, world: World): void {
+export function updateOrder(el: HTMLElement, world: World, island: number = HOME): void {
   const visible = orderVisible(world);
   if (el.hidden === visible) el.hidden = !visible;
-  setField(el, 'order-text', orderCardText(world));
+  setField(el, 'order-text', orderCardText(world, island));
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
+  if (btn) {
+    const label = deliverLabel(world, island);
+    if (btn.textContent !== label) btn.textContent = label;
+  }
   if (btn && world.order !== null) {
-    btn.classList.toggle('unaffordable', home(world).stock[world.order.good] < world.order.amount);
+    btn.classList.toggle(
+      'unaffordable',
+      world.islands[island]!.stock[world.order.good] < world.order.amount,
+    );
   }
 }

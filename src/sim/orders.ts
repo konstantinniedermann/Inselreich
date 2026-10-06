@@ -1,10 +1,13 @@
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from './defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
+import { islandName } from './islands';
+import { islandAt } from './placement';
 import { createRng } from './rng';
 import { functionLock } from './unlocks';
 import type { GoodId, Result, Tier, World } from './types';
 import { fail, ok } from './types';
-import { home } from './world';
+import { noKontorTrade } from './trade';
+import { HOME } from './world';
 
 /** Höchste Hausstufe aller Häuser; ohne Häuser 1 (auch Eingabe des Boom-Pools, M6). */
 export function maxHouseTier(world: World): Tier {
@@ -63,14 +66,21 @@ export function tickOrders(world: World): void {
   }
 }
 
-/** Liefert den aktiven Auftrag ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung. */
-export function deliverOrder(world: World): Result {
+/** Liefert den aktiven Auftrag aus dem Lager der Insel ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung. */
+export function deliverOrder(world: World, island: number = HOME): Result {
   const lock = functionLock(world, 'orders');
   if (lock !== null) return fail(lock);
   const o = world.order;
   if (o === null) return fail('Kein Auftrag');
-  if (home(world).stock[o.good] < o.amount) return fail('Nicht genug Ware');
-  home(world).stock[o.good] -= o.amount;
+  const isl = islandAt(world, island);
+  if (isl === null) return fail('Unbekannte Insel');
+  const noKontor = noKontorTrade(world, island);
+  if (noKontor !== null) return fail(noKontor);
+  if (isl.stock[o.good] < o.amount)
+    return fail(
+      island === HOME ? 'Nicht genug Ware' : `Nicht genug Ware auf ${islandName(world, island)}`,
+    );
+  isl.stock[o.good] -= o.amount;
   world.money += o.reward;
   world.order = null;
   return ok;

@@ -9,7 +9,8 @@ import { step } from '../sim/tick';
 import { LEVELS } from '../sim/defs/levels';
 import { holdFeast } from '../sim/feast';
 import { upgradeBuilding } from '../sim/upgrade';
-import { home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { HOME, home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -40,6 +41,8 @@ import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { cameraBounds, islandView } from '../render/archipel';
+import { activeIsland, islandRects } from './activeIsland';
+import { jumpTarget, nextIsland } from './islandJump';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -63,7 +66,13 @@ import {
   withSpeed,
   type HotkeyAction,
 } from './hotkeys';
-import { foreignHover, hoverInfo, hoverPosition, hoverVisible } from './hover';
+import {
+  foreignBuildingHover,
+  foreignHover,
+  hoverInfo,
+  hoverPosition,
+  hoverVisible,
+} from './hover';
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
@@ -108,6 +117,7 @@ import {
   currentStorageProblem,
   listSaves,
   loadSlot,
+  loadNotice,
   saveAuto,
   saveToStorage,
   type Slot,
@@ -115,7 +125,8 @@ import {
 import { openStartCard, startChoices, STORAGE_NOTES } from './startCard';
 import { renderTrade, updateTrade } from './trade';
 
-export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
+export type PanelState =
+  { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade'; island: number };
 
 export interface GameState {
   world: World;
@@ -138,6 +149,8 @@ export interface GameState {
   newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
+  /** Insel, die der Spieler gerade ansieht (aus der Bildmitte, D-143); nur UI-Zustand, nicht gespeichert. */
+  activeIsland: number;
 }
 
 const MAX_TICKS_PER_FRAME = 20;
@@ -240,6 +253,7 @@ function launch(
     unlockedSeen: [...world.unlocked],
     newEntries: new Set(),
     eventLog: [],
+    activeIsland: 0,
   };
   const sound = createSound({
     muted: settings.muted,
@@ -348,6 +362,9 @@ function launch(
     // Kein bleibender Fokusring auf dem alten Knopf
     (document.activeElement as HTMLElement | null)?.blur?.();
     showMessage('Pausiert — P oder 1× setzt fort');
+    // Hinweis eines alten Standes: einmal je Laden, nicht im Spielstand (Anhang 03 D)
+    const notice = loadNotice(r);
+    if (notice !== null) showMessage(notice, 'info', true, true);
   };
 
   const menuActions: MenuActions = {
@@ -377,7 +394,16 @@ function launch(
     closeHelp = openStartCard(gameEl, { mode: 'help', opener, world });
   };
 
+  /** Kamera auf die Insel `i` (Kontor-Mitte bzw. Inselmitte), Zoom bleibt; ohne Seefahrt stumm. */
+  const jumpToIsland = (i: number): void => {
+    if (functionLock(world, 'seafaring') !== null || !world.islands[i]) return;
+    const t = jumpTarget(world, i);
+    centerOn(state.cam, t.x, t.y, view, bounds);
+    refresh();
+  };
+
   const actions: HudActions = {
+    jumpToIsland,
     setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
@@ -425,7 +451,7 @@ function launch(
     },
     deliverOrder: () => {
       const o = world.order ? { ...world.order } : null;
-      const r = deliverOrder(world);
+      const r = deliverOrder(world, state.activeIsland);
       const ev = actionSound(r, 'orderDone');
       if (!r.ok)
         showError(friendlyReason(world, r.reason, o ? { good: o.good, amount: o.amount } : {}));
@@ -461,7 +487,10 @@ function launch(
           }
           refresh();
         },
-        openTrade: () => setPanel({ kind: 'trade' }),
+        openTrade: () => {
+          const b = world.buildings[panel.id];
+          if (b) setPanel({ kind: 'trade', island: b.island });
+        },
         upgrade: (id) => {
           const b = world.buildings[id];
           const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
@@ -513,15 +542,24 @@ function launch(
         },
       });
     } else if (panel.kind === 'trade') {
-      state.selectedId = home(world).kontorId;
-      renderTrade(panelEl, world, {
-        back: () => setPanel({ kind: 'inspect', id: home(world).kontorId }),
-        changed: (op, r, good, n) => {
-          if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
-          else if (op === 'sell') sound.play('coin');
-          refresh();
+      const tradeIsland = panel.island;
+      state.selectedId = world.islands[tradeIsland]!.kontorId;
+      renderTrade(
+        panelEl,
+        world,
+        {
+          back: () => {
+            const k = world.islands[tradeIsland]!.kontorId;
+            setPanel(k === null ? { kind: 'none' } : { kind: 'inspect', id: k });
+          },
+          changed: (op, r, good, n) => {
+            if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
+            else if (op === 'sell') sound.play('coin');
+            refresh();
+          },
         },
-      });
+        tradeIsland,
+      );
     } else {
       state.selectedId = null;
       renderRest(panelEl, world);
@@ -530,6 +568,13 @@ function launch(
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
+    // Aktive Insel aus der Bildmitte (D-143: vor der Seefahrt immer die Heimat); bei Wechsel Bauleiste neu aufbauen
+    const mid = screenToTileF(state.cam, view.w / 2, view.h / 2);
+    const active = activeIsland(islandRects(world), mid, functionLock(world, 'seafaring') === null);
+    if (active !== state.activeIsland) {
+      state.activeIsland = active;
+      renderBuildMenu(navEl, state, selectTool, toggleCategory);
+    }
     const goal = goalBanners(state, world);
     state.wonShown = goal.shown.wonShown;
     state.wonMerchantsShown = goal.shown.wonMerchantsShown;
@@ -542,19 +587,20 @@ function launch(
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
-    updateNoticeStack(noticeStack, world);
+    updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
       const r = resolveLogClick(t, world);
       centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, bounds);
       if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
     });
-    updateBuildMenu(navEl, world);
+    updateBuildMenu(navEl, world, state.activeIsland);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
       if (world.buildings[panel.id]) updateInspect(panelEl, world, panel.id);
       else setPanel({ kind: 'none' });
     } else if (panel.kind === 'trade') {
-      updateTrade(panelEl, world);
+      if (world.islands[panel.island]?.kontorId == null) setPanel({ kind: 'none' });
+      else updateTrade(panelEl, world, panel.island);
     } else {
       updateRest(panelEl, world);
     }
@@ -591,8 +637,9 @@ function launch(
     if (id === null) {
       setPanel({ kind: 'none' });
     } else if (id === home(world).kontorId) {
-      // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
-      if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
+      // P-1: das Kontor der Heimat öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
+      if (panel.kind !== 'trade' || panel.island !== HOME)
+        setPanel({ kind: 'trade', island: HOME });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
       setPanel({ kind: 'inspect', id });
     }
@@ -628,6 +675,10 @@ function launch(
       setSpeed(h.speed);
     } else if (h.kind === 'help') {
       openHelp();
+    } else if (h.kind === 'islandHome') {
+      jumpToIsland(HOME);
+    } else if (h.kind === 'islandCycle') {
+      jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
     } else {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -672,12 +723,12 @@ function launch(
       dragForestFailureShown = false;
     }
     const tool = state.tool;
-    const tile = tileAt(home(world), a.x, a.y);
+    const tile = tileAt(world.islands[a.island]!, a.x, a.y);
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
       const before = unconnectedIds(world);
-      const r = placeBuilding(world, tool.defId, a.x, a.y);
+      const r = placeBuilding(world, tool.defId, a.x, a.y, a.island);
       if (!r.ok) showError(friendlyReason(world, r.reason, { defId: tool.defId }));
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'build');
@@ -685,7 +736,7 @@ function launch(
       }
     } else if (tool.kind === 'road') {
       const before = unconnectedIds(world);
-      const r = placeRoad(world, a.x, a.y);
+      const r = placeRoad(world, a.x, a.y, a.island);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'road');
@@ -693,7 +744,9 @@ function launch(
       }
     } else if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
       const r =
-        tool.kind === 'clearForest' ? clearForest(world, a.x, a.y) : plantForest(world, a.x, a.y);
+        tool.kind === 'clearForest'
+          ? clearForest(world, a.x, a.y, a.island)
+          : plantForest(world, a.x, a.y, a.island);
       if (r.ok) sound.play('build');
       else if (!dragForestFailureShown) {
         // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
@@ -704,7 +757,7 @@ function launch(
       const r = demolishBuilding(tile.buildingId);
       if (r.ok) sound.play('demolish');
     } else {
-      const r = removeRoad(world, a.x, a.y);
+      const r = removeRoad(world, a.x, a.y, a.island);
       if (!r.ok) showRoadFailure(r.reason, a.dragging);
       else sound.play('demolish');
     }
@@ -729,7 +782,13 @@ function launch(
     const key = hintKey(hover);
     if (force || key !== hintFor) {
       hintFor = key;
-      const h = placementHint(world, hover.tool ?? state.tool, hover.x, hover.y);
+      const h = placementHint(
+        world,
+        hover.tool ?? state.tool,
+        hover.x,
+        hover.y,
+        hover.island ?? state.activeIsland,
+      );
       hintEl.hidden = h === null;
       if (h) {
         hintEl.textContent = h.text;
@@ -803,7 +862,9 @@ function launch(
     const sx = client.x - r.left,
       sy = client.y - r.top;
     const t = targetTile(world, state.cam, sel, sx, sy);
-    const foreign = t ? null : foreignHover(world, state.cam, sx, sy);
+    const foreign = t
+      ? null
+      : (foreignBuildingHover(world, state.cam, sx, sy) ?? foreignHover(world, state.cam, sx, sy));
     if (!t && !foreign) {
       hoverTile = null;
       hideHoverCard();

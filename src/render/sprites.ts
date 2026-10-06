@@ -565,9 +565,8 @@ function houseBody(p: IsoPainter, b: Building): void {
   }
 }
 
-function kontorBody(p: IsoPainter, b: Building): void {
-  const def = BUILDING_DEFS.kontor;
-  const h = bodyHeight(def, b);
+function kontorBody(p: IsoPainter, b: Building, roof: string = PALETTE.roofTimber): void {
+  const h = bodyHeight(BUILDING_DEFS[b.defId], b);
   yard(p, mixHex(PALETTE.rock, PALETTE.sandDry, 0.45));
   // Hintere Kaimauern zuerst: der Körper überdeckt sie, sichtbar bleibt der Rand links und rechts
   const back = wallColors(PALETTE.rockDark);
@@ -582,7 +581,7 @@ function kontorBody(p: IsoPainter, b: Building): void {
   }
   const s = makeShell(p, 0.56 * h, h + ISO_H * BODY_INSET, 'gable', 'u');
   const w = wallColors(PALETTE.wallStone);
-  drawShell(p, s, w, PALETTE.roofTimber);
+  drawShell(p, s, w, roof);
   // Tor und Ladeluke, Balken
   leftQuad(p, s, 0.7, 1.3, 0, 0.55 * s.wz, DOOR);
   leftQuad(p, s, 0.95, 1.05, 0, 0.55 * s.wz, wallColors(PALETTE.wallTimber).left);
@@ -982,17 +981,23 @@ function weaverBody(p: IsoPainter, b: Building): void {
 }
 
 // Zuckerrohr: Feld in Reihen mit Halmen, kleine Hütte vorn rechts
-function canefarmBody(p: IsoPainter, b: Building): void {
-  const h = bodyHeight(BUILDING_DEFS.canefarm, b);
-  yard(p, mixHex(PALETTE.earth, PALETTE.grass, 0.55));
+function plantationBody(
+  p: IsoPainter,
+  b: Building,
+  stalkTone: string,
+  yardTone: string,
+  bandTone: string,
+): void {
+  const h = bodyHeight(BUILDING_DEFS[b.defId], b);
+  yard(p, yardTone);
   const bands = 8;
   for (let i = 0; i < bands; i++) {
     if (i % 2 === 0) continue;
     const va = I + ((p.h - 2 * I) * i) / bands,
       vb = I + ((p.h - 2 * I) * (i + 1)) / bands;
-    p.quad([I, va, 0], [p.w - I, va, 0], [p.w - I, vb, 0], [I, vb, 0], PALETTE.grassDark, false);
+    p.quad([I, va, 0], [p.w - I, va, 0], [p.w - I, vb, 0], [I, vb, 0], bandTone, false);
   }
-  const stalk = wallColors(mixHex(PALETTE.crown, PALETTE.grassLight, 0.45));
+  const stalk = wallColors(stalkTone);
   const sw = 0.035; // halbe Halmbreite in Kacheln
   const stems: [number, number][] = [];
   for (let v = 0.15; v < 1.8; v += 0.3)
@@ -1016,6 +1021,24 @@ function canefarmBody(p: IsoPainter, b: Building): void {
   leftQuad(p, s, 1.3, 1.5, 0.3 * s.wz, 0.8 * s.wz, WINDOW);
   rightQuad(p, s, 1.3, 1.5, 0.3 * s.wz, 0.8 * s.wz, WINDOW);
 }
+
+const canefarmBody = (p: IsoPainter, b: Building): void =>
+  plantationBody(
+    p,
+    b,
+    mixHex(PALETTE.crown, PALETTE.grassLight, 0.45),
+    mixHex(PALETTE.earth, PALETTE.grass, 0.55),
+    PALETTE.grassDark,
+  );
+// Gewürzplantage (M12, D-144 Regel 1): Zuckerrohr-Form, eigener Palettenton (rotbraune Stauden auf dunklerer Erde)
+const spicefarmBody = (p: IsoPainter, b: Building): void =>
+  plantationBody(
+    p,
+    b,
+    PALETTE.spiceLeaf,
+    mixHex(PALETTE.earth, PALETTE.spiceLeaf, 0.35),
+    mixHex(PALETTE.earthEdge, PALETTE.spiceLeaf, 0.4),
+  );
 
 // Brennerei: Haus, gemauerter Schornstein, Fässer
 function barrel(p: IsoPainter, u: number, v: number): void {
@@ -1599,6 +1622,7 @@ export function drawLevelTopper(p: IsoPainter, def: BuildingDef, b: Building): v
 export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   house: houseBody,
   kontor: kontorBody,
+  kontor2: (p, b) => kontorBody(p, b, PALETTE.roofSlate), // M12: Aussenkontor, Schieferdach
   lumberjack: lumberjackBody,
   market: marketBody,
   fisher: fisherBody,
@@ -1608,6 +1632,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   sheepfarm: sheepfarmBody,
   weaver: weaverBody,
   canefarm: canefarmBody,
+  spicefarm: spicefarmBody, // M12
   distillery: distilleryBody,
   toolmaker: toolmakerBody,
   chapel: chapelBody,
@@ -1668,6 +1693,21 @@ function merchantWindows(wz: number): WallWindow[] {
 }
 
 /** Lagen wie in den Silhouetten gezeichnet (gleiche Wandebenen, gleiche Anteile an der Traufhöhe `wz`). */
+/** Fenster des Lagerhauses (kontor und kontor2). */
+const kontorWindows = (h: number): WallWindow[] => {
+  const wz = 0.56 * h;
+  return [
+    L(1.5, 1.7, 0.45 * wz, 0.8 * wz),
+    R(0.5, 0.8, 0.4 * wz, 0.8 * wz),
+    R(1.2, 1.5, 0.4 * wz, 0.8 * wz),
+    L(0.45, 0.55, 0.3 * wz, 0.62 * wz, true), // Laterne neben dem Tor
+  ];
+};
+/** Fenster der Plantagenhütte (canefarm und spicefarm). */
+const caneHutWindows = (h: number): WallWindow[] => {
+  const wz = 0.72 * h;
+  return [L(1.3, 1.5, 0.3 * wz, 0.8 * wz), R(1.3, 1.5, 0.3 * wz, 0.8 * wz)];
+};
 const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWindow[]>> = {
   house: (b, h) => {
     const tier = b.house?.tier ?? 1;
@@ -1688,15 +1728,8 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
       R(0.66, 0.78, 0.58 * wz, 0.9 * wz),
     ];
   },
-  kontor: (_b, h) => {
-    const wz = 0.56 * h;
-    return [
-      L(1.5, 1.7, 0.45 * wz, 0.8 * wz),
-      R(0.5, 0.8, 0.4 * wz, 0.8 * wz),
-      R(1.2, 1.5, 0.4 * wz, 0.8 * wz),
-      L(0.45, 0.55, 0.3 * wz, 0.62 * wz, true), // Laterne neben dem Tor
-    ];
-  },
+  kontor: (_b, h) => kontorWindows(h),
+  kontor2: (_b, h) => kontorWindows(h),
   lumberjack: (_b, h) => [R(0.4, 0.62, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
   market: () => [L(1.78, 1.88, 14, 24, true)], // Laterne
   fisher: (_b, h) => [R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h)],
@@ -1712,10 +1745,8 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
     R(0.3, 0.5, 0.35 * 0.5 * h, 0.8 * 0.5 * h),
     R(0.65, 0.85, 0.35 * 0.5 * h, 0.8 * 0.5 * h),
   ],
-  canefarm: (_b, h) => {
-    const wz = 0.72 * h;
-    return [L(1.3, 1.5, 0.3 * wz, 0.8 * wz), R(1.3, 1.5, 0.3 * wz, 0.8 * wz)];
-  },
+  canefarm: (_b, h) => caneHutWindows(h),
+  spicefarm: (_b, h) => caneHutWindows(h),
   distillery: (_b, h) => [
     R(0.3, 0.5, 0.35 * 0.5 * h, 0.8 * 0.5 * h),
     R(0.7, 0.9, 0.35 * 0.5 * h, 0.8 * 0.5 * h),
@@ -2026,7 +2057,7 @@ export function drawAir(
   timeMs: number,
   maxPuffs: number = SMOKE_PUFFS,
 ): void {
-  if (def.id === 'kontor') drawFlag(ctx, cam, def, b, timeMs);
+  if (def.id === 'kontor' || def.id === 'kontor2') drawFlag(ctx, cam, def, b, timeMs);
   const puffs = Math.min(operatingPuffs(def, b), Math.max(0, Math.floor(maxPuffs)));
   if (puffs <= 0) return;
   const box = spriteBounds(def, b);

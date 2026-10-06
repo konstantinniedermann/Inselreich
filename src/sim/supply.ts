@@ -3,7 +3,7 @@ import { isSupplySource } from './coverage';
 import type { Building, World } from './types';
 import { center } from './world';
 
-/** Versorgende Gebäude einer Insel: ihr Kontor immer, Märkte der Insel nur, wenn sie angebunden sind. */
+/** Versorgende Gebäude einer Insel: ihr Kontor (auch Kontor II) immer, Märkte nur, wenn sie angebunden sind. */
 export function supplyBuildings(world: World, island: number): Building[] {
   return Object.values(world.buildings).filter(
     (b) => b.island === island && isSupplySource(world, b),

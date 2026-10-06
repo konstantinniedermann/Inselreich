@@ -5,6 +5,11 @@ import { fail, ok, type Result, type World } from '../sim/types';
 export const SAVE_KEY = 'inselreich.save.v1';
 export const AUTO_KEY = 'inselreich.save.auto';
 
+/** Meldung des Ladens (Übergangsbestand eines alten Standes) oder `null`; nichts davon wird gespeichert. */
+export function loadNotice(result: LoadResult): string | null {
+  return result.ok && result.notice !== undefined ? result.notice : null;
+}
+
 export type Slot = 'manual' | 'auto';
 export interface SaveInfo {
   slot: Slot;

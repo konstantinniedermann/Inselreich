@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../../src/render/palette';
+import { GOODS } from '../../src/sim/defs/goods';
 import { ICON_IDS, ICONS, iconSvg } from '../../src/ui/icons';
 
 const EXPECTED = [
@@ -53,5 +54,11 @@ describe('M10 Symbolsatz (Spec 14)', () => {
       expect(svg).toContain('aria-hidden="true"');
       expect(svg).toContain('focusable="false"');
     }
+  });
+  it('D-144 Chip-Farbe Gewürz: eigener Palettenton, kein anderes Gut teilt ihn', () => {
+    const goods = ICON_IDS.filter((id) => !id.startsWith('tier-') && id in GOODS);
+    expect(goods).toContain('spice');
+    for (const id of goods.filter((g) => g !== 'spice'))
+      expect(ICONS[id].color, id).not.toBe(ICONS.spice.color);
   });
 });

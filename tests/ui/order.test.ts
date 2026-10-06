@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Order } from '../../src/sim/types';
 import { orderForPeriod } from '../../src/sim/orders';
 import {
+  deliverLabel,
   deliveredMessage,
   orderCardText,
   orderChange,
@@ -67,5 +68,13 @@ describe('M10 Auftragskarte nach Freischaltung', () => {
     expect(orderVisible(cur)).toBe(true);
     expect(orderMessageFor(prev.order, orderVisible(prev), cur)).toBeNull();
     expect(diffSoundEvents(soundSnapshot(prev), soundSnapshot(cur))).not.toContain('order');
+  });
+});
+
+describe('M12 E2 UI Bauen und Handeln: Liefern je Insel', () => {
+  it('deliverLabel: Heimat wie bisher, Fremdinsel mit Namen', () => {
+    const w = createWorld(3);
+    expect(deliverLabel(w, 0)).toBe('Liefern');
+    expect(deliverLabel(w, 2)).toBe('Liefern · Felsbucht');
   });
 });
