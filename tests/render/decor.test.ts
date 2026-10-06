@@ -525,12 +525,17 @@ describe('L4 D5 Salze und Zufall', () => {
     return false;
   };
   // Erkannte Muster (Quelltext von src/render/*.ts): `seed + 5dd` (Salz am Seed), `salt: 5dd` (Pool-Tabelle in decor.ts) und
-  // `rnd(5dd, …)` (Formen-Helfer in groundDecor.ts). Salze, die nur über eine Variable laufen, erkennt der Test nicht.
+  // `rnd(5dd, …)` (Formen-Helfer in groundDecor.ts), `gCount(seed, 5dd, …)` (Kandidatenzahl) und die Literale in
+  // `G_SALTS = [5dd, …]`. Salze, die nur über eine andere Variable laufen, erkennt der Test nicht.
   const salts = (src: string): number[] =>
     [
       ...src.matchAll(/seed\s*\+\s*(5\d\d)\b/g),
       ...src.matchAll(/salt:\s*(5\d\d)\b/g),
       ...src.matchAll(/\brnd\(\s*(5\d\d)\s*,/g),
+      ...src.matchAll(/\bgCount\(\s*seed\s*,\s*(5\d\d)\b/g),
+      ...(/G_SALTS\s*=\s*\[([^\]]*)\]/.exec(src)?.[1]?.match(/5\d\d/g) ?? []).map(
+        (n) => [n, n] as RegExpMatchArray,
+      ),
     ].map((m) => Number(m[1]));
 
   it('L4-T5 jedes Salz 5dd steht im Kopf von groundDecor.ts und liegt im Bereich seines Häppchens', () => {
@@ -1032,7 +1037,7 @@ describe('L4 G-Anzahl: 2–12 je Insel (Katalog), statische Kandidatenliste', ()
       const n = stampPlacements(seed, home(w), kontorOf(w)).filter(
         (s) => s.kind === 'solitaire',
       ).length;
-      expect(n, `Seed ${seed}`).toBeLessThanOrEqual(8); // Katalog 2–12, Deckel 8 (Release-Budget)
+      expect(n, `Seed ${seed}`).toBeLessThanOrEqual(8); // Katalog 2–12, Deckel 8 = Entscheid lead-art (Perf-Reserve Release A), innerhalb Katalog-Band 2–12
       if (n >= 2) inBand++;
     }
     expect(inBand / 50).toBeGreaterThanOrEqual(0.9);

@@ -544,7 +544,7 @@ function planStamps(p: StaticPlan, w: number, h: number): void {
   const target = gCount(seed, 540, 0, SOLITAIRE_MAX);
   let solitaires = 0;
   for (const c of cand) {
-    if (solitaires >= Math.min(target, SOLITAIRE_MAX) || out.length >= limit) break;
+    if (solitaires >= target || out.length >= limit) break;
     if (near(c.x, c.y)) continue;
     add('solitaire', c.x, c.y);
     solitaires++;

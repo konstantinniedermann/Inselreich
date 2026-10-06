@@ -1145,7 +1145,8 @@ describe('S1-Rest DIM_FIRE', () => {
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
-  // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben.
+  // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
+  // G-Anzahl (b537908).
   const HOME_CALLS = { hash: 2585897606, length: 12859 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3670334885, length: 3662 };
