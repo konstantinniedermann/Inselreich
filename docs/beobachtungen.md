@@ -944,3 +944,17 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Ursprung:** M12-E1 T05, Review OK.
 - **Einschätzung:** Test in T06 nachziehen (klein); `errands` harmlos.
 - **Test nachgezogen:** b59ac28 (Baumstempel-Seed; Mutationsprobe rot/grün).
+
+## 2026-10-06 · M12-E1 C3: Messumgebung und Werkzeug-Fallen
+
+- **Fundort:** `tools/render-qa/perf.mjs`-Läufe, Arbeiter-Skripte im Scratchpad, Entwickler-Mac.
+- **Beobachtung:** (1) Ein Probe-Skript liess Vite (Port 5180) und Headless-Chrome 75 min laufen; die Messserie in dieser Zeit war ungültig — die R250-Prüfung `ps | grep vitest` erkennt solche Prozesse nicht. (2) Ein Arbeiter räumte mit `pkill -x node` auf; das trifft auch Vite-/vitest-Prozesse anderer Stränge. (3) macOS-Hintergrunddienste (Spotlight `mds`, `AddressBookSourceSync`) hielten die Last über Stunden bei 5–7; ein `make check` zeigte Testdauern um 925 s (vermutlich Ruhezustand des Rechners) — solche Läufe taugen nicht als Beleg. (4) `timeout` fehlt auf macOS.
+- **Ursprung:** M12-E1 C3 (T07).
+- **Einschätzung:** mittel. Lastprüfung um `vite|headless` erweitern und Aufräumen nur per eigener PID (R257 deckt das für Messserien ab); für E-030/Handbuch prüfen, ob die Systemlast (`uptime`) als Vorbedingung für Zeittests und Messungen gilt.
+
+## 2026-10-06 · M12-E1 C3 Playtests: Inselkarte bricht um, Schlieren im Flachwasser-Saum
+
+- **Fundort:** `src/ui/hover.ts`/Tooltip (Inselkarte), Viertel-Kopie bei Zoom 0,25 und 0,125 (`.studio/qa/m12-e1-c3/T07/b_s14_1920_zoom0.25_clip_mitte_x3.png`, `b_s3_1920_zoom0.125_heimat_x4.png`).
+- **Beobachtung:** Die Inselkarte bricht bei 1280 px mitten im Text um („Fahrzeit / 0:26“). Im Flachwasser-Saum der Inseln sind bei Zoom ≤ 0,25 weiche waagrechte Schlieren etwa im Kachelzeilen-Abstand sichtbar (keine Streifennaht, nicht bei Zoom 1).
+- **Ursprung:** M12-E1 T06/T07 Playtests (qa-playtester).
+- **Einschätzung:** niedrig; Umbruch kosmetisch (z. B. geschütztes Leerzeichen vor der Zeit). Schlieren beurteilt lead-art im Merge-Gate E1.
