@@ -4,6 +4,7 @@ import {
   archipelRect,
   cameraBounds,
   islandCam,
+  islandView,
   pickArchipel,
   visibleIslands,
   type Placed,
@@ -17,6 +18,9 @@ import {
 } from '../../src/render/camera';
 import { H_TOWER, project } from '../../src/render/iso';
 import { createWorld } from '../../src/sim/world';
+import { serialize } from '../../src/sim/save';
+import { foundKontor2Literal, seaWorld } from '../sim/seaHelpers';
+import { lumberjackLiteral } from './seaRender';
 
 const HEIMAT: Placed = { ox: 0, oy: 0, width: 64, height: 64 };
 const A: Placed = { ox: 90, oy: 10, width: 24, height: 24 };
@@ -122,5 +126,41 @@ describe('M12 E1 Archipel', () => {
       centerOn(c, (r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, VIEW, r);
       expect(visibleIslands(c, VIEW, isl), `seed ${seed}`).toHaveLength(isl.length);
     }
+  });
+});
+
+describe('M12 E2 Render Fremdinseln', () => {
+  it('islandView(w, 0) ist die Welt selbst', () => {
+    const w = seaWorld();
+    expect(islandView(w, 0)).toBe(w);
+  });
+
+  it('islandView(w, 2): Gebäude der Insel als flache Kopien mit island 0, Insel 1 leer, Welt unverändert', () => {
+    const w = seaWorld();
+    const k = foundKontor2Literal(w, 2);
+    const lj = lumberjackLiteral(w, 2);
+    const before = serialize(w);
+    const v = islandView(w, 2);
+    expect(Object.keys(v.buildings).map(Number)).toEqual([k.id, lj.id].sort((a, b) => a - b));
+    for (const b of [k, lj]) {
+      const copy = v.buildings[b.id]!;
+      expect(copy).not.toBe(b);
+      expect(copy.island).toBe(0);
+      expect({ ...copy, island: b.island }).toEqual(b);
+    }
+    expect(Object.keys(islandView(w, 1).buildings)).toEqual([]);
+    expect(w.buildings[k.id]!.island).toBe(2);
+    expect(serialize(w)).toBe(before);
+  });
+
+  it('islandView folgt neuen Gebäuden und abgerissenen (Ansicht bleibt dieselbe Identität)', () => {
+    const w = seaWorld();
+    const v = islandView(w, 2);
+    expect(Object.keys(v.buildings)).toEqual([]);
+    const lj = lumberjackLiteral(w, 2);
+    expect(islandView(w, 2)).toBe(v);
+    expect(Object.keys(islandView(w, 2).buildings).map(Number)).toEqual([lj.id]);
+    delete w.buildings[lj.id];
+    expect(Object.keys(islandView(w, 2).buildings)).toEqual([]);
   });
 });

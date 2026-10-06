@@ -7,6 +7,9 @@ import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import { islandCam, islandView } from '../../src/render/archipel';
+import { tileToScreen } from '../../src/render/camera';
+import { foundKontor2Literal } from '../sim/seaHelpers';
+import { lumberjackLiteral } from './seaRender';
 import { project } from '../../src/render/iso';
 import {
   render,
@@ -47,6 +50,7 @@ interface Call {
 }
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
+  bodyCams: new Map<number, { x: number; y: number; zoom: number }>(),
   treeSeeds: [] as number[],
   terrain: {
     scale: 1,
@@ -63,6 +67,7 @@ vi.mock('../../src/render/sprites', async (orig) => {
     ...m,
     drawBody: (...a: Parameters<typeof m.drawBody>) => {
       h.calls.push({ kind: 'body', id: a[3].id, at: at(a[0]) });
+      h.bodyCams.set(a[3].id, { ...a[1] });
       return m.drawBody(...a);
     },
     drawAir: (...a: Parameters<typeof m.drawAir>) => {
@@ -1264,5 +1269,109 @@ describe('M12 E1 Renderer', () => {
     expect(h.treeSeeds.length).toBeGreaterThan(0);
     expect(islandView(world, 1).seed).not.toBe(world.seed);
     expect(new Set(h.treeSeeds)).toEqual(new Set([world.seed]));
+  });
+});
+
+describe('M12 E2 Render Fremdinseln', () => {
+  const V = { w: 1280, h: 800 };
+  const camOn = (fx: number, fy: number, zoom: number): { x: number; y: number; zoom: number } => {
+    const p = project(fx, fy);
+    return { x: p.x - V.w / 2 / zoom, y: p.y - V.h / 2 / zoom, zoom };
+  };
+  const layers = {
+    get: (i: number): HTMLCanvasElement | null =>
+      i === 0 ? layer : ({ width: 36 * 32, height: 36 * 32 } as unknown as HTMLCanvasElement),
+  };
+  const HOVER_OK = rgbaOf(PALETTE.signalOk, 0.35);
+  const withIsland2 = () => {
+    const { world } = scene();
+    const kontor = foundKontor2Literal(world, 2);
+    const lj = lumberjackLiteral(world, 2);
+    return { world, kontor, lj, isl: world.islands[2]! };
+  };
+  const draw = (
+    world: World,
+    cam: { x: number; y: number; zoom: number },
+    hover: Hover | null = null,
+    selected: number | null = null,
+  ) => {
+    h.calls.length = 0;
+    h.bodyCams.clear();
+    const f = fakeCtx();
+    render(f.ctx, world, cam, layers, hover, selected, V, { timeMs: 5000, dayNight: true });
+    return { calls: h.calls.slice(), events: f.log.events };
+  };
+
+  it('(a) Heimat gleich: Gebäude auf Insel 2 ausserhalb des Bildes ändern die Aufrufliste nicht', () => {
+    const plain = scene().world;
+    const before = draw(plain, camFor(plain, 1)).calls;
+    const { world } = withIsland2();
+    expect(draw(world, camFor(world, 1)).calls).toEqual(before);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('(b) Kamera auf Insel 2: Kontor und Holzfäller werden mit islandCam gezeichnet', () => {
+    const { world, kontor, lj, isl } = withIsland2();
+    const cam = camOn(isl.ox + isl.width / 2, isl.oy + isl.height / 2, 2);
+    const { calls } = draw(world, cam);
+    expect(renderStats.islandsDrawn).toBe(1);
+    const bodies = calls.filter((c) => c.kind === 'body').map((c) => c.id);
+    expect(bodies).toContain(lj.id);
+    expect(bodies).toContain(kontor.id);
+    const ic = islandCam(cam, isl);
+    expect(h.bodyCams.get(lj.id)).toEqual(ic);
+    // Bildposition der Holzfäller-Raute folgt aus der Inselkamera
+    const p = tileToScreen(ic, lj.x, lj.y);
+    const q = tileToScreen(cam, isl.ox + lj.x, isl.oy + lj.y);
+    expect(p.x).toBeCloseTo(q.x, 6);
+    expect(p.y).toBeCloseTo(q.y, 6);
+    // Welt bleibt unverändert
+    expect(world.buildings[lj.id]!.island).toBe(2);
+  });
+
+  it('(c) hover mit island 2: Vorschau-Rahmen an der Inselposition, keiner in der Heimat; ohne island wie vorher', () => {
+    const { world, isl } = withIsland2();
+    const cam = camOn(isl.ox + isl.width / 2, isl.oy + isl.height / 2, 2);
+    const ic = islandCam(cam, isl);
+    const hover: Hover = {
+      island: 2,
+      x: 4,
+      y: 5,
+      tool: { kind: 'build', defId: 'lumberjack' },
+      ok: true,
+    };
+    const fills = (ev: readonly Ev[]) => ev.filter((e) => e.op === 'fill' && e.style === HOVER_OK);
+    const on = draw(world, cam, hover).events;
+    const rahmen = fills(on);
+    expect(rahmen).toHaveLength(1);
+    const o = tileToScreen(ic, 4, 5);
+    expect(rahmen[0]!.points[0]!.x).toBeCloseTo(o.x, 6);
+    expect(rahmen[0]!.points[0]!.y).toBeCloseTo(o.y, 6);
+    // Kamera über der Heimat, hover auf der Heimat ohne island: Rahmen an Heimatposition
+    const hc = camFor(world, 1);
+    const homeHover: Hover = { x: 4, y: 5, tool: { kind: 'build', defId: 'lumberjack' }, ok: true };
+    const hr = fills(draw(world, hc, homeHover).events);
+    expect(hr).toHaveLength(1);
+    expect(hr[0]!.points[0]).toEqual(tileToScreen(hc, 4, 5));
+    // hover.island 2 bei Kamera über der Heimat: kein Rahmen (Insel 2 nicht im Bild)
+    expect(fills(draw(world, hc, { ...homeHover, island: 2 }).events)).toHaveLength(0);
+    // hover auf Insel 2 bei Kamera auf Insel 2: kein Heimat-Rahmen an der Heimat-Kachel
+    expect(fills(draw(world, cam, { ...hover, island: 0 }).events)).toHaveLength(0);
+  });
+
+  it('Auswahl eines Gebäudes auf Insel 2 hebt es in der Ansicht von Insel 2 hervor', () => {
+    const { world, lj, isl } = withIsland2();
+    const cam = camOn(isl.ox + isl.width / 2, isl.oy + isl.height / 2, 2);
+    const strokes = (sel: number | null) =>
+      draw(world, cam, null, sel).events.filter(
+        (e) => e.op === 'stroke' && e.style === PALETTE.signalYellow,
+      );
+    expect(strokes(null)).toHaveLength(0);
+    const sel = strokes(lj.id);
+    expect(sel).toHaveLength(1);
+    const o = tileToScreen(islandCam(cam, isl), lj.x, lj.y);
+    expect(
+      sel[0]!.points.some((p) => Math.abs(p.x - o.x) < 1e-6 && Math.abs(p.y - o.y) < 1e-6),
+    ).toBe(true);
   });
 });
