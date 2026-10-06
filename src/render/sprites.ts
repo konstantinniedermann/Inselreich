@@ -33,8 +33,8 @@ export const CONTOUR_ALPHA = 0.65;
 /** Bis zu diesem Zoom gibt es keine Silhouette; bis Zoom 1 wächst die Breite linear. */
 export const CONTOUR_MIN_ZOOM = 0.5;
 /** Lichtkante: Breite in CSS-px und Deckkraft. */
-export const LIGHT_EDGE_WIDTH = 0.75;
-export const LIGHT_EDGE_ALPHA = 0.55;
+export const LIGHT_EDGE_WIDTH = 0.9;
+export const LIGHT_EDGE_ALPHA = 0.7;
 /** Hand-Linie: Kanten ab dieser Länge (Kacheln) hängen durch; Versatz der Mitte in px bei Zoom 1 (min..max). */
 export const HAND_MIN_LEN = 0.8;
 export const HAND_SAG_MIN = 0.3;
@@ -43,15 +43,25 @@ export const HAND_SAG_MAX = 0.8;
 export const L3_SALTS = { sag: 570, tufts: 571, rim: 572, blade: 573 } as const;
 /** Kontaktschatten: Bandbreite in Kacheln und Deckkraft je Stufe (äussere Stufe zuerst). */
 const CONTACT_BANDS: readonly (readonly [number, number])[] = [
-  [0.1, 0.1],
-  [0.05, 0.18],
+  [0.14, 0.15], // aussen: 4 px Gesamtbreite (2 px sichtbar ausserhalb der inneren Stufe), Deckkraft 0,15
+  [0.07, 0.19], // innen: 2 px, zusammen mit der äusseren Stufe Deckkraft ≈ 0,3
 ];
 /** Erdrand der Hofplatte: Stützpunktabstand (Kacheln), Ausfransung nach aussen (min, max) und Rand um die Platte. */
 const RIM_SPACING = 0.12;
-const RIM_JITTER = [-0.018, 0.042] as const;
-const RIM_GROW = 0.035;
+const RIM_JITTER = [-0.02, 0.03] as const;
+/** Erdband: Breite in Kacheln (≈ 2–3 px bei Zoom 1, skaliert mit dem Zoom), aussen gezackt, innen bündig an der Platte. */
+const RIM_GROW = 0.08;
 /** Farben der Grasbüschel (Grastöne, keine Signalfarbe). */
-export const TUFT_COLORS = [toInk(PALETTE.grass, 0.25), PALETTE.grassDark, PALETTE.grass] as const;
+const desaturate = (css: string, t: number): string => {
+  const [r, g, b] = rgbOfCss(css);
+  const l = 0.299 * r + 0.587 * g + 0.114 * b;
+  return `rgb(${Math.round(r + (l - r) * t)},${Math.round(g + (l - g) * t)},${Math.round(b + (l - b) * t)})`;
+};
+export const TUFT_COLORS = [
+  desaturate(toInk(PALETTE.grass, 0.25), 0.1),
+  desaturate(PALETTE.grassDark, 0.1),
+  desaturate(PALETTE.grass, 0.1),
+] as const;
 /** Sichtbare Silhouettenbreite für den Zoom `zoom`; 0 = keine Linie. */
 export function contourWidth(zoom: number): number {
   return (
@@ -500,6 +510,7 @@ function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): voi
   const lit: [T3, T3, string][] = [[[u0, v1, 0], [u0, v1, wz], wall.left]]; // Wandkante zum Licht
   if (s.kind === 'gable' && s.axis === 'u') {
     lit.push([[u0, vm, zr], [u1, vm, zr], r.light]); // First
+    lit.push([[u0, v1, wz], [u0, vm, zr], r.light]); // linke Dachkante (Traufe links oben)
     lit.push([[u0, v1, wz], [u1, v1, wz], wall.left]); // Oberkante der linken Wand
   } else if (s.kind === 'gable') {
     lit.push([[um, v0, zr], [um, v1, zr], r.light]); // First
@@ -610,33 +621,32 @@ function raggedYard(
     [0, 1],
     [-1, 0],
   ];
-  const outline = (grow: number): T3[] => {
-    const out: T3[] = [];
-    corners.forEach(([ax, ay], e) => {
-      const [bx, by] = corners[(e + 1) % 4]!;
-      const [nx, ny] = normals[e]!;
-      const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / RIM_SPACING));
-      for (let k = 0; k < n; k++) {
-        const t = k / n;
-        const h = hash2(
-          L3_SALTS.rim,
-          e * 512 + k + p.variant * 4096,
-          Math.round(p.w * 10) * 31 + Math.round(p.h * 10),
-        );
-        const j = k === 0 ? 0 : RIM_JITTER[0] + (RIM_JITTER[1] - RIM_JITTER[0]) * h;
-        out.push([ax + (bx - ax) * t + nx * (grow + j), ay + (by - ay) * t + ny * (grow + j), 0]);
-      }
-    });
-    return out;
-  };
+  const rim: T3[] = [];
+  corners.forEach(([ax, ay], e) => {
+    const [bx, by] = corners[(e + 1) % 4]!;
+    const [nx, ny] = normals[e]!;
+    const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / RIM_SPACING));
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      const h = hash2(
+        L3_SALTS.rim,
+        e * 512 + k + p.variant * 4096,
+        Math.round(p.w * 10) * 31 + Math.round(p.h * 10),
+      );
+      const g = RIM_GROW + (k === 0 ? 0 : RIM_JITTER[0] + (RIM_JITTER[1] - RIM_JITTER[0]) * h);
+      rim.push([ax + (bx - ax) * t + nx * g, ay + (by - ay) * t + ny * g, 0]);
+    }
+  });
+  const plate: T3[] = corners.map(([u, v]) => [u, v, 0]);
   const { ctx } = p;
   const fill = p.tone(color, p.look.wall);
-  for (const [grow, c] of [
-    [RIM_GROW, mixHex(fill, PALETTE.earthEdge, 0.55)],
-    [0, fill],
+  // Erdband: höchstens eine Tonstufe dunkler als die Platte, gefüllt, ohne Strich; die gerade Platte deckt die Innenkante
+  for (const [pts, c] of [
+    [rim, toInk(fill, 0.12)],
+    [plate, fill],
   ] as const) {
     ctx.beginPath();
-    outline(grow).forEach(([u, v], i) => {
+    pts.forEach(([u, v], i) => {
       const q = p.pt(u, v, 0);
       if (i === 0) ctx.moveTo(q.x, q.y);
       else ctx.lineTo(q.x, q.y);

@@ -28,13 +28,15 @@ const STRAW_LIGHT = rgba(PALETTE.foam, 0.28);
 const CRACK = rgba(PALETTE.rockDark, 0.4);
 // L3 Pinselkorn (Spec 2.3/4): zwei Tonstufen je Fläche (leicht heller / dunkler als der Eigenton), Korn 1 px,
 // zurückhaltend (Signale und Typ-Erkennung haben Vorrang). Dachreihen: jede Reihe leicht verschoben, ein Teil dunkler.
-export const GRAIN_LIGHT = rgba(PALETTE.wallLime, 0.1);
-export const GRAIN_DARK = rgba(INK_TONE, 0.09);
+export const GRAIN_LIGHT = rgba(PALETTE.wallLime, 0.07);
+export const GRAIN_DARK = rgba(INK_TONE, 0.07);
 export const ROW_DARK = rgba(PALETTE.roofTimber, 0.26);
 /** Korngrösse in CSS-px, Fläche je Korn (Weltpixel²) und Obergrenze je Fläche. */
 export const GRAIN_SIZE = 1;
-const GRAIN_AREA = 60;
-const MAX_GRAIN = 48;
+const GRAIN_AREA = 7;
+const MAX_GRAIN = 700;
+/** Länge eines Faserstrichs in Bildpunkten (1–2 px; mit runder Kappe etwa 1 px dicker). */
+const GRAIN_LEN = 1.5;
 /** Salze L3 (Block 500–599): Korn und Dachreihen. */
 export const GRAIN_SALT = 574;
 export const ROW_SALT = 575;
@@ -221,8 +223,8 @@ export function drawMaterial(
   const light: Seg[] = [];
   const cracks: Seg[] = [];
   const rowsDark: Seg[] = [];
-  const grainLight: Pt[] = [];
-  const grainDark: Pt[] = [];
+  const grainLight: [Pt, Pt][] = [];
+  const grainDark: [Pt, Pt][] = [];
   let widest: BodyFace | null = null;
   let widestIdx = -1;
 
@@ -258,18 +260,36 @@ export function drawMaterial(
       }
     } else if (pts.length === 4)
       courses(pts, step, fi, joints, wall ? undefined : { salt: ROW_SALT, dark: rowsDark });
-    // Pinselkorn: Punkte in der Fläche, nicht unter später gezeichneten Flächen (Fenster, Tür, Dach davor)
+    // Pinselkorn: dichte, kontrastarme Faserstriche in Richtung der Reihen bzw. Bretter (bei Vierecken wie `courses`)
+    let [dx, dy] = [1, 0];
+    if (pts.length === 4) {
+      const [p0, p1, p2, p3] = pts as [Pt, Pt, Pt, Pt];
+      const along = dist(p0, p1) + dist(p2, p3) >= dist(p1, p2) + dist(p3, p0);
+      const [q0, q1] = along ? [p0, p1] : [p0, p3];
+      const l = dist(q0, q1) || 1;
+      [dx, dy] = [(q1.x - q0.x) / l, (q1.y - q0.y) / l];
+    }
     const n = Math.min(
       MAX_GRAIN,
       Math.floor(a / (zoom * zoom * GRAIN_AREA)) * (level >= 3 ? 1 : 0.6),
     );
     for (let i = 0; i < Math.floor(n); i++) {
-      const x = minX + hash2(GRAIN_SALT + 0, fi * 97 + variant, i * 2) * (maxX - minX),
-        y = minY + hash2(GRAIN_SALT + 0, fi * 97 + variant, i * 2 + 1) * (maxY - minY);
-      // das Korn (1 px) liegt ganz in der Fläche und unter keiner später gezeichneten Fläche
-      if (!allIn(pts, x, y)) continue;
-      if (faces.slice(fi + 1).some((g) => anyIn(g.pts, x, y))) continue;
-      ((i & 1) === 0 ? grainLight : grainDark).push({ x, y });
+      const x = minX + hash2(GRAIN_SALT, fi * 97 + variant, i * 3) * (maxX - minX),
+        y = minY + hash2(GRAIN_SALT, fi * 97 + variant, i * 3 + 1) * (maxY - minY);
+      const tilt = (hash2(GRAIN_SALT, fi * 97 + variant, i * 3 + 2) - 0.5) * 0.35; // leichte Streuung der Richtung
+      const [ex, ey] = [
+        dx * Math.cos(tilt) - dy * Math.sin(tilt),
+        dx * Math.sin(tilt) + dy * Math.cos(tilt),
+      ];
+      const ends = [
+        { x: x - (ex * GRAIN_LEN) / 2, y: y - (ey * GRAIN_LEN) / 2 },
+        { x: x + (ex * GRAIN_LEN) / 2, y: y + (ey * GRAIN_LEN) / 2 },
+      ] as [Pt, Pt];
+      // ganz in der Fläche und unter keiner später gezeichneten Fläche
+      if (![{ x, y }, ...ends].every((q) => allIn(pts, q.x, q.y))) continue;
+      if (faces.slice(fi + 1).some((g) => [{ x, y }, ...ends].some((q) => anyIn(g.pts, q.x, q.y))))
+        continue;
+      ((i & 1) === 0 ? grainLight : grainDark).push(ends);
     }
   });
 
@@ -324,10 +344,9 @@ export function drawMaterial(
   ] as const) {
     if (g.length === 0) continue;
     ctx.beginPath();
-    // Korn als Punkt: Strich der Länge 0 mit runder Kappe, Breite wie die Fugen (1 px); die Material-Schicht bleibt Strich-Pfade
-    for (const q of g) {
-      ctx.moveTo(q.x, q.y);
-      ctx.lineTo(q.x + 0.01, q.y);
+    for (const [p, q] of g) {
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(q.x, q.y);
     }
     ctx.strokeStyle = color;
     ctx.stroke();
