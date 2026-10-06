@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests
+.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests messfenster
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -50,5 +50,8 @@ studio-metrics: ## Studio-Metriken der letzten Session verdichten
 
 pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle 50 %)
 	node tools/pages/check.ts dist
+
+messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
+	node tools/render-qa/messfenster.mjs $(ARGS)
 
 check: lint zeittests test studio-test build pages-limit ## Gleich wie CI: lint, zeittests, test, studio-test, build, pages-limit
