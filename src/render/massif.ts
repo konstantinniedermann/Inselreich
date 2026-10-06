@@ -695,6 +695,10 @@ export const TONE_FLAT = 2;
 const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
 const TONE_GAIN_SHADE = 1.6; // auf der Schattenseite (die dem Blick zugewandten Flanken sollen nicht absaufen)
 const TONE_NOISE = 0.22; // grossflächige Tönung ± (Stufen): die Stufengrenzen wandern, kein Kachelraster
+/** Unterhalb LOW_HN_FROM Tonumfang auf TONE_FLAT ± 1 gestaucht, bis LOW_HN überblendet; Rauschanteil dort. */
+const LOW_HN_FROM = 0.2,
+  LOW_HN = 0.35,
+  LOW_NOISE = 0.4;
 const LAP_REF = 16; // px Krümmung für volle Grat- bzw. Rinnenkante
 /** Sockelfarbe je Landart (Index = Code aus `nearestLand`; 0 = keine Mischung). */
 export const EDGE_COLORS: readonly (Rgb | null)[] = [
@@ -743,12 +747,17 @@ export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): n
   const tone =
     0.7 * (rotNoise(seed + 311, fx, fy, 0.55, ROT_C) - 0.5) +
     0.3 * (rotNoise(seed + 315, fx, fy, 1.6, ROT_A) - 0.5);
-  const t =
-    TONE_FLAT +
-    (rl >= 1 ? TONE_GAIN : TONE_GAIN_SHADE) * (rl - 1) +
-    2 * TONE_NOISE * tone +
-    0.35 * (Math.min(1, s.hn) - 0.4);
-  return Math.max(0, TONE_FLAT - 2 * (1 - top), Math.min(ROCK_TONES.length - 1, t));
+  const gain = (rl >= 1 ? TONE_GAIN : TONE_GAIN_SHADE) * (rl - 1),
+    lift = 0.35 * (Math.min(1, s.hn) - 0.4);
+  const t = TONE_FLAT + gain + 2 * TONE_NOISE * tone + lift;
+  const full = Math.max(0, TONE_FLAT - 2 * (1 - top), Math.min(ROCK_TONES.length - 1, t));
+  if (s.hn >= LOW_HN) return full;
+  // L2 Kontrast nach Höhe: unten Tonumfang gestaucht (T in TONE_FLAT ± 1, Rauschen 0,4-fach), bei LOW_HN_FROM … LOW_HN
+  // sanft zum vollen Wert (hn ≥ LOW_HN bitgleich wie vor L2)
+  const squeezed =
+    TONE_FLAT + Math.max(-1, Math.min(1, gain + 2 * TONE_NOISE * LOW_NOISE * tone + lift));
+  const k = smoothstep(LOW_HN_FROM, LOW_HN, s.hn);
+  return squeezed + (full - squeezed) * k;
 }
 
 /** Bewuchs-Feld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern): Flecken nur in tiefen, flachen Lagen. */

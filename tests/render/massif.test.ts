@@ -1175,3 +1175,24 @@ describe('ART-STIL-02 L2 Kern', () => {
     }
   });
 });
+
+describe('ART-STIL-02 L2 Kontrast nach Höhe', () => {
+  it('L2 Kontrast: für Knoten mit hn < 0,2 überspannen die Stufen toneStep(t, 0) höchstens 3 aufeinanderfolgende Werte', () => {
+    for (const seed of KERN_SEEDS) {
+      const lo: number[] = [];
+      let hi = 0;
+      for (const p of massifPieces(fieldWorld(createWorld(seed, { unlockAll: true })))) {
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const nd = at(c.I, c.J),
+            hn = nd.h / p.comp.amp;
+          if (hn < 0.2) lo.push(toneStep(nd.t, 0));
+          else if (hn >= 0.35) hi = Math.max(hi, Math.abs(toneStep(nd.t, 0) - TONE_FLAT));
+        }
+      }
+      expect(lo.length, `Seed ${seed}`).toBeGreaterThan(200);
+      expect(Math.max(...lo) - Math.min(...lo), `Seed ${seed}`).toBeLessThanOrEqual(2);
+      expect(hi, `Seed ${seed}: oben bleibt der volle Umfang`).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
