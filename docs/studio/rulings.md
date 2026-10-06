@@ -2370,3 +2370,15 @@ Sim-/Save-Änderung, opus-Review je Release. Budget lead-art 26 / lead-qa 2, Par
 Irrtum: Häppchen fliegt aus dem Kandidaten.
 
 Entscheider: L0 · Anlass: `.studio/handoffs/2026-10-06-l0-lead-art-gate.md` · ADR: —
+
+## R284 · 2026-10-06 · Playtest REL-05: Schiff unauffindbar
+
+Ruling: Nutzer-Playtest bestätigt Folgepaket (2) aus R274b. Ein Schiff kann man kaufen (Heimatkontor → Handel →
+«Zurück» → Schiffe), aber das Spiel sagt es nirgends: Der Leitsatz endet bei „Gründe ein Kontor“, der Grund „Kein
+freies Schiff“ nennt keinen Weg. Nutzer-Auftrag: in dieser Session nichts umsetzen, nur Ideen aufnehmen →
+IDEEN-04 (design-idea-scout): Seefahrt-Leitsätze (S), Werft (M), Auftragsreihe Seefahrt (M), Story-Rahmen (L).
+Die S-Idee bekommt Vorrang im nächsten Release und wird mit Folgepaket (2) gebündelt; Werft, Auftragsreihe
+und Story sind Bausteine für das nächste Meilenstein-Brainstorming. Bewertung durch lead-design in einer
+späteren Session. — Kosten bei Irrtum: ein Häppchen wird umsortiert.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
