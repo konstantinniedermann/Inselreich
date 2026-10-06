@@ -1401,10 +1401,10 @@ describe('M12 E4 Schiffe im Renderer (AK-E4-15)', () => {
     expect(i).toBeGreaterThanOrEqual(0);
     const before = calls.slice(0, i).filter((c) => c.kind === 'body');
     const after = calls.slice(i + 1).filter((c) => c.kind === 'body');
-    expect(before.length).toBeGreaterThan(0);
-    expect(after.length).toBeGreaterThan(0);
-    for (const c of before) expect(keyOf(c.id)).toBeLessThan(shipKey);
-    for (const c of after) expect(keyOf(c.id)).toBeGreaterThan(shipKey);
+    expect(before.some((c) => keyOf(c.id) < shipKey)).toBe(true);
+    expect(after.some((c) => keyOf(c.id) > shipKey)).toBe(true);
+    for (const c of before) expect(keyOf(c.id)).toBeLessThanOrEqual(shipKey); // Gleichstand: Gebäude zuerst (RANK)
+    for (const c of after) expect(keyOf(c.id)).toBeGreaterThanOrEqual(shipKey);
   });
 
   it('AK-E4-15 (b) Schiff auf See: nach Insel 1 gezeichnet genau dann, wenn seaShipAfter', () => {

@@ -10,7 +10,11 @@ const BOB_PERIOD_MS = 2600;
 /** Höhe des Schiffs über der Rautenmitte (Weltpixel, Zoom 1). */
 export const SHIP_H = 1.2 * ISO_H;
 const SHIP_W = 0.8 * ISO_W;
+/** Schiffsbreite in Weltpixeln bei Zoom 1 (für Mindestgrösse und Treffer, T11). */
+export const SHIP_W_PX = SHIP_W;
 const SHIP_SPAN = 0.7; // Anteil der Formhöhe, der über SHIP_H liegt (Mast bis Kiel)
+/** Formhöhe des Schiffs in Weltpixeln bei Zoom 1. */
+export const SHIP_ASPECT_H = SHIP_H / SHIP_SPAN;
 const BOB_AMPLITUDE = 0.04; // Anteil der Kachelhöhe
 const TILT_MAX = 0.06; // rad
 export const HULL = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
@@ -50,16 +54,17 @@ export function shipTile(world: World): Pos | null {
   return water[0] ?? null;
 }
 
-/** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`) an der Rautenmitte von `tile`. */
+/** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`) an der Rautenmitte von `tile`; `scale` ≥ 1 vergrössert es (Mindestgrösse bei kleinem Zoom, T11). */
 export function drawShip(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
   tile: Pos,
   timeMs: number,
+  scale = 1,
 ): void {
   const c = worldToScreen(cam, project(tile.x + 0.5, tile.y + 0.5));
-  const w = SHIP_W * cam.zoom;
-  const h = (SHIP_H / SHIP_SPAN) * cam.zoom;
+  const w = SHIP_W * cam.zoom * scale;
+  const h = SHIP_ASPECT_H * cam.zoom * scale;
   const phase = (timeMs / BOB_PERIOD_MS) * Math.PI * 2;
   ctx.save();
   ctx.translate(c.x, c.y + Math.sin(phase) * h * BOB_AMPLITUDE);
