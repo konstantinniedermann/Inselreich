@@ -2251,7 +2251,7 @@ eine Wegwerf-Datei, kein Eingriff in laufende Stränge.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
 
-## R274 · 2026-10-06 · Gate Seefahrt: Fix-Runde F2 vor REL-05
+## R274b · 2026-10-06 · Gate Seefahrt: Fix-Runde F2 vor REL-05
 
 Ruling: Final-Review lead-qa (`feat/m12-see` @ 4250784: BEDENKEN, nur niedrige Befunde; Determinismus-Probe mit
 Schiffen zeichengleich, Bitgleichheit bestätigt, CI-Reserve ok) und Urteil lead-art (ZURÜCK nur wegen D-144 Regel 3:
