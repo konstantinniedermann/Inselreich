@@ -29,7 +29,7 @@ Prozessstufe: <leicht|voll>
 Feste Regeln (unverändert, gelten immer):
 - Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
-- Save-Format versionieren und migrieren, mit Test für alte Spielstände.
+- Save-Format versionieren; ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz; Test für das Abweisen.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
 - Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
 
@@ -70,7 +70,7 @@ Prozessstufe: voll
 Feste Regeln (unverändert, gelten immer):
 - Neue Abhängigkeiten nur mit ADR und Ruling des Projektleiters, und nur wenn keine Alternative Sinn macht; den Hook `dep-guard` nie umgehen. Assets sind keine Dependencies.
 - `src/sim` DOM-frei, Zufall nur über den seeded RNG.
-- Save-Format versionieren und migrieren, mit Test für alte Spielstände.
+- Save-Format versionieren; ältere Spielstände müssen nicht ladbar sein. Ein inkompatibler Spielstand wird mit Hinweis abgewiesen, nie ein Absturz; Test für das Abweisen.
 - Tests grün, Balancing-Test bleibt Regressionsschutz, bewusste Änderungen als Ruling.
 - Befunde ausserhalb Scope nach `docs/beobachtungen.md`, keine Folgeissues ohne Nutzer-OK.
 
