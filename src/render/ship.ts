@@ -12,6 +12,8 @@ export const SHIP_H = 1.2 * ISO_H;
 const SHIP_W = 0.8 * ISO_W;
 /** Schiffsbreite in Weltpixeln bei Zoom 1 (für Mindestgrösse und Treffer, T11). */
 export const SHIP_W_PX = SHIP_W;
+/** Anteil von `SHIP_W_PX`, den die gezeichnete Silhouette (Rumpf ±0,38) breit ist (D-144 Regel 3). */
+export const SHIP_DRAWN_FRAC = 0.76;
 const SHIP_SPAN = 0.7; // Anteil der Formhöhe, der über SHIP_H liegt (Mast bis Kiel)
 /** Formhöhe des Schiffs in Weltpixeln bei Zoom 1. */
 export const SHIP_ASPECT_H = SHIP_H / SHIP_SPAN;

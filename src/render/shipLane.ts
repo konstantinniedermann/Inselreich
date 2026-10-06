@@ -4,7 +4,7 @@ import { laneTicks, seaLanes, type Pt } from '../sim/islands';
 import type { Island, Ship, World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
 import { project } from './iso';
-import { SHIP_ASPECT_H, SHIP_W_PX } from './ship';
+import { SHIP_ASPECT_H, SHIP_DRAWN_FRAC, SHIP_W_PX } from './ship';
 
 /** Pose in Archipel-Kacheln (Mitte der Raute); `island` = Rechteck, in dem sie liegt, sonst null (offene See). */
 export interface ShipPose {
@@ -13,8 +13,8 @@ export interface ShipPose {
   island: number | null;
 }
 
-/** Mindestbreite eines Schiffs auf dem Bildschirm in CSS-Pixeln (Archipel-Überblick, D-144 Regel 3). */
-export const MIN_SHIP_CSS_PX = 12;
+/** Ziel-Mindestbreite der GEZEICHNETEN Silhouette (Rumpf + Segel) in CSS-Pixeln; Spec-Grenze 12 (D-144 Regel 3), Reserve für Neigung. */
+export const MIN_SHIP_CSS_PX = 16;
 
 /** Lane-Punkte von `from` nach `to`; für `from > to` umgedreht. Ohne Lane: leer. */
 export function lanePoints(world: World, from: number, to: number): Pt[] {
@@ -85,9 +85,9 @@ export function seaShipAfter(pose: ShipPose, isl: Island): boolean {
   return pose.x + pose.y >= isl.ox + isl.oy + (isl.width + isl.height) / 2;
 }
 
-/** Skalierungsfaktor: mindestens 1; bei kleinem Zoom so gross, dass die Breite ≥ `MIN_SHIP_CSS_PX` bleibt. */
+/** Skalierungsfaktor: mindestens 1; bei kleinem Zoom so gross, dass die gezeichnete Breite ≥ `MIN_SHIP_CSS_PX` bleibt. */
 export function shipScale(zoom: number): number {
-  return Math.max(1, MIN_SHIP_CSS_PX / (SHIP_W_PX * zoom));
+  return Math.max(1, MIN_SHIP_CSS_PX / (SHIP_W_PX * SHIP_DRAWN_FRAC * zoom));
 }
 
 /** Schiffs-id unter dem Bildpunkt (oberstes = grösste Tiefe zuerst, dann grösste id); nur lesend. */
