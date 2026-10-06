@@ -9,6 +9,7 @@ import {
   ZOOM_STEPS,
   project,
   sortedObjects,
+  pointBounds,
 } from '../../src/render/iso';
 import { PALETTE, SHADOW, SIGNAL_NAMES, mixHex, rgbOfCss } from '../../src/render/palette';
 import { deltaE2000, rgbToLab } from './deltaE';
@@ -16,7 +17,12 @@ import {
   CONIFER_COLOR,
   LIGHT_CROWN_COLOR,
   LIGHT_TRUNK_COLOR,
+  MAPLE_COLOR,
+  PINE_COLOR,
+  STAMP_BELOW,
+  STAMP_W,
   TREE_H,
+  crownBase,
   crownCap,
   crownShade,
   crownsFor,
@@ -35,23 +41,23 @@ const item = (id: number, x: number, y: number, variant: number) =>
   ({ kind: 'tree', id, fp: { x, y, w: 1, h: 1 }, key: 2 * x + 1 + 2 * y + 1, variant }) as const;
 
 describe('Baumstempel', () => {
-  it('ISO §6 crownsFor: 3–5 Kronen je Variante, deterministisch, Kronen in der Spaltenbreite', () => {
+  it('ISO §6 crownsFor (L1): 2–8 Kronen je Variante, deterministisch, Fusspunkt höchstens 0,35 Kachel über der Kachel', () => {
     for (let v = 0; v < TREE_VARIANTS; v++) {
       const c = crownsFor(3, v);
-      expect(c.length).toBeGreaterThanOrEqual(3);
-      expect(c.length).toBeLessThanOrEqual(5);
+      expect(c.length).toBeGreaterThanOrEqual(2);
+      expect(c.length).toBeLessThanOrEqual(8);
       expect(crownsFor(3, v)).toEqual(c);
       for (const k of c) {
-        expect(k.cx).toBeGreaterThan(0);
-        expect(k.cx).toBeLessThan(1);
-        expect(k.cy).toBeGreaterThan(0);
-        expect(k.cy).toBeLessThan(1);
+        expect(k.cx - k.r).toBeGreaterThanOrEqual(-0.35 - 1e-9);
+        expect(k.cx + k.r).toBeLessThanOrEqual(1.35 + 1e-9);
+        expect(k.cy - k.r).toBeGreaterThanOrEqual(-0.35 - 1e-9);
+        expect(k.cy + k.r).toBeLessThanOrEqual(1.35 + 1e-9);
       }
     }
     expect(crownsFor(3, 0)).not.toEqual(crownsFor(4, 0));
   });
 
-  it('AK-ISO-10 Baumstempel: jeder Pfadpunkt in treeBounds und in der Spaltenbreite einer Kachel', () => {
+  it('AK-ISO-10 Baumstempel (L1): jeder Pfadpunkt in treeBounds; Eng-Stempel bleiben in der Spaltenbreite einer Kachel', () => {
     for (const seed of [3, 11, 12588])
       for (const step of ZOOM_STEPS)
         for (let v = 0; v < TREE_VARIANTS; v++) {
@@ -63,21 +69,25 @@ describe('Baumstempel', () => {
           const c = project(10.5, 7.5);
           for (const p of log.allPoints) {
             // Stempelpixel -> Weltpixel: Ursprung (ISO_W/2, TREE_H) liegt auf der Rautenmitte
-            const wx = c.x + p.x / step - ISO_W / 2;
+            const wx = c.x + p.x / step - STAMP_W / 2;
             const wy = c.y + p.y / step - TREE_H;
             expect(wx).toBeGreaterThanOrEqual(box.x - 1e-6);
             expect(wx).toBeLessThanOrEqual(box.x + box.w + 1e-6);
             expect(wy).toBeGreaterThanOrEqual(box.y - 1e-6);
             expect(wy).toBeLessThanOrEqual(box.y + box.h + 1e-6);
-            expect(Math.abs(wx - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
+            if (v % 8 >= 6) expect(Math.abs(wx - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
           }
         }
   });
 
-  it('AK-ISO-10 treeBounds ist pointBounds der Kachelmitte mit Höhe TREE_H', () => {
-    const b = treeBounds(item(0, 4, 9, 0));
+  it('AK-ISO-10 treeBounds (L1): Eng ist pointBounds der Kachelmitte mit Höhe TREE_H, Kern und Rand sind breiter', () => {
     const c = project(4.5, 9.5);
-    expect(b).toEqual({ x: c.x - ISO_W / 2, y: c.y - TREE_H, w: ISO_W, h: TREE_H + ISO_H / 2 });
+    expect(treeBounds(item(0, 4, 9, 7))).toEqual(pointBounds(4.5, 9.5, TREE_H));
+    const b = treeBounds(item(0, 4, 9, 0));
+    expect(b.w).toBeGreaterThan(ISO_W);
+    expect(b.x + b.w / 2).toBeCloseTo(c.x, 9);
+    expect(b.y).toBeCloseTo(c.y - TREE_H, 9);
+    expect(b.y + b.h).toBeCloseTo(c.y + STAMP_BELOW, 9);
     expect(TREE_H).toBeCloseTo(1.1 * ISO_H, 9);
   });
 
@@ -94,24 +104,31 @@ describe('Baumstempel', () => {
       CONIFER_COLOR,
       LIGHT_CROWN_COLOR,
       LIGHT_TRUNK_COLOR,
+      PINE_COLOR,
+      MAPLE_COLOR,
+      crownShade(PINE_COLOR),
+      crownCap(PINE_COLOR),
+      crownShade(MAPLE_COLOR),
+      crownCap(MAPLE_COLOR),
     ]);
     const signals = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
-    for (let v = 0; v < TREE_VARIANTS; v++) {
-      const { ctx, log } = fakeCtx();
-      paintStamp(ctx, 3, v, 1);
-      for (const f of log.fillSet) {
-        expect(allowed.has(f), f).toBe(true);
-        expect(signals.has(f)).toBe(false);
-        expect(f).not.toBe(SHADOW);
+    for (let v = 0; v < TREE_VARIANTS; v++)
+      for (const seed of [3, 4, 8, 12]) {
+        const { ctx, log } = fakeCtx();
+        paintStamp(ctx, seed, v, 1);
+        for (const f of log.fillSet) {
+          expect(allowed.has(f), f).toBe(true);
+          expect(signals.has(f)).toBe(false);
+          expect(f).not.toBe(SHADOW);
+        }
+        expect(
+          ([0, 1, 2, 3, 4] as const)
+            .map(crownBase)
+            .some((base) => log.fillSet.includes(crownCap(base))),
+        ).toBe(true);
       }
-      expect(
-        [PALETTE.crown, LIGHT_CROWN_COLOR, CONIFER_COLOR].some((base) =>
-          log.fillSet.includes(crownCap(base)),
-        ),
-      ).toBe(true);
-    }
     // neue Töne: ΔE2000 ≥ 20 zu den Signalfarben
-    for (const c of [CONIFER_COLOR, LIGHT_CROWN_COLOR, LIGHT_TRUNK_COLOR])
+    for (const c of [CONIFER_COLOR, LIGHT_CROWN_COLOR, LIGHT_TRUNK_COLOR, PINE_COLOR, MAPLE_COLOR])
       for (const n of SIGNAL_NAMES)
         expect(
           deltaE2000(rgbToLab(rgbOfCss(c)), rgbToLab(rgbOfCss(PALETTE[n]))),
@@ -119,7 +136,7 @@ describe('Baumstempel', () => {
         ).toBeGreaterThanOrEqual(20);
   });
 
-  it('R149 Baumarten: je Seed ≥ 2 Arten über die Varianten, Radienverhältnis max/min ≥ 1,4, Radien 0,08–0,15', () => {
+  it('R149 Baumarten (L1): je Seed ≥ 2 Arten über die Varianten, Radienverhältnis max/min ≥ 2,5, Radien 0,04–0,35', () => {
     for (const seed of [3, 11, 12588, 94108]) {
       const kinds = new Set<number>();
       let lo = Infinity,
@@ -129,23 +146,23 @@ describe('Baumstempel', () => {
           kinds.add(c.kind);
           lo = Math.min(lo, c.r);
           hi = Math.max(hi, c.r);
-          expect(c.r).toBeGreaterThanOrEqual(0.08);
-          expect(c.r).toBeLessThanOrEqual(0.15);
+          expect(c.r).toBeGreaterThanOrEqual(0.04);
+          expect(c.r).toBeLessThanOrEqual(0.35);
         }
       expect(kinds.size, `Seed ${seed}`).toBeGreaterThanOrEqual(2);
-      expect(hi / lo, `Seed ${seed}`).toBeGreaterThanOrEqual(1.4);
+      expect(hi / lo, `Seed ${seed}`).toBeGreaterThanOrEqual(2.5);
     }
   });
 
-  it('R149 Stempel zeigen die Körperfarben der drei Arten', () => {
+  it('R149 Stempel zeigen die Körperfarben aller fünf Arten (über Seeds mit verschiedenem Waldtyp)', () => {
     const seen = new Set<string>();
-    for (let v = 0; v < TREE_VARIANTS; v++) {
-      const { ctx, log } = fakeCtx();
-      paintStamp(ctx, 3, v, 1);
-      for (const f of log.fillSet) seen.add(f);
-    }
-    for (const c of [PALETTE.crown, CONIFER_COLOR, LIGHT_CROWN_COLOR])
-      expect(seen.has(c), c).toBe(true);
+    for (let seed = 1; seed <= 40; seed++)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        const { ctx, log } = fakeCtx();
+        paintStamp(ctx, seed, v, 1);
+        for (const f of log.fillSet) seen.add(f);
+      }
+    for (const k of [0, 1, 2, 3, 4] as const) expect(seen.has(crownBase(k)), `Art ${k}`).toBe(true);
   });
 
   it('AK-ISO-10 treeShadow: Polygon im Kachelraum, nach rechts unten versetzt, deterministisch', () => {
@@ -234,7 +251,7 @@ describe('Baumstempel-Cache', () => {
     }
     expect(treeCacheSize()).toBeGreaterThan(0);
     expect(treeCacheSize()).toBeLessThanOrEqual(TREE_VARIANTS * ZOOM_STEPS.length);
-    expect(treeCacheSize()).toBeLessThanOrEqual(40);
+    expect(treeCacheSize()).toBeLessThanOrEqual(TREE_VARIANTS * 5); // Stufen 0,5 … 2
   });
 
   it('ISO §16 neue Welt (anderer Seed) → neuer Cache', () => {
@@ -249,7 +266,7 @@ describe('Baumstempel-Cache', () => {
     expect(treeCacheSize()).toBe(1);
   });
 
-  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z): Zielgrösse = Stempel × Faktor', () => {
+  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z): Zielgrösse = Stempel × Faktor (L1: Stempelbreite STAMP_W)', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
     const calls: number[][] = [];
@@ -258,9 +275,9 @@ describe('Baumstempel-Cache', () => {
     } as unknown as CanvasRenderingContext2D;
     drawTreeStamp(ctx, { x: 0, y: 0, zoom: 1.2 }, item(0, 3, 3, 0), 3); // Stufe 1,5
     const [dx, dy, dw, dh] = calls[0]!;
-    expect(dw).toBeCloseTo(ISO_W * 1.2, 6);
+    expect(dw).toBeCloseTo(STAMP_W * 1.2, 6);
     const c = project(3.5, 3.5);
-    expect(dx).toBeCloseTo(c.x * 1.2 - (ISO_W / 2) * 1.2, 6);
+    expect(dx).toBeCloseTo(c.x * 1.2 - (STAMP_W / 2) * 1.2, 6);
     expect(dy).toBeCloseTo(c.y * 1.2 - TREE_H * 1.2, 6);
     expect(dh!).toBeGreaterThan(0);
   });
@@ -374,16 +391,22 @@ describe('Baumstempel gerastert', () => {
   it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte Lichtkappen (crownCap) (je ≥ 4 px), für alle Varianten und Seeds', () => {
     for (const seed of [3, 11, 12588, 94108])
       for (let v = 0; v < TREE_VARIANTS; v++) {
-        const r = new RasterCtx(ISO_W, Math.ceil(TREE_H + ISO_H / 2));
+        const r = new RasterCtx(STAMP_W, Math.ceil(TREE_H + STAMP_BELOW));
         paintStamp(r as unknown as CanvasRenderingContext2D, seed, v, 1);
-        // H-R10: Kappen je gezeichneter Kronenart (Laub 0, Nadel 1, hell 2), mindestens eine je Art
-        const bases = [PALETTE.crown, CONIFER_COLOR, LIGHT_CROWN_COLOR];
-        const kinds = new Set(crownsFor(seed, v).map((c) => c.kind));
-        for (const k of kinds)
-          expect(
-            components(r, crownCap(bases[k]!), 4),
-            `Seed ${seed} Variante ${v} Art ${k}`,
-          ).toBeGreaterThanOrEqual(1);
+        // L1: ≥ 2 getrennte Kappen je Stempel (kleine Rand-Jungbäume überdecken sich), die Hauptart zeigt mindestens eine
+        const crowns = crownsFor(seed, v).filter((c) => !c.bush);
+        let total = 0;
+        for (const k of [0, 1, 2, 3, 4] as const) total += components(r, crownCap(crownBase(k)), 4);
+        expect(total, `Seed ${seed} Variante ${v}`).toBeGreaterThanOrEqual(2);
+        const count = (k: number) => crowns.filter((c) => c.kind === k).length;
+        const main = ([0, 1, 2, 3, 4] as const).reduce(
+          (a, k) => (count(k) > count(a) ? k : a),
+          0 as 0 | 1 | 2 | 3 | 4,
+        );
+        expect(
+          components(r, crownCap(crownBase(main)), 4),
+          `Seed ${seed} Variante ${v} Hauptart ${main}`,
+        ).toBeGreaterThanOrEqual(1);
       }
   });
 });

@@ -5,6 +5,7 @@ import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { fieldWorld } from './terrainField';
 import { massifPieces, type MassifPiece } from './massif';
+import { FOREST_VARIANTS, forestLayout, type TileClass } from './forest';
 
 // iso.ts — Kern (Setzung Spec D-01 bis D-05, D-13, D-16)
 export const ISO_W = 64;
@@ -12,7 +13,8 @@ export const ISO_H = 32;
 export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
-export const TREE_VARIANTS = 8;
+/** Baumstempel: 3 Art-Slots × (Kern 3 + Rand 3 + Eng 2) = 24 (ART-STIL-02 L1, `forest.ts`). */
+export const TREE_VARIANTS = FOREST_VARIANTS;
 export const ZOOM_STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.5, 2] as const;
 export interface Pt {
   x: number;
@@ -49,6 +51,7 @@ export const radiusEllipse = (r: number): { rx: number; ry: number } => ({
 });
 /** Kleinste Zoomstufe ≥ z (Cache-Raster, ISO §16); über 2 bleibt es 2. */
 export const zoomStep = (z: number): number => ZOOM_STEPS.find((s) => s >= z - 1e-9) ?? 2;
+/** Vorgabe-Variante einer Waldkachel ohne Wissen über die Nachbarn (Hash); die Platzierung wählt `forestLayout`. */
 export const treeVariant = (seed: number, x: number, y: number): number =>
   Math.floor(hash2(seed + 41, x, y) * TREE_VARIANTS) % TREE_VARIANTS;
 
@@ -122,7 +125,16 @@ export interface Moving {
 }
 export type SortedItem =
   | { kind: 'building'; id: number; fp: Footprint; key: number }
-  | { kind: 'tree'; id: number; fp: Footprint; key: number; variant: number }
+  | {
+      kind: 'tree';
+      id: number;
+      fp: Footprint;
+      key: number;
+      variant: number;
+      ox?: number;
+      oy?: number;
+      giant?: boolean;
+    }
   | { kind: 'massif'; id: number; fp: Footprint; key: number; piece: MassifPiece }
   | { kind: Moving['kind']; id: number; fp: Footprint; key: number; cx: number; cy: number };
 const RANK = { massif: 0, tree: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
@@ -149,13 +161,29 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       const fp = { x: f % isl.width, y: Math.floor(f / isl.width), w: 1, h: 1 };
       items.push({ kind: 'massif', id: piece.id, fp, key: depthKey(fp), piece });
     }
+    // Wald (ART-STIL-02 L1): ein Stempel je freier Waldkachel; Rolle, Art, Form und Versatz aus `forestLayout`
+    const cls = (x: number, y: number): TileClass => {
+      if (x < 0 || y < 0 || x >= isl.width || y >= isl.height) return 'blocked';
+      const t = isl.tiles[y * isl.width + x]!;
+      if (t.buildingId !== null || t.road) return 'blocked';
+      return t.terrain === 'forest' ? 'forest' : t.terrain === 'grass' ? 'meadow' : 'blocked';
+    };
+    const layout = forestLayout(world.seed, isl.width, isl.height, cls);
     for (let y = 0; y < isl.height; y++)
       for (let x = 0; x < isl.width; x++) {
-        const t = isl.tiles[y * isl.width + x]!;
-        if (t.terrain !== 'forest' || t.buildingId !== null || t.road) continue;
+        const pl = layout[y * isl.width + x];
+        if (!pl) continue;
         const fp = { x, y, w: 1, h: 1 };
-        const variant = treeVariant(world.seed, x, y);
-        items.push({ kind: 'tree', id: y * isl.width + x, fp, key: depthKey(fp), variant });
+        items.push({
+          kind: 'tree',
+          id: y * isl.width + x,
+          fp,
+          key: depthKey(fp),
+          variant: pl.variant,
+          ox: pl.ox,
+          oy: pl.oy,
+          giant: pl.giant,
+        });
       }
     items.sort(cmp);
     c = { key, items };

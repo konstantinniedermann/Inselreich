@@ -5,41 +5,66 @@ import {
   ISO_W,
   TREE_VARIANTS,
   ZOOM_STEPS,
-  pointBounds,
   project,
   zoomStep,
   type Box,
   type Pt,
   type SortedItem,
 } from './iso';
+import { accentIsMaple, forestType, variantParts, type ForestType } from './forest';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, shadeSide, toLight } from './palette';
 
-// trees.ts — aufrechte Baumstempel (ISO §6, D-08, D-12). Kronen liegen in der Spaltenbreite ihrer Kachel.
+// trees.ts — Baumstempel (ISO §6, D-08, D-12; ART-STIL-02 L1 „Wald organisch"). Die Platzierung (Rolle, Art, Form,
+// Versatz) kommt aus `forest.ts`; hier stehen Kronenform, Stempel, Cache, Schatten und Box. Salze 512 (Kronen) und
+// 513 (Kronenform aus dem Formwert `s`) nach der Vergabe im Kopf von groundDecor.ts.
 export type TreeItem = Extract<SortedItem, { kind: 'tree' }>;
-/** Baumart: 0 Laubbaum, 1 Nadelbaum, 2 heller Laubbaum (R149). */
-export type CrownKind = 0 | 1 | 2;
-/** Eine Krone: Art, Lage in Kachel-Anteilen, Radius in Rautenbreiten, Höhe des Kronenmittelpunkts in Weltpixeln. */
+/** Baumart: 0 Laubbaum, 1 Nadelbaum, 2 Birke (hell), 3 Pinie (schirmförmig), 4 Ahorn (gedecktes Rostrot). */
+export type CrownKind = 0 | 1 | 2 | 3 | 4;
+/**
+ * Eine Krone: Art, Lage in Kachel-Anteilen (die Mitte des Fusspunkts), Fussradius `r` in Kacheln (Breite der Krone =
+ * r × ISO_W), Höhe des Kronenmittelpunkts über dem Boden in Weltpixeln, Busch-Flag und Formwert `s` (0…1).
+ */
 export interface Crown {
   kind: CrownKind;
   cx: number;
   cy: number;
   r: number;
   h: number;
+  bush: boolean;
+  s: number;
 }
 
 /** Stempelhöhe über der Rautenmitte (Weltpixel). */
 export const TREE_H = 1.1 * ISO_H;
-const STAMP_H = TREE_H + ISO_H / 2;
+/** Stempelbreite (Kronen dürfen bis 0,35 Kachel über die Kachel hinausragen) und Platz unter der Rautenmitte. */
+export const STAMP_W = 1.75 * ISO_W;
+export const STAMP_BELOW = 0.75 * ISO_H;
+const STAMP_H = TREE_H + STAMP_BELOW;
+/** Der Riesenbaum (B3) ist 1,8-mal so hoch und gross. */
+export const GIANT_SCALE = 1.8;
+const OVERHANG = 0.35; // Kronenfuss ragt höchstens so weit über die eigene Kachel
 const CROWN_RY = 0.85; // Kronenhöhe im Verhältnis zur Breite
 const TRUNK_COLOR = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
 /** Körper des Nadelbaums (R149). */
 export const CONIFER_COLOR = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
 /** Körper des hellen Laubbaums (R149). */
 export const LIGHT_CROWN_COLOR = mixHex(PALETTE.crown, PALETTE.grassLight, 0.45);
-/** Stamm des hellen Laubbaums, heller als der Standardstamm (R149). */
+/** Stamm des hellen Laubbaums, heller als der Standardstamm (R149); Stamm der Birke (B4). */
 export const LIGHT_TRUNK_COLOR = mixHex(PALETTE.wallLime, PALETTE.rockDark, 0.55);
-const CONIFER_TOP = 1.6; // Spitze des Nadelbaums über dem Kronenmittelpunkt, in Kronenhöhen (ry)
+/** Pinie (Waldtyp 3): warmes, trockenes Grün. */
+export const PINE_COLOR = mixHex(PALETTE.crown, PALETTE.roofThatch, 0.28);
+/** Ahorn (B5): gedecktes Rostrot aus Palettenmischungen, ΔE2000 ≥ 20 zu allen Signalfarben. */
+export const MAPLE_COLOR = mixHex(PALETTE.roofTerracotta, PALETTE.crown, 0.38);
+const BODY: readonly string[] = [
+  PALETTE.crown,
+  CONIFER_COLOR,
+  LIGHT_CROWN_COLOR,
+  PINE_COLOR,
+  MAPLE_COLOR,
+];
+/** Körperfarbe je Baumart. */
+export const crownBase = (kind: CrownKind): string => BODY[kind]!;
 const SHADOW_SHIFT = 0.19; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
   SHADOW_B = 0.3;
@@ -59,143 +84,427 @@ export const crownShade = (base: string): string => shadeSide(base, 0.3);
 export const crownCap = (base: string): string =>
   toLight(mixHex(base, PALETTE.grassLight, 0.3), 0.2);
 
-/**
- * Feste Kronenplätze in Kachel-Anteilen (Ecken und Mitte der Raute). Bei Zoom 1 liegen die Plätze mindestens 6 px
- * auseinander, die Kronen sind klein genug, dass jede Lichtkappe sichtbar bleibt (Spec 5.3, I5).
- */
-const SLOTS: readonly [number, number][] = [
-  [0.72, 0.3], // rechts
-  [0.3, 0.72], // links
-  [0.3, 0.3], // hinten
-  [0.72, 0.72], // vorn
-  [0.5, 0.5], // Mitte
-];
+// ---------------------------------------------------------------------------------------------------------------
+// Kronenform: Lappen (Laub, Birke, Ahorn, Pinie, Busch) bzw. Etagen (Nadel), deterministisch aus dem Formwert `s`.
 
-/** 3–5 Kronen je Variante auf verschiedenen Plätzen, deterministisch aus `hash2` (ISO §6). */
-export function crownsFor(seed: number, variant: number): Crown[] {
-  const n = 3 + Math.min(2, Math.floor(hash2(seed + 51, variant, 99) * 3));
-  // Plätze nach Hashwert mischen; die Mitte kommt nur bei fünf Kronen dazu
-  const order = SLOTS.slice(0, 4)
-    .map((slot, i) => ({ slot, k: hash2(seed + 52, variant, i) }))
-    .sort((p, q) => p.k - q.k)
-    .map((e) => e.slot);
-  if (n === 5) order.push(SLOTS[4]!);
-  const out: Crown[] = [];
-  for (let k = 0; k < n; k++) {
-    const rnd = (j: number) => hash2(seed + 51, variant, k * 4 + j);
-    const [sx, sy] = order[k]!;
-    const cx = sx + (rnd(0) - 0.5) * 0.05,
-      cy = sy + (rnd(1) - 0.5) * 0.05;
-    const kr = hash2(seed + 68, variant, k); // Art je Krone (R149): 50 % Laub, 28 % Nadel, 22 % hell
-    const kind: CrownKind = kr < 0.5 ? 0 : kr < 0.78 ? 1 : 2;
-    const r = 0.08 + 0.07 * rnd(2);
-    const ground = ((cx + cy - 1) * ISO_H) / 2; // Bild-y des Fusspunkts relativ zur Rautenmitte
-    const top = kind === 1 ? CONIFER_TOP : 1; // Spitze steht höher als die Kuppe
-    const hWanted = (0.26 + 0.14 * rnd(3) + (kind === 1 ? 0.06 : 0)) * ISO_H;
-    const h = Math.min(hWanted, TREE_H - top * CROWN_RY * r * ISO_W + ground - 0.5);
-    out.push({ kind, cx, cy, r, h });
+interface Lobe {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+}
+interface Tier {
+  ax: number; // Spitze
+  ay: number;
+  hw: number; // halbe Basisbreite
+  bx: number; // Basismitte
+  by: number;
+  th: number; // Etagenhöhe
+}
+/** Form einer Krone relativ zu ihrem Mittelpunkt; `hw`/`hh` sind die halben Masse der Hüllbox (Mitte = Mittelpunkt). */
+export interface CrownGeom {
+  lobes: Lobe[];
+  tiers: Tier[];
+  hw: number;
+  hh: number;
+}
+const CONIFER_TOP = 1.6; // Spitze des Nadelbaums über dem Kronenmittelpunkt, in Kronenhöhen (ry)
+const CONIFER_BOTTOM = 0.9;
+const PINE_FLAT = 0.4; // Pinienschirm: Höhe im Verhältnis zur Breite
+const BUSH_FLAT = 0.7;
+
+/** Form einer Krone aus (Art, Radius, Formwert, Busch); eine reine Funktion, kein Seed nötig. */
+export function crownGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush'>): CrownGeom {
+  const q = (i: number, j: number): number => hash2(513 + Math.floor(c.s * 65536), i, j);
+  const rx0 = c.r * ISO_W;
+  const lobes: Lobe[] = [];
+  const tiers: Tier[] = [];
+  if (c.kind === 1 && !c.bush) {
+    const ry0 = rx0 * CROWN_RY;
+    const n = 3 + (q(0, 0) > 0.5 ? 1 : 0);
+    const span = (CONIFER_TOP + CONIFER_BOTTOM) * ry0;
+    const th = span / (1 + 0.55 * (n - 1));
+    for (let i = 0; i < n; i++) {
+      const by = CONIFER_BOTTOM * ry0 - i * 0.55 * th;
+      const hw = rx0 * (1 - 0.17 * i) * (0.74 + 0.22 * q(i, 5));
+      const lean = (q(i, 6) - 0.5) * rx0 * (i === n - 1 ? 0.5 : 0.22); // leicht schiefe Spitze
+      tiers.push({ ax: lean, ay: by - th, hw, bx: (q(i, 7) - 0.5) * 0.08 * hw, by, th });
+    }
+  } else {
+    const flat = c.kind === 3 ? PINE_FLAT : c.bush ? BUSH_FLAT : CROWN_RY;
+    const ry0 = rx0 * flat;
+    if (c.kind === 3) {
+      for (const [x, y, w] of [
+        [-0.42, 0.06, 0.58],
+        [0, -0.1, 0.64],
+        [0.42, 0.08, 0.55],
+      ] as const)
+        lobes.push({ x: x * rx0, y: y * ry0, rx: w * rx0, ry: w * ry0 });
+    } else {
+      const n = c.bush ? 3 : 3 + Math.floor(q(0, 1) * 4); // 3–6 Lappen
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + q(i, 2) * 0.9;
+        const d = 0.28 + 0.1 * q(i, 3);
+        const rr = 0.52 + 0.1 * q(i, 4);
+        lobes.push({
+          x: Math.cos(a) * d * rx0,
+          y: Math.sin(a) * d * ry0,
+          rx: rr * rx0,
+          ry: rr * ry0,
+        });
+      }
+    }
   }
+  // Hüllbox bestimmen und die Form so verschieben, dass ihre Mitte im Mittelpunkt der Krone liegt
+  let x0 = Infinity,
+    x1 = -Infinity,
+    y0 = Infinity,
+    y1 = -Infinity;
+  for (const l of lobes) {
+    x0 = Math.min(x0, l.x - l.rx);
+    x1 = Math.max(x1, l.x + l.rx);
+    y0 = Math.min(y0, l.y - l.ry);
+    y1 = Math.max(y1, l.y + l.ry);
+  }
+  for (const t of tiers) {
+    x0 = Math.min(x0, t.bx - t.hw, t.ax);
+    x1 = Math.max(x1, t.bx + t.hw, t.ax);
+    y0 = Math.min(y0, t.ay);
+    y1 = Math.max(y1, t.by);
+  }
+  const mx = (x0 + x1) / 2,
+    my = (y0 + y1) / 2;
+  for (const l of lobes) {
+    l.x -= mx;
+    l.y -= my;
+  }
+  for (const t of tiers) {
+    t.ax -= mx;
+    t.bx -= mx;
+    t.ay -= my;
+    t.by -= my;
+  }
+  return { lobes, tiers, hw: (x1 - x0) / 2, hh: (y1 - y0) / 2 };
+}
+
+/** Mittelpunkt und halbe Masse einer Krone im Stempelraum (Pixel, Ursprung = Rautenmitte; y nach unten). */
+export function crownScreen(c: Crown): { x: number; y: number; rx: number; ry: number } {
+  const g = crownGeom(c);
+  return {
+    x: (c.cx - c.cy) * (ISO_W / 2),
+    y: ((c.cx + c.cy - 1) * ISO_H) / 2 - c.h,
+    rx: g.hw,
+    ry: g.hh,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Kronen je Variante
+
+/** Baumart je Art-Slot und Waldtyp (Spec 3.7); `null` im Mischwald steht für den Akzent (Birke oder Ahorn). */
+const SLOT_KINDS: readonly (readonly (CrownKind | null)[])[] = [
+  [0, 1, null], // Mischwald
+  [1, 0, 2], // Nadelwald
+  [2, 0, 1], // Birken- und Hellholzwald
+  [3, 1, 0], // Pinienwald
+];
+/** Baumart eines Slots (Waldtyp aus dem Seed, Akzent im Mischwald je Seed Birke oder Ahorn). */
+export function slotKind(seed: number, slot: number): CrownKind {
+  const k = SLOT_KINDS[forestType(seed) as ForestType]![slot]!;
+  return k ?? (accentIsMaple(seed) ? 4 : 2);
+}
+
+interface Spec {
+  n: number;
+  rMin: number;
+  rMax: number;
+  lo: number; // Lage der Fusspunkte in Kachel-Anteilen
+  hi: number;
+  hf0: number; // Höhe des Kronenmittelpunkts in Kronenhöhen (hh)
+  hf1: number;
+  dMin: number; // Mindestabstand der Kronenmitten
+}
+const SPECS: readonly Spec[] = [
+  // Kern: grosse, überlappende Kronen, Stämme kaum sichtbar
+  { n: 5, rMin: 0.15, rMax: 0.27, lo: -0.02, hi: 1.02, hf0: 0.95, hf1: 1.1, dMin: 0.3 },
+  // Rand: Jungbäume mit sichtbaren Stämmen (dazu Büsche)
+  { n: 3, rMin: 0.08, rMax: 0.14, lo: 0, hi: 1, hf0: 2, hf1: 2.8, dMin: 0.28 },
+  // Eng: Kronen innerhalb der eigenen Kachel
+  { n: 4, rMin: 0.1, rMax: 0.15, lo: 0, hi: 1, hf0: 1.5, hf1: 2.2, dMin: 0.26 },
+];
+const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
+
+const crownCache = new Map<string, Crown[]>();
+const CROWN_CACHE_MAX = 256;
+
+/**
+ * Kronen einer Variante (Rolle, Art-Slot und Form aus `variantParts`), deterministisch aus `hash2`. Alle Kronen
+ * liegen mit ihrem Fusspunkt (Mitte ± Radius) höchstens 0,35 Kachel über der eigenen Kachel; auf Eng-Kacheln innerhalb.
+ * Mit `giant` kommt der Riesenbaum (B3, Krone ×1,8) dazu; die Kronen vor ihm entfallen.
+ */
+export function crownsFor(seed: number, variant: number, giant = false): Crown[] {
+  const key = `${seed}|${variant}|${giant ? 1 : 0}`;
+  const hit = crownCache.get(key);
+  if (hit) return hit;
+  const { slot, role, form } = variantParts(variant);
+  const base = slotKind(seed, slot);
+  const alt = slotKind(seed, (slot + 1) % 3);
+  const spec = SPECS[role]!;
+  const rnd = (k: number, j: number): number => hash2(seed + 512, variant * 32 + k, j);
+  const out: Crown[] = [];
+  const limitTop = TREE_H;
+  /** Passt eine Krone unter die Höhenobergrenze: Radius schrumpft, bis Krone und Stamm hineinpassen. */
+  const add = (
+    kind: CrownKind,
+    bush: boolean,
+    r0: number,
+    px: number,
+    py: number,
+    hf: number,
+    s: number,
+    top: number,
+  ): void => {
+    let r = r0 * (kind === 3 && !bush ? 1.25 : 1);
+    for (let i = 0; i < 8; i++, r *= 0.88) {
+      const cx =
+        role === 2 && !bush ? clamp(px, r, 1 - r) : clamp(px, r - OVERHANG, 1 + OVERHANG - r);
+      const cy =
+        role === 2 && !bush ? clamp(py, r, 1 - r) : clamp(py, r - OVERHANG, 1 + OVERHANG - r);
+      const g = crownGeom({ kind, r, s, bush });
+      const ground = ((cx + cy - 1) * ISO_H) / 2;
+      const hCap = top - 0.5 - g.hh + ground;
+      if (hCap < (bush ? 0.45 : 0.95) * g.hh) continue;
+      out.push({ kind, cx, cy, r, h: Math.min(hf * g.hh, hCap), bush, s });
+      return;
+    }
+  };
+  const spread = (
+    n: number,
+    k0: number,
+    dMin: number,
+    lo: number,
+    hi: number,
+  ): [number, number][] => {
+    const pts: [number, number][] = [];
+    for (let i = 0; i < n; i++) {
+      let best: [number, number] = [0, 0],
+        bd = -1;
+      for (let a = 0; a < 10; a++) {
+        const p: [number, number] = [
+          lo + (hi - lo) * rnd(k0 + i, 40 + a * 2),
+          lo + (hi - lo) * rnd(k0 + i, 41 + a * 2),
+        ];
+        const d = pts.reduce((m, q) => Math.min(m, Math.hypot(p[0] - q[0], p[1] - q[1])), 9);
+        if (d > bd) {
+          bd = d;
+          best = p;
+        }
+        if (d >= dMin) break;
+      }
+      pts.push(best);
+    }
+    return pts;
+  };
+  const n = spec.n + (form % 2); // Kern 5–6, Rand 3–4, Eng 4–5
+  const pts = spread(n, 0, spec.dMin, spec.lo, spec.hi);
+  pts.forEach(([px, py], i) => {
+    // Beimischung: etwa jede achte Krone nimmt die Nebenart (kein Reinbestand), nie auf Eng-Kacheln
+    const kind = role !== 2 && rnd(i, 1) < 0.12 ? alt : base;
+    const r = spec.rMin + (spec.rMax - spec.rMin) * rnd(i, 2);
+    const hf = spec.hf0 + (spec.hf1 - spec.hf0) * rnd(i, 3);
+    add(kind, false, r, px, py, hf, rnd(i, 4), limitTop);
+  });
+  if (role === 1) {
+    // Saum (B1): Büsche auf der Waldkachel, eine Form mit einem Überhälter
+    const nb = 1 + (form % 2);
+    spread(nb, 8, 0.3, 0.05, 0.95).forEach(([px, py], i) =>
+      add(0, true, 0.05 + 0.025 * rnd(8 + i, 2), px, py, 0.55, rnd(8 + i, 4), limitTop),
+    );
+    if (form === 1)
+      add(base, false, 0.18, 0.5 + (rnd(12, 0) - 0.5) * 0.5, 0.5, 1.5, rnd(12, 4), limitTop);
+  }
+  if (giant) {
+    const behind = out.filter((c) => c.cx + c.cy <= 1);
+    out.length = 0;
+    out.push(...behind);
+    add(base, false, 0.17 * GIANT_SCALE, 0.5, 0.5, 1.7, rnd(20, 4), GIANT_SCALE * TREE_H);
+  }
+  if (crownCache.size >= CROWN_CACHE_MAX) crownCache.clear();
+  crownCache.set(key, out);
   return out;
 }
 
-/** Bildbox des Stempels (= `pointBounds` der Kachelmitte). */
+// ---------------------------------------------------------------------------------------------------------------
+// Box, Schatten
+
+const itemOffset = (item: TreeItem): Pt => project(item.ox ?? 0, item.oy ?? 0);
+
+/** Halbe Breite und Platz unter der Rautenmitte der Bildbox je Rolle (Kern, Rand, Eng); Eng bleibt in der Kachel. */
+const BOX_HALF = [52, 46, ISO_W / 2] as const;
+const BOX_BELOW = [STAMP_BELOW, 22, ISO_H / 2] as const;
+
+/**
+ * Bildbox des Stempels: Kachelmitte plus Versatz; die Breite hängt von der Rolle ab (Eng wie früher eine Kachel,
+ * Rand und Kern mit Überhang). Der Riesenbaum ragt 1,8-mal so hoch.
+ */
 export function treeBounds(item: TreeItem): Box {
-  return pointBounds(item.fp.x + 0.5, item.fp.y + 0.5, TREE_H);
+  const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+  const o = itemOffset(item);
+  const role = variantParts(item.variant % TREE_VARIANTS).role;
+  const up = item.giant ? GIANT_SCALE * TREE_H : TREE_H;
+  return {
+    x: c.x + o.x - BOX_HALF[role],
+    y: c.y + o.y - up,
+    w: 2 * BOX_HALF[role],
+    h: up + BOX_BELOW[role],
+  };
 }
 
-/** Schattenpolygon im Kachelraum, nach rechts unten (+3, +1) versetzt; der Schattendurchgang zeichnet es (R1b). */
+/** Schattenpolygon im Kachelraum, nach rechts unten (+3, +1) versetzt, mit Stempelversatz und Grösse nach Rolle. */
 export function treeShadow(item: TreeItem): Pt[] {
-  const mx = item.fp.x + 0.5 + DIR.x * SHADOW_SHIFT,
-    my = item.fp.y + 0.5 + DIR.y * SHADOW_SHIFT;
+  const role = variantParts(item.variant % TREE_VARIANTS).role;
+  const k = item.giant ? GIANT_SCALE : role === 0 ? 1 : 0.8;
+  const mx = item.fp.x + 0.5 + (item.ox ?? 0) + DIR.x * SHADOW_SHIFT * k,
+    my = item.fp.y + 0.5 + (item.oy ?? 0) + DIR.y * SHADOW_SHIFT * k;
   const pts: Pt[] = [];
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    const u = Math.cos(a) * SHADOW_A,
-      v = Math.sin(a) * SHADOW_B;
+    const u = Math.cos(a) * SHADOW_A * k,
+      v = Math.sin(a) * SHADOW_B * k;
     pts.push({ x: mx + DIR.x * u - DIR.y * v, y: my + DIR.y * u + DIR.x * v });
   }
   return pts;
 }
 
-/** Zeichnet den Stempel einer Variante in Stempelpixeln (Faktor `step`); Ursprung = Rautenmitte unten in der Mitte. */
+// ---------------------------------------------------------------------------------------------------------------
+// Zeichnen
+
+const ellipse = (
+  ctx: CanvasRenderingContext2D,
+  fill: string,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+): void => {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+};
+
+/**
+ * Zeichnet eine Krone (ohne Stamm) um ihren Mittelpunkt (x, y) im Stempelraum in drei Tonstufen:
+ * Laub-artige Kronen als Klumpen aus Lappen (Schattenmond, Mitte, Kappe zum Licht), der Nadelbaum als Etagen.
+ */
+export function paintCrown(ctx: CanvasRenderingContext2D, c: Crown, x: number, y: number): void {
+  const g = crownGeom(c);
+  const base = crownBase(c.kind);
+  if (g.tiers.length > 0) {
+    const sd = LIGHT_PX.x > 0 ? -1 : 1; // Seite des Schattens im Bild
+    for (const t of g.tiers) {
+      const ax = x + t.ax,
+        ay = y + t.ay,
+        bx = x + t.bx,
+        by = y + t.by;
+      ctx.fillStyle = base;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx + t.hw, by);
+      ctx.lineTo(bx - t.hw, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = crownShade(base);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx + sd * t.hw, by);
+      ctx.lineTo(bx, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = crownCap(base);
+      ctx.beginPath();
+      ctx.moveTo(ax - sd * 0.05 * t.hw, ay + 0.08 * t.th);
+      ctx.lineTo(ax - sd * 0.05 * t.hw, ay + 0.74 * t.th);
+      ctx.lineTo(ax - sd * 0.72 * t.hw, ay + 0.74 * t.th);
+      ctx.closePath();
+      ctx.fill();
+    }
+    return;
+  }
+  const lobes = [...g.lobes].sort((a, b) => a.y - b.y); // hinten zuerst
+  // Schattenmond: alle Lappen im kühlen Ton (die gezackte Silhouette)
+  for (const l of lobes) ellipse(ctx, crownShade(base), x + l.x, y + l.y, l.rx, l.ry);
+  // Mitte: Lappen zum Licht versetzt und etwas kleiner
+  for (const l of lobes)
+    ellipse(
+      ctx,
+      base,
+      x + l.x + LIGHT_PX.x * MOON_SHIFT * l.rx,
+      y + l.y + LIGHT_PX.y * MOON_SHIFT * l.ry,
+      MOON_SHRINK * l.rx,
+      MOON_SHRINK * l.ry,
+    );
+  // Kappe: die am stärksten zum Licht liegenden Lappen (bei Büschen einer)
+  const lit = [...lobes]
+    .sort((a, b) => b.x * LIGHT_PX.x + b.y * LIGHT_PX.y - (a.x * LIGHT_PX.x + a.y * LIGHT_PX.y))
+    .slice(0, c.bush ? 1 : 2);
+  for (const l of lit)
+    ellipse(
+      ctx,
+      crownCap(base),
+      x + l.x + LIGHT_PX.x * (MOON_SHIFT + CAP_SHIFT) * l.rx,
+      y + l.y + LIGHT_PX.y * (MOON_SHIFT + CAP_SHIFT) * l.ry,
+      0.55 * l.rx,
+      0.5 * l.ry,
+    );
+}
+
+/** Zeichnet den Stamm einer Krone: vom Boden (x, ground) bis zum Kronenmittelpunkt. */
+function paintTrunk(
+  ctx: CanvasRenderingContext2D,
+  c: Crown,
+  x: number,
+  ground: number,
+  giant: boolean,
+): void {
+  if (c.bush) return;
+  const w = (c.kind === 2 ? 2.2 : 2.6) * (giant ? 2 : 1) + (c.r > 0.2 ? 0.8 : 0);
+  ctx.fillStyle = c.kind === 2 ? LIGHT_TRUNK_COLOR : TRUNK_COLOR;
+  ctx.beginPath();
+  if (c.kind === 3) {
+    // Pinie: leicht geneigter Stamm
+    const lean = (c.s - 0.5) * 4;
+    ctx.moveTo(x - w / 2, ground);
+    ctx.lineTo(x + w / 2, ground);
+    ctx.lineTo(x + w / 2 + lean, ground - c.h);
+    ctx.lineTo(x - w / 2 + lean, ground - c.h);
+    ctx.closePath();
+  } else ctx.rect(x - w / 2, ground - c.h, w, c.h);
+  ctx.fill();
+}
+
+/** Zeichnet den Stempel einer Variante in Stempelpixeln (Faktor `step`); Ursprung = Rautenmitte, `TREE_H` darüber. */
 export function paintStamp(
   ctx: CanvasRenderingContext2D,
   seed: number,
   variant: number,
   step: number,
+  giant = false,
 ): void {
-  const crowns = crownsFor(seed, variant)
+  const crowns = crownsFor(seed, variant, giant)
     .map((c) => ({
       c,
       x: (c.cx - c.cy) * (ISO_W / 2),
-      y: ((c.cx + c.cy - 1) * ISO_H) / 2,
+      y: ((c.cx + c.cy - 1) * ISO_H) / 2, // Bild-y des Fusspunkts relativ zur Rautenmitte
     }))
     .sort((a, b) => a.y - b.y); // hinten zuerst
   ctx.save();
   ctx.scale(step, step);
-  ctx.translate(ISO_W / 2, TREE_H);
+  ctx.translate(STAMP_W / 2, TREE_H);
   for (const { c, x, y } of crowns) {
-    const rx = c.r * ISO_W,
-      ry = rx * CROWN_RY,
-      cyc = y - c.h;
-    ctx.fillStyle = c.kind === 2 ? LIGHT_TRUNK_COLOR : TRUNK_COLOR;
-    ctx.beginPath();
-    ctx.rect(x - 1.5, cyc, 3, c.h);
-    ctx.fill();
-    if (c.kind === 1) {
-      // Nadelbaum: zwei Dreiecksstufen; Schattenhälfte auf der lichtabgewandten Seite, Kappe an der Lichtseite
-      const sd = LIGHT_PX.x > 0 ? -1 : 1; // Seite des Schattens im Bild
-      const tier = (apexY: number, half: number, baseY: number): void => {
-        ctx.fillStyle = CONIFER_COLOR;
-        ctx.beginPath();
-        ctx.moveTo(x, apexY);
-        ctx.lineTo(x + half, baseY);
-        ctx.lineTo(x - half, baseY);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = crownShade(CONIFER_COLOR);
-        ctx.beginPath();
-        ctx.moveTo(x, apexY);
-        ctx.lineTo(x + sd * half, baseY);
-        ctx.lineTo(x, baseY);
-        ctx.closePath();
-        ctx.fill();
-      };
-      tier(cyc - 0.4 * ry, rx, cyc + 0.9 * ry);
-      tier(cyc - CONIFER_TOP * ry, 0.75 * rx, cyc + 0.25 * ry);
-      ctx.fillStyle = crownCap(CONIFER_COLOR);
-      ctx.beginPath();
-      ctx.moveTo(x + sd * -0.05 * rx, cyc - (CONIFER_TOP - 0.1) * ry);
-      ctx.lineTo(x + sd * -0.05 * rx, cyc + 0.1 * ry);
-      ctx.lineTo(x + sd * -0.7 * rx, cyc + 0.1 * ry);
-      ctx.closePath();
-      ctx.fill();
-      continue;
-    }
-    const base = c.kind === 2 ? LIGHT_CROWN_COLOR : PALETTE.crown;
-    // Schattenmond: volle Krone im kühlen Ton, Mitte und Kappe sitzen zum Licht versetzt darüber
-    ctx.fillStyle = crownShade(base);
-    ctx.beginPath();
-    ctx.ellipse(x, cyc, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    const mx = x + LIGHT_PX.x * MOON_SHIFT * rx,
-      my = cyc + LIGHT_PX.y * MOON_SHIFT * ry;
-    ctx.fillStyle = base;
-    ctx.beginPath();
-    ctx.ellipse(mx, my, MOON_SHRINK * rx, MOON_SHRINK * ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = crownCap(base);
-    ctx.beginPath();
-    ctx.ellipse(
-      mx + LIGHT_PX.x * CAP_SHIFT * rx,
-      my + LIGHT_PX.y * CAP_SHIFT * ry,
-      0.5 * rx,
-      0.45 * ry,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    const isGiant = giant && c.r > 0.17 * GIANT_SCALE - 1e-9;
+    paintTrunk(ctx, c, x, y, isGiant);
+    paintCrown(ctx, c, x, y - c.h);
   }
   ctx.restore();
 }
@@ -224,7 +533,7 @@ function stampFor(seed: number, variant: number, step: number): HTMLCanvasElemen
   const hit = cache.get(key);
   if (hit) return hit;
   const canvas = makeCanvas();
-  canvas.width = Math.ceil(ISO_W * step);
+  canvas.width = Math.ceil(STAMP_W * step);
   canvas.height = Math.ceil(STAMP_H * step);
   const c = canvas.getContext('2d');
   if (!c) return null;
@@ -233,7 +542,10 @@ function stampFor(seed: number, variant: number, step: number): HTMLCanvasElemen
   return canvas;
 }
 
-/** Zeichnet den Stempel an der Kachelmitte; Zoom-Cache auf `ZOOM_STEPS`, Zielgrösse Faktor `z / zoomStep(z)`. */
+/**
+ * Zeichnet den Stempel an der Kachelmitte plus Versatz; Zoom-Cache auf `ZOOM_STEPS`, Zielgrösse Faktor
+ * `z / zoomStep(z)`. Nur der Riesenbaum (B3, höchstens einer je Karte) wird direkt gezeichnet, nie aus dem Cache.
+ */
 export function drawTreeStamp(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
@@ -242,9 +554,26 @@ export function drawTreeStamp(
 ): void {
   const z = cam.zoom,
     step = zoomStep(z);
-  const stamp = stampFor(seed, item.variant % TREE_VARIANTS, step);
+  const variant = item.variant % TREE_VARIANTS;
+  const p = worldToScreen(
+    cam,
+    project(item.fp.x + 0.5 + (item.ox ?? 0), item.fp.y + 0.5 + (item.oy ?? 0)),
+  );
+  if (item.giant) {
+    ctx.save();
+    ctx.translate(p.x - (STAMP_W / 2) * z, p.y - TREE_H * z);
+    paintStamp(ctx, seed, variant, z, true);
+    ctx.restore();
+    return;
+  }
+  const stamp = stampFor(seed, variant, step);
   if (!stamp) return;
   const f = z / step;
-  const p = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
-  ctx.drawImage(stamp, p.x - (ISO_W / 2) * z, p.y - TREE_H * z, stamp.width * f, stamp.height * f);
+  ctx.drawImage(
+    stamp,
+    p.x - (STAMP_W / 2) * z,
+    p.y - TREE_H * z,
+    stamp.width * f,
+    stamp.height * f,
+  );
 }

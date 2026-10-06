@@ -14,7 +14,7 @@ import { LIGHT } from './light';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, fieldWorld, type Field } from './terrainField';
-import { crownsFor, type TreeItem } from './trees';
+import { crownScreen, crownsFor, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
 const rgbaCss = (css: string, alpha: number): string => `rgba(${rgbOfCss(css).join(',')},${alpha})`;
@@ -487,7 +487,6 @@ export interface Occluder {
   clips: () => Poly[][];
 }
 
-const CROWN_RY = 0.85; // wie `trees.ts`: Kronenhöhe im Verhältnis zur Breite
 const CROWN_SEGMENTS = 12;
 
 const area = (p: Poly): number =>
@@ -602,15 +601,22 @@ export function buildingClips(cam: Camera, world: World, b: Building): Poly[][] 
   return e.groups.map((g) => g.map((p) => p.map((q) => worldToScreen(cam, q))));
 }
 
-/** Kronenkreise eines Baumstempels im Bildraum (Vieleck je Krone), an der Stempelposition wie `drawTreeStamp`. */
+/**
+ * Kronenvielecke eines Baumstempels im Bildraum (ein Vieleck je Krone), mit Stempelversatz und Riesenbaum: Mitte und
+ * halbe Masse kommen aus `crownScreen`, derselben Quelle wie das Zeichnen (`paintCrown`).
+ */
 export function crownPolys(cam: Camera, item: TreeItem, seed: number): Poly[] {
   const z = cam.zoom;
-  const o = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
-  return crownsFor(seed, item.variant % TREE_VARIANTS).map((c) => {
-    const mx = o.x + (c.cx - c.cy) * (ISO_W / 2) * z,
-      my = o.y + (((c.cx + c.cy - 1) * ISO_H) / 2 - c.h) * z;
-    const rx = c.r * ISO_W * z,
-      ry = rx * CROWN_RY;
+  const o = worldToScreen(
+    cam,
+    project(item.fp.x + 0.5 + (item.ox ?? 0), item.fp.y + 0.5 + (item.oy ?? 0)),
+  );
+  return crownsFor(seed, item.variant % TREE_VARIANTS, item.giant === true).map((c) => {
+    const s = crownScreen(c);
+    const mx = o.x + s.x * z,
+      my = o.y + s.y * z;
+    const rx = s.rx * z,
+      ry = s.ry * z;
     return Array.from({ length: CROWN_SEGMENTS }, (_, i) => {
       const a = (i / CROWN_SEGMENTS) * Math.PI * 2;
       return { x: mx + Math.cos(a) * rx, y: my + Math.sin(a) * ry };
