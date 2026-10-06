@@ -1159,7 +1159,8 @@ describe('M12 E1 Terrain', () => {
             k in t
               ? t[k]
               : (...a: unknown[]) => {
-                  c.calls.push(`${k}(${JSON.stringify(a)})`);
+                  // drawImage: Quelle (Canvas samt Pixelpuffer) nicht serialisieren
+                  c.calls.push(`${k}(${JSON.stringify(k === 'drawImage' ? a.slice(1) : a)})`);
                 },
           set: () => true,
         });
@@ -1372,6 +1373,31 @@ describe('M12 E1 Terrain', () => {
       for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
       expect(quarterLayer(job.layer)).toBe(q);
       expectCovered(stripCalls(q), half.height, q.height);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: halbe Kopie in Streifenschritten (je Streifen eine Zeichnung, deckt die Ebene lückenlos)', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      for (const s of job.steps) s();
+      const half = halfLayer(job.layer);
+      const rows = stripCalls(half);
+      expect(rows.length).toBe(quarterStrips(job.layer.height).length);
+      expect(rows.length).toBeGreaterThanOrEqual(QUARTER_STRIPS - 1);
+      expectCovered(rows, job.layer.height, half.height);
+      expect(halfLayer(job.layer)).toBe(half);
+    });
+  });
+
+  it('AK-E1-19 terrainJob: ruft der Renderer halfLayer mitten in den Streifen, ist die Kopie vollständig und die Reststreifen malen nicht mehr', () => {
+    withLightDocument(() => {
+      const job = terrainJob(view(), 1);
+      const first = job.steps.length - QUARTER_STRIPS - QUARTER_STRIPS;
+      for (let i = 0; i < first + 3; i++) job.steps[i]!();
+      const half = halfLayer(job.layer);
+      for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
+      expect(halfLayer(job.layer)).toBe(half);
+      expectCovered(stripCalls(half), job.layer.height, half.height);
     });
   });
 });
