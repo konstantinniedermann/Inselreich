@@ -5,6 +5,13 @@ import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
+import {
+  decorCacheClears,
+  decorCacheSeed,
+  resetDecorCache,
+  setDecorCanvasFactory,
+  type DecorItem,
+} from '../../src/render/decorStamps';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import { islandCam, islandView } from '../../src/render/archipel';
 import { tileToScreen } from '../../src/render/camera';
@@ -54,6 +61,8 @@ const h = vi.hoisted(() => ({
   calls: [] as Call[],
   bodyCams: new Map<number, { x: number; y: number; zoom: number }>(),
   treeSeeds: [] as number[],
+  decorCalls: [] as { id: number; stamp: string; seed: number; zoom: number }[],
+  decorShadows: [] as number[],
   shipScales: [] as number[],
   terrain: {
     scale: 1,
@@ -97,6 +106,20 @@ vi.mock('../../src/render/trees', async (orig) => {
       h.calls.push({ kind: 'tree', id: a[2].id, at: at(a[0]) });
       h.treeSeeds.push(a[3]);
       return m.drawTreeStamp(...a);
+    },
+  };
+});
+vi.mock('../../src/render/decorStamps', async (orig) => {
+  const m = await orig<typeof import('../../src/render/decorStamps')>();
+  return {
+    ...m,
+    drawDecorStamp: (...a: Parameters<typeof m.drawDecorStamp>) => {
+      h.decorCalls.push({ id: a[2].id, stamp: a[2].stamp, seed: a[3], zoom: a[1].zoom });
+      return m.drawDecorStamp(...a);
+    },
+    decorShadow: (...a: Parameters<typeof m.decorShadow>) => {
+      h.decorShadows.push(a[0].id);
+      return m.decorShadow(...a);
     },
   };
 });
@@ -187,9 +210,17 @@ beforeAll(() => {
     return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
   });
   resetTreeCache();
+  // ebenso für die Deko-Stempel (ART-STIL-02 L4)
+  setDecorCanvasFactory(() => {
+    const { ctx } = fakeCtx();
+    return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
+  });
+  resetDecorCache();
 });
 beforeEach(() => {
   h.calls.length = 0;
+  h.decorCalls.length = 0;
+  h.decorShadows.length = 0;
   h.terrain.scale = 1;
   h.terrain.patch = { redrawn: false, ms: 0 };
   h.terrain.halfCalls = 0;
@@ -348,15 +379,30 @@ describe('Renderer', () => {
       (i) =>
         i.kind === 'building' ||
         (i.kind === 'tree' &&
-          i.fp.x >= range.x0 &&
-          i.fp.x <= range.x1 &&
-          i.fp.y >= range.y0 &&
-          i.fp.y <= range.y1),
+          i.fp.x >= range.x0 - 1 &&
+          i.fp.x <= range.x1 + 1 &&
+          i.fp.y >= range.y0 - 1 &&
+          i.fp.y <= range.y1 + 1),
     );
     expect(items.filter((i) => i.kind === 'tree').length).toBeGreaterThanOrEqual(16);
     expect(seq.filter((c) => c.kind !== 'ship').map((c) => `${c.kind}${c.id}`)).toEqual(
       items.map((i) => `${i.kind === 'tree' ? 'tree' : 'body'}${i.id}`),
     );
+  });
+
+  it('L1-Befund Culling: ein Baum eine Kachel hinter dem Kachelbereich wird noch gezeichnet (Zuschlag), zwei Kacheln dahinter nicht', () => {
+    const { world } = scene();
+    const cam = camFor(world, 1);
+    const isl = home(world);
+    const range = visibleTileRange(cam, VIEW, { w: isl.width, h: isl.height });
+    const y = Math.floor((range.y0 + range.y1) / 2);
+    expect(range.x1 + 2).toBeLessThan(isl.width);
+    for (const dx of [1, 2]) forceRect(world, range.x1 + dx, y, 1, 1, 'forest');
+    const { ctx } = fakeCtx();
+    render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
+    const drawn = new Set(h.calls.filter((c) => c.kind === 'tree').map((c) => c.id));
+    expect(drawn.has(y * isl.width + range.x1 + 1)).toBe(true);
+    expect(drawn.has(y * isl.width + range.x1 + 2)).toBe(false);
   });
 
   it('ISO §5 (N2) Bruchprobe-Szene: der Weg liegt vor dem ersten Körper — nach den Körpern gezeichnete Wege würden diesen Test röten', () => {
@@ -475,6 +521,9 @@ describe('Renderer', () => {
     // keine Baum- und Felsschatten (H-R8) im Zähler
     for (const t of home(world).tiles)
       if (t.terrain === 'forest' || t.terrain === 'mountain') t.terrain = 'grass';
+    // und keine Deko-Stempel-Schatten (L4): Stempel stehen nur auf Gras, also bleibt kein freies Gras
+    for (const t of home(world).tiles)
+      if (t.terrain === 'grass' && t.buildingId === null) t.terrain = 'sand';
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
     const box = spriteBounds(BUILDING_DEFS.market, keep);
@@ -1095,7 +1144,12 @@ describe('S1-Rest DIM_FIRE', () => {
 });
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
-  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
+  // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
+  // G-Anzahl (b537908).
+  const HOME_CALLS = { hash: 2585897606, length: 12859 };
+  // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
+  const HOME_ORDER = { hash: 3670334885, length: 3662 };
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
@@ -1120,6 +1174,8 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
     }
     const json = JSON.stringify(all);
     expect({ hash: fnv1a32(json), length: json.length }).toEqual(HOME_CALLS);
+    const seq = JSON.stringify(all.map((l) => l.map((c) => `${c.kind}${c.id}`)));
+    expect({ hash: fnv1a32(seq), length: seq.length }).toEqual(HOME_ORDER);
   });
 });
 
@@ -1141,6 +1197,8 @@ describe('M12 E1 Renderer', () => {
   const run = (world: World, cam: ReturnType<typeof camOn>, fx: Partial<RenderFx> = {}) => {
     h.calls.length = 0;
     h.treeSeeds.length = 0;
+    h.decorCalls.length = 0;
+    h.decorShadows.length = 0;
     const f = fakeCtx();
     render(f.ctx, world, cam, layers, null, null, V, { timeMs: 5000, dayNight: true, ...fx });
     return { calls: h.calls.slice(), log: f.log };
@@ -1165,6 +1223,87 @@ describe('M12 E1 Renderer', () => {
     expect(renderStats.islandsDrawn).toBe(1);
     expect(log.images[0]).toBe(layers.get(1));
   });
+
+  it('L4-T1 Cache-Thrash über den Renderer: 10 Frames abwechselnd über Heimat und Fremdinsel leeren den Deko-Cache höchstens einmal, gefüllt nur mit dem Heimat-Seed', () => {
+    const { world } = scene();
+    const stamp = sortedObjects(world).find((i) => i.kind === 'decor')!;
+    expect(stamp, 'die Szene hat einen Deko-Stempel').toBeDefined();
+    const a = world.islands[1]!;
+    const camHome = camOn(stamp.fp.x + 0.5, stamp.fp.y + 0.5, 1);
+    const camFar = camOn(a.ox + a.width / 2, a.oy + a.height / 2, 2);
+    const base = decorCacheClears();
+    const seeds: number[] = [];
+    for (let frame = 0; frame < 10; frame++) {
+      run(world, frame % 2 === 0 ? camHome : camFar);
+      seeds.push(...h.decorCalls.map((c) => c.seed));
+      expect(renderStats.islandsDrawn).toBe(1);
+    }
+    expect(decorCacheClears() - base).toBeLessThanOrEqual(1);
+    expect(renderStats.decorClears).toBe(decorCacheClears());
+    expect(seeds.length).toBeGreaterThan(0);
+    for (const sd of seeds) expect(sd).toBe(world.seed); // nie ein Ansicht-Seed
+    expect(decorCacheSeed()).toBe(world.seed);
+    expect(renderStats.decorBytes).toBeGreaterThan(0);
+  });
+
+  it(
+    'L4 Deko-Culling: eine Kachel hinter range gezeichnet, zwei nicht; unter Zoom 0,5 kein A5/A6, unter 0,75 kein A9/A14; Schatten im gemeinsamen Pfad',
+    { timeout: 120000 },
+    () => {
+      const MIN = { solitaire: 0.5, orchard: 0.5, menhir: 0.75, ruin: 0.75 } as const;
+      let plusOne = 0,
+        plusTwo = 0;
+      const kindsDrawn = new Map<number, Set<string>>();
+      for (const seed of [3, 7]) {
+        const world = createWorld(seed, { unlockAll: true });
+        const dims = { w: home(world).width, h: home(world).height };
+        const items = sortedObjects(world).filter((i) => i.kind === 'decor') as DecorItem[];
+        for (const zoom of [1, 0.6, 0.4]) {
+          const step = zoom === 1 ? 3 : 7;
+          for (let cy = 4; cy <= 60; cy += step)
+            for (let cx = 4; cx <= 60; cx += step) {
+              const cam = camOn(cx, cy, zoom);
+              const range = visibleTileRange(cam, V, dims);
+              run(world, cam);
+              const drawn = new Set(h.decorCalls.map((c) => c.id));
+              const want = new Set<number>();
+              for (const it of items) {
+                if (zoom < MIN[it.stamp]) continue;
+                const dx = Math.max(range.x0 - it.fp.x, it.fp.x - range.x1),
+                  dy = Math.max(range.y0 - it.fp.y, it.fp.y - range.y1);
+                if (Math.max(dx, dy) <= 1) want.add(it.id);
+                if (zoom === 1 && Math.max(dx, dy) === 1) plusOne++;
+                if (zoom === 1 && Math.max(dx, dy) === 2 && !drawn.has(it.id)) plusTwo++;
+              }
+              expect([...drawn].sort(), `Seed ${seed} Zoom ${zoom} @${cx},${cy}`).toEqual(
+                [...want].sort(),
+              );
+              for (const c of h.decorCalls) {
+                expect(zoom).toBeGreaterThanOrEqual(MIN[c.stamp as keyof typeof MIN]);
+                if (!kindsDrawn.has(zoom)) kindsDrawn.set(zoom, new Set());
+                kindsDrawn.get(zoom)!.add(c.stamp);
+              }
+              // Schatten: genau ein gemeinsamer Pfad, A5/A6 darin, Menhir und Mauerreste nicht
+              expect(
+                [...new Set(h.decorShadows)].sort(),
+                'Schatten für alle gezeichneten Stempel',
+              ).toEqual([...want].sort());
+              expect(renderStats.shadowFills).toBeLessThanOrEqual(renderStats.islandsDrawn); // ein gemeinsamer Pfad je Insel
+            }
+        }
+      }
+      expect(plusOne, 'ein Stempel eine Kachel hinter range wurde geprüft').toBeGreaterThan(0);
+      expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
+      expect([...(kindsDrawn.get(1) ?? [])].sort()).toEqual([
+        'menhir',
+        'orchard',
+        'ruin',
+        'solitaire',
+      ]);
+      expect([...(kindsDrawn.get(0.6) ?? [])].sort()).toEqual(['orchard', 'solitaire']);
+      expect(kindsDrawn.get(0.4)).toBeUndefined();
+    },
+  );
 
   it('AK-E1-12 jump, aktive Insel 0, Zoom 0,125 über der Rahmenmitte: Aufrufliste gleich der Heimat-Welt', () => {
     const { world } = scene();

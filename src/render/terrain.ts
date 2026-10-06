@@ -8,14 +8,18 @@ import { TEX } from './iso';
 import { forestClearing, forestEdgeShift } from './forest';
 import type { CacheStep } from './cachePlan';
 import {
-  FLOWER_TONES,
   SHRUB_TONES,
+  flowerTonesFor,
   flowerVeil,
+  extraFlowersFor,
   flowersFor,
+  groundShapes,
   meadowWarmth,
   shrubsFor,
   tuftColor,
+  type Prim,
 } from './groundDecor';
+import { groundElements, kontorPos } from './decor';
 import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
   COAST_BAND,
@@ -1275,8 +1279,10 @@ const isFreeGrass = (world: World, occ: Uint8Array, x: number, y: number): boole
 };
 
 /**
- * Deko auf unbelegten Grasskacheln im Rechteck (Texturpixel × `scale`): Büschel, Büsche am Waldrand, Blumen.
- * Je Farbe ein Pfad; belegte Kacheln und Nicht-Gras bekommen nichts (R149).
+ * Deko auf unbelegten Grasskacheln im Rechteck (Texturpixel × `scale`): Büschel, Büsche am Waldrand, Blumen und die
+ * Boden-Elemente aus `decor.ts` (ART-STIL-02 L4). Je Farbe ein Pfad; belegte Kacheln und Nicht-Gras bekommen nichts
+ * (R149). Gemalt wird jedes Element, dessen Bildbox das Rechteck schneidet, mit Clip auf das Pixelrechteck von `r`:
+ * Büschel vom Rand ragen herein, nichts wird abgeschnitten oder doppelt gemalt. Ohne Inhalt bleibt der Kontext unberührt.
  */
 export function paintDecor(
   ctx: CanvasRenderingContext2D,
@@ -1290,15 +1296,20 @@ export function paintDecor(
   const { seed } = world;
   const forestAt = (x: number, y: number): boolean =>
     x >= 0 && y >= 0 && x < w && y < h && isl.tiles[y * w + x]!.terrain === 'forest';
-  ctx.save();
-  ctx.scale(scale, scale);
-  ctx.lineWidth = 1;
-  ctx.lineCap = 'round';
+  // Büschel und Blumen ragen über die Kachel hinaus: Nachbarn im Abstand 1 mitnehmen, der Clip schneidet auf `r`
+  const e: TileRect = {
+    x0: Math.max(0, r.x0 - 1),
+    y0: Math.max(0, r.y0 - 1),
+    x1: Math.min(w - 1, r.x1 + 1),
+    y1: Math.min(h - 1, r.y1 + 1),
+  };
   // H-R11: Farbe nach der Tonstufe des Bodens darunter (Schatten 1, eben 2, Licht 3), Dichte unverändert.
   // Büschel und Stufe einmal je Kachel vorberechnen, dann je Farbe ein Pfad.
   const tufts: { px: number; py: number; tone: 0 | 1; level: 1 | 2 | 3 }[] = [];
-  for (let y = r.y0; y <= r.y1; y++)
-    for (let x = r.x0; x <= r.x1; x++) {
+  const shrubs: { px: number; py: number; rx: number; tone: 0 | 1 }[] = [];
+  const flowers: { px: number; py: number; size: number; tone: 0 | 1 | 2 }[] = [];
+  for (let y = e.y0; y <= e.y1; y++)
+    for (let x = e.x0; x <= e.x1; x++) {
       if (!isFreeGrass(world, occ, x, y)) continue;
       const lush = 0.5 - 0.5 * meadowWarmth(seed, x + 0.5, y + 0.5);
       for (const t of tuftsFor(seed, x, y, lush))
@@ -1311,7 +1322,39 @@ export function paintDecor(
             Math.min(3, Math.floor(groundToneAt(seed, x + t.x, y + t.y) + 0.5)),
           ) as 1 | 2 | 3,
         });
+      // flache Büsche auf der Waldseite
+      const sides = {
+        left: forestAt(x - 1, y),
+        right: forestAt(x + 1, y),
+        up: forestAt(x, y - 1),
+        down: forestAt(x, y + 1),
+      };
+      if (sides.left || sides.right || sides.up || sides.down)
+        for (const b of shrubsFor(seed, x, y, sides))
+          shrubs.push({ px: (x + b.x) * TEX, py: (y + b.y) * TEX, rx: b.r * TEX, tone: b.tone });
+      for (const f of [...flowersFor(seed, x, y), ...extraFlowersFor(seed, x, y)])
+        flowers.push({ px: (x + f.x) * TEX, py: (y + f.y) * TEX, size: f.size, tone: f.tone });
     }
+  // Boden-Elemente (A2–A4, A7, A8, A10–A13, B6–B8): Lagen z, je (Lage, Farbe) ein Pfad
+  const layers: Map<string, Prim[]>[] = [new Map(), new Map()];
+  let elements = 0;
+  for (const el of groundElements(seed, isl, occ, r, kontorPos(isl, world.buildings))) {
+    for (const p of groundShapes(el, seed)) {
+      const m = layers[Math.min(1, p.z)]!;
+      const list = m.get(p.c);
+      if (list) list.push(p);
+      else m.set(p.c, [p]);
+    }
+    elements++;
+  }
+  if (tufts.length + shrubs.length + flowers.length + elements === 0) return;
+  ctx.save();
+  ctx.scale(scale, scale);
+  ctx.beginPath();
+  ctx.rect(r.x0 * TEX, r.y0 * TEX, (r.x1 - r.x0 + 1) * TEX, (r.y1 - r.y0 + 1) * TEX);
+  ctx.clip();
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
   for (const tone of [0, 1] as const)
     for (const st of [1, 2, 3] as const) {
       ctx.beginPath();
@@ -1330,51 +1373,51 @@ export function paintDecor(
       ctx.strokeStyle = tuftColor(tone, st);
       ctx.stroke();
     }
-  // flache Büsche auf der Waldseite
   for (const tone of [0, 1] as const) {
     ctx.beginPath();
     let any = false;
-    for (let y = r.y0; y <= r.y1; y++)
-      for (let x = r.x0; x <= r.x1; x++) {
-        if (!isFreeGrass(world, occ, x, y)) continue;
-        const sides = {
-          left: forestAt(x - 1, y),
-          right: forestAt(x + 1, y),
-          up: forestAt(x, y - 1),
-          down: forestAt(x, y + 1),
-        };
-        if (!(sides.left || sides.right || sides.up || sides.down)) continue;
-        for (const b of shrubsFor(seed, x, y, sides)) {
-          if (b.tone !== tone) continue;
-          const px = (x + b.x) * TEX,
-            py = (y + b.y) * TEX,
-            rx = b.r * TEX;
-          ctx.moveTo(px + rx, py);
-          ctx.ellipse(px, py, rx, rx * 0.6, 0, 0, Math.PI * 2);
-          any = true;
-        }
-      }
+    for (const b of shrubs) {
+      if (b.tone !== tone) continue;
+      ctx.moveTo(b.px + b.rx, b.py);
+      ctx.ellipse(b.px, b.py, b.rx, b.rx * 0.6, 0, 0, Math.PI * 2);
+      any = true;
+    }
     if (!any) continue;
     ctx.fillStyle = SHRUB_TONES[tone]!;
     ctx.fill();
   }
-  // Blumen: kleine Punkte
+  // Blumen: kleine Punkte, Palette je Insel
+  const bloom = flowerTonesFor(seed);
   for (const tone of [0, 1, 2] as const) {
     ctx.beginPath();
     let any = false;
-    for (let y = r.y0; y <= r.y1; y++)
-      for (let x = r.x0; x <= r.x1; x++) {
-        if (!isFreeGrass(world, occ, x, y)) continue;
-        for (const f of flowersFor(seed, x, y))
-          if (f.tone === tone) {
-            ctx.rect((x + f.x) * TEX, (y + f.y) * TEX, f.size, f.size);
-            any = true;
-          }
+    for (const f of flowers)
+      if (f.tone === tone) {
+        ctx.rect(f.px, f.py, f.size, f.size);
+        any = true;
       }
     if (!any) continue;
-    ctx.fillStyle = FLOWER_TONES[tone]!;
+    ctx.fillStyle = bloom[tone]!;
     ctx.fill();
   }
+  for (const m of layers)
+    for (const c of [...m.keys()].sort()) {
+      ctx.beginPath();
+      for (const p of m.get(c)!) {
+        if (p.k === 'rect') ctx.rect(p.x * TEX, p.y * TEX, p.w * TEX, p.h * TEX);
+        else if (p.k === 'ell') {
+          ctx.moveTo((p.x + p.rx) * TEX, p.y * TEX);
+          ctx.ellipse(p.x * TEX, p.y * TEX, p.rx * TEX, p.ry * TEX, 0, 0, Math.PI * 2);
+        } else {
+          ctx.moveTo(p.pts[0]! * TEX, p.pts[1]! * TEX);
+          for (let i = 2; i < p.pts.length; i += 2)
+            ctx.lineTo(p.pts[i]! * TEX, p.pts[i + 1]! * TEX);
+          ctx.closePath();
+        }
+      }
+      ctx.fillStyle = c;
+      ctx.fill();
+    }
   ctx.restore();
 }
 

@@ -312,3 +312,51 @@ RENDER-LOOK-01 erst danach.
   Kronenwert ins Salz statt dem Schema `seed + Salz` zu folgen. Keine Kollision gefunden. **Einschätzung:**
   niedrig; bei der nächsten Änderung an trees.ts (L6) auf `seed + 513` mit `s` als Argument umstellen.
   **Ursprung:** ART-STIL-02 L1, qa-code-reviewer.
+
+### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 (Ist-Galerie)
+
+- **Fundort / Beobachtung:** Wiese: Dunkle Tonflecken haben eckige, polygonale Ränder mit geraden Abschnitten
+  (`.studio/qa/art-stil-02/s1-wald-z1.png`, `s1-wald-z2.png`); D8 aus dem Stilrahmen ist also nicht ganz behoben.
+  **Einschätzung:** mittel; die Wiese ist Nutzer-Referenz, deshalb nicht in ART-STIL-02 eingeplant; Ursache in
+  `terrain.ts` (Mottling bzw. Fleckenrauschen) klären. **Ursprung:** ART-STIL-02, lead-art.
+- **Fundort / Beobachtung:** Die Grenze Gras/Sand verläuft bei Zoom 0,5 als Rautentreppe entlang der Kacheln
+  (`s2-gesamt-z0.5.png`, Westzunge und Südküste), anders als die weiche Küstenlinie. **Einschätzung:** niedrig bis
+  mittel; ein Kandidat für ein späteres Boden-Häppchen. **Ursprung:** ART-STIL-02, lead-art.
+- **Fundort / Beobachtung:** QA-Skripte: Ein per `house.tier = 4` gesetztes Wohnhaus ergibt einen Stand, den
+  `deserialize` als „Beschädigter Spielstand" abweist; die Startkarte zeigt dann den Hinweis zu beschädigten Ständen.
+  **Einschätzung:** niedrig; nur Werkzeug-Falle (Galerie-Skripte setzen Stufe 1–3); das künftige
+  `tools/render-qa/galerie.mjs` (L1) berücksichtigt es. **Ursprung:** ART-STIL-02, lead-art.
+
+### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 L1 (Wald)
+
+- **Fundort / Beobachtung:** `src/render/renderer.ts`: Bäume werden nur über den Kachelbereich `range` gecullt,
+  ohne Zuschlag für den neuen Kronenüberhang (bis 0,35 Kachel) plus Stempelversatz (bis 0,3). Am Bildrand können
+  Randkronen bis etwa eine Kachel zu früh bzw. zu spät erscheinen. **Einschätzung:** niedrig; fällt nur beim
+  Scrollen am Rand auf; Fix: `range` für Bäume um 1 Kachel erweitern (renderer.ts gehört L4/L7). **Ursprung:**
+  ART-STIL-02 L1, art-rendering-engineer.
+- **Fundort / Beobachtung:** `tools/render-qa/perf.mjs` misst ohne `--w/--h` bei 1280 × 800, die Spec
+  „Lebendige Insel" §5 nennt 1920 × 1080. **Einschätzung:** niedrig; im Briefing `--w 1920 --h 1080` nennen
+  oder den Standard angleichen. **Ursprung:** ART-STIL-02 L1, art-rendering-engineer.
+- **Fundort / Beobachtung:** `window.__inselDev` hat keinen Hook für die Tageszeit; `galerie.mjs` kann daher kein
+  Nachtbild erzeugen (Spec §6.0 „Nacht als Option"). **Einschätzung:** niedrig; L7 (Glühwürmchen, Meeresleuchten)
+  braucht Nachtbilder; ein Dev-Hook in `src/ui/` wäre ein kleines UI-Paket. **Ursprung:** ART-STIL-02 L1.
+- **Fundort / Beobachtung:** `src/render/trees.ts` ~Z. 120: `hash2(513 + floor(c.s * 65536), …)` mischt einen
+  Kronenwert ins Salz statt dem Schema `seed + Salz` zu folgen. Keine Kollision gefunden. **Einschätzung:**
+  niedrig; bei der nächsten Änderung an trees.ts (L6) auf `seed + 513` mit `s` als Argument umstellen.
+  **Ursprung:** ART-STIL-02 L1, qa-code-reviewer.
+
+### 2026-10-06 · Render · Befunde aus ART-STIL-02 L4 (Deko)
+
+- **Fundort / Beobachtung:** `src/render/decor.ts` (`decorHill`) dupliziert `meadowHill` aus `terrain.ts`, um einen
+  Import-Zyklus zu vermeiden; die Gleichheit sichert nur ein Test. **Einschätzung:** niedrig; beim nächsten Umbau von
+  `terrain.ts` in ein reines Feldmodul zusammenführen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
+- **Fundort / Beobachtung:** `src/render/renderer.ts`: Der Culling-Zuschlag von 1 Kachel für Bäume und Deko-Stempel
+  setzt voraus, dass Kronen höchstens eine Kachel über ihre Kachel hinausragen. **Einschätzung:** niedrig; bei
+  grösseren Kronen in `trees.ts` (L6, Riesenbaum) den Zuschlag mitprüfen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
+- **Fundort / Beobachtung:** `src/render/decor.ts`: S/E-Orte sind statisch (D1) und meiden den „Urwald-Schätzer"
+  (`generateTerrain` lesend). Nach Aufforsten können gelöste S/E-Elemente unsichtbar werden. **Einschätzung:**
+  niedrig; L8 soll beim 3–6-Band die sichtbaren Elemente zählen, nicht die gelösten. **Ursprung:** ART-STIL-02 L4,
+  art-rendering-engineer.
+- **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
+  `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
+  verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
