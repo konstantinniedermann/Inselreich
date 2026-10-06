@@ -79,6 +79,32 @@ export const forestClearing = (seed: number, fx: number, fy: number): number => 
   return t * t * (3 - 2 * t);
 };
 
+/**
+ * Kern-Streuung (Salze 506/507) in Kacheln: Versatz einer Kernkachel (± 0,08). `forestLayout` nutzt diese Funktionen,
+ * `isClearingTile` erkennt daran die Lichtung (B2), ohne dass `TreeItem` eine Rolle tragen muss.
+ */
+export const kernOx = (seed: number, x: number, y: number): number =>
+  (hash2(seed + 506, x, y) - 0.5) * 0.16;
+export const kernOy = (seed: number, x: number, y: number): number =>
+  (hash2(seed + 507, x, y) - 0.5) * 0.16;
+/**
+ * Ist die Waldkachel (x, y) mit dem Stempelversatz (ox, oy) eine Lichtung (Kernkachel mit Feld ≥ 0,5, die
+ * `forestLayout` mit der lichteren Rand-Form belegt)? Nur Kernkacheln tragen genau den Kern-Versatz; Randkacheln
+ * (Versatz zur Wiese hin) und Engstellen (Versatz 0) nie. Rein, aus den Werten des Stempels.
+ */
+export const isClearingTile = (
+  seed: number,
+  x: number,
+  y: number,
+  ox: number | undefined,
+  oy: number | undefined,
+): boolean =>
+  ox !== undefined &&
+  oy !== undefined &&
+  ox === kernOx(seed, x, y) &&
+  oy === kernOy(seed, x, y) &&
+  forestClearing(seed, x + 0.5, y + 0.5) >= 0.5;
+
 const NB: readonly (readonly [number, number])[] = [
   [-1, -1],
   [0, -1],
@@ -142,8 +168,8 @@ export function forestLayout(
       let ox = 0,
         oy = 0;
       if (role === 0) {
-        ox = (hash2(seed + 506, x, y) - 0.5) * 0.16;
-        oy = (hash2(seed + 507, x, y) - 0.5) * 0.16;
+        ox = kernOx(seed, x, y);
+        oy = kernOy(seed, x, y);
       } else if (role === 1) {
         let sx = 0,
           sy = 0;

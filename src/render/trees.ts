@@ -11,7 +11,7 @@ import {
   type Pt,
   type SortedItem,
 } from './iso';
-import { accentIsMaple, forestType, variantParts, type ForestType } from './forest';
+import { accentIsMaple, forestType, isClearingTile, variantParts, type ForestType } from './forest';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, shadeSide, toLight } from './palette';
 
@@ -675,6 +675,8 @@ let cacheSeed: number | null = null;
 export const treeCacheSize = (): number => cache.size;
 export function resetTreeCache(): void {
   cache.clear();
+  fernCache.clear();
+  fernSeed = null;
   boxCache.clear();
   cacheSeed = null;
 }
@@ -698,6 +700,127 @@ function stampFor(seed: number, variant: number, step: number): HTMLCanvasElemen
   return canvas;
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Farn auf Lichtungen (ART-STIL-02 L6, B2 Stempelteil). Salz 584 (Block 576–584, Eintrag im zentralen Kopf von
+// groundDecor.ts macht der Release-Merge). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln), gezeichnet vor dem
+// Baumstempel der Kachel; eigener kleiner Cache (FERN_FORMS × ZOOM_STEPS), `TREE_VARIANTS` bleibt unverändert.
+
+export const FERN_SALT = 584;
+export const FERN_FORMS = 4;
+/** Farn zeigt sich ab Zoom 0,5. */
+export const FERN_MIN_ZOOM = 0.5;
+/** Höhe eines Büschels (Weltpixel) höchstens ein Viertel der Stempelhöhe. */
+export const FERN_H = 0.25 * TREE_H;
+/** Frisches Hellgrün, heller als die Kronen: crownLight mit grassLight; Kontur dunkler Eigenton (nie Schwarz). */
+export const FERN_LIGHT = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.55);
+export const FERN_MID = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.3);
+export const FERN_LINE = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
+export interface FernTuft {
+  /** Form 0 … FERN_FORMS − 1 */
+  form: number;
+  /** Fusspunkt in Kachel-Anteilen (0,15 … 0,85) */
+  u: number;
+  v: number;
+}
+/** Büschel einer Lichtungskachel: 2–4, deterministisch aus (Seed, Kachel), nach Tiefe (u + v) geordnet. Rein. */
+export function fernTufts(seed: number, x: number, y: number): FernTuft[] {
+  const n = 2 + Math.floor(hash2(seed + FERN_SALT, x, y) * 3);
+  const out: FernTuft[] = [];
+  for (let k = 0; k < n; k++)
+    out.push({
+      form: Math.floor(hash2(seed + FERN_SALT, x * 16 + k + 1, y) * FERN_FORMS) % FERN_FORMS,
+      u: 0.15 + 0.7 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 1000),
+      v: 0.15 + 0.7 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 2000),
+    });
+  return out.sort((a, b) => a.u + a.v - (b.u + b.v));
+}
+/** Fläche eines Büschel-Canvas in Weltpixeln: Fusspunkt unten in der Mitte. */
+const FERN_BOX = { w: 18, h: 11, cx: 9, cy: 10 };
+/** Zeichnet ein Büschel (Fusspunkt bei (0, 0), Wedel nach oben) in Weltpixeln; Eigenkontur zuerst, dann 2 Töne. */
+export function paintFern(ctx: CanvasRenderingContext2D, seed: number, form: number): void {
+  const n = 5 + (form % 3);
+  const H = FERN_H * (0.8 + 0.2 * (form / (FERN_FORMS - 1)));
+  const fronds: { tx: number; ty: number; qx: number; qy: number; lit: boolean }[] = [];
+  for (let i = 0; i < n; i++) {
+    const a =
+      ((i / (n - 1)) * 2 - 1) * 1.1 + (hash2(seed + FERN_SALT, form * 8 + i, 77) - 0.5) * 0.2; // ± 63°
+    const len =
+      H *
+      (0.72 + 0.28 * Math.cos(a * 0.9)) *
+      (0.92 + 0.08 * hash2(seed + FERN_SALT, form * 8 + i, 78));
+    // Wedel: Bogen, der nach aussen kippt (Fächer), die Spitze liegt tiefer als die Mitte des Bogens
+    const tx = Math.sin(a) * len * 0.95,
+      ty = -Math.cos(a) * len * 0.92;
+    fronds.push({
+      tx,
+      ty,
+      qx: Math.sin(a) * len * 0.35,
+      qy: -Math.cos(a) * len * 0.85,
+      lit: a < 0.15,
+    });
+  }
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const pass = (width: number, color: (f: (typeof fronds)[number]) => string): void => {
+    ctx.lineWidth = width;
+    for (const f of fronds) {
+      ctx.strokeStyle = color(f);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(f.qx, f.qy, f.tx, f.ty);
+      ctx.stroke();
+    }
+  };
+  pass(2.3, () => FERN_LINE);
+  pass(1.1, (f) => (f.lit ? FERN_LIGHT : FERN_MID));
+  ctx.restore();
+}
+const fernCache = new Map<number, HTMLCanvasElement>();
+let fernSeed: number | null = null;
+export const fernCacheSize = (): number => fernCache.size;
+function fernFor(seed: number, form: number, step: number): HTMLCanvasElement | null {
+  if (fernSeed !== seed) {
+    fernCache.clear();
+    fernSeed = seed;
+  }
+  const key = form * ZOOM_STEPS.length + ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number]);
+  const hit = fernCache.get(key);
+  if (hit) return hit;
+  const canvas = makeCanvas();
+  canvas.width = Math.ceil(FERN_BOX.w * step);
+  canvas.height = Math.ceil(FERN_BOX.h * step);
+  const c = canvas.getContext('2d');
+  if (!c) return null;
+  c.save();
+  c.scale(step, step);
+  c.translate(FERN_BOX.cx, FERN_BOX.cy);
+  paintFern(c, seed, form);
+  c.restore();
+  if (fernCache.size < FERN_FORMS * ZOOM_STEPS.length) fernCache.set(key, canvas);
+  return canvas;
+}
+/** Farnbüschel einer Lichtungskachel (vor dem Baumstempel zu zeichnen); keine Lichtung oder Zoom < 0,5: nichts. */
+function drawFern(ctx: CanvasRenderingContext2D, cam: Camera, item: TreeItem, seed: number): void {
+  const z = cam.zoom,
+    step = zoomStep(z);
+  if (z < FERN_MIN_ZOOM - 1e-9 || item.giant) return;
+  if (!isClearingTile(seed, item.fp.x, item.fp.y, item.ox, item.oy)) return;
+  const f = z / step;
+  for (const t of fernTufts(seed, item.fp.x, item.fp.y)) {
+    const canvas = fernFor(seed, t.form, step);
+    if (!canvas) continue;
+    const p = worldToScreen(cam, project(item.fp.x + t.u, item.fp.y + t.v));
+    ctx.drawImage(
+      canvas,
+      p.x - FERN_BOX.cx * z,
+      p.y - FERN_BOX.cy * z,
+      canvas.width * f,
+      canvas.height * f,
+    );
+  }
+}
+
 /**
  * Zeichnet den Stempel an der Kachelmitte plus Versatz; Zoom-Cache auf `ZOOM_STEPS`, Zielgrösse Faktor
  * `z / zoomStep(z)`. Nur der Riesenbaum (B3, höchstens einer je Karte) wird direkt gezeichnet, nie aus dem Cache.
@@ -711,6 +834,7 @@ export function drawTreeStamp(
   const z = cam.zoom,
     step = zoomStep(z);
   const variant = item.variant % TREE_VARIANTS;
+  drawFern(ctx, cam, item, seed); // Lichtung (L6 B2): Farn vor den Kronen
   const p = worldToScreen(
     cam,
     project(item.fp.x + 0.5 + (item.ox ?? 0), item.fp.y + 0.5 + (item.oy ?? 0)),
