@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
 import { ok, type World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import {
@@ -8,6 +8,7 @@ import {
   SAVE_KEY,
   autosaveOnHide,
   listSavesFrom,
+  loadNotice,
   storageProblem,
   type StorageLike,
 } from '../../src/ui/storage';
@@ -108,4 +109,20 @@ it('RF-3 autosaveOnHide: Tick 0 schreibt nicht, werfendes Schreiben bleibt still
       throw new Error('voll');
     }),
   ).not.toThrow();
+});
+
+describe('M12 E2 UI Lade-Meldung', () => {
+  it('loadNotice gibt den Hinweis des Ladeergebnisses zurück, sonst null', () => {
+    const w = createWorld(3);
+    expect(loadNotice({ ok: true, world: w, notice: 'Hinweis' })).toBe('Hinweis');
+    expect(loadNotice({ ok: true, world: w })).toBeNull();
+    expect(loadNotice({ ok: false, reason: 'Ungültiges Format' })).toBeNull();
+  });
+  it('alter Stand v8 mit Kaufleuten: Meldung beim Laden, nach dem Speichern keine mehr', () => {
+    const json = readFileSync('tests/sim/fixtures/save-v8.json', 'utf8');
+    const first = deserialize(json);
+    expect(loadNotice(first)).not.toBeNull();
+    const again = deserialize(serialize((first as { world: World }).world));
+    expect(loadNotice(again)).toBeNull();
+  });
 });
