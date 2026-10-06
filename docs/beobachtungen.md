@@ -1020,3 +1020,105 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   Werkzeug und die gleiche Meldung beim ersten Bauversuch erscheinen nur einmal (gleicher Text innerhalb `DEDUPE_MS`).
   **Einschätzung:** niedrig, gewollt; für Playtester vermerkt, damit der „fehlende“ zweite Toast nicht als Fehler gilt.
   **Ursprung:** T13 Browser-Eigencheck.
+
+## 2026-10-06 · M12 Seefahrt (E2–E4, Integration): gesammelte Befunde ausserhalb des Scopes (T16)
+
+Übertragen aus den Strang-Ledgern (`int`, `e2`, `e3`, `e4`, `render`) und dem Playtest T15. Der Eintrag zu T13
+(`hints.ts`, Heimat-Bestand auf Fremdinseln) weiter oben ist mit T15 (R272, `ReasonCtx.island`) behoben. Zu
+„Geldschwemme ab Kaufleuten" (R238) und „Unversorgte Häuser als Steuerquelle" (Anhang 03 C.12) stehen schon Einträge vom
+2026-10-05; sie brauchen keine Ergänzung.
+
+**Playtest T15 (Browser, Fixture):**
+
+- **Fundort / Beobachtung (a):** `src/ui/inspect.ts`, `src/ui/trade.ts`: Ein Klick auf das Heimatkontor öffnet den
+  Handel; der Schiffsabschnitt erscheint erst über „Zurück" oder einen Klick aufs Schiff (4 statt 2 Klicks vom
+  Kartenklick); im Handel-Panel fehlt ein Hinweis. **Einschätzung:** mittel (Auffindbarkeit); Hinweiszeile „Schiffe:
+  Zurück" im Handel-Panel oder Schiffsabschnitt auch im Handel. Gleicher Kern wie „Heimatkontor-Auswahl öffnet sofort
+  Handel" aus T13 (Vergleich mit `main` offen). **Ursprung:** Playtest T15.
+- **Fundort / Beobachtung (b):** `src/render/shipLane.ts`, `src/sim/islands.ts` (`seaLanes`): In der Fixture führt die
+  Lane das Schiff sichtbar über Land der Heimatinsel (Pose x ≈ 10–12, y ≈ 36). **Einschätzung:** kosmetisch bis
+  mittel; Lane startet am Heimatanker und schneidet die Küste; Lane-Erzeugung gegen Landmaske prüfen (E5-Kandidat, kein
+  Versprechen). **Ursprung:** Playtest T15.
+- **Fundort / Beobachtung (c):** `src/ui/guide.ts:100` (`nextStep`): Im Szenario Z3 steht „Nächster Schritt:
+  Handelsstadt erreicht — spiel frei weiter" neben „Fehlt: Schiffsroute …"; das dritte Ziel ist offen, der Wortlaut
+  widerspricht. **Einschätzung:** mittel (irreführender Text); `nextStep` muss bei `wonMerchants && !wonSpice` auf das
+  dritte Ziel zeigen. **Ursprung:** Playtest T15.
+- **Fundort / Beobachtung (d):** D-144 Regel 3 (Schiff-Mindestgrösse): Der Schiffkörper ist bei Zoom 0,25 und 0,125
+  sichtbar nur 10 × 10 px (rechnerisch 12,8 bzw. 12,0 px). **Einschätzung:** Urteil `lead-art` offen; Entscheid beim
+  Studio, hier nur erwähnt. **Ursprung:** Playtest T15.
+- **Fundort / Beobachtung (e):** `src/ui/ships.ts` (`dryWorld`): Die Sim bietet keine Vorabprüfung (`canBuyShip`,
+  `canRetireShip`); die UI läuft die Aktion auf einer Kopie der Welt. „Kein freies Schiff" stammt nicht aus der Sim
+  (`startRoute` zeigt denselben Text bei `freeShipAtHome === null`). Das Panel einer unbeteiligten Fremdinsel zeigt
+  Schiffe auf See nicht (nur die Heimat zeigt die ganze Flotte). **Einschätzung:** niedrig; `canBuyShip` in der Sim wäre
+  sauberer (eine Regel statt Probelauf). **Ursprung:** T15-Umsetzer, Playtest T15.
+
+**UI und Bedienung (e2):**
+
+- **Fundort / Beobachtung:** `bindIslandMenu` (`src/ui/hud.ts`) hängt einen `document`-Listener beim Kopfzeilenaufbau an;
+  `.chip[hidden]` (Trivial-Fix in T12) wirkt auf bestehende Chips ohne eigenen Test; die Farbe des Gewürz-Chips ist nur
+  per Screenshot geprüft. **Einschätzung:** niedrig. **Ursprung:** T12-Review/-Playtest.
+- **Fundort / Beobachtung:** Menü-Karte bei 1280 × 800 höher als das Fenster (Titel, Speichern, Laden oben abgeschnitten,
+  Mausklick auf „Speichern" traf nicht). **Einschätzung:** vermutlich nicht aus T13; ähnlicher Eintrag vom 2026-10-02
+  (Menü-Karte scrollt intern) — erneut prüfen. **Ursprung:** T13-Playtest.
+- **Fundort / Beobachtung:** `tests/ui/` `toolAfford`-Test ist doppelt; ein fester Gutname wäre stärker.
+  **Einschätzung:** niedrig. **Ursprung:** T13-Review.
+
+**Sim (e2, e3, e4, int):**
+
+- **Fundort / Beobachtung:** Die Regel „Merkmal der Insel" steht doppelt (`src/sim/flow.ts:67` `dampsOn`,
+  `src/sim/placement.ts:95`), weil ein Import placement ↔ flow einen Kreis ergäbe. **Einschätzung:** niedrig (DRY);
+  Helfer ohne Kreis (z. B. in `islands.ts`). **Ursprung:** T04-Review.
+- **Fundort / Beobachtung:** `noKontorTrade` liegt in `trade.ts` und wird von `orders.ts` importiert; heute kein
+  Kreis. `tests/sim/flow.test.ts` „und umgekehrt" prüft nur eine Richtung; der Fehlschlag `fireTile` → `outcome 'miss'`
+  ist nur auf Funktionsebene getestet. **Einschätzung:** niedrig. **Ursprung:** T04-Review.
+- **Fundort / Beobachtung:** `src/sim/save.ts` `isForeignKontor`: Laden mit gesetztem `kontor2` und `kontorId null` nach
+  Abriss eines Fremdinsel-Kontors prüfen. **Einschätzung:** niedrig; Test ergänzen, falls Abriss möglich wird.
+  **Ursprung:** T03-Review.
+- **Fundort / Beobachtung:** `src/sim/defs/sea.ts:8`: Kommentar „Reserve in Prozent" ist falsch; die Reserve gilt in
+  Stück (`stock − reserve`, Anhang 03 E). `tests/sim/ships.test.ts`: Testname „tickShips ist ein Gerüst ohne Verluste"
+  ist veraltet (Test gültig). **Einschätzung:** niedrig, Trivial-Fix im nächsten Sim-Paket. **Ursprung:** T09-Review.
+- **Fundort / Beobachtung:** `buyShip` vor `seafaring` liefert den Text aus `functionLock` („Erst nach dem Ziel"), nicht
+  „Seefahrt mit den Kaufleuten" wie `kontor2` (Entscheid C2-1). **Einschätzung:** niedrig; Vereinheitlichung optional.
+  **Ursprung:** T08.
+- **Fundort / Beobachtung:** `src/ui/goal.ts`/`guide.ts`: `foreignGoodHint` bildet „{Gut}insel" und trägt nur für Gewürz;
+  `nextStep` blendet den Gewürz-Satz ab Heimatlager ≥ 1 aus (Alternative: Bedarf `ceil(EW × 0,1)`); die Flexion „{Stufe}n"
+  ist an „Kaufleute" gebunden (Test pinnt den Wortlaut). **Einschätzung:** niedrig; bei einem weiteren Merkmal-Gut den
+  Inselnamen aus dem Merkmal ableiten. **Ursprung:** T05-/T07-Review.
+- **Fundort / Beobachtung:** `src/sim/goal3.ts`/`tick.ts`: Der Guard `wonMerchants` in `checkWin` ist mit gültigen
+  Zuständen nicht von einer Mutation zu unterscheiden (`spiceMerchants ≥ 80` ⇒ `merchants ≥ 60`); AK-Z3-03 „ein Haus
+  ohne Gewürz" ist als „kein Haus hat Gewürz" getestet (Lager gemeinsam je Insel). **Einschätzung:** niedrig,
+  akzeptiert. **Ursprung:** T06-Review.
+- **Fundort / Beobachtung:** `feedSpice` (Tests) kauft 1 Gewürz auch ohne `TIERS[4].needs.spice` (relevant für das
+  v8-Rezept in `fixtureV8.ts`); `tests/sim/fixtureV6.ts` iteriert über `GOOD_IDS`, jedes neue Gut ändert das Rezept.
+  **Einschätzung:** niedrig; Rezepte mit festen Güterlisten schreiben. **Ursprung:** T01/T05.
+- **Fundort / Beobachtung:** `spicefarm` hat keinen `LEVELS`-Eintrag (kein Ausbau); `BUILDING_DEFS`-Reihenfolge ist
+  unkritisch, solange die Sim nicht darüber iteriert. **Einschätzung:** Design-Frage für einen späteren Meilenstein.
+  **Ursprung:** T02-Review.
+- **Fundort / Beobachtung:** `tools/studio/tests/test_metrics.py` `test_second_run_overwrites`: einmal rot in
+  `CI=true make check`, danach viermal grün. **Einschätzung:** Flake, vermutlich zeitabhängige Zeile ausser „erzeugt";
+  `tools/` gegen `main` unverändert. **Ursprung:** M12-E3 C3.
+
+**Tests und Messung (int, render):**
+
+- **Fundort / Beobachtung:** `tests/sim/perf.test.ts` AK-E0-15a lag unter Systemlast knapp über der Grenze (2,57 statt
+  2,5 ms bei Last 73; grün bei Last 22); `tests/sim/save.test.ts` B6 einmal rot (5,22 statt 5 ms) bei Last 10–20, allein
+  grün. **Einschätzung:** Zeittest-Flake, Werkzeug E-030/TOOL-E030. **Ursprung:** T00/T02.
+- **Fundort / Beobachtung:** Commit `1d77725` trägt im Text versehentlich `RED_PLACEHOLDER` (Zahlen stehen in `c70d887`);
+  kein Umschreiben der Historie erlaubt. **Einschätzung:** nur Hinweis. **Ursprung:** T09.
+- **Fundort / Beobachtung:** `src/render/archipel.ts` `islandView` kopiert je Aufruf alle Gebäude der Insel (O(n) je
+  Frame und Insel); `shipPose`/`shipAt` bauen je Schiff und Frame `seaLanes` neu. **Einschätzung:** T15-Messung (Last
+  3,4–4,0): `shipPose` 1,3 µs, vier Schiffe 3,7 µs, `shipAt` 3,6 µs, `islandView(2)` mit 400 Gebäuden 9,2 µs — je Frame
+  unter 0,02 ms, kein Cache nötig; erneut messen, wenn Inselgrösse oder Flotte wachsen. **Ursprung:** T10/T11-Review, T15.
+- **Fundort / Beobachtung:** `tests/render/shipLane.test.ts` (a) toleriert Tiefengleichstand (`RANK`); das alte
+  Schiffsbild `shipTile` (Auftrags-Händler, `ship.ts`) und die Flotte sind zwei Schiffs-Konzepte im Renderer, ein
+  Gleichstand mit id 0 ist möglich. **Einschätzung:** kosmetisch, niedrig. **Ursprung:** T11-Review.
+- **Fundort / Beobachtung:** `src/render/variants.ts` Doc-Kommentar war schon vor T02 veraltet (80 statt 88
+  Kombinationen) und nannte zuletzt 84 825 088 B / 26 %. **Einschätzung:** mit T16 auf die gemessenen Werte
+  nachgeführt (AK7: 84 115 456 B = 1,253 × Limit, Schranke 1,30); bei jedem Typzuwachs erneut nachführen.
+  **Ursprung:** T02/T10.
+
+**Dokumentation:**
+
+- **Fundort / Beobachtung:** Der Plan E0 (P-2) nennt die Helfer-API in `world.ts`; umgesetzt sind `addStock`,
+  `takeStock` und `checkAfford` in `economy.ts` (nur Doku). **Einschätzung:** keine Wirkung auf den Code; bei künftigen
+  Plänen den Ort aus dem Code lesen. **Ursprung:** E0-Plan, T16.

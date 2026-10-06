@@ -1,6 +1,6 @@
 # ADR-005: Tick-Reihenfolge und Zustandssemantik der Gebäude
 
-Status: akzeptiert · Datum: 2026-09-30 · Nachtrag M5 (Markt-Erholung, Handelsaufträge): 2026-09-30, siehe unten
+Status: akzeptiert · Datum: 2026-09-30 · Nachträge siehe unten (zuletzt M12 Seefahrt: 2026-10-06)
 
 ## Kontext
 
@@ -89,3 +89,25 @@ einer Anzahl Schritte stattfinden. Die Gebäudezustände (`waitingInput`, `stora
 - `eff` (gleitende Auslastung, `EFF_WINDOW` 256) wird in jedem Zweig nachgeführt, auch bei Stillstand (Zielwert 0).
   Geld und Waren hängen nicht an `eff`; es ist reine Anzeige- und Diagnosegrösse. Folge: Nach Eintritt von
   `noForest` fällt die Anzeige erst nach einigen hundert Schritten.
+
+## Nachtrag M12 (2026-10-06): `tickShips`, drittes Ziel, `StepReport`
+
+- **Neue Reihenfolge** (aus `src/sim/tick.ts`): `world.tick += 1`, dann `tickProduction → tickShips → tickPopulation →
+tickTaxes → tickEconomy → tickMarket → tickOrders → tickCrises → checkWin → tickUnlocks`. `tickUnlocks` bleibt der
+  letzte Aufruf.
+- **Warum Schiffe nach der Produktion und vor der Bevölkerung:** Ladung, die in diesem Schritt im Hafen ankommt, liegt
+  schon im Insellager, wenn `tickPopulation` den Bedarf desselben Schritts deckt. Die Produktion des Schritts ist
+  dann ebenfalls eingelagert und kann verladen werden. Umgekehrt (Schiffe nach dem Verbrauch) käme jede Lieferung eine
+  Periode zu spät; Häuser würden einen Schritt lang Mangel melden, obwohl das Schiff schon da ist.
+- **Ganzzahlig, ohne Zufall:** `tickShips` rechnet nur mit Ticks (`left -= 1`, `laneTicks`) und Stückzahlen; es nutzt
+  keinen RNG. Die Schiffe laufen in `id`-Reihenfolge (sortierte Kopie, nie die Listenreihenfolge der Welt). Entladen
+  folgt `GOOD_IDS`, Beladen verteilt zuerst gleiche Anteile und dann den Rest in Listenfolge der Route.
+- **Rein-lesende Ziele:** `checkWin` prüft das dritte Ziel (`wonSpice`) nach `wonMerchants` und nur mit
+  `wonMerchants`; die Abfragen `spiceMerchants` und `spiceLoop` (`goal3.ts`) schreiben nie. Wie die ersten beiden
+  Ziele wird `wonSpice` nie zurückgesetzt.
+- **`StepReport`:** `step` liefert `{ lost }` (verfallene Ladung bei der Heimkehr, `ShipLoss`). Der Bericht steht nicht
+  im Save und nicht in der Welt; die UI sammelt die Berichte je Frame und meldet den Verlust.
+- **Folgen:** `tickShips` ändert Lager und `ships`, nicht Geld. Die Unterhaltsbuchung der Schiffe liegt in
+  `tickEconomy` (`totalUpkeep`). Ohne Schiffe ist `tickShips` ein leerer Durchlauf; der Referenzlauf der früheren
+  Meilensteine bleibt bitgleich (Pins in `tests/sim/`).
+- **Alternative:** Schiffe nach `tickPopulation` (eine Periode Verzug der Lieferung, siehe oben); verworfen.
