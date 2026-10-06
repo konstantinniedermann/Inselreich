@@ -2328,3 +2328,15 @@ bestehen, bis der Nutzer das Löschen ausdrücklich verlangt (Verfassung §6, ir
 die Demo ist reproduzierbar.
 
 Entscheider: Nutzer · Anlass: Rückmeldung zur Hex-Demo · ADR: —
+
+## R280 · 2026-10-06 · Auftrag „Lebendige Insel" (ART-STIL-02)
+
+Ruling: Nutzerfeedback ausgelegt als Art-Strang unter `lead-art` nach dem Muster R209: (1) **ART-STIL-02** Diagnose
+und Stilrahmen-Nachtrag: Wald organisch statt geometrisch-repetitiv, Gebirge weicher im Übergang zu Wiese/Küste
+(Gelungenes behalten), Gebäudekanten weicher; Katalog ≥ 30 Entdeckungs-Elemente (Nutzerliste + eigene) mit
+Seltenheit und Ort; Zuschnitt in Häppchen. Referenz: Flachwasser, Küste, Strand, Wiese, Tierleben. Alle Elemente
+rein darstellend, deterministisch aus dem Seed, ohne Sim- oder Save-Änderung. (2) Umsetzung nach Gate. Zweck:
+mehr zu entdecken in einem Guss; die Auslegung widerspricht ihm nicht, weil sie Bildziele vor Code festlegt. —
+Kosten bei Irrtum: Phase 1 ist reine Analyse; Häppchen einzeln revertierbar.
+
+Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-06 · ADR: —
