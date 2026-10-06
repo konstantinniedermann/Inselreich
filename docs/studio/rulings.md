@@ -2126,3 +2126,19 @@ aus R250-Rest, 1 Start lead-qa. Mess-Wächter (R264 V1) folgt nach dem E1-Merge 
 Nachmessung mit Trace in einem Häppchen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3B · ADR: —
+
+## R266 · 2026-10-06 · Gate Merge M12-E1 mit BEDENKEN, Fix-Runde F1
+
+Ruling: Final-Review lead-qa (`feat/m12-e1` @ 2282086: BEDENKEN, nur niedrige Befunde, Fix-Runden T03/T04 bestätigt,
+Determinismus-Probe Seeds 3/14/77 und Fixtures v3–v7 grün) und Bildurteil lead-art (BEDENKEN, Schlieren nicht
+blockierend → Häppchen **H-R15** „Saum Fernansicht" nach dem Merge) angenommen. **Merge freigegeben unter Bedingung:**
+vorher kurze Fix-Runde **F1** durch lead-tech (sonnet, 2 Starts: Umsetzer + Review): Q1 (Viertel-Streifen-Test muss
+rot werden können), Q2 (`GRID_BAND_ROWS` 2 im Gittertest), Q3 (Detailstufe ohne Möwen/Vogelschwärme testen), Q5
+(`perf.mjs`-Texte auf R257/R265), Q6 (ADR-013 einheitlich 8,4–10,1 ms), arc42 `save-v7.json`; Q4, Q8 und die
+Ausser-Scope-Befunde (Gebäudekoordinaten gegen Inselgrösse ab E2, Fremdinsel-Felder in `limits.ts`, Rastern im Modus
+`jump`, Viertel-Kopie synchron beim ersten Zoom) nach `docs/beobachtungen.md`. **Q7** angenommen: Seed 3 misst der
+Mess-Wächter (R264 V1) mit. Sind F1-Review OK und `make check`/`CI=true make check` grün, mergt production-integrator
+ohne weiteres Gate in `.worktrees/integrate` nach `main` (Save v8 live). Danach ist **M1** für das Seefahrt-Bündel
+erfüllt. — Kosten bei Irrtum: Revert-Merge; v8-Spielstände wären im alten Build unladbar (nach R261 hingenommen).
+
+Entscheider: L0 · Anlass: Final-Review lead-qa, Urteil lead-art · ADR: —
