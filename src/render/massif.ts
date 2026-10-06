@@ -65,7 +65,7 @@ const BUMP = 0.8; // px Geröll-Buckel am Fuss
  * smooth(dist / r)^FOOT_P gedämpft (1 ab r): das Massiv wächst aus dem Land statt als Wand zu stehen. An Rinnenausgängen
  * (Krümmung > 0 vor dem Fuss) läuft der Fuss bis FOOT_FAN Kacheln weiter hinaus (Schwemmkegel).
  */
-export const FOOT_R = 2.4,
+export const FOOT_R = 2.6,
   FOOT_P = 3,
   FOOT_FAN = 0.5,
   FOOT_BACK = 0.3;
@@ -462,7 +462,7 @@ function buildComponent(
   // L2 Fuss: erst nach der Staffelung (β bleibt wie vor L2). Krümmung der Form vor dem Fuss steuert den Schwemmkegel.
   const pre = new Float32Array(nx * ny);
   for (let k = 0; k < pre.length; k++) pre[k] = amp * shape[k]! * Math.exp(beta * gs[k]!);
-  const footW = 1 - sk;
+  const footW = (1 - sk) * smoothstep(1.5, 3, maxD); // Felshügel und schmale Grate: kein Fuss
   const foot = new Float32Array(nx * ny).fill(1);
   if (footW > 0)
     for (let j = 1; j < ny - 1; j++)
@@ -788,7 +788,7 @@ export const SNOW_TONES: readonly Rgb[] = [
 /** Schnee nur auf Komponenten mit dieser Amplitude (px) und mehr. */
 export const SNOW_MIN_AMP = 90;
 /** Schneegrenze (hn): flache Lagen darüber, Rinnen (Krümmung > 0) bis SNOW_HN_GULLY hinab; Rand ± SNOW_JITTER nach Rauschen. */
-const SNOW_HN_MIN = 0.7,
+const SNOW_HN_MIN = 0.66,
   SNOW_HN_MAX = 1.1,
   SNOW_TARGET = 0.045, // Anteil der Komponentenknoten mit Schnee (Bisektion der Schneegrenze)
   SNOW_GULLY_DROP = 0.12, // Rinnen: Schneegrenze so viel tiefer (≈ 0,65 bei Grenze 0,8)
