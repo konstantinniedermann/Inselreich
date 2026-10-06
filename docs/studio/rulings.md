@@ -2496,3 +2496,22 @@ Dach widerspräche dem Bildziel); L3 Cache-Aufbau +36 % (nur bei Zoomwechsel, Fr
 Patch-Messung (T3). — Kosten bei Irrtum: Release-Lauf misst gesamt, Häppchen fliegt bei Überschreitung.
 
 Entscheider: L0 · Anlass: Berichte lead-art L1, L3 · ADR: —
+
+## R296 · 2026-10-06 · D-148 Gebirgsfuss, Start L6
+
+Ruling: D-148 bestätigt: Fuss ≥ 1,6 Kacheln plus Knick-Test; Kern ausserhalb der Fusszone (≤ 40 % der Knoten) bleibt
+hart pixelgleich geprüft — die beiden AK schlossen sich aus, die einfachere Variante gilt (R136). L6 (Gebirge und
+Wald entdecken) startet jetzt gestapelt auf `feat/art02-l2-gebirge` @ 76edd0c (enthält L1), Release B. — Kosten bei
+Irrtum: L6 nachziehen, falls Release A L1/L2 ändert.
+
+Entscheider: L0 · Anlass: Bericht lead-art L2 · ADR: —
+
+## R297 · 2026-10-06 · Kandidat REL-06 „Gewachsene Insel", Abweichungen L4/L6, Start L5
+
+Ruling: Angenommen: L4 Bild-Runde 3 (nur Stempel), A3 ≥ 1 Kachel, A5 ≤ 8, statische Orte mit lesendem
+`generateTerrain` (Release-Review prüft Reinheit); L6 (a) Salze in `massif.ts`/`trees.ts`, L8 trägt nach, (b)
+`forest.ts` additiv, (c) Renderer-Pin. REL-06 = L2 (enthält L1) + L3 + L4, Kandidat `rel/rel-06` durch den
+Integrator, ein Browser-Lauf mit allen blinden Bildfragen und L3-Blindtest, ein opus-Review (R282). L5 startet
+gestapelt auf L4. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten.
+
+Entscheider: L0 · Anlass: Berichte lead-art L4, L6 · ADR: —
