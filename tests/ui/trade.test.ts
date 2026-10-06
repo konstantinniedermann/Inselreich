@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { home, createWorld } from '../../src/sim/world';
-import { boomGood, tradeRows } from '../../src/ui/trade';
+import { boomGood, tradeRows, tradeTitle } from '../../src/ui/trade';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
   it('trifft genau das Boom-Gut, nach dem Boom keines', () => {
@@ -21,5 +21,19 @@ describe('M10 Handelszeilen nach Freischaltung', () => {
     expect(tradeRows(w).map((r) => r.good)).toEqual(['wood', 'tools', 'stone', 'food']);
     home(w).stock.wool = 3;
     expect(tradeRows(w).find((r) => r.good === 'wool')).toEqual({ good: 'wool', canBuy: false });
+  });
+});
+
+describe('M12 E2 UI Bauen und Handeln: Handel je Insel', () => {
+  it('tradeRows liest das Lager der Insel', () => {
+    const w = createWorld(3);
+    w.islands[2]!.stock.wool = 4;
+    expect(tradeRows(w, 2).map((r) => r.good)).toContain('wool');
+    expect(tradeRows(w, 0).map((r) => r.good)).not.toContain('wool');
+  });
+  it('tradeTitle: Heimat unverändert, Fremdinsel mit Namen', () => {
+    const w = createWorld(3);
+    expect(tradeTitle(w, 0)).toBe('Handel am Kontor');
+    expect(tradeTitle(w, 2)).toBe('Handel · Felsbucht');
   });
 });

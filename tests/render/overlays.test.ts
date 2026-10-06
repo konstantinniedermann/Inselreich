@@ -162,7 +162,8 @@ describe('M8 R1 Symbole und Farben', () => {
         tier: 4,
         inhabitants: 5,
         demand: {},
-        satisfied: { food: true, cloth: true, rum: true, glass: true },
+        // R226 F-03: Kaufleute brauchen Gewürz; erfüllt, damit nur das Bad fehlt
+        satisfied: { food: true, cloth: true, rum: true, glass: true, spice: true },
         services: {},
         satisfiedSince: 0,
         supplied: true,

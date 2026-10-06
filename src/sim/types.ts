@@ -1,10 +1,12 @@
-import type { IslandKind } from './defs/sea';
+import type { IslandKind, IslandTrait } from './defs/sea';
 
 export type GoodId =
-  'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass';
+  'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass' | 'spice';
 export type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
 export type BuildingDefId =
   | 'kontor'
+  | 'kontor2'
+  | 'spicefarm'
   | 'market'
   | 'house'
   | 'fisher'
@@ -35,7 +37,9 @@ export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
-  | { kind: 'supply' }; // im Radius von Kontor oder Markt
+  | { kind: 'supply' } // im Radius von Kontor oder Markt
+  | { kind: 'islandTrait'; trait: IslandTrait } // Insel trägt das Merkmal (nur ferne Inseln)
+  | { kind: 'foreignNoKontor' }; // ferne Insel ohne Kontor
 export interface BuildingDef {
   id: BuildingDefId;
   name: string;
@@ -163,14 +167,15 @@ export interface Crisis {
   /** Nur boom. */
   good?: GoodId;
   /** Nur fire; fehlt ohne brennbares Gebäude. */
-  tile?: { x: number; y: number };
+  tile?: { x: number; y: number; island: number };
   /** Nur fire; fehlt bei 'miss'. */
   target?: number;
   /** Nur fire. */
   outcome?: FireOutcome;
 }
 export type UnlockId = 'U0' | 'U1' | 'U2' | 'U3' | 'U4' | 'U5' | 'U6';
-export type UnlockFunction = 'forest' | 'orders' | 'goodLocks' | 'upgrade2' | 'upgrade3';
+export type UnlockFunction =
+  'forest' | 'orders' | 'goodLocks' | 'upgrade2' | 'upgrade3' | 'seafaring';
 export type UnlockTrigger =
   | { kind: 'start' }
   | { kind: 'houses'; min: number }
@@ -192,8 +197,31 @@ export interface GoodLock {
   tier: Tier;
   good: GoodId;
 }
+/** Ein Gut einer Route mit Reserve (Vielfache von 10, 0 … 90; M12 Seefahrt). */
+export interface RouteGood {
+  good: GoodId;
+  reserve: number;
+}
+/** Handelsroute zwischen zwei Inseln mit Kontor: Güter hin (`ab`) und zurück (`ba`), je höchstens zwei. */
+export interface Route {
+  a: number;
+  b: number;
+  ab: RouteGood[];
+  ba: RouteGood[];
+}
+/** Ein Schiff: liegt im Hafen `port` (`to` null) oder fährt nach `to` (noch `left` Ticks). */
+export interface Ship {
+  id: number;
+  port: number;
+  to: number | null;
+  left: number;
+  /** Nur Einträge ≥ 1, Summe ≤ `SHIP.capacity`. */
+  cargo: Partial<Record<GoodId, number>>;
+  route: Route | null;
+  homing: boolean;
+}
 export interface World {
-  version: 8;
+  version: 9;
   seed: number;
   islands: Island[];
   tick: number;
@@ -220,6 +248,11 @@ export interface World {
   taxCarry: number;
   /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
   upkeepCarry: number;
+  /** Schiffe (M12 Seefahrt), höchstens `SHIP_MAX`. */
+  ships: Ship[];
+  nextShipId: number;
+  /** Drittes Ziel „Gewürzstadt“ erreicht; nur mit `wonMerchants`, nie zurückgesetzt. */
+  wonSpice: boolean;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
@@ -238,6 +271,9 @@ export interface Island {
   /** Ankerkachel für den Seeweg, innerhalb der Insel. */
   anchor: { x: number; y: number };
 }
+/** Ergebnis von `deserialize`; `notice` nur beim ersten Laden eines alten Standes mit Übergangsbestand. */
+export type LoadResult =
+  { ok: true; world: World; notice?: string } | { ok: false; reason: string };
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });
 export const fail = (reason: string): Result => ({ ok: false, reason });

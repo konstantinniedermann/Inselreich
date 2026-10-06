@@ -95,7 +95,9 @@ describe('M8 Tooltips (AK-U2-01)', () => {
       TIERS[4].unlockCitizens = null;
     }
     expect(tooltipLines({ kind: 'build', defId: 'weaver' })).toContain('Braucht: Wolle 12 / min');
-    for (const id of BUILDING_IDS.filter((x) => x !== 'glassworks' && x !== 'bathhouse'))
+    // M12 T02: kontor2 und spicefarm hängen an U6 und zeigen vorerst denselben Hinweis (UI-Strang prüft den Text)
+    const withHint = ['glassworks', 'bathhouse', 'kontor2', 'spicefarm'];
+    for (const id of BUILDING_IDS.filter((x) => !withHint.includes(x)))
       expect(tierPreviewLine(id), id).toBeNull();
     for (const id of BUILDING_IDS)
       for (const line of tooltipLines({ kind: 'build', defId: id }))
@@ -113,7 +115,7 @@ describe('M8 Bauleiste (Änderung S11)', () => {
     expect(buildEntries(w, 'public')).not.toContain('bathhouse');
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(buildEntries(w, 'production')).toHaveLength(11);
+    expect(buildEntries(w, 'production')).toHaveLength(12); // M12 T02: + spicefarm
     expect(buildEntries(w, 'production')).toContain('glassworks');
     expect(buildEntries(w, 'public')).toHaveLength(5);
     expect(buildEntries(w, 'public')).toContain('bathhouse');
@@ -144,14 +146,14 @@ describe('M10 Bauleiste nach Freischaltung (Spec 11.1)', () => {
     expect(count(at(['U0', 'U2', 'U3', 'U4']))).toMatchObject({ production: 9, public: 4 });
     expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5'])).production).toBe(10);
     expect(count(at(['U0', 'U2', 'U3', 'U4', 'U5', 'U6']))).toMatchObject({
-      production: 11,
+      production: 12, // M12 T02: + spicefarm
       public: 5,
     });
     expect(count(at(['U0', 'U1'])).infrastructure).toBe(1);
     expect(count(createWorld(3, { crisisLevel: 'normal', unlockAll: true }))).toEqual({
-      infrastructure: 1,
+      infrastructure: 1, // M12 T12: kontor2 nicht in der Heimat-Bauleiste
       housing: 1,
-      production: 11,
+      production: 12, // M12 T02: + spicefarm
       public: 5,
     });
     expect(count(createWorld(3, { crisisLevel: 'off', unlockAll: true })).public).toBe(4);
@@ -258,5 +260,22 @@ describe('M11 Bauleisten-Tooltip (Spec 7)', () => {
     expect(
       tooltipLines({ kind: 'build', defId: 'chapel' }).some((l) => l.startsWith('Ausstoss')),
     ).toBe(false);
+  });
+});
+
+describe('M12 E2 UI Inseln: kontor2 und spicefarm in der Bauleiste', () => {
+  it('(c) kontor2 steht nicht in der Heimat-Bauleiste, nur auf Fremdinseln', () => {
+    const w = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
+    expect(buildEntries(w, 'infrastructure')).not.toContain('kontor2');
+    expect(buildEntries(w, 'infrastructure', 0)).not.toContain('kontor2');
+    expect(buildEntries(w, 'infrastructure', 2)).toContain('kontor2');
+    expect(buildEntries(w, 'infrastructure')).toHaveLength(1);
+    expect(visibleCategories(w, 1)).toContain('infrastructure');
+  });
+  it('(d) tierPreviewLine: kein „Für Kaufleute (Stufe 4)" für kontor2 und spicefarm', () => {
+    expect(tierPreviewLine('kontor2')).toBe('Für Fremdinseln (Seefahrt)');
+    expect(tierPreviewLine('spicefarm')).toBe('Für Inseln mit Gewürz (Seefahrt)');
+    for (const id of ['kontor2', 'spicefarm'] as const)
+      expect(tooltipLines({ kind: 'build', defId: id }).join('\n')).not.toContain('Kaufleute');
   });
 });

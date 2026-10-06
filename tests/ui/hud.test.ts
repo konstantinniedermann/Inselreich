@@ -18,6 +18,7 @@ import {
   popChipHidden,
   speedTooltip,
   stockChipHidden,
+  stockPrefix,
   stockTooltip,
   tierPath,
   tierTooltip,
@@ -35,8 +36,9 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
       'Siedler: Einwohner der Stufe 2 · brauchen Nahrung, Stoff, Kapelle',
     );
     expect(tierTooltip(1)).toBe('Pioniere: Einwohner der Stufe 1 · brauchen Nahrung');
+    // R226 F-03: Kaufleute brauchen zusätzlich Gewürz
     expect(tierPath()).toBe(
-      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Gewürz, Badehaus)',
     );
   });
   it('AK-UX-07 balanceText je Minute', () => {
@@ -62,11 +64,12 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
 
 describe('M8 Stufenpfad (AK-S1-18)', () => {
   it('AK-S1-18 tierPath endet mit den Kaufleuten, tierTooltip(4) nennt alle Bedarfe', () => {
+    // R226 F-03: Kaufleute brauchen zusätzlich Gewürz
     expect(tierPath()).toBe(
-      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Badehaus)',
+      'Pioniere → Siedler (brauchen Stoff, Kapelle) → Bürger (brauchen Rum, Schule) → Kaufleute (brauchen Glas, Gewürz, Badehaus)',
     );
     expect(tierTooltip(4)).toBe(
-      'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Kapelle, Schule, Badehaus',
+      'Kaufleute: Einwohner der Stufe 4 · brauchen Nahrung, Stoff, Rum, Glas, Gewürz, Kapelle, Schule, Badehaus',
     );
   });
 });
@@ -177,5 +180,45 @@ describe('M11 Kopfzeile im Fluss (Spec 7)', () => {
     expect(balanceDue(1000, 600)).toBe(false);
     expect(balanceDue(1100, 600)).toBe(true);
     expect(balanceDue(0, -Infinity)).toBe(true);
+  });
+});
+
+describe('M12 E2 UI Inseln: Lagerleiste je Insel', () => {
+  const seaWorld = () => {
+    const w = createWorld(3);
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    return w;
+  };
+  it('chipView(world, good, island) liest das Lager der Insel', () => {
+    const w = createWorld(3);
+    home(w).stock.wood = 11;
+    w.islands[2]!.stock.wood = 77;
+    expect(chipView(w, 'wood').text.startsWith('11 ')).toBe(true);
+    expect(chipView(w, 'wood', 0).text.startsWith('11 ')).toBe(true);
+    expect(chipView(w, 'wood', 2).text.startsWith('77 ')).toBe(true);
+    expect(chipView(w, 'wood', 2).label.startsWith('Holz 77')).toBe(true);
+  });
+  it('stockTooltip liest Lager und Bilanz der Insel', () => {
+    const w = createWorld(3);
+    w.islands[2]!.stock.wood = 77;
+    expect(stockTooltip(w, 'wood', 2).startsWith('Holz 77 / ')).toBe(true);
+  });
+  it('D-143 stockPrefix: Name erst mit seafaring, vorher null (auch für Fremdinseln)', () => {
+    const w = createWorld(3);
+    expect(stockPrefix(w, 2)).toBeNull();
+    expect(stockPrefix(w, 0)).toBeNull();
+    const s = seaWorld();
+    expect(stockPrefix(s, 2)).toBe('Felsbucht');
+    expect(stockPrefix(s, 0)).toBe('Heimat');
+  });
+  it('Gewürz-Chip: verborgen bis U6 oder Gewürz > 0 auf der aktiven Insel', () => {
+    const w = createWorld(3);
+    expect(stockChipHidden(w, 'spice')).toBe(true);
+    w.islands[2]!.stock.spice = 4;
+    expect(stockChipHidden(w, 'spice')).toBe(true); // Heimat aktiv, dort 0
+    expect(stockChipHidden(w, 'spice', 2)).toBe(false);
+    const s = seaWorld();
+    expect(stockChipHidden(s, 'spice')).toBe(false);
   });
 });

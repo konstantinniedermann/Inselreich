@@ -5,11 +5,22 @@ import { buyPrice } from '../sim/trade';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { connectBuilding } from '../sim/connect';
-import { step } from '../sim/tick';
+import { step, type StepReport } from '../sim/tick';
+import { SHIP } from '../sim/defs/sea';
+import {
+  buyShip,
+  clearRoute,
+  freeShipAtHome,
+  retireShip,
+  setRoute,
+  updateRoute,
+} from '../sim/ships';
+import { shipAt } from '../render/shipLane';
 import { LEVELS } from '../sim/defs/levels';
 import { holdFeast } from '../sim/feast';
 import { upgradeBuilding } from '../sim/upgrade';
-import { home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { HOME, home, tileAt, createWorld, center, type Pos } from '../sim/world';
+import { functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import type {
   BuildingDefId,
@@ -22,7 +33,7 @@ import type {
   World,
 } from '../sim/types';
 import { demolishText } from './texts';
-import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
+import { applyGoalShown, goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
   centerOn,
   clampToRect,
@@ -40,6 +51,8 @@ import { wildlifeAt } from '../render/wildlife';
 import { createSound } from '../audio/sound';
 import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../render/renderer';
 import { cameraBounds, islandView } from '../render/archipel';
+import { activeIsland, islandRects } from './activeIsland';
+import { jumpTarget, nextIsland } from './islandJump';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -63,7 +76,14 @@ import {
   withSpeed,
   type HotkeyAction,
 } from './hotkeys';
-import { foreignHover, hoverInfo, hoverPosition, hoverVisible } from './hover';
+import {
+  foreignBuildingHover,
+  foreignHover,
+  hoverInfo,
+  hoverPosition,
+  hoverVisible,
+} from './hover';
+import { highlightShip, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
@@ -108,6 +128,7 @@ import {
   currentStorageProblem,
   listSaves,
   loadSlot,
+  loadNotice,
   saveAuto,
   saveToStorage,
   type Slot,
@@ -115,7 +136,8 @@ import {
 import { openStartCard, startChoices, STORAGE_NOTES } from './startCard';
 import { renderTrade, updateTrade } from './trade';
 
-export type PanelState = { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade' };
+export type PanelState =
+  { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade'; island: number };
 
 export interface GameState {
   world: World;
@@ -132,12 +154,16 @@ export interface GameState {
   wonShown: boolean;
   /** Banner des zweiten Ziels bereits gezeigt (Spec M8 14.1; ein geladener Stand zeigt es nicht erneut). */
   wonMerchantsShown: boolean;
+  /** Banner des dritten Ziels (Gewürzstadt) bereits gezeigt (M12 Z3). */
+  wonSpiceShown: boolean;
   /** Einträge, die die Freischalt-Meldung schon kennt: beim Start/Laden und bei „Neu“ = `world.unlocked` (Spec 11.6). */
   unlockedSeen: UnlockId[];
   /** Neu freigeschaltete Bau-Einträge bis zur ersten Wahl (Zeichen neu, K2); nur UI-Zustand, nicht gespeichert. */
   newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
+  /** Insel, die der Spieler gerade ansieht (aus der Bildmitte, D-143); nur UI-Zustand, nicht gespeichert. */
+  activeIsland: number;
 }
 
 const MAX_TICKS_PER_FRAME = 20;
@@ -240,6 +266,7 @@ function launch(
     unlockedSeen: [...world.unlocked],
     newEntries: new Set(),
     eventLog: [],
+    activeIsland: 0,
   };
   const sound = createSound({
     muted: settings.muted,
@@ -348,6 +375,9 @@ function launch(
     // Kein bleibender Fokusring auf dem alten Knopf
     (document.activeElement as HTMLElement | null)?.blur?.();
     showMessage('Pausiert — P oder 1× setzt fort');
+    // Hinweis eines alten Standes: einmal je Laden, nicht im Spielstand (Anhang 03 D)
+    const notice = loadNotice(r);
+    if (notice !== null) showMessage(notice, 'info', true, true);
   };
 
   const menuActions: MenuActions = {
@@ -377,7 +407,16 @@ function launch(
     closeHelp = openStartCard(gameEl, { mode: 'help', opener, world });
   };
 
+  /** Kamera auf die Insel `i` (Kontor-Mitte bzw. Inselmitte), Zoom bleibt; ohne Seefahrt stumm. */
+  const jumpToIsland = (i: number): void => {
+    if (functionLock(world, 'seafaring') !== null || !world.islands[i]) return;
+    const t = jumpTarget(world, i);
+    centerOn(state.cam, t.x, t.y, view, bounds);
+    refresh();
+  };
+
   const actions: HudActions = {
+    jumpToIsland,
     setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
@@ -425,10 +464,18 @@ function launch(
     },
     deliverOrder: () => {
       const o = world.order ? { ...world.order } : null;
-      const r = deliverOrder(world);
+      const r = deliverOrder(world, state.activeIsland);
       const ev = actionSound(r, 'orderDone');
       if (!r.ok)
-        showError(friendlyReason(world, r.reason, o ? { good: o.good, amount: o.amount } : {}));
+        showError(
+          friendlyReason(
+            world,
+            r.reason,
+            o
+              ? { good: o.good, amount: o.amount, island: state.activeIsland }
+              : { island: state.activeIsland },
+          ),
+        );
       else {
         // Vergleichswert zurücksetzen, damit die Lieferung nicht als „verfallen" gilt
         prevOrder = null;
@@ -444,6 +491,42 @@ function launch(
 
   /** Pfad-Vorschau des Knopfs „Anbinden" (nur beim Überfahren), wird nach dem Zeichnen der Karte gemalt. */
   let connectPreview: readonly Pos[] | null = null;
+
+  /** Schiffe und Routen im Kontor-Panel (M12 E4): Sim-Aktion, bei Ablehnung der Grund der Sim. */
+  const shipActions: ShipActions = {
+    buy: () => {
+      const r = buyShip(world);
+      if (r.ok) sound.play('build');
+      else showError(friendlyReason(world, r.reason, { cost: SHIP.cost, island: HOME }));
+      refresh();
+    },
+    startRoute: (route) => {
+      const ship = freeShipAtHome(world);
+      const r =
+        ship === null
+          ? { ok: false as const, reason: 'Kein freies Schiff' }
+          : setRoute(world, ship.id, route);
+      if (r.ok) sound.play('build');
+      else showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    changeRoute: (id, route) => {
+      const r = updateRoute(world, id, route);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    clearRoute: (id) => {
+      const r = clearRoute(world, id);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    retire: (id) => {
+      const r = retireShip(world, id);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    reject: (reason) => showError(friendlyReason(world, reason)),
+  };
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
@@ -461,13 +544,23 @@ function launch(
           }
           refresh();
         },
-        openTrade: () => setPanel({ kind: 'trade' }),
+        openTrade: () => {
+          const b = world.buildings[panel.id];
+          if (b) setPanel({ kind: 'trade', island: b.island });
+        },
         upgrade: (id) => {
           const b = world.buildings[id];
           const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
           const r = upgradeBuilding(world, id);
           if (r.ok) sound.play('build');
-          else showError(friendlyReason(world, r.reason, next ? { cost: next.cost } : {}));
+          else
+            showError(
+              friendlyReason(
+                world,
+                r.reason,
+                next ? { cost: next.cost, island: b?.island } : { island: b?.island },
+              ),
+            );
           refresh();
         },
         setTax: (level) => {
@@ -492,7 +585,7 @@ function launch(
               sound.playBuild(buildSoundKey({ kind: 'road' }) ?? 'road');
               reportConnections(before);
             } else {
-              showError(friendlyReason(world, r.reason, { cost: v.cost }));
+              showError(friendlyReason(world, r.reason, { cost: v.cost, island: b?.island }));
             }
           }
           refresh();
@@ -506,6 +599,7 @@ function launch(
         previewConnect: (tiles) => {
           connectPreview = tiles;
         },
+        ships: shipActions,
         setUpgradeStop: (tier, stopped) => {
           const r = setUpgradeStop(world, tier, stopped);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -513,15 +607,25 @@ function launch(
         },
       });
     } else if (panel.kind === 'trade') {
-      state.selectedId = home(world).kontorId;
-      renderTrade(panelEl, world, {
-        back: () => setPanel({ kind: 'inspect', id: home(world).kontorId }),
-        changed: (op, r, good, n) => {
-          if (!r.ok) showError(friendlyReason(world, r.reason, tradeCtx(op, good, n)));
-          else if (op === 'sell') sound.play('coin');
-          refresh();
+      const tradeIsland = panel.island;
+      state.selectedId = world.islands[tradeIsland]!.kontorId;
+      renderTrade(
+        panelEl,
+        world,
+        {
+          back: () => {
+            const k = world.islands[tradeIsland]!.kontorId;
+            setPanel(k === null ? { kind: 'none' } : { kind: 'inspect', id: k });
+          },
+          changed: (op, r, good, n) => {
+            if (!r.ok)
+              showError(friendlyReason(world, r.reason, tradeCtx(op, good, n, tradeIsland)));
+            else if (op === 'sell') sound.play('coin');
+            refresh();
+          },
         },
-      });
+        tradeIsland,
+      );
     } else {
       state.selectedId = null;
       renderRest(panelEl, world);
@@ -530,9 +634,15 @@ function launch(
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
+    // Aktive Insel aus der Bildmitte (D-143: vor der Seefahrt immer die Heimat); bei Wechsel Bauleiste neu aufbauen
+    const mid = screenToTileF(state.cam, view.w / 2, view.h / 2);
+    const active = activeIsland(islandRects(world), mid, functionLock(world, 'seafaring') === null);
+    if (active !== state.activeIsland) {
+      state.activeIsland = active;
+      renderBuildMenu(navEl, state, selectTool, toggleCategory);
+    }
     const goal = goalBanners(state, world);
-    state.wonShown = goal.shown.wonShown;
-    state.wonMerchantsShown = goal.shown.wonMerchantsShown;
+    applyGoalShown(state, goal.shown);
     for (const text of goal.texts) showMessage(text, 'info', true, true);
     for (const id of newBuildEntries(state.unlockedSeen, world)) state.newEntries.add(id);
     const unlock = frameUnlock(state.unlockedSeen, world);
@@ -542,19 +652,20 @@ function launch(
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     updateHud(hudEl, state, actions);
-    updateNoticeStack(noticeStack, world);
+    updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
       const r = resolveLogClick(t, world);
       centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, bounds);
       if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
     });
-    updateBuildMenu(navEl, world);
+    updateBuildMenu(navEl, world, state.activeIsland);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
       if (world.buildings[panel.id]) updateInspect(panelEl, world, panel.id);
       else setPanel({ kind: 'none' });
     } else if (panel.kind === 'trade') {
-      updateTrade(panelEl, world);
+      if (world.islands[panel.island]?.kontorId == null) setPanel({ kind: 'none' });
+      else updateTrade(panelEl, world, panel.island);
     } else {
       updateRest(panelEl, world);
     }
@@ -591,8 +702,9 @@ function launch(
     if (id === null) {
       setPanel({ kind: 'none' });
     } else if (id === home(world).kontorId) {
-      // P-1: das Kontor öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
-      if (panel.kind !== 'trade') setPanel({ kind: 'trade' });
+      // P-1: das Kontor der Heimat öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
+      if (panel.kind !== 'trade' || panel.island !== HOME)
+        setPanel({ kind: 'trade', island: HOME });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
       setPanel({ kind: 'inspect', id });
     }
@@ -603,8 +715,8 @@ function launch(
   let dragForestFailureShown = false;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
     tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
-  const showRoadFailure = (reason: string, dragging: boolean): void => {
-    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ });
+  const showRoadFailure = (reason: string, dragging: boolean, island: number): void => {
+    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ, island });
     if (!dragging) {
       showError(text);
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
@@ -628,6 +740,10 @@ function launch(
       setSpeed(h.speed);
     } else if (h.kind === 'help') {
       openHelp();
+    } else if (h.kind === 'islandHome') {
+      jumpToIsland(HOME);
+    } else if (h.kind === 'islandCycle') {
+      jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
     } else {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -646,12 +762,22 @@ function launch(
     else showError(friendlyReason(world, r.reason));
     return r;
   };
-  const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number): ReasonCtx =>
+  const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     op === 'buy'
-      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good }
-      : { good, amount: n };
+      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good, island }
+      : { good, amount: n, island };
 
   const onAction = (a: InputAction): void => {
+    if (a.type === 'ship') {
+      // Klick auf ein Schiff: Panel des Heimatkontors mit hervorgehobener Schiffszeile
+      const k = home(world).kontorId;
+      if (k !== null) {
+        setPanel({ kind: 'inspect', id: k });
+        highlightShip(panelEl, a.id);
+        refresh();
+      }
+      return;
+    }
     if (a.type === 'hotkey') {
       onHotkey(a.action);
       return;
@@ -672,40 +798,43 @@ function launch(
       dragForestFailureShown = false;
     }
     const tool = state.tool;
-    const tile = tileAt(home(world), a.x, a.y);
+    const tile = tileAt(world.islands[a.island]!, a.x, a.y);
     if (tool.kind === 'select') {
       selectBuilding(tile?.buildingId ?? null);
     } else if (tool.kind === 'build') {
       const before = unconnectedIds(world);
-      const r = placeBuilding(world, tool.defId, a.x, a.y);
-      if (!r.ok) showError(friendlyReason(world, r.reason, { defId: tool.defId }));
+      const r = placeBuilding(world, tool.defId, a.x, a.y, a.island);
+      if (!r.ok)
+        showError(friendlyReason(world, r.reason, { defId: tool.defId, island: a.island }));
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'build');
         reportConnections(before);
       }
     } else if (tool.kind === 'road') {
       const before = unconnectedIds(world);
-      const r = placeRoad(world, a.x, a.y);
-      if (!r.ok) showRoadFailure(r.reason, a.dragging);
+      const r = placeRoad(world, a.x, a.y, a.island);
+      if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'road');
         reportConnections(before);
       }
     } else if (tool.kind === 'clearForest' || tool.kind === 'plantForest') {
       const r =
-        tool.kind === 'clearForest' ? clearForest(world, a.x, a.y) : plantForest(world, a.x, a.y);
+        tool.kind === 'clearForest'
+          ? clearForest(world, a.x, a.y, a.island)
+          : plantForest(world, a.x, a.y, a.island);
       if (r.ok) sound.play('build');
       else if (!dragForestFailureShown) {
         // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
         dragForestFailureShown = true;
-        showError(friendlyReason(world, r.reason, { cost: forestCost(tool) }));
+        showError(friendlyReason(world, r.reason, { cost: forestCost(tool), island: a.island }));
       }
     } else if (tile?.buildingId != null) {
       const r = demolishBuilding(tile.buildingId);
       if (r.ok) sound.play('demolish');
     } else {
-      const r = removeRoad(world, a.x, a.y);
-      if (!r.ok) showRoadFailure(r.reason, a.dragging);
+      const r = removeRoad(world, a.x, a.y, a.island);
+      if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);
       else sound.play('demolish');
     }
     refresh();
@@ -729,7 +858,13 @@ function launch(
     const key = hintKey(hover);
     if (force || key !== hintFor) {
       hintFor = key;
-      const h = placementHint(world, hover.tool ?? state.tool, hover.x, hover.y);
+      const h = placementHint(
+        world,
+        hover.tool ?? state.tool,
+        hover.x,
+        hover.y,
+        hover.island ?? state.activeIsland,
+      );
       hintEl.hidden = h === null;
       if (h) {
         hintEl.textContent = h.text;
@@ -802,9 +937,14 @@ function launch(
     const r = canvas.getBoundingClientRect();
     const sx = client.x - r.left,
       sy = client.y - r.top;
+    const shipId = shipAt(world, state.cam, sx, sy);
     const t = targetTile(world, state.cam, sel, sx, sy);
-    const foreign = t ? null : foreignHover(world, state.cam, sx, sy);
-    if (!t && !foreign) {
+    const foreign =
+      t || shipId !== null
+        ? null
+        : (foreignBuildingHover(world, state.cam, sx, sy) ??
+          foreignHover(world, state.cam, sx, sy));
+    if (!t && !foreign && shipId === null) {
       hoverTile = null;
       hideHoverCard();
       return;
@@ -812,9 +952,12 @@ function launch(
     const f = screenToTileF(state.cam, sx, sy);
     const gx = Math.floor(f.x),
       gy = Math.floor(f.y);
-    const key = foreign
-      ? `i${foreign.island},${foreign.x},${foreign.y}`
-      : `${t!.x},${t!.y},${gx},${gy}`;
+    const key =
+      shipId !== null
+        ? `s${shipId}`
+        : foreign
+          ? `i${foreign.island},${foreign.x},${foreign.y}`
+          : `${t!.x},${t!.y},${gx},${gy}`;
     const sameTile = key === hoverTile;
     if (!sameTile) {
       hoverTile = key;
@@ -835,11 +978,14 @@ function launch(
     }
     const ship = shipTile(world);
     const info =
+      (shipId !== null ? shipHover(world, shipId) : null) ??
       foreign?.info ??
-      hoverInfo(world, t!, fx.timeMs, {
-        ship: ship !== null && ship.x === gx && ship.y === gy,
-        animal: animalAt(fx, sx, sy, gx, gy),
-      });
+      (t
+        ? hoverInfo(world, t, fx.timeMs, {
+            ship: ship !== null && ship.x === gx && ship.y === gy,
+            animal: animalAt(fx, sx, sy, gx, gy),
+          })
+        : null);
     if (!info) {
       hideHoverCard();
       return;
@@ -965,11 +1111,13 @@ function launch(
       if (state.speed > 0) {
         acc += dt * state.speed;
         let ticks = 0;
+        const reports: StepReport[] = [];
         while (acc >= TICK_MS && ticks < MAX_TICKS_PER_FRAME) {
-          step(world);
+          reports.push(step(world));
           acc -= TICK_MS;
           ticks += 1;
         }
+        for (const text of lossMessages(reports)) showMessage(text, 'warn');
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
       input?.applyKeys(dt);

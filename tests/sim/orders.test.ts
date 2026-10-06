@@ -2,11 +2,19 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../../src/sim/defs/timing';
-import { deliverOrder, nextOrderTick, orderForPeriod, tickOrders } from '../../src/sim/orders';
+import {
+  deliverOrder,
+  nextOrderTick,
+  orderForPeriod,
+  orderPool,
+  tickOrders,
+} from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { Tier, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
+import { foundKontor2Literal, seaWorld } from './seaHelpers';
+import { ORDER_PINS, SEE_SEEDS } from './seePins';
 
 let w: World;
 
@@ -185,5 +193,54 @@ describe('M8 Auftrags-Pool bitgleich (Spec 5.4)', () => {
         for (let k = 0; k < 200; k++) all.push(orderForPeriod(seed, k, t));
     expect(all).toHaveLength(6000);
     expect(fnv1a32(JSON.stringify(all))).toBe(POOL_REFERENCE);
+  });
+});
+
+describe('M12 E2 Aufträge je Insel (AK-E2-05, AK-E2-14)', () => {
+  const orderWorld = (): World => {
+    const s = seaWorld();
+    foundKontor2Literal(s, 2);
+    s.order = { period: 0, good: 'tools', amount: 10, reward: 500, due: 99_999 };
+    home(s).stock.tools = 50;
+    return s;
+  };
+  it('zu wenig im Lager 2: Nicht genug Ware auf Felsbucht', () => {
+    const s = orderWorld();
+    s.islands[2]!.stock.tools = 5;
+    expect(deliverOrder(s, 2)).toEqual({ ok: false, reason: 'Nicht genug Ware auf Felsbucht' });
+    expect(s.order).not.toBeNull();
+  });
+  it('genug im Lager 2: Lager 2 -10, Heimat gleich, Prämie', () => {
+    const s = orderWorld();
+    s.islands[2]!.stock.tools = 10;
+    const m = s.money;
+    expect(deliverOrder(s, 2)).toEqual({ ok: true });
+    expect(s.islands[2]!.stock.tools).toBe(0);
+    expect(home(s).stock.tools).toBe(50);
+    expect(s.money).toBe(m + 500);
+    expect(s.order).toBeNull();
+  });
+  it('Heimat behält den Text; Insel ohne Kontor: Kein Kontor auf Möweninsel', () => {
+    const s = orderWorld();
+    home(s).stock.tools = 5;
+    expect(deliverOrder(s)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
+    const before = serialize(s);
+    expect(deliverOrder(s, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
+    expect(serialize(s)).toBe(before);
+  });
+});
+
+describe('AK-E3-04 Gewürz ist kein Auftrags- und Boomgut', () => {
+  it('orderPool für Stufe 0 … 4 enthält nie spice', () => {
+    for (const t of [0, 1, 2, 3, 4] as Tier[]) expect(orderPool(t)).not.toContain('spice');
+  });
+  it('orderForPeriod für SEE_SEEDS × k 0 … 19 bleibt gleich ORDER_PINS', () => {
+    for (const seed of SEE_SEEDS)
+      expect(
+        Array.from({ length: 20 }, (_, k) => {
+          const o = orderForPeriod(seed, k, 4);
+          return [o.good, o.amount];
+        }),
+      ).toEqual(ORDER_PINS[seed]);
   });
 });

@@ -17,13 +17,20 @@ Umgebung und Effekte. Dazu Tooltips, Hotkeys und Touch-Bedienung (Zielplattform 
 
 Lass **50 Bürger** auf deiner Insel leben. Gezählt werden die Einwohner aller Wohnhäuser der Stufe Bürger und
 höher. Ist das Ziel erreicht, erscheint eine Meldung und das Spiel läuft weiter. Der Chip «Ziel» in der
-Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt; der Ausblick «Danach: Kaufleute — Handelsstadt 60» steht
+Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt; der Ausblick «Danach: Kaufleute — Handelsstadt 60» (danach «Gewürzstadt», siehe Seefahrt) steht
 in der Inselchronik und im Tooltip des Ziel-Chips.
 
-Mit dem Bürger-Ziel werden die vierte Stufe **Kaufleute**, das **Badehaus** und die **Glashütte** frei (Meldung
-«Neu freigeschaltet: Badehaus (J) und Glashütte (O) — deine Bürger wollen Kaufleute werden»). Das zweite Ziel
-heisst **Handelsstadt**: 60 Kaufleute. Ist es erreicht, erscheint «Zweites Ziel erreicht: 60 Kaufleute! Das Spiel
-läuft weiter.», danach spielst du frei weiter («Handelsstadt · 60 Kaufleute»).
+Mit dem Bürger-Ziel werden die vierte Stufe **Kaufleute**, das **Badehaus**, die **Glashütte** und die **Seefahrt**
+frei (Meldung «Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen
+Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln»). Das zweite Ziel heisst **Handelsstadt**: 60
+Kaufleute. Ist es erreicht, erscheint «Zweites Ziel erreicht: 60 Kaufleute! Das Spiel läuft weiter.».
+
+Das dritte Ziel heisst **Gewürzstadt**: **80 Kaufleute**, die **600 Ticks (60 s)** lang voll versorgt sind, und das
+Gewürz kommt per Schiff von deiner eigenen Plantage — es muss ein Schiff mit einer Route fahren, die Gewürz von einer
+Fremdinsel mit Gewürzplantage in die Heimat holt. Der Chip «Ziel» zeigt «Ziel n / 80 Kaufleute mit Gewürz»; fehlt die
+Schiffsroute, steht «Fehlt: Schiffsroute, die Gewürz von deiner Plantage heimholt» in der Inselchronik. Ist es
+erreicht, erscheint «Drittes Ziel erreicht: Gewürzstadt mit 80 Kaufleuten! Das Spiel läuft weiter.»; danach spielst
+du frei weiter («Gewürzstadt · n Kaufleute»).
 
 Alle Zeitangaben sind **Spielzeit bei 1×** (Minuten und Sekunden); bei 2× und 4× läuft sie entsprechend
 schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
@@ -134,6 +141,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste              |
 | `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                       |
 | `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                    |
+| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)      |
 
 Hotkeys wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
@@ -212,15 +220,15 @@ frei, sobald der jeweilige Auslöser eintritt; eine Meldung nennt das Neue, und 
 als Nächstes kommt. Gesperrte Werkzeuge nennen auf Tastendruck ihren Grund. Als Auslöser zählt ein volles Wohnhaus der aktuellen Stufe (es wünscht die nächste) oder das erste Wohnhaus
 der nächsten Stufe.
 
-| Schritt | Auslöser                     | Neu                                                                                             |
-| ------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung                              |
-| U1      | 20 Wohnhäuser                | Marktplatz                                                                                      |
-| U2      | ein Wohnhaus wünscht Siedler | Jagdhütte, Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden, Aufforsten |
-| U3      | die ersten Siedler           | Rinderfarm, Amtsstube; Handelsaufträge; Ausbau Stufe 2                                          |
-| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                                          |
-| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube; Ausbau Stufe 3                                   |
-| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte; Glas                                                                       |
+| Schritt | Auslöser                     | Neu                                                                                                |
+| ------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| U0      | Spielstart                   | Wohnhaus, Fischerhütte, Holzfäller; Holz, Werkzeug, Stein, Nahrung                                 |
+| U1      | 20 Wohnhäuser                | Marktplatz                                                                                         |
+| U2      | ein Wohnhaus wünscht Siedler | Jagdhütte, Steinbruch, Schäferei, Weberei, Kapelle, Feuerwache; Wolle, Stoff; Roden, Aufforsten    |
+| U3      | die ersten Siedler           | Rinderfarm, Amtsstube; Handelsaufträge; Ausbau Stufe 2                                             |
+| U4      | ein Wohnhaus wünscht Bürger  | Zuckerrohrplantage, Brennerei, Schule; Zuckerrohr, Rum                                             |
+| U5      | die ersten Bürger            | Werkzeugmacher; Gütersperren in der Amtsstube; Ausbau Stufe 3                                      |
+| U6      | Ziel erreicht (Bürger-Ziel)  | Badehaus, Glashütte, Kontor (Fremdinsel), Gewürzplantage; Glas, Gewürz; Seefahrt und Handelsschiff |
 
 Die Feuerwache erscheint bei der Krisenstufe «aus» nicht in der Bauleiste (in der Sim bleibt sie baubar).
 Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei (Test- und Übungsmodus).
@@ -275,6 +283,7 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 | Brennerei          | Rum        | Zuckerrohr  | 5 s    | 120               | beliebiges Bauland                                 |
 | Werkzeugmacher     | Werkzeug   | Holz        | 8 s    | 150               | beliebiges Bauland                                 |
 | Glashütte          | Glas       | Stein, Holz | 5 s    | 150               | beliebiges Bauland                                 |
+| Gewürzplantage     | Gewürz     | —           | 5 s    | 90                | nur Gewürzinsel; mind. 4 Graskacheln im Radius 2   |
 
 Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukosten 200 Geld, 15 Holz,
 3 Werkzeug). Er lohnt sich erst, wenn du viel Werkzeug brauchst: Sein Unterhalt läuft auch im
@@ -302,10 +311,10 @@ Stein **und** Holz: Sie entnimmt je Zyklus beides zugleich und nur, wenn beides 
 
 Kontor anklicken, dann «Handeln»: Waren in Mengen von 1 oder 10 kaufen und verkaufen.
 
-| Gut             | Holz | Werkzeug | Stein | Nahrung | Wolle | Stoff | Zuckerrohr | Rum | Glas |
-| --------------- | ---- | -------- | ----- | ------- | ----- | ----- | ---------- | --- | ---- |
-| Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  | 50   |
-| Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  | 20   |
+| Gut             | Holz | Werkzeug | Stein | Nahrung | Wolle | Stoff | Zuckerrohr | Rum | Glas | Gewürz |
+| --------------- | ---- | -------- | ----- | ------- | ----- | ----- | ---------- | --- | ---- | ------ |
+| Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  | 50   | 40     |
+| Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  | 20   | 12     |
 
 - **Kaufpreise sind fest.**
 - **Verkaufssättigung:** Jede verkaufte Einheit senkt den Verkaufspreis dieses Guts um 1 Prozentpunkt,
@@ -339,6 +348,36 @@ Auftrag verfällt ohne Strafe. Ohne Auftrag zeigt die Karte «Nächster Auftrag 
 Welche Waren bestellt werden, richtet sich nach der höchsten Stufe deiner Häuser. Ein Auftrag bringt
 mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird nicht bestellt.
 
+### Seefahrt und Gewürz
+
+Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen zwei weitere Inseln im Archipel: die **Möweninsel**
+(24 × 24 Kacheln, Gewürz) und die **Felsbucht** (36 × 36, Gewürz und Gebirge). Kaufleute brauchen **Gewürz** (0,1 je
+Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor zu 40 Geld kaufen (Verkauf 12).
+
+- **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` zur nächsten Insel; der Knopf «Inseln» in der Kopfzeile
+  öffnet die Liste. Die Kamera zeigt die Insel, die in der Bildmitte liegt; die Lagerleiste in der Kopfzeile zeigt das
+  Lager **dieser** Insel, mit dem Inselnamen davor. Jede Insel hat ihr eigenes Lager.
+- **Kontor II:** Ein zweites **Kontor** (2×2, Küste, 800 Geld, 20 Holz, 8 Werkzeug, 10 Stein, Unterhalt 60 / min, Versorgungsradius 8) gründest du an der Küste einer Fremdinsel. Seine Baukosten zahlst du aus dem **Heimatlager**.
+  Auf jeder Fremdinsel ist ein Kontor erlaubt; ohne Kontor lässt sich dort nichts bauen, und Handel, Aufträge und
+  Versorgung laufen über das Kontor der jeweiligen Insel.
+- **Bauen auf Fremdinseln:** Alle anderen Gebäude zahlen aus dem Lager der Insel, auf der sie stehen; fehlt dort eine
+  Ware, steht im Grund «Nicht genug … auf <Insel>». Ware kommt per Handel am dortigen Kontor oder per Schiff dorthin.
+- **Gewürzplantage** (2×2, 200 Geld, 12 Holz, 3 Werkzeug, Unterhalt 90 / min, Zyklus 5 s): nur auf einer Insel mit
+  Gewürz und mit mindestens 4 Graskacheln im Radius 2; ihr Gewürz landet im Lager der Insel und muss per Schiff in die
+  Heimat.
+- **Handelsschiff** (kaufen im Kontor-Panel der Heimat: 1200 Geld, 25 Holz, 10 Werkzeug; Unterhalt 90 / min je Schiff;
+  höchstens 4 Schiffe; Ladung höchstens 50 Stück). Ein neues Schiff liegt im Heimathafen.
+- **Route in zwei Klicks:** Im Kontor-Panel «Route nach <Insel>» wählen (Klick 1), dann das Gut bei «Holen» oder
+  «Bringen» (Klick 2); das freie Schiff im Heimathafen bekommt die Route und pendelt zwischen den beiden Kontoren. Je
+  Richtung höchstens 2 Güter, ein Gut fährt nur in eine Richtung. Das Schiff fährt eine Sekunde je Seekachel. Beim
+  Anlegen entlädt es, was nicht auf der Route steht, und lädt neu.
+- **Reserve:** Je Gut stellst du eine Reserve in Stück ein (Standard 10, Schritt 10, höchstens 90); das Schiff nimmt nur
+  den Bestand über der Reserve mit, so bleibt Vorrat im Lager. Bei mehreren Gütern teilt es die Ladung zuerst gleich auf.
+- **Route auflösen:** Das Schiff fährt heim, entlädt bis zur Lagergrenze (100); was nicht mehr ins Heimatlager passt,
+  verfällt («n Gewürz verloren»). **Ausmustern** geht nur im Heimathafen ohne Route und ohne Ladung.
+- **Bedienung:** Ein Klick aufs Heimatkontor öffnet den Handel; die Schiffe erreichst du über «Zurück» oder mit einem
+  Klick direkt auf das Schiff. Mouse-over über einem Schiff zeigt Ladung, Ziel und Restzeit.
+
 ### Unterhalt und Geld
 
 - Unterhalt und Steuern werden je Spielschritt gebucht, Bruchteile werden mitgeführt (die Kasse zählt stetig); die Angaben «/ min» sind Raten. Der Münzton kommt weiter im 10-Sekunden-Takt. Die Kopfzeile zeigt die Bilanz («Bilanz ±n / min», Steuern minus Unterhalt);
@@ -356,12 +395,12 @@ Button «Abreissen» zeigt den tatsächlichen Betrag und was am Lagerlimit verf�
 
 ### Stufen
 
-| Stufe     | max. Einwohner | Bedürfnisse (je Einwohner pro 10 s)       | Dienste                   | Steuer je Einwohner pro 10 s | Aufstieg kostet (Geld/Holz/Werkzeug/Stein)                 |
-| --------- | -------------- | ----------------------------------------- | ------------------------- | ---------------------------- | ---------------------------------------------------------- |
-| Pioniere  | 4              | Nahrung 0.5                               | —                         | 2                            | zu Siedlern: 100 / 5 / 2 / 0                               |
-| Siedler   | 8              | Nahrung 0.5, Stoff 0.2                    | Kapelle                   | 7                            | zu Bürgern: 300 / 10 / 5 / 5                               |
-| Bürger    | 15             | Nahrung 0.5, Stoff 0.2, Rum 0.2           | Kapelle, Schule           | 14                           | zu Kaufleuten: 600 / 15 / 8 / 10, nur nach dem Bürger-Ziel |
-| Kaufleute | 20             | Nahrung 0.5, Stoff 0.2, Rum 0.2, Glas 0.1 | Kapelle, Schule, Badehaus | 20                           | —                                                          |
+| Stufe     | max. Einwohner | Bedürfnisse (je Einwohner pro 10 s)                   | Dienste                   | Steuer je Einwohner pro 10 s | Aufstieg kostet (Geld/Holz/Werkzeug/Stein)                 |
+| --------- | -------------- | ----------------------------------------------------- | ------------------------- | ---------------------------- | ---------------------------------------------------------- |
+| Pioniere  | 4              | Nahrung 0.5                                           | —                         | 2                            | zu Siedlern: 100 / 5 / 2 / 0                               |
+| Siedler   | 8              | Nahrung 0.5, Stoff 0.2                                | Kapelle                   | 7                            | zu Bürgern: 300 / 10 / 5 / 5                               |
+| Bürger    | 15             | Nahrung 0.5, Stoff 0.2, Rum 0.2                       | Kapelle, Schule           | 14                           | zu Kaufleuten: 600 / 15 / 8 / 10, nur nach dem Bürger-Ziel |
+| Kaufleute | 20             | Nahrung 0.5, Stoff 0.2, Rum 0.2, Glas 0.1, Gewürz 0.1 | Kapelle, Schule, Badehaus | 22                           | —                                                          |
 
 Ein neues Wohnhaus startet mit einem Pionier. Die Kopfzeile zeigt die Einwohner je Stufe. Die
 Steuer und die Wartezeit vor dem Aufstieg hängen zusätzlich vom Steuerregler ab (unten).
@@ -496,6 +535,8 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
+- Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
+  (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format
   gespeichert; Stände von vor M6 spielen mit Krisenstufe «aus».
 

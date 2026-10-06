@@ -20,6 +20,7 @@ import {
   type Pt,
   type Rect,
 } from '../../src/sim/islands';
+import { foundKontor2Literal } from './seaHelpers';
 import { canPlace } from '../../src/sim/placement';
 import { createWorld } from '../../src/sim/world';
 import { generateMap, isLand, MAP_H, MAP_W, seaMask } from '../../src/sim/mapgen';
@@ -246,6 +247,7 @@ describe('M12 E1 AK-E1-01 Kreuzprobe canPlace', () => {
         const w = createWorld(seed, { unlockAll: true });
         const b = generateForeignIslands(w.seed, homeOf(w.seed)).find((i) => i.kind === 'B')!;
         expect(b.quarrySites.length).toBeGreaterThan(0);
+        foundKontor2Literal(w, 2);
         for (const p of b.quarrySites) {
           const r = canPlace(w, 'quarry', p.x, p.y, 2);
           expect(r.ok, `Seed ${seed} (${p.x},${p.y})`).toBe(true);

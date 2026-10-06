@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  kontorActions,
   lockMatrix,
   needIcons,
   burningText,
@@ -391,5 +392,13 @@ describe('M11 Haus-Panel Defizit (Spec 7, Anhang 01 E)', () => {
     add('distillery');
     add('distillery'); // Rum 4,0 ≥ Δ 3,0
     expect(deficitLine(w, h)).toBeNull();
+  });
+});
+
+describe('M12 E2 UI Kontor-Panel', () => {
+  it('kontorActions: beide Kontore handeln, nur kontor2 lässt sich abreissen', () => {
+    expect(kontorActions('kontor')).toEqual({ trade: true, demolish: false });
+    expect(kontorActions('kontor2')).toEqual({ trade: true, demolish: true });
+    expect(kontorActions('house')).toBeNull();
   });
 });

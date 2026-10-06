@@ -240,7 +240,34 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    home(w).stock.spice = 1; // R226 F-03: Gewürz im Lager, sonst käme der Gewürz-Satz vor dem Badehaus
     expectStep(w, 'Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe');
+  });
+  it('AK-U2-08 (d2) Glas-Kette steht, Gewürz fehlt → kaufe es am Kontor oder gründe ein Kontor', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    expect(home(w).stock.spice).toBe(0);
+    expectStep(
+      w,
+      'Deine Kaufleute brauchen Gewürz: kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
+    );
+  });
+  it('R226 F-03 kein Hinweis enthält eine leere Tastenklammer „()“', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    expect(nextStep(w)).not.toContain('()');
+    const house = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(house, 4, 20, ['food', 'cloth', 'rum', 'glass']); // nur Gewürz unerfüllt
+    const remedy = remedyText(w, house);
+    expect(remedy).not.toBeNull();
+    expect(remedy).not.toContain('()');
+    expect(remedy).toBe(
+      'Gewürz fehlt: kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
+    );
   });
   it('AK-U2-08 (f) Hebel 40, won false, 45 Bürger, sonst wie (b) → Satz aus (b)', () => {
     const w = citizenWorld();
@@ -384,5 +411,27 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
     expect(remedyText(lj.w, lj.b)).toBe('Verkaufe Holz am Kontor');
     lj.w.unlocked = [...UNLOCK_IDS];
     expect(remedyText(lj.w, lj.b)).toBe(REMEDY_TODAY);
+  });
+});
+
+describe('M12 E2 UI Inseln: Hilfe-Schritt Kontor auf Gewürzinsel (C.11)', () => {
+  const C11 = 'Gründe ein Kontor auf einer Insel mit Gewürz';
+  it('nach U6 ohne kontor2 → C.11; mit kontor2 nicht mehr; vor U6 nicht', () => {
+    const w = citizenWorld();
+    expect(nextStep(w)).not.toBe(C11);
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    expect(w.unlocked).toContain('U6');
+    addDirect(w, 'glassworks');
+    addDirect(w, 'lumberjack');
+    addDirect(w, 'quarry');
+    addDirect(w, 'bathhouse');
+    // Merge e2/e3: fehlt Gewürz für die nächste Stufe, nennt der spezifischere R256-Satz denselben Weg
+    // (Kontor auf Gewürzinsel); C.11 gilt, solange kein Gewürz fehlt.
+    expect(nextStep(w)).toMatch(/brauchen Gewürz.*Kontor auf einer Gewürzinsel/);
+    w.islands[0]!.stock.spice = 5;
+    expect(nextStep(w)).toBe(C11);
+    addDirect(w, 'kontor2');
+    expect(nextStep(w)).not.toBe(C11);
   });
 });

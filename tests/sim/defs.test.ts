@@ -8,21 +8,26 @@ import {
   UNSATISFIED_TAX_FACTOR,
   WIN_CITIZENS,
   WIN_MERCHANTS,
+  WIN_SPICE_HOLD,
+  WIN_SPICE_MERCHANTS,
 } from '../../src/sim/defs/tiers';
 import { EFF_MAX, EFF_WINDOW, UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';
 import type { GoodId } from '../../src/sim/types';
+import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
 import { createWorld } from '../../src/sim/world';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 
 describe('defs', () => {
-  it('has 8 goods with buy > sell', () => {
-    expect(GOOD_IDS).toHaveLength(9);
+  // Bewusst geändert (M12 Seefahrt T01, R226 F-03): 9 → 10 Güter, Gewürz ist das zehnte.
+  it('has 10 goods with buy > sell', () => {
+    expect(GOOD_IDS).toHaveLength(10);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 14 building defs whose goods exist (M11 S2)', () => {
-    expect(BUILDING_IDS).toHaveLength(19);
+  it('has 21 building defs whose goods exist (M11 S2)', () => {
+    expect(BUILDING_IDS).toHaveLength(21); // bewusst, M12 T02: kontor2, spicefarm
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -92,9 +97,10 @@ describe('M8 defs', () => {
       tier: 4,
       name: 'Kaufleute',
       maxInhabitants: 20,
-      needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1 },
+      // R226 F-03, Anhang 03 D: Kaufleute brauchen Gewürz, Steuer 22
+      needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1, spice: 0.1 },
       services: ['faith', 'school', 'bath'],
-      tax: 20,
+      tax: 22,
       upgradeCost: null,
       requiresWin: true,
       unlockCitizens: null,
@@ -112,8 +118,10 @@ describe('M8 defs', () => {
       sell: 20,
       order: { tier: 4, min: 4, max: 8 },
     });
-    expect(GOOD_IDS).toHaveLength(9);
-    expect(GOOD_IDS[GOOD_IDS.length - 1]).toBe('glass');
+    // Bewusst geändert (R226 F-03): Glas war das letzte Gut, jetzt steht Gewürz am Ende.
+    expect(GOOD_IDS).toHaveLength(10);
+    expect(GOOD_IDS[8]).toBe('glass');
+    expect(GOOD_IDS[GOOD_IDS.length - 1]).toBe('spice');
     expect(START_STOCK.glass).toBe(0);
     const bath = BUILDING_DEFS.bathhouse;
     expect(bath).toMatchObject({
@@ -197,7 +205,11 @@ describe('M11 Jagdhütte und Rinderfarm (Spec 3.3)', () => {
 describe('M11 Ausbau-Werte (Spec 3.6)', () => {
   // Die übrigen neun Einträge prüft der Vorstufen-Test in upgrade.test.ts wörtlich.
   it('AK-P3-01 LEVELS hat genau die 11 Betriebe mit produces, Werte Anhang 01 A.4, ganzzahlig, Stufe 3 schneller', () => {
-    const producers = BUILDING_IDS.filter((id) => BUILDING_DEFS[id].produces !== undefined).sort();
+    // M12 T02: spicefarm ist neu und hat (noch) keine Ausbaustufen; Ausbau-Frage an lead-tech
+    const producers = BUILDING_IDS.filter(
+      (id) => BUILDING_DEFS[id].produces !== undefined && id !== 'spicefarm',
+    ).sort();
+    expect(LEVELS.spicefarm).toBeUndefined(); // bewusst ohne Ausbaustufen
     expect(producers).toHaveLength(11);
     expect(Object.keys(LEVELS).sort()).toEqual(producers);
     const T = (
@@ -236,6 +248,94 @@ describe('M11 Ausbau-Werte (Spec 3.6)', () => {
         expect(Number.isInteger(n), id).toBe(true);
       expect(s3.cycle, id).toBeLessThan(s2.cycle);
       expect([s2.fee.good, s3.fee.good], id).toEqual(['cloth', 'rum']);
+    }
+  });
+});
+
+describe('AK-E3-01 Gewürz (M12 Seefahrt T01)', () => {
+  it('erste neun Güter unverändert, Gewürz am Ende', () => {
+    expect(GOOD_IDS.slice(0, 9)).toEqual([
+      'wood',
+      'tools',
+      'stone',
+      'food',
+      'wool',
+      'cloth',
+      'cane',
+      'rum',
+      'glass',
+    ]);
+    expect(GOOD_IDS[9]).toBe('spice');
+  });
+  it('AK-E3-01 TIERS[4]: Gewürz 0,1 je Einwohner, Steuer 22', () => {
+    // R226 F-03, Anhang 03 D
+    expect(TIERS[4].needs.spice).toBe(0.1);
+    expect(TIERS[4].tax).toBe(22);
+  });
+  it('GOODS.spice 40/12 ohne order, Startbestand 0', () => {
+    expect(GOODS.spice).toEqual({ id: 'spice', name: 'Gewürz', buy: 40, sell: 12 });
+    expect(START_STOCK.spice).toBe(0);
+  });
+});
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((n) => {
+    const p = `${dir}/${n}`;
+    return statSync(p).isDirectory() ? sourceFiles(p) : p.endsWith('.ts') ? [p] : [];
+  });
+}
+
+describe('M12 Seefahrt Werte (T02)', () => {
+  it('AK-E3-01 spicefarm: Kosten, Takt, Unterhalt, Eigenschaften', () => {
+    expect(BUILDING_DEFS.spicefarm).toMatchObject({
+      name: 'Gewürzplantage',
+      w: 2,
+      h: 2,
+      cost: { money: 200, wood: 12, tools: 3, stone: 0 },
+      cycle: 50,
+      upkeep: 15,
+      produces: 'spice',
+      flammable: true,
+      stormAffected: true,
+      site: [
+        { kind: 'radius', terrain: 'grass', radius: 2, min: 4 },
+        { kind: 'islandTrait', trait: 'spice' },
+      ],
+    });
+  });
+  it('AK-E2-09 kontor2: Kosten, Unterhalt, Versorgungsradius, Platzregeln', () => {
+    expect(BUILDING_DEFS.kontor2).toMatchObject({
+      name: 'Kontor',
+      w: 2,
+      h: 2,
+      cost: { money: 800, wood: 20, tools: 8, stone: 10 },
+      upkeep: 10,
+      supplyRadius: 8,
+      site: [...BUILDING_DEFS.kontor.site, { kind: 'foreignNoKontor' }],
+    });
+  });
+  it('AK-E2-09 Schiff und Routen', () => {
+    expect(SHIP).toEqual({
+      cost: { money: 1200, wood: 25, tools: 10, stone: 0 },
+      upkeep: 15,
+      capacity: 50,
+    });
+    expect(SHIP_MAX).toBe(4);
+    expect(ROUTE_GOODS_PER_DIRECTION).toBe(2);
+    expect(ROUTE_RESERVE).toEqual({ default: 10, step: 10, max: 90 });
+  });
+  it('AK-Z3-01 Gewürzstadt-Ziel steht in den Defs', () => {
+    expect(WIN_SPICE_MERCHANTS).toBe(80);
+    expect(WIN_SPICE_HOLD).toBe(600);
+  });
+  it('AK-Z3-01 kein Literal 80 oder 600 ausserhalb der Defs in Dateien zum Gewürzziel', () => {
+    const files = [...sourceFiles('src/sim'), ...sourceFiles('src/ui')].filter(
+      (f) => !f.includes('/defs/'),
+    );
+    for (const f of files) {
+      const text = readFileSync(f, 'utf8');
+      if (!/wonSpice|WIN_SPICE/.test(text)) continue;
+      expect(/\b(80|600)\b/.test(text), f).toBe(false);
     }
   });
 });

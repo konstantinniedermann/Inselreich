@@ -492,7 +492,29 @@ describe('M8 Abfragen', () => {
     expect(goalView(w)).toEqual({ phase: 'merchants', current: 15, target: 60 });
     for (const h of hs) Object.assign(h.house!, { tier: 4, inhabitants: 20 });
     w.wonMerchants = true;
-    expect(goalView(w)).toEqual({ phase: 'done', current: 60, target: 60 });
+    // R239 (3): Pin bewusst geändert; nach dem zweiten Ziel folgt die Phase 'spice', 'done' erst mit wonSpice (M12 Z3).
+    expect(goalView(w)).toEqual({ phase: 'spice', current: 0, target: 80, loop: false });
+    w.wonSpice = true;
+    expect(goalView(w)).toEqual({ phase: 'done', current: 60, target: 80 });
+  });
+
+  it('AK-Z3-10 goalView spice: current nach B.1, loop nach B.2', () => {
+    const hs = [0, 1, 2, 3].map((i) => m8House(4, 20, k.x + 2, k.y + i));
+    w.won = true;
+    w.wonMerchants = true;
+    expect(goalView(w)).toEqual({ phase: 'spice', current: 0, target: 80, loop: false });
+    for (const h of hs) {
+      h.house!.supplied = true;
+      h.house!.services = { faith: true, school: true, bath: true };
+      h.house!.satisfiedSince = w.tick - 600;
+    }
+    w.tick = 700;
+    expect(goalView(w)).toEqual({ phase: 'spice', current: 80, target: 80, loop: false });
+    hs[3]!.house!.satisfiedSince = w.tick - 599;
+    expect(goalView(w)).toMatchObject({ phase: 'spice', current: 60 });
+    expect(goalView(w).phase).not.toBe('done');
+    w.wonSpice = true;
+    expect(goalView(w)).toEqual({ phase: 'done', current: 80, target: 80 });
   });
 
   it('AK-S3-05 Badabdeckung: coverageMask(bath) gleich serviceAvailable je Kachel, auch während eines Brands', () => {

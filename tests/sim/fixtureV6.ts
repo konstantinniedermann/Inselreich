@@ -75,7 +75,7 @@ export function fixtureV6Run(): { w: World; layout: Layout; t: Trajectory } {
   if (!lumber) throw new Error('T00: kein Holzfäller');
   must(upgradeBuilding(w, lumber.id), 'upgradeBuilding');
   for (const g of GOOD_IDS)
-    if (g !== 'glass' && home(w).stock[g] === 0) must(buy(w, g, 3), `buy ${g}`);
+    if (g !== 'glass' && g !== 'spice' && home(w).stock[g] === 0) must(buy(w, g, 3), `buy ${g}`);
   return run;
 }
 

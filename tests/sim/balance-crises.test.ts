@@ -14,7 +14,7 @@ import {
 } from './controller';
 import { RANDOM_SEQUENCE } from './e0Pins';
 import { NORMAL, randomSequence } from './fixtureV6';
-import { fnv1a32, foldBackToV6, foldBackToV7 } from './helpers';
+import { fnv1a32, foldBackToV6, foldBackToV7, foldBackToV8 } from './helpers';
 
 /**
  * Endwelt ohne die M6-Felder (Spec 15): `version` 2, `crisisLevel` und `crisis` entfernt; ohne die M8-Felder
@@ -22,7 +22,7 @@ import { fnv1a32, foldBackToV6, foldBackToV7 } from './helpers';
  * M11 (Anhang 02 B): zusätzlich `taxCarry`, `upkeepCarry` und je Gebäude `eff`, `level` entfernt.
  */
 function normalized(json: string): string {
-  const raw = foldBackToV6(foldBackToV7(JSON.parse(json) as Record<string, unknown>));
+  const raw = foldBackToV6(foldBackToV7(foldBackToV8(JSON.parse(json) as Record<string, unknown>)));
   raw.version = 2;
   delete raw.crisisLevel;
   delete raw.crisis;

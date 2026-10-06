@@ -1,6 +1,6 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import type { Building, BuildingDefId, World } from './types';
-import { adjacentOf, HOME, idx, inBounds } from './world';
+import { adjacentOf, HOME, idx, inBounds, isKontor } from './world';
 
 /** Wegkacheln (Tile-Indizes), die 4er-angrenzend an den Kontor-Footprint liegen. */
 export function kontorRoadRoots(world: World, island: number = HOME): number[] {
@@ -43,7 +43,7 @@ export function reachableRoads(world: World, island: number = HOME): Set<number>
 }
 
 export function isBuildingConnected(world: World, b: Building, roads: Set<number>): boolean {
-  if (b.defId === 'kontor') return true;
+  if (isKontor(b.defId)) return true;
   if (b.defId === 'house') return false; // Versorgung läuft über Radius (M3), nicht über Wege
   const isl = world.islands[b.island]!;
   const def = BUILDING_DEFS[b.defId];
@@ -57,7 +57,7 @@ export function needsConnection(defId: BuildingDefId): boolean {
     def.produces !== undefined ||
     def.service !== undefined ||
     def.serviceRadius !== undefined ||
-    (def.supplyRadius !== undefined && defId !== 'kontor')
+    (def.supplyRadius !== undefined && !isKontor(defId))
   );
 }
 

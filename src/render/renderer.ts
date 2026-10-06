@@ -57,6 +57,7 @@ import { cap, rainStreaks } from './limits';
 import {
   TEX,
   bodyHull,
+  project,
   sortedObjects,
   spriteBounds,
   type Moving,
@@ -75,6 +76,7 @@ import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { LIGHT_COLORS, mixRgb } from './light';
 import { drawShip, shipShadow, shipTile } from './ship';
+import { seaShipAfter, shipPose, shipScale, type ShipPose } from './shipLane';
 import { halfLayer, quarterLayer, terrainScale, updateTerrainLayer } from './terrain';
 import {
   ARCHIPEL_VIEW,
@@ -211,6 +213,8 @@ export const renderStats = {
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
 
 export interface Hover {
+  /** Insel unter dem Mauszeiger (M12 E2); fehlt sie, gilt die aktive Insel (Standard Heimat). */
+  island?: number;
   x: number;
   y: number;
   tool: Tool | null;
@@ -469,6 +473,7 @@ function drawIsland(
   view: { w: number; h: number },
   fx: RenderFx,
   env: FrameEnv,
+  fleet: readonly { id: number; cx: number; cy: number }[] = [],
 ): IslandFrame {
   const { weather, reduce, light, lod } = env;
   const world = v;
@@ -541,6 +546,8 @@ function drawIsland(
     const moving: Moving[] = [];
     const ship = shipTile(world);
     if (ship) moving.push({ kind: 'ship', id: 0, cx: ship.x + 0.5, cy: ship.y + 0.5 });
+    // Handelsschiffe im Rechteck dieser Insel (Inselkoordinaten, Tiefe wie jedes bewegte Objekt)
+    for (const f of fleet) moving.push({ kind: 'ship', id: f.id, cx: f.cx, cy: f.cy });
     // Laufwege (H-R4) zuerst: sie zählen gegen das Figurenlimit, Spaziergänger bekommen den Rest
     const errands = lod ? [] : errandsFrom(world, range, tickClock(world, fx.timeMs), reduce);
     const errandPoses = new Map<number, ErrandPose>();
@@ -656,7 +663,7 @@ function drawIsland(
           def,
           b,
           fx.timeMs,
-          def.id === 'kontor' ? waterSides(world, b) : undefined,
+          def.id === 'kontor' || def.id === 'kontor2' ? waterSides(world, b) : undefined,
           variantOf(world.seed, b.x, b.y),
         );
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
@@ -672,7 +679,7 @@ function drawIsland(
       } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, env.seed);
       else if (it.kind === 'massif') massifCache.draw(ctx, cam, it as MassifItem);
       else if (it.kind === 'ship')
-        drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs);
+        drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs, shipScale(cam.zoom));
       else if (it.kind === 'walker') {
         const pose = poses.get(it.id);
         if (pose) {
@@ -793,15 +800,42 @@ export function render(
   const camOf = (i: number): Camera => (i === HOME ? cam : islandCam(cam, world.islands[i]!));
   const env: FrameEnv = { weather, reduce, light, lod: cam.zoom <= LOD_ZOOM, seed: world.seed };
   const frames: IslandFrame[] = [];
+  // Handelsschiffe (M12 E4): im Rechteck einer Insel bewegtes Objekt dieser Insel, sonst auf See (Tiefe nach Inseln)
+  const poses = world.ships.map((s) => ({ id: s.id, pose: shipPose(world, s) }));
+  const sea = poses
+    .filter((p) => p.pose.island === null)
+    .sort((a, b) => a.pose.x + a.pose.y - (b.pose.x + b.pose.y) || a.id - b.id);
+  let seaNext = 0;
+  const drawSea = (until: (p: ShipPose) => boolean): void => {
+    while (seaNext < sea.length && until(sea[seaNext]!.pose)) drawSeaShip(sea[seaNext++]!.pose);
+  };
+  const drawSeaShip = (pose: ShipPose): void => {
+    const c = worldToScreen(cam, project(pose.x, pose.y));
+    const m = 80; // knapp ausserhalb: nichts zu sehen
+    if (c.x < -m || c.y < -m || c.x > view.w + m || c.y > view.h + m) return;
+    withGround(ctx, cam, () => {
+      ctx.beginPath();
+      polyPath(ctx, shipShadow({ x: pose.x - 0.5, y: pose.y - 0.5 }));
+      ctx.fillStyle = SHADOW;
+      ctx.fill();
+    });
+    drawShip(ctx, cam, { x: pose.x - 0.5, y: pose.y - 0.5 }, fx.timeMs, shipScale(cam.zoom));
+  };
   for (const i of visibleIslands(cam, view, world.islands, active, mode)) {
     const layer = layerOf(i);
     if (!layer) continue;
+    drawSea((p) => !seaShipAfter(p, world.islands[i]!)); // See-Schiffe vor dieser Insel
     renderStats.islandsDrawn++;
+    const isl = world.islands[i]!;
+    const fleet = poses
+      .filter((p) => p.pose.island === i)
+      .map((p) => ({ id: p.id, cx: p.pose.x - isl.ox, cy: p.pose.y - isl.oy }));
     frames.push({
-      ...drawIsland(ctx, islandView(world, i), camOf(i), layer, view, fx, env),
+      ...drawIsland(ctx, islandView(world, i), camOf(i), layer, view, fx, env, fleet),
       island: i,
     });
   }
+  drawSea(() => true);
   // Signale, Auswahl und Mouse-over gehören der aktiven Insel; ist sie nicht im Bild, gilt ein leerer Bereich
   const act: IslandFrame = frames.find((f) => f.island === active) ?? {
     island: active,
@@ -882,9 +916,16 @@ export function render(
   // 12 Signale (Bildraum, ungetönt, nie unter der Bodenmatrix) der aktiven Insel
   const av = act.v;
   const acam = act.ci;
-  if (hover?.tool?.kind === 'build') {
-    drawPlacementOverlay(ctx, av, acam, range, hover.tool.defId, hover.x, hover.y);
-  }
+  // Bau-Vorschau, Zonen, Abdeckung und Mouse-over gehören der Insel unter dem Mauszeiger (M12 E2);
+  // fehlt `hover.island`, gilt die aktive Insel. Liegt sie nicht im Bild, entfällt die Anzeige.
+  const hf = hover
+    ? hover.island === undefined
+      ? act
+      : frames.find((f) => f.island === hover.island)
+    : undefined;
+  if (hover && hf && hover.tool?.kind === 'build')
+    drawPlacementOverlay(ctx, hf.v, hf.ci, hf.range, hover.tool.defId, hover.x, hover.y);
+
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
   const kontor = av.buildings[home(av).kontorId];
   if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(acam, kontor), fx.timeMs);
@@ -894,20 +935,23 @@ export function render(
   drawProgressRings(ctx, av, acam, range, tickClock(av, fx.timeMs).frac);
   if (import.meta.env.DEV) collectBadges(av, acam, range);
 
-  const sel = selectedId === null ? undefined : av.buildings[selectedId];
-  if (sel) {
+  // Auswahl: das Gebäude hebt sich in der Ansicht seiner Insel ab (Id in der Kopie gleich)
+  const selB = selectedId === null ? undefined : world.buildings[selectedId];
+  const sf = selB ? frames.find((f) => f.island === selB.island) : undefined;
+  const sel = sf ? sf.v.buildings[selectedId!] : undefined;
+  if (sel && sf) {
     const def = BUILDING_DEFS[sel.defId];
     ctx.save();
     ctx.beginPath();
-    footprintPath(ctx, acam, sel.x, sel.y, def.w, def.h);
-    hullPath(ctx, acam, sel);
+    footprintPath(ctx, sf.ci, sel.x, sel.y, def.w, def.h);
+    hullPath(ctx, sf.ci, sel);
     ctx.strokeStyle = PALETTE.signalYellow;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
   }
 
-  if (hover) drawHover(ctx, av, acam, hover);
+  if (hover && hf) drawHover(ctx, hf.v, hf.ci, hover);
 
   if (fx.raster === true && !empty) {
     ctx.save();
