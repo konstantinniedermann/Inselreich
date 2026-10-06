@@ -200,6 +200,12 @@ async function once(root, n) {
           const readyIdx = await c.ev('window.__readyIdx');
           const end = readyIdx > 0 ? readyIdx : gaps.length;
           let start = buildAt === null ? GAP_SKIP : gaps.findIndex(([ep]) => ep >= buildAt) + 1;
+          // Der Aufbau-Frame ist der lange Abstand (>= halbe `buildMs`) unter den ersten Frames; die Konsolenzeit
+          // allein trifft ihn nicht sicher (rAF-Reihenfolge), dann liegt er ein Frame später.
+          if (buildMs[0] > 0) {
+            const heavy = gaps.slice(0, GAP_SKIP + 5).findLastIndex(([, g]) => g >= buildMs[0] / 2);
+            if (heavy >= 0) start = Math.max(start, heavy + 1);
+          }
           if (start <= 0 || start >= end) start = Math.min(GAP_SKIP, end);
           measured.buildGaps = gaps.slice(0, start).map(([, g]) => +g.toFixed(1));
           const win = gaps.slice(start, end);
