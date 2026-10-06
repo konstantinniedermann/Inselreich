@@ -852,7 +852,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
   `eff` nur bei Betrieben mit `produces` und ganzzahlig 0 … 256 000, `level` nur bei Betrieben mit Ausbau-Eintrag und 2 oder 3). Fehler ergeben
   `Ungültiges Format`, `Unbekannte Version` oder `Beschädigter Spielstand`. Ein echter v1-Stand liegt als
   Fixture in `tests/sim/fixtures/save-v1.json`, ein v2-Stand in `tests/sim/fixtures/save-v2.json`, ein
-  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`. Die Fixtures `save-v6.json` und `save-v6-locks.json` belegen die Migration v6 → v7.
+  v3-Stand (Seed 3, Krise, Auftrag, Bürgerhaus, Tick 5400) in `tests/sim/fixtures/save-v3.json`, ein v4-Stand (Tick 4800, Steuer „high") in `tests/sim/fixtures/save-v4.json`, ein v5-Stand (Tick 2650, Sturm) in `tests/sim/fixtures/save-v5.json`. Die Fixtures `save-v6.json` und `save-v6-locks.json` belegen die Migration v6 → v7, `save-v7.json` die Migration v7 → v8 (Inselmodell).
 - **Save v8 und Ladeprüfung (M12 E1):** `migrateV7ToV8` wirft nie; aus einem v7-Stand baut sie die Heimat um
   (`kind`, `ox`, `oy`, `anchor` über `homeAnchor`) und erzeugt A und B aus `seed` (`generateForeignIslands`). Lässt sich
   der Stand nicht aufbauen, setzt sie nur die Version, und die Prüfung meldet `Beschädigter Spielstand`. Die Prüfung

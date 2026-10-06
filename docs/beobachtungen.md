@@ -987,3 +987,23 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - Die Inselkarte, die bei 1280 px umbricht, und die Schlieren im Flachwasser-Saum stehen schon im Eintrag vom
   2026-10-06 (C3 Playtests); die `.env.example` gibt es im Repo nicht (keine Umgebungsvariablen nötig, `docs/arc42.md`
   nennt keine).
+
+## 2026-10-06 · M12-E1 Fix-Runde F1 / Final-Review: Befunde ausserhalb des Scopes
+
+- **Fundort / Beobachtung (Q4):** `tests/render/camera.test.ts:320`: Die Prüfung ist tautologisch (kann nicht rot werden).
+  **Einschätzung:** niedrig; bei der nächsten Arbeit an der Kamera mit einer echten Gegenprobe ersetzen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8a):** `src/sim/world.ts:82` und `src/sim/save.ts:281`: Die Fremdinsel-Erzeugung steht doppelt
+  (`createWorld` und `migrateV7ToV8`). **Einschätzung:** niedrig (DRY); eine gemeinsame Funktion, sonst laufen beide Wege
+  bei einer Änderung auseinander. Der Commit `0108a67` trägt das Präfix `style:` statt der Konvention
+  (`feat:`/`fix:`/`docs:`/`refactor:`/`test:`); nicht änderbar (kein Umschreiben der Historie), nur Hinweis. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8b):** `src/sim/save.ts:44`: Die Ladeprüfung prüft Gebäudekoordinaten nicht gegen die
+  Inselgrösse. **Einschätzung:** ab E2 relevant (Gebäude auf Fremdinseln), dann Koordinaten je `island` gegen
+  `width`/`height` prüfen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8c):** `src/sim/limits.ts`: Gitter und Felder der Fremdinseln (etwa 10 MB) sind in den
+  Obergrenzen nicht erfasst. **Einschätzung:** niedrig; bei der nächsten Änderung an `limits.ts` aufnehmen. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8d):** Archipel-Ansicht im Modus `jump`: Fremdinseln werden im Leerlauf gerastert, obwohl
+  die Ansicht sie nicht zeigt. **Einschätzung:** unnötiger Leerlaufaufwand; prüfen, ob `jump` die Pläne der Fremdinseln
+  zurückstellen kann. **Ursprung:** F1/Final-Review M12-E1.
+- **Fundort / Beobachtung (Q8e):** Viertel-Kopie der Heimat entsteht synchron beim ersten Zoom ≤ 0,25; das fehlt in R4
+  (Spec, Leistungsabschnitt). **Einschätzung:** Doku-Lücke, kein Fehler; im Spec-Nachtrag oder in ADR-013 vermerken
+  und prüfen, ob ein Frame dabei die 50 ms überschreitet. **Ursprung:** F1/Final-Review M12-E1.

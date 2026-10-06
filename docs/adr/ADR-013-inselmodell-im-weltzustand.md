@@ -146,7 +146,7 @@ angegebenen Last.
 | AK-E1-16 (R3)              | ×0,07 (1,9 / 26,2 ms), Grenze ≤ ×2,0         | DPR 2                 | 3,1–3,3 |
 | AK-E1-18 (R4, entscheidet) | 16,8 / 33,3 / 33,3 ms, Grenze ≤ 50           | DPR 1, `--idle`, 3 L. | 2,4     |
 | AK-E1-18 informativ        | 66,7 ms (Grundframe dort 50 ms)              | DPR 2                 | 3,9–5,4 |
-| AK-E1-19 (R5), Scheiben    | p95 7,7–7,9, Median 5,4, Maximum 8,4–9,7     | DPR 2, 3 Läufe        | 3,9–5,4 |
+| AK-E1-19 (R5), Scheiben    | p95 7,7–7,9, Median 5,4, Maximum 8,4–10,1    | DPR 2, 3 Läufe        | 3,9–5,4 |
 | AK-E1-19 (R5), Scheiben    | p95 7,7–8,0, Maximum 8,3–9,4                 | DPR 1, 6 Läufe        | 3,2–3,5 |
 
 Seed 3 lag in der früheren Serie 3 ähnlich (AK-E1-14 ±0,0, AK-E1-15 ×1,0, AK-E1-16 ×0,06). Einordnung der Messregeln:
