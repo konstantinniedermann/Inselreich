@@ -1,3 +1,4 @@
+import { homeBuildings } from '../render/homeBuildings';
 import { islandView, pickArchipel } from '../render/archipel';
 import { pickTarget } from './islandTools';
 import type { Camera } from '../render/camera';
@@ -147,7 +148,7 @@ function serviceInfo(world: World, b: Building): HoverInfo {
   const c = center(def, b.x, b.y);
   const n = trouble
     ? 0
-    : Object.values(world.buildings).filter((h) => {
+    : homeBuildings(world).filter((h) => {
         if (!h.house) return false;
         const hc = center(BUILDING_DEFS[h.defId], h.x, h.y);
         return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (def.serviceRadius ?? 0);
