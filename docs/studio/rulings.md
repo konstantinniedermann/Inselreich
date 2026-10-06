@@ -2095,3 +2095,19 @@ liegengebliebenes Chrome, `pkill -x node`), qa-playtester ohne Lebenszeichen 2,5
 C4 neu auslegen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3, Hook-Meldung Inaktivität · ADR: —
+
+## R264 · 2026-10-06 · Vorschläge Ad-hoc-Retro E1 C3
+
+Ruling: Retro `docs/studio/retros/2026-10-06-adhoc-e1-c3.md` angenommen, Vorschläge als **Fehlerbehebungen** (Verfassung
+§10.5: offensichtliche Fehler brauchen keine Datenbasis; kein Experiment-Platz nötig): **V1** `tools/render-qa/perf.mjs`
+beendet sein Chrome nur per eigener PID; ein Messfenster-Wächter (Last, vitest/vite/Chrome fremder Worktrees,
+`caffeinate -i` gegen Ruhezustand) läuft vor jeder Messserie — als kleines Werkzeug-Paket **nach** E1 C3b (gleiche
+Dateien), Ziel ≤ 1 ungültige Serie je Messpaket. **V2** statt Guard-Regel: Persona `lead-tech` bekommt `model: sonnet`
+als Vorgabe; Plan, Plan-Überarbeitung und Meilenstein-Retro startet L0 ausdrücklich mit `opus` (Handbuch Z. 124
+unverändert); Messung: 0 Controller-Starts auf opus je Session. **V3** E-026 als Persona-Korrektur ohne Experiment:
+`production-integrator` merged in `.worktrees/integrate` (detached, `git push origin HEAD:main`) und prüft vorher
+`git rev-parse --show-toplevel`; E-026 wird als „übernommen R264" geschlossen. Umsetzung V2/V3 durch studio-coach
+(Persona-Version + CHANGELOG). B3 (verwaister Playtester-Start) beobachten, keine Massnahme. — Kosten bei Irrtum:
+Persona-Versionen zurücksetzen.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro RETRO-ADHOC-E1C3 · ADR: —
