@@ -5,6 +5,7 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
+import type { CacheStep } from './cachePlan';
 import {
   FLOWER_TONES,
   SHRUB_TONES,
@@ -1593,7 +1594,7 @@ export const SLICE_ROWS = 16; // Pixelzeilen je Malschritt des Inselcaches (M12 
 export function terrainJob(
   world: World,
   scale: number,
-): { layer: HTMLCanvasElement; steps: (() => void)[] } {
+): { layer: HTMLCanvasElement; steps: CacheStep[] } {
   const { w, h } = terrainLayerSize(home(world), scale)[0]!;
   const layer = document.createElement('canvas');
   layer.width = w;
@@ -1611,7 +1612,7 @@ export function terrainJob(
       f();
       spent += performance.now() - t0;
     };
-  const steps: (() => void)[] = [
+  const steps: CacheStep[] = [
     timed(() => {
       fields = terrainFields(fieldWorld(world));
     }),
@@ -1660,21 +1661,22 @@ export function terrainJob(
   // Halbe Kopie in Streifen, je Streifen mit erzwungener Rasterung (AK-E1-19); ruft der Renderer `halfLayer` früher,
   // bleiben die Streifen wirkungslos.
   let halfWip: HTMLCanvasElement | null = null;
-  for (let i = 0; i < QUARTER_STRIPS; i++)
-    steps.push(
-      timed(() => {
-        const m = meta.get(layer);
-        if (!m || m.half) return;
-        const list = quarterStrips(layer.height);
-        const st = list[i];
-        halfWip ??= newHalf(layer);
-        if (st) {
-          paintHalfStrip(halfWip, layer, st);
-          flushRaster(halfWip);
-        }
-        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.half = halfWip;
-      }),
-    );
+  for (let i = 0; i < QUARTER_STRIPS; i++) {
+    const strip: CacheStep = timed(() => {
+      const m = meta.get(layer);
+      if (!m || m.half) return;
+      const list = quarterStrips(layer.height);
+      const st = list[i];
+      halfWip ??= newHalf(layer);
+      if (st) {
+        paintHalfStrip(halfWip, layer, st);
+        flushRaster(halfWip);
+      }
+      if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.half = halfWip;
+    });
+    if (i === 0) strip.solo = true; // erste Lesung der Ebene (Textur, aufgeschobene Rasterung): allein in einer Scheibe
+    steps.push(strip);
+  }
   // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
   let quarter: HTMLCanvasElement | null = null;
   const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
