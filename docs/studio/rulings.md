@@ -2319,3 +2319,12 @@ bleibt, studio-coach misst die Wirkung in der nächsten Retro (Prozess V5). — 
 zurücknehmen.
 
 Entscheider: L0 · Anlass: Retros `2026-10-06-session-e51712dd.md`, `2026-10-06-prozess-rel05.md` · ADR: —
+
+## R279 · 2026-10-06 · Hex-Raster verworfen
+
+Ruling: Nutzer hat die Hex-Demo (R274) gesehen und verwirft die Idee („gefällt mir nicht"). Das Spiel bleibt beim
+Iso-Rautenraster (ADR-012); kein Hex-Meilenstein, kein Eintrag im Ideen-Pool. Das private Demo-Artifact bleibt
+bestehen, bis der Nutzer das Löschen ausdrücklich verlangt (Verfassung §6, irreversibel). — Kosten bei Irrtum: keine,
+die Demo ist reproduzierbar.
+
+Entscheider: Nutzer · Anlass: Rückmeldung zur Hex-Demo · ADR: —
