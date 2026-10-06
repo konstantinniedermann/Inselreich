@@ -2496,3 +2496,12 @@ Dach widerspräche dem Bildziel); L3 Cache-Aufbau +36 % (nur bei Zoomwechsel, Fr
 Patch-Messung (T3). — Kosten bei Irrtum: Release-Lauf misst gesamt, Häppchen fliegt bei Überschreitung.
 
 Entscheider: L0 · Anlass: Berichte lead-art L1, L3 · ADR: —
+
+## R296 · 2026-10-06 · D-148 Gebirgsfuss, Start L6
+
+Ruling: D-148 bestätigt: Fuss ≥ 1,6 Kacheln plus Knick-Test; Kern ausserhalb der Fusszone (≤ 40 % der Knoten) bleibt
+hart pixelgleich geprüft — die beiden AK schlossen sich aus, die einfachere Variante gilt (R136). L6 (Gebirge und
+Wald entdecken) startet jetzt gestapelt auf `feat/art02-l2-gebirge` @ 76edd0c (enthält L1), Release B. — Kosten bei
+Irrtum: L6 nachziehen, falls Release A L1/L2 ändert.
+
+Entscheider: L0 · Anlass: Bericht lead-art L2 · ADR: —
