@@ -2382,3 +2382,14 @@ und Story sind Bausteine für das nächste Meilenstein-Brainstorming. Bewertung 
 späteren Session. — Kosten bei Irrtum: ein Häppchen wird umsortiert.
 
 Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R285 · 2026-10-06 · IDEEN-04b Nachtrag Playtest
+
+Ruling: Nutzer-Nachtrag aufgenommen, weiterhin ohne Umsetzung. I-019 „Schiffsangebot am Kontor“ (gelbes «!»)
+wird mit I-015 und Folgepaket (2) R274b gebündelt. Die Nutzeranforderungen an die Fahrlinie (nur Wasser, Tiefwasser
+bevorzugt, Hindernisse meiden, flüssig) gehen als Beobachtung in Folgepaket (1). Die Glättung der Schiffspose ist
+reines Render-Thema und lässt sich vorziehen; Wegpunkte brauchen weiter ein eigenes Ruling (`d`, E1-Band).
+Figuren-Tempo (Streuung ≤ 1,5 : 1) als eigenes Render-Häppchen, nicht in ART-STIL-02 (das berührt die Figuren
+nicht). — Kosten bei Irrtum: ein Häppchen wird umsortiert.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —

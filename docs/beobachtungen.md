@@ -1162,3 +1162,39 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   Messläufen vor dem Mess-Wächter. **Einschätzung:** niedrig; ausserhalb des Repos (Löschen dort nur durch den Nutzer,
   R207); `lib.mjs` räumt künftig auf — prüfen, ob es auch das Temp-Verzeichnis entfernt. **Ursprung:**
   TOOL-MESSWAECHTER, R269.
+
+### 2026-10-06 · Seefahrt · Nutzer-Playtest REL-05: Fahrlinie und Figuren-Tempo
+
+- **Fundort / Beobachtung (B, Fahrlinie):** Nutzer wörtlich: „die route von kontor zu kontor wo das schiff fährt muss
+  immer auf dem wasser sein und wenn möglich im tiefen wasser und nicht durch objekte wie "wal", "wrack" etc. ausserdem
+  soll es nicht ruckeln, sondern smooth fahren.“ Anforderungen an Folgepaket (1) „Fahrlinie mit Wegpunkten im Wasser“
+  (R274b): nur Wasser, Tiefwasser bevorzugt, Hindernisse meiden, flüssige Bewegung. **Fakten (nur gelesen):** Die Lane
+  ist heute eine Gerade zwischen zwei Ankern (`src/sim/islands.ts` Z. 353: `points = [anchorPt(a), anchorPt(b)]`,
+  `d = ceil(seaLength)`); eine Tiefe/Flachwasser-Information gibt es nur im Render (`depthAt`, `terrainField.ts`), nicht im
+  Weltzustand. Die Pose kommt aus `t = 1 − ship.left / laneTicks` (`shipLane.ts` Z. 77); `left` sinkt je Tick (100 ms,
+  `TICK_MS`), 10 Ticks je Seekachel. Es gibt keine Zwischenschritte zwischen den Ticks: das Schiff springt alle 100 ms um
+  0,1 Kachel (bei Tempo ×4 ruckeln die Schritte pro Frame ungleichmässig, ein bis mehrere Ticks je Frame) — das ist die
+  wahrscheinliche Ursache des „Ruckelns“. Der Wal (`wildlife.ts`) ist reine Render-Deko aus Zeit und Seed und weicht nur
+  dem Kontor-Schiff aus (`WHALE_SHIP_GAP = 3`, `shipTile`), nicht dem Schiff auf See; ein „Wrack“ kommt in `src/` nicht
+  vor (vermutlich Fisch-/Wal-Schatten oder Insel-Deko missdeutet, bei Nachstellung prüfen). Eine Gerade kann dazu
+  durch fremde Inseln laufen (Prüfung `clipInside` in `islands.ts` nur beim Anlegen der Lane, nicht für Tiefe).
+  **Einschätzung:** mittel; Glättung ist Render-only (Interpolation mit Bruchteil des Tick-Akkumulators, kein Save),
+  Wegpunkte im Wasser ändern `lane.points`/`d` und damit Fahrzeiten und das E1-Band (Ruling nötig); Wal-/Deko-Ausweichen
+  ist eine Render-Frage (Deko meidet die Lane), kein Sim-Thema. Grundlage für das Ruling zu Folgepaket (1).
+  **Ursprung:** Nutzer-Playtest REL-05 (IDEEN-04b).
+- **Fundort / Beobachtung (C, Figuren-Tempo):** Nutzer wörtlich: „die leute auf den strassen laufen z.t. unnatürlich
+  schnell. die dürfen schon unterschiedlich schnell sein aber es soll in einem verhältnis sein.“ **Fakten (nur gelesen):**
+  `src/render/life.ts` Z. 24: `WALK_SPEED = 1.2` Kacheln/s, für alle Figuren gleich (`walkerAt`, Segment = `SEG_MS`
+  = 833 ms je Kachel); es gibt weder Träger noch Passanten, nur Spaziergänger. Die Zeit ist die echte Bildschirmzeit
+  (`performance.now()`, `app.ts` Z. 1186), unabhängig von Spielgeschwindigkeit ×1/×2/×4 — das Tempo wächst dort also nicht.
+  Mögliche Quellen des Eindrucks: (1) Bildschirmtempo steigt mit dem Zoom (1,2 Kacheln/s bei grossem Zoom ≈ sehr viele
+  Pixel/s, bei Zoom 1 etwa 1,2 · 64 px/s je Achse); (2) Wege laufen auf Kachelmitten im Rechteckraster, diagonal in
+  Bildrichtung ist die Bildgeschwindigkeit ≈ doppelt so hoch wie vertikal (Raute); (3) Episodenwechsel alle 32 Segmente
+  (≈ 26,7 s) blendet über 300 ms aus und an und setzt die Figur an einen neuen Ort, das wirkt wie Teleport/Hast. Eine
+  Streuung je Figur ist nicht angelegt. **Einschätzung:** niedrig bis mittel; Vorschlag: Tempo je Figur aus Seed streuen
+  (z. B. 0,8 bis 1,2 · Basis, Verhältnis höchstens 1,5 zu 1), Basis eher 0,9 Kacheln/s prüfen; Messen im Browser mit
+  mehreren Zoomstufen. **Eingabe für lead-art:** das laufende Paket ART-STIL-02 „Lebendige Insel“ berührt `life.ts` nur
+  über `crownPolys` (Baumkronen, Handoff `2026-10-06-l0-lead-art-gate.md` T2), nicht die Figuren; Figuren-Tempo ist also
+  nicht abgedeckt und wäre ein eigenes kleines Häppchen oder ein Anhang an L1 (gleiche Datei: Ownership beachten).
+  **Ursprung:** Nutzer-Playtest REL-05 (IDEEN-04b).
+

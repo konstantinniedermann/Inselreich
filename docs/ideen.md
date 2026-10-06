@@ -181,6 +181,7 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Spielerwirkung: „Der Spieler liest nach Kontor II im Leitsatz «Kaufe ein Handelsschiff im Heimatkontor», danach «Lege eine Route: Gewürz von <Insel> heim», und der Grund «Kein freies Schiff» nennt den Weg (kaufen oder Route lösen)."
 - Grösse: S · Risiko: keins (nur Texte und Schrittbedingungen in `src/ui/`; mit Folgepaket (2) R274b abstimmen, nicht doppeln)
 - Raster: offen
+- Verwandt: I-019
 - Entscheid: offen
 
 ### I-016 · neu · Werft
@@ -207,4 +208,14 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Grösse: L · Risiko: Save und Lizenz (Kapitelstand im Weltzustand; Texte, Namen und Figuren müssen eigen sein, ADR-006)
 - Raster: offen
 - Doppelung: keine; stärkere Fassung von I-017. Nur als Frage an L0, ob Erzählung zum Spiel passt, nicht als Richtungswechsel.
+- Entscheid: offen
+
+### I-019 · neu · Schiffsangebot am Kontor
+
+- Bereich: Bedienung/Grafik · Säule: Wirtschaft, Steuern und Handel · Quelle: Playtest 2026-10-06 (REL-05, wörtlich: „ist aber schlecht versteckt im menu. -> wie wärs wenn ein schiff auftaucht vor meinem kontor welches mit einem gelben "!" markiert ist als hinweis das man es anklicken kann. dieses könnte man dann kaufen.“); Pfade `src/render/ship.ts` (`shipTile`, `drawShip`), `src/render/shipLane.ts`, `src/ui/ships.ts` `buyShipView`; Genre-Mechanik: Hinweismarke am Objekt statt Menüeintrag
+- Spielerwirkung: „Der Spieler sieht, sobald Seefahrt frei ist und ein Schiff kaufbar wäre, ein Angebotsschiff mit gelbem «!» vor dem Heimatkontor, klickt es an und landet direkt im Kauf."
+- Grösse: S–M · Risiko: keins beim Save, wenn die Marke rein aus dem Zustand abgeleitet wird (Seefahrt frei, kein freies Schiff, Kauf bezahlbar); Render-Marke plus UI-Klick, Picking für das Angebotsschiff nötig; Liegeplatz: Befund H-R14 (beobachtungen.md, 2026-10-04) — das Schiff kann hinter dem Kontor verdeckt liegen, das Angebotsschiff braucht einen sichtbaren Platz (Seite vor dem Kontor oder Marke über dem Kontor); Marke nicht mit der roten Kontor-Marke verwechseln
+- Raster: offen
+- Doppelung: I-015 (Leitsätze) führt per Text, diese Idee per Bild; zusammen lesbar, nicht doppeln. I-016 (Werft) würde den Kaufort verlegen; dann zöge die Marke zur Werft. Folgepaket (2) R274b („Heimatkontor-Klick → Schiffe direkt“) ist die Klick-Hälfte; Abstimmung nötig.
+- Verwandt: I-015, I-016
 - Entscheid: offen
