@@ -1147,7 +1147,8 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
   // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
   // G-Anzahl (b537908).
-  const HOME_CALLS = { hash: 2585897606, length: 12859 };
+  // L5: Palmen und Meer-Stempel (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter (+3 Zeichen).
+  const HOME_CALLS = { hash: 3287991724, length: 12862 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3670334885, length: 3662 };
   const V1280 = { w: 1280, h: 800 };
@@ -1250,7 +1251,16 @@ describe('M12 E1 Renderer', () => {
     'L4 Deko-Culling: eine Kachel hinter range gezeichnet, zwei nicht; unter Zoom 0,5 kein A5/A6, unter 0,75 kein A9/A14; Schatten im gemeinsamen Pfad',
     { timeout: 120000 },
     () => {
-      const MIN = { solitaire: 0.5, orchard: 0.5, menhir: 0.75, ruin: 0.75 } as const;
+      const MIN = {
+        solitaire: 0.5,
+        orchard: 0.5,
+        menhir: 0.75,
+        ruin: 0.75,
+        palm: 0.5, // L5 D1
+        wreck: 0.25, // L5 E1
+        seaRock: 0.25, // L5 E3
+        islet: 0.25, // L5 E8
+      } as const;
       let plusOne = 0,
         plusTwo = 0;
       const kindsDrawn = new Map<number, Set<string>>();
@@ -1294,14 +1304,18 @@ describe('M12 E1 Renderer', () => {
       }
       expect(plusOne, 'ein Stempel eine Kachel hinter range wurde geprüft').toBeGreaterThan(0);
       expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
-      expect([...(kindsDrawn.get(1) ?? [])].sort()).toEqual([
-        'menhir',
-        'orchard',
-        'ruin',
-        'solitaire',
-      ]);
-      expect([...(kindsDrawn.get(0.6) ?? [])].sort()).toEqual(['orchard', 'solitaire']);
-      expect(kindsDrawn.get(0.4)).toBeUndefined();
+      // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu
+      const got = (z: number): string[] => [...(kindsDrawn.get(z) ?? [])].sort();
+      for (const k of ['menhir', 'orchard', 'ruin', 'solitaire'])
+        expect(got(1), `Zoom 1 zeigt ${k}`).toContain(k);
+      expect(got(1).filter((k) => !['menhir', 'orchard', 'ruin', 'solitaire'].includes(k))).toEqual(
+        expect.arrayContaining(['palm']),
+      );
+      expect(got(0.6)).toEqual(expect.arrayContaining(['orchard', 'solitaire', 'palm']));
+      for (const k of got(0.6)) expect(['menhir', 'ruin']).not.toContain(k);
+      // unter 0,5 nur Meer-Stempel (Fern-Pfad), keine Land-Stempel und keine Palmen
+      for (const k of got(0.4))
+        expect(['wreck', 'seaRock', 'islet'], `Zoom 0,4 zeigt ${k}`).toContain(k);
     },
   );
 
