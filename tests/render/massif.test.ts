@@ -75,6 +75,7 @@ import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import kernFixture from './fixtures/massif-kern-main.json';
+import kernL2 from './fixtures/massif-kern-l2.json';
 import { KERN_SEEDS, bandNoise, kernNodes } from './fixtures/massifKern';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
@@ -1642,4 +1643,27 @@ describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
     }
     expect(found.size).toBe(3);
   }, 60000);
+});
+
+// ART-STIL-02 L6-T0 (Anhang 0.4): Referenz der Kernknoten (hn ≥ 0,35) auf der Basis nach L2.
+describe('ART-STIL-02 L6 Referenz', { timeout: 60000 }, () => {
+  it('L6-T0 Kern nach L2 unverändert: alle Kernknoten gleich der Fixture (RGB ± 0, ΔE2000 im Mittel < 1)', () => {
+    type Fx = Record<string, { nodes: number[][] }>;
+    for (const seed of KERN_SEEDS) {
+      const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
+      const all = (kernL2 as Fx)[String(seed)]!.nodes;
+      expect(now.size, `Seed ${seed}: Knotenzahl`).toBe(all.length);
+      let dE = 0,
+        n = 0;
+      for (const r of all) {
+        const k = `${r[0]}|${r[1]}|${r[2]}`;
+        const q = now.get(k);
+        expect(q, `Seed ${seed}: Knoten ${k} fehlt`).toBeDefined();
+        expect(q!.rgb, `Seed ${seed}: Knoten ${k}`).toEqual([r[4], r[5], r[6]]);
+        dE += deltaE2000(rgbToLab(q!.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
+        n++;
+      }
+      expect(dE / n, `Seed ${seed}: mittleres ΔE`).toBeLessThan(1);
+    }
+  });
 });
