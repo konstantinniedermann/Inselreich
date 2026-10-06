@@ -2250,3 +2250,19 @@ eigener Meilenstein mit Brainstorming und ADR (bricht ADR-012 Isometrie und alle
 eine Wegwerf-Datei, kein Eingriff in laufende Stränge.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R274 · 2026-10-06 · Gate Seefahrt: Fix-Runde F2 vor REL-05
+
+Ruling: Final-Review lead-qa (`feat/m12-see` @ 4250784: BEDENKEN, nur niedrige Befunde; Determinismus-Probe mit
+Schiffen zeichengleich, Bitgleichheit bestätigt, CI-Reserve ok) und Urteil lead-art (ZURÜCK nur wegen D-144 Regel 3:
+Schiff bei Zoom 0,25/0,125 gezeichnet 6–8 px statt ≥ 12 px; Regeln 1/2 OK) angenommen. **Fix-Runde F2** vor dem
+Merge (lead-tech, sonnet, 4 Starts aus R241: Umsetzer, Review, Playtest, lead-art-Bestätigung): (a) Mindestbreite gilt
+für die gezeichnete Silhouette, nicht die Box (Vorgabe ≈ 16 px Formel-Minimum), Test misst Rumpf+Segel im
+Fake-Kontext; Screenshots `1280-20*` neu, lead-art bestätigt; (b) N1 Ladeprüfung `left ≥ 1` bei `to ≠ null`; (c) N2
+Abriss setzt `kontorId` nur bei `kontorId === b.id` auf `null`; (d) N5 Testtitel „version 10"; (e) N3 Kommentar
+`defs/sea.ts:8`. N4 und Befunde → `docs/beobachtungen.md`. **Folgepakete nach REL-05** (eigene Rulings): Fahrlinie mit
+Wegpunkten im Wasser (ändert `d`/E1-Band), UX-Paket (Heimatkontor-Klick → Schiffe, Text „spiel frei weiter" bei
+offenem drittem Ziel), Art-Paket Schiffskontrast (heller Rand/Kielwasser). Nach F2: Gate Merge Release REL-05 =
+Seefahrt + H-R15 durch L0. — Kosten bei Irrtum: Schiff in der Fernansicht weiter kaum sichtbar.
+
+Entscheider: L0 · Anlass: Final-Review lead-qa, Urteil lead-art · ADR: —
