@@ -1,5 +1,5 @@
 import { MIN_MOUNTAIN_PATCH } from '../sim/defs/map';
-import { valueNoise } from '../sim/noise';
+import { hash2, valueNoise } from '../sim/noise';
 import {
   DEBRIS,
   DEBRIS_MIX,
@@ -664,9 +664,10 @@ const L3 = {
 /** Weltpixel Höhe, die einer Kachel waagrechter Strecke entspricht (Kachelseite 64/√2), für Gefälle und Licht. */
 const TILE_PX = 45;
 /** Sockel: Mischung ins Nachbargelände nach dem weichen Innen-Anteil (Ecken stärker, gerundet), höchstens EDGE_MIX. */
-const SOFT_LO = 0.2,
+const SOFT_LO = 0.35,
   SOFT_HI = 0.85,
-  EDGE_MIX = 0.3;
+  EDGE_MIX = 0.7,
+  EDGE_MIX_FOREST = 0.3; // dunkler Waldboden zieht den hellen Fuss nicht herunter
 /**
  * Sockel ohne Naht (A3, Entscheid lead-art Runde 1; Playtest Runde 3 schmal statt breit): die Kontur ist die
  * Höhenlinie SOFT_CUT des weichgezeichneten Innen-Anteils (an geraden Kanten die Kachelgrenze, an Ecken gerundet);
@@ -676,7 +677,7 @@ export const SOFT_CUT = 0.52; // Wert an einer geraden Kante (gemessen), Kontur 
 const SOFT_A_LO = SOFT_CUT - 0.05,
   SOFT_A_HI = SOFT_CUT + 0.05;
 /** Schuttband: voll am Rand (Innen-Anteil SOFT_CUT), aus ab DEBRIS_HI. */
-const DEBRIS_HI = 0.8;
+export const DEBRIS_HI = 0.7;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
 const P = LIGHT_COLORS;
@@ -690,6 +691,28 @@ export const VEG_TONES: readonly Rgb[] = [
 ];
 /** Helles Geröll-/Schuttband am Massivfuss: rock/rockLight mit etwas sandDry (Playtest R3: kein dunkler Saum). */
 export { DEBRIS };
+/** Bewuchs unten (L2): Wiesentöne wie die Wiese (grassDark … grassLight), nicht die dunklen Kronentöne. */
+export const VEG_GRASS_TONES: readonly Rgb[] = [
+  mixRgb(mixRgb(rgbOf(PALETTE.grassDark), P.dark, 0.2), P.cool, 0.15),
+  rgbOf(PALETTE.grassDark),
+  mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.35),
+  rgbOf(PALETTE.grass),
+  mixRgb(rgbOf(PALETTE.grassLight), P.warm, 0.12),
+];
+/** Bewuchstöne bei relativer Höhe hn: Wiesentöne unten, Kronentöne ab hn 0,35 (weiche Überblendung). */
+export const vegTones = (hn: number): readonly Rgb[] => {
+  const k = 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn);
+  return k >= 1
+    ? VEG_GRASS_TONES
+    : k <= 0
+      ? VEG_TONES
+      : VEG_TONES.map((t, i) => mixRgb(t, VEG_GRASS_TONES[i]!, k));
+};
+/** Blütenbereich der Alpenwiese (C5): hn 0,2–0,35 auf flachen Lagen. */
+export const flowerWeight = (hn: number, steep: number): number =>
+  smoothstep(0.2, 0.23, hn) *
+  (1 - smoothstep(0.32, LOW_HN, hn)) *
+  (1 - smoothstep(0.2, 0.4, steep));
 /** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
 export const TONE_FLAT = 2;
 const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
@@ -707,6 +730,8 @@ export const EDGE_COLORS: readonly (Rgb | null)[] = [
   rgbOfCss(FOREST_FLOOR),
   rgbOf(PALETTE.sandDry),
 ];
+
+const edgeMix = (e: Rgb): number => (e === EDGE_COLORS[2] ? EDGE_MIX_FOREST : EDGE_MIX);
 
 export interface CellShade {
   /** mittlere Höhe (px) */
@@ -760,10 +785,39 @@ export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): n
   return squeezed + (full - squeezed) * k;
 }
 
-/** Bewuchs-Feld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern): Flecken nur in tiefen, flachen Lagen. */
-function vegField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
-  const low = smoothstep(0.01, 0.05, hn) * (1 - smoothstep(0.16, 0.34, hn)) * (1 - steep);
-  return rotNoise(seed + 317, fx, fy, 1.9, ROT_A) * (0.25 + 0.7 * low);
+/** Salze von L2 Gebirge (Block 530–539, Liste in groundDecor.ts): Bewuchsvariante, Blütenraster, Blütenton. */
+const L2_VARIANT_SALT = 500; // hash2(seed + 500, 0, 3): Inselvariante (k = 3 = Gebirge)
+export const L2_FLOWER_SALT = 530,
+  L2_FLOWER_TONE_SALT = 531;
+/** Bewuchsdichte unten je Insel: Gewinn 1 ± BASE_VEG_VARIANT aus der Inselvariante (Anteil 20–35 %). */
+const VEG_LOW_BIAS = 0.3,
+  VEG_LOW_GAIN = 1.0,
+  VEG_LOW_VARIANT = 0.22;
+/** Bis zu dieser relativen Höhe (hn) wächst Gras in Rinnen und auf Schultern; darüber nichts (Kern bleibt Referenz). */
+const VEG_TOP_HN = 0.3;
+/** Weicher Übergang der Bewuchsfarbe: Wiesentöne unter VEG_GRASS_HN, Kronentöne darüber. */
+const VEG_GRASS_HN = 0.25;
+
+/**
+ * Bewuchs-Feld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern): Flecken in tiefen, flachen Lagen; ab hn 0,35 unverändert
+ * (Kern). L2: unter hn 0,3 Gras auf Schultern (flach) und in Rinnen (Krümmung > 0), Dichte je Insel aus der Variante.
+ */
+function vegField(
+  seed: number,
+  fx: number,
+  fy: number,
+  hn: number,
+  steep: number,
+  lap: number,
+): number {
+  const n = rotNoise(seed + 317, fx, fy, 1.9, ROT_A);
+  if (hn >= LOW_HN) return n * 0.25; // wie vor L2 (der Tiefenfaktor war dort schon 0)
+  const rinne = smoothstep(0.3, 0.7, Math.max(-1, Math.min(1, lap / LAP_REF)));
+  const flach = Math.max(1 - steep, 0.85 * rinne);
+  const low =
+    smoothstep(0.01, 0.05, hn) * (1 - smoothstep(VEG_TOP_HN - 0.08, VEG_TOP_HN, hn)) * flach;
+  const variant = 1 + VEG_LOW_VARIANT * (2 * hash2(seed + L2_VARIANT_SALT, 0, 3) - 1);
+  return Math.min(1, n * (0.25 + VEG_LOW_GAIN * variant * low) + VEG_LOW_BIAS * variant * low);
 }
 /** Geröll-Feld 0…1 am Netzpunkt: tiefe, flache Lagen und Fuss der Flanken. */
 function rubbleField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
@@ -778,13 +832,14 @@ function rubbleField(seed: number, fx: number, fy: number, hn: number, steep: nu
 export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): Rgb {
   const steep = steepness(s.gx, s.gy);
   const st = toneStep(toneLevel(seed, fx, fy, s), 0);
-  const veg = vegField(seed, fx, fy, s.hn, steep) >= 0.5 ? 1 : 0;
-  let c = mixRgb(toneColor(st), toneColor(st, VEG_TONES), VEG_MIX * veg);
+  const veg = vegField(seed, fx, fy, s.hn, steep, s.lap) >= 0.5 ? 1 : 0;
+  const vt = vegTones(s.hn);
+  let c = mixRgb(toneColor(st), toneColor(st, vt), VEG_MIX * veg);
   const e = Math.max(-1, Math.min(1, -s.lap / LAP_REF));
   if (e > EDGE_ON && st >= TONE_FLAT) c = mixRgb(c, ROCK_TONES[4]!, RIDGE_HI);
   if (e < -EDGE_ON) c = mixRgb(c, ROCK_TONES[0]!, RINNE_LO);
   c = mixRgb(c, DEBRIS, DEBRIS_MIX * debrisOf(s.soft ?? 1));
-  if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, EDGE_MIX * (1 - s.rim));
+  if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, edgeMix(s.edge) * (1 - s.rim));
   return c;
 }
 /** Bewuchsanteil eines Flecks, Schwellen der Grat- und Rinnenkante und ihre Stärke. */
@@ -812,6 +867,9 @@ export interface NodeShade {
   e: number;
   /** Bewuchs- und Geröll-Feld */
   veg: number;
+  /** Anteil der Wiesentöne an der Bewuchsfarbe (1 unten, 0 ab hn 0,35) und Blütenbereich (0…1, hn 0,2–0,35, flach) */
+  vlow: number;
+  flower: number;
   rub: number;
   /** weicher Innen-Anteil (Kontur bei SOFT_CUT, Schuttband) und Deckkraft aus der Höhe (h ≥ RIM_H deckt immer) */
   soft: number;
@@ -879,9 +937,11 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       steep,
       t: toneLevel(c.seed, fx, fy, sh),
       e: Math.max(-1, Math.min(1, -lap / LAP_REF)),
-      veg: vegField(c.seed, fx, fy, hn, steep),
+      veg: vegField(c.seed, fx, fy, hn, steep, lap),
+      vlow: 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn),
+      flower: flowerWeight(hn, steep),
       rub: rubbleField(c.seed, fx, fy, hn, steep),
-      mix: edge ? EDGE_MIX * (1 - sh.rim) : 0,
+      mix: edge ? edgeMix(edge) * (1 - sh.rim) : 0,
       ec: edge ?? ROCK_TONES[TONE_FLAT]!,
       warp: 3.2 * rotNoise(c.seed + 313, fx, fy, 0.7, ROT_B),
     };

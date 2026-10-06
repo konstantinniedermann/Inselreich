@@ -3,6 +3,8 @@ import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem 
 import { DEBRIS_MIX } from './light';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
+import { FLOWER_TONES } from './groundDecor';
+import { rgbOfCss } from './palette';
 import {
   DEBRIS,
   EDGE_ON,
@@ -13,6 +15,9 @@ import {
   ROCK_TONES,
   SUB,
   TONE_FLAT,
+  L2_FLOWER_SALT,
+  L2_FLOWER_TONE_SALT,
+  VEG_GRASS_TONES,
   VEG_MIX,
   VEG_TONES,
   pieceHeight,
@@ -284,6 +289,9 @@ export function strataAt(h: number, steep: number, warp: number, wx: number, wy:
   return BAND[Math.floor((ph - Math.floor(ph)) * 64) & 63]! * on * sm * sm;
 }
 
+/** Blütendichte auf dem Blütenbereich (Anteil der Zellen); insgesamt höchstens 3 % der Bewuchspixel. */
+const FLOWER_DENSITY = 0.04;
+const FLOWER_RGB = FLOWER_TONES.map((c) => rgbOfCss(c));
 /** Seed-Versatz des Felskorns (Liste der Versätze in groundDecor.ts). */
 const GRAIN_SEED = 321;
 /**
@@ -364,19 +372,27 @@ function triangle(
       const k0 = Math.floor(st),
         k1 = Math.min(top, k0 + 1),
         fr = st - k0;
+      const vl = lerp(a.vlow, b.vlow, c.vlow); // Wiesentöne unten, Kronentöne oben
       const R = ROCK_TONES[k0]!,
         R1 = ROCK_TONES[k1]!,
         V = VEG_TONES[k0]!,
-        V1 = VEG_TONES[k1]!;
+        V1 = VEG_TONES[k1]!,
+        G = VEG_GRASS_TONES[k0]!,
+        G1 = VEG_GRASS_TONES[k1]!;
       let r = R[0] + (R1[0] - R[0]) * fr,
         g = R[1] + (R1[1] - R[1]) * fr,
         bl = R[2] + (R1[2] - R[2]) * fr;
       // Bewuchsflecken
       const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg), 0.5, hwV);
       if (vg > 0) {
-        r += (V[0] + (V1[0] - V[0]) * fr - r) * vg;
-        g += (V[1] + (V1[1] - V[1]) * fr - g) * vg;
-        bl += (V[2] + (V1[2] - V[2]) * fr - bl) * vg;
+        for (let q = 0; q < 3; q++) {
+          const v0 = V[q]! + (G[q]! - V[q]!) * vl,
+            v1 = V1[q]! + (G1[q]! - V1[q]!) * vl;
+          const target = v0 + (v1 - v0) * fr;
+          if (q === 0) r += (target - r) * vg;
+          else if (q === 1) g += (target - g) * vg;
+          else bl += (target - bl) * vg;
+        }
       }
       // knappe helle Kante auf Graten (Lichtseite), dunkle in Rinnen
       const e = lerp(a.e, b.e, c.e);
@@ -422,6 +438,18 @@ function triangle(
       r *= k;
       g *= k;
       bl *= k;
+      // C5 Alpenwiese: vereinzelte Blütenpunkte auf flachen Bewuchsflecken, Zelle = 1 Weltpixel (weltfest, kein Flimmern)
+      if (vg >= 0.9 * VEG_MIX && lerp(a.flower, b.flower, c.flower) > 0.5) {
+        const cx = Math.floor(wx),
+          cy = Math.floor(wy);
+        if (hash2(seed + L2_FLOWER_SALT, cx, cy) < FLOWER_DENSITY) {
+          const f =
+            FLOWER_RGB[Math.min(2, Math.floor(hash2(seed + L2_FLOWER_TONE_SALT, cx, cy) * 3))]!;
+          r = f[0];
+          g = f[1];
+          bl = f[2];
+        }
+      }
       // Sockel: Nachbargelände einmischen, Deckkraft
       const mx = lerp(a.mix, b.mix, c.mix);
       if (mx > 0) {

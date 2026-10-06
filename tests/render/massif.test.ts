@@ -1,4 +1,6 @@
 import { fieldWorld } from '../../src/render/terrainField';
+import { FLOWER_TONES } from '../../src/render/groundDecor';
+import { rotNoise } from '../../src/render/light';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { MIN_MOUNTAIN_PATCH } from '../../src/sim/defs/map';
@@ -33,6 +35,8 @@ import {
   pieceCells,
   pieceNodes,
   DEBRIS,
+  DEBRIS_HI,
+  EDGE_COLORS,
   FOOT_FAN,
   FOOT_R,
   HILL_AMP,
@@ -231,7 +235,8 @@ describe('H-R9 A2 Höhenfeld', () => {
           shade = 0,
           rub = 0,
           dark = 0;
-        const rockL = lum(PALETTE.rock);
+        // L2 (Spec 2.2(3)): der Fuss mischt stärker ins Nachbargelände (Wiese mit Kies); nie dunkler als die Wiese
+        const rockL = Math.min(lum(PALETTE.rock), lum(`rgb(${EDGE_COLORS[1]!.join(',')})`));
         for (const p of massifPieces(fieldWorld(w))) {
           const at = pieceNodes(p);
           for (const cell of pieceCells(p)) {
@@ -1196,3 +1201,117 @@ describe('ART-STIL-02 L2 Kontrast nach Höhe', () => {
     }
   });
 });
+
+describe('ART-STIL-02 L2 Fuss und Bewuchs', () => {
+  /** Grösste Komponenten (Seeds 7, 14): Mittelfarbe der Knoten im Fussband gegen die Wiese. */
+  it('L2 Fussband ↔ Wiese ΔE2000 ≤ 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
+    const wiese = rgbToLab(EDGE_COLORS[1] as [number, number, number]);
+    for (const seed of KERN_SEEDS) {
+      const w = createWorld(seed, { unlockAll: true });
+      const big = largest(w);
+      const sum = [0, 0, 0];
+      let n = 0;
+      const seen = new Set<string>();
+      for (const p of massifPieces(fieldWorld(w))) {
+        if (p.comp !== big) continue;
+        const at = pieceNodes(p);
+        for (const c of pieceCells(p)) {
+          const k = `${c.I}|${c.J}`;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          const nd = at(c.I, c.J);
+          if (!(nd.soft > SOFT_CUT && nd.soft < DEBRIS_HI && nd.h < 2 * RIM_H)) continue;
+          for (let q = 0; q < 3; q++) sum[q]! += nd.c[q]!;
+          n++;
+        }
+      }
+      expect(n, `Seed ${seed}`).toBeGreaterThan(30);
+      const mean = sum.map((v) => v / n) as [number, number, number];
+      expect(deltaE2000(rgbToLab(mean), wiese), `Seed ${seed}`).toBeLessThanOrEqual(15);
+    }
+  });
+
+  /** Alle eindeutigen Knoten (comp, I, J) der Teilstücke einer Heimatinsel mit ihren Netzwerten. */
+  function allNodes(seed: number) {
+    const w = createWorld(seed, { unlockAll: true });
+    const seen = new Set<string>();
+    const out: {
+      nd: ReturnType<ReturnType<typeof pieceNodes>>;
+      hn: number;
+      I: number;
+      J: number;
+    }[] = [];
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      for (const c of pieceCells(p)) {
+        const k = `${p.comp.id}|${c.I}|${c.J}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const nd = at(c.I, c.J);
+        out.push({ nd, hn: nd.h / p.comp.amp, I: c.I, J: c.J });
+      }
+    }
+    return out;
+  }
+
+  it('L2 Bewuchs unten: Anteil Bewuchsknoten bei hn < 0,25 in [0,2; 0,35] (± 0,03) für Seeds 7 und 14, Gras bis hn 0,3 in Rinnen und auf Schultern', () => {
+    for (const seed of KERN_SEEDS) {
+      const low = allNodes(seed).filter((n) => n.hn < 0.25);
+      const share = low.filter((n) => n.nd.veg >= 0.5).length / low.length;
+      expect(share, `Seed ${seed}`).toBeGreaterThanOrEqual(0.17);
+      expect(share, `Seed ${seed}`).toBeLessThanOrEqual(0.38);
+    }
+    const hoch = KERN_SEEDS.flatMap((s) =>
+      allNodes(s).filter((n) => n.hn >= 0.25 && n.hn < 0.32 && n.nd.veg >= 0.5),
+    );
+    expect(hoch.length).toBeGreaterThan(10);
+  });
+
+  it('L2 Bewuchs: bei hn ≥ 0,35 identisch zu vor L2 (veg = 0,25 · Rauschen, nie ≥ 0,5)', () => {
+    for (const seed of KERN_SEEDS) {
+      const w = createWorld(seed, { unlockAll: true });
+      const comp = largest(w);
+      const hi = allNodes(seed).filter((n) => n.hn >= 0.35);
+      expect(hi.length).toBeGreaterThan(500);
+      for (const n of hi.slice(0, 400)) {
+        expect(n.nd.veg).toBeCloseTo(
+          0.25 * rotNoise(comp.seed + 317, n.I / SUB, n.J / SUB, 1.9, 0.61),
+          6,
+        );
+      }
+    }
+  });
+
+  it('L2 C5 Alpenwiese: Blütenpunkte (FLOWER_TONES) nur auf Bewuchsflecken, ≤ 3 % der Bewuchspixel, deterministisch, bei f = 2 scharf', () => {
+    const tones = FLOWER_TONES.map((c) =>
+      rgbOfCss(c)
+        .map((v) => Math.round(v))
+        .join(','),
+    );
+    let bloom = 0,
+      veg = 0;
+    const w = createWorld(14, { unlockAll: true });
+    const items = massifItems(w);
+    for (const it of items) {
+      const b = massifBounds(it);
+      const wpx = Math.round((ISO_W / 2) * 2),
+        hpx = Math.ceil(b.h * 2);
+      const buf = rasterPiece(it, wpx, hpx, 2);
+      const again = rasterPiece(it, wpx, hpx, 2);
+      expect(Buffer_equal(buf, again)).toBe(true);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        if (tones.includes(`${buf[o]},${buf[o + 1]},${buf[o + 2]}`)) bloom++;
+        else if (buf[o + 1]! > buf[o]! + 8 && buf[o + 1]! > buf[o + 2]! + 20) veg++;
+      }
+    }
+    expect(bloom).toBeGreaterThan(0);
+    expect(bloom / (bloom + veg)).toBeLessThanOrEqual(0.03);
+  });
+});
+
+function Buffer_equal(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
