@@ -367,6 +367,8 @@ export interface WreckGeom {
   /** Gezackte Lücke im Rumpf (Bruchstelle) und die 2–4 darin sichtbaren Spanten. */
   gap: Pt[];
   ribs: [Pt, Pt][];
+  /** 1–2 Treibplanken im Wasser neben dem Rumpf (Vierecke). */
+  planks: Pt[][];
   top: number;
 }
 const WRECK_TILT = [22, 26, 24, 28] as const;
@@ -416,6 +418,21 @@ export function wreckGeom(v: number): WreckGeom {
     rot({ x: top.x + 1.9, y: top.y - 0.3 }),
     rot({ x: base.x + 2, y: base.y }),
   ];
+  const plank = (cx: number, cy: number, l: number, a: number): Pt[] => {
+    const c = Math.cos(a),
+      sn = Math.sin(a),
+      t = 1.3;
+    return [
+      { x: cx - c * l - sn * -t, y: cy - sn * l + c * -t },
+      { x: cx + c * l - sn * -t, y: cy + sn * l + c * -t },
+      { x: cx + c * l - sn * t, y: cy + sn * l + c * t },
+      { x: cx - c * l - sn * t, y: cy - sn * l + c * t },
+    ];
+  };
+  const planks = [
+    plank(mirror * 27, 9, 5, 0.18 * mirror),
+    ...(v & 2 ? [plank(-mirror * 9, 13.5, 3.6, -0.3 * mirror)] : []),
+  ];
   return {
     hull,
     tiltDeg,
@@ -423,6 +440,7 @@ export function wreckGeom(v: number): WreckGeom {
     deck,
     gap,
     ribs,
+    planks,
     top: Math.min(...[...hull, ...mast].map((p) => p.y)),
   };
 }
@@ -472,6 +490,15 @@ function paintWreck(ctx: CanvasRenderingContext2D, v: number): void {
   g.mast.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
   ctx.closePath();
   ctx.stroke();
+  for (const pl of g.planks) {
+    poly(ctx, T.wreckWet, pl);
+    ctx.strokeStyle = T.wreckLine;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    pl.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.stroke();
+  }
   // Wellenstrich vor dem versunkenen Teil
   ctx.strokeStyle = T.isletHalo;
   ctx.lineWidth = 0.9;

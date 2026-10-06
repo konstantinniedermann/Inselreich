@@ -178,33 +178,69 @@ function infoFor(world: World): WaterInfo {
 
 // ---------- L5: Schaum an Riff, Wrack, Meeresfels, Felseiland ----------
 
-export interface FoamRing {
-  /** Mitte (Kachelraum), Radius, Phase (rad). */
-  x: number;
-  y: number;
+export interface FoamPiece {
+  /** Radius des Bogenstücks um die Objektmitte (Kacheln), Winkelbereich a0 < a1 (rad), Phase und Strichstärke. */
   r: number;
+  a0: number;
+  a1: number;
   phase: number;
+  thick: boolean;
 }
-export interface FoamReef {
-  /** Mitte der Riffkachel, Einheitsvektor zur See (weg vom Land), Phase. */
+export interface FoamRing {
+  /** Mitte (Kachelraum), Fussabdruck-Radius des Objekts und die 3–5 unregelmässigen Bogenstücke (nie ein geschlossener Kreis). */
   x: number;
   y: number;
+  fp: number;
+  pieces: FoamPiece[];
+}
+/** Kurze gebogene Schaumsichel am Riff (Anfang, Steuerpunkt, Ende im Kachelraum); `tx`/`ty` = Riffkachel. */
+export interface FoamReef {
+  tx: number;
+  ty: number;
+  x0: number;
+  y0: number;
+  cx: number;
+  cy: number;
+  x1: number;
+  y1: number;
+  phase: number;
+  /** Einheitsvektor zur See (Wanderrichtung). */
   dx: number;
   dy: number;
-  phase: number;
 }
 export interface SeaFoam {
   rings: FoamRing[];
   reefs: FoamReef[];
 }
 const seaFoamCache = new WeakMap<World, SeaFoam>();
-const RING_R = { wreck: 0.85, rock: 0.55, needle: 0.42, islet: 1.0 } as const;
-/** Reichweite der Landsuche für die Seeseite eines Riffstücks (Kacheln). */
-const REEF_LAND_REACH = 7;
+/** Fussabdruck-Radien der Objekte (Kacheln); der Schaum liegt bei Fussabdruck + 0,03 … 0,145. */
+const FOOT = { wreck: 0.5, rock: 0.3, needle: 0.26, islet: 0.5 } as const;
+/** Reichweite der Landsuche für die Seeseite (Kacheln). */
+const LAND_REACH = 7;
+
+/** Einheitsvektor vom Land weg (zur See) an der Kachel `t`: Landkacheln im Umkreis, gewichtet mit 1 / Abstand². */
+function seaward(isl: ReturnType<typeof home>, tx: number, ty: number): [number, number] {
+  const { width: w, height: h } = isl;
+  let lx = 0,
+    ly = 0;
+  for (let dy = -LAND_REACH; dy <= LAND_REACH; dy++)
+    for (let dx = -LAND_REACH; dx <= LAND_REACH; dx++) {
+      const nx = tx + dx,
+        ny = ty + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || isl.tiles[ny * w + nx]!.terrain === 'water')
+        continue;
+      const d = Math.hypot(dx, dy);
+      lx += dx / (d * d);
+      ly += dy / (d * d);
+    }
+  const l = Math.hypot(lx, ly);
+  return l > 1e-9 ? [-lx / l, -ly / l] : [1, 0];
+}
 
 /**
- * Schaumelemente der Heimat aus `seaPlan` (statisch, je Welt einmal): Ringe um Wrack, Felsen und Eiland, Riffstücke an der
- * Seeseite. Die Welt wird nur gelesen. Ohne Heimat-Art (Testwelten) leer.
+ * Schaumelemente der Heimat aus `seaPlan` (statisch, je Welt einmal): unregelmässige Bogenstücke dicht am Objekt, vor allem
+ * auf der Seeseite (Salze 566–568 über `hash2`), und kurze gebogene Sicheln an der Seekante des Riffs (569). Die Welt wird
+ * nur gelesen. Ohne Heimat-Art (Testwelten) leer.
  */
 export function seaFoam(world: World): SeaFoam {
   const hit = seaFoamCache.get(world);
@@ -213,66 +249,77 @@ export function seaFoam(world: World): SeaFoam {
   const isl = home(world);
   if (isl.kind === 'home') {
     const plan = seaPlan(world.seed, isl, seaContext(world));
-    const ph = (salt: number, x: number, y: number): number =>
-      hash2(world.seed + salt, x, y) * Math.PI * 2;
-    if (plan.wreck)
-      out.rings.push({
-        x: plan.wreck.x + 0.5,
-        y: plan.wreck.y + 0.5,
-        r: RING_R.wreck,
-        phase: ph(566, plan.wreck.x, plan.wreck.y),
-      });
-    for (const r of plan.rocks)
-      out.rings.push({
-        x: r.x + 0.5,
-        y: r.y + 0.5,
-        r: r.needle ? RING_R.needle : RING_R.rock,
-        phase: ph(567, r.x, r.y),
-      });
-    if (plan.islet)
-      out.rings.push({
-        x: plan.islet.x + 0.5,
-        y: plan.islet.y + 0.5,
-        r: RING_R.islet,
-        phase: ph(568, plan.islet.x, plan.islet.y),
-      });
-    const { width: w, height: h } = isl;
+    const seed = world.seed;
+    const ring = (salt: number, tx: number, ty: number, fp: number): void => {
+      const hs = (k: number): number => hash2(seed + salt, tx * 64 + k, ty);
+      const [dx, dy] = seaward(isl, tx, ty);
+      const th = Math.atan2(dy, dx);
+      const n = 3 + Math.floor(hs(0) * 3);
+      const offs = [
+        0,
+        1.2 + 0.4 * hs(1),
+        -(1.2 + 0.4 * hs(2)),
+        2.3 + 0.3 * hs(3),
+        -(2.3 + 0.3 * hs(4)),
+      ];
+      const pieces: FoamPiece[] = [];
+      for (let k = 0; k < n; k++) {
+        const len =
+          k === 0 ? 0.9 + 0.5 * hs(10) : k === n - 1 ? 0.3 + 0.1 * hs(11) : 0.35 + 0.4 * hs(12 + k);
+        const r = k === 0 ? fp + 0.03 : k === 1 ? fp + 0.145 : fp + 0.03 + 0.115 * hs(20 + k);
+        const c = th + offs[k]!;
+        pieces.push({
+          r,
+          a0: c - len / 2,
+          a1: c + len / 2,
+          phase: hs(30 + k) * Math.PI * 2,
+          thick: hs(40 + k) < 0.45,
+        });
+      }
+      out.rings.push({ x: tx + 0.5, y: ty + 0.5, fp, pieces });
+    };
+    if (plan.wreck) ring(566, plan.wreck.x, plan.wreck.y, FOOT.wreck);
+    for (const r of plan.rocks) ring(567, r.x, r.y, r.needle ? FOOT.needle : FOOT.rock);
+    if (plan.islet) ring(568, plan.islet.x, plan.islet.y, FOOT.islet);
     for (const a of plan.reefs)
       for (const t of a.tiles) {
-        // Land in der Nähe: Schwerpunkt der Landkacheln im Umkreis, gewichtet mit 1 / Abstand
-        let lx = 0,
-          ly = 0;
-        for (let dy = -REEF_LAND_REACH; dy <= REEF_LAND_REACH; dy++)
-          for (let dx = -REEF_LAND_REACH; dx <= REEF_LAND_REACH; dx++) {
-            const nx = t.x + dx,
-              ny = t.y + dy;
-            if (
-              nx < 0 ||
-              ny < 0 ||
-              nx >= w ||
-              ny >= h ||
-              isl.tiles[ny * w + nx]!.terrain === 'water'
-            )
-              continue;
-            const d = Math.hypot(dx, dy);
-            lx += dx / (d * d);
-            ly += dy / (d * d);
-          }
-        const l = Math.hypot(lx, ly);
-        out.reefs.push({
-          x: t.x + 0.5,
-          y: t.y + 0.5,
-          dx: l > 1e-9 ? -lx / l : 1,
-          dy: l > 1e-9 ? -ly / l : 0,
-          phase: ph(569, t.x, t.y),
-        });
+        const [dx, dy] = seaward(isl, t.x, t.y);
+        const px = -dy,
+          py = dx;
+        const hs = (k: number): number => hash2(seed + 569, t.x * 64 + k, t.y + 400);
+        if (hs(0) < 0.15) continue; // Lücke
+        const count = hs(1) < 0.5 ? 2 : 1;
+        for (let k = 0; k < count; k++) {
+          const off = 0.3 + 0.2 * hs(2 + k * 8);
+          const s0 = -0.5 + 0.55 * hs(3 + k * 8) + (k ? 0.1 : 0);
+          const len = 0.22 + 0.5 * hs(4 + k * 8);
+          const bulge = (0.08 + 0.14 * hs(5 + k * 8)) * (hs(6 + k * 8) < 0.5 ? -1 : 1);
+          const x0 = t.x + 0.5 + dx * off + px * s0,
+            y0 = t.y + 0.5 + dy * off + py * s0;
+          const drift = 0.06 * (hs(7 + k * 8) - 0.5);
+          const x1 = x0 + px * len + dx * drift,
+            y1 = y0 + py * len + dy * drift;
+          out.reefs.push({
+            tx: t.x,
+            ty: t.y,
+            x0,
+            y0,
+            x1,
+            y1,
+            cx: (x0 + x1) / 2 + dx * bulge,
+            cy: (y0 + y1) / 2 + dy * bulge,
+            phase: hs(9 + k * 8) * Math.PI * 2,
+            dx,
+            dy,
+          });
+        }
       }
   }
   seaFoamCache.set(world, out);
   return out;
 }
 
-/** Brandungsschaum der Meer-Elemente im `range`: gleitend (Phase je Element), nie aus; `reduce` = statisch. */
+/** Brandungsschaum der Meer-Elemente im `range`: gleitend (Phase je Stück), nie aus; `reduce` = statisch. */
 function drawSeaFoam(
   ctx: CanvasRenderingContext2D,
   world: World,
@@ -290,42 +337,42 @@ function drawSeaFoam(
     x - pad <= range.x1 + 1 &&
     y + pad >= range.y0 &&
     y - pad <= range.y1 + 1;
-  ctx.beginPath();
-  let any = false;
-  for (const r of f.rings) {
-    if (!inRange(r.x, r.y, r.r + 0.1)) continue;
-    const wob = reduce ? 0 : 0.045 * Math.sin(phaseT + r.phase);
-    const rad = r.r + wob;
-    const spin = reduce ? 0 : 0.35 * Math.sin(phaseT + r.phase + 1);
-    // drei Bögen mit Lücken: gebrochener Ring
-    for (let k = 0; k < 3; k++) {
-      const a0 = spin + r.phase + (k * 2 * Math.PI) / 3;
-      ctx.moveTo(r.x + Math.cos(a0) * rad, r.y + Math.sin(a0) * rad);
-      ctx.arc(r.x, r.y, rad, a0, a0 + 1.25);
+  // zwei Strichstärken; die Deckkraft liegt im unteren Teil des Bands
+  const lo = (v: number, band: readonly [number, number], k: number): number =>
+    band[0] + (v - band[0]) * k;
+  const aSeam = lo(alpha, FOAM_ALPHA, 0.5),
+    aCore = lo(core, FOAM_CORE_ALPHA, 0.4);
+  for (const thick of [true, false]) {
+    ctx.beginPath();
+    let any = false;
+    for (const r of f.rings) {
+      if (!inRange(r.x, r.y, r.fp + 0.3)) continue;
+      for (const p of r.pieces) {
+        if (p.thick !== thick) continue;
+        const rad = p.r + (reduce ? 0 : 0.01 * Math.sin(phaseT + p.phase));
+        ctx.moveTo(r.x + Math.cos(p.a0) * rad, r.y + Math.sin(p.a0) * rad);
+        ctx.arc(r.x, r.y, rad, p.a0, p.a1);
+        any = true;
+      }
     }
-    any = true;
+    if (!thick)
+      for (const c of f.reefs) {
+        if (!inRange(c.tx + 0.5, c.ty + 0.5, 0.9)) continue;
+        const w = reduce ? 0 : 0.035 * Math.sin(phaseT + c.phase);
+        const ox = c.dx * w,
+          oy = c.dy * w;
+        ctx.moveTo(c.x0 + ox, c.y0 + oy);
+        ctx.quadraticCurveTo(c.cx + ox, c.cy + oy, c.x1 + ox, c.y1 + oy);
+        any = true;
+      }
+    if (!any) continue;
+    ctx.lineWidth = FOAM_SEAM_WIDTH * widthK * (thick ? 1.25 : 0.75);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(aSeam.toFixed(4)));
+    ctx.stroke();
+    ctx.lineWidth = FOAM_CORE_WIDTH * widthK * (thick ? 1.2 : 0.7);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(aCore.toFixed(4)));
+    ctx.stroke();
   }
-  for (const r of f.reefs) {
-    if (!inRange(r.x, r.y, 0.9)) continue;
-    const off = 0.36 + (reduce ? 0 : 0.05 * Math.sin(phaseT + r.phase));
-    const cx = r.x + r.dx * off,
-      cy = r.y + r.dy * off;
-    const px = -r.dy,
-      py = r.dx;
-    // gebrochene Linie quer zur Seerichtung: zwei Stücke mit Lücke
-    ctx.moveTo(cx + px * 0.46, cy + py * 0.46);
-    ctx.lineTo(cx + px * 0.1, cy + py * 0.1);
-    ctx.moveTo(cx - px * 0.05, cy - py * 0.05);
-    ctx.lineTo(cx - px * 0.4, cy - py * 0.4);
-    any = true;
-  }
-  if (!any) return;
-  ctx.lineWidth = FOAM_SEAM_WIDTH * widthK;
-  ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(alpha.toFixed(4)));
-  ctx.stroke();
-  ctx.lineWidth = FOAM_CORE_WIDTH * widthK;
-  ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(core.toFixed(4)));
-  ctx.stroke();
 }
 
 /**

@@ -191,13 +191,13 @@ export const DECOR_TONES = {
   fernDark: mixHex(PALETTE.grass, PALETTE.grassDark, 0.4),
   // Strand (L5, Sand ist bebaubar: alle Töne ≥ 10 ΔE2000 zu den Wassertönen)
   sandDamp: mixHex(PALETTE.sandWet, PALETTE.rockDark, 0.3),
-  driftGrey: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockLight, 0.5), PALETTE.sandWet, 0.15),
+  driftGrey: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockLight, 0.6), PALETTE.wallLime, 0.1),
   driftDark: mixHex(PALETTE.roofTimber, PALETTE.rock, 0.45),
   shell: mixHex(PALETTE.wallLime, PALETTE.sandDry, 0.3),
   shellShade: mixHex(PALETTE.sandWet, PALETTE.rock, 0.4),
   starfish: mixHex(mixHex(PALETTE.roofTerracotta, PALETTE.sandWet, 0.4), PALETTE.rock, 0.5),
-  marram: mixHex(PALETTE.grassLight, PALETTE.sandDry, 0.4),
-  marramDark: mixHex(PALETTE.grass, PALETTE.sandWet, 0.35),
+  marram: mixHex(mixHex(PALETTE.grassLight, PALETTE.grassDark, 0.35), PALETTE.sandDry, 0.1),
+  marramDark: mixHex(mixHex(PALETTE.grassDark, PALETTE.crown, 0.3), PALETTE.sandDry, 0.08),
   poolDark: mixHex(PALETTE.sandWet, PALETTE.rockDark, 0.45),
   poolRim: mixHex(PALETTE.sandDry, PALETTE.rockLight, 0.5),
   poolGlint: mixHex(PALETTE.rockLight, PALETTE.wallLime, 0.3),
@@ -625,25 +625,44 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       break;
     }
     case 'beachStone': {
-      // D2: 1–2 kleine Steine dicht beisammen (zusammen ≤ 0,3 Kachel), Felstöne aus ROCK_TONES, feuchter Fuss
-      const x0 = tx + 0.3 + 0.4 * rnd(561, 0),
-        y0 = ty + 0.35 + 0.35 * rnd(561, 1);
+      // D2: 1–2 Steine dicht beisammen (zusammen ≤ 0,3 Kachel), Felstöne aus ROCK_TONES mit Licht- und Schattenseite,
+      // dunkle Kontur und feuchter Fuss: bei Zoom 1 als Steine erkennbar
+      const x0 = tx + 0.3 + 0.35 * rnd(561, 0),
+        y0 = ty + 0.35 + 0.3 * rnd(561, 1);
       const n = 1 + Math.floor(rnd(561, 2) * 2);
       for (let i = 0; i < n; i++) {
-        const x = x0 + i * (0.07 + 0.04 * rnd(561, 3 + i)),
+        const x = x0 + i * (0.07 + 0.02 * rnd(561, 3 + i)),
           y = y0 + i * 0.03,
-          rx = 0.04 + 0.02 * rnd(561, 6 + i),
-          ry = rx * 0.7;
-        out.push({ k: 'ell', c: D.sandDamp, z: 0, x, y: y + ry * 0.5, rx: rx * 1.2, ry: ry * 0.7 });
-        out.push({ k: 'ell', c: i ? D.rockShade : D.rockMid, z: 0, x, y, rx, ry });
+          rx = 0.055 + 0.02 * rnd(561, 6 + i),
+          ry = rx * 0.75;
+        out.push({
+          k: 'ell',
+          c: D.sandDamp,
+          z: 0,
+          x,
+          y: y + ry * 0.55,
+          rx: rx * 1.18,
+          ry: ry * 0.7,
+        });
+        out.push({ k: 'ell', c: D.rockDark, z: 0, x, y, rx: rx * 1.1, ry: ry * 1.1 });
+        out.push({ k: 'ell', c: D.rockShade, z: 0, x: x + rx * 0.1, y: y + ry * 0.1, rx, ry });
+        out.push({
+          k: 'ell',
+          c: D.rockMid,
+          z: 1,
+          x: x - rx * 0.12,
+          y: y - ry * 0.12,
+          rx: rx * 0.78,
+          ry: ry * 0.72,
+        });
         out.push({
           k: 'ell',
           c: D.rockLight,
           z: 1,
-          x: x - rx * 0.3,
-          y: y - ry * 0.35,
-          rx: rx * 0.45,
-          ry: ry * 0.4,
+          x: x - rx * 0.32,
+          y: y - ry * 0.38,
+          rx: rx * 0.4,
+          ry: ry * 0.34,
         });
       }
       break;
@@ -728,25 +747,28 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       break;
     }
     case 'beachGrass': {
-      // D5: Büschel aus 4–6 Halmen, hell am Licht, dunkler im Kern, leicht windgebeugt; Strandhafer ist gelblich-grün
-      const bx = tx + 0.3 + 0.4 * rnd(564, 0),
-        by = ty + 0.6 + 0.25 * rnd(564, 1);
-      const n = 4 + Math.floor(rnd(564, 2) * 3);
+      // D5: lockere Gruppe aus 1–2 Büscheln zu je 3–6 Halmen, ≈ 0,15 Kachel hoch, grün gegen den Sand, leicht windgebeugt
+      const groups = 1 + Math.floor(rnd(564, 4) * 2);
       const wind = 0.04 + 0.04 * rnd(564, 3);
-      for (let i = 0; i < n; i++) {
-        const f = n === 1 ? 0 : i / (n - 1) - 0.5;
-        const len = 0.17 + 0.1 * rnd(564, 10 + i);
-        out.push(
-          blade(
-            i % 2 ? D.marram : D.marramDark,
-            i % 2 ? 1 : 0,
-            bx + f * 0.06,
-            by,
-            bx + f * 0.22 + wind,
-            by - len,
-            1.4,
-          ),
-        );
+      for (let g = 0; g < groups; g++) {
+        const bx = tx + 0.25 + 0.5 * rnd(564, g * 20),
+          by = ty + 0.55 + 0.3 * rnd(564, g * 20 + 1);
+        const n = 3 + Math.floor(rnd(564, g * 20 + 2) * 4);
+        for (let i = 0; i < n; i++) {
+          const f = n === 1 ? 0 : i / (n - 1) - 0.5;
+          const len = 0.13 + 0.04 * rnd(564, g * 20 + 10 + i);
+          out.push(
+            blade(
+              i % 2 ? D.marram : D.marramDark,
+              i % 2 ? 1 : 0,
+              bx + f * 0.06,
+              by,
+              bx + f * 0.2 + wind,
+              by - len,
+              1.7,
+            ),
+          );
+        }
       }
       break;
     }

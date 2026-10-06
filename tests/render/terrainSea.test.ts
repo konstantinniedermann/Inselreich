@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
 import { seaContext, seaPlan } from '../../src/render/decor';
 import { PALETTE, rgbOfCss } from '../../src/render/palette';
-import { SEA_TONES, buildSeaTint, seaTintFor, tintWater } from '../../src/render/seaFields';
+import {
+  SEA_RES,
+  SEA_TONES,
+  buildSeaTint,
+  seaTintFor,
+  tintWater,
+} from '../../src/render/seaFields';
 import { buildGrid, paintPixels } from '../../src/render/terrain';
 import { fieldWorld } from '../../src/render/terrainField';
 import { deltaE2000, rgbToLab } from './deltaE';
@@ -109,5 +115,68 @@ describe('L5-T3 Wasserfelder im Bodenbild (Sandbank, Riff, Tang)', () => {
     const f = createWorld(7);
     home(f).kind = 'home';
     expect(seaTintFor(f)).not.toBeUndefined();
+  });
+
+  it('T7 weiche Ränder über die Kachelgrenzen: das Gewicht ändert sich entlang jeder Linie nie sprunghaft (Gradient begrenzt), keine Rechteckform', () => {
+    const t = buildSeaTint(3, 30, 30, {
+      sandbanks: [
+        {
+          tiles: [
+            { x: 10, y: 10 },
+            { x: 11, y: 10 },
+            { x: 10, y: 11 },
+          ],
+        },
+      ],
+      reefs: [
+        {
+          tiles: [
+            { x: 20, y: 20 },
+            { x: 21, y: 20 },
+            { x: 22, y: 20 },
+          ],
+        },
+      ],
+      kelp: [{ tiles: [{ x: 5, y: 22 }] }],
+    });
+    const w = (kind: 'sand' | 'reef' | 'kelp', fx: number, fy: number): number => {
+      const gx = fx * SEA_RES,
+        gy = fy * SEA_RES,
+        sw = t.w * SEA_RES + 1;
+      const i = Math.floor(gx),
+        j = Math.floor(gy);
+      const tx = gx - i,
+        ty = gy - j,
+        f = t[kind],
+        a = j * sw + i;
+      return (
+        f[a]! * (1 - tx) * (1 - ty) +
+        f[a + 1]! * tx * (1 - ty) +
+        f[a + sw]! * (1 - tx) * ty +
+        f[a + sw + 1]! * tx * ty
+      );
+    };
+    for (const kind of ['sand', 'reef', 'kelp'] as const) {
+      let maxStep = 0,
+        extent = 0;
+      for (let y = 0; y < 29.8; y += 0.1)
+        for (let x = 0; x < 29.8; x += 0.1) {
+          const v = w(kind, x, y);
+          maxStep = Math.max(
+            maxStep,
+            Math.abs(v - w(kind, x + 0.1, y)),
+            Math.abs(v - w(kind, x, y + 0.1)),
+          );
+          if (v > 0.05) extent++;
+        }
+      expect(maxStep, `${kind}: ≤ 0,2 je 0,1 Kachel`).toBeLessThanOrEqual(0.2);
+      expect(extent).toBeGreaterThan(0);
+    }
+    // Rechteckform: Gewicht an der Kachelecke weit unter dem Gewicht in der Kachelmitte
+    expect(w('sand', 10.5, 10.5)).toBeGreaterThan(0.8);
+    expect(w('sand', 9.2, 10.5)).toBeGreaterThan(0);
+    expect(w('sand', 9.2, 10.5)).toBeLessThan(w('sand', 10.5, 10.5));
+    // Unschärfe ≥ 1 Kachel: Einfluss reicht mindestens 1,2 Kacheln über den Rand der Kachel hinaus
+    expect(w('sand', 12.7, 10.5)).toBeGreaterThan(0);
   });
 });

@@ -180,4 +180,36 @@ describe('L5-T5 Strand-Boden (D2–D6, D9)', () => {
       for (const n of SIGNAL_NAMES)
         expect(deltaE2000(lab(t[1]), lab(PALETTE[n])), `${t[0]} ~ ${n}`).toBeGreaterThanOrEqual(20);
   });
+
+  it('T7 Strandhafer: Büschel aus 3–6 Halmen ≈ 0,15 Kachel hoch, ΔE2000 ≥ 15 zu trockenem und nassem Sand; Strandsteine mit Licht- und Schattenseite', () => {
+    let tufts = 0;
+    for (const w of W50) {
+      for (const e of beach(w).filter((x) => x.kind === 'beachGrass' || x.kind === 'beachStone')) {
+        const prims = groundShapes(e, w.seed);
+        if (e.kind === 'beachGrass') {
+          const blades = prims.filter((p) => p.k === 'poly');
+          expect(blades.length).toBeGreaterThanOrEqual(3);
+          expect(blades.length).toBeLessThanOrEqual(12); // lockere Gruppe: bis zu zwei Büschel
+          for (const p of prims) {
+            expect(deltaE2000(lab(p.c), lab(PALETTE.sandDry)), p.c).toBeGreaterThanOrEqual(15);
+            expect(deltaE2000(lab(p.c), lab(PALETTE.sandWet)), p.c).toBeGreaterThanOrEqual(15);
+            if (p.k === 'poly') {
+              const ys = p.pts.filter((_, i) => i % 2 === 1);
+              expect(Math.max(...ys) - Math.min(...ys), 'Halmhöhe').toBeLessThanOrEqual(0.2);
+              expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThanOrEqual(0.1);
+            }
+          }
+          tufts++;
+        } else {
+          const cs = new Set(prims.map((p) => p.c));
+          expect(
+            cs.has(DECOR_TONES.rockLight) &&
+              cs.has(DECOR_TONES.rockShade) &&
+              cs.has(DECOR_TONES.rockMid),
+          ).toBe(true);
+        }
+      }
+    }
+    expect(tufts).toBeGreaterThan(50);
+  });
 });

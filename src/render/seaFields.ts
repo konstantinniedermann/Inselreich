@@ -22,7 +22,9 @@ export interface SeaTint {
 }
 export const SEA_RES = 4;
 /** Radius des weichen Flecks je Flächenkachel (Kacheln); der Rand fällt über `smoothstep` ab. */
-export const SEA_BLOB = 1.05;
+export const SEA_BLOB = 1.55;
+/** Noise-Modulation des Radius (Anteil): `R · (1 − MOD/2 + MOD · n)`, damit keine Kachelkante und keine Rechteckform bleibt. */
+const SEA_BLOB_MOD = 0.2;
 
 const rgb = (css: string): readonly number[] => rgbOfCss(css);
 /** Töne (Mischungen aus `palette.ts`). Sandbank: aufgehelltes Flachwasser, nie trockener Sand. */
@@ -43,20 +45,33 @@ export const SEA_ALPHA = { sandbank: 0.78, reef: 0.8, coral: 0.55, kelp: 0.5 } a
 
 const smooth01 = (t: number): number => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
-function splat(f: Float32Array, w: number, h: number, areas: readonly SeaArea[]): void {
+function splat(
+  f: Float32Array,
+  w: number,
+  h: number,
+  areas: readonly SeaArea[],
+  seed: number,
+): void {
   const sw = w * SEA_RES + 1;
   for (const a of areas)
     for (const t of a.tiles) {
       const cx = t.x + 0.5,
         cy = t.y + 0.5;
-      const i0 = Math.max(0, Math.floor((cx - SEA_BLOB) * SEA_RES)),
-        i1 = Math.min(w * SEA_RES, Math.ceil((cx + SEA_BLOB) * SEA_RES)),
-        j0 = Math.max(0, Math.floor((cy - SEA_BLOB) * SEA_RES)),
-        j1 = Math.min(h * SEA_RES, Math.ceil((cy + SEA_BLOB) * SEA_RES));
+      const rMax = SEA_BLOB * (1 + SEA_BLOB_MOD / 2);
+      const i0 = Math.max(0, Math.floor((cx - rMax) * SEA_RES)),
+        i1 = Math.min(w * SEA_RES, Math.ceil((cx + rMax) * SEA_RES)),
+        j0 = Math.max(0, Math.floor((cy - rMax) * SEA_RES)),
+        j1 = Math.min(h * SEA_RES, Math.ceil((cy + rMax) * SEA_RES));
       for (let j = j0; j <= j1; j++)
         for (let i = i0; i <= i1; i++) {
-          const d = Math.hypot(i / SEA_RES - cx, j / SEA_RES - cy);
-          const v = smooth01(1 - d / SEA_BLOB);
+          const vx = i / SEA_RES,
+            vy = j / SEA_RES;
+          const d = Math.hypot(vx - cx, vy - cy);
+          // Radius je Stützstelle verrauscht (Salz 569): weiche, unregelmässige Ränder über die Kachelgrenzen
+          const rEff =
+            SEA_BLOB *
+            (1 - SEA_BLOB_MOD / 2 + SEA_BLOB_MOD * valueNoise(seed + 569, vx * 0.7, vy * 0.7));
+          const v = smooth01(1 - d / rEff);
           if (v > f[j * sw + i]!) f[j * sw + i] = v;
         }
     }
@@ -79,14 +94,14 @@ export function buildSeaTint(
     kelp: new Float32Array(n),
     mask: new Uint8Array(w * h),
   };
-  splat(t.sand, w, h, areas.sandbanks);
-  splat(t.reef, w, h, areas.reefs);
-  splat(t.kelp, w, h, areas.kelp);
+  splat(t.sand, w, h, areas.sandbanks, seed);
+  splat(t.reef, w, h, areas.reefs, seed + 11);
+  splat(t.kelp, w, h, areas.kelp, seed + 23);
   for (const list of [areas.sandbanks, areas.reefs, areas.kelp])
     for (const a of list)
       for (const q of a.tiles)
-        for (let dy = -1; dy <= 1; dy++)
-          for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -2; dy <= 2; dy++)
+          for (let dx = -2; dx <= 2; dx++) {
             const x = q.x + dx,
               y = q.y + dy;
             if (x >= 0 && y >= 0 && x < w && y < h) t.mask[y * w + x] = 1;

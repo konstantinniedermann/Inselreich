@@ -38,14 +38,52 @@ describe('L5-T4 Schaum an Riff, Wrack, Fels und Eiland', () => {
   const around: R = { x0: x - 1, y0: y - 1, x1: x + 1, y1: y + 1 };
   const farAway: R = { x0: x + 20, y0: y + 20, x1: x + 22, y1: y + 22 };
 
-  it('seaFoam: je Welt gehalten; Ringe um Wrack, Fels und Eiland, Riffstücke je Riffkachel an der Seeseite', () => {
+  it('seaFoam: je Welt gehalten; Ringstücke direkt am Objekt (≤ Fussabdruck + 0,15), nie geschlossen, Radien und Längen streuen', () => {
     const f = seaFoam(w);
     expect(seaFoam(w)).toBe(f);
     const plan = seaPlan(w.seed, home(w), seaContext(w));
     expect(f.rings.length).toBe((plan.wreck ? 1 : 0) + plan.rocks.length + 1);
-    expect(f.reefs.length).toBe(plan.reefs.reduce((n, a) => n + a.tiles.length, 0));
-    for (const r of f.rings) expect(r.r).toBeLessThanOrEqual(1.2);
-    for (const r of f.reefs) expect(Math.hypot(r.dx, r.dy)).toBeCloseTo(1, 5);
+    for (const r of f.rings) {
+      expect(r.pieces.length).toBeGreaterThanOrEqual(3);
+      expect(r.pieces.length).toBeLessThanOrEqual(5);
+      const radii = r.pieces.map((p) => p.r);
+      for (const p of r.pieces) {
+        expect(p.r, 'dicht am Objekt').toBeLessThanOrEqual(r.fp + 0.15);
+        expect(p.r).toBeGreaterThanOrEqual(r.fp + 0.02);
+        expect(p.a1).toBeGreaterThan(p.a0);
+      }
+      expect(Math.max(...radii) / Math.min(...radii), 'Radien streuen').toBeGreaterThanOrEqual(1.2);
+      const lens = r.pieces.map((p) => p.a1 - p.a0);
+      expect(Math.max(...lens) / Math.min(...lens), 'Längen streuen').toBeGreaterThanOrEqual(1.3);
+      expect(
+        lens.reduce((a, b) => a + b, 0),
+        'nie ein geschlossener Kreis',
+      ).toBeLessThan(Math.PI * 1.7);
+    }
+  });
+
+  it('Riffschaum: gebogene Sicheln (nie gerade), gestreute Längen, weiche Lage an der Seeseite je Riffkachel', () => {
+    let n = 0;
+    const lens: number[] = [];
+    for (let seed = 1; seed <= 30; seed++) {
+      const wo = createWorld(seed);
+      const f = seaFoam(wo);
+      const plan = seaPlan(seed, home(wo), seaContext(wo));
+      const tiles = plan.reefs.reduce((k, a) => k + a.tiles.length, 0);
+      expect(f.reefs.length, `Seed ${seed}`).toBeLessThanOrEqual(2 * tiles);
+      for (const c of f.reefs) {
+        n++;
+        const cross = (c.cx - c.x0) * (c.y1 - c.y0) - (c.cy - c.y0) * (c.x1 - c.x0);
+        expect(Math.abs(cross), 'gebogen').toBeGreaterThan(0.004);
+        lens.push(Math.hypot(c.x1 - c.x0, c.y1 - c.y0));
+      }
+    }
+    expect(n).toBeGreaterThan(100);
+    expect(Math.max(...lens) / Math.min(...lens), 'Längen streuen').toBeGreaterThanOrEqual(1.8);
+    // keine zwei Stücke mit genau gleicher Länge in Folge (kein Raster)
+    let equal = 0;
+    for (let i = 1; i < lens.length; i++) if (Math.abs(lens[i]! - lens[i - 1]!) < 1e-6) equal++;
+    expect(equal).toBe(0);
   });
 
   it('Schaum nur im Bereich der Elemente: ohne Element im range keine Schaumlinie, mit Eiland im range Linien', () => {
@@ -100,7 +138,7 @@ describe('L5-T4 Schaum an Riff, Wrack, Fels und Eiland', () => {
       const f = seaFoam(wo);
       const t = f.reefs[0];
       if (!t) continue;
-      const [tx, ty] = [Math.floor(t.x), Math.floor(t.y)];
+      const [tx, ty] = [t.tx, t.ty];
       const inR = { x0: tx, y0: ty, x1: tx, y1: ty };
       expect(frame(wo, inR, 0).length, `Seed ${seed}`).toBeGreaterThan(0);
       return;

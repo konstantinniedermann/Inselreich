@@ -213,6 +213,20 @@ describe('L5 Zeichner: Grenzen und Form', () => {
     }
   });
 
+  it('T7 Wrack: 1–2 Treibplanken als Teil des Stempels, innerhalb der Stempelbox', () => {
+    for (let v = 0; v < 4; v++) {
+      const g = wreckGeom(v);
+      expect(g.planks.length).toBeGreaterThanOrEqual(1);
+      expect(g.planks.length).toBeLessThanOrEqual(2);
+      for (const pl of g.planks)
+        for (const p of pl) {
+          expect(p.x).toBeGreaterThanOrEqual(STAMP_BOX.x0);
+          expect(p.x).toBeLessThanOrEqual(STAMP_BOX.x1);
+          expect(p.y).toBeLessThanOrEqual(STAMP_BOX.y1);
+        }
+    }
+  });
+
   it('T6 Palme: weicher Kontaktschatten im Stempel (halbtransparent, am Fuss, Richtung −LIGHT), nicht über decorShadow', () => {
     const f = paint('palm', 0);
     const sh = f.log.events.filter((e) => e.op === 'fill' && e.alpha < 1 && e.alpha > 0.1);

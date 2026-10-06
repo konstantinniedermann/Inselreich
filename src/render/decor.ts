@@ -723,7 +723,7 @@ const BEACH_BAND = {
   stoneWet: 0.08,
   stoneDry: 0.025,
   /** Strandhafer auf Dünenkämmen: je nach Küstenvariante; Rauschschwelle des Kamms und Anteil auf dem Kamm. */
-  grass: { palm: [0.58, 0.3], pine: [0.52, 0.4], dune: [0.4, 0.45] },
+  grass: { palm: [0.58, 0.3], pine: [0.52, 0.4], dune: [0.3, 0.55] },
 } as const;
 export const CRATE_P = 0.15;
 export const TIDEPOOL_MAX = 6;
