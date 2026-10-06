@@ -1,0 +1,309 @@
+import { describe, expect, it } from 'vitest';
+import { laneTicks } from '../../src/sim/islands';
+import { createWorld, home } from '../../src/sim/world';
+import type { Ship, World } from '../../src/sim/types';
+import { project } from '../../src/render/iso';
+import { seaContext, seaElementTiles, seaPlan, type StampKind } from '../../src/render/decor';
+import {
+  DECOR_MIN_ZOOM,
+  DECOR_STAMP_TONES,
+  STAMP_BOX,
+  VARIANT_COUNT,
+  decorShadow,
+  drawDecorStamp,
+  paintDecorStamp,
+  palmGeom,
+  rockHeaps,
+  setDecorCanvasFactory,
+  stampHeight,
+  resetDecorCache,
+  wreckGeom,
+  type DecorItem,
+} from '../../src/render/decorStamps';
+import { ISO_H, ISO_W, sortedObjects } from '../../src/render/iso';
+import { PALETTE, rgbOfCss } from '../../src/render/palette';
+import { HULL } from '../../src/render/ship';
+import { lanePoints, shipAt, shipPose } from '../../src/render/shipLane';
+import { worldToScreen } from '../../src/render/camera';
+import { TREE_H } from '../../src/render/trees';
+import { rgbToLab } from './deltaE';
+import { fakeCtx } from './fakeCtx';
+
+const L5: StampKind[] = ['palm', 'wreck', 'seaRock', 'islet'];
+const lab = (css: string) => rgbToLab(rgbOfCss(css));
+const chroma = (css: string): number => {
+  const [, a, b] = lab(css);
+  return Math.hypot(a, b);
+};
+const paint = (kind: StampKind, v: number) => {
+  const f = fakeCtx();
+  paintDecorStamp(f.ctx, kind, v, 1, 0, 0);
+  return f;
+};
+const item = (stamp: StampKind, variant = 1): DecorItem => ({
+  kind: 'decor',
+  id: 100,
+  fp: { x: 4, y: 4, w: 1, h: 1 },
+  key: 8,
+  stamp,
+  variant,
+});
+
+describe('L5 Zeichner: Grenzen und Form', () => {
+  it('R5 jede Variante jeder L5-Art ≤ TREE_H hoch (gemessen und tabelliert), liegt in der Stempelbox, save/restore ausgeglichen, Matrix unverändert', () => {
+    for (const k of L5)
+      for (let v = 0; v < VARIANT_COUNT[k]; v++) {
+        const f = paint(k, v);
+        const ys = f.log.allPoints.map((p) => p.y),
+          xs = f.log.allPoints.map((p) => p.x);
+        expect(ys.length, `${k} ${v}`).toBeGreaterThan(10);
+        expect(-Math.min(...ys), `${k} ${v} gemessen`).toBeLessThanOrEqual(TREE_H + 1e-9);
+        expect(stampHeight(k, v), `${k} ${v} Tabelle`).toBeLessThanOrEqual(TREE_H);
+        expect(stampHeight(k, v)).toBeGreaterThan(8);
+        expect(Math.min(...xs)).toBeGreaterThanOrEqual(STAMP_BOX.x0);
+        expect(Math.max(...xs)).toBeLessThanOrEqual(STAMP_BOX.x1);
+        expect(Math.min(...ys)).toBeGreaterThanOrEqual(STAMP_BOX.y0);
+        expect(Math.max(...ys)).toBeLessThanOrEqual(STAMP_BOX.y1);
+        expect(f.log.saves).toBe(f.log.restores);
+        expect(f.log.underflow).toBe(0);
+        expect(f.log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
+      }
+  });
+
+  it('R7 keine Linie und keine Fläche in Schwarz oder Weiss; Signalfarben kommen nicht vor', () => {
+    const bad = new Set<string>();
+    for (const k of L5)
+      for (let v = 0; v < VARIANT_COUNT[k]; v++) {
+        const f = paint(k, v);
+        for (const c of [...f.log.fillSet, ...f.log.strokeSet]) {
+          const [r, g, b] = rgbOfCss(c);
+          if ((r + g + b === 0 || r + g + b === 765) && c !== '#000000') bad.add(c);
+          if (
+            ['signalRed', 'signalYellow', 'signalWarn', 'signalOk'].some(
+              (n) => c === PALETTE[n as 'signalRed'],
+            )
+          )
+            bad.add(c);
+        }
+        // der Fake-Kontext beginnt mit '#000000'; keine Zeichnung darf ihn je als Ton benutzen
+        for (const e of f.log.events.filter(
+          (x) => x.op === 'fill' || x.op === 'stroke' || x.op === 'fillRect',
+        )) {
+          const [r, g, b] = rgbOfCss(e.style);
+          expect(r + g + b > 0 && r + g + b < 765, `${k} ${v}: ${e.op} ${e.style}`).toBe(true);
+        }
+      }
+    expect([...bad]).toEqual([]);
+  });
+
+  it('D1 Palme: 5–7 gefiederte Wedel (Polygone mit Zacken, nicht nur Ellipsen), 3 Formen × 4 Richtungen, neigt zur See', () => {
+    const counts = new Set<number>();
+    for (let shape = 0; shape < 3; shape++)
+      for (let dir = 0; dir < 4; dir++) {
+        const g = palmGeom(shape, dir);
+        expect(g.fronds.length).toBeGreaterThanOrEqual(5);
+        expect(g.fronds.length).toBeLessThanOrEqual(7);
+        counts.add(g.fronds.length);
+        for (const f of g.fronds) expect(f.outline.length).toBeGreaterThanOrEqual(12);
+        // Schopf liegt auf der Seite der Richtung: +x/−y nach rechts, +y/−x nach links (Iso-Projektion)
+        const right = dir === 0 || dir === 3;
+        expect(Math.sign(g.crown.x), `${shape}/${dir}`).toBe(right ? 1 : -1);
+        // schlanker Stamm: unten höchstens 5 px breit
+        expect(g.right[0]!.x - g.left[0]!.x).toBeLessThanOrEqual(5);
+      }
+    expect(counts.size).toBe(3);
+    const f = paint('palm', 5);
+    const polys = f.log.events.filter((e) => e.op === 'fill' && e.points.length >= 12);
+    expect(polys.length).toBeGreaterThanOrEqual(5 * 3); // je Wedel Umriss, Licht, Schatten
+    // Wedelfarbe: gelbstichiger (kleinerer Farbwinkel in Lab) und heller als die Kronen der Waldbäume
+    const hue = (c: string): number => (Math.atan2(lab(c)[2], lab(c)[1]) * 180) / Math.PI;
+    for (const c of [PALETTE.crown, PALETTE.crownLight]) {
+      expect(hue(c) - hue(DECOR_STAMP_TONES.palmFrond), c).toBeGreaterThanOrEqual(8);
+      expect(lab(DECOR_STAMP_TONES.palmFrond)[0]).toBeGreaterThan(lab(c)[0] + 5);
+    }
+  });
+
+  it('E1 Wrack: Neigung ≥ 20°, ≤ 1,5 Kacheln, kein Segel (keine helle Fläche, Mastrest ≤ 10 px), entsättigt gegenüber dem Handelsschiff', () => {
+    for (let v = 0; v < 4; v++) {
+      const g = wreckGeom(v);
+      expect(g.tiltDeg).toBeGreaterThanOrEqual(20);
+      // gemessen: die Deckkante steigt mit mindestens 20° gegen die Waagrechte
+      const [bow, stern] = g.deck;
+      const ang =
+        (Math.atan2(Math.abs(bow.y - stern.y), Math.abs(bow.x - stern.x)) * 180) / Math.PI;
+      expect(ang, `Variante ${v}`).toBeGreaterThanOrEqual(20);
+      const xs = g.hull.map((p) => p.x);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(1.5 * ISO_W * 0.75);
+      const mh = Math.max(...g.mast.map((p) => p.y)) - Math.min(...g.mast.map((p) => p.y));
+      expect(mh).toBeLessThanOrEqual(11);
+      const f = paint('wreck', v);
+      for (const e of f.log.events.filter((x) => x.op === 'fill' || x.op === 'fillRect')) {
+        const [r, gg, b] = rgbOfCss(e.style);
+        expect(Math.min(r, gg, b), `${e.style}: keine helle Segelfläche`).toBeLessThan(170);
+      }
+    }
+    const t = DECOR_STAMP_TONES;
+    for (const k of ['wreckWood', 'wreckLit', 'wreckShade', 'wreckWet'] as const)
+      expect(chroma(t[k]), k).toBeLessThan(0.6 * chroma(HULL));
+    // unterer Teil in Wasserton gemischt: das nasse Holz liegt näher am Wasser als das trockene
+    const d = (a: string, b: string): number => {
+      const x = lab(a),
+        y = lab(b);
+      return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+    };
+    expect(d(t.wreckWet, PALETTE.waterMid)).toBeLessThan(d(t.wreckWood, PALETTE.waterMid));
+    for (const k of L5) expect(decorShadow(item(k)), k).toBeNull(); // kein Schatten für L5-Stempel
+  });
+
+  it('E3 Meeresfelsen: 1–3 Brocken, Felsnadel schmal und hoch (≤ TREE_H), Felstöne aus DECOR_TONES, nasser Fuss', () => {
+    for (let v = 0; v < 6; v++) expect(rockHeaps(v).length).toBe((v % 3) + 1);
+    const heaps = Math.max(...[0, 1, 2, 3, 4, 5].map((v) => stampHeight('seaRock', v)));
+    for (const v of [6, 7]) {
+      expect(stampHeight('seaRock', v)).toBeGreaterThan(heaps);
+      expect(stampHeight('seaRock', v)).toBeLessThanOrEqual(TREE_H);
+    }
+    const f = paint('seaRock', 0);
+    const styles = new Set(f.log.events.map((e) => e.style));
+    expect(styles.has(DECOR_STAMP_TONES.rockWet)).toBe(true);
+    expect(f.log.events.some((e) => e.op === 'stroke')).toBe(true);
+    const n = paint('seaRock', 6);
+    const xs = n.log.allPoints.map((p) => p.x);
+    expect(Math.max(...xs) - Math.min(...xs), 'Nadel ist schmal').toBeLessThanOrEqual(22);
+  });
+
+  it('E8 Felseiland: ≤ 1 Kachel, genau eine Palme, keine grüne Grasfläche', () => {
+    for (let v = 0; v < 4; v++) {
+      const f = paint('islet', v);
+      const xs = f.log.allPoints.map((p) => p.x);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(ISO_W);
+      const wedel = f.log.events.filter(
+        (e) => e.op === 'fill' && e.style === DECOR_STAMP_TONES.palmFrond,
+      );
+      expect(wedel.length, `Variante ${v}: genau eine Palme`).toBeGreaterThanOrEqual(5);
+      expect(wedel.length).toBeLessThanOrEqual(7);
+      for (const e of f.log.events.filter((x) => x.op === 'fill')) {
+        const green = [PALETTE.grass, PALETTE.grassLight, PALETTE.grassDark];
+        expect(green).not.toContain(e.style);
+        // grosse Flächen (Ellipsen, > 30 px breit) sind nie Grasgrün (Lab: a* < −12 bei b* > 20)
+        const w = Math.max(...e.points.map((p) => p.x)) - Math.min(...e.points.map((p) => p.x));
+        const [, la, lb] = lab(e.style);
+        if (w > 30) expect(la < -12 && lb > 20, `${e.style} ist keine Grasfläche`).toBe(false);
+      }
+    }
+  });
+
+  it('Zoomschwellen und Fern-Pfad: Wrack, Felsen und Eiland ab 0,25, Palme ab 0,5', () => {
+    resetDecorCache();
+    setDecorCanvasFactory(() => {
+      const { ctx } = fakeCtx();
+      return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
+    });
+    for (const k of L5)
+      for (const zoom of [0.25, 0.5]) {
+        const f = fakeCtx();
+        drawDecorStamp(f.ctx, { x: 0, y: 0, zoom }, item(k), 7);
+        expect(f.log.events.filter((e) => e.op === 'drawImage').length, `${k}@${zoom}`).toBe(
+          zoom >= DECOR_MIN_ZOOM[k] ? 1 : 0,
+        );
+      }
+    setDecorCanvasFactory(null);
+  });
+});
+
+describe('L5-T1 Fernansicht und Stempelzahl', () => {
+  it('L5-T1 Zoom ≤ 0,25: ≤ 300 Stempel je Insel im Fern-Pfad (Seeds 1–50), dort nur Wrack, Meeresfelsen und Eiland', () => {
+    let max = 0,
+      maxAll = 0;
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 50; seed++) {
+      const w = createWorld(seed);
+      const all = sortedObjects(w).filter((i): i is DecorItem => i.kind === 'decor');
+      const far = all.filter((i) => DECOR_MIN_ZOOM[i.stamp] <= 0.25);
+      max = Math.max(max, far.length);
+      maxAll = Math.max(maxAll, all.length);
+      for (const i of far) seen.add(i.stamp);
+      expect(far.length, `Seed ${seed}`).toBeLessThanOrEqual(300);
+      expect(all.length, `Seed ${seed}`).toBeLessThanOrEqual(300);
+    }
+    expect([...seen].sort()).toEqual(['islet', 'seaRock', 'wreck']);
+    expect(max).toBeGreaterThan(0);
+    expect(maxAll).toBeLessThanOrEqual(300);
+  });
+
+  it('die Meer-Stempel stehen in sortedObjects auf Wasserkacheln der Heimat und folgen dem Plan', () => {
+    const w = createWorld(7);
+    const isl = home(w);
+    const plan = seaPlan(w.seed, isl, seaContext(w));
+    const items = sortedObjects(w).filter((i): i is DecorItem => i.kind === 'decor');
+    const sea = items.filter((i) => ['wreck', 'seaRock', 'islet'].includes(i.stamp));
+    const want = seaElementTiles(plan).filter((e) => ['wreck', 'rock', 'islet'].includes(e.kind));
+    expect(sea.length).toBe(want.length);
+    for (const i of sea) expect(isl.tiles[i.fp.y * isl.width + i.fp.x]!.terrain).toBe('water');
+  });
+});
+
+describe('L5-T3 shipAt trifft nie Wrack oder Felsen', () => {
+  it('L5-T3 Schiffe am Anker und am nächsten Lane-Punkt jedes Elements; Bildpunkte über der Stempelbox bei Zoom 0,25 / 0,5 / 1 (Seeds 1–20)', () => {
+    let samples = 0,
+      ships = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const w: World = createWorld(seed);
+      const isl = home(w);
+      const ctx = seaContext(w);
+      const plan = seaPlan(seed, isl, ctx);
+      const els = seaElementTiles(plan).filter((e) => ['wreck', 'rock', 'islet'].includes(e.kind));
+      const place = (to: number | null, u: number): Ship => {
+        const total = to === null ? 0 : laneTicks(w.islands, 0, to);
+        const s: Ship = {
+          id: 1,
+          port: 0,
+          to,
+          left: total * (1 - u),
+          cargo: {},
+          route: null,
+          homing: false,
+        };
+        w.ships = [s];
+        return s;
+      };
+      const poses: { to: number | null; u: number }[] = [{ to: null, u: 0 }];
+      for (let b = 1; b < w.islands.length; b++) {
+        const pts = lanePoints(w, 0, b);
+        const [p, q] = [pts[0]!, pts[pts.length - 1]!];
+        for (const e of els) {
+          const c = { x: e.x + 0.5, y: e.y + 0.5 };
+          const dx = q.x - p.x,
+            dy = q.y - p.y;
+          const u = Math.max(
+            0,
+            Math.min(1, ((c.x - p.x) * dx + (c.y - p.y) * dy) / (dx * dx + dy * dy)),
+          );
+          poses.push({ to: b, u });
+        }
+      }
+      for (const ps of poses) {
+        const ship = place(ps.to, ps.u);
+        ships++;
+        const pose = shipPose(w, ship);
+        for (const e of els) {
+          const c = project(e.x + 0.5, e.y + 0.5);
+          for (const z of [0.25, 0.5, 1]) {
+            const cam = { x: 0, y: 0, zoom: z };
+            const o = worldToScreen(cam, c);
+            for (let sx = o.x + STAMP_BOX.x0 * z; sx <= o.x + STAMP_BOX.x1 * z; sx += 4)
+              for (let sy = o.y + STAMP_BOX.y0 * z; sy <= o.y + STAMP_BOX.y1 * z; sy += 4) {
+                samples++;
+                if (shipAt(w, cam, sx, sy) !== null)
+                  throw new Error(
+                    `Seed ${seed}: Schiff @${pose.x.toFixed(1)},${pose.y.toFixed(1)} trifft ${e.kind}@${e.x},${e.y} bei Zoom ${z}`,
+                  );
+              }
+          }
+        }
+      }
+    }
+    expect(ships).toBeGreaterThan(100);
+    expect(samples).toBeGreaterThan(10000);
+    expect(ISO_H).toBe(32);
+  });
+});

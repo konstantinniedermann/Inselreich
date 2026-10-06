@@ -10,7 +10,9 @@ import {
   DECOR_MIN_ZOOM,
   DECOR_STAMP_TONES,
   RUIN_H_MAX,
+  SEA_ONLY_TONES,
   STAMP_BOX,
+  VARIANT_COUNT,
   decorCacheBytes,
   decorCacheClears,
   decorCacheKeys,
@@ -34,10 +36,15 @@ import { TREE_VARIANTS } from '../../src/render/iso';
 import { deltaE2000, rgbToLab } from './deltaE';
 import { fakeCtx } from './fakeCtx';
 
+/** Die L4-Stempel (Land, Gras); die L5-Stempel (Palme, Meer) haben eigene Tests weiter unten. */
 const KINDS: StampKind[] = ['solitaire', 'orchard', 'menhir', 'ruin'];
+const L5_KINDS: StampKind[] = ['palm', 'wreck', 'seaRock', 'islet'];
+const ALL_KINDS: StampKind[] = [...KINDS, ...L5_KINDS];
 const lab = (css: string) => rgbToLab(rgbOfCss(css));
-const decorItems = (w: World): DecorItem[] =>
+const allDecorItems = (w: World): DecorItem[] =>
   sortedObjects(w).filter((i): i is DecorItem => i.kind === 'decor');
+const decorItems = (w: World): DecorItem[] =>
+  allDecorItems(w).filter((i) => KINDS.includes(i.stamp));
 
 beforeEach(() => {
   setDecorCanvasFactory(() => {
@@ -185,12 +192,23 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
   });
 
   it('R5 Töne: ΔE2000 ≥ 20 zu den Signalfarben, ≥ 10 zu den Wassertönen', () => {
-    for (const t of [...Object.values(DECOR_STAMP_TONES), ...Object.values(DECOR_TONES)]) {
+    const land = Object.entries(DECOR_STAMP_TONES)
+      .filter(([k]) => !(SEA_ONLY_TONES as readonly string[]).includes(k))
+      .map(([, t]) => t);
+    for (const t of [...land, ...Object.values(DECOR_TONES)]) {
       for (const n of SIGNAL_NAMES)
         expect(deltaE2000(lab(t), lab(PALETTE[n])), `${t} ~ ${n}`).toBeGreaterThanOrEqual(20);
       for (const n of ['waterDeep', 'waterMid', 'waterShallow'] as const)
         expect(deltaE2000(lab(t), lab(PALETTE[n])), `${t} ~ ${n}`).toBeGreaterThanOrEqual(10);
     }
+  });
+  it('R5 Töne der Meer-Stempel (im Wasser, nie auf bebaubaren Kacheln): ΔE2000 ≥ 20 zu den Signalfarben', () => {
+    for (const k of SEA_ONLY_TONES)
+      for (const n of SIGNAL_NAMES)
+        expect(
+          deltaE2000(lab(DECOR_STAMP_TONES[k]), lab(PALETTE[n])),
+          `${k} ~ ${n}`,
+        ).toBeGreaterThanOrEqual(20);
   });
 });
 
@@ -205,8 +223,17 @@ describe('Zeichnen, Zoomschwellen, Schatten', () => {
   });
 
   it('Zoomschwellen nach Katalog: A5/A6 ab 0,5, A9/A14 ab 0,75; save/restore ausgeglichen, Matrix unverändert', () => {
-    expect(DECOR_MIN_ZOOM).toEqual({ solitaire: 0.5, orchard: 0.5, menhir: 0.75, ruin: 0.75 });
-    for (const k of KINDS)
+    expect(DECOR_MIN_ZOOM).toEqual({
+      solitaire: 0.5,
+      orchard: 0.5,
+      menhir: 0.75,
+      ruin: 0.75,
+      palm: 0.5, // L5 D1
+      wreck: 0.25, // L5 E1
+      seaRock: 0.25, // L5 E3
+      islet: 0.25, // L5 E8
+    });
+    for (const k of ALL_KINDS)
       for (const zoom of [0.25, 0.5, 0.6, 0.75, 1, 2]) {
         const f = fakeCtx();
         drawDecorStamp(f.ctx, { x: 0, y: 0, zoom }, item(k), 7);
@@ -242,10 +269,14 @@ describe('Zeichnen, Zoomschwellen, Schatten', () => {
 describe('L4-T4 LRU des Deko-Stempel-Caches', () => {
   it('DECOR_CACHE_MAX_BYTES = 8 MiB; alle Arten × Varianten × Zoomstufen bleiben darunter', () => {
     expect(DECOR_CACHE_MAX_BYTES).toBe(8 * 1024 * 1024);
-    for (const k of KINDS)
-      for (let v = 0; v < 4; v++) for (const s of ZOOM_STEPS) decorStampFor(3, k, v, s);
+    let variants = 0;
+    for (const k of ALL_KINDS)
+      for (let v = 0; v < VARIANT_COUNT[k]; v++) {
+        variants++;
+        for (const s of ZOOM_STEPS) decorStampFor(3, k, v, s);
+      }
     expect(decorCacheBytes()).toBeLessThanOrEqual(DECOR_CACHE_MAX_BYTES);
-    expect(decorCacheSize()).toBe(KINDS.length * 4 * ZOOM_STEPS.length);
+    expect(decorCacheSize()).toBe(variants * ZOOM_STEPS.length);
   });
 
   it('nach Füllen über die Grenze ≤ Grenze; der älteste Eintrag fliegt zuerst, ein Treffer verjüngt', () => {
