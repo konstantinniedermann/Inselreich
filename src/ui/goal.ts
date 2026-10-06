@@ -110,6 +110,13 @@ export function initialGoalShown(
   };
 }
 
+/** Übernimmt die neuen Merkfelder in den Spielzustand (alle drei Banner; sonst erscheint ein Banner je Frame neu). */
+export function applyGoalShown(target: GoalShown, shown: GoalShown): void {
+  target.wonShown = shown.wonShown;
+  target.wonMerchantsShown = shown.wonMerchantsShown;
+  target.wonSpiceShown = shown.wonSpiceShown ?? false;
+}
+
 /** Banner, die jetzt erscheinen (erstes, zweites, drittes Ziel), und die neuen Merkfelder. Rein. */
 export function goalBanners(
   shown: GoalShown,

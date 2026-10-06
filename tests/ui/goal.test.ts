@@ -9,6 +9,7 @@ import {
   FIRST_GOAL_BANNER,
   SECOND_GOAL_BANNER,
   THIRD_GOAL_BANNER,
+  applyGoalShown,
   goalBanners,
   goalTexts,
   UNLOCK_NOTICE,
@@ -307,5 +308,20 @@ describe('M12 Z3 Texte', () => {
     expect(goalBanners(initialGoalShown(w), w).texts).toEqual([]);
     const r = goalBanners({ wonShown: true, wonMerchantsShown: true }, w);
     expect(r.texts).toEqual([THIRD_GOAL_BANNER]);
+  });
+});
+
+describe('M12 Z3 Merkfeld drittes Banner (R258, C3-3)', () => {
+  it('applyGoalShown schreibt alle drei Merkfelder in den Spielzustand: drittes Banner erscheint nur einmal', () => {
+    const w = createWorld(3);
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = true;
+    const state = { ...initialGoalShown(createWorld(3)) };
+    const first = goalBanners(state, w);
+    expect(first.texts).toContain(THIRD_GOAL_BANNER);
+    applyGoalShown(state, first.shown);
+    expect(state).toEqual({ wonShown: true, wonMerchantsShown: true, wonSpiceShown: true });
+    expect(goalBanners(state, w).texts).toEqual([]);
   });
 });

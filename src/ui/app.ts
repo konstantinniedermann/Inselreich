@@ -23,7 +23,7 @@ import type {
   World,
 } from '../sim/types';
 import { demolishText } from './texts';
-import { goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
+import { applyGoalShown, goalBanners, initialGoalShown, frameUnlock, lockedToolText } from './goal';
 import {
   centerOn,
   clampToRect,
@@ -143,6 +143,8 @@ export interface GameState {
   wonShown: boolean;
   /** Banner des zweiten Ziels bereits gezeigt (Spec M8 14.1; ein geladener Stand zeigt es nicht erneut). */
   wonMerchantsShown: boolean;
+  /** Banner des dritten Ziels (Gewürzstadt) bereits gezeigt (M12 Z3). */
+  wonSpiceShown: boolean;
   /** Einträge, die die Freischalt-Meldung schon kennt: beim Start/Laden und bei „Neu“ = `world.unlocked` (Spec 11.6). */
   unlockedSeen: UnlockId[];
   /** Neu freigeschaltete Bau-Einträge bis zur ersten Wahl (Zeichen neu, K2); nur UI-Zustand, nicht gespeichert. */
@@ -576,8 +578,7 @@ function launch(
       renderBuildMenu(navEl, state, selectTool, toggleCategory);
     }
     const goal = goalBanners(state, world);
-    state.wonShown = goal.shown.wonShown;
-    state.wonMerchantsShown = goal.shown.wonMerchantsShown;
+    applyGoalShown(state, goal.shown);
     for (const text of goal.texts) showMessage(text, 'info', true, true);
     for (const id of newBuildEntries(state.unlockedSeen, world)) state.newEntries.add(id);
     const unlock = frameUnlock(state.unlockedSeen, world);
