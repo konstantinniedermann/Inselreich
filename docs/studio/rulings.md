@@ -2078,3 +2078,20 @@ gehen in den E6-Plan. Ob E5/E6 geplant werden, entscheidet L0 nach dem Seefahrt-
 in `src/sim/defs/`.
 
 Entscheider: L0 · Anlass: Bericht lead-design M12-FP7 · ADR: —
+
+## R263 · 2026-10-06 · E1 C3: T06 abgenommen, T07 in C3b, Ad-hoc-Retro
+
+Ruling: T06 (`feat/m12-e1`, Review OK nach einer Fix-Runde, Playtest a–g OK) angenommen; Fixes 332336e
+(`requestIdleCallback`-Timeout) und 26dec9c angenommen. **T07** läuft in einer neuen Controller-Instanz **C3b**
+(lead-tech auf `sonnet` nach Handbuch, 6 freie Starts aus R250, Übergabe `.studio/handoffs/2026-10-05-m12-e1-C3-an-C4.md`).
+**Auslegung AK-E1-19 vorab:** Zuerst Ursache der Spitzen isolieren. Liegt sie in unserem Code (unteilbare Arbeit in
+einer Scheibe), wird sie behoben, Grenze 8 ms auf das Maximum. Liegt sie nachweislich ausserhalb (Speicherbereinigung,
+Compositor, Browser), entscheidet **p95 ≤ 8 ms**, das Maximum steht informativ im Bericht. AK-E1-14 Seed 14 mit 7
+Läufen nachmessen. Ein lastfreier `make check` und `CI=true make check` auf dem Endstand ist Pflicht vor C4.
+**Verbot:** `pkill`/`killall` auf allgemeine Prozessnamen (`node`, `chrome`) — nur eigene PIDs beenden. **Ad-hoc-Retro**
+durch studio-coach: Dauer E1 C3 (≈ 11,6 h statt ~20 min Schätzung), Messumgebung (Fremdlast, Ruhezustand,
+liegengebliebenes Chrome, `pkill -x node`), qa-playtester ohne Lebenszeichen 2,5 h, Controller auf opus statt sonnet
+(Handbuch Z. 124), Integrator-Merge im Hauptcheckout statt `.worktrees/integrate`. — Kosten bei Irrtum: AK-E1-19 in
+C4 neu auslegen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-E1-C3, Hook-Meldung Inaktivität · ADR: —
