@@ -122,3 +122,51 @@ class ContextTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ObservationCounterTest(unittest.TestCase):
+    def _file(self, tmp: str, body: str) -> Path:
+        path = Path(tmp) / "beobachtungen.md"
+        path.write_text(body, "utf-8")
+        return path
+
+    def test_counts_only_entries_below_mark(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._file(
+                tmp,
+                "# B\n### Alt · vor der Marke\nLetzte Auswertung: 2026-10-06\n"
+                "## Offen\n### Paket-Kandidat · x\n## 2026-10-06 · a\n"
+                "## Ausgewertet 2026-09-30\n",
+            )
+            self.assertEqual(context.observation_status(path), (2, "2026-10-06"))
+            line = context.observations_line(path)
+            self.assertIn("2 Einträge", line)
+            self.assertNotIn("PFLICHT", line)
+
+    def test_threshold_is_strictly_above_30(self):
+        with tempfile.TemporaryDirectory() as tmp:
+
+            def entries(n: int) -> str:
+                return "".join(f"## 2026-10-06 · e{i}\n" for i in range(n))
+
+            at = self._file(tmp, "Letzte Auswertung: 2026-10-01\n" + entries(30))
+            self.assertNotIn("PFLICHT", context.observations_line(at))
+            over = self._file(tmp, "Letzte Auswertung: 2026-10-01\n" + entries(31))
+            line = context.observations_line(over)
+            self.assertIn("PFLICHT (R288)", line)
+            self.assertIn("31 Einträge", line)
+
+    def test_missing_mark_counts_all(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._file(tmp, "# B\n## 2026-10-06 · a\n### b\n")
+            self.assertEqual(context.observation_status(path), (2, None))
+            self.assertIn("Marke fehlt", context.observations_line(path))
+
+    def test_missing_file_and_start_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            docs = Path(tmp) / "studio"
+            docs.mkdir()
+            self.assertIn("fehlt", context.observations_line(Path(tmp) / "x.md"))
+            self._file(tmp, "Letzte Auswertung: 2026-10-06\n")
+            text = context.build_context(docs, [], "8765")
+            self.assertIn("0 Einträge seit der letzten Auswertung (2026-10-06)", text)

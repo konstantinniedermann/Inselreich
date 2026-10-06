@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.21 · Stand: 2026-10-06 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.22 · Stand: 2026-10-06 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -409,6 +409,15 @@ nachfragen oder warten verlangt; Verfassung §1.4):
 5. Weiterarbeiten ohne Rückfrage: Eine neue Anweisung ist der Auftrag (Auslegung als Ruling);
    sonst den Plan aus [state.md](state.md) fortsetzen (Übergaben unter `.studio/handoffs/`).
    Beantwortete Warteschlangen-Einträge zuerst; offene Vorfälle → Ad-hoc-Retro.
+6. **Beobachtungen (R287 (b)/(c), R288):** Der Hook zählt die Einträge in `docs/beobachtungen.md`
+   unter der Zeile „Letzte Auswertung: JJJJ-MM-TT“ und meldet Zahl und Datum im Start-Kontext; fehlt
+   die Marke, zählen alle Einträge und der Hook sagt „Marke fehlt“. Bei **mehr als 30** Einträgen
+   steht dort ein Pflichthinweis: Die Auswertung (`lead-production`, Skill `beobachtungen-auswerten`)
+   ist das erste Paket der Session, bis zu ihrem Ende startet keine neue Funktionsarbeit (Ausnahme:
+   Hotfix für einen Live-Fehler, läuft parallel). Jeder Eintrag endet als erledigt, abgehakt,
+   eingeplant (Board) oder Idee (`docs/ideen.md`). Die Marke setzt die Auswertung als eigene Zeile
+   „Letzte Auswertung: JJJJ-MM-TT“; sie ist Pflicht und erscheint im Start-Bericht von L0. Die
+   Zählung macht der Hook (`tools/studio/context.py`), nicht das Gedächtnis von L0.
 
 **Eine aktive L0-Session je Repo** (R129, E-007): Läuft beim Start bereits eine andere (Dashboard,
 [state.md](state.md)), arbeitet die neue nur lesend oder beendet sich; Parallelität nur per
