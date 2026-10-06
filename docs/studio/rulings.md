@@ -2157,3 +2157,18 @@ Ad-hoc-Retro (CI rot, Integrator `failed`) durch studio-coach nach dem Hotfix; P
 Final-Review geänderte Zeittest nicht durch die CI-Reserve-Prüfung (R236 (a))? — Kosten bei Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht production-integrator M12-E1-MERGE, Hook-Meldung · ADR: —
+
+## R268 · 2026-10-06 · E1 live, M1 erfüllt; Start Seefahrt C4 und H-R15
+
+Ruling: H-T4 (7b4fde0) gemergt, Workflow „CI" Lauf 37440669276 grün, Workflow „Pages" Lauf 37440669368 grün —
+**M12-E1 ist live** (Save v8). Der hängende Pages-Lauf 37438286556 (Job `deploy` > 24 min `queued`, blockierte über
+die Concurrency-Gruppe `pages` den Folgelauf) wurde von L0 abgebrochen; der Folgelauf deployte denselben Stand plus
+H-T4. **M1 erfüllt.** Start **Seefahrt C4** (lead-tech, sonnet): `main` in `feat/m12-see` mergen (Plan: nach dem
+E1-Merge nur noch `main`), dann Strang **render** (T10, T11) und Strang **e2-UI** (T12, T13 mit Quer-Merge render
+nach T10) parallel; Budget aus R241: 12 Starts, Parallelität 3. Start **H-R15 „Saum Fernansicht"** (lead-art mit
+art-rendering-engineer, Stufe leicht, höchstens eine Bild-Fix-Runde, Abnahme nach Urteil lead-art R266) ab `main`;
+Datei-Eigentum nur Wasser-/Terrain-Malcode und dessen Tests — nicht die Dateien des render-Strangs (`archipel.ts`,
+`renderer.ts`, `ship.ts`, `shipLane.ts`, `overlays.ts`, `sprites.ts`, `palette.ts`); Budget 4 Starts. H-R15 wird nach
+Abnahme release-reif (Release-Bündel REL-05). — Kosten bei Irrtum: Konflikt beim T14-Merge in einer Malroutine.
+
+Entscheider: L0 · Anlass: Bericht production-integrator H-T4, Pages-Lauf · ADR: —
