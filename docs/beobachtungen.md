@@ -1022,3 +1022,7 @@ Hotkeys und Bauleiste über `unlocked` lösen.
 - **Fundort / Beobachtung:** Heimat-Viertel-Kopie entsteht synchron beim ersten Zoom ≤ 0,25 (siehe Q8e); mit H-R15
   kostet das etwa 33 ms statt 22 ms (Last 4, Seed 14/3). **Einschätzung:** unter 50 ms, aber knapp bei langsameren
   Rechnern; die Heimat wie die Fremdinseln über Schritte aufbauen. **Ursprung:** H-R15.
+- **Fundort / Beobachtung:** Kleine Fremdinseln (Seed 14, `.studio/qa/h-r15/nachher_d_s14_1280_zmin_archipel.png`)
+  sind fast reine Rauten; ihr Saum folgt der Küste und läuft deshalb weiter spitz nach Ost/West aus. Ursache ist die
+  Inselform (Erzeugung), nicht der Saum. **Einschätzung:** niedrig, kosmetisch; bei der nächsten Arbeit an der
+  Fremdinsel-Erzeugung die Umrisse unregelmässiger machen (lead-art). **Ursprung:** H-R15 Bildurteil lead-art.
