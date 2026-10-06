@@ -426,6 +426,10 @@ describe('M12 E2 UI Inseln: Hilfe-Schritt Kontor auf Gewürzinsel (C.11)', () =>
     addDirect(w, 'lumberjack');
     addDirect(w, 'quarry');
     addDirect(w, 'bathhouse');
+    // Merge e2/e3: fehlt Gewürz für die nächste Stufe, nennt der spezifischere R256-Satz denselben Weg
+    // (Kontor auf Gewürzinsel); C.11 gilt, solange kein Gewürz fehlt.
+    expect(nextStep(w)).toMatch(/brauchen Gewürz.*Kontor auf einer Gewürzinsel/);
+    w.islands[0].stock.spice = 5;
     expect(nextStep(w)).toBe(C11);
     addDirect(w, 'kontor2');
     expect(nextStep(w)).not.toBe(C11);
