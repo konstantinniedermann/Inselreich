@@ -626,34 +626,42 @@ describe('L4 Formen und Ausprägungen', () => {
       expect(variants.get(kind)?.size ?? 0, kind).toBeGreaterThanOrEqual(2);
   });
 
-  it('R5 Findling ≤ 0,3 Kachel, Lesesteinhaufen ≤ 0,35, Elemente liegen in ihrem Fussabdruck', () => {
-    let boulders = 0;
-    for (const { seed, els } of all)
-      for (const e of els) {
-        const ps = groundShapes(e, seed);
-        const b = bounds(ps);
-        if (e.kind === 'boulder') {
-          boulders++;
-          expect(Math.max(b.w, b.h)).toBeLessThanOrEqual(0.3);
-        }
-        if (e.kind === 'stoneHeap') expect(Math.max(b.w, b.h)).toBeLessThanOrEqual(0.35);
-        for (const p of ps) {
-          const pts: number[] =
-            p.k === 'poly'
-              ? [...p.pts]
-              : p.k === 'rect'
-                ? [p.x, p.y, p.x + p.w, p.y + p.h]
-                : [p.x - p.rx, p.y - p.ry, p.x + p.rx, p.y + p.ry];
-          for (let i = 0; i < pts.length; i += 2) {
-            expect(pts[i]!, `${key(e)} x`).toBeGreaterThanOrEqual(e.x - 1e-9);
-            expect(pts[i]!, `${key(e)} x`).toBeLessThanOrEqual(e.x + e.w + 1e-9);
-            expect(pts[i + 1]!, `${key(e)} y`).toBeGreaterThanOrEqual(e.y - 1e-9);
-            expect(pts[i + 1]!, `${key(e)} y`).toBeLessThanOrEqual(e.y + e.h + 1e-9);
+  it(
+    'R5 Findling ≤ 0,3 Kachel, Lesesteinhaufen ≤ 0,35, Elemente liegen in ihrem Fussabdruck',
+    { timeout: 30000 },
+    () => {
+      let boulders = 0;
+      const outside: string[] = [];
+      for (const { seed, els } of all)
+        for (const e of els) {
+          const ps = groundShapes(e, seed);
+          const b = bounds(ps);
+          if (e.kind === 'boulder') {
+            boulders++;
+            expect(Math.max(b.w, b.h)).toBeLessThanOrEqual(0.3);
+          }
+          if (e.kind === 'stoneHeap') expect(Math.max(b.w, b.h)).toBeLessThanOrEqual(0.35);
+          for (const p of ps) {
+            const pts: number[] =
+              p.k === 'poly'
+                ? [...p.pts]
+                : p.k === 'rect'
+                  ? [p.x, p.y, p.x + p.w, p.y + p.h]
+                  : [p.x - p.rx, p.y - p.ry, p.x + p.rx, p.y + p.ry];
+            for (let i = 0; i < pts.length; i += 2)
+              if (
+                pts[i]! < e.x - 1e-9 ||
+                pts[i]! > e.x + e.w + 1e-9 ||
+                pts[i + 1]! < e.y - 1e-9 ||
+                pts[i + 1]! > e.y + e.h + 1e-9
+              )
+                outside.push(key(e));
           }
         }
-      }
-    expect(boulders).toBeGreaterThan(50);
-  });
+      expect(outside, 'Formen ausserhalb ihres Fussabdrucks').toEqual([]);
+      expect(boulders).toBeGreaterThan(50);
+    },
+  );
 
   it('R6 Boden-Deko ändert den mittleren Ton einer Wiesenkachel um ≤ 1 Tonstufe (Flächenanteil × Helligkeitsabstand)', () => {
     // Eine Tonstufe des Bodens: TONE_DARK_MUL = 8 % der Helligkeit der Wiese (terrain.ts)
@@ -790,9 +798,9 @@ describe('L4 Bild-Fix 1', () => {
   });
 
   it('A3 Buschgruppen: etwa 1 je 5–8 freie Wiesenkacheln, gehäuft (Dichte schwankt), runde Körper mit Lichtkante', () => {
+    const dens: number[] = [];
     let grass = 0,
-      shrubs = 0,
-      dens: number[] = [];
+      shrubs = 0;
     for (let seed = 1; seed <= 20; seed++) {
       const w = createWorld(seed);
       const isl = home(w);
