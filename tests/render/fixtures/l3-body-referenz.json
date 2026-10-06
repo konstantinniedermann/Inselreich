@@ -1,922 +1,922 @@
 {
- "kontor|t-|l-|v0": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor|t-|l-|v1": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor|t-|l-|v2": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor|t-|l-|v3": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "market|t-|l-|v0": {
-  "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
-  "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
-  "count": 103
- },
- "market|t-|l-|v1": {
-  "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
-  "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
-  "count": 103
- },
- "market|t-|l-|v2": {
-  "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
-  "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
-  "count": 103
- },
- "market|t-|l-|v3": {
-  "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
-  "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
-  "count": 103
- },
- "house|t1|l-|v0": {
-  "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
-  "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
-  "count": 12
- },
- "house|t1|l-|v1": {
-  "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
-  "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
-  "count": 12
- },
- "house|t1|l-|v2": {
-  "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
-  "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
-  "count": 12
- },
- "house|t1|l-|v3": {
-  "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
-  "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
-  "count": 12
- },
- "house|t2|l-|v0": {
-  "polygons": "d54b28f724614a66c22efcb9c0f58e4caee3b6bc1a38030bf4f19d87cb6b0b83",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "house|t2|l-|v1": {
-  "polygons": "9e8d65c09830e0810f08da45abe8b303d77dac3fbf1345d6c960d64d77d518f6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 21
- },
- "house|t2|l-|v2": {
-  "polygons": "9e8d65c09830e0810f08da45abe8b303d77dac3fbf1345d6c960d64d77d518f6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 21
- },
- "house|t2|l-|v3": {
-  "polygons": "d54b28f724614a66c22efcb9c0f58e4caee3b6bc1a38030bf4f19d87cb6b0b83",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "house|t3|l-|v0": {
-  "polygons": "d2643b8adddfaf2c62607aa28a497c7b458f0e54c945ef4f2a733c2c8762a2f9",
-  "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
-  "count": 19
- },
- "house|t3|l-|v1": {
-  "polygons": "6546fcbbd4eeb2f2904e5585e713071d7772a52ece1d466120de66a383e19dc7",
-  "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
-  "count": 23
- },
- "house|t3|l-|v2": {
-  "polygons": "6546fcbbd4eeb2f2904e5585e713071d7772a52ece1d466120de66a383e19dc7",
-  "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
-  "count": 23
- },
- "house|t3|l-|v3": {
-  "polygons": "d2643b8adddfaf2c62607aa28a497c7b458f0e54c945ef4f2a733c2c8762a2f9",
-  "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
-  "count": 19
- },
- "house|t4|l-|v0": {
-  "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
-  "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
-  "count": 42
- },
- "house|t4|l-|v1": {
-  "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
-  "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
-  "count": 42
- },
- "house|t4|l-|v2": {
-  "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
-  "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
-  "count": 42
- },
- "house|t4|l-|v3": {
-  "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
-  "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
-  "count": 42
- },
- "fisher|t-|l-|v0": {
-  "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 18
- },
- "fisher|t-|l-|v1": {
-  "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 18
- },
- "fisher|t-|l-|v2": {
-  "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 18
- },
- "fisher|t-|l-|v3": {
-  "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 18
- },
- "fisher|t-|l2|v0": {
-  "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 21
- },
- "fisher|t-|l2|v1": {
-  "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 21
- },
- "fisher|t-|l2|v2": {
-  "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 21
- },
- "fisher|t-|l2|v3": {
-  "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 21
- },
- "fisher|t-|l3|v0": {
-  "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 27
- },
- "fisher|t-|l3|v1": {
-  "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 27
- },
- "fisher|t-|l3|v2": {
-  "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 27
- },
- "fisher|t-|l3|v3": {
-  "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 27
- },
- "hunter|t-|l-|v0": {
-  "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 22
- },
- "hunter|t-|l-|v1": {
-  "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 22
- },
- "hunter|t-|l-|v2": {
-  "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 22
- },
- "hunter|t-|l-|v3": {
-  "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 22
- },
- "hunter|t-|l2|v0": {
-  "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 25
- },
- "hunter|t-|l2|v1": {
-  "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 25
- },
- "hunter|t-|l2|v2": {
-  "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 25
- },
- "hunter|t-|l2|v3": {
-  "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 25
- },
- "hunter|t-|l3|v0": {
-  "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 31
- },
- "hunter|t-|l3|v1": {
-  "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 31
- },
- "hunter|t-|l3|v2": {
-  "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 31
- },
- "hunter|t-|l3|v3": {
-  "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
-  "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
-  "count": 31
- },
- "cattlefarm|t-|l-|v0": {
-  "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 85
- },
- "cattlefarm|t-|l-|v1": {
-  "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 85
- },
- "cattlefarm|t-|l-|v2": {
-  "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 85
- },
- "cattlefarm|t-|l-|v3": {
-  "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 85
- },
- "cattlefarm|t-|l2|v0": {
-  "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 88
- },
- "cattlefarm|t-|l2|v1": {
-  "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 88
- },
- "cattlefarm|t-|l2|v2": {
-  "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 88
- },
- "cattlefarm|t-|l2|v3": {
-  "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 88
- },
- "cattlefarm|t-|l3|v0": {
-  "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 94
- },
- "cattlefarm|t-|l3|v1": {
-  "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 94
- },
- "cattlefarm|t-|l3|v2": {
-  "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 94
- },
- "cattlefarm|t-|l3|v3": {
-  "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
-  "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
-  "count": 94
- },
- "lumberjack|t-|l-|v0": {
-  "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "lumberjack|t-|l-|v1": {
-  "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "lumberjack|t-|l-|v2": {
-  "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "lumberjack|t-|l-|v3": {
-  "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 19
- },
- "lumberjack|t-|l2|v0": {
-  "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 22
- },
- "lumberjack|t-|l2|v1": {
-  "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 22
- },
- "lumberjack|t-|l2|v2": {
-  "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 22
- },
- "lumberjack|t-|l2|v3": {
-  "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 22
- },
- "lumberjack|t-|l3|v0": {
-  "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 28
- },
- "lumberjack|t-|l3|v1": {
-  "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 28
- },
- "lumberjack|t-|l3|v2": {
-  "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 28
- },
- "lumberjack|t-|l3|v3": {
-  "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
-  "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
-  "count": 28
- },
- "quarry|t-|l-|v0": {
-  "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 28
- },
- "quarry|t-|l-|v1": {
-  "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 28
- },
- "quarry|t-|l-|v2": {
-  "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 28
- },
- "quarry|t-|l-|v3": {
-  "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 28
- },
- "quarry|t-|l2|v0": {
-  "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 31
- },
- "quarry|t-|l2|v1": {
-  "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 31
- },
- "quarry|t-|l2|v2": {
-  "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 31
- },
- "quarry|t-|l2|v3": {
-  "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 31
- },
- "quarry|t-|l3|v0": {
-  "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 37
- },
- "quarry|t-|l3|v1": {
-  "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 37
- },
- "quarry|t-|l3|v2": {
-  "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 37
- },
- "quarry|t-|l3|v3": {
-  "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
-  "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
-  "count": 37
- },
- "sheepfarm|t-|l-|v0": {
-  "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 75
- },
- "sheepfarm|t-|l-|v1": {
-  "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 75
- },
- "sheepfarm|t-|l-|v2": {
-  "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 75
- },
- "sheepfarm|t-|l-|v3": {
-  "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 75
- },
- "sheepfarm|t-|l2|v0": {
-  "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 78
- },
- "sheepfarm|t-|l2|v1": {
-  "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 78
- },
- "sheepfarm|t-|l2|v2": {
-  "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 78
- },
- "sheepfarm|t-|l2|v3": {
-  "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 78
- },
- "sheepfarm|t-|l3|v0": {
-  "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 84
- },
- "sheepfarm|t-|l3|v1": {
-  "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 84
- },
- "sheepfarm|t-|l3|v2": {
-  "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 84
- },
- "sheepfarm|t-|l3|v3": {
-  "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
-  "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
-  "count": 84
- },
- "weaver|t-|l-|v0": {
-  "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 31
- },
- "weaver|t-|l-|v1": {
-  "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 31
- },
- "weaver|t-|l-|v2": {
-  "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 31
- },
- "weaver|t-|l-|v3": {
-  "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 31
- },
- "weaver|t-|l2|v0": {
-  "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 34
- },
- "weaver|t-|l2|v1": {
-  "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 34
- },
- "weaver|t-|l2|v2": {
-  "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 34
- },
- "weaver|t-|l2|v3": {
-  "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 34
- },
- "weaver|t-|l3|v0": {
-  "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 40
- },
- "weaver|t-|l3|v1": {
-  "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 40
- },
- "weaver|t-|l3|v2": {
-  "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 40
- },
- "weaver|t-|l3|v3": {
-  "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 40
- },
- "canefarm|t-|l-|v0": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "canefarm|t-|l-|v1": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "canefarm|t-|l-|v2": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "canefarm|t-|l-|v3": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "canefarm|t-|l2|v0": {
-  "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 80
- },
- "canefarm|t-|l2|v1": {
-  "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 80
- },
- "canefarm|t-|l2|v2": {
-  "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 80
- },
- "canefarm|t-|l2|v3": {
-  "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 80
- },
- "canefarm|t-|l3|v0": {
-  "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 86
- },
- "canefarm|t-|l3|v1": {
-  "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 86
- },
- "canefarm|t-|l3|v2": {
-  "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 86
- },
- "canefarm|t-|l3|v3": {
-  "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 86
- },
- "distillery|t-|l-|v0": {
-  "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 40
- },
- "distillery|t-|l-|v1": {
-  "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 40
- },
- "distillery|t-|l-|v2": {
-  "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 40
- },
- "distillery|t-|l-|v3": {
-  "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 40
- },
- "distillery|t-|l2|v0": {
-  "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 43
- },
- "distillery|t-|l2|v1": {
-  "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 43
- },
- "distillery|t-|l2|v2": {
-  "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 43
- },
- "distillery|t-|l2|v3": {
-  "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 43
- },
- "distillery|t-|l3|v0": {
-  "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 49
- },
- "distillery|t-|l3|v1": {
-  "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 49
- },
- "distillery|t-|l3|v2": {
-  "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 49
- },
- "distillery|t-|l3|v3": {
-  "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 49
- },
- "toolmaker|t-|l-|v0": {
-  "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 24
- },
- "toolmaker|t-|l-|v1": {
-  "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 24
- },
- "toolmaker|t-|l-|v2": {
-  "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 24
- },
- "toolmaker|t-|l-|v3": {
-  "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 24
- },
- "toolmaker|t-|l2|v0": {
-  "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 27
- },
- "toolmaker|t-|l2|v1": {
-  "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 27
- },
- "toolmaker|t-|l2|v2": {
-  "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 27
- },
- "toolmaker|t-|l2|v3": {
-  "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 27
- },
- "toolmaker|t-|l3|v0": {
-  "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 33
- },
- "toolmaker|t-|l3|v1": {
-  "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 33
- },
- "toolmaker|t-|l3|v2": {
-  "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 33
- },
- "toolmaker|t-|l3|v3": {
-  "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
-  "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
-  "count": 33
- },
- "chapel|t-|l-|v0": {
-  "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
-  "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
-  "count": 19
- },
- "chapel|t-|l-|v1": {
-  "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
-  "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
-  "count": 19
- },
- "chapel|t-|l-|v2": {
-  "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
-  "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
-  "count": 19
- },
- "chapel|t-|l-|v3": {
-  "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
-  "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
-  "count": 19
- },
- "school|t-|l-|v0": {
-  "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
-  "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
-  "count": 25
- },
- "school|t-|l-|v1": {
-  "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
-  "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
-  "count": 25
- },
- "school|t-|l-|v2": {
-  "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
-  "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
-  "count": 25
- },
- "school|t-|l-|v3": {
-  "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
-  "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
-  "count": 25
- },
- "firestation|t-|l-|v0": {
-  "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
-  "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
-  "count": 19
- },
- "firestation|t-|l-|v1": {
-  "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
-  "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
-  "count": 19
- },
- "firestation|t-|l-|v2": {
-  "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
-  "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
-  "count": 19
- },
- "firestation|t-|l-|v3": {
-  "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
-  "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
-  "count": 19
- },
- "bathhouse|t-|l-|v0": {
-  "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 60
- },
- "bathhouse|t-|l-|v1": {
-  "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 60
- },
- "bathhouse|t-|l-|v2": {
-  "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 60
- },
- "bathhouse|t-|l-|v3": {
-  "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 60
- },
- "glassworks|t-|l-|v0": {
-  "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 50
- },
- "glassworks|t-|l-|v1": {
-  "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 50
- },
- "glassworks|t-|l-|v2": {
-  "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 50
- },
- "glassworks|t-|l-|v3": {
-  "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 50
- },
- "glassworks|t-|l2|v0": {
-  "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 53
- },
- "glassworks|t-|l2|v1": {
-  "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 53
- },
- "glassworks|t-|l2|v2": {
-  "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 53
- },
- "glassworks|t-|l2|v3": {
-  "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 53
- },
- "glassworks|t-|l3|v0": {
-  "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 59
- },
- "glassworks|t-|l3|v1": {
-  "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 59
- },
- "glassworks|t-|l3|v2": {
-  "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 59
- },
- "glassworks|t-|l3|v3": {
-  "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
-  "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
-  "count": 59
- },
- "kontor2|t-|l-|v0": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor2|t-|l-|v1": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor2|t-|l-|v2": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "kontor2|t-|l-|v3": {
-  "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
-  "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
-  "count": 20
- },
- "spicefarm|t-|l-|v0": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "spicefarm|t-|l-|v1": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "spicefarm|t-|l-|v2": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "spicefarm|t-|l-|v3": {
-  "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
-  "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
-  "count": 77
- },
- "townhall|t-|l-|v0": {
-  "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
-  "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
-  "count": 24
- },
- "townhall|t-|l-|v1": {
-  "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
-  "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
-  "count": 24
- },
- "townhall|t-|l-|v2": {
-  "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
-  "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
-  "count": 24
- },
- "townhall|t-|l-|v3": {
-  "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
-  "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
-  "count": 24
- }
+  "kontor|t-|l-|v0": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor|t-|l-|v1": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor|t-|l-|v2": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor|t-|l-|v3": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "market|t-|l-|v0": {
+    "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
+    "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
+    "count": 103
+  },
+  "market|t-|l-|v1": {
+    "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
+    "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
+    "count": 103
+  },
+  "market|t-|l-|v2": {
+    "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
+    "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
+    "count": 103
+  },
+  "market|t-|l-|v3": {
+    "polygons": "21cb660569a555b3b8f97589cca3978bb3f9645fb4ab4778d0400936ba4a3c2e",
+    "hull": "d230d9f68bb62b6eb6a8047145b61e1bbf2f7bfebd0b6525544fe658d8c6a8d5",
+    "count": 103
+  },
+  "house|t1|l-|v0": {
+    "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
+    "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
+    "count": 12
+  },
+  "house|t1|l-|v1": {
+    "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
+    "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
+    "count": 12
+  },
+  "house|t1|l-|v2": {
+    "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
+    "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
+    "count": 12
+  },
+  "house|t1|l-|v3": {
+    "polygons": "08603e801322b7ddda659b77f68c6492df91e76c417651352e62e3794317b3fe",
+    "hull": "8a45dade1158b14887cecd9182e89dc3240590b28135fe200e09f79e51ad5891",
+    "count": 12
+  },
+  "house|t2|l-|v0": {
+    "polygons": "d54b28f724614a66c22efcb9c0f58e4caee3b6bc1a38030bf4f19d87cb6b0b83",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "house|t2|l-|v1": {
+    "polygons": "9e8d65c09830e0810f08da45abe8b303d77dac3fbf1345d6c960d64d77d518f6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 21
+  },
+  "house|t2|l-|v2": {
+    "polygons": "9e8d65c09830e0810f08da45abe8b303d77dac3fbf1345d6c960d64d77d518f6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 21
+  },
+  "house|t2|l-|v3": {
+    "polygons": "d54b28f724614a66c22efcb9c0f58e4caee3b6bc1a38030bf4f19d87cb6b0b83",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "house|t3|l-|v0": {
+    "polygons": "d2643b8adddfaf2c62607aa28a497c7b458f0e54c945ef4f2a733c2c8762a2f9",
+    "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
+    "count": 19
+  },
+  "house|t3|l-|v1": {
+    "polygons": "6546fcbbd4eeb2f2904e5585e713071d7772a52ece1d466120de66a383e19dc7",
+    "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
+    "count": 23
+  },
+  "house|t3|l-|v2": {
+    "polygons": "6546fcbbd4eeb2f2904e5585e713071d7772a52ece1d466120de66a383e19dc7",
+    "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
+    "count": 23
+  },
+  "house|t3|l-|v3": {
+    "polygons": "d2643b8adddfaf2c62607aa28a497c7b458f0e54c945ef4f2a733c2c8762a2f9",
+    "hull": "40e6e1616149013ec6010b5a47ee9d100dbac3d87899669a5e843cb552fb90dd",
+    "count": 19
+  },
+  "house|t4|l-|v0": {
+    "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
+    "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
+    "count": 42
+  },
+  "house|t4|l-|v1": {
+    "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
+    "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
+    "count": 42
+  },
+  "house|t4|l-|v2": {
+    "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
+    "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
+    "count": 42
+  },
+  "house|t4|l-|v3": {
+    "polygons": "1a6c7ce9b2add7d39679649a744ee9ba8dfb9c6c2caad178202dfa2aa9f787fb",
+    "hull": "401903316ad42101cf2064535df5681bcd9d2aaaca745919724d7181483bceae",
+    "count": 42
+  },
+  "fisher|t-|l-|v0": {
+    "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 18
+  },
+  "fisher|t-|l-|v1": {
+    "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 18
+  },
+  "fisher|t-|l-|v2": {
+    "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 18
+  },
+  "fisher|t-|l-|v3": {
+    "polygons": "9275314faf96fcf122a41170b52a8d9a68bfe75207bdca00e98b3b5f0e67c4cb",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 18
+  },
+  "fisher|t-|l2|v0": {
+    "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 21
+  },
+  "fisher|t-|l2|v1": {
+    "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 21
+  },
+  "fisher|t-|l2|v2": {
+    "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 21
+  },
+  "fisher|t-|l2|v3": {
+    "polygons": "413067504f920a2d580806e837f941ba8ca0df3dd898fa6dc339f39b5cb55a94",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 21
+  },
+  "fisher|t-|l3|v0": {
+    "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 27
+  },
+  "fisher|t-|l3|v1": {
+    "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 27
+  },
+  "fisher|t-|l3|v2": {
+    "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 27
+  },
+  "fisher|t-|l3|v3": {
+    "polygons": "b3b563d22c22da8f4401b8e868a6bfeaed0381e3be621a65d5ccdd4618fd5b54",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 27
+  },
+  "hunter|t-|l-|v0": {
+    "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 22
+  },
+  "hunter|t-|l-|v1": {
+    "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 22
+  },
+  "hunter|t-|l-|v2": {
+    "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 22
+  },
+  "hunter|t-|l-|v3": {
+    "polygons": "a1ec10e480b4c8f1821206581f6a0333fe2a41d613ad7a7515e6fdd01a73fe29",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 22
+  },
+  "hunter|t-|l2|v0": {
+    "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 25
+  },
+  "hunter|t-|l2|v1": {
+    "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 25
+  },
+  "hunter|t-|l2|v2": {
+    "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 25
+  },
+  "hunter|t-|l2|v3": {
+    "polygons": "873c5c30784f1c04ad502dca63b8ce42e39f104c9564636b2a32a2c519b42e84",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 25
+  },
+  "hunter|t-|l3|v0": {
+    "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 31
+  },
+  "hunter|t-|l3|v1": {
+    "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 31
+  },
+  "hunter|t-|l3|v2": {
+    "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 31
+  },
+  "hunter|t-|l3|v3": {
+    "polygons": "ac218a8884c6d0b39bbf15f0bc652f0f54988057f830275f56e610fcb3deb985",
+    "hull": "339f84e4c3e974787e3429d3c5366c824f87039518fd7beb716f487615aba97a",
+    "count": 31
+  },
+  "cattlefarm|t-|l-|v0": {
+    "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 85
+  },
+  "cattlefarm|t-|l-|v1": {
+    "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 85
+  },
+  "cattlefarm|t-|l-|v2": {
+    "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 85
+  },
+  "cattlefarm|t-|l-|v3": {
+    "polygons": "2393194a046c3eccd22505b96d89184bfa5a2e2c6985275c53980daec0b13583",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 85
+  },
+  "cattlefarm|t-|l2|v0": {
+    "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 88
+  },
+  "cattlefarm|t-|l2|v1": {
+    "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 88
+  },
+  "cattlefarm|t-|l2|v2": {
+    "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 88
+  },
+  "cattlefarm|t-|l2|v3": {
+    "polygons": "4a6a864f0c9512bf3bb4169b636451113bfe7571e5f8b21f7097cacbfa08888c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 88
+  },
+  "cattlefarm|t-|l3|v0": {
+    "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 94
+  },
+  "cattlefarm|t-|l3|v1": {
+    "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 94
+  },
+  "cattlefarm|t-|l3|v2": {
+    "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 94
+  },
+  "cattlefarm|t-|l3|v3": {
+    "polygons": "67cdee35680eb40f304873021bbab2e846af5178d725fa6f9feaae1b60821e8c",
+    "hull": "951a16da6351df4c007c72ba2cd477a45f2ff7ae650f438121fe52da7f81b68f",
+    "count": 94
+  },
+  "lumberjack|t-|l-|v0": {
+    "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "lumberjack|t-|l-|v1": {
+    "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "lumberjack|t-|l-|v2": {
+    "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "lumberjack|t-|l-|v3": {
+    "polygons": "cdfe2212ebbc54da40aff307da48835ded0d0896c3b214712e87765ae33863d6",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 19
+  },
+  "lumberjack|t-|l2|v0": {
+    "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 22
+  },
+  "lumberjack|t-|l2|v1": {
+    "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 22
+  },
+  "lumberjack|t-|l2|v2": {
+    "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 22
+  },
+  "lumberjack|t-|l2|v3": {
+    "polygons": "4a6eac650678e3b74a2188955443b46fdfccc4c2986038863b19e8f470626f20",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 22
+  },
+  "lumberjack|t-|l3|v0": {
+    "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 28
+  },
+  "lumberjack|t-|l3|v1": {
+    "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 28
+  },
+  "lumberjack|t-|l3|v2": {
+    "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 28
+  },
+  "lumberjack|t-|l3|v3": {
+    "polygons": "84181694e2908528d75d0161039ae0ac48751423db015f2fe4e2cc73967f0fc5",
+    "hull": "46ce9cb6ee9c11aab6755dca8a11d37875d349cbf3803fa359536979adcc0605",
+    "count": 28
+  },
+  "quarry|t-|l-|v0": {
+    "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 28
+  },
+  "quarry|t-|l-|v1": {
+    "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 28
+  },
+  "quarry|t-|l-|v2": {
+    "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 28
+  },
+  "quarry|t-|l-|v3": {
+    "polygons": "3b24e28753e21154b6a306da11e83a755320996540db10492dbe10374a89ea80",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 28
+  },
+  "quarry|t-|l2|v0": {
+    "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 31
+  },
+  "quarry|t-|l2|v1": {
+    "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 31
+  },
+  "quarry|t-|l2|v2": {
+    "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 31
+  },
+  "quarry|t-|l2|v3": {
+    "polygons": "48058ceeb81fe9a718b8b709260e8a74663f18b5ad3f97c38af13421f319ce3e",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 31
+  },
+  "quarry|t-|l3|v0": {
+    "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 37
+  },
+  "quarry|t-|l3|v1": {
+    "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 37
+  },
+  "quarry|t-|l3|v2": {
+    "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 37
+  },
+  "quarry|t-|l3|v3": {
+    "polygons": "41c960f1014e2c040eb4a8c488aa173e2a6c205ce3a789bf8ca330c939deacb6",
+    "hull": "73364c89b7af8146a382035d3107701788b584805fce0fa57ac7680d4d70351a",
+    "count": 37
+  },
+  "sheepfarm|t-|l-|v0": {
+    "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 75
+  },
+  "sheepfarm|t-|l-|v1": {
+    "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 75
+  },
+  "sheepfarm|t-|l-|v2": {
+    "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 75
+  },
+  "sheepfarm|t-|l-|v3": {
+    "polygons": "f4ca14d038569a9032b032631be8c7cfb32e3c20a27edec8fdd9ab95ce41fde9",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 75
+  },
+  "sheepfarm|t-|l2|v0": {
+    "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 78
+  },
+  "sheepfarm|t-|l2|v1": {
+    "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 78
+  },
+  "sheepfarm|t-|l2|v2": {
+    "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 78
+  },
+  "sheepfarm|t-|l2|v3": {
+    "polygons": "27ecec05db453ddf486bc39a4d4124afdafa07c6073ea7b7b85899ce7c898367",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 78
+  },
+  "sheepfarm|t-|l3|v0": {
+    "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 84
+  },
+  "sheepfarm|t-|l3|v1": {
+    "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 84
+  },
+  "sheepfarm|t-|l3|v2": {
+    "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 84
+  },
+  "sheepfarm|t-|l3|v3": {
+    "polygons": "6c2ff7031eaed52ebf134ff4cc1ae34847517643ce4c33a89535e461f164d98a",
+    "hull": "82e61d99c013e29f3b554d687c797a3eabbc46fa17f06e2b688b475ce82b51f8",
+    "count": 84
+  },
+  "weaver|t-|l-|v0": {
+    "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 31
+  },
+  "weaver|t-|l-|v1": {
+    "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 31
+  },
+  "weaver|t-|l-|v2": {
+    "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 31
+  },
+  "weaver|t-|l-|v3": {
+    "polygons": "02899322548d0596030c86c419ddba6cb7bf9f4e70ba82274540e6bd62590058",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 31
+  },
+  "weaver|t-|l2|v0": {
+    "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 34
+  },
+  "weaver|t-|l2|v1": {
+    "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 34
+  },
+  "weaver|t-|l2|v2": {
+    "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 34
+  },
+  "weaver|t-|l2|v3": {
+    "polygons": "756e60a96cbfe902c68b88875466aed3c29b354ad724e3135d80957b4faf5ab6",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 34
+  },
+  "weaver|t-|l3|v0": {
+    "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 40
+  },
+  "weaver|t-|l3|v1": {
+    "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 40
+  },
+  "weaver|t-|l3|v2": {
+    "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 40
+  },
+  "weaver|t-|l3|v3": {
+    "polygons": "ab4e74ec5d8c7e2c3fdf9c8f77cb51e45cc6413a02df6f23c95219fb411f1bcc",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 40
+  },
+  "canefarm|t-|l-|v0": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "canefarm|t-|l-|v1": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "canefarm|t-|l-|v2": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "canefarm|t-|l-|v3": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "canefarm|t-|l2|v0": {
+    "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 80
+  },
+  "canefarm|t-|l2|v1": {
+    "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 80
+  },
+  "canefarm|t-|l2|v2": {
+    "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 80
+  },
+  "canefarm|t-|l2|v3": {
+    "polygons": "e14e1dab94af5f0bf2ea5c7d4221e4b8f253da7362ef2848d6b8e45e4d1aa835",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 80
+  },
+  "canefarm|t-|l3|v0": {
+    "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 86
+  },
+  "canefarm|t-|l3|v1": {
+    "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 86
+  },
+  "canefarm|t-|l3|v2": {
+    "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 86
+  },
+  "canefarm|t-|l3|v3": {
+    "polygons": "edc6818c17ceda7bc9d40cac91458912c85f2c51f1060f3945350f09c41bdd31",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 86
+  },
+  "distillery|t-|l-|v0": {
+    "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 40
+  },
+  "distillery|t-|l-|v1": {
+    "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 40
+  },
+  "distillery|t-|l-|v2": {
+    "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 40
+  },
+  "distillery|t-|l-|v3": {
+    "polygons": "433263167e54d6e7cf867fc8ba3d74c8788dec632c602c0dc12b4605dc916b6a",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 40
+  },
+  "distillery|t-|l2|v0": {
+    "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 43
+  },
+  "distillery|t-|l2|v1": {
+    "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 43
+  },
+  "distillery|t-|l2|v2": {
+    "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 43
+  },
+  "distillery|t-|l2|v3": {
+    "polygons": "43505c1c527e3234f92e4a508558039a242439cd2d6e86f04bc297dd2ae627ef",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 43
+  },
+  "distillery|t-|l3|v0": {
+    "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 49
+  },
+  "distillery|t-|l3|v1": {
+    "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 49
+  },
+  "distillery|t-|l3|v2": {
+    "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 49
+  },
+  "distillery|t-|l3|v3": {
+    "polygons": "ce2bbd095c3f01bce5bf0d54d3e91905e6e0cf162e7022aa8a5eeed47bf451eb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 49
+  },
+  "toolmaker|t-|l-|v0": {
+    "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 24
+  },
+  "toolmaker|t-|l-|v1": {
+    "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 24
+  },
+  "toolmaker|t-|l-|v2": {
+    "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 24
+  },
+  "toolmaker|t-|l-|v3": {
+    "polygons": "3d2265985b05b673d6f118afd54ea622590974ccfb205e75184fab54758ca268",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 24
+  },
+  "toolmaker|t-|l2|v0": {
+    "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 27
+  },
+  "toolmaker|t-|l2|v1": {
+    "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 27
+  },
+  "toolmaker|t-|l2|v2": {
+    "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 27
+  },
+  "toolmaker|t-|l2|v3": {
+    "polygons": "bfc6d94f4e81fb66f03bed4284dd34210a12df3e96c3a631f13aa10703ab70a7",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 27
+  },
+  "toolmaker|t-|l3|v0": {
+    "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 33
+  },
+  "toolmaker|t-|l3|v1": {
+    "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 33
+  },
+  "toolmaker|t-|l3|v2": {
+    "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 33
+  },
+  "toolmaker|t-|l3|v3": {
+    "polygons": "25f962d5dddc25dcf5f734df80bce16dfc0970d7289792c425d26dbe81e7cf24",
+    "hull": "18ab7041177a354e65b7226b43814c711589278f7b7a59685dd5bca93a79c9f4",
+    "count": 33
+  },
+  "chapel|t-|l-|v0": {
+    "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
+    "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
+    "count": 19
+  },
+  "chapel|t-|l-|v1": {
+    "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
+    "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
+    "count": 19
+  },
+  "chapel|t-|l-|v2": {
+    "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
+    "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
+    "count": 19
+  },
+  "chapel|t-|l-|v3": {
+    "polygons": "f34a8362ccbe1966bde11622d4b4a08236614c8254993ec33a7087770319dc12",
+    "hull": "e5a12020471ada49bf80502d3e6535dbe9fed5321d311d6cfacc5c03386c2403",
+    "count": 19
+  },
+  "school|t-|l-|v0": {
+    "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
+    "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
+    "count": 25
+  },
+  "school|t-|l-|v1": {
+    "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
+    "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
+    "count": 25
+  },
+  "school|t-|l-|v2": {
+    "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
+    "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
+    "count": 25
+  },
+  "school|t-|l-|v3": {
+    "polygons": "76dcd128946b5e15e9f4f24c3d50e7514951e85c3ee38b363f2dc5100e2c5aad",
+    "hull": "fe8dd80f2111cdb3bf4aa7f81971419e6502b2daf8027f9ba0821040978ec4f1",
+    "count": 25
+  },
+  "firestation|t-|l-|v0": {
+    "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
+    "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
+    "count": 19
+  },
+  "firestation|t-|l-|v1": {
+    "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
+    "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
+    "count": 19
+  },
+  "firestation|t-|l-|v2": {
+    "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
+    "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
+    "count": 19
+  },
+  "firestation|t-|l-|v3": {
+    "polygons": "f44c1ab228b8995630eb05c7f4aaaf4f57b72ff446fe87c779a84553ba22207e",
+    "hull": "8b9d620b4ae79739b161958d49e31bcae7bd824832cf1c428ed320e192b8b36d",
+    "count": 19
+  },
+  "bathhouse|t-|l-|v0": {
+    "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 60
+  },
+  "bathhouse|t-|l-|v1": {
+    "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 60
+  },
+  "bathhouse|t-|l-|v2": {
+    "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 60
+  },
+  "bathhouse|t-|l-|v3": {
+    "polygons": "5bd18f39168caad14b97788caeddc8ef437ec5fccbb9e8b64a1350803605cec7",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 60
+  },
+  "glassworks|t-|l-|v0": {
+    "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 50
+  },
+  "glassworks|t-|l-|v1": {
+    "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 50
+  },
+  "glassworks|t-|l-|v2": {
+    "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 50
+  },
+  "glassworks|t-|l-|v3": {
+    "polygons": "cd7d6651c331a9e968f666954c42efe869b2e293741c72b4e33791904261c1be",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 50
+  },
+  "glassworks|t-|l2|v0": {
+    "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 53
+  },
+  "glassworks|t-|l2|v1": {
+    "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 53
+  },
+  "glassworks|t-|l2|v2": {
+    "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 53
+  },
+  "glassworks|t-|l2|v3": {
+    "polygons": "5e623c7e053db01fda72977ae3cfe2de86ed2226488e5f2e87b7a618c7a7455e",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 53
+  },
+  "glassworks|t-|l3|v0": {
+    "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 59
+  },
+  "glassworks|t-|l3|v1": {
+    "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 59
+  },
+  "glassworks|t-|l3|v2": {
+    "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 59
+  },
+  "glassworks|t-|l3|v3": {
+    "polygons": "af0ccfbbe137fbedc1bc6e46552540cff190b0f29e903d92003c464c89fcdf8c",
+    "hull": "8522238f41ec3608532f8003175f3e73b1863c5cdea18113e04df6c7205a33c6",
+    "count": 59
+  },
+  "kontor2|t-|l-|v0": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor2|t-|l-|v1": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor2|t-|l-|v2": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "kontor2|t-|l-|v3": {
+    "polygons": "0bb6d47d490c671381750684ab4a150c1f9e9a60510421d6f1821de7d57e6aeb",
+    "hull": "532de184c7f94f5f9c39bcbc6326987e5fa5c63dda8148e13deaf0888f174909",
+    "count": 20
+  },
+  "spicefarm|t-|l-|v0": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "spicefarm|t-|l-|v1": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "spicefarm|t-|l-|v2": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "spicefarm|t-|l-|v3": {
+    "polygons": "7c618eb4d4e809c28ffea369bf04d6cac9c4a3c461f8cda2043ee3de662cc88b",
+    "hull": "cd8f93a15cb2918f6a2b7b1e9c4dcb683084b97b9183304c3838cbf5cf4c3c52",
+    "count": 77
+  },
+  "townhall|t-|l-|v0": {
+    "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
+    "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
+    "count": 24
+  },
+  "townhall|t-|l-|v1": {
+    "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
+    "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
+    "count": 24
+  },
+  "townhall|t-|l-|v2": {
+    "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
+    "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
+    "count": 24
+  },
+  "townhall|t-|l-|v3": {
+    "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
+    "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
+    "count": 24
+  }
 }

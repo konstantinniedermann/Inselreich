@@ -3,7 +3,8 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
 import { bodyHeight, spriteBounds } from '../../src/render/iso';
 import { SPRITE_CACHE_MAX_BYTES } from '../../src/render/limits';
-import { bodyFaces, bodyPolygons, drawBody } from '../../src/render/sprites';
+// L3: Geometrie- und Referenztests zeichnen ohne Bildmodus (`drawBodyPlain`); Bildmodus: sprites-kanten.test.ts
+import { bodyFaces, bodyPolygons, drawBodyPlain as drawBody } from '../../src/render/sprites';
 import { VARIANT_COUNT, VARIANT_LOOKS, variantOf } from '../../src/render/variants';
 import { createSpriteCache, spriteKey, type SpriteSurface } from '../../src/render/spriteCache';
 import { drawMaterial, materialDetail } from '../../src/render/material';

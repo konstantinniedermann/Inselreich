@@ -1095,7 +1095,8 @@ describe('S1-Rest DIM_FIRE', () => {
 });
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
-  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
+  const HOME_CALLS = { hash: 50834292, length: 12375 };
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {

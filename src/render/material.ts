@@ -1,7 +1,7 @@
 import { hash2 } from '../sim/noise';
 import type { Building, BuildingDef } from '../sim/types';
 import { ISO_W, type Pt } from './iso';
-import { PALETTE, rgbOfCss } from './palette';
+import { INK_TONE, PALETTE, rgbOfCss } from './palette';
 import type { BodyFace } from './sprites';
 
 // material.ts — Materialschicht des Sprite-Caches (H-R7, G8): Fugen, Risse und Stroh als reine Strich-Pfade.
@@ -26,6 +26,18 @@ const JOINT = rgba(PALETTE.wallTimber, 0.16);
 const STRAW_DARK = rgba(PALETTE.roofTimber, 0.3);
 const STRAW_LIGHT = rgba(PALETTE.foam, 0.28);
 const CRACK = rgba(PALETTE.rockDark, 0.4);
+// L3 Pinselkorn (Spec 2.3/4): zwei Tonstufen je Fläche (leicht heller / dunkler als der Eigenton), Korn 1 px,
+// zurückhaltend (Signale und Typ-Erkennung haben Vorrang). Dachreihen: jede Reihe leicht verschoben, ein Teil dunkler.
+export const GRAIN_LIGHT = rgba(PALETTE.wallLime, 0.1);
+export const GRAIN_DARK = rgba(INK_TONE, 0.09);
+export const ROW_DARK = rgba(PALETTE.roofTimber, 0.26);
+/** Korngrösse in CSS-px, Fläche je Korn (Weltpixel²) und Obergrenze je Fläche. */
+export const GRAIN_SIZE = 1;
+const GRAIN_AREA = 60;
+const MAX_GRAIN = 48;
+/** Salze L3 (Block 500–599): Korn und Dachreihen. */
+export const GRAIN_SALT = 564;
+export const ROW_SALT = 565;
 
 /**
  * Detailstufe nach Zoom (ISO §16): 0 = kein Material (bei kleinem Zoom wären Fugen unter einem Pixel Abstand),
@@ -62,6 +74,20 @@ function inPoly(poly: readonly Pt[], x: number, y: number): boolean {
   }
   return inside;
 }
+const GRAIN_PAD = 0.6;
+const corners = (x: number, y: number): Pt[] =>
+  [
+    [0, 0],
+    [GRAIN_PAD, 0],
+    [-GRAIN_PAD, 0],
+    [0, GRAIN_PAD],
+    [0, -GRAIN_PAD],
+  ].map(([dx, dy]) => ({ x: x + dx!, y: y + dy! }));
+/** Das Korn samt Umgebung liegt ganz im Polygon bzw. berührt es irgendwo. */
+const allIn = (poly: readonly Pt[], x: number, y: number): boolean =>
+  corners(x, y).every((c) => inPoly(poly, c.x, c.y));
+const anyIn = (poly: readonly Pt[], x: number, y: number): boolean =>
+  corners(x, y).some((c) => inPoly(poly, c.x, c.y));
 /** Wand: Viereck mit zwei senkrechten Kanten (Wandflächen liegen in einer Ebene u = const oder v = const). */
 function isWall(pts: readonly Pt[]): boolean {
   if (pts.length !== 4) return false;
@@ -147,7 +173,13 @@ function visibleParts(s: Seg, faces: readonly BodyFace[]): [Pt, Pt][] {
 }
 
 /** Fugenlinien eines Vierecks, parallel zum längeren Kantenpaar. */
-function courses(pts: readonly Pt[], step: number, fi: number, path: Seg[]): void {
+function courses(
+  pts: readonly Pt[],
+  step: number,
+  fi: number,
+  path: Seg[],
+  roof?: { salt: number; dark: Seg[] },
+): void {
   const [p0, p1, p2, p3] = pts as [Pt, Pt, Pt, Pt];
   const along = dist(p0, p1) + dist(p2, p3) >= dist(p1, p2) + dist(p3, p0);
   const [a0, a1, b0, b1, across] = along
@@ -155,10 +187,12 @@ function courses(pts: readonly Pt[], step: number, fi: number, path: Seg[]): voi
     : [p0, p1, p3, p2, (dist(p0, p1) + dist(p3, p2)) / 2];
   const n = Math.floor(across / step);
   for (let i = 1; i <= n; i++) {
-    const t = i / (n + 1);
+    // Dachreihen: Abstand bis ±30 % einer Reihe verschoben, rund die Hälfte der Reihen dunkler
+    const t = i / (n + 1) + (roof ? (hash2(roof.salt, fi, i) - 0.5) * (0.6 / (n + 1)) : 0);
     const a = lerp(a0, a1, t),
       b = lerp(b0, b1, t);
-    path.push({ fi, a: lerp(a, b, END_GAP), b: lerp(a, b, 1 - END_GAP) });
+    const seg = { fi, a: lerp(a, b, END_GAP), b: lerp(a, b, 1 - END_GAP) };
+    (roof && hash2(roof.salt + 1, fi, i) > 0.5 ? roof.dark : path).push(seg);
   }
 }
 
@@ -186,6 +220,9 @@ export function drawMaterial(
   const dark: Seg[] = [];
   const light: Seg[] = [];
   const cracks: Seg[] = [];
+  const rowsDark: Seg[] = [];
+  const grainLight: Pt[] = [];
+  const grainDark: Pt[] = [];
   let widest: BodyFace | null = null;
   let widestIdx = -1;
 
@@ -219,7 +256,21 @@ export function drawMaterial(
             b: { x: x + dx, y: y + dy },
           });
       }
-    } else if (pts.length === 4) courses(pts, step, fi, joints);
+    } else if (pts.length === 4)
+      courses(pts, step, fi, joints, wall ? undefined : { salt: ROW_SALT, dark: rowsDark });
+    // Pinselkorn: Punkte in der Fläche, nicht unter später gezeichneten Flächen (Fenster, Tür, Dach davor)
+    const n = Math.min(
+      MAX_GRAIN,
+      Math.floor(a / (zoom * zoom * GRAIN_AREA)) * (level >= 3 ? 1 : 0.6),
+    );
+    for (let i = 0; i < Math.floor(n); i++) {
+      const x = minX + hash2(GRAIN_SALT + 0, fi * 97 + variant, i * 2) * (maxX - minX),
+        y = minY + hash2(GRAIN_SALT + 0, fi * 97 + variant, i * 2 + 1) * (maxY - minY);
+      // das Korn (1 px) liegt ganz in der Fläche und unter keiner später gezeichneten Fläche
+      if (!allIn(pts, x, y)) continue;
+      if (faces.slice(fi + 1).some((g) => anyIn(g.pts, x, y))) continue;
+      ((i & 1) === 0 ? grainLight : grainDark).push({ x, y });
+    }
   });
 
   // Risse (nur Stufe 3, nur ab Variante 2): ein Zickzack auf der grössten Wand, jeder Punkt in der Fläche.
@@ -246,12 +297,13 @@ export function drawMaterial(
     [dark, STRAW_DARK],
     [light, STRAW_LIGHT],
     [cracks, CRACK],
+    [rowsDark, ROW_DARK],
   ];
   const drawn = groups.map(([g, color]): [[Pt, Pt][], string] => [
     g.flatMap((sg) => visibleParts(sg, faces)),
     color,
   ]);
-  if (drawn.every(([g]) => g.length === 0)) return;
+  if (drawn.every(([g]) => g.length === 0) && grainLight.length + grainDark.length === 0) return;
   ctx.save();
   ctx.lineWidth = LINE_WIDTH;
   ctx.lineJoin = 'round';
@@ -262,6 +314,20 @@ export function drawMaterial(
     for (const [p, q] of g) {
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(q.x, q.y);
+    }
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  }
+  for (const [g, color] of [
+    [grainLight, GRAIN_LIGHT],
+    [grainDark, GRAIN_DARK],
+  ] as const) {
+    if (g.length === 0) continue;
+    ctx.beginPath();
+    // Korn als Punkt: Strich der Länge 0 mit runder Kappe, Breite wie die Fugen (1 px); die Material-Schicht bleibt Strich-Pfade
+    for (const q of g) {
+      ctx.moveTo(q.x, q.y);
+      ctx.lineTo(q.x + 0.01, q.y);
     }
     ctx.strokeStyle = color;
     ctx.stroke();
