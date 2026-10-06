@@ -1,6 +1,8 @@
 import { generateTerrain } from '../sim/mapgen';
 import { hash2, valueNoise } from '../sim/noise';
-import type { Island } from '../sim/types';
+import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { seaLanes } from '../sim/islands';
+import type { Island, World } from '../sim/types';
 import { LIGHT, rotNoise } from './light';
 import { meadowWarmth } from './groundDecor';
 
@@ -26,7 +28,11 @@ import { meadowWarmth } from './groundDecor';
 //     reine Funktion von Seed und Kachel, also statisch (D1): S/E- und Mehrkachel-Orte meiden diesen Wald, auch wenn er
 //     später gerodet wird. Fremdinseln und unpassende Karten haben keinen Schätzer.
 //  D4 Fremdinseln: gilt für jeden Ansicht-Seed; Stempel zeigt der Aufrufer (`iso.ts`) nur auf der Heimat.
-//  D5 Salze nur 540–559; Zufall nur über `hash2`/`valueNoise`.
+//  D5 Salze 540–559 (L4) und 560–569 (L5, Meer und Palmen: 560 Palmen, 566 Wrack, 567 Meeresfels und Felsnadel, 568 Felseiland,
+//     569 Wasserflächen Sandbank/Riff/Tang); Zufall nur über `hash2`/`valueNoise`.
+//  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
+//     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
+//     NICHT über `RARE_POOL`/`RARE_CAP` (Land-Orte), sondern über eigene Lose; L8 zählt sie fürs Seltenheitsbudget dazu.
 
 /** Reichweite der Sichtbarkeitsprüfung über den Fussabdruck hinaus in Kacheln (= Rand von `dirtyRect`). */
 export const DECOR_REACH = 1;
@@ -98,12 +104,20 @@ export interface GroundElement {
 }
 
 /** Stempel (A5, A6, A9, A14), im sortierten Durchgang gezeichnet; Fussabdruck 1 × 1. */
-export type StampKind = 'solitaire' | 'orchard' | 'menhir' | 'ruin';
+export type StampKind =
+  | 'solitaire'
+  | 'orchard'
+  | 'menhir'
+  | 'ruin'
+  | 'palm' // D1 (L5), auf Sand
+  | 'wreck' // E1 (L5), im Wasser
+  | 'seaRock' // E3 (L5), im Wasser; Varianten 6/7 = Felsnadel
+  | 'islet'; // E8 (L5), im Wasser
 export interface StampPlacement {
   kind: StampKind;
   x: number;
   y: number;
-  /** Form-Variante 0…3. */
+  /** Form-Variante: 0…3 (L4-Stempel); `palm` 0…11 (Form × 4 + Neigungsrichtung), `wreck` 0…3, `seaRock` 0…7, `islet` 0…3. */
   variant: number;
   /** `y * Breite + x`. */
   id: number;
@@ -227,6 +241,8 @@ interface StaticPlan {
   sites: RareSite[];
   /** Statische Stempelliste (D1): Kandidaten, Reihenfolge, Abstand und Deckel nur aus dem statischen Gelände. */
   stamps: StampPlacement[];
+  /** Palmen (D1, L5): statisch aus dem Gelände; `stampPlacements` hängt sie nur mit `sea` an. */
+  palms: StampPlacement[];
   /** Statische Kandidaten der Boden-G-Elemente je Kachel (0 keiner, sonst 1 + Index in `G_KINDS`). */
   g: Uint8Array;
   /** Zahl der statisch zulässigen Kacheln je G-Art (für Tests: „das Gelände lässt es zu“). */
@@ -423,12 +439,14 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
     wild,
     sites: [],
     stamps: [],
+    palms: [],
     g: new Uint8Array(w * h),
     gEligible: [0, 0, 0, 0],
     reserved: new Uint8Array(w * h),
   };
   planRare(p, w, h);
   planStamps(p, w, h);
+  planPalms(p, w, h);
   planGround(p, w, h);
   plans.set(isl, p);
   return p;
@@ -552,6 +570,92 @@ function planStamps(p: StaticPlan, w: number, h: number): void {
   p.stamps = out.sort((a, b) => a.id - b.id);
 }
 
+// ---------- Palmen (D1, L5) ----------
+
+/** Küstencharakter je Insel (Spec 3.7, `hash2(seed + 500, 0, 2)`): Palmenküste, Kiefernküste, kahle Dünenküste. */
+export type CoastKind = 'palm' | 'pine' | 'dune';
+export function coastKind(seed: number): CoastKind {
+  const u = hash2(seed + 500, 0, 2);
+  return u < 0.5 ? 'palm' : u < 0.75 ? 'pine' : 'dune';
+}
+/** Abstand der Palmengruppen (Chebyshev) und Zahl der Formen; Richtungen 0 = +x, 1 = +y, 2 = −x, 3 = −y (Kachelraum). */
+const PALM_GROUP_GAP = 6;
+export const PALM_SHAPES = 3;
+
+/** Richtung (0…3) vom Land zum nächsten Wasser, auf die 4 Kachelachsen gerundet (= die 4 Iso-Richtungen). */
+function seaward(p: StaticPlan, w: number, h: number, x: number, y: number): number {
+  let best = Infinity,
+    bx = 1,
+    by = 0;
+  for (let dy = -6; dy <= 6; dy++)
+    for (let dx = -6; dx <= 6; dx++) {
+      const nx = x + dx,
+        ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || p.cls[ny * w + nx] !== 0) continue;
+      const d = dx * dx + dy * dy + 0.01 * hash2(p.seed + 560, nx, ny);
+      if (d < best) {
+        best = d;
+        bx = dx;
+        by = dy;
+      }
+    }
+  return Math.abs(bx) >= Math.abs(by) ? (bx >= 0 ? 0 : 2) : by >= 0 ? 1 : 3;
+}
+
+/**
+ * Palmen (D1): einzeln oder in Gruppen zu 2–3 auf trockenem Sand mit Wasserabstand ≥ 2 (≥ 1 Kachel Abstand zum Saum). Die
+ * Küstenvariante bestimmt die Zahl der Gruppen: Palmenküste 3–10, Kiefernküste höchstens eine, Dünenküste keine. Statisch (D1):
+ * nur Gelände, Seed und Küstenvariante; Belegung blendet in `stampPlacements` aus. Variante = Form · 4 + Richtung zur See.
+ */
+function planPalms(p: StaticPlan, w: number, h: number): void {
+  const seed = p.seed;
+  const kind = coastKind(seed);
+  const groups =
+    kind === 'palm'
+      ? gCount(seed, 560, 0, 10)
+      : kind === 'pine'
+        ? Math.floor(hash2(seed + 560, -5, -5) * 2)
+        : 0;
+  p.palms = [];
+  if (!groups) return;
+  const cand: { x: number; y: number; r: number }[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (p.cls[i] === 1 && p.coast[i]! >= 2) cand.push({ x, y, r: hash2(seed + 560, x, y) });
+    }
+  cand.sort((a, b) => a.r - b.r);
+  const used = new Set<number>();
+  const centres: Pos[] = [];
+  for (const c of cand) {
+    if (centres.length >= groups) break;
+    if (centres.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < PALM_GROUP_GAP))
+      continue;
+    centres.push(c);
+    const size = 1 + Math.floor(hash2(seed + 560, c.x * 64 + 1, c.y) * 3);
+    const members = [c];
+    for (const m of cand) {
+      if (members.length >= size) break;
+      if (m === c || Math.max(Math.abs(m.x - c.x), Math.abs(m.y - c.y)) !== 1) continue;
+      members.push(m);
+    }
+    for (const m of members) {
+      const id = m.y * w + m.x;
+      if (used.has(id)) continue;
+      used.add(id);
+      const shape = Math.floor(hash2(seed + 560, m.x * 64 + 2, m.y) * PALM_SHAPES);
+      p.palms.push({
+        kind: 'palm',
+        x: m.x,
+        y: m.y,
+        variant: shape * 4 + seaward(p, w, h, m.x, m.y),
+        id,
+      });
+    }
+  }
+  p.palms.sort((a, b) => a.id - b.id);
+}
+
 /** Boden-G-Elemente mit statischer Kandidatenliste: A7, A11, A12, B7 (Salze 545, 546, 547, 549). */
 export const G_KINDS = ['stoneHeap', 'molehills', 'reeds', 'deadwood'] as const;
 const G_SALTS = [545, 546, 547, 549] as const;
@@ -606,19 +710,360 @@ export const groundEligible = (
  * Stempel der Insel: die statische Liste (`planStamps`), ausgeblendet wo der Fuss kein unbelegtes Gras ist, auf Kacheln vor
  * einem Gebäude liegt (R3) oder ein Solitär weniger als `SOLITAIRE_FOREST_GAP` Kacheln vom jetzigen Wald steht (R5).
  * Nichts rückt nach: ein Haus, ein Weg oder eine Rodung entfernt höchstens Stempel an Ort und Stelle. Sortiert nach `id`.
+ * Mit `sea` (nur die Heimat, `iso.ts`) kommen Palmen (D1, auf Sand, R3 wie die übrigen) und die Meer-Stempel (Wrack, Felsen,
+ * Eiland aus `seaPlan`) dazu; R6 (≤ 1 je 6 Landkacheln, ≤ 300) zählt sie mit. Ohne `sea` bleibt alles wie in L4.
  */
 export function stampPlacements(
   seed: number,
   isl: DecorIsland,
   kontor: Pos | null = null,
+  sea?: SeaContext,
 ): StampPlacement[] {
   const w = isl.width;
-  return staticPlan(seed, isl, kontor).stamps.filter(
+  const p = staticPlan(seed, isl, kontor);
+  const base = p.stamps.filter(
     (s) =>
       isl.tiles[s.y * w + s.x]!.terrain === 'grass' &&
       !stampBlocked(isl, s.x, s.y) &&
       (s.kind !== 'solitaire' || solitaireClear(isl, s.x, s.y)),
   );
+  if (!sea) return base;
+  const room = stampLimit(p.cls.reduce((n, c) => n + (c !== 0 ? 1 : 0), 0)) - base.length;
+  const extra: StampPlacement[] = [
+    ...seaStamps(seed, seaPlan(seed, isl, sea), w),
+    ...p.palms.filter(
+      (s) => isl.tiles[s.y * w + s.x]!.terrain === 'sand' && !stampBlocked(isl, s.x, s.y),
+    ),
+  ];
+  return [...base, ...extra.slice(0, Math.max(0, room))].sort((a, b) => a.id - b.id);
+}
+
+// ---------- Meer (E1, E2, E3, E6, E8, D11; R4) ----------
+
+/** Wassertiefe = Chebyshev-Abstand zum Land: flach 1–2, mittel 3–6. */
+export const SEA_SHALLOW_MAX = 2;
+export const SEA_MID_MAX = 6;
+/** R4: Mindestabstand zur Lane, zu Anker und Kontor (Kacheln), Halbwinkel des Anfahrtskegels (Grad). */
+export const SEA_LANE_GAP = 3;
+export const SEA_ANCHOR_GAP = 4;
+export const SEA_CONE_DEG = 30;
+/** Lose der seltenen Meer-Elemente (Spec 3.5): Wrack 40 %, Felseiland 15 %, Felsnadel (S) 30 %. */
+export const WRECK_P = 0.4;
+export const ISLET_P = 0.15;
+export const NEEDLE_P = 0.3;
+
+/** Alles, was die Schifffahrt von der Heimatinsel aus festlegt, in Kachelkoordinaten der Heimat (Mitte der Kachel = x + 0,5). */
+export interface SeaContext {
+  /** Fahrlinien der Heimat (vom Anker weg), Polylinien. */
+  lanes: Pos[][];
+  anchor: Pos;
+  /** Kontore der Heimat: Mitte und Grösse. */
+  kontors: { x: number; y: number; w: number; h: number }[];
+}
+
+const seaContexts = new WeakMap<World, { sig: string; ctx: SeaContext }>();
+
+/**
+ * Seekontext der Heimat (rein lesend): `seaLanes` mit Heimat-Index in Heimat-Kacheln (minus `ox`/`oy`), Anker, Kontore. Je
+ * Welt einmal gehalten (WeakMap, fällt mit der Welt weg); neu gebildet nur, wenn sich die Kontorliste ändert (Inseln sind ab
+ * Weltbau fest).
+ */
+export function seaContext(world: World): SeaContext {
+  const hi = Math.max(
+    0,
+    world.islands.findIndex((i) => i.kind === 'home'),
+  );
+  const isl = world.islands[hi]!;
+  const kontors = Object.values(world.buildings)
+    .filter((b) => b.island === hi && (b.defId === 'kontor' || b.defId === 'kontor2'))
+    .map((b) => {
+      const d = BUILDING_DEFS[b.defId];
+      return { x: b.x, y: b.y, w: d.w, h: d.h };
+    });
+  const sig = JSON.stringify(kontors);
+  const c = seaContexts.get(world);
+  if (c && c.sig === sig) return c.ctx;
+  const lanes: Pos[][] = [];
+  for (const l of seaLanes(world.islands)) {
+    if (l.a !== hi && l.b !== hi) continue;
+    const pts = l.a === hi ? l.points : [...l.points].reverse();
+    lanes.push(pts.map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
+  }
+  const ctx: SeaContext = {
+    lanes,
+    anchor: { x: isl.anchor.x + 0.5, y: isl.anchor.y + 0.5 },
+    kontors,
+  };
+  seaContexts.set(world, { sig, ctx });
+  return ctx;
+}
+
+function distToSeg(px: number, py: number, a: Pos, b: Pos): number {
+  const dx = b.x - a.x,
+    dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy;
+  const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l2));
+  return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
+}
+
+/**
+ * R4: Kachel (`x`, `y`) ist für Meer-Elemente gesperrt, wenn ihre Mitte < `SEA_LANE_GAP` Kacheln von einer Lane, <
+ * `SEA_ANCHOR_GAP` vom Anker oder von einem Kontor (Abstand zum Rechteck) liegt oder im Anfahrtskegel (±`SEA_CONE_DEG` um
+ * die Fahrtrichtung vom Anker weg, je Lane) steht. `pad` vergrössert die Abstände für Elemente über eine Kachel hinaus.
+ * Die „Richtung Anker → nächster Lane-Punkt“ ist die Richtung des ersten Lane-Abschnitts (Lanes sind Geraden Anker → Anker).
+ */
+export function seaKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
+  const cx = x + 0.5,
+    cy = y + 0.5;
+  for (const l of ctx.lanes)
+    for (let i = 1; i < l.length; i++)
+      if (distToSeg(cx, cy, l[i - 1]!, l[i]!) < SEA_LANE_GAP + pad) return true;
+  const vx = cx - ctx.anchor.x,
+    vy = cy - ctx.anchor.y;
+  const vl = Math.hypot(vx, vy);
+  if (vl < SEA_ANCHOR_GAP + pad) return true;
+  for (const k of ctx.kontors) {
+    const dx = Math.max(k.x - cx, 0, cx - (k.x + k.w)),
+      dy = Math.max(k.y - cy, 0, cy - (k.y + k.h));
+    if (Math.hypot(dx, dy) < SEA_ANCHOR_GAP + pad) return true;
+  }
+  const cos = Math.cos((SEA_CONE_DEG * Math.PI) / 180);
+  for (const l of ctx.lanes) {
+    const t = l.find((q) => Math.hypot(q.x - ctx.anchor.x, q.y - ctx.anchor.y) > 1e-6);
+    if (!t) continue;
+    const tx = t.x - ctx.anchor.x,
+      ty = t.y - ctx.anchor.y;
+    if ((vx * tx + vy * ty) / (vl * Math.hypot(tx, ty)) > cos) return true;
+  }
+  return false;
+}
+
+export interface SeaRock extends Pos {
+  /** Felsnadel (S): schmal und hoch, Variante 6/7. */
+  needle: boolean;
+}
+/** Wasserfläche (D11, E2, E6): ihre Kacheln; in Teil 2 von `terrain.ts`/`water.ts` gezeichnet, nicht von den Stempeln. */
+export interface SeaArea {
+  tiles: Pos[];
+}
+export interface SeaPlan {
+  wreck: Pos | null;
+  rocks: SeaRock[];
+  islet: Pos | null;
+  sandbanks: SeaArea[];
+  reefs: SeaArea[];
+  kelp: SeaArea[];
+}
+export interface SeaTile extends Pos {
+  kind: 'wreck' | 'rock' | 'islet' | 'sandbank' | 'reef' | 'kelp';
+}
+/** Alle Kacheln aller Meer-Elemente (für R4-Prüfung, L7 und die Flächenzeichner). */
+export function seaElementTiles(plan: SeaPlan): SeaTile[] {
+  const out: SeaTile[] = [];
+  if (plan.wreck) out.push({ kind: 'wreck', ...plan.wreck });
+  for (const r of plan.rocks) out.push({ kind: 'rock', x: r.x, y: r.y });
+  if (plan.islet) out.push({ kind: 'islet', ...plan.islet });
+  for (const [kind, list] of [
+    ['sandbank', plan.sandbanks],
+    ['reef', plan.reefs],
+    ['kelp', plan.kelp],
+  ] as const)
+    for (const a of list) for (const t of a.tiles) out.push({ kind, x: t.x, y: t.y });
+  return out;
+}
+
+const seaPlans = new WeakMap<object, { seed: number; key: string; plan: SeaPlan }>();
+const ctxKeys = new WeakMap<SeaContext, string>();
+const ctxKey = (c: SeaContext): string => {
+  let k = ctxKeys.get(c);
+  if (k === undefined) ctxKeys.set(c, (k = JSON.stringify(c)));
+  return k;
+};
+
+/** Wasser, das mit dem Kartenrand zusammenhängt (4er-Nachbarschaft): das Meer; Binnenseen zählen nicht. */
+function seaMask(cls: Uint8Array, w: number, h: number): Uint8Array {
+  const out = new Uint8Array(w * h);
+  const q: number[] = [];
+  const push = (x: number, y: number): void => {
+    const i = y * w + x;
+    if (x < 0 || y < 0 || x >= w || y >= h || out[i] || cls[i] !== 0) return;
+    out[i] = 1;
+    q.push(i);
+  };
+  for (let x = 0; x < w; x++) {
+    push(x, 0);
+    push(x, h - 1);
+  }
+  for (let y = 0; y < h; y++) {
+    push(0, y);
+    push(w - 1, y);
+  }
+  for (let k = 0; k < q.length; k++) {
+    const i = q[k]!,
+      x = i % w,
+      y = (i / w) | 0;
+    push(x - 1, y);
+    push(x + 1, y);
+    push(x, y - 1);
+    push(x, y + 1);
+  }
+  return out;
+}
+
+/**
+ * Meer-Plan der Heimat (statisch, D1): Wrack (E1), Meeresfelsen (E3, selten Felsnadel), Felseiland (E8) und die Flächen
+ * Sandbank (D11), Riff (E2), Seetang (E6). Nur Gelände, Seed und `SeaContext`; jede Kachel besteht `seaKeepOut` (R4), kein Element
+ * überlappt ein anderes (Punkt-Elemente halten Abstand ≥ 3, Flächen belegen ihre Kacheln samt Rand). Einmal je Insel gehalten.
+ */
+export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPlan {
+  const key = ctxKey(ctx);
+  const hit = seaPlans.get(isl);
+  if (hit && hit.seed === seed && hit.key === key) return hit.plan;
+  const { width: w, height: h } = isl;
+  const cls = staticClasses(isl);
+  const sea = seaMask(cls, w, h);
+  const shore = chebDist(w, h, (i) => cls[i] !== 0);
+  const mtn = chebDist(w, h, (i) => cls[i] === 3);
+  const blocked = new Uint8Array(w * h);
+  const plan: SeaPlan = { wreck: null, rocks: [], islet: null, sandbanks: [], reefs: [], kelp: [] };
+  const inRect = (x: number, y: number): boolean => x >= 2 && y >= 2 && x < w - 2 && y < h - 2;
+  const ok = (x: number, y: number, lo: number, hi: number, pad = 0): boolean => {
+    if (!inRect(x, y)) return false;
+    const i = y * w + x;
+    return (
+      !!sea[i] && !blocked[i] && shore[i]! >= lo && shore[i]! <= hi && !seaKeepOut(ctx, x, y, pad)
+    );
+  };
+  const claim = (x: number, y: number, r: number): void => {
+    for (let dy = -r; dy <= r; dy++)
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = x + dx,
+          ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h) blocked[ny * w + nx] = 1;
+      }
+  };
+  /** Die Kacheln im Tiefenband nach Rang `hash2(seed + salt, x + 100 · k, y)`, bester zuerst. */
+  const ranked = (salt: number, k: number, lo: number, hi: number, pad = 0): Pos[] => {
+    const c: { x: number; y: number; r: number }[] = [];
+    for (let y = 2; y < h - 2; y++)
+      for (let x = 2; x < w - 2; x++) {
+        const i = y * w + x;
+        if (sea[i] && shore[i]! >= lo && shore[i]! <= hi && !seaKeepOut(ctx, x, y, pad))
+          c.push({ x, y, r: hash2(seed + salt, x + 100 * k, y) });
+      }
+    return c.sort((a, b) => a.r - b.r);
+  };
+
+  // E1 Wrack
+  if (hash2(seed + 566, 0, 0) < WRECK_P) {
+    const c = ranked(566, 1, 1, 5, 0.5).find((t) => ok(t.x, t.y, 1, 5, 0.5));
+    if (c) {
+      plan.wreck = { x: c.x, y: c.y };
+      claim(c.x, c.y, 2);
+    }
+  }
+  // E8 Felseiland: Mittelwasser ≥ 4 Kacheln zur Küste
+  if (hash2(seed + 568, 0, 0) < ISLET_P) {
+    const c = ranked(568, 2, 4, SEA_MID_MAX, 1).find((t) => ok(t.x, t.y, 4, SEA_MID_MAX, 1));
+    if (c) {
+      plan.islet = { x: c.x, y: c.y };
+      claim(c.x, c.y, 2);
+    }
+  }
+  // E3 Meeresfelsen (G), selten eine Felsnadel (S)
+  const nRocks = gCount(seed, 567, 5, 9);
+  for (const c of ranked(567, 3, 1, 5)) {
+    if (plan.rocks.length >= nRocks) break;
+    if (!ok(c.x, c.y, 1, 5)) continue;
+    plan.rocks.push({ x: c.x, y: c.y, needle: false });
+    claim(c.x, c.y, 2);
+  }
+  if (plan.rocks.length && hash2(seed + 567, -1, -1) < NEEDLE_P)
+    plan.rocks[Math.floor(hash2(seed + 567, -2, -2) * plan.rocks.length)]!.needle = true;
+
+  // Flächen: wachsen aus einem Startpunkt über 4er-Nachbarn; jede Kachel prüft R4 und Belegung
+  const grow = (
+    salt: number,
+    k: number,
+    start: Pos,
+    n: number,
+    lo: number,
+    hi: number,
+    walk: boolean,
+  ): Pos[] => {
+    const tiles: Pos[] = [start];
+    const has = (x: number, y: number): boolean => tiles.some((t) => t.x === x && t.y === y);
+    let step: Pos | null = null;
+    while (tiles.length < n) {
+      const from = walk ? [tiles[tiles.length - 1]!] : tiles;
+      const cand: { x: number; y: number; r: number }[] = [];
+      for (const t of from)
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            if (!dx && !dy) continue;
+            if (!walk && dx && dy) continue;
+            const x = t.x + dx,
+              y = t.y + dy;
+            if (has(x, y) || !ok(x, y, lo, hi)) continue;
+            let r = hash2(seed + salt, x + 100 * k, y);
+            if (walk && step && dx === step.x && dy === step.y) r -= 0.6; // Streifen: Richtung halten
+            cand.push({ x, y, r });
+          }
+      if (!cand.length) break;
+      const best = cand.reduce((a, b) => (b.r < a.r ? b : a));
+      if (walk) {
+        const last = tiles[tiles.length - 1]!;
+        step = { x: best.x - last.x, y: best.y - last.y };
+      }
+      tiles.push({ x: best.x, y: best.y });
+    }
+    return tiles;
+  };
+  const areas = (
+    k: number,
+    max: number,
+    lo: number,
+    hi: number,
+    sizeLo: number,
+    sizeHi: number,
+    walk: boolean,
+    near?: (i: number) => boolean,
+  ): SeaArea[] => {
+    const out: SeaArea[] = [];
+    const n = gCount(seed, 569, k, max);
+    for (const c of ranked(569, k, lo, hi)) {
+      if (out.length >= n) break;
+      if (!ok(c.x, c.y, lo, hi) || (near && !near(c.y * w + c.x))) continue;
+      const size =
+        sizeLo + Math.floor(hash2(seed + 569, c.x + 100 * k, c.y + 977) * (sizeHi - sizeLo + 1));
+      const tiles = grow(569, k, { x: c.x, y: c.y }, size, lo, hi, walk);
+      if (tiles.length < Math.min(3, sizeLo)) continue;
+      for (const t of tiles) claim(t.x, t.y, 1);
+      out.push({ tiles });
+    }
+    return out;
+  };
+  plan.reefs = areas(1, 6, 3, 4, 4, 9, true); // E2: Streifen im Mittelwasser, dicht an einer Tiefenlinie
+  plan.sandbanks = areas(0, 6, 1, SEA_SHALLOW_MAX, 3, 8, false); // D11: Flachwasser
+  plan.kelp = areas(2, 6, 1, SEA_SHALLOW_MAX, 4, 9, false, (i) => mtn[i]! <= 5); // E6: Flachwasser vor Felsküste
+  seaPlans.set(isl, { seed, key, plan });
+  return plan;
+}
+
+/** Stempel des Meer-Plans: Wrack (Variante 0…3), Felsen (0…5 Haufen, 6/7 Nadel), Eiland (0…3). Fläche sind keine Stempel. */
+export function seaStamps(seed: number, plan: SeaPlan, w: number): StampPlacement[] {
+  const out: StampPlacement[] = [];
+  const add = (kind: StampKind, t: Pos, variant: number): void =>
+    void out.push({ kind, x: t.x, y: t.y, variant, id: t.y * w + t.x });
+  if (plan.wreck)
+    add('wreck', plan.wreck, Math.floor(hash2(seed + 566, plan.wreck.x, plan.wreck.y) * 4));
+  if (plan.islet)
+    add('islet', plan.islet, Math.floor(hash2(seed + 568, plan.islet.x, plan.islet.y) * 4));
+  for (const r of plan.rocks) {
+    const u = hash2(seed + 567, r.x, r.y);
+    add('seaRock', r, r.needle ? 6 + Math.floor(u * 2) : Math.floor(u * 6));
+  }
+  return out;
 }
 
 // ---------- Boden-Elemente ----------

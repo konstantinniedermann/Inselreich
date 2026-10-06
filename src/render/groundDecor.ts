@@ -19,6 +19,9 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 Buschdichte A3 und Zusatzblüten A1 · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
 // 556 Mauerreste A14 · 557 Obstbaum A6 · 558 Menhir A9 · 559 Pilzring A10. Dazu die Blütenpalette je Insel über
 // `hash2(seed + 500, 0, 1)` (Inselcharakter k = 1, Anhang 0.2).
+// L5 im Einzelnen (560–569): 560 Palmen D1 und Palmengruppen · 561 Strandsteine D2 und Tümpel D6 · 562 Treibholz D3 ·
+// 563 Muscheln D4 · 564 Strandhafer D5 · 565 Kiste D9 · 566 Wrack E1 · 567 Meeresfels E3 und Felsnadel · 568 Felseiland E8 ·
+// 569 Wasserfelder (Sandbank D11, Riff E2, Tang E6 über verschiedene `hash2`-Argumente); Küstenvariante `hash2(seed + 500, 0, 2)`.
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
