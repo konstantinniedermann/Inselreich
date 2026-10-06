@@ -2303,3 +2303,19 @@ statt „zu neu", fehlendes favicon) → `docs/beobachtungen.md`. Folgepakete na
 Revert-Merge; v9-Spielstände wären im alten Build unladbar (nach R261 hingenommen).
 
 Entscheider: L0 · Anlass: Delta-Review lead-qa, Playtest-Report REL-05 · ADR: —
+
+## R278 · 2026-10-06 · Vorschläge Kurz-Retro e51712dd und Prozess-Retro REL-05
+
+Ruling: Angenommen als Regeln (Umsetzung durch studio-coach bzw. ein Werkzeug-Paket in der nächsten Session):
+(1) Integrator führt nach jedem Merge, der Dateien unter `docs/` per Union-Merge zusammenführt, `prettier --write` auf
+genau diese Dateien aus und committet das ohne eigenes Ruling (Kurz V1 = Prozess V4; Schwelle 0 Formatbrüche in 3
+Merges). (2) Studio-Test schlägt bei doppelter R-Nummer fehl (Kurz V2; kleines Werkzeug-Paket). (3) E-029 ist erster
+Nachrücker für den nächsten freien Experiment-Platz, ergänzt um „L0-Kontext Max ≤ 250k" (Kurz V3). (4) Folgestränge
+starten, sobald der Vorgänger die Schnittstelle mit Review OK liefert, auf dem Vorgänger-Branch (Prozess V1; Ziel ≤ 2 h
+Wartezeit statt 12,4 h); Pläne nennen diesen Startpunkt. (5) Messkriterien (Bedingung, Statistik) und eine Zeitbox (3 h
+oder 2 ungültige Serien) stehen vorab im Plan (Prozess V2). (6) Release-Playtest prüft Delta und Merge-Stellen; für
+unveränderte UI-Tasks verweist die Prüfliste auf deren Strang-Playtest (Prozess V3). (7) Steuerungsanteil rot: R233 V1
+bleibt, studio-coach misst die Wirkung in der nächsten Retro (Prozess V5). — Kosten bei Irrtum: Regeln einzeln
+zurücknehmen.
+
+Entscheider: L0 · Anlass: Retros `2026-10-06-session-e51712dd.md`, `2026-10-06-prozess-rel05.md` · ADR: —

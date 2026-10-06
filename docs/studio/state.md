@@ -4,103 +4,90 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-05 (Session-Ende 6a98e530; 5-h-Fenster ≈ 30 %, Woche 28 %)
+Stand: 2026-10-06 (Session-Ende e51712dd; 5-h-Fenster ≈ 31 %, Woche 42 %)
 
 ## Release-Notizen
 
-**REL-04 (live @ 50deea8, R244)**
+**REL-05 (live @ 30a9f50, R277) — M12 Seefahrt-Bündel + Saum Fernansicht**
 
-- **Neu:** Fest in der Kapelle (H-I007, **vom Studio vorgeschlagen**, I-007): Knopf «Fest feiern (10 Rum)» im Panel
-  einer angebundenen Kapelle; 1 min lang steigen Häuser im Umkreis so schnell auf wie bei Steuer «niedrig», danach
-  3 min Abklingzeit; der Knopf nennt Sperrgründe. Zusätzlich live: M12-E0 (Inseln im Weltzustand, Save v7, @ 628d690,
-  R247) — ohne sichtbare Änderung, alte Spielstände werden umgewandelt.
-- **Bitte testen:** Fest starten, Countdown und Abklingzeit beobachten; Sperrgründe (zu wenig Rum, nicht angebunden,
-  Steuer niedrig/hoch); Speichern und Laden mitten im Fest. Lohnt sich Rum fürs Fest statt für den Verkauf?
+- **Neu:** Kontor II auf Fremdinseln gründen, dort bauen, handeln und Aufträge liefern; Lager, Bilanz und Krisen je
+  Insel; neues Gut **Gewürz** (Plantage nur auf Gewürzinseln), Kaufleute brauchen es; **Handelsschiffe** kaufen und
+  Routen in 2 Klicks; **drittes Ziel «Gewürzstadt»** (vom Studio vorgeschlagen, I-010). Aktive Insel mit Taste `9`
+  wechseln, `0` = Heimat, Menü „Inseln". Saum im Flachwasser in der Fernansicht ohne Streifen (H-R15). Save v9.
+- **Bitte testen:** Ein Kontor II gründen und Gewürz heimholen — ist der Weg verständlich? Schiffsroute anlegen und
+  auflösen; drittes Ziel erreichbar? Fällt auf, dass Schiffe am Heimatkontor über den Strand fahren (Folgepaket)?
 
-**REL-03 (live @ 1a24d25, R232)**
+**M12-E1 Archipel (live @ d2d08fb + H-T4, R266/R268)** — zwei Fremdinseln, Fernansicht bis Zoom 0,125, Save v8.
+**Bitte testen:** Herauszoomen auf den Archipel — flüssig?
 
-- **Neu:** Anbinden-Knopf (H-U1, vom Studio vorgeschlagen), Dünen neu (H-R12b), Schuttband am Gebirgsfuss (H-R13),
-  Brände gedämpft (S1-Rest). **Bitte testen:** Dünen, Anbinden-Knopf, Vorberge (S6) ausreichend sichtbar?
+**REL-04 (live @ 50deea8, R244)** — Fest in der Kapelle. **Bitte testen:** Fest, Sperrgründe, Speichern im Fest.
 
-**REL-02 (live @ 9ff5502, R222)** — Licht für Schiff/Figuren (H-R14), „Hörbare Wirtschaft" (H-A2). **Bitte testen:**
-Mangel-Ton rechtzeitig, Arbeitsgeräusche angenehm?
-
-**REL-01 (live @ 6dc3dc1, R216)** — Licht Häuser/Bäume, Wiesen-Unebenheiten, Brandmeldung springt. **Bitte testen:**
-Gesamtbild, Wiese?
+**REL-01…REL-03 (live)** — Licht, Wiese, Dünen, Anbinden-Knopf, Vorberge, Licht für Schiff/Figuren, hörbare
+Wirtschaft. **Bitte testen:** Gesamtbild, Dünen, Mangel-Ton.
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. Live auf main @ 628d690 (CI/Pages grün): M1–M8, M10, M11, M9-Häppchen, REL-01…REL-04,
-  Hotfix H-T3, **M12-E0**. Programm Nutzerfeedback: `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md`.
-- **Session-Fokus Spielinhalte (R237):** Prozessarbeit (Handbuch-Umsetzung R233/R236) und paintPixels-Performance
-  ruhten; Nutzer-Auftrag gilt, bis er etwas anderes sagt.
-- **Arbeitsweise (Handbuch 1.18):** Release-Bündel E-028, Discovery-Strang E-027, Stilrahmen S1–S6 (R211).
-- **M12 „Weite Welt" (läuft, etappenweise Merges R247):** Spec `docs/m12-brainstorming` @ 619eea5 (+ Anhang 05
-  „Drittes Ziel «Gewürzstadt»", R239). Save: v7 = E0 (live), v8 = E1, v9 = Seefahrt-Bündel, v10 = E6.
-  - **E1** (Archipel, v8): `feat/m12-e1` @ 218b191 (Worktree `.worktrees/m12-e1`), C1 (T00–T02) und C2 (Merge E0,
-    T03–T05) fertig (R246, R248). Weiter: **C3 = T06 UI (+ Baumstempel-Seed-Test) + T07 Browser-Messung (Malbänder
-    15–51 ms Spitzen, ggf. `SLICE_ROWS` 16) + Playtests**, dann C4 = T08 + Final-Review lead-qa (Fix-Runden T03/T04
-    ausdrücklich prüfen, R248). Übergabe `.studio/handoffs/2026-10-05-m12-e1-C2-an-C3.md`. `.worktrees/m12-e1-terrain`
-    kann nach C3 weg.
-  - **Seefahrt-Bündel E2+E3+E4 (+ Anhang 05):** Plan `feat/m12-see` @ 11d5da7 (Gate R241, Nachtrag eingearbeitet;
-    D-142 islandTrait-Dämpfung, D-143 Heimat aktiv vor `seafaring`, D-144 Platzhalter + 3 Mindestregeln). **M0 erfüllt
-    ab E1 766df67** → C1 (T00–T02 Integrationsbranch) kann starten. Budget 50 (lead-tech 49, lead-qa 1).
-  - E6-Werte F-P7 prüft design-economy-designer vor dem E6-Plan.
-- **Ideen:** IDEEN-03 entschieden (R238): I-010 eingeplant (in M12), I-011/012/014 geparkt, I-013 verworfen.
-- **REL-05 (Kandidaten):** paintPixels-Performance (R236, technisch) · M9 Rest G7b Landtiere, K3 Silhouetten (R186),
-  Typ-Erkennung kleiner Bauten (R195) · kosmetische REL-04-Befunde (beobachtungen.md).
-- Dauerregeln: Desktop-first (R78); im Hauptcheckout nur `git pull --ff-only`; kein Rebase (§6.3, R212); Integrator
-  mergt im Worktree `.worktrees/integrate`; L0 committet nie im Hauptcheckout, solange dort jemand arbeitet (R198);
-  Persona-Start als `general-purpose` braucht `model` (R212); Löschen im Repo ohne Rückfrage, ausserhalb verboten
-  (R207). Leads treffen keine Rulings (R232). Studioweit ≤ 5 Arbeiter gleichzeitig (R241).
-- Token-Effizienz: E-010 (Leads ein Auftrag je Instanz, Controller `sonnet`, Deckel 200k Kontext / 6
-  Arbeiter-Starts, L0-Übergabe nach Gate-Block bzw. 25 % Kontext).
+- Projekt: **Inselreich**. Live auf main @ 30a9f50 (CI 37468348957 / Pages 37468348971 grün): M1–M8, M10, M11,
+  M9-Häppchen, REL-01…REL-05, **M12-E0, E1, Seefahrt-Bündel E2–E4 + drittes Ziel**. Verfassung **1.2** (R261:
+  Spielstände müssen nicht rückwärtskompatibel sein — neue Formate ohne Migration, Abweisen mit Hinweis).
+  Handbuch **1.21**.
+- **Session-Fokus Spielinhalte (R237)** gilt weiter, bis der Nutzer etwas anderes sagt; Nutzer überlässt L0
+  Technik-/Auslegungsentscheide (R260).
+- **M12 „Weite Welt":** Muss-Teile E0–E4 + Anhang 05 live. Offen: **E5** (Seekarten-Übersicht, Gründungsfahrt) und
+  **E6** (Händlerschiff I-006; Werte F-P7 entschieden R262, `OFFER_MIN_BUY` ≥ 30, Save v10 ohne Migration) —
+  Kann-Teile, Entscheid über Planung durch L0 (R259/R262). Danach M12-Meilenstein-Retro.
+- **Folgepakete aus REL-05 (R274b):** (1) Fahrlinie mit Wegpunkten im Wasser (ändert `d`/E1-Band, braucht Ruling);
+  (2) UX: Heimatkontor-Klick → Schiffe direkt, Text „spiel frei weiter" bei offenem drittem Ziel, v99 „zu neu" statt
+  „beschädigt"; (3) Art: Schiffskontrast (heller Rand/Kielwasser). Beobachtungen in `docs/beobachtungen.md`.
+- **Werkzeuge neu:** `make messfenster` (Mess-Wächter, R269) vor jeder Messung; Zeittests seriell (E-030), Wächter
+  `make zeittests`; Zeittests mit CI-Reserve ≤ 50 % des Timeouts (R270, Audit H-T5).
+- Dauerregeln: Desktop-first (R78); kein Rebase (§6.3); Integrator mergt nur in `.worktrees/integrate` (R264) und
+  führt vor jedem Push `make check` + `CI=true make check` mit Exit-Code aus (R270); L0 committet nie im Hauptcheckout,
+  solange dort jemand arbeitet (R198); `pkill`/`killall` auf allgemeine Namen verboten (R263); Controller
+  (`lead-tech`) auf **sonnet**, Plan/Meilenstein-Retro ausdrücklich opus (R264); Studioweit ≤ 5 Arbeiter (R241).
+- Token-Effizienz: E-010 (Leads ein Auftrag je Instanz, Deckel 200k Kontext / 6 Arbeiter-Starts, L0-Übergabe nach
+  Gate-Block bzw. 25 % Kontext).
 
 ## Parallele Sessions
 
-| Session  | Stand         | besitzt     | bis |
-| -------- | ------------- | ----------- | --- |
-| 6a98e530 | abgeschlossen | nichts mehr | –   |
+| Session       | Stand         | besitzt               | bis |
+| ------------- | ------------- | --------------------- | --- |
+| e51712dd      | abgeschlossen | nichts mehr           | –   |
+| anno-clone #3 | abgeschlossen | Hex-Demo (Scratchpad) | –   |
 
 ## Seit letzter Session erledigt
 
-- R237 Fokus Spielinhalte. IDEEN-03 (R238) → Spec-Nachtrag I-010 „Gewürzstadt" (R239).
-- Plan Seefahrt-Bündel + Gate (R241). H-I007 Fest in der Kapelle: Kurzdesign → Plan → Gate (R240) → Umsetzung →
-  REL-04 live (R243, R244).
-- M12-E0 C2, C3, Final-Review, Delta-Merge REL-04 → **E0 live** (R242, R245, R247). E1 C1 + C2 (R246, R248).
-- Kurz-Retro und Prozess-Retro REL-04/E0 (Berichte unter `docs/studio/retros/`, Vorschläge offen).
+- Handbuch 1.19–1.21 (R251, R264, R270), E-028 abgeschlossen „behalten", E-026 übernommen, E-030 läuft.
+- Verfassung 1.2 durch den Nutzer (R261). N-95, N-96 erledigt (R260, R261).
+- Werkzeuge: E-030 Zeittests seriell (R252), Mess-Wächter (R269). Hotfixes H-T4, H-T5 (CI-Timeouts, R267, R271).
+- **M12-E1 live** (C3/C3b/C4, F1, R263–R268); **Seefahrt-Bündel C1–C5 + F2 → REL-05 live** mit H-R15 (R254–R277).
+- F-P7 Werte E6 entschieden (R262). Ad-hoc-Retros E1 C3 und CI H-T4 (R264, R270).
 
 ## Pausierte Pakete
 
-- Worktrees: `.worktrees/integrate` (bleibt), `.worktrees/m12-design`, `.worktrees/m12-e1`, `.worktrees/m12-see`
-  (laufend); `.worktrees/m12-e0`, `.worktrees/h-i007`, `.worktrees/ideen-03`, `.worktrees/h-u1`, `.worktrees/h-t3`,
-  `.worktrees/rel03-*`, `.worktrees/h-r12` (gemergt) können weg; `.worktrees/m12-e1-terrain` nach E1 C3.
-- Remote-Branches überholt, nicht gemergt: `rel/rel-01`, `docs/rel-01-arc42` — bleiben (§6.1).
+- Worktrees: nur `.worktrees/integrate` (bleibt). Alle M12-Worktrees entfernt; Ledger unter `.superpowers/sdd/`.
+- Remote-Branches überholt, nicht gemergt: `rel/rel-01`, `docs/rel-01-arc42` — bleiben (§6.1). Lokale Branches der
+  Session (`feat/m12-*`, `fix/h-t4…`, `fix/h-t5…`, `tool/*`, `feat/h-r15-saum`, `rel/rel-05`) gemergt, bleiben.
 - Lokaler Branch `feat/m7-fx` @ 4489bdd, Remote `wip/r118a-render-aufraeumen`, `stash@{0}`: unverändert, bis Ruling.
 
 ## Budget
 
-- M12-E1: lead-tech 27 Starts, davon C1 6 + C2 6 verbraucht → **15 frei** (C3 6, C4 3, Reserve 6); lead-qa 1.
-- Seefahrt-Bündel: 50 (lead-tech 49, lead-qa 1), unverbraucht, Freigabe ab M0 (erfüllt) — neu loggen je Controller.
+- Seefahrt-Bündel (R241, 50): verbraucht ≈ 41 (C1 6, C2 8, C3 6, C4 10, C5 7, F2 4) → Rest verfällt mit dem Merge.
+- Neue Pakete brauchen eigene Freigabe.
 
 ## Offene Entscheide
 
-- **Nutzer (Warteschlange N-95):** `feastAt` ohne neue Save-Version (R240 D-140) — Empfehlung ja; bei Nein
-  Versionswechsel mit Identitäts-Migration.
-- Nutzer: Test REL-01…REL-04 (oben); R90-Auslegung „grössere Karte" = grössere Welt (R226 F-02) — kippbar; Abnahme
-  M10/M11 im Spiel und Tempo M11 (R185/R192).
-- Retro-Vorschläge dieser Session entschieden (R249); E-029 erster Nachrücker für einen Experiment-Platz.
-- L0: Experiment-Plätze voll (E-022, E-027, E-028). Wartend: E-025, E-023, E-026, E-019, E-024, E-018, E-020,
-  E-012, E-006.
-- CI: Node-20-Abkündigung der Actions und `ubuntu-latest` → Ubuntu 26 ab 2026-10-19 (beobachtungen.md); Zeittests
-  flackern unter paralleler Agenten-Last (AK-R1-06, AK-E0-15a, B6).
+- Nutzer: Test REL-01…REL-05 und E1 (oben). Warteschlange leer.
+- L0: E5/E6 planen oder M12 abschliessen; Reihenfolge der drei Folgepakete. Retro-Vorschläge entschieden (R278).
+- Experiment-Plätze: E-022, E-027, E-030 belegt. Wartend: E-029 (erster Nachrücker), E-025, E-023, E-019, E-024,
+  E-018, E-020, E-012, E-006.
+- CI: Node-20-Abkündigung der Actions und `ubuntu-latest` → Ubuntu 26 ab 2026-10-19 (beobachtungen.md).
 
 ## Nächste Schritte
 
 0. Dauerregel R127: Ablauffehler an die Retro; Prozess-Retro nach jedem Feature-Release.
-1. studio-coach setzt R233, R236 (b)/(c) und R249 (1)–(3), (5) ins Handbuch um; lead-tech Werkzeug-Paket „Zeittests
-   allein laufen lassen" (R249 (3)).
-2. Parallel: **E1 C3** (lead-tech sonnet, Übergabe C2→C3) ∥ **Seefahrt C1** (T00–T02 auf Integrationsbranch,
-   `feat/m12-see` holt E1 @ 766df67 oder neuer per Merge), Obergrenze 5 Arbeiter.
-3. Danach E1 C4 (T08 + Final-Review) → Gate Merge E1 (Etappe) → Seefahrt-Stränge e2/e3/e4/render ab M1.
-4. Nutzerurteil zu REL-01…04 und N-95 umsetzen, sobald es vorliegt.
+1. R278 umsetzen: studio-coach (Integrator-Prettier nach Union-Merge, Startpunkt Folgestränge, Messkriterien +
+   Zeitbox im Plan, Release-Playtest auf Delta) und Werkzeug-Paket „doppelte R-Nummer" im Studio-Test.
+2. Folgepakete REL-05: zuerst (2) UX und (3) Schiffskontrast als Häppchen (parallel, disjunkte Dateien), (1)
+   Fahrlinie mit eigenem Ruling (Wirkung auf `d`).
+3. Entscheid E5/E6: Brainstorming lead-design → Plan (lead-tech opus) oder M12-Abschluss mit Meilenstein-Retro.
