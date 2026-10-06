@@ -3,9 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import v1Json from './fixtures/save-v1.json?raw';
 import v2Json from './fixtures/save-v2.json?raw';
 import v3Json from './fixtures/save-v3.json?raw';
-import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { demolish, placeBuilding, placeRoad } from '../../src/sim/build';
+import { buyShip, clearRoute, freeShipAtHome, setRoute } from '../../src/sim/ships';
+import { foundKontor2Literal, seaWorld, shipLiteral } from './seaHelpers';
+import { seeRouteStart } from './scenariosSea';
 import { beginCrisis, flammableRect, rollCrisis, type CrisisRoll } from '../../src/sim/crises';
-import { laneTicks, seaLanes } from '../../src/sim/islands';
+import { generateForeignIslands, laneTicks, seaLanes } from '../../src/sim/islands';
 import { orderForPeriod } from '../../src/sim/orders';
 import {
   GOODS,
@@ -1675,5 +1678,104 @@ describe('M12 Seefahrt Save v9', () => {
       delete q.sellPct.spice;
       expect(deserialize(JSON.stringify(q))).toEqual(BAD);
     });
+  });
+});
+
+describe('M12 Seefahrt Querschnitt (T14)', () => {
+  const richSea = (): World => {
+    const w = seaWorld();
+    w.money = 100_000;
+    home(w).stock.wood = 100;
+    home(w).stock.tools = 100;
+    home(w).stock.stone = 100;
+    return w;
+  };
+  const load = (w: World): World => {
+    const r = deserialize(serialize(w));
+    if (!r.ok) throw new Error(r.reason);
+    return r.world;
+  };
+
+  it('AK-E2-03 (R228 (1)) Abriss erst nach Routenauflösung, Save/Load unterwegs, Heimkehr entlädt', () => {
+    let w = richSea();
+    const site = generateForeignIslands(w.seed, home(w))[1]!.kontorSite;
+    const placed = placeBuilding(w, 'kontor2', site.x, site.y, 2);
+    expect(placed.ok).toBe(true);
+    const kontor2 = placed.id!;
+    w.islands[2]!.stock.spice = 30;
+    expect(buyShip(w).ok).toBe(true);
+    const shipId = w.ships[0]!.id;
+    const route = { a: 0, b: 2, ab: [], ba: [{ good: 'spice' as const, reserve: 0 }] };
+    expect(setRoute(w, shipId, route).ok).toBe(true);
+    for (let i = 0; i < 2000 && w.ships[0]!.port !== 2; i++) step(w);
+    expect(w.ships[0]).toMatchObject({ port: 2, to: 0 });
+    expect(w.ships[0]!.route).not.toBeNull();
+    expect(demolish(w, kontor2)).toEqual({ ok: false, reason: 'Erst Route auflösen' });
+    expect(clearRoute(w, shipId).ok).toBe(true);
+    expect(demolish(w, kontor2).ok).toBe(true);
+    w = load(w);
+    for (let i = 0; i < 2000 && w.ships[0]!.homing; i++) step(w);
+    const ship = w.ships[0]!;
+    expect(ship.homing).toBe(false);
+    expect(ship.cargo).toEqual({});
+    expect(freeShipAtHome(w)).not.toBeNull();
+    expect(home(w).stock.spice).toBeGreaterThan(0);
+  });
+
+  it('AK-E4-11 Save/Load mitten auf der Fahrt: nach 1000 Schritten zeichengleich', () => {
+    const w = richSea();
+    foundKontor2Literal(w, 1);
+    foundKontor2Literal(w, 2);
+    w.islands[1]!.stock.spice = 60;
+    w.islands[2]!.stock.spice = 60;
+    home(w).stock.food = 80;
+    shipLiteral(w, {
+      route: {
+        a: 0,
+        b: 1,
+        ab: [{ good: 'food', reserve: 0 }],
+        ba: [{ good: 'spice', reserve: 0 }],
+      },
+    });
+    shipLiteral(w, {
+      route: {
+        a: 0,
+        b: 2,
+        ab: [{ good: 'food', reserve: 0 }],
+        ba: [{ good: 'spice', reserve: 0 }],
+      },
+    });
+    for (let i = 0; i < 100; i++) step(w);
+    const onTheWay = w.ships.filter((s) => s.to !== null && Object.keys(s.cargo).length > 0);
+    expect(onTheWay.length).toBeGreaterThan(0);
+    const b = load(w);
+    expect(serialize(b)).toBe(serialize(w));
+    for (let i = 0; i < 1000; i++) {
+      step(w);
+      step(b);
+    }
+    expect(serialize(b)).toBe(serialize(w));
+  });
+});
+
+describe('M12 Fixture see-route-start-v9 (AK-E4-13)', () => {
+  const FIXTURE = 'tests/sim/fixtures/see-route-start-v9.json';
+
+  it('ist ladbar und gleicht dem Rezept seeRouteStart()', () => {
+    const json = readFileSync(FIXTURE, 'utf8');
+    expect(deserialize(json).ok).toBe(true);
+    expect(json).toBe(serialize(seeRouteStart()));
+  });
+
+  it('erfüllt die vier Startbedingungen der Routenprobe', () => {
+    const r = deserialize(readFileSync(FIXTURE, 'utf8'));
+    if (!r.ok) throw new Error(r.reason);
+    const w = r.world;
+    expect(w.seed).toBe(3);
+    expect(w.islands[2]!.kontorId).not.toBeNull();
+    expect(w.buildings[w.islands[2]!.kontorId!]!.defId).toBe('kontor2');
+    expect(w.ships).toHaveLength(1);
+    expect(freeShipAtHome(w)).not.toBeNull();
+    expect(w.islands[2]!.stock.spice).toBe(30);
   });
 });

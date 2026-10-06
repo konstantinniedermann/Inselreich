@@ -154,6 +154,24 @@ describe('M12 E4 step und Schiffe', () => {
     expect(h.house!.satisfied.food).toBe(true);
   });
 
+  it('AK-E4-09 Gewürz vom selben Schritt deckt den Kaufmannsbedarf (Querschnitt, grün nach Merge)', () => {
+    const world = seaWorld();
+    const h = houseNearKontor(world);
+    h.house!.tier = 4;
+    h.house!.demand = { spice: 1 }; // Entnahme im nächsten Schritt fällig
+    h.house!.inhabitants = TIERS[4].maxInhabitants;
+    home(world).stock.spice = 0;
+    shipLiteral(world, {
+      port: 2,
+      to: 0,
+      left: 1,
+      cargo: { spice: 10 },
+      route: { a: 0, b: 2, ab: [], ba: [{ good: 'spice', reserve: 0 }] },
+    });
+    step(world);
+    expect(h.house!.satisfied.spice).toBe(true);
+  });
+
   it('AK-E4-09 kleinere id entlädt zuerst', () => {
     const world = seaWorld();
     home(world).stock.food = 50;

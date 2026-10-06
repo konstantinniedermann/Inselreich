@@ -144,4 +144,49 @@ describe('M12 Z3 Gewürzstadt', () => {
     for (let i = 0; i < WIN_SPICE_HOLD + 100; i++) step(w);
     expect(w.wonSpice).toBe(true);
   });
+
+  it('qa-B1 z3-scenario-v9 ohne Nachfüllen: wonSpice nach Haltezeit plus 100', () => {
+    const json = readFileSync('tests/sim/fixtures/z3-scenario-v9.json', 'utf8');
+    const loaded = deserialize(json);
+    if (!loaded.ok) throw new Error('Fixture nicht ladbar');
+    for (let i = 0; i < WIN_SPICE_HOLD + 100; i++) step(loaded.world);
+    expect(loaded.world.wonSpice).toBe(true);
+  });
+
+  it('qa-B7 Save/Load in der Haltezeit: gleicher Zustand, Ziel im selben Tick', () => {
+    const a = spiceGoalScenario();
+    run(a, 300);
+    expect(a.wonSpice).toBe(false);
+    const loaded = deserialize(serialize(a));
+    if (!loaded.ok) throw new Error('Laden schlug fehl');
+    const b = loaded.world;
+    const wonA = run(a, WIN_SPICE_HOLD);
+    const wonB = run(b, WIN_SPICE_HOLD);
+    expect(wonA).not.toBeNull();
+    expect(wonB).toBe(wonA);
+    expect(serialize(b)).toBe(serialize(a));
+  });
+
+  it('Ende-zu-Ende: echtes Schiff bringt Gewürz, Heimat steigt um die Ladung, danach wonSpice', () => {
+    const w = spiceGoalScenario();
+    w.islands[2]!.stock.spice = 20;
+    let delivered = 0;
+    let wonAt: number | null = null;
+    for (let i = 0; i < 1000; i++) {
+      if (w.tick % 100 === 0) refill(w, false);
+      const ship = w.ships[0]!;
+      const arriving = delivered === 0 && ship.to === 0 && ship.left === 1;
+      const cargo = ship.cargo.spice ?? 0;
+      const before = home(w).stock.spice;
+      step(w);
+      if (arriving) {
+        delivered = cargo;
+        expect(home(w).stock.spice - before).toBe(cargo);
+      }
+      if (wonAt === null && w.wonSpice) wonAt = w.tick;
+    }
+    expect(delivered).toBeGreaterThan(0);
+    expect(wonAt).not.toBeNull();
+    expect(w.wonSpice).toBe(true);
+  });
 });
