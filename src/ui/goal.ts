@@ -102,7 +102,7 @@ export const THIRD_GOAL_BANNER = `Drittes Ziel erreicht: ${THIRD_GOAL_NAME} mit 
 /** Start und Laden: Erreichtes gilt als gezeigt (ein geladener Stand zeigt kein Banner erneut). */
 export function initialGoalShown(
   world: Pick<World, 'won' | 'wonMerchants' | 'wonSpice'>,
-): GoalShown {
+): Required<GoalShown> {
   return {
     wonShown: world.won,
     wonMerchantsShown: world.wonMerchants,
