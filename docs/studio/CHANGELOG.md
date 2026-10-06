@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-06 · Handbuch 1.22
+
+- Anlass: Nutzerfrage zu ungesichteten Beobachtungen (rund 175 Einträge seit 2026-09-30)
+- Datenbasis: Auftrag R288-UMSETZUNG; `docs/beobachtungen.md` (95 Einträge unter der Marke vom 2026-09-30)
+- Ruling: R287 (b), (c); R288
+- Änderungen: Session-Start Punkt 6: Hook zählt Einträge unter „Letzte Auswertung“, bei > 30 Pflichthinweis und Auswertung als erstes Paket; Zähler in `tools/studio/context.py` mit Tests
+
 ## 2026-10-06 · Persona production-integrator 1.8
 
 - Anlass: Ad-hoc-Retro CI H-T4, B1/B2/B4
