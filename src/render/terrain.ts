@@ -1445,6 +1445,7 @@ export function updateTerrainLayer(
   if (terRect) {
     patchGrid(fieldWorld(world), m.fields, m.grid, m.codes, codes, terRect);
     m.codes = codes;
+    farCoast.delete(layer); // Küste kann sich geändert haben (H-R15)
   }
   const ctx = layer.getContext('2d');
   if (!ctx) return { redrawn: false, ms: 0 };
@@ -1468,6 +1469,8 @@ export function updateTerrainLayer(
         qc.imageSmoothingQuality = 'high';
         qc.clearRect(px / 4, py / 4, pw / 4, ph / 4);
         qc.drawImage(m.half, px / 2, py / 2, pw / 2, ph / 2, px / 4, py / 4, pw / 4, ph / 4);
+        // H-R15: das Rechteck kommt aus der halben Kopie zurück, also das Fernwasser darin neu malen
+        repaintFarWater(layer, m.quarter, { dx: px / 4, dw: pw / 4, dy: py / 4, dh: ph / 4 });
       }
     }
   }
@@ -1564,27 +1567,38 @@ function newQuarter(half: HTMLCanvasElement): HTMLCanvasElement {
 
 const farCoast = new WeakMap<HTMLCanvasElement, Field>(); // je Boden-Ebene, fällt mit ihr
 
-/**
- * H-R15: malt das reine Wasser eines Viertel-Streifens aus dem euklidischen Küstenabstand neu (rund statt Raute,
- * ohne Zeilenschlieren). Land, Küstenzellen und Tiefwasser bleiben wie in der Kopie.
- */
-function repaintFarWater(
-  layer: HTMLCanvasElement,
-  quarter: HTMLCanvasElement,
-  st: { dy: number; dh: number },
-): void {
+/** Euklidischer Küstenabstand je Ebene, beim ersten Gebrauch gerechnet (eigener Schritt im Inselcache). */
+function farCoastOf(layer: HTMLCanvasElement): Field | null {
   const m = meta.get(layer);
-  const ctx = quarter.getContext('2d');
-  if (!m || !ctx || st.dh <= 0) return;
+  if (!m) return null;
   let e = farCoast.get(layer);
   if (!e) {
     e = euclidCoast(fieldWorld(m.world));
     farCoast.set(layer, e);
   }
+  return e;
+}
+
+/**
+ * H-R15: malt das reine Wasser eines Viertel-Streifens aus dem euklidischen Küstenabstand neu (rund statt Raute,
+ * ohne Zeilenschlieren). Land, Küstenzellen und Tiefwasser bleiben wie in der Kopie.
+ */
+export function repaintFarWater(
+  layer: HTMLCanvasElement,
+  quarter: HTMLCanvasElement,
+  st: { dy: number; dh: number; dx?: number; dw?: number },
+): void {
+  const m = meta.get(layer);
+  const ctx = quarter.getContext('2d');
+  if (!m || !ctx || st.dh <= 0) return;
+  const e = farCoastOf(layer);
+  if (!e) return;
   const g = m.grid,
     { nx, ny, cls, smooth } = g;
-  const w = quarter.width;
-  const img = ctx.getImageData(0, st.dy, w, st.dh);
+  const dx = st.dx ?? 0;
+  const w = Math.min(st.dw ?? quarter.width, quarter.width - dx);
+  if (w <= 0) return;
+  const img = ctx.getImageData(dx, st.dy, w, st.dh);
   const px = img.data;
   const f = 4 / (m.scale * RASTER); // Viertelpixel → Gitterknoten
   const pxTile = 4 / (m.scale * TEX);
@@ -1597,7 +1611,7 @@ function repaintFarWater(
     const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
     const ty = Math.min(Math.max(gy - j, 0), 1);
     for (let x = 0; x < w; x++) {
-      const gx = (x + 0.5) * f;
+      const gx = (dx + x + 0.5) * f;
       const i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
       const a = j * nx + i;
       if (cls[a] !== 0 || cls[a + 1] !== 0 || cls[a + nx] !== 0 || cls[a + nx + 1] !== 0) continue;
@@ -1607,9 +1621,9 @@ function repaintFarWater(
         (smooth[a + nx]! * (1 - tx) + smooth[a + nx + 1]! * tx) * ty
       );
       if (dOld >= 6) continue; // Chebyshev ≤ euklidisch: ab 6 ist es überall tief
-      const d = farWaterDepth(e, g.seed, (x + 0.5) * pxTile, qy * pxTile);
+      const d = farWaterDepth(e, g.seed, (dx + x + 0.5) * pxTile, qy * pxTile);
       waterColor(d, col);
-      const rim = rimWeight((x + 0.5) * pxTile, qy * pxTile, tilesW, tilesH);
+      const rim = rimWeight((dx + x + 0.5) * pxTile, qy * pxTile, tilesW, tilesH);
       if (rim < 1) mix3(C.deep, col, rim, col);
       const o = (y * w + x) * 4;
       px[o] = col[0]!;
@@ -1618,7 +1632,7 @@ function repaintFarWater(
       px[o + 3] = 255;
     }
   }
-  ctx.putImageData(img, 0, st.dy);
+  ctx.putImageData(img, dx, st.dy);
 }
 
 function paintQuarterStrip(
@@ -1626,12 +1640,21 @@ function paintQuarterStrip(
   quarter: HTMLCanvasElement,
   half: HTMLCanvasElement,
   st: { sy: number; sh: number; dy: number; dh: number },
+  repaint = true,
 ): void {
   const ctx = quarter.getContext('2d');
   if (!ctx) return;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
-  repaintFarWater(layer, quarter, st);
+  if (repaint) repaintFarWater(layer, quarter, st);
+}
+
+export const QUARTER_BLOCK_ROWS = 32; // Zeilen je Neumal-Schritt des Fernwassers (H-R15)
+
+/** Zahl der Schritte der Viertel-Kopie im Inselcache: Streifen, Abstandsfeld, Neumal-Blöcke. */
+export function quarterStepCount(layerHeight: number): number {
+  const qh = Math.ceil(Math.ceil(layerHeight / 2) / 2);
+  return QUARTER_STRIPS + 1 + Math.ceil(qh / QUARTER_BLOCK_ROWS);
 }
 
 /** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
@@ -1740,6 +1763,7 @@ export function terrainJob(
     steps.push(strip);
   }
   // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
+  // Das Fernwasser (H-R15) wird danach in eigenen Schritten neu gemalt; die Kopie gilt erst nach dem letzten Block.
   let quarter: HTMLCanvasElement | null = null;
   const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
   for (let i = 0; i < QUARTER_STRIPS; i++)
@@ -1748,11 +1772,31 @@ export function terrainJob(
         const m = meta.get(layer);
         if (!m || m.quarter) return;
         const half = halfLayer(layer);
-        const list = stripsOf();
-        const st = list[i];
+        const st = stripsOf()[i];
         quarter ??= newQuarter(half);
-        if (st) paintQuarterStrip(layer, quarter, half, st);
-        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.quarter = quarter;
+        if (st) {
+          paintQuarterStrip(layer, quarter, half, st, false);
+          flushRaster(quarter); // die Rasterung bleibt in diesem Schritt, das Rücklesen danach ist billig
+        }
+      }),
+    );
+  steps.push(
+    timed(() => {
+      if (!meta.get(layer)?.quarter) farCoastOf(layer);
+    }),
+  );
+  const blocks = quarterStepCount(layer.height) - QUARTER_STRIPS - 1;
+  for (let b = 0; b < blocks; b++)
+    steps.push(
+      timed(() => {
+        const m = meta.get(layer);
+        if (!m || m.quarter || !quarter) return;
+        const dy = b * QUARTER_BLOCK_ROWS;
+        repaintFarWater(layer, quarter, {
+          dy,
+          dh: Math.min(QUARTER_BLOCK_ROWS, quarter.height - dy),
+        });
+        if (b === blocks - 1) m.quarter = quarter;
       }),
     );
   return { layer, steps };
