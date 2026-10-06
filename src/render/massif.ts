@@ -1278,11 +1278,11 @@ export interface MassifTree {
   J: number;
   /** Höhe des Geländes am Anker (px) */
   h: number;
-  /** Baumhöhe in Weltpixeln (6–9) */
+  /** Baumhöhe in Weltpixeln (14–20) */
   height: number;
-  /** Windschiefe: Krone neigt sich um so viele Weltpixel zur Seite (−2 … 2) */
+  /** Windschiefe: Krone neigt sich um so viele Weltpixel zur Seite (−3 … 3) */
   lean: number;
-  /** Kronenlappen 2–3 */
+  /** Kronenlappen (3) */
   lobes: number;
   /** Formvariante 0…1 */
   v: number;
@@ -1340,9 +1340,9 @@ export function massifTrees(c: MassifComponent): MassifTrees {
       I: k.I,
       J: k.J,
       h: nodeHeight(c, k.I, k.J),
-      height: 6 + Math.round(3 * hash2(c.seed + L2_TREE_SALT + 2, k.I, k.J)),
-      lean: (hash2(c.seed + L2_TREE_SALT + 3, k.I, k.J) - 0.5) * 4,
-      lobes: 2 + (v > 0.5 ? 1 : 0),
+      height: 14 + Math.round(6 * hash2(c.seed + L2_TREE_SALT + 2, k.I, k.J)),
+      lean: (hash2(c.seed + L2_TREE_SALT + 3, k.I, k.J) - 0.5) * 6,
+      lobes: 3,
       v,
     });
   }

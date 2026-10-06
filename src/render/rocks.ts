@@ -321,9 +321,28 @@ const TREE_CROWN = rgbOf(PALETTE.crown),
   TREE_TRUNK = rgbOf(PALETTE.earthEdge),
   TREE_LINE = mixRgb(rgbOf(PALETTE.crown), LIGHT_COLORS.cool, 0.35); // dunkle Eigenkontur, nie Schwarz
 
+/** Kronenlappen eines Baums in Weltpixeln relativ zum Anker (u rechts, v hoch): Mitte, Radien. */
+export function treeLobes(t: MassifTree): { cu: number; cv: number; rx: number; ry: number }[] {
+  const ws = 1.45; // Breitenmassstab (Höhe 14–20 px, Breite ≤ 12 px)
+  const sh = t.height / 9;
+  const off = [-1.2, 1.2, -0.4];
+  const out: { cu: number; cv: number; rx: number; ry: number }[] = [];
+  for (let i = 0; i < t.lobes; i++) {
+    const a = t.lobes === 1 ? 0 : i / (t.lobes - 1); // 0 unten, 1 oben
+    const cv = t.height * (0.45 + 0.27 * a);
+    out.push({
+      cu: t.lean * (0.35 + 0.65 * a) + off[i % 3]! * ws,
+      cv,
+      rx: (2.2 - 0.25 * a) * ws,
+      ry: Math.min(2 * sh, t.height - cv) * (0.85 + 0.15 * (1 - a)) + 0.1,
+    });
+  }
+  return out;
+}
+
 /**
  * Windschiefe Kiefer am Anker (L2 C3), in Weltpixeln gezeichnet (scharf bei jedem Faktor): Stamm in earthEdge, Krone
- * aus 2–3 Lappen in crown/crownLight (Licht links oben) mit dunkler Eigenkontur. Höhe 6–9, Breite höchstens 8 px.
+ * aus 3 Lappen in crown/crownLight (Licht links oben) mit dunkler Eigenkontur. Höhe 14–20, Breite höchstens 12 px.
  */
 function drawTree(
   buf: Uint8ClampedArray,
@@ -339,18 +358,9 @@ function drawTree(
     fy = (t.I + t.J) * NY - t.h;
   const top = t.height,
     lean = t.lean;
-  const lobes: { cu: number; cv: number; rx: number; ry: number }[] = [];
-  for (let i = 0; i < t.lobes; i++) {
-    const a = t.lobes === 1 ? 0 : i / (t.lobes - 1); // 0 unten, 1 oben
-    lobes.push({
-      cu: lean * (0.35 + 0.65 * a) + (i % 2 === 0 ? -1.1 : 1.1) * (1 - 0.4 * a),
-      cv: top * (0.5 + 0.28 * a),
-      rx: 2.2 - 0.25 * a,
-      ry: Math.min(2, top - top * (0.5 + 0.28 * a)) * (0.85 + 0.15 * (1 - a)) + 0.1,
-    });
-  }
-  const x0 = Math.max(0, Math.floor((fx - 5 - ox) * sx)),
-    x1 = Math.min(W - 1, Math.ceil((fx + 5 - ox) * sx)),
+  const lobes = treeLobes(t);
+  const x0 = Math.max(0, Math.floor((fx - 8 - ox) * sx)),
+    x1 = Math.min(W - 1, Math.ceil((fx + 8 - ox) * sx)),
     y0 = Math.max(0, Math.floor((fy - top - 1 - oy) * sy)),
     y1 = Math.min(H - 1, Math.ceil((fy + 0.5 - oy) * sy));
   for (let y = y0; y <= y1; y++)

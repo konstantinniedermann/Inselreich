@@ -56,6 +56,7 @@ import {
 } from '../../src/render/massif';
 import {
   createMassifCache,
+  treeLobes,
   massifBounds,
   massifOnScreen,
   massifSilhouette,
@@ -1573,8 +1574,13 @@ describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
           expect(nd.veg >= 0.5 || nd.e < -0.3).toBe(true);
           expect(nd.steep).toBeLessThan(0.7);
           expect(nd.snow).toBeLessThan(0.5);
-          expect(t.height).toBeGreaterThanOrEqual(6);
-          expect(t.height).toBeLessThanOrEqual(9);
+          expect(t.height).toBeGreaterThanOrEqual(14);
+          expect(t.height).toBeLessThanOrEqual(20);
+          const lo = treeLobes(t);
+          const l = Math.min(...lo.map((k) => k.cu - k.rx)),
+            r = Math.max(...lo.map((k) => k.cu + k.rx));
+          expect(r - l, 'Breite ≤ 12 px').toBeLessThanOrEqual(12);
+          expect(Math.max(-l, r), 'im eigenen Halbstreifen (±16 px)').toBeLessThan(16);
           expect(t.height).toBeLessThanOrEqual(TREE_H);
         }
         for (const [i, a] of ts.entries())
