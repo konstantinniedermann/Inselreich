@@ -1233,12 +1233,12 @@ describe('M12 E1 Terrain', () => {
     );
   });
 
-  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16 und 13, Heimat und Inselansicht)', () => {
+  it('AK-E1-11 gridBands: Gitter aus Bändern gleich buildGrid (Bandhöhen 16, 13 und GRID_BAND_ROWS, Heimat und Inselansicht)', () => {
     for (const w of [view(), createWorld(3)]) {
       const isl = fieldWorld(w);
       const fields = terrainFields(isl);
       const ref = buildGrid(isl, fields) as unknown as Record<string, unknown>;
-      for (const rows of [16, 13]) {
+      for (const rows of [16, 13, GRID_BAND_ROWS]) {
         const bands = gridBands(isl, fields, rows);
         expect(bands.steps.length).toBeGreaterThan(2);
         for (const s of bands.steps) s();
@@ -1305,7 +1305,8 @@ describe('M12 E1 Terrain', () => {
     draws: number[][];
     getContext: () => unknown;
   }
-  const withLightDocument = (fn: () => void): void => {
+  const withLightDocument = (fn: (created: LightCanvas[]) => void): void => {
+    const created: LightCanvas[] = [];
     const doc = (globalThis as { document?: unknown }).document;
     (globalThis as { document?: unknown }).document = {
       createElement: (): LightCanvas => {
@@ -1321,11 +1322,12 @@ describe('M12 E1 Terrain', () => {
                 : () => undefined,
           set: () => true,
         });
+        created.push(c);
         return c;
       },
     };
     try {
-      fn();
+      fn(created);
     } finally {
       (globalThis as { document?: unknown }).document = doc;
     }
@@ -1364,13 +1366,22 @@ describe('M12 E1 Terrain', () => {
   });
 
   it('AK-E1-19 terrainJob: ruft der Renderer quarterLayer nach Streifen 3, ist das Bild vollständig und die Reststreifen malen nicht mehr', () => {
-    withLightDocument(() => {
+    withLightDocument((created) => {
       const job = terrainJob(view(), 1);
       const first = job.steps.length - QUARTER_STRIPS;
+      const total = (): number => created.reduce((n, c) => n + c.draws.length, 0);
       for (let i = 0; i < first + 3; i++) job.steps[i]!();
       const half = halfLayer(job.layer);
+      const before = total();
       const q = quarterLayer(job.layer);
+      const strips = quarterStrips(half.height).length;
+      // Der vorzeitige Aufruf malt alle Streifen selbst (nicht nur die drei fehlenden).
+      expect(total() - before).toBe(strips);
+      expect(stripCalls(q).length).toBe(strips);
+      const afterCall = total();
       for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
+      // Reststreifen: keine einzige weitere Zeichnung, auf keiner Ebene (auch nicht auf einer Arbeitskopie).
+      expect(total()).toBe(afterCall);
       expect(quarterLayer(job.layer)).toBe(q);
       expectCovered(stripCalls(q), half.height, q.height);
     });
