@@ -215,6 +215,8 @@ interface StaticPlan {
   /** Wald der Erzeugung (Urwald-Schätzer), 1 = Wald; null ohne passende Erzeugung. */
   wild: Uint8Array | null;
   sites: RareSite[];
+  /** Statische Stempelliste (D1): Kandidaten, Reihenfolge, Abstand und Deckel nur aus dem statischen Gelände. */
+  stamps: StampPlacement[];
   /** 0 frei, sonst 1 + Index in `sites` (Fussabdruck bzw. Teppichkacheln). */
   reserved: Uint8Array;
 }
@@ -406,9 +408,11 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
     green,
     wild,
     sites: [],
+    stamps: [],
     reserved: new Uint8Array(w * h),
   };
   planRare(p, w, h);
+  planStamps(p, w, h);
   plans.set(isl, p);
   return p;
 }
@@ -491,57 +495,68 @@ const STAMP_OF: Partial<Record<RareId, StampKind>> = {
 };
 
 /**
- * Stempel der Insel: S/E-Stempel (A6, A9, A14) an ihren statischen Orten, wenn der Fuss unbelegtes Gras ist, dazu
- * Solitärbäume (A5) nach Los. Alle ausserhalb von Belegung und Kacheln vor Gebäuden (R3), mit Mindestabstand
- * `STAMP_SPACING` (≤ 1 je 3 × 3), nach R6 gedeckelt. Eine reine Funktion von (Seed, Gelände, Belegung); sortiert nach `id`.
+ * Statische Stempelliste (D1): S/E-Stempel (A6, A9, A14) an ihren Orten, dann Solitärbäume (A5) nach Los und Rang.
+ * Kandidaten, Reihenfolge, Mindestabstand `STAMP_SPACING` (≤ 1 je 3 × 3) und Deckel (R6, `SOLITAIRE_MAX`) hängen nur am
+ * statischen Gelände (Grünland, Urwald-Schätzer, Kontor). Belegung und aktueller Wald blenden später nur aus; ein
+ * ausgeblendeter Platz wird nie durch einen anderen ersetzt (`stampPlacements`).
  */
-export function stampPlacements(
-  seed: number,
-  isl: DecorIsland,
-  kontor: Pos | null = null,
-): StampPlacement[] {
-  const { width: w, height: h } = isl;
-  const plan = staticPlan(seed, isl, kontor);
-  const limit = stampLimit(plan.cls.reduce((n, c) => n + (c !== 0 ? 1 : 0), 0));
+function planStamps(p: StaticPlan, w: number, h: number): void {
+  const seed = p.seed;
+  const limit = stampLimit(p.cls.reduce((n, c) => n + (c !== 0 ? 1 : 0), 0));
   const out: StampPlacement[] = [];
   const near = (x: number, y: number): boolean =>
     out.some((s) => Math.max(Math.abs(s.x - x), Math.abs(s.y - y)) < STAMP_SPACING);
-  const grassFree = (x: number, y: number): boolean =>
-    isl.tiles[y * w + x]!.terrain === 'grass' && !stampBlocked(isl, x, y);
-  for (const s of plan.sites) {
+  const add = (kind: StampKind, x: number, y: number): void => {
+    out.push({ kind, x, y, variant: Math.floor(hash2(seed + 552, x, y) * 4), id: y * w + x });
+  };
+  for (const s of p.sites) {
     const kind = STAMP_OF[s.id];
-    if (!kind || out.length >= limit) continue;
-    if (!grassFree(s.x, s.y) || near(s.x, s.y)) continue;
-    out.push({
-      kind,
-      x: s.x,
-      y: s.y,
-      variant: Math.floor(hash2(seed + 552, s.x, s.y) * 4),
-      id: s.y * w + s.x,
-    });
+    if (!kind || out.length >= limit || near(s.x, s.y)) continue;
+    add(kind, s.x, s.y);
   }
   const cand: { x: number; y: number; r: number }[] = [];
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
+      const i = y * w + x;
       const r = hash2(seed + 540, x, y);
-      if (r >= SOLITAIRE_P || plan.reserved[y * w + x]) continue;
-      if (grassFree(x, y) && solitaireClear(isl, x, y)) cand.push({ x, y, r });
+      // statisch: Grünland ohne Urwald (Abstand ≥ SOLITAIRE_FOREST_GAP + 1 zum Nicht-Grünland bzw. Urwald), nicht reserviert
+      if (
+        r >= SOLITAIRE_P ||
+        p.reserved[i] ||
+        p.cls[i] !== 2 ||
+        p.green[i]! < SOLITAIRE_FOREST_GAP + 1
+      )
+        continue;
+      cand.push({ x, y, r });
     }
   cand.sort((a, b) => a.r - b.r);
   let solitaires = 0;
   for (const c of cand) {
     if (solitaires >= SOLITAIRE_MAX || out.length >= limit) break;
     if (near(c.x, c.y)) continue;
-    out.push({
-      kind: 'solitaire',
-      x: c.x,
-      y: c.y,
-      variant: Math.floor(hash2(seed + 552, c.x, c.y) * 4),
-      id: c.y * w + c.x,
-    });
+    add('solitaire', c.x, c.y);
     solitaires++;
   }
-  return out.sort((a, b) => a.id - b.id);
+  p.stamps = out.sort((a, b) => a.id - b.id);
+}
+
+/**
+ * Stempel der Insel: die statische Liste (`planStamps`), ausgeblendet wo der Fuss kein unbelegtes Gras ist, auf Kacheln vor
+ * einem Gebäude liegt (R3) oder ein Solitär weniger als `SOLITAIRE_FOREST_GAP` Kacheln vom jetzigen Wald steht (R5).
+ * Nichts rückt nach: ein Haus, ein Weg oder eine Rodung entfernt höchstens Stempel an Ort und Stelle. Sortiert nach `id`.
+ */
+export function stampPlacements(
+  seed: number,
+  isl: DecorIsland,
+  kontor: Pos | null = null,
+): StampPlacement[] {
+  const w = isl.width;
+  return staticPlan(seed, isl, kontor).stamps.filter(
+    (s) =>
+      isl.tiles[s.y * w + s.x]!.terrain === 'grass' &&
+      !stampBlocked(isl, s.x, s.y) &&
+      (s.kind !== 'solitaire' || solitaireClear(isl, s.x, s.y)),
+  );
 }
 
 // ---------- Boden-Elemente ----------

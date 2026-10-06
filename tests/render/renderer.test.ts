@@ -5,6 +5,7 @@ import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
 import { PALETTE, SHADOW, rgbOfCss, rgbaOf } from '../../src/render/palette';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
+import { resetDecorCache, setDecorCanvasFactory } from '../../src/render/decorStamps';
 import { centerOn, groundMatrix, visibleTileRange } from '../../src/render/camera';
 import { islandCam, islandView } from '../../src/render/archipel';
 import { tileToScreen } from '../../src/render/camera';
@@ -187,6 +188,12 @@ beforeAll(() => {
     return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
   });
   resetTreeCache();
+  // ebenso für die Deko-Stempel (ART-STIL-02 L4)
+  setDecorCanvasFactory(() => {
+    const { ctx } = fakeCtx();
+    return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
+  });
+  resetDecorCache();
 });
 beforeEach(() => {
   h.calls.length = 0;
@@ -490,6 +497,9 @@ describe('Renderer', () => {
     // keine Baum- und Felsschatten (H-R8) im Zähler
     for (const t of home(world).tiles)
       if (t.terrain === 'forest' || t.terrain === 'mountain') t.terrain = 'grass';
+    // und keine Deko-Stempel-Schatten (L4): Stempel stehen nur auf Gras, also bleibt kein freies Gras
+    for (const t of home(world).tiles)
+      if (t.terrain === 'grass' && t.buildingId === null) t.terrain = 'sand';
     const keep = world.buildings[ids.market!]!;
     world.buildings = { [keep.id]: keep };
     const box = spriteBounds(BUILDING_DEFS.market, keep);
@@ -1110,9 +1120,9 @@ describe('S1-Rest DIM_FIRE', () => {
 });
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
-  // Bewusst neu gepinnt (ART-STIL-02 L4, fix: Baum-Culling mit 1 Kachel Zuschlag): mehr Baumstempel am Bildrand, die
-  // Aufrufliste wächst um 520 Zeichen (12339 → 12859); sonst unverändert.
-  const HOME_CALLS = { hash: 298504614, length: 12859 };
+  // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
+  // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben.
+  const HOME_CALLS = { hash: 1891014166, length: 12859 };
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {

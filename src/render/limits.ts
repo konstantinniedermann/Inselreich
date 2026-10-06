@@ -27,6 +27,12 @@ export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce 
 export const MASSIF_CACHE_MAX_BYTES = 48 * 1024 * 1024;
 export const MASSIF_BUILDS_PER_FRAME = 8;
 /**
+ * Deko-Stempel-Cache (ART-STIL-02 L4, `decorStamps.ts`): Obergrenze der Offscreen-Flächen in Bytes (RGBA, LRU, der
+ * älteste Eintrag fliegt zuerst). Darstellungswert.
+ */
+export const DECOR_CACHE_MAX_BYTES = 8 * 1024 * 1024;
+
+/**
  * Höchstens so viele Flächenpixel je Weltpixel und Achse (Zoomstufe × DPR gedeckelt): bei Zoom 2 und DPR 2 wird die
  * Fläche mit Faktor 2 gemalt und doppelt so gross gestempelt. Ohne Deckel passt ein bildfüllendes Massiv (gemessen
  * ≈ 59 MB bei 1920 × 1080) nicht unter die Bytegrenze und würde jeden Frame neu gerastert. Zoom 1 bei DPR 2

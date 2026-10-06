@@ -7,6 +7,7 @@ import type { Building, BuildingDef, BuildingDefId, Category, World } from '../s
 import { fieldWorld } from './terrainField';
 import { massifPieces, type MassifPiece } from './massif';
 import { FOREST_VARIANTS, forestLayout, type TileClass } from './forest';
+import { kontorPos, stampPlacements, type StampKind } from './decor';
 
 // iso.ts — Kern (Setzung Spec D-01 bis D-05, D-13, D-16)
 export const ISO_W = 64;
@@ -137,8 +138,9 @@ export type SortedItem =
       giant?: boolean;
     }
   | { kind: 'massif'; id: number; fp: Footprint; key: number; piece: MassifPiece }
+  | { kind: 'decor'; id: number; fp: Footprint; key: number; stamp: StampKind; variant: number }
   | { kind: Moving['kind']; id: number; fp: Footprint; key: number; cx: number; cy: number };
-const RANK = { massif: 0, tree: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
+const RANK = { massif: 0, tree: 1, decor: 1, building: 2, ship: 3, boat: 4, walker: 5 } as const;
 const cmp = (a: SortedItem, b: SortedItem): number =>
   a.key - b.key || a.fp.x - b.fp.x || RANK[a.kind] - RANK[b.kind] || a.id - b.id;
 const fixed = new WeakMap<World, { key: string; items: SortedItem[] }>();
@@ -184,6 +186,20 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
           ox: pl.ox,
           oy: pl.oy,
           giant: pl.giant,
+        });
+      }
+    // Deko-Stempel (ART-STIL-02 L4, A5/A6/A9/A14): nur auf der Heimatinsel (D4); eine Inselansicht fremder Inseln zeigt
+    // nur Boden-Deko. Die Liste entsteht hier, je `layoutKey`, nie je Frame; sie rückt bei Bau und Rodung nicht nach.
+    if (!isl.kind || isl.kind === 'home')
+      for (const s of stampPlacements(world.seed, isl, kontorPos(isl, world.buildings))) {
+        const fp = { x: s.x, y: s.y, w: 1, h: 1 };
+        items.push({
+          kind: 'decor',
+          id: s.id,
+          fp,
+          key: depthKey(fp),
+          stamp: s.kind,
+          variant: s.variant,
         });
       }
     items.sort(cmp);

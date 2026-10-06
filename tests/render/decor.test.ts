@@ -952,3 +952,43 @@ describe('L4 Bild-Fix 2: Farnsaum folgt nicht der Kachelkante', () => {
       for (const c of fringeClusters(seed, 5, 0, arg)) expect(c.u).toBeGreaterThanOrEqual(0.3);
   });
 });
+
+describe('L4 Stempelliste rückt nicht nach (D1)', () => {
+  const ids = (l: { id: number; kind: string }[]): string[] => l.map((s) => `${s.kind}@${s.id}`);
+
+  it('Eine belegte Kachel unter einem Stempel entfernt nur Stempel an Ort und Stelle, alle anderen bleiben identisch (30 Seeds)', () => {
+    let tested = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const k = kontorOf(w);
+      const before = stampPlacements(seed, isl, k);
+      const target = before.find((s) => s.kind === 'solitaire') ?? before[0];
+      if (!target) continue;
+      tested++;
+      const t = isl.tiles[target.id]!;
+      t.buildingId = 9999;
+      const after = stampPlacements(seed, isl, k);
+      t.buildingId = null;
+      const gone = new Set([
+        target.id,
+        target.id + 1,
+        target.id + isl.width,
+        target.id + isl.width + 1,
+      ]);
+      expect(ids(after), `Seed ${seed}`).toEqual(ids(before.filter((s) => !gone.has(s.id))));
+    }
+    expect(tested).toBeGreaterThanOrEqual(25);
+  });
+
+  it('Roden entfernt keinen Stempel und fügt keinen an anderer Stelle statt eines ausgeblendeten ein (Rodung nur zusätzlich)', () => {
+    for (const seed of [1, 7, 14, 21, 28]) {
+      const w = fresh(seed);
+      const s = spots(w);
+      const before = stampPlacements(seed, home(w), kontorOf(w));
+      clearForest(w, s.wood.x, s.wood.y);
+      const after = stampPlacements(seed, home(w), kontorOf(w));
+      for (const b of ids(before)) expect(ids(after), `Seed ${seed}`).toContain(b);
+    }
+  });
+});

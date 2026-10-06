@@ -88,6 +88,7 @@ import {
   type ArchipelView,
 } from './archipel';
 import { massifBounds, massifCache, massifClips, massifOnScreen, type MassifItem } from './rocks';
+import { DECOR_MIN_ZOOM, decorShadow, drawDecorStamp, type DecorItem } from './decorStamps';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
@@ -621,6 +622,16 @@ function drawIsland(
           it.fp.y > range.y1 + 1
         )
           continue;
+      } else if (it.kind === 'decor') {
+        // Deko-Stempel: im Kachelbereich mit 1 Kachel Zuschlag (Kronen ragen über die Kachel), unter der Zoomschwelle nicht
+        if (cam.zoom < DECOR_MIN_ZOOM[it.stamp]) continue;
+        if (
+          it.fp.x < range.x0 - 1 ||
+          it.fp.x > range.x1 + 1 ||
+          it.fp.y < range.y0 - 1 ||
+          it.fp.y > range.y1 + 1
+        )
+          continue;
       } else if (it.kind !== 'ship' && it.kind !== 'walker') continue;
       visible.push(it);
     }
@@ -644,7 +655,10 @@ function drawIsland(
             const b = world.buildings[it.id]!;
             polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
-          else if (it.kind === 'massif')
+          else if (it.kind === 'decor') {
+            const sh = decorShadow(it as DecorItem);
+            if (sh) polyPath(ctx, sh);
+          } else if (it.kind === 'massif')
             continue; // Licht- und Schattenseite liegen im Netz
           else if (it.kind === 'walker') {
             if ((poses.get(it.id)?.alpha ?? 0) >= 0.5)
@@ -684,6 +698,7 @@ function drawIsland(
           ctx.restore();
         }
       } else if (it.kind === 'tree') drawTreeStamp(ctx, cam, it as TreeItem, env.seed);
+      else if (it.kind === 'decor') drawDecorStamp(ctx, cam, it as DecorItem, env.seed);
       else if (it.kind === 'massif') massifCache.draw(ctx, cam, it as MassifItem);
       else if (it.kind === 'ship')
         drawShip(ctx, cam, { x: it.cx - 0.5, y: it.cy - 0.5 }, fx.timeMs, shipScale(cam.zoom));
