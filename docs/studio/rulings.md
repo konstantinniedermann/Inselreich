@@ -2142,3 +2142,18 @@ ohne weiteres Gate in `.worktrees/integrate` nach `main` (Save v8 live). Danach 
 erfüllt. — Kosten bei Irrtum: Revert-Merge; v8-Spielstände wären im alten Build unladbar (nach R261 hingenommen).
 
 Entscheider: L0 · Anlass: Final-Review lead-qa, Urteil lead-art · ADR: —
+
+## R267 · 2026-10-06 · CI rot nach E1-Merge: Hotfix H-T4, Ad-hoc-Retro
+
+Ruling: Beobachtung: Workflow **CI**, Lauf 37438286587 auf `main` @ d2d08fb rot — 1 von 1835 Tests:
+`tests/render/terrain.test.ts:1236` AK-E1-11 „gridBands … GRID_BAND_ROWS" → „Test timed out in 5000ms"; lokal und im
+Integrations-Worktree grün. Workflow **Pages** Lauf 37438286556 stand > 10 min in `queued`. Vermutung (unbelegt): F1 Q2
+hat den Gittertest auf dem CI-Runner über das Vitest-Timeout gehoben. Kein Revert: E1 bleibt auf `main`, Hotfix
+**H-T4** durch lead-tech (sonnet, 2 Starts) auf `fix/h-t4-gridbands-timeout` ab `origin/main`: Ursache belegen
+(Laufzeit des Tests lokal und unter `CI=true`, Vergleich vor/nach F1), dann kleinste Korrektur (Test verkleinern oder
+begründetes Test-Timeout; keine Schwelle einer Leistungsprüfung lockern), Review, `CI=true make check`; Merge durch
+production-integrator ohne weiteres Gate, sobald Review OK. **M1** für das Seefahrt-Bündel gilt erst mit grüner CI.
+Ad-hoc-Retro (CI rot, Integrator `failed`) durch studio-coach nach dem Hotfix; Prüffrage: Warum lief der nach dem
+Final-Review geänderte Zeittest nicht durch die CI-Reserve-Prüfung (R236 (a))? — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht production-integrator M12-E1-MERGE, Hook-Meldung · ADR: —
