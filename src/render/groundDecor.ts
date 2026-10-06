@@ -699,7 +699,10 @@ export function fringeClusters(seed: number, tx: number, ty: number, arg: number
       const fx = side < 4 ? tx + 0.5 : tx + u,
         fy = side < 4 ? ty + u : ty + 0.5;
       const t = (forestEdgeShift(seed, fx, fy) + 0.3) / 0.6; // 0…1
-      const d = 0.05 + 0.3 * Math.min(1, Math.max(0, 0.5 + 2 * (0.4 * t + 0.6 * r(80 + q) - 0.5)));
+      // Abstand: abwechselnd nah (0,05–0,14) und fern (0,26–0,35), mit gelegentlichem Vertauschen und Feld-Anteil
+      const m = Math.min(1, Math.max(0, 0.5 * t + 0.5 * r(80 + q)));
+      const far = (((side < 4 ? ty : tx) * 3 + k + (r(110 + q) < 0.15 ? 1 : 0)) & 1) === 1;
+      const d = (far ? 0.26 : 0.05) + 0.09 * m;
       const n = 2 + Math.floor(r(90 + q) * 4);
       out.push({
         side: side as 1 | 2 | 4 | 8,

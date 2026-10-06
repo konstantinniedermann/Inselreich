@@ -179,40 +179,52 @@ const fresh = (seed: number): World => {
 };
 
 describe('L4-T2 Patch = Vollaufbau (Bau, Abriss, Roden, Aufforsten)', () => {
-  const diffs: Record<string, number> = { Bau: 0, Roden: 0, Aufforsten: 0 };
+  const diffs: Record<string, number> = { Bau: 0, Abriss: 0, Roden: 0, Aufforsten: 0 };
   afterAll(() => {
     // nicht leer: die Aktionen ändern über die Seeds hinweg tatsächlich Elemente
     for (const k of Object.keys(diffs)) expect(diffs[k], k).toBeGreaterThan(0);
   });
-  const steps: [string, (w: World, s: ReturnType<typeof spots>) => void][] = [
+  type Ctx = ReturnType<typeof spots> & { id?: number };
+  const steps: [string, (w: World, s: Ctx) => void, (w: World, s: Ctx) => void][] = [
     [
       'Bau',
+      () => {},
       (w, s) => {
         placeBuilding(w, 'house', s.house.x, s.house.y);
         placeRoad(w, s.house.x, s.house.y + 2);
       },
     ],
     [
+      'Abriss',
+      (w, s) => {
+        s.id = placeBuilding(w, 'house', s.house.x, s.house.y).id;
+        placeRoad(w, s.house.x, s.house.y + 2);
+      },
+      (w, s) => {
+        demolish(w, s.id!);
+      },
+    ],
+    [
       'Roden',
+      () => {},
       (w, s) => {
         clearForest(w, s.wood.x, s.wood.y);
       },
     ],
     [
       'Aufforsten',
+      () => {},
       (w, s) => {
         plantForest(w, s.house.x, s.house.y);
       },
     ],
   ];
   for (const seed of [1, 7, 14, 21]) {
-    for (const [name, act] of steps) {
+    for (const [name, setup, act] of steps) {
       it(`L4-T2 ${name} (Seed ${seed}): jedes geänderte Element liegt mit Bildbox im Patch-Rechteck, Rechteck nach Patch = voller Plan`, () => {
         const w = fresh(seed);
-        const s = spots(w);
-        if (name === 'Aufforsten') {
-          /* Weide → Wald an der Haus-Kachel */
-        }
+        const s: Ctx = spots(w);
+        setup(w, s);
         const before = clone(w);
         const fullBefore = plan(w);
         act(w, s);
@@ -239,6 +251,45 @@ describe('L4-T2 Patch = Vollaufbau (Bau, Abriss, Roden, Aufforsten)', () => {
       });
     }
   }
+
+  it('L4-T2 Malebene: paintDecor über das Patch-Rechteck malt dieselben Punkte im Rechteck wie das Vollmalen des neuen Stands (Bau, Abriss, Roden, Aufforsten)', () => {
+    /** Pfadpunkte (Texturpixel, Faktor 1) je Zeichenaufruf und Farbe von `paintDecor` über `paint`, die in `r` liegen. */
+    const pointsIn = (w: World, paint: TileRect, r: TileRect): string[] => {
+      const f = fakeCtx();
+      paintDecor(f.ctx, w, occupancy(home(w)), 1, paint);
+      const out: string[] = [];
+      for (const e of f.log.events)
+        if (e.op === 'fill' || e.op === 'stroke')
+          for (const p of e.points)
+            if (
+              p.x >= r.x0 * 32 &&
+              p.x < (r.x1 + 1) * 32 &&
+              p.y >= r.y0 * 32 &&
+              p.y < (r.y1 + 1) * 32
+            )
+              out.push(`${e.op}|${e.style}|${p.x.toFixed(3)}|${p.y.toFixed(3)}`);
+      return out.sort();
+    };
+    let checked = 0;
+    for (const seed of [1, 7, 14, 21]) {
+      for (const [name, setup, act] of steps) {
+        const w = fresh(seed);
+        const s: Ctx = spots(w);
+        const full = { x0: 0, y0: 0, x1: home(w).width - 1, y1: home(w).height - 1 };
+        setup(w, s);
+        const before = clone(w);
+        act(w, s);
+        const rect = patchRect(before, w);
+        if (!rect) continue;
+        const patch = pointsIn(w, rect, rect);
+        const all = pointsIn(w, full, rect); // Vollmalen des neuen Stands, im selben Rechteck ausgewertet
+        expect(patch, `Seed ${seed} ${name}`).toEqual(all);
+        expect(patch.length, `Seed ${seed} ${name}: nicht leer`).toBeGreaterThan(0);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(12);
+  });
 
   it('L4-T2 Abriss: Plan nach Bau und Abriss ist identisch zum Plan davor; ebenso Roden und Aufforsten', () => {
     let changed = 0;
@@ -469,6 +520,8 @@ describe('L4 D5 Salze und Zufall', () => {
       if (n >= Number(m[1]) && n <= Number(m[2])) return true;
     return false;
   };
+  // Erkannte Muster (Quelltext von src/render/*.ts): `seed + 5dd` (Salz am Seed), `salt: 5dd` (Pool-Tabelle in decor.ts) und
+  // `rnd(5dd, …)` (Formen-Helfer in groundDecor.ts). Salze, die nur über eine Variable laufen, erkennt der Test nicht.
   const salts = (src: string): number[] =>
     [
       ...src.matchAll(/seed\s*\+\s*(5\d\d)\b/g),
@@ -865,7 +918,8 @@ describe('L4 Bild-Fix 2: Farnsaum folgt nicht der Kachelkante', () => {
 
   it('Entlang eines geraden Waldrands von 10 Kacheln: SD des Abstands der Büschel zur Kante ≥ 0,08, Saum ≤ 70 % der Kantenlänge', () => {
     const { isl } = edge();
-    for (const seed of [1, 2, 5, 7, 11]) {
+    // Gemessen über Seeds 1–200: SD-Minimum 0,0896 (Median 0,106), Saumanteil ≤ 0,44. Schwelle = Bildziel 0,08.
+    for (let seed = 1; seed <= 200; seed++) {
       const ds: number[] = [];
       let covered = 0;
       for (let y = 1; y <= 10; y++) {
