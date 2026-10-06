@@ -11,8 +11,8 @@ import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 // k 3 Gebirge, L2 in massif.ts) ·
 // 501–519 L1 Wald: 501 Akzentart, 502/503 Bestandsfelder, 504/505/514 Randversatz, 506/507 Kern-Streuung, 508 Lichtung,
 // 509/510 Riesenbaum, 511 Formreihenfolge (alle forest.ts), 512 Kronen je Variante, 513 Kronenform (trees.ts) ·
-// 520–539 L2 Gebirge (belegt 530–538, massif.ts/rocks.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
-// 533 Schneerand, 534 Baumauswahl, 535 Baumform, 536 Baumhöhe, 537 Baumneigung (534 + 1…3), 538 Wiesenfuss ·
+// 520–539 L2 Gebirge (belegt 530–539, massif.ts/rocks.ts, 539 in terrain.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
+// 533 Schneerand, 534 Baumauswahl, 535 Baumform, 536 Baumhöhe, 537 Baumneigung (534 + 1…3), 538 Wiesenfuss, 539 Findlinge im Boden (terrain.ts, Task B) ·
 // 540–559 L4 · 560–574 L5 · 575–584 L6 · 585–594 L7 · 595–599 L8.
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);

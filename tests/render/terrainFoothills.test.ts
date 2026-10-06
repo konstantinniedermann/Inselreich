@@ -2,6 +2,9 @@ import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
 import { TEX } from '../../src/render/iso';
+import { PALETTE, SIGNAL_NAMES, rgbOf } from '../../src/render/palette';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
+import { BOULDER_TONES } from '../../src/render/terrain';
 import { terrainFields } from '../../src/render/terrainField';
 import {
   buildGrid,
@@ -11,6 +14,10 @@ import {
   groundHeight,
   paintPixels,
   patchGrid,
+  BOULDER_P,
+  SCREE_MAX,
+  boulderOf,
+  screeWeight,
   terrainCodes,
   terrainPatchRect,
 } from '../../src/render/terrain';
@@ -240,3 +247,119 @@ const firstDiff = (a: ArrayLike<number>, b: ArrayLike<number>): number => {
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return i;
   return -1;
 };
+
+// ART-STIL-02 L2 Task B — Schutt schmal und ruhig, Findlinge als Bodenton (Spec 2.2(3), C11).
+/** Abstand (Kacheln) eines Punkts zum nächsten Gebirgs-Kachelrechteck; 99 jenseits von 4 Kacheln. */
+const rectDist = (mt: readonly [number, number][], fx: number, fy: number): number => {
+  let d = 99;
+  for (const [x, y] of mt) {
+    if (Math.abs(x + 0.5 - fx) > 5 || Math.abs(y + 0.5 - fy) > 5) continue;
+    d = Math.min(
+      d,
+      Math.hypot(Math.max(x - fx, fx - (x + 1), 0), Math.max(y - fy, fy - (y + 1), 0)),
+    );
+  }
+  return d;
+};
+const mountainTiles = (w: ReturnType<typeof createWorld>): [number, number][] => {
+  const isl = home(w);
+  const out: [number, number][] = [];
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++)
+      if (isl.tiles[y * isl.width + x]!.terrain === 'mountain') out.push([x, y]);
+  return out;
+};
+
+describe('ART-STIL-02 L2 Task B Schutt', () => {
+  it('L2 Schutt schmal: scree = 0 ab 1,2 Kacheln Abstand zum Gebirge (höchstens 3 % der Graknoten in Buchten, keiner ab 2,5)', () => {
+    for (const { world, grid } of setups) {
+      const isl = home(world);
+      const mt = mountainTiles(world);
+      let far = 0,
+        nonzero = 0,
+        vfar = 0;
+      for (let j = 0; j < grid.ny; j++)
+        for (let i = 0; i < grid.nx; i++) {
+          const fx = i / NODES,
+            fy = j / NODES;
+          const tx = Math.floor(fx),
+            ty = Math.floor(fy);
+          if (
+            tx >= isl.width ||
+            ty >= isl.height ||
+            isl.tiles[ty * isl.width + tx]!.terrain !== 'grass'
+          )
+            continue;
+          const d = rectDist(mt, fx, fy);
+          if (d < 1.2 || d > 4) continue;
+          far++;
+          if (grid.scree[j * grid.nx + i]! > 0.05) nonzero++;
+          if (d >= 2.5) vfar += grid.scree[j * grid.nx + i]!;
+        }
+      expect(nonzero / Math.max(1, far), `Seed ${world.seed}`).toBeLessThanOrEqual(0.03);
+      expect(vfar, `Seed ${world.seed}`).toBe(0);
+    }
+  });
+
+  it('L2 Schutt ruhig: SCREE_MAX ≤ 0,4, Modulation durch das Felsrauschen höchstens ±20 %', () => {
+    expect(SCREE_MAX).toBeLessThanOrEqual(0.4);
+    for (const sc of [0.3, 0.7, 1]) {
+      const lo = screeWeight(sc, 0),
+        hi = screeWeight(sc, 1);
+      expect(hi / lo, `scree ${sc}`).toBeLessThanOrEqual(1.5 + 1e-9); // 1,2 / 0,8
+      expect(Math.max(lo, hi)).toBeLessThanOrEqual(SCREE_MAX * 1.2 * sc + 1e-9);
+    }
+  });
+});
+
+describe('ART-STIL-02 L2 Task B Findlinge (C11)', () => {
+  it('L2 Findlinge: nur auf Gras, höchstens 2 Kacheln vor dem Fuss, Durchmesser ≤ 0,3 Kachel, Anteil ≈ 0,2–0,3, deterministisch', () => {
+    let tiles = 0,
+      hits = 0;
+    for (const { world, grid, seed } of setups) {
+      const isl = home(world);
+      const mt = mountainTiles(world);
+      let near = 0,
+        near_hit = 0;
+      for (let ty = 0; ty < isl.height; ty++)
+        for (let tx = 0; tx < isl.width; tx++) {
+          const b = boulderOf(grid, tx, ty);
+          const b2 = boulderOf(grid, tx, ty);
+          expect(b2, 'deterministisch').toEqual(b);
+          const grassNear =
+            isl.tiles[ty * isl.width + tx]!.terrain === 'grass' &&
+            rectDist(mt, tx + 0.5, ty + 0.5) <= 1.9;
+          if (grassNear) near++;
+          if (!b) continue;
+          hits++;
+          expect(isl.tiles[ty * isl.width + tx]!.terrain, `Seed ${seed} Kachel ${tx},${ty}`).toBe(
+            'grass',
+          );
+          expect(rectDist(mt, tx + b.cx, ty + b.cy), `Seed ${seed} Abstand`).toBeLessThanOrEqual(
+            2.3,
+          );
+          expect(2 * b.r, 'Durchmesser').toBeLessThanOrEqual(0.3);
+          expect(b.cx - b.r).toBeGreaterThanOrEqual(0);
+          expect(b.cx + b.r).toBeLessThanOrEqual(1);
+          if (grassNear) near_hit++;
+        }
+      tiles += near;
+      expect(near_hit / Math.max(1, near), `Seed ${seed} Anteil nahe Gras-Kacheln`).toBeGreaterThan(
+        BOULDER_P * 0.4,
+      );
+      expect(near_hit / Math.max(1, near)).toBeLessThanOrEqual(BOULDER_P * 1.4);
+    }
+    expect(tiles).toBeGreaterThan(50);
+    expect(hits).toBeGreaterThan(20);
+  });
+
+  it('L2 Findlinge: Töne ΔE2000 ≥ 20 zu den Signalfarben', () => {
+    const sig = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
+    for (const t of BOULDER_TONES)
+      for (const s of sig)
+        expect(deltaE2000(rgbToLab([...t] as [number, number, number]), s)).toBeGreaterThanOrEqual(
+          20,
+        );
+    expect(rgbOf(PALETTE.rock)).toBeDefined();
+  });
+});
