@@ -5,6 +5,7 @@ import type { World } from '../sim/types';
 import { HOME, tileAt } from '../sim/world';
 import { cameraBounds } from '../render/archipel';
 import { clampToRect, zoomAt } from '../render/camera';
+import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
@@ -13,6 +14,7 @@ import { pickTarget, type IslandTile } from './islandTools';
 
 export type InputAction =
   | { type: 'tile'; island: number; x: number; y: number; dragging: boolean }
+  | { type: 'ship'; id: number }
   | { type: 'cancel' }
   | { type: 'hotkey'; action: HotkeyAction }
   | { type: 'dragEnd' };
@@ -339,7 +341,12 @@ export function bindInput(
     if (d.panning || d.button !== 0) return;
     if (d.select && !d.touch) {
       const up = local(e);
-      if (d.downTile && !exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })) {
+      const ship = exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })
+        ? null
+        : shipAt(state.world, state.cam, up.sx, up.sy);
+      if (ship !== null) {
+        onAction({ type: 'ship', id: ship });
+      } else if (d.downTile && !exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })) {
         onAction({
           type: 'tile',
           island: d.downTile.island,

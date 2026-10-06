@@ -22,6 +22,8 @@ export interface ReasonCtx {
   cost?: Cost;
   good?: GoodId;
   amount?: number;
+  /** Insel, deren Bestand genannt wird (Standard Heimat). */
+  island?: number;
 }
 
 /** `show` liefert den Anzeigetext; `null` = Grund unverändert anzeigen. */
@@ -34,6 +36,8 @@ export interface ReasonRow {
 export type Hint = { tone: 'ok' | 'bad' | 'info'; text: string };
 
 const same = (): null => null;
+const stockOf = (w: World, c: ReasonCtx): Record<GoodId, number> =>
+  (w.islands[c.island ?? HOME] ?? home(w)).stock;
 const COST_GOODS = ['wood', 'tools', 'stone'] as const;
 const costOf = (c: ReasonCtx): Cost | null =>
   c.cost ?? (c.defId ? BUILDING_DEFS[c.defId].cost : null);
@@ -104,7 +108,7 @@ export const REASON_TABLE: readonly ReasonRow[] = [
       const cost = costOf(c);
       const g = COST_GOODS.find((x) => GOODS[x].name === m[1]);
       return cost && g
-        ? `Zu wenig ${m[1]}: ${cost[g]} nötig, ${home(w).stock[g]} vorhanden · kaufbar am Kontor`
+        ? `Zu wenig ${m[1]}: ${cost[g]} nötig, ${stockOf(w, c)[g]} vorhanden · kaufbar am Kontor`
         : null;
     },
   },
@@ -145,7 +149,7 @@ export const REASON_TABLE: readonly ReasonRow[] = [
     pattern: /^Nicht genug Ware$/,
     show: (_m, w, c) =>
       c.good && c.amount !== undefined
-        ? `Nicht genug ${GOODS[c.good].name}: ${c.amount} nötig, ${home(w).stock[c.good]} vorhanden`
+        ? `Nicht genug ${GOODS[c.good].name}: ${c.amount} nötig, ${stockOf(w, c)[c.good]} vorhanden`
         : null,
   },
   { source: 'trade', pattern: /^Ungültige Menge$/, show: same },

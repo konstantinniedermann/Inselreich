@@ -21,6 +21,7 @@ import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
+import { renderShipSection, updateShipSection, type ShipActions } from './ships';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { iconChip } from './messages';
@@ -54,6 +55,8 @@ export interface InspectActions {
   holdFeast(id: number): void;
   /** Pfad-Vorschau auf der Karte setzen (`null` löscht sie). */
   previewConnect(tiles: readonly Pos[] | null): void;
+  /** Kontor-Panel: Schiffe kaufen und Routen anlegen (M12 E4). */
+  ships: ShipActions;
 }
 
 export interface LockRow {
@@ -128,7 +131,9 @@ export function upgradeOkText(): string {
 /** Gründe, warum das Haus nicht aufsteigt, als Klartext mit Aufstiegskosten. */
 export function upgradeReasonTexts(world: World, b: Building): string[] {
   const cost = TIERS[b.house!.tier].upgradeCost!;
-  return upgradeStatus(world, b).reasons.map((r) => `✗ ${friendlyReason(world, r, { cost })}`);
+  return upgradeStatus(world, b).reasons.map(
+    (r) => `✗ ${friendlyReason(world, r, { cost, island: b.island })}`,
+  );
 }
 
 function addButton(parent: HTMLElement, label: string, onClick: () => void, field?: string): void {
@@ -287,7 +292,9 @@ export function deficitLine(world: World, b: Building): string | null {
   const tier = TIERS[house.tier];
   if (tier.upgradeCost === null || house.inhabitants !== tier.maxInhabitants) return null;
   const d = upgradeDeficit(world, b);
-  return d ? deficitText(d.good, home(world).stock[d.good], d.net) : null;
+  return d
+    ? deficitText(d.good, (world.islands[b.island] ?? home(world)).stock[d.good], d.net)
+    : null;
 }
 
 /** Setzt Text und Sichtbarkeit einer optionalen Panel-Zeile (`null` → verborgen). */
@@ -570,6 +577,7 @@ export function renderInspect(
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
+  if (kontor !== null) renderShipSection(panel, world, b.island, actions.ships);
   if (buttons.querySelector('[data-field="connect"]')) {
     const reason = addLine(panel, '', 'connect-reason');
     reason.classList.add('negative');
@@ -629,7 +637,9 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
     cost: `Kosten ${costLine(next.cost)}`,
     fee: `Gebühr ${next.fee.amount} ${GOODS[next.fee.good].name}`,
     preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
-    reasons: r.ok ? [] : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost })}`],
+    reasons: r.ok
+      ? []
+      : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost, island: b.island })}`],
     ok: r.ok,
   };
 }
@@ -756,6 +766,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
   if (b.defId === 'townhall') updateTownhall(panel, world);
+  if (isKontor(b.defId)) updateShipSection(panel, world);
   setField(panel, 'refund', refundLine(world, b));
   setField(panel, 'upkeep', upkeepText(b));
   setField(panel, 'level', levelText(b) ?? '');

@@ -101,7 +101,9 @@ function houseInfo(world: World, b: Building): HoverInfo {
   if (tier.upgradeCost !== null) {
     const st = upgradeStatus(world, b);
     lines.push(
-      st.ok ? 'Aufstieg bereit' : `Aufstieg: ${friendlyReason(world, st.reasons[0] ?? '')}`,
+      st.ok
+        ? 'Aufstieg bereit'
+        : `Aufstieg: ${friendlyReason(world, st.reasons[0] ?? '', { island: b.island })}`,
     );
   }
   return { title: HOUSE_TITLES[house.tier], lines };

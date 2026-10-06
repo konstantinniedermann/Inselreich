@@ -27,7 +27,7 @@ export function connectView(world: World, b: Building): ConnectView | null {
     return {
       label: 'Anbinden',
       ok: false,
-      reason: friendlyReason(world, path.reason),
+      reason: friendlyReason(world, path.reason, { island: b.island }),
       tiles: [],
       cost: { ...ROAD_COST_OBJ, money: 0 },
     };
@@ -35,11 +35,11 @@ export function connectView(world: World, b: Building): ConnectView | null {
   const n = path.tiles.length;
   const cost = { ...ROAD_COST_OBJ, money: n * ROAD_COST };
   const label = `Anbinden (${n} ${n === 1 ? 'Weg' : 'Wege'} · ${cost.money} Geld)`;
-  const afford = checkAfford(world, home(world), cost);
+  const afford = checkAfford(world, world.islands[b.island] ?? home(world), cost);
   return {
     label,
     ok: afford.ok,
-    reason: afford.ok ? null : friendlyReason(world, afford.reason, { cost }),
+    reason: afford.ok ? null : friendlyReason(world, afford.reason, { cost, island: b.island }),
     tiles: path.tiles,
     cost,
   };

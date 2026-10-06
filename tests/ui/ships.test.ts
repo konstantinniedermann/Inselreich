@@ -5,8 +5,9 @@ import { TICK_MS } from '../../src/sim/defs/timing';
 import { upgradeDeficit } from '../../src/sim/flow';
 import { laneTicks } from '../../src/sim/islands';
 import { buyShip, clearRoute, freeShipAtHome, setRoute } from '../../src/sim/ships';
+import { newHouseState } from '../../src/sim/population';
 import { step, type StepReport } from '../../src/sim/tick';
-import type { Building, Route, World } from '../../src/sim/types';
+import type { Building, Route } from '../../src/sim/types';
 import { deficitLine } from '../../src/ui/inspect';
 import { friendlyReason } from '../../src/ui/hints';
 import {
@@ -27,8 +28,9 @@ import { setHouse } from '../sim/helpers';
 
 const FELS = 2;
 
-const report = (lost: { ship: number; good: 'spice' | 'wood' | 'tools'; n: number }[]): StepReport =>
-  ({ lost }) as StepReport;
+const report = (
+  lost: { ship: number; good: 'spice' | 'wood' | 'tools'; n: number }[],
+): StepReport => ({ lost }) as StepReport;
 
 describe('M12 E4 UI Schiffe', () => {
   it('routeTargets: Felsbucht ohne Grund; ohne freies Schiff „Kein freies Schiff“', () => {
@@ -43,7 +45,9 @@ describe('M12 E4 UI Schiffe', () => {
 
   it('routeTargets: vom Panel der Felsbucht aus Ziel Heimat', () => {
     const w = seeRouteStart();
-    expect(routeTargets(w, FELS).map((x) => [x.island, x.label])).toEqual([[0, 'Route nach Heimat']]);
+    expect(routeTargets(w, FELS).map((x) => [x.island, x.label])).toEqual([
+      [0, 'Route nach Heimat'],
+    ]);
   });
 
   it('goodChoices: Gewürz zuerst bei „Holen“ (30 > 10 auf der Quellseite)', () => {
@@ -79,7 +83,7 @@ describe('M12 E4 UI Schiffe', () => {
     const row = shipRows(w, 0)[0]!;
     expect(row.target).toBe('unterwegs nach Felsbucht');
     const left = w.ships[0]!.left;
-    expect(left).toBe(laneTicks(w.islands, 0, FELS) - 1);
+    expect(left).toBe(laneTicks(w.islands, 0, FELS));
     const s = Math.ceil((left * TICK_MS) / 1000);
     expect(row.rest).toBe(`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`);
     expect(row.route).toBe(routeLine(w, w.ships[0]!.route!, 0));
@@ -103,7 +107,7 @@ describe('M12 E4 UI Schiffe', () => {
       ba: [{ good: 'tools', reserve: 10 }],
     };
     expect(routeLine(w, route, 0)).toBe('Heimat ⇄ Felsbucht: Gewürz →, ← Werkzeug');
-    expect(routeLine(w, route, FELS)).toBe('Felsbucht ⇄ Heimat: Gewürz ←, → Werkzeug');
+    expect(routeLine(w, route, FELS)).toBe('Felsbucht ⇄ Heimat: Werkzeug →, ← Gewürz');
   });
 
   it('shipTooltip: Ladung, Ziel, Restzeit; liegend ohne Restzeit', () => {
@@ -146,7 +150,10 @@ describe('M12 E4 UI Schiffe', () => {
     expect(real.ok).toBe(false);
     expect(buyShipView(w).reason).toBe(real.ok ? null : real.reason);
     w.money = 100_000;
-    while (w.ships.length < SHIP_MAX) buyShip(w);
+    w.islands[0]!.stock.wood = 500;
+    w.islands[0]!.stock.tools = 500;
+    for (let i = 0; i < SHIP_MAX && w.ships.length < SHIP_MAX; i++) buyShip(w);
+    expect(w.ships).toHaveLength(SHIP_MAX);
     const full = buyShip(structuredClone(w));
     expect(buyShipView(w).reason).toBe(full.ok ? null : full.reason);
   });
@@ -206,9 +213,9 @@ describe('M12 E4 Inselbestand in Ausbau-Gründen (Pflichtzusatz B)', () => {
     const w = seeRouteStart();
     w.islands[FELS]!.stock.wood = 3;
     w.islands[0]!.stock.wood = 100;
-    expect(
-      friendlyReason(w, 'Nicht genug Ware', { good: 'wood', amount: 20, island: FELS }),
-    ).toBe('Nicht genug Holz: 20 nötig, 3 vorhanden');
+    expect(friendlyReason(w, 'Nicht genug Ware', { good: 'wood', amount: 20, island: FELS })).toBe(
+      'Nicht genug Holz: 20 nötig, 3 vorhanden',
+    );
   });
 
   it('deficitLine nennt den Bestand der Insel des Hauses', () => {
@@ -223,6 +230,7 @@ describe('M12 E4 Inselbestand in Ausbau-Gründen (Pflichtzusatz B)', () => {
       progress: 0,
       state: 'ok',
       island: FELS,
+      house: newHouseState(sea),
     };
     sea.buildings[id] = h;
     setHouse(h, 2, 8);

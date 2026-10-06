@@ -345,7 +345,11 @@ export function renderBuildMenu(
       onSelect(tool);
       // Werkzeug bleibt wählbar; der Grund erscheint sofort, auch ohne Tooltip (Touch)
       const reason = cost ? toolReason(state.world, tool, state.activeIsland) : null;
-      if (reason !== null) showMessage(friendlyReason(state.world, reason, { cost }), 'error');
+      if (reason !== null)
+        showMessage(
+          friendlyReason(state.world, reason, { cost, island: state.activeIsland }),
+          'error',
+        );
     });
     parent.appendChild(btn);
   };
@@ -430,7 +434,7 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
     const why = toolReason(world, tool, island);
     btn.classList.toggle('unaffordable', why !== null);
     const reason = btn.querySelector('.tt-reason');
-    const text = why === null ? '' : friendlyReason(world, why, { cost });
+    const text = why === null ? '' : friendlyReason(world, why, { cost, island });
     if (reason && reason.textContent !== text) reason.textContent = text;
   }
 }
