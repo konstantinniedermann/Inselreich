@@ -17,7 +17,7 @@
 //   --warm <ms>     (Standard 5000) Warten auf `cachesReady()` (Limit 60 s, sonst Fehler), dann Zoom/Fokus setzen,
 //                   `--warm` ms warten, dann Messfenster 15 s. Ohne `cachesReady` (main) entfällt nur das Warten darauf.
 //   --idle          Messfenster ab erstem Frame nach dem Laden (Fortsetzen) bis `cachesReady()`; ausgegeben werden
-//                   `frameMax` (Probe, ohne Notfall-Frames), `frameMaxAfterBuild` (eigener rAF-Schreiber ab dem 6. Frame nach Fortsetzen), `emergencyFrames` getrennt sowie Median/p95/Maximum von
+//                   `frameMax` (Probe, ohne Notfall-Frames), `frameMaxAfterBuild` (eigener rAF-Schreiber: ab dem zweiten Frame nach der Konsolenmeldung `[terrain] Aufbau` bis `cachesReady()`, ohne Notfall-Frames), `emergencyFrames` getrennt sowie Median/p95/Maximum von
 //                   `slices()` (Leerlauf-Scheiben, ms) und `emergency()`. Die Probe hält ein Fenster von 600 Frames.
 // Ausgabe: Kopfzeile (CPU, OS, Node, Chrome, DPR, Fenster, Seed, Zoom, Fokus), je Lauf eine Ergebniszeile je Seite
 // mit `buildMs` (Konsole `[terrain] Aufbau <ms> ms`), am Ende die Zusammenfassung. Je Seed ein eigener Aufruf, kein
@@ -120,10 +120,14 @@ async function once(root, n) {
     { dpr, width, height, root, path: '/?perf=1', vitePort: port, chromePort },
     async (c) => {
       const buildMs = [];
+      let buildAt = null; // Zeitstempel (ms, Epoche) der ersten Konsolenmeldung `[terrain] Aufbau`
       c.on('Runtime.consoleAPICalled', (e) => {
         const text = (e.args ?? []).map((a) => a.value ?? a.description ?? '').join(' ');
         const m = BUILD_RE.exec(text);
-        if (m) buildMs.push(Number(m[1].replace(',', '.')));
+        if (m) {
+          buildMs.push(Number(m[1].replace(',', '.')));
+          buildAt ??= e.timestamp;
+        }
       });
       const chrome = (await (await fetch(`http://127.0.0.1:${chromePort}/json/version`)).json())
         .Browser;
@@ -161,7 +165,7 @@ async function once(root, n) {
       };
       if (idle)
         await c.ev(
-          `window.__gaps = []; (() => { let prev = null; const f = (t) => { if (prev !== null) window.__gaps.push([t, t - prev]); prev = t; requestAnimationFrame(f); }; requestAnimationFrame(f); })(); 1`,
+          `window.__gaps = []; window.__readyIdx = -1; (() => { let prev = null; const f = (t) => { const ep = performance.timeOrigin + t; const em = window.__inselPerf?.emergencyFrames ?? 0; if (prev !== null) window.__gaps.push([ep, t - prev, em]); prev = t; if (window.__readyIdx < 0 && window.__inselDev?.cachesReady?.()) window.__readyIdx = window.__gaps.length; requestAnimationFrame(f); }; requestAnimationFrame(f); })(); 1`,
         );
       await click('Fortsetzen');
       let at = null;
@@ -187,14 +191,29 @@ async function once(root, n) {
           JSON.parse(await c.ev(`JSON.stringify(window.__inselDev.${fn}?.() ?? [])`));
         measured = { slices: stats(await list('slices')), emergency: await list('emergency') };
         if (idle) {
-          // Eigener rAF-Schreiber: Lücken ab dem ersten Frame nach dem Heimataufbau (die ersten GAP_SKIP Frames
-          // nach Fortsetzen enthalten den Aufbau und werden getrennt ausgewiesen).
+          // Eigener rAF-Schreiber (Frame: Epochen-ms, Abstand, Notfallzähler). Fenster: ab dem zweiten Frame nach der
+          // Konsolenmeldung `[terrain] Aufbau` (der erste enthält den Aufbau) bis zum ersten Frame mit
+          // `cachesReady()` (Versatz höchstens ein Frame). Notfall-Frames (Zähler steigt) und ihr Folgeabstand
+          // zählen nicht zu `frameMaxAfterBuild`; die rAF-Reihenfolge zur App ist nicht garantiert, deshalb fallen
+          // beide Nachbarabstände heraus.
           const gaps = JSON.parse(await c.ev('JSON.stringify(window.__gaps)'));
-          measured.buildGaps = gaps.slice(0, GAP_SKIP).map(([, g]) => +g.toFixed(1));
-          const rest = gaps.slice(GAP_SKIP).map(([, g]) => g);
-          measured.frameMaxAfterBuild = +Math.max(0, ...rest).toFixed(1);
-          measured.framesAfterBuild = rest.length;
-          measured.framesOver50 = rest.filter((g) => g > 50).length;
+          const readyIdx = await c.ev('window.__readyIdx');
+          const end = readyIdx > 0 ? readyIdx : gaps.length;
+          let start = buildAt === null ? GAP_SKIP : gaps.findIndex(([ep]) => ep >= buildAt) + 1;
+          if (start <= 0 || start >= end) start = Math.min(GAP_SKIP, end);
+          measured.buildGaps = gaps.slice(0, start).map(([, g]) => +g.toFixed(1));
+          const win = gaps.slice(start, end);
+          const emAt = (i) => (gaps[i - 1]?.[2] ?? 0) < (gaps[i]?.[2] ?? 0);
+          const normal = win.filter((_, j) => {
+            const i = start + j;
+            return !(emAt(i) || emAt(i - 1));
+          });
+          measured.frameMaxAfterBuild = +Math.max(0, ...normal.map(([, g]) => g)).toFixed(1);
+          measured.framesAfterBuild = win.length;
+          measured.framesExcludedEmergency = win.length - normal.length;
+          measured.framesOver50 = normal.filter(([, g]) => g > 50).length;
+          measured.windowStart = start;
+          measured.windowEnd = end;
         }
       }
       const r = await c.ev('JSON.stringify(globalThis.__inselRender ?? null)');
@@ -250,6 +269,8 @@ try {
           frameMedian: r.frameMedian,
           frameMax: r.frameMax,
           frameMaxAfterBuild: r.frameMaxAfterBuild,
+          framesExcludedEmergency: r.framesExcludedEmergency,
+          window: r.windowStart === undefined ? undefined : [r.windowStart, r.windowEnd],
           framesOver50: r.framesOver50,
           framesAfterBuild: r.framesAfterBuild,
           buildGaps: r.buildGaps,
@@ -297,10 +318,14 @@ console.log(
     buildMsA: buildOf(res.A),
     buildMsB: buildOf(res.B),
     ...(idle && {
-      frameMaxAfterBuildB: res.B.map((r) => r.frameMaxAfterBuild),
-      frameMaxB: med(res.B.map((r) => r.frameMax ?? 0)),
-      emergencyFramesB: res.B.map((r) => r.emergencyFrames ?? 0),
-      slicesMaxB: Math.max(...res.B.map((r) => r.slices?.max ?? 0)),
+      // AK-E1-18/19: Maximum über alle Läufe beider Seiten (kein Median).
+      frameMaxAfterBuildMax: Math.max(
+        ...[...res.A, ...res.B].map((r) => r.frameMaxAfterBuild ?? 0),
+      ),
+      frameMaxAfterBuildPerRun: res.B.map((r) => r.frameMaxAfterBuild),
+      emergencyFramesMax: Math.max(...[...res.A, ...res.B].map((r) => r.emergencyFrames ?? 0)),
+      slicesMax: Math.max(...[...res.A, ...res.B].map((r) => r.slices?.max ?? 0)),
+      slicesP95Max: Math.max(...[...res.A, ...res.B].map((r) => r.slices?.p95 ?? 0)),
     }),
   }),
 );
