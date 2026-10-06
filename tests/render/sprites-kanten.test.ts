@@ -117,6 +117,17 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
         if (e.lineWidth === 1) expect(e.points.length, c.name).toBe(2);
     }
   });
+  it('AK-L3-a alle Typen, Stufen, Varianten bei Zoom 0,75: genau ein Kontur-Strich (SIL_MIN_BOX nimmt keiner kleinen Hütte die Kontur)', () => {
+    const zoom = 0.75;
+    for (const c of CASES) {
+      const { log } = paint(c, zoom);
+      // Kontur: Strich mit lineWidth = 2 · Konturbreite des Zooms und Deckkraft CONTOUR_ALPHA
+      const kont = strokes(log.events).filter(
+        (e) => Math.abs(e.lineWidth - 2 * contourWidth(zoom)) < 1e-9 && e.alpha === CONTOUR_ALPHA,
+      );
+      expect(kont.length, c.name).toBe(1);
+    }
+  });
   it('AK-L3-a Kontur: sichtbare Breite ≤ 0,75 px, Deckkraft ≤ 0,7, dunkler Eigenton (nie Schwarz oder Weiss)', () => {
     expect(CONTOUR_WIDTH).toBeLessThanOrEqual(0.75);
     expect(CONTOUR_ALPHA).toBeLessThanOrEqual(0.7);
