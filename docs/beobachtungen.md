@@ -1176,3 +1176,21 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   `deserialize` als „Beschädigter Spielstand" abweist; die Startkarte zeigt dann den Hinweis zu beschädigten Ständen.
   **Einschätzung:** niedrig; nur Werkzeug-Falle (Galerie-Skripte setzen Stufe 1–3); das künftige
   `tools/render-qa/galerie.mjs` (L1) berücksichtigt es. **Ursprung:** ART-STIL-02, lead-art.
+
+### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 L1 (Wald)
+
+- **Fundort / Beobachtung:** `src/render/renderer.ts`: Bäume werden nur über den Kachelbereich `range` gecullt,
+  ohne Zuschlag für den neuen Kronenüberhang (bis 0,35 Kachel) plus Stempelversatz (bis 0,3). Am Bildrand können
+  Randkronen bis etwa eine Kachel zu früh bzw. zu spät erscheinen. **Einschätzung:** niedrig; fällt nur beim
+  Scrollen am Rand auf; Fix: `range` für Bäume um 1 Kachel erweitern (renderer.ts gehört L4/L7). **Ursprung:**
+  ART-STIL-02 L1, art-rendering-engineer.
+- **Fundort / Beobachtung:** `tools/render-qa/perf.mjs` misst ohne `--w/--h` bei 1280 × 800, die Spec
+  „Lebendige Insel" §5 nennt 1920 × 1080. **Einschätzung:** niedrig; im Briefing `--w 1920 --h 1080` nennen
+  oder den Standard angleichen. **Ursprung:** ART-STIL-02 L1, art-rendering-engineer.
+- **Fundort / Beobachtung:** `window.__inselDev` hat keinen Hook für die Tageszeit; `galerie.mjs` kann daher kein
+  Nachtbild erzeugen (Spec §6.0 „Nacht als Option"). **Einschätzung:** niedrig; L7 (Glühwürmchen, Meeresleuchten)
+  braucht Nachtbilder; ein Dev-Hook in `src/ui/` wäre ein kleines UI-Paket. **Ursprung:** ART-STIL-02 L1.
+- **Fundort / Beobachtung:** `src/render/trees.ts` ~Z. 120: `hash2(513 + floor(c.s * 65536), …)` mischt einen
+  Kronenwert ins Salz statt dem Schema `seed + Salz` zu folgen. Keine Kollision gefunden. **Einschätzung:**
+  niedrig; bei der nächsten Änderung an trees.ts (L6) auf `seed + 513` mit `s` als Argument umstellen.
+  **Ursprung:** ART-STIL-02 L1, qa-code-reviewer.
