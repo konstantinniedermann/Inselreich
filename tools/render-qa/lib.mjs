@@ -1,10 +1,72 @@
-/* global process, fetch, setTimeout, URL, WebSocket */
+/* global process, console, fetch, setTimeout, URL, WebSocket */
 // lib.mjs — gemeinsame Helfer der Render-QA-Skripte (H-R7): Vite-Dev-Server und Headless-Chrome starten,
 // minimaler CDP-Client (Node-WebSocket, keine Abhängigkeiten). Nur Entwicklungswerkzeug, nie im Build.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+
+// Eigene Kindprozesse (Vite, Chrome) laufen in je eigener Prozessgruppe (`detached`) und stehen in `registry`.
+// Beendet wird nur über diese selbst gestarteten PIDs/Gruppen (`process.kill(-pid, …)`), nie über Namen. Aufräumen
+// bei Normalende, Fehler, SIGINT/SIGTERM/SIGHUP, uncaughtException und `exit`.
+const registry = new Set();
+const profiles = new Set();
+const killGroup = (pid, sig) => {
+  try {
+    process.kill(-pid, sig);
+  } catch {
+    /* Gruppe schon weg */
+  }
+};
+
+/** Startet einen Kindprozess in eigener Prozessgruppe und trägt ihn in die Registry ein. */
+export function spawnTracked(cmd, args, opts = {}) {
+  const child = spawn(cmd, args, { stdio: 'ignore', ...opts, detached: true });
+  child.exited = new Promise((r) => child.once('exit', r));
+  registry.add(child);
+  return child;
+}
+
+/** SIGTERM an die Gruppe, nach kurzer Frist SIGKILL auf dieselbe Gruppe. */
+export async function stopTracked(child, graceMs = 1500) {
+  if (child.pid) {
+    killGroup(child.pid, 'SIGTERM');
+    if (child.exitCode === null && child.signalCode === null)
+      await Promise.race([child.exited, sleep(graceMs)]);
+    killGroup(child.pid, 'SIGKILL');
+  }
+  registry.delete(child);
+}
+
+const removeProfile = (dir) => rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+const killAllSync = () => {
+  for (const c of registry) if (c.pid) killGroup(c.pid, 'SIGKILL');
+  registry.clear();
+  for (const d of profiles) {
+    try {
+      removeProfile(d);
+    } catch {
+      /* best effort */
+    }
+  }
+  profiles.clear();
+};
+let cleaning = false;
+const die = (code) => {
+  if (cleaning) return;
+  cleaning = true;
+  for (const c of registry) if (c.pid) killGroup(c.pid, 'SIGTERM');
+  setTimeout(() => process.exit(code), 400).unref?.();
+  // 'exit' (synchron) erledigt SIGKILL und Profilverzeichnis.
+};
+process.on('exit', killAllSync);
+process.on('SIGINT', () => die(130));
+process.on('SIGTERM', () => die(143));
+process.on('SIGHUP', () => die(129));
+process.on('uncaughtException', (e) => {
+  console.error(e);
+  die(1);
+});
 
 const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 export const repoRoot = resolve(new URL('../..', import.meta.url).pathname);
@@ -38,33 +100,27 @@ export async function withBrowser(
 ) {
   const procs = [];
   const profile = mkdtempSync(join(tmpdir(), 'renderqa-'));
+  profiles.add(profile);
   try {
-    const vite = spawn(
+    const vite = spawnTracked(
       'npx',
       ['vite', '--port', String(vitePort), '--strictPort', '--host', '127.0.0.1'],
-      {
-        cwd: root,
-        stdio: 'ignore',
-      },
+      { cwd: root },
     );
     procs.push(vite);
     await waitFor(`http://127.0.0.1:${vitePort}/`);
-    const chrome = spawn(
-      CHROME,
-      [
-        '--headless=new',
-        '--disable-gpu',
-        `--remote-debugging-port=${chromePort}`,
-        `--user-data-dir=${profile}`,
-        `--force-device-scale-factor=${dpr}`,
-        `--window-size=${width},${height}`,
-        '--mute-audio',
-        '--no-first-run',
-        '--no-default-browser-check',
-        'about:blank',
-      ],
-      { stdio: 'ignore' },
-    );
+    const chrome = spawnTracked(CHROME, [
+      '--headless=new',
+      '--disable-gpu',
+      `--remote-debugging-port=${chromePort}`,
+      `--user-data-dir=${profile}`,
+      `--force-device-scale-factor=${dpr}`,
+      `--window-size=${width},${height}`,
+      '--mute-audio',
+      '--no-first-run',
+      '--no-default-browser-check',
+      'about:blank',
+    ]);
     procs.push(chrome);
     const list = await (await waitFor(`http://127.0.0.1:${chromePort}/json`)).json();
     const page = list.find((t) => t.type === 'page');
@@ -112,8 +168,8 @@ export async function withBrowser(
     const on = (method, l) => listeners.set(method, [...(listeners.get(method) ?? []), l]);
     return await fn({ ev, send, on, chromePort, close: () => ws.close() });
   } finally {
-    for (const p of procs) p.kill('SIGTERM');
-    await sleep(300);
-    rmSync(profile, { recursive: true, force: true });
+    await Promise.all(procs.map((p) => stopTracked(p)));
+    removeProfile(profile);
+    profiles.delete(profile);
   }
 }
