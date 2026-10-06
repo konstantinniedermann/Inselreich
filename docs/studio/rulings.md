@@ -2290,3 +2290,16 @@ dann `rel/rel-05` setzen. Wiederkehrendes Risiko (Union-Merge + Prettier) → Be
 (z. B. Prettier im Merge-Ablauf des Integrators). — Kosten bei Irrtum: keine (Doku-Format).
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-05 · ADR: —
+
+## R277 · 2026-10-06 · Gate Merge Release REL-05: OK
+
+Ruling: REL-05 = Seefahrt-Bündel E2+E3+E4 + drittes Ziel (Save v9) + H-R15 freigegeben. Prüfliste erfüllt: Kandidat
+`rel/rel-05` @ 30a9f50 (Basis origin/main 6a58af9), `make check`/`CI=true` EXIT=0 (2132 Tests); Delta-Review lead-qa
+OK (F2, H-R15, Merge-Stellen, CI-Reserve ≤ 20 %, Bitgleichheit); Browser-Lauf qa-playtester OK mit Abschnitten
+`.studio/qa/REL-05/T12/`, `T13/`, `T15/`, `H-R15/`, `Allgemein/` (Ausbau-Hinweis mit Inselbestand im Browser belegt,
+Banner einmal, Schiff 14–16 px, v1–v8 migriert, v99/kaputt abgewiesen, keine Exceptions). Doku nachgeführt (T16).
+Integrator pusht `rel/rel-05` nach `main` (Fast-Forward), prüft CI und Pages. Niedrige Befunde (v99 „beschädigt"
+statt „zu neu", fehlendes favicon) → `docs/beobachtungen.md`. Folgepakete nach R274b bleiben. — Kosten bei Irrtum:
+Revert-Merge; v9-Spielstände wären im alten Build unladbar (nach R261 hingenommen).
+
+Entscheider: L0 · Anlass: Delta-Review lead-qa, Playtest-Report REL-05 · ADR: —
