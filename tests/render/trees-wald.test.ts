@@ -44,9 +44,11 @@ describe('L1 Kronenlage aus einem Feld', () => {
 // ---------------------------------------------------------------------------------------------------------------
 // Anhang L1: L1-T1 … L1-T7 und die AK aus Spec 7 „L1 Wald"
 import { readFileSync } from 'node:fs';
-import { ISO_W, TREE_VARIANTS, ZOOM_STEPS, project, depthKey } from '../../src/render/iso';
+import { ISO_W, TEX, TREE_VARIANTS, ZOOM_STEPS, project, depthKey } from '../../src/render/iso';
 import { crownPolys } from '../../src/render/life';
-import { forestType, variantParts } from '../../src/render/forest';
+import { forestClearing, forestEdgeShift, forestType, variantParts } from '../../src/render/forest';
+import { buildGrid, paintPixels } from '../../src/render/terrain';
+import { fieldWorld } from '../../src/render/terrainField';
 import {
   crownGeom,
   crownScreen,
@@ -383,5 +385,83 @@ describe('AK L1 Kronenform: keine reine Ellipse, kein reines Dreieck', () => {
       }
     expect(maple).toBeGreaterThan(0);
     expect(birch).toBeGreaterThan(0);
+  });
+});
+
+describe('L1 Waldboden folgt den Kronen (terrain.ts, nur Waldzweig)', () => {
+  it('RF-L1-7 der Waldboden an der Kante folgt dem Randversatz: weicht der Rand zurück (a kleiner), wird der Boden dort heller', () => {
+    // dieselbe Welt, zwei Felder (anderer Salz-Seed der Gitter); je Kachel zählt die Änderung von a und der Helligkeit
+    const world = createWorld(7, { unlockAll: true });
+    const gridA = buildGrid(fieldWorld(world));
+    const gridB = { ...gridA, seed: gridA.seed + 1000 };
+    const isl = home(world);
+    const lum = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+    let sxy = 0,
+      sxx = 0,
+      n = 0;
+    for (let y = 1; y < isl.height - 1; y++)
+      for (let x = 1; x < isl.width - 1; x++) {
+        const t = (xx: number, yy: number) => isl.tiles[yy * isl.width + xx]!.terrain;
+        if (t(x, y) !== 'forest') continue;
+        for (const [dx, dy] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ] as const) {
+          if (t(x + dx, y + dy) !== 'grass') continue;
+          // Streifen an der Kante zur Wiese, mittlere 40 % der Kante, bis 0,45 Kachel tief
+          const lo = Math.round(0.02 * TEX),
+            hi = Math.round(0.45 * TEX),
+            m0 = Math.round(0.3 * TEX),
+            m1 = Math.round(0.7 * TEX);
+          const w = dx !== 0 ? hi - lo : m1 - m0,
+            h = dx !== 0 ? m1 - m0 : hi - lo;
+          const ox = dx === 0 ? m0 : dx > 0 ? TEX - hi : lo,
+            oy = dy === 0 ? m0 : dy > 0 ? TEX - hi : lo;
+          const mean = (g: typeof gridA): number => {
+            const px = paintPixels(g, 1, x * TEX + ox, y * TEX + oy, w, h);
+            let l = 0;
+            for (let k = 0; k < w * h; k++) l += lum(px[k * 4]!, px[k * 4 + 1]!, px[k * 4 + 2]!);
+            return l / (w * h);
+          };
+          const cx = x + 0.5 + dx * 0.3,
+            cy = y + 0.5 + dy * 0.3;
+          const da = forestEdgeShift(gridA.seed, cx, cy) - forestEdgeShift(gridB.seed, cx, cy);
+          const dl = mean(gridA) - mean(gridB);
+          sxy += da * dl;
+          sxx += da * da;
+          n++;
+        }
+      }
+    expect(n).toBeGreaterThan(100);
+    expect(sxy / sxx, 'Steigung Helligkeit je Randversatz').toBeLessThan(-4);
+  });
+
+  it('RF-L1-7 Lichtungsfeld: im Kern ist der Waldboden dort heller, wo forestClearing ≥ 0,5', () => {
+    const world = createWorld(7, { unlockAll: true });
+    const grid = buildGrid(fieldWorld(world));
+    const isl = home(world);
+    const lum = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+    const acc = { clear: [0, 0], dense: [0, 0] };
+    for (let y = 2; y < isl.height - 2; y++)
+      for (let x = 2; x < isl.width - 2; x++) {
+        let all = true;
+        for (let dy = -2; dy <= 2; dy++)
+          for (let dx = -2; dx <= 2; dx++)
+            if (isl.tiles[(y + dy) * isl.width + x + dx]!.terrain !== 'forest') all = false;
+        if (!all) continue;
+        const c = forestClearing(world.seed, x + 0.5, y + 0.5);
+        if (c > 0.05 && c < 0.95) continue;
+        const px = paintPixels(grid, 1, x * TEX + 8, y * TEX + 8, 16, 16);
+        let l = 0;
+        for (let k = 0; k < 256; k++) l += lum(px[k * 4]!, px[k * 4 + 1]!, px[k * 4 + 2]!);
+        const bin = c >= 0.95 ? acc.clear : acc.dense;
+        bin[0]! += l / 256;
+        bin[1]!++;
+      }
+    expect(acc.clear[1]).toBeGreaterThan(3);
+    expect(acc.dense[1]).toBeGreaterThan(20);
+    expect(acc.clear[0]! / acc.clear[1]!).toBeGreaterThan(acc.dense[0]! / acc.dense[1]! + 3);
   });
 });
