@@ -2226,3 +2226,15 @@ Final-Review lead-qa (opus) startet L0 danach. Budget aus R241: 9 Starts, Parall
 `make messfenster` (R269). — Kosten bei Irrtum: Neupin-Abweichung stoppt T14.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C4 · ADR: —
+
+## R273 · 2026-10-06 · H-R15 release-reif, fährt mit dem Seefahrt-Bündel
+
+Ruling: H-R15 „Saum Fernansicht" (`feat/h-r15-saum` @ 55e5da1; Review OK nach einer Code-Fix-Runde, Bildvergleich
+bestanden, Zoom 0,5/1/2 pixelgleich, Urteil lead-art OK, `make check`/`CI=true` EXIT=0 auf 060ed7e, danach nur Doku;
+`renderMedian` unverändert, p95 Scheiben 7,6–8,0 ms) ist **release-reif**. Nach R249 (2) fährt es mit dem
+Seefahrt-Merge (Konfliktgefahr `terrain.ts` mit dem render-Strang): Release **REL-05** = Seefahrt-Bündel + H-R15,
+Merge-Reihenfolge Seefahrt zuerst, dann H-R15 per Merge von `main`. Kommt der Seefahrt-Merge nicht in dieser Session,
+geht H-R15 am Session-Ende allein als REL-05 (Auslöser Session-Ende). Erster Zoom-out der Heimat in einem Zug ≈ 33 ms
+(< 50 ms) hingenommen, Beobachtung bleibt. — Kosten bei Irrtum: H-R15 später, Konflikt dann in `terrain.ts`.
+
+Entscheider: L0 · Anlass: Bericht lead-art H-R15 · ADR: —
