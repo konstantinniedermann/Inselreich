@@ -488,7 +488,9 @@ function triangle(
       if (w2 < eps) continue;
       const lerp = (va: number, vb: number, vc: number): number => va * w0 + vb * w1 + vc * w2;
       // Tonstufe
-      const st = Math.min(top, toneStep(lerp(a.t, b.t, c.t), hwT));
+      const soft = lerp(a.soft, b.soft, c.soft);
+      const deb = debrisOf(soft);
+      const st = Math.min(top, toneStep(lerp(a.t, b.t, c.t), hwT)); // Band: Stufen schon im Netz flach
       const k0 = Math.floor(st),
         k1 = Math.min(top, k0 + 1),
         fr = st - k0;
@@ -506,7 +508,13 @@ function triangle(
       // Weltpixel (stetig über Streifen und Zoomstufen) und grobes Rauschen für gebrochene Ränder (Bewuchs, Schnee)
       const wx = ox + xc / sx,
         wy = oy + yc / sy;
-      const brk = tex(wx * 1.1 + 31, wy * 1.1 + 5) - 0.5;
+      // nur dort rechnen, wo Bewuchs, Schnee oder Fusswiese wirken (Review R3)
+      const brk =
+        a.veg + b.veg + c.veg > 0.3 ||
+        a.snow + b.snow + c.snow > 0.3 ||
+        a.foot + b.foot + c.foot > 0.15
+          ? tex(wx * 1.1 + 31, wy * 1.1 + 5) - 0.5
+          : 0;
       const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg) + VEG_BREAK * brk, 0.5, hwV);
       if (vg > 0) {
         for (let q = 0; q < 3; q++) {
@@ -546,7 +554,6 @@ function triangle(
         bl += (S[2] + (S1[2] - S[2]) * fr - bl) * sn;
       }
       // Schuttband am Fuss (hell), vor der Kontur
-      const soft = lerp(a.soft, b.soft, c.soft);
       const db = DEBRIS_MIX * debrisOf(soft);
       if (db > 0) {
         r += (DEBRIS[0] - r) * db;
@@ -558,8 +565,11 @@ function triangle(
       const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
       // Schuttband (L2): keine feinen Brocken und kein Feinkorn, nur grobe Tönung und Korn in 2-px-Zellen
-      const deb = debrisOf(soft);
-      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc) * (1 - 0.5 * sn); // Schnee: Textur halb
+      let k =
+        1 +
+        TEX_AMP *
+          (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc * (1 - 0.6 * deb)) *
+          (1 - 0.5 * sn); // Schnee: Textur halb
       const rub = lerp(a.rub, b.rub, c.rub) * (1 - deb);
       if (rub > 0.05) {
         const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);

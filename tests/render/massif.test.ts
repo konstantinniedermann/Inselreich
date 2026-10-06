@@ -41,7 +41,9 @@ import {
   DEBRIS,
   DEBRIS_HI,
   EDGE_COLORS,
+  FOOT_GRASS,
   MEADOW,
+  VEG_MIX,
   footRadius,
   HILL_AMP,
   ROCK_TONES,
@@ -241,8 +243,9 @@ describe('H-R9 A2 Höhenfeld', () => {
           shade = 0,
           rub = 0,
           dark = 0;
-        // L2 (Spec 2.2(3)): der Fuss mischt stärker ins Nachbargelände (Wiese mit Kies); nie dunkler als die Wiese
-        const rockL = Math.min(lum(PALETTE.rock), lum(`rgb(${EDGE_COLORS[1]!.join(',')})`));
+        // R4 geprüft: gegen rock allein halten Schattenknoten am Rand nicht (Schuttband nur noch 60 %, Review R1/F6 gegen den
+        // Ocker-Ring); der Rand bleibt höchstens 30 Luma-Stufen unter min(rock, gemalte Wiese), nie dunkel
+        const rockL = Math.min(lum(PALETTE.rock), lum(`rgb(${MEADOW.map(Math.round).join(',')})`));
         for (const p of massifPieces(fieldWorld(w))) {
           const at = pieceNodes(p);
           for (const cell of pieceCells(p)) {
@@ -251,7 +254,8 @@ describe('H-R9 A2 Höhenfeld', () => {
             if (nd.t < TONE_FLAT - 0.5) shade++;
             if (nd.rub > 0.3) rub++;
             const css = `rgb(${nd.c.map((v) => Math.round(v)).join(',')})`;
-            if (nd.soft < 0.62 && lum(css) < rockL - 5) dark++;
+            // Wiesenflecken und Bewuchs (L2) sind gewollt dunkler; der Fels selbst bleibt am Rand hell
+            if (nd.soft < 0.62 && nd.veg < 0.5 && nd.foot < 0.5 && lum(css) < rockL - 30) dark++;
           }
         }
         expect(lit, `Form ${k} Lichtseite`).toBeGreaterThan(0);
@@ -1286,7 +1290,7 @@ describe('ART-STIL-02 L2 Kontrast nach Höhe', { timeout: 60000 }, () => {
 
 describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
   /** Grösste Komponenten (Seeds 7, 14): Mittelfarbe der Knoten im Fussband gegen die Wiese. */
-  it('L2 Fussband ↔ Wiese ΔE2000 ≤ 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
+  it('L2 Fussband ↔ Wiese ΔE2000 zwischen 8 und 15: Mittelfarbe der Knoten im Fussband (soft zwischen SOFT_CUT und DEBRIS_HI, h < 2 · RIM_H)', () => {
     const wiese = rgbToLab(meadowTint(rgbOf(PALETTE.grass))); // die gemalte Wiese der Geländeebene (G2)
     for (let q = 0; q < 3; q++)
       expect(MEADOW[q]!).toBeCloseTo(meadowTint(rgbOf(PALETTE.grass))[q]!, 6);
@@ -1311,7 +1315,12 @@ describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
       }
       expect(n, `Seed ${seed}`).toBeGreaterThan(30);
       const mean = sum.map((v) => v / n) as [number, number, number];
-      expect(deltaE2000(rgbToLab(mean), wiese), `Seed ${seed}`).toBeLessThanOrEqual(15);
+      const de = deltaE2000(rgbToLab(mean), wiese);
+      expect(de, `Seed ${seed} ΔE ${de.toFixed(1)}`).toBeLessThanOrEqual(15);
+      expect(
+        de,
+        `Seed ${seed} ΔE ${de.toFixed(1)}: Band erkennbar abgesetzt`,
+      ).toBeGreaterThanOrEqual(8);
     }
   });
 
@@ -1337,6 +1346,22 @@ describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
     }
     return out;
   }
+
+  it('L2 Wiesenanteil Fuss ≤ 35 %: mittleres wirksames Wiesengewicht (Nachbar-Mischung, Fussfeld, Bewuchs zusammen) über alle Knoten mit hn < 0,25', () => {
+    for (const seed of KERN_SEEDS) {
+      const low = allNodes(seed).filter((n) => n.hn < 0.25);
+      let sum = 0;
+      for (const { nd } of low) {
+        // wie in shadeColor/rocks verrechnet: Nachbarland (nur Wiese), Fussfeld, Bewuchs
+        const e = nd.ec === EDGE_COLORS[1] ? nd.mix : 0;
+        const f = nd.foot >= 0.5 && nd.fc === EDGE_COLORS[1] ? FOOT_GRASS : 0;
+        const v = nd.veg >= 0.5 ? VEG_MIX : 0;
+        sum += 1 - (1 - e) * (1 - f) * (1 - v);
+      }
+      expect(low.length, `Seed ${seed}`).toBeGreaterThan(200);
+      expect(sum / low.length, `Seed ${seed}`).toBeLessThanOrEqual(0.35);
+    }
+  });
 
   it('L2 Bewuchs unten: Anteil Bewuchsknoten bei hn < 0,25 in [0,2; 0,35] (± 0,03) für Seeds 7 und 14, Gras bis hn 0,3 in Rinnen und auf Schultern', () => {
     for (const seed of KERN_SEEDS) {

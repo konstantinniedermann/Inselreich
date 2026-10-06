@@ -845,8 +845,8 @@ const TILE_PX = 45;
 /** Sockel: Mischung ins Nachbargelände nach dem weichen Innen-Anteil (Ecken stärker, gerundet), höchstens EDGE_MIX. */
 const SOFT_LO = 0.35,
   SOFT_HI = 0.85,
-  EDGE_MIX = 0.7,
-  EDGE_MIX_FOREST = 0.3; // dunkler Waldboden zieht den hellen Fuss nicht herunter
+  EDGE_MIX = 0.1,
+  EDGE_MIX_FOREST = 0.15; // dunkler Waldboden zieht den hellen Fuss nicht herunter
 /**
  * Sockel ohne Naht (A3, Entscheid lead-art Runde 1; Playtest Runde 3 schmal statt breit): die Kontur ist die
  * Höhenlinie SOFT_CUT des weichgezeichneten Innen-Anteils (an geraden Kanten die Kachelgrenze, an Ecken gerundet);
@@ -856,7 +856,7 @@ export const SOFT_CUT = 0.52; // Wert an einer geraden Kante (gemessen), Kontur 
 const SOFT_A_LO = SOFT_CUT - 0.05,
   SOFT_A_HI = SOFT_CUT + 0.05;
 /** Schuttband: voll am Rand (Innen-Anteil SOFT_CUT), aus ab DEBRIS_HI. */
-export const DEBRIS_HI = 0.64;
+export const DEBRIS_HI = 0.68;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
 const P = LIGHT_COLORS;
@@ -985,16 +985,18 @@ export const EDGE_COLORS: readonly (Rgb | null)[] = [
  * Das Feld (0…1, Schwelle 0,5) wird je Pixel gestuft (1–2 px Übergang wie die Bewuchsflecken): Fels läuft in Zungen
  * und Rinnen in die Wiese, die Wiese in Bändern hinauf.
  */
-export const FOOT_GRASS = 0.85,
-  L2_FOOT_SALT = 535;
-const FOOT_HN = 0.2,
-  FOOT_JITTER = 0.08,
+export const FOOT_GRASS = 0.5,
+  L2_FOOT_SALT = 538;
+const FOOT_THR = 0.62,
+  FOOT_HN_TOP = 0.25,
   FOOT_STEP = 0.1;
 export function footField(seed: number, fx: number, fy: number, hn: number, e: Rgb | null): number {
   if (e === null) return 0;
-  const edgeHn =
-    FOOT_HN + FOOT_JITTER * (2 * rotNoise(seed + L2_FOOT_SALT, fx, fy, 1.3, ROT_A) - 1);
-  return Math.max(0, Math.min(1, 0.5 + (edgeHn - hn) / FOOT_STEP));
+  // Flecken statt Fläche (Review R1): Rauschen gegen eine Schwelle, die mit hn steigt; unten rund FOOT_SHARE Wiese,
+  // der Fels (Kies) bleibt Fels; die Wiese steigt in Bändern, wo das Rauschen hoch ist, bis hn FOOT_HN_TOP
+  const n = rotNoise(seed + L2_FOOT_SALT, fx, fy, 1.3, ROT_A);
+  const thr = FOOT_THR + (1 - FOOT_THR + 0.15) * smoothstep(0, FOOT_HN_TOP, hn);
+  return Math.max(0, Math.min(1, 0.5 + (n - thr) / FOOT_STEP));
 }
 /** Zielfarbe des Fusses: Nachbargelände, bei Wald und Wasser die Wiese. */
 const footTarget = (e: Rgb | null): Rgb => (e && e !== EDGE_COLORS[2] ? e : EDGE_COLORS[1]!);
