@@ -17,7 +17,7 @@ OBS_LIMIT = 30  # R288: mehr ungesichtete Einträge → Auswertung ist das erste
 OBS_MARK_RE = re.compile(
     r"^[\s>*_-]*Letzte Auswertung:?\**\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE
 )
-OBS_ENTRY_RE = re.compile(r"^#{2,3}\s+(?!Offen\b|Ausgewertet\b)\S")
+OBS_HEAD_RE = re.compile(r"^(#{2,3})\s+(\S.*)$")
 QUEUE_SHOWN = ("offen", "beantwortet")
 EXPERIMENT_SHOWN = ("laufend", "vorgeschlagen")
 START_ROUTINE = (
@@ -43,8 +43,10 @@ def shorten(text: str, limit: int, name: str) -> str:
 def observation_status(path: Path) -> tuple[int, str | None]:
     """(Anzahl Einträge unter der Marke „Letzte Auswertung: JJJJ-MM-TT“, Datum).
 
-    Eintrag = Überschrift der Ebene 2/3, ausser den Abschnittsköpfen „Offen“ und
-    „Ausgewertet …“. Ohne Marke zählen alle Einträge, das Datum ist ``None``.
+    Eintrag = Überschrift der Ebene 2/3 ausser den Abschnittsköpfen „Offen …“ und
+    „Ausgewertet …“. Alles unter „Ausgewertet …“ zählt nicht, bis zur nächsten
+    Überschrift derselben oder einer höheren Ebene. Ohne Marke zählen alle Einträge,
+    das Datum ist ``None``.
     """
     lines = read_text(path).splitlines()
     mark_at, date = -1, None
@@ -52,7 +54,19 @@ def observation_status(path: Path) -> tuple[int, str | None]:
         found = OBS_MARK_RE.match(line)
         if found:
             mark_at, date = index, found.group(1)  # letzte Marke gilt
-    count = sum(1 for line in lines[mark_at + 1 :] if OBS_ENTRY_RE.match(line))
+    count, skip_level = 0, 0  # skip_level > 0: innerhalb „Ausgewertet …“
+    for line in lines[mark_at + 1 :]:
+        head = OBS_HEAD_RE.match(line)
+        if not head:
+            continue
+        level, title = len(head.group(1)), head.group(2)
+        if re.match(r"Ausgewertet\b", title):
+            skip_level = level
+        elif re.match(r"Offen\b", title):
+            skip_level = 0
+        elif not skip_level or level <= skip_level:
+            skip_level = 0
+            count += 1
     return count, date
 
 

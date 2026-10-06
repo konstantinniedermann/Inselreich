@@ -143,6 +143,31 @@ class ObservationCounterTest(unittest.TestCase):
             self.assertIn("2 Einträge", line)
             self.assertNotIn("PFLICHT", line)
 
+    def test_entries_in_ausgewertet_sections_do_not_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._file(
+                tmp,
+                "# B\nLetzte Auswertung: 2026-10-06\n## Ausgewertet 2026-10-06\n"
+                "### a\n### b\n## Ausgewertet 2026-09-30\n### c\n"
+                "## Offen (neue Einträge unten anhängen)\n### neu\n",
+            )
+            self.assertEqual(context.observation_status(path), (1, "2026-10-06"))
+
+    def test_real_file_after_evaluation_counts_zero(self):
+        import subprocess
+
+        shown = subprocess.run(
+            ["git", "show", "13316d9:docs/beobachtungen.md"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if shown.returncode != 0:
+            self.skipTest("Commit 13316d9 nicht verfügbar")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._file(tmp, shown.stdout)
+            self.assertEqual(context.observation_status(path), (0, "2026-10-06"))
+
     def test_threshold_is_strictly_above_30(self):
         with tempfile.TemporaryDirectory() as tmp:
 

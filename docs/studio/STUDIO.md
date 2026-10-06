@@ -410,7 +410,7 @@ nachfragen oder warten verlangt; Verfassung §1.4):
    sonst den Plan aus [state.md](state.md) fortsetzen (Übergaben unter `.studio/handoffs/`).
    Beantwortete Warteschlangen-Einträge zuerst; offene Vorfälle → Ad-hoc-Retro.
 6. **Beobachtungen (R287 (b)/(c), R288):** Der Hook zählt die Einträge in `docs/beobachtungen.md`
-   unter der Zeile „Letzte Auswertung: JJJJ-MM-TT“ und meldet Zahl und Datum im Start-Kontext; fehlt
+   unter der Zeile „Letzte Auswertung: JJJJ-MM-TT“ (nicht die Abschnitte „Ausgewertet …“) und meldet Zahl und Datum im Start-Kontext; fehlt
    die Marke, zählen alle Einträge und der Hook sagt „Marke fehlt“. Bei **mehr als 30** Einträgen
    steht dort ein Pflichthinweis: Die Auswertung (`lead-production`, Skill `beobachtungen-auswerten`)
    ist das erste Paket der Session, bis zu ihrem Ende startet keine neue Funktionsarbeit (Ausnahme:
