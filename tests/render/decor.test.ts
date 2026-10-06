@@ -545,7 +545,7 @@ describe('L4 D5 Salze und Zufall', () => {
 
   it('L4-T5 jedes Salz 5dd steht im Kopf von groundDecor.ts und liegt im Bereich seines Häppchens', () => {
     const l4 = ['decor.ts', 'groundDecor.ts', 'decorStamps.ts'];
-    const l5 = ['terrain.ts', 'water.ts'];
+    const l5 = ['terrain.ts', 'water.ts', 'seaFields.ts'];
     const l1 = ['forest.ts', 'trees.ts'];
     let found = 0;
     for (const f of files) {
