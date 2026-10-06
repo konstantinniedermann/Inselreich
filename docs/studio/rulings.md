@@ -2360,3 +2360,13 @@ Engineer-Start (R233 V1); Blindtest L3 im Release-Lauf A. Review je Task und opu
 bleibt. — Kosten bei Irrtum: Fehler fallen später auf, Fix-Runde im Release-Lauf.
 
 Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-06 · ADR: —
+
+## R283 · 2026-10-06 · Gate ART-STIL-02 (kombiniert)
+
+Ruling: Nachtrag „Lebendige Insel" freigegeben (lead-tech, lead-qa: BEDENKEN). Nacharbeit T1–T6, Q1–Q7 als
+Test-Anhang zur Spec, ohne Zweitprüfung; §9: Caches ja, Mouse-over zurückgestellt, E8 mit Durchfallkriterium,
+zwei Releases mit einer Freigabe. Stufe leicht nach E-028 trotz 8 Häppchen: je Häppchen ≤ 1 Session, keine
+Sim-/Save-Änderung, opus-Review je Release. Budget lead-art 26 / lead-qa 2, Parallelität 3. — Kosten bei
+Irrtum: Häppchen fliegt aus dem Kandidaten.
+
+Entscheider: L0 · Anlass: `.studio/handoffs/2026-10-06-l0-lead-art-gate.md` · ADR: —
