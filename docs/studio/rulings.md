@@ -2458,3 +2458,12 @@ SEE-F1-FAHRLINIE → H-TRAEGER-TEMPO, RENDER-LOOK-01 (nach ART-STIL-02, Dateien 
 bei Irrtum: Reihenfolge per Ruling umstellen.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-01 · ADR: —
+
+## R292 · 2026-10-06 · Gate Merge Release H-F1
+
+Ruling: Hotfix H-F1 (`fix/h-f1-geisterbauten` @ 4125b62) freigegeben: lead-qa OK (opus-Review, `CI=true make
+check` grün, Browser-Lauf Vorher/Nachher `.studio/qa/rel-hf1/`). Integrator pusht ihn zusammen mit der bereits
+gemergten Auswertung (51f28ac); der Zähler-Branch folgt nach der Fix-Runde einzeln. arc42-Nachtrag
+`homeBuildings.ts` → Beobachtung. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-HF1 · ADR: —
