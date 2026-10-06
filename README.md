@@ -17,7 +17,7 @@ Umgebung und Effekte. Dazu Tooltips, Hotkeys und Touch-Bedienung (Zielplattform 
 
 Lass **50 Bürger** auf deiner Insel leben. Gezählt werden die Einwohner aller Wohnhäuser der Stufe Bürger und
 höher. Ist das Ziel erreicht, erscheint eine Meldung und das Spiel läuft weiter. Der Chip «Ziel» in der
-Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt; der Ausblick «Danach: Kaufleute — Handelsstadt 60» steht
+Kopfzeile («Ziel n / 50 Bürger») zeigt den Fortschritt; der Ausblick «Danach: Kaufleute — Handelsstadt 60» (danach «Gewürzstadt», siehe Seefahrt) steht
 in der Inselchronik und im Tooltip des Ziel-Chips.
 
 Mit dem Bürger-Ziel werden die vierte Stufe **Kaufleute**, das **Badehaus**, die **Glashütte** und die **Seefahrt**
