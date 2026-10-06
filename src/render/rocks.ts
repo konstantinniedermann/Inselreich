@@ -185,6 +185,9 @@ const STRATA_BREAK = 0.09;
 const GRAIN = 0.04; // Pixelkorn ±2 %
 /** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
 export const TONE_EDGE_PX = 1.5;
+/** Rauschen am Rand von Bewuchs und Schnee (Anteil des Felds): gebrochene Ränder statt Papierschnitt. */
+const VEG_BREAK = 0.3,
+  SNOW_BREAK = 0.4;
 /** Weichheit der Sockelkontur: höchstens 1 Flächenpixel (L2). */
 const CONTOUR_PX = 1;
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
@@ -488,7 +491,11 @@ function triangle(
         g = R[1] + (R1[1] - R[1]) * fr,
         bl = R[2] + (R1[2] - R[2]) * fr;
       // Bewuchsflecken
-      const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg), 0.5, hwV);
+      // Weltpixel (stetig über Streifen und Zoomstufen) und grobes Rauschen für gebrochene Ränder (Bewuchs, Schnee)
+      const wx = ox + xc / sx,
+        wy = oy + yc / sy;
+      const brk = tex(wx * 1.1 + 31, wy * 1.1 + 5) - 0.5;
+      const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg) + VEG_BREAK * brk, 0.5, hwV);
       if (vg > 0) {
         for (let q = 0; q < 3; q++) {
           const v0 = V[q]! + (G[q]! - V[q]!) * vl,
@@ -515,7 +522,10 @@ function triangle(
         bl += (D[2] - bl) * lo;
       }
       // Schnee (L2 C2): 3 Stufen nach der Tonstufe, 1–2 px weicher Rand, ersetzt Fels und Bewuchs
-      const sn = a.snow + b.snow + c.snow > 0.3 ? sstep(lerp(a.snow, b.snow, c.snow), 0.5, hwN) : 0;
+      const sn =
+        a.snow + b.snow + c.snow > 0.3
+          ? sstep(lerp(a.snow, b.snow, c.snow) + SNOW_BREAK * brk, 0.5, hwN)
+          : 0;
       if (sn > 0) {
         const S = SNOW_TONES[k0]!,
           S1 = SNOW_TONES[k1]!;
@@ -531,9 +541,7 @@ function triangle(
         g += (DEBRIS[1] - g) * db;
         bl += (DEBRIS[2] - bl) * db;
       }
-      // Textur, Geröll und Schichtbänder in Weltpixeln (stetig über Streifen und Zoomstufen)
-      const wx = ox + xc / sx,
-        wy = oy + yc / sy;
+      // Textur, Geröll und Schichtbänder in Weltpixeln
       const steep = lerp(a.steep, b.steep, c.steep);
       const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
@@ -558,6 +566,13 @@ function triangle(
       r *= k;
       g *= k;
       bl *= k;
+      // Sockel: Nachbargelände einmischen, Deckkraft
+      const mx = lerp(a.mix, b.mix, c.mix);
+      if (mx > 0) {
+        r += (lerp(a.ec[0], b.ec[0], c.ec[0]) - r) * mx;
+        g += (lerp(a.ec[1], b.ec[1], c.ec[1]) - g) * mx;
+        bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
+      }
       // C5 Alpenwiese: vereinzelte Blütenpunkte auf flachen Bewuchsflecken, Zelle = 1 Weltpixel (weltfest, kein Flimmern)
       if (vg >= 0.9 * VEG_MIX && lerp(a.flower, b.flower, c.flower) > 0.5) {
         const cx = Math.floor(wx),
@@ -569,13 +584,6 @@ function triangle(
           g = f[1];
           bl = f[2];
         }
-      }
-      // Sockel: Nachbargelände einmischen, Deckkraft
-      const mx = lerp(a.mix, b.mix, c.mix);
-      if (mx > 0) {
-        r += (lerp(a.ec[0], b.ec[0], c.ec[0]) - r) * mx;
-        g += (lerp(a.ec[1], b.ec[1], c.ec[1]) - g) * mx;
-        bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
       }
       const o = (y * W + x) * 4;
       // Kontur: 1–2 px weich an der Höhenlinie SOFT_CUT; ab RIM_H Höhe immer deckend

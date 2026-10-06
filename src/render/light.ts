@@ -29,7 +29,7 @@ export const DEBRIS: readonly [number, number, number] = mix(
   0.3,
 );
 /** Anteil der Schuttfarbe am Massivrand (Netzpunkte in massif.ts, Pixel in rocks.ts). */
-export const DEBRIS_MIX = 0.9;
+export const DEBRIS_MIX = 0.6;
 
 // ---------- Tonleiter (H-R11: aus massif.ts hierher, Gebirge und Boden teilen sie) ----------
 //

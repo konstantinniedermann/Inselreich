@@ -40,8 +40,7 @@ import {
   DEBRIS,
   DEBRIS_HI,
   EDGE_COLORS,
-  FOOT_FAN,
-  FOOT_R,
+  footRadius,
   HILL_AMP,
   ROCK_TONES,
   SNOW_TONES,
@@ -1156,37 +1155,58 @@ function inTri(t: readonly P[], x: number, y: number): boolean {
 
 // ART-STIL-02 L2 (Q2): der Gebirgskern (hn ≥ 0,35) bleibt die Referenz, ausser Schnee- und Baummaske.
 /**
- * Knoten, die L2 absichtlich ändert und die der Kerntest ausnimmt: Fusszone (Randabstand unter FOOT_R + FOOT_FAN:
- * der Hangfuss ist das Ziel von T1, reicht an der Schulter bis in Knoten mit hn ≥ 0,35), Schnee (T4), Baummaske (T5).
+ * Fusszone (L2 T1): Randabstand unter dem lokalen Fussradius der Komponente plus ein Knoten Hof (die Höhenlinie des
+ * Fusses wirkt über das Gefälle noch einen Knoten weiter). Nur hier darf sich ein Kernknoten ändern oder fehlen.
  */
-const kernAusnahme = (data: MassifData, comp: number, I: number, J: number): boolean => {
+const inFussZone = (data: MassifData, comp: number, I: number, J: number): boolean => {
   const c = data.comps[comp]!;
-  return c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]! < FOOT_R + FOOT_FAN;
+  return c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]! < footRadius(c, I, J) + 1 / SUB;
 };
 
 describe('ART-STIL-02 L2 Kern', { timeout: 60000 }, () => {
-  it('L2 Kern unverändert: Knoten ausserhalb von Schnee- und Baummaske gleich dem Stand vor L2 (≥ 95 % gefunden, ΔE2000 < 1, |Δh| ≤ 1 px)', () => {
+  it('L2 Kern unverändert: ausserhalb von Fusszone, Schnee- und Baummaske sind alle Kernknoten da und gleich (ΔE2000 < 1, |Δh| ≤ 1 px); Fusszone (Ausnahme plus fehlende) ≤ 40 % der Fixture-Knoten', () => {
     type Fx = Record<string, { nodes: number[][] }>;
     for (const seed of KERN_SEEDS) {
       const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
       const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
-      const ref = (kernFixture as Fx)[String(seed)]!.nodes.filter((r) => {
-        const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
-        return !kernAusnahme(data, r[0]!, r[1]!, r[2]!) && !n?.snow && !n?.tree;
-      });
-      let found = 0,
+      const all = (kernFixture as Fx)[String(seed)]!.nodes;
+      let ausser = 0,
+        inZone = 0,
+        fehlt = 0,
+        verglichen = 0,
         dE = 0,
-        dH = 0;
-      for (const r of ref) {
+        dH = 0,
+        dEzone = 0,
+        nZone = 0;
+      for (const r of all) {
         const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
-        if (!n) continue;
-        found++;
+        if (n?.snow || n?.tree) {
+          ausser++;
+          continue;
+        }
+        const zone = inFussZone(data, r[0]!, r[1]!, r[2]!);
+        if (zone) inZone++;
+        if (!n) {
+          if (!zone) fehlt++; // ausserhalb der Zone ein Fehler
+          ausser++;
+          continue;
+        }
+        const e = deltaE2000(rgbToLab(n.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
+        if (zone) {
+          ausser++;
+          dEzone += e;
+          nZone++;
+          continue;
+        }
+        verglichen++;
+        dE += e;
         dH += Math.abs(n.h - r[3]!);
-        dE += deltaE2000(rgbToLab(n.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
       }
-      expect(found / ref.length, `Seed ${seed} gefunden`).toBeGreaterThanOrEqual(0.95);
-      expect(dE / found, `Seed ${seed} ΔE2000`).toBeLessThan(1);
-      expect(dH / found, `Seed ${seed} |Δh|`).toBeLessThanOrEqual(1);
+      const info = `Seed ${seed}: Zone ${((100 * inZone) / all.length).toFixed(0)} %, Schnee/Baum+Zone ${((100 * ausser) / all.length).toFixed(0)} %, verglichen ${((100 * verglichen) / all.length).toFixed(0)} %, ΔE ${(dE / verglichen).toFixed(2)}, ΔE Zone ${(dEzone / Math.max(1, nZone)).toFixed(1)}`;
+      expect(fehlt, `${info} (fehlende ausserhalb der Zone)`).toBe(0);
+      expect(dE / verglichen, info).toBeLessThan(1);
+      expect(dH / verglichen, `Seed ${seed} |Δh|`).toBeLessThanOrEqual(1);
+      expect(inZone / all.length, `${info}: Anteil Fusszone`).toBeLessThanOrEqual(0.4);
     }
   });
 });

@@ -62,13 +62,16 @@ const BACK_RATIO = 1.25;
 const BUMP = 0.8; // px Geröll-Buckel am Fuss
 /**
  * L2 Gebirgsfuss (Bildziel 2.2(2)): konkaver Hangfuss. Unter FOOT_R Kacheln Randabstand wird der Körper mit
- * smooth(dist / r)^FOOT_P gedämpft (1 ab r): das Massiv wächst aus dem Land statt als Wand zu stehen. An Rinnenausgängen
+ * (dist / r)^FOOT_P gedämpft (1 ab r): das Massiv wächst aus dem Land statt als Wand zu stehen. An Rinnenausgängen
  * (Krümmung > 0 vor dem Fuss) läuft der Fuss bis FOOT_FAN Kacheln weiter hinaus (Schwemmkegel).
  */
-export const FOOT_R = 2.6,
+export const FOOT_R = 2.2,
   FOOT_P = 3,
   FOOT_FAN = 0.5,
   FOOT_BACK = 0.3;
+/** Fussradius je Knoten höchstens FOOT_WIDTH_K · lokaler grösster Randabstand (≈ 0,5 · lokale Breite): schmale Arme behalten ihren Grat. */
+const FOOT_WIDTH_K = 1,
+  FOOT_LOCAL = 2 * SUB; // Radius des Max-Filters (Knoten)
 /** Felshügel (< SMALL_MASSIF): Mindestamplitude (px, ≈ 0,9 ISO_H) und Kuppen-Modulation ± HILL_DOME. */
 export const HILL_AMP = 29;
 const HILL_DOME = 0.18;
@@ -102,6 +105,8 @@ export interface MassifComponent {
   amp: number;
   /** Schneegrenze (hn) für flache Lagen dieser Komponente (L2 C2), Bisektion in SNOW_HN_MIN … SNOW_HN_MAX */
   snowHn: number;
+  /** Fussradius je Knoten in Kacheln (L2 T1): unter diesem Randabstand ist der Körper gedämpft; 0 = kein Fuss */
+  footR: Float32Array;
   /** 1 je Kachel des Rechtecks (Zeilen ab y0), die zur Komponente gehört. */
   mask: Uint8Array;
   seed: number;
@@ -286,6 +291,26 @@ function edt(src: Uint8Array, nx: number, ny: number): Float32Array {
   }
   return out;
 }
+/** Separabler Max-Filter (Quadrat, Radius r Knoten). */
+function maxFilter(f: Float32Array, nx: number, ny: number, r: number): Float32Array {
+  const tmp = new Float32Array(f.length),
+    out = new Float32Array(f.length);
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) {
+      let m = 0;
+      for (let k = Math.max(0, i - r); k <= Math.min(nx - 1, i + r); k++)
+        m = Math.max(m, f[j * nx + k]!);
+      tmp[j * nx + i] = m;
+    }
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) {
+      let m = 0;
+      for (let k = Math.max(0, j - r); k <= Math.min(ny - 1, j + r); k++)
+        m = Math.max(m, tmp[k * nx + i]!);
+      out[j * nx + i] = m;
+    }
+  return out;
+}
 /** Separabler Box-Weichzeichner, Ränder geklemmt. */
 function boxBlur(f: Float32Array, nx: number, ny: number, r: number): void {
   const tmp = new Float32Array(f.length);
@@ -464,16 +489,22 @@ function buildComponent(
   for (let k = 0; k < pre.length; k++) pre[k] = amp * shape[k]! * Math.exp(beta * gs[k]!);
   const footW = (1 - sk) * smoothstep(1.5, 3, maxD); // Felshügel und schmale Grate: kein Fuss
   const foot = new Float32Array(nx * ny).fill(1);
+  const footR = new Float32Array(nx * ny);
+  const localMax = maxFilter(dist, nx, ny, FOOT_LOCAL);
   if (footW > 0)
     for (let j = 1; j < ny - 1; j++)
       for (let i = 1; i < nx - 1; i++) {
         const k = j * nx + i;
-        if (src[k] || dist[k]! >= FOOT_R + FOOT_FAN) continue;
+        if (src[k]) continue;
         const lap = pre[k - 1]! + pre[k + 1]! + pre[k - nx]! + pre[k + nx]! - 4 * pre[k]!;
-        const r = FOOT_R + FOOT_FAN * smoothstep(0, LAP_REF, lap);
+        // Schwemmkegel nur an echten Rinnenausgängen (deutlich positive Krümmung)
+        const r =
+          Math.min(FOOT_R, FOOT_WIDTH_K * localMax[k]!) +
+          FOOT_FAN * smoothstep(0.2 * LAP_REF, 0.6 * LAP_REF, lap);
+        footR[k] = r;
+        if (dist[k]! >= r) continue;
         // Rückseite (gs > 0) steht höher (Staffelung): ihr Fuss ist flacher gedämpft, die Vorderseite stärker
-        const depth =
-          footW * (1 - Math.pow(smooth01(dist[k]! / r), FOOT_P)) * (1 - FOOT_BACK * gs[k]!);
+        const depth = footW * (1 - Math.pow(dist[k]! / r, FOOT_P)) * (1 - FOOT_BACK * gs[k]!);
         foot[k] = Math.max(0, 1 - depth);
       }
   const height = new Float32Array(nx * ny);
@@ -509,6 +540,7 @@ function buildComponent(
     height,
     amp,
     snowHn,
+    footR,
     mask,
     seed,
     width: W,
@@ -588,6 +620,12 @@ export const inComp = (c: MassifComponent, x: number, y: number): boolean =>
 /** Knoten (I, J) (globale Knotenkoordinaten) liegt im Innern der Komponente. */
 export function nodeInside(c: MassifComponent, I: number, J: number): boolean {
   return insideNode((x, y) => inComp(c, x, y), I, J);
+}
+/** Fussradius (Kacheln) am Knoten (I, J); 0 ausserhalb oder ohne Fuss. */
+export function footRadius(c: MassifComponent, I: number, J: number): number {
+  const i = I - c.x0 * SUB,
+    j = J - c.y0 * SUB;
+  return i < 0 || j < 0 || i >= c.nx || j >= c.ny ? 0 : c.footR[j * c.nx + i]!;
 }
 /** Grundhöhe am Knoten (I, J) in Weltpixeln; 0 ausserhalb. */
 export function nodeHeight(c: MassifComponent, I: number, J: number): number {
@@ -735,7 +773,7 @@ export const SOFT_CUT = 0.52; // Wert an einer geraden Kante (gemessen), Kontur 
 const SOFT_A_LO = SOFT_CUT - 0.05,
   SOFT_A_HI = SOFT_CUT + 0.05;
 /** Schuttband: voll am Rand (Innen-Anteil SOFT_CUT), aus ab DEBRIS_HI. */
-export const DEBRIS_HI = 0.7;
+export const DEBRIS_HI = 0.64;
 /** Ab dieser Höhe (px) deckt das Netz immer voll: durchsichtig ist nur der flache Sockel. */
 export const RIM_H = 6;
 const P = LIGHT_COLORS;
@@ -750,13 +788,17 @@ export const VEG_TONES: readonly Rgb[] = [
 /** Helles Geröll-/Schuttband am Massivfuss: rock/rockLight mit etwas sandDry (Playtest R3: kein dunkler Saum). */
 export { DEBRIS };
 /** Bewuchs unten (L2): Wiesentöne wie die Wiese (grassDark … grassLight), nicht die dunklen Kronentöne. */
-export const VEG_GRASS_TONES: readonly Rgb[] = [
-  mixRgb(mixRgb(rgbOf(PALETTE.grassDark), P.dark, 0.2), P.cool, 0.15),
-  rgbOf(PALETTE.grassDark),
-  mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.35),
-  rgbOf(PALETTE.grass),
-  mixRgb(rgbOf(PALETTE.grassLight), P.warm, 0.12),
-];
+export const VEG_GRASS_TONES: readonly Rgb[] = (() => {
+  // F4: die gedämpften Oliv-Töne der Geländeebene (wie EDGE_COLORS[1]), nach Tonstufe gestuft
+  const w = mixRgb(rgbOf(PALETTE.grass), rgbOf(PALETTE.grassDark), 0.25);
+  return [
+    mixRgb(mixRgb(w, P.dark, 0.3), P.cool, 0.15),
+    mixRgb(w, P.dark, 0.15),
+    w,
+    mixRgb(w, P.warm, 0.12),
+    mixRgb(w, P.warm, 0.22),
+  ];
+})();
 /** Bewuchstöne bei relativer Höhe hn: Wiesentöne unten, Kronentöne ab hn 0,35 (weiche Überblendung). */
 export const vegTones = (hn: number): readonly Rgb[] => {
   const k = 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn);
@@ -773,18 +815,12 @@ export const flowerWeight = (hn: number, steep: number): number =>
   (1 - smoothstep(0.2, 0.4, steep));
 /**
  * Schnee (L2 C2): drei Stufen, nach der Tonstufe des Felses darunter, von warmweiss (Licht) bis kühlblau (Schatten);
- * nie heller als `foam`. Rampe mit 5 Einträgen für `toneColor`: Stufen 0–1 Schatten, 2 Mitte, 3–4 Licht.
+ * nie heller als `foam`. Rampe mit 5 Einträgen für `toneColor`: Stufen 0–1 Schatten (kühl), 2–3 Mitte, 4 Licht (nur Lichtseite).
  */
 const SNOW_LIGHT = mixRgb(rgbOf(PALETTE.foam), P.warm, 0.08),
   SNOW_MID = mixRgb(rgbOf(PALETTE.foam), P.light, 0.15),
   SNOW_SHADE = mixRgb(mixRgb(rgbOf(PALETTE.foam), P.cool, 0.22), P.light, 0.08);
-export const SNOW_TONES: readonly Rgb[] = [
-  SNOW_SHADE,
-  SNOW_SHADE,
-  SNOW_MID,
-  SNOW_LIGHT,
-  SNOW_LIGHT,
-];
+export const SNOW_TONES: readonly Rgb[] = [SNOW_SHADE, SNOW_SHADE, SNOW_MID, SNOW_MID, SNOW_LIGHT];
 /** Schnee nur auf Komponenten mit dieser Amplitude (px) und mehr. */
 export const SNOW_MIN_AMP = 90;
 /** Schneegrenze (hn): flache Lagen darüber, Rinnen (Krümmung > 0) bis SNOW_HN_GULLY hinab; Rand ± SNOW_JITTER nach Rauschen. */
@@ -816,7 +852,15 @@ export function snowField(
     SNOW_GULLY_DROP * rinne +
     SNOW_JITTER * (2 * rotNoise(seed + L2_SNOW_SALT, fx, fy, 1.1, ROT_B) - 1);
   const lage = hn - edge;
-  return smoothstep(-0.05, 0.05, lage) * (1 - smoothstep(SNOW_STEEP, SNOW_STEEP + 0.15, steep));
+  return (
+    smoothstep(-0.05, 0.05, lage) *
+    (1 -
+      smoothstep(
+        SNOW_STEEP + 0.5 * smoothstep(0.75, 0.95, hn),
+        SNOW_STEEP + 0.5 * smoothstep(0.75, 0.95, hn) + 0.15,
+        steep,
+      ))
+  ); // Gipfelflächen ohne Löcher;
 }
 /** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
 export const TONE_FLAT = 2;
@@ -836,6 +880,14 @@ export const EDGE_COLORS: readonly (Rgb | null)[] = [
   rgbOf(PALETTE.sandDry),
 ];
 
+/** F3: der flache Fuss (hn < FOOT_GRASS_HN) ist Wiese mit Kies; Übergang zum Fels bis hn FOOT_GRASS_TO. */
+const FOOT_GRASS = 0.75,
+  FOOT_GRASS_HN = 0.12,
+  FOOT_GRASS_TO = 0.28;
+const footMix = (hn: number, e: Rgb | null): number =>
+  e === null ? 0 : FOOT_GRASS * (1 - smoothstep(FOOT_GRASS_HN, FOOT_GRASS_TO, hn));
+/** Zielfarbe des Fusses: Nachbargelände, bei Wald und Wasser die Wiese. */
+const footTarget = (e: Rgb | null): Rgb => (e && e !== EDGE_COLORS[2] ? e : EDGE_COLORS[1]!);
 const edgeMix = (e: Rgb): number => (e === EDGE_COLORS[2] ? EDGE_MIX_FOREST : EDGE_MIX);
 
 export interface CellShade {
@@ -887,8 +939,9 @@ export function toneLevel(seed: number, fx: number, fy: number, s: CellShade): n
   if (s.hn >= LOW_HN) return full;
   // L2 Kontrast nach Höhe: unten Tonumfang gestaucht (T in TONE_FLAT ± 1, Rauschen 0,4-fach), bei LOW_HN_FROM … LOW_HN
   // sanft zum vollen Wert (hn ≥ LOW_HN bitgleich wie vor L2)
-  const squeezed =
-    TONE_FLAT + Math.max(-1, Math.min(1, gain + 2 * TONE_NOISE * LOW_NOISE * tone + lift));
+  // Fuss nicht dunkler als die Flanke: nicht nach unten verschoben, Stufe 1 nur an steilen Schattenhängen (F3)
+  const lo = -smoothstep(0.35, 0.75, steepness(s.gx, s.gy));
+  const squeezed = TONE_FLAT + Math.max(lo, Math.min(1, gain + 2 * TONE_NOISE * LOW_NOISE * tone));
   const k = smoothstep(LOW_HN_FROM, LOW_HN, s.hn);
   return squeezed + (full - squeezed) * k;
 }
@@ -921,7 +974,9 @@ function vegField(
   const n = rotNoise(seed + 317, fx, fy, 1.9, ROT_A);
   if (hn >= LOW_HN) return n * 0.25; // wie vor L2 (der Tiefenfaktor war dort schon 0)
   const rinne = smoothstep(0.3, 0.7, Math.max(-1, Math.min(1, lap / LAP_REF)));
-  const flach = Math.max(1 - steep, 0.85 * rinne);
+  // keine flächigen Teppiche auf Graten (Krümmung < 0): Bewuchs weicht der Kante
+  const grat = smoothstep(0.1, 0.5, Math.max(-1, Math.min(1, -lap / LAP_REF)));
+  const flach = Math.max(1 - steep, 0.85 * rinne) * (1 - 0.8 * grat);
   const low =
     smoothstep(0.01, 0.05, hn) * (1 - smoothstep(VEG_TOP_HN - 0.08, VEG_TOP_HN, hn)) * flach;
   const variant = 1 + VEG_LOW_VARIANT * (2 * hash2(seed + L2_VARIANT_SALT, 0, 3) - 1);
@@ -929,7 +984,8 @@ function vegField(
 }
 /** Geröll-Feld 0…1 am Netzpunkt: tiefe, flache Lagen und Fuss der Flanken. */
 function rubbleField(seed: number, fx: number, fy: number, hn: number, steep: number): number {
-  const low = 1 - smoothstep(0.08, 0.4, hn);
+  // am flachen Fuss (hn < 0,22, nicht steil) kein Gesprenkel, an steilen Fussflanken bleibt das Geröll
+  const low = (1 - smoothstep(0.08, 0.4, hn)) * (1 - (1 - smoothstep(0.1, 0.22, hn)) * (1 - steep));
   return low * (0.4 + 0.6 * steep) * smoothstep(0.3, 0.6, rotNoise(seed + 319, fx, fy, 1.7, ROT_B));
 }
 
@@ -953,6 +1009,8 @@ export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): 
     c = toneColor(st, SNOW_TONES);
   c = mixRgb(c, DEBRIS, DEBRIS_MIX * debrisOf(s.soft ?? 1));
   if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, edgeMix(s.edge) * (1 - s.rim));
+  const fm = footMix(s.hn, s.edge);
+  if (fm > 0) c = mixRgb(c, footTarget(s.edge), fm);
   return c;
 }
 /** Bewuchsanteil eines Flecks, Schwellen der Grat- und Rinnenkante und ihre Stärke. */
@@ -1059,8 +1117,11 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       vlow: 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn),
       flower: flowerWeight(hn, steep),
       rub: rubbleField(c.seed, fx, fy, hn, steep),
-      mix: edge ? edgeMix(edge) * (1 - sh.rim) : 0,
-      ec: edge ?? ROCK_TONES[TONE_FLAT]!,
+      mix: Math.max(edge ? edgeMix(edge) * (1 - sh.rim) : 0, footMix(hn, edge)),
+      ec:
+        footMix(hn, edge) > (edge ? edgeMix(edge) * (1 - sh.rim) : 0)
+          ? footTarget(edge)
+          : (edge ?? ROCK_TONES[TONE_FLAT]!),
       warp: 3.2 * rotNoise(c.seed + 313, fx, fy, 0.7, ROT_B),
     };
     nm.set(k, out);
