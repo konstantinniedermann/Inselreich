@@ -100,6 +100,8 @@ export interface MassifComponent {
   /** Grundhöhe je Knoten in Weltpixeln (ohne Gebäude-Sattel). */
   height: Float32Array;
   amp: number;
+  /** Schneegrenze (hn) für flache Lagen dieser Komponente (L2 C2), Bisektion in SNOW_HN_MIN … SNOW_HN_MAX */
+  snowHn: number;
   /** 1 je Kachel des Rechtecks (Zeilen ab y0), die zur Komponente gehört. */
   mask: Uint8Array;
   seed: number;
@@ -486,6 +488,7 @@ function buildComponent(
       const bump = (valueNoise(seed + 307, fx * 1.7, fy * 1.7) - 0.5) * 2 * BUMP * rim * (1 - dn);
       height[k] = Math.max(0, pre[k]! * foot[k]! + bump);
     }
+  const snowHn = snowLine(seed, x0, y0, nx, ny, src, height, amp);
   const mask = new Uint8Array((x1 - x0 + 1) * (y1 - y0 + 1));
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++) {
@@ -505,10 +508,65 @@ function buildComponent(
     soft,
     height,
     amp,
+    snowHn,
     mask,
     seed,
     width: W,
   };
+}
+
+/**
+ * Schneegrenze (hn) einer Komponente: Bisektion, so dass etwa SNOW_TARGET der Knoten Schnee tragen (Spec: über hn 0,8,
+ * hier je Komponente angepasst, damit jedes grosse Massiv eine Kappe trägt und keines ganz weiss wird). Komponenten
+ * unter SNOW_MIN_AMP: ohne Bedeutung (1).
+ */
+function snowLine(
+  seed: number,
+  x0: number,
+  y0: number,
+  nx: number,
+  ny: number,
+  src: Uint8Array,
+  height: Float32Array,
+  amp: number,
+): number {
+  if (amp < SNOW_MIN_AMP) return 1;
+  const hn: number[] = [],
+    steep: number[] = [],
+    lap: number[] = [],
+    fx: number[] = [],
+    fy: number[] = [];
+  for (let j = 1; j < ny - 1; j++)
+    for (let i = 1; i < nx - 1; i++) {
+      const k = j * nx + i;
+      if (src[k]) continue;
+      const h = height[k]!;
+      hn.push(h / amp);
+      steep.push(
+        steepness(
+          ((height[k + 1]! - height[k - 1]!) / 2) * SUB,
+          ((height[k + nx]! - height[k - nx]!) / 2) * SUB,
+        ),
+      );
+      lap.push(height[k - 1]! + height[k + 1]! + height[k - nx]! + height[k + nx]! - 4 * h);
+      fx.push(x0 + i / SUB);
+      fy.push(y0 + j / SUB);
+    }
+  const share = (line: number): number => {
+    let c = 0;
+    for (let q = 0; q < hn.length; q++)
+      if (snowField(seed, fx[q]!, fy[q]!, amp, line, hn[q]!, steep[q]!, lap[q]!) >= 0.5) c++;
+    return hn.length ? c / hn.length : 0;
+  };
+  let lo = SNOW_HN_MIN,
+    hi = SNOW_HN_MAX;
+  if (share(lo) < SNOW_TARGET) return lo; // zu wenig Fläche: tiefste Grenze
+  for (let it = 0; it < 10; it++) {
+    const mid = (lo + hi) / 2;
+    if (share(mid) > SNOW_TARGET) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
 }
 
 /** Knoten (I, J) innen: alle Kacheln, die ihn berühren, erfüllen `inTile`. */
@@ -713,6 +771,53 @@ export const flowerWeight = (hn: number, steep: number): number =>
   smoothstep(0.2, 0.23, hn) *
   (1 - smoothstep(0.32, LOW_HN, hn)) *
   (1 - smoothstep(0.2, 0.4, steep));
+/**
+ * Schnee (L2 C2): drei Stufen, nach der Tonstufe des Felses darunter, von warmweiss (Licht) bis kühlblau (Schatten);
+ * nie heller als `foam`. Rampe mit 5 Einträgen für `toneColor`: Stufen 0–1 Schatten, 2 Mitte, 3–4 Licht.
+ */
+const SNOW_LIGHT = mixRgb(rgbOf(PALETTE.foam), P.warm, 0.08),
+  SNOW_MID = mixRgb(rgbOf(PALETTE.foam), P.light, 0.15),
+  SNOW_SHADE = mixRgb(mixRgb(rgbOf(PALETTE.foam), P.cool, 0.22), P.light, 0.08);
+export const SNOW_TONES: readonly Rgb[] = [
+  SNOW_SHADE,
+  SNOW_SHADE,
+  SNOW_MID,
+  SNOW_LIGHT,
+  SNOW_LIGHT,
+];
+/** Schnee nur auf Komponenten mit dieser Amplitude (px) und mehr. */
+export const SNOW_MIN_AMP = 90;
+/** Schneegrenze (hn): flache Lagen darüber, Rinnen (Krümmung > 0) bis SNOW_HN_GULLY hinab; Rand ± SNOW_JITTER nach Rauschen. */
+const SNOW_HN_MIN = 0.7,
+  SNOW_HN_MAX = 1.1,
+  SNOW_TARGET = 0.045, // Anteil der Komponentenknoten mit Schnee (Bisektion der Schneegrenze)
+  SNOW_GULLY_DROP = 0.12, // Rinnen: Schneegrenze so viel tiefer (≈ 0,65 bei Grenze 0,8)
+  SNOW_JITTER = 0.05,
+  SNOW_STEEP = 0.45;
+export const L2_SNOW_SALT = 533;
+/**
+ * Schneefeld 0…1 am Netzpunkt (Schwelle 0,5 beim Rastern, 1–2 px weicher Rand): reine Funktion der Knotenwerte, auch
+ * für die Maske im Kerntest. 0 bei Komponenten unter SNOW_MIN_AMP.
+ */
+export function snowField(
+  seed: number,
+  fx: number,
+  fy: number,
+  amp: number,
+  snowHn: number,
+  hn: number,
+  steep: number,
+  lap: number,
+): number {
+  if (amp < SNOW_MIN_AMP) return 0;
+  const rinne = smoothstep(0.3, 0.6, Math.max(-1, Math.min(1, lap / LAP_REF)));
+  const edge =
+    snowHn -
+    SNOW_GULLY_DROP * rinne +
+    SNOW_JITTER * (2 * rotNoise(seed + L2_SNOW_SALT, fx, fy, 1.1, ROT_B) - 1);
+  const lage = hn - edge;
+  return smoothstep(-0.05, 0.05, lage) * (1 - smoothstep(SNOW_STEEP, SNOW_STEEP + 0.15, steep));
+}
 /** Mittlere Stufe der ebenen Fläche (Fuss, Plateau). */
 export const TONE_FLAT = 2;
 const TONE_GAIN = 2.4; // Stufen je Einheit relativer Beleuchtung auf der Lichtseite
@@ -749,6 +854,9 @@ export interface CellShade {
   edge: Rgb | null;
   /** weicher Innen-Anteil (Schuttband am Rand); fehlt = innen */
   soft?: number;
+  /** Amplitude der Komponente (px): Schnee nur ab SNOW_MIN_AMP; fehlt = kein Schnee */
+  amp?: number;
+  snowHn?: number;
 }
 /** Anteil des Schuttbands 0…1 aus dem weichen Innen-Anteil. */
 export const debrisOf = (soft: number): number => 1 - smoothstep(SOFT_CUT, DEBRIS_HI, soft);
@@ -838,6 +946,11 @@ export function shadeColor(seed: number, fx: number, fy: number, s: CellShade): 
   const e = Math.max(-1, Math.min(1, -s.lap / LAP_REF));
   if (e > EDGE_ON && st >= TONE_FLAT) c = mixRgb(c, ROCK_TONES[4]!, RIDGE_HI);
   if (e < -EDGE_ON) c = mixRgb(c, ROCK_TONES[0]!, RINNE_LO);
+  if (
+    s.amp !== undefined &&
+    snowField(seed, fx, fy, s.amp, s.snowHn ?? 1, s.hn, steep, s.lap) >= 0.5
+  )
+    c = toneColor(st, SNOW_TONES);
   c = mixRgb(c, DEBRIS, DEBRIS_MIX * debrisOf(s.soft ?? 1));
   if (s.edge && s.rim < 1) c = mixRgb(c, s.edge, edgeMix(s.edge) * (1 - s.rim));
   return c;
@@ -870,6 +983,8 @@ export interface NodeShade {
   /** Anteil der Wiesentöne an der Bewuchsfarbe (1 unten, 0 ab hn 0,35) und Blütenbereich (0…1, hn 0,2–0,35, flach) */
   vlow: number;
   flower: number;
+  /** Schneefeld 0…1 (Schwelle 0,5), nur Komponenten mit amp ≥ SNOW_MIN_AMP */
+  snow: number;
   rub: number;
   /** weicher Innen-Anteil (Kontur bei SOFT_CUT, Schuttband) und Deckkraft aus der Höhe (h ≥ RIM_H deckt immer) */
   soft: number;
@@ -924,6 +1039,8 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       rim: smoothstep(SOFT_LO, SOFT_HI, soft),
       edge,
       soft,
+      amp: c.amp,
+      snowHn: c.snowHn,
     };
     const steep = steepness(gx, gy);
     const out: NodeShade = {
@@ -938,6 +1055,7 @@ export function pieceNodes(p: MassifPiece): (I: number, J: number) => NodeShade 
       t: toneLevel(c.seed, fx, fy, sh),
       e: Math.max(-1, Math.min(1, -lap / LAP_REF)),
       veg: vegField(c.seed, fx, fy, hn, steep, lap),
+      snow: snowField(c.seed, fx, fy, c.amp, c.snowHn, hn, steep, lap),
       vlow: 1 - smoothstep(VEG_GRASS_HN, LOW_HN, hn),
       flower: flowerWeight(hn, steep),
       rub: rubbleField(c.seed, fx, fy, hn, steep),

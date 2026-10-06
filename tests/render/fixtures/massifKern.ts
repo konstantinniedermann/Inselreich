@@ -24,6 +24,9 @@ export interface KernNode {
   hn: number;
   h: number;
   rgb: [number, number, number];
+  /** Schneemaske (T4) bzw. Baummaske (T5) des heutigen Codes: der Knoten ist von L2 absichtlich geändert. */
+  snow: boolean;
+  tree: boolean;
 }
 
 /** Eindeutige Kernknoten (hn ≥ KERN_HN) einer Heimatinsel, I und J gerade. */
@@ -54,6 +57,8 @@ export function kernNodes(seed: number): KernNode[] {
           hn,
           h: nd.h,
           rgb: [Math.round(nd.c[0]), Math.round(nd.c[1]), Math.round(nd.c[2])],
+          snow: nd.snow >= 0.5,
+          tree: false,
         });
       }
   }

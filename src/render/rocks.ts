@@ -15,6 +15,7 @@ import {
   ROCK_TONES,
   SUB,
   TONE_FLAT,
+  SNOW_TONES,
   L2_FLOWER_SALT,
   L2_FLOWER_TONE_SALT,
   VEG_GRASS_TONES,
@@ -360,7 +361,8 @@ function triangle(
   const hwS = Math.min(0.5, Math.max(0.02, 0.5 * CONTOUR_PX * grad(a.soft, b.soft, c.soft))),
     hwT = halfWidth(grad(a.t, b.t, c.t)),
     hwE = halfWidth(grad(a.e, b.e, c.e)),
-    hwV = halfWidth(grad(a.veg, b.veg, c.veg));
+    hwV = halfWidth(grad(a.veg, b.veg, c.veg)),
+    hwN = halfWidth(grad(a.snow, b.snow, c.snow));
   const eps = -1e-7;
   const top = ROCK_TONES.length - 1;
   for (let y = minY; y <= maxY; y++) {
@@ -416,6 +418,15 @@ function triangle(
         g += (D[1] - g) * lo;
         bl += (D[2] - bl) * lo;
       }
+      // Schnee (L2 C2): 3 Stufen nach der Tonstufe, 1–2 px weicher Rand, ersetzt Fels und Bewuchs
+      const sn = a.snow + b.snow + c.snow > 0.3 ? sstep(lerp(a.snow, b.snow, c.snow), 0.5, hwN) : 0;
+      if (sn > 0) {
+        const S = SNOW_TONES[k0]!,
+          S1 = SNOW_TONES[k1]!;
+        r += (S[0] + (S1[0] - S[0]) * fr - r) * sn;
+        g += (S[1] + (S1[1] - S[1]) * fr - g) * sn;
+        bl += (S[2] + (S1[2] - S[2]) * fr - bl) * sn;
+      }
       // Schuttband am Fuss (hell), vor der Kontur
       const soft = lerp(a.soft, b.soft, c.soft);
       const db = DEBRIS_MIX * debrisOf(soft);
@@ -432,7 +443,7 @@ function triangle(
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
       // Schuttband (L2): keine feinen Brocken und kein Feinkorn, nur grobe Tönung und Korn in 2-px-Zellen
       const deb = debrisOf(soft);
-      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc);
+      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc) * (1 - 0.5 * sn); // Schnee: Textur halb
       const rub = lerp(a.rub, b.rub, c.rub) * (1 - deb);
       if (rub > 0.05) {
         const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);
@@ -442,8 +453,12 @@ function triangle(
       }
       k *=
         1 -
-        STRATA_DARK * strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
+        STRATA_DARK *
+          (1 - sn) * // Schnee: keine Schichtbänder
+          strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
+      if (sn > 0 && k > 1) k = 1 + (k - 1) * (1 - sn); // Schnee nie heller als seine Stufe (≤ foam)
       k *= deb > 0.5 ? bandGrainAt(seed, wx, wy) : grainAt(seed, wx, wy, sx, sy);
+      if (sn > 0.5 && k > 1) k = 1;
       r *= k;
       g *= k;
       bl *= k;

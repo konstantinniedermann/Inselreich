@@ -41,6 +41,7 @@ import {
   FOOT_R,
   HILL_AMP,
   ROCK_TONES,
+  SNOW_TONES,
   SOFT_CUT,
   TONE_FLAT,
   debrisOf,
@@ -65,7 +66,7 @@ import { render } from '../../src/render/renderer';
 import { setCanvasFactory as setTreeCanvasFactory } from '../../src/render/trees';
 import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
-import { deltaE2000, rgbToLab } from './deltaE';
+import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import kernFixture from './fixtures/massif-kern-main.json';
 import { KERN_SEEDS, bandNoise, kernNodes } from './fixtures/massifKern';
 
@@ -611,7 +612,7 @@ describe('H-R9 A3 Färbung', () => {
     expect(same / n).toBeLessThan(0.05);
   });
 
-  it('A3 nur Palettentöne: keine Signalfarben, kein Schnee (heller als rockLight/foam-Mischung 30 %)', () => {
+  it('A3 nur Palettentöne: keine Signalfarben, kein Schnee ausserhalb der Schneemaske (heller als rockLight/foam-Mischung 30 %)', () => {
     const w = createWorld(7, { unlockAll: true });
     const sig = SIGNAL_NAMES.map((n) => rgbOf(PALETTE[n]));
     const snow = rgbOfCss(
@@ -620,15 +621,20 @@ describe('H-R9 A3 Färbung', () => {
         .join(',')})`,
     );
     let n = 0;
-    for (const p of massifPieces(fieldWorld(w)))
-      for (const q of pieceQuads(p)) {
-        const c = rgbOfCss(q.fill);
-        for (const s of sig) expect(dist3(c, s)).toBeGreaterThan(60);
-        expect(lum(q.fill)).toBeLessThanOrEqual(
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      for (const c of pieceCells(p)) {
+        const nd = at(c.I, c.J);
+        if (nd.snow >= 0.5) continue; // Schneemaske (L2 T4): eigene Töne, siehe Schnee-Tests
+        const css = `rgb(${nd.c.map((v) => Math.round(v)).join(',')})`;
+        const col = rgbOfCss(css);
+        for (const s of sig) expect(dist3(col, s)).toBeGreaterThan(60);
+        expect(lum(css)).toBeLessThanOrEqual(
           0.299 * snow[0]! + 0.587 * snow[1]! + 0.114 * snow[2]! + 1,
         );
         n++;
       }
+    }
     expect(n).toBeGreaterThan(1000);
   });
 });
@@ -1161,9 +1167,10 @@ describe('ART-STIL-02 L2 Kern', () => {
     for (const seed of KERN_SEEDS) {
       const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
       const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
-      const ref = (kernFixture as Fx)[String(seed)]!.nodes.filter(
-        (r) => !kernAusnahme(data, r[0]!, r[1]!, r[2]!),
-      );
+      const ref = (kernFixture as Fx)[String(seed)]!.nodes.filter((r) => {
+        const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
+        return !kernAusnahme(data, r[0]!, r[1]!, r[2]!) && !n?.snow && !n?.tree;
+      });
       let found = 0,
         dE = 0,
         dH = 0;
@@ -1329,4 +1336,87 @@ describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', () => {
       ).toBeLessThanOrEqual(0.5 * vorher);
     }
   });
+});
+
+describe('ART-STIL-02 L2 Schnee (C2)', () => {
+  /** Eindeutige Knoten je Komponente (comp-Index → Knoten). */
+  function perComp(seed: number) {
+    const w = createWorld(seed, { unlockAll: true });
+    const res = new Map<number, { amp: number; n: number; snow: number; hnSnow: number[] }>();
+    const seen = new Set<string>();
+    for (const p of massifPieces(fieldWorld(w))) {
+      const at = pieceNodes(p);
+      const r = res.get(p.comp.id) ?? { amp: p.comp.amp, n: 0, snow: 0, hnSnow: [] };
+      res.set(p.comp.id, r);
+      for (const c of pieceCells(p)) {
+        const k = `${p.comp.id}|${c.I}|${c.J}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const nd = at(c.I, c.J);
+        r.n++;
+        if (nd.snow >= 0.5) {
+          r.snow++;
+          r.hnSnow.push(nd.h / p.comp.amp);
+        }
+      }
+    }
+    return res;
+  }
+
+  it('L2 Schnee nur bei amp ≥ 90; Anteil Schneeknoten 2–8 % je Komponente mit amp ≥ 90 (Seeds 1–20 der Heimatinsel)', () => {
+    let big = 0;
+    for (let seed = 1; seed <= 20; seed++)
+      for (const [id, r] of perComp(seed)) {
+        if (r.amp < 90) {
+          expect(r.snow, `Seed ${seed} Komponente ${id} amp ${r.amp.toFixed(0)}`).toBe(0);
+          continue;
+        }
+        big++;
+        const share = r.snow / r.n;
+        expect(share, `Seed ${seed} Komponente ${id}`).toBeGreaterThanOrEqual(0.02);
+        expect(share, `Seed ${seed} Komponente ${id}`).toBeLessThanOrEqual(0.08);
+        expect(
+          Math.min(...r.hnSnow),
+          `Seed ${seed} Komponente ${id} tiefster Schnee`,
+        ).toBeGreaterThanOrEqual(0.5);
+      }
+    expect(big).toBeGreaterThan(5);
+  });
+
+  it('L2 Schneetöne: Luminanz ≤ foam, 3 Stufen warmweiss bis kühlblau, ΔE2000 ≥ 20 zu den Signalfarben', () => {
+    const foam = lum(PALETTE.foam);
+    const sig = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
+    expect(new Set(SNOW_TONES.map((t) => t.join(','))).size).toBe(3);
+    for (const t of SNOW_TONES) {
+      expect(lum(`rgb(${t.map(Math.round).join(',')})`)).toBeLessThanOrEqual(foam + 0.01);
+      for (const s of sig)
+        expect(deltaE2000(rgbToLab([...t] as [number, number, number]), s)).toBeGreaterThanOrEqual(
+          20,
+        );
+    }
+    // Licht warm, Schatten kühl: blauer Anteil im Schatten relativ zum Rot höher
+    const [sh, , li] = [SNOW_TONES[0]!, SNOW_TONES[2]!, SNOW_TONES[4]!];
+    expect(sh[2] - sh[0]).toBeGreaterThan(li[2] - li[0]);
+  });
+
+  it('L2 Schnee im Raster: helle Pixel auf grossen Massiven, nie heller als foam (Luma), kein reines Weiss', () => {
+    const w = createWorld(14, { unlockAll: true });
+    const foam = lum(PALETTE.foam);
+    const fels = lum(`rgb(${ROCK_TONES[4]!.map(Math.round).join(',')})`);
+    let schnee = 0,
+      maxL = 0;
+    for (const it of massifItems(w)) {
+      if (it.piece.comp.amp < 90) continue;
+      const b = massifBounds(it);
+      const buf = rasterPiece(it, Math.round((ISO_W / 2) * 2), Math.ceil(b.h * 2), 2);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        const l = 0.299 * buf[o]! + 0.587 * buf[o + 1]! + 0.114 * buf[o + 2]!;
+        maxL = Math.max(maxL, l);
+        if (l > fels + 12) schnee++;
+      }
+    }
+    expect(maxL).toBeLessThanOrEqual(foam + 0.5);
+    expect(schnee).toBeGreaterThan(300);
+  }, 60000);
 });
