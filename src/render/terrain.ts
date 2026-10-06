@@ -1488,13 +1488,41 @@ const unionRect = (a: TileRect | null, b: TileRect | null): TileRect | null =>
         y1: Math.max(a.y1, b.y1),
       };
 
+function newHalf(layer: HTMLCanvasElement): HTMLCanvasElement {
+  const half = document.createElement('canvas');
+  half.width = Math.ceil(layer.width / 2);
+  half.height = Math.ceil(layer.height / 2);
+  return half;
+}
+
+function paintHalfStrip(
+  half: HTMLCanvasElement,
+  layer: HTMLCanvasElement,
+  st: { sy: number; sh: number; dy: number; dh: number },
+): void {
+  const ctx = half.getContext('2d');
+  if (!ctx) return;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(layer, 0, st.sy, layer.width, st.sh, 0, st.dy, half.width, st.dh);
+}
+
+/**
+ * Erzwingt die aufgeschobene Rasterung von `canvas` (Chrome zeichnet eine Ebene erst, wenn sie als Quelle gelesen
+ * wird): ein Ein-Pixel-Lesen in eine Wegwerf-Fläche, ohne Rücklesen in den Speicher (M12 E1, AK-E1-19: die Rasterung
+ * der halben Kopie lief sonst gebündelt im ersten Viertel-Streifen, 10–25 ms).
+ */
+function flushRaster(canvas: HTMLCanvasElement): void {
+  const probe = document.createElement('canvas');
+  probe.width = 1;
+  probe.height = 1;
+  probe.getContext('2d')?.drawImage(canvas, 0, 0, 1, 1, 0, 0, 1, 1);
+}
+
 /** Einmal vorskalierte Kopie mit halber Kantenlänge (Zoom ≤ 0,5, AK-ISO-19). */
 export function halfLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   const m = meta.get(layer);
   if (m?.half) return m.half;
-  const half = document.createElement('canvas');
-  half.width = Math.ceil(layer.width / 2);
-  half.height = Math.ceil(layer.height / 2);
+  const half = newHalf(layer);
   const ctx = half.getContext('2d');
   if (ctx) {
     ctx.imageSmoothingQuality = 'high';
@@ -1628,8 +1656,25 @@ export function terrainJob(
         buildMs: spent,
       });
     }),
-    timed(() => void halfLayer(layer)),
   );
+  // Halbe Kopie in Streifen, je Streifen mit erzwungener Rasterung (AK-E1-19); ruft der Renderer `halfLayer` früher,
+  // bleiben die Streifen wirkungslos.
+  let halfWip: HTMLCanvasElement | null = null;
+  for (let i = 0; i < QUARTER_STRIPS; i++)
+    steps.push(
+      timed(() => {
+        const m = meta.get(layer);
+        if (!m || m.half) return;
+        const list = quarterStrips(layer.height);
+        const st = list[i];
+        halfWip ??= newHalf(layer);
+        if (st) {
+          paintHalfStrip(halfWip, layer, st);
+          flushRaster(halfWip);
+        }
+        if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.half = halfWip;
+      }),
+    );
   // Viertel-Kopie in Streifen (AK-E1-19); ruft der Renderer `quarterLayer` früher, bleiben die Streifen wirkungslos.
   let quarter: HTMLCanvasElement | null = null;
   const stripsOf = (): ReturnType<typeof quarterStrips> => quarterStrips(halfLayer(layer).height);
