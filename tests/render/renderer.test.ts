@@ -1184,6 +1184,26 @@ describe('M12 E1 Renderer', () => {
     }
   });
 
+  it('AK-E1-22 Detailstufe: Möwen (Flügelstriche) und Vogelschwärme fallen weg, bei Zoom 0,5 sind die Möwen da', () => {
+    const gullStrokes = (
+      events: readonly { op?: string; style?: unknown; lineWidth?: number }[],
+      z: number,
+    ) =>
+      events.filter(
+        (e) =>
+          e.op === 'stroke' && e.style === PALETTE.foam && e.lineWidth === Math.max(1, 1.5 * z),
+      );
+    const { world } = scene();
+    world.tick = 0; // Tag: Möwen fliegen
+    const half = run(world, camFor(world, 0.5), { dayNight: false });
+    expect(gullStrokes(half.log.events, 0.5).length).toBeGreaterThan(0); // Gegenprobe: Möwen sind im Bild
+    for (const zoom of [0.25, 0.125]) {
+      const { log } = run(world, camFor(world, zoom), { dayNight: false });
+      expect(gullStrokes(log.events, zoom)).toHaveLength(0);
+      expect(renderStats.wildDrawn).toBe(0);
+    }
+  });
+
   it('AK-E1-22 Zoom 0,5 wie heute: Figuren, Rauch, Wellen gezeichnet, Boden aus halfLayer', () => {
     const { world } = scene();
     world.order = order;
