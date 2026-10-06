@@ -584,6 +584,46 @@ export function shrubDensity(seed: number, x: number, y: number): number {
   return Math.min(0.6, Math.max(0, (f - 0.25) * 1.0));
 }
 
+/**
+ * Fortsetzung der Waldkante über die Enden der Kachel (Bits 4 + 2 · Seitenindex + Ende, Seitenindex 0 links, 1 rechts, 2 oben,
+ * 3 unten): die Nachbarkachel entlang der Kante ist Nicht-Wald und hat denselben Wald an derselben Seite. Sonst endet die
+ * Kante (Ecke der Treppe) und der Farnsaum spart sie aus. Hängt nur an Kachel und Nachbarn (D2).
+ */
+export function fringeEnds(isl: DecorIsland, x: number, y: number, sides: number): number {
+  let m = 0;
+  const cont = (nx: number, ny: number, dx: number, dy: number): boolean =>
+    nx >= 0 &&
+    ny >= 0 &&
+    nx < isl.width &&
+    ny < isl.height &&
+    !forestAt(isl, nx, ny) &&
+    forestAt(isl, nx + dx, ny + dy);
+  const dirs: [number, number][] = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ]; // Richtung zum Wald je Seite
+  dirs.forEach(([dx, dy], si) => {
+    if (!(sides & (1 << si))) return;
+    // Enden der Kante: entlang y (links/rechts) bzw. x (oben/unten), kleinere und grössere Koordinate
+    const along: [number, number][] =
+      si < 2
+        ? [
+            [0, -1],
+            [0, 1],
+          ]
+        : [
+            [-1, 0],
+            [1, 0],
+          ];
+    along.forEach(([ax, ay], e) => {
+      if (cont(x + ax, y + ay, dx, dy)) m |= 1 << (4 + si * 2 + e);
+    });
+  });
+  return m;
+}
+
 /** A2 nach `meadowWarmth`: feucht = hohes Gras, Mitte = Klee, warm = Trockenrasen. */
 export function tuftKind(seed: number, x: number, y: number): 'tuftTall' | 'clover' | 'tuftDry' {
   const m = meadowWarmth(seed, x + 0.5, y + 0.5);
@@ -697,7 +737,16 @@ export function groundElements(
       }
       // B8: durchgehender Farnsaum auf der Grasseite jeder Waldkante (zusätzlich zum einen Element der Kachel)
       const sides = forestSides(isl, x, y);
-      if (sides) out.push({ kind: 'ferns', x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: sides });
+      if (sides)
+        out.push({
+          kind: 'ferns',
+          x,
+          y,
+          w: 1,
+          h: 1,
+          box: boxOf(x, y, 1, 1),
+          arg: sides | fringeEnds(isl, x, y, sides),
+        });
       const kind = tileKind(seed, isl, occ, plan, x, y);
       if (kind)
         out.push({ kind, x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: forestSides(isl, x, y) });

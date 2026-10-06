@@ -16,6 +16,7 @@ import {
   STAMP_SPACING,
   decorHill,
   footprintFree,
+  fringeEnds,
   groundElements,
   kontorPos,
   shrubDensity,
@@ -38,6 +39,7 @@ import {
   flowerPalette,
   flowerTonesFor,
   extraFlowersFor,
+  fringeClusters,
   flowersFor,
   groundShapes,
   meadowWarmth,
@@ -840,5 +842,59 @@ describe('L4 Bild-Fix 1', () => {
     const isl = home(w);
     for (const e of groundElements(7, isl, occupancy(isl), undefined, kontorOf(w)))
       for (const p of groundShapes(e, 7)) expect(['rect', 'ell', 'poly']).toContain(p.k);
+  });
+});
+
+describe('L4 Bild-Fix 2: Farnsaum folgt nicht der Kachelkante', () => {
+  /** Gerader Waldrand: Wald links von Spalte 5, Gras ab Spalte 5, 10 Kacheln hoch; Karte 12 × 12. */
+  const edge = (): {
+    isl: {
+      width: number;
+      height: number;
+      tiles: { terrain: string; buildingId: null; road: boolean }[];
+    };
+  } => {
+    const n = 12;
+    const tiles = Array.from({ length: n * n }, (_v, i) => ({
+      terrain: i % n < 5 ? 'forest' : 'grass',
+      buildingId: null,
+      road: false,
+    }));
+    return { isl: { width: n, height: n, tiles } };
+  };
+
+  it('Entlang eines geraden Waldrands von 10 Kacheln: SD des Abstands der Büschel zur Kante ≥ 0,08, Saum ≤ 70 % der Kantenlänge', () => {
+    const { isl } = edge();
+    for (const seed of [1, 2, 5, 7, 11]) {
+      const ds: number[] = [];
+      let covered = 0;
+      for (let y = 1; y <= 10; y++) {
+        const sides = 1; // Wald links
+        const arg = sides | fringeEnds(isl as never, 5, y, sides);
+        for (const c of fringeClusters(seed, 5, y, arg)) {
+          ds.push(c.d);
+          covered += c.w + 0.04; // Breite des Büschels plus Neigung der Wedel
+          expect(c.d).toBeGreaterThanOrEqual(0.05);
+          expect(c.d).toBeLessThanOrEqual(0.35);
+          expect(c.n).toBeGreaterThanOrEqual(2);
+          expect(c.n).toBeLessThanOrEqual(5);
+        }
+      }
+      const mean = ds.reduce((a, b) => a + b, 0) / ds.length;
+      const sd = Math.sqrt(ds.reduce((a, b) => a + (b - mean) ** 2, 0) / ds.length);
+      expect(ds.length, `Seed ${seed}`).toBeGreaterThan(5);
+      expect(sd, `Seed ${seed}: SD`).toBeGreaterThanOrEqual(0.08);
+      expect(covered / 10, `Seed ${seed}: Anteil mit Saum`).toBeLessThanOrEqual(0.7);
+    }
+  });
+
+  it('An Ecken der Treppe ist der Saum ausgespart: kein Büschel nahe dem Ende einer endenden Kante', () => {
+    const { isl } = edge();
+    // oberstes Kantenstück (y = 0): die Kante setzt sich nach oben nicht fort (Kartenrand), nach unten schon
+    const arg = 1 | fringeEnds(isl as never, 5, 0, 1);
+    expect(arg & (1 << 4)).toBe(0); // Ende 0 (oben) setzt sich nicht fort
+    expect(arg & (1 << 5)).not.toBe(0);
+    for (let seed = 1; seed <= 60; seed++)
+      for (const c of fringeClusters(seed, 5, 0, arg)) expect(c.u).toBeGreaterThanOrEqual(0.3);
   });
 });
