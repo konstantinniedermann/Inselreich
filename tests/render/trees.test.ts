@@ -21,6 +21,7 @@ import {
   PINE_COLOR,
   STAMP_BELOW,
   STAMP_W,
+  stampBox,
   TREE_H,
   crownBase,
   crownCap,
@@ -266,7 +267,7 @@ describe('Baumstempel-Cache', () => {
     expect(treeCacheSize()).toBe(1);
   });
 
-  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z): Zielgrösse = Stempel × Faktor (L1: Stempelbreite STAMP_W)', () => {
+  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z): Zielgrösse = Stempel × Faktor (L1: Canvas = Inhaltsbox)', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
     const calls: number[][] = [];
@@ -275,10 +276,11 @@ describe('Baumstempel-Cache', () => {
     } as unknown as CanvasRenderingContext2D;
     drawTreeStamp(ctx, { x: 0, y: 0, zoom: 1.2 }, item(0, 3, 3, 0), 3); // Stufe 1,5
     const [dx, dy, dw, dh] = calls[0]!;
-    expect(dw).toBeCloseTo(STAMP_W * 1.2, 6);
+    const b = stampBox(3, 0);
+    expect(dw).toBeCloseTo(Math.ceil((b.x1 - b.x0) * 1.5) * (1.2 / 1.5), 6);
     const c = project(3.5, 3.5);
-    expect(dx).toBeCloseTo(c.x * 1.2 - (STAMP_W / 2) * 1.2, 6);
-    expect(dy).toBeCloseTo(c.y * 1.2 - TREE_H * 1.2, 6);
+    expect(dx).toBeCloseTo(c.x * 1.2 + b.x0 * 1.2, 6);
+    expect(dy).toBeCloseTo(c.y * 1.2 + b.y0 * 1.2, 6);
     expect(dh!).toBeGreaterThan(0);
   });
 });

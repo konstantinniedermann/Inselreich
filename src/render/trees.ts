@@ -42,7 +42,6 @@ export const TREE_H = 1.1 * ISO_H;
 /** Stempelbreite (Kronen dürfen bis 0,35 Kachel über die Kachel hinausragen) und Platz unter der Rautenmitte. */
 export const STAMP_W = 1.75 * ISO_W;
 export const STAMP_BELOW = 0.75 * ISO_H;
-const STAMP_H = TREE_H + STAMP_BELOW;
 /** Der Riesenbaum (B3) ist 1,8-mal so hoch und gross. */
 export const GIANT_SCALE = 1.8;
 const OVERHANG = 0.35; // Kronenfuss ragt höchstens so weit über die eigene Kachel
@@ -196,9 +195,17 @@ export function crownGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'young'>)
   return { lobes, tiers, hw: (x1 - x0) / 2, hh: (y1 - y0) / 2 };
 }
 
+const geomOf = new WeakMap<Crown, CrownGeom>();
+/** `crownGeom` je Kronenobjekt einmal (die Kronen einer Variante sind gecacht); je Frame kein Neuberechnen. */
+function geomFor(c: Crown): CrownGeom {
+  let g = geomOf.get(c);
+  if (!g) geomOf.set(c, (g = crownGeom(c)));
+  return g;
+}
+
 /** Mittelpunkt und halbe Masse einer Krone im Stempelraum (Pixel, Ursprung = Rautenmitte; y nach unten). */
 export function crownScreen(c: Crown): { x: number; y: number; rx: number; ry: number } {
-  const g = crownGeom(c);
+  const g = geomFor(c);
   return {
     x: (c.cx - c.cy) * (ISO_W / 2),
     y: ((c.cx + c.cy - 1) * ISO_H) / 2 - c.h,
@@ -448,18 +455,21 @@ export function treeBounds(item: TreeItem): Box {
  */
 export function treeShadow(item: TreeItem): Pt[] {
   const role = variantParts(item.variant % TREE_VARIANTS).role;
-  const k = item.giant ? 1.1 : role === 0 ? 0.55 : 0.5;
+  const unit = SHADOW_UNITS[item.giant ? 2 : role === 0 ? 0 : 1]!;
   const mx = item.fp.x + 0.5 + (item.ox ?? 0) + DIR.x * SHADOW_SHIFT,
     my = item.fp.y + 0.5 + (item.oy ?? 0) + DIR.y * SHADOW_SHIFT;
-  const pts: Pt[] = [];
-  for (let i = 0; i < 12; i++) {
+  return unit.map((u) => ({ x: mx + u.x, y: my + u.y }));
+}
+
+/** Schattenform je Grösse (Kern, Rand/Eng, Riese) als feste Versätze im Kachelraum; je Frame nur noch verschieben. */
+const SHADOW_UNITS: readonly (readonly Pt[])[] = [0.55, 0.5, 1.1].map((k) =>
+  Array.from({ length: 12 }, (_, i) => {
     const a = (i / 12) * Math.PI * 2;
     const u = Math.cos(a) * SHADOW_A * k,
       v = Math.sin(a) * SHADOW_B * k;
-    pts.push({ x: mx + DIR.x * u - DIR.y * v, y: my + DIR.y * u + DIR.x * v });
-  }
-  return pts;
-}
+    return { x: DIR.x * u - DIR.y * v, y: DIR.y * u + DIR.x * v };
+  }),
+);
 
 // ---------------------------------------------------------------------------------------------------------------
 // Zeichnen
@@ -483,7 +493,7 @@ const ellipse = (
  * Laub-artige Kronen als Klumpen aus Lappen (Schattenmond, Mitte, Kappe zum Licht), der Nadelbaum als Etagen.
  */
 export function paintCrown(ctx: CanvasRenderingContext2D, c: Crown, x: number, y: number): void {
-  const g = crownGeom(c);
+  const g = geomFor(c);
   const base = crownBase(c.kind);
   if (g.tiers.length > 0) {
     const sd = LIGHT_PX.x > 0 ? -1 : 1; // Seite des Schattens im Bild
@@ -577,6 +587,19 @@ export function paintStamp(
   step: number,
   giant = false,
 ): void {
+  paintStampAt(ctx, seed, variant, step, giant, STAMP_W / 2, TREE_H);
+}
+
+/** Wie `paintStamp`, der Ursprung (Rautenmitte) liegt bei (ox, oy) Stempelpixeln (Zuschnitt auf die Inhaltsbox). */
+function paintStampAt(
+  ctx: CanvasRenderingContext2D,
+  seed: number,
+  variant: number,
+  step: number,
+  giant: boolean,
+  ox: number,
+  oy: number,
+): void {
   const crowns = crownsFor(seed, variant, giant)
     .map((c) => ({
       c,
@@ -586,7 +609,7 @@ export function paintStamp(
     .sort((a, b) => a.y - b.y); // hinten zuerst
   ctx.save();
   ctx.scale(step, step);
-  ctx.translate(STAMP_W / 2, TREE_H);
+  ctx.translate(ox, oy);
   for (const { c, x, y } of crowns) {
     const isGiant = giant && c.r > 0.17 * GIANT_SCALE - 1e-9;
     paintTrunk(ctx, c, x, y, isGiant);
@@ -601,12 +624,58 @@ export function setCanvasFactory(fn: () => HTMLCanvasElement): void {
   makeCanvas = fn;
 }
 
+/** Inhaltsbox eines Stempels in Stempelpixeln relativ zur Rautenmitte (ganze Pixel, 1 px Rand). */
+export interface StampBox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+const boxCache = new Map<string, StampBox>();
+/**
+ * Hüllbox aller Kronen und Stämme einer Variante (aus der Kronengeometrie); gibt Breite, Höhe und Ursprung des
+ * Stempel-Canvas vor, so dass kein leerer Rand gefüllt wird. Je (Seed, Variante) einmal berechnet.
+ */
+export function stampBox(seed: number, variant: number): StampBox {
+  const key = `${seed}|${variant}`;
+  const hit = boxCache.get(key);
+  if (hit) return hit;
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
+  for (const c of crownsFor(seed, variant)) {
+    const s = crownScreen(c);
+    const ground = ((c.cx + c.cy - 1) * ISO_H) / 2;
+    x0 = Math.min(x0, s.x - s.rx);
+    x1 = Math.max(x1, s.x + s.rx);
+    y0 = Math.min(y0, s.y - s.ry);
+    y1 = Math.max(y1, s.y + s.ry, ground);
+    if (!c.bush) {
+      const half =
+        ((c.kind === 2 ? 2.2 : 2.6) + (c.r > 0.2 ? 0.8 : 0)) / 2 + (c.kind === 3 ? 2 : 0);
+      x0 = Math.min(x0, s.x - half);
+      x1 = Math.max(x1, s.x + half);
+    }
+  }
+  const box = {
+    x0: Math.floor(x0) - 1,
+    y0: Math.floor(y0) - 1,
+    x1: Math.ceil(x1) + 1,
+    y1: Math.ceil(y1) + 1,
+  };
+  if (boxCache.size >= 256) boxCache.clear();
+  boxCache.set(key, box);
+  return box;
+}
+
 /** Cache je Welt-Seed (neue Welt → neuer Cache); höchstens TREE_VARIANTS × ZOOM_STEPS.length Einträge. */
-const cache = new Map<string, HTMLCanvasElement>();
+const cache = new Map<number, HTMLCanvasElement>();
 let cacheSeed: number | null = null;
 export const treeCacheSize = (): number => cache.size;
 export function resetTreeCache(): void {
   cache.clear();
+  boxCache.clear();
   cacheSeed = null;
 }
 
@@ -615,15 +684,16 @@ function stampFor(seed: number, variant: number, step: number): HTMLCanvasElemen
     cache.clear();
     cacheSeed = seed;
   }
-  const key = `${variant}|${step}`;
+  const key = variant * ZOOM_STEPS.length + ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number]);
   const hit = cache.get(key);
   if (hit) return hit;
+  const b = stampBox(seed, variant);
   const canvas = makeCanvas();
-  canvas.width = Math.ceil(STAMP_W * step);
-  canvas.height = Math.ceil(STAMP_H * step);
+  canvas.width = Math.ceil((b.x1 - b.x0) * step);
+  canvas.height = Math.ceil((b.y1 - b.y0) * step);
   const c = canvas.getContext('2d');
   if (!c) return null;
-  paintStamp(c, seed, variant, step);
+  paintStampAt(c, seed, variant, step, false, -b.x0, -b.y0);
   if (cache.size < TREE_VARIANTS * ZOOM_STEPS.length) cache.set(key, canvas);
   return canvas;
 }
@@ -655,11 +725,6 @@ export function drawTreeStamp(
   const stamp = stampFor(seed, variant, step);
   if (!stamp) return;
   const f = z / step;
-  ctx.drawImage(
-    stamp,
-    p.x - (STAMP_W / 2) * z,
-    p.y - TREE_H * z,
-    stamp.width * f,
-    stamp.height * f,
-  );
+  const b = stampBox(seed, variant);
+  ctx.drawImage(stamp, p.x + b.x0 * z, p.y + b.y0 * z, stamp.width * f, stamp.height * f);
 }

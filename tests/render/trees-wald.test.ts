@@ -55,6 +55,7 @@ import {
   drawTreeStamp,
   paintCrown,
   paintStamp,
+  stampBox,
   resetTreeCache,
   setCanvasFactory,
   treeBounds,
@@ -634,3 +635,54 @@ function slotKindMain(seed: number, variant: number): number {
   for (const c of cs) cnt[c.kind]!++;
   return cnt.indexOf(Math.max(...cnt));
 }
+
+describe('Perf Stempel-Canvas auf die Inhaltsbox zugeschnitten', () => {
+  it('Perf-1 jede Variante: alle Pfadpunkte liegen in der Inhaltsbox, die Box überragt die Punkte um höchstens 3 px', () => {
+    for (const seed of SEEDS)
+      for (let v = 0; v < TREE_VARIANTS; v++) {
+        const b = stampBox(seed, v);
+        const { ctx, log } = fakeCtx();
+        paintStamp(ctx, seed, v, 1);
+        const xs = log.allPoints.map((p) => p.x - 56),
+          ys = log.allPoints.map((p) => p.y - TREE_H);
+        expect(Math.min(...xs), `Seed ${seed} v${v}`).toBeGreaterThanOrEqual(b.x0);
+        expect(Math.max(...xs)).toBeLessThanOrEqual(b.x1);
+        expect(Math.min(...ys)).toBeGreaterThanOrEqual(b.y0);
+        expect(Math.max(...ys)).toBeLessThanOrEqual(b.y1);
+        expect(b.x0).toBeGreaterThanOrEqual(Math.min(...xs) - 3);
+        expect(b.x1).toBeLessThanOrEqual(Math.max(...xs) + 3);
+        expect(b.y0).toBeGreaterThanOrEqual(Math.min(...ys) - 3);
+        expect(b.y1).toBeLessThanOrEqual(Math.max(...ys) + 3);
+      }
+  });
+
+  it('Perf-1 drawTreeStamp legt je Variante ein Canvas in Boxgrösse an (Fläche ≤ alt), und zeichnet es an die Box-Ecke', () => {
+    const made: { width: number; height: number }[] = [];
+    setCanvasFactory(() => {
+      const { ctx } = fakeCtx();
+      const c = { width: 0, height: 0, getContext: () => ctx };
+      made.push(c);
+      return c as unknown as HTMLCanvasElement;
+    });
+    resetTreeCache();
+    let sum = 0;
+    const calls: number[][] = [];
+    const ctx = {
+      drawImage: (...a: number[]) => calls.push(a.slice(1)),
+    } as unknown as CanvasRenderingContext2D;
+    for (let v = 0; v < TREE_VARIANTS; v++) {
+      const b = stampBox(3, v);
+      drawTreeStamp(ctx, { x: 0, y: 0, zoom: 1 }, mk(3, v), 3);
+      const c = made[made.length - 1]!;
+      expect(c.width).toBe(b.x1 - b.x0);
+      expect(c.height).toBe(b.y1 - b.y0);
+      expect(c.width * c.height).toBeLessThanOrEqual(112 * (TREE_H + 24));
+      sum += c.width * c.height;
+      const p = project(10.5, 7.5);
+      expect(calls[v]![0]).toBeCloseTo(p.x + b.x0, 6);
+      expect(calls[v]![1]).toBeCloseTo(p.y + b.y0, 6);
+    }
+    expect(sum).toBeLessThan(0.6 * TREE_VARIANTS * 112 * (TREE_H + 24));
+    resetTreeCache();
+  });
+});
