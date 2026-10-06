@@ -360,3 +360,17 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
   `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
   verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
+
+### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 (Ist-Galerie)
+
+- **Fundort / Beobachtung:** Wiese: Dunkle Tonflecken haben eckige, polygonale Ränder mit geraden Abschnitten
+  (`.studio/qa/art-stil-02/s1-wald-z1.png`, `s1-wald-z2.png`); D8 aus dem Stilrahmen ist also nicht ganz behoben.
+  **Einschätzung:** mittel; die Wiese ist Nutzer-Referenz, deshalb nicht in ART-STIL-02 eingeplant; Ursache in
+  `terrain.ts` (Mottling bzw. Fleckenrauschen) klären. **Ursprung:** ART-STIL-02, lead-art.
+- **Fundort / Beobachtung:** Die Grenze Gras/Sand verläuft bei Zoom 0,5 als Rautentreppe entlang der Kacheln
+  (`s2-gesamt-z0.5.png`, Westzunge und Südküste), anders als die weiche Küstenlinie. **Einschätzung:** niedrig bis
+  mittel; ein Kandidat für ein späteres Boden-Häppchen. **Ursprung:** ART-STIL-02, lead-art.
+- **Fundort / Beobachtung:** QA-Skripte: Ein per `house.tier = 4` gesetztes Wohnhaus ergibt einen Stand, den
+  `deserialize` als „Beschädigter Spielstand" abweist; die Startkarte zeigt dann den Hinweis zu beschädigten Ständen.
+  **Einschätzung:** niedrig; nur Werkzeug-Falle (Galerie-Skripte setzen Stufe 1–3); das künftige
+  `tools/render-qa/galerie.mjs` (L1) berücksichtigt es. **Ursprung:** ART-STIL-02, lead-art.

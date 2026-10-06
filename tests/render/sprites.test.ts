@@ -20,7 +20,8 @@ import {
   CHIMNEY_OVER_ROOF,
   buildingShadow,
   drawAir,
-  drawBody,
+  // L3: Geometrie-Tests (Hülle, Flächen, Reihenfolge) prüfen die Geometrie ohne Bildmodus; der Bildmodus steht in sprites-kanten.test.ts
+  drawBodyPlain as drawBody,
   drawGhost,
   drawRoads,
   hearthAnchor,

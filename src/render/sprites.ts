@@ -25,6 +25,80 @@ export const BODY_INSET = 0.08;
 /** Schattenlänge je Höhe (Darstellungswert, ISO D-11; `lead-art` justiert ihn im Slice über AK-ISO-13). */
 export const SHADOW_K = 0.4;
 const GHOST_ALPHA = 0.5; // Bauvorschau (D-13)
+// --- L3 Weiche Gebäudekanten (Bildmodus `hand`; Darstellungswerte, keine Spielwerte) ---
+/** Sichtbare Breite der Silhouette in CSS-px bei Zoom ≥ 1 (der Strich ist doppelt so breit, die Füllung deckt die Innenhälfte). */
+export const CONTOUR_WIDTH = 0.75;
+/** Deckkraft der Silhouette (≤ 0,7, Spec 2.3/1). */
+export const CONTOUR_ALPHA = 0.65;
+/** Bis zu diesem Zoom gibt es keine Silhouette; bis Zoom 1 wächst die Breite linear. */
+export const CONTOUR_MIN_ZOOM = 0.5;
+/** Kleinste Bildbox (Weltpixel²) einer Fläche, die zur Silhouette beiträgt. */
+const SIL_MIN_BOX = 300;
+/** Lichtkante: Breite in CSS-px und Deckkraft. */
+export const LIGHT_EDGE_WIDTH = 0.9;
+export const LIGHT_EDGE_ALPHA = 0.7;
+/** Hand-Linie: Kanten ab dieser Länge (Kacheln) hängen durch; Versatz der Mitte in px bei Zoom 1 (min..max). */
+export const HAND_MIN_LEN = 0.8;
+export const HAND_SAG_MIN = 0.3;
+export const HAND_SAG_MAX = 0.8;
+/** Salze L3 (Block 500–599, Spec R1): Durchhang, Grasbüschel, Erdrand, Büschelform. */
+export const L3_SALTS = { sag: 570, tufts: 571, rim: 572, blade: 573 } as const;
+/** Kontaktschatten: Bandbreite in Kacheln und Deckkraft je Stufe (äussere Stufe zuerst). */
+const CONTACT_BANDS: readonly (readonly [number, number])[] = [
+  [0.14, 0.15], // aussen: 4 px Gesamtbreite (2 px sichtbar ausserhalb der inneren Stufe), Deckkraft 0,15
+  [0.07, 0.19], // innen: 2 px, zusammen mit der äusseren Stufe Deckkraft ≈ 0,3
+];
+/** Erdrand der Hofplatte: Stützpunktabstand (Kacheln), Ausfransung nach aussen (min, max) und Rand um die Platte. */
+const RIM_SPACING = 0.12;
+const RIM_JITTER = [-0.02, 0.03] as const;
+/** Erdband: Breite in Kacheln (≈ 2–3 px bei Zoom 1, skaliert mit dem Zoom), aussen gezackt, innen bündig an der Platte. */
+const RIM_GROW = 0.08;
+/** Farben der Grasbüschel (Grastöne, keine Signalfarbe). */
+const desaturate = (css: string, t: number): string => {
+  const [r, g, b] = rgbOfCss(css);
+  const l = 0.299 * r + 0.587 * g + 0.114 * b;
+  return `rgb(${Math.round(r + (l - r) * t)},${Math.round(g + (l - g) * t)},${Math.round(b + (l - b) * t)})`;
+};
+export const TUFT_COLORS = [
+  desaturate(toInk(PALETTE.grass, 0.25), 0.1),
+  desaturate(PALETTE.grassDark, 0.1),
+  desaturate(PALETTE.grass, 0.1),
+] as const;
+/** Sichtbare Silhouettenbreite für den Zoom `zoom`; 0 = keine Linie. */
+export function contourWidth(zoom: number): number {
+  return (
+    CONTOUR_WIDTH * Math.min(1, Math.max(0, (zoom - CONTOUR_MIN_ZOOM) / (1 - CONTOUR_MIN_ZOOM)))
+  );
+}
+type T3 = readonly [number, number, number];
+/** Fläche des Aufzeichnungsdurchgangs: Eckpunkte in Footprint-Koordinaten und Füllfarbe. */
+export interface SilFace {
+  pts: readonly T3[];
+  fill: string;
+}
+const blueShare = (css: string): number => {
+  const [r, g, b] = rgbOfCss(css);
+  return b / Math.max(1, r + g + b);
+};
+/**
+ * Lichtkantenfarben, hell nach warm (Mischungen aus Palettenfarben, ΔE2000 ≥ 20 zu allen Signalfarben, R5).
+ * Eine Fläche bekommt die hellste Stufe, deren Blauanteil deutlich unter dem der Fläche liegt (wärmer).
+ */
+export const LIGHT_EDGE_LADDER: readonly string[] = [
+  mixHex(PALETTE.foam, PALETTE.lightMorning, 0.25),
+  mixHex(PALETTE.foam, PALETTE.lightEvening, 0.5),
+  mixHex(PALETTE.lightMorning, PALETTE.roofTerracotta, 0.25),
+  mixHex(PALETTE.lightEvening, PALETTE.lightMorning, 0.5),
+  mixHex(PALETTE.earth, PALETTE.roofThatch, 0.75),
+];
+/** Lichtkantenfarbe für die angrenzende Fläche `fill`: wärmer als sie (Blauanteil mindestens 0,015 kleiner). */
+export function lightEdgeColor(fill: string): string {
+  const target = blueShare(fill) - 0.015;
+  return (
+    LIGHT_EDGE_LADDER.find((c) => blueShare(c) < target) ??
+    LIGHT_EDGE_LADDER[LIGHT_EDGE_LADDER.length - 1]!
+  );
+}
 const SHADOW_DIR = { x: -LIGHT.x, y: -LIGHT.y }; // Kachelraum, vom Licht weg (rechts unten im Bild)
 /** Umrisslinie der Slice-Körper (aus der Palette abgeleitet, keine Signalfarbe). */
 export const EDGE = toInk(PALETTE.wallTimber, 0.55);
@@ -73,6 +147,12 @@ export class IsoPainter {
   height = 0;
   /** Variante (H-R7): verschiebt nur Töne und Zubehör, nie den Umriss; 0 = bisheriger Look. */
   variant = 0;
+  /** Bildmodus (L3): Hand-Linie, Silhouette, Lichtkante, Bodenkontakt. Aus für Picking und Flächenlisten. */
+  hand = false;
+  /** Aufzeichnungsdurchgang der Silhouette: sammelt die Flächen mit Umriss, zeichnet nichts. */
+  recording: SilFace[] | null = null;
+  /** Aufgezeichnete Flächen; die Silhouette wird vor der ersten Fläche mit Umriss gestrichen. */
+  private silhouette: SilFace[] | null = null;
   private tones = new Map<string, string>();
   private outlines = new Map<string, string>();
   constructor(
@@ -108,23 +188,161 @@ export class IsoPainter {
     return VARIANT_LOOKS[this.variant] ?? VARIANT_LOOKS[0]!;
   }
 
+  /** Durchhang (Bildpunkte, nach unten) der Kante a→b im Bildmodus; 0 für kurze, schräge und Bodenkanten. */
+  sag(a: T3, b: T3): number {
+    if (!this.hand || a[2] <= 0.001 || Math.abs(a[2] - b[2]) > 0.001) return 0;
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < HAND_MIN_LEN) return 0;
+    // nur von (Variante, sortierte Endpunkte): gemeinsame Kanten hängen in jeder Fläche und Richtung gleich
+    const [p, q] = a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]) ? [a, b] : [b, a];
+    const k = (t: T3): number =>
+      Math.round(t[0] * 100) * 40009 + Math.round(t[1] * 100) * 211 + Math.round(t[2]);
+    const h = hash2(L3_SALTS.sag, k(p) + this.variant * 7919, k(q));
+    return (HAND_SAG_MIN + (HAND_SAG_MAX - HAND_SAG_MIN) * h) * Math.min(1, this.cam.zoom);
+  }
+
+  /** Pfad der Fläche auf `ctx`: gerade Kanten, im Bildmodus durchhängende lange Kanten. */
+  private trace(ctx: CanvasRenderingContext2D, pts: readonly T3[]): void {
+    const sc = pts.map(([u, v, z]) => this.pt(u, v, z));
+    ctx.moveTo(sc[0]!.x, sc[0]!.y);
+    for (let i = 1; i <= pts.length; i++) {
+      const j = i % pts.length;
+      const d = this.sag(pts[i - 1]!, pts[j]!);
+      const [a, c] = [sc[i - 1]!, sc[j]!];
+      if (d > 0) ctx.quadraticCurveTo((a.x + c.x) / 2, (a.y + c.y) / 2 + 2 * d, c.x, c.y);
+      else if (i < pts.length) ctx.lineTo(c.x, c.y);
+    }
+  }
+
+  /** Silhouette: ein Pfad aus allen Flächen mit Umriss, doppelt so breit wie sichtbar; die Füllungen decken den Rest. */
+  private strokeSilhouette(faces: readonly SilFace[]): void {
+    const { ctx } = this;
+    const width = contourWidth(this.cam.zoom);
+    if (width <= 0 || faces.length === 0) return;
+    const prevAlpha = ctx.globalAlpha,
+      prevJoin = ctx.lineJoin;
+    ctx.beginPath();
+    for (const f of faces) {
+      this.trace(ctx, f.pts);
+      ctx.closePath();
+    }
+    ctx.globalAlpha = prevAlpha * CONTOUR_ALPHA;
+    ctx.strokeStyle = this.edge ?? this.outlineOf(faces[0]!.fill);
+    ctx.lineWidth = 2 * width;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.globalAlpha = prevAlpha;
+    ctx.lineJoin = prevJoin;
+  }
+
   poly(pts: readonly [number, number, number][], fill: string, outline = true): void {
     const { ctx } = this;
+    if (this.recording) {
+      if (outline && this.bigFace(pts))
+        this.recording.push({ pts, fill: this.tone(fill, this.look.wall) });
+      return;
+    }
     fill = this.tone(fill, this.look.wall);
+    if (this.hand && outline && this.silhouette) {
+      const faces = this.silhouette;
+      this.silhouette = null;
+      this.strokeSilhouette(faces);
+    }
     ctx.beginPath();
-    pts.forEach(([u, v, z], i) => {
-      const p = this.pt(u, v, z);
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    });
+    if (this.hand) this.trace(ctx, pts);
+    else
+      pts.forEach(([u, v, z], i) => {
+        const p = this.pt(u, v, z);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
     ctx.closePath();
     ctx.fillStyle = fill;
     ctx.fill();
+    if (this.hand) {
+      if (outline) this.contact(pts);
+      return;
+    }
     if (outline) {
       ctx.strokeStyle = this.edge ?? this.outlineOf(fill);
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+  }
+
+  /** Nur grosse Flächen (Wände, Dächer, Anbauten) bilden die Silhouette; Kamine, Kisten u. Ä. liegen innen oder am Boden. */
+  private bigFace(pts: readonly T3[]): boolean {
+    let [x0, x1, y0, y1] = [Infinity, -Infinity, Infinity, -Infinity];
+    for (const [u, v, z] of pts) {
+      const q = this.pt(u, v, z);
+      x0 = Math.min(x0, q.x);
+      x1 = Math.max(x1, q.x);
+      y0 = Math.min(y0, q.y);
+      y1 = Math.max(y1, q.y);
+    }
+    return (x1 - x0) * (y1 - y0) >= SIL_MIN_BOX * this.cam.zoom * this.cam.zoom;
+  }
+
+  /** Setzt die aufgezeichneten Flächen (Durchgang 2); die Silhouette entsteht vor der ersten Fläche mit Umriss. */
+  setSilhouette(faces: SilFace[]): void {
+    this.silhouette = faces.length > 0 ? faces : null;
+  }
+
+  /** Kontaktschatten (Bildmodus): Bänder auf dem Boden vor der Fusskante einer sichtbaren Wand (kühl, 2 Stufen). */
+  private contact(pts: readonly T3[]): void {
+    if (pts.length !== 4) return;
+    for (let i = 0; i < 4; i++) {
+      const [a, b, c, d] = [pts[i]!, pts[(i + 1) % 4]!, pts[(i + 2) % 4]!, pts[(i + 3) % 4]!];
+      if (a[2] !== 0 || b[2] !== 0 || c[2] <= 0 || d[2] <= 0) continue;
+      const alongU = a[1] === b[1],
+        alongV = a[0] === b[0];
+      if (alongU === alongV) return;
+      const { ctx } = this;
+      const prev = ctx.globalAlpha;
+      ctx.fillStyle = INK_TONE;
+      for (const [w, alpha] of CONTACT_BANDS) {
+        const [du, dv] = alongV ? [w, 0] : [0, w];
+        const q: T3[] = [a, b, [b[0] + du, b[1] + dv, 0], [a[0] + du, a[1] + dv, 0]];
+        ctx.beginPath();
+        this.trace(ctx, q);
+        ctx.closePath();
+        ctx.globalAlpha = prev * alpha;
+        ctx.fill();
+      }
+      ctx.globalAlpha = prev;
+      return;
+    }
+  }
+
+  /**
+   * Lichtkanten (Bildmodus, über `CONTOUR_MIN_ZOOM`): dünne warme Striche an Licht zugewandten Oberkanten, je
+   * Fläche in der aufgehellten, wärmeren Farbe der angrenzenden Fläche; ein Strich je Farbe.
+   */
+  lightEdges(edges: readonly (readonly [T3, T3, string])[]): void {
+    if (!this.hand || this.recording || this.cam.zoom <= CONTOUR_MIN_ZOOM) return;
+    const { ctx } = this;
+    const byColor = new Map<string, [T3, T3][]>();
+    for (const [a, b, fill] of edges) {
+      const c = lightEdgeColor(this.tone(fill, this.look.wall));
+      const list = byColor.get(c) ?? [];
+      list.push([a, b]);
+      byColor.set(c, list);
+    }
+    const prev = ctx.globalAlpha;
+    ctx.globalAlpha = prev * LIGHT_EDGE_ALPHA;
+    ctx.lineWidth = LIGHT_EDGE_WIDTH;
+    for (const [color, list] of byColor) {
+      ctx.beginPath();
+      for (const [a, b] of list) {
+        const [p, q] = [this.pt(...a), this.pt(...b)];
+        ctx.moveTo(p.x, p.y);
+        const d = this.sag(a, b);
+        if (d > 0) ctx.quadraticCurveTo((p.x + q.x) / 2, (p.y + q.y) / 2 + 2 * d, q.x, q.y);
+        else ctx.lineTo(q.x, q.y);
+      }
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = prev;
   }
 
   quad(
@@ -161,6 +379,11 @@ export function isoBox(p: IsoPainter, height: number, colors: BoxColors, inset =
   p.quad([u0, v1, 0], [u1, v1, 0], [u1, v1, z], [u0, v1, z], colors.left); // vorn links
   p.quad([u1, v0, 0], [u1, v1, 0], [u1, v1, z], [u1, v0, z], colors.right); // vorn rechts
   p.quad([u0, v0, z], [u1, v0, z], [u1, v1, z], [u0, v1, z], colors.top); // Dach
+  p.lightEdges([
+    [[u0, v1, z], [u1, v1, z], colors.left], // Oberkante der linken Wand
+    [[u0, v1, 0], [u0, v1, z], colors.left], // Wandkante zum Licht
+    [[u0, v0, z], [u0, v1, z], colors.top], // linke Dachkante
+  ]);
 }
 
 // --- Slice-Körper (Spec 5.5, ISO 7.1): Wohnhaus (3 Stufen), Kontor, Holzfäller ---
@@ -300,6 +523,21 @@ function drawShell(p: IsoPainter, s: Shell, wall: WallColors, roof: string): voi
       r.shade,
     ); // vorn rechts
   }
+  const lit: [T3, T3, string][] = [[[u0, v1, 0], [u0, v1, wz], wall.left]]; // Wandkante zum Licht
+  if (s.kind === 'gable' && s.axis === 'u') {
+    lit.push([[u0, vm, zr], [u1, vm, zr], r.light]); // First
+    lit.push([[u0, v1, wz], [u0, vm, zr], r.light]); // linke Dachkante (Traufe links oben)
+    lit.push([[u0, v1, wz], [u1, v1, wz], wall.left]); // Oberkante der linken Wand
+  } else if (s.kind === 'gable') {
+    lit.push([[um, v0, zr], [um, v1, zr], r.light]); // First
+    lit.push([[u0, v0, wz], [u0, v1, wz], r.light]); // Traufe links oben
+  } else {
+    const half = Math.max(0, (u1 - u0 - (v1 - v0)) / 2);
+    if (half > 0) lit.push([[um - half, vm, zr], [um + half, vm, zr], r.light]); // First
+    lit.push([[u0, v1, wz], [u1, v1, wz], wall.left]); // Oberkante der linken Wand
+    lit.push([[u0, v1, wz], [um - half, vm, zr], r.light]); // Walmgrat zum Licht
+  }
+  p.lightEdges(lit);
   p.ctx.lineJoin = 'miter';
 }
 
@@ -374,7 +612,95 @@ function yard(
   u1 = p.w - 0.02,
   v1 = p.h - 0.02,
 ): void {
+  if (p.hand && !p.recording) {
+    raggedYard(p, color, [u0, v0, u1, v1]);
+    return;
+  }
   p.quad([u0, v0, 0], [u1, v0, 0], [u1, v1, 0], [u0, v1, 0], color, false);
+}
+
+/** Hofplatte im Bildmodus: Erdrand (grösser, Erdton) und Platte mit deterministisch ausgefransten Kanten. */
+function raggedYard(
+  p: IsoPainter,
+  color: string,
+  [u0, v0, u1, v1]: readonly [number, number, number, number],
+): void {
+  const corners: [number, number][] = [
+    [u0, v0],
+    [u1, v0],
+    [u1, v1],
+    [u0, v1],
+  ];
+  const normals: [number, number][] = [
+    [0, -1],
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+  ];
+  const rim: T3[] = [];
+  corners.forEach(([ax, ay], e) => {
+    const [bx, by] = corners[(e + 1) % 4]!;
+    const [nx, ny] = normals[e]!;
+    const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / RIM_SPACING));
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      const h = hash2(
+        L3_SALTS.rim,
+        e * 512 + k + p.variant * 4096,
+        Math.round(p.w * 10) * 31 + Math.round(p.h * 10),
+      );
+      const g = RIM_GROW + (k === 0 ? 0 : RIM_JITTER[0] + (RIM_JITTER[1] - RIM_JITTER[0]) * h);
+      rim.push([ax + (bx - ax) * t + nx * g, ay + (by - ay) * t + ny * g, 0]);
+    }
+  });
+  const plate: T3[] = corners.map(([u, v]) => [u, v, 0]);
+  const { ctx } = p;
+  const fill = p.tone(color, p.look.wall);
+  // Erdband: höchstens eine Tonstufe dunkler als die Platte, gefüllt, ohne Strich; die gerade Platte deckt die Innenkante
+  for (const [pts, c] of [
+    [rim, toInk(fill, 0.12)],
+    [plate, fill],
+  ] as const) {
+    ctx.beginPath();
+    pts.forEach(([u, v], i) => {
+      const q = p.pt(u, v, 0);
+      if (i === 0) ctx.moveTo(q.x, q.y);
+      else ctx.lineTo(q.x, q.y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = c;
+    ctx.fill();
+  }
+}
+
+/** Grasbüschel am Sockel (Bildmodus): 2–4 kleine Dreiecke-Gruppen nahe den Ecken der Vorderkanten, nie vor Türen. */
+function tufts(p: IsoPainter): void {
+  const zoom = p.cam.zoom;
+  if (zoom <= CONTOUR_MIN_ZOOM) return;
+  const { ctx } = p;
+  const key = Math.round(p.w * 8) * 17 + Math.round(p.h * 8);
+  const n = 2 + Math.floor(hash2(L3_SALTS.tufts, p.variant, key) * 3);
+  for (let i = 0; i < n; i++) {
+    const t = hash2(L3_SALTS.tufts, i + 1, key + p.variant * 101);
+    const along = t < 0.5 ? 0.04 + 0.16 * (t * 2) : 0.8 + 0.16 * ((t - 0.5) * 2); // nur nahe den Ecken
+    const [u, v] =
+      i % 2 === 0
+        ? [BODY_INSET + along * (p.w - 2 * BODY_INSET), p.h - BODY_INSET + 0.03]
+        : [p.w - BODY_INSET + 0.03, BODY_INSET + along * (p.h - 2 * BODY_INSET)];
+    const base = p.pt(u, v, 0);
+    for (let k = 0; k < 3; k++) {
+      const r = (c: number): number => hash2(L3_SALTS.blade, i * 8 + k + p.variant * 64, c);
+      const x = base.x + (k - 1) * 1.1 * zoom;
+      const lean = (r(1) - 0.5) * 2.4 * zoom;
+      ctx.fillStyle = TUFT_COLORS[(i + k) % 3]!;
+      ctx.beginPath();
+      ctx.moveTo(x - 0.7 * zoom, base.y);
+      ctx.lineTo(x + 0.7 * zoom, base.y);
+      ctx.lineTo(x + lean, base.y - (2.4 + 1.6 * r(2)) * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
 }
 
 /** Fensterläden (Variante): schmale Streifen links und rechts eines Fensters, innerhalb der Wandfläche. */
@@ -1882,6 +2208,50 @@ export function lightAnchors(def: BuildingDef, b: Building): LightAnchor[] {
   });
 }
 
+/** Kontext ohne Wirkung für den Aufzeichnungsdurchgang der Silhouette (nur Pfad- und Stilaufrufe). */
+const NOOP = (): undefined => undefined;
+const NOOP_CTX = new Proxy({} as Record<string, unknown>, {
+  get: () => NOOP, // eine gemeinsame Funktion: keine Allokation je Aufruf
+  set: () => true,
+}) as unknown as CanvasRenderingContext2D;
+
+/**
+ * Zeichnet den Körper. `hand` = Bildmodus (L3): Silhouette statt Strich je Fläche, Hand-Linie, Lichtkante,
+ * Bodenkontakt. Ohne `hand` entstehen gerade Pfade und keine zusätzlichen Füllflächen (Picking, `bodyFaces`).
+ */
+function paintBody(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  def: BuildingDef,
+  b: Building,
+  env: BodyEnv | undefined,
+  variant: number,
+  hand: boolean,
+): void {
+  const make = (c: CanvasRenderingContext2D): IsoPainter => {
+    const p = new IsoPainter(c, cam, b.x, b.y, def.w, def.h);
+    p.variant = variant;
+    p.height = bodyHeight(def, b);
+    if (env) p.env = env;
+    p.hand = hand;
+    return p;
+  };
+  const draw = (p: IsoPainter): void => {
+    (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
+    if (b.level !== undefined && LEVELS[def.id]) drawLevelTopper(p, def, b);
+  };
+  const p = make(ctx);
+  if (hand && contourWidth(cam.zoom) > 0) {
+    // Durchgang 1: Flächen mit Umriss sammeln; Durchgang 2 streicht daraus vorab eine Silhouette
+    const rec = make(NOOP_CTX);
+    rec.recording = [];
+    draw(rec);
+    p.setSilhouette(rec.recording);
+  }
+  draw(p);
+  if (hand) tufts(p);
+}
+
 /** Körper (sortierter Durchgang): Silhouette samt Hof und Zubehör, ohne Schatten, ohne Rauch, ohne Signale. */
 export function drawBody(
   ctx: CanvasRenderingContext2D,
@@ -1892,12 +2262,25 @@ export function drawBody(
   env?: BodyEnv,
   variant = 0,
 ): void {
-  const p = new IsoPainter(ctx, cam, b.x, b.y, def.w, def.h);
-  p.variant = variant;
-  p.height = bodyHeight(def, b);
-  if (env) p.env = env;
-  (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
-  if (b.level !== undefined && LEVELS[def.id]) drawLevelTopper(p, def, b);
+  void timeMs;
+  paintBody(ctx, cam, def, b, env, variant, true);
+}
+
+/**
+ * Wie `drawBody` ohne Bildmodus: gerade Pfade, Strich je Fläche, keine Zusatzflächen (Kontakt, Erdrand, Gras).
+ * Geometrie-Referenz für Tests; `bodyFaces` zeichnet genau so.
+ */
+export function drawBodyPlain(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  def: BuildingDef,
+  b: Building,
+  timeMs: number,
+  env?: BodyEnv,
+  variant = 0,
+): void {
+  void timeMs;
+  paintBody(ctx, cam, def, b, env, variant, false);
 }
 
 /**
@@ -1950,7 +2333,7 @@ export function bodyFaces(
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
-  drawBody(ctx, cam, def, b, 0, undefined, variant);
+  paintBody(ctx, cam, def, b, undefined, variant, false);
   return faces;
 }
 setBodyShapes(bodyPolygons);
@@ -1975,7 +2358,7 @@ export function drawGhost(
   };
   ctx.save();
   ctx.globalAlpha = GHOST_ALPHA;
-  drawBody(ctx, cam, def, b, 0);
+  drawBodyPlain(ctx, cam, def, b, 0); // Vorschau ohne Bildmodus: bei Deckkraft 0,5 würden sich Silhouette und Zusatzflächen durchdrücken
   ctx.restore();
 }
 
