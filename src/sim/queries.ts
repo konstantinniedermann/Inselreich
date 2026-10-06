@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
-import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from './defs/tiers';
+import { TIERS, WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
+import { spiceLoop, spiceMerchants } from './goal3';
 import { isProtected, nextCrisisTick } from './crises';
 import { refundCost } from './economy';
 import { citizens, isSupplied, merchants, serviceAvailable } from './population';
@@ -49,6 +50,7 @@ export type GoalView =
       next: { tierName: string; target: number; unlockCitizens: number | null };
     }
   | { phase: 'merchants'; current: number; target: number }
+  | { phase: 'spice'; current: number; target: number; loop: boolean }
   | { phase: 'done'; current: number; target: number };
 
 /** Standortradius der Rohstoffbetriebe mit Zone: Holzfäller (Wald), Schäferei und Zuckerrohr (Gras). */
@@ -68,8 +70,15 @@ export function missingInputs(world: World, b: Building): GoodId[] {
 }
 
 export function goalView(world: World): GoalView {
+  if (world.wonSpice)
+    return { phase: 'done', current: merchants(world), target: WIN_SPICE_MERCHANTS };
   if (world.wonMerchants)
-    return { phase: 'done', current: merchants(world), target: WIN_MERCHANTS };
+    return {
+      phase: 'spice',
+      current: spiceMerchants(world),
+      target: WIN_SPICE_MERCHANTS,
+      loop: spiceLoop(world),
+    };
   if (world.won) return { phase: 'merchants', current: merchants(world), target: WIN_MERCHANTS };
   return {
     phase: 'citizens',

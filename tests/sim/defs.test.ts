@@ -97,9 +97,10 @@ describe('M8 defs', () => {
       tier: 4,
       name: 'Kaufleute',
       maxInhabitants: 20,
-      needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1 },
+      // R226 F-03, Anhang 03 D: Kaufleute brauchen Gewürz, Steuer 22
+      needs: { food: 0.5, cloth: 0.2, rum: 0.2, glass: 0.1, spice: 0.1 },
       services: ['faith', 'school', 'bath'],
-      tax: 20,
+      tax: 22,
       upgradeCost: null,
       requiresWin: true,
       unlockCitizens: null,
@@ -265,6 +266,11 @@ describe('AK-E3-01 Gewürz (M12 Seefahrt T01)', () => {
       'glass',
     ]);
     expect(GOOD_IDS[9]).toBe('spice');
+  });
+  it('AK-E3-01 TIERS[4]: Gewürz 0,1 je Einwohner, Steuer 22', () => {
+    // R226 F-03, Anhang 03 D
+    expect(TIERS[4].needs.spice).toBe(0.1);
+    expect(TIERS[4].tax).toBe(22);
   });
   it('GOODS.spice 40/12 ohne order, Startbestand 0', () => {
     expect(GOODS.spice).toEqual({ id: 'spice', name: 'Gewürz', buy: 40, sell: 12 });

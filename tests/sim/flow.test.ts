@@ -6,7 +6,8 @@ import {
   upgradeDeficit,
   upgradeDelta,
 } from '../../src/sim/flow';
-import { upgradeStatus } from '../../src/sim/population';
+import { UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
+import { UPGRADE_WAIT, upgradeStatus } from '../../src/sim/population';
 import { setTaxLevel } from '../../src/sim/tax';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, HouseState, Tier, World } from '../../src/sim/types';
@@ -102,7 +103,8 @@ describe('M11 Gedämpfter Aufstieg (Spec 3.2)', () => {
     };
     near(upgradeDelta(hs(1, 4)), { food: 2.0, cloth: 1.6 });
     near(upgradeDelta(hs(2, 8)), { food: 3.5, cloth: 1.4, rum: 3.0 });
-    near(upgradeDelta(hs(3, 15)), { food: 2.5, cloth: 1.0, rum: 1.0, glass: 2.0 });
+    // R226 F-03: Kaufleute brauchen Gewürz, Δ 20 × 0,1 = 2,0
+    near(upgradeDelta(hs(3, 15)), { food: 2.5, cloth: 1.0, rum: 1.0, glass: 2.0, spice: 2.0 });
     expect(upgradeDelta(hs(4, 20))).toEqual({});
   });
   it('AK-P1-12 Rum 100 im Lager bei Rum-Defizit → 600; brennende Brennerei zählt nominell', () => {
@@ -158,6 +160,53 @@ describe('M12 E2 Bilanz je Insel (AK-E2-06)', () => {
     putBuilding(s, 0, 'weaver', 11, 5);
     expect(upgradeStatus(s, homeHouse).reasons.join()).not.toContain('noch nicht');
     expect(upgradeStatus(s, far).reasons.join()).toContain('noch nicht 600');
+  });
+  /** Erzeuger für alle Zielgüter ausser Gewürz auf `island`: Bilanz reicht für ein volles Bürgerhaus (Δ 3 → 4). */
+  const supplyAllButSpice = (s: World, island: number): void => {
+    for (const defId of ['fisher', 'fisher', 'fisher', 'fisher', 'weaver', 'weaver'] as const)
+      addRaw(s, defId, { island });
+    for (const defId of ['distillery', 'distillery', 'glassworks', 'glassworks'] as const)
+      addRaw(s, defId, { island });
+  };
+  /** Volles Bürgerhaus auf `island`, seit genau der einfachen Wartezeit zufrieden (D-142-Prüfung der Wartezeit). */
+  const fullCitizenHouse = (s: World, island: number): Building => {
+    const b =
+      island === 0
+        ? putBuilding(s, 0, 'house', 0, 0)
+        : Object.values(s.buildings).find((x) => x.island === island && x.house)!;
+    setHouse(b, 3, 15);
+    s.tick = 1000;
+    b.house!.satisfiedSince = s.tick - UPGRADE_WAIT;
+    return b;
+  };
+  const waitReason = (s: World, b: Building): string | undefined =>
+    upgradeStatus(s, b).reasons.find((r) => r.startsWith('Bedürfnisse noch nicht'));
+  it('D-142 (a) Gewürz-Defizit der Heimat dämpft das Heimat-Haus nicht: einfache Wartezeit', () => {
+    const s = twoIslands();
+    const h = fullCitizenHouse(s, 0);
+    supplyAllButSpice(s, 0);
+    expect(goodsBalance(s, 0).spice.net).toBeLessThan(upgradeDelta(h.house!).spice ?? 0); // Defizit
+    expect(waitReason(s, h)).toBeUndefined(); // einfache Wartezeit abgelaufen, kein × Faktor
+    h.house!.satisfiedSince += 1;
+    expect(waitReason(s, h)).toBe(`Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`);
+  });
+  it('D-142 (b) gleiche Lage auf einer Gewürzinsel: Wartezeit × Faktor', () => {
+    const s = twoIslands();
+    const h = fullCitizenHouse(s, 2);
+    supplyAllButSpice(s, 2);
+    expect(waitReason(s, h)).toBe(
+      `Bedürfnisse noch nicht ${UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR} Ticks erfüllt`,
+    );
+  });
+  it('D-142 (c) Fremdinsel versorgt, Heimat im Defizit: Haus auf der Fremdinsel nicht gedämpft', () => {
+    const s = twoIslands();
+    const h = fullCitizenHouse(s, 2);
+    supplyAllButSpice(s, 2);
+    addRaw(s, 'spicefarm', { island: 2 });
+    addRaw(s, 'spicefarm', { island: 2 });
+    const homeHouse = fullCitizenHouse(s, 0); // Heimat: nichts erzeugt, also Defizit
+    expect(upgradeDeficit(s, homeHouse)).not.toBeNull();
+    expect(waitReason(s, h)).toBeUndefined();
   });
   it('D1 dampsOn: Gewürz dämpft nur auf Inseln mit dem Merkmal', () => {
     const s = twoIslands();

@@ -73,10 +73,14 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
 });
 
 describe('M11 Baseline Kaufleute (Spec 14)', () => {
-  it('AK-BAS-02 Kaufleute: Sieg 6750, Ziel 2 11 200 ≤ 12 000, minMoneyAfterWin 320, Geld > 0', () => {
+  it('AK-BAS-02 Kaufleute: Sieg 6750, Ziel 2 11 500 ≤ 12 000, minMoneyAfterWin 320, Geld > 0', () => {
     const { w, t } = run();
-    expect([t.winTick, t.wonMerchantsTick, t.minMoneyAfterWin]).toEqual([6750, 11200, 320]); // M-01, M-08, M-10
+    // R226 F-03: Kaufleute brauchen Gewürz, Steuer 22 (11 200 → 11 500). Gemessen mit
+    // `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-merchants.test.ts --silent=false`.
+    // vorläufig T05 (R226 F-03), Bestätigung T14 (Anhang 05 J.2)
+    expect([t.winTick, t.wonMerchantsTick, t.minMoneyAfterWin]).toEqual([6750, 11500, 320]); // M-01, M-08, M-10
     expect(t.wonMerchantsTick!).toBeLessThanOrEqual(MERCHANT_TICK_LIMIT);
     expect(w.money).toBeGreaterThan(0);
+    expect(w.wonSpice).toBe(false); // AK-Z3-13 (Teil): der Controller erreicht das dritte Ziel nicht
   });
 });

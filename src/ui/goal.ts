@@ -2,15 +2,28 @@
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { FUNCTION_LABELS, UNLOCKS } from '../sim/defs/unlocks';
-import { TIERS, WIN_CITIZENS, WIN_MERCHANTS } from '../sim/defs/tiers';
+import { GOODS } from '../sim/defs/goods';
+import { TICK_MS } from '../sim/defs/timing';
+import {
+  TIERS,
+  WIN_CITIZENS,
+  WIN_MERCHANTS,
+  WIN_SPICE_HOLD,
+  WIN_SPICE_MERCHANTS,
+} from '../sim/defs/tiers';
 import { buildLock, buildingShown, functionLock } from '../sim/unlocks';
 import type { GoalView } from '../sim/queries';
 import type { BuildingDefId, UnlockDef, UnlockId, World } from '../sim/types';
 import { friendlyReason } from './hints';
-import { hotkeyLabel, toolName } from './hotkeys';
+import { ISLAND_CYCLE_KEY, hotkeyLabel, toolName } from './hotkeys';
 
 /** Name des zweiten Ziels (Setzung Spec M8 7). */
 export const SECOND_GOAL_NAME = 'Handelsstadt';
+/** Name des dritten Ziels (UI-Text, Anhang 05 F). */
+export const THIRD_GOAL_NAME = 'Gewürzstadt';
+
+/** Haltedauer des dritten Ziels in Spielsekunden bei 1× (Ticks · Tick-Länge). */
+const SPICE_HOLD_SECONDS = (WIN_SPICE_HOLD * TICK_MS) / 1000;
 
 export interface GoalTexts {
   /** HUD-Chip `goal`. */
@@ -49,14 +62,24 @@ export function goalTexts(view: GoalView): GoalTexts {
         chip: `Ziel ${view.current} / ${view.target} ${merchant.name}`,
         title: `Zweites Ziel: ${view.target} ${merchant.name} — Einwohner der Stufe ${merchant.tier}`,
         rest: `${view.current} / ${view.target} ${merchant.name}`,
-        next: null,
+        next: `Danach: ${THIRD_GOAL_NAME} — ${WIN_SPICE_MERCHANTS} ${merchant.name} mit ${GOODS.spice.name} von einer fernen Insel`,
+        fillPct: pct(view.current, view.target),
+      };
+    case 'spice':
+      return {
+        chip: `Ziel ${view.current} / ${view.target} ${merchant.name} mit ${GOODS.spice.name}`,
+        title: `Drittes Ziel: ${view.target} ${merchant.name}, ${SPICE_HOLD_SECONDS} s voll versorgt — ${GOODS.spice.name} per Schiff von deiner eigenen Plantage`,
+        rest: `${view.current} / ${view.target} ${merchant.name} mit ${GOODS.spice.name}`,
+        next: view.loop
+          ? null
+          : `Fehlt: Schiffsroute, die ${GOODS.spice.name} von deiner Plantage heimholt`,
         fillPct: pct(view.current, view.target),
       };
     case 'done':
       return {
-        chip: `${SECOND_GOAL_NAME} · ${view.current} ${merchant.name}`,
-        title: 'Beide Ziele erreicht — freies Spiel',
-        rest: `${SECOND_GOAL_NAME} erreicht · ${view.current} ${merchant.name}`,
+        chip: `${THIRD_GOAL_NAME} · ${view.current} ${merchant.name}`,
+        title: 'Alle drei Ziele erreicht — freies Spiel',
+        rest: `${THIRD_GOAL_NAME} erreicht · ${view.current} ${merchant.name}`,
         next: null,
         fillPct: 100,
       };
@@ -67,29 +90,41 @@ export function goalTexts(view: GoalView): GoalTexts {
 export interface GoalShown {
   wonShown: boolean;
   wonMerchantsShown: boolean;
+  /** Optional, weil `app.ts` das Feld erst mit T15 kopiert; `undefined` gilt als „nicht gezeigt". */
+  wonSpiceShown?: boolean;
 }
 
 export const FIRST_GOAL_BANNER = `Ziel erreicht: ${WIN_CITIZENS} ${TIERS[3].name}! Das Spiel läuft weiter.`;
 export const SECOND_GOAL_BANNER = `Zweites Ziel erreicht: ${WIN_MERCHANTS} ${TIERS[4].name}! Das Spiel läuft weiter.`;
+/** Flexion Dativ Plural wie bei „Bürgern“: Stufenname + „n“ (Kaufleute → Kaufleuten). */
+export const THIRD_GOAL_BANNER = `Drittes Ziel erreicht: ${THIRD_GOAL_NAME} mit ${WIN_SPICE_MERCHANTS} ${TIERS[4].name}n! Das Spiel läuft weiter.`;
 
 /** Start und Laden: Erreichtes gilt als gezeigt (ein geladener Stand zeigt kein Banner erneut). */
-export function initialGoalShown(world: Pick<World, 'won' | 'wonMerchants'>): GoalShown {
-  return { wonShown: world.won, wonMerchantsShown: world.wonMerchants };
+export function initialGoalShown(
+  world: Pick<World, 'won' | 'wonMerchants' | 'wonSpice'>,
+): GoalShown {
+  return {
+    wonShown: world.won,
+    wonMerchantsShown: world.wonMerchants,
+    wonSpiceShown: world.wonSpice,
+  };
 }
 
-/** Banner, die jetzt erscheinen (erst erstes, dann zweites Ziel), und die neuen Merkfelder. Rein. */
+/** Banner, die jetzt erscheinen (erstes, zweites, drittes Ziel), und die neuen Merkfelder. Rein. */
 export function goalBanners(
   shown: GoalShown,
-  world: Pick<World, 'won' | 'wonMerchants'>,
+  world: Pick<World, 'won' | 'wonMerchants' | 'wonSpice'>,
 ): { texts: string[]; shown: GoalShown } {
   const texts: string[] = [];
   if (world.won && !shown.wonShown) texts.push(FIRST_GOAL_BANNER);
   if (world.wonMerchants && !shown.wonMerchantsShown) texts.push(SECOND_GOAL_BANNER);
+  if (world.wonSpice && !(shown.wonSpiceShown ?? false)) texts.push(THIRD_GOAL_BANNER);
   return {
     texts,
     shown: {
       wonShown: shown.wonShown || world.won,
       wonMerchantsShown: shown.wonMerchantsShown || world.wonMerchants,
+      wonSpiceShown: (shown.wonSpiceShown ?? false) || world.wonSpice,
     },
   };
 }
@@ -100,7 +135,7 @@ const withKey = (id: BuildingDefId): string => {
 };
 
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
-export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')} und ${withKey('glassworks')} — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden`;
+export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')}, ${withKey('glassworks')} und ${FUNCTION_LABELS.seafaring[0]} (Inseln: ${ISLAND_CYCLE_KEY}) — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden; ${TIERS[4].name} brauchen ${GOODS.spice.name} von fernen Inseln`;
 
 /** Forst-Werkzeuge in `FUNCTION_LABELS.forest`-Reihenfolge (Roden, Aufforsten); Tasten aus `hotkeyLabel`. */
 const FOREST_TOOLS: readonly Tool[] = [{ kind: 'clearForest' }, { kind: 'plantForest' }];

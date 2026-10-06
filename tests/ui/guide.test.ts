@@ -240,7 +240,34 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    home(w).stock.spice = 1; // R226 F-03: Gewürz im Lager, sonst käme der Gewürz-Satz vor dem Badehaus
     expectStep(w, 'Deine Kaufleute brauchen Badehaus: baue Badehaus (J) in ihrer Nähe');
+  });
+  it('AK-U2-08 (d2) Glas-Kette steht, Gewürz fehlt → kaufe es am Kontor oder gründe ein Kontor', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    expect(home(w).stock.spice).toBe(0);
+    expectStep(
+      w,
+      'Deine Kaufleute brauchen Gewürz: kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
+    );
+  });
+  it('R226 F-03 kein Hinweis enthält eine leere Tastenklammer „()“', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    expect(nextStep(w)).not.toContain('()');
+    const house = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(house, 4, 20, ['food', 'cloth', 'rum', 'glass']); // nur Gewürz unerfüllt
+    const remedy = remedyText(w, house);
+    expect(remedy).not.toBeNull();
+    expect(remedy).not.toContain('()');
+    expect(remedy).toBe(
+      'Gewürz fehlt: kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
+    );
   });
   it('AK-U2-08 (f) Hebel 40, won false, 45 Bürger, sonst wie (b) → Satz aus (b)', () => {
     const w = citizenWorld();
