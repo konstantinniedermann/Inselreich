@@ -2211,3 +2211,18 @@ eigene Ad-hoc-Retro: gleiche Klasse wie RETRO-ADHOC-HT4 (dort angenommen); das A
 als Datenpunkt für R270 V1. — Kosten bei Irrtum: weitere rote Läufe durch Bestandstests.
 
 Entscheider: L0 · Anlass: Bericht production-integrator TOOL-MESSWAECHTER · ADR: —
+
+## R272 · 2026-10-06 · Seefahrt C4 abgenommen, Start C5 (T14–T16)
+
+Ruling: C4 angenommen: M1 in `feat/m12-see` (9a5e066, Prettier-Fix aefed6f), render `feat/m12-see-render` @ 530221d
+(T10 OK, T11 BEDENKEN niedrig — Seelane je Frame und Schiff, doppeltes Schiffskonzept: angenommen, Messung mit ≥ 4
+Schiffen in T14/T15), e2 `feat/m12-see-e2` @ a503f69 (T12 OK + Playtest OK, T13 OK + Playtest BEDENKEN niedrig).
+Pflichtpunkte erfüllt; AK7 misst 1,253, Schranke 1,30 bleibt (D-145). **T15 übernimmt** die Ausbau-Grundtexte
+(`hints.ts`, `deficitLine` nennen auf Fremdinseln den Heimat-Bestand) und den T11-Rest. **C5 startet** (lead-tech,
+sonnet): M2 = `main` (E1, H-T4, H-T5 mit Merge-Hinweis `islands-gen.test.ts`, Mess-Wächter) in `feat/m12-see`, dann
+**T14** Integration aller Stränge mit Neupin endgültig (P-8: Wert muss dem vorläufigen [6750, 11500, 320] gleichen,
+sonst R74), danach **T15** UI Schiffe (+ Playtest; lead-art urteilt über T15-Screenshots, D-144) und **T16** Doku;
+Final-Review lead-qa (opus) startet L0 danach. Budget aus R241: 9 Starts, Parallelität 1. Messungen nur mit
+`make messfenster` (R269). — Kosten bei Irrtum: Neupin-Abweichung stoppt T14.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M12-SEE-C4 · ADR: —
