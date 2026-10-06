@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 // viewStats.ts — Sichtbezug für den Umgebungsklang (Spec 7.2, ISO §4). Reine Funktion, liest die Welt nur.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { World } from '../sim/types';
@@ -56,7 +57,7 @@ export function viewStats(world: World, cam: Camera, view: { w: number; h: numbe
     }
   if (n === 0) return { ...out, water: 1 };
   for (const k of SHARES) out[k] /= n;
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (!b.house) continue;
     const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
     if (inView(c.cx, c.cy)) out.inhabitants += b.house.inhabitants;

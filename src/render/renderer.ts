@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { houseDiagnosis } from '../sim/queries';
 import { HOME, home, tileAt } from '../sim/world';
@@ -343,7 +344,7 @@ function polyPath(ctx: CanvasRenderingContext2D, poly: readonly Pt[]): void {
 
 /** Bedarfssymbole und rote Punkte des Frames mit Bildpunkt (Dev; spiegelt die Bedingungen aus `overlays.ts`). */
 function collectBadges(world: World, cam: Camera, range: TileRange): void {
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const box = spriteBounds(BUILDING_DEFS[b.defId], b);
     const a = worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });

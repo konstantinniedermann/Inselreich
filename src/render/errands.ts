@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 // errands.ts — Laufwege mit Herkunft und Ziel (H-R4, Programm G6): Sammler gehen zur Zielkachel und kommen mit
 // Last zurück, Träger bringen die Ware über den Weggraph zum Kontor oder Markt. Reine Darstellung: liest Phase
 // (`progress / cycle`), Zustand und Terrain, schreibt nie in die Welt; Caches nur je Weggraph/Welt mit Obergrenze.
@@ -170,7 +171,7 @@ function carryPath(world: World, g: RoadGraph, b: Building): Pt[] | null {
   if (!b.connected) return null;
   const w = g.width;
   const goals = new Map<number, Building>(); // Wegkachel neben Kontor/angebundenem Markt → Gebäude
-  for (const s of Object.values(world.buildings)) {
+  for (const s of homeBuildings(world)) {
     if (!(s.defId === 'kontor' || (s.defId === 'market' && s.connected))) continue;
     const sd = BUILDING_DEFS[s.defId];
     for (const p of adjacentOf(home(world), s.x, s.y, sd.w, sd.h)) {
@@ -333,7 +334,7 @@ export function errandsFrom(
   const out: ErrandPose[] = [];
   const limit = errandCap(reduce);
   const cands: { b: Building; key: number }[] = [];
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     const def = BUILDING_DEFS[b.defId];
     if (!def.produces || cycleOf(b) === undefined || b.state !== 'ok' || !b.connected) continue;
     if (
