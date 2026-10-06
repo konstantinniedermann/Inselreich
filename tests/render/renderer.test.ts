@@ -10,7 +10,7 @@ import { islandCam, islandView } from '../../src/render/archipel';
 import { tileToScreen } from '../../src/render/camera';
 import { foundKontor2Literal, seaWorld, shipLiteral } from '../sim/seaHelpers';
 import { seaShipAfter, shipPose, shipScale } from '../../src/render/shipLane';
-import { SHIP_W_PX } from '../../src/render/ship';
+import { drawShip } from '../../src/render/ship';
 import { lumberjackLiteral } from './seaRender';
 import { project } from '../../src/render/iso';
 import {
@@ -1440,7 +1440,14 @@ describe('M12 E4 Schiffe im Renderer (AK-E4-15)', () => {
   });
 
   it('AK-E4-15 (c) Mindestgrösse: Schiff bei Zoom 0,25 und 0,125 mindestens 12 CSS-px breit, bei Zoom 1 Faktor 1', () => {
-    for (const z of [0.25, 0.125]) expect(shipScale(z) * SHIP_W_PX * z).toBeGreaterThanOrEqual(12);
+    for (const z of [0.25, 0.125]) {
+      const f = fakeCtx();
+      drawShip(f.ctx, { x: 0, y: 0, zoom: z }, { x: 0, y: 0 }, 0, shipScale(z));
+      const xs = f.log.events
+        .filter((e) => e.op === 'fill')
+        .flatMap((e) => e.points.map((p) => p.x));
+      expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThanOrEqual(12);
+    }
     expect(shipScale(1)).toBe(1);
     const w = seaWorld();
     shipLiteral(w, { port: 0, to: null });

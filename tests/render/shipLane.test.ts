@@ -9,7 +9,8 @@ import {
   shipPose,
   shipScale,
 } from '../../src/render/shipLane';
-import { SHIP_W_PX } from '../../src/render/ship';
+import { drawShip } from '../../src/render/ship';
+import { fakeCtx } from './fakeCtx';
 import { project } from '../../src/render/iso';
 import { worldToScreen } from '../../src/render/camera';
 import { foundKontor2Literal, seaWorld, shipLiteral } from '../sim/seaHelpers';
@@ -69,9 +70,15 @@ describe('M12 E4 Schiffsposition', () => {
     expect(seaShipAfter({ x: 20, y: 12, island: null }, isl)).toBe(true);
     expect(seaShipAfter({ x: 13, y: 12, island: null }, isl)).toBe(false);
   });
-  it('AK-E4-15 shipScale: ≥ 12 CSS-px bei 0,25 und 0,125; bei Zoom 1 Faktor 1', () => {
-    expect(MIN_SHIP_CSS_PX).toBe(12);
-    for (const z of [0.25, 0.125]) expect(shipScale(z) * SHIP_W_PX * z).toBeGreaterThanOrEqual(12);
+  it('AK-E4-15 shipScale: gezeichnete Silhouette ≥ 12 CSS-px bei 0,25 und 0,125; bei Zoom 1 Faktor 1', () => {
+    expect(MIN_SHIP_CSS_PX).toBeGreaterThanOrEqual(12);
+    for (const z of [0.25, 0.125]) {
+      const { ctx, log } = fakeCtx();
+      drawShip(ctx, { x: 0, y: 0, zoom: z }, { x: 0, y: 0 }, 0, shipScale(z));
+      const xs = log.events.filter((e) => e.op === 'fill').flatMap((e) => e.points.map((p) => p.x));
+      expect(xs.length).toBeGreaterThan(0);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThanOrEqual(12);
+    }
     expect(shipScale(1)).toBe(1);
   });
   it('AK-E4-15 shipAt trifft die Schiffsmitte, verfehlt eine Kachel daneben; das oberste gewinnt', () => {
