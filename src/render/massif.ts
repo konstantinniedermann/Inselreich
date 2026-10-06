@@ -60,6 +60,15 @@ const STAGGER = 0.3;
 const STAGGER_MAX = 0.5;
 const BACK_RATIO = 1.25;
 const BUMP = 0.8; // px Geröll-Buckel am Fuss
+/**
+ * L2 Gebirgsfuss (Bildziel 2.2(2)): konkaver Hangfuss. Unter FOOT_R Kacheln Randabstand wird der Körper mit
+ * smooth(dist / r)^FOOT_P gedämpft (1 ab r): das Massiv wächst aus dem Land statt als Wand zu stehen. An Rinnenausgängen
+ * (Krümmung > 0 vor dem Fuss) läuft der Fuss bis FOOT_FAN Kacheln weiter hinaus (Schwemmkegel).
+ */
+export const FOOT_R = 2.4,
+  FOOT_P = 3,
+  FOOT_FAN = 0.5,
+  FOOT_BACK = 0.3;
 /** Felshügel (< SMALL_MASSIF): Mindestamplitude (px, ≈ 0,9 ISO_H) und Kuppen-Modulation ± HILL_DOME. */
 export const HILL_AMP = 29;
 const HILL_DOME = 0.18;
@@ -448,6 +457,23 @@ function buildComponent(
     if (nb === 0 || nf === 0 || sb / nb >= BACK_RATIO * (sf / nf)) break;
   }
   beta = Math.min(beta, STAGGER_MAX) * ridgeW;
+  // L2 Fuss: erst nach der Staffelung (β bleibt wie vor L2). Krümmung der Form vor dem Fuss steuert den Schwemmkegel.
+  const pre = new Float32Array(nx * ny);
+  for (let k = 0; k < pre.length; k++) pre[k] = amp * shape[k]! * Math.exp(beta * gs[k]!);
+  const footW = 1 - sk;
+  const foot = new Float32Array(nx * ny).fill(1);
+  if (footW > 0)
+    for (let j = 1; j < ny - 1; j++)
+      for (let i = 1; i < nx - 1; i++) {
+        const k = j * nx + i;
+        if (src[k] || dist[k]! >= FOOT_R + FOOT_FAN) continue;
+        const lap = pre[k - 1]! + pre[k + 1]! + pre[k - nx]! + pre[k + nx]! - 4 * pre[k]!;
+        const r = FOOT_R + FOOT_FAN * smoothstep(0, LAP_REF, lap);
+        // Rückseite (gs > 0) steht höher (Staffelung): ihr Fuss ist flacher gedämpft, die Vorderseite stärker
+        const depth =
+          footW * (1 - Math.pow(smooth01(dist[k]! / r), FOOT_P)) * (1 - FOOT_BACK * gs[k]!);
+        foot[k] = Math.max(0, 1 - depth);
+      }
   const height = new Float32Array(nx * ny);
   for (let j = 0; j < ny; j++)
     for (let i = 0; i < nx; i++) {
@@ -458,7 +484,7 @@ function buildComponent(
       const dn = Math.min(1, base[k]! / maxBase);
       const rim = smooth01(dist[k]! / rimR);
       const bump = (valueNoise(seed + 307, fx * 1.7, fy * 1.7) - 0.5) * 2 * BUMP * rim * (1 - dn);
-      height[k] = Math.max(0, amp * shape[k]! * Math.exp(beta * gs[k]!) + bump);
+      height[k] = Math.max(0, pre[k]! * foot[k]! + bump);
     }
   const mask = new Uint8Array((x1 - x0 + 1) * (y1 - y0 + 1));
   for (let y = y0; y <= y1; y++)

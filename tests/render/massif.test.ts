@@ -33,6 +33,8 @@ import {
   pieceCells,
   pieceNodes,
   DEBRIS,
+  FOOT_FAN,
+  FOOT_R,
   HILL_AMP,
   ROCK_TONES,
   SOFT_CUT,
@@ -40,6 +42,7 @@ import {
   debrisOf,
   toneStep,
   type MassifComponent,
+  type MassifData,
   type MassifPiece,
 } from '../../src/render/massif';
 import {
@@ -401,16 +404,18 @@ describe('H-R9 A2 Höhenfeld', () => {
     }
   });
 
-  it('A2 kein breiter flacher Saum: ab 1 Kachel Randabstand trägt das Massiv schon ein Fünftel der Amplitude (Median)', () => {
+  it('L2 Fuss: Randabstand, bei dem der Körper 24 % der Amplitude erreicht, ≥ 1,8 Kacheln (ersetzt A2 „kein breiter flacher Saum“, Spec 2.2(2) hebt den Playtest-R3-Entscheid auf)', () => {
     for (const seed of [7, 14]) {
       const c = largest(createWorld(seed, { unlockAll: true }));
-      const band: number[] = [];
+      const d: number[] = [];
       for (const [I, J] of nodes(c)) {
-        const d = c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]!;
-        if (d >= 1 && d <= 1.5) band.push(nodeHeight(c, I, J));
+        const k = (J - c.y0 * SUB) * c.nx + I - c.x0 * SUB;
+        if (c.dist[k]! > 0 && Math.abs(nodeHeight(c, I, J) / c.amp - 0.24) < 0.03)
+          d.push(c.dist[k]!);
       }
-      band.sort((a, b) => a - b);
-      expect(band[Math.floor(band.length / 2)]!, `Seed ${seed}`).toBeGreaterThan(0.2 * c.amp);
+      d.sort((a, b) => a - b);
+      expect(d.length, `Seed ${seed}`).toBeGreaterThan(20);
+      expect(d[Math.floor(d.length / 2)]!, `Seed ${seed}`).toBeGreaterThanOrEqual(1.8);
     }
   });
 });
@@ -1136,16 +1141,23 @@ function inTri(t: readonly P[], x: number, y: number): boolean {
 }
 
 // ART-STIL-02 L2 (Q2): der Gebirgskern (hn ≥ 0,35) bleibt die Referenz, ausser Schnee- und Baummaske.
-/** Knoten, die Schnee (T4) oder Krüppelbäume (T5) tragen dürfen und im Kerntest ausgenommen sind. */
-const kernAusnahme = (_seed: number, _comp: number, _I: number, _J: number): boolean => false;
+/**
+ * Knoten, die L2 absichtlich ändert und die der Kerntest ausnimmt: Fusszone (Randabstand unter FOOT_R + FOOT_FAN:
+ * der Hangfuss ist das Ziel von T1, reicht an der Schulter bis in Knoten mit hn ≥ 0,35), Schnee (T4), Baummaske (T5).
+ */
+const kernAusnahme = (data: MassifData, comp: number, I: number, J: number): boolean => {
+  const c = data.comps[comp]!;
+  return c.dist[(J - c.y0 * SUB) * c.nx + I - c.x0 * SUB]! < FOOT_R + FOOT_FAN;
+};
 
 describe('ART-STIL-02 L2 Kern', () => {
   it('L2 Kern unverändert: Knoten ausserhalb von Schnee- und Baummaske gleich dem Stand vor L2 (≥ 95 % gefunden, ΔE2000 < 1, |Δh| ≤ 1 px)', () => {
     type Fx = Record<string, { nodes: number[][] }>;
     for (const seed of KERN_SEEDS) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
       const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
       const ref = (kernFixture as Fx)[String(seed)]!.nodes.filter(
-        (r) => !kernAusnahme(seed, r[0]!, r[1]!, r[2]!),
+        (r) => !kernAusnahme(data, r[0]!, r[1]!, r[2]!),
       );
       let found = 0,
         dE = 0,
