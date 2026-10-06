@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 import { home } from '../sim/world';
 // life.ts — Leben (Spec 5.6, ISO §5 Ebenen 5 bis 7): Spaziergänger, Möwen, Herdrauch, Fensterlicht-Hilfen.
 // Kosmetisch und deterministisch aus `timeMs` und dem Welt-Zustand; kein Zustand ausser Caches je Welt, kein
@@ -74,7 +75,7 @@ export function walkerCount(inhabitants: number, reduce = false): number {
 /** Summe der Einwohner aller Häuser. */
 export function totalInhabitants(world: World): number {
   let n = 0;
-  for (const b of Object.values(world.buildings)) n += b.house?.inhabitants ?? 0;
+  for (const b of homeBuildings(world)) n += b.house?.inhabitants ?? 0;
   return n;
 }
 

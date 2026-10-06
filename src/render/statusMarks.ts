@@ -1,3 +1,4 @@
+import { homeBuildings } from './homeBuildings';
 // statusMarks.ts — Statusmarken über Betrieben (H-R3, Programm S4): zeigt, warum ein Betrieb nicht voll
 // produziert. Liest nur `b.state`, schreibt nie in die Welt. Unterscheidung über die FORM, nicht nur die Farbe.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
@@ -75,7 +76,7 @@ export function drawStatusMarks(
   const s = Math.min(MARK_MAX_PX, Math.max(MARK_MIN_PX, MARK_BASE_PX * cam.zoom));
   const bob = reduce ? 0 : Math.sin((timeMs / PULSE_MS) * Math.PI * 2) * PULSE_PX;
   let n = 0;
-  for (const b of Object.values(world.buildings)) {
+  for (const b of homeBuildings(world)) {
     if (n >= MAX_MARKS) break;
     if (!markable(b) || b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1)
       continue;

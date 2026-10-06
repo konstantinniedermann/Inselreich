@@ -2340,3 +2340,168 @@ mehr zu entdecken in einem Guss; die Auslegung widerspricht ihm nicht, weil sie 
 Kosten bei Irrtum: Phase 1 ist reine Analyse; Häppchen einzeln revertierbar.
 
 Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-06 · ADR: —
+
+## R281 · 2026-10-06 · ART-STIL-02 direkt in die Produktion
+
+Ruling: Nutzer: „ich muss nichts testen, setze es um, ich teste an der Produktion." ART-STIL-02 läuft ohne
+Nutzer-Zwischenstände bis Pages durch: L0 entscheidet das kombinierte Gate sofort nach Eingang, Häppchen folgen
+ohne Pause, Release nach Gate Merge. Interne Prüfungen (Review je Task, Browser-Check, opus-Review) bleiben
+(Verfassung §9). — Kosten bei Irrtum: Revert des Release-Merges.
+
+Entscheider: Nutzer · Anlass: Nutzerantwort 2026-10-06 · ADR: —
+
+## R282 · 2026-10-06 · Bündeln von Prüfungen (ART-STIL-02)
+
+Ruling: Nutzer: „Sachen bündeln, visuelle Tests und Playtests bündeln." Ausgelegt für ART-STIL-02: kein
+qa-playtester je Häppchen, sondern **ein** Browser-Lauf je Release über alle Häppchen; Bildurteil je Häppchen
+nur per Galerie-Skript durch lead-art (kein Agent-Start); unabhängige kleine Tasks eines Häppchens in einen
+Engineer-Start (R233 V1); Blindtest L3 im Release-Lauf A. Review je Task und opus-Review je Release bleiben
+(§9). Zweck: Zeit und Tokens sparen; Auslegung widerspricht ihm nicht, weil Prüftiefe am Release erhalten
+bleibt. — Kosten bei Irrtum: Fehler fallen später auf, Fix-Runde im Release-Lauf.
+
+Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-06 · ADR: —
+
+## R283 · 2026-10-06 · Gate ART-STIL-02 (kombiniert)
+
+Ruling: Nachtrag „Lebendige Insel" freigegeben (lead-tech, lead-qa: BEDENKEN). Nacharbeit T1–T6, Q1–Q7 als
+Test-Anhang zur Spec, ohne Zweitprüfung; §9: Caches ja, Mouse-over zurückgestellt, E8 mit Durchfallkriterium,
+zwei Releases mit einer Freigabe. Stufe leicht nach E-028 trotz 8 Häppchen: je Häppchen ≤ 1 Session, keine
+Sim-/Save-Änderung, opus-Review je Release. Budget lead-art 26 / lead-qa 2, Parallelität 3. — Kosten bei
+Irrtum: Häppchen fliegt aus dem Kandidaten.
+
+Entscheider: L0 · Anlass: `.studio/handoffs/2026-10-06-l0-lead-art-gate.md` · ADR: —
+
+## R284 · 2026-10-06 · Playtest REL-05: Schiff unauffindbar
+
+Ruling: Nutzer-Playtest bestätigt Folgepaket (2) aus R274b. Ein Schiff kann man kaufen (Heimatkontor → Handel →
+«Zurück» → Schiffe), aber das Spiel sagt es nirgends: Der Leitsatz endet bei „Gründe ein Kontor“, der Grund „Kein
+freies Schiff“ nennt keinen Weg. Nutzer-Auftrag: in dieser Session nichts umsetzen, nur Ideen aufnehmen →
+IDEEN-04 (design-idea-scout): Seefahrt-Leitsätze (S), Werft (M), Auftragsreihe Seefahrt (M), Story-Rahmen (L).
+Die S-Idee bekommt Vorrang im nächsten Release und wird mit Folgepaket (2) gebündelt; Werft, Auftragsreihe
+und Story sind Bausteine für das nächste Meilenstein-Brainstorming. Bewertung durch lead-design in einer
+späteren Session. — Kosten bei Irrtum: ein Häppchen wird umsortiert.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R285 · 2026-10-06 · IDEEN-04b Nachtrag Playtest
+
+Ruling: Nutzer-Nachtrag aufgenommen, weiterhin ohne Umsetzung. I-019 „Schiffsangebot am Kontor“ (gelbes «!»)
+wird mit I-015 und Folgepaket (2) R274b gebündelt. Die Nutzeranforderungen an die Fahrlinie (nur Wasser, Tiefwasser
+bevorzugt, Hindernisse meiden, flüssig) gehen als Beobachtung in Folgepaket (1). Die Glättung der Schiffspose ist
+reines Render-Thema und lässt sich vorziehen; Wegpunkte brauchen weiter ein eigenes Ruling (`d`, E1-Band).
+Figuren-Tempo (Streuung ≤ 1,5 : 1) als eigenes Render-Häppchen, nicht in ART-STIL-02 (das berührt die Figuren
+nicht). — Kosten bei Irrtum: ein Häppchen wird umsortiert.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R286 · 2026-10-06 · Playtest: Geisterbauten und Träger-Tempo
+
+Ruling: Diagnose DIAG-PT1 angenommen (Einträge in `docs/beobachtungen.md`). Geisterbauten auf der Heimat sind ein
+Live-Fehler aus M12-E2 und werden in der nächsten Session als erstes Häppchen (Hotfix H-F1, Render/UI, Reihentest
+über alle Heimat-Iteratoren) vor allen Folgepaketen umgesetzt. Träger-Tempo wird ein Render-Häppchen zusammen mit
+der Schiffs-Glättung (R285). In dieser Session keine Umsetzung (Nutzer-Auftrag). — Kosten bei Irrtum: Fehler bleibt
+eine Session länger live.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-06 · ADR: —
+
+## R287 · 2026-10-06 · Beobachtungen: fester Auswertungs-Takt
+
+Ruling: Befund auf Nutzerfrage: letzte Auswertung von `docs/beobachtungen.md` am 2026-09-30, seither rund 175
+neue Einträge (1227 Zeilen) ohne Sichtung; das Handbuch kennt keinen Takt. Neu: (a) Auswertung mit Skill
+`beobachtungen-auswerten` durch `lead-production` nach jedem Release (Merge auf main/Pages) und spätestens, wenn
+seit der letzten Auswertung 40 Einträge dazugekommen sind; (b) Ergebnis je Eintrag: erledigt (streichen),
+abgehakt, Paket-Kandidat (Board) oder Idee (`docs/ideen.md`); (c) Kopfzeile „Letzte Auswertung“ ist Pflicht und
+erscheint im Start-Bericht von L0. Erste Auswertung in der nächsten Session parallel zum Hotfix H-F1 (nur Doku,
+disjunkte Dateien). Handbuch-Änderung setzt `studio-coach` beim Session-Ende um. — Kosten bei Irrtum: eine
+Auswertung pro Release zu viel.
+
+Entscheider: L0 · Anlass: Nutzerfrage 2026-10-06 · ADR: —
+
+## R288 · 2026-10-06 · Beobachtungen: harte Schwelle beim Session-Start (ersetzt R287 (a))
+
+Ruling: Nutzervorschlag übernommen. Stehen beim Session-Start mehr als 30 ungesichtete Einträge in
+`docs/beobachtungen.md`, ist die Auswertung (`lead-production`, Skill `beobachtungen-auswerten`) das erste Paket
+der Session; jeder Eintrag endet als erledigt, abgehakt, eingeplant (Board) oder Idee. Bis sie fertig ist,
+startet keine neue Funktionsarbeit. Ausnahme: Hotfix für einen Live-Fehler läuft parallel. Die Zählung macht der
+SessionStart-Hook (Einträge unter der Marke „Letzte Auswertung“) und meldet sie im Start-Kontext, nicht das
+Gedächtnis von L0; Einbau des Zählers und Handbuch-Text durch `studio-coach` beim Session-Ende. Der Takt nach
+Release (R287 (a)) entfällt. R287 (b) und (c) gelten weiter. — Kosten bei Irrtum: eine Session beginnt mit
+Aufräumen statt mit Inhalt.
+
+Entscheider: L0 · Anlass: Nutzervorschlag 2026-10-06 · ADR: —
+
+## R289 · 2026-10-06 · Aufträge aus der Parallel-Session und R288-Übergang
+
+Ruling: Vom Nutzer übermittelte Aufträge der Parallel-Session übernommen: Hotfix H-F1 (lead-tech) und Auswertung
+`docs/beobachtungen.md` (lead-production) starten sofort parallel, R288-Umsetzung durch studio-coach. ART-STIL-02
+läuft weiter: gestartet vor R288, kein neuer Start; weitere Funktionsarbeit (L4 ff., Träger-Tempo, Seefahrt-Hilfe)
+erst nach der Auswertung. H-F1 geht als Hotfix-Release einzeln vor REL-A auf main. — Kosten bei Irrtum: Merge-
+Nacharbeit in `iso.ts`/`life.ts` für L1.
+
+Entscheider: L0 · Anlass: Nachricht Parallel-Session (vom Nutzer übermittelt) · ADR: —
+
+## R290 · 2026-10-06 · Gate H-F1 und CI-Formatfehler
+
+Ruling: Kurzplan H-F1 freigegeben, Alternative B (Helfer `homeBuildings`, Einzeilen-Umstellung je rot belegter
+Stelle) statt gefiltertem `islandView`, weil kleiner und konfliktarm zu ART-STIL-02. Browser-Check gebündelt im
+Hotfix-Release-Lauf (R282). CI rot auf main (R288/R289: Prettier in `beobachtungen.md`) per `prettier --write`
+behoben (dc91839, R278 (1) sinngemäss). — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech H-F1, CI 37488497826 · ADR: —
+
+## R291 · 2026-10-06 · Auswertung BEOB-AUSW-01 und Reihenfolge
+
+Ruling: Auswertung angenommen (13 Paket-Kandidaten auf dem Board, Marke „Letzte Auswertung: 2026-10-06"); R288
+ist erfüllt, Funktionsarbeit darf wieder starten. Merge zusammen mit `tool/r288-beob-zaehler` (Handbuch 1.22)
+durch den Integrator. Reihenfolge: H-F1 → CI-ACTIONS-NODE (Frist 2026-10-19) → ART-STIL-02 L4–L8 → SEE-F2-UX,
+SEE-F1-FAHRLINIE → H-TRAEGER-TEMPO, RENDER-LOOK-01 (nach ART-STIL-02, Dateien `life.ts`/`terrain.ts`). — Kosten
+bei Irrtum: Reihenfolge per Ruling umstellen.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-01 · ADR: —
+
+## R292 · 2026-10-06 · Gate Merge Release H-F1
+
+Ruling: Hotfix H-F1 (`fix/h-f1-geisterbauten` @ 4125b62) freigegeben: lead-qa OK (opus-Review, `CI=true make
+check` grün, Browser-Lauf Vorher/Nachher `.studio/qa/rel-hf1/`). Integrator pusht ihn zusammen mit der bereits
+gemergten Auswertung (51f28ac); der Zähler-Branch folgt nach der Fix-Runde einzeln. arc42-Nachtrag
+`homeBuildings.ts` → Beobachtung. — Kosten bei Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-HF1 · ADR: —
+
+## R293 · 2026-10-06 · Gate CI-ACTIONS-NODE (Kurzentscheid)
+
+Ruling: Kleinpaket ohne `src/`-Änderung, Gate durch L0 im Briefing (R260): Actions auf die neuesten Major-Versionen
+mit Node-24-Laufzeit heben (per `gh api` belegt), Runner auf `ubuntu-24.04` festnageln statt `ubuntu-latest`, damit
+der Wechsel auf Ubuntu 26 kein ungeplantes Ereignis wird; Umstieg auf 26 später als eigenes Paket. Umsetzung
+lead-production, Review `qa-code-reviewer`. — Kosten bei Irrtum: CI rot, Revert des Commits.
+
+Entscheider: L0 · Anlass: BEOB-AUSW-01, Frist 2026-10-19 · ADR: —
+
+## R294 · 2026-10-06 · Union-Merge holt ausgewertete Beobachtungen zurück
+
+Ruling: `merge=union` auf `docs/beobachtungen.md` hat beim H-F1-Merge rund 490 von der Auswertung gestrichene Zeilen
+zurückgeholt (Branch zweigte vor 13316d9 ab). Reparatur durch den Integrator (Fassung 13316d9 + Einträge der
+Branch). Regel bis zu einem Werkzeug-Fix: Bei jedem Merge einer Branch mit Basis vor 13316d9 übernimmt der
+Integrator für diese Datei die main-Fassung und hängt nur die von der Branch **neu** hinzugefügten Einträge an
+(`git diff <merge-base> <branch> -- docs/beobachtungen.md`); danach `context.py` ≤ 30 prüfen. Betrifft alle
+ART-STIL-02-Branches. — Kosten bei Irrtum: verlorener Eintrag, auffindbar in der Branch-Historie.
+
+Entscheider: L0 · Anlass: Integrator-Bericht DOC-MERGE-01 · ADR: —
+
+## R295 · 2026-10-06 · ART-STIL-02 Abweichungen L1/L3, Start L4
+
+Ruling: Angenommen: L1 renderMedian Seed 7/Zoom 1 +0,3 ms (Häppchen-Budget +0,2; Release-Budget +0,5 hält, lichteres
+Dach widerspräche dem Bildziel); L3 Cache-Aufbau +36 % (nur bei Zoomwechsel, Frame ±0); Salz-Korrektur im Anhang
+(822a4db). L4 startet sofort, gestapelt auf `feat/art02-l1-wald` mit main (H-F1) per Merge, erster Task
+Patch-Messung (T3). — Kosten bei Irrtum: Release-Lauf misst gesamt, Häppchen fliegt bei Überschreitung.
+
+Entscheider: L0 · Anlass: Berichte lead-art L1, L3 · ADR: —
+
+## R296 · 2026-10-06 · D-148 Gebirgsfuss, Start L6
+
+Ruling: D-148 bestätigt: Fuss ≥ 1,6 Kacheln plus Knick-Test; Kern ausserhalb der Fusszone (≤ 40 % der Knoten) bleibt
+hart pixelgleich geprüft — die beiden AK schlossen sich aus, die einfachere Variante gilt (R136). L6 (Gebirge und
+Wald entdecken) startet jetzt gestapelt auf `feat/art02-l2-gebirge` @ 76edd0c (enthält L1), Release B. — Kosten bei
+Irrtum: L6 nachziehen, falls Release A L1/L2 ändert.
+
+Entscheider: L0 · Anlass: Bericht lead-art L2 · ADR: —
