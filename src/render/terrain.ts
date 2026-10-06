@@ -11,6 +11,7 @@ import {
   SHRUB_TONES,
   flowerTonesFor,
   flowerVeil,
+  extraFlowersFor,
   flowersFor,
   groundShapes,
   meadowWarmth,
@@ -1231,7 +1232,7 @@ export function paintDecor(
       if (sides.left || sides.right || sides.up || sides.down)
         for (const b of shrubsFor(seed, x, y, sides))
           shrubs.push({ px: (x + b.x) * TEX, py: (y + b.y) * TEX, rx: b.r * TEX, tone: b.tone });
-      for (const f of flowersFor(seed, x, y))
+      for (const f of [...flowersFor(seed, x, y), ...extraFlowersFor(seed, x, y)])
         flowers.push({ px: (x + f.x) * TEX, py: (y + f.y) * TEX, size: f.size, tone: f.tone });
     }
   // Boden-Elemente (A2–A4, A7, A8, A10–A13, B6–B8): Lagen z, je (Lage, Farbe) ein Pfad

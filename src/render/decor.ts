@@ -1,4 +1,5 @@
-import { hash2 } from '../sim/noise';
+import { generateTerrain } from '../sim/mapgen';
+import { hash2, valueNoise } from '../sim/noise';
 import type { Island } from '../sim/types';
 import { LIGHT, rotNoise } from './light';
 import { meadowWarmth } from './groundDecor';
@@ -8,7 +9,7 @@ import { meadowWarmth } from './groundDecor';
 // L5 (Küste/Meer) und L8 (Seltenheitsband) erweitern `RARE_POOL`; L6/L7 lesen. Salze 540–559 (Kopf von groundDecor.ts):
 // 540 Solitärbaum je Kachel (Los und Rang) · 541 Wiesenart A2 (Variante) · 542 Buschgruppe A3 · 543 Kiesel A4 ·
 // 544 Findling A4 · 545 Lesesteinhaufen A7 · 546 Maulwurfshügel A11 · 547 Binsen A12 · 548 Pilze B6 · 549 Totholz B7 ·
-// 550 Farnsaum B8 · 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 frei · 554–559 Los und Ort der
+// 550 Farnsaum B8 · 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 Buschdichte A3 und Zusatzblüten A1 · 554–559 Los und Ort der
 // S/E-Elemente (A8, A13, A14, A6, A9, A10).
 //
 // Invarianten (Design-Entscheid L0, machen den Patch lokal):
@@ -19,6 +20,11 @@ import { meadowWarmth } from './groundDecor';
 //  D2 Sichtbarkeit: ob ein Element gezeigt wird, entscheidet der eigene Fussabdruck (≤ 2 × 2) plus höchstens
 //     `DECOR_REACH` Kachel Rand und nur für 1 × 1-Elemente; belegt oder kein Gras → das ganze Element entfällt.
 //  D3 Seltenheit: Los `hash2(seed + salt, 0, 0) < p` nach der Eignungsprüfung, E höchstens 1, höchstens `RARE_CAP` je Insel.
+//     Urwald-Schätzer (Bild-Fix 1): Die Heimatinsel entsteht in `src/sim/mapgen.ts` aus `generateTerrain(seed + i, …)`;
+//     dort ist Wald `valueNoise(seed + 3, x / 5, y / 5) > 0,62`. Das Salz 3 ist ein Sim-Salz und wird hier nur gelesen
+//     (über `generateTerrain` selbst, mit dem Versatz `i`, dessen statische Klassen zur Karte passen). Das Ergebnis ist eine
+//     reine Funktion von Seed und Kachel, also statisch (D1): S/E- und Mehrkachel-Orte meiden diesen Wald, auch wenn er
+//     später gerodet wird. Fremdinseln und unpassende Karten haben keinen Schätzer.
 //  D4 Fremdinseln: gilt für jeden Ansicht-Seed; Stempel zeigt der Aufrufer (`iso.ts`) nur auf der Heimat.
 //  D5 Salze nur 540–559; Zufall nur über `hash2`/`valueNoise`.
 
@@ -206,6 +212,8 @@ interface StaticPlan {
   coast: Uint8Array;
   mtn: Uint8Array;
   green: Uint8Array;
+  /** Wald der Erzeugung (Urwald-Schätzer), 1 = Wald; null ohne passende Erzeugung. */
+  wild: Uint8Array | null;
   sites: RareSite[];
   /** 0 frei, sonst 1 + Index in `sites` (Fussabdruck bzw. Teppichkacheln). */
   reserved: Uint8Array;
@@ -318,7 +326,12 @@ function planRare(p: StaticPlan, w: number, h: number): void {
           for (let xx = Math.max(0, x - r - 1); xx <= Math.min(w - 1, x + r + 1); xx++) {
             const dd = Math.hypot(xx - x, yy - y);
             const edge = r + 0.8 * (hash2(seed + def.salt, xx + 7, yy + 7) - 0.5);
-            if (dd <= edge && p.cls[yy * w + xx] === 2 && !p.reserved[yy * w + xx])
+            if (
+              dd <= edge &&
+              p.cls[yy * w + xx] === 2 &&
+              p.wild?.[yy * w + xx] !== 1 &&
+              !p.reserved[yy * w + xx]
+            )
               p.reserved[yy * w + xx] = si;
           }
       } else
@@ -327,6 +340,30 @@ function planRare(p: StaticPlan, w: number, h: number): void {
     }
   }
   p.sites = sites;
+}
+
+/**
+ * Urwald-Schätzer: der Wald, den `generateTerrain` für die Heimatinsel erzeugt hat. Gesucht wird der Versatz `i`
+ * (`generateMap` probiert `seed + i`), dessen Wasser-, Sand-, Gebirgs- und Grünlandkacheln mit den statischen Klassen
+ * der Insel übereinstimmen; ohne exakte Übereinstimmung gibt es keinen Schätzer.
+ */
+export function wildForest(seed: number, isl: DecorIsland, cls: Uint8Array): Uint8Array | null {
+  const kind = (isl as { kind?: string }).kind;
+  if (kind && kind !== 'home') return null;
+  const n = isl.width * isl.height;
+  for (let i = 0; i < 50; i++) {
+    const t = generateTerrain(seed + i, isl.width, isl.height);
+    let same = true;
+    for (let k = 0; k < n && same; k++) {
+      const c = t[k] === 'water' ? 0 : t[k] === 'sand' ? 1 : t[k] === 'mountain' ? 3 : 2;
+      if (c !== cls[k]) same = false;
+    }
+    if (!same) continue;
+    const out = new Uint8Array(n);
+    for (let k = 0; k < n; k++) if (t[k] === 'forest') out[k] = 1;
+    return out;
+  }
+  return null;
 }
 
 const plans = new WeakMap<object, StaticPlan>();
@@ -353,7 +390,8 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
   )
     return c;
   const { width: w, height: h } = isl;
-  const green = chebDist(w, h, (i) => cls[i] !== 2);
+  const wild = wildForest(seed, isl, cls);
+  const green = chebDist(w, h, (i) => cls[i] !== 2 || wild?.[i] === 1);
   for (let i = 0; i < green.length; i++) {
     const x = i % w,
       y = (i / w) | 0;
@@ -366,6 +404,7 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
     coast: chebDist(w, h, (i) => cls[i] === 0),
     mtn: chebDist(w, h, (i) => cls[i] === 3),
     green,
+    wild,
     sites: [],
     reserved: new Uint8Array(w * h),
   };
@@ -512,15 +551,14 @@ const BAND = {
   tuft: 0.16,
   pebble: 0.06,
   pebbleMtn: 0.16,
-  boulder: 0.015,
-  boulderMtn: 0.05,
-  shrubs: 0.1,
+  boulder: 0.03,
+  boulderMtn: 0.1,
+  boulderHill: 0.04,
   stoneHeap: 0.004,
   molehills: 0.004,
   reeds: [0.1, 0.07, 0.04] as const,
   toadstools: 0.08,
   deadwood: 0.045,
-  ferns: 0.22,
 } as const;
 
 const forestAt = (isl: DecorIsland, x: number, y: number): boolean =>
@@ -536,6 +574,15 @@ export const forestSides = (isl: DecorIsland, x: number, y: number): number =>
   (forestAt(isl, x + 1, y) ? 2 : 0) |
   (forestAt(isl, x, y - 1) ? 4 : 0) |
   (forestAt(isl, x, y + 1) ? 8 : 0);
+
+/**
+ * Dichte der Buschgruppen (A3) je Kachel: gehäuft über ein Rauschfeld (Salz 553), im Mittel ≈ 1 Gruppe je 6–7 freie
+ * Wiesenkacheln, im Kern der Flecken dichter, dazwischen leer.
+ */
+export function shrubDensity(seed: number, x: number, y: number): number {
+  const f = valueNoise(seed + 553, (x + 0.5) / 3.5, (y + 0.5) / 3.5);
+  return Math.min(0.6, Math.max(0, (f - 0.25) * 1.0));
+}
 
 /** A2 nach `meadowWarmth`: feucht = hohes Gras, Mitte = Klee, warm = Trockenrasen. */
 export function tuftKind(seed: number, x: number, y: number): 'tuftTall' | 'clover' | 'tuftDry' {
@@ -569,7 +616,6 @@ function tileKind(
     forestAt(isl, x, y - 1) ||
     forestAt(isl, x, y + 1);
   if (edge4) {
-    if (hit(BAND.ferns)) return 'ferns';
     if (hit(BAND.toadstools)) return 'toadstools';
     if (hit(BAND.deadwood)) return 'deadwood';
   }
@@ -587,11 +633,12 @@ function tileKind(
         break;
       }
     }
-  if (ringFree && hit(BAND.shrubs)) return 'shrubs';
+  if (ringFree && hit(shrubDensity(seed, x, y))) return 'shrubs';
   if (hit(BAND.stoneHeap)) return 'stoneHeap';
   if (hit(BAND.molehills)) return 'molehills';
   const pm = plan.mtn[i]! <= 5 ? (6 - plan.mtn[i]!) / 5 : 0; // am Gebirge häufiger
-  if (hit(BAND.boulder + BAND.boulderMtn * pm)) return 'boulder';
+  const hill = decorHill(seed, x + 0.5, y + 0.5) > 0.62 ? BAND.boulderHill : 0; // Kuppen
+  if (hit(BAND.boulder + BAND.boulderMtn * pm + hill)) return 'boulder';
   if (hit(BAND.pebble + BAND.pebbleMtn * pm)) return 'pebble';
   if (hit(BAND.tuft)) return tuftKind(seed, x, y);
   return null;
@@ -648,6 +695,9 @@ export function groundElements(
           out.push({ kind: 'carpet', x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: s.tone });
         continue;
       }
+      // B8: durchgehender Farnsaum auf der Grasseite jeder Waldkante (zusätzlich zum einen Element der Kachel)
+      const sides = forestSides(isl, x, y);
+      if (sides) out.push({ kind: 'ferns', x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: sides });
       const kind = tileKind(seed, isl, occ, plan, x, y);
       if (kind)
         out.push({ kind, x, y, w: 1, h: 1, box: boxOf(x, y, 1, 1), arg: forestSides(isl, x, y) });

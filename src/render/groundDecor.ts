@@ -1,6 +1,6 @@
 import { hash2, valueNoise } from '../sim/noise';
 import type { GroundElement } from './decor';
-import { ROCK_TONES } from './light';
+import { LIGHT, ROCK_TONES } from './light';
 import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './palette';
 
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
@@ -15,7 +15,7 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // 520–539 L2 · 540–559 L4 (decor.ts, groundDecor.ts, decorStamps.ts) · 560–574 L5 · 575–584 L6 · 585–594 L7 · 595–599 L8.
 // L4 im Einzelnen: 540 Solitärbaum je Kachel · 541 Wiesenart A2 · 542 Buschgruppe A3 · 543 Kiesel A4 · 544 Findling A4 ·
 // 545 Lesesteinhaufen A7 · 546 Maulwurfshügel A11 · 547 Binsen A12 · 548 Pilze B6 · 549 Totholz B7 · 550 Farnsaum B8 ·
-// 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 frei · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
+// 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 Buschdichte A3 und Zusatzblüten A1 · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
 // 556 Mauerreste A14 · 557 Obstbaum A6 · 558 Menhir A9 · 559 Pilzring A10. Dazu die Blütenpalette je Insel über
 // `hash2(seed + 500, 0, 1)` (Inselcharakter k = 1, Anhang 0.2).
 
@@ -162,7 +162,7 @@ export const DECOR_TONES = {
   clover: mixHex(PALETTE.grassDark, PALETTE.crown, 0.55),
   dryDark: mixHex(PALETTE.grass, PALETTE.roofThatch, 0.45),
   dryLight: mixHex(PALETTE.grassLight, PALETTE.roofThatch, 0.35),
-  shrubDark: mixHex(SHRUB_TONES[0], PALETTE.grassDark, 0.35),
+  shrubDark: mixHex(mixHex(SHRUB_TONES[0], PALETTE.grassDark, 0.35), PALETTE.grass, 0.3),
   shrubMid: mixHex(SHRUB_TONES[1], PALETTE.grassLight, 0.2),
   shrubEdge: mixHex(mixHex(SHRUB_TONES[1], PALETTE.grassLight, 0.2), LIGHT_TONE, 0.35),
   rockDark: rockCss(0),
@@ -182,6 +182,10 @@ export const DECOR_TONES = {
   woodLight: toLight(PALETTE.roofWood, 0.3),
   woodEnd: toInk(PALETTE.roofTimber, 0.25),
   fern: mixHex(PALETTE.grass, PALETTE.roofThatch, 0.15),
+  fringe: mixHex(PALETTE.grass, PALETTE.roofThatch, 0.28),
+  fringeLight: mixHex(PALETTE.grassLight, PALETTE.roofThatch, 0.3),
+  shrubShadow: toInk(mixHex(SHRUB_TONES[0], PALETTE.grassDark, 0.35), 0.12),
+  earthDark: PALETTE.earthEdge,
   fernDark: mixHex(PALETTE.grass, PALETTE.grassDark, 0.4),
 } as const;
 
@@ -286,40 +290,52 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       break;
     }
     case 'shrubs': {
-      // Gruppe aus 1–3 Büschen, Radius 0,06–0,12; zwei Grüntöne und eine Lichtkante oben (nie Kronenfarbe)
+      // Gruppe aus 1–3 runden Büschen (Radius 0,10–0,16, in Dreiergruppen ≤ 0,12): Körper, 2 Lappen, Kontaktschatten
+      // unten, Lichtkante aus LIGHT oben links (nie Kronenfarbe)
       const n = 1 + Math.floor(rnd(542, 0) * 3);
-      const cx = tx + 0.35 + 0.3 * rnd(542, 1),
-        cy = ty + 0.4 + 0.2 * rnd(542, 2);
+      const rMax = n === 3 ? 0.12 : 0.16;
+      const cx = tx + 0.5 + 0.1 * (rnd(542, 1) - 0.5),
+        cy = ty + 0.55 + 0.1 * (rnd(542, 2) - 0.5);
       for (let i = 0; i < n; i++) {
-        const r = 0.06 + 0.06 * rnd(542, 3 + i * 4);
+        const r = 0.1 + (rMax - 0.1) * rnd(542, 3 + i * 6);
+        const off = n === 1 ? 0 : (i - (n - 1) / 2) * 0.27;
         const x = Math.min(
-          tx + 1 - r - 0.04,
-          Math.max(
-            tx + r + 0.04,
-            cx + (i - (n - 1) / 2) * 0.16 + 0.04 * (rnd(542, 4 + i * 4) - 0.5),
-          ),
+          tx + 1 - r * 1.3 - 0.02,
+          Math.max(tx + r * 1.3 + 0.02, cx + off + 0.03 * (rnd(542, 4 + i * 6) - 0.5)),
         );
         const y = Math.min(
-          ty + 1 - r * 0.8 - 0.04,
-          Math.max(ty + r + 0.04, cy + 0.06 * (rnd(542, 5 + i * 4) - 0.5)),
+          ty + 1 - r * 0.8 - 0.05,
+          Math.max(ty + r * 0.9 + 0.04, cy + 0.06 * (rnd(542, 5 + i * 6) - 0.5) + (i % 2) * 0.05),
         );
+        const c = rnd(542, 6 + i * 6) < 0.5 ? D.shrubDark : D.shrubMid;
         out.push({
           k: 'ell',
-          c: rnd(542, 6 + i * 4) < 0.5 ? D.shrubDark : D.shrubMid,
+          c: D.shrubShadow,
           z: 0,
-          x,
-          y,
-          rx: r,
-          ry: r * 0.75,
+          x: x + r * 0.12,
+          y: y + r * 0.45,
+          rx: r * 1.15,
+          ry: r * 0.5,
         });
+        out.push({ k: 'ell', c, z: 0, x, y, rx: r, ry: r * 0.8 });
+        for (const side of [-1, 1])
+          out.push({
+            k: 'ell',
+            c,
+            z: 0,
+            x: x + side * r * 0.55,
+            y: y - r * 0.2,
+            rx: r * 0.6,
+            ry: r * 0.5,
+          });
         out.push({
           k: 'ell',
           c: D.shrubEdge,
           z: 1,
-          x: x - r * 0.25,
-          y: y - r * 0.4,
+          x: x + LIGHT.x * r * 0.45,
+          y: y + LIGHT.y * r * 0.9 - r * 0.15,
           rx: r * 0.55,
-          ry: r * 0.28,
+          ry: r * 0.3,
         });
       }
       break;
@@ -444,20 +460,32 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       break;
     }
     case 'molehills': {
-      // 3–6 kleine Erdhäufchen, Licht oben links
-      const n = 3 + Math.floor(rnd(546, 0) * 4);
+      // 3–5 runde Erdhügel dicht beieinander: dunkler Fuss, Erdton, hellere Kuppe oben links
+      const n = 3 + Math.floor(rnd(546, 0) * 3);
+      const cx = tx + 0.5,
+        cy = ty + 0.5;
       for (let i = 0; i < n; i++) {
-        const x = tx + 0.2 + 0.6 * rnd(546, 1 + i * 2),
-          y = ty + 0.25 + 0.5 * rnd(546, 2 + i * 2);
-        out.push({ k: 'ell', c: D.earth, z: 0, x, y, rx: 0.045, ry: 0.03 });
+        const x = cx + (rnd(546, 1 + i * 2) - 0.5) * 0.5,
+          y = cy + (rnd(546, 2 + i * 2) - 0.5) * 0.36;
+        const r = 0.055 + 0.02 * rnd(546, 12 + i);
+        out.push({
+          k: 'ell',
+          c: D.earthDark,
+          z: 0,
+          x: x + r * 0.1,
+          y: y + r * 0.3,
+          rx: r * 1.15,
+          ry: r * 0.75,
+        });
+        out.push({ k: 'ell', c: D.earth, z: 0, x, y, rx: r, ry: r * 0.8 });
         out.push({
           k: 'ell',
           c: D.earthLight,
           z: 1,
-          x: x - 0.012,
-          y: y - 0.012,
-          rx: 0.025,
-          ry: 0.014,
+          x: x - r * 0.3,
+          y: y - r * 0.3,
+          rx: r * 0.5,
+          ry: r * 0.35,
         });
       }
       break;
@@ -582,23 +610,69 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       break;
     }
     case 'ferns': {
-      // Farnsaum: Fächer aus 3–5 kurzen, frischgrünen Wedeln auf der Grasseite des Waldrands
-      const n = 3 + Math.floor(rnd(550, 0) * 3);
-      const [sx, sy, dx, dy] = sidePoint(el.arg, rnd(550, 1), 0.2);
+      // Farnsaum: lichter, durchgehender Streifen aus überlappenden Lappen entlang jeder Waldkante der Kachel, auf der
+      // Grasseite; dazu einzelne helle Wedel. Die Lappen berühren die Kachelkante, so schliessen Nachbarkacheln an.
+      const edges: [number, number, number][] = [
+        [1, 0, 1],
+        [2, 0, 1],
+        [4, 1, 0],
+        [8, 1, 0],
+      ];
+      for (const [bit, ,] of edges) {
+        if (!(el.arg & bit)) continue;
+        for (let k = 0; k < 4; k++) {
+          const along = 0.125 + 0.25 * k + 0.05 * (rnd(550, k + bit * 4) - 0.5);
+          const depth = 0.1 + 0.05 * rnd(550, 40 + k + bit * 4);
+          const r = 0.12 + 0.03 * rnd(550, 80 + k + bit * 4);
+          const [px, py] =
+            bit === 1
+              ? [depth, along]
+              : bit === 2
+                ? [1 - depth, along]
+                : bit === 4
+                  ? [along, depth]
+                  : [along, 1 - depth];
+          const x = tx + Math.min(0.99 - r, Math.max(0.01 + r, px)),
+            y = ty + Math.min(0.99 - r, Math.max(0.01 + r, py));
+          out.push({
+            k: 'ell',
+            c: D.fringe,
+            z: 0,
+            x,
+            y,
+            rx: r * (bit < 4 ? 0.8 : 1),
+            ry: r * (bit < 4 ? 1 : 0.8),
+          });
+          if (k % 2 === 0)
+            out.push({
+              k: 'ell',
+              c: D.fringeLight,
+              z: 1,
+              x: x - r * 0.2,
+              y: y - r * 0.25,
+              rx: r * 0.5,
+              ry: r * 0.35,
+            });
+        }
+      }
+      const n = 2 + Math.floor(rnd(550, 0) * 2);
+      const [sx, sy, dx, dy] = sidePoint(el.arg, rnd(550, 1), 0.3);
       const bx = tx + Math.min(0.9, Math.max(0.1, sx)),
         by = ty + Math.min(0.9, Math.max(0.1, sy));
       const base = Math.atan2(dy, dx);
       for (let i = 0; i < n; i++) {
-        const a = base + (n === 1 ? 0 : (i / (n - 1) - 0.5) * 1.3) + 0.12 * (rnd(550, 2 + i) - 0.5);
-        const len = 0.1 + 0.05 * rnd(550, 8 + i);
+        const a = base + (i / Math.max(1, n - 1) - 0.5) * 1.0;
+        const len = 0.1 + 0.04 * rnd(550, 8 + i);
+        const ex = bx + Math.cos(a) * len,
+          ey = by + Math.sin(a) * len;
         out.push(
           blade(
-            i % 2 ? D.fernDark : D.fern,
-            0,
+            D.fernDark,
+            1,
             bx,
             by,
-            bx + Math.cos(a) * len,
-            by + Math.sin(a) * len,
+            Math.min(tx + 0.98, Math.max(tx + 0.02, ex)),
+            Math.min(ty + 0.98, Math.max(ty + 0.02, ey)),
             1.6,
           ),
         );
@@ -616,4 +690,23 @@ function sidePoint(mask: number, t: number, inset: number): [number, number, num
   if (mask & 2) return [1 - inset * 0.4, along, -1, 0];
   if (mask & 4) return [along, inset * 0.5, 0, 1];
   return [along, 1 - inset * 0.5, 0, -1];
+}
+
+/**
+ * A1 Zusatzblüten: im Kern der Blumenflecks bis 4 weitere Blüten je Kachel (zusammen mit `flowersFor` bis 8), Grösse
+ * 1,5–2 Texturpixel; bei Zoom 1 ein farbiger Schleier, bei Zoom 2 einzelne Blüten. Salz 553, gleiche Töne und Fleckenfeld.
+ */
+export function extraFlowersFor(seed: number, x: number, y: number): Flower[] {
+  const dens = flowerVeil(seed, x + 0.5, y + 0.5);
+  if (dens < 0.25) return [];
+  const n = Math.min(4, Math.floor(dens * (0.6 + 4.4 * hash2(seed + 553, x * 64, y))));
+  const out: Flower[] = [];
+  for (let k = 0; k < n; k++)
+    out.push({
+      x: 0.06 + 0.88 * hash2(seed + 553, x * 64 + 1 + k * 3, y),
+      y: 0.06 + 0.88 * hash2(seed + 553, x * 64 + 2 + k * 3, y),
+      size: 1.5 + 0.5 * hash2(seed + 553, x * 64 + 3 + k * 3, y),
+      tone: Math.min(2, Math.floor(hash2(seed + 553, x * 64 + 40 + k, y) * 3)) as 0 | 1 | 2,
+    });
+  return out;
 }

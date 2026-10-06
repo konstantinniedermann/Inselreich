@@ -18,6 +18,8 @@ import {
   footprintFree,
   groundElements,
   kontorPos,
+  shrubDensity,
+  wildForest,
   rareCount,
   rareLot,
   rareSites,
@@ -35,6 +37,8 @@ import {
   FLOWER_PALETTES,
   flowerPalette,
   flowerTonesFor,
+  extraFlowersFor,
+  flowersFor,
   groundShapes,
   meadowWarmth,
   type Prim,
@@ -741,5 +745,92 @@ describe('L4 R3/R5/R6 reine Regeln und Stempelliste', () => {
     }
     expect(total).toBeGreaterThan(50);
     expect(stampLimit(1600)).toBeLessThanOrEqual(300);
+  });
+});
+
+describe('L4 Bild-Fix 1', () => {
+  it('D1 Urwald-Schätzer: ≥ 80 % der gelosten S/E-Elemente sind auf der frisch erzeugten Heimat sichtbar (Seeds 1–50)', () => {
+    let sites = 0,
+      visible = 0;
+    for (let seed = 1; seed <= 50; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const k = kontorOf(w);
+      const occ = occupancy(isl);
+      expect(
+        wildForest(seed, isl, staticClasses(isl)),
+        `Seed ${seed}: Schätzer passt`,
+      ).not.toBeNull();
+      const els = groundElements(seed, isl, occ, undefined, k);
+      const stamps = stampPlacements(seed, isl, k);
+      for (const s of rareSites(seed, isl, k)) {
+        sites++;
+        const ok =
+          s.id === 'steinkreis'
+            ? els.some((e) => e.kind === 'stoneCircle' && e.x === s.x && e.y === s.y)
+            : s.id === 'pilzring'
+              ? els.some((e) => e.kind === 'mushRing' && e.x === s.x && e.y === s.y)
+              : s.id === 'bluetenteppich'
+                ? els.some((e) => e.kind === 'carpet')
+                : stamps.some((t) => t.x === s.x && t.y === s.y);
+        if (ok) visible++;
+      }
+    }
+    expect(sites).toBeGreaterThan(80);
+    expect(visible / sites).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it('Der Schätzer ändert sich nicht durch Roden: Orte bleiben gleich', () => {
+    const w = fresh(7);
+    const isl = home(w);
+    const ref = JSON.stringify(rareSites(7, isl, kontorOf(w)));
+    const s = spots(w);
+    clearForest(w, s.wood.x, s.wood.y);
+    expect(JSON.stringify(rareSites(7, isl, kontorOf(w)))).toBe(ref);
+  });
+
+  it('A3 Buschgruppen: etwa 1 je 5–8 freie Wiesenkacheln, gehäuft (Dichte schwankt), runde Körper mit Lichtkante', () => {
+    let grass = 0,
+      shrubs = 0,
+      dens: number[] = [];
+    for (let seed = 1; seed <= 20; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      for (const t of isl.tiles) if (t.terrain === 'grass') grass++;
+      for (const e of groundElements(seed, isl, occupancy(isl), undefined, kontorOf(w)))
+        if (e.kind === 'shrubs') {
+          shrubs++;
+          const ps = groundShapes(e, seed);
+          expect(ps.filter((p) => p.k === 'ell').length).toBeGreaterThanOrEqual(4); // Körper, Lappen, Schatten, Licht
+        }
+      for (let y = 0; y < isl.height; y += 4) dens.push(shrubDensity(seed, 20, y));
+    }
+    expect(grass / shrubs).toBeGreaterThanOrEqual(5);
+    expect(grass / shrubs).toBeLessThanOrEqual(11);
+    expect(Math.max(...dens) - Math.min(...dens)).toBeGreaterThan(0.2);
+  });
+
+  it('A1 Zusatzblüten: Kern bis 8 Blüten je Kachel, Grösse 1,5–2 px, Palette je Insel; bestehendes flowersFor unverändert', () => {
+    let max = 0;
+    for (let seed = 1; seed <= 10; seed++)
+      for (let y = 0; y < 60; y++)
+        for (let x = 0; x < 60; x++) {
+          const base = flowersFor(seed, x, y);
+          const extra = extraFlowersFor(seed, x, y);
+          max = Math.max(max, base.length + extra.length);
+          for (const f of extra) {
+            expect(f.size).toBeGreaterThanOrEqual(1.5);
+            expect(f.size).toBeLessThanOrEqual(2);
+          }
+          expect(base.length + extra.length).toBeLessThanOrEqual(8);
+        }
+    expect(max).toBeGreaterThanOrEqual(7);
+  });
+
+  it('Kein Element besteht aus Strichen: alle Formen sind Füllungen (rect, ell, poly)', () => {
+    const w = createWorld(7);
+    const isl = home(w);
+    for (const e of groundElements(7, isl, occupancy(isl), undefined, kontorOf(w)))
+      for (const p of groundShapes(e, 7)) expect(['rect', 'ell', 'poly']).toContain(p.k);
   });
 });
