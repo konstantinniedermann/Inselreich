@@ -2416,3 +2416,16 @@ disjunkte Dateien). Handbuch-Änderung setzt `studio-coach` beim Session-Ende um
 Auswertung pro Release zu viel.
 
 Entscheider: L0 · Anlass: Nutzerfrage 2026-10-06 · ADR: —
+
+## R288 · 2026-10-06 · Beobachtungen: harte Schwelle beim Session-Start (ersetzt R287 (a))
+
+Ruling: Nutzervorschlag übernommen. Stehen beim Session-Start mehr als 30 ungesichtete Einträge in
+`docs/beobachtungen.md`, ist die Auswertung (`lead-production`, Skill `beobachtungen-auswerten`) das erste Paket
+der Session; jeder Eintrag endet als erledigt, abgehakt, eingeplant (Board) oder Idee. Bis sie fertig ist,
+startet keine neue Funktionsarbeit. Ausnahme: Hotfix für einen Live-Fehler läuft parallel. Die Zählung macht der
+SessionStart-Hook (Einträge unter der Marke „Letzte Auswertung“) und meldet sie im Start-Kontext, nicht das
+Gedächtnis von L0; Einbau des Zählers und Handbuch-Text durch `studio-coach` beim Session-Ende. Der Takt nach
+Release (R287 (a)) entfällt. R287 (b) und (c) gelten weiter. — Kosten bei Irrtum: eine Session beginnt mit
+Aufräumen statt mit Inhalt.
+
+Entscheider: L0 · Anlass: Nutzervorschlag 2026-10-06 · ADR: —
