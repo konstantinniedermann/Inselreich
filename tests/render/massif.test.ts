@@ -58,6 +58,9 @@ import { render } from '../../src/render/renderer';
 import { setCanvasFactory as setTreeCanvasFactory } from '../../src/render/trees';
 import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
+import { deltaE2000, rgbToLab } from './deltaE';
+import kernFixture from './fixtures/massif-kern-main.json';
+import { KERN_SEEDS, kernNodes } from './fixtures/massifKern';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
 
@@ -1131,3 +1134,32 @@ function inTri(t: readonly P[], x: number, y: number): boolean {
     w1 = ((c.x - x) * (a.y - y) - (a.x - x) * (c.y - y)) / d;
   return w0 >= 1e-6 && w1 >= 1e-6 && 1 - w0 - w1 >= 1e-6;
 }
+
+// ART-STIL-02 L2 (Q2): der Gebirgskern (hn ≥ 0,35) bleibt die Referenz, ausser Schnee- und Baummaske.
+/** Knoten, die Schnee (T4) oder Krüppelbäume (T5) tragen dürfen und im Kerntest ausgenommen sind. */
+const kernAusnahme = (_seed: number, _comp: number, _I: number, _J: number): boolean => false;
+
+describe('ART-STIL-02 L2 Kern', () => {
+  it('L2 Kern unverändert: Knoten ausserhalb von Schnee- und Baummaske gleich dem Stand vor L2 (≥ 95 % gefunden, ΔE2000 < 1, |Δh| ≤ 1 px)', () => {
+    type Fx = Record<string, { nodes: number[][] }>;
+    for (const seed of KERN_SEEDS) {
+      const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
+      const ref = (kernFixture as Fx)[String(seed)]!.nodes.filter(
+        (r) => !kernAusnahme(seed, r[0]!, r[1]!, r[2]!),
+      );
+      let found = 0,
+        dE = 0,
+        dH = 0;
+      for (const r of ref) {
+        const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
+        if (!n) continue;
+        found++;
+        dH += Math.abs(n.h - r[3]!);
+        dE += deltaE2000(rgbToLab(n.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
+      }
+      expect(found / ref.length, `Seed ${seed} gefunden`).toBeGreaterThanOrEqual(0.95);
+      expect(dE / found, `Seed ${seed} ΔE2000`).toBeLessThan(1);
+      expect(dH / found, `Seed ${seed} |Δh|`).toBeLessThanOrEqual(1);
+    }
+  });
+});
