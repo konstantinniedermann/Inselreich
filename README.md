@@ -516,6 +516,10 @@ Zeittests (Tests, die Wandzeit messen) allein und seriell, damit sie unter Last 
 in `vite.config.ts` fehlen, und lässt `make check` dann scheitern. Neuer Zeittest: Schwelle über
 `perfBudget` ableiten und die Datei in `ZEITTESTS` eintragen.
 
+`make messfenster` prüft vor einer Leistungsmessung die Last und fremde vitest-, vite- und Headless-Chrome-Prozesse
+(Ausgabe `Messfenster frei` oder `belegt: …`). Eine Messserie startet man mit
+`make messfenster ARGS="--run -- node tools/render-qa/perf.mjs ..."`; sie läuft nur bei freiem Fenster und unter `caffeinate -i`.
+
 Studio-Dashboard (lokal, nicht Teil des Spiels; Python 3, nur Standardbibliothek):
 
 ```bash

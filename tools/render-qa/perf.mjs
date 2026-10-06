@@ -4,9 +4,11 @@
 // Seiten laufen unter gleichen Bedingungen und abwechselnd (A, B, A, B, …), verglichen wird der Median der Mediane.
 //
 // Aufruf (benannte Argumente, alle optional ausser den Wurzeln):
-//   node tools/render-qa/perf.mjs --a <wurzelA> --b <wurzelB> [--seed 14 | --save <spielstand.json>]
+//   node tools/render-qa/perf.mjs --a <wurzelA> --b <wurzelB> [--seed 14 | --seed 3,14 | --save <spielstand.json>]
 //        [--runs 3] [--dpr 1] [--w 1920] [--h 1080] [--zoom 1] [--focus home|archipel|mountain|none]
 //        [--warm 5000] [--idle] [--help]
+// Seedliste: `--seed 3,14` misst jeden Seed als eigenen, vollständig getrennten Lauf (eigener Aufruf dieses Skripts,
+// eigene Chrome-/Vite-Instanz, kein Mittel über Seeds); Exit-Code 0 nur, wenn alle Läufe 0 liefern. Strg-C bricht ab.
 // Spielstand: `--seed N` erzeugt die Welt im Seitenkontext reproduzierbar mit `createWorld(N, { unlockAll: true })`
 // der jeweiligen Wurzel und legt sie als Autosave ab; `--save` nimmt eine Datei (z. B. `leistung-50`).
 // Schalter:
@@ -31,7 +33,7 @@
 // Altes Format (Positionsargumente `<savejson> <wurzelA> <wurzelB> [läufe] [dpr]`) bleibt gültig.
 import { readFileSync } from 'node:fs';
 import { cpus, release } from 'node:os';
-import { sleep, withBrowser } from './lib.mjs';
+import { spawn } from 'node:child_process';
 
 const argv = process.argv.slice(2);
 const opt = {};
@@ -46,12 +48,41 @@ if (argv[0] && !argv[0].startsWith('--')) {
   }
 }
 const USAGE =
-  'Aufruf: perf.mjs --a <wurzelA> --b <wurzelB> (--seed N | --save datei) [--runs 3] [--dpr 1] [--w 1280] [--h 800]\n' +
+  'Aufruf: perf.mjs --a <wurzelA> --b <wurzelB> (--seed N[,N...] | --save datei) [--runs 3] [--dpr 1] [--w 1280] [--h 800]\n' +
   '        [--zoom 1] [--focus home|archipel|mountain|none] [--warm 5000] [--idle] [--help]';
 if (opt.help) {
   console.log(USAGE);
   process.exit(0);
 }
+if (typeof opt.seed === 'string' && opt.seed.includes(',')) {
+  // Seedliste: je Seed ein eigener Aufruf mit sonst identischen Argumenten, nacheinander.
+  const seeds = opt.seed.split(',').map((x) => x.trim());
+  if (seeds.some((x) => !/^\d+$/.test(x))) {
+    console.error(`Ungültige Seedliste: ${opt.seed}\n${USAGE}`);
+    process.exit(2);
+  }
+  let child = null;
+  let signalCode = null;
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+    process.on(sig, () => {
+      signalCode ??= sig === 'SIGINT' ? 130 : sig === 'SIGTERM' ? 143 : 129;
+      child?.kill(sig);
+      if (!child) process.exit(signalCode);
+    });
+  }
+  let code = 0;
+  for (const seed of seeds) {
+    if (signalCode !== null) break;
+    const args = [...process.argv.slice(1)];
+    args[args.indexOf('--seed') + 1] = seed;
+    child = spawn(process.execPath, args, { stdio: 'inherit' });
+    const c = await new Promise((r) => child.once('exit', (st, sg) => r(st ?? (sg ? 1 : 0))));
+    child = null;
+    code = Math.max(code, c);
+  }
+  process.exit(signalCode ?? code);
+}
+const { sleep, withBrowser } = await import('./lib.mjs');
 const runs = Number(opt.runs ?? 3),
   dpr = Number(opt.dpr ?? 1),
   width = Number(opt.w ?? 1280),
