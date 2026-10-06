@@ -17,6 +17,9 @@ import {
   decorHill,
   footprintFree,
   fringeEnds,
+  G_KINDS,
+  G_MAX,
+  groundEligible,
   groundElements,
   kontorPos,
   shrubDensity,
@@ -989,6 +992,59 @@ describe('L4 Stempelliste rückt nicht nach (D1)', () => {
       clearForest(w, s.wood.x, s.wood.y);
       const after = stampPlacements(seed, home(w), kontorOf(w));
       for (const b of ids(before)) expect(ids(after), `Seed ${seed}`).toContain(b);
+    }
+  });
+});
+
+describe('L4 G-Anzahl: 2–12 je Insel (Katalog), statische Kandidatenliste', () => {
+  it('Seeds 1–50, frisch erzeugte Heimat: sichtbare Solitärbäume (A5) in [2, 12] für ≥ 90 % der Seeds, nie mehr als 12', () => {
+    let inBand = 0;
+    for (let seed = 1; seed <= 50; seed++) {
+      const w = createWorld(seed);
+      const n = stampPlacements(seed, home(w), kontorOf(w)).filter(
+        (s) => s.kind === 'solitaire',
+      ).length;
+      expect(n, `Seed ${seed}`).toBeLessThanOrEqual(12);
+      if (n >= 2) inBand++;
+    }
+    expect(inBand / 50).toBeGreaterThanOrEqual(0.9);
+  });
+
+  it('Seeds 1–50: sichtbare A7, A11, A12, B7 in [2, 12] für ≥ 80 % der Seeds, in denen das Gelände sie zulässt (≥ 12 zulässige Kacheln)', () => {
+    expect(G_MAX).toBe(12);
+    const kinds = G_KINDS;
+    const inBand: number[] = kinds.map(() => 0),
+      counted: number[] = kinds.map(() => 0);
+    for (let seed = 1; seed <= 50; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const els = plan(w);
+      const el = groundEligible(seed, isl, kontorOf(w));
+      kinds.forEach((kd, i) => {
+        const n = els.filter((e) => e.kind === kd).length;
+        expect(n, `Seed ${seed} ${kd}`).toBeLessThanOrEqual(12);
+        if (el[i]! >= 12) {
+          counted[i]!++;
+          if (n >= 2) inBand[i]!++;
+        }
+      });
+    }
+    kinds.forEach((kd, i) => {
+      expect(counted[i], `${kd}: Seeds mit zulässigem Gelände`).toBeGreaterThanOrEqual(25);
+      expect(inBand[i]! / counted[i]!, kd).toBeGreaterThanOrEqual(0.8);
+    });
+  });
+
+  it('Nicht nachrücken: ein belegter Kandidat entfernt nur sich selbst, kein anderer Kandidat erscheint', () => {
+    for (const seed of [1, 7, 14]) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const before = plan(w).filter((e) => (G_KINDS as readonly string[]).includes(e.kind));
+      const t = before[0]!;
+      isl.tiles[t.y * isl.width + t.x]!.buildingId = 9999;
+      const after = plan(w).filter((e) => (G_KINDS as readonly string[]).includes(e.kind));
+      isl.tiles[t.y * isl.width + t.x]!.buildingId = null;
+      expect(after.map(key)).toEqual(before.filter((e) => e !== t).map(key));
     }
   });
 });

@@ -39,7 +39,14 @@ export const STAMP_MAX = 300;
 export const SOLITAIRE_FOREST_GAP = 2;
 export const STAMP_SPACING = 3;
 export const SOLITAIRE_MAX = 12;
-const SOLITAIRE_P = 0.012;
+/** G-Elemente (Katalog: 2–12 je Insel): Zahl der statischen Kandidaten je Insel liegt in [G_MIN, G_MAX]. */
+export const G_MIN = 3;
+export const G_MAX = 12;
+/** Mindestabstand der Kandidaten gleicher Art (Kacheln, Chebyshev) bei den Boden-G-Elementen. */
+const G_SPACING = 4;
+/** Zahl der Kandidaten einer G-Art je Insel: `G_MIN`…`G_MAX`, aus dem Salz der Art (Argumente −1, −1). */
+export const gCount = (seed: number, salt: number): number =>
+  G_MIN + Math.floor(hash2(seed + salt, -1, -1) * (G_MAX - G_MIN + 1));
 /** Mauerreste (A14): Mindestabstand zum Kontor in Kacheln. */
 export const RUIN_KONTOR_GAP = 8;
 
@@ -217,6 +224,10 @@ interface StaticPlan {
   sites: RareSite[];
   /** Statische Stempelliste (D1): Kandidaten, Reihenfolge, Abstand und Deckel nur aus dem statischen Gelände. */
   stamps: StampPlacement[];
+  /** Statische Kandidaten der Boden-G-Elemente je Kachel (0 keiner, sonst 1 + Index in `G_KINDS`). */
+  g: Uint8Array;
+  /** Zahl der statisch zulässigen Kacheln je G-Art (für Tests: „das Gelände lässt es zu“). */
+  gEligible: number[];
   /** 0 frei, sonst 1 + Index in `sites` (Fussabdruck bzw. Teppichkacheln). */
   reserved: Uint8Array;
 }
@@ -409,10 +420,13 @@ export function staticPlan(seed: number, isl: DecorIsland, kontor: Pos | null = 
     wild,
     sites: [],
     stamps: [],
+    g: new Uint8Array(w * h),
+    gEligible: [0, 0, 0, 0],
     reserved: new Uint8Array(w * h),
   };
   planRare(p, w, h);
   planStamps(p, w, h);
+  planGround(p, w, h);
   plans.set(isl, p);
   return p;
 }
@@ -518,27 +532,72 @@ function planStamps(p: StaticPlan, w: number, h: number): void {
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      const r = hash2(seed + 540, x, y);
       // statisch: Grünland ohne Urwald (Abstand ≥ SOLITAIRE_FOREST_GAP + 1 zum Nicht-Grünland bzw. Urwald), nicht reserviert
-      if (
-        r >= SOLITAIRE_P ||
-        p.reserved[i] ||
-        p.cls[i] !== 2 ||
-        p.green[i]! < SOLITAIRE_FOREST_GAP + 1
-      )
-        continue;
-      cand.push({ x, y, r });
+      if (p.reserved[i] || p.cls[i] !== 2 || p.green[i]! < SOLITAIRE_FOREST_GAP + 1) continue;
+      cand.push({ x, y, r: hash2(seed + 540, x, y) });
     }
   cand.sort((a, b) => a.r - b.r);
+  // G (2–12 je Insel): feste Zahl von Kandidaten aus dem Rang, nicht aus einem Los je Kachel
+  const target = gCount(seed, 540);
   let solitaires = 0;
   for (const c of cand) {
-    if (solitaires >= SOLITAIRE_MAX || out.length >= limit) break;
+    if (solitaires >= Math.min(target, SOLITAIRE_MAX) || out.length >= limit) break;
     if (near(c.x, c.y)) continue;
     add('solitaire', c.x, c.y);
     solitaires++;
   }
   p.stamps = out.sort((a, b) => a.id - b.id);
 }
+
+/** Boden-G-Elemente mit statischer Kandidatenliste: A7, A11, A12, B7 (Salze 545, 546, 547, 549). */
+export const G_KINDS = ['stoneHeap', 'molehills', 'reeds', 'deadwood'] as const;
+const G_SALTS = [545, 546, 547, 549] as const;
+
+/**
+ * Statische Kandidaten der Boden-G-Elemente (D1): je Art die `gCount` besten zulässigen Grünlandkacheln nach Rang
+ * `hash2(seed + salt, x * 64 + 63, y)` mit Abstand `G_SPACING`. Zulässig: A7/A11 im Inneren der Wiese (ohne Urwald), A12
+ * nahe der Küste (Abstand 1–3 zum Wasser), B7 an Kacheln mit Urwald als Nachbar. Ob ein Kandidat gezeigt wird, entscheiden
+ * Belegung und aktueller Wald (`tileKind`); ein ausgeblendeter Platz wird nie ersetzt.
+ */
+function planGround(p: StaticPlan, w: number, h: number): void {
+  const seed = p.seed;
+  const wild = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < w && y < h && p.wild?.[y * w + x] === 1;
+  G_KINDS.forEach((kind, ki) => {
+    const salt = G_SALTS[ki]!;
+    const cand: { i: number; x: number; y: number; r: number }[] = [];
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (p.cls[i] !== 2 || p.wild?.[i] === 1 || p.reserved[i] || p.g[i]) continue;
+        const ok =
+          kind === 'reeds'
+            ? p.coast[i]! >= 1 && p.coast[i]! <= 3
+            : kind === 'deadwood'
+              ? wild(x - 1, y) || wild(x + 1, y) || wild(x, y - 1) || wild(x, y + 1)
+              : p.green[i]! >= 3;
+        if (ok) cand.push({ i, x, y, r: hash2(seed + salt, x * 64 + 63, y) });
+      }
+    p.gEligible[ki] = cand.length;
+    cand.sort((a, b) => a.r - b.r);
+    const n = gCount(seed, salt);
+    const taken: { x: number; y: number }[] = [];
+    for (const c of cand) {
+      if (taken.length >= n) break;
+      if (taken.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < G_SPACING))
+        continue;
+      taken.push(c);
+      p.g[c.i] = ki + 1;
+    }
+  });
+}
+
+/** Statisch zulässige Kacheln je Boden-G-Art in der Reihenfolge von `G_KINDS` (Test: „das Gelände lässt es zu“). */
+export const groundEligible = (
+  seed: number,
+  isl: DecorIsland,
+  kontor: Pos | null = null,
+): number[] => staticPlan(seed, isl, kontor).gEligible.slice();
 
 /**
  * Stempel der Insel: die statische Liste (`planStamps`), ausgeblendet wo der Fuss kein unbelegtes Gras ist, auf Kacheln vor
@@ -569,11 +628,7 @@ const BAND = {
   boulder: 0.03,
   boulderMtn: 0.1,
   boulderHill: 0.04,
-  stoneHeap: 0.004,
-  molehills: 0.004,
-  reeds: [0.1, 0.07, 0.04] as const,
   toadstools: 0.08,
-  deadwood: 0.045,
 } as const;
 
 const forestAt = (isl: DecorIsland, x: number, y: number): boolean =>
@@ -670,12 +725,12 @@ function tileKind(
     forestAt(isl, x + 1, y) ||
     forestAt(isl, x, y - 1) ||
     forestAt(isl, x, y + 1);
+  // statischer G-Kandidat dieser Kachel (A7, A11, A12, B7): B7 braucht jetzt Wald als Nachbarn, sonst entfällt er
+  const g = plan.g[i]!;
+  if (g && (G_KINDS[g - 1] !== 'deadwood' || edge4)) return G_KINDS[g - 1]!;
   if (edge4) {
     if (hit(BAND.toadstools)) return 'toadstools';
-    if (hit(BAND.deadwood)) return 'deadwood';
   }
-  const cd = plan.coast[i]!;
-  if (cd >= 1 && cd <= 3 && hit(BAND.reeds[cd - 1]!)) return 'reeds';
   // A3 braucht rundum Abstand zu Weg/Gebäude und zum Wald
   let ringFree = true;
   for (let dy = -DECOR_REACH; dy <= DECOR_REACH && ringFree; dy++)
@@ -689,8 +744,6 @@ function tileKind(
       }
     }
   if (ringFree && hit(shrubDensity(seed, x, y))) return 'shrubs';
-  if (hit(BAND.stoneHeap)) return 'stoneHeap';
-  if (hit(BAND.molehills)) return 'molehills';
   const pm = plan.mtn[i]! <= 5 ? (6 - plan.mtn[i]!) / 5 : 0; // am Gebirge häufiger
   const hill = decorHill(seed, x + 0.5, y + 0.5) > 0.62 ? BAND.boulderHill : 0; // Kuppen
   if (hit(BAND.boulder + BAND.boulderMtn * pm + hill)) return 'boulder';
