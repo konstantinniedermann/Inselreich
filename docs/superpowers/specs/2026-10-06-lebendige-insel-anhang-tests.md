@@ -14,7 +14,7 @@
 - **0.2 Salze (T6, R1):** Neue Salze nur aus 500–599, eingetragen im Kopfkommentar von `src/render/groundDecor.ts`
   im selben Commit wie der Code. Vergabe: **500** Inselcharakter `hash2(seed + 500, 0, k)` (k 0 Waldtyp L1, k 1
   Blüten, k 2 Küste, k 3 Gebirge, k 4 Nachtmeer; L8) · **501–519** L1 · **520–539** L2 · **540–559** L4 ·
-  **560–574** L5 · **575–584** L6 · **585–594** L7 · **595–599** L8 (Seltenheitsbudget).
+  **560–569** L5 · **570–575** L3 (sprites.ts, material.ts) · **576–584** L6 · **585–594** L7 · **595–599** L8 (Seltenheitsbudget).
 - **0.3 Unberührte Referenzen (Q2):** `tests/render/picking.test.ts` und `tests/render/verdeckung.test.ts` bleiben
   in allen Häppchen unverändert. Prüfung im Review: `git diff --stat <basis> -- tests/render/picking.test.ts
 tests/render/verdeckung.test.ts` ist leer. Dasselbe gilt für `src/sim/` und `tests/sim/`.
