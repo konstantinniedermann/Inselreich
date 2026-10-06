@@ -2340,3 +2340,33 @@ mehr zu entdecken in einem Guss; die Auslegung widerspricht ihm nicht, weil sie 
 Kosten bei Irrtum: Phase 1 ist reine Analyse; Häppchen einzeln revertierbar.
 
 Entscheider: L0 · Anlass: Nutzerfeedback 2026-10-06 · ADR: —
+
+## R281 · 2026-10-06 · ART-STIL-02 direkt in die Produktion
+
+Ruling: Nutzer: „ich muss nichts testen, setze es um, ich teste an der Produktion." ART-STIL-02 läuft ohne
+Nutzer-Zwischenstände bis Pages durch: L0 entscheidet das kombinierte Gate sofort nach Eingang, Häppchen folgen
+ohne Pause, Release nach Gate Merge. Interne Prüfungen (Review je Task, Browser-Check, opus-Review) bleiben
+(Verfassung §9). — Kosten bei Irrtum: Revert des Release-Merges.
+
+Entscheider: Nutzer · Anlass: Nutzerantwort 2026-10-06 · ADR: —
+
+## R282 · 2026-10-06 · Bündeln von Prüfungen (ART-STIL-02)
+
+Ruling: Nutzer: „Sachen bündeln, visuelle Tests und Playtests bündeln." Ausgelegt für ART-STIL-02: kein
+qa-playtester je Häppchen, sondern **ein** Browser-Lauf je Release über alle Häppchen; Bildurteil je Häppchen
+nur per Galerie-Skript durch lead-art (kein Agent-Start); unabhängige kleine Tasks eines Häppchens in einen
+Engineer-Start (R233 V1); Blindtest L3 im Release-Lauf A. Review je Task und opus-Review je Release bleiben
+(§9). Zweck: Zeit und Tokens sparen; Auslegung widerspricht ihm nicht, weil Prüftiefe am Release erhalten
+bleibt. — Kosten bei Irrtum: Fehler fallen später auf, Fix-Runde im Release-Lauf.
+
+Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-06 · ADR: —
+
+## R283 · 2026-10-06 · Gate ART-STIL-02 (kombiniert)
+
+Ruling: Nachtrag „Lebendige Insel" freigegeben (lead-tech, lead-qa: BEDENKEN). Nacharbeit T1–T6, Q1–Q7 als
+Test-Anhang zur Spec, ohne Zweitprüfung; §9: Caches ja, Mouse-over zurückgestellt, E8 mit Durchfallkriterium,
+zwei Releases mit einer Freigabe. Stufe leicht nach E-028 trotz 8 Häppchen: je Häppchen ≤ 1 Session, keine
+Sim-/Save-Änderung, opus-Review je Release. Budget lead-art 26 / lead-qa 2, Parallelität 3. — Kosten bei
+Irrtum: Häppchen fliegt aus dem Kandidaten.
+
+Entscheider: L0 · Anlass: `.studio/handoffs/2026-10-06-l0-lead-art-gate.md` · ADR: —
