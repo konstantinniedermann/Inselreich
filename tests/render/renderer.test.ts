@@ -1095,7 +1095,9 @@ describe('S1-Rest DIM_FIRE', () => {
 });
 
 describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
-  const HOME_CALLS = { hash: 363174084, length: 12339 };
+  // L6 B2: Farnbüschel auf Lichtungen sind zusätzliche drawImage-Ereignisse vor dem Baumstempel; die Positionen `at` der
+  // folgenden Aufrufe verschieben sich (Länge gleich), der Hash ist bewusst neu (ART-STIL-02 L6, nur dieser Wert).
+  const HOME_CALLS = { hash: 1162665526, length: 12339 };
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
