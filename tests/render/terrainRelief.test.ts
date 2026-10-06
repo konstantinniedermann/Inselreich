@@ -91,7 +91,7 @@ describe('H-R11 Hanggrenze (S6)', () => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(4);
     }
-  });
+  }, 30_000); // H-T5: CI bis 4,4 s (Default 5 s); lokal CI=true ≈ 1,5 s, Timeout > 3 ×, Reserve für den Runner
 });
 
 describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
