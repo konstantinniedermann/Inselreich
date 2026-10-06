@@ -1,3 +1,4 @@
+import { SHIP } from './defs/sea';
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
 import { upkeepOf } from './levels';
@@ -60,7 +61,7 @@ export function grantRefund(world: World, isl: Island, cost: Cost): void {
 export function totalUpkeep(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) sum += upkeepOf(b);
-  return sum;
+  return sum + world.ships.length * SHIP.upkeep;
 }
 
 /** Bucht den Unterhalt je Schritt mit ganzzahligem Übertrag; `stats.upkeep` bleibt der Nominalwert. */
