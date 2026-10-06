@@ -4,6 +4,7 @@ import {
   SOFT_CUT,
   SUB,
   massifPieces,
+  massifTreeMask,
   pieceCells,
   pieceNodes,
   type MassifPiece,
@@ -58,7 +59,7 @@ export function kernNodes(seed: number): KernNode[] {
           h: nd.h,
           rgb: [Math.round(nd.c[0]), Math.round(nd.c[1]), Math.round(nd.c[2])],
           snow: nd.snow >= 0.5,
-          tree: false,
+          tree: massifTreeMask(p.comp, I, J),
         });
       }
   }

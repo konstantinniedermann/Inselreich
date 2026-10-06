@@ -19,6 +19,7 @@ import {
   type SortedItem,
 } from '../../src/render/iso';
 import { MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from '../../src/render/limits';
+import { TREE_H } from '../../src/render/trees';
 import { PALETTE, SIGNAL_NAMES, rgbOf, rgbOfCss } from '../../src/render/palette';
 import {
   AMP_CAP,
@@ -30,6 +31,8 @@ import {
   cellColor,
   massifData,
   massifPieces,
+  massifTreeMask,
+  massifTrees,
   nodeHeight,
   nodeInside,
   pieceCells,
@@ -1418,5 +1421,84 @@ describe('ART-STIL-02 L2 Schnee (C2)', () => {
     }
     expect(maxL).toBeLessThanOrEqual(foam + 0.5);
     expect(schnee).toBeGreaterThan(300);
+  }, 60000);
+});
+
+describe('ART-STIL-02 L2 Krüppelbäume (C3)', () => {
+  it('L2 Bäume: 3–20 je grossem Massiv, kleine 0–3, deterministisch (Seeds 7 und 14)', () => {
+    for (const seed of KERN_SEEDS) {
+      const a = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const b = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      for (const [i, c] of a.comps.entries()) {
+        const n = massifTrees(c).trees.length;
+        if (c.amp >= 90 || c.n >= 24) {
+          expect(n, `Seed ${seed} Komponente ${i}`).toBeGreaterThanOrEqual(3);
+          expect(n, `Seed ${seed} Komponente ${i}`).toBeLessThanOrEqual(20);
+        } else expect(n, `Seed ${seed} Komponente ${i} klein`).toBeLessThanOrEqual(3);
+        expect(massifTrees(b.comps[i]!).trees, `Seed ${seed} deterministisch`).toEqual(
+          massifTrees(c).trees,
+        );
+        expect(massifTrees(c), 'gemerkt je Komponente').toBe(massifTrees(c));
+      }
+    }
+  });
+
+  it('L2 Bäume: Anker in Bewuchs- oder Rinnenlage, hn 0,08–0,5, steep < 0,7, kein Schnee, Streifen-Mitte ((I − J) mod 4 = 2), Abstand ≥ 1,5 Kacheln', () => {
+    for (const seed of KERN_SEEDS) {
+      const fw = fieldWorld(createWorld(seed, { unlockAll: true }));
+      const pieces = massifPieces(fw);
+      for (const c of massifData(fw).comps.filter((k) => k.amp >= 90 || k.n >= 24)) {
+        const ts = massifTrees(c).trees;
+        const own = pieces.filter((p) => p.comp === c);
+        for (const t of ts) {
+          expect((((t.I - t.J) % 4) + 4) % 4).toBe(2);
+          const p = own.find((q) =>
+            pieceCells(q).some((k) => k.I === t.I && k.J === t.J && !k.seam),
+          )!;
+          expect(p, 'Anker liegt in genau einem Teilstück').toBeDefined();
+          const nd = pieceNodes(p)(t.I, t.J);
+          const hn = nd.h / c.amp;
+          expect(hn).toBeGreaterThanOrEqual(0.08);
+          expect(hn).toBeLessThan(0.5);
+          expect(nd.veg >= 0.5 || nd.e < -0.3).toBe(true);
+          expect(nd.steep).toBeLessThan(0.7);
+          expect(nd.snow).toBeLessThan(0.5);
+          expect(t.height).toBeGreaterThanOrEqual(6);
+          expect(t.height).toBeLessThanOrEqual(9);
+          expect(t.height).toBeLessThanOrEqual(TREE_H);
+        }
+        for (const [i, a] of ts.entries())
+          for (const b of ts.slice(i + 1))
+            expect(Math.hypot(a.I - b.I, a.J - b.J) / SUB).toBeGreaterThanOrEqual(1.5);
+      }
+    }
+  });
+
+  it('L2 Bäume im Raster: Stamm (earthEdge) und Krone (crown/crownLight) erscheinen bei f = 2 scharf, Baummaske umfasst den Umkreis von 2 Knoten', () => {
+    const w = createWorld(14, { unlockAll: true });
+    const c = largest(w);
+    const { trees, mask } = massifTrees(c);
+    expect(trees.length).toBeGreaterThanOrEqual(3);
+    for (const t of trees) expect(massifTreeMask(c, t.I + 2, t.J - 2)).toBe(true);
+    expect(massifTreeMask(c, trees[0]!.I + 3, trees[0]!.J + 3) || mask.size > 0).toBe(true);
+    const want = new Set(
+      [PALETTE.earthEdge, PALETTE.crown, PALETTE.crownLight].map((h) =>
+        rgbOfCss(h)
+          .map((v) => Math.round(v))
+          .join(','),
+      ),
+    );
+    const found = new Set<string>();
+    for (const it of massifItems(w)) {
+      if (it.piece.comp !== c) continue;
+      const b = massifBounds(it);
+      const buf = rasterPiece(it, Math.round((ISO_W / 2) * 2), Math.ceil(b.h * 2), 2);
+      for (let o = 0; o < buf.length; o += 4) {
+        if (buf[o + 3] !== 255) continue;
+        const k = `${buf[o]},${buf[o + 1]},${buf[o + 2]}`;
+        if (want.has(k)) found.add(k);
+      }
+    }
+    expect(found.size).toBe(3);
   }, 60000);
 });

@@ -1080,3 +1080,102 @@ export function pieceMesh(p: MassifPiece): MeshCell[] {
     return { ...cell, n: [at(I, J), at(I + 1, J), at(I + 1, J + 1), at(I, J + 1)] };
   });
 }
+
+// ---------- Krüppelbäume (L2 C3) ----------
+
+/** Salz der Baumauswahl und der Formvariante (Block 530–539, Liste in groundDecor.ts). */
+export const L2_TREE_SALT = 534;
+const TREE_HN_MIN = 0.08,
+  TREE_HN_MAX = 0.5,
+  TREE_STEEP_MAX = 0.7,
+  TREE_SPACING = 1.5 * SUB, // Knoten (Abstand ≥ 1,5 Kacheln)
+  TREE_MAX_BIG = 20,
+  TREE_MAX_SMALL = 3,
+  TREE_BIG_N = 24, // grosses Massiv: amp ≥ SNOW_MIN_AMP oder n ≥ TREE_BIG_N
+  TREE_PER_TILES = 22, // etwa ein Baum je so viele Kacheln, im Rahmen der Obergrenzen
+  TREE_MASK_R = 2; // Baummaske: Knoten im Umkreis von 2 Knoten um den Anker
+export interface MassifTree {
+  /** Anker: Knoten (globale Knotenkoordinaten), (I − J) mod 4 = 2 = Mitte des Halbstreifens */
+  I: number;
+  J: number;
+  /** Höhe des Geländes am Anker (px) */
+  h: number;
+  /** Baumhöhe in Weltpixeln (6–9) */
+  height: number;
+  /** Windschiefe: Krone neigt sich um so viele Weltpixel zur Seite (−2 … 2) */
+  lean: number;
+  /** Kronenlappen 2–3 */
+  lobes: number;
+  /** Formvariante 0…1 */
+  v: number;
+}
+export interface MassifTrees {
+  trees: MassifTree[];
+  /** Knoten im Umkreis von TREE_MASK_R Knoten um einen Anker (Schlüssel J · 100000 + I) */
+  mask: Set<number>;
+}
+const treeCache = new WeakMap<MassifComponent, MassifTrees>();
+
+/**
+ * Krüppelbäume einer Komponente, gemerkt: Anker auf Knoten in der Mitte des Halbstreifens (kein Baum quert eine
+ * Streifenkante), in Bewuchs- oder Rinnenlage, hn 0,08–0,5, nicht steil, nicht im Schnee; Auswahl nach
+ * `hash2(seed + 534, I, J)`, Abstand ≥ 1,5 Kacheln. 3–20 je grossem Massiv, höchstens 3 je kleinem. Rein.
+ */
+export function massifTrees(c: MassifComponent): MassifTrees {
+  const hit = treeCache.get(c);
+  if (hit) return hit;
+  const big = c.amp >= SNOW_MIN_AMP || c.n >= TREE_BIG_N;
+  const cap = big
+    ? Math.max(3, Math.min(TREE_MAX_BIG, Math.round(c.n / TREE_PER_TILES)))
+    : Math.min(TREE_MAX_SMALL, Math.floor(c.n / 8));
+  const cand: { I: number; J: number; r: number }[] = [];
+  for (let J = c.y0 * SUB; J <= (c.y1 + 1) * SUB; J++)
+    for (let I = c.x0 * SUB; I <= (c.x1 + 1) * SUB; I++) {
+      if ((((I - J) % 4) + 4) % 4 !== 2 || !nodeInside(c, I, J)) continue;
+      const h = nodeHeight(c, I, J),
+        hn = h / c.amp;
+      if (hn < TREE_HN_MIN || hn >= TREE_HN_MAX) continue;
+      const gx = ((nodeHeight(c, I + 1, J) - nodeHeight(c, I - 1, J)) / 2) * SUB,
+        gy = ((nodeHeight(c, I, J + 1) - nodeHeight(c, I, J - 1)) / 2) * SUB;
+      const lap =
+        nodeHeight(c, I - 1, J) +
+        nodeHeight(c, I + 1, J) +
+        nodeHeight(c, I, J - 1) +
+        nodeHeight(c, I, J + 1) -
+        4 * h;
+      const steep = steepness(gx, gy);
+      if (steep >= TREE_STEEP_MAX) continue;
+      const fx = I / SUB,
+        fy = J / SUB;
+      const rinne = Math.max(-1, Math.min(1, -lap / LAP_REF)) < -0.3;
+      if (!rinne && vegField(c.seed, fx, fy, hn, steep, lap) < 0.5) continue;
+      if (snowField(c.seed, fx, fy, c.amp, c.snowHn, hn, steep, lap) >= 0.5) continue;
+      cand.push({ I, J, r: hash2(c.seed + L2_TREE_SALT, I, J) });
+    }
+  cand.sort((a, b) => a.r - b.r || a.J - b.J || a.I - b.I);
+  const trees: MassifTree[] = [];
+  for (const k of cand) {
+    if (trees.length >= cap) break;
+    if (trees.some((t) => Math.hypot(t.I - k.I, t.J - k.J) < TREE_SPACING)) continue;
+    const v = hash2(c.seed + L2_TREE_SALT + 1, k.I, k.J);
+    trees.push({
+      I: k.I,
+      J: k.J,
+      h: nodeHeight(c, k.I, k.J),
+      height: 6 + Math.round(3 * hash2(c.seed + L2_TREE_SALT + 2, k.I, k.J)),
+      lean: (hash2(c.seed + L2_TREE_SALT + 3, k.I, k.J) - 0.5) * 4,
+      lobes: 2 + (v > 0.5 ? 1 : 0),
+      v,
+    });
+  }
+  const mask = new Set<number>();
+  for (const t of trees)
+    for (let dj = -TREE_MASK_R; dj <= TREE_MASK_R; dj++)
+      for (let di = -TREE_MASK_R; di <= TREE_MASK_R; di++) mask.add((t.J + dj) * 100000 + t.I + di);
+  const out = { trees, mask };
+  treeCache.set(c, out);
+  return out;
+}
+/** Knoten (I, J) liegt in der Baummaske (Umkreis von 2 Knoten um einen Anker). */
+export const massifTreeMask = (c: MassifComponent, I: number, J: number): boolean =>
+  massifTrees(c).mask.has(J * 100000 + I);

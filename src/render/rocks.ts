@@ -4,7 +4,8 @@ import { DEBRIS_MIX } from './light';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
 import { FLOWER_TONES } from './groundDecor';
-import { rgbOfCss } from './palette';
+import { PALETTE, rgbOf, rgbOfCss } from './palette';
+import { mixRgb, LIGHT_COLORS } from './light';
 import {
   DEBRIS,
   EDGE_ON,
@@ -21,10 +22,13 @@ import {
   VEG_GRASS_TONES,
   VEG_MIX,
   VEG_TONES,
+  massifTrees,
+  pieceCells,
   pieceHeight,
   pieceMesh,
   toneStep,
   type MassifPiece,
+  type MassifTree,
   type MeshCell,
 } from './massif';
 
@@ -113,6 +117,27 @@ export function massifSilhouette(item: MassifItem | { piece: MassifPiece }): Pt[
   return out;
 }
 
+const treesOf = new WeakMap<MassifPiece, MassifTree[]>();
+/**
+ * Krüppelbäume, die ein Teilstück malt (L2 C3): Anker-Zelle (I, J) unter den Zellen des Teilstücks, auch Nahtzellen
+ * (das vordere Teilstück übermalt sonst den Baum des hinteren). Nach Tiefe I + J geordnet.
+ */
+export function pieceTrees(p: MassifPiece): MassifTree[] {
+  let out = treesOf.get(p);
+  if (!out) {
+    const all = massifTrees(p.comp).trees;
+    if (all.length === 0) out = [];
+    else {
+      const cells = new Set(pieceCells(p).map((c) => c.J * 100000 + c.I));
+      out = all
+        .filter((t) => cells.has(t.J * 100000 + t.I))
+        .sort((a, b) => a.I + a.J - (b.I + b.J) || a.I - b.I);
+    }
+    treesOf.set(p, out);
+  }
+  return out;
+}
+
 const boxes = new WeakMap<MassifPiece, Box>();
 /** Bildbox eines Teilstücks (Weltpixel): Halbstreifen × Silhouette samt Rand. */
 export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
@@ -126,6 +151,7 @@ export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
       y0 = Math.min(y0, q.y);
       y1 = Math.max(y1, q.y);
     }
+    for (const t of pieceTrees(p)) y0 = Math.min(y0, (t.I + t.J) * NY - t.h - t.height); // Bäume ragen über die Silhouette
     b = { x: p.strip * STRIP, y: y0 - PAD, w: STRIP, h: y1 - y0 + 2 * PAD };
     boxes.set(p, b);
   }
@@ -231,7 +257,12 @@ export function rasterPiece(
   const seed = item.piece.comp.seed;
   const px = new Float64Array(4),
     py = new Float64Array(4);
+  const trees = pieceTrees(item.piece);
+  let ti = 0;
   for (const c of pieceMesh(item.piece)) {
+    // Bäume nach den Zellen bis zur Tiefe ihres Ankers: davor liegende Zellen überdecken den Fuss
+    while (ti < trees.length && trees[ti]!.I + trees[ti]!.J < c.I + c.J)
+      drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
     const I = [c.I, c.I + 1, c.I + 1, c.I],
       J = [c.J, c.J, c.J + 1, c.J + 1];
     for (let k = 0; k < 4; k++) {
@@ -240,6 +271,7 @@ export function rasterPiece(
     }
     for (const t of cellTris(c.n)) triangle(buf, W, H, px, py, t, c.n, seed, b.x, b.y, sx, sy);
   }
+  while (ti < trees.length) drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
   if (ss === 1) {
     // ImageData erwartet unvormultiplizierte Farben (nur im Sockelband nötig)
     for (let o = 0; o < buf.length; o += 4) {
@@ -278,6 +310,70 @@ export function rasterPiece(
       }
     }
   return out;
+}
+
+const TREE_CROWN = rgbOf(PALETTE.crown),
+  TREE_LIGHT = rgbOf(PALETTE.crownLight),
+  TREE_TRUNK = rgbOf(PALETTE.earthEdge),
+  TREE_LINE = mixRgb(rgbOf(PALETTE.crown), LIGHT_COLORS.cool, 0.35); // dunkle Eigenkontur, nie Schwarz
+
+/**
+ * Windschiefe Kiefer am Anker (L2 C3), in Weltpixeln gezeichnet (scharf bei jedem Faktor): Stamm in earthEdge, Krone
+ * aus 2–3 Lappen in crown/crownLight (Licht links oben) mit dunkler Eigenkontur. Höhe 6–9, Breite höchstens 8 px.
+ */
+function drawTree(
+  buf: Uint8ClampedArray,
+  W: number,
+  H: number,
+  t: MassifTree,
+  ox: number,
+  oy: number,
+  sx: number,
+  sy: number,
+): void {
+  const fx = (t.I - t.J) * NX,
+    fy = (t.I + t.J) * NY - t.h;
+  const top = t.height,
+    lean = t.lean;
+  const lobes: { cu: number; cv: number; rx: number; ry: number }[] = [];
+  for (let i = 0; i < t.lobes; i++) {
+    const a = t.lobes === 1 ? 0 : i / (t.lobes - 1); // 0 unten, 1 oben
+    lobes.push({
+      cu: lean * (0.35 + 0.65 * a) + (i % 2 === 0 ? -1.1 : 1.1) * (1 - 0.4 * a),
+      cv: top * (0.5 + 0.28 * a),
+      rx: 2.2 - 0.25 * a,
+      ry: Math.min(2, top - top * (0.5 + 0.28 * a)) * (0.85 + 0.15 * (1 - a)) + 0.1,
+    });
+  }
+  const x0 = Math.max(0, Math.floor((fx - 5 - ox) * sx)),
+    x1 = Math.min(W - 1, Math.ceil((fx + 5 - ox) * sx)),
+    y0 = Math.max(0, Math.floor((fy - top - 1 - oy) * sy)),
+    y1 = Math.min(H - 1, Math.ceil((fy + 0.5 - oy) * sy));
+  for (let y = y0; y <= y1; y++)
+    for (let x = x0; x <= x1; x++) {
+      const u = ox + (x + 0.5) / sx - fx,
+        v = fy - (oy + (y + 0.5) / sy);
+      let c: readonly number[] | null = null;
+      // Stamm: leicht gekrümmt bis 55 % der Höhe
+      if (v >= 0 && v <= 0.55 * top && Math.abs(u - lean * 0.5 * (v / (0.55 * top)) ** 1.5) <= 0.6)
+        c = TREE_TRUNK;
+      // Lappen von oben nach unten: untere liegen vorn
+      for (let i = lobes.length - 1; i >= 0; i--) {
+        const l = lobes[i]!;
+        const qu = (u - l.cu) / l.rx,
+          qv = (v - l.cv) / l.ry;
+        const q = qu * qu + qv * qv;
+        if (q > 1) continue;
+        const rim = (1 - Math.sqrt(q)) * Math.min(l.rx, l.ry) < 0.9;
+        c = rim ? TREE_LINE : -0.6 * qu + 0.8 * qv > 0.1 ? TREE_LIGHT : TREE_CROWN;
+      }
+      if (!c) continue;
+      const o = (y * W + x) * 4;
+      buf[o] = c[0]!;
+      buf[o + 1] = c[1]!;
+      buf[o + 2] = c[2]!;
+      buf[o + 3] = 255;
+    }
 }
 
 /** Schichtband 0…1 am Weltpunkt (wx, wy) in Höhe h: nur an steilen Flanken, unterbrochen und versetzt (A3). */
