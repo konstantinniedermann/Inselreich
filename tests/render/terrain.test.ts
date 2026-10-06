@@ -30,8 +30,11 @@ import {
   SLICE_ROWS,
   halfLayer,
   quarterLayer,
+  updateTerrainLayer,
   quarterStrips,
   QUARTER_STRIPS,
+  quarterStepCount,
+  repaintFarWater,
   terrainJob,
 } from '../../src/render/terrain';
 import { clearForest, plantForest } from '../../src/sim/forest';
@@ -1147,9 +1150,23 @@ describe('M12 E1 Terrain', () => {
         };
         const base = {
           createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
-          putImageData: (img: { data: Uint8ClampedArray }, x: number, y: number) => {
+          getImageData: (x: number, y: number, w: number, h: number) => {
+            const data = new Uint8ClampedArray(w * h * 4);
+            if (c.px)
+              for (let r = 0; r < h; r++)
+                data.set(
+                  c.px.subarray(((y + r) * c.width + x) * 4, ((y + r) * c.width + x + w) * 4),
+                  r * w * 4,
+                );
+            return { data, width: w, height: h };
+          },
+          putImageData: (
+            img: { data: Uint8ClampedArray; width?: number },
+            x: number,
+            y: number,
+          ) => {
             c.px ??= new Uint8ClampedArray(c.width * c.height * 4);
-            const w = c.width;
+            const w = img.width ?? c.width;
             for (let r = 0; r < img.data.length / 4 / w; r++)
               c.px.set(img.data.subarray(r * w * 4, (r + 1) * w * 4), ((y + r) * c.width + x) * 4);
           },
@@ -1322,11 +1339,15 @@ describe('M12 E1 Terrain', () => {
           get: (_t, k: string) =>
             k === 'createImageData'
               ? (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) })
-              : k === 'drawImage'
-                ? (_src: unknown, ...a: number[]) => {
-                    if (a.length === 8) c.draws.push([a[1]!, a[3]!, a[5]!, a[7]!]);
-                  }
-                : () => undefined,
+              : k === 'getImageData'
+                ? (_x: number, _y: number, w: number, h: number) => ({
+                    data: new Uint8ClampedArray(w * h * 4),
+                  })
+                : k === 'drawImage'
+                  ? (_src: unknown, ...a: number[]) => {
+                      if (a.length === 8) c.draws.push([a[1]!, a[3]!, a[5]!, a[7]!]);
+                    }
+                  : () => undefined,
           set: () => true,
         });
         created.push(c);
@@ -1375,7 +1396,7 @@ describe('M12 E1 Terrain', () => {
   it('AK-E1-19 terrainJob: ruft der Renderer quarterLayer nach Streifen 3, ist das Bild vollständig und die Reststreifen malen nicht mehr', () => {
     withLightDocument((created) => {
       const job = terrainJob(view(), 1);
-      const first = job.steps.length - QUARTER_STRIPS;
+      const first = job.steps.length - quarterStepCount(job.layer.height);
       const total = (): number => created.reduce((n, c) => n + c.draws.length, 0);
       for (let i = 0; i < first + 3; i++) job.steps[i]!();
       const half = halfLayer(job.layer);
@@ -1410,7 +1431,7 @@ describe('M12 E1 Terrain', () => {
   it('AK-E1-19 terrainJob: ruft der Renderer halfLayer mitten in den Streifen, ist die Kopie vollständig und die Reststreifen malen nicht mehr', () => {
     withLightDocument(() => {
       const job = terrainJob(view(), 1);
-      const first = job.steps.length - QUARTER_STRIPS - QUARTER_STRIPS;
+      const first = job.steps.length - quarterStepCount(job.layer.height) - QUARTER_STRIPS;
       for (let i = 0; i < first + 3; i++) job.steps[i]!();
       const half = halfLayer(job.layer);
       for (let i = first + 3; i < job.steps.length; i++) job.steps[i]!();
@@ -1423,7 +1444,77 @@ describe('M12 E1 Terrain', () => {
     withLightDocument(() => {
       const job = terrainJob(view(), 1);
       const solo = job.steps.flatMap((s, i) => (s.solo ? [i] : []));
-      expect(solo).toEqual([job.steps.length - 2 * QUARTER_STRIPS]);
+      expect(solo).toEqual([
+        job.steps.length - quarterStepCount(job.layer.height) - QUARTER_STRIPS,
+      ]);
     });
+  });
+
+  it('RF-4 repaintFarWater: Küstenwasser wird neu gefärbt, Land und Tiefwasser bleiben bitgleich', () => {
+    const N = 40;
+    const tiles = [];
+    for (let y = 0; y < N; y++)
+      for (let x = 0; x < N; x++)
+        tiles.push({
+          terrain: x >= 15 && x <= 24 && y >= 15 && y <= 24 ? 'grass' : 'water',
+          buildingId: null,
+          road: false,
+        });
+    const world = {
+      seed: 5,
+      islands: [{ width: N, height: N, tiles }],
+      buildings: {},
+      nextBuildingId: 1,
+    } as unknown as World;
+    const layer = buildTerrainLayer(world, 1);
+    const q = document.createElement('canvas') as unknown as FakeCanvas;
+    q.width = q.height = (N * TEX) / 4;
+    q.px = new Uint8ClampedArray(q.width * q.height * 4);
+    for (let i = 0; i < q.px.length; i += 4) q.px.set([200, 100, 50, 255], i);
+    repaintFarWater(layer, q as unknown as HTMLCanvasElement, { dy: 0, dh: q.height });
+    const at = (tx: number, ty: number): number[] => {
+      const o = (Math.floor(ty * 8) * q.width + Math.floor(tx * 8)) * 4;
+      return Array.from(q.px!.subarray(o, o + 4));
+    };
+    expect(at(19.5, 19.5)).toEqual([200, 100, 50, 255]); // Land
+    expect(at(8.5, 20.5)).toEqual([200, 100, 50, 255]); // Tiefwasser (Abstand 7 Kacheln)
+    expect(at(13.5, 20.5)).not.toEqual([200, 100, 50, 255]); // Küstenwasser (Abstand 2)
+    expect(at(13.5, 20.5)[3]).toBe(255);
+  });
+
+  it('RF-5 updateTerrainLayer: der Patch malt das Fernwasser im Rechteck neu (aus frischem Küstenabstand)', () => {
+    const N = 40;
+    const tiles = [];
+    for (let y = 0; y < N; y++)
+      for (let x = 0; x < N; x++)
+        tiles.push({
+          terrain: x >= 15 && x <= 24 && y >= 15 && y <= 24 ? 'grass' : 'water',
+          buildingId: null,
+          road: false,
+        });
+    const world = {
+      seed: 5,
+      islands: [{ width: N, height: N, tiles }],
+      buildings: {},
+      nextBuildingId: 1,
+    } as unknown as World;
+    const layer = buildTerrainLayer(world, 1);
+    const q = quarterLayer(layer) as unknown as FakeCanvas;
+    // Die Fake-Kontexte kopieren keine Pixel: die Kopie aus der halben Kopie ersetzt ein Sentinel
+    const SENT = [200, 100, 50, 255];
+    for (let i = 0; i < q.px!.length; i += 4) q.px!.set(SENT, i);
+    const at = (tx: number, ty: number): number[] => {
+      const o = (Math.floor(ty * 8) * q.width + Math.floor(tx * 8)) * 4;
+      return Array.from(q.px!.subarray(o, o + 4));
+    };
+    // Die Küste weicht um eine Kachel zurück: Kachel (15, 20) wird Wasser, Tiefe dort rund 1
+    home(world).tiles[20 * N + 15]!.terrain = 'water';
+    expect(updateTerrainLayer(layer, world).redrawn).toBe(true);
+    const shallow = rgbOfCss(PALETTE.waterShallow);
+    const px = at(15.5, 20.5);
+    expect(px).not.toEqual(SENT); // ohne Neumalen im Patch-Pfad bliebe die Kopie aus der halben Kopie stehen
+    // frischer Abstand: flach ohne Schaum; ein veralteter Abstand (Land, Tiefe 0) gäbe Schaum
+    for (let c = 0; c < 3; c++) expect(Math.abs(px[c]! - shallow[c]!)).toBeLessThan(8);
+    expect(at(30.5, 30.5)).toEqual(SENT); // ausserhalb des Rechtecks nichts angefasst
   });
 });

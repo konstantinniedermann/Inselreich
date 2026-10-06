@@ -1132,3 +1132,21 @@ Hotkeys und Bauleiste über `unlocked` lösen.
   Meeresfarben nur schwach ab (Playtest C5). **Einschätzung:** kosmetisch bis mittel; Folgepaket mit lead-art, nach F2
   (Mindestbreite) erneut sichten. **Ursprung:** Gate Seefahrt R274.
 - Die Folgepakete Fahrlinie über Land (b), Heimatkontor-Klick und „spiel frei weiter" (c) stehen oben unter „Playtest T15".
+## 2026-10-06 · H-R15 Review: Zustand der Viertel-Kopie dezentral
+
+- **Fundort / Beobachtung:** `terrainJob` und `updateTerrainLayer` (`src/render/terrain.ts`) kennen den Zustand der
+  Viertel-Kopie nicht zentral; jede Neumalung der Kopie (Streifen, Patch, `quarterLayer`) muss selbst an
+  `repaintFarWater` denken. **Einschätzung:** niedrig; bei weiterer Arbeit an der Kopie Zustand und Neumalen in eine
+  Stelle bündeln. **Ursprung:** H-R15-Review.
+- **Fundort / Beobachtung:** `perf.mjs`: `buildMs` schwankt zwischen Läufen um etwa ±15 %; das Kriterium B/A ≤ 1,1
+  hat bei Einzelläufen wenig Aussagekraft. **Einschätzung:** niedrig; Median über mehr Läufe oder Spanne angeben.
+- **Fundort / Beobachtung:** Bildvergleich im Browser: Wasserglanz und Schaum sind zeitabhängig, ein Frame-Pixeldiff ist
+  nur mit pausierter Animation deterministisch; sonst Ebenen-Hash (`buildTerrainLayer`, `halfLayer`) vergleichen.
+  **Einschätzung:** niedrig; im Messwerkzeug einen Pausen-Schalter oder Ebenen-Hash ergänzen. **Ursprung:** H-R15.
+- **Fundort / Beobachtung:** Heimat-Viertel-Kopie entsteht synchron beim ersten Zoom ≤ 0,25 (siehe Q8e); mit H-R15
+  kostet das etwa 33 ms statt 22 ms (Last 4, Seed 14/3). **Einschätzung:** unter 50 ms, aber knapp bei langsameren
+  Rechnern; die Heimat wie die Fremdinseln über Schritte aufbauen. **Ursprung:** H-R15.
+- **Fundort / Beobachtung:** Kleine Fremdinseln (Seed 14, `.studio/qa/h-r15/nachher_d_s14_1280_zmin_archipel.png`)
+  sind fast reine Rauten; ihr Saum folgt der Küste und läuft deshalb weiter spitz nach Ost/West aus. Ursache ist die
+  Inselform (Erzeugung), nicht der Saum. **Einschätzung:** niedrig, kosmetisch; bei der nächsten Arbeit an der
+  Fremdinsel-Erzeugung die Umrisse unregelmässiger machen (lead-art). **Ursprung:** H-R15 Bildurteil lead-art.
