@@ -85,7 +85,8 @@ export function demolish(world: World, id: number): Result {
   }
   delete world.buildings[id];
   if (isFar) {
-    world.islands[b.island]!.kontorId = null;
+    const isl = world.islands[b.island]!;
+    if (isl.kontorId === b.id) isl.kontorId = null;
     grantRefund(world, home(world), effectiveRefund(world, paidCost(b)));
   } else grantRefund(world, islandOf(world, b), refundCost(paidCost(b)));
   recomputeConnectivity(world);

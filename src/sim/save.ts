@@ -563,7 +563,7 @@ function isValidShip(s: unknown, islands: Record<string, unknown>[]): boolean {
   }
   const maxLeft =
     s.to === null ? 0 : laneTicks(islands as unknown as LaneIsland[], port, s.to as number);
-  if (!isIntBetween(s.left, 0, maxLeft)) return false;
+  if (!isIntBetween(s.left, s.to === null ? 0 : 1, maxLeft)) return false;
   if (!isValidCargo(s.cargo) || !isValidRoute(s.route, islands)) return false;
   return typeof s.homing === 'boolean' && (!s.homing || s.route === null);
 }

@@ -5,7 +5,7 @@ export const SHIP = {
   upkeep: 15,
   capacity: 50,
 } as const;
-/** Routen (T02 bestätigt): Güter je Richtung und Reserve in Prozent. */
+/** Routen (T02 bestätigt): Güter je Richtung; Reserve absolut in Einheiten (nicht Prozent). */
 export const ROUTE_GOODS_PER_DIRECTION = 2;
 export const ROUTE_RESERVE = { default: 10, step: 10, max: 90 } as const;
 
