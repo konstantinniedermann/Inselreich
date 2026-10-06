@@ -30,6 +30,7 @@ import {
   fieldWorld,
   rimWeight,
 } from './terrainField';
+import { euclidCoast, farWaterDepth } from './saum';
 
 // terrain.ts — Terrain-Ebene (Spec 5.1, ISO §6). Keine Baumkronen: die kommen als Stempel aus trees.ts (D-08).
 export const RASTER = 4; // Texturpixel (Faktor 1) je Rechenknoten (Setzung Spec 5.1)
@@ -1561,7 +1562,67 @@ function newQuarter(half: HTMLCanvasElement): HTMLCanvasElement {
   return quarter;
 }
 
+const farCoast = new WeakMap<HTMLCanvasElement, Field>(); // je Boden-Ebene, fällt mit ihr
+
+/**
+ * H-R15: malt das reine Wasser eines Viertel-Streifens aus dem euklidischen Küstenabstand neu (rund statt Raute,
+ * ohne Zeilenschlieren). Land, Küstenzellen und Tiefwasser bleiben wie in der Kopie.
+ */
+function repaintFarWater(
+  layer: HTMLCanvasElement,
+  quarter: HTMLCanvasElement,
+  st: { dy: number; dh: number },
+): void {
+  const m = meta.get(layer);
+  const ctx = quarter.getContext('2d');
+  if (!m || !ctx || st.dh <= 0) return;
+  let e = farCoast.get(layer);
+  if (!e) {
+    e = euclidCoast(fieldWorld(m.world));
+    farCoast.set(layer, e);
+  }
+  const g = m.grid,
+    { nx, ny, cls, smooth } = g;
+  const w = quarter.width;
+  const img = ctx.getImageData(0, st.dy, w, st.dh);
+  const px = img.data;
+  const f = 4 / (m.scale * RASTER); // Viertelpixel → Gitterknoten
+  const pxTile = 4 / (m.scale * TEX);
+  const tilesW = ((nx - 1) * RASTER) / TEX,
+    tilesH = ((ny - 1) * RASTER) / TEX;
+  const col = [0, 0, 0];
+  for (let y = 0; y < st.dh; y++) {
+    const qy = st.dy + y + 0.5;
+    const gy = qy * f;
+    const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+    const ty = Math.min(Math.max(gy - j, 0), 1);
+    for (let x = 0; x < w; x++) {
+      const gx = (x + 0.5) * f;
+      const i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
+      const a = j * nx + i;
+      if (cls[a] !== 0 || cls[a + 1] !== 0 || cls[a + nx] !== 0 || cls[a + nx + 1] !== 0) continue;
+      const tx = Math.min(Math.max(gx - i, 0), 1);
+      const dOld = -(
+        (smooth[a]! * (1 - tx) + smooth[a + 1]! * tx) * (1 - ty) +
+        (smooth[a + nx]! * (1 - tx) + smooth[a + nx + 1]! * tx) * ty
+      );
+      if (dOld >= 6) continue; // Chebyshev ≤ euklidisch: ab 6 ist es überall tief
+      const d = farWaterDepth(e, g.seed, (x + 0.5) * pxTile, qy * pxTile);
+      waterColor(d, col);
+      const rim = rimWeight((x + 0.5) * pxTile, qy * pxTile, tilesW, tilesH);
+      if (rim < 1) mix3(C.deep, col, rim, col);
+      const o = (y * w + x) * 4;
+      px[o] = col[0]!;
+      px[o + 1] = col[1]!;
+      px[o + 2] = col[2]!;
+      px[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, st.dy);
+}
+
 function paintQuarterStrip(
+  layer: HTMLCanvasElement,
   quarter: HTMLCanvasElement,
   half: HTMLCanvasElement,
   st: { sy: number; sh: number; dy: number; dh: number },
@@ -1570,6 +1631,7 @@ function paintQuarterStrip(
   if (!ctx) return;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
+  repaintFarWater(layer, quarter, st);
 }
 
 /** Einmal vorskalierte Kopie mit Viertel-Kantenlänge (Zoom ≤ 0,25), aus der halben Kopie verkleinert (M12 E1). */
@@ -1578,7 +1640,7 @@ export function quarterLayer(layer: HTMLCanvasElement): HTMLCanvasElement {
   if (m?.quarter) return m.quarter;
   const half = halfLayer(layer);
   const quarter = newQuarter(half);
-  for (const st of quarterStrips(half.height)) paintQuarterStrip(quarter, half, st);
+  for (const st of quarterStrips(half.height)) paintQuarterStrip(layer, quarter, half, st);
   if (m) m.quarter = quarter;
   return quarter;
 }
@@ -1689,7 +1751,7 @@ export function terrainJob(
         const list = stripsOf();
         const st = list[i];
         quarter ??= newQuarter(half);
-        if (st) paintQuarterStrip(quarter, half, st);
+        if (st) paintQuarterStrip(layer, quarter, half, st);
         if (i >= list.length - 1 || i === QUARTER_STRIPS - 1) m.quarter = quarter;
       }),
     );

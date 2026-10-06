@@ -1147,6 +1147,9 @@ describe('M12 E1 Terrain', () => {
         };
         const base = {
           createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
+          getImageData: (_x: number, _y: number, w: number, h: number) => ({
+            data: new Uint8ClampedArray(w * h * 4),
+          }),
           putImageData: (img: { data: Uint8ClampedArray }, x: number, y: number) => {
             c.px ??= new Uint8ClampedArray(c.width * c.height * 4);
             const w = c.width;
@@ -1322,11 +1325,15 @@ describe('M12 E1 Terrain', () => {
           get: (_t, k: string) =>
             k === 'createImageData'
               ? (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) })
-              : k === 'drawImage'
-                ? (_src: unknown, ...a: number[]) => {
-                    if (a.length === 8) c.draws.push([a[1]!, a[3]!, a[5]!, a[7]!]);
-                  }
-                : () => undefined,
+              : k === 'getImageData'
+                ? (_x: number, _y: number, w: number, h: number) => ({
+                    data: new Uint8ClampedArray(w * h * 4),
+                  })
+                : k === 'drawImage'
+                  ? (_src: unknown, ...a: number[]) => {
+                      if (a.length === 8) c.draws.push([a[1]!, a[3]!, a[5]!, a[7]!]);
+                    }
+                  : () => undefined,
           set: () => true,
         });
         created.push(c);
