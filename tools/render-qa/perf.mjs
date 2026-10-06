@@ -5,7 +5,7 @@
 //
 // Aufruf (benannte Argumente, alle optional ausser den Wurzeln):
 //   node tools/render-qa/perf.mjs --a <wurzelA> --b <wurzelB> [--seed 14 | --save <spielstand.json>]
-//        [--runs 3] [--dpr 2] [--w 1920] [--h 1080] [--zoom 1] [--focus home|archipel|mountain|none]
+//        [--runs 3] [--dpr 1] [--w 1920] [--h 1080] [--zoom 1] [--focus home|archipel|mountain|none]
 //        [--warm 5000] [--idle] [--help]
 // Spielstand: `--seed N` erzeugt die Welt im Seitenkontext reproduzierbar mit `createWorld(N, { unlockAll: true })`
 // der jeweiligen Wurzel und legt sie als Autosave ab; `--save` nimmt eine Datei (z. B. `leistung-50`).
@@ -22,10 +22,12 @@
 // Ausgabe: Kopfzeile (CPU, OS, Node, Chrome, DPR, Fenster, Seed, Zoom, Fokus), je Lauf eine Ergebniszeile je Seite
 // mit `buildMs` (Konsole `[terrain] Aufbau <ms> ms`), am Ende die Zusammenfassung. Je Seed ein eigener Aufruf, kein
 // Mittel über Seeds.
-// Messprotokoll (P-9, T07): Entwickler-Mac, Headless, DPR 2, 1920x1080, `--runs 3`, abwechselnd A/B, Seeds 14 und 3.
+// Messprotokoll (P-9, T07): Entwickler-Mac, Headless, 1920x1080, `--runs 3`, abwechselnd A/B, Seeds 14 und 3.
+//   DPR: AK-E1-18 wird bei DPR 1 entschieden (R257); DPR-2-Werte stehen nur informativ im Bericht.
 //   AK-E1-14/15: --a A --b B --seed s --zoom 1 --focus home          (renderMedian B-A <= +0,2 ms; buildMs <= 1,3x)
 //   AK-E1-16:    B allein: --zoom 0.125 --focus archipel --warm 5000 gegen --zoom 1 --focus home (Verhältnis <= 2,0)
-//   AK-E1-18/19: B allein: --zoom 1 --focus home --idle              (frameMax <= 50 ms; max(slices()) <= 8 ms)
+//   AK-E1-18/19: B allein: --zoom 1 --focus home --idle --dpr 1     (AK-E1-18 frameMax <= 50 ms, R257;
+//                AK-E1-19 p95(slices()) <= 8 ms, R265; Maximum nur informativ <= 12 ms)
 // Altes Format (Positionsargumente `<savejson> <wurzelA> <wurzelB> [läufe] [dpr]`) bleibt gültig.
 import { readFileSync } from 'node:fs';
 import { cpus, release } from 'node:os';
@@ -324,7 +326,7 @@ console.log(
     buildMsA: buildOf(res.A),
     buildMsB: buildOf(res.B),
     ...(idle && {
-      // AK-E1-18/19: Maximum über alle Läufe beider Seiten (kein Median).
+      // AK-E1-18 (frameMax, DPR 1, R257) und AK-E1-19 (slicesP95Max <= 8 ms entscheidet, slicesMax nur informativ <= 12 ms, R265): Maximum über alle Läufe beider Seiten (kein Median).
       frameMaxAfterBuildMax: Math.max(
         ...[...res.A, ...res.B].map((r) => r.frameMaxAfterBuild ?? 0),
       ),
