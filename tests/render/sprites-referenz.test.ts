@@ -13,7 +13,7 @@ import type { Building, Tier } from '../../src/sim/types';
 // Stand vor L3. Neu erzeugen nur nach bewusster Änderung der Körperformen: `it.skip` unten auf `it` stellen,
 // einmal laufen lassen, wieder auf `it.skip` setzen.
 
-const FIXTURE = 'tests/render/fixtures/l3-body-referenz.json';
+const FIXTURE = 'tests/render/fixtures/body-shapes.json';
 
 interface Entry {
   polygons: string;

@@ -3,6 +3,7 @@ import { PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
 
 // groundDecor.ts — Deko auf Graskacheln: Blumenwiesen und Büsche am Waldrand (R149, Bodenbild).
 // Reine Helfer ohne Canvas; Lage in Kachel-Anteilen, deterministisch aus `hash2`/`valueNoise`.
+// ART-STIL-02 L3 (sprites.ts, material.ts): Salze 570–575 (Durchhang, Büschel, Erdrand, Büschelform, Korn, Dachreihen).
 // Seed-Versätze: Blumen 60 (Rauschen) und 66–82, Büsche 90–100 (k = 0, 1 mit Schritt 5). Frei von 11, 13, 17, 19,
 // 31–34, 41, 51, 52, 101–112 (H-R9: Wiesenwärme, Flecken, Mottling, Kuppen, Dünen in terrain.ts), den Terrainrauschen 23 (Felskorn), 27 (Fels, 2. Oktave), 29 (Gebirgskuppen), 61/62 in terrain.ts,
 // 301–319 (Gebirgsmassiv in massif.ts: Grate, Verbeulung, Geröll, Tönung, Schichtversatz, Bewuchs) und 321 (Felskorn

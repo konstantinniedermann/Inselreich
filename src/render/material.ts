@@ -36,8 +36,8 @@ export const GRAIN_SIZE = 1;
 const GRAIN_AREA = 60;
 const MAX_GRAIN = 48;
 /** Salze L3 (Block 500–599): Korn und Dachreihen. */
-export const GRAIN_SALT = 564;
-export const ROW_SALT = 565;
+export const GRAIN_SALT = 574;
+export const ROW_SALT = 575;
 
 /**
  * Detailstufe nach Zoom (ISO §16): 0 = kein Material (bei kleinem Zoom wären Fugen unter einem Pixel Abstand),
@@ -192,7 +192,7 @@ function courses(
     const a = lerp(a0, a1, t),
       b = lerp(b0, b1, t);
     const seg = { fi, a: lerp(a, b, END_GAP), b: lerp(a, b, 1 - END_GAP) };
-    (roof && hash2(roof.salt + 1, fi, i) > 0.5 ? roof.dark : path).push(seg);
+    (roof && hash2(roof.salt, fi + 4096, i) > 0.5 ? roof.dark : path).push(seg);
   }
 }
 

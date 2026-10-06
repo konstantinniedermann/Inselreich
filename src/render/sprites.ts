@@ -40,7 +40,7 @@ export const HAND_MIN_LEN = 0.8;
 export const HAND_SAG_MIN = 0.3;
 export const HAND_SAG_MAX = 0.8;
 /** Salze L3 (Block 500–599, Spec R1): Durchhang, Grasbüschel, Erdrand, Büschelform. */
-export const L3_SALTS = { sag: 560, tufts: 561, rim: 562, blade: 563 } as const;
+export const L3_SALTS = { sag: 570, tufts: 571, rim: 572, blade: 573 } as const;
 /** Kontaktschatten: Bandbreite in Kacheln und Deckkraft je Stufe (äussere Stufe zuerst). */
 const CONTACT_BANDS: readonly (readonly [number, number])[] = [
   [0.1, 0.1],
