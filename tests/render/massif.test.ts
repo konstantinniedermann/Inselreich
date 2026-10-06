@@ -67,7 +67,7 @@ import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
 import { deltaE2000, rgbToLab } from './deltaE';
 import kernFixture from './fixtures/massif-kern-main.json';
-import { KERN_SEEDS, kernNodes } from './fixtures/massifKern';
+import { KERN_SEEDS, bandNoise, kernNodes } from './fixtures/massifKern';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
 
@@ -1315,3 +1315,18 @@ function Buffer_equal(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
 }
+
+describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', () => {
+  it('L2 Sockel: Rauschenergie im Schuttband bei Zoom 2 ≤ 0,5 × Fixture-Wert vor L2, je Seed', () => {
+    type Fx = Record<string, { sockelRauschen: number }>;
+    for (const seed of KERN_SEEDS) {
+      const vorher = (kernFixture as Fx)[String(seed)]!.sockelRauschen;
+      const jetzt = bandNoise(seed, DEBRIS_HI);
+      expect(vorher, `Seed ${seed} Fixture`).toBeGreaterThan(1);
+      expect(
+        jetzt,
+        `Seed ${seed} jetzt ${jetzt.toFixed(2)} vorher ${vorher.toFixed(2)}`,
+      ).toBeLessThanOrEqual(0.5 * vorher);
+    }
+  });
+});

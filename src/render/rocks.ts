@@ -158,6 +158,8 @@ const STRATA_BREAK = 0.09;
 const GRAIN = 0.04; // Pixelkorn ±2 %
 /** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
 export const TONE_EDGE_PX = 1.5;
+/** Weichheit der Sockelkontur: höchstens 1 Flächenpixel (L2). */
+const CONTOUR_PX = 1;
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
 /** Texturpixel je Weltpixel: Merkmale ≈ 2 px (fein, feiner als die Tonstufen) und ≈ 6 px (Brocken). */
 const TEX_FINE = 4,
@@ -302,6 +304,11 @@ export function grainAt(seed: number, wx: number, wy: number, sx: number, sy: nu
   return 1 + (hash2(seed + GRAIN_SEED, Math.floor(wx * sx), Math.floor(wy * sy)) - 0.5) * GRAIN;
 }
 
+/** Korn im Schuttband (L2): Zellen von 2 Weltpixeln, halbe Amplitude (Salz 532, Liste in groundDecor.ts). */
+export function bandGrainAt(seed: number, wx: number, wy: number): number {
+  return 1 + (hash2(seed + 532, Math.floor(wx / 2), Math.floor(wy / 2)) - 0.5) * GRAIN * 0.5;
+}
+
 /** Halbe Übergangsbreite (in Einheiten des Werts) für TONE_EDGE_PX Pixel bei Gefälle |∇v| (je Pixel). */
 const halfWidth = (g: number): number => Math.min(0.5, Math.max(0.02, 0.5 * TONE_EDGE_PX * g));
 const sstep = (v: number, t: number, hw: number): number => {
@@ -350,7 +357,7 @@ function triangle(
     d1y = (x0 - x2) / area;
   const grad = (va: number, vb: number, vc: number): number =>
     Math.hypot((va - vc) * d0x + (vb - vc) * d1x, (va - vc) * d0y + (vb - vc) * d1y);
-  const hwS = halfWidth(grad(a.soft, b.soft, c.soft)),
+  const hwS = Math.min(0.5, Math.max(0.02, 0.5 * CONTOUR_PX * grad(a.soft, b.soft, c.soft))),
     hwT = halfWidth(grad(a.t, b.t, c.t)),
     hwE = halfWidth(grad(a.e, b.e, c.e)),
     hwV = halfWidth(grad(a.veg, b.veg, c.veg));
@@ -423,8 +430,10 @@ function triangle(
       const steep = lerp(a.steep, b.steep, c.steep);
       const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
-      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) + 0.45 * tc);
-      const rub = Math.max(lerp(a.rub, b.rub, c.rub), 0.8 * debrisOf(soft));
+      // Schuttband (L2): keine feinen Brocken und kein Feinkorn, nur grobe Tönung und Korn in 2-px-Zellen
+      const deb = debrisOf(soft);
+      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc);
+      const rub = lerp(a.rub, b.rub, c.rub) * (1 - deb);
       if (rub > 0.05) {
         const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);
         if (s2 > 0.72)
@@ -434,7 +443,7 @@ function triangle(
       k *=
         1 -
         STRATA_DARK * strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
-      k *= grainAt(seed, wx, wy, sx, sy);
+      k *= deb > 0.5 ? bandGrainAt(seed, wx, wy) : grainAt(seed, wx, wy, sx, sy);
       r *= k;
       g *= k;
       bl *= k;
