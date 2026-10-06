@@ -318,9 +318,10 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
   const hfFor = (kind: CrownKind, lo: number, hi: number, i: number): number =>
     kind === 3 ? (role === 0 ? 0.7 : 1.1) + 0.2 * rnd(i, 3) : lo + (hi - lo) * rnd(i, 3); // Pinie: kurzer Stamm
   if (role === 0) {
-    // Kern: Ankerpunkte (Mitte, Ecken; 6 Kronen, die hintere Ecke deckt das Dach davor) halten die Rautenfläche dicht unter grossen Kronen
+    // Kern: Ankerpunkte (Mitte, Ecken, ein Zufallspunkt) halten die Rautenfläche dicht unter grossen Kronen
     const anchors: [number, number][] = [
       [0.5, 0.5],
+      [0.2, 0.2],
       [0.86, 0.22],
       [0.22, 0.86],
       [0.84, 0.84],
