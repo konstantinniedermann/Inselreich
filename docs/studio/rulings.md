@@ -2487,3 +2487,12 @@ Integrator für diese Datei die main-Fassung und hängt nur die von der Branch *
 ART-STIL-02-Branches. — Kosten bei Irrtum: verlorener Eintrag, auffindbar in der Branch-Historie.
 
 Entscheider: L0 · Anlass: Integrator-Bericht DOC-MERGE-01 · ADR: —
+
+## R295 · 2026-10-06 · ART-STIL-02 Abweichungen L1/L3, Start L4
+
+Ruling: Angenommen: L1 renderMedian Seed 7/Zoom 1 +0,3 ms (Häppchen-Budget +0,2; Release-Budget +0,5 hält, lichteres
+Dach widerspräche dem Bildziel); L3 Cache-Aufbau +36 % (nur bei Zoomwechsel, Frame ±0); Salz-Korrektur im Anhang
+(822a4db). L4 startet sofort, gestapelt auf `feat/art02-l1-wald` mit main (H-F1) per Merge, erster Task
+Patch-Messung (T3). — Kosten bei Irrtum: Release-Lauf misst gesamt, Häppchen fliegt bei Überschreitung.
+
+Entscheider: L0 · Anlass: Berichte lead-art L1, L3 · ADR: —
