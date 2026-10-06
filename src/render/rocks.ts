@@ -365,19 +365,19 @@ export const LAKE_DEEP: Rgb = mixRgb(rgbOf(PALETTE.waterDeep), L.dark, 0.3),
   LAKE_LINE: Rgb = mixRgb(LAKE_DEEP, ROCK_TONES[0]!, 0.5),
   LAKE_SHORE: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.4),
   LAKE_SHORE_BACK: Rgb = ROCK_TONES[1]!;
-/** Wasserfall: heller Kern (foam/waterMid), Randton (waterMid mit Fels), Nassfels daneben, Gischt, Tümpel. */
+/** Wasserfall: Kern foam/waterMid (steil hell, flach waterMid-grau), Nassfels weicher Felston, Gischt, Tümpel (Seestil). */
 export const FALL_BAND: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.3),
   FALL_EDGE: Rgb = mixRgb(rgbOf(PALETTE.waterMid), ROCK_TONES[2]!, 0.35),
   FALL_WET: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.2),
   FALL_SPRAY: Rgb = mixRgb(rgbOf(PALETTE.foam), rgbOf(PALETTE.waterMid), 0.12),
-  FALL_POOL: Rgb = mixRgb(rgbOf(PALETTE.waterMid), L.dark, 0.35);
+  FALL_POOL: Rgb = LAKE_DEEP;
 /** Höhle: zwei dunkle Töne (oben dunkler, nicht Schwarz), weicher Felsband-Überhang, Schuttfächer darunter. */
 const dim = (c: Rgb, k: number): Rgb => [c[0] * k, c[1] * k, c[2] * k];
 export const CAVE_IN: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.7),
   CAVE_IN_TOP: Rgb = dim(mixRgb(ROCK_TONES[0]!, L.cool, 0.35), 0.52),
   CAVE_LINE: Rgb = mixRgb(ROCK_TONES[0]!, L.cool, 0.3),
   CAVE_LINTEL: Rgb = ROCK_TONES[3]!,
-  CAVE_FAN: Rgb = mixRgb(DEBRIS, ROCK_TONES[2]!, 0.35);
+  CAVE_FAN: Rgb = mixRgb(ROCK_TONES[2]!, ROCK_TONES[3]!, 0.4); // Fels-/Schuttton, kein Gelb
 /** Steinmännchen: Felstöne mit Licht oben links, Kontur dunkler Eigenton. */
 export const CAIRN_LIT: Rgb = ROCK_TONES[3]!,
   CAIRN_MID: Rgb = ROCK_TONES[2]!,
@@ -431,7 +431,13 @@ const segDist = (
 };
 
 /** Farbe des Abziehbilds am Punkt (Kachelpunkt fx, fy; Bildpunkt wx, wy in Weltpixeln) oder null. */
-function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: number): Rgb | null {
+function decalColor(
+  dec: CellDecal,
+  fx: number,
+  fy: number,
+  wx: number,
+  wy: number,
+): readonly number[] | null {
   const lake = dec.lake;
   if (lake) {
     const sd = lake.comp.seed;
@@ -462,8 +468,7 @@ function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: numb
     let best = Infinity,
       wBand = 1,
       hi = 0,
-      side = 0,
-      spray = false;
+      side = 0;
     for (let k = 0; k + 1 < pts.length; k++) {
       const a = pts[k]!,
         b = pts[k + 1]!;
@@ -479,21 +484,53 @@ function decalColor(dec: CellDecal, fx: number, fy: number, wx: number, wy: numb
         hi = a.steep + (b.steep - a.steep) * t;
         side = wx - (ax + (bx - ax) * t);
       }
-      // Knick von steil zu flach: kleiner Gischtfleck (3–4 px)
-      if (a.steep >= 0.5 && b.steep < 0.5 && Math.hypot((wx - bx) / 1.9, (wy - by) / 1.2) < 1)
-        spray = true;
     }
+    // Gischt an Knicken von steil zu flach: 2–3 überlappende Kleckse, Deckung blendet aus
+    let spray = 0;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const a = pts[k]!,
+        b = pts[k + 1]!;
+      if (!(a.steep >= 0.5 && b.steep < 0.5)) continue;
+      const bx = (b.I - b.J) * NX,
+        by = (b.I + b.J) * NY - b.h;
+      const kx = Math.round(bx * 4),
+        ky = Math.round(by * 4);
+      const nb = 2 + Math.floor(hash2(sd + 579, kx, ky) * 2);
+      for (let i = 0; i < nb; i++) {
+        const cx = bx + (hash2(sd + 579, kx + i * 7 + 1, ky) - 0.5) * 3.2,
+          cy = by + (hash2(sd + 579, kx, ky + i * 7 + 1) - 0.5) * 2,
+          rr = 1.1 + 0.9 * hash2(sd + 579, kx + i * 3 + 2, ky + 5);
+        const dd = Math.hypot((wx - cx) / 1.4, wy - cy) / rr;
+        if (dd < 1) spray = Math.max(spray, 1 - dd);
+      }
+    }
+    // Tümpel am Fuss: unregelmässiger flacher Fleck im Seestil (dunkles Wasser, vorn Kies, Kante mit Rauschen)
     const e = pts[pts.length - 1]!;
     const ex = wx - (e.I - e.J) * NX,
       ey = wy - ((e.I + e.J) * NY - e.h);
-    // Tümpel und Gischt am Fuss
-    if ((ex / 3.4) ** 2 + (ey / 1.7) ** 2 < 1)
-      return (ex / 1.7) ** 2 + ((ey + 0.3) / 0.9) ** 2 < 1 ? FALL_SPRAY : FALL_POOL;
-    if (spray) return FALL_SPRAY;
-    // ausgefranste Ränder: fester Hash je halbem Weltpixel (± 0,5 px), kein Blinken
+    {
+      const u = ex / 3,
+        v = ey / 2;
+      const fac = 1 + (valueNoise(sd + 580, ex * 0.8 + 9, ey * 1.1 + 4) - 0.5) * 0.7;
+      const q = Math.hypot(u, v);
+      if (q < fac) {
+        if (q > fac - 0.28) return LAKE_LINE;
+        if (v < -0.2 && q < 0.55) return [...FALL_SPRAY, 0.75];
+        return FALL_POOL;
+      }
+      if (q < fac + 0.3 && ey > 0 && hash2(sd + 581, Math.floor(wx * 2), Math.floor(wy * 2)) > 0.3)
+        return LAKE_SHORE;
+    }
+    if (spray > 0.05) return [...FALL_SPRAY, Math.min(0.9, spray * 1.3)];
+    // ausgefranste Ränder: fester Hash je halbem Weltpixel (± 0,5 px), kein Blinken; keine dunkle Kontur
     const ed = best + (hash2(sd + 579, Math.floor(wx * 2), Math.floor(wy * 2)) - 0.5);
-    if (ed <= 0) return ed < -0.25 - 0.1 * wBand || hi > 0.8 ? FALL_BAND : FALL_EDGE;
-    if (ed <= 1 && side > 0) return FALL_WET; // Nassfels, 1 px auf der Schattenseite
+    if (ed <= 0) {
+      // Kern: steil am hellsten, flach waterMid-grau
+      const c = mixRgb(FALL_EDGE, FALL_BAND, Math.max(0, Math.min(1, (hi - 0.15) / 0.55)));
+      return ed < -0.3 - 0.1 * wBand ? c : [...c, 0.8];
+    }
+    // Nassfels: weicher, abgedunkelter Felston (≈ 50 % Deckung, ausblendend), nur auf der Schattenseite
+    if (ed <= 1.4 && side > 0) return [...FALL_WET, 0.5 * (1 - ed / 1.4)];
   }
   const cave = dec.cave;
   if (cave) {
@@ -882,9 +919,10 @@ function triangle(
           fy = (cJ[i0]! * w0 + cJ[i1]! * w1 + cJ[i2]! * w2) / SUB;
         const q = decalColor(dec, fx, fy, wx, wy);
         if (q) {
-          r = q[0];
-          g = q[1];
-          bl = q[2];
+          const qa = q.length > 3 ? q[3]! : 1; // weiche Abziehbilder (Nassfels, Gischt) mit Deckung
+          r += (q[0]! - r) * qa;
+          g += (q[1]! - g) * qa;
+          bl += (q[2]! - bl) * qa;
         }
       }
       const o = (y * W + x) * 4;
