@@ -2594,3 +2594,12 @@ Merges und ein Release-Lauf für fertige Häppchen (L5, L6, L7, WALD-02). Nicht 
 Folgepakete. — Kosten bei Irrtum: L8 wartet auf neuen Auftrag.
 
 Entscheider: Nutzer · Anlass: Nutzerantworten 2026-10-07 · ADR: —
+
+## R306 · 2026-10-07 · Session-Abbruch auf Nutzerwunsch
+
+Ruling: Nutzer beendet die Session („beim nächsten Start soll es weitergehen"). Laufende Agenten (WALD-02, L7) enden
+mit dem Prozess; ihre Worktrees bleiben unangetastet. Übergabe in `state.md`, Abschnitt „Fortsetzung beim nächsten
+Start". Session-Ende-Routine (Metriken, Kurz-Retro) wird dort nachgeholt. — Kosten bei Irrtum: Nacharbeit beim Sichten
+der Worktrees.
+
+Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-07 · ADR: —
