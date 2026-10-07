@@ -1437,9 +1437,9 @@ function drawTurtle(
   for (const tp of h.trail ?? []) {
     const q = at(cam, tp.x, tp.y, 0);
     ctx.beginPath();
-    blob(ctx, q.x, q.y - 1.5 * s, 1.1 * s, 0.7 * s);
-    blob(ctx, q.x, q.y + 1.5 * s, 1.1 * s, 0.7 * s);
-    ctx.fillStyle = rgbaOfCss(TURTLE_TRAIL, Math.min(1, tp.a * 1.6));
+    blob(ctx, q.x, q.y - 1.7 * s, 1.3 * s, 0.9 * s);
+    blob(ctx, q.x, q.y + 1.7 * s, 1.3 * s, 0.9 * s);
+    ctx.fillStyle = rgbaOfCss(TURTLE_TRAIL, Math.min(1, tp.a * 2.4));
     ctx.fill();
   }
   const f = h.flip;
@@ -1809,16 +1809,24 @@ function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   shadowOf(ctx, g, 9 * s);
   const down = h.phase;
   const ink = toInk(DEER_COLOR, 0.55);
-  // Schulter vorn; der Kopf sitzt schräg oben vorn (down 0) und senkt sich VORNE zum Boden (down 1)
-  const sh = { x: c.x + f * 6.4 * s, y: c.y - 14.6 * s };
-  const up = { x: c.x + f * 11.6 * s, y: c.y - 22.4 * s },
-    dn = { x: c.x + f * 13.8 * s, y: c.y - 4.4 * s };
+  // Schulter vorn; der Hals führt schräg nach oben vorn (down 0) bzw. vorne zum Boden (down 1)
+  const sh = { x: c.x + f * 6.2 * s, y: c.y - 14.6 * s };
+  const up = { x: c.x + f * 11.2 * s, y: c.y - 21.6 * s },
+    dn = { x: c.x + f * 13.4 * s, y: c.y - 5.6 * s };
   const hd = { x: up.x + (dn.x - up.x) * down, y: up.y + (dn.y - up.y) * down };
-  const len = Math.hypot(hd.x - sh.x, hd.y - sh.y) || 1;
-  const dir = { x: (hd.x - sh.x) / len, y: (hd.y - sh.y) / len };
-  let pv = { x: dir.y, y: -dir.x };
+  const nl = Math.hypot(hd.x - sh.x, hd.y - sh.y) || 1;
+  const nd = { x: (hd.x - sh.x) / nl, y: (hd.y - sh.y) / nl };
+  const np = { x: -nd.y, y: nd.x };
+  // Kopfachse: oben nach vorn und leicht abwärts, beim Äsen steil zum Boden
+  const ax0 = { x: f * 0.93, y: 0.36 },
+    ax1 = { x: f * 0.42, y: 0.91 };
+  const al = Math.hypot(ax0.x + (ax1.x - ax0.x) * down, ax0.y + (ax1.y - ax0.y) * down) || 1;
+  const ax = {
+    x: (ax0.x + (ax1.x - ax0.x) * down) / al,
+    y: (ax0.y + (ax1.y - ax0.y) * down) / al,
+  };
+  let pv = { x: ax.y, y: -ax.x };
   if (pv.y > 0) pv = { x: -pv.x, y: -pv.y };
-  const ang = Math.atan2(dir.y, dir.x);
   const swing = h.state === 1 ? Math.sin((h.x + h.y) * 3 * TAU) * 2 : 0;
   // Beine: dünn, Vorder- und Hinterpaar leicht versetzt
   ctx.beginPath();
@@ -1828,61 +1836,71 @@ function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
     [4.4, -swing],
     [6.2, swing],
   ] as const) {
-    ctx.moveTo(c.x + f * lx * s, c.y - 10.8 * s);
+    ctx.moveTo(c.x + f * lx * s, c.y - 11.4 * s);
     ctx.lineTo(c.x + f * (lx + sw) * s, c.y);
   }
   ctx.strokeStyle = ink;
-  ctx.lineWidth = Math.max(1, 1.0 * s);
+  ctx.lineWidth = Math.max(1, 1.2 * s);
   ctx.stroke();
-  // Hals: schräg nach oben vorn bzw. vorn zum Boden
+  // Hals: Trapez, an der Schulter breit, am Kopf schmal
   ctx.beginPath();
-  ctx.moveTo(sh.x, sh.y);
-  ctx.lineTo(hd.x, hd.y);
-  ctx.strokeStyle = DEER_COLOR;
-  ctx.lineWidth = 3.8 * s;
-  ctx.stroke();
-  // Rumpf: längliches Oval 2 : 1, Bauch heller
+  ctx.moveTo(sh.x + np.x * 2.6 * s, sh.y + np.y * 2.6 * s);
+  ctx.lineTo(sh.x - np.x * 2.6 * s, sh.y - np.y * 2.6 * s);
+  ctx.lineTo(hd.x - np.x * 1.3 * s, hd.y - np.y * 1.3 * s);
+  ctx.lineTo(hd.x + np.x * 1.3 * s, hd.y + np.y * 1.3 * s);
+  ctx.closePath();
+  ctx.fillStyle = DEER_COLOR;
+  ctx.fill();
+  // Rumpf: längliches Oval 2 : 1 mit Brust und Keule, Bauch heller
+  const trunk = (): void => {
+    blob(ctx, c.x, c.y - 13.6 * s, 8.8 * s, 4.4 * s);
+    blob(ctx, c.x + f * 5.6 * s, c.y - 14 * s, 3.6 * s, 4.4 * s);
+    blob(ctx, c.x - f * 5.8 * s, c.y - 13.4 * s, 3.8 * s, 4.5 * s);
+  };
   ctx.beginPath();
-  blob(ctx, c.x, c.y - 13 * s, 9.2 * s, 4.6 * s);
+  trunk();
   ctx.fillStyle = DEER_COLOR;
   ctx.fill();
   ctx.beginPath();
-  blob(ctx, c.x - f * 0.4 * s, c.y - 10.4 * s, 7.4 * s, 1.9 * s);
+  ctx.ellipse(c.x, c.y - 13.6 * s, 8.6 * s, 4.2 * s, 0, 0.12 * Math.PI, 0.88 * Math.PI);
+  ctx.closePath();
   ctx.fillStyle = DEER_BELLY;
   ctx.fill();
-  // Kopf mit zwei Ohren
-  const hc = { x: hd.x + dir.x * 1.6 * s, y: hd.y + dir.y * 1.6 * s };
+  // Kopf (gegen den Hals abgewinkelt) mit Nase und zwei Ohren
+  const hc = { x: hd.x + ax.x * 2 * s, y: hd.y + ax.y * 2 * s };
+  const ang = Math.atan2(ax.y, ax.x);
   ctx.beginPath();
-  ctx.moveTo(hc.x + 3.4 * s, hc.y);
-  ctx.ellipse(hc.x, hc.y, 3.4 * s, 1.9 * s, ang, 0, TAU);
+  ctx.moveTo(hc.x + 3.6 * s, hc.y);
+  ctx.ellipse(hc.x, hc.y, 3.6 * s, 2 * s, ang, 0, TAU);
   ctx.fillStyle = DEER_COLOR;
   ctx.fill();
   ctx.beginPath();
-  for (const o of [-0.9, 0.5]) {
-    const b = { x: hd.x + (dir.x * o + pv.x * 1.1) * s, y: hd.y + (dir.y * o + pv.y * 1.1) * s };
+  blob(ctx, hc.x + ax.x * 3.2 * s, hc.y + ax.y * 3.2 * s, 0.9 * s, 0.8 * s);
+  ctx.fillStyle = toInk(DEER_COLOR, 0.8);
+  ctx.fill();
+  ctx.beginPath();
+  for (const o of [-1.2, 0.2]) {
+    const b = { x: hd.x + (ax.x * o + pv.x * 1.3) * s, y: hd.y + (ax.y * o + pv.y * 1.3) * s };
     tri(
       ctx,
-      { x: b.x - dir.x * 0.7 * s, y: b.y - dir.y * 0.7 * s },
-      { x: b.x + dir.x * 0.7 * s, y: b.y + dir.y * 0.7 * s },
-      { x: b.x + (pv.x * 3.2 - dir.x * 1.2) * s, y: b.y + (pv.y * 3.2 - dir.y * 1.2) * s },
+      { x: b.x - ax.x * 0.8 * s, y: b.y - ax.y * 0.8 * s },
+      { x: b.x + ax.x * 0.8 * s, y: b.y + ax.y * 0.8 * s },
+      { x: b.x + (pv.x * 3.6 - ax.x * 1.4) * s, y: b.y + (pv.y * 3.6 - ax.y * 1.4) * s },
     );
   }
   ctx.fillStyle = DEER_COLOR;
   ctx.fill();
   ctx.beginPath();
-  blob(ctx, c.x - f * 9.4 * s, c.y - 14.4 * s, 1.3 * s, 1.5 * s);
+  blob(ctx, c.x - f * 9.6 * s, c.y - 14.6 * s, 1.4 * s, 1.6 * s);
   ctx.fillStyle = mixHex(DEER_COLOR, PALETTE.wallLime, 0.55);
   ctx.fill();
   if (h.variant === 1) {
     // Hirsch: Stange mit drei kurzen Enden
     const q = {
-      x: hd.x + (-dir.x * 0.4 + pv.x * 1.6) * s,
-      y: hd.y + (-dir.y * 0.4 + pv.y * 1.6) * s,
+      x: hd.x + (-ax.x * 0.6 + pv.x * 1.8) * s,
+      y: hd.y + (-ax.y * 0.6 + pv.y * 1.8) * s,
     };
-    const end = {
-      x: q.x + (pv.x * 5.2 - dir.x * 1.8) * s,
-      y: q.y + (pv.y * 5.2 - dir.y * 1.8) * s,
-    };
+    const end = { x: q.x + (pv.x * 5 - ax.x * 1.8) * s, y: q.y + (pv.y * 5 - ax.y * 1.8) * s };
     ctx.beginPath();
     ctx.moveTo(q.x, q.y);
     ctx.lineTo(end.x, end.y);
@@ -1890,16 +1908,16 @@ function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
       const bx = q.x + (end.x - q.x) * k,
         by = q.y + (end.y - q.y) * k;
       ctx.moveTo(bx, by);
-      ctx.lineTo(bx + (dir.x * 1.8 + pv.x * 1.2) * s, by + (dir.y * 1.8 + pv.y * 1.2) * s);
+      ctx.lineTo(bx + (ax.x * 1.8 + pv.x * 1.2) * s, by + (ax.y * 1.8 + pv.y * 1.2) * s);
     }
     ctx.strokeStyle = ANTLER_COLOR;
     ctx.lineWidth = Math.max(1, 1.1 * s);
     ctx.stroke();
   }
   ctx.beginPath();
-  blob(ctx, c.x, c.y - 13 * s, 9.2 * s, 4.6 * s);
+  blob(ctx, c.x, c.y - 13.6 * s, 8.8 * s, 4.4 * s);
   ctx.strokeStyle = ink;
-  ctx.lineWidth = Math.max(0.8, 0.8 * s);
+  ctx.lineWidth = Math.max(0.8, 0.7 * s);
   ctx.stroke();
 }
 
