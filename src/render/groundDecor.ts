@@ -26,6 +26,13 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 Buschdichte A3 und Zusatzblüten A1 · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
 // 556 Mauerreste A14 · 557 Obstbaum A6 · 558 Menhir A9 · 559 Pilzring A10. Dazu die Blütenpalette je Insel über
 // `hash2(seed + 500, 0, 1)` (Inselcharakter k = 1, Anhang 0.2).
+// L7 im Einzelnen (585–594): 585 Los der seltenen Arten (`faunaLot`) · 586 Zellenanteil und Ankerschlüssel (Orte aller Arten) ·
+// 587 Posen (Zyklusversatz, Rast- und Wegplätze) · 588 Episoden (Fuchs, Waldvögel) · 589 Gestalt (Falterton, Hirsch, Flugbahn) ·
+// 590 Glühwürmchen (Drift, Puls) (alle fauna.ts) · 591–593 Delfine in wildlife.ts (591 Episode und Beginn, 592 Gruppengrösse,
+// 593 Ort und Richtung) · 594 Glitzern (fauna.ts).
+// L5 im Einzelnen (560–569): 560 Palmen D1 und Palmengruppen · 561 Strandsteine D2 und Tümpel D6 · 562 Treibholz D3 ·
+// 563 Muscheln D4 · 564 Strandhafer D5 · 565 Kiste D9 · 566 Wrack E1 · 567 Meeresfels E3 und Felsnadel · 568 Felseiland E8 ·
+// 569 Wasserfelder (Sandbank D11, Riff E2, Tang E6 über verschiedene `hash2`-Argumente); Küstenvariante `hash2(seed + 500, 0, 2)`.
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -193,6 +200,19 @@ export const DECOR_TONES = {
   shrubShadow: toInk(mixHex(SHRUB_TONES[0], PALETTE.grassDark, 0.35), 0.12),
   earthDark: PALETTE.earthEdge,
   fernDark: mixHex(PALETTE.grass, PALETTE.grassDark, 0.4),
+  // Strand (L5, Sand ist bebaubar: alle Töne ≥ 10 ΔE2000 zu den Wassertönen)
+  sandDamp: mixHex(PALETTE.sandWet, PALETTE.rockDark, 0.3),
+  driftGrey: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockLight, 0.6), PALETTE.wallLime, 0.1),
+  driftDark: mixHex(PALETTE.roofTimber, PALETTE.rock, 0.45),
+  shell: mixHex(PALETTE.wallLime, PALETTE.sandDry, 0.3),
+  shellShade: mixHex(PALETTE.sandWet, PALETTE.rock, 0.4),
+  starfish: mixHex(mixHex(PALETTE.roofTerracotta, PALETTE.sandWet, 0.4), PALETTE.rock, 0.5),
+  marram: mixHex(mixHex(PALETTE.grassLight, PALETTE.grassDark, 0.35), PALETTE.sandDry, 0.1),
+  marramDark: mixHex(mixHex(PALETTE.grassDark, PALETTE.crown, 0.3), PALETTE.sandDry, 0.08),
+  poolDark: mixHex(PALETTE.sandWet, PALETTE.rockDark, 0.45),
+  poolRim: mixHex(PALETTE.sandDry, PALETTE.rockLight, 0.5),
+  poolGlint: mixHex(PALETTE.rockLight, PALETTE.wallLime, 0.3),
+  glass: mixHex(PALETTE.crownLight, PALETTE.earth, 0.45),
 } as const;
 
 /**
@@ -615,6 +635,235 @@ export function groundShapes(el: GroundElement, seed: number): Prim[] {
       });
       break;
     }
+    case 'beachStone': {
+      // D2: 1–2 Steine dicht beisammen (zusammen ≤ 0,3 Kachel), Felstöne aus ROCK_TONES mit Licht- und Schattenseite,
+      // dunkle Kontur und feuchter Fuss: bei Zoom 1 als Steine erkennbar
+      const x0 = tx + 0.3 + 0.35 * rnd(561, 0),
+        y0 = ty + 0.35 + 0.3 * rnd(561, 1);
+      const n = 1 + Math.floor(rnd(561, 2) * 2);
+      for (let i = 0; i < n; i++) {
+        const x = x0 + i * (0.07 + 0.02 * rnd(561, 3 + i)),
+          y = y0 + i * 0.03,
+          rx = 0.055 + 0.02 * rnd(561, 6 + i),
+          ry = rx * 0.75;
+        out.push({
+          k: 'ell',
+          c: D.sandDamp,
+          z: 0,
+          x,
+          y: y + ry * 0.55,
+          rx: rx * 1.18,
+          ry: ry * 0.7,
+        });
+        out.push({ k: 'ell', c: D.rockDark, z: 0, x, y, rx: rx * 1.1, ry: ry * 1.1 });
+        out.push({ k: 'ell', c: D.rockShade, z: 0, x: x + rx * 0.1, y: y + ry * 0.1, rx, ry });
+        out.push({
+          k: 'ell',
+          c: D.rockMid,
+          z: 1,
+          x: x - rx * 0.12,
+          y: y - ry * 0.12,
+          rx: rx * 0.78,
+          ry: ry * 0.72,
+        });
+        out.push({
+          k: 'ell',
+          c: D.rockLight,
+          z: 1,
+          x: x - rx * 0.32,
+          y: y - ry * 0.38,
+          rx: rx * 0.4,
+          ry: ry * 0.34,
+        });
+      }
+      break;
+    }
+    case 'driftwood': {
+      // D3: grauer, verwaschener Ast 0,3–0,5 Kachel auf dem Spülsaum, Lichtkante oben, kurzer Aststumpf
+      const len = 0.3 + 0.2 * rnd(562, 0),
+        a = (rnd(562, 1) - 0.5) * 1.2;
+      const cx = tx + 0.3 + 0.4 * rnd(562, 2),
+        cy = ty + 0.35 + 0.3 * rnd(562, 3);
+      const ux = Math.cos(a) * len * 0.5,
+        uy = Math.sin(a) * len * 0.5 * 0.8,
+        th = 0.028;
+      out.push({ k: 'ell', c: D.sandDamp, z: 0, x: cx, y: cy + th * 1.6, rx: len * 0.5, ry: th });
+      out.push({
+        k: 'poly',
+        c: D.driftDark,
+        z: 0,
+        pts: [
+          cx - ux,
+          cy - uy - th * 0.2,
+          cx + ux,
+          cy + uy - th * 0.2,
+          cx + ux,
+          cy + uy + th,
+          cx - ux,
+          cy - uy + th,
+        ],
+      });
+      out.push({
+        k: 'poly',
+        c: D.driftGrey,
+        z: 1,
+        pts: [
+          cx - ux,
+          cy - uy - th,
+          cx + ux,
+          cy + uy - th,
+          cx + ux,
+          cy + uy + th * 0.1,
+          cx - ux,
+          cy - uy + th * 0.1,
+        ],
+      });
+      out.push(
+        blade(
+          D.driftDark,
+          0,
+          cx - ux * 0.2,
+          cy - uy * 0.2 - th,
+          cx - ux * 0.1,
+          cy - uy * 0.1 - th - 0.07,
+          2.2,
+        ),
+      );
+      break;
+    }
+    case 'shell': {
+      // D4: winzig; arg 0 = 2–3 Muscheln (heller Körper, Schattenpunkt), arg 1 = Seestern mit fünf Armen
+      if (el.arg === 1) {
+        const cx = tx + 0.3 + 0.4 * rnd(563, 0),
+          cy = ty + 0.35 + 0.3 * rnd(563, 1),
+          r = 0.075 + 0.02 * rnd(563, 2),
+          rot = rnd(563, 3) * Math.PI;
+        const pts: number[] = [];
+        for (let k = 0; k < 10; k++) {
+          const ang = rot + (k * Math.PI) / 5,
+            rr = k % 2 ? r * 0.38 : r;
+          pts.push(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr * 0.8);
+        }
+        out.push({ k: 'poly', c: D.starfish, z: 0, pts });
+        out.push(dot(D.shell, 1, cx - 0.5 * PX, cy - 0.5 * PX, 1));
+        break;
+      }
+      const n = 2 + Math.floor(rnd(563, 4) * 2);
+      for (let i = 0; i < n; i++) {
+        const x = tx + 0.2 + 0.6 * rnd(563, 5 + i * 3),
+          y = ty + 0.25 + 0.5 * rnd(563, 6 + i * 3);
+        out.push(dot(D.shellShade, 0, x + PX * 0.5, y + PX * 0.5, 2));
+        out.push(dot(D.shell, 1, x, y, 2));
+      }
+      break;
+    }
+    case 'beachGrass': {
+      // D5: lockere Gruppe aus 1–2 Büscheln zu je 3–6 Halmen, ≈ 0,15 Kachel hoch, grün gegen den Sand, leicht windgebeugt
+      const groups = 1 + Math.floor(rnd(564, 4) * 2);
+      const wind = 0.04 + 0.04 * rnd(564, 3);
+      for (let g = 0; g < groups; g++) {
+        const bx = tx + 0.25 + 0.5 * rnd(564, g * 20),
+          by = ty + 0.55 + 0.3 * rnd(564, g * 20 + 1);
+        const n = 3 + Math.floor(rnd(564, g * 20 + 2) * 4);
+        for (let i = 0; i < n; i++) {
+          const f = n === 1 ? 0 : i / (n - 1) - 0.5;
+          const len = 0.13 + 0.04 * rnd(564, g * 20 + 10 + i);
+          out.push(
+            blade(
+              i % 2 ? D.marram : D.marramDark,
+              i % 2 ? 1 : 0,
+              bx + f * 0.06,
+              by,
+              bx + f * 0.2 + wind,
+              by - len,
+              1.7,
+            ),
+          );
+        }
+      }
+      break;
+    }
+    case 'tidePool': {
+      // D6: nasser, dunkler Sandton mit hellem Glanzrand (kein Wasserblau: Sand ist bebaubar), 2–3 Steine am Rand
+      const cx = tx + 0.45 + 0.1 * rnd(561, 20),
+        cy = ty + 0.5 + 0.08 * rnd(561, 21);
+      const rx = 0.2 + 0.05 * rnd(561, 22);
+      out.push({ k: 'ell', c: D.poolRim, z: 0, x: cx, y: cy, rx: rx * 1.22, ry: rx * 0.72 });
+      out.push({ k: 'ell', c: D.poolDark, z: 0, x: cx, y: cy + 0.01, rx, ry: rx * 0.55 });
+      out.push({
+        k: 'ell',
+        c: D.poolGlint,
+        z: 1,
+        x: cx - rx * 0.35,
+        y: cy - rx * 0.12,
+        rx: rx * 0.3,
+        ry: rx * 0.1,
+      });
+      const n = 2 + Math.floor(rnd(561, 23) * 2);
+      for (let i = 0; i < n; i++) {
+        const ang = rnd(561, 24 + i) * Math.PI * 2,
+          sx = cx + Math.cos(ang) * rx * 1.15,
+          sy = cy + Math.sin(ang) * rx * 0.68,
+          sr = 0.03 + 0.02 * rnd(561, 30 + i);
+        out.push({ k: 'ell', c: D.rockMid, z: 1, x: sx, y: sy, rx: sr, ry: sr * 0.7 });
+        out.push({
+          k: 'ell',
+          c: D.rockLight,
+          z: 1,
+          x: sx - sr * 0.3,
+          y: sy - sr * 0.3,
+          rx: sr * 0.4,
+          ry: sr * 0.3,
+        });
+      }
+      break;
+    }
+    case 'crate': {
+      const cx = tx + 0.5,
+        cy = ty + 0.55;
+      if (el.arg === 1) {
+        // Flaschenpost: liegende Flasche mit Korken, Schatten im Sand
+        out.push({ k: 'ell', c: D.sandDamp, z: 0, x: cx, y: cy + 0.05, rx: 0.15, ry: 0.035 });
+        out.push({ k: 'ell', c: D.glass, z: 0, x: cx, y: cy, rx: 0.12, ry: 0.05 });
+        out.push({ k: 'rect', c: D.glass, z: 0, x: cx + 0.1, y: cy - 0.02, w: 0.1, h: 0.04 });
+        out.push(dot(D.earth, 1, cx + 0.2, cy - 0.015, 2));
+        out.push({ k: 'ell', c: D.shell, z: 1, x: cx - 0.03, y: cy - 0.02, rx: 0.04, ry: 0.012 });
+        break;
+      }
+      // Kiste: kleiner Quader (≈ 0,3 Kachel), Deckel hell, Lichtseite links, Schattenseite rechts
+      const hw = 0.13,
+        hh = 0.065,
+        hz = 0.12;
+      out.push({
+        k: 'ell',
+        c: D.sandDamp,
+        z: 0,
+        x: cx + 0.02,
+        y: cy + hh + 0.01,
+        rx: hw * 1.1,
+        ry: hh * 0.7,
+      });
+      out.push({
+        k: 'poly',
+        c: D.wood,
+        z: 0,
+        pts: [cx - hw, cy, cx, cy + hh, cx, cy + hh - hz, cx - hw, cy - hz],
+      });
+      out.push({
+        k: 'poly',
+        c: D.woodDark,
+        z: 0,
+        pts: [cx, cy + hh, cx + hw, cy, cx + hw, cy - hz, cx, cy + hh - hz],
+      });
+      out.push({
+        k: 'poly',
+        c: D.woodLight,
+        z: 1,
+        pts: [cx - hw, cy - hz, cx, cy + hh - hz, cx + hw, cy - hz, cx, cy - hh - hz],
+      });
+      break;
+    }
+
     case 'ferns': {
       // Farnsaum B8: Büschel aus 2–5 Wedeln auf der Grasseite der Waldkante, nie als Linie an der Kachelkante
       for (const c of fringeClusters(seed, tx, ty, el.arg)) {

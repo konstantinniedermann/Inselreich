@@ -1165,9 +1165,12 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // G-Anzahl (b537908).
   // WALD-02 (auch Fix-Runden 1–3, Baumgruppen, Nadelwald-Rotten, Nachsetzen unter dunklem Boden): bewusst neu gepinnt (beide Pins): Wald-Objekte sind Tiefenband-Zellen aus einzelnen Kronen (andere Ids und
   // Anzahl, Reihenfolge nach Fusstiefe) und das Baum-Culling hat 2 Kacheln Zuschlag.
-  const HOME_CALLS = { hash: 588943217, length: 19005 };
+  // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter.
+  // L7-Merge (main mit REL-06 + L5): neu gepinnt, L3-Bildmodus und L5-Meer-Stempel zusammen.
+  // REL-07 (int/rel-07, WALD-02 + L7 mit L5): neu gepinnt, WALD-02-Kronenzellen und L5-Meer-Stempel zusammen.
+  const HOME_CALLS = { hash: 3026111215, length: 19015 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
-  const HOME_ORDER = { hash: 3285043491, length: 5143 };
+  const HOME_ORDER = { hash: 3152224459, length: 5142 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
   // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };
@@ -1227,6 +1230,10 @@ describe('M12 E1 Renderer', () => {
 
   it('AK-E1-10 Kamera über der Heimat: Aufrufliste gleich der Welt ohne Fremdinseln', () => {
     const { world } = scene();
+    // L7: Robben und Kormorane stehen auf Fels und Sandbank des Meer-Plans, und der hängt von den Fahrlinien und damit
+    // von den Fremdinseln ab (`seaContext`); ohne Fremdinseln ist es eine andere Meerlage. Nachts (tick 3000) sind die Meer-Tiere
+    // aus, der Rest des Bildes bleibt der Prüfgegenstand dieses Tests.
+    world.tick = 3000;
     const cam = camFor(world, 1);
     const a = run(world, cam);
     const b = run(homeOnly(world), cam);
@@ -1270,7 +1277,16 @@ describe('M12 E1 Renderer', () => {
     'L4 Deko-Culling: eine Kachel hinter range gezeichnet, zwei nicht; unter Zoom 0,5 kein A5/A6, unter 0,75 kein A9/A14; Schatten im gemeinsamen Pfad',
     { timeout: 120000 },
     () => {
-      const MIN = { solitaire: 0.5, orchard: 0.5, menhir: 0.75, ruin: 0.75 } as const;
+      const MIN = {
+        solitaire: 0.5,
+        orchard: 0.5,
+        menhir: 0.75,
+        ruin: 0.75,
+        palm: 0.5, // L5 D1
+        wreck: 0.25, // L5 E1
+        seaRock: 0.25, // L5 E3
+        islet: 0.25, // L5 E8
+      } as const;
       let plusOne = 0,
         plusTwo = 0;
       const kindsDrawn = new Map<number, Set<string>>();
@@ -1314,14 +1330,11 @@ describe('M12 E1 Renderer', () => {
       }
       expect(plusOne, 'ein Stempel eine Kachel hinter range wurde geprüft').toBeGreaterThan(0);
       expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
-      expect([...(kindsDrawn.get(1) ?? [])].sort()).toEqual([
-        'menhir',
-        'orchard',
-        'ruin',
-        'solitaire',
-      ]);
-      expect([...(kindsDrawn.get(0.6) ?? [])].sort()).toEqual(['orchard', 'solitaire']);
-      expect(kindsDrawn.get(0.4)).toBeUndefined();
+      // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu: exakte Listen je Zoom
+      const got = (z: number): string[] => [...(kindsDrawn.get(z) ?? [])].sort();
+      expect(got(1)).toEqual(['menhir', 'orchard', 'palm', 'ruin', 'seaRock', 'solitaire']);
+      expect(got(0.6)).toEqual(['orchard', 'palm', 'seaRock', 'solitaire']);
+      expect(got(0.4)).toEqual(['seaRock']);
     },
   );
 

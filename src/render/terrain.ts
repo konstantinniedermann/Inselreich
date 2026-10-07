@@ -21,6 +21,7 @@ import {
   type Prim,
 } from './groundDecor';
 import { groundElements, kontorPos } from './decor';
+import { seaTintFor, tintWater, type SeaTint } from './seaFields';
 import { FOREST_FLOOR, PALETTE, SHADE_TONE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
   COAST_BAND,
@@ -326,6 +327,8 @@ export interface TerrainGrid {
   /** Fix-Runde 3 B: Faktor auf den Waldbodenanteil aus der Bestandsdichte (`floorFactor`), 1 im dichten Wald. */
   woodK: Float32Array;
   cls: Uint8Array; // 0 Wasser, 1 + Index in LAND
+  /** L5: Wasserfelder (Sandbank, Riff, Tang) der Heimat; fehlt bei Fremdinseln. Statisch, wird nie gepatcht. */
+  sea?: SeaTint | null;
 }
 
 const smoothstepClamp = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -1200,6 +1203,7 @@ export function paintPixels(
       const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
       if (water) {
         waterColor(Math.max(0, -lerp(smooth)), col);
+        if (g.sea) tintWater(g.sea, (px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, col);
         const rim = rimWeight((px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, tilesW, tilesH);
         if (rim < 1) mix3(C.deep, col, rim, col);
       } else {
@@ -1566,6 +1570,7 @@ export function buildTerrainLayer(world: World, scale = defaultTerrainScale()): 
   if (!ctx) throw new Error('2D-Kontext nicht verfügbar');
   const fields = terrainFields(fieldWorld(world));
   const grid = buildGrid(fieldWorld(world), fields);
+  grid.sea = seaTintFor(world);
   paintRegion(ctx, grid, scale, 0, 0, w, h);
   const occ = occupancy(home(world));
   paintDecor(ctx, world, occ, scale, {
@@ -1931,6 +1936,7 @@ export function repaintFarWater(
       if (dOld >= 6) continue; // Chebyshev ≤ euklidisch: ab 6 ist es überall tief
       const d = farWaterDepth(e, g.seed, (dx + x + 0.5) * pxTile, qy * pxTile);
       waterColor(d, col);
+      if (g.sea) tintWater(g.sea, (dx + x + 0.5) * pxTile, qy * pxTile, col);
       const rim = rimWeight((dx + x + 0.5) * pxTile, qy * pxTile, tilesW, tilesH);
       if (rim < 1) mix3(C.deep, col, rim, col);
       const o = (y * w + x) * 4;
@@ -2015,6 +2021,7 @@ export function terrainJob(
   steps.push(
     timed(() => {
       grid = bands.grid();
+      grid.sea = seaTintFor(world);
     }),
   );
   for (let y = 0; y < h; y += SLICE_ROWS)

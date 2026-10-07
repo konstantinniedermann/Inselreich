@@ -149,7 +149,7 @@ describe('Wasser (Spec 5.2)', () => {
       maxF = -Infinity;
     for (let t = 0; t < FOAM_PERIOD_MS; t += 400) {
       const { ctx, log } = fakeCtx();
-      drawWaves(ctx, w, ALL(w), t);
+      drawWaves(ctx, w, ALL(w), t, undefined, false, false); // ohne L5-Elementschaum: nur die Küstenlinie
       for (const e of log.events)
         if (e.op === 'stroke' && alphaOf(e.style) >= 0.35 && alphaOf(e.style) !== WAVE_ALPHA)
           for (const p of e.points) {
@@ -198,7 +198,7 @@ describe('Wasser (Spec 5.2)', () => {
       if (alphaOf(log.strokeStyle) >= 0.8) widths.push(log.lineWidth);
       orig();
     };
-    drawWaves(ctx, w, ALL(w), 1000);
+    drawWaves(ctx, w, ALL(w), 1000, undefined, false, false); // ohne L5-Elementschaum
     expect(widths.length).toBe(1);
     // Bodenmatrix bei Zoom 1: Texturpixel → Bild, Spalten (32, 16) und (−32, 16); Breite senkrecht zur Linie = lw · det / |M d|
     const det = 32 * 16 + 32 * 16;

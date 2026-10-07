@@ -7,7 +7,7 @@ import { fieldWorld } from './terrainField';
 import { massifPieces, type MassifPiece } from './massif';
 import { woodLayout, type TileClass } from './forest';
 import type { Crown } from './crown';
-import { kontorPos, stampPlacements, type StampKind } from './decor';
+import { kontorPos, seaContext, stampPlacements, type StampKind } from './decor';
 
 // iso.ts — Kern (Setzung Spec D-01 bis D-05, D-13, D-16)
 import { ISO_H, ISO_W, project, type Pt } from './isoBase';
@@ -152,10 +152,15 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       items.push({ kind: 'massif', id: piece.id, fp, key: depthKey(fp), piece });
     }
     // Deko-Stempel (ART-STIL-02 L4, A5/A6/A9/A14): nur auf der Heimatinsel (D4); eine Inselansicht fremder Inseln zeigt
-    // nur Boden-Deko. Die Liste entsteht hier, je `layoutKey`, nie je Frame; sie rückt bei Bau und Rodung nicht nach.
+    // nur Boden-Deko (L5: mit `seaContext` kommen Palmen und Meer-Stempel dazu). Die Liste entsteht hier, je `layoutKey`, nie je Frame; sie rückt bei Bau und Rodung nicht nach.
     const stampTiles = new Set<number>();
     if (!isl.kind || isl.kind === 'home')
-      for (const s of stampPlacements(world.seed, isl, kontorPos(isl, world.buildings))) {
+      for (const s of stampPlacements(
+        world.seed,
+        isl,
+        kontorPos(isl, world.buildings),
+        seaContext(world),
+      )) {
         const fp = { x: s.x, y: s.y, w: 1, h: 1 };
         stampTiles.add(s.y * isl.width + s.x);
         items.push({

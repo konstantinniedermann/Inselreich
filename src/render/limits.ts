@@ -15,6 +15,20 @@ export const CAPS = {
   fish: [20, 6],
   whales: [1, 1],
   flocks: [4, 2],
+  // ART-STIL-02 L7 Fauna (Spec 5): gezählt im Bild; Summe 69 normal, ≤ 9 reduziert (Spec), tatsächlich 8
+  butterflies: [12, 0],
+  hares: [4, 1],
+  fireflies: [24, 0],
+  deer: [2, 1],
+  fox: [1, 0],
+  forestBirds: [6, 2],
+  ibex: [3, 1],
+  eagle: [1, 1],
+  crabs: [6, 0],
+  turtle: [1, 0],
+  seals: [3, 1],
+  cormorants: [3, 1],
+  dolphins: [3, 0],
 } as const;
 export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];

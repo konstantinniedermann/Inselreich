@@ -8,14 +8,15 @@ import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { phaseAt, type Phase, type WeatherKind } from './daynight';
+import { dolphinOk, dolphinSites, faunaLot } from './fauna';
 import { ISO_H, ISO_W, project } from './iso';
 import { coastFor } from './life';
 import { cap } from './limits';
-import { PALETTE, mixHex, rgbaOf } from './palette';
+import { PALETTE, mixHex, rgbaOf, toInk } from './palette';
 import { shipTile } from './ship';
 import type { Field } from './terrainField';
 
-export type WildlifeKind = 'fish' | 'whale' | 'birds';
+export type WildlifeKind = 'fish' | 'whale' | 'birds' | 'dolphins';
 
 /** Umgebung wie beim Renderer (sonst stimmt der Name nicht mit dem Bild); Vorgaben: Phase aus `world.tick`, 'clear', false. */
 export interface WildlifeEnv {
@@ -61,9 +62,16 @@ export interface FlockPose {
   birds: { x: number; y: number; z: number; flap: number }[];
 }
 
+export interface DolphinPose {
+  /** Springende Delfine dieses Augenblicks: Fusspunkt (Kachelraum), Höhe in Weltpixeln, Verlauf des Sprungs 0…1, Schwimmrichtung. */
+  dolphins: { x: number; y: number; z: number; t: number; heading: number }[];
+  /** Spritzringe an Ein- und Austauchstelle: Mitte (Kachelraum), Alter 0…1. */
+  splash: { x: number; y: number; age: number }[];
+}
+
 export interface WildlifeHit {
   kind: WildlifeKind;
-  name: 'Fischschwarm' | 'Wal' | 'Vogelschwarm';
+  name: 'Fischschwarm' | 'Wal' | 'Vogelschwarm' | 'Delfine';
   /** Bodenpunkt im Kachelraum (Schwarm- bzw. Tiermitte). */
   x: number;
   y: number;
@@ -71,7 +79,7 @@ export interface WildlifeHit {
   z: number;
   /** Trefferradius in Kacheln. */
   r: number;
-  pose: FishPose | WhalePose | FlockPose;
+  pose: FishPose | WhalePose | FlockPose | DolphinPose;
 }
 
 // --- Konstanten (Darstellungswerte, keine Spielwerte) ---------------------------------------------------
@@ -275,6 +283,143 @@ function candidatesOf(world: World): number[] {
 }
 
 const DIRS = 8;
+export const DOLPHIN_EPISODE_MS = 45000;
+export const DOLPHIN_VISIBLE_MS = 9000;
+const DOLPHIN_SHARE = 0.5;
+const DOLPHIN_JUMP_MS = 1100;
+const DOLPHIN_SPLASH_MS = 600;
+const DOLPHIN_GAP_MS = 3600; // 3 Tiere × `DOLPHIN_LAG_MS`: je Runde springt eines nach dem anderen, nie zwei zugleich
+const DOLPHIN_LAG_MS = 1200; // länger als ein Sprung (1100 ms): die Tiere kreuzen sich im Bild nie
+const DOLPHIN_REACH = 3; // Kacheln über die sichtbare Zeit
+const DOLPHIN_SPACING = 0.6; // Abstand der Tiere in der Gruppe entlang der Schwimmrichtung (alle schwimmen gleich, versetzt)
+const DOLPHIN_LATERAL = 0.15; // leichter Querversatz je zweites Tier
+const DOLPHIN_SHIP_GAP = 3;
+const DOLPHIN_JUMP_H = 0.45 * ISO_H;
+
+interface DolphinRoute {
+  a: Pt2;
+  ang: number;
+}
+const ROUTE_KEEP = 8;
+/** Bahnen je Welt und Episode (höchstens `ROUTE_KEEP` Einträge, der älteste fliegt zuerst); hängen nie von Schiff oder Zeit ab. */
+const dolphinRoutes = new WeakMap<World, Map<number, DolphinRoute | null>>();
+/** Mitte und Richtung der Episode `e`: einmal geprüft (Tiefwasser und R4 entlang der Bahn), danach aus dem Cache. */
+function dolphinRoute(
+  world: World,
+  sites: NonNullable<ReturnType<typeof dolphinSites>>,
+  e: number,
+): DolphinRoute | null {
+  let m = dolphinRoutes.get(world);
+  if (!m) dolphinRoutes.set(world, (m = new Map()));
+  const hit = m.get(e);
+  if (hit !== undefined) return hit;
+  let out: DolphinRoute | null = null;
+  const f = sites.field;
+  const c =
+    sites.cands[
+      Math.min(
+        sites.cands.length - 1,
+        Math.floor(hash2(world.seed + 593, e, 0) * sites.cands.length),
+      )
+    ]!;
+  const a = { x: (c % f.w) + 0.5, y: Math.floor(c / f.w) + 0.5 };
+  // Richtung: die erste der 8, deren Bahn ganz im erlaubten Tiefwasser bleibt (sonst keine Delfine in dieser Episode)
+  const d0 = Math.floor(hash2(world.seed + 593, e, 1) * DIRS);
+  let ang = 0,
+    reach = -1;
+  for (let d = 0; d < DIRS; d++) {
+    const q = ((d0 + d) / DIRS) * Math.PI * 2;
+    if (
+      // Bahn von den hintersten Tieren (2 · Abstand hinter dem Anker) bis `DOLPHIN_REACH`, mit Querversatz
+      Array.from(
+        { length: 22 },
+        (_, k) => -2 * DOLPHIN_SPACING + (k / 21) * (DOLPHIN_REACH + 2 * DOLPHIN_SPACING),
+      ).every((u) =>
+        [-DOLPHIN_LATERAL, 0, DOLPHIN_LATERAL].every((side) =>
+          dolphinOk(
+            sites,
+            a.x + Math.cos(q) * u - Math.sin(q) * side,
+            a.y + Math.sin(q) * u + Math.cos(q) * side,
+          ),
+        ),
+      )
+    ) {
+      ang = q;
+      reach = DOLPHIN_REACH;
+      break;
+    }
+  }
+  if (reach >= 0) out = { a, ang };
+  m.set(e, out);
+  if (m.size > ROUTE_KEEP) m.delete(m.keys().next().value!);
+  return out;
+}
+
+/**
+ * Delfingruppe zur Zeit `timeMs` oder null (E5): Episoden zu 45 s, in ca. der Hälfte springen 2–3 Delfine nacheinander
+ * (zweimal je Tier) in Bögen über Tiefwasser (`dolphinSites`: Küstenfeld ≤ −4, R4-Abstände), die Gruppe zieht 3 Kacheln. Die
+ * Kappe `dolphins` zählt Tiere (reduziert 0 = keine). Ein Delfin näher als 3 Kacheln am Schiff taucht nicht auf. Bahn
+ * hängt nur von Seed, Episode und Meer ab, nie vom Schiff (Salze 591–593, ART-STIL-02 Anhang 0.2).
+ */
+export function dolphinsAt(world: World, timeMs: number, reduce = false): DolphinPose | null {
+  const limit = cap('dolphins', reduce);
+  if (limit <= 0 || !faunaLot(world.seed, 'dolphin')) return null;
+  const sites = dolphinSites(world);
+  if (!sites || sites.cands.length === 0) return null;
+  const t = clampTime(timeMs);
+  const e = Math.floor(t / DOLPHIN_EPISODE_MS);
+  if (hash2(world.seed + 591, e, 0) >= DOLPHIN_SHARE) return null;
+  const start =
+    e * DOLPHIN_EPISODE_MS +
+    hash2(world.seed + 592, e, 0) * (DOLPHIN_EPISODE_MS - DOLPHIN_VISIBLE_MS);
+  const dt = t - start;
+  if (dt < 0 || dt >= DOLPHIN_VISIBLE_MS) return null;
+  const route = dolphinRoute(world, sites, e);
+  if (!route) return null; // keine Bahn im erlaubten Tiefwasser: in dieser Episode keine Delfine
+  const { a, ang } = route;
+  const reach = DOLPHIN_REACH;
+  const n = Math.min(limit, 2 + (hash2(world.seed + 592, e, 1) < 0.5 ? 1 : 0));
+  const ship = shipTile(world);
+  // gleiche Richtung, versetzt entlang der Bahn (`DOLPHIN_SPACING` hinter dem Vordermann), je zweites Tier leicht seitlich
+  const at = (tt: number, i: number): Pt2 => {
+    const along = reach * (tt / DOLPHIN_VISIBLE_MS) - i * DOLPHIN_SPACING;
+    const side = (i % 2) * DOLPHIN_LATERAL;
+    return {
+      x: a.x + Math.cos(ang) * along - Math.sin(ang) * side,
+      y: a.y + Math.sin(ang) * along + Math.cos(ang) * side,
+    };
+  };
+  const clear = (p: Pt2): boolean =>
+    !ship || Math.hypot(p.x - (ship.x + 0.5), p.y - (ship.y + 0.5)) >= DOLPHIN_SHIP_GAP;
+  const pose: DolphinPose = { dolphins: [], splash: [] };
+  for (let i = 0; i < n; i++)
+    for (let k = 0; k < 2; k++) {
+      const s0 = i * DOLPHIN_LAG_MS + k * DOLPHIN_GAP_MS;
+      const tIn = dt - s0;
+      if (tIn >= 0 && tIn < DOLPHIN_JUMP_MS) {
+        const p = tIn / DOLPHIN_JUMP_MS,
+          q = at(dt, i);
+        if (clear(q))
+          pose.dolphins.push({
+            x: q.x,
+            y: q.y,
+            z: 4 * p * (1 - p) * DOLPHIN_JUMP_H,
+            t: p,
+            heading: ang,
+          });
+      }
+      for (const [at0, tt] of [
+        [s0, dt - s0],
+        [s0 + DOLPHIN_JUMP_MS, dt - s0 - DOLPHIN_JUMP_MS],
+      ] as const)
+        if (tt >= 0 && tt < DOLPHIN_SPLASH_MS) {
+          const q = at(at0, i);
+          if (clear(q)) pose.splash.push({ x: q.x, y: q.y, age: tt / DOLPHIN_SPLASH_MS });
+        }
+    }
+  return pose.dolphins.length > 0 || pose.splash.length > 0 ? pose : null;
+}
+
 /**
  * Wal zur Zeit `timeMs` oder null. Episoden zu 60 s; in ca. 35 % taucht ein Wal für 12 s auf einer Kandidatenkachel
  * auf und driftet 0,15 Kacheln/s in eine Richtung, die tiefes Wasser (`−s ≥ 5`) hält. Bahn und Kandidat hängen nur
@@ -419,6 +564,18 @@ export function wildlifeAt(
     if (w && inRange(range, w.x, w.y))
       out.push({ kind: 'whale', name: 'Wal', x: w.x, y: w.y, z: 0, r: 1.0, pose: w });
   }
+  // Delfine (E5): jede helle Phase, nicht bei Sturm. Abweichung von Spec §3 „ab Zoom 0,5“ (Entscheid lead-art): wie der Wal
+  // ohne eigene Zoomschwelle (sichtbar über LOD_ZOOM), damit Bild und Mouse-over übereinstimmen (die UI kennt den Zoom nicht).
+  if (phase !== 'night' && weather !== 'storm') {
+    const d = dolphinsAt(world, timeMs, reduce);
+    if (d) {
+      const pts = [...d.dolphins, ...d.splash];
+      const x = pts.reduce((m, q) => m + q.x, 0) / pts.length,
+        y = pts.reduce((m, q) => m + q.y, 0) / pts.length;
+      if (inRange(range, x, y))
+        out.push({ kind: 'dolphins', name: 'Delfine', x, y, z: 0, r: 1.5, pose: d });
+    }
+  }
   if (weather === 'clear' || weather === 'cloudy')
     for (const a of flockAnchors(world, phase, reduce)) {
       const p = flockPose(a, world.seed, timeMs, reduce);
@@ -461,6 +618,82 @@ const WHALE_LEN = 1.8; // Kacheln
 const WHALE_HUMP = 0.42 * ISO_H;
 const FLUKE_W = 0.6 * ISO_W;
 const FLUKE_H = 0.75 * ISO_H;
+/** Delfin: Schiefer mit Wasser, heller als der Wal; Kontur im Eigenton. */
+export const DOLPHIN_COLOR = mixHex(PALETTE.roofSlate, PALETTE.waterMid, 0.45);
+export const DOLPHIN_LIGHT = mixHex(DOLPHIN_COLOR, PALETTE.foam, 0.3);
+const DOLPHIN_LEN = 0.6 * ISO_W;
+
+/** Ein springender Delfin im Profil: gebogener Körper (Nase hoch beim Auftauchen, Nase runter beim Eintauchen), Finne, Fluke. */
+function drawDolphin(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  d: DolphinPose['dolphins'][number],
+): void {
+  const z = cam.zoom,
+    L = DOLPHIN_LEN * z;
+  const q = project(d.x, d.y);
+  const c = worldToScreen(cam, { x: q.x, y: q.y - d.z });
+  const hx = Math.cos(d.heading) - Math.sin(d.heading);
+  const f = hx < 0 ? -1 : 1;
+  const phi = (0.5 - d.t) * 1.3; // > 0: Nase oben
+  const n = { x: f * Math.cos(phi), y: -Math.sin(phi) };
+  let pv = { x: n.y, y: -n.x };
+  if (pv.y > 0) pv = { x: -pv.x, y: -pv.y };
+  const pt = (u: number, side: number, bulge = true): Pt2 => {
+    const thick = 0.12 * L * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.8)), 0.8);
+    const arch = bulge ? 0.1 * L * Math.sin(Math.PI * u) : 0;
+    const a = (u - 0.5) * L;
+    return {
+      x: c.x + n.x * a + pv.x * (arch + side * thick),
+      y: c.y + n.y * a + pv.y * (arch + side * thick),
+    };
+  };
+  const N = 10;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const p = pt(i / N, 1);
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  for (let i = N; i >= 0; i--) {
+    const p = pt(i / N, -0.8);
+    ctx.lineTo(p.x, p.y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = DOLPHIN_COLOR;
+  ctx.strokeStyle = toInk(DOLPHIN_COLOR, 0.5);
+  ctx.lineWidth = Math.max(0.75, 0.9 * z);
+  ctx.fill();
+  ctx.stroke();
+  // Rückenfinne und Fluke
+  const f0 = pt(0.42, 1),
+    f1 = pt(0.56, 1),
+    top = pt(0.5, 1);
+  const tail = pt(0.02, 0, true);
+  ctx.beginPath();
+  ctx.moveTo(f0.x, f0.y);
+  ctx.lineTo(top.x + pv.x * 0.1 * L - n.x * 0.04 * L, top.y + pv.y * 0.1 * L - n.y * 0.04 * L);
+  ctx.lineTo(f1.x, f1.y);
+  ctx.closePath();
+  ctx.moveTo(tail.x, tail.y);
+  ctx.lineTo(tail.x - n.x * 0.07 * L + pv.x * 0.1 * L, tail.y - n.y * 0.07 * L + pv.y * 0.1 * L);
+  ctx.lineTo(tail.x - n.x * 0.07 * L - pv.x * 0.1 * L, tail.y - n.y * 0.07 * L - pv.y * 0.1 * L);
+  ctx.closePath();
+  ctx.fillStyle = DOLPHIN_COLOR;
+  ctx.fill();
+  ctx.stroke();
+  // helle Flanke
+  ctx.beginPath();
+  for (let i = 2; i <= N - 2; i++) {
+    const p = pt(i / N, -0.35);
+    if (i === 2) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.strokeStyle = DOLPHIN_LIGHT;
+  ctx.lineWidth = Math.max(0.75, 1.1 * z);
+  ctx.stroke();
+}
+
 export const WHALE_UNDER = mixHex(PALETTE.roofSlate, WHALE_DARK, 0.65);
 
 /**
@@ -663,6 +896,19 @@ export function drawWaterLife(
     }
   }
   for (const w of hits) if (w.kind === 'whale') drawWhale(ctx, cam, w.pose as WhalePose);
+  // Delfine: Spritzringe (Schaum) an Ein- und Austauchstelle, dann die springenden Tiere
+  for (const w of hits)
+    if (w.kind === 'dolphins') {
+      const dp = w.pose as DolphinPose;
+      if (dp.splash.length > 0) {
+        ctx.beginPath();
+        for (const sp of dp.splash) ringPath(ctx, scr(sp), (0.04 + 0.1 * sp.age) * ISO_W * z);
+        ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.5);
+        ctx.lineWidth = Math.max(0.75, 1 * z);
+        ctx.stroke();
+      }
+      for (const d of dp.dolphins) drawDolphin(ctx, cam, d);
+    }
   ctx.restore();
 }
 
