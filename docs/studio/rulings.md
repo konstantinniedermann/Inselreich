@@ -2574,3 +2574,12 @@ entfällt, Konflikte löst der Integrator (beide Anhänge behalten). E-032 als W
 mit WALD-02 sinngemäss (Rater im Paket). — Kosten bei Irrtum: mehr Merge-Konflikte in einer Datei.
 
 Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-07-adhoc-session-7db07561.md` · ADR: —
+
+## R304 · 2026-10-07 · L5 release-reif, Start L7, L8 danach
+
+Ruling: L5 angenommen inkl. (a) Meer-Plan am Start-Kontor, späte Kontore blenden aus, (b) `seaFields.ts`,
+`iso.ts`-Argument, Renderer-Pin, D5 auf Rauschkamm; Nachmessung Zoom 1 holt der Release-Lauf B nach. L7 startet
+gestapelt auf L5 (main per Merge); L8 erst nach L7, weil das Seltenheitsbudget alle Gruppen zählt und die
+Rechnerlast (12–20) Messungen bereits staut. — Kosten bei Irrtum: L8 eine Runde später.
+
+Entscheider: L0 · Anlass: Bericht lead-art L5 · ADR: —
