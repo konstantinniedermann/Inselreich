@@ -15,8 +15,6 @@ import {
   spriteBounds,
   unproject,
   zoomStep,
-  treeVariant,
-  TREE_VARIANTS,
   type Footprint,
   type Hull,
   type Pt,
@@ -26,6 +24,7 @@ import { demolish, placeBuilding } from '../../src/sim/build';
 import { home, createWorld, tilesInRadius } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
+import { VORWALD_MAX } from '../../src/render/forest';
 import { clearForest, plantForest } from '../../src/sim/forest';
 
 const inPoly = (h: readonly Pt[], x: number, y: number): boolean => {
@@ -80,13 +79,6 @@ describe('Projektion', () => {
     expect(zoomStep(2)).toBe(2);
     expect(zoomStep(3)).toBe(2);
     for (let z = 0.5; z <= 2; z += 0.01) expect(ZOOM_STEPS).toContain(zoomStep(z));
-  });
-  it('ISO D-13 treeVariant (L1: Vorgabe-Variante) ist deterministisch und liegt in 0 … TREE_VARIANTS - 1', () => {
-    for (let i = 0; i < 200; i++) {
-      const v = treeVariant(7, i % 64, (i * 7) % 64);
-      expect(v).toBe(treeVariant(7, i % 64, (i * 7) % 64));
-      expect(Number.isInteger(v) && v >= 0 && v < TREE_VARIANTS).toBe(true);
-    }
   });
 });
 
@@ -331,22 +323,35 @@ describe('Sortierung und Cache', () => {
   });
 });
 
-it('AK-R1-02 sortedObjects: nach clearForest kein Baum an (x, y); nach plantForest genau einer (L1: Variante aus forestLayout)', () => {
+it('AK-R1-02 sortedObjects: nach clearForest kein Waldbaum auf (x, y), höchstens Vorwald; nach plantForest wieder ≥ 2 (WALD-02: Kronen aus woodLayout)', () => {
   const w = createWorld(3, { unlockAll: true });
   const k = w.buildings[home(w).kontorId]!;
   const x = k.x + 6;
   const y = k.y + 2;
   forceRect(w, x, y, 1, 1, 'forest');
   w.money = 1000;
-  const trees = () =>
-    sortedObjects(w).filter((o) => o.kind === 'tree' && o.id === y * home(w).width + x);
-  expect(trees()).toHaveLength(1);
+  const onCrowns = () =>
+    sortedObjects(w)
+      .flatMap((o) =>
+        o.kind === 'tree'
+          ? o.crowns.map((c) => ({ ...c, fx: o.fp.x + c.cx, fy: o.fp.y + c.cy }))
+          : [],
+      )
+      .filter((c) => !c.dead && Math.floor(c.fx) === x && Math.floor(c.fy) === y);
+  const on = () =>
+    sortedObjects(w)
+      .flatMap((o) =>
+        o.kind === 'tree' ? o.crowns.map((c) => [o.fp.x + c.cx, o.fp.y + c.cy, c.dead]) : [],
+      )
+      .filter(
+        ([fx, fy, dead]) =>
+          !dead && Math.floor(fx as number) === x && Math.floor(fy as number) === y,
+      );
+  expect(on().length).toBeGreaterThanOrEqual(2);
   expect(clearForest(w, x, y).ok).toBe(true);
-  expect(trees()).toHaveLength(0);
+  // gerodet ist Wiese: dort steht kein Waldbaum mehr, höchstens Vorwald (≤ VORWALD_MAX kleine Gehölze)
+  expect(on().length).toBeLessThanOrEqual(VORWALD_MAX);
+  expect(onCrowns().every((c) => c.young || c.bush)).toBe(true);
   expect(plantForest(w, x, y).ok).toBe(true);
-  expect(trees()).toEqual([
-    expect.objectContaining({ variant: expect.any(Number), ox: expect.any(Number) }),
-  ]);
-  const v = (trees()[0] as { variant: number }).variant;
-  expect(v >= 0 && v < TREE_VARIANTS).toBe(true);
+  expect(on().length).toBeGreaterThanOrEqual(2);
 });

@@ -28,6 +28,11 @@ import {
   rareCount,
   rareLot,
   rareSites,
+  coastKind,
+  seaContext,
+  seaElementTiles,
+  seaKeepOut,
+  seaPlan,
   solitaireClear,
   stampBlocked,
   stampLimit,
@@ -422,7 +427,13 @@ describe('L4 D2/D3 Fussabdruck, Seltenheit', () => {
         expect(e.w).toBeLessThanOrEqual(2);
         expect(e.h).toBeLessThanOrEqual(2);
         expect(e.box).toEqual({ x0: e.x, y0: e.y, x1: e.x + e.w - 1, y1: e.y + e.h - 1 });
-        expect(footprintFree(isl, occ, e.x, e.y, e.w, e.h), key(e)).toBe(true);
+        if (
+          ['beachStone', 'driftwood', 'shell', 'beachGrass', 'tidePool', 'crate'].includes(e.kind)
+        ) {
+          // L5: Strand-Elemente stehen auf freiem Sand (kein Gebäude, kein Weg)
+          expect(isl.tiles[e.y * isl.width + e.x]!.terrain, key(e)).toBe('sand');
+          expect(occ[e.y * isl.width + e.x], key(e)).not.toBe(1);
+        } else expect(footprintFree(isl, occ, e.x, e.y, e.w, e.h), key(e)).toBe(true);
       }
     }
   });
@@ -540,17 +551,26 @@ describe('L4 D5 Salze und Zufall', () => {
 
   it('L4-T5 jedes Salz 5dd steht im Kopf von groundDecor.ts und liegt im Bereich seines Häppchens', () => {
     const l4 = ['decor.ts', 'groundDecor.ts', 'decorStamps.ts'];
-    const l1 = ['forest.ts', 'trees.ts'];
+    const l5 = ['terrain.ts', 'water.ts', 'seaFields.ts'];
+    // L1 Wald; WALD-02 belegt zusätzlich 518–529 (Briefing: 518, 519 und 520–529 frei laut Kopf von groundDecor.ts)
+    const l1 = ['forest.ts', 'trees.ts', 'woodField.ts', 'crown.ts'];
     let found = 0;
     for (const f of files) {
       for (const n of salts(readFileSync(`${dir}/${f}`, 'utf8'))) {
         found++;
         expect(covered(n), `${f}: Salz ${n} fehlt im Kopf von groundDecor.ts`).toBe(true);
         if (l4.includes(f))
-          expect(n === 500 || (n >= 540 && n <= 559), `${f}: ${n} ausserhalb 540–559`).toBe(true);
+          expect(n === 500 || (n >= 540 && n <= 569), `${f}: ${n} ausserhalb 540–569`).toBe(true);
+        else if (l5.includes(f))
+          // terrain.ts trägt zusätzlich 539 aus L2 (Findlinge im Boden, Task B; Kopf von groundDecor.ts), sichtbar seit
+          // dem Merge von main (REL-06) in den L5-Stapel
+          expect(
+            (f === 'terrain.ts' && n === 539) || (n >= 560 && n <= 569),
+            `${f}: ${n} ausserhalb 560–569 (L5)`,
+          ).toBe(true);
         else if (l1.includes(f))
-          expect(n >= 500 && n <= 519, `${f}: ${n} ausserhalb 500–519`).toBe(true);
-        else expect(n >= 540 && n <= 559, `${f}: ${n} gehört zu L4`).toBe(false);
+          expect(n >= 500 && n <= 529, `${f}: ${n} ausserhalb 500–529`).toBe(true);
+        else expect(n >= 540 && n <= 569, `${f}: ${n} gehört zu L4/L5`).toBe(false);
       }
     }
     expect(found).toBeGreaterThan(20);
@@ -564,7 +584,28 @@ describe('L4 D5 Salze und Zufall', () => {
       540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 554, 555, 556, 557, 558, 559,
     ])
       expect(used.has(n), `Salz ${n}`).toBe(true);
-    for (const n of used) expect(n).toBeLessThanOrEqual(559);
+    for (const n of [560, 566, 567, 568, 569]) expect(used.has(n), `Salz ${n} (L5)`).toBe(true);
+    for (const n of used) expect(n).toBeLessThanOrEqual(569);
+  });
+
+  it('L5-Review: Salze nur aus dem Block ihres Häppchens, keine Summen wie `seed + a + b` und keine Versätze ausserhalb 560–569 in seaFields.ts/water.ts', () => {
+    for (const f of ['decor.ts', 'decorStamps.ts', 'water.ts', 'seaFields.ts']) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8').replace(/\/\/.*$/gm, '');
+      const sums = [
+        ...src.matchAll(/\b(?:seed|t\.seed|world\.seed)\s*\+\s*\d+\s*\+\s*[\w.]+/g),
+      ].map((m) => m[0]);
+      // erlaubt sind nur `seed + 5dd + …` ohne weitere Summanden vor dem Komma bzw. der Klammer
+      expect(sums, `${f}: Summe aus Seed und zwei Versätzen`).toEqual([]);
+    }
+    for (const f of ['seaFields.ts', 'water.ts']) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8').replace(/\/\/.*$/gm, '');
+      for (const m of src.matchAll(/\b(?:seed|t\.seed|world\.seed)\s*\+\s*(\d+)\b/g)) {
+        const n = Number(m[1]);
+        expect(n === 101 || n === 202 || (n >= 560 && n <= 569), `${f}: Seed-Versatz ${n}`).toBe(
+          true,
+        );
+      }
+    }
   });
 
   it('L4-T6 kein Math.random in decor.ts und decorStamps.ts (decorStamps.ts darf bis Task 2 fehlen)', () => {
@@ -1079,5 +1120,278 @@ describe('L4 G-Anzahl: 2–12 je Insel (Katalog), statische Kandidatenliste', ()
       isl.tiles[t.y * isl.width + t.x]!.buildingId = null;
       expect(after.map(key)).toEqual(before.filter((e) => e !== t).map(key));
     }
+  });
+});
+
+// ---------- L5 Meer-Plan und Schifffahrtsregel R4 ----------
+
+/** Abstand eines Punktes zu einer Strecke (unabhängig von decor.ts neu geschrieben). */
+function segDist(p: Pos, a: Pos, b: Pos): number {
+  const dx = b.x - a.x,
+    dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy;
+  const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+const polyDist = (p: Pos, pts: readonly Pos[]): number =>
+  Math.min(...pts.slice(1).map((b, i) => segDist(p, pts[i]!, b)));
+
+describe('L5 Meer-Plan und R4', () => {
+  it('Seeds 1–200: kein Meer-Element < 3 Kacheln von einer Lane', () => {
+    let elements = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const ctx = seaContext(w);
+      expect(ctx.lanes.length, `Seed ${seed}`).toBeGreaterThan(0);
+      for (const e of seaElementTiles(seaPlan(seed, isl, ctx))) {
+        elements++;
+        const c = { x: e.x + 0.5, y: e.y + 0.5 };
+        for (const l of ctx.lanes)
+          expect(polyDist(c, l), `Seed ${seed} ${e.kind}@${e.x},${e.y}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+    expect(elements).toBeGreaterThan(200);
+  });
+
+  const worlds = (n: number): { seed: number; w: World }[] =>
+    Array.from({ length: n }, (_, i) => ({ seed: i + 1, w: createWorld(i + 1) }));
+  const W200 = worlds(200);
+
+  it('R4 Anker und Kontor: Mitte ≥ 4 Kacheln (Kontor: Abstand zum Rechteck), nie im Anfahrtskegel ±30°; Seeds 1–200', () => {
+    let checked = 0;
+    for (const { seed, w } of W200) {
+      const ctx = seaContext(w);
+      expect(ctx.kontors.length, `Seed ${seed}`).toBeGreaterThan(0);
+      for (const e of seaElementTiles(seaPlan(seed, home(w), ctx))) {
+        checked++;
+        const c = { x: e.x + 0.5, y: e.y + 0.5 };
+        expect(
+          Math.hypot(c.x - ctx.anchor.x, c.y - ctx.anchor.y),
+          `Seed ${seed} Anker`,
+        ).toBeGreaterThanOrEqual(4);
+        for (const k of ctx.kontors)
+          expect(
+            Math.hypot(
+              Math.max(k.x - c.x, 0, c.x - (k.x + k.w)),
+              Math.max(k.y - c.y, 0, c.y - (k.y + k.h)),
+            ),
+            `Seed ${seed} Kontor`,
+          ).toBeGreaterThanOrEqual(4);
+        for (const l of ctx.lanes) {
+          const d = { x: l[1]!.x - l[0]!.x, y: l[1]!.y - l[0]!.y };
+          const v = { x: c.x - ctx.anchor.x, y: c.y - ctx.anchor.y };
+          const ang = Math.acos(
+            Math.max(
+              -1,
+              Math.min(1, (d.x * v.x + d.y * v.y) / (Math.hypot(d.x, d.y) * Math.hypot(v.x, v.y))),
+            ),
+          );
+          expect(ang, `Seed ${seed} Kegel ${e.kind}@${e.x},${e.y}`).toBeGreaterThanOrEqual(
+            Math.PI / 6,
+          );
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(1000);
+  });
+
+  it('seaKeepOut: Lane < 3, Anker/Kontor < 4 und der Kegel sperren; frei dahinter (kleiner Kontext)', () => {
+    const ctx = {
+      lanes: [
+        [
+          { x: 10.5, y: 10.5 },
+          { x: 10.5, y: 60.5 },
+        ],
+      ],
+      anchor: { x: 10.5, y: 10.5 },
+      kontors: [{ x: 40, y: 40, w: 2, h: 2 }],
+      live: [{ x: 40, y: 40, w: 2, h: 2 }],
+    };
+    expect(seaKeepOut(ctx, 12, 30)).toBe(true); // 2 Kacheln neben der Lane
+    expect(seaKeepOut(ctx, 8, 30)).toBe(true); // 2 Kacheln links
+    expect(seaKeepOut(ctx, 16, 30)).toBe(true); // Kegel: 5,5/20 → 15° zur Lane
+    expect(seaKeepOut(ctx, 40, 30)).toBe(false); // weit seitlich, > 30°
+    expect(seaKeepOut(ctx, 13, 11)).toBe(true); // Lane 3,0, aber nur 3,2 vom Anker
+    expect(seaKeepOut(ctx, 38, 43)).toBe(true); // < 4 vom Kontor (Abstand 2,1)
+    expect(seaKeepOut(ctx, 46, 30)).toBe(false);
+    expect(seaKeepOut(ctx, 10, 30, 0)).toBe(true);
+    expect(seaKeepOut(ctx, 40, 55, 0)).toBe(false);
+    expect(seaKeepOut(ctx, 40, 55, 40)).toBe(true); // pad vergrössert die Abstände
+  });
+
+  it('Wrack in 25–55 % der Seeds 1–200 und nie zweimal; Eiland nie zweimal; Felsnadel höchstens eine', () => {
+    let wreck = 0,
+      islet = 0,
+      needle = 0;
+    for (const { seed, w } of W200) {
+      const ctx = seaContext(w);
+      const plan = seaPlan(seed, home(w), ctx);
+      const st = stampPlacements(seed, home(w), kontorOf(w), ctx);
+      const n = (k: StampKind): number => st.filter((s) => s.kind === k).length;
+      expect(n('wreck'), `Seed ${seed}`).toBe(plan.wreck ? 1 : 0);
+      expect(n('islet'), `Seed ${seed}`).toBe(plan.islet ? 1 : 0);
+      expect(plan.rocks.filter((r) => r.needle).length).toBeLessThanOrEqual(1);
+      wreck += n('wreck');
+      islet += n('islet');
+      needle += st.filter((s) => s.kind === 'seaRock' && s.variant >= 6).length;
+    }
+    expect(wreck / 200, `Wrack ${wreck}`).toBeGreaterThanOrEqual(0.25);
+    expect(wreck / 200).toBeLessThanOrEqual(0.55);
+    expect(islet, 'Eiland kommt vor').toBeGreaterThan(0);
+    expect(islet / 200).toBeLessThanOrEqual(0.3);
+    expect(needle, 'Felsnadel kommt vor, ist selten').toBeGreaterThan(0);
+    expect(needle / 200).toBeLessThanOrEqual(0.5);
+  });
+
+  it('Eignung: Tiefe (Abstand zum Land), nur offenes Meer, Felsen 3–12, Eiland ≥ 4 Kacheln zur Küste, keine Überlappung', () => {
+    for (const { seed, w } of W200) {
+      const isl = home(w);
+      const cls = staticClasses(isl);
+      const plan = seaPlan(seed, isl, seaContext(w));
+      const depth = (x: number, y: number): number => {
+        let best = 99;
+        for (let yy = 0; yy < isl.height; yy++)
+          for (let xx = 0; xx < isl.width; xx++)
+            if (cls[yy * isl.width + xx] !== 0)
+              best = Math.min(best, Math.max(Math.abs(xx - x), Math.abs(yy - y)));
+        return best;
+      };
+      expect(plan.rocks.length, `Seed ${seed}`).toBeLessThanOrEqual(12);
+      for (const e of seaElementTiles(plan)) {
+        expect(cls[e.y * isl.width + e.x], `Seed ${seed} ${e.kind} liegt im Wasser`).toBe(0);
+        if (e.kind === 'wreck' || e.kind === 'rock') {
+          expect(depth(e.x, e.y)).toBeGreaterThanOrEqual(1);
+          expect(depth(e.x, e.y)).toBeLessThanOrEqual(5);
+        }
+        if (e.kind === 'islet')
+          expect(depth(e.x, e.y), `Seed ${seed} Eiland`).toBeGreaterThanOrEqual(4);
+        if (e.kind === 'sandbank' || e.kind === 'kelp')
+          expect(depth(e.x, e.y)).toBeLessThanOrEqual(2);
+        if (e.kind === 'reef') {
+          expect(depth(e.x, e.y)).toBeGreaterThanOrEqual(3);
+          expect(depth(e.x, e.y)).toBeLessThanOrEqual(4);
+        }
+      }
+      const tiles = seaElementTiles(plan).map((e) => `${e.x},${e.y}`);
+      expect(new Set(tiles).size, `Seed ${seed}: keine Kachel doppelt`).toBe(tiles.length);
+      const pts = [
+        ...(plan.wreck ? [plan.wreck] : []),
+        ...(plan.islet ? [plan.islet] : []),
+        ...plan.rocks,
+      ];
+      for (let i = 0; i < pts.length; i++)
+        for (let j = i + 1; j < pts.length; j++)
+          expect(
+            Math.max(Math.abs(pts[i]!.x - pts[j]!.x), Math.abs(pts[i]!.y - pts[j]!.y)),
+            `Seed ${seed}`,
+          ).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('die Flächen D11/E2/E6 sind im Plan: Sandbänke, Riffe (Streifen, 4–9 Kacheln), Tang nur nahe Gebirge', () => {
+    let sb = 0,
+      rf = 0,
+      kl = 0;
+    for (const { seed, w } of W200.slice(0, 60)) {
+      const isl = home(w);
+      const plan = seaPlan(seed, isl, seaContext(w));
+      sb += plan.sandbanks.length;
+      rf += plan.reefs.length;
+      kl += plan.kelp.length;
+      for (const r of plan.reefs) {
+        expect(r.tiles.length).toBeGreaterThanOrEqual(3);
+        expect(r.tiles.length).toBeLessThanOrEqual(9);
+      }
+    }
+    expect(sb).toBeGreaterThan(60);
+    expect(rf).toBeGreaterThan(60);
+    expect(kl).toBeGreaterThan(0);
+  });
+
+  it('gleiche Seeds → gleicher Plan, auch mit frischer Welt und ohne Cache; seaPlan liest nur (Welt unverändert)', () => {
+    for (const seed of [1, 7, 14, 99]) {
+      const a = createWorld(seed),
+        b = createWorld(seed);
+      const before = JSON.stringify(a);
+      const pa = JSON.stringify(seaPlan(seed, home(a), seaContext(a)));
+      expect(JSON.stringify(a)).toBe(before);
+      expect(JSON.stringify(seaPlan(seed, home(b), seaContext(b)))).toBe(pa);
+      expect(seaContext(a)).toBe(seaContext(a)); // je Welt gehalten
+    }
+  });
+
+  it('Palmen (D1): nur trockener Sand mit Wasserabstand ≥ 2, 1–3 je Gruppe, nur mit sea, keine bei Dünenküste', () => {
+    let palms = 0;
+    const kinds = new Set<string>();
+    for (const { seed, w } of W200.slice(0, 80)) {
+      const isl = home(w);
+      const cls = staticClasses(isl);
+      const plain = stampPlacements(seed, isl, kontorOf(w));
+      expect(
+        plain.some((s) => s.kind === 'palm'),
+        'ohne sea keine Palmen',
+      ).toBe(false);
+      const st = stampPlacements(seed, isl, kontorOf(w), seaContext(w)).filter(
+        (s) => s.kind === 'palm',
+      );
+      kinds.add(coastKind(seed));
+      if (coastKind(seed) === 'dune') expect(st).toHaveLength(0);
+      for (const s of st) {
+        palms++;
+        expect(isl.tiles[s.y * isl.width + s.x]!.terrain).toBe('sand');
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++)
+            expect(cls[(s.y + dy) * isl.width + s.x + dx], `Seed ${seed} Saum`).not.toBe(0);
+        expect(s.variant).toBeGreaterThanOrEqual(0);
+        expect(s.variant).toBeLessThan(12);
+      }
+    }
+    expect(kinds.size).toBe(3);
+    expect(palms).toBeGreaterThan(50);
+  });
+
+  it('R6 mit Meer und Palmen: ≤ 1 je 6 Landkacheln und ≤ 300; Stempel-Ids eindeutig', () => {
+    for (const { seed, w } of W200.slice(0, 50)) {
+      const isl = home(w);
+      const land = staticClasses(isl).reduce((n, c) => n + (c !== 0 ? 1 : 0), 0);
+      const st = stampPlacements(seed, isl, kontorOf(w), seaContext(w));
+      expect(st.length).toBeLessThanOrEqual(stampLimit(land));
+      expect(st.length).toBeLessThanOrEqual(300);
+      expect(new Set(st.map((s) => s.id)).size).toBe(st.length);
+    }
+  });
+
+  it('T6 Palmenküste wirkt locker bewaldet: ≥ 1 Palme je ~4 geeignete Strandkacheln (Mittel ≥ 0,2), Dünen- und Kiefernküste bleiben dünner', () => {
+    const acc: Record<string, { palms: number; suit: number; n: number }> = {
+      palm: { palms: 0, suit: 0, n: 0 },
+      pine: { palms: 0, suit: 0, n: 0 },
+      dune: { palms: 0, suit: 0, n: 0 },
+    };
+    for (const { seed, w } of W200) {
+      const isl = home(w);
+      const cls = staticClasses(isl);
+      let suit = 0;
+      for (let y = 0; y < isl.height; y++)
+        for (let x = 0; x < isl.width; x++) {
+          if (cls[y * isl.width + x] !== 1) continue;
+          let near = false;
+          for (let dy = -1; dy <= 1 && !near; dy++)
+            for (let dx = -1; dx <= 1; dx++)
+              if (cls[(y + dy) * isl.width + x + dx] === 0) near = true;
+          if (!near) suit++;
+        }
+      const palms = stampPlacements(seed, isl, kontorOf(w), seaContext(w)).filter(
+        (s) => s.kind === 'palm',
+      ).length;
+      const a = acc[coastKind(seed)]!;
+      a.palms += palms;
+      a.suit += suit;
+      a.n++;
+    }
+    const rate = (k: string): number => acc[k]!.palms / Math.max(1, acc[k]!.suit);
+    expect(rate('palm'), 'Palmen je geeignete Kachel').toBeGreaterThanOrEqual(0.2);
+    expect(rate('pine')).toBeLessThan(0.05);
+    expect(acc.dune!.palms).toBe(0);
   });
 });

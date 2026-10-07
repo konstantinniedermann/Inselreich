@@ -31,6 +31,8 @@ import {
   SUB,
   cellColor,
   massifData,
+  massifFeatureMask,
+  massifFeatures,
   massifPieces,
   massifTreeMask,
   massifTrees,
@@ -51,6 +53,7 @@ import {
   SOFT_CUT,
   TONE_FLAT,
   debrisOf,
+  steepness,
   toneStep,
   type MassifComponent,
   type MassifData,
@@ -75,6 +78,7 @@ import { targetTile } from '../../src/ui/target';
 import { fakeCtx, type P } from './fakeCtx';
 import { deltaE2000, hexToLab, rgbToLab } from './deltaE';
 import kernFixture from './fixtures/massif-kern-main.json';
+import kernL2 from './fixtures/massif-kern-l2.json';
 import { KERN_SEEDS, bandNoise, kernNodes } from './fixtures/massifKern';
 
 // H-R9 Teil A — Gebirgsmassiv als Höhenfeld je Zusammenhangskomponente (Kurz-Spec A1–A8).
@@ -83,8 +87,14 @@ const fakeCanvas = (): HTMLCanvasElement => {
   const { ctx } = fakeCtx();
   return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
 };
+/** Kronen-Atlas-Flächen (WALD-02): ihre drawImage-Aufrufe zählen nicht als Massiv-Teilstücke. */
+const treeCanvases = new Set<unknown>();
 beforeAll(() => {
-  setTreeCanvasFactory(fakeCanvas);
+  setTreeCanvasFactory(() => {
+    const c = fakeCanvas();
+    treeCanvases.add(c);
+    return c;
+  });
   setMassifCanvasFactory(fakeCanvas);
 });
 
@@ -1067,7 +1077,13 @@ describe('H-R9 A6 Cache und Culling', () => {
       return x < view.w && x + b.w * cam2.zoom > 0 && y < view.h && y + b.h * cam2.zoom > 0;
     });
     expect(visible.length).toBeGreaterThan(10);
-    const draws = log.events.filter((e) => e.op === 'drawImage' && e.points.length === 2);
+    const imgs = [...log.images];
+    let di = 0;
+    const draws = log.events.filter((e) => {
+      if (e.op !== 'drawImage') return false;
+      const img = imgs[di++];
+      return e.points.length === 2 && !treeCanvases.has(img);
+    });
     const massifDraws = draws.filter((e) => {
       const wpx = e.points[1]!.x - e.points[0]!.x;
       return Math.abs(wpx - (ISO_W / 2) * cam2.zoom) < 1.01;
@@ -1236,7 +1252,7 @@ describe('ART-STIL-02 L2 Kern', { timeout: 60000 }, () => {
         nZone = 0;
       for (const r of all) {
         const n = now.get(`${r[0]}|${r[1]}|${r[2]}`);
-        if (n?.snow || n?.tree) {
+        if (n?.snow || n?.tree || massifFeatureMask(data, r[1]!, r[2]!)) {
           ausser++;
           continue;
         }
@@ -1642,4 +1658,58 @@ describe('ART-STIL-02 L2 Krüppelbäume (C3)', { timeout: 60000 }, () => {
     }
     expect(found.size).toBe(3);
   }, 60000);
+});
+
+// ART-STIL-02 L6-T0 (Anhang 0.4): Referenz der Kernknoten (hn ≥ 0,35) auf der Basis nach L2.
+describe('ART-STIL-02 L6 Referenz', { timeout: 60000 }, () => {
+  it('L6-T0 Kern nach L2 unverändert: alle Kernknoten ausser denen in den Elementmasken gleich der Fixture (RGB ± 0, ΔE2000 im Mittel < 1)', () => {
+    type Fx = Record<string, { nodes: number[][] }>;
+    for (const seed of KERN_SEEDS) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const now = new Map(kernNodes(seed).map((n) => [`${n.comp}|${n.I}|${n.J}`, n]));
+      const all = (kernL2 as Fx)[String(seed)]!.nodes;
+      expect(now.size, `Seed ${seed}: Knotenzahl`).toBe(all.length);
+      let dE = 0,
+        n = 0;
+      for (const r of all) {
+        if (massifFeatureMask(data, r[1]!, r[2]!)) continue; // Elementmasken (L6): dort darf sich der Kern ändern
+        const k = `${r[0]}|${r[1]}|${r[2]}`;
+        const q = now.get(k);
+        expect(q, `Seed ${seed}: Knoten ${k} fehlt`).toBeDefined();
+        expect(q!.rgb, `Seed ${seed}: Knoten ${k}`).toEqual([r[4], r[5], r[6]]);
+        dE += deltaE2000(rgbToLab(q!.rgb), rgbToLab([r[4]!, r[5]!, r[6]!]));
+        n++;
+      }
+      expect(dE / n, `Seed ${seed}: mittleres ΔE`).toBeLessThan(1);
+    }
+  });
+});
+
+// ART-STIL-02 L6 (Anhang 0.1): roter Starttest, Bergsee nur in der Mulde.
+describe('ART-STIL-02 L6 Bergsee', { timeout: 60000 }, () => {
+  it('Bergsee nur in einer Mulde (Steilheit < 0,2, hn 0,4–0,7)', () => {
+    let seen = 0;
+    for (let seed = 1; seed <= 60; seed++) {
+      const data = massifData(fieldWorld(createWorld(seed, { unlockAll: true })));
+      const lake = massifFeatures(data).lake;
+      if (!lake) continue;
+      seen++;
+      const c = lake.comp;
+      const h = nodeHeight(c, lake.I, lake.J);
+      const gx =
+          ((nodeHeight(c, lake.I + 1, lake.J) - nodeHeight(c, lake.I - 1, lake.J)) / 2) * SUB,
+        gy = ((nodeHeight(c, lake.I, lake.J + 1) - nodeHeight(c, lake.I, lake.J - 1)) / 2) * SUB;
+      const lap =
+        nodeHeight(c, lake.I - 1, lake.J) +
+        nodeHeight(c, lake.I + 1, lake.J) +
+        nodeHeight(c, lake.I, lake.J - 1) +
+        nodeHeight(c, lake.I, lake.J + 1) -
+        4 * h;
+      expect(steepness(gx, gy), `Seed ${seed}: Steilheit`).toBeLessThan(0.2);
+      expect(h / c.amp, `Seed ${seed}: hn`).toBeGreaterThanOrEqual(0.4);
+      expect(h / c.amp, `Seed ${seed}: hn`).toBeLessThanOrEqual(0.7);
+      expect(lap, `Seed ${seed}: Mulde (konkav)`).toBeGreaterThan(0);
+    }
+    expect(seen, 'es gibt Seeds mit Bergsee').toBeGreaterThan(5);
+  });
 });
