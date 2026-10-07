@@ -2515,3 +2515,43 @@ Integrator, ein Browser-Lauf mit allen blinden Bildfragen und L3-Blindtest, ein 
 gestapelt auf L4. — Kosten bei Irrtum: Häppchen fliegt aus dem Kandidaten.
 
 Entscheider: L0 · Anlass: Berichte lead-art L4, L6 · ADR: —
+
+## R298 · 2026-10-06 · Gate REL-06: ZURÜCK für L1, L3-Kriterium ausgelegt
+
+Ruling: REL-06 nicht gepusht. L1 bekommt eine Fix-Runde (Bildfrage 2 durchgefallen: Kugelraster Laubwald Seed 1,
+Nadelreihen Seed 7) — der Nutzerauftrag war genau „Wald nicht repetitiv", ein Nachziehen in L6 widerspräche dem
+Zweck; Fix ohne Mehrkosten (Seed 7 +0,5 ms an der Grenze), danach Rater-Nachprüfung Fragen 1–2 und A/B. L3 nach
+Auslegung „kein Rückschritt gegenüber vorher" bestanden (Paarvergleich 20/23 = 20/23). L2, L4 OK. Doku-Nachtrag
+arc42 und Salzkopf in der Fix-Runde. — Kosten bei Irrtum: eine Session Verzug für Release A.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-06, `.studio/qa/rel-06/` · ADR: —
+
+## R299 · 2026-10-07 · L1-Fix: Ränder als Folgepaket, hängende Messung
+
+Ruling: L1-Fix (`fix/art02-l1-wald-r2` @ be4ce8e) behebt das Muster (Gate-Grund Frage 2); die Rautenform der
+Waldflächen in der Übersicht kommt aus der kachelweisen Waldmaske und wird Folgepaket „Waldsaum" (render-only,
+direkt nach REL-06). Rater prüft Fragen 1–2 auf diesem Stand. Hängende L5-Messung (PID 42157, Ruhezustand) per PID
+beendet; Messungen seriell. `pkill -f "vitest run"` eines Engineers → Retro (R263). — Kosten bei Irrtum: Ränder
+bleiben eine Release länger eckig.
+
+Entscheider: L0 · Anlass: Bericht lead-art L1-Fix · ADR: —
+
+## R300 · 2026-10-07 · REL-06 mit L1-Fix als Zwischenstand, Wald zweiter Anlauf
+
+Ruling: Rater-Nachprüfung: Frage 2 weiter durchgefallen (Nadelwald-Teppich), Frage 1 grenzwertig; zwei Bild-Runden
+sind ausgeschöpft (R211). L1 lässt sich nicht aus dem Kandidaten lösen (L2/L4 gestapelt). REL-06 geht mit L1-Fix
+live, sobald dessen A/B-Messung ≤ +0,5 ms hält: gegenüber main messbar weniger repetitiv (gleiche Diagonal-Stempel
+0,315 → 0,145), L2–L4 bestanden, der Nutzer will Fortschritt in der Produktion (R281). Direkt danach Paket
+**WALD-02** (zweiter Anlauf inkl. Waldsaum, Mandat auch für Struktur-Umbau in `src/render/`) vor L5–L8. — Kosten bei
+Irrtum: Nutzer sieht den Wald noch nicht am Ziel; Bericht sagt das offen.
+
+Entscheider: L0 · Anlass: `.studio/qa/rel-06/blind/nach-l1r2.md` · ADR: —
+
+## R301 · 2026-10-07 · Gate Merge Release REL-06
+
+Ruling: REL-06 freigegeben = `rel/rel-06` (L1–L4, lead-qa-Review R298) + L1-Fix `fix/art02-l1-wald-r2` (Task-Review
+OK, A/B Seed 7 +0,4 ms ≤ +0,5; Seed 14 entfällt wegen Last 14–16, Kandidat dort +0,3). Integrator merget den Fix in
+den Kandidaten, `make check` + `CI=true make check`, Befunde aus dem Handoff anhängen, Push nach main. — Kosten bei
+Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Messung `.studio/qa/art-stil-02/l1r2/perf-s7-1920.txt`, R300 · ADR: —

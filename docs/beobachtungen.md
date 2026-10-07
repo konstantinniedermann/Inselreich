@@ -345,3 +345,19 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** `src/render/terrain.ts` ~Z. 952: Kommentar „wo die Krone vorragt (a > 0)" stimmt nach
   R298 nur noch ungefähr, der Boden folgt dem Randfeld flacher gestaucht als die Kronen. **Einschätzung:** niedrig;
   beim nächsten Eingriff in `terrain.ts` nachziehen. **Ursprung:** ART-STIL-02 L1r2, qa-code-reviewer.
+
+### 2026-10-06 · Befunde aus dem Release-Lauf REL-06 (lead-qa)
+
+- 2026-10-06 · `src/render/groundDecor.ts`/`decor.ts` · Boden-Deko neben neuem Gebäude/Weg wechselt die Art (nach
+  Abriss wieder wie vorher). Einschätzung: niedrig, Kandidat für L8. Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Spiel/Fremdinsel · Direkt nach Kontor II ist kein Haus baubar („Kein Bauland", „Ausserhalb der
+  Versorgung"). Einschätzung: mittel, prüfen ob Absicht (Reichweite Kontor II) oder Fehler; Kandidat SEE-F2-UX.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · `tools/render-qa/perf` · Der Seed-14-Lauf brach 2× beim Start ab (`cachesReady` undefiniert).
+  Einschätzung: niedrig, Werkzeug. Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Git · Drei Commits mit Präfix `perf:` (nicht in der Konvention). Einschätzung: niedrig, Hinweis.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Gebirge · Die Südwestecke in Seed 7 Zoom 1 wirkt eckig (L2). Einschätzung: niedrig, Kandidat L6/L8.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Blindtest L3 · Spielbilder ohne Statusmarken; künftige Blindtests mit Szene inklusive Marken.
+  Einschätzung: niedrig, Prüf-Vorlage. Ursprung: Release-Lauf REL-06.
