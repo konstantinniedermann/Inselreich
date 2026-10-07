@@ -2638,3 +2638,26 @@ Fragen, ein opus-Review, Gate, Push. Perf: Seed 7 liegt mit WALD-02 genau auf +0
 Lauf gegen main. — Kosten bei Irrtum: ein Häppchen fliegt aus dem Kandidaten.
 
 Entscheider: L0 · Anlass: Bericht lead-art WALD-02 · ADR: —
+
+## R310 · 2026-10-07 · REL-07: Konflikte auf eigenem Auflösungs-Branch
+
+Ruling: Der Integrator brach den L5-Merge ab (Code-Konflikt `tests/render/renderer.test.ts`). Probe-Merges
+(`git merge-tree`) zeigen Code-Konflikte zwischen WALD-02, L6 und L7 (`forest.ts`, `iso.ts`, `terrain.ts`, `trees.ts`,
+Render-Tests). L7 enthält L5 und ist mit main schon konfliktfrei bis auf `docs/beobachtungen.md`. Darum: lead-art baut
+`int/rel-07` (Worktree `.worktrees/rel07-aufloesung`) von `feat/wald-02`, mergt L7, dann L6, löst die Konflikte
+inhaltlich (keine Funktion eines Häppchens fällt weg) und macht `make check` und `CI=true make check` grün. Der
+Integrator mergt danach nur `int/rel-07` in `rel/rel-07`. Ändert die Auflösung Zeichnen oder Perf, misst der Release-Lauf
+das mit. — Kosten bei Irrtum: eine Auflösungsrunde mehr.
+
+Entscheider: L0 · Anlass: Bericht Integrator REL-07 · ADR: —
+
+## R311 · 2026-10-07 · Auflösung `int/rel-07` angenommen, Kandidat REL-07
+
+Ruling: `int/rel-07` @ 3567348 angenommen: WALD-02-Fassung als Basis, L5-Meer, L6-Lichtung (`isClearing` auf
+Feld-Salz 508) und Farn im WALD-02-Modell additiv; Pins HOME_CALLS/HOME_ORDER und vier Timeouts (R270) begründet.
+Der Release-Lauf prüft die L6-Lichtungen und den Farn besonders (Helfer `kernOx`/`isClearingTile` entfielen) und
+misst die Perf gegen main. C7-Glitzern am Wasserfall war nie verdrahtet: nicht Teil von REL-07, bleibt Beobachtung
+(R305, kein neues Paket). Deckel E-010 überschritten (249k beim Arbeiter) — Befund für die Retro. Integrator mergt
+`int/rel-07` in `rel/rel-07`, prüft, pusht den Kandidaten. — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-art REL-07-AUFLOESUNG · ADR: —
