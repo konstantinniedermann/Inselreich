@@ -126,8 +126,10 @@ describe('Szenario verdeckung (ISO §14, §16)', () => {
 
   it('verdeckung: Messpunkt linke Wand von L1 liegt ausserhalb aller treeBounds von T-vor und T-hinter', () => {
     const m = wallPoint(at(VERDECKUNG.L1));
-    const near = trees().filter((t) =>
-      [...VERDECKUNG.tVor, ...VERDECKUNG.tHinter].some((v) => v.x === t.fp.x && v.y === t.fp.y),
+    const near = trees().filter(
+      (t) =>
+        t.own &&
+        [...VERDECKUNG.tVor, ...VERDECKUNG.tHinter].some((v) => v.x === t.fp.x && v.y === t.fp.y),
     );
     expect(near).toHaveLength(VERDECKUNG.tVor.length + VERDECKUNG.tHinter.length);
     for (const t of near) {
@@ -346,8 +348,11 @@ function hoverPoint(
 
 /** Mitte der linken Wand, so tief wie nötig, damit 3 × 3 px frei von allen Baumboxen bleiben (Weltpixel). */
 function wallPoint(b: Building): P {
-  const near = trees().filter((t) =>
-    [...VERDECKUNG.tVor, ...VERDECKUNG.tHinter].some((v) => v.x === t.fp.x && v.y === t.fp.y),
+  // WALD-02: T-vor und T-hinter grenzen an L1 (Eng): ihre Kronen stehen im eigenen Objekt der Kachel
+  const near = trees().filter(
+    (t) =>
+      t.own &&
+      [...VERDECKUNG.tVor, ...VERDECKUNG.tHinter].some((v) => v.x === t.fp.x && v.y === t.fp.y),
   );
   const base = project(b.x + 0.5, b.y + 1 - BODY_INSET); // Mitte der linken Wand am Boden
   for (let z = 3; z < 0.8 * ISO_H; z += 0.5) {

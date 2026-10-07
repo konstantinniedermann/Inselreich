@@ -97,6 +97,8 @@ import {
   type DecorItem,
 } from './decorStamps';
 import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
+/** Culling-Zuschlag der Wald-Objekte in Kacheln (WALD-02). */
+const TREE_CULL = 2;
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
 import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildlife';
@@ -624,12 +626,13 @@ function drawIsland(
       } else if (it.kind === 'massif') {
         if (!massifOnScreen(cam, view, it as MassifItem)) continue;
       } else if (it.kind === 'tree') {
-        // 1 Kachel Zuschlag: Kronen ragen bis 0,35 Kachel über die Kachel, der Stempelversatz bis 0,3 (L1-Befund)
+        // 2 Kacheln Zuschlag (WALD-02): eine Tiefenband-Zelle hält Kronen bis 0,75 Kachel neben ihrer Kachel, die Kronen
+        // ragen bis 0,35 Kachel über ihren Fuss hinaus
         if (
-          it.fp.x < range.x0 - 1 ||
-          it.fp.x > range.x1 + 1 ||
-          it.fp.y < range.y0 - 1 ||
-          it.fp.y > range.y1 + 1
+          it.fp.x < range.x0 - TREE_CULL ||
+          it.fp.x > range.x1 + TREE_CULL ||
+          it.fp.y < range.y0 - TREE_CULL ||
+          it.fp.y > range.y1 + TREE_CULL
         )
           continue;
       } else if (it.kind === 'decor') {

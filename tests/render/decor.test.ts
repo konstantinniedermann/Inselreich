@@ -540,7 +540,8 @@ describe('L4 D5 Salze und Zufall', () => {
 
   it('L4-T5 jedes Salz 5dd steht im Kopf von groundDecor.ts und liegt im Bereich seines Häppchens', () => {
     const l4 = ['decor.ts', 'groundDecor.ts', 'decorStamps.ts'];
-    const l1 = ['forest.ts', 'trees.ts'];
+    // L1 Wald; WALD-02 belegt zusätzlich 518–529 (Briefing: 518, 519 und 520–529 frei laut Kopf von groundDecor.ts)
+    const l1 = ['forest.ts', 'trees.ts', 'woodField.ts', 'crown.ts'];
     let found = 0;
     for (const f of files) {
       for (const n of salts(readFileSync(`${dir}/${f}`, 'utf8'))) {
@@ -549,7 +550,7 @@ describe('L4 D5 Salze und Zufall', () => {
         if (l4.includes(f))
           expect(n === 500 || (n >= 540 && n <= 559), `${f}: ${n} ausserhalb 540–559`).toBe(true);
         else if (l1.includes(f))
-          expect(n >= 500 && n <= 519, `${f}: ${n} ausserhalb 500–519`).toBe(true);
+          expect(n >= 500 && n <= 529, `${f}: ${n} ausserhalb 500–529`).toBe(true);
         else expect(n >= 540 && n <= 559, `${f}: ${n} gehört zu L4`).toBe(false);
       }
     }

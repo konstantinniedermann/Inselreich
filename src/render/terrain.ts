@@ -5,7 +5,8 @@ import { DEBRIS, LIGHT, LIGHT_COLORS, mixRgb, rotNoise, toneHalfWidth, toneStep 
 import { layoutKey } from '../sim/queries';
 import type { Island, World } from '../sim/types';
 import { TEX } from './iso';
-import { forestClearing, forestEdgeShift } from './forest';
+import { forestClearing, standAt } from './forest';
+import { SAUM_LEVEL, saumAt, woodBlur, type WoodMask } from './woodField';
 import type { CacheStep } from './cachePlan';
 import {
   SHRUB_TONES,
@@ -20,7 +21,7 @@ import {
   type Prim,
 } from './groundDecor';
 import { groundElements, kontorPos } from './decor';
-import { FOREST_FLOOR, PALETTE, mixHex, rgbOf, rgbOfCss } from './palette';
+import { FOREST_FLOOR, PALETTE, SHADE_TONE, mixHex, rgbOf, rgbOfCss } from './palette';
 import {
   COAST_BAND,
   EDGE_BAND,
@@ -77,8 +78,7 @@ const CLEARING_MAX = 0.5;
 const PATCH_SPREAD = 2.8; // H-R11 D8: Gewinn vor tanh (vorher 5 mit hartem Klemmen)
 const PATCH_FREQ = 0.95,
   PATCH_FREQ2 = 1.7; // Rauschfrequenzen je Kachel der beiden Oktaven
-const FOREST_EDGE_SHIFT = 2; // L1: Waldboden folgt den Kronen: Randversatz a (±0,3 Kachel) verschiebt die Randaufhellung um a × 2
-const FOREST_EDGE_MEADOW = 0.7; // Fix 5: am Aussenrand reicht der Wiesenton bis an die Kronen, der dunkle Boden bleibt unter ihnen
+const FOREST_EDGE_MEADOW = 0.4; // Fix 5 (WALD-02 0,7 → 0,4: den Übergang zur Wiese trägt jetzt die Waldgewichtung aus S)
 const FOREST_CLEARING_LIGHT = 0.55; // L1 B2: Lichtung (Feld 0…1) hellt den Waldboden im Kern bis zu diesem Anteil auf
 const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
@@ -320,6 +320,9 @@ export interface TerrainGrid {
   dphase: Float32Array;
   /** H-R9: Blumenschleier 0…1 (dieselbe Verteilung wie `flowersFor`). */
   veil: Float32Array;
+  /** WALD-02: Saumfeld S je Knoten (`woodField.ts`), und S zum Licht hin versetzt (Waldschatten). */
+  wood: Float32Array;
+  woodSh: Float32Array;
   cls: Uint8Array; // 0 Wasser, 1 + Index in LAND
 }
 
@@ -538,7 +541,10 @@ function computeWindow(isl: World3, fields: TerrainFields, win: NodeWindow): Ter
     dphase = new Float32Array(n),
     height = new Float32Array(n),
     footH = new Float32Array(n), // Gebirgsanteil der Höhe (für die Dämpfung des Hofs an der Grasseite)
+    wood = new Float32Array(n),
+    woodSh = new Float32Array(n),
     cls = new Uint8Array(n);
+  const woodMask = woodMaskOf(fields);
   const ind = LAND.map(() => new Float32Array(n));
   const seed = isl.seed;
   const mt = LAND.indexOf('mountain');
@@ -629,6 +635,7 @@ function computeWindow(isl: World3, fields: TerrainFields, win: NodeWindow): Ter
         veil[k] = flowerVeil(seed, fx, fy);
       }
       gwArr[k] = gw;
+      if (cls[k] !== 0) woodNode(seed, woodMask, fx, fy, wood, woodSh, k);
       footH[k] =
         FOOT_HEIGHT * foot + HILL_HEIGHT * foot * rotNoise(seed + 29, fx, fy, 0.9, ROT_HILL);
       height[k] =
@@ -757,6 +764,8 @@ function computeWindow(isl: World3, fields: TerrainFields, win: NodeWindow): Ter
     dune,
     dpres,
     dphase,
+    wood,
+    woodSh,
     cls,
   };
 }
@@ -799,6 +808,67 @@ function waterColor(d: number, o: number[]): void {
   else if (d < 6) mix3(C.mid, C.deep, (d - 3) / 3, o);
   else mix3(C.deep, C.deep, 0, o);
   if (d < FOAM_STATIC) mix3(o, C.foam, 0.6, o);
+}
+
+// ---------- WALD-02: Waldboden und Waldschatten aus dem Saumfeld ----------
+// Der Waldboden folgt derselben Höhenlinie S = SAUM_LEVEL wie die Kronen (forest.ts), nicht der Kachelkante: die
+// Mischung Wiese/Waldboden kommt aus S („Waldgewichtung"), auch auf reinen Gras- und Waldzellen. Der Schatten des
+// Kronendachs liegt im Boden: S zum Licht hin versetzt (Länge je nach Bestandsalter), weich, mit Restschatten unter dem
+// Dach; Vorwald dunkelt die Wiese davor weich nach. Die Kronen innerhalb der Saumlinie werfen keinen eigenen Schatten
+// mehr (trees.ts `treeShadow`). Reichweite ≤ 2 Kacheln (3 × 3-Filter, Bilinear, Versatz ≤ 0,5): `SMOOTH_BORDER` hält.
+
+/** Halbe Breite des Übergangs Wiese → Waldboden in S-Einheiten (≈ 0,15 Kachel an einer geraden Kante). */
+const FLOOR_SOFT = 0.07;
+/** Randaufhellung des Waldbodens: von der Saumlinie bis SAUM_LEVEL + FLOOR_EDGE_SPAN (lichter Rand). */
+const FLOOR_EDGE_SPAN = 0.3;
+/** Schattenlänge zum Licht hin (Kacheln): junger und alter Bestand. */
+const WOOD_SHADOW_MIN = 0.22,
+  WOOD_SHADOW_MAX = 0.5;
+/** Schattenstärke (wie `SHADOW` in palette.ts: Deckkraft 0,35), Anteil unter dem eigenen Dach, weiche Kante. */
+const WOOD_SHADOW_A = 0.35,
+  WOOD_SHADOW_UNDER = 0.25,
+  WOOD_SHADOW_SOFT = 0.08;
+/** Vorwald: Band unter der Saumlinie (S-Einheiten) und höchste Abdunklung der Wiese darin. */
+const VORWALD_FLOOR_BAND = 0.3,
+  VORWALD_FLOOR_DARK = 0.1;
+/** Schattenton: kühles Dunkel (SHADE_TONE) statt Grün, damit beschattete Wiese nie wie eine Krone aussieht (AK-R1-08 I5). */
+const SHADOW_RGB = rgbOf(SHADE_TONE);
+const smooth01 = (t: number): number => {
+  const u = t < 0 ? 0 : t > 1 ? 1 : t;
+  return u * u * (3 - 2 * u);
+};
+/** Anteil Waldboden am Saumwert s (0 Wiese, 1 Wald). */
+const floorShare = (s: number): number =>
+  smooth01((s - (SAUM_LEVEL - FLOOR_SOFT)) / (2 * FLOOR_SOFT));
+/** Weichgezeichnete Geländewald-Maske der Felder (je Aufruf neu: `patchGrid` ändert die Felder an Ort und Stelle). */
+function woodMaskOf(fields: TerrainFields): WoodMask {
+  const f = fields.types.forest;
+  return woodBlur(f.w, f.h, f.v);
+}
+/** Saumwert und versetzter Saumwert (Schatten) eines Knotens. */
+function woodNode(
+  seed: number,
+  m: WoodMask,
+  fx: number,
+  fy: number,
+  wood: Float32Array,
+  woodSh: Float32Array,
+  k: number,
+): void {
+  wood[k] = saumAt(seed, m, fx, fy);
+  const len = WOOD_SHADOW_MIN + (WOOD_SHADOW_MAX - WOOD_SHADOW_MIN) * standAt(seed, fx, fy);
+  woodSh[k] = saumAt(seed, m, fx + LIGHT.x * len, fy + LIGHT.y * len);
+}
+/**
+ * Waldschatten und Vorwald-Abdunklung auf einem Wiesen-/Waldbodenpixel (Anteil `gf` 0…1 an Gras und Wald), nach
+ * Tonstufen und Korn. `fF` ist der Waldbodenanteil, `sW`/`sS` Saumwert und versetzter Saumwert.
+ */
+function woodShade(col: number[], gf: number, fF: number, sW: number, sS: number): void {
+  const sh = smooth01((sS - (SAUM_LEVEL - WOOD_SHADOW_SOFT)) / (2 * WOOD_SHADOW_SOFT));
+  const a = sh * WOOD_SHADOW_A * (1 - (1 - WOOD_SHADOW_UNDER) * fF) * gf;
+  const v = smooth01((sW - (SAUM_LEVEL - VORWALD_FLOOR_BAND)) / VORWALD_FLOOR_BAND) * (1 - fF);
+  const d = v * VORWALD_FLOOR_DARK * gf;
+  if (a + d > 0) mix3(col, SHADOW_RGB, Math.min(1, a + d), col);
 }
 
 const FOREST = LAND.indexOf('forest');
@@ -949,15 +1019,8 @@ function landColor(
     }
     case 'forest': {
       const p = lerp(g.patch);
-      // L1: derselbe Randversatz wie die Platzierung der Kronen (`forestEdgeShift`): wo die Krone vorragt (a > 0),
-      // reicht der dunkle Waldboden weiter hinaus, wo sie zurückweicht (a < 0), hellt der Boden früher auf
-      const inner = 1 - lerp(g.ind[FOREST]!);
-      let shifted = inner;
-      if (inner > 0 && inner < 0.95) {
-        const bump = Math.min(1, inner * 4) * (1 - Math.min(1, Math.max(0, (inner - 0.7) * 4)));
-        shifted -= forestEdgeShift(g.seed, fx, fy) * FOREST_EDGE_SHIFT * 0.5 * bump;
-      }
-      const edge = smoothstepClamp(shifted * 2); // innen 0, Rand ~1
+      // WALD-02: Rand aus dem Saumfeld (dieselbe Höhenlinie wie die Kronen): an der Saumlinie 1, tief im Wald 0
+      const edge = 1 - smooth01((lerp(g.wood) - SAUM_LEVEL) / FLOOR_EDGE_SPAN);
       // R170: am sonnigen Rand weniger Moos — sonst ergibt Moos + Klee im Übergang einen Kronenton
       if (p > 0) mix3(C.wood, C.moss, p * MOSS_MAX * (1 - MOSS_EDGE_FADE * edge), o);
       else mix3(C.wood, C.clearing, -p * CLEARING_MAX, o);
@@ -1008,6 +1071,19 @@ export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
       f[a + g.nx + 1]! * tx * ty;
     return v > 0 ? v ** TYPE_BLEND_POW : 0;
   });
+  // WALD-02: Wiese und Waldboden teilen ihren Anteil nach dem Saumfeld (wie `paintPixels`)
+  const gf = out[GRASS]! + out[FOREST]!;
+  if (gf > 0) {
+    const w = g.wood;
+    const fF = floorShare(
+      w[a]! * (1 - tx) * (1 - ty) +
+        w[a + 1]! * tx * (1 - ty) +
+        w[a + g.nx]! * (1 - tx) * ty +
+        w[a + g.nx + 1]! * tx * ty,
+    );
+    out[FOREST] = gf * fF;
+    out[GRASS] = gf * (1 - fF);
+  }
   const sum = out.reduce((p, q) => p + q, 0);
   return sum > 0 ? out.map((q) => q / sum) : out;
 }
@@ -1082,7 +1158,8 @@ export function paintPixels(
   h: number,
   out: Uint8ClampedArray = new Uint8ClampedArray(w * h * 4),
 ): Uint8ClampedArray {
-  const { nx, ny, sharp, smooth, ind, shade, tone, cls, dpres } = g;
+  const { nx, ny, sharp, smooth, ind, shade, tone, cls, dpres, wood, woodSh } = g;
+  const WOOD_LO = SAUM_LEVEL - VORWALD_FLOOR_BAND; // darunter weder Waldboden noch Vorwald noch Schatten
   boulderGrid = g;
   boulderTiles = new Map();
   const gradScale = 1 / (scale * RASTER); // Knoteneinheiten → Ausgabepixel
@@ -1141,6 +1218,28 @@ export function paintPixels(
           );
           wMt = c0 - 1 === mt ? 1 : 0;
           wFlur = c0 - 1 === GRASS || c0 - 1 === SAND ? 1 : 0;
+          // WALD-02: Waldgewichtung aus dem Saumfeld auch in reinen Gras- und Waldzellen
+          if (c0 - 1 === GRASS || c0 - 1 === FOREST) {
+            const hiW = Math.max(wood[a]!, wood[b]!, wood[c]!, wood[d]!),
+              loW = Math.min(wood[a]!, wood[b]!, wood[c]!, wood[d]!);
+            if (c0 - 1 === GRASS ? hiW > SAUM_LEVEL - FLOOR_SOFT : loW < SAUM_LEVEL + FLOOR_SOFT) {
+              const fF = floorShare(lerp(wood));
+              const other = c0 - 1 === GRASS ? FOREST : GRASS;
+              const k = c0 - 1 === GRASS ? fF : 1 - fF;
+              if (k > 0) {
+                landColor(
+                  g,
+                  other,
+                  lerp,
+                  grain,
+                  tc,
+                  (px0 + px + 0.5) * pxTile,
+                  (py0 + py + 0.5) * pxTile,
+                );
+                mix3(col, tc, k, col);
+              }
+            }
+          }
         } else {
           let sum = 0;
           for (let t = 0; t < LAND.length; t++) {
@@ -1148,6 +1247,13 @@ export function paintPixels(
             const q = v > 0 ? v ** TYPE_BLEND_POW : 0;
             wt[t] = q;
             sum += q;
+          }
+          // WALD-02: Wiese und Waldboden teilen ihren Anteil nach dem Saumfeld
+          const gfw = wt[GRASS]! + wt[FOREST]!;
+          if (gfw > 0) {
+            const fF = floorShare(lerp(wood));
+            wt[FOREST] = gfw * fF;
+            wt[GRASS] = gfw * (1 - fF);
           }
           col[0] = col[1] = col[2] = 0;
           for (let t = 0; t < LAND.length; t++) {
@@ -1219,6 +1325,23 @@ export function paintPixels(
           col[0] = col[0]! * gm;
           col[1] = col[1]! * gm;
           col[2] = col[2]! * gm;
+        }
+        // WALD-02: Waldschatten und Vorwald im Boden (nur nahe am Wald)
+        if (
+          wTone > 0 &&
+          Math.max(
+            woodSh[a]!,
+            woodSh[b]!,
+            woodSh[c]!,
+            woodSh[d]!,
+            wood[a]!,
+            wood[b]!,
+            wood[c]!,
+            wood[d]!,
+          ) > WOOD_LO
+        ) {
+          const sW = lerp(wood);
+          woodShade(col, wTone, floorShare(sW), sW, lerp(woodSh));
         }
         // H-R12b: Dünen auf Sand (eigene Funktion: hält die heisse Schleife klein)
         if (pure ? c0 - 1 === SAND : wt[SAND]! > 0) {
@@ -1520,6 +1643,8 @@ export function patchGrid(
     'dune',
     'dpres',
     'dphase',
+    'wood',
+    'woodSh',
   ] as const)
     copy(g[f], part[f]);
   copy(g.cls, part.cls);
@@ -1543,6 +1668,8 @@ const GRID_FLOAT_FIELDS = [
   'dune',
   'dpres',
   'dphase',
+  'wood',
+  'woodSh',
 ] as const;
 
 /**

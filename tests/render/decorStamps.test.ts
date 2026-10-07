@@ -29,8 +29,8 @@ import { DECOR_TONES } from '../../src/render/groundDecor';
 import { ISO_H, ISO_W, ZOOM_STEPS, buildingHulls, sortedObjects } from '../../src/render/iso';
 import { DECOR_CACHE_MAX_BYTES } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
-import { TREE_H, crownScreen, crownsFor } from '../../src/render/trees';
-import { TREE_VARIANTS } from '../../src/render/iso';
+import { TREE_H, crownScreen } from '../../src/render/trees';
+import { crownsOf, woodWorld } from './woodHelpers';
 import { deltaE2000, rgbToLab } from './deltaE';
 import { fakeCtx } from './fakeCtx';
 
@@ -290,15 +290,14 @@ describe('Abriss und Stempel (R3 im Bild)', () => {
 
 describe('Bild-Fix 3: Kronensprache und Mauerreste', () => {
   it('A5/A6 Krone aus 5–7 überlappenden Lappen, Höhe ≈ 0,75 × Breite; Solitär ×1,3–1,5 breiter als eine Waldkrone, Obstbaum kleiner', () => {
-    // mittlere Breite einer Waldkrone (Laubbäume der L1-Varianten)
+    // mittlere Breite einer Waldkrone (Laubbäume einer echten Karte, WALD-02)
     let sum = 0,
       n = 0;
-    for (let v = 0; v < TREE_VARIANTS; v++)
-      for (const c of crownsFor(7, v))
-        if (c.kind === 0 && !c.bush) {
-          sum += 2 * crownScreen(c).rx;
-          n++;
-        }
+    for (const c of crownsOf(woodWorld(7)))
+      if (c.kind === 0 && !c.bush && !c.dead) {
+        sum += 2 * crownScreen(c).rx;
+        n++;
+      }
     const forestW = sum / n;
     expect(n).toBeGreaterThan(5);
     for (let v = 0; v < 4; v++) {

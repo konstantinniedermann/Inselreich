@@ -1,27 +1,21 @@
 import { homeBuildings } from './homeBuildings';
 import { home } from '../sim/world';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import { hash2 } from '../sim/noise';
 import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { fieldWorld } from './terrainField';
 import { massifPieces, type MassifPiece } from './massif';
-import { FOREST_VARIANTS, forestLayout, type TileClass } from './forest';
+import { woodLayout, type TileClass } from './forest';
+import type { Crown } from './crown';
 import { kontorPos, stampPlacements, type StampKind } from './decor';
 
 // iso.ts — Kern (Setzung Spec D-01 bis D-05, D-13, D-16)
-export const ISO_W = 64;
-export const ISO_H = 32;
+import { ISO_H, ISO_W, project, type Pt } from './isoBase';
+export { ISO_H, ISO_W, project, type Pt };
 export const H_MAX = 2 * ISO_H;
 export const H_TOWER = 3 * ISO_H;
 export const TEX = 32; // Texturpixel je Kachel bei Faktor 1 (ersetzt TILE in terrain.ts)
-/** Baumstempel: 3 Art-Slots × (Kern 3 + Rand 3 + Eng 2) = 24 (ART-STIL-02 L1, `forest.ts`). */
-export const TREE_VARIANTS = FOREST_VARIANTS;
 export const ZOOM_STEPS = [0.125, 0.25, 0.5, 0.75, 1, 1.5, 2] as const;
-export interface Pt {
-  x: number;
-  y: number;
-}
 export interface Footprint {
   x: number;
   y: number;
@@ -34,10 +28,6 @@ export interface Box {
   w: number;
   h: number;
 }
-export const project = (fx: number, fy: number): Pt => ({
-  x: (fx - fy) * (ISO_W / 2),
-  y: (fx + fy) * (ISO_H / 2),
-});
 export const unproject = (X: number, Y: number): Pt => ({
   x: X / ISO_W + Y / ISO_H,
   y: Y / ISO_H - X / ISO_W,
@@ -53,9 +43,6 @@ export const radiusEllipse = (r: number): { rx: number; ry: number } => ({
 });
 /** Kleinste Zoomstufe ≥ z (Cache-Raster, ISO §16); über 2 bleibt es 2. */
 export const zoomStep = (z: number): number => ZOOM_STEPS.find((s) => s >= z - 1e-9) ?? 2;
-/** Vorgabe-Variante einer Waldkachel ohne Wissen über die Nachbarn (Hash); die Platzierung wählt `forestLayout`. */
-export const treeVariant = (seed: number, x: number, y: number): number =>
-  Math.floor(hash2(seed + 41, x, y) * TREE_VARIANTS) % TREE_VARIANTS;
 
 // iso.ts — Fortsetzung
 /** Platzhalter-Höhe je Kategorie über der oberen Ecke des vollen Footprints (Weltpixel, Zoom 1, D-12). */
@@ -132,10 +119,10 @@ export type SortedItem =
       id: number;
       fp: Footprint;
       key: number;
-      variant: number;
-      ox?: number;
-      oy?: number;
-      giant?: boolean;
+      /** Kronen der Zelle, Fusspunkte relativ zur Kachel `fp` (WALD-02, `woodLayout`). */
+      crowns: readonly Crown[];
+      /** Eng-Kachel (Nachbar eines Objekts): alle Kronen in der eigenen Kachel. */
+      own: boolean;
     }
   | { kind: 'massif'; id: number; fp: Footprint; key: number; piece: MassifPiece }
   | { kind: 'decor'; id: number; fp: Footprint; key: number; stamp: StampKind; variant: number }
@@ -164,35 +151,13 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       const fp = { x: f % isl.width, y: Math.floor(f / isl.width), w: 1, h: 1 };
       items.push({ kind: 'massif', id: piece.id, fp, key: depthKey(fp), piece });
     }
-    // Wald (ART-STIL-02 L1): ein Stempel je freier Waldkachel; Rolle, Art, Form und Versatz aus `forestLayout`
-    const cls = (x: number, y: number): TileClass => {
-      if (x < 0 || y < 0 || x >= isl.width || y >= isl.height) return 'blocked';
-      const t = isl.tiles[y * isl.width + x]!;
-      if (t.buildingId !== null || t.road) return 'blocked';
-      return t.terrain === 'forest' ? 'forest' : t.terrain === 'grass' ? 'meadow' : 'blocked';
-    };
-    const layout = forestLayout(world.seed, isl.width, isl.height, cls);
-    for (let y = 0; y < isl.height; y++)
-      for (let x = 0; x < isl.width; x++) {
-        const pl = layout[y * isl.width + x];
-        if (!pl) continue;
-        const fp = { x, y, w: 1, h: 1 };
-        items.push({
-          kind: 'tree',
-          id: y * isl.width + x,
-          fp,
-          key: depthKey(fp),
-          variant: pl.variant,
-          ox: pl.ox,
-          oy: pl.oy,
-          giant: pl.giant,
-        });
-      }
     // Deko-Stempel (ART-STIL-02 L4, A5/A6/A9/A14): nur auf der Heimatinsel (D4); eine Inselansicht fremder Inseln zeigt
     // nur Boden-Deko. Die Liste entsteht hier, je `layoutKey`, nie je Frame; sie rückt bei Bau und Rodung nicht nach.
+    const stampTiles = new Set<number>();
     if (!isl.kind || isl.kind === 'home')
       for (const s of stampPlacements(world.seed, isl, kontorPos(isl, world.buildings))) {
         const fp = { x: s.x, y: s.y, w: 1, h: 1 };
+        stampTiles.add(s.y * isl.width + s.x);
         items.push({
           kind: 'decor',
           id: s.id,
@@ -202,6 +167,35 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
           variant: s.variant,
         });
       }
+    // Wald (WALD-02): jede Krone einzeln aus dem Saumfeld (`woodLayout`), je Tiefenband-Zelle ein Objekt. Gebäude, Wege
+    // und Deko-Stempel sind Objekte (Nachbarkronen bleiben in ihrer Kachel), die Kacheln direkt vor einem Gebäude
+    // (+x, +y, +x+y, Spec R3) tragen keinen Vorwald.
+    const W = isl.width,
+      H = isl.height;
+    const tileAt = (x: number, y: number) =>
+      x < 0 || y < 0 || x >= W || y >= H ? null : isl.tiles[y * W + x]!;
+    const hasBuilding = (x: number, y: number): boolean => tileAt(x, y)?.buildingId != null;
+    const cls = (x: number, y: number): TileClass => {
+      const t = tileAt(x, y);
+      if (!t) return 'blocked';
+      if (t.buildingId !== null || t.road || stampTiles.has(y * W + x)) return 'object';
+      if (t.terrain === 'forest') return 'forest';
+      if (t.terrain !== 'grass') return 'blocked';
+      return hasBuilding(x - 1, y) || hasBuilding(x, y - 1) || hasBuilding(x - 1, y - 1)
+        ? 'quiet'
+        : 'meadow';
+    };
+    const wood = woodLayout({
+      seed: world.seed,
+      w: W,
+      h: H,
+      terrainForest: (x, y) => tileAt(x, y)?.terrain === 'forest',
+      cls,
+    });
+    wood.cells.forEach((c, i) => {
+      const fp = { x: c.x, y: c.y, w: 1, h: 1 };
+      items.push({ kind: 'tree', id: i, fp, key: depthKey(fp), crowns: c.crowns, own: c.own });
+    });
     items.sort(cmp);
     c = { key, items };
     fixed.set(world, c);

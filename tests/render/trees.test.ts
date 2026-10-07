@@ -1,135 +1,138 @@
 import { describe, expect, it } from 'vitest';
-import { placeBuilding } from '../../src/sim/build';
-import { home, createWorld } from '../../src/sim/world';
+import { home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
-import {
-  ISO_H,
-  ISO_W,
-  TREE_VARIANTS,
-  ZOOM_STEPS,
-  project,
-  sortedObjects,
-  pointBounds,
-} from '../../src/render/iso';
+import { ISO_W, ZOOM_STEPS, project, zoomStep } from '../../src/render/iso';
 import { PALETTE, SHADOW, SIGNAL_NAMES, mixHex, rgbOfCss } from '../../src/render/palette';
 import { deltaE2000, rgbToLab } from './deltaE';
+import { OVERHANG, slotKind } from '../../src/render/forest';
 import {
   CONIFER_COLOR,
+  DEADWOOD_COLOR,
   LIGHT_CROWN_COLOR,
   LIGHT_TRUNK_COLOR,
   MAPLE_COLOR,
   PINE_COLOR,
-  STAMP_BELOW,
-  STAMP_W,
-  stampBox,
-  TREE_H,
+  RADIUS_STEPS,
+  STUMP_TOP_COLOR,
+  TREE_CACHE_MAX_BYTES,
   crownBase,
+  crownBox,
   crownCap,
   crownShade,
-  crownsFor,
   drawTreeStamp,
-  paintStamp,
+  paintItem,
   setCanvasFactory,
   treeBounds,
+  treeCacheBytes,
   treeCacheSize,
   treeShadow,
   resetTreeCache,
+  type Crown,
+  type TreeItem,
 } from '../../src/render/trees';
-import { forceRect } from '../sim/helpers';
-import { fakeCtx } from './fakeCtx';
+import { fakeCtx, type P } from './fakeCtx';
+import { crownsOf, fakeCanvasFactory, mkItem, treeItems, woodWorld } from './woodHelpers';
 
-const item = (id: number, x: number, y: number, variant: number) =>
-  ({ kind: 'tree', id, fp: { x, y, w: 1, h: 1 }, key: 2 * x + 1 + 2 * y + 1, variant }) as const;
+// trees.test.ts — Bäume zeichnen (ISO §6; WALD-02: Kronen einzeln aus dem Saumfeld, Kronen-Atlas).
 
-describe('Baumstempel', () => {
-  it('ISO §6 crownsFor (L1): 2–10 Kronen je Variante, deterministisch, Fusspunkt höchstens 0,35 Kachel über der Kachel', () => {
-    for (let v = 0; v < TREE_VARIANTS; v++) {
-      const c = crownsFor(3, v);
-      expect(c.length).toBeGreaterThanOrEqual(2);
-      expect(c.length).toBeLessThanOrEqual(10);
-      expect(crownsFor(3, v)).toEqual(c);
-      for (const k of c) {
-        expect(k.cx - k.r).toBeGreaterThanOrEqual(-0.35 - 1e-9);
-        expect(k.cx + k.r).toBeLessThanOrEqual(1.35 + 1e-9);
-        expect(k.cy - k.r).toBeGreaterThanOrEqual(-0.35 - 1e-9);
-        expect(k.cy + k.r).toBeLessThanOrEqual(1.35 + 1e-9);
+/** Alle gemalten Punkte (Pfade und fillRect) eines Objekts bei Faktor `step`, in Weltpixeln. */
+function paintedPoints(item: TreeItem, step: number): P[] {
+  const { ctx, log } = fakeCtx();
+  paintItem(ctx, item, step);
+  const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+  const pts = [
+    ...log.allPoints,
+    ...log.events.filter((e) => e.op === 'fillRect').flatMap((e) => e.points),
+  ];
+  return pts.map((p) => ({ x: c.x + p.x / step, y: c.y + p.y / step }));
+}
+const sample = <T>(a: T[], n: number): T[] =>
+  a.filter((_, i) => i % Math.max(1, Math.floor(a.length / n)) === 0);
+
+describe('Wald-Objekte', () => {
+  it('ISO §6 Kronen (WALD-02): Fussscheibe höchstens OVERHANG = 0,35 Kachel über die eigene Kachel, Radien 0,03–0,35 (ausser Riesenbaum)', () => {
+    for (const seed of [3, 7, 11]) {
+      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.giant);
+      expect(cs.length).toBeGreaterThan(300);
+      for (const c of cs) {
+        const tx = Math.floor(c.fx),
+          ty = Math.floor(c.fy);
+        expect(c.fx - c.r).toBeGreaterThanOrEqual(tx - OVERHANG - 1e-9);
+        expect(c.fx + c.r).toBeLessThanOrEqual(tx + 1 + OVERHANG + 1e-9);
+        expect(c.fy - c.r).toBeGreaterThanOrEqual(ty - OVERHANG - 1e-9);
+        expect(c.fy + c.r).toBeLessThanOrEqual(ty + 1 + OVERHANG + 1e-9);
+        expect(c.r).toBeGreaterThanOrEqual(0.03);
+        expect(c.r).toBeLessThanOrEqual(0.35);
       }
     }
-    expect(crownsFor(3, 0)).not.toEqual(crownsFor(4, 0));
   });
 
-  it('AK-ISO-10 Baumstempel (L1): jeder Pfadpunkt in treeBounds; Eng-Stempel bleiben in der Spaltenbreite einer Kachel', () => {
-    for (const seed of [3, 11, 12588])
-      for (const step of ZOOM_STEPS)
-        for (let v = 0; v < TREE_VARIANTS; v++) {
-          const { ctx, log } = fakeCtx();
-          paintStamp(ctx, seed, v, step);
-          expect(log.allPoints.length).toBeGreaterThan(8);
-          const it0 = item(0, 10, 7, v);
-          const box = treeBounds(it0);
-          const c = project(10.5, 7.5);
-          for (const p of log.allPoints) {
-            // Stempelpixel -> Weltpixel: Ursprung (ISO_W/2, TREE_H) liegt auf der Rautenmitte
-            const wx = c.x + p.x / step - STAMP_W / 2;
-            const wy = c.y + p.y / step - TREE_H;
-            expect(wx).toBeGreaterThanOrEqual(box.x - 1e-6);
-            expect(wx).toBeLessThanOrEqual(box.x + box.w + 1e-6);
-            expect(wy).toBeGreaterThanOrEqual(box.y - 1e-6);
-            expect(wy).toBeLessThanOrEqual(box.y + box.h + 1e-6);
-            if (v % 8 >= 6) expect(Math.abs(wx - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
+  it('AK-ISO-10 Wald-Objekt: jeder gemalte Punkt liegt in treeBounds (alle Zoomstufen, mit Riesenbaum); Eng-Objekte bleiben in der Spaltenbreite einer Kachel', () => {
+    for (const seed of [3, 11, 7]) {
+      const items = treeItems(woodWorld(seed));
+      const pick = [
+        ...sample(items, 40),
+        ...items.filter((i) => i.own).slice(0, 10),
+        ...items.filter((i) => i.crowns.some((c) => c.giant)),
+      ];
+      for (const item of pick)
+        for (const step of ZOOM_STEPS) {
+          const box = treeBounds(item);
+          const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+          for (const p of paintedPoints(item, step)) {
+            expect(p.x).toBeGreaterThanOrEqual(box.x - 1e-6);
+            expect(p.x).toBeLessThanOrEqual(box.x + box.w + 1e-6);
+            expect(p.y).toBeGreaterThanOrEqual(box.y - 1e-6);
+            expect(p.y).toBeLessThanOrEqual(box.y + box.h + 1e-6);
+            if (item.own) expect(Math.abs(p.x - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
           }
         }
+    }
   });
 
-  it('AK-ISO-10 treeBounds (L1): Eng ist pointBounds der Kachelmitte mit Höhe TREE_H, Kern und Rand sind breiter', () => {
-    const c = project(4.5, 9.5);
-    expect(treeBounds(item(0, 4, 9, 7))).toEqual(pointBounds(4.5, 9.5, TREE_H));
-    const b = treeBounds(item(0, 4, 9, 0));
-    expect(b.w).toBeGreaterThan(ISO_W);
-    expect(b.x + b.w / 2).toBeCloseTo(c.x, 9);
-    expect(b.y).toBeCloseTo(c.y - TREE_H, 9);
-    expect(b.y + b.h).toBeCloseTo(c.y + STAMP_BELOW, 9);
-    expect(TREE_H).toBeCloseTo(1.1 * ISO_H, 9);
-  });
-
-  it('AK-R1-03 Stempel nutzt nur Palettenfarben (keine Signalfarben, kein Schatten)', () => {
+  it('AK-R1-03 Kronen nutzen nur Palettenmischungen (keine Signalfarben, kein Schatten); neue Töne ΔE2000 ≥ 20 zu den Signalfarben', () => {
+    const bases = ([0, 1, 2, 3, 4] as const).flatMap((k) =>
+      ([-1, 0, 1] as const).map((t) => crownBase(k, t)),
+    );
+    const trunk = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
     const allowed = new Set<string>([
-      PALETTE.crown,
-      crownShade(PALETTE.crown),
-      crownCap(PALETTE.crown),
-      crownShade(LIGHT_CROWN_COLOR),
-      crownCap(LIGHT_CROWN_COLOR),
-      crownShade(CONIFER_COLOR),
-      crownCap(CONIFER_COLOR),
-      mixHex(PALETTE.rockDark, PALETTE.earth, 0.5),
+      ...bases,
+      ...bases.map(crownShade),
+      ...bases.map(crownCap),
+      trunk,
+      LIGHT_TRUNK_COLOR,
+      DEADWOOD_COLOR,
+      crownShade(DEADWOOD_COLOR).length ? crownShade(DEADWOOD_COLOR) : '',
+      STUMP_TOP_COLOR,
+    ]);
+    const signals = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
+    const seen = new Set<string>();
+    for (const seed of [3, 7, 2])
+      for (const item of sample(treeItems(woodWorld(seed)), 80)) {
+        const { ctx, log } = fakeCtx();
+        paintItem(ctx, item, 1);
+        for (const f of log.fillSet) {
+          seen.add(f);
+          expect(signals.has(f)).toBe(false);
+          expect(f).not.toBe(SHADOW);
+        }
+      }
+    for (const f of seen)
+      expect(
+        allowed.has(f) || f === mixHex(DEADWOOD_COLOR, DEADWOOD_COLOR, 0) || /^#/.test(f),
+        f,
+      ).toBe(true);
+    for (const f of seen) if (!allowed.has(f)) expect(f).toBe(crownShade(DEADWOOD_COLOR));
+    for (const c of [
       CONIFER_COLOR,
       LIGHT_CROWN_COLOR,
       LIGHT_TRUNK_COLOR,
       PINE_COLOR,
       MAPLE_COLOR,
-      crownShade(PINE_COLOR),
-      crownCap(PINE_COLOR),
-      crownShade(MAPLE_COLOR),
-      crownCap(MAPLE_COLOR),
-    ]);
-    const signals = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
-    for (let v = 0; v < TREE_VARIANTS; v++)
-      for (const seed of [3, 4, 8, 12]) {
-        const { ctx, log } = fakeCtx();
-        paintStamp(ctx, seed, v, 1);
-        for (const f of log.fillSet) {
-          expect(allowed.has(f), f).toBe(true);
-          expect(signals.has(f)).toBe(false);
-          expect(f).not.toBe(SHADOW);
-        }
-        expect(
-          ([0, 1, 2, 3, 4] as const)
-            .map(crownBase)
-            .some((base) => log.fillSet.includes(crownCap(base))),
-        ).toBe(true);
-      }
-    // neue Töne: ΔE2000 ≥ 20 zu den Signalfarben
-    for (const c of [CONIFER_COLOR, LIGHT_CROWN_COLOR, LIGHT_TRUNK_COLOR, PINE_COLOR, MAPLE_COLOR])
+      DEADWOOD_COLOR,
+      STUMP_TOP_COLOR,
+      ...bases,
+    ])
       for (const n of SIGNAL_NAMES)
         expect(
           deltaE2000(rgbToLab(rgbOfCss(c)), rgbToLab(rgbOfCss(PALETTE[n]))),
@@ -137,151 +140,156 @@ describe('Baumstempel', () => {
         ).toBeGreaterThanOrEqual(20);
   });
 
-  it('R149 Baumarten (L1): je Seed ≥ 2 Arten über die Varianten, Radienverhältnis max/min ≥ 2,5, Radien 0,04–0,35', () => {
-    for (const seed of [3, 11, 12588, 94108]) {
-      const kinds = new Set<number>();
-      let lo = Infinity,
-        hi = 0;
-      for (let v = 0; v < TREE_VARIANTS; v++)
-        for (const c of crownsFor(seed, v)) {
-          kinds.add(c.kind);
-          lo = Math.min(lo, c.r);
-          hi = Math.max(hi, c.r);
-          expect(c.r).toBeGreaterThanOrEqual(0.04);
-          expect(c.r).toBeLessThanOrEqual(0.35);
-        }
+  it('R149 Baumarten: je Seed ≥ 2 Arten, Radienverhältnis max/min ≥ 2,5; über die Waldtypen alle fünf Arten', () => {
+    for (const seed of [3, 11, 7, 2]) {
+      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.dead && !c.giant);
+      const kinds = new Set(cs.map((c) => c.kind));
+      const rs = cs.map((c) => c.r);
       expect(kinds.size, `Seed ${seed}`).toBeGreaterThanOrEqual(2);
-      expect(hi / lo, `Seed ${seed}`).toBeGreaterThanOrEqual(2.5);
+      expect(Math.max(...rs) / Math.min(...rs), `Seed ${seed}`).toBeGreaterThanOrEqual(2.5);
     }
+    const all = new Set<number>();
+    for (let seed = 1; seed <= 40; seed++) for (const s of [0, 1, 2]) all.add(slotKind(seed, s));
+    expect([...all].sort()).toEqual([0, 1, 2, 3, 4]);
   });
 
-  it('R149 Stempel zeigen die Körperfarben aller fünf Arten (über Seeds mit verschiedenem Waldtyp)', () => {
-    const seen = new Set<string>();
-    for (let seed = 1; seed <= 40; seed++)
-      for (let v = 0; v < TREE_VARIANTS; v++) {
-        const { ctx, log } = fakeCtx();
-        paintStamp(ctx, seed, v, 1);
-        for (const f of log.fillSet) seen.add(f);
+  it('AK-ISO-10 treeShadow: nur Kronen mit eigenem Schatten (Vorwald, Saum); Polygon im Kachelraum, nach rechts unten versetzt, deterministisch', () => {
+    const items = treeItems(woodWorld(7));
+    const casting = items.filter((i) => i.crowns.some((c) => c.cast));
+    expect(casting.length).toBeGreaterThan(20);
+    for (const it0 of sample(casting, 30)) {
+      const poly = treeShadow(it0);
+      expect(poly.length).toBeGreaterThanOrEqual(8);
+      expect(treeShadow(it0)).toEqual(poly);
+      const cs = it0.crowns.filter((c) => c.cast);
+      const fx = cs.reduce((s, c) => s + it0.fp.x + c.cx, 0) / cs.length,
+        fy = cs.reduce((s, c) => s + it0.fp.y + c.cy, 0) / cs.length;
+      const mx = poly.reduce((s, p) => s + p.x, 0) / poly.length,
+        my = poly.reduce((s, p) => s + p.y, 0) / poly.length;
+      if (cs.length === 1) {
+        expect(mx).toBeGreaterThan(fx);
+        expect(my).toBeGreaterThan(fy);
       }
-    for (const k of [0, 1, 2, 3, 4] as const) expect(seen.has(crownBase(k)), `Art ${k}`).toBe(true);
-  });
-
-  it('AK-ISO-10 treeShadow: Polygon im Kachelraum, nach rechts unten versetzt, deterministisch', () => {
-    const it0 = item(0, 10, 7, 2);
-    const poly = treeShadow(it0);
-    expect(poly.length).toBeGreaterThanOrEqual(4);
-    expect(treeShadow(it0)).toEqual(poly);
-    const mx = poly.reduce((s, p) => s + p.x, 0) / poly.length;
-    const my = poly.reduce((s, p) => s + p.y, 0) / poly.length;
-    expect(mx).toBeGreaterThan(10.5);
-    expect(my).toBeGreaterThan(7.5);
-    for (const p of poly) {
-      expect(Math.abs(p.x - 10.5)).toBeLessThan(1.2);
-      expect(Math.abs(p.y - 7.5)).toBeLessThan(1.2);
+      for (const p of poly) {
+        expect(Math.abs(p.x - fx)).toBeLessThan(1.5);
+        expect(Math.abs(p.y - fy)).toBeLessThan(1.5);
+      }
     }
+    const quiet = items.find((i) => i.crowns.every((c) => !c.cast && !c.giant))!;
+    expect(treeShadow(quiet)).toEqual([]);
   });
 });
 
-function forestWorld(): { world: World; ids: number[] } {
-  const world = createWorld(3);
-  const k = world.buildings[home(world).kontorId]!;
-  const x0 = k.x + 4,
-    y0 = k.y + 4;
-  forceRect(world, x0, y0, 3, 3, 'forest');
-  const ids: number[] = [];
-  for (let j = 0; j < 3; j++)
-    for (let i = 0; i < 3; i++) ids.push((y0 + j) * home(world).width + x0 + i);
-  return { world, ids };
-}
-const treeIds = (w: World) =>
-  sortedObjects(w)
-    .filter((i) => i.kind === 'tree')
-    .map((i) => i.id);
-
-describe('Baumstempel und Bebauung', () => {
-  it('AK-R1-06 (ISO, R96) nach Bebauung einer Waldkachel fehlt deren Stempel, die 8 Nachbarn bleiben', () => {
-    const { world, ids } = forestWorld();
-    const before = new Set(treeIds(world));
-    for (const id of ids) expect(before.has(id)).toBe(true);
-    // Haus auf die Mitte: placeBuilding verlangt freies Gras; die Wahl der Kachel ändert den Stempel-Test nicht
-    const mid = ids[4]!;
-    const mx = mid % home(world).width,
-      my = (mid / home(world).width) | 0;
-    world.money = 100000;
-    const r = placeBuilding(world, 'house', mx, my);
-    if (!r.ok) {
-      // Wald ist nicht bebaubar: Gebäude roh setzen (wie in renderer.test.ts), layoutKey ändert sich trotzdem
-      const bid = world.nextBuildingId++;
-      world.buildings[bid] = {
-        id: bid,
-        defId: 'house',
-        x: mx,
-        y: my,
-        connected: false,
-        progress: 0,
-        state: 'ok',
-        island: 0,
-      };
-      home(world).tiles[mid]!.buildingId = bid;
+describe('Wald und Bebauung', () => {
+  it('AK-R1-06 (ISO, R96) nach Bebauung einer Waldkachel steht dort keine Krone mehr, die 8 Nachbarn tragen weiter ≥ 2 Kronen', () => {
+    const world = structuredClone(woodWorld(7)) as World;
+    const isl = home(world);
+    const w = isl.width;
+    // eine Kernkachel: 8 Nachbarn Wald
+    let mid = -1;
+    for (let i = w + 1; i < isl.tiles.length - w - 1 && mid < 0; i++) {
+      const x = i % w,
+        y = (i / w) | 0;
+      let ok = true;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++)
+          ok &&= isl.tiles[(y + dy) * w + x + dx]!.terrain === 'forest';
+      if (ok) mid = i;
     }
-    const after = new Set(treeIds(world));
-    expect(after.has(mid)).toBe(false);
-    for (const id of ids) if (id !== mid) expect(after.has(id), `Nachbar ${id}`).toBe(true);
-    expect(after.size).toBe(before.size - 1);
+    const mx = mid % w,
+      my = (mid / w) | 0;
+    const bid = world.nextBuildingId++;
+    world.buildings[bid] = {
+      id: bid,
+      defId: 'house',
+      x: mx,
+      y: my,
+      connected: false,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+    };
+    isl.tiles[mid]!.buildingId = bid;
+    const on = (x: number, y: number) =>
+      crownsOf(world).filter((c) => !c.dead && Math.floor(c.fx) === x && Math.floor(c.fy) === y);
+    expect(on(mx, my).length).toBe(0);
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++)
+        if (dx || dy)
+          expect(on(mx + dx, my + dy).length, `Nachbar ${dx},${dy}`).toBeGreaterThanOrEqual(2);
   });
 });
 
-/** Fake-Offscreen-Canvas für den Cache-Test. */
-function fakeCanvasFactory(): () => HTMLCanvasElement {
-  return () => {
-    const { ctx } = fakeCtx();
-    return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
-  };
-}
-
-describe('Baumstempel-Cache', () => {
-  it('ISO §16 Zoom-Cache: nach 200 zufälligen Zoomwerten in [0,5, 2] ≤ TREE_VARIANTS × ZOOM_STEPS.length Einträge', () => {
+describe('Kronen-Atlas', () => {
+  it('ISO §16 Atlas: nach 200 zufälligen Zoomwerten in [0,125; 2] über viele Objekte bleibt er unter TREE_CACHE_MAX_BYTES, Einträge nur auf ZOOM_STEPS', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
+    const items = treeItems(woodWorld(7));
     let s = 12345;
     const rnd = () => (s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296;
     for (let i = 0; i < 200; i++) {
-      const zoom = 0.5 + rnd() * 1.5;
+      const zoom = 0.125 + rnd() * 1.875;
       const { ctx } = fakeCtx();
-      drawTreeStamp(ctx, { x: 0, y: 0, zoom }, item(i, 3, 3, Math.floor(rnd() * TREE_VARIANTS)), 3);
+      for (let k = 0; k < 40; k++)
+        drawTreeStamp(ctx, { x: 0, y: 0, zoom }, items[Math.floor(rnd() * items.length)]!, 7);
+      expect(treeCacheBytes()).toBeLessThanOrEqual(TREE_CACHE_MAX_BYTES);
     }
     expect(treeCacheSize()).toBeGreaterThan(0);
-    expect(treeCacheSize()).toBeLessThanOrEqual(TREE_VARIANTS * ZOOM_STEPS.length);
-    expect(treeCacheSize()).toBeLessThanOrEqual(TREE_VARIANTS * 5); // Stufen 0,5 … 2
   });
 
-  it('ISO §16 neue Welt (anderer Seed) → neuer Cache', () => {
+  it('ISO §16 der Atlas hängt nicht vom Seed ab: dieselbe Krone teilt den Eintrag über Inseln', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
+    const c: Crown = { kind: 0, cx: 0.5, cy: 0.5, r: 0.2, h: 10, bush: false, s: 0.3 };
     const { ctx } = fakeCtx();
     const cam = { x: 0, y: 0, zoom: 1 };
-    drawTreeStamp(ctx, cam, item(0, 3, 3, 1), 3);
-    drawTreeStamp(ctx, cam, item(0, 3, 3, 2), 3);
-    expect(treeCacheSize()).toBe(2);
-    drawTreeStamp(ctx, cam, item(0, 3, 3, 1), 4);
+    drawTreeStamp(ctx, cam, mkItem([c], 3, 3), 3);
+    drawTreeStamp(ctx, cam, mkItem([{ ...c }], 5, 3), 4);
     expect(treeCacheSize()).toBe(1);
+    drawTreeStamp(ctx, cam, mkItem([{ ...c, tone: 1 }], 5, 3), 4);
+    expect(treeCacheSize()).toBe(2);
   });
 
-  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z): Zielgrösse = Stempel × Faktor (L1: Canvas = Inhaltsbox)', () => {
+  it('ISO §16 Zeichnen mit Faktor z / zoomStep(z) · r / r_b: Fusspunkt der Krone liegt auf dem Fusspunkt im Bild', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
     const calls: number[][] = [];
     const ctx = {
       drawImage: (...a: number[]) => calls.push(a.slice(1)),
     } as unknown as CanvasRenderingContext2D;
-    drawTreeStamp(ctx, { x: 0, y: 0, zoom: 1.2 }, item(0, 3, 3, 0), 3); // Stufe 1,5
+    const c: Crown = { kind: 1, cx: 0.4, cy: 0.7, r: 0.2, h: 9, bush: false, s: 0.5 };
+    const z = 1.2,
+      step = zoomStep(z);
+    drawTreeStamp(ctx, { x: 0, y: 0, zoom: z }, mkItem([c], 3, 3), 3);
     const [dx, dy, dw, dh] = calls[0]!;
-    const b = stampBox(3, 0);
-    expect(dw).toBeCloseTo(Math.ceil((b.x1 - b.x0) * 1.5) * (1.2 / 1.5), 6);
-    const c = project(3.5, 3.5);
-    expect(dx).toBeCloseTo(c.x * 1.2 + b.x0 * 1.2, 6);
-    expect(dy).toBeCloseTo(c.y * 1.2 + b.y0 * 1.2, 6);
-    expect(dh!).toBeGreaterThan(0);
+    const rb = RADIUS_STEPS.filter((r) => r >= c.r).at(-1)!;
+    const k = (z / step) * (c.r / rb);
+    const b = crownBox({ ...c, r: rb, h: c.h / (c.r / rb) });
+    expect(dw).toBeCloseTo(Math.ceil((b.x1 - b.x0 + 2) * step) * k, 6);
+    expect(dh).toBeCloseTo(Math.ceil((b.y1 - b.y0 + 2) * step) * k, 6);
+    const f = project(3.4, 3.7);
+    expect(dx! + (1 - b.x0) * step * k).toBeCloseTo(f.x * z, 6);
+    expect(dy! + (1 - b.y0) * step * k).toBeCloseTo(f.y * z, 6);
+  });
+
+  it('L1-T4 der Riesenbaum wird direkt gemalt und füllt den Atlas nicht', () => {
+    setCanvasFactory(fakeCanvasFactory());
+    resetTreeCache();
+    const g: Crown = {
+      kind: 0,
+      cx: 0.5,
+      cy: 0.5,
+      r: 0.306,
+      h: 20,
+      bush: false,
+      s: 0.5,
+      giant: true,
+    };
+    const { ctx, log } = fakeCtx();
+    drawTreeStamp(ctx, { x: 0, y: 0, zoom: 1 }, mkItem([g], 3, 3), 3);
+    expect(treeCacheSize()).toBe(0);
+    expect(log.saves).toBe(log.restores);
+    expect(log.fillSet.length).toBeGreaterThan(3);
   });
 });
 
@@ -324,6 +332,10 @@ class RasterCtx {
     this.shape!.a.push(x, y);
   }
   closePath() {}
+  fillRect(x: number, y: number, w: number, h: number) {
+    this.rect(x, y, w, h);
+    this.fill();
+  }
   ellipse(x: number, y: number, rx: number, ry: number) {
     this.shape = { kind: 'ell', a: [x, y, rx, ry] };
   }
@@ -389,26 +401,24 @@ function components(r: RasterCtx, color: string, min: number): number {
   return n;
 }
 
-describe('Baumstempel gerastert', () => {
-  it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte Lichtkappen (crownCap) (je ≥ 4 px), für alle Varianten und Seeds', () => {
-    for (const seed of [3, 11, 12588, 94108])
-      for (let v = 0; v < TREE_VARIANTS; v++) {
-        const r = new RasterCtx(STAMP_W, Math.ceil(TREE_H + STAMP_BELOW));
-        paintStamp(r as unknown as CanvasRenderingContext2D, seed, v, 1);
-        // L1: ≥ 2 getrennte Kappen je Stempel (kleine Rand-Jungbäume überdecken sich), die Hauptart zeigt mindestens eine
-        const crowns = crownsFor(seed, v).filter((c) => !c.bush);
+describe('Kronen gerastert', () => {
+  it('AK-R1-08 I5 jedes Kern-Objekt mit ≥ 3 Kronen zeigt bei Zoom 1 ≥ 2 getrennte Lichtkappen (je ≥ 4 px)', () => {
+    for (const seed of [3, 11, 7]) {
+      const items = treeItems(woodWorld(seed)).filter(
+        (i) => i.crowns.filter((c) => !c.bush && !c.dead && !c.young).length >= 3,
+      );
+      expect(items.length).toBeGreaterThan(20);
+      for (const item of sample(items, 25)) {
+        const b = treeBounds(item);
+        const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+        const r = new RasterCtx(Math.ceil(b.w) + 2, Math.ceil(b.h) + 2);
+        r.translate(c.x - b.x + 1, c.y - b.y + 1);
+        paintItem(r as unknown as CanvasRenderingContext2D, item, 1);
         let total = 0;
-        for (const k of [0, 1, 2, 3, 4] as const) total += components(r, crownCap(crownBase(k)), 4);
-        expect(total, `Seed ${seed} Variante ${v}`).toBeGreaterThanOrEqual(2);
-        const count = (k: number) => crowns.filter((c) => c.kind === k).length;
-        const main = ([0, 1, 2, 3, 4] as const).reduce(
-          (a, k) => (count(k) > count(a) ? k : a),
-          0 as 0 | 1 | 2 | 3 | 4,
-        );
-        expect(
-          components(r, crownCap(crownBase(main)), 4),
-          `Seed ${seed} Variante ${v} Hauptart ${main}`,
-        ).toBeGreaterThanOrEqual(1);
+        for (const k of [0, 1, 2, 3, 4] as const)
+          for (const t of [-1, 0, 1] as const) total += components(r, crownCap(crownBase(k, t)), 4);
+        expect(total, `Seed ${seed} Objekt ${item.id}`).toBeGreaterThanOrEqual(2);
       }
+    }
   });
 });

@@ -1,10 +1,10 @@
 import { fieldWorld } from '../../src/render/terrainField';
 import { describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
-import { TEX, TREE_VARIANTS } from '../../src/render/iso';
+import { TEX } from '../../src/render/iso';
 import { LIGHT, TONE_EDGE_PX } from '../../src/render/light';
 import { PALETTE, rgbOf } from '../../src/render/palette';
-import { crownsFor } from '../../src/render/trees';
+import { treeItems } from './woodHelpers';
 import { LAND } from '../../src/render/terrainField';
 import {
   GROUND_FLAT,
@@ -241,18 +241,15 @@ describe('H-R11 Sättigung (S5)', () => {
 
 describe('H-R11 Wald (D9)', () => {
   const FOREST = LAND.indexOf('forest');
-  it('H-R11 D9 der Waldboden-Hof endet höchstens 0,5 Kachel hinter der äussersten Krone', () => {
-    // Abstand der äussersten Krone zum Kachelrand (innen), über alle Varianten
-    let gap = 1;
-    for (let v = 0; v < TREE_VARIANTS; v++)
-      for (const c of crownsFor(1, v))
-        gap = Math.min(gap, c.cx - c.r, 1 - c.cx - c.r, c.cy - c.r, 1 - c.cy - c.r);
-    // L1: Kronen dürfen bis 0,35 Kachel über die eigene Kachel ragen (Spec 2.1 (1)); der Hof misst ab der äussersten Krone
-    expect(gap).toBeGreaterThanOrEqual(-0.35 - 1e-9);
-    expect(gap).toBeLessThan(0);
+  it('H-R11 D9 der Waldboden-Hof endet höchstens 0,5 Kachel hinter der äussersten Krone (WALD-02: Kronen aus woodLayout)', () => {
     let edges = 0,
-      worst = 0;
-    for (const { world, grid } of worlds)
+      worst = -Infinity;
+    for (const { world, grid } of worlds) {
+      const crowns = treeItems(world).flatMap((it) =>
+        it.crowns
+          .filter((c) => !c.dead)
+          .map((c) => ({ fx: it.fp.x + c.cx, fy: it.fp.y + c.cy, r: c.r })),
+      );
       for (let y = 1; y < home(world).height - 1; y++)
         for (let x = 1; x < home(world).width - 1; x++) {
           if (terr(fieldWorld(world), x, y) !== 'forest') continue;
@@ -278,18 +275,26 @@ describe('H-R11 Wald (D9)', () => {
             }
             if (!free) continue;
             edges++;
-            // entlang der Aussennormalen ab der Kachelkante, Mitte der Kante
-            let reach = 0;
-            for (let d = 0; d <= 0.9; d += 0.02) {
+            // Reichweite des Hofs entlang der Aussennormalen ab der Kachelkante (Mitte der Kante) …
+            let reach = -0.5;
+            for (let d = -0.5; d <= 1.5; d += 0.02) {
               const fx = x + 0.5 + dx * (0.5 + d),
                 fy = y + 0.5 + dy * (0.5 + d);
               if (landShares(grid, fx, fy)[FOREST]! >= 0.2) reach = d;
             }
-            worst = Math.max(worst, reach);
+            // … gegen die äusserste Kronenkante in einem Band von ±0,5 Kachel quer zur Normalen
+            let crown = -1;
+            for (const c of crowns) {
+              const along = (c.fx - x - 0.5) * dx + (c.fy - y - 0.5) * dy - 0.5;
+              const across = (c.fx - x - 0.5) * dy - (c.fy - y - 0.5) * dx;
+              if (Math.abs(across) <= 0.5 && along > -1.5) crown = Math.max(crown, along + c.r);
+            }
+            worst = Math.max(worst, reach - crown);
           }
         }
+    }
     expect(edges).toBeGreaterThan(50);
-    expect(worst + gap).toBeLessThanOrEqual(0.5);
+    expect(worst).toBeLessThanOrEqual(0.5);
   });
 
   it('H-R11 Wald bleibt bei Zoom 1 dunkler als die Wiese (Bodenhelligkeit, Faktor ≤ 0,8)', () => {

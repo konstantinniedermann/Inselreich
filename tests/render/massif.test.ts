@@ -83,8 +83,14 @@ const fakeCanvas = (): HTMLCanvasElement => {
   const { ctx } = fakeCtx();
   return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
 };
+/** Kronen-Atlas-Flächen (WALD-02): ihre drawImage-Aufrufe zählen nicht als Massiv-Teilstücke. */
+const treeCanvases = new Set<unknown>();
 beforeAll(() => {
-  setTreeCanvasFactory(fakeCanvas);
+  setTreeCanvasFactory(() => {
+    const c = fakeCanvas();
+    treeCanvases.add(c);
+    return c;
+  });
   setMassifCanvasFactory(fakeCanvas);
 });
 
@@ -1067,7 +1073,13 @@ describe('H-R9 A6 Cache und Culling', () => {
       return x < view.w && x + b.w * cam2.zoom > 0 && y < view.h && y + b.h * cam2.zoom > 0;
     });
     expect(visible.length).toBeGreaterThan(10);
-    const draws = log.events.filter((e) => e.op === 'drawImage' && e.points.length === 2);
+    const imgs = [...log.images];
+    let di = 0;
+    const draws = log.events.filter((e) => {
+      if (e.op !== 'drawImage') return false;
+      const img = imgs[di++];
+      return e.points.length === 2 && !treeCanvases.has(img);
+    });
     const massifDraws = draws.filter((e) => {
       const wpx = e.points[1]!.x - e.points[0]!.x;
       return Math.abs(wpx - (ISO_W / 2) * cam2.zoom) < 1.01;

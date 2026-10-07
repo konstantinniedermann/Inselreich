@@ -379,10 +379,10 @@ describe('Renderer', () => {
       (i) =>
         i.kind === 'building' ||
         (i.kind === 'tree' &&
-          i.fp.x >= range.x0 - 1 &&
-          i.fp.x <= range.x1 + 1 &&
-          i.fp.y >= range.y0 - 1 &&
-          i.fp.y <= range.y1 + 1),
+          i.fp.x >= range.x0 - 2 &&
+          i.fp.x <= range.x1 + 2 &&
+          i.fp.y >= range.y0 - 2 &&
+          i.fp.y <= range.y1 + 2),
     );
     expect(items.filter((i) => i.kind === 'tree').length).toBeGreaterThanOrEqual(16);
     expect(seq.filter((c) => c.kind !== 'ship').map((c) => `${c.kind}${c.id}`)).toEqual(
@@ -390,19 +390,35 @@ describe('Renderer', () => {
     );
   });
 
-  it('L1-Befund Culling: ein Baum eine Kachel hinter dem Kachelbereich wird noch gezeichnet (Zuschlag), zwei Kacheln dahinter nicht', () => {
+  it('L1-Befund Culling (WALD-02): die Kronen einer Waldkachel eine Kachel hinter dem Kachelbereich werden gezeichnet, die vier Kacheln dahinter nicht', () => {
     const { world } = scene();
     const cam = camFor(world, 1);
     const isl = home(world);
     const range = visibleTileRange(cam, VIEW, { w: isl.width, h: isl.height });
     const y = Math.floor((range.y0 + range.y1) / 2);
-    expect(range.x1 + 2).toBeLessThan(isl.width);
-    for (const dx of [1, 2]) forceRect(world, range.x1 + dx, y, 1, 1, 'forest');
+    // rechts oder links des Kachelbereichs, je nachdem wo die Karte Platz hat
+    const right = range.x1 + 4 < isl.width;
+    const at = (d: number) => (right ? range.x1 + d : range.x0 - d);
+    expect(right || range.x0 - 4 >= 0).toBe(true);
+    forceRect(world, Math.min(at(1), at(4)), y, 4, 1, 'grass');
+    for (const d of [1, 4]) forceRect(world, at(d), y, 1, 1, 'forest');
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     const drawn = new Set(h.calls.filter((c) => c.kind === 'tree').map((c) => c.id));
-    expect(drawn.has(y * isl.width + range.x1 + 1)).toBe(true);
-    expect(drawn.has(y * isl.width + range.x1 + 2)).toBe(false);
+    const holders = (tx: number) =>
+      sortedObjects(world, [])
+        .filter(
+          (i) =>
+            i.kind === 'tree' &&
+            i.crowns.some(
+              (c) => Math.floor(i.fp.x + c.cx) === tx && Math.floor(i.fp.y + c.cy) === y,
+            ),
+        )
+        .map((i) => i.id);
+    expect(holders(at(1)).length).toBeGreaterThan(0);
+    for (const id of holders(at(1))) expect(drawn.has(id)).toBe(true);
+    expect(holders(at(4)).length).toBeGreaterThan(0);
+    for (const id of holders(at(4))) expect(drawn.has(id)).toBe(false);
   });
 
   it('ISO §5 (N2) Bruchprobe-Szene: der Weg liegt vor dem ersten Körper — nach den Körpern gezeichnete Wege würden diesen Test röten', () => {
@@ -1147,9 +1163,11 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
   // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
   // G-Anzahl (b537908).
-  const HOME_CALLS = { hash: 967493816, length: 12895 };
+  // WALD-02: bewusst neu gepinnt (beide Pins): Wald-Objekte sind Tiefenband-Zellen aus einzelnen Kronen (andere Ids und
+  // Anzahl, Reihenfolge nach Fusstiefe) und das Baum-Culling hat 2 Kacheln Zuschlag.
+  const HOME_CALLS = { hash: 722842292, length: 17358 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
-  const HOME_ORDER = { hash: 3670334885, length: 3662 };
+  const HOME_ORDER = { hash: 1276441569, length: 4659 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
   // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };
