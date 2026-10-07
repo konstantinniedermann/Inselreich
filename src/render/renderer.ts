@@ -555,7 +555,9 @@ function drawIsland(
       x1: Math.min(home(world).width - 1, range.x1 + 3),
       y1: Math.min(home(world).height - 1, range.y1 + 3),
     };
-    const wild = lod ? [] : wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
+    const wild = lod
+      ? []
+      : wildlifeAt(world, wildRange, fx.timeMs, { ...wildlifeEnvOf(world, fx), zoom: cam.zoom });
     if (!lod) drawWaterLife(ctx, cam, wild);
     renderStats.wildDrawn += wild.length;
     // Fauna an Land (L7): eine Abfrage; Bodentiere mischen sich nach Tiefe in den sortierten Durchgang, Luft folgt bei den Möwen

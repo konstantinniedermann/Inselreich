@@ -9,6 +9,10 @@ import { render, type RenderFx } from '../../src/render/renderer';
 import { coastField } from '../../src/render/terrainField';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import {
+  DOLPHIN_COLOR,
+  DOLPHIN_EPISODE_MS,
+  DOLPHIN_LIGHT,
+  dolphinsAt,
   BIRD_COLOR,
   FISH_SHIMMER,
   WHALE_EPISODE_MS,
@@ -27,6 +31,7 @@ import {
   wildlifeAt,
   type WildlifeEnv,
 } from '../../src/render/wildlife';
+import { seaClearance, seaContext } from '../../src/render/decor';
 import { shipTile } from '../../src/render/ship';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, center, createWorld } from '../../src/sim/world';
@@ -331,7 +336,12 @@ describe('Wasser- und Luftleben (H-R2)', () => {
   });
 
   it('RF-6 wildlifeAt: Namen, leerer Bereich gibt [], Treffer liegen im Bereich, wirft nicht', () => {
-    const names = { fish: 'Fischschwarm', whale: 'Wal', birds: 'Vogelschwarm' } as const;
+    const names = {
+      fish: 'Fischschwarm',
+      whale: 'Wal',
+      birds: 'Vogelschwarm',
+      dolphins: 'Delfine',
+    } as const;
     const kinds = new Set<string>();
     const empty: TileRange = { x0: 5, y0: 5, x1: 4, y1: 4 };
     for (const seed of SEEDS) {
@@ -349,11 +359,11 @@ describe('Wasser- und Luftleben (H-R2)', () => {
           expect(hit.x).toBeLessThan(r.x1 + 1);
           expect(hit.y).toBeGreaterThanOrEqual(r.y0);
           expect(hit.y).toBeLessThan(r.y1 + 1);
-          expect(hit.r).toBe({ fish: 0.6, whale: 1.0, birds: 1.2 }[hit.kind]);
+          expect(hit.r).toBe({ fish: 0.6, whale: 1.0, birds: 1.2, dolphins: 1.5 }[hit.kind]);
           expect(hit.kind === 'birds' ? hit.z > 0 : hit.z === 0).toBe(true);
         }
     }
-    expect([...kinds].sort()).toEqual(['birds', 'fish', 'whale']);
+    expect([...kinds].sort()).toEqual(['birds', 'dolphins', 'fish', 'whale']);
   });
 
   it('RF-8 Wal Ablauf in 12 s: Auftauchen, Schwimmen, Abtauchen, Fluke; Fontäne nur beim Auftauchen; wildlifeAt liefert Wal in allen Phasen', () => {
@@ -547,5 +557,180 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       break;
     }
     expect(done).toBe(true);
+  });
+});
+
+describe('Delfine (ART-STIL-02 L7 E5)', () => {
+  const SEEDS50 = Array.from({ length: 50 }, (_, i) => i + 1);
+  const dolphinEpisodes = (world: World, reduce = false) => {
+    const out: { t: number; pose: NonNullable<ReturnType<typeof dolphinsAt>> }[] = [];
+    for (let e = 0; e < 40; e++)
+      for (let dt = 0; dt < 45000; dt += 250) {
+        const t = e * DOLPHIN_EPISODE_MS + dt;
+        const pose = dolphinsAt(world, t, reduce);
+        if (pose) out.push({ t, pose });
+      }
+    return out;
+  };
+
+  it('E5 Determinismus, Kappe [3, 0], Episoden: sichtbar ≤ 9 s je Episode, reduziert keine', () => {
+    let groups = 0,
+      withSeed = 0;
+    for (const seed of SEEDS50) {
+      const world = createWorld(seed);
+      const a = dolphinEpisodes(world);
+      expect(JSON.stringify(dolphinEpisodes(world))).toBe(JSON.stringify(a));
+      if (a.length > 0) withSeed++;
+      for (const { t, pose } of a) {
+        groups++;
+        expect(pose.dolphins.length).toBeLessThanOrEqual(CAPS.dolphins[0]);
+        expect(t % DOLPHIN_EPISODE_MS).toBeLessThan(DOLPHIN_EPISODE_MS);
+      }
+      expect(dolphinEpisodes(world, true)).toEqual([]);
+    }
+    expect(CAPS.dolphins).toEqual([3, 0]);
+    expect(groups).toBeGreaterThan(0);
+    // S-Art: nur auf einem Teil der Inseln (Los 0,45 nach der Eignung)
+    expect(withSeed).toBeGreaterThan(5);
+    expect(withSeed).toBeLessThan(50);
+  });
+
+  it('E5 nie im R4-Sperrbereich (Seeds 1–50): Tiefwasser, seaClearance ≥ 0, auch Spritzringe; ≥ 3 Kacheln vom Schiff', () => {
+    let checked = 0;
+    for (const seed of SEEDS50) {
+      const world = createWorld(seed);
+      world.order = { period: 1, good: 'wood', amount: 5, reward: 100, due: 999 };
+      const ctx = seaContext(world);
+      const f = coastField(fieldWorld(world));
+      const ship = shipTile(world);
+      for (const { pose } of dolphinEpisodes(world))
+        for (const p of [...pose.dolphins, ...pose.splash]) {
+          checked++;
+          expect(
+            seaClearance(ctx, p.x, p.y, 0),
+            `seed ${seed} @${p.x},${p.y}`,
+          ).toBeGreaterThanOrEqual(0);
+          expect(f.v[Math.floor(p.y) * f.w + Math.floor(p.x)]!).toBeLessThanOrEqual(-4);
+          if (ship)
+            expect(Math.hypot(p.x - (ship.x + 0.5), p.y - (ship.y + 0.5))).toBeGreaterThanOrEqual(
+              3,
+            );
+        }
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it('E5 springen nacheinander in Bögen: Höhe ≤ 0,45 · ISO_H, Verlauf 0…1, mehrere Tiere zu verschiedenen Zeiten', () => {
+    let jumps = 0;
+    let hmax = 0;
+    for (const seed of SEEDS) {
+      const world = worldOf(seed);
+      for (const { pose } of dolphinEpisodes(world))
+        for (const d of pose.dolphins) {
+          jumps++;
+          hmax = Math.max(hmax, d.z);
+          expect(d.t).toBeGreaterThanOrEqual(0);
+          expect(d.t).toBeLessThan(1);
+          expect(d.z).toBeGreaterThanOrEqual(0);
+        }
+    }
+    expect(jumps).toBeGreaterThan(0);
+    expect(hmax).toBeLessThanOrEqual(0.45 * ISO_H + 1e-9);
+    expect(hmax).toBeGreaterThan(0.2 * ISO_H);
+    // zwei Tiere einer Gruppe sind nie gleichzeitig am Scheitel
+    for (const seed of SEEDS)
+      for (const { pose } of dolphinEpisodes(worldOf(seed)))
+        expect(pose.dolphins.filter((d) => d.t > 0.45 && d.t < 0.55).length).toBeLessThanOrEqual(2);
+  });
+
+  it('E5 wildlifeAt: Name „Delfine“, Radius 1,5, nicht nachts und nicht bei Sturm, erst ab Zoom 0,5, reduziert keine', () => {
+    let found = 0;
+    for (const seed of SEEDS50) {
+      const world = createWorld(seed);
+      const ep = dolphinEpisodes(world)[0];
+      if (!ep) continue;
+      found++;
+      const at = (env: WildlifeEnv) =>
+        wildlifeAt(world, FULL, ep.t, env).filter((x) => x.kind === 'dolphins');
+      const hits = at({ phase: 'day', weather: 'clear' });
+      expect(hits).toHaveLength(1);
+      expect(hits[0]!.name).toBe('Delfine');
+      expect(hits[0]!.r).toBe(1.5);
+      expect(hits[0]!.z).toBe(0);
+      expect(at({ phase: 'night', weather: 'clear' })).toHaveLength(0);
+      expect(at({ phase: 'morning', weather: 'rain' })).toHaveLength(1);
+      expect(at({ phase: 'day', weather: 'storm' })).toHaveLength(0);
+      expect(at({ phase: 'day', zoom: 0.4 })).toHaveLength(0);
+      expect(at({ phase: 'day', zoom: 0.5 })).toHaveLength(1);
+      expect(at({ phase: 'day', reduce: true })).toHaveLength(0);
+      if (found >= 6) break;
+    }
+    expect(found).toBeGreaterThan(0);
+  });
+
+  it('E5 Wal bleibt unverändert: dieselbe Bahn, unabhängig von den Delfinen', () => {
+    // Der Wal hängt nur von Seed, Episode und Tiefwasser ab: gleiche Aufrufe, gleiche Pose (kein gemeinsamer Zustand)
+    for (const seed of SEEDS) {
+      const world = createWorld(seed);
+      const a = JSON.stringify(
+        [...Array(80).keys()].map((e) => whaleAt(world, e * WHALE_EPISODE_MS + 5000)),
+      );
+      dolphinEpisodes(world);
+      expect(
+        JSON.stringify(
+          [...Array(80).keys()].map((e) => whaleAt(world, e * WHALE_EPISODE_MS + 5000)),
+        ),
+      ).toBe(a);
+    }
+  });
+
+  it('E5 gezeichnet: Schiefer-Wasser, heller als der Wal, ΔE ≥ 20 zu den Signalfarben, keine schwarze oder weisse Linie, save/restore ausgeglichen', () => {
+    const hit = {
+      kind: 'dolphins',
+      name: 'Delfine',
+      x: 20.5,
+      y: 20.5,
+      z: 0,
+      r: 1.5,
+      pose: {
+        dolphins: [0.1, 0.5, 0.9].map((t, i) => ({
+          x: 20.5 + i,
+          y: 20.5,
+          z: 4 * t * (1 - t) * 14,
+          t,
+          heading: 0.4 + i,
+        })),
+        splash: [{ x: 20.5, y: 20.5, age: 0.4 }],
+      },
+    } as unknown as WildlifeHit;
+    const { ctx, log } = fakeCtx();
+    drawWaterLife(ctx, { x: 0, y: 0, zoom: 1.5 }, [hit]);
+    expect(log.events.filter((e) => e.op === 'fill').length).toBeGreaterThan(0);
+    expect(log.saves).toBe(log.restores);
+    expect(log.underflow).toBe(0);
+    expect(log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
+    const luma = (c: string) => {
+      const [r, g, b] = rgbOfCss(c);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    };
+    expect(luma(DOLPHIN_COLOR)).toBeGreaterThan(luma(WHALE_COLOR));
+    for (const col of [DOLPHIN_COLOR, DOLPHIN_LIGHT])
+      for (const sig of SIGNAL_NAMES)
+        expect(deltaE2000(rgbToLab(rgbOfCss(col)), hexToLab(PALETTE[sig]))).toBeGreaterThanOrEqual(
+          20,
+        );
+    for (const op of ['fill', 'stroke'] as const)
+      for (const style of new Set(log.events.filter((e) => e.op === op).map((e) => e.style))) {
+        const c = rgbOfCss(style);
+        for (const sig of SIGNAL_NAMES)
+          expect(
+            deltaE2000(rgbToLab(c), hexToLab(PALETTE[sig])),
+            `${op} ${style}`,
+          ).toBeGreaterThanOrEqual(20);
+        if (op === 'stroke') {
+          expect(luma(style)).toBeGreaterThanOrEqual(0.08);
+          expect(c.every((v) => v >= 250)).toBe(false);
+        }
+      }
   });
 });

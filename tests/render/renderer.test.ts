@@ -1211,6 +1211,10 @@ describe('M12 E1 Renderer', () => {
 
   it('AK-E1-10 Kamera über der Heimat: Aufrufliste gleich der Welt ohne Fremdinseln', () => {
     const { world } = scene();
+    // L7: Robben und Kormorane stehen auf Fels und Sandbank des Meer-Plans, und der hängt von den Fahrlinien und damit
+    // von den Fremdinseln ab (`seaContext`); ohne Fremdinseln ist es eine andere Meerlage. Nachts (tick 3000) sind die Meer-Tiere
+    // aus, der Rest des Bildes bleibt der Prüfgegenstand dieses Tests.
+    world.tick = 3000;
     const cam = camFor(world, 1);
     const a = run(world, cam);
     const b = run(homeOnly(world), cam);

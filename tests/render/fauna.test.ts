@@ -3,6 +3,25 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { centerOn, visibleTileRange, type Camera, type TileRange } from '../../src/render/camera';
 import type { Phase, WeatherKind } from '../../src/render/daynight';
 import {
+  CORMORANT_COLOR,
+  CRAB_COLOR,
+  EAGLE_COLOR,
+  EAGLE_HEAD,
+  EAGLE_HN,
+  IBEX_COLOR,
+  IBEX_HORN,
+  IBEX_MIN_TILES,
+  IBEX_SIGHT,
+  IBEX_SLOPE,
+  SEAL_COLOR,
+  TURTLE_COLOR,
+  TURTLE_TRAIL,
+  drawEagle,
+  drawFallSparks,
+  drawIbex,
+  fallSparks,
+  massifHeightAt,
+  sightFree,
   ANTLER_COLOR,
   DEER_BELLY,
   DEER_COLOR,
@@ -25,9 +44,13 @@ import {
   type FaunaEnv,
   type FaunaHit,
 } from '../../src/render/fauna';
+import { SUB, massifData, type MassifData } from '../../src/render/massif';
+import { seaContext, seaPlan } from '../../src/render/decor';
+import { fieldWorld } from '../../src/render/terrainField';
+import { dolphinsAt } from '../../src/render/wildlife';
 import { FLOWER_PALETTES, flowerPalette } from '../../src/render/groundDecor';
 import { LOD_ZOOM } from '../../src/render/archipel';
-import { CAPS } from '../../src/render/limits';
+import { CAPS, cap } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import { render, renderStats, type RenderFx } from '../../src/render/renderer';
 import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
@@ -89,6 +112,12 @@ const CAP_OF = {
   deer: 'deer',
   fox: 'fox',
   forestBird: 'forestBirds',
+  ibex: 'ibex',
+  eagle: 'eagle',
+  crab: 'crabs',
+  turtle: 'turtle',
+  seal: 'seals',
+  cormorant: 'cormorants',
 } as const;
 const SIGNALS = SIGNAL_NAMES.map((n) => PALETTE[n]);
 
@@ -245,14 +274,15 @@ describe('Fauna T1: Posen und Orte', () => {
     }
   });
 
-  it('Zoom: unter dem Mindestzoom der Art keine Tiere (Schmetterling, Hase, Fuchs ab 1; Reh, Vögel, Glühwürmchen ab 0,75)', () => {
+  it('Zoom: unter dem Mindestzoom der Art keine Tiere (Adler ab 0,5; Reh, Vögel, Glühwürmchen, Robben ab 0,75; Falter, Hase, Fuchs, Steinbock, Schildkröte, Kormoran ab 1; Krabbe ab 1,5)', () => {
     for (const seed of SEEDS) {
       const world = worldOf(seed);
       for (const phase of PHASES) {
         const at = (zoom: number) => idsAt(world, { phase, zoom }, 3100);
-        expect(at(0.5).size).toBe(0);
-        for (const id of at(0.75)) expect(['deer', 'forestBird', 'firefly']).toContain(id);
-        for (const id of at(1)) expect(id).toBeTruthy();
+        for (const id of at(0.5)) expect(['eagle'], `${id} bei Zoom 0,5`).toContain(id);
+        for (const id of at(0.75))
+          expect(['eagle', 'deer', 'forestBird', 'firefly', 'seal']).toContain(id);
+        for (const id of at(1)) expect(id).not.toBe('crab'); // Krabben erst ab 1,5
       }
     }
   });
@@ -364,7 +394,7 @@ describe('Fauna T1: Posen und Orte', () => {
 });
 
 describe('Fauna T1: Katalog und Los', () => {
-  it('faunaCatalog: eine Zeile je Art (14), T2-Arten als Platzhalter, present nur bei eligible', () => {
+  it('faunaCatalog: eine Zeile je Art (14), Glitzern als Zeile mit rarity E und eligible false, present nur bei eligible', () => {
     for (const seed of SEEDS) {
       const rows = faunaCatalog(worldOf(seed));
       expect(rows).toHaveLength(14);
@@ -373,20 +403,11 @@ describe('Fauna T1: Katalog und Los', () => {
         expect(['G', 'S', 'E']).toContain(r.rarity);
         if (r.present) expect(r.eligible).toBe(true);
       }
-      for (const id of [
-        'ibex',
-        'fall',
-        'eagle',
-        'crab',
-        'turtle',
-        'seal',
-        'cormorant',
-        'dolphin',
-      ]) {
-        const r = rows.find((x) => x.id === id)!;
-        expect(r.eligible).toBe(false);
-        expect(r.present).toBe(false);
-      }
+      // C7 Glitzern: Zeile ohne Treffer in `faunaAt` (L6 liefert den Wasserfall noch nicht in diese Branch), Seltenheit E
+      const fall = rows.find((x) => x.id === 'fall')!;
+      expect(fall.rarity).toBe('E');
+      expect(fall.eligible).toBe(false);
+      expect(fall.present).toBe(false);
       const s = rows.filter((r) => r.rarity === 'S').map((r) => r.id);
       expect(s.sort()).toEqual(['cormorant', 'deer', 'dolphin', 'fox', 'seal', 'turtle']);
     }
@@ -697,5 +718,550 @@ describe('Fauna T1: Quelltext', () => {
     const src = readFileSync('src/render/groundDecor.ts', 'utf8');
     expect(src).toMatch(/585–594/);
     expect(src).toMatch(/L7 im Einzelnen/);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// T2: Gebirge, Küste, Meer (C1, C7, C10, D7, D8, D10, E4); Delfine (E5) stehen in wildlife.test.ts
+// ---------------------------------------------------------------------------------------------------------
+const SEEDS20 = Array.from({ length: 20 }, (_, i) => i + 1);
+const T2_IDS = ['ibex', 'eagle', 'crab', 'turtle', 'seal', 'cormorant'] as const;
+const hitsOf = (world: World, id: string, env: FaunaEnv, step = 900, span = 70000): FaunaHit[] => {
+  const out: FaunaHit[] = [];
+  for (let t = 0; t < span; t += step)
+    for (const x of faunaAt(world, FULL, t, env)) if (x.id === id) out.push(x);
+  return out;
+};
+
+describe('Fauna T2: Orte und Haltung', () => {
+  it('Eignung über die Seeds 1–20 (Katalog): jede Art kommt auf mehreren Inseln vor', () => {
+    const el: Record<string, number> = {},
+      pr: Record<string, number> = {};
+    for (const seed of SEEDS20)
+      for (const r of faunaCatalog(worldOf(seed))) {
+        if (r.eligible) el[r.id] = (el[r.id] ?? 0) + 1;
+        if (r.present) pr[r.id] = (pr[r.id] ?? 0) + 1;
+      }
+    for (const id of ['ibex', 'eagle', 'crab', 'turtle', 'seal', 'cormorant', 'dolphin']) {
+      expect(el[id] ?? 0, `${id} eligible`).toBeGreaterThanOrEqual(5);
+      expect(pr[id] ?? 0, `${id} present`).toBeGreaterThanOrEqual(2);
+    }
+    expect(el.fall ?? 0).toBe(0);
+  });
+
+  it('Tageszeit und Wetter: keine der T2-Arten nachts, Adler nicht bei rain/storm', () => {
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const night = idsAt(world, { phase: 'night' }, 4100);
+      for (const id of T2_IDS) expect(night.has(id), `${id} nachts`).toBe(false);
+      for (const weather of ['rain', 'storm'] as const)
+        expect(idsAt(world, { phase: 'day', weather }, 4100).has('eagle'), weather).toBe(false);
+    }
+    const some = new Set<string>();
+    for (const seed of SEEDS20)
+      for (const id of idsAt(worldOf(seed), { phase: 'day' }, 4100)) some.add(id);
+    for (const id of T2_IDS) expect(some.has(id), `${id} am Tag`).toBe(true);
+  });
+
+  it('Zoom: Krabben erst ab 1,5, Steinbock, Schildkröte und Kormoran ab 1, Robben ab 0,75, Adler ab 0,5', () => {
+    const minZoom: Record<string, number> = {
+      crab: 1.5,
+      ibex: 1,
+      turtle: 1,
+      cormorant: 1,
+      seal: 0.75,
+      eagle: 0.5,
+    };
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      for (const [id, z] of Object.entries(minZoom)) {
+        const below = [0.3, z * 0.9].filter((v) => v < z);
+        for (const zoom of below)
+          expect(idsAt(world, { phase: 'day', zoom }, 5300).has(id), `${id} bei ${zoom}`).toBe(
+            false,
+          );
+      }
+    }
+    let crabs = 0;
+    for (const seed of SEEDS20)
+      crabs += hitsOf(worldOf(seed), 'crab', { phase: 'day', zoom: 1.5 }, 2500, 20000).length;
+    expect(crabs).toBeGreaterThan(0);
+  });
+
+  it('Kappen aller 13 Arten zusammen: Figuren im Bild höchstens 69 normal bzw. 9 reduziert (Delfine eingerechnet)', () => {
+    let peak = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      for (const reduce of [false, true])
+        for (const phase of PHASES)
+          for (let t = 0; t < 70000; t += 2300) {
+            const fauna = faunaAt(world, FULL, t, { phase, reduce }).length;
+            const d = dolphinsAt(world, t, reduce)?.dolphins.length ?? 0;
+            expect(fauna + d, `seed ${seed} reduce ${reduce}`).toBeLessThanOrEqual(reduce ? 9 : 69);
+            for (const [id, key] of Object.entries(CAP_OF))
+              expect(
+                faunaAt(world, FULL, t, { phase, reduce }).filter((x) => x.id === id).length,
+              ).toBeLessThanOrEqual(CAPS[key][reduce ? 1 : 0]);
+            if (!reduce) peak = Math.max(peak, fauna + d);
+          }
+    }
+    expect(peak).toBeGreaterThan(3);
+  });
+
+  it('Steinbock: Komponente ≥ 24 Kacheln, hn 0,3–0,7, flaches Band, Höhe aus dem Netz', () => {
+    let seen = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const data = massifData(fieldWorld(world));
+      for (const x of hitsOf(world, 'ibex', { phase: 'day' }, 3100)) {
+        seen++;
+        const comp = data.comps[data.compOf[x.ty * data.width + x.tx]!]!;
+        expect(comp, `Massiv unter dem Steinbock (seed ${seed})`).toBeTruthy();
+        expect(comp.n).toBeGreaterThanOrEqual(IBEX_MIN_TILES);
+        expect(x.layer).toBe('air');
+        expect(x.z).toBeCloseTo(massifHeightAt(data, x.x, x.y), 6);
+        const hn = x.z / comp.amp;
+        expect(hn).toBeGreaterThan(0.3 - 0.08);
+        expect(hn).toBeLessThan(0.7 + 0.08);
+        // flach: die Höhe ändert sich einen Knotenschritt (0,25 Kacheln) weit um höchstens 3 · IBEX_SLOPE (Platz 0,14 Kacheln neben dem Anker)
+        for (const [dx, dy] of [
+          [0.25, 0],
+          [-0.25, 0],
+          [0, 0.25],
+          [0, -0.25],
+        ] as const)
+          expect(Math.abs(massifHeightAt(data, x.x + dx, x.y + dy) - x.z)).toBeLessThanOrEqual(
+            3 * IBEX_SLOPE,
+          );
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  it('Steinbock sichtbar: kein Gelände davor in Kamerarichtung verdeckt den Standpunkt; die Prüfung greift (Gegenprobe)', () => {
+    let checked = 0,
+      rejected = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const data = massifData(fieldWorld(world));
+      for (const x of hitsOf(world, 'ibex', { phase: 'day' }, 3100)) {
+        checked++;
+        expect(sightFree(data, x.x, x.y, x.z, 0), `seed ${seed} @${x.x},${x.y}`).toBe(true);
+      }
+      // Gegenprobe: flache, mittelhohe Knoten, die verdeckt wären, gibt es (die Auswahl lässt sie weg)
+      for (const c of data.comps) {
+        if (c.n < IBEX_MIN_TILES) continue;
+        for (let j = 0; j < c.ny; j += 3)
+          for (let i = 0; i < c.nx; i += 3) {
+            const h = c.height[j * c.nx + i]!;
+            if (h / c.amp < 0.3 || h / c.amp > 0.7 || c.dist[j * c.nx + i]! < 0.7) continue;
+            if (!sightFree(data, (c.x0 * SUB + i) / SUB, (c.y0 * SUB + j) / SUB, h, IBEX_SIGHT))
+              rejected++;
+          }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+    expect(rejected).toBeGreaterThan(0);
+  });
+
+  it('sightFree gegen ein synthetisches Netz: eine Wand davor verdeckt, ein freies Feld nicht', () => {
+    const nx = 40,
+      ny = 40;
+    const height = new Float32Array(nx * ny);
+    const mk = (): MassifData =>
+      ({
+        comps: [{ x0: 0, y0: 0, x1: 9, y1: 9, nx, ny, height }],
+        width: 10,
+        height: 10,
+        compOf: new Int32Array(100),
+        sig: '',
+        seed: 0,
+      }) as unknown as MassifData;
+    const flat = mk();
+    expect(sightFree(flat, 2, 2, 20, 0)).toBe(true);
+    // Wand 1,5 Kacheln vor dem Punkt, 80 px hoch (mehr als 32 · 1,5 = 48 px über dem Punkt)
+    for (let j = 0; j < ny; j++)
+      for (let i = 0; i < nx; i++) {
+        const fx = i / SUB,
+          fy = j / SUB;
+        if (fx + fy >= 2 + 2 + 1.4 && fx + fy <= 2 + 2 + 1.7) height[j * nx + i] = 120;
+      }
+    expect(sightFree(mk(), 2, 2, 20, 0)).toBe(false);
+  });
+
+  it('Adler: kreist über hn ≥ 0,6, über dem Gelände, selten ein Flügelschlag', () => {
+    let seen = 0,
+      flaps = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const data = massifData(fieldWorld(world));
+      for (const x of hitsOf(world, 'eagle', { phase: 'day' }, 700, 50000)) {
+        seen++;
+        if (x.phase !== 0) flaps++;
+        expect(x.z).toBeGreaterThan(massifHeightAt(data, x.x, x.y));
+        // in 3 Kacheln Umkreis liegt ein Knoten mit hn ≥ 0,6
+        let ok = false;
+        for (const c of data.comps)
+          for (let j = 0; j < c.ny && !ok; j++)
+            for (let i = 0; i < c.nx && !ok; i++)
+              ok =
+                c.height[j * c.nx + i]! / c.amp >= EAGLE_HN &&
+                Math.hypot((c.x0 * SUB + i) / SUB - x.x, (c.y0 * SUB + j) / SUB - x.y) <= 3;
+        expect(ok, `seed ${seed}`).toBe(true);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+    expect(flaps / seen).toBeLessThan(0.2);
+  });
+
+  it('Krabben auf nassem Sand (Sand mit Wasser nebenan), huschen in Stössen', () => {
+    let seen = 0,
+      moved = 0;
+    const terr = (w: World, x: number, y: number) => home(w).tiles[y * home(w).width + x]?.terrain;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const first = new Map<string, number>();
+      for (const x of hitsOf(world, 'crab', { phase: 'day', zoom: 1.5 }, 400, 20000)) {
+        seen++;
+        if (x.state === 1) moved++;
+        let wet = false;
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) wet ||= terr(world, x.tx + dx, x.ty + dy) === 'water';
+        expect(wet).toBe(true);
+        first.set(`${x.tx}`, 1);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+    expect(moved).toBeGreaterThan(0);
+    expect(moved / seen).toBeLessThan(0.5);
+  });
+
+  it('Schildkröte: ruhiger Strand ≥ 8 Kacheln vom Kontor, kriecht Wasser ↔ Strand, Spur auf Sand verblasst', () => {
+    let seen = 0,
+      trails = 0;
+    const xs = new Set<number>();
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const k = world.buildings[home(world).kontorId]!;
+      const kc = center(BUILDING_DEFS.kontor, k.x, k.y);
+      const isl = home(world);
+      for (const x of hitsOf(world, 'turtle', { phase: 'day' }, 1500, 120000)) {
+        seen++;
+        expect(Math.hypot(x.x - kc.cx, x.y - kc.cy)).toBeGreaterThanOrEqual(8 - 1.2);
+        xs.add(Math.round(x.x * 10));
+        expect(x.layer).toBe('ground');
+        const tr = x.trail ?? [];
+        for (let i = 0; i < tr.length; i++) {
+          trails++;
+          expect(isl.tiles[Math.floor(tr[i]!.y) * isl.width + Math.floor(tr[i]!.x)]!.terrain).toBe(
+            'sand',
+          );
+          expect(tr[i]!.a).toBeGreaterThan(0);
+          expect(tr[i]!.a).toBeLessThanOrEqual(0.55);
+          if (i > 0) expect(tr[i]!.a).toBeLessThan(tr[i - 1]!.a);
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
+    expect(trails).toBeGreaterThan(0);
+    expect(xs.size).toBeGreaterThan(3);
+  });
+
+  it('Robben auf Sandbank oder Fels, Kormorane auf Meeresfels (nie Felsnadel), Schlüssel der Kachel; weichen einem Kontor in < 4 Kacheln', () => {
+    let seals = 0,
+      corm = 0,
+      onRock = 0,
+      onBank = 0;
+    for (const seed of SEEDS20) {
+      const world = createWorld(seed);
+      const plan = seaPlan(world.seed, home(world), seaContext(world));
+      const rocks = new Set(plan.rocks.filter((r) => !r.needle).map((r) => `${r.x},${r.y}`));
+      const banks = new Set(plan.sandbanks.flatMap((a) => a.tiles.map((t) => `${t.x},${t.y}`)));
+      for (const x of hitsOf(world, 'cormorant', { phase: 'day' }, 5000)) {
+        corm++;
+        expect(rocks.has(`${x.tx},${x.ty}`), 'Kormoran auf Fels').toBe(true);
+        expect(x.key).toBe(2 * x.tx + 2 * x.ty + 2);
+      }
+      for (const x of hitsOf(world, 'seal', { phase: 'day' }, 5000)) {
+        seals++;
+        const k = `${x.tx},${x.ty}`;
+        expect(rocks.has(k) || banks.has(k), 'Robbe auf Fels oder Bank').toBe(true);
+        if (rocks.has(k)) onRock++;
+        else onBank++;
+      }
+      // Kontor in der Nähe blendet die Meer-Tiere aus; Abriss bringt sie zurück
+      const all = [
+        ...hitsOf(world, 'cormorant', { phase: 'day' }, 9000, 9001),
+        ...hitsOf(world, 'seal', { phase: 'day' }, 9000, 9001),
+      ];
+      const victim = all[0];
+      if (victim) {
+        const id = 99999;
+        world.buildings[id] = {
+          id,
+          defId: 'kontor',
+          x: victim.tx - 2,
+          y: victim.ty,
+          island: 0,
+        } as unknown as World['buildings'][number];
+        const gone = [
+          ...hitsOf(world, 'cormorant', { phase: 'day' }, 9000, 9001),
+          ...hitsOf(world, 'seal', { phase: 'day' }, 9000, 9001),
+        ];
+        expect(gone.some((g) => g.tx === victim.tx && g.ty === victim.ty)).toBe(false);
+        delete world.buildings[id];
+        const back = [
+          ...hitsOf(world, 'cormorant', { phase: 'day' }, 9000, 9001),
+          ...hitsOf(world, 'seal', { phase: 'day' }, 9000, 9001),
+        ];
+        expect(back.some((g) => g.tx === victim.tx && g.ty === victim.ty)).toBe(true);
+      }
+    }
+    expect(corm).toBeGreaterThan(0);
+    expect(seals).toBeGreaterThan(0);
+    expect(onRock + onBank).toBe(seals);
+  });
+
+  it('Glitzern: Funken liegen auf dem Pfad, wandern abwärts, höchstens Budget, reduziert keine, deterministisch', () => {
+    const path = Array.from({ length: 12 }, (_, i) => ({
+      I: 20 + i * 1.5,
+      J: 8 + i * 2,
+      h: 90 - i * 7,
+      w: 2,
+      steep: 0.6,
+    }));
+    const onPath = (x: number, y: number, z: number): boolean => {
+      for (let i = 0; i + 1 < path.length; i++) {
+        const a = path[i]!,
+          b = path[i + 1]!;
+        const ax = a.I / SUB,
+          ay = a.J / SUB,
+          bx = b.I / SUB,
+          by = b.J / SUB;
+        const l2 = (bx - ax) ** 2 + (by - ay) ** 2;
+        const u = ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / l2;
+        if (u < -1e-9 || u > 1 + 1e-9) continue;
+        if (
+          Math.hypot(ax + (bx - ax) * u - x, ay + (by - ay) * u - y) < 1e-6 &&
+          Math.abs(a.h + (b.h - a.h) * u - z) < 1e-6
+        )
+          return true;
+      }
+      return false;
+    };
+    const budget = cap('glitter');
+    expect(budget).toBe(30);
+    expect(fallSparks(path, 5, 1234, cap('glitter', true))).toEqual([]);
+    const a = fallSparks(path, 5, 1234, budget);
+    expect(JSON.stringify(a)).toBe(JSON.stringify(fallSparks(path, 5, 1234, budget)));
+    expect(a.length).toBeGreaterThan(0);
+    expect(a.length).toBeLessThanOrEqual(budget);
+    expect(fallSparks(path, 5, 1234, 4).length).toBeLessThanOrEqual(4);
+    expect(fallSparks(path.slice(0, 1), 5, 1234, budget)).toEqual([]);
+    let down = 0,
+      total = 0;
+    for (let t = 0; t < 6000; t += 100) {
+      const s0 = fallSparks(path, 5, t, budget),
+        s1 = fallSparks(path, 5, t + 50, budget);
+      s0.forEach((q, k) => {
+        expect(onPath(q.x, q.y, q.z), `Funke ${k} bei ${t}`).toBe(true);
+        expect(q.alpha).toBeGreaterThanOrEqual(0);
+        expect(q.alpha).toBeLessThanOrEqual(1);
+        total++;
+        if (s1[k]!.z < q.z) down++;
+      });
+    }
+    expect(down / total).toBeGreaterThan(0.95);
+  });
+
+  it('Pose deterministisch (zwei Aufrufe gleich), Welt unverändert, kein Math.random auch für die T2-Arten', () => {
+    const rnd = vi.spyOn(Math, 'random');
+    for (const seed of [1, 2, 3, 5]) {
+      const world = createWorld(seed);
+      const before = JSON.stringify(world);
+      for (const phase of PHASES)
+        for (const t of [0, 4321, 99999]) {
+          const x = JSON.stringify(faunaAt(world, FULL, t, { phase, zoom: 2 }));
+          expect(JSON.stringify(faunaAt(world, FULL, t, { phase, zoom: 2 }))).toBe(x);
+        }
+      expect(JSON.stringify(world)).toBe(before);
+    }
+    expect(rnd).not.toHaveBeenCalled();
+    rnd.mockRestore();
+  });
+});
+
+describe('Fauna T2: Zeichner (Fake-Kontext)', () => {
+  const cam: Camera = { x: 0, y: 0, zoom: 1.5 };
+  const mk = (
+    id: FaunaHit['id'],
+    layer: FaunaHit['layer'],
+    extra: Partial<FaunaHit> = {},
+  ): FaunaHit => ({
+    id,
+    layer,
+    x: 10.5,
+    y: 10.5,
+    z: 20,
+    tx: 10,
+    ty: 10,
+    key: 22,
+    alpha: 1,
+    flip: 1,
+    state: 0,
+    phase: 0.5,
+    variant: 0,
+    ...extra,
+  });
+  const luma = (c: [number, number, number]): number =>
+    (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  const draws: [string, (ctx: CanvasRenderingContext2D) => void][] = [
+    ['Krabbe ruht', (ctx) => drawGroundFauna(ctx, cam, mk('crab', 'ground', { z: 0 }))],
+    [
+      'Krabbe huscht',
+      (ctx) => drawGroundFauna(ctx, cam, mk('crab', 'ground', { z: 0, state: 1, phase: 0.4 })),
+    ],
+    [
+      'Schildkröte mit Spur',
+      (ctx) =>
+        drawGroundFauna(
+          ctx,
+          cam,
+          mk('turtle', 'ground', {
+            z: 0,
+            state: 1,
+            flip: -1,
+            trail: [
+              { x: 10.3, y: 10.3, a: 0.45 },
+              { x: 10.1, y: 10.1, a: 0.3 },
+            ],
+          }),
+        ),
+    ],
+    ['Robbe liegt', (ctx) => drawGroundFauna(ctx, cam, mk('seal', 'ground', { z: 0 }))],
+    [
+      'Robbe Kopf',
+      (ctx) => drawGroundFauna(ctx, cam, mk('seal', 'ground', { z: 0, state: 1, phase: 1 })),
+    ],
+    [
+      'Robbe Schwanz',
+      (ctx) =>
+        drawGroundFauna(ctx, cam, mk('seal', 'ground', { z: 0, state: 2, phase: 1, flip: -1 })),
+    ],
+    ['Kormoran', (ctx) => drawGroundFauna(ctx, cam, mk('cormorant', 'ground', { z: 10 }))],
+    [
+      'Kormoran trocknet',
+      (ctx) => drawGroundFauna(ctx, cam, mk('cormorant', 'ground', { z: 10, phase: 1 })),
+    ],
+    [
+      'Steinbock',
+      (ctx) =>
+        drawIbex(ctx, cam, [
+          mk('ibex', 'air', { variant: 1 }),
+          mk('ibex', 'air', { state: 1, x: 12 }),
+        ]),
+    ],
+    [
+      'Adler',
+      (ctx) =>
+        drawEagle(ctx, cam, [
+          mk('eagle', 'air', { z: 120, phase: 0.8 }),
+          mk('eagle', 'air', { phase: 0, flip: -1 }),
+        ]),
+    ],
+    [
+      'Funken',
+      (ctx) =>
+        drawFallSparks(ctx, cam, [
+          { x: 10, y: 10, z: 50, alpha: 1 },
+          { x: 10.2, y: 10.2, z: 30, alpha: 0.4 },
+        ]),
+    ],
+  ];
+
+  it('jede Farbe ΔE2000 ≥ 20 zu allen signal*-Farben; keine Linie in Schwarz oder reinem Weiss', () => {
+    for (const [name, run] of draws) {
+      const { ctx, log } = fakeCtx();
+      run(ctx);
+      expect(log.events.length, name).toBeGreaterThan(0);
+      for (const op of ['fill', 'stroke'] as const)
+        for (const style of new Set(log.events.filter((e) => e.op === op).map((e) => e.style))) {
+          const c = rgbOfCss(style);
+          for (const sig of SIGNALS)
+            expect(
+              deltaE2000(rgbToLab(c), rgbToLab(rgbOfCss(sig))),
+              `${name} ${op} ${style} zu ${sig}`,
+            ).toBeGreaterThanOrEqual(20);
+          if (op === 'stroke') {
+            expect(luma(c), `${name} Linie ${style} nahe Schwarz`).toBeGreaterThanOrEqual(0.08);
+            expect(
+              c.every((v) => v >= 250),
+              `${name} Linie ${style} reines Weiss`,
+            ).toBe(false);
+          }
+        }
+    }
+  });
+
+  it('die Tierfarben der T2-Arten (Konstanten): ΔE ≥ 20 zu den Signalfarben, Eigenton dunkler', () => {
+    for (const col of [
+      CRAB_COLOR,
+      TURTLE_COLOR,
+      TURTLE_TRAIL,
+      SEAL_COLOR,
+      CORMORANT_COLOR,
+      IBEX_COLOR,
+      IBEX_HORN,
+      EAGLE_COLOR,
+      EAGLE_HEAD,
+    ])
+      for (const sig of SIGNALS)
+        expect(
+          deltaE2000(rgbToLab(rgbOfCss(col)), rgbToLab(rgbOfCss(sig))),
+          `${col} zu ${sig}`,
+        ).toBeGreaterThanOrEqual(20);
+    // Korallenrot der Krabbe liegt weit genug von signalRed und signalWarn
+    for (const sig of [PALETTE.signalRed, PALETTE.signalWarn])
+      expect(
+        deltaE2000(rgbToLab(rgbOfCss(CRAB_COLOR)), rgbToLab(rgbOfCss(sig))),
+      ).toBeGreaterThanOrEqual(20);
+    // Kopf des Adlers heller als der Körper, nicht weiss
+    expect(luma(rgbOfCss(EAGLE_HEAD))).toBeGreaterThan(luma(rgbOfCss(EAGLE_COLOR)));
+    expect(rgbOfCss(EAGLE_HEAD).every((v) => v >= 250)).toBe(false);
+  });
+
+  it('save und restore ausgeglichen, Matrix danach wie vorher, keine Bodenmatrix', () => {
+    for (const [name, run] of draws) {
+      const { ctx, log } = fakeCtx();
+      run(ctx);
+      expect(log.saves, name).toBe(log.restores);
+      expect(log.underflow, name).toBe(0);
+      expect(log.matrix, name).toEqual([1, 0, 0, 1, 0, 0]);
+      expect(
+        log.events.filter((e) => e.op === 'transform'),
+        name,
+      ).toHaveLength(0);
+    }
+  });
+
+  it('Funken gebündelt: wenige Füllungen unabhängig von der Anzahl', () => {
+    const { ctx, log } = fakeCtx();
+    drawFallSparks(
+      ctx,
+      cam,
+      Array.from({ length: 30 }, (_, i) => ({
+        x: 10,
+        y: 10 + i * 0.1,
+        z: 40,
+        alpha: (i % 10) / 10,
+      })),
+    );
+    expect(log.events.filter((e) => e.op === 'fill').length).toBeLessThanOrEqual(4);
+  });
+
+  it('Quelltext: groundDecor-Kopf nennt die T2-Salze', () => {
+    const gd = readFileSync('src/render/groundDecor.ts', 'utf8');
+    expect(gd).toMatch(/591/);
+    expect(gd).toMatch(/594/);
   });
 });
