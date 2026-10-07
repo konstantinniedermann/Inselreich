@@ -263,3 +263,30 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Rater nur im Release-Lauf.
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
 - Ruling: –
+
+## E-034 · vorgeschlagen · Übergabe-Prüfzeile bei Session-Abbruch
+
+- Hypothese: Wenn L0 beim Abbruch Agenten mit Heartbeat < 10 min in `state.md` als „kann weiterlaufen“ nennt und beim Start vor jedem Neustart Worktree-Stand und Dashboard prüft, entstehen keine zwei Schreiber im selben Worktree und `state.md` ist nicht veraltet (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md) B1).
+- Messgrösse: bei den nächsten 3 Abbrüchen oder Pausen 0 Worktrees mit zwei Schreibern und 0 Abweichungen zwischen `state.md` und Worktree-HEAD beim Start (Ausgang: 1 Abweichung bei L7 in 1 Abbruch).
+- Zeitraum: die nächsten 3 Abbrüche, höchstens 4 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Ende, Punkt 1; Start, Punkt 5)
+- Ruling: –
+
+## E-035 · vorgeschlagen · Überholte CI-Vorfälle automatisch erledigen
+
+- Hypothese: Wenn `effort.incidents()` einen roten main-Lauf auslässt, sobald derselbe Workflow später auf main grün lief, erscheinen keine erledigten „CI auf main fehlgeschlagen“-Meldungen mehr (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md) B3).
+- Messgrösse: 0 offene `ci:`-Vorfälle bei grünem main in den nächsten 2 Sessions; alle roten Läufe weiter in den CI-Events und der Metrik sichtbar (Stichprobe `metrics.py`); Retro-Pflicht für rote Läufe unverändert (Rot ist im Retro-Bericht genannt).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: Änderung in `effort.py` zurücknehmen (`git revert`).
+- Dateien: `tools/studio/effort.py`, `tools/studio/tests/test_effort.py`
+- Ruling: –
+
+## E-036 · vorgeschlagen · Cache-Write je Instanz gegen Wartezeit ausweisen
+
+- Hypothese: Der Cache-Write-Anteil (rot, 42,9 %) entsteht überwiegend nach Lücken > 5 min ohne Aufruf; die Auswertung je Instanz bestätigt oder widerlegt das (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md), Ampel).
+- Messgrösse: Anteil der Neuschreibungen > 20k direkt nach einer Lücke > 5 min; Schwelle: ≥ 60 % bestätigt die Hypothese, dann folgt ein eigenes Experiment zur Wartegestaltung; < 30 % widerlegt sie.
+- Zeitraum: eine Auswertung über die letzten 5 Sessions, danach Bewertung.
+- Rückfall: Zusatz in `metrics.py` entfernen; rein lesend, keine Änderung am Ablauf.
+- Dateien: `tools/studio/metrics.py`
+- Ruling: –
