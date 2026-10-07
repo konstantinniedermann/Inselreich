@@ -2638,3 +2638,15 @@ Fragen, ein opus-Review, Gate, Push. Perf: Seed 7 liegt mit WALD-02 genau auf +0
 Lauf gegen main. — Kosten bei Irrtum: ein Häppchen fliegt aus dem Kandidaten.
 
 Entscheider: L0 · Anlass: Bericht lead-art WALD-02 · ADR: —
+
+## R310 · 2026-10-07 · REL-07: Konflikte auf eigenem Auflösungs-Branch
+
+Ruling: Der Integrator brach den L5-Merge ab (Code-Konflikt `tests/render/renderer.test.ts`). Probe-Merges
+(`git merge-tree`) zeigen Code-Konflikte zwischen WALD-02, L6 und L7 (`forest.ts`, `iso.ts`, `terrain.ts`, `trees.ts`,
+Render-Tests). L7 enthält L5 und ist mit main schon konfliktfrei bis auf `docs/beobachtungen.md`. Darum: lead-art baut
+`int/rel-07` (Worktree `.worktrees/rel07-aufloesung`) von `feat/wald-02`, mergt L7, dann L6, löst die Konflikte
+inhaltlich (keine Funktion eines Häppchens fällt weg) und macht `make check` und `CI=true make check` grün. Der
+Integrator mergt danach nur `int/rel-07` in `rel/rel-07`. Ändert die Auflösung Zeichnen oder Perf, misst der Release-Lauf
+das mit. — Kosten bei Irrtum: eine Auflösungsrunde mehr.
+
+Entscheider: L0 · Anlass: Bericht Integrator REL-07 · ADR: —
