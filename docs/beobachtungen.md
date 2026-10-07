@@ -371,3 +371,12 @@ RENDER-LOOK-01 erst danach.
   Ursprung: Release-Lauf REL-06.
 - 2026-10-06 · Blindtest L3 · Spielbilder ohne Statusmarken; künftige Blindtests mit Szene inklusive Marken.
   Einschätzung: niedrig, Prüf-Vorlage. Ursprung: Release-Lauf REL-06.
+
+### 2026-10-07 · Render · Fauna L7 (ART-STIL-02)
+
+- 2026-10-07 · `src/render/fauna.ts` C7 · Das Gischt-Glitzern am Kliff (C7) hat Pose und Zeichner, hängt aber erst nach
+  dem Merge von L6 und L7 am Renderer. Einschätzung: mittel, beim L6/L7-Zusammenführen anschliessen und im Browser
+  prüfen. Ursprung: Review L7.
+- 2026-10-07 · `tests/render/fauna.test.ts` „Eignung über die Seeds 1–20“ · Lief unter starker Rechnerlast einmal 689 s
+  statt ≈ 6 s und riss das 5-s-Limit. Einschätzung: niedrig, Kandidat für die Zeitreserve-Prüfung bzw. `ZEITTESTS`.
+  Ursprung: L7 Fix-Runde 2.
