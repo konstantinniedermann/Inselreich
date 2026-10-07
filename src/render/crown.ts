@@ -174,11 +174,16 @@ export function crownGeom(
  * damit eine Atlas-Kachel (Krone plus Stamm) für alle Radien gilt. Nadel tief angesetzt (Rock bis zum Boden),
  * Birke und Jungbaum mit sichtbarem Stamm, Busch am Boden.
  */
-export function heightFactor(c: Pick<Crown, 'kind' | 'bush' | 'young'>): number {
+export function heightFactor(c: Pick<Crown, 'kind' | 'bush' | 'young'> & { s?: number }): number {
   if (c.bush) return 0.55;
   if (c.young) return c.kind === 1 ? 0.95 : 1.15;
+  // Pinie: Stammhöhe je Form (5 Stufen), damit die Schirme nicht in einer Ebene liegen und sich zu Bändern stapeln;
+  // ohne Formwert gilt die höchste Stufe (Höhengrenze)
+  if (c.kind === 3)
+    return c.s === undefined ? PINE_HF[3]! : PINE_HF[Math.min(4, Math.floor(c.s * 5))]!;
   return [0.95, 0.72, 1.2, 0.85, 0.95][c.kind]!;
 }
+const PINE_HF = [0.8, 1.25, 0.95, 1.45, 1.1] as const;
 
 /** Halbhöhe der Krone je Kachel Radius (`hh / r`), höchstens über alle Formwerte: für die Höhengrenze. */
 const hhUnitCache = new Map<string, number>();
@@ -194,5 +199,7 @@ export function hhPerRadius(c: Pick<Crown, 'kind' | 'bush' | 'young'>): number {
 }
 
 /** Grösster Radius, bei dem Krone samt Stamm unter `top` Weltpixeln bleibt. */
-export const maxRadius = (c: Pick<Crown, 'kind' | 'bush' | 'young'>, top = TREE_H): number =>
-  top / ((heightFactor(c) + 1) * hhPerRadius(c));
+export const maxRadius = (
+  c: Pick<Crown, 'kind' | 'bush' | 'young'> & { s?: number },
+  top = TREE_H,
+): number => top / ((heightFactor(c) + 1) * hhPerRadius(c));

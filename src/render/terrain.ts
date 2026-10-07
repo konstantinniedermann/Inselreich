@@ -819,6 +819,8 @@ function waterColor(d: number, o: number[]): void {
 
 /** Halbe Breite des Übergangs Wiese → Waldboden in S-Einheiten (≈ 0,15 Kachel an einer geraden Kante). */
 const FLOOR_SOFT = 0.07;
+/** Der dunkle Boden beginnt etwas innerhalb der Saumlinie (S-Einheiten), wo das Kronendach dichter wird: kein Hof. */
+const FLOOR_INSET = 0.06;
 /** Randaufhellung des Waldbodens: von der Saumlinie bis SAUM_LEVEL + FLOOR_EDGE_SPAN (lichter Rand). */
 const FLOOR_EDGE_SPAN = 0.3;
 /** Schattenlänge zum Licht hin (Kacheln): junger und alter Bestand. */
@@ -839,7 +841,7 @@ const smooth01 = (t: number): number => {
 };
 /** Anteil Waldboden am Saumwert s (0 Wiese, 1 Wald). */
 const floorShare = (s: number): number =>
-  smooth01((s - (SAUM_LEVEL - FLOOR_SOFT)) / (2 * FLOOR_SOFT));
+  smooth01((s - (SAUM_LEVEL + FLOOR_INSET - FLOOR_SOFT)) / (2 * FLOOR_SOFT));
 /** Weichgezeichnete Geländewald-Maske der Felder (je Aufruf neu: `patchGrid` ändert die Felder an Ort und Stelle). */
 function woodMaskOf(fields: TerrainFields): WoodMask {
   const f = fields.types.forest;

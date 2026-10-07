@@ -293,7 +293,10 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       r: Math.min(
         r,
         OVERHANG,
-        maxRadius({ kind, bush: flags.bush === true, young: flags.young === true }, top),
+        maxRadius(
+          { kind, bush: flags.bush === true, young: flags.young === true, s: shapeValue(shape) },
+          top,
+        ),
       ),
       h: 0,
       bush: flags.bush === true,
