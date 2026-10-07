@@ -2535,3 +2535,14 @@ beendet; Messungen seriell. `pkill -f "vitest run"` eines Engineers → Retro (R
 bleiben eine Release länger eckig.
 
 Entscheider: L0 · Anlass: Bericht lead-art L1-Fix · ADR: —
+
+## R300 · 2026-10-07 · REL-06 mit L1-Fix als Zwischenstand, Wald zweiter Anlauf
+
+Ruling: Rater-Nachprüfung: Frage 2 weiter durchgefallen (Nadelwald-Teppich), Frage 1 grenzwertig; zwei Bild-Runden
+sind ausgeschöpft (R211). L1 lässt sich nicht aus dem Kandidaten lösen (L2/L4 gestapelt). REL-06 geht mit L1-Fix
+live, sobald dessen A/B-Messung ≤ +0,5 ms hält: gegenüber main messbar weniger repetitiv (gleiche Diagonal-Stempel
+0,315 → 0,145), L2–L4 bestanden, der Nutzer will Fortschritt in der Produktion (R281). Direkt danach Paket
+**WALD-02** (zweiter Anlauf inkl. Waldsaum, Mandat auch für Struktur-Umbau in `src/render/`) vor L5–L8. — Kosten bei
+Irrtum: Nutzer sieht den Wald noch nicht am Ziel; Bericht sagt das offen.
+
+Entscheider: L0 · Anlass: `.studio/qa/rel-06/blind/nach-l1r2.md` · ADR: —
