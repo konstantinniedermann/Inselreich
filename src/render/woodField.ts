@@ -22,6 +22,16 @@ export interface WoodMask {
 
 /** Höhenlinie der sichtbaren Waldkante (dichtes Kronendach und dunkler Waldboden). */
 export const SAUM_LEVEL = 0.5;
+/** Halbe Breite des Übergangs Wiese → Waldboden in S-Einheiten (≈ 0,15 Kachel an einer geraden Kante). */
+export const FLOOR_SOFT = 0.07;
+/** Der dunkle Boden beginnt etwas innerhalb der Saumlinie (S-Einheiten), wo das Kronendach dichter wird: kein Hof. */
+const FLOOR_INSET = 0.12;
+/** Anteil Waldboden am Saumwert s (0 Wiese, 1 Wald); terrain.ts malt ihn, forest.ts deckt ihn mit Kronen. */
+export function floorShare(s: number): number {
+  const t = (s - (SAUM_LEVEL + FLOOR_INSET - FLOOR_SOFT)) / (2 * FLOOR_SOFT);
+  const u = t < 0 ? 0 : t > 1 ? 1 : t;
+  return u * u * (3 - 2 * u);
+}
 /** Grösste Verschiebung der Höhenlinie durch das Rauschen in S-Einheiten: nach aussen und nach innen. */
 const SAUM_OUT = 0.36,
   SAUM_IN = 0.46;

@@ -14,7 +14,7 @@ import {
 } from './crown';
 import { ISO_W } from './isoBase';
 import { rotNoise } from './light';
-import { SAUM_LEVEL, saumAt, woodBlur, woodNoise, type WoodMask } from './woodField';
+import { SAUM_LEVEL, floorShare, saumAt, woodBlur, woodNoise, type WoodMask } from './woodField';
 
 // forest.ts — reine Platzierung des Waldes (ART-STIL-02 L1, WALD-02; Spec 2.1, 3.2 B1–B5, 3.7). Kein Canvas, kein DOM.
 //
@@ -103,6 +103,43 @@ const smooth01 = (t: number): number => {
   const u = clamp(t, 0, 1);
   return u * u * (3 - 2 * u);
 };
+
+/** Rottenfeld des Nadelwalds 0…1 (Salz 529, Merkmal ROTTE_PERIOD): 1 dichte Rotte, 0 lichte Partie. */
+const rotteField = (seed: number, fx: number, fy: number): number =>
+  smooth01((rotNoise(seed + 529, fx, fy, 1 / ROTTE_PERIOD, 2.4) - 0.36) / 0.28);
+/** Horste und kleine Bestandslücken im Kern (Salz 528, Merkmal ≈ 2,5 Kacheln): Faktor auf die Annahme. */
+const horstFactor = (seed: number, fx: number, fy: number, core: number): number =>
+  1 - HORST_DEPTH * core * smooth01((0.55 - rotNoise(seed + 528, fx, fy, 1 / 2.5, 1.9)) / 0.3);
+/**
+ * Fix-Runde 3 B: Bestandsdichte 0…1 am Punkt mit Saumwert `s`: dieselben Faktoren (Lichtung im Kern, Rotten des
+ * Nadelwalds, Horste), die die Annahme der Kronen senken. 1 dichtes Dach, klein in lichten Partien.
+ */
+export function standDensity(seed: number, fx: number, fy: number, s: number): number {
+  const core = smooth01((s - SAUM_LEVEL) / CORE_SPAN);
+  const gap = core > 0.6 ? forestClearing(seed, fx, fy) : 0;
+  const conifer = slotKind(seed, slotAt(seed, forestType(seed), fx, fy)) === 1;
+  const light = conifer ? LIGHT_ACCEPT + (1 - LIGHT_ACCEPT) * rotteField(seed, fx, fy) : 1;
+  return (1 - 0.85 * gap) * light * horstFactor(seed, fx, fy, core);
+}
+/** Fix-Runde 3 B: Waldboden je Bestandsdichte: unter DENSE_LO nur FLOOR_LIGHT des Bodens, ab DENSE_HI voll. */
+const FLOOR_LIGHT = 0.35,
+  DENSE_LO = 0.3,
+  DENSE_HI = 0.75,
+  /** erst ab diesem Anteil des lichten Randes (CORE_SPAN) wirkt die Dichte: der Saum selbst bleibt unverändert */
+  FLOOR_INNER = 0.3;
+/**
+ * Faktor auf den Waldbodenanteil (`floorShare`) am Punkt mit Saumwert `s`: lichte Partien im Innern sind zur Wiese
+ * gemischt (Bestandsdichte unter DENSE_LO: nur FLOOR_LIGHT); am Saum (bis FLOOR_INNER · CORE_SPAN) bleibt der Boden.
+ */
+export function floorFactor(seed: number, fx: number, fy: number, s: number): number {
+  const inner = smooth01(
+    (s - SAUM_LEVEL - FLOOR_INNER * CORE_SPAN) / ((1 - FLOOR_INNER) * CORE_SPAN),
+  );
+  if (inner <= 0) return 1;
+  const d = standDensity(seed, fx, fy, s);
+  const k = FLOOR_LIGHT + (1 - FLOOR_LIGHT) * smooth01((d - DENSE_LO) / (DENSE_HI - DENSE_LO));
+  return 1 - (1 - k) * inner;
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Darstellungswerte der Platzierung
@@ -209,6 +246,18 @@ export interface WoodInput {
  */
 const FRONT_R = 0.13,
   FRONT_SET = 0.5;
+/**
+ * Fix-Runde 3 B: Nachsetzen unter dunklem Boden. Ab Waldbodenanteil FILL_DARK gilt der Boden als dunkel; Abtastung
+ * FILL_STEPS × FILL_STEPS je Kachel; Kronenrand höchstens FILL_REACH (Kacheln) entfernt (Ziel ≤ 0,3 im Bild, mit Reserve
+ * für die Rasterung des Bodens). Lage und Form aus den Kandidaten-Würfen (Salz 521) mit Indizes jenseits der
+ * Kandidaten (j ab FILL_J0 = CAND_FOREST, Wurf k ab 8): keine eigene Periodik, kein neues Salz.
+ */
+const FILL_DARK = 0.42,
+  FILL_STEPS = 5,
+  FILL_REACH = 0.2,
+  /** auf Wiesenkacheln etwas weiter (Wiese bleibt Wiese: höchstens 1,5 Gehölze je Vorwaldkachel, RF-W-3) */
+  FILL_REACH_MEADOW = 0.26,
+  FILL_J0 = 12;
 
 /** Ein Wald-Objekt: Kachel (für Sortierung und Culling) und seine Kronen, Fusspunkte relativ zur Kachel. */
 export interface WoodCell {
@@ -390,7 +439,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     return tone;
   }
   function rotteAt(fx: number, fy: number): number {
-    return smooth01((rotNoise(seed + 529, fx, fy, 1 / ROTTE_PERIOD, 2.4) - 0.36) / 0.28);
+    return rotteField(seed, fx, fy);
   }
   function forestCrown(
     fx: number,
@@ -411,8 +460,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const rotte = conifer ? rotteAt(fx, fy) : 1;
     accept *= LIGHT_ACCEPT + (1 - LIGHT_ACCEPT) * rotte;
     // Horste und kleine Bestandslücken im Kern (Merkmal ≈ 2,5 Kacheln): das Dach ist kein Teppich
-    accept *=
-      1 - HORST_DEPTH * core * smooth01((0.55 - rotNoise(seed + 528, fx, fy, 1 / 2.5, 1.9)) / 0.3);
+    accept *= horstFactor(seed, fx, fy, core);
     // Totholz (B3) in Lücken und im lichten Kern
     if (rnd(x, y, j, 7) < DEAD_P * (0.3 + 2 * gap) && core > 0.5) {
       const dead = rnd(x, y, j, 8) < 0.7 ? 1 : 2;
@@ -755,6 +803,74 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       }
     }
   }
+
+  // Fix-Runde 3 B: kein dunkler Boden ohne Bäume. Wo der Boden dunkel ist (Waldbodenanteil wie terrain.ts), steht
+  // eine Krone höchstens FILL_REACH entfernt; jede Kachel mit dunkler Mitte trägt einen Altbaum oder zwei Jungbäume.
+  const floorAt = (fx: number, fy: number): number => {
+    const sv = S(fx, fy);
+    const f = floorShare(sv);
+    return f < FILL_DARK ? f : f * floorFactor(seed, fx, fy, sv);
+  };
+  const gapTo = (fx: number, fy: number): number => {
+    const x0 = Math.floor(fx),
+      y0 = Math.floor(fy);
+    let d = Infinity;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++)
+        for (const o of grid.get(keyOf(x0 + dx, y0 + dy)) ?? [])
+          if (!o.c.dead) d = Math.min(d, Math.hypot(o.fx - fx, o.fy - fy) - o.c.r);
+    return d;
+  };
+  /** Würfel des Abtastpunkts `i` (0…24) einer Kachel, Komponente `comp` (0, 1). */
+  const fillRnd = (tx: number, ty: number, i: number, comp: number): number =>
+    rnd(tx, ty, FILL_J0 + (i % 20), 8 + 2 * Math.floor(i / 20) + comp);
+  const fill = (fx: number, fy: number, tx: number, ty: number, i: number): boolean => {
+    const k = ty * w + tx;
+    const j = FILL_J0 + (i % 20);
+    const meadow = free[k] === 2;
+    const kind = slotKind(seed, slotAt(seed, type, fx, fy));
+    // auf der Wiese niedriger Jungwuchs (Vorwaldhöhe), im Wald ein kleiner Altbaum
+    const c = meadow
+      ? makeCrown(kind, 0.14 + 0.04 * rnd(tx, ty, j, 5), tx, ty, j, { young: true }, VORWALD_TOP)
+      : makeCrown(kind, 0.14 + 0.05 * rnd(tx, ty, j, 5), tx, ty, j, {}, TREE_H);
+    c.tone = toneAt(fx, fy, tx, ty, j);
+    if (meadow) c.cast = true;
+    return put({ fx, fy, tx, ty, p: 0, c, forest: !meadow });
+  };
+  for (let ty = 0; ty < h; ty++)
+    for (let tx = 0; tx < w; tx++) {
+      const k = ty * w + tx;
+      if (!free[k]) continue;
+      // Kachel mit dunkler Mitte: ein Altbaum oder zwei Jungbäume
+      if (floorAt(tx + 0.5, ty + 0.5) >= FILL_DARK) {
+        let adult = 0,
+          young = 0;
+        for (const o of grid.get(keyOf(tx, ty)) ?? []) {
+          if (o.c.dead) continue;
+          if (o.c.group !== undefined) adult += 2;
+          else if (o.c.young || o.c.bush) young++;
+          else adult++;
+        }
+        for (let i = 0; adult < 1 && young < 2 && i < 4; i++) {
+          const u = 0.3 + 0.4 * fillRnd(tx, ty, 20 + i, 0),
+            v = 0.3 + 0.4 * fillRnd(tx, ty, 20 + i, 1);
+          if (!fill(tx + u, ty + v, tx, ty, 20 + i)) continue;
+          if (free[k] === 2) young++;
+          else adult++;
+        }
+      }
+      // dunkler Boden ohne Krone in der Nähe: nachsetzen
+      for (let b = 0; b < FILL_STEPS; b++)
+        for (let a = 0; a < FILL_STEPS; a++) {
+          // Abtastpunkt im Fach (a, b), im Fach gewürfelt: nachgesetzte Kronen liegen nicht auf einem Raster
+          const i = b * FILL_STEPS + a;
+          const fx = tx + (a + 0.15 + 0.7 * fillRnd(tx, ty, i, 0)) / FILL_STEPS,
+            fy = ty + (b + 0.15 + 0.7 * fillRnd(tx, ty, i, 1)) / FILL_STEPS;
+          if (gapTo(fx, fy) <= (free[k] === 2 ? FILL_REACH_MEADOW : FILL_REACH)) continue;
+          if (floorAt(fx, fy) < FILL_DARK) continue;
+          fill(fx, fy, tx, ty, i);
+        }
+    }
 
   all = giant ? [...accepted, giant] : accepted;
   // Höhe aus der Form, Tiefenband-Zelle
