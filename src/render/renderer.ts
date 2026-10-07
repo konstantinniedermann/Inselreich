@@ -100,6 +100,7 @@ import { drawTreeStamp, treeBounds, treeShadow, type TreeItem } from './trees';
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
 import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildlife';
+import { drawFaunaAir, drawFireflies, drawGroundFauna, faunaAt, type FaunaHit } from './fauna';
 import {
   buildingShadow,
   drawAir,
@@ -220,6 +221,8 @@ export const renderStats = {
   wavesDrawn: 0,
   walkersDrawn: 0,
   wildDrawn: 0,
+  /** Tiere der Fauna (L7) im letzten Frame. */
+  faunaDrawn: 0,
   smokeDrawn: 0,
 };
 if (import.meta.env.DEV) (globalThis as { __inselRender?: unknown }).__inselRender = renderStats;
@@ -474,6 +477,8 @@ interface IslandFrame {
   lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[];
   fireClips: Poly[][][];
   windowLights: WindowLights;
+  /** Glühwürmchen dieser Insel für den einen additiven Durchgang (Schritt 10). */
+  fireflies: FaunaHit[];
 }
 
 /** Schritte 2–7 (Boden bis Luft) einer Insel; `v` ist die Welt bzw. die Inselansicht, `ci` die Inselkamera. */
@@ -495,6 +500,7 @@ function drawIsland(
 
   let windowLights: WindowLights = { groups: [], k: 0 };
   let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
+  let fireflies: FaunaHit[] = [];
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
@@ -552,6 +558,18 @@ function drawIsland(
     const wild = lod ? [] : wildlifeAt(world, wildRange, fx.timeMs, wildlifeEnvOf(world, fx));
     if (!lod) drawWaterLife(ctx, cam, wild);
     renderStats.wildDrawn += wild.length;
+    // Fauna an Land (L7): eine Abfrage; Bodentiere mischen sich nach Tiefe in den sortierten Durchgang, Luft folgt bei den Möwen
+    // Glühwürmchen sind Lichter wie die Fenster: ohne Tag-Nacht-Wechsel (dayNight false) bleiben sie aus
+    const fauna = lod
+      ? []
+      : faunaAt(world, wildRange, fx.timeMs, {
+          ...wildlifeEnvOf(world, fx),
+          zoom: cam.zoom,
+        }).filter((h) => h.layer !== 'glow' || fx.dayNight === true);
+    renderStats.faunaDrawn += fauna.length;
+    const groundFauna = fauna.filter((h) => h.layer === 'ground');
+    fireflies = fauna.filter((h) => h.layer === 'glow');
+    let gf = 0;
 
     // Figuren: nur die im Bild; Pose rein aus Zeit und Weggraph (Spec 5.6)
     const poses = new Map<number, WalkerPose>();
@@ -684,6 +702,9 @@ function drawIsland(
 
     // 6 Sortierter Objektdurchgang
     for (const it of visible) {
+      // Bodentiere vor dem ersten Objekt mit grösserem Schlüssel (Gleichstand: nach dem Objekt)
+      while (gf < groundFauna.length && groundFauna[gf]!.key < it.key)
+        drawGroundFauna(ctx, cam, groundFauna[gf++]!);
       if (it.kind === 'building') {
         if (shadowOnly.has(it.id)) continue;
         const b = world.buildings[it.id]!;
@@ -723,6 +744,8 @@ function drawIsland(
       }
     }
 
+    while (gf < groundFauna.length) drawGroundFauna(ctx, cam, groundFauna[gf++]!);
+
     const sc = spriteCache.stats();
     renderStats.spriteHits = sc.hits;
     renderStats.spriteMisses = sc.misses;
@@ -761,6 +784,7 @@ function drawIsland(
     }
     for (const g of gulls) drawGull(ctx, cam, g);
     if (!lod) drawFlocks(ctx, cam, wild);
+    drawFaunaAir(ctx, cam, fauna, world.seed);
     // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
     lit.forEach(({ f, rect }, i) => {
       const clip = fireClips[i]!;
@@ -784,7 +808,7 @@ function drawIsland(
       rank,
     );
   }
-  return { island: -1, v, ci, range, empty, lit, fireClips, windowLights };
+  return { island: -1, v, ci, range, empty, lit, fireClips, windowLights, fireflies };
 }
 
 /**
@@ -808,6 +832,7 @@ export function render(
   renderStats.wavesDrawn = 0;
   renderStats.walkersDrawn = 0;
   renderStats.wildDrawn = 0;
+  renderStats.faunaDrawn = 0;
   renderStats.smokeDrawn = 0;
   renderStats.errands = 0;
   // DPR aus der Basismatrix (app.ts setzt sie per setTransform); ohne getTransform (Fake) gilt 1
@@ -880,6 +905,7 @@ export function render(
     lit: [],
     fireClips: [],
     windowLights: { groups: [], k: 0 },
+    fireflies: [],
   };
   const { range, empty } = act;
   const lit = frames.flatMap((f) => f.lit);
@@ -906,7 +932,8 @@ export function render(
   // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
   const glowing = lit.some(({ f }) => f.flames > 0);
   const lights = windowLights.groups;
-  if (glowing || lights.length > 0) {
+  const glowFlies = frames.some((f) => f.fireflies.length > 0);
+  if (glowing || lights.length > 0 || glowFlies) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     // frei stehende Gebäude gebündelt, verdeckte einzeln unter ihren Clips (BUG-LICHT)
@@ -940,6 +967,7 @@ export function render(
       drawFireGlow(ctx, rect, fx.timeMs, f.flames);
       if (clip.length > 0) ctx.restore();
     });
+    for (const f of frames) drawFireflies(ctx, f.ci, f.fireflies);
     ctx.restore();
   }
 
