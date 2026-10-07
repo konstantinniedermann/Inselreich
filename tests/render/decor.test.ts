@@ -561,7 +561,12 @@ describe('L4 D5 Salze und Zufall', () => {
         if (l4.includes(f))
           expect(n === 500 || (n >= 540 && n <= 569), `${f}: ${n} ausserhalb 540–569`).toBe(true);
         else if (l5.includes(f))
-          expect(n >= 560 && n <= 569, `${f}: ${n} ausserhalb 560–569 (L5)`).toBe(true);
+          // terrain.ts trägt zusätzlich 539 aus L2 (Findlinge im Boden, Task B; Kopf von groundDecor.ts), sichtbar seit
+          // dem Merge von main (REL-06) in den L5-Stapel
+          expect(
+            (f === 'terrain.ts' && n === 539) || (n >= 560 && n <= 569),
+            `${f}: ${n} ausserhalb 560–569 (L5)`,
+          ).toBe(true);
         else if (l1.includes(f))
           expect(n >= 500 && n <= 519, `${f}: ${n} ausserhalb 500–519`).toBe(true);
         else expect(n >= 540 && n <= 569, `${f}: ${n} gehört zu L4/L5`).toBe(false);
