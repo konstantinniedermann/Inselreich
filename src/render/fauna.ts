@@ -1747,61 +1747,61 @@ function drawHare(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   const f = h.flip;
   shadowOf(ctx, g, 4.8 * s * (1 - Math.min(0.4, h.z / ISO_H)));
   const hop = h.state === 2;
-  const nib = h.state === 1 ? 2 * Math.sin(h.phase * TAU) * s : 0;
-  // sitzend birnenförmig: breite Keule hinten, schmale Brust vorne; beim Hoppeln gestreckt
-  const rear = hop
-    ? { x: -f * 2.4, y: -3.2, rx: 3.8, ry: 2.8 }
-    : { x: -f * 1.0, y: -3.6, rx: 4.3, ry: 3.8 };
-  const chest = hop
-    ? { x: f * 2.4, y: -3.5, rx: 3.2, ry: 2.3 }
-    : { x: f * 1.8, y: -4.6, rx: 2.6, ry: 3.2 };
-  const head = hop ? { x: f * 5.8, y: -4.8 } : { x: f * 3.0, y: -8.2 + (h.state === 1 ? 2.4 : 0) };
-  const hx = c.x + head.x * s,
-    hy = c.y + head.y * s + nib;
-  const bodies = (): void => {
-    blob(ctx, c.x + rear.x * s, c.y + rear.y * s, rear.rx * s, rear.ry * s);
-    blob(ctx, c.x + chest.x * s, c.y + chest.y * s, chest.rx * s, chest.ry * s);
-    blob(ctx, hx, hy, 1.9 * s, 1.8 * s);
+  const nib = h.state === 1 ? 2.2 * Math.sin(h.phase * TAU) * s : 0;
+  const E = (x: number, y: number, rx: number, ry: number, rot = 0): void => {
+    ctx.moveTo(c.x + (x + rx) * s, c.y + y * s);
+    ctx.ellipse(c.x + x * s, c.y + y * s, rx * s, ry * s, rot, 0, TAU);
   };
+  // zwei Töne, keine Umrisse und keine Innenlinien: Körper in HARE_COLOR, Unterseite in HARE_BELLY
+  const rear = hop
+    ? { x: -f * 1.2, y: -3.2, rx: 6, ry: 2.5 }
+    : { x: -f * 0.8, y: -3.4, rx: 3.6, ry: 3.4 };
+  const head = hop ? { x: f * 6.2, y: -4.3 } : { x: f * 2.7, y: -9 + (h.state === 1 ? 3.2 : 0) };
   ctx.beginPath();
-  bodies();
+  E(rear.x, rear.y, rear.rx, rear.ry);
+  if (!hop) E(f * 1.6, -6.2, 2.4, 3.1); // Brust, schräg vorn über der Keule
+  E(head.x, head.y + nib / s, 1.9, 1.7);
   ctx.fillStyle = HARE_COLOR;
   ctx.fill();
-  // Ohren ≈ 0,6 · Körperhöhe (sitzend 4,6 px), leicht nach hinten geneigt, beim Hoppeln angelegt
+  // Ohren: zwei gefüllte schmale Ellipsen, steil nach oben und leicht nach hinten; beim Sprung angelegt
+  const hy = head.y + nib / s;
   ctx.beginPath();
-  for (let e = 0; e < 2; e++) {
-    const o = (e === 0 ? -0.5 : 0.7) * f * s;
-    const tip = hop
-      ? { x: hx - f * (4.6 - e * 0.6) * s, y: hy - (2.6 - e * 0.5) * s }
-      : { x: hx + o - f * (1.8 - e * 0.5) * s, y: hy - (6.6 - e * 0.4) * s };
-    tri(
-      ctx,
-      { x: hx + o - 0.7 * s, y: hy - 1.2 * s },
-      { x: hx + o + 0.7 * s, y: hy - 1.2 * s },
-      tip,
-    );
+  if (hop) {
+    E(head.x - f * 2.6, hy - 0.6, 2.8, 0.7, f * 0.12);
+    E(head.x - f * 2.2, hy + 0.4, 2.5, 0.65, f * 0.2);
+  } else {
+    E(head.x - f * 0.9, hy - 3.1, 0.7, 2.2, -f * 0.25);
+    E(head.x - f * 0.1, hy - 3.3, 0.7, 2.2, -f * 0.12);
   }
   ctx.fill();
+  // Unterseite: untere Hälfte der Keule dunkler; beim Sprung die Hinterläufe als kurzer Strich nach hinten
   ctx.beginPath();
-  blob(
-    ctx,
-    c.x + (rear.x + chest.x) * 0.5 * s,
-    c.y + (rear.y + 2.1) * s,
-    (rear.rx + 0.4) * s,
-    1.3 * s,
+  ctx.ellipse(
+    c.x + rear.x * s,
+    c.y + rear.y * s,
+    rear.rx * s,
+    rear.ry * s,
+    0,
+    0.1 * Math.PI,
+    0.9 * Math.PI,
   );
+  ctx.closePath();
   ctx.fillStyle = HARE_BELLY;
   ctx.fill();
+  if (hop) {
+    ctx.beginPath();
+    ctx.moveTo(c.x - f * 5.2 * s, c.y - 2.4 * s);
+    ctx.lineTo(c.x - f * 9 * s, c.y - 0.8 * s);
+    ctx.strokeStyle = HARE_BELLY;
+    ctx.lineWidth = Math.max(1, 1.4 * s);
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
   // Schwanz: kleiner cremefarbener Tupfer
   ctx.beginPath();
-  blob(ctx, c.x + (rear.x - f * (rear.rx + 0.5)) * s, c.y + (rear.y - 0.2) * s, 1.2 * s, 1.2 * s);
+  E(rear.x - f * (rear.rx + 0.3), rear.y - 0.4, 1.1, 1.1);
   ctx.fillStyle = HARE_TAIL;
   ctx.fill();
-  ctx.beginPath();
-  bodies();
-  ctx.strokeStyle = toInk(HARE_COLOR, 0.5);
-  ctx.lineWidth = Math.max(0.8, 0.8 * s);
-  ctx.stroke();
 }
 
 function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: FaunaHit): void {
