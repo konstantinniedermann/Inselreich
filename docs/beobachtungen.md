@@ -328,3 +328,20 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
   `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
   verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
+
+### 2026-10-07 · Render · Befunde aus der L1-Fix-Runde R298 (Wald)
+
+- **Fundort / Beobachtung:** Übersicht Zoom 0,5 (`.studio/qa/art-stil-02/l1r2/nachher/s1-, s5-, s7-gesamt-z0.5.png`):
+  Waldflächen lesen sich weiter als Rauten und Parallelogramme. Ursache ist die Waldmaske aus der Welterzeugung
+  (Kachelauflösung), dazu Waldboden und Schattenkante in `terrain.ts`, die die Maskenlinie nachzeichnen. Der
+  Stempelversatz (höchstens 0,5 Kachel) bricht das bei Zoom 0,5 nicht. **Einschätzung:** mittel; Hebel ausserhalb
+  von `forest.ts`/`trees.ts`: Waldboden mit vollem Kronenversatz in `terrain.ts`, Vorwald-Bäume auf Wiesenkacheln am
+  Rand (`decor.ts`, Solitär-Mechanik) oder eine weichere Maske in `src/sim` (Ruling nötig). **Ursprung:** ART-STIL-02
+  L1r2, lead-art und art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/iso.ts` sortiert gleich tiefe Stempel nach `fp.x`; der rechte Nachbar deckt
+  Kronen, die räumlich vor ihm liegen. Möglicher Grund für leichte Kachelbänder im Laubdach, ungeprüft.
+  **Einschätzung:** niedrig; beim nächsten Paket an `iso.ts` messen. **Ursprung:** ART-STIL-02 L1r2,
+  art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/terrain.ts` ~Z. 952: Kommentar „wo die Krone vorragt (a > 0)" stimmt nach
+  R298 nur noch ungefähr, der Boden folgt dem Randfeld flacher gestaucht als die Kronen. **Einschätzung:** niedrig;
+  beim nächsten Eingriff in `terrain.ts` nachziehen. **Ursprung:** ART-STIL-02 L1r2, qa-code-reviewer.
