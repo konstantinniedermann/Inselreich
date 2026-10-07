@@ -199,7 +199,16 @@ export interface WoodInput {
   terrainForest: (x: number, y: number) => boolean;
   /** Klasse je Kachel für die Kronen. */
   cls: (x: number, y: number) => TileClass;
+  /** Fix-Runde 3 A: Footprint-Kachel eines Gebäudes? (kein Stammfuss darauf, kleine Bäume davor) */
+  building?: (x: number, y: number) => boolean;
 }
+/**
+ * Fix-Runde 3 A: Bäume auf der Kachel direkt vor einem Gebäude (+x, +y, +x+y) sind Jungbäume mit Radius ≤ FRONT_R,
+ * ihr Fuss steht in der vom Haus abgewandten Kachelhälfte (Anteil ≥ FRONT_SET): die Fassade bleibt lesbar, Bäume
+ * davor gibt es weiter (Verdeckung, Fensterlicht).
+ */
+const FRONT_R = 0.13,
+  FRONT_SET = 0.5;
 
 /** Ein Wald-Objekt: Kachel (für Sortierung und Culling) und seine Kronen, Fusspunkte relativ zur Kachel. */
 export interface WoodCell {
@@ -236,6 +245,14 @@ interface Cand {
   c: Crown;
   mk?: () => Crown;
   forest: boolean;
+}
+
+/** Höhe des Kronenmittelpunkts über dem Fuss aus der Form (Totholz 0, Riesenbaum gedeckelt). */
+function heightOf(c: Crown): number {
+  if (c.dead) return 0;
+  if (!c.giant) return crownHeight(c);
+  const hh = crownGeom(c).hh;
+  return Math.min((c.kind === 1 ? 1.05 : 1.7) * hh, GIANT_SCALE * TREE_H - hh);
 }
 
 /**
@@ -278,6 +295,30 @@ export function woodLayout(inp: WoodInput): WoodLayout {
   const openTile = (x: number, y: number): boolean => {
     const c = at(x, y);
     return c === 'forest' || c === 'meadow';
+  };
+
+  // Fix-Runde 3 A: Gebäude-Footprints und die Kacheln direkt davor (Seite des Hauses je Achse: 1 = −x, 2 = −y, 4 = Ecke)
+  const bld = new Uint8Array(w * h);
+  if (inp.building)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) bld[y * w + x] = inp.building(x, y) ? 1 : 0;
+  const bAt = (x: number, y: number): boolean =>
+    x >= 0 && y >= 0 && x < w && y < h && bld[y * w + x] === 1;
+  const front = new Uint8Array(w * h);
+  if (inp.building)
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++)
+        if (!bld[y * w + x])
+          front[y * w + x] =
+            (bAt(x - 1, y) ? 1 : 0) | (bAt(x, y - 1) ? 2 : 0) | (bAt(x - 1, y - 1) ? 4 : 0);
+  /** Fix-Runde 3 A: kein Stammfuss (auch keiner eines Gruppenbaums) auf einer Gebäudekachel, keine Gruppe davor. */
+  const clearOf = (fx: number, fy: number, c: Crown): boolean => {
+    if (!inp.building) return true;
+    if (c.group !== undefined) {
+      if (front[Math.floor(fy) * w + Math.floor(fx)]) return false;
+      return groupMembers(c).every((m) => !bAt(Math.floor(fx + m.cx), Math.floor(fy + m.cy)));
+    }
+    return !bAt(Math.floor(fx), Math.floor(fy));
   };
 
   const rnd = (x: number, y: number, j: number, k: number): number =>
@@ -521,6 +562,20 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const k = q.ty * w + q.tx;
     let u = q.fx - q.tx,
       v = q.fy - q.ty;
+    const fr = front[k];
+    if (fr && c.group === undefined && !c.giant) {
+      // vor einem Gebäude: Jungbaum, Fuss in der abgewandten Kachelhälfte
+      if (!c.dead) {
+        c.young = true;
+        c.r = Math.min(c.r, FRONT_R, maxRadius(c));
+      }
+      if (fr & 1) u = Math.max(u, FRONT_SET);
+      if (fr & 2) v = Math.max(v, FRONT_SET);
+      if (fr === 4) {
+        u = Math.max(u, FRONT_SET * 0.7);
+        v = Math.max(v, FRONT_SET * 0.7);
+      }
+    }
     const r = c.r;
     if (tight[k]) {
       // Eng: Fussscheibe in der Kachel, und im Bild in der Spaltenbreite der Kachel (|u − v| · ISO_W/2 + hw ≤ ISO_W/2)
@@ -567,14 +622,16 @@ export function woodLayout(inp: WoodInput): WoodLayout {
   }
   const accepted: Cand[] = [];
   const isAccepted = new Set<Cand>();
-  const put = (q: Cand): void => {
+  const put = (q: Cand): boolean => {
     clampFoot(q);
+    if (!clearOf(q.fx, q.fy, q.c)) return false;
     const k = keyOf(Math.floor(q.fx), Math.floor(q.fy));
     const l = grid.get(k);
     if (l) l.push(q);
     else grid.set(k, [q]);
     accepted.push(q);
     isAccepted.add(q);
+    return true;
   };
   const meadowN = new Map<number, number>();
   for (const q of cands) {
@@ -584,7 +641,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       const k = q.ty * w + q.tx;
       const n = meadowN.get(k) ?? 0;
       if (n >= VORWALD_MAX) continue;
-      meadowN.set(k, n + 1);
+      if (put(q)) meadowN.set(k, n + 1);
+      continue;
     }
     put(q);
   }
@@ -624,7 +682,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
         s: shapeValue(2),
         giant: true,
       };
-      giant = { fx: x + 0.5, fy: y + 0.5, tx: x, ty: y, p: 2, c, forest: true };
+      if (clearOf(x + 0.5, y + 0.5, c))
+        giant = { fx: x + 0.5, fy: y + 0.5, tx: x, ty: y, p: 2, c, forest: true };
     }
   }
   let all = accepted;
@@ -692,8 +751,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
         if (sapling) c.young = true;
         c.r = Math.min(c.r, maxRadius(c));
         if (relax > 0 && conflicts(q, relax)) continue;
-        put(q);
-        n++;
+        if (put(q)) n++;
       }
     }
   }
@@ -706,13 +764,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const k = q.ty * w + q.tx;
     const fx = q.fx,
       fy = q.fy;
-    if (c.dead) c.h = 0;
-    else {
-      const hh = crownGeom(c).hh;
-      c.h = c.giant
-        ? Math.min((c.kind === 1 ? 1.05 : 1.7) * hh, GIANT_SCALE * TREE_H - hh)
-        : crownHeight(c);
-    }
+    c.h = heightOf(c);
     const cell = tight[k] ? { x: q.tx, y: q.ty } : bandCell(fx, fy);
     const key = `${tight[k] ? 1 : 0}|${cell.x}|${cell.y}`;
     let wc = cells.get(key);

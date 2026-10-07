@@ -191,6 +191,7 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       h: H,
       terrainForest: (x, y) => tileAt(x, y)?.terrain === 'forest',
       cls,
+      building: hasBuilding,
     });
     wood.cells.forEach((c, i) => {
       const fp = { x: c.x, y: c.y, w: 1, h: 1 };
