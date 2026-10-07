@@ -1147,10 +1147,13 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
   // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
   // G-Anzahl (b537908).
-  // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter (+14 Zeichen).
-  const HOME_CALLS = { hash: 3586398040, length: 12873 };
+  // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter.
+  // L7-Merge (main mit REL-06 + L5): neu gepinnt, L3-Bildmodus und L5-Meer-Stempel zusammen.
+  const HOME_CALLS = { hash: 3765048213, length: 12900 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3670334885, length: 3662 };
+  // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
+  // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {

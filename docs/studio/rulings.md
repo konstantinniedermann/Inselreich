@@ -2525,3 +2525,61 @@ Auslegung „kein Rückschritt gegenüber vorher" bestanden (Paarvergleich 20/23
 arc42 und Salzkopf in der Fix-Runde. — Kosten bei Irrtum: eine Session Verzug für Release A.
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-06, `.studio/qa/rel-06/` · ADR: —
+
+## R299 · 2026-10-07 · L1-Fix: Ränder als Folgepaket, hängende Messung
+
+Ruling: L1-Fix (`fix/art02-l1-wald-r2` @ be4ce8e) behebt das Muster (Gate-Grund Frage 2); die Rautenform der
+Waldflächen in der Übersicht kommt aus der kachelweisen Waldmaske und wird Folgepaket „Waldsaum" (render-only,
+direkt nach REL-06). Rater prüft Fragen 1–2 auf diesem Stand. Hängende L5-Messung (PID 42157, Ruhezustand) per PID
+beendet; Messungen seriell. `pkill -f "vitest run"` eines Engineers → Retro (R263). — Kosten bei Irrtum: Ränder
+bleiben eine Release länger eckig.
+
+Entscheider: L0 · Anlass: Bericht lead-art L1-Fix · ADR: —
+
+## R300 · 2026-10-07 · REL-06 mit L1-Fix als Zwischenstand, Wald zweiter Anlauf
+
+Ruling: Rater-Nachprüfung: Frage 2 weiter durchgefallen (Nadelwald-Teppich), Frage 1 grenzwertig; zwei Bild-Runden
+sind ausgeschöpft (R211). L1 lässt sich nicht aus dem Kandidaten lösen (L2/L4 gestapelt). REL-06 geht mit L1-Fix
+live, sobald dessen A/B-Messung ≤ +0,5 ms hält: gegenüber main messbar weniger repetitiv (gleiche Diagonal-Stempel
+0,315 → 0,145), L2–L4 bestanden, der Nutzer will Fortschritt in der Produktion (R281). Direkt danach Paket
+**WALD-02** (zweiter Anlauf inkl. Waldsaum, Mandat auch für Struktur-Umbau in `src/render/`) vor L5–L8. — Kosten bei
+Irrtum: Nutzer sieht den Wald noch nicht am Ziel; Bericht sagt das offen.
+
+Entscheider: L0 · Anlass: `.studio/qa/rel-06/blind/nach-l1r2.md` · ADR: —
+
+## R301 · 2026-10-07 · Gate Merge Release REL-06
+
+Ruling: REL-06 freigegeben = `rel/rel-06` (L1–L4, lead-qa-Review R298) + L1-Fix `fix/art02-l1-wald-r2` (Task-Review
+OK, A/B Seed 7 +0,4 ms ≤ +0,5; Seed 14 entfällt wegen Last 14–16, Kandidat dort +0,3). Integrator merget den Fix in
+den Kandidaten, `make check` + `CI=true make check`, Befunde aus dem Handoff anhängen, Push nach main. — Kosten bei
+Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Messung `.studio/qa/art-stil-02/l1r2/perf-s7-1920.txt`, R300 · ADR: —
+
+## R302 · 2026-10-07 · REL-06 live, Hotfix H-T6 CI-Timeout
+
+Ruling: REL-06 ist live (main 464d490, Pages 37585424789 grün). CI 37585424784 rot: `variants.test.ts:308` Timeout
+5 s bei 8,1 s im Runner, lokal grün. Hotfix H-T6 (lead-tech) hat Vorrang, Gate im Briefing: Test-Timeout mit R270-
+Reserve oder kleinerer Test, kein `src/`. WALD-02 startet parallel (disjunkte Dateien). — Kosten bei Irrtum: CI
+bleibt eine Runde länger rot; Produktion unberührt.
+
+Entscheider: L0 · Anlass: Integrator-Bericht REL-06 · ADR: —
+
+## R303 · 2026-10-07 · Vorschläge Ad-hoc-Retro 2026-10-07
+
+Ruling: Angenommen: E-031 als Anpassung von E-022 (kein neuer Platz): `merge=union` für `docs/beobachtungen.md`
+entfällt, Konflikte löst der Integrator (beide Anhänge behalten). E-032 als Werkzeug-Paket TOOL-CHECK-ZEITTEST
+(`make check` prüft Zeittest-Timeouts und Doku-Prettier). Regel: Guard sperrt `pkill`/`killall` mit `-f`
+(TOOL-GUARD-PKILL); Messläufe mit Wanduhr-Limit und `caffeinate`. E-033 (Rater nach jedem Layer) vorgemerkt, startet
+mit WALD-02 sinngemäss (Rater im Paket). — Kosten bei Irrtum: mehr Merge-Konflikte in einer Datei.
+
+Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-07-adhoc-session-7db07561.md` · ADR: —
+
+## R304 · 2026-10-07 · L5 release-reif, Start L7, L8 danach
+
+Ruling: L5 angenommen inkl. (a) Meer-Plan am Start-Kontor, späte Kontore blenden aus, (b) `seaFields.ts`,
+`iso.ts`-Argument, Renderer-Pin, D5 auf Rauschkamm; Nachmessung Zoom 1 holt der Release-Lauf B nach. L7 startet
+gestapelt auf L5 (main per Merge); L8 erst nach L7, weil das Seltenheitsbudget alle Gruppen zählt und die
+Rechnerlast (12–20) Messungen bereits staut. — Kosten bei Irrtum: L8 eine Runde später.
+
+Entscheider: L0 · Anlass: Bericht lead-art L5 · ADR: —

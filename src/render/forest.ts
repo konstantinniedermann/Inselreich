@@ -5,7 +5,8 @@ import { hash2, valueNoise } from '../sim/noise';
 // Alles ist eine reine Funktion von (Seed, Kachel); nur `hash2` und `valueNoise`. Salze 500 und 501–519 (s. Kopf von
 // groundDecor.ts): 500 Waldtyp · 501 Akzentart · 502 Bestandsfeld · 503 Akzentfeld · 504/514 Randversatz ·
 // 505 Hash-Streuung Rand · 506/507 Kern-Streuung x/y · 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel ·
-// 510 Riesenbaum ja/nein · 511 Formreihenfolge. Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68 und 512–519).
+// 510 Riesenbaum ja/nein · 511 Formreihenfolge · 515 Wiederholung in der Formwahl (R298) · 516 Randversatz quer zur
+// Normalen (R298) · 517 wellige Randkomponente (Bildrunde 1). Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68, 512 und 513).
 
 /** Rolle einer Waldkachel: Kern (alle 8 Nachbarn freier Wald), Rand (grenzt an freie Wiese), Eng (gesperrter Nachbar). */
 export type Role = 0 | 1 | 2;
@@ -62,16 +63,52 @@ export function slotAt(seed: number, type: ForestType, x: number, y: number): Sl
   return d < 0.6 ? 0 : d < 0.86 ? 1 : 2;
 }
 
-const AMP = 0.3;
+/**
+ * Randversatz entlang der Aussennormalen (Bildrunde 1 nach R298): nach innen bis `EDGE_IN`, nach aussen bis `EDGE_OUT`.
+ * Die Rand-Stempel ragen höchstens 0,24 Kachel über ihre Kachel (trees.ts), Kronenfuss plus Versatz bleibt also
+ * ≤ 0,75 (Culling mit 1 Kachel Zuschlag; RF-L1-13). Keine Eng-Form am zurückweichenden Rand: ihre hochstämmigen
+ * Jungbäume lasen sich als Lutscher, und der Waldboden (terrain.ts) zeigte dort die Raute.
+ */
+export const EDGE_IN = 0.5,
+  EDGE_OUT = 0.35;
+/** Kern-Versatz je Achse (R298: ±0,2 statt ±0,08; kleine Lücken im Kronendach lesen sich als Waldbodenschatten). */
+const CORE_SHIFT = 0.2;
+/**
+ * Randversatz (R298): Weissrauschen je Kachel (vor der Stauchung, in Feldeinheiten), Konvexitätsausgleich je Stufe
+ * (danach, in Kacheln), Jitter quer zur Normalen (Kacheln).
+ */
+const EDGE_WHITE = 0.9,
+  EDGE_BULGE = 0.18,
+  EDGE_TANGENT = 0.1;
+/**
+ * Formwahl (R298): Kosten einer Wiederholung links/oben (meist 4, in `REPEAT_P` der Kacheln nur `REPEAT_COST`) und
+ * der oberen Diagonalen; die Diagonale (x − 1, y − 1) liegt im Bild genau darüber und wiegt deshalb mehr.
+ */
+const REPEAT_P = 0.2,
+  REPEAT_COST = 0.8,
+  DIAG_COST = 1.2,
+  ANTI_COST = 0.8;
+/** Betrag des Bodenversatzes (`forestEdgeShift`). */
+const FLOOR_AMP = 0.3;
+/** Verstärkung vor der Stauchung (tanh): wie oft der Rand die Grenzen fast erreicht. */
+const EDGE_GAIN = 2.6;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
-/** Randversatz-Betrag in Kacheln an einem Kachelpunkt: Rauschen (Periode ≈ 4,5 Kacheln), in [−0,3; +0,3]. */
+/** Feld des Randversatzes vor der Stauchung: drei Rauschen (Perioden ≈ 4,5, 3,4 und 2,3 Kacheln; Salze 504, 517, 514). */
+const edgeRaw = (seed: number, fx: number, fy: number): number =>
+  EDGE_GAIN *
+  ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
+    (valueNoise(seed + 517, fx / 3.4, fy / 3.4) - 0.5) * 2.2 +
+    (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 1.6);
+/** Asymmetrische Stauchung: nach innen bis −`EDGE_IN`, nach aussen bis +`EDGE_OUT`. */
+const squash = (v: number): number => (v < 0 ? EDGE_IN * Math.tanh(v) : EDGE_OUT * Math.tanh(v));
+/**
+ * Randversatz für den Waldboden (terrain.ts) und den Farnsaum (groundDecor.ts), in [−0,3; +0,3]: dasselbe wellige
+ * Feld wie die Kronen, aber flacher gestaucht. Mit dem vollen Kronenbereich (bis −0,5) hellte der Boden am
+ * zurückweichenden Rand bis in den Kronenton auf (AK-R1-08 I5); die Lage der Wellen bleibt dieselbe.
+ */
 export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
-  AMP *
-  Math.tanh(
-    ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
-      (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 2.2) /
-      AMP,
-  );
+  FLOOR_AMP * Math.tanh(edgeRaw(seed, fx, fy));
+
 /** Lichtungsfeld 0…1 (Merkmal ≈ 5 Kacheln); ab 0,5 lichtet sich der Kern. */
 export const forestClearing = (seed: number, fx: number, fy: number): number => {
   const n = valueNoise(seed + 508, fx / 5, fy / 5);
@@ -113,7 +150,12 @@ export function forestLayout(
     }
     return rand ? 1 : 0;
   };
-  // Zeilenweise: die Form meidet die Varianten des linken und des oberen Nachbarn (4-Nachbarpaare verschieden)
+  // Zeilenweise Formwahl nach Kosten: die Varianten des linken und des oberen Nachbarn sind teuer (4-Nachbarpaare
+  // verschieden), die der beiden oberen Diagonalen billig, aber nicht frei. Bei nur drei Formen erzwingt das gierige
+  // Meiden von links und oben sonst Form(x, y) = Form(x − 1, y − 1), also senkrechte Streifen gleicher Stempel im Bild
+  // (R298). Mit kleiner Wahrscheinlichkeit (Salz 515) ist eine Wiederholung links oder oben billiger als eine Diagonale.
+  const at = (x: number, y: number): number | undefined =>
+    x >= 0 && x < w && y >= 0 ? out[y * w + x]?.variant : undefined;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (cls(x, y) !== 'forest') continue;
@@ -124,42 +166,59 @@ export function forestLayout(
         useRole = 1; // Lichtung (B2): der Kern nimmt die lichtere Rand-Form
         clearing[y * w + x] = 1;
       }
-      const slot = slotAt(seed, type, x, y);
-      const n = ROLE_FORMS[useRole];
-      const forms = Array.from({ length: n }, (_, f) => f).sort(
-        (a, b) => hash2(seed + 511, x * 8 + a, y) - hash2(seed + 511, x * 8 + b, y),
-      );
-      const wv = x > 0 ? out[y * w + x - 1]?.variant : undefined,
-        nv = y > 0 ? out[(y - 1) * w + x]?.variant : undefined;
-      let variant = variantOf(slot, useRole, forms[0]!);
-      for (const f of forms) {
-        const v = variantOf(slot, useRole, f);
-        if (v !== wv && v !== nv) {
-          variant = v;
-          break;
-        }
-      }
       let ox = 0,
         oy = 0;
       if (role === 0) {
-        ox = (hash2(seed + 506, x, y) - 0.5) * 0.16;
-        oy = (hash2(seed + 507, x, y) - 0.5) * 0.16;
+        ox = (hash2(seed + 506, x, y) - 0.5) * 2 * CORE_SHIFT;
+        oy = (hash2(seed + 507, x, y) - 0.5) * 2 * CORE_SHIFT;
       } else if (role === 1) {
         let sx = 0,
-          sy = 0;
+          sy = 0,
+          ortho = 0;
         for (const [dx, dy] of NB) {
           if (cls(x + dx, y + dy) !== 'meadow') continue;
           sx += dx;
           sy += dy;
+          if (dx === 0 || dy === 0) ortho++;
         }
         const len = Math.hypot(sx, sy) || 1;
+        const nx = sx / len,
+          ny = sy / len;
+        // Konvexität: vorspringende Stufe (Wiese an zwei, drei Seiten) rund nach innen, einspringende (Wiese nur
+        // diagonal) nach aussen; dazu das wellige Feld und je Kachel Weissrauschen
+        const bulge = clamp(ortho - 1, -1, 2);
         const a = clamp(
-          forestEdgeShift(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 0.18,
-          -AMP,
-          AMP,
+          squash(
+            edgeRaw(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE,
+          ) -
+            bulge * EDGE_BULGE,
+          -EDGE_IN,
+          EDGE_OUT,
         );
-        ox = (sx / len) * a;
-        oy = (sy / len) * a;
+        const t = (hash2(seed + 516, x, y) - 0.5) * 2 * EDGE_TANGENT;
+        ox = nx * a - ny * t;
+        oy = ny * a + nx * t;
+      }
+      const slot = slotAt(seed, type, x, y);
+      const wv = at(x - 1, y),
+        nv = at(x, y - 1),
+        dv = at(x - 1, y - 1),
+        av = at(x + 1, y - 1);
+      const rep = hash2(seed + 515, x, y) < REPEAT_P ? REPEAT_COST : 4;
+      let variant = -1,
+        best = Infinity;
+      for (let f = 0; f < ROLE_FORMS[useRole]; f++) {
+        const v = variantOf(slot, useRole, f);
+        const cost =
+          (v === wv ? rep : 0) +
+          (v === nv ? rep : 0) +
+          (v === dv ? DIAG_COST : 0) +
+          (v === av ? ANTI_COST : 0) +
+          hash2(seed + 511, x * 8 + f, y) * 0.5;
+        if (cost < best) {
+          best = cost;
+          variant = v;
+        }
       }
       out[y * w + x] = { variant, role, slot, ox, oy, giant: false };
     }

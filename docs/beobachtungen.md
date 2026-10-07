@@ -338,3 +338,36 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** `src/render/water.ts` `seaFoamVisible` → `seaContext(world)` je Frame (`Object.values`
   über alle Gebäude plus `JSON.stringify`). **Einschätzung:** niedrig; billiger Schnellpfad (Kontorzahl oder
   `nextBuildingId`) beim nächsten Eingriff in `water.ts` (L8). **Ursprung:** ART-STIL-02 L5, qa-code-reviewer.
+
+### 2026-10-07 · Render · Befunde aus der L1-Fix-Runde R298 (Wald)
+
+- **Fundort / Beobachtung:** Übersicht Zoom 0,5 (`.studio/qa/art-stil-02/l1r2/nachher/s1-, s5-, s7-gesamt-z0.5.png`):
+  Waldflächen lesen sich weiter als Rauten und Parallelogramme. Ursache ist die Waldmaske aus der Welterzeugung
+  (Kachelauflösung), dazu Waldboden und Schattenkante in `terrain.ts`, die die Maskenlinie nachzeichnen. Der
+  Stempelversatz (höchstens 0,5 Kachel) bricht das bei Zoom 0,5 nicht. **Einschätzung:** mittel; Hebel ausserhalb
+  von `forest.ts`/`trees.ts`: Waldboden mit vollem Kronenversatz in `terrain.ts`, Vorwald-Bäume auf Wiesenkacheln am
+  Rand (`decor.ts`, Solitär-Mechanik) oder eine weichere Maske in `src/sim` (Ruling nötig). **Ursprung:** ART-STIL-02
+  L1r2, lead-art und art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/iso.ts` sortiert gleich tiefe Stempel nach `fp.x`; der rechte Nachbar deckt
+  Kronen, die räumlich vor ihm liegen. Möglicher Grund für leichte Kachelbänder im Laubdach, ungeprüft.
+  **Einschätzung:** niedrig; beim nächsten Paket an `iso.ts` messen. **Ursprung:** ART-STIL-02 L1r2,
+  art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/terrain.ts` ~Z. 952: Kommentar „wo die Krone vorragt (a > 0)" stimmt nach
+  R298 nur noch ungefähr, der Boden folgt dem Randfeld flacher gestaucht als die Kronen. **Einschätzung:** niedrig;
+  beim nächsten Eingriff in `terrain.ts` nachziehen. **Ursprung:** ART-STIL-02 L1r2, qa-code-reviewer.
+
+### 2026-10-06 · Befunde aus dem Release-Lauf REL-06 (lead-qa)
+
+- 2026-10-06 · `src/render/groundDecor.ts`/`decor.ts` · Boden-Deko neben neuem Gebäude/Weg wechselt die Art (nach
+  Abriss wieder wie vorher). Einschätzung: niedrig, Kandidat für L8. Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Spiel/Fremdinsel · Direkt nach Kontor II ist kein Haus baubar („Kein Bauland", „Ausserhalb der
+  Versorgung"). Einschätzung: mittel, prüfen ob Absicht (Reichweite Kontor II) oder Fehler; Kandidat SEE-F2-UX.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · `tools/render-qa/perf` · Der Seed-14-Lauf brach 2× beim Start ab (`cachesReady` undefiniert).
+  Einschätzung: niedrig, Werkzeug. Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Git · Drei Commits mit Präfix `perf:` (nicht in der Konvention). Einschätzung: niedrig, Hinweis.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Gebirge · Die Südwestecke in Seed 7 Zoom 1 wirkt eckig (L2). Einschätzung: niedrig, Kandidat L6/L8.
+  Ursprung: Release-Lauf REL-06.
+- 2026-10-06 · Blindtest L3 · Spielbilder ohne Statusmarken; künftige Blindtests mit Szene inklusive Marken.
+  Einschätzung: niedrig, Prüf-Vorlage. Ursprung: Release-Lauf REL-06.

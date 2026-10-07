@@ -84,7 +84,7 @@ describe('L1-T1 Stempelbox', () => {
         for (let v = 0; v < TREE_VARIANTS; v++)
           for (const giant of v % 8 === 0 ? [false, true] : [false]) {
             const role = variantParts(v).role;
-            const o = role === 1 ? 0.3 : role === 0 ? 0.08 : 0; // grösster Versatz der Rolle
+            const o = role === 1 ? 0.3 : role === 0 ? 0.2 : 0; // grösster Versatz der Rolle (R298: Kern ±0,2)
             const t = mk(seed, v, o, -o, giant);
             const { ctx, log } = fakeCtx();
             paintStamp(ctx, seed, v, step, giant);
@@ -684,5 +684,83 @@ describe('Perf Stempel-Canvas auf die Inhaltsbox zugeschnitten', () => {
     }
     expect(sum).toBeLessThan(0.6 * TREE_VARIANTS * 112 * (TREE_H + 24));
     resetTreeCache();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// Fix-Runde R298 (Gate REL-06): kein Kugelraster, keine Baumreihen, keine Diagonalstreifen gleicher Stempel
+
+describe('R298 Rasterfreiheit (echte Karten, Seeds 1/2/5/7)', () => {
+  it('RF-L1-8 gleiche Variante auf Diagonale (x−1, y−1) und Gegendiagonale (x+1, y−1) höchstens Zufallswert + 0,05; 4-Nachbarpaare bleiben ≥ 90 % verschieden', () => {
+    let pd = 0,
+      sd = 0,
+      ed = 0,
+      pa = 0,
+      sa = 0,
+      ea = 0,
+      p4 = 0,
+      d4 = 0;
+    /** Erwartung bei unabhängiger Formwahl: gleiche Art und Rolle, dann 1 / Formen der Rolle. */
+    const chance = (a: TreeItem, b: TreeItem): number => {
+      const p = variantParts(a.variant),
+        q = variantParts(b.variant);
+      return p.slot === q.slot && p.role === q.role ? 1 / [3, 3, 2][p.role]! : 0;
+    };
+    for (const seed of SEEDS) {
+      const w = createWorld(seed);
+      const W = home(w).width;
+      const ts = trees(w);
+      const by = new Map(ts.map((t) => [t.fp.y * W + t.fp.x, t]));
+      for (const t of ts) {
+        const at = (dx: number, dy: number) => by.get((t.fp.y + dy) * W + t.fp.x + dx);
+        for (const n of [at(1, 0), at(0, 1)])
+          if (n) {
+            p4++;
+            if (n.variant !== t.variant) d4++;
+          }
+        const d = at(-1, -1),
+          a = at(1, -1);
+        if (d) {
+          pd++;
+          ed += chance(d, t);
+          if (d.variant === t.variant) sd++;
+        }
+        if (a) {
+          pa++;
+          ea += chance(a, t);
+          if (a.variant === t.variant) sa++;
+        }
+      }
+    }
+    expect(d4 / p4, '4-Nachbarpaare verschieden').toBeGreaterThanOrEqual(0.9);
+    expect(sd / pd, `Diagonale (Zufall ${(ed / pd).toFixed(3)})`).toBeLessThanOrEqual(
+      ed / pd + 0.05,
+    );
+    expect(sa / pa, `Gegendiagonale (Zufall ${(ea / pa).toFixed(3)})`).toBeLessThanOrEqual(
+      ea / pa + 0.05,
+    );
+  });
+
+  it('RF-L1-9 Kernkronen ohne Häufungspunkt im Kachel-Anteil: 5 × 5-Histogramm (cx mod 1, cy mod 1, mit Versatz), jedes Fach zwischen 0,4 × und 2 × Mittel', () => {
+    const hist = new Array<number>(25).fill(0);
+    let n = 0;
+    const frac = (v: number): number => ((v % 1) + 1) % 1;
+    for (const seed of SEEDS) {
+      const w = createWorld(seed);
+      for (const t of trees(w)) {
+        if (variantParts(t.variant).role !== 0 || t.giant) continue;
+        for (const c of crownsFor(w.seed, t.variant)) {
+          const fx = frac(t.fp.x + c.cx + (t.ox ?? 0)),
+            fy = frac(t.fp.y + c.cy + (t.oy ?? 0));
+          hist[Math.min(4, Math.floor(fy * 5)) * 5 + Math.min(4, Math.floor(fx * 5))]!++;
+          n++;
+        }
+      }
+    }
+    expect(n).toBeGreaterThan(500);
+    const mean = n / 25;
+    const rel = hist.map((h) => +(h / mean).toFixed(2));
+    expect(Math.max(...rel), `Histogramm ${rel.join(' ')}`).toBeLessThanOrEqual(2);
+    expect(Math.min(...rel), `Histogramm ${rel.join(' ')}`).toBeGreaterThanOrEqual(0.4);
   });
 });

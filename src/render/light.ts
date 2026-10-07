@@ -19,14 +19,17 @@ const mix = (a: readonly number[], b: readonly number[], t: number): [number, nu
   a[1]! + (b[1]! - a[1]!) * t,
   a[2]! + (b[2]! - a[2]!) * t,
 ];
-/** Helles Geröll-/Schuttband am Gebirgsfuss (Massiv und Geländeebene): rock/rockLight mit 15 % sandDry. */
+/**
+ * Geröll-/Schuttband am Gebirgsfuss (Massiv und Geländeebene), L2: warmer Ocker statt kaltem Grau, rockLight mit
+ * etwa 30 % earth und 30 % sandDry (Fussband = Wiese mit Kies).
+ */
 export const DEBRIS: readonly [number, number, number] = mix(
-  mix(rgbOf(PALETTE.rock), rgbOf(PALETTE.rockLight), 0.6),
+  mix(rgbOf(PALETTE.rockLight), rgbOf(PALETTE.earth), 0.3),
   rgbOf(PALETTE.sandDry),
-  0.15,
+  0.3,
 );
 /** Anteil der Schuttfarbe am Massivrand (Netzpunkte in massif.ts, Pixel in rocks.ts). */
-export const DEBRIS_MIX = 0.9;
+export const DEBRIS_MIX = 0.6;
 
 // ---------- Tonleiter (H-R11: aus massif.ts hierher, Gebirge und Boden teilen sie) ----------
 //

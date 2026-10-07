@@ -3,7 +3,8 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
 import { bodyHeight, spriteBounds } from '../../src/render/iso';
 import { SPRITE_CACHE_MAX_BYTES } from '../../src/render/limits';
-import { bodyFaces, bodyPolygons, drawBody } from '../../src/render/sprites';
+// L3: Geometrie- und Referenztests zeichnen ohne Bildmodus (`drawBodyPlain`); Bildmodus: sprites-kanten.test.ts
+import { bodyFaces, bodyPolygons, drawBodyPlain as drawBody } from '../../src/render/sprites';
 import { VARIANT_COUNT, VARIANT_LOOKS, variantOf } from '../../src/render/variants';
 import { createSpriteCache, spriteKey, type SpriteSurface } from '../../src/render/spriteCache';
 import { drawMaterial, materialDetail } from '../../src/render/material';
@@ -336,7 +337,7 @@ describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
             expect(p.y, m).toBeLessThanOrEqual(sf.height - half);
           }
         }
-  });
+  }, 20_000); // CI misst 8,1 s (lokal ca. 2 s): R270, Laufzeit <= 50 % des Timeouts
 });
 
 describe('H-R7 AK3/AK4 Silhouette und Picking', () => {

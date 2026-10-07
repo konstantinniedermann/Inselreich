@@ -3,6 +3,9 @@ import { ISO_H, ISO_W, ZOOM_STEPS, zoomStep, type Box, type Pt, type SortedItem 
 import { DEBRIS_MIX } from './light';
 import { MASSIF_BUILDS_PER_FRAME, MASSIF_CACHE_MAX_BYTES, MASSIF_MAX_SCALE } from './limits';
 import { hash2 } from '../sim/noise';
+import { FLOWER_TONES } from './groundDecor';
+import { PALETTE, rgbOf, rgbOfCss } from './palette';
+import { mixRgb, LIGHT_COLORS } from './light';
 import {
   DEBRIS,
   EDGE_ON,
@@ -13,12 +16,20 @@ import {
   ROCK_TONES,
   SUB,
   TONE_FLAT,
+  SNOW_TONES,
+  FOOT_GRASS,
+  L2_FLOWER_SALT,
+  L2_FLOWER_TONE_SALT,
+  VEG_GRASS_TONES,
   VEG_MIX,
   VEG_TONES,
+  massifTrees,
+  pieceCells,
   pieceHeight,
   pieceMesh,
   toneStep,
   type MassifPiece,
+  type MassifTree,
   type MeshCell,
 } from './massif';
 
@@ -107,6 +118,27 @@ export function massifSilhouette(item: MassifItem | { piece: MassifPiece }): Pt[
   return out;
 }
 
+const treesOf = new WeakMap<MassifPiece, MassifTree[]>();
+/**
+ * Krüppelbäume, die ein Teilstück malt (L2 C3): Anker-Zelle (I, J) unter den Zellen des Teilstücks, auch Nahtzellen
+ * (das vordere Teilstück übermalt sonst den Baum des hinteren). Nach Tiefe I + J geordnet.
+ */
+export function pieceTrees(p: MassifPiece): MassifTree[] {
+  let out = treesOf.get(p);
+  if (!out) {
+    const all = massifTrees(p.comp).trees;
+    if (all.length === 0) out = [];
+    else {
+      const cells = new Set(pieceCells(p).map((c) => c.J * 100000 + c.I));
+      out = all
+        .filter((t) => cells.has(t.J * 100000 + t.I))
+        .sort((a, b) => a.I + a.J - (b.I + b.J) || a.I - b.I);
+    }
+    treesOf.set(p, out);
+  }
+  return out;
+}
+
 const boxes = new WeakMap<MassifPiece, Box>();
 /** Bildbox eines Teilstücks (Weltpixel): Halbstreifen × Silhouette samt Rand. */
 export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
@@ -120,6 +152,7 @@ export function massifBounds(item: MassifItem | { piece: MassifPiece }): Box {
       y0 = Math.min(y0, q.y);
       y1 = Math.max(y1, q.y);
     }
+    for (const t of pieceTrees(p)) y0 = Math.min(y0, (t.I + t.J) * NY - t.h - t.height); // Bäume ragen über die Silhouette
     b = { x: p.strip * STRIP, y: y0 - PAD, w: STRIP, h: y1 - y0 + 2 * PAD };
     boxes.set(p, b);
   }
@@ -153,6 +186,11 @@ const STRATA_BREAK = 0.09;
 const GRAIN = 0.04; // Pixelkorn ±2 %
 /** Breite der Stufenübergänge in Pixeln der Fläche (1–2 px, Abnahme lead-art Runde 1). */
 export const TONE_EDGE_PX = 1.5;
+/** Rauschen am Rand von Bewuchs und Schnee (Anteil des Felds): gebrochene Ränder statt Papierschnitt. */
+const VEG_BREAK = 0.3,
+  SNOW_BREAK = 0.4;
+/** Weichheit der Sockelkontur: höchstens 1 Flächenpixel (L2). */
+const CONTOUR_PX = 1;
 const TEX_N = 128; // Kantenlänge der Felstextur (Wertrauschen, kachelbar, einmal beim Laden)
 /** Texturpixel je Weltpixel: Merkmale ≈ 2 px (fein, feiner als die Tonstufen) und ≈ 6 px (Brocken). */
 const TEX_FINE = 4,
@@ -223,7 +261,12 @@ export function rasterPiece(
   const seed = item.piece.comp.seed;
   const px = new Float64Array(4),
     py = new Float64Array(4);
+  const trees = pieceTrees(item.piece);
+  let ti = 0;
   for (const c of pieceMesh(item.piece)) {
+    // Bäume nach den Zellen bis zur Tiefe ihres Ankers: davor liegende Zellen überdecken den Fuss
+    while (ti < trees.length && trees[ti]!.I + trees[ti]!.J < c.I + c.J)
+      drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
     const I = [c.I, c.I + 1, c.I + 1, c.I],
       J = [c.J, c.J, c.J + 1, c.J + 1];
     for (let k = 0; k < 4; k++) {
@@ -232,6 +275,7 @@ export function rasterPiece(
     }
     for (const t of cellTris(c.n)) triangle(buf, W, H, px, py, t, c.n, seed, b.x, b.y, sx, sy);
   }
+  while (ti < trees.length) drawTree(buf, W, H, trees[ti++]!, b.x, b.y, sx, sy);
   if (ss === 1) {
     // ImageData erwartet unvormultiplizierte Farben (nur im Sockelband nötig)
     for (let o = 0; o < buf.length; o += 4) {
@@ -272,6 +316,80 @@ export function rasterPiece(
   return out;
 }
 
+const TREE_CROWN = rgbOf(PALETTE.crown),
+  TREE_LIGHT = rgbOf(PALETTE.crownLight),
+  TREE_TRUNK = rgbOf(PALETTE.earthEdge),
+  TREE_LINE = mixRgb(rgbOf(PALETTE.crown), LIGHT_COLORS.cool, 0.35); // dunkle Eigenkontur, nie Schwarz
+
+/** Kronenlappen eines Baums in Weltpixeln relativ zum Anker (u rechts, v hoch): Mitte, Radien. */
+export function treeLobes(t: MassifTree): { cu: number; cv: number; rx: number; ry: number }[] {
+  const ws = 1.45; // Breitenmassstab (Höhe 14–20 px, Breite ≤ 12 px)
+  const sh = t.height / 9;
+  const off = [-1.2, 1.2, -0.4];
+  const out: { cu: number; cv: number; rx: number; ry: number }[] = [];
+  for (let i = 0; i < t.lobes; i++) {
+    const a = t.lobes === 1 ? 0 : i / (t.lobes - 1); // 0 unten, 1 oben
+    const cv = t.height * (0.45 + 0.27 * a);
+    out.push({
+      cu: t.lean * (0.35 + 0.65 * a) + off[i % 3]! * ws,
+      cv,
+      rx: (2.2 - 0.25 * a) * ws,
+      ry: Math.min(2 * sh, t.height - cv) * (0.85 + 0.15 * (1 - a)) + 0.1,
+    });
+  }
+  return out;
+}
+
+/**
+ * Windschiefe Kiefer am Anker (L2 C3), in Weltpixeln gezeichnet (scharf bei jedem Faktor): Stamm in earthEdge, Krone
+ * aus 3 Lappen in crown/crownLight (Licht links oben) mit dunkler Eigenkontur. Höhe 14–20, Breite höchstens 12 px.
+ */
+function drawTree(
+  buf: Uint8ClampedArray,
+  W: number,
+  H: number,
+  t: MassifTree,
+  ox: number,
+  oy: number,
+  sx: number,
+  sy: number,
+): void {
+  const fx = (t.I - t.J) * NX,
+    fy = (t.I + t.J) * NY - t.h;
+  const top = t.height,
+    lean = t.lean;
+  const lobes = treeLobes(t);
+  const x0 = Math.max(0, Math.floor((fx - 8 - ox) * sx)),
+    x1 = Math.min(W - 1, Math.ceil((fx + 8 - ox) * sx)),
+    y0 = Math.max(0, Math.floor((fy - top - 1 - oy) * sy)),
+    y1 = Math.min(H - 1, Math.ceil((fy + 0.5 - oy) * sy));
+  for (let y = y0; y <= y1; y++)
+    for (let x = x0; x <= x1; x++) {
+      const u = ox + (x + 0.5) / sx - fx,
+        v = fy - (oy + (y + 0.5) / sy);
+      let c: readonly number[] | null = null;
+      // Stamm: leicht gekrümmt bis 55 % der Höhe
+      if (v >= 0 && v <= 0.55 * top && Math.abs(u - lean * 0.5 * (v / (0.55 * top)) ** 1.5) <= 0.6)
+        c = TREE_TRUNK;
+      // Lappen von oben nach unten: untere liegen vorn
+      for (let i = lobes.length - 1; i >= 0; i--) {
+        const l = lobes[i]!;
+        const qu = (u - l.cu) / l.rx,
+          qv = (v - l.cv) / l.ry;
+        const q = qu * qu + qv * qv;
+        if (q > 1) continue;
+        const rim = (1 - Math.sqrt(q)) * Math.min(l.rx, l.ry) < 0.9;
+        c = rim ? TREE_LINE : -0.6 * qu + 0.8 * qv > 0.1 ? TREE_LIGHT : TREE_CROWN;
+      }
+      if (!c) continue;
+      const o = (y * W + x) * 4;
+      buf[o] = c[0]!;
+      buf[o + 1] = c[1]!;
+      buf[o + 2] = c[2]!;
+      buf[o + 3] = 255;
+    }
+}
+
 /** Schichtband 0…1 am Weltpunkt (wx, wy) in Höhe h: nur an steilen Flanken, unterbrochen und versetzt (A3). */
 export function strataAt(h: number, steep: number, warp: number, wx: number, wy: number): number {
   if (steep < 0.35) return 0;
@@ -284,6 +402,9 @@ export function strataAt(h: number, steep: number, warp: number, wx: number, wy:
   return BAND[Math.floor((ph - Math.floor(ph)) * 64) & 63]! * on * sm * sm;
 }
 
+/** Blütendichte auf dem Blütenbereich (Anteil der Zellen); insgesamt höchstens 3 % der Bewuchspixel. */
+const FLOWER_DENSITY = 0.04;
+const FLOWER_RGB = FLOWER_TONES.map((c) => rgbOfCss(c));
 /** Seed-Versatz des Felskorns (Liste der Versätze in groundDecor.ts). */
 const GRAIN_SEED = 321;
 /**
@@ -292,6 +413,11 @@ const GRAIN_SEED = 321;
  */
 export function grainAt(seed: number, wx: number, wy: number, sx: number, sy: number): number {
   return 1 + (hash2(seed + GRAIN_SEED, Math.floor(wx * sx), Math.floor(wy * sy)) - 0.5) * GRAIN;
+}
+
+/** Korn im Schuttband (L2): Zellen von 2 Weltpixeln, halbe Amplitude (Salz 532, Liste in groundDecor.ts). */
+export function bandGrainAt(seed: number, wx: number, wy: number): number {
+  return 1 + (hash2(seed + 532, Math.floor(wx / 2), Math.floor(wy / 2)) - 0.5) * GRAIN * 0.5;
 }
 
 /** Halbe Übergangsbreite (in Einheiten des Werts) für TONE_EDGE_PX Pixel bei Gefälle |∇v| (je Pixel). */
@@ -342,10 +468,12 @@ function triangle(
     d1y = (x0 - x2) / area;
   const grad = (va: number, vb: number, vc: number): number =>
     Math.hypot((va - vc) * d0x + (vb - vc) * d1x, (va - vc) * d0y + (vb - vc) * d1y);
-  const hwS = halfWidth(grad(a.soft, b.soft, c.soft)),
+  const hwS = Math.min(0.5, Math.max(0.02, 0.5 * CONTOUR_PX * grad(a.soft, b.soft, c.soft))),
     hwT = halfWidth(grad(a.t, b.t, c.t)),
     hwE = halfWidth(grad(a.e, b.e, c.e)),
-    hwV = halfWidth(grad(a.veg, b.veg, c.veg));
+    hwV = halfWidth(grad(a.veg, b.veg, c.veg)),
+    hwN = halfWidth(grad(a.snow, b.snow, c.snow)),
+    hwF = halfWidth(grad(a.foot, b.foot, c.foot));
   const eps = -1e-7;
   const top = ROCK_TONES.length - 1;
   for (let y = minY; y <= maxY; y++) {
@@ -360,23 +488,43 @@ function triangle(
       if (w2 < eps) continue;
       const lerp = (va: number, vb: number, vc: number): number => va * w0 + vb * w1 + vc * w2;
       // Tonstufe
-      const st = Math.min(top, toneStep(lerp(a.t, b.t, c.t), hwT));
+      const soft = lerp(a.soft, b.soft, c.soft);
+      const deb = debrisOf(soft);
+      const st = Math.min(top, toneStep(lerp(a.t, b.t, c.t), hwT)); // Band: Stufen schon im Netz flach
       const k0 = Math.floor(st),
         k1 = Math.min(top, k0 + 1),
         fr = st - k0;
+      const vl = lerp(a.vlow, b.vlow, c.vlow); // Wiesentöne unten, Kronentöne oben
       const R = ROCK_TONES[k0]!,
         R1 = ROCK_TONES[k1]!,
         V = VEG_TONES[k0]!,
-        V1 = VEG_TONES[k1]!;
+        V1 = VEG_TONES[k1]!,
+        G = VEG_GRASS_TONES[k0]!,
+        G1 = VEG_GRASS_TONES[k1]!;
       let r = R[0] + (R1[0] - R[0]) * fr,
         g = R[1] + (R1[1] - R[1]) * fr,
         bl = R[2] + (R1[2] - R[2]) * fr;
       // Bewuchsflecken
-      const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg), 0.5, hwV);
+      // Weltpixel (stetig über Streifen und Zoomstufen) und grobes Rauschen für gebrochene Ränder (Bewuchs, Schnee)
+      const wx = ox + xc / sx,
+        wy = oy + yc / sy;
+      // nur dort rechnen, wo Bewuchs, Schnee oder Fusswiese wirken (Review R3)
+      const brk =
+        a.veg + b.veg + c.veg > 0.3 ||
+        a.snow + b.snow + c.snow > 0.3 ||
+        a.foot + b.foot + c.foot > 0.15
+          ? tex(wx * 1.1 + 31, wy * 1.1 + 5) - 0.5
+          : 0;
+      const vg = VEG_MIX * sstep(lerp(a.veg, b.veg, c.veg) + VEG_BREAK * brk, 0.5, hwV);
       if (vg > 0) {
-        r += (V[0] + (V1[0] - V[0]) * fr - r) * vg;
-        g += (V[1] + (V1[1] - V[1]) * fr - g) * vg;
-        bl += (V[2] + (V1[2] - V[2]) * fr - bl) * vg;
+        for (let q = 0; q < 3; q++) {
+          const v0 = V[q]! + (G[q]! - V[q]!) * vl,
+            v1 = V1[q]! + (G1[q]! - V1[q]!) * vl;
+          const target = v0 + (v1 - v0) * fr;
+          if (q === 0) r += (target - r) * vg;
+          else if (q === 1) g += (target - g) * vg;
+          else bl += (target - bl) * vg;
+        }
       }
       // knappe helle Kante auf Graten (Lichtseite), dunkle in Rinnen
       const e = lerp(a.e, b.e, c.e);
@@ -393,22 +541,36 @@ function triangle(
         g += (D[1] - g) * lo;
         bl += (D[2] - bl) * lo;
       }
+      // Schnee (L2 C2): 3 Stufen nach der Tonstufe, 1–2 px weicher Rand, ersetzt Fels und Bewuchs
+      const sn =
+        a.snow + b.snow + c.snow > 0.3
+          ? sstep(lerp(a.snow, b.snow, c.snow) + SNOW_BREAK * brk, 0.5, hwN)
+          : 0;
+      if (sn > 0) {
+        const S = SNOW_TONES[k0]!,
+          S1 = SNOW_TONES[k1]!;
+        r += (S[0] + (S1[0] - S[0]) * fr - r) * sn;
+        g += (S[1] + (S1[1] - S[1]) * fr - g) * sn;
+        bl += (S[2] + (S1[2] - S[2]) * fr - bl) * sn;
+      }
       // Schuttband am Fuss (hell), vor der Kontur
-      const soft = lerp(a.soft, b.soft, c.soft);
       const db = DEBRIS_MIX * debrisOf(soft);
       if (db > 0) {
         r += (DEBRIS[0] - r) * db;
         g += (DEBRIS[1] - g) * db;
         bl += (DEBRIS[2] - bl) * db;
       }
-      // Textur, Geröll und Schichtbänder in Weltpixeln (stetig über Streifen und Zoomstufen)
-      const wx = ox + xc / sx,
-        wy = oy + yc / sy;
+      // Textur, Geröll und Schichtbänder in Weltpixeln
       const steep = lerp(a.steep, b.steep, c.steep);
       const tf = tex(wx * TEX_FINE, wy * TEX_FINE) - 0.5,
         tc = tex(wx * TEX_COARSE + 37, wy * TEX_COARSE + 91) - 0.5;
-      let k = 1 + TEX_AMP * (tf * (0.45 + 0.55 * steep) + 0.45 * tc);
-      const rub = Math.max(lerp(a.rub, b.rub, c.rub), 0.8 * debrisOf(soft));
+      // Schuttband (L2): keine feinen Brocken und kein Feinkorn, nur grobe Tönung und Korn in 2-px-Zellen
+      let k =
+        1 +
+        TEX_AMP *
+          (tf * (0.45 + 0.55 * steep) * (1 - deb) + 0.45 * tc * (1 - 0.6 * deb)) *
+          (1 - 0.5 * sn); // Schnee: Textur halb
+      const rub = lerp(a.rub, b.rub, c.rub) * (1 - deb);
       if (rub > 0.05) {
         const s2 = tex(wx * 2.6 + 101, wy * 2.6 + 7);
         if (s2 > 0.72)
@@ -417,8 +579,12 @@ function triangle(
       }
       k *=
         1 -
-        STRATA_DARK * strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
-      k *= grainAt(seed, wx, wy, sx, sy);
+        STRATA_DARK *
+          (1 - sn) * // Schnee: keine Schichtbänder
+          strataAt(lerp(a.h, b.h, c.h), steep, lerp(a.warp, b.warp, c.warp), wx, wy);
+      if (sn > 0 && k > 1) k = 1 + (k - 1) * (1 - sn); // Schnee nie heller als seine Stufe (≤ foam)
+      k *= deb > 0.5 ? bandGrainAt(seed, wx, wy) : grainAt(seed, wx, wy, sx, sy);
+      if (sn > 0.5 && k > 1) k = 1;
       r *= k;
       g *= k;
       bl *= k;
@@ -428,6 +594,28 @@ function triangle(
         r += (lerp(a.ec[0], b.ec[0], c.ec[0]) - r) * mx;
         g += (lerp(a.ec[1], b.ec[1], c.ec[1]) - g) * mx;
         bl += (lerp(a.ec[2], b.ec[2], c.ec[2]) - bl) * mx;
+      }
+      // Wiesenfuss (G2): gestufte Kante, 1–2 px, Rand per Rauschen gebrochen
+      const fv = a.foot + b.foot + c.foot;
+      if (fv > 0.15) {
+        const fm = FOOT_GRASS * sstep(lerp(a.foot, b.foot, c.foot) + 0.25 * brk, 0.5, hwF);
+        if (fm > 0) {
+          r += (lerp(a.fc[0], b.fc[0], c.fc[0]) - r) * fm;
+          g += (lerp(a.fc[1], b.fc[1], c.fc[1]) - g) * fm;
+          bl += (lerp(a.fc[2], b.fc[2], c.fc[2]) - bl) * fm;
+        }
+      }
+      // C5 Alpenwiese: vereinzelte Blütenpunkte auf flachen Bewuchsflecken, Zelle = 1 Weltpixel (weltfest, kein Flimmern)
+      if (vg >= 0.9 * VEG_MIX && lerp(a.flower, b.flower, c.flower) > 0.5) {
+        const cx = Math.floor(wx),
+          cy = Math.floor(wy);
+        if (hash2(seed + L2_FLOWER_SALT, cx, cy) < FLOWER_DENSITY) {
+          const f =
+            FLOWER_RGB[Math.min(2, Math.floor(hash2(seed + L2_FLOWER_TONE_SALT, cx, cy) * 3))]!;
+          r = f[0];
+          g = f[1];
+          bl = f[2];
+        }
       }
       const o = (y * W + x) * 4;
       // Kontur: 1–2 px weich an der Höhenlinie SOFT_CUT; ab RIM_H Höhe immer deckend

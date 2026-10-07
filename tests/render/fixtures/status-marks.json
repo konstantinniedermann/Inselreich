@@ -1,0 +1,1262 @@
+{
+  "kontor|waitingInput|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|storageFull|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|noForest|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|waitingInput|z1": {
+    "hash": 1579419631,
+    "length": 623,
+    "marks": 1
+  },
+  "market|storageFull|z1": {
+    "hash": 3587419222,
+    "length": 940,
+    "marks": 1
+  },
+  "market|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|noForest|z1": {
+    "hash": 3971365180,
+    "length": 1336,
+    "marks": 1
+  },
+  "market|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|waitingInput|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|storageFull|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|noForest|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|waitingInput|z1": {
+    "hash": 1335038729,
+    "length": 623,
+    "marks": 1
+  },
+  "fisher|storageFull|z1": {
+    "hash": 705417410,
+    "length": 901,
+    "marks": 1
+  },
+  "fisher|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|noForest|z1": {
+    "hash": 1198706540,
+    "length": 1228,
+    "marks": 1
+  },
+  "fisher|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|waitingInput|z1": {
+    "hash": 1335038729,
+    "length": 623,
+    "marks": 1
+  },
+  "hunter|storageFull|z1": {
+    "hash": 705417410,
+    "length": 901,
+    "marks": 1
+  },
+  "hunter|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|noForest|z1": {
+    "hash": 1198706540,
+    "length": 1228,
+    "marks": 1
+  },
+  "hunter|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|waitingInput|z1": {
+    "hash": 766998538,
+    "length": 623,
+    "marks": 1
+  },
+  "cattlefarm|storageFull|z1": {
+    "hash": 232410132,
+    "length": 901,
+    "marks": 1
+  },
+  "cattlefarm|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|noForest|z1": {
+    "hash": 1763903570,
+    "length": 1228,
+    "marks": 1
+  },
+  "cattlefarm|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|waitingInput|z1": {
+    "hash": 201600014,
+    "length": 623,
+    "marks": 1
+  },
+  "lumberjack|storageFull|z1": {
+    "hash": 1850279370,
+    "length": 901,
+    "marks": 1
+  },
+  "lumberjack|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|noForest|z1": {
+    "hash": 2194544225,
+    "length": 1306,
+    "marks": 1
+  },
+  "lumberjack|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|waitingInput|z1": {
+    "hash": 766998538,
+    "length": 623,
+    "marks": 1
+  },
+  "quarry|storageFull|z1": {
+    "hash": 232410132,
+    "length": 901,
+    "marks": 1
+  },
+  "quarry|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|noForest|z1": {
+    "hash": 1763903570,
+    "length": 1228,
+    "marks": 1
+  },
+  "quarry|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|waitingInput|z1": {
+    "hash": 201600014,
+    "length": 623,
+    "marks": 1
+  },
+  "sheepfarm|storageFull|z1": {
+    "hash": 1850279370,
+    "length": 901,
+    "marks": 1
+  },
+  "sheepfarm|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|noForest|z1": {
+    "hash": 2194544225,
+    "length": 1306,
+    "marks": 1
+  },
+  "sheepfarm|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|waitingInput|z1": {
+    "hash": 129448686,
+    "length": 623,
+    "marks": 1
+  },
+  "weaver|storageFull|z1": {
+    "hash": 1531341081,
+    "length": 940,
+    "marks": 1
+  },
+  "weaver|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|noForest|z1": {
+    "hash": 710605398,
+    "length": 1336,
+    "marks": 1
+  },
+  "weaver|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|waitingInput|z1": {
+    "hash": 1008496861,
+    "length": 623,
+    "marks": 1
+  },
+  "canefarm|storageFull|z1": {
+    "hash": 454053204,
+    "length": 901,
+    "marks": 1
+  },
+  "canefarm|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|noForest|z1": {
+    "hash": 4085337315,
+    "length": 1228,
+    "marks": 1
+  },
+  "canefarm|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|waitingInput|z1": {
+    "hash": 70178229,
+    "length": 623,
+    "marks": 1
+  },
+  "distillery|storageFull|z1": {
+    "hash": 1276258968,
+    "length": 901,
+    "marks": 1
+  },
+  "distillery|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|noForest|z1": {
+    "hash": 3107275791,
+    "length": 1228,
+    "marks": 1
+  },
+  "distillery|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|waitingInput|z1": {
+    "hash": 129448686,
+    "length": 623,
+    "marks": 1
+  },
+  "toolmaker|storageFull|z1": {
+    "hash": 1531341081,
+    "length": 940,
+    "marks": 1
+  },
+  "toolmaker|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|noForest|z1": {
+    "hash": 710605398,
+    "length": 1336,
+    "marks": 1
+  },
+  "toolmaker|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|waitingInput|z1": {
+    "hash": 4138006367,
+    "length": 623,
+    "marks": 1
+  },
+  "chapel|storageFull|z1": {
+    "hash": 637626377,
+    "length": 940,
+    "marks": 1
+  },
+  "chapel|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|noForest|z1": {
+    "hash": 1929120743,
+    "length": 1264,
+    "marks": 1
+  },
+  "chapel|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|waitingInput|z1": {
+    "hash": 2590045479,
+    "length": 623,
+    "marks": 1
+  },
+  "school|storageFull|z1": {
+    "hash": 3042232602,
+    "length": 901,
+    "marks": 1
+  },
+  "school|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|noForest|z1": {
+    "hash": 1457875734,
+    "length": 1228,
+    "marks": 1
+  },
+  "school|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|waitingInput|z1": {
+    "hash": 2620207225,
+    "length": 701,
+    "marks": 1
+  },
+  "firestation|storageFull|z1": {
+    "hash": 3727966786,
+    "length": 979,
+    "marks": 1
+  },
+  "firestation|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|noForest|z1": {
+    "hash": 2960165211,
+    "length": 1427,
+    "marks": 1
+  },
+  "firestation|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|waitingInput|z1": {
+    "hash": 70178229,
+    "length": 623,
+    "marks": 1
+  },
+  "bathhouse|storageFull|z1": {
+    "hash": 1276258968,
+    "length": 901,
+    "marks": 1
+  },
+  "bathhouse|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|noForest|z1": {
+    "hash": 3107275791,
+    "length": 1228,
+    "marks": 1
+  },
+  "bathhouse|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|waitingInput|z1": {
+    "hash": 2976873420,
+    "length": 623,
+    "marks": 1
+  },
+  "glassworks|storageFull|z1": {
+    "hash": 3471828036,
+    "length": 901,
+    "marks": 1
+  },
+  "glassworks|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|noForest|z1": {
+    "hash": 1411982545,
+    "length": 1228,
+    "marks": 1
+  },
+  "glassworks|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|waitingInput|z1": {
+    "hash": 70178229,
+    "length": 623,
+    "marks": 1
+  },
+  "kontor2|storageFull|z1": {
+    "hash": 1276258968,
+    "length": 901,
+    "marks": 1
+  },
+  "kontor2|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|noForest|z1": {
+    "hash": 3107275791,
+    "length": 1228,
+    "marks": 1
+  },
+  "kontor2|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|waitingInput|z1": {
+    "hash": 1008496861,
+    "length": 623,
+    "marks": 1
+  },
+  "spicefarm|storageFull|z1": {
+    "hash": 454053204,
+    "length": 901,
+    "marks": 1
+  },
+  "spicefarm|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|noForest|z1": {
+    "hash": 4085337315,
+    "length": 1228,
+    "marks": 1
+  },
+  "spicefarm|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|waitingInput|z1": {
+    "hash": 2092199542,
+    "length": 623,
+    "marks": 1
+  },
+  "townhall|storageFull|z1": {
+    "hash": 2289682882,
+    "length": 901,
+    "marks": 1
+  },
+  "townhall|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|noForest|z1": {
+    "hash": 1081128079,
+    "length": 1264,
+    "marks": 1
+  },
+  "townhall|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|waitingInput|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|storageFull|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|noForest|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|waitingInput|z2": {
+    "hash": 4027900835,
+    "length": 623,
+    "marks": 1
+  },
+  "market|storageFull|z2": {
+    "hash": 1043067444,
+    "length": 937,
+    "marks": 1
+  },
+  "market|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|noForest|z2": {
+    "hash": 2758610679,
+    "length": 1150,
+    "marks": 1
+  },
+  "market|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "market|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|waitingInput|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|storageFull|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|noForest|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "house|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|waitingInput|z2": {
+    "hash": 3174338645,
+    "length": 623,
+    "marks": 1
+  },
+  "fisher|storageFull|z2": {
+    "hash": 3944491286,
+    "length": 901,
+    "marks": 1
+  },
+  "fisher|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|noForest|z2": {
+    "hash": 2321453487,
+    "length": 1150,
+    "marks": 1
+  },
+  "fisher|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "fisher|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|waitingInput|z2": {
+    "hash": 3174338645,
+    "length": 623,
+    "marks": 1
+  },
+  "hunter|storageFull|z2": {
+    "hash": 3944491286,
+    "length": 901,
+    "marks": 1
+  },
+  "hunter|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|noForest|z2": {
+    "hash": 2321453487,
+    "length": 1150,
+    "marks": 1
+  },
+  "hunter|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "hunter|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|waitingInput|z2": {
+    "hash": 1544622768,
+    "length": 623,
+    "marks": 1
+  },
+  "cattlefarm|storageFull|z2": {
+    "hash": 4120383489,
+    "length": 901,
+    "marks": 1
+  },
+  "cattlefarm|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|noForest|z2": {
+    "hash": 1837945382,
+    "length": 1183,
+    "marks": 1
+  },
+  "cattlefarm|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "cattlefarm|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|waitingInput|z2": {
+    "hash": 4194972502,
+    "length": 623,
+    "marks": 1
+  },
+  "lumberjack|storageFull|z2": {
+    "hash": 3811763528,
+    "length": 901,
+    "marks": 1
+  },
+  "lumberjack|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|noForest|z2": {
+    "hash": 639108836,
+    "length": 1354,
+    "marks": 1
+  },
+  "lumberjack|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "lumberjack|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|waitingInput|z2": {
+    "hash": 1544622768,
+    "length": 623,
+    "marks": 1
+  },
+  "quarry|storageFull|z2": {
+    "hash": 4120383489,
+    "length": 901,
+    "marks": 1
+  },
+  "quarry|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|noForest|z2": {
+    "hash": 1837945382,
+    "length": 1183,
+    "marks": 1
+  },
+  "quarry|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "quarry|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|waitingInput|z2": {
+    "hash": 4194972502,
+    "length": 623,
+    "marks": 1
+  },
+  "sheepfarm|storageFull|z2": {
+    "hash": 3811763528,
+    "length": 901,
+    "marks": 1
+  },
+  "sheepfarm|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|noForest|z2": {
+    "hash": 639108836,
+    "length": 1354,
+    "marks": 1
+  },
+  "sheepfarm|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "sheepfarm|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|waitingInput|z2": {
+    "hash": 3849276384,
+    "length": 623,
+    "marks": 1
+  },
+  "weaver|storageFull|z2": {
+    "hash": 2471887739,
+    "length": 937,
+    "marks": 1
+  },
+  "weaver|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|noForest|z2": {
+    "hash": 626135665,
+    "length": 1150,
+    "marks": 1
+  },
+  "weaver|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "weaver|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|waitingInput|z2": {
+    "hash": 680663353,
+    "length": 623,
+    "marks": 1
+  },
+  "canefarm|storageFull|z2": {
+    "hash": 773974493,
+    "length": 901,
+    "marks": 1
+  },
+  "canefarm|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|noForest|z2": {
+    "hash": 2144540500,
+    "length": 1183,
+    "marks": 1
+  },
+  "canefarm|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "canefarm|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|waitingInput|z2": {
+    "hash": 2991182442,
+    "length": 623,
+    "marks": 1
+  },
+  "distillery|storageFull|z2": {
+    "hash": 4244766226,
+    "length": 901,
+    "marks": 1
+  },
+  "distillery|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|noForest|z2": {
+    "hash": 759385266,
+    "length": 1150,
+    "marks": 1
+  },
+  "distillery|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "distillery|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|waitingInput|z2": {
+    "hash": 3849276384,
+    "length": 623,
+    "marks": 1
+  },
+  "toolmaker|storageFull|z2": {
+    "hash": 2471887739,
+    "length": 937,
+    "marks": 1
+  },
+  "toolmaker|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|noForest|z2": {
+    "hash": 626135665,
+    "length": 1150,
+    "marks": 1
+  },
+  "toolmaker|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "toolmaker|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|waitingInput|z2": {
+    "hash": 1916996897,
+    "length": 623,
+    "marks": 1
+  },
+  "chapel|storageFull|z2": {
+    "hash": 1100403636,
+    "length": 940,
+    "marks": 1
+  },
+  "chapel|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|noForest|z2": {
+    "hash": 1529102002,
+    "length": 1294,
+    "marks": 1
+  },
+  "chapel|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "chapel|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|waitingInput|z2": {
+    "hash": 2599490289,
+    "length": 623,
+    "marks": 1
+  },
+  "school|storageFull|z2": {
+    "hash": 3912175061,
+    "length": 901,
+    "marks": 1
+  },
+  "school|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|noForest|z2": {
+    "hash": 3837931954,
+    "length": 1150,
+    "marks": 1
+  },
+  "school|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "school|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|waitingInput|z2": {
+    "hash": 1072388305,
+    "length": 701,
+    "marks": 1
+  },
+  "firestation|storageFull|z2": {
+    "hash": 1036724214,
+    "length": 979,
+    "marks": 1
+  },
+  "firestation|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|noForest|z2": {
+    "hash": 3932402299,
+    "length": 1367,
+    "marks": 1
+  },
+  "firestation|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "firestation|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|waitingInput|z2": {
+    "hash": 2991182442,
+    "length": 623,
+    "marks": 1
+  },
+  "bathhouse|storageFull|z2": {
+    "hash": 4244766226,
+    "length": 901,
+    "marks": 1
+  },
+  "bathhouse|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|noForest|z2": {
+    "hash": 759385266,
+    "length": 1150,
+    "marks": 1
+  },
+  "bathhouse|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "bathhouse|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|waitingInput|z2": {
+    "hash": 116276767,
+    "length": 623,
+    "marks": 1
+  },
+  "glassworks|storageFull|z2": {
+    "hash": 421394317,
+    "length": 901,
+    "marks": 1
+  },
+  "glassworks|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|noForest|z2": {
+    "hash": 2247091221,
+    "length": 1183,
+    "marks": 1
+  },
+  "glassworks|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "glassworks|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|waitingInput|z2": {
+    "hash": 2991182442,
+    "length": 623,
+    "marks": 1
+  },
+  "kontor2|storageFull|z2": {
+    "hash": 4244766226,
+    "length": 901,
+    "marks": 1
+  },
+  "kontor2|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|noForest|z2": {
+    "hash": 759385266,
+    "length": 1150,
+    "marks": 1
+  },
+  "kontor2|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "kontor2|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|waitingInput|z2": {
+    "hash": 680663353,
+    "length": 623,
+    "marks": 1
+  },
+  "spicefarm|storageFull|z2": {
+    "hash": 773974493,
+    "length": 901,
+    "marks": 1
+  },
+  "spicefarm|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|noForest|z2": {
+    "hash": 2144540500,
+    "length": 1183,
+    "marks": 1
+  },
+  "spicefarm|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "spicefarm|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|waitingInput|z2": {
+    "hash": 2835107536,
+    "length": 623,
+    "marks": 1
+  },
+  "townhall|storageFull|z2": {
+    "hash": 1496868550,
+    "length": 901,
+    "marks": 1
+  },
+  "townhall|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|noForest|z2": {
+    "hash": 293277840,
+    "length": 1186,
+    "marks": 1
+  },
+  "townhall|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "townhall|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  }
+}
