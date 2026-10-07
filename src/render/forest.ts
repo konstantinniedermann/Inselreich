@@ -65,17 +65,20 @@ export function slotAt(seed: number, type: ForestType, x: number, y: number): Sl
 
 /**
  * Randversatz entlang der Aussennormalen (Bildrunde 1 nach R298): nach innen bis `EDGE_IN`, nach aussen bis `EDGE_OUT`.
- * Kronenfuss (≤ 0,35) plus Versatz bleibt ≤ 0,75 Kachel über der eigenen Kachel: weicht der Rand weiter als
- * `EDGE_THIN` zurück, nimmt die Kachel die Eng-Form (Kronen innerhalb der Kachel, kleiner und lichter).
+ * Die Rand-Stempel ragen höchstens 0,24 Kachel über ihre Kachel (trees.ts), Kronenfuss plus Versatz bleibt also
+ * ≤ 0,75 (Culling mit 1 Kachel Zuschlag; RF-L1-13). Keine Eng-Form am zurückweichenden Rand: ihre hochstämmigen
+ * Jungbäume lasen sich als Lutscher, und der Waldboden (terrain.ts) zeigte dort die Raute.
  */
-export const EDGE_IN = 0.55,
-  EDGE_OUT = 0.35,
-  EDGE_THIN = -0.25;
+export const EDGE_IN = 0.5,
+  EDGE_OUT = 0.35;
 /** Kern-Versatz je Achse (R298: ±0,2 statt ±0,08; kleine Lücken im Kronendach lesen sich als Waldbodenschatten). */
 const CORE_SHIFT = 0.2;
-/** Randversatz: Weissrauschen je Kachel, Konvexitätsausgleich je Stufe, Jitter quer zur Normalen (R298). */
-const EDGE_WHITE = 0.12,
-  EDGE_BULGE = 0.22,
+/**
+ * Randversatz (R298): Weissrauschen je Kachel (vor der Stauchung, in Feldeinheiten), Konvexitätsausgleich je Stufe
+ * (danach, in Kacheln), Jitter quer zur Normalen (Kacheln).
+ */
+const EDGE_WHITE = 0.9,
+  EDGE_BULGE = 0.18,
   EDGE_TANGENT = 0.1;
 /**
  * Formwahl (R298): Kosten einer Wiederholung links/oben (meist 4, in `REPEAT_P` der Kacheln nur `REPEAT_COST`) und
@@ -86,22 +89,22 @@ const REPEAT_P = 0.2,
   DIAG_COST = 1.2,
   ANTI_COST = 0.8;
 /** Verstärkung vor der Stauchung (tanh): wie oft der Rand die Grenzen fast erreicht. */
-const EDGE_GAIN = 2.8;
+const EDGE_GAIN = 2.6;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
+/** Feld des Randversatzes vor der Stauchung: drei Rauschen (Perioden ≈ 4,5, 3,4 und 2,3 Kacheln; Salze 504, 517, 514). */
+const edgeRaw = (seed: number, fx: number, fy: number): number =>
+  EDGE_GAIN *
+  ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
+    (valueNoise(seed + 517, fx / 3.4, fy / 3.4) - 0.5) * 2.2 +
+    (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 1.6);
+/** Asymmetrische Stauchung: nach innen bis −`EDGE_IN`, nach aussen bis +`EDGE_OUT`. */
+const squash = (v: number): number => (v < 0 ? EDGE_IN * Math.tanh(v) : EDGE_OUT * Math.tanh(v));
 /**
- * Randversatz-Betrag in Kacheln an einem Kachelpunkt, in [−`EDGE_IN`; +`EDGE_OUT`]: drei Rauschen (Perioden ≈ 4,5,
- * 3,4 und 2,3 Kacheln; Salze 504, 517, 514), asymmetrisch gestaucht. Gerade Maskenkanten werden so wellig
- * (Wellenlänge 2–5 Kacheln), der Rand weicht weiter zurück als er vorragt.
+ * Randversatz-Betrag in Kacheln an einem Kachelpunkt, in [−`EDGE_IN`; +`EDGE_OUT`]: das Feld asymmetrisch gestaucht.
+ * Gerade Maskenkanten werden so wellig (Wellenlänge 2–5 Kacheln), der Rand weicht weiter zurück als er vorragt.
  */
-export const forestEdgeShift = (seed: number, fx: number, fy: number): number => {
-  const v = Math.tanh(
-    EDGE_GAIN *
-      ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
-        (valueNoise(seed + 517, fx / 3.4, fy / 3.4) - 0.5) * 2.2 +
-        (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 1.6),
-  );
-  return v < 0 ? v * EDGE_IN : v * EDGE_OUT;
-};
+export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
+  squash(edgeRaw(seed, fx, fy));
 /** Lichtungsfeld 0…1 (Merkmal ≈ 5 Kacheln); ab 0,5 lichtet sich der Kern. */
 export const forestClearing = (seed: number, fx: number, fy: number): number => {
   const n = valueNoise(seed + 508, fx / 5, fy / 5);
@@ -181,13 +184,13 @@ export function forestLayout(
         // diagonal) nach aussen; dazu das wellige Feld und je Kachel Weissrauschen
         const bulge = clamp(ortho - 1, -1, 2);
         const a = clamp(
-          forestEdgeShift(seed, x + 0.5, y + 0.5) +
-            (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE -
+          squash(
+            edgeRaw(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE,
+          ) -
             bulge * EDGE_BULGE,
           -EDGE_IN,
           EDGE_OUT,
         );
-        if (a < EDGE_THIN) useRole = 2; // der Rand dünnt aus: Eng-Form, Kronen in der Kachel
         const t = (hash2(seed + 516, x, y) - 0.5) * 2 * EDGE_TANGENT;
         ox = nx * a - ny * t;
         oy = ny * a + nx * t;
