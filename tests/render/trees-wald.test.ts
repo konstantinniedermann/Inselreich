@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
-import { ISO_W, TEX, project } from '../../src/render/iso';
+import { TEX, project } from '../../src/render/iso';
 import { crownPolys } from '../../src/render/life';
 import { fieldWorld } from '../../src/render/terrainField';
 import { buildGrid, paintPixels } from '../../src/render/terrain';

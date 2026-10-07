@@ -32,7 +32,6 @@ import {
 } from '../../src/render/trees';
 import { fakeCtx, type P } from './fakeCtx';
 import {
-  crownsOf,
   expand,
   fakeCanvasFactory,
   mkItem,
