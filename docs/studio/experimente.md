@@ -264,14 +264,15 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
 - Ruling: –
 
-## E-034 · vorgeschlagen · Übergabe-Prüfzeile bei Session-Abbruch
+## E-034 · vorgeschlagen (angenommen R308, wartet auf Platz) · Übergabe-Prüfzeile bei Session-Abbruch
 
 - Hypothese: Wenn L0 beim Abbruch Agenten mit Heartbeat < 10 min in `state.md` als „kann weiterlaufen“ nennt und beim Start vor jedem Neustart Worktree-Stand und Dashboard prüft, entstehen keine zwei Schreiber im selben Worktree und `state.md` ist nicht veraltet (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md) B1).
 - Messgrösse: bei den nächsten 3 Abbrüchen oder Pausen 0 Worktrees mit zwei Schreibern und 0 Abweichungen zwischen `state.md` und Worktree-HEAD beim Start (Ausgang: 1 Abweichung bei L7 in 1 Abbruch).
 - Zeitraum: die nächsten 3 Abbrüche, höchstens 4 Wochen.
 - Rückfall: Handbuch auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Ende, Punkt 1; Start, Punkt 5)
-- Ruling: –
+- Ruling: R308
+- Start: Handbuch 1.24 (Satz gilt seit 2026-10-07); Zählung `laufend` erst bei freiem Platz (3 laufen: E-022, E-027, E-030)
 
 ## E-035 · vorgeschlagen · Überholte CI-Vorfälle automatisch erledigen
 

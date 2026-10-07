@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-07 · Handbuch 1.24
+
+- Anlass: Kurz-Retro Session 7db07561 B1 (Agenten liefen nach dem Abbruch weiter)
+- Datenbasis: `docs/studio/retros/2026-10-07-session-7db07561-ende.md`; `.studio/events.jsonl`
+- Ruling: R308
+- Änderungen: Session-Ende um Punkt 0a ergänzt (Agenten mit frischem Heartbeat in `state.md`; vor Paket-Neustart Worktree-HEAD und Dashboard prüfen), E-034 läuft
+
 ## 2026-10-07 · Handbuch 1.23
 
 - Anlass: Ad-hoc-Retro Session 7db07561 B3 (hängende Messung im Ruhezustand, `pkill -f`)
