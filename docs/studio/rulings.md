@@ -2564,3 +2564,13 @@ Reserve oder kleinerer Test, kein `src/`. WALD-02 startet parallel (disjunkte Da
 bleibt eine Runde länger rot; Produktion unberührt.
 
 Entscheider: L0 · Anlass: Integrator-Bericht REL-06 · ADR: —
+
+## R303 · 2026-10-07 · Vorschläge Ad-hoc-Retro 2026-10-07
+
+Ruling: Angenommen: E-031 als Anpassung von E-022 (kein neuer Platz): `merge=union` für `docs/beobachtungen.md`
+entfällt, Konflikte löst der Integrator (beide Anhänge behalten). E-032 als Werkzeug-Paket TOOL-CHECK-ZEITTEST
+(`make check` prüft Zeittest-Timeouts und Doku-Prettier). Regel: Guard sperrt `pkill`/`killall` mit `-f`
+(TOOL-GUARD-PKILL); Messläufe mit Wanduhr-Limit und `caffeinate`. E-033 (Rater nach jedem Layer) vorgemerkt, startet
+mit WALD-02 sinngemäss (Rater im Paket). — Kosten bei Irrtum: mehr Merge-Konflikte in einer Datei.
+
+Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-07-adhoc-session-7db07561.md` · ADR: —
