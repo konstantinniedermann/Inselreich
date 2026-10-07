@@ -48,21 +48,35 @@ export const GIANT_SCALE = 1.8;
 const OVERHANG = 0.35; // Kronenfuss ragt höchstens so weit über die eigene Kachel
 const CROWN_RY = 0.85; // Kronenhöhe im Verhältnis zur Breite
 /**
- * Kernkronen (R298): Anzahl, Fenster des Torus-Bilds (Anteile unter `CORE_WIN` rücken um eine Kachel nach vorn),
- * Mindestabstand auf dem Kacheltorus, Radius r0 + rs × Zufall; bis zu `CORE_TRIES` Streuungen, die erste mit
- * Deckung ≥ `CORE_COVER` der eigenen Raute gilt (sonst die beste). Hinten in der Kachel sitzt eine Kernkrone lieber
- * tiefer (Höhe ab `CORE_LOW` × Kronenhalbhöhe) als dass sie schrumpft; sonst wären hintere Kronen je Kachel kleiner
- * und das Dach zeigte Reihen im Kachelabstand.
+ * Kernkronen (R298, Bildrunde 1): Blue-Noise-Streuung auf dem Kacheltorus; je Punkt ein Torus-Bild mit Koordinaten in
+ * [`CORE_LO`; `CORE_HI`] und Tiefe cx + cy ≥ `CORE_S0` (hinten wäre die Krone unter `TREE_H` gedrückt), damit Kronen
+ * über die Kachelgrenzen greifen und die Kacheln ineinanderlaufen. Die drei Kernformen unterscheiden sich im
+ * Massstab (`CORE_CLASSES`: wenige grosse Kronen der Hauptart mit Füllwerk, mittel, viele kleine).
+ * Bis zu `CORE_TRIES` Streuungen, die erste mit Deckung ≥ `CORE_COVER` der eigenen Raute gilt (sonst die beste).
+ * Stösst eine Kernkrone an `TREE_H`, sitzt sie lieber tiefer (Höhe ab `CORE_LOW` × Kronenhalbhöhe) als dass sie
+ * schrumpft; sonst wären hintere Kronen je Kachel kleiner und das Dach zeigte Reihen im Kachelabstand.
  */
-const CORE_MIN = 6,
-  CORE_MAX = 7,
-  CORE_WIN = 0.15,
-  CORE_DMIN = 0.32,
-  CORE_R0 = 0.18,
-  CORE_RS = 0.15,
+const CORE_LO = -0.2,
+  CORE_HI = 1.2,
+  CORE_S0 = 0.6,
   CORE_COVER = 0.9,
   CORE_TRIES = 4,
   CORE_LOW = 0.6;
+interface CoreClass {
+  big: number;
+  rBig: number;
+  rBigS: number;
+  fill: number;
+  fillS: number;
+  rFill: number;
+  rFillS: number;
+  dMin: number;
+}
+const CORE_CLASSES: readonly CoreClass[] = [
+  { big: 3, rBig: 0.28, rBigS: 0.05, fill: 2, fillS: 1, rFill: 0.12, rFillS: 0.05, dMin: 0.42 },
+  { big: 0, rBig: 0, rBigS: 0, fill: 6, fillS: 1, rFill: 0.18, rFillS: 0.12, dMin: 0.32 },
+  { big: 0, rBig: 0, rBigS: 0, fill: 7, fillS: 0, rFill: 0.17, rFillS: 0.08, dMin: 0.3 },
+];
 const TRUNK_COLOR = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
 /** Körper des Nadelbaums (R149). */
 export const CONIFER_COLOR = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
@@ -376,24 +390,36 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
     kind === 3 ? (role === 0 ? 0.7 : 1.1) + 0.2 * rnd(i, 3) : lo + (hi - lo) * rnd(i, 3); // Pinie: kurzer Stamm
   if (role === 0) {
     // Kern (R298): Blue-Noise-Streuung auf dem Kacheltorus statt fester Anker, damit die Kronen aller Kernkacheln kein
-    // gemeinsames Unterraster bilden (Kugelraster, Baumreihen). Über die Kachelgrenze greifen die Kronen mit Radius
-    // und Kern-Versatz (±0,2, forest.ts); Anzahl und Grösse streuen.
-    const win = (v: number): number => (v < CORE_WIN ? v + 1 : v);
+    // gemeinsames Unterraster bilden (Kugelraster, Baumreihen); Massstab je Form (s. CORE_CLASSES)
+    const cls = CORE_CLASSES[form]!;
+    /** Torus-Bild eines Punkts: alle Bilder im Bereich und tief genug, eines davon per Zufall. */
+    const image = (qx: number, qy: number, i: number): [number, number] => {
+      const opts: [number, number][] = [];
+      for (let a = -1; a <= 1; a++)
+        for (let b = -1; b <= 1; b++) {
+          const px = qx + a,
+            py = qy + b;
+          if (px < CORE_LO || px > CORE_HI || py < CORE_LO || py > CORE_HI) continue;
+          if (px + py >= CORE_S0) opts.push([px, py]);
+        }
+      return opts[Math.floor(rnd(i, 5) * opts.length)] ?? [qx + 0.5, qy + 0.5];
+    };
     let best: Crown[] = [],
       bestCover = -1;
     for (let t = 0; t < CORE_TRIES && bestCover < CORE_COVER; t++) {
       out.length = 0;
       const k0 = t * 50;
-      const n = CORE_MIN + Math.floor(rnd(30 + t, 0) * (CORE_MAX - CORE_MIN + 1));
-      spread(n, k0, CORE_DMIN, 0, 1, true).forEach(([qx, qy], j) => {
+      const n = cls.big + cls.fill + Math.floor(rnd(30 + t, 0) * (cls.fillS + 1));
+      spread(n, k0, cls.dMin, 0, 1, true).forEach(([qx, qy], j) => {
         const i = k0 + j;
-        const kind = kindFor(i);
+        const kind = j < cls.big ? base : kindFor(i); // die grossen Kronen sind immer Hauptart
+        const [px, py] = image(qx, qy, i);
         add(
           kind,
           false,
-          CORE_R0 + CORE_RS * rnd(i, 2),
-          win(qx),
-          win(qy),
+          j < cls.big ? cls.rBig + cls.rBigS * rnd(i, 2) : cls.rFill + cls.rFillS * rnd(i, 2),
+          px,
+          py,
           hfFor(kind, 0.8, 0.95, i),
           rnd(i, 4),
           limitTop,

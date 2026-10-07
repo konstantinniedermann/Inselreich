@@ -7,6 +7,7 @@ import {
   type TileClass,
 } from '../../src/render/forest';
 import { valueNoise } from '../../src/sim/noise';
+import { crownsFor } from '../../src/render/trees';
 
 // forest.test.ts — reine Platzierung (L1 Wald organisch): Rolle, Art-Slot, Form, Versatz, Riesenbaum, Waldtyp.
 
@@ -109,8 +110,9 @@ describe('L1 forest: Platzierung', () => {
     }
   });
 
-  // R298: Kern-Versatz ±0,2 statt ±0,08 (Kugelraster aufbrechen), Rand dazu ±0,1 quer zur Normalen (Treppen aufbrechen)
-  it('RF-L1-3 Versatz: Rand ±0,3 entlang der Aussennormalen und ±0,1 quer dazu, Kern ±0,2, Eng 0; beide Vorzeichen kommen vor', () => {
+  // R298: Kern-Versatz ±0,2 statt ±0,08 (Kugelraster aufbrechen), Rand dazu ±0,1 quer zur Normalen (Treppen aufbrechen);
+  // Bildrunde 1: Rand entlang der Normalen −0,55 … +0,35 statt ±0,3 (wellige Kanten)
+  it('RF-L1-3 Versatz: Rand −0,55 … +0,35 entlang der Aussennormalen und ±0,1 quer dazu, Kern ±0,2, Eng 0; beide Vorzeichen kommen vor', () => {
     let pos = 0,
       neg = 0;
     for (const seed of SEEDS) {
@@ -123,7 +125,7 @@ describe('L1 forest: Platzierung', () => {
           expect(Math.abs(p.oy)).toBeLessThanOrEqual(0.2 + 1e-9);
         }
         if (p.role === 1) {
-          expect(Math.hypot(p.ox, p.oy)).toBeLessThanOrEqual(Math.hypot(0.3, 0.1) + 1e-9);
+          expect(Math.hypot(p.ox, p.oy)).toBeLessThanOrEqual(Math.hypot(0.55, 0.1) + 1e-9);
           if (Math.hypot(p.ox, p.oy) > 0.1) {
             pos++;
           }
@@ -144,7 +146,8 @@ describe('L1 forest: Platzierung', () => {
         const p = L[19 * 30 + x]!; // Randreihe, Wiese bei +y
         expect(p.role).toBe(1);
         expect(Math.abs(p.ox)).toBeLessThanOrEqual(0.1 + 1e-9); // quer zur Normalen
-        expect(Math.abs(p.oy)).toBeLessThanOrEqual(0.3 + 1e-9);
+        expect(p.oy).toBeGreaterThanOrEqual(-0.55 - 1e-9); // Bildrunde 1: nach innen bis 0,55
+        expect(p.oy).toBeLessThanOrEqual(0.35 + 1e-9); // nach aussen bis 0,35
         if (p.oy > 0) pos++;
         else neg++;
       }
@@ -172,6 +175,56 @@ describe('L1 forest: Platzierung', () => {
       }
       const mean = (v: number[]) => v.reduce((p, q) => p + q, 0) / v.length;
       expect(mean(inn) - mean(out), `Seed ${seed}`).toBeGreaterThanOrEqual(0.15);
+    }
+  });
+
+  it('RF-L1-11 Randwelligkeit: entlang einer geraden Kante und einer Treppe (je 10 Kacheln) streut die äusserste Kronenposition zur Maskenlinie mit SD ≥ 0,25 Kachel (Mittel über die Seeds, je Seed ≥ 0,15)', () => {
+    const sd = (v: number[]): number => {
+      const m = v.reduce((a, b) => a + b, 0) / v.length;
+      return Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length);
+    };
+    const w = 48;
+    // gerade Kante: Wald y < 30, Wiese ab y = 30; Randreihe y = 29, Aussennormale +y
+    const straight = (x: number, y: number): TileClass =>
+      x < 0 || y < 0 || x >= w || y >= w
+        ? 'blocked'
+        : y < 30 && x >= 4 && x < 44
+          ? 'forest'
+          : 'meadow';
+    // Treppe: Wald x + y ≤ 40; vorspringende Stufen auf x + y = 40, Aussennormale (1, 1) / √2
+    const stair = (x: number, y: number): TileClass =>
+      x < 0 || y < 0 || x >= w || y >= w ? 'blocked' : x + y <= 40 ? 'forest' : 'meadow';
+    const k = Math.SQRT1_2;
+    const sds: number[][] = [[], []];
+    for (const seed of SEEDS) {
+      const A = forestLayout(seed, w, w, straight),
+        B = forestLayout(seed, w, w, stair);
+      const a: number[] = [],
+        b: number[] = [];
+      for (let i = 0; i < 10; i++) {
+        const p = A[29 * w + 15 + i]!;
+        a.push(Math.max(...crownsFor(seed, p.variant).map((c) => c.cy + c.r)) + p.oy - 1);
+        const x = 15 + i,
+          q = B[(40 - x) * w + x]!;
+        b.push(
+          Math.max(...crownsFor(seed, q.variant).map((c) => (c.cx + c.cy) * k + c.r)) +
+            (q.ox + q.oy) * k,
+        );
+      }
+      sds[0]!.push(sd(a));
+      sds[1]!.push(sd(b));
+    }
+    const mean = (v: number[]) => v.reduce((p, q) => p + q, 0) / v.length;
+    for (const [i, name] of ['gerade', 'Treppe'].entries()) {
+      const v = sds[i]!;
+      expect(
+        mean(v),
+        `${name}: SD je Seed ${v.map((x) => x.toFixed(2)).join(' ')}`,
+      ).toBeGreaterThanOrEqual(0.25);
+      expect(
+        Math.min(...v),
+        `${name}: SD je Seed ${v.map((x) => x.toFixed(2)).join(' ')}`,
+      ).toBeGreaterThanOrEqual(0.15);
     }
   });
 

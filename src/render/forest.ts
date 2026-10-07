@@ -6,7 +6,7 @@ import { hash2, valueNoise } from '../sim/noise';
 // groundDecor.ts): 500 Waldtyp · 501 Akzentart · 502 Bestandsfeld · 503 Akzentfeld · 504/514 Randversatz ·
 // 505 Hash-Streuung Rand · 506/507 Kern-Streuung x/y · 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel ·
 // 510 Riesenbaum ja/nein · 511 Formreihenfolge · 515 Wiederholung in der Formwahl (R298) · 516 Randversatz quer zur
-// Normalen (R298). Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68, 512 und 513).
+// Normalen (R298) · 517 wellige Randkomponente (Bildrunde 1). Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68, 512 und 513).
 
 /** Rolle einer Waldkachel: Kern (alle 8 Nachbarn freier Wald), Rand (grenzt an freie Wiese), Eng (gesperrter Nachbar). */
 export type Role = 0 | 1 | 2;
@@ -63,12 +63,19 @@ export function slotAt(seed: number, type: ForestType, x: number, y: number): Sl
   return d < 0.6 ? 0 : d < 0.86 ? 1 : 2;
 }
 
-const AMP = 0.3;
+/**
+ * Randversatz entlang der Aussennormalen (Bildrunde 1 nach R298): nach innen bis `EDGE_IN`, nach aussen bis `EDGE_OUT`.
+ * Kronenfuss (≤ 0,35) plus Versatz bleibt ≤ 0,75 Kachel über der eigenen Kachel: weicht der Rand weiter als
+ * `EDGE_THIN` zurück, nimmt die Kachel die Eng-Form (Kronen innerhalb der Kachel, kleiner und lichter).
+ */
+export const EDGE_IN = 0.55,
+  EDGE_OUT = 0.35,
+  EDGE_THIN = -0.25;
 /** Kern-Versatz je Achse (R298: ±0,2 statt ±0,08; kleine Lücken im Kronendach lesen sich als Waldbodenschatten). */
 const CORE_SHIFT = 0.2;
 /** Randversatz: Weissrauschen je Kachel, Konvexitätsausgleich je Stufe, Jitter quer zur Normalen (R298). */
-const EDGE_WHITE = 0.14,
-  EDGE_BULGE = 0.14,
+const EDGE_WHITE = 0.12,
+  EDGE_BULGE = 0.22,
   EDGE_TANGENT = 0.1;
 /**
  * Formwahl (R298): Kosten einer Wiederholung links/oben (meist 4, in `REPEAT_P` der Kacheln nur `REPEAT_COST`) und
@@ -78,15 +85,23 @@ const REPEAT_P = 0.2,
   REPEAT_COST = 0.8,
   DIAG_COST = 1.2,
   ANTI_COST = 0.8;
+/** Verstärkung vor der Stauchung (tanh): wie oft der Rand die Grenzen fast erreicht. */
+const EDGE_GAIN = 2.8;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
-/** Randversatz-Betrag in Kacheln an einem Kachelpunkt: Rauschen (Periode ≈ 4,5 Kacheln), in [−0,3; +0,3]. */
-export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
-  AMP *
-  Math.tanh(
-    ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
-      (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 2.2) /
-      AMP,
+/**
+ * Randversatz-Betrag in Kacheln an einem Kachelpunkt, in [−`EDGE_IN`; +`EDGE_OUT`]: drei Rauschen (Perioden ≈ 4,5,
+ * 3,4 und 2,3 Kacheln; Salze 504, 517, 514), asymmetrisch gestaucht. Gerade Maskenkanten werden so wellig
+ * (Wellenlänge 2–5 Kacheln), der Rand weicht weiter zurück als er vorragt.
+ */
+export const forestEdgeShift = (seed: number, fx: number, fy: number): number => {
+  const v = Math.tanh(
+    EDGE_GAIN *
+      ((valueNoise(seed + 504, fx / 4.5, fy / 4.5) - 0.5) * 1.1 +
+        (valueNoise(seed + 517, fx / 3.4, fy / 3.4) - 0.5) * 2.2 +
+        (valueNoise(seed + 514, fx / 2.3, fy / 2.3) - 0.5) * 1.6),
   );
+  return v < 0 ? v * EDGE_IN : v * EDGE_OUT;
+};
 /** Lichtungsfeld 0…1 (Merkmal ≈ 5 Kacheln); ab 0,5 lichtet sich der Kern. */
 export const forestClearing = (seed: number, fx: number, fy: number): number => {
   const n = valueNoise(seed + 508, fx / 5, fy / 5);
@@ -144,6 +159,39 @@ export function forestLayout(
         useRole = 1; // Lichtung (B2): der Kern nimmt die lichtere Rand-Form
         clearing[y * w + x] = 1;
       }
+      let ox = 0,
+        oy = 0;
+      if (role === 0) {
+        ox = (hash2(seed + 506, x, y) - 0.5) * 2 * CORE_SHIFT;
+        oy = (hash2(seed + 507, x, y) - 0.5) * 2 * CORE_SHIFT;
+      } else if (role === 1) {
+        let sx = 0,
+          sy = 0,
+          ortho = 0;
+        for (const [dx, dy] of NB) {
+          if (cls(x + dx, y + dy) !== 'meadow') continue;
+          sx += dx;
+          sy += dy;
+          if (dx === 0 || dy === 0) ortho++;
+        }
+        const len = Math.hypot(sx, sy) || 1;
+        const nx = sx / len,
+          ny = sy / len;
+        // Konvexität: vorspringende Stufe (Wiese an zwei, drei Seiten) rund nach innen, einspringende (Wiese nur
+        // diagonal) nach aussen; dazu das wellige Feld und je Kachel Weissrauschen
+        const bulge = clamp(ortho - 1, -1, 2);
+        const a = clamp(
+          forestEdgeShift(seed, x + 0.5, y + 0.5) +
+            (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE -
+            bulge * EDGE_BULGE,
+          -EDGE_IN,
+          EDGE_OUT,
+        );
+        if (a < EDGE_THIN) useRole = 2; // der Rand dünnt aus: Eng-Form, Kronen in der Kachel
+        const t = (hash2(seed + 516, x, y) - 0.5) * 2 * EDGE_TANGENT;
+        ox = nx * a - ny * t;
+        oy = ny * a + nx * t;
+      }
       const slot = slotAt(seed, type, x, y);
       const wv = at(x - 1, y),
         nv = at(x, y - 1),
@@ -164,38 +212,6 @@ export function forestLayout(
           best = cost;
           variant = v;
         }
-      }
-      let ox = 0,
-        oy = 0;
-      if (role === 0) {
-        ox = (hash2(seed + 506, x, y) - 0.5) * 2 * CORE_SHIFT;
-        oy = (hash2(seed + 507, x, y) - 0.5) * 2 * CORE_SHIFT;
-      } else if (role === 1) {
-        let sx = 0,
-          sy = 0,
-          ortho = 0;
-        for (const [dx, dy] of NB) {
-          if (cls(x + dx, y + dy) !== 'meadow') continue;
-          sx += dx;
-          sy += dy;
-          if (dx === 0 || dy === 0) ortho++;
-        }
-        const len = Math.hypot(sx, sy) || 1;
-        const nx = sx / len,
-          ny = sy / len;
-        // Konvexität: vorspringende Stufe (Wiese an zwei, drei Seiten) nach innen, einspringende (Wiese nur
-        // diagonal) nach aussen; danach das glatte Feld und je Kachel Weissrauschen
-        const bulge = clamp(ortho - 1, -1, 1.5);
-        const a = clamp(
-          forestEdgeShift(seed, x + 0.5, y + 0.5) * 0.8 +
-            (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE -
-            bulge * EDGE_BULGE,
-          -AMP,
-          AMP,
-        );
-        const t = (hash2(seed + 516, x, y) - 0.5) * 2 * EDGE_TANGENT;
-        ox = nx * a - ny * t;
-        oy = ny * a + nx * t;
       }
       out[y * w + x] = { variant, role, slot, ox, oy, giant: false };
     }

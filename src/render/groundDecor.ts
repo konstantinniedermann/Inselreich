@@ -14,7 +14,8 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // ART-STIL-02 (Spec 4 R1, Anhang 0.2): 500 Inselcharakter `hash2(seed + 500, 0, k)` (k 0 Waldtyp, L1 in forest.ts;
 // k 1 Blüten, L4; k 2 Küste, L5; k 3 Gebirge, L2 in massif.ts; k 4 Nachtmeer, L8) ·
 // 501–519 L1 Wald: 501 Akzentart, 502/503 Bestandsfelder, 504/505/514 Randversatz, 506/507 Kern-Streuung, 508 Lichtung,
-// 509/510 Riesenbaum, 511 Formreihenfolge, 515 Wiederholung in der Formwahl, 516 Randversatz quer (alle forest.ts),
+// 509/510 Riesenbaum, 511 Formreihenfolge, 515 Wiederholung in der Formwahl, 516 Randversatz quer, 517 wellige
+// Randkomponente in `forestEdgeShift` (alle forest.ts),
 // 512 Kronen je Variante, 513 Kronenform (trees.ts) ·
 // 520–539 L2 Gebirge (belegt 530–539, massif.ts/rocks.ts, 539 in terrain.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
 // 533 Schneerand, 534 Baumauswahl, 535 Baumform, 536 Baumhöhe, 537 Baumneigung (534 + 1…3), 538 Wiesenfuss, 539 Findlinge im Boden (terrain.ts, Task B) ·
