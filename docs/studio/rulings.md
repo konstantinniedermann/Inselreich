@@ -2525,3 +2525,13 @@ Auslegung „kein Rückschritt gegenüber vorher" bestanden (Paarvergleich 20/23
 arc42 und Salzkopf in der Fix-Runde. — Kosten bei Irrtum: eine Session Verzug für Release A.
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-06, `.studio/qa/rel-06/` · ADR: —
+
+## R299 · 2026-10-07 · L1-Fix: Ränder als Folgepaket, hängende Messung
+
+Ruling: L1-Fix (`fix/art02-l1-wald-r2` @ be4ce8e) behebt das Muster (Gate-Grund Frage 2); die Rautenform der
+Waldflächen in der Übersicht kommt aus der kachelweisen Waldmaske und wird Folgepaket „Waldsaum" (render-only,
+direkt nach REL-06). Rater prüft Fragen 1–2 auf diesem Stand. Hängende L5-Messung (PID 42157, Ruhezustand) per PID
+beendet; Messungen seriell. `pkill -f "vitest run"` eines Engineers → Retro (R263). — Kosten bei Irrtum: Ränder
+bleiben eine Release länger eckig.
+
+Entscheider: L0 · Anlass: Bericht lead-art L1-Fix · ADR: —
