@@ -23,17 +23,17 @@ export interface WoodMask {
 /** Höhenlinie der sichtbaren Waldkante (dichtes Kronendach und dunkler Waldboden). */
 export const SAUM_LEVEL = 0.5;
 /** Grösste Verschiebung der Höhenlinie durch das Rauschen in S-Einheiten: nach aussen und nach innen. */
-const SAUM_OUT = 0.34,
-  SAUM_IN = 0.56;
+const SAUM_OUT = 0.36,
+  SAUM_IN = 0.46;
 /** Gewicht des Rauschens am Saum: g(B) = min(1, SAUM_BAND · 4B(1 − B)). */
 const SAUM_BAND = 2;
 /** Rauschoktaven: Frequenz (je Kachel), Gewicht, Drehung; Verstärkung vor der Sättigung. */
 const OCTAVES = [
-  { salt: 518, freq: 1 / 5.5, w: 0.5, rot: 0.61 },
-  { salt: 519, freq: 1 / 3.1, w: 0.32, rot: 1.37 },
+  { salt: 518, freq: 1 / 5.5, w: 0.42, rot: 0.61 },
+  { salt: 519, freq: 1 / 3.4, w: 0.4, rot: 1.37 },
   { salt: 520, freq: 1 / 1.35, w: 0.18, rot: 2.29 },
 ] as const;
-const NOISE_GAIN = 5;
+const NOISE_GAIN = 7.5;
 
 /** 3 × 3-Binomialfilter (1 2 1 / 2 4 2 / 1 2 1, durch 16) über eine 0/1-Maske; ausserhalb der Karte gilt 0. */
 export function woodBlur(w: number, h: number, mask: ArrayLike<number>): WoodMask {
@@ -88,7 +88,7 @@ export function saumAt(seed: number, m: WoodMask, fx: number, fy: number): numbe
  * eigenen Kachel, Reichweite 0.
  */
 const CORE_R = 0.26,
-  CORE_LIFT = 0.12;
+  CORE_LIFT = 0.2;
 function tileCore(m: WoodMask, fx: number, fy: number): number {
   if (!m.raw) return 0;
   const x = Math.floor(fx),

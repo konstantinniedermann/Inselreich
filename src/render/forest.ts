@@ -108,8 +108,8 @@ const smooth01 = (t: number): number => {
 // Darstellungswerte der Platzierung
 
 /** Kandidaten je Waldkachel und je Vorwaldkachel. */
-const CAND_FOREST = 14,
-  CAND_MEADOW = 6;
+const CAND_FOREST = 12,
+  CAND_MEADOW = 5;
 /** Breite des lichten Randes in S-Einheiten (innen): von SAUM_LEVEL bis SAUM_LEVEL + CORE_SPAN wächst das Dach zu. */
 const CORE_SPAN = 0.35;
 /** Annahme je Kandidat: lichter Rand, voller Kern, hinter der Saumlinie (Waldkachel). */
@@ -118,7 +118,7 @@ const ACCEPT_EDGE = 0.45,
   ACCEPT_BEHIND = 0.3;
 /** Vorwald: Band unter der Saumlinie (S-Einheiten), höchste Annahme, Anteil Büsche. */
 const VORWALD_BAND = 0.35,
-  VORWALD_ACCEPT = 0.85,
+  VORWALD_ACCEPT = 0.6,
   VORWALD_BUSH = 0.55;
 /** Grundradius (Kacheln) je Baumart bei Grössenfeld 1: Laub, Nadel, Birke, Pinie, Ahorn. */
 const R_KIND = [0.27, 0.25, 0.22, 0.32, 0.26] as const;
@@ -132,6 +132,8 @@ const STAND_LO = 0.6,
 const CONIFER_JITTER = 0.42;
 /** Horste: Ausdünnung im Kern, wo das Horstfeld tief liegt (Anteil). */
 const HORST_DEPTH = 0.3;
+/** Grösse der Bäume hinter der Saumlinie (Jungwuchs) gegen den Kern. */
+const BEHIND_SIZE = 0.72;
 /** Beimischung (B3): Anteil Kronen einer anderen Art. */
 const ADMIX_P = 0.09,
   ADMIX_PINE = 0.16;
@@ -140,13 +142,14 @@ const ADMIX_P = 0.09,
  * GROUP_R + GROUP_R_STAND × Bestandsalter (±GROUP_JITTER), höchstens GROUP_R_MAX; Abstand zweier Gruppen
  * SPACING_GROUP × Radiensumme.
  */
-const GROUP_FROM = 0.5,
+const GROUP_FROM = 0.05,
   GROUP_P = 0.9,
   GROUP_R = 0.3,
   GROUP_R_STAND = 0.2,
   GROUP_JITTER = 0.12,
   GROUP_R_MAX = 0.5,
-  SPACING_GROUP = 0.64;
+  SPACING_GROUP = 0.6,
+  SPACING_GROUP_SINGLE = 0.82;
 /**
  * Abstand: Mindestabstand der Fusspunkte als Anteil der Radiensumme je Art (Laub, Nadel, Birke, Pinie, Ahorn; Laub
  * schliesst dichter), für Büsche und Totholz, und absolut (Kacheln).
@@ -360,7 +363,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       kind !== 3 && // Pinien stehen einzeln (Schirme verschieden hoch, Durchblick)
       !tight[y * w + x] &&
       core >= GROUP_FROM &&
-      rnd(x, y, j, 13) < GROUP_P * smooth01((core - GROUP_FROM) / 0.25)
+      rnd(x, y, j, 13) < GROUP_P * smooth01((core - GROUP_FROM) / 0.2)
     ) {
       const group = Math.floor(rnd(x, y, j, 14) * GROUP_SHAPES);
       const mirror = rnd(x, y, j, 15) < 0.5;
@@ -382,8 +385,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     }
     const stand = STAND_LO + (STAND_HI - STAND_LO) * stand01;
     const jitter = kind === 1 ? CONIFER_JITTER : SIZE_JITTER;
-    let size = stand * (0.62 + 0.38 * core) * (1 + jitter * (2 * rnd(x, y, j, 5) - 1));
+    let size = stand * (0.75 + 0.25 * core) * (1 + jitter * (2 * rnd(x, y, j, 5) - 1));
     const young = !inside || (core < 0.3 && rnd(x, y, j, 6) < 0.5);
+    if (!inside) size *= BEHIND_SIZE; // hinter der Saumlinie: niedriger Jungwuchs
     if (!young && core > 0.5 && rnd(x, y, j, 11) < EMERGENT_P) size *= EMERGENT_F;
     const c = makeCrown(kind, R_KIND[kind] * size, x, y, j, { young }, TREE_H);
     c.tone = toneAt(fx, fy, x, y, j);
@@ -426,7 +430,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
               ? SPACING_BUSH
               : q.c.group !== undefined && o.c.group !== undefined
                 ? SPACING_GROUP
-                : Math.min(SPACING_KIND[q.c.kind], SPACING_KIND[o.c.kind]);
+                : q.c.group !== undefined || o.c.group !== undefined
+                  ? SPACING_GROUP_SINGLE
+                  : Math.min(SPACING_KIND[q.c.kind], SPACING_KIND[o.c.kind]);
           const d = Math.max(minD, k * (q.c.r + o.c.r));
           if ((q.fx - o.fx) ** 2 + (q.fy - o.fy) ** 2 < d * d) return true;
         }
@@ -527,13 +533,14 @@ export function woodLayout(inp: WoodInput): WoodLayout {
         if (n >= MIN_CROWNS) break;
         if (accepted.includes(q) || q.c.dead) continue;
         const c = q.c;
+        const sapling = c.cast === true; // hinter der Saumlinie: Jungwuchs; sonst ein Baum des lichten Randes
         if (c.group !== undefined) {
           // als Einzelbaum (Jungbaum) nachsetzen
           delete c.group;
           c.s = shapeValue(Math.floor(rnd(q.tx, q.ty, 0, 15) * SHAPES));
         }
-        c.r = Math.min(c.r, 0.16);
-        c.young = true;
+        c.r = sapling ? Math.min(c.r, 0.16) : Math.max(0.15, Math.min(c.r, 0.22));
+        if (sapling) c.young = true;
         c.r = Math.min(c.r, maxRadius(c));
         if (relax > 0 && conflicts(q, relax)) continue;
         put(q);

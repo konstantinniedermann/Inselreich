@@ -78,9 +78,9 @@ const CLEARING_MAX = 0.5;
 const PATCH_SPREAD = 2.8; // H-R11 D8: Gewinn vor tanh (vorher 5 mit hartem Klemmen)
 const PATCH_FREQ = 0.95,
   PATCH_FREQ2 = 1.7; // Rauschfrequenzen je Kachel der beiden Oktaven
-const FOREST_EDGE_MEADOW = 0.4; // Fix 5 (WALD-02 0,7 → 0,4: den Übergang zur Wiese trägt jetzt die Waldgewichtung aus S)
+const FOREST_EDGE_MEADOW = 0.25; // Fix 5 (WALD-02 0,7 → 0,4: den Übergang zur Wiese trägt jetzt die Waldgewichtung aus S)
 const FOREST_CLEARING_LIGHT = 0.55; // L1 B2: Lichtung (Feld 0…1) hellt den Waldboden im Kern bis zu diesem Anteil auf
-const FOREST_EDGE_LIGHT = 0.3; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
+const FOREST_EDGE_LIGHT = 0.5; // Aufhellung des Waldbodens am Rand (Indikator ~0,5)
 const WET_SAND = 0.18; // Spec 5.1: sandWet bei 0 ≤ s < 0,18
 const FOAM_STATIC = 0.12; // Spec 5.1: statischer Schaumsaum bei −s < 0,12
 /**
@@ -820,9 +820,9 @@ function waterColor(d: number, o: number[]): void {
 /** Halbe Breite des Übergangs Wiese → Waldboden in S-Einheiten (≈ 0,15 Kachel an einer geraden Kante). */
 const FLOOR_SOFT = 0.07;
 /** Der dunkle Boden beginnt etwas innerhalb der Saumlinie (S-Einheiten), wo das Kronendach dichter wird: kein Hof. */
-const FLOOR_INSET = 0.06;
+const FLOOR_INSET = 0.12;
 /** Randaufhellung des Waldbodens: von der Saumlinie bis SAUM_LEVEL + FLOOR_EDGE_SPAN (lichter Rand). */
-const FLOOR_EDGE_SPAN = 0.3;
+const FLOOR_EDGE_SPAN = 0.4;
 /** Schattenlänge zum Licht hin (Kacheln): junger und alter Bestand. */
 const WOOD_SHADOW_MIN = 0.22,
   WOOD_SHADOW_MAX = 0.5;

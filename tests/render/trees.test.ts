@@ -31,14 +31,7 @@ import {
   type TreeItem,
 } from '../../src/render/trees';
 import { fakeCtx, type P } from './fakeCtx';
-import {
-  expand,
-  fakeCanvasFactory,
-  mkItem,
-  treeItems,
-  treesOf,
-  woodWorld,
-} from './woodHelpers';
+import { expand, fakeCanvasFactory, mkItem, treeItems, treesOf, woodWorld } from './woodHelpers';
 
 // trees.test.ts — Bäume zeichnen (ISO §6; WALD-02: Kronen einzeln aus dem Saumfeld, Kronen-Atlas).
 

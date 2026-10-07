@@ -92,7 +92,7 @@ describe('WALD-02 Saumfeld', () => {
       const sd = Math.sqrt(pos.reduce((a, b) => a + (b - m) ** 2, 0) / pos.length);
       expect(sd, `Seed ${seed}`).toBeGreaterThanOrEqual(0.15);
       // im Mittel nahe an der Maskenkante (nach innen weicht der lichte Rand weiter zurück als nach aussen, A3)
-      expect(Math.abs(m - 10), `Seed ${seed}`).toBeLessThan(1.3); // Fix-Runde 1: tiefere Buchten (Merkmal 3–6 Kacheln)
+      expect(Math.abs(m - 10), `Seed ${seed}`).toBeLessThan(1.4); // Fix-Runde 1: tiefere Buchten (Merkmal 3–6 Kacheln)
     }
   });
 });

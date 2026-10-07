@@ -300,7 +300,7 @@ describe('WALD-02 Platzierung', () => {
     }
   });
 
-  it('RF-W-9 Saum: Kronen hinter der Saumlinie sind klein und werfen eigenen Schatten; im Kern stehen grössere Kronen', () => {
+  it('RF-W-9 Saum: Kronen hinter der Saumlinie sind niedrig und werfen eigenen Schatten; im Kern stehen höhere Bäume', () => {
     for (const seed of [7, 14]) {
       const w = woodWorld(seed);
       const cs = treesOf(w).filter((c) => !c.dead && !c.bush && !c.giant);
@@ -309,19 +309,25 @@ describe('WALD-02 Platzierung', () => {
           c.cast &&
           w.islands[0]!.tiles[Math.floor(c.fy) * 64 + Math.floor(c.fx)]!.terrain === 'forest',
       );
-      const core = cs.filter((c) => !c.cast && !c.inGroup);
-      const mean = (a: { r: number }[]) => a.reduce((s, c) => s + c.r, 0) / a.length;
+      // Kern: Bäume ohne eigenen Schatten (Gruppen aufgelöst); verglichen wird die Höhe der Krone über dem Fuss
+      const core = cs.filter((c) => !c.cast);
+      const top = (c: Crown) => c.h + crownHalf(c);
+      const mean = (a: Crown[]) => a.reduce((s, c) => s + top(c), 0) / a.length;
       expect(behind.length).toBeGreaterThan(0);
       expect(mean(behind)).toBeLessThan(0.85 * mean(core));
     }
-    // Kronen ohne eigenen Schatten stehen innerhalb der Saumlinie (S ≥ SAUM_LEVEL; Toleranz für das Rücken an Sperrkanten)
+    // Einzelkronen ohne eigenen Schatten stehen innerhalb der Saumlinie (S ≥ SAUM_LEVEL; Toleranz für das Rücken an
+    // Sperrkanten). Gruppen zählen mit ihrem Fuss (ihre Bäume streuen bis zum Gruppenradius).
     const L = woodLayout(input(5));
     let n = 0;
-    for (const c of flat(L))
-      if (!c.cast && !c.dead && !c.giant && !c.own) {
-        n++;
-        expect(saumAt(5, L.mask, c.fx, c.fy)).toBeGreaterThanOrEqual(SAUM_LEVEL - 0.1);
-      }
+    for (const cell of L.cells)
+      for (const c of cell.crowns)
+        if (!c.cast && !c.dead && !c.giant && !cell.own) {
+          n++;
+          expect(saumAt(5, L.mask, cell.x + c.cx, cell.y + c.cy)).toBeGreaterThanOrEqual(
+            SAUM_LEVEL - 0.15,
+          );
+        }
     expect(n).toBeGreaterThan(100);
   });
 

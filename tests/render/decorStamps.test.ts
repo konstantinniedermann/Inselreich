@@ -30,7 +30,7 @@ import { ISO_H, ISO_W, ZOOM_STEPS, buildingHulls, sortedObjects } from '../../sr
 import { DECOR_CACHE_MAX_BYTES } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import { TREE_H, crownScreen } from '../../src/render/trees';
-import { crownsOf, woodWorld } from './woodHelpers';
+import { treesOf, woodWorld } from './woodHelpers';
 import { deltaE2000, rgbToLab } from './deltaE';
 import { fakeCtx } from './fakeCtx';
 
@@ -293,7 +293,7 @@ describe('Bild-Fix 3: Kronensprache und Mauerreste', () => {
     // mittlere Breite einer Waldkrone (Laubbäume einer echten Karte, WALD-02)
     let sum = 0,
       n = 0;
-    for (const c of crownsOf(woodWorld(7)))
+    for (const c of treesOf(woodWorld(7)))
       if (c.kind === 0 && !c.bush && !c.dead) {
         sum += 2 * crownScreen(c).rx;
         n++;
