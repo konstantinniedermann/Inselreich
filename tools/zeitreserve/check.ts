@@ -13,7 +13,15 @@ function main(): number {
     return 1;
   }
   const timings = JSON.parse(readFileSync(path, 'utf8')) as TestTiming[];
+  if (timings.length === 0) {
+    console.error(`zeitreserve: ${path} enthält keine Tests; Berichtslauf fehlerhaft.`);
+    return 1;
+  }
   const baseline = new Set(JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as string[]);
+  const known = new Set(timings.map(testKey));
+  for (const k of baseline)
+    if (!known.has(k))
+      console.warn(`zeitreserve: Altlast ohne Test, aus baseline.json streichen: ${k}`);
   const bad = findViolations(timings, baseline);
   console.log(
     `zeitreserve: ${timings.length} Tests geprüft, ${bad.length} ohne CI-Reserve (ab ${MIN_DURATION_MS} ms, ohne Altlasten)`,
