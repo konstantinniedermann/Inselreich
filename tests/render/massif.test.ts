@@ -1416,7 +1416,7 @@ describe('ART-STIL-02 L2 Fuss und Bewuchs', { timeout: 60000 }, () => {
     }
     expect(bloom).toBeGreaterThan(0);
     expect(bloom / (bloom + veg)).toBeLessThanOrEqual(0.03);
-  }, 50_000); // H-T7: unter Volllast bis 5,8 s, Timeout >= 8 x (R270)
+  });
 });
 
 function Buffer_equal(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
@@ -1437,7 +1437,7 @@ describe('ART-STIL-02 L2 Sockel ohne Pixelrauschen', { timeout: 60000 }, () => {
         `Seed ${seed} jetzt ${jetzt.toFixed(2)} vorher ${vorher.toFixed(2)}`,
       ).toBeLessThanOrEqual(0.5 * vorher);
     }
-  }, 50_000); // H-T7: unter Volllast bis 5,3 s, Timeout >= 8 x (R270)
+  });
 });
 
 describe('ART-STIL-02 L2 Schnee (C2)', { timeout: 60000 }, () => {
