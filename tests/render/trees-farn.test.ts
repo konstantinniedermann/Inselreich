@@ -119,7 +119,7 @@ describe('L6 B2 Farn auf Lichtungen', () => {
     }
     expect(total, 'es gibt Lichtungen über die Seeds').toBeGreaterThan(10);
     resetTreeCache();
-  });
+  }, 25_000); // lokal bis 2,8 s im Gesamtlauf (20 Welten mit WALD-02-Kronen), Timeout >= 8 x (R270)
 
   it('B2 2–4 Büschel je Lichtungskachel in deren vorderer Hälfte, in der Tiefenfolge der Zelle; Büschel kleiner als ein Baum; Kachel bleibt Wald (≥ 2 Kronen)', () => {
     let n = 0;

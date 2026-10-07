@@ -74,7 +74,7 @@ describe('L5-T3 Wasserfelder im Bodenbild (Sandbank, Riff, Tang)', () => {
       }
     }
     expect(changedAll).toBeGreaterThan(2000);
-  });
+  }, 25_000); // lokal bis 3,0 s im Gesamtlauf (REL-07: Grid mit WALD-02-Waldfeldern), Timeout >= 8 x (R270)
 
   it('Fläche ist im Bild sichtbar: Mitte einer Sandbank liegt ≥ 8 ΔE vom ungetönten Wasser, Riff hat dunklere Flecken, Tang ist olivstichig', () => {
     let sand = 0,
