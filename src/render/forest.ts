@@ -247,6 +247,18 @@ export interface WoodInput {
  */
 const FRONT_R = 0.12,
   FRONT_SET = 0.5;
+/** Eigene Kachel zuerst, dann die 8 Nachbarn. */
+const NEIGHBOURS: readonly (readonly [number, number])[] = [
+  [0, 0],
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-1, -1],
+  [1, -1],
+  [-1, 1],
+  [1, 1],
+];
 /**
  * Fix-Runde 3 B: Nachsetzen unter dunklem Boden. Ab Waldbodenanteil FILL_DARK gilt der Boden als dunkel; Abtastung
  * FILL_STEPS × FILL_STEPS je Kachel; Kronenrand höchstens FILL_REACH (Kacheln) entfernt (Ziel ≤ 0,3 im Bild, mit Reserve
@@ -832,15 +844,19 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const f = floorShare(sv);
     return f < FILL_DARK ? f : f * floorFactor(seed, fx, fy, sv);
   };
-  const gapTo = (fx: number, fy: number): number => {
+  /** Steht ein Kronenrand höchstens `reach` vom Punkt entfernt? (Kachel des Punkts zuerst, dann die Nachbarn) */
+  const covered = (fx: number, fy: number, reach: number): boolean => {
     const x0 = Math.floor(fx),
       y0 = Math.floor(fy);
-    let d = Infinity;
-    for (let dy = -1; dy <= 1; dy++)
-      for (let dx = -1; dx <= 1; dx++)
-        for (const o of grid.get(keyOf(x0 + dx, y0 + dy)) ?? [])
-          if (!o.c.dead) d = Math.min(d, Math.hypot(o.fx - fx, o.fy - fy) - o.c.r);
-    return d;
+    for (const [dx, dy] of NEIGHBOURS)
+      for (const o of grid.get(keyOf(x0 + dx, y0 + dy)) ?? []) {
+        if (o.c.dead) continue;
+        const e = reach + o.c.r;
+        const ex = o.fx - fx,
+          ey = o.fy - fy;
+        if (ex * ex + ey * ey <= e * e) return true;
+      }
+    return false;
   };
   /** Würfel des Abtastpunkts `i` (0…24) einer Kachel, Komponente `comp` (0, 1). */
   const fillRnd = (tx: number, ty: number, i: number, comp: number): number =>
@@ -887,7 +903,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
           const i = b * FILL_STEPS + a;
           const fx = tx + (a + 0.15 + 0.7 * fillRnd(tx, ty, i, 0)) / FILL_STEPS,
             fy = ty + (b + 0.15 + 0.7 * fillRnd(tx, ty, i, 1)) / FILL_STEPS;
-          if (gapTo(fx, fy) <= (free[k] === 2 ? FILL_REACH_MEADOW : FILL_REACH)) continue;
+          if (covered(fx, fy, free[k] === 2 ? FILL_REACH_MEADOW : FILL_REACH)) continue;
           if (floorAt(fx, fy) < FILL_DARK) continue;
           fill(fx, fy, tx, ty, i);
         }
