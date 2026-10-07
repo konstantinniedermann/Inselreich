@@ -2614,3 +2614,15 @@ noch auf WALD-02 (Arbeiter läuft). Die CI-Retro-Meldungen auf main sind durch H
 37645643528). — Kosten bei Irrtum: ein Nachlauf im Release-Kandidaten.
 
 Entscheider: L0 · Anlass: Bericht lead-art L7 · ADR: —
+
+## R308 · 2026-10-07 · Kurz-Retro 7db07561: Berichtigung R306, Vorschläge E-034 bis E-036
+
+Ruling: (1) Berichtigung R306: Die Agenten endeten nicht mit dem Prozess; WALD-02-Engineer und L7-Lead arbeiteten in
+der Folgesession weiter (Retro 2026-10-07 session-7db07561). Darum startet L0 für WALD-02 keine frische Instanz,
+sondern wartet auf den laufenden Lead. (2) E-034 (Übergabe-Prüfzeile bei Abbruch) angenommen als Handbuch-Änderung,
+Umsetzung studio-coach; zwei Sätze, schliesst einen Ablauffehler (R127) und ist kein neues Paket im Sinn von R305.
+(3) E-035 (überholte CI-Vorfälle automatisch erledigen) und E-036 (Cache-Write je Instanz) bleiben `vorgeschlagen`:
+Werkzeug-Pakete, nach R305 nur mit neuem Nutzer-Auftrag. — Kosten bei Irrtum: veraltete CI-Meldungen bleiben im
+Dashboard sichtbar, bis eine Retro sie quittiert.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 7db07561 · ADR: —
