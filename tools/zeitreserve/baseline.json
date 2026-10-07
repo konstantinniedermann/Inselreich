@@ -7,6 +7,7 @@
   "tests/render/terrain.test.ts :: H-R9 B3 Wiesenvarianz > H-R11 F1 (löst H-R9 B3 Farbstreuung ab) RMS-ΔE2000 zum Mittel über eine Grasfläche 1,8…6,0 (main-Basis 5,0; das Licht kommt jetzt gestuft aus den Tonstufen)",
   "tests/render/terrain.test.ts :: H-R9 B3 Wiesenvarianz > H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel",
   "tests/render/terrain.test.ts :: H-R9 B3 Wiesenvarianz > H-R9 B3 Keine Signalfarbe auf Wiese mit Relief und Blumenschleier",
+  "tests/render/terrain.test.ts :: M10 Teil-Raster > AK-R1-01 patchGrid im Rechteck ergibt dasselbe Raster wie ein Vollaufbau (Roden und Aufforsten)",
   "tests/render/terrain.test.ts :: M12 E1 Terrain > AK-E1-11 gridBands (Inselansicht) > Gitter aus Bändern der Höhe 2 gleich buildGrid",
   "tests/render/terrain.test.ts :: M12 E1 Terrain > AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor 1), samt Dekor",
   "tests/render/terrain.test.ts :: M12 E1 Terrain > AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor 2), samt Dekor",
