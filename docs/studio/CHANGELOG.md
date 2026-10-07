@@ -27,7 +27,7 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 - Anlass: Kurz-Retro Session 7db07561 B1 (Agenten liefen nach dem Abbruch weiter)
 - Datenbasis: `docs/studio/retros/2026-10-07-session-7db07561-ende.md`; `.studio/events.jsonl`
 - Ruling: R308
-- Änderungen: Session-Ende um Punkt 0a ergänzt (Agenten mit frischem Heartbeat in `state.md`; vor Paket-Neustart Worktree-HEAD und Dashboard prüfen), E-034 läuft
+- Änderungen: Session-Ende um Punkt 0a ergänzt (Agenten mit frischem Heartbeat in `state.md`; vor Paket-Neustart Worktree-HEAD und Dashboard prüfen); E-034 angenommen, wartet auf freien Platz
 
 ## 2026-10-07 · Handbuch 1.23
 
