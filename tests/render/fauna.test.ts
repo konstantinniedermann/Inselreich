@@ -637,7 +637,7 @@ describe('Fauna T1: Renderer', () => {
       );
     }
     expect(drawn).toBeGreaterThan(0);
-  });
+  }, 20_000); // einzeln 1,2 s, im Gesamtlauf bis 2,1 s (REL-07: Renderer mit WALD-02-Kronen), Timeout >= 8 x (R270)
 
   const visibleRange = (world: World, zoom: number, pad: number): TileRange => {
     const r = visibleTileRange(kontorCam(world, zoom), VIEW, {
