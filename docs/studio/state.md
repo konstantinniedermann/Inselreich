@@ -8,6 +8,14 @@ Stand: 2026-10-06 (Session-Ende e51712dd; 5-h-Fenster ≈ 31 %, Woche 42 %)
 
 ## Release-Notizen
 
+**REL-06 „Gewachsene Insel" (live @ 464d490, R301) — ART-STIL-02 Release A**
+
+- **Neu:** Wald organischer (Lappenkronen, Nadel-Etagen, Bestände, Lichtungen, seltener Riesenbaum, Waldtyp je
+  Spiel); Gebirgsfuss weich mit Kiesband, Schneegipfel, Krüppelkiefern, Alpenwiese, Findlinge; Gebäudekanten weich
+  (Umrisskontur, Lichtkante, Kontaktschatten, Grasbüschel); Wiese mit Blumen, Büschen, Steinen, Einzelbäumen,
+  Mauerresten. Zwischenstand Wald: Muster im Nadelwald und Rauten-Ränder in der Übersicht → WALD-02 (R300).
+- **Bitte testen:** Gesamtbild in mehreren neuen Spielen; wirkt die Wiese belebt, aber ruhig? Gebäude gut erkennbar?
+
 **REL-05 (live @ 30a9f50, R277) — M12 Seefahrt-Bündel + Saum Fernansicht**
 
 - **Neu:** Kontor II auf Fremdinseln gründen, dort bauen, handeln und Aufträge liefern; Lager, Bilanz und Krisen je

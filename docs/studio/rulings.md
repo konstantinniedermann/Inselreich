@@ -2555,3 +2555,12 @@ den Kandidaten, `make check` + `CI=true make check`, Befunde aus dem Handoff anh
 Irrtum: Revert-Merge.
 
 Entscheider: L0 · Anlass: Messung `.studio/qa/art-stil-02/l1r2/perf-s7-1920.txt`, R300 · ADR: —
+
+## R302 · 2026-10-07 · REL-06 live, Hotfix H-T6 CI-Timeout
+
+Ruling: REL-06 ist live (main 464d490, Pages 37585424789 grün). CI 37585424784 rot: `variants.test.ts:308` Timeout
+5 s bei 8,1 s im Runner, lokal grün. Hotfix H-T6 (lead-tech) hat Vorrang, Gate im Briefing: Test-Timeout mit R270-
+Reserve oder kleinerer Test, kein `src/`. WALD-02 startet parallel (disjunkte Dateien). — Kosten bei Irrtum: CI
+bleibt eine Runde länger rot; Produktion unberührt.
+
+Entscheider: L0 · Anlass: Integrator-Bericht REL-06 · ADR: —
