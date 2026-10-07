@@ -318,12 +318,12 @@ function dolphinRoute(
     sites.cands[
       Math.min(
         sites.cands.length - 1,
-        Math.floor(hash2(world.seed + 67, e, 0) * sites.cands.length),
+        Math.floor(hash2(world.seed + 593, e, 0) * sites.cands.length),
       )
     ]!;
   const a = { x: (c % f.w) + 0.5, y: Math.floor(c / f.w) + 0.5 };
   // Richtung: die erste der 8, deren Bahn ganz im erlaubten Tiefwasser bleibt (sonst keine Delfine in dieser Episode)
-  const d0 = Math.floor(hash2(world.seed + 67, e, 1) * DIRS);
+  const d0 = Math.floor(hash2(world.seed + 593, e, 1) * DIRS);
   let ang = 0,
     reach = -1;
   for (let d = 0; d < DIRS; d++) {
@@ -354,7 +354,7 @@ function dolphinRoute(
  * Delfingruppe zur Zeit `timeMs` oder null (E5): Episoden zu 45 s, in ca. der Hälfte springen 2–3 Delfine nacheinander
  * (zweimal je Tier) in Bögen über Tiefwasser (`dolphinSites`: Küstenfeld ≤ −4, R4-Abstände), die Gruppe zieht 3 Kacheln. Die
  * Kappe `dolphins` zählt Tiere (reduziert 0 = keine). Ein Delfin näher als 3 Kacheln am Schiff taucht nicht auf. Bahn
- * hängt nur von Seed, Episode und Meer ab, nie vom Schiff (Salze 65–67).
+ * hängt nur von Seed, Episode und Meer ab, nie vom Schiff (Salze 591–593, ART-STIL-02 Anhang 0.2).
  */
 export function dolphinsAt(world: World, timeMs: number, reduce = false): DolphinPose | null {
   const limit = cap('dolphins', reduce);
@@ -363,17 +363,17 @@ export function dolphinsAt(world: World, timeMs: number, reduce = false): Dolphi
   if (!sites || sites.cands.length === 0) return null;
   const t = clampTime(timeMs);
   const e = Math.floor(t / DOLPHIN_EPISODE_MS);
-  if (hash2(world.seed + 65, e, 0) >= DOLPHIN_SHARE) return null;
+  if (hash2(world.seed + 591, e, 0) >= DOLPHIN_SHARE) return null;
   const start =
     e * DOLPHIN_EPISODE_MS +
-    hash2(world.seed + 66, e, 0) * (DOLPHIN_EPISODE_MS - DOLPHIN_VISIBLE_MS);
+    hash2(world.seed + 592, e, 0) * (DOLPHIN_EPISODE_MS - DOLPHIN_VISIBLE_MS);
   const dt = t - start;
   if (dt < 0 || dt >= DOLPHIN_VISIBLE_MS) return null;
   const route = dolphinRoute(world, sites, e);
   if (!route) return null; // keine Bahn im erlaubten Tiefwasser: in dieser Episode keine Delfine
   const { a, ang } = route;
   const reach = DOLPHIN_REACH;
-  const n = Math.min(limit, 2 + (hash2(world.seed + 66, e, 1) < 0.5 ? 1 : 0));
+  const n = Math.min(limit, 2 + (hash2(world.seed + 592, e, 1) < 0.5 ? 1 : 0));
   const ship = shipTile(world);
   const at = (tt: number, i: number): Pt2 => ({
     x:

@@ -1261,7 +1261,7 @@ describe('Fauna T2: Zeichner (Fake-Kontext)', () => {
 
   it('Quelltext: groundDecor-Kopf nennt die T2-Salze', () => {
     const gd = readFileSync('src/render/groundDecor.ts', 'utf8');
-    expect(gd).toMatch(/591/);
-    expect(gd).toMatch(/594/);
+    expect(gd).toMatch(/591–593 Delfine/);
+    expect(gd).toMatch(/594 Glitzern/);
   });
 });

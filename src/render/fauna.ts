@@ -33,8 +33,9 @@ import { fieldWorld, type Field } from './terrainField';
 //   585 Los der seltenen Arten (`faunaLot`, `hash2(seed + 585, k, 0)`, k je Art in `LOT_K`) · 586 Zellenanteil und
 //   Ankerschlüssel (je Art `x + 4096 · (k + 1)`) · 587 Posen: Zyklusversatz, Rastplätze, Hasen- und Rehwege ·
 //   588 Episoden (Fuchs, Waldvögel): Periode, Versatz, Richtung · 589 Gestalt (Falterton, Hirsch oder Reh, Flugbahn) ·
-//   590 Glühwürmchen: Drift und Puls · 591 Steinbock (Auswahl, Haltung) · 592 Adler (Bahn) · 593 Krabbe, Schildkröte,
-//   Robbe, Kormoran (Haltung, Zyklus) · 594 Glitzern (Funkenversatz); Delfine in wildlife.ts nutzen 65–67 (wie der Wal 61–64).
+//   590 Glühwürmchen: Drift und Puls · 591–593 Delfine in wildlife.ts (591 Episode und Beginn, 592 Gruppengrösse, 593 Ort
+//   und Richtung) · 594 Glitzern (Funkenversatz). Steinbock, Adler, Krabbe, Schildkröte, Robbe und Kormoran nutzen
+//   586 (Orte), 587 (Haltung, Zyklus) und 589 (Gestalt). Frei bleibt nichts im Block 585–594.
 // C7 Glitzern: `fallSparks`/`drawFallSparks` laufen gegen einen strukturgleichen lokalen Pfadtyp (`FallPathPoint` = die
 // `MassifFallPoint` aus L6); der Renderer-Anschluss folgt, sobald L6 und L7 zusammen liegen.
 
