@@ -15,7 +15,7 @@ export const CAPS = {
   fish: [20, 6],
   whales: [1, 1],
   flocks: [4, 2],
-  // ART-STIL-02 L7 Fauna (Spec 5): gezählt im Bild; Summe 69 normal, 9 reduziert
+  // ART-STIL-02 L7 Fauna (Spec 5): gezählt im Bild; Summe 69 normal, ≤ 9 reduziert (Spec), tatsächlich 8
   butterflies: [12, 0],
   hares: [4, 1],
   fireflies: [24, 0],
