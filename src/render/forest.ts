@@ -88,6 +88,8 @@ const REPEAT_P = 0.2,
   REPEAT_COST = 0.8,
   DIAG_COST = 1.2,
   ANTI_COST = 0.8;
+/** Betrag des Bodenversatzes (`forestEdgeShift`). */
+const FLOOR_AMP = 0.3;
 /** Verstärkung vor der Stauchung (tanh): wie oft der Rand die Grenzen fast erreicht. */
 const EDGE_GAIN = 2.6;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
@@ -100,11 +102,13 @@ const edgeRaw = (seed: number, fx: number, fy: number): number =>
 /** Asymmetrische Stauchung: nach innen bis −`EDGE_IN`, nach aussen bis +`EDGE_OUT`. */
 const squash = (v: number): number => (v < 0 ? EDGE_IN * Math.tanh(v) : EDGE_OUT * Math.tanh(v));
 /**
- * Randversatz-Betrag in Kacheln an einem Kachelpunkt, in [−`EDGE_IN`; +`EDGE_OUT`]: das Feld asymmetrisch gestaucht.
- * Gerade Maskenkanten werden so wellig (Wellenlänge 2–5 Kacheln), der Rand weicht weiter zurück als er vorragt.
+ * Randversatz für den Waldboden (terrain.ts) und den Farnsaum (groundDecor.ts), in [−0,3; +0,3]: dasselbe wellige
+ * Feld wie die Kronen, aber flacher gestaucht. Mit dem vollen Kronenbereich (bis −0,5) hellte der Boden am
+ * zurückweichenden Rand bis in den Kronenton auf (AK-R1-08 I5); die Lage der Wellen bleibt dieselbe.
  */
 export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
-  squash(edgeRaw(seed, fx, fy));
+  FLOOR_AMP * Math.tanh(edgeRaw(seed, fx, fy));
+
 /** Lichtungsfeld 0…1 (Merkmal ≈ 5 Kacheln); ab 0,5 lichtet sich der Kern. */
 export const forestClearing = (seed: number, fx: number, fy: number): number => {
   const n = valueNoise(seed + 508, fx / 5, fy / 5);
