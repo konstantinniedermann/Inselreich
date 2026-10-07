@@ -79,7 +79,7 @@ describe('Baumstempel', () => {
             if (v % 8 >= 6) expect(Math.abs(wx - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
           }
         }
-  });
+  }, 20_000); // H-T7: CI-Lauf brach bei 5 s ab (lokal 1,7 s); Timeout >= 8 x lokal (R270)
 
   it('AK-ISO-10 treeBounds (L1): Eng ist pointBounds der Kachelmitte mit Höhe TREE_H, Kern und Rand sind breiter', () => {
     const c = project(4.5, 9.5);
