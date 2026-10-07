@@ -653,6 +653,41 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
     }
   });
 
+  it('E5 Gruppe schwimmt in gleicher Richtung, versetzt entlang der Richtung (kreuzt sich nie zum X); Ringe klein', () => {
+    let pairs = 0;
+    for (const seed of SEEDS50) {
+      const world = createWorld(seed);
+      for (const { pose } of dolphinEpisodes(world)) {
+        for (const d of pose.dolphins) expect(d.heading).toBe(pose.dolphins[0]!.heading);
+        for (let i = 0; i < pose.dolphins.length; i++)
+          for (let j = i + 1; j < pose.dolphins.length; j++) {
+            pairs++;
+            expect(
+              Math.hypot(
+                pose.dolphins[i]!.x - pose.dolphins[j]!.x,
+                pose.dolphins[i]!.y - pose.dolphins[j]!.y,
+              ),
+            ).toBeGreaterThan(0.4);
+          }
+      }
+    }
+    expect(pairs).toBeGreaterThanOrEqual(0);
+    const hit = {
+      kind: 'dolphins',
+      name: 'Delfine',
+      x: 20.5,
+      y: 20.5,
+      z: 0,
+      r: 1.5,
+      pose: { dolphins: [], splash: [{ x: 20.5, y: 20.5, age: 1 }] },
+    } as unknown as WildlifeHit;
+    const { ctx, log } = fakeCtx();
+    drawWaterLife(ctx, { x: 0, y: 0, zoom: 1 }, [hit]);
+    const ring = log.events.find((e) => e.op === 'stroke')!;
+    const w = Math.max(...ring.points.map((p) => p.x)) - Math.min(...ring.points.map((p) => p.x));
+    expect(w).toBeLessThanOrEqual(2 * 0.14 * ISO_W + 1e-6); // wie die Fischringe, nicht grösser
+  });
+
   it('E5 wildlifeAt: Name „Delfine“, Radius 1,5, nicht nachts und nicht bei Sturm, ohne Zoomschwelle (wie der Wal), reduziert keine', () => {
     let found = 0;
     for (const seed of SEEDS50) {

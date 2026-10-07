@@ -24,6 +24,13 @@ import {
   sightFree,
   ANTLER_COLOR,
   DEER_BELLY,
+  FOREST_BIRD_COLOR,
+  HARE_TAIL,
+  GROUND_GAP,
+  SEAL_BELLY,
+  TURTLE_RIM,
+  faunaAnchors,
+  foxTileFree,
   DEER_COLOR,
   FIREFLY_COLOR,
   FOX_BELLY,
@@ -53,7 +60,7 @@ import { LOD_ZOOM } from '../../src/render/archipel';
 import { CAPS, cap } from '../../src/render/limits';
 import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import { render, renderStats, type RenderFx } from '../../src/render/renderer';
-import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
+import { TREE_H, resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { shipTile } from '../../src/render/ship';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, home } from '../../src/sim/world';
@@ -548,6 +555,8 @@ describe('Fauna T1: Zeichner (Fake-Kontext)', () => {
       FOX_BELLY,
       FOX_TIP,
       FIREFLY_COLOR,
+      HARE_TAIL,
+      FOREST_BIRD_COLOR,
     ])
       for (const sig of SIGNALS)
         expect(
@@ -556,7 +565,7 @@ describe('Fauna T1: Zeichner (Fake-Kontext)', () => {
         ).toBeGreaterThanOrEqual(20);
     // Körper in zwei Tönen: Unterseite dunkler als der Körper
     expect(luma(rgb(HARE_BELLY))).toBeLessThan(luma(rgb(HARE_COLOR)));
-    expect(luma(rgb(DEER_BELLY))).toBeLessThan(luma(rgb(DEER_COLOR)));
+    expect(luma(rgb(DEER_BELLY))).toBeGreaterThan(luma(rgb(DEER_COLOR))); // Reh: Bauch heller (Bild-Fix R1)
     expect(luma(rgb(FOX_BELLY))).toBeLessThan(luma(rgb(FOX_COLOR)));
   });
 
@@ -1263,5 +1272,136 @@ describe('Fauna T2: Zeichner (Fake-Kontext)', () => {
     const gd = readFileSync('src/render/groundDecor.ts', 'utf8');
     expect(gd).toMatch(/591–593 Delfine/);
     expect(gd).toMatch(/594 Glitzern/);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// Bild-Fix-Runde 1 (lead-art): Fuchs auf freien Kacheln, Abstand der Bodentiere, Hase, Waldvögel, Schildkrötenspur
+// ---------------------------------------------------------------------------------------------------------
+describe('Fauna Bild-Fix R1', () => {
+  it('Fuchs: jeder Pfadpunkt liegt auf einer Graskachel ohne Wald in den Kacheln davor (kein Wald, keine Krone davor)', () => {
+    let seen = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      const isl = home(world);
+      const t = (x: number, y: number) => isl.tiles[y * isl.width + x]?.terrain;
+      for (const x of hitsOf(world, 'fox', { phase: 'day' }, 100, 160000)) {
+        seen++;
+        expect(t(x.tx, x.ty), `seed ${seed} @${x.x},${x.y}`).toBe('grass');
+        expect(foxTileFree(isl, x.tx, x.ty)).toBe(true);
+        for (let dy = 0; dy <= 2; dy++)
+          for (let dx = 0; dx <= 2; dx++) expect(t(x.tx + dx, x.ty + dy)).not.toBe('forest');
+      }
+    }
+    expect(seen).toBeGreaterThan(20);
+  });
+
+  it('Verschiedene Bodentiere halten ≥ 1,5 Kacheln Abstand zwischen ihren Ankern', () => {
+    let pairs = 0;
+    for (const seed of SEEDS20) {
+      const a = faunaAnchors(worldOf(seed));
+      const ground = ['hare', 'deer', 'fox', 'crab', 'turtle', 'seal', 'cormorant'] as const;
+      for (let i = 0; i < ground.length; i++)
+        for (let j = i + 1; j < ground.length; j++)
+          for (const p of a[ground[i]!] ?? [])
+            for (const q of a[ground[j]!] ?? []) {
+              pairs++;
+              expect(
+                Math.hypot(p.tx - q.tx, p.ty - q.ty),
+                `${ground[i]} / ${ground[j]} seed ${seed}`,
+              ).toBeGreaterThanOrEqual(GROUND_GAP);
+            }
+    }
+    expect(pairs).toBeGreaterThan(50);
+    expect(GROUND_GAP).toBe(1.5);
+  });
+
+  it('Krabbe und Schildkröte stehen nie auf derselben Stelle (Posen über die Zeit ≥ 0,5 Kacheln auseinander)', () => {
+    let both = 0;
+    for (const seed of SEEDS20) {
+      const world = worldOf(seed);
+      for (let t = 0; t < 120000; t += 1500) {
+        const hits = faunaAt(world, FULL, t, { phase: 'day', zoom: 2 });
+        for (const c of hits.filter((x) => x.id === 'crab'))
+          for (const u of hits.filter((x) => x.id === 'turtle')) {
+            both++;
+            expect(Math.hypot(c.x - u.x, c.y - u.y)).toBeGreaterThan(0.5);
+          }
+      }
+    }
+    expect(both).toBeGreaterThanOrEqual(0);
+  });
+
+  it('Hase: sitzt etwa die Hälfte der Zeit (≈ 55 %), hoppelt in jedem Zyklus (≥ 15 % der Zeit), knabbert dazwischen', () => {
+    const n = [0, 0, 0];
+    for (const seed of SEEDS)
+      for (let t = 0; t < 120000; t += 100)
+        for (const x of faunaAt(worldOf(seed), FULL, t, { phase: 'day' }))
+          if (x.id === 'hare') n[x.state]!++;
+    const tot = n[0]! + n[1]! + n[2]!;
+    expect(n[0]! / tot).toBeGreaterThan(0.45);
+    expect(n[0]! / tot).toBeLessThan(0.65);
+    expect(n[2]! / tot).toBeGreaterThan(0.15);
+    expect(n[1]! / tot).toBeGreaterThan(0.1);
+  });
+
+  it('Waldvögel steigen bis ≈ 2,5 · TREE_H, schlagen deutlich mit den Flügeln und sind hell (heller als das Kronendach)', () => {
+    let zmax = 0,
+      flaps = 0,
+      n = 0;
+    for (const seed of SEEDS20)
+      for (const x of hitsOf(worldOf(seed), 'forestBird', { phase: 'day' }, 100, 120000)) {
+        n++;
+        zmax = Math.max(zmax, x.z);
+        flaps = Math.max(flaps, Math.abs(x.phase));
+      }
+    expect(n).toBeGreaterThan(0);
+    expect(zmax).toBeGreaterThan(2.1 * TREE_H);
+    expect(zmax).toBeLessThan(2.8 * TREE_H);
+    expect(flaps).toBeGreaterThan(0.9);
+    const l = (c: string): number => {
+      const [r, g, b] = rgbOfCss(c);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    };
+    expect(l(FOREST_BIRD_COLOR)).toBeGreaterThan(l(PALETTE.crown) + 0.3);
+  });
+
+  it('Schildkröte gezeichnet: Spur aus zwei Punktreihen je Spurpunkt in dunklerem Sand, hellerer Panzerrand; Robbe: Bauch heller als Rücken', () => {
+    const cam: Camera = { x: 0, y: 0, zoom: 2 };
+    const turtle: FaunaHit = {
+      id: 'turtle',
+      layer: 'ground',
+      x: 10.5,
+      y: 10.5,
+      z: 0,
+      tx: 10,
+      ty: 10,
+      key: 22,
+      alpha: 1,
+      flip: 1,
+      state: 1,
+      phase: 0.2,
+      variant: 0,
+      trail: [
+        { x: 10.3, y: 10.3, a: 0.4 },
+        { x: 10.1, y: 10.1, a: 0.3 },
+        { x: 9.9, y: 9.9, a: 0.2 },
+      ],
+    };
+    const { ctx, log } = fakeCtx();
+    drawGroundFauna(ctx, cam, turtle);
+    const dots = log.events.filter((e) => e.op === 'fill' && e.style.startsWith('rgba('));
+    // je Spurpunkt ein Füllpfad mit zwei Ellipsen (je moveTo plus 4 Punkte im Fake)
+    const trailFills = dots.filter(
+      (e) => e.points.length === 10 && !e.style.startsWith('rgba(20,'),
+    );
+    expect(trailFills.length).toBe(3);
+    expect(log.events.some((e) => e.op === 'fill' && e.style === TURTLE_RIM)).toBe(true);
+    const lum = (c: string): number => {
+      const [r, g, b] = rgbOfCss(c);
+      return 0.299 * r + 0.587 * g + 0.114 * b;
+    };
+    expect(lum(SEAL_BELLY)).toBeGreaterThan(lum(SEAL_COLOR));
+    expect(lum(TURTLE_RIM)).toBeGreaterThan(lum(TURTLE_COLOR));
   });
 });

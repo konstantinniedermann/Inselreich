@@ -291,7 +291,8 @@ const DOLPHIN_SPLASH_MS = 600;
 const DOLPHIN_GAP_MS = 2700;
 const DOLPHIN_LAG_MS = 700;
 const DOLPHIN_REACH = 3; // Kacheln über die sichtbare Zeit
-const DOLPHIN_SIDE = 0.7; // Abstand der Tiere in der Gruppe quer zur Richtung
+const DOLPHIN_SPACING = 0.6; // Abstand der Tiere in der Gruppe entlang der Schwimmrichtung (alle schwimmen gleich, versetzt)
+const DOLPHIN_LATERAL = 0.15; // leichter Querversatz je zweites Tier
 const DOLPHIN_SHIP_GAP = 3;
 const DOLPHIN_JUMP_H = 0.45 * ISO_H;
 
@@ -329,12 +330,16 @@ function dolphinRoute(
   for (let d = 0; d < DIRS; d++) {
     const q = ((d0 + d) / DIRS) * Math.PI * 2;
     if (
-      [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1].every((u) =>
-        [-1, 0, 1].every((side) =>
+      // Bahn von den hintersten Tieren (2 · Abstand hinter dem Anker) bis `DOLPHIN_REACH`, mit Querversatz
+      Array.from(
+        { length: 22 },
+        (_, k) => -2 * DOLPHIN_SPACING + (k / 21) * (DOLPHIN_REACH + 2 * DOLPHIN_SPACING),
+      ).every((u) =>
+        [-DOLPHIN_LATERAL, 0, DOLPHIN_LATERAL].every((side) =>
           dolphinOk(
             sites,
-            a.x + Math.cos(q) * DOLPHIN_REACH * u - Math.sin(q) * side * DOLPHIN_SIDE,
-            a.y + Math.sin(q) * DOLPHIN_REACH * u + Math.cos(q) * side * DOLPHIN_SIDE,
+            a.x + Math.cos(q) * u - Math.sin(q) * side,
+            a.y + Math.sin(q) * u + Math.cos(q) * side,
           ),
         ),
       )
@@ -375,16 +380,15 @@ export function dolphinsAt(world: World, timeMs: number, reduce = false): Dolphi
   const reach = DOLPHIN_REACH;
   const n = Math.min(limit, 2 + (hash2(world.seed + 592, e, 1) < 0.5 ? 1 : 0));
   const ship = shipTile(world);
-  const at = (tt: number, i: number): Pt2 => ({
-    x:
-      a.x +
-      Math.cos(ang) * reach * (tt / DOLPHIN_VISIBLE_MS) -
-      Math.sin(ang) * (i - (n - 1) / 2) * DOLPHIN_SIDE,
-    y:
-      a.y +
-      Math.sin(ang) * reach * (tt / DOLPHIN_VISIBLE_MS) +
-      Math.cos(ang) * (i - (n - 1) / 2) * DOLPHIN_SIDE,
-  });
+  // gleiche Richtung, versetzt entlang der Bahn (`DOLPHIN_SPACING` hinter dem Vordermann), je zweites Tier leicht seitlich
+  const at = (tt: number, i: number): Pt2 => {
+    const along = reach * (tt / DOLPHIN_VISIBLE_MS) - i * DOLPHIN_SPACING;
+    const side = (i % 2) * DOLPHIN_LATERAL;
+    return {
+      x: a.x + Math.cos(ang) * along - Math.sin(ang) * side,
+      y: a.y + Math.sin(ang) * along + Math.cos(ang) * side,
+    };
+  };
   const clear = (p: Pt2): boolean =>
     !ship || Math.hypot(p.x - (ship.x + 0.5), p.y - (ship.y + 0.5)) >= DOLPHIN_SHIP_GAP;
   const pose: DolphinPose = { dolphins: [], splash: [] };
@@ -898,7 +902,7 @@ export function drawWaterLife(
       const dp = w.pose as DolphinPose;
       if (dp.splash.length > 0) {
         ctx.beginPath();
-        for (const sp of dp.splash) ringPath(ctx, scr(sp), (0.05 + 0.18 * sp.age) * ISO_W * z);
+        for (const sp of dp.splash) ringPath(ctx, scr(sp), (0.04 + 0.1 * sp.age) * ISO_W * z);
         ctx.strokeStyle = rgbaOf(SPLASH_RGB, 0.5);
         ctx.lineWidth = Math.max(0.75, 1 * z);
         ctx.stroke();
