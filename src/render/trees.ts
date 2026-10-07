@@ -419,6 +419,15 @@ export function drawTreeStamp(
   const z = cam.zoom,
     step = zoomStep(z);
   atlasFrame++;
+  // Bildausschnitt: der Kachelbereich des Renderers ist das achsparallele Rechteck um die Bildraute und enthält viele
+  // Objekte neben dem Bild; Objekte ganz ausserhalb kosten hier keinen Zeichenaufruf (WALD-02, viele Einzelkronen)
+  const v = viewOf(ctx);
+  if (v) {
+    const b = treeBounds(item);
+    const x0 = (b.x - cam.x) * z,
+      y0 = (b.y - cam.y) * z;
+    if (x0 > v.w || y0 > v.h || x0 + b.w * z < 0 || y0 + b.h * z < 0) return;
+  }
   let d = drawOf.get(item);
   if (!d || d.step !== step || d.list.some((e) => e.s !== null && !e.s.alive))
     drawOf.set(item, (d = drawList(item, step)));
@@ -436,6 +445,25 @@ export function drawTreeStamp(
     e.s.used = atlasFrame;
     ctx.drawImage(e.s.canvas, o.x + e.x * z, o.y + e.y * z, e.w * z, e.h * z);
   }
+}
+
+/** Bildgrösse in CSS-Pixeln (Canvas durch die DPR der Basismatrix), gemerkt je Kontext und Canvasgrösse; ohne Canvas null. */
+let viewKey: { ctx: CanvasRenderingContext2D | null; w: number; h: number } = {
+  ctx: null,
+  w: 0,
+  h: 0,
+};
+let viewVal: { w: number; h: number } | null = null;
+function viewOf(ctx: CanvasRenderingContext2D): { w: number; h: number } | null {
+  const c = (ctx as { canvas?: HTMLCanvasElement }).canvas;
+  if (!c || typeof c.width !== 'number') return null;
+  if (viewKey.ctx !== ctx || viewKey.w !== c.width || viewKey.h !== c.height) {
+    const m = ctx.getTransform?.();
+    const dpr = m && Number.isFinite(m.a) && m.a > 0 ? m.a : 1;
+    viewKey = { ctx, w: c.width, h: c.height };
+    viewVal = { w: c.width / dpr, h: c.height / dpr };
+  }
+  return viewVal;
 }
 
 /** Zeichenliste eines Objekts je Zoomstufe: Atlas-Eintrag und Zielrechteck in Weltpixeln relativ zur Objektecke. */
