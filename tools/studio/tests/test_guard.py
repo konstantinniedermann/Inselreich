@@ -105,11 +105,23 @@ class BashTest(unittest.TestCase):
             "echo x && pkill -f perf.mjs",
             "bash -c 'pkill -f mess.sh'",
             "/usr/bin/pkill -f x",
+            "ls | xargs pkill",
+            "ls | xargs -n1 killall",
+            "nice pkill x",
+            "find . -exec killall x \\;",
+            "ssh h pkill x",
         ]:
             with self.subTest(cmd=cmd):
                 self.assertIsNotNone(reason(cmd))
                 self.assertIsNotNone(reason(cmd, allow=True))
-        for cmd in ["kill 42157", "kill -TERM 123 456", "pgrep -f mess.sh", "ps -p 1"]:
+        for cmd in [
+            "kill 42157",
+            "kill -TERM 123 456",
+            "pgrep -f mess.sh",
+            "ps -p 1",
+            "grep pkill notes.md",
+            "echo pkill",
+        ]:
             with self.subTest(cmd=cmd):
                 self.assertIsNone(reason(cmd))
 

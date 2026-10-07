@@ -48,6 +48,7 @@ READ_ONLY = {"ls", "cat", "test", "[", "grep", "rg", "head", "tail", "wc"}
 REBASE_KEY = re.compile(r"^(pull\.rebase|branch\..+\.rebase)$", re.IGNORECASE)
 REBASE_OFF = {"false", "no", "off", "0"}
 KILL_BY_NAME = {"pkill", "killall"}
+KILL_RUNNERS = {"xargs", "nice", "find", "ssh", "watch"}
 KILL_BY_NAME_REASON = (
     "Prozesse per Namen beenden ist verboten (pkill/killall); eigene nur per PID mit"
     " kill (R263, R303)"
@@ -416,7 +417,10 @@ def _check(
             _apply_assigns([a for a in args if ASSIGNMENT.match(a)], env)
             continue
         found = None
-        if name in KILL_BY_NAME:
+        if name in KILL_BY_NAME or (
+            name in KILL_RUNNERS
+            and any(os.path.basename(a) in KILL_BY_NAME for a in args)
+        ):
             found = KILL_BY_NAME_REASON
         elif name == "git":
             found = _git_reason(args, cwd, allow)
