@@ -337,7 +337,7 @@ describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
             expect(p.y, m).toBeLessThanOrEqual(sf.height - half);
           }
         }
-  });
+  }, 20_000); // CI misst 8,1 s (lokal ca. 2 s): R270, Laufzeit <= 50 % des Timeouts
 });
 
 describe('H-R7 AK3/AK4 Silhouette und Picking', () => {
