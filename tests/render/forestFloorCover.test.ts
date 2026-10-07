@@ -28,10 +28,21 @@ function scene(seed: number) {
   const objects = new Set<number>();
   for (const it of sortedObjects(w))
     if (it.kind === 'decor') objects.add(it.fp.y * isl.width + it.fp.x);
-  /** Freie Kachel: kein Gebäude, kein Weg, kein Deko-Stempel. */
+  const bAt = (x: number, y: number): boolean =>
+    x >= 0 &&
+    y >= 0 &&
+    x < isl.width &&
+    (isl.tiles[y * isl.width + x]?.buildingId ?? null) !== null;
+  /**
+   * Freie Kachel: kein Gebäude, kein Weg, kein Deko-Stempel, und kein Gebäude unter den 8 Nachbarn (dort stehen nach
+   * Runde 3 A nur kleine, vom Haus abgerückte Bäume: eine gewollte kleine Lichtung).
+   */
   const free = (x: number, y: number): boolean => {
     const t = isl.tiles[y * isl.width + x];
-    return !!t && t.buildingId === null && !t.road && !objects.has(y * isl.width + x);
+    if (!t || t.buildingId !== null || t.road || objects.has(y * isl.width + x)) return false;
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) if (bAt(x + dx, y + dy)) return false;
+    return true;
   };
   s = { w, grid: buildGrid(fieldWorld(w)), free };
   cache.set(seed, s);

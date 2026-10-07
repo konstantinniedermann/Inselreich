@@ -240,11 +240,12 @@ export interface WoodInput {
   building?: (x: number, y: number) => boolean;
 }
 /**
- * Fix-Runde 3 A: Bäume auf der Kachel direkt vor einem Gebäude (+x, +y, +x+y) sind Jungbäume mit Radius ≤ FRONT_R,
+ * Fix-Runde 3 A: Bäume auf den Kacheln vor einem Gebäude (+x, +y, +x+y) und im Bild seitlich daneben (+x−y, −x+y)
+ * sind Jungbäume mit Radius ≤ FRONT_R,
  * ihr Fuss steht in der vom Haus abgewandten Kachelhälfte (Anteil ≥ FRONT_SET): die Fassade bleibt lesbar, Bäume
  * davor gibt es weiter (Verdeckung, Fensterlicht).
  */
-const FRONT_R = 0.13,
+const FRONT_R = 0.12,
   FRONT_SET = 0.5;
 /**
  * Fix-Runde 3 B: Nachsetzen unter dunklem Boden. Ab Waldbodenanteil FILL_DARK gilt der Boden als dunkel; Abtastung
@@ -346,7 +347,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     return c === 'forest' || c === 'meadow';
   };
 
-  // Fix-Runde 3 A: Gebäude-Footprints und die Kacheln direkt davor (Seite des Hauses je Achse: 1 = −x, 2 = −y, 4 = Ecke)
+  // Fix-Runde 3 A: Gebäude-Footprints und die Kacheln davor, seitlich und dahinter (Lage des Hauses: 1 = −x, 2 = −y,
+  // 4 = Ecke −x−y, 8 = +x−y, 16 = −x+y; dahinter 32 = +x, 64 = +y)
   const bld = new Uint8Array(w * h);
   if (inp.building)
     for (let y = 0; y < h; y++)
@@ -359,7 +361,13 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       for (let x = 0; x < w; x++)
         if (!bld[y * w + x])
           front[y * w + x] =
-            (bAt(x - 1, y) ? 1 : 0) | (bAt(x, y - 1) ? 2 : 0) | (bAt(x - 1, y - 1) ? 4 : 0);
+            (bAt(x - 1, y) ? 1 : 0) |
+            (bAt(x, y - 1) ? 2 : 0) |
+            (bAt(x - 1, y - 1) ? 4 : 0) |
+            (bAt(x + 1, y - 1) ? 8 : 0) | // im Bild links neben dem Haus
+            (bAt(x - 1, y + 1) ? 16 : 0) | // im Bild rechts neben dem Haus
+            (bAt(x + 1, y) ? 32 : 0) | // hinter der linken Wand
+            (bAt(x, y + 1) ? 64 : 0); // hinter der rechten Wand
   /** Fix-Runde 3 A: kein Stammfuss (auch keiner eines Gruppenbaums) auf einer Gebäudekachel, keine Gruppe davor. */
   const clearOf = (fx: number, fy: number, c: Crown): boolean => {
     if (!inp.building) return true;
@@ -610,7 +618,11 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const k = q.ty * w + q.tx;
     let u = q.fx - q.tx,
       v = q.fy - q.ty;
-    const fr = front[k];
+    const fb = front[k]!;
+    const fr = fb & 31;
+    // hinter dem Haus: grosse Bäume bleiben, ihr Fuss rückt von der Wand ab (keine Fichte an der Wand)
+    if (fb & 32 && c.group === undefined) u = Math.min(u, 1 - FRONT_SET);
+    if (fb & 64 && c.group === undefined) v = Math.min(v, 1 - FRONT_SET);
     if (fr && c.group === undefined && !c.giant) {
       // vor einem Gebäude: Jungbaum, Fuss in der abgewandten Kachelhälfte
       if (!c.dead) {
@@ -622,6 +634,15 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       if (fr === 4) {
         u = Math.max(u, FRONT_SET * 0.7);
         v = Math.max(v, FRONT_SET * 0.7);
+      }
+      // seitlich: vom Haus weg (links: −x, +y; rechts: +x, −y), nicht an die Wand
+      if (fr & 8 && !(fr & 3)) {
+        u = Math.min(u, 1 - FRONT_SET);
+        v = Math.max(v, FRONT_SET);
+      }
+      if (fr & 16 && !(fr & 3)) {
+        u = Math.max(u, FRONT_SET);
+        v = Math.min(v, 1 - FRONT_SET);
       }
     }
     const r = c.r;
