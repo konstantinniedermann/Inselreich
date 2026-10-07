@@ -2626,3 +2626,15 @@ Werkzeug-Pakete, nach R305 nur mit neuem Nutzer-Auftrag. — Kosten bei Irrtum: 
 Dashboard sichtbar, bis eine Retro sie quittiert.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 7db07561 · ADR: —
+
+## R309 · 2026-10-07 · WALD-02 release-reif, Kandidat REL-07 (Release B), D-149
+
+Ruling: WALD-02 (`feat/wald-02` @ c9fa371, Fix-Runde 3) angenommen für Release B. D-149: Die Lesbarkeit (Bergwald
+in Seed 7, Hütte im Wald) prüft der gebündelte Rater im Release-Lauf B, kein eigener Rater-Start (Empfehlung lead-art,
+R282). REL-07 = L5 + L6 + L7 + WALD-02, Kandidat `rel/rel-07` durch den Integrator in `.worktrees/integrate` (R264),
+Merge-Reihenfolge L5 → L6 → L7 → WALD-02, kein Rebase. In `docs/beobachtungen.md` bleiben bei einem Konflikt beide
+Anhänge (E-031), jeder andere Konflikt geht zurück an lead-art. Danach ein Browser-Lauf lead-qa mit allen blinden
+Fragen, ein opus-Review, Gate, Push. Perf: Seed 7 liegt mit WALD-02 genau auf +0,7 ms; das Release-Budget misst der
+Lauf gegen main. — Kosten bei Irrtum: ein Häppchen fliegt aus dem Kandidaten.
+
+Entscheider: L0 · Anlass: Bericht lead-art WALD-02 · ADR: —
