@@ -2583,3 +2583,14 @@ gestapelt auf L5 (main per Merge); L8 erst nach L7, weil das Seltenheitsbudget a
 Rechnerlast (12–20) Messungen bereits staut. — Kosten bei Irrtum: L8 eine Runde später.
 
 Entscheider: L0 · Anlass: Bericht lead-art L5 · ADR: —
+
+## R305 · 2026-10-07 · N-97 Guard pkill/killall, Startstopp für neue Arbeit
+
+Ruling: (1) Nutzerfreigabe „VERFASSUNG ÄNDERN" für N-97: L0 setzt in der Hauptsession um (Freigabe gilt nur hier,
+§1.3): Guard verweigert `pkill`/`killall` immer, `kill <PID>` bleibt; Test zuerst rot, dann grün, Review
+`qa-code-reviewer` (§9.1). (2) Nutzer: „keine neuen generellen Prozesse, nur Subprozesse zur Beendigung der
+laufenden." Laufend und zu Ende geführt: WALD-02, L7, TOOL-CHECK-ZEITTEST, Retro-Merge, Guard; dazu deren Reviews,
+Merges und ein Release-Lauf für fertige Häppchen (L5, L6, L7, WALD-02). Nicht gestartet: L8, Waldsaum-Rest,
+Folgepakete. — Kosten bei Irrtum: L8 wartet auf neuen Auftrag.
+
+Entscheider: Nutzer · Anlass: Nutzerantworten 2026-10-07 · ADR: —
