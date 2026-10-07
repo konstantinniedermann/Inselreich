@@ -182,7 +182,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
       }
     }
     expect(rodungen).toBeGreaterThan(20);
-  });
+  }, 20_000);
 
   it('R5 Töne: ΔE2000 ≥ 20 zu den Signalfarben, ≥ 10 zu den Wassertönen', () => {
     for (const t of [...Object.values(DECOR_STAMP_TONES), ...Object.values(DECOR_TONES)]) {

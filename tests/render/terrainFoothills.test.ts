@@ -239,7 +239,7 @@ describe('H-R13 Teil-Neuzeichnung', () => {
         `Seed ${seed} Pixel`,
       ).toBe(-1);
     }
-  }, 30000);
+  }, 40_000); // H-T7: unter Volllast 4,0 s, Timeout >= 8 x (R270)
 });
 
 const firstDiff = (a: ArrayLike<number>, b: ArrayLike<number>): number => {
