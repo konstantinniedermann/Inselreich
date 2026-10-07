@@ -351,11 +351,14 @@ export function crownBox(c: Crown): { x0: number; y0: number; x1: number; y1: nu
 const atlas = new Map<number, Sprite>();
 let atlasBytes = 0;
 let atlasFrame = 0;
+/** Zählt Verdrängungen; eine Zeichenliste mit älterer Zahl prüft ihre Einträge neu. */
+let atlasGen = 0;
 /** Dev/Test: Einträge und Bytes des Kronen-Atlas. */
 export const treeCacheSize = (): number => atlas.size;
 export const treeCacheBytes = (): number => atlasBytes;
 export function resetTreeCache(): void {
   for (const s of atlas.values()) s.alive = false;
+  atlasGen++;
   atlas.clear();
   atlasBytes = 0;
 }
@@ -402,6 +405,7 @@ function evict(need: number): void {
     atlas.delete(k);
     atlasBytes -= s.bytes;
     s.alive = false;
+    atlasGen++;
   }
 }
 
@@ -429,8 +433,13 @@ export function drawTreeStamp(
     if (x0 > v.w || y0 > v.h || x0 + b.w * z < 0 || y0 + b.h * z < 0) return;
   }
   let d = drawOf.get(item);
-  if (!d || d.step !== step || d.list.some((e) => e.s !== null && !e.s.alive))
+  if (
+    !d ||
+    d.step !== step ||
+    (d.gen !== atlasGen && d.list.some((e) => e.s !== null && !e.s.alive))
+  )
     drawOf.set(item, (d = drawList(item, step)));
+  d.gen = atlasGen;
   const o = worldToScreen(cam, project(item.fp.x, item.fp.y));
   for (const e of d.list) {
     if (e.s === null) {
@@ -475,8 +484,8 @@ interface DrawEntry {
   w: number;
   h: number;
 }
-const drawOf = new WeakMap<TreeItem, { step: number; list: DrawEntry[] }>();
-function drawList(item: TreeItem, step: number): { step: number; list: DrawEntry[] } {
+const drawOf = new WeakMap<TreeItem, { step: number; gen: number; list: DrawEntry[] }>();
+function drawList(item: TreeItem, step: number): { step: number; gen: number; list: DrawEntry[] } {
   const list: DrawEntry[] = [];
   for (const c of item.crowns) {
     const fx = (c.cx - c.cy) * (ISO_W / 2),
@@ -498,7 +507,7 @@ function drawList(item: TreeItem, step: number): { step: number; list: DrawEntry
       h: s.canvas.height * k,
     });
   }
-  return { step, list };
+  return { step, gen: atlasGen, list };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

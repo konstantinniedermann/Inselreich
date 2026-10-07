@@ -291,6 +291,27 @@ describe('Kronen-Atlas', () => {
     expect(dy! + (1 - b.y0) * step * k).toBeCloseTo(f.y * z, 6);
   });
 
+  it('Perf drawTreeStamp: ein Objekt ganz ausserhalb des Bildes (Canvas / DPR) kostet keinen Zeichenaufruf, eines im Bild zeichnet je Krone einmal', () => {
+    setCanvasFactory(fakeCanvasFactory());
+    resetTreeCache();
+    const crowns: Crown[] = [
+      { kind: 0, cx: 0.3, cy: 0.6, r: 0.2, h: 10, bush: false, s: 0.3 },
+      { kind: 1, cx: 0.7, cy: 0.4, r: 0.18, h: 8, bush: false, s: 0.7 },
+    ];
+    const calls: number[][] = [];
+    const ctx = {
+      canvas: { width: 1600, height: 1000 },
+      getTransform: () => ({ a: 2 }),
+      drawImage: (...a: number[]) => calls.push(a.slice(1)),
+    } as unknown as CanvasRenderingContext2D;
+    const cam = { x: -400, y: -100, zoom: 1 };
+    drawTreeStamp(ctx, cam, mkItem(crowns, 5, 5), 1); // Bildmitte bei DPR 2: 800 × 500 CSS-Pixel
+    expect(calls).toHaveLength(2);
+    calls.length = 0;
+    drawTreeStamp(ctx, cam, mkItem(crowns, 40, 2), 1); // weit rechts ausserhalb
+    expect(calls).toHaveLength(0);
+  });
+
   it('L1-T4 der Riesenbaum wird direkt gemalt und füllt den Atlas nicht', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();
