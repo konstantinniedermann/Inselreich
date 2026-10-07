@@ -386,6 +386,35 @@ describe('WALD-02 Waldboden folgt dem Saumfeld (terrain.ts, Waldzweig und Waldge
     }
   });
 
+  it('RF-W-11 Lesbarkeit: unter ≥ 95 % der Waldkacheln ist der Boden in der Kachelmitte dunkler als die Wiese (Mittel, ≥ 15 Luma), auch an dünnen Waldstreifen', () => {
+    for (const seed of [11, 7]) {
+      const world = createWorld(seed, { unlockAll: true });
+      const grid = buildGrid(fieldWorld(world));
+      const isl = home(world);
+      const mean = (x: number, y: number): number => {
+        const px = paintPixels(grid, 1, x * TEX + 12, y * TEX + 12, 8, 8);
+        let l = 0;
+        for (let k = 0; k < 64; k++) l += lum(px[k * 4]!, px[k * 4 + 1]!, px[k * 4 + 2]!);
+        return l / 64;
+      };
+      let g = 0,
+        ng = 0;
+      const forest: number[] = [];
+      for (let y = 1; y < isl.height - 1; y++)
+        for (let x = 1; x < isl.width - 1; x++) {
+          const t = isl.tiles[y * isl.width + x]!.terrain;
+          if (t === 'forest') forest.push(mean(x, y));
+          else if (t === 'grass' && (x + y) % 3 === 0) {
+            g += mean(x, y);
+            ng++;
+          }
+        }
+      const meadow = g / ng;
+      const dark = forest.filter((l) => l < meadow - 15).length;
+      expect(dark / forest.length, `Seed ${seed}`).toBeGreaterThanOrEqual(0.95);
+    }
+  });
+
   it('RF-L1-7 Lichtungsfeld: im Kern ist der Waldboden dort heller, wo forestClearing ≥ 0,5', () => {
     const world = createWorld(7, { unlockAll: true });
     const grid = buildGrid(fieldWorld(world));

@@ -79,5 +79,7 @@ export function saumAt(seed: number, m: WoodMask, fx: number, fy: number): numbe
   if (b <= 0 || b >= 1) return b;
   const g = Math.min(1, SAUM_BAND * 4 * b * (1 - b));
   const r = woodNoise(seed, fx, fy);
-  return b + g * (r > 0 ? SAUM_OUT * r : SAUM_IN * r);
+  // nach innen erst ab B ≈ 0,45 (dünne Waldstreifen und Einzelkacheln bleiben als Wald lesbar), voll ab B ≈ 0,8
+  const t = Math.min(1, Math.max(0, (b - 0.45) / 0.35));
+  return b + g * (r > 0 ? SAUM_OUT * r : SAUM_IN * t * t * (3 - 2 * t) * r);
 }

@@ -92,7 +92,15 @@ export function crownGeom(
       tiers.push({ ax: lean, ay: by - th, hw, bx: (q(i, 7) - 0.5) * 0.08 * hw, by, th });
     }
   } else {
-    const flat = c.kind === 3 ? PINE_FLAT : c.bush ? BUSH_FLAT : c.young ? YOUNG_FLAT : CROWN_RY;
+    // WALD-02: Pinienschirme je Form verschieden flach (gleich flache Schirme stapelten sich zu Bändern)
+    const flat =
+      c.kind === 3
+        ? PINE_FLAT + 0.22 * q(0, 9)
+        : c.bush
+          ? BUSH_FLAT
+          : c.young
+            ? YOUNG_FLAT
+            : CROWN_RY;
     const ry0 = rx0 * flat;
     if (c.kind === 3) {
       // Schirm aus 3–5 überlappenden Lappen (Dach), die Lappen sitzen leicht versetzt nebeneinander

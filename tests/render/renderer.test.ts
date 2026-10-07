@@ -1165,9 +1165,9 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // G-Anzahl (b537908).
   // WALD-02: bewusst neu gepinnt (beide Pins): Wald-Objekte sind Tiefenband-Zellen aus einzelnen Kronen (andere Ids und
   // Anzahl, Reihenfolge nach Fusstiefe) und das Baum-Culling hat 2 Kacheln Zuschlag.
-  const HOME_CALLS = { hash: 500202143, length: 17288 };
+  const HOME_CALLS = { hash: 3036003499, length: 17906 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
-  const HOME_ORDER = { hash: 1276788457, length: 4639 };
+  const HOME_ORDER = { hash: 665951928, length: 4820 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
   // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };
