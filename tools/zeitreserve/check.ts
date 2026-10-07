@@ -1,7 +1,15 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
 import { existsSync, readFileSync } from 'node:fs';
-import { MIN_DURATION_MS, findViolations, formatViolation, testKey } from './rule.ts';
+import {
+  CI_FACTOR,
+  CI_FACTOR_ON_CI,
+  FAIL_DURATION_MS,
+  findViolations,
+  findWarnings,
+  formatViolation,
+  testKey,
+} from './rule.ts';
 import type { TestTiming } from './rule.ts';
 
 const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
@@ -22,11 +30,14 @@ function main(): number {
   for (const k of baseline)
     if (!known.has(k))
       console.warn(`zeitreserve: Altlast ohne Test, aus baseline.json streichen: ${k}`);
-  const bad = findViolations(timings, baseline);
+  const factor = process.env.GITHUB_ACTIONS === 'true' ? CI_FACTOR_ON_CI : CI_FACTOR;
+  const bad = findViolations(timings, baseline, factor);
   console.log(
-    `zeitreserve: ${timings.length} Tests geprüft, ${bad.length} ohne CI-Reserve (ab ${MIN_DURATION_MS} ms, ohne Altlasten)`,
+    `zeitreserve: ${timings.length} Tests geprüft (Faktor ${factor}), ${bad.length} ohne CI-Reserve (ab ${FAIL_DURATION_MS} ms, ohne Altlasten)`,
   );
-  for (const t of bad) console.error(formatViolation(t));
+  for (const t of findWarnings(timings, baseline, factor))
+    console.warn(`Warnung: ${formatViolation(t, factor)}`);
+  for (const t of bad) console.error(formatViolation(t, factor));
   return bad.length === 0 ? 0 : 1;
 }
 
