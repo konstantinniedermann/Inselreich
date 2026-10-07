@@ -582,6 +582,26 @@ describe('L4 D5 Salze und Zufall', () => {
     for (const n of used) expect(n).toBeLessThanOrEqual(569);
   });
 
+  it('L5-Review: Salze nur aus dem Block ihres Häppchens, keine Summen wie `seed + a + b` und keine Versätze ausserhalb 560–569 in seaFields.ts/water.ts', () => {
+    for (const f of ['decor.ts', 'decorStamps.ts', 'water.ts', 'seaFields.ts']) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8').replace(/\/\/.*$/gm, '');
+      const sums = [
+        ...src.matchAll(/\b(?:seed|t\.seed|world\.seed)\s*\+\s*\d+\s*\+\s*[\w.]+/g),
+      ].map((m) => m[0]);
+      // erlaubt sind nur `seed + 5dd + …` ohne weitere Summanden vor dem Komma bzw. der Klammer
+      expect(sums, `${f}: Summe aus Seed und zwei Versätzen`).toEqual([]);
+    }
+    for (const f of ['seaFields.ts', 'water.ts']) {
+      const src = readFileSync(`${dir}/${f}`, 'utf8').replace(/\/\/.*$/gm, '');
+      for (const m of src.matchAll(/\b(?:seed|t\.seed|world\.seed)\s*\+\s*(\d+)\b/g)) {
+        const n = Number(m[1]);
+        expect(n === 101 || n === 202 || (n >= 560 && n <= 569), `${f}: Seed-Versatz ${n}`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
   it('L4-T6 kein Math.random in decor.ts und decorStamps.ts (decorStamps.ts darf bis Task 2 fehlen)', () => {
     expect(readFileSync(`${dir}/decor.ts`, 'utf8')).not.toMatch(/Math\.random/);
     expect(readFileSync(`${dir}/groundDecor.ts`, 'utf8')).not.toMatch(/Math\.random/);
@@ -1180,6 +1200,7 @@ describe('L5 Meer-Plan und R4', () => {
       ],
       anchor: { x: 10.5, y: 10.5 },
       kontors: [{ x: 40, y: 40, w: 2, h: 2 }],
+      live: [{ x: 40, y: 40, w: 2, h: 2 }],
     };
     expect(seaKeepOut(ctx, 12, 30)).toBe(true); // 2 Kacheln neben der Lane
     expect(seaKeepOut(ctx, 8, 30)).toBe(true); // 2 Kacheln links

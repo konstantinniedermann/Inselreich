@@ -1,7 +1,7 @@
 import { hash2, valueNoise } from '../sim/noise';
 import { home } from '../sim/world';
 import type { World } from '../sim/types';
-import { seaContext, seaPlan, type SeaArea } from './decor';
+import { seaClearance, seaContext, seaPlan, type SeaArea, type SeaContext } from './decor';
 import { PALETTE, mixHex, rgbOfCss } from './palette';
 
 // seaFields.ts — Wasserfelder im Bodenbild (ART-STIL-02 L5 T3): Sandbank D11, Riff E2, Tang E6. Reine Funktionen ohne
@@ -51,6 +51,7 @@ function splat(
   h: number,
   areas: readonly SeaArea[],
   seed: number,
+  shift: number,
 ): void {
   const sw = w * SEA_RES + 1;
   for (const a of areas)
@@ -70,7 +71,9 @@ function splat(
           // Radius je Stützstelle verrauscht (Salz 569): weiche, unregelmässige Ränder über die Kachelgrenzen
           const rEff =
             SEA_BLOB *
-            (1 - SEA_BLOB_MOD / 2 + SEA_BLOB_MOD * valueNoise(seed + 569, vx * 0.7, vy * 0.7));
+            (1 -
+              SEA_BLOB_MOD / 2 +
+              SEA_BLOB_MOD * valueNoise(seed + 569, vx * 0.7 + shift, vy * 0.7 + shift));
           const v = smooth01(1 - d / rEff);
           if (v > f[j * sw + i]!) f[j * sw + i] = v;
         }
@@ -83,6 +86,7 @@ export function buildSeaTint(
   w: number,
   h: number,
   areas: { sandbanks: readonly SeaArea[]; reefs: readonly SeaArea[]; kelp: readonly SeaArea[] },
+  ctx?: SeaContext,
 ): SeaTint {
   const n = (w * SEA_RES + 1) * (h * SEA_RES + 1);
   const t: SeaTint = {
@@ -94,9 +98,22 @@ export function buildSeaTint(
     kelp: new Float32Array(n),
     mask: new Uint8Array(w * h),
   };
-  splat(t.sand, w, h, areas.sandbanks, seed);
-  splat(t.reef, w, h, areas.reefs, seed + 11);
-  splat(t.kelp, w, h, areas.kelp, seed + 23);
+  splat(t.sand, w, h, areas.sandbanks, seed, 0); // je Art ein eigener Koordinatenversatz (Salz bleibt 569)
+  splat(t.reef, w, h, areas.reefs, seed, 131);
+  splat(t.kelp, w, h, areas.kelp, seed, 257);
+  if (ctx) {
+    // R4 pixelgenau: wo `seaKeepOut` gilt, ist das Gewicht 0 (Spielraum − 0,36 deckt den Abstand zur nächsten Stützstelle ab),
+    // dahinter läuft es weich aus (0,8 Kacheln). Die Flecken reichen sonst bis ≈ 1,6 Kacheln über die Flächenkachel hinaus.
+    const sw = w * SEA_RES + 1;
+    for (let j = 0; j <= h * SEA_RES; j++)
+      for (let i = 0; i < sw; i++) {
+        const m = smooth01((seaClearance(ctx, i / SEA_RES, j / SEA_RES) - 0.36) / 0.8);
+        if (m >= 1) continue;
+        t.sand[j * sw + i]! *= m;
+        t.reef[j * sw + i]! *= m;
+        t.kelp[j * sw + i]! *= m;
+      }
+  }
   for (const list of [areas.sandbanks, areas.reefs, areas.kelp])
     for (const a of list)
       for (const q of a.tiles)
@@ -120,7 +137,7 @@ export function seaTintFor(world: World): SeaTint | null {
   if (c && c.sig === sig) return c.tint;
   const plan = seaPlan(world.seed, isl, ctx);
   const any = plan.sandbanks.length + plan.reefs.length + plan.kelp.length > 0;
-  const tint = any ? buildSeaTint(world.seed, isl.width, isl.height, plan) : null;
+  const tint = any ? buildSeaTint(world.seed, isl.width, isl.height, plan, ctx) : null;
   cache.set(world, { sig, tint });
   return tint;
 }

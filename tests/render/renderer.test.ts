@@ -1304,18 +1304,11 @@ describe('M12 E1 Renderer', () => {
       }
       expect(plusOne, 'ein Stempel eine Kachel hinter range wurde geprüft').toBeGreaterThan(0);
       expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
-      // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu
+      // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu: exakte Listen je Zoom
       const got = (z: number): string[] => [...(kindsDrawn.get(z) ?? [])].sort();
-      for (const k of ['menhir', 'orchard', 'ruin', 'solitaire'])
-        expect(got(1), `Zoom 1 zeigt ${k}`).toContain(k);
-      expect(got(1).filter((k) => !['menhir', 'orchard', 'ruin', 'solitaire'].includes(k))).toEqual(
-        expect.arrayContaining(['palm']),
-      );
-      expect(got(0.6)).toEqual(expect.arrayContaining(['orchard', 'solitaire', 'palm']));
-      for (const k of got(0.6)) expect(['menhir', 'ruin']).not.toContain(k);
-      // unter 0,5 nur Meer-Stempel (Fern-Pfad), keine Land-Stempel und keine Palmen
-      for (const k of got(0.4))
-        expect(['wreck', 'seaRock', 'islet'], `Zoom 0,4 zeigt ${k}`).toContain(k);
+      expect(got(1)).toEqual(['menhir', 'orchard', 'palm', 'ruin', 'seaRock', 'solitaire']);
+      expect(got(0.6)).toEqual(['orchard', 'palm', 'seaRock', 'solitaire']);
+      expect(got(0.4)).toEqual(['seaRock']);
     },
   );
 

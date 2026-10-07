@@ -833,7 +833,15 @@ export function stampPlacements(
   if (!sea) return base;
   const room = stampLimit(p.cls.reduce((n, c) => n + (c !== 0 ? 1 : 0), 0)) - base.length;
   const extra: StampPlacement[] = [
-    ...seaStamps(seed, seaPlan(seed, isl, sea), w),
+    ...seaStamps(seed, seaPlan(seed, isl, sea), w).filter(
+      (s) =>
+        !seaKontorBlocked(
+          sea,
+          s.x,
+          s.y,
+          s.kind === 'wreck' ? SEA_PAD.wreck : s.kind === 'islet' ? SEA_PAD.islet : 0,
+        ),
+    ),
     ...p.palms.filter(
       (s) => isl.tiles[s.y * w + s.x]!.terrain === 'sand' && !stampBlocked(isl, s.x, s.y),
     ),
@@ -860,8 +868,22 @@ export interface SeaContext {
   /** Fahrlinien der Heimat (vom Anker weg), Polylinien. */
   lanes: Pos[][];
   anchor: Pos;
-  /** Kontore der Heimat: Mitte und Grösse. */
-  kontors: { x: number; y: number; w: number; h: number }[];
+  /**
+   * Das Start-Kontor (kleinste id auf der Heimat): Teil der Planung. Ein später gebautes Kontor verschiebt oder würfelt nichts
+   * neu (der Plan ist statisch, D1).
+   */
+  kontors: KontorRect[];
+  /**
+   * Alle jetzigen Kontore der Heimat (Start-Kontor eingeschlossen): R4 gilt für jedes als Sichtbarkeitsfilter (`seaKontorBlocked`,
+   * wie D2 in L4): Meer-Stempel und ihr Schaum entfallen, solange eins < 4 Kacheln entfernt ist.
+   */
+  live: KontorRect[];
+}
+export interface KontorRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 const seaContexts = new WeakMap<World, { sig: string; ctx: SeaContext }>();
@@ -877,13 +899,16 @@ export function seaContext(world: World): SeaContext {
     world.islands.findIndex((i) => i.kind === 'home'),
   );
   const isl = world.islands[hi]!;
-  const kontors = Object.values(world.buildings)
+  const found = Object.values(world.buildings)
     .filter((b) => b.island === hi && (b.defId === 'kontor' || b.defId === 'kontor2'))
+    .sort((a, b) => a.id - b.id)
     .map((b) => {
       const d = BUILDING_DEFS[b.defId];
       return { x: b.x, y: b.y, w: d.w, h: d.h };
     });
-  const sig = JSON.stringify(kontors);
+  const live = found;
+  const kontors = found.slice(0, 1);
+  const sig = JSON.stringify(live);
   const c = seaContexts.get(world);
   if (c && c.sig === sig) return c.ctx;
   const lanes: Pos[][] = [];
@@ -896,6 +921,7 @@ export function seaContext(world: World): SeaContext {
     lanes,
     anchor: { x: isl.anchor.x + 0.5, y: isl.anchor.y + 0.5 },
     kontors,
+    live,
   };
   seaContexts.set(world, { sig, ctx });
   return ctx;
@@ -916,30 +942,58 @@ function distToSeg(px: number, py: number, a: Pos, b: Pos): number {
  * Die „Richtung Anker → nächster Lane-Punkt“ ist die Richtung des ersten Lane-Abschnitts (Lanes sind Geraden Anker → Anker).
  */
 export function seaKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
-  const cx = x + 0.5,
-    cy = y + 0.5;
+  return seaClearance(ctx, x + 0.5, y + 0.5, pad) < 0;
+}
+
+/**
+ * Abstand in Kacheln zur R4-Grenze am Punkt (`cx`, `cy`, Kachelraum): kleinster Spielraum über Lane (− 3), Anker (− 4), Start-Kontor
+ * (− 4) und Anfahrtskegel (Abstand zum Kegelrand); negativ = gesperrt. Die Tönung der Wasserfelder (`seaFields.ts`) läuft damit
+ * pixelgenau bei 0 aus.
+ */
+export function seaClearance(ctx: SeaContext, cx: number, cy: number, pad = 0): number {
+  let c = Infinity;
   for (const l of ctx.lanes)
     for (let i = 1; i < l.length; i++)
-      if (distToSeg(cx, cy, l[i - 1]!, l[i]!) < SEA_LANE_GAP + pad) return true;
+      c = Math.min(c, distToSeg(cx, cy, l[i - 1]!, l[i]!) - SEA_LANE_GAP - pad);
   const vx = cx - ctx.anchor.x,
     vy = cy - ctx.anchor.y;
   const vl = Math.hypot(vx, vy);
-  if (vl < SEA_ANCHOR_GAP + pad) return true;
-  for (const k of ctx.kontors) {
-    const dx = Math.max(k.x - cx, 0, cx - (k.x + k.w)),
-      dy = Math.max(k.y - cy, 0, cy - (k.y + k.h));
-    if (Math.hypot(dx, dy) < SEA_ANCHOR_GAP + pad) return true;
+  c = Math.min(c, vl - SEA_ANCHOR_GAP - pad);
+  for (const k of ctx.kontors) c = Math.min(c, kontorDist(k, cx, cy) - SEA_ANCHOR_GAP - pad);
+  if (vl > 1e-9) {
+    const rad = (SEA_CONE_DEG * Math.PI) / 180;
+    for (const l of ctx.lanes) {
+      const t = l.find((q) => Math.hypot(q.x - ctx.anchor.x, q.y - ctx.anchor.y) > 1e-6);
+      if (!t) continue;
+      const tx = t.x - ctx.anchor.x,
+        ty = t.y - ctx.anchor.y;
+      const ang = Math.acos(
+        Math.max(-1, Math.min(1, (vx * tx + vy * ty) / (vl * Math.hypot(tx, ty)))),
+      );
+      c = Math.min(
+        c,
+        ang < rad
+          ? -vl * Math.sin(rad - ang) - 1e-9
+          : vl * Math.sin(Math.min(ang - rad, Math.PI / 2)),
+      );
+    }
   }
-  const cos = Math.cos((SEA_CONE_DEG * Math.PI) / 180);
-  for (const l of ctx.lanes) {
-    const t = l.find((q) => Math.hypot(q.x - ctx.anchor.x, q.y - ctx.anchor.y) > 1e-6);
-    if (!t) continue;
-    const tx = t.x - ctx.anchor.x,
-      ty = t.y - ctx.anchor.y;
-    if ((vx * tx + vy * ty) / (vl * Math.hypot(tx, ty)) > cos) return true;
-  }
-  return false;
+  return c;
 }
+
+const kontorDist = (k: KontorRect, cx: number, cy: number): number =>
+  Math.hypot(Math.max(k.x - cx, 0, cx - (k.x + k.w)), Math.max(k.y - cy, 0, cy - (k.y + k.h)));
+
+/**
+ * R4 als Sichtbarkeitsfilter (wie D2 in L4): ein Meer-Stempel an Kachel (`x`, `y`) samt Schaum entfällt, solange irgendein
+ * jetziges Kontor (`ctx.live`) < `SEA_ANCHOR_GAP` + `pad` Kacheln entfernt ist. Nach einem Abriss kommt er zurück. Die Flächen
+ * (Sandbank, Riff, Tang) bleiben, weil sie nur Bodentönung sind, nie gepatcht werden und daher nicht je Kontor neu entstehen.
+ */
+export function seaKontorBlocked(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
+  return ctx.live.some((k) => kontorDist(k, x + 0.5, y + 0.5) < SEA_ANCHOR_GAP + pad);
+}
+/** Zuschlag für den Fussabdruck über eine Kachel hinaus (Wrack ≤ 1,5 Kacheln, Eiland mit Sandring). */
+export const SEA_PAD = { wreck: 0.5, islet: 1, rock: 0 } as const;
 
 export interface SeaRock extends Pos {
   /** Felsnadel (S): schmal und hoch, Variante 6/7. */
@@ -979,7 +1033,8 @@ const seaPlans = new WeakMap<object, { seed: number; key: string; plan: SeaPlan 
 const ctxKeys = new WeakMap<SeaContext, string>();
 const ctxKey = (c: SeaContext): string => {
   let k = ctxKeys.get(c);
-  if (k === undefined) ctxKeys.set(c, (k = JSON.stringify(c)));
+  if (k === undefined)
+    ctxKeys.set(c, (k = JSON.stringify({ lanes: c.lanes, anchor: c.anchor, kontors: c.kontors })));
   return k;
 };
 
@@ -1059,7 +1114,7 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
 
   // E1 Wrack
   if (hash2(seed + 566, 0, 0) < WRECK_P) {
-    const c = ranked(566, 1, 1, 5, 0.5).find((t) => ok(t.x, t.y, 1, 5, 0.5));
+    const c = ranked(566, 1, 1, 5, SEA_PAD.wreck).find((t) => ok(t.x, t.y, 1, 5, SEA_PAD.wreck));
     if (c) {
       plan.wreck = { x: c.x, y: c.y };
       claim(c.x, c.y, 2);
@@ -1067,7 +1122,9 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
   }
   // E8 Felseiland: Mittelwasser ≥ 4 Kacheln zur Küste
   if (hash2(seed + 568, 0, 0) < ISLET_P) {
-    const c = ranked(568, 2, 4, SEA_MID_MAX, 1).find((t) => ok(t.x, t.y, 4, SEA_MID_MAX, 1));
+    const c = ranked(568, 2, 4, SEA_MID_MAX, SEA_PAD.islet).find((t) =>
+      ok(t.x, t.y, 4, SEA_MID_MAX, SEA_PAD.islet),
+    );
     if (c) {
       plan.islet = { x: c.x, y: c.y };
       claim(c.x, c.y, 2);

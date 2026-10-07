@@ -3,7 +3,18 @@ import { laneTicks } from '../../src/sim/islands';
 import { createWorld, home } from '../../src/sim/world';
 import type { Ship, World } from '../../src/sim/types';
 import { project } from '../../src/render/iso';
-import { seaContext, seaElementTiles, seaPlan, type StampKind } from '../../src/render/decor';
+import {
+  kontorPos,
+  seaClearance,
+  seaContext,
+  seaElementTiles,
+  seaPlan,
+  stampPlacements,
+  type StampKind,
+} from '../../src/render/decor';
+import { seaTintFor, tintWater } from '../../src/render/seaFields';
+import { seaFoamVisible } from '../../src/render/water';
+import type { Building } from '../../src/sim/types';
 import {
   DECOR_MIN_ZOOM,
   DECOR_STAMP_TONES,
@@ -365,5 +376,58 @@ describe('L5-T3 shipAt trifft nie Wrack oder Felsen', () => {
     expect(ships).toBeGreaterThan(100);
     expect(samples).toBeGreaterThan(10000);
     expect(ISO_H).toBe(32);
+  });
+});
+
+describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
+  it('ein später gebautes Kontor verschiebt nichts: Plan gleich, Stempel und Schaum in < 4 Kacheln entfallen, nach Abriss alles zurück', () => {
+    const w = createWorld(7);
+    const isl = home(w);
+    const k = kontorPos(isl, w.buildings);
+    const plan0 = JSON.stringify(seaPlan(w.seed, isl, seaContext(w)));
+    const st0 = stampPlacements(w.seed, isl, k, seaContext(w));
+    const foam0 = seaFoamVisible(w).rings.length;
+    const rock = seaPlan(w.seed, isl, seaContext(w)).rocks[0]!;
+    w.buildings[9001] = {
+      id: 9001,
+      defId: 'kontor2',
+      x: rock.x + 2,
+      y: rock.y,
+      island: 0,
+    } as unknown as Building;
+    const ctx1 = seaContext(w);
+    expect(ctx1.live.length).toBe(ctx1.kontors.length + 1);
+    expect(JSON.stringify(seaPlan(w.seed, isl, ctx1)), 'Plan bleibt').toBe(plan0);
+    const st1 = stampPlacements(w.seed, isl, k, ctx1);
+    expect(st1.some((s) => s.kind === 'seaRock' && s.x === rock.x && s.y === rock.y)).toBe(false);
+    expect(st1.length).toBeLessThan(st0.length);
+    for (const s of st1) expect(st0.map((q) => q.id)).toContain(s.id); // nichts kommt dazu, nichts rückt nach
+    expect(seaFoamVisible(w).rings.length, 'Schaum entfällt mit dem Objekt').toBeLessThan(foam0);
+    delete w.buildings[9001];
+    expect(stampPlacements(w.seed, isl, k, seaContext(w))).toEqual(st0);
+    expect(seaFoamVisible(w).rings.length).toBe(foam0);
+  });
+
+  it('Tönung der Wasserfelder ist an der R4-Grenze 0: Seeds 1–20 kein getöntes Punkt < 3 Kacheln von einer Lane, < 4 vom Anker oder Kontor, nicht im Kegel', () => {
+    let tinted = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const w = createWorld(seed);
+      const t = seaTintFor(w);
+      if (!t) continue;
+      const ctx = seaContext(w);
+      const base = [47, 127, 154];
+      for (let y = 0; y < 64; y += 0.2)
+        for (let x = 0; x < 64; x += 0.2) {
+          const o = [...base];
+          tintWater(t, x, y, o);
+          if (o[0] === base[0] && o[1] === base[1] && o[2] === base[2]) continue;
+          tinted++;
+          expect(
+            seaClearance(ctx, x, y),
+            `Seed ${seed} @${x.toFixed(1)},${y.toFixed(1)}`,
+          ).toBeGreaterThanOrEqual(0);
+        }
+    }
+    expect(tinted).toBeGreaterThan(5000);
   });
 });
