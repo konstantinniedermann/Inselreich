@@ -825,9 +825,9 @@ const FLOOR_EDGE_SPAN = 0.3;
 const WOOD_SHADOW_MIN = 0.22,
   WOOD_SHADOW_MAX = 0.5;
 /** Schattenstärke (wie `SHADOW` in palette.ts: Deckkraft 0,35), Anteil unter dem eigenen Dach, weiche Kante. */
-const WOOD_SHADOW_A = 0.35,
+const WOOD_SHADOW_A = 0.28,
   WOOD_SHADOW_UNDER = 0.25,
-  WOOD_SHADOW_SOFT = 0.08;
+  WOOD_SHADOW_SOFT = 0.13;
 /** Vorwald: Band unter der Saumlinie (S-Einheiten) und höchste Abdunklung der Wiese darin. */
 const VORWALD_FLOOR_BAND = 0.3,
   VORWALD_FLOOR_DARK = 0.1;

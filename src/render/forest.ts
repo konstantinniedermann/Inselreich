@@ -24,7 +24,7 @@ import { SAUM_LEVEL, saumAt, woodBlur, woodNoise, type WoodMask } from './woodFi
 // 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel · 510 Riesenbaum ja/nein (alle L1) ·
 // WALD-02: 518/519/520 Randrauschen des Saumfelds (woodField.ts, auch `forestEdgeShift`) · 521 Kandidaten je Kachel
 // (Lage, Rang, Einzelwurf) · 522 Grössen-/Altersfeld · 523 Tonfeld · 524 Beimischung · 525 Totholz · 526 Vorwalddichte ·
-// 527 Form und Spiegelung · 528/529 frei.
+// 527 Form und Spiegelung · 528 Horstfeld · 529 frei.
 // Nicht mehr benutzt (WALD-02): 504, 505, 506, 507, 511, 514, 515, 516, 517 (alte Stempelplatzierung).
 //
 // Schnittstellen für L6 (Lichtung, trees.ts): `woodLayout` liefert die Zellen samt Kronen; `forestClearing` ist das
@@ -117,13 +117,17 @@ const VORWALD_BAND = 0.35,
   VORWALD_ACCEPT = 0.85,
   VORWALD_BUSH = 0.55;
 /** Grundradius (Kacheln) je Baumart bei Grössenfeld 1: Laub, Nadel, Birke, Pinie, Ahorn. */
-const R_KIND = [0.27, 0.23, 0.22, 0.32, 0.26] as const;
+const R_KIND = [0.27, 0.25, 0.22, 0.32, 0.26] as const;
 /** Grössenfeld (Alter des Bestands, Merkmal ≈ 6 Kacheln): Spanne; Einzelwurf ±; Überhälter: Anteil und Faktor. */
 const STAND_LO = 0.6,
   STAND_HI = 1.25,
   SIZE_JITTER = 0.3,
-  EMERGENT_P = 0.035,
+  EMERGENT_P = 0.06,
   EMERGENT_F = 1.3;
+/** Nadelbäume streuen stärker (die Höhe folgt dem Radius; kein Nagelbrett). */
+const CONIFER_JITTER = 0.42;
+/** Horste: Ausdünnung im Kern, wo das Horstfeld tief liegt (Anteil). */
+const HORST_DEPTH = 0.3;
 /** Beimischung (B3): Anteil Kronen einer anderen Art. */
 const ADMIX_P = 0.09;
 /**
@@ -318,6 +322,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     const gap = core > 0.6 ? forestClearing(seed, fx, fy) : 0;
     let accept = inside ? ACCEPT_EDGE + (ACCEPT_CORE - ACCEPT_EDGE) * core : ACCEPT_BEHIND;
     accept *= 1 - 0.85 * gap;
+    // Horste und kleine Bestandslücken im Kern (Merkmal ≈ 2,5 Kacheln): das Dach ist kein Teppich
+    accept *=
+      1 - HORST_DEPTH * core * smooth01((0.55 - rotNoise(seed + 528, fx, fy, 1 / 2.5, 1.9)) / 0.3);
     // Totholz (B3) in Lücken und im lichten Kern
     if (rnd(x, y, j, 7) < DEAD_P * (0.3 + 2 * gap) && core > 0.5) {
       const dead = rnd(x, y, j, 8) < 0.7 ? 1 : 2;
@@ -331,7 +338,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     if (rnd(x, y, j, 3) < ADMIX_P)
       kind = slotKind(seed, (slot + 1 + (rnd(x, y, j, 4) < 0.5 ? 1 : 0)) % 3);
     const stand = STAND_LO + (STAND_HI - STAND_LO) * standAt(seed, fx, fy);
-    let size = stand * (0.62 + 0.38 * core) * (1 + SIZE_JITTER * (2 * rnd(x, y, j, 5) - 1));
+    const jitter = kind === 1 ? CONIFER_JITTER : SIZE_JITTER;
+    let size = stand * (0.62 + 0.38 * core) * (1 + jitter * (2 * rnd(x, y, j, 5) - 1));
     const young = !inside || (core < 0.3 && rnd(x, y, j, 6) < 0.5);
     if (!young && core > 0.5 && rnd(x, y, j, 11) < EMERGENT_P) size *= EMERGENT_F;
     const c = makeCrown(kind, R_KIND[kind] * size, x, y, j, { young }, TREE_H);
@@ -525,7 +533,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     if (c.dead) c.h = 0;
     else {
       const hh = crownGeom(c).hh;
-      c.h = c.giant ? Math.min(1.7 * hh, GIANT_SCALE * TREE_H - hh) : heightFactor(c) * hh;
+      c.h = c.giant
+        ? Math.min((c.kind === 1 ? 1.05 : 1.7) * hh, GIANT_SCALE * TREE_H - hh)
+        : heightFactor(c) * hh;
     }
     const cell = tight[k] ? { x: q.tx, y: q.ty } : bandCell(fx, fy);
     const key = `${tight[k] ? 1 : 0}|${cell.x}|${cell.y}`;

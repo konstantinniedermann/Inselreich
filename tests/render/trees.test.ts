@@ -237,6 +237,25 @@ describe('Kronen-Atlas', () => {
     expect(treeCacheSize()).toBeGreaterThan(0);
   });
 
+  it('Spec §5 Atlas bei Zoom 2: alle Kronen einer ganzen Insel (Seeds 7, 14, 2) passen ohne Verdrängung unter die Obergrenze (Briefing: ≤ 12 MiB)', () => {
+    for (const seed of [7, 14, 2]) {
+      setCanvasFactory(fakeCanvasFactory());
+      resetTreeCache();
+      const { ctx } = fakeCtx();
+      for (const item of treeItems(woodWorld(seed)))
+        drawTreeStamp(ctx, { x: 0, y: 0, zoom: 2 }, item, seed);
+      const n = treeCacheSize(),
+        bytes = treeCacheBytes();
+      // noch einmal: keine neuen Einträge (nichts wurde verdrängt)
+      for (const item of treeItems(woodWorld(seed)))
+        drawTreeStamp(ctx, { x: 0, y: 0, zoom: 2 }, item, seed);
+      expect(treeCacheSize(), `Seed ${seed}`).toBe(n);
+      expect(bytes, `Seed ${seed}: ${(bytes / 2 ** 20).toFixed(2)} MiB`).toBeLessThanOrEqual(
+        12 * 2 ** 20,
+      );
+    }
+  });
+
   it('ISO §16 der Atlas hängt nicht vom Seed ab: dieselbe Krone teilt den Eintrag über Inseln', () => {
     setCanvasFactory(fakeCanvasFactory());
     resetTreeCache();

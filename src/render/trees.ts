@@ -61,8 +61,8 @@ const BODY: readonly string[] = [
   MAPLE_COLOR,
 ];
 /** Tonklassen des Kronendachs (B2): je Art dunkler (−1) und heller (+1), etwa eine Tonstufe. */
-const TONE_DARK = 0.24,
-  TONE_LIGHT = 0.2;
+const TONE_DARK = 0.3,
+  TONE_LIGHT = 0.26;
 /** Körperfarbe je Baumart und Tonklasse. */
 export const crownBase = (kind: CrownKind, tone: -1 | 0 | 1 = 0): string => {
   const b = BODY[kind]!;
@@ -324,6 +324,8 @@ interface Sprite {
   oy: number;
   bytes: number;
   used: number;
+  /** false, sobald der Eintrag verdrängt ist (Zeichenlisten der Objekte bauen sich dann neu). */
+  alive: boolean;
 }
 
 let makeCanvas: () => HTMLCanvasElement = () => document.createElement('canvas');
@@ -353,6 +355,7 @@ let atlasFrame = 0;
 export const treeCacheSize = (): number => atlas.size;
 export const treeCacheBytes = (): number => atlasBytes;
 export function resetTreeCache(): void {
+  for (const s of atlas.values()) s.alive = false;
   atlas.clear();
   atlasBytes = 0;
 }
@@ -378,7 +381,14 @@ function spriteFor(ref: AtlasRef, step: number): Sprite | null {
   ctx.scale(step, step);
   paintTree(ctx, c, 0, 0);
   ctx.restore();
-  const s: Sprite = { canvas, ox, oy, bytes: canvas.width * canvas.height * 4, used: atlasFrame };
+  const s: Sprite = {
+    canvas,
+    ox,
+    oy,
+    bytes: canvas.width * canvas.height * 4,
+    used: atlasFrame,
+    alive: true,
+  };
   if (atlasBytes + s.bytes > TREE_CACHE_MAX_BYTES) evict(s.bytes);
   atlas.set(key, s);
   atlasBytes += s.bytes;
@@ -391,6 +401,7 @@ function evict(need: number): void {
     if (atlasBytes + need <= TREE_CACHE_MAX_BYTES * 0.8) break;
     atlas.delete(k);
     atlasBytes -= s.bytes;
+    s.alive = false;
   }
 }
 
@@ -408,26 +419,58 @@ export function drawTreeStamp(
   const z = cam.zoom,
     step = zoomStep(z);
   atlasFrame++;
+  let d = drawOf.get(item);
+  if (!d || d.step !== step || d.list.some((e) => e.s !== null && !e.s.alive))
+    drawOf.set(item, (d = drawList(item, step)));
   const o = worldToScreen(cam, project(item.fp.x, item.fp.y));
-  const hx = (ISO_W / 2) * z,
-    hy = (ISO_H / 2) * z;
-  for (const c of item.crowns) {
-    const px = o.x + (c.cx - c.cy) * hx,
-      py = o.y + (c.cx + c.cy) * hy;
-    if (c.giant) {
+  for (const e of d.list) {
+    if (e.s === null) {
+      // Riesenbaum: direkt gemalt
       ctx.save();
-      ctx.translate(px, py);
+      ctx.translate(o.x + e.x * z, o.y + e.y * z);
       ctx.scale(z, z);
-      paintTree(ctx, c, 0, 0);
+      paintTree(ctx, e.c, 0, 0);
       ctx.restore();
+      continue;
+    }
+    e.s.used = atlasFrame;
+    ctx.drawImage(e.s.canvas, o.x + e.x * z, o.y + e.y * z, e.w * z, e.h * z);
+  }
+}
+
+/** Zeichenliste eines Objekts je Zoomstufe: Atlas-Eintrag und Zielrechteck in Weltpixeln relativ zur Objektecke. */
+interface DrawEntry {
+  s: Sprite | null;
+  c: Crown;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const drawOf = new WeakMap<TreeItem, { step: number; list: DrawEntry[] }>();
+function drawList(item: TreeItem, step: number): { step: number; list: DrawEntry[] } {
+  const list: DrawEntry[] = [];
+  for (const c of item.crowns) {
+    const fx = (c.cx - c.cy) * (ISO_W / 2),
+      fy = (c.cx + c.cy) * (ISO_H / 2);
+    if (c.giant) {
+      list.push({ s: null, c, x: fx, y: fy, w: 0, h: 0 });
       continue;
     }
     const ref = atlasRef(c);
     const s = spriteFor(ref, step);
     if (!s) continue;
-    const k = (z / step) * ref.f;
-    ctx.drawImage(s.canvas, px - s.ox * k, py - s.oy * k, s.canvas.width * k, s.canvas.height * k);
+    const k = ref.f / step; // Sprite-Pixel → Weltpixel
+    list.push({
+      s,
+      c,
+      x: fx - s.ox * k,
+      y: fy - s.oy * k,
+      w: s.canvas.width * k,
+      h: s.canvas.height * k,
+    });
   }
+  return { step, list };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
