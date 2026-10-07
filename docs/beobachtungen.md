@@ -328,3 +328,13 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
   `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
   verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
+- **Fundort / Beobachtung:** `src/render/decor.ts` (`coastKind`): Die Kiefernküste (§3.7) hat in L5 nur „D1 selten“;
+  „Nadelbäume bis an den Sand“ fehlt, weil `trees.ts`/`forest.ts` für L5 gesperrt waren. **Einschätzung:** mittel für
+  das Bildziel Inselcharakter; L8 (Varianten §3.7 vollständig) mit Schreibrecht auf `forest.ts` nachziehen.
+  **Ursprung:** ART-STIL-02 L5, art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/decor.ts`: Wrack (E1), Felseiland (E8), Felsnadel (E3-S) und Kiste (D9) haben
+  eigene Lose ausserhalb von `RARE_POOL`, weil `RARE_CAP` = 6 sie sonst verdrängt. **Einschätzung:** mittel; L8 muss sie
+  beim 3–6-Seltenheitsband mitzählen. **Ursprung:** ART-STIL-02 L5, art-rendering-engineer.
+- **Fundort / Beobachtung:** `src/render/water.ts` `seaFoamVisible` → `seaContext(world)` je Frame (`Object.values`
+  über alle Gebäude plus `JSON.stringify`). **Einschätzung:** niedrig; billiger Schnellpfad (Kontorzahl oder
+  `nextBuildingId`) beim nächsten Eingriff in `water.ts` (L8). **Ursprung:** ART-STIL-02 L5, qa-code-reviewer.
