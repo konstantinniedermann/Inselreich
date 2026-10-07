@@ -643,6 +643,16 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
         expect(pose.dolphins.filter((d) => d.t > 0.45 && d.t < 0.55).length).toBeLessThanOrEqual(2);
   });
 
+  it('E5 Bahn-Cache je Episode begrenzt und stabil: nach vielen anderen Episoden dieselbe Pose wie zuvor', () => {
+    for (const seed of SEEDS50) {
+      const world = createWorld(seed);
+      const first = dolphinEpisodes(world).slice(0, 12);
+      if (first.length === 0) continue;
+      for (let e = 60; e < 90; e++) dolphinsAt(world, e * DOLPHIN_EPISODE_MS + 4000);
+      for (const { t, pose } of first) expect(dolphinsAt(world, t)).toEqual(pose);
+    }
+  });
+
   it('E5 wildlifeAt: Name „Delfine“, Radius 1,5, nicht nachts und nicht bei Sturm, ohne Zoomschwelle (wie der Wal), reduziert keine', () => {
     let found = 0;
     for (const seed of SEEDS50) {

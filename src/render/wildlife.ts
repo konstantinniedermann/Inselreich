@@ -295,25 +295,24 @@ const DOLPHIN_SIDE = 0.7; // Abstand der Tiere in der Gruppe quer zur Richtung
 const DOLPHIN_SHIP_GAP = 3;
 const DOLPHIN_JUMP_H = 0.45 * ISO_H;
 
-/**
- * Delfingruppe zur Zeit `timeMs` oder null (E5): Episoden zu 45 s, in ca. der Hälfte springen 2–3 Delfine nacheinander
- * (zweimal je Tier) in Bögen über Tiefwasser (`dolphinSites`: Küstenfeld ≤ −4, R4-Abstände), die Gruppe zieht 3 Kacheln. Die
- * Kappe `dolphins` zählt Tiere (reduziert 0 = keine). Ein Delfin näher als 3 Kacheln am Schiff taucht nicht auf. Bahn
- * hängt nur von Seed, Episode und Meer ab, nie vom Schiff (Salze 65–67).
- */
-export function dolphinsAt(world: World, timeMs: number, reduce = false): DolphinPose | null {
-  const limit = cap('dolphins', reduce);
-  if (limit <= 0 || !faunaLot(world.seed, 'dolphin')) return null;
-  const sites = dolphinSites(world);
-  if (!sites || sites.cands.length === 0) return null;
-  const t = clampTime(timeMs);
-  const e = Math.floor(t / DOLPHIN_EPISODE_MS);
-  if (hash2(world.seed + 65, e, 0) >= DOLPHIN_SHARE) return null;
-  const start =
-    e * DOLPHIN_EPISODE_MS +
-    hash2(world.seed + 66, e, 0) * (DOLPHIN_EPISODE_MS - DOLPHIN_VISIBLE_MS);
-  const dt = t - start;
-  if (dt < 0 || dt >= DOLPHIN_VISIBLE_MS) return null;
+interface DolphinRoute {
+  a: Pt2;
+  ang: number;
+}
+const ROUTE_KEEP = 8;
+/** Bahnen je Welt und Episode (höchstens `ROUTE_KEEP` Einträge, der älteste fliegt zuerst); hängen nie von Schiff oder Zeit ab. */
+const dolphinRoutes = new WeakMap<World, Map<number, DolphinRoute | null>>();
+/** Mitte und Richtung der Episode `e`: einmal geprüft (Tiefwasser und R4 entlang der Bahn), danach aus dem Cache. */
+function dolphinRoute(
+  world: World,
+  sites: NonNullable<ReturnType<typeof dolphinSites>>,
+  e: number,
+): DolphinRoute | null {
+  let m = dolphinRoutes.get(world);
+  if (!m) dolphinRoutes.set(world, (m = new Map()));
+  const hit = m.get(e);
+  if (hit !== undefined) return hit;
+  let out: DolphinRoute | null = null;
   const f = sites.field;
   const c =
     sites.cands[
@@ -345,7 +344,35 @@ export function dolphinsAt(world: World, timeMs: number, reduce = false): Dolphi
       break;
     }
   }
-  if (reach < 0) return null; // keine Bahn im erlaubten Tiefwasser: in diesem Abschnitt keine Delfine
+  if (reach >= 0) out = { a, ang };
+  m.set(e, out);
+  if (m.size > ROUTE_KEEP) m.delete(m.keys().next().value!);
+  return out;
+}
+
+/**
+ * Delfingruppe zur Zeit `timeMs` oder null (E5): Episoden zu 45 s, in ca. der Hälfte springen 2–3 Delfine nacheinander
+ * (zweimal je Tier) in Bögen über Tiefwasser (`dolphinSites`: Küstenfeld ≤ −4, R4-Abstände), die Gruppe zieht 3 Kacheln. Die
+ * Kappe `dolphins` zählt Tiere (reduziert 0 = keine). Ein Delfin näher als 3 Kacheln am Schiff taucht nicht auf. Bahn
+ * hängt nur von Seed, Episode und Meer ab, nie vom Schiff (Salze 65–67).
+ */
+export function dolphinsAt(world: World, timeMs: number, reduce = false): DolphinPose | null {
+  const limit = cap('dolphins', reduce);
+  if (limit <= 0 || !faunaLot(world.seed, 'dolphin')) return null;
+  const sites = dolphinSites(world);
+  if (!sites || sites.cands.length === 0) return null;
+  const t = clampTime(timeMs);
+  const e = Math.floor(t / DOLPHIN_EPISODE_MS);
+  if (hash2(world.seed + 65, e, 0) >= DOLPHIN_SHARE) return null;
+  const start =
+    e * DOLPHIN_EPISODE_MS +
+    hash2(world.seed + 66, e, 0) * (DOLPHIN_EPISODE_MS - DOLPHIN_VISIBLE_MS);
+  const dt = t - start;
+  if (dt < 0 || dt >= DOLPHIN_VISIBLE_MS) return null;
+  const route = dolphinRoute(world, sites, e);
+  if (!route) return null; // keine Bahn im erlaubten Tiefwasser: in dieser Episode keine Delfine
+  const { a, ang } = route;
+  const reach = DOLPHIN_REACH;
   const n = Math.min(limit, 2 + (hash2(world.seed + 66, e, 1) < 0.5 ? 1 : 0));
   const ship = shipTile(world);
   const at = (tt: number, i: number): Pt2 => ({
