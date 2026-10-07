@@ -113,3 +113,13 @@ schliesst den Eintrag.
 - Blockiert: nichts
 - Von: l0
 - Antwort: Nutzer 2026-10-05: VERFASSUNG ÄNDERN; Wortlaut gesetzt, Verfassung 1.2 (R261)
+
+## N-97 · beantwortet · 2026-10-07 · Guard erweitern: pkill/killall -f sperren
+
+- Frage: Darf L0 den Guard (tools/studio/guard.py, verfassungsgeschützt §1.3) so erweitern, dass pkill/killall mit -f bzw. auf allgemeine Namen gesperrt werden? Freigabe per 'VERFASSUNG ÄNDERN' in der Hauptsession.
+- Empfehlung: Ja freigeben
+- Begründung: Ein Engineer hat 'pkill -f vitest run' benutzt und damit evtl. fremde Testläufe beendet (R299); R263 verbietet es schon, aber nur auf Papier (Retro 2026-10-07).
+- Kosten des Wartens: Gering: Regel bleibt Papier, Risiko eines erneuten Fremd-Abbruchs bei parallelen Läufen.
+- Blockiert: TOOL-GUARD-PKILL
+- Von: studio-coach
+- Antwort: Nutzer 2026-10-07: VERFASSUNG ÄNDERN — L0 setzt Guard-Erweiterung selbst um (R305)

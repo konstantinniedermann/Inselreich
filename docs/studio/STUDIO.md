@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.22 · Stand: 2026-10-06 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.24 · Stand: 2026-10-07 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -366,7 +366,8 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 - **Lastregel (R249 (3), R250, E-030):** Rote Zeittests (`perfBudget`) und Browser-Messungen gelten
   nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst
   warten oder allein wiederholen); der Bericht nennt den Last-Zustand. Eine Schwelle wird erst
-  gelockert, wenn ein Lauf ohne Last rot ist.
+  gelockert, wenn ein Lauf ohne Last rot ist. Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`
+  (R303); nie per `pkill -f` beenden, nur per PID.
 - **Bildrunden (R233 V3):** höchstens 2 je Häppchen; danach Stopp-Bericht an L0 und Gate-Entscheid
   statt eines dritten Anlaufs.
 - **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
@@ -429,6 +430,7 @@ Abnahme pushen (R107).
 
 0. Pausiert L0 vor dem regulären Ende (z. B. Nutzungslimit), führt er **zuerst** `state.md` nach
    (Punkt 4); die Übergabe steht nie nur im Chat (R66).
+   0a. Bei einem Abbruch endet kein Agent von selbst (Retro session-7db07561 B1): `state.md` nennt die Agenten mit frischem Heartbeat (< 10 min, Dashboard) als „kann weiterlaufen“ mit Worktree. Vor jedem Neustart eines Pakets prüft L0 Worktree-HEAD (`git log -1`, `git status`) und Dashboard, damit nie zwei Schreiber im selben Worktree arbeiten (E-034, R308).
 1. Laufende Agenten abschliessen oder pausieren und loggen: Lead meldet Zwischenstand (Bericht, bei
    Bedarf Übergabe unter `.studio/handoffs/`) und loggt
    `status --status done --summary "Pausiert: <Stand>"`; Pakete bleiben auf ihrem Status.

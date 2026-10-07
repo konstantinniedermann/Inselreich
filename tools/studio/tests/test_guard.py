@@ -94,6 +94,37 @@ class BashTest(unittest.TestCase):
                 self.assertIsNotNone(reason(cmd))
                 self.assertIsNone(reason(cmd, allow=True))
 
+    def test_kill_by_name_forbidden(self):
+        """R263, R303: fremde Prozesse nie per Namen beenden, eigene nur per PID."""
+        for cmd in [
+            "pkill -f 'vitest run'",
+            "pkill vite",
+            "killall node",
+            "sudo pkill -9 chrome",
+            "timeout 5 killall -m perf",
+            "echo x && pkill -f perf.mjs",
+            "bash -c 'pkill -f mess.sh'",
+            "/usr/bin/pkill -f x",
+            "ls | xargs pkill",
+            "ls | xargs -n1 killall",
+            "nice pkill x",
+            "find . -exec killall x \\;",
+            "ssh h pkill x",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNotNone(reason(cmd))
+                self.assertIsNotNone(reason(cmd, allow=True))
+        for cmd in [
+            "kill 42157",
+            "kill -TERM 123 456",
+            "pgrep -f mess.sh",
+            "ps -p 1",
+            "grep pkill notes.md",
+            "echo pkill",
+        ]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
     def test_unparsable_is_allowed(self):
         self.assertIsNone(reason("echo 'offen"))
 

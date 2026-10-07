@@ -22,6 +22,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Hypothese: Wenn `.gitattributes` für `docs/beobachtungen.md` `merge=union` setzt und der `production-integrator` in einem eigenen Worktree (`git worktree add .worktrees/integrate main`, Push von dort, Hauptcheckout danach `git pull --ff-only`) statt im Hauptcheckout mergt, dann entstehen keine Konflikte im Anhänge-Journal und keine Vorfälle durch den geteilten Arbeitsbaum (Retro M11 B1, B4; R196, R198).
 - Messgrösse: in M12 0 manuell aufgelöste Konflikte in `docs/beobachtungen.md`, 0 verlorene oder doppelte Einträge (Sichtprüfung im Review) und 0 Vorfälle durch gemeinsam genutzten Hauptcheckout (Ausgang M11: 3 Konflikte, H-R7, C7, R2; 2 L0-Ablauffehler).
 - Zeitraum: M12.
+- Anpassung R303 (Handbuch 1.23): `merge=union` entfällt (Zeile aus `.gitattributes` entfernt), Standardmerge; Messgrösse zusätzlich 0 zurückgeholte gestrichene Zeilen und 0 Doppelabschnitte in 3 Merges, die `docs/beobachtungen.md` berühren (E-031). Rückfall dafür: Zeile `docs/beobachtungen.md merge=union` wiederherstellen.
 - Rückfall: Zeile aus `.gitattributes` entfernen; Persona `production-integrator` 1.3 und `lead-production` 1.5, Handbuch 1.14 (`git show HEAD~1:docs/studio/STUDIO.md`).
 - Dateien: `.gitattributes`, `.claude/agents/production-integrator.md`, `.claude/agents/lead-production.md`, `docs/studio/STUDIO.md` (Merge), `docs/studio/CHANGELOG.md`
 - Ruling: R201
@@ -235,3 +236,58 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 ## E-026 · übernommen R264 · Integrator-Persona: detached Arbeitsbaum
 
 - Ruling: R264 (als Persona-Korrektur ohne Experiment übernommen, Persona production-integrator 1.7; Belege Retro 9b13950a B4 und [adhoc-e1-c3](retros/2026-10-06-adhoc-e1-c3.md) B5)
+
+## E-031 · angenommen als Teil von E-022 (R303) · Merge-Hygiene ohne union für `docs/beobachtungen.md`
+
+- Hypothese: Wenn `merge=union` für `docs/beobachtungen.md` entfällt und Konflikte am Dateiende manuell gelöst werden, kehren ausgewertete (gestrichene) Zeilen nicht mehr zurück (Retro [adhoc session-7db07561](retros/2026-10-07-adhoc-session-7db07561.md) B2; R294).
+- Messgrösse: 0 zurückgeholte gestrichene Zeilen und 0 Doppelabschnitte in den nächsten 3 Merges, die die Datei berühren (`git diff <merge-base> HEAD`); manuelle Auflösung ≤ 5 min je Fall (Ausgang: ~490 Zeilen, R294).
+- Zeitraum: 3 Merges.
+- Rückfall: Zeile `docs/beobachtungen.md merge=union` in `.gitattributes` wiederherstellen.
+- Dateien: `.gitattributes`, `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merge), `docs/studio/CHANGELOG.md`
+- Ruling: –
+
+## E-032 · angenommen als Werkzeug-Paket TOOL-CHECK-ZEITTEST (R303) · Mechanische Zeittest- und Format-Prüfung in `make check`
+
+- Hypothese: Wenn `make check` Tests mit lokaler Laufzeit ≥ 1 s ohne Timeout ≥ 5 × Laufzeit meldet und geänderte Doku-Dateien mit `prettier --check` prüft, bleibt main bei Zeittest- und Formatfehlern grün (Retro adhoc session-7db07561 B1; R267, R271, R290, R302).
+- Messgrösse: 0 rote CI-Läufe auf main durch Zeittest-Timeout oder Prettier in 3 Releases (Ausgang: 3 in 2 Sessions); Nebenmessgrösse Cache-Write je Session.
+- Zeitraum: 3 Releases.
+- Rückfall: Schritt aus `make check` entfernen.
+- Dateien: `Makefile`, `tools/` (Prüfskript), `docs/studio/STUDIO.md`
+- Ruling: –
+
+## E-033 · vorgemerkt (R303) · Blinder Rater vor dem Stapeln von Optik-Layern
+
+- Hypothese: Wenn der blinde Rater (Fragen 1–2, ein Start) direkt nach dem Layer-Merge in den Release-Kandidaten läuft, fallen Bildmängel vor dem Stapeln auf und bleiben isolierbar (Retro adhoc session-7db07561 B4; R298, R300).
+- Messgrösse: 0 Bildfrage-Durchfälle, die erst im Release-Lauf auffallen, in 3 Optik-Releases (Ausgang: 2 Gate-Runden WALD L1); Gegenprobe ≤ 1 zusätzlicher Rater-Start je Layer.
+- Zeitraum: 3 Optik-Releases.
+- Rückfall: Rater nur im Release-Lauf.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
+- Ruling: –
+
+## E-034 · vorgeschlagen (angenommen R308, wartet auf Platz) · Übergabe-Prüfzeile bei Session-Abbruch
+
+- Hypothese: Wenn L0 beim Abbruch Agenten mit Heartbeat < 10 min in `state.md` als „kann weiterlaufen“ nennt und beim Start vor jedem Neustart Worktree-Stand und Dashboard prüft, entstehen keine zwei Schreiber im selben Worktree und `state.md` ist nicht veraltet (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md) B1).
+- Messgrösse: bei den nächsten 3 Abbrüchen oder Pausen 0 Worktrees mit zwei Schreibern und 0 Abweichungen zwischen `state.md` und Worktree-HEAD beim Start (Ausgang: 1 Abweichung bei L7 in 1 Abbruch).
+- Zeitraum: die nächsten 3 Abbrüche, höchstens 4 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Ende, Punkt 1; Start, Punkt 5)
+- Ruling: R308
+- Start: Handbuch 1.24 (Satz gilt seit 2026-10-07); Zählung `laufend` erst bei freiem Platz (3 laufen: E-022, E-027, E-030)
+
+## E-035 · vorgeschlagen · Überholte CI-Vorfälle automatisch erledigen
+
+- Hypothese: Wenn `effort.incidents()` einen roten main-Lauf auslässt, sobald derselbe Workflow später auf main grün lief, erscheinen keine erledigten „CI auf main fehlgeschlagen“-Meldungen mehr (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md) B3).
+- Messgrösse: 0 offene `ci:`-Vorfälle bei grünem main in den nächsten 2 Sessions; alle roten Läufe weiter in den CI-Events und der Metrik sichtbar (Stichprobe `metrics.py`); Retro-Pflicht für rote Läufe unverändert (Rot ist im Retro-Bericht genannt).
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: Änderung in `effort.py` zurücknehmen (`git revert`).
+- Dateien: `tools/studio/effort.py`, `tools/studio/tests/test_effort.py`
+- Ruling: –
+
+## E-036 · vorgeschlagen · Cache-Write je Instanz gegen Wartezeit ausweisen
+
+- Hypothese: Der Cache-Write-Anteil (rot, 42,9 %) entsteht überwiegend nach Lücken > 5 min ohne Aufruf; die Auswertung je Instanz bestätigt oder widerlegt das (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md), Ampel).
+- Messgrösse: Anteil der Neuschreibungen > 20k direkt nach einer Lücke > 5 min; Schwelle: ≥ 60 % bestätigt die Hypothese, dann folgt ein eigenes Experiment zur Wartegestaltung; < 30 % widerlegt sie.
+- Zeitraum: eine Auswertung über die letzten 5 Sessions, danach Bewertung.
+- Rückfall: Zusatz in `metrics.py` entfernen; rein lesend, keine Änderung am Ablauf.
+- Dateien: `tools/studio/metrics.py`
+- Ruling: –

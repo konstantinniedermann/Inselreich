@@ -91,7 +91,7 @@ describe('L1-T2 Überhang nur auf Wald und freie Wiese', () => {
       }
       expect(checked).toBeGreaterThan(500);
     }
-  });
+  }, 15_000); // H-T7: lokal 1,3 s, Timeout >= 8 x lokal (R270)
 });
 
 describe('L1-T5 Licht-Verdeckung folgt den Kronen', () => {
@@ -397,7 +397,7 @@ describe('WALD-02 Waldboden folgt dem Saumfeld (terrain.ts, Waldzweig und Waldge
       const sd = Math.sqrt(pos.reduce((a, b) => a + (b - mean) ** 2, 0) / pos.length);
       expect(sd, `Seed ${seed}`).toBeGreaterThanOrEqual(0.15);
     }
-  });
+  }, 30_000); // H-T7: lokal 2,4 s, Timeout >= 8 x lokal (R270)
 
   it('RF-W-11 Lesbarkeit: unter ≥ 95 % der Waldkacheln ist der Boden in der Kachelmitte dunkler als die Wiese (Mittel, ≥ 15 Luma), auch an dünnen Waldstreifen', () => {
     for (const seed of [11, 7]) {
@@ -426,7 +426,7 @@ describe('WALD-02 Waldboden folgt dem Saumfeld (terrain.ts, Waldzweig und Waldge
       const dark = forest.filter((l) => l < meadow - 15).length;
       expect(dark / forest.length, `Seed ${seed}`).toBeGreaterThanOrEqual(0.95);
     }
-  });
+  }, 15_000); // H-T7: lokal 1,6 s, Timeout >= 8 x lokal (R270)
 
   it('RF-L1-7 Lichtungsfeld: im Kern ist der Waldboden dort heller, wo forestClearing ≥ 0,5', () => {
     const world = createWorld(7, { unlockAll: true });

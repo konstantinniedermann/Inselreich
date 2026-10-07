@@ -88,7 +88,7 @@ describe('Wald-Objekte', () => {
           }
         }
     }
-  });
+  }, 40_000); // H-T7: lokal 3,5 s, Timeout >= 8 x lokal (R270)
 
   it('AK-R1-03 Kronen nutzen nur Palettenmischungen (keine Signalfarben, kein Schatten); neue Töne ΔE2000 ≥ 20 zu den Signalfarben', () => {
     const bases = ([0, 1, 2, 3, 4] as const).flatMap((k) =>

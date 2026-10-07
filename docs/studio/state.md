@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-06 (Session-Ende e51712dd; 5-h-Fenster ≈ 31 %, Woche 42 %)
+Stand: 2026-10-07 (Session 7db07561 abgebrochen auf Nutzerwunsch; Fortsetzung beim nächsten Start)
 
 ## Release-Notizen
 
@@ -33,9 +33,26 @@ Stand: 2026-10-06 (Session-Ende e51712dd; 5-h-Fenster ≈ 31 %, Woche 42 %)
 **REL-01…REL-03 (live)** — Licht, Wiese, Dünen, Anbinden-Knopf, Vorberge, Licht für Schiff/Figuren, hörbare
 Wirtschaft. **Bitte testen:** Gesamtbild, Dünen, Mangel-Ton.
 
+## Fortsetzung beim nächsten Start (Session 7db07561, R305)
+
+Nutzer-Auftrag „Lebendige Insel" (R280–R305) läuft weiter; Nutzer testet nur in der Produktion (R281), Prüfungen
+gebündelt (R282). **Nur Angefangenes abschliessen (R305)**, keine neuen Pakete ohne Nutzer-Auftrag.
+
+1. **WALD-02** (zweiter Anlauf Wald inkl. Waldsaum, R300/R302): `.worktrees/wald-02` @ 8ab81ca, **4 Dateien
+   uncommittet** (Stand prüfen, nicht verwerfen). Frische lead-art-Instanz: Stand sichten, fertigstellen, blinder
+   Rater (Fragen 1–3, `.studio/handoffs/2026-10-06-l0-lead-qa-rel06.md`), A/B ≤ +0,7 ms.
+2. **L7 Tierleben**: `.worktrees/art02-l7` (`feat/art02-l7-fauna`) @ 7626a52, sauber; Review/Perf-Stand unbekannt →
+   frische lead-art-Instanz prüft und schliesst ab.
+3. **Release B** (REL-07) aus L5 (`feat/art02-l5-kueste` @ 684f43b, release-reif, Nachmessung Zoom 1 offen), L6
+   (`feat/art02-l6-entdecken` @ 3068893, release-reif), L7, WALD-02: Kandidat durch Integrator, ein Browser-Lauf mit
+   allen blinden Fragen (L5: E8/Wrack/Felsnadel; L6: 4 Fragen; L7; WALD-02), ein opus-Review, Gate, Push.
+   Union-Merge ist weg (E-031): Konflikte in `docs/beobachtungen.md` beide Anhänge behalten.
+4. Nicht gestartet (R305): L8 Seltenheit, Folgepakete aus BEOB-AUSW-01 (Board), SEE-F1/F2, H-TRAEGER-TEMPO.
+5. Session-Ende-Routine nachholen: `make studio-metrics`, Kurz-Retro studio-coach (Session 7db07561), lernen.md.
+
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. Live auf main @ 30a9f50 (CI 37468348957 / Pages 37468348971 grün): M1–M8, M10, M11,
+- Projekt: **Inselreich**. Live auf main @ 4c1b3b4 (CI 37594401657 / Pages 37594401618 grün; REL-06, H-F1, H-T6, H-T7, CI-Node, Guard N-97): M1–M8, M10, M11,
   M9-Häppchen, REL-01…REL-05, **M12-E0, E1, Seefahrt-Bündel E2–E4 + drittes Ziel**. Verfassung **1.2** (R261:
   Spielstände müssen nicht rückwärtskompatibel sein — neue Formate ohne Migration, Abweisen mit Hinweis).
   Handbuch **1.21**.

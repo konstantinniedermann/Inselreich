@@ -2564,3 +2564,65 @@ Reserve oder kleinerer Test, kein `src/`. WALD-02 startet parallel (disjunkte Da
 bleibt eine Runde länger rot; Produktion unberührt.
 
 Entscheider: L0 · Anlass: Integrator-Bericht REL-06 · ADR: —
+
+## R303 · 2026-10-07 · Vorschläge Ad-hoc-Retro 2026-10-07
+
+Ruling: Angenommen: E-031 als Anpassung von E-022 (kein neuer Platz): `merge=union` für `docs/beobachtungen.md`
+entfällt, Konflikte löst der Integrator (beide Anhänge behalten). E-032 als Werkzeug-Paket TOOL-CHECK-ZEITTEST
+(`make check` prüft Zeittest-Timeouts und Doku-Prettier). Regel: Guard sperrt `pkill`/`killall` mit `-f`
+(TOOL-GUARD-PKILL); Messläufe mit Wanduhr-Limit und `caffeinate`. E-033 (Rater nach jedem Layer) vorgemerkt, startet
+mit WALD-02 sinngemäss (Rater im Paket). — Kosten bei Irrtum: mehr Merge-Konflikte in einer Datei.
+
+Entscheider: L0 · Anlass: `docs/studio/retros/2026-10-07-adhoc-session-7db07561.md` · ADR: —
+
+## R304 · 2026-10-07 · L5 release-reif, Start L7, L8 danach
+
+Ruling: L5 angenommen inkl. (a) Meer-Plan am Start-Kontor, späte Kontore blenden aus, (b) `seaFields.ts`,
+`iso.ts`-Argument, Renderer-Pin, D5 auf Rauschkamm; Nachmessung Zoom 1 holt der Release-Lauf B nach. L7 startet
+gestapelt auf L5 (main per Merge); L8 erst nach L7, weil das Seltenheitsbudget alle Gruppen zählt und die
+Rechnerlast (12–20) Messungen bereits staut. — Kosten bei Irrtum: L8 eine Runde später.
+
+Entscheider: L0 · Anlass: Bericht lead-art L5 · ADR: —
+
+## R305 · 2026-10-07 · N-97 Guard pkill/killall, Startstopp für neue Arbeit
+
+Ruling: (1) Nutzerfreigabe „VERFASSUNG ÄNDERN" für N-97: L0 setzt in der Hauptsession um (Freigabe gilt nur hier,
+§1.3): Guard verweigert `pkill`/`killall` immer, `kill <PID>` bleibt; Test zuerst rot, dann grün, Review
+`qa-code-reviewer` (§9.1). (2) Nutzer: „keine neuen generellen Prozesse, nur Subprozesse zur Beendigung der
+laufenden." Laufend und zu Ende geführt: WALD-02, L7, TOOL-CHECK-ZEITTEST, Retro-Merge, Guard; dazu deren Reviews,
+Merges und ein Release-Lauf für fertige Häppchen (L5, L6, L7, WALD-02). Nicht gestartet: L8, Waldsaum-Rest,
+Folgepakete. — Kosten bei Irrtum: L8 wartet auf neuen Auftrag.
+
+Entscheider: Nutzer · Anlass: Nutzerantworten 2026-10-07 · ADR: —
+
+## R306 · 2026-10-07 · Session-Abbruch auf Nutzerwunsch
+
+Ruling: Nutzer beendet die Session („beim nächsten Start soll es weitergehen"). Laufende Agenten (WALD-02, L7) enden
+mit dem Prozess; ihre Worktrees bleiben unangetastet. Übergabe in `state.md`, Abschnitt „Fortsetzung beim nächsten
+Start". Session-Ende-Routine (Metriken, Kurz-Retro) wird dort nachgeholt. — Kosten bei Irrtum: Nacharbeit beim Sichten
+der Worktrees.
+
+Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-07 · ADR: —
+
+## R307 · 2026-10-07 · L7 Tierleben release-reif für Release B
+
+Ruling: L7 (`feat/art02-l7-fauna` @ 07c16f1) angenommen für den Kandidaten Release B; kein Einzel-Merge. Eigenentscheid
+lead-art (Hase sitzt ≈ 55 % statt ≈ 70 %) bestätigt. Perf +0,2 ms liegt auf der Grenze und wird im Release-Lauf B
+nachgemessen; voller `make check` nach dem Kommentar-Fix 46bd06c entfällt, der Integrator prüft im Kandidaten. Gischt
+am Kliff (braucht L6) und das Zeitlimit des Eignungstests unter Last prüft der Release-Lauf B. Release B wartet nur
+noch auf WALD-02 (Arbeiter läuft). Die CI-Retro-Meldungen auf main sind durch H-T7 erledigt (main grün,
+37645643528). — Kosten bei Irrtum: ein Nachlauf im Release-Kandidaten.
+
+Entscheider: L0 · Anlass: Bericht lead-art L7 · ADR: —
+
+## R308 · 2026-10-07 · Kurz-Retro 7db07561: Berichtigung R306, Vorschläge E-034 bis E-036
+
+Ruling: (1) Berichtigung R306: Die Agenten endeten nicht mit dem Prozess; WALD-02-Engineer und L7-Lead arbeiteten in
+der Folgesession weiter (Retro 2026-10-07 session-7db07561). Darum startet L0 für WALD-02 keine frische Instanz,
+sondern wartet auf den laufenden Lead. (2) E-034 (Übergabe-Prüfzeile bei Abbruch) angenommen als Handbuch-Änderung,
+Umsetzung studio-coach; zwei Sätze, schliesst einen Ablauffehler (R127) und ist kein neues Paket im Sinn von R305.
+(3) E-035 (überholte CI-Vorfälle automatisch erledigen) und E-036 (Cache-Write je Instanz) bleiben `vorgeschlagen`:
+Werkzeug-Pakete, nach R305 nur mit neuem Nutzer-Auftrag. — Kosten bei Irrtum: veraltete CI-Meldungen bleiben im
+Dashboard sichtbar, bis eine Retro sie quittiert.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 7db07561 · ADR: —

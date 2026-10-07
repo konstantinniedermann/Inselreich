@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-07 · Handbuch 1.24
+
+- Anlass: Kurz-Retro Session 7db07561 B1 (Agenten liefen nach dem Abbruch weiter)
+- Datenbasis: `docs/studio/retros/2026-10-07-session-7db07561-ende.md`; `.studio/events.jsonl`
+- Ruling: R308
+- Änderungen: Session-Ende um Punkt 0a ergänzt (Agenten mit frischem Heartbeat in `state.md`; vor Paket-Neustart Worktree-HEAD und Dashboard prüfen); E-034 angenommen, wartet auf freien Platz
+
+## 2026-10-07 · Handbuch 1.23
+
+- Anlass: Ad-hoc-Retro Session 7db07561 B3 (hängende Messung im Ruhezustand, `pkill -f`)
+- Datenbasis: `docs/studio/retros/2026-10-07-adhoc-session-7db07561.md`; R299
+- Ruling: R303
+- Änderungen: Lastregel um „Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`“ ergänzt; `.gitattributes` ohne `merge=union` (E-022 angepasst)
+
 ## 2026-10-06 · Handbuch 1.22
 
 - Anlass: Nutzerfrage zu ungesichteten Beobachtungen (rund 175 Einträge seit 2026-09-30)

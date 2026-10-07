@@ -94,7 +94,7 @@ describe('WALD-02 Platzierung', () => {
         expect(c.fx + c.r).toBeLessThanOrEqual(tx + 1 + OVERHANG + 1e-9);
       }
     }
-  });
+  }, 20_000); // H-T7: lokal 1,9 s, Timeout >= 8 x lokal (R270)
 
   it('RF-W-3 Vorwald höchstens VORWALD_REACH = 2 Kacheln vor dem Wald, nie vor einem Gebäude, Gehölze ≤ 0,6 × TREE_H', () => {
     expect(VORWALD_REACH).toBeLessThanOrEqual(2);
@@ -219,7 +219,7 @@ describe('WALD-02 Platzierung', () => {
       const main = Math.max(...counts.values());
       expect(1 - main / cs.length, `Seed ${seed} Beimischung`).toBeGreaterThanOrEqual(0.03);
     }
-  });
+  }, 15_000); // H-T7: lokal 1,3 s, Timeout >= 8 x lokal (R270)
 
   it('RF-W-7 Sortierung mit Versatz (B5): die Kronen jeder Tiefenband-Zelle liegen in [x + y + 0,5; x + y + 1,5), über die Zeilen steigt die Tiefe in Zeichenreihenfolge', () => {
     for (let i = 0; i < 500; i++) {
@@ -347,7 +347,7 @@ describe('WALD-02 Platzierung', () => {
     }
     expect(withGiant).toBeGreaterThanOrEqual(8);
     expect(withGiant).toBeLessThanOrEqual(24);
-  });
+  }, 25_000); // H-T7: lokal 2,1 s, Timeout >= 8 x lokal (R270)
 
   it('RF-L1-5 Lichtung: wo forestClearing ≥ 0,5, stehen im Kern weniger Kronen (≤ 75 % der Dichte daneben), Totholz kommt vor', () => {
     let inC = 0,
