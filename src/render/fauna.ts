@@ -1228,7 +1228,11 @@ export function faunaAt(
 // --- Zeichner (dünn, Bildraum) --------------------------------------------------------------------------
 
 /** Wie die Vogelschwärme (`BIRD_COLOR` in wildlife.ts), hier gespiegelt, damit wildlife.ts fauna.ts importieren darf. */
-export const FOREST_BIRD_COLOR = mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5);
+export const FOREST_BIRD_COLOR = mixHex(
+  mixHex(PALETTE.rockDark, PALETTE.wallTimber, 0.5),
+  PALETTE.wallLime,
+  0.2,
+);
 export const HARE_COLOR = mixHex(PALETTE.wallTimber, PALETTE.rockLight, 0.55);
 export const HARE_BELLY = toInk(HARE_COLOR, 0.25);
 export const DEER_COLOR = mixHex(PALETTE.roofTerracotta, PALETTE.roofTimber, 0.55);
@@ -1817,12 +1821,12 @@ export function drawForestBirds(
   const list = hits.filter((h) => h.id === 'forestBird');
   if (list.length === 0) return;
   const s = cam.zoom,
-    span = 0.085 * ISO_H * s;
+    span = 0.11 * ISO_H * s;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = FOREST_BIRD_COLOR;
-  ctx.lineWidth = Math.max(1, 1.2 * s);
+  ctx.lineWidth = Math.max(1.4, 1.6 * s);
   for (const [q, group] of byAlpha(list)) {
     ctx.globalAlpha = q;
     ctx.beginPath();
