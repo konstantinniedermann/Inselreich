@@ -28,7 +28,7 @@ import { SAUM_LEVEL, saumAt, woodBlur, woodNoise, type WoodMask } from './woodFi
 // 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel · 510 Riesenbaum ja/nein (alle L1) ·
 // WALD-02: 518/519/520 Randrauschen des Saumfelds (woodField.ts, auch `forestEdgeShift`) · 521 Kandidaten je Kachel
 // (Lage, Rang, Einzelwurf) · 522 Grössen-/Altersfeld · 523 Tonfeld · 524 Beimischung · 525 Totholz · 526 Vorwalddichte ·
-// 527 Form und Spiegelung · 528 Horstfeld · 529 frei.
+// 527 Form und Spiegelung · 528 Horstfeld · 529 Rottenfeld (Dichtestaffel im Nadelwald).
 // Nicht mehr benutzt (WALD-02): 504, 505, 506, 507, 511, 514, 515, 516, 517 (alte Stempelplatzierung).
 //
 // Schnittstellen für L6 (Lichtung, trees.ts): `woodLayout` liefert die Zellen samt Kronen; `forestClearing` ist das
@@ -117,9 +117,10 @@ const ACCEPT_EDGE = 0.45,
   ACCEPT_CORE = 0.97,
   ACCEPT_BEHIND = 0.3;
 /** Vorwald: Band unter der Saumlinie (S-Einheiten), höchste Annahme, Anteil Büsche. */
-const VORWALD_BAND = 0.35,
-  VORWALD_ACCEPT = 0.6,
-  VORWALD_BUSH = 0.55;
+const VORWALD_BAND = 0.45,
+  VORWALD_ACCEPT = 0.7,
+  VORWALD_BUSH = 0.55,
+  VORWALD_BUSH_CONIFER = 0.35;
 /** Grundradius (Kacheln) je Baumart bei Grössenfeld 1: Laub, Nadel, Birke, Pinie, Ahorn. */
 const R_KIND = [0.27, 0.25, 0.22, 0.32, 0.26] as const;
 /** Grössenfeld (Alter des Bestands, Merkmal ≈ 6 Kacheln): Spanne; Einzelwurf ±; Überhälter: Anteil und Faktor. */
@@ -133,9 +134,21 @@ const CONIFER_JITTER = 0.42;
 /** Horste: Ausdünnung im Kern, wo das Horstfeld tief liegt (Anteil). */
 const HORST_DEPTH = 0.3;
 /** Grösse der Bäume hinter der Saumlinie (Jungwuchs) gegen den Kern. */
-const BEHIND_SIZE = 0.72;
+const BEHIND_SIZE = 0.6;
+/**
+ * Dichtestaffel im Nadelwald (Fix-Runde 2): Rottenfeld (Salz 529, Merkmal ≈ 6,5 Kacheln) 0 licht … 1 dicht; Annahme in
+ * lichten Partien `LIGHT_ACCEPT`; unter `ROTTE_GROUP` meist Jungwuchs-Gruppen (`YOUNG_GROUP_P`, Radius × `YOUNG_GROUP_R`).
+ */
+const ROTTE_PERIOD = 6.5,
+  LIGHT_ACCEPT = 0.3,
+  ROTTE_GROUP = 0.45,
+  YOUNG_GROUP_P = 0.7,
+  YOUNG_GROUP_R = 0.72;
+/** Beimischung in Gruppen: Feld (Salz 524) über der Schwelle (≈ 15–20 % der Fläche), Merkmal in Kacheln. */
+const ADMIX_FIELD = 0.66,
+  ADMIX_PERIOD = 1.9;
 /** Beimischung (B3): Anteil Kronen einer anderen Art. */
-const ADMIX_P = 0.09,
+const ADMIX_P = 0.03,
   ADMIX_PINE = 0.16;
 /**
  * Baumgruppen im Kern (Fix-Runde 1, Perf): ab Kernanteil GROUP_FROM mit Anteil bis GROUP_P; Gruppenradius
@@ -164,7 +177,7 @@ export const OVERHANG = 0.35;
 /** Vorwald: Gehölze höchstens 0,6 × TREE_H hoch. */
 export const VORWALD_TOP = 0.6 * TREE_H;
 /** Vorwald: höchstens so viele Gehölze je Wiesenkachel. */
-export const VORWALD_MAX = 2;
+export const VORWALD_MAX = 3;
 /** Vorwald höchstens so viele Kacheln vor dem Wald (Chebyshev). */
 export const VORWALD_REACH = 2;
 /** Mindestzahl Kronen je freier Waldkachel (Spec 2.1.5). */
@@ -219,7 +232,9 @@ interface Cand {
   tx: number;
   ty: number;
   p: number;
+  /** Krone; bei abgelehnten Kandidaten erst gebaut, wenn sie als Mindestkrone gebraucht wird (`mk`). */
   c: Crown;
+  mk?: () => Crown;
   forest: boolean;
 }
 
@@ -236,8 +251,11 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     for (let x = 0; x < w; x++) m[y * w + x] = inp.terrainForest(x, y) ? 1 : 0;
   const mask = woodBlur(w, h, m);
   const S = (fx: number, fy: number): number => saumAt(seed, mask, fx, fy);
+  // Klassen einmal je Kachel abfragen (die Nachbarschaftsschleifen lesen sie oft)
+  const clsArr: TileClass[] = new Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) clsArr[y * w + x] = cls(x, y);
   const at = (x: number, y: number): TileClass =>
-    x < 0 || y < 0 || x >= w || y >= h ? 'blocked' : cls(x, y);
+    x < 0 || y < 0 || x >= w || y >= h ? 'blocked' : clsArr[y * w + x]!;
   const free = new Uint8Array(w * h); // 1 freier Wald, 2 Vorwald-Wiese
   const tight = new Uint8Array(w * h);
   for (let y = 0; y < h; y++)
@@ -275,16 +293,18 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       for (let j = 0; j < n; j++) {
         const fx = x + rnd(x, y, j, 0),
           fy = y + rnd(x, y, j, 1);
-        const c = f === 1 ? forestCrown(fx, fy, x, y, j) : vorwaldCrown(fx, fy, x, y, j);
+        const res = f === 1 ? forestCrown(fx, fy, x, y, j) : vorwaldCrown(fx, fy, x, y, j);
         const cand: Cand = {
           fx,
           fy,
           tx: x,
           ty: y,
           p: rnd(x, y, j, 2),
-          c: c.crown,
+          c: (res.ok ? res.make() : null) as unknown as Crown,
           forest: f === 1,
         };
+        if (!res.ok) cand.mk = res.make;
+        const c = res;
         list.push(cand);
         if (c.ok) cands.push(cand);
       }
@@ -328,34 +348,70 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     if (rnd(x, y, j, 9) < TONE_FLIP) tone = rnd(x, y, j, 10) < 0.5 ? -1 : 1;
     return tone;
   }
+  function rotteAt(fx: number, fy: number): number {
+    return smooth01((rotNoise(seed + 529, fx, fy, 1 / ROTTE_PERIOD, 2.4) - 0.36) / 0.28);
+  }
   function forestCrown(
     fx: number,
     fy: number,
     x: number,
     y: number,
     j: number,
-  ): { ok: boolean; crown: Crown } {
+  ): { ok: boolean; make: () => Crown } {
     const s = S(fx, fy);
     const core = smooth01((s - SAUM_LEVEL) / CORE_SPAN);
     const inside = s >= SAUM_LEVEL;
     const gap = core > 0.6 ? forestClearing(seed, fx, fy) : 0;
     let accept = inside ? ACCEPT_EDGE + (ACCEPT_CORE - ACCEPT_EDGE) * core : ACCEPT_BEHIND;
     accept *= 1 - 0.85 * gap;
+    // Fix-Runde 2: Nadelwald mit Dichtestaffel (Merkmal ≈ 6,5 Kacheln): dichte, dunkle Rotten und lichte Partien
+    const slot = slotAt(seed, type, fx, fy);
+    const conifer = slotKind(seed, slot) === 1;
+    const rotte = conifer ? rotteAt(fx, fy) : 1;
+    accept *= LIGHT_ACCEPT + (1 - LIGHT_ACCEPT) * rotte;
     // Horste und kleine Bestandslücken im Kern (Merkmal ≈ 2,5 Kacheln): das Dach ist kein Teppich
     accept *=
       1 - HORST_DEPTH * core * smooth01((0.55 - rotNoise(seed + 528, fx, fy, 1 / 2.5, 1.9)) / 0.3);
     // Totholz (B3) in Lücken und im lichten Kern
     if (rnd(x, y, j, 7) < DEAD_P * (0.3 + 2 * gap) && core > 0.5) {
       const dead = rnd(x, y, j, 8) < 0.7 ? 1 : 2;
-      const c = makeCrown(0, dead === 1 ? 0.07 : 0.09, x, y, j, {}, TREE_H);
-      c.dead = dead;
-      c.h = 0;
-      return { ok: true, crown: c };
+      return {
+        ok: true,
+        make: () => {
+          const c = makeCrown(0, dead === 1 ? 0.07 : 0.09, x, y, j, {}, TREE_H);
+          c.dead = dead;
+          c.h = 0;
+          return c;
+        },
+      };
     }
-    const slot = slotAt(seed, type, fx, fy);
+    // die Krone selbst nur bauen, wenn sie gebraucht wird (angenommen oder als Mindestkrone)
+    return {
+      ok: rnd(x, y, j, 12) < accept,
+      make: () => buildForest(fx, fy, x, y, j, slot, core, inside, rotte),
+    };
+  }
+  function buildForest(
+    fx: number,
+    fy: number,
+    x: number,
+    y: number,
+    j: number,
+    slot: Slot,
+    core: number,
+    inside: boolean,
+    rotte: number,
+  ): Crown {
     let kind = slotKind(seed, slot);
-    const admixed = rnd(x, y, j, 3) < (type === 3 ? ADMIX_PINE : ADMIX_P);
-    if (admixed) kind = slotKind(seed, (slot + 1 + (rnd(x, y, j, 4) < 0.5 ? 1 : 0)) % 3);
+    // Beimischung (B3): in Gruppen aus einem eigenen Feld (Merkmal ≈ 2 Kacheln), dazu selten einzeln
+    const patch = rotNoise(seed + 524, fx, fy, 1 / ADMIX_PERIOD, 0.7) > ADMIX_FIELD;
+    const admixed = !patch && rnd(x, y, j, 3) < (type === 3 ? ADMIX_PINE : ADMIX_P);
+    if (patch)
+      kind = slotKind(
+        seed,
+        (slot + 1 + (rotNoise(seed + 524, fx, fy, 1 / 3.7, 2.1) < 0.5 ? 1 : 0)) % 3,
+      );
+    else if (admixed) kind = slotKind(seed, (slot + 1 + (rnd(x, y, j, 4) < 0.5 ? 1 : 0)) % 3);
     const stand01 = standAt(seed, fx, fy);
     // Baumgruppe im Kern (Fix-Runde 1): ein Atlas-Eintrag für 3–6 Bäume, spart Zeichenaufrufe
     if (
@@ -367,32 +423,44 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     ) {
       const group = Math.floor(rnd(x, y, j, 14) * GROUP_SHAPES);
       const mirror = rnd(x, y, j, 15) < 0.5;
+      // lichte Partien des Nadelwalds: Jungwuchs-Gruppen (kleine, schlanke Fichten)
+      const youngG = rotte < ROTTE_GROUP && rnd(x, y, j, 17) < YOUNG_GROUP_P;
       const gr =
-        (GROUP_R + GROUP_R_STAND * stand01) * (1 + GROUP_JITTER * (2 * rnd(x, y, j, 5) - 1));
+        (GROUP_R + GROUP_R_STAND * stand01) *
+        (1 + GROUP_JITTER * (2 * rnd(x, y, j, 5) - 1)) *
+        (youngG ? YOUNG_GROUP_R : 1);
       const c: Crown = {
         kind,
         cx: 0,
         cy: 0,
-        r: Math.min(gr, GROUP_R_MAX, maxRadius({ kind, bush: false, young: false, group, mirror })),
+        r: Math.min(
+          gr,
+          GROUP_R_MAX,
+          maxRadius({ kind, bush: false, young: youngG, group, mirror }),
+        ),
         h: 0,
         bush: false,
         s: shapeValue(0),
         mirror,
         group,
-        tone: toneAt(fx, fy, x, y, j),
+        ...(youngG ? { young: true } : {}),
+        tone: Math.min(toneAt(fx, fy, x, y, j), rotte > 0.75 && rnd(x, y, j, 16) < 0.5 ? -1 : 1),
       };
-      return { ok: rnd(x, y, j, 12) < accept, crown: c };
+      return c;
     }
     const stand = STAND_LO + (STAND_HI - STAND_LO) * stand01;
     const jitter = kind === 1 ? CONIFER_JITTER : SIZE_JITTER;
     let size = stand * (0.75 + 0.25 * core) * (1 + jitter * (2 * rnd(x, y, j, 5) - 1));
-    const young = !inside || (core < 0.3 && rnd(x, y, j, 6) < 0.5);
+    // Jungwuchs: hinter der Saumlinie, im lichten Rand, und in den lichten Partien des Nadelwalds
+    const young =
+      !inside || (core < 0.3 && rnd(x, y, j, 6) < 0.5) || (rotte < 0.4 && rnd(x, y, j, 6) < 0.55);
+    if (young && rotte < 0.4 && inside) size *= 0.7;
     if (!inside) size *= BEHIND_SIZE; // hinter der Saumlinie: niedriger Jungwuchs
     if (!young && core > 0.5 && rnd(x, y, j, 11) < EMERGENT_P) size *= EMERGENT_F;
     const c = makeCrown(kind, R_KIND[kind] * size, x, y, j, { young }, TREE_H);
     c.tone = toneAt(fx, fy, x, y, j);
     if (!inside) c.cast = true;
-    return { ok: rnd(x, y, j, 12) < accept, crown: c };
+    return c;
   }
   function vorwaldCrown(
     fx: number,
@@ -400,19 +468,27 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     x: number,
     y: number,
     j: number,
-  ): { ok: boolean; crown: Crown } {
+  ): { ok: boolean; make: () => Crown } {
     const s = S(fx, fy);
     const v = smooth01((s - (SAUM_LEVEL - VORWALD_BAND)) / VORWALD_BAND);
     const mod = 0.3 + 0.7 * valueNoise(seed + 526, fx / 4, fy / 4);
     const accept = VORWALD_ACCEPT * v * mod;
-    const bush = rnd(x, y, j, 3) < VORWALD_BUSH;
+    return {
+      ok: s < SAUM_LEVEL + 0.15 && rnd(x, y, j, 12) < accept,
+      make: () => buildVorwald(fx, fy, x, y, j),
+    };
+  }
+  function buildVorwald(fx: number, fy: number, x: number, y: number, j: number): Crown {
     const slot = slotAt(seed, type, fx, fy);
+    // vor Nadelwald mehr Jungfichten als Gebüsch (Fix-Runde 2: der Vorwald löst gerade Kanten auf)
+    const bush =
+      rnd(x, y, j, 3) < (slotKind(seed, slot) === 1 ? VORWALD_BUSH_CONIFER : VORWALD_BUSH);
     const kind: CrownKind = bush ? 0 : slotKind(seed, rnd(x, y, j, 4) < 0.7 ? slot : 2);
     const r = bush ? 0.07 + 0.06 * rnd(x, y, j, 5) : 0.1 + 0.07 * rnd(x, y, j, 5);
     const c = makeCrown(kind, r, x, y, j, bush ? { bush } : { young: true }, VORWALD_TOP);
     c.tone = toneAt(fx, fy, x, y, j);
     c.cast = true;
-    return { ok: s < SAUM_LEVEL + 0.15 && rnd(x, y, j, 12) < accept, crown: c };
+    return c;
   }
 
   // Blue-Noise-Ausdünnung: nach Rang, Mindestabstand aus den Radien (Raster je Kachel für die Nachbarsuche)
@@ -490,6 +566,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     q.fy = q.ty + v;
   }
   const accepted: Cand[] = [];
+  const isAccepted = new Set<Cand>();
   const put = (q: Cand): void => {
     clampFoot(q);
     const k = keyOf(Math.floor(q.fx), Math.floor(q.fy));
@@ -497,6 +574,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     if (l) l.push(q);
     else grid.set(k, [q]);
     accepted.push(q);
+    isAccepted.add(q);
   };
   const meadowN = new Map<number, number>();
   for (const q of cands) {
@@ -510,45 +588,6 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     }
     put(q);
   }
-  // Mindestens MIN_CROWNS lebende Kronen je freier Waldkachel (kleine Jungbäume, wenn der Saum hier zurückweicht)
-  const count = new Map<number, number>();
-  const bump = (tx: number, ty: number): void => {
-    if (tx >= 0 && ty >= 0 && tx < w && ty < h)
-      count.set(ty * w + tx, (count.get(ty * w + tx) ?? 0) + 1);
-  };
-  for (const q of accepted) {
-    if (q.c.dead) continue;
-    // Gruppen zählen mit jedem Baum auf der Kachel seines Fusses
-    if (q.c.group !== undefined)
-      for (const m of groupMembers(q.c)) bump(Math.floor(q.fx + m.cx), Math.floor(q.fy + m.cy));
-    else if (q.forest) bump(q.tx, q.ty);
-  }
-  for (const [k, list] of byTile) {
-    if (free[k] !== 1) continue;
-    let n = count.get(k) ?? 0;
-    if (n >= MIN_CROWNS) continue;
-    const order = [...list].sort((a, b) => b.p - a.p);
-    for (const relax of [SPACING_MIN, 0]) {
-      for (const q of order) {
-        if (n >= MIN_CROWNS) break;
-        if (accepted.includes(q) || q.c.dead) continue;
-        const c = q.c;
-        const sapling = c.cast === true; // hinter der Saumlinie: Jungwuchs; sonst ein Baum des lichten Randes
-        if (c.group !== undefined) {
-          // als Einzelbaum (Jungbaum) nachsetzen
-          delete c.group;
-          c.s = shapeValue(Math.floor(rnd(q.tx, q.ty, 0, 15) * SHAPES));
-        }
-        c.r = sapling ? Math.min(c.r, 0.16) : Math.max(0.15, Math.min(c.r, 0.22));
-        if (sapling) c.young = true;
-        c.r = Math.min(c.r, maxRadius(c));
-        if (relax > 0 && conflicts(q, relax)) continue;
-        put(q);
-        n++;
-      }
-    }
-  }
-
   // Riesenbaum (B3): in etwa der Hälfte der Karten genau einer, in der tiefsten Kernkachel (dichteste 5 × 5-Umgebung)
   let giant: Cand | null = null;
   if (hash2(seed + 510, 0, 0) < 0.5) {
@@ -590,16 +629,76 @@ export function woodLayout(inp: WoodInput): WoodLayout {
   }
   let all = accepted;
   if (giant) {
-    // die Kronen vor dem Riesen und dicht um ihn entfallen (er steht frei im Dach)
     const g = giant;
+    // nur die Kronen unmittelbar am Riesen entfallen (Gruppen mit ihrem Radius); die Kachel behält ihre Nachbarn
     all = accepted.filter(
       (q) =>
-        !(q.tx === g.tx && q.ty === g.ty && q.fx + q.fy > g.fx + g.fy) &&
-        (q.fx - g.fx) ** 2 + (q.fy - g.fy) ** 2 >= 0.3 ** 2,
+        (q.fx - g.fx) ** 2 + (q.fy - g.fy) ** 2 >=
+        (0.22 + (q.c.group !== undefined ? q.c.r * 0.6 : 0)) ** 2,
     );
     all.push(g);
   }
+  // die Mindestzahl gilt nach dem Riesenbaum (er räumt seine Umgebung frei): Raster und Liste neu aufbauen
+  if (all !== accepted) {
+    grid.clear();
+    accepted.length = 0;
+    for (const q of all) {
+      if (q.c.giant) continue;
+      const k = keyOf(Math.floor(q.fx), Math.floor(q.fy));
+      const l = grid.get(k);
+      if (l) l.push(q);
+      else grid.set(k, [q]);
+      accepted.push(q);
+    }
+    if (giant) {
+      const k = keyOf(Math.floor(giant.fx), Math.floor(giant.fy));
+      const l = grid.get(k);
+      if (l) l.push(giant);
+      else grid.set(k, [giant]);
+    }
+  }
+  // Mindestens MIN_CROWNS lebende Kronen je freier Waldkachel (kleine Jungbäume, wenn der Saum hier zurückweicht)
+  const count = new Map<number, number>();
+  const bump = (tx: number, ty: number): void => {
+    if (tx >= 0 && ty >= 0 && tx < w && ty < h)
+      count.set(ty * w + tx, (count.get(ty * w + tx) ?? 0) + 1);
+  };
+  for (const q of accepted) {
+    if (q.c.dead) continue;
+    // Gruppen zählen mit jedem Baum auf der Kachel seines Fusses
+    if (q.c.group !== undefined)
+      for (const m of groupMembers(q.c)) bump(Math.floor(q.fx + m.cx), Math.floor(q.fy + m.cy));
+    else if (q.forest) bump(q.tx, q.ty);
+  }
+  for (const [k, list] of byTile) {
+    if (free[k] !== 1) continue;
+    let n = count.get(k) ?? 0;
+    if (n >= MIN_CROWNS) continue;
+    const order = [...list].sort((a, b) => b.p - a.p);
+    for (const relax of [SPACING_MIN, 0]) {
+      for (const q of order) {
+        if (n >= MIN_CROWNS) break;
+        if (isAccepted.has(q)) continue;
+        if (!q.c) q.c = q.mk!();
+        if (q.c.dead) continue;
+        const c = q.c;
+        const sapling = c.cast === true; // hinter der Saumlinie: Jungwuchs; sonst ein Baum des lichten Randes
+        if (c.group !== undefined) {
+          // als Einzelbaum (Jungbaum) nachsetzen
+          delete c.group;
+          c.s = shapeValue(Math.floor(rnd(q.tx, q.ty, 0, 15) * SHAPES));
+        }
+        c.r = sapling ? Math.min(c.r, 0.16) : Math.max(0.15, Math.min(c.r, 0.22));
+        if (sapling) c.young = true;
+        c.r = Math.min(c.r, maxRadius(c));
+        if (relax > 0 && conflicts(q, relax)) continue;
+        put(q);
+        n++;
+      }
+    }
+  }
 
+  all = giant ? [...accepted, giant] : accepted;
   // Höhe aus der Form, Tiefenband-Zelle
   const cells = new Map<string, WoodCell>();
   for (const q of all) {

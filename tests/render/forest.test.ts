@@ -310,7 +310,7 @@ describe('WALD-02 Platzierung', () => {
           w.islands[0]!.tiles[Math.floor(c.fy) * 64 + Math.floor(c.fx)]!.terrain === 'forest',
       );
       // Kern: Bäume ohne eigenen Schatten (Gruppen aufgelöst); verglichen wird die Höhe der Krone über dem Fuss
-      const core = cs.filter((c) => !c.cast);
+      const core = cs.filter((c) => !c.cast && !c.young); // Altbäume (Jungwuchs der lichten Partien zählt nicht)
       const top = (c: Crown) => c.h + crownHalf(c);
       const mean = (a: Crown[]) => a.reduce((s, c) => s + top(c), 0) / a.length;
       expect(behind.length).toBeGreaterThan(0);

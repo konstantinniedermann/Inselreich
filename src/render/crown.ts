@@ -100,12 +100,13 @@ export function crownGeom(
   const lobes: Lobe[] = [];
   const tiers: Tier[] = [];
   if (c.kind === 1 && !c.bush) {
-    // Fichte: 3–5 Etagen, schlank bis breit (Breite : Höhe ≈ 1 : 1,7 … 1 : 3,8), ungleiche Etagenkanten, leicht schiefe
+    // Fichte: 3–5 Etagen, ungleiche Etagenkanten, leicht schiefe
     // Spitze; einzelne Formen mit gebrochener oder lichter Spitze
     const ry0 = rx0 * CROWN_RY;
     const n = 3 + Math.floor(q(5, 21) * 3);
-    const el = 1.35 + 0.6 * q(0, 10); // Streckung der Höhe
-    const slim = 0.62 + 0.38 * q(0, 8);
+    // Altbäume breit (Höhe : Breite ≈ 1,6 … 2,5), Jungwuchs schlank (≈ 2,8 … 4)
+    const el = c.young ? 1.7 + 0.4 * q(0, 10) : 1.3 + 0.4 * q(0, 10); // Streckung der Höhe
+    const slim = c.young ? 0.6 + 0.15 * q(0, 8) : 0.86 + 0.16 * q(0, 8);
     const odd = q(6, 23); // < 0,14 gebrochen, < 0,28 licht
     const gapF = odd >= 0.14 && odd < 0.28 ? 0.72 : 0.55;
     const span = (CONIFER_TOP + CONIFER_BOTTOM) * ry0 * el;
@@ -236,13 +237,16 @@ export function crownHeight(
   c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'young' | 'mirror' | 'group'>,
 ): number {
   if (c.group !== undefined) return groupLayout(c).h;
-  return heightFactor(c) * crownGeom(c).hh;
+  // linear in r: Halbhöhe je Radius der Formstufe (gemerkt) statt der ganzen Form
+  return heightFactor(c) * hhPerRadius(c) * c.r;
 }
 
 /** Halbhöhe der Krone je Kachel Radius (`hh / r`) für einen Formwert, ohne Formwert höchstens über alle Formen. */
-const hhUnitCache = new Map<string, number>();
+const hhUnitCache = new Map<number, number>();
 export function hhPerRadius(c: Pick<Crown, 'kind' | 'bush' | 'young'> & { s?: number }): number {
-  const key = `${c.kind}|${c.bush ? 1 : 0}|${c.young ? 1 : 0}|${c.s === undefined ? '-' : shapeIndex(c.s)}`;
+  const key =
+    ((c.kind * 2 + (c.bush ? 1 : 0)) * 2 + (c.young ? 1 : 0)) * 16 +
+    (c.s === undefined ? 15 : shapeIndex(c.s));
   let v = hhUnitCache.get(key);
   if (v === undefined) {
     v = 0;
@@ -255,14 +259,17 @@ export function hhPerRadius(c: Pick<Crown, 'kind' | 'bush' | 'young'> & { s?: nu
   return v;
 }
 
-const groupMaxR = new Map<string, number>();
+const groupMaxR = new Map<number, number>();
 /** Grösster Radius, bei dem Krone samt Stamm unter `top` Weltpixeln über ihrem Fuss bleibt (Gruppe: jeder Baum). */
 export function maxRadius(
   c: Pick<Crown, 'kind' | 'bush' | 'young'> & { s?: number; group?: number; mirror?: boolean },
   top = TREE_H,
 ): number {
   if (c.group !== undefined) {
-    const key = `${c.kind}|${c.group}|${c.mirror ? 1 : 0}|${top}`;
+    const key =
+      (((c.kind * GROUP_SHAPES + c.group) * 2 + (c.mirror ? 1 : 0)) * 2 + (c.young ? 1 : 0)) *
+        1000 +
+      Math.round(top * 10);
     const hit = groupMaxR.get(key);
     if (hit !== undefined) return hit;
     let worst = 0;
@@ -273,6 +280,7 @@ export function maxRadius(
       bush: false,
       group: c.group,
       mirror: c.mirror,
+      young: c.young,
     }))
       worst = Math.max(worst, ((heightFactor(m) + 1) * hhPerRadius(m) * m.r) / 1);
     groupMaxR.set(key, top / worst);
@@ -291,18 +299,21 @@ export function maxRadius(
  */
 const membersCache = new Map<string, Crown[]>();
 export function groupMembers(
-  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone'>,
+  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone' | 'young'>,
 ): Crown[] {
-  const key = `${c.kind}|${c.group}|${c.mirror ? 1 : 0}|${c.tone ?? 0}|${c.r}`;
-  const hit = membersCache.get(key);
-  if (hit) return hit;
-  const out = buildMembers(c);
-  if (membersCache.size > 8192) membersCache.clear();
-  membersCache.set(key, out);
-  return out;
+  // Alles ist linear im Gruppenradius: einmal je Form bei r = 1 bauen, dann skalieren
+  const key = `${c.kind}|${c.group}|${c.mirror ? 1 : 0}|${c.young ? 1 : 0}|${c.tone ?? 0}`;
+  let unit = membersCache.get(key);
+  if (!unit) {
+    unit = buildMembers({ ...c, r: 1 });
+    if (membersCache.size > 4096) membersCache.clear();
+    membersCache.set(key, unit);
+  }
+  const r = c.r;
+  return unit.map((m) => ({ ...m, cx: m.cx * r, cy: m.cy * r, r: m.r * r, h: m.h * r }));
 }
 function buildMembers(
-  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone'>,
+  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone' | 'young'>,
 ): Crown[] {
   const g = c.group ?? 0;
   const q = (i: number, j: number): number => hash2(619 + g * 97 + c.kind * 13, i, j);
@@ -341,6 +352,7 @@ function buildMembers(
       s: shapeValue(Math.floor(q(i, 2) * SHAPES)),
       mirror: q(i, 3) < 0.5,
       tone: (c.tone ?? 0) + (q(i, 4) - 0.5),
+      ...(c.young ? { young: true } : {}),
     });
   }
   for (const m of out) m.h = heightFactor(m) * crownGeom(m).hh;
@@ -358,11 +370,40 @@ interface GroupLayout {
 }
 const layoutCache = new Map<string, GroupLayout>();
 function groupLayout(
-  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone'>,
+  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'tone' | 'young'>,
 ): GroupLayout {
-  const key = `${c.kind}|${c.group}|${c.mirror ? 1 : 0}|${c.tone ?? 0}|${c.r}`;
+  const key = `${c.kind}|${c.group}|${c.mirror ? 1 : 0}|${c.young ? 1 : 0}|${c.tone ?? 0}|${c.r}`;
   let L = layoutCache.get(key);
   if (L) return L;
+  if (c.r !== 1) {
+    // aus der Einheitsgruppe skalieren (linear in r)
+    const U = groupLayout({ ...c, r: 1 });
+    const k = c.r;
+    L = {
+      members: U.members.map((m) => ({ ...m, cx: m.cx * k, cy: m.cy * k, r: m.r * k, h: m.h * k })),
+      at: U.at.map((a) => ({ x: a.x * k, y: a.y * k })),
+      geom: {
+        lobes: U.geom.lobes.map((l) => ({ x: l.x * k, y: l.y * k, rx: l.rx * k, ry: l.ry * k })),
+        tiers: U.geom.tiers.map((t) => ({
+          ax: t.ax * k,
+          ay: t.ay * k,
+          hw: t.hw * k,
+          hl: t.hl * k,
+          hr: t.hr * k,
+          bx: t.bx * k,
+          by: t.by * k,
+          th: t.th * k,
+        })),
+        hw: U.geom.hw * k,
+        hh: U.geom.hh * k,
+        ox: (U.geom.ox ?? 0) * k,
+      },
+      h: U.h * k,
+    };
+    if (layoutCache.size > 4096) layoutCache.clear();
+    layoutCache.set(key, L);
+    return L;
+  }
   const members = groupMembers(c);
   const lobes: Lobe[] = [],
     tiers: Tier[] = [];
@@ -388,7 +429,9 @@ function groupLayout(
   layoutCache.set(key, L);
   return L;
 }
-function groupGeom(c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror'>): CrownGeom {
+function groupGeom(
+  c: Pick<Crown, 'kind' | 'r' | 's' | 'bush' | 'group' | 'mirror' | 'young'>,
+): CrownGeom {
   const g = groupLayout(c).geom;
   return {
     lobes: g.lobes.map((l) => ({ ...l })),

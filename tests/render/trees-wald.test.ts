@@ -229,20 +229,24 @@ describe('AK Höhe und Form (echte Karten)', () => {
     expect(n).toBeGreaterThan(20);
   });
 
-  it('Fix-4 Nadelkern: im Mittel 3–12 Bäume je Kernkachel; Fichten schlank bis breit (Höhe : Breite P5 ≤ 2,2, P95 ≥ 3, alle 1,4–4,2), 3–5 Etagen', () => {
+  it('Fix-4 Nadelkern: im Mittel 3–12 Bäume je Kernkachel; Altfichten breit (Höhe : Breite im Median 1,6–2,6), Jungfichten schlank (Median ≥ 2,6) und kleiner, 3–5 Etagen', () => {
     for (const seed of [7, 14]) {
       const w = woodWorld(seed);
       const isl = home(w);
       const per = new Map<number, number>();
-      const asp: number[] = [];
+      const asp: number[] = [],
+        aspY: number[] = [],
+        rA: number[] = [],
+        rY: number[] = [];
       const tiersN = new Set<number>();
       for (const c of treesOf(w)) {
         if (c.dead || c.bush) continue;
         const k = Math.floor(c.fy) * isl.width + Math.floor(c.fx);
         per.set(k, (per.get(k) ?? 0) + 1);
-        if (c.kind === 1 && !c.young) {
+        if (c.kind === 1) {
           const g = crownGeom(c);
-          asp.push(g.hh / g.hw);
+          (c.young ? aspY : asp).push(g.hh / g.hw);
+          (c.young ? rY : rA).push(c.r);
           tiersN.add(g.tiers.length);
         }
       }
@@ -261,12 +265,11 @@ describe('AK Höhe und Form (echte Karten)', () => {
       expect(n).toBeGreaterThan(10);
       expect(sum / n).toBeGreaterThanOrEqual(3);
       expect(sum / n).toBeLessThanOrEqual(12);
-      asp.sort((a, b) => a - b);
-      const q = (p: number) => asp[Math.floor(p * (asp.length - 1))]!;
-      expect(q(0.05)).toBeLessThanOrEqual(2.2);
-      expect(q(0.95)).toBeGreaterThanOrEqual(3);
-      expect(asp[0]!).toBeGreaterThanOrEqual(1.4);
-      expect(asp.at(-1)!).toBeLessThanOrEqual(4.2);
+      const med = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)]!;
+      expect(med(asp)).toBeGreaterThanOrEqual(1.6);
+      expect(med(asp)).toBeLessThanOrEqual(2.6);
+      expect(med(aspY)).toBeGreaterThanOrEqual(2.6);
+      expect(med(rY)).toBeLessThan(med(rA));
       expect([...tiersN].sort()).toEqual([3, 4, 5]);
     }
   });
@@ -305,7 +308,7 @@ function coverage(crowns: (Crown & { fx: number; fy: number })[], x: number, y: 
 }
 
 describe('Fix 1 Kronendeckung', () => {
-  it('Fix-1 Kronendeckung im Kern (S ≥ SAUM_LEVEL + 0,4, keine Lichtung): im Mittel ≥ 80 % (Pinienhain ≥ 70 %; junge Bestände zeigen Boden zwischen den Fichten, B1), Lücken unter 50 % Deckung in höchstens 6 % der Kacheln', () => {
+  it('Fix-1 Kronendeckung im Kern (S ≥ SAUM_LEVEL + 0,4, keine Lichtung): im Mittel ≥ 80 % (Pinien- und Nadelwald ≥ 68 %; junge Bestände zeigen Boden zwischen den Fichten, B1), Lücken unter 50 % Deckung in höchstens 6 % der Kacheln', () => {
     for (const seed of [7, 14, 1, 2]) {
       const w = woodWorld(seed);
       const isl = home(w);
@@ -323,11 +326,11 @@ describe('Fix 1 Kronendeckung', () => {
         }
       expect(cov.length, `Seed ${seed}`).toBeGreaterThan(10);
       expect(cov.reduce((a, b) => a + b, 0) / cov.length, `Seed ${seed}`).toBeGreaterThanOrEqual(
-        forestType(seed) === 3 ? 0.7 : 0.8, // Pinienhain: Durchblick auf Stämme und Boden (Fix-Runde 1)
+        forestType(seed) === 3 || forestType(seed) === 1 ? 0.68 : 0.8, // Pinienhain und Bergwald mit lichten Partien (Fix-Runden 1/2)
       );
-      // Lücken (B3) bleiben selten: höchstens 6 % der Kernkacheln unter 50 % Deckung
+      // Lücken (B3) bleiben selten: höchstens 6 % der Kernkacheln unter 50 % Deckung (Nadel- und Pinienwald 20 %)
       expect(cov.filter((c) => c < 0.5).length / cov.length, `Seed ${seed}`).toBeLessThanOrEqual(
-        0.06,
+        forestType(seed) === 1 || forestType(seed) === 3 ? 0.2 : 0.06, // Bergwald: lichte Partien mit Boden (Fix-Runde 2)
       );
     }
   });
