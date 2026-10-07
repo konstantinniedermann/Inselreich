@@ -5,7 +5,8 @@ import { hash2, valueNoise } from '../sim/noise';
 // Alles ist eine reine Funktion von (Seed, Kachel); nur `hash2` und `valueNoise`. Salze 500 und 501–519 (s. Kopf von
 // groundDecor.ts): 500 Waldtyp · 501 Akzentart · 502 Bestandsfeld · 503 Akzentfeld · 504/514 Randversatz ·
 // 505 Hash-Streuung Rand · 506/507 Kern-Streuung x/y · 508 Lichtungsfeld · 509 Riesenbaum-Wahl je Kachel ·
-// 510 Riesenbaum ja/nein · 511 Formreihenfolge. Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68 und 512–519).
+// 510 Riesenbaum ja/nein · 511 Formreihenfolge · 515 Wiederholung in der Formwahl (R298) · 516 Randversatz quer zur
+// Normalen (R298). Die Kronen selbst würfelt `trees.ts` (Salze 51/52/68, 512 und 513).
 
 /** Rolle einer Waldkachel: Kern (alle 8 Nachbarn freier Wald), Rand (grenzt an freie Wiese), Eng (gesperrter Nachbar). */
 export type Role = 0 | 1 | 2;
@@ -63,6 +64,20 @@ export function slotAt(seed: number, type: ForestType, x: number, y: number): Sl
 }
 
 const AMP = 0.3;
+/** Kern-Versatz je Achse (R298: ±0,2 statt ±0,08; kleine Lücken im Kronendach lesen sich als Waldbodenschatten). */
+const CORE_SHIFT = 0.2;
+/** Randversatz: Weissrauschen je Kachel, Konvexitätsausgleich je Stufe, Jitter quer zur Normalen (R298). */
+const EDGE_WHITE = 0.14,
+  EDGE_BULGE = 0.14,
+  EDGE_TANGENT = 0.1;
+/**
+ * Formwahl (R298): Kosten einer Wiederholung links/oben (meist 4, in `REPEAT_P` der Kacheln nur `REPEAT_COST`) und
+ * der oberen Diagonalen; die Diagonale (x − 1, y − 1) liegt im Bild genau darüber und wiegt deshalb mehr.
+ */
+const REPEAT_P = 0.2,
+  REPEAT_COST = 0.8,
+  DIAG_COST = 1.2,
+  ANTI_COST = 0.8;
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 /** Randversatz-Betrag in Kacheln an einem Kachelpunkt: Rauschen (Periode ≈ 4,5 Kacheln), in [−0,3; +0,3]. */
 export const forestEdgeShift = (seed: number, fx: number, fy: number): number =>
@@ -113,7 +128,12 @@ export function forestLayout(
     }
     return rand ? 1 : 0;
   };
-  // Zeilenweise: die Form meidet die Varianten des linken und des oberen Nachbarn (4-Nachbarpaare verschieden)
+  // Zeilenweise Formwahl nach Kosten: die Varianten des linken und des oberen Nachbarn sind teuer (4-Nachbarpaare
+  // verschieden), die der beiden oberen Diagonalen billig, aber nicht frei. Bei nur drei Formen erzwingt das gierige
+  // Meiden von links und oben sonst Form(x, y) = Form(x − 1, y − 1), also senkrechte Streifen gleicher Stempel im Bild
+  // (R298). Mit kleiner Wahrscheinlichkeit (Salz 515) ist eine Wiederholung links oder oben billiger als eine Diagonale.
+  const at = (x: number, y: number): number | undefined =>
+    x >= 0 && x < w && y >= 0 ? out[y * w + x]?.variant : undefined;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (cls(x, y) !== 'forest') continue;
@@ -125,41 +145,57 @@ export function forestLayout(
         clearing[y * w + x] = 1;
       }
       const slot = slotAt(seed, type, x, y);
-      const n = ROLE_FORMS[useRole];
-      const forms = Array.from({ length: n }, (_, f) => f).sort(
-        (a, b) => hash2(seed + 511, x * 8 + a, y) - hash2(seed + 511, x * 8 + b, y),
-      );
-      const wv = x > 0 ? out[y * w + x - 1]?.variant : undefined,
-        nv = y > 0 ? out[(y - 1) * w + x]?.variant : undefined;
-      let variant = variantOf(slot, useRole, forms[0]!);
-      for (const f of forms) {
+      const wv = at(x - 1, y),
+        nv = at(x, y - 1),
+        dv = at(x - 1, y - 1),
+        av = at(x + 1, y - 1);
+      const rep = hash2(seed + 515, x, y) < REPEAT_P ? REPEAT_COST : 4;
+      let variant = -1,
+        best = Infinity;
+      for (let f = 0; f < ROLE_FORMS[useRole]; f++) {
         const v = variantOf(slot, useRole, f);
-        if (v !== wv && v !== nv) {
+        const cost =
+          (v === wv ? rep : 0) +
+          (v === nv ? rep : 0) +
+          (v === dv ? DIAG_COST : 0) +
+          (v === av ? ANTI_COST : 0) +
+          hash2(seed + 511, x * 8 + f, y) * 0.5;
+        if (cost < best) {
+          best = cost;
           variant = v;
-          break;
         }
       }
       let ox = 0,
         oy = 0;
       if (role === 0) {
-        ox = (hash2(seed + 506, x, y) - 0.5) * 0.16;
-        oy = (hash2(seed + 507, x, y) - 0.5) * 0.16;
+        ox = (hash2(seed + 506, x, y) - 0.5) * 2 * CORE_SHIFT;
+        oy = (hash2(seed + 507, x, y) - 0.5) * 2 * CORE_SHIFT;
       } else if (role === 1) {
         let sx = 0,
-          sy = 0;
+          sy = 0,
+          ortho = 0;
         for (const [dx, dy] of NB) {
           if (cls(x + dx, y + dy) !== 'meadow') continue;
           sx += dx;
           sy += dy;
+          if (dx === 0 || dy === 0) ortho++;
         }
         const len = Math.hypot(sx, sy) || 1;
+        const nx = sx / len,
+          ny = sy / len;
+        // Konvexität: vorspringende Stufe (Wiese an zwei, drei Seiten) nach innen, einspringende (Wiese nur
+        // diagonal) nach aussen; danach das glatte Feld und je Kachel Weissrauschen
+        const bulge = clamp(ortho - 1, -1, 1.5);
         const a = clamp(
-          forestEdgeShift(seed, x + 0.5, y + 0.5) + (hash2(seed + 505, x, y) - 0.5) * 0.18,
+          forestEdgeShift(seed, x + 0.5, y + 0.5) * 0.8 +
+            (hash2(seed + 505, x, y) - 0.5) * 2 * EDGE_WHITE -
+            bulge * EDGE_BULGE,
           -AMP,
           AMP,
         );
-        ox = (sx / len) * a;
-        oy = (sy / len) * a;
+        const t = (hash2(seed + 516, x, y) - 0.5) * 2 * EDGE_TANGENT;
+        ox = nx * a - ny * t;
+        oy = ny * a + nx * t;
       }
       out[y * w + x] = { variant, role, slot, ox, oy, giant: false };
     }

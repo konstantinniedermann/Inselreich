@@ -109,7 +109,8 @@ describe('L1 forest: Platzierung', () => {
     }
   });
 
-  it('RF-L1-3 Versatz: Rand ±0,3 entlang der Aussennormalen, Kern ±0,08, Eng 0; beide Vorzeichen kommen vor', () => {
+  // R298: Kern-Versatz ±0,2 statt ±0,08 (Kugelraster aufbrechen), Rand dazu ±0,1 quer zur Normalen (Treppen aufbrechen)
+  it('RF-L1-3 Versatz: Rand ±0,3 entlang der Aussennormalen und ±0,1 quer dazu, Kern ±0,2, Eng 0; beide Vorzeichen kommen vor', () => {
     let pos = 0,
       neg = 0;
     for (const seed of SEEDS) {
@@ -118,11 +119,11 @@ describe('L1 forest: Platzierung', () => {
         if (!p) continue;
         if (p.role === 2) expect([p.ox, p.oy]).toEqual([0, 0]);
         if (p.role === 0) {
-          expect(Math.abs(p.ox)).toBeLessThanOrEqual(0.08 + 1e-9);
-          expect(Math.abs(p.oy)).toBeLessThanOrEqual(0.08 + 1e-9);
+          expect(Math.abs(p.ox)).toBeLessThanOrEqual(0.2 + 1e-9);
+          expect(Math.abs(p.oy)).toBeLessThanOrEqual(0.2 + 1e-9);
         }
         if (p.role === 1) {
-          expect(Math.hypot(p.ox, p.oy)).toBeLessThanOrEqual(0.3 + 1e-9);
+          expect(Math.hypot(p.ox, p.oy)).toBeLessThanOrEqual(Math.hypot(0.3, 0.1) + 1e-9);
           if (Math.hypot(p.ox, p.oy) > 0.1) {
             pos++;
           }
@@ -142,12 +143,36 @@ describe('L1 forest: Platzierung', () => {
       for (let x = 7; x < 23; x++) {
         const p = L[19 * 30 + x]!; // Randreihe, Wiese bei +y
         expect(p.role).toBe(1);
-        expect(p.ox).toBeCloseTo(0, 9);
+        expect(Math.abs(p.ox)).toBeLessThanOrEqual(0.1 + 1e-9); // quer zur Normalen
+        expect(Math.abs(p.oy)).toBeLessThanOrEqual(0.3 + 1e-9);
         if (p.oy > 0) pos++;
         else neg++;
       }
     }
     expect(neg).toBeGreaterThan(0);
+  });
+
+  it('RF-L1-10 Treppe: vorspringende Stufen rücken nach innen, einspringende nach aussen (Mittel ≥ 0,15 Kachel auseinander)', () => {
+    // Waldrand als Kachel-Treppe x + y ≤ 40: im Bild eine waagrechte Zickzack-Kante. Auf x + y = 40 springt die Stufe
+    // vor (Wiese rechts und unten), auf x + y = 39 springt sie ein (Wiese nur diagonal bei (+1, +1)).
+    const w = 48;
+    const cls = (x: number, y: number): TileClass =>
+      x < 0 || y < 0 || x >= w || y >= w ? 'blocked' : x + y <= 40 ? 'forest' : 'meadow';
+    const n = Math.SQRT1_2;
+    for (const seed of SEEDS) {
+      const L = forestLayout(seed, w, w, cls);
+      const out: number[] = [],
+        inn: number[] = [];
+      for (let x = 12; x < 30; x++) {
+        const a = L[(40 - x) * w + x]!,
+          b = L[(39 - x) * w + x]!;
+        expect([a.role, b.role]).toEqual([1, 1]);
+        out.push(a.ox * n + a.oy * n);
+        inn.push(b.ox * n + b.oy * n);
+      }
+      const mean = (v: number[]) => v.reduce((p, q) => p + q, 0) / v.length;
+      expect(mean(inn) - mean(out), `Seed ${seed}`).toBeGreaterThanOrEqual(0.15);
+    }
   });
 
   it('RF-L1-4 Riesenbaum: höchstens einer je Karte, in 20–60 % der Seeds 1–40, nur im Kern', () => {

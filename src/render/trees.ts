@@ -16,8 +16,9 @@ import { LIGHT } from './light';
 import { PALETTE, mixHex, shadeSide, toLight } from './palette';
 
 // trees.ts — Baumstempel (ISO §6, D-08, D-12; ART-STIL-02 L1 „Wald organisch"). Die Platzierung (Rolle, Art, Form,
-// Versatz) kommt aus `forest.ts`; hier stehen Kronenform, Stempel, Cache, Schatten und Box. Salze 512 (Kronen) und
-// 513 (Kronenform aus dem Formwert `s`) nach der Vergabe im Kopf von groundDecor.ts.
+// Versatz) kommt aus `forest.ts`; hier stehen Kronenform, Stempel, Cache, Schatten und Box. Salze 512 (Kronen, auch die
+// Blue-Noise-Streuung des Kerns nach R298) und 513 (Kronenform aus dem Formwert `s`) nach der Vergabe im Kopf von
+// groundDecor.ts; R298 braucht in trees.ts kein neues Salz.
 export type TreeItem = Extract<SortedItem, { kind: 'tree' }>;
 /** Baumart: 0 Laubbaum, 1 Nadelbaum, 2 Birke (hell), 3 Pinie (schirmförmig), 4 Ahorn (gedecktes Rostrot). */
 export type CrownKind = 0 | 1 | 2 | 3 | 4;
@@ -46,6 +47,22 @@ export const STAMP_BELOW = 0.75 * ISO_H;
 export const GIANT_SCALE = 1.8;
 const OVERHANG = 0.35; // Kronenfuss ragt höchstens so weit über die eigene Kachel
 const CROWN_RY = 0.85; // Kronenhöhe im Verhältnis zur Breite
+/**
+ * Kernkronen (R298): Anzahl, Fenster des Torus-Bilds (Anteile unter `CORE_WIN` rücken um eine Kachel nach vorn),
+ * Mindestabstand auf dem Kacheltorus, Radius r0 + rs × Zufall; bis zu `CORE_TRIES` Streuungen, die erste mit
+ * Deckung ≥ `CORE_COVER` der eigenen Raute gilt (sonst die beste). Hinten in der Kachel sitzt eine Kernkrone lieber
+ * tiefer (Höhe ab `CORE_LOW` × Kronenhalbhöhe) als dass sie schrumpft; sonst wären hintere Kronen je Kachel kleiner
+ * und das Dach zeigte Reihen im Kachelabstand.
+ */
+const CORE_MIN = 6,
+  CORE_MAX = 7,
+  CORE_WIN = 0.15,
+  CORE_DMIN = 0.32,
+  CORE_R0 = 0.18,
+  CORE_RS = 0.15,
+  CORE_COVER = 0.9,
+  CORE_TRIES = 4,
+  CORE_LOW = 0.6;
 const TRUNK_COLOR = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
 /** Körper des Nadelbaums (R149). */
 export const CONIFER_COLOR = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
@@ -232,6 +249,34 @@ export function slotKind(seed: number, slot: number): CrownKind {
 
 const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
 
+/** Anteil der eigenen Raute (Bildraum, 12 × 12 Proben), den die Kronen decken; nur beim Aufbau einer Variante. */
+function ownCover(crowns: readonly Crown[]): number {
+  const cs = crowns.map((c) => ({ s: crownScreen(c), g: geomFor(c) }));
+  let hit = 0;
+  for (let i = 0; i < 12; i++)
+    for (let j = 0; j < 12; j++) {
+      const u = (i + 0.5) / 12,
+        v = (j + 0.5) / 12;
+      const px = (u - v) * (ISO_W / 2),
+        py = ((u + v - 1) * ISO_H) / 2;
+      const on = cs.some(({ s, g }) => {
+        const dx = px - s.x,
+          dy = py - s.y;
+        if (g.tiers.length > 0)
+          return g.tiers.some((t) => {
+            const yy = dy - t.ay,
+              th = t.by - t.ay;
+            if (yy < 0 || yy > th) return false;
+            const k = yy / th;
+            return Math.abs(dx - (t.ax + (t.bx - t.ax) * k)) <= t.hw * k;
+          });
+        return g.lobes.some((l) => ((dx - l.x) / l.rx) ** 2 + ((dy - l.y) / l.ry) ** 2 <= 1);
+      });
+      if (on) hit++;
+    }
+  return hit / 144;
+}
+
 const crownCache = new Map<string, Crown[]>();
 const CROWN_CACHE_MAX = 256;
 
@@ -281,7 +326,7 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
       const g = crownGeom({ kind, r, s, bush, young });
       const ground = ((cx + cy - 1) * ISO_H) / 2;
       const hCap = top - 0.5 - g.hh + ground;
-      if (hCap < (bush ? 0.45 : 0.95) * g.hh) continue;
+      if (hCap < (bush ? 0.45 : role === 0 ? CORE_LOW : 0.95) * g.hh) continue;
       out.push({ kind, cx, cy, r, h: Math.min(hf * g.hh, hCap), bush, s, young });
       return;
     }
@@ -292,7 +337,19 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
     dMin: number,
     lo: number,
     hi: number,
+    wrap = false,
   ): [number, number][] => {
+    // Abstand auf dem Torus (Periode hi − lo): keine Häufung am Rand des Bereichs, die Nachbarkacheln schliessen an
+    const per = hi - lo;
+    const dist = (p: [number, number], q: [number, number]): number => {
+      let dx = Math.abs(p[0] - q[0]),
+        dy = Math.abs(p[1] - q[1]);
+      if (wrap) {
+        dx = Math.min(dx, per - dx);
+        dy = Math.min(dy, per - dy);
+      }
+      return Math.hypot(dx, dy);
+    };
     const pts: [number, number][] = [];
     for (let i = 0; i < n; i++) {
       let best: [number, number] = [0, 0],
@@ -302,7 +359,7 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
           lo + (hi - lo) * rnd(k0 + i, 40 + a * 2),
           lo + (hi - lo) * rnd(k0 + i, 41 + a * 2),
         ];
-        const d = pts.reduce((m, q) => Math.min(m, Math.hypot(p[0] - q[0], p[1] - q[1])), 9);
+        const d = pts.reduce((m, q) => Math.min(m, dist(p, q)), 9);
         if (d > bd) {
           bd = d;
           best = p;
@@ -318,29 +375,38 @@ export function crownsFor(seed: number, variant: number, giant = false): Crown[]
   const hfFor = (kind: CrownKind, lo: number, hi: number, i: number): number =>
     kind === 3 ? (role === 0 ? 0.7 : 1.1) + 0.2 * rnd(i, 3) : lo + (hi - lo) * rnd(i, 3); // Pinie: kurzer Stamm
   if (role === 0) {
-    // Kern: Ankerpunkte (Mitte, Ecken, ein Zufallspunkt) halten die Rautenfläche dicht unter grossen Kronen
-    const anchors: [number, number][] = [
-      [0.5, 0.5],
-      [0.2, 0.2],
-      [0.86, 0.22],
-      [0.22, 0.86],
-      [0.84, 0.84],
-      [0.92, 0.55],
-      [0.55, 0.92],
-    ];
-    anchors.forEach(([ax, ay], i) => {
-      const kind = kindFor(i);
-      add(
-        kind,
-        false,
-        0.21 + 0.1 * rnd(i, 2),
-        ax + jit(i, 40, 0.09),
-        ay + jit(i, 41, 0.09),
-        hfFor(kind, 0.8, 0.95, i),
-        rnd(i, 4),
-        limitTop,
-      );
-    });
+    // Kern (R298): Blue-Noise-Streuung auf dem Kacheltorus statt fester Anker, damit die Kronen aller Kernkacheln kein
+    // gemeinsames Unterraster bilden (Kugelraster, Baumreihen). Über die Kachelgrenze greifen die Kronen mit Radius
+    // und Kern-Versatz (±0,2, forest.ts); Anzahl und Grösse streuen.
+    const win = (v: number): number => (v < CORE_WIN ? v + 1 : v);
+    let best: Crown[] = [],
+      bestCover = -1;
+    for (let t = 0; t < CORE_TRIES && bestCover < CORE_COVER; t++) {
+      out.length = 0;
+      const k0 = t * 50;
+      const n = CORE_MIN + Math.floor(rnd(30 + t, 0) * (CORE_MAX - CORE_MIN + 1));
+      spread(n, k0, CORE_DMIN, 0, 1, true).forEach(([qx, qy], j) => {
+        const i = k0 + j;
+        const kind = kindFor(i);
+        add(
+          kind,
+          false,
+          CORE_R0 + CORE_RS * rnd(i, 2),
+          win(qx),
+          win(qy),
+          hfFor(kind, 0.8, 0.95, i),
+          rnd(i, 4),
+          limitTop,
+        );
+      });
+      const cover = ownCover(out);
+      if (cover > bestCover) {
+        bestCover = cover;
+        best = [...out];
+      }
+    }
+    out.length = 0;
+    out.push(...best);
   } else if (role === 1) {
     // Saum (B1): 1–2 Kronen in Kerngrösse zur Kachelmitte, davor Jungbäume (buschig, tief ansetzend) und Büsche
     const nBig = 2;
