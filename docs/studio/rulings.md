@@ -2546,3 +2546,12 @@ live, sobald dessen A/B-Messung ≤ +0,5 ms hält: gegenüber main messbar wenig
 Irrtum: Nutzer sieht den Wald noch nicht am Ziel; Bericht sagt das offen.
 
 Entscheider: L0 · Anlass: `.studio/qa/rel-06/blind/nach-l1r2.md` · ADR: —
+
+## R301 · 2026-10-07 · Gate Merge Release REL-06
+
+Ruling: REL-06 freigegeben = `rel/rel-06` (L1–L4, lead-qa-Review R298) + L1-Fix `fix/art02-l1-wald-r2` (Task-Review
+OK, A/B Seed 7 +0,4 ms ≤ +0,5; Seed 14 entfällt wegen Last 14–16, Kandidat dort +0,3). Integrator merget den Fix in
+den Kandidaten, `make check` + `CI=true make check`, Befunde aus dem Handoff anhängen, Push nach main. — Kosten bei
+Irrtum: Revert-Merge.
+
+Entscheider: L0 · Anlass: Messung `.studio/qa/art-stil-02/l1r2/perf-s7-1920.txt`, R300 · ADR: —
