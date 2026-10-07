@@ -21,6 +21,16 @@ const mask = (f: (x: number, y: number) => boolean): WoodMask => {
 const rect = mask((x, y) => x >= 10 && x < 20 && y >= 10 && y < 20);
 
 describe('WALD-02 Saumfeld', () => {
+  it('RF-W-1 Kern: an jeder Waldkachelmitte bleibt S über der Saumlinie, auch an einer Einzelkachel und in tiefen Buchten', () => {
+    const one = mask((x, y) => x === 5 && y === 5);
+    for (const seed of [1, 2, 5, 7, 11, 14]) {
+      expect(saumAt(seed, one, 5.5, 5.5)).toBeGreaterThanOrEqual(SAUM_LEVEL + 0.05);
+      for (let y = 10; y < 20; y++)
+        for (let x = 10; x < 20; x++)
+          expect(saumAt(seed, rect, x + 0.5, y + 0.5)).toBeGreaterThan(SAUM_LEVEL);
+    }
+  });
+
   it('RF-W-1 deterministisch: gleiche Maske und gleicher Seed ergeben dasselbe S', () => {
     const a = mask((x, y) => (x * 7 + y * 3) % 5 < 2);
     const b = mask((x, y) => (x * 7 + y * 3) % 5 < 2);
@@ -74,14 +84,15 @@ describe('WALD-02 Saumfeld', () => {
       for (let x = 10.25; x < 20; x += 0.5) {
         // von aussen (y = 7) nach innen suchen
         let y = 7;
-        while (y < 14 && saumAt(seed, rect, x, y) < SAUM_LEVEL) y += 0.02;
+        // ohne den Kern um die Kachelmitten (der hält jede Waldkachel lesbar, siehe RF-W-1 Kern)
+        while (y < 14 && saumAt(seed, { ...rect, raw: undefined }, x, y) < SAUM_LEVEL) y += 0.02;
         pos.push(y);
       }
       const m = pos.reduce((a, b) => a + b, 0) / pos.length;
       const sd = Math.sqrt(pos.reduce((a, b) => a + (b - m) ** 2, 0) / pos.length);
       expect(sd, `Seed ${seed}`).toBeGreaterThanOrEqual(0.15);
       // im Mittel nahe an der Maskenkante (nach innen weicht der lichte Rand weiter zurück als nach aussen, A3)
-      expect(Math.abs(m - 10), `Seed ${seed}`).toBeLessThan(1);
+      expect(Math.abs(m - 10), `Seed ${seed}`).toBeLessThan(1.3); // Fix-Runde 1: tiefere Buchten (Merkmal 3–6 Kacheln)
     }
   });
 });

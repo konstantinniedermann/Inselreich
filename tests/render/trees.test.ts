@@ -31,7 +31,15 @@ import {
   type TreeItem,
 } from '../../src/render/trees';
 import { fakeCtx, type P } from './fakeCtx';
-import { crownsOf, fakeCanvasFactory, mkItem, treeItems, woodWorld } from './woodHelpers';
+import {
+  crownsOf,
+  expand,
+  fakeCanvasFactory,
+  mkItem,
+  treeItems,
+  treesOf,
+  woodWorld,
+} from './woodHelpers';
 
 // trees.test.ts — Bäume zeichnen (ISO §6; WALD-02: Kronen einzeln aus dem Saumfeld, Kronen-Atlas).
 
@@ -52,7 +60,7 @@ const sample = <T>(a: T[], n: number): T[] =>
 describe('Wald-Objekte', () => {
   it('ISO §6 Kronen (WALD-02): Fussscheibe höchstens OVERHANG = 0,35 Kachel über die eigene Kachel, Radien 0,03–0,35 (ausser Riesenbaum)', () => {
     for (const seed of [3, 7, 11]) {
-      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.giant);
+      const cs = treesOf(woodWorld(seed)).filter((c) => !c.giant);
       expect(cs.length).toBeGreaterThan(300);
       for (const c of cs) {
         const tx = Math.floor(c.fx),
@@ -92,37 +100,37 @@ describe('Wald-Objekte', () => {
 
   it('AK-R1-03 Kronen nutzen nur Palettenmischungen (keine Signalfarben, kein Schatten); neue Töne ΔE2000 ≥ 20 zu den Signalfarben', () => {
     const bases = ([0, 1, 2, 3, 4] as const).flatMap((k) =>
-      ([-1, 0, 1] as const).map((t) => crownBase(k, t)),
+      ([-1.5, -1, -0.5, 0, 0.5, 1, 1.5] as const).map((t) => crownBase(k, t)),
     );
     const trunk = mixHex(PALETTE.rockDark, PALETTE.earth, 0.5);
-    const allowed = new Set<string>([
-      ...bases,
-      ...bases.map(crownShade),
-      ...bases.map(crownCap),
-      trunk,
-      LIGHT_TRUNK_COLOR,
-      DEADWOOD_COLOR,
-      crownShade(DEADWOOD_COLOR).length ? crownShade(DEADWOOD_COLOR) : '',
-      STUMP_TOP_COLOR,
-    ]);
     const signals = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
-    const seen = new Set<string>();
     for (const seed of [3, 7, 2])
       for (const item of sample(treeItems(woodWorld(seed)), 80)) {
+        // erlaubt: Körper, Schatten und Kappe der Baumart im Ton jedes gemalten Baums, Stämme, Totholz
+        const allowed = new Set<string>([
+          trunk,
+          LIGHT_TRUNK_COLOR,
+          DEADWOOD_COLOR,
+          crownShade(DEADWOOD_COLOR),
+          STUMP_TOP_COLOR,
+        ]);
+        for (const c of expand(item.crowns.map((k) => ({ ...k, fx: 0, fy: 0 })))) {
+          const b = crownBase(c.kind, c.tone ?? 0);
+          allowed.add(b).add(crownShade(b)).add(crownCap(b));
+        }
         const { ctx, log } = fakeCtx();
         paintItem(ctx, item, 1);
         for (const f of log.fillSet) {
-          seen.add(f);
+          expect(allowed.has(f), f).toBe(true);
           expect(signals.has(f)).toBe(false);
           expect(f).not.toBe(SHADOW);
+          for (const n of SIGNAL_NAMES)
+            expect(
+              deltaE2000(rgbToLab(rgbOfCss(f)), rgbToLab(rgbOfCss(PALETTE[n]))),
+              `${f} ~ ${n}`,
+            ).toBeGreaterThanOrEqual(20);
         }
       }
-    for (const f of seen)
-      expect(
-        allowed.has(f) || f === mixHex(DEADWOOD_COLOR, DEADWOOD_COLOR, 0) || /^#/.test(f),
-        f,
-      ).toBe(true);
-    for (const f of seen) if (!allowed.has(f)) expect(f).toBe(crownShade(DEADWOOD_COLOR));
     for (const c of [
       CONIFER_COLOR,
       LIGHT_CROWN_COLOR,
@@ -142,7 +150,7 @@ describe('Wald-Objekte', () => {
 
   it('R149 Baumarten: je Seed ≥ 2 Arten, Radienverhältnis max/min ≥ 2,5; über die Waldtypen alle fünf Arten', () => {
     for (const seed of [3, 11, 7, 2]) {
-      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.dead && !c.giant);
+      const cs = treesOf(woodWorld(seed)).filter((c) => !c.dead && !c.giant);
       const kinds = new Set(cs.map((c) => c.kind));
       const rs = cs.map((c) => c.r);
       expect(kinds.size, `Seed ${seed}`).toBeGreaterThanOrEqual(2);
@@ -211,7 +219,7 @@ describe('Wald und Bebauung', () => {
     };
     isl.tiles[mid]!.buildingId = bid;
     const on = (x: number, y: number) =>
-      crownsOf(world).filter((c) => !c.dead && Math.floor(c.fx) === x && Math.floor(c.fy) === y);
+      treesOf(world).filter((c) => !c.dead && Math.floor(c.fx) === x && Math.floor(c.fy) === y);
     expect(on(mx, my).length).toBe(0);
     for (let dy = -1; dy <= 1; dy++)
       for (let dx = -1; dx <= 1; dx++)
@@ -455,8 +463,12 @@ describe('Kronen gerastert', () => {
         r.translate(c.x - b.x + 1, c.y - b.y + 1);
         paintItem(r as unknown as CanvasRenderingContext2D, item, 1);
         let total = 0;
-        for (const k of [0, 1, 2, 3, 4] as const)
-          for (const t of [-1, 0, 1] as const) total += components(r, crownCap(crownBase(k, t)), 4);
+        const caps = new Set(
+          expand(item.crowns.map((k) => ({ ...k, fx: 0, fy: 0 }))).map((k) =>
+            crownCap(crownBase(k.kind, k.tone ?? 0)),
+          ),
+        );
+        for (const cap of caps) total += components(r, cap, 4);
         expect(total, `Seed ${seed} Objekt ${item.id}`).toBeGreaterThanOrEqual(2);
       }
     }

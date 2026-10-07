@@ -2,6 +2,7 @@ import { createWorld } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import { depthKey, sortedObjects } from '../../src/render/iso';
 import type { Crown, TreeItem } from '../../src/render/trees';
+import { groupMembers } from '../../src/render/crown';
 import { fakeCtx } from './fakeCtx';
 
 // woodHelpers.ts — WALD-02: gemeinsame Helfer der Wald-Tests (echte Karten, Objekte aus Kronen, Fake-Canvas).
@@ -22,6 +23,25 @@ export function crownsOf(w: World): (Crown & { fx: number; fy: number; item: Tre
     item.crowns.map((c) => ({ ...c, fx: item.fp.x + c.cx, fy: item.fp.y + c.cy, item })),
   );
 }
+/** Einzelbäume: Gruppen in ihre Bäume aufgelöst (absoluter Fuss), Einzelkronen unverändert. */
+export function expand<T extends Crown & { fx: number; fy: number }>(
+  cs: T[],
+): (T & { inGroup?: boolean })[] {
+  return cs.flatMap((c) =>
+    c.group === undefined
+      ? [c]
+      : groupMembers(c).map((m) => ({
+          ...c,
+          ...m,
+          fx: c.fx + m.cx,
+          fy: c.fy + m.cy,
+          group: undefined,
+          inGroup: true,
+        })),
+  );
+}
+/** Alle Bäume einer Karte (Gruppen aufgelöst). */
+export const treesOf = (w: World) => expand(crownsOf(w));
 /** Wald-Objekt aus Kronen an der Kachel (x, y). */
 export function mkItem(crowns: Crown[], x: number, y: number, id = 0, own = false): TreeItem {
   const fp = { x, y, w: 1, h: 1 };

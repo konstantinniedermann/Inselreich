@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { rgbOfCss } from '../../src/render/palette';
 import { crownGeom, paintCrown, type Crown } from '../../src/render/trees';
 import { ISO_W } from '../../src/render/iso';
-import { crownsOf, woodWorld } from './woodHelpers';
+import { treesOf, woodWorld } from './woodHelpers';
 
 interface Ell {
   fill: string;
@@ -57,7 +57,7 @@ const blue = (c: string): number => {
 /** Ellipsen je Lappenkrone einer echten Karte (WALD-02) zerlegt: n Schattenlappen, n Mittenlappen, 1–3 Kappen. */
 function perCrown(seed: number): { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] {
   const out: { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] = [];
-  const cs = crownsOf(woodWorld(seed)).filter((k) => !k.dead && !(k.kind === 1 && !k.bush));
+  const cs = treesOf(woodWorld(seed)).filter((k) => !k.dead && !(k.kind === 1 && !k.bush));
   for (const c of cs.filter((_, i) => i % 4 === 0)) {
     const e = ellipses(c);
     const n = crownGeom(c).lobes.length;

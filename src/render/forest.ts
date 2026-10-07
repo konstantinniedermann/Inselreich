@@ -1,10 +1,14 @@
 import { hash2, valueNoise } from '../sim/noise';
 import {
   GIANT_SCALE,
+  GROUP_SHAPES,
+  SHAPES,
   TREE_H,
   crownGeom,
-  heightFactor,
+  crownHeight,
+  groupMembers,
   maxRadius,
+  shapeValue,
   type Crown,
   type CrownKind,
 } from './crown';
@@ -129,12 +133,25 @@ const CONIFER_JITTER = 0.42;
 /** Horste: Ausdünnung im Kern, wo das Horstfeld tief liegt (Anteil). */
 const HORST_DEPTH = 0.3;
 /** Beimischung (B3): Anteil Kronen einer anderen Art. */
-const ADMIX_P = 0.09;
+const ADMIX_P = 0.09,
+  ADMIX_PINE = 0.16;
+/**
+ * Baumgruppen im Kern (Fix-Runde 1, Perf): ab Kernanteil GROUP_FROM mit Anteil bis GROUP_P; Gruppenradius
+ * GROUP_R + GROUP_R_STAND × Bestandsalter (±GROUP_JITTER), höchstens GROUP_R_MAX; Abstand zweier Gruppen
+ * SPACING_GROUP × Radiensumme.
+ */
+const GROUP_FROM = 0.5,
+  GROUP_P = 0.9,
+  GROUP_R = 0.3,
+  GROUP_R_STAND = 0.2,
+  GROUP_JITTER = 0.12,
+  GROUP_R_MAX = 0.5,
+  SPACING_GROUP = 0.64;
 /**
  * Abstand: Mindestabstand der Fusspunkte als Anteil der Radiensumme je Art (Laub, Nadel, Birke, Pinie, Ahorn; Laub
  * schliesst dichter), für Büsche und Totholz, und absolut (Kacheln).
  */
-const SPACING_KIND = [0.62, 0.78, 0.68, 0.56, 0.62] as const;
+const SPACING_KIND = [0.62, 0.78, 0.68, 0.68, 0.62] as const;
 const SPACING_BUSH = 0.65,
   SPACING_MIN = 0.17;
 /** Grösster Radius auf einer Eng-Kachel (Nachbar eines Objekts). */
@@ -148,9 +165,8 @@ export const VORWALD_MAX = 2;
 /** Vorwald höchstens so viele Kacheln vor dem Wald (Chebyshev). */
 export const VORWALD_REACH = 2;
 /** Mindestzahl Kronen je freier Waldkachel (Spec 2.1.5). */
-export const MIN_CROWNS = 2;
-/** Formen je Art (die Hälfte gespiegelt): der Kronen-Atlas rastert `s` auf diese Stufen. */
-export const SHAPES = 5;
+export const MIN_CROWNS = 3;
+export { SHAPES, shapeValue } from './crown';
 /** Tonfeld (B2): Merkmal in Kacheln, Schwellen für −1/+1, Anteil Einzelwurf. */
 const TONE_PERIOD = 7,
   TONE_LO = 0.42,
@@ -158,9 +174,6 @@ const TONE_PERIOD = 7,
   TONE_FLIP = 0.1;
 /** Totholz (B3): Anteil je Kandidat in Lücken und im lichten Kern. */
 const DEAD_P = 0.015;
-
-/** Formwert einer Formstufe: Mitte der Stufe (der Atlas zeichnet genau diese Form). */
-export const shapeValue = (i: number): number => (i + 0.5) / SHAPES;
 
 export interface WoodInput {
   seed: number;
@@ -241,7 +254,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       tight[y * w + x] = obj ? 1 : 0;
     }
   /** Darf eine Fussscheibe über die Kachel (x, y) ragen? Nur über Wald und Vorwald-Wiese. */
-  const open = (x: number, y: number): boolean => {
+  const openTile = (x: number, y: number): boolean => {
     const c = at(x, y);
     return c === 'forest' || c === 'meadow';
   };
@@ -338,9 +351,36 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     }
     const slot = slotAt(seed, type, fx, fy);
     let kind = slotKind(seed, slot);
-    if (rnd(x, y, j, 3) < ADMIX_P)
-      kind = slotKind(seed, (slot + 1 + (rnd(x, y, j, 4) < 0.5 ? 1 : 0)) % 3);
-    const stand = STAND_LO + (STAND_HI - STAND_LO) * standAt(seed, fx, fy);
+    const admixed = rnd(x, y, j, 3) < (type === 3 ? ADMIX_PINE : ADMIX_P);
+    if (admixed) kind = slotKind(seed, (slot + 1 + (rnd(x, y, j, 4) < 0.5 ? 1 : 0)) % 3);
+    const stand01 = standAt(seed, fx, fy);
+    // Baumgruppe im Kern (Fix-Runde 1): ein Atlas-Eintrag für 3–6 Bäume, spart Zeichenaufrufe
+    if (
+      !admixed &&
+      kind !== 3 && // Pinien stehen einzeln (Schirme verschieden hoch, Durchblick)
+      !tight[y * w + x] &&
+      core >= GROUP_FROM &&
+      rnd(x, y, j, 13) < GROUP_P * smooth01((core - GROUP_FROM) / 0.25)
+    ) {
+      const group = Math.floor(rnd(x, y, j, 14) * GROUP_SHAPES);
+      const mirror = rnd(x, y, j, 15) < 0.5;
+      const gr =
+        (GROUP_R + GROUP_R_STAND * stand01) * (1 + GROUP_JITTER * (2 * rnd(x, y, j, 5) - 1));
+      const c: Crown = {
+        kind,
+        cx: 0,
+        cy: 0,
+        r: Math.min(gr, GROUP_R_MAX, maxRadius({ kind, bush: false, young: false, group, mirror })),
+        h: 0,
+        bush: false,
+        s: shapeValue(0),
+        mirror,
+        group,
+        tone: toneAt(fx, fy, x, y, j),
+      };
+      return { ok: rnd(x, y, j, 12) < accept, crown: c };
+    }
+    const stand = STAND_LO + (STAND_HI - STAND_LO) * stand01;
     const jitter = kind === 1 ? CONIFER_JITTER : SIZE_JITTER;
     let size = stand * (0.62 + 0.38 * core) * (1 + jitter * (2 * rnd(x, y, j, 5) - 1));
     const young = !inside || (core < 0.3 && rnd(x, y, j, 6) < 0.5);
@@ -384,15 +424,68 @@ export function woodLayout(inp: WoodInput): WoodLayout {
           const k =
             q.c.bush || o.c.bush || q.c.dead || o.c.dead
               ? SPACING_BUSH
-              : Math.min(SPACING_KIND[q.c.kind], SPACING_KIND[o.c.kind]);
+              : q.c.group !== undefined && o.c.group !== undefined
+                ? SPACING_GROUP
+                : Math.min(SPACING_KIND[q.c.kind], SPACING_KIND[o.c.kind]);
           const d = Math.max(minD, k * (q.c.r + o.c.r));
           if ((q.fx - o.fx) ** 2 + (q.fy - o.fy) ** 2 < d * d) return true;
         }
       }
     return false;
   };
+  /** Fussscheibe nie über gesperrte Kacheln; Eng (Nachbar eines Objekts): ganz in der eigenen Kachel. */
+  function clampFoot(q: Cand): void {
+    const c = q.c;
+    const k = q.ty * w + q.tx;
+    let u = q.fx - q.tx,
+      v = q.fy - q.ty;
+    const r = c.r;
+    if (tight[k]) {
+      // Eng: Fussscheibe in der Kachel, und im Bild in der Spaltenbreite der Kachel (|u − v| · ISO_W/2 + hw ≤ ISO_W/2)
+      c.r = Math.min(c.r, TIGHT_R);
+      u = clamp(u, c.r, 1 - c.r);
+      v = clamp(v, c.r, 1 - c.r);
+      const room = 1 - crownGeom(c).hw / (ISO_W / 2);
+      const t = u - v;
+      if (Math.abs(t) > room) {
+        const d = (Math.abs(t) - room) / 2;
+        u -= Math.sign(t) * d;
+        v += Math.sign(t) * d;
+      }
+    } else if (!c.giant) {
+      // Gruppen nur über Wald (ihre Bäume sind hoch; auf der Wiese steht nur Vorwald)
+      const open =
+        c.group !== undefined ? (x: number, y: number) => at(x, y) === 'forest' : openTile;
+      if (!open(q.tx - 1, q.ty)) u = Math.max(u, r);
+      if (!open(q.tx + 1, q.ty)) u = Math.min(u, 1 - r);
+      if (!open(q.tx, q.ty - 1)) v = Math.max(v, r);
+      if (!open(q.tx, q.ty + 1)) v = Math.min(v, 1 - r);
+      for (const [dx, dy] of [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ] as const) {
+        if (open(q.tx + dx, q.ty + dy)) continue;
+        const ex = dx < 0 ? u : 1 - u,
+          ey = dy < 0 ? v : 1 - v; // Abstand zur Ecke je Achse
+        const d = Math.hypot(ex, ey);
+        if (d >= r) continue;
+        const f = d > 1e-6 ? r / d : 0;
+        const nx = d > 1e-6 ? ex * f : r * Math.SQRT1_2,
+          ny = d > 1e-6 ? ey * f : r * Math.SQRT1_2;
+        u = dx < 0 ? nx : 1 - nx;
+        v = dy < 0 ? ny : 1 - ny;
+      }
+      u = clamp(u, 0, 1 - 1e-6);
+      v = clamp(v, 0, 1 - 1e-6);
+    }
+    q.fx = q.tx + u;
+    q.fy = q.ty + v;
+  }
   const accepted: Cand[] = [];
   const put = (q: Cand): void => {
+    clampFoot(q);
     const k = keyOf(Math.floor(q.fx), Math.floor(q.fy));
     const l = grid.get(k);
     if (l) l.push(q);
@@ -413,8 +506,17 @@ export function woodLayout(inp: WoodInput): WoodLayout {
   }
   // Mindestens MIN_CROWNS lebende Kronen je freier Waldkachel (kleine Jungbäume, wenn der Saum hier zurückweicht)
   const count = new Map<number, number>();
-  for (const q of accepted)
-    if (q.forest && !q.c.dead) count.set(q.ty * w + q.tx, (count.get(q.ty * w + q.tx) ?? 0) + 1);
+  const bump = (tx: number, ty: number): void => {
+    if (tx >= 0 && ty >= 0 && tx < w && ty < h)
+      count.set(ty * w + tx, (count.get(ty * w + tx) ?? 0) + 1);
+  };
+  for (const q of accepted) {
+    if (q.c.dead) continue;
+    // Gruppen zählen mit jedem Baum auf der Kachel seines Fusses
+    if (q.c.group !== undefined)
+      for (const m of groupMembers(q.c)) bump(Math.floor(q.fx + m.cx), Math.floor(q.fy + m.cy));
+    else if (q.forest) bump(q.tx, q.ty);
+  }
   for (const [k, list] of byTile) {
     if (free[k] !== 1) continue;
     let n = count.get(k) ?? 0;
@@ -425,6 +527,11 @@ export function woodLayout(inp: WoodInput): WoodLayout {
         if (n >= MIN_CROWNS) break;
         if (accepted.includes(q) || q.c.dead) continue;
         const c = q.c;
+        if (c.group !== undefined) {
+          // als Einzelbaum (Jungbaum) nachsetzen
+          delete c.group;
+          c.s = shapeValue(Math.floor(rnd(q.tx, q.ty, 0, 15) * SHAPES));
+        }
         c.r = Math.min(c.r, 0.16);
         c.young = true;
         c.r = Math.min(c.r, maxRadius(c));
@@ -486,59 +593,19 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     all.push(g);
   }
 
-  // Fussscheibe nie über gesperrte Kacheln; Eng (Nachbar eines Objekts): ganz in der eigenen Kachel. Höhe aus der Form.
+  // Höhe aus der Form, Tiefenband-Zelle
   const cells = new Map<string, WoodCell>();
   for (const q of all) {
     const c = q.c;
     const k = q.ty * w + q.tx;
-    let u = q.fx - q.tx,
-      v = q.fy - q.ty;
-    const r = c.r;
-    if (tight[k]) {
-      // Eng: Fussscheibe in der Kachel, und im Bild in der Spaltenbreite der Kachel (|u − v| · ISO_W/2 + hw ≤ ISO_W/2)
-      c.r = Math.min(c.r, TIGHT_R);
-      u = clamp(u, c.r, 1 - c.r);
-      v = clamp(v, c.r, 1 - c.r);
-      const room = 1 - crownGeom(c).hw / (ISO_W / 2);
-      const t = u - v;
-      if (Math.abs(t) > room) {
-        const d = (Math.abs(t) - room) / 2;
-        u -= Math.sign(t) * d;
-        v += Math.sign(t) * d;
-      }
-    } else if (!c.giant) {
-      if (!open(q.tx - 1, q.ty)) u = Math.max(u, r);
-      if (!open(q.tx + 1, q.ty)) u = Math.min(u, 1 - r);
-      if (!open(q.tx, q.ty - 1)) v = Math.max(v, r);
-      if (!open(q.tx, q.ty + 1)) v = Math.min(v, 1 - r);
-      for (const [dx, dy] of [
-        [-1, -1],
-        [1, -1],
-        [-1, 1],
-        [1, 1],
-      ] as const) {
-        if (open(q.tx + dx, q.ty + dy)) continue;
-        const ex = dx < 0 ? u : 1 - u,
-          ey = dy < 0 ? v : 1 - v; // Abstand zur Ecke je Achse
-        const d = Math.hypot(ex, ey);
-        if (d >= r) continue;
-        const f = d > 1e-6 ? r / d : 0;
-        const nx = d > 1e-6 ? ex * f : r * Math.SQRT1_2,
-          ny = d > 1e-6 ? ey * f : r * Math.SQRT1_2;
-        u = dx < 0 ? nx : 1 - nx;
-        v = dy < 0 ? ny : 1 - ny;
-      }
-      u = clamp(u, 0, 1 - 1e-6);
-      v = clamp(v, 0, 1 - 1e-6);
-    }
-    const fx = q.tx + u,
-      fy = q.ty + v;
+    const fx = q.fx,
+      fy = q.fy;
     if (c.dead) c.h = 0;
     else {
       const hh = crownGeom(c).hh;
       c.h = c.giant
         ? Math.min((c.kind === 1 ? 1.05 : 1.7) * hh, GIANT_SCALE * TREE_H - hh)
-        : heightFactor(c) * hh;
+        : crownHeight(c);
     }
     const cell = tight[k] ? { x: q.tx, y: q.ty } : bandCell(fx, fy);
     const key = `${tight[k] ? 1 : 0}|${cell.x}|${cell.y}`;

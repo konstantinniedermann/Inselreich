@@ -3,21 +3,13 @@ import {
   GIANT_SCALE,
   TREE_H,
   crownGeom,
+  groupParts,
+  shapeIndex,
   type Crown,
   type CrownGeom,
   type CrownKind,
 } from './crown';
-import { SHAPES } from './forest';
-import {
-  ISO_H,
-  ISO_W,
-  ZOOM_STEPS,
-  project,
-  zoomStep,
-  type Box,
-  type Pt,
-  type SortedItem,
-} from './iso';
+import { ISO_H, ISO_W, project, zoomStep, type Box, type Pt, type SortedItem } from './iso';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, shadeSide, toLight, toShade } from './palette';
 
@@ -64,9 +56,15 @@ const BODY: readonly string[] = [
 const TONE_DARK = 0.3,
   TONE_LIGHT = 0.26;
 /** Körperfarbe je Baumart und Tonklasse. */
-export const crownBase = (kind: CrownKind, tone: -1 | 0 | 1 = 0): string => {
+export const crownBase = (kind: CrownKind, tone = 0): string => {
   const b = BODY[kind]!;
-  return tone < 0 ? toShade(b, TONE_DARK) : tone > 0 ? toLight(b, TONE_LIGHT) : b;
+  const t = Math.max(-1.4, Math.min(1.2, tone));
+  // die Birke ist schon hell: halbe Aufhellung (ihre Kappe bleibt ΔE ≥ 20 zu signalOk)
+  return t < 0
+    ? toShade(b, -t * TONE_DARK)
+    : t > 0
+      ? toLight(b, t * TONE_LIGHT * (kind === 2 ? 0.5 : 1))
+      : b;
 };
 const SHADOW_SHIFT = 0.19; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
@@ -99,7 +97,7 @@ function geomFor(c: Crown): CrownGeom {
 export function crownScreen(c: Crown): { x: number; y: number; rx: number; ry: number } {
   const g = geomFor(c);
   return {
-    x: (c.cx - c.cy) * (ISO_W / 2),
+    x: (c.cx - c.cy) * (ISO_W / 2) + (g.ox ?? 0),
     y: ((c.cx + c.cy - 1) * ISO_H) / 2 - c.h,
     rx: g.hw,
     ry: g.hh,
@@ -128,6 +126,12 @@ const ellipse = (
  * Lappen (Schattenmond, Mitte, Kappe zum Licht), der Nadelbaum als Etagen. Tonklasse aus `c.tone`.
  */
 export function paintCrown(ctx: CanvasRenderingContext2D, c: Crown, x: number, y: number): void {
+  if (c.group !== undefined) {
+    // Gruppe: die Kronen ihrer Bäume, hinten zuerst, um die Gruppenmitte (x, y)
+    const { members, at } = groupParts(c);
+    members.forEach((m, i) => paintCrown(ctx, m, x + at[i]!.x, y + at[i]!.y));
+    return;
+  }
   const g = geomFor(c);
   const base = crownBase(c.kind, c.tone ?? 0);
   if (g.tiers.length > 0) {
@@ -140,14 +144,14 @@ export function paintCrown(ctx: CanvasRenderingContext2D, c: Crown, x: number, y
       ctx.fillStyle = base;
       ctx.beginPath();
       ctx.moveTo(ax, ay);
-      ctx.lineTo(bx + t.hw, by);
-      ctx.lineTo(bx - t.hw, by);
+      ctx.lineTo(bx + t.hr, by);
+      ctx.lineTo(bx - t.hl, by);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = crownShade(base);
       ctx.beginPath();
       ctx.moveTo(ax, ay);
-      ctx.lineTo(bx + sd * t.hw, by);
+      ctx.lineTo(bx + (sd > 0 ? t.hr : -t.hl), by);
       ctx.lineTo(bx, by);
       ctx.closePath();
       ctx.fill();
@@ -258,6 +262,11 @@ export function paintTree(
     paintDead(ctx, c, x, ground);
     return;
   }
+  if (c.group !== undefined) {
+    for (const m of groupParts(c).members)
+      paintTree(ctx, m, x + (m.cx - m.cy) * (ISO_W / 2), ground + (m.cx + m.cy) * (ISO_H / 2));
+    return;
+  }
   paintTrunk(ctx, c, x, ground);
   paintCrown(ctx, c, x, ground - c.h);
 }
@@ -278,7 +287,7 @@ export function paintItem(ctx: CanvasRenderingContext2D, item: TreeItem, step: n
 
 /** Radiusstufen (Kacheln), Verhältnis 1,3: eine Krone nimmt die kleinste Stufe ≥ r und wird verkleinert. */
 export const RADIUS_STEPS = [
-  0.4, 0.31, 0.24, 0.185, 0.143, 0.11, 0.085, 0.066, 0.05, 0.038,
+  0.52, 0.4, 0.31, 0.24, 0.185, 0.143, 0.11, 0.085, 0.066, 0.05, 0.038,
 ] as const;
 /** Obergrenze des Kronen-Atlas in Bytes (RGBA). */
 export const TREE_CACHE_MAX_BYTES = 12 * 1024 * 1024;
@@ -290,7 +299,7 @@ const stepIndex = (r: number): number => {
 };
 /** Atlas-Schlüssel einer Krone (ohne Zoomstufe) und Verkleinerung r / r_b. */
 interface AtlasRef {
-  key: number;
+  key: string;
   f: number;
   proto: Crown;
 }
@@ -301,13 +310,7 @@ function atlasRef(c: Crown): AtlasRef {
   if (a) return a;
   const si = stepIndex(c.r);
   const rb = RADIUS_STEPS[si]!;
-  const shape = Math.min(SHAPES - 1, Math.floor(c.s * SHAPES));
-  const key =
-    ((((c.kind * SHAPES + shape) * 2 + (c.mirror ? 1 : 0)) * 3 + ((c.tone ?? 0) + 1)) *
-      RADIUS_STEPS.length +
-      si) *
-      6 +
-    FLAGS(c);
+  const key = `${c.kind}|${shapeIndex(c.s)}|${c.mirror ? 1 : 0}|${c.tone ?? 0}|${si}|${FLAGS(c)}|${c.group ?? '-'}`;
   const f = c.r / rb;
   // Urbild der Atlas-Kachel: dieselbe Form bei Radius r_b, Höhe im selben Verhältnis
   const proto: Crown = { ...c, cx: 0, cy: 0, r: rb, h: c.h / f };
@@ -342,13 +345,29 @@ export function crownBox(c: Crown): { x0: number; y0: number; x1: number; y1: nu
     const half = c.dead === 1 ? w / 2 : w * 0.7;
     return { x0: -half, y0: -h, x1: half, y1: 1 };
   }
+  if (c.group !== undefined) {
+    let x0 = Infinity,
+      y0 = Infinity,
+      x1 = -Infinity,
+      y1 = -Infinity;
+    for (const m of groupParts(c).members) {
+      const b = crownBox(m);
+      const dx = (m.cx - m.cy) * (ISO_W / 2),
+        dy = (m.cx + m.cy) * (ISO_H / 2);
+      x0 = Math.min(x0, b.x0 + dx);
+      x1 = Math.max(x1, b.x1 + dx);
+      y0 = Math.min(y0, b.y0 + dy);
+      y1 = Math.max(y1, b.y1 + dy);
+    }
+    return { x0, y0, x1, y1 };
+  }
   const g = geomFor(c);
   const tw = c.bush ? 0 : trunkWidth(c) / 2 + (c.kind === 3 ? 2 : 0);
   const hw = Math.max(g.hw, tw);
   return { x0: -hw, y0: -c.h - g.hh, x1: hw, y1: Math.max(1, -c.h + g.hh) };
 }
 
-const atlas = new Map<number, Sprite>();
+const atlas = new Map<string, Sprite>();
 let atlasBytes = 0;
 let atlasFrame = 0;
 /** Zählt Verdrängungen; eine Zeichenliste mit älterer Zahl prüft ihre Einträge neu. */
@@ -364,7 +383,7 @@ export function resetTreeCache(): void {
 }
 
 function spriteFor(ref: AtlasRef, step: number): Sprite | null {
-  const key = ref.key * ZOOM_STEPS.length + ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number]);
+  const key = `${ref.key}|${step}`;
   const hit = atlas.get(key);
   if (hit) {
     hit.used = atlasFrame;

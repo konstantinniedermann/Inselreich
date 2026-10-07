@@ -14,7 +14,7 @@ import {
 import { SAUM_LEVEL, saumAt } from '../../src/render/woodField';
 import { TREE_H, crownGeom, type Crown } from '../../src/render/crown';
 import { valueNoise } from '../../src/sim/noise';
-import { crownsOf, treeItems, woodWorld } from './woodHelpers';
+import { expand, treeItems, treesOf, woodWorld } from './woodHelpers';
 
 // forest.test.ts — reine Platzierung des Waldes (WALD-02): jede Krone einzeln aus dem Saumfeld, Blue-Noise über
 // Kachelgrenzen, Vorwald, Tiefenband-Zellen, Riesenbaum, Waldtyp.
@@ -49,10 +49,14 @@ const input = (seed: number, g = grid(seed)): WoodInput => ({
   cls: (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? 'blocked' : g[y * N + x]!),
 });
 type Abs = Crown & { fx: number; fy: number; own: boolean };
+/** Alle Bäume eines Layouts mit absolutem Fuss (Gruppen in ihre Bäume aufgelöst). */
 const flat = (L: ReturnType<typeof woodLayout>): Abs[] =>
-  L.cells.flatMap((c) =>
-    c.crowns.map((k) => ({ ...k, fx: c.x + k.cx, fy: c.y + k.cy, own: c.own })),
+  expand(
+    L.cells.flatMap((c) =>
+      c.crowns.map((k) => ({ ...k, fx: c.x + k.cx, fy: c.y + k.cy, own: c.own })),
+    ),
   );
+
 const SEEDS = [1, 2, 5, 7, 11, 14];
 
 describe('WALD-02 Platzierung', () => {
@@ -136,7 +140,7 @@ describe('WALD-02 Platzierung', () => {
           const d = dist(i % W, Math.floor(i / W));
           if (d <= 3) tiles[d]!++;
         }
-      for (const c of crownsOf(w)) {
+      for (const c of treesOf(w)) {
         const tx = Math.floor(c.fx),
           ty = Math.floor(c.fy);
         if (terr(tx, ty) !== 'grass') continue;
@@ -171,7 +175,7 @@ describe('WALD-02 Platzierung', () => {
   it('RF-W-5 Höhen- und Grössenspreizung im Nadelwald: höchste / niedrigste Krone ≥ 2 und Radien ≥ 2 (P95/P5), einzelne Überhälter', () => {
     for (const seed of [7, 14]) {
       expect(forestType(seed)).toBe(1);
-      const cs = crownsOf(woodWorld(seed)).filter(
+      const cs = treesOf(woodWorld(seed)).filter(
         (c) => c.kind === 1 && !c.bush && !c.dead && !c.giant && !c.young,
       );
       const q = (a: number[], p: number) =>
@@ -186,7 +190,7 @@ describe('WALD-02 Platzierung', () => {
 
   it('RF-W-6 Bestände, Töne, Beimischung: Nachbarkronen gleicher Art ≥ 65 %, Tonflecken (gleicher Ton bei ≥ 50 % der Nachbarn, alle drei Töne), Beimischung 3–20 %', () => {
     for (const seed of [7, 14, 2, 1]) {
-      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.dead && !c.bush && !c.giant);
+      const cs = treesOf(woodWorld(seed)).filter((c) => !c.dead && !c.bush && !c.giant);
       let same = 0,
         tone = 0,
         pairs = 0;
@@ -205,11 +209,11 @@ describe('WALD-02 Platzierung', () => {
         if (!best) continue;
         pairs++;
         if (best.kind === a.kind) same++;
-        if ((best.tone ?? 0) === (a.tone ?? 0)) tone++;
+        if (Math.abs((best.tone ?? 0) - (a.tone ?? 0)) <= 0.5) tone++; // Bäume einer Gruppe streuen ±½ Stufe
       }
       expect(same / pairs, `Seed ${seed} Art`).toBeGreaterThanOrEqual(0.65);
       expect(tone / pairs, `Seed ${seed} Ton`).toBeGreaterThanOrEqual(0.5);
-      for (const t of [-1, 0, 1]) expect(cs.some((c) => (c.tone ?? 0) === t)).toBe(true);
+      for (const t of [-1, 0, 1]) expect(cs.some((c) => Math.round(c.tone ?? 0) === t)).toBe(true);
       const counts = new Map<number, number>();
       for (const c of cs) counts.set(c.kind, (counts.get(c.kind) ?? 0) + 1);
       const main = Math.max(...counts.values());
@@ -262,7 +266,7 @@ describe('WALD-02 Platzierung', () => {
 
   it('RF-W-8 keine Periodik im Kachelabstand (B4): Fusspunkte im Kachel-Anteil gleich verteilt (6 × 6-Fächer 0,5–1,6 × Mittel), keine zwei Nachbarkacheln mit derselben Anordnung', () => {
     for (const seed of [7, 14, 1]) {
-      const cs = crownsOf(woodWorld(seed)).filter((c) => !c.dead && !c.bush);
+      const cs = treesOf(woodWorld(seed)).filter((c) => !c.dead && !c.bush);
       const bins = new Array(36).fill(0);
       for (const c of cs) {
         const u = c.fx - Math.floor(c.fx),
@@ -299,13 +303,13 @@ describe('WALD-02 Platzierung', () => {
   it('RF-W-9 Saum: Kronen hinter der Saumlinie sind klein und werfen eigenen Schatten; im Kern stehen grössere Kronen', () => {
     for (const seed of [7, 14]) {
       const w = woodWorld(seed);
-      const cs = crownsOf(w).filter((c) => !c.dead && !c.bush && !c.giant);
+      const cs = treesOf(w).filter((c) => !c.dead && !c.bush && !c.giant);
       const behind = cs.filter(
         (c) =>
           c.cast &&
           w.islands[0]!.tiles[Math.floor(c.fy) * 64 + Math.floor(c.fx)]!.terrain === 'forest',
       );
-      const core = cs.filter((c) => !c.cast);
+      const core = cs.filter((c) => !c.cast && !c.inGroup);
       const mean = (a: { r: number }[]) => a.reduce((s, c) => s + c.r, 0) / a.length;
       expect(behind.length).toBeGreaterThan(0);
       expect(mean(behind)).toBeLessThan(0.85 * mean(core));
