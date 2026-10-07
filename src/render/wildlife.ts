@@ -23,8 +23,6 @@ export interface WildlifeEnv {
   phase?: Phase;
   weather?: WeatherKind;
   reduce?: boolean;
-  /** Zoom des Bildes (Mindestzoom der Delfine 0,5); ohne Angabe kein Zoomfilter (Mouse-over kennt ihn nicht). */
-  zoom?: number;
 }
 
 interface Pt2 {
@@ -535,8 +533,9 @@ export function wildlifeAt(
     if (w && inRange(range, w.x, w.y))
       out.push({ kind: 'whale', name: 'Wal', x: w.x, y: w.y, z: 0, r: 1.0, pose: w });
   }
-  // Delfine (E5): jede helle Phase, nicht bei Sturm, ab Zoom 0,5
-  if (phase !== 'night' && weather !== 'storm' && (env.zoom === undefined || env.zoom >= 0.5)) {
+  // Delfine (E5): jede helle Phase, nicht bei Sturm. Abweichung von Spec §3 „ab Zoom 0,5“ (Entscheid lead-art): wie der Wal
+  // ohne eigene Zoomschwelle (sichtbar über LOD_ZOOM), damit Bild und Mouse-over übereinstimmen (die UI kennt den Zoom nicht).
+  if (phase !== 'night' && weather !== 'storm') {
     const d = dolphinsAt(world, timeMs, reduce);
     if (d) {
       const pts = [...d.dolphins, ...d.splash];

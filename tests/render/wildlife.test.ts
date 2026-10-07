@@ -643,7 +643,7 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
         expect(pose.dolphins.filter((d) => d.t > 0.45 && d.t < 0.55).length).toBeLessThanOrEqual(2);
   });
 
-  it('E5 wildlifeAt: Name „Delfine“, Radius 1,5, nicht nachts und nicht bei Sturm, erst ab Zoom 0,5, reduziert keine', () => {
+  it('E5 wildlifeAt: Name „Delfine“, Radius 1,5, nicht nachts und nicht bei Sturm, ohne Zoomschwelle (wie der Wal), reduziert keine', () => {
     let found = 0;
     for (const seed of SEEDS50) {
       const world = createWorld(seed);
@@ -660,8 +660,6 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
       expect(at({ phase: 'night', weather: 'clear' })).toHaveLength(0);
       expect(at({ phase: 'morning', weather: 'rain' })).toHaveLength(1);
       expect(at({ phase: 'day', weather: 'storm' })).toHaveLength(0);
-      expect(at({ phase: 'day', zoom: 0.4 })).toHaveLength(0);
-      expect(at({ phase: 'day', zoom: 0.5 })).toHaveLength(1);
       expect(at({ phase: 'day', reduce: true })).toHaveLength(0);
       if (found >= 6) break;
     }

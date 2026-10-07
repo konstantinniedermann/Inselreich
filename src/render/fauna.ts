@@ -1157,7 +1157,8 @@ const SPECIES: readonly SpeciesDef[] = [
     alive: (w, _i, a) => !seaBlocked(w, a.tx, a.ty),
     pose: poseSeal,
   },
-  { id: 'dolphin', rarity: 'S', capKey: 'dolphins', minZoom: 0.5, phases: DAYLIGHT, weather: null },
+  // Delfine: Spec §3 nennt „ab 0,5“; Entscheid lead-art: keine eigene Zoomschwelle wie der Wal (siehe wildlife.ts)
+  { id: 'dolphin', rarity: 'S', capKey: 'dolphins', minZoom: 0, phases: DAYLIGHT, weather: null },
 ];
 
 /**
