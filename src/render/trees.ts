@@ -1,3 +1,4 @@
+import { hash2 } from '../sim/noise';
 import { worldToScreen, type Camera } from './camera';
 import {
   GIANT_SCALE,
@@ -9,7 +10,17 @@ import {
   type CrownGeom,
   type CrownKind,
 } from './crown';
-import { ISO_H, ISO_W, project, zoomStep, type Box, type Pt, type SortedItem } from './iso';
+import {
+  ISO_H,
+  ISO_W,
+  ZOOM_STEPS,
+  project,
+  zoomStep,
+  type Box,
+  type Pt,
+  type SortedItem,
+} from './iso';
+import { bandCell } from './forest';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, shadeSide, toLight, toShade } from './palette';
 
@@ -24,6 +35,10 @@ import { PALETTE, mixHex, shadeSide, toLight, toShade } from './palette';
 //
 // Schnittstellen für L6 (Lichtung): `paintCrown`/`paintTrunk` malen eine Krone, `drawTreeStamp` ein Wald-Objekt,
 // `treeBounds`/`treeShadow` gehören zum Objekt; die Kronen eines Objekts stehen in `item.crowns`.
+//
+// Farn auf Lichtungen (L6 B2, REL-07 auf WALD-02 übertragen): die Lichtungskacheln stehen in `item.ferns`; ihre Büschel
+// (`fernTufts`, Salz 584) zeichnet das Objekt, in dessen Tiefenband-Zelle der Fuss des Büschels fällt, in der
+// Tiefenfolge zwischen seinen Kronen.
 
 export { GIANT_SCALE, TREE_H, crownGeom, type Crown, type CrownGeom, type CrownKind };
 export { slotKind } from './forest';
@@ -376,6 +391,8 @@ let atlasGen = 0;
 export const treeCacheSize = (): number => atlas.size;
 export const treeCacheBytes = (): number => atlasBytes;
 export function resetTreeCache(): void {
+  fernCache.clear();
+  fernSeed = null;
   for (const s of atlas.values()) s.alive = false;
   atlasGen++;
   atlas.clear();
@@ -428,6 +445,127 @@ function evict(need: number): void {
   }
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Farn auf Lichtungen (ART-STIL-02 L6, B2 Stempelteil). Salz 584 (Block 576–584, Eintrag im zentralen Kopf von
+// groundDecor.ts macht der Release-Merge). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln) in der vorderen
+// Kachelhälfte; WALD-02/REL-07: jedes Büschel wird mit der Tiefenband-Zelle seines Fusspunkts gezeichnet, in der
+// Tiefenfolge zwischen deren Kronen. Eigener kleiner Cache (FERN_FORMS × ZOOM_STEPS), der Kronen-Atlas bleibt unberührt.
+
+export const FERN_SALT = 584;
+export const FERN_FORMS = 4;
+/** Farn zeigt sich ab Zoom 0,5. */
+export const FERN_MIN_ZOOM = 0.5;
+/** Höhe eines Büschels (Weltpixel) höchstens ein Viertel der Baumhöhe. */
+export const FERN_H = 0.25 * TREE_H;
+/** Frisches Hellgrün, heller als die Kronen: crownLight mit grassLight; Kontur dunkler Eigenton (nie Schwarz). */
+export const FERN_LIGHT = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.85);
+export const FERN_MID = mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.6);
+export const FERN_LINE = mixHex(PALETTE.crown, PALETTE.rockDark, 0.35);
+export interface FernTuft {
+  /** Form 0 … FERN_FORMS − 1 */
+  form: number;
+  /** Fusspunkt in Kachel-Anteilen, vordere Hälfte (0,5 … 0,95) */
+  u: number;
+  v: number;
+}
+/** Büschel einer Lichtungskachel: 2–4, deterministisch aus (Seed, Kachel), nach Tiefe (u + v) geordnet. Rein. */
+export function fernTufts(seed: number, x: number, y: number): FernTuft[] {
+  const n = 2 + Math.floor(hash2(seed + FERN_SALT, x, y) * 3);
+  const out: FernTuft[] = [];
+  for (let k = 0; k < n; k++)
+    out.push({
+      form: Math.floor(hash2(seed + FERN_SALT, x * 16 + k + 1, y) * FERN_FORMS) % FERN_FORMS,
+      u: 0.5 + 0.45 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 1000),
+      v: 0.5 + 0.45 * hash2(seed + FERN_SALT, x * 16 + k + 1, y + 2000),
+    });
+  return out.sort((a, b) => a.u + a.v - (b.u + b.v));
+}
+/** Fläche eines Büschel-Canvas in Weltpixeln: Fusspunkt unten in der Mitte. */
+const FERN_BOX = { w: 22, h: 11, cx: 11, cy: 10 };
+/** Zeichnet ein Büschel (Fusspunkt bei (0, 0), Wedel nach oben) in Weltpixeln; Eigenkontur zuerst, dann 2 Töne. */
+export function paintFern(ctx: CanvasRenderingContext2D, seed: number, form: number): void {
+  const n = 5 + (form % 3);
+  const H = FERN_H * (0.9 + 0.1 * (form / (FERN_FORMS - 1)));
+  const fronds: { tx: number; ty: number; qx: number; qy: number; lit: boolean }[] = [];
+  for (let i = 0; i < n; i++) {
+    const a =
+      ((i / (n - 1)) * 2 - 1) * 1.1 + (hash2(seed + FERN_SALT, form * 8 + i, 77) - 0.5) * 0.2; // ± 63°
+    const len =
+      H *
+      (0.72 + 0.28 * Math.cos(a * 0.9)) *
+      (0.92 + 0.08 * hash2(seed + FERN_SALT, form * 8 + i, 78));
+    // Wedel: Bogen, der nach aussen kippt (Fächer), die Spitze liegt tiefer als die Mitte des Bogens
+    const tx = Math.sin(a) * len * 0.95,
+      ty = -Math.cos(a) * len * 0.92;
+    fronds.push({
+      tx,
+      ty,
+      qx: Math.sin(a) * len * 0.35,
+      qy: -Math.cos(a) * len * 0.85,
+      lit: a < 0.15,
+    });
+  }
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const pass = (width: number, color: (f: (typeof fronds)[number]) => string): void => {
+    ctx.lineWidth = width;
+    for (const f of fronds) {
+      ctx.strokeStyle = color(f);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(f.qx, f.qy, f.tx, f.ty);
+      ctx.stroke();
+    }
+  };
+  pass(2.9, () => FERN_LINE);
+  pass(1.6, (f) => (f.lit ? FERN_LIGHT : FERN_MID));
+  ctx.restore();
+}
+const fernCache = new Map<number, HTMLCanvasElement>();
+let fernSeed: number | null = null;
+export const fernCacheSize = (): number => fernCache.size;
+function fernFor(seed: number, form: number, step: number): HTMLCanvasElement | null {
+  if (fernSeed !== seed) {
+    fernCache.clear();
+    fernSeed = seed;
+  }
+  const key = form * ZOOM_STEPS.length + ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number]);
+  const hit = fernCache.get(key);
+  if (hit) return hit;
+  const canvas = makeCanvas();
+  canvas.width = Math.ceil(FERN_BOX.w * step);
+  canvas.height = Math.ceil(FERN_BOX.h * step);
+  const c = canvas.getContext('2d');
+  if (!c) return null;
+  c.save();
+  c.scale(step, step);
+  c.translate(FERN_BOX.cx, FERN_BOX.cy);
+  paintFern(c, seed, form);
+  c.restore();
+  if (fernCache.size < FERN_FORMS * ZOOM_STEPS.length) fernCache.set(key, canvas);
+  return canvas;
+}
+/**
+ * Farnbüschel eines Wald-Objekts: die Büschel der Lichtungskacheln in `item.ferns`, deren Fusspunkt in die
+ * Tiefenband-Zelle des Objekts fällt, mit Fusspunkt relativ zur Objektkachel. Nach Tiefe geordnet. Rein.
+ */
+export function itemFerns(
+  item: TreeItem,
+  seed: number,
+): { form: number; cx: number; cy: number; tile: { x: number; y: number } }[] {
+  const out: { form: number; cx: number; cy: number; tile: { x: number; y: number } }[] = [];
+  for (const t of item.ferns ?? [])
+    for (const f of fernTufts(seed, t.x, t.y)) {
+      const fx = t.x + f.u,
+        fy = t.y + f.v;
+      const c = bandCell(fx, fy);
+      if (c.x !== item.fp.x || c.y !== item.fp.y) continue;
+      out.push({ form: f.form, cx: fx - item.fp.x, cy: fy - item.fp.y, tile: t });
+    }
+  return out.sort((a, b) => a.cx + a.cy - (b.cx + b.cy));
+}
+
 /**
  * Zeichnet ein Wald-Objekt: je Krone ein Atlas-Eintrag der Zoomstufe `zoomStep(z)`, an den Fusspunkt gesetzt und um
  * `z / step · r / r_b` skaliert. Der Riesenbaum (B3, höchstens einer je Karte) wird direkt gemalt, nie aus dem Atlas.
@@ -438,7 +576,7 @@ export function drawTreeStamp(
   item: TreeItem,
   seed: number,
 ): void {
-  void seed; // der Atlas hängt nicht vom Seed ab (Signatur für renderer.ts)
+  // der Kronen-Atlas hängt nicht vom Seed ab; der Seed würfelt nur die Farnbüschel (L6 B2)
   const z = cam.zoom,
     step = zoomStep(z);
   atlasFrame++;
@@ -457,11 +595,17 @@ export function drawTreeStamp(
     d.step !== step ||
     (d.gen !== atlasGen && d.list.some((e) => e.s !== null && !e.s.alive))
   )
-    drawOf.set(item, (d = drawList(item, step)));
+    drawOf.set(item, (d = drawList(item, step, seed)));
   d.gen = atlasGen;
   const o = worldToScreen(cam, project(item.fp.x, item.fp.y));
+  const fern = z >= FERN_MIN_ZOOM - 1e-9;
   for (const e of d.list) {
+    if (e.f) {
+      if (fern) ctx.drawImage(e.f, o.x + e.x * z, o.y + e.y * z, e.w * z, e.h * z);
+      continue;
+    }
     if (e.s === null) {
+      if (!e.c) continue;
       // Riesenbaum: direkt gemalt
       ctx.save();
       ctx.translate(o.x + e.x * z, o.y + e.y * z);
@@ -497,16 +641,42 @@ function viewOf(ctx: CanvasRenderingContext2D): { w: number; h: number } | null 
 /** Zeichenliste eines Objekts je Zoomstufe: Atlas-Eintrag und Zielrechteck in Weltpixeln relativ zur Objektecke. */
 interface DrawEntry {
   s: Sprite | null;
-  c: Crown;
+  /** Farnbüschel (L6 B2): Canvas aus dem Farn-Cache; dann sind `s` und `c` null. */
+  f?: HTMLCanvasElement;
+  c: Crown | null;
   x: number;
   y: number;
   w: number;
   h: number;
 }
 const drawOf = new WeakMap<TreeItem, { step: number; gen: number; list: DrawEntry[] }>();
-function drawList(item: TreeItem, step: number): { step: number; gen: number; list: DrawEntry[] } {
+function drawList(
+  item: TreeItem,
+  step: number,
+  seed: number,
+): { step: number; gen: number; list: DrawEntry[] } {
   const list: DrawEntry[] = [];
+  // Farnbüschel nach Tiefe zwischen die Kronen (beide Listen sind nach cx + cy geordnet)
+  const ferns = itemFerns(item, seed);
+  let fi = 0;
+  const pushFerns = (depth: number): void => {
+    for (; fi < ferns.length && ferns[fi]!.cx + ferns[fi]!.cy <= depth; fi++) {
+      const t = ferns[fi]!;
+      const canvas = fernFor(seed, t.form, step);
+      if (!canvas) continue;
+      list.push({
+        s: null,
+        c: null,
+        f: canvas,
+        x: (t.cx - t.cy) * (ISO_W / 2) - FERN_BOX.cx,
+        y: (t.cx + t.cy) * (ISO_H / 2) - FERN_BOX.cy,
+        w: canvas.width / step,
+        h: canvas.height / step,
+      });
+    }
+  };
   for (const c of item.crowns) {
+    pushFerns(c.cx + c.cy);
     const fx = (c.cx - c.cy) * (ISO_W / 2),
       fy = (c.cx + c.cy) * (ISO_H / 2);
     if (c.giant) {
@@ -526,6 +696,7 @@ function drawList(item: TreeItem, step: number): { step: number; gen: number; li
       h: s.canvas.height * k,
     });
   }
+  pushFerns(Infinity);
   return { step, gen: atlasGen, list };
 }
 
@@ -550,8 +721,23 @@ export function treeBounds(item: TreeItem): Box {
     y0 = Math.min(y0, p.y + q.y0);
     y1 = Math.max(y1, p.y + q.y1);
   }
+  // Farn (L6 B2): die vordere Hälfte jeder Lichtungskachel samt Büschelfläche
+  for (const t of item.ferns ?? [])
+    for (const [u, v] of [
+      [0.5, 0.5],
+      [0.95, 0.5],
+      [0.5, 0.95],
+      [0.95, 0.95],
+    ] as const) {
+      const p = project(t.x + u - item.fp.x, t.y + v - item.fp.y);
+      x0 = Math.min(x0, p.x - FERN_BOX.cx);
+      x1 = Math.max(x1, p.x - FERN_BOX.cx + FERN_BOX.w);
+      y0 = Math.min(y0, p.y - FERN_BOX.cy);
+      y1 = Math.max(y1, p.y - FERN_BOX.cy + FERN_BOX.h);
+    }
   if (!Number.isFinite(x0)) {
-    const c = project(item.fp.x + 0.5, item.fp.y + 0.5);
+    // ohne Krone und Farn: die Kachelmitte (relativ zur Objektecke)
+    const c = project(0.5, 0.5);
     x0 = x1 = c.x;
     y0 = y1 = c.y;
   }

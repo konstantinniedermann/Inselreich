@@ -386,3 +386,14 @@ RENDER-LOOK-01 erst danach.
 - 2026-10-07 · `tests/render/fauna.test.ts` „Eignung über die Seeds 1–20“ · Lief unter starker Rechnerlast einmal 689 s
   statt ≈ 6 s und riss das 5-s-Limit. Einschätzung: niedrig, Kandidat für die Zeitreserve-Prüfung bzw. `ZEITTESTS`.
   Ursprung: L7 Fix-Runde 2.
+
+### 2026-10-06 · Render · Befunde aus ART-STIL-02 L6 (Entdecken)
+
+- **Fundort / Beobachtung:** `src/render/forest.ts` `forestClearing` (Salz 508, Schwelle 0,78 auf Rauschen mit 5 Kacheln
+  Merkmal): über Seeds 1–50 hat eine Insel 0–3 zusammenhängende Lichtungen (Median 1); Katalog B2 verlangt G (2–12 je
+  Insel). L6 zeichnet den Farn auf genau diesen Kacheln. **Einschätzung:** niedrig bis mittel; Schwelle oder
+  Merkmalgrösse in L1 bzw. L8 (Seltenheitsbudget) anpassen, Bild des Waldes erneut abnehmen. **Ursprung:** ART-STIL-02
+  L6, art-rendering-engineer.
+- **Fundort / Beobachtung:** `tests/render/renderer.test.ts` pinnt den Hash der Heimat-Aufrufliste; L4 und L6 ändern
+  ihn beide. Beim Merge von Release B muss der Pin auf dem zusammengeführten Stand neu gesetzt werden.
+  **Einschätzung:** niedrig; Merge-Hinweis für den Integrator. **Ursprung:** ART-STIL-02 L6, lead-art.

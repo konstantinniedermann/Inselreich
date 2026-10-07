@@ -32,7 +32,8 @@ import { SAUM_LEVEL, floorShare, saumAt, woodBlur, woodNoise, type WoodMask } fr
 // Nicht mehr benutzt (WALD-02): 504, 505, 506, 507, 511, 514, 515, 516, 517 (alte Stempelplatzierung).
 //
 // Schnittstellen für L6 (Lichtung, trees.ts): `woodLayout` liefert die Zellen samt Kronen; `forestClearing` ist das
-// Lichtungsfeld (Boden in terrain.ts, Ausdünnung hier); `slotKind` die Art eines Bestands.
+// Lichtungsfeld (Boden in terrain.ts, Ausdünnung hier); `slotKind` die Art eines Bestands. REL-07: `isClearing` ist die
+// Lichtungskachel des L6-Farns (Kern mit Feld ≥ 0,5); die Büschel (Salz 584) würfelt `trees.ts`.
 
 /** Art-Slot: Platz 0 ist die Hauptart des Waldtyps, 1 die Nebenart, 2 der Akzent. */
 export type Slot = 0 | 1 | 2;
@@ -93,6 +94,24 @@ export const forestClearing = (seed: number, fx: number, fy: number): number => 
   const t = clamp((n - 0.78) / 0.1, 0, 1);
   return t * t * (3 - 2 * t);
 };
+
+/** Ab diesem Wert des Lichtungsfelds ist eine Kernkachel Lichtung (L6 B2, Farn). */
+export const CLEARING_MIN = 0.5;
+/**
+ * Lichtungskachel (ART-STIL-02 L6 B2, Farn; REL-07 auf WALD-02 übertragen): freie Waldkachel, deren 8 Nachbarn freier
+ * Wald sind (Kern, nie Rand), mit Lichtungsfeld `forestClearing` ≥ CLEARING_MIN in der Kachelmitte. Liest nur das
+ * bestehende Feld (Salz 508), kein neuer Zufallsstrom. Rein.
+ */
+export function isClearing(
+  seed: number,
+  x: number,
+  y: number,
+  cls: (x: number, y: number) => TileClass,
+): boolean {
+  for (let dy = -1; dy <= 1; dy++)
+    for (let dx = -1; dx <= 1; dx++) if (cls(x + dx, y + dy) !== 'forest') return false;
+  return forestClearing(seed, x + 0.5, y + 0.5) >= CLEARING_MIN;
+}
 
 /** Grössen- und Altersfeld 0…1 des Bestands (B1, Merkmal ≈ 6 Kacheln): 0 junger, 1 alter Bestand. */
 export const standAt = (seed: number, fx: number, fy: number): number =>

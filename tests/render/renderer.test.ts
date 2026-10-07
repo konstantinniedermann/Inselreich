@@ -1168,9 +1168,13 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter.
   // L7-Merge (main mit REL-06 + L5): neu gepinnt, L3-Bildmodus und L5-Meer-Stempel zusammen.
   // REL-07 (int/rel-07, WALD-02 + L7 mit L5): neu gepinnt, WALD-02-Kronenzellen und L5-Meer-Stempel zusammen.
-  const HOME_CALLS = { hash: 3026111215, length: 19015 };
+  // L6 B2: Farnbüschel auf Lichtungen sind zusätzliche drawImage-Ereignisse; die Positionen `at` der folgenden Aufrufe
+  // verschieben sich (ART-STIL-02 L6).
+  // REL-07 (+ L6): Farn auf WALD-02 übertragen, Büschel in der Tiefenfolge der Kronenzellen; HOME_ORDER neu, weil eine
+  // Tiefenband-Zelle ohne Krone (Kachel 25/54) nur für zwei Farnbüschel als Wald-Objekt dazukommt (tree332).
+  const HOME_CALLS = { hash: 802371235, length: 19050 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
-  const HOME_ORDER = { hash: 3152224459, length: 5142 };
+  const HOME_ORDER = { hash: 3471626267, length: 5152 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
   // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };

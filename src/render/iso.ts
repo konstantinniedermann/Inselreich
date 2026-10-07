@@ -5,7 +5,7 @@ import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, BuildingDefId, Category, World } from '../sim/types';
 import { fieldWorld } from './terrainField';
 import { massifPieces, type MassifPiece } from './massif';
-import { woodLayout, type TileClass } from './forest';
+import { isClearing, woodLayout, type TileClass } from './forest';
 import type { Crown } from './crown';
 import { kontorPos, seaContext, stampPlacements, type StampKind } from './decor';
 
@@ -123,6 +123,11 @@ export type SortedItem =
       crowns: readonly Crown[];
       /** Eng-Kachel (Nachbar eines Objekts): alle Kronen in der eigenen Kachel. */
       own: boolean;
+      /**
+       * L6 B2 (REL-07): Lichtungskacheln (`isClearing`), deren Farnbüschel in diese Tiefenband-Zelle fallen können
+       * (eigene Kachel, −x, −y); welche Büschel es sind, entscheidet `trees.ts` über `bandCell`. Fehlt ohne Lichtung.
+       */
+      ferns?: readonly { x: number; y: number }[];
     }
   | { kind: 'massif'; id: number; fp: Footprint; key: number; piece: MassifPiece }
   | { kind: 'decor'; id: number; fp: Footprint; key: number; stamp: StampKind; variant: number }
@@ -198,10 +203,51 @@ export function sortedObjects(world: World, moving: readonly Moving[] = []): rea
       cls,
       building: hasBuilding,
     });
+    // Farn (L6 B2): Büschel einer Lichtungskachel (x, y) liegen in der vorderen Kachelhälfte und damit in den
+    // Tiefenband-Zellen (x, y), (x + 1, y) oder (x, y + 1); jede dieser Zellen kennt die Lichtung
+    const ferns = new Map<number, { x: number; y: number }[]>();
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        if (!isClearing(world.seed, x, y, cls)) continue;
+        for (const [cx, cy] of [
+          [x, y],
+          [x + 1, y],
+          [x, y + 1],
+        ] as const) {
+          const k = cy * W + cx;
+          const l = ferns.get(k);
+          if (l) l.push({ x, y });
+          else ferns.set(k, [{ x, y }]);
+        }
+      }
     wood.cells.forEach((c, i) => {
       const fp = { x: c.x, y: c.y, w: 1, h: 1 };
-      items.push({ kind: 'tree', id: i, fp, key: depthKey(fp), crowns: c.crowns, own: c.own });
+      const f = c.own ? undefined : ferns.get(c.y * W + c.x);
+      items.push({
+        kind: 'tree',
+        id: i,
+        fp,
+        key: depthKey(fp),
+        crowns: c.crowns,
+        own: c.own,
+        ...(f ? { ferns: f } : {}),
+      });
+      if (f) ferns.delete(c.y * W + c.x);
     });
+    // Zellen ohne eigene Krone, in die Büschel fallen können: leeres Wald-Objekt nur für den Farn (selten)
+    let id = wood.cells.length;
+    for (const [k, f] of ferns) {
+      const fp = { x: k % W, y: Math.floor(k / W), w: 1, h: 1 };
+      items.push({
+        kind: 'tree',
+        id: id++,
+        fp,
+        key: depthKey(fp),
+        crowns: [],
+        own: false,
+        ferns: f,
+      });
+    }
     items.sort(cmp);
     c = { key, items };
     fixed.set(world, c);
