@@ -2603,3 +2603,14 @@ Start". Session-Ende-Routine (Metriken, Kurz-Retro) wird dort nachgeholt. — Ko
 der Worktrees.
 
 Entscheider: Nutzer · Anlass: Nutzeranweisung 2026-10-07 · ADR: —
+
+## R307 · 2026-10-07 · L7 Tierleben release-reif für Release B
+
+Ruling: L7 (`feat/art02-l7-fauna` @ 07c16f1) angenommen für den Kandidaten Release B; kein Einzel-Merge. Eigenentscheid
+lead-art (Hase sitzt ≈ 55 % statt ≈ 70 %) bestätigt. Perf +0,2 ms liegt auf der Grenze und wird im Release-Lauf B
+nachgemessen; voller `make check` nach dem Kommentar-Fix 46bd06c entfällt, der Integrator prüft im Kandidaten. Gischt
+am Kliff (braucht L6) und das Zeitlimit des Eignungstests unter Last prüft der Release-Lauf B. Release B wartet nur
+noch auf WALD-02 (Arbeiter läuft). Die CI-Retro-Meldungen auf main sind durch H-T7 erledigt (main grün,
+37645643528). — Kosten bei Irrtum: ein Nachlauf im Release-Kandidaten.
+
+Entscheider: L0 · Anlass: Bericht lead-art L7 · ADR: —
