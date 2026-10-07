@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests messfenster
+.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve messfenster
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -18,8 +18,14 @@ zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) st
 	  test -f "$$f" || { echo "ZEITTESTS-Eintrag ohne Datei (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
-test: ## Tests ausführen (Vitest)
+test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json)
 	npm test
+
+zeitreserve: ## CI-Reserve prüfen (Laufzeit × 4 ≤ 50 % des Timeouts, R270); nach make test
+	node tools/zeitreserve/check.ts
+
+docs-check: ## Prettier-Check über alles inkl. docs/ (schnell, vor Doku-Commits; Teil von lint)
+	npx prettier --check .
 
 lint: ## ESLint + Prettier-Check
 	npm run lint
@@ -54,4 +60,4 @@ pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle
 messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
 	node tools/render-qa/messfenster.mjs $(ARGS)
 
-check: lint zeittests test studio-test build pages-limit ## Gleich wie CI: lint, zeittests, test, studio-test, build, pages-limit
+check: lint zeittests test zeitreserve studio-test build pages-limit ## Gleich wie CI: lint, zeittests, test, zeitreserve, studio-test, build, pages-limit

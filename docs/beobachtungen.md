@@ -361,3 +361,9 @@ RENDER-LOOK-01 erst danach.
   Ursprung: Release-Lauf REL-06.
 - 2026-10-06 · Blindtest L3 · Spielbilder ohne Statusmarken; künftige Blindtests mit Szene inklusive Marken.
   Einschätzung: niedrig, Prüf-Vorlage. Ursprung: Release-Lauf REL-06.
+
+### 2026-10-07 · Tests · Zeitreserve-Altlast (TOOL-CHECK-ZEITTEST)
+
+- 2026-10-07 · `tools/zeitreserve/baseline.json` · 26 Bestandstests verletzen die Zeitreserve-Regel (Timeout ≥ 8× lokale
+  Laufzeit) und stehen als Altlast in der Baseline; abzuarbeiten, wenn die Tests ohnehin angefasst werden.
+  Ursprung: TOOL-CHECK-ZEITTEST.
