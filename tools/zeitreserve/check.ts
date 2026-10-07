@@ -1,7 +1,7 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
 import { existsSync, readFileSync } from 'node:fs';
-import { MIN_DURATION_MS, findViolations, formatViolation } from './rule.ts';
+import { MIN_DURATION_MS, findViolations, formatViolation, testKey } from './rule.ts';
 import type { TestTiming } from './rule.ts';
 
 const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
