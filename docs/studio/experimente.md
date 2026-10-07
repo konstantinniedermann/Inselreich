@@ -235,3 +235,30 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 ## E-026 · übernommen R264 · Integrator-Persona: detached Arbeitsbaum
 
 - Ruling: R264 (als Persona-Korrektur ohne Experiment übernommen, Persona production-integrator 1.7; Belege Retro 9b13950a B4 und [adhoc-e1-c3](retros/2026-10-06-adhoc-e1-c3.md) B5)
+
+## E-031 · vorgeschlagen · Merge-Hygiene ohne union für `docs/beobachtungen.md`
+
+- Hypothese: Wenn `merge=union` für `docs/beobachtungen.md` entfällt und Konflikte am Dateiende manuell gelöst werden, kehren ausgewertete (gestrichene) Zeilen nicht mehr zurück (Retro [adhoc session-7db07561](retros/2026-10-07-adhoc-session-7db07561.md) B2; R294).
+- Messgrösse: 0 zurückgeholte gestrichene Zeilen und 0 Doppelabschnitte in den nächsten 3 Merges, die die Datei berühren (`git diff <merge-base> HEAD`); manuelle Auflösung ≤ 5 min je Fall (Ausgang: ~490 Zeilen, R294).
+- Zeitraum: 3 Merges.
+- Rückfall: Zeile `docs/beobachtungen.md merge=union` in `.gitattributes` wiederherstellen.
+- Dateien: `.gitattributes`, `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merge), `docs/studio/CHANGELOG.md`
+- Ruling: –
+
+## E-032 · vorgeschlagen · Mechanische Zeittest- und Format-Prüfung in `make check`
+
+- Hypothese: Wenn `make check` Tests mit lokaler Laufzeit ≥ 1 s ohne Timeout ≥ 5 × Laufzeit meldet und geänderte Doku-Dateien mit `prettier --check` prüft, bleibt main bei Zeittest- und Formatfehlern grün (Retro adhoc session-7db07561 B1; R267, R271, R290, R302).
+- Messgrösse: 0 rote CI-Läufe auf main durch Zeittest-Timeout oder Prettier in 3 Releases (Ausgang: 3 in 2 Sessions); Nebenmessgrösse Cache-Write je Session.
+- Zeitraum: 3 Releases.
+- Rückfall: Schritt aus `make check` entfernen.
+- Dateien: `Makefile`, `tools/` (Prüfskript), `docs/studio/STUDIO.md`
+- Ruling: –
+
+## E-033 · vorgeschlagen · Blinder Rater vor dem Stapeln von Optik-Layern
+
+- Hypothese: Wenn der blinde Rater (Fragen 1–2, ein Start) direkt nach dem Layer-Merge in den Release-Kandidaten läuft, fallen Bildmängel vor dem Stapeln auf und bleiben isolierbar (Retro adhoc session-7db07561 B4; R298, R300).
+- Messgrösse: 0 Bildfrage-Durchfälle, die erst im Release-Lauf auffallen, in 3 Optik-Releases (Ausgang: 2 Gate-Runden WALD L1); Gegenprobe ≤ 1 zusätzlicher Rater-Start je Layer.
+- Zeitraum: 3 Optik-Releases.
+- Rückfall: Rater nur im Release-Lauf.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
+- Ruling: –
