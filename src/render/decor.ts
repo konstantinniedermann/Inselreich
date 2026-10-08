@@ -31,7 +31,7 @@ import { meadowWarmth } from './groundDecor';
 //  D5 Salze 540–559 (L4) und 560–569 (L5, Meer und Palmen: 560 Palmen, 566 Wrack, 567 Meeresfels und Felsnadel, 568 Felseiland,
 //     569 Wasserflächen Sandbank/Riff/Tang); Zufall nur über `hash2`/`valueNoise`.
 //     Salze 595–597 (L8): Zweitlos der Land-Arten (`planRare`), wenn Land-Orte plus Meer-Lose unter `RARE_MIN` bleiben.
-//     Salze 598–599: reserviert für L8 (noch frei).
+//     Salz 598 (L8): Strandkiefern der Kiefernküste (`planPalms`: Zahl, Rang, Form). Salz 599: reserviert für L8 (noch frei).
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
@@ -128,12 +128,13 @@ export type StampKind =
   | 'palm' // D1 (L5), auf Sand
   | 'wreck' // E1 (L5), im Wasser
   | 'seaRock' // E3 (L5), im Wasser; Varianten 6/7 = Felsnadel
-  | 'islet'; // E8 (L5), im Wasser
+  | 'islet' // E8 (L5), im Wasser
+  | 'shorePine'; // L8 Strandkiefer der Kiefernküste, auf Sand
 export interface StampPlacement {
   kind: StampKind;
   x: number;
   y: number;
-  /** Form-Variante: 0…3 (L4-Stempel); `palm` 0…11 (Form × 4 + Neigungsrichtung), `wreck` 0…3, `seaRock` 0…7, `islet` 0…3. */
+  /** Form-Variante: 0…3 (L4-Stempel); `palm` 0…11 (Form × 4 + Neigungsrichtung), `wreck` 0…3, `seaRock` 0…7, `islet` 0…3, `shorePine` 0…3 (Richtung zur See). */
   variant: number;
   /** `y * Breite + x`. */
   id: number;
@@ -707,7 +708,47 @@ function planPalms(p: StaticPlan, w: number, h: number): void {
       });
     }
   }
+  if (kind === 'pine') planShorePines(p, w, h, used);
   p.palms.sort((a, b) => a.id - b.id);
+}
+
+/** Strandkiefern (L8, Salz 598): Zahl, Rang und Form nur aus Seed und Gelände (D1). */
+export const SHORE_PINE_MIN = 2;
+export const SHORE_PINE_MAX = 5;
+/** Mindestabstand (Chebyshev) der Strandkiefern zueinander in Kacheln. */
+export const SHORE_PINE_GAP = 3;
+const SHORE_PINE_SALT = 598;
+/**
+ * Kiefernküste: 2–5 Strandkiefern auf trockenem Sand (Wasserabstand ≥ 2), ≥ `SHORE_PINE_GAP` Kacheln auseinander, nicht auf
+ * Palmenkacheln. Variante = Richtung zur See (windschief wie die Palmen; die Kronenform folgt der Richtung).
+ */
+function planShorePines(p: StaticPlan, w: number, h: number, used: Set<number>): void {
+  const seed = p.seed;
+  const want =
+    SHORE_PINE_MIN +
+    Math.floor(hash2(seed + SHORE_PINE_SALT, -1, -1) * (SHORE_PINE_MAX - SHORE_PINE_MIN + 1));
+  const cand: { x: number; y: number; r: number }[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (p.cls[i] === 1 && p.coast[i]! >= 2 && !used.has(i))
+        cand.push({ x, y, r: hash2(seed + SHORE_PINE_SALT, x, y) });
+    }
+  cand.sort((a, b) => a.r - b.r);
+  const placed: Pos[] = [];
+  for (const c of cand) {
+    if (placed.length >= want) break;
+    if (placed.some((t) => Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y)) < SHORE_PINE_GAP))
+      continue;
+    placed.push(c);
+    p.palms.push({
+      kind: 'shorePine',
+      x: c.x,
+      y: c.y,
+      variant: seaward(p, w, h, c.x, c.y),
+      id: c.y * w + c.x,
+    });
+  }
 }
 
 /** Boden-G-Elemente mit statischer Kandidatenliste: A7, A11, A12, B7 (Salze 545, 546, 547, 549). */

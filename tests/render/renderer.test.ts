@@ -1319,6 +1319,7 @@ describe('M12 E1 Renderer', () => {
         wreck: 0.25, // L5 E1
         seaRock: 0.25, // L5 E3
         islet: 0.25, // L5 E8
+        shorePine: 0.5, // L8 Strandkiefer
       } as const;
       let plusOne = 0,
         plusTwo = 0;
@@ -1365,8 +1366,16 @@ describe('M12 E1 Renderer', () => {
       expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
       // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu: exakte Listen je Zoom
       const got = (z: number): string[] => [...(kindsDrawn.get(z) ?? [])].sort();
-      expect(got(1)).toEqual(['menhir', 'orchard', 'palm', 'ruin', 'seaRock', 'solitaire']);
-      expect(got(0.6)).toEqual(['orchard', 'palm', 'seaRock', 'solitaire']);
+      expect(got(1)).toEqual([
+        'menhir',
+        'orchard',
+        'palm',
+        'ruin',
+        'seaRock',
+        'shorePine',
+        'solitaire',
+      ]);
+      expect(got(0.6)).toEqual(['orchard', 'palm', 'seaRock', 'shorePine', 'solitaire']);
       expect(got(0.4)).toEqual(['seaRock']);
     },
   );

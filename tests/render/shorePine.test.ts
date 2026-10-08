@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
@@ -75,12 +76,12 @@ describe('ART-L8-SELTEN T3 Kiefernküste', () => {
     expect(after.map(key)).toEqual(before.slice(1).map(key));
   });
 
-  it('AK8c Zeichner: Zoomschwelle 0,5, 8 Varianten, Höhe, save/restore ausgeglichen, keine Signalfarben', () => {
+  it('AK8c Zeichner: Zoomschwelle 0,5, 4 Varianten, Höhe, save/restore ausgeglichen, keine Signalfarben', () => {
     const kind = 'shorePine' as StampPlacement['kind'];
     expect(DECOR_MIN_ZOOM[kind]).toBe(0.5);
-    expect(VARIANT_COUNT[kind]).toBe(8);
-    const signal = new Set(SIGNAL_NAMES.map((n) => PALETTE[n]));
-    for (let v = 0; v < 8; v++) {
+    expect(VARIANT_COUNT[kind]).toBe(4);
+    const signal = new Set<string>(SIGNAL_NAMES.map((n) => PALETTE[n]));
+    for (let v = 0; v < 4; v++) {
       expect(stampHeight(kind, v)).toBeGreaterThan(14);
       const { ctx, log } = fakeCtx();
       paintDecorStamp(ctx, kind, v, 1, 0, 0);
@@ -88,5 +89,13 @@ describe('ART-L8-SELTEN T3 Kiefernküste', () => {
       expect(log.events.length).toBeGreaterThan(5);
       for (const e of log.events) expect(signal.has(e.style), e.style).toBe(false);
     }
+  });
+
+  it('D5 Salz 598 steht im Kopf von decor.ts', () => {
+    const src = readFileSync(
+      new URL('../../src/render/decor.ts', import.meta.url).pathname,
+      'utf8',
+    );
+    expect(src.slice(0, src.indexOf('export const DECOR_REACH'))).toContain('Salz 598');
   });
 });
