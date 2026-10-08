@@ -3413,3 +3413,14 @@ Welt (13–25 ms, 75 % Dijkstra) und `routeDist` brute-force je Feldkachel, `lan
 `zeitreserve` Tests ohne Reserve, wird nicht gemergt. Ist FIX-SEE-F1-ZEIT ≈ 30 von 40.
 
 Entscheider: L0 · Anlass: Bericht FIX-SEE-F1-ZEIT · ADR: —
+
+## R373 · 2026-10-08 · Gate Merge UI-PANEL-AUFRAEUMEN OK
+
+Ruling: **OK** für `refactor/ui-panel` @ 5f29cc3. Trivial-Fix: Overlay-Höhe gemerkt, Neu-Messung nur bei Umbau der
+Bauleiste (`MutationObserver`, auf `hidden` und Kinder eingeschränkt) und `resize`; Playtest 5/5 auf 986ad0f
+(Kartenhöhe 574 px konstant, Kamera rückt nach, Vorschau verschwindet, kein Konsolenfehler); die Einschränkung in
+5f29cc3 nur per Vitest — der Release-Check REL-09 sieht sie im Browser. Kamerarahmen über die Insel hinaus →
+Beobachtung (L0 eingetragen). Ist unter 150. Merge durch den Integrator mit `make check` bei Load ≤ 8 ohne fremden
+Lauf; danach Release-Check REL-09.
+
+Entscheider: L0 · Anlass: Bericht UI-PANEL-AUFRAEUMEN · ADR: —
