@@ -87,7 +87,7 @@ describe('ART-L8-SELTEN T4 Boden-Deko neben Neubau', () => {
     }
   });
 
-  it('AK10b Bandanteile der Boden-Elemente über Seeds 1–40 ändern sich je Art um höchstens 2 pp', () => {
+  it('AK10b Bandanteile der Boden-Elemente über Seeds 1–40 ändern sich je Art um höchstens 0,2 pp (gemessen höchstens 0,056 pp)', () => {
     // Anteile (Elemente je Insel-Kachel) vor T4, gemessen auf dem Stand nach T1/T3
     const BEFORE: Record<string, number> = {
       mushRing: 0.0002,
@@ -128,6 +128,6 @@ describe('ART-L8-SELTEN T4 Boden-Deko neben Neubau', () => {
         cnt[e.kind] = (cnt[e.kind] ?? 0) + 1;
     }
     for (const k of new Set([...Object.keys(BEFORE), ...Object.keys(cnt)]))
-      expect(Math.abs((cnt[k] ?? 0) / tiles - (BEFORE[k] ?? 0)), k).toBeLessThanOrEqual(0.02);
+      expect(Math.abs((cnt[k] ?? 0) / tiles - (BEFORE[k] ?? 0)), k).toBeLessThanOrEqual(0.002);
   });
 });
