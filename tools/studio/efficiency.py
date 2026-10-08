@@ -13,6 +13,7 @@ import re
 import statistics
 from collections import Counter, defaultdict
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 
 NOT_MEASURED = "nicht gemessen"
@@ -76,6 +77,15 @@ PERSONA_LINES = 5
 REWRITE_MIN = 20_000
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico")
 TOP_READS = 5
+REWRITE_PAUSE_S = 300  # Cache-Frist; längere Pause zwischen zwei Aufrufen
+REWRITE_ROWS = 12
+WAIT_TOOLS = {"Bash", "Agent", "Task"}
+PACKAGE = re.compile(r"^\s*Paket:\s*([\w.-]+)", re.MULTILINE)
+FAMILIES = (
+    ("Grafik", ("ART", "WALD", "H-R")),
+    ("Release", ("REL", "INT")),
+    ("Betrieb", ("TOOL", "RETRO")),
+)
 
 
 def role_class(role: str) -> str:
@@ -194,6 +204,22 @@ def _collect_tools(content: list, pending: dict, reads: list) -> None:
                 reads.append({"path": target, "chars": chars})
 
 
+def _entry_time(entry: dict) -> float | None:
+    when = _parse_ts(entry.get("timestamp"))
+    return when.timestamp() if when else None
+
+
+def _tool_names(message: dict) -> set[str]:
+    content = message.get("content")
+    if not isinstance(content, list):
+        return set()
+    return {
+        str(b.get("name"))
+        for b in content
+        if isinstance(b, dict) and b.get("type") == "tool_use"
+    }
+
+
 def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
     mid = message.get("id") or entry.get("uuid")
     if not mid:
@@ -211,8 +237,20 @@ def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
         "output": _int(usage.get("output_tokens")),
     }
     record = calls.setdefault(
-        mid, {"model": message.get("model"), **dict.fromkeys(values, 0)}
+        mid,
+        {
+            "model": message.get("model"),
+            **dict.fromkeys(values, 0),
+            "ts": None,
+            "ts_end": None,
+            "tools": set(),
+        },
     )
+    when = _entry_time(entry)
+    if when is not None:
+        record["ts"] = when if record["ts"] is None else min(record["ts"], when)
+        record["ts_end"] = max(record["ts_end"] or when, when)
+    record["tools"] |= _tool_names(message)
     for key, value in values.items():
         record[key] = max(record[key], value)
     record["model"] = record["model"] or message.get("model")
@@ -224,7 +262,51 @@ def _persona(prompt: str | None) -> str | None:
     return match.group(1) if match else None
 
 
-def _instance(role: str, raw: dict, general_persona: bool) -> dict | None:
+def _package(prompt: str | None) -> str | None:
+    head = "\n".join((prompt or "").splitlines()[:PERSONA_LINES])
+    match = PACKAGE.search(head)
+    return match.group(1) if match else None
+
+
+def package_family(pkg: str | None) -> str:
+    """Paketfamilie aus der Paket-ID (Präfix, Gross-/Kleinschreibung egal)."""
+    name = (pkg or "").upper()
+    if re.match(r"M\d", name):
+        return "Funktion"
+    for family, prefixes in FAMILIES:
+        if name.startswith(prefixes):
+            return family
+    return "Sonstiges"
+
+
+def _rewrite_events(calls: list[dict], family: str) -> list[dict]:
+    """Neuschreibungen (Cache-Write >= REWRITE_MIN) nach einer Pause über 5 min."""
+    events = []
+    for before, call in pairwise(calls):
+        if call["ts"] is None or before["ts_end"] is None:
+            continue
+        gap = call["ts"] - before["ts_end"]
+        written = call["cache_write_5m"] + call["cache_write_1h"]
+        if gap <= REWRITE_PAUSE_S or written < REWRITE_MIN:
+            continue
+        weight = (
+            call["cache_write_5m"] * KIND_WEIGHT["cache_write_5m"]
+            + call["cache_write_1h"] * KIND_WEIGHT["cache_write_1h"]
+        ) * model_factor(call["model"])
+        events.append(
+            {
+                "family": family,
+                "gap_s": gap,
+                "weight": weight,
+                "wait": bool(before["tools"] & WAIT_TOOLS),
+            }
+        )
+    return events
+
+
+def _instance(
+    role: str, raw: dict, general_persona: bool, pkg: str | None = None
+) -> dict | None:
     calls = raw["calls"]
     if not calls:
         return None
@@ -246,6 +328,7 @@ def _instance(role: str, raw: dict, general_persona: bool) -> dict | None:
         "kinds": kinds,
         "cost": sum(kinds.values()),
         "persona_start": general_persona,
+        "rewrite_events": _rewrite_events(calls, package_family(pkg)),
     }
 
 
@@ -300,7 +383,9 @@ def _compute(mains: list[Path]) -> dict | None:
                 continue
             kind = (meta or {}).get("agentType") or "general-purpose"
             persona = _persona(raw["prompt"]) if kind == "general-purpose" else None
-            built = _instance(persona or kind, raw, persona is not None)
+            built = _instance(
+                persona or kind, raw, persona is not None, _package(raw["prompt"])
+            )
             reads += raw["reads"]
             if built:
                 instances.append(built)
@@ -349,6 +434,42 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         ),
         "roles": _roles(instances),
         "top_reads": ranked,
+        "rewrite_stats": _rewrite_stats(instances, total),
+    }
+
+
+def _rewrite_stats(instances: list[dict], total: float) -> dict:
+    by_role: dict[str, list[dict]] = defaultdict(list)
+    by_family: dict[str, list[dict]] = defaultdict(list)
+    for item in instances:
+        for event in item["rewrite_events"]:
+            by_role[item["role"]].append(event)
+            by_family[event["family"]].append(event)
+    weight = sum(e["weight"] for v in by_role.values() for e in v)
+    roles = [
+        {
+            "role": role,
+            "count": len(events),
+            "weight": sum(e["weight"] for e in events),
+            "median_pause_min": statistics.median(e["gap_s"] for e in events) / 60,
+            "bash_share": _ratio(sum(e["wait"] for e in events), len(events)),
+        }
+        for role, events in by_role.items()
+    ]
+    families = [
+        {
+            "family": family,
+            "count": len(events),
+            "weight": sum(e["weight"] for e in events),
+        }
+        for family, events in by_family.items()
+    ]
+    return {
+        "count": sum(len(v) for v in by_role.values()),
+        "weight": weight,
+        "total_cost": total,
+        "by_role": sorted(roles, key=lambda r: (-r["weight"], r["role"])),
+        "by_family": sorted(families, key=lambda f: (-f["weight"], f["family"])),
     }
 
 
@@ -537,6 +658,48 @@ def render_section(data: dict | None) -> str:
         f"- {r['chars'] / KB:.1f} KB: `{r['path']}`" for r in data["top_reads"]
     ] or ["- –"]
     out.append("")
+    return "\n".join(out)
+
+
+def render_rewrites(data: dict | None) -> str:
+    head = "## Neuschreibungen nach Pause > 5 min"
+    stats = (data or {}).get("rewrite_stats")
+    if not stats:
+        return f"{head}\n\n- {NOT_MEASURED}.\n"
+    if not stats["count"]:
+        return f"{head}\n\n- keine Neuschreibung nach Pause > 5 min gefunden.\n"
+    out = [
+        head,
+        "",
+        (
+            f"- Gesamt: {stats['count']} Neuschreibungen (Cache-Write >= {REWRITE_MIN // 1000}k "
+            f"nach Pause > {REWRITE_PAUSE_S // 60} min), Kostengewicht {stats['weight'] / 1000:.0f}k, "
+            f"Anteil am Gesamt-Kostengewicht {_pct(_ratio(stats['weight'], stats['total_cost']))}."
+        ),
+        "",
+        *_table(
+            ["Rolle", "Anzahl", "Kostengewicht", "Median-Pause", "vorher Bash/Agent"],
+            [
+                [
+                    r["role"],
+                    str(r["count"]),
+                    _k(r["weight"]),
+                    f"{r['median_pause_min']:.1f} min",
+                    _pct(r["bash_share"]),
+                ]
+                for r in stats["by_role"][:REWRITE_ROWS]
+            ],
+        ),
+        "",
+        *_table(
+            ["Paketfamilie", "Anzahl", "Kostengewicht"],
+            [
+                [f["family"], str(f["count"]), _k(f["weight"])]
+                for f in stats["by_family"][:REWRITE_ROWS]
+            ],
+        ),
+        "",
+    ]
     return "\n".join(out)
 
 

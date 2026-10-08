@@ -395,6 +395,7 @@ def main(argv: list[str] | None = None) -> int:
         files = latest_transcripts(paths.repo_root(), args.sessions)
         data = efficiency.compute(files)
         print(efficiency.render_section(data))
+        print(efficiency.render_rewrites(data))
         gaps = efficiency.idle_gaps(load_events(paths.studio_home()), args.idle_prefix)
         print(efficiency.render_idle(gaps))
         return 0

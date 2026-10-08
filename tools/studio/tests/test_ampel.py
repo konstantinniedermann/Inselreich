@@ -79,7 +79,9 @@ class AmpelParserTest(unittest.TestCase):
         text = (FIXTURES / "S-2026-10-07-b2a8949d.md").read_text("utf-8")
         parsed = effort.parse_ampel_session("S-2026-10-07-b2a8949d", text)
         self.assertEqual(parsed["id"], "S-2026-10-07-b2a8949d")
-        self.assertEqual(parsed["agents"], 4)  # gemessen, nicht die 24 Aufwand-Ereignisse
+        self.assertEqual(
+            parsed["agents"], 4
+        )  # gemessen, nicht die 24 Aufwand-Ereignisse
         self.assertEqual(parsed["red"], {"umsetzer", "cache_write_5m", "opus"})
         self.assertGreater(parsed["t"], 1_700_000_000)
 
@@ -113,9 +115,7 @@ class AmpelParserTest(unittest.TestCase):
 
 class AmpelWiringTest(unittest.TestCase):
     def test_pending_incidents_includes_ampel(self):
-        found = model.pending_incidents(
-            [], T0, ampel_sessions=[sess(1), sess(2)]
-        )
+        found = model.pending_incidents([], T0, ampel_sessions=[sess(1), sess(2)])
         self.assertEqual(ids(found), ["ampel:cache_write_5m:S-02"])
 
     def test_retro_trigger_acknowledges(self):
@@ -128,18 +128,18 @@ class AmpelWiringTest(unittest.TestCase):
             "report": "retros/x.md",
             "session_id": "s1",
         }
-        found = model.pending_incidents(
-            [retro], T0, ampel_sessions=[sess(1), sess(2)]
-        )
+        found = model.pending_incidents([retro], T0, ampel_sessions=[sess(1), sess(2)])
         self.assertEqual(found, [])
 
     def test_hook_notice_contains_ampel(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict(os.environ, {"STUDIO_HOME": tmp}):
-                incidents = effort.ampel_incidents([sess(1), sess(2)], set())
-                text = hook.incident_notice(
-                    {"hook_event_name": "UserPromptSubmit", "session_id": "s-1"},
-                    incidents,
-                )
+        incidents = effort.ampel_incidents([sess(1), sess(2)], set())
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            mock.patch.dict(os.environ, {"STUDIO_HOME": tmp}),
+        ):
+            text = hook.incident_notice(
+                {"hook_event_name": "UserPromptSubmit", "session_id": "s-1"},
+                incidents,
+            )
         self.assertIn("Ad-hoc-Retro fällig", text)
         self.assertIn("Cache-Write 5 min", text)
