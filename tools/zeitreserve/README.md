@@ -28,6 +28,10 @@ aufgeteilt ist. Neue Verstösse gehören nie hinein.
 
 **Push-Gate (R338):** `make zeitreserve` bleibt bei Load > 4 (1 min) eine Warnung (Exit 0), weil die Last durch parallele Agenten meist darüber liegt. `make zeitreserve-push` (nach `make test`) ist vor dem Session-End-Push Pflicht: bei Load > 4 Exit 2 "nicht belastbar" ohne Ergebnis (warten), sonst harte Prüfung (Exit 1 bei Verstoss). Die Schwelle `LOAD_MAX` steht nur in `rule.ts`. Tests simulieren Last mit `ZEITRESERVE_FAKE_LOAD`.
 
+**Messdatei (R353):** `.studio/zeitreserve.json` ist ein Objekt `{ commit, loadStart, loadEnd, loadMax, timings }` (Commit = `git rev-parse HEAD`, Last = 1-min-Load beim Start und am Ende des Laufs). `make zeitreserve-push` nimmt nur eine Messung mit Commit = aktueller HEAD und `loadMax` ≤ 4 an; sonst Exit 2 „nicht belastbar“ mit Grund (alter Commit, zu hohe Last, altes Array-Format), dann `make test` neu laufen lassen. `make zeitreserve` bleibt locker und zeigt nur einen Hinweis. Tests simulieren den HEAD mit `ZEITRESERVE_FAKE_HEAD`.
+
+**CI-Faktor der Perf-Budgets (R353):** `CI=true` wirkt nur in `tests/helpers/perfBudget.ts`. `make check-ci-perf` führt deshalb nur die Testdateien aus, die `perfBudget` nutzen, mit `CI=true` aus (statt eines zweiten vollen `CI=true make check`); es schreibt kein `zeitreserve.json`.
+
 **Grenzen:** Gemessen wird die Laufzeit im lokalen Lauf (bei parallelem Lauf unter Last eher zu hoch, nie zu
 niedrig); Tests unter 1 s bleiben unbeachtet. Der Schritt prüft nur Tests, die tatsächlich liefen, und liest den Bericht des letzten `npm test`-Laufs (immer erst `make test`, nicht einen alten Bericht auswerten). Einträge der Baseline ohne passenden Test meldet er als Warnung. Warnungen (1–2 s) sind Hinweise: im Zweifel gleich ein Timeout setzen.
 

@@ -328,7 +328,7 @@ Regeln dazu:
   Budget und Wanduhr-Limit es erlauben; sonst Eintrag in `state.md` und Start in der nächsten Session.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
-  (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;
+  (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `make check-ci-perf`;
   Browser nur für Neues); ein Delta in `src/` führt zum vollen Release-Review.
 - **Häppchen auf Etappen-Dateien (R249 (2)):** Berührt ein Häppchen Dateien, die eine laufende Etappe
   exklusiv hält, nennt das Reihenfolge-Ruling den erwarteten Etappen-Merge. Fällt er in dieselbe
