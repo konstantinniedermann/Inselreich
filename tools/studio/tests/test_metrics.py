@@ -230,3 +230,16 @@ def mock_env(**values):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SessionStartTest(unittest.TestCase):
+    def test_ignores_ci_pseudo_session(self):
+        events = [
+            {"ts": "2026-10-05T10:00:00Z", "session_id": "ci"},
+            {"ts": "2026-10-08T10:00:00Z", "session_id": "abc"},
+            {"ts": "2026-10-08T10:05:00Z", "session_id": "abc"},
+            {"ts": "2026-10-08T10:09:00Z", "session_id": "ci"},
+        ]
+        start = metrics._session_start(events)
+        self.assertEqual(start.isoformat(), "2026-10-08T10:00:00+00:00")
+        self.assertIsNone(metrics._session_start([]))

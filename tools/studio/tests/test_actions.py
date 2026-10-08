@@ -62,7 +62,7 @@ class ActionsTest(unittest.TestCase):
 
         for runner in (broken, failing, lambda a: "kein json"):
             text = actions.render(NOW, runner)
-            self.assertEqual(text.count("nicht erfasst"), 2)
+            self.assertEqual(text.count("nicht erfasst"), 3)
             self.assertNotIn("GRÜN", text)
 
     def test_empty_usage_is_zero_not_missing(self):
@@ -78,6 +78,72 @@ class ActionsTest(unittest.TestCase):
 
     def test_empty_login_is_not_recorded(self):
         self.assertIsNone(actions.usage(NOW, fake([], login="")))
+
+
+class SessionMinutesTest(unittest.TestCase):
+    SINCE = datetime(2026, 10, 8, 10, tzinfo=timezone.utc)
+
+    @staticmethod
+    def runner(runs, jobs):
+        def run(args):
+            if args[:2] == ["run", "list"]:
+                return json.dumps(runs)
+            return json.dumps({"jobs": jobs})
+
+        return run
+
+    def test_rounds_each_job_up_and_skips_old_runs(self):
+        runs = [
+            {"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"},
+            {"databaseId": 2, "createdAt": "2026-10-08T09:00:00Z"},
+        ]
+        jobs = [
+            {"startedAt": "2026-10-08T11:00:00Z", "completedAt": "2026-10-08T11:04:01Z"}
+        ]
+        self.assertEqual(
+            actions.session_minutes(self.SINCE, self.runner(runs, jobs)), 5
+        )
+
+    def test_skipped_jobs_not_counted(self):
+        runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
+        jobs = [
+            {
+                "conclusion": "skipped",
+                "startedAt": "2026-10-08T11:00:00Z",
+                "completedAt": "2026-10-08T11:05:00Z",
+            }
+        ]
+        self.assertEqual(
+            actions.session_minutes(self.SINCE, self.runner(runs, jobs)), 0
+        )
+
+    def test_limits_exactly_eight_and_red(self):
+        runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
+
+        def line(minutes):
+            jobs = [
+                {
+                    "startedAt": "2026-10-08T11:00:00Z",
+                    "completedAt": f"2026-10-08T11:{minutes:02d}:00Z",
+                }
+            ]
+            return actions.render_session(self.SINCE, self.runner(runs, jobs))
+
+        self.assertTrue(line(8).startswith("- GRÜN"))
+        self.assertTrue(line(16).startswith("- ROT"))
+
+    def test_light_and_missing(self):
+        def broken(args):
+            raise OSError("kein gh")
+
+        self.assertIn("nicht erfasst", actions.render_session(self.SINCE, broken))
+        self.assertIn("nicht erfasst", actions.render_session(None, broken))
+        runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
+        jobs = [
+            {"startedAt": "2026-10-08T11:00:00Z", "completedAt": "2026-10-08T11:09:00Z"}
+        ]
+        line = actions.render_session(self.SINCE, self.runner(runs, jobs))
+        self.assertTrue(line.startswith("- GELB"), line)
 
 
 if __name__ == "__main__":
