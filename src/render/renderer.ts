@@ -103,7 +103,15 @@ const TREE_CULL = 2;
 import { drawWaves } from './water';
 import { gradeAt, pickWeather } from './weather';
 import { drawFlocks, drawWaterLife, wildlifeAt, type WildlifeEnv } from './wildlife';
-import { drawFaunaAir, drawFireflies, drawGroundFauna, faunaAt, type FaunaHit } from './fauna';
+import {
+  drawFallSparks,
+  drawFaunaAir,
+  drawFireflies,
+  drawGroundFauna,
+  fallGlitter,
+  faunaAt,
+  type FaunaHit,
+} from './fauna';
 import {
   buildingShadow,
   drawAir,
@@ -789,6 +797,11 @@ function drawIsland(
     for (const g of gulls) drawGull(ctx, cam, g);
     if (!lod) drawFlocks(ctx, cam, wild);
     drawFaunaAir(ctx, cam, fauna, world.seed);
+    // Gischt am L6-Wasserfall (nur Heimat; `fallGlitter` lässt Fremdinseln und kleine Zoomstufen leer)
+    if (!lod) {
+      const sparks = fallGlitter(world, wildRange, fx.timeMs, { zoom: cam.zoom, reduce });
+      if (sparks.length > 0) drawFallSparks(ctx, cam, sparks);
+    }
     // Feuer im Luftdurchgang: Flammen immer, Rauch im Rahmen seines Anteils am Budget
     lit.forEach(({ f, rect }, i) => {
       const clip = fireClips[i]!;
