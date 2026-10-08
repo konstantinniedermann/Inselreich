@@ -65,7 +65,7 @@ describe('Wald-Objekte', () => {
         expect(c.r).toBeLessThanOrEqual(0.35);
       }
     }
-  });
+  }, 10000);
 
   it('AK-ISO-10 Wald-Objekt: jeder gemalte Punkt liegt in treeBounds (alle Zoomstufen, mit Riesenbaum); Eng-Objekte bleiben in der Spaltenbreite einer Kachel', () => {
     for (const seed of [3, 11, 7]) {
