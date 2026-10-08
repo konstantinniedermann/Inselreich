@@ -39,7 +39,7 @@ class ActionsTest(unittest.TestCase):
         run = fake([item(100), item(30, repo="x"), item(9, product="copilot")])
         self.assertEqual(actions.usage(NOW, run), (100.0, 130.0))
         self.assertIn(
-            "/users/koschi/settings/billing/usage?year=2026&month=10", run.calls[1][1]
+            "/users/koschi/settings/billing/usage?year=2026&month=10", run.calls[2][1]
         )
 
     def test_lights_green_yellow_red(self):
