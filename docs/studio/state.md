@@ -46,7 +46,8 @@ gebündelt (R282). **Nur Angefangenes abschliessen (R305)**, keine neuen Pakete 
    `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` (B1–B15).
 2. Danach Integrator: `int/rel-07` erneut in `rel/rel-07`; lead-qa prüft nur Ruckeln, Perf, K-Proben blind; Gate, Push.
 3. Rater-Bedenken und Befunde ausserhalb Scope (B1–B15 ohne B4/B5/B7/B8) beim Release in `docs/beobachtungen.md`.
-4. Nicht gestartet (R305): L8 Seltenheit, Folgepakete aus BEOB-AUSW-01 (Board), SEE-F1/F2, H-TRAEGER-TEMPO.
+4. studio-coach setzt E-039 und E-041 als Handbuch-Sätze um (R315); E-040 wartet (R305).
+5. Nicht gestartet (R305): L8 Seltenheit, Folgepakete aus BEOB-AUSW-01 (Board), SEE-F1/F2, H-TRAEGER-TEMPO.
 
 ## Aktuelles Projekt und Phase
 
