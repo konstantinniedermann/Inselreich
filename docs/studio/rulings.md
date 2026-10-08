@@ -2787,3 +2787,14 @@ in den Umfang von TOOL-TIMEOUTS. Nach dessen Merge seriell `make check` ohne par
 `tool-ampel-m1` dann mit. — Kosten bei Irrtum: main bis dahin lokal mit rotem Zeitreserve-Schritt, kein Push.
 
 Entscheider: L0 · Anlass: Bericht production-integrator TOOL-AMPEL-M1 · ADR: —
+
+## R322 · 2026-10-08 · Gate Merge TOOL-TIMEOUTS: OK
+
+Ruling: Review OK angenommen; Baseline der Zeitreserve-Altlasten 29 → 0, alle mit hergeleitetem Timeout. Merge
+`tool/timeouts` @ 4695986 durch production-integrator, danach `make check` ohne parallele Agenten (lastarm, R321).
+Korrektur zum Bericht: `tests/render/massif.test.ts` existiert auf main (seit L2, 72f14fa); bleibt er danach rot,
+bekommt er im selben Muster ein hergeleitetes Timeout (Trivial-Fix, eigener Commit). Lastabhängige Zusatzmeldungen
+(Load 13–35) bleiben Thema der Lastregel aus E-030. Konfliktpunkt mit FIX-REL07: `tests/render/terrain.test.ts`
+(Integrator-Hinweis für REL-07). — Kosten bei Irrtum: längere Testtimeouts, Revert möglich.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-TIMEOUTS · ADR: —
