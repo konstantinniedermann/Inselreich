@@ -1060,8 +1060,38 @@ function landColor(
  * Gewichte (Indikator^TYPE_BLEND_POW), mit denen `paintPixels` die Farben mischt. Für Prüfungen (Waldboden-Hof).
  */
 export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
-  const gx = (fx * TEX) / RASTER,
-    gy = (fy * TEX) / RASTER;
+  return landSharesAtNode(g, (fx * TEX) / RASTER, (fy * TEX) / RASTER);
+}
+
+/**
+ * Abtastposition (Gitterknoten) eines Pixels. Gemeinsame Quelle von `paintPixels` und der Rauten-Metrik
+ * (`tests/render/rauten.test.ts`): `qx/qy` = Pixelmitte in Texturpixeln (Faktor 1), Ergebnis in `out` = [gx, gy].
+ */
+export function sampleNode(g: TerrainGrid, qx: number, qy: number, out: number[]): number[] {
+  void g;
+  out[0] = qx / RASTER;
+  out[1] = qy / RASTER;
+  return out;
+}
+
+/** Dünen-Tonwert (vor der Stufung) am Gitterpunkt (gx, gy) in Knoten, bilinear wie in `duneContrast`. */
+export function duneToneAtNode(g: TerrainGrid, gx: number, gy: number): number {
+  const i = Math.min(Math.max(Math.floor(gx), 0), g.nx - 2),
+    j = Math.min(Math.max(Math.floor(gy), 0), g.ny - 2);
+  const tx = Math.min(Math.max(gx - i, 0), 1),
+    ty = Math.min(Math.max(gy - j, 0), 1);
+  const a = j * g.nx + i,
+    f = g.dune;
+  return (
+    f[a]! * (1 - tx) * (1 - ty) +
+    f[a + 1]! * tx * (1 - ty) +
+    f[a + g.nx]! * (1 - tx) * ty +
+    f[a + g.nx + 1]! * tx * ty
+  );
+}
+
+/** Anteile je Land-Typ am Gitterpunkt (gx, gy) in Knoten; Kern von `landShares` und der Rauten-Metrik. */
+export function landSharesAtNode(g: TerrainGrid, gx: number, gy: number): number[] {
   const i = Math.min(Math.max(Math.floor(gx), 0), g.nx - 2),
     j = Math.min(Math.max(Math.floor(gy), 0), g.ny - 2);
   const tx = Math.min(Math.max(gx - i, 0), 1),
@@ -1176,12 +1206,14 @@ export function paintPixels(
   const tilesW = ((nx - 1) * RASTER) / TEX,
     tilesH = ((ny - 1) * RASTER) / TEX;
   const pxTile = 1 / (scale * TEX);
+  const node = [0, 0];
   for (let py = 0; py < h; py++) {
-    const gy = (py0 + py + 0.5) / scale / RASTER;
-    const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
-    const ty = Math.min(Math.max(gy - j, 0), 1);
     for (let px = 0; px < w; px++) {
-      const gx = (px0 + px + 0.5) / scale / RASTER;
+      sampleNode(g, (px0 + px + 0.5) / scale, (py0 + py + 0.5) / scale, node);
+      const gx = node[0]!,
+        gy = node[1]!;
+      const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+      const ty = Math.min(Math.max(gy - j, 0), 1);
       const i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
       const tx = Math.min(Math.max(gx - i, 0), 1);
       const a = j * nx + i,
