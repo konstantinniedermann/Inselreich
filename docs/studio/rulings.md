@@ -2699,3 +2699,14 @@ weglassen. Hebel 2–4 nacheinander erst nach Messung von 1 (sonst nicht trennba
 unberührt. — Kosten bei Irrtum: ein Rückbau im Handbuch, Messgrösse Cache-Write-5-min-Anteil.
 
 Entscheider: L0 · Anlass: Nutzerfrage, Bericht studio-process-coach PROC-AUFWAND · ADR: —
+
+## R315 · 2026-10-08 · Kurz-Retro 8ef9d27f: E-039 und E-041 angenommen, E-040 wartet
+
+Ruling: (1) E-039 (Perf-Ablage nennt Vergleichsart `aa-`/`ab-<A>-vs-<B>`; L0 meldet nur Zahlen aus dem Lead-Bericht)
+und E-041 (`.studio/qa/<id>/stand.md` mit Fortsetzungspunkt, Messskripte unter `tools/render-qa/`) angenommen als
+Handbuch-Sätze; sie schliessen Ablauffehler (R127) und sind kein neues Paket im Sinn von R305. Umsetzung studio-coach
+in der nächsten Session. (2) E-040 (Bau-Ruckel-Szenario in `perf.mjs`) bleibt `vorgeschlagen` (Werkzeug-Paket, R305);
+FIX-REL07 (R313) legt seine Ruckel-Messung aber als Nachweis unter `tools/render-qa/` ab. — Kosten bei Irrtum: zwei
+Handbuch-Sätze zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 8ef9d27f · ADR: —
