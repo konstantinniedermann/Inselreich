@@ -8,6 +8,7 @@ Fehlt `gh`, das Token oder schlägt der Aufruf fehl, steht „nicht erfasst“ �
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 from datetime import datetime, timezone
 
@@ -16,6 +17,8 @@ NOT_RECORDED = "nicht erfasst"
 REPO_LIMITS = (150, 400)
 ACCOUNT_LIMITS = (1000, 1600)
 ACCOUNT_QUOTA = 2000
+# Session-Minuten (gelb über, rot über)
+SESSION_LIMITS = (8, 15)
 
 
 def run_gh(args: list[str]) -> str:
@@ -64,7 +67,51 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
         return None
 
 
-def render(now: datetime | None = None, runner=None) -> str:
+def _ts(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def session_minutes(
+    since: datetime, now: datetime | None = None, runner=None
+) -> int | None:
+    """Actions-Minuten der Workflow-Läufe seit `since`; je Job auf volle Minuten aufgerundet.
+
+    None, wenn `gh` fehlt oder ein Aufruf scheitert.
+    """
+    run = runner or run_gh
+    try:
+        raw = run(["run", "list", "--limit", "100", "--json", "databaseId,createdAt"])
+        total = 0
+        for item in json.loads(raw):
+            if _ts(item["createdAt"]) < since:
+                continue
+            jobs = json.loads(
+                run(["run", "view", str(item["databaseId"]), "--json", "jobs"])
+            )["jobs"]
+            for job in jobs:
+                if not job.get("completedAt") or not job.get("startedAt"):
+                    continue
+                seconds = (
+                    _ts(job["completedAt"]) - _ts(job["startedAt"])
+                ).total_seconds()
+                total += max(1, math.ceil(seconds / 60))
+        return total
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
+        return None
+
+
+def render_session(since: datetime | None, now=None, runner=None) -> str:
+    rule = f"(gelb > {SESSION_LIMITS[0]}, rot > {SESSION_LIMITS[1]})"
+    minutes = session_minutes(since, now, runner) if since else None
+    if minutes is None:
+        return f"- {NOT_RECORDED}: Session-Minuten"
+    return f"- {_light(minutes, SESSION_LIMITS)}: Session-Minuten: {minutes} {rule}"
+
+
+def render(
+    now: datetime | None = None, runner=None, since: datetime | None = None
+) -> str:
+    session = render_session(since, now, runner)
     data = usage(now, runner)
     head = ["## Actions-Minuten (Monat)", ""]
     if data is None:
@@ -73,6 +120,7 @@ def render(now: datetime | None = None, runner=None) -> str:
                 *head,
                 f"- {NOT_RECORDED}: Inselreich-Minuten",
                 f"- {NOT_RECORDED}: Konto-Minuten",
+                session,
                 "",
             ]
         )
@@ -86,4 +134,4 @@ def render(now: datetime | None = None, runner=None) -> str:
         f"- {_light(account, ACCOUNT_LIMITS)}: Konto-Minuten: "
         f"{account:.0f} von {ACCOUNT_QUOTA} {account_rule}"
     )
-    return "\n".join([*head, repo_line, account_line, ""])
+    return "\n".join([*head, repo_line, account_line, session, ""])

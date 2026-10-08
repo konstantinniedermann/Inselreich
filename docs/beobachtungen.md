@@ -366,3 +366,12 @@ Fundort: Session-End-Push REL-08 (R348). Beobachtung: `make zeitreserve-push` mi
 bewertet das Gate im Hauptcheckout die alte Datei (falsches Exit 1 trotz Fix). Ausserdem prüft es die Last beim
 Aufruf, nicht während der Testläufe. Ursprung: L0-Diagnose. Einschätzung: mittel; im Werkzeug-Paket E-046/E-047
 mitnehmen: Datei mit Commit-Hash und Last während des Laufs stempeln, das Gate verweigert eine fremde oder alte Datei.
+
+### 2026-10-08 · CI-Laufzeit `make check`: 276 s statt ~81 s, fast alles im Vitest-Schritt
+
+Fundort: CI-Läufe 37799673425 (8.10., Check 4 min 36 s) gegen 37358278682 (5.10., ~81 s Wandzeit im Check-Schritt, Job 97 s).
+Beobachtung: Zerlegung aus den Logzeilen. lint 19 s → 30 s; Vitest 62 s (125 Dateien) → 225 s (176 Dateien, 3,6-fach bei
+1,4-fach mehr Dateien); Rest nach Vitest (zeitreserve, studio-test 11,5 s → 12 s, build, pages-limit) 16 s → 21 s.
+Wachstum 195 s insgesamt, davon rund 163 s allein Vitest. Ursprung: Messauftrag TOOL-E046-SESSION (R356).
+Einschätzung: Der Vitest-Schritt ist die einzige relevante Stelle; die pro Datei langsamsten Tests (Vitest-Reporter mit
+`--reporter=verbose` auf dem Runner) und die ZEITTESTS-Liste prüfen, bevor die Laufzeit Actions-Minuten frisst.
