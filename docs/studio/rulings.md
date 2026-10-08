@@ -3293,3 +3293,14 @@ Ziel ≤ 500 ms je Test lokal, weil die CI-Laufzeit schon ×3,6 gewachsen ist (R
 (c) SEE-F1-FAHRLINIE: Signal für T3, Branch zuerst mit main mergen.
 
 Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
+
+## R364 · 2026-10-08 · Gate Merge FIX-RAUTEN-ZEIT OK, danach TOOL-ZEITRESERVE-META
+
+Ruling: **OK** für `fix/rauten-zeit` @ cb6224b (nur `tests/render/rauten.test.ts`; Aufbau je Seed und Kantenart in
+`beforeAll`, Schwellen und Messlogik unverändert; Summe der Datei ≈ 6 s → ≈ 2,4 s lokal, also echte CI-Ersparnis, nicht
+nur Verlagerung; Review OK; `npm test` 2578 grün). Hinweis aus dem Lauf bei Load 7,5 (nicht belastbar):
+`tests/render/trees-licht.test.ts` „H-R10 Kronen in 3 Tönen > c)“ geschätzt 2778 ms Runner gegen 2500 ms — wird am
+Push-Gate bei ruhiger Last geprüft; schlägt es dort an, Trivial-Fix wie R347 nach frischer Messung (R353 P4). Merge
+seriell: zuerst FIX-RAUTEN-ZEIT, dann TOOL-ZEITRESERVE-META (R362), je mit `make check` am Merge-Stand.
+
+Entscheider: L0 · Anlass: Bericht FIX-RAUTEN-ZEIT · ADR: —
