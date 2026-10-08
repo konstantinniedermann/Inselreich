@@ -3072,3 +3072,12 @@ Steuerungsanteil getrennt ausweisen; lead-art nennt im nächsten Perf-Paket die 
 in der nächsten Retro den ersten CI-Lauf nach `zeitreserve-push` bewerten. — Kosten bei Irrtum: rund 55 Tools.
 
 Entscheider: L0 · Anlass: Session-Retro · ADR: —
+
+## R345 · 2026-10-08 · Release-Check REL-08 BEDENKEN: Fix-Runde Menü vor dem Push
+
+Ruling: Release-Smoke auf main @ 176f169 hat alle Schritte bestanden (Laden, Panel, Pipette, `Umschalt+U`, Leertaste,
+Wald, Save v9, Konsole sauber). Hoch: Bei 1280×720 öffnet das Menü unten gescrollt, Speichern und Laden sind
+unsichtbar (Zielplattform ab 1280 px, R78). Deshalb Fix-Runde **FIX-REL08-MENU** (lead-tech, ≤ 40 Tools) in derselben
+Session (Handbuch 1.30); REL-08 geht erst danach live. Niedrige Befunde als Beobachtung.
+
+Entscheider: L0 · Anlass: Release-Check REL-08 · ADR: —

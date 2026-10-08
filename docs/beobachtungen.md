@@ -351,3 +351,10 @@ Ursprung: qa-playtester. Einschätzung: niedrig.
 - 2026-10-08 · `src/render/fauna.ts` Fuchs (`alive`, PERF-L57 Review) · der Sichtbarkeitsfilter prüft nur die Ankerkachel, nicht den Laufweg; der Fuchs kann über später gebaute Wege laufen. Ursprung: qa-code-reviewer. Erste Einschätzung: niedrig; mit dem nächsten Eingriff in `fauna.ts`.
 - 2026-10-08 · `tools/render-qa/` (PERF-L57) · die Trace- und Zählskripte (`trace.mjs` DoUpdateLayers je Frame, `calls.mjs` Zeichenaufrufe je Frame, `incl.mjs` inklusive JS-Zeit je Funktion) liegen nur im Session-Scratchpad. Ursprung: PERF-L57. Erste Einschätzung: mittel für künftige Perf-Pakete; nach `tools/render-qa/` übernehmen (Paket-Kandidat, Teil von TOOL-RENDERQA-NACHZUG).
 - 2026-10-08 · `src/ui/app.ts:1051` (PERF-L57 Re-Review) · die Geräte-DPR wird nur über den `ResizeObserver` nachgestellt; eine reine DPR-Änderung (Fenster auf anderen Monitor) löst ihn nicht aus. Betrifft das ganze Bild, nicht den Bodencache. Ursprung: qa-code-reviewer. Erste Einschätzung: niedrig; bei Arbeit an `app.ts`.
+
+### 2026-10-08 · Release-Check REL-08: kleine Befunde
+
+Fundort: Release-Smoke REL-08 (lead-qa). Beobachtung: Konsolen-Warnung `willReadFrequently` aus
+`src/render/terrain.ts`; `favicon.ico` liefert 404; die Bauleiste wächst bei Werkzeugwahl um eine Zeile, die Karte
+schrumpft um rund 36 px; Einwohner sinken bei Häusern ohne Weg (vermutlich Absicht der Sim). Ursprung: qa-playtester.
+Einschätzung: niedrig; die Bauleisten-Höhe bei der nächsten UI-Arbeit ansehen.
