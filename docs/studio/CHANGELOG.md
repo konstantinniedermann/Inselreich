@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.30
+
+- Anlass: Prozess-Retro REL-07 (Vorschläge angenommen)
+- Datenbasis: `docs/studio/retros/2026-10-08-prozess-rel07.md`
+- Ruling: R330
+- Änderungen: Release-Läufe mit Wanduhr-Limit und `stand.md` alle 30 min (2); Fix-Runde nach ZURÜCK in derselben Session (4); Konflikt-Probe mit `git merge-tree` vor dem Integrator-Start (5); E-039 und E-041 waren bereits im Handbuch (nur bestätigt)
+
 ## 2026-10-08 · Handbuch 1.29
 
 - Anlass: Retro Session 191cc1e4 (Vorschläge angenommen)
