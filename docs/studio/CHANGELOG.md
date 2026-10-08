@@ -22,6 +22,69 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.25
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Abschnitt Kommunikation um zwei Regeln ergänzt (lange Bash-Läufe im Hintergrund, nur Bash, Agent-Starts bleiben Vordergrund; Ein-Umsetzer-Pakete: Lead auf sonnet oder direkt durch L0); E-037 angenommen, wartet auf freien Platz
+
+## 2026-10-08 · Persona lead-art 1.5
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) und „Ein Umsetzer“ ergänzt
+
+## 2026-10-08 · Persona lead-design 1.7
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) und „Ein Umsetzer“ ergänzt
+
+## 2026-10-08 · Persona lead-production 1.7
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) ergänzt
+
+## 2026-10-08 · Persona lead-qa 1.7
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) ergänzt
+
+## 2026-10-08 · Persona lead-tech 1.9
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) und „Ein Umsetzer“ ergänzt
+
+## 2026-10-08 · Persona art-rendering-engineer 1.1
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) ergänzt
+
+## 2026-10-08 · Persona tech-sim-engineer 1.4
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) ergänzt
+
+## 2026-10-08 · Persona tech-ui-engineer 1.6
+
+- Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND
+- Datenbasis: `docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (B4: Cache-Write 5 min 33,7 %)
+- Ruling: R314
+- Änderungen: Regel „Lange Bash-Läufe“ (E-037) ergänzt
+
 ## 2026-10-07 · Handbuch 1.24
 
 - Anlass: Kurz-Retro Session 7db07561 B1 (Agenten liefen nach dem Abbruch weiter)

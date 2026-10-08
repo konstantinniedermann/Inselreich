@@ -2687,3 +2687,15 @@ Danach nur Nachprüfung der geänderten Punkte (Ruckeln, Perf, K-Proben), kein v
 eine weitere Fix-Runde.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-07, Handoff `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` · ADR: —
+
+## R314 · 2026-10-08 · Aufwandsverteilung: Hebel 1 und 5 als Experiment
+
+Ruling: Nutzerfrage „was braucht am meisten Zeit, liesse sich das verschnellern?" beantwortet mit
+`docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (Grafik 36 % Zeit / 41–55 % Token; Treiber Anläufe +
+Nacharbeit; 5-min-Cache-Fristablauf ≈ 22 % Token). Angenommen als Experiment (Nummer vergibt studio-coach):
+**Hebel 1** lange Bash-Läufe von Umsetzern und Leads im Hintergrund, Abfrage spätestens alle 4 min (ersetzt nicht
+ADR-007: Arbeiter-Starts bleiben Vordergrund); **Hebel 5** Leads bei Ein-Umsetzer-Paketen auf sonnet bzw. Lead-Schicht
+weglassen. Hebel 2–4 nacheinander erst nach Messung von 1 (sonst nicht trennbar). Laufende Fix-Runde FIX-REL07 bleibt
+unberührt. — Kosten bei Irrtum: ein Rückbau im Handbuch, Messgrösse Cache-Write-5-min-Anteil.
+
+Entscheider: L0 · Anlass: Nutzerfrage, Bericht studio-process-coach PROC-AUFWAND · ADR: —

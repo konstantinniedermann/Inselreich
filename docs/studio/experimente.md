@@ -291,3 +291,61 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Zusatz in `metrics.py` entfernen; rein lesend, keine Änderung am Ablauf.
 - Dateien: `tools/studio/metrics.py`
 - Ruling: –
+
+## E-037 · vorgeschlagen (angenommen R314, wartet auf Platz) · Lange Bash-Läufe im Hintergrund, Ein-Umsetzer-Pakete ohne opus-Lead
+
+- Hypothese: Wenn Leads und Umsetzer Bash-Läufe > 4 min im Hintergrund starten und alle ≤ 4 min abfragen (Hebel 1) und Leads bei Ein-Umsetzer-Paketen auf `sonnet` laufen oder entfallen (Hebel 5), sinkt der Cache-Write-5-min-Anteil, weil weniger Neuschreibungen auf Pausen > 5 min folgen (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md) B4, Vorschlag 1 und 5; Hebel 2–4 erst nach der Messung).
+- Messgrösse: (a) Ampel „Cache-Write 5 min“ (`metrics.py --efficiency`) < 15 % (Ausgang 33,7 %); (b) Neuschreibungen nach Pause > 5 min je Umsetzer-Instanz < 20 (Ausgang 115 in 33 Instanzen); (c) Anteil Leads < 20 % (Ausgang 26,9 %), Steuerung < 40 %. Gegenprobe: Laufzeit je Paket nicht länger als im Ausgang, Fehlstarts und Briefing-Rückfragen nicht häufiger.
+- Zeitraum: die nächsten 3 Sessions mit Umsetzer-Paketen, höchstens 4 Wochen. Die Hebel gelten gemeinsam; Zuordnung der Wirkung über (b) für Hebel 1 und (c) für Hebel 5.
+- Rückfall: Handbuch 1.24 und die Personas vor Version 1.25 (`git show <Commit>~1:docs/studio/STUDIO.md`, gleiche Abschnitte in `.claude/agents/lead-*.md`, `art-rendering-engineer.md`, `tech-*-engineer.md`); Regel streichen, wenn (a) nicht fällt oder das Abfragen die Laufzeit verlängert.
+- Dateien: `docs/studio/STUDIO.md` (Kommunikation), `.claude/agents/lead-*.md`, `.claude/agents/art-rendering-engineer.md`, `.claude/agents/tech-sim-engineer.md`, `.claude/agents/tech-ui-engineer.md`
+- Ruling: R314
+- Start: Handbuch 1.25 (Regel gilt seit 2026-10-08); Zählung `laufend` erst bei freiem Platz (3 laufen: E-022, E-027, E-030). Laufende Fix-Runde FIX-REL07 bleibt unberührt.
+- Bewertung: –
+
+## E-037 · vorgeschlagen (angenommen R314, wartet auf Platz) · Lange Bash-Läufe im Hintergrund (Hebel 1)
+
+- Hypothese: Wenn Umsetzer und Leads lange Bash-Läufe im Hintergrund starten und spätestens alle 4 min abfragen, läuft die 5-min-Cache-Frist seltener ab und der Cache-Write-5-min-Anteil sinkt (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). ADR-007 bleibt: Arbeiter-Starts bleiben im Vordergrund.
+- Messgrösse: Cache-Write-5-min-Anteil laut Session-Datei (`metrics.py`, Abschnitt „Effizienz“), Ausgang 29,2 % (Historie) bzw. 21,7 % (8ef9d27f); Schwelle ≤ 20 % im Mittel über 3 Sessions mit Umsetzern, ohne Anstieg der Review-Runden.
+- Zeitraum: 3 Sessions, höchstens 4 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`, `.claude/agents/tech-*.md` (nur nach Ruling)
+- Ruling: R314
+- Start: Zählung `laufend` erst bei freiem Platz (3 laufen)
+
+## E-038 · vorgeschlagen (angenommen R314, wartet auf Platz) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
+
+- Hypothese: Wenn Leads bei Ein-Umsetzer-Paketen auf sonnet laufen oder die Lead-Schicht entfällt, sinken opus- und Steuerungsanteil ohne mehr Nacharbeit (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). Hebel 2–4 erst nach Messung von E-037.
+- Messgrösse: Steuerungsanteil (Ausgang 49,8 % Historie) ≤ 40 % und opus-Anteil (74,1 %) ≤ 60 % über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 2 und Erstabnahme-Quote nicht schlechter.
+- Zeitraum: 3 Sessions mit Ein-Umsetzer-Paketen.
+- Rückfall: Handbuch und Lead-Personas auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`
+- Ruling: R314
+- Start: erst nach Messung von E-037 (getrennte Wirkung), `laufend` bei freiem Platz
+
+## E-039 · vorgeschlagen · Vergleichsart im Perf-Artefakt
+
+- Hypothese: Wenn jede Perf-Ablage im Dateinamen die Vergleichsart und im Kopf die beiden Stände (`aa-` bzw. `ab-<A>-vs-<B>`, Commit-Hashes) nennt und L0 nur Zahlen aus dem Lead-Bericht meldet, wird kein A/A-Lauf mehr als A/B gelesen (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B1).
+- Messgrösse: 0 Fehlzitate von Perf-Werten in Rulings und Nutzermeldungen in den nächsten 3 Release-Läufen (Stichprobe: Ruling-Zahl gegen Gate-Bericht; Ausgang 1 Fall in 1 Lauf). Gegenprobe: Perf-Auswertung bleibt mit denselben Dateien möglich.
+- Zeitraum: die nächsten 3 Release-Läufe.
+- Rückfall: Satz im Handbuch streichen; Namensschema ist rein lesend.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`; Kopfzeile in `tools/render-qa/perf.mjs` nur als späteres Werkzeug-Paket
+- Ruling: –
+
+## E-040 · vorgeschlagen · Bau-Ruckel-Szenario im Perf-Werkzeug
+
+- Hypothese: Wenn `perf.mjs` ein Szenario „n Gebäude im laufenden Spiel bauen“ misst und je Bau die Frames > 25 ms zählt, fällt ein Bau-Ruckeln im Häppchen statt im Release-Lauf auf (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B2; R313 (a)).
+- Messgrösse: Ruckel-Frames je Bau, Schwelle: Kandidat ≤ main + 1 (Ausgang main 0, REL-07 4–6); in den nächsten 3 Optik-Releases 0 Ruckel-Befunde, die erst der Release-Lauf findet. Gegenprobe: `renderMedian`-Messung unverändert (neues Szenario ergänzt, ersetzt nichts).
+- Zeitraum: die nächsten 3 Optik-Releases; Umsetzung als Werkzeug-Paket nach R305, Kosten rund ein Häppchen.
+- Rückfall: Szenario aus `perf.mjs` entfernen (`git revert`).
+- Dateien: `tools/render-qa/perf.mjs`, `docs/studio/STUDIO.md` (Abnahmekriterien Optik-Häppchen)
+- Ruling: –
+
+## E-041 · vorgeschlagen · Fortsetzungspunkt und Messskripte im Repo
+
+- Hypothese: Wenn lange QA-Läufe nach jedem Teil eine Datei `.studio/qa/<id>/stand.md` (erledigt, offen, Fortsetzungspunkt) fortschreiben und Messskripte unter `tools/render-qa/` statt im Scratchpad liegen, übernimmt eine Folgeinstanz ohne Rekonstruktion (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B3; ergänzt E-034 um die Lead-Seite).
+- Messgrösse: bei den nächsten 3 Abbrüchen oder Zeitüberschreitungen eines QA-Laufs: 0 wiederholte Teilläufe und 0 Skripte nur im Scratchpad (Ausgang: 1 Abbruch, Seed 14 und Ruckel-Skript betroffen).
+- Zeitraum: die nächsten 3 Abbrüche, höchstens 6 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
+- Ruling: –

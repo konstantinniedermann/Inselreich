@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.24 · Stand: 2026-10-07 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.25 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -46,6 +46,12 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
   Hintergrund starten (ADR-007).
+- **Lange Bash-Läufe (E-037):** Leads und Umsetzer starten Bash-Läufe, die voraussichtlich > 4 min dauern
+  (Tests, Browser, Perf-Messung), mit `run_in_background: true` und fragen sie spätestens alle 4 min ab
+  (Cache-Frist 5 min). Das betrifft nur das Bash-Werkzeug. Arbeiter-Starts über das Agent-Werkzeug bleiben
+  im Vordergrund (Vordergrund-Regel oben, ADR-007).
+- **Ein-Umsetzer-Pakete (E-037):** Hat ein Paket genau einen Umsetzer, läuft der Lead auf `sonnet`, oder L0
+  briefet den Umsetzer direkt ohne Lead. L0 entscheidet das im Briefing (Kopfzeile `Modell:`).
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
   [templates/uebergabe.md](templates/uebergabe.md) unter
   `<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md` (gitignored, Arbeitsstand; nicht im
