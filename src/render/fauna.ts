@@ -1587,10 +1587,10 @@ function drawSeal(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   // V-Schwanzflossen, bei state 2 angehoben
   tri(ctx, P(X0 + 0.6, -3.4), P(X0 - 3.4, -5.6 - 4 * tail), P(X0 - 1.2, -2.8));
   tri(ctx, P(X0 + 0.6, -3.4), P(X0 - 3.4, -1.2 - 2 * tail), P(X0 - 1.2, -3.8));
-  ctx.fillStyle = SEAL_COLOR;
-  ctx.fill();
-  ctx.beginPath();
   outline();
+  // Kopf: gleicher Ton wie Flossen und Rücken, eine Füllung (der Bauch liegt nicht unter dem Kopf)
+  ctx.moveTo(hc.x + 2.8 * s, hc.y);
+  ctx.ellipse(hc.x, hc.y, 2.8 * s, 2.2 * s, -0.3 * f, 0, TAU);
   ctx.fillStyle = SEAL_COLOR; // Rücken dunkler
   ctx.fill();
   ctx.beginPath(); // Bauch heller
@@ -1614,11 +1614,6 @@ function drawSeal(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   ctx.strokeStyle = SEAL_COLOR;
   ctx.lineWidth = 3.6 * s;
   ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(hc.x + 2.8 * s, hc.y);
-  ctx.ellipse(hc.x, hc.y, 2.8 * s, 2.2 * s, -0.3 * f, 0, TAU);
-  ctx.fillStyle = SEAL_COLOR;
-  ctx.fill();
   ctx.beginPath();
   blob(ctx, hc.x + f * 2.2 * s, hc.y + 0.5 * s, 0.7 * s, 0.6 * s);
   ctx.fillStyle = toInk(SEAL_COLOR, 0.7);
@@ -1826,11 +1821,9 @@ function drawHare(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   E(rear.x, rear.y, rear.rx, rear.ry);
   if (!hop) E(f * 1.6, -6.2, 2.4, 3.1); // Brust, schräg vorn über der Keule
   E(head.x, head.y + nib / s, 1.9, 1.7);
-  ctx.fillStyle = HARE_COLOR;
-  ctx.fill();
-  // Ohren: zwei gefüllte schmale Ellipsen, steil nach oben und leicht nach hinten; beim Sprung angelegt
+  // Ohren: zwei gefüllte schmale Ellipsen, steil nach oben und leicht nach hinten; beim Sprung angelegt (gleicher Ton:
+  // im Pfad des Körpers, eine Füllung)
   const hy = head.y + nib / s;
-  ctx.beginPath();
   if (hop) {
     E(head.x - f * 2.6, hy - 0.6, 2.8, 0.7, f * 0.12);
     E(head.x - f * 2.2, hy + 0.4, 2.5, 0.65, f * 0.2);
@@ -1838,6 +1831,7 @@ function drawHare(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
     E(head.x - f * 0.9, hy - 3.1, 0.7, 2.2, -f * 0.25);
     E(head.x - f * 0.1, hy - 3.3, 0.7, 2.2, -f * 0.12);
   }
+  ctx.fillStyle = HARE_COLOR;
   ctx.fill();
   // Unterseite: untere Hälfte der Keule dunkler; beim Sprung die Hinterläufe als kurzer Strich nach hinten
   ctx.beginPath();
@@ -1914,16 +1908,13 @@ function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   ctx.lineTo(hd.x - np.x * 1.3 * s, hd.y - np.y * 1.3 * s);
   ctx.lineTo(hd.x + np.x * 1.3 * s, hd.y + np.y * 1.3 * s);
   ctx.closePath();
-  ctx.fillStyle = DEER_COLOR;
-  ctx.fill();
   // Rumpf: längliches Oval 2 : 1 mit Brust und Keule, Bauch heller
   const trunk = (): void => {
     blob(ctx, c.x, c.y - 13.6 * s, 8.8 * s, 4.4 * s);
     blob(ctx, c.x + f * 5.6 * s, c.y - 14 * s, 3.6 * s, 4.4 * s);
     blob(ctx, c.x - f * 5.8 * s, c.y - 13.4 * s, 3.8 * s, 4.5 * s);
   };
-  ctx.beginPath();
-  trunk();
+  trunk(); // im Pfad des Halses: gleicher Ton, eine Füllung
   ctx.fillStyle = DEER_COLOR;
   ctx.fill();
   ctx.beginPath();
