@@ -8,7 +8,7 @@ import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { phaseAt, type Phase, type WeatherKind } from './daynight';
-import { dolphinOk, dolphinSites, faunaLot } from './fauna';
+import { dolphinOk, dolphinSites, faunaLot, routeFar } from './fauna';
 import { ISO_H, ISO_W, project } from './iso';
 import { coastFor } from './life';
 import { cap } from './limits';
@@ -94,6 +94,8 @@ export const WHALE_VISIBLE_MS = 12000;
 const WHALE_SHARE = 0.35;
 const WHALE_DRIFT = 0.15 / 1000; // Kacheln/ms
 const WHALE_SHIP_GAP = 3; // Kacheln
+/** Freier Streifen um die Wasserroute (AK11, Kacheln); der Wal startet um die Driftweite weiter weg, die Bahn bleibt so ausserhalb. */
+export const WHALE_ROUTE_GAP = 3;
 const JUMP_MS = 600;
 const SPLASH_MS = 500;
 const JUMP_HEIGHT = 0.35 * ISO_H;
@@ -276,7 +278,10 @@ function candidatesOf(world: World): number[] {
   if (!c) {
     const f = coastFor(world);
     c = [];
-    for (let i = 0; i < f.v.length; i++) if (f.v[i]! <= -5) c.push(i);
+    const gap = WHALE_ROUTE_GAP + WHALE_DRIFT * WHALE_VISIBLE_MS;
+    for (let i = 0; i < f.v.length; i++)
+      if (f.v[i]! <= -5 && routeFar(world, (i % f.w) + 0.5, Math.floor(i / f.w) + 0.5, gap))
+        c.push(i);
     whaleCandidates.set(world, c);
   }
   return c;

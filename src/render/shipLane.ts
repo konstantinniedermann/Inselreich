@@ -1,6 +1,7 @@
 // shipLane.ts — Handelsschiffe auf der Fahrlinie (M12 E4, T11): Pose, Tiefe, Mindestgrösse, Treffer.
 // Rein und nur lesend: schreibt nie in `world.ships` (render schreibt nie in die Welt).
-import { laneTicks, seaLanes, type Pt } from '../sim/islands';
+import { laneTicks, type Pt } from '../sim/islands';
+import { seaRoute } from '../sim/seaRoute';
 import type { Island, Ship, World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
 import { project } from './iso';
@@ -16,14 +17,35 @@ export interface ShipPose {
 /** Ziel-Mindestbreite der GEZEICHNETEN Silhouette (Rumpf + Segel) in CSS-Pixeln; Spec-Grenze 12 (D-144 Regel 3), Reserve für Neigung. */
 export const MIN_SHIP_CSS_PX = 16;
 
-/** Lane-Punkte von `from` nach `to`; für `from > to` umgedreht. Ohne Lane: leer. */
-export function lanePoints(world: World, from: number, to: number): Pt[] {
+/** Fahrzeit je Paar, je Welt (Schlüssel: `islands`-Array) einmal gerechnet: `laneTicks` rechnet sonst alle Paare je Frame. */
+const ticksCache = new WeakMap<readonly Island[], Map<string, number>>();
+
+function cachedTicks(world: World, from: number, to: number): number {
+  let per = ticksCache.get(world.islands);
+  if (!per) ticksCache.set(world.islands, (per = new Map()));
+  const key = `${from}-${to}`;
+  let n = per.get(key);
+  if (n === undefined) per.set(key, (n = laneTicks(world.islands, from, to)));
+  return n;
+}
+
+/** Fahrlinien je Richtung, je Welt (Schlüssel: `islands`-Array): ohne Cache kopiert jeder Aufruf die ganze Linie. */
+const pointsCache = new WeakMap<readonly Island[], Map<string, readonly Pt[]>>();
+
+/** Fahrlinie (Wasserroute) von `from` nach `to`; für `from > to` umgedreht. Ohne Lane: leer. Nicht verändern. */
+export function lanePoints(world: World, from: number, to: number): readonly Pt[] {
   const lo = Math.min(from, to),
     hi = Math.max(from, to);
-  const lane = seaLanes(world.islands).find((l) => l.a === lo && l.b === hi);
-  if (!lane) return [];
-  const pts = lane.points.map((p) => ({ x: p.x, y: p.y }));
-  return from > to ? pts.reverse() : pts;
+  if (lo === hi || !world.islands[lo] || !world.islands[hi]) return [];
+  let per = pointsCache.get(world.islands);
+  if (!per) pointsCache.set(world.islands, (per = new Map()));
+  const key = `${from}-${to}`;
+  let pts = per.get(key);
+  if (pts === undefined) {
+    const fwd = seaRoute(world.islands, lo, hi).map((p) => ({ x: p.x, y: p.y }));
+    per.set(key, (pts = from > to ? fwd.reverse() : fwd));
+  }
+  return pts;
 }
 
 /** Punkt bei Anteil `t` ∈ [0, 1] der gesamten Polylinienlänge (nicht des Segmentanteils). */
@@ -73,7 +95,7 @@ export function shipPose(world: World, ship: Ship): ShipPose {
       ? { x: port.ox + port.anchor.x + 0.5, y: port.oy + port.anchor.y + 0.5 }
       : { x: 0, y: 0 };
   } else {
-    const total = laneTicks(world.islands, ship.port, ship.to);
+    const total = cachedTicks(world, ship.port, ship.to);
     const t = total > 0 ? Math.min(1, Math.max(0, 1 - ship.left / total)) : 1;
     p = pointAt(lanePoints(world, ship.port, ship.to), t);
   }

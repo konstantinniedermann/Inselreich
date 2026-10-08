@@ -99,3 +99,18 @@ describe('E-039 vergleich', () => {
     expect(s.hashA).toBe(s.hashB);
   });
 });
+
+describe('R365 smoke.mjs', () => {
+  const run = (args: string[]) =>
+    spawnSync('node', [new URL('smoke.mjs', dir).pathname, ...args], { encoding: 'utf8' });
+
+  it('--help gibt den Aufruf aus und endet mit Exit 0', () => {
+    const r = run(['--help']);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain('--paket');
+  });
+  it('fehlendes --paket oder falsche Grösse endet mit Exit 2, ohne Browser', () => {
+    expect(run([]).status).toBe(2);
+    expect(run(['--paket', 'x', '--size', '10x10']).status).toBe(2);
+  });
+});

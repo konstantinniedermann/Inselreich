@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Persona qa-playtester 1.7
+
+- Anlass: Prozess-Retro REL-08, Vorschlag P3 (Wegwerf-Skripte im Release-Smoke)
+- Datenbasis: `docs/studio/retros/2026-10-08-prozess-rel08.md`
+- Ruling: R365
+- Änderungen: Release-Check nutzt das feste Skript `tools/render-qa/smoke.mjs` und ergänzt nur paketspezifische Schritte
+
 ## 2026-10-08 · Handbuch 1.30
 
 - Anlass: Prozess-Retro REL-07 (Vorschläge angenommen)
