@@ -1529,6 +1529,7 @@ describe('PERF-L57 B1 Fauna-Anker aus statischem Gelände', () => {
     const w = createWorld(7);
     const before = sig(w);
     const hare = faunaAnchors(w).hare?.[0];
+    expect(hare, 'Seed 7 hat einen Hasen-Anker').toBeDefined();
     if (!hare) return;
     home(w).tiles[hare.ty * home(w).width + hare.tx]!.road = true;
     expect(sig(w)).toBe(before);
