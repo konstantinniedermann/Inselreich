@@ -3266,3 +3266,16 @@ nach ART-WALD-RAUTEN. Nebenbei: Eine seit 6 h hängende Shell (`cat` auf stdin) 
 gelöschten Worktree `.worktrees/tasten` per PID beendet (0 % CPU, kein Lastverursacher, keine Daten).
 
 Entscheider: L0 · Anlass: Fix-Runde TOOL-E046-SESSION · ADR: —
+
+## R362 · 2026-10-08 · Gate Merge TOOL-ZEITRESERVE-META OK; Echtprobe ist der Session-End-Push
+
+Ruling: **OK** für `tool/zeitreserve-meta` @ 616dd08. Review BEDENKEN nur niedrig: (1) Test-Schalter
+`ZEITRESERVE_FAKE_HEAD` wirkt auch produktiv (lokaler Selbstbetrug, wie `FAKE_LOAD`) — akzeptiert; (2) HEAD-Ermittlung
+doppelt, und „unbekannt“ = „unbekannt“ gälte ohne Git als belastbar — Beobachtung, Trivial-Fix beim nächsten Eingriff;
+(3) Hinweiszeile im CI-Log harmlos. `check-ci-perf` ermittelt die perfBudget-Dateien dynamisch per grep. Die grüne
+Echtprobe `make zeitreserve-push` fehlt wegen Last; sie ist zugleich die Pflichtprüfung des Session-End-Pushes und
+wird dort bei ruhiger Maschine erbracht (ersetzt die Reihenfolge aus R348). Der vom Lead gemeldete rote
+`test_second_run_overwrites` ist auf main grün (L0-Lauf), lastbedingt. Merge seriell als vierter durch den
+Integrator mit `make check` am Merge-Stand.
+
+Entscheider: L0 · Anlass: Review TOOL-ZEITRESERVE-META · ADR: —
