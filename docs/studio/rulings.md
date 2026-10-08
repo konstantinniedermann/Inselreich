@@ -2910,3 +2910,15 @@ derselben Session, sofern Budget und Limit es erlauben. (5) Vor dem Integrator-S
 `git merge-tree`. — Kosten bei Irrtum: ein Werkzeug-Paket und drei Handbuch-Sätze, rücknehmbar.
 
 Entscheider: L0 · Anlass: Prozess-Retro REL-07 · ADR: —
+
+## R331 · 2026-10-08 · Nutzer-Auftrag „räum auf": Auslegung
+
+Ruling: Ausgelegt als zwei Pakete. **CLEANUP-WT** (`production-integrator`): Worktrees unter `.worktrees/` entfernen,
+deren Stand in `main` enthalten und die sauber sind (`git worktree remove`, nie `--force`; R329 (3)); verwaiste
+Einträge per `git worktree prune`; danach lokale Branches, die in `main` gemergt sind, mit `git branch -d` löschen
+(nie `-D`). Ausgenommen bleiben `main`, `.worktrees/integrate`, `.worktrees/beob-02`, alle nicht gemergten Branches,
+`stash@{0}` und alle Remote-Branches (bleiben bis eigenes Ruling, §6). **BEOB-AUSW-02** (`lead-production`, Skill
+`beobachtungen-auswerten`): 18 Einträge seit 2026-10-06 auswerten (R287 Pflicht nach Release REL-07). — Kosten bei
+Irrtum: gering; gelöschte gemergte Branches sind über `main` und Reflog wiederherstellbar.
+
+Entscheider: L0 · Anlass: Nutzer „räum auf" · ADR: —
