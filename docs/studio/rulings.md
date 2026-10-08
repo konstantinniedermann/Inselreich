@@ -3081,3 +3081,14 @@ unsichtbar (Zielplattform ab 1280 px, R78). Deshalb Fix-Runde **FIX-REL08-MENU**
 Session (Handbuch 1.30); REL-08 geht erst danach live. Niedrige Befunde als Beobachtung.
 
 Entscheider: L0 · Anlass: Release-Check REL-08 · ADR: —
+
+## R346 · 2026-10-08 · Gate Merge FIX-REL08-MENU OK; Session-End-Push und Release REL-08
+
+Ruling: **OK** für `fix/rel08-menu` @ 0c2fc31. Ursache: `close.focus()` scrollte die zu hohe Menükarte nach unten,
+den Fehler gab es schon vor REL-08. Fix: `focus({ preventScroll: true })` und `scrollTop = 0`. Browser bei 1280×720
+`scrollTop` 0, Review OK, 34 von 40 Tools. Damit ist REL-08 freigegeben. Session-End-Push nach R335 durch den
+Integrator: Fix lokal mergen, dann `make zeitreserve-push` (auf Load ≤ 4 warten), danach `gh workflow enable CI` und
+`gh workflow enable Pages` (R334, die neuen Workflow-Dateien sind im Push), Push, CI prüfen, `gh workflow run Pages
+--ref main`, Deploy prüfen und `ci.py`.
+
+Entscheider: L0 · Anlass: Bericht FIX-REL08-MENU · ADR: —

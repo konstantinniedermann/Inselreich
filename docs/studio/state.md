@@ -97,8 +97,7 @@ Keine.
 
 ## Pausierte Pakete
 
-- **FIX-REL08-MENU** (lead-tech): Worktree `.worktrees/fix-menu`, Branch `fix/rel08-menu`, läuft bis zum Merge (R345).
-- Worktrees sonst nur Hauptcheckout und `.worktrees/integrate`.
+- Worktrees nur Hauptcheckout und `.worktrees/integrate`; FIX-REL08-MENU gemergt (R346).
 - Branch `int/rel-07` (lokal; Guard sperrt `-D`, erledigt sich mit Löschen von `origin/int/rel-07` per Ruling),
   nicht gemergte Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`), Remote `wip/r118a-render-aufraeumen` und
   `stash@{0}` bleiben bis Ruling.
