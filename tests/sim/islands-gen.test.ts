@@ -183,12 +183,13 @@ describe('M12 E1 Generator', () => {
     },
   );
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-E1-02: Lage, Lücken, Seewege und Rahmen für Seeds 1…200', () => {
     for (const seed of SEEDS_200) {
       const home = homeOf(seed);
       checkLayout(home, generateForeignIslands(seed, home));
     }
-  });
+  }, 15_000);
 
   it('AK-E1-04: Ersatzform erfüllt alle Garantien und ist deterministisch', () => {
     for (let seed = 1; seed <= 20; seed++) {

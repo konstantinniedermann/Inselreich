@@ -8,12 +8,22 @@ Abschnitt „Aggregation — effort.py“.
 
 from __future__ import annotations
 
+import re
+from datetime import datetime
+
+import efficiency
+
 GAP_DEFAULT = 300.0
 DIRECTOR = "studio-director"
 TOKEN_FIELDS = ("input", "cache_write", "cache_read", "output")
 CACHE_FIELDS = ("cache_write", "cache_read")
 ROUNDS_LIMIT = 3
 BUDGET_FACTOR = 1.5
+AMPEL_MIN_AGENTS = 10  # kleinere Sessions sind Rauschen und brechen die Kette
+_CREATED = re.compile(r"^- erzeugt:\s*(\S+)", re.MULTILINE)
+_AGENTS = re.compile(r"^- Sessions:\s*\d+,\s*Agenten:\s*(\d+)", re.MULTILINE)
+_MEASURED = re.compile(r"^- Datenbasis: \d+ Session\(s\), (\d+) Agenten", re.MULTILINE)
+_RED = re.compile(r"^- ROT: (.+?): ", re.MULTILINE)
 
 
 def _lead(node: dict, nodes: dict[str, dict]) -> str:
@@ -380,3 +390,72 @@ def incidents(
                 }
             )
     return [i for i in found if i["id"] not in acknowledged]
+
+
+def parse_ampel_session(ident: str, text: str) -> dict | None:
+    """Eine Session-Metrikdatei: Kennung, Zeit, Agentenzahl, rote Kennzahlen."""
+    # „Datenbasis … Agenten" ist die Zählbasis für AMPEL_MIN_AGENTS: „Agenten:" im
+    # Abschnitt Aufwand zählt Hook-Ereignisse (z. B. 50 statt 3 gemessen), die
+    # Grenze würde sonst nie greifen.
+    created = _CREATED.search(text)
+    agents = _MEASURED.search(text) or _AGENTS.search(text)
+    if not created or not agents:
+        return None
+    try:
+        when = datetime.fromisoformat(created.group(1).replace("Z", "+00:00"))
+        stamp = when.timestamp()
+    except ValueError:
+        return None
+    red = {
+        efficiency.LABEL_KEYS[name]
+        for name in _RED.findall(text)
+        if name in efficiency.LABEL_KEYS
+    }
+    return {"id": ident, "t": stamp, "agents": int(agents.group(1)), "red": red}
+
+
+def _counts(session: dict) -> bool:
+    return session["agents"] >= AMPEL_MIN_AGENTS
+
+
+def _ampel_floor(ordered: list[dict], key: str, acknowledged) -> int:
+    floor = -1
+    for index, session in enumerate(ordered):
+        if f"ampel:{key}:{session['id']}" in acknowledged:
+            floor = index
+    return floor
+
+
+def _latest_pair(ordered: list[dict], key: str, floor: int) -> int | None:
+    """Index i des jüngsten Paars (i-1, i), beide gross und rot für key, i-1 > floor."""
+    for i in range(len(ordered) - 1, max(floor + 1, 0), -1):
+        pair = (ordered[i - 1], ordered[i])
+        if all(_counts(s) and key in s["red"] for s in pair):
+            return i
+    return None
+
+
+def ampel_incidents(
+    sessions: list[dict], acknowledged: set[str] | frozenset[str]
+) -> list[dict]:
+    """Rote Ampelzeile in zwei benachbarten grossen Sessions: ein Vorfall je Kennzahl."""
+    ordered = sorted(sessions, key=lambda s: (s["t"], s["id"]))
+    found: list[dict] = []
+    for key, label in efficiency.LIGHT_LABELS.items():
+        floor = _ampel_floor(ordered, key, acknowledged)
+        i = _latest_pair(ordered, key, floor)
+        if i is None:
+            continue
+        before, last = ordered[i - 1], ordered[i]
+        found.append(
+            {
+                "id": f"ampel:{key}:{last['id']}",
+                "kind": "ampel",
+                "text": (
+                    f"Ampel {label} in zwei Sessions in Folge rot "
+                    f"({before['id']}, {last['id']})"
+                ),
+                "t": last["t"],
+            }
+        )
+    return found

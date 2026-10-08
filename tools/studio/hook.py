@@ -21,7 +21,7 @@ import context
 import limits
 import studio_docs
 import usage
-from model import EventStore, pending_incidents
+from model import EventStore, load_ampel_sessions, pending_incidents
 from paths import (
     agents_dir,
     append_event,
@@ -308,7 +308,11 @@ def enrich(event: dict, payload: dict) -> list[dict]:
 
 
 def open_incidents() -> list[dict]:
-    return pending_incidents(EventStore(events_file()).events(), time.time())
+    return pending_incidents(
+        EventStore(events_file()).events(),
+        time.time(),
+        ampel_sessions=load_ampel_sessions(docs_dir() / "metriken"),
+    )
 
 
 def mark_incidents(sid: str, incidents: list[dict]) -> list[dict]:

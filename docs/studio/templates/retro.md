@@ -23,11 +23,11 @@ Seite.
 
 ## Effizienz-Ampel
 
-Pflicht in jeder Retro. Quelle: Abschnitt „Effizienz“ der Metrik-Datei (`python3 tools/studio/metrics.py --efficiency`), Schwellen in [verbesserung.md](../verbesserung.md#messung-und-aufwand). Je gelber oder roter Zeile ein Befund mit Ursache (Beobachtung und Deutung getrennt); bei Rot ein Experiment-Vorschlag oder die Begründung, warum keiner folgt.
+Pflicht in jeder Retro. Quelle: Abschnitt „Effizienz“ der Metrik-Datei (`python3 tools/studio/metrics.py --efficiency`), Schwellen in [verbesserung.md](../verbesserung.md#messung-und-aufwand). Je gelber oder roter Zeile ein Befund mit Ursache (Beobachtung und Deutung getrennt); Je gelber oder roter Zeile ist die Spalte „Hebel oder Messauftrag mit Frist“ Pflicht (R316): ein Hebel (E-/R-Nr.) oder ein Messauftrag mit Verantwortlichem und Frist (Datum oder Session), der bis dahin die Ursache belegt. „Ursache unbelegt“, „Hypothese“ und „Plätze belegt“ sind kein Abschluss; ohne Beleg folgt ein Messauftrag. Steht dieselbe Zeile in der dritten Retro in Folge gelb oder rot, ist ein Hebel-Vorschlag an L0 Pflicht, eine Begründung statt eines Vorschlags entfällt.
 
-| Kennzahl   | Wert   | Ampel         | Befund / Ursache          |
-| ---------- | ------ | ------------- | ------------------------- |
-| <Kennzahl> | <Wert> | grün/gelb/rot | <B-Nr. oder „–“ bei grün> |
+| Kennzahl   | Wert   | Ampel         | Befund / Ursache          | Hebel oder Messauftrag mit Frist                      |
+| ---------- | ------ | ------------- | ------------------------- | ----------------------------------------------------- |
+| <Kennzahl> | <Wert> | grün/gelb/rot | <B-Nr. oder „–“ bei grün> | <E-/R-Nr. oder Messauftrag bis <Frist>; „–“ bei grün> |
 
 ## Befragung der Leads
 

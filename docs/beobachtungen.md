@@ -397,3 +397,21 @@ RENDER-LOOK-01 erst danach.
 - **Fundort / Beobachtung:** `tests/render/renderer.test.ts` pinnt den Hash der Heimat-Aufrufliste; L4 und L6 ändern
   ihn beide. Beim Merge von Release B muss der Pin auf dem zusammengeführten Stand neu gesetzt werden.
   **Einschätzung:** niedrig; Merge-Hinweis für den Integrator. **Ursprung:** ART-STIL-02 L6, lead-art.
+
+### 2026-10-08 · Studio · Ampelklasse „Leads“ mischt Steuerung und Autorenarbeit
+
+- 2026-10-08 · `tools/studio/efficiency.py` (`role_class`) · Plan-Leads (z. B. M12-SEE-PLAN, 89 Turns, 20 % einer Session)
+  zählen als „Leads“ und damit als Steuerung; Planungssessions sind dadurch strukturell rot. Einschätzung: mittel,
+  Trennung über M1 der Retro, keine Schwellenänderung. Ursprung: `docs/studio/retros/2026-10-08-ampel-steuerung.md`.
+
+### 2026-10-08 · Studio · Paketfeld der Lead-Instanzen nicht normalisiert
+
+- 2026-10-08 · `tools/studio/efficiency.py` (Tabelle „Lead-Instanzen") · `ART-STIL-02-umsetzung` und `ART-STIL-02`
+  erscheinen getrennt; Paketfamilien-Summen können dadurch zerfallen. Einschätzung: klein, beim nächsten Eingriff in
+  die Paketzuordnung normalisieren. Ursprung: TOOL-AMPEL-M1 (Bericht lead-tech).
+
+### 2026-10-08 · Tests · Zeittest B6 in save.test.ts einmal rot
+
+- 2026-10-08 · `tests/sim/save.test.ts` (B6 `createWorld` Mittel über Seeds 1…50, `perfBudget(5)`) · ein `make check`
+  rot, Wiederholung grün; Last im Lauf unbelegt. Einschätzung: Restflackern des Zeitbudgets trotz Serienlauf (E-030),
+  gehört zu TOOL-TIMEOUTS/`perfBudget` (R318). Ursprung: Coach-Rotation R319.

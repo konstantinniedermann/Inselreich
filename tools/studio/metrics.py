@@ -328,6 +328,13 @@ def _session_cost(state: dict, sid: str, root: Path) -> dict | None:
     return None
 
 
+def _persona_models() -> dict[str, str]:
+    try:
+        return model.read_agent_models(paths.agents_dir())
+    except OSError:
+        return {}
+
+
 def _session_files(root: Path, sids: list[str]) -> list[Path]:
     folder = transcript_dir(root)
     return [folder / f"{sid}.jsonl" for sid in sids]
@@ -354,7 +361,9 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
         sids = sorted({r["session_id"] for r in state["records"]})
-        data = efficiency.compute(_session_files(paths.repo_root(), sids))
+        data = efficiency.compute(
+            _session_files(paths.repo_root(), sids), _persona_models()
+        )
         raw = summarize(
             state, "milestone", args.milestone, handbook, None, created, data
         )
@@ -367,7 +376,9 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     day = datetime.fromtimestamp(found["started"]).astimezone().strftime("%Y-%m-%d")
     kennung = f"S-{day}-{sid[:8]}"
     cost = _session_cost(state, sid, paths.repo_root())
-    data = efficiency.compute(_session_files(paths.repo_root(), [sid]))
+    data = efficiency.compute(
+        _session_files(paths.repo_root(), [sid]), _persona_models()
+    )
     return kennung, summarize(state, "session", kennung, handbook, cost, created, data)
 
 
@@ -393,8 +404,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.efficiency:
         files = latest_transcripts(paths.repo_root(), args.sessions)
-        data = efficiency.compute(files)
+        data = efficiency.compute(files, _persona_models())
         print(efficiency.render_section(data))
+        print(efficiency.render_rewrites(data))
         gaps = efficiency.idle_gaps(load_events(paths.studio_home()), args.idle_prefix)
         print(efficiency.render_idle(gaps))
         return 0

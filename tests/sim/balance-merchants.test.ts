@@ -55,6 +55,7 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     expect(t.buildings.glassworks).toBe(3);
   });
 
+  // Timeout: lokal ≤ 0,6 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-B1-04 Laden beim ersten Kaufmann: gleicher Endzustand, gleicher wonMerchantsTick', () => {
     const a = run();
     let w = createWorld(3);
@@ -69,7 +70,7 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     expect(runMerchants(w, layoutFor(w), t)).toBe(false);
     expect(serialize(w)).toBe(serialize(a.w));
     expect(t.wonMerchantsTick).toBe(a.t.wonMerchantsTick);
-  });
+  }, 15_000);
 });
 
 describe('M11 Baseline Kaufleute (Spec 14)', () => {

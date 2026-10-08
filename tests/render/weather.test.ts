@@ -6,12 +6,13 @@ import { CAPS, cap, fireTongues, rainStreaks } from '../../src/render/limits';
 const KINDS: WeatherKind[] = ['clear', 'cloudy', 'rain', 'storm'];
 
 describe('Wetter (Spec 6.4)', () => {
+  // Timeout: lokal ≤ 0,8 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-R3-01 Luma von gradeAt ≥ 0,60 für jede Art, w in 0,1-Schritten, jeden Tick', () => {
     for (const kind of KINDS)
       for (let k = 0; k <= 10; k++)
         for (let t = 0; t < 6000; t++)
           expect(lumaOf(gradeAt(t, { kind, w: k / 10 }))).toBeGreaterThanOrEqual(0.6);
-  });
+  }, 15_000);
 
   it('AK-R3-01 clear gleicht lightAt; w = 0 gleicht clear für jede Art', () => {
     for (let t = 0; t < 6000; t += 7) {

@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.24 · Stand: 2026-10-07 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.27 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -46,14 +46,32 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
   Hintergrund starten (ADR-007).
+- **Lange Bash-Läufe (E-037):** Leads und Umsetzer starten Bash-Läufe, die voraussichtlich > 4 min dauern
+  (Tests, Browser, Perf-Messung), mit `run_in_background: true` und fragen sie spätestens alle 4 min ab
+  (Cache-Frist 5 min). Das betrifft nur das Bash-Werkzeug. Arbeiter-Starts über das Agent-Werkzeug bleiben
+  im Vordergrund (Vordergrund-Regel oben, ADR-007).
+- **Ein-Umsetzer-Pakete (E-037):** Hat ein Paket genau einen Umsetzer, läuft der Lead auf `sonnet`, oder L0
+  briefet den Umsetzer direkt ohne Lead. L0 entscheidet das im Briefing (Kopfzeile `Modell:`).
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
   [templates/uebergabe.md](templates/uebergabe.md) unter
   `<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md` (gitignored, Arbeitsstand; nicht im
   Worktree, Hauptrepo via `git rev-parse --git-common-dir`). Ergebnisse mit Bestand gehören in
   Spec, Plan oder Ruling.
-- **Fortsetzen statt neu starten:** Fix-Runden und Rückfragen setzen **denselben** Agenten per
-  `SendMessage` fort (auch einen beendeten, Kontext bleibt); nur ein Neustart braucht ein volles
-  Briefing. Eine Fortsetzung zählt nicht als neuer Start.
+- **Fortsetzen statt neu starten (Arbeiter):** Fix-Runden und Rückfragen setzen **denselben**
+  Arbeiter per `SendMessage` fort (auch einen beendeten, Kontext bleibt); nur ein Neustart braucht
+  ein volles Briefing. Eine Fortsetzung zählt nicht als neuer Start.
+- **Leads nach dem Abschlussbericht ablösen (E-042, R319):** Ein Lead wird nach seinem
+  Abschlussbericht nicht fortgesetzt. Er legt mit dem Bericht ein Handoff nach
+  [templates/uebergabe.md](templates/uebergabe.md) ab (`<Hauptrepo>/.studio/handoffs/<datum>-<lead>-<lead>.md`:
+  Stand, offene Punkte, Fundstellen); Fix-Runden, Gate-Rückfragen und Folgepakete startet L0 als
+  **neuen** Lead mit Briefing und Handoff. Fortsetzen bleibt erlaubt, wenn der Lead-Kontext unter
+  60k liegt oder seit seinem letzten Aufruf weniger als 5 min vergangen sind (Cache warm). Die
+  Ablösung zählt nicht als neuer Start des Pakets im Sinn von „Starts je Paket“.
+- **Lead-Status (E-042, R319):** Leads melden `active` und `done` nicht; `SubagentStart` und
+  `SubagentStop` des Hooks setzen beides (`tools/studio/model.py` `on_agent_start`/`on_agent_stop`),
+  der Stop trägt den Bericht als Zusammenfassung. Leads melden weiter `delegated` (mit `--task`),
+  `waiting`, `blocked`, `failed`; jeder Aufruf bleibt ein eigener Bash-Befehl, darf aber im
+  selben Turn wie der Agent-/SendMessage-Aufruf stehen. Arbeiter und L0 melden unverändert.
 - **Eskalation:** Konflikt zwischen Bereichen → beide Leads melden ihre Sicht an L0 → L0 entscheidet
   und schreibt ein Ruling. Ein Arbeiter eskaliert nur an seinen Lead.
 - **Bericht** (≤ ~15 Zeilen, [templates/bericht.md](templates/bericht.md)): Ergebnis ·
@@ -297,6 +315,7 @@ Regeln dazu:
   einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
+  **Nach jedem Merge eines Releases auf main startet L0 den `studio-process-coach` (R127, R316).**
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;

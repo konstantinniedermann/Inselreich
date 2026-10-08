@@ -129,6 +129,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
     expect(STAMP_BOX.x1 - STAMP_BOX.x0).toBeGreaterThanOrEqual(ISO_W);
   });
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('R5 Solitär ≥ 2 Kacheln vom Wald und ≤ 1 je 3 × 3 (Seeds 1–50), auch nach Roden und Aufforsten', () => {
     /** Prüft R5 am jetzigen Stand und liefert die Stempel. */
     const check = (w: World, label: string): DecorItem[] => {

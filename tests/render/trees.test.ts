@@ -464,5 +464,5 @@ describe('Kronen gerastert', () => {
         expect(total, `Seed ${seed} Objekt ${item.id}`).toBeGreaterThanOrEqual(2);
       }
     }
-  }, 10_000); // H-T7: lokal 1,2 s, Timeout >= 8 x lokal (R270)
+  }, 15_000); // H-T7: lokal 1,2 s, Timeout >= 8 x lokal, CI bis ~4× (R270/R318)
 });
