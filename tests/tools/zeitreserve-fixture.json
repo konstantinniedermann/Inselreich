@@ -1,0 +1,8 @@
+[
+  {
+    "file": "tests/a.test.ts",
+    "name": "lahm",
+    "durationMs": 3000,
+    "timeoutMs": 5000
+  }
+]

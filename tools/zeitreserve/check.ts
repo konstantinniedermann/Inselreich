@@ -1,4 +1,5 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
+// Mit --push (make zeitreserve-push, Pflicht vor dem Session-End-Push, R338): bei Last > 4 kein Ergebnis (Exit 2).
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
 import { existsSync, readFileSync } from 'node:fs';
 import { loadavg } from 'node:os';
@@ -19,7 +20,9 @@ import {
 import type { TestTiming } from './rule.ts';
 
 const ON_CI = process.env.GITHUB_ACTIONS === 'true';
-const LOAD = loadavg()[0] ?? 0;
+const FAKE_LOAD = process.env.ZEITRESERVE_FAKE_LOAD; // nur für Tests
+const LOAD = FAKE_LOAD !== undefined ? Number(FAKE_LOAD) : (loadavg()[0] ?? 0);
+const PUSH = process.argv.includes('--push');
 const VERDICT = loadVerdict(LOAD, ON_CI);
 
 /** Verstoss ausgeben: bei ruhiger Last (oder auf Actions) als Fehler, sonst als Warnung. */
@@ -34,7 +37,13 @@ function report(line: string): void {
 const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
 
 function main(): number {
-  const path = process.argv[2] ?? '.studio/zeitreserve.json';
+  const path = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '.studio/zeitreserve.json';
+  if (PUSH && VERDICT === 'unreliable') {
+    console.error(
+      `zeitreserve-push: nicht belastbar, Last ${LOAD.toFixed(1)} > ${LOAD_MAX}, warten und erneut starten (kein Ergebnis).`,
+    );
+    return 2;
+  }
   if (!existsSync(path)) {
     console.error(`zeitreserve: ${path} fehlt; zuerst die Tests laufen lassen (make test).`);
     return 1;

@@ -26,6 +26,8 @@ Last wiederholen. Auf GitHub Actions gilt immer hart (`loadVerdict`).
 verstiessen (auch ab 600 ms, weil lokale Messungen um die 1-s-Schwelle streuen). Die Liste darf nur kleiner werden: Eintrag entfernen, sobald der Test ein Timeout hat oder
 aufgeteilt ist. Neue Verstösse gehören nie hinein.
 
+**Push-Gate (R338):** `make zeitreserve` bleibt bei Load > 4 (1 min) eine Warnung (Exit 0), weil die Last durch parallele Agenten meist darüber liegt. `make zeitreserve-push` (nach `make test`) ist vor dem Session-End-Push Pflicht: bei Load > 4 Exit 2 "nicht belastbar" ohne Ergebnis (warten), sonst harte Prüfung (Exit 1 bei Verstoss). Die Schwelle `LOAD_MAX` steht nur in `rule.ts`. Tests simulieren Last mit `ZEITRESERVE_FAKE_LOAD`.
+
 **Grenzen:** Gemessen wird die Laufzeit im lokalen Lauf (bei parallelem Lauf unter Last eher zu hoch, nie zu
 niedrig); Tests unter 1 s bleiben unbeachtet. Der Schritt prüft nur Tests, die tatsächlich liefen, und liest den Bericht des letzten `npm test`-Laufs (immer erst `make test`, nicht einen alten Bericht auswerten). Einträge der Baseline ohne passenden Test meldet er als Warnung. Warnungen (1–2 s) sind Hinweise: im Zweifel gleich ein Timeout setzen.
 

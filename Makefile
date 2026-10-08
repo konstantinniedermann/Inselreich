@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve messfenster
+.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push messfenster
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -23,6 +23,9 @@ test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json)
 
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
+
+zeitreserve-push: ## Streng vor dem Session-End-Push (R338): Last > 4 = Exit 2 "nicht belastbar", sonst harte Prüfung; nach make test
+	node tools/zeitreserve/check.ts --push
 
 docs-check: ## Prettier-Check über alles inkl. docs/ (schnell, vor Doku-Commits; Teil von lint)
 	npx prettier --check .

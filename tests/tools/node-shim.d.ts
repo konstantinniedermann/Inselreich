@@ -1,4 +1,4 @@
-// tests/tools/node-shim.d.ts — minimale Typen für node:child_process in tests/tools/renderqa.test.ts (ADR-001: keine @types/node)
+// tests/tools/node-shim.d.ts — minimale Typen für node:child_process in tests/tools (ADR-001: keine @types/node)
 declare module 'node:child_process' {
   export function spawnSync(
     command: string,

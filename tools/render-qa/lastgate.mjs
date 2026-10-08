@@ -8,8 +8,9 @@
 import { loadavg } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
-/** Schwelle für den 1-min-Load (R329): darüber gilt eine Messung nicht. */
-export const LOAD_MAX = 4;
+// Schwelle für den 1-min-Load (R329): darüber gilt eine Messung nicht; eine Quelle mit tools/zeitreserve.
+import { LOAD_MAX } from '../zeitreserve/rule.ts';
+export { LOAD_MAX };
 
 /** Reine Prüfung: `{ ok, message }`; Load genau auf der Schwelle ist noch ok. */
 export function checkLoad(load, max = LOAD_MAX) {

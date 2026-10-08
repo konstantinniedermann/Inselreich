@@ -112,7 +112,7 @@ export function formatRunnerViolation(t: TestTiming, factor: number): string {
   );
 }
 
-/** Ab diesem 1-min-Load (lokal) sind Messungen nicht belastbar (wie LOAD_MAX in tools/render-qa/lastgate.mjs). */
+/** Ab diesem 1-min-Load (lokal) sind Messungen nicht belastbar (einzige Definition; lastgate.mjs importiert sie). */
 export const LOAD_MAX = 4;
 
 /** `strict`: Verstösse lassen den Lauf scheitern; `unreliable`: nur Warnung, Lauf bei ruhiger Last wiederholen. */

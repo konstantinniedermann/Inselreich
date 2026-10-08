@@ -1,4 +1,5 @@
 // E-032 / R270: Prüfschritt `make zeitreserve` erkennt Tests ohne CI-Reserve.
+import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
   findViolations,
@@ -138,5 +139,35 @@ describe('zeitreserve Lastabhängigkeit', () => {
 
   it('auf GitHub Actions gilt unabhängig von der Last hart', () => {
     expect(loadVerdict(20, true)).toBe('strict');
+  });
+});
+
+const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
+  .process.env;
+
+describe('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
+  const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
+  const fixture = new URL('./zeitreserve-fixture.json', import.meta.url).pathname;
+  const run = (load: string, ...flags: string[]) =>
+    spawnSync('node', [check, fixture, ...flags], {
+      encoding: 'utf8',
+      env: { ...nodeEnv, GITHUB_ACTIONS: undefined, ZEITRESERVE_FAKE_LOAD: load },
+    });
+
+  it('lokal bei Last > 4 ohne --push: Verstoss nur Warnung, Exit 0', () => {
+    const p = run('9');
+    expect(p.status).toBe(0);
+    expect(p.stderr).toContain('nicht belastbar');
+  });
+
+  it('--push bei Last > 4: kein Ergebnis, Exit 2 mit Meldung', () => {
+    const p = run('9', '--push');
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('nicht belastbar, Last 9.0 > 4, warten');
+  });
+
+  it('--push bei Last <= 4: harte Prüfung, Verstoss gibt Exit 1', () => {
+    expect(run('2', '--push').status).toBe(1);
+    expect(run('2').status).toBe(1);
   });
 });
