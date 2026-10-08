@@ -3345,3 +3345,13 @@ an die Retro; **letzter Mehrbedarf +30** (Commit, `make check`, Review der Nacha
 nicht, stoppt der Lead mit Handoff.
 
 Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
+
+## R368 · 2026-10-08 · Gate Merge TOOL-SMOKE OK
+
+Ruling: **OK** für `tool/smoke` @ d0203e2: `tools/render-qa/smoke.mjs` (Schritte a–f + Menü bei 1280×720 und
+1920×1080), Echtprobe gegen main BESTANDEN, Review BEDENKEN ohne Blocker, drei Punkte eingearbeitet; offen niedrig:
+⏸-Klick und Tempo-Reset nicht geprüft, Umschalt+U-Hinweis nur per Screenshot. Persona qa-playtester 1.7. Ab dem
+Release-Check REL-09 ruft der Playtester `smoke.mjs` und ergänzt nur paketspezifische Schritte. `URL.pathname` bei
+Leerzeichen im Pfad → Beobachtung. Ist rund 31 von 40. Merge lokal durch den Integrator mit `make check`.
+
+Entscheider: L0 · Anlass: Bericht TOOL-SMOKE · ADR: —
