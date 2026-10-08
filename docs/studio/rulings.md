@@ -3018,3 +3018,13 @@ nach R249 (1) nur Delta seit dem Final-Review. Budget um rund 27 Tools (≈ 22 %
 Offen: Safari/Firefox (OF-4) nicht prüfbar, `bbd2966` allein nicht lauffähig (kein Bisect-Schaden auf main, `--no-ff`).
 
 Entscheider: L0 · Anlass: Bericht TASTEN-KOMFORT · ADR: —
+
+## R340 · 2026-10-08 · Gate Spec PANEL-UEBERSICHT OK, Start nach PERF-L57-Messung
+
+Ruling: Spec `2026-10-08-panel-uebersicht-spec.md` (33 AKs: 21 Vitest, 12 Browser; neues reines Modul
+`src/ui/panelView.ts`, keine Sim-/Save-Änderung) **OK** mit allen Empfehlungen zu den offenen Fragen: Ausbau-Karte vor
+Freischaltung mit Sperrgrund, Stufe als Text plus Pips, Kennzahlen als Kacheln, Gewinn als Vorher→Nachher mit Delta,
+Panelbreite 280 px, kein geschätzter Ist-Ausstoss. Die Umsetzung (lead-tech, ≤ 120 Tools) startet erst nach Abschluss
+der PERF-L57-Messläufe, weil Testläufe die Last über 4 heben und die Messung ungültig machen (R329).
+
+Entscheider: L0 · Anlass: Bericht Spec PANEL-UEBERSICHT · ADR: —
