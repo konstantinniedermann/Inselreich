@@ -122,6 +122,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
     expect(STAMP_BOX.x1 - STAMP_BOX.x0).toBeGreaterThanOrEqual(ISO_W);
   });
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('R5 Solitär ≥ 2 Kacheln vom Wald und ≤ 1 je 3 × 3 (Seeds 1–50), auch nach Roden und Aufforsten', () => {
     /** Prüft R5 am jetzigen Stand und liefert die Stempel. */
     const check = (w: World, label: string): DecorItem[] => {
@@ -182,7 +183,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
       }
     }
     expect(rodungen).toBeGreaterThan(20);
-  }, 20_000); // H-T7: lokal 0,6 s, Timeout >= 8 x (R270)
+  }, 15_000); // H-T7: lokal 0,6 s, Timeout >= 8 x (R270)
 
   it('R5 Töne: ΔE2000 ≥ 20 zu den Signalfarben, ≥ 10 zu den Wassertönen', () => {
     for (const t of [...Object.values(DECOR_STAMP_TONES), ...Object.values(DECOR_TONES)]) {

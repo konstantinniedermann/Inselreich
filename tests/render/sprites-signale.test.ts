@@ -56,6 +56,7 @@ describe('L3-T1 Signale unverändert zur Basis', () => {
   it.skip('Generator: schreibt die Fixture (nur bewusst ausführen)', () => {
     writeFileSync(FIXTURE, JSON.stringify(compute(), null, 1));
   });
+  // Timeout: lokal ≤ 0,8 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('RF-L3-2 Aufrufe von drawStatusMarks (Farben, Lage) sind für alle Typen, Zustände und Zoom 1 und 2 gleich zur Basis', () => {
     const ref = JSON.parse(readFileSync(FIXTURE, 'utf8')) as ReturnType<typeof compute>;
     const now = compute();
@@ -64,5 +65,5 @@ describe('L3-T1 Signale unverändert zur Basis', () => {
     expect(
       Object.keys(ref).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(ref[k])),
     ).toEqual([]);
-  });
+  }, 15_000);
 });

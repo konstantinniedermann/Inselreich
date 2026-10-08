@@ -78,6 +78,7 @@ const mk = (_seed: number, variant: number, ox = 0, oy = 0, giant = false): Tree
 });
 
 describe('L1-T1 Stempelbox', () => {
+  // Timeout: lokal ≤ 1,3 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('L1-T1 jeder Pfadpunkt jedes Stempels (alle Varianten, Seeds 1/2/5/7, mit Versatz, Riesenbaum) liegt in treeBounds', () => {
     for (const seed of SEEDS)
       for (const step of [0.5, 1, 2])
@@ -100,7 +101,7 @@ describe('L1-T1 Stempelbox', () => {
               expect(wy, `v${v} Seed ${seed}`).toBeLessThanOrEqual(box.y + box.h + 1e-6);
             }
           }
-  });
+  }, 30_000);
 
   it('L1-T1 die Box wächst mit: Eng bleibt in der Kachelbreite, Kern ist breiter, der Riesenbaum höher', () => {
     const eng = treeBounds(mk(3, 7)),

@@ -363,6 +363,7 @@ describe('ART-STIL-02 L2 Task B Findlinge (C11)', () => {
     expect(rgbOf(PALETTE.rock)).toBeDefined();
   });
 
+  // Timeout: lokal 3,4 s seriell, 6,8 s im Gesamtlauf; ≥ 8 × Laufzeit, CI bis ~4×, R270/R318
   it('L2 Findlinge: patchGrid am Gebirgsfuss gleich Vollaufbau, Pixel im Patch-Rechteck mit Findling gleich', () => {
     for (const seed of [14, 1, 7]) {
       const w = createWorld(seed, { unlockAll: true });
@@ -395,5 +396,5 @@ describe('ART-STIL-02 L2 Task B Findlinge (C11)', () => {
         `Seed ${seed} Pixel`,
       ).toBe(-1);
     }
-  }, 30000);
+  }, 60_000);
 });

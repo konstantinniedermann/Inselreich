@@ -304,6 +304,7 @@ describe('L3 Kanten: Signalabstand und Zusatzfarben', () => {
 });
 
 describe('L3 Kanten: Bodenkontakt und Sprite-Fläche', () => {
+  // Timeout: lokal ≤ 2,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-L3-e alle Pfadpunkte des Körpers liegen in spriteBounds + MARGIN (alle Zooms)', () => {
     for (const zoom of [1, 2])
       for (const c of CASES) {
@@ -322,7 +323,7 @@ describe('L3 Kanten: Bodenkontakt und Sprite-Fläche', () => {
           expect(p.y, `${c.name}@${zoom}`).toBeLessThanOrEqual(y1);
         }
       }
-  });
+  }, 30_000);
   it('AK-L3-e Bildmodus malt Kontaktschatten (kühl, 2 Stufen) und 2–4 Grasbüschel; Plain nicht', () => {
     for (const c of CASES.filter((x) => x.variant === 0 && x.def.id === 'house')) {
       const hand = paint(c).log.events.filter((e) => e.op === 'fill');

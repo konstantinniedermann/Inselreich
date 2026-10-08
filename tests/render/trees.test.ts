@@ -58,6 +58,7 @@ describe('Baumstempel', () => {
     expect(crownsFor(3, 0)).not.toEqual(crownsFor(4, 0));
   });
 
+  // Timeout: lokal ≤ 2,4 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-ISO-10 Baumstempel (L1): jeder Pfadpunkt in treeBounds; Eng-Stempel bleiben in der Spaltenbreite einer Kachel', () => {
     for (const seed of [3, 11, 12588])
       for (const step of ZOOM_STEPS)
@@ -79,7 +80,7 @@ describe('Baumstempel', () => {
             if (v % 8 >= 6) expect(Math.abs(wx - c.x)).toBeLessThanOrEqual(ISO_W / 2 + 1e-6);
           }
         }
-  }, 20_000); // H-T7: CI-Lauf brach bei 5 s ab (lokal 1,7 s); Timeout >= 8 x lokal (R270)
+  }, 30_000); // H-T7: CI-Lauf brach bei 5 s ab (lokal 1,7 s); Timeout >= 8 x lokal (R270)
 
   it('AK-ISO-10 treeBounds (L1): Eng ist pointBounds der Kachelmitte mit Höhe TREE_H, Kern und Rand sind breiter', () => {
     const c = project(4.5, 9.5);
@@ -390,6 +391,7 @@ function components(r: RasterCtx, color: string, min: number): number {
 }
 
 describe('Baumstempel gerastert', () => {
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-R1-08 I5 jeder Stempel zeigt bei Zoom 1 ≥ 3 getrennte Lichtkappen (crownCap) (je ≥ 4 px), für alle Varianten und Seeds', () => {
     for (const seed of [3, 11, 12588, 94108])
       for (let v = 0; v < TREE_VARIANTS; v++) {
@@ -410,5 +412,5 @@ describe('Baumstempel gerastert', () => {
           `Seed ${seed} Variante ${v} Hauptart ${main}`,
         ).toBeGreaterThanOrEqual(1);
       }
-  });
+  }, 15_000);
 });
