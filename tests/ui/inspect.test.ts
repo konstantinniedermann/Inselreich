@@ -13,12 +13,12 @@ import {
   levelText,
   refundLine,
   utilizationText,
-  upgradeView,
   deficitLine,
   buildSameShown,
   BUILD_SAME_TITLE,
   UPGRADE_TITLE,
 } from '../../src/ui/inspect';
+import { upgradeView } from '../../src/ui/panelView';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
 import type { BuildingDefId, World } from '../../src/sim/types';

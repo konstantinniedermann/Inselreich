@@ -15,7 +15,7 @@ import {
   upgradeCard,
   upgradeGain,
 } from '../../src/ui/panelView';
-import { upgradeView, progressPct } from '../../src/ui/inspect';
+import { upgradeView, progressPct } from '../../src/ui/panelView';
 import { missingInputs } from '../../src/sim/queries';
 import { isSupplied } from '../../src/sim/population';
 import { functionLock } from '../../src/sim/unlocks';
