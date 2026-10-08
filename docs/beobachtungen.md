@@ -396,7 +396,7 @@ RENDER-LOOK-01 erst danach.
   L6, art-rendering-engineer.
 - **Fundort / Beobachtung:** `tests/render/renderer.test.ts` pinnt den Hash der Heimat-Aufrufliste; L4 und L6 ändern
   ihn beide. Beim Merge von Release B muss der Pin auf dem zusammengeführten Stand neu gesetzt werden.
-  **Einschätzung:** niedrig; Merge-Hinweis für den Integrator. **Ursprung:** ART-STIL-02 L6, lead-art.
+  **Einschätzung:** niedrig; Merge-Hinweis für den Integrator. **Ursprung:** ART-STIL-02 L6, lead-art. **Erledigt** in REL-07 Lauf B (Pin neu gesetzt, Befund B9).
 
 ### 2026-10-08 · Studio · Ampelklasse „Leads“ mischt Steuerung und Autorenarbeit
 
@@ -415,3 +415,23 @@ RENDER-LOOK-01 erst danach.
 - 2026-10-08 · `tests/sim/save.test.ts` (B6 `createWorld` Mittel über Seeds 1…50, `perfBudget(5)`) · ein `make check`
   rot, Wiederholung grün; Last im Lauf unbelegt. Einschätzung: Restflackern des Zeitbudgets trotz Serienlauf (E-030),
   gehört zu TOOL-TIMEOUTS/`perfBudget` (R318). Ursprung: Coach-Rotation R319.
+
+### 2026-10-08 · Render · Befunde aus FIX-REL07 (REL-07 Fix-Runde, R313)
+
+- 2026-10-08 · Kaltstart Seed 14 (`.studio/qa/fix-rel07/kprof-*.txt`) · Kandidat 22–24 s gegen main 11–15 s bis
+  `cachesReady`; Ursache Rasterarbeit der Terrain-Ebene L5–L7 (`(program)` 17,3 gegen 12,2 s, `drawImage` 808 gegen
+  318 ms), nicht der Wald. Der Kandidat hat im Spiel kaum Leerlaufreserve (`(idle)` ~0 gegen ~20 ms im Profil), daher
+  kippen Zusatzarbeiten Frames auf 33 ms. Einschätzung: mittel; eigenes Paket „Terrain-Rasterkosten L5–L7 senken",
+  wenn das Perf-Budget nicht reicht. Ursprung: FIX-REL07 a, art-rendering-engineer.
+- 2026-10-08 · `src/render/massif.ts` Massiv-Teilstücke · Tragen grosse Raster (Seed 14 ca. 330 MB als JSON);
+  `toEqual` auf `sortedObjects` hängt deshalb, Tests vergleichen nur Kennung und Kacheln. Einschätzung: niedrig.
+  Ursprung: FIX-REL07 a.
+- 2026-10-08 · `src/render/decor.ts` `stampBlocked` · Stempel lesen Gebäude und Wege, hängen also nicht nur am Kontor;
+  ein Stempel-Cache je Kontor wäre falsch. Einschätzung: niedrig, Hinweis für spätere Optimierung. Ursprung: FIX-REL07 a.
+- 2026-10-08 · `src/render/decorStamps.ts` `minStampScale` · Für Wrack und Felseiland seit der Zoom-Schwelle 0,5
+  (FIX-REL07 b) toter Pfad, samt Tests belassen. Einschätzung: niedrig, beim nächsten Eingriff entfernen. Ursprung:
+  FIX-REL07 b.
+- 2026-10-08 · Rater-Bedenken REL-07 Lauf B (R313 e, Handoff `2026-10-08-l0-lead-qa-rel07-befunde.md` B10–B13) · Sand
+  mit Stufen-/Rautenkanten (Seed 2, Zoom 0,5); isolierte Riff-Schaumbögen wirken wie Möwen; heller Gebirgs-Fussring
+  folgt Rautendiagonalen (L2); kleine Tiere ohne Hinweis kaum benennbar, Hütten-Tür. Einschätzung: niedrig, nicht
+  blockierend; Kandidaten für eine Art-Feinrunde. Ursprung: lead-qa, Release-Lauf B.
