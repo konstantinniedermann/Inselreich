@@ -1416,9 +1416,10 @@ function tileKind(
   // statischer G-Kandidat dieser Kachel (A7, A11, A12, B7): B7 braucht jetzt Wald als Nachbarn, sonst entfällt er
   const g = plan.g[i]!;
   if (g && (G_KINDS[g - 1] !== 'deadwood' || edge4)) return G_KINDS[g - 1]!;
-  if (edge4) {
-    if (hit(BAND.toadstools)) return 'toadstools';
-  }
+  // L8 T4: jedes bedingte Band rückt den Zähler immer vor (auch ungenutzt), damit eine Nachbarschaftsänderung
+  // (Neubau, Wald) die Kachel nur leert, nie die Art wechselt
+  const toadHit = hit(BAND.toadstools);
+  if (toadHit) return edge4 ? 'toadstools' : null;
   // A3 braucht rundum Abstand zu Weg/Gebäude und zum Wald
   let ringFree = true;
   for (let dy = -DECOR_REACH; dy <= DECOR_REACH && ringFree; dy++)
@@ -1431,7 +1432,8 @@ function tileKind(
         break;
       }
     }
-  if (ringFree && hit(shrubDensity(seed, x, y))) return 'shrubs';
+  const shrubHit = hit(shrubDensity(seed, x, y));
+  if (shrubHit) return ringFree ? 'shrubs' : null;
   const pm = plan.mtn[i]! <= 5 ? (6 - plan.mtn[i]!) / 5 : 0; // am Gebirge häufiger
   const hill = decorHill(seed, x + 0.5, y + 0.5) > 0.62 ? BAND.boulderHill : 0; // Kuppen
   if (hit(BAND.boulder + BAND.boulderMtn * pm + hill)) return 'boulder';
