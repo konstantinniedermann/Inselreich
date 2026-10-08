@@ -356,3 +356,32 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Handbuch auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
 - Ruling: –
+
+## E-043 · vorgeschlagen · Zeitreserve lokal gegen geschätzte Runner-Zeit
+
+- Hypothese: Wenn `make zeitreserve` lokal die gemessene Laufzeit mit dem beobachteten Runner-Faktor 3 hochrechnet und dann die Runner-Regel (Faktor 1, Schwelle 2000 ms) anwendet, fallen Zeittests ohne CI-Reserve vor dem Push auf (Retro [session-191cc1e4-ende](retros/2026-10-08-session-191cc1e4-ende.md) B2).
+- Messgrösse: 0 rote CI-Läufe wegen `zeitreserve` in den nächsten 3 Pushes mit neuen oder geänderten Zeittests (Ausgang: 1 Fall in dieser Session, davor R318/R322). Gegenprobe: höchstens 2 lokale Meldungen, die der Runner nicht bestätigt (Vorabzählung: 4 Meldungen im Bestand).
+- Messbarkeit: Der lokale Faktor 4 und die Runner-Regel bleiben in `rule.ts` unverändert erkennbar; die Hochrechnung läuft als zusätzlicher Modus, `.studio/zeitreserve.json` bleibt unverändert, damit rote Runner-Läufe weiter dieselbe Messgrundlage haben.
+- Zeitraum: 3 Pushes mit Zeittest-Änderung, höchstens bis 2026-11-05.
+- Rückfall: Zusatzmodus in `tools/zeitreserve/` und Makefile entfernen (`git revert`).
+- Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/check.ts`, `Makefile` (Paket TOOL-ZEITRESERVE-RUNNER, lead-tech)
+- Ruling: –
+
+## E-044 · vorgeschlagen · Worktree-Belegung vor jedem Agent-Start
+
+- Hypothese: Wenn jeder Paketstart seine Worktree-Belegung (Pfad, Session-ID, Zeit) als Ereignis schreibt und der Guard einen Agent-Start im Worktree, den eine andere Session mit Heartbeat < 10 min belegt, mit Hinweis blockt, entstehen keine zwei Schreiber im selben Worktree auch bei zwei L0-Sessions (Retro [session-191cc1e4-ende](retros/2026-10-08-session-191cc1e4-ende.md) B1). Ergänzt E-034, das nur den Abbruch-Fall per Handbuchsatz regelt.
+- Messgrösse: 0 Fälle von zwei Schreibern in einem Worktree in den nächsten 3 Sessions oder 4 Wochen (Ausgang: 3 Fälle paralleler L0, R107/R118, R274b, R324); Gegenprobe: 0 Fehlblocks bei Heartbeat > 10 min oder derselben Session.
+- Messbarkeit: Blockierte Starts landen als Ereignis im Log (`events.jsonl`), so bleibt zählbar, wie oft der Schutz griff; die Zählung der Kollisionen ändert sich nicht.
+- Zeitraum: 3 Sessions, höchstens bis 2026-11-12. Start erst bei freiem Platz (3 laufen: E-027, E-037, E-042; E-027 endet spätestens 2026-10-22).
+- Rückfall: Guard-Prüfung ausschalten (`git revert`), Handbuch Ende 0a wie Fassung 1.27.
+- Dateien: `tools/studio/guard.py`, `tools/studio/log.py`, `docs/studio/STUDIO.md` (Start, Punkt 5)
+- Ruling: –
+
+## E-045 · vorgeschlagen · Lastgrenze für Perf- und Ruckel-Messungen
+
+- Hypothese: Wenn Perf- und Ruckel-Messungen nur bei 1-min-Load ≤ 4 gelten und der Bericht `uptime` vor und nach dem Lauf nennt, melden Berichte keine Regressionen mehr, die bei Wiederholung unter ruhiger Last verschwinden (Retro [session-191cc1e4-ende](retros/2026-10-08-session-191cc1e4-ende.md) B4).
+- Messgrösse: In den nächsten 2 Perf-/Hitch-Messberichten nennen 100 % den Load; 0 Befunde, die lead-qa bei Load ≤ 4 nicht reproduziert (Ausgang: 1 Grundlast-Regression bei Load 6–15, R326/R327).
+- Zeitraum: die nächsten 2 Perf- oder Hitch-Messungen, höchstens bis 2026-11-05.
+- Rückfall: Satz aus dem Handbuch (Lastregel) streichen, Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Lastregel), `.claude/agents/lead-art.md`, `.claude/agents/lead-qa.md` (nur nach Ruling)
+- Ruling: –
