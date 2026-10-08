@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -24,8 +25,11 @@ class LogBase(unittest.TestCase):
         }
         self.env = mock.patch.dict(os.environ, env)
         self.env.start()
+        self.prettier = mock.patch.object(log, "run_prettier")
+        self.prettier_mock = self.prettier.start()
 
     def tearDown(self):
+        self.prettier.stop()
         self.env.stop()
         self.tmp.cleanup()
 
@@ -195,6 +199,57 @@ class LogTest(LogBase):
         events = self.events()
         self.assertEqual([e["action"] for e in events], ["add", "answer", "done"])
         self.assertEqual(events[2]["summary"], "verworfen")
+
+    def test_queue_runs_prettier_on_queue_file(self):
+        self.run_log("queue", "--id", "N-001", "--title", "t", "--question", "q")
+        self.prettier_mock.assert_called_once_with(
+            str(Path(self.docs) / "warteschlange.md")
+        )
+
+    def test_prettier_missing_warns_but_keeps_entry(self):
+        self.prettier.stop()
+        try:
+            with mock.patch.object(
+                log.subprocess, "run", side_effect=FileNotFoundError
+            ):
+                code, _, err = self.run_log(
+                    "queue", "--id", "N-001", "--title", "t", "--question", "q"
+                )
+        finally:
+            self.prettier_mock = self.prettier.start()
+        self.assertEqual(code, 0)
+        self.assertIn("Warnung: prettier nicht ausgeführt", err)
+        self.assertIn(
+            "N-001", (Path(self.docs) / "warteschlange.md").read_text("utf-8")
+        )
+        self.assertEqual(self.events()[0]["action"], "add")
+
+    def test_glob_text_survives_prettier(self):
+        binary = log.repo_root() / "node_modules" / ".bin" / "prettier"
+        if not binary.exists():
+            self.skipTest("prettier nicht installiert")
+        self.prettier.stop()
+        try:
+            self.run_log(
+                "queue",
+                "--id",
+                "N-001",
+                "--title",
+                "Glob",
+                "--question",
+                "docs/**, **/*.md, a_b_c",
+            )
+        finally:
+            self.prettier_mock = self.prettier.start()
+        target = str(Path(self.docs) / "warteschlange.md")
+        check = subprocess.run(
+            [str(binary), "--check", target],
+            cwd=log.repo_root(),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
 
     def test_queue_id_format(self):
         for bad in ("N-", "n-001", "N-001x", "X-1", "N-1 ", "../N-1"):

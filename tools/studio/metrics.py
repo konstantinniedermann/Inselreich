@@ -11,6 +11,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import actions
 import efficiency
 import effort
 import model
@@ -409,6 +410,7 @@ def main(argv: list[str] | None = None) -> int:
         print(efficiency.render_rewrites(data))
         gaps = efficiency.idle_gaps(load_events(paths.studio_home()), args.idle_prefix)
         print(efficiency.render_idle(gaps))
+        print(actions.render())
         return 0
     result = build(args)
     if result is None:
