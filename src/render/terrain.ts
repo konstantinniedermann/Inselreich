@@ -1388,6 +1388,9 @@ interface TerrainMeta {
 }
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
 
+/** Die Ebene ist fertig gemalt (Meta wird erst nach dem letzten Pixelschritt gesetzt). */
+export const hasTerrainMeta = (layer: HTMLCanvasElement): boolean => meta.has(layer);
+
 function paintRegion(
   ctx: CanvasRenderingContext2D,
   grid: TerrainGrid,
@@ -1741,7 +1744,7 @@ export function gridBands(
 export function updateTerrainLayer(
   layer: HTMLCanvasElement,
   world: World,
-): { redrawn: boolean; ms: number } {
+): { redrawn: boolean; ms: number; rect?: TileRect } {
   const m = meta.get(layer);
   if (!m) return { redrawn: false, ms: 0 };
   const key = layoutKey(world);
@@ -1793,7 +1796,7 @@ export function updateTerrainLayer(
     terrainStats.patches.push(ms);
     if (terrainStats.patches.length > STATS_MAX) terrainStats.patches.shift();
   }
-  return { redrawn: true, ms };
+  return { redrawn: true, ms, rect };
 }
 
 const unionRect = (a: TileRect | null, b: TileRect | null): TileRect | null =>

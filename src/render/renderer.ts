@@ -1,6 +1,7 @@
 import { homeBuildings } from './homeBuildings';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { houseDiagnosis } from '../sim/queries';
+import { drawGround, noteGroundPatch } from './groundCache';
 import { HOME, home, tileAt } from '../sim/world';
 import type { Building, BuildingDefId, World } from '../sim/types';
 import {
@@ -79,7 +80,13 @@ import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { LIGHT_COLORS, mixRgb } from './light';
 import { drawShip, shipShadow, shipTile } from './ship';
 import { seaShipAfter, shipPose, shipScale, type ShipPose } from './shipLane';
-import { halfLayer, quarterLayer, terrainScale, updateTerrainLayer } from './terrain';
+import {
+  halfLayer,
+  hasTerrainMeta,
+  quarterLayer,
+  terrainScale,
+  updateTerrainLayer,
+} from './terrain';
 import {
   ARCHIPEL_VIEW,
   LOD_ZOOM,
@@ -502,6 +509,7 @@ function drawIsland(
   fx: RenderFx,
   env: FrameEnv,
   fleet: readonly { id: number; cx: number; cy: number }[] = [],
+  cacheGround = false,
 ): IslandFrame {
   const { weather, reduce, light, lod } = env;
   const world = v;
@@ -531,6 +539,7 @@ function drawIsland(
   if (patch.redrawn) {
     renderStats.terrainPatches++;
     renderStats.terrainPatchMs = patch.ms;
+    if (cacheGround) noteGroundPatch(terrainLayer, patch.rect);
   }
 
   if (!empty) {
@@ -544,10 +553,7 @@ function drawIsland(
     const sw = Math.min(src.width - sx, (range.x1 - range.x0 + 1) * per);
     const sh = Math.min(src.height - sy, (range.y1 - range.y0 + 1) * per);
     if (sw > 0 && sh > 0) {
-      ctx.save();
-      ctx.transform(...groundMatrix(cam, per));
-      ctx.drawImage(src, sx, sy, sw, sh, sx, sy, sw, sh);
-      ctx.restore();
+      drawGround(ctx, cam, { owner: terrainLayer, src, sx, sy, sw, sh, per }, cacheGround);
     }
 
     // 3 Wasser, 4 Wege: unter der Bodenmatrix
@@ -907,7 +913,17 @@ export function render(
       .filter((p) => p.pose.island === i)
       .map((p) => ({ id: p.id, cx: p.pose.x - isl.ox, cy: p.pose.y - isl.oy }));
     frames.push({
-      ...drawIsland(ctx, islandView(world, i), camOf(i), layer, view, fx, env, fleet),
+      ...drawIsland(
+        ctx,
+        islandView(world, i),
+        camOf(i),
+        layer,
+        view,
+        fx,
+        env,
+        fleet,
+        i === HOME && hasTerrainMeta(layer),
+      ),
       island: i,
     });
   }
