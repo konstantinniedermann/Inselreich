@@ -2798,3 +2798,14 @@ bekommt er im selben Muster ein hergeleitetes Timeout (Trivial-Fix, eigener Comm
 (Integrator-Hinweis für REL-07). — Kosten bei Irrtum: längere Testtimeouts, Revert möglich.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-TIMEOUTS · ADR: —
+
+## R323 · 2026-10-08 · Nutzerwünsche Bedienung: nur aufnehmen
+
+Ruling: Die fünf Nutzerwünsche (Leertaste Pause, Pipette, Gebäude direkt in höherer Stufe bauen, Taste `U` für
+Upgrade, übersichtliches Gebäude-Panel) kommen als I-022…I-026 mit Status `neu` und Quelle „Nutzer 2026-10-08“ in
+`docs/ideen.md`, ausdrücklich ohne Umsetzung (Nutzerwortlaut „nur aufnehmen nicht implementieren“). Bewertung nach
+Raster in der nächsten Ideen-Runde; vorher prüft der Eintrag, was davon schon existiert (z. B. bestehende
+Tastenbelegung, Upgrade-Regeln). R305 gilt weiter: keine neuen Pakete, FIX-REL07 hat Vorrang. Eintrag durch
+`design-idea-scout`, ein Start. — Kosten bei Irrtum: keine, reiner Pool-Eintrag.
+
+Entscheider: L0 · Anlass: Nutzer-Auftrag Session-Start · ADR: —
