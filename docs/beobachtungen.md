@@ -4,7 +4,7 @@ Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschä
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
 ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
 
-Letzte Auswertung: 2026-10-06
+Letzte Auswertung: 2026-10-08
 
 **Marke (R287, R288):** Die Zeile „Letzte Auswertung: JJJJ-MM-TT“ ist die Zählmarke des SessionStart-Hooks. Als
 Eintrag zählt jede Überschrift der Ebene 2 oder 3 unter der Marke, ausser „Offen …“ und „Ausgewertet …“. Neue
@@ -17,6 +17,56 @@ nachgeführt und der Inhalt zu einem neuen „Ausgewertet …“-Abschnitt einge
 abgehakt (mit Trigger), eingeplant (Board, 14 Paket-Kandidaten) oder Idee (`docs/ideen.md`, I-020 und I-021). Der
 frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegangen; der Rest jener Auswertung steht unten
 unverändert als Archiv.
+
+**Stand 2026-10-08** (`lead-production`, Paket BEOB-AUSW-02, gegen `c6e9b32`): 18 Einträge gesichtet. Bilanz und Paket-Kandidaten stehen in „Ausgewertet 2026-10-08“; die Auswertung vom 2026-10-06 steht darunter unverändert.
+
+---
+
+## Ausgewertet 2026-10-08
+
+**Bilanz** (18 Einträge, `lead-production`, Paket BEOB-AUSW-02, gegen `c6e9b32`): 5 erledigt, 7 abgehakt (mit
+Trigger), 6 eingeplant (Paket-Kandidaten), 0 verworfen, 0 Ideen, 0 ungesichtet. Einige Einträge zerfallen
+in Teilbefunde mit verschiedenen Ausgängen; gezählt ist der Hauptausgang. Verifiziert am Code (Fundstellen unten);
+Teilbefunde aus Agentenberichten (Bildbefunde, Messwerte) sind nicht neu gemessen.
+
+**Erledigt**
+
+| Eintrag                                              | Beleg                                                                                                                       |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Runner `ubuntu-24.04` festgenagelt (R293)            | `.github/workflows/ci.yml`, `pages.yml` (`runs-on: ubuntu-24.04`, Actions `@v7`), `b0efc2e`; CI-ACTIONS-NODE damit erledigt |
+| Zeitreserve-Altlast (26 Bestandstests)               | `tools/zeitreserve/baseline.json` ist eine leere Liste (R318, `4695986`)                                                    |
+| Pin `renderer.test.ts` Heimat-Aufrufliste (L4/L6)    | im Eintrag selbst als in REL-07 Lauf B erledigt vermerkt (R327)                                                             |
+| Alte Worktrees unter `.worktrees/`                   | wird durch Paket CLEANUP-WT erledigt (R331, Integrator räumt auf)                                                           |
+| `tools/render-qa/galerie.mjs` / Tier-4-Falle / Nacht | `galerie.mjs` liegt jetzt in `tools/render-qa/`; Rest siehe Abgehakt                                                        |
+
+**Eingeplant (Paket-Kandidaten, L0 entscheidet; Empfehlung im Bericht)**
+
+| Paket-ID (Vorschlag)            | Inhalt                                                                                                                                                                                                            | Beleg (geprüft 2026-10-08 gegen `c6e9b32`)                                                                                                                 | Prio    | Owner                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------- |
+| UI-INSELFILTER                  | Iteratoren über alle Inseln: `protectedCount` zählt Fremdinsel-Gebäude mit (sicher falsch); `inhabitantsOf`, Rathaus-Suche, Panel-Einwohner, `guide`, `hints`, `soundEvents`, `startCard`, `app` je Stelle prüfen | `src/ui/inspect.ts` `protectedCount` (`Object.values(world.buildings)`), `:72`, `:432`, `:818`; `src/render/homeBuildings.ts` `homeBuildings` liegt bereit | mittel  | lead-tech                                 |
+| ART-WALD-RAUTEN                 | Rautenkanten: Waldmaske, Wiesen-Tonflecken, Gras/Sand-Treppe, Sand-Stufen, Gebirgs-Fussring, Schaum ohne Objekt (wirkt rasterartig) → Rasterstufe der Welterzeugung/`terrain.ts`                                  | Einträge ART-STIL-02, L1r2, REL-07 B10–B13, Nachprüfung; `terrain.ts` ungeändert seit Eintrag                                                              | mittel  | lead-art                                  |
+| ART-C7-ANSCHLUSS                | Gischt-Glitzern: `fallSparks`/`drawFallSparks` nie vom Renderer gerufen (toter Code, B6); anschliessen oder löschen; Meeresfelsen als Boot; Fauna-Anker nach Weg/Laden; Tag-Pin AK-E1-10; Aufräumen `fauna.ts`    | `grep drawFallSparks src/render` → nur Definition in `fauna.ts`; `tests/render/renderer.test.ts` AK-E1-10 setzt `tick = 3000` (Nacht)                      | niedrig | lead-art (mit PERF-L57)                   |
+| ART-L8-SELTEN                   | Seltenheitsband L8: `RARE_CAP` 6 mit eigenen Losen (Wrack, Felseiland, Felsnadel, Kiste), Lichtungen (Median 1 statt 2–12), Kiefernküste, S/E-Orte nach Aufforsten, Boden-Deko wechselt neben Neubau              | `src/render/decor.ts` `RARE_CAP = 6`; `forest.ts` `forestClearing`; Eintrag L4/L5/L6                                                                       | niedrig | lead-art                                  |
+| TOOL-RENDERQA-NACHZUG           | Messskripte (`hitch*.mjs`, `altwald.mjs`, `proben.mjs`, `perf-lauf.sh`) aus `.studio/qa/` nach `tools/render-qa/` (R315), vor PERF-L57; `cachesReady`-Abbruch Seed 14; Dev-Hook Tageszeit                         | `ls tools/render-qa/` enthält sie nicht                                                                                                                    | mittel  | lead-art                                  |
+| TOOL-STUDIO-HYGIENE (erweitert) | Ampelklasse „Leads" mischt Plan-Leads (`role_class`); Paketfeld nicht normalisiert (`ART-STIL-02-umsetzung` gegen `ART-STIL-02`)                                                                                  | `tools/studio/efficiency.py` `role_class` (`lead-` → „Leads"); `package_family`; beide Punkte dort anhängen                                                | mittel  | lead-production (`production-studio-ops`) |
+
+Zeitreserve `groundBeach.test.ts` D9/D5 und Zeittest B6 `save.test.ts` gehören zu TOOL-ZEITRESERVE-RUNNER (R329/R330,
+Board); `fauna.test.ts` Eignung Seeds 1–20 desgleichen. PERF-L57 (Kaltstart L5–L7, Waldaufbau nach Bau, `massif.ts`
+Raster) ist bereits benannt (R327).
+
+**Abgehakt (bewusst nichts tun, mit Reevaluations-Trigger)**
+
+| Cluster                                                                                                                                                                                                                             | Begründung                                               | Trigger zurück                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Umstieg `ubuntu-latest` → Ubuntu 26                                                                                                                                                                                                 | Runner ist auf `ubuntu-24.04` festgelegt (R293)          | Ubuntu 24.04 wird abgekündigt oder jemand arbeitet ohnehin an `.github/workflows/`  |
+| Culling-Zuschlag Bäume/Deko (Kronenüberhang), Hinweis zu grösseren Kronen in `trees.ts`                                                                                                                                             | niedrig, nur am Bildrand beim Scrollen                   | Riesenbaum (L6) oder Kronen über 1 Kachel; sonst nächster Eingriff in `renderer.ts` |
+| Code-Hygiene Render: `trees.ts` Salz `513`, `decorHill` doppelt zu `meadowHill`, `terrain.ts`-Kommentar „a > 0", `seaFoamVisible` je Frame, `minStampScale` toter Pfad, `stampBlocked`-Hinweis, `iso.ts` Gleichstand nach `fp.x`    | niedrig, gemessen unkritisch                             | nächster Eingriff in die jeweilige Datei                                            |
+| Doppeltes Runden `worldToScreen`/Stempel, Hofkram, Material erst bei warmem Cache (aus Auswertung 2026-10-06 weitergeführt)                                                                                                         | siehe dort                                               | wie dort                                                                            |
+| Tools: `perf.mjs` Standardgrösse 1280 × 800, Tier-4-Falle in QA-Skripten, `__inselDev` ohne Tageszeit-Hook (in TOOL-RENDERQA-NACHZUG), `perf:`-Commitpräfix (3 Commits, nicht änderbar), Blindtest ohne Marken, A/A-Läufe `rel-07b` | Werkzeug- und Prozesshinweise                            | Perf-Messung nach Spec §5; nächster Blindtest (Vorlage um Marken ergänzen)          |
+| `massif.ts` Raster (330 MB) mit `toEqual` hängt                                                                                                                                                                                     | Tests vergleichen nur Kennung und Kacheln                | PERF-L57 oder neuer Test auf `massif`                                               |
+| Direkt nach Kontor II kein Haus baubar („Kein Bauland")                                                                                                                                                                             | im Eintrag selbst Kandidat SEE-F2-UX (Board, 2026-10-06) | SEE-F2-UX startet: Absicht gegen Fehler prüfen                                      |
+
+**Ideen:** keine. (Die Meeres-/Schaum-Optik gehört zu ART-WALD-RAUTEN und ART-C7-ANSCHLUSS.)
 
 ---
 
@@ -267,216 +317,3 @@ RENDER-LOOK-01 erst danach.
 ---
 
 ## Offen (neue Einträge unten anhängen)
-
-### 2026-10-06 · UI · Weitere Iteratoren über alle Inseln ohne Insel-Filter (H-F1, Lesung, mittel)
-
-- Fundort: `src/ui/inspect.ts:72` (`inhabitantsOf`), `:107` (`protectedCount`, „schützt N Gebäude" zählt Fremdinsel-Gebäude mit; vom H-F1-Implementierer belegt gelesen), `:432` (Rathaus-Suche), `:818` (Einwohner im Panel); `ui/guide.ts:30,101`, `ui/hints.ts:307,324`, `ui/soundEvents.ts:28,112,144`, `ui/startCard.ts:124`, `ui/app.ts:458`.
-- Beobachtung: Diese Stellen iterieren `world.buildings` über alle Inseln. Ob das Absicht ist (z. B. Spielfortschritt, Ton, Anleitung) oder derselbe Fehler wie die Geisterbauten, ist je Stelle **unbelegt**; nur `protectedCount` ist sicher falsch (Schutzreichweite in Heimatkoordinaten gegen Gebäude anderer Inseln).
-- Ursprung: Nebenbefund H-F1 (Geisterbauten, R286/R290), Prüfung ohne Test.
-- Einschätzung: mittel, nur Zahlen und Texte, nicht das Bild. Je Stelle erst roter Test, dann Entscheid; Helfer `homeBuildings` (`src/render/homeBuildings.ts`) liegt bereit.
-
-### 2026-10-06 · CI · Runner `ubuntu-24.04` festgenagelt (R293), Umstieg Ubuntu 26 später
-
-- Fundort: `.github/workflows/`
-- Beobachtung: Der Runner ist auf `ubuntu-24.04` festgelegt (R293). Der Umstieg auf Ubuntu 26 ist später ein eigenes Paket.
-- Ursprung: CI-ACTIONS-NODE.
-
-### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 (Ist-Galerie)
-
-- **Fundort / Beobachtung:** Wiese: Dunkle Tonflecken haben eckige, polygonale Ränder mit geraden Abschnitten
-  (`.studio/qa/art-stil-02/s1-wald-z1.png`, `s1-wald-z2.png`); D8 aus dem Stilrahmen ist also nicht ganz behoben.
-  **Einschätzung:** mittel; die Wiese ist Nutzer-Referenz, deshalb nicht in ART-STIL-02 eingeplant; Ursache in
-  `terrain.ts` (Mottling bzw. Fleckenrauschen) klären. **Ursprung:** ART-STIL-02, lead-art.
-- **Fundort / Beobachtung:** Die Grenze Gras/Sand verläuft bei Zoom 0,5 als Rautentreppe entlang der Kacheln
-  (`s2-gesamt-z0.5.png`, Westzunge und Südküste), anders als die weiche Küstenlinie. **Einschätzung:** niedrig bis
-  mittel; ein Kandidat für ein späteres Boden-Häppchen. **Ursprung:** ART-STIL-02, lead-art.
-- **Fundort / Beobachtung:** QA-Skripte: Ein per `house.tier = 4` gesetztes Wohnhaus ergibt einen Stand, den
-  `deserialize` als „Beschädigter Spielstand" abweist; die Startkarte zeigt dann den Hinweis zu beschädigten Ständen.
-  **Einschätzung:** niedrig; nur Werkzeug-Falle (Galerie-Skripte setzen Stufe 1–3); das künftige
-  `tools/render-qa/galerie.mjs` (L1) berücksichtigt es. **Ursprung:** ART-STIL-02, lead-art.
-
-### 2026-10-06 · Render/Werkzeuge · Befunde aus ART-STIL-02 L1 (Wald)
-
-- **Fundort / Beobachtung:** `src/render/renderer.ts`: Bäume werden nur über den Kachelbereich `range` gecullt,
-  ohne Zuschlag für den neuen Kronenüberhang (bis 0,35 Kachel) plus Stempelversatz (bis 0,3). Am Bildrand können
-  Randkronen bis etwa eine Kachel zu früh bzw. zu spät erscheinen. **Einschätzung:** niedrig; fällt nur beim
-  Scrollen am Rand auf; Fix: `range` für Bäume um 1 Kachel erweitern (renderer.ts gehört L4/L7). **Ursprung:**
-  ART-STIL-02 L1, art-rendering-engineer.
-- **Fundort / Beobachtung:** `tools/render-qa/perf.mjs` misst ohne `--w/--h` bei 1280 × 800, die Spec
-  „Lebendige Insel" §5 nennt 1920 × 1080. **Einschätzung:** niedrig; im Briefing `--w 1920 --h 1080` nennen
-  oder den Standard angleichen. **Ursprung:** ART-STIL-02 L1, art-rendering-engineer.
-- **Fundort / Beobachtung:** `window.__inselDev` hat keinen Hook für die Tageszeit; `galerie.mjs` kann daher kein
-  Nachtbild erzeugen (Spec §6.0 „Nacht als Option"). **Einschätzung:** niedrig; L7 (Glühwürmchen, Meeresleuchten)
-  braucht Nachtbilder; ein Dev-Hook in `src/ui/` wäre ein kleines UI-Paket. **Ursprung:** ART-STIL-02 L1.
-- **Fundort / Beobachtung:** `src/render/trees.ts` ~Z. 120: `hash2(513 + floor(c.s * 65536), …)` mischt einen
-  Kronenwert ins Salz statt dem Schema `seed + Salz` zu folgen. Keine Kollision gefunden. **Einschätzung:**
-  niedrig; bei der nächsten Änderung an trees.ts (L6) auf `seed + 513` mit `s` als Argument umstellen.
-  **Ursprung:** ART-STIL-02 L1, qa-code-reviewer.
-
-### 2026-10-06 · Render · Befunde aus ART-STIL-02 L4 (Deko)
-
-- **Fundort / Beobachtung:** `src/render/decor.ts` (`decorHill`) dupliziert `meadowHill` aus `terrain.ts`, um einen
-  Import-Zyklus zu vermeiden; die Gleichheit sichert nur ein Test. **Einschätzung:** niedrig; beim nächsten Umbau von
-  `terrain.ts` in ein reines Feldmodul zusammenführen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
-- **Fundort / Beobachtung:** `src/render/renderer.ts`: Der Culling-Zuschlag von 1 Kachel für Bäume und Deko-Stempel
-  setzt voraus, dass Kronen höchstens eine Kachel über ihre Kachel hinausragen. **Einschätzung:** niedrig; bei
-  grösseren Kronen in `trees.ts` (L6, Riesenbaum) den Zuschlag mitprüfen. **Ursprung:** ART-STIL-02 L4, qa-code-reviewer.
-- **Fundort / Beobachtung:** `src/render/decor.ts`: S/E-Orte sind statisch (D1) und meiden den „Urwald-Schätzer"
-  (`generateTerrain` lesend). Nach Aufforsten können gelöste S/E-Elemente unsichtbar werden. **Einschätzung:**
-  niedrig; L8 soll beim 3–6-Band die sichtbaren Elemente zählen, nicht die gelösten. **Ursprung:** ART-STIL-02 L4,
-  art-rendering-engineer.
-- **Fundort / Beobachtung:** Worktree `.worktrees/art02-l4`: Ein Eintrag `stash@{0}` bleibt liegen, weil der Hook
-  `git stash drop` blockt; der Inhalt ist schon committet. **Einschätzung:** niedrig; beim Aufräumen des Worktrees
-  verschwindet er nicht von selbst (Stashes sind repo-weit), Entfernen nur durch den Nutzer. **Ursprung:** ART-STIL-02 L4.
-- **Fundort / Beobachtung:** `src/render/decor.ts` (`coastKind`): Die Kiefernküste (§3.7) hat in L5 nur „D1 selten“;
-  „Nadelbäume bis an den Sand“ fehlt, weil `trees.ts`/`forest.ts` für L5 gesperrt waren. **Einschätzung:** mittel für
-  das Bildziel Inselcharakter; L8 (Varianten §3.7 vollständig) mit Schreibrecht auf `forest.ts` nachziehen.
-  **Ursprung:** ART-STIL-02 L5, art-rendering-engineer.
-- **Fundort / Beobachtung:** `src/render/decor.ts`: Wrack (E1), Felseiland (E8), Felsnadel (E3-S) und Kiste (D9) haben
-  eigene Lose ausserhalb von `RARE_POOL`, weil `RARE_CAP` = 6 sie sonst verdrängt. **Einschätzung:** mittel; L8 muss sie
-  beim 3–6-Seltenheitsband mitzählen. **Ursprung:** ART-STIL-02 L5, art-rendering-engineer.
-- **Fundort / Beobachtung:** `src/render/water.ts` `seaFoamVisible` → `seaContext(world)` je Frame (`Object.values`
-  über alle Gebäude plus `JSON.stringify`). **Einschätzung:** niedrig; billiger Schnellpfad (Kontorzahl oder
-  `nextBuildingId`) beim nächsten Eingriff in `water.ts` (L8). **Ursprung:** ART-STIL-02 L5, qa-code-reviewer.
-
-### 2026-10-07 · Render · Befunde aus der L1-Fix-Runde R298 (Wald)
-
-- **Fundort / Beobachtung:** Übersicht Zoom 0,5 (`.studio/qa/art-stil-02/l1r2/nachher/s1-, s5-, s7-gesamt-z0.5.png`):
-  Waldflächen lesen sich weiter als Rauten und Parallelogramme. Ursache ist die Waldmaske aus der Welterzeugung
-  (Kachelauflösung), dazu Waldboden und Schattenkante in `terrain.ts`, die die Maskenlinie nachzeichnen. Der
-  Stempelversatz (höchstens 0,5 Kachel) bricht das bei Zoom 0,5 nicht. **Einschätzung:** mittel; Hebel ausserhalb
-  von `forest.ts`/`trees.ts`: Waldboden mit vollem Kronenversatz in `terrain.ts`, Vorwald-Bäume auf Wiesenkacheln am
-  Rand (`decor.ts`, Solitär-Mechanik) oder eine weichere Maske in `src/sim` (Ruling nötig). **Ursprung:** ART-STIL-02
-  L1r2, lead-art und art-rendering-engineer.
-- **Fundort / Beobachtung:** `src/render/iso.ts` sortiert gleich tiefe Stempel nach `fp.x`; der rechte Nachbar deckt
-  Kronen, die räumlich vor ihm liegen. Möglicher Grund für leichte Kachelbänder im Laubdach, ungeprüft.
-  **Einschätzung:** niedrig; beim nächsten Paket an `iso.ts` messen. **Ursprung:** ART-STIL-02 L1r2,
-  art-rendering-engineer.
-- **Fundort / Beobachtung:** `src/render/terrain.ts` ~Z. 952: Kommentar „wo die Krone vorragt (a > 0)" stimmt nach
-  R298 nur noch ungefähr, der Boden folgt dem Randfeld flacher gestaucht als die Kronen. **Einschätzung:** niedrig;
-  beim nächsten Eingriff in `terrain.ts` nachziehen. **Ursprung:** ART-STIL-02 L1r2, qa-code-reviewer.
-
-### 2026-10-06 · Befunde aus dem Release-Lauf REL-06 (lead-qa)
-
-- 2026-10-06 · `src/render/groundDecor.ts`/`decor.ts` · Boden-Deko neben neuem Gebäude/Weg wechselt die Art (nach
-  Abriss wieder wie vorher). Einschätzung: niedrig, Kandidat für L8. Ursprung: Release-Lauf REL-06.
-- 2026-10-06 · Spiel/Fremdinsel · Direkt nach Kontor II ist kein Haus baubar („Kein Bauland", „Ausserhalb der
-  Versorgung"). Einschätzung: mittel, prüfen ob Absicht (Reichweite Kontor II) oder Fehler; Kandidat SEE-F2-UX.
-  Ursprung: Release-Lauf REL-06.
-- 2026-10-06 · `tools/render-qa/perf` · Der Seed-14-Lauf brach 2× beim Start ab (`cachesReady` undefiniert).
-  Einschätzung: niedrig, Werkzeug. Ursprung: Release-Lauf REL-06.
-- 2026-10-06 · Git · Drei Commits mit Präfix `perf:` (nicht in der Konvention). Einschätzung: niedrig, Hinweis.
-  Ursprung: Release-Lauf REL-06.
-- 2026-10-06 · Gebirge · Die Südwestecke in Seed 7 Zoom 1 wirkt eckig (L2). Einschätzung: niedrig, Kandidat L6/L8.
-  Ursprung: Release-Lauf REL-06.
-- 2026-10-06 · Blindtest L3 · Spielbilder ohne Statusmarken; künftige Blindtests mit Szene inklusive Marken.
-  Einschätzung: niedrig, Prüf-Vorlage. Ursprung: Release-Lauf REL-06.
-
-### 2026-10-07 · Tests · Zeitreserve-Altlast (TOOL-CHECK-ZEITTEST)
-
-- 2026-10-07 · `tools/zeitreserve/baseline.json` · 26 Bestandstests verletzen die Zeitreserve-Regel (Timeout ≥ 8× lokale
-  Laufzeit) und stehen als Altlast in der Baseline; abzuarbeiten, wenn die Tests ohnehin angefasst werden.
-  Ursprung: TOOL-CHECK-ZEITTEST.
-
-### 2026-10-07 · Render · Fauna L7 (ART-STIL-02)
-
-- 2026-10-07 · `src/render/fauna.ts` C7 · Das Gischt-Glitzern am Kliff (C7) hat Pose und Zeichner, hängt aber erst nach
-  dem Merge von L6 und L7 am Renderer. Einschätzung: mittel, beim L6/L7-Zusammenführen anschliessen und im Browser
-  prüfen. Ursprung: Review L7.
-- 2026-10-07 · `tests/render/fauna.test.ts` „Eignung über die Seeds 1–20“ · Lief unter starker Rechnerlast einmal 689 s
-  statt ≈ 6 s und riss das 5-s-Limit. Einschätzung: niedrig, Kandidat für die Zeitreserve-Prüfung bzw. `ZEITTESTS`.
-  Ursprung: L7 Fix-Runde 2.
-
-### 2026-10-06 · Render · Befunde aus ART-STIL-02 L6 (Entdecken)
-
-- **Fundort / Beobachtung:** `src/render/forest.ts` `forestClearing` (Salz 508, Schwelle 0,78 auf Rauschen mit 5 Kacheln
-  Merkmal): über Seeds 1–50 hat eine Insel 0–3 zusammenhängende Lichtungen (Median 1); Katalog B2 verlangt G (2–12 je
-  Insel). L6 zeichnet den Farn auf genau diesen Kacheln. **Einschätzung:** niedrig bis mittel; Schwelle oder
-  Merkmalgrösse in L1 bzw. L8 (Seltenheitsbudget) anpassen, Bild des Waldes erneut abnehmen. **Ursprung:** ART-STIL-02
-  L6, art-rendering-engineer.
-- **Fundort / Beobachtung:** `tests/render/renderer.test.ts` pinnt den Hash der Heimat-Aufrufliste; L4 und L6 ändern
-  ihn beide. Beim Merge von Release B muss der Pin auf dem zusammengeführten Stand neu gesetzt werden.
-  **Einschätzung:** niedrig; Merge-Hinweis für den Integrator. **Ursprung:** ART-STIL-02 L6, lead-art. **Erledigt** in REL-07 Lauf B (Pin neu gesetzt, Befund B9).
-
-### 2026-10-08 · Studio · Ampelklasse „Leads“ mischt Steuerung und Autorenarbeit
-
-- 2026-10-08 · `tools/studio/efficiency.py` (`role_class`) · Plan-Leads (z. B. M12-SEE-PLAN, 89 Turns, 20 % einer Session)
-  zählen als „Leads“ und damit als Steuerung; Planungssessions sind dadurch strukturell rot. Einschätzung: mittel,
-  Trennung über M1 der Retro, keine Schwellenänderung. Ursprung: `docs/studio/retros/2026-10-08-ampel-steuerung.md`.
-
-### 2026-10-08 · Studio · Paketfeld der Lead-Instanzen nicht normalisiert
-
-- 2026-10-08 · `tools/studio/efficiency.py` (Tabelle „Lead-Instanzen") · `ART-STIL-02-umsetzung` und `ART-STIL-02`
-  erscheinen getrennt; Paketfamilien-Summen können dadurch zerfallen. Einschätzung: klein, beim nächsten Eingriff in
-  die Paketzuordnung normalisieren. Ursprung: TOOL-AMPEL-M1 (Bericht lead-tech).
-
-### 2026-10-08 · Tests · Zeittest B6 in save.test.ts einmal rot
-
-- 2026-10-08 · `tests/sim/save.test.ts` (B6 `createWorld` Mittel über Seeds 1…50, `perfBudget(5)`) · ein `make check`
-  rot, Wiederholung grün; Last im Lauf unbelegt. Einschätzung: Restflackern des Zeitbudgets trotz Serienlauf (E-030),
-  gehört zu TOOL-TIMEOUTS/`perfBudget` (R318). Ursprung: Coach-Rotation R319.
-
-### 2026-10-08 · Render · Befunde aus FIX-REL07 (REL-07 Fix-Runde, R313)
-
-- 2026-10-08 · Kaltstart Seed 14 (`.studio/qa/fix-rel07/kprof-*.txt`) · Kandidat 22–24 s gegen main 11–15 s bis
-  `cachesReady`; Ursache Rasterarbeit der Terrain-Ebene L5–L7 (`(program)` 17,3 gegen 12,2 s, `drawImage` 808 gegen
-  318 ms), nicht der Wald. Der Kandidat hat im Spiel kaum Leerlaufreserve (`(idle)` ~0 gegen ~20 ms im Profil), daher
-  kippen Zusatzarbeiten Frames auf 33 ms. Einschätzung: mittel; eigenes Paket „Terrain-Rasterkosten L5–L7 senken",
-  wenn das Perf-Budget nicht reicht. Ursprung: FIX-REL07 a, art-rendering-engineer.
-- 2026-10-08 · `src/render/massif.ts` Massiv-Teilstücke · Tragen grosse Raster (Seed 14 ca. 330 MB als JSON);
-  `toEqual` auf `sortedObjects` hängt deshalb, Tests vergleichen nur Kennung und Kacheln. Einschätzung: niedrig.
-  Ursprung: FIX-REL07 a.
-- 2026-10-08 · `src/render/decor.ts` `stampBlocked` · Stempel lesen Gebäude und Wege, hängen also nicht nur am Kontor;
-  ein Stempel-Cache je Kontor wäre falsch. Einschätzung: niedrig, Hinweis für spätere Optimierung. Ursprung: FIX-REL07 a.
-- 2026-10-08 · `src/render/decorStamps.ts` `minStampScale` · Für Wrack und Felseiland seit der Zoom-Schwelle 0,5
-  (FIX-REL07 b) toter Pfad, samt Tests belassen. Einschätzung: niedrig, beim nächsten Eingriff entfernen. Ursprung:
-  FIX-REL07 b.
-- 2026-10-08 · Rater-Bedenken REL-07 Lauf B (R313 e, Handoff `2026-10-08-l0-lead-qa-rel07-befunde.md` B10–B13) · Sand
-  mit Stufen-/Rautenkanten (Seed 2, Zoom 0,5); isolierte Riff-Schaumbögen wirken wie Möwen; heller Gebirgs-Fussring
-  folgt Rautendiagonalen (L2); kleine Tiere ohne Hinweis kaum benennbar, Hütten-Tür. Einschätzung: niedrig, nicht
-  blockierend; Kandidaten für eine Art-Feinrunde. Ursprung: lead-qa, Release-Lauf B.
-
-### 2026-10-08 · Render · Befunde ausserhalb Scope aus REL-07 Lauf B (R327)
-
-Quelle: `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md`. B3/B5 erledigt, B4/B7/B8 per R313 angenommen,
-B10–B13 stehen oben, B9 ist oben als erledigt markiert, B15 ohne Aktion.
-
-- 2026-10-08 · Fauna-Anker `src/render/fauna.ts:624-672` (B1) · Anker werden einmal je Welt aus dem Zustand beim ersten
-  Aufruf gebildet (inkl. Gebäudeprüfung); nach neuem Weg plus Speichern/Laden liegen sie in 6/6 Seeds anders. Nur
-  Darstellung, nicht Sim. Einschätzung: niedrig; Orte nur aus statischem Gelände, Bebauung über `alive` filtern.
-  Ursprung: lead-qa, Release-Lauf B.
-- 2026-10-08 · `tests/render/renderer.test.ts:1240` (B2) · AK-E1-10 prüft nur noch Nacht; das Tagbild mit Fauna und
-  Delfinen ist ungepinnt. Einschätzung: niedrig; Pin für Tag nachziehen oder Begründung als Ruling. Ursprung: lead-qa.
-- 2026-10-08 · `src/render/fauna.ts` (B6) · Toter Code (`fallSparks`/`drawFallSparks`/`FALL_SPARK_MS` nur in Tests,
-  Kopfkommentar `:38-39` veraltet); doppelte `sightFree`-/Höhenabfrage (`fauna.ts:326-363` und `massif.ts`); `seaBlocked`
-  je Tier und Frame über alle Gebäude (`:1101`). Einschätzung: niedrig; Aufräumen in einem Folgehäppchen. Ursprung: lead-qa.
-- 2026-10-08 · `.studio/qa/rel-07b/partA` (B14) · A/A-Läufe (`perf-nah-b`, `perf-fern-b`: A = B = Kandidat) sind nur
-  Rauschreferenz (+0,1 ms), kein Vergleich gegen main; der Zwischenstand der Vorinstanz nannte sie „A/B gegen main“.
-  Einschätzung: niedrig; Beschriftung beachten. Ursprung: lead-qa.
-
-### 2026-10-08 · Render · Kandidaten aus der REL-07-Nachprüfung (R327)
-
-Quelle: `.studio/qa/rel-07c/stand.md`, Handoff `.studio/handoffs/2026-10-08-lead-qa-lead-qa.md`.
-
-- 2026-10-08 · Meeresfelsen bei Zoom 0,5 (Blindprobe `blind-c/`) · wirken wie Boote („Sandbank, vielleicht Boot“).
-  Einschätzung: niedrig; Kontrast/Form des Felseilands prüfen. Ursprung: lead-qa, Nachprüfung.
-- 2026-10-08 · Schaumflecken ohne Objekt bei Zoom 0,25 · wirken rasterartig. Einschätzung: niedrig; mit B11
-  (Schaum an Riff/Fels binden) zusammen angehen. Ursprung: lead-qa, Nachprüfung.
-- 2026-10-08 · Waldaufbau nach einem Bau (`altwald.mjs`, Seeds 7 und 14) · das neue Haus steckt in den Aufbau-Frames
-  (ca. 0,13 s) bis auf die Dachspitze in alten Baumkronen und wird erst im Abschluss-Frame frei. Einschätzung: niedrig,
-  kurz; bei PERF-L57 mitprüfen. Ursprung: lead-qa, Nachprüfung.
-- 2026-10-08 · Messskripte (`hitch*.mjs`, `altwald.mjs`, `proben.mjs`, `perf-lauf.sh` in `.studio/qa/rel-07c/`,
-  `rel-07b/`, `fix-rel07/`) · gehören nach `tools/render-qa/` (R315), sonst gehen sie mit dem Scratchpad verloren.
-  Einschätzung: mittel, vor PERF-L57. Ursprung: lead-qa.
-
-### 2026-10-08 · Tests · Zeitreserve-Warnungen `groundBeach.test.ts` D9 und D5
-
-- 2026-10-08 · `tests/render/groundBeach.test.ts` · D9 (1250 ms) und D5 (1034 ms) melden Zeitreserve-Warnungen
-  (`make zeitreserve`). Einschätzung: niedrig; Kandidat für hergeleitete Timeouts nach dem Muster R318/R322/R328,
-  bevor CI sie rot färbt. Ursprung: Nachlauf REL-07 (R328).
-
-### 2026-10-08 · Studio · Alte Worktrees unter `.worktrees/`
-
-- 2026-10-08 · `.worktrees/` (`git worktree list`, 25 Einträge) · über 20 Worktrees bereits gemergter Pakete liegen
-  noch da. Einschätzung: niedrig, Platz und Verwechslungsgefahr (vgl. R324); Aufräumen braucht vorher je Worktree eine
-  Prüfung auf ungesicherte Änderungen (`git status`, unmerged Commits). Ursprung: Nachlauf REL-07, lead-production.
