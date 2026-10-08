@@ -14,6 +14,7 @@ import { friendlyReason } from '../../src/ui/hints';
 import {
   buyShipView,
   goodChoices,
+  homeKontorPanel,
   lossMessages,
   retireView,
   routeFromClick,
@@ -26,6 +27,7 @@ import {
 import { deficitText } from '../../src/ui/texts';
 import { seeRouteStart } from '../sim/scenariosSea';
 import { setHouse } from '../sim/helpers';
+import { createWorld } from '../../src/sim/world';
 
 const FELS = 2;
 
@@ -262,5 +264,23 @@ describe('M12 E4 Inselbestand in Ausbau-Gründen (Pflichtzusatz B)', () => {
     sea.islands[0]!.stock[d!.good] = 500;
     sea.islands[FELS]!.stock[d!.good] = 0;
     expect(deficitLine(sea, h)).toBe(deficitText(d!.good, 0, d!.net));
+  });
+});
+
+describe('SEE-F2-UX T3 homeKontorPanel', () => {
+  it('vor der Seefahrt: Handel', () => {
+    expect(homeKontorPanel(createWorld(1))).toBe('trade');
+  });
+  it('Seefahrt frei und Schiff vorhanden: Kontor-Panel mit Schiffen', () => {
+    const w = seeRouteStart();
+    expect(w.ships.length).toBeGreaterThan(0);
+    expect(homeKontorPanel(w)).toBe('inspect');
+  });
+  it('Seefahrt frei, kein Schiff, nicht kaufbar: Handel', () => {
+    const w = seeRouteStart();
+    w.ships = [];
+    w.money = 0;
+    expect(buyShipView(w).reason).not.toBeNull();
+    expect(homeKontorPanel(w)).toBe('trade');
   });
 });

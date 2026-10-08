@@ -7,7 +7,7 @@ import { islandName } from '../sim/islands';
 import { buyShip, freeShipAtHome, retireShip } from '../sim/ships';
 import type { StepReport } from '../sim/tick';
 import type { GoodId, Route, RouteGood, Ship, World } from '../sim/types';
-import { goodUnlocked } from '../sim/unlocks';
+import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { HOME } from '../sim/world';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
@@ -529,4 +529,10 @@ export function highlightShip(panel: HTMLElement, id: number | null): void {
   applyHighlight(box, st);
   if (id !== null)
     box.querySelector<HTMLElement>(`[data-ship="${id}"]`)?.scrollIntoView?.({ block: 'nearest' });
+}
+
+/** Heimatkontor-Klick: Schiffe zeigen (Kontor-Panel), sobald Seefahrt frei und ein Schiff da oder kaufbar ist; sonst Handel. */
+export function homeKontorPanel(world: World): 'inspect' | 'trade' {
+  if (functionLock(world, 'seafaring') !== null) return 'trade';
+  return world.ships.length > 0 || buyShipView(world).reason === null ? 'inspect' : 'trade';
 }
