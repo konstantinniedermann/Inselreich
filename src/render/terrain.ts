@@ -1063,15 +1063,59 @@ export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
   return landSharesAtNode(g, (fx * TEX) / RASTER, (fy * TEX) / RASTER);
 }
 
+/** Pixelfeine Verwerfung der Abtastposition (Texturpixel): Wellenlänge und Amplitude, Salz lokal (nicht in `decor.ts`). */
+const WARP_WAVE = 3;
+const WARP_AMP = 3;
+const WARP_SALT = 9100;
+
 /**
  * Abtastposition (Gitterknoten) eines Pixels. Gemeinsame Quelle von `paintPixels` und der Rauten-Metrik
  * (`tests/render/rauten.test.ts`): `qx/qy` = Pixelmitte in Texturpixeln (Faktor 1), Ergebnis in `out` = [gx, gy].
  */
 export function sampleNode(g: TerrainGrid, qx: number, qy: number, out: number[]): number[] {
-  void g;
-  out[0] = qx / RASTER;
-  out[1] = qy / RASTER;
+  const t = warpTable(g.seed);
+  const u = qx * (1 / WARP_WAVE),
+    v = qy * (1 / WARP_WAVE);
+  const u0 = Math.floor(u),
+    v0 = Math.floor(v);
+  const fu = u - u0,
+    fv = v - v0;
+  const x0 = u0 & WARP_MASK,
+    x1 = (u0 + 1) & WARP_MASK,
+    r0 = (v0 & WARP_MASK) << WARP_BITS,
+    r1 = ((v0 + 1) & WARP_MASK) << WARP_BITS;
+  const i00 = (r0 | x0) << 1,
+    i10 = (r0 | x1) << 1,
+    i01 = (r1 | x0) << 1,
+    i11 = (r1 | x1) << 1;
+  const w00 = (1 - fu) * (1 - fv),
+    w10 = fu * (1 - fv),
+    w01 = (1 - fu) * fv,
+    w11 = fu * fv;
+  out[0] =
+    (qx + (t[i00]! * w00 + t[i10]! * w10 + t[i01]! * w01 + t[i11]! * w11) * WARP_AMP) / RASTER;
+  out[1] =
+    (qy +
+      (t[i00 + 1]! * w00 + t[i10 + 1]! * w10 + t[i01 + 1]! * w01 + t[i11 + 1]! * w11) * WARP_AMP) /
+    RASTER;
   return out;
+}
+
+const WARP_BITS = 6;
+const WARP_MASK = (1 << WARP_BITS) - 1;
+let warpCache: { seed: number; t: Float32Array } | null = null; // höchstens ein Eintrag (Obergrenze 1)
+/** Rauschtabelle (x, y je Ecke in −1…1) des Seeds; periodisch über 64 Ecken, aus `hash2` abgeleitet. */
+function warpTable(seed: number): Float32Array {
+  if (warpCache && warpCache.seed === seed) return warpCache.t;
+  const n = 1 << WARP_BITS;
+  const t = new Float32Array(n * n * 2);
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++) {
+      t[(y * n + x) * 2] = hash2(seed + WARP_SALT, x, y) * 2 - 1;
+      t[(y * n + x) * 2 + 1] = hash2(seed + WARP_SALT + 1, x, y) * 2 - 1;
+    }
+  warpCache = { seed, t };
+  return t;
 }
 
 /** Dünen-Tonwert (vor der Stufung) am Gitterpunkt (gx, gy) in Knoten, bilinear wie in `duneContrast`. */
@@ -1209,28 +1253,30 @@ export function paintPixels(
   const node = [0, 0];
   for (let py = 0; py < h; py++) {
     for (let px = 0; px < w; px++) {
-      sampleNode(g, (px0 + px + 0.5) / scale, (py0 + py + 0.5) / scale, node);
-      const gx = node[0]!,
-        gy = node[1]!;
-      const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
-      const ty = Math.min(Math.max(gy - j, 0), 1);
-      const i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
-      const tx = Math.min(Math.max(gx - i, 0), 1);
-      const a = j * nx + i,
+      const qx = (px0 + px + 0.5) / scale,
+        qy = (py0 + py + 0.5) / scale;
+      // Wasser/Land entscheidet die unverschobene Position (Küste bleibt, wo Schaum und Objekte sie erwarten)
+      let gx = qx / RASTER,
+        gy = qy / RASTER;
+      let j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+      let ty = Math.min(Math.max(gy - j, 0), 1);
+      let i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
+      let tx = Math.min(Math.max(gx - i, 0), 1);
+      let a = j * nx + i,
         b = a + 1,
         c = a + nx,
         d = c + 1;
-      const w00 = (1 - tx) * (1 - ty),
+      let w00 = (1 - tx) * (1 - ty),
         w10 = tx * (1 - ty),
         w01 = (1 - tx) * ty,
         w11 = tx * ty;
       const lerp = (f: Float32Array): number =>
         f[a]! * w00 + f[b]! * w10 + f[c]! * w01 + f[d]! * w11;
-      const c0 = cls[a]!;
+      let c0 = cls[a]!;
       // reine Zelle: vier gleiche Klassen, und an Land trägt jeder Knoten nur seinen Typ (Indikator 1)
-      const uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
-      const own = c0 === 0 ? null : ind[c0 - 1]!;
-      const pure =
+      let uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
+      let own = c0 === 0 ? null : ind[c0 - 1]!;
+      let pure =
         uniform && (own === null || (own[a] === 1 && own[b] === 1 && own[c] === 1 && own[d] === 1));
       const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
       if (water) {
@@ -1239,6 +1285,41 @@ export function paintPixels(
         const rim = rimWeight((px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, tilesW, tilesH);
         if (rim < 1) mix3(C.deep, col, rim, col);
       } else {
+        // ART-WALD-RAUTEN: Lesen aller Land-Felder an der pixelfein verworfenen Position (Typ-, Saum-, Ton- und Dünenfeld)
+        sampleNode(g, qx, qy, node);
+        gx = node[0]!;
+        gy = node[1]!;
+        j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+        i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
+        const wa = j * nx + i;
+        if (
+          wa !== a &&
+          !(cls[wa] === 0 && cls[wa + 1] === 0 && cls[wa + nx] === 0 && cls[wa + nx + 1] === 0)
+        ) {
+          ty = Math.min(Math.max(gy - j, 0), 1);
+          tx = Math.min(Math.max(gx - i, 0), 1);
+          a = wa;
+          b = a + 1;
+          c = a + nx;
+          d = c + 1;
+          w00 = (1 - tx) * (1 - ty);
+          w10 = tx * (1 - ty);
+          w01 = (1 - tx) * ty;
+          w11 = tx * ty;
+          c0 = cls[a]!;
+          uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
+          own = c0 === 0 ? null : ind[c0 - 1]!;
+          pure =
+            uniform &&
+            (own === null || (own[a] === 1 && own[b] === 1 && own[c] === 1 && own[d] === 1));
+        } else if (wa === a) {
+          ty = Math.min(Math.max(gy - j, 0), 1);
+          tx = Math.min(Math.max(gx - i, 0), 1);
+          w00 = (1 - tx) * (1 - ty);
+          w10 = tx * (1 - ty);
+          w01 = (1 - tx) * ty;
+          w11 = tx * ty;
+        }
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
         let wMt: number,
           wFlur: number,

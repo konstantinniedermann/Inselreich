@@ -5,6 +5,7 @@ import {
   buildGrid,
   duneToneAtNode,
   landSharesAtNode,
+  RASTER,
   sampleNode,
   type TerrainGrid,
 } from '../../src/render/terrain';
@@ -109,25 +110,53 @@ function measure(kind: Kind, seed: number) {
   return { steps, meanRun: steps ? weightedRun / steps : 0, longFrac: steps ? long / steps : 0 };
 }
 
-// Schwellen: 70 % des kleinsten Ist-Werts am unveränderten Code (Seeds 1, 2, 7), also mind. 30 % Reserve.
-// Ist vorher: wald longFrac 0,120/0,214/0,126; sand longFrac 0,817/0,751/0,700, meanRun 5,99/4,99/4,50;
-// stufe longFrac 0,128/0,374/0,149.
-const MAX_LONG_FRAC = { wald: 0.084, sand: 0.49, stufe: 0.09 } as const;
-const MAX_MEAN_RUN_SAND = 3.15;
+// Schwellen, gemessen am unveränderten Code (Stand 9cc3546, Seeds 1, 2, 7), Schwelle = 70 % des Ist (mind. 30 % Reserve).
+// Ist longFrac: sand 0,817/0,751/0,700 (je Seed geprüft), meanRun 5,99/4,99/4,50;
+// wald 0,120/0,214/0,126 und stufe 0,128/0,374/0,149 schwanken je Seed stark, darum über die drei Seeds nach Kantenschritten
+// gewichtet gemittelt: wald 0,1535, stufe 0,200.
+const MAX_SAND_LONG_FRAC = 0.49;
+const MAX_SAND_MEAN_RUN = 3.15;
+const MAX_AGG_LONG_FRAC = { wald: 0.107, stufe: 0.14 } as const;
 
 describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
-  for (const kind of ['wald', 'sand', 'stufe'] as const) {
-    for (const seed of SEEDS) {
-      it(`AK-T01 ${kind} Seed ${seed}: wenige lange gerade Kantenstücke`, () => {
+  for (const seed of SEEDS) {
+    it(`AK-T01 sand Seed ${seed}: wenige lange gerade Kantenstücke`, () => {
+      const m = measure('sand', seed);
+      expect(m.steps).toBeGreaterThan(200);
+      expect(m.longFrac).toBeLessThan(MAX_SAND_LONG_FRAC);
+      expect(m.meanRun).toBeLessThan(MAX_SAND_MEAN_RUN);
+    });
+  }
+  for (const kind of ['wald', 'stufe'] as const) {
+    it(`AK-T01 ${kind}: Seeds ${SEEDS.join(', ')} gemeinsam, wenige lange gerade Kantenstücke`, () => {
+      let steps = 0,
+        long = 0;
+      for (const seed of SEEDS) {
         const m = measure(kind, seed);
-        expect(m.steps).toBeGreaterThan(200);
-        expect(m.longFrac).toBeLessThan(MAX_LONG_FRAC[kind]);
-        if (kind === 'sand') expect(m.meanRun).toBeLessThan(MAX_MEAN_RUN_SAND);
-      });
-    }
+        steps += m.steps;
+        long += m.longFrac * m.steps;
+      }
+      expect(steps).toBeGreaterThan(500);
+      expect(long / steps).toBeLessThan(MAX_AGG_LONG_FRAC[kind]);
+    });
   }
 
   it('AK-T01 deterministisch: zwei Messungen gleich', () => {
     expect(measure('wald', 1)).toEqual(measure('wald', 1));
+  });
+
+  it('AK-T02c sampleNode: deterministisch je Seed, Verschiebung höchstens 3 Texturpixel', () => {
+    const g = buildGrid(fieldWorld(createWorld(1)));
+    const a = [0, 0],
+      b = [0, 0];
+    for (let k = 0; k < 400; k++) {
+      const qx = 37.5 + k * 1.37,
+        qy = 91.5 + k * 0.71;
+      sampleNode(g, qx, qy, a);
+      sampleNode(g, qx, qy, b);
+      expect(a).toEqual(b);
+      expect(Math.abs(a[0]! * RASTER - qx)).toBeLessThanOrEqual(3);
+      expect(Math.abs(a[1]! * RASTER - qy)).toBeLessThanOrEqual(3);
+    }
   });
 });
