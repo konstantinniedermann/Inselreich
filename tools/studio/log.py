@@ -8,11 +8,19 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 
 import studio_docs
-from paths import append_event, archive_dir, docs_dir, events_file, now_iso
+from paths import (
+    append_event,
+    archive_dir,
+    docs_dir,
+    events_file,
+    now_iso,
+    repo_root,
+)
 
 STATUSES = (
     "active",
@@ -104,6 +112,27 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _split(text: str) -> list[str]:
     return [x.strip() for x in text.split(",") if x.strip()]
+
+
+def run_prettier(path: str) -> None:
+    """Formatiert die Warteschlange wie `make check` sie erwartet (E-047).
+
+    Fehlt `npx` oder scheitert prettier, gibt es eine Warnung, keinen Abbruch.
+    """
+    try:
+        subprocess.run(
+            ["npx", "prettier", "--write", path],
+            cwd=repo_root(),
+            capture_output=True,
+            check=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(
+            f"studio-log: Warnung: prettier nicht ausgeführt ({exc.__class__.__name__}); "
+            "docs/studio/warteschlange.md vor make check mit 'npx prettier --write' formatieren",
+            file=sys.stderr,
+        )
 
 
 def queue_event(args: argparse.Namespace) -> dict | None:
@@ -259,6 +288,7 @@ def main(argv: list[str] | None = None) -> int:
         if extra is None:
             parser.exit(2, f"studio-log: {args.id} nicht in der Warteschlange\n")
         event.update(extra)
+        run_prettier(str(docs_dir() / "warteschlange.md"))
     append_event(event)
     print(f"studio-log: {args.kind} geschrieben")
     return 0

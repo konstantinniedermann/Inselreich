@@ -4,7 +4,9 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
+import actions
 import efficiency
 import metrics
 
@@ -341,7 +343,23 @@ class RenderTest(Fixture):
             self.assertIn(needle, text)
         self.assertNotIn("shot.png", text)
 
+    def no_gh(self):
+        patch = mock.patch.object(actions, "run_gh", side_effect=OSError)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_cli_efficiency_prints_actions_lines(self):
+        self.no_gh()
+        buffer = io.StringIO()
+        with (
+            unittest_env({"STUDIO_TRANSCRIPTS": str(self.root)}),
+            redirect_stdout(buffer),
+        ):
+            metrics.main(["--efficiency"])
+        self.assertIn("nicht erfasst: Inselreich-Minuten", buffer.getvalue())
+
     def test_cli_efficiency_prints_only_section(self):
+        self.no_gh()
         env = {"STUDIO_TRANSCRIPTS": str(self.root)}
         buffer = io.StringIO()
         with unittest_env(env), redirect_stdout(buffer):
@@ -352,6 +370,7 @@ class RenderTest(Fixture):
         self.assertNotIn("## Aufwand", out)
 
     def test_cli_sessions_limit(self):
+        self.no_gh()
         write(self.root / "s0.jsonl", [assistant("z", "claude-opus-4", out=1)])
         env = {"STUDIO_TRANSCRIPTS": str(self.root)}
         (self.root / "s0.jsonl").touch()  # neuester
@@ -361,6 +380,7 @@ class RenderTest(Fixture):
         self.assertIn("1 Session", buffer.getvalue())
 
     def test_cli_without_transcripts(self):
+        self.no_gh()
         env = {"STUDIO_TRANSCRIPTS": str(self.root / "leer")}
         buffer = io.StringIO()
         with unittest_env(env), redirect_stdout(buffer):

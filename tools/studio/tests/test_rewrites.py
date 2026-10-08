@@ -146,6 +146,7 @@ class RewriteEmptyTest(unittest.TestCase):
             with (
                 mock.patch.object(metrics, "latest_transcripts", return_value=[path]),
                 mock.patch.object(metrics, "load_events", return_value=[]),
+                mock.patch.object(metrics.actions, "run_gh", side_effect=OSError),
                 redirect_stdout(out),
             ):
                 metrics.main(["--efficiency"])
