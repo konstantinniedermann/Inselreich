@@ -127,7 +127,7 @@ schliesst den Eintrag.
 ## N-98 · offen · 2026-10-08 · GitHub Actions wieder einschalten — mit Sparregeln?
 
 - Frage: CI und Pages sind seit 2026-10-08 abgeschaltet (Nutzer-Stopp, R333). Wieder einschalten, und wenn ja, mit welchen Regeln?
-- Empfehlung: Einschalten mit drei Regeln: (1) CI und Pages ignorieren reine Doku-Pushes (paths-ignore docs/**, **/*.md, .studio/**, .claude/**) — 324 von 433 main-Pushes im Oktober waren docs:; (2) Pages nur noch manuell beim Release (workflow_dispatch durch den Integrator); (3) CI mit concurrency cancel-in-progress. Erwartung: rund 50–150 statt ~3500 min/Monat.
+- Empfehlung: Einschalten mit drei Regeln: (1) CI und Pages ignorieren reine Doku-Pushes (paths-ignore docs/**, **/\*.md, .studio/**, .claude/**) — 324 von 433 main-Pushes im Oktober waren docs:; (2) Pages nur noch manuell beim Release (workflow_dispatch durch den Integrator); (3) CI mit concurrency cancel-in-progress. Erwartung: rund 50–150 statt ~3500 min/Monat.
 - Begründung: Ohne CI fehlt die zweite Prüfung auf frischer Linux-Maschine; ohne Pages geht kein Release mehr live.
 - Kosten des Wartens: Bis zur Antwort: Releases bleiben lokal (make check, CI=true make check als Gate), Pages zeigt REL-07; keine Minuten.
 - Blockiert: Pages-Deploy künftiger Releases, CI-Erfassung (ci.py)
