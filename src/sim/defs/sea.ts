@@ -93,3 +93,5 @@ export const ROUTE_SMOOTH_PASSES = 60;
 export const ROUTE_MIN_DIST = 2;
 /** Radius um die Anker (Kacheln), in dem die Fahrlinie näher an Land liegen darf. */
 export const ROUTE_EXIT_RADIUS = 1.5;
+/** Zuschlag je Zelle unter `ROUTE_MIN_DIST` Landabstand: Engstellen nur, wenn es nicht anders geht. */
+export const ROUTE_NARROW_PENALTY = 20;

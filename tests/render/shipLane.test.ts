@@ -160,7 +160,7 @@ describe('SEE-F1 Schiffspose folgt der Wasserroute', () => {
       [1, 2],
     ] as const) {
       expect(lanePoints(w, b, a)).toEqual([...lanePoints(w, a, b)].reverse());
-      expect(lanePoints(w, a, b).length).toBeGreaterThan(2 - 1);
+      expect(lanePoints(w, a, b).length).toBeGreaterThan(2);
     }
     const fwd = poses(w, 0, 1);
     const back = poses(w, 1, 0);

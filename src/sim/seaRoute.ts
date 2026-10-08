@@ -4,6 +4,7 @@ import {
   ROUTE_DEEP,
   ROUTE_EXIT_RADIUS,
   ROUTE_MIN_DIST,
+  ROUTE_NARROW_PENALTY,
   ROUTE_MARGIN,
   ROUTE_MAX_NODES,
   ROUTE_MAX_TURN,
@@ -137,10 +138,18 @@ class Heap {
 }
 
 const cellCost = (g: Grid, i: number): number =>
-  1 + ROUTE_SHORE_PENALTY * Math.max(0, ROUTE_DEEP - g.dist[i]!);
+  1 +
+  ROUTE_SHORE_PENALTY * Math.max(0, ROUTE_DEEP - g.dist[i]!) +
+  (g.dist[i]! < ROUTE_MIN_DIST ? ROUTE_NARROW_PENALTY : 0);
 
 /** Dijkstra von Zelle `s` nach `t`; Zellfolge oder `null` (nichts gefunden / Deckel). */
-function dijkstra(g: Grid, s: number, t: number, keepOff: boolean): number[] | null {
+function dijkstra(
+  g: Grid,
+  s: number,
+  t: number,
+  zone: number | null,
+  ends: readonly Pt[],
+): number[] | null {
   const best = new Float64Array(g.w * g.h).fill(Infinity);
   const prev = new Int32Array(g.w * g.h).fill(-1);
   const done = new Uint8Array(g.w * g.h);
@@ -162,7 +171,8 @@ function dijkstra(g: Grid, s: number, t: number, keepOff: boolean): number[] | n
       if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
       const j = ny * g.w + nx;
       if (done[j] || (g.blocked[j] && j !== t)) continue;
-      if (keepOff && g.dist[j]! < ROUTE_MIN_DIST && !nearEnd(g, j, s, t)) continue;
+      if (zone !== null && g.dist[j]! < ROUTE_MIN_DIST && !nearAny(cellCenter(g, j), ends, zone))
+        continue;
       if (dx !== 0 && dy !== 0 && (g.blocked[y * g.w + nx] || g.blocked[ny * g.w + x])) continue;
       const c = best[i]! + cellCost(g, j) * (dx !== 0 && dy !== 0 ? DIAG : 1);
       if (c < best[j]!) {
@@ -175,12 +185,10 @@ function dijkstra(g: Grid, s: number, t: number, keepOff: boolean): number[] | n
   return null;
 }
 
-/** Zelle `j` ist Start/Ziel oder einer ihrer 4er-Nachbarn (dort ist Küstennähe erlaubt). */
-function nearEnd(g: Grid, j: number, s: number, t: number): boolean {
-  const close = (e: number): boolean =>
-    Math.abs((j % g.w) - (e % g.w)) + Math.abs(Math.floor(j / g.w) - Math.floor(e / g.w)) <= 1;
-  return close(s) || close(t);
-}
+const cellCenter = (g: Grid, c: number): Pt => ({
+  x: g.x0 + (c % g.w) + 0.5,
+  y: g.y0 + Math.floor(c / g.w) + 0.5,
+});
 
 function unwind(prev: Int32Array, s: number, t: number): number[] {
   const out = [t];
@@ -191,8 +199,8 @@ function unwind(prev: Int32Array, s: number, t: number): number[] {
   return out.reverse();
 }
 
-const nearAny = (p: Pt, ends: readonly Pt[]): boolean =>
-  ends.some((e) => Math.hypot(p.x - e.x, p.y - e.y) <= ROUTE_EXIT_RADIUS);
+const nearAny = (p: Pt, ends: readonly Pt[], radius: number = ROUTE_EXIT_RADIUS): boolean =>
+  ends.some((e) => Math.hypot(p.x - e.x, p.y - e.y) <= radius);
 
 const cellAt = (g: Grid, p: Pt): number => {
   const x = Math.floor(p.x) - g.x0;
@@ -201,9 +209,14 @@ const cellAt = (g: Grid, p: Pt): number => {
 };
 
 /** Wasser und, ausser nahe den Ankern, mindestens `ROUTE_MIN_DIST` Zellen Landabstand. */
-const isClear = (g: Grid, p: Pt, ends: readonly Pt[]): boolean => {
+const isClear = (
+  g: Grid,
+  p: Pt,
+  ends: readonly Pt[],
+  minDist: number = ROUTE_MIN_DIST,
+): boolean => {
   const c = cellAt(g, p);
-  return c < 0 || (!g.blocked[c] && (g.dist[c]! >= ROUTE_MIN_DIST || nearAny(p, ends)));
+  return c < 0 || (!g.blocked[c] && (g.dist[c]! >= minDist || nearAny(p, ends)));
 };
 
 /** Sichtlinie frei, mit Landabstand mindestens `need` (Zellen ausserhalb des Rasters zählen als frei). */
@@ -310,11 +323,11 @@ function smoothSharp(pts: readonly Pt[]): Pt[] | null {
 }
 
 /** Glättet scharfe Stellen, bis der Richtungswechsel passt; bricht ab, bevor der Küstenabstand fällt. */
-function relax(g: Grid, pts: Pt[], ends: readonly Pt[]): Pt[] {
+function relax(g: Grid, pts: Pt[], ends: readonly Pt[], minDist: number): Pt[] {
   let cur = pts;
   for (let k = 0; k < ROUTE_SMOOTH_PASSES; k++) {
     const next = smoothSharp(cur);
-    if (next === null || !next.every((p) => isClear(g, p, ends))) break;
+    if (next === null || !next.every((p) => isClear(g, p, ends, minDist))) break;
     cur = next;
   }
   return cur;
@@ -327,18 +340,24 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   const g = buildGrid(islands);
   const ends = [from, to];
   const [s, t] = [cellAt(g, from), cellAt(g, to)];
-  const cells = dijkstra(g, s, t, true) ?? dijkstra(g, s, t, false);
-  if (cells === null) return straight;
-  const centers = cells.map((c) => ({
-    x: g.x0 + (c % g.w) + 0.5,
-    y: g.y0 + Math.floor(c / g.w) + 0.5,
-  }));
-  centers[0] = from;
-  centers[centers.length - 1] = to;
-  const thinned = thin(g, centers, ends);
-  for (const candidate of [round(thinned), thinned, centers]) {
-    const sampled = resample(candidate);
-    if (sampled.every((p) => isClear(g, p, ends))) return relax(g, sampled, ends);
+  // Erst mit Küstenabstand, dann nur noch Wasser; die Gerade ist der allerletzte Notanker.
+  const levels: [number, number | null][] = [
+    [ROUTE_MIN_DIST, 1],
+    [ROUTE_MIN_DIST, ROUTE_EXIT_RADIUS],
+    [0, null],
+  ];
+  for (const [minDist, zone] of levels) {
+    const cells = dijkstra(g, s, t, zone, ends);
+    if (cells === null) continue;
+    const centers = cells.map((c) => cellCenter(g, c));
+    centers[0] = from;
+    centers[centers.length - 1] = to;
+    const thinned = thin(g, centers, ends);
+    for (const candidate of [round(thinned), thinned, centers]) {
+      const sampled = resample(candidate);
+      if (sampled.every((p) => isClear(g, p, ends, minDist)))
+        return relax(g, sampled, ends, minDist);
+    }
   }
   return straight;
 }

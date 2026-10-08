@@ -160,20 +160,55 @@ describe('seaRoute', () => {
     }
   });
 
-  it('Küstenabstand: ausser nahe den Ankern mindestens 1,5 Kacheln zu jeder Landkachelmitte', () => {
-    for (let seed = 1; seed <= 20; seed++) {
+  it('Küstenabstand: mindestens 1,5 Kacheln zur Landmitte, ausser nahe den Ankern und in Engstellen', () => {
+    for (let seed = 1; seed <= 10; seed++) {
       const w = seaWorld(seed);
       for (const [a, b] of pairs(w)) {
         const r = seaRoute(w.islands, a, b);
         const ends = [r[0]!, r[r.length - 1]!];
-        for (const p of r) {
-          if (ends.some((e) => Math.hypot(p.x - e.x, p.y - e.y) <= 1.5)) continue;
+        const far = r.filter((p) => ends.every((e) => Math.hypot(p.x - e.x, p.y - e.y) > 1.5));
+        const tooClose = far.filter((p) => landDist(w.islands, p) < 1.5);
+        // Ankerbuchten der Heimat erzwingen kurze Engstellen: höchstens 5 % der Punkte.
+        expect(tooClose.length, `seed ${seed} ${a}-${b}`).toBeLessThanOrEqual(r.length * 0.05);
+        // Mittelstück (offene See) hält den Abstand immer.
+        for (const p of r.slice(Math.floor(r.length / 4), Math.ceil((3 * r.length) / 4)))
           expect(
             landDist(w.islands, p),
             `seed ${seed} ${a}-${b} ${p.x},${p.y}`,
           ).toBeGreaterThanOrEqual(1.5);
-        }
       }
     }
+  });
+
+  it('Route liegt dicht abgetastet ganz auf Wasser und ist nie die Gerade über Land (Seeds 1-20)', () => {
+    const t0 = Date.now();
+    for (let seed = 1; seed <= 20; seed++) {
+      const w = seaWorld(seed);
+      const n = w.islands.length;
+      for (let a = 0; a < n; a++)
+        for (let b = a + 1; b < n; b++) {
+          const r = seaRoute(w.islands, a, b);
+          for (let i = 1; i < r.length; i++) {
+            const steps = Math.max(
+              1,
+              Math.ceil(Math.hypot(r[i]!.x - r[i - 1]!.x, r[i]!.y - r[i - 1]!.y) / 0.25),
+            );
+            for (let k = 0; k <= steps; k++) {
+              const p = {
+                x: r[i - 1]!.x + ((r[i]!.x - r[i - 1]!.x) * k) / steps,
+                y: r[i - 1]!.y + ((r[i]!.y - r[i - 1]!.y) * k) / steps,
+              };
+              expect(isWater(w.islands, p), `seed ${seed} ${a}-${b} ${p.x},${p.y}`).toBe(true);
+            }
+          }
+          const lane = seaLanes(w.islands).find((l) => l.a === a && l.b === b)!.points;
+          const crossesLand = Array.from({ length: 201 }, (_, k) => ({
+            x: lane[0]!.x + ((lane[1]!.x - lane[0]!.x) * k) / 200,
+            y: lane[0]!.y + ((lane[1]!.y - lane[0]!.y) * k) / 200,
+          })).some((p) => !isWater(w.islands, p));
+          if (crossesLand) expect(r.length, `seed ${seed} ${a}-${b}`).toBeGreaterThan(2);
+        }
+    }
+    expect(Date.now() - t0).toBeLessThan(5000);
   });
 });

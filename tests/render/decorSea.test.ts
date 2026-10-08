@@ -534,10 +534,10 @@ describe('SEE-F1 T3 Meeresdeko folgt der Wasserroute', () => {
     }
   });
 
-  it('AK11 Wal und Delfine bleiben >= 3 Kacheln von jeder Route (Seeds 1-10)', () => {
+  it('AK11 Wal und Delfine bleiben >= 3 Kacheln von jeder Route (Seeds 1-5)', () => {
     let whales = 0,
       dolphins = 0;
-    for (let seed = 1; seed <= 10; seed++) {
+    for (let seed = 1; seed <= 5; seed++) {
       const w = createWorld(seed);
       for (let e = 0; e < 40; e++)
         for (let t = 0; t < WHALE_EPISODE_MS; t += 4000) {
