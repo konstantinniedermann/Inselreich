@@ -391,6 +391,8 @@ let atlasGen = 0;
 export const treeCacheSize = (): number => atlas.size;
 export const treeCacheBytes = (): number => atlasBytes;
 export function resetTreeCache(): void {
+  composites.clear();
+  compositeBytes = 0;
   fernCache.clear();
   fernSeed = null;
   for (const s of atlas.values()) s.alive = false;
@@ -593,12 +595,30 @@ export function drawTreeStamp(
   if (
     !d ||
     d.step !== step ||
+    d.seed !== seed ||
     (d.gen !== atlasGen && d.list.some((e) => e.s !== null && !e.s.alive))
   )
     drawOf.set(item, (d = drawList(item, step, seed)));
   d.gen = atlasGen;
   const o = worldToScreen(cam, project(item.fp.x, item.fp.y));
   const fern = z >= FERN_MIN_ZOOM - 1e-9;
+  // PERF-L57: ab dem zweiten Zeichnen ein Gesamtbild des Objekts mit einem einzigen drawImage
+  const comp = compositeFor(item, d, step, fern);
+  if (comp) {
+    // Atlas-LRU nur grob nachführen (PERF-L57): das Gesamtbild bleibt auch ohne seine Sprites ein gültiges Bild
+    if (windowNo - comp.touch >= COMPOSITE_TOUCH_WINDOWS) {
+      comp.touch = windowNo;
+      for (const e of d.list) if (e.s) e.s.used = atlasFrame;
+    }
+    ctx.drawImage(
+      comp.canvas,
+      o.x + comp.rx * z,
+      o.y + comp.ry * z,
+      (comp.canvas.width / step) * z,
+      (comp.canvas.height / step) * z,
+    );
+    return;
+  }
   for (const e of d.list) {
     if (e.f) {
       if (fern) ctx.drawImage(e.f, o.x + e.x * z, o.y + e.y * z, e.w * z, e.h * z);
@@ -617,6 +637,157 @@ export function drawTreeStamp(
     e.s.used = atlasFrame;
     ctx.drawImage(e.s.canvas, o.x + e.x * z, o.y + e.y * z, e.w * z, e.h * z);
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Gesamtbild je Wald-Objekt (PERF-L57): ein Objekt hat 3–5 Kronen/Büschel; nach dem ersten Zeichnen wird es einmal in ein
+// eigenes Canvas der Grösse treeBounds · step gemalt und danach mit einem drawImage gezeichnet. Die Sprites liegen dort
+// auf ganzen Gerätepixeln der Zoomstufe (Abweichung zum Direktzeichnen höchstens ein halbes Pixel der Stufe).
+
+/** Obergrenze aller Gesamtbilder in Bytes (RGBA), getrennt vom Kronen-Atlas. */
+export const TREE_COMPOSITE_MAX_BYTES = 16 * 1024 * 1024;
+/** Höchstens so viele Aufbauten je Zeitfenster (≈ Frame); alle anderen Objekte zeichnen direkt. */
+export const TREE_COMPOSITE_PER_FRAME = 12;
+/** Länge des Zeitfensters in ms (ein Frame bei 60 Hz). */
+export const TREE_COMPOSITE_WINDOW_MS = 16;
+/** Ein Gesamtbild über dieser Grösse (Bytes) lohnt nicht und wird nie gebaut. */
+const COMPOSITE_ITEM_MAX_BYTES = 1024 * 1024;
+
+interface Composite {
+  canvas: HTMLCanvasElement;
+  /** Ecke des Gesamtbilds relativ zum Fusspunkt der Objektkachel (Weltpixel). */
+  rx: number;
+  ry: number;
+  bytes: number;
+  step: number;
+  fern: boolean;
+  /** Zeichenliste, aus der es gebaut ist; ein neues Listenobjekt macht es ungültig. */
+  list: DrawEntry[];
+  used: number;
+  /** Zeitfenster, in dem zuletzt die Atlas-Sprites der Liste als benutzt vermerkt wurden. */
+  touch: number;
+}
+/** Sprites eines Gesamtbilds werden höchstens alle so viele Zeitfenster (≈ Frames) als benutzt vermerkt. */
+const COMPOSITE_TOUCH_WINDOWS = 30;
+/** Die Uhr wird nur bei jedem so vielten `compositeFor`-Aufruf gelesen (ein Frame hat ~500 Aufrufe). */
+export const TREE_CLOCK_EVERY = 16;
+let clockTick = 0;
+const composites = new Map<TreeItem, Composite>();
+let compositeBytes = 0;
+/** Zeitfenster-Nummer und Aufbauten darin. */
+let windowNo = 0;
+let windowStart = -Infinity;
+let windowBuilds = 0;
+let clock: () => number = () =>
+  typeof performance !== 'undefined' ? performance.now() : Date.now();
+/** Test: Uhr für das Aufbau-Budget. */
+export function setTreeClock(fn: () => number): void {
+  clock = fn;
+  windowStart = -Infinity;
+  clockTick = 0;
+}
+/** Dev/Test: Anzahl und Bytes der Gesamtbilder. */
+export const treeCompositeCount = (): number => composites.size;
+export const treeCompositeBytes = (): number => compositeBytes;
+
+function dropComposite(item: TreeItem, c: Composite): void {
+  composites.delete(item);
+  compositeBytes -= c.bytes;
+}
+function compositeEvict(need: number): boolean {
+  if (compositeBytes + need <= TREE_COMPOSITE_MAX_BYTES) return true; // Platz da: nichts verdrängen
+  if (need > TREE_COMPOSITE_MAX_BYTES) return false;
+  const order = [...composites.entries()]
+    .filter(([, c]) => c.used !== windowNo)
+    .sort((a, b) => a[1].used - b[1].used);
+  for (const [k, c] of order) {
+    if (compositeBytes + need <= TREE_COMPOSITE_MAX_BYTES * 0.9) break;
+    dropComposite(k, c);
+  }
+  return compositeBytes + need <= TREE_COMPOSITE_MAX_BYTES;
+}
+
+/** Gesamtbild des Objekts, wenn vorhanden oder jetzt baubar; sonst null (dann direkt zeichnen). */
+function compositeFor(item: TreeItem, d: DrawRec, step: number, fern: boolean): Composite | null {
+  if (clockTick++ % TREE_CLOCK_EVERY === 0) {
+    const now = clock();
+    if (now - windowStart >= TREE_COMPOSITE_WINDOW_MS || now < windowStart) {
+      windowStart = now;
+      windowNo++;
+      windowBuilds = 0;
+    }
+  }
+  d.n++;
+  const hit = composites.get(item);
+  if (hit) {
+    if (hit.list === d.list && hit.step === step && hit.fern === fern) {
+      hit.used = windowNo;
+      return hit;
+    }
+    dropComposite(item, hit);
+  }
+  if (d.skip || d.n < 2 || windowBuilds >= TREE_COMPOSITE_PER_FRAME) return null;
+  // Riesenbaum und verdrängte Sprites: direkt zeichnen
+  let parts = 0;
+  for (const e of d.list) {
+    if (e.f ? fern : e.s !== null) {
+      if (e.s && !e.s.alive) return null;
+      parts++;
+    } else if (!e.f && e.s === null && e.c) {
+      d.skip = true;
+      return null;
+    }
+  }
+  if (parts < 2) {
+    d.skip = true;
+    return null;
+  }
+  const b = treeBounds(item);
+  const o = project(item.fp.x, item.fp.y);
+  const rx = b.x - o.x,
+    ry = b.y - o.y;
+  const w = Math.max(1, Math.ceil(b.w * step)),
+    h = Math.max(1, Math.ceil(b.h * step));
+  const bytes = w * h * 4;
+  if (bytes > COMPOSITE_ITEM_MAX_BYTES) {
+    d.skip = true;
+    return null;
+  }
+  if (!compositeEvict(bytes)) return null;
+  const canvas = makeCanvas();
+  canvas.width = w;
+  canvas.height = h;
+  const cx = canvas.getContext('2d');
+  if (!cx) {
+    d.skip = true;
+    return null;
+  }
+  for (const e of d.list) {
+    const img = e.f ? (fern ? e.f : null) : e.s ? e.s.canvas : null;
+    if (!img) continue;
+    cx.drawImage(
+      img,
+      Math.round((e.x - rx) * step),
+      Math.round((e.y - ry) * step),
+      Math.round(e.w * step),
+      Math.round(e.h * step),
+    );
+  }
+  windowBuilds++;
+  const c: Composite = {
+    canvas,
+    rx,
+    ry,
+    bytes,
+    step,
+    fern,
+    list: d.list,
+    used: windowNo,
+    touch: windowNo,
+  };
+  composites.set(item, c);
+  compositeBytes += bytes;
+  return c;
 }
 
 /** Bildgrösse in CSS-Pixeln (Canvas durch die DPR der Basismatrix), gemerkt je Kontext und Canvasgrösse; ohne Canvas null. */
@@ -649,12 +820,16 @@ interface DrawEntry {
   w: number;
   h: number;
 }
-const drawOf = new WeakMap<TreeItem, { step: number; gen: number; list: DrawEntry[] }>();
-function drawList(
-  item: TreeItem,
-  step: number,
-  seed: number,
-): { step: number; gen: number; list: DrawEntry[] } {
+type DrawRec = {
+  step: number;
+  seed: number;
+  gen: number;
+  n: number;
+  skip?: boolean;
+  list: DrawEntry[];
+};
+const drawOf = new WeakMap<TreeItem, DrawRec>();
+function drawList(item: TreeItem, step: number, seed: number): DrawRec {
   const list: DrawEntry[] = [];
   // Farnbüschel nach Tiefe zwischen die Kronen (beide Listen sind nach cx + cy geordnet)
   const ferns = itemFerns(item, seed);
@@ -697,7 +872,7 @@ function drawList(
     });
   }
   pushFerns(Infinity);
-  return { step, gen: atlasGen, list };
+  return { step, seed, gen: atlasGen, n: 0, list };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

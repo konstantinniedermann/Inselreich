@@ -19,7 +19,7 @@ import {
   type SeaPlan,
 } from './decor';
 import { coastFor } from './life';
-import { SUB, massifData, nodeHeight, nodeInside, type MassifData } from './massif';
+import { SUB, massifData, massifFeatures, nodeHeight, nodeInside, type MassifData } from './massif';
 import { fieldWorld, type Field } from './terrainField';
 
 // fauna.ts — Tierleben an Land und auf See (ART-STIL-02 L7). Kosmetisch und deterministisch aus `timeMs`, `world.seed`
@@ -36,7 +36,8 @@ import { fieldWorld, type Field } from './terrainField';
 //   und Richtung) · 594 Glitzern (Funkenversatz). Steinbock, Adler, Krabbe, Schildkröte, Robbe und Kormoran nutzen
 //   586 (Orte), 587 (Haltung, Zyklus) und 589 (Gestalt). Frei bleibt nichts im Block 585–594.
 // C7 Glitzern: `fallSparks`/`drawFallSparks` laufen gegen einen strukturgleichen lokalen Pfadtyp (`FallPathPoint` = die
-// `MassifFallPoint` aus L6); der Renderer-Anschluss folgt, sobald L6 und L7 zusammen liegen.
+// `MassifFallPoint` aus L6). `fallGlitter` holt den Pfad des L6-Wasserfalls der Heimat (`massifFeatures`, je Welt
+// gemerkt) und der Renderer zeichnet die Funken bei den Lüften (PERF-L57).
 
 export type FaunaId =
   | 'butterfly'
@@ -251,7 +252,11 @@ const ORDER: readonly FaunaId[] = [
  * (dx, dy ∈ [0, 2]: dort stehen Stämme und Kronen, die ihn im sortierten Durchgang überdecken würden).
  */
 export function foxTileFree(isl: Isl, x: number, y: number): boolean {
-  if (terrainAt(isl, x, y) !== 'grass' || builtAt(isl, x, y)) return false;
+  return !builtAt(isl, x, y) && foxTerrainFree(isl, x, y);
+}
+/** Wie `foxTileFree`, aber nur das Gelände (für die statischen Orte). */
+function foxTerrainFree(isl: Isl, x: number, y: number): boolean {
+  if (terrainAt(isl, x, y) !== 'grass') return false;
   for (let dy = 0; dy <= 2; dy++)
     for (let dx = 0; dx <= 2; dx++) if (isForest(terrainAt(isl, x + dx, y + dy))) return false;
   return true;
@@ -265,7 +270,7 @@ function foxDir(isl: Isl, seed: number, tx: number, ty: number): number {
       dy = Math.sin((d * Math.PI) / 4);
     let ok = true;
     for (let u = -FOX_LEN; u <= FOX_LEN + 1e-9 && ok; u += FOX_STEP)
-      ok = foxTileFree(isl, Math.floor(tx + 0.5 + dx * u), Math.floor(ty + 0.5 + dy * u));
+      ok = foxTerrainFree(isl, Math.floor(tx + 0.5 + dx * u), Math.floor(ty + 0.5 + dy * u));
     if (ok) return d;
   }
   return -1;
@@ -279,7 +284,7 @@ function foxSites(e: BuildEnv): Anchor[] {
       let back = false; // Wald hinter ihm (dx, dy ∈ [−2, 0]): der Waldrand
       for (let dy = -2; dy <= 0 && !back; dy++)
         for (let dx = -2; dx <= 0 && !back; dx++) back = isForest(terrainAt(isl, x + dx, y + dy));
-      if (!back || !foxTileFree(isl, x, y)) return false;
+      if (!back || !foxTerrainFree(isl, x, y)) return false;
       const d = foxDir(isl, seed, x, y);
       if (d < 0) return false;
       dirs.set(y * isl.width + x, d);
@@ -519,14 +524,14 @@ function sealSites(e: BuildEnv): Anchor[] {
 }
 
 const SITES: Partial<Record<FaunaCatalogId, SiteDef>> = {
+  // Bebauung gehört nicht in die Orte (PERF-L57 B1): sie filtert nur `alive` je Frame, damit die Anker nach Wegbau und
+  // Laden dieselben bleiben.
   // A15 Blumenwiese: Graskachel mit Blumenschleier
   butterfly: {
     cell: 4,
     share: 0.8,
     ok: (isl, seed, x, y) =>
-      terrainAt(isl, x, y) === 'grass' &&
-      !builtAt(isl, x, y) &&
-      flowerVeil(seed, x + 0.5, y + 0.5) > 0.25,
+      terrainAt(isl, x, y) === 'grass' && flowerVeil(seed, x + 0.5, y + 0.5) > 0.25,
   },
   // A16 Wiesenrand: Gras mit Wald in 3 Kacheln, ringsum Land, nichts Gebautes im Umkreis
   hare: {
@@ -535,17 +540,13 @@ const SITES: Partial<Record<FaunaCatalogId, SiteDef>> = {
     ok: (isl, _s, x, y) =>
       terrainAt(isl, x, y) === 'grass' &&
       anyWithin(isl, x, y, 3, isForest) &&
-      allWithin(isl, x, y, 1, isLandGreen) &&
-      !builtWithin(isl, x, y, HARE_GAP + 1),
+      allWithin(isl, x, y, 1, isLandGreen),
   },
   // A17 Wiese am Waldrand
   firefly: {
     cell: 4,
     share: 0.7,
-    ok: (isl, _s, x, y) =>
-      terrainAt(isl, x, y) === 'grass' &&
-      anyWithin(isl, x, y, 2, isForest) &&
-      !builtWithin(isl, x, y, 2),
+    ok: (isl, _s, x, y) => terrainAt(isl, x, y) === 'grass' && anyWithin(isl, x, y, 2, isForest),
   },
   // B9 Waldrand ↔ Wiese
   deer: {
@@ -554,8 +555,7 @@ const SITES: Partial<Record<FaunaCatalogId, SiteDef>> = {
     ok: (isl, _s, x, y) =>
       terrainAt(isl, x, y) === 'grass' &&
       anyWithin(isl, x, y, 2, isForest) &&
-      allWithin(isl, x, y, 1, isLandGreen) &&
-      !builtWithin(isl, x, y, 3),
+      allWithin(isl, x, y, 1, isLandGreen),
   },
   // B10: huscht über freie Wiesenkacheln am Waldrand (Abweichung von „Lichtung“: dort überdecken Kronen den Fuchs)
   fox: { custom: foxSites },
@@ -563,17 +563,14 @@ const SITES: Partial<Record<FaunaCatalogId, SiteDef>> = {
   forestBird: {
     cell: 8,
     share: 0.8,
-    ok: (isl, _s, x, y) =>
-      isForest(terrainAt(isl, x, y)) && allWithin(isl, x, y, 2, isForest) && !builtAt(isl, x, y),
+    ok: (isl, _s, x, y) => isForest(terrainAt(isl, x, y)) && allWithin(isl, x, y, 2, isForest),
   },
   // D7 nasser Sand: Sand mit Wasser in der 8er-Nachbarschaft
   crab: {
     cell: 6,
     share: 0.8,
     ok: (isl, _s, x, y) =>
-      terrainAt(isl, x, y) === 'sand' &&
-      anyWithin(isl, x, y, 1, (t) => t === 'water') &&
-      !builtWithin(isl, x, y, 1),
+      terrainAt(isl, x, y) === 'sand' && anyWithin(isl, x, y, 1, (t) => t === 'water'),
   },
   // D8 ruhiger Strand: Sand mit Wasser an einer Kante, ≥ 8 Kacheln vom Kontor, nichts Gebautes in 3 Kacheln
   turtle: {
@@ -582,8 +579,7 @@ const SITES: Partial<Record<FaunaCatalogId, SiteDef>> = {
     ok: (isl, _s, x, y, near) =>
       terrainAt(isl, x, y) === 'sand' &&
       waterSide(isl, x, y) >= 0 &&
-      Math.hypot(x + 0.5 - near.x, y + 0.5 - near.y) >= TURTLE_KONTOR_GAP &&
-      !builtWithin(isl, x, y, 3),
+      Math.hypot(x + 0.5 - near.x, y + 0.5 - near.y) >= TURTLE_KONTOR_GAP,
   },
   // C1 und C10, D10 und E4 bauen ihre Orte selbst (Massivnetz, Meer-Plan)
   ibex: { custom: ibexSites },
@@ -1078,6 +1074,58 @@ export function fallSparks(
   return out;
 }
 
+/** Pfad und Bildbereich (Kachelraum) des Wasserfalls der Heimat, je Welt gemerkt; neu gebildet, wenn die Kacheln wechseln. */
+interface FallSite {
+  path: FallPathPoint[];
+  box: TileRange;
+}
+const fallCache = new WeakMap<World, { tiles: unknown; site: FallSite | null }>();
+const FALL_PAD = 1;
+function fallSiteOf(world: World): FallSite | null {
+  const isl = home(world);
+  const hit = fallCache.get(world);
+  if (hit && hit.tiles === isl.tiles) return hit.site;
+  let site: FallSite | null = null;
+  if (isl.kind === 'home') {
+    const fall = massifFeatures(massifData(fieldWorld(world))).fall;
+    if (fall && fall.path.length >= 2) {
+      const xs = fall.path.map((p) => p.I / SUB),
+        ys = fall.path.map((p) => p.J / SUB);
+      site = {
+        path: fall.path,
+        box: {
+          x0: Math.floor(Math.min(...xs)) - FALL_PAD,
+          y0: Math.floor(Math.min(...ys)) - FALL_PAD,
+          x1: Math.floor(Math.max(...xs)) + FALL_PAD,
+          y1: Math.floor(Math.max(...ys)) + FALL_PAD,
+        },
+      };
+    }
+  }
+  fallCache.set(world, { tiles: isl.tiles, site });
+  return site;
+}
+/**
+ * Funken am L6-Wasserfall der Heimat für den Bildbereich `range` (Kachelraum): leer ohne Fall, ausserhalb des Bereichs,
+ * unter dem Mindestzoom der Art `fall` (SPECIES), bei reduzierter Bewegung (Budget 0) und auf Fremdinseln. Liest die
+ * Welt nur.
+ */
+export function fallGlitter(
+  world: World,
+  range: TileRange,
+  timeMs: number,
+  env: { zoom?: number; reduce?: boolean } = {},
+): FallSpark[] {
+  if (!(range.x1 >= range.x0) || !(range.y1 >= range.y0)) return [];
+  const sp = SPECIES.find((q) => q.id === 'fall')!;
+  if (env.zoom !== undefined && env.zoom < sp.minZoom) return [];
+  const site = fallSiteOf(world);
+  if (!site) return [];
+  const b = site.box;
+  if (b.x1 < range.x0 || b.x0 > range.x1 || b.y1 < range.y0 || b.y0 > range.y1) return [];
+  return fallSparks(site.path, world.seed, timeMs, cap(sp.capKey, env.reduce === true));
+}
+
 // --- Arten ----------------------------------------------------------------------------------------------
 
 interface SpeciesDef {
@@ -1097,13 +1145,29 @@ const notBuilt =
   (r: number) =>
   (_w: World, isl: Isl, a: Anchor): boolean =>
     !builtWithin(isl, a.tx, a.ty, r);
-/** Kontore der Heimat jetzt (R4 als Sichtbarkeitsfilter wie `seaKontorBlocked`: Meer-Tiere weichen einem Kontor in < 4 Kacheln). */
-function seaBlocked(world: World, x: number, y: number): boolean {
+/** Kontore der Heimat (Rechteck). `faunaAt` bildet die Liste je Aufruf einmal neu; `seaBlocked` liest sie je Tier. */
+interface KontorBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const kontorCache = new WeakMap<World, KontorBox[]>();
+function buildKontors(world: World): KontorBox[] {
+  const list: KontorBox[] = [];
   for (const b of Object.values(world.buildings)) {
     if (b.defId !== 'kontor' && b.defId !== 'kontor2') continue;
     const d = BUILDING_DEFS[b.defId];
-    const dx = Math.max(b.x - (x + 0.5), 0, x + 0.5 - (b.x + d.w)),
-      dy = Math.max(b.y - (y + 0.5), 0, y + 0.5 - (b.y + d.h));
+    list.push({ x: b.x, y: b.y, w: d.w, h: d.h });
+  }
+  kontorCache.set(world, list);
+  return list;
+}
+/** Kontore der Heimat jetzt (R4 als Sichtbarkeitsfilter wie `seaKontorBlocked`: Meer-Tiere weichen einem Kontor in < 4 Kacheln). */
+function seaBlocked(world: World, x: number, y: number): boolean {
+  for (const k of kontorCache.get(world) ?? buildKontors(world)) {
+    const dx = Math.max(k.x - (x + 0.5), 0, x + 0.5 - (k.x + k.w)),
+      dy = Math.max(k.y - (y + 0.5), 0, y + 0.5 - (k.y + k.h));
     if (Math.hypot(dx, dy) < SEA_ANCHOR_GAP) return true;
   }
   return false;
@@ -1137,7 +1201,7 @@ const SPECIES: readonly SpeciesDef[] = [
     minZoom: 0.75,
     phases: ['night'],
     weather: FAIR,
-    alive: notBuilt(1),
+    alive: notBuilt(2),
     pose: poseFirefly,
   },
   {
@@ -1147,7 +1211,7 @@ const SPECIES: readonly SpeciesDef[] = [
     minZoom: 0.75,
     phases: ['morning', 'evening'],
     weather: null,
-    alive: notBuilt(2),
+    alive: notBuilt(3),
     pose: poseDeer,
   },
   {
@@ -1208,7 +1272,7 @@ const SPECIES: readonly SpeciesDef[] = [
     minZoom: 1,
     phases: DAYLIGHT,
     weather: null,
-    alive: notBuilt(2),
+    alive: notBuilt(3),
     pose: poseTurtle,
   },
   {
@@ -1293,6 +1357,7 @@ export function faunaAt(
   const isl = home(world);
   const pc: PoseCtx = { seed: world.seed, t: clampTime(timeMs), reduce, isl, data: c.massif };
   const out: FaunaHit[] = [];
+  buildKontors(world); // einmal je Abfrage statt je Tier über alle Gebäude
   for (const sp of SPECIES) {
     if (!sp.pose) continue;
     if (!sp.phases.includes(phase)) continue;
@@ -1522,10 +1587,10 @@ function drawSeal(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   // V-Schwanzflossen, bei state 2 angehoben
   tri(ctx, P(X0 + 0.6, -3.4), P(X0 - 3.4, -5.6 - 4 * tail), P(X0 - 1.2, -2.8));
   tri(ctx, P(X0 + 0.6, -3.4), P(X0 - 3.4, -1.2 - 2 * tail), P(X0 - 1.2, -3.8));
-  ctx.fillStyle = SEAL_COLOR;
-  ctx.fill();
-  ctx.beginPath();
   outline();
+  // Kopf: gleicher Ton wie Flossen und Rücken, eine Füllung (der Bauch liegt nicht unter dem Kopf)
+  ctx.moveTo(hc.x + 2.8 * s, hc.y);
+  ctx.ellipse(hc.x, hc.y, 2.8 * s, 2.2 * s, -0.3 * f, 0, TAU);
   ctx.fillStyle = SEAL_COLOR; // Rücken dunkler
   ctx.fill();
   ctx.beginPath(); // Bauch heller
@@ -1549,11 +1614,6 @@ function drawSeal(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   ctx.strokeStyle = SEAL_COLOR;
   ctx.lineWidth = 3.6 * s;
   ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(hc.x + 2.8 * s, hc.y);
-  ctx.ellipse(hc.x, hc.y, 2.8 * s, 2.2 * s, -0.3 * f, 0, TAU);
-  ctx.fillStyle = SEAL_COLOR;
-  ctx.fill();
   ctx.beginPath();
   blob(ctx, hc.x + f * 2.2 * s, hc.y + 0.5 * s, 0.7 * s, 0.6 * s);
   ctx.fillStyle = toInk(SEAL_COLOR, 0.7);
@@ -1761,11 +1821,9 @@ function drawHare(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   E(rear.x, rear.y, rear.rx, rear.ry);
   if (!hop) E(f * 1.6, -6.2, 2.4, 3.1); // Brust, schräg vorn über der Keule
   E(head.x, head.y + nib / s, 1.9, 1.7);
-  ctx.fillStyle = HARE_COLOR;
-  ctx.fill();
-  // Ohren: zwei gefüllte schmale Ellipsen, steil nach oben und leicht nach hinten; beim Sprung angelegt
+  // Ohren: zwei gefüllte schmale Ellipsen, steil nach oben und leicht nach hinten; beim Sprung angelegt (gleicher Ton:
+  // im Pfad des Körpers, eine Füllung)
   const hy = head.y + nib / s;
-  ctx.beginPath();
   if (hop) {
     E(head.x - f * 2.6, hy - 0.6, 2.8, 0.7, f * 0.12);
     E(head.x - f * 2.2, hy + 0.4, 2.5, 0.65, f * 0.2);
@@ -1773,6 +1831,7 @@ function drawHare(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
     E(head.x - f * 0.9, hy - 3.1, 0.7, 2.2, -f * 0.25);
     E(head.x - f * 0.1, hy - 3.3, 0.7, 2.2, -f * 0.12);
   }
+  ctx.fillStyle = HARE_COLOR;
   ctx.fill();
   // Unterseite: untere Hälfte der Keule dunkler; beim Sprung die Hinterläufe als kurzer Strich nach hinten
   ctx.beginPath();
@@ -1849,16 +1908,13 @@ function drawDeer(ctx: CanvasRenderingContext2D, g: Pt2, c: Pt2, s: number, h: F
   ctx.lineTo(hd.x - np.x * 1.3 * s, hd.y - np.y * 1.3 * s);
   ctx.lineTo(hd.x + np.x * 1.3 * s, hd.y + np.y * 1.3 * s);
   ctx.closePath();
-  ctx.fillStyle = DEER_COLOR;
-  ctx.fill();
   // Rumpf: längliches Oval 2 : 1 mit Brust und Keule, Bauch heller
   const trunk = (): void => {
     blob(ctx, c.x, c.y - 13.6 * s, 8.8 * s, 4.4 * s);
     blob(ctx, c.x + f * 5.6 * s, c.y - 14 * s, 3.6 * s, 4.4 * s);
     blob(ctx, c.x - f * 5.8 * s, c.y - 13.4 * s, 3.8 * s, 4.5 * s);
   };
-  ctx.beginPath();
-  trunk();
+  trunk(); // im Pfad des Halses: gleicher Ton, eine Füllung
   ctx.fillStyle = DEER_COLOR;
   ctx.fill();
   ctx.beginPath();

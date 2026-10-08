@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isLit, lightAt } from '../../src/render/daynight';
+import { isLit, lightAt, phaseAt } from '../../src/render/daynight';
+import { faunaAt } from '../../src/render/fauna';
 import { SMOKE_COLOR } from '../../src/render/fx';
 import { weatherMul } from '../../src/render/weather';
 import { TEX, sortedObjects, spriteBounds } from '../../src/render/iso';
@@ -1243,6 +1244,34 @@ describe('M12 E1 Renderer', () => {
     const b = run(homeOnly(world), cam);
     expect(a.calls).toEqual(b.calls);
     expect(a.log.events.length).toBe(b.log.events.length);
+    expect(renderStats.islandsDrawn).toBe(1);
+  });
+
+  it('AK-E1-10 Tag (Phase day, Fauna und Delfine im Bild): Aufrufliste (ohne Ereignisindex) gleich der Welt ohne Fremdinseln, Land-Tiere gleich', () => {
+    const { world } = scene();
+    world.tick = 600;
+    expect(phaseAt(world.tick)).toBe('day');
+    const cam = camFor(world, 1);
+    const a = run(world, cam);
+    const drawnA = renderStats.faunaDrawn;
+    const b = run(homeOnly(world), cam);
+    // Die Aufrufliste (Körper, Luft, Bäume, Schiff, Figuren) ist am Tag dieselbe, nur der Ereignisindex `at` verschiebt
+    // sich um die Zeichenereignisse der Meer-Tiere. Robben, Kormorane und Delfine hängen
+    // vom Meer-Plan und damit von den Fahrlinien der Fremdinseln ab (`seaContext`): ihre Zeichenereignisse (a.log) und
+    // `faunaDrawn` sind ohne Fremdinseln andere, darum werden die Land-Tiere über `faunaAt` verglichen (Meer-Arten
+    // ausgenommen) und das Tagbild über Aufrufliste und Land-Tiere gepinnt.
+    const noAt = (l: typeof a.calls): unknown[] =>
+      l.map((c) => ({ kind: c.kind, id: c.id, pose: c.pose }));
+    expect(noAt(a.calls)).toEqual(noAt(b.calls));
+    const env = { phase: 'day' as const, zoom: 1 };
+    const range = { x0: 0, y0: 0, x1: 255, y1: 255 };
+    const land = (w: World): string[] =>
+      faunaAt(w, range, 5000, env)
+        .filter((x) => x.id !== 'seal' && x.id !== 'cormorant')
+        .map((x) => `${x.id}@${x.tx},${x.ty}`);
+    expect(land(world)).toEqual(land(homeOnly(world)));
+    expect(land(world).length).toBeGreaterThan(0);
+    expect(drawnA).toBeGreaterThan(0);
     expect(renderStats.islandsDrawn).toBe(1);
   });
 

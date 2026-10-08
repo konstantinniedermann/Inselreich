@@ -296,10 +296,73 @@ function startWood(world: World, key: string, code: Uint8Array): WoodJob {
   return { key, code, gen, cls, seed: world.seed, W, H };
 }
 
-/** Wald-Objekte aus dem fertigen Layout samt Farn-Zellen (sortiert). */
-function woodToItems(job: WoodJob, wood: WoodLayout): SortedItem[] {
+/** Gleiche Felder (und gleich viele) in zwei flachen Datensätzen? */
+function sameFields(a: object, b: object): boolean {
+  let na = 0,
+    nb = 0;
+  for (const k in a) {
+    na++;
+    if ((a as Record<string, unknown>)[k] !== (b as Record<string, unknown>)[k]) return false;
+  }
+  for (const k in b) if (k) nb++;
+  return na === nb;
+}
+function sameCrowns(a: readonly Crown[], b: readonly Crown[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (!sameFields(a[i]!, b[i]!)) return false;
+  return true;
+}
+function sameFerns(
+  a: readonly { x: number; y: number }[] | undefined,
+  b: readonly { x: number; y: number }[] | undefined,
+): boolean {
+  if (!a || !b) return !a && !b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i]!.x !== b[i]!.x || a[i]!.y !== b[i]!.y) return false;
+  return true;
+}
+
+/**
+ * Wald-Objekte aus dem fertigen Layout samt Farn-Zellen (sortiert). Mit `prev` (Objekte des alten Stands) behält eine
+ * Zelle mit gleichen Kronen und Farnen ihr Objekt (PERF-L57): Zeichenliste, Gesamtbild und Hüllen-Caches bleiben
+ * erhalten. `id` des Baum-Objekts dient nur der Sortier-Reihenfolge und wird neu gesetzt.
+ */
+function woodToItems(job: WoodJob, wood: WoodLayout, prev?: readonly SortedItem[]): SortedItem[] {
   const { W, H, cls, seed } = job;
   const items: SortedItem[] = [];
+  type Tree = Extract<SortedItem, { kind: 'tree' }>;
+  let old: Map<number, Tree> | undefined;
+  if (prev && prev.length > 0) {
+    old = new Map();
+    for (const it of prev)
+      if (it.kind === 'tree') old.set((it.fp.y * W + it.fp.x) * 2 + (it.own ? 1 : 0), it);
+  }
+  const make = (
+    id: number,
+    x: number,
+    y: number,
+    crowns: readonly Crown[],
+    own: boolean,
+    f?: Tree['ferns'],
+  ): Tree => {
+    const k = (y * W + x) * 2 + (own ? 1 : 0);
+    const o = old?.get(k);
+    if (o && sameCrowns(o.crowns, crowns) && sameFerns(o.ferns, f)) {
+      old!.delete(k);
+      o.id = id;
+      return o;
+    }
+    const fp = { x, y, w: 1, h: 1 };
+    return {
+      kind: 'tree',
+      id,
+      fp,
+      key: depthKey(fp),
+      crowns,
+      own,
+      ...(f ? { ferns: f } : {}),
+    };
+  };
   // Farn (L6 B2): Büschel einer Lichtungskachel (x, y) liegen in der vorderen Kachelhälfte und damit in den
   // Tiefenband-Zellen (x, y), (x + 1, y) oder (x, y + 1); jede dieser Zellen kennt die Lichtung
   const ferns = new Map<number, { x: number; y: number }[]>();
@@ -319,24 +382,14 @@ function woodToItems(job: WoodJob, wood: WoodLayout): SortedItem[] {
       }
     }
   wood.cells.forEach((c, i) => {
-    const fp = { x: c.x, y: c.y, w: 1, h: 1 };
     const f = c.own ? undefined : ferns.get(c.y * W + c.x);
-    items.push({
-      kind: 'tree',
-      id: i,
-      fp,
-      key: depthKey(fp),
-      crowns: c.crowns,
-      own: c.own,
-      ...(f ? { ferns: f } : {}),
-    });
+    items.push(make(i, c.x, c.y, c.crowns, c.own, f));
     if (f) ferns.delete(c.y * W + c.x);
   });
   // Zellen ohne eigene Krone, in die Büschel fallen können: leeres Wald-Objekt nur für den Farn (selten)
   let id = wood.cells.length;
   for (const [k, f] of ferns) {
-    const fp = { x: k % W, y: Math.floor(k / W), w: 1, h: 1 };
-    items.push({ kind: 'tree', id: id++, fp, key: depthKey(fp), crowns: [], own: false, ferns: f });
+    items.push(make(id++, k % W, Math.floor(k / W), [], false, f));
   }
   items.sort(cmp);
   return items;
@@ -383,7 +436,7 @@ function woodItems(world: World, rest: RestCache, budgetMs: number | undefined):
     if (r.done) {
       ws.key = job.key;
       ws.code = job.code;
-      ws.items = ws.shown = woodToItems(job, r.value);
+      ws.items = ws.shown = woodToItems(job, r.value, ws.items);
       delete ws.job;
       return ws.items;
     }
