@@ -1,5 +1,6 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { hash2 } from '../sim/noise';
+import { seaRoute } from '../sim/seaRoute';
 import { home } from '../sim/world';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
@@ -453,10 +454,39 @@ function eagleSites(e: BuildEnv): Anchor[] {
 export interface DolphinSites {
   field: Field;
   ctx: SeaContext;
+  world: World;
   /** Kachelindizes des Tiefwassers (Küstenfeld ≤ −4) mit `seaClearance` ≥ 0 (R4), Cache je Welt. */
   cands: number[];
 }
 const DOLPHIN_DEEP = -4;
+const routesLocal = new WeakMap<World, { x: number; y: number }[][]>();
+/** Kleinster Abstand (Kacheln, Heimat-Kachelraum wie das Küstenfeld) des Punkts zu irgendeiner Wasserroute der Welt. */
+export function routeDist(world: World, px: number, py: number): number {
+  let rs = routesLocal.get(world);
+  if (!rs) {
+    const isl = world.islands,
+      h = home(world);
+    rs = [];
+    for (let a = 0; a < isl.length; a++)
+      for (let b = a + 1; b < isl.length; b++)
+        rs.push(seaRoute(isl, a, b).map((q) => ({ x: q.x - h.ox, y: q.y - h.oy })));
+    routesLocal.set(world, rs);
+  }
+  let m = Infinity;
+  for (const r of rs)
+    for (let i = 1; i < r.length; i++) {
+      const a = r[i - 1]!,
+        b = r[i]!;
+      const dx = b.x - a.x,
+        dy = b.y - a.y;
+      const l2 = dx * dx + dy * dy;
+      const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l2));
+      m = Math.min(m, Math.hypot(px - a.x - t * dx, py - a.y - t * dy));
+    }
+  return m;
+}
+/** Mindestabstand der Delfingruppe zur Route (AK11): R4-Spielraum der Lanes plus Zuschlag deckt Heimat-Routen, dies alle. */
+const DOLPHIN_ROUTE_GAP = 3 + 1;
 /** Zuschlag auf die R4-Abstände: die Gruppe springt über etwa eine Kachel. */
 export const DOLPHIN_PAD = 1;
 /** Sicherheitsabstand über der R4-Grenze: die Bahn wird in Schritten geprüft, der Kegelrand ändert sich stetig. */
@@ -478,10 +508,11 @@ export function dolphinSites(world: World): DolphinSites | null {
     if (
       field.v[i]! <= DOLPHIN_DEEP &&
       seaClearance(ctx, (i % field.w) + 0.5, Math.floor(i / field.w) + 0.5, DOLPHIN_PAD) >=
-        DOLPHIN_MARGIN
+        DOLPHIN_MARGIN &&
+      routeDist(world, (i % field.w) + 0.5, Math.floor(i / field.w) + 0.5) >= DOLPHIN_ROUTE_GAP
     )
       cands.push(i);
-  c = { field, ctx, cands };
+  c = { field, ctx, world, cands };
   dolphinCache.set(world, c);
   return c;
 }
@@ -493,7 +524,8 @@ export function dolphinOk(sites: DolphinSites, x: number, y: number): boolean {
   if (tx < 0 || ty < 0 || tx >= f.w || ty >= f.h) return false;
   return (
     f.v[ty * f.w + tx]! <= DOLPHIN_DEEP &&
-    seaClearance(sites.ctx, x, y, DOLPHIN_PAD) >= DOLPHIN_MARGIN
+    seaClearance(sites.ctx, x, y, DOLPHIN_PAD) >= DOLPHIN_MARGIN &&
+    routeDist(sites.world, x, y) >= DOLPHIN_ROUTE_GAP
   );
 }
 

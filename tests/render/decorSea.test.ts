@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { laneTicks } from '../../src/sim/islands';
+import { seaRoute } from '../../src/sim/seaRoute';
+import { WHALE_EPISODE_MS, whaleAt } from '../../src/render/wildlife';
+import { dolphinSites } from '../../src/render/fauna';
 import { createWorld, home } from '../../src/sim/world';
 import type { Ship, World } from '../../src/sim/types';
 import { project } from '../../src/render/iso';
@@ -486,5 +489,80 @@ describe('T04 Meeresfels bei Zoom 0,5 und Schaum nur an Objekten', () => {
             expect(centers).not.toContain(`${r.x},${r.y}`);
       }
     }
+  });
+});
+
+describe('SEE-F1 T3 Meeresdeko folgt der Wasserroute', () => {
+  const segDist = (
+    p: { x: number; y: number },
+    a: { x: number; y: number },
+    b: { x: number; y: number },
+  ) => {
+    const dx = b.x - a.x,
+      dy = b.y - a.y;
+    const l2 = dx * dx + dy * dy;
+    const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+    return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
+  };
+  const minRouteDist = (w: World, x: number, y: number): number => {
+    let m = Infinity;
+    for (let a = 0; a < w.islands.length; a++)
+      for (let b = a + 1; b < w.islands.length; b++) {
+        const r = seaRoute(w.islands, a, b);
+        for (let i = 1; i < r.length; i++) m = Math.min(m, segDist({ x, y }, r[i - 1]!, r[i]!));
+      }
+    return m;
+  };
+
+  it('AK12 seaContext.lanes sind die Routen der Heimat, vom Heimat-Anker aus, um ox/oy verschoben', () => {
+    for (let seed = 1; seed <= 5; seed++) {
+      const w = createWorld(seed);
+      const isl = home(w);
+      const hi = w.islands.indexOf(isl);
+      const lanes = seaContext(w).lanes;
+      expect(lanes.length).toBe(w.islands.length - 1);
+      let k = 0;
+      for (let o = 0; o < w.islands.length; o++) {
+        if (o === hi) continue;
+        const r = seaRoute(w.islands, Math.min(hi, o), Math.max(hi, o));
+        const want = (hi < o ? r : [...r].reverse()).map((q) => ({
+          x: q.x - isl.ox,
+          y: q.y - isl.oy,
+        }));
+        expect(lanes[k++]).toEqual(want);
+      }
+    }
+  });
+
+  it('AK11 Wal und Delfine bleiben >= 3 Kacheln von jeder Route (Seeds 1-10)', () => {
+    let whales = 0,
+      dolphins = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+      const w = createWorld(seed);
+      for (let e = 0; e < 40; e++)
+        for (let t = 0; t < WHALE_EPISODE_MS; t += 4000) {
+          const p = whaleAt(w, e * WHALE_EPISODE_MS + t);
+          if (!p) continue;
+          whales++;
+          expect(
+            minRouteDist(w, p.x + home(w).ox, p.y + home(w).oy),
+            `Seed ${seed} Wal`,
+          ).toBeGreaterThanOrEqual(3);
+        }
+      const sites = dolphinSites(w);
+      const isl = home(w);
+      for (const i of sites?.cands ?? []) {
+        if (i % 7 !== 0) continue;
+        dolphins++;
+        const x = (i % sites!.field.w) + 0.5,
+          y = Math.floor(i / sites!.field.w) + 0.5;
+        expect(
+          minRouteDist(w, x + isl.ox, y + isl.oy),
+          `Seed ${seed} Delfin`,
+        ).toBeGreaterThanOrEqual(3);
+      }
+    }
+    expect(whales).toBeGreaterThan(0);
+    expect(dolphins).toBeGreaterThan(0);
   });
 });
