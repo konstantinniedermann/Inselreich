@@ -3146,3 +3146,17 @@ das Urteil nicht, weil die Runde laut R337 klein war. E-047 übernommen als Werk
 und 5 Tools.
 
 Entscheider: L0 · Anlass: Gate HB-E048 · ADR: —
+
+## R352 · 2026-10-08 · M12 abgeschlossen ohne E5/E6; REL-09 Welle 1
+
+Ruling: Vorlage `docs/studio/vorlagen/2026-10-08-board-nach-rel08.md` angenommen. (1) **M12 ist abgeschlossen**, E5
+und E6 sind Kann-Teile (Spec §9) und werden nicht geplant; E5 (Seekarte) und E6 (Händlerschiff, I-006) gehen als
+Ideen in die nächste Ideen-Runde. Pflicht-Retro M12 durch den studio-coach. (2) **REL-09 Welle 1** parallel, getrennte
+Worktrees: SEE-F2-UX (lead-tech), SEE-F1-FAHRLINIE (lead-tech, zweite Instanz), ART-WALD-RAUTEN mit Meeresfelsen und
+`willReadFrequently` (lead-art). Es sind Fehlerbehebungen ohne neue Spielregel: kein Kurzdesign, der Lead liefert den
+Plan (Tasks, Datei-Ownership, Budgetantrag) im Bericht, danach kombiniertes Gate Spec/Plan durch L0. Planungsbudget je
+25 Tools. Welle 2 (SEE-F3, UI-PANEL-AUFRAEUMEN, ART-L8-SELTEN) folgt nach den Vorgängern. (3) CI-ACTIONS-NODE ist
+erledigt (Runner `ubuntu-24.04` fest, R293); der Frist-Hinweis in state.md entfällt. — Kosten bei Irrtum: E5/E6 kehren
+als Ideen zurück, keine verlorene Arbeit.
+
+Entscheider: L0 · Anlass: Board-Vorlage BOARD-NACH-REL08 · ADR: —
