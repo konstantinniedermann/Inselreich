@@ -2883,3 +2883,18 @@ die lokalen Commits nicht hatte; Trailer mit dem tatsächlichen Modell. Ad-hoc-R
 Session-Ende-Retro gebündelt. — Kosten bei Irrtum: ein weiterer roter CI-Lauf.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-07 · ADR: —
+
+## R329 · 2026-10-08 · Retro Session 191cc1e4: Handbuch-Vorschläge angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-08-session-191cc1e4-ende.md` angenommen. Handbuch-Sätze, umgesetzt durch
+studio-coach: (1) Lastregel: Perf- und Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4, `uptime` vor und nach dem
+Lauf im Beleg. Damit wird E-045 direkt Handbuch-Satz statt Experiment. (2) Vor jedem Paketstart in einem Worktree
+prüft der Startende `git worktree list`, `git status` im Ziel-Worktree und fremde Heartbeats im Dashboard.
+Ungecommittete Änderungen gelten als fremd belegt, bis der Eigentümer geklärt ist (Erweiterung Ende 0a).
+(3) Nach einem Release werden gemergte, saubere Worktrees ohne `--force` entfernt. E-043
+(`zeitreserve` mit Runner-Faktor) als Werkzeug-Paket TOOL-ZEITRESERVE-RUNNER aufs Board für lead-tech. Start in einer
+späteren Session; bis dahin führt der Integrator vor jedem Push zusätzlich `make zeitreserve` aus. E-044 (Guard
+für Worktree-Belegung) bleibt `vorgeschlagen`, bis ein Platz frei ist. Nach R127 folgt die Prozess-Retro nach dem
+Release REL-07 durch studio-process-coach. — Kosten bei Irrtum: drei Handbuch-Sätze, rücknehmbar.
+
+Entscheider: L0 · Anlass: Session-Ende-Retro 191cc1e4 · ADR: —
