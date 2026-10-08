@@ -3243,3 +3243,15 @@ Playtest OK; `make -k check` grün (2567). Commit-Präfix `test/fix:` in 51cbb11
 lokal durch den Integrator mit erneutem `make check` (R357), kein Push.
 
 Entscheider: L0 · Anlass: Bericht SEE-F2-UX · ADR: —
+
+## R360 · 2026-10-08 · Gate Merge ART-WALD-RAUTEN OK (Bedingung `make check` am Merge-Stand)
+
+Ruling: **OK** für `fix/wald-rauten` @ 2454794. Rauten-Metrik: Anteil langer gerader Kantenstücke Gras/Sand 0,70–0,82 →
+0,14–0,18, Wald/Wiese 0,15 → 0,09, Sand-Stufen 0,20 → 0,09; Kaltstart Seed 7 Median 8362 → 8492 ms (+1,6 %, Grenze
++3 %); `willReadFrequently` 3 → 0; Meeresfels ab Zoom 0,5 ohne Bootform; Final-Review `opus` BEDENKEN ohne Blocker,
+hohe Befunde behoben, niedrige als Beobachtung. Fussring und „Schaum ohne Objekt“ nur per Bildsicht ohne Rauten, nicht
+gemessen — Rest bleibt Beobachtung. Ist rund 139 von 170 Tools, 1 Hintergrund-Lauf (E-037). Fehlender roter Commit
+(Index-Vermischung A/B) an die Retro. Merge seriell nach SEE-F2-UX durch den Integrator; Bedingung: `make check` am
+Merge-Stand grün (R357). Danach Signal an SEE-F1 für T3.
+
+Entscheider: L0 · Anlass: Bericht ART-WALD-RAUTEN · ADR: —
