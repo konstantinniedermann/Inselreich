@@ -3232,3 +3232,14 @@ die Mehrbedarfsmeldung nicht (L0). T3 startet nach dem Merge von ART-WALD-RAUTEN
 ist gewollt (Handoff `.studio/handoffs/2026-10-08-lead-tech-tech-see-f1.md`), keine Ad-hoc-Retro.
 
 Entscheider: L0 · Anlass: Zwischenbericht SEE-F1 · ADR: —
+
+## R359 · 2026-10-08 · Gate Merge SEE-F2-UX OK
+
+Ruling: **OK** für `fix/see-f2-ux` @ a1520f6. T1–T4, T6, T7 umgesetzt; T5 entfällt (nicht reproduzierbar, Ursache
+Wasserkachel bzw. fehlendes Holz auf der Fremdinsel); N4 (`shipsKey`) war echt und ist behoben; Favicon als Data-URI
+(Asset-Weg hätte eine CREDITS-Zeile verlangt); DPR-Wechsel per `matchMedia`-Listener, Live-Wechsel nur per Reload
+belegt, manueller Zoom-Test steht als Beobachtung. Final-Review `opus` BEDENKEN niedrig, behoben in b270009;
+Playtest OK; `make -k check` grün (2567). Commit-Präfix `test/fix:` in 51cbb11 an die Retro (kein Rebase). Merge
+lokal durch den Integrator mit erneutem `make check` (R357), kein Push.
+
+Entscheider: L0 · Anlass: Bericht SEE-F2-UX · ADR: —
