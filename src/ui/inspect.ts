@@ -38,6 +38,7 @@ import {
   levelPips,
   progressView,
   riseCard,
+  statKeys,
   statTiles,
   stateChip,
   supplyChip,
@@ -46,6 +47,7 @@ import {
   type Chip,
   type GainRow,
   type Pips,
+  type StatKey,
   type StatTile,
 } from './panelView';
 
@@ -330,6 +332,7 @@ function addHead(
 /** Stufen-Chip: Text und Punkte (Anzahl hängt nur vom Typ ab, G-3). */
 function addLevelChip(row: HTMLElement, chipField: string, textField: string, max: number): void {
   const chip = node('span', 'chip pv-level', chipField);
+  chip.setAttribute('role', 'group');
   chip.appendChild(node('span', undefined, textField));
   const pips = node('span', 'pv-pips', `${textField}-pips`);
   pips.setAttribute('aria-hidden', 'true');
@@ -373,19 +376,28 @@ function setPips(panel: HTMLElement, chipField: string, textField: string, p: Pi
 }
 
 /** Kennzahlen-Zone mit Kachel-Grid; die Kacheln hängen nur vom Typ ab. */
-function addStats(panel: HTMLElement, tiles: StatTile[]): HTMLElement {
+/** Beschriftung und Unterzeile je Kachel; das Gerüst hängt nur vom Typ ab (`statKeys`, G-3). */
+const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
+  output: { label: 'Ausstoss', sub: true },
+  utilization: { label: 'Auslastung', sub: false },
+  input: { label: 'Verbrauch', sub: true },
+  upkeep: { label: 'Unterhalt', sub: true },
+  inhabitants: { label: 'Einwohner', sub: false },
+};
+
+function addStats(panel: HTMLElement, keys: StatKey[]): HTMLElement {
   const sec = node('section', 'pv-stats');
   sec.dataset.zone = 'stats';
   sec.setAttribute('aria-label', 'Kennzahlen');
   const grid = node('div', 'pv-grid');
-  for (const t of tiles) {
+  for (const key of keys) {
     const tile = node('div', 'pv-tile');
-    tile.dataset.stat = t.key;
+    tile.dataset.stat = key;
     tile.append(
-      Object.assign(node('span', 'pv-tile-label'), { textContent: t.label }),
-      node('strong', 'pv-tile-value', `stat-${t.key}`),
+      Object.assign(node('span', 'pv-tile-label'), { textContent: TILE_LAYOUT[key].label }),
+      node('strong', 'pv-tile-value', `stat-${key}`),
     );
-    if (t.sub !== null) tile.appendChild(node('small', 'pv-tile-sub', `stat-${t.key}-sub`));
+    if (TILE_LAYOUT[key].sub) tile.appendChild(node('small', 'pv-tile-sub', `stat-${key}-sub`));
     grid.appendChild(tile);
   }
   sec.appendChild(grid);
@@ -405,6 +417,7 @@ function addGainRow(parent: HTMLElement, field: string): void {
   const p = node('p', 'pv-gain');
   p.append(node('span', undefined, field), node('span', 'pv-delta', `${field}-delta`));
   p.dataset.gain = field;
+  p.setAttribute('role', 'group');
   parent.appendChild(p);
 }
 
@@ -443,7 +456,7 @@ function renderHouse(panel: HTMLElement, b: Building): void {
   addLine(head, '', 'feast').hidden = true;
   addList(head, 'reasons', 'diagnosis');
   addRemedy(head);
-  const stats = addStats(panel, houseTiles(b));
+  const stats = addStats(panel, ['inhabitants']);
   addList(stats, 'needs', 'needs');
   addLine(stats, '', 'first-missing').hidden = true;
   const upgrade = cardNode('Aufstieg');
@@ -707,7 +720,7 @@ function renderBetrieb(panel: HTMLElement, b: Building, onUpgrade: () => void): 
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
   addRemedy(head);
-  const stats = addStats(panel, statTiles(b));
+  const stats = addStats(panel, statKeys(b.defId));
   if (progressView(b) !== null) {
     const bar = node('div', 'progress', 'progress-bar');
     bar.setAttribute('role', 'progressbar');
