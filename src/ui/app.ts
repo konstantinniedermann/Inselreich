@@ -1081,6 +1081,22 @@ function launch(
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
   resize();
+  // DPR-Wechsel (Monitorwechsel, Browser-Zoom) ändert die Grösse nicht; die Media-Query gilt nur für den
+  // aktuellen Wert und wird deshalb nach jedem Wechsel neu angelegt.
+  let dprQuery: MediaQueryList | null = null;
+  const onDprChange = (): void => {
+    dprQuery?.removeEventListener('change', onDprChange);
+    resize();
+    watchDpr();
+  };
+  const watchDpr = (): void => {
+    dprQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+        : null;
+    dprQuery?.addEventListener('change', onDprChange);
+  };
+  watchDpr();
   if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
     centerOn(state.cam, c.cx, c.cy, view, bounds);
@@ -1250,6 +1266,7 @@ function launch(
     cancelAnimationFrame(rafId);
     layers.dispose();
     resizeObserver.disconnect();
+    dprQuery?.removeEventListener('change', onDprChange);
     input?.unbind();
     closeAllModals();
     closeSettings?.();
