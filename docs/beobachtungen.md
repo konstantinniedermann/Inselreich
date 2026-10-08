@@ -392,3 +392,7 @@ Fundort: `src/ui/input.ts` (`clamp`, Kamerarahmen). Beobachtung: Bei maximal sü
 Wasser; die Rahmen-Ecke liegt bei Kachel 72,121, die südlichste Inselkachel bei 35,106 (Playtest UI-PANEL-AUFRAEUMEN,
 1280×720). Ursprung: qa-playtester in UI-PANEL-AUFRAEUMEN, unabhängig vom Overlay. Einschätzung: niedrig, Bedienkomfort;
 Rahmen enger an die Inselgrenzen plus Rand legen, mit `cameraBounds`-Vitest.
+
+- 2026-10-08 · Boden-Deko `groundElementAt`/`tileKind` (`src/render/decor.ts`, aus ART-L8-SELTEN Final-Review) · Ein Totholz-Kandidat (`deadwood`) ohne Waldnachbar fällt in die Würfelkette; beim Roden wechselt die Kachel so die Art (3 Fälle in Seeds 1–10), D2 ist dort nicht ganz erfüllt. Vorschlag: Totholz ohne Waldnachbar gibt `null`. Ursprung: ART-L8-SELTEN, älter als das Paket. Erste Einschätzung: niedrig.
+- 2026-10-08 · `rareBudget` (`src/render/decor.ts`, aus ART-L8-SELTEN) · Er zählt bestandene Meer-Lose, nicht die sichtbaren Elemente (Felsnadel ohne Felsen, Kiste ohne nassen Sand); die sichtbare Zahl kann unter 3 fallen. Gewollt laut AK5 (kein Bezug zu `SeaContext`). Ursprung: ART-L8-SELTEN. Erste Einschätzung: niedrig; bei Bildbefund „zu leere Insel" Eignung nachziehen.
+- 2026-10-08 · Strandkiefern und `STAMP_MAX` (`src/render/decor.ts` Z. ~925, aus ART-L8-SELTEN T3-Review) · Kiefern liegen in `p.palms` und teilen sich mit Palmen und Meer-Stempeln die Kürzung `extra.slice(0, room)`; relevant nur am Limit von 300 Stempeln, praktisch nicht erreichbar. Ursprung: ART-L8-SELTEN. Erste Einschätzung: sehr niedrig.
