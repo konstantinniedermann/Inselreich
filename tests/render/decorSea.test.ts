@@ -314,6 +314,7 @@ describe('L5-T1 Fernansicht und Stempelzahl', () => {
 });
 
 describe('L5-T3 shipAt trifft nie Wrack oder Felsen', () => {
+  // Timeout: lokal ≤ 1 s (seriell, Last eher höher), CI bis ~4× (gemessen 3,6 s), R270/R318/R328
   it('L5-T3 Schiffe am Anker und am nächsten Lane-Punkt jedes Elements; Bildpunkte über der Stempelbox bei Zoom 0,25 / 0,5 / 1 (Seeds 1–20)', () => {
     let samples = 0,
       ships = 0;
@@ -376,7 +377,7 @@ describe('L5-T3 shipAt trifft nie Wrack oder Felsen', () => {
     expect(ships).toBeGreaterThan(100);
     expect(samples).toBeGreaterThan(10000);
     expect(ISO_H).toBe(32);
-  });
+  }, 15_000);
 });
 
 describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
@@ -408,6 +409,7 @@ describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
     expect(seaFoamVisible(w).rings.length).toBe(foam0);
   });
 
+  // Timeout: lokal ≤ 1 s (seriell, Last eher höher), CI bis ~4× (gemessen 3,6 s), R270/R318/R328
   it('Tönung der Wasserfelder ist an der R4-Grenze 0: Seeds 1–20 kein getöntes Punkt < 3 Kacheln von einer Lane, < 4 vom Anker oder Kontor, nicht im Kegel', () => {
     let tinted = 0;
     for (let seed = 1; seed <= 20; seed++) {
@@ -429,5 +431,5 @@ describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
         }
     }
     expect(tinted).toBeGreaterThan(5000);
-  });
+  }, 15_000);
 });
