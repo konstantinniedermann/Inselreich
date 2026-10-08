@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.29
+
+- Anlass: Retro Session 191cc1e4 (Vorschläge angenommen)
+- Datenbasis: `docs/studio/retros/2026-10-08-session-191cc1e4-ende.md` (B1, B2, B4)
+- Ruling: R329
+- Änderungen: Lastgrenze Load ≤ 4 mit `uptime` im Beleg (E-045 übernommen); Worktree-Prüfung vor jedem Paketstart (Erweiterung Ende 0a); Worktrees nach dem Release ohne `--force` aufräumen; E-043 als Paket TOOL-ZEITRESERVE-RUNNER vermerkt
+
+## 2026-10-08 · Handbuch 1.28
+
+- Anlass: Kurz-Retro 8ef9d27f (Umsetzung nachgeholt)
+- Datenbasis: `docs/studio/retros/2026-10-08-session-8ef9d27f-ende.md` (B1, B3)
+- Ruling: R315
+- Änderungen: Release-Lauf um Perf-Ablage mit Vergleichsart (E-039) und `stand.md` mit Fortsetzungspunkt, Messskripte unter `tools/render-qa/` (E-041) ergänzt
+
 ## 2026-10-08 · Handbuch 1.27
 
 - Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)

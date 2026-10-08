@@ -330,14 +330,14 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R314
 - Start: erst nach Bewertung von E-037 (getrennte Wirkung); frühestens 2026-10-22 (E-027-Stichtag), spätestens beim nächsten freien Platz. Die Regel 1.25 „Ein-Umsetzer-Pakete“ gilt bereits; die Messung beginnt erst mit dem Start. Reihenfolge der Plätze: E-037, E-042, danach E-038 (R319).
 
-## E-039 · vorgeschlagen · Vergleichsart im Perf-Artefakt
+## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
 - Hypothese: Wenn jede Perf-Ablage im Dateinamen die Vergleichsart und im Kopf die beiden Stände (`aa-` bzw. `ab-<A>-vs-<B>`, Commit-Hashes) nennt und L0 nur Zahlen aus dem Lead-Bericht meldet, wird kein A/A-Lauf mehr als A/B gelesen (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B1).
 - Messgrösse: 0 Fehlzitate von Perf-Werten in Rulings und Nutzermeldungen in den nächsten 3 Release-Läufen (Stichprobe: Ruling-Zahl gegen Gate-Bericht; Ausgang 1 Fall in 1 Lauf). Gegenprobe: Perf-Auswertung bleibt mit denselben Dateien möglich.
 - Zeitraum: die nächsten 3 Release-Läufe.
 - Rückfall: Satz im Handbuch streichen; Namensschema ist rein lesend.
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`; Kopfzeile in `tools/render-qa/perf.mjs` nur als späteres Werkzeug-Paket
-- Ruling: –
+- Ruling: R315
 
 ## E-040 · vorgeschlagen · Bau-Ruckel-Szenario im Perf-Werkzeug
 
@@ -348,14 +348,14 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/render-qa/perf.mjs`, `docs/studio/STUDIO.md` (Abnahmekriterien Optik-Häppchen)
 - Ruling: –
 
-## E-041 · vorgeschlagen · Fortsetzungspunkt und Messskripte im Repo
+## E-041 · übernommen (R315) · Fortsetzungspunkt und Messskripte im Repo
 
 - Hypothese: Wenn lange QA-Läufe nach jedem Teil eine Datei `.studio/qa/<id>/stand.md` (erledigt, offen, Fortsetzungspunkt) fortschreiben und Messskripte unter `tools/render-qa/` statt im Scratchpad liegen, übernimmt eine Folgeinstanz ohne Rekonstruktion (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B3; ergänzt E-034 um die Lead-Seite).
 - Messgrösse: bei den nächsten 3 Abbrüchen oder Zeitüberschreitungen eines QA-Laufs: 0 wiederholte Teilläufe und 0 Skripte nur im Scratchpad (Ausgang: 1 Abbruch, Seed 14 und Ruckel-Skript betroffen).
 - Zeitraum: die nächsten 3 Abbrüche, höchstens 6 Wochen.
 - Rückfall: Handbuch auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
-- Ruling: –
+- Ruling: R315
 
 ## E-043 · vorgeschlagen · Zeitreserve lokal gegen geschätzte Runner-Zeit
 
@@ -365,7 +365,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Pushes mit Zeittest-Änderung, höchstens bis 2026-11-05.
 - Rückfall: Zusatzmodus in `tools/zeitreserve/` und Makefile entfernen (`git revert`).
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/check.ts`, `Makefile` (Paket TOOL-ZEITRESERVE-RUNNER, lead-tech)
-- Ruling: –
+- Ruling: R329 (Werkzeug-Paket TOOL-ZEITRESERVE-RUNNER aufs Board; Start in späterer Session; bis dahin `make zeitreserve` vor jedem Push)
 
 ## E-044 · vorgeschlagen · Worktree-Belegung vor jedem Agent-Start
 
@@ -377,11 +377,11 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/guard.py`, `tools/studio/log.py`, `docs/studio/STUDIO.md` (Start, Punkt 5)
 - Ruling: –
 
-## E-045 · vorgeschlagen · Lastgrenze für Perf- und Ruckel-Messungen
+## E-045 · übernommen (R329) · Lastgrenze für Perf- und Ruckel-Messungen
 
 - Hypothese: Wenn Perf- und Ruckel-Messungen nur bei 1-min-Load ≤ 4 gelten und der Bericht `uptime` vor und nach dem Lauf nennt, melden Berichte keine Regressionen mehr, die bei Wiederholung unter ruhiger Last verschwinden (Retro [session-191cc1e4-ende](retros/2026-10-08-session-191cc1e4-ende.md) B4).
 - Messgrösse: In den nächsten 2 Perf-/Hitch-Messberichten nennen 100 % den Load; 0 Befunde, die lead-qa bei Load ≤ 4 nicht reproduziert (Ausgang: 1 Grundlast-Regression bei Load 6–15, R326/R327).
 - Zeitraum: die nächsten 2 Perf- oder Hitch-Messungen, höchstens bis 2026-11-05.
 - Rückfall: Satz aus dem Handbuch (Lastregel) streichen, Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Lastregel), `.claude/agents/lead-art.md`, `.claude/agents/lead-qa.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R329

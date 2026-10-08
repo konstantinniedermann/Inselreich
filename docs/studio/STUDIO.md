@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.27 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.29 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -316,6 +316,12 @@ Regeln dazu:
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
   **Nach jedem Merge eines Releases auf main startet L0 den `studio-process-coach` (R127, R316).**
+  **Worktrees aufräumen (R329):** Nach dem Release entfernt der Integrator gemergte, saubere Worktrees
+  (`git worktree remove`, nie `--force`); unsaubere bleiben und gehen in `state.md`.
+  **Perf-Ablage (E-039, R315):** Dateiname nennt die Vergleichsart (`aa-` bzw. `ab-<A>-vs-<B>`), der Kopf
+  beide Stände (Commit-Hashes); L0 meldet nur Zahlen aus dem Lead-Bericht.
+  **Fortsetzungspunkt (E-041, R315):** Lange QA-Läufe schreiben nach jedem Teil `.studio/qa/<id>/stand.md`
+  (erledigt, offen, Fortsetzungspunkt); Messskripte liegen unter `tools/render-qa/`, nicht im Scratchpad.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;
@@ -384,7 +390,8 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 - Echtzeit-Proben höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
 - **Lastregel (R249 (3), R250, E-030):** Rote Zeittests (`perfBudget`) und Browser-Messungen gelten
   nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst
-  warten oder allein wiederholen); der Bericht nennt den Last-Zustand. Eine Schwelle wird erst
+  warten oder allein wiederholen); der Bericht nennt den Last-Zustand. **Lastgrenze (R329, E-045):** Perf- und
+  Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4; `uptime` vor und nach dem Lauf steht im Beleg. Eine Schwelle wird erst
   gelockert, wenn ein Lauf ohne Last rot ist. Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`
   (R303); nie per `pkill -f` beenden, nur per PID.
 - **Bildrunden (R233 V3):** höchstens 2 je Häppchen; danach Stopp-Bericht an L0 und Gate-Entscheid
@@ -449,7 +456,7 @@ Abnahme pushen (R107).
 
 0. Pausiert L0 vor dem regulären Ende (z. B. Nutzungslimit), führt er **zuerst** `state.md` nach
    (Punkt 4); die Übergabe steht nie nur im Chat (R66).
-   0a. Bei einem Abbruch endet kein Agent von selbst (Retro session-7db07561 B1): `state.md` nennt die Agenten mit frischem Heartbeat (< 10 min, Dashboard) als „kann weiterlaufen“ mit Worktree. Vor jedem Neustart eines Pakets prüft L0 Worktree-HEAD (`git log -1`, `git status`) und Dashboard, damit nie zwei Schreiber im selben Worktree arbeiten (E-034, R308).
+   0a. Bei einem Abbruch endet kein Agent von selbst (Retro session-7db07561 B1): `state.md` nennt die Agenten mit frischem Heartbeat (< 10 min, Dashboard) als „kann weiterlaufen“ mit Worktree. Vor jedem Neustart eines Pakets prüft L0 Worktree-HEAD (`git log -1`, `git status`) und Dashboard, damit nie zwei Schreiber im selben Worktree arbeiten (E-034, R308). **Vor jedem Paketstart in einem Worktree (R329)** prüft der Startende zusätzlich `git worktree list`, `git status` im Ziel-Worktree und fremde Heartbeats im Dashboard; ungecommittete Änderungen gelten als fremd belegt, bis der Eigentümer geklärt ist.
 1. Laufende Agenten abschliessen oder pausieren und loggen: Lead meldet Zwischenstand (Bericht, bei
    Bedarf Übergabe unter `.studio/handoffs/`) und loggt
    `status --status done --summary "Pausiert: <Stand>"`; Pakete bleiben auf ihrem Status.
