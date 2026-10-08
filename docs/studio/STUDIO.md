@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.26 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.27 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -57,9 +57,21 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
   `<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md` (gitignored, Arbeitsstand; nicht im
   Worktree, Hauptrepo via `git rev-parse --git-common-dir`). Ergebnisse mit Bestand gehören in
   Spec, Plan oder Ruling.
-- **Fortsetzen statt neu starten:** Fix-Runden und Rückfragen setzen **denselben** Agenten per
-  `SendMessage` fort (auch einen beendeten, Kontext bleibt); nur ein Neustart braucht ein volles
-  Briefing. Eine Fortsetzung zählt nicht als neuer Start.
+- **Fortsetzen statt neu starten (Arbeiter):** Fix-Runden und Rückfragen setzen **denselben**
+  Arbeiter per `SendMessage` fort (auch einen beendeten, Kontext bleibt); nur ein Neustart braucht
+  ein volles Briefing. Eine Fortsetzung zählt nicht als neuer Start.
+- **Leads nach dem Abschlussbericht ablösen (E-042, R319):** Ein Lead wird nach seinem
+  Abschlussbericht nicht fortgesetzt. Er legt mit dem Bericht ein Handoff nach
+  [templates/uebergabe.md](templates/uebergabe.md) ab (`<Hauptrepo>/.studio/handoffs/<datum>-<lead>-<lead>.md`:
+  Stand, offene Punkte, Fundstellen); Fix-Runden, Gate-Rückfragen und Folgepakete startet L0 als
+  **neuen** Lead mit Briefing und Handoff. Fortsetzen bleibt erlaubt, wenn der Lead-Kontext unter
+  60k liegt oder seit seinem letzten Aufruf weniger als 5 min vergangen sind (Cache warm). Die
+  Ablösung zählt nicht als neuer Start des Pakets im Sinn von „Starts je Paket“.
+- **Lead-Status (E-042, R319):** Leads melden `active` und `done` nicht; `SubagentStart` und
+  `SubagentStop` des Hooks setzen beides (`tools/studio/model.py` `on_agent_start`/`on_agent_stop`),
+  der Stop trägt den Bericht als Zusammenfassung. Leads melden weiter `delegated` (mit `--task`),
+  `waiting`, `blocked`, `failed`; jeder Aufruf bleibt ein eigener Bash-Befehl, darf aber im
+  selben Turn wie der Agent-/SendMessage-Aufruf stehen. Arbeiter und L0 melden unverändert.
 - **Eskalation:** Konflikt zwischen Bereichen → beide Leads melden ihre Sicht an L0 → L0 entscheidet
   und schreibt ein Ruling. Ein Arbeiter eskaliert nur an seinen Lead.
 - **Bericht** (≤ ~15 Zeilen, [templates/bericht.md](templates/bericht.md)): Ergebnis ·

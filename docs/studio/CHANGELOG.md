@@ -22,6 +22,48 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.27
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Regel „Fortsetzen statt neu starten“ für Leads ersetzt durch Ablösung per Handoff nach dem Abschlussbericht (Ausnahme Kontext < 60k oder Cache warm); Lead-Status `active`/`done` entfallen (Hook-Events); Verbesserungsschleife um Schritt 6 „Rotation“ ergänzt (Wartezeit > 2 Sessions → Bewertung der laufenden Experimente); E-042 gestartet, E-037 gestartet, E-022 und E-030 abgeschlossen, E-029 ersetzt, E-036 abgeschlossen, E-027 verlängert
+
+## 2026-10-08 · Persona lead-tech 1.10
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Abschnitt „Abschluss und Ablösung“ (Handoff, E-042); Statuszeilen `active`/`done` gestrichen, `delegated` mit `--task`
+
+## 2026-10-08 · Persona lead-art 1.6
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Abschnitt „Abschluss und Ablösung“ (Handoff, E-042); Statuszeilen `active`/`done` gestrichen, `delegated` mit `--task`
+
+## 2026-10-08 · Persona lead-design 1.8
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Abschnitt „Abschluss und Ablösung“ (Handoff, E-042); Statuszeilen `active`/`done` gestrichen, `delegated` mit `--task`
+
+## 2026-10-08 · Persona lead-production 1.8
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Abschnitt „Abschluss und Ablösung“ (Handoff, E-042); Statuszeilen `active`/`done` gestrichen, `delegated` mit `--task`
+
+## 2026-10-08 · Persona lead-qa 1.8
+
+- Anlass: Retro Ampel Steuerung (Vorfälle `ampel:steuerung`, `ampel:cache_write_5m`)
+- Datenbasis: `docs/studio/retros/2026-10-08-ampel-steuerung.md` (B2, B3: 65 % der Lead-Neuschreibungen nach Turn-Ende; 120 alleinstehende Statusturns); V2-Prüfung `tools/studio/model.py` Zeile 627, 647, 719–730, `hook.py` Zeile 153–164
+- Ruling: R319
+- Änderungen: Abschnitt „Abschluss und Ablösung“ (Handoff, E-042); Statuszeilen `active`/`done` gestrichen, `delegated` mit `--task`
+
 ## 2026-10-08 · Handbuch 1.26
 
 - Anlass: Vorfall-Retro „Effizienz-Muster blieb unentdeckt“ (R315), Paket TOOL-RETRO-V2

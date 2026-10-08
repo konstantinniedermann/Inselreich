@@ -379,3 +379,9 @@ RENDER-LOOK-01 erst danach.
 - 2026-10-08 · `tools/studio/efficiency.py` (Tabelle „Lead-Instanzen") · `ART-STIL-02-umsetzung` und `ART-STIL-02`
   erscheinen getrennt; Paketfamilien-Summen können dadurch zerfallen. Einschätzung: klein, beim nächsten Eingriff in
   die Paketzuordnung normalisieren. Ursprung: TOOL-AMPEL-M1 (Bericht lead-tech).
+
+### 2026-10-08 · Tests · Zeittest B6 in save.test.ts einmal rot
+
+- 2026-10-08 · `tests/sim/save.test.ts` (B6 `createWorld` Mittel über Seeds 1…50, `perfBudget(5)`) · ein `make check`
+  rot, Wiederholung grün; Last im Lauf unbelegt. Einschätzung: Restflackern des Zeitbudgets trotz Serienlauf (E-030),
+  gehört zu TOOL-TIMEOUTS/`perfBudget` (R318). Ursprung: Coach-Rotation R319.
