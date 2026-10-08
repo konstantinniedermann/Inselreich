@@ -213,6 +213,7 @@ class _Builder:
         self.results: dict[tuple[str, str], dict] = {}
         self.timeline: list[tuple[float, str, str, str]] = []
         self.retros: list[dict] = []
+        self.ampel_sessions: list[dict] = []
         self.ci: dict[str, dict] = {}
         self.queue: dict[str, dict] = {}
         self.milestones_by_id: dict[str, dict] = {}
@@ -1128,10 +1129,12 @@ class _Builder:
         return [dict(m) for m in self.milestones_by_id.values()]
 
     def incident_list(
-        self, records: list[dict], inactive_keys: list[str]
+        self,
+        records: list[dict],
+        inactive_keys: list[str],
     ) -> list[dict]:
         acknowledged = {t for retro in self.retros for t in retro["triggers"]}
-        return effort.incidents(
+        found = effort.incidents(
             records,
             list(self.results.values()),
             list(self.ci.values()),
@@ -1140,6 +1143,7 @@ class _Builder:
             acknowledged,
             inactive_keys,
         )
+        return found + effort.ampel_incidents(self.ampel_sessions, acknowledged)
 
     def view(self, node: dict, inactive_after: float) -> dict:
         live_children = [c for c in node["children"] if self.nodes[c]["status"] in LIVE]
@@ -1311,8 +1315,10 @@ def build_state(
     inactive_after: float = INACTIVE_DEFAULT,
     heartbeats: bool = True,
     agent_names: dict[str, dict] | None = None,
+    ampel_sessions: list[dict] | None = None,
 ) -> dict:
     builder = _Builder(agent_models, now, agent_names)
+    builder.ampel_sessions = ampel_sessions or []
     ordered = sorted(
         (e for e in events if isinstance(e, dict)), key=lambda e: parse_ts(e.get("ts"))
     )
@@ -1323,8 +1329,36 @@ def build_state(
     return builder.result(session, inactive_after, heartbeats)
 
 
+def load_ampel_sessions(folder: Path) -> list[dict]:
+    """Session-Metrikdateien (S-*.md) für den Ampel-Vorfall; Fehler = leer, nie Absturz."""
+    found: list[dict] = []
+    try:
+        files = sorted(folder.glob("S-*.md"))
+    except OSError:
+        return []
+    for path in files:
+        with contextlib.suppress(OSError, ValueError):
+            parsed = effort.parse_ampel_session(
+                path.stem, path.read_text(encoding="utf-8")
+            )
+            if parsed:
+                found.append(parsed)
+    return found
+
+
 def pending_incidents(
-    events: list[dict], now: float, inactive_after: float = INACTIVE_DEFAULT
+    events: list[dict],
+    now: float,
+    inactive_after: float = INACTIVE_DEFAULT,
+    ampel_sessions: list[dict] | None = None,
 ) -> list[dict]:
     """Offene Vorfälle über alle Sessions (ohne erledigte Retro-Auslöser)."""
-    return build_state(events, now, {}, "all", inactive_after, False)["incidents"]
+    return build_state(
+        events,
+        now,
+        {},
+        "all",
+        inactive_after,
+        False,
+        ampel_sessions=ampel_sessions,
+    )["incidents"]

@@ -12,7 +12,8 @@ import json
 import re
 import statistics
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
+from itertools import pairwise
 from pathlib import Path
 
 NOT_MEASURED = "nicht gemessen"
@@ -46,6 +47,19 @@ THRESHOLDS = {
     "largest_read": {"gelb": 40, "rot": 100, "op": ">"},  # KB (1 KB = 1024 Zeichen)
 }
 
+# Anzeigename je Ampelzeile: einzige Quelle für `_lights` und die Vorfall-Zuordnung
+LIGHT_LABELS = {
+    "steuerung": "Steuerungsanteil (L0 + Leads)",
+    "umsetzer": "Umsetzeranteil",
+    "cache_write_5m": "Cache-Write 5 min",
+    "lead_ctx": "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
+    "l0_ctx_max": "L0-Kontext Max",
+    "opus": "opus-Anteil",
+    "persona_opus": "Persona-Starts als general-purpose auf opus (Instanzen)",
+    "largest_read": "Grösste gelesene Datei",
+}
+LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
+
 CLASSES = (
     "L0",
     "Leads",
@@ -63,6 +77,16 @@ PERSONA_LINES = 5
 REWRITE_MIN = 20_000
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico")
 TOP_READS = 5
+REWRITE_PAUSE_S = 300  # Cache-Frist; längere Pause zwischen zwei Aufrufen
+REWRITE_ROWS = 12
+GUARD_DATE = datetime(2026, 10, 4, tzinfo=timezone.utc)  # Persona-Guard (R167) aktiv
+WAIT_TOOLS = {"Bash", "Agent", "Task"}
+PACKAGE = re.compile(r"^\s*Paket:\s*([\w.-]+)", re.MULTILINE)
+FAMILIES = (
+    ("Grafik", ("ART", "WALD", "H-R")),
+    ("Release", ("REL", "INT")),
+    ("Betrieb", ("TOOL", "RETRO")),
+)
 
 
 def role_class(role: str) -> str:
@@ -181,6 +205,22 @@ def _collect_tools(content: list, pending: dict, reads: list) -> None:
                 reads.append({"path": target, "chars": chars})
 
 
+def _entry_time(entry: dict) -> float | None:
+    when = _parse_ts(entry.get("timestamp"))
+    return when.timestamp() if when else None
+
+
+def _tool_names(message: dict) -> set[str]:
+    content = message.get("content")
+    if not isinstance(content, list):
+        return set()
+    return {
+        str(b.get("name"))
+        for b in content
+        if isinstance(b, dict) and b.get("type") == "tool_use"
+    }
+
+
 def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
     mid = message.get("id") or entry.get("uuid")
     if not mid:
@@ -198,8 +238,20 @@ def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
         "output": _int(usage.get("output_tokens")),
     }
     record = calls.setdefault(
-        mid, {"model": message.get("model"), **dict.fromkeys(values, 0)}
+        mid,
+        {
+            "model": message.get("model"),
+            **dict.fromkeys(values, 0),
+            "ts": None,
+            "ts_end": None,
+            "tools": set(),
+        },
     )
+    when = _entry_time(entry)
+    if when is not None:
+        record["ts"] = when if record["ts"] is None else min(record["ts"], when)
+        record["ts_end"] = max(record["ts_end"] or when, when)
+    record["tools"] |= _tool_names(message)
     for key, value in values.items():
         record[key] = max(record[key], value)
     record["model"] = record["model"] or message.get("model")
@@ -211,7 +263,51 @@ def _persona(prompt: str | None) -> str | None:
     return match.group(1) if match else None
 
 
-def _instance(role: str, raw: dict, general_persona: bool) -> dict | None:
+def _package(prompt: str | None) -> str | None:
+    head = "\n".join((prompt or "").splitlines()[:PERSONA_LINES])
+    match = PACKAGE.search(head)
+    return match.group(1) if match else None
+
+
+def package_family(pkg: str | None) -> str:
+    """Paketfamilie aus der Paket-ID (Präfix, Gross-/Kleinschreibung egal)."""
+    name = (pkg or "").upper()
+    if re.match(r"M\d", name):
+        return "Funktion"
+    for family, prefixes in FAMILIES:
+        if name.startswith(prefixes):
+            return family
+    return "Sonstiges"
+
+
+def _rewrite_events(calls: list[dict], family: str) -> list[dict]:
+    """Neuschreibungen (Cache-Write >= REWRITE_MIN) nach einer Pause über 5 min."""
+    events = []
+    for before, call in pairwise(calls):
+        if call["ts"] is None or before["ts_end"] is None:
+            continue
+        gap = call["ts"] - before["ts_end"]
+        written = call["cache_write_5m"] + call["cache_write_1h"]
+        if gap <= REWRITE_PAUSE_S or written < REWRITE_MIN:
+            continue
+        weight = (
+            call["cache_write_5m"] * KIND_WEIGHT["cache_write_5m"]
+            + call["cache_write_1h"] * KIND_WEIGHT["cache_write_1h"]
+        ) * model_factor(call["model"])
+        events.append(
+            {
+                "family": family,
+                "gap_s": gap,
+                "weight": weight,
+                "wait": bool(before["tools"] & WAIT_TOOLS),
+            }
+        )
+    return events
+
+
+def _instance(
+    role: str, raw: dict, general_persona: bool, pkg: str | None = None
+) -> dict | None:
     calls = raw["calls"]
     if not calls:
         return None
@@ -233,6 +329,8 @@ def _instance(role: str, raw: dict, general_persona: bool) -> dict | None:
         "kinds": kinds,
         "cost": sum(kinds.values()),
         "persona_start": general_persona,
+        "start_ts": calls[0]["ts"],
+        "rewrite_events": _rewrite_events(calls, package_family(pkg)),
     }
 
 
@@ -260,15 +358,20 @@ def _ratio(part: float, total: float) -> float:
     return part / total if total else 0.0
 
 
-def compute(mains: list[Path]) -> dict | None:
-    """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen."""
+def compute(
+    mains: list[Path], persona_models: dict[str, str] | None = None
+) -> dict | None:
+    """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen.
+
+    persona_models: Persona -> Modell aus der Frontmatter; ohne Eintrag oder bei
+    «inherit» gilt ein Persona-Start nie als abweichend."""
     try:
-        return _compute(mains)
+        return _compute(mains, persona_models or {})
     except Exception:  # noqa: BLE001 - Messung darf nie abstürzen
         return None
 
 
-def _compute(mains: list[Path]) -> dict | None:
+def _compute(mains: list[Path], persona_models: dict[str, str]) -> dict | None:
     instances: list[dict] = []
     reads: list[dict] = []
     sessions = 0
@@ -287,16 +390,23 @@ def _compute(mains: list[Path]) -> dict | None:
                 continue
             kind = (meta or {}).get("agentType") or "general-purpose"
             persona = _persona(raw["prompt"]) if kind == "general-purpose" else None
-            built = _instance(persona or kind, raw, persona is not None)
+            built = _instance(
+                persona or kind, raw, persona is not None, _package(raw["prompt"])
+            )
             reads += raw["reads"]
             if built:
                 instances.append(built)
     if not instances:
         return None
-    return _summary(instances, reads, sessions)
+    return _summary(instances, reads, sessions, persona_models)
 
 
-def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
+def _summary(
+    instances: list[dict],
+    reads: list[dict],
+    sessions: int,
+    persona_models: dict[str, str],
+) -> dict:
     total = sum(i["cost"] for i in instances)
     by_class: dict[str, float] = dict.fromkeys(CLASSES, 0.0)
     kinds: Counter = Counter()
@@ -307,6 +417,7 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         if "opus" in (item["model"] or ""):
             opus += item["cost"]
     share = {k: _ratio(v, total) for k, v in by_class.items()}
+    split = _persona_split(instances, persona_models)
     leads = [
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
     ]
@@ -331,11 +442,71 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         "umsetzer": share["Umsetzer"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
-        "persona_opus": sum(
-            1 for i in instances if i["persona_start"] and "opus" in (i["model"] or "")
-        ),
+        "persona_opus": split["ab_guard"][
+            "abweichend"
+        ],  # Starts vor dem Guard: nur Tabelle
+        "persona_split": split,
         "roles": _roles(instances),
         "top_reads": ranked,
+        "rewrite_stats": _rewrite_stats(instances, total),
+    }
+
+
+def _deviates(item: dict, persona_models: dict[str, str]) -> bool:
+    expected = persona_models.get(item["role"])
+    if not expected or expected == "inherit":
+        return False
+    return expected not in (item["model"] or "")
+
+
+def _persona_split(instances: list[dict], persona_models: dict[str, str]) -> dict:
+    """Persona-Starts vor/ab Guard x abweichend/zulässig (Start ohne Zeit: ab Guard)."""
+    split = {
+        period: {"abweichend": 0, "zulaessig": 0}
+        for period in ("vor_guard", "ab_guard")
+    }
+    for item in instances:
+        if not item["persona_start"]:
+            continue
+        start = item["start_ts"]
+        before = start is not None and start < GUARD_DATE.timestamp()
+        kind = "abweichend" if _deviates(item, persona_models) else "zulaessig"
+        split["vor_guard" if before else "ab_guard"][kind] += 1
+    return split
+
+
+def _rewrite_stats(instances: list[dict], total: float) -> dict:
+    by_role: dict[str, list[dict]] = defaultdict(list)
+    by_family: dict[str, list[dict]] = defaultdict(list)
+    for item in instances:
+        for event in item["rewrite_events"]:
+            by_role[item["role"]].append(event)
+            by_family[event["family"]].append(event)
+    weight = sum(e["weight"] for v in by_role.values() for e in v)
+    roles = [
+        {
+            "role": role,
+            "count": len(events),
+            "weight": sum(e["weight"] for e in events),
+            "median_pause_min": statistics.median(e["gap_s"] for e in events) / 60,
+            "bash_share": _ratio(sum(e["wait"] for e in events), len(events)),
+        }
+        for role, events in by_role.items()
+    ]
+    families = [
+        {
+            "family": family,
+            "count": len(events),
+            "weight": sum(e["weight"] for e in events),
+        }
+        for family, events in by_family.items()
+    ]
+    return {
+        "count": sum(len(v) for v in by_role.values()),
+        "weight": weight,
+        "total_cost": total,
+        "by_role": sorted(roles, key=lambda r: (-r["weight"], r["role"])),
+        "by_family": sorted(families, key=lambda f: (-f["weight"], f["family"])),
     }
 
 
@@ -401,49 +572,49 @@ def _lights(data: dict) -> list[str]:
     t = THRESHOLDS
     entries = [
         (
-            "Steuerungsanteil (L0 + Leads)",
+            LIGHT_LABELS["steuerung"],
             "steuerung",
             _pct(data["steuerung"]),
             f"gelb > {t['steuerung']['gelb'] * 100:.0f} %, rot > {t['steuerung']['rot'] * 100:.0f} %",
         ),
         (
-            "Umsetzeranteil",
+            LIGHT_LABELS["umsetzer"],
             "umsetzer",
             _pct(data["umsetzer"]),
             f"gelb < {t['umsetzer']['gelb'] * 100:.0f} %, rot < {t['umsetzer']['rot'] * 100:.0f} %",
         ),
         (
-            "Cache-Write 5 min",
+            LIGHT_LABELS["cache_write_5m"],
             "cache_write_5m",
             _pct(data["kind_share"]["cache_write_5m"]),
             f"gelb > {t['cache_write_5m']['gelb'] * 100:.0f} %, rot > {t['cache_write_5m']['rot'] * 100:.0f} %",
         ),
         (
-            "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
+            LIGHT_LABELS["lead_ctx"],
             "lead_ctx",
             _k(data["lead_ctx_median"]),
             f"gelb > {_k(t['lead_ctx']['gelb'])}, rot > {_k(t['lead_ctx']['rot'])}",
         ),
         (
-            "L0-Kontext Max",
+            LIGHT_LABELS["l0_ctx_max"],
             "l0_ctx_max",
             _k(data["l0_ctx_max"]),
             f"gelb > {_k(t['l0_ctx_max']['gelb'])}, rot > {_k(t['l0_ctx_max']['rot'])}",
         ),
         (
-            "opus-Anteil",
+            LIGHT_LABELS["opus"],
             "opus",
             _pct(data["opus_share"]),
             f"gelb > {t['opus']['gelb'] * 100:.0f} %, rot > {t['opus']['rot'] * 100:.0f} %",
         ),
         (
-            "Persona-Starts als general-purpose auf opus (Instanzen)",
+            LIGHT_LABELS["persona_opus"],
             "persona_opus",
             str(data["persona_opus"]),
             f"gelb ≥ {t['persona_opus']['gelb']}, rot ≥ {t['persona_opus']['rot']}",
         ),
         (
-            "Grösste gelesene Datei",
+            LIGHT_LABELS["largest_read"],
             "largest_read",
             NOT_MEASURED if top is None else f"{top:.1f} KB",
             f"gelb > {t['largest_read']['gelb']} KB, rot > {t['largest_read']['rot']} KB",
@@ -465,6 +636,19 @@ def _raw_value(data: dict, key: str) -> float | None:
     if key == "opus":
         return data["opus_share"]
     return data[key]
+
+
+def _split_lines(split: dict | None) -> list[str]:
+    if not split:
+        return []
+    parts = [
+        f"{label} {split[key]['abweichend']} abweichend / {split[key]['zulaessig']} zulässig"
+        for key, label in (
+            ("vor_guard", f"vor Guard ({GUARD_DATE:%Y-%m-%d})"),
+            ("ab_guard", "ab Guard"),
+        )
+    ]
+    return [f"- Persona-Starts (Modell gegen Frontmatter): {'; '.join(parts)}"]
 
 
 def render_section(data: dict | None) -> str:
@@ -494,6 +678,7 @@ def render_section(data: dict | None) -> str:
         "",
         f"- opus-Anteil: {_pct(data['opus_share'])}",
         f"- Persona-Starts als general-purpose auf opus (Instanzen): {data['persona_opus']}",
+        *_split_lines(data.get("persona_split")),
         "",
         *_table(
             [
@@ -524,6 +709,48 @@ def render_section(data: dict | None) -> str:
         f"- {r['chars'] / KB:.1f} KB: `{r['path']}`" for r in data["top_reads"]
     ] or ["- –"]
     out.append("")
+    return "\n".join(out)
+
+
+def render_rewrites(data: dict | None) -> str:
+    head = "## Neuschreibungen nach Pause > 5 min"
+    stats = (data or {}).get("rewrite_stats")
+    if not stats:
+        return f"{head}\n\n- {NOT_MEASURED}.\n"
+    if not stats["count"]:
+        return f"{head}\n\n- keine Neuschreibung nach Pause > 5 min gefunden.\n"
+    out = [
+        head,
+        "",
+        (
+            f"- Gesamt: {stats['count']} Neuschreibungen (Cache-Write >= {REWRITE_MIN // 1000}k "
+            f"nach Pause > {REWRITE_PAUSE_S // 60} min), Kostengewicht {stats['weight'] / 1000:.0f}k, "
+            f"Anteil am Gesamt-Kostengewicht {_pct(_ratio(stats['weight'], stats['total_cost']))}."
+        ),
+        "",
+        *_table(
+            ["Rolle", "Anzahl", "Kostengewicht", "Median-Pause", "vorher Bash/Agent"],
+            [
+                [
+                    r["role"],
+                    str(r["count"]),
+                    _k(r["weight"]),
+                    f"{r['median_pause_min']:.1f} min",
+                    _pct(r["bash_share"]),
+                ]
+                for r in stats["by_role"][:REWRITE_ROWS]
+            ],
+        ),
+        "",
+        *_table(
+            ["Paketfamilie", "Anzahl", "Kostengewicht"],
+            [
+                [f["family"], str(f["count"]), _k(f["weight"])]
+                for f in stats["by_family"][:REWRITE_ROWS]
+            ],
+        ),
+        "",
+    ]
     return "\n".join(out)
 
 
