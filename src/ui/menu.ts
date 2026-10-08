@@ -128,6 +128,8 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
     keys,
     close,
   );
-  close.focus(); // Spec L2: Fokus beim Öffnen auf „Schliessen"
+  // Spec L2: Fokus beim Öffnen auf „Schliessen", aber ohne die Karte nach unten zu scrollen
+  close.focus({ preventScroll: true });
+  m.card.scrollTop = 0;
   return m.close;
 }
