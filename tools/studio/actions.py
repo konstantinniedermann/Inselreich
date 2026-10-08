@@ -71,12 +71,12 @@ def _ts(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def session_minutes(
-    since: datetime, now: datetime | None = None, runner=None
-) -> int | None:
+def session_minutes(since: datetime, runner=None) -> int | None:
     """Actions-Minuten der Workflow-Läufe seit `since`; je Job auf volle Minuten aufgerundet.
 
-    None, wenn `gh` fehlt oder ein Aufruf scheitert.
+    Grenzen: nur die letzten 100 Läufe (`--limit 100`); Jobs ohne `completedAt`
+    (laufend) und übersprungene Jobs zählen nicht. None, wenn `gh` fehlt oder
+    ein Aufruf scheitert.
     """
     run = runner or run_gh
     try:
@@ -89,6 +89,8 @@ def session_minutes(
                 run(["run", "view", str(item["databaseId"]), "--json", "jobs"])
             )["jobs"]
             for job in jobs:
+                if job.get("conclusion") == "skipped":
+                    continue
                 if not job.get("completedAt") or not job.get("startedAt"):
                     continue
                 seconds = (
@@ -100,9 +102,9 @@ def session_minutes(
         return None
 
 
-def render_session(since: datetime | None, now=None, runner=None) -> str:
+def render_session(since: datetime | None, runner=None) -> str:
     rule = f"(gelb > {SESSION_LIMITS[0]}, rot > {SESSION_LIMITS[1]})"
-    minutes = session_minutes(since, now, runner) if since else None
+    minutes = session_minutes(since, runner) if since else None
     if minutes is None:
         return f"- {NOT_RECORDED}: Session-Minuten"
     return f"- {_light(minutes, SESSION_LIMITS)}: Session-Minuten: {minutes} {rule}"
@@ -111,7 +113,7 @@ def render_session(since: datetime | None, now=None, runner=None) -> str:
 def render(
     now: datetime | None = None, runner=None, since: datetime | None = None
 ) -> str:
-    session = render_session(since, now, runner)
+    session = render_session(since, runner)
     data = usage(now, runner)
     head = ["## Actions-Minuten (Monat)", ""]
     if data is None:

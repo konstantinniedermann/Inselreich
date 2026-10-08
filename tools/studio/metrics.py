@@ -431,7 +431,11 @@ def main(argv: list[str] | None = None) -> int:
 
 def _session_start(events: list[dict]):
     """Erstes Event der aktuellen (zuletzt aktiven) Session oder None."""
-    stamped = [e for e in events if e.get("ts") and e.get("session_id")]
+    stamped = [
+        e
+        for e in events
+        if e.get("ts") and e.get("session_id") and e["session_id"] != model.CI_SESSION
+    ]
     if not stamped:
         return None
     sid = max(stamped, key=lambda e: model.parse_ts(e["ts"]))["session_id"]
