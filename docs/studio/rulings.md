@@ -3182,3 +3182,17 @@ der L0-Echtlauf, nicht die Tests — Echtläufe gegen externe APIs gehören in d
 durch den Integrator (Konflikt-Probe sauber), kein Push (R335). Ist laut Zählung: 14 + 18 + 6 Tools.
 
 Entscheider: L0 · Anlass: Review TOOL-E046-E047 · ADR: —
+
+## R355 · 2026-10-08 · Kombiniertes Gate REL-09 Welle 1: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Urteil lead-qa BEDENKEN für alle drei Pläne, nichts blockierend (B1–B13). Nacharbeit ohne Zweitprüfung, der
+Lead führt sie zuerst im Plan nach und setzt dann um. Ownership (L0): `tests/render/decorSea.test.ts` und
+`src/render/decor.ts` gehören in Welle 1 ART-WALD-RAUTEN; SEE-F1 testet T2 nur in `shipLane.test.ts`, die
+`decorSea`-Anpassung wandert in T3 (nach dem Merge von ART-WALD-RAUTEN, B7). Neue Salze in `decor.ts` legt nur
+Umsetzer B an (B13). Pflicht vor Start: SEE-F1 erzeugt Goldwerte (`seaLanes`, `d`, `laneTicks`, Welt-Hash nach 2000
+Ticks für 3 Seeds) auf main vor T1 (B5); ART-WALD-RAUTEN plant Review je Umsetzer und Final-Review auf `opus` (B9) und
+misst Kaltstart als Median `--runs 3 --seed 7` (B11). Umsetzungsbudget: SEE-F2-UX 165 Tools (+ Reproduktions-Playtest),
+SEE-F1-FAHRLINIE 120, ART-WALD-RAUTEN 170. Studioweit ≤ 5 Arbeiter (R241): ART-WALD-RAUTEN darf A und B nur parallel
+starten, wenn höchstens 4 andere Arbeiter laufen, sonst seriell; Messläufe nur bei Load ≤ 4 (R329).
+
+Entscheider: L0 · Anlass: Gate GATE-REL09-W1 · ADR: —
