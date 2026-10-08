@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.29 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.30 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -322,6 +322,10 @@ Regeln dazu:
   beide Stände (Commit-Hashes); L0 meldet nur Zahlen aus dem Lead-Bericht.
   **Fortsetzungspunkt (E-041, R315):** Lange QA-Läufe schreiben nach jedem Teil `.studio/qa/<id>/stand.md`
   (erledigt, offen, Fortsetzungspunkt); Messskripte liegen unter `tools/render-qa/`, nicht im Scratchpad.
+  **Release-Läufe (R330 (2)):** Jeder Release-Lauf hat ein Wanduhr-Limit (im Briefing genannt) und schreibt
+  `.studio/qa/<id>/stand.md` mindestens alle 30 min, nicht erst nach einem Teil.
+  **Fix-Runde nach ZURÜCK (R330 (4)):** Eine Fix-Runde nach Gate ZURÜCK startet in derselben Session, sofern
+  Budget und Wanduhr-Limit es erlauben; sonst Eintrag in `state.md` und Start in der nächsten Session.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;
@@ -330,10 +334,13 @@ Regeln dazu:
   exklusiv hält, nennt das Reihenfolge-Ruling den erwarteten Etappen-Merge. Fällt er in dieselbe
   Session, setzt das Häppchen auf der Etappen-Branch auf und geht mit ihr nach main (kein eigenes
   Release); sonst main zuerst. Geprüft wird bei der Auswahl, nicht erst im Plan.
-- **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, seriell durch `production-integrator` im
-  Worktree `.worktrees/integrate` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+- **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, davor Konflikt-Probe (R330 (5)): L0 oder
+  Production-Lead prüft vor dem Integrator-Start je Branch `git merge-tree --write-tree main <branch>` (ändert
+  weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` im
+  Worktree `.worktrees/integrate` (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Push laut Verfassung §7, danach CI (`gh run list --branch main --limit 3`), Pages und
+  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, am Session-Ende (siehe „Session-Start und -Ende“), danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
+  erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 
 - **Discovery-Strang (E-027, R208):** `lead-design` verantwortet Ideen-Runden (`IDEEN-nn`) nach jedem
@@ -470,5 +477,7 @@ Abnahme pushen (R107).
    `docs/beobachtungen.md` sind eingetragen. Committen (`docs: …`).
 5. Kurzbericht an den Nutzer: erledigt · Aufwand · Handbuch-Änderungen · offene Nutzerentscheide.
    Danach `python3 tools/studio/log.py status --role studio-director --status done --summary "<Kurzbericht>"`.
+
+Gebündelter Push (höchstens einer je Session): `production-integrator` pusht auf L0-Auftrag, prüft CI (läuft nur, wenn Code dabei ist) und löst bei einem Release Pages mit `gh workflow run Pages --ref main` aus und prüft den Deploy.
 
 Danach Skill `session-wrap-up`; Push laut [Verfassung §7](VERFASSUNG.md#7-commits-und-pushes).
