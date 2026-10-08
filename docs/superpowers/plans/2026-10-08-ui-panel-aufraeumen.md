@@ -12,9 +12,8 @@ Aufräumen ohne neue Spielregel, kein Save-Eingriff. Branch `refactor/ui-panel`,
 
 ## Layoutentscheid (Bauleiste)
 
-- **A (Empfehlung):** `.buildbar-sub` als Overlay am unteren Rand von `#game` (`position:absolute`, über dem Canvas, `z-index` unter Meldungen/Modal). Die Kartenhöhe bleibt beim Öffnen konstant, keine Neuberechnung des Canvas, kein Sprung. Kosten: verdeckt bis ~2 Zeilen Kartenrand; Picking darunter muss die Leiste ausnehmen (Ereignisse bleiben an der Leiste, kein Durchklicken).
-- **B:** Zeile dauerhaft mit `min-height` für 2 Sub-Zeilen reservieren. Einfachst, kostet aber ~36 px Karte immer (bei 720 px Höhe ~5 %).
-- Folge von A gegenüber Spec: Wortlaut „gleiche Rasterzeile“ ändert sich. Ist kleine Spec-Anpassung (Verhalten, nicht Regel) mit Ruling; L0 entscheidet bei Gate Plan, sonst gilt A.
+- **A (L0-Entscheid R366, gilt):** `.buildbar-sub` als Overlay am unteren Rand von `#game` (`position:absolute`, über dem Canvas, `z-index` unter Meldungen/Modal). Die Kartenhöhe bleibt beim Öffnen konstant, keine Neuberechnung des Canvas, kein Sprung. Kosten: verdeckt bis ~2 Zeilen Kartenrand; Picking darunter muss die Leiste ausnehmen (Ereignisse bleiben an der Leiste, kein Durchklicken).
+- Folge: Der Spec-Wortlaut „gleiche Rasterzeile“ ändert sich; die UX-Spec wird im Paket nachgeführt (T7). Ruling schreibt nur L0, Kandidaten gehen in den Bericht.
 
 ## Tasks
 
@@ -30,9 +29,16 @@ Aufräumen ohne neue Spielregel, kein Save-Eingriff. Branch `refactor/ui-panel`,
 
 Reihenfolge: T1, T2, T3 (alle `src/ui/`-Logik, seriell), dann T4 (kann parallel zu T1 laufen, liest nur), T5, T6, T7. `qa-code-reviewer` je Task (T1–T3 gebündelt zulässig, da klein), `qa-playtester` T4 und T6, Final-Review `opus` über die Branch. `make check` und Balancing-Test grün, Exit-Codes im Bericht.
 
+## Ergänzte Abnahmekriterien (Gate R366)
+
+- **T1 (d):** Kanten sind Wert-Importe (`import … from`) und `export … from`; `import type` zählt nicht (zur Laufzeit gelöscht, kein Initialisierungszyklus). Der Test dokumentiert das im Kopfkommentar.
+- **T5 (a) Kamera-Grenze:** `clamp()` (`src/ui/input.ts:162`) rechnet mit voller `canvas.clientHeight`. Bei maximal nach unten gescrollter Kamera und offener Kategorie liegt die südlichste Inselkachel oberhalb der Overlay-Oberkante und ist bebaubar (Screenshot). Ändert sich `cameraBounds`/`clampToRect`, gibt es dafür einen Vitest (rot zuerst).
+- **T5 (b) Kein Durchklicken:** Ein Klick aufs Overlay, auch in Lücken zwischen den Knöpfen, baut nicht, reisst nicht ab und beendet den Baumodus nicht (`input.ts:533` window-capture, `hud.ts:353` prüfen). Vitest für einen reinen Helfer, sonst Browser.
+- **T5 (c) Mausrad/Hover:** Mausrad über dem Overlay zoomt nicht und scrollt die Seite nicht. Hover und Bauvorschau verschwinden beim Wechsel ins Overlay.
+
 ## Datei-Ownership (Umsetzer `tech-ui-engineer`)
 
-`src/ui/{panelView,inspect,buildMenu}.ts`, `src/style.css`, `tests/ui/{imports,inspect,panelView,levelReads}.test.ts`, `docs/{beobachtungen,arc42}.md`, `docs/studio/rulings.md`, bei A die UX-Spec. `.studio/qa/ui-panel/` gehört dem Playtester.
+`src/ui/{panelView,inspect,buildMenu,input,hud}.ts`, `src/style.css`, `tests/ui/{imports,inspect,panelView,levelReads}.test.ts`, `docs/{beobachtungen,arc42}.md`, `docs/studio/rulings.md`, bei A die UX-Spec. `.studio/qa/ui-panel/` gehört dem Playtester.
 
 ## Abgrenzung
 
