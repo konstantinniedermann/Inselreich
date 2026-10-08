@@ -30,7 +30,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Bewertung: – (Datenpunkt, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N4: 1 Formatabweichung in `docs/beobachtungen.md` nach union-Merge in REL-02, vom Integrator behoben; 0 Konflikte; Zeitraum M12 nicht begonnen); Datenpunkt 2 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md) B3): 0 Konflikte, 1 Formatabweichung nach Union-Merge in REL-05 (R276), keine Hauptcheckout-Vorfälle belegt → weiter beobachten
 - Urteil R319 (Coach 2026-10-08): **übernehmen**, Teil `merge=union` bereits zurückgenommen (R303). Gegen Schwelle: 0 Konflikte und 0 Hauptcheckout-Vorfälle in beiden Datenpunkten (Retros e13c3631-Nachtrag N4, session-e51712dd B3), 2 Formatabweichungen nach Union-Merge sind durch den Wegfall von `union` erledigt. Der Worktree-Teil steht in `production-integrator` 1.7 (R264) und im Handbuch. Der Zeitraum „M12“ ist ohne Meilenstein-Ende nicht mehr bestimmbar; die Restprüfung (E-031: 0 zurückgeholte Zeilen in 3 Merges) läuft als Regel ohne Platz, die Session-Retro prüft sie mit `git diff <merge-base> HEAD -- docs/beobachtungen.md`.
 
-## E-027 · laufend · Discovery-Strang mit Ideen-Pool
+## E-027 · behalten (R350) · Discovery-Strang mit Ideen-Pool
 
 - Hypothese: Wenn `lead-design` nach jedem Release- oder Meilenstein-Merge (spätestens jede zweite Session) eine Ideen-Runde verantwortet, in der `design-idea-scout` höchstens 5 Ideen in `docs/ideen.md` einträgt, `lead-design` sie mit dem Raster (Spielspass ×2, Säulen-Passung, Aufwand, Risiko) bewertet und höchstens 2 an L0 pitcht, L0 je Runde ein Ruling fällt und jedes Release einen Platz für eine Studio-Idee reserviert, dann entwickelt sich das Spiel auch ohne Nutzer-Input weiter, zu begrenzten Kosten (R207 (1); Prozess-Retro 2026-10-04 B1).
 - Messgrösse: Anteil der im Zeitraum eingeplanten Bausteine (Häppchen und Meilenstein-Bausteine) mit Studio-Ursprung (Verweis auf `I-nnn` im Ruling) ≥ 25 %; eine Idee gilt als eingeplant, sobald ein Ruling sie mit Release- oder M-Ziel nennt (R224 (5)) und ≥ 2 Studio-Ideen live (Ausgang: 0 von 20 Programmpunkten, 0 Häppchen). Gegenproben: je Runde ≤ 2 Starts und ≤ 80 Tool-Aufrufe (Paket-ID `IDEEN-nn`); von live gegangenen Studio-Ideen höchstens 1 von 3 per Nutzer-Einwand verworfen oder zurückgenommen.
@@ -41,6 +41,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Start: 2026-10-04 (Handbuch 1.16)
 - Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus); Datenpunkt 2 von 3 Runden, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: IDEEN-02 mit 1 Start, 2 von 4 Ideen eingeplant (H-A2 live in REL-02, I-007 für REL-04), 2 Studio-Ideen live (Schwelle ≥ 2 erreicht), Studio-Anteil live 2 von 5 Häppchen, eingeplant je nach Zählregel offen; Nutzer-Einwände 0) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 Studio-Anteil 1 von 4 = 25 % (H-U1/I-001), M12-Bausteine I-004/I-006/I-008 eingeplant (R225); IDEEN-02 offen. Messwert 3 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md)): R250–R277 ohne `I-nnn`-Ruling, IDEEN-03 nicht belegt und fällig → weiter beobachten.
 - Urteil R319 (Coach 2026-10-08): **verlängern**, bis IDEEN-03 gelaufen ist, höchstens bis 2026-10-22. Gegen Schwelle: Studio-Anteil 20 % / 25 % (Soll ≥ 25 %, einmal erreicht), 2 Studio-Ideen live (erreicht), Nutzer-Einwände 0, Gegenproben eingehalten (IDEEN-01: 35 Aufrufe, IDEEN-02: 1 Start). Es liegen aber nur 2 von 3 Ideen-Runden vor; Messwert 3 ist ohne `I-nnn`-Ruling seit R250 und ohne IDEEN-03. Ein Urteil jetzt wäre Schätzung. Rückfall am Stichtag: ohne IDEEN-03 `zurückgenommen` (Pool bleibt Archiv).
+- Urteil R350 (Coach 2026-10-08): **behalten**. Beobachtung: IDEEN-03 ist gelaufen, Gate OK mit Bündeln TASTEN-KOMFORT (I-022, I-023, I-025) und PANEL-UEBERSICHT (I-026) als nächste Pakete (R337). Damit liegen 3 von 3 Ideen-Runden vor; Studio-Ideen live ≥ 2 (erreicht, R319), Nutzer-Einwände 0. Deutung: Der Studio-Anteil eingeplanter Bausteine steigt mit R337 deutlich über 25 %, weil 4 Ideen mit Studio-Ursprung auf einmal eingeplant sind. Lücke: Starts und Tool-Aufrufe von IDEEN-03 (Gegenprobe ≤ 2 Starts, ≤ 80 Aufrufe) wurden nicht gesondert erhoben; die Bewertung stützt sich auf R337 und R319. Der Strang bleibt Regel (STUDIO.md, Discovery-Strang); L0 bestätigt per Ruling.
 
 ## E-030 · angepasst (R319) · Zeittests lokal seriell
 
@@ -396,7 +397,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
 - Ruling: R344, R349
 
-## E-047 · laufend · `log.py queue` formatiert selbst
+## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 
 - Hypothese: Wenn `log.py queue` nach dem Schreiben `npx prettier --write docs/studio/warteschlange.md` aufruft (bei fehlendem `npx` mit Warnung), bleibt `make check` nach jedem Warteschlangen-Eintrag grün, auch bei `*` oder `_` im Text (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B2).
 - Messgrösse: 0 rote `make check` wegen `docs/studio/warteschlange.md` in den nächsten 5 Einträgen (Ausgang: 1 von 1 Eintrag mit Glob-Text, N-98, rot); ein Test mit Eintrag `docs/**, **/*.md, a_b_c` besteht.
@@ -404,9 +405,9 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: die nächsten 5 Einträge, höchstens bis 2026-11-12.
 - Rückfall: Aufruf entfernen (`git revert`); Hinweis in lernen.md bleibt.
 - Dateien: `tools/studio/log.py` bzw. `tools/studio/studio_docs.py`, `tools/studio/tests/`
-- Ruling: R344, R349
+- Ruling: R344, R349 (angenommen), R350 (Werkzeug-Fix ohne offene Hypothese, Wirkung per Test belegt; kein Experimentplatz)
 
-## E-048 · laufend · Ist aus der Zählung am Gate, Richtwert für UI-Pakete mit Browser-Abnahme
+## E-048 · vorgeschlagen · Ist aus der Zählung am Gate, Richtwert für UI-Pakete mit Browser-Abnahme
 
 - Hypothese: Wenn das Gate das Ist der Tool-Aufrufe aus der Budget-Zählung liest (nicht aus der Selbstangabe des Leads) und UI-Pakete mit Final-Review und Browser-Abnahme mit 150 statt 120 Tools budgetiert werden, entstehen weder Überzüge um mehr als 10 % noch widersprüchliche Selbstangaben (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B3).
 - Messgrösse: Bei den nächsten 3 UI-Paketen mit Browser-Abnahme: Ist ≤ 150 und Abweichung Selbstangabe gegen Zählung ≤ 10 % (Ausgang: TASTEN-KOMFORT 147/120, PANEL-UEBERSICHT 136/120, Selbstangabe „ca. 100“ gegen 136).
@@ -414,4 +415,4 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 UI-Pakete, höchstens bis 2026-11-19. Ergänzender Messauftrag (B4): Ergebnis des CI-Laufs nach dem ersten `zeitreserve-push` im Bericht der nächsten Retro nennen.
 - Rückfall: Handbuchsätze (Budget, Gate) auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Budget-Zählung, Gate Merge; nur nach Ruling)
-- Ruling: R344, R349
+- Ruling: R344, R349 (angenommen; wartet auf Platz, höchstens 3 laufend, R350; Handbuch-Sätze und Version 1.31 zurückgenommen)

@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.31 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.30 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -170,7 +170,6 @@ Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht im
   zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;
   Stufe leicht: alles an `lead-tech`), z. B.
   `log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG`.
-  UI-Pakete mit Final-Review und Browser-Abnahme budgetiert L0 mit 150 Tools (E-048).
 
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
@@ -262,7 +261,7 @@ Ablauf eines Meilensteins (Stufe voll):
    einen Implementierer-Start, statt Turn für Turn zu warten; jedes Warten loggt er als
    `status --status waiting`.
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
-6. **Gate Merge** (L0, eines je Meilenstein; L0 liest das Ist der Tool-Aufrufe aus der Budget-Zählung, nicht aus der Selbstangabe des Lead, E-048) → Production-Lead lässt `production-integrator` die
+6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
