@@ -3160,3 +3160,16 @@ erledigt (Runner `ubuntu-24.04` fest, R293); der Frist-Hinweis in state.md entf�
 als Ideen zurück, keine verlorene Arbeit.
 
 Entscheider: L0 · Anlass: Board-Vorlage BOARD-NACH-REL08 · ADR: —
+
+## R353 · 2026-10-08 · Prozess-Retro REL-08: alle vier Vorschläge angenommen; Nachtrag zu R347
+
+Ruling: Retro `docs/studio/retros/2026-10-08-prozess-rel08.md` angenommen. **Nachtrag R347:** Beide Exit 1 am
+Push-Gate kamen aus derselben veralteten Messdatei (885 ms; frisch 574/580 ms gegen 833 ms) — R347 war ein Fehlalarm,
+der 10000-ms-Timeout bleibt (harmlos). (P1+P2) Paket **TOOL-ZEITRESERVE-META** (lead-tech, 45 Tools, sofort, eigener
+Worktree): Messdatei trägt Commit und 1-min-Last der Messung, das Gate nimmt nur Messungen mit Commit = `HEAD` und
+Last ≤ 4 an (ersetzt die Reihenfolge aus R348); `CI=true` nur für die Perf-Budget-Tests statt eines zweiten vollen
+`make check`. (P3) Smoke-Skript `tools/render-qa/smoke.mjs` (lead-art, 40 Tools) nach Welle 1 von REL-09, vor dem
+Release-Check REL-09. (P4) lernen.md-Zeile „strenges und lockeres Gate widersprechen sich → erst frisch messen“ beim
+Session-Ende durch den studio-coach. — Kosten bei Irrtum: rund 90 Tools, Rückfall per `git revert`.
+
+Entscheider: L0 · Anlass: Prozess-Retro REL-08 · ADR: —
