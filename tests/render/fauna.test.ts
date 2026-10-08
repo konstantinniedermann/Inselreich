@@ -673,7 +673,7 @@ describe('Fauna T1: Renderer', () => {
       expect(day.compositeSet.filter((c) => c === 'lighter').length).toBeLessThanOrEqual(0);
     }
     expect(seenNight).toBeGreaterThan(0);
-  });
+  }, 15_000);
 
   it('Bodentiere mischen sich nach Tiefe ein: vor dem Schiff bei kleinerem Schlüssel, nach ihm bei gleichem und grösserem', () => {
     const world = createWorld(3);

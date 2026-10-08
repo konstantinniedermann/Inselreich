@@ -339,7 +339,7 @@ Regeln dazu:
   weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` im
   Worktree `.worktrees/integrate` (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, am Session-Ende (siehe „Session-Start und -Ende“), danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
+  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, am Session-Ende (siehe „Session-Start und -Ende“) und erst nach grünem `make zeitreserve-push` (bei Load > 4 Exit 2 „nicht belastbar“: warten, bis Load <= 4; R338), danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
   erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 

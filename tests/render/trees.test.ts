@@ -235,7 +235,7 @@ describe('Kronen-Atlas', () => {
       expect(treeCacheBytes()).toBeLessThanOrEqual(TREE_CACHE_MAX_BYTES);
     }
     expect(treeCacheSize()).toBeGreaterThan(0);
-  });
+  }, 20_000);
 
   it('Spec §5 Atlas bei Zoom 2: alle Kronen einer ganzen Insel (Seeds 7, 14, 2) passen ohne Verdrängung unter die Obergrenze (Briefing: ≤ 12 MiB)', () => {
     for (const seed of [7, 14, 2]) {

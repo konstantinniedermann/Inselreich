@@ -377,7 +377,7 @@ describe('L5-T3 shipAt trifft nie Wrack oder Felsen', () => {
     expect(ships).toBeGreaterThan(100);
     expect(samples).toBeGreaterThan(10000);
     expect(ISO_H).toBe(32);
-  }, 15_000);
+  }, 20_000);
 });
 
 describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {

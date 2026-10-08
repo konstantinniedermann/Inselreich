@@ -12,9 +12,21 @@ auf GitHub Actions (`GITHUB_ACTIONS=true`) ist die gemessene Zeit schon CI-Zeit,
 Timeout (`it(name, fn, 30_000)`) oder wird aufgeteilt. Die Meldung nennt Datei, Test, Messung und ein
 passendes Timeout.
 
+**Geschätzte Runner-Zeit (E-043):** `check.ts` prüft zusätzlich `lokale Laufzeit × RUNNER_FACTOR (3)` mit der
+Runner-Regel (Faktor 1, Fehler ab 2000 ms, Warnung ab 1000 ms, Reserve ≤ 50 % Timeout). Beim Standard-Timeout
+5 s fällt so ein Test ab etwa 834 ms lokal auf. Meldungen nennen „geschätzte Runner-Zeit“. Auf GitHub Actions
+entfällt die Hochrechnung (Faktor 1, gleiche Prüfung wie oben). Die Baseline gilt für beide Modi;
+`.studio/zeitreserve.json` bleibt unverändert.
+
+**Last:** `check.ts` nennt in der Kopfzeile `Last (1 min)`. Lokal bei Load > 4 (`LOAD_MAX`, wie `lastgate.mjs`)
+sind Messungen nicht belastbar: Verstösse erscheinen nur als Warnung, der Exit-Code bleibt 0; Lauf bei ruhiger
+Last wiederholen. Auf GitHub Actions gilt immer hart (`loadVerdict`).
+
 **Altlasten:** `baseline.json` listet Tests (`Datei :: Name`), die beim Einführen schon gegen die Regel
 verstiessen (auch ab 600 ms, weil lokale Messungen um die 1-s-Schwelle streuen). Die Liste darf nur kleiner werden: Eintrag entfernen, sobald der Test ein Timeout hat oder
 aufgeteilt ist. Neue Verstösse gehören nie hinein.
+
+**Push-Gate (R338):** `make zeitreserve` bleibt bei Load > 4 (1 min) eine Warnung (Exit 0), weil die Last durch parallele Agenten meist darüber liegt. `make zeitreserve-push` (nach `make test`) ist vor dem Session-End-Push Pflicht: bei Load > 4 Exit 2 "nicht belastbar" ohne Ergebnis (warten), sonst harte Prüfung (Exit 1 bei Verstoss). Die Schwelle `LOAD_MAX` steht nur in `rule.ts`. Tests simulieren Last mit `ZEITRESERVE_FAKE_LOAD`.
 
 **Grenzen:** Gemessen wird die Laufzeit im lokalen Lauf (bei parallelem Lauf unter Last eher zu hoch, nie zu
 niedrig); Tests unter 1 s bleiben unbeachtet. Der Schritt prüft nur Tests, die tatsächlich liefen, und liest den Bericht des letzten `npm test`-Laufs (immer erst `make test`, nicht einen alten Bericht auswerten). Einträge der Baseline ohne passenden Test meldet er als Warnung. Warnungen (1–2 s) sind Hinweise: im Zweifel gleich ein Timeout setzen.

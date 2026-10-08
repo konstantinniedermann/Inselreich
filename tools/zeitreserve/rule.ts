@@ -3,6 +3,9 @@
 /** CI ist laut Erfahrung bis zu 4-mal langsamer als lokal (R270). */
 export const CI_FACTOR = 4;
 
+/** Beobachteter Faktor Runner-Zeit zu lokaler Zeit (E-043); nur für den Zusatzmodus. */
+export const RUNNER_FACTOR = 3;
+
 /** Erlaubter Anteil des Timeouts, den ein Test auf der CI belegen darf (R270: ≤ 50 %). */
 export const MAX_TIMEOUT_SHARE = 0.5;
 
@@ -87,4 +90,32 @@ export function formatViolation(t: TestTiming, factor: number = CI_FACTOR): stri
     `${t.file}: "${t.name}" ${t.durationMs} ms × ${factor} > ${MAX_TIMEOUT_SHARE * 100} % ` +
     `von ${t.timeoutMs} ms Timeout (Vorschlag: Timeout ${suggestedTimeoutMs(t.durationMs, factor)} ms oder Test aufteilen; R270)`
   );
+}
+
+/** Hochrechnungsfaktor des Runner-Modus: auf GitHub Actions 1 (gemessene Zeit ist schon Runner-Zeit). */
+export function runnerScale(onGithubActions: boolean): number {
+  return onGithubActions ? CI_FACTOR_ON_CI : RUNNER_FACTOR;
+}
+
+/** Geschätzte Runner-Zeit: Laufzeiten × `factor`; Eingabe bleibt unverändert. Danach `CI_FACTOR_ON_CI` anwenden. */
+export function scaleToRunner(timings: readonly TestTiming[], factor: number): TestTiming[] {
+  return timings.map((t) => ({ ...t, durationMs: Math.round(t.durationMs * factor) }));
+}
+
+/** Meldungszeile des Runner-Modus; `t.durationMs` ist die geschätzte Runner-Zeit. */
+export function formatRunnerViolation(t: TestTiming, factor: number): string {
+  const local = Math.round(t.durationMs / factor);
+  return (
+    `${t.file}: "${t.name}" geschätzte Runner-Zeit ${t.durationMs} ms (${local} ms lokal × ${factor}) > ` +
+    `${MAX_TIMEOUT_SHARE * 100} % von ${t.timeoutMs} ms Timeout ` +
+    `(Vorschlag: Timeout ${suggestedTimeoutMs(t.durationMs, CI_FACTOR_ON_CI)} ms oder Test aufteilen; E-043)`
+  );
+}
+
+/** Ab diesem 1-min-Load (lokal) sind Messungen nicht belastbar (einzige Definition; lastgate.mjs importiert sie). */
+export const LOAD_MAX = 4;
+
+/** `strict`: Verstösse lassen den Lauf scheitern; `unreliable`: nur Warnung, Lauf bei ruhiger Last wiederholen. */
+export function loadVerdict(load: number, onGithubActions: boolean): 'strict' | 'unreliable' {
+  return onGithubActions || load <= LOAD_MAX ? 'strict' : 'unreliable';
 }
