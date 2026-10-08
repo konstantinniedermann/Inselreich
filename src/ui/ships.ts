@@ -147,7 +147,7 @@ const routeSig = (r: Route): string =>
     .map((g) => `${g.good}${g.reserve}`)
     .join(',')}`;
 
-/** Struktur des Abschnitts: ändert sich nur, wenn das DOM neu gebaut werden muss (nicht mit `left` oder Ladung). */
+/** Struktur des Abschnitts (Schiffe, Ziele, freigeschaltete Güter): ändert sich nur, wenn das DOM neu gebaut werden muss (nicht mit `left` oder Ladung). */
 export function shipsKey(world: World, island: number): string {
   const rows = world.ships
     .filter((s) => related(world, s, island))
@@ -157,7 +157,8 @@ export function shipsKey(world: World, island: number): string {
         `${s.id}${s.route === null ? '-' : routeSig(s.route)}${s.to === null ? 'd' : 'f'}${s.homing ? 'h' : ''}`,
     );
   const targets = routeTargets(world, island).map((t) => t.island);
-  return `${rows.join('|')}#${targets.join(',')}#${freeShipAtHome(world)?.id ?? '-'}`;
+  const goods = GOOD_IDS.filter((g) => goodUnlocked(world, g)).join(',');
+  return `${rows.join('|')}#${targets.join(',')}#${freeShipAtHome(world)?.id ?? '-'}#${goods}`;
 }
 
 function shipParts(world: World, ship: Ship): string[] {

@@ -7,7 +7,8 @@ import { laneTicks } from '../../src/sim/islands';
 import { buyShip, clearRoute, freeShipAtHome, setRoute } from '../../src/sim/ships';
 import { newHouseState } from '../../src/sim/population';
 import { step, type StepReport } from '../../src/sim/tick';
-import type { Building, Route } from '../../src/sim/types';
+import { UNLOCKS } from '../../src/sim/defs/unlocks';
+import type { Building, Route, World } from '../../src/sim/types';
 import { deficitLine } from '../../src/ui/inspect';
 import { friendlyReason } from '../../src/ui/hints';
 import {
@@ -137,6 +138,28 @@ describe('M12 E4 UI Schiffe', () => {
     expect(shipsKey(w, 0)).toBe(k2);
     clearRoute(w, w.ships[0]!.id);
     expect(shipsKey(w, 0)).not.toBe(k2);
+  });
+
+  describe('shipsKey: Tabelle der Zustandsänderungen (N4)', () => {
+    const woolEntry = UNLOCKS.find((u) => u.goods.includes('wool'))!.id;
+    const rows: [string, (w: World) => void, boolean][] = [
+      ['Gut freigeschaltet', (w) => void w.unlocked.push(woolEntry), true],
+      ['Schiff gekauft', (w) => void buyShip(w), true],
+      [
+        'Route geändert',
+        (w) => void setRoute(w, w.ships[0]!.id, routeFromClick(0, FELS, 'spice', 'fetch')),
+        true,
+      ],
+      ['Ziel gesetzt', (w) => void (w.ships[0]!.to = FELS), true],
+      ['left geändert', (w) => void (w.ships[0]!.left -= 5), false],
+    ];
+    it.each(rows)('%s → Schlüssel ändert sich: %s', (_name, mutate, changes) => {
+      const w = seeRouteStart();
+      w.unlocked = w.unlocked.filter((id) => id !== woolEntry); // Gut zunächst gesperrt
+      const k0 = shipsKey(w, 0);
+      mutate(w);
+      expect(shipsKey(w, 0) !== k0).toBe(changes);
+    });
   });
 
   it('buyShipView: Zahlen aus SHIP; Gründe aus der Sim (Geld, Höchstzahl)', () => {
