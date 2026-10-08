@@ -2755,3 +2755,16 @@ geteilt. Messgrösse: 0 Altlasten mit Standard-Timeout, kein Timeout-Rot in den 
 V2 (R316) künftig ausgeschlossen. — Kosten bei Irrtum: längere Testlaufzeit, Rückfall per Revert.
 
 Entscheider: L0 · Anlass: Retro R-2026-10-08-ci-main · ADR: —
+
+## R319 · 2026-10-08 · Retro Steuerung: V1, V2, M1 angenommen; Experiment-Plätze rotieren
+
+Ruling: `docs/studio/retros/2026-10-08-ampel-steuerung.md` angenommen. Hauptteil der Steuerung ist Lead-Handarbeit
+(81 % Bash-Turns) und Neuschreibung nach Turn-Ende (65 %), nicht Briefings. **V1** Leads nach Abschlussbericht nicht
+fortsetzen, sondern per Handoff ablösen (ersetzt E-029). **V2** `active`/`done`-Statusturns der Leads streichen,
+sofern studio-coach vorher belegt, dass das Dashboard sie nicht braucht. **M1** Metrik-Spalte „vorher Turn-Ende" und
+Lead-Turn-Zahlen (Werkzeug, lead-tech). Zweiter Befund: E-029, E-036, E-037, E-038 warten alle auf einen Platz
+(Verfassung §: höchstens 3 gleichzeitig) — „wartet auf Platz" darf kein Dauerzustand sein. studio-coach bewertet die
+laufenden E-022, E-027, E-030 und schliesst reife ab, damit E-037 sofort startet; Rotation statt Warten. — Kosten
+bei Irrtum: ein Experiment endet früh, Wiederaufnahme möglich.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-ampel-steuerung · ADR: —

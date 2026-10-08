@@ -367,3 +367,9 @@ RENDER-LOOK-01 erst danach.
 - 2026-10-07 · `tools/zeitreserve/baseline.json` · 26 Bestandstests verletzen die Zeitreserve-Regel (Timeout ≥ 8× lokale
   Laufzeit) und stehen als Altlast in der Baseline; abzuarbeiten, wenn die Tests ohnehin angefasst werden.
   Ursprung: TOOL-CHECK-ZEITTEST.
+
+### 2026-10-08 · Studio · Ampelklasse „Leads“ mischt Steuerung und Autorenarbeit
+
+- 2026-10-08 · `tools/studio/efficiency.py` (`role_class`) · Plan-Leads (z. B. M12-SEE-PLAN, 89 Turns, 20 % einer Session)
+  zählen als „Leads“ und damit als Steuerung; Planungssessions sind dadurch strukturell rot. Einschätzung: mittel,
+  Trennung über M1 der Retro, keine Schwellenänderung. Ursprung: `docs/studio/retros/2026-10-08-ampel-steuerung.md`.
