@@ -2854,3 +2854,20 @@ Altwald während des Waldaufbaus. Worktree `.worktrees/rel07-wood` wird entfernt
 bleibt. — Kosten bei Irrtum: eine weitere Fix-Runde.
 
 Entscheider: L0 · Anlass: Bericht lead-art FIX-REL07 · ADR: —
+
+## R327 · 2026-10-08 · Gate Merge REL-07 (Nachprüfung): OK mit Bedenken, Release
+
+Ruling: Nachprüfung lead-qa (`rel/rel-07` @ dbf4524 gegen main @ 8ccec73, Last ≤ 4) angenommen. Ohne Bau: OK
+(Seed 7 im Mittel 0,28 Ruckel-Frames, Seed 14 0), die Gate-Bedingung aus R326 (2) greift nicht. Perf: OK
+(höchstens +1,3 ms, absolut 3,7 ms). K-Proben blind: OK. Altwald während des Aufbaus: OK.
+**D-REL07N-1:** Das Bau-Ruckeln bei Seed 7 (Median 2, höchstens 6 Frames à 33 ms je Bau, main 0) wird angenommen
+und blockiert nicht. Es ist gegenüber Lauf B deutlich kleiner (vorher 4–6 Frames à 33–50 ms), der Ruhezustand ist
+sauber, und eine weitere Fix-Runde hielte das ganze Release für ein kurzes Stocken nur auf waldreichen Inseln auf.
+Folgepaket **PERF-L57 „Zeichenkosten L5–L7 senken“** mit den Zielen: Bau Seed 7 main ± 1, Kaltstart Seed 14 nahe main.
+Es kommt aufs Board, der Start erfolgt nach R305 erst mit Nutzer-Auftrag oder als Abschluss des laufenden Auftrags
+„Lebendige Insel“ in der nächsten Session. Release-Notiz nennt Bau-Ruckeln und Kaltstart offen unter „Bitte testen“.
+Ablauf: production-integrator mergt `rel/rel-07` nach main, `make check`, Push, CI und Pages prüfen. Befunde
+ausserhalb Scope (B1, B2, B6, B14 aus Lauf B und die vier Kandidaten aus der Nachprüfung) kommen in
+`docs/beobachtungen.md`. — Kosten bei Irrtum: Spieler bemerkt Stocken beim Bauen im Wald; Revert möglich.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Nachprüfung REL-07 (`.studio/qa/rel-07c/stand.md`) · ADR: —
