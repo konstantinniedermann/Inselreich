@@ -1502,7 +1502,7 @@ interface TerrainMeta {
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
 
 /** Kontext-Optionen der Viertel-Kopie: Fernwasser liest sie per `getImageData` zurück (sonst Chrome-Warnung). Nur dort, die Bodenebene bleibt GPU-fähig. */
-export const READBACK_CTX = { willReadFrequently: true } as const;
+export const READBACK_CTX: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 /** Die Ebene ist fertig gemalt (Meta wird erst nach dem letzten Pixelschritt gesetzt). */
 export const hasTerrainMeta = (layer: HTMLCanvasElement): boolean => meta.has(layer);
