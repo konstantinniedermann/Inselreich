@@ -45,7 +45,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
   Knöpfe: «Fortsetzen — Autosave (Spielzeit m:ss)», «Gespeichertes Spiel laden (Spielzeit m:ss)» und «Neue
   Insel» bzw. «Los geht's», wenn es nichts zu laden gibt. `Esc` oder ein Klick daneben löst den hervorgehobenen
   Knopf aus. Gibt es einen Stand, fragt «Neue Insel» zuerst nach («Ja, neue Insel» / «Abbrechen»). Ist ein
-  Spielstand beschädigt oder der Browser-Speicher gesperrt, steht darunter ein Hinweis. Nach dem Laden ist das
+  Spielstand beschädigt, stammt er aus einer neueren Version oder ist der Browser-Speicher gesperrt, steht darunter ein Hinweis. Nach dem Laden ist das
   Spiel **pausiert** («Pausiert — P oder 1× setzt fort»).
 - **Menü** (Knopf «Menü» rechts in der Kopfzeile; das Spiel läuft dahinter weiter): **Speichern**, **Laden**
   (Liste der Stände mit Spielzeit, darüber der Hinweis «Ungespeicherter Fortschritt geht verloren»),
@@ -309,7 +309,9 @@ Stein **und** Holz: Sie entnimmt je Zyklus beides zugleich und nur, wenn beides 
 
 ### Handel
 
-Kontor anklicken, dann «Handeln»: Waren in Mengen von 1 oder 10 kaufen und verkaufen.
+Kontor anklicken, dann «Handeln»: Waren in Mengen von 1 oder 10 kaufen und verkaufen. Ist die Seefahrt frei und
+gibt es ein Schiff oder lässt sich eines kaufen, öffnet der Klick auf das Heimatkontor das Kontor-Panel mit dem
+Schiffsabschnitt («Handeln» bleibt dort ein Knopf); sonst öffnet er direkt den Handel.
 
 | Gut             | Holz | Werkzeug | Stein | Nahrung | Wolle | Stoff | Zuckerrohr | Rum | Glas | Gewürz |
 | --------------- | ---- | -------- | ----- | ------- | ----- | ----- | ---------- | --- | ---- | ------ |
