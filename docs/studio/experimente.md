@@ -385,3 +385,33 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Satz aus dem Handbuch (Lastregel) streichen, Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Lastregel), `.claude/agents/lead-art.md`, `.claude/agents/lead-qa.md` (nur nach Ruling)
 - Ruling: R329
+
+## E-046 · vorgeschlagen · Ampelzeile „Actions-Minuten“
+
+- Hypothese: Wenn `metrics.py --efficiency` den Monatsverbrauch an Actions-Minuten (Konto und Repo Inselreich) aus `gh api "/users/<login>/settings/billing/usage?year=…&month=…"` als Ampelzeile ausweist, fällt ein Verbrauchsanstieg in der nächsten Retro statt erst durch den Nutzer auf (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B1; R333).
+- Messgrösse: Zwei Zeilen: Inselreich-Minuten im Monat (grün ≤ 150, gelb > 150, rot > 400; Erwartung nach R334: 50–150) und Konto-Minuten (gelb > 1000, rot > 1600 von 2000). Die Zeile ist wirksam, wenn jede Session-Datei in den nächsten 3 Sessions sie mit Wert nennt (0 × „nicht erfasst“, ausser bei fehlendem `gh`) und kein Verbrauchsstand mehr erst durch den Nutzer entdeckt wird.
+- Messbarkeit: Die Zeile steht zusätzlich zu den Token-Zeilen; keine bestehende Kennzahl und keine Schwelle ändert sich. Bei fehlendem `gh` oder fehlendem Token: „nicht erfasst“ statt Nullwert.
+- Zeitraum: 3 Sessions, höchstens bis 2026-11-12.
+- Rückfall: Änderung in `tools/studio/efficiency.py` bzw. `metrics.py` zurücknehmen (`git revert`).
+- Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
+- Ruling: –
+
+## E-047 · vorgeschlagen · `log.py queue` formatiert selbst
+
+- Hypothese: Wenn `log.py queue` nach dem Schreiben `npx prettier --write docs/studio/warteschlange.md` aufruft (bei fehlendem `npx` mit Warnung), bleibt `make check` nach jedem Warteschlangen-Eintrag grün, auch bei `*` oder `_` im Text (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B2).
+- Messgrösse: 0 rote `make check` wegen `docs/studio/warteschlange.md` in den nächsten 5 Einträgen (Ausgang: 1 von 1 Eintrag mit Glob-Text, N-98, rot); ein Test mit Eintrag `docs/**, **/*.md, a_b_c` besteht.
+- Messbarkeit: Die Event-Zeile `queue` bleibt unverändert; nur die Datei wird nach dem Schreiben normalisiert.
+- Zeitraum: die nächsten 5 Einträge, höchstens bis 2026-11-12.
+- Rückfall: Aufruf entfernen (`git revert`); Hinweis in lernen.md bleibt.
+- Dateien: `tools/studio/log.py` bzw. `tools/studio/studio_docs.py`, `tools/studio/tests/`
+- Ruling: –
+
+## E-048 · vorgeschlagen · Ist aus der Zählung am Gate, Richtwert für UI-Pakete mit Browser-Abnahme
+
+- Hypothese: Wenn das Gate das Ist der Tool-Aufrufe aus der Budget-Zählung liest (nicht aus der Selbstangabe des Leads) und UI-Pakete mit Final-Review und Browser-Abnahme mit 150 statt 120 Tools budgetiert werden, entstehen weder Überzüge um mehr als 10 % noch widersprüchliche Selbstangaben (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B3).
+- Messgrösse: Bei den nächsten 3 UI-Paketen mit Browser-Abnahme: Ist ≤ 150 und Abweichung Selbstangabe gegen Zählung ≤ 10 % (Ausgang: TASTEN-KOMFORT 147/120, PANEL-UEBERSICHT 136/120, Selbstangabe „ca. 100“ gegen 136).
+- Messbarkeit: Das höhere Budget verdeckt keinen Überzug, weil die Schwelle absolut (150) und gegen die Zählung gelesen wird; die Schätzung-gegen-Ist-Zeile der Metrik bleibt unverändert.
+- Zeitraum: 3 UI-Pakete, höchstens bis 2026-11-19. Ergänzender Messauftrag (B4): Ergebnis des CI-Laufs nach dem ersten `zeitreserve-push` im Bericht der nächsten Retro nennen.
+- Rückfall: Handbuchsätze (Budget, Gate) auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Budget-Zählung, Gate Merge; nur nach Ruling)
+- Ruling: –
