@@ -106,6 +106,7 @@ export const NAV_KEYS: readonly { key: string; label: string }[] = [
   { key: 'W A S D / Pfeile', label: 'Karte schwenken' },
   { key: 'Leertaste + Ziehen', label: 'Karte schwenken mit der Maus' },
   { key: 'Leertaste (antippen)', label: 'Pause / weiter' },
+  { key: 'Strg/Cmd + Klick auf Gebäude', label: 'Gebäudetyp als Bauwerkzeug (Pipette)' },
   { key: 'Mausrad', label: 'Zoomen' },
   { key: 'Esc', label: 'Werkzeug ablegen, Karte schliessen' },
   { key: 'Rechtsklick', label: 'Werkzeug ablegen' },

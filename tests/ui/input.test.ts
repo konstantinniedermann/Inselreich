@@ -4,6 +4,7 @@ import {
   exceedsDrag,
   isClick,
   isDragPaintTool,
+  isPipetteClick,
   panDelta,
   panKeyAllowed,
   spaceKeyRole,
@@ -87,5 +88,15 @@ describe('TASTEN-KOMFORT Eingabe-Helfer', () => {
     expect(spaceKeyRole({ tagName: 'CANVAS' }, false, none)).toBe('map');
     expect(spaceKeyRole({ tagName: 'DIV' }, false, none)).toBe('map');
   });
-});
+
+  it('AK-TK-10 isPipetteClick', () => {
+    const no = { ctrl: false, meta: false };
+    expect(isPipetteClick(0, { ...no, ctrl: true }, false, false)).toBe(true);
+    expect(isPipetteClick(0, { ...no, meta: true }, false, false)).toBe(true);
+    expect(isPipetteClick(0, no, false, false)).toBe(false);
+    expect(isPipetteClick(1, { ...no, ctrl: true }, false, false)).toBe(false);
+    expect(isPipetteClick(2, { ...no, ctrl: true }, false, false)).toBe(false);
+    expect(isPipetteClick(0, { ...no, ctrl: true }, true, false)).toBe(false);
+    expect(isPipetteClick(0, { ...no, ctrl: true }, false, true)).toBe(false);
+  });
 });

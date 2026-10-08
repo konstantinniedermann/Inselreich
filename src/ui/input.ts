@@ -48,6 +48,16 @@ export function spaceKeyRole(
   return panKeyAllowed(target, modalOpen) ? 'map' : 'ignore';
 }
 
+/** Pipetten-Klick: linke Taste mit Strg/Cmd, nicht Touch, Leertaste (Pan) nicht gehalten. */
+export function isPipetteClick(
+  button: number,
+  mods: { ctrl: boolean; meta: boolean },
+  spaceDown: boolean,
+  touch: boolean,
+): boolean {
+  return button === 0 && (mods.ctrl || mods.meta) && !spaceDown && !touch;
+}
+
 /** Zieht der Zeiger weiter als die Schwelle (euklidisch, CSS-px) vom Startpunkt weg? */
 export function exceedsDrag(start: Pt, p: Pt): boolean {
   return Math.hypot(p.x - start.x, p.y - start.y) > DRAG_THRESHOLD;

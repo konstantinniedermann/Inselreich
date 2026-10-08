@@ -373,3 +373,12 @@ describe('TASTEN-KOMFORT Tasten (Teil A, C)', () => {
     expect(upgradeTarget({ kind: 'inspect', id: 987654 }, w)).toEqual(fail);
   });
 });
+
+describe('TASTEN-KOMFORT Pipette (Teil B)', () => {
+  it('AK-TK-19 NAV_KEYS nennt Strg/Cmd + Klick', () => {
+    expect(NAV_KEYS).toContainEqual({
+      key: 'Strg/Cmd + Klick auf Gebäude',
+      label: 'Gebäudetyp als Bauwerkzeug (Pipette)',
+    });
+  });
+});
