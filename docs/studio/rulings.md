@@ -2926,3 +2926,13 @@ Entscheider: L0 · Anlass: Nutzer „räum auf" · ADR: —
 Nachtrag R331: CLEANUP-WT entfernte 23 Worktrees und 96 gemergte Branches. `int/rel-07` bleibt: `-d` lehnt wegen des
 veralteten Upstreams ab, obwohl die Branch vollständig in `main` steckt; `-D` sperrt der Guard (§6) und wird nicht
 umgangen. Erledigt sich mit dem Löschen von `origin/int/rel-07` (eigenes Ruling, Remote).
+
+## R332 · 2026-10-08 · BEOB-AUSW-02: Gate Merge OK, Paket-Kandidaten aufs Board
+
+Ruling: Gate Merge **OK** für `docs/beob-auswertung-02` @ f722f6a (nur `docs/beobachtungen.md`, 18 Einträge: 5 erledigt,
+7 abgehakt, 6 eingeplant). Die Kandidaten kommen als `open` aufs Board, gestartet wird keiner (Startstopp R305):
+UI-INSELFILTER (lead-tech, mit SEE-F2-UX), TOOL-RENDERQA-NACHZUG (lead-art, vor PERF-L57), ART-WALD-RAUTEN (lead-art,
+nach PERF-L57), ART-C7-ANSCHLUSS (lead-art, in PERF-L57 mitnehmen), ART-L8-SELTEN (lead-art, später).
+Hygiene-Punkte (`role_class`, `package_family`) hängen an TOOL-STUDIO-HYGIENE. — Kosten bei Irrtum: keine, nur Board.
+
+Entscheider: L0 · Anlass: Bericht BEOB-AUSW-02 · ADR: —
