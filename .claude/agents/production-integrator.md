@@ -34,7 +34,7 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
      `git worktree add --detach .worktrees/integrate origin/main`; sonst `git -C .worktrees/integrate checkout --detach origin/main`.
      Dort Arbeitsbaum sauber (`git status --short`), `make check` grün.
   2. `git merge --no-ff --no-commit <branch>` (Merge vorbereitet, noch nicht committet).
-  3. `make check; echo EXIT=$?` und `CI=true make check; echo EXIT=$?` auf dem vorbereiteten Stand (nie in eine Pipe; beide Exit-Codes im Bericht, auch vor jedem Push). Grün: Merge committen (`git commit`, Nachricht nach
+  3. `make check; echo EXIT=$?` und `make check-ci-perf; echo EXIT=$?` (nur die Perf-Budget-Tests mit `CI=true`, R353) auf dem vorbereiteten Stand (nie in eine Pipe; beide Exit-Codes im Bericht, auch vor jedem Push). Grün: Merge committen (`git commit`, Nachricht nach
      Konvention). Rot: `git merge --abort` und melden — `main` bleibt auf dem Stand vor dem Merge.
      Ist nach dem Merge-Commit oder auf dem Kandidaten eine Korrektur nötig (z. B. Formatierungs-Trivial-Fix
      nach L0-Freigabe), machst du einen **eigenen Fix-Commit**, nie `git commit --amend` (R224).

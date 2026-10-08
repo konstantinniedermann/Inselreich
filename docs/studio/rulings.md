@@ -3293,3 +3293,97 @@ Ziel ≤ 500 ms je Test lokal, weil die CI-Laufzeit schon ×3,6 gewachsen ist (R
 (c) SEE-F1-FAHRLINIE: Signal für T3, Branch zuerst mit main mergen.
 
 Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
+
+## R364 · 2026-10-08 · Gate Merge FIX-RAUTEN-ZEIT OK, danach TOOL-ZEITRESERVE-META
+
+Ruling: **OK** für `fix/rauten-zeit` @ cb6224b (nur `tests/render/rauten.test.ts`; Aufbau je Seed und Kantenart in
+`beforeAll`, Schwellen und Messlogik unverändert; Summe der Datei ≈ 6 s → ≈ 2,4 s lokal, also echte CI-Ersparnis, nicht
+nur Verlagerung; Review OK; `npm test` 2578 grün). Hinweis aus dem Lauf bei Load 7,5 (nicht belastbar):
+`tests/render/trees-licht.test.ts` „H-R10 Kronen in 3 Tönen > c)“ geschätzt 2778 ms Runner gegen 2500 ms — wird am
+Push-Gate bei ruhiger Last geprüft; schlägt es dort an, Trivial-Fix wie R347 nach frischer Messung (R353 P4). Merge
+seriell: zuerst FIX-RAUTEN-ZEIT, dann TOOL-ZEITRESERVE-META (R362), je mit `make check` am Merge-Stand.
+
+Entscheider: L0 · Anlass: Bericht FIX-RAUTEN-ZEIT · ADR: —
+
+## R365 · 2026-10-08 · REL-09 = Welle 1; Welle 2 vorbereiten, Smoke-Skript vor dem Release-Check
+
+Ruling: FIX-RAUTEN-ZEIT (616dbc5) und TOOL-ZEITRESERVE-META (0f46b13) sind in main, `make check` und
+`check-ci-perf` grün, `zeitreserve` 0 ohne Reserve auch in der Runner-Schätzung. **REL-09** umfasst SEE-F2-UX,
+ART-WALD-RAUTEN (+ FIX-RAUTEN-ZEIT) und SEE-F1-FAHRLINIE (läuft, T3); Welle 2 geht in REL-10. Jetzt parallel:
+(1) **TOOL-SMOKE** (lead-art, 40 Tools, R353 P3): festes `tools/render-qa/smoke.mjs` für den Release-Check inkl.
+Menü-Schritt bei 1280×720, vor dem Release-Check REL-09; (2) Pläne **UI-PANEL-AUFRAEUMEN** (lead-tech, 25 Tools) und
+**ART-L8-SELTEN** (lead-art, 25 Tools), Umsetzung nach dem Gate; ART-L8-SELTEN setzt erst nach dem Merge von SEE-F1
+um (`decor.ts`).
+
+Entscheider: L0 · Anlass: Merges REL-09 · ADR: —
+
+## R366 · 2026-10-08 · Gate REL-10 Welle 2: BEDENKEN → Nacharbeit; Bauleiste Variante A
+
+Ruling: Urteil lead-qa BEDENKEN für beide Pläne, ohne Zweitprüfung. (1) **UI-PANEL-AUFRAEUMEN:** Bauleiste
+**Variante A** (`.buildbar-sub` als Overlay am unteren Rand von `#game`; Kartenhöhe konstant, Desktop-first, wie im
+Genre üblich); die UX-Spec wird im Paket nachgeführt (Abweichung vom Wortlaut „gleiche Rasterzeile“ ist hiermit
+gedeckt). Pflicht-AK aus dem Gate: Kamera-Grenze (südlichste Inselkachel bei offener Kategorie bebaubar), kein
+Durchklicken durchs Overlay, Mausrad/Hover am Overlay, Variante B gestrichen, Kantendefinition des Zyklustests.
+`docs/studio/rulings.md` schreibt nur L0; der Umsetzer meldet Ruling-Kandidaten im Bericht. Umsetzung frei sofort,
+150 Tools. (2) **ART-L8-SELTEN:** Nacharbeit a–e aus dem Gate; der 500-Seeds-Quotentest läuft **nicht** in
+`make check` (CI-Minuten, R356, R361), sondern als Werkzeug unter `tools/render-qa/` mit Ergebnis im Bericht; die
+Suite prüft Seeds 1–40. Snapshot AK5b wird auf main nach dem SEE-F1-Merge vor T1 erzeugt. Umsetzung erst nach dem
+SEE-F1-Merge, 170 Tools.
+
+Entscheider: L0 · Anlass: Gate GATE-REL10-W2 · ADR: —
+
+## R367 · 2026-10-08 · SEE-F1: Weg 1 (Deko-Freihaltung gegen die Gerade), letzter Mehrbedarf +30
+
+Ruling: T3 machte die Heimat-Darstellung von den Fremdinseln abhängig (Route an der Heimatküste unterdrückt die
+Tönung): Heimat-Pin, AK-E1-10, AK-E1-12 rot, `terrainSea` Timeout. **Weg 1:** `seaContext.lanes` bleiben Geraden, die
+Pins aus M12-E1 (Heimat unabhängig von Fremdinseln) bleiben unangetastet; Wal und Delfin meiden die Route über
+`routeDist`. Der L5-T3-Test wird nur auf die Gerade eingegrenzt, wenn eine Messung belegt, wie oft ein Wrack oder Fels
+im Korridor der Route liegt (Seeds 1–40, Zahl im Bericht und als Beobachtung); liegt der Anteil über 5 % der Seeds,
+geht ein Folgepaket in REL-10. Weg 2 abgelehnt: Er hebt eine Architektur-Invariante für einen seltenen Bildfehler auf.
+Neuer Wassertest ≤ 500 ms (Final-Review). Budget: Ist rund 280 gegen 180 frei, zum zweiten Mal ohne Vorabmeldung —
+an die Retro; **letzter Mehrbedarf +30** (Commit, `make check`, Review der Nacharbeit, kurzer Browserblick). Reicht er
+nicht, stoppt der Lead mit Handoff.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
+
+## R368 · 2026-10-08 · Gate Merge TOOL-SMOKE OK
+
+Ruling: **OK** für `tool/smoke` @ d0203e2: `tools/render-qa/smoke.mjs` (Schritte a–f + Menü bei 1280×720 und
+1920×1080), Echtprobe gegen main BESTANDEN, Review BEDENKEN ohne Blocker, drei Punkte eingearbeitet; offen niedrig:
+⏸-Klick und Tempo-Reset nicht geprüft, Umschalt+U-Hinweis nur per Screenshot. Persona qa-playtester 1.7. Ab dem
+Release-Check REL-09 ruft der Playtester `smoke.mjs` und ergänzt nur paketspezifische Schritte. `URL.pathname` bei
+Leerzeichen im Pfad → Beobachtung. Ist rund 31 von 40. Merge lokal durch den Integrator mit `make check`.
+
+Entscheider: L0 · Anlass: Bericht TOOL-SMOKE · ADR: —
+
+## R369 · 2026-10-08 · Gate Merge SEE-F1-FAHRLINIE OK mit Auflagen; Folgepaket SEE-F1-KORRIDOR
+
+Ruling: **OK** für `fix/see-f1-fahrlinie` @ 86baaac (Weg 1 nach R367; Pins unangetastet, `decor.ts` = main; Save v9,
+`balance.test.ts` ohne Diff, Goldwerte grün; Final-Review `opus` OK nach ZURÜCK-Runde, Review der Nacharbeit OK;
+Messung im Browser: Schiffsmitte nie auf Land, Minimum 0,53 zur Kachelkante). Auflagen: (1) `make check` lief bei Load
+12,7 mit fremdem Vitest (Verstoss R357) und meldete 19 Tests ohne CI-Reserve — der Integrator wiederholt `make check`
+am Merge-Stand bei Load ≤ 8 ohne fremden Lauf; meldet `zeitreserve` dann Tests ohne Reserve, wird nicht gemergt;
+(2) optischer Nachweis der Fahrlinie im Release-Check REL-09 (eigener Screenshot-Schritt). Korridor-Messung: 39 von 265
+Meer-Elementen (≈ 15 %, 18 von 40 Seeds) liegen ≤ 2 Kacheln an einer Route — über der 5-%-Schwelle aus R367, also
+Folgepaket **SEE-F1-KORRIDOR** in REL-10 (lead-tech; Ziel: Meer-Elemente meiden die Fahrlinie, ohne die Invariante
+„Heimat unabhängig von Fremdinseln“ der Tönung aufzugeben, z. B. getrennte Freihaltung nur für die Platzierung mit
+eigenem Pin). Abgeschwächte Abdeckung des Wassertests (Seeds 1–15, Schritt 0,5) akzeptiert, 150-Seeds-Probe im Review
+OK. An die Retro: zweimal Budget ohne Vorabmeldung (Ist ≈ 320 gegen 120 + 60 + 30), Lastregeln R357/R329 umgangen,
+Code-Ersetzung per Shell-Skript.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
+
+## R370 · 2026-10-08 · SEE-F1 nicht gemergt: Testzeiten-Regression; FIX-SEE-F1-ZEIT
+
+Ruling: TOOL-SMOKE ist in main (be81249). SEE-F1 am Merge-Stand: `make check` grün, aber `zeitreserve` meldet 6 Tests
+ohne CI-Reserve (Runner-Schätzung 10), alle mit SEE-F1 neu langsam: `wildlife.test.ts` RF-10 (1,3 s) und vier
+Delfin-Tests E5 (2,6–3,3 s), `decorSea.test.ts` L5-T3 (4,9 s), `decorStamps.test.ts` R5 (5,3 s). Merge nach Auflage
+R369 (1) abgebrochen — richtig. Vermutung (unbelegt): `seaRoute`/`routeDist` wird je Aufruf neu berechnet (Cache per
+WeakMap am Array-Objekt trifft bei frisch gebauten Welten nicht), dann wäre auch die Laufzeit im Spiel betroffen.
+Paket **FIX-SEE-F1-ZEIT** (frische lead-tech-Instanz über Handoff, 40 Tools): zuerst messen (Profil eines Delfin-Tests,
+Zahl der `seaRoute`-Aufrufe je Frame im Spiel), dann die Ursache beheben (Cache je Welt-Inseln, Vorberechnung);
+Timeouts nur als letzter Weg und hergeleitet. Abnahme: `zeitreserve` 0 ohne Reserve am Merge-Stand, Frame-Kosten von
+`routeDist` im Spiel genannt. Worktree `.worktrees/see-f1` neu anlegen (der Integrator hatte ihn entfernt; Branch
+unverändert @ 86baaac).
+
+Entscheider: L0 · Anlass: Bericht Integrator · ADR: —

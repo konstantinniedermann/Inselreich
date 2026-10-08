@@ -408,9 +408,10 @@ def main(argv: list[str] | None = None) -> int:
         data = efficiency.compute(files, _persona_models())
         print(efficiency.render_section(data))
         print(efficiency.render_rewrites(data))
-        gaps = efficiency.idle_gaps(load_events(paths.studio_home()), args.idle_prefix)
+        events = load_events(paths.studio_home())
+        gaps = efficiency.idle_gaps(events, args.idle_prefix)
         print(efficiency.render_idle(gaps))
-        print(actions.render())
+        print(actions.render(since=_session_start(events)))
         return 0
     result = build(args)
     if result is None:
@@ -426,6 +427,20 @@ def main(argv: list[str] | None = None) -> int:
     format_markdown(path)
     print(path)
     return 0
+
+
+def _session_start(events: list[dict]):
+    """Erstes Event der aktuellen (zuletzt aktiven) Session oder None."""
+    stamped = [
+        e
+        for e in events
+        if e.get("ts") and e.get("session_id") and e["session_id"] != model.CI_SESSION
+    ]
+    if not stamped:
+        return None
+    sid = max(stamped, key=lambda e: model.parse_ts(e["ts"]))["session_id"]
+    first = min(model.parse_ts(e["ts"]) for e in stamped if e["session_id"] == sid)
+    return datetime.fromtimestamp(first, timezone.utc)
 
 
 def format_markdown(path: Path) -> None:

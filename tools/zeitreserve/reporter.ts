@@ -1,8 +1,10 @@
 // tools/zeitreserve/reporter.ts — Vitest-Reporter: schreibt Laufzeit und Timeout je Test nach
 // .studio/zeitreserve.json; ausgewertet von check.ts (`make zeitreserve`).
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { loadavg } from 'node:os';
 import { relative } from 'node:path';
-import type { TestTiming } from './rule.ts';
+import type { Measurement, TestTiming } from './rule.ts';
 
 export const REPORT_PATH = '.studio/zeitreserve.json';
 
@@ -17,7 +19,17 @@ interface ReportedModule {
   children: { allTests(): Iterable<ReportedTest> };
 }
 
+function headCommit(): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  } catch {
+    return 'unbekannt';
+  }
+}
+
 export default class ZeitreserveReporter {
+  private loadStart = loadavg()[0] ?? 0;
+
   onTestRunEnd(modules: readonly ReportedModule[]): void {
     const timings: TestTiming[] = [];
     for (const m of modules) {
@@ -34,6 +46,14 @@ export default class ZeitreserveReporter {
       }
     }
     mkdirSync('.studio', { recursive: true });
-    writeFileSync(REPORT_PATH, JSON.stringify(timings));
+    const loadEnd = loadavg()[0] ?? 0;
+    const report: Measurement = {
+      commit: headCommit(),
+      loadStart: this.loadStart,
+      loadEnd,
+      loadMax: Math.max(this.loadStart, loadEnd),
+      timings,
+    };
+    writeFileSync(REPORT_PATH, JSON.stringify(report));
   }
 }

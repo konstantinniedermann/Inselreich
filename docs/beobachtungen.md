@@ -368,3 +368,16 @@ Aufruf, nicht während der Testläufe. Ursprung: L0-Diagnose. Einschätzung: mit
 mitnehmen: Datei mit Commit-Hash und Last während des Laufs stempeln, das Gate verweigert eine fremde oder alte Datei.
 
 Fundort: SEE-F2-UX (2026-10-08, `tech-ui-engineer`/`qa-playtester`). Beobachtungen: (a) Der Hinweis «Nicht genug Holz auf <Insel>» erklärt nicht, dass nur Kontor II aus der Heimat zahlt, das Wohnhaus aber aus dem Insellager; «Kein Bauland nach Kontor II» war nicht reproduzierbar (Ursache Wasserkachel Ost bzw. dieser Hinweis; Screenshots `.studio/qa/see-f2-ux/T5a-*.png`). Einschätzung: UX, niedrig. (b) `noLoadableReason()` in `src/ui/storage.ts` ist vermutlich toter Code und bildet «Unbekannte Version» nicht auf «neuer» ab. Einschätzung: niedrig, bei nächster Storage-Arbeit prüfen. (c) Der `matchMedia`-DPR-Listener in `app.ts` ist live nicht verifiziert: CDP löst keine matchMedia-Events aus, offen bleibt ein manueller Browser-Zoom-Test. (d) Canvas2D-Warnung `willReadFrequently` in `src/render/terrain.ts`; Einschätzung: in ART-WALD-RAUTEN mitnehmen. (e) I-019 Angebotsschiff bleibt eigenes Paket nach SEE-F1.
+
+### 2026-10-08 · CI-Laufzeit `make check`: 276 s statt ~81 s, fast alles im Vitest-Schritt
+
+Fundort: CI-Läufe 37799673425 (8.10., Check 4 min 36 s) gegen 37358278682 (5.10., ~81 s Wandzeit im Check-Schritt, Job 97 s).
+Beobachtung: Zerlegung aus den Logzeilen. lint 19 s → 30 s; Vitest 62 s (125 Dateien) → 225 s (176 Dateien, 3,6-fach bei
+1,4-fach mehr Dateien); Rest nach Vitest (zeitreserve, studio-test 11,5 s → 12 s, build, pages-limit) 16 s → 21 s.
+Wachstum 195 s insgesamt, davon rund 163 s allein Vitest. Ursprung: Messauftrag TOOL-E046-SESSION (R356).
+Einschätzung: Der Vitest-Schritt ist die einzige relevante Stelle; die pro Datei langsamsten Tests (Vitest-Reporter mit
+`--reporter=verbose` auf dem Runner) und die ZEITTESTS-Liste prüfen, bevor die Laufzeit Actions-Minuten frisst.
+
+### 2026-10-08 · Importzyklus `src/ui/inspect.ts` ↔ `src/ui/panelView.ts`
+
+Fundort: `inspect.ts:52` importiert `panelView`, `panelView.ts:11` importiert `progressPct, upgradeView` aus `inspect`. Ursprung: Board nach REL-08 (Paket 5), Ist-Prüfung lead-tech. Einschätzung: niedrig; `upgradeView` und `progressPct` nach `panelView.ts`, Test gegen Zyklen in `src/ui/` (Paket UI-PANEL-AUFRAEUMEN).
