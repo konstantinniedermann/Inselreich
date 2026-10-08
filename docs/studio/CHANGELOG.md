@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.26
+
+- Anlass: Vorfall-Retro „Effizienz-Muster blieb unentdeckt“ (R315), Paket TOOL-RETRO-V2
+- Datenbasis: `docs/studio/retros/2026-10-08-vorfall-effizienz-unentdeckt.md` (B1: Cache-Write in 11 Retros rot ohne Hebel; B3: Prozess-Retro nach REL-06 fehlte)
+- Ruling: R316
+- Änderungen: Retro-Vorlage um Pflichtspalte „Hebel oder Messauftrag mit Frist“ je gelber oder roter Ampelzeile ergänzt (dritte Retro in Folge: Hebel-Vorschlag Pflicht); Release-Checkliste: nach Merge auf main startet L0 den `studio-process-coach`; Satz in `lernen.md` gekürzt
+
 ## 2026-10-08 · Handbuch 1.25
 
 - Anlass: Nutzerfrage Aufwandsverteilung (PROC-AUFWAND), Paket TOOL-E-AUFWAND

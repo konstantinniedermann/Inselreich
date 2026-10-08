@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.25 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.26 · Stand: 2026-10-08 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -303,6 +303,7 @@ Regeln dazu:
   einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
+  **Nach jedem Merge eines Releases auf main startet L0 den `studio-process-coach` (R127, R316).**
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `CI=true make check`;

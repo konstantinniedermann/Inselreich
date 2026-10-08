@@ -2710,3 +2710,26 @@ FIX-REL07 (R313) legt seine Ruckel-Messung aber als Nachweis unter `tools/render
 Handbuch-Sätze zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 8ef9d27f · ADR: —
+
+## R315 · 2026-10-08 · Ablauf-Effizienz erkennt das Studio selbst
+
+Ruling: Nutzer 2026-10-08: Verbesserungen im Ablauf und in der Zusammenarbeit muss das Studio selbst erkennen und
+einführen (Aufgabe des Prozess-Coaches, Grundlage Worker-Logs). Befund: Die Effizienz-Ampel zeigte Cache-Write 5 min
+ROT (33,7 %), ohne dass eine Retro daraus einen Hebel machte; erst die Nutzerfrage löste R314 aus → Ablauffehler.
+Vorfall-Retro durch studio-process-coach: Warum blieb das unentdeckt, und welcher Mechanismus macht es künftig
+automatisch (Auslöser, Rolle, Werkzeug)? Umsetzung des Vorschlags per eigenem Ruling. — Kosten bei Irrtum: eine Retro.
+
+Entscheider: L0 · Anlass: Nutzeranweisung nach R314 · ADR: —
+
+## R316 · 2026-10-08 · Retro „Effizienz unentdeckt": V1–V3 angenommen
+
+Ruling: Bericht `docs/studio/retros/2026-10-08-vorfall-effizienz-unentdeckt.md` angenommen. Ursache: rote Ampel in
+11 Retros gelesen, aber Vorlage erlaubte „Ursache unbelegt" statt Hebel; Prozess-Aussensicht nach REL-06 fehlte
+(kein Auslöser). **V2** (Pflichtspalte „Hebel oder Messauftrag mit Frist" je roter Ampelzeile, 3. Retro in Folge =
+Vorschlag Pflicht) + Release-Checkliste „nach Merge auf main: studio-process-coach starten" → studio-coach, sofort.
+**V1** (Vorfall `ampel:<kennzahl>` bei 2 Sessions rot, ≥ 10 Agenten) + **V3** (Neuschreibungen nach Pause > 5 min
+je Rolle/Paketfamilie im Metrik-Lauf) → ein Werkzeug-Paket TOOL-AMPEL an lead-tech (R315 schlägt R305 für dieses
+Paket). Die zweite rote Zeile (Persona-Starts als general-purpose auf opus) fällt sofort unter V2. — Kosten bei
+Irrtum: ein Werkzeug-Paket; Rückbau per Revert.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-effizienz-unentdeckt · ADR: —
