@@ -34,6 +34,20 @@ export function panKeyAllowed(target: KeyTarget | null, modalOpen: boolean): boo
   return !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
+/**
+ * Rolle der Leertaste: `button` = Knopf-Aktivierung (bleibt), `ignore` = Eingabefeld, offene Karte
+ * oder Strg/Cmd/Alt, `map` = Karte (Schwenken, Antippen = Pause).
+ */
+export function spaceKeyRole(
+  target: KeyTarget | null,
+  modalOpen: boolean,
+  mods: { ctrl: boolean; meta: boolean; alt: boolean },
+): 'button' | 'ignore' | 'map' {
+  if (target?.tagName === 'BUTTON') return 'button';
+  if (mods.ctrl || mods.meta || mods.alt) return 'ignore';
+  return panKeyAllowed(target, modalOpen) ? 'map' : 'ignore';
+}
+
 /** Zieht der Zeiger weiter als die Schwelle (euklidisch, CSS-px) vom Startpunkt weg? */
 export function exceedsDrag(start: Pt, p: Pt): boolean {
   return Math.hypot(p.x - start.x, p.y - start.y) > DRAG_THRESHOLD;

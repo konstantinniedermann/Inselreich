@@ -2,6 +2,7 @@ import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import type { Category, World } from '../sim/types';
+import type { PanelState } from './app';
 
 /** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
@@ -39,6 +40,7 @@ export type HotkeyAction =
   | { kind: 'tool'; tool: Tool }
   | { kind: 'speed'; speed: 1 | 2 | 4 }
   | { kind: 'pause' }
+  | { kind: 'upgrade' }
   | { kind: 'help' }
   | { kind: 'islandHome' }
   | { kind: 'islandCycle' };
@@ -49,12 +51,14 @@ export type HotkeyAction =
  */
 export function hotkeyAction(
   key: string,
-  mods: { ctrl: boolean; meta: boolean; alt: boolean },
+  mods: { ctrl: boolean; meta: boolean; alt: boolean; shift?: boolean },
   inFormField: boolean,
   seafaring = false,
 ): HotkeyAction | null {
   if (inFormField || mods.ctrl || mods.meta || mods.alt) return null;
   const k = key.toLowerCase();
+  // Umschalt+U = Ausbau; Gross-U ohne Umschalt (Feststelltaste) bleibt Schule (Spec C-2)
+  if (k === 'u' && mods.shift === true) return { kind: 'upgrade' };
   // Inselsprung nur mit der Seefahrt, sonst stumm (M12 E2)
   if (k === ISLAND_HOME_KEY) return seafaring ? { kind: 'islandHome' } : null;
   if (k === ISLAND_CYCLE_KEY) return seafaring ? { kind: 'islandCycle' } : null;
@@ -101,6 +105,7 @@ export function afterPause(
 export const NAV_KEYS: readonly { key: string; label: string }[] = [
   { key: 'W A S D / Pfeile', label: 'Karte schwenken' },
   { key: 'Leertaste + Ziehen', label: 'Karte schwenken mit der Maus' },
+  { key: 'Leertaste (antippen)', label: 'Pause / weiter' },
   { key: 'Mausrad', label: 'Zoomen' },
   { key: 'Esc', label: 'Werkzeug ablegen, Karte schliessen' },
   { key: 'Rechtsklick', label: 'Werkzeug ablegen' },
@@ -145,14 +150,31 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
           { key: ISLAND_CYCLE_KEY, label: 'Zur nächsten Insel springen' },
         ]
       : [];
+  const upgrade =
+    functionLock(world, 'upgrade2') === null
+      ? [{ key: 'Umschalt + U', label: 'Markiertes Gebäude ausbauen' }]
+      : [];
   return [
     ...tools,
     ...speeds,
     { key: 'P', label: 'Pause / weiter' },
     { key: '?', label: 'Hilfe' },
+    ...upgrade,
     ...islands,
     ...NAV_KEYS,
   ];
+}
+
+export const NO_SELECTION_TEXT = 'Kein Gebäude markiert';
+
+/** Ziel von Umschalt+U: das Gebäude des offenen Info-Panels, sonst Meldung. */
+export function upgradeTarget(
+  panel: PanelState,
+  world: World,
+): { ok: true; id: number } | { ok: false; reason: string } {
+  if (panel.kind === 'inspect' && world.buildings[panel.id] !== undefined)
+    return { ok: true, id: panel.id };
+  return { ok: false, reason: NO_SELECTION_TEXT };
 }
 
 export type CategoryEvent = { kind: 'toggle'; category: Category } | { kind: 'tool'; tool: Tool };
