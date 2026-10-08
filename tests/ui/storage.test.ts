@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { deserialize, serialize } from '../../src/sim/save';
+import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { ok, type World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import {
@@ -12,7 +12,7 @@ import {
   storageProblem,
   type StorageLike,
 } from '../../src/ui/storage';
-import { startChoices } from '../../src/ui/startCard';
+import { STORAGE_NOTES, startChoices } from '../../src/ui/startCard';
 import { formatClock } from '../../src/ui/time';
 
 function fake(entries: Record<string, string>): StorageLike {
@@ -79,6 +79,45 @@ it('AK-UX-01 storageProblem: werfend → unavailable, kaputt → damaged, leer �
   expect(storageProblem(broken)).toBe('damaged');
   expect(listSavesFrom(broken)).toEqual([]);
   expect(storageProblem({ getItem: () => null })).toBe('none');
+});
+
+describe('storageProblem: neuere Version', () => {
+  const only = (json: string) => ({ getItem: (k: string) => (k === SAVE_KEY ? json : null) });
+  const withVersion = (version: number): string => {
+    const raw = JSON.parse(serialize(createWorld(1))) as Record<string, unknown>;
+    raw.version = version;
+    return JSON.stringify(raw);
+  };
+  it('SAVE_VERSION + 1 → newer (nicht damaged), Text nennt neuere Version', () => {
+    expect(storageProblem(only(withVersion(SAVE_VERSION + 1)))).toBe('newer');
+    expect(STORAGE_NOTES.newer).toBe(
+      'Ein Spielstand stammt aus einer neueren Version des Spiels und kann nicht geladen werden.',
+    );
+    expect(startChoices([], 'newer').note).toBe(STORAGE_NOTES.newer);
+  });
+  it('SAVE_VERSION lädt → none', () => {
+    expect(storageProblem(only(withVersion(SAVE_VERSION)))).toBe('none');
+  });
+  it('migrierbarer alter Stand (v2-Fixture) → none', () => {
+    const json = readFileSync('tests/sim/fixtures/save-v2.json', 'utf8');
+    expect(storageProblem(only(json))).toBe('none');
+  });
+  it('defektes JSON bleibt damaged; unbekannte alte Version bleibt damaged', () => {
+    expect(storageProblem(only('{kaputt'))).toBe('damaged');
+    expect(storageProblem(only('null'))).toBe('damaged');
+    expect(storageProblem(only(withVersion(0)))).toBe('damaged');
+  });
+  it('Vorrang: newer vor damaged, in beiden Slot-Reihenfolgen', () => {
+    const newer = withVersion(SAVE_VERSION + 1);
+    const a = { getItem: (k: string) => (k === SAVE_KEY ? newer : k === AUTO_KEY ? '{x' : null) };
+    const b = { getItem: (k: string) => (k === SAVE_KEY ? '{x' : k === AUTO_KEY ? newer : null) };
+    expect(storageProblem(a)).toBe('newer');
+    expect(storageProblem(b)).toBe('newer');
+  });
+  it('neuerer Stand wird nicht geladen (Abweisen statt Absturz)', () => {
+    const s = only(withVersion(SAVE_VERSION + 1));
+    expect(listSavesFrom(s)).toEqual([]);
+  });
 });
 
 it('AK-UX-01 v2-Fixture im manuellen Slot ist ladbar (Migration)', () => {
