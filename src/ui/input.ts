@@ -122,6 +122,29 @@ export interface InputBinding {
   unbind(): void;
 }
 
+/**
+ * Kartenhöhe, die der Kamera-Grenze zugrunde liegt: die Bauleisten-Einträge liegen als Overlay über dem unteren
+ * Kartenrand und verdecken ihn, also zählt nur der freie Teil (die Overlay-Höhe kommt aus dem DOM).
+ */
+export function visibleViewHeight(canvasH: number, overlayH: number): number {
+  return Math.max(1, canvasH - Math.max(0, overlayH));
+}
+
+/** Liegt der Zeiger (Fensterkoordinaten) in der Fläche `rect`? Ohne Zeiger oder Fläche: nein. */
+export function pointerInRect(
+  p: { x: number; y: number } | null,
+  rect: { left: number; top: number; right: number; bottom: number } | null,
+): boolean {
+  return (
+    p !== null &&
+    rect !== null &&
+    p.x >= rect.left &&
+    p.x <= rect.right &&
+    p.y >= rect.top &&
+    p.y <= rect.bottom
+  );
+}
+
 /** Bindet Maus und Tastatur an Canvas und Fenster. */
 export function bindInput(
   canvas: HTMLCanvasElement,
@@ -155,17 +178,32 @@ export function bindInput(
   const touches = new Map<number, { sx: number; sy: number }>();
   let gesture: { dist: number; mx: number; my: number } | null = null;
 
+  /** Overlay-Höhe: gemerkt, neu gemessen nur nach Umbau der Bauleiste oder `resize` (kein Layout je Frame). */
+  let lastOverlayH = 0;
+  let overlayDirty = true;
+  const markOverlayDirty = (): void => {
+    overlayDirty = true;
+  };
+  const buildbar = canvas.ownerDocument.getElementById('buildbar');
+  const overlayObserver =
+    buildbar && typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(markOverlayDirty)
+      : null;
+  overlayObserver?.observe(buildbar!, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['hidden'],
+  });
+  window.addEventListener('resize', markOverlayDirty);
   const local = (e: MouseEvent): { sx: number; sy: number } => {
     const r = canvas.getBoundingClientRect();
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
+  /** Sichtbare Kartenhöhe: bei offener Kategorie ohne das Bauleisten-Overlay. */
+  const viewH = (): number => visibleViewHeight(canvas.clientHeight, lastOverlayH);
   const clamp = (): void => {
-    clampToRect(
-      state.cam,
-      cameraBounds(state.world.islands),
-      canvas.clientWidth,
-      canvas.clientHeight,
-    );
+    clampToRect(state.cam, cameraBounds(state.world.islands), canvas.clientWidth, viewH());
   };
 
   const updateHover = (): void => {
@@ -295,7 +333,7 @@ export function bindInput(
             g.dist / gesture.dist,
             g.mx,
             g.my,
-            { w: canvas.clientWidth, h: canvas.clientHeight },
+            { w: canvas.clientWidth, h: viewH() },
             cameraBounds(state.world.islands),
           );
           clamp();
@@ -436,7 +474,7 @@ export function bindInput(
       e.deltaY < 0 ? 1.1 : 1 / 1.1,
       p.sx,
       p.sy,
-      { w: canvas.clientWidth, h: canvas.clientHeight },
+      { w: canvas.clientWidth, h: viewH() },
       cameraBounds(state.world.islands),
     );
     updateHover();
@@ -547,9 +585,33 @@ export function bindInput(
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', onBlur);
+    window.removeEventListener('resize', markOverlayDirty);
+    overlayObserver?.disconnect();
+  };
+
+  /**
+   * Öffnet oder schliesst sich das Bauleisten-Overlay, ändert sich die sichtbare Kartenhöhe: Kamera neu klemmen
+   * und Hover neu bestimmen; liegt der ruhende Zeiger nun unter dem Overlay, entfällt der Hover.
+   */
+  const syncOverlay = (): void => {
+    if (!overlayDirty) return;
+    overlayDirty = false;
+    const sub = canvas.ownerDocument.querySelector<HTMLElement>('.buildbar-sub');
+    const h = sub?.offsetHeight ?? 0;
+    if (h === lastOverlayH) return;
+    lastOverlayH = h;
+    clamp();
+    if (pointerInRect(client, sub ? sub.getBoundingClientRect() : null)) {
+      pointer = null;
+      client = null;
+      state.hover = null;
+    } else {
+      updateHover();
+    }
   };
 
   const applyKeys = (dtMs: number): void => {
+    syncOverlay();
     const step = panDelta(Math.max(0, dtMs), 1);
     let dx = 0;
     let dy = 0;

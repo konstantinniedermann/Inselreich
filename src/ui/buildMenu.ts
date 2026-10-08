@@ -401,6 +401,8 @@ export function renderBuildMenu(
   if (state.openCategory !== null) {
     const sub = document.createElement('div');
     sub.className = 'buildbar-sub';
+    // Overlay über der Karte: Mausrad weder zoomen noch die Seite scrollen lassen (UI-PANEL T5c)
+    sub.addEventListener('wheel', (ev) => ev.preventDefault(), { passive: false });
     const ids = buildEntries(state.world, state.openCategory, state.activeIsland);
     for (const id of ids) {
       const def = BUILDING_DEFS[id];

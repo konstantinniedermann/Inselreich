@@ -8,8 +8,8 @@ import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { LEVELS } from '../sim/defs/levels';
-import { cycleOf, upkeepOf, utilization } from '../sim/levels';
-import { paidCost, upgradeBuilding } from '../sim/upgrade';
+import { upkeepOf, utilization } from '../sim/levels';
+import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
@@ -38,6 +38,7 @@ import {
   levelPips,
   progressView,
   riseCard,
+  TILE_LAYOUT,
   statKeys,
   statTiles,
   stateChip,
@@ -376,15 +377,6 @@ function setPips(panel: HTMLElement, chipField: string, textField: string, p: Pi
 }
 
 /** Kennzahlen-Zone mit Kachel-Grid; die Kacheln hängen nur vom Typ ab. */
-/** Beschriftung und Unterzeile je Kachel; das Gerüst hängt nur vom Typ ab (`statKeys`, G-3). */
-const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
-  output: { label: 'Ausstoss', sub: true },
-  utilization: { label: 'Auslastung', sub: false },
-  input: { label: 'Verbrauch', sub: true },
-  upkeep: { label: 'Unterhalt', sub: true },
-  inhabitants: { label: 'Einwohner', sub: false },
-};
-
 function addStats(panel: HTMLElement, keys: StatKey[]): HTMLElement {
   const sec = node('section', 'pv-stats');
   sec.dataset.zone = 'stats';
@@ -800,47 +792,6 @@ export function utilizationText(b: Building): string | null {
   return u === null ? null : `Auslastung ${Math.floor(u / 10)} %`;
 }
 
-export interface UpgradeView {
-  title: string;
-  cost: string;
-  fee: string;
-  preview: string;
-  reasons: string[];
-  ok: boolean;
-}
-
-/**
- * Ausbau-Abschnitt des Betriebs-Panels (Spec 7); `null`, wenn der Betrieb nicht ausbaubar oder die Stufe noch
- * nicht freigeschaltet ist. Die Gründe stammen aus einem Probelauf von `upgradeBuilding` auf einer Kopie.
- */
-export function upgradeView(world: World, b: Building): UpgradeView | null {
-  const levels = LEVELS[b.defId];
-  if (levels === undefined) return null;
-  const lvl = b.level ?? 1;
-  if (lvl >= 3)
-    return { title: 'Höchste Stufe', cost: '', fee: '', preview: '', reasons: [], ok: false };
-  if (functionLock(world, lvl === 1 ? 'upgrade2' : 'upgrade3') !== null) return null;
-  const next = levels[lvl - 1]!;
-  const probe = {
-    ...world,
-    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
-    buildings: { ...world.buildings, [b.id]: { ...b } },
-  };
-  const r = upgradeBuilding(probe, b.id);
-  const out = `${perMinute(1, cycleOf(b) ?? 1)} → ${perMinute(1, next.cycle)}`;
-  const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
-  return {
-    title: `Ausbau zu Stufe ${lvl + 1}`,
-    cost: `Kosten ${costLine(next.cost)}`,
-    fee: `Gebühr ${next.fee.amount} ${GOODS[next.fee.good].name}`,
-    preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
-    reasons: r.ok
-      ? []
-      : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost, island: b.island })}`],
-    ok: r.ok,
-  };
-}
-
 /** Gerüst der Ausbau-Karte; `updateInspect` füllt Texte und Sichtbarkeit (Kartenart nur über `hidden`, A-14). */
 function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
   const box = cardNode('Ausbau');
@@ -912,11 +863,6 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
 /** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
 export function upkeepText(b: Building): string {
   return `Unterhalt ${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`;
-}
-
-/** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */
-export function progressPct(b: Building): number {
-  return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
 }
 
 /** Setzt Anbinden-Knopf und Grundzeile; führt die Vorschau nach, solange der Knopf überfahren ist. */

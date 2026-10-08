@@ -235,6 +235,7 @@ body {
 }
 
 #buildbar {
+  position: relative;
   display: flex;
   flex-direction: column-reverse;
   gap: 6px;
@@ -244,10 +245,21 @@ body {
   display: flex;
   gap: 6px;
 }
+/* Overlay über dem unteren Kartenrand (UI-PANEL T5): die Kartenhöhe bleibt beim Öffnen konstant. Eigene Fläche
+   fängt alle Zeigerereignisse (auch in Lücken); unter Meldungen (9/10), Tooltips und Modal, über dem Log (5). */
 .buildbar-sub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 6;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding: 6px 8px;
+  background: var(--wood);
+  border-top: 1px solid var(--gold);
+  overscroll-behavior: contain;
 }
 #buildbar .btn {
   padding: 4px 10px;
