@@ -130,6 +130,21 @@ export function visibleViewHeight(canvasH: number, overlayH: number): number {
   return Math.max(1, canvasH - Math.max(0, overlayH));
 }
 
+/** Liegt der Zeiger (Fensterkoordinaten) in der Fläche `rect`? Ohne Zeiger oder Fläche: nein. */
+export function pointerInRect(
+  p: { x: number; y: number } | null,
+  rect: { left: number; top: number; right: number; bottom: number } | null,
+): boolean {
+  return (
+    p !== null &&
+    rect !== null &&
+    p.x >= rect.left &&
+    p.x <= rect.right &&
+    p.y >= rect.top &&
+    p.y <= rect.bottom
+  );
+}
+
 /** Bindet Maus und Tastatur an Canvas und Fenster. */
 export function bindInput(
   canvas: HTMLCanvasElement,
@@ -558,7 +573,28 @@ export function bindInput(
     window.removeEventListener('blur', onBlur);
   };
 
+  /**
+   * Öffnet oder schliesst sich das Bauleisten-Overlay, ändert sich die sichtbare Kartenhöhe: Kamera neu klemmen
+   * und Hover neu bestimmen; liegt der ruhende Zeiger nun unter dem Overlay, entfällt der Hover.
+   */
+  let lastOverlayH = 0;
+  const syncOverlay = (): void => {
+    const sub = canvas.ownerDocument.querySelector<HTMLElement>('.buildbar-sub');
+    const h = sub?.offsetHeight ?? 0;
+    if (h === lastOverlayH) return;
+    lastOverlayH = h;
+    clamp();
+    if (pointerInRect(client, sub ? sub.getBoundingClientRect() : null)) {
+      pointer = null;
+      client = null;
+      state.hover = null;
+    } else {
+      updateHover();
+    }
+  };
+
   const applyKeys = (dtMs: number): void => {
+    syncOverlay();
     const step = panDelta(Math.max(0, dtMs), 1);
     let dx = 0;
     let dy = 0;

@@ -8,6 +8,7 @@ import {
   panDelta,
   panKeyAllowed,
   spaceKeyRole,
+  pointerInRect,
   visibleViewHeight,
 } from '../../src/ui/input';
 import { clampToRect, worldToScreen } from '../../src/render/camera';
@@ -123,5 +124,18 @@ describe('Kamera-Sicht bei offener Bauleiste (UI-PANEL T5a)', () => {
     clampToRect(cam, bounds, 800, visibleViewHeight(H, ov));
     const south = worldToScreen(cam, project(40, 40));
     expect(south.y).toBeLessThanOrEqual(H - ov);
+  });
+});
+
+describe('Zeiger unter dem Overlay (UI-PANEL T5 Fix)', () => {
+  const rect = { left: 0, top: 500, right: 800, bottom: 536 };
+  it('erkennt einen Zeiger innerhalb der Overlay-Fläche', () => {
+    expect(pointerInRect({ x: 100, y: 510 }, rect)).toBe(true);
+    expect(pointerInRect({ x: 100, y: 499 }, rect)).toBe(false);
+    expect(pointerInRect({ x: 801, y: 510 }, rect)).toBe(false);
+  });
+  it('ohne Zeiger oder ohne Overlay: nein', () => {
+    expect(pointerInRect(null, rect)).toBe(false);
+    expect(pointerInRect({ x: 1, y: 1 }, null)).toBe(false);
   });
 });
