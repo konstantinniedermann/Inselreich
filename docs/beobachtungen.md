@@ -329,3 +329,7 @@ falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusam
 
 Fundort: Review TOOL-RELEASE-CI. Beobachtung: Auf GitHub Actions läuft die Runner-Prüfung zusätzlich zur Hauptprüfung.
 Ursprung: qa-code-reviewer. Einschätzung: niedrig, kostet CI-Sekunden; bei nächster Werkzeugarbeit bereinigen.
+
+### 2026-10-08 · Kontrast der Rand-Farben von `.needs`/`.reasons` unter 3:1
+
+Fundort: Spec PANEL-UEBERSICHT (OF-7). Beobachtung: Die Randfarben der Listen im Info-Panel erreichen auf Pergament nur 2,3 bis 2,7 : 1. Ursprung: design-spec-author. Einschätzung: niedrig; im Paket PANEL-UEBERSICHT mit den neuen `--tone-*`-Farben mitlösen.
