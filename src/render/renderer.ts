@@ -544,7 +544,7 @@ function drawIsland(
     // 3 Wasser, 4 Wege: unter der Bodenmatrix
     withGround(ctx, cam, () => {
       if (!lod) {
-        drawWaves(ctx, world, range, fx.timeMs, weather, reduce);
+        drawWaves(ctx, world, range, fx.timeMs, weather, reduce, true, cam.zoom);
         renderStats.wavesDrawn++;
       }
       drawRoads(ctx, world, range);
