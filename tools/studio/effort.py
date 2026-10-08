@@ -22,6 +22,7 @@ BUDGET_FACTOR = 1.5
 AMPEL_MIN_AGENTS = 10  # kleinere Sessions sind Rauschen und brechen die Kette
 _CREATED = re.compile(r"^- erzeugt:\s*(\S+)", re.MULTILINE)
 _AGENTS = re.compile(r"^- Sessions:\s*\d+,\s*Agenten:\s*(\d+)", re.MULTILINE)
+_MEASURED = re.compile(r"^- Datenbasis: \d+ Session\(s\), (\d+) Agenten", re.MULTILINE)
 _RED = re.compile(r"^- ROT: (.+?): ", re.MULTILINE)
 
 
@@ -393,7 +394,10 @@ def incidents(
 
 def parse_ampel_session(ident: str, text: str) -> dict | None:
     """Eine Session-Metrikdatei: Kennung, Zeit, Agentenzahl, rote Kennzahlen."""
-    created, agents = _CREATED.search(text), _AGENTS.search(text)
+    # gemessene Agenten (Transkripte) vor den Aufwand-Ereignissen: Letztere zählen
+    # jeden Hook-Start mit und lassen auch kleine Sessions gross erscheinen
+    created = _CREATED.search(text)
+    agents = _MEASURED.search(text) or _AGENTS.search(text)
     if not created or not agents:
         return None
     try:

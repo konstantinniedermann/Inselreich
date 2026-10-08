@@ -79,9 +79,14 @@ class AmpelParserTest(unittest.TestCase):
         text = (FIXTURES / "S-2026-10-07-b2a8949d.md").read_text("utf-8")
         parsed = effort.parse_ampel_session("S-2026-10-07-b2a8949d", text)
         self.assertEqual(parsed["id"], "S-2026-10-07-b2a8949d")
-        self.assertEqual(parsed["agents"], 24)
+        self.assertEqual(parsed["agents"], 4)  # gemessen, nicht die 24 Aufwand-Ereignisse
         self.assertEqual(parsed["red"], {"umsetzer", "cache_write_5m", "opus"})
         self.assertGreater(parsed["t"], 1_700_000_000)
+
+    def test_falls_back_to_aufwand_agents(self):
+        text = "- erzeugt: 2026-10-01T10:00:00+02:00\n- Sessions: 1, Agenten: 30, X\n"
+        parsed = effort.parse_ampel_session("S-a", text)
+        self.assertEqual(parsed["agents"], 30)
 
     def test_broken_file_is_none(self):
         self.assertIsNone(effort.parse_ampel_session("S-x", "# nichts"))
