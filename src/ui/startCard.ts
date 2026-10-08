@@ -23,6 +23,8 @@ export type StartChoice =
 export const STORAGE_NOTES: Record<StorageProblem, string | null> = {
   none: null,
   damaged: 'Ein Spielstand ist beschädigt und kann nicht geladen werden.',
+  newer:
+    'Ein Spielstand stammt aus einer neueren Version des Spiels und kann nicht geladen werden.',
   unavailable:
     'Der Browser-Speicher ist nicht verfügbar — Spielstände lassen sich weder laden noch speichern.',
 };

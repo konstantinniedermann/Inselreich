@@ -3,7 +3,7 @@ import { home } from '../sim/world';
 import { PALETTE } from '../render/palette';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { GOOD_IDS, GOODS } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, WIN_SPICE_MERCHANTS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
@@ -19,6 +19,7 @@ import type {
   World,
 } from '../sim/types';
 import { crisisLogVisible } from './crisisLog';
+import { THIRD_GOAL_NAME } from './goal';
 import { hotkeyLabel } from './hotkeys';
 import { unconnectedIds } from './hints';
 import { formatGameTime } from './time';
@@ -97,7 +98,9 @@ function cashSentence(w: World): string {
 }
 
 export function nextStep(w: World): string {
-  if (w.wonMerchants) return 'Handelsstadt erreicht — spiel frei weiter';
+  if (w.wonMerchants && w.wonSpice) return 'Handelsstadt erreicht — spiel frei weiter';
+  if (w.wonMerchants)
+    return `Drittes Ziel: ${THIRD_GOAL_NAME} — ${WIN_SPICE_MERCHANTS} ${TIERS[4].name} mit ${GOODS.spice.name} von einer fernen Insel`;
   const houses = Object.values(w.buildings)
     .filter((b) => b.house)
     .sort((a, b) => a.id - b.id);

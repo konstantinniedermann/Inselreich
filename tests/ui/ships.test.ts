@@ -7,12 +7,14 @@ import { laneTicks } from '../../src/sim/islands';
 import { buyShip, clearRoute, freeShipAtHome, setRoute } from '../../src/sim/ships';
 import { newHouseState } from '../../src/sim/population';
 import { step, type StepReport } from '../../src/sim/tick';
-import type { Building, Route } from '../../src/sim/types';
+import { UNLOCKS } from '../../src/sim/defs/unlocks';
+import type { Building, Route, World } from '../../src/sim/types';
 import { deficitLine } from '../../src/ui/inspect';
 import { friendlyReason } from '../../src/ui/hints';
 import {
   buyShipView,
   goodChoices,
+  homeKontorPanel,
   lossMessages,
   retireView,
   routeFromClick,
@@ -25,6 +27,7 @@ import {
 import { deficitText } from '../../src/ui/texts';
 import { seeRouteStart } from '../sim/scenariosSea';
 import { setHouse } from '../sim/helpers';
+import { createWorld } from '../../src/sim/world';
 
 const FELS = 2;
 
@@ -139,6 +142,28 @@ describe('M12 E4 UI Schiffe', () => {
     expect(shipsKey(w, 0)).not.toBe(k2);
   });
 
+  describe('shipsKey: Tabelle der Zustandsänderungen (N4)', () => {
+    const woolEntry = UNLOCKS.find((u) => u.goods.includes('wool'))!.id;
+    const rows: [string, (w: World) => void, boolean][] = [
+      ['Gut freigeschaltet', (w) => void w.unlocked.push(woolEntry), true],
+      ['Schiff gekauft', (w) => void buyShip(w), true],
+      [
+        'Route geändert',
+        (w) => void setRoute(w, w.ships[0]!.id, routeFromClick(0, FELS, 'spice', 'fetch')),
+        true,
+      ],
+      ['Ziel gesetzt', (w) => void (w.ships[0]!.to = FELS), true],
+      ['left geändert', (w) => void (w.ships[0]!.left -= 5), false],
+    ];
+    it.each(rows)('%s → Schlüssel ändert sich: %s', (_name, mutate, changes) => {
+      const w = seeRouteStart();
+      w.unlocked = w.unlocked.filter((id) => id !== woolEntry); // Gut zunächst gesperrt
+      const k0 = shipsKey(w, 0);
+      mutate(w);
+      expect(shipsKey(w, 0) !== k0).toBe(changes);
+    });
+  });
+
   it('buyShipView: Zahlen aus SHIP; Gründe aus der Sim (Geld, Höchstzahl)', () => {
     const w = seeRouteStart();
     const v = buyShipView(w);
@@ -239,5 +264,32 @@ describe('M12 E4 Inselbestand in Ausbau-Gründen (Pflichtzusatz B)', () => {
     sea.islands[0]!.stock[d!.good] = 500;
     sea.islands[FELS]!.stock[d!.good] = 0;
     expect(deficitLine(sea, h)).toBe(deficitText(d!.good, 0, d!.net));
+  });
+});
+
+describe('SEE-F2-UX T3 homeKontorPanel', () => {
+  it('vor der Seefahrt: Handel', () => {
+    expect(homeKontorPanel(createWorld(1))).toBe('trade');
+  });
+  it('Seefahrt frei und Schiff vorhanden: Kontor-Panel mit Schiffen', () => {
+    const w = seeRouteStart();
+    expect(w.ships.length).toBeGreaterThan(0);
+    expect(homeKontorPanel(w)).toBe('inspect');
+  });
+  it('Seefahrt frei, kein Schiff, nicht kaufbar: Handel', () => {
+    const w = seeRouteStart();
+    w.ships = [];
+    w.money = 0;
+    expect(buyShipView(w).reason).not.toBeNull();
+    expect(homeKontorPanel(w)).toBe('trade');
+  });
+  it('Seefahrt frei, kein Schiff, aber kaufbar: Kontor-Panel', () => {
+    const w = seeRouteStart();
+    w.ships = [];
+    w.money = 100000;
+    w.islands[0]!.stock.wood = 100;
+    w.islands[0]!.stock.tools = 100;
+    expect(buyShipView(w).reason).toBeNull();
+    expect(homeKontorPanel(w)).toBe('inspect');
   });
 });

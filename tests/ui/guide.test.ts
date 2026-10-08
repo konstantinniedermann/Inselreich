@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PALETTE } from '../../src/render/palette';
 import type { Building, BuildingDefId, World } from '../../src/sim/types';
-import { TIERS } from '../../src/sim/defs/tiers';
+import { TIERS, WIN_SPICE_MERCHANTS } from '../../src/sim/defs/tiers';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { UnlockId } from '../../src/sim/types';
@@ -45,6 +45,7 @@ describe('nextStep (AK-UX-08)', () => {
     const w = world(2, 4, ['chapel']);
     w.won = true;
     w.wonMerchants = true;
+    w.wonSpice = true;
     expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
   });
   it('AK-UX-08 R1 nur Kontor', () => {
@@ -288,7 +289,18 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     const w = citizenWorld();
     w.won = true;
     w.wonMerchants = true;
+    w.wonSpice = true;
     expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
+  });
+  it('wonMerchants ohne wonSpice → Satz zum dritten Ziel, nicht „spiel frei weiter“', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = false;
+    expectStep(
+      w,
+      `Drittes Ziel: Gewürzstadt — ${WIN_SPICE_MERCHANTS} Kaufleute mit Gewürz von einer fernen Insel`,
+    );
   });
   it('AK-U2-08 (h) won, Glashütte steht, Steinbruch fehlt → Steinbruch bauen', () => {
     const w = citizenWorld();
