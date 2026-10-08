@@ -3173,3 +3173,12 @@ Release-Check REL-09. (P4) lernen.md-Zeile „strenges und lockeres Gate widersp
 Session-Ende durch den studio-coach. — Kosten bei Irrtum: rund 90 Tools, Rückfall per `git revert`.
 
 Entscheider: L0 · Anlass: Prozess-Retro REL-08 · ADR: —
+
+## R354 · 2026-10-08 · Gate Merge TOOL-E046-E047 OK
+
+Ruling: **OK** für `tool/e046-e047` @ 972b564 (Review OK, Befunde niedrig; `make studio-test` 463 grün; Echtlauf
+Inselreich 918 min rot, Konto 1182/2000 gelb). Fehler im ersten Stand (Reponame `anno-clone` statt `Inselreich`) fand
+der L0-Echtlauf, nicht die Tests — Echtläufe gegen externe APIs gehören in die DoD von Werkzeug-Paketen. Merge lokal
+durch den Integrator (Konflikt-Probe sauber), kein Push (R335). Ist laut Zählung: 14 + 18 + 6 Tools.
+
+Entscheider: L0 · Anlass: Review TOOL-E046-E047 · ADR: —
