@@ -3439,3 +3439,18 @@ HEAD und Last ≤ 4), `make check`, `make check-ci-perf`; Push; CI prüfen; `gh 
 und `ci.py`. ART-L8-SELTEN pausiert Messläufe bis dahin und bleibt auf seiner Branch (REL-10).
 
 Entscheider: L0 · Anlass: Release-Check REL-09 · ADR: —
+
+## R375 · 2026-10-08 · Session-Retro 29c3791b: V1–V5 angenommen; `merge=union` bleibt entfernt
+
+Ruling: Retro `docs/studio/retros/2026-10-08-session-29c3791b-ende.md` angenommen. Der Coach hat Fix (a) zu Recht nicht
+umgesetzt: `merge=union` wurde mit R303 absichtlich entfernt (H-F1 holte rund 490 gestrichene Zeilen zurück); falsch
+ist der Satz in `gates.md` (V4). Konflikte in `docs/beobachtungen.md` löst weiter der Eigentümer des späteren Branches.
+(V1) **TOOL-TESTLOCK** (E-051, Werkzeug ohne Experimentplatz wie E-043/E-047, lead-tech, 40 Tools) nächste Session:
+Lockdatei und Load-Prüfung in `make check`/`make test`/`zeitreserve-push`. (V2) E-050 `vorgeschlagen`, Pflicht-Hebel
+für Cache-Write, wartet auf Platz. (V3) Briefing-Vorlage: Pflichtzeilen je Paketart (`make studio-test`, Echtlauf
+externer APIs, Mehrbedarf vorab melden) und (V4) `gates.md` Z. 218 an R303 angleichen — **sofort** durch den
+studio-coach vor dem Push, Handbuch 1.31. (V5) Gleitende 5-Session-Zeilen mit dem E-049-Paket. Steuerung (dritte
+Session rot): E-038 bekommt den ersten freien Platz ab 2026-10-22; Reihenfolge der Wartenden damit E-038, E-048,
+E-050, E-049, E-044.
+
+Entscheider: L0 · Anlass: Session-Retro · ADR: —
