@@ -2733,3 +2733,14 @@ Paket). Die zweite rote Zeile (Persona-Starts als general-purpose auf opus) fäl
 Irrtum: ein Werkzeug-Paket; Rückbau per Revert.
 
 Entscheider: L0 · Anlass: Retro R-2026-10-08-effizienz-unentdeckt · ADR: —
+
+## R317 · 2026-10-08 · Gate Merge TOOL-AMPEL: OK mit zwei Kleinkorrekturen
+
+Ruling: Review OK angenommen. (1) `persona_opus` zählt nur Abweichungen ab dem Guard (2026-10-04); Altfälle vor
+dem Guard sind erledigte Historie und dürfen die Zeile nicht dauerhaft rot halten — sonst wird der Ampel-Vorfall zum
+Dauerrauschen und verliert seinen Zweck. (2) Die Wahl „Datenbasis … Agenten" als Zählbasis für die Grenze 10 im
+Code kommentieren (eine Zeile). Danach seriell Merge durch production-integrator inkl. `make check`. Der erste
+Vorfall `ampel:cache_write_5m` ist durch R314/E-037 adressiert; `ampel:steuerung` geht an die nächste Session-Retro
+(V2-Pflicht). — Kosten bei Irrtum: Altfälle unsichtbar; sie stehen in den Retros und in R167.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL · ADR: —
