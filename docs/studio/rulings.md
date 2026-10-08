@@ -3424,3 +3424,18 @@ Beobachtung (L0 eingetragen). Ist unter 150. Merge durch den Integrator mit `mak
 Lauf; danach Release-Check REL-09.
 
 Entscheider: L0 · Anlass: Bericht UI-PANEL-AUFRAEUMEN · ADR: —
+
+## R374 · 2026-10-08 · Gate Merge Release REL-09 OK; Session-End-Push
+
+Ruling: **OK** für REL-09 = main @ a578d72 (SEE-F2-UX, ART-WALD-RAUTEN + FIX-RAUTEN-ZEIT, SEE-F1-FAHRLINIE +
+FIX-SEE-F1-ZEIT, UI-PANEL-AUFRAEUMEN; dazu Werkzeug TOOL-E046-E047, TOOL-E046-SESSION, TOOL-ZEITRESERVE-META,
+TOOL-SMOKE). Browser-Lauf: Smoke BESTANDEN beide Grössen, alle vier Paket-Abschnitte OK mit Screenshots unter
+`.studio/qa/REL-09/`, Schiff in 342 Proben nie auf Land, Frame-Zeit im Hafen render-Median 1,6 ms (Load 3,6–4,8),
+Konsole leer. `opus`-Review BEDENKEN niedrig: Kamera-Klemmung in `app.ts` (`resize`, `centerOn`) mit voller Höhe,
+arc42 zu Overlay/`visibleViewHeight`, `seaRoute` liefert veränderbare geteilte Arrays — alle als Folgearbeit REL-10
+(Paket **UI-KAMERA-KLEMMUNG** zusammen mit dem Kamerarahmen-Befund). Session-End-Push durch den Integrator nach R335
+mit dem neuen Push-Gate (R362): bei 1-min-Load ≤ 3 `make test`, dann `make zeitreserve-push` (Messung mit Commit =
+HEAD und Last ≤ 4), `make check`, `make check-ci-perf`; Push; CI prüfen; `gh workflow run Pages --ref main`; Deploy
+und `ci.py`. ART-L8-SELTEN pausiert Messläufe bis dahin und bleibt auf seiner Branch (REL-10).
+
+Entscheider: L0 · Anlass: Release-Check REL-09 · ADR: —
