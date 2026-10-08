@@ -6,11 +6,11 @@ import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
-import { SERVICE_BUILDING, isSupplied, upgradeStatus } from '../sim/population';
+import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { LEVELS } from '../sim/defs/levels';
 import { cycleOf, upkeepOf, utilization } from '../sim/levels';
 import { paidCost, upgradeBuilding } from '../sim/upgrade';
-import { effectiveRefund, goalView, houseDiagnosis, missingInputs } from '../sim/queries';
+import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
@@ -18,7 +18,7 @@ import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
 import type { Building, BuildingDefId, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
-import { deficitText, diagnosisText, goodList, producesText, refundText, stateInfo } from './texts';
+import { deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
 import { friendlyReason } from './hints';
 import { renderShipSection, updateShipSection, type ShipActions } from './ships';
@@ -31,6 +31,25 @@ import { formatGameTime, perMinute } from './time';
 import { needsConnection } from '../sim/roads';
 import { connectView } from './connect';
 import type { Pos } from '../sim/world';
+import {
+  TONE_SYMBOL,
+  UPGRADE_KEY_LABEL,
+  houseTiles,
+  levelPips,
+  progressView,
+  riseCard,
+  statKeys,
+  statTiles,
+  stateChip,
+  supplyChip,
+  tierPips,
+  upgradeCard,
+  type Chip,
+  type GainRow,
+  type Pips,
+  type StatKey,
+  type StatTile,
+} from './panelView';
 
 export {
   burningText,
@@ -281,20 +300,170 @@ function addRemedy(parent: HTMLElement): void {
   p.hidden = true;
 }
 
-/** Gerüst des Wohnhaus-Panels: Einwohner, Versorgung, Bedürfnisse, Aufstieg. */
-function renderHouse(panel: HTMLElement): void {
-  addLine(panel, '', 'inhabitants');
-  addLine(panel, '', 'supplied');
-  addLine(panel, '', 'feast').hidden = true;
-  addList(panel, 'reasons', 'diagnosis');
-  addRemedy(panel);
-  addList(panel, 'needs', 'needs');
-  addLine(panel, '', 'first-missing').hidden = true;
-  const upgrade = document.createElement('div');
-  upgrade.className = 'upgrade';
+function node<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls?: string,
+  field?: string,
+): HTMLElementTagNameMap[K] {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (field) e.dataset.field = field;
+  return e;
+}
+
+/** Kopf-Zone (G-2, C-1): Titelzeile mit Platz für den Stufen-Chip; im DEV-Build die Positionszeile darunter. */
+function addHead(
+  panel: HTMLElement,
+  b: Building,
+  name: string,
+): { head: HTMLElement; row: HTMLElement } {
+  const head = node('header', 'pv-head');
+  head.dataset.zone = 'head';
+  const row = node('div', 'pv-head-row');
+  const title = node('h2', 'panel-title', 'title');
+  title.textContent = name;
+  row.appendChild(title);
+  head.appendChild(row);
+  if (import.meta.env.DEV) addLine(head, `Position (${b.x}, ${b.y})`);
+  panel.appendChild(head);
+  return { head, row };
+}
+
+/** Stufen-Chip: Text und Punkte (Anzahl hängt nur vom Typ ab, G-3). */
+function addLevelChip(row: HTMLElement, chipField: string, textField: string, max: number): void {
+  const chip = node('span', 'chip pv-level', chipField);
+  chip.setAttribute('role', 'group');
+  chip.appendChild(node('span', undefined, textField));
+  const pips = node('span', 'pv-pips', `${textField}-pips`);
+  pips.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < max; i++) pips.appendChild(node('span', 'pv-pip'));
+  chip.appendChild(pips);
+  row.appendChild(chip);
+}
+
+/** Zustands- bzw. Versorgungs-Chip: Symbol (aria-hidden) und Text, Ton über `data-tone`. */
+function addToneChip(parent: HTMLElement, chipField: string, textField: string): void {
+  const chip = node('div', 'pv-chip', chipField);
+  chip.setAttribute('role', 'group');
+  const sym = node('span', 'pv-symbol', `${chipField}-symbol`);
+  sym.setAttribute('aria-hidden', 'true');
+  chip.append(sym, node('span', undefined, textField));
+  parent.appendChild(chip);
+}
+
+function setAttr(el: HTMLElement, name: string, value: string): void {
+  if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+}
+
+function setToneChip(panel: HTMLElement, chipField: string, textField: string, c: Chip): void {
+  const chip = panel.querySelector<HTMLElement>(`[data-field="${chipField}"]`);
+  if (!chip) return;
+  setAttr(chip, 'data-tone', c.tone);
+  setAttr(chip, 'aria-label', c.label);
+  setAttr(chip, 'title', c.label);
+  setField(chip, `${chipField}-symbol`, TONE_SYMBOL[c.tone]);
+  setField(chip, textField, c.text);
+}
+
+function setPips(panel: HTMLElement, chipField: string, textField: string, p: Pips | null): void {
+  if (p === null) return;
+  const chip = panel.querySelector<HTMLElement>(`[data-field="${chipField}"]`);
+  if (!chip) return;
+  setAttr(chip, 'aria-label', p.label);
+  setAttr(chip, 'title', p.label);
+  const dots = chip.querySelectorAll<HTMLElement>(`[data-field="${textField}-pips"] > span`);
+  dots.forEach((d, i) => d.classList.toggle('on', i < p.level));
+}
+
+/** Kennzahlen-Zone mit Kachel-Grid; die Kacheln hängen nur vom Typ ab. */
+/** Beschriftung und Unterzeile je Kachel; das Gerüst hängt nur vom Typ ab (`statKeys`, G-3). */
+const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
+  output: { label: 'Ausstoss', sub: true },
+  utilization: { label: 'Auslastung', sub: false },
+  input: { label: 'Verbrauch', sub: true },
+  upkeep: { label: 'Unterhalt', sub: true },
+  inhabitants: { label: 'Einwohner', sub: false },
+};
+
+function addStats(panel: HTMLElement, keys: StatKey[]): HTMLElement {
+  const sec = node('section', 'pv-stats');
+  sec.dataset.zone = 'stats';
+  sec.setAttribute('aria-label', 'Kennzahlen');
+  const grid = node('div', 'pv-grid');
+  for (const key of keys) {
+    const tile = node('div', 'pv-tile');
+    tile.dataset.stat = key;
+    tile.append(
+      Object.assign(node('span', 'pv-tile-label'), { textContent: TILE_LAYOUT[key].label }),
+      node('strong', 'pv-tile-value', `stat-${key}`),
+    );
+    if (TILE_LAYOUT[key].sub) tile.appendChild(node('small', 'pv-tile-sub', `stat-${key}-sub`));
+    grid.appendChild(tile);
+  }
+  sec.appendChild(grid);
+  panel.appendChild(sec);
+  return sec;
+}
+
+function setTiles(panel: HTMLElement, tiles: StatTile[]): void {
+  for (const t of tiles) {
+    setField(panel, `stat-${t.key}`, t.value);
+    if (t.sub !== null) setField(panel, `stat-${t.key}-sub`, t.sub);
+  }
+}
+
+/** Gewinn-Zeile «Label a → b / min» mit Delta-Marke; Wurzel ist ein `<p>`, hidden steuert die Sichtbarkeit. */
+function addGainRow(parent: HTMLElement, field: string): void {
+  const p = node('p', 'pv-gain');
+  p.append(node('span', undefined, field), node('span', 'pv-delta', `${field}-delta`));
+  p.dataset.gain = field;
+  p.setAttribute('role', 'group');
+  parent.appendChild(p);
+}
+
+function gainAria(g: GainRow): string {
+  const d = g.delta.startsWith('+')
+    ? `plus ${g.delta.slice(1)}`
+    : g.delta.startsWith('−')
+      ? `minus ${g.delta.slice(1)}`
+      : 'unverändert';
+  return `${g.label} von ${g.before} auf ${g.after}, ${d}`;
+}
+
+function setGainRow(root: HTMLElement, field: string, g: GainRow | undefined): void {
+  const row = root.querySelector<HTMLElement>(`[data-gain="${field}"]`);
+  if (!row) return;
+  row.hidden = g === undefined;
+  if (g === undefined) return;
+  setField(row, field, `${g.label} ${g.text}`);
+  setField(row, `${field}-delta`, g.delta);
+  setAttr(row, 'aria-label', gainAria(g));
+}
+
+/** Karten-Wurzel (Ausbau bzw. Aufstieg) mit `data-zone="upgrade"`. */
+function cardNode(label: string): HTMLElement {
+  const card = node('section', 'upgrade pv-card');
+  card.dataset.zone = 'upgrade';
+  card.setAttribute('aria-label', label);
+  return card;
+}
+
+/** Gerüst des Wohnhaus-Panels: Kopf, Kennzahlen, Aufstiegs-Karte (Spec 6). */
+function renderHouse(panel: HTMLElement, b: Building): void {
+  const { head, row } = addHead(panel, b, BUILDING_DEFS[b.defId].name);
+  addLevelChip(row, 'tier-chip', 'tier', Object.keys(TIERS).length);
+  addToneChip(head, 'supplied-chip', 'supplied');
+  addLine(head, '', 'feast').hidden = true;
+  addList(head, 'reasons', 'diagnosis');
+  addRemedy(head);
+  const stats = addStats(panel, ['inhabitants']);
+  addList(stats, 'needs', 'needs');
+  addLine(stats, '', 'first-missing').hidden = true;
+  const upgrade = cardNode('Aufstieg');
   const heading = document.createElement('h3');
   heading.dataset.field = 'upgrade-title';
   upgrade.appendChild(heading);
+  addGainRow(upgrade, 'gain-inhabitants');
   addList(upgrade, 'reasons', 'upgrade-reasons');
   addLine(upgrade, '', 'deficit').hidden = true;
   addLine(upgrade, '', 'stone-hint').hidden = true;
@@ -338,14 +507,11 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
   const house = b.house;
   if (!house) return;
   const tier = TIERS[house.tier];
-  setField(panel, 'title', `${BUILDING_DEFS[b.defId].name} — ${tier.name}`);
-  setField(panel, 'inhabitants', `Einwohner ${house.inhabitants} / ${tier.maxInhabitants}`);
-  const supplied = isSupplied(world, b);
-  setField(
-    panel,
-    'supplied',
-    supplied ? 'Versorgung: ✓ im Radius' : 'Versorgung: ✗ ausserhalb von Kontor/Markt',
-  )?.classList.toggle('negative', !supplied);
+  setField(panel, 'tier', tier.name);
+  setPips(panel, 'tier-chip', 'tier', tierPips(b));
+  setTiles(panel, houseTiles(b));
+  const supply = supplyChip(world, b);
+  if (supply) setToneChip(panel, 'supplied-chip', 'supplied', supply);
 
   const icons = needIcons(world, b);
   setList(
@@ -371,14 +537,17 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
 
   const cost = panel.querySelector<HTMLElement>('[data-field="upgrade-cost"]');
   if (tier.upgradeCost === null) {
-    setField(panel, 'upgrade-title', 'Höchste Stufe');
+    setField(panel, 'upgrade-title', riseCard(world, b)!.title);
+    setGainRow(panel, 'gain-inhabitants', undefined);
     setList(panel, 'upgrade-reasons', []);
     setOptionalLine(panel, 'deficit', null);
     setOptionalLine(panel, 'stone-hint', null);
     if (cost) cost.hidden = true;
     return;
   }
-  setField(panel, 'upgrade-title', `Aufstieg zu ${TIERS[(house.tier + 1) as Tier].name}`);
+  const rise = riseCard(world, b)!;
+  setField(panel, 'upgrade-title', rise.title);
+  setGainRow(panel, 'gain-inhabitants', rise.gain ?? undefined);
   const status = upgradeStatus(world, b);
   setList(
     panel,
@@ -543,6 +712,29 @@ export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish:
   return { trade: true, demolish: defId === 'kontor2' };
 }
 
+/** Gerüst des Betriebs-Panels (Betriebe und Dienste): Kopf, Kennzahlen, Ausbau-Karte (Spec 5). */
+function renderBetrieb(panel: HTMLElement, b: Building, onUpgrade: () => void): void {
+  const def = BUILDING_DEFS[b.defId];
+  const { head, row } = addHead(panel, b, def.name);
+  const levels = LEVELS[b.defId];
+  if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
+  addToneChip(head, 'state-chip', 'state');
+  addRemedy(head);
+  const stats = addStats(panel, statKeys(b.defId));
+  if (progressView(b) !== null) {
+    const bar = node('div', 'progress', 'progress-bar');
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-valuemin', '0');
+    bar.setAttribute('aria-valuemax', '100');
+    bar.setAttribute('aria-label', 'Fortschritt Zyklus');
+    bar.appendChild(node('div', 'progress-fill', 'progress'));
+    stats.appendChild(bar);
+  }
+  if (def.flammable === true) addLine(stats, '', 'fire-protection');
+  if (def.fireProtection === true) addLine(stats, '', 'fire-covers');
+  if (levels !== undefined) renderUpgradeBox(panel, onUpgrade);
+}
+
 /** Baut den Panel-Inhalt für ein Gebäude neu auf (nur bei Auswahlwechsel aufrufen). */
 export function renderInspect(
   panel: HTMLElement,
@@ -556,17 +748,11 @@ export function renderInspect(
   if (!b) return;
   const def = BUILDING_DEFS[b.defId];
 
-  const title = document.createElement('h2');
-  title.className = 'panel-title';
-  title.textContent = def.name;
-  title.dataset.field = 'title';
-  panel.appendChild(title);
-  if (import.meta.env.DEV) addLine(panel, `Position (${b.x}, ${b.y})`);
-
   const buttons = document.createElement('div');
   buttons.className = 'panel-actions';
 
   const kontor = kontorActions(b.defId);
+  if (kontor !== null || b.defId === 'townhall') addHead(panel, b, def.name);
   if (kontor !== null) {
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
@@ -580,28 +766,8 @@ export function renderInspect(
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   } else {
     if (b.house) {
-      renderHouse(panel);
-    } else {
-      addLine(panel, '', 'state');
-      addRemedy(panel);
-      if (LEVELS[b.defId] !== undefined) addLine(panel, '', 'level');
-      if (def.produces) addLine(panel, '', 'utilization');
-      if (def.produces && def.cycle !== undefined) {
-        addLine(panel, producesText(def, b.outageUntil !== undefined, cycleOf(b)), 'produces');
-        if (def.consumes) addLine(panel, `Verbraucht ${goodList(def.consumes)}`);
-        const bar = document.createElement('div');
-        bar.className = 'progress';
-        const fill = document.createElement('div');
-        fill.className = 'progress-fill';
-        fill.dataset.field = 'progress';
-        bar.appendChild(fill);
-        panel.appendChild(bar);
-      }
-      addLine(panel, '', 'upkeep');
-      if (LEVELS[b.defId] !== undefined) renderUpgradeBox(panel, () => actions.upgrade(id));
-      if (def.flammable === true) addLine(panel, '', 'fire-protection');
-      if (def.fireProtection === true) addLine(panel, '', 'fire-covers');
-    }
+      renderHouse(panel, b);
+    } else renderBetrieb(panel, b, () => actions.upgrade(id));
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
@@ -675,49 +841,71 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
   };
 }
 
-/** Gerüst des Ausbau-Abschnitts; `updateInspect` füllt Texte und Sichtbarkeit. */
+/** Gerüst der Ausbau-Karte; `updateInspect` füllt Texte und Sichtbarkeit (Kartenart nur über `hidden`, A-14). */
 function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
-  const box = document.createElement('div');
-  box.className = 'upgrade';
+  const box = cardNode('Ausbau');
   box.dataset.field = 'upgrade-box';
   const heading = document.createElement('h3');
   heading.dataset.field = 'level-title';
   box.appendChild(heading);
+  addGainRow(box, 'gain-output');
+  addGainRow(box, 'gain-upkeep');
+  addLine(box, '', 'level-lock');
   addLine(box, '', 'level-cost');
   addLine(box, '', 'level-fee');
-  addLine(box, '', 'level-preview');
   addList(box, 'reasons', 'level-reasons');
-  addButton(box, 'Ausbauen', onUpgrade, 'upgrade', UPGRADE_TITLE);
+  const btn = node('button', 'btn', 'upgrade');
+  btn.type = 'button';
+  btn.title = UPGRADE_TITLE;
+  btn.append('Ausbauen ');
+  const key = node('kbd', undefined, 'upgrade-key');
+  key.textContent = UPGRADE_KEY_LABEL;
+  btn.appendChild(key);
+  btn.addEventListener('click', () => {
+    btn.blur();
+    onUpgrade();
+  });
+  box.appendChild(btn);
   panel.appendChild(box);
 }
 
-/** Setzt den Ausbau-Abschnitt aus `upgradeView`; ohne Ansicht verborgen. */
+/** Setzt die Ausbau-Karte aus `upgradeCard`; ohne Karte verborgen. */
 function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
   const box = panel.querySelector<HTMLElement>('[data-field="upgrade-box"]');
   if (!box) return;
-  const v = upgradeView(world, b);
-  box.hidden = v === null;
-  if (v === null) return;
-  setField(box, 'level-title', v.title);
-  const maxed = v.title === 'Höchste Stufe';
-  const rows = [
-    ['level-cost', v.cost],
-    ['level-fee', v.fee],
-    ['level-preview', v.preview],
-  ] as const;
-  for (const [field, text] of rows) {
+  const c = upgradeCard(world, b);
+  box.hidden = c === null;
+  if (c === null) return;
+  setField(box, 'level-title', c.title);
+  const gains = c.kind === 'max' ? [] : c.gains;
+  setGainRow(
+    box,
+    'gain-output',
+    gains.find((g) => g.key === 'output'),
+  );
+  setGainRow(
+    box,
+    'gain-upkeep',
+    gains.find((g) => g.key === 'upkeep'),
+  );
+  const lock = setField(box, 'level-lock', c.kind === 'locked' ? c.lock : '');
+  if (lock) lock.hidden = c.kind !== 'locked';
+  for (const [field, text] of [
+    ['level-cost', c.kind === 'next' ? c.cost : ''],
+    ['level-fee', c.kind === 'next' ? c.fee : ''],
+  ] as const) {
     const el = setField(box, field, text);
-    if (el) el.hidden = maxed;
+    if (el) el.hidden = c.kind !== 'next';
   }
   setList(
     box,
     'level-reasons',
-    v.reasons.map((text) => ({ ok: false, text })),
+    (c.kind === 'next' ? c.reasons : []).map((text) => ({ ok: false, text })),
   );
   const btn = box.querySelector<HTMLElement>('[data-field="upgrade"]');
   if (btn) {
-    btn.hidden = maxed;
-    btn.classList.toggle('unaffordable', !v.ok);
+    btn.hidden = c.kind !== 'next';
+    btn.classList.toggle('unaffordable', c.kind !== 'next' || !c.ok);
   }
 }
 
@@ -799,9 +987,8 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (b.defId === 'townhall') updateTownhall(panel, world);
   if (isKontor(b.defId)) updateShipSection(panel, world);
   setField(panel, 'refund', refundLine(world, b));
-  setField(panel, 'upkeep', upkeepText(b));
-  setField(panel, 'level', levelText(b) ?? '');
-  setField(panel, 'utilization', utilizationText(b) ?? '');
+  if (b.defId === 'townhall') setField(panel, 'upkeep', upkeepText(b));
+  if (!b.house && !isKontor(b.defId) && b.defId !== 'townhall') updateBetrieb(panel, world, b);
   updateUpgradeBox(panel, world, b);
   updateConnect(panel, world, b);
   updateFeast(panel, world, b);
@@ -811,21 +998,27 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
     remedyEl.hidden = text === null;
     setField(panel, 'remedy', text ?? '');
   }
-  if (def.produces && def.cycle !== undefined) {
-    setField(panel, 'produces', producesText(def, b.outageUntil !== undefined, cycleOf(b)));
-  }
-  const info = stateInfo(b, world.tick, missingInputs(world, b));
-  setField(panel, 'state', info.text)?.classList.toggle('negative', !info.ok);
   if (def.flammable === true) {
     setField(panel, 'fire-protection', `Brandschutz: ${isProtected(world, b) ? 'ja' : 'nein'}`);
   }
   if (def.fireProtection === true) {
     setField(panel, 'fire-covers', `Schützt ${protectedCount(world, b)} brennbare Gebäude`);
   }
+}
+
+/** Führt Kopf, Kacheln und Balken des Betriebs-Panels nach (nur Texte und Attribute, G-3). */
+function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
+  setToneChip(panel, 'state-chip', 'state', stateChip(world, b));
+  setField(panel, 'level', levelText(b) ?? '');
+  setPips(panel, 'level-chip', 'level', levelPips(b));
+  setTiles(panel, statTiles(b));
+  const view = progressView(b);
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
-  if (fill && def.cycle) {
-    const width = `${progressPct(b)}%`;
+  const bar = panel.querySelector<HTMLElement>('[data-field="progress-bar"]');
+  if (view && fill && bar) {
+    const width = `${view.pct}%`;
     if (fill.style.width !== width) fill.style.width = width;
+    setAttr(bar, 'aria-valuenow', String(view.pct));
   }
 }
 

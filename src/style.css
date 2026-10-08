@@ -28,6 +28,9 @@
   --warn-parchment: #f2dc9b;
   --warn-amber: #b8620f;
   --ok: #6aa84f;
+  --tone-ok: #2f6b2a;
+  --tone-warn: #9a5410;
+  --tone-bad: #b3261e;
   --negative: #ff8a80;
   --font-serif: 'EB Garamond', Georgia, serif;
 }
@@ -406,6 +409,123 @@ body {
 }
 .upgrade [hidden] {
   display: none;
+}
+
+/* Info-Panel in drei Zonen (PANEL-UEBERSICHT): Kopf, Kennzahlen, Karte. Ton nie als Textfarbe, nur als Kante. */
+.pv-head {
+  margin-bottom: 4px;
+}
+.pv-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.pv-head-row .panel-title {
+  margin: 0;
+  min-width: 0;
+}
+.pv-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.pv-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.pv-pip {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--wood);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.pv-pip.on {
+  background: var(--wood);
+}
+.pv-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  padding: 2px 6px;
+  background: var(--parchment);
+  color: var(--ink);
+  font-weight: 700;
+  border: 1px solid var(--wood);
+  border-left: 4px solid var(--wood);
+  border-radius: 4px;
+}
+.pv-chip[data-tone='ok'] {
+  border-left-color: var(--tone-ok);
+}
+.pv-chip[data-tone='warn'] {
+  border-left-color: var(--tone-warn);
+}
+.pv-chip[data-tone='bad'] {
+  border-left-color: var(--tone-bad);
+}
+.pv-symbol {
+  min-width: 1em;
+  text-align: center;
+}
+.pv-stats {
+  margin: 4px 0;
+}
+.pv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 4px;
+}
+.pv-tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.pv-tile-label,
+.pv-tile-sub {
+  font-size: 12px;
+}
+.pv-tile-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+.pv-card {
+  padding: 4px 6px;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 6px;
+}
+.pv-card [hidden],
+.pv-gain[hidden] {
+  display: none;
+}
+.pv-gain {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 2px 0;
+}
+.pv-delta {
+  flex: none;
+  padding: 0 6px;
+  font-weight: 700;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 999px;
+}
+.btn kbd {
+  margin-left: 4px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
 }
 
 /* Tooltips der Bauleiste (fixed: die scrollende Leiste schneidet sonst ab) */

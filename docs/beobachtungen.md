@@ -330,6 +330,20 @@ falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusam
 Fundort: Review TOOL-RELEASE-CI. Beobachtung: Auf GitHub Actions läuft die Runner-Prüfung zusätzlich zur Hauptprüfung.
 Ursprung: qa-code-reviewer. Einschätzung: niedrig, kostet CI-Sekunden; bei nächster Werkzeugarbeit bereinigen.
 
+### 2026-10-08 · Kontrast der Rand-Farben von `.needs`/`.reasons` unter 3:1
+
+Fundort: Spec PANEL-UEBERSICHT (OF-7). Beobachtung: Die Randfarben der Listen im Info-Panel erreichen auf Pergament nur 2,3 bis 2,7 : 1. Ursprung: design-spec-author. Einschätzung: niedrig; nicht im Paket PANEL-UEBERSICHT (Spec OF-7), eigenes Kleinst-Folgepaket mit den neuen `--tone-*`-Farben.
+
+### 2026-10-08 · Info-Panel bei 800×600 teils unter dem Karten-Canvas
+
+Fundort: Browser-Check PANEL-UEBERSICHT (AK-PU-31), auf `main` identisch. Beobachtung: Bei 800×600 liegt das Panel als untere Leiste; die oberen ca. 130 px (Titel, Zustands-Chip) liegen unter dem Canvas, weder klickbar noch per Scrollen erreichbar.
+Ursprung: qa-playtester. Einschätzung: niedrig bis mittel (Desktop-first, schmale Fenster nur „stürzt nicht ab"); Layout-Kleinpaket, falls schmale Fenster relevant werden.
+
+### 2026-10-08 · Info-Panel: Glashütte im Brand läuft bei 1280×720 über die Panelhöhe
+
+Fundort: Browser-Check PANEL-UEBERSICHT. Beobachtung: Vier Kacheln plus mehrzeiliger Brand-Chip schieben «Rückerstattung» unter die Panelkante (per Scrollen erreichbar); Auslastung zeigt im Brand weiter 43–82 %. Spec D-5 gilt nur für Fischerhütte.
+Ursprung: qa-playtester. Einschätzung: niedrig.
+
 - 2026-10-08 · `src/render/fauna.ts` `massifHeightAt`/`sightFree` (PERF-L57, Rest von ART-C7-ANSCHLUSS B6) · die Höhen- und Sichtprüfung gibt es doppelt (fauna.ts exportiert und getestet, massif.ts privat: `sightFree`, `heightAtF`, `heightAnywhere`). Zusammenführen braucht einen Export in `massif.ts`. Ursprung: PERF-L57 W2. Erste Einschätzung: niedrig; beim nächsten Eingriff in `massif.ts`.
 - 2026-10-08 · Meeresfelsen bei Zoom 0,5 (aus ART-C7-ANSCHLUSS, nicht bearbeitet) · wirken wie Boote; Bildbefund, braucht Blick im Browser. Ursprung: PERF-L57 (Auftrag nannte nur Gischt, Fauna-Aufräumen, Tag-Pin). Erste Einschätzung: niedrig; mit ART-L8-SELTEN oder ART-WALD-RAUTEN zusammen prüfen.
 - 2026-10-08 · Frame-Budget im Headless-Chrome (`.studio/qa/perf-l57/`) · Der Haupt-Thread-Frame besteht zu ~13 ms aus `LayerTreeHost::DoUpdateLayers` (Canvas-Rasterung) und zu 2–3 ms aus JS; die Reserve zum 16,7-ms-Takt war nur ~0,2–1 ms, deshalb kippte jede Zusatzarbeit (Waldscheibe, Cache-Aufbau im Leerlauf) einen Frame und der Kaltstart (Cache-Aufbau nur im Leerlauf) dauerte 21 s statt 15 s. Der Bildschirmcache des Bodens (`groundCache.ts`) senkt die Rasterung auf ~8 ms. Neue Ebenen sollten zusätzliche Zeichenaufrufe je Frame gegen diese Reserve prüfen (Spiegel: `trace.mjs`-Messung). Ursprung: PERF-L57. Erste Einschätzung: Hinweis für künftige Render-Pakete; ein Trace-Skript nach `tools/render-qa/` lohnt sich.

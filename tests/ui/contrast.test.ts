@@ -74,3 +74,22 @@ describe('UI-Kontrast (AK-U2-02)', () => {
     expect(css).not.toMatch(/background(-color)?:\s*var\(--signal-red\)/);
   });
 });
+
+describe('Info-Panel Töne und Regeln (AK-PU-19, AK-PU-20)', () => {
+  it('AK-PU-19 Tonfarben ≥ 3 : 1 auf Pergament und Pergamentkante', () => {
+    for (const tone of ['--tone-ok', '--tone-warn', '--tone-bad']) {
+      expect(vars[tone], tone).toBeDefined();
+      for (const bg of ['--parchment', '--parchment-edge'])
+        expect(contrast(vars[tone]!, vars[bg]!), `${tone}/${bg}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('AK-PU-20 Kennzahlen-Grid, Tonkanten und verborgene Karten-Zeilen', () => {
+    expect(css).toMatch(/\.pv-grid\s*\{[^}]*display:\s*grid/);
+    for (const tone of ['ok', 'warn', 'bad'])
+      expect(css).toMatch(
+        new RegExp(`\\.pv-chip\\[data-tone='${tone}'\\]\\s*\\{[^}]*var\\(--tone-${tone}\\)`),
+      );
+    expect(css).toMatch(/\.pv-card \[hidden\],\s*\.pv-gain\[hidden\]\s*\{[^}]*display:\s*none/);
+  });
+});
