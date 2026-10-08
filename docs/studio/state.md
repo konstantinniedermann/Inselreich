@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-07 (Session 7db07561 abgebrochen auf Nutzerwunsch; Fortsetzung beim nächsten Start)
+Stand: 2026-10-08 (Session 8ef9d27f, kurze Session: REL-07 Gate ZURÜCK, Fix-Runde offen)
 
 ## Release-Notizen
 
@@ -33,22 +33,20 @@ Stand: 2026-10-07 (Session 7db07561 abgebrochen auf Nutzerwunsch; Fortsetzung be
 **REL-01…REL-03 (live)** — Licht, Wiese, Dünen, Anbinden-Knopf, Vorberge, Licht für Schiff/Figuren, hörbare
 Wirtschaft. **Bitte testen:** Gesamtbild, Dünen, Mangel-Ton.
 
-## Fortsetzung beim nächsten Start (Session 7db07561, R305)
+## Fortsetzung beim nächsten Start (Session 8ef9d27f, R313)
 
 Nutzer-Auftrag „Lebendige Insel" (R280–R305) läuft weiter; Nutzer testet nur in der Produktion (R281), Prüfungen
 gebündelt (R282). **Nur Angefangenes abschliessen (R305)**, keine neuen Pakete ohne Nutzer-Auftrag.
 
-1. **WALD-02** (zweiter Anlauf Wald inkl. Waldsaum, R300/R302): `.worktrees/wald-02` @ 8ab81ca, **4 Dateien
-   uncommittet** (Stand prüfen, nicht verwerfen). Frische lead-art-Instanz: Stand sichten, fertigstellen, blinder
-   Rater (Fragen 1–3, `.studio/handoffs/2026-10-06-l0-lead-qa-rel06.md`), A/B ≤ +0,7 ms.
-2. **L7 Tierleben**: `.worktrees/art02-l7` (`feat/art02-l7-fauna`) @ 7626a52, sauber; Review/Perf-Stand unbekannt →
-   frische lead-art-Instanz prüft und schliesst ab.
-3. **Release B** (REL-07) aus L5 (`feat/art02-l5-kueste` @ 684f43b, release-reif, Nachmessung Zoom 1 offen), L6
-   (`feat/art02-l6-entdecken` @ 3068893, release-reif), L7, WALD-02: Kandidat durch Integrator, ein Browser-Lauf mit
-   allen blinden Fragen (L5: E8/Wrack/Felsnadel; L6: 4 Fragen; L7; WALD-02), ein opus-Review, Gate, Push.
-   Union-Merge ist weg (E-031): Konflikte in `docs/beobachtungen.md` beide Anhänge behalten.
+1. **FIX-REL07** (R313): Release-Lauf B ergab Gate ZURÜCK. Frische lead-art-Instanz (Render-Engineer) auf
+   `int/rel-07` @ 3567348 (`.worktrees/rel07-aufloesung`): (a) Bau-Ruckeln (`iso.ts:180-250`, Neuaufbau
+   `sortedObjects` je Bau) + Kaltstart Seed 14; (b) Wrack/E8 erst ab Zoom ≥ 0,5; (c) arc42 + Salz-Register;
+   (d) Perf neu gegen main (Annahme bis +1,5 ms laut R313). Belege: `.studio/qa/rel-07b/` (Ruckel-Messung `hitch.mjs`
+   lag im Scratchpad der QA — in `.studio/qa/rel-07b/` sichern lassen), Befunde
+   `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` (B1–B15).
+2. Danach Integrator: `int/rel-07` erneut in `rel/rel-07`; lead-qa prüft nur Ruckeln, Perf, K-Proben blind; Gate, Push.
+3. Rater-Bedenken und Befunde ausserhalb Scope (B1–B15 ohne B4/B5/B7/B8) beim Release in `docs/beobachtungen.md`.
 4. Nicht gestartet (R305): L8 Seltenheit, Folgepakete aus BEOB-AUSW-01 (Board), SEE-F1/F2, H-TRAEGER-TEMPO.
-5. Session-Ende-Routine nachholen: `make studio-metrics`, Kurz-Retro studio-coach (Session 7db07561), lernen.md.
 
 ## Aktuelles Projekt und Phase
 

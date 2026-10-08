@@ -2670,3 +2670,20 @@ Ablage `.studio/qa/rel-07b/`, wiederholt Erledigtes nicht und liefert das Gate-U
 reicht die Zeit nicht, Zwischenstand mit Fortsetzungspunkt in state.md. — Kosten bei Irrtum: ein Doppellauf von Seed 14.
 
 Entscheider: L0 · Anlass: Session-Start, Sichtung `.studio/qa/rel-07b/` · ADR: —
+
+## R313 · 2026-10-08 · Gate Merge REL-07: ZURÜCK, Fix-Runde FIX-REL07
+
+Ruling: Gate-Urteil lead-qa (Kandidat `rel/rel-07` @ 9c6920c) angenommen: ZURÜCK, eng begrenzt. Fix-Runde FIX-REL07
+an lead-art (Render-Engineer) auf `int/rel-07`, Start nächste Session:
+(a) **Bau-Ruckeln beheben** (Pflicht): Bau löst 4–6 Frames 33–50 ms aus (main 0), Ursache Neuaufbau `sortedObjects`
+(`iso.ts:180-250`, Wald-/Lichtungsschleife je Bau). Ziel: Ruckel-Frames je Bau wie main (±1). Kaltstart Seed 14
+(20 s gegen 8 s) mituntersuchen. (b) **Fernansicht L5:** Wrack und Felseiland E8 erst ab Zoom ≥ 0,5 zeichnen
+(KISS statt Neuzeichnung); danach die K-Proben blind neu. (c) `docs/arc42.md` für L5/L6/L7 nachführen, Salz-Register
+(B5) nachführen. (d) **Perf-Budget:** nach (a) neu gegen main messen; ein Überschreiten von ≤ +0,5 ms wird bis
++1,5 ms `renderMedian` angenommen, solange `frameMedian` 16,7 ms und `emergencyFrames` 0 bleiben (absolut ≤ 6 ms).
+(e) Review-Befunde B4 (Filter `own`, Prüfung nicht schwächer), B7 (Kronen-Atlas 12 MiB), B8 (Delfine im Mouse-over)
+angenommen. Rater-Bedenken (Hütten-Tür, L6-Fussring, Schaumbögen „wie Möwen") blockieren nicht → Beobachtungen.
+Danach nur Nachprüfung der geänderten Punkte (Ruckeln, Perf, K-Proben), kein voller Release-Lauf. — Kosten bei Irrtum:
+eine weitere Fix-Runde.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-07, Handoff `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` · ADR: —
