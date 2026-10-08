@@ -265,10 +265,7 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
   Weg zum Kontor über freie Kacheln; vorhandene Wegstücke werden mitbenutzt. Die Kosten sind n × 5 Geld, es
   wird nie nur ein Teil gebaut. Fehlt der Pfad oder das Geld, ist der Knopf blass und eine Zeile nennt den
   Grund. Beim Überfahren (oder Fokussieren) zeigt die Karte den geplanten Weg als helle Rauten.
-- **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
-  angebunden»), Stufe («Stufe 1» bis «Stufe 3»), Auslastung, Produktion, Fortschritt und Unterhalt. Ab der
-  Freischaltung des Ausbaus steht dort der Abschnitt «Ausbau zu Stufe n» mit Kosten, Gebühr, Vorschau auf
-  Ausstoss und Unterhalt, dem Knopf «Ausbauen» (Tastenkürzel `Umschalt` + `U`) und, falls es nicht geht, dem Grund. Der Knopf «Gleiches bauen» wählt den Gebäudetyp als Bauwerkzeug (wie `Cmd`/`Strg` + Klick; nicht beim Kontor). Das Mouse-over nennt Stufe
+- **Info-Panel:** Das Info-Panel eines Betriebs hat drei Teile. Oben stehen Name, Stufe («Stufe 1» bis «Stufe 3» mit Punkten) und der Zustand als farbig umrandeter Chip (✓ läuft, ! wartet, ✗ steht, z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor angebunden») samt Abhilfe. Darunter zeigen Kacheln Ausstoss und Verbrauch je Minute, Auslastung und Unterhalt, dazu der Fortschritt. Unten steht die Ausbau-Karte mit dem Gewinn des nächsten Ausbaus (Ausstoss und Unterhalt, vorher → nachher), Kosten, Gebühr und dem Knopf «Ausbauen» (Tastenkürzel `Umschalt` + `U`); falls es nicht geht, nennt sie den Grund. Vor der Freischaltung nennt die Karte, wann der Ausbau möglich wird. Das Wohnhaus zeigt Stufe, Versorgung, Einwohner, Bedarfe und die Aufstiegs-Karte im gleichen Aufbau. Der Knopf «Gleiches bauen» wählt den Gebäudetyp als Bauwerkzeug (wie `Cmd`/`Strg` + Klick; nicht beim Kontor). Das Mouse-over nennt Stufe
   und Auslastung.
 
 ### Produktionsketten
