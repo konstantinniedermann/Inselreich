@@ -66,14 +66,14 @@ describe('seaRoute', () => {
     }
   });
 
-  it('AK4: Länge zwischen 1,0 und 2,0 mal Gerade (Gerade quert Land, Umweg ist Geometrie)', () => {
+  it('AK4: Länge zwischen 1,0 und 1,8 mal Gerade (Gerade quert Land, Umweg ist Geometrie)', () => {
     for (const seed of SEEDS) {
       const w = seaWorld(seed);
       for (const [a, b] of pairs(w)) {
         const straight = seaLanes(w.islands).find((l) => l.a === a && l.b === b)!.points;
         const ratio = length(seaRoute(w.islands, a, b)) / length(straight);
         expect(ratio).toBeGreaterThanOrEqual(1 - 1e-9);
-        expect(ratio).toBeLessThanOrEqual(2);
+        expect(ratio).toBeLessThanOrEqual(1.8);
       }
     }
   });
@@ -138,6 +138,25 @@ describe('seaRoute', () => {
       if (!loaded.ok) throw new Error(loaded.reason);
       for (const [a, b] of pairs(w))
         expect(seaRoute(loaded.world.islands, a, b)).toEqual(seaRoute(w.islands, a, b));
+    }
+  });
+
+  it('Richtungswechsel je abgetastetem Schritt höchstens 30 Grad (auch am Anker)', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const w = seaWorld(seed);
+      for (const [a, b] of pairs(w)) {
+        const r = seaRoute(w.islands, a, b);
+        for (let i = 2; i < r.length; i++) {
+          const h1 = Math.atan2(r[i - 1]!.y - r[i - 2]!.y, r[i - 1]!.x - r[i - 2]!.x);
+          const h2 = Math.atan2(r[i]!.y - r[i - 1]!.y, r[i]!.x - r[i - 1]!.x);
+          let d = Math.abs(h2 - h1);
+          if (d > Math.PI) d = 2 * Math.PI - d;
+          expect(
+            (d * 180) / Math.PI,
+            `seed ${seed} ${a}-${b} Punkt ${i}/${r.length}`,
+          ).toBeLessThanOrEqual(30);
+        }
+      }
     }
   });
 });

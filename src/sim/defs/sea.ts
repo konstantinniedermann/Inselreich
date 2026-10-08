@@ -85,3 +85,7 @@ export const ROUTE_STEP = 0.5;
 export const ROUTE_MARGIN = 2;
 /** Deterministischer Deckel: höchstens so viele Knoten werden je Suche abgearbeitet. */
 export const ROUTE_MAX_NODES = 200000;
+/** Zielwert: grösster Richtungswechsel (Grad) je abgetastetem Schritt. */
+export const ROUTE_MAX_TURN = 30;
+/** Höchstzahl Glättungsdurchgänge nach der Abtastung. */
+export const ROUTE_SMOOTH_PASSES = 60;

@@ -4,8 +4,10 @@ import {
   ROUTE_DEEP,
   ROUTE_MARGIN,
   ROUTE_MAX_NODES,
+  ROUTE_MAX_TURN,
   ROUTE_ROUND_RADIUS,
   ROUTE_SHORE_PENALTY,
+  ROUTE_SMOOTH_PASSES,
   ROUTE_STEP,
 } from './defs/sea';
 import type { Pt } from './islands';
@@ -259,8 +261,44 @@ function resample(pts: readonly Pt[]): Pt[] {
   }
   const end = pts[pts.length - 1]!;
   const last = out[out.length - 1]!;
-  if (last.x !== end.x || last.y !== end.y) out.push(end);
+  if (out.length > 1 && Math.hypot(end.x - last.x, end.y - last.y) < ROUTE_STEP / 2) out.pop();
+  if (out[out.length - 1] !== end) out.push(end);
   return out;
+}
+
+/** Grösster Richtungswechsel zwischen zwei Schritten in Grad. */
+function maxTurn(pts: readonly Pt[]): number {
+  let worst = 0;
+  for (let i = 2; i < pts.length; i++) {
+    const h1 = Math.atan2(pts[i - 1]!.y - pts[i - 2]!.y, pts[i - 1]!.x - pts[i - 2]!.x);
+    const h2 = Math.atan2(pts[i]!.y - pts[i - 1]!.y, pts[i]!.x - pts[i - 1]!.x);
+    const d = Math.abs(h2 - h1);
+    worst = Math.max(worst, ((d > Math.PI ? 2 * Math.PI - d : d) * 180) / Math.PI);
+  }
+  return worst;
+}
+
+/** Ein Glättungsdurchgang (1-2-1), Start und Ende bleiben fest. */
+function smoothOnce(pts: readonly Pt[]): Pt[] {
+  return pts.map((p, i) =>
+    i === 0 || i === pts.length - 1
+      ? p
+      : {
+          x: 0.25 * pts[i - 1]!.x + 0.5 * p.x + 0.25 * pts[i + 1]!.x,
+          y: 0.25 * pts[i - 1]!.y + 0.5 * p.y + 0.25 * pts[i + 1]!.y,
+        },
+  );
+}
+
+/** Glättet, bis der Richtungswechsel passt; bricht ab, bevor eine Kachel Land berührt wird. */
+function relax(g: Grid, pts: Pt[]): Pt[] {
+  let cur = pts;
+  for (let k = 0; k < ROUTE_SMOOTH_PASSES && maxTurn(cur) > ROUTE_MAX_TURN; k++) {
+    const next = smoothOnce(cur);
+    if (!next.every((p) => isWater(g, p))) break;
+    cur = next;
+  }
+  return cur;
 }
 
 function compute(islands: readonly Island[], a: number, b: number): Pt[] {
@@ -279,7 +317,7 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   const thinned = thin(g, centers);
   for (const candidate of [round(thinned), thinned, centers]) {
     const sampled = resample(candidate);
-    if (sampled.every((p) => isWater(g, p))) return sampled;
+    if (sampled.every((p) => isWater(g, p))) return relax(g, sampled);
   }
   return straight;
 }
