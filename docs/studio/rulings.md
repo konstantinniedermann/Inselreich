@@ -3049,3 +3049,14 @@ Session-End-Push live. PANEL-UEBERSICHT kommt nur dazu, wenn es vor dem Session-
 Budget-Nachrunde eingehalten.
 
 Entscheider: L0 · Anlass: Bericht Nachrunde PERF-L57 · ADR: —
+
+## R343 · 2026-10-08 · Gate Merge PANEL-UEBERSICHT OK, kommt in REL-08
+
+Ruling: **OK** für `feat/panel-uebersicht` @ d22ce7a. Final-Review auf opus BEDENKEN mit fünf niedrigen Befunden,
+drei davon behoben; offen sind der Importzyklus `panelView.ts`↔`inspect.ts` (funktioniert, Auslagern später) und
+das Duplikat `TILE_LAYOUT`, beide als Beobachtung. Browser AK-PU-22…32 bestanden, Höhenreserve bei 1280×720 rund
+195 px; nach der Fix-Runde wurde nicht erneut geprüft, für Rolle, Gerüst und `kbd`-Grösse vertretbar. Sim
+unverändert, Save v9. REL-08 heisst damit „Tasten-Komfort, flüssigere Insel, neues Gebäude-Panel". Budget rund 136
+von 120 Tools, bei widersprüchlicher Selbstangabe → Retro.
+
+Entscheider: L0 · Anlass: Bericht PANEL-UEBERSICHT · ADR: —
