@@ -3112,3 +3112,14 @@ von Commit und Last der Messung) steht als Beobachtung im Werkzeug-Paket E-046/E
 oben für jeden Session-End-Push.
 
 Entscheider: L0 · Anlass: Push-Gate REL-08 · ADR: —
+
+## R349 · 2026-10-08 · Session-Start: drei Pakete parallel (TOOL-E046-E047, HB-E048, Prozess-Retro REL-08)
+
+Ruling: REL-08 ist live (CI grün 37799673425, Pages 37800395087). Plan aus state.md fortgesetzt, drei unabhängige
+Stränge parallel (getrennte Dateien): **TOOL-E046-E047** (lead-tech, Worktree, 60 Tools): E-046 Ampelzeile
+„Actions-Minuten" und E-047 `log.py queue` mit Prettier, die Werkzeug-Schwäche aus R348 (Messdatei ohne Commit und
+Last) ist mit drin, wenn sie in 15 Tools passt, sonst bleibt sie Beobachtung; **HB-E048** (studio-coach, 20 Tools): die
+zwei Handbuch-Sätze, E-046…E-048 auf `laufend`; **Prozess-Retro REL-08** (studio-process-coach, 40 Tools, nach R127 nach
+jedem Release). Merges bleiben lokal, Push erst am Session-Ende (R335). — Kosten bei Irrtum: rund 120 Tools.
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
