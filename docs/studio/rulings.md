@@ -3123,3 +3123,16 @@ zwei Handbuch-Sätze, E-046…E-048 auf `laufend`; **Prozess-Retro REL-08** (stu
 jedem Release). Merges bleiben lokal, Push erst am Session-Ende (R335). — Kosten bei Irrtum: rund 120 Tools.
 
 Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R350 · 2026-10-08 · Gate HB-E048: Experiment-Grenze verletzt, Korrektur
+
+Ruling: Commit ae2f9e5 setzt E-046…E-048 auf `laufend`; damit laufen 6 Experimente, `test_experiments_limit` erlaubt
+3 (`make studio-test` rot). Ursache: Das Briefing von L0 (R349) nannte nur Prettier als DoD und prüfte die Grenze nicht.
+Korrektur durch den studio-coach: (1) **E-027** bewerten und abschliessen, IDEEN-03 ist gelaufen (R337, Frist R319);
+(2) **E-047** ist kein Experiment, sondern ein Werkzeug-Fix (keine offene Hypothese, Wirkung per Test belegt), Eintrag
+als `übernommen` bzw. nach der Statuskonvention der Datei abschliessen; (3) danach laufen E-042, E-037, E-046, E-048.
+Lässt sich **E-037** mit den vorhandenen Sessions bewerten, wird es bewertet, sonst geht **E-048** zurück auf
+`vorgeschlagen` und die zwei Handbuch-Sätze samt Version 1.31 werden zurückgenommen, bis ein Platz frei ist. Künftige
+Experiment-Briefings nennen `make studio-test` als DoD. Gate HB-E048 erst nach grünem `make studio-test`.
+
+Entscheider: L0 · Anlass: Gate HB-E048 · ADR: —
