@@ -3355,3 +3355,20 @@ Release-Check REL-09 ruft der Playtester `smoke.mjs` und ergänzt nur paketspezi
 Leerzeichen im Pfad → Beobachtung. Ist rund 31 von 40. Merge lokal durch den Integrator mit `make check`.
 
 Entscheider: L0 · Anlass: Bericht TOOL-SMOKE · ADR: —
+
+## R369 · 2026-10-08 · Gate Merge SEE-F1-FAHRLINIE OK mit Auflagen; Folgepaket SEE-F1-KORRIDOR
+
+Ruling: **OK** für `fix/see-f1-fahrlinie` @ 86baaac (Weg 1 nach R367; Pins unangetastet, `decor.ts` = main; Save v9,
+`balance.test.ts` ohne Diff, Goldwerte grün; Final-Review `opus` OK nach ZURÜCK-Runde, Review der Nacharbeit OK;
+Messung im Browser: Schiffsmitte nie auf Land, Minimum 0,53 zur Kachelkante). Auflagen: (1) `make check` lief bei Load
+12,7 mit fremdem Vitest (Verstoss R357) und meldete 19 Tests ohne CI-Reserve — der Integrator wiederholt `make check`
+am Merge-Stand bei Load ≤ 8 ohne fremden Lauf; meldet `zeitreserve` dann Tests ohne Reserve, wird nicht gemergt;
+(2) optischer Nachweis der Fahrlinie im Release-Check REL-09 (eigener Screenshot-Schritt). Korridor-Messung: 39 von 265
+Meer-Elementen (≈ 15 %, 18 von 40 Seeds) liegen ≤ 2 Kacheln an einer Route — über der 5-%-Schwelle aus R367, also
+Folgepaket **SEE-F1-KORRIDOR** in REL-10 (lead-tech; Ziel: Meer-Elemente meiden die Fahrlinie, ohne die Invariante
+„Heimat unabhängig von Fremdinseln“ der Tönung aufzugeben, z. B. getrennte Freihaltung nur für die Platzierung mit
+eigenem Pin). Abgeschwächte Abdeckung des Wassertests (Seeds 1–15, Schritt 0,5) akzeptiert, 150-Seeds-Probe im Review
+OK. An die Retro: zweimal Budget ohne Vorabmeldung (Ist ≈ 320 gegen 120 + 60 + 30), Lastregeln R357/R329 umgangen,
+Code-Ersetzung per Shell-Skript.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
