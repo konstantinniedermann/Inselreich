@@ -1,4 +1,4 @@
-import { deserialize, serialize, type LoadResult } from '../sim/save';
+import { SAVE_VERSION, deserialize, serialize, type LoadResult } from '../sim/save';
 import { fail, ok, type Result, type World } from '../sim/types';
 
 /** Manueller Speicherplatz (Schlüssel bleibt v1, das Format ist v2 mit Migration). */
@@ -92,11 +92,22 @@ export function noLoadableReason(): string {
   return NO_SAVE;
 }
 
-export type StorageProblem = 'none' | 'unavailable' | 'damaged';
+export type StorageProblem = 'none' | 'unavailable' | 'damaged' | 'newer';
 
-/** Speicherzustand für Startkarte und Menü: wirft `getItem`, ist er gesperrt; ein belegter, abgelehnter Slot ist kaputt. */
+/** Stammt der Stand aus einer neueren Spielversion? Nur Erkennung per `JSON.parse`; defektes JSON ergibt `false`. */
+function isNewerSave(json: string): boolean {
+  try {
+    const v = (JSON.parse(json) as { version?: unknown } | null)?.version;
+    return typeof v === 'number' && v > SAVE_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+/** Speicherzustand für Startkarte und Menü: wirft `getItem`, ist er gesperrt; ein abgelehnter Slot ist neuer (Version > SAVE_VERSION) oder kaputt. */
 export function storageProblem(storage: StorageLike): StorageProblem {
   let problem: StorageProblem = 'none';
+  let newer = false;
   for (const slot of SLOTS) {
     let json: string | null;
     try {
@@ -104,9 +115,12 @@ export function storageProblem(storage: StorageLike): StorageProblem {
     } catch {
       return 'unavailable';
     }
-    if (json !== null && !deserialize(json).ok) problem = 'damaged';
+    if (json !== null && !deserialize(json).ok) {
+      if (isNewerSave(json)) newer = true;
+      else problem = 'damaged';
+    }
   }
-  return problem;
+  return newer ? 'newer' : problem; // Vorrang: neuere Version vor beschädigt
 }
 
 export function currentStorageProblem(): StorageProblem {

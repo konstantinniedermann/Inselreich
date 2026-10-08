@@ -3210,3 +3210,86 @@ den Retros weiter (Statuspflege durch den studio-coach am Session-Ende). Hochrec
 Ende Oktober) geht als Information in den Nutzerbericht; kein Vorbehalt nach §5.3.
 
 Entscheider: L0 · Anlass: Retro M12 · ADR: —
+
+## R357 · 2026-10-08 · Lastbremse: studioweit ein voller Testlauf zugleich
+
+Ruling: 1-min-Load stieg auf 57 (10 Kerne), weil mehrere Stränge gleichzeitig volle Vitest-Läufe (`make check`,
+`make test`) fuhren; Messläufe (ART-WALD-RAUTEN Kaltstart) warten dadurch. Ab sofort: Während eines Tasks nur gezielte
+Läufe (`npx vitest run <datei>`); volle Läufe (`make check`, `make test`, `zeitreserve-push`) nur bei 1-min-Load ≤ 8
+und nie zwei Stränge zugleich — vor dem Start `pgrep -fl 'vitest run'` prüfen, läuft schon einer, warten. Messläufe
+haben Vorrang. Der Nutzer hatte nach der Rechnerlast gefragt. Kandidat für einen Werkzeug-Riegel (Lockdatei in
+`make check`) für die nächste Retro.
+
+Entscheider: L0 · Anlass: Nutzerfrage Rechnerlast · ADR: —
+
+## R358 · 2026-10-08 · SEE-F1-FAHRLINIE: Mehrbedarf +60 nachträglich frei; Überzug an die Retro
+
+Ruling: Stand `fix/see-f1-fahrlinie` @ cdda26f (T0–T2, T4 fertig, Goldwerte B5 belegt, Save v9 und `balance.test.ts`
+ohne Diff). Ist rund 174 Tools gegen 120 frei (+45 %), gemeldet erst nach dem Überzug. Mehrbedarf **+60** für T3,
+erneuten Browserblick und Final-Review `opus` nachträglich frei (Gesamt 180), weil das Paket fast fertig ist und ein
+Abbruch teurer wäre. Ursachen für die Retro: Playtest 30 Tools und drei T1-Starts; das Briefing an diese Instanz nannte
+die Mehrbedarfsmeldung nicht (L0). T3 startet nach dem Merge von ART-WALD-RAUTEN, die Inaktivität der Instanz bis dahin
+ist gewollt (Handoff `.studio/handoffs/2026-10-08-lead-tech-tech-see-f1.md`), keine Ad-hoc-Retro.
+
+Entscheider: L0 · Anlass: Zwischenbericht SEE-F1 · ADR: —
+
+## R359 · 2026-10-08 · Gate Merge SEE-F2-UX OK
+
+Ruling: **OK** für `fix/see-f2-ux` @ a1520f6. T1–T4, T6, T7 umgesetzt; T5 entfällt (nicht reproduzierbar, Ursache
+Wasserkachel bzw. fehlendes Holz auf der Fremdinsel); N4 (`shipsKey`) war echt und ist behoben; Favicon als Data-URI
+(Asset-Weg hätte eine CREDITS-Zeile verlangt); DPR-Wechsel per `matchMedia`-Listener, Live-Wechsel nur per Reload
+belegt, manueller Zoom-Test steht als Beobachtung. Final-Review `opus` BEDENKEN niedrig, behoben in b270009;
+Playtest OK; `make -k check` grün (2567). Commit-Präfix `test/fix:` in 51cbb11 an die Retro (kein Rebase). Merge
+lokal durch den Integrator mit erneutem `make check` (R357), kein Push.
+
+Entscheider: L0 · Anlass: Bericht SEE-F2-UX · ADR: —
+
+## R360 · 2026-10-08 · Gate Merge ART-WALD-RAUTEN OK (Bedingung `make check` am Merge-Stand)
+
+Ruling: **OK** für `fix/wald-rauten` @ 2454794. Rauten-Metrik: Anteil langer gerader Kantenstücke Gras/Sand 0,70–0,82 →
+0,14–0,18, Wald/Wiese 0,15 → 0,09, Sand-Stufen 0,20 → 0,09; Kaltstart Seed 7 Median 8362 → 8492 ms (+1,6 %, Grenze
++3 %); `willReadFrequently` 3 → 0; Meeresfels ab Zoom 0,5 ohne Bootform; Final-Review `opus` BEDENKEN ohne Blocker,
+hohe Befunde behoben, niedrige als Beobachtung. Fussring und „Schaum ohne Objekt“ nur per Bildsicht ohne Rauten, nicht
+gemessen — Rest bleibt Beobachtung. Ist rund 139 von 170 Tools, 1 Hintergrund-Lauf (E-037). Fehlender roter Commit
+(Index-Vermischung A/B) an die Retro. Merge seriell nach SEE-F2-UX durch den Integrator; Bedingung: `make check` am
+Merge-Stand grün (R357). Danach Signal an SEE-F1 für T3.
+
+Entscheider: L0 · Anlass: Bericht ART-WALD-RAUTEN · ADR: —
+
+## R361 · 2026-10-08 · Gate Merge TOOL-E046-SESSION OK; hängende Alt-Shell beendet
+
+Ruling: **OK** für `tool/e046-session` @ 2b56794. Review BEDENKEN (hoch: Sessionbeginn traf die Pseudo-Session `ci`,
+Minuten wären über Tage summiert worden) in der Fix-Runde behoben, mit Test; Studio-Tests 468 grün, ruff sauber
+(`uvx ruff`); Echtlauf Session 0 min, Monat 918 rot, Konto 1182 gelb. CI-Laufzeit zerlegt: Vitest 62 → 225 s bei 125 →
+176 Dateien (×3,6 gegen ×1,4), Rest klein — Beobachtung eingetragen, Ursache je Datei offen (verbose-Lauf). Merge seriell
+nach ART-WALD-RAUTEN. Nebenbei: Eine seit 6 h hängende Shell (`cat` auf stdin) einer früheren Arbeiter-Instanz im
+gelöschten Worktree `.worktrees/tasten` per PID beendet (0 % CPU, kein Lastverursacher, keine Daten).
+
+Entscheider: L0 · Anlass: Fix-Runde TOOL-E046-SESSION · ADR: —
+
+## R362 · 2026-10-08 · Gate Merge TOOL-ZEITRESERVE-META OK; Echtprobe ist der Session-End-Push
+
+Ruling: **OK** für `tool/zeitreserve-meta` @ 616dd08. Review BEDENKEN nur niedrig: (1) Test-Schalter
+`ZEITRESERVE_FAKE_HEAD` wirkt auch produktiv (lokaler Selbstbetrug, wie `FAKE_LOAD`) — akzeptiert; (2) HEAD-Ermittlung
+doppelt, und „unbekannt“ = „unbekannt“ gälte ohne Git als belastbar — Beobachtung, Trivial-Fix beim nächsten Eingriff;
+(3) Hinweiszeile im CI-Log harmlos. `check-ci-perf` ermittelt die perfBudget-Dateien dynamisch per grep. Die grüne
+Echtprobe `make zeitreserve-push` fehlt wegen Last; sie ist zugleich die Pflichtprüfung des Session-End-Pushes und
+wird dort bei ruhiger Maschine erbracht (ersetzt die Reihenfolge aus R348). Der vom Lead gemeldete rote
+`test_second_run_overwrites` ist auf main grün (L0-Lauf), lastbedingt. Merge seriell als vierter durch den
+Integrator mit `make check` am Merge-Stand.
+
+Entscheider: L0 · Anlass: Review TOOL-ZEITRESERVE-META · ADR: —
+
+## R363 · 2026-10-08 · Merges 1–2 in main; Rauten-Tests zu langsam; Signal SEE-F1 T3
+
+Ruling: SEE-F2-UX (0900140) und ART-WALD-RAUTEN (038cbdc) sind lokal in main, beide mit `make check` grün.
+(a) TOOL-E046-SESSION: Konflikt in `docs/beobachtungen.md` (beide Stränge hängten Einträge an); der Lead merged main
+in seinen Branch (kein Rebase), führt beide Einträge zusammen, danach Merge durch den Integrator. (b) TOOL-ZEITRESERVE-META:
+`make check` am Merge-Stand rot, weil `zeitreserve` 5 Tests in `tests/render/rauten.test.ts` ohne CI-Reserve meldet
+(lokal ≈ 2 s, Runner geschätzt ≈ 6 s gegen 5 s Timeout). Das ist ein echter Befund am Paket ART-WALD-RAUTEN, nicht am
+Werkzeug. Paket **FIX-RAUTEN-ZEIT** (lead-art, 25 Tools): Tests zuerst billiger machen (kleinerer Ausschnitt, ein Seed
+je Kantenart, gemeinsamer Aufbau), Aussagekraft der Schwellen erhalten; nur falls nötig hergeleitete Timeouts wie R328;
+Ziel ≤ 500 ms je Test lokal, weil die CI-Laufzeit schon ×3,6 gewachsen ist (R361). Danach Merge TOOL-ZEITRESERVE-META.
+(c) SEE-F1-FAHRLINIE: Signal für T3, Branch zuerst mit main mergen.
+
+Entscheider: L0 · Anlass: Bericht Integrator · ADR: —

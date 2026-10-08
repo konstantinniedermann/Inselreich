@@ -1060,8 +1060,82 @@ function landColor(
  * Gewichte (Indikator^TYPE_BLEND_POW), mit denen `paintPixels` die Farben mischt. Für Prüfungen (Waldboden-Hof).
  */
 export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
-  const gx = (fx * TEX) / RASTER,
-    gy = (fy * TEX) / RASTER;
+  return landSharesAtNode(g, (fx * TEX) / RASTER, (fy * TEX) / RASTER);
+}
+
+/** Pixelfeine Verwerfung der Abtastposition (Texturpixel): Wellenlänge und Amplitude, Salze 9100/9101 (in der Kopfliste von `decor.ts` vermerkt). */
+const WARP_WAVE = 3;
+const WARP_AMP = 3;
+const WARP_SALT = 9100;
+
+/**
+ * Abtastposition (Gitterknoten) eines Pixels. Gemeinsame Quelle von `paintPixels` und der Rauten-Metrik
+ * (`tests/render/rauten.test.ts`): `qx/qy` = Pixelmitte in Texturpixeln (Faktor 1), Ergebnis in `out` = [gx, gy].
+ */
+export function sampleNode(g: TerrainGrid, qx: number, qy: number, out: number[]): number[] {
+  const t = warpTable(g.seed);
+  const u = qx * (1 / WARP_WAVE),
+    v = qy * (1 / WARP_WAVE);
+  const u0 = Math.floor(u),
+    v0 = Math.floor(v);
+  const fu = u - u0,
+    fv = v - v0;
+  const x0 = u0 & WARP_MASK,
+    x1 = (u0 + 1) & WARP_MASK,
+    r0 = (v0 & WARP_MASK) << WARP_BITS,
+    r1 = ((v0 + 1) & WARP_MASK) << WARP_BITS;
+  const i00 = (r0 | x0) << 1,
+    i10 = (r0 | x1) << 1,
+    i01 = (r1 | x0) << 1,
+    i11 = (r1 | x1) << 1;
+  const w00 = (1 - fu) * (1 - fv),
+    w10 = fu * (1 - fv),
+    w01 = (1 - fu) * fv,
+    w11 = fu * fv;
+  out[0] =
+    (qx + (t[i00]! * w00 + t[i10]! * w10 + t[i01]! * w01 + t[i11]! * w11) * WARP_AMP) / RASTER;
+  out[1] =
+    (qy +
+      (t[i00 + 1]! * w00 + t[i10 + 1]! * w10 + t[i01 + 1]! * w01 + t[i11 + 1]! * w11) * WARP_AMP) /
+    RASTER;
+  return out;
+}
+
+const WARP_BITS = 6;
+const WARP_MASK = (1 << WARP_BITS) - 1;
+let warpCache: { seed: number; t: Float32Array } | null = null; // höchstens ein Eintrag (Obergrenze 1)
+/** Rauschtabelle (x, y je Ecke in −1…1) des Seeds; periodisch über 64 Ecken, aus `hash2` abgeleitet. */
+function warpTable(seed: number): Float32Array {
+  if (warpCache && warpCache.seed === seed) return warpCache.t;
+  const n = 1 << WARP_BITS;
+  const t = new Float32Array(n * n * 2);
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++) {
+      t[(y * n + x) * 2] = hash2(seed + WARP_SALT, x, y) * 2 - 1;
+      t[(y * n + x) * 2 + 1] = hash2(seed + WARP_SALT + 1, x, y) * 2 - 1;
+    }
+  warpCache = { seed, t };
+  return t;
+}
+
+/** Dünen-Tonwert (vor der Stufung) am Gitterpunkt (gx, gy) in Knoten, bilinear wie in `duneContrast`. */
+export function duneToneAtNode(g: TerrainGrid, gx: number, gy: number): number {
+  const i = Math.min(Math.max(Math.floor(gx), 0), g.nx - 2),
+    j = Math.min(Math.max(Math.floor(gy), 0), g.ny - 2);
+  const tx = Math.min(Math.max(gx - i, 0), 1),
+    ty = Math.min(Math.max(gy - j, 0), 1);
+  const a = j * g.nx + i,
+    f = g.dune;
+  return (
+    f[a]! * (1 - tx) * (1 - ty) +
+    f[a + 1]! * tx * (1 - ty) +
+    f[a + g.nx]! * (1 - tx) * ty +
+    f[a + g.nx + 1]! * tx * ty
+  );
+}
+
+/** Anteile je Land-Typ am Gitterpunkt (gx, gy) in Knoten; Kern von `landShares` und der Rauten-Metrik. */
+export function landSharesAtNode(g: TerrainGrid, gx: number, gy: number): number[] {
   const i = Math.min(Math.max(Math.floor(gx), 0), g.nx - 2),
     j = Math.min(Math.max(Math.floor(gy), 0), g.ny - 2);
   const tx = Math.min(Math.max(gx - i, 0), 1),
@@ -1176,29 +1250,33 @@ export function paintPixels(
   const tilesW = ((nx - 1) * RASTER) / TEX,
     tilesH = ((ny - 1) * RASTER) / TEX;
   const pxTile = 1 / (scale * TEX);
+  const node = [0, 0];
   for (let py = 0; py < h; py++) {
-    const gy = (py0 + py + 0.5) / scale / RASTER;
-    const j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
-    const ty = Math.min(Math.max(gy - j, 0), 1);
     for (let px = 0; px < w; px++) {
-      const gx = (px0 + px + 0.5) / scale / RASTER;
-      const i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
-      const tx = Math.min(Math.max(gx - i, 0), 1);
-      const a = j * nx + i,
+      const qx = (px0 + px + 0.5) / scale,
+        qy = (py0 + py + 0.5) / scale;
+      // Wasser/Land entscheidet die unverschobene Position (Küste bleibt, wo Schaum und Objekte sie erwarten)
+      let gx = qx / RASTER,
+        gy = qy / RASTER;
+      let j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+      let ty = Math.min(Math.max(gy - j, 0), 1);
+      let i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
+      let tx = Math.min(Math.max(gx - i, 0), 1);
+      let a = j * nx + i,
         b = a + 1,
         c = a + nx,
         d = c + 1;
-      const w00 = (1 - tx) * (1 - ty),
+      let w00 = (1 - tx) * (1 - ty),
         w10 = tx * (1 - ty),
         w01 = (1 - tx) * ty,
         w11 = tx * ty;
       const lerp = (f: Float32Array): number =>
         f[a]! * w00 + f[b]! * w10 + f[c]! * w01 + f[d]! * w11;
-      const c0 = cls[a]!;
+      let c0 = cls[a]!;
       // reine Zelle: vier gleiche Klassen, und an Land trägt jeder Knoten nur seinen Typ (Indikator 1)
-      const uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
-      const own = c0 === 0 ? null : ind[c0 - 1]!;
-      const pure =
+      let uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
+      let own = c0 === 0 ? null : ind[c0 - 1]!;
+      let pure =
         uniform && (own === null || (own[a] === 1 && own[b] === 1 && own[c] === 1 && own[d] === 1));
       const water = uniform ? c0 === 0 : lerp(sharp) <= 0;
       if (water) {
@@ -1207,6 +1285,41 @@ export function paintPixels(
         const rim = rimWeight((px0 + px + 0.5) * pxTile, (py0 + py + 0.5) * pxTile, tilesW, tilesH);
         if (rim < 1) mix3(C.deep, col, rim, col);
       } else {
+        // ART-WALD-RAUTEN: Lesen aller Land-Felder an der pixelfein verworfenen Position (Typ-, Saum-, Ton- und Dünenfeld)
+        sampleNode(g, qx, qy, node);
+        gx = node[0]!;
+        gy = node[1]!;
+        j = Math.min(Math.max(Math.floor(gy), 0), ny - 2);
+        i = Math.min(Math.max(Math.floor(gx), 0), nx - 2);
+        const wa = j * nx + i;
+        if (
+          wa !== a &&
+          !(cls[wa] === 0 && cls[wa + 1] === 0 && cls[wa + nx] === 0 && cls[wa + nx + 1] === 0)
+        ) {
+          ty = Math.min(Math.max(gy - j, 0), 1);
+          tx = Math.min(Math.max(gx - i, 0), 1);
+          a = wa;
+          b = a + 1;
+          c = a + nx;
+          d = c + 1;
+          w00 = (1 - tx) * (1 - ty);
+          w10 = tx * (1 - ty);
+          w01 = (1 - tx) * ty;
+          w11 = tx * ty;
+          c0 = cls[a]!;
+          uniform = c0 === cls[b] && c0 === cls[c] && c0 === cls[d];
+          own = c0 === 0 ? null : ind[c0 - 1]!;
+          pure =
+            uniform &&
+            (own === null || (own[a] === 1 && own[b] === 1 && own[c] === 1 && own[d] === 1));
+        } else if (wa === a) {
+          ty = Math.min(Math.max(gy - j, 0), 1);
+          tx = Math.min(Math.max(gx - i, 0), 1);
+          w00 = (1 - tx) * (1 - ty);
+          w10 = tx * (1 - ty);
+          w01 = (1 - tx) * ty;
+          w11 = tx * ty;
+        }
         const grain = hash2(grainSeed, px0 + px, py0 + py) - 0.5;
         let wMt: number,
           wFlur: number,
@@ -1387,6 +1500,9 @@ interface TerrainMeta {
   buildMs: number;
 }
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
+
+/** Kontext-Optionen der Viertel-Kopie: Fernwasser liest sie per `getImageData` zurück (sonst Chrome-Warnung). Nur dort, die Bodenebene bleibt GPU-fähig. */
+export const READBACK_CTX: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 /** Die Ebene ist fertig gemalt (Meta wird erst nach dem letzten Pixelschritt gesetzt). */
 export const hasTerrainMeta = (layer: HTMLCanvasElement): boolean => meta.has(layer);
@@ -1780,7 +1896,7 @@ export function updateTerrainLayer(
       hc.drawImage(layer, px, py, pw, ph, px / 2, py / 2, pw / 2, ph / 2);
     }
     if (m.quarter) {
-      const qc = m.quarter.getContext('2d');
+      const qc = m.quarter.getContext('2d', READBACK_CTX);
       if (qc) {
         qc.imageSmoothingQuality = 'high';
         qc.clearRect(px / 4, py / 4, pw / 4, ph / 4);
@@ -1905,7 +2021,7 @@ export function repaintFarWater(
   st: { dy: number; dh: number; dx?: number; dw?: number },
 ): void {
   const m = meta.get(layer);
-  const ctx = quarter.getContext('2d');
+  const ctx = quarter.getContext('2d', READBACK_CTX);
   if (!m || !ctx || st.dh <= 0) return;
   const e = farCoastOf(layer);
   if (!e) return;
@@ -1959,7 +2075,7 @@ function paintQuarterStrip(
   st: { sy: number; sh: number; dy: number; dh: number },
   repaint = true,
 ): void {
-  const ctx = quarter.getContext('2d');
+  const ctx = quarter.getContext('2d', READBACK_CTX);
   if (!ctx) return;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);

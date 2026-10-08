@@ -7,7 +7,7 @@ import { islandName } from '../sim/islands';
 import { buyShip, freeShipAtHome, retireShip } from '../sim/ships';
 import type { StepReport } from '../sim/tick';
 import type { GoodId, Route, RouteGood, Ship, World } from '../sim/types';
-import { goodUnlocked } from '../sim/unlocks';
+import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { HOME } from '../sim/world';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
@@ -147,7 +147,7 @@ const routeSig = (r: Route): string =>
     .map((g) => `${g.good}${g.reserve}`)
     .join(',')}`;
 
-/** Struktur des Abschnitts: ändert sich nur, wenn das DOM neu gebaut werden muss (nicht mit `left` oder Ladung). */
+/** Struktur des Abschnitts (Schiffe, Ziele, freigeschaltete Güter): ändert sich nur, wenn das DOM neu gebaut werden muss (nicht mit `left` oder Ladung). */
 export function shipsKey(world: World, island: number): string {
   const rows = world.ships
     .filter((s) => related(world, s, island))
@@ -157,7 +157,8 @@ export function shipsKey(world: World, island: number): string {
         `${s.id}${s.route === null ? '-' : routeSig(s.route)}${s.to === null ? 'd' : 'f'}${s.homing ? 'h' : ''}`,
     );
   const targets = routeTargets(world, island).map((t) => t.island);
-  return `${rows.join('|')}#${targets.join(',')}#${freeShipAtHome(world)?.id ?? '-'}`;
+  const goods = GOOD_IDS.filter((g) => goodUnlocked(world, g)).join(',');
+  return `${rows.join('|')}#${targets.join(',')}#${freeShipAtHome(world)?.id ?? '-'}#${goods}`;
 }
 
 function shipParts(world: World, ship: Ship): string[] {
@@ -528,4 +529,10 @@ export function highlightShip(panel: HTMLElement, id: number | null): void {
   applyHighlight(box, st);
   if (id !== null)
     box.querySelector<HTMLElement>(`[data-ship="${id}"]`)?.scrollIntoView?.({ block: 'nearest' });
+}
+
+/** Heimatkontor-Klick: Schiffe zeigen (Kontor-Panel), sobald Seefahrt frei und ein Schiff da oder kaufbar ist; sonst Handel. */
+export function homeKontorPanel(world: World): 'inspect' | 'trade' {
+  if (functionLock(world, 'seafaring') !== null) return 'trade';
+  return world.ships.length > 0 || buyShipView(world).reason === null ? 'inspect' : 'trade';
 }
