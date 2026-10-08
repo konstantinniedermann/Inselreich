@@ -1063,7 +1063,7 @@ export function landShares(g: TerrainGrid, fx: number, fy: number): number[] {
   return landSharesAtNode(g, (fx * TEX) / RASTER, (fy * TEX) / RASTER);
 }
 
-/** Pixelfeine Verwerfung der Abtastposition (Texturpixel): Wellenlänge und Amplitude, Salz lokal (nicht in `decor.ts`). */
+/** Pixelfeine Verwerfung der Abtastposition (Texturpixel): Wellenlänge und Amplitude, Salze 9100/9101 (in der Kopfliste von `decor.ts` vermerkt). */
 const WARP_WAVE = 3;
 const WARP_AMP = 3;
 const WARP_SALT = 9100;
