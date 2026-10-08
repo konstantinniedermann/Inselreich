@@ -660,6 +660,7 @@ function seaward(p: StaticPlan, w: number, h: number, x: number, y: number): num
  * Palmen (D1): einzeln oder in Gruppen zu 2–3 auf trockenem Sand mit Wasserabstand ≥ 2 (≥ 1 Kachel Abstand zum Saum). Die
  * Küstenvariante bestimmt die Zahl der Gruppen: Palmenküste 3–10, Kiefernküste höchstens eine, Dünenküste keine. Statisch (D1):
  * nur Gelände, Seed und Küstenvariante; Belegung blendet in `stampPlacements` aus. Variante = Form · 4 + Richtung zur See.
+ * Auf der Kiefernküste kommen zusätzlich 2–5 Strandkiefern (`planShorePines`, Salz 598) in dieselbe Liste.
  */
 function planPalms(p: StaticPlan, w: number, h: number): void {
   const seed = p.seed;
