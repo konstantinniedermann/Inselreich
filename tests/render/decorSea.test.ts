@@ -13,7 +13,7 @@ import {
   type StampKind,
 } from '../../src/render/decor';
 import { seaTintFor, tintWater } from '../../src/render/seaFields';
-import { seaFoamVisible } from '../../src/render/water';
+import { drawWaves, foamShown, seaFoamVisible } from '../../src/render/water';
 import type { Building } from '../../src/sim/types';
 import {
   DECOR_MIN_ZOOM,
@@ -432,4 +432,59 @@ describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
     }
     expect(tinted).toBeGreaterThan(5000);
   }, 15_000);
+});
+
+describe('T04 Meeresfels bei Zoom 0,5 und Schaum nur an Objekten', () => {
+  const sil = (v: number, zoom: number) => {
+    const pts = paint('seaRock', v).log.allPoints.map((p) => ({ x: p.x, y: p.y }));
+    // Schaumring (nur wenn bei diesem Zoom gezeichnet), projiziert um den Stempelfuss
+    const w = createWorld(3);
+    const ring = seaFoamVisible(w).rings.find((r) => r.kind === 'rock');
+    if (ring && foamShown('rock', zoom))
+      for (const pc of ring.pieces)
+        for (let k = 0; k <= 6; k++) {
+          const a = pc.a0 + ((pc.a1 - pc.a0) * k) / 6;
+          const dx = Math.cos(a) * pc.r,
+            dy = Math.sin(a) * pc.r;
+          pts.push({ x: ((dx - dy) * ISO_W) / 2, y: ((dx + dy) * ISO_H) / 2 });
+        }
+    const xs = pts.map((p) => p.x),
+      ys = pts.map((p) => p.y);
+    return (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
+  };
+
+  it('AK-T04a Meeresfels bei Zoom 0,5: Breite : Höhe der Silhouette inkl. Schaumring ≤ 1,3 : 1 (alle 8 Varianten)', () => {
+    for (let v = 0; v < 8; v++) expect(sil(v, 0.5), `Variante ${v}`).toBeLessThanOrEqual(1.3);
+  });
+
+  it('AK-T04a Schaum nur an Fels, Wrack, Eiland: jeder Bogen sitzt auf einem Objekt des Plans, Fels-Schaum erst ab Zoom 0,7', () => {
+    for (const seed of [1, 2, 3, 7]) {
+      const w = createWorld(seed);
+      const objs = seaFoamVisible(w).rings.map((r) => `${r.x},${r.y}`);
+      for (const zoom of [0.25, 0.5, 1]) {
+        const f = fakeCtx();
+        const centers: string[] = [];
+        const arc = f.log.arc.bind(f.log);
+        f.log.arc = (x: number, y: number, r: number) => {
+          centers.push(`${x},${y}`);
+          arc(x, y, r);
+        };
+        const isl = home(w);
+        drawWaves(
+          f.ctx,
+          w,
+          { x0: 0, y0: 0, x1: isl.width, y1: isl.height },
+          0,
+          undefined,
+          false,
+          true,
+          zoom,
+        );
+        for (const c of centers) expect(objs, `seed ${seed} zoom ${zoom}`).toContain(c);
+        if (zoom < 0.7)
+          for (const r of seaFoamVisible(w).rings.filter((q) => q.kind === 'rock'))
+            expect(centers).not.toContain(`${r.x},${r.y}`);
+      }
+    }
+  });
 });

@@ -522,9 +522,9 @@ export interface Heap {
 export function rockHeaps(v: number): Heap[] {
   const m = v >= 3 ? -1 : 1;
   const all: Heap[] = [
-    { cx: 0, w: 8.5, h: 13 },
-    { cx: 11 * m, w: 6, h: 8.5 },
-    { cx: -10 * m, w: 5, h: 6.5 },
+    { cx: 0, w: 8, h: 21 },
+    { cx: 9 * m, w: 5.5, h: 13 },
+    { cx: -8 * m, w: 4.5, h: 10 },
   ];
   return all.slice(0, (v % 3) + 1);
 }

@@ -30,6 +30,7 @@ import { meadowWarmth } from './groundDecor';
 //  D4 Fremdinseln: gilt für jeden Ansicht-Seed; Stempel zeigt der Aufrufer (`iso.ts`) nur auf der Heimat.
 //  D5 Salze 540–559 (L4) und 560–569 (L5, Meer und Palmen: 560 Palmen, 566 Wrack, 567 Meeresfels und Felsnadel, 568 Felseiland,
 //     569 Wasserflächen Sandbank/Riff/Tang); Zufall nur über `hash2`/`valueNoise`.
+//     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
 //     NICHT über `RARE_POOL`/`RARE_CAP` (Land-Orte), sondern über eigene Lose; L8 zählt sie fürs Seltenheitsbudget dazu.
