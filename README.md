@@ -74,7 +74,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 - **Ferne Inseln:** Neben deiner Insel liegen zwei weitere, die Möweninsel und die Felsbucht. Fährst du mit dem
   Mauszeiger über eine von ihnen, nennt eine Karte Name, Grösse, Merkmale und Fahrzeit. Bauen kannst du dort noch nicht;
   du siehst sie nur.
-- **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen, im
+- **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen (die Leertaste nur kurz antippen pausiert dagegen), im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen (ab 4 Pixel Bewegung schwenkt die Karte, es wird
   nichts ausgewählt) — oder WASD/Pfeiltasten; diese wirken auch, wenn nach einem Klick ein Knopf den
   Fokus hat (nicht in Eingabefeldern und nicht bei offener Karte).
@@ -123,27 +123,30 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 
 ### Tastatur und Maus
 
-| Eingabe                | Wirkung                                                             |
-| ---------------------- | ------------------------------------------------------------------- |
-| WASD / Pfeiltasten     | Karte verschieben                                                   |
-| Leertaste (halten)     | Linke Maustaste verschiebt die Karte                                |
-| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu (`Esc` auch bei Knopffokus) |
-| Mausrad                | Zoomen                                                              |
-| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                   |
-| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                             |
-| `R` / `X`              | Weg / Abriss                                                        |
-| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                            |
-| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                  |
-| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher           |
-| `E`                    | Feuerwache                                                          |
-| `I`                    | Amtsstube (erst ab U3, höchstens eine)                              |
-| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                     |
-| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste              |
-| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                       |
-| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                    |
-| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)      |
+| Eingabe                | Wirkung                                                                   |
+| ---------------------- | ------------------------------------------------------------------------- |
+| WASD / Pfeiltasten     | Karte verschieben                                                         |
+| Leertaste antippen     | Pause an/aus (wie `P`)                                                    |
+| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                     |
+| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu (`Esc` auch bei Knopffokus)       |
+| Mausrad                | Zoomen                                                                    |
+| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                         |
+| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung) |
+| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)              |
+| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                   |
+| `R` / `X`              | Weg / Abriss                                                              |
+| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                  |
+| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                        |
+| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                 |
+| `E`                    | Feuerwache                                                                |
+| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                    |
+| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                           |
+| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                    |
+| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                             |
+| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                          |
+| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)            |
 
-Hotkeys wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Dieselbe
+Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
 nennt die Taste; alle Kürzel stehen auch im Menü unter «Tastenkürzel». Bei offener Karte (Start, Menü,
 Einstellungen) sind alle Kürzel stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
@@ -265,7 +268,7 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Info-Panel:** zeigt Zustand (z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor
   angebunden»), Stufe («Stufe 1» bis «Stufe 3»), Auslastung, Produktion, Fortschritt und Unterhalt. Ab der
   Freischaltung des Ausbaus steht dort der Abschnitt «Ausbau zu Stufe n» mit Kosten, Gebühr, Vorschau auf
-  Ausstoss und Unterhalt, dem Knopf «Ausbauen» und, falls es nicht geht, dem Grund. Das Mouse-over nennt Stufe
+  Ausstoss und Unterhalt, dem Knopf «Ausbauen» (Tastenkürzel `Umschalt` + `U`) und, falls es nicht geht, dem Grund. Der Knopf «Gleiches bauen» wählt den Gebäudetyp als Bauwerkzeug (wie `Cmd`/`Strg` + Klick; nicht beim Kontor). Das Mouse-over nennt Stufe
   und Auslastung.
 
 ### Produktionsketten

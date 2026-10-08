@@ -26,6 +26,7 @@ import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { iconChip } from './messages';
 import { tierPath } from './hud';
+import { toolForBuilding } from './pipette';
 import { formatGameTime, perMinute } from './time';
 import { needsConnection } from '../sim/roads';
 import { connectView } from './connect';
@@ -40,7 +41,18 @@ export {
   stateText,
 } from './texts';
 
+export const BUILD_SAME_TITLE =
+  'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)';
+export const UPGRADE_TITLE = 'Ausbauen (Umschalt+U)';
+
+/** Knopf «Gleiches bauen» nur für Gebäude mit Bauwerkzeug (nicht beide Kontore). */
+export function buildSameShown(defId: BuildingDefId): boolean {
+  return toolForBuilding(defId) !== null;
+}
+
 export interface InspectActions {
+  /** «Gleiches bauen»: Gebäudetyp als Bauwerkzeug wählen (wie die Pipette). */
+  buildSame(defId: BuildingDefId): void;
   demolish(id: number): void;
   openTrade(): void;
   /** Betrieb um eine Stufe ausbauen; die Ablehnung zeigt der Aufrufer. */
@@ -136,16 +148,33 @@ export function upgradeReasonTexts(world: World, b: Building): string[] {
   );
 }
 
-function addButton(parent: HTMLElement, label: string, onClick: () => void, field?: string): void {
+function addButton(
+  parent: HTMLElement,
+  label: string,
+  onClick: () => void,
+  field?: string,
+  title?: string,
+): void {
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.textContent = label;
   if (field) btn.dataset.field = field;
+  if (title) btn.title = title;
   btn.addEventListener('click', () => {
     btn.blur();
     onClick();
   });
   parent.appendChild(btn);
+}
+
+function addBuildSame(parent: HTMLElement, defId: BuildingDefId, actions: InspectActions): void {
+  addButton(
+    parent,
+    'Gleiches bauen',
+    () => actions.buildSame(defId),
+    'build-same',
+    BUILD_SAME_TITLE,
+  );
 }
 
 /** Aktionen je Panel-Element (für das Nachführen der Vorschau im Update). */
@@ -547,6 +576,7 @@ export function renderInspect(
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
     addLine(panel, '', 'fire-protection');
+    if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   } else {
     if (b.house) {
@@ -574,6 +604,7 @@ export function renderInspect(
     }
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
+    if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
   }
   panel.appendChild(buttons);
@@ -656,7 +687,7 @@ function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
   addLine(box, '', 'level-fee');
   addLine(box, '', 'level-preview');
   addList(box, 'reasons', 'level-reasons');
-  addButton(box, 'Ausbauen', onUpgrade, 'upgrade');
+  addButton(box, 'Ausbauen', onUpgrade, 'upgrade', UPGRADE_TITLE);
   panel.appendChild(box);
 }
 

@@ -11,12 +11,14 @@ import type { GameState } from './app';
 import { hotkeyAction, type HotkeyAction } from './hotkeys';
 import { isModalOpen } from './modal';
 import { pickTarget, type IslandTile } from './islandTools';
+import { createSpaceTap } from './spaceTap';
 
 export type InputAction =
   | { type: 'tile'; island: number; x: number; y: number; dragging: boolean }
   | { type: 'ship'; id: number }
   | { type: 'cancel' }
   | { type: 'hotkey'; action: HotkeyAction }
+  | { type: 'pipette'; island: number; x: number; y: number }
   | { type: 'dragEnd' };
 
 /** Tastatur-Pan in Bildschirm-Pixeln je Sekunde (= 16 px je Frame bei 60 fps). */
@@ -32,6 +34,30 @@ export function panKeyAllowed(target: KeyTarget | null, modalOpen: boolean): boo
   if (target === null) return true;
   if (target.isContentEditable === true) return false;
   return !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
+/**
+ * Rolle der Leertaste: `button` = Knopf-Aktivierung (bleibt), `ignore` = Eingabefeld, offene Karte
+ * oder Strg/Cmd/Alt, `map` = Karte (Schwenken, Antippen = Pause).
+ */
+export function spaceKeyRole(
+  target: KeyTarget | null,
+  modalOpen: boolean,
+  mods: { ctrl: boolean; meta: boolean; alt: boolean },
+): 'button' | 'ignore' | 'map' {
+  if (target?.tagName === 'BUTTON') return 'button';
+  if (mods.ctrl || mods.meta || mods.alt) return 'ignore';
+  return panKeyAllowed(target, modalOpen) ? 'map' : 'ignore';
+}
+
+/** Pipetten-Klick: linke Taste mit Strg/Cmd, nicht Touch, Leertaste (Pan) nicht gehalten. */
+export function isPipetteClick(
+  button: number,
+  mods: { ctrl: boolean; meta: boolean },
+  spaceDown: boolean,
+  touch: boolean,
+): boolean {
+  return button === 0 && (mods.ctrl || mods.meta) && !spaceDown && !touch;
 }
 
 /** Zieht der Zeiger weiter als die Schwelle (euklidisch, CSS-px) vom Startpunkt weg? */
@@ -104,6 +130,7 @@ export function bindInput(
 ): InputBinding {
   const keys = new Set<string>();
   let spaceDown = false;
+  const spaceTap = createSpaceTap();
   let pointer: { sx: number; sy: number } | null = null;
   let client: { x: number; y: number } | null = null;
   let drag: {
@@ -217,6 +244,12 @@ export function bindInput(
     const wantsPan = e.button === 1 || (e.button === 0 && spaceDown);
     if (e.button !== 0 && e.button !== 1) return;
     e.preventDefault();
+    if (isPipetteClick(e.button, { ctrl: e.ctrlKey, meta: e.metaKey }, spaceDown, isTouch)) {
+      // Pipette (B-6): kein Zieh-Zustand, nichts gebaut oder gewählt; Pan hat Vorrang (oben via spaceDown)
+      const t = pickTarget(state.world, state.cam, { kind: 'select' }, p.sx, p.sy);
+      if (t) onAction({ type: 'pipette', island: t.island, x: t.x, y: t.y });
+      return;
+    }
     canvas.setPointerCapture(e.pointerId);
     drag = {
       button: e.button,
@@ -422,9 +455,14 @@ export function bindInput(
         ? { tagName: e.target.tagName, isContentEditable: e.target.isContentEditable }
         : null;
     const modal = isModalOpen();
+    if (
+      e.key === ' ' &&
+      spaceKeyRole(target, modal, { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }) === 'ignore'
+    )
+      spaceTap.blur(); // A-9: Erkennung verwerfen
     const hot = hotkeyAction(
       e.key,
-      { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey },
+      { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey },
       isTextField(e.target) || modal,
       functionLock(state.world, 'seafaring') === null,
     );
@@ -440,9 +478,16 @@ export function bindInput(
       onAction({ type: 'cancel' });
     } else if (k === ' ') {
       // Auf Knöpfen bleibt die Leertaste deren Aktivierung (R121 Punkt 3)
-      if (target?.tagName === 'BUTTON') return;
+      const role = spaceKeyRole(target, modal, {
+        ctrl: e.ctrlKey,
+        meta: e.metaKey,
+        alt: e.altKey,
+      });
+      if (role === 'button') return;
       spaceDown = true;
       e.preventDefault();
+      spaceTap.keyDown(e.timeStamp, e.repeat);
+      if (drag !== null) spaceTap.pointerDown(); // A-6: keine Pause mitten in einer Zeigeraktion
     } else if (PAN_KEYS.has(k)) {
       keys.add(k);
       e.preventDefault();
@@ -451,12 +496,31 @@ export function bindInput(
   const onKeyUp = (e: KeyboardEvent): void => {
     // Immer löschen, damit nichts hängen bleibt (z. B. Fokuswechsel während der Taste)
     const k = e.key.toLowerCase();
-    if (k === ' ') spaceDown = false;
+    if (k === ' ') {
+      spaceDown = false;
+      const target: KeyTarget | null =
+        e.target instanceof HTMLElement
+          ? { tagName: e.target.tagName, isContentEditable: e.target.isContentEditable }
+          : null;
+      const role = spaceKeyRole(target, isModalOpen(), {
+        ctrl: e.ctrlKey,
+        meta: e.metaKey,
+        alt: e.altKey,
+      });
+      if (role === 'map') {
+        if (spaceTap.keyUp(e.timeStamp) === 'toggle')
+          onAction({ type: 'hotkey', action: { kind: 'pause' } });
+      } else {
+        spaceTap.blur();
+      }
+    }
     keys.delete(k);
   };
+  const onWindowPointerDown = (): void => spaceTap.pointerDown();
   const onBlur = (): void => {
     keys.clear();
     spaceDown = false;
+    spaceTap.blur();
   };
 
   canvas.addEventListener('contextmenu', onContextMenu);
@@ -466,6 +530,7 @@ export function bindInput(
   canvas.addEventListener('pointercancel', onPointerCancel);
   canvas.addEventListener('pointerleave', onPointerLeave);
   canvas.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('pointerdown', onWindowPointerDown, true);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('blur', onBlur);
@@ -478,6 +543,7 @@ export function bindInput(
     canvas.removeEventListener('pointercancel', onPointerCancel);
     canvas.removeEventListener('pointerleave', onPointerLeave);
     canvas.removeEventListener('wheel', onWheel);
+    window.removeEventListener('pointerdown', onWindowPointerDown, true);
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', onBlur);

@@ -4,8 +4,10 @@ import {
   exceedsDrag,
   isClick,
   isDragPaintTool,
+  isPipetteClick,
   panDelta,
   panKeyAllowed,
+  spaceKeyRole,
 } from '../../src/ui/input';
 
 describe('panDelta (Q2, AK-U1a-02)', () => {
@@ -68,5 +70,33 @@ describe('M10 Zieh-Werkzeuge (Kann K5)', () => {
     expect(isDragPaintTool({ kind: 'demolish' })).toBe(false);
     expect(isDragPaintTool({ kind: 'select' })).toBe(false);
     expect(isDragPaintTool({ kind: 'build', defId: 'house' })).toBe(false);
+  });
+});
+
+describe('TASTEN-KOMFORT Eingabe-Helfer', () => {
+  const none = { ctrl: false, meta: false, alt: false };
+
+  it('AK-TK-08 spaceKeyRole', () => {
+    expect(spaceKeyRole({ tagName: 'BUTTON' }, false, none)).toBe('button');
+    for (const tagName of ['INPUT', 'TEXTAREA', 'SELECT'])
+      expect(spaceKeyRole({ tagName }, false, none)).toBe('ignore');
+    expect(spaceKeyRole({ tagName: 'DIV', isContentEditable: true }, false, none)).toBe('ignore');
+    expect(spaceKeyRole({ tagName: 'CANVAS' }, true, none)).toBe('ignore');
+    for (const m of ['ctrl', 'meta', 'alt'])
+      expect(spaceKeyRole({ tagName: 'CANVAS' }, false, { ...none, [m]: true })).toBe('ignore');
+    expect(spaceKeyRole(null, false, none)).toBe('map');
+    expect(spaceKeyRole({ tagName: 'CANVAS' }, false, none)).toBe('map');
+    expect(spaceKeyRole({ tagName: 'DIV' }, false, none)).toBe('map');
+  });
+
+  it('AK-TK-10 isPipetteClick', () => {
+    const no = { ctrl: false, meta: false };
+    expect(isPipetteClick(0, { ...no, ctrl: true }, false, false)).toBe(true);
+    expect(isPipetteClick(0, { ...no, meta: true }, false, false)).toBe(true);
+    expect(isPipetteClick(0, no, false, false)).toBe(false);
+    expect(isPipetteClick(1, { ...no, ctrl: true }, false, false)).toBe(false);
+    expect(isPipetteClick(2, { ...no, ctrl: true }, false, false)).toBe(false);
+    expect(isPipetteClick(0, { ...no, ctrl: true }, true, false)).toBe(false);
+    expect(isPipetteClick(0, { ...no, ctrl: true }, false, true)).toBe(false);
   });
 });

@@ -12,7 +12,9 @@ import {
   hotkeyLabel,
   hotkeyList,
   nextOpenCategory,
+  NO_SELECTION_TEXT,
   toolName,
+  upgradeTarget,
   withSpeed,
 } from '../../src/ui/hotkeys';
 
@@ -312,5 +314,71 @@ describe('M12 E2 UI Inseln: Tasten 0 und 9', () => {
     const all = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
     expect(keys(all).filter((k) => k === '0')).toHaveLength(1);
     expect(keys(all).filter((k) => k === '9')).toHaveLength(1);
+  });
+});
+
+describe('TASTEN-KOMFORT Tasten (Teil A, C)', () => {
+  const SH = { ...NONE, shift: true };
+
+  it('AK-TK-09 NAV_KEYS und hotkeyList: Leertaste antippen', () => {
+    expect(NAV_KEYS).toContainEqual({ key: 'Leertaste (antippen)', label: 'Pause / weiter' });
+    expect(NAV_KEYS.some((e) => e.key === 'Leertaste + Ziehen')).toBe(true);
+    const list = hotkeyList(createWorld(3, { crisisLevel: 'normal' }));
+    expect(list).toContainEqual({ key: 'Leertaste (antippen)', label: 'Pause / weiter' });
+    expect(list.some((e) => e.key === 'Leertaste + Ziehen')).toBe(true);
+    expect(list.some((e) => e.key === 'P')).toBe(true);
+  });
+
+  it('AK-TK-15 Umschalt+U = Ausbau, sonst Schule', () => {
+    expect(hotkeyAction('U', SH, false)).toEqual({ kind: 'upgrade' });
+    expect(hotkeyAction('u', SH, false)).toEqual({ kind: 'upgrade' });
+    const school = { kind: 'tool', tool: { kind: 'build', defId: 'school' } };
+    expect(hotkeyAction('u', NONE, false)).toEqual(school);
+    expect(hotkeyAction('U', { ...NONE, shift: false }, false)).toEqual(school);
+    expect(hotkeyAction('U', { ...SH, ctrl: true }, false)).toBeNull();
+    expect(hotkeyAction('U', { ...SH, meta: true }, false)).toBeNull();
+    expect(hotkeyAction('U', { ...SH, alt: true }, false)).toBeNull();
+    expect(hotkeyAction('U', SH, true)).toBeNull();
+  });
+
+  it('AK-TK-16 andere Tasten mit Umschalt unverändert', () => {
+    for (const k of Object.keys(TOOL_HOTKEYS).filter((k) => k !== 'u')) {
+      expect(hotkeyAction(k.toUpperCase(), SH, false)).toEqual(hotkeyAction(k, NONE, false));
+    }
+    expect(hotkeyAction('?', SH, false)).toEqual({ kind: 'help' });
+    expect(hotkeyAction('P', SH, false)).toEqual({ kind: 'pause' });
+    expect(hotkeyAction('H', SH, false)).toEqual({
+      kind: 'tool',
+      tool: { kind: 'build', defId: 'house' },
+    });
+  });
+
+  it('AK-TK-17 hotkeyList: Umschalt + U erst mit upgrade2', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    expect(hotkeyList(w).some((e) => e.key === 'Umschalt + U')).toBe(false);
+    const all = createWorld(3, { crisisLevel: 'normal', unlockAll: true });
+    const list = hotkeyList(all);
+    expect(list).toContainEqual({ key: 'Umschalt + U', label: 'Markiertes Gebäude ausbauen' });
+    expect(list).toContainEqual({ key: 'U', label: 'Schule' });
+  });
+
+  it('AK-TK-18 upgradeTarget', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    const id = Number(Object.keys(w.buildings)[0]);
+    const fail = { ok: false, reason: 'Kein Gebäude markiert' };
+    expect(NO_SELECTION_TEXT).toBe('Kein Gebäude markiert');
+    expect(upgradeTarget({ kind: 'none' }, w)).toEqual(fail);
+    expect(upgradeTarget({ kind: 'trade', island: 0 }, w)).toEqual(fail);
+    expect(upgradeTarget({ kind: 'inspect', id }, w)).toEqual({ ok: true, id });
+    expect(upgradeTarget({ kind: 'inspect', id: 987654 }, w)).toEqual(fail);
+  });
+});
+
+describe('TASTEN-KOMFORT Pipette (Teil B)', () => {
+  it('AK-TK-19 NAV_KEYS nennt Strg/Cmd + Klick', () => {
+    expect(NAV_KEYS).toContainEqual({
+      key: 'Strg/Cmd + Klick auf Gebäude',
+      label: 'Gebäudetyp als Bauwerkzeug (Pipette)',
+    });
   });
 });
