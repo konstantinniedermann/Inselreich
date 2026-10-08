@@ -2871,3 +2871,15 @@ ausserhalb Scope (B1, B2, B6, B14 aus Lauf B und die vier Kandidaten aus der Nac
 `docs/beobachtungen.md`. — Kosten bei Irrtum: Spieler bemerkt Stocken beim Bauen im Wald; Revert möglich.
 
 Entscheider: L0 · Anlass: Bericht lead-qa Nachprüfung REL-07 (`.studio/qa/rel-07c/stand.md`) · ADR: —
+
+## R328 · 2026-10-08 · CI rot nach REL-07: Zeitreserve `decorSea.test.ts`, Trivial-Fix
+
+Ruling: REL-07 ist live (Merge d7a65a3, Pages 37763554619 grün, HTTP 200). CI 37763554612 ist rot, allein wegen
+`make zeitreserve`: zwei Tests in `tests/render/decorSea.test.ts` (L5-T3 `shipAt` 3596 ms, L5-Review Tönung
+3123 ms) liegen in CI über 50 % des Standard-Timeouts. Sie bekommen nach dem Muster aus R318/R322 ein hergeleitetes
+Timeout (Trivial-Fix, eigener `test:`-Commit direkt auf main, danach Push und CI erneut). Das Produkt ist nicht
+betroffen, kein Revert. Abweichungen des Integrators angenommen: Merge im Hauptcheckout, weil `.worktrees/integrate`
+die lokalen Commits nicht hatte; Trailer mit dem tatsächlichen Modell. Ad-hoc-Retro „CI rot“ wird mit der
+Session-Ende-Retro gebündelt. — Kosten bei Irrtum: ein weiterer roter CI-Lauf.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-07 · ADR: —
