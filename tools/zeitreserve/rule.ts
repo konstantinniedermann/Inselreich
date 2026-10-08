@@ -119,3 +119,29 @@ export const LOAD_MAX = 4;
 export function loadVerdict(load: number, onGithubActions: boolean): 'strict' | 'unreliable' {
   return onGithubActions || load <= LOAD_MAX ? 'strict' : 'unreliable';
 }
+
+/** Messdatei (R353 P1): Zeiten plus Commit und 1-min-Last während des Testlaufs. */
+export interface Measurement {
+  timings: TestTiming[];
+  commit?: string;
+  loadStart?: number;
+  loadEnd?: number;
+  loadMax?: number;
+}
+
+/** Liest neues Format (Objekt) und altes Format (reines Array, ohne Metadaten). */
+export function parseMeasurement(raw: unknown): Measurement {
+  if (Array.isArray(raw)) return { timings: raw as TestTiming[] };
+  const m = raw as Partial<Measurement> | null;
+  return { ...m, timings: Array.isArray(m?.timings) ? m.timings : [] };
+}
+
+/** Grund, warum die Messung für `--push` nicht belastbar ist, sonst null. */
+export function measurementProblem(m: Measurement, head: string): string | null {
+  if (m.commit === undefined || m.loadMax === undefined)
+    return 'Messung im alten Format (Array) ohne Commit und Last; make test neu laufen lassen';
+  if (m.commit !== head) return `Messung stammt von Commit ${m.commit}, HEAD ist ${head}`;
+  if (m.loadMax > LOAD_MAX)
+    return `Last ${m.loadMax.toFixed(1)} > ${LOAD_MAX} während der Messung (Start ${m.loadStart?.toFixed(1)}, Ende ${m.loadEnd?.toFixed(1)})`;
+  return null;
+}

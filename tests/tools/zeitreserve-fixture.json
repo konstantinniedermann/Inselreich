@@ -1,8 +1,14 @@
-[
-  {
-    "file": "tests/a.test.ts",
-    "name": "lahm",
-    "durationMs": 3000,
-    "timeoutMs": 5000
-  }
-]
+{
+  "commit": "abc",
+  "loadStart": 1,
+  "loadEnd": 1,
+  "loadMax": 1,
+  "timings": [
+    {
+      "file": "tests/a.test.ts",
+      "name": "lahm",
+      "durationMs": 3000,
+      "timeoutMs": 5000
+    }
+  ]
+}

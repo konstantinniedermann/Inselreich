@@ -1,5 +1,8 @@
 // E-032 / R270: Prüfschritt `make zeitreserve` erkennt Tests ohne CI-Reserve.
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   findViolations,
@@ -16,6 +19,8 @@ import {
   loadVerdict,
   LOAD_MAX,
   testKey,
+  parseMeasurement,
+  measurementProblem,
 } from '../../tools/zeitreserve/rule';
 import type { TestTiming } from '../../tools/zeitreserve/rule';
 
@@ -151,7 +156,12 @@ describe('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
   const run = (load: string, ...flags: string[]) =>
     spawnSync('node', [check, fixture, ...flags], {
       encoding: 'utf8',
-      env: { ...nodeEnv, GITHUB_ACTIONS: undefined, ZEITRESERVE_FAKE_LOAD: load },
+      env: {
+        ...nodeEnv,
+        GITHUB_ACTIONS: undefined,
+        ZEITRESERVE_FAKE_LOAD: load,
+        ZEITRESERVE_FAKE_HEAD: 'abc',
+      },
     });
 
   it('lokal bei Last > 4 ohne --push: Verstoss nur Warnung, Exit 0', () => {
@@ -169,5 +179,84 @@ describe('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
   it('--push bei Last <= 4: harte Prüfung, Verstoss gibt Exit 1', () => {
     expect(run('2', '--push').status).toBe(1);
     expect(run('2').status).toBe(1);
+  });
+});
+
+describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
+  const timings = [t(3000, 5000)];
+  const meta = { commit: 'abc', loadStart: 1, loadEnd: 2, loadMax: 2, timings };
+
+  it('liest das neue Format samt Metadaten', () => {
+    expect(parseMeasurement(meta)).toEqual(meta);
+  });
+
+  it('altes Array-Format: Zeiten da, Metadaten fehlen', () => {
+    expect(parseMeasurement(timings)).toEqual({ timings });
+  });
+
+  it('belastbar bei gleichem Commit und Last <= LOAD_MAX', () => {
+    expect(measurementProblem(meta, 'abc')).toBeNull();
+    expect(measurementProblem({ ...meta, loadMax: LOAD_MAX }, 'abc')).toBeNull();
+  });
+
+  it('alter Commit ist nicht belastbar und nennt beide Commits', () => {
+    expect(measurementProblem(meta, 'def')).toMatch(/Commit abc.*HEAD ist def/);
+  });
+
+  it('zu hohe Last während der Messung ist nicht belastbar', () => {
+    expect(measurementProblem({ ...meta, loadMax: 6.5 }, 'abc')).toMatch(/Last 6\.5 > 4/);
+  });
+
+  it('altes Format ist nicht belastbar, ohne Absturz', () => {
+    expect(measurementProblem({ timings }, 'abc')).toMatch(/alten Format/);
+  });
+});
+
+describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
+  const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
+  const dir = mkdtempSync(join(tmpdir(), 'zr-'));
+  const ok = [{ file: 'a', name: 'x', durationMs: 10, timeoutMs: 5000 }];
+  const file = (name: string, content: unknown) => {
+    const p = join(dir, name);
+    writeFileSync(p, JSON.stringify(content));
+    return p;
+  };
+  const run = (path: string, ...flags: string[]) =>
+    spawnSync('node', [check, path, ...flags], {
+      encoding: 'utf8',
+      env: {
+        ...nodeEnv,
+        GITHUB_ACTIONS: undefined,
+        ZEITRESERVE_FAKE_LOAD: '1',
+        ZEITRESERVE_FAKE_HEAD: 'abc',
+      },
+    });
+  const meta = { commit: 'abc', loadStart: 1, loadEnd: 1, loadMax: 1, timings: ok };
+
+  it('passende Messung: Exit 0', () => {
+    expect(run(file('ok.json', meta), '--push').status).toBe(0);
+  });
+
+  it('alter Commit: Exit 2 nicht belastbar', () => {
+    const p = run(file('old.json', { ...meta, commit: 'zzz' }), '--push');
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('nicht belastbar');
+  });
+
+  it('hohe Last während der Messung: Exit 2', () => {
+    const p = run(file('load.json', { ...meta, loadMax: 9 }), '--push');
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('Last 9');
+  });
+
+  it('Array-Format: Exit 2 statt Absturz', () => {
+    const p = run(file('arr.json', ok), '--push');
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('alten Format');
+  });
+
+  it('lockerer Modus liest beide Formate wie bisher', () => {
+    expect(run(file('ok2.json', meta)).status).toBe(0);
+    expect(run(file('arr2.json', ok)).status).toBe(0);
   });
 });

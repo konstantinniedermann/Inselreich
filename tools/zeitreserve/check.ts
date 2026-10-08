@@ -1,6 +1,8 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
-// Mit --push (make zeitreserve-push, Pflicht vor dem Session-End-Push, R338): bei Last > 4 kein Ergebnis (Exit 2).
+// Mit --push (make zeitreserve-push, Pflicht vor dem Session-End-Push, R338): bei Last > 4 oder einer Messung
+// mit anderem Commit als HEAD / Last > 4 während des Laufs / altem Format kein Ergebnis (Exit 2, R353).
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { loadavg } from 'node:os';
 import {
@@ -13,11 +15,12 @@ import {
   formatViolation,
   LOAD_MAX,
   loadVerdict,
+  measurementProblem,
+  parseMeasurement,
   runnerScale,
   scaleToRunner,
   testKey,
 } from './rule.ts';
-import type { TestTiming } from './rule.ts';
 
 const ON_CI = process.env.GITHUB_ACTIONS === 'true';
 const FAKE_LOAD = process.env.ZEITRESERVE_FAKE_LOAD; // nur für Tests
@@ -34,6 +37,16 @@ function report(line: string): void {
     );
 }
 
+function currentHead(): string {
+  const fake = process.env.ZEITRESERVE_FAKE_HEAD; // nur für Tests
+  if (fake !== undefined) return fake;
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  } catch {
+    return 'unbekannt';
+  }
+}
+
 const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
 
 function main(): number {
@@ -48,7 +61,15 @@ function main(): number {
     console.error(`zeitreserve: ${path} fehlt; zuerst die Tests laufen lassen (make test).`);
     return 1;
   }
-  const timings = JSON.parse(readFileSync(path, 'utf8')) as TestTiming[];
+  const measurement = parseMeasurement(JSON.parse(readFileSync(path, 'utf8')));
+  const timings = measurement.timings;
+  const problem = measurementProblem(measurement, currentHead());
+  if (PUSH && problem !== null) {
+    console.error(`zeitreserve-push: nicht belastbar, ${problem} (kein Ergebnis).`);
+    return 2;
+  }
+  if (problem !== null)
+    console.warn(`zeitreserve: Hinweis, für --push nicht belastbar: ${problem}`);
   if (timings.length === 0) {
     console.error(`zeitreserve: ${path} enthält keine Tests; Berichtslauf fehlerhaft.`);
     return 1;
