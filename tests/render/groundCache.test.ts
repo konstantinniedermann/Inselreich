@@ -17,6 +17,7 @@ class Rec {
   log: string[] = [];
   calls: { op: string; args: unknown[] }[] = [];
   imageSmoothingQuality = 'low';
+  imageSmoothingEnabled = true;
   constructor(
     public canvas: { width: number; height: number },
     private tr = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
@@ -150,7 +151,7 @@ describe('PERF-L57 Bodencache', () => {
     expect(off.count('transform')).toBe(before + 1);
     expect(off.count('clip')).toBe(1);
     expect(off.count('clearRect')).toBe(1);
-    const box = off.calls.find((c) => c.op === 'rect')!.args as number[];
+    const box = off.calls.find((c) => c.op === 'rect')!.args as number[]; // dpr 1: Gerät = CSS
     const full = groundScreenBox(cam, 32, { x0: 3, y0: 3, x1: 4, y1: 4 }, 0);
     expect(box[0]!).toBeLessThanOrEqual(full.x - 4);
     expect(box[2]!).toBeGreaterThanOrEqual(full.w + 8);
@@ -198,5 +199,39 @@ describe('PERF-L57 Bodencache', () => {
       expect(affine(r)).toBe(1);
     }
     expect(groundCacheSize()).toBe(0);
+  });
+
+  it('RF-GC-6 Glättung kommt vom Ziel-Kontext, steckt im Schlüssel und im Cache-Bild', () => {
+    const view = { width: 800, height: 600 };
+    const mk = (q: string): Rec => {
+      const r = new Rec(view);
+      r.imageSmoothingQuality = q;
+      return r;
+    };
+    for (let i = 0; i < 4; i++) frame(mk('high'));
+    expect((made[0]!.ctx as Rec).imageSmoothingQuality).toBe('high');
+    const low = mk('low');
+    frame(low);
+    expect(affine(low)).toBe(1); // Wechsel der Qualität verwirft
+    for (let i = 0; i < 3; i++) frame(mk('low'));
+    expect(made[1]!.ctx.imageSmoothingQuality).toBe('low');
+  });
+
+  it('RF-GC-7 Patch-Box liegt bei DPR 1,5 auf ganzen Gerätepixeln, Clip unter Identität, Boden unter Basismatrix', () => {
+    const view = { width: 1200, height: 900 };
+    const tr = { a: 1.5, b: 0, c: 0, d: 1.5, e: 0, f: 0 };
+    for (let i = 0; i < 4; i++) frame(new Rec(view, tr));
+    const off = made[0]!.ctx;
+    noteGroundPatch(owner, { x0: 3, y0: 3, x1: 4, y1: 4 });
+    frame(new Rec(view, tr));
+    const rect = off.calls.find((c) => c.op === 'rect')!.args as number[];
+    for (const v of rect) expect(Number.isInteger(v)).toBe(true);
+    const sets = off.calls.filter((c) => c.op === 'setTransform').map((c) => c.args);
+    expect(sets.slice(-2)).toEqual([
+      [1, 0, 0, 1, 0, 0],
+      [1.5, 0, 0, 1.5, 0, 0],
+    ]);
+    const ops = off.calls.map((c) => c.op);
+    expect(ops.indexOf('clip')).toBeLessThan(ops.lastIndexOf('setTransform'));
   });
 });

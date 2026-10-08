@@ -129,11 +129,19 @@ function applyPending(e: Entry, off: HTMLCanvasElement): void {
       x1: r.x1 + 1,
       y1: r.y1 + 1,
     });
+    // Box in Gerätepixeln (Basismatrix, ohne Drehung), ganzzahlig: keine halbtransparenten Säume bei DPR 1,25/1,5
+    const b = e.base;
+    const dx0 = Math.floor(b.a! * box.x + b.e!),
+      dy0 = Math.floor(b.d! * box.y + b.f!),
+      dx1 = Math.ceil(b.a! * (box.x + box.w) + b.e!),
+      dy1 = Math.ceil(b.d! * (box.y + box.h) + b.f!);
     c.save();
+    c.setTransform(1, 0, 0, 1, 0, 0);
     c.beginPath();
-    c.rect(box.x, box.y, box.w, box.h);
+    c.rect(dx0, dy0, dx1 - dx0, dy1 - dy0);
     c.clip();
-    c.clearRect(box.x, box.y, box.w, box.h);
+    c.clearRect(dx0, dy0, dx1 - dx0, dy1 - dy0);
+    c.setTransform(b.a!, b.b!, b.c!, b.d!, b.e!, b.f!);
     paint(c, e.cam, e.spec);
     c.restore();
     groundStats.patches++;
@@ -158,7 +166,11 @@ export function drawGround(
     paint(ctx, cam, g);
     return;
   }
+  const smooth = ctx.imageSmoothingEnabled !== false;
+  const quality = ctx.imageSmoothingQuality ?? 'low';
   const sig = [
+    smooth,
+    quality,
     g.sx,
     g.sy,
     g.sw,
@@ -206,7 +218,8 @@ export function drawGround(
     off.width = cv.width;
     off.height = cv.height;
     oc.setTransform(e.base.a!, e.base.b!, e.base.c!, e.base.d!, e.base.e!, e.base.f!);
-    oc.imageSmoothingQuality = 'high';
+    oc.imageSmoothingEnabled = smooth;
+    oc.imageSmoothingQuality = quality;
     paint(oc, cam, g);
     e.canvas = off;
     groundStats.builds++;
