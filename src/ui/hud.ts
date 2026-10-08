@@ -30,6 +30,8 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 4, label: '4×' },
 ];
 
+export const PAUSE_TOOLTIP = 'Pause / weiter (P oder Leertaste antippen)';
+
 /** Schwelle, unter der eine Bilanz als „ausgeglichen" gilt (gegen Gleitkomma-Rauschen). */
 const TREND_EPS = 0.05;
 
@@ -225,7 +227,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       btn.className = 'btn';
       btn.textContent = s.label;
       btn.dataset.speed = String(s.value);
-      if (s.value === 2 || s.value === 4) btn.title = speedTooltip(s.value);
+      if (s.value === 0) btn.title = PAUSE_TOOLTIP;
+      else if (s.value === 2 || s.value === 4) btn.title = speedTooltip(s.value);
       btn.addEventListener('click', () => {
         btn.blur();
         actions.setSpeed(s.value);

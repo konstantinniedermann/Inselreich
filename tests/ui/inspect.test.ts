@@ -15,6 +15,9 @@ import {
   utilizationText,
   upgradeView,
   deficitLine,
+  buildSameShown,
+  BUILD_SAME_TITLE,
+  UPGRADE_TITLE,
 } from '../../src/ui/inspect';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
@@ -400,5 +403,22 @@ describe('M12 E2 UI Kontor-Panel', () => {
     expect(kontorActions('kontor')).toEqual({ trade: true, demolish: false });
     expect(kontorActions('kontor2')).toEqual({ trade: true, demolish: true });
     expect(kontorActions('house')).toBeNull();
+  });
+});
+
+describe('TASTEN-KOMFORT Panel-Knöpfe (AK-TK-28, 30)', () => {
+  it('«Gleiches bauen» erscheint für jedes Gebäude mit Werkzeug, nicht für beide Kontore', () => {
+    expect(buildSameShown('house')).toBe(true);
+    expect(buildSameShown('townhall')).toBe(true);
+    expect(buildSameShown('fisher')).toBe(true);
+    expect(buildSameShown('kontor')).toBe(false);
+    expect(buildSameShown('kontor2')).toBe(false);
+  });
+
+  it('Tooltips nennen die Tastenwege', () => {
+    expect(BUILD_SAME_TITLE).toBe(
+      'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)',
+    );
+    expect(UPGRADE_TITLE).toBe('Ausbauen (Umschalt+U)');
   });
 });

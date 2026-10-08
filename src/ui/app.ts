@@ -75,7 +75,9 @@ import {
   sameTool,
   withSpeed,
   type HotkeyAction,
+  upgradeTarget,
 } from './hotkeys';
+import { buildingDefAt, pipetteResult } from './pipette';
 import {
   foreignBuildingHover,
   foreignHover,
@@ -529,6 +531,32 @@ function launch(
   };
 
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
+  /** Ausbau eines Gebäudes: gemeinsamer Weg für den Knopf «Ausbauen» und Umschalt+U (C-5). */
+  const upgradeSelected = (id: number): void => {
+    const b = world.buildings[id];
+    const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
+    const r = upgradeBuilding(world, id);
+    if (r.ok) sound.play('build');
+    else
+      showError(
+        friendlyReason(
+          world,
+          r.reason,
+          next ? { cost: next.cost, island: b?.island } : { island: b?.island },
+        ),
+      );
+    refresh();
+  };
+  /** Pipette und Knopf «Gleiches bauen»: Gebäudetyp als Bauwerkzeug (B-3, B-4, B-7). */
+  const pipette = (defId: BuildingDefId): void => {
+    const r = pipetteResult(world, defId);
+    if (!r.ok) {
+      showError(r.reason);
+      return;
+    }
+    if (sameTool(state.tool, r.tool)) return; // B-7: bleibt aktiv, Panel unberührt
+    selectTool(r.tool);
+  };
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
     connectPreview = null;
@@ -548,21 +576,8 @@ function launch(
           const b = world.buildings[panel.id];
           if (b) setPanel({ kind: 'trade', island: b.island });
         },
-        upgrade: (id) => {
-          const b = world.buildings[id];
-          const next = b ? LEVELS[b.defId]?.[(b.level ?? 1) - 1] : undefined;
-          const r = upgradeBuilding(world, id);
-          if (r.ok) sound.play('build');
-          else
-            showError(
-              friendlyReason(
-                world,
-                r.reason,
-                next ? { cost: next.cost, island: b?.island } : { island: b?.island },
-              ),
-            );
-          refresh();
-        },
+        upgrade: (id) => upgradeSelected(id),
+        buildSame: (defId) => pipette(defId),
         setTax: (level) => {
           const r = setTaxLevel(world, level);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -738,6 +753,10 @@ function launch(
       selectTool(sameTool(state.tool, h.tool) ? { kind: 'select' } : h.tool);
     } else if (h.kind === 'speed') {
       setSpeed(h.speed);
+    } else if (h.kind === 'upgrade') {
+      const t = upgradeTarget(state.panel, world);
+      if (t.ok) upgradeSelected(t.id);
+      else showError(t.reason);
     } else if (h.kind === 'help') {
       openHelp();
     } else if (h.kind === 'islandHome') {
@@ -780,6 +799,11 @@ function launch(
     }
     if (a.type === 'hotkey') {
       onHotkey(a.action);
+      return;
+    }
+    if (a.type === 'pipette') {
+      const defId = buildingDefAt(world, a.island, a.x, a.y);
+      if (defId !== null) pipette(defId);
       return;
     }
     if (a.type === 'cancel') {

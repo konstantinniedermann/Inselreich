@@ -17,6 +17,7 @@ import {
   taxView,
   popChipHidden,
   speedTooltip,
+  PAUSE_TOOLTIP,
   stockChipHidden,
   stockPrefix,
   stockTooltip,
@@ -59,6 +60,12 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
   });
   it('AK-UX-07 speedTooltip', () => {
     expect(speedTooltip(4)).toBe('Spielzeit läuft 4× so schnell');
+  });
+});
+
+describe('TASTEN-KOMFORT Pause-Tooltip (AK-TK-33)', () => {
+  it('nennt P und das Antippen der Leertaste', () => {
+    expect(PAUSE_TOOLTIP).toBe('Pause / weiter (P oder Leertaste antippen)');
   });
 });
 
