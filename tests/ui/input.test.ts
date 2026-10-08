@@ -8,7 +8,10 @@ import {
   panDelta,
   panKeyAllowed,
   spaceKeyRole,
+  visibleViewHeight,
 } from '../../src/ui/input';
+import { clampToRect, worldToScreen } from '../../src/render/camera';
+import { project } from '../../src/render/iso';
 
 describe('panDelta (Q2, AK-U1a-02)', () => {
   it('Q2: 960 Pixel je Sekunde bei Zoom 1', () => {
@@ -98,5 +101,27 @@ describe('TASTEN-KOMFORT Eingabe-Helfer', () => {
     expect(isPipetteClick(2, { ...no, ctrl: true }, false, false)).toBe(false);
     expect(isPipetteClick(0, { ...no, ctrl: true }, true, false)).toBe(false);
     expect(isPipetteClick(0, { ...no, ctrl: true }, false, true)).toBe(false);
+  });
+});
+
+describe('Kamera-Sicht bei offener Bauleiste (UI-PANEL T5a)', () => {
+  it('zieht die Overlay-Höhe von der Kartenhöhe ab', () => {
+    expect(visibleViewHeight(574, 36)).toBe(538);
+    expect(visibleViewHeight(574, 0)).toBe(574);
+  });
+
+  it('klemmt Ausreisser: nie unter 1, kein negatives Overlay', () => {
+    expect(visibleViewHeight(30, 100)).toBe(1);
+    expect(visibleViewHeight(574, -5)).toBe(574);
+  });
+
+  it('südlichste Kachel liegt bei maximal südlicher Kamera über dem Overlay', () => {
+    const bounds = { x0: 0, y0: 0, x1: 40, y1: 40 };
+    const H = 574;
+    const ov = 36;
+    const cam = { x: 0, y: 1e6, zoom: 1 };
+    clampToRect(cam, bounds, 800, visibleViewHeight(H, ov));
+    const south = worldToScreen(cam, project(40, 40));
+    expect(south.y).toBeLessThanOrEqual(H - ov);
   });
 });

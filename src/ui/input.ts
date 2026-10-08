@@ -122,6 +122,14 @@ export interface InputBinding {
   unbind(): void;
 }
 
+/**
+ * Kartenhöhe, die der Kamera-Grenze zugrunde liegt: die Bauleisten-Einträge liegen als Overlay über dem unteren
+ * Kartenrand und verdecken ihn, also zählt nur der freie Teil (die Overlay-Höhe kommt aus dem DOM).
+ */
+export function visibleViewHeight(canvasH: number, overlayH: number): number {
+  return Math.max(1, canvasH - Math.max(0, overlayH));
+}
+
 /** Bindet Maus und Tastatur an Canvas und Fenster. */
 export function bindInput(
   canvas: HTMLCanvasElement,
@@ -159,13 +167,14 @@ export function bindInput(
     const r = canvas.getBoundingClientRect();
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
-  const clamp = (): void => {
-    clampToRect(
-      state.cam,
-      cameraBounds(state.world.islands),
-      canvas.clientWidth,
+  /** Sichtbare Kartenhöhe: bei offener Kategorie ohne das Bauleisten-Overlay. */
+  const viewH = (): number =>
+    visibleViewHeight(
       canvas.clientHeight,
+      canvas.ownerDocument.querySelector<HTMLElement>('.buildbar-sub')?.offsetHeight ?? 0,
     );
+  const clamp = (): void => {
+    clampToRect(state.cam, cameraBounds(state.world.islands), canvas.clientWidth, viewH());
   };
 
   const updateHover = (): void => {
@@ -295,7 +304,7 @@ export function bindInput(
             g.dist / gesture.dist,
             g.mx,
             g.my,
-            { w: canvas.clientWidth, h: canvas.clientHeight },
+            { w: canvas.clientWidth, h: viewH() },
             cameraBounds(state.world.islands),
           );
           clamp();
@@ -436,7 +445,7 @@ export function bindInput(
       e.deltaY < 0 ? 1.1 : 1 / 1.1,
       p.sx,
       p.sy,
-      { w: canvas.clientWidth, h: canvas.clientHeight },
+      { w: canvas.clientWidth, h: viewH() },
       cameraBounds(state.world.islands),
     );
     updateHover();
