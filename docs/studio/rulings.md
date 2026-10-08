@@ -2768,3 +2768,12 @@ laufenden E-022, E-027, E-030 und schliesst reife ab, damit E-037 sofort startet
 bei Irrtum: ein Experiment endet früh, Wiederaufnahme möglich.
 
 Entscheider: L0 · Anlass: Retro R-2026-10-08-ampel-steuerung · ADR: —
+
+## R320 · 2026-10-08 · Gate Merge TOOL-AMPEL-M1: OK
+
+Ruling: Review OK (zwei niedrige Hinweise, nicht blockierend: Status-Erkennung per Textsuche, fehlender Test für
+Streaming-Duplikate) angenommen; Merge `tool/ampel-m1` @ a79314f durch production-integrator. Erste Zahlen stützen
+R319 V1: 93 % der lead-art-Neuschreibungen folgen auf Turn-Ende. Paketfeld-Normalisierung → beobachtungen.md.
+— Kosten bei Irrtum: Messspalte leicht ungenau, kein Einfluss auf Spiel oder Ampel.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL-M1 · ADR: —

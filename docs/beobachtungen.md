@@ -373,3 +373,9 @@ RENDER-LOOK-01 erst danach.
 - 2026-10-08 · `tools/studio/efficiency.py` (`role_class`) · Plan-Leads (z. B. M12-SEE-PLAN, 89 Turns, 20 % einer Session)
   zählen als „Leads“ und damit als Steuerung; Planungssessions sind dadurch strukturell rot. Einschätzung: mittel,
   Trennung über M1 der Retro, keine Schwellenänderung. Ursprung: `docs/studio/retros/2026-10-08-ampel-steuerung.md`.
+
+### 2026-10-08 · Studio · Paketfeld der Lead-Instanzen nicht normalisiert
+
+- 2026-10-08 · `tools/studio/efficiency.py` (Tabelle „Lead-Instanzen") · `ART-STIL-02-umsetzung` und `ART-STIL-02`
+  erscheinen getrennt; Paketfamilien-Summen können dadurch zerfallen. Einschätzung: klein, beim nächsten Eingriff in
+  die Paketzuordnung normalisieren. Ursprung: TOOL-AMPEL-M1 (Bericht lead-tech).
