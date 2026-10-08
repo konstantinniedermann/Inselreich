@@ -3092,3 +3092,13 @@ Integrator: Fix lokal mergen, dann `make zeitreserve-push` (auf Load ≤ 4 warte
 --ref main`, Deploy prüfen und `ci.py`.
 
 Entscheider: L0 · Anlass: Bericht FIX-REL08-MENU · ADR: —
+
+## R347 · 2026-10-08 · Push-Gate fand einen echten Verstoss; Trivial-Fix Timeout, danach Push
+
+Ruling: Das erste belastbare `make zeitreserve-push` (Load 2,7) meldete Exit 1 für `tests/render/trees.test.ts`
+(„ISO §6 Kronen (WALD-02)", Runner-Schätzung 2655 ms gegen 5000 ms). Das Gate wirkt wie gewollt (R338): ohne es wäre
+erst die CI nach dem Push rot geworden. Trivial-Fix `fix/zeitreserve-trees` @ 6cd8c2b (Timeout 10000 ms, Testlogik
+unverändert; danach `zeitreserve-push` Exit 0 bei Load 3,6, `make check` grün). Gate Merge **OK**; der Integrator
+setzt den Session-End-Ablauf aus R346 ab dem Merge dieses Fixes fort.
+
+Entscheider: L0 · Anlass: Push-Gate REL-08 · ADR: —
