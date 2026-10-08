@@ -2983,3 +2983,15 @@ I-022…I-026, Tastenkonflikte Leertaste und `U` prüfen), ≤ 80 Tools; **UI-IN
 startet nach TOOL-RELEASE-CI und nur bei 1-min-Load ≤ 4 (aktuell 7). Studioweit ≤ 5 Arbeiter (R241).
 
 Entscheider: L0 · Anlass: Nutzer-Auftrag · ADR: —
+
+## R337 · 2026-10-08 · Gate IDEEN-03 OK, UI-INSELFILTER ohne Fehler
+
+Ruling: (a) Gate Ideen-Runde **OK** (`docs/ideen-03` @ 96850cb): Bündel **TASTEN-KOMFORT** (I-022 Leertaste antippen
+pausiert, Halten+Ziehen verschiebt; I-023 Pipette Strg/Cmd+Klick und Knopf „Gleiches bauen"; I-025 Ausbau mit
+`Umschalt+U`, `U` bleibt Schule) als nächstes Paket, danach **PANEL-UEBERSICHT** (I-026); I-024 geparkt
+(Wirtschaftsentscheid, Dominanzrisiko). L0 wählt `Umschalt+U` statt `+` (Merkbarkeit). Spec durch lead-design.
+(b) UI-INSELFILTER: Befund veraltet, `isProtected` filtert bereits nach Insel; nur Regressionstest
+(`fix/ui-inselfilter` @ 73b8625), Merge mit dem nächsten Integrator-Lauf. (c) `trees-farn.test.ts` Zeitreserve und
+Lastabhängigkeit von `make zeitreserve` gehen in TOOL-RELEASE-CI. (d) Studio-coach startet jetzt (STUDIO.md frei).
+
+Entscheider: L0 · Anlass: Berichte IDEEN-03, UI-INSELFILTER · ADR: —

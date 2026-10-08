@@ -317,3 +317,9 @@ RENDER-LOOK-01 erst danach.
 ---
 
 ## Offen (neue Einträge unten anhängen)
+
+### 2026-10-08 · `tests/sim/perf.test.ts` AK-E0-15a lastabhängig
+
+Fundort: Integrator-Lauf TOOL-ACTIONS-SPAR. Beobachtung: 2,62 ms/Schritt gegen Grenze 2,5 bei paralleler Last
+(1-min-Load ~7), Wiederholung allein grün. Ursprung: lokaler Merge-Check. Einschätzung: Perf-Grenze in `make check`
+falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusammen ansehen.
