@@ -260,7 +260,7 @@ const woods = new WeakMap<World, WoodState>();
 const merged = new WeakMap<World, { rest: RestCache; wood: SortedItem[]; items: SortedItem[] }>();
 
 /** Darstellungswert (kein Spielwert): Rechenzeit des Waldaufbaus je Frame nach einem Bau. */
-export const WOOD_SLICE_MS = 3;
+export const WOOD_SLICE_MS = 2;
 
 /**
  * Wald (WALD-02): jede Krone einzeln aus dem Saumfeld (`woodLayout`), je Tiefenband-Zelle ein Objekt. Gebäude, Wege
