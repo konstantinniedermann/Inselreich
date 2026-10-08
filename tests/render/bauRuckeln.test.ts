@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { perfBudget } from '../helpers/perfBudget';
 import { createWorld, home } from '../../src/sim/world';
 import { placeBuilding, placeRoad, demolish } from '../../src/sim/build';
 import { canPlace } from '../../src/sim/placement';
@@ -178,6 +179,6 @@ describe('FIX-REL07 a: Bau und Waldaufbau', () => {
       worst = Math.max(worst, performance.now() - t);
     }
     // Vollaufbau ~20 ms; ein Schritt deutlich darunter (Reserve für Aufwärmen und Fertigstellung)
-    expect(worst).toBeLessThan(16);
+    expect(worst).toBeLessThan(perfBudget(16)); // Zeittest: läuft seriell (ZEITTESTS)
   });
 });
