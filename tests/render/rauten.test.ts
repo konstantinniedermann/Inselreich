@@ -122,7 +122,7 @@ type Measure = ReturnType<typeof measureOn>;
 const GRIDS = new Map<number, { world: ReturnType<typeof createWorld>; g: TerrainGrid }>();
 const MEASURES = new Map<string, Measure>();
 const measure = (kind: Kind, seed: number): Measure => MEASURES.get(`${kind}${seed}`)!;
-/** Herleitung: Aufbau lokal ≈ 4 s (3 × buildGrid ≈ 0,3 s, 9 Messungen ≈ 0,3 s); CI-Faktor 3 plus Reserve ⇒ 30 s. */
+/** Herleitung: Aufbau lokal ≈ 2 s (Lauf der Datei 3,2 s); Runner-Faktor 3 und Reserve 50 % ⇒ ≥ 12 s, gesetzt 30 s. */
 const SETUP_TIMEOUT = 30_000;
 
 // Warum die Schwellen für wald/stufe in aa61ae5 von je-Seed auf gemeinsam über 3 Seeds wechselten: die Vorher-Werte
