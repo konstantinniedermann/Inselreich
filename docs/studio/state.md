@@ -97,7 +97,7 @@ Neue Pakete brauchen eigene Freigabe.
 ## Nächste Schritte
 
 1. Worktrees aufräumen (R329 (3)): gemergte, saubere ohne `--force` entfernen.
-2. Prozess-Retro nach REL-07 (studio-process-coach, R127/R329).
-3. PERF-L57 (lead-art) und TOOL-ZEITRESERVE-RUNNER (lead-tech) starten, sobald L0 freigibt.
+2. studio-coach: Handbuch-Sätze aus R330 (2), (4), (5) umsetzen (Prozess-Retro REL-07 erledigt).
+3. PERF-L57 (lead-art) und TOOL-RELEASE-CI inkl. TOOL-ZEITRESERVE-RUNNER (lead-tech, R329/R330) starten, sobald L0 freigibt.
 4. Ideen-Runde I-022…I-026; Entscheid M12 E5/E6.
 5. Befunde in `docs/beobachtungen.md` auswerten (Zeitreserve `groundBeach.test.ts`, alte Worktrees).

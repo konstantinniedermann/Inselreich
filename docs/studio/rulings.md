@@ -2898,3 +2898,15 @@ für Worktree-Belegung) bleibt `vorgeschlagen`, bis ein Platz frei ist. Nach R12
 Release REL-07 durch studio-process-coach. — Kosten bei Irrtum: drei Handbuch-Sätze, rücknehmbar.
 
 Entscheider: L0 · Anlass: Session-Ende-Retro 191cc1e4 · ADR: —
+
+## R330 · 2026-10-08 · Prozess-Retro REL-07: alle fünf Vorschläge angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-08-prozess-rel07.md` angenommen. Zwei Werkzeug-Vorschläge gehen in ein
+Paket **TOOL-RELEASE-CI** (lead-tech) zusammen mit TOOL-ZEITRESERVE-RUNNER (E-043): (1) CI auch auf `rel/**`;
+(3) Perf- und Ruckel-Skripte brechen bei 1-min-Load über 4 ab und tragen A/A bzw. A/B im Namen. Diese Skripte
+ziehen dabei nach `tools/render-qa/` um (E-041). Als Handbuch-Sätze für den studio-coach in der nächsten Session:
+(2) Release-Läufe mit Wanduhr-Limit und `stand.md` alle 30 min. (4) Eine Fix-Runde nach Gate ZURÜCK startet in
+derselben Session, sofern Budget und Limit es erlauben. (5) Vor dem Integrator-Start ein Konflikt-Probe-Merge mit
+`git merge-tree`. — Kosten bei Irrtum: ein Werkzeug-Paket und drei Handbuch-Sätze, rücknehmbar.
+
+Entscheider: L0 · Anlass: Prozess-Retro REL-07 · ADR: —
