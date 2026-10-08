@@ -3028,3 +3028,13 @@ Panelbreite 280 px, kein geschätzter Ist-Ausstoss. Die Umsetzung (lead-tech, �
 der PERF-L57-Messläufe, weil Testläufe die Last über 4 heben und die Messung ungültig machen (R329).
 
 Entscheider: L0 · Anlass: Bericht Spec PANEL-UEBERSICHT · ADR: —
+
+## R341 · 2026-10-08 · PERF-L57: Messziel erreicht, Nachrunde vor dem Merge-Gate; PANEL-UEBERSICHT startet
+
+Ruling: PERF-L57 (`perf/l57` @ 92a214c) erreicht das Ziel aus R327, von L0 gegen `.studio/qa/perf-l57/r3/` geprüft:
+Bauen im Wald Seed 7 und 14 je 0 Frames > 25 ms (A und B); Kaltstart Seed 7 22,8 → 8,3–8,4 s, Seed 14 14,9–16,0 →
+8,1–8,4 s. Das Review lautete ZURÜCK, die Fixes wurden nicht erneut geprüft; neu ist ein Bildschirmcache für den Boden.
+Deshalb vor dem Gate eine Nachrunde (+40 Tools): Delta-Review auf opus (inklusive Invalidierung des Cache) und
+Sichtprüfung im Browser. PANEL-UEBERSICHT (lead-tech, ≤ 120 Tools) startet jetzt, die Messläufe sind abgeschlossen.
+
+Entscheider: L0 · Anlass: Bericht PERF-L57 · ADR: —
