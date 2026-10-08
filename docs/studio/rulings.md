@@ -2809,3 +2809,18 @@ Tastenbelegung, Upgrade-Regeln). R305 gilt weiter: keine neuen Pakete, FIX-REL07
 `design-idea-scout`, ein Start. — Kosten bei Irrtum: keine, reiner Pool-Eintrag.
 
 Entscheider: L0 · Anlass: Nutzer-Auftrag Session-Start · ADR: —
+
+## R324 · 2026-10-08 · Zwei L0-Sessions auf FIX-REL07: Session #2 zieht sich zurück
+
+Ruling: Zwei L0-Sessions (anno-clone #2, #3) haben FIX-REL07 parallel bearbeitet, beide im Worktree
+`.worktrees/rel07-aufloesung` (`int/rel-07`) — Verstoss gegen „Eine aktive L0-Session je Repo" (R129) und gegen
+STUDIO.md Ende 0a (Worktree-HEAD und `git status` vor Paketstart prüfen; Session #2 hat das nicht getan). Folge:
+Der Engineer von #2 hat `forest.ts`, `iso.ts`, `renderer.ts` im geteilten Worktree zurückgesetzt; ungecommittete
+`__prof`-Hooks von #3 in `iso.ts` sind vermutlich verloren (`tests/render/_prof.test.ts` importiert sie noch).
+Entscheid: Die interaktive Session #3 (Nutzer aktiv dort) führt FIX-REL07 allein weiter; #2 arbeitet ab jetzt nur
+lesend und fasst `int/rel-07` nicht mehr an. Zwischenstand von #2 zu (a): Branch `fix/rel07-a-wood` @ c94e99a
+(Wald in 2-ms-Scheiben, `woodSlices.test.ts` grün, senkt Ruckeln nicht auf main-Niveau; Rasteranteil ≈ 14 ms
+`(program)`), Messskripte `.studio/qa/rel-07b/` — #3 übernimmt oder verwirft. Vorfall an die nächste Retro. — Kosten
+bei Irrtum: Doppelarbeit an (a).
+
+Entscheider: L0 (Session #2) · Anlass: Blocker-Bericht lead-art FIX-REL07 · ADR: —
