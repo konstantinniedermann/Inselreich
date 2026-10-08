@@ -3387,3 +3387,17 @@ Timeouts nur als letzter Weg und hergeleitet. Abnahme: `zeitreserve` 0 ohne Rese
 unverändert @ 86baaac).
 
 Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
+
+## R371 · 2026-10-08 · UI-PANEL-AUFRAEUMEN: Ruling-Kandidaten bestätigt, Trivial-Fix Layout je Frame, REL-09
+
+Ruling: Stand `refactor/ui-panel` @ d2e82c3 (`make check` grün, Final-Review `opus` OK, Playtest 7/7 OK; Kartenhöhe
+1280×720 konstant 574 px statt 538 px). Bestätigt: (1) Bauleiste Variante A (R366), Spec nachgeführt; (2) der
+Zyklustest zählt Wert-Importe und `export … from`, nicht `import type`; (3) das Overlay darf den Ereignis-Log unten
+links verdecken. **Trivial-Fix vor dem Merge:** `syncOverlay` misst die Overlay-Höhe in jedem Frame und erzwingt ein
+Layout — Messung nur beim Öffnen/Schliessen und bei `resize` (z. B. `ResizeObserver`), ≤ 10 Tools; danach Browserblick
+auf d2e82c3-Folgestand (Karte rückt bei maximal südlicher Kamera nach, Bauvorschau verschwindet beim Öffnen). Die
+offenen `app.ts`-Punkte (`resize`, `centerOn` mit voller Höhe) bleiben Beobachtung. Weil der Push am Session-Ende ganz
+main veröffentlicht, gehört UI-PANEL-AUFRAEUMEN in **REL-09** (vier Pakete: SEE-F2-UX, ART-WALD-RAUTEN, SEE-F1,
+UI-PANEL); ART-L8-SELTEN und SEE-F1-KORRIDOR bilden REL-10.
+
+Entscheider: L0 · Anlass: Bericht UI-PANEL-AUFRAEUMEN · ADR: —
