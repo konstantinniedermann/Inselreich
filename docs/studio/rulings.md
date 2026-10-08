@@ -2661,3 +2661,12 @@ misst die Perf gegen main. C7-Glitzern am Wasserfall war nie verdrahtet: nicht T
 `int/rel-07` in `rel/rel-07`, prüft, pusht den Kandidaten. — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-art REL-07-AUFLOESUNG · ADR: —
+
+## R312 · 2026-10-08 · REL-07 Release-Lauf fortsetzen
+
+Ruling: Der Release-Lauf B (lead-qa) brach über Nacht nach Perf (Seed 7: +0,1 ms nah, 0 ms fern) und Live-Seeds 1/7
+ab; Seed 14 meldet Zeitüberschreitung, Rater, opus-Review und Gate fehlen. Eine frische lead-qa-Instanz übernimmt die
+Ablage `.studio/qa/rel-07b/`, wiederholt Erledigtes nicht und liefert das Gate-Urteil. Nutzer-Auftrag „kurze Session":
+reicht die Zeit nicht, Zwischenstand mit Fortsetzungspunkt in state.md. — Kosten bei Irrtum: ein Doppellauf von Seed 14.
+
+Entscheider: L0 · Anlass: Session-Start, Sichtung `.studio/qa/rel-07b/` · ADR: —
