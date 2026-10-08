@@ -46,6 +46,19 @@ THRESHOLDS = {
     "largest_read": {"gelb": 40, "rot": 100, "op": ">"},  # KB (1 KB = 1024 Zeichen)
 }
 
+# Anzeigename je Ampelzeile: einzige Quelle für `_lights` und die Vorfall-Zuordnung
+LIGHT_LABELS = {
+    "steuerung": "Steuerungsanteil (L0 + Leads)",
+    "umsetzer": "Umsetzeranteil",
+    "cache_write_5m": "Cache-Write 5 min",
+    "lead_ctx": "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
+    "l0_ctx_max": "L0-Kontext Max",
+    "opus": "opus-Anteil",
+    "persona_opus": "Persona-Starts als general-purpose auf opus (Instanzen)",
+    "largest_read": "Grösste gelesene Datei",
+}
+LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
+
 CLASSES = (
     "L0",
     "Leads",
@@ -401,49 +414,49 @@ def _lights(data: dict) -> list[str]:
     t = THRESHOLDS
     entries = [
         (
-            "Steuerungsanteil (L0 + Leads)",
+            LIGHT_LABELS["steuerung"],
             "steuerung",
             _pct(data["steuerung"]),
             f"gelb > {t['steuerung']['gelb'] * 100:.0f} %, rot > {t['steuerung']['rot'] * 100:.0f} %",
         ),
         (
-            "Umsetzeranteil",
+            LIGHT_LABELS["umsetzer"],
             "umsetzer",
             _pct(data["umsetzer"]),
             f"gelb < {t['umsetzer']['gelb'] * 100:.0f} %, rot < {t['umsetzer']['rot'] * 100:.0f} %",
         ),
         (
-            "Cache-Write 5 min",
+            LIGHT_LABELS["cache_write_5m"],
             "cache_write_5m",
             _pct(data["kind_share"]["cache_write_5m"]),
             f"gelb > {t['cache_write_5m']['gelb'] * 100:.0f} %, rot > {t['cache_write_5m']['rot'] * 100:.0f} %",
         ),
         (
-            "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
+            LIGHT_LABELS["lead_ctx"],
             "lead_ctx",
             _k(data["lead_ctx_median"]),
             f"gelb > {_k(t['lead_ctx']['gelb'])}, rot > {_k(t['lead_ctx']['rot'])}",
         ),
         (
-            "L0-Kontext Max",
+            LIGHT_LABELS["l0_ctx_max"],
             "l0_ctx_max",
             _k(data["l0_ctx_max"]),
             f"gelb > {_k(t['l0_ctx_max']['gelb'])}, rot > {_k(t['l0_ctx_max']['rot'])}",
         ),
         (
-            "opus-Anteil",
+            LIGHT_LABELS["opus"],
             "opus",
             _pct(data["opus_share"]),
             f"gelb > {t['opus']['gelb'] * 100:.0f} %, rot > {t['opus']['rot'] * 100:.0f} %",
         ),
         (
-            "Persona-Starts als general-purpose auf opus (Instanzen)",
+            LIGHT_LABELS["persona_opus"],
             "persona_opus",
             str(data["persona_opus"]),
             f"gelb ≥ {t['persona_opus']['gelb']}, rot ≥ {t['persona_opus']['rot']}",
         ),
         (
-            "Grösste gelesene Datei",
+            LIGHT_LABELS["largest_read"],
             "largest_read",
             NOT_MEASURED if top is None else f"{top:.1f} KB",
             f"gelb > {t['largest_read']['gelb']} KB, rot > {t['largest_read']['rot']} KB",

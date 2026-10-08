@@ -17,6 +17,7 @@ from model import (
     INACTIVE_DEFAULT,
     EventStore,
     build_state,
+    load_ampel_sessions,
     read_agent_models,
     read_agent_names,
 )
@@ -111,6 +112,7 @@ class Handler(SimpleHTTPRequestHandler):
             inactive_after=self.inactive_after,
             heartbeats=heartbeats,
             agent_names=read_agent_names(self.agents),
+            ampel_sessions=load_ampel_sessions(Path(self.docs) / "metriken"),
         )
         state["docs"] = bundle(self.docs, self.agents)
         state["limits"] = limits_state(time.time())
