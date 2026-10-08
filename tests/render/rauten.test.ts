@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
 import { fieldWorld } from '../../src/render/terrainField';
 import {
@@ -101,9 +101,7 @@ function straightness(bin: Uint8Array): { steps: number; meanRun: number; longFr
   return { steps, meanRun: runs ? steps / runs : 0, longFrac: steps ? long / steps : 0 };
 }
 
-function measure(kind: Kind, seed: number) {
-  const world = createWorld(seed);
-  const g = buildGrid(fieldWorld(world));
+function measureOn(world: ReturnType<typeof createWorld>, g: TerrainGrid, kind: Kind) {
   const [a, b] = kind === 'wald' ? ['forest', 'grass'] : ['sand', 'grass'];
   let steps = 0,
     weightedRun = 0,
@@ -117,6 +115,16 @@ function measure(kind: Kind, seed: number) {
   return { steps, meanRun: steps ? weightedRun / steps : 0, longFrac: steps ? long / steps : 0 };
 }
 
+const KINDS: Kind[] = ['sand', 'wald', 'stufe'];
+type Measure = ReturnType<typeof measureOn>;
+// Zeit-Reserve (R363): Welt, Raster und Messung je Seed und Kantenart werden einmal in `beforeAll` aufgebaut; die Tests
+// prüfen nur noch die Schwellen. Die Messung bleibt unverändert (gleiche Fenster, gleiche Schwellen, `sampleNode`).
+const GRIDS = new Map<number, { world: ReturnType<typeof createWorld>; g: TerrainGrid }>();
+const MEASURES = new Map<string, Measure>();
+const measure = (kind: Kind, seed: number): Measure => MEASURES.get(`${kind}${seed}`)!;
+/** Herleitung: Aufbau lokal ≈ 4 s (3 × buildGrid ≈ 0,3 s, 9 Messungen ≈ 0,3 s); CI-Faktor 3 plus Reserve ⇒ 30 s. */
+const SETUP_TIMEOUT = 30_000;
+
 // Warum die Schwellen für wald/stufe in aa61ae5 von je-Seed auf gemeinsam über 3 Seeds wechselten: die Vorher-Werte
 // streuen je Seed stark (Wald 0,12 bis 0,21), eine je-Seed-Schwelle bei 70 % des kleinsten Werts hätte nur Rauschen
 // geprüft; Sand streut wenig und bleibt je Seed.
@@ -129,6 +137,15 @@ const MAX_SAND_MEAN_RUN = 3.15;
 const MAX_AGG_LONG_FRAC = { wald: 0.107, stufe: 0.14 } as const;
 
 describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
+  beforeAll(() => {
+    for (const seed of SEEDS) {
+      const world = createWorld(seed);
+      const g = buildGrid(fieldWorld(world));
+      GRIDS.set(seed, { world, g });
+      for (const kind of KINDS) MEASURES.set(`${kind}${seed}`, measureOn(world, g, kind));
+    }
+  }, SETUP_TIMEOUT);
+
   for (const seed of SEEDS) {
     it(`AK-T01 sand Seed ${seed}: wenige lange gerade Kantenstücke`, () => {
       const m = measure('sand', seed);
@@ -152,11 +169,13 @@ describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
   }
 
   it('AK-T01 deterministisch: zwei Messungen gleich', () => {
-    expect(measure('wald', 1)).toEqual(measure('wald', 1));
+    // frischer Aufbau (Welt + Raster) gegen die Messung aus `beforeAll`: ein Seed, eine Kantenart
+    const world = createWorld(1);
+    expect(measureOn(world, buildGrid(fieldWorld(world)), 'wald')).toEqual(measure('wald', 1));
   });
 
   it('AK-T02c sampleNode: deterministisch je Seed, Verschiebung höchstens 3 Texturpixel', () => {
-    const g = buildGrid(fieldWorld(createWorld(1)));
+    const g = GRIDS.get(1)!.g;
     const a = [0, 0],
       b = [0, 0];
     for (let k = 0; k < 400; k++) {
@@ -170,7 +189,10 @@ describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
     }
   });
 
-  it('AK-T02c Patch vs. Vollaufbau: gleiche Pixel im Überlapp (mit Verwerfung, Seed 1)', () => {
+  let patchA: ReturnType<typeof paintPixels> | undefined,
+    patchB: ReturnType<typeof paintPixels> | undefined;
+  // Aufbau und Malen in `beforeAll` (R363, Zeit-Reserve: Welt, zwei Raster und Malen ≈ 0,9 s lokal); Timeout wie SETUP_TIMEOUT.
+  beforeAll(() => {
     const w = createWorld(1, { unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
     forceRect(w, k.x + 6, k.y + 2, 4, 3, 'forest');
@@ -186,8 +208,13 @@ describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
       y0 = rect.y0 * TEX,
       pw = (rect.x1 - rect.x0 + 1) * TEX,
       ph = (rect.y1 - rect.y0 + 1) * TEX;
-    const a = paintPixels(grid, 1, x0, y0, pw, ph),
-      b = paintPixels(full, 1, x0, y0, pw, ph);
+    patchA = paintPixels(grid, 1, x0, y0, pw, ph);
+    patchB = paintPixels(full, 1, x0, y0, pw, ph);
+  }, SETUP_TIMEOUT);
+
+  it('AK-T02c Patch vs. Vollaufbau: gleiche Pixel im Überlapp (mit Verwerfung, Seed 1)', () => {
+    const a = patchA!,
+      b = patchB!;
     expect(a.length).toBe(b.length);
     expect(a.every((v, i) => v === b[i])).toBe(true);
   });
