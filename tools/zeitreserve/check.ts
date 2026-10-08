@@ -1,6 +1,7 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
 import { existsSync, readFileSync } from 'node:fs';
+import { loadavg } from 'node:os';
 import {
   CI_FACTOR,
   CI_FACTOR_ON_CI,
@@ -9,11 +10,26 @@ import {
   findWarnings,
   formatRunnerViolation,
   formatViolation,
+  LOAD_MAX,
+  loadVerdict,
   runnerScale,
   scaleToRunner,
   testKey,
 } from './rule.ts';
 import type { TestTiming } from './rule.ts';
+
+const ON_CI = process.env.GITHUB_ACTIONS === 'true';
+const LOAD = loadavg()[0] ?? 0;
+const VERDICT = loadVerdict(LOAD, ON_CI);
+
+/** Verstoss ausgeben: bei ruhiger Last (oder auf Actions) als Fehler, sonst als Warnung. */
+function report(line: string): void {
+  if (VERDICT === 'strict') console.error(line);
+  else
+    console.warn(
+      `Warnung: bei Last ${LOAD.toFixed(1)} > ${LOAD_MAX} nicht belastbar, Lauf bei ruhiger Last wiederholen: ${line}`,
+    );
+}
 
 const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
 
@@ -33,6 +49,7 @@ function main(): number {
   for (const k of baseline)
     if (!known.has(k))
       console.warn(`zeitreserve: Altlast ohne Test, aus baseline.json streichen: ${k}`);
+  console.log(`zeitreserve: Last (1 min): ${LOAD.toFixed(1)}`);
   const factor = process.env.GITHUB_ACTIONS === 'true' ? CI_FACTOR_ON_CI : CI_FACTOR;
   const bad = findViolations(timings, baseline, factor);
   console.log(
@@ -40,9 +57,10 @@ function main(): number {
   );
   for (const t of findWarnings(timings, baseline, factor))
     console.warn(`Warnung: ${formatViolation(t, factor)}`);
-  for (const t of bad) console.error(formatViolation(t, factor));
+  for (const t of bad) report(formatViolation(t, factor));
   const runnerBad = checkRunnerEstimate(timings, baseline);
-  return bad.length === 0 && runnerBad === 0 ? 0 : 1;
+  const localBad = VERDICT === 'strict' ? bad.length : 0;
+  return localBad === 0 && runnerBad === 0 ? 0 : 1;
 }
 
 /** Zusatzmodus E-043: lokale Zeit × Runner-Faktor, dann Runner-Regel; auf Actions keine Hochrechnung. */
@@ -55,8 +73,8 @@ function checkRunnerEstimate(timings: TestTiming[], baseline: Set<string>): numb
   );
   for (const t of findWarnings(estimated, baseline, CI_FACTOR_ON_CI))
     console.warn(`Warnung: ${formatRunnerViolation(t, scale)}`);
-  for (const t of bad) console.error(formatRunnerViolation(t, scale));
-  return bad.length;
+  for (const t of bad) report(formatRunnerViolation(t, scale));
+  return VERDICT === 'strict' ? bad.length : 0;
 }
 
 process.exit(main());

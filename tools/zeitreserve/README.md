@@ -18,6 +18,10 @@ Runner-Regel (Faktor 1, Fehler ab 2000 ms, Warnung ab 1000 ms, Reserve ≤ 50 % 
 entfällt die Hochrechnung (Faktor 1, gleiche Prüfung wie oben). Die Baseline gilt für beide Modi;
 `.studio/zeitreserve.json` bleibt unverändert.
 
+**Last:** `check.ts` nennt in der Kopfzeile `Last (1 min)`. Lokal bei Load > 4 (`LOAD_MAX`, wie `lastgate.mjs`)
+sind Messungen nicht belastbar: Verstösse erscheinen nur als Warnung, der Exit-Code bleibt 0; Lauf bei ruhiger
+Last wiederholen. Auf GitHub Actions gilt immer hart (`loadVerdict`).
+
 **Altlasten:** `baseline.json` listet Tests (`Datei :: Name`), die beim Einführen schon gegen die Regel
 verstiessen (auch ab 600 ms, weil lokale Messungen um die 1-s-Schwelle streuen). Die Liste darf nur kleiner werden: Eintrag entfernen, sobald der Test ein Timeout hat oder
 aufgeteilt ist. Neue Verstösse gehören nie hinein.

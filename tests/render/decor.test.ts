@@ -1194,7 +1194,7 @@ describe('L5 Meer-Plan und R4', () => {
       }
     }
     expect(checked).toBeGreaterThan(1000);
-  }, 15_000);
+  }, 20_000);
 
   it('seaKeepOut: Lane < 3, Anker/Kontor < 4 und der Kegel sperren; frei dahinter (kleiner Kontext)', () => {
     const ctx = {

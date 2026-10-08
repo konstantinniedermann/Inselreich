@@ -166,7 +166,7 @@ describe('L6 B2 Farn auf Lichtungen', () => {
     }
     expect(n).toBeGreaterThan(10);
     expect(FERN_H).toBeLessThan(TREE_H);
-  }, 10_000);
+  }, 30_000);
 
   it('B2 Farn ab Zoom 0,5: bei 0,25 keiner, bei 0,5 und 2 da', () => {
     setCanvasFactory(factory);

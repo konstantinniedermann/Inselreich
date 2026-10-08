@@ -12,6 +12,8 @@ import {
   scaleToRunner,
   runnerScale,
   formatRunnerViolation,
+  loadVerdict,
+  LOAD_MAX,
   testKey,
 } from '../../tools/zeitreserve/rule';
 import type { TestTiming } from '../../tools/zeitreserve/rule';
@@ -124,5 +126,17 @@ describe('zeitreserve geschätzte Runner-Zeit (E-043)', () => {
     expect(msg).toContain('900 ms lokal');
     expect(msg).toContain('lahm');
     expect(msg).toContain('Timeout 10000 ms');
+  });
+});
+
+describe('zeitreserve Lastabhängigkeit', () => {
+  it('bis LOAD_MAX gilt die Messung, darüber nur Warnung', () => {
+    expect(LOAD_MAX).toBe(4);
+    expect(loadVerdict(LOAD_MAX, false)).toBe('strict');
+    expect(loadVerdict(LOAD_MAX + 0.1, false)).toBe('unreliable');
+  });
+
+  it('auf GitHub Actions gilt unabhängig von der Last hart', () => {
+    expect(loadVerdict(20, true)).toBe('strict');
   });
 });

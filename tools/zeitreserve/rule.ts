@@ -111,3 +111,11 @@ export function formatRunnerViolation(t: TestTiming, factor: number): string {
     `(Vorschlag: Timeout ${suggestedTimeoutMs(t.durationMs, CI_FACTOR_ON_CI)} ms oder Test aufteilen; E-043)`
   );
 }
+
+/** Ab diesem 1-min-Load (lokal) sind Messungen nicht belastbar (wie LOAD_MAX in tools/render-qa/lastgate.mjs). */
+export const LOAD_MAX = 4;
+
+/** `strict`: Verstösse lassen den Lauf scheitern; `unreliable`: nur Warnung, Lauf bei ruhiger Last wiederholen. */
+export function loadVerdict(load: number, onGithubActions: boolean): 'strict' | 'unreliable' {
+  return onGithubActions || load <= LOAD_MAX ? 'strict' : 'unreliable';
+}
