@@ -3210,3 +3210,25 @@ den Retros weiter (Statuspflege durch den studio-coach am Session-Ende). Hochrec
 Ende Oktober) geht als Information in den Nutzerbericht; kein Vorbehalt nach §5.3.
 
 Entscheider: L0 · Anlass: Retro M12 · ADR: —
+
+## R357 · 2026-10-08 · Lastbremse: studioweit ein voller Testlauf zugleich
+
+Ruling: 1-min-Load stieg auf 57 (10 Kerne), weil mehrere Stränge gleichzeitig volle Vitest-Läufe (`make check`,
+`make test`) fuhren; Messläufe (ART-WALD-RAUTEN Kaltstart) warten dadurch. Ab sofort: Während eines Tasks nur gezielte
+Läufe (`npx vitest run <datei>`); volle Läufe (`make check`, `make test`, `zeitreserve-push`) nur bei 1-min-Load ≤ 8
+und nie zwei Stränge zugleich — vor dem Start `pgrep -fl 'vitest run'` prüfen, läuft schon einer, warten. Messläufe
+haben Vorrang. Der Nutzer hatte nach der Rechnerlast gefragt. Kandidat für einen Werkzeug-Riegel (Lockdatei in
+`make check`) für die nächste Retro.
+
+Entscheider: L0 · Anlass: Nutzerfrage Rechnerlast · ADR: —
+
+## R358 · 2026-10-08 · SEE-F1-FAHRLINIE: Mehrbedarf +60 nachträglich frei; Überzug an die Retro
+
+Ruling: Stand `fix/see-f1-fahrlinie` @ cdda26f (T0–T2, T4 fertig, Goldwerte B5 belegt, Save v9 und `balance.test.ts`
+ohne Diff). Ist rund 174 Tools gegen 120 frei (+45 %), gemeldet erst nach dem Überzug. Mehrbedarf **+60** für T3,
+erneuten Browserblick und Final-Review `opus` nachträglich frei (Gesamt 180), weil das Paket fast fertig ist und ein
+Abbruch teurer wäre. Ursachen für die Retro: Playtest 30 Tools und drei T1-Starts; das Briefing an diese Instanz nannte
+die Mehrbedarfsmeldung nicht (L0). T3 startet nach dem Merge von ART-WALD-RAUTEN, die Inaktivität der Instanz bis dahin
+ist gewollt (Handoff `.studio/handoffs/2026-10-08-lead-tech-tech-see-f1.md`), keine Ad-hoc-Retro.
+
+Entscheider: L0 · Anlass: Zwischenbericht SEE-F1 · ADR: —
