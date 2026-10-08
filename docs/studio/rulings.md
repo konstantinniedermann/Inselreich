@@ -2936,3 +2936,17 @@ nach PERF-L57), ART-C7-ANSCHLUSS (lead-art, in PERF-L57 mitnehmen), ART-L8-SELTE
 Hygiene-Punkte (`role_class`, `package_family`) hängen an TOOL-STUDIO-HYGIENE. — Kosten bei Irrtum: keine, nur Board.
 
 Entscheider: L0 · Anlass: Bericht BEOB-AUSW-02 · ADR: —
+
+## R333 · 2026-10-08 · Nutzer-Stopp GitHub Actions
+
+Ruling: Nutzer-Anweisung „Actions durch Inselreich sofort stoppen" (Konto: 1172 von 2000 min im Oktober, 910 davon
+Inselreich). Umgesetzt: Workflows `CI` und `Pages` per `gh workflow disable` abgeschaltet (rücknehmbar mit
+`gh workflow enable`); laufender Integrator BEOB-AUSW-02 vor dem Push gestoppt, halber Merge in `integrate`
+abgebrochen, Branch `docs/beob-auswertung-02` @ f722f6a bleibt. Ursache: jeder Push auf `main` startet CI und Pages
+(drei Jobs, je auf volle Minuten aufgerundet); Oktober bisher 240 Pushes, davon 324 von 433 Commits reine `docs:`,
+Spitze 1.–3.10. mit rund 60 Pushes pro Tag. Bis zur Antwort auf N-98 gilt: kein Wiedereinschalten, kein
+`workflow_dispatch`; das Merge-Gate stützt sich lokal auf `make check`, `CI=true make check`, `make zeitreserve`;
+die CI-Schritte nach dem Push (Handbuch „Merge", Integrator-Persona Schritt 5) entfallen. Pushes auf `main` sind
+erlaubt (lösen nichts aus). — Kosten bei Irrtum: Releases gehen nicht live, bis N-98 beantwortet ist.
+
+Entscheider: Nutzer (Stopp), L0 (Umsetzung) · Anlass: Minutenverbrauch · ADR: —
