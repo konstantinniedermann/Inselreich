@@ -2969,3 +2969,17 @@ Release geht damit erst mit dem Session-End-Push live (danach `gh workflow run P
 und Handbuch im Paket TOOL-ACTIONS-SPAR. — Kosten bei Irrtum: CI-Fehler fallen erst am Session-Ende auf.
 
 Entscheider: Nutzer · Anlass: Minutenverbrauch (R333) · ADR: —
+
+## R336 · 2026-10-08 · Gate TOOL-ACTIONS-SPAR OK; Startstopp aufgehoben, Arbeitsverteilung
+
+Ruling: (a) Gate Merge **OK** für `tool/actions-spar` @ 3e5bdee (Workflows nach R334, Doku nach R335). Merge lokal
+durch den Integrator; Push und `gh workflow enable` erst am Session-Ende (R335). (b) Nutzer „weiterarbeiten und Arbeit
+verteilen" hebt den Startstopp R305 auf. Start jetzt parallel: **TOOL-RELEASE-CI** (lead-tech) ohne Punkt (1) „CI auf
+`rel/**`" (widerspricht R333–R335), dafür mit TOOL-RENDERQA-NACHZUG: Messskripte nach `tools/render-qa/` mit
+Lastabbruch und A/A-, A/B-Namen, dazu TOOL-ZEITRESERVE-RUNNER (E-043), ≤ 120 Tools; **IDEEN-03** (lead-design,
+I-022…I-026, Tastenkonflikte Leertaste und `U` prüfen), ≤ 80 Tools; **UI-INSELFILTER** (lead-tech, Bugfix
+`protectedCount` und gleichartige Stellen), ≤ 80 Tools. Nach dem Merge von TOOL-ACTIONS-SPAR folgt der studio-coach
+(Handbuch-Sätze R330 (2), (4), (5), E-039, E-041), weil beide `STUDIO.md` berühren. PERF-L57 (mit ART-C7-ANSCHLUSS)
+startet nach TOOL-RELEASE-CI und nur bei 1-min-Load ≤ 4 (aktuell 7). Studioweit ≤ 5 Arbeiter (R241).
+
+Entscheider: L0 · Anlass: Nutzer-Auftrag · ADR: —
