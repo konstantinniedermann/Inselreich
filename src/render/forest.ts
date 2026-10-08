@@ -342,6 +342,19 @@ function heightOf(c: Crown): number {
  * gesperrten Kachel, Riesenbaum (B3). Ergebnis nach Zellen, Kronen je Zelle nach Tiefe sortiert.
  */
 export function woodLayout(inp: WoodInput): WoodLayout {
+  const g = woodLayoutSteps(inp);
+  for (;;) {
+    const r = g.next();
+    if (r.done) return r.value;
+  }
+}
+
+/**
+ * `woodLayout` in Schritten (FIX-REL07): derselbe Ablauf, nur gibt der Generator zwischen den Zeilen- und
+ * Kandidatenschleifen die Kontrolle ab (`yield`), damit der Renderer die ~20 ms eines Baus auf mehrere Frames
+ * verteilen kann. Das Ergebnis hängt nicht vom Takt der Aufrufe ab; die Eingaben dürfen sich dazwischen nicht ändern.
+ */
+export function* woodLayoutSteps(inp: WoodInput): Generator<void, WoodLayout, void> {
   const { seed, w, h, cls } = inp;
   const type = forestType(seed);
   const m = new Uint8Array(w * h);
@@ -352,11 +365,13 @@ export function woodLayout(inp: WoodInput): WoodLayout {
   // Klassen einmal je Kachel abfragen (die Nachbarschaftsschleifen lesen sie oft)
   const clsArr: TileClass[] = new Array(w * h);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) clsArr[y * w + x] = cls(x, y);
+  yield;
   const at = (x: number, y: number): TileClass =>
     x < 0 || y < 0 || x >= w || y >= h ? 'blocked' : clsArr[y * w + x]!;
   const free = new Uint8Array(w * h); // 1 freier Wald, 2 Vorwald-Wiese
   const tight = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++)
+  for (let y = 0; y < h; y++) {
+    if ((y & 7) === 7) yield;
     for (let x = 0; x < w; x++) {
       const c = at(x, y);
       if (c !== 'forest' && c !== 'meadow') continue;
@@ -372,6 +387,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       free[y * w + x] = c === 'forest' ? 1 : 2;
       tight[y * w + x] = obj ? 1 : 0;
     }
+  }
   /** Darf eine Fussscheibe über die Kachel (x, y) ragen? Nur über Wald und Vorwald-Wiese. */
   const openTile = (x: number, y: number): boolean => {
     const c = at(x, y);
@@ -413,7 +429,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     hash2(seed + 521, (x * 32 + j) * 16 + k, y);
   const cands: Cand[] = [];
   const byTile = new Map<number, Cand[]>();
-  for (let y = 0; y < h; y++)
+  for (let y = 0; y < h; y++) {
+    if ((y & 3) === 3) yield;
     for (let x = 0; x < w; x++) {
       const f = free[y * w + x]!;
       if (!f) continue;
@@ -439,6 +456,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       }
       byTile.set(y * w + x, list);
     }
+  }
 
   function makeCrown(
     kind: CrownKind,
@@ -734,7 +752,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     return true;
   };
   const meadowN = new Map<number, number>();
+  let nCand = 0;
   for (const q of cands) {
+    if ((++nCand & 255) === 0) yield;
     if (conflicts(q, SPACING_MIN)) continue;
     if (!q.forest) {
       // Vorwald: höchstens VORWALD_MAX Gehölze je Wiesenkachel (Wiese bleibt Wiese)
@@ -829,7 +849,9 @@ export function woodLayout(inp: WoodInput): WoodLayout {
       for (const m of groupMembers(q.c)) bump(Math.floor(q.fx + m.cx), Math.floor(q.fy + m.cy));
     else if (q.forest) bump(q.tx, q.ty);
   }
+  let nTile = 0;
   for (const [k, list] of byTile) {
+    if ((++nTile & 63) === 0) yield;
     if (free[k] !== 1) continue;
     let n = count.get(k) ?? 0;
     if (n >= MIN_CROWNS) continue;
@@ -893,7 +915,8 @@ export function woodLayout(inp: WoodInput): WoodLayout {
     if (meadow) c.cast = true;
     return put({ fx, fy, tx, ty, p: 0, c, forest: !meadow });
   };
-  for (let ty = 0; ty < h; ty++)
+  for (let ty = 0; ty < h; ty++) {
+    if ((ty & 1) === 1) yield;
     for (let tx = 0; tx < w; tx++) {
       const k = ty * w + tx;
       if (!free[k]) continue;
@@ -927,6 +950,7 @@ export function woodLayout(inp: WoodInput): WoodLayout {
           fill(fx, fy, tx, ty, i);
         }
     }
+  }
 
   all = giant ? [...accepted, giant] : accepted;
   // Höhe aus der Form, Tiefenband-Zelle

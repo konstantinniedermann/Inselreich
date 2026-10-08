@@ -60,6 +60,7 @@ import {
   bodyHull,
   project,
   sortedObjects,
+  WOOD_SLICE_MS,
   spriteBounds,
   type Moving,
   type Pt,
@@ -617,7 +618,7 @@ function drawIsland(
           );
 
     // Sichtbare Objekte in Zeichenreihenfolge (D-09)
-    const items = sortedObjects(world, moving);
+    const items = sortedObjects(world, moving, WOOD_SLICE_MS);
     const left = cam.x,
       top = cam.y,
       right = cam.x + view.w / cam.zoom,
