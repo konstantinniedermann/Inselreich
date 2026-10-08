@@ -446,8 +446,8 @@ function evict(need: number): void {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Farn auf Lichtungen (ART-STIL-02 L6, B2 Stempelteil). Salz 584 (Block 576–584, Eintrag im zentralen Kopf von
-// groundDecor.ts macht der Release-Merge). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln) in der vorderen
+// Farn auf Lichtungen (ART-STIL-02 L6, B2 Stempelteil). Salz 584 (Block 576–584, Register im zentralen Kopf von
+// groundDecor.ts). Je Lichtungskachel 2–4 Büschel (Fächer aus 5–7 Wedeln) in der vorderen
 // Kachelhälfte; WALD-02/REL-07: jedes Büschel wird mit der Tiefenband-Zelle seines Fusspunkts gezeichnet, in der
 // Tiefenfolge zwischen deren Kronen. Eigener kleiner Cache (FERN_FORMS × ZOOM_STEPS), der Kronen-Atlas bleibt unberührt.
 

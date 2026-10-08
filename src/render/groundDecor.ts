@@ -13,14 +13,16 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // des Massivs in rocks.ts) und trees.ts (seed + 68 mit Argumenten `variant, k`, keine Kollision).
 // ART-STIL-02 (Spec 4 R1, Anhang 0.2): 500 Inselcharakter `hash2(seed + 500, 0, k)` (k 0 Waldtyp, L1 in forest.ts;
 // k 1 Blüten, L4; k 2 Küste, L5; k 3 Gebirge, L2 in massif.ts; k 4 Nachtmeer, L8) ·
-// 501–519 L1 Wald: 501 Akzentart, 502/503 Bestandsfelder, 504/505/514 Randversatz, 506/507 Kern-Streuung, 508 Lichtung,
-// 509/510 Riesenbaum, 511 Formreihenfolge, 515 Wiederholung in der Formwahl, 516 Randversatz quer, 517 wellige
-// Randkomponente in `forestEdgeShift` (alle forest.ts),
-// 512 Kronen je Variante, 513 Kronenform (trees.ts) ·
-// 520–539 L2 Gebirge (belegt 530–539, massif.ts/rocks.ts, 539 in terrain.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
+// 501–517 L1 Wald (forest.ts): 501 Akzentart, 502/503 Bestandsfelder, 508 Lichtung, 509/510 Riesenbaum. Nicht mehr belegt
+// seit WALD-02: 504–507, 511–517 (alte Stempelplatzierung und Kronenformen) ·
+// 518–529 WALD-02 (forest.ts, woodField.ts): 518/519/520 Randrauschen des Saumfelds (`woodField.ts`, auch `forestEdgeShift`),
+// 521 Kandidaten je Kachel (Lage, Rang, Einzelwurf), 522 Grössen-/Altersfeld, 523 Tonfeld, 524 Beimischung,
+// 525 Totholz (reserviert, im Code ungenutzt), 526 Vorwalddichte, 527 Form und Spiegelung, 528 Horstfeld,
+// 529 Rottenfeld (Dichtestaffel im Nadelwald) ·
+// 530–539 L2 Gebirge (massif.ts/rocks.ts, 539 in terrain.ts): 530 Blütenraster, 531 Blütenton, 532 Korn im Schuttband,
 // 533 Schneerand, 534 Baumauswahl, 535 Baumform, 536 Baumhöhe, 537 Baumneigung (534 + 1…3), 538 Wiesenfuss, 539 Findlinge im Boden (terrain.ts, Task B) ·
 // 540–559 L4 (decor.ts, groundDecor.ts, decorStamps.ts) · 560–569 L5 · 570–575 L3 (sprites.ts, material.ts; im
-// Einzelnen oben) · 576–584 L6 · 585–594 L7 · 595–599 L8 (Seltenheitsbudget).
+// Einzelnen oben) · 576–584 L6 (unten) · 585–594 L7 · 595–599 L8 (Seltenheitsbudget).
 // L4 im Einzelnen: 540 Solitärbaum je Kachel · 541 Wiesenart A2 · 542 Buschgruppe A3 · 543 Kiesel A4 · 544 Findling A4 ·
 // 545 Lesesteinhaufen A7 · 546 Maulwurfshügel A11 · 547 Binsen A12 · 548 Pilze B6 · 549 Totholz B7 · 550 Farnsaum B8 ·
 // 551 Wahl des Boden-Elements je Kachel · 552 Stempelvariante · 553 Buschdichte A3 und Zusatzblüten A1 · 554 Steinkreis A8 · 555 Blütenteppich A13 ·
@@ -30,6 +32,9 @@ import { LIGHT_TONE, PALETTE, mixHex, rgbOf, rgbOfCss, toInk, toLight } from './
 // 587 Posen (Zyklusversatz, Rast- und Wegplätze) · 588 Episoden (Fuchs, Waldvögel) · 589 Gestalt (Falterton, Hirsch, Flugbahn) ·
 // 590 Glühwürmchen (Drift, Puls) (alle fauna.ts) · 591–593 Delfine in wildlife.ts (591 Episode und Beginn, 592 Gruppengrösse,
 // 593 Ort und Richtung) · 594 Glitzern (fauna.ts).
+// L6 im Einzelnen (576–584): 576 Bergsee-Los (+1 = 577 Form, Uferradien; 577 auch Formrauschen und Korn in rocks.ts) ·
+// 578 Wasserfall-Los (+1 = 579 Form, Breite; 579 auch Geröll in rocks.ts) · 580 Höhlen-Los (+1 = 581 Form, Umriss) ·
+// 582 Steinmännchen-Los (+1 = 583 Form, Steine) (alle massif.ts, rocks.ts) · 584 Farn auf Lichtungen (trees.ts, `FERN_SALT`).
 // L5 im Einzelnen (560–569): 560 Palmen D1 und Palmengruppen · 561 Strandsteine D2 und Tümpel D6 · 562 Treibholz D3 ·
 // 563 Muscheln D4 · 564 Strandhafer D5 · 565 Kiste D9 · 566 Wrack E1 · 567 Meeresfels E3 und Felsnadel · 568 Felseiland E8 ·
 // 569 Wasserfelder (Sandbank D11, Riff E2, Tang E6 über verschiedene `hash2`-Argumente); Küstenvariante `hash2(seed + 500, 0, 2)`.
