@@ -11,6 +11,7 @@ export const ZEITTESTS = [
   'tests/render/terrain.test.ts',
   'tests/sim/perf.test.ts',
   'tests/sim/save.test.ts',
+  'tests/sim/seaRoute.test.ts',
   'tests/ui/hints.test.ts',
 ];
 
