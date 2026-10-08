@@ -2950,3 +2950,13 @@ die CI-Schritte nach dem Push (Handbuch „Merge", Integrator-Persona Schritt 5)
 erlaubt (lösen nichts aus). — Kosten bei Irrtum: Releases gehen nicht live, bis N-98 beantwortet ist.
 
 Entscheider: Nutzer (Stopp), L0 (Umsetzung) · Anlass: Minutenverbrauch · ADR: —
+
+## R334 · 2026-10-08 · N-98: Actions mit drei Sparregeln wieder einschalten
+
+Ruling: Nutzerentscheid N-98 umsetzen als Paket **TOOL-ACTIONS-SPAR** (lead-tech): (1) `CI` und `Pages` ignorieren
+reine Doku-Pushes (`paths-ignore`: `docs/**`, `**/*.md`, `.studio/**`, `.claude/**`); (2) `Pages` nur noch per
+`workflow_dispatch`, ausgelöst vom Integrator beim Release; (3) `CI` mit `concurrency` und `cancel-in-progress`.
+Integrator-Persona und Handbuch „Merge" werden nachgeführt (Pages-Auslösung beim Release, CI-Prüfung nur bei
+Code-Pushes). Workflows erst nach dem Merge der neuen Dateien wieder einschalten. — Kosten bei Irrtum: gering.
+
+Entscheider: Nutzer (N-98), L0 · Anlass: R333 · ADR: —
