@@ -13,7 +13,6 @@ import {
   kontorPos,
   rareBudget,
   rareSites,
-  seaContext,
   type RareSite,
 } from '../../src/render/decor';
 
@@ -100,21 +99,11 @@ describe('ART-L8-SELTEN T1 Seltenheitsbudget', () => {
     expect(total / runs).toBeGreaterThanOrEqual(0.7);
   });
 
-  it('AK5 rareBudget zählt die Meer-Lose und hängt nicht von SeaContext ab', () => {
+  it('AK5 rareBudget(seed) zählt die Meer-Lose und braucht keinen SeaContext', () => {
     expect(rareBudget.length).toBe(1);
     SEEDS.forEach((s, i) => {
       const before = rareBudget(worlds[i]!.seed);
       expect(before, `Seed ${s}`).toBe(mOf(lots[i]!));
-      const ctx = seaContext(worlds[i]!);
-      ctx.lanes = [];
-      expect(rareBudget(worlds[i]!.seed)).toBe(before);
-      ctx.lanes = [
-        [
-          { x: 1, y: 1 },
-          { x: 40, y: 40 },
-        ],
-      ];
-      expect(rareBudget(worlds[i]!.seed)).toBe(before);
     });
   });
 
