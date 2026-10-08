@@ -768,6 +768,9 @@ describe('M10 Teil-Raster', () => {
       'dune',
       'dpres',
       'dphase',
+      'wood',
+      'woodSh',
+      'woodK',
     ] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));

@@ -9,13 +9,13 @@ import { layoutKey } from '../sim/queries';
 import type { Building, BuildingDef, World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import type { Phase } from './daynight';
-import { ISO_H, ISO_W, TREE_VARIANTS, project, type Pt } from './iso';
+import { ISO_H, ISO_W, project, type Pt } from './iso';
 import { cap } from './limits';
 import { LIGHT } from './light';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, fieldWorld, type Field } from './terrainField';
-import { crownScreen, crownsFor, type TreeItem } from './trees';
+import { crownScreen, type TreeItem } from './trees';
 
 /** `rgba(…)` aus einer Palettenfarbe oder einem `mixHex`-Ton (`rgb(…)`). */
 const rgbaCss = (css: string, alpha: number): string => `rgba(${rgbOfCss(css).join(',')},${alpha})`;
@@ -603,26 +603,26 @@ export function buildingClips(cam: Camera, world: World, b: Building): Poly[][] 
 }
 
 /**
- * Kronenvielecke eines Baumstempels im Bildraum (ein Vieleck je Krone), mit Stempelversatz und Riesenbaum: Mitte und
- * halbe Masse kommen aus `crownScreen`, derselben Quelle wie das Zeichnen (`paintCrown`).
+ * Kronenvielecke eines Wald-Objekts im Bildraum (ein Vieleck je Krone, ohne Totholz): Mitte und halbe Masse kommen aus
+ * `crownScreen`, derselben Quelle wie das Zeichnen (`paintCrown`), Ursprung = Rautenmitte der Objektkachel.
  */
 export function crownPolys(cam: Camera, item: TreeItem, seed: number): Poly[] {
+  void seed; // WALD-02: die Kronen stehen im Objekt, der Seed wird nicht mehr gebraucht (Signatur für renderer.ts)
   const z = cam.zoom;
-  const o = worldToScreen(
-    cam,
-    project(item.fp.x + 0.5 + (item.ox ?? 0), item.fp.y + 0.5 + (item.oy ?? 0)),
-  );
-  return crownsFor(seed, item.variant % TREE_VARIANTS, item.giant === true).map((c) => {
-    const s = crownScreen(c);
-    const mx = o.x + s.x * z,
-      my = o.y + s.y * z;
-    const rx = s.rx * z,
-      ry = s.ry * z;
-    return Array.from({ length: CROWN_SEGMENTS }, (_, i) => {
-      const a = (i / CROWN_SEGMENTS) * Math.PI * 2;
-      return { x: mx + Math.cos(a) * rx, y: my + Math.sin(a) * ry };
+  const o = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
+  return item.crowns
+    .filter((c) => !c.dead)
+    .map((c) => {
+      const s = crownScreen(c);
+      const mx = o.x + s.x * z,
+        my = o.y + s.y * z;
+      const rx = s.rx * z,
+        ry = s.ry * z;
+      return Array.from({ length: CROWN_SEGMENTS }, (_, i) => {
+        const a = (i / CROWN_SEGMENTS) * Math.PI * 2;
+        return { x: mx + Math.cos(a) * rx, y: my + Math.sin(a) * ry };
+      });
     });
-  });
 }
 
 /** Kleinste Box um `rects`, rundum um `pad` erweitert. */

@@ -4,9 +4,14 @@ import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
 import type { Weather } from './daynight';
 import { CLEAR } from './weather';
+import { SEA_ELEMENT_MIN_ZOOM } from './decorStamps';
+
+export { SEA_ELEMENT_MIN_ZOOM };
+import { SEA_PAD, seaContext, seaKontorBlocked, seaPlan, type SeaContext } from './decor';
 import { coastField, coastValue, fieldWorld, rimWeight, terrainFields } from './terrainField';
 
 // water.ts — Schaumsaum und Wellen (Spec 5.2, ISO §6). Alles im Kachelraum, Aufruf unter der Bodenmatrix.
+// L5: Brandungsschaum an Riff, Wrack, Meeresfels und Felseiland (Salz 566–569 über `hash2` für die Phasen).
 export const FOAM_PERIOD_MS = 3200; // Spec 5.2: Periode des Schaumsaums
 export const FOAM_ALPHA: [number, number] = [0.35, 0.7]; // weicher Saum
 export const FOAM_CORE_ALPHA: [number, number] = [0.85, 1]; // Kernlinie: farbnah zu foam (I2)
@@ -174,11 +179,244 @@ function infoFor(world: World): WaterInfo {
   return info;
 }
 
+// ---------- L5: Schaum an Riff, Wrack, Meeresfels, Felseiland ----------
+
+export interface FoamPiece {
+  /** Radius des Bogenstücks um die Objektmitte (Kacheln), Winkelbereich a0 < a1 (rad), Phase und Strichstärke. */
+  r: number;
+  a0: number;
+  a1: number;
+  phase: number;
+  thick: boolean;
+}
+export interface FoamRing {
+  /** Art des Objekts: Wrack und Eiland erscheinen erst ab `SEA_ELEMENT_MIN_ZOOM`. */
+  kind: 'wreck' | 'rock' | 'islet';
+  /** Mitte (Kachelraum), Fussabdruck-Radius des Objekts und die 3–5 unregelmässigen Bogenstücke (nie ein geschlossener Kreis). */
+  x: number;
+  y: number;
+  fp: number;
+  pieces: FoamPiece[];
+  /** Kachel des Objekts und Zuschlag für den R4-Sichtbarkeitsfilter (`seaKontorBlocked`). */
+  tx: number;
+  ty: number;
+  pad: number;
+}
+/** Kurze gebogene Schaumsichel am Riff (Anfang, Steuerpunkt, Ende im Kachelraum); `tx`/`ty` = Riffkachel. */
+export interface FoamReef {
+  tx: number;
+  ty: number;
+  x0: number;
+  y0: number;
+  cx: number;
+  cy: number;
+  x1: number;
+  y1: number;
+  phase: number;
+  /** Einheitsvektor zur See (Wanderrichtung). */
+  dx: number;
+  dy: number;
+}
+export interface SeaFoam {
+  rings: FoamRing[];
+  reefs: FoamReef[];
+}
+const seaFoamCache = new WeakMap<World, SeaFoam>();
+/** Fussabdruck-Radien der Objekte (Kacheln); der Schaum liegt bei Fussabdruck + 0,03 … 0,145. */
+const FOOT = { wreck: 0.5, rock: 0.3, needle: 0.26, islet: 0.5 } as const;
+/** Reichweite der Landsuche für die Seeseite (Kacheln). */
+const LAND_REACH = 7;
+
+/** Einheitsvektor vom Land weg (zur See) an der Kachel `t`: Landkacheln im Umkreis, gewichtet mit 1 / Abstand². */
+function seaward(isl: ReturnType<typeof home>, tx: number, ty: number): [number, number] {
+  const { width: w, height: h } = isl;
+  let lx = 0,
+    ly = 0;
+  for (let dy = -LAND_REACH; dy <= LAND_REACH; dy++)
+    for (let dx = -LAND_REACH; dx <= LAND_REACH; dx++) {
+      const nx = tx + dx,
+        ny = ty + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || isl.tiles[ny * w + nx]!.terrain === 'water')
+        continue;
+      const d = Math.hypot(dx, dy);
+      lx += dx / (d * d);
+      ly += dy / (d * d);
+    }
+  const l = Math.hypot(lx, ly);
+  return l > 1e-9 ? [-lx / l, -ly / l] : [1, 0];
+}
+
+/**
+ * Schaumelemente der Heimat aus `seaPlan` (statisch, je Welt einmal): unregelmässige Bogenstücke dicht am Objekt, vor allem
+ * auf der Seeseite (Salze 566–568 über `hash2`), und kurze gebogene Sicheln an der Seekante des Riffs (569). Die Welt wird
+ * nur gelesen. Ohne Heimat-Art (Testwelten) leer.
+ */
+export function seaFoam(world: World): SeaFoam {
+  const hit = seaFoamCache.get(world);
+  if (hit) return hit;
+  const out: SeaFoam = { rings: [], reefs: [] };
+  const isl = home(world);
+  if (isl.kind === 'home') {
+    const plan = seaPlan(world.seed, isl, seaContext(world));
+    const seed = world.seed;
+    const ring = (
+      kind: FoamRing['kind'],
+      salt: number,
+      tx: number,
+      ty: number,
+      fp: number,
+      pad: number,
+    ): void => {
+      const hs = (k: number): number => hash2(seed + salt, tx * 64 + k, ty);
+      const [dx, dy] = seaward(isl, tx, ty);
+      const th = Math.atan2(dy, dx);
+      const n = 3 + Math.floor(hs(0) * 3);
+      const offs = [
+        0,
+        1.2 + 0.4 * hs(1),
+        -(1.2 + 0.4 * hs(2)),
+        2.3 + 0.3 * hs(3),
+        -(2.3 + 0.3 * hs(4)),
+      ];
+      const pieces: FoamPiece[] = [];
+      for (let k = 0; k < n; k++) {
+        const len =
+          k === 0 ? 0.9 + 0.5 * hs(10) : k === n - 1 ? 0.3 + 0.1 * hs(11) : 0.35 + 0.4 * hs(12 + k);
+        const r = k === 0 ? fp + 0.03 : k === 1 ? fp + 0.145 : fp + 0.03 + 0.115 * hs(20 + k);
+        const c = th + offs[k]!;
+        pieces.push({
+          r,
+          a0: c - len / 2,
+          a1: c + len / 2,
+          phase: hs(30 + k) * Math.PI * 2,
+          thick: hs(40 + k) < 0.45,
+        });
+      }
+      out.rings.push({ kind, x: tx + 0.5, y: ty + 0.5, fp, pieces, tx, ty, pad });
+    };
+    if (plan.wreck) ring('wreck', 566, plan.wreck.x, plan.wreck.y, FOOT.wreck, SEA_PAD.wreck);
+    for (const r of plan.rocks)
+      ring('rock', 567, r.x, r.y, r.needle ? FOOT.needle : FOOT.rock, SEA_PAD.rock);
+    if (plan.islet) ring('islet', 568, plan.islet.x, plan.islet.y, FOOT.islet, SEA_PAD.islet);
+    for (const a of plan.reefs)
+      for (const t of a.tiles) {
+        const [dx, dy] = seaward(isl, t.x, t.y);
+        const px = -dy,
+          py = dx;
+        const hs = (k: number): number => hash2(seed + 569, t.x * 64 + k, t.y + 400);
+        if (hs(0) < 0.15) continue; // Lücke
+        const count = hs(1) < 0.5 ? 2 : 1;
+        for (let k = 0; k < count; k++) {
+          const off = 0.3 + 0.2 * hs(2 + k * 8);
+          const s0 = -0.5 + 0.55 * hs(3 + k * 8) + (k ? 0.1 : 0);
+          const len = 0.22 + 0.5 * hs(4 + k * 8);
+          const bulge = (0.08 + 0.14 * hs(5 + k * 8)) * (hs(6 + k * 8) < 0.5 ? -1 : 1);
+          const x0 = t.x + 0.5 + dx * off + px * s0,
+            y0 = t.y + 0.5 + dy * off + py * s0;
+          const drift = 0.06 * (hs(7 + k * 8) - 0.5);
+          const x1 = x0 + px * len + dx * drift,
+            y1 = y0 + py * len + dy * drift;
+          out.reefs.push({
+            tx: t.x,
+            ty: t.y,
+            x0,
+            y0,
+            x1,
+            y1,
+            cx: (x0 + x1) / 2 + dx * bulge,
+            cy: (y0 + y1) / 2 + dy * bulge,
+            phase: hs(9 + k * 8) * Math.PI * 2,
+            dx,
+            dy,
+          });
+        }
+      }
+  }
+  seaFoamCache.set(world, out);
+  return out;
+}
+
+const visibleCache = new WeakMap<SeaContext, SeaFoam>();
+/**
+ * `seaFoam` ohne die Objekte, die R4 wegen eines jetzigen Kontors in < 4 Kacheln ausblendet (derselbe Filter wie bei den
+ * Stempeln: nie Schaum ohne Objekt). Je Seekontext einmal gehalten; die Riffsicheln bleiben (Flächen sind nur Bodentönung).
+ */
+export function seaFoamVisible(world: World): SeaFoam {
+  const f = seaFoam(world);
+  if (home(world).kind !== 'home') return f;
+  const ctx = seaContext(world);
+  let v = visibleCache.get(ctx);
+  if (!v) {
+    v = { rings: f.rings.filter((r) => !seaKontorBlocked(ctx, r.tx, r.ty, r.pad)), reefs: f.reefs };
+    visibleCache.set(ctx, v);
+  }
+  return v;
+}
+
+/** Brandungsschaum der Meer-Elemente im `range`: gleitend (Phase je Stück), nie aus; `reduce` = statisch. */
+function drawSeaFoam(
+  ctx: CanvasRenderingContext2D,
+  world: World,
+  range: { x0: number; y0: number; x1: number; y1: number },
+  phaseT: number,
+  alpha: number,
+  core: number,
+  widthK: number,
+  reduce: boolean,
+  zoom: number,
+): void {
+  const f = seaFoamVisible(world);
+  const near = zoom >= SEA_ELEMENT_MIN_ZOOM;
+  if (!f.rings.length && !f.reefs.length) return;
+  const inRange = (x: number, y: number, pad: number): boolean =>
+    x + pad >= range.x0 &&
+    x - pad <= range.x1 + 1 &&
+    y + pad >= range.y0 &&
+    y - pad <= range.y1 + 1;
+  // zwei Strichstärken; die Deckkraft liegt im unteren Teil des Bands
+  const lo = (v: number, band: readonly [number, number], k: number): number =>
+    band[0] + (v - band[0]) * k;
+  const aSeam = lo(alpha, FOAM_ALPHA, 0.5),
+    aCore = lo(core, FOAM_CORE_ALPHA, 0.4);
+  for (const thick of [true, false]) {
+    ctx.beginPath();
+    let any = false;
+    for (const r of f.rings) {
+      if (r.kind !== 'rock' && !near) continue;
+      if (!inRange(r.x, r.y, r.fp + 0.3)) continue;
+      for (const p of r.pieces) {
+        if (p.thick !== thick) continue;
+        const rad = p.r + (reduce ? 0 : 0.01 * Math.sin(phaseT + p.phase));
+        ctx.moveTo(r.x + Math.cos(p.a0) * rad, r.y + Math.sin(p.a0) * rad);
+        ctx.arc(r.x, r.y, rad, p.a0, p.a1);
+        any = true;
+      }
+    }
+    if (!thick)
+      for (const c of f.reefs) {
+        if (!inRange(c.tx + 0.5, c.ty + 0.5, 0.9)) continue;
+        const w = reduce ? 0 : 0.035 * Math.sin(phaseT + c.phase);
+        const ox = c.dx * w,
+          oy = c.dy * w;
+        ctx.moveTo(c.x0 + ox, c.y0 + oy);
+        ctx.quadraticCurveTo(c.cx + ox, c.cy + oy, c.x1 + ox, c.y1 + oy);
+        any = true;
+      }
+    if (!any) continue;
+    ctx.lineWidth = FOAM_SEAM_WIDTH * widthK * (thick ? 1.25 : 0.75);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(aSeam.toFixed(4)));
+    ctx.stroke();
+    ctx.lineWidth = FOAM_CORE_WIDTH * widthK * (thick ? 1.2 : 0.7);
+    ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(aCore.toFixed(4)));
+    ctx.stroke();
+  }
+}
+
 /**
  * Schaumsaum und Wellenstriche auf Wasserkacheln im Bereich x0..x1/y0..y1 (inklusive).
  * Zeichnet im Kachelraum (1 Einheit = 1 Kachel): Aufruf unter der Bodenmatrix (`withGround`).
  * Sturm (Spec 5.2): Amplitude × (1 + w), Schaumbreite × (1 + 1,5 w), Periode × (1 − 0,4 w); `reduce` halbiert
- * die Amplitude (Spec 9.2).
+ * die Amplitude (Spec 9.2). `seaElements` false lässt den Schaum an Riff, Wrack, Fels und Eiland (L5) weg (Küstentests); `zoom` blendet Wrack- und Eiland-Schaum unter `SEA_ELEMENT_MIN_ZOOM` aus.
  */
 export function drawWaves(
   ctx: CanvasRenderingContext2D,
@@ -187,6 +425,8 @@ export function drawWaves(
   timeMs: number,
   weather: Weather = CLEAR,
   reduce = false,
+  seaElements = true,
+  zoom = 1,
 ): void {
   const info = infoFor(world);
   const isl = home(world);
@@ -238,6 +478,13 @@ export function drawWaves(
     ctx.strokeStyle = rgbaOf(PALETTE.foam, Number(core.toFixed(4)));
     ctx.stroke();
   }
+
+  // L5: Schaum an Riff, Wrack, Fels und Eiland (reduceMotion: statisch, Mittelwert der Deckkraft)
+  const calm = reduce
+    ? { a: (FOAM_ALPHA[0] + FOAM_ALPHA[1]) / 2, c: (FOAM_CORE_ALPHA[0] + FOAM_CORE_ALPHA[1]) / 2 }
+    : { a: alpha, c: core };
+  if (seaElements)
+    drawSeaFoam(ctx, world, { x0, y0, x1, y1 }, phaseT, calm.a, calm.c, widthK, reduce, zoom);
 
   // Wellenstriche: foam mit Deckkraft 0,12, nur im tiefen Wasser
   const t = (timeMs / (WAVE_PERIOD_MS * periodK)) * Math.PI * 2;

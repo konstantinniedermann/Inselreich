@@ -138,7 +138,8 @@ describe('RF-LICHT Fensterlicht hinter Verdeckern', () => {
     forceRect(world, f.x + 1, f.y + 1, 1, 1, 'forest');
     const { log, cam } = frame(world, NIGHT, [], VERDECKUNG.F);
     const tree = sortedObjects(world).find(
-      (i): i is TreeItem => i.kind === 'tree' && i.fp.x === f.x + 1,
+      // WALD-02: die Waldkachel grenzt ans Haus (Eng): ihre Kronen stehen im eigenen Objekt der Kachel
+      (i): i is TreeItem => i.kind === 'tree' && i.own && i.fp.x === f.x + 1 && i.fp.y === f.y + 1,
     )!;
     expect(tree).toBeDefined();
     const fill = lightFill(log, windowRects(cam, f)[0]!);

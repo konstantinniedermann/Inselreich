@@ -379,10 +379,10 @@ describe('Renderer', () => {
       (i) =>
         i.kind === 'building' ||
         (i.kind === 'tree' &&
-          i.fp.x >= range.x0 - 1 &&
-          i.fp.x <= range.x1 + 1 &&
-          i.fp.y >= range.y0 - 1 &&
-          i.fp.y <= range.y1 + 1),
+          i.fp.x >= range.x0 - 2 &&
+          i.fp.x <= range.x1 + 2 &&
+          i.fp.y >= range.y0 - 2 &&
+          i.fp.y <= range.y1 + 2),
     );
     expect(items.filter((i) => i.kind === 'tree').length).toBeGreaterThanOrEqual(16);
     expect(seq.filter((c) => c.kind !== 'ship').map((c) => `${c.kind}${c.id}`)).toEqual(
@@ -390,19 +390,35 @@ describe('Renderer', () => {
     );
   });
 
-  it('L1-Befund Culling: ein Baum eine Kachel hinter dem Kachelbereich wird noch gezeichnet (Zuschlag), zwei Kacheln dahinter nicht', () => {
+  it('L1-Befund Culling (WALD-02): die Kronen einer Waldkachel eine Kachel hinter dem Kachelbereich werden gezeichnet, die vier Kacheln dahinter nicht', () => {
     const { world } = scene();
     const cam = camFor(world, 1);
     const isl = home(world);
     const range = visibleTileRange(cam, VIEW, { w: isl.width, h: isl.height });
     const y = Math.floor((range.y0 + range.y1) / 2);
-    expect(range.x1 + 2).toBeLessThan(isl.width);
-    for (const dx of [1, 2]) forceRect(world, range.x1 + dx, y, 1, 1, 'forest');
+    // rechts oder links des Kachelbereichs, je nachdem wo die Karte Platz hat
+    const right = range.x1 + 4 < isl.width;
+    const at = (d: number) => (right ? range.x1 + d : range.x0 - d);
+    expect(right || range.x0 - 4 >= 0).toBe(true);
+    forceRect(world, Math.min(at(1), at(4)), y, 4, 1, 'grass');
+    for (const d of [1, 4]) forceRect(world, at(d), y, 1, 1, 'forest');
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, VIEW, { timeMs: 0 });
     const drawn = new Set(h.calls.filter((c) => c.kind === 'tree').map((c) => c.id));
-    expect(drawn.has(y * isl.width + range.x1 + 1)).toBe(true);
-    expect(drawn.has(y * isl.width + range.x1 + 2)).toBe(false);
+    const holders = (tx: number) =>
+      sortedObjects(world, [])
+        .filter(
+          (i) =>
+            i.kind === 'tree' &&
+            i.crowns.some(
+              (c) => Math.floor(i.fp.x + c.cx) === tx && Math.floor(i.fp.y + c.cy) === y,
+            ),
+        )
+        .map((i) => i.id);
+    expect(holders(at(1)).length).toBeGreaterThan(0);
+    for (const id of holders(at(1))) expect(drawn.has(id)).toBe(true);
+    expect(holders(at(4)).length).toBeGreaterThan(0);
+    for (const id of holders(at(4))) expect(drawn.has(id)).toBe(false);
   });
 
   it('ISO §5 (N2) Bruchprobe-Szene: der Weg liegt vor dem ersten Körper — nach den Körpern gezeichnete Wege würden diesen Test röten', () => {
@@ -1147,9 +1163,18 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Bewusst neu gepinnt (ART-STIL-02 L4): Baum-Culling mit 1 Kachel Zuschlag (+520 Zeichen) und die Deko-Stempel, deren
   // Zeichen- und Schattenaufrufe die Ereignisreihenfolge (`at`) der Aufrufe verschieben; mehr Deko-Ereignisse durch
   // G-Anzahl (b537908).
-  const HOME_CALLS = { hash: 967493816, length: 12895 };
+  // WALD-02 (auch Fix-Runden 1–3, Baumgruppen, Nadelwald-Rotten, Nachsetzen unter dunklem Boden): bewusst neu gepinnt (beide Pins): Wald-Objekte sind Tiefenband-Zellen aus einzelnen Kronen (andere Ids und
+  // Anzahl, Reihenfolge nach Fusstiefe) und das Baum-Culling hat 2 Kacheln Zuschlag.
+  // L5: Palmen, Meer-Stempel und ihr Schaum (Heimat der Fixtur) verschieben die Ereignisreihenfolge weiter.
+  // L7-Merge (main mit REL-06 + L5): neu gepinnt, L3-Bildmodus und L5-Meer-Stempel zusammen.
+  // REL-07 (int/rel-07, WALD-02 + L7 mit L5): neu gepinnt, WALD-02-Kronenzellen und L5-Meer-Stempel zusammen.
+  // L6 B2: Farnbüschel auf Lichtungen sind zusätzliche drawImage-Ereignisse; die Positionen `at` der folgenden Aufrufe
+  // verschieben sich (ART-STIL-02 L6).
+  // REL-07 (+ L6): Farn auf WALD-02 übertragen, Büschel in der Tiefenfolge der Kronenzellen; HOME_ORDER neu, weil eine
+  // Tiefenband-Zelle ohne Krone (Kachel 25/54) nur für zwei Farnbüschel als Wald-Objekt dazukommt (tree332).
+  const HOME_CALLS = { hash: 802371235, length: 19050 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
-  const HOME_ORDER = { hash: 3670334885, length: 3662 };
+  const HOME_ORDER = { hash: 3471626267, length: 5152 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
   // L3: Ereignisindex `at` je Körper wächst mit dem Bildmodus (Kontur, Kontakt, Gras); Reihenfolge und Ids unverändert.
   const V1280 = { w: 1280, h: 800 };
@@ -1209,6 +1234,10 @@ describe('M12 E1 Renderer', () => {
 
   it('AK-E1-10 Kamera über der Heimat: Aufrufliste gleich der Welt ohne Fremdinseln', () => {
     const { world } = scene();
+    // L7: Robben und Kormorane stehen auf Fels und Sandbank des Meer-Plans, und der hängt von den Fahrlinien und damit
+    // von den Fremdinseln ab (`seaContext`); ohne Fremdinseln ist es eine andere Meerlage. Nachts (tick 3000) sind die Meer-Tiere
+    // aus, der Rest des Bildes bleibt der Prüfgegenstand dieses Tests.
+    world.tick = 3000;
     const cam = camFor(world, 1);
     const a = run(world, cam);
     const b = run(homeOnly(world), cam);
@@ -1252,7 +1281,16 @@ describe('M12 E1 Renderer', () => {
     'L4 Deko-Culling: eine Kachel hinter range gezeichnet, zwei nicht; unter Zoom 0,5 kein A5/A6, unter 0,75 kein A9/A14; Schatten im gemeinsamen Pfad',
     { timeout: 120000 },
     () => {
-      const MIN = { solitaire: 0.5, orchard: 0.5, menhir: 0.75, ruin: 0.75 } as const;
+      const MIN = {
+        solitaire: 0.5,
+        orchard: 0.5,
+        menhir: 0.75,
+        ruin: 0.75,
+        palm: 0.5, // L5 D1
+        wreck: 0.25, // L5 E1
+        seaRock: 0.25, // L5 E3
+        islet: 0.25, // L5 E8
+      } as const;
       let plusOne = 0,
         plusTwo = 0;
       const kindsDrawn = new Map<number, Set<string>>();
@@ -1296,14 +1334,11 @@ describe('M12 E1 Renderer', () => {
       }
       expect(plusOne, 'ein Stempel eine Kachel hinter range wurde geprüft').toBeGreaterThan(0);
       expect(plusTwo, 'ein Stempel zwei Kacheln hinter range wurde geprüft').toBeGreaterThan(0);
-      expect([...(kindsDrawn.get(1) ?? [])].sort()).toEqual([
-        'menhir',
-        'orchard',
-        'ruin',
-        'solitaire',
-      ]);
-      expect([...(kindsDrawn.get(0.6) ?? [])].sort()).toEqual(['orchard', 'solitaire']);
-      expect(kindsDrawn.get(0.4)).toBeUndefined();
+      // L5: Palmen (ab 0,5) und die Meer-Stempel (ab 0,25) kommen zu den L4-Stempeln dazu: exakte Listen je Zoom
+      const got = (z: number): string[] => [...(kindsDrawn.get(z) ?? [])].sort();
+      expect(got(1)).toEqual(['menhir', 'orchard', 'palm', 'ruin', 'seaRock', 'solitaire']);
+      expect(got(0.6)).toEqual(['orchard', 'palm', 'seaRock', 'solitaire']);
+      expect(got(0.4)).toEqual(['seaRock']);
     },
   );
 

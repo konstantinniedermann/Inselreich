@@ -9,11 +9,14 @@ import { crownGeom, paintCrown, type Crown } from './trees';
 import type { StampKind } from './decor';
 
 // decorStamps.ts — Zeichner und Cache der Deko-Stempel (ART-STIL-02 L4): A5 Solitärbaum, A6 Obstbaum, A9 Menhir, A14
-// Mauerreste. Die Platzierung kommt aus `decor.ts`; hier stehen Formen, Schatten, Zoomschwellen und der Stempel-Cache.
+// Mauerreste; L5: D1 Palme, E1 Wrack, E3 Meeresfels (und Felsnadel), E8 Felseiland. Die Platzierung kommt aus `decor.ts`; hier stehen Formen, Schatten, Zoomschwellen und der Stempel-Cache.
 // Kein Zufall ausser `hash2`. Gezeichnet wird in Weltpixeln mit dem Ursprung in der Rautenmitte der Kachel (Boden y = 0,
 // nach oben negativ), der Cache hält je (Art, Variante, Zoomstufe) eine feste Box.
 
 export type DecorItem = Extract<SortedItem, { kind: 'decor' }>;
+
+/** Wrack (E1) und Felseiland (E8) samt Brandungsschaum erst ab diesem Zoom (REL-07: in der Fernansicht lesen sie sich als Rauschen). */
+export const SEA_ELEMENT_MIN_ZOOM = 0.5;
 
 /** Zoomschwellen nach Katalog: A5/A6 ab 0,5, A9/A14 ab 0,75. */
 export const DECOR_MIN_ZOOM: Record<StampKind, number> = {
@@ -21,6 +24,10 @@ export const DECOR_MIN_ZOOM: Record<StampKind, number> = {
   orchard: 0.5,
   menhir: 0.75,
   ruin: 0.75,
+  palm: 0.5,
+  wreck: SEA_ELEMENT_MIN_ZOOM,
+  seaRock: 0.25,
+  islet: SEA_ELEMENT_MIN_ZOOM,
 };
 
 /** Töne der Stempel (Mischungen aus `palette.ts`); Test: ΔE2000 ≥ 20 zu den Signalfarben. */
@@ -33,11 +40,63 @@ export const DECOR_STAMP_TONES = {
   ruinSide: mixHex(DECOR_TONES.rockMid, PALETTE.grass, 0.28),
   ruinShade: mixHex(DECOR_TONES.rockShade, PALETTE.grassDark, 0.3),
   ruinTop: mixHex(DECOR_TONES.rockLight, PALETTE.grass, 0.35),
+  // Palme (D1): gelbstichiger als Laub und Nadel (crown/crownLight mit grassLight und etwas Stroh), Stamm aus Holz und Erde
+  palmFrond: mixHex(mixHex(PALETTE.crownLight, PALETTE.grassLight, 0.6), PALETTE.roofThatch, 0.15),
+  palmFrondLit: mixHex(PALETTE.grassLight, PALETTE.roofThatch, 0.22),
+  palmFrondShade: mixHex(mixHex(PALETTE.crown, PALETTE.crownLight, 0.4), PALETTE.grassDark, 0.25),
+  palmLine: mixHex(PALETTE.crown, PALETTE.rockDark, 0.45),
+  palmTrunk: mixHex(PALETTE.roofWood, PALETTE.earth, 0.5),
+  palmTrunkShade: mixHex(PALETTE.roofTimber, PALETTE.earthEdge, 0.5),
+  palmShadow: mixHex(PALETTE.rockDark, PALETTE.sandWet, 0.3),
+  palmNut: mixHex(PALETTE.roofTimber, PALETTE.rockDark, 0.4),
+  // Wrack (E1): entsättigtes Holz (mit rockDark und waterMid), unten ins Wasser getaucht
+  wreckWood: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockDark, 0.5), PALETTE.waterMid, 0.18),
+  wreckLit: mixHex(
+    mixHex(mixHex(PALETTE.roofWood, PALETTE.rockDark, 0.5), PALETTE.rockLight, 0.2),
+    PALETTE.waterMid,
+    0.15,
+  ),
+  wreckShade: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockDark, 0.62), PALETTE.waterDeep, 0.3),
+  wreckWet: mixHex(mixHex(PALETTE.roofWood, PALETTE.rockDark, 0.5), PALETTE.waterMid, 0.62),
+  wreckLine: mixHex(PALETTE.rockDark, PALETTE.waterDeep, 0.5),
+  // Meeresfels (E3) und Felseiland (E8): Felstöne aus ROCK_TONES (DECOR_TONES), nasser Fuss, Sandring
+  rockWet: mixHex(PALETTE.rockDark, PALETTE.waterDeep, 0.5),
+  isletSand: mixHex(PALETTE.sandWet, PALETTE.rock, 0.3),
+  isletSandLit: mixHex(PALETTE.sandDry, PALETTE.rockLight, 0.5),
+  isletHalo: mixHex(PALETTE.waterShallow, PALETTE.rock, 0.3),
 } as const;
+
+/** Töne, die nur im Wasser vorkommen (nasser Fuss, Wrack, Eiland-Halo): dort ist Nähe zu den Wassertönen gewollt, nur die Signalfarben-Grenze gilt. */
+export const SEA_ONLY_TONES = [
+  'wreckWood',
+  'wreckLit',
+  'wreckShade',
+  'wreckWet',
+  'wreckLine',
+  'rockWet',
+  'isletSand',
+  'isletSandLit',
+  'isletHalo',
+] as const satisfies readonly (keyof typeof DECOR_STAMP_TONES)[];
 
 /** Feste Box des Stempel-Canvas relativ zur Rautenmitte (Weltpixel). */
 export const STAMP_BOX = { x0: -40, y0: -46, x1: 40, y1: 20 } as const;
 const VARIANTS = 4;
+/** Zahl der Formvarianten je Art (Cache-Schlüssel und Zeichner): Palme 3 Formen × 4 Richtungen, Felsen 6 Haufen + 2 Nadeln. */
+export const VARIANT_COUNT: Record<StampKind, number> = {
+  solitaire: VARIANTS,
+  orchard: VARIANTS,
+  menhir: VARIANTS,
+  ruin: VARIANTS,
+  palm: 12,
+  wreck: 4,
+  seaRock: 8,
+  islet: 4,
+};
+const variantOf = (kind: StampKind, variant: number): number => {
+  const n = VARIANT_COUNT[kind];
+  return ((variant % n) + n) % n;
+};
 
 /** Gesamthöhe (Krone ohne Stamm) der Bäume in Weltpixeln: Solitär grösser als ein Waldbaum, Obstbaum kleiner. */
 const CROWN_H = { solitaire: 27, orchard: 17 } as const;
@@ -131,9 +190,31 @@ export function ruinBlocks(variant: number): Block[] {
     : out;
 }
 
+/** Breite des gezeichneten Stempels in Weltpixeln (nur die Arten mit Mindestbreite in der Fernansicht, sonst 0). */
+export function stampWidthPx(kind: StampKind, variant: number): number {
+  const v = variantOf(kind, variant);
+  if (kind === 'wreck') {
+    const xs = wreckGeom(v).hull.map((p) => p.x);
+    return Math.max(...xs) - Math.min(...xs);
+  }
+  if (kind === 'islet') return 50;
+  return 0;
+}
+/** Mindestbreite von Wrack und Felseiland bei Zoom ≤ 0,25 in CSS-Pixeln (kleiner als das Schiff mit 16 px). */
+export const FAR_MIN_CSS_PX = 10;
+/** Vergrösserungsfaktor (≥ 1) für Wrack und Eiland bei Zoom ≤ 0,25 (wie `shipScale`, aber kleiner); sonst 1. */
+export function minStampScale(kind: StampKind, variant: number, zoom: number): number {
+  if ((kind !== 'wreck' && kind !== 'islet') || zoom > 0.25) return 1;
+  return Math.max(1, FAR_MIN_CSS_PX / (stampWidthPx(kind, variant) * zoom));
+}
+
 /** Höhe des gezeichneten Stempels über dem Boden in Weltpixeln (aus der Formtabelle, ohne Rasterung). */
 export function stampHeight(kind: StampKind, variant: number): number {
-  const v = ((variant % VARIANTS) + VARIANTS) % VARIANTS;
+  const v = variantOf(kind, variant);
+  if (kind === 'palm') return -palmGeom(v >> 2, v & 3).top;
+  if (kind === 'wreck') return -wreckGeom(v).top;
+  if (kind === 'seaRock') return v >= 6 ? NEEDLE_H : Math.max(...rockHeaps(v).map((b) => b.h));
+  if (kind === 'islet') return ISLET_H;
   if (kind === 'solitaire' || kind === 'orchard') {
     const t = treeShape(kind, v);
     return t.cy + t.hh;
@@ -143,6 +224,465 @@ export function stampHeight(kind: StampKind, variant: number): number {
 }
 const MENHIR_H = [21, 19, 22, 20] as const;
 const MENHIR_W = 10;
+
+// ---------- L5: Palme, Wrack, Meeresfels, Felseiland ----------
+
+const quadAt = (a: Pt, c: Pt, b: Pt, t: number): Pt => ({
+  x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
+  y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y,
+});
+
+export interface Frond {
+  /** Umriss (Wedel mit gezackten Kanten), Lichtseite und Schattenseite als eigene Polygone. */
+  outline: Pt[];
+  lit: Pt[];
+  shade: Pt[];
+  /** sin θ der Wedelrichtung: > 0 zum Betrachter (vorn). */
+  front: number;
+}
+export interface PalmGeom {
+  /** Stammkanten links und rechts (unten nach oben), Mittellinie, Wedel (hinten zuerst), Schopfmitte. */
+  left: Pt[];
+  right: Pt[];
+  mid: Pt[];
+  fronds: Frond[];
+  crown: Pt;
+  /** Kleinstes y aller Punkte (negativ = Höhe über dem Boden). */
+  top: number;
+}
+/** Horizontale Neigung je Richtung (0 +x, 1 +y, 2 −x, 3 −y im Kachelraum → rechts/links auf dem Bildschirm). */
+const LEAN_SIGN = [1, -1, -1, 1] as const;
+const PALM_H = [20, 22, 24] as const;
+const geoms = new Map<string, PalmGeom>();
+
+/** Geometrie einer Palme: schlanker, zur See gebogener Stamm und 5–7 gefiederte Wedel (Form 0…2 → 5…7). Rein, ohne Zufall. */
+export function palmGeom(shape: number, dir: number): PalmGeom {
+  const key = `${shape}|${dir}`;
+  let g = geoms.get(key);
+  if (g) return g;
+  const H = PALM_H[shape % 3]!;
+  const lx = LEAN_SIGN[dir & 3]! * (5 + shape);
+  const a = { x: 0, y: 0 },
+    c = { x: lx * 0.08, y: -H * 0.62 },
+    b = { x: lx, y: -H };
+  const left: Pt[] = [],
+    right: Pt[] = [],
+    mid: Pt[] = [];
+  for (let i = 0; i <= 6; i++) {
+    const t = i / 6,
+      m = quadAt(a, c, b, t),
+      w = 2.1 - 0.9 * t;
+    mid.push(m);
+    left.push({ x: m.x - w, y: m.y });
+    right.push({ x: m.x + w, y: m.y });
+  }
+  const n = 5 + (shape % 3);
+  const fronds: Frond[] = [];
+  const L = 12.5 + shape * 0.8;
+  for (let i = 0; i < n; i++) {
+    // gleichmässig um die Schopfmitte, je Form und Richtung versetzt; sinθ > 0 = zum Betrachter
+    const th = ((i + 0.5 + 0.18 * shape + 0.07 * (dir & 3)) / n) * Math.PI * 2;
+    const P0 = { x: b.x, y: b.y + 1 },
+      C = { x: b.x + Math.cos(th) * L * 0.55, y: b.y - 5 + Math.sin(th) * L * 0.2 },
+      P1 = { x: b.x + Math.cos(th) * L, y: b.y + 2.5 + Math.sin(th) * L * 0.3 };
+    const N = 6;
+    const up: Pt[] = [],
+      dn: Pt[] = [],
+      sp: Pt[] = [];
+    for (let k = 0; k <= N; k++) {
+      const t = k / N,
+        s0 = quadAt(P0, C, P1, t),
+        s1 = quadAt(P0, C, P1, Math.min(1, t + 0.02)),
+        tx = s1.x - s0.x,
+        ty = s1.y - s0.y,
+        tl = Math.hypot(tx, ty) || 1;
+      // Fiederung: abwechselnd lange und kurze Zacken, zur Spitze schmaler
+      const w = 3.1 * Math.sin(Math.PI * Math.pow(t, 0.75)) * (k % 2 ? 1 : 0.55);
+      sp.push(s0);
+      up.push({ x: s0.x + (ty / tl) * w, y: s0.y - (tx / tl) * w });
+      dn.push({ x: s0.x - (ty / tl) * w, y: s0.y + (tx / tl) * w });
+    }
+    const upper = mean(up) < mean(dn); // die obere Seite ist die Lichtseite
+    const hi = upper ? up : dn,
+      lo = upper ? dn : up;
+    fronds.push({
+      outline: [...up, ...dn.slice().reverse()],
+      lit: [...sp, ...hi.slice().reverse()],
+      shade: [...sp, ...lo.slice().reverse()],
+      front: Math.sin(th),
+    });
+  }
+  fronds.sort((p, q) => p.front - q.front);
+  const all = [...left, ...right, ...fronds.flatMap((f) => f.outline)];
+  g = { left, right, mid, fronds, crown: b, top: Math.min(...all.map((q) => q.y)) };
+  geoms.set(key, g);
+  return g;
+}
+const mean = (ps: readonly Pt[]): number => ps.reduce((s, p) => s + p.y, 0) / ps.length;
+
+function paintPalm(ctx: CanvasRenderingContext2D, shape: number, dir: number): void {
+  const g = palmGeom(shape, dir),
+    T = DECOR_STAMP_TONES;
+  // weicher Kontaktschatten am Fuss, Richtung −LIGHT (im Stempel selbst, nicht über `decorShadow`)
+  const so = project(DIR.x * 0.2, DIR.y * 0.2);
+  ctx.save();
+  ctx.globalAlpha = 0.32;
+  ell(ctx, T.palmShadow, so.x, so.y, 8, 3.2);
+  ctx.globalAlpha = 0.2;
+  ell(ctx, T.palmShadow, so.x * 0.8, so.y * 0.8, 5, 2);
+  ctx.restore();
+  const strip = [...g.left, ...g.right.slice().reverse()];
+  poly(ctx, T.palmTrunk, strip);
+  // Schattenseite des Stamms (Licht links) und Ringe quer über den Stamm
+  poly(ctx, T.palmTrunkShade, [
+    ...g.mid.map((m, i) => ({ x: (m.x + g.right[i]!.x) / 2, y: m.y })),
+    ...g.right.slice().reverse(),
+  ]);
+  ctx.strokeStyle = T.palmTrunkShade;
+  ctx.lineWidth = 0.9;
+  for (const i of [1, 2, 3, 4, 5]) {
+    ctx.beginPath();
+    ctx.moveTo(g.left[i]!.x, g.left[i]!.y + 0.6);
+    ctx.lineTo(g.right[i]!.x, g.right[i]!.y - 0.4);
+    ctx.stroke();
+  }
+  for (const f of g.fronds) {
+    poly(ctx, T.palmFrond, f.outline);
+    poly(ctx, T.palmFrondLit, f.lit);
+    poly(ctx, T.palmFrondShade, f.shade);
+    ctx.strokeStyle = T.palmLine;
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    f.outline.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.stroke();
+  }
+  ell(ctx, T.palmNut, g.crown.x - 1.4, g.crown.y + 2.2, 1.3, 1.3);
+  ell(ctx, T.palmNut, g.crown.x + 1.2, g.crown.y + 2.6, 1.3, 1.3);
+}
+
+export interface WreckGeom {
+  /** Rumpf (Umriss), Neigung des Decks gegen die Waagrechte in Grad, Mastrest, Deckkante (Bug → Heck). */
+  hull: Pt[];
+  tiltDeg: number;
+  mast: Pt[];
+  deck: [Pt, Pt];
+  /** Gezackte Lücke im Rumpf (Bruchstelle) und die 2–4 darin sichtbaren Spanten. */
+  gap: Pt[];
+  ribs: [Pt, Pt][];
+  /** 1–2 Treibplanken im Wasser neben dem Rumpf (Vierecke). */
+  planks: Pt[][];
+  top: number;
+}
+const WRECK_TILT = [22, 26, 24, 28] as const;
+/**
+ * Rumpf in Weltpixeln: schräg auf Grund (≥ 20°), ein Ende unter Wasser, Länge ≈ 1–1,2 Kacheln, in der Mitte aufgebrochen
+ * (gezackte Lücke mit 3 Spanten), Maststumpf mit schräger Bruchkante, keine Segelfläche.
+ */
+export function wreckGeom(v: number): WreckGeom {
+  const tiltDeg = WRECK_TILT[v & 3]!;
+  const mirror = (v & 1) === 1 ? -1 : 1;
+  const len = 35 + (v >> 1) * 2.5;
+  const rot = (p: Pt): Pt => {
+    const r = (-tiltDeg * Math.PI) / 180;
+    const x = p.x * Math.cos(r) - p.y * Math.sin(r),
+      y = p.x * Math.sin(r) + p.y * Math.cos(r);
+    return { x: x * mirror, y };
+  };
+  // Profil vor der Drehung (Bug rechts): Deckkante, Bug, Kiel, Heck; Höhe nach oben negativ
+  const pre: Pt[] = [
+    { x: -len, y: -7 },
+    { x: -len * 0.2, y: -8.2 },
+    { x: len * 0.85, y: -10 },
+    { x: len, y: -12.5 },
+    { x: len * 0.8, y: -1 },
+    { x: len * 0.3, y: 3.5 },
+    { x: -len * 0.5, y: 4 },
+    { x: -len * 0.95, y: 1 },
+  ];
+  const hull = pre.map(rot);
+  const deck: [Pt, Pt] = [rot(pre[3]!), rot(pre[0]!)];
+  // Bruchstelle: Zacken von der Deckkante nach unten, dahinter das dunkle Innere
+  const gx = [-0.36, -0.3, -0.23, -0.17, -0.1, -0.04, 0.03, 0.1];
+  const gy = [-8.3, -1.2, -5.6, -0.4, -4.6, -1.8, -3.4, -9.2];
+  const gap = gx.map((f, i) => rot({ x: len * f, y: gy[i]! }));
+  const ribs: [Pt, Pt][] = [-0.28, -0.16, -0.05].map((f) => [
+    rot({ x: len * f, y: -9 }),
+    rot({ x: len * f * 0.98, y: 1.2 }),
+  ]);
+  // Maststumpf: schräg abgebrochen, am Deck etwas vor der Mitte, kippt gegen das Heck
+  const base = { x: len * 0.32, y: -9.4 };
+  const top = { x: len * 0.32 - 5, y: -9.4 - 11 };
+  const mast: Pt[] = [
+    rot({ x: base.x - 2, y: base.y }),
+    rot({ x: top.x - 1.8, y: top.y + 1.5 }),
+    rot({ x: top.x - 0.4, y: top.y - 1.4 }),
+    rot({ x: top.x + 0.8, y: top.y + 1.6 }),
+    rot({ x: top.x + 1.9, y: top.y - 0.3 }),
+    rot({ x: base.x + 2, y: base.y }),
+  ];
+  const plank = (cx: number, cy: number, l: number, a: number): Pt[] => {
+    const c = Math.cos(a),
+      sn = Math.sin(a),
+      t = 1.3;
+    return [
+      { x: cx - c * l - sn * -t, y: cy - sn * l + c * -t },
+      { x: cx + c * l - sn * -t, y: cy + sn * l + c * -t },
+      { x: cx + c * l - sn * t, y: cy + sn * l + c * t },
+      { x: cx - c * l - sn * t, y: cy - sn * l + c * t },
+    ];
+  };
+  const planks = [
+    plank(mirror * 27, 9, 5, 0.18 * mirror),
+    ...(v & 2 ? [plank(-mirror * 9, 13.5, 3.6, -0.3 * mirror)] : []),
+  ];
+  return {
+    hull,
+    tiltDeg,
+    mast,
+    deck,
+    gap,
+    ribs,
+    planks,
+    top: Math.min(...[...hull, ...mast].map((p) => p.y)),
+  };
+}
+
+function paintWreck(ctx: CanvasRenderingContext2D, v: number): void {
+  const g = wreckGeom(v),
+    T = DECOR_STAMP_TONES;
+  // Schatten im Wasser unter dem Rumpf
+  ell(ctx, T.rockWet, 0, 2, 36, 7);
+  poly(ctx, T.wreckWood, g.hull);
+  // Lichtseite oben, Schattenseite unten
+  ctx.save();
+  ctx.beginPath();
+  g.hull.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.clip();
+  const x0 = Math.min(...g.hull.map((p) => p.x)) - 1,
+    x1 = Math.max(...g.hull.map((p) => p.x)) + 1;
+  ctx.fillStyle = T.wreckLit;
+  ctx.fillRect(x0, -30, x1 - x0, 12);
+  ctx.fillStyle = T.wreckShade;
+  ctx.fillRect(x0, -4, x1 - x0, 6);
+  // halb versunken: alles unter der Wasserlinie in Wasserton gemischt (ein Ende ganz darunter)
+  ctx.fillStyle = T.wreckWet;
+  ctx.fillRect(x0, -0.5, x1 - x0, 24);
+  ctx.restore();
+  // aufgebrochen: gezackte Lücke mit dunklem Inneren, darin 3 Spanten
+  poly(ctx, T.wreckLine, g.gap);
+  ctx.strokeStyle = T.wreckLit;
+  ctx.lineWidth = 1.3;
+  for (const [a, b] of g.ribs) {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = T.wreckLine;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  g.hull.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.stroke();
+  poly(ctx, T.wreckShade, g.mast);
+  ctx.strokeStyle = T.wreckLine;
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  g.mast.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.stroke();
+  for (const pl of g.planks) {
+    poly(ctx, T.wreckWet, pl);
+    ctx.strokeStyle = T.wreckLine;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    pl.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.stroke();
+  }
+  // Wellenstrich vor dem versunkenen Teil
+  ctx.strokeStyle = T.isletHalo;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(-20, 1);
+  ctx.quadraticCurveTo(-9, -1, 2, 1);
+  ctx.quadraticCurveTo(12, 2.4, 22, 0.4);
+  ctx.stroke();
+}
+
+export interface Heap {
+  /** Mitte (Bildschirm-x), Halbbreite und Höhe in Weltpixeln. */
+  cx: number;
+  w: number;
+  h: number;
+}
+/** Felshaufen: 1–3 Brocken (Variante % 3 + 1), Varianten ≥ 3 gespiegelt. Brocken von hinten nach vorn (kleinstes Gewicht zuerst). */
+export function rockHeaps(v: number): Heap[] {
+  const m = v >= 3 ? -1 : 1;
+  const all: Heap[] = [
+    { cx: 0, w: 8.5, h: 13 },
+    { cx: 11 * m, w: 6, h: 8.5 },
+    { cx: -10 * m, w: 5, h: 6.5 },
+  ];
+  return all.slice(0, (v % 3) + 1);
+}
+export const NEEDLE_H = 27.5;
+export interface NeedleGeom {
+  /** Umriss des Pfeilers (≥ 8 Punkte), Licht- und Schattenfläche, Nebenbrocken. */
+  pillar: Pt[];
+  lit: Pt[];
+  shade: Pt[];
+  side: Heap[];
+}
+/** Felsnadel (Variante 6/7 gespiegelt): Fuss ≈ 15 px breit, Höhe `NEEDLE_H` ≤ 0,8 · TREE_H, Spitze schräg abgebrochen mit Kerbe. */
+export function needleGeom(v: number): NeedleGeom {
+  const m = v === 7 ? -1 : 1;
+  const P = (x: number, y: number): Pt => ({ x: x * m, y });
+  return {
+    pillar: [
+      P(-7, 0),
+      P(-6.8, -6),
+      P(-4.6, -11),
+      P(-5.2, -17),
+      P(-3.4, -23),
+      P(-1.6, -27.5),
+      P(0.6, -24.5),
+      P(3, -27),
+      P(3.8, -22.5),
+      P(6, -18),
+      P(5.5, -12),
+      P(7, -6),
+      P(7.5, 0),
+    ],
+    lit: [
+      P(-7, 0),
+      P(-6.8, -6),
+      P(-4.6, -11),
+      P(-5.2, -17),
+      P(-3.4, -23),
+      P(-1.6, -27.5),
+      P(-0.4, -14),
+      P(-1, 0),
+    ],
+    shade: [
+      P(2.4, 0),
+      P(1.4, -12),
+      P(0.6, -24.5),
+      P(3, -27),
+      P(3.8, -22.5),
+      P(6, -18),
+      P(5.5, -12),
+      P(7, -6),
+      P(7.5, 0),
+    ],
+    side: [
+      { cx: -11.5 * m, w: 4.6, h: 6.5 },
+      { cx: 11 * m, w: 3.6, h: 4.5 },
+    ],
+  };
+}
+const ISLET_H = 30;
+
+/** Ein Felsbrocken (flach facettiert, Licht links) mit nassem Fuss. */
+function paintBoulder(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  w: number,
+  h: number,
+  lean = 0,
+): void {
+  const T = DECOR_STAMP_TONES;
+  const top = { x: cx + lean, y: -h };
+  const pts: Pt[] = [
+    { x: cx - w, y: 0 },
+    { x: cx - w * 0.95, y: -h * 0.5 },
+    { x: top.x - w * 0.35, y: top.y + 1 },
+    top,
+    { x: top.x + w * 0.45, y: top.y + h * 0.18 },
+    { x: cx + w * 0.95, y: -h * 0.45 },
+    { x: cx + w, y: 0 },
+  ];
+  poly(ctx, DECOR_TONES.rockMid, pts);
+  poly(ctx, DECOR_TONES.rockLight, [
+    pts[0]!,
+    pts[1]!,
+    pts[2]!,
+    top,
+    { x: cx - w * 0.1, y: -h * 0.45 },
+    { x: cx - w * 0.3, y: 0 },
+  ]);
+  poly(ctx, DECOR_TONES.rockShade, [
+    { x: cx + w * 0.25, y: 0 },
+    { x: cx + w * 0.1 + lean * 0.5, y: -h * 0.5 },
+    top,
+    pts[4]!,
+    pts[5]!,
+    pts[6]!,
+  ]);
+  // nasser Fuss: dunkles, kühles Band an der Wasserlinie
+  poly(ctx, T.rockWet, [
+    pts[0]!,
+    { x: cx - w * 0.85, y: -2.4 },
+    { x: cx + w * 0.85, y: -2.2 },
+    pts[6]!,
+    { x: cx, y: 1.6 },
+  ]);
+  ctx.strokeStyle = DECOR_TONES.rockDark;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.stroke();
+}
+
+function paintSeaRock(ctx: CanvasRenderingContext2D, v: number): void {
+  if (v >= 6) {
+    // Felsnadel: unregelmässiger, kantiger Pfeiler mit breitem Fuss, abgebrochener Spitze und 1–2 Nebenbrocken
+    const g = needleGeom(v);
+    for (const b of g.side) paintBoulder(ctx, b.cx, b.w, b.h);
+    poly(ctx, DECOR_TONES.rockMid, g.pillar);
+    poly(ctx, DECOR_TONES.rockLight, g.lit);
+    poly(ctx, DECOR_TONES.rockShade, g.shade);
+    const m = v === 7 ? -1 : 1;
+    // nasser dunkler Fuss
+    poly(ctx, DECOR_STAMP_TONES.rockWet, [
+      { x: -8.2 * m, y: 0.4 },
+      { x: -7.2 * m, y: -3.2 },
+      { x: 7.6 * m, y: -3 },
+      { x: 8.4 * m, y: 0.4 },
+      { x: 0, y: 2 },
+    ]);
+    ctx.strokeStyle = DECOR_TONES.rockDark;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    g.pillar.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.stroke();
+    return;
+  }
+  const heaps = rockHeaps(v);
+  // hinten zuerst: die kleineren Brocken stehen seitlich, der grosse in der Mitte zuletzt
+  for (const hp of heaps.slice().reverse()) paintBoulder(ctx, hp.cx, hp.w, hp.h, hp.cx * 0.06);
+}
+
+function paintIslet(ctx: CanvasRenderingContext2D, v: number): void {
+  const T = DECOR_STAMP_TONES,
+    m = v & 1 ? -1 : 1;
+  // flacher Halo in Flachwasserton, Sandring (schmal), darin Fels; keine grüne Fläche
+  ell(ctx, T.isletHalo, 0, 0.5, 25, 12.5);
+  ell(ctx, T.isletSand, 0, 0, 21, 10.5);
+  ell(ctx, T.isletSandLit, -3 * m, -1, 15, 7);
+  paintBoulder(ctx, -7 * m, 7.5, 10 + (v >> 1) * 1.5, -1);
+  paintBoulder(ctx, -1 * m, 5, 6.5);
+  // genau eine Palme auf dem Sand, kleiner als am Strand
+  ctx.save();
+  ctx.translate(8 * m, 2);
+  ctx.scale(0.72, 0.72);
+  paintPalm(ctx, v >> 1, m > 0 ? 0 : 2);
+  ctx.restore();
+}
 
 // ---------- Schatten (gemeinsamer Schattenpfad, Kachelraum) ----------
 
@@ -159,7 +699,7 @@ const SHADOWS: Partial<Record<StampKind, readonly Pt[]>> = {
   solitaire: SHADOW_UNIT(0.62),
   orchard: SHADOW_UNIT(0.4),
 };
-/** Schattenpolygon im Kachelraum für A5/A6 (Boden-Fleck unter der Krone); Menhir und Mauerreste werfen keinen. */
+/** Schattenpolygon im Kachelraum für A5/A6 (Boden-Fleck unter der Krone); Menhir, Mauerreste und die L5-Stempel (Palme am Strand, Wrack, Felsen, Eiland) werfen keinen. */
 export function decorShadow(item: DecorItem): Pt[] | null {
   const unit = SHADOWS[item.stamp];
   if (!unit) return null;
@@ -290,12 +830,16 @@ export function paintDecorStamp(
   ox: number,
   oy: number,
 ): void {
-  const v = ((variant % VARIANTS) + VARIANTS) % VARIANTS;
+  const v = variantOf(kind, variant);
   ctx.save();
   ctx.translate(ox, oy);
   ctx.scale(scale, scale);
   if (kind === 'solitaire' || kind === 'orchard') paintTree(ctx, kind, v);
   else if (kind === 'menhir') paintMenhir(ctx, v);
+  else if (kind === 'palm') paintPalm(ctx, v >> 2, v & 3);
+  else if (kind === 'wreck') paintWreck(ctx, v);
+  else if (kind === 'seaRock') paintSeaRock(ctx, v);
+  else if (kind === 'islet') paintIslet(ctx, v);
   else paintRuin(ctx, v);
   ctx.restore();
 }
@@ -392,11 +936,12 @@ export function drawDecorStamp(
   if (!stamp) return;
   const p = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
   const f = z / step;
+  const k = minStampScale(item.stamp, item.variant, z); // vergrössert um den Fusspunkt
   ctx.drawImage(
     stamp,
-    p.x + STAMP_BOX.x0 * z,
-    p.y + STAMP_BOX.y0 * z,
-    stamp.width * f,
-    stamp.height * f,
+    p.x + STAMP_BOX.x0 * z * k,
+    p.y + STAMP_BOX.y0 * z * k,
+    stamp.width * f * k,
+    stamp.height * f * k,
   );
 }
