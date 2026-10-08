@@ -530,7 +530,6 @@ function launch(
     reject: (reason) => showError(friendlyReason(world, reason)),
   };
 
-  /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   /** Ausbau eines Gebäudes: gemeinsamer Weg für den Knopf «Ausbauen» und Umschalt+U (C-5). */
   const upgradeSelected = (id: number): void => {
     const b = world.buildings[id];
@@ -557,6 +556,7 @@ function launch(
     if (sameTool(state.tool, r.tool)) return; // B-7: bleibt aktiv, Panel unberührt
     selectTool(r.tool);
   };
+  /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
     connectPreview = null;

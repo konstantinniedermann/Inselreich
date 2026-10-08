@@ -66,5 +66,12 @@ describe('Pipette (AK-TK-11..14)', () => {
           break;
         }
     expect(sawNull).toBe(true);
+    // Wegkachel und Waldkachel ohne Gebäude -> null
+    const road = isl.tiles.findIndex((t) => t.road && t.buildingId === null);
+    expect(road).toBeGreaterThanOrEqual(0);
+    expect(buildingDefAt(w, 0, road % isl.width, Math.floor(road / isl.width))).toBeNull();
+    const forest = isl.tiles.findIndex((t) => t.terrain === 'forest' && t.buildingId === null);
+    expect(forest).toBeGreaterThanOrEqual(0);
+    expect(buildingDefAt(w, 0, forest % isl.width, Math.floor(forest / isl.width))).toBeNull();
   });
 });
