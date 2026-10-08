@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.31
+
+- Anlass: Prozess-Retro session-56d273bd-ende (E-048 angenommen)
+- Datenbasis: `docs/studio/retros/2026-10-08-session-56d273bd-ende.md` (B3)
+- Ruling: R344, R349
+- Änderungen: Gate Merge liest das Ist der Tool-Aufrufe aus der Budget-Zählung; UI-Pakete mit Final-Review und Browser-Abnahme mit 150 Tools budgetiert (Budget)
+
 ## 2026-10-08 · Handbuch 1.30
 
 - Anlass: Prozess-Retro REL-07 (Vorschläge angenommen)
