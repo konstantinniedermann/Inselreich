@@ -2809,3 +2809,48 @@ Tastenbelegung, Upgrade-Regeln). R305 gilt weiter: keine neuen Pakete, FIX-REL07
 `design-idea-scout`, ein Start. — Kosten bei Irrtum: keine, reiner Pool-Eintrag.
 
 Entscheider: L0 · Anlass: Nutzer-Auftrag Session-Start · ADR: —
+
+## R324 · 2026-10-08 · Zwei L0-Sessions auf FIX-REL07: Session #2 zieht sich zurück
+
+Ruling: Zwei L0-Sessions (anno-clone #2, #3) haben FIX-REL07 parallel bearbeitet, beide im Worktree
+`.worktrees/rel07-aufloesung` (`int/rel-07`) — Verstoss gegen „Eine aktive L0-Session je Repo" (R129) und gegen
+STUDIO.md Ende 0a (Worktree-HEAD und `git status` vor Paketstart prüfen; Session #2 hat das nicht getan). Folge:
+Der Engineer von #2 hat `forest.ts`, `iso.ts`, `renderer.ts` im geteilten Worktree zurückgesetzt; ungecommittete
+`__prof`-Hooks von #3 in `iso.ts` sind vermutlich verloren (`tests/render/_prof.test.ts` importiert sie noch).
+Entscheid: Die interaktive Session #3 (Nutzer aktiv dort) führt FIX-REL07 allein weiter; #2 arbeitet ab jetzt nur
+lesend und fasst `int/rel-07` nicht mehr an. Zwischenstand von #2 zu (a): Branch `fix/rel07-a-wood` @ c94e99a
+(Wald in 2-ms-Scheiben, `woodSlices.test.ts` grün, senkt Ruckeln nicht auf main-Niveau; Rasteranteil ≈ 14 ms
+`(program)`), Messskripte `.studio/qa/rel-07b/` — #3 übernimmt oder verwirft. Vorfall an die nächste Retro. — Kosten
+bei Irrtum: Doppelarbeit an (a).
+
+Entscheider: L0 (Session #2) · Anlass: Blocker-Bericht lead-art FIX-REL07 · ADR: —
+
+## R325 · 2026-10-08 · FIX-REL07 nach Kollision: eine Hand, Zwischenstand #2 als Option
+
+Ruling: R324 angenommen. FIX-REL07 führt allein die lead-art-Instanz dieser Session. Sie erhält Branch
+`fix/rel07-a-wood` @ c94e99a (Wald in 2-ms-Scheiben) als Option, nicht als Pflicht: Laut Messung von Session #2
+ist der Bau-Frame überwiegend Rasterarbeit, Slicing allein reicht vermutlich nicht. Der Worktree-Stand in
+`rel07-aufloesung` wird vor der Weiterarbeit per `git diff` geprüft (zurückgesetzte `__prof`-Hooks,
+`_prof.test.ts`). Über `.worktrees/rel07-wood` entscheidet L0 nach dem Bericht. Vorfall „zwei L0, ein Worktree,
+keine Prüfung vor dem Start“ geht in die Session-Ende-Retro dieser Session (studio-coach). — Kosten bei Irrtum:
+verlorene Arbeiterstunde, Branch c94e99a bleibt erhalten.
+
+Entscheider: L0 · Anlass: Cross-Session-Meldung L0 #2 · ADR: —
+
+## R326 · 2026-10-08 · D-FIXREL07-1: Bau-Ruckeln erfüllt, Grundlast Seed 7 entscheidet die Nachprüfung
+
+Ruling: Bericht lead-art FIX-REL07 (`int/rel-07` @ eb173e8, `make check` grün) angenommen.
+(1) R313 (a) gilt als erfüllt: Bauen löst den Wald-Neuaufbau nicht mehr in einem Frame aus (2-ms-Scheiben,
+gleich dem Vollaufbau). (2) **Bedingung für das Gate:** Der Rest bei Seed 7 (rund 5 verlorene Frames je 900 ms
+auch ohne Bau, main 0) ist unter Last 6–15 gemessen. lead-qa wiederholt `hitch.mjs` auf ruhiger Maschine mit und
+ohne Bau. Bleibt der Kandidat ohne Bau bei mehr als main + 1 Frame je Fenster, ist das ein sichtbares Ruckeln im
+Ruhezustand → Gate ZURÜCK mit Paket „Zeichenkosten L5–L7“ vor dem Release. Sonst geht das Paket nach dem Release
+als Folgepaket. (3) Kaltstart Seed 14 (22–24 s gegen 11–15 s) blockiert nicht; kommt in das Folgepaket und in die
+Release-Notiz. (4) (b), (c), (d) erfüllt; Perf innerhalb R313 (höchstens +1,3 ms). (5) Eintrag in der Liste
+`ZEITTESTS` in `vite.config.ts` ausserhalb der Grenze als Trivial-Fix angenommen. (6) Budget: rund 40 Tools über
+der Schätzung ohne Antrag → Retro (Ursache Kollision R324). (7) Ablauf: Integrator mergt `int/rel-07` in
+`rel/rel-07`, danach Nachprüfung lead-qa nur für Ruckeln mit/ohne Bau, Perf, K-Proben blind und sichtbaren
+Altwald während des Waldaufbaus. Worktree `.worktrees/rel07-wood` wird entfernt, Branch `fix/rel07-a-wood`
+bleibt. — Kosten bei Irrtum: eine weitere Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-art FIX-REL07 · ADR: —
