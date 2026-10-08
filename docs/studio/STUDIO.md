@@ -331,9 +331,10 @@ Regeln dazu:
   Session, setzt das Häppchen auf der Etappen-Branch auf und geht mit ihr nach main (kein eigenes
   Release); sonst main zuerst. Geprüft wird bei der Auswahl, nicht erst im Plan.
 - **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, seriell durch `production-integrator` im
-  Worktree `.worktrees/integrate` (Push von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+  Worktree `.worktrees/integrate` (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Push laut Verfassung §7, danach CI (`gh run list --branch main --limit 3`), Pages und
+  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, am Session-Ende (siehe „Session-Start und -Ende“), danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
+  erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 
 - **Discovery-Strang (E-027, R208):** `lead-design` verantwortet Ideen-Runden (`IDEEN-nn`) nach jedem
@@ -470,5 +471,7 @@ Abnahme pushen (R107).
    `docs/beobachtungen.md` sind eingetragen. Committen (`docs: …`).
 5. Kurzbericht an den Nutzer: erledigt · Aufwand · Handbuch-Änderungen · offene Nutzerentscheide.
    Danach `python3 tools/studio/log.py status --role studio-director --status done --summary "<Kurzbericht>"`.
+
+Gebündelter Push (höchstens einer je Session): `production-integrator` pusht auf L0-Auftrag, prüft CI (läuft nur, wenn Code dabei ist) und löst bei einem Release Pages mit `gh workflow run Pages --ref main` aus und prüft den Deploy.
 
 Danach Skill `session-wrap-up`; Push laut [Verfassung §7](VERFASSUNG.md#7-commits-und-pushes).

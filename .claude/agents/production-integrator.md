@@ -23,7 +23,7 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
 - **Release-Lauf (E-028, R208):** Das Briefing nennt Paket-ID `REL-nn` und 2–4 release-reife Branches.
   Du baust daraus **einen Kandidaten** im Worktree `.worktrees/integrate` (je Branch Schritte 2–3, Commit nur
   bei grünem `make check`), meldest den Kandidaten-Stand für den Browser-Lauf und das `opus`-Review und
-  pushst erst nach dem **Gate Merge Release** (Ruling im Briefing; fehlt es, brichst du ab). Fällt ein
+  merget erst nach dem **Gate Merge Release** (Ruling im Briefing; fehlt es, brichst du ab); der Push folgt gebündelt (Schritt 4). Fällt ein
   Häppchen durch, baust du den Kandidaten frisch auf (`git worktree add --detach` auf origin/main), nie per
   Reset. Hotfixes mergst du einzeln.
 - Du mergst **nur nach dem L0-Gate** (Gate Merge bzw. Gate Merge Release): Das Briefing nennt das Ruling in
@@ -38,10 +38,13 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
      Konvention). Rot: `git merge --abort` und melden — `main` bleibt auf dem Stand vor dem Merge.
      Ist nach dem Merge-Commit oder auf dem Kandidaten eine Korrektur nötig (z. B. Formatierungs-Trivial-Fix
      nach L0-Freigabe), machst du einen **eigenen Fix-Commit**, nie `git commit --amend` (R224).
-  4. Push **nur**, wenn das Briefing ihn ausdrücklich freigibt (`git push origin HEAD:main`, aus dem Integrations-Worktree);
-     danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
-  5. Nach dem Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
-     `gh run watch <id>` verfolgen; danach den Pages-Deploy-Lauf ebenso prüfen. Zum Schluss
+  4. Merges nach main bleiben **lokal**; kein Push je Merge (N-98, R335). Der Push erfolgt höchstens einmal je
+     Session, am Session-Ende, nur auf ausdrücklichen L0-Auftrag im Briefing (`git push origin HEAD:main`, aus dem
+     Integrations-Worktree); danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
+  5. Nach dem gebündelten Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
+     `gh run watch <id>` verfolgen. CI läuft nur bei Code-Pushes (reine Doku-/Studio-Pushes erzeugen
+     bewusst keinen Lauf, N-98). Pages startet nicht mehr automatisch: enthält der Push ein Release,
+     `gh workflow run Pages --ref main`, dann den Deploy-Lauf prüfen. Zum Schluss
      `python3 tools/studio/ci.py` (erfasst die CI-Läufe als Studio-Events). Steht der Pages-Job `deploy` > 10 min
      in `queued`, melde Lauf-ID und Dauer an `lead-production`; du brichst den Lauf nicht ab (R270).
   6. Status: `failed` nur, wenn der Merge selbst scheitert; ist der Merge durch und die CI rot, `done` mit
@@ -57,7 +60,7 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
 
 - Kein Merge ohne Gate-Ruling (Merge bzw. Merge Release) und ohne grünes `make check` vorher und nachher.
 - Jeder Merge ist ein `--no-ff`-Commit; die Historie der Branch bleibt erhalten.
-- Push nur laut Briefing; CI- und Pages-Status sind im Bericht mit Lauf-ID belegt.
+- Push nur laut Briefing, gebündelt am Session-Ende; CI- und Pages-Status sind im Bericht mit Lauf-ID belegt.
 - Nach einem Abbruch ist `main` im Zustand vor dem Merge (kein halber Merge, keine fremden
   Änderungen).
 
