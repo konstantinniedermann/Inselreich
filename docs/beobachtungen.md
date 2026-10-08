@@ -332,4 +332,14 @@ Ursprung: qa-code-reviewer. Einschätzung: niedrig, kostet CI-Sekunden; bei näc
 
 ### 2026-10-08 · Kontrast der Rand-Farben von `.needs`/`.reasons` unter 3:1
 
-Fundort: Spec PANEL-UEBERSICHT (OF-7). Beobachtung: Die Randfarben der Listen im Info-Panel erreichen auf Pergament nur 2,3 bis 2,7 : 1. Ursprung: design-spec-author. Einschätzung: niedrig; im Paket PANEL-UEBERSICHT mit den neuen `--tone-*`-Farben mitlösen.
+Fundort: Spec PANEL-UEBERSICHT (OF-7). Beobachtung: Die Randfarben der Listen im Info-Panel erreichen auf Pergament nur 2,3 bis 2,7 : 1. Ursprung: design-spec-author. Einschätzung: niedrig; nicht im Paket PANEL-UEBERSICHT (Spec OF-7), eigenes Kleinst-Folgepaket mit den neuen `--tone-*`-Farben.
+
+### 2026-10-08 · Info-Panel bei 800×600 teils unter dem Karten-Canvas
+
+Fundort: Browser-Check PANEL-UEBERSICHT (AK-PU-31), auf `main` identisch. Beobachtung: Bei 800×600 liegt das Panel als untere Leiste; die oberen ca. 130 px (Titel, Zustands-Chip) liegen unter dem Canvas, weder klickbar noch per Scrollen erreichbar.
+Ursprung: qa-playtester. Einschätzung: niedrig bis mittel (Desktop-first, schmale Fenster nur „stürzt nicht ab"); Layout-Kleinpaket, falls schmale Fenster relevant werden.
+
+### 2026-10-08 · Info-Panel: Glashütte im Brand läuft bei 1280×720 über die Panelhöhe
+
+Fundort: Browser-Check PANEL-UEBERSICHT. Beobachtung: Vier Kacheln plus mehrzeiliger Brand-Chip schieben «Rückerstattung» unter die Panelkante (per Scrollen erreichbar); Auslastung zeigt im Brand weiter 43–82 %. Spec D-5 gilt nur für Fischerhütte.
+Ursprung: qa-playtester. Einschätzung: niedrig.
