@@ -19,12 +19,12 @@ Nicht anfassen: `src/sim/`, `src/render/` (lead-art, PERF-L57), `src/ui/trade.ts
 
 ## Tasks
 
-| Task | Titel                              | Datei                | AK                       | blocked-by | Modell |
-| ---- | ---------------------------------- | -------------------- | ------------------------ | ---------- | ------ |
-| T1   | `panelView.ts` rein, TDD           | T01-panelview.md     | 01-17                    | –          | sonnet |
-| T2   | Gerüst Betrieb + Kopf Amtsstube/Kontor | T02-geruest-a-c.md | 18, 22-26, 28, 29, 32  | T1         | sonnet |
-| T3   | Wohnhaus Teil B                    | T03-wohnhaus.md      | 27                       | T2         | sonnet |
-| T4   | CSS, ARIA, Tests, README, arc42    | T04-css-doku.md      | 19, 20, 30, 31, 33       | T3         | sonnet |
+| Task | Titel                                  | Datei              | AK                    | blocked-by | Modell |
+| ---- | -------------------------------------- | ------------------ | --------------------- | ---------- | ------ |
+| T1   | `panelView.ts` rein, TDD               | T01-panelview.md   | 01-17                 | –          | sonnet |
+| T2   | Gerüst Betrieb + Kopf Amtsstube/Kontor | T02-geruest-a-c.md | 18, 22-26, 28, 29, 32 | T1         | sonnet |
+| T3   | Wohnhaus Teil B                        | T03-wohnhaus.md    | 27                    | T2         | sonnet |
+| T4   | CSS, ARIA, Tests, README, arc42        | T04-css-doku.md    | 19, 20, 30, 31, 33    | T3         | sonnet |
 
 Review: ein Final-Review `qa-code-reviewer` (opus) über die Branch (Freigabe L0: statt Review je Task); Browser-Check `qa-playtester` nach T4 (AK-PU-22..32, 1280×720 und 1920×1080).
 Budget: 3 Umsetzer-Aufrufe (T1; T2+T3; T4), 1 Review, 1 Browser-Check, je 1 Fix-Runde Reserve; gesamt ≤ 120 Tools, ≤ 2 parallel (praktisch seriell, gleiche Dateien).
