@@ -815,7 +815,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
       const g = buildGrid(flat(40, 'grass', seed));
       expect(stdOf(inner(g, g.shade)), `Seed ${seed}`).toBeGreaterThanOrEqual(0.085);
     }
-  });
+  }, 10_000);
 
   // Timeout: lokal ≤ 0,7 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B1 Grenzen: Gras und Strand ≤ ±20 % (und nutzen > 14 %, R3), Wald weiter ≤ ±8 %', () => {

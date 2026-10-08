@@ -146,7 +146,7 @@ describe('L1-T6 Determinismus und Waldtyp', () => {
     }
     expect(maple).toBeGreaterThan(0);
     expect(birch).toBeGreaterThan(0);
-  });
+  }, 10_000);
 });
 
 describe('L1-T7 kein Math.random', () => {

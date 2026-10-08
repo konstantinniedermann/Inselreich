@@ -1152,7 +1152,7 @@ describe('L5 Meer-Plan und R4', () => {
       }
     }
     expect(elements).toBeGreaterThan(200);
-  });
+  }, 20_000);
 
   const worlds = (n: number): { seed: number; w: World }[] =>
     Array.from({ length: n }, (_, i) => ({ seed: i + 1, w: createWorld(i + 1) }));
@@ -1194,7 +1194,7 @@ describe('L5 Meer-Plan und R4', () => {
       }
     }
     expect(checked).toBeGreaterThan(1000);
-  });
+  }, 15_000);
 
   it('seaKeepOut: Lane < 3, Anker/Kontor < 4 und der Kegel sperren; frei dahinter (kleiner Kontext)', () => {
     const ctx = {

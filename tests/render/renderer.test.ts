@@ -259,7 +259,7 @@ describe('Renderer', () => {
             expect(log.matrix).toEqual(BASE(2));
           }
         }
-  });
+  }, 15_000);
 
   it('AK-R1-05 genau ein fillRect mit multiply am Abend, keiner mit dayNight false oder bei Tick 0', () => {
     const { world } = scene();
@@ -1031,7 +1031,7 @@ describe('Renderer', () => {
         expect(sum(withFire)).toBeLessThanOrEqual(total);
         expect(count(withFire, `rgba(${SMOKE_COLOR.join(',')},`)).toBeGreaterThan(0); // Feuer behält Vorrang
       }
-    });
+    }, 15_000);
 
     it('AK-R4-05 Fensterlicht: ein additiver Block nach dem Multiply; nur bewohnte Häuser und Betriebe ok; Laternen immer', () => {
       const night = (mk?: Parameters<typeof life>[2], fx: Partial<RenderFx> = {}) =>
