@@ -118,6 +118,7 @@ function minNewTiles(world: World, id: number): number | null {
 }
 
 describe('connectPath is minimal on mixed start costs (AK-01)', () => {
+  // Timeout: lokal ≤ 1,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('matches a reference search on many seeded layouts of roads and water', () => {
     let seed = 12345;
     const rnd = (): number => {
@@ -150,7 +151,7 @@ describe('connectPath is minimal on mixed start costs (AK-01)', () => {
       checked++;
     }
     expect(checked).toBeGreaterThan(30);
-  });
+  }, 15_000);
 });
 
 describe('connectPath determinism and purity (AK-02)', () => {

@@ -305,6 +305,7 @@ describe('H-R7 Fix 3: Sättigung bleibt', () => {
 });
 
 describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
+  // Timeout: lokal ≤ 3,3 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('Fix2 B alle Typen: Pfadpunkte samt halber Strichbreite liegen in der Fläche (Zoom 1/1,5/2, DPR 1/2, mit Material)', () => {
     for (const z of [1, 1.5, 2])
       for (const dpr of [1, 2])
@@ -337,7 +338,7 @@ describe('H-R7 Fix 2 B: Cache-Fläche schneidet nichts ab', () => {
             expect(p.y, m).toBeLessThanOrEqual(sf.height - half);
           }
         }
-  }, 20_000); // CI misst 8,1 s (lokal ca. 2 s): R270, Laufzeit <= 50 % des Timeouts
+  }, 40_000); // CI misst 8,1 s, lokal 2…3,8 s unter Last: R270, Laufzeit <= 50 % des Timeouts
 });
 
 describe('H-R7 AK3/AK4 Silhouette und Picking', () => {
@@ -408,6 +409,7 @@ describe('H-R7 AK5 Material', () => {
       expect(f.log.saves).toBe(f.log.restores);
     });
   }
+  // Timeout: lokal ≤ 1,2 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK5 kein Materialstrich liegt unter einer später gezeichneten Fläche (alle Typen, Stufen, Varianten, Zoom 0,75/1/1,5)', () => {
     let segsChecked = 0;
     for (const [id, tier] of cases)
@@ -445,7 +447,7 @@ describe('H-R7 AK5 Material', () => {
           }
         }
     expect(segsChecked).toBeGreaterThan(500);
-  });
+  }, 15_000);
   it('AK5 drawBody zeichnet in jeder Variante gleich viele Striche wie Variante 0 (Material nur im Cache)', () => {
     const strokes = (id: BuildingDefId, tier: Tier | undefined, v: number) =>
       events(BUILDING_DEFS[id], mk(id, 12, 7, tier), v).filter((e) => e.op === 'stroke').length;

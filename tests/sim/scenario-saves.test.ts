@@ -45,6 +45,7 @@ const WON_AFTER_FIRST_TICK = new Set([
 ]);
 
 describe('Szenario-Saves', () => {
+  // Timeout: lokal ≤ 0,8 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-S5-01 jedes Szenario ist ladbar und Version 2', () => {
     for (const name of Object.keys(SCENARIOS)) {
       const world = SCENARIOS[name]!();
@@ -55,7 +56,7 @@ describe('Szenario-Saves', () => {
         expect(r.world, name).toEqual(world);
       }
     }
-  });
+  }, 15_000);
 
   it('AK-B2-02 nach dem ersten Tick gewonnen nur ux-sieg und die M8-Siegszenarien (Sieg-Overlay verfälscht Browser-Checks)', () => {
     for (const name of Object.keys(SCENARIOS)) {
