@@ -49,7 +49,7 @@ const sizes = values.size.split(',').map((s) => s.trim().split('x').map(Number))
 const seed = Number(values.seed);
 if (
   !values.paket ||
-  !/^[\w.-]+$/.test(values.paket) ||
+  !/^[\w][\w.-]*$/.test(values.paket) ||
   !Number.isInteger(seed) ||
   sizes.some((s) => s.length !== 2 || s.some((n) => !Number.isInteger(n) || n < 320))
 ) {
@@ -344,14 +344,16 @@ async function runSize(w, h) {
         await key('Escape');
         // Umschalt+U auf ausgewähltem Haus
         await click(p.x, p.y);
-        const m0 = await snap();
         const t0 = (await panelInfo()).text;
+        const b0 = await bodyText();
         await key('U', SHIFT, 60);
         await sleep(400);
-        const m1 = await snap();
         const t1 = (await panelInfo()).text;
-        rec.notes.push(
-          `Umschalt+U: Geld ${m0.money} → ${m1.money}, Panel ${t0 === t1 ? 'unverändert (Sperrgrund prüfen)' : 'geändert'}`,
+        const b1 = await bodyText();
+        expect(
+          rec,
+          t0 !== t1 || b0 !== b1,
+          `Umschalt+U reagiert sichtbar (Ausbau oder Sperrgrund-Meldung; Panel ${t0 === t1 ? 'gleich' : 'geändert'})`,
         );
         rec.shots.push(await shot('b-ausbau'));
         await key('Escape');
@@ -469,7 +471,7 @@ async function runSize(w, h) {
         if (!(await menuInfo())) await openMenu();
         expect(rec, await clickText('Speichern'), '«Speichern» geklickt');
         await sleep(400);
-        expect(rec, /Gespeichert/.test(await bodyText()), 'Meldung «Gespeichert»');
+        expect(rec, /(^|\n)Gespeichert\s*($|\n)/.test(await bodyText()), 'Meldung «Gespeichert»');
         saved = await snap();
         rec.notes.push(
           `gespeichert: Gebäude ${saved.n}, Geld ${saved.money}, Vorrat ${JSON.stringify(saved.stock)}`,
