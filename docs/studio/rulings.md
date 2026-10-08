@@ -2836,3 +2836,21 @@ keine Prüfung vor dem Start“ geht in die Session-Ende-Retro dieser Session (s
 verlorene Arbeiterstunde, Branch c94e99a bleibt erhalten.
 
 Entscheider: L0 · Anlass: Cross-Session-Meldung L0 #2 · ADR: —
+
+## R326 · 2026-10-08 · D-FIXREL07-1: Bau-Ruckeln erfüllt, Grundlast Seed 7 entscheidet die Nachprüfung
+
+Ruling: Bericht lead-art FIX-REL07 (`int/rel-07` @ eb173e8, `make check` grün) angenommen.
+(1) R313 (a) gilt als erfüllt: Bauen löst den Wald-Neuaufbau nicht mehr in einem Frame aus (2-ms-Scheiben,
+gleich dem Vollaufbau). (2) **Bedingung für das Gate:** Der Rest bei Seed 7 (rund 5 verlorene Frames je 900 ms
+auch ohne Bau, main 0) ist unter Last 6–15 gemessen. lead-qa wiederholt `hitch.mjs` auf ruhiger Maschine mit und
+ohne Bau. Bleibt der Kandidat ohne Bau bei mehr als main + 1 Frame je Fenster, ist das ein sichtbares Ruckeln im
+Ruhezustand → Gate ZURÜCK mit Paket „Zeichenkosten L5–L7“ vor dem Release. Sonst geht das Paket nach dem Release
+als Folgepaket. (3) Kaltstart Seed 14 (22–24 s gegen 11–15 s) blockiert nicht; kommt in das Folgepaket und in die
+Release-Notiz. (4) (b), (c), (d) erfüllt; Perf innerhalb R313 (höchstens +1,3 ms). (5) Eintrag in der Liste
+`ZEITTESTS` in `vite.config.ts` ausserhalb der Grenze als Trivial-Fix angenommen. (6) Budget: rund 40 Tools über
+der Schätzung ohne Antrag → Retro (Ursache Kollision R324). (7) Ablauf: Integrator mergt `int/rel-07` in
+`rel/rel-07`, danach Nachprüfung lead-qa nur für Ruckeln mit/ohne Bau, Perf, K-Proben blind und sichtbaren
+Altwald während des Waldaufbaus. Worktree `.worktrees/rel07-wood` wird entfernt, Branch `fix/rel07-a-wood`
+bleibt. — Kosten bei Irrtum: eine weitere Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-art FIX-REL07 · ADR: —
