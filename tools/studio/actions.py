@@ -11,7 +11,6 @@ import json
 import subprocess
 from datetime import datetime, timezone
 
-REPO = "anno-clone"
 NOT_RECORDED = "nicht erfasst"
 # (gelb über, rot über)
 REPO_LIMITS = (150, 400)
@@ -39,7 +38,8 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
     now = now or datetime.now(timezone.utc)
     try:
         login = run(["api", "user", "--jq", ".login"]).strip()
-        if not login:
+        name = run(["repo", "view", "--json", "name", "-q", ".name"]).strip()
+        if not login or not name:
             return None
         raw = run(
             [
@@ -57,7 +57,7 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
                 continue
             minutes = float(item.get("quantity", 0))
             account += minutes
-            if item.get("repositoryName") == REPO:
+            if item.get("repositoryName") == name:
                 repo += minutes
         return repo, account
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):

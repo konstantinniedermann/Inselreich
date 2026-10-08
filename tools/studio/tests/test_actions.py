@@ -8,13 +8,17 @@ import actions
 NOW = datetime(2026, 10, 8, tzinfo=timezone.utc)
 
 
-def fake(items, login="koschi"):
+def fake(items, login="koschi", name="anno-clone"):
     calls = []
 
     def run(args):
         calls.append(args)
         if args[:2] == ["api", "user"]:
             return login + "\n"
+        if args[0] == "repo":
+            if name is None:
+                raise subprocess.CalledProcessError(1, "gh")
+            return name + "\n"
         return json.dumps({"usageItems": items})
 
     run.calls = calls
@@ -63,6 +67,14 @@ class ActionsTest(unittest.TestCase):
 
     def test_empty_usage_is_zero_not_missing(self):
         self.assertEqual(actions.usage(NOW, fake([])), (0.0, 0.0))
+
+    def test_repo_name_is_detected_not_hardcoded(self):
+        run = fake([item(918, repo="Inselreich"), item(5, repo="x")], name="Inselreich")
+        self.assertEqual(actions.usage(NOW, run), (918.0, 923.0))
+        self.assertIn(["repo", "view", "--json", "name", "-q", ".name"], run.calls)
+
+    def test_repo_name_failure_is_not_recorded(self):
+        self.assertIsNone(actions.usage(NOW, fake([item(1)], name=None)))
 
     def test_empty_login_is_not_recorded(self):
         self.assertIsNone(actions.usage(NOW, fake([], login="")))
