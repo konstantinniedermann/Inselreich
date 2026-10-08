@@ -178,16 +178,25 @@ export function bindInput(
   const touches = new Map<number, { sx: number; sy: number }>();
   let gesture: { dist: number; mx: number; my: number } | null = null;
 
+  /** Overlay-Höhe: gemerkt, neu gemessen nur nach Umbau der Bauleiste oder `resize` (kein Layout je Frame). */
+  let lastOverlayH = 0;
+  let overlayDirty = true;
+  const markOverlayDirty = (): void => {
+    overlayDirty = true;
+  };
+  const buildbar = canvas.ownerDocument.getElementById('buildbar');
+  const overlayObserver =
+    buildbar && typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(markOverlayDirty)
+      : null;
+  overlayObserver?.observe(buildbar!, { childList: true, subtree: true, attributes: true });
+  window.addEventListener('resize', markOverlayDirty);
   const local = (e: MouseEvent): { sx: number; sy: number } => {
     const r = canvas.getBoundingClientRect();
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
   /** Sichtbare Kartenhöhe: bei offener Kategorie ohne das Bauleisten-Overlay. */
-  const viewH = (): number =>
-    visibleViewHeight(
-      canvas.clientHeight,
-      canvas.ownerDocument.querySelector<HTMLElement>('.buildbar-sub')?.offsetHeight ?? 0,
-    );
+  const viewH = (): number => visibleViewHeight(canvas.clientHeight, lastOverlayH);
   const clamp = (): void => {
     clampToRect(state.cam, cameraBounds(state.world.islands), canvas.clientWidth, viewH());
   };
@@ -571,14 +580,17 @@ export function bindInput(
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', onBlur);
+    window.removeEventListener('resize', markOverlayDirty);
+    overlayObserver?.disconnect();
   };
 
   /**
    * Öffnet oder schliesst sich das Bauleisten-Overlay, ändert sich die sichtbare Kartenhöhe: Kamera neu klemmen
    * und Hover neu bestimmen; liegt der ruhende Zeiger nun unter dem Overlay, entfällt der Hover.
    */
-  let lastOverlayH = 0;
   const syncOverlay = (): void => {
+    if (!overlayDirty) return;
+    overlayDirty = false;
     const sub = canvas.ownerDocument.querySelector<HTMLElement>('.buildbar-sub');
     const h = sub?.offsetHeight ?? 0;
     if (h === lastOverlayH) return;
