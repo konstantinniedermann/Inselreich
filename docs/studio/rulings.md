@@ -3210,3 +3210,14 @@ den Retros weiter (Statuspflege durch den studio-coach am Session-Ende). Hochrec
 Ende Oktober) geht als Information in den Nutzerbericht; kein Vorbehalt nach §5.3.
 
 Entscheider: L0 · Anlass: Retro M12 · ADR: —
+
+## R357 · 2026-10-08 · Lastbremse: studioweit ein voller Testlauf zugleich
+
+Ruling: 1-min-Load stieg auf 57 (10 Kerne), weil mehrere Stränge gleichzeitig volle Vitest-Läufe (`make check`,
+`make test`) fuhren; Messläufe (ART-WALD-RAUTEN Kaltstart) warten dadurch. Ab sofort: Während eines Tasks nur gezielte
+Läufe (`npx vitest run <datei>`); volle Läufe (`make check`, `make test`, `zeitreserve-push`) nur bei 1-min-Load ≤ 8
+und nie zwei Stränge zugleich — vor dem Start `pgrep -fl 'vitest run'` prüfen, läuft schon einer, warten. Messläufe
+haben Vorrang. Der Nutzer hatte nach der Rechnerlast gefragt. Kandidat für einen Werkzeug-Riegel (Lockdatei in
+`make check`) für die nächste Retro.
+
+Entscheider: L0 · Anlass: Nutzerfrage Rechnerlast · ADR: —
