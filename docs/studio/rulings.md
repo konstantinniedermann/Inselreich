@@ -3028,3 +3028,35 @@ Panelbreite 280 px, kein geschätzter Ist-Ausstoss. Die Umsetzung (lead-tech, �
 der PERF-L57-Messläufe, weil Testläufe die Last über 4 heben und die Messung ungültig machen (R329).
 
 Entscheider: L0 · Anlass: Bericht Spec PANEL-UEBERSICHT · ADR: —
+
+## R341 · 2026-10-08 · PERF-L57: Messziel erreicht, Nachrunde vor dem Merge-Gate; PANEL-UEBERSICHT startet
+
+Ruling: PERF-L57 (`perf/l57` @ 92a214c) erreicht das Ziel aus R327, von L0 gegen `.studio/qa/perf-l57/r3/` geprüft:
+Bauen im Wald Seed 7 und 14 je 0 Frames > 25 ms (A und B); Kaltstart Seed 7 22,8 → 8,3–8,4 s, Seed 14 14,9–16,0 →
+8,1–8,4 s. Das Review lautete ZURÜCK, die Fixes wurden nicht erneut geprüft; neu ist ein Bildschirmcache für den Boden.
+Deshalb vor dem Gate eine Nachrunde (+40 Tools): Delta-Review auf opus (inklusive Invalidierung des Cache) und
+Sichtprüfung im Browser. PANEL-UEBERSICHT (lead-tech, ≤ 120 Tools) startet jetzt, die Messläufe sind abgeschlossen.
+
+Entscheider: L0 · Anlass: Bericht PERF-L57 · ADR: —
+
+## R342 · 2026-10-08 · Gate Merge PERF-L57 OK; REL-08 umfasst Tasten-Komfort und PERF-L57
+
+Ruling: Nach der Nachrunde **OK** für `perf/l57` @ 20c8e50: Delta-Review auf opus OK (Invalidierung des Bodencache
+vollständig, drei niedrige Testlücken) und Sichtprüfung OK (gepatchtes Bild gegen Neuaufbau 0 Pixel Unterschied,
+Tag/Nacht pixelgleich; Unterschiede zu main nur an Baumkanten und an den neuen Funken). Die Konflikt-Probe ist
+konfliktfrei. Merge lokal. REL-08 heisst jetzt „Tasten-Komfort und flüssigere Insel" und geht mit dem
+Session-End-Push live. PANEL-UEBERSICHT kommt nur dazu, wenn es vor dem Session-Ende das Gate besteht, sonst REL-09.
+Budget-Nachrunde eingehalten.
+
+Entscheider: L0 · Anlass: Bericht Nachrunde PERF-L57 · ADR: —
+
+## R343 · 2026-10-08 · Gate Merge PANEL-UEBERSICHT OK, kommt in REL-08
+
+Ruling: **OK** für `feat/panel-uebersicht` @ d22ce7a. Final-Review auf opus BEDENKEN mit fünf niedrigen Befunden,
+drei davon behoben; offen sind der Importzyklus `panelView.ts`↔`inspect.ts` (funktioniert, Auslagern später) und
+das Duplikat `TILE_LAYOUT`, beide als Beobachtung. Browser AK-PU-22…32 bestanden, Höhenreserve bei 1280×720 rund
+195 px; nach der Fix-Runde wurde nicht erneut geprüft, für Rolle, Gerüst und `kbd`-Grösse vertretbar. Sim
+unverändert, Save v9. REL-08 heisst damit „Tasten-Komfort, flüssigere Insel, neues Gebäude-Panel". Budget rund 136
+von 120 Tools, bei widersprüchlicher Selbstangabe → Retro.
+
+Entscheider: L0 · Anlass: Bericht PANEL-UEBERSICHT · ADR: —

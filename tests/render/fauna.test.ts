@@ -46,12 +46,13 @@ import {
   drawForestBirds,
   drawGroundFauna,
   faunaAt,
+  fallGlitter,
   faunaCatalog,
   faunaLot,
   type FaunaEnv,
   type FaunaHit,
 } from '../../src/render/fauna';
-import { SUB, massifData, type MassifData } from '../../src/render/massif';
+import { SUB, massifData, massifFeatures, type MassifData } from '../../src/render/massif';
 import { seaContext, seaPlan } from '../../src/render/decor';
 import { fieldWorld } from '../../src/render/terrainField';
 import { dolphinsAt } from '../../src/render/wildlife';
@@ -62,6 +63,7 @@ import { PALETTE, SIGNAL_NAMES, rgbOfCss } from '../../src/render/palette';
 import { render, renderStats, type RenderFx } from '../../src/render/renderer';
 import { TREE_H, resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { shipTile } from '../../src/render/ship';
+import { deserialize, serialize } from '../../src/sim/save';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
@@ -70,7 +72,7 @@ import { fakeCtx, type Ev } from './fakeCtx';
 
 // Bodentiere im Renderer: ein Test legt über `inject` eigene Treffer in `faunaAt`, damit die Mischung nach Tiefe prüfbar ist.
 const h = vi.hoisted(() => ({
-  calls: [] as { kind: string; key?: number }[],
+  calls: [] as { kind: string; key?: number; n?: number }[],
   inject: [] as unknown[],
 }));
 vi.mock('../../src/render/fauna', async (orig) => {
@@ -79,6 +81,10 @@ vi.mock('../../src/render/fauna', async (orig) => {
     ...m,
     faunaAt: (...a: Parameters<typeof m.faunaAt>) =>
       [...m.faunaAt(...a), ...(h.inject as FaunaHit[])].sort((x, y) => x.key - y.key),
+    drawFallSparks: (...a: Parameters<typeof m.drawFallSparks>) => {
+      h.calls.push({ kind: 'sparks', n: a[2].length });
+      return m.drawFallSparks(...a);
+    },
     drawGroundFauna: (...a: Parameters<typeof m.drawGroundFauna>) => {
       h.calls.push({ kind: 'fauna', key: a[2].key });
       return m.drawGroundFauna(...a);
@@ -1403,5 +1409,131 @@ describe('Fauna Bild-Fix R1', () => {
     };
     expect(lum(SEAL_BELLY)).toBeGreaterThan(lum(SEAL_COLOR));
     expect(lum(TURTLE_RIM)).toBeGreaterThan(lum(TURTLE_COLOR));
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// PERF-L57 W2: Gischt am Wasserfall angeschlossen, statische Anker
+// ---------------------------------------------------------------------------------------------------------
+const massifFeaturesOf = (world: World) => massifFeatures(massifData(fieldWorld(world))).fall;
+const kontorCamOf = (world: World): Camera => {
+  const k = world.buildings[home(world).kontorId]!;
+  const c = center(BUILDING_DEFS.kontor, k.x, k.y);
+  const cam = { x: 0, y: 0, zoom: 1 };
+  centerOn(cam, c.cx, c.cy, VIEW, { w: home(world).width, h: home(world).height });
+  return cam;
+};
+describe('PERF-L57 Wasserfall-Gischt im Renderer', () => {
+  const FALL_SEED = 3; // L6-Wasserfall steht (Suche per Schleife über Seeds 1–39: 3, 12, 13, 15, 16, 26, 29)
+  const NO_FALL_SEED = 1;
+  const ghostCam = (world: World, zoom: number): Camera => {
+    const f = massifFeaturesOf(world)!;
+    const p = f.path[Math.floor(f.path.length / 2)]!;
+    const cam = { x: 0, y: 0, zoom };
+    centerOn(cam, p.I / SUB, p.J / SUB, VIEW, { w: home(world).width, h: home(world).height });
+    return cam;
+  };
+  const sparksIn = (world: World, zoom: number, fx: Partial<RenderFx> = {}): number[] => {
+    const { ctx } = fakeCtx();
+    h.calls.length = 0;
+    render(ctx, world, ghostCam(world, zoom), layer, null, null, VIEW, { timeMs: 1000, ...fx });
+    return h.calls.filter((c) => c.kind === 'sparks').map((c) => c.n!);
+  };
+  const full = (world: World): TileRange => ({
+    x0: 0,
+    y0: 0,
+    x1: home(world).width - 1,
+    y1: home(world).height - 1,
+  });
+
+  it('fallGlitter: Funken mit Fall, höchstens cap("glitter"), reduziert und unter Mindestzoom keine, ohne Fall nichts', () => {
+    const w = createWorld(FALL_SEED);
+    const a = fallGlitter(w, full(w), 1000, { zoom: 1 });
+    expect(a.length).toBeGreaterThan(0);
+    expect(a.length).toBeLessThanOrEqual(cap('glitter', false));
+    expect(JSON.stringify(a)).toBe(JSON.stringify(fallGlitter(w, full(w), 1000, { zoom: 1 })));
+    expect(fallGlitter(w, full(w), 1000, { zoom: 0.5 })).toEqual([]);
+    expect(fallGlitter(w, full(w), 1000, { zoom: 1, reduce: true })).toEqual([]);
+    expect(fallGlitter(w, { x0: 0, y0: 0, x1: -1, y1: -1 }, 1000, { zoom: 1 })).toEqual([]);
+    const none = createWorld(NO_FALL_SEED);
+    expect(fallGlitter(none, full(none), 1000, { zoom: 1 })).toEqual([]);
+  });
+
+  it('fallGlitter: Fall ausserhalb des Bereichs gibt nichts', () => {
+    const w = createWorld(FALL_SEED);
+    const f = massifFeaturesOf(w)!;
+    const xs = f.path.map((p) => p.I / SUB);
+    const far = { x0: Math.ceil(Math.max(...xs)) + 3, y0: 0, x1: 255, y1: 255 };
+    expect(fallGlitter(w, far, 1000, { zoom: 1 })).toEqual([]);
+  });
+
+  it('Renderer: Funken über dem Fall (Zoom 1), nachts auch; nicht bei Zoom ≤ LOD_ZOOM, reduziert, ohne Fall', () => {
+    const w = createWorld(FALL_SEED);
+    for (const tick of [0, 3000]) {
+      w.tick = tick;
+      const n = sparksIn(w, 1);
+      expect(n.length, `tick ${tick}`).toBe(1);
+      expect(n[0]).toBeGreaterThan(0);
+    }
+    expect(sparksIn(w, LOD_ZOOM)).toEqual([]);
+    expect(sparksIn(w, 1, { reduceMotion: true })).toEqual([]);
+    const none = createWorld(NO_FALL_SEED);
+    h.calls.length = 0;
+    const { ctx } = fakeCtx();
+    render(ctx, none, kontorCamOf(none), layer, null, null, VIEW, { timeMs: 1000 });
+    expect(h.calls.filter((c) => c.kind === 'sparks')).toHaveLength(0);
+  }, 20_000);
+
+  it('Renderer: Fall ausserhalb des Bildes zeichnet keine Funken', () => {
+    const w = createWorld(FALL_SEED);
+    const cam = ghostCam(w, 1);
+    cam.x += 100000;
+    const { ctx } = fakeCtx();
+    h.calls.length = 0;
+    render(ctx, w, cam, layer, null, null, VIEW, { timeMs: 1000 });
+    expect(h.calls.filter((c) => c.kind === 'sparks')).toHaveLength(0);
+  });
+
+  it('Quelltext: der Kopf von fauna.ts nennt keinen offenen Anschluss mehr', () => {
+    expect(readFileSync('src/render/fauna.ts', 'utf8')).not.toMatch(/Anschluss folgt/);
+  });
+});
+
+describe('PERF-L57 B1 Fauna-Anker aus statischem Gelände', () => {
+  const sig = (w: World): string => JSON.stringify(faunaAnchors(w));
+  it('Anker gleich vor und nach Weg und Haus (Bebauung filtert nur über alive)', () => {
+    for (const seed of [3, 7]) {
+      const a = createWorld(seed);
+      const b = createWorld(seed);
+      const before = sig(a);
+      // Wege und ein Haus auf viele Kacheln der Heimat setzen (Zustand wie nach Bauen), bevor b zum ersten Mal Anker bildet
+      const isl = home(b);
+      for (let i = 0; i < isl.tiles.length; i += 3) {
+        const t = isl.tiles[i]!;
+        if (t.terrain === 'grass' || t.terrain === 'sand') t.road = true;
+      }
+      expect(sig(b)).toBe(before);
+    }
+  });
+  it('Anker gleich nach serialize/deserialize (neue Welt-Instanz)', () => {
+    const a = createWorld(7);
+    const before = sig(a);
+    const isl = home(a);
+    for (let i = 0; i < isl.tiles.length; i += 5)
+      if (isl.tiles[i]!.terrain === 'grass') isl.tiles[i]!.road = true;
+    const loaded = deserialize(serialize(a));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    expect(sig(loaded.world)).toBe(before);
+  });
+  it('gebaute Kachel blendet das Tier nur aus (alive), der Anker bleibt', () => {
+    const w = createWorld(7);
+    const before = sig(w);
+    const hare = faunaAnchors(w).hare?.[0];
+    expect(hare, 'Seed 7 hat einen Hasen-Anker').toBeDefined();
+    if (!hare) return;
+    home(w).tiles[hare.ty * home(w).width + hare.tx]!.road = true;
+    expect(sig(w)).toBe(before);
+    const hits = faunaAt(w, FULL, 1000, { phase: 'day', zoom: 1 });
+    expect(hits.some((x) => x.id === 'hare' && x.tx === hare.tx && x.ty === hare.ty)).toBe(false);
   });
 });
