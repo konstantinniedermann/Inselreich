@@ -189,7 +189,12 @@ export function bindInput(
     buildbar && typeof MutationObserver !== 'undefined'
       ? new MutationObserver(markOverlayDirty)
       : null;
-  overlayObserver?.observe(buildbar!, { childList: true, subtree: true, attributes: true });
+  overlayObserver?.observe(buildbar!, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['hidden'],
+  });
   window.addEventListener('resize', markOverlayDirty);
   const local = (e: MouseEvent): { sx: number; sy: number } => {
     const r = canvas.getBoundingClientRect();
