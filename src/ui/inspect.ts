@@ -38,6 +38,7 @@ import {
   levelPips,
   progressView,
   riseCard,
+  TILE_LAYOUT,
   statKeys,
   statTiles,
   stateChip,
@@ -376,15 +377,6 @@ function setPips(panel: HTMLElement, chipField: string, textField: string, p: Pi
 }
 
 /** Kennzahlen-Zone mit Kachel-Grid; die Kacheln hängen nur vom Typ ab. */
-/** Beschriftung und Unterzeile je Kachel; das Gerüst hängt nur vom Typ ab (`statKeys`, G-3). */
-const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
-  output: { label: 'Ausstoss', sub: true },
-  utilization: { label: 'Auslastung', sub: false },
-  input: { label: 'Verbrauch', sub: true },
-  upkeep: { label: 'Unterhalt', sub: true },
-  inhabitants: { label: 'Einwohner', sub: false },
-};
-
 function addStats(panel: HTMLElement, keys: StatKey[]): HTMLElement {
   const sec = node('section', 'pv-stats');
   sec.dataset.zone = 'stats';

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TILE_LAYOUT,
   TONE_SYMBOL,
   UPGRADE_KEY_LABEL,
   houseTiles,
@@ -14,6 +15,7 @@ import {
   tierPips,
   upgradeCard,
   upgradeGain,
+  type StatKey,
 } from '../../src/ui/panelView';
 import { upgradeView, progressPct } from '../../src/ui/panelView';
 import { missingInputs } from '../../src/sim/queries';
@@ -208,6 +210,20 @@ describe('AK-PU-06..09 Kacheln', () => {
       },
     ]);
     expect(houseTiles(put(w, 'fisher'))).toEqual([]);
+  });
+  it('TILE_LAYOUT: ein Eintrag je StatKey, Etiketten eine Quelle', () => {
+    const keys: StatKey[] = ['output', 'utilization', 'input', 'upkeep', 'inhabitants'];
+    expect(Object.keys(TILE_LAYOUT).sort()).toEqual([...keys].sort());
+    const h = put(w, 'house');
+    setHouse(h, 1, 3, []);
+    const tiles = [
+      ...statTiles(put(w, 'fisher')),
+      ...statTiles(put(w, 'weaver')),
+      ...statTiles(put(w, 'chapel')),
+      ...houseTiles(h),
+    ];
+    expect(new Set(tiles.map((t) => t.key)).size).toBeGreaterThanOrEqual(4);
+    for (const t of tiles) expect(t.label).toBe(TILE_LAYOUT[t.key].label);
   });
 });
 

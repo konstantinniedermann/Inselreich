@@ -117,6 +117,15 @@ export function tierPips(b: Building): Pips | null {
   return { level, max, label: `${TIERS[level].name}, Stufe ${level} von ${max}` };
 }
 
+/** Beschriftung und Unterzeile je Kachel; einzige Quelle der Etiketten (`statTiles`, `houseTiles`, Gerüst in `inspect`). */
+export const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
+  output: { label: 'Ausstoss', sub: true },
+  utilization: { label: 'Auslastung', sub: false },
+  input: { label: 'Verbrauch', sub: true },
+  upkeep: { label: 'Unterhalt', sub: true },
+  inhabitants: { label: 'Einwohner', sub: false },
+};
+
 /** Struktur der Kennzahl-Kacheln je Typ, unabhängig von Stufe, Zustand und Brand (G-3). */
 export function statKeys(defId: BuildingDefId): StatKey[] {
   const def = BUILDING_DEFS[defId];
@@ -140,7 +149,7 @@ export function statTiles(b: Building): StatTile[] {
     const good = GOODS[def.produces].name;
     tiles.push({
       key: 'output',
-      label: 'Ausstoss',
+      label: TILE_LAYOUT.output.label,
       value: perMin,
       sub:
         b.outageUntil !== undefined
@@ -152,20 +161,20 @@ export function statTiles(b: Building): StatTile[] {
   if (u !== null)
     tiles.push({
       key: 'utilization',
-      label: 'Auslastung',
+      label: TILE_LAYOUT.utilization.label,
       value: `${Math.floor(u / 10)} %`,
       sub: null,
     });
   if (def.consumes && cycle !== undefined)
     tiles.push({
       key: 'input',
-      label: 'Verbrauch',
+      label: TILE_LAYOUT.input.label,
       value: def.consumes.length > 1 ? `je ${perMin}` : perMin,
       sub: goodList(def.consumes),
     });
   tiles.push({
     key: 'upkeep',
-    label: 'Unterhalt',
+    label: TILE_LAYOUT.upkeep.label,
     value: `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`,
     sub: 'Geld',
   });
@@ -177,7 +186,7 @@ export function houseTiles(b: Building): StatTile[] {
   return [
     {
       key: 'inhabitants',
-      label: 'Einwohner',
+      label: TILE_LAYOUT.inhabitants.label,
       value: `${b.house.inhabitants} / ${TIERS[b.house.tier].maxInhabitants}`,
       sub: null,
     },
