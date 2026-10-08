@@ -2777,3 +2777,13 @@ R319 V1: 93 % der lead-art-Neuschreibungen folgen auf Turn-Ende. Paketfeld-Norma
 — Kosten bei Irrtum: Messspalte leicht ungenau, kein Einfluss auf Spiel oder Ampel.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL-M1 · ADR: —
+
+## R321 · 2026-10-08 · `zeitreserve` rot nach Merge M1: Last-Artefakt, an TOOL-TIMEOUTS
+
+Ruling: Merge 772e4bb bleibt (Diff nur `tools/studio/`, 2317 Tests + studio-test grün). `zeitreserve` rot bei
+`tests/render/terrainFoothills.test.ts` und `massif.test.ts` (≈ 4 s gegen Grenze 3,75 s bei 30 s Timeout) fällt
+zeitlich mit parallelen Testläufen von TOOL-TIMEOUTS zusammen (Lastabhängigkeit, Thema E-030). Beide Tests gehen
+in den Umfang von TOOL-TIMEOUTS. Nach dessen Merge seriell `make check` ohne parallele Testläufe; Worktree-Aufräumen
+`tool-ampel-m1` dann mit. — Kosten bei Irrtum: main bis dahin lokal mit rotem Zeitreserve-Schritt, kein Push.
+
+Entscheider: L0 · Anlass: Bericht production-integrator TOOL-AMPEL-M1 · ADR: —
