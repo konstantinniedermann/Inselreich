@@ -30,15 +30,24 @@ import { meadowWarmth } from './groundDecor';
 //  D4 Fremdinseln: gilt für jeden Ansicht-Seed; Stempel zeigt der Aufrufer (`iso.ts`) nur auf der Heimat.
 //  D5 Salze 540–559 (L4) und 560–569 (L5, Meer und Palmen: 560 Palmen, 566 Wrack, 567 Meeresfels und Felsnadel, 568 Felseiland,
 //     569 Wasserflächen Sandbank/Riff/Tang); Zufall nur über `hash2`/`valueNoise`.
+//     Salze 595–597 (L8): Zweitlos der Land-Arten (`planRare`), wenn Land-Orte plus Meer-Lose unter `RARE_MIN` bleiben.
+//     Salze 598–599: reserviert für L8 (noch frei).
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
-//     NICHT über `RARE_POOL`/`RARE_CAP` (Land-Orte), sondern über eigene Lose; L8 zählt sie fürs Seltenheitsbudget dazu.
+//     NICHT über `RARE_POOL` (Land-Orte), sondern über eigene Lose; `rareBudget` (L8) zählt diese Lose (nicht ihre Eignung) und
+//     senkt die Land-Kappe von `planRare` auf `RARE_CAP − Meer-Lose`; das Budget hängt nie von `SeaContext` ab.
 
 /** Reichweite der Sichtbarkeitsprüfung über den Fussabdruck hinaus in Kacheln (= Rand von `dirtyRect`). */
 export const DECOR_REACH = 1;
-/** Obergrenze der S/E-Elemente je Insel in fester Reihenfolge (L8 stellt das 3–6-Band scharf). */
+/** Obergrenze der S/E-Elemente je Insel (Land-Orte plus bestandene Meer-Lose, L8: Band 3–6). */
 export const RARE_CAP = 6;
+/** Untergrenze des Bands: reicht die Summe nicht, rücken Land-Arten per Zweitlos (Salze 595–597) nach. */
+export const RARE_MIN = 3;
+/** Zweitlos je Land-Art und Runde (Salze 595–597): Losgrenze = `RARE_SECOND_K` · `p` der Art, damit die Quoten nahe `p` bleiben. */
+const RARE_SECOND_K = 1;
+/** Salze des Zweitloses je Runde (D5). */
+const RARE_SECOND_SALTS = [595, 596, 597] as const;
 /** R6: höchstens ein Stempel je so viele Landkacheln und höchstens so viele je Insel. */
 export const STAMP_PER_LAND = 6;
 export const STAMP_MAX = 300;
@@ -222,6 +231,19 @@ export function rareCount(seed: number, def: RareDef): number {
   return def.max > 1 && hash2(seed + def.salt, -1, -1) < 0.4 ? 2 : 1;
 }
 
+/**
+ * L8 Seltenheitsbudget: Zahl der bestandenen Meer-Lose (Kiste 565, Wrack 566, Felsnadel 567, Felseiland 568). Reine Funktion
+ * von Seed und Salz: zählt die Lose, nicht die Eignung, und kennt weder `SeaContext` noch Fahrlinie.
+ */
+export function rareBudget(seed: number): number {
+  return (
+    Number(hash2(seed + 565, 0, 0) < CRATE_P) +
+    Number(hash2(seed + 566, 0, 0) < WRECK_P) +
+    Number(hash2(seed + 567, -1, -1) < NEEDLE_P) +
+    Number(hash2(seed + 568, 0, 0) < ISLET_P)
+  );
+}
+
 export interface RareSite {
   id: RareId;
   /** Kachel links oben des Fussabdrucks. */
@@ -322,65 +344,81 @@ function rareEligible(id: RareId, p: StaticPlan, w: number, x: number, y: number
   }
 }
 
-/** Nach Eignung und Los: die Orte der S/E-Elemente. Reihenfolge fest; höchstens `RARE_CAP`. */
+/**
+ * Nach Eignung und Los: die Orte der S/E-Elemente. Reihenfolge fest; Land-Kappe `RARE_CAP − rareBudget(seed)` (L8, die Meer-Lose
+ * zählen mit). Bleibt die Summe aus Land-Orten und Meer-Losen unter `RARE_MIN`, rücken Land-Arten mit gescheitertem Los per
+ * Zweitlos (Salze 595–597, je eine Runde) hinten an; die Einträge davor bleiben unverändert.
+ */
 function planRare(p: StaticPlan, w: number, h: number): void {
   const seed = p.seed;
+  const sea = rareBudget(seed);
+  const cap = RARE_CAP - sea;
   const sites: RareSite[] = [];
+  /** Setzt Exemplar `k` von `def`; false, wenn kein Ort passt. */
+  const place = (def: RareDef, k: number, taken: Pos[]): boolean => {
+    let best = -1,
+      bestScore = -1;
+    const span = def.size;
+    for (let y = 0; y + span <= h; y++)
+      for (let x = 0; x + span <= w; x++) {
+        if (!rareEligible(def.id, p, w, x, y)) continue;
+        if (taken.some((t) => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) < 8)) continue;
+        let score = hash2(seed + def.salt, x + 1, y + 1);
+        // Teppich: das statisch innerste Grünland zuerst, dann der Würfel
+        if (def.id === 'bluetenteppich') score += p.green[y * w + x]!;
+        if (score > bestScore) {
+          bestScore = score;
+          best = y * w + x;
+        }
+      }
+    if (best < 0) return false;
+    const x = best % w,
+      y = (best / w) | 0;
+    taken.push({ x, y });
+    const site: RareSite = {
+      id: def.id,
+      x,
+      y,
+      size: def.size,
+      n: k,
+      radius: 2 + Math.floor(hash2(seed + def.salt, -2, -2) * 3),
+      tone: hash2(seed + def.salt, -3, -3) < 0.5 ? 0 : 1,
+    };
+    sites.push(site);
+    const si = sites.length;
+    if (def.id === 'bluetenteppich') {
+      // Teppichkacheln: Scheibe mit rauer Kante, nur statisches Grünland, nicht über schon Reserviertes
+      const r = site.radius;
+      for (let yy = Math.max(0, y - r - 1); yy <= Math.min(h - 1, y + r + 1); yy++)
+        for (let xx = Math.max(0, x - r - 1); xx <= Math.min(w - 1, x + r + 1); xx++) {
+          const dd = Math.hypot(xx - x, yy - y);
+          const edge = r + 0.8 * (hash2(seed + def.salt, xx + 7, yy + 7) - 0.5);
+          if (
+            dd <= edge &&
+            p.cls[yy * w + xx] === 2 &&
+            p.wild?.[yy * w + xx] !== 1 &&
+            !p.reserved[yy * w + xx]
+          )
+            p.reserved[yy * w + xx] = si;
+        }
+    } else
+      for (let dy = 0; dy < span; dy++)
+        for (let dx = 0; dx < span; dx++) p.reserved[(y + dy) * w + x + dx] = si;
+    return true;
+  };
   for (const def of RARE_POOL) {
     if (!rareLot(seed, def)) continue;
     const taken: Pos[] = [];
     const n = rareCount(seed, def);
-    for (let k = 0; k < n && sites.length < RARE_CAP; k++) {
-      let best = -1,
-        bestScore = -1;
-      const span = def.size;
-      for (let y = 0; y + span <= h; y++)
-        for (let x = 0; x + span <= w; x++) {
-          if (!rareEligible(def.id, p, w, x, y)) continue;
-          if (taken.some((t) => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) < 8)) continue;
-          let score = hash2(seed + def.salt, x + 1, y + 1);
-          // Teppich: das statisch innerste Grünland zuerst, dann der Würfel
-          if (def.id === 'bluetenteppich') score += p.green[y * w + x]!;
-          if (score > bestScore) {
-            bestScore = score;
-            best = y * w + x;
-          }
-        }
-      if (best < 0) break;
-      const x = best % w,
-        y = (best / w) | 0;
-      taken.push({ x, y });
-      const site: RareSite = {
-        id: def.id,
-        x,
-        y,
-        size: def.size,
-        n: k,
-        radius: 2 + Math.floor(hash2(seed + def.salt, -2, -2) * 3),
-        tone: hash2(seed + def.salt, -3, -3) < 0.5 ? 0 : 1,
-      };
-      sites.push(site);
-      const si = sites.length;
-      if (def.id === 'bluetenteppich') {
-        // Teppichkacheln: Scheibe mit rauer Kante, nur statisches Grünland, nicht über schon Reserviertes
-        const r = site.radius;
-        for (let yy = Math.max(0, y - r - 1); yy <= Math.min(h - 1, y + r + 1); yy++)
-          for (let xx = Math.max(0, x - r - 1); xx <= Math.min(w - 1, x + r + 1); xx++) {
-            const dd = Math.hypot(xx - x, yy - y);
-            const edge = r + 0.8 * (hash2(seed + def.salt, xx + 7, yy + 7) - 0.5);
-            if (
-              dd <= edge &&
-              p.cls[yy * w + xx] === 2 &&
-              p.wild?.[yy * w + xx] !== 1 &&
-              !p.reserved[yy * w + xx]
-            )
-              p.reserved[yy * w + xx] = si;
-          }
-      } else
-        for (let dy = 0; dy < span; dy++)
-          for (let dx = 0; dx < span; dx++) p.reserved[(y + dy) * w + x + dx] = si;
-    }
+    for (let k = 0; k < n && sites.length < cap; k++) if (!place(def, k, taken)) break;
   }
+  // Zweitlos (Salze 595–597): nur Arten, deren Erstlos scheiterte; eine Runde je Salz, ein Exemplar
+  for (let r = 0; r < RARE_SECOND_SALTS.length && sites.length + sea < RARE_MIN; r++)
+    RARE_POOL.forEach((def, di) => {
+      if (sites.length + sea >= RARE_MIN || sites.length >= cap) return;
+      if (rareLot(seed, def) || sites.some((t) => t.id === def.id)) return;
+      if (hash2(seed + RARE_SECOND_SALTS[r]!, di + 1, 0) < RARE_SECOND_K * def.p) place(def, 0, []);
+    });
   p.sites = sites;
 }
 

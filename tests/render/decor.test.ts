@@ -481,9 +481,9 @@ describe('L4 D2/D3 Fussabdruck, Seltenheit', () => {
       for (const d of RARE_POOL) {
         const n = sites.filter((s) => s.id === d.id).length;
         expect(n).toBeLessThanOrEqual(d.max);
-        if (n > 0) expect(rareLot(seed, d), `${d.id} ohne Los`).toBe(true);
+        // L8: ohne Erstlos nur über das Zweitlos (Salze 595–597), dann genau ein Exemplar
         if (n > 0) seen.add(d.id);
-        expect(n).toBeLessThanOrEqual(rareLot(seed, d) ? rareCount(seed, d) : 0);
+        expect(n).toBeLessThanOrEqual(rareLot(seed, d) ? rareCount(seed, d) : 1);
       }
     }
     expect(seen.size).toBe(RARE_POOL.length);

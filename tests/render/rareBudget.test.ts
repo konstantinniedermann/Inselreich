@@ -127,3 +127,15 @@ describe('ART-L8-SELTEN T1 Seltenheitsbudget', () => {
     });
   });
 });
+
+describe('ART-L8-SELTEN T1 Salze', () => {
+  it('D5 der Bereich 595–597 steht im Kopf von decor.ts und im Code', () => {
+    const src = readFileSync(
+      new URL('../../src/render/decor.ts', import.meta.url).pathname,
+      'utf8',
+    );
+    const head = src.slice(0, src.indexOf('export const DECOR_REACH'));
+    expect(head).toContain('Salze 595–597');
+    expect(src).toContain('[595, 596, 597]');
+  });
+});
