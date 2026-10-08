@@ -3038,3 +3038,14 @@ Deshalb vor dem Gate eine Nachrunde (+40 Tools): Delta-Review auf opus (inklusiv
 Sichtprüfung im Browser. PANEL-UEBERSICHT (lead-tech, ≤ 120 Tools) startet jetzt, die Messläufe sind abgeschlossen.
 
 Entscheider: L0 · Anlass: Bericht PERF-L57 · ADR: —
+
+## R342 · 2026-10-08 · Gate Merge PERF-L57 OK; REL-08 umfasst Tasten-Komfort und PERF-L57
+
+Ruling: Nach der Nachrunde **OK** für `perf/l57` @ 20c8e50: Delta-Review auf opus OK (Invalidierung des Bodencache
+vollständig, drei niedrige Testlücken) und Sichtprüfung OK (gepatchtes Bild gegen Neuaufbau 0 Pixel Unterschied,
+Tag/Nacht pixelgleich; Unterschiede zu main nur an Baumkanten und an den neuen Funken). Die Konflikt-Probe ist
+konfliktfrei. Merge lokal. REL-08 heisst jetzt „Tasten-Komfort und flüssigere Insel" und geht mit dem
+Session-End-Push live. PANEL-UEBERSICHT kommt nur dazu, wenn es vor dem Session-Ende das Gate besteht, sonst REL-09.
+Budget-Nachrunde eingehalten.
+
+Entscheider: L0 · Anlass: Bericht Nachrunde PERF-L57 · ADR: —
