@@ -2744,3 +2744,14 @@ Vorfall `ampel:cache_write_5m` ist durch R314/E-037 adressiert; `ampel:steuerung
 (V2-Pflicht). — Kosten bei Irrtum: Altfälle unsichtbar; sie stehen in den Retros und in R167.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL · ADR: —
+
+## R318 · 2026-10-08 · Retro CI main: Hebel V1 (Timeout-Altlasten) angenommen
+
+Ruling: `docs/studio/retros/2026-10-08-ci-main.md` angenommen. 6 von 8 roten CI-Läufen auf main waren Test-Timeouts
+(5 s Standard) bei Altlast-Tests aus `tools/zeitreserve/baseline.json`; Hotfixes trafen jeweils nur den letzten
+Test. V1 an lead-tech (Paket TOOL-TIMEOUTS): die 21 übrigen Altlasten bekommen begründete eigene Timeouts oder werden
+geteilt. Messgrösse: 0 Altlasten mit Standard-Timeout, kein Timeout-Rot in den nächsten 20 CI-Läufen, Frist
+2026-10-22. Befund am Rand: die Session-Retro 8ef9d27f hatte 7 CI-Vorfälle ohne Ursachenanalyse quittiert — durch
+V2 (R316) künftig ausgeschlossen. — Kosten bei Irrtum: längere Testlaufzeit, Rückfall per Revert.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-ci-main · ADR: —
