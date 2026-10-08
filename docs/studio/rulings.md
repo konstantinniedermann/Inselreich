@@ -3136,3 +3136,13 @@ Lässt sich **E-037** mit den vorhandenen Sessions bewerten, wird es bewertet, s
 Experiment-Briefings nennen `make studio-test` als DoD. Gate HB-E048 erst nach grünem `make studio-test`.
 
 Entscheider: L0 · Anlass: Gate HB-E048 · ADR: —
+
+## R351 · 2026-10-08 · Gate HB-E048 OK nach Korrektur; E-027 behalten bestätigt
+
+Ruling: Commit fb774e6, `make studio-test` grün (452 OK). **E-027 behalten** bestätigt: 3 von 3 Ideen-Runden, ≥ 2
+Studio-Ideen live, keine Nutzer-Einwände; die nicht erhobene Gegenprobe von IDEEN-03 ist als Lücke vermerkt und senkt
+das Urteil nicht, weil die Runde laut R337 klein war. E-047 übernommen als Werkzeug. Es laufen E-042, E-037, E-046.
+**E-048** wartet auf den nächsten freien Platz (vor E-044). Handbuch bleibt 1.30. Ist dieser Korrektur laut Zählung: 4
+und 5 Tools.
+
+Entscheider: L0 · Anlass: Gate HB-E048 · ADR: —
