@@ -12,7 +12,7 @@ import json
 import re
 import statistics
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import pairwise
 from pathlib import Path
 
@@ -79,6 +79,7 @@ IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ic
 TOP_READS = 5
 REWRITE_PAUSE_S = 300  # Cache-Frist; längere Pause zwischen zwei Aufrufen
 REWRITE_ROWS = 12
+GUARD_DATE = datetime(2026, 10, 4, tzinfo=timezone.utc)  # Persona-Guard (R167) aktiv
 WAIT_TOOLS = {"Bash", "Agent", "Task"}
 PACKAGE = re.compile(r"^\s*Paket:\s*([\w.-]+)", re.MULTILINE)
 FAMILIES = (
@@ -328,6 +329,7 @@ def _instance(
         "kinds": kinds,
         "cost": sum(kinds.values()),
         "persona_start": general_persona,
+        "start_ts": calls[0]["ts"],
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
     }
 
@@ -356,15 +358,20 @@ def _ratio(part: float, total: float) -> float:
     return part / total if total else 0.0
 
 
-def compute(mains: list[Path]) -> dict | None:
-    """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen."""
+def compute(
+    mains: list[Path], persona_models: dict[str, str] | None = None
+) -> dict | None:
+    """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen.
+
+    persona_models: Persona -> Modell aus der Frontmatter; ohne Eintrag oder bei
+    «inherit» gilt ein Persona-Start nie als abweichend."""
     try:
-        return _compute(mains)
+        return _compute(mains, persona_models or {})
     except Exception:  # noqa: BLE001 - Messung darf nie abstürzen
         return None
 
 
-def _compute(mains: list[Path]) -> dict | None:
+def _compute(mains: list[Path], persona_models: dict[str, str]) -> dict | None:
     instances: list[dict] = []
     reads: list[dict] = []
     sessions = 0
@@ -391,10 +398,15 @@ def _compute(mains: list[Path]) -> dict | None:
                 instances.append(built)
     if not instances:
         return None
-    return _summary(instances, reads, sessions)
+    return _summary(instances, reads, sessions, persona_models)
 
 
-def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
+def _summary(
+    instances: list[dict],
+    reads: list[dict],
+    sessions: int,
+    persona_models: dict[str, str],
+) -> dict:
     total = sum(i["cost"] for i in instances)
     by_class: dict[str, float] = dict.fromkeys(CLASSES, 0.0)
     kinds: Counter = Counter()
@@ -405,6 +417,7 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         if "opus" in (item["model"] or ""):
             opus += item["cost"]
     share = {k: _ratio(v, total) for k, v in by_class.items()}
+    split = _persona_split(instances, persona_models)
     leads = [
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
     ]
@@ -429,13 +442,36 @@ def _summary(instances: list[dict], reads: list[dict], sessions: int) -> dict:
         "umsetzer": share["Umsetzer"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
-        "persona_opus": sum(
-            1 for i in instances if i["persona_start"] and "opus" in (i["model"] or "")
-        ),
+        "persona_opus": split["vor_guard"]["abweichend"]
+        + split["ab_guard"]["abweichend"],
+        "persona_split": split,
         "roles": _roles(instances),
         "top_reads": ranked,
         "rewrite_stats": _rewrite_stats(instances, total),
     }
+
+
+def _deviates(item: dict, persona_models: dict[str, str]) -> bool:
+    expected = persona_models.get(item["role"])
+    if not expected or expected == "inherit":
+        return False
+    return expected not in (item["model"] or "")
+
+
+def _persona_split(instances: list[dict], persona_models: dict[str, str]) -> dict:
+    """Persona-Starts vor/ab Guard x abweichend/zulässig (Start ohne Zeit: ab Guard)."""
+    split = {
+        period: {"abweichend": 0, "zulaessig": 0}
+        for period in ("vor_guard", "ab_guard")
+    }
+    for item in instances:
+        if not item["persona_start"]:
+            continue
+        start = item["start_ts"]
+        before = start is not None and start < GUARD_DATE.timestamp()
+        kind = "abweichend" if _deviates(item, persona_models) else "zulaessig"
+        split["vor_guard" if before else "ab_guard"][kind] += 1
+    return split
 
 
 def _rewrite_stats(instances: list[dict], total: float) -> dict:
@@ -601,6 +637,19 @@ def _raw_value(data: dict, key: str) -> float | None:
     return data[key]
 
 
+def _split_lines(split: dict | None) -> list[str]:
+    if not split:
+        return []
+    parts = [
+        f"{label} {split[key]['abweichend']} abweichend / {split[key]['zulaessig']} zulässig"
+        for key, label in (
+            ("vor_guard", f"vor Guard ({GUARD_DATE:%Y-%m-%d})"),
+            ("ab_guard", "ab Guard"),
+        )
+    ]
+    return [f"- Persona-Starts (Modell gegen Frontmatter): {'; '.join(parts)}"]
+
+
 def render_section(data: dict | None) -> str:
     out = ["## Effizienz", ""]
     if data is None:
@@ -628,6 +677,7 @@ def render_section(data: dict | None) -> str:
         "",
         f"- opus-Anteil: {_pct(data['opus_share'])}",
         f"- Persona-Starts als general-purpose auf opus (Instanzen): {data['persona_opus']}",
+        *_split_lines(data.get("persona_split")),
         "",
         *_table(
             [
