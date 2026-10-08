@@ -3401,3 +3401,15 @@ main veröffentlicht, gehört UI-PANEL-AUFRAEUMEN in **REL-09** (vier Pakete: SE
 UI-PANEL); ART-L8-SELTEN und SEE-F1-KORRIDOR bilden REL-10.
 
 Entscheider: L0 · Anlass: Bericht UI-PANEL-AUFRAEUMEN · ADR: —
+
+## R372 · 2026-10-08 · Gate Merge SEE-F1-FAHRLINIE (nach FIX-SEE-F1-ZEIT) OK
+
+Ruling: **OK** für `fix/see-f1-fahrlinie` @ 5ac78b8. Ursache gemessen: Neuberechnung von `seaRoute` je frisch gebauter
+Welt (13–25 ms, 75 % Dijkstra) und `routeDist` brute-force je Feldkachel, `lanePoints` kopierte je Aufruf. Fix: Cache
+über einen Fingerabdruck der Inseln (≤ 64 Sätze), `routeFar` mit Rechteck-Vorprüfung und frühem Abbruch, gecachte
+`readonly`-Linien. Testzeiten wieder nahe main (Delfine E5 0,3–0,6 s statt bis 3,3 s); `zeitreserve` 0 ohne Reserve
+(Faktor 4 und Runner-Schätzung); Review OK. Frame-Kosten nur per Code-Lesen belegt — Messung im Release-Check
+(Smoke + Frame-Zeit im Hafen). Merge durch den Integrator mit `make check` bei Load ≤ 8 ohne fremden Lauf; meldet
+`zeitreserve` Tests ohne Reserve, wird nicht gemergt. Ist FIX-SEE-F1-ZEIT ≈ 30 von 40.
+
+Entscheider: L0 · Anlass: Bericht FIX-SEE-F1-ZEIT · ADR: —
