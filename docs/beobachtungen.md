@@ -358,3 +358,11 @@ Fundort: Release-Smoke REL-08 (lead-qa). Beobachtung: Konsolen-Warnung `willRead
 `src/render/terrain.ts`; `favicon.ico` liefert 404; die Bauleiste wächst bei Werkzeugwahl um eine Zeile, die Karte
 schrumpft um rund 36 px; Einwohner sinken bei Häusern ohne Weg (vermutlich Absicht der Sim). Ursprung: qa-playtester.
 Einschätzung: niedrig; die Bauleisten-Höhe bei der nächsten UI-Arbeit ansehen.
+
+### 2026-10-08 · `zeitreserve-push` liest veraltete Messdatei, Last zum falschen Zeitpunkt
+
+Fundort: Session-End-Push REL-08 (R348). Beobachtung: `make zeitreserve-push` misst nicht selbst, es liest
+`.studio/zeitreserve.json` aus dem letzten `make test` im selben Checkout. Laufen die Tests in `.worktrees/integrate`,
+bewertet das Gate im Hauptcheckout die alte Datei (falsches Exit 1 trotz Fix). Ausserdem prüft es die Last beim
+Aufruf, nicht während der Testläufe. Ursprung: L0-Diagnose. Einschätzung: mittel; im Werkzeug-Paket E-046/E-047
+mitnehmen: Datei mit Commit-Hash und Last während des Laufs stempeln, das Gate verweigert eine fremde oder alte Datei.

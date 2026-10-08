@@ -3102,3 +3102,13 @@ unverändert; danach `zeitreserve-push` Exit 0 bei Load 3,6, `make check` grün)
 setzt den Session-End-Ablauf aus R346 ab dem Merge dieses Fixes fort.
 
 Entscheider: L0 · Anlass: Push-Gate REL-08 · ADR: —
+
+## R348 · 2026-10-08 · Push-Gate las eine veraltete Messdatei; Ablauf korrigiert
+
+Ruling: Das zweite Exit 1 war ein Briefing-Fehler von L0. `zeitreserve-push` liest `.studio/zeitreserve.json` aus dem
+letzten `make test` im selben Checkout, die Tests liefen aber in `.worktrees/integrate`. Neuer Ablauf: Im
+Hauptcheckout bei 1-min-Load ≤ 3 erst `make test`, dann `make zeitreserve-push`. Die Werkzeug-Schwäche (keine Prüfung
+von Commit und Last der Messung) steht als Beobachtung im Werkzeug-Paket E-046/E-047. Bis dahin gilt die Reihenfolge
+oben für jeden Session-End-Push.
+
+Entscheider: L0 · Anlass: Push-Gate REL-08 · ADR: —
