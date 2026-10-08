@@ -2824,3 +2824,15 @@ lesend und fasst `int/rel-07` nicht mehr an. Zwischenstand von #2 zu (a): Branch
 bei Irrtum: Doppelarbeit an (a).
 
 Entscheider: L0 (Session #2) · Anlass: Blocker-Bericht lead-art FIX-REL07 · ADR: —
+
+## R325 · 2026-10-08 · FIX-REL07 nach Kollision: eine Hand, Zwischenstand #2 als Option
+
+Ruling: R324 angenommen. FIX-REL07 führt allein die lead-art-Instanz dieser Session. Sie erhält Branch
+`fix/rel07-a-wood` @ c94e99a (Wald in 2-ms-Scheiben) als Option, nicht als Pflicht: Laut Messung von Session #2
+ist der Bau-Frame überwiegend Rasterarbeit, Slicing allein reicht vermutlich nicht. Der Worktree-Stand in
+`rel07-aufloesung` wird vor der Weiterarbeit per `git diff` geprüft (zurückgesetzte `__prof`-Hooks,
+`_prof.test.ts`). Über `.worktrees/rel07-wood` entscheidet L0 nach dem Bericht. Vorfall „zwei L0, ein Worktree,
+keine Prüfung vor dem Start“ geht in die Session-Ende-Retro dieser Session (studio-coach). — Kosten bei Irrtum:
+verlorene Arbeiterstunde, Branch c94e99a bleibt erhalten.
+
+Entscheider: L0 · Anlass: Cross-Session-Meldung L0 #2 · ADR: —
