@@ -3331,3 +3331,17 @@ Suite prüft Seeds 1–40. Snapshot AK5b wird auf main nach dem SEE-F1-Merge vor
 SEE-F1-Merge, 170 Tools.
 
 Entscheider: L0 · Anlass: Gate GATE-REL10-W2 · ADR: —
+
+## R367 · 2026-10-08 · SEE-F1: Weg 1 (Deko-Freihaltung gegen die Gerade), letzter Mehrbedarf +30
+
+Ruling: T3 machte die Heimat-Darstellung von den Fremdinseln abhängig (Route an der Heimatküste unterdrückt die
+Tönung): Heimat-Pin, AK-E1-10, AK-E1-12 rot, `terrainSea` Timeout. **Weg 1:** `seaContext.lanes` bleiben Geraden, die
+Pins aus M12-E1 (Heimat unabhängig von Fremdinseln) bleiben unangetastet; Wal und Delfin meiden die Route über
+`routeDist`. Der L5-T3-Test wird nur auf die Gerade eingegrenzt, wenn eine Messung belegt, wie oft ein Wrack oder Fels
+im Korridor der Route liegt (Seeds 1–40, Zahl im Bericht und als Beobachtung); liegt der Anteil über 5 % der Seeds,
+geht ein Folgepaket in REL-10. Weg 2 abgelehnt: Er hebt eine Architektur-Invariante für einen seltenen Bildfehler auf.
+Neuer Wassertest ≤ 500 ms (Final-Review). Budget: Ist rund 280 gegen 180 frei, zum zweiten Mal ohne Vorabmeldung —
+an die Retro; **letzter Mehrbedarf +30** (Commit, `make check`, Review der Nacharbeit, kurzer Browserblick). Reicht er
+nicht, stoppt der Lead mit Handoff.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
