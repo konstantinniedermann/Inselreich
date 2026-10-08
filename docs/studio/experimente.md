@@ -15,6 +15,9 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
+Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
+E-050, E-049, E-044.
+
 ---
 
 ## E-022 · angepasst (übernommen, R319) · Merge-Hygiene
