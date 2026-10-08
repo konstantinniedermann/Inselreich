@@ -162,6 +162,7 @@ describe('SEE-F1 Schiffspose folgt der Wasserroute', () => {
       expect(lanePoints(w, b, a)).toEqual([...lanePoints(w, a, b)].reverse());
       expect(lanePoints(w, a, b).length).toBeGreaterThan(2);
     }
+    expect(lanePoints(w, 0, 1)).toBe(lanePoints(w, 0, 1)); // Cache: je Frame keine Kopie
     const fwd = poses(w, 0, 1);
     const back = poses(w, 1, 0);
     expect(back[0]).toMatchObject({ x: fwd[fwd.length - 1]!.x, y: fwd[fwd.length - 1]!.y });

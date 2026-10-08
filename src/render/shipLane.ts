@@ -29,13 +29,23 @@ function cachedTicks(world: World, from: number, to: number): number {
   return n;
 }
 
-/** Fahrlinie (Wasserroute) von `from` nach `to`; für `from > to` umgedreht. Ohne Lane: leer. */
-export function lanePoints(world: World, from: number, to: number): Pt[] {
+/** Fahrlinien je Richtung, je Welt (Schlüssel: `islands`-Array): ohne Cache kopiert jeder Aufruf die ganze Linie. */
+const pointsCache = new WeakMap<readonly Island[], Map<string, readonly Pt[]>>();
+
+/** Fahrlinie (Wasserroute) von `from` nach `to`; für `from > to` umgedreht. Ohne Lane: leer. Nicht verändern. */
+export function lanePoints(world: World, from: number, to: number): readonly Pt[] {
   const lo = Math.min(from, to),
     hi = Math.max(from, to);
   if (lo === hi || !world.islands[lo] || !world.islands[hi]) return [];
-  const pts = seaRoute(world.islands, lo, hi).map((p) => ({ x: p.x, y: p.y }));
-  return from > to ? pts.reverse() : pts;
+  let per = pointsCache.get(world.islands);
+  if (!per) pointsCache.set(world.islands, (per = new Map()));
+  const key = `${from}-${to}`;
+  let pts = per.get(key);
+  if (pts === undefined) {
+    const fwd = seaRoute(world.islands, lo, hi).map((p) => ({ x: p.x, y: p.y }));
+    per.set(key, (pts = from > to ? fwd.reverse() : fwd));
+  }
+  return pts;
 }
 
 /** Punkt bei Anteil `t` ∈ [0, 1] der gesamten Polylinienlänge (nicht des Segmentanteils). */

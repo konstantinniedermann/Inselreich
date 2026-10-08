@@ -39,6 +39,8 @@ const MOVES: readonly (readonly [number, number])[] = [
 ];
 
 const cache = new WeakMap<readonly Island[], Map<string, Pt[]>>();
+/** Raster je Inselliste: alle Paare einer Welt teilen es (Maske und Landabstand einmal statt je Paar). */
+const gridCache = new WeakMap<readonly Island[], Grid>();
 
 const anchorOf = (i: Island): Pt => ({ x: i.ox + i.anchor.x + 0.5, y: i.oy + i.anchor.y + 0.5 });
 
@@ -337,7 +339,8 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   const from = anchorOf(islands[a]!);
   const to = anchorOf(islands[b]!);
   const straight = [from, to];
-  const g = buildGrid(islands);
+  let g = gridCache.get(islands);
+  if (g === undefined) gridCache.set(islands, (g = buildGrid(islands)));
   const ends = [from, to];
   const [s, t] = [cellAt(g, from), cellAt(g, to)];
   // Erst mit Küstenabstand, dann nur noch Wasser; die Gerade ist der allerletzte Notanker.
@@ -362,10 +365,43 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   return straight;
 }
 
+/**
+ * Fingerabdruck aller Eingaben der Routensuche (Lage, Grösse, Anker, Terrain jeder Kachel): gleiche Inseln, gleiche
+ * Routen. Frisch gebaute Welten desselben Seeds (Laden, Neustart, Tests) teilen so ihre Routen.
+ */
+function fingerprint(islands: readonly Island[]): string {
+  const ids = new Map<string, number>();
+  const parts: string[] = [];
+  for (const isl of islands) {
+    let h = 2166136261;
+    for (const t of isl.tiles) {
+      let id = ids.get(t.terrain);
+      if (id === undefined) ids.set(t.terrain, (id = ids.size + 1));
+      h = Math.imul(h ^ id, 16777619);
+    }
+    parts.push(
+      `${isl.ox},${isl.oy},${isl.width},${isl.height},${isl.anchor.x},${isl.anchor.y},${h >>> 0}`,
+    );
+  }
+  return [...ids.keys()].join('|') + '#' + parts.join(';');
+}
+
+/** Obergrenze der geteilten Routensätze (je Satz höchstens drei Linien): ein Spiel nutzt einen, Tests viele Seeds. */
+const SHARED_MAX = 64;
+const shared = new Map<string, Map<string, Pt[]>>();
+
 /** Fahrlinie von Anker `a` nach Anker `b` (a < b) über Wasser; Aufrufer können umkehren. */
 export function seaRoute(islands: readonly Island[], a: number, b: number): Pt[] {
   let perWorld = cache.get(islands);
-  if (perWorld === undefined) cache.set(islands, (perWorld = new Map()));
+  if (perWorld === undefined) {
+    const fp = fingerprint(islands);
+    let hit = shared.get(fp);
+    if (hit === undefined) {
+      if (shared.size >= SHARED_MAX) shared.delete(shared.keys().next().value!);
+      shared.set(fp, (hit = new Map()));
+    }
+    cache.set(islands, (perWorld = hit));
+  }
   const key = `${a}-${b}`;
   let route = perWorld.get(key);
   if (route === undefined) perWorld.set(key, (route = compute(islands, a, b)));

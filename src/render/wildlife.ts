@@ -8,7 +8,7 @@ import { hash2 } from '../sim/noise';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { phaseAt, type Phase, type WeatherKind } from './daynight';
-import { dolphinOk, dolphinSites, faunaLot, routeDist } from './fauna';
+import { dolphinOk, dolphinSites, faunaLot, routeFar } from './fauna';
 import { ISO_H, ISO_W, project } from './iso';
 import { coastFor } from './life';
 import { cap } from './limits';
@@ -280,7 +280,7 @@ function candidatesOf(world: World): number[] {
     c = [];
     const gap = WHALE_ROUTE_GAP + WHALE_DRIFT * WHALE_VISIBLE_MS;
     for (let i = 0; i < f.v.length; i++)
-      if (f.v[i]! <= -5 && routeDist(world, (i % f.w) + 0.5, Math.floor(i / f.w) + 0.5) >= gap)
+      if (f.v[i]! <= -5 && routeFar(world, (i % f.w) + 0.5, Math.floor(i / f.w) + 0.5, gap))
         c.push(i);
     whaleCandidates.set(world, c);
   }

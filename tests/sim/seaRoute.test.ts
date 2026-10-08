@@ -5,6 +5,7 @@ import { laneTicks, seaLanes, type Pt } from '../../src/sim/islands';
 import { seaRoute } from '../../src/sim/seaRoute';
 import { deserialize, serialize } from '../../src/sim/save';
 import type { Island, World } from '../../src/sim/types';
+import { createWorld } from '../../src/sim/world';
 import { seaWorld } from './seaHelpers';
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => 100 + i * 7);
@@ -210,5 +211,19 @@ describe('seaRoute', () => {
         }
     }
     expect(Date.now() - t0).toBeLessThan(5000);
+  });
+});
+
+describe('FIX-SEE-F1-ZEIT Routen-Cache', () => {
+  it('frisch gebaute Welten desselben Seeds teilen die Route (kein zweites Rechnen)', () => {
+    const a = createWorld(7);
+    const b = createWorld(7);
+    expect(a.islands).not.toBe(b.islands);
+    expect(seaRoute(b.islands, 0, 1)).toBe(seaRoute(a.islands, 0, 1));
+  });
+  it('andere Inseln, andere Route-Zeile (Fingerabdruck trennt Seeds)', () => {
+    const a = seaRoute(createWorld(7).islands, 0, 1);
+    const b = seaRoute(createWorld(8).islands, 0, 1);
+    expect(b).not.toBe(a);
   });
 });
