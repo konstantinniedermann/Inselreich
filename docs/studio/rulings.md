@@ -3008,3 +3008,13 @@ Werkzeug, Tests 33/33). Offen: echte Nachmessung der Timeouts bei Load ≤ 4 üb
 doppelt" → Beobachtung. PERF-L57 kann nach dem Merge starten, misst aber nur bei Load ≤ 4.
 
 Entscheider: L0 · Anlass: Berichte Spec TASTEN-KOMFORT, TOOL-RELEASE-CI · ADR: —
+
+## R339 · 2026-10-08 · Gate Merge TASTEN-KOMFORT OK, Release REL-08 mit dem Session-End-Push
+
+Ruling: Gate Merge **OK** für `feat/tasten-komfort` @ 8c1dbba (Final-Review opus BEDENKEN, vier Befunde behoben;
+Browser AK-TK-21…33 OK; Vitest 2478 grün; `src/sim` unverändert, Save v9). Merge lokal. Das Paket geht als **REL-08
+„Tasten-Komfort"** mit dem gebündelten Session-End-Push live (Pages per `gh workflow run`, R334/R335); Release-Review
+nach R249 (1) nur Delta seit dem Final-Review. Budget um rund 27 Tools (≈ 22 %) überschritten → Session-Retro.
+Offen: Safari/Firefox (OF-4) nicht prüfbar, `bbd2966` allein nicht lauffähig (kein Bisect-Schaden auf main, `--no-ff`).
+
+Entscheider: L0 · Anlass: Bericht TASTEN-KOMFORT · ADR: —
