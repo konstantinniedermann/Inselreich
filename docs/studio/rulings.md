@@ -3316,3 +3316,18 @@ Menü-Schritt bei 1280×720, vor dem Release-Check REL-09; (2) Pläne **UI-PANEL
 um (`decor.ts`).
 
 Entscheider: L0 · Anlass: Merges REL-09 · ADR: —
+
+## R366 · 2026-10-08 · Gate REL-10 Welle 2: BEDENKEN → Nacharbeit; Bauleiste Variante A
+
+Ruling: Urteil lead-qa BEDENKEN für beide Pläne, ohne Zweitprüfung. (1) **UI-PANEL-AUFRAEUMEN:** Bauleiste
+**Variante A** (`.buildbar-sub` als Overlay am unteren Rand von `#game`; Kartenhöhe konstant, Desktop-first, wie im
+Genre üblich); die UX-Spec wird im Paket nachgeführt (Abweichung vom Wortlaut „gleiche Rasterzeile“ ist hiermit
+gedeckt). Pflicht-AK aus dem Gate: Kamera-Grenze (südlichste Inselkachel bei offener Kategorie bebaubar), kein
+Durchklicken durchs Overlay, Mausrad/Hover am Overlay, Variante B gestrichen, Kantendefinition des Zyklustests.
+`docs/studio/rulings.md` schreibt nur L0; der Umsetzer meldet Ruling-Kandidaten im Bericht. Umsetzung frei sofort,
+150 Tools. (2) **ART-L8-SELTEN:** Nacharbeit a–e aus dem Gate; der 500-Seeds-Quotentest läuft **nicht** in
+`make check` (CI-Minuten, R356, R361), sondern als Werkzeug unter `tools/render-qa/` mit Ergebnis im Bericht; die
+Suite prüft Seeds 1–40. Snapshot AK5b wird auf main nach dem SEE-F1-Merge vor T1 erzeugt. Umsetzung erst nach dem
+SEE-F1-Merge, 170 Tools.
+
+Entscheider: L0 · Anlass: Gate GATE-REL10-W2 · ADR: —
