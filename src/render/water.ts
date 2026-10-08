@@ -224,6 +224,12 @@ export interface SeaFoam {
 const seaFoamCache = new WeakMap<World, SeaFoam>();
 /** Fussabdruck-Radien der Objekte (Kacheln); der Schaum liegt bei Fussabdruck + 0,03 … 0,145. */
 const FOOT = { wreck: 0.5, rock: 0.3, needle: 0.26, islet: 0.5 } as const;
+/** Unter diesem Zoom zeichnet der Meeresfels keinen Schaumring (T04: Fels + Ring las sich als Boot). */
+export const ROCK_FOAM_MIN_ZOOM = 0.7;
+/** Ob der Schaum dieser Objektart bei `zoom` gezeichnet wird. */
+export function foamShown(kind: FoamRing['kind'], zoom: number): boolean {
+  return zoom >= (kind === 'rock' ? ROCK_FOAM_MIN_ZOOM : SEA_ELEMENT_MIN_ZOOM);
+}
 /** Reichweite der Landsuche für die Seeseite (Kacheln). */
 const LAND_REACH = 7;
 
@@ -366,7 +372,6 @@ function drawSeaFoam(
   zoom: number,
 ): void {
   const f = seaFoamVisible(world);
-  const near = zoom >= SEA_ELEMENT_MIN_ZOOM;
   if (!f.rings.length && !f.reefs.length) return;
   const inRange = (x: number, y: number, pad: number): boolean =>
     x + pad >= range.x0 &&
@@ -382,7 +387,7 @@ function drawSeaFoam(
     ctx.beginPath();
     let any = false;
     for (const r of f.rings) {
-      if (r.kind !== 'rock' && !near) continue;
+      if (!foamShown(r.kind, zoom)) continue;
       if (!inRange(r.x, r.y, r.fp + 0.3)) continue;
       for (const p of r.pieces) {
         if (p.thick !== thick) continue;

@@ -85,7 +85,7 @@ import {
   hoverPosition,
   hoverVisible,
 } from './hover';
-import { highlightShip, lossMessages, shipHover, type ShipActions } from './ships';
+import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
@@ -717,9 +717,16 @@ function launch(
     if (id === null) {
       setPanel({ kind: 'none' });
     } else if (id === home(world).kontorId) {
-      // P-1: das Kontor der Heimat öffnet direkt den Handel; erneutes Anklicken lässt ihn offen
-      if (panel.kind !== 'trade' || panel.island !== HOME)
-        setPanel({ kind: 'trade', island: HOME });
+      // P-1: das Kontor der Heimat öffnet den Handel; mit freier Seefahrt und Schiff/Kaufmöglichkeit
+      // stattdessen das Kontor-Panel (Schiffsabschnitt, „Handeln“ bleibt Knopf). Erneutes Anklicken lässt das passende Panel
+      // offen; bei offenem Handel springt es ins Kontor-Panel, wenn homeKontorPanel 'inspect' liefert.
+      const next = homeKontorPanel(world);
+      const open =
+        next === 'trade'
+          ? panel.kind === 'trade' && panel.island === HOME
+          : panel.kind === 'inspect' && panel.id === id;
+      if (!open)
+        setPanel(next === 'trade' ? { kind: 'trade', island: HOME } : { kind: 'inspect', id });
     } else if (panel.kind !== 'inspect' || panel.id !== id) {
       setPanel({ kind: 'inspect', id });
     }
@@ -1075,6 +1082,22 @@ function launch(
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
   resize();
+  // DPR-Wechsel (Monitorwechsel, Browser-Zoom) ändert die Grösse nicht; die Media-Query gilt nur für den
+  // aktuellen Wert und wird deshalb nach jedem Wechsel neu angelegt.
+  let dprQuery: MediaQueryList | null = null;
+  const onDprChange = (): void => {
+    dprQuery?.removeEventListener('change', onDprChange);
+    resize();
+    watchDpr();
+  };
+  const watchDpr = (): void => {
+    dprQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+        : null;
+    dprQuery?.addEventListener('change', onDprChange);
+  };
+  watchDpr();
   if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
     centerOn(state.cam, c.cx, c.cy, view, bounds);
@@ -1244,6 +1267,7 @@ function launch(
     cancelAnimationFrame(rafId);
     layers.dispose();
     resizeObserver.disconnect();
+    dprQuery?.removeEventListener('change', onDprChange);
     input?.unbind();
     closeAllModals();
     closeSettings?.();
