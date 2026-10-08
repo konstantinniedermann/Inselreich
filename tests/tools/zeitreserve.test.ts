@@ -8,6 +8,10 @@ import {
   findWarnings,
   WARN_DURATION_MS,
   suggestedTimeoutMs,
+  RUNNER_FACTOR,
+  scaleToRunner,
+  runnerScale,
+  formatRunnerViolation,
   testKey,
 } from '../../tools/zeitreserve/rule';
 import type { TestTiming } from '../../tools/zeitreserve/rule';
@@ -77,5 +81,48 @@ describe('zeitreserve Meldung', () => {
     expect(msg).toContain('2000 ms');
     expect(msg).toContain('Timeout 20000 ms');
     expect(formatViolation(bad[0]!, CI_FACTOR_ON_CI)).toContain('Timeout 5000 ms');
+  });
+});
+
+describe('zeitreserve geschätzte Runner-Zeit (E-043)', () => {
+  const runnerCheck = (timings: TestTiming[], baseline = new Set<string>()) =>
+    findViolations(scaleToRunner(timings, RUNNER_FACTOR), baseline, CI_FACTOR_ON_CI);
+
+  it('skaliert die Laufzeit mit dem Runner-Faktor 3, ohne die Eingabe zu ändern', () => {
+    const input = [t(600, 5000)];
+    expect(RUNNER_FACTOR).toBe(3);
+    expect(scaleToRunner(input, RUNNER_FACTOR)[0]!.durationMs).toBe(1800);
+    expect(input[0]!.durationMs).toBe(600);
+  });
+
+  it('Grenzfall: 900 ms lokal (2700 ms Runner) bei 5000 ms Timeout ist Verstoss, 600 ms nicht', () => {
+    expect(runnerCheck([t(900, 5000)])).toHaveLength(1);
+    expect(runnerCheck([t(800, 5000)])).toEqual([]);
+    expect(runnerCheck([t(600, 5000)])).toEqual([]);
+  });
+
+  it('Fehlerschwelle gilt für die geschätzte Zeit: 667 ms × 3 erreicht 2000 ms', () => {
+    expect(runnerCheck([t(667, 3000)])).toHaveLength(1);
+    expect(runnerCheck([t(600, 3000)])).toEqual([]);
+  });
+
+  it('respektiert die Baseline', () => {
+    const old = t(900, 5000, 'alt');
+    const neu = t(900, 5000, 'neu');
+    expect(runnerCheck([old, neu], new Set([testKey(old)]))).toHaveLength(1);
+  });
+
+  it('auf GitHub Actions keine Hochrechnung (Faktor 1)', () => {
+    expect(runnerScale(true)).toBe(1);
+    expect(runnerScale(false)).toBe(RUNNER_FACTOR);
+  });
+
+  it('Meldung nennt geschätzte Runner-Zeit und gemessene lokale Zeit', () => {
+    const [v] = runnerCheck([t(900, 5000, 'lahm')]);
+    const msg = formatRunnerViolation(v!, RUNNER_FACTOR);
+    expect(msg).toContain('geschätzte Runner-Zeit 2700 ms');
+    expect(msg).toContain('900 ms lokal');
+    expect(msg).toContain('lahm');
+    expect(msg).toContain('Timeout 10000 ms');
   });
 });

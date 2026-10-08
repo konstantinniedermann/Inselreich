@@ -21,7 +21,7 @@ zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) st
 test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json)
 	npm test
 
-zeitreserve: ## CI-Reserve prüfen (Laufzeit × 4 ≤ 50 % des Timeouts, R270); nach make test
+zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
 
 docs-check: ## Prettier-Check über alles inkl. docs/ (schnell, vor Doku-Commits; Teil von lint)

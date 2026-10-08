@@ -7,7 +7,10 @@ import {
   FAIL_DURATION_MS,
   findViolations,
   findWarnings,
+  formatRunnerViolation,
   formatViolation,
+  runnerScale,
+  scaleToRunner,
   testKey,
 } from './rule.ts';
 import type { TestTiming } from './rule.ts';
@@ -38,7 +41,22 @@ function main(): number {
   for (const t of findWarnings(timings, baseline, factor))
     console.warn(`Warnung: ${formatViolation(t, factor)}`);
   for (const t of bad) console.error(formatViolation(t, factor));
-  return bad.length === 0 ? 0 : 1;
+  const runnerBad = checkRunnerEstimate(timings, baseline);
+  return bad.length === 0 && runnerBad === 0 ? 0 : 1;
+}
+
+/** Zusatzmodus E-043: lokale Zeit × Runner-Faktor, dann Runner-Regel; auf Actions keine Hochrechnung. */
+function checkRunnerEstimate(timings: TestTiming[], baseline: Set<string>): number {
+  const scale = runnerScale(process.env.GITHUB_ACTIONS === 'true');
+  const estimated = scaleToRunner(timings, scale);
+  const bad = findViolations(estimated, baseline, CI_FACTOR_ON_CI);
+  console.log(
+    `zeitreserve (geschätzte Runner-Zeit, lokal × ${scale}): ${bad.length} ohne Reserve (ab ${FAIL_DURATION_MS} ms, ohne Altlasten)`,
+  );
+  for (const t of findWarnings(estimated, baseline, CI_FACTOR_ON_CI))
+    console.warn(`Warnung: ${formatRunnerViolation(t, scale)}`);
+  for (const t of bad) console.error(formatRunnerViolation(t, scale));
+  return bad.length;
 }
 
 process.exit(main());

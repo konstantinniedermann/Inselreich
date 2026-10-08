@@ -12,6 +12,12 @@ auf GitHub Actions (`GITHUB_ACTIONS=true`) ist die gemessene Zeit schon CI-Zeit,
 Timeout (`it(name, fn, 30_000)`) oder wird aufgeteilt. Die Meldung nennt Datei, Test, Messung und ein
 passendes Timeout.
 
+**Geschätzte Runner-Zeit (E-043):** `check.ts` prüft zusätzlich `lokale Laufzeit × RUNNER_FACTOR (3)` mit der
+Runner-Regel (Faktor 1, Fehler ab 2000 ms, Warnung ab 1000 ms, Reserve ≤ 50 % Timeout). Beim Standard-Timeout
+5 s fällt so ein Test ab etwa 834 ms lokal auf. Meldungen nennen „geschätzte Runner-Zeit“. Auf GitHub Actions
+entfällt die Hochrechnung (Faktor 1, gleiche Prüfung wie oben). Die Baseline gilt für beide Modi;
+`.studio/zeitreserve.json` bleibt unverändert.
+
 **Altlasten:** `baseline.json` listet Tests (`Datei :: Name`), die beim Einführen schon gegen die Regel
 verstiessen (auch ab 600 ms, weil lokale Messungen um die 1-s-Schwelle streuen). Die Liste darf nur kleiner werden: Eintrag entfernen, sobald der Test ein Timeout hat oder
 aufgeteilt ist. Neue Verstösse gehören nie hinein.
