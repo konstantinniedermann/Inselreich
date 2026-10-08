@@ -25,7 +25,12 @@ const v = cli(
 const rootA = v.a ?? defaultRoot();
 const rootB = v.b ?? rootA;
 const seeds = numList(v.seed);
-const o = ausgabe(v.out ?? `${rootA}/.studio/qa/kalt`, rootA, rootB, `kalt-s${seeds.join('_')}.txt`);
+const o = ausgabe(
+  v.out ?? `${rootA}/.studio/qa/kalt`,
+  rootA,
+  rootB,
+  `kalt-s${seeds.join('_')}.txt`,
+);
 const sides =
   o.d.kind === 'aa'
     ? [['A', rootA, o.d.labelA]]
