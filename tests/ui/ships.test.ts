@@ -283,4 +283,13 @@ describe('SEE-F2-UX T3 homeKontorPanel', () => {
     expect(buyShipView(w).reason).not.toBeNull();
     expect(homeKontorPanel(w)).toBe('trade');
   });
+  it('Seefahrt frei, kein Schiff, aber kaufbar: Kontor-Panel', () => {
+    const w = seeRouteStart();
+    w.ships = [];
+    w.money = 100000;
+    w.islands[0]!.stock.wood = 100;
+    w.islands[0]!.stock.tools = 100;
+    expect(buyShipView(w).reason).toBeNull();
+    expect(homeKontorPanel(w)).toBe('inspect');
+  });
 });

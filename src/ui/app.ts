@@ -718,7 +718,8 @@ function launch(
       setPanel({ kind: 'none' });
     } else if (id === home(world).kontorId) {
       // P-1: das Kontor der Heimat öffnet den Handel; mit freier Seefahrt und Schiff/Kaufmöglichkeit
-      // stattdessen das Kontor-Panel (Schiffsabschnitt, „Handeln“ bleibt Knopf). Erneutes Anklicken lässt es offen.
+      // stattdessen das Kontor-Panel (Schiffsabschnitt, „Handeln“ bleibt Knopf). Erneutes Anklicken lässt das passende Panel
+      // offen; bei offenem Handel springt es ins Kontor-Panel, wenn homeKontorPanel 'inspect' liefert.
       const next = homeKontorPanel(world);
       const open =
         next === 'trade'
