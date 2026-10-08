@@ -322,7 +322,8 @@ RENDER-LOOK-01 erst danach.
 
 Fundort: Integrator-Lauf TOOL-ACTIONS-SPAR. Beobachtung: 2,62 ms/Schritt gegen Grenze 2,5 bei paralleler Last
 (1-min-Load ~7), Wiederholung allein grün. Ursprung: lokaler Merge-Check. Einschätzung: Perf-Grenze in `make check`
-falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusammen ansehen.
+falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusammen ansehen. Zweiter Fall: `tests/render/terrain.test.ts` AK-R1-06 1570 ms gegen 1500 ms bei Load ~19
+(Merge TASTEN-KOMFORT), Wiederholung grün.
 
 ### 2026-10-08 · Zeitreserve-Runner-Modus läuft auf CI doppelt
 
