@@ -3279,3 +3279,17 @@ wird dort bei ruhiger Maschine erbracht (ersetzt die Reihenfolge aus R348). Der 
 Integrator mit `make check` am Merge-Stand.
 
 Entscheider: L0 · Anlass: Review TOOL-ZEITRESERVE-META · ADR: —
+
+## R363 · 2026-10-08 · Merges 1–2 in main; Rauten-Tests zu langsam; Signal SEE-F1 T3
+
+Ruling: SEE-F2-UX (0900140) und ART-WALD-RAUTEN (038cbdc) sind lokal in main, beide mit `make check` grün.
+(a) TOOL-E046-SESSION: Konflikt in `docs/beobachtungen.md` (beide Stränge hängten Einträge an); der Lead merged main
+in seinen Branch (kein Rebase), führt beide Einträge zusammen, danach Merge durch den Integrator. (b) TOOL-ZEITRESERVE-META:
+`make check` am Merge-Stand rot, weil `zeitreserve` 5 Tests in `tests/render/rauten.test.ts` ohne CI-Reserve meldet
+(lokal ≈ 2 s, Runner geschätzt ≈ 6 s gegen 5 s Timeout). Das ist ein echter Befund am Paket ART-WALD-RAUTEN, nicht am
+Werkzeug. Paket **FIX-RAUTEN-ZEIT** (lead-art, 25 Tools): Tests zuerst billiger machen (kleinerer Ausschnitt, ein Seed
+je Kantenart, gemeinsamer Aufbau), Aussagekraft der Schwellen erhalten; nur falls nötig hergeleitete Timeouts wie R328;
+Ziel ≤ 500 ms je Test lokal, weil die CI-Laufzeit schon ×3,6 gewachsen ist (R361). Danach Merge TOOL-ZEITRESERVE-META.
+(c) SEE-F1-FAHRLINIE: Signal für T3, Branch zuerst mit main mergen.
+
+Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
