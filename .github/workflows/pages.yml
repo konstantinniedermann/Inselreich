@@ -3,10 +3,10 @@
 # auf dem Free-Plan braucht das ein öffentliches Repo.
 # Nach dem Build prüft `tools/pages/check.ts` die Plattformgrenzen (R130, Schwelle 50 %).
 # `vite.config.ts` setzt `base: './'` (relative Pfade), deshalb braucht der Build kein `--base`.
+# Auslösung nur manuell (N-98): der Integrator startet den Deploy beim Release mit
+# `gh workflow run Pages --ref main`; kein Lauf mehr bei jedem Push.
 name: Pages
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

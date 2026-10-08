@@ -553,8 +553,8 @@ flowchart LR
   Browser["Browser des Spielers"]
   Dev --> Vite
   Dev --> Build --> Dist
-  Dev -->|"Push, Pull Request"| CI
-  Dev -->|"Push auf main"| Pages
+  Dev -->|"Push, Pull Request (ohne reine Doku)"| CI
+  Dev -->|"manuell beim Release"| Pages
   Pages -->|"Build, upload-pages-artifact, deploy-pages"| GHP
   GHP -->|"statische Dateien"| Browser
   Vite --> Browser
