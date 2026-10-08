@@ -3196,3 +3196,17 @@ SEE-F1-FAHRLINIE 120, ART-WALD-RAUTEN 170. Studioweit ≤ 5 Arbeiter (R241): ART
 starten, wenn höchstens 4 andere Arbeiter laufen, sonst seriell; Messläufe nur bei Load ≤ 4 (R329).
 
 Entscheider: L0 · Anlass: Gate GATE-REL09-W1 · ADR: —
+
+## R356 · 2026-10-08 · Retro M12: Vorschläge 1–4 angenommen, E-043 übernommen als Werkzeug
+
+Ruling: Retro `docs/studio/retros/2026-10-08-m12.md` angenommen. (1) E-046 bekommt eine Zeile **Actions-Minuten der
+Session** (grün ≤ 8, rot > 15), weil die Monatszeile im Oktober wegen der 954 min vor den Sparregeln rot bleibt; (2)
+Messauftrag CI-Laufzeit: `make check` auf dem Runner zerlegen (5.10. 81 s → 8.10. 276 s), ≤ 10 Tools, Frist
+Session-End-Push REL-09. (1) und (2) als Paket **TOOL-E046-SESSION** (lead-tech, 25 Tools), Start sobald studioweit
+ein Arbeiterplatz frei ist (R241). (3) E-049 bleibt `vorgeschlagen`; (4) Reihenfolge der Wartenden: E-048, E-049,
+E-044. (5) **E-043** ist mit TOOL-ZEITRESERVE-RUNNER gebaut (`make zeitreserve` rechnet × 3 hoch); es wird wie E-047
+als `übernommen als Werkzeug` geführt, die Messgrösse (0 rote CI-Läufe wegen `zeitreserve`) läuft als Messauftrag in
+den Retros weiter (Statuspflege durch den studio-coach am Session-Ende). Hochrechnung Konto (1410–1730 von 2000 min
+Ende Oktober) geht als Information in den Nutzerbericht; kein Vorbehalt nach §5.3.
+
+Entscheider: L0 · Anlass: Retro M12 · ADR: —

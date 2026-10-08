@@ -416,3 +416,13 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Handbuchsätze (Budget, Gate) auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Budget-Zählung, Gate Merge; nur nach Ruling)
 - Ruling: R344, R349 (angenommen; wartet auf Platz, höchstens 3 laufend, R350; Handbuch-Sätze und Version 1.31 zurückgenommen)
+
+## E-049 · vorgeschlagen · Steuerungsanteil bereinigt um Plan- und Messpakete
+
+- Hypothese: Wenn `metrics.py --efficiency` neben dem Steuerungsanteil eine Zeile „Steuerungsanteil bereinigt“ ausweist, die Lead-Instanzen mit Plan-, Spec-, Brainstorm- oder Messpaketen (Paketname enthält `PLAN`, `SPEC`, `BRAIN`, `PERF` oder `MESS`; Liste in `efficiency.py`) herausrechnet, lässt sich die Wirkung von E-042 und E-038 auf die eigentliche Steuerung getrennt lesen (Retro [m12](retros/2026-10-08-m12.md) B4; Messauftrag R344).
+- Messgrösse: In 3 Session-Dateien steht die Zeile mit Wert (0 × „nicht erfasst“); Gegenprobe: bereinigt plus herausgerechnete Lead-Pakete plus L0 ergibt den Rohwert auf 0,1 Prozentpunkte. Ausgang M12: roh 59,3 %, bereinigt ≈ 41,7 % (Handrechnung aus `lead_stats.rows`). Schwellen wie die Rohzeile (gelb > 40 %, rot > 50 %).
+- Messbarkeit: Die Rohzeile und ihre Schwellen bleiben unverändert; die neue Zeile ist zusätzlich. Pakete ohne erkennbaren Namen zählen zur Steuerung (konservativ).
+- Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
+- Rückfall: Zeile in `tools/studio/efficiency.py` entfernen (`git revert`).
+- Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
+- Ruling: –
