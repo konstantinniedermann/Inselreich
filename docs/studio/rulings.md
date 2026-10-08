@@ -3060,3 +3060,15 @@ unverändert, Save v9. REL-08 heisst damit „Tasten-Komfort, flüssigere Insel,
 von 120 Tools, bei widersprüchlicher Selbstangabe → Retro.
 
 Entscheider: L0 · Anlass: Bericht PANEL-UEBERSICHT · ADR: —
+
+## R344 · 2026-10-08 · Retro Session 56d273bd: alle fünf Vorschläge angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-08-session-56d273bd-ende.md` angenommen. Umsetzung in der nächsten Session,
+weil vor dem gebündelten Push nichts Neues dazukommt: **E-046** Ampelzeile „Actions-Minuten" in `metrics.py
+--efficiency` über die Billing-API (Werkzeug-Paket, lead-tech); **E-047** `log.py queue` formatiert selbst mit
+Prettier (lead-tech, klein, zusammen mit E-046); **E-048** Gate liest das Ist-Budget aus der Zählung, UI-Pakete mit
+Browser-Abnahme bekommen 150 Tools (zwei Handbuch-Sätze, studio-coach). Messaufträge: Messpakete in der Zeile
+Steuerungsanteil getrennt ausweisen; lead-art nennt im nächsten Perf-Paket die Zahl der Hintergrund-Läufe (E-037);
+in der nächsten Retro den ersten CI-Lauf nach `zeitreserve-push` bewerten. — Kosten bei Irrtum: rund 55 Tools.
+
+Entscheider: L0 · Anlass: Session-Retro · ADR: —
