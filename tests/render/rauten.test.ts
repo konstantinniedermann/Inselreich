@@ -3,6 +3,10 @@ import { createWorld, home } from '../../src/sim/world';
 import { fieldWorld } from '../../src/render/terrainField';
 import {
   buildGrid,
+  paintPixels,
+  patchGrid,
+  terrainCodes,
+  terrainPatchRect,
   duneToneAtNode,
   landSharesAtNode,
   RASTER,
@@ -10,7 +14,8 @@ import {
   type TerrainGrid,
 } from '../../src/render/terrain';
 import { TEX } from '../../src/render/iso';
-import { LAND } from '../../src/render/terrainField';
+import { LAND, terrainFields } from '../../src/render/terrainField';
+import { forceRect } from '../sim/helpers';
 
 // ART-WALD-RAUTEN T01: Rautigkeits-Metrik auf Pixelauflösung. Gemessen wird dieselbe Abtastung wie in `paintPixels`
 // (`sampleNode`), danach die Schwelle (Anteil 0,5) bzw. die Sand-Stufe.
@@ -53,6 +58,8 @@ function binary(g: TerrainGrid, kind: Kind, x0: number, y0: number): Uint8Array 
   for (let py = 0; py < n; py++)
     for (let px = 0; px < n; px++) {
       sampleNode(g, x0 * TEX + px + 0.5, y0 * TEX + py + 0.5, node);
+      // Proxy: Stufe = gerundeter Dünen-Tonwert, Paritätswechsel = Stufenkante (die echte Stufung `toneStep` hat zusätzlich
+      // eine 1-2 px breite Weichkante, die an der Lage der Kante nichts ändert)
       if (kind === 'stufe')
         bin[py * n + px] = Math.round(duneToneAtNode(g, node[0]!, node[1]!)) & 1;
       else {
@@ -110,6 +117,9 @@ function measure(kind: Kind, seed: number) {
   return { steps, meanRun: steps ? weightedRun / steps : 0, longFrac: steps ? long / steps : 0 };
 }
 
+// Warum die Schwellen für wald/stufe in aa61ae5 von je-Seed auf gemeinsam über 3 Seeds wechselten: die Vorher-Werte
+// streuen je Seed stark (Wald 0,12 bis 0,21), eine je-Seed-Schwelle bei 70 % des kleinsten Werts hätte nur Rauschen
+// geprüft; Sand streut wenig und bleibt je Seed.
 // Schwellen, gemessen am unveränderten Code (Stand 9cc3546, Seeds 1, 2, 7), Schwelle = 70 % des Ist (mind. 30 % Reserve).
 // Ist longFrac: sand 0,817/0,751/0,700 (je Seed geprüft), meanRun 5,99/4,99/4,50;
 // wald 0,120/0,214/0,126 und stufe 0,128/0,374/0,149 schwanken je Seed stark, darum über die drei Seeds nach Kantenschritten
@@ -158,5 +168,27 @@ describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
       expect(Math.abs(a[0]! * RASTER - qx)).toBeLessThanOrEqual(3);
       expect(Math.abs(a[1]! * RASTER - qy)).toBeLessThanOrEqual(3);
     }
+  });
+
+  it('AK-T02c Patch vs. Vollaufbau: gleiche Pixel im Überlapp (mit Verwerfung, Seed 1)', () => {
+    const w = createWorld(1, { unlockAll: true });
+    const k = w.buildings[home(w).kontorId]!;
+    forceRect(w, k.x + 6, k.y + 2, 4, 3, 'forest');
+    const fields = terrainFields(fieldWorld(w));
+    const grid = buildGrid(fieldWorld(w), fields);
+    const prev = terrainCodes(fieldWorld(w));
+    home(w).tiles[(k.y + 3) * home(w).width + k.x + 7]!.terrain = 'grass';
+    const next = terrainCodes(fieldWorld(w));
+    const rect = terrainPatchRect(prev, next, home(w).width, home(w).height)!;
+    patchGrid(fieldWorld(w), fields, grid, prev, next, rect);
+    const full = buildGrid(fieldWorld(w));
+    const x0 = rect.x0 * TEX,
+      y0 = rect.y0 * TEX,
+      pw = (rect.x1 - rect.x0 + 1) * TEX,
+      ph = (rect.y1 - rect.y0 + 1) * TEX;
+    const a = paintPixels(grid, 1, x0, y0, pw, ph),
+      b = paintPixels(full, 1, x0, y0, pw, ph);
+    expect(a.length).toBe(b.length);
+    expect(a.every((v, i) => v === b[i])).toBe(true);
   });
 });
