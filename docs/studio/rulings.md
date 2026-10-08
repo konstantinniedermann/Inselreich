@@ -2960,3 +2960,12 @@ Integrator-Persona und Handbuch „Merge" werden nachgeführt (Pages-Auslösung 
 Code-Pushes). Workflows erst nach dem Merge der neuen Dateien wieder einschalten. — Kosten bei Irrtum: gering.
 
 Entscheider: Nutzer (N-98), L0 · Anlass: R333 · ADR: —
+
+## R335 · 2026-10-08 · Pushes bündeln: einmal pro Session
+
+Ruling: Nutzerentscheid. Höchstens ein Push auf `main` pro Session, am Session-Ende durch den Integrator. Merges nach
+Gate bleiben lokal und werden wie bisher mit `make check`, `CI=true make check` und `make zeitreserve` geprüft. Ein
+Release geht damit erst mit dem Session-End-Push live (danach `gh workflow run Pages`). Umsetzung in Integrator-Persona
+und Handbuch im Paket TOOL-ACTIONS-SPAR. — Kosten bei Irrtum: CI-Fehler fallen erst am Session-Ende auf.
+
+Entscheider: Nutzer · Anlass: Minutenverbrauch (R333) · ADR: —
