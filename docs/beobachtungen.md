@@ -376,3 +376,7 @@ Beobachtung: Zerlegung aus den Logzeilen. lint 19 s → 30 s; Vitest 62 s (125 D
 Wachstum 195 s insgesamt, davon rund 163 s allein Vitest. Ursprung: Messauftrag TOOL-E046-SESSION (R356).
 Einschätzung: Der Vitest-Schritt ist die einzige relevante Stelle; die pro Datei langsamsten Tests (Vitest-Reporter mit
 `--reporter=verbose` auf dem Runner) und die ZEITTESTS-Liste prüfen, bevor die Laufzeit Actions-Minuten frisst.
+
+### 2026-10-08 · Importzyklus `src/ui/inspect.ts` ↔ `src/ui/panelView.ts`
+
+Fundort: `inspect.ts:52` importiert `panelView`, `panelView.ts:11` importiert `progressPct, upgradeView` aus `inspect`. Ursprung: Board nach REL-08 (Paket 5), Ist-Prüfung lead-tech. Einschätzung: niedrig; `upgradeView` und `progressPct` nach `panelView.ts`, Test gegen Zyklen in `src/ui/` (Paket UI-PANEL-AUFRAEUMEN).
