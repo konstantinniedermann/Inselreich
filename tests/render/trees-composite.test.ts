@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  TREE_CLOCK_EVERY,
   TREE_COMPOSITE_MAX_BYTES,
   TREE_COMPOSITE_PER_FRAME,
   TREE_COMPOSITE_WINDOW_MS,
@@ -32,6 +33,7 @@ const crowns = (n: number): Crown[] =>
 const cam = { x: 0, y: 0, zoom: 1 };
 const frame = (items: TreeItem[], c = cam): number => {
   now += TREE_COMPOSITE_WINDOW_MS + 1;
+  setTreeClock(() => now); // setzt den Lesezähler: der erste Aufruf des Frames liest die Uhr
   const { ctx, log } = fakeCtx();
   for (const it of items) drawTreeStamp(ctx, c, it, 1);
   return log.images.length;
@@ -106,6 +108,29 @@ describe('PERF-L57 Gesamtbild', () => {
     expect(treeCompositeCount()).toBe(TREE_COMPOSITE_PER_FRAME);
     frame(items);
     expect(treeCompositeCount()).toBe(2 * TREE_COMPOSITE_PER_FRAME);
+  });
+
+  it('RF-PERF-W4-3 Uhr wird nur bei jedem TREE_CLOCK_EVERY-ten Aufruf gelesen, Fenster wechselt dann', () => {
+    let reads = 0;
+    setTreeClock(() => (reads++, now));
+    const items = Array.from({ length: 40 }, (_, i) =>
+      mkItem(crowns(3), 4 + (i % 10), 4 + (i >> 3), i),
+    );
+    const { ctx } = fakeCtx();
+    for (const it of items) drawTreeStamp(ctx, cam, it, 1);
+    expect(reads).toBe(Math.ceil(40 / TREE_CLOCK_EVERY));
+    // Fenster wechselt erst beim nächsten Lesen: Zeit läuft weiter, bis zum Lesen gilt das alte Fenster
+    now += TREE_COMPOSITE_WINDOW_MS + 1;
+    for (let i = 0; i < 16; i++) drawTreeStamp(ctx, cam, items[i]!, 1);
+    expect(reads).toBe(Math.ceil(40 / TREE_CLOCK_EVERY) + 1);
+  });
+
+  it('RF-PERF-W4-4 compositeEvict: ohne Platzmangel bleibt jedes Gesamtbild, mit Mangel wird verdrängt', () => {
+    const items = Array.from({ length: 12 }, (_, i) => mkItem(crowns(3), 4 + i, 4, i));
+    frame(items);
+    frame(items);
+    expect(treeCompositeCount()).toBe(12);
+    expect(treeCompositeBytes()).toBeLessThanOrEqual(TREE_COMPOSITE_MAX_BYTES);
   });
 
   it('RF-PERF-5 Riesenbaum und Einzelkrone werden nie zum Gesamtbild und zeichnen direkt weiter', () => {

@@ -605,7 +605,11 @@ export function drawTreeStamp(
   // PERF-L57: ab dem zweiten Zeichnen ein Gesamtbild des Objekts mit einem einzigen drawImage
   const comp = compositeFor(item, d, step, fern);
   if (comp) {
-    for (const e of d.list) if (e.s) e.s.used = atlasFrame;
+    // Atlas-LRU nur grob nachführen (PERF-L57): das Gesamtbild bleibt auch ohne seine Sprites ein gültiges Bild
+    if (windowNo - comp.touch >= COMPOSITE_TOUCH_WINDOWS) {
+      comp.touch = windowNo;
+      for (const e of d.list) if (e.s) e.s.used = atlasFrame;
+    }
     ctx.drawImage(
       comp.canvas,
       o.x + comp.rx * z,
@@ -660,7 +664,14 @@ interface Composite {
   /** Zeichenliste, aus der es gebaut ist; ein neues Listenobjekt macht es ungültig. */
   list: DrawEntry[];
   used: number;
+  /** Zeitfenster, in dem zuletzt die Atlas-Sprites der Liste als benutzt vermerkt wurden. */
+  touch: number;
 }
+/** Sprites eines Gesamtbilds werden höchstens alle so viele Zeitfenster (≈ Frames) als benutzt vermerkt. */
+const COMPOSITE_TOUCH_WINDOWS = 30;
+/** Die Uhr wird nur bei jedem so vielten `compositeFor`-Aufruf gelesen (ein Frame hat ~500 Aufrufe). */
+export const TREE_CLOCK_EVERY = 16;
+let clockTick = 0;
 const composites = new Map<TreeItem, Composite>();
 let compositeBytes = 0;
 /** Zeitfenster-Nummer und Aufbauten darin. */
@@ -673,6 +684,7 @@ let clock: () => number = () =>
 export function setTreeClock(fn: () => number): void {
   clock = fn;
   windowStart = -Infinity;
+  clockTick = 0;
 }
 /** Dev/Test: Anzahl und Bytes der Gesamtbilder. */
 export const treeCompositeCount = (): number => composites.size;
@@ -683,6 +695,7 @@ function dropComposite(item: TreeItem, c: Composite): void {
   compositeBytes -= c.bytes;
 }
 function compositeEvict(need: number): boolean {
+  if (compositeBytes + need <= TREE_COMPOSITE_MAX_BYTES) return true; // Platz da: nichts verdrängen
   if (need > TREE_COMPOSITE_MAX_BYTES) return false;
   const order = [...composites.entries()]
     .filter(([, c]) => c.used !== windowNo)
@@ -696,11 +709,13 @@ function compositeEvict(need: number): boolean {
 
 /** Gesamtbild des Objekts, wenn vorhanden oder jetzt baubar; sonst null (dann direkt zeichnen). */
 function compositeFor(item: TreeItem, d: DrawRec, step: number, fern: boolean): Composite | null {
-  const now = clock();
-  if (now - windowStart >= TREE_COMPOSITE_WINDOW_MS || now < windowStart) {
-    windowStart = now;
-    windowNo++;
-    windowBuilds = 0;
+  if (clockTick++ % TREE_CLOCK_EVERY === 0) {
+    const now = clock();
+    if (now - windowStart >= TREE_COMPOSITE_WINDOW_MS || now < windowStart) {
+      windowStart = now;
+      windowNo++;
+      windowBuilds = 0;
+    }
   }
   d.n++;
   const hit = composites.get(item);
@@ -759,7 +774,17 @@ function compositeFor(item: TreeItem, d: DrawRec, step: number, fern: boolean): 
     );
   }
   windowBuilds++;
-  const c: Composite = { canvas, rx, ry, bytes, step, fern, list: d.list, used: windowNo };
+  const c: Composite = {
+    canvas,
+    rx,
+    ry,
+    bytes,
+    step,
+    fern,
+    list: d.list,
+    used: windowNo,
+    touch: windowNo,
+  };
   composites.set(item, c);
   compositeBytes += bytes;
   return c;
