@@ -150,3 +150,110 @@ class RewriteEmptyTest(unittest.TestCase):
             ):
                 metrics.main(["--efficiency"])
         self.assertIn("Neuschreibungen nach Pause > 5 min", out.getvalue())
+
+
+STATUS = ("s1", "Bash", {"command": "python3 tools/studio/log.py status --role x"})
+OTHER = ("o1", "Read", {"file_path": "a"})
+LEAD_PROMPT = "Persona: lead-tech\nPaket: TOOL-AMPEL-M1"
+
+
+class TurnEndTest(unittest.TestCase):
+    def stats_for(self, first_tools):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "s.jsonl"
+            write(
+                path,
+                [
+                    at(0, assistant("m1", OPUS, cc5=1000, tools=first_tools)),
+                    at(301, assistant("m2", OPUS, cc5=30000)),
+                ],
+            )
+            return efficiency.compute([path])["rewrite_stats"]
+
+    def test_no_tool_is_turn_end(self):
+        row = self.stats_for([])["by_role"][0]
+        self.assertAlmostEqual(row["turn_end_share"], 1.0)
+        self.assertAlmostEqual(row["bash_share"], 0.0)
+
+    def test_bash_is_not_turn_end(self):
+        row = self.stats_for([BASH])["by_role"][0]
+        self.assertAlmostEqual(row["turn_end_share"], 0.0)
+        self.assertAlmostEqual(row["bash_share"], 1.0)
+
+    def test_total_turn_end_weight_share(self):
+        stats = self.stats_for([])
+        self.assertAlmostEqual(stats["turn_end_weight_share"], 1.0)
+        self.assertIn(
+            "vorher Turn-Ende", efficiency.render_rewrites({"rewrite_stats": stats})
+        )
+
+
+class LeadTableTest(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        write(
+            self.root / "s1.jsonl",
+            [at(0, assistant("m1", OPUS, cc5=1000, tools=[BASH]))],
+        )
+        agent(
+            self.root,
+            "s1",
+            "a1",
+            {"agentType": "general-purpose"},
+            [
+                at(0, prompt(LEAD_PROMPT)),
+                at(1, assistant("l1", OPUS, cc5=1000, tools=[STATUS])),  # Status
+                at(2, assistant("l2", OPUS, cc5=1000, tools=[STATUS, OTHER])),  # nein
+                at(3, assistant("l3", OPUS, cc5=1000, tools=[BASH])),  # nein
+                at(4, assistant("l4", OPUS, cc5=1000)),  # Turn ohne Tool
+            ],
+        )
+        agent(
+            self.root,
+            "s1",
+            "a2",
+            {"agentType": "general-purpose"},
+            [
+                at(0, prompt("Persona: tech-sim-engineer\nPaket: X")),
+                at(1, assistant("e1", OPUS, cc5=1000, tools=[STATUS])),
+            ],
+        )
+        self.data = efficiency.compute([self.root / "s1.jsonl"])
+        self.leads = self.data["lead_stats"]
+
+    def test_only_leads(self):
+        self.assertEqual([r["role"] for r in self.leads["rows"]], ["lead-tech"])
+
+    def test_turns_and_status_turns(self):
+        row = self.leads["rows"][0]
+        self.assertEqual(row["package"], "TOOL-AMPEL-M1")
+        self.assertEqual(row["turns"], 4)
+        self.assertEqual(row["status_turns"], 1)
+        self.assertEqual(self.leads["instances"], 1)
+        self.assertEqual(self.leads["turns"], 4)
+        self.assertEqual(self.leads["status_turns"], 1)
+
+    def test_render_and_json(self):
+        text = efficiency.render_rewrites(self.data)
+        self.assertIn("Lead-Instanzen", text)
+        self.assertIn("lead-tech", text)
+        self.assertNotIn("| tech-sim-engineer | X", text)
+        self.assertIsNotNone(efficiency.json_safe(self.data))
+
+    def test_row_limit(self):
+        rows = [{**self.leads["rows"][0], "role": f"lead-{i}"} for i in range(20)]
+        text = efficiency.render_rewrites(
+            {**self.data, "lead_stats": {**self.leads, "rows": rows}}
+        )
+        self.assertEqual(text.count("| lead-"), efficiency.LEAD_ROWS)
+
+    def test_empty(self):
+        self.assertIn(
+            efficiency.NOT_MEASURED, efficiency.render_rewrites({"rewrite_stats": None})
+        )
+        text = efficiency.render_rewrites(
+            {"rewrite_stats": {"count": 0}, "lead_stats": None}
+        )
+        self.assertIn("keine", text)

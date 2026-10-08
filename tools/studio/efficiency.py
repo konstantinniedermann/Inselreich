@@ -79,6 +79,8 @@ IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ic
 TOP_READS = 5
 REWRITE_PAUSE_S = 300  # Cache-Frist; längere Pause zwischen zwei Aufrufen
 REWRITE_ROWS = 12
+LEAD_ROWS = 12
+STATUS_CMD = "tools/studio/log.py status"
 GUARD_DATE = datetime(2026, 10, 4, tzinfo=timezone.utc)  # Persona-Guard (R167) aktiv
 WAIT_TOOLS = {"Bash", "Agent", "Task"}
 PACKAGE = re.compile(r"^\s*Paket:\s*([\w.-]+)", re.MULTILINE)
@@ -221,6 +223,25 @@ def _tool_names(message: dict) -> set[str]:
     }
 
 
+def _tool_blocks(message: dict) -> tuple[set[str], set[str]]:
+    """IDs aller tool_use-Blöcke und derer, die ein Status-Log (log.py status) sind."""
+    content = message.get("content")
+    every: set[str] = set()
+    status: set[str] = set()
+    if not isinstance(content, list):
+        return every, status
+    for index, block in enumerate(content):
+        if not isinstance(block, dict) or block.get("type") != "tool_use":
+            continue
+        ident = str(block.get("id") or f"#{index}")
+        every.add(ident)
+        data = block.get("input")
+        command = data.get("command") if isinstance(data, dict) else None
+        if block.get("name") == "Bash" and STATUS_CMD in str(command or ""):
+            status.add(ident)
+    return every, status
+
+
 def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
     mid = message.get("id") or entry.get("uuid")
     if not mid:
@@ -245,6 +266,8 @@ def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
             "ts": None,
             "ts_end": None,
             "tools": set(),
+            "tool_ids": set(),
+            "status_ids": set(),
         },
     )
     when = _entry_time(entry)
@@ -252,6 +275,9 @@ def _add_call(calls: dict, message: dict, entry: dict, usage: dict) -> None:
         record["ts"] = when if record["ts"] is None else min(record["ts"], when)
         record["ts_end"] = max(record["ts_end"] or when, when)
     record["tools"] |= _tool_names(message)
+    every, status = _tool_blocks(message)
+    record["tool_ids"] |= every
+    record["status_ids"] |= status
     for key, value in values.items():
         record[key] = max(record[key], value)
     record["model"] = record["model"] or message.get("model")
@@ -300,6 +326,7 @@ def _rewrite_events(calls: list[dict], family: str) -> list[dict]:
                 "gap_s": gap,
                 "weight": weight,
                 "wait": bool(before["tools"] & WAIT_TOOLS),
+                "turn_end": not before["tools"],
             }
         )
     return events
@@ -331,6 +358,13 @@ def _instance(
         "persona_start": general_persona,
         "start_ts": calls[0]["ts"],
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
+        "package": pkg,
+        "turns": len(calls),
+        "status_turns": sum(
+            1
+            for c in calls
+            if len(c["tool_ids"]) == 1 and c["status_ids"] == c["tool_ids"]
+        ),
     }
 
 
@@ -449,6 +483,7 @@ def _summary(
         "roles": _roles(instances),
         "top_reads": ranked,
         "rewrite_stats": _rewrite_stats(instances, total),
+        "lead_stats": _lead_stats(instances),
     }
 
 
@@ -490,6 +525,7 @@ def _rewrite_stats(instances: list[dict], total: float) -> dict:
             "weight": sum(e["weight"] for e in events),
             "median_pause_min": statistics.median(e["gap_s"] for e in events) / 60,
             "bash_share": _ratio(sum(e["wait"] for e in events), len(events)),
+            "turn_end_share": _ratio(sum(e["turn_end"] for e in events), len(events)),
         }
         for role, events in by_role.items()
     ]
@@ -505,8 +541,37 @@ def _rewrite_stats(instances: list[dict], total: float) -> dict:
         "count": sum(len(v) for v in by_role.values()),
         "weight": weight,
         "total_cost": total,
+        "turn_end_weight_share": _ratio(
+            sum(e["weight"] for v in by_role.values() for e in v if e["turn_end"]),
+            weight,
+        ),
         "by_role": sorted(roles, key=lambda r: (-r["weight"], r["role"])),
         "by_family": sorted(families, key=lambda f: (-f["weight"], f["family"])),
+    }
+
+
+def _lead_stats(instances: list[dict]) -> dict:
+    leads = [i for i in instances if role_class(i["role"]) == "Leads"]
+    rows = [
+        {
+            "role": i["role"],
+            "package": i["package"],
+            "turns": i["turns"],
+            "status_turns": i["status_turns"],
+            "weight": i["cost"],
+        }
+        for i in leads
+    ]
+    turns = sum(r["turns"] for r in rows)
+    status = sum(r["status_turns"] for r in rows)
+    return {
+        "instances": len(rows),
+        "turns": turns,
+        "status_turns": status,
+        "status_share": _ratio(status, turns),
+        "rows": sorted(
+            rows, key=lambda r: (-r["weight"], r["role"], str(r["package"]))
+        ),
     }
 
 
@@ -712,24 +777,60 @@ def render_section(data: dict | None) -> str:
     return "\n".join(out)
 
 
+def _lead_lines(stats: dict | None) -> list[str]:
+    if not stats:
+        return ["### Lead-Instanzen", "", f"- {NOT_MEASURED}.", ""]
+    rows = [
+        [
+            r["role"],
+            str(r["package"] or "–"),
+            str(r["turns"]),
+            str(r["status_turns"]),
+            _k(r["weight"]),
+        ]
+        for r in stats["rows"][:LEAD_ROWS]
+    ]
+    return [
+        "### Lead-Instanzen",
+        "",
+        *_table(["Rolle", "Paket", "Turns", "Status-Turns", "Kostengewicht"], rows),
+        "",
+        (
+            f"- Gesamt: {stats['instances']} Lead-Instanzen, {stats['turns']} Turns, "
+            f"{stats['status_turns']} Status-Turns ({_pct(stats['status_share'])})."
+        ),
+        "",
+    ]
+
+
 def render_rewrites(data: dict | None) -> str:
     head = "## Neuschreibungen nach Pause > 5 min"
     stats = (data or {}).get("rewrite_stats")
     if not stats:
         return f"{head}\n\n- {NOT_MEASURED}.\n"
+    leads = _lead_lines((data or {}).get("lead_stats"))
     if not stats["count"]:
-        return f"{head}\n\n- keine Neuschreibung nach Pause > 5 min gefunden.\n"
+        none = "- keine Neuschreibung nach Pause > 5 min gefunden."
+        return "\n".join([head, "", none, "", *leads]) + "\n"
     out = [
         head,
         "",
         (
             f"- Gesamt: {stats['count']} Neuschreibungen (Cache-Write >= {REWRITE_MIN // 1000}k "
             f"nach Pause > {REWRITE_PAUSE_S // 60} min), Kostengewicht {stats['weight'] / 1000:.0f}k, "
-            f"Anteil am Gesamt-Kostengewicht {_pct(_ratio(stats['weight'], stats['total_cost']))}."
+            f"Anteil am Gesamt-Kostengewicht {_pct(_ratio(stats['weight'], stats['total_cost']))}, "
+            f"davon vorher Turn-Ende {_pct(stats.get('turn_end_weight_share'))}."
         ),
         "",
         *_table(
-            ["Rolle", "Anzahl", "Kostengewicht", "Median-Pause", "vorher Bash/Agent"],
+            [
+                "Rolle",
+                "Anzahl",
+                "Kostengewicht",
+                "Median-Pause",
+                "vorher Bash/Agent",
+                "vorher Turn-Ende",
+            ],
             [
                 [
                     r["role"],
@@ -737,6 +838,7 @@ def render_rewrites(data: dict | None) -> str:
                     _k(r["weight"]),
                     f"{r['median_pause_min']:.1f} min",
                     _pct(r["bash_share"]),
+                    _pct(r.get("turn_end_share")),
                 ]
                 for r in stats["by_role"][:REWRITE_ROWS]
             ],
@@ -750,6 +852,7 @@ def render_rewrites(data: dict | None) -> str:
             ],
         ),
         "",
+        *leads,
     ]
     return "\n".join(out)
 
