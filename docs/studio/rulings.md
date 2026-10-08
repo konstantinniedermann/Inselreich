@@ -2661,3 +2661,151 @@ misst die Perf gegen main. C7-Glitzern am Wasserfall war nie verdrahtet: nicht T
 `int/rel-07` in `rel/rel-07`, prüft, pusht den Kandidaten. — Kosten bei Irrtum: Fix-Runde im Release-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-art REL-07-AUFLOESUNG · ADR: —
+
+## R312 · 2026-10-08 · REL-07 Release-Lauf fortsetzen
+
+Ruling: Der Release-Lauf B (lead-qa) brach über Nacht nach Perf (Seed 7: +0,1 ms nah, 0 ms fern) und Live-Seeds 1/7
+ab; Seed 14 meldet Zeitüberschreitung, Rater, opus-Review und Gate fehlen. Eine frische lead-qa-Instanz übernimmt die
+Ablage `.studio/qa/rel-07b/`, wiederholt Erledigtes nicht und liefert das Gate-Urteil. Nutzer-Auftrag „kurze Session":
+reicht die Zeit nicht, Zwischenstand mit Fortsetzungspunkt in state.md. — Kosten bei Irrtum: ein Doppellauf von Seed 14.
+
+Entscheider: L0 · Anlass: Session-Start, Sichtung `.studio/qa/rel-07b/` · ADR: —
+
+## R313 · 2026-10-08 · Gate Merge REL-07: ZURÜCK, Fix-Runde FIX-REL07
+
+Ruling: Gate-Urteil lead-qa (Kandidat `rel/rel-07` @ 9c6920c) angenommen: ZURÜCK, eng begrenzt. Fix-Runde FIX-REL07
+an lead-art (Render-Engineer) auf `int/rel-07`, Start nächste Session:
+(a) **Bau-Ruckeln beheben** (Pflicht): Bau löst 4–6 Frames 33–50 ms aus (main 0), Ursache Neuaufbau `sortedObjects`
+(`iso.ts:180-250`, Wald-/Lichtungsschleife je Bau). Ziel: Ruckel-Frames je Bau wie main (±1). Kaltstart Seed 14
+(20 s gegen 8 s) mituntersuchen. (b) **Fernansicht L5:** Wrack und Felseiland E8 erst ab Zoom ≥ 0,5 zeichnen
+(KISS statt Neuzeichnung); danach die K-Proben blind neu. (c) `docs/arc42.md` für L5/L6/L7 nachführen, Salz-Register
+(B5) nachführen. (d) **Perf-Budget:** nach (a) neu gegen main messen; ein Überschreiten von ≤ +0,5 ms wird bis
++1,5 ms `renderMedian` angenommen, solange `frameMedian` 16,7 ms und `emergencyFrames` 0 bleiben (absolut ≤ 6 ms).
+(e) Review-Befunde B4 (Filter `own`, Prüfung nicht schwächer), B7 (Kronen-Atlas 12 MiB), B8 (Delfine im Mouse-over)
+angenommen. Rater-Bedenken (Hütten-Tür, L6-Fussring, Schaumbögen „wie Möwen") blockieren nicht → Beobachtungen.
+Danach nur Nachprüfung der geänderten Punkte (Ruckeln, Perf, K-Proben), kein voller Release-Lauf. — Kosten bei Irrtum:
+eine weitere Fix-Runde.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-07, Handoff `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` · ADR: —
+
+## R314 · 2026-10-08 · Aufwandsverteilung: Hebel 1 und 5 als Experiment
+
+Ruling: Nutzerfrage „was braucht am meisten Zeit, liesse sich das verschnellern?" beantwortet mit
+`docs/studio/retros/2026-10-08-proc-aufwandsverteilung.md` (Grafik 36 % Zeit / 41–55 % Token; Treiber Anläufe +
+Nacharbeit; 5-min-Cache-Fristablauf ≈ 22 % Token). Angenommen als Experiment (Nummer vergibt studio-coach):
+**Hebel 1** lange Bash-Läufe von Umsetzern und Leads im Hintergrund, Abfrage spätestens alle 4 min (ersetzt nicht
+ADR-007: Arbeiter-Starts bleiben Vordergrund); **Hebel 5** Leads bei Ein-Umsetzer-Paketen auf sonnet bzw. Lead-Schicht
+weglassen. Hebel 2–4 nacheinander erst nach Messung von 1 (sonst nicht trennbar). Laufende Fix-Runde FIX-REL07 bleibt
+unberührt. — Kosten bei Irrtum: ein Rückbau im Handbuch, Messgrösse Cache-Write-5-min-Anteil.
+
+Entscheider: L0 · Anlass: Nutzerfrage, Bericht studio-process-coach PROC-AUFWAND · ADR: —
+
+## R315 · 2026-10-08 · Kurz-Retro 8ef9d27f: E-039 und E-041 angenommen, E-040 wartet
+
+Ruling: (1) E-039 (Perf-Ablage nennt Vergleichsart `aa-`/`ab-<A>-vs-<B>`; L0 meldet nur Zahlen aus dem Lead-Bericht)
+und E-041 (`.studio/qa/<id>/stand.md` mit Fortsetzungspunkt, Messskripte unter `tools/render-qa/`) angenommen als
+Handbuch-Sätze; sie schliessen Ablauffehler (R127) und sind kein neues Paket im Sinn von R305. Umsetzung studio-coach
+in der nächsten Session. (2) E-040 (Bau-Ruckel-Szenario in `perf.mjs`) bleibt `vorgeschlagen` (Werkzeug-Paket, R305);
+FIX-REL07 (R313) legt seine Ruckel-Messung aber als Nachweis unter `tools/render-qa/` ab. — Kosten bei Irrtum: zwei
+Handbuch-Sätze zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro 8ef9d27f · ADR: —
+
+## R315 · 2026-10-08 · Ablauf-Effizienz erkennt das Studio selbst
+
+Ruling: Nutzer 2026-10-08: Verbesserungen im Ablauf und in der Zusammenarbeit muss das Studio selbst erkennen und
+einführen (Aufgabe des Prozess-Coaches, Grundlage Worker-Logs). Befund: Die Effizienz-Ampel zeigte Cache-Write 5 min
+ROT (33,7 %), ohne dass eine Retro daraus einen Hebel machte; erst die Nutzerfrage löste R314 aus → Ablauffehler.
+Vorfall-Retro durch studio-process-coach: Warum blieb das unentdeckt, und welcher Mechanismus macht es künftig
+automatisch (Auslöser, Rolle, Werkzeug)? Umsetzung des Vorschlags per eigenem Ruling. — Kosten bei Irrtum: eine Retro.
+
+Entscheider: L0 · Anlass: Nutzeranweisung nach R314 · ADR: —
+
+## R316 · 2026-10-08 · Retro „Effizienz unentdeckt": V1–V3 angenommen
+
+Ruling: Bericht `docs/studio/retros/2026-10-08-vorfall-effizienz-unentdeckt.md` angenommen. Ursache: rote Ampel in
+11 Retros gelesen, aber Vorlage erlaubte „Ursache unbelegt" statt Hebel; Prozess-Aussensicht nach REL-06 fehlte
+(kein Auslöser). **V2** (Pflichtspalte „Hebel oder Messauftrag mit Frist" je roter Ampelzeile, 3. Retro in Folge =
+Vorschlag Pflicht) + Release-Checkliste „nach Merge auf main: studio-process-coach starten" → studio-coach, sofort.
+**V1** (Vorfall `ampel:<kennzahl>` bei 2 Sessions rot, ≥ 10 Agenten) + **V3** (Neuschreibungen nach Pause > 5 min
+je Rolle/Paketfamilie im Metrik-Lauf) → ein Werkzeug-Paket TOOL-AMPEL an lead-tech (R315 schlägt R305 für dieses
+Paket). Die zweite rote Zeile (Persona-Starts als general-purpose auf opus) fällt sofort unter V2. — Kosten bei
+Irrtum: ein Werkzeug-Paket; Rückbau per Revert.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-effizienz-unentdeckt · ADR: —
+
+## R317 · 2026-10-08 · Gate Merge TOOL-AMPEL: OK mit zwei Kleinkorrekturen
+
+Ruling: Review OK angenommen. (1) `persona_opus` zählt nur Abweichungen ab dem Guard (2026-10-04); Altfälle vor
+dem Guard sind erledigte Historie und dürfen die Zeile nicht dauerhaft rot halten — sonst wird der Ampel-Vorfall zum
+Dauerrauschen und verliert seinen Zweck. (2) Die Wahl „Datenbasis … Agenten" als Zählbasis für die Grenze 10 im
+Code kommentieren (eine Zeile). Danach seriell Merge durch production-integrator inkl. `make check`. Der erste
+Vorfall `ampel:cache_write_5m` ist durch R314/E-037 adressiert; `ampel:steuerung` geht an die nächste Session-Retro
+(V2-Pflicht). — Kosten bei Irrtum: Altfälle unsichtbar; sie stehen in den Retros und in R167.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL · ADR: —
+
+## R318 · 2026-10-08 · Retro CI main: Hebel V1 (Timeout-Altlasten) angenommen
+
+Ruling: `docs/studio/retros/2026-10-08-ci-main.md` angenommen. 6 von 8 roten CI-Läufen auf main waren Test-Timeouts
+(5 s Standard) bei Altlast-Tests aus `tools/zeitreserve/baseline.json`; Hotfixes trafen jeweils nur den letzten
+Test. V1 an lead-tech (Paket TOOL-TIMEOUTS): die 21 übrigen Altlasten bekommen begründete eigene Timeouts oder werden
+geteilt. Messgrösse: 0 Altlasten mit Standard-Timeout, kein Timeout-Rot in den nächsten 20 CI-Läufen, Frist
+2026-10-22. Befund am Rand: die Session-Retro 8ef9d27f hatte 7 CI-Vorfälle ohne Ursachenanalyse quittiert — durch
+V2 (R316) künftig ausgeschlossen. — Kosten bei Irrtum: längere Testlaufzeit, Rückfall per Revert.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-ci-main · ADR: —
+
+## R319 · 2026-10-08 · Retro Steuerung: V1, V2, M1 angenommen; Experiment-Plätze rotieren
+
+Ruling: `docs/studio/retros/2026-10-08-ampel-steuerung.md` angenommen. Hauptteil der Steuerung ist Lead-Handarbeit
+(81 % Bash-Turns) und Neuschreibung nach Turn-Ende (65 %), nicht Briefings. **V1** Leads nach Abschlussbericht nicht
+fortsetzen, sondern per Handoff ablösen (ersetzt E-029). **V2** `active`/`done`-Statusturns der Leads streichen,
+sofern studio-coach vorher belegt, dass das Dashboard sie nicht braucht. **M1** Metrik-Spalte „vorher Turn-Ende" und
+Lead-Turn-Zahlen (Werkzeug, lead-tech). Zweiter Befund: E-029, E-036, E-037, E-038 warten alle auf einen Platz
+(Verfassung §: höchstens 3 gleichzeitig) — „wartet auf Platz" darf kein Dauerzustand sein. studio-coach bewertet die
+laufenden E-022, E-027, E-030 und schliesst reife ab, damit E-037 sofort startet; Rotation statt Warten. — Kosten
+bei Irrtum: ein Experiment endet früh, Wiederaufnahme möglich.
+
+Entscheider: L0 · Anlass: Retro R-2026-10-08-ampel-steuerung · ADR: —
+
+## R320 · 2026-10-08 · Gate Merge TOOL-AMPEL-M1: OK
+
+Ruling: Review OK (zwei niedrige Hinweise, nicht blockierend: Status-Erkennung per Textsuche, fehlender Test für
+Streaming-Duplikate) angenommen; Merge `tool/ampel-m1` @ a79314f durch production-integrator. Erste Zahlen stützen
+R319 V1: 93 % der lead-art-Neuschreibungen folgen auf Turn-Ende. Paketfeld-Normalisierung → beobachtungen.md.
+— Kosten bei Irrtum: Messspalte leicht ungenau, kein Einfluss auf Spiel oder Ampel.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-AMPEL-M1 · ADR: —
+
+## R321 · 2026-10-08 · `zeitreserve` rot nach Merge M1: Last-Artefakt, an TOOL-TIMEOUTS
+
+Ruling: Merge 772e4bb bleibt (Diff nur `tools/studio/`, 2317 Tests + studio-test grün). `zeitreserve` rot bei
+`tests/render/terrainFoothills.test.ts` und `massif.test.ts` (≈ 4 s gegen Grenze 3,75 s bei 30 s Timeout) fällt
+zeitlich mit parallelen Testläufen von TOOL-TIMEOUTS zusammen (Lastabhängigkeit, Thema E-030). Beide Tests gehen
+in den Umfang von TOOL-TIMEOUTS. Nach dessen Merge seriell `make check` ohne parallele Testläufe; Worktree-Aufräumen
+`tool-ampel-m1` dann mit. — Kosten bei Irrtum: main bis dahin lokal mit rotem Zeitreserve-Schritt, kein Push.
+
+Entscheider: L0 · Anlass: Bericht production-integrator TOOL-AMPEL-M1 · ADR: —
+
+## R322 · 2026-10-08 · Gate Merge TOOL-TIMEOUTS: OK
+
+Ruling: Review OK angenommen; Baseline der Zeitreserve-Altlasten 29 → 0, alle mit hergeleitetem Timeout. Merge
+`tool/timeouts` @ 4695986 durch production-integrator, danach `make check` ohne parallele Agenten (lastarm, R321).
+Korrektur zum Bericht: `tests/render/massif.test.ts` existiert auf main (seit L2, 72f14fa); bleibt er danach rot,
+bekommt er im selben Muster ein hergeleitetes Timeout (Trivial-Fix, eigener Commit). Lastabhängige Zusatzmeldungen
+(Load 13–35) bleiben Thema der Lastregel aus E-030. Konfliktpunkt mit FIX-REL07: `tests/render/terrain.test.ts`
+(Integrator-Hinweis für REL-07). — Kosten bei Irrtum: längere Testtimeouts, Revert möglich.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-TIMEOUTS · ADR: —
+
+## R323 · 2026-10-08 · Nutzerwünsche Bedienung: nur aufnehmen
+
+Ruling: Die fünf Nutzerwünsche (Leertaste Pause, Pipette, Gebäude direkt in höherer Stufe bauen, Taste `U` für
+Upgrade, übersichtliches Gebäude-Panel) kommen als I-022…I-026 mit Status `neu` und Quelle „Nutzer 2026-10-08“ in
+`docs/ideen.md`, ausdrücklich ohne Umsetzung (Nutzerwortlaut „nur aufnehmen nicht implementieren“). Bewertung nach
+Raster in der nächsten Ideen-Runde; vorher prüft der Eintrag, was davon schon existiert (z. B. bestehende
+Tastenbelegung, Upgrade-Regeln). R305 gilt weiter: keine neuen Pakete, FIX-REL07 hat Vorrang. Eintrag durch
+`design-idea-scout`, ein Start. — Kosten bei Irrtum: keine, reiner Pool-Eintrag.
+
+Entscheider: L0 · Anlass: Nutzer-Auftrag Session-Start · ADR: —

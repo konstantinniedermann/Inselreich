@@ -274,6 +274,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect(n).toBeGreaterThan(0);
   });
 
+  // Timeout: lokal 0,9 s seriell, 2,0 s unter Last; ≥ 8 × Laufzeit, CI bis ~4×, R270/R318
   it('RF-4 Phase und Wetter: nachts, bei Regen und Sturm keine Vögel; im Sturm keine Sprünge; Wal unabhängig', () => {
     let birdsDay = 0,
       jumps = 0;
@@ -302,7 +303,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     }
     expect(birdsDay).toBeGreaterThan(0);
     expect(jumps).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it('RF-5 Wal: 25 bis 45 % der Episoden sichtbar, nie näher als 3 Kacheln am Schiff', () => {
     let seen = 0,

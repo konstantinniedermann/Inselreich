@@ -212,6 +212,7 @@ describe('Waldboden und Licht', () => {
     return s / c;
   };
 
+  // Timeout: lokal ≤ 0,6 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('Spec 5.1 Relief: Licht von links oben (−3, −1) – Hang zur Lichtseite hell, abgewandt dunkel', () => {
     // H-R9: die Wiese trägt jetzt eigenes Mikrorelief (Zufall je Seed); über 8 Seeds mittelt es sich heraus, der Gebirgsfuss bleibt
     const gs = Array.from({ length: 8 }, (_, k) => buildGrid(blockWorld(9 + k)));
@@ -239,7 +240,7 @@ describe('Waldboden und Licht', () => {
       if (g.cls[k] === mtCls) mtMax = Math.max(mtMax, a);
     }
     expect(mtMax).toBeGreaterThan(0.08); // das Gebirge nutzt die höhere Grenze tatsächlich
-  });
+  }, 15_000);
 
   it('H-R9 R3 kein dunkler Hof: Wiese vor dem Gebirgsfuss (rechts/unten, Schattenseite) ist im Mittel kaum dunkler', () => {
     const gs = Array.from({ length: 8 }, (_, k) => buildGrid(blockWorld(9 + k)));
@@ -250,6 +251,7 @@ describe('Waldboden und Licht', () => {
     expect(avg(9, 15, 16.15, 16.9) - avg(9, 15, 20.15, 20.9)).toBeGreaterThan(-0.02);
   });
 
+  // Timeout: lokal ≤ 1,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('R149 Plastik: mittlere |shade| auf Land ≥ 0,035 und auf Gebirge ≥ 0,05 (Seeds 3, 5, 12588)', () => {
     const mtCls = 1 + LAND.indexOf('mountain');
     for (const seed of [3, 5, 12588]) {
@@ -271,7 +273,7 @@ describe('Waldboden und Licht', () => {
       expect(sl / cl, `Land Seed ${seed}`).toBeGreaterThanOrEqual(0.035);
       expect(sm / cm, `Gebirge Seed ${seed}`).toBeGreaterThanOrEqual(0.05);
     }
-  });
+  }, 15_000);
 
   it('R149 Pixel auf Gras tragen höchstens ±20 % Schattierung (H-R9 R3, vorher ±14 % bzw. ±8 %); Gebirgsanteil 0', () => {
     // Alle Knoten tragen 0,3 bzw. 0,2: Gleiche Pixel auf Gras beweisen, dass paintPixels bei ±20 % klemmt.
@@ -740,6 +742,7 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
 });
 
 describe('M10 Teil-Raster', () => {
+  // Timeout: lokal ≤ 2,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-R1-01 patchGrid im Rechteck ergibt dasselbe Raster wie ein Vollaufbau (Roden und Aufforsten)', () => {
     const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
@@ -765,10 +768,13 @@ describe('M10 Teil-Raster', () => {
       'dune',
       'dpres',
       'dphase',
+      'wood',
+      'woodSh',
+      'woodK',
     ] as const)
       expect(firstDiff(grid[f], full[f]), f).toBe(-1);
     grid.ind.forEach((a, t) => expect(a, `ind ${t}`).toEqual(full.ind[t]));
-  }, 30000);
+  }, 30_000);
 });
 
 // ---------- H-R9 Teil B: Mikrorelief und Wiesenvarianz ----------
@@ -811,6 +817,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     }
   });
 
+  // Timeout: lokal ≤ 0,7 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B1 Grenzen: Gras und Strand ≤ ±20 % (und nutzen > 14 %, R3), Wald weiter ≤ ±8 %', () => {
     const grass = buildGrid(flat(40, 'grass', 7));
     const maxG = Math.max(...grass.shade.map(Math.abs));
@@ -831,7 +838,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     const c = paintPixels(hot(f), 1, 64, 64, 64, 64);
     const d = paintPixels(lim(f, 0.08), 1, 64, 64, 64, 64);
     expect(firstDiff(c, d)).toBe(-1);
-  });
+  }, 15_000);
 
   it('H-R9 B1 Kuppen heller, Senken dunkler: shade korreliert mit der Hanglage zur Sonne (Licht links oben)', () => {
     const g = buildGrid(flat(40, 'grass', 7));
@@ -974,6 +981,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
   };
 
   // Messwert R3: RMS 5,66 (Seed 7) und 5,71 (Seed 8); vor R3 5,39/5,50; Basis main vor H-R9: 5,0
+  // Timeout: lokal ≤ 1,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R11 F1 (löst H-R9 B3 Farbstreuung ab) RMS-ΔE2000 zum Mittel über eine Grasfläche 1,8…6,0 (main-Basis 5,0; das Licht kommt jetzt gestuft aus den Tonstufen)', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
@@ -989,7 +997,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       expect(rms, `Seed ${seed}`).toBeGreaterThanOrEqual(1.8);
       expect(rms, `Seed ${seed}`).toBeLessThanOrEqual(6);
     }
-  });
+  }, 40_000);
 
   it('H-R11 F1 (löst H-R9 B3/R4 ab) Warmton und Schleier ändern nur den Farbton: Luma je Pixel gleich der Grundstruktur (ohne Ebenen) ±2 %', () => {
     const g0 = buildGrid(flat(30, 'grass', 7));
@@ -1012,6 +1020,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     expect(changed).toBeGreaterThan(450); // die Ebenen wirken tatsächlich
   });
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {
     for (const seed of [7, 8]) {
       const { out } = paintFlat(seed);
@@ -1037,7 +1046,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
         }
       expect(cross / nc / (within / nw), `Seed ${seed}`).toBeLessThanOrEqual(1.08);
     }
-  });
+  }, 30_000);
 
   it('H-R9 B3 Büschel-Dichte folgt dem Boden: satter Boden mehr Büschel als trockener, Standard bleibt 0–2', () => {
     let dry = 0,
@@ -1051,6 +1060,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
     expect(lush).toBeGreaterThan(dry * 1.5);
   });
 
+  // Timeout: lokal ≤ 0,8 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B3 Keine Signalfarbe auf Wiese mit Relief und Blumenschleier', () => {
     const { out } = paintFlat(7);
     for (const name of SIGNAL_NAMES) {
@@ -1058,7 +1068,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       for (let i = 0; i < out.length; i += 4 * 53)
         expect(deltaE2000(rgbToLab([out[i]!, out[i + 1]!, out[i + 2]!]), lab)).toBeGreaterThan(8);
     }
-  });
+  }, 15_000);
 });
 
 describe('H-R9 B4 Teil-Neuzeichnung', () => {
@@ -1198,6 +1208,7 @@ describe('M12 E1 Terrain', () => {
     expect(rimWeight(12, 12, 24, 24)).toBe(1);
   });
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-E1-20 paintPixels: die äussersten 2 Kacheln sind exakt waterDeep, ohne Schaum', () => {
     const world = view();
     const grid = buildGrid(fieldWorld(world));
@@ -1215,13 +1226,14 @@ describe('M12 E1 Terrain', () => {
         expect([out[o], out[o + 1], out[o + 2]]).toEqual(deep);
       }
     expect(rim).toBeGreaterThan(0);
-  });
+  }, 15_000);
 
   // Zeichenaufrufe von paintDecor: alles ausser Pixelblöcken und Kopien (die unterscheiden sich im Schnitt der Schritte)
   const decorCalls = (c: FakeCanvas): string[] =>
     c.calls.filter((k) => !/^(createImageData|putImageData|drawImage|clearRect)\(/.test(k));
 
   for (const scale of [1, 2])
+    // Timeout: lokal ≤ 1,1 s (seriell, Last eher höher), CI bis ~4×, R270/R318
     it(`AK-E1-11 terrainJob: alle Schritte nacheinander gleich buildTerrainLayer (Faktor ${scale}), samt Dekor`, () => {
       const world = view();
       const ref = buildTerrainLayer(world, scale) as unknown as FakeCanvas;
@@ -1238,7 +1250,7 @@ describe('M12 E1 Terrain', () => {
       expect(decorCalls(ref).length).toBeGreaterThan(0);
       expect(decorCalls(layer)).toEqual(decorCalls(ref));
       expect(halfLayer(job.layer).width).toBe(Math.ceil(layer.width / 2));
-    });
+    }, 15_000);
 
   it('AK-E1-19 Malbänder feiner: SLICE_ROWS 16, GRID_BAND_ROWS 2; Schritte ≥ Höhe / SLICE_ROWS (T07, Scheiben ≤ 8 ms)', () => {
     expect(SLICE_ROWS).toBe(16);
@@ -1250,8 +1262,8 @@ describe('M12 E1 Terrain', () => {
     );
   });
 
-  // Je Welt und Bandhöhe ein eigener Test (H-T4): lokal höchstens 2,9 s (Inselansicht, Höhe 2),
-  // daher Timeout 15 s (> 5 × Reserve für den CI-Runner).
+  // Je Welt und Bandhöhe ein eigener Test (H-T4): lokal höchstens 3,0 s (Inselansicht, Höhe 2),
+  // daher Timeout 90 s (≥ 8 × Laufzeit auch im Gesamtlauf mit 8,3 s unter Last, R270/R318).
   describe.each([
     ['Heimat', () => view()],
     ['Inselansicht', () => createWorld(3)],
@@ -1288,7 +1300,7 @@ describe('M12 E1 Terrain', () => {
           }
         }
       },
-      15_000,
+      90_000, // lokal 3,0 s seriell, bis 8,3 s im Gesamtlauf unter Last (R270/R318)
     );
   });
 
@@ -1428,6 +1440,7 @@ describe('M12 E1 Terrain', () => {
     });
   });
 
+  // Timeout: lokal ≤ 1,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-E1-19 terrainJob: ruft der Renderer halfLayer mitten in den Streifen, ist die Kopie vollständig und die Reststreifen malen nicht mehr', () => {
     withLightDocument(() => {
       const job = terrainJob(view(), 1);
@@ -1438,7 +1451,7 @@ describe('M12 E1 Terrain', () => {
       expect(halfLayer(job.layer)).toBe(half);
       expectCovered(stripCalls(half), job.layer.height, half.height);
     });
-  });
+  }, 15_000);
 
   it('AK-E1-19 terrainJob: genau der erste Schritt der halben Kopie ist solo (erste Lesung der Ebene, teuer)', () => {
     withLightDocument(() => {

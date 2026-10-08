@@ -17,7 +17,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 
 ---
 
-## E-022 · laufend · Merge-Hygiene
+## E-022 · angepasst (übernommen, R319) · Merge-Hygiene
 
 - Hypothese: Wenn `.gitattributes` für `docs/beobachtungen.md` `merge=union` setzt und der `production-integrator` in einem eigenen Worktree (`git worktree add .worktrees/integrate main`, Push von dort, Hauptcheckout danach `git pull --ff-only`) statt im Hauptcheckout mergt, dann entstehen keine Konflikte im Anhänge-Journal und keine Vorfälle durch den geteilten Arbeitsbaum (Retro M11 B1, B4; R196, R198).
 - Messgrösse: in M12 0 manuell aufgelöste Konflikte in `docs/beobachtungen.md`, 0 verlorene oder doppelte Einträge (Sichtprüfung im Review) und 0 Vorfälle durch gemeinsam genutzten Hauptcheckout (Ausgang M11: 3 Konflikte, H-R7, C7, R2; 2 L0-Ablauffehler).
@@ -28,6 +28,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Ruling: R201
 - Start: Handbuch 1.15 (Persona-Fassungen gelten ab einem späteren Zug)
 - Bewertung: – (Datenpunkt, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N4: 1 Formatabweichung in `docs/beobachtungen.md` nach union-Merge in REL-02, vom Integrator behoben; 0 Konflikte; Zeitraum M12 nicht begonnen); Datenpunkt 2 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md) B3): 0 Konflikte, 1 Formatabweichung nach Union-Merge in REL-05 (R276), keine Hauptcheckout-Vorfälle belegt → weiter beobachten
+- Urteil R319 (Coach 2026-10-08): **übernehmen**, Teil `merge=union` bereits zurückgenommen (R303). Gegen Schwelle: 0 Konflikte und 0 Hauptcheckout-Vorfälle in beiden Datenpunkten (Retros e13c3631-Nachtrag N4, session-e51712dd B3), 2 Formatabweichungen nach Union-Merge sind durch den Wegfall von `union` erledigt. Der Worktree-Teil steht in `production-integrator` 1.7 (R264) und im Handbuch. Der Zeitraum „M12“ ist ohne Meilenstein-Ende nicht mehr bestimmbar; die Restprüfung (E-031: 0 zurückgeholte Zeilen in 3 Merges) läuft als Regel ohne Platz, die Session-Retro prüft sie mit `git diff <merge-base> HEAD -- docs/beobachtungen.md`.
 
 ## E-027 · laufend · Discovery-Strang mit Ideen-Pool
 
@@ -39,8 +40,9 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Ruling: R208, Zählregel R224 (5) (Handbuch 1.18)
 - Start: 2026-10-04 (Handbuch 1.16)
 - Bewertung: – (Datenpunkt 1 von 3 Runden, [Retro session-e13c3631](retros/2026-10-04-session-e13c3631.md) B5: IDEEN-01 mit 2 Agenten und 35 Tool-Aufrufen; 2 von 5 Ideen eingeplant, 1 Studio-Idee live (H-U2, REL-01), Studio-Anteil 1 von 5 Häppchen = 20 %; Nutzer-Einwände 0, Playtest steht aus); Datenpunkt 2 von 3 Runden, [Nachtrag](retros/2026-10-04-session-e13c3631.md) N5: IDEEN-02 mit 1 Start, 2 von 4 Ideen eingeplant (H-A2 live in REL-02, I-007 für REL-04), 2 Studio-Ideen live (Schwelle ≥ 2 erreicht), Studio-Anteil live 2 von 5 Häppchen, eingeplant je nach Zählregel offen; Nutzer-Einwände 0) Messwert 2 ([Retro session-ad51d3c5](retros/2026-10-05-session-ad51d3c5.md)): REL-03 Studio-Anteil 1 von 4 = 25 % (H-U1/I-001), M12-Bausteine I-004/I-006/I-008 eingeplant (R225); IDEEN-02 offen. Messwert 3 ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md)): R250–R277 ohne `I-nnn`-Ruling, IDEEN-03 nicht belegt und fällig → weiter beobachten.
+- Urteil R319 (Coach 2026-10-08): **verlängern**, bis IDEEN-03 gelaufen ist, höchstens bis 2026-10-22. Gegen Schwelle: Studio-Anteil 20 % / 25 % (Soll ≥ 25 %, einmal erreicht), 2 Studio-Ideen live (erreicht), Nutzer-Einwände 0, Gegenproben eingehalten (IDEEN-01: 35 Aufrufe, IDEEN-02: 1 Start). Es liegen aber nur 2 von 3 Ideen-Runden vor; Messwert 3 ist ohne `I-nnn`-Ruling seit R250 und ohne IDEEN-03. Ein Urteil jetzt wäre Schätzung. Rückfall am Stichtag: ohne IDEEN-03 `zurückgenommen` (Pool bleibt Archiv).
 
-## E-030 · laufend · Zeittests lokal seriell
+## E-030 · angepasst (R319) · Zeittests lokal seriell
 
 - Hypothese: Wenn `perfBudget`-Zeittests lokal nach dem parallelen Testlauf allein laufen, flackern sie nicht mehr unter Mehrfachlast (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) B1).
 - Messgrösse: 0 lokale Flackerfälle in `docs/beobachtungen.md` und Lead-Berichten in 2 Sessions (Ausgang ≥ 5 Fälle in 3 Sessions).
@@ -50,8 +52,9 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Ruling: R249 (3), R250 (Start), R251 (Platz nach Abschluss E-028)
 - Start: 2026-10-05 (Handbuch 1.20, Paket TOOL-E030)
 - Bewertung: Datenpunkt 1 von 2 Sessions ([Retro session-e51712dd](retros/2026-10-06-session-e51712dd.md)): 0 neue Flacker-Einträge seit dem Start, zwei rote CI-Läufe waren fehlende Runner-Reserve, kein lokales Flackern; Lead-Berichte nicht ausgewertet → weiter beobachten
+- Urteil R319 (Coach 2026-10-08): **übernehmen als angepasst**. Gegen Schwelle: Soll 0 lokale Flackerfälle in 2 Sessions; Datenpunkt 1 (e51712dd) 0 Fälle, `docs/beobachtungen.md` kennt seit dem Start keinen Eintrag. Beim Gegenlesen dieser Rotation scheiterte aber `tests/sim/save.test.ts` B6 (`createWorld` Mittel ≤ `perfBudget(5)`) in einem `make check` einmal, im Wiederholungslauf grün (Last unbelegt, Messung im selben Lauf). Schwelle damit knapp verfehlt (1 Fall; Ausgang ≥ 5 in 3 Sessions). Die Lastregel bleibt (Handbuch 1.19, `vite.config.ts`); Restursache ist das Zeitbudget einzelner Tests, das gehört in TOOL-TIMEOUTS/`perfBudget` (R318), nicht in ein weiteres Experiment. Beobachtung in `docs/beobachtungen.md` eingetragen.
 
-## E-029 · vorgeschlagen · Lead-Übergabe bei 200k mit Aufschlüsselung der Steuerung
+## E-029 · ersetzt durch E-042 (R319) · Lead-Übergabe bei 200k mit Aufschlüsselung der Steuerung
 
 - Hypothese: Wenn der Steuerungsanteil je Tätigkeit (Gate, Spec, Plan, Controller, Warten) aufgeschlüsselt und jede Lead-Instanz bei 200k Kontext per Ledger übergibt (R190), dann sinken Lead-Kontext Max und Steuerungsanteil, und die Ursache der zweiten roten Session in Folge wird lesbar (Retro [session-6a98e530](retros/2026-10-05-session-6a98e530.md) E1).
 - Messgrösse: Lead-Kontext Max ≤ 300k und Steuerungsanteil ≤ 55 % (Session-Zeile, `metrics.py --efficiency`; Ausgang 343k, 64,3 %).
@@ -59,6 +62,19 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Rückfall: Zustand wie jetzt (R190 ohne Durchsetzung).
 - Dateien: `tools/studio/metrics.py` (Aufschlüsselung), `.claude/agents/lead-tech.md`
 - Ruling: –
+- Ersetzt: V1 und M1 der Retro [ampel-steuerung](retros/2026-10-08-ampel-steuerung.md), Ruling R319; die Aufschlüsselung liefert M1 (lead-tech), die Übergabe-Regel E-042.
+
+## E-042 · laufend · Lead-Ablösung per Handoff, Statusturns der Leads entfallen
+
+- Hypothese: Wenn ein Lead nach dem Abschlussbericht nicht fortgesetzt, sondern per Handoff durch einen neuen Lead abgelöst wird (V1), und die Leads `active`/`done` nicht mehr melden, weil Hook-Events sie ersetzen (V2), sinken die Neuschreibungen des Lead-Kontexts nach Turn-Ende und die Turn-Zahl der Leads, ohne dass Übergabe oder Dashboard leiden (Retro [ampel-steuerung](retros/2026-10-08-ampel-steuerung.md) B3, V1, V2; ersetzt E-029).
+- Messgrösse: (V1) Lead-Neuschreibungen ≥ 20k nach Turn-Ende je Lead-Instanz ≤ 0,6 (Ausgang 1,2; 91 in 78 Instanzen, 6 Sessions); (V2) alleinstehende `log.py status`-Turns je Lead-Instanz ≤ 1 (Ausgang 3,2). Beide über 3 Sessions mit zusammen ≥ 10 Lead-Starts. Gegenprobe: Starts je Paket höchstens +1 gegenüber Ausgang, Review-Runden im Mittel ≤ 2, Briefing-Rückfragen nicht häufiger, Dashboard zeigt jeden Lead mit Paket (Stichprobe aus `.studio/events.jsonl`). Getrennt von E-037: dort zählen Umsetzer-Instanzen und Bash-Vorgänger.
+- Messbarkeit: Solange M1 (Metrik-Spalte „vorher Turn-Ende“, lead-tech) fehlt, zählen Sessions erst ab dem ersten Metrik-Lauf mit M1; vorher gilt das Wegwerf-Skript der Retro nur als Stichprobe. Spätestens nach 2 Sessions ohne M1 meldet der Coach das als Blocker an L0.
+- Zeitraum: 3 Sessions mit ≥ 10 Lead-Starts, höchstens bis 2026-11-05.
+- Rückfall: Handbuch 1.26 und Lead-Personas vor dieser Änderung (`git show <Commit>~1:docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`); `active`/`done` wieder melden, Regel „Fortsetzen statt neu starten“ wie 1.26.
+- Dateien: `docs/studio/STUDIO.md`, `docs/studio/verbesserung.md`, `.claude/agents/lead-*.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R319
+- Start: 2026-10-08 (Handbuch 1.27, Leads 1.10/1.6/1.8); V2-Vorbedingung geprüft (Dashboard und Modell brauchen `active`/`done` nicht, siehe Retro-Nachtrag und Coach-Bericht)
+- Bewertung: –
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -283,11 +299,60 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/effort.py`, `tools/studio/tests/test_effort.py`
 - Ruling: –
 
-## E-036 · vorgeschlagen · Cache-Write je Instanz gegen Wartezeit ausweisen
+## E-036 · übernommen als Werkzeug (R316 V3, R319) · Cache-Write je Instanz gegen Wartezeit ausweisen
 
 - Hypothese: Der Cache-Write-Anteil (rot, 42,9 %) entsteht überwiegend nach Lücken > 5 min ohne Aufruf; die Auswertung je Instanz bestätigt oder widerlegt das (Retro [session-7db07561-ende](retros/2026-10-07-session-7db07561-ende.md), Ampel).
 - Messgrösse: Anteil der Neuschreibungen > 20k direkt nach einer Lücke > 5 min; Schwelle: ≥ 60 % bestätigt die Hypothese, dann folgt ein eigenes Experiment zur Wartegestaltung; < 30 % widerlegt sie.
 - Zeitraum: eine Auswertung über die letzten 5 Sessions, danach Bewertung.
 - Rückfall: Zusatz in `metrics.py` entfernen; rein lesend, keine Änderung am Ablauf.
 - Dateien: `tools/studio/metrics.py`
+- Ruling: –
+- Urteil R319 (Coach 2026-10-08): **abschliessen**. Die Auswertung ist als Tabelle „Neuschreibungen nach Pause > 5 min“ in `metrics.py --efficiency` Dauerbestandteil (TOOL-AMPEL); die Hypothese ist durch Retro ampel-steuerung B3 für Leads gestützt (91 von 125 Fällen nach Turn-Ende). Kein Slot nötig.
+
+## E-037 · laufend · Lange Bash-Läufe im Hintergrund (Hebel 1)
+
+- Hypothese: Wenn Umsetzer und Leads lange Bash-Läufe im Hintergrund starten und spätestens alle 4 min abfragen, läuft die 5-min-Cache-Frist seltener ab und der Cache-Write-5-min-Anteil sinkt (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). ADR-007 bleibt: Arbeiter-Starts bleiben im Vordergrund.
+- Messgrösse: Cache-Write-5-min-Anteil laut Session-Datei (`metrics.py`, Abschnitt „Effizienz“), Ausgang 29,2 % (Historie) bzw. 21,7 % (8ef9d27f); Schwelle ≤ 20 % im Mittel über 3 Sessions mit Umsetzern, ohne Anstieg der Review-Runden.
+- Zeitraum: 3 Sessions, höchstens 4 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`, `.claude/agents/tech-*.md` (nur nach Ruling)
+- Ruling: R314
+- Start: 2026-10-08, Platz frei durch Rotation R319 (E-022, E-030 abgeschlossen); Handbuch 1.25 gilt seit 2026-10-08, Zählung der 3 Sessions ab Handbuch 1.27
+- Hinweis: Der frühere kombinierte E-037 (Hebel 1 und 5) war doppelt eingetragen; Hebel 5 steht unverändert als E-038.
+
+## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
+
+- Hypothese: Wenn Leads bei Ein-Umsetzer-Paketen auf sonnet laufen oder die Lead-Schicht entfällt, sinken opus- und Steuerungsanteil ohne mehr Nacharbeit (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). Hebel 2–4 erst nach Messung von E-037.
+- Messgrösse: Steuerungsanteil (Ausgang 49,8 % Historie) ≤ 40 % und opus-Anteil (74,1 %) ≤ 60 % über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 2 und Erstabnahme-Quote nicht schlechter.
+- Zeitraum: 3 Sessions mit Ein-Umsetzer-Paketen.
+- Rückfall: Handbuch und Lead-Personas auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`
+- Ruling: R314
+- Start: erst nach Bewertung von E-037 (getrennte Wirkung); frühestens 2026-10-22 (E-027-Stichtag), spätestens beim nächsten freien Platz. Die Regel 1.25 „Ein-Umsetzer-Pakete“ gilt bereits; die Messung beginnt erst mit dem Start. Reihenfolge der Plätze: E-037, E-042, danach E-038 (R319).
+
+## E-039 · vorgeschlagen · Vergleichsart im Perf-Artefakt
+
+- Hypothese: Wenn jede Perf-Ablage im Dateinamen die Vergleichsart und im Kopf die beiden Stände (`aa-` bzw. `ab-<A>-vs-<B>`, Commit-Hashes) nennt und L0 nur Zahlen aus dem Lead-Bericht meldet, wird kein A/A-Lauf mehr als A/B gelesen (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B1).
+- Messgrösse: 0 Fehlzitate von Perf-Werten in Rulings und Nutzermeldungen in den nächsten 3 Release-Läufen (Stichprobe: Ruling-Zahl gegen Gate-Bericht; Ausgang 1 Fall in 1 Lauf). Gegenprobe: Perf-Auswertung bleibt mit denselben Dateien möglich.
+- Zeitraum: die nächsten 3 Release-Läufe.
+- Rückfall: Satz im Handbuch streichen; Namensschema ist rein lesend.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`; Kopfzeile in `tools/render-qa/perf.mjs` nur als späteres Werkzeug-Paket
+- Ruling: –
+
+## E-040 · vorgeschlagen · Bau-Ruckel-Szenario im Perf-Werkzeug
+
+- Hypothese: Wenn `perf.mjs` ein Szenario „n Gebäude im laufenden Spiel bauen“ misst und je Bau die Frames > 25 ms zählt, fällt ein Bau-Ruckeln im Häppchen statt im Release-Lauf auf (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B2; R313 (a)).
+- Messgrösse: Ruckel-Frames je Bau, Schwelle: Kandidat ≤ main + 1 (Ausgang main 0, REL-07 4–6); in den nächsten 3 Optik-Releases 0 Ruckel-Befunde, die erst der Release-Lauf findet. Gegenprobe: `renderMedian`-Messung unverändert (neues Szenario ergänzt, ersetzt nichts).
+- Zeitraum: die nächsten 3 Optik-Releases; Umsetzung als Werkzeug-Paket nach R305, Kosten rund ein Häppchen.
+- Rückfall: Szenario aus `perf.mjs` entfernen (`git revert`).
+- Dateien: `tools/render-qa/perf.mjs`, `docs/studio/STUDIO.md` (Abnahmekriterien Optik-Häppchen)
+- Ruling: –
+
+## E-041 · vorgeschlagen · Fortsetzungspunkt und Messskripte im Repo
+
+- Hypothese: Wenn lange QA-Läufe nach jedem Teil eine Datei `.studio/qa/<id>/stand.md` (erledigt, offen, Fortsetzungspunkt) fortschreiben und Messskripte unter `tools/render-qa/` statt im Scratchpad liegen, übernimmt eine Folgeinstanz ohne Rekonstruktion (Retro [session-8ef9d27f-ende](retros/2026-10-08-session-8ef9d27f-ende.md) B3; ergänzt E-034 um die Lead-Seite).
+- Messgrösse: bei den nächsten 3 Abbrüchen oder Zeitüberschreitungen eines QA-Laufs: 0 wiederholte Teilläufe und 0 Skripte nur im Scratchpad (Ausgang: 1 Abbruch, Seed 14 und Ruckel-Skript betroffen).
+- Zeitraum: die nächsten 3 Abbrüche, höchstens 6 Wochen.
+- Rückfall: Handbuch auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
 - Ruling: –

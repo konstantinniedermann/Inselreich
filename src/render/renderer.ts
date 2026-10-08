@@ -60,6 +60,7 @@ import {
   bodyHull,
   project,
   sortedObjects,
+  WOOD_SLICE_MS,
   spriteBounds,
   type Moving,
   type Pt,
@@ -544,7 +545,7 @@ function drawIsland(
     // 3 Wasser, 4 Wege: unter der Bodenmatrix
     withGround(ctx, cam, () => {
       if (!lod) {
-        drawWaves(ctx, world, range, fx.timeMs, weather, reduce);
+        drawWaves(ctx, world, range, fx.timeMs, weather, reduce, true, cam.zoom);
         renderStats.wavesDrawn++;
       }
       drawRoads(ctx, world, range);
@@ -617,7 +618,7 @@ function drawIsland(
           );
 
     // Sichtbare Objekte in Zeichenreihenfolge (D-09)
-    const items = sortedObjects(world, moving);
+    const items = sortedObjects(world, moving, WOOD_SLICE_MS);
     const left = cam.x,
       top = cam.y,
       right = cam.x + view.w / cam.zoom,

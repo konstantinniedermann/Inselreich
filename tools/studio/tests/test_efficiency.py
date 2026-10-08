@@ -120,7 +120,8 @@ class Fixture(unittest.TestCase):
                 assistant("p1", "claude-haiku-4", out=10),
             ],
         )
-        self.data = efficiency.compute([self.root / "s1.jsonl"])
+        persona_models = {"tech-sim-engineer": "sonnet"}  # Frontmatter-Modell
+        self.data = efficiency.compute([self.root / "s1.jsonl"], persona_models)
 
 
 class ComputeTest(Fixture):

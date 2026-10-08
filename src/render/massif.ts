@@ -24,7 +24,7 @@ export { ROCK_TONES, toneColor, toneStep };
 // Mathematik im Kachelraum: Komponenten, Höhenfeld auf einem Untergitter (SUB Knoten je Kachel), Zerlegung in
 // Teilstücke (Halbkachel-Streifen) und Zellfarben. Keine Projektion, kein Canvas (das macht `rocks.ts`); liest die
 // Welt nur. Höhen in Weltpixeln (Zoom 1), Darstellungswerte, keine Spielwerte.
-// Salze (ART-STIL-02 L6, Block 576–584, Eintrag im zentralen Kopf von groundDecor.ts macht der Release-Merge):
+// Salze (ART-STIL-02 L6, Block 576–584, im zentralen Register von groundDecor.ts eingetragen):
 // 576 Bergsee-Los, 577 Bergsee-Form, 578 Wasserfall-Los, 579 Wasserfall-Form, 580 Höhlen-Los, 581 Höhlen-Form,
 // 582 Steinmännchen-Los, 583 Steinmännchen-Form (alle hier), 584 Farn (trees.ts).
 

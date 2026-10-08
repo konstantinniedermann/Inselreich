@@ -129,6 +129,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
     expect(STAMP_BOX.x1 - STAMP_BOX.x0).toBeGreaterThanOrEqual(ISO_W);
   });
 
+  // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('R5 Solitär ≥ 2 Kacheln vom Wald und ≤ 1 je 3 × 3 (Seeds 1–50), auch nach Roden und Aufforsten', () => {
     /** Prüft R5 am jetzigen Stand und liefert die Stempel. */
     const check = (w: World, label: string): DecorItem[] => {
@@ -229,12 +230,12 @@ describe('Zeichnen, Zoomschwellen, Schatten', () => {
       menhir: 0.75,
       ruin: 0.75,
       palm: 0.5, // L5 D1
-      wreck: 0.25, // L5 E1
+      wreck: 0.5, // L5 E1 (REL-07: erst ab 0,5)
       seaRock: 0.25, // L5 E3
-      islet: 0.25, // L5 E8
+      islet: 0.5, // L5 E8 (REL-07: erst ab 0,5)
     });
     for (const k of ALL_KINDS)
-      for (const zoom of [0.25, 0.5, 0.6, 0.75, 1, 2]) {
+      for (const zoom of [0.125, 0.25, 0.5, 0.6, 0.75, 1, 2]) {
         const f = fakeCtx();
         drawDecorStamp(f.ctx, { x: 0, y: 0, zoom }, item(k), 7);
         const drawn = f.log.events.filter((e) => e.op === 'drawImage').length;

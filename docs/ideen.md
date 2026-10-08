@@ -237,3 +237,53 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Raster: offen
 - Doppelung: keine; M7 deckt Höhenhülle und Signale in der obersten Ebene ab
 - Entscheid: offen
+
+### I-022 · neu · Leertaste pausiert
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Nutzer 2026-10-08 (R323, wörtlich: „Leertaste für Pause/Unpause“)
+- Ist-Stand: Pause liegt heute auf `P` (README „Tastatur und Maus“, Z. 132); die Leertaste ist belegt als „halten + linke Maustaste = Karte verschieben“ und aktiviert auf fokussierten Knöpfen den Knopf (`src/ui/input.ts` Z. 444–449, `hotkeyAction`).
+- Spielerwirkung: „Der Spieler hält das Spiel mit der grössten Taste der Tastatur an und setzt es fort, ohne die Hand von der Maus-Tastatur-Haltung zu lösen.“
+- Grösse: S · Risiko: Tastenkonflikt mit Leertaste-Halten zum Verschieben (Antippen = Pause, Halten + Ziehen = Verschieben müsste unterscheidbar sein, z. B. Pause erst beim Loslassen ohne Mausbewegung) und mit der Knopf-Aktivierung (R121 Punkt 3); `P` bleibt als zweiter Weg; Save, Baseline, Perf unberührt
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Doppelung: keine (Pause per `P` existiert, Leertaste nicht)
+- Entscheid: offen (nächste Ideen-Runde)
+
+### I-023 · neu · Pipette für Gebäude
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Nutzer 2026-10-08 (R323, wörtlich: Pipettenwerkzeug zum Kopieren von Gebäuden); Genre-Mechanik: Bautyp vom Bestand übernehmen
+- Ist-Stand: Nicht vorhanden; das Werkzeug wählt man über Bauleiste oder Buchstabentaste (`src/ui/buildMenu.ts`, `src/ui/input.ts` `hotkeyAction`), Anklicken im Werkzeug „Auswahl“ öffnet nur das Info-Panel (`src/ui/inspect.ts`).
+- Spielerwirkung: „Der Spieler klickt ein Gebäude an (z. B. mit Mittelklick oder Taste) und hat denselben Gebäudetyp sofort als Bauauswahl, statt in Leiste oder Tastenkürzeln zu suchen.“
+- Grösse: S · Risiko: Eingabekonflikt (mittlere Maustaste verschiebt die Karte, README Z. 77; Taste statt Maus wählen); gesperrte Typen (Freischaltung, Rinderfarm ohne Taste) müssen den Grund nennen; Save, Baseline, Perf unberührt
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Doppelung: keine
+- Entscheid: offen (nächste Ideen-Runde)
+
+### I-024 · neu · Direkt als Stufe 2 bauen
+
+- Bereich: Inhalt/Bedienung · Säule: Produktionsketten · Quelle: Nutzer 2026-10-08 (R323, wörtlich: Gebäude bereits in der höheren Stufe bauen)
+- Ist-Stand: Gebäude entstehen immer auf Stufe 1; Ausbau einzeln per Knopf „Ausbauen“ (`src/sim/upgrade.ts` `upgradeBuilding`: Stufe 1 → 2 → 3, Kosten und Gebühr aus `src/sim/defs/levels.ts`, gesperrt bis U3 (Stufe 2) bzw. U5 (Stufe 3), nicht bei Brand; Abriss erstattet die Hälfte).
+- Spielerwirkung: „Der Spieler wählt beim Platzieren «Stufe 2» und zahlt Bau und Ausbau in einem Zug, statt nach dem Bau zurückzukehren und einzeln aufzurüsten.“
+- Grösse: M · Risiko: **berührt Sim-Regeln (nicht entschieden):** Kosten und Gebühr bei Bau (Summe oder Rabatt?), Sperren U3/U5, `build.ts`-Ergebnisse und Controller-Verhalten; Save nur, wenn ein neues Feld nötig ist; Baseline, falls der Controller es nutzt; Balancing-Test; Platzier-Vorschau und Tooltips müssten Kosten beider Stufen zeigen; Alternative ohne Sim-Änderung: UI-Knopf „Bauen und gleich ausbauen“ als zwei Sim-Aktionen
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
+- Verwandt: I-025
+- Entscheid: offen (nächste Ideen-Runde)
+
+### I-025 · neu · Ausbau-Taste
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Nutzer 2026-10-08 (R323, wörtlich: Taste `U` als Shortcut zum Upgraden des markierten Gebäudes)
+- Ist-Stand: Ausbau nur per Knopf „Ausbauen“ im Info-Panel (`src/ui/inspect.ts` `InspectActions.upgrade`, Panel-Abschnitt „Ausbau zu Stufe n“); **`U` ist bereits Schule** (README Z. 136, `hotkeyAction` in `src/ui/input.ts`).
+- Spielerwirkung: „Der Spieler wählt ein Gebäude und baut es mit einem Tastendruck aus, ohne den Knopf im Panel zu suchen.“
+- Grösse: S · Risiko: **Tastenkonflikt `U`/Schule** (Taste müsste neu vergeben oder eine andere Taste gewählt werden, z. B. Strg-freie Alternative; Entscheid an lead-design/L0); Taste wirkt nur bei markiertem Gebäude und muss bei Misserfolg den Grund nennen (`upgradeBuilding` liefert `{ ok, reason }`); Wohnhäuser steigen von selbst auf (kein Ausbau); Save, Baseline, Perf unberührt
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Verwandt: I-024, I-026
+- Entscheid: offen (nächste Ideen-Runde)
+
+### I-026 · neu · Übersichtliches Gebäude-Panel
+
+- Bereich: Bedienung/Grafik · Säule: Bedienung · Quelle: Nutzer 2026-10-08 (R323, wörtlich: Beschrieb beim Anklicken mit Produktionsstatistik, Upgrade usw. auf einen Blick statt unformatiertem, undurchsichtigem Text)
+- Ist-Stand: Panel besteht aus Textzeilen (`addLine`) mit Zustand, Stufe, Auslastung, Produktion, Fortschritt, Unterhalt und Ausbau-Abschnitt (`src/ui/inspect.ts` Z. 205–340, README Z. 265–270); Wohnhaus-Panel hat Symbol-Chips für Bedürfnisse (`needIcons`), Betriebe nicht.
+- Spielerwirkung: „Der Spieler erkennt beim Anklicken eines Betriebs auf einen Blick Zustand, Ausstoss je Minute, Auslastung und den Gewinn des nächsten Ausbaus, gegliedert in Kopf, Kennzahlen und Ausbau-Karte statt in einem Textblock.“
+- Grösse: M · Risiko: Layout (`src/style.css`, Desktop ab 1280 px), Panel-Tests in `tests/ui/`, Browser-Prüfung; keine Sim-Änderung; Abstimmung mit Wunsch-Taste I-025 (Ausbau-Karte zeigt die Taste) und I-015 (Texte)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Verwandt: I-025
+- Entscheid: offen (nächste Ideen-Runde)

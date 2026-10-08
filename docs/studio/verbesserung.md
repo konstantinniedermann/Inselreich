@@ -188,6 +188,10 @@ flowchart LR
    bewertet er gegen die vorab festgelegte Schwelle (`behalten` / `angepasst` / `zurückgenommen`);
    L0 bestätigt per Ruling. Zurückgenommen → Rückfallzustand wiederherstellen, Version erneut
    hochzählen.
+6. **Rotation:** Wartet ein Experiment länger als 2 Sessions auf einen Platz, bewertet der Coach
+   in der nächsten Retro die laufenden Experimente (Ergebnis gegen Schwelle, Urteil übernehmen,
+   verwerfen oder verlängern mit Frist) und schlägt L0 eine Rotation vor. „Wartet auf Platz“ ist
+   kein Dauerzustand; ein Experiment ohne Startdatum nennt den frühesten Start (R319).
 
 **Versionierung:**
 

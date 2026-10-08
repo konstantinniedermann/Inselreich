@@ -106,6 +106,7 @@ describe('M12 E1 Archipel', () => {
     });
   });
 
+  // Timeout: lokal ≤ 0,6 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-E1-17 Seeds 1…200: Rahmen bei Zoom 0,125 passt in 1280 × 800, Übersicht zeigt alle Inseln', () => {
     for (let seed = 1; seed <= 200; seed++) {
       const isl = createWorld(seed).islands;
@@ -126,7 +127,7 @@ describe('M12 E1 Archipel', () => {
       centerOn(c, (r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, VIEW, r);
       expect(visibleIslands(c, VIEW, isl), `seed ${seed}`).toHaveLength(isl.length);
     }
-  });
+  }, 15_000);
 });
 
 describe('M12 E2 Render Fremdinseln', () => {

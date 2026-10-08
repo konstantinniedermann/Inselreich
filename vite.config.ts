@@ -6,6 +6,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
  * Neue Zeittests hier eintragen; `make zeittests` (Teil von `make check`) schlägt sonst fehl.
  */
 export const ZEITTESTS = [
+  'tests/render/bauRuckeln.test.ts',
   'tests/render/renderer.test.ts',
   'tests/render/terrain.test.ts',
   'tests/sim/perf.test.ts',

@@ -4,6 +4,9 @@ import type { World } from '../sim/types';
 import { PALETTE, rgbaOf } from './palette';
 import type { Weather } from './daynight';
 import { CLEAR } from './weather';
+import { SEA_ELEMENT_MIN_ZOOM } from './decorStamps';
+
+export { SEA_ELEMENT_MIN_ZOOM };
 import { SEA_PAD, seaContext, seaKontorBlocked, seaPlan, type SeaContext } from './decor';
 import { coastField, coastValue, fieldWorld, rimWeight, terrainFields } from './terrainField';
 
@@ -187,6 +190,8 @@ export interface FoamPiece {
   thick: boolean;
 }
 export interface FoamRing {
+  /** Art des Objekts: Wrack und Eiland erscheinen erst ab `SEA_ELEMENT_MIN_ZOOM`. */
+  kind: 'wreck' | 'rock' | 'islet';
   /** Mitte (Kachelraum), Fussabdruck-Radius des Objekts und die 3–5 unregelmässigen Bogenstücke (nie ein geschlossener Kreis). */
   x: number;
   y: number;
@@ -254,7 +259,14 @@ export function seaFoam(world: World): SeaFoam {
   if (isl.kind === 'home') {
     const plan = seaPlan(world.seed, isl, seaContext(world));
     const seed = world.seed;
-    const ring = (salt: number, tx: number, ty: number, fp: number, pad: number): void => {
+    const ring = (
+      kind: FoamRing['kind'],
+      salt: number,
+      tx: number,
+      ty: number,
+      fp: number,
+      pad: number,
+    ): void => {
       const hs = (k: number): number => hash2(seed + salt, tx * 64 + k, ty);
       const [dx, dy] = seaward(isl, tx, ty);
       const th = Math.atan2(dy, dx);
@@ -280,12 +292,12 @@ export function seaFoam(world: World): SeaFoam {
           thick: hs(40 + k) < 0.45,
         });
       }
-      out.rings.push({ x: tx + 0.5, y: ty + 0.5, fp, pieces, tx, ty, pad });
+      out.rings.push({ kind, x: tx + 0.5, y: ty + 0.5, fp, pieces, tx, ty, pad });
     };
-    if (plan.wreck) ring(566, plan.wreck.x, plan.wreck.y, FOOT.wreck, SEA_PAD.wreck);
+    if (plan.wreck) ring('wreck', 566, plan.wreck.x, plan.wreck.y, FOOT.wreck, SEA_PAD.wreck);
     for (const r of plan.rocks)
-      ring(567, r.x, r.y, r.needle ? FOOT.needle : FOOT.rock, SEA_PAD.rock);
-    if (plan.islet) ring(568, plan.islet.x, plan.islet.y, FOOT.islet, SEA_PAD.islet);
+      ring('rock', 567, r.x, r.y, r.needle ? FOOT.needle : FOOT.rock, SEA_PAD.rock);
+    if (plan.islet) ring('islet', 568, plan.islet.x, plan.islet.y, FOOT.islet, SEA_PAD.islet);
     for (const a of plan.reefs)
       for (const t of a.tiles) {
         const [dx, dy] = seaward(isl, t.x, t.y);
@@ -351,8 +363,10 @@ function drawSeaFoam(
   core: number,
   widthK: number,
   reduce: boolean,
+  zoom: number,
 ): void {
   const f = seaFoamVisible(world);
+  const near = zoom >= SEA_ELEMENT_MIN_ZOOM;
   if (!f.rings.length && !f.reefs.length) return;
   const inRange = (x: number, y: number, pad: number): boolean =>
     x + pad >= range.x0 &&
@@ -368,6 +382,7 @@ function drawSeaFoam(
     ctx.beginPath();
     let any = false;
     for (const r of f.rings) {
+      if (r.kind !== 'rock' && !near) continue;
       if (!inRange(r.x, r.y, r.fp + 0.3)) continue;
       for (const p of r.pieces) {
         if (p.thick !== thick) continue;
@@ -401,7 +416,7 @@ function drawSeaFoam(
  * Schaumsaum und Wellenstriche auf Wasserkacheln im Bereich x0..x1/y0..y1 (inklusive).
  * Zeichnet im Kachelraum (1 Einheit = 1 Kachel): Aufruf unter der Bodenmatrix (`withGround`).
  * Sturm (Spec 5.2): Amplitude × (1 + w), Schaumbreite × (1 + 1,5 w), Periode × (1 − 0,4 w); `reduce` halbiert
- * die Amplitude (Spec 9.2). `seaElements` false lässt den Schaum an Riff, Wrack, Fels und Eiland (L5) weg (Küstentests).
+ * die Amplitude (Spec 9.2). `seaElements` false lässt den Schaum an Riff, Wrack, Fels und Eiland (L5) weg (Küstentests); `zoom` blendet Wrack- und Eiland-Schaum unter `SEA_ELEMENT_MIN_ZOOM` aus.
  */
 export function drawWaves(
   ctx: CanvasRenderingContext2D,
@@ -411,6 +426,7 @@ export function drawWaves(
   weather: Weather = CLEAR,
   reduce = false,
   seaElements = true,
+  zoom = 1,
 ): void {
   const info = infoFor(world);
   const isl = home(world);
@@ -468,7 +484,7 @@ export function drawWaves(
     ? { a: (FOAM_ALPHA[0] + FOAM_ALPHA[1]) / 2, c: (FOAM_CORE_ALPHA[0] + FOAM_CORE_ALPHA[1]) / 2 }
     : { a: alpha, c: core };
   if (seaElements)
-    drawSeaFoam(ctx, world, { x0, y0, x1, y1 }, phaseT, calm.a, calm.c, widthK, reduce);
+    drawSeaFoam(ctx, world, { x0, y0, x1, y1 }, phaseT, calm.a, calm.c, widthK, reduce, zoom);
 
   // Wellenstriche: foam mit Deckkraft 0,12, nur im tiefen Wasser
   const t = (timeMs / (WAVE_PERIOD_MS * periodK)) * Math.PI * 2;
