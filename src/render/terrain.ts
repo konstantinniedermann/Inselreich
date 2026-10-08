@@ -1501,6 +1501,9 @@ interface TerrainMeta {
 }
 const meta = new WeakMap<HTMLCanvasElement, TerrainMeta>();
 
+/** Kontext-Optionen der Viertel-Kopie: Fernwasser liest sie per `getImageData` zurück (sonst Chrome-Warnung). Nur dort, die Bodenebene bleibt GPU-fähig. */
+export const READBACK_CTX = { willReadFrequently: true } as const;
+
 /** Die Ebene ist fertig gemalt (Meta wird erst nach dem letzten Pixelschritt gesetzt). */
 export const hasTerrainMeta = (layer: HTMLCanvasElement): boolean => meta.has(layer);
 
@@ -1893,7 +1896,7 @@ export function updateTerrainLayer(
       hc.drawImage(layer, px, py, pw, ph, px / 2, py / 2, pw / 2, ph / 2);
     }
     if (m.quarter) {
-      const qc = m.quarter.getContext('2d');
+      const qc = m.quarter.getContext('2d', READBACK_CTX);
       if (qc) {
         qc.imageSmoothingQuality = 'high';
         qc.clearRect(px / 4, py / 4, pw / 4, ph / 4);
@@ -2018,7 +2021,7 @@ export function repaintFarWater(
   st: { dy: number; dh: number; dx?: number; dw?: number },
 ): void {
   const m = meta.get(layer);
-  const ctx = quarter.getContext('2d');
+  const ctx = quarter.getContext('2d', READBACK_CTX);
   if (!m || !ctx || st.dh <= 0) return;
   const e = farCoastOf(layer);
   if (!e) return;
@@ -2072,7 +2075,7 @@ function paintQuarterStrip(
   st: { sy: number; sh: number; dy: number; dh: number },
   repaint = true,
 ): void {
-  const ctx = quarter.getContext('2d');
+  const ctx = quarter.getContext('2d', READBACK_CTX);
   if (!ctx) return;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(half, 0, st.sy, half.width, st.sh, 0, st.dy, quarter.width, st.dh);
