@@ -89,3 +89,7 @@ export const ROUTE_MAX_NODES = 200000;
 export const ROUTE_MAX_TURN = 30;
 /** Höchstzahl Glättungsdurchgänge nach der Abtastung. */
 export const ROUTE_SMOOTH_PASSES = 60;
+/** Mindest-Landabstand in Zellen (8er) auf der Fahrlinie; 2 Zellen = mindestens 1,5 Kacheln zur Landmitte. */
+export const ROUTE_MIN_DIST = 2;
+/** Radius um die Anker (Kacheln), in dem die Fahrlinie näher an Land liegen darf. */
+export const ROUTE_EXIT_RADIUS = 1.5;

@@ -2,6 +2,8 @@
 import {
   ROUTE_CLEAR,
   ROUTE_DEEP,
+  ROUTE_EXIT_RADIUS,
+  ROUTE_MIN_DIST,
   ROUTE_MARGIN,
   ROUTE_MAX_NODES,
   ROUTE_MAX_TURN,
@@ -138,7 +140,7 @@ const cellCost = (g: Grid, i: number): number =>
   1 + ROUTE_SHORE_PENALTY * Math.max(0, ROUTE_DEEP - g.dist[i]!);
 
 /** Dijkstra von Zelle `s` nach `t`; Zellfolge oder `null` (nichts gefunden / Deckel). */
-function dijkstra(g: Grid, s: number, t: number): number[] | null {
+function dijkstra(g: Grid, s: number, t: number, keepOff: boolean): number[] | null {
   const best = new Float64Array(g.w * g.h).fill(Infinity);
   const prev = new Int32Array(g.w * g.h).fill(-1);
   const done = new Uint8Array(g.w * g.h);
@@ -160,6 +162,7 @@ function dijkstra(g: Grid, s: number, t: number): number[] | null {
       if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
       const j = ny * g.w + nx;
       if (done[j] || (g.blocked[j] && j !== t)) continue;
+      if (keepOff && g.dist[j]! < ROUTE_MIN_DIST && !nearEnd(g, j, s, t)) continue;
       if (dx !== 0 && dy !== 0 && (g.blocked[y * g.w + nx] || g.blocked[ny * g.w + x])) continue;
       const c = best[i]! + cellCost(g, j) * (dx !== 0 && dy !== 0 ? DIAG : 1);
       if (c < best[j]!) {
@@ -172,6 +175,13 @@ function dijkstra(g: Grid, s: number, t: number): number[] | null {
   return null;
 }
 
+/** Zelle `j` ist Start/Ziel oder einer ihrer 4er-Nachbarn (dort ist Küstennähe erlaubt). */
+function nearEnd(g: Grid, j: number, s: number, t: number): boolean {
+  const close = (e: number): boolean =>
+    Math.abs((j % g.w) - (e % g.w)) + Math.abs(Math.floor(j / g.w) - Math.floor(e / g.w)) <= 1;
+  return close(s) || close(t);
+}
+
 function unwind(prev: Int32Array, s: number, t: number): number[] {
   const out = [t];
   for (let i = t; i !== s;) {
@@ -181,38 +191,47 @@ function unwind(prev: Int32Array, s: number, t: number): number[] {
   return out.reverse();
 }
 
+const nearAny = (p: Pt, ends: readonly Pt[]): boolean =>
+  ends.some((e) => Math.hypot(p.x - e.x, p.y - e.y) <= ROUTE_EXIT_RADIUS);
+
 const cellAt = (g: Grid, p: Pt): number => {
   const x = Math.floor(p.x) - g.x0;
   const y = Math.floor(p.y) - g.y0;
   return x < 0 || y < 0 || x >= g.w || y >= g.h ? -1 : y * g.w + x;
 };
 
-const isWater = (g: Grid, p: Pt): boolean => {
+/** Wasser und, ausser nahe den Ankern, mindestens `ROUTE_MIN_DIST` Zellen Landabstand. */
+const isClear = (g: Grid, p: Pt, ends: readonly Pt[]): boolean => {
   const c = cellAt(g, p);
-  return c < 0 || !g.blocked[c];
+  return c < 0 || (!g.blocked[c] && (g.dist[c]! >= ROUTE_MIN_DIST || nearAny(p, ends)));
 };
 
 /** Sichtlinie frei, mit Landabstand mindestens `need` (Zellen ausserhalb des Rasters zählen als frei). */
-function sees(g: Grid, a: Pt, b: Pt, need: number): boolean {
+function sees(g: Grid, a: Pt, b: Pt, need: number, ends: readonly Pt[]): boolean {
   const len = Math.hypot(b.x - a.x, b.y - a.y);
   const n = Math.max(1, Math.ceil(len / 0.25));
   for (let k = 0; k <= n; k++) {
     const p = { x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n };
     const c = cellAt(g, p);
-    if (c >= 0 && (g.blocked[c] || g.dist[c]! < need)) return false;
+    if (c < 0) continue;
+    if (g.blocked[c]) return false;
+    if (g.dist[c]! < need && !nearAny(p, ends)) return false;
   }
   return true;
 }
 
-function thin(g: Grid, pts: readonly Pt[]): Pt[] {
+function thin(g: Grid, pts: readonly Pt[], ends: readonly Pt[]): Pt[] {
   const distAt = (p: Pt): number => g.dist[cellAt(g, p)]!;
   const out = [pts[0]!];
   let i = 0;
   while (i < pts.length - 1) {
     let j = pts.length - 1;
     for (; j > i + 1; j--) {
-      const need = Math.min(ROUTE_CLEAR, distAt(pts[i]!), distAt(pts[j]!));
-      if (sees(g, pts[i]!, pts[j]!, need)) break;
+      const need = Math.max(
+        ROUTE_MIN_DIST,
+        Math.min(ROUTE_CLEAR, distAt(pts[i]!), distAt(pts[j]!)),
+      );
+      if (sees(g, pts[i]!, pts[j]!, need, ends)) break;
     }
     out.push(pts[j]!);
     i = j;
@@ -266,22 +285,22 @@ function resample(pts: readonly Pt[]): Pt[] {
   return out;
 }
 
-/** Grösster Richtungswechsel zwischen zwei Schritten in Grad. */
-function maxTurn(pts: readonly Pt[]): number {
-  let worst = 0;
-  for (let i = 2; i < pts.length; i++) {
-    const h1 = Math.atan2(pts[i - 1]!.y - pts[i - 2]!.y, pts[i - 1]!.x - pts[i - 2]!.x);
-    const h2 = Math.atan2(pts[i]!.y - pts[i - 1]!.y, pts[i]!.x - pts[i - 1]!.x);
-    const d = Math.abs(h2 - h1);
-    worst = Math.max(worst, ((d > Math.PI ? 2 * Math.PI - d : d) * 180) / Math.PI);
-  }
-  return worst;
+/** Richtungswechsel in Grad am Punkt `i` (1 ≤ i < Länge − 1). */
+function turnAt(pts: readonly Pt[], i: number): number {
+  const h1 = Math.atan2(pts[i]!.y - pts[i - 1]!.y, pts[i]!.x - pts[i - 1]!.x);
+  const h2 = Math.atan2(pts[i + 1]!.y - pts[i]!.y, pts[i + 1]!.x - pts[i]!.x);
+  const d = Math.abs(h2 - h1);
+  return ((d > Math.PI ? 2 * Math.PI - d : d) * 180) / Math.PI;
 }
 
-/** Ein Glättungsdurchgang (1-2-1), Start und Ende bleiben fest. */
-function smoothOnce(pts: readonly Pt[]): Pt[] {
+/** Ein Glättungsdurchgang (1-2-1) nur dort, wo der Richtungswechsel zu gross ist; Enden bleiben fest. */
+function smoothSharp(pts: readonly Pt[]): Pt[] | null {
+  const sharp = new Set<number>();
+  for (let i = 1; i < pts.length - 1; i++)
+    if (turnAt(pts, i) > ROUTE_MAX_TURN) for (let k = i - 1; k <= i + 1; k++) sharp.add(k);
+  if (sharp.size === 0) return null;
   return pts.map((p, i) =>
-    i === 0 || i === pts.length - 1
+    !sharp.has(i) || i === 0 || i === pts.length - 1
       ? p
       : {
           x: 0.25 * pts[i - 1]!.x + 0.5 * p.x + 0.25 * pts[i + 1]!.x,
@@ -290,12 +309,12 @@ function smoothOnce(pts: readonly Pt[]): Pt[] {
   );
 }
 
-/** Glättet, bis der Richtungswechsel passt; bricht ab, bevor eine Kachel Land berührt wird. */
-function relax(g: Grid, pts: Pt[]): Pt[] {
+/** Glättet scharfe Stellen, bis der Richtungswechsel passt; bricht ab, bevor der Küstenabstand fällt. */
+function relax(g: Grid, pts: Pt[], ends: readonly Pt[]): Pt[] {
   let cur = pts;
-  for (let k = 0; k < ROUTE_SMOOTH_PASSES && maxTurn(cur) > ROUTE_MAX_TURN; k++) {
-    const next = smoothOnce(cur);
-    if (!next.every((p) => isWater(g, p))) break;
+  for (let k = 0; k < ROUTE_SMOOTH_PASSES; k++) {
+    const next = smoothSharp(cur);
+    if (next === null || !next.every((p) => isClear(g, p, ends))) break;
     cur = next;
   }
   return cur;
@@ -306,7 +325,9 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   const to = anchorOf(islands[b]!);
   const straight = [from, to];
   const g = buildGrid(islands);
-  const cells = dijkstra(g, cellAt(g, from), cellAt(g, to));
+  const ends = [from, to];
+  const [s, t] = [cellAt(g, from), cellAt(g, to)];
+  const cells = dijkstra(g, s, t, true) ?? dijkstra(g, s, t, false);
   if (cells === null) return straight;
   const centers = cells.map((c) => ({
     x: g.x0 + (c % g.w) + 0.5,
@@ -314,10 +335,10 @@ function compute(islands: readonly Island[], a: number, b: number): Pt[] {
   }));
   centers[0] = from;
   centers[centers.length - 1] = to;
-  const thinned = thin(g, centers);
+  const thinned = thin(g, centers, ends);
   for (const candidate of [round(thinned), thinned, centers]) {
     const sampled = resample(candidate);
-    if (sampled.every((p) => isWater(g, p))) return relax(g, sampled);
+    if (sampled.every((p) => isClear(g, p, ends))) return relax(g, sampled, ends);
   }
   return straight;
 }

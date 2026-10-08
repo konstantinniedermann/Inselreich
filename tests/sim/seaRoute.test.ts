@@ -159,4 +159,21 @@ describe('seaRoute', () => {
       }
     }
   });
+
+  it('Küstenabstand: ausser nahe den Ankern mindestens 1,5 Kacheln zu jeder Landkachelmitte', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const w = seaWorld(seed);
+      for (const [a, b] of pairs(w)) {
+        const r = seaRoute(w.islands, a, b);
+        const ends = [r[0]!, r[r.length - 1]!];
+        for (const p of r) {
+          if (ends.some((e) => Math.hypot(p.x - e.x, p.y - e.y) <= 1.5)) continue;
+          expect(
+            landDist(w.islands, p),
+            `seed ${seed} ${a}-${b} ${p.x},${p.y}`,
+          ).toBeGreaterThanOrEqual(1.5);
+        }
+      }
+    }
+  });
 });
