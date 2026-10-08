@@ -2922,3 +2922,7 @@ Einträge per `git worktree prune`; danach lokale Branches, die in `main` gemerg
 Irrtum: gering; gelöschte gemergte Branches sind über `main` und Reflog wiederherstellbar.
 
 Entscheider: L0 · Anlass: Nutzer „räum auf" · ADR: —
+
+Nachtrag R331: CLEANUP-WT entfernte 23 Worktrees und 96 gemergte Branches. `int/rel-07` bleibt: `-d` lehnt wegen des
+veralteten Upstreams ab, obwohl die Branch vollständig in `main` steckt; `-D` sperrt der Guard (§6) und wird nicht
+umgangen. Erledigt sich mit dem Löschen von `origin/int/rel-07` (eigenes Ruling, Remote).
