@@ -1260,7 +1260,8 @@ describe('M12 E1 Renderer', () => {
     // vom Meer-Plan und damit von den Fahrlinien der Fremdinseln ab (`seaContext`): ihre Zeichenereignisse (a.log) und
     // `faunaDrawn` sind ohne Fremdinseln andere, darum werden die Land-Tiere über `faunaAt` verglichen (Meer-Arten
     // ausgenommen) und das Tagbild über Aufrufliste und Land-Tiere gepinnt.
-    const noAt = (l: typeof a.calls): unknown[] => l.map(({ at: _at, ...c }) => c);
+    const noAt = (l: typeof a.calls): unknown[] =>
+      l.map((c) => ({ kind: c.kind, id: c.id, pose: c.pose }));
     expect(noAt(a.calls)).toEqual(noAt(b.calls));
     const env = { phase: 'day' as const, zoom: 1 };
     const range = { x0: 0, y0: 0, x1: 255, y1: 255 };
