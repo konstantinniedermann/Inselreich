@@ -1,7 +1,7 @@
 import { generateTerrain } from '../sim/mapgen';
 import { hash2, valueNoise } from '../sim/noise';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
-import { seaRoute } from '../sim/seaRoute';
+import { seaLanes } from '../sim/islands';
 import type { Island, World } from '../sim/types';
 import { LIGHT, rotNoise } from './light';
 import { meadowWarmth } from './groundDecor';
@@ -890,7 +890,7 @@ export interface KontorRect {
 const seaContexts = new WeakMap<World, { sig: string; ctx: SeaContext }>();
 
 /**
- * Seekontext der Heimat (rein lesend): `seaRoute` (Wasserroute) mit Heimat-Index in Heimat-Kacheln (minus `ox`/`oy`), Anker, Kontore. Je
+ * Seekontext der Heimat (rein lesend): `seaLanes` mit Heimat-Index in Heimat-Kacheln (minus `ox`/`oy`), Anker, Kontore. Je
  * Welt einmal gehalten (WeakMap, fällt mit der Welt weg); neu gebildet nur, wenn sich die Kontorliste ändert (Inseln sind ab
  * Weltbau fest).
  */
@@ -913,11 +913,10 @@ export function seaContext(world: World): SeaContext {
   const c = seaContexts.get(world);
   if (c && c.sig === sig) return c.ctx;
   const lanes: Pos[][] = [];
-  for (let o = 0; o < world.islands.length; o++) {
-    if (o === hi) continue;
-    const pts = seaRoute(world.islands, Math.min(hi, o), Math.max(hi, o));
-    const dir = hi < o ? pts : [...pts].reverse();
-    lanes.push(dir.map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
+  for (const l of seaLanes(world.islands)) {
+    if (l.a !== hi && l.b !== hi) continue;
+    const pts = l.a === hi ? l.points : [...l.points].reverse();
+    lanes.push(pts.map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
   }
   const ctx: SeaContext = {
     lanes,
