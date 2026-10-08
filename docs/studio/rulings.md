@@ -3255,3 +3255,14 @@ gemessen — Rest bleibt Beobachtung. Ist rund 139 von 170 Tools, 1 Hintergrund-
 Merge-Stand grün (R357). Danach Signal an SEE-F1 für T3.
 
 Entscheider: L0 · Anlass: Bericht ART-WALD-RAUTEN · ADR: —
+
+## R361 · 2026-10-08 · Gate Merge TOOL-E046-SESSION OK; hängende Alt-Shell beendet
+
+Ruling: **OK** für `tool/e046-session` @ 2b56794. Review BEDENKEN (hoch: Sessionbeginn traf die Pseudo-Session `ci`,
+Minuten wären über Tage summiert worden) in der Fix-Runde behoben, mit Test; Studio-Tests 468 grün, ruff sauber
+(`uvx ruff`); Echtlauf Session 0 min, Monat 918 rot, Konto 1182 gelb. CI-Laufzeit zerlegt: Vitest 62 → 225 s bei 125 →
+176 Dateien (×3,6 gegen ×1,4), Rest klein — Beobachtung eingetragen, Ursache je Datei offen (verbose-Lauf). Merge seriell
+nach ART-WALD-RAUTEN. Nebenbei: Eine seit 6 h hängende Shell (`cat` auf stdin) einer früheren Arbeiter-Instanz im
+gelöschten Worktree `.worktrees/tasten` per PID beendet (0 % CPU, kein Lastverursacher, keine Daten).
+
+Entscheider: L0 · Anlass: Fix-Runde TOOL-E046-SESSION · ADR: —
