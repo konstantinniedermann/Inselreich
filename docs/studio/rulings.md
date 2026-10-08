@@ -3304,3 +3304,15 @@ Push-Gate bei ruhiger Last geprüft; schlägt es dort an, Trivial-Fix wie R347 n
 seriell: zuerst FIX-RAUTEN-ZEIT, dann TOOL-ZEITRESERVE-META (R362), je mit `make check` am Merge-Stand.
 
 Entscheider: L0 · Anlass: Bericht FIX-RAUTEN-ZEIT · ADR: —
+
+## R365 · 2026-10-08 · REL-09 = Welle 1; Welle 2 vorbereiten, Smoke-Skript vor dem Release-Check
+
+Ruling: FIX-RAUTEN-ZEIT (616dbc5) und TOOL-ZEITRESERVE-META (0f46b13) sind in main, `make check` und
+`check-ci-perf` grün, `zeitreserve` 0 ohne Reserve auch in der Runner-Schätzung. **REL-09** umfasst SEE-F2-UX,
+ART-WALD-RAUTEN (+ FIX-RAUTEN-ZEIT) und SEE-F1-FAHRLINIE (läuft, T3); Welle 2 geht in REL-10. Jetzt parallel:
+(1) **TOOL-SMOKE** (lead-art, 40 Tools, R353 P3): festes `tools/render-qa/smoke.mjs` für den Release-Check inkl.
+Menü-Schritt bei 1280×720, vor dem Release-Check REL-09; (2) Pläne **UI-PANEL-AUFRAEUMEN** (lead-tech, 25 Tools) und
+**ART-L8-SELTEN** (lead-art, 25 Tools), Umsetzung nach dem Gate; ART-L8-SELTEN setzt erst nach dem Merge von SEE-F1
+um (`decor.ts`).
+
+Entscheider: L0 · Anlass: Merges REL-09 · ADR: —
