@@ -3221,3 +3221,14 @@ haben Vorrang. Der Nutzer hatte nach der Rechnerlast gefragt. Kandidat für eine
 `make check`) für die nächste Retro.
 
 Entscheider: L0 · Anlass: Nutzerfrage Rechnerlast · ADR: —
+
+## R358 · 2026-10-08 · SEE-F1-FAHRLINIE: Mehrbedarf +60 nachträglich frei; Überzug an die Retro
+
+Ruling: Stand `fix/see-f1-fahrlinie` @ cdda26f (T0–T2, T4 fertig, Goldwerte B5 belegt, Save v9 und `balance.test.ts`
+ohne Diff). Ist rund 174 Tools gegen 120 frei (+45 %), gemeldet erst nach dem Überzug. Mehrbedarf **+60** für T3,
+erneuten Browserblick und Final-Review `opus` nachträglich frei (Gesamt 180), weil das Paket fast fertig ist und ein
+Abbruch teurer wäre. Ursachen für die Retro: Playtest 30 Tools und drei T1-Starts; das Briefing an diese Instanz nannte
+die Mehrbedarfsmeldung nicht (L0). T3 startet nach dem Merge von ART-WALD-RAUTEN, die Inaktivität der Instanz bis dahin
+ist gewollt (Handoff `.studio/handoffs/2026-10-08-lead-tech-tech-see-f1.md`), keine Ad-hoc-Retro.
+
+Entscheider: L0 · Anlass: Zwischenbericht SEE-F1 · ADR: —
