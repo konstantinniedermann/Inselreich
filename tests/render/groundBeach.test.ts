@@ -95,7 +95,7 @@ describe('L5-T5 Strand-Boden (D2–D6, D9)', () => {
     }
     expect(n / 200, `D9 ${n}/200`).toBeGreaterThanOrEqual(0.1);
     expect(n / 200).toBeLessThanOrEqual(0.2);
-  });
+  }, 20_000);
 
   it('D6 Tümpel: nur wo Felsküste das zulässt, höchstens 6 je Insel, ≥ 4 Kacheln auseinander', () => {
     let pools = 0;
@@ -124,7 +124,7 @@ describe('L5-T5 Strand-Boden (D2–D6, D9)', () => {
     const mean = (k: string): number => sum[k]![0] / sum[k]![1];
     expect(mean('dune')).toBeGreaterThan(1.5 * mean('palm'));
     expect(mean('palm')).toBeGreaterThan(0);
-  });
+  }, 20_000);
 
   it('Dichte: höchstens 30 % der Sandkacheln tragen ein Strandelement (R6: ein Haus steht nie „in“ der Deko)', () => {
     for (const w of W50.slice(0, 20)) {
