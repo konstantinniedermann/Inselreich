@@ -4,9 +4,18 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-08 (Session 8ef9d27f, kurze Session: REL-07 Gate ZURÜCK, Fix-Runde offen)
+Stand: 2026-10-08 (Session 191cc1e4 / Entwurf lead-production: REL-07 live, CI grün nach 81befc2)
 
 ## Release-Notizen
+
+**REL-07 „Lebendige Insel" (live @ d7a65a3, R327; CI grün nach 81befc2, R328)**
+
+- **Neu:** Küste mit Riffen, Schaum und Wrack (L5, Wrack und Felseiland erst ab Zoom 0,5); Entdecken im Gebirge: Bergsee,
+  Wasserfall, Höhle, Steinmännchen, Farn auf Lichtungen (L6); Tiere in Wald, Gebirge, Küste und Meer, dazu Delfine (L7,
+  Mouse-over zeigt Tiere); Wald-Feinschliff WALD-02 (Baumgruppen, Fichten und Pinien, Waldkern, lichte Ränder, Waldboden
+  nur unter Bäumen). Bauen im Wald baut den Wald in kleinen Scheiben neu auf, der alte Wald bleibt dabei stehen.
+- **Bitte testen:** Wirkt die Insel lebendiger? Stockt das Bauen im Wald (bekannt: Seed 7, bis 6 Frames à 33 ms)?
+  Lädt ein neues Spiel zu lange (bekannt: Seed 14 Kaltstart 22–24 s gegen 11–15 s)?
 
 **REL-06 „Gewachsene Insel" (live @ 464d490, R301) — ART-STIL-02 Release A**
 
@@ -33,21 +42,20 @@ Stand: 2026-10-08 (Session 8ef9d27f, kurze Session: REL-07 Gate ZURÜCK, Fix-Run
 **REL-01…REL-03 (live)** — Licht, Wiese, Dünen, Anbinden-Knopf, Vorberge, Licht für Schiff/Figuren, hörbare
 Wirtschaft. **Bitte testen:** Gesamtbild, Dünen, Mangel-Ton.
 
-## Fortsetzung beim nächsten Start (Session 8ef9d27f, R313)
+## Fortsetzung beim nächsten Start
 
-Nutzer-Auftrag „Lebendige Insel" (R280–R305) läuft weiter; Nutzer testet nur in der Produktion (R281), Prüfungen
-gebündelt (R282). **Nur Angefangenes abschliessen (R305)**, keine neuen Pakete ohne Nutzer-Auftrag.
+Nutzer-Auftrag „Lebendige Insel" (R280–R305): REL-07 ist live; FIX-REL07, Integrator, Gate und Push sind erledigt.
+Keine neuen Pakete ohne Nutzer-Auftrag (R305).
 
-1. **FIX-REL07** (R313): Release-Lauf B ergab Gate ZURÜCK. Frische lead-art-Instanz (Render-Engineer) auf
-   `int/rel-07` @ 3567348 (`.worktrees/rel07-aufloesung`): (a) Bau-Ruckeln (`iso.ts:180-250`, Neuaufbau
-   `sortedObjects` je Bau) + Kaltstart Seed 14; (b) Wrack/E8 erst ab Zoom ≥ 0,5; (c) arc42 + Salz-Register;
-   (d) Perf neu gegen main (Annahme bis +1,5 ms laut R313). Belege: `.studio/qa/rel-07b/` (Ruckel-Messung `hitch.mjs`
-   lag im Scratchpad der QA — in `.studio/qa/rel-07b/` sichern lassen), Befunde
-   `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md` (B1–B15).
-2. Danach Integrator: `int/rel-07` erneut in `rel/rel-07`; lead-qa prüft nur Ruckeln, Perf, K-Proben blind; Gate, Push.
-3. Rater-Bedenken und Befunde ausserhalb Scope (B1–B15 ohne B4/B5/B7/B8) beim Release in `docs/beobachtungen.md`.
-4. studio-coach setzt E-039 und E-041 als Handbuch-Sätze um (R315); E-040 wartet (R305).
-5. Nicht gestartet (R305): L8 Seltenheit, Folgepakete aus BEOB-AUSW-01 (Board), SEE-F1/F2, H-TRAEGER-TEMPO.
+1. **PERF-L57 „Zeichenkosten L5–L7 senken"** (Board `open`, lead-art): Bau Seed 7 main ± 1 Ruckel-Frame, Kaltstart
+   Seed 14 nahe main. Belege `.studio/qa/fix-rel07/`, `.studio/qa/rel-07c/`. Start nach R305 mit Nutzer-Auftrag oder als
+   Abschluss des Auftrags „Lebendige Insel". Vorher Messskripte nach `tools/render-qa/` (R315, beobachtungen.md).
+2. Nutzerwünsche **I-022…I-026** (Leertaste Pause, Pipette, Direkt Stufe 2 bauen, Taste `U`, Gebäude-Panel) liegen im
+   Ideen-Pool (R323) und warten auf die nächste Ideen-Runde. Achtung Tastenkonflikte Leertaste und `U` mit der
+   bestehenden Belegung.
+3. studio-coach: E-039 und E-041 als Handbuch-Sätze (R315), falls noch offen; E-040 wartet (R305).
+4. Retro dieser Session (Kollision zwei L0, CI rot, Budget-Überschreitung FIX-REL07): nennt die Retro selbst, L0 trägt nach.
+5. Befunde offen in `docs/beobachtungen.md` (Abschnitte 2026-10-08), u. a. Zeitreserve `groundBeach.test.ts`, alte Worktrees.
 
 ## Aktuelles Projekt und Phase
 
@@ -101,7 +109,7 @@ gebündelt (R282). **Nur Angefangenes abschliessen (R305)**, keine neuen Pakete 
 
 ## Offene Entscheide
 
-- Nutzer: Test REL-01…REL-05 und E1 (oben). Warteschlange leer.
+- Nutzer: keine offenen Entscheide; Testwünsche stehen unter „Bitte testen" (REL-07 oben). Warteschlange leer.
 - L0: E5/E6 planen oder M12 abschliessen; Reihenfolge der drei Folgepakete. Retro-Vorschläge entschieden (R278).
 - Experiment-Plätze: E-022, E-027, E-030 belegt. Wartend: E-029 (erster Nachrücker), E-025, E-023, E-019, E-024,
   E-018, E-020, E-012, E-006.

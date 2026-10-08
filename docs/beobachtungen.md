@@ -435,3 +435,48 @@ RENDER-LOOK-01 erst danach.
   mit Stufen-/Rautenkanten (Seed 2, Zoom 0,5); isolierte Riff-Schaumbögen wirken wie Möwen; heller Gebirgs-Fussring
   folgt Rautendiagonalen (L2); kleine Tiere ohne Hinweis kaum benennbar, Hütten-Tür. Einschätzung: niedrig, nicht
   blockierend; Kandidaten für eine Art-Feinrunde. Ursprung: lead-qa, Release-Lauf B.
+
+### 2026-10-08 · Render · Befunde ausserhalb Scope aus REL-07 Lauf B (R327)
+
+Quelle: `.studio/handoffs/2026-10-08-l0-lead-qa-rel07-befunde.md`. B3/B5 erledigt, B4/B7/B8 per R313 angenommen,
+B10–B13 stehen oben, B9 ist oben als erledigt markiert, B15 ohne Aktion.
+
+- 2026-10-08 · Fauna-Anker `src/render/fauna.ts:624-672` (B1) · Anker werden einmal je Welt aus dem Zustand beim ersten
+  Aufruf gebildet (inkl. Gebäudeprüfung); nach neuem Weg plus Speichern/Laden liegen sie in 6/6 Seeds anders. Nur
+  Darstellung, nicht Sim. Einschätzung: niedrig; Orte nur aus statischem Gelände, Bebauung über `alive` filtern.
+  Ursprung: lead-qa, Release-Lauf B.
+- 2026-10-08 · `tests/render/renderer.test.ts:1240` (B2) · AK-E1-10 prüft nur noch Nacht; das Tagbild mit Fauna und
+  Delfinen ist ungepinnt. Einschätzung: niedrig; Pin für Tag nachziehen oder Begründung als Ruling. Ursprung: lead-qa.
+- 2026-10-08 · `src/render/fauna.ts` (B6) · Toter Code (`fallSparks`/`drawFallSparks`/`FALL_SPARK_MS` nur in Tests,
+  Kopfkommentar `:38-39` veraltet); doppelte `sightFree`-/Höhenabfrage (`fauna.ts:326-363` und `massif.ts`); `seaBlocked`
+  je Tier und Frame über alle Gebäude (`:1101`). Einschätzung: niedrig; Aufräumen in einem Folgehäppchen. Ursprung: lead-qa.
+- 2026-10-08 · `.studio/qa/rel-07b/partA` (B14) · A/A-Läufe (`perf-nah-b`, `perf-fern-b`: A = B = Kandidat) sind nur
+  Rauschreferenz (+0,1 ms), kein Vergleich gegen main; der Zwischenstand der Vorinstanz nannte sie „A/B gegen main“.
+  Einschätzung: niedrig; Beschriftung beachten. Ursprung: lead-qa.
+
+### 2026-10-08 · Render · Kandidaten aus der REL-07-Nachprüfung (R327)
+
+Quelle: `.studio/qa/rel-07c/stand.md`, Handoff `.studio/handoffs/2026-10-08-lead-qa-lead-qa.md`.
+
+- 2026-10-08 · Meeresfelsen bei Zoom 0,5 (Blindprobe `blind-c/`) · wirken wie Boote („Sandbank, vielleicht Boot“).
+  Einschätzung: niedrig; Kontrast/Form des Felseilands prüfen. Ursprung: lead-qa, Nachprüfung.
+- 2026-10-08 · Schaumflecken ohne Objekt bei Zoom 0,25 · wirken rasterartig. Einschätzung: niedrig; mit B11
+  (Schaum an Riff/Fels binden) zusammen angehen. Ursprung: lead-qa, Nachprüfung.
+- 2026-10-08 · Waldaufbau nach einem Bau (`altwald.mjs`, Seeds 7 und 14) · das neue Haus steckt in den Aufbau-Frames
+  (ca. 0,13 s) bis auf die Dachspitze in alten Baumkronen und wird erst im Abschluss-Frame frei. Einschätzung: niedrig,
+  kurz; bei PERF-L57 mitprüfen. Ursprung: lead-qa, Nachprüfung.
+- 2026-10-08 · Messskripte (`hitch*.mjs`, `altwald.mjs`, `proben.mjs`, `perf-lauf.sh` in `.studio/qa/rel-07c/`,
+  `rel-07b/`, `fix-rel07/`) · gehören nach `tools/render-qa/` (R315), sonst gehen sie mit dem Scratchpad verloren.
+  Einschätzung: mittel, vor PERF-L57. Ursprung: lead-qa.
+
+### 2026-10-08 · Tests · Zeitreserve-Warnungen `groundBeach.test.ts` D9 und D5
+
+- 2026-10-08 · `tests/render/groundBeach.test.ts` · D9 (1250 ms) und D5 (1034 ms) melden Zeitreserve-Warnungen
+  (`make zeitreserve`). Einschätzung: niedrig; Kandidat für hergeleitete Timeouts nach dem Muster R318/R322/R328,
+  bevor CI sie rot färbt. Ursprung: Nachlauf REL-07 (R328).
+
+### 2026-10-08 · Studio · Alte Worktrees unter `.worktrees/`
+
+- 2026-10-08 · `.worktrees/` (`git worktree list`, 25 Einträge) · über 20 Worktrees bereits gemergter Pakete liegen
+  noch da. Einschätzung: niedrig, Platz und Verwechslungsgefahr (vgl. R324); Aufräumen braucht vorher je Worktree eine
+  Prüfung auf ungesicherte Änderungen (`git status`, unmerged Commits). Ursprung: Nachlauf REL-07, lead-production.
