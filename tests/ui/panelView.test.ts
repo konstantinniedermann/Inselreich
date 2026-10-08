@@ -26,13 +26,7 @@ import { LEVELS } from '../../src/sim/defs/levels';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { stateInfo } from '../../src/ui/texts';
 import { perMinute, signedNum } from '../../src/ui/time';
-import type {
-  Building,
-  BuildingDefId,
-  BuildingState,
-  Tier,
-  World,
-} from '../../src/sim/types';
+import type { Building, BuildingDefId, BuildingState, Tier, World } from '../../src/sim/types';
 import { setHouse, uxWorld } from './worlds';
 
 /** Betrieb roh einsetzen (ohne Kachel); die Helfer lesen nur Gebäude und Welt. */
@@ -144,36 +138,20 @@ describe('AK-PU-04 Pips', () => {
 describe('AK-PU-05 supplyChip', () => {
   it('versorgt, unversorgt, kein Haus', () => {
     const { w, house, fisher } = uxWorld();
-    const sup = isSupplied(w, house);
-    const chip = supplyChip(w, house)!;
-    expect(chip.tone).toBe(sup ? 'ok' : 'bad');
-    house.house!.supplied = true;
+    expect(isSupplied(w, house)).toBe(true);
+    expect(supplyChip(w, house)).toEqual({
+      text: 'Versorgt',
+      tone: 'ok',
+      label: 'Versorgung: ✓ im Radius',
+    });
     const far = put(w, 'house', { x: 0, y: 0, house: { ...house.house! } });
+    expect(isSupplied(w, far)).toBe(false);
+    expect(supplyChip(w, far)).toEqual({
+      text: 'Nicht versorgt',
+      tone: 'bad',
+      label: 'Versorgung: ✗ ausserhalb von Kontor/Markt',
+    });
     expect(supplyChip(w, fisher)).toBeNull();
-    for (const h of [house, far]) {
-      const c = supplyChip(w, h)!;
-      if (isSupplied(w, h))
-        expect(c).toEqual({
-          text: 'Versorgt',
-          tone: 'ok',
-          label: 'Versorgung: ✓ im Radius',
-        });
-      else
-        expect(c).toEqual({
-          text: 'Nicht versorgt',
-          tone: 'bad',
-          label: 'Versorgung: ✗ ausserhalb von Kontor/Markt',
-        });
-    }
-  });
-  it('beide Fälle kommen vor', () => {
-    const { w, house } = uxWorld();
-    const seen = new Set<string>();
-    seen.add(supplyChip(w, house)!.text);
-    const other = { ...house, x: 0, y: 0, house: { ...house.house! } };
-    w.buildings[999] = { ...other, id: 999 };
-    seen.add(supplyChip(w, w.buildings[999]!)!.text);
-    expect(seen.size).toBeGreaterThanOrEqual(1);
   });
 });
 
