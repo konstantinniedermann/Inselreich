@@ -442,8 +442,9 @@ def _summary(
         "umsetzer": share["Umsetzer"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
-        "persona_opus": split["vor_guard"]["abweichend"]
-        + split["ab_guard"]["abweichend"],
+        "persona_opus": split["ab_guard"][
+            "abweichend"
+        ],  # Starts vor dem Guard: nur Tabelle
         "persona_split": split,
         "roles": _roles(instances),
         "top_reads": ranked,

@@ -85,6 +85,20 @@ class AmpelParserTest(unittest.TestCase):
         self.assertEqual(parsed["red"], {"umsetzer", "cache_write_5m", "opus"})
         self.assertGreater(parsed["t"], 1_700_000_000)
 
+    def test_measured_agents_beat_aufwand_events(self):
+        text = (
+            "- erzeugt: 2026-10-08T09:02:04+02:00\n"
+            "- Sessions: 1, Agenten: 50, Delegationen: 1\n"
+            "- Datenbasis: 1 Session(s), 3 Agenten, 153 Aufrufe.\n"
+            "- ROT: Umsetzeranteil: 0.0 % (x)\n"
+        )
+        parsed = effort.parse_ampel_session("S-a", text)
+        self.assertEqual(parsed["agents"], 3)
+        found = effort.ampel_incidents(
+            [parsed, {**parsed, "id": "S-b", "t": parsed["t"] + 1}], set()
+        )
+        self.assertEqual(found, [])
+
     def test_falls_back_to_aufwand_agents(self):
         text = "- erzeugt: 2026-10-01T10:00:00+02:00\n- Sessions: 1, Agenten: 30, X\n"
         parsed = effort.parse_ampel_session("S-a", text)

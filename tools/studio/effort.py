@@ -394,8 +394,9 @@ def incidents(
 
 def parse_ampel_session(ident: str, text: str) -> dict | None:
     """Eine Session-Metrikdatei: Kennung, Zeit, Agentenzahl, rote Kennzahlen."""
-    # gemessene Agenten (Transkripte) vor den Aufwand-Ereignissen: Letztere zählen
-    # jeden Hook-Start mit und lassen auch kleine Sessions gross erscheinen
+    # „Datenbasis … Agenten" ist die Zählbasis für AMPEL_MIN_AGENTS: „Agenten:" im
+    # Abschnitt Aufwand zählt Hook-Ereignisse (z. B. 50 statt 3 gemessen), die
+    # Grenze würde sonst nie greifen.
     created = _CREATED.search(text)
     agents = _MEASURED.search(text) or _AGENTS.search(text)
     if not created or not agents:

@@ -53,8 +53,8 @@ class PersonaSplitTest(unittest.TestCase):
             },
         )
 
-    def test_light_counts_only_deviations(self):
-        self.assertEqual(self.data["persona_opus"], 2)
+    def test_light_counts_only_deviations_since_guard(self):
+        self.assertEqual(self.data["persona_opus"], 1)
 
     def test_without_frontmatter_nothing_deviates(self):
         data = efficiency.compute([self.root / "s1.jsonl"])
