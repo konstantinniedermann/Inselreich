@@ -323,3 +323,8 @@ RENDER-LOOK-01 erst danach.
 Fundort: Integrator-Lauf TOOL-ACTIONS-SPAR. Beobachtung: 2,62 ms/Schritt gegen Grenze 2,5 bei paralleler Last
 (1-min-Load ~7), Wiederholung allein grün. Ursprung: lokaler Merge-Check. Einschätzung: Perf-Grenze in `make check`
 falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusammen ansehen.
+
+### 2026-10-08 · Zeitreserve-Runner-Modus läuft auf CI doppelt
+
+Fundort: Review TOOL-RELEASE-CI. Beobachtung: Auf GitHub Actions läuft die Runner-Prüfung zusätzlich zur Hauptprüfung.
+Ursprung: qa-code-reviewer. Einschätzung: niedrig, kostet CI-Sekunden; bei nächster Werkzeugarbeit bereinigen.

@@ -2995,3 +2995,16 @@ pausiert, Halten+Ziehen verschiebt; I-023 Pipette Strg/Cmd+Klick und Knopf „Gl
 Lastabhängigkeit von `make zeitreserve` gehen in TOOL-RELEASE-CI. (d) Studio-coach startet jetzt (STUDIO.md frei).
 
 Entscheider: L0 · Anlass: Berichte IDEEN-03, UI-INSELFILTER · ADR: —
+
+## R338 · 2026-10-08 · Gate Spec TASTEN-KOMFORT OK; TOOL-RELEASE-CI Push-Gate, Gate OK
+
+Ruling: (a) Spec `2026-10-08-tasten-komfort-spec.md` (34 AKs) **OK**; OF-1 Leertaste schliesst Info-Panel nicht, OF-2
+`kontor2` wie Kontor, OF-3 Tooltip am Pause-Knopf, OF-4 Cmd+Klick als Hauptweg; Setzungen des Spec-Autors bestätigt,
+inklusive Strg/Cmd+Klick im Abriss-Werkzeug wechselt das Werkzeug (AK-TK-25). Umsetzung lead-tech, ≤ 120 Tools.
+(b) TOOL-RELEASE-CI: Review BEDENKEN (Zeitreserve unter Last wirkungslos) gelöst per Push-Gate statt rotem `make check`:
+lokale Merges warnen bei Load > 4, `make zeitreserve-push` ist streng (Load > 4 → „nicht belastbar", Exit 2) und vor
+dem Session-End-Push Pflicht (R335). Gate Merge **OK** für `tool/release-ci` @ 5398e80 ohne zweites Review (nur
+Werkzeug, Tests 33/33). Offen: echte Nachmessung der Timeouts bei Load ≤ 4 über das Push-Gate; „Runner-Modus auf CI
+doppelt" → Beobachtung. PERF-L57 kann nach dem Merge starten, misst aber nur bei Load ≤ 4.
+
+Entscheider: L0 · Anlass: Berichte Spec TASTEN-KOMFORT, TOOL-RELEASE-CI · ADR: —
