@@ -131,6 +131,29 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
     expect(producesText(def, true)).not.toContain('alle 5 s');
     expect(producesText(def, true)).toContain('brennt');
   });
+  it('UI-INSELFILTER: protectedCount zählt nur Gebäude der Insel der Wache', () => {
+    const w = createWorld(3);
+    const mk = (id: number, defId: 'firestation' | 'distillery', island: number) => {
+      w.buildings[id] = {
+        id,
+        defId,
+        x: 10 + (defId === 'firestation' ? 0 : 4),
+        y: 50,
+        connected: true,
+        progress: 0,
+        state: 'ok',
+        island,
+      };
+      return w.buildings[id];
+    };
+    const st0 = mk(911, 'firestation', 0);
+    mk(912, 'distillery', 0);
+    mk(913, 'distillery', 1); // gleiche lokale Koordinaten auf Fremdinsel
+    expect(protectedCount(w, st0)).toBe(1);
+    const st1 = mk(914, 'firestation', 1);
+    expect(protectedCount(w, st1)).toBe(1); // nur Insel 1, auch wenn Insel 0 aktiv ist
+  });
+
   it('protectedCount: eine zweite Wache ändert die Zahl der ersten nicht', () => {
     const w = createWorld(3);
     const mk = (id: number, defId: 'firestation' | 'distillery', x: number) => {
