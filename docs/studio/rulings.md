@@ -3372,3 +3372,18 @@ OK. An die Retro: zweimal Budget ohne Vorabmeldung (Ist ≈ 320 gegen 120 + 60 +
 Code-Ersetzung per Shell-Skript.
 
 Entscheider: L0 · Anlass: Bericht SEE-F1 · ADR: —
+
+## R370 · 2026-10-08 · SEE-F1 nicht gemergt: Testzeiten-Regression; FIX-SEE-F1-ZEIT
+
+Ruling: TOOL-SMOKE ist in main (be81249). SEE-F1 am Merge-Stand: `make check` grün, aber `zeitreserve` meldet 6 Tests
+ohne CI-Reserve (Runner-Schätzung 10), alle mit SEE-F1 neu langsam: `wildlife.test.ts` RF-10 (1,3 s) und vier
+Delfin-Tests E5 (2,6–3,3 s), `decorSea.test.ts` L5-T3 (4,9 s), `decorStamps.test.ts` R5 (5,3 s). Merge nach Auflage
+R369 (1) abgebrochen — richtig. Vermutung (unbelegt): `seaRoute`/`routeDist` wird je Aufruf neu berechnet (Cache per
+WeakMap am Array-Objekt trifft bei frisch gebauten Welten nicht), dann wäre auch die Laufzeit im Spiel betroffen.
+Paket **FIX-SEE-F1-ZEIT** (frische lead-tech-Instanz über Handoff, 40 Tools): zuerst messen (Profil eines Delfin-Tests,
+Zahl der `seaRoute`-Aufrufe je Frame im Spiel), dann die Ursache beheben (Cache je Welt-Inseln, Vorberechnung);
+Timeouts nur als letzter Weg und hergeleitet. Abnahme: `zeitreserve` 0 ohne Reserve am Merge-Stand, Frame-Kosten von
+`routeDist` im Spiel genannt. Worktree `.worktrees/see-f1` neu anlegen (der Integrator hatte ihn entfernt; Branch
+unverändert @ 86baaac).
+
+Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
