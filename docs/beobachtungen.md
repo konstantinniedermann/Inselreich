@@ -381,3 +381,14 @@ Einschätzung: Der Vitest-Schritt ist die einzige relevante Stelle; die pro Date
 ### 2026-10-08 · Importzyklus `src/ui/inspect.ts` ↔ `src/ui/panelView.ts`
 
 Fundort: `inspect.ts:52` importiert `panelView`, `panelView.ts:11` importiert `progressPct, upgradeView` aus `inspect`. Ursprung: Board nach REL-08 (Paket 5), Ist-Prüfung lead-tech. Einschätzung: niedrig; `upgradeView` und `progressPct` nach `panelView.ts`, Test gegen Zyklen in `src/ui/` (Paket UI-PANEL-AUFRAEUMEN).
+
+### 2026-10-08 · UI-PANEL-AUFRAEUMEN: erledigt und neue kleine Befunde
+
+Erledigt (Branch `refactor/ui-panel`): Importzyklus `inspect` ↔ `panelView` aufgelöst, Etiketten-Duplikat zusammengeführt, Bauleisten-Höhe (Eintrag vom 2026-10-02 und Release-Check REL-08) als Overlay gelöst. Neu: (a) `src/ui/app.ts` (`resize`, `centerOn`/`jumpToIsland`) klemmt und zentriert mit voller Kartenhöhe, bei offener Kategorie liegt das Ziel um die Overlay-Höhe verschoben; (b) das Overlay deckt den Ereignis-Log unten links ab (niedrig, vertretbar); (c) ein Klick auf einen Hauptleisten-Knopf schliesst das offene Overlay (nicht gegen `main` verglichen). Ursprung: Review/Playtest UI-PANEL-AUFRAEUMEN. Einschätzung: niedrig; (a) bei Arbeit an `app.ts`.
+
+### 2026-10-08 · Kamerarahmen reicht weit über die Insel hinaus
+
+Fundort: `src/ui/input.ts` (`clamp`, Kamerarahmen). Beobachtung: Bei maximal südlicher Kamera zeigt die Karte nur
+Wasser; die Rahmen-Ecke liegt bei Kachel 72,121, die südlichste Inselkachel bei 35,106 (Playtest UI-PANEL-AUFRAEUMEN,
+1280×720). Ursprung: qa-playtester in UI-PANEL-AUFRAEUMEN, unabhängig vom Overlay. Einschätzung: niedrig, Bedienkomfort;
+Rahmen enger an die Inselgrenzen plus Rand legen, mit `cameraBounds`-Vitest.

@@ -6,9 +6,11 @@ import { UPKEEP_INTERVAL } from '../sim/economy';
 import { cycleOf, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs } from '../sim/queries';
+import { upgradeBuilding } from '../sim/upgrade';
 import { functionLock } from '../sim/unlocks';
 import type { Building, BuildingDefId, Tier, World } from '../sim/types';
-import { progressPct, upgradeView } from './inspect';
+import { costLine } from './dom';
+import { friendlyReason } from './hints';
 import { goodList, stateInfo } from './texts';
 import { formatGameTime, perMinute, signedNum } from './time';
 
@@ -115,6 +117,15 @@ export function tierPips(b: Building): Pips | null {
   return { level, max, label: `${TIERS[level].name}, Stufe ${level} von ${max}` };
 }
 
+/** Beschriftung und Unterzeile je Kachel; einzige Quelle der Etiketten (`statTiles`, `houseTiles`, Gerüst in `inspect`). */
+export const TILE_LAYOUT: Record<StatKey, { label: string; sub: boolean }> = {
+  output: { label: 'Ausstoss', sub: true },
+  utilization: { label: 'Auslastung', sub: false },
+  input: { label: 'Verbrauch', sub: true },
+  upkeep: { label: 'Unterhalt', sub: true },
+  inhabitants: { label: 'Einwohner', sub: false },
+};
+
 /** Struktur der Kennzahl-Kacheln je Typ, unabhängig von Stufe, Zustand und Brand (G-3). */
 export function statKeys(defId: BuildingDefId): StatKey[] {
   const def = BUILDING_DEFS[defId];
@@ -138,7 +149,7 @@ export function statTiles(b: Building): StatTile[] {
     const good = GOODS[def.produces].name;
     tiles.push({
       key: 'output',
-      label: 'Ausstoss',
+      label: TILE_LAYOUT.output.label,
       value: perMin,
       sub:
         b.outageUntil !== undefined
@@ -150,20 +161,20 @@ export function statTiles(b: Building): StatTile[] {
   if (u !== null)
     tiles.push({
       key: 'utilization',
-      label: 'Auslastung',
+      label: TILE_LAYOUT.utilization.label,
       value: `${Math.floor(u / 10)} %`,
       sub: null,
     });
   if (def.consumes && cycle !== undefined)
     tiles.push({
       key: 'input',
-      label: 'Verbrauch',
+      label: TILE_LAYOUT.input.label,
       value: def.consumes.length > 1 ? `je ${perMin}` : perMin,
       sub: goodList(def.consumes),
     });
   tiles.push({
     key: 'upkeep',
-    label: 'Unterhalt',
+    label: TILE_LAYOUT.upkeep.label,
     value: `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`,
     sub: 'Geld',
   });
@@ -175,7 +186,7 @@ export function houseTiles(b: Building): StatTile[] {
   return [
     {
       key: 'inhabitants',
-      label: 'Einwohner',
+      label: TILE_LAYOUT.inhabitants.label,
       value: `${b.house.inhabitants} / ${TIERS[b.house.tier].maxInhabitants}`,
       sub: null,
     },
@@ -269,4 +280,50 @@ export function progressView(b: Building): { pct: number; label: string } | null
   if (cycleOf(b) === undefined) return null;
   const pct = progressPct(b);
   return { pct, label: `Fortschritt ${pct} %` };
+}
+
+export interface UpgradeView {
+  title: string;
+  cost: string;
+  fee: string;
+  preview: string;
+  reasons: string[];
+  ok: boolean;
+}
+
+/**
+ * Ausbau-Abschnitt des Betriebs-Panels (Spec 7); `null`, wenn der Betrieb nicht ausbaubar oder die Stufe noch
+ * nicht freigeschaltet ist. Die Gründe stammen aus einem Probelauf von `upgradeBuilding` auf einer Kopie.
+ */
+export function upgradeView(world: World, b: Building): UpgradeView | null {
+  const levels = LEVELS[b.defId];
+  if (levels === undefined) return null;
+  const lvl = b.level ?? 1;
+  if (lvl >= 3)
+    return { title: 'Höchste Stufe', cost: '', fee: '', preview: '', reasons: [], ok: false };
+  if (functionLock(world, lvl === 1 ? 'upgrade2' : 'upgrade3') !== null) return null;
+  const next = levels[lvl - 1]!;
+  const probe = {
+    ...world,
+    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
+    buildings: { ...world.buildings, [b.id]: { ...b } },
+  };
+  const r = upgradeBuilding(probe, b.id);
+  const out = `${perMinute(1, cycleOf(b) ?? 1)} → ${perMinute(1, next.cycle)}`;
+  const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
+  return {
+    title: `Ausbau zu Stufe ${lvl + 1}`,
+    cost: `Kosten ${costLine(next.cost)}`,
+    fee: `Gebühr ${next.fee.amount} ${GOODS[next.fee.good].name}`,
+    preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
+    reasons: r.ok
+      ? []
+      : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost, island: b.island })}`],
+    ok: r.ok,
+  };
+}
+
+/** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */
+export function progressPct(b: Building): number {
+  return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
 }
