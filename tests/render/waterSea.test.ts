@@ -5,6 +5,7 @@ import {
   FOAM_CORE_ALPHA,
   FOAM_PERIOD_MS,
   drawWaves,
+  SEA_ELEMENT_MIN_ZOOM,
   seaFoam,
 } from '../../src/render/water';
 import { seaContext, seaPlan } from '../../src/render/decor';
@@ -144,5 +145,22 @@ describe('L5-T4 Schaum an Riff, Wrack, Fels und Eiland', () => {
       return;
     }
     throw new Error('kein Riff');
+  });
+
+  it('REL-07: Schaum an Wrack und Felseiland nur ab SEA_ELEMENT_MIN_ZOOM; Fels bleibt', () => {
+    const { w: iw, x, y } = isletWorld();
+    const at = { x0: x - 2, y0: y - 2, x1: x + 2, y1: y + 2 };
+    const n = (zoom: number) => {
+      const f = fakeCtx();
+      drawWaves(f.ctx, iw, at, 0, undefined, false, true, zoom);
+      return f.log.events.filter(
+        (e) => e.op === 'stroke' && isFoam(e.style) && alphaOf(e.style) >= 0.3,
+      ).length;
+    };
+    expect(SEA_ELEMENT_MIN_ZOOM).toBe(0.5);
+    expect(n(1)).toBeGreaterThan(0);
+    expect(n(0.5)).toBe(n(1));
+    expect(n(0.25)).toBe(0);
+    expect(n(0.125)).toBe(n(0.25));
   });
 });

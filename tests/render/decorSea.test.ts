@@ -282,7 +282,7 @@ describe('L5 Zeichner: Grenzen und Form', () => {
 });
 
 describe('L5-T1 Fernansicht und Stempelzahl', () => {
-  it('L5-T1 Zoom ≤ 0,25: ≤ 300 Stempel je Insel im Fern-Pfad (Seeds 1–50), dort nur Wrack, Meeresfelsen und Eiland', () => {
+  it('L5-T1 Zoom ≤ 0,25: ≤ 300 Stempel je Insel im Fern-Pfad (Seeds 1–50), dort nur Meeresfelsen (Wrack und Eiland ab 0,5, REL-07)', () => {
     let max = 0,
       maxAll = 0;
     const seen = new Set<string>();
@@ -296,7 +296,7 @@ describe('L5-T1 Fernansicht und Stempelzahl', () => {
       expect(far.length, `Seed ${seed}`).toBeLessThanOrEqual(300);
       expect(all.length, `Seed ${seed}`).toBeLessThanOrEqual(300);
     }
-    expect([...seen].sort()).toEqual(['islet', 'seaRock', 'wreck']);
+    expect([...seen].sort()).toEqual(['seaRock']);
     expect(max).toBeGreaterThan(0);
     expect(maxAll).toBeLessThanOrEqual(300);
   }, 25_000); // lokal bis 2,8 s im Gesamtlauf (REL-07: sortedObjects mit WALD-02-Kronen), Timeout >= 8 x (R270)

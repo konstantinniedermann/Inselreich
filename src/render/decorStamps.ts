@@ -15,6 +15,9 @@ import type { StampKind } from './decor';
 
 export type DecorItem = Extract<SortedItem, { kind: 'decor' }>;
 
+/** Wrack (E1) und Felseiland (E8) samt Brandungsschaum erst ab diesem Zoom (REL-07: in der Fernansicht lesen sie sich als Rauschen). */
+export const SEA_ELEMENT_MIN_ZOOM = 0.5;
+
 /** Zoomschwellen nach Katalog: A5/A6 ab 0,5, A9/A14 ab 0,75. */
 export const DECOR_MIN_ZOOM: Record<StampKind, number> = {
   solitaire: 0.5,
@@ -22,9 +25,9 @@ export const DECOR_MIN_ZOOM: Record<StampKind, number> = {
   menhir: 0.75,
   ruin: 0.75,
   palm: 0.5,
-  wreck: 0.25,
+  wreck: SEA_ELEMENT_MIN_ZOOM,
   seaRock: 0.25,
-  islet: 0.25,
+  islet: SEA_ELEMENT_MIN_ZOOM,
 };
 
 /** Töne der Stempel (Mischungen aus `palette.ts`); Test: ΔE2000 ≥ 20 zu den Signalfarben. */
