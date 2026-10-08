@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { createWorld, home } from '../../src/sim/world';
+import { kontorPos, seaContext, stampPlacements } from '../../src/render/decor';
 import {
   MIN_CROWNS,
   OVERHANG,
@@ -7,6 +9,7 @@ import {
   bandCell,
   forestClearing,
   forestType,
+  isClearing,
   woodLayout,
   type TileClass,
   type WoodInput,
@@ -401,3 +404,69 @@ describe('WALD-02 Platzierung', () => {
 function crownHalf(c: Crown): number {
   return crownGeom(c).hh;
 }
+
+/** Zahl der 4-zusammenhängenden Lichtungs-Komponenten (`isClearing`) auf der Heimatinsel (Gebäude, Wege, Stempel frei). */
+function clearingComponents(seed: number): number {
+  const w = createWorld(seed);
+  const isl = home(w);
+  const W = isl.width;
+  const stamps = new Set<number>();
+  for (const s of stampPlacements(w.seed, isl, kontorPos(isl, w.buildings), seaContext(w)))
+    stamps.add(s.y * W + s.x);
+  const cls = (x: number, y: number): TileClass => {
+    if (x < 0 || y < 0 || x >= W || y >= isl.height) return 'blocked';
+    const t = isl.tiles[y * W + x]!;
+    return t.terrain === 'forest' && t.buildingId === null && !t.road && !stamps.has(y * W + x)
+      ? 'forest'
+      : 'meadow';
+  };
+  const on = new Set<number>();
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < W; x++) if (isClearing(w.seed, x, y, cls)) on.add(y * W + x);
+  const seen = new Set<number>();
+  let n = 0;
+  for (const k of on) {
+    if (seen.has(k)) continue;
+    n++;
+    seen.add(k);
+    const stack = [k];
+    while (stack.length) {
+      const c = stack.pop()!;
+      const x = c % W;
+      for (const m of [c + 1, c - 1, c + W, c - W]) {
+        if ((m === c + 1 && x === W - 1) || (m === c - 1 && x === 0)) continue;
+        if (on.has(m) && !seen.has(m)) {
+          seen.add(m);
+          stack.push(m);
+        }
+      }
+    }
+  }
+  return n;
+}
+
+describe('ART-L8-SELTEN T2 Lichtungen selten', () => {
+  const counts: number[] = [];
+  beforeAll(() => {
+    for (let seed = 1; seed <= 40; seed++) counts.push(clearingComponents(seed));
+  });
+
+  it('AK6 Seeds 1–40: Median der Lichtungen je Heimatinsel = 1, Minimum 0, Maximum ≤ 3', () => {
+    const s = [...counts].sort((a, b) => a - b);
+    expect((s[19]! + s[20]!) / 2).toBe(1);
+    expect(s[0]).toBe(0);
+    expect(s[s.length - 1]!).toBeLessThanOrEqual(3);
+  });
+
+  it('AK7 forestClearing liegt in [0, 1] und ist rein (gleicher Wert bei Wiederholung)', () => {
+    for (let seed = 1; seed <= 10; seed++)
+      for (let i = 0; i < 400; i++) {
+        const fx = (i * 7.31) % 64;
+        const fy = (i * 3.17) % 64;
+        const v = forestClearing(seed, fx, fy);
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThanOrEqual(1);
+        expect(forestClearing(seed, fx, fy)).toBe(v);
+      }
+  });
+});
