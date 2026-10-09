@@ -20,7 +20,7 @@ import {
 import { CRISIS_FIRST_TICK, FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { ISLANDS, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
-import { TIERS } from '../../src/sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS } from '../../src/sim/defs/tiers';
 import { utilization } from '../../src/sim/levels';
 import {
   SAVE_VERSION,
@@ -33,6 +33,7 @@ import {
   serialize,
 } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
+import { taxBaseByTier, taxUnits, tierCap } from '../../src/sim/population';
 import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, home } from '../../src/sim/world';
@@ -49,7 +50,10 @@ import {
   foldBackToV6,
   foldBackToV7,
   foldBackToV8,
+  foldBackToV9,
+  placeTownhall,
   prepareEast,
+  setAllTax,
   setHouse,
   sortedJson,
   village,
@@ -1778,5 +1782,218 @@ describe('M12 Fixture see-route-start-v9 (AK-E4-13)', () => {
     expect(w.ships).toHaveLength(1);
     expect(freeShipAtHome(w)).not.toBeNull();
     expect(w.islands[2]!.stock.spice).toBe(30);
+  });
+});
+
+describe('I-028 Save v10', () => {
+  const FIX_DIR = 'tests/sim/fixtures/';
+  const FIX_V9 = `${FIX_DIR}see-route-start-v9.json`;
+  const ALL = (v: unknown): Record<string, unknown> => ({ 1: v, 2: v, 3: v, 4: v });
+  const raw10 = (world: World): Record<string, unknown> => JSON.parse(serialize(world));
+  const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
+  const ids = (n: number): number => 9500 + n;
+
+  /** Häuser roh wie `addHouse` in taxes.test.ts. */
+  function addHouse(world: World, n: number, tier: 1 | 2 | 3 | 4, inh: number, met: boolean): void {
+    const def = TIERS[tier];
+    const satisfied: Record<string, boolean> = {};
+    for (const g of Object.keys(def.needs)) satisfied[g] = met;
+    world.buildings[ids(n)] = {
+      id: ids(n),
+      defId: 'house',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+      house: {
+        tier,
+        inhabitants: inh,
+        demand: {},
+        satisfied,
+        services: { faith: met, school: met },
+        satisfiedSince: 0,
+        supplied: met,
+      },
+    } as Building;
+  }
+
+  it('AK-T01 + P-1 neue Welt: je Stufe normal und ohne Sperre, kein taxLevel, Version 10', () => {
+    const v = createWorld(3, { unlockAll: true });
+    expect(v.taxLevels).toEqual({ 1: 'normal', 2: 'normal', 3: 'normal', 4: 'normal' });
+    expect(v.taxLockedUntil).toEqual({ 1: 0, 2: 0, 3: 0, 4: 0 });
+    expect('taxLevel' in v).toBe(false);
+    expect(SAVE_VERSION).toBe(10);
+    expect(createWorld(3).version).toBe(10);
+  });
+
+  it('AK-T03 Bitgleichheit: taxUnits = pct × Σ Basis je Stufe (Stufen 1-3, alle Regler gleich)', () => {
+    const v = createWorld(3, { unlockAll: true });
+    placeTownhall(v);
+    for (const level of ['normal', 'high'] as const) {
+      setAllTax(v, level);
+      expect(taxUnits(v)).toBe(0); // leere Insel
+    }
+    addHouse(v, 1, 1, 4, true);
+    addHouse(v, 2, 1, 3, false);
+    addHouse(v, 3, 2, 8, true);
+    addHouse(v, 4, 3, 5, false);
+    const sum = (): number => TIER_IDS.reduce((a, t) => a + taxBaseByTier(v)[t], 0);
+    expect(sum()).toBeGreaterThan(0);
+    for (const level of ['normal', 'high'] as const) {
+      setAllTax(v, level);
+      expect(taxUnits(v)).toBe(TAX_LEVELS[level].pct * sum());
+    }
+    addHouse(v, 5, 4, 10, true);
+    setAllTax(v, 'normal');
+    expect(taxUnits(v)).toBe(100 * sum());
+  });
+
+  it('AK-T06 tierCap je Stufe', () => {
+    expect(TIER_IDS.map((t) => tierCap(t, 'high'))).toEqual([3, 6, 11, 15]);
+    expect(TIER_IDS.map((t) => tierCap(t, 'normal'))).toEqual([4, 8, 15, 20]);
+    expect(TIER_IDS.map((t) => tierCap(t, 'low'))).toEqual([4, 8, 15, 20]);
+  });
+
+  it('AK-T17 Grundfall: Rundreise mit ungleichen Reglern und Sperren', () => {
+    const v = createWorld(3, { unlockAll: true });
+    v.taxLevels = { 1: 'low', 2: 'normal', 3: 'high', 4: 'high' };
+    v.taxLockedUntil = { 1: 1300, 2: 0, 3: 900, 4: 0 };
+    const r = deserialize(serialize(v));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.world).toEqual(v);
+  });
+
+  it('AK-T18 (high, normal) + P-1: v9-Text mit einem Regler wird auf alle vier verteilt', () => {
+    for (const [level, lock] of [
+      ['high', 450],
+      ['normal', 0],
+    ] as const) {
+      const v = createWorld(3, { unlockAll: true });
+      setAllTax(v, level);
+      v.taxLockedUntil = { 1: lock, 2: lock, 3: lock, 4: lock };
+      const text = JSON.stringify(foldBackToV9(raw10(v)));
+      const r = deserialize(text);
+      expect(r.ok).toBe(true);
+      if (!r.ok) continue;
+      expect(r.world.taxLevels).toEqual(ALL(level));
+      expect(r.world.taxLockedUntil).toEqual(ALL(lock));
+      expect(r.world.version).toBe(10);
+      expect('taxLevel' in r.world).toBe(false);
+    }
+  });
+
+  it('AK-T18 jede Fixture v1 bis v9 lädt als Version 10', () => {
+    const files = [
+      'save-v1.json',
+      'save-v2.json',
+      'save-v3.json',
+      'save-v4.json',
+      'save-v5.json',
+      'save-v6.json',
+      'save-v6-locks.json',
+      'save-v7.json',
+      'save-v8.json',
+      'see-route-start-v9.json',
+      'z3-scenario-v9.json',
+    ];
+    for (const f of files) {
+      const r = deserialize(readFileSync(`${FIX_DIR}${f}`, 'utf8'));
+      expect(r.ok, f).toBe(true);
+      if (r.ok) expect(r.world.version, f).toBe(10);
+    }
+  });
+
+  describe('AK-T19 Formfälle (QA-g)', () => {
+    const cases: [string, (r: Record<string, any>) => void][] = [
+      // eslint-disable-line @typescript-eslint/no-explicit-any
+      ['Level unbekannt', (r) => (r.taxLevels['2'] = 'extreme')],
+      ['taxLevels ohne Schlüssel 3', (r) => delete r.taxLevels['3']],
+      ['taxLevels mit Schlüssel 5', (r) => (r.taxLevels['5'] = 'normal')],
+      [
+        'nur taxLevel',
+        (r) => {
+          delete r.taxLevels;
+          r.taxLevel = 'normal';
+        },
+      ],
+      ['Sperre -1', (r) => (r.taxLockedUntil['1'] = -1)],
+      ['Sperre 1.5', (r) => (r.taxLockedUntil['1'] = 1.5)],
+      ['Sperre als Text', (r) => (r.taxLockedUntil['1'] = '300')],
+      ['Sperre als Zahl', (r) => (r.taxLockedUntil = 300)],
+      ['Sperre ohne Schlüssel 3', (r) => delete r.taxLockedUntil['3']],
+      ['Sperre mit Schlüssel 5', (r) => (r.taxLockedUntil['5'] = 0)],
+    ];
+    for (const [name, edit] of cases)
+      it(name, () => {
+        const json = tampered(createWorld(3), (r) => edit(r as Record<string, any>)); // eslint-disable-line @typescript-eslint/no-explicit-any
+        expect(() => deserialize(json)).not.toThrow();
+        expect(deserialize(json)).toEqual(BAD);
+      });
+    it('v9 mit taxLevel extreme', () => {
+      const t = JSON.parse(JSON.stringify(foldBackToV9(raw10(createWorld(3)))));
+      t.taxLevel = 'extreme';
+      expect(deserialize(JSON.stringify(t))).toEqual(BAD);
+    });
+  });
+
+  it('AK-T20 (QA-b) Version über SAVE_VERSION wird abgewiesen', () => {
+    const json = tampered(createWorld(3), (r) => (r.version = SAVE_VERSION + 1));
+    expect(deserialize(json)).toEqual({ ok: false, reason: 'Unbekannte Version' });
+  });
+
+  it('AK-T21 Kette v4: alle high, alle Sperren 5100', () => {
+    const r = deserialize(readFileSync(`${FIX_DIR}save-v4.json`, 'utf8'));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.world.taxLevels).toEqual(ALL('high'));
+    expect(r.world.taxLockedUntil).toEqual(ALL(5100));
+  });
+
+  describe('AK-T24 + TECH-B2 foldBackToV9', () => {
+    const base = (): Record<string, any> => raw10(createWorld(3)) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const fold = (lv: unknown[], lock: number[] = [0, 0, 0, 0]): Record<string, unknown> => {
+      const r = base();
+      r.taxLevels = Object.fromEntries(lv.map((l, i) => [i + 1, l]));
+      r.taxLockedUntil = Object.fromEntries(lock.map((l, i) => [i + 1, l]));
+      return foldBackToV9(r);
+    };
+    it('fasst gleiche Regler zusammen', () => {
+      expect(fold(['normal', 'normal', 'normal', 'normal']).taxLevel).toBe('normal');
+      expect(fold(['low', 'low', 'low', 'normal']).taxLevel).toBe('low');
+      expect(fold(['normal', 'normal', 'normal', 'normal']).version).toBe(9);
+    });
+    it('wirft bei nicht zusammenfassbaren Reglern', () => {
+      expect(() => fold(['low', 'normal', 'normal', 'normal'])).toThrow(/Regler/);
+    });
+    it('Sperre = Maximum', () => {
+      expect(
+        fold(['normal', 'normal', 'normal', 'normal'], [1300, 1300, 1300, 0]).taxLockedUntil,
+      ).toBe(1300);
+    });
+    it('wirft bei Zusatzschlüssel und bei taxLevel', () => {
+      expect(() => foldBackToV9({ ...base(), foo: 1 })).toThrow(/unbekannter Schlüssel foo/);
+      expect(() => foldBackToV9({ ...base(), taxLevel: 'normal' })).toThrow(
+        /unbekannter Schlüssel taxLevel/,
+      );
+    });
+    it('frischer Stand hat die Schlüssel von see-route-start-v9.json', () => {
+      expect(Object.keys(foldBackToV9(raw10(createWorld(3))))).toEqual(
+        Object.keys(JSON.parse(readFileSync(FIX_V9, 'utf8'))),
+      );
+    });
+    it('migrierter v8 gleicht dem Fixture-Text', () => {
+      const json = readFileSync(`${FIX_DIR}save-v8.json`, 'utf8');
+      const r = deserialize(json);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(JSON.stringify(foldBackToV8(foldBackToV9(raw10(r.world))))).toBe(json);
+    });
+    it('migrierter v9 gleicht dem Fixture-Text', () => {
+      const json = readFileSync(FIX_V9, 'utf8');
+      const r = deserialize(json);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(JSON.stringify(foldBackToV9(raw10(r.world)))).toBe(json);
+    });
   });
 });
