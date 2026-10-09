@@ -4,6 +4,8 @@
 // prüft den 1-min-Load und startet den Befehl. Belegt oder Load > LOAD_MAX: Exit 3, kein Warten.
 // Auf CI (CI/GITHUB_ACTIONS) und in verschachtelten Läufen (STUDIO_TESTLOCK_HELD) läuft der Befehl direkt.
 // TESTLOCK_FAKE_LOAD und TESTLOCK_PATH gibt es nur für Tests, nie zum Umgehen echter Prüfungen (R378).
+// Vor Last- und Sperrprüfung: Hinweis (nur stderr, nichts wird beendet) auf verwaiste Vitest-Prozesse.
+// TESTLOCK_PS_FIXTURE (Pfad zu einer ps-Ausgabe) gibt es nur für Tests (R378).
 // Übernahme toter Sperren: nur unter einem Wächterverzeichnis (<lock>.takeover, mkdir ist atomar); die tote
 // Sperrdatei kann nur ein Wächterhalter löschen, daher kein ABA-Fenster.
 import { spawn, execFileSync } from 'node:child_process';
@@ -18,6 +20,7 @@ import {
 } from 'node:fs';
 import { constants, loadavg } from 'node:os';
 import { resolve } from 'node:path';
+import { findOrphans, orphanNotice } from './orphans.ts';
 
 export const LOAD_MAX = 8;
 const EXIT_BLOCKED = 3;
@@ -48,10 +51,27 @@ function finish(code: number): never {
   process.exit(code);
 }
 
+function reportOrphans(): void {
+  try {
+    const ps =
+      env.TESTLOCK_PS_FIXTURE !== undefined // nur für Tests (R378)
+        ? readFileSync(env.TESTLOCK_PS_FIXTURE, 'utf8')
+        : execFileSync('ps', ['-A', '-o', 'pid=,ppid=,etime=,command='], {
+            encoding: 'utf8',
+            maxBuffer: 8 * 1024 * 1024,
+          });
+    const note = orphanNotice(findOrphans(ps, process.pid));
+    if (note) console.error(note);
+  } catch {
+    /* ps fehlt oder scheitert: kein Hinweis */
+  }
+}
+
 const isSet = (v: string | undefined): boolean => !!v && v !== 'false' && v !== '0';
 if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
   run();
 } else {
+  reportOrphans();
   const load = env.TESTLOCK_FAKE_LOAD !== undefined ? Number(env.TESTLOCK_FAKE_LOAD) : loadavg()[0];
   if (!(load <= LOAD_MAX)) {
     console.error(

@@ -4,6 +4,7 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { findOrphans, orphanNotice, parseEtime } from '../../tools/testlock/orphans';
 
 const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
   .process.env;
@@ -149,5 +150,56 @@ describe('testlock (R378)', () => {
   it('Signal-Ende des Befehls: Exit 128 + Signalnummer', () => {
     const { run } = setup();
     expect(run({}, 'node', '-e', 'process.kill(process.pid,"SIGTERM")').status).toBe(143);
+  });
+});
+
+const PS = [
+  '  4242     1 01:02:03 node (vitest 3)',
+  '  4243     1    05:00 node (vitest 4)', // zu jung
+  '  4244   900 2-00:00:00 node /x/node_modules/.bin/vitest run', // hat Eltern
+  '  4245     1 1-00:00:00 /usr/sbin/syslogd', // kein vitest
+  '  4246     1    45:10 node /x/node_modules/.bin/vitest run',
+].join('\n');
+
+describe('verwaiste Vitest-Prozesse (TOOL-STUDIO-HYGIENE)', () => {
+  it('parseEtime: mm:ss, hh:mm:ss, d-hh:mm:ss, Müll', () => {
+    expect(parseEtime('05:00')).toBe(300);
+    expect(parseEtime('01:02:03')).toBe(3723);
+    expect(parseEtime('2-00:00:00')).toBe(172800);
+    expect(Number.isNaN(parseEtime('x'))).toBe(true);
+  });
+  it('findOrphans: nur PPID 1, vitest, >= 30 min, nicht der eigene PID', () => {
+    expect(findOrphans(PS, 1).map((o) => o.pid)).toEqual([4242, 4246]);
+    expect(findOrphans(PS, 4242).map((o) => o.pid)).toEqual([4246]);
+  });
+  it('orphanNotice: leer ohne Waisen, sonst PIDs und Hinweis kill <pid>', () => {
+    expect(orphanNotice([])).toBe('');
+    const text = orphanNotice(findOrphans(PS, 1));
+    expect(text).toContain('PID 4242');
+    expect(text).toContain('verwaist');
+    expect(text).toContain('nicht beendet');
+  });
+  it('Testsperre meldet Waisen, Befehl läuft, Exit unverändert', () => {
+    const { run } = setup();
+    const ps = join(mkdtempSync(join(tmpdir(), 'ps-')), 'ps.txt');
+    writeFileSync(ps, PS);
+    const p = run({ TESTLOCK_PS_FIXTURE: ps }, 'node', '-e', 'process.exit(0)');
+    expect(p.status).toBe(0);
+    expect(p.stderr).toContain('PID 4242');
+    expect(p.stderr).not.toContain('PID 4243');
+  });
+  it('Hinweis auch bei Lastabbruch, Exit bleibt 3', () => {
+    const { run } = setup();
+    const ps = join(mkdtempSync(join(tmpdir(), 'ps-')), 'ps.txt');
+    writeFileSync(ps, PS);
+    const p = run({ TESTLOCK_PS_FIXTURE: ps, TESTLOCK_FAKE_LOAD: '9' }, 'node', '-e', '0');
+    expect(p.status).toBe(3);
+    expect(p.stderr).toContain('PID 4242');
+  });
+  it('ohne Waisen kein Hinweis', () => {
+    const { run } = setup();
+    const ps = join(mkdtempSync(join(tmpdir(), 'ps-')), 'ps.txt');
+    writeFileSync(ps, '  1 0 10-00:00:00 /sbin/launchd');
+    expect(run({ TESTLOCK_PS_FIXTURE: ps }, 'node', '-e', '0').stderr).not.toContain('verwaist');
   });
 });
