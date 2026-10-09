@@ -3594,3 +3594,27 @@ teilen, ≤ 500 ms je Test, Aussage unverändert; +10 Tools (Gesamt 205). Danach
 unverändert, Kaltstart −2,7 %); Merge durch den Integrator mit `make check`, `zeitreserve` belastbar erst am Push-Gate.
 
 Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
+
+## R387 · 2026-10-09 · Gate Merge FIX-TESTLOCK-RACE OK
+
+Ruling: **OK** für `fix/testlock-race` @ 2d3cfb7. Echter Wettlauf belegt (≈ 3 von 100 Runden zwei gleichzeitige Läufe,
+auch ohne Last 2 von 20 Testläufen rot): `takeOver` löschte bei bereits verschwundener Sperre (`ENOENT`) eine
+inzwischen frisch angelegte, lebende Sperre (ABA ausserhalb des Wächters). Fix: bei `ENOENT` ohne Löschen abbrechen,
+nächster Versuch legt selbst an. Nachher 0 von 200 Runden, 20/20 unter CPU-Last; Review OK. Der Test braucht ≈ 4 s
+(Haltezeit für Überlappung) — akzeptiert, weil eine kürzere Haltezeit die Prüfung schwächt; als Altlast-Kandidat
+für die Zeitreserve beobachten. Merge seriell nach SEE-F1-KORRIDOR.
+
+Entscheider: L0 · Anlass: Bericht FIX-TESTLOCK-RACE · ADR: —
+
+## R388 · 2026-10-09 · SEE-F1-KORRIDOR: alle 200-Seeds-Meertests auf einmal
+
+Ruling: FIX-TESTLOCK-RACE ist in main (b0156fd). SEE-F1-KORRIDOR @ c8522ec scheiterte am Merge-Stand dreimal an
+`tests/render/decor.test.ts:1241` „Wrack in 25–55 % der Seeds 1–200“ (Timeout 5000 ms unter Last; einzeln grün).
+Dritte Runde desselben Musters → der Lead behandelt **alle** Tests in `tests/render/` mit Schleifen über ≥ 100 Seeds,
+die Meer-Plan, `seaRoute` oder `stampPlacements` nutzen, in einem Zug: gemeinsamer Aufbau je Datei (`beforeAll`),
+Quoten über 200 Seeds ins Werkzeug (`tools/render-qa/korridor.mjs` bzw. `quoten.mjs`, Ergebnis im Bericht), in der
+Suite eine grobe Prüfung über Seeds 1–40; jeder Test ≤ 500 ms. Liste der betroffenen Tests mit Zeiten vorher/nachher
+im Bericht; `make check` im Worktree grün. +15 Tools (Gesamt 220). An die Retro: Plan-AK zur Testzeit prüfte nur neue
+Tests, nicht bestehende, die das Paket verlangsamt.
+
+Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
