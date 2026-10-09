@@ -140,7 +140,10 @@ describe('mapDots (AK-S4)', () => {
     const dots = mapDots(w);
     expect(dots.map((d) => d.id)).toEqual([s1.id, s2.id].sort((a, b) => a - b));
     for (const d of dots) {
-      const p = shipPose(w, w.ships.find((s) => s.id === d.id)!);
+      const p = shipPose(
+        w,
+        w.ships.find((s) => s.id === d.id)!,
+      );
       expect(d.x).toBe(p.x);
       expect(d.y).toBe(p.y);
     }
