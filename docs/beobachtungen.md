@@ -394,3 +394,7 @@ RENDER-LOOK-01 erst danach.
 - **Fundort:** `tools/render-qa/blindprobe.mjs` (Branch `fix/art-meeresfels`) zeichnet ohne Schaumring und ohne Wassertönung; die Blindprobe (10 von 10 richtig) prüft nur die Stempel-Silhouette. Einschätzung: eine Browser-Sichtprobe im echten Spiel beim Release-Check ergänzen.
 - **Fundort:** Worktrees: `.vitest/` liegt untracked in Worktrees (`.gitignore`-Kandidat); ein Scratch-Worktree des Reviewers (Detached HEAD auf main) liegt unter dem Scratchpad, sein Entfernen blockte der Hook (Verfassung §6). Einschätzung: niedrig, Aufräumen durch L0/Integrator.
 - **Fundort:** `tests/render/seaPlanKeepOutIndex.test.ts`: neuer Vollvergleichstest braucht ≈ 2,3 s (neuer Test, nicht unter der 500-ms-Regel für bestehende Tests). Einschätzung: bei Suite-Laufzeitdruck ausdünnen.
+
+### 2026-10-09 · UI-SEEKARTE (qa-code-reviewer): Befund ohne Blocker
+
+- **Fundort:** `src/ui/hud.ts` (Seekarte): `layout` und `cache` bleiben bei offenem Popover über einen Weltwechsel (Laden) bestehen, bis zum nächsten Öffnen. Ursprung: Task-Review T3-T5. Einschätzung: niedrig, unwahrscheinlich (Laden schliesst Popover meist über Klick daneben); Fix wäre Weltidentität in den Schlüssel.
