@@ -3743,3 +3743,15 @@ Integrator-Briefing: `tsc --noEmit` und `make lint` vor `make test`. Umsetzung m
 (Handbuch 1.33).
 
 Entscheider: L0 · Anlass: Push REL-10, BEOB-AUSW · ADR: —
+
+## R399 · 2026-10-09 · Gate Spec/Plan REL-11 Render-Strang OK mit Auflage
+
+Ruling: **OK** für `docs/superpowers/plans/2026-10-09-rel11-render.md` (`d593e19`). Budget 12 Starts, Parallelität 3,
+Richtwert ≈ 220 Tools; drei Worktrees, Merge-Reihenfolge Keepout → Schiff → Fels. Blindprobe ART-MEERESFELS mit einem
+Rater (6 Bilder, frischer Kontext, Zuordnung erst nach dem Urteil) freigegeben. **Auflage SEE-F3:** Kontrastziel des
+Saums gegen alle drei Meerestöne ≥ 2,0 statt 1,5 (1,5 liegt kaum über dem heutigen Mittelwasser-Wert 1,43); Messung im
+Test, Sichtprobe zusätzlich. Keepout: Zähler (`distToSeg` ≤ 20 %) und Referenzvergleich sind die harten Abnahmen, Zeiten
+nur bei Load ≤ 4. Pins: Nahzoom bitgleich, sonst je Pin ein Ruling. Studioweit ≤ 5 Arbeiter (R241): Der UI-Strang
+erhält höchstens 2 parallele Arbeiter.
+
+Entscheider: L0 · Anlass: Plan REL-11 Render · ADR: —
