@@ -336,6 +336,11 @@ describe('M12 E1 Zoom 0,125 und clampToRect', () => {
   });
 });
 
+const TRI_HULL = [
+  { x: 0, y: 0 },
+  { x: 40, y: 0 },
+  { x: 0, y: 40 },
+];
 describe('REL11 Kamerahülle', () => {
   const area = (h: readonly Pt[]): number => {
     let a = 0;
@@ -442,5 +447,28 @@ describe('REL11 Kamerahülle', () => {
       expect(inner.x).toBeCloseTo(copy.x, 6);
       expect(inner.y).toBeCloseTo(copy.y, 6);
     }
+  });
+  it('clampToPolygon: degenerierte Hüllen ohne NaN', () => {
+    const p = { x: 5, y: 7 };
+    for (const h of [
+      [{ x: 1, y: 1 }],
+      [
+        { x: 1, y: 1 },
+        { x: 3, y: 1 },
+      ],
+      [
+        { x: 2, y: 2 },
+        { x: 2, y: 2 },
+      ],
+    ]) {
+      const q = clampToPolygon(p, h);
+      expect(Number.isFinite(q.x) && Number.isFinite(q.y)).toBe(true);
+    }
+    expect(clampToPolygon(p, [{ x: 1, y: 1 }])).toEqual({ x: 1, y: 1 });
+  });
+  it('clampToRect: nicht-finite Bildmitte mit hull ohne NaN', () => {
+    const c: Camera = { x: Infinity, y: NaN, zoom: 1 };
+    clampToRect(c, { x0: 0, y0: 0, x1: 40, y1: 40, hull: TRI_HULL }, VIEW.w, VIEW.h);
+    expect(Number.isFinite(c.x) && Number.isFinite(c.y)).toBe(true);
   });
 });

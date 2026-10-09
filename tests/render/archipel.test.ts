@@ -12,11 +12,11 @@ import {
 import {
   type Camera,
   centerOn,
+  convexHull,
   screenToTile,
   visibleTileRange,
   worldToScreen,
 } from '../../src/render/camera';
-import { convexHull } from '../../src/render/camera';
 import { H_TOWER, project } from '../../src/render/iso';
 import { createWorld } from '../../src/sim/world';
 import { serialize } from '../../src/sim/save';
