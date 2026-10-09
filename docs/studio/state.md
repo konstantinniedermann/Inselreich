@@ -51,19 +51,22 @@ Keine Nutzer-Aufträge offen.
 0. **Push REL-13** (plus Doku-Commits dieser Session) nach Handbuch 1.35: `tsc`, `lint`, `zeittests`, `conflicts`,
    `make test`, warten bis Last ≤ 4, `make zeitreserve-push`, `make check`, `make check-ci-perf`; CI, `gh workflow run
 Pages --ref main`, `ci.py`. Vorher prüfen: keine verwaisten Vitest-Worker (`ps`, PPID 1), Session „anno-clone #3“.
-1. **TOOL-PRETTIER-HOOK** (R417 V2): Prettier-Check geänderter Dateien beim `git commit`, < 3 s, Ablehnung ins Event-Log;
-   Werkzeug-Pflichtzeilen R375; dabei Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`) mitnehmen.
+1. **Werkzeug-Bündel** (R417 V2, R420): **TOOL-PRETTIER-HOOK** Prettier-Check geänderter Dateien beim `git commit`, < 3 s, Ablehnung ins Event-Log;
+   Werkzeug-Pflichtzeilen R375; dabei Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`) mitnehmen;
+   **TOOL-MODELL-GUARD** (Guard prüft typisierte Starts gegen die Modelltabelle, E-038); **TOOL-STUDIO-HYGIENE**
+   (Phantom-Inaktiv-Vorfälle ausblenden, verwaiste Vitest-Worker melden); `efficiency.py` auf E-049 umstellen.
 2. **REL-14-Kandidaten** (BEOB-AUSW-03, `docs/beobachtungen.md` „Ausgewertet 2026-10-09 (2)“): UI-INSPEKTOR-KLARTEXT (S),
    SIM-FEST-INSEL (S, mit UI-INSELFILTER bündelbar), ART-FELS-FERNGROESSE (S, Urteil lead-art); Trivial-Fixes `.vitest/`
    in `.gitignore`, arc42 `hud.ts`-Zeile „Steuersperre“.
 3. **Aufräumen CLEANUP-WT-2** (Ruling nötig): gemergte Worktrees inkl. `steuer-je-stufe`, Scratch-Worktree aus e90e097e,
    `.worktrees/check2.log`.
-4. **Experimente:** E-038 ab 2026-10-22, E-049 nach Bewertung E-046 (spätestens 2026-11-12). Laufend: E-037, E-042, E-046.
+4. **Experimente (R420):** laufend E-038, E-049, E-050; E-048 wartet. **Modell nur nach der Modelltabelle** in STUDIO.md
+   (Leads als Controller, Gate-Urteile lead-qa/lead-production, Kurz-Retro: `sonnet`).
 
 ## Aktuelles Projekt und Phase
 
 - Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-12, M1–M8, M10, M11, M9-Häppchen, M12; REL-13 (I-028)
-  in main, Push offen. Verfassung **1.2**, Handbuch **1.35**.
+  in main, Push offen. Verfassung **1.2**, Handbuch **1.36**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit ≤ 5 Arbeiter
   (R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats prüfen (R329); Messungen nur bei 1-min-Load
   ≤ 4 (R329).
@@ -91,7 +94,7 @@ prüfen, ob er arbeitet (R324), nicht beenden.
 - REL-11 + REL-12 live (R413, R416): Push `5d14854..3417346` nach einem Lint-Abbruch (Prettier, Trivial-Fix `4806006`).
 - I-028 „Steuer je Stufe“ komplett: Brainstorming (R412), Spec mit 42 AK (R414), Plan nach E-010 (R415, R416), Umsetzung
   T1a/T1b/T2 mit Reviews, Playtest, Final-Review opus, Merge lokal `d7291aa` (R418), Release-Check REL-13 OK (R419).
-- Release-Retro REL-12 (R417) → Handbuch 1.35. Beobachtungen ausgewertet und archiviert (BEOB-AUSW-03,
+- Release-Retro REL-12 (R417) → Handbuch 1.35; Session-Retro fb37ceac (R420) → Handbuch 1.36. Beobachtungen ausgewertet und archiviert (BEOB-AUSW-03,
   `docs/beobachtungen-archiv.md`). Verwaister Vitest-Worker beendet (Beobachtung).
 
 ## Pausierte Pakete
@@ -110,4 +113,4 @@ brauchen eigene Freigabe.
 ## Offene Entscheide
 
 - Nutzer: keine; Warteschlange leer.
-- L0: Auswahl REL-14 (Fortsetzung 2); Ruling CLEANUP-WT-2; Vorschläge der Session-Retro fb37ceac.
+- L0: Auswahl REL-14 (Fortsetzung 2); Ruling CLEANUP-WT-2.
