@@ -3948,3 +3948,21 @@ wörtlich; `ReasonCtx.tier?: Tier` in `src/ui/hints.ts`; Menge C aus R6.2 als re
 Gate Plan). Umsetzung erst nach dem Push dieser Session.
 
 Entscheider: L0 · Anlass: Gate Spec · ADR: —
+
+## R415 · 2026-10-09 · Gate Plan I-028 BEDENKEN angenommen: Nacharbeit lead-tech, danach Delta-Check L0; Push jetzt
+
+Ruling: Gate Plan zu `docs/superpowers/plans/2026-10-09-steuer-je-stufe.md` (`15142af`): lead-production BEDENKEN (Ownership
+und Reihenfolge OK; E-010 verletzt: T1-Abschnitt 19,4 KB), lead-qa BEDENKEN (Test-first und Reviews OK; drei blockende
+Punkte). **Nacharbeit durch lead-tech** (ohne Agenten, zählt nicht aufs Umsetzungsbudget): (1) Aufteilung nach E-010 in
+Index + Task-Dateien ≤ 10 KB; (2) T1 teilen in **T1a** (Weltform `taxLevels`/`taxLockedUntil`, Save v10, Migration,
+`foldBackToV9`, `setAllTax`, Bestandstests und mechanische UI-Anpassungen; Verhalten gleich) und **T1b** (Regeln je Stufe,
+`pctByTier` 115, `taxChangeSet`/`setTierTaxLevel`, `taxTiers.test.ts`); nach jedem Teil alle Tests grün; (3) `hover.test.ts`
+klären (T1 oder T2); (4) lead-qa B-1 AK-T42 mit Testschritt (Sim in T1b, `taxSummary` in T2), B-2 `triggerTaxBlocked`
+exportiert mit Fällen Stufe 1/2, B-3 Hinweis ohne Stufe nennt kleinste gesperrte Stufe (drei Fälle in `tests/ui/hints.test.ts`);
+H-1 bis H-6 nach Wortlaut Anhang 02; niedrige Punkte (QA-a, QA-g Schlüssel `"3"`, P-1 `version === 10`, QA-e, Ort von
+`taxTarget` in `tax.ts` oder begründete Abweichung); T4 nennt 42 AK. Danach **Delta-Check durch L0** anhand dieser Liste,
+keine Zweitprüfung. **Budget** nach dem Delta-Check: 11 Starts, Parallelität 1, Controller-Übergabe nach 6 Starts vor T4.
+**Push REL-11 + REL-12 startet jetzt** parallel zur reinen Doku-Nacharbeit (R335 ein Push; spätere Doku-Commits dieser
+Session gehen mit dem nächsten Push).
+
+Entscheider: L0 · Anlass: Gate Plan · ADR: —
