@@ -432,3 +432,7 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · Release-Retro REL-12 (studio-process-coach): Befund ohne Blocker
 
 - **Fundort:** `tools/studio/model.py` (Inaktiv-Erkennung, `pending_incidents`): Ein Spawn-Event ohne folgendes `agent_start` (Auftrag „no-op“, agent_id `adf27249890570d9f`) erzeugt den Vorfall „Agent unbekannt ist inaktiv“, obwohl kein Agent lief. Ursprung: Release-Retro REL-12 (B-b). Einschätzung: niedrig, Werkzeug; Spawns ohne `agent_start` nach einer Frist als „nicht gestartet“ ausblenden statt als inaktiv melden.
+
+### 2026-10-09 · Session fb37ceac (L0): Befund ohne Blocker
+
+- **Fundort:** Prozessliste: verwaister Vitest-Fork-Worker (`vitest/dist/workers/forks.js`, PPID 1, cwd `.worktrees/ui-seekarte`) lief seit 14:26 (Session e90e097e) über 6 h mit ~95 % CPU und trieb die Last bis 20; L0 hat ihn per `kill <PID>` beendet (kein pkill/killall). Ursprung: Lastspitze während I-028. Einschätzung: mittel, Werkzeug; abgebrochene Testläufe hinterlassen Worker; Vorschlag: TOOL-TESTLOCK meldet beim Start Vitest-Worker mit PPID 1 älter als 30 min (nur melden, nicht beenden). Ausserdem lebt die Claude-Session „anno-clone #3“ (seit 2026-10-08) weiter; ob sie aktiv arbeitet, ist ungeklärt (R324).
