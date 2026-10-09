@@ -3874,3 +3874,17 @@ Ruling: Merge-Lauf brach in `make zeittests` ab: `tests/render/seaMap.test.ts` (
 Integrator-Abbrüche dieser Session (TSC, ZEITTESTS) wären damit vor dem Integrator gefunden worden.
 
 Entscheider: L0 · Anlass: Integrator MERGE-UI-SEEKARTE gescheitert · ADR: —
+
+## R410 · 2026-10-09 · Session-Retro e90e097e: V1–V3 angenommen; Push-Plan nächste Session
+
+Ruling: Retro `docs/studio/retros/2026-10-09-session-e90e097e-ende.md` angenommen. (V1) Pflichtzeile „schnelle
+Make-Prüfungen ohne Testlauf: `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts` Exit 0“ in jeder
+Task-DoD (Briefing-Vorlage Punkt 5) und im Integrator-Vorlauf; Messgrösse 0 Integrator-Abbrüche dieser Klasse in 5
+Gates (Ausgang 3). (V2, = R395 V2) Rot-Beleg im Task-Bericht: je neuem Testfall die rote Ausgabe vor dem Fix
+(Commit-Reihenfolge allein genügt nicht); Messgrösse ≤ 20 % unbelegte Rot-Phasen in 3 Paketen mit Tests. V1 + V2
+setzt der studio-coach sofort um (Handbuch 1.34). (V3) E-049 startet, sobald E-046 bewertet ist (spätestens
+2026-11-12; Hebel nach R316). **Push-Plan nächste Session:** ein Push für REL-11 + REL-12 (UI-SEEKARTE); vorher kurzer
+Release-Check REL-12 (`smoke.mjs` auf main plus Seekarten-Abschnitt; T6 lief nur auf dem Branch), dann Push-Gate
+nach Handbuch 1.34.
+
+Entscheider: L0 · Anlass: Session-Retro · ADR: —
