@@ -12,6 +12,8 @@ import type { StampKind } from './decor';
 // Mauerreste; L5: D1 Palme, E1 Wrack, E3 Meeresfels (und Felsnadel), E8 Felseiland. Die Platzierung kommt aus `decor.ts`; hier stehen Formen, Schatten, Zoomschwellen und der Stempel-Cache.
 // Kein Zufall ausser `hash2`. Gezeichnet wird in Weltpixeln mit dem Ursprung in der Rautenmitte der Kachel (Boden y = 0,
 // nach oben negativ), der Cache hält je (Art, Variante, Zoomstufe) eine feste Box.
+// Meeresfels (E3): bis Zoomstufe `FAR_ROCK_MAX_STEP` (0,5) eine eigene gedrungene Fern-Form (`farRockGeom`, Cache-Schlüssel `|far`),
+// damit er bei kleinem Zoom nicht als Segel oder Boot gelesen wird (ART-MEERESFELS); die Nahform bleibt bitgleich.
 
 export type DecorItem = Extract<SortedItem, { kind: 'decor' }>;
 
@@ -650,6 +652,81 @@ export function needleGeom(v: number): NeedleGeom {
     ],
   };
 }
+
+/** Fern-Zoom des Meeresfelsen: bis zu dieser Zoomstufe (ZOOM_STEPS) wird die gedrungene Fern-Form gerastert (ART-MEERESFELS). */
+export const FAR_ROCK_MAX_STEP = 0.5;
+/** Ein Buckel der Fern-Form: Umriss (Bildschirm-x, Boden y = 0), Lichtfläche, Schattenfläche und deren gestaffelte Trennlinie. */
+export interface FarPart {
+  outline: Pt[];
+  lit: Pt[];
+  shade: Pt[];
+  /** Trennlinie Licht/Schatten von unten nach oben (endet auf dem Umriss). */
+  seam: Pt[];
+  hw: number;
+  h: number;
+}
+/**
+ * Fern-Form (Zoom <= 0,5): gedrungene, abgerundete Buckel statt hoher Brocken und Nadel. Breite : Höhe ≈ 1,28 (das Schiff
+ * liegt bei ≈ 1,06), kein spitzer Scheitel (Winkel an der Kuppe weit über 50 Grad), die Lichtfläche ist durch eine
+ * unregelmässige Linie von der Schattenfläche getrennt (keine senkrechte Mittellinie). Rein, ohne Zufall.
+ */
+export function farRockGeom(v: number): FarPart[] {
+  const m = v >= 3 && v < 6 ? -1 : v === 7 ? -1 : 1;
+  const mound = (cx: number, hw: number, h: number, skew: number): FarPart => {
+    const p = (x: number, y: number): Pt => ({ x: cx + x * hw, y: -y * h });
+    const o = [
+      p(-1, 0),
+      p(-0.98, 0.42),
+      p(-0.72, 0.8),
+      { x: cx - 0.25 * hw + skew, y: -h },
+      { x: cx + 0.2 * hw + skew, y: -h * 0.93 },
+      p(0.62, 0.7),
+      p(0.96, 0.34),
+      p(1, 0),
+    ];
+    const seam = [p(0.3, 0), p(-0.18, 0.4), p(0.3, 0.66), o[3]!];
+    return {
+      outline: o,
+      lit: [o[0]!, o[1]!, o[2]!, o[3]!, seam[2]!, seam[1]!, seam[0]!],
+      shade: [seam[0]!, seam[1]!, seam[2]!, o[3]!, o[4]!, o[5]!, o[6]!, o[7]!],
+      seam,
+      hw,
+      h,
+    };
+  };
+  if (v >= 6) {
+    // Nadel als gedrungener Pfeiler: breiter Fuss, zwei Schultern, gebrochene (nicht spitze) Kuppe
+    const P = (x: number, y: number): Pt => ({ x: x * 1.1 * m, y });
+    const o = [
+      P(-12, 0),
+      P(-11.6, -7),
+      P(-9.4, -12.5),
+      P(-5.5, -15.5),
+      P(-2, -14),
+      P(0.8, -18.5),
+      P(5, -17),
+      P(8.2, -13),
+      P(11, -7.5),
+      P(12, 0),
+    ];
+    const seam = [P(3, 0), P(-2.5, -6), P(3.5, -11), P(-1.5, -15.5), o[5]!];
+    return [
+      {
+        outline: o,
+        lit: [o[0]!, o[1]!, o[2]!, o[3]!, o[4]!, o[5]!, seam[3]!, seam[2]!, seam[1]!, seam[0]!],
+        shade: [seam[0]!, seam[1]!, seam[2]!, seam[3]!, o[5]!, o[6]!, o[7]!, o[8]!, o[9]!],
+        seam,
+        hw: 13.2,
+        h: 18.5,
+      },
+    ];
+  }
+  // 1–3 Buckel (Variante % 3 + 1); Masse so, dass Breite : Höhe ≈ 1,28 bleibt (Schiff ≈ 1,06, Test)
+  if (v % 3 === 0) return [mound(0, 11.6, 16, 0.8)];
+  if (v % 3 === 1) return [mound(-2 * m, 9.5, 17, 0.8 * m), mound(6.9 * m, 6, 11, 0)];
+  return [mound(-9.7 * m, 5, 9.5, 0), mound(7 * m, 5.5, 12, 0), mound(-1 * m, 8.5, 19, 0.8 * m)];
+}
+
 const ISLET_H = 30;
 
 /** Ein Felsbrocken (flach facettiert, Licht links) mit nassem Fuss. */
@@ -704,7 +781,35 @@ function paintBoulder(
   ctx.stroke();
 }
 
-function paintSeaRock(ctx: CanvasRenderingContext2D, v: number): void {
+/** Fern-Zeichner (Zoom <= 0,5): gedrungene Buckel mit gestaffelter Licht/Schatten-Trennlinie, nasser Fuss, Umriss. */
+function paintFarSeaRock(ctx: CanvasRenderingContext2D, v: number): void {
+  const parts = farRockGeom(v);
+  const xs = parts.flatMap((q) => q.outline.map((p) => p.x));
+  // Reihenfolge: hohe Buckel zuerst (hinten), kleinere danach, sie stehen davor (vorn) und verdecken den Fuss der hohen
+  for (const q of parts.slice().sort((a, b) => b.h - a.h)) {
+    poly(ctx, DECOR_TONES.rockMid, q.outline);
+    poly(ctx, DECOR_TONES.rockLight, q.lit);
+    poly(ctx, DECOR_TONES.rockShade, q.shade);
+    ctx.strokeStyle = DECOR_TONES.rockDark;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    q.outline.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.stroke();
+  }
+  const x0 = Math.min(...xs),
+    x1 = Math.max(...xs);
+  poly(ctx, DECOR_STAMP_TONES.rockWet, [
+    { x: x0, y: 0.4 },
+    { x: x0 + 1, y: -2.6 },
+    { x: x1 - 1, y: -2.4 },
+    { x: x1, y: 0.4 },
+    { x: (x0 + x1) / 2, y: 2 },
+  ]);
+}
+
+function paintSeaRock(ctx: CanvasRenderingContext2D, v: number, far = false): void {
+  if (far) return paintFarSeaRock(ctx, v);
   if (v >= 6) {
     // Felsnadel: unregelmässiger, kantiger Pfeiler mit breitem Fuss, abgebrochener Spitze und 1–2 Nebenbrocken
     const g = needleGeom(v);
@@ -888,7 +993,7 @@ function paintRuin(ctx: CanvasRenderingContext2D, v: number): void {
   }
 }
 
-/** Malt einen Stempel mit dem Ursprung (`ox`, `oy`) in Zielpixeln und dem Faktor `scale`. */
+/** Malt einen Stempel mit dem Ursprung (`ox`, `oy`) in Zielpixeln und dem Faktor `scale`; `far` wählt die Fern-Form des Meeresfelsen (nur `seaRock`). */
 export function paintDecorStamp(
   ctx: CanvasRenderingContext2D,
   kind: StampKind,
@@ -896,6 +1001,7 @@ export function paintDecorStamp(
   scale: number,
   ox: number,
   oy: number,
+  far = false,
 ): void {
   const v = variantOf(kind, variant);
   ctx.save();
@@ -906,7 +1012,7 @@ export function paintDecorStamp(
   else if (kind === 'palm') paintPalm(ctx, v >> 2, v & 3);
   else if (kind === 'shorePine') paintShorePine(ctx, v);
   else if (kind === 'wreck') paintWreck(ctx, v);
-  else if (kind === 'seaRock') paintSeaRock(ctx, v);
+  else if (kind === 'seaRock') paintSeaRock(ctx, v, far);
   else if (kind === 'islet') paintIslet(ctx, v);
   else paintRuin(ctx, v);
   ctx.restore();
@@ -959,7 +1065,8 @@ export function decorStampFor(
     cacheBytes = 0;
     cacheSeed = seed;
   }
-  const key = `${kind}|${variant}|${ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number])}`;
+  const far = kind === 'seaRock' && step <= FAR_ROCK_MAX_STEP;
+  const key = `${kind}|${variant}|${ZOOM_STEPS.indexOf(step as (typeof ZOOM_STEPS)[number])}${far ? '|far' : ''}`;
   const hit = cache.get(key);
   if (hit) {
     cache.delete(key);
@@ -973,7 +1080,7 @@ export function decorStampFor(
   canvas.height = Math.ceil((STAMP_BOX.y1 - STAMP_BOX.y0) * step);
   const c = canvas.getContext('2d');
   if (!c) return null;
-  paintDecorStamp(c, kind, variant, step, -STAMP_BOX.x0 * step, -STAMP_BOX.y0 * step);
+  paintDecorStamp(c, kind, variant, step, -STAMP_BOX.x0 * step, -STAMP_BOX.y0 * step, far);
   const bytes = canvas.width * canvas.height * 4;
   if (bytes <= max) {
     for (const [k, e] of cache) {
