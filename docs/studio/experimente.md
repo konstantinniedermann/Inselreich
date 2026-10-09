@@ -80,6 +80,7 @@ E-050, E-049, E-044.
 - Start: 2026-10-08 (Handbuch 1.27, Leads 1.10/1.6/1.8); V2-Vorbedingung geprüft (Dashboard und Modell brauchen `active`/`done` nicht, siehe Retro-Nachtrag und Coach-Bericht)
 - Bewertung: –
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): V1 ≈ 1,0 Neuschreibungen nach Turn-Ende je Lead-Instanz (13 in 13, nicht erreicht); V2 0,38 Status-Turns je Instanz (erreicht); Review-Runden 1,00.
+- Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, ersetzt den Datenpunkt oben, Session zählt einmal): V1 18 in 22 Lead-Instanzen = 0,82 (nicht erreicht; Teil 2 allein ≈ 0,56, abgeleitet); V2 14 in 22 = 0,64 (erreicht); Review-Runden 1,00.
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -91,6 +92,7 @@ E-050, E-049, E-044.
 - Ruling: R190 (vorgeschlagen, wartet auf Platz)
 - Start: –
 - Bewertung: –
+- Datenpunkt 1, Release-Check REL-10 (R389, R390; Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B13): CLI-Rater urteilte ohne Kontext „Boot“ für den Meeresfels und entschied den Widerspruch aus R381; zweiter Datenpunkt ist die Abnahme von ART-MEERESFELS.
 
 ## E-019 · vorgeschlagen · Parallelität aus der Dateimatrix
 
@@ -325,6 +327,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-08, Platz frei durch Rotation R319 (E-022, E-030 abgeschlossen); Handbuch 1.25 gilt seit 2026-10-08, Zählung der 3 Sessions ab Handbuch 1.27
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): 27,2 %; nur 7 von 27 Neuschreibungen > 20k nach Bash, 20 nach Turn-Ende (≈ 80 % Gewicht) — der mögliche Effekt von E-037 ist gedeckelt.
 - Hinweis: Der frühere kombinierte E-037 (Hebel 1 und 5) war doppelt eingetragen; Hebel 5 steht unverändert als E-038.
+- Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): 24,3 %; 35 Neuschreibungen > 20k, 90 % des Gewichts nach Turn-Ende, davon eine L0-Neuschreibung nach 620 min Pause mit 25 % des Gewichts.
 
 ## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
 
@@ -403,6 +406,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
 - Ruling: R344, R349
 - Datenpunkt 1 von 3, S-2026-10-08-29c3791b: Monat 918, Konto 1182, Session 0 mit Wert; kein Verbrauch erst durch den Nutzer entdeckt.
+- Datenpunkt 1 ergänzt (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): Session-Minuten 8 (REL-09-Push), Monat 926, Konto 1192.
 
 ## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 
@@ -444,7 +448,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
 - Ruling: –
 
-## E-051 · vorgeschlagen · Werkzeug-Riegel für volle Testläufe
+## E-051 · übernommen als Werkzeug (R375, R380) · Werkzeug-Riegel für volle Testläufe
 
 - Hypothese: Wenn `make check`, `make test` und `make zeitreserve-push` vor dem vollen Vitest-Lauf eine Sperre `.studio/locks/vitest` atomar nehmen (`mkdir`, darin PID, Paket, Zeit; Sperre eines toten PID gilt als frei) und bei belegter Sperre oder 1-min-Load > 8 mit Hinweis abbrechen statt zu blockieren, laufen nie zwei volle Läufe zugleich und kein Gate-Urteil entsteht unter Fremdlast (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B4; R357, R369).
 - Messgrösse: 0 Fälle zweier gleichzeitiger voller Vitest-Läufe und 0 Gate-Läufe bei Load > 8 in 3 Sessions mit ≥ 3 parallelen Strängen (Ausgang S-2026-10-08-29c3791b: Load 57 (R357), `make check` bei Load 12,7 mit fremdem Lauf (R369), Playtester gegen R329 (R369), Echtprobe wegen Last ausgefallen (R362)). Gegenprobe: 0 hängende Sperren; Abbrüche je Session sichtbar und Wartezeit bis zum erfolgreichen Lauf im Median ≤ 10 min.
@@ -452,4 +456,26 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions mit Parallelität, höchstens bis 2026-11-19. Werkzeug ohne offene Hypothese zur Regel selbst: L0 kann es wie E-043/E-047 als Werkzeug-Paket führen (Messauftrag statt Platz).
 - Rückfall: Sperre in `Makefile` entfernen (`git revert`); R357 gilt weiter als Handbuchsatz.
 - Dateien: `Makefile`, `tools/studio/` (kleines Sperr-Skript), `tools/studio/tests/` (Paket TOOL-TESTLOCK, lead-tech, ≈ 40 Tools)
+- Ruling: R375 (als Werkzeug ohne Experimentplatz), R380 (Merge TOOL-TESTLOCK), R387 (FIX-TESTLOCK-RACE)
+- Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B11): Echtprobe zweier `make test` — zweiter bricht ab (R380); eigener ABA-Wettlauf ≈ 3 von 100 Runden gefunden und behoben (R385, R387).
+
+## E-052 · vorgeschlagen · Testzeit-Ausgang vor Task 1
+
+- Hypothese: Wenn das Briefing für Pakete mit `src/`-Änderung vor Task 1 die Zeiten der berührten Tests auf main verlangt (`npx vitest related --run <geplante src-Dateien>`, Tests > 200 ms in den Plan) und die Abnahme dieselben Dateien A/B main/Branch unmittelbar nacheinander vergleicht, werden Testzeit-Regressionen bestehender Tests im Plan geschätzt und vor dem Merge-Stand gefunden (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B8, B9; R370, R385, R386, R388).
+- Messgrösse: In den nächsten 3 Paketen mit `src/`-Änderung 0 Merge-Abbrüche und 0 Mehrbedarfs-Freigaben wegen Testzeiten bestehender Tests (Ausgang S-2026-10-08-29c3791b: 3 Pakete, KORRIDOR 40 Tools und 3 Merge-Abbrüche). Gegenprobe: Mehraufwand der Messung ≤ 5 Tools je Paket; keine gestrichenen Prüfschritte des Plans.
+- Messbarkeit: Der Ausgang steht im Plan, das A/B im Bericht; `zeitreserve` bleibt unverändert als unabhängige Gegenprobe.
+- Zeitraum: 3 Pakete mit `src/`-Änderung, höchstens bis 2026-11-19.
+- Rückfall: Briefing-Vorlage und Handbuch 1.31. Stufe 2 bei Misserfolg: `zeitreserve` gegen main-Baseline je Test (Werkzeug, nach E-053).
+- Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
+- Ruling: –
+
+## E-053 · vorgeschlagen · `zeitreserve` urteilt nach Fremdlast vor dem Lauf
+
+- Hypothese: Wenn `zeitreserve` `strict` urteilt, sobald die Last vor dem Lauf ≤ 4 ist und die Testsperre (E-051) gehalten wird, statt `max(loadStart, loadEnd) ≤ 4` zu verlangen, wird die Messung am Push-Gate auf ruhigem Rechner belastbar, ohne dass rote CI-Läufe wegen Zeittests zunehmen (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B10; R385 (3): Start 2,8 → Ende 9,8; `tools/zeitreserve/reporter.ts:54`, `rule.ts:116`).
+- Vorbedingung: lead-tech belegt, dass Faktor 4 und Runner ×3 (E-043) aus vollen Läufen mit Eigenlast kalibriert sind; sonst entfällt der Vorschlag.
+- Messgrösse: 0 Urteile `unreliable` in den nächsten 3 Push-Gates mit `loadStart ≤ 4`. Gegenprobe: Messauftrag E-043 (0 rote CI-Läufe wegen `zeitreserve` in 3 Pushes mit Zeittest-Änderung).
+- Messbarkeit: `loadStart`, `loadEnd` und `loadMax` bleiben in der Ausgabe; die alte Regel bleibt je Lauf nachrechenbar.
+- Zeitraum: 3 Push-Gates, höchstens bis 2026-11-19.
+- Rückfall: `git revert` der Änderung in `tools/zeitreserve/`.
+- Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/reporter.ts`, `tests/tools/` (Paket lead-tech, ≈ 15 Tools)
 - Ruling: –
