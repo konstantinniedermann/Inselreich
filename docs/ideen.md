@@ -84,6 +84,7 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Doppelung: keine; Aufträge (Verkauf an Händler) und Boom (Verkaufspreis) existieren, die Kaufseite ist unberührt. Handelsrouten (M12) sind Schiffsverkehr, nicht dieses Zufallsangebot.
 - Bewertung lead-design: Spass 3 → 2: Billig-Vorrat ist eine kleine Abwägung, die Lagergrenze 100 deckelt sie. **Entartung:** −30 % bricht die Regel „Zukaufen für Aufträge lohnt nie“ (Stoff 21 < Prämie 22, Rum 28 < 30, Glas 35 < 37, Stein 10,5 < 11); sicher ist höchstens −20 % (engste Spanne Nahrung, Wolle, Zuckerrohr, Rum: Prämie = 75 % des Kaufpreises). Einfachere Variante: vierte Krisenart „Schnäppchen“ im vorhandenen Krisen-Pool (Karte, Ziehung, Restzeit vorhanden) — ändert aber die Krisenverteilung und damit `balance-crises.test.ts`. Baustein fürs M12-Brainstorming (Handel), nicht gepitcht.
 - Entscheid: R219 → geparkt fürs M12-Brainstorming (Handel; Rabatt ≤ 20 %)
+- Nachtrag IDEEN-04 (E6 aus R352): bleibt geparkt; Spec-Fassung E6 (`anhang-03`, Save v10) ist ein Händlerschiff mit Angebot, Wirkung wie oben bewertet; gemeinsam mit I-029 im Handels-Brainstorming denken.
 
 ### I-007 · eingeplant · Fest in der Kapelle
 
@@ -292,3 +293,47 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Verwandt: I-025
 - Bewertung IDEEN-03: eigenes Paket nach TASTEN-KOMFORT (gleiche Dateien `inspect.ts`, sonst Merge-Konflikt); Ausbau-Karte zeigt `Umschalt+U`, Knopf «Gleiches bauen».
 - Entscheid: Empfehlung einplanen als eigenes M-Paket (Reihenfolge 2)
+
+### I-027 · gepitcht · Seekarte und Gründungsfahrt
+
+- Bereich: Bedienung/Grafik · Säule: Insel besiedeln (Archipel erlebbar machen) · Quelle: Spec-Kann-Teil E5 (`docs/superpowers/specs/2026-10-05-m12-weite-welt-spec/anhang-03-e2-e4-regeln-und-werte.md` Abschnitt G, AK-E5-01/-02 in `anhang-04-ak-liste.md`); Ist-Stand: `README.md` Z. 359 (Knopf «Inseln», Tasten `0`/`9` wechseln nur die Insel), `src/sim/defs/sea.ts` (`ISLANDS`, `dMin`/`dMax`)
+- Spielerwirkung: „Der Spieler öffnet im Knopf «Inseln» eine kleine Seekarte mit allen Inseln, Fahrlinien und Schiffspunkten, springt per Klick zu einer Insel und sieht nach dem Bau eines Kontors II ein Schiff einmalig von der Heimat zur neuen Insel fahren."
+- Grösse: S–M (Karte S, Gründungsfahrt M-Anteil) · Risiko: Perf (Silhouetten je Insel einmal rastern und cachen); kein Sim-Zustand, nicht im Save, Baseline unberührt
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11 (nur Karte; mit Gründungsfahrt Aufwand 2 = 10)
+- Randfälle: Kontor II wird während der Fahrt abgerissen → Sprite endet ohne Meldung; Laden → keine Fahrt (AK-E5-02); Schiff ohne Route erscheint nicht als Punkt, Schiff im Hafen als Punkt am Anker; Fenster unter 1280 px nur „stürzt nicht ab".
+- Doppelung: keine; I-019 (Angebotsschiff) betrifft den Kauf, nicht die Übersicht. Zusammen mit dem Seefahrt-Bündel lesbar, nicht davon abhängig.
+- Bewertung lead-design (IDEEN-04): Schnitt in zwei Teile. Karte mit Silhouetten, Linien und Schiffspunkten ist S und löst echtes Orientierungsproblem (Inselwechsel heute nur per `9`/`0` und Listenknopf); die Gründungsfahrt ist reine Kür (M-Anteil, kein Sim-Wert) und kommt später. Passung 3 → 2: stärkt Archipel indirekt. Spass bleibt 2, da Übersicht ohne neue Entscheidung. Silhouetten einmal cachen (Perf, `CAPS`). Pitch als S-Häppchen nur für die Karte.
+- Entscheid: Empfehlung einplanen (nur Karte, S-Platz REL-12); Ruling IDEEN-04 offen
+
+### I-028 · gepitcht · Steuer je Stufe
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (nur Mechanik, ADR-006): Steuersatz getrennt nach Bevölkerungsgruppe; Ist-Stand `README.md` Z. 453 („gilt für die ganze Insel", ein Regler), `src/sim/defs/tiers.ts` (`tax` 2/7/14/22), Amtsstube (`src/sim/defs/buildings.ts` `townhall`)
+- Spielerwirkung: „Der Spieler stellt in der Amtsstube die Steuer für Pioniere, Siedler, Bürger und Kaufleute getrennt ein und entscheidet, ob er Pioniere niedrig hält, damit sie schnell aufsteigen, und Kaufleute stärker belastet."
+- Grösse: M · Risiko: Save und Baseline (vier Stufenwerte statt eines im Weltzustand, Migration mit dem bisherigen Wert für alle; Controller stellt heute global ein → Fingerabdruck nur bitgleich, wenn alle vier gleich gesetzt bleiben)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12
+- Randfälle: Kaufleute haben keinen Aufstieg (`upgradeCost: null`), „hoch" kostet dort nur Belegung → Dominanz möglich, Belegung oder Versorgung muss dort greifen (mit `design-economy-designer` prüfen); Sperre von 30 s nach dem Umschalten je Regler oder gemeinsam; Kopfzeilen-Knopf zeigt Mischung («gemischt»); Tooltip und Chronik müssen die Wirkung je Stufe nennen.
+- Doppelung: keine; I-007 (Fest) beschleunigt Aufstieg lokal und warenbasiert, diese Idee ist global und geldbasiert je Stufe; zusammen testen, damit „niedrig" für Siedler plus Fest nicht dominiert.
+- Bewertung lead-design (IDEEN-04): Stärkste neue Entscheidung der Runde und schon in der ersten Stunde spürbar (Pioniere und Siedler niedrig für schnellen Aufstieg gegen Steuer, Kaufleute ohne Aufstieg anders). Risiko 1: Save und Baseline zugleich. **Entartung:** Kaufleute ohne Aufstieg machen «hoch» dort dominant (nur Belegung als Preis); die Stufe «hoch» braucht für Kaufleute einen echten Preis (Abwanderung oder Versorgungsschwelle), sonst ist es ein versteckter Pflichtregler. Der Controller fährt global; bei vier gleichen Werten bleibt die Baseline bitgleich. Werte und Bilanz je Einwohner mit `design-economy-designer`. M (Reglerlogik, Panel, Kopfzeile, Migration, Balancing): Baustein fürs Wirtschafts-Brainstorming, nicht in den S-Platz.
+- Entscheid: Empfehlung einplanen als Baustein fürs Wirtschafts-Brainstorming; Ruling IDEEN-04 offen
+
+### I-029 · bewertet · Gefragte Ware
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (nur Mechanik, ADR-006): wechselnde Nachfrage nach einem Handelsgut; Pfade `src/sim/defs/goods.ts` (`sell` fest, `SELL_FLOOR`/`SELL_DROP` Sättigung), `src/sim/defs/crises.ts` (`BOOM_PCT` 150 gilt für alle Güter), `README.md` („Handel" mit Verkaufssättigung)
+- Spielerwirkung: „Der Spieler sieht am Kontor-Chip «Gefragt: Rum +40 % · noch 3:00» und entscheidet, ob er Rum aus dem Lager jetzt verkauft oder die Brennerei hochfährt, statt immer das Gut mit dem besten Grundpreis zu liefern."
+- Grösse: S–M · Risiko: Save und Baseline (aktives Gut mit Ablauf im Weltzustand; Ziehung über eigenen seeded Strom nach ADR-010, nicht in Aufträge oder Krisen; Controller verkauft nicht nach Nachfrage → Baseline bitgleich)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10
+- Randfälle: Aufschlag so klein, dass „Gefragt" nie über den Kaufpreis führt (Verkauf bleibt unter `buy`, kein Kauf-und-Verkauf-Gewinn); fällt mit Boom zusammen → nur der höhere Satz, nicht multipliziert; Gut noch nicht freigeschaltet → nicht ziehbar; Lager leer → Chip bleibt, Hinweis «Kein Bestand».
+- Doppelung: keine; Boom hebt alle Preise gleichzeitig, I-006 betrifft Zukauf (Kaufseite), Handelsaufträge sind Fixmengen mit Prämie. Gefragte Ware ist die Verkaufsseite je Gut.
+- Bewertung lead-design (IDEEN-04): Verkaufsseite je Gut ist neu, aber Boom (alle Güter 150 %) und Sättigung decken schon einen Teil; der Mehrwert gegen heute ist eine kleine Umlenkung des Verkaufs. Gleicher Eingriffstyp (Weltzustand, eigener Strom, Krisen-Test) wie I-006; beide gemeinsam im Handels-Brainstorming denken (Kaufseite I-006 ≤ −20 %, Verkaufsseite hier ≤ Kaufpreis ohne Kauf-und-Verkauf-Gewinn). Nicht gepitcht.
+- Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006); Ruling IDEEN-04 offen
+
+### I-030 · bewertet · Wahlziele nach der Gewürzstadt
+
+- Bereich: Inhalt · Säule: Insel besiedeln (Langzeitmotivation) · Quelle: `README.md` Z. 31–33 („danach spielst du frei weiter"; nach dem dritten Ziel gibt es kein weiteres Ziel); Genre-Mechanik: freiwillige Zusatzziele nach dem Hauptziel
+- Spielerwirkung: „Der Spieler wählt nach der Gewürzstadt aus drei freiwilligen Zielen im Ziel-Chip (z. B. «Alle drei Inseln mit Kontor», «Bilanz über +500 / min», «Alle Häuser Kaufleute auf 100 Einwohner») und hat wieder eine Richtung für die Wirtschaft."
+- Grösse: S · Risiko: Save (gewähltes und erreichtes Wahlziel als Flagge, Migration mit „keins"); Ziele nur als Daten in `src/sim/defs/`; Controller läuft nach Ziel 3 nicht weiter → Baseline bitgleich
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11
+- Randfälle: Wert beim Erreichen nur gehalten gültig (Bilanz kurz positiv zählt nicht, wie bei I-010: Stand beim Prüfen über 60 s); Wechsel des Wahlziels erlaubt, erreichte Ziele bleiben erreicht; Spielstand, der die Bedingung schon erfüllt → Meldung einmal; Spielende gibt es nicht.
+- Doppelung: keine; I-010 (Gewürzstadt) ist das dritte Hauptziel, I-017 (Auftragsreihe) und I-018 (Story) sind Vorlauf und Erzählung, nicht Nachspiel.
+- Bewertung lead-design (IDEEN-04): Lücke nach Ziel 3 echt, aber die Beispielziele tragen nicht: «Bilanz +500 / min» ist mit 100 Kaufleuten (≈ 12 000 Geld/min brutto) in Minuten erreicht, das war schon die Entartung von I-010. Brauchbar nur mit Zielen, die Planung verlangen (z. B. n Kaufleute auf zwei Inseln, alle Güter lieferbar, gehalten 60 s). Die Zielwerte brauchen `design-economy-designer`; Spass 2 (spätes Spiel). Grenzfall des Pitchs (11), aber ohne tragfähige Werte noch nicht: geparkt-Empfehlung bis Werte stehen.
+- Entscheid: Empfehlung parken bis Zielwerte gerechnet sind; Ruling IDEEN-04 offen
