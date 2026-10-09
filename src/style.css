@@ -599,6 +599,22 @@ body {
 .tax-lock {
   font-style: italic;
 }
+.tax-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5.5em) repeat(3, minmax(0, 1fr)) minmax(0, auto);
+  gap: 4px;
+  align-items: center;
+}
+.tax-grid .btn {
+  padding-left: 2px;
+  padding-right: 2px;
+  min-width: 0;
+}
+.tax-min {
+  white-space: nowrap;
+  font-size: 0.85em;
+  text-align: right;
+}
 
 /* Dialoge: Einstellungen, Credits (M7-U1) */
 .modal-backdrop {

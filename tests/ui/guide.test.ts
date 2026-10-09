@@ -91,7 +91,7 @@ describe('nextStep (AK-UX-08)', () => {
     setAllTax(w, 'high');
     expect(nextStep(w)).toMatch(/^Steuer ‚hoch' für Pioniere verhindert den Aufstieg: /);
   });
-  it("AK-T32 Leitfaden U-12: volles Siedler-Haus, Siedler hoch → Satz nennt Siedler", () => {
+  it('AK-T32 Leitfaden U-12: volles Siedler-Haus, Siedler hoch → Satz nennt Siedler', () => {
     const w = world(2, TIERS[2].maxInhabitants, ['chapel', 'weaver', 'sheepfarm']);
     for (const h of Object.values(w.buildings).filter((b) => b.house))
       setHouse(h, 2, TIERS[2].maxInhabitants, ['food', 'cloth']);

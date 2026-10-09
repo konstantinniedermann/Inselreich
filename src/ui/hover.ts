@@ -11,7 +11,8 @@ import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { houseDiagnosis, missingInputs, type Diagnosis } from '../sim/queries';
 import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
-import { effectiveTaxLevel } from '../sim/townhall';
+import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
+import { taxSummaryText } from './taxView';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import { HOME, home, adjacentOf, center, inBounds, isKontor } from '../sim/world';
 import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
@@ -104,9 +105,11 @@ function houseInfo(world: World, b: Building): HoverInfo {
     lines.push(
       st.ok
         ? 'Aufstieg bereit'
-        : `Aufstieg: ${friendlyReason(world, st.reasons[0] ?? '', { island: b.island })}`,
+        : `Aufstieg: ${friendlyReason(world, st.reasons[0] ?? '', { island: b.island, tier: house.tier })}`,
     );
   }
+  if (townhallActive(world))
+    lines.push(`Steuer: ${TAX_LEVELS[effectiveTaxLevel(world, house.tier)].name}`);
   return { title: HOUSE_TITLES[house.tier], lines };
 }
 
@@ -163,7 +166,7 @@ function townhallInfo(world: World, b: Building): HoverInfo {
   return {
     title: BUILDING_DEFS[b.defId].name,
     lines: [
-      `Steuer: ${TAX_LEVELS[effectiveTaxLevel(world, 1)].name}`,
+      `Steuer: ${taxSummaryText(world)}`,
       `Sperren: ${world.goodLocks.length}`,
       trouble ? `Wirkt nicht: ${trouble}` : 'Klicken zum Einstellen',
     ],

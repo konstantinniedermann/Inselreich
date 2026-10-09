@@ -1,7 +1,8 @@
 import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS, WIN_CITIZENS } from '../sim/defs/tiers';
+import { taxLocked } from '../sim/tax';
 import { refundCost } from '../sim/economy';
 import { canClearForest, canPlantForest } from '../sim/forest';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
@@ -9,7 +10,7 @@ import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
 import { paidCost } from '../sim/upgrade';
-import type { Building, BuildingDefId, Cost, GoodId, World } from '../sim/types';
+import type { Building, BuildingDefId, Cost, GoodId, Tier, World } from '../sim/types';
 import { HOME, home, adjacentOf, idx, isKontor, tileAt } from '../sim/world';
 import { toolAfford } from './islandTools';
 import { costLine } from './dom';
@@ -24,6 +25,8 @@ export interface ReasonCtx {
   amount?: number;
   /** Insel, deren Bestand genannt wird (Standard Heimat). */
   island?: number;
+  /** Bevölkerungsstufe, auf die sich ein Steuergrund bezieht (P-2). */
+  tier?: Tier;
 }
 
 /** `show` liefert den Anzeigetext; `null` = Grund unverändert anzeigen. */
@@ -141,8 +144,12 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   {
     source: 'tax',
     pattern: /^Sperrzeit$/,
-    show: (_m, w) =>
-      `Steuer erst in ${formatGameTime(w.taxLockedUntil[1] - w.tick)} wieder änderbar`,
+    show: (_m, w, c) => {
+      const t = c.tier ?? TIER_IDS.find((x) => taxLocked(w, x));
+      return t === undefined
+        ? null
+        : `Steuer für ${TIERS[t].name} erst in ${formatGameTime(w.taxLockedUntil[t] - w.tick)} wieder änderbar`;
+    },
   },
   { source: 'orders', pattern: /^Kein Auftrag$/, show: () => 'Gerade gibt es keinen Auftrag' },
   {
@@ -172,7 +179,10 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   {
     source: 'upgradeStatus',
     pattern: /^Steuer zu hoch$/,
-    show: () => `Steuer ‚${TAX_LEVELS.high.name}' verhindert den Aufstieg`,
+    show: (_m, _w, c) =>
+      c.tier === undefined
+        ? `Steuer ‚${TAX_LEVELS.high.name}' verhindert den Aufstieg`
+        : `Steuer ‚${TAX_LEVELS.high.name}' für ${TIERS[c.tier].name} verhindert den Aufstieg`,
   },
   {
     source: 'upgradeStatus',
