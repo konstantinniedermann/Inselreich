@@ -3527,3 +3527,16 @@ Klärung im nächsten Release-Check als Blindprobe (Probe-Bild ohne Kontext, Urt
 E-018); bis dahin bleibt die Beobachtung offen. Merge durch den Integrator; danach Start SEE-F1-KORRIDOR.
 
 Entscheider: L0 · Anlass: Bericht ART-L8-SELTEN · ADR: —
+
+## R382 · 2026-10-09 · Gate Merge UI-KAMERA-KLEMMUNG OK; Auslegung AK-U4
+
+Ruling: **OK** für `fix/ui-kamera` @ 239adbe (`app.ts` klemmt und zentriert mit `visibleViewHeight`, DOM-freier Helfer
+`src/ui/cameraView.ts`; `cameraBounds` = Landausdehnung + `CAMERA_MARGIN` 6 statt 12–20 Kacheln Rand; Dev-Probe
+`__inselDev.camera()`; arc42 nachgeführt; Final-Review `opus` BEDENKEN ohne Blocker; Playtest Konsole leer, an allen
+Rändern Land sichtbar). **Auslegung AK-U4:** „kein Sprung“ gilt innerhalb des Kamerarahmens (gemessen 0 px); am
+Rahmenrand ist Nachklemmen um die halbe Resize- bzw. Overlay-Änderung gewollt (`clampToRect` klemmt die Mitte der
+sichtbaren Fläche; gemessen Nord 23–25 px, West 89 px bei Resize). Rahmenecken bei verstreuten Inseln im Wasser →
+Beobachtung. Commit `564e7c2` (`test:` mit `src/`-Anteil) an die Retro. Merge seriell nach ART-L8-SELTEN durch den
+Integrator (Konflikte in `docs/arc42.md`/`docs/beobachtungen.md` löst der Lead per `git merge main`).
+
+Entscheider: L0 · Anlass: Bericht UI-KAMERA-KLEMMUNG · ADR: —
