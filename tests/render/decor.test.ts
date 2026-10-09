@@ -1175,9 +1175,9 @@ describe('L5 Meer-Plan und R4', () => {
     Array.from({ length: n }, (_, i) => ({ seed: i + 1, w: createWorld(i + 1) }));
   const W200 = worlds(200);
 
-  it('R4 Anker und Kontor: Mitte ≥ 4 Kacheln (Kontor: Abstand zum Rechteck), nie im Anfahrtskegel ±30°; Seeds 1–200', () => {
+  it('R4 Anker und Kontor: Mitte ≥ 4 Kacheln (Kontor: Abstand zum Rechteck), nie im Anfahrtskegel ±30°; Seeds 1–40 (1–200: tools/render-qa/korridor.mjs)', () => {
     let checked = 0;
-    for (const { seed, w } of W200) {
+    for (const { seed, w } of W200.slice(0, 40)) {
       const ctx = seaContext(w);
       expect(ctx.kontors.length, `Seed ${seed}`).toBeGreaterThan(0);
       for (const e of seaElementTiles(seaPlan(seed, home(w), ctx))) {
