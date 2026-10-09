@@ -39,10 +39,10 @@ describe('balanceLabel (AK-U3-01/07)', () => {
 describe('taxTooltip (Spec 10.7)', () => {
   it('nennt Steuer, Wartezeit bzw. „kein Aufstieg" und Belegung', () => {
     expect(taxTooltip('low')).toBe(
-      'niedrig: 70 % Steuer · Aufstieg nach 15 s Zufriedenheit · Häuser voll belegt',
+      'niedrig: 70 % Steuer (Kaufleute normal) · Aufstieg nach 15 s Zufriedenheit · Häuser voll belegt',
     );
     expect(taxTooltip('high')).toBe(
-      'hoch: 130 % Steuer · kein Aufstieg · Häuser nur zu 75 % belegt',
+      'hoch: 130 % Steuer (Kaufleute 115 %) · kein Aufstieg · Häuser nur zu 75 % belegt',
     );
   });
 });

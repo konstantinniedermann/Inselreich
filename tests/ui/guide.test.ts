@@ -5,7 +5,8 @@ import { TIERS, WIN_SPICE_MERCHANTS } from '../../src/sim/defs/tiers';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { UnlockId } from '../../src/sim/types';
-import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
+import { MAP_SIGNS, nextStep, producerOf, remedyText, taxEffect } from '../../src/ui/guide';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, createWorld, idx } from '../../src/sim/world';
 import { houseFar, placeTownhall, setAllTax, village } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
@@ -88,7 +89,30 @@ describe('nextStep (AK-UX-08)', () => {
     placeTownhall(w); // M10: gespeicherte Stufe wirkt nur mit aktiver Amtsstube
     connectAll(w);
     setAllTax(w, 'high');
-    expect(nextStep(w)).toMatch(/^Steuer ‚hoch' verhindert den Aufstieg: /);
+    expect(nextStep(w)).toMatch(/^Steuer ‚hoch' für Pioniere verhindert den Aufstieg: /);
+  });
+  it("AK-T32 Leitfaden U-12: volles Siedler-Haus, Siedler hoch → Satz nennt Siedler", () => {
+    const w = world(2, TIERS[2].maxInhabitants, ['chapel', 'weaver', 'sheepfarm']);
+    for (const h of Object.values(w.buildings).filter((b) => b.house))
+      setHouse(h, 2, TIERS[2].maxInhabitants, ['food', 'cloth']);
+    // Die Güter und Dienste der nächsten Stufe stehen, damit kein früherer Satz greift.
+    const rum = producerOf('rum')!;
+    for (const id of [rum, ...(BUILDING_DEFS[rum].consumes ?? []).map((g) => producerOf(g)!)])
+      addDirect(w, id);
+    addDirect(w, 'school');
+    placeTownhall(w);
+    connectAll(w);
+    w.taxLevels[2] = 'high';
+    expect(nextStep(w)).toBe(
+      "Steuer ‚hoch' für Siedler verhindert den Aufstieg: stelle sie auf ‚normal' oder ‚niedrig'",
+    );
+  });
+  it('AK-T32 U-12: hoch nur für Kaufleute, kein Kaufleute-Haus → kein Steuer-Satz', () => {
+    const w = world(1, 2, []);
+    placeTownhall(w);
+    connectAll(w);
+    w.taxLevels[4] = 'high';
+    expect(nextStep(w)).toBe('Baue weitere Wohnhäuser und versorge sie');
   });
   it('AK-UX-08 R7 sonst', () => {
     expectStep(world(1, 2, []), 'Baue weitere Wohnhäuser und versorge sie');
@@ -98,10 +122,10 @@ describe('nextStep (AK-UX-08)', () => {
 describe('taxEffect und remedyText (AK-UX-10)', () => {
   it('AK-UX-10 taxEffect', () => {
     expect(taxEffect('high')).toBe(
-      'hoch: 130 % Steuer · kein Aufstieg · Häuser nur zu 75 % belegt',
+      'hoch: 130 % Steuer (Kaufleute 115 %) · kein Aufstieg · Häuser nur zu 75 % belegt',
     );
     expect(taxEffect('low')).toBe(
-      'niedrig: 70 % Steuer · Aufstieg nach 15 s Zufriedenheit · Häuser voll belegt',
+      'niedrig: 70 % Steuer (Kaufleute normal) · Aufstieg nach 15 s Zufriedenheit · Häuser voll belegt',
     );
   });
   it('AK-UX-10 remedyText je Lage', () => {

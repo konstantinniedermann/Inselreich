@@ -242,6 +242,21 @@ describe('M10 Ruhe-Ansicht Steuer', () => {
     setAllTax(w, 'high');
     expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
   });
+  it('AK-T33 (U-8, QA-d) gemischt, alle hoch, ohne Amtsstube gemischt', () => {
+    const w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    w.taxLevels = { 1: 'low', 2: 'normal', 3: 'normal', 4: 'high' };
+    expect(restView(w).tax).toBe('Steuer gemischt: P niedrig · S normal · B normal · K hoch');
+    setAllTax(w, 'high');
+    expect(restView(w).tax).toBe(
+      'hoch: 130 % Steuer (Kaufleute 115 %) · kein Aufstieg · Häuser nur zu 75 % belegt',
+    );
+    const v = createWorld(3);
+    v.taxLevels = { 1: 'low', 2: 'normal', 3: 'normal', 4: 'high' };
+    expect(restView(v).tax).toBe(
+      'normal: 100 % Steuer · Aufstieg nach 30 s Zufriedenheit · Häuser voll belegt (keine Amtsstube)',
+    );
+  });
 });
 
 describe('M10 Amtsstuben-Panel (Spec 11.8)', () => {

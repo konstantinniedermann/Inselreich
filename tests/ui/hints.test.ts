@@ -18,7 +18,7 @@ import { GOODS, STORAGE_CAP } from '../../src/sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { createRng } from '../../src/sim/rng';
-import type { Building, BuildingDefId, GoodId, TaxLevel } from '../../src/sim/types';
+import type { Building, BuildingDefId, GoodId, TaxLevel, World } from '../../src/sim/types';
 import { home, createWorld, idx } from '../../src/sim/world';
 import type { Tool } from '../../src/render/renderer';
 import {
@@ -35,7 +35,7 @@ import { formatGameTime } from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
-import { setAllTax } from '../sim/helpers';
+import { placeTownhall, setAllTax } from '../sim/helpers';
 import { perfBudget } from '../helpers/perfBudget';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -125,7 +125,11 @@ describe('friendlyReason (AK-UX-03)', () => {
       ['Zu wenig Stein', {}, SAME],
       ['Ungültige Stufe', {}, SAME],
       ['Stufe bereits aktiv', {}, 'Diese Steuerstufe gilt bereits'],
-      ['Sperrzeit', {}, `Steuer erst in ${formatGameTime(TAX_SWITCH_LOCK)} wieder änderbar`],
+      [
+        'Sperrzeit',
+        { tier: 1 },
+        `Steuer für ${TIERS[1].name} erst in ${formatGameTime(TAX_SWITCH_LOCK)} wieder änderbar`,
+      ],
       ['Kein Auftrag', {}, 'Gerade gibt es keinen Auftrag'],
       ['Ungültige Menge', {}, SAME],
       ['Lager voll', { good: 'wood' }, `Lager voll: höchstens ${STORAGE_CAP} ${GOODS.wood.name}`],
@@ -487,5 +491,45 @@ describe('M11 R161 Stein-Hinweis (Spec 3.7)', () => {
     };
     expect(glassStoneHint(w, ['Haus nicht voll belegt', 'Zu wenig Stein'])).toBe(text);
     expect(glassStoneHint(w, ['Zu wenig Holz'])).toBeNull();
+  });
+});
+
+describe('AK-T31/T32 Zusatz (P-2): Stufe im Grund', () => {
+  const lockedWorld = (): World => {
+    const w = createWorld(3);
+    w.tick = 1000;
+    w.taxLockedUntil = { 1: 0, 2: 1200, 3: 1150, 4: 0 };
+    return w;
+  };
+  it('Sperrzeit mit tier nennt die Gruppe', () => {
+    expect(friendlyReason(lockedWorld(), 'Sperrzeit', { tier: 2 })).toBe(
+      'Steuer für Siedler erst in 20 s wieder änderbar',
+    );
+  });
+  it('Sperrzeit ohne tier: kleinste gesperrte Stufe', () => {
+    expect(friendlyReason(lockedWorld(), 'Sperrzeit')).toBe(
+      'Steuer für Siedler erst in 20 s wieder änderbar',
+    );
+  });
+  it('Sperrzeit ohne gesperrte Stufe und ohne tier bleibt wörtlich', () => {
+    const w = lockedWorld();
+    w.taxLockedUntil = { 1: 0, 2: 1000, 3: 900, 4: 0 };
+    expect(friendlyReason(w, 'Sperrzeit')).toBe('Sperrzeit');
+  });
+  it('Steuer zu hoch mit tier nennt die Gruppe, ohne tier wie heute', () => {
+    const w = createWorld(3);
+    expect(friendlyReason(w, 'Steuer zu hoch', { tier: 3 })).toBe(
+      "Steuer ‚hoch' für Bürger verhindert den Aufstieg",
+    );
+    expect(friendlyReason(w, 'Steuer zu hoch')).toBe("Steuer ‚hoch' verhindert den Aufstieg");
+  });
+  it('upgradeStatus eines Bürger-Hauses unter hoch liefert genau «Steuer zu hoch»', () => {
+    const { w, house } = uxWorld();
+    placeTownhall(w);
+    setHouse(house, 3, TIERS[3].maxInhabitants, []);
+    setAllTax(w, 'high');
+    expect(upgradeStatus(w, house).reasons.filter((r) => r.startsWith('Steuer'))).toEqual([
+      'Steuer zu hoch',
+    ]);
   });
 });
