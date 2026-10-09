@@ -1,5 +1,5 @@
 // R375 V1: studioweite Testsperre (tools/testlock/testlock.ts); Last per TESTLOCK_FAKE_LOAD simuliert.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -100,31 +100,41 @@ describe('testlock', () => {
 });
 
 describe('testlock (R378)', () => {
-  it('zwei parallele Läufe auf toter Sperre: genau einer gewinnt', () => {
-    for (let round = 0; round < 4; round++) {
-      const { lock } = setup();
-      writeFileSync(lock, holder(2147483646, 'alt'));
-
-      const sh = spawnSync(
-        'sh',
-        [
-          '-c',
-          `for i in 1 2 3; do node "${script}" node -e 'console.log("RAN");setTimeout(()=>{},800)' & done; wait`,
-        ],
-        {
-          encoding: 'utf8',
-          env: {
-            ...nodeEnv,
-            CI: undefined,
-            GITHUB_ACTIONS: undefined,
-            STUDIO_TESTLOCK_HELD: undefined,
-            TESTLOCK_PATH: lock,
-            TESTLOCK_FAKE_LOAD: '1',
+  it('zwei parallele Läufe auf toter Sperre: genau einer gewinnt', async () => {
+    // R389: die 4 Runden laufen gleichzeitig (je eigene Sperre); die 800-ms-Haltezeit je Runde
+    // bleibt, sie sichert die Überlappung der 3 Läufe (R387). Wandzeit ≈ 1 Runde statt 4.
+    const round = () =>
+      new Promise<{ ran: number; lockLeft: boolean }>((resolve, reject) => {
+        const { lock } = setup();
+        writeFileSync(lock, holder(2147483646, 'alt'));
+        const sh = spawn(
+          'sh',
+          [
+            '-c',
+            `for i in 1 2 3; do node "${script}" node -e 'console.log("RAN");setTimeout(()=>{},800)' & done; wait`,
+          ],
+          {
+            env: {
+              ...nodeEnv,
+              CI: undefined,
+              GITHUB_ACTIONS: undefined,
+              STUDIO_TESTLOCK_HELD: undefined,
+              TESTLOCK_PATH: lock,
+              TESTLOCK_FAKE_LOAD: '1',
+            },
           },
-        },
-      );
-      expect(sh.stdout.split('RAN').length - 1).toBe(1);
-      expect(existsSync(lock)).toBe(false);
+        );
+        let out = '';
+        sh.stdout.on('data', (d: Buffer) => (out += d.toString()));
+        sh.on('error', reject);
+        sh.on('close', () =>
+          resolve({ ran: out.split('RAN').length - 1, lockLeft: existsSync(lock) }),
+        );
+      });
+    const results = await Promise.all([round(), round(), round(), round()]);
+    for (const r of results) {
+      expect(r.ran).toBe(1);
+      expect(r.lockLeft).toBe(false);
     }
   }, 30_000);
 
