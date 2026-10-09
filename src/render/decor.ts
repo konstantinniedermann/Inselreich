@@ -36,7 +36,7 @@ import { meadowWarmth } from './groundDecor';
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements; Wrack, Eiland und Felsen meiden zusätzlich die Schiffsrouten
-//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
+//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`; Segmentindex im 8er-Gitter je `routes`-Array, WeakMap, gleiche Antwort wie die Schleife über alle Segmente). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
 //     NICHT über `RARE_POOL` (Land-Orte), sondern über eigene Lose; `rareBudget` (L8) zählt diese Lose (nicht ihre Eignung) und
 //     senkt die Land-Kappe von `planRare` auf `RARE_CAP − Meer-Lose`; das Budget hängt nie von `SeaContext` ab.
 
@@ -1048,9 +1048,49 @@ export function seaPlanKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): 
   const cx = x + 0.5,
     cy = y + 0.5,
     gap = SEA_LANE_GAP + pad;
+  if (gap <= ROUTE_INDEX_GAP) {
+    // Nur die Segmente der Zelle des Punkts können < gap entfernt sein (Box um ROUTE_INDEX_GAP aufgebläht, Index je `routes`).
+    const cell = routeIndex(ctx.routes).get(
+      routeCellKey(Math.floor(cx / ROUTE_CELL), Math.floor(cy / ROUTE_CELL)),
+    );
+    if (!cell) return false;
+    for (let i = 0; i < cell.length; i += 2)
+      if (distToSeg(cx, cy, cell[i]!, cell[i + 1]!) < gap) return true;
+    return false;
+  }
   for (const r of ctx.routes)
     for (let i = 1; i < r.length; i++) if (distToSeg(cx, cy, r[i - 1]!, r[i]!) < gap) return true;
   return false;
+}
+
+/** Zellgrösse (Kacheln) des Segmentindex der Routen und grösster Abstand (`SEA_LANE_GAP` + `SEA_PAD.islet`), den er bedient. */
+const ROUTE_CELL = 8;
+const ROUTE_INDEX_GAP = SEA_LANE_GAP + 1;
+const routeCellKey = (ix: number, iy: number): number => (ix + 4096) * 8192 + (iy + 4096);
+/** Je Zelle flach Paare (a, b) der Segmente, deren um `ROUTE_INDEX_GAP` aufgeblähte Box die Zelle trifft. */
+const routeIndexes = new WeakMap<Pos[][], Map<number, Pos[]>>();
+function routeIndex(routes: Pos[][]): Map<number, Pos[]> {
+  let idx = routeIndexes.get(routes);
+  if (idx) return idx;
+  idx = new Map();
+  for (const r of routes)
+    for (let i = 1; i < r.length; i++) {
+      const a = r[i - 1]!,
+        b = r[i]!;
+      const x0 = Math.floor((Math.min(a.x, b.x) - ROUTE_INDEX_GAP) / ROUTE_CELL),
+        x1 = Math.floor((Math.max(a.x, b.x) + ROUTE_INDEX_GAP) / ROUTE_CELL),
+        y0 = Math.floor((Math.min(a.y, b.y) - ROUTE_INDEX_GAP) / ROUTE_CELL),
+        y1 = Math.floor((Math.max(a.y, b.y) + ROUTE_INDEX_GAP) / ROUTE_CELL);
+      for (let ix = x0; ix <= x1; ix++)
+        for (let iy = y0; iy <= y1; iy++) {
+          const k = routeCellKey(ix, iy);
+          const c = idx.get(k);
+          if (c) c.push(a, b);
+          else idx.set(k, [a, b]);
+        }
+    }
+  routeIndexes.set(routes, idx);
+  return idx;
 }
 
 /**
