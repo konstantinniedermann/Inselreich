@@ -3728,3 +3728,18 @@ an den Coach: DoD-Pflichtzeile `npx tsc --noEmit` für jedes Paket mit `.ts`-Än
 vor `make test` aus (schneller Abbruch statt nach 8 min). Vierter Anlauf startet sofort.
 
 Entscheider: L0 · Anlass: Integrator PUSH-REL-10 (3) gescheitert · ADR: —
+
+## R398 · 2026-10-09 · REL-10 live; REL-11 Planung in zwei Strängen; DoD-Zeile Typcheck
+
+Ruling: (1) **REL-10 live**: Push `7812eb0..5d14854` (100 Commits), CI 37922518742 grün, Pages 37923119613 grün. Push
+dieser Session verbraucht (R335). (2) **REL-11** nach BEOB-AUSW (`18ac258`) in zwei Strängen mit disjunkten Dateien,
+Muster R352 (Fehlerbehebungen ohne neue Spielregel: kein Kurzdesign; der Lead liefert Plan mit Tasks,
+Datei-Ownership und Budgetantrag im Bericht, danach kombiniertes Gate Spec/Plan durch L0; Planungsbudget je 25 Tools):
+**Render-Strang** (lead-art): ART-MEERESFELS (R390), SEE-F3-SCHIFFSKONTRAST, RENDER-SEEPLAN-KEEPOUT;
+**UI-Strang** (lead-tech): UI-KAMERA-RAND (R390) plus die drei Trivial-Fixes aus BEOB-AUSW (Kontrast `.needs`/
+`.reasons`, `favicon`, toter `noLoadableReason`). TOOL-RENDERQA-NACHZUG-Rest bleibt Kandidat. (3) R397-Vorschlag
+angenommen: Briefing-Vorlage Punkt 5 Pflichtzeile „jedes Paket mit `.ts`-Änderung: `npx tsc --noEmit` Exit 0“;
+Integrator-Briefing: `tsc --noEmit` und `make lint` vor `make test`. Umsetzung mit R395 V1 durch den studio-coach
+(Handbuch 1.33).
+
+Entscheider: L0 · Anlass: Push REL-10, BEOB-AUSW · ADR: —
