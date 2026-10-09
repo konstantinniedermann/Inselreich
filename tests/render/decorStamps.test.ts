@@ -190,7 +190,7 @@ describe('L4-T3 Grenzen der Stempel (R5)', () => {
       }
     }
     expect(rodungen).toBeGreaterThan(20);
-  }, 40_000); // H-T7: lokal bis 4,7 s (WALD-02: Wald je Roden/Aufforsten neu gelegt), Timeout >= 8 x (R270)
+  }, 50_000); // lokal bis 5,9 s im Gesamtlauf (REL-10, ART-L8-SELTEN), Timeout >= 8 x (R270)
 
   it('R5 Töne: ΔE2000 ≥ 20 zu den Signalfarben, ≥ 10 zu den Wassertönen', () => {
     const land = Object.entries(DECOR_STAMP_TONES)
