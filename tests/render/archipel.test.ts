@@ -106,6 +106,37 @@ describe('M12 E1 Archipel', () => {
     });
   });
 
+  it('AK-U3 cameraBounds <= Landausdehnung + Rand an allen vier Seiten, Seeds 1-10', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const isl = createWorld(seed).islands;
+      let x0 = Infinity,
+        y0 = Infinity,
+        x1 = -Infinity,
+        y1 = -Infinity;
+      for (const i of isl)
+        i.tiles.forEach((t, k) => {
+          if (t.terrain === 'water') return;
+          const x = i.ox + (k % i.width),
+            y = i.oy + Math.floor(k / i.width);
+          x0 = Math.min(x0, x);
+          y0 = Math.min(y0, y);
+          x1 = Math.max(x1, x + 1);
+          y1 = Math.max(y1, y + 1);
+        });
+      const b = cameraBounds(isl);
+      expect(CAMERA_MARGIN, `Seed ${seed}`).toBeLessThanOrEqual(8);
+      expect(x0 - b.x0, `Seed ${seed} West`).toBeLessThanOrEqual(8);
+      expect(y0 - b.y0, `Seed ${seed} Nord`).toBeLessThanOrEqual(8);
+      expect(b.x1 - x1, `Seed ${seed} Ost`).toBeLessThanOrEqual(8);
+      expect(b.y1 - y1, `Seed ${seed} Süd`).toBeLessThanOrEqual(8);
+      // Land bleibt im Rahmen (kein Abschneiden)
+      expect(b.x0).toBeLessThanOrEqual(x0);
+      expect(b.y0).toBeLessThanOrEqual(y0);
+      expect(b.x1).toBeGreaterThanOrEqual(x1);
+      expect(b.y1).toBeGreaterThanOrEqual(y1);
+    }
+  });
+
   // Timeout: lokal ≤ 0,6 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-E1-17 Seeds 1…200: Rahmen bei Zoom 0,125 passt in 1280 × 800, Übersicht zeigt alle Inseln', () => {
     for (let seed = 1; seed <= 200; seed++) {

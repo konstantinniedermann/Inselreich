@@ -6,8 +6,11 @@ import { H_TOWER, project } from './iso';
 
 export type ArchipelView = 'sea' | 'jump';
 export const ARCHIPEL_VIEW: ArchipelView = 'sea'; // Streichvariante B: 'jump'
-export const CAMERA_MARGIN = 8; // Kacheln um den Archipel-Rahmen
-export type Placed = Pick<Island, 'ox' | 'oy' | 'width' | 'height'>;
+// Kacheln um die Landausdehnung (Bildmitte darf so weit ins Meer; Platzrahmen hat selbst ~4-12 Kacheln Wasserrand)
+export const CAMERA_MARGIN = 6;
+export type Placed = Pick<Island, 'ox' | 'oy' | 'width' | 'height'> & {
+  tiles?: readonly { terrain: string }[];
+};
 export type { TileRect };
 
 /** Kamera, mit der Insel `isl` in Inselkoordinaten gezeichnet wird (project ist linear). */
@@ -88,14 +91,42 @@ export function archipelRect(islands: readonly Placed[]): TileRect {
   };
 }
 
-/** Bereich, in dem die Bildmitte der Kamera liegen darf. */
+/** Land-Kachelbox (Terrain ausser Wasser) einer Insel in Archipel-Kacheln; ohne Kacheldaten der Platzrahmen. */
+function landRect(isl: Placed): TileRect {
+  const t = isl.tiles;
+  if (!t) return archipelRect([isl]);
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity;
+  for (let k = 0; k < t.length; k++) {
+    if (t[k]!.terrain === 'water') continue;
+    const x = k % isl.width,
+      y = Math.floor(k / isl.width);
+    if (x < x0) x0 = x;
+    if (x + 1 > x1) x1 = x + 1;
+    if (y < y0) y0 = y;
+    if (y + 1 > y1) y1 = y + 1;
+  }
+  if (x0 === Infinity) return archipelRect([isl]); // reines Wasser: Platzrahmen
+  return { x0: isl.ox + x0, y0: isl.oy + y0, x1: isl.ox + x1, y1: isl.oy + y1 };
+}
+
+/** Bereich, in dem die Bildmitte der Kamera liegen darf: Landausdehnung aller Inseln plus Rand. */
 export function cameraBounds(
   islands: readonly Placed[],
   active = 0,
   mode: ArchipelView = ARCHIPEL_VIEW,
 ): TileRect {
   if (mode === 'jump') return archipelRect(islands[active] ? [islands[active]] : []);
-  const r = archipelRect(islands);
+  if (islands.length === 0) return archipelRect(islands);
+  const rs = islands.map(landRect);
+  const r = {
+    x0: Math.min(...rs.map((q) => q.x0)),
+    y0: Math.min(...rs.map((q) => q.y0)),
+    x1: Math.max(...rs.map((q) => q.x1)),
+    y1: Math.max(...rs.map((q) => q.y1)),
+  };
   return {
     x0: r.x0 - CAMERA_MARGIN,
     y0: r.y0 - CAMERA_MARGIN,

@@ -25,6 +25,14 @@ export interface DevProbe {
   world(): World;
   tileCenter(x: number, y: number): { x: number; y: number };
   centerOn(x: number, y: number): void;
+  /** Kamera, Kamera-Rahmen (Kacheln) und klemmende Ansicht (CSS-Pixel). */
+  camera(): {
+    x: number;
+    y: number;
+    zoom: number;
+    bounds: { x0: number; y0: number; x1: number; y1: number };
+    view: { w: number; h: number };
+  };
   /** Zoom um die Bildmitte, geklemmt auf die Zoomstufen. */
   setZoom(z: number): void;
   /** Heimatkontor bzw. Mitte des Kamera-Rahmens in die Bildmitte. */
