@@ -4103,3 +4103,13 @@ prune` und Löschen von `.worktrees/check2.log`. Vorbedingung je Worktree: saube
 bleibt. Alt-Branches, Remote `wip/r118a-…` und `stash@{0}` bleiben unberührt.
 
 Entscheider: L0 · Anlass: Push-Bericht lead-production, Fortsetzung 3 · ADR: —
+
+## R426 · 2026-10-09 · Korrektur R425: kein `--force`; see-f3 nach `.gitignore`-Fix
+
+Ruling: Die `--force`-Ausnahme in R425 widersprach dem Handbuch (Worktrees aufräumen R329: „nie `--force`“); der Guard hat
+sie zu Recht gesperrt (Verfassung §6). Ausnahme gestrichen. CLEANUP-WT-2: 7 von 8 Worktrees entfernt, `check2.log` gelöscht.
+`.worktrees/see-f3-schiffskontrast` (nur `?? .vitest/`) wird mit normalem `git worktree remove` entfernt, sobald der REL-14-
+Trivial-Fix `.vitest/` in `.gitignore` auf main ist (dann ist der Baum sauber); bis dahin steht er in `state.md`. Der Fehler
+geht als Befund an die Release-Retro REL-13.
+
+Entscheider: L0 · Anlass: Bericht production-integrator CLEANUP-WT-2 · ADR: —
