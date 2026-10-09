@@ -262,3 +262,7 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · TOOL-BUENDEL: Testlücke bei `ps`-Fehler in der Testsperre
 
 - **Fundort:** `tests/tools/testlock.test.ts`: kein Test belegt, dass ein `ps`-Fehler (`TESTLOCK_PS_FIXTURE` zeigt auf eine fehlende Datei) nichts ändert. Ursprung: TOOL-BUENDEL T02 (Final-Review). Einschätzung: niedrig; ein Test ergänzt die Fehlerrichtung ab.
+
+### 2026-10-09 · Retro c64c0775: Ampelzeile «Persona-Starts» zählt nur `general-purpose`
+
+- **Fundort:** `tools/studio/efficiency.py` (Ampelzeile Persona-Starts auf opus): typisierte Persona-Starts fehlen in der Zählung. Ursprung: Kurz-Retro Session c64c0775 (ausserhalb Scope). Einschätzung: niedrig; mit der Ampelzeile E-038 in TOOL-AKTIVIERUNG oder TOOL-E049-PHASE mitnehmen.
