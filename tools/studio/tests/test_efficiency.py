@@ -485,10 +485,6 @@ class IdleGapTest(unittest.TestCase):
         self.assertIn("nicht gemessen", efficiency.render_idle([]))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class AdjustedControlTest(unittest.TestCase):
     def build(self, lead_prompts):
         tmp = tempfile.TemporaryDirectory()
@@ -576,3 +572,7 @@ class AdjustedControlTest(unittest.TestCase):
         self.assertEqual(
             with_line["red"], without["red"]
         )  # Zeile ändert die Rot-Menge nie
+
+
+if __name__ == "__main__":
+    unittest.main()
