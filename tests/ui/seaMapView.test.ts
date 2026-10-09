@@ -9,6 +9,7 @@ import {
   seaMapTip,
   seaMapUnavailable,
 } from '../../src/ui/seaMapView';
+import { laneTicks } from '../../src/sim/islands';
 import { islandList } from '../../src/ui/islandJump';
 import { createWorld } from '../../src/sim/world';
 import { seaWorld, shipLiteral } from '../sim/seaHelpers';
@@ -33,11 +34,11 @@ describe('seaMapKey (AK-S10)', () => {
   });
   it('ändert sich bei Schiffsbewegung um mindestens einen Karten-Pixel', () => {
     const w = seaWorld();
-    const ship = shipLiteral(w, { route, port: 0, to: 1, left: 100000 });
+    const ship = shipLiteral(w, { route, port: 0, to: 1, left: 1 });
     const l = layoutOf(w);
     const keys = new Set<string>();
-    const total = ship.left;
-    for (let left = total; left > 0; left -= Math.floor(total / 400)) {
+    const total = laneTicks(w.islands, 0, 1);
+    for (let left = total; left > 0; left -= Math.max(1, Math.floor(total / 400))) {
       ship.left = left;
       keys.add(seaMapKey(w, l));
     }
