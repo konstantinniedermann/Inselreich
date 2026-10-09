@@ -3816,3 +3816,16 @@ Runde **IDEEN-04** (lead-design, ≤ 2 Starts, ≤ 80 Tools, E-027) ist überfä
 REL-10): parallel zum Browser-Lauf, nur `docs/ideen.md`.
 
 Entscheider: L0 · Anlass: REL-11 vollständig in main · ADR: —
+
+## R405 · 2026-10-09 · Ideen-Runde IDEEN-04 entschieden
+
+Ruling: Runde `52292b2` angenommen (4 Ideen, 1 von 2 Starts). **I-027 Seekarte nur als Karte** (Silhouetten, Fahrlinien,
+Schiffspunkte, Klick springt zur Insel; Silhouetten einmal gerastert und gecacht) → Studio-Platz **REL-12** als
+S-Häppchen **UI-SEEKARTE**; Grundlage ist der vorhandene Spec-Kann-Teil E5 (M12-Spec Anhang 03 Abschnitt G, AK-E5-01);
+kein Sim-Zustand, nicht im Save, Baseline unberührt → kein Kurzdesign, lead-tech liefert Plan mit Budgetantrag
+(Planungsbudget 25 Tools), Gate Spec/Plan durch L0. Gründungsfahrt (AK-E5-02) bleibt Kür im Pool. **I-028 Steuer je
+Stufe** → Baustein eines Wirtschafts-Brainstormings (lead-design mit design-economy-designer, Rechnung zur Dominanz
+von «hoch» bei Kaufleuten) als Kandidat nach REL-12. **I-029, I-030** geparkt (I-029 mit I-006 im Handels-Brainstorming,
+I-030 erst nach Rechnung der Zielwerte). Kein Nutzer-Vorbehalt (§5.3: kein Richtungswechsel).
+
+Entscheider: L0 · Anlass: Bericht IDEEN-04 · ADR: —
