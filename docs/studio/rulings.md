@@ -3927,3 +3927,24 @@ letzter Schritt der Session (R335), nach Gate Spec I-028, damit die Doku-Commits
 Pages per `gh workflow run Pages --ref main`.
 
 Entscheider: L0 · Anlass: Gate Merge Release · ADR: —
+
+## R414 · 2026-10-09 · Gate Spec I-028 „Steuer je Stufe“ OK mit Auflagen; P-1 v10, P-2 tier im ReasonCtx
+
+Ruling: **OK mit Auflagen** für `docs/superpowers/specs/2026-10-09-steuer-je-stufe-design.md` (`829aadc`); lead-tech
+BEDENKEN (Machbarkeit OK, ohne ADR), lead-qa BEDENKEN (alle 41 AK prüfbar, Balancing-Test ohne Berührung bestätigt).
+**Auflagen** (Nachtrag als `anhang-02-gate-auflagen.md` im Spec-Ordner, Spec selbst bleibt unter 40 KB): lead-qa (a) AK-T14
+Fall „nur Kaufleute-Haus «normal» im Radius, Stufen 1–3 «hoch» → ok“; (b) AK-T20 `SAVE_VERSION + 1` statt fest 11; (c) AK-T29
+`taxEffect('low')` mit „(Kaufleute normal)“; (d) U-4/U-8 „Steuer gemischt: …“ in AK-T36 bzw. AK-T33; (e) U-5 ohne Amtsstube
+wirksamer Wert in AK-T30; (f) U-6 Knoten und Fokus bleiben, Browser-Schritt in AK-T36; (g) AK-T19 `taxLockedUntil` mit
+fehlendem/zusätzlichem Schlüssel; (h) AK-T17 Speichern → Laden mit gemischten Reglern, N Ticks, JSON-Vergleich gegen Lauf
+ohne Laden; (i) AK-T13 Sperre läuft ohne Amtsstube weiter, neue Amtsstube übernimmt die Regler. lead-tech (B1) AK-T23: die
+v9-Byte-Vergleiche `tests/sim/save.test.ts:1767` und `tests/sim/goal3.test.ts:139` über `JSON.stringify(foldBackToV9(...))`,
+Fixtures unverändert; Versions-Assertions auf 9 umstellen; (B2) AK-T24: `foldBackToV9` schreibt Schlüssel in der Reihenfolge
+von `V9_WORLD_KEYS`, Fall „migrierter Stand“ ergänzen; Hinweise R7.4 (Vorstufe erst ab t ≥ 2) und §6 (save-v2/v4 ohne
+Kaufleute-Häuser). **P-1:** Save **v10 fest** (E6 geparkt, keine Branch); R8.5 nur Notfallregel. **P-2:** Sim-Gründe bleiben
+wörtlich; `ReasonCtx.tier?: Tier` in `src/ui/hints.ts`; Menge C aus R6.2 als reine Sim-Funktion (`taxChangeSet`), von
+`setTaxLevel` und UI gemeinsam genutzt (DRY). Nächste Schritte parallel: Nachtrag durch `design-spec-author` (lead-design,
++1 Start) und Plan durch `lead-tech` (Schnitt: ein Strang, T1 Sim+Save, T2 UI mit Playtest, Doku in T2; Budget später im
+Gate Plan). Umsetzung erst nach dem Push dieser Session.
+
+Entscheider: L0 · Anlass: Gate Spec · ADR: —
