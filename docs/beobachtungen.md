@@ -398,3 +398,6 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · UI-SEEKARTE (qa-code-reviewer): Befund ohne Blocker
 
 - **Fundort:** `src/ui/hud.ts` (Seekarte): `layout` und `cache` bleiben bei offenem Popover über einen Weltwechsel (Laden) bestehen, bis zum nächsten Öffnen. Ursprung: Task-Review T3-T5. Einschätzung: niedrig, unwahrscheinlich (Laden schliesst Popover meist über Klick daneben); Fix wäre Weltidentität in den Schlüssel.
+- **Fundort:** `src/render/seaMap.ts` (Z. 222-227, 247-257): Kontor-Marke (4 × 4) liegt auf `anchor+0.5` und wird vom Schiffspunkt im Hafen (Radius 3) verdeckt; Marke, Punktradius und Strichstärken sind feste Gerätepixel, nicht an `devicePixelRatio` gebunden. Ursprung: Final-Review UI-SEEKARTE. Einschätzung: niedrig, kosmetisch; Marke seitlich versetzen und mit dpr skalieren.
+- **Fundort:** `tests/render/seaMap.test.ts:221-227`: Zeitgrenze `< 50 ms` per Uhr (Fake-Rasterer). Ursprung: Final-Review. Einschätzung: niedrig; bei Flackern auf Zähler umstellen (Cache-Zähler besteht bereits).
+- **Fundort:** Seekarten-Popover: verdeckt solange offen Lager-Chips und Hinweiskarten rechts oben; Hover-Rahmen zeigt das Iso-Rechteck, nicht die Silhouette. Ursprung: Playtest T6. Einschätzung: niedrig, gewollt.
