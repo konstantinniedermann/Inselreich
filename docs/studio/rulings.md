@@ -3464,3 +3464,19 @@ Tools, `Makefile`, `tools/`); (3) Pläne **SEE-F1-KORRIDOR** und **UI-KAMERA-KLE
 leicht, Fehlerbehebung ohne Kurzdesign). Gate je Plan durch lead-qa gebündelt.
 
 Entscheider: L0 · Anlass: Nutzer „mach weiter“ · ADR: —
+
+## R377 · 2026-10-09 · Gate REL-10 Welle 3: KORRIDOR BEDENKEN (B1 blockierend), KAMERA BEDENKEN; Pin-Ruling
+
+Ruling: (1) **SEE-F1-KORRIDOR:** Die Routen-Freihaltung gilt nur für Wrack, Eiland und Felsen; die Flächen aus
+`seaPlan`, aus denen `seaTintFor` die Tönung baut, bleiben **bitgleich zu main** — neuer Pin: Hash von `seaTintFor`
+über Seeds 1–40, in K1 auf main aufgenommen, unverändert über K3–K5 (B1). Pin-Ruling vor K4 (B2, ergänzt R367):
+`HOME_CALLS` darf begründet neu gesetzt werden, wenn sich nur die Positionen der Meer-Elemente verschieben;
+`HOME_ORDER` und die `terrainSea`-Pins bleiben unverändert. AK-K1 mit genauer Messgrösse (Elemente inkl. Felsnadel?,
+Abstand Kachelmitte, alle Routenpaare wie `routeFar`, Ausgangswert auf main im Test; lead-qa maß 29/275 = 10,5 %,
+B3); Determinismus Speichern→Laden und kalter Cache, Indexreihenfolge `seaRoute(a < b)` (B4). Nach der Nacharbeit
+Zweitprüfung nur für B1 durch lead-qa; Umsetzung nach dem Merge von ART-L8-SELTEN. (2) **UI-KAMERA-KLEMMUNG:**
+Nacharbeit U1–U4 ohne Zweitprüfung (DOM-freier Helfer in eigener Datei unter `src/ui/`, Neu-Messen nach Resize,
+Abbruchregel in U3, messbares „kein Sprung“ ≤ 1 px mit DPR 1 und 2, Tests ≤ 500 ms, `zeitreserve` 0); danach Umsetzung
+frei, 150 Tools.
+
+Entscheider: L0 · Anlass: Gate GATE-REL10-W3 · ADR: —
