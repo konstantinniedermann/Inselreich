@@ -95,7 +95,7 @@ def main(runner: Runner = run, env: Mapping[str, str] = os.environ) -> int:
             )
             return 0
         code, failing, detail = check(files, prettier, runner)
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         print(f"pre-commit: Check übersprungen ({exc}).", file=sys.stderr)
         return 0
     if code == 0:

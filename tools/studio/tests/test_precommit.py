@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -93,6 +95,15 @@ class MainTest(unittest.TestCase):
     def test_missing_prettier_allows(self):
         with mock.patch.object(precommit, "prettier_bin", return_value=None):
             self.assertEqual(precommit.main(FakeRunner("a.ts\0"), {}), 0)
+
+    def test_decode_error_allows_commit(self):
+        def broken(args):
+            raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(precommit.main(broken, {}), 0)
+        self.assertIn("übersprungen", stderr.getvalue())
 
     def test_event_does_not_break_dashboard_model(self):
         run = FakeRunner("a.ts\0", prettier_code=1, prettier_out="a.ts\n")
