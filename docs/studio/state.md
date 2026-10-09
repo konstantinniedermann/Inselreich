@@ -60,7 +60,8 @@ Keine Nutzer-Aufträge offen.
 1. **TOOL-AKTIVIERUNG** (studio-coach, R428/R432): Kopfzeilen-Syntax `Modell: <alias> (<Einsatz>)` in
    `templates/briefing.md` und `STUDIO.md`, `make hooks` im Hauptcheckout (Prettier-Hook), Modell-Guard
    `tools/studio/modelguard.py` von `warn` auf `deny` (Rückweg ADR-014); Ampelzeile E-038 im Dashboard.
-2. **Kurz-Retro c64c0775** auswerten (`docs/studio/retros/2026-10-09-session-c64c0775-ende.md`), Vorschläge per Ruling.
+2. **Handbuch 1.38** (R433 V3, studio-coach, mit TOOL-AKTIVIERUNG): Schätzung in Tools, keine Budget-Zeile für weitere
+   Controller-Instanzen, Handoff-Name mit Paket-ID. Werkzeug-Paket **TOOL-E049-PHASE** (R433 V2, lead-tech, ≈ 25 Tools).
 3. **Beobachtungen:** neue Einträge im Abschnitt „Offen“ (u. a. studio-lint 28 Ruff-Altfehler, Dienst-Mangel-Wortlaut in
    der Aufstiegsliste, Hover verdeckt Cursor-Hinweis, Hook-Wrapper ohne `python3`); bei Bedarf Auswertung BEOB-AUSW-04.
    REL-15-Kandidat: UI-SEEKARTE-NACHZUG (R422).
@@ -113,4 +114,4 @@ Offen: lead-tech TOOL-BUENDEL 4 Puffer-Starts (verfallen mit Session-Ende). Neue
 ## Offene Entscheide
 
 - Nutzer: keine; Warteschlange leer.
-- L0: Ruling zu Fortsetzung 4 (see-f3); Vorschläge der Kurz-Retro c64c0775.
+- L0: Ruling zu Fortsetzung 4 (see-f3); E-054 wartet auf einen Experiment-Platz (R433).

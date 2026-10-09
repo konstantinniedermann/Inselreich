@@ -4217,3 +4217,17 @@ Prozess-Aussensicht zu REL-14 startet nach dem Push.
 Regelbezug: gates.md Gate Merge; STUDIO.md Release-Retro (R127/R316) · Kosten bei Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-3 · ADR: ADR-014
+
+## R433 · 2026-10-09 · Kurz-Retro c64c0775: V3 angenommen, V2 als Werkzeug-Paket, V1 wartet
+
+Ruling: Retro `docs/studio/retros/2026-10-09-session-c64c0775-ende.md` (`ba29cde`) angenommen. **V3** angenommen als
+Handbuch 1.38 (studio-coach, nächste Session zusammen mit TOOL-AKTIVIERUNG): (a) Leads schätzen in Tools, Minuten = Tools ÷ 6;
+(b) weitere Controller-Instanzen eines Pakets bekommen keine eigene `log.py budget`-Zeile; (c) Handoff-Dateiname mit
+Paket-ID. **V2** (E-049 nach Freigabephase `plan-*`/`design-*`/`gate-*`) als Werkzeug-Paket TOOL-E049-PHASE (lead-tech,
+≈ 25 Tools) nächste Session. **V1/E-054** (Pläne für Stufe-leicht und Werkzeug-Bündel auf sonnet) bleibt eingereiht, bis ein
+Experiment-Platz frei ist; Steuerung rot wird damit mit Hebel geführt (R316). Messaufträge Umsetzeranteil (2026-10-23) und
+Cache-Write (2026-11-19) übernommen.
+
+Regelbezug: STUDIO.md Verbesserungsschleife (R316), R428/R431 · Kosten bei Irrtum: ein Handbuch-Minor zurück.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session c64c0775 · ADR: —
