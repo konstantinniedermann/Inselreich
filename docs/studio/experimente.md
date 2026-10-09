@@ -439,7 +439,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
 - Rückfall: Zeile in `tools/studio/efficiency.py` entfernen (`git revert`).
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
-- Ruling: –
+- Ruling: R410 (V3): startet, sobald E-046 bewertet ist (spätestens 2026-11-12; Hebel nach R316)
 
 ## E-050 · vorgeschlagen · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 

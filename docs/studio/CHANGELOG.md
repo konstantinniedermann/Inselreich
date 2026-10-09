@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-09 · Handbuch 1.34
+
+- Anlass: Session-Retro e90e097e (drei Integrator-Abbrüche an schnellen Prüfungen, dritter Fall unbelegter Rot-Phase)
+- Datenbasis: `docs/studio/retros/2026-10-09-session-e90e097e-ende.md`, `docs/studio/metriken/S-2026-10-09-e90e097e.md`
+- Ruling: R410 (V1, V2; V3 Platzvergabe E-049)
+- Änderungen: Briefing-Vorlage Punkt 5: tsc-Zeile erweitert zu „schnelle Make-Prüfungen ohne Testlauf“ (`tsc`, `lint`, `zeittests`, `conflicts`), neue Pflichtzeile Rot-Beleg; Integrator-Vorlauf in STUDIO.md um `make zeittests` und `make conflicts` ergänzt; E-049 Ruling-Feld
+
 ## 2026-10-09 · Handbuch 1.33
 
 - Anlass: Ad-hoc-Retro Push-Gate REL-10 (vierfacher Push-Anlauf) und Typcheck-Lücke
