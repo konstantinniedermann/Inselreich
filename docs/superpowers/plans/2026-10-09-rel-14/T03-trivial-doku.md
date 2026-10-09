@@ -1,6 +1,6 @@
 # T03 · Trivial-Fixes und Doku
 
-Strang A · Worktree `.worktrees/rel-14-inspektor` · Branch `fix/rel-14-inspektor` · Umsetzer: T01-Umsetzer per SendMessage fortgesetzt (`tech-ui-engineer`, sonnet; sonst frischer Start) · AK-Entwürfe A9, C1–C6 (`ak-entwuerfe.md`) · blocked-by T01 (Review OK), T02 (Review OK, nur für die Fest-Sätze)
+Strang A · Worktree `.worktrees/rel-14-inspektor` · Branch `fix/rel-14-inspektor` · Umsetzer: T01-Umsetzer per SendMessage fortgesetzt (`tech-ui-engineer`, sonnet; sonst frischer Start) · AK-Entwürfe A9, C1–C6 = AK-R14-09, 15…20 (`ak-entwuerfe.md`) · blocked-by T01 (Review OK), T02 (Review OK, nur für die Fest-Sätze)
 
 **Ziel:** Fünf Trivial-Fixes aus R422/R423 und die Doku zu T01/T02. Jeder Punkt ist ein eigener Commit. Doku-Dateien (D1) sind für diesen Task ausdrücklich freigegeben (E-017).
 
@@ -90,6 +90,20 @@ Run: `grep -n "Fehlt:" README.md` → nur Z. ~31 (Inselchronik, `goal.ts`, Gate-
 git add docs/arc42.md README.md docs/superpowers/specs/2026-10-06-lebendige-insel.md docs/beobachtungen.md
 git commit -m "docs: REL-14 Versorgungs-Chip, Fest je Insel, arc42 hud/taxView, Spec Fernansicht, ART-FELS abgehakt"
 ```
+
+## Reviewer-Briefing: grep-Belege je Doku-AK (R427)
+
+Der Reviewer führt diese Befehle im Worktree aus und prüft den erwarteten Treffer; Abweichung = BEDENKEN.
+
+| AK        | Befehl                                                                                | Erwartung                                                                                    |
+| --------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| AK-R14-15 | `grep -n "^\.vitest/" .gitignore`                                                     | genau 1 Treffer                                                                              |
+| AK-R14-16 | `grep -n "Steuersperre" docs/arc42.md`                                                | kein Treffer in der Zeile `hud.ts`; Treffer in der Zeile `taxView.ts` mit „Amtsstuben-Panel“ |
+| AK-R14-17 | `grep -rn "minStampScale\|FAR_MIN_CSS_PX\|stampWidthPx" src/ tests/`                  | 0 Treffer                                                                                    |
+| AK-R14-18 | `grep -n "SEA_ELEMENT_MIN_ZOOM" docs/superpowers/specs/2026-10-06-lebendige-insel.md` | Treffer in §5 „Fernansicht“ mit „ab Zoom 0,5“                                                |
+| AK-R14-19 | `grep -n "ART-FELS-FERNGROESSE" docs/beobachtungen.md`                                | Eintrag im Abschnitt „Offen“ mit drei Triggern                                               |
+| AK-R14-20 | `grep -n "derselben Insel\|Kapellen-Insel" README.md docs/arc42.md`                   | je ≥ 1 Treffer («Fest feiern»; Zeile `feast.ts`)                                             |
+| AK-R14-09 | `grep -n "Im Versorgungsradius" README.md` und `grep -n "Fehlt:" README.md`           | Chip-Wortlaut im Absatz «Aufstieg»; „Fehlt:“ nur Z. ~31 (Inselchronik, E5)                   |
 
 ## Bericht an den Controller
 

@@ -1,6 +1,6 @@
 # T01 · Inspektor-Klartext (UI-Code und Tests)
 
-Strang A · Worktree `.worktrees/rel-14-inspektor` · Branch `fix/rel-14-inspektor` · Umsetzer `tech-ui-engineer` (sonnet) · AK-Entwürfe A1–A7 (`ak-entwuerfe.md`) · blocked-by –
+Strang A · Worktree `.worktrees/rel-14-inspektor` · Branch `fix/rel-14-inspektor` · Umsetzer `tech-ui-engineer` (sonnet) · AK-Entwürfe A1–A7 = AK-R14-01…07 (`ak-entwuerfe.md`) · blocked-by –
 
 **Ziel:** Ein Begriff je Ursache. Radius = „Versorgung“ (Chip), Waren/Dienste = „Mangel: … fehlt“. Die Zeile „Fehlt: X“ entfällt. Hover und Cursor-Hinweis nutzen denselben Text wie der Inspektor.
 
@@ -58,6 +58,8 @@ describe('REL-14 Quelltext: alte Begriffe und Fehlt-Zeile entfernt', () => {
       expect(src).not.toMatch(/first-missing|setFirstMissing|TIER_LIST/);
       expect(src).not.toMatch(/const TIER_IDS/);
     }
+    // A2 (R427): Rückfall des Haus-Hinweises ist „zufrieden“; „versorgt N Häuser“ (Dienstgebäude, hover.ts) bleibt.
+    expect(readFileSync('src/ui/hints.ts', 'utf8')).not.toContain("'versorgt'");
     expect(readFileSync('src/style.css', 'utf8')).not.toContain('first-missing');
   });
 });
@@ -149,7 +151,7 @@ function diagnosisLine(d: Diagnosis): string {
 Run: `npx vitest run tests/ui/panelView.test.ts tests/ui/format.test.ts tests/ui/hover.test.ts tests/ui/hints.test.ts tests/ui/inspect.test.ts tests/ui/cursorHint.test.ts tests/ui/hud.test.ts tests/ui/guide.test.ts tests/ui/feast.test.ts tests/ui/imports.test.ts; echo EXIT=$?`
 Expected: PASS, EXIT=0.
 Run: `npx tsc --noEmit; echo EXIT=$?` und `make lint; echo EXIT=$?` → je EXIT=0.
-Run: `grep -rnw "Versorgt" src/ui/; grep -rn "Nicht versorgt\|first-missing\|TIER_LIST" src/ src/style.css; grep -rn "const TIER_IDS" src/` → nur `src/sim/defs/tiers.ts:52`.
+Run: `grep -rnw "Versorgt" src/ui/; grep -rn "Nicht versorgt\|first-missing\|TIER_LIST" src/ src/style.css; grep -rn "const TIER_IDS" src/` → nur `src/sim/defs/tiers.ts:52`; `grep -n "'versorgt'" src/ui/hints.ts` → keine Treffer. Erlaubt bleiben `versorgt N Häuser` (`hover.ts`, Dienstgebäude), `goal.ts`, `guide.ts`.
 
 - [ ] **Schritt 5: Commit** (einer; `git add -p` ist nicht verfügbar, `inspect.ts` trägt beide Themen)
 
