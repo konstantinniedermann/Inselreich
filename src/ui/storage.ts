@@ -83,15 +83,6 @@ export function loadSlot(slot: Slot): LoadResult {
   }
 }
 
-/** Grund, wenn kein Slot ladbar ist: der erste echte Fehler (kaputt), sonst „Kein Spielstand". */
-export function noLoadableReason(): string {
-  for (const slot of SLOTS) {
-    const r = loadSlot(slot);
-    if (!r.ok && r.reason !== NO_SAVE) return r.reason;
-  }
-  return NO_SAVE;
-}
-
 export type StorageProblem = 'none' | 'unavailable' | 'damaged' | 'newer';
 
 /** Stammt der Stand aus einer neueren Spielversion? Nur Erkennung per `JSON.parse`; defektes JSON ergibt `false`. */
