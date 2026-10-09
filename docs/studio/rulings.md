@@ -4187,3 +4187,16 @@ Regelbezug: gates.md Gate Merge Release; STUDIO.md Push-Ablauf (R335) · Kosten 
 nächsten Session.
 
 Entscheider: L0 · Anlass: Release-Check lead-qa · ADR: —
+
+## R431 · 2026-10-09 · REL-14 lokal auf main; see-f3 bleibt; Werkzeug-Bündel T06/T07 frei
+
+Ruling: REL-14 lokal gemergt `ed547b0` (tsc, lint, conflicts Exit 0), REL-14-Worktrees entfernt. Die Annahme aus R426 war
+falsch: Der Worktree `see-f3-schiffskontrast` sieht die `.gitignore` seines eigenen Branches, nicht die von main; er bleibt
+mit `?? .vitest/` stehen (harmlos, kein `--force`, kein Löschen per Ruling in dieser Session). Nächste Session: Ruling, ob
+der Testcache `.vitest/` dort per `rm -r` gelöscht und der Worktree dann normal entfernt wird. **Werkzeug-Bündel:** T06
+(nach `git merge main` in `tool/buendel-py`) und T07 frei, eine dritte Controller-Instanz `lead-tech` (sonnet) zusätzlich
+zu R428; Arbeiter-Starts bleiben im Rahmen 15 (8 verbraucht). Ab jetzt bis zu 3 Arbeiter zugleich (REL-14 fertig).
+
+Regelbezug: STUDIO.md Worktrees aufräumen (R329), R428 · Kosten bei Irrtum: ein verwaister Worktree mehr.
+
+Entscheider: L0 · Anlass: Bericht production-integrator · ADR: —
