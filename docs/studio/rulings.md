@@ -4034,3 +4034,15 @@ durch den studio-coach (sonnet) jetzt, TOOL-MODELL-GUARD als Werkzeug-Paket näc
 und TOOL-STUDIO-HYGIENE (Phantom-Vorfälle, verwaiste Vitest-Worker).
 
 Entscheider: L0 · Anlass: Session-Retro · ADR: —
+
+## R421 · 2026-10-09 · Push REL-13 zu Sessionbeginn; Werkzeug-Bündel danach lokal
+
+Ruling: Der eine Push dieser Session (R335) ist der Push von REL-13 (main @ `f0307c0`, enthält Merge `d7291aa` und die
+Doku-Commits der Session fb37ceac), wie in R419 und `state.md` (Fortsetzung 0) vorgesehen. Er läuft **jetzt** statt am
+Session-Ende: Auslegung von „am Session-Ende“ als „nach dem Abschluss des zu pushenden Stands“ — REL-13 ist seit R419
+abgeschlossen; ein früher Push bringt das Release zum Nutzer, und das Push-Gate (Testsperre, Last ≤ 4) kollidiert nicht mit
+Testläufen des Werkzeug-Bündels. Ablauf nach Handbuch 1.36 durch `lead-production` (sonnet) mit `production-integrator` aus
+`.worktrees/integrate`. Alles, was danach in dieser Session entsteht (Werkzeug-Bündel, REL-14-Vorarbeit), bleibt lokal bis zum
+Push der nächsten Session. Das Werkzeug-Bündel startet erst nach grünem Push-Gate.
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
