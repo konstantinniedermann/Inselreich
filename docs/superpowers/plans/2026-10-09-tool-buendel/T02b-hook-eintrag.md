@@ -1,6 +1,6 @@
 # T02b · Modell-Guard: Hook-Einstieg, Event, Eintrag in settings.json (TOOL-MODELL-GUARD)
 
-Strang `guard` · Worktree `.worktrees/buendel-guard` · Branch `tool/buendel-guard` · Umsetzer `tech-sim-engineer` (sonnet), **im selben Start nach [T02a](T02a-modellregel.md)** · AK-TB08, TB12, TB13 · Grundlage E-038, R420 V1
+Strang `guard` · Worktree `.worktrees/buendel-guard` · Branch `tool/buendel-guard` · Umsetzer `tech-sim-engineer` (sonnet), **im selben Start nach [T02a](T02a-modellregel.md)** · AK-TB08, TB12, TB13 (Startzustand `warn`, R428) · Grundlage E-038, R420 V1
 
 **Files:**
 
@@ -12,47 +12,66 @@ Strang `guard` · Worktree `.worktrees/buendel-guard` · Branch `tool/buendel-gu
 
 ## Schritt 1 · Tests zuerst (rot)
 
-In `tools/studio/tests/test_modelguard.py` ergänzen und oben die Importe `json`, `os`, `shutil`, `subprocess`, `sys`, `tempfile`, `from pathlib import Path` ergänzen:
+In `tools/studio/tests/test_modelguard.py` ergänzen; oben die Importe `io`, `json`, `os`, `shutil`, `subprocess`, `sys`, `tempfile`, `from pathlib import Path`, `from unittest import mock`. `main()` läuft **im Prozess** (stdin/stdout/Umgebung gepatcht, `MODE` gepatcht); nur der Test kaputter Eingabe startet einen Prozess. Keine Fake-Schalter im Code (TOOL-TESTLOCK):
 
 ```python
 class HookTest(unittest.TestCase):
-    def run_hook(self, payload, mode=None):
+    def run_hook(self, payload, mode="warn"):
         with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as docs:
             shutil.copy(STUDIO, Path(docs) / "STUDIO.md")
-            env = {**os.environ, "STUDIO_HOME": home, "STUDIO_DOCS": docs}
-            script = Path(modelguard.__file__)
-            done = subprocess.run(
-                [sys.executable, str(script)], input=json.dumps(payload),
-                env=env, capture_output=True, text=True,
-            )
-            events_path = Path(home) / "events.jsonl"
-            lines = events_path.read_text("utf-8").splitlines() if events_path.exists() else []
-            return done, [json.loads(line) for line in lines]
+            env = {"STUDIO_HOME": home, "STUDIO_DOCS": docs}
+            out = io.StringIO()
+            with (
+                mock.patch.dict(os.environ, env),
+                mock.patch.object(modelguard, "MODE", mode),
+                mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+                mock.patch.object(sys, "stdout", out),
+            ):
+                code = modelguard.main()
+            path = Path(home) / "events.jsonl"
+            lines = path.read_text("utf-8").splitlines() if path.exists() else []
+            return code, out.getvalue(), [json.loads(line) for line in lines]
 
-    def payload(self, **tool_input):
-        return {"hook_event_name": "PreToolUse", "tool_name": "Agent",
+    def payload(self, tool="Agent", **tool_input):
+        return {"hook_event_name": "PreToolUse", "tool_name": tool,
                 "session_id": "s1", "tool_input": tool_input}
 
-    def test_deny_output_and_event(self):
-        done, events = self.run_hook(self.payload(subagent_type="lead-qa", model="opus", prompt="Persona: lead-qa"))
-        self.assertEqual(done.returncode, 0)
-        out = json.loads(done.stdout)["hookSpecificOutput"]
-        self.assertEqual(out["permissionDecision"], "deny")
-        self.assertEqual(events[0]["kind"], "model_guard")
-        self.assertEqual(events[0]["persona"], "lead-qa")
+    OVER = {"subagent_type": "lead-qa", "model": "opus", "prompt": "Persona: lead-qa"}
+
+    def test_deny_mode_output_and_event(self):
+        code, out, events = self.run_hook(self.payload(**self.OVER), "deny")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertEqual((events[0]["kind"], events[0]["persona"]), ("model_guard", "lead-qa"))
+
+    def test_warn_mode_is_default_event_only(self):
+        self.assertEqual(modelguard.MODE, "warn")
+        code, out, events = self.run_hook(self.payload(**self.OVER))
+        self.assertEqual((code, out, events[0]["mode"]), (0, "", "warn"))
+
+    def test_task_tool_name_is_checked(self):
+        _, out, events = self.run_hook(self.payload("Task", **self.OVER), "deny")
+        self.assertIn("deny", out)
+        self.assertEqual(len(events), 1)
+
+    def test_unknown_alias_allows_with_event(self):
+        data = {"subagent_type": "lead-design", "model": "fable", "prompt": ""}
+        _, out, events = self.run_hook(self.payload(**data), "deny")
+        self.assertEqual(out, "")
+        self.assertIn("nicht in der Modelltabelle", events[0]["summary"])
 
     def test_allowed_and_other_tools_are_silent(self):
-        done, events = self.run_hook(self.payload(subagent_type="lead-qa", prompt="Persona: lead-qa"))
-        self.assertEqual((done.stdout, events), ("", []))
+        ok = self.payload(subagent_type="lead-qa", prompt="Persona: lead-qa")
+        self.assertEqual(self.run_hook(ok, "deny")[1:], ("", []))
         bash = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "ls"}}
-        self.assertEqual(self.run_hook(bash)[0].stdout, "")
+        self.assertEqual(self.run_hook(bash, "deny")[1:], ("", []))
 
     def test_broken_input_never_fails(self):
         done = subprocess.run([sys.executable, str(Path(modelguard.__file__))], input="kaputt", capture_output=True, text=True)
         self.assertEqual((done.returncode, done.stdout), (0, ""))
 ```
 
-Ergänze einen Test für `MODE = "warn"` (per `unittest.mock.patch.object(modelguard, "MODE", "warn")` und direktem Aufruf von `modelguard.main()` mit gepatchtem `sys.stdin`/`sys.stdout`): Event geschrieben, keine Ausgabe. Lauf: `python3 -m unittest discover -s tools/studio/tests -t tools/studio -p 'test_modelguard.py' -k Hook; echo EXIT=$?` → rot. Rote Ausgabe in den Bericht.
+Lauf: `python3 -m unittest discover -s tools/studio/tests -t tools/studio -p 'test_modelguard.py' -k Hook; echo EXIT=$?` → rot (`AttributeError: main`). Rote Ausgabe in den Bericht.
 
 ## Schritt 2 · `main()` in `tools/studio/modelguard.py`
 
@@ -72,7 +91,8 @@ def main() -> int:
             return 0
         table = model_table(read_text(docs_dir() / "STUDIO.md"))
         found = reason(data, persona_meta(agents_dir()), table)
-        if not found:
+        note = unknown_alias(data, table)  # unbekannter Alias: nur Event, nie deny
+        if not found and not note:
             return 0
         with contextlib.suppress(Exception):
             append_event({
@@ -80,9 +100,9 @@ def main() -> int:
                 "agent_id": str(payload.get("agent_id") or "main"), "source": "hook",
                 "kind": "model_guard", "mode": MODE,
                 "persona": _persona(data),
-                "model": str(data.get("model") or ""), "summary": found[:160],
+                "model": str(data.get("model") or ""), "summary": (found or note)[:160],
             })
-        if MODE == "deny":
+        if found and MODE == "deny":
             out = {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                    "permissionDecisionReason": found}
             print(json.dumps({"hookSpecificOutput": out}, ensure_ascii=False))
@@ -117,7 +137,7 @@ Fragt die Umgebung beim Schreiben von `.claude/settings.json` nach einer Freigab
 ## Schritt 4 · Grün, Echtlauf, Prüfungen, Commit
 
 - `python3 -m unittest discover -s tools/studio/tests -t tools/studio -p 'test_modelguard.py'; echo EXIT=$?` → 0.
-- **Echtlauf** (R375): `printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Agent","session_id":"probe","tool_input":{"subagent_type":"lead-qa","model":"opus","prompt":"Persona: lead-qa"}}' | STUDIO_HOME="$SCRATCH/studio" python3 tools/studio/modelguard.py; echo EXIT=$?` → deny-JSON, Exit 0; dasselbe mit `"prompt":"Persona: lead-qa\nModell: opus (Final-Review)"` → keine Ausgabe. Beide Ausgaben in den Bericht (`$SCRATCH` = eigenes Scratchpad).
+- **Echtlauf** (R375, Eingabe aus dem Scratchpad `$SCRATCH`): (a) Standard `warn`: `printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Agent","session_id":"probe","tool_input":{"subagent_type":"lead-qa","model":"opus","prompt":"Persona: lead-qa"}}' | STUDIO_HOME="$SCRATCH/studio" python3 tools/studio/modelguard.py; echo EXIT=$?` → keine Ausgabe, Exit 0, Event `model_guard` mit `mode: warn` in `$SCRATCH/studio/events.jsonl`. (b) `deny` einmalig: dieselbe Eingabe über `cd tools/studio && python3 -c "import modelguard; modelguard.MODE='deny'; modelguard.main()"` → deny-JSON. (c) Eingabe mit `"prompt":"Persona: lead-qa\nModell: opus (Final-Review)"` → keine Ausgabe. Alle Ausgaben in den Bericht.
 - `make studio-test; echo EXIT=$?`, `make studio-lint; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make check; echo EXIT=$?` → 0 (Testsperre: Exit 3 = später erneut).
 
 ```bash

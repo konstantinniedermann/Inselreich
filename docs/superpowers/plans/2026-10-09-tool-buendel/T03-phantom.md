@@ -10,12 +10,12 @@ Strang `py` · Worktree `.worktrees/buendel-py` · Branch `tool/buendel-py` · U
 
 **Befund (Planprobe lead-tech, heutiger Stand):** Ein `spawn`-Event mit `agent_id` eines Agenten, der nie ein `agent_start` hatte (Harness-Nebenagent, Prompt „no-op“), legt über `Builder.agent()` einen Knoten mit Rolle `unbekannt` an; `signal()` macht ihn sichtbar, nach 300 s gilt er als inaktiv → Vorfall `inaktiv:s1:P9` bei `now` = 400 s und 1000 s, `counts.inactive` = 1.
 
-**Regel:** Ein Knoten ist **unbestätigt**, wenn `agent_id != "main"`, nie `agent_start` (`_started` falsch) und nie `spawned` (`_confirmed` falsch). Unbestätigte Knoten sind nie `inactive`; nach `PHANTOM_AFTER = 600.0` s seit `started` sind sie ausgeblendet (`hidden`). Fehlerrichtung: Ein echter Agent, dessen `SubagentStart`-Hook verloren ging, meldet bis zu seinem `spawned` keinen Inaktiv-Vorfall (selten, Hook-Timeout 5 s) — bewusst in Kauf genommen.
+**Regel:** Ein Knoten ist **unbestätigt**, wenn `agent_id != "main"`, nicht `_Builder.is_start(node)` ist (kein `_started`, kein `_confirmed`, kein `_entry`: ein per Spawn-Zuordnung bestätigter Knoten zählt als Bestätigung, R428 B4). Unbestätigte Knoten sind nie `inactive`; nach `PHANTOM_AFTER = 600.0` s seit `started` sind sie ausgeblendet (`hidden`). Fehlerrichtung: Ein echter Agent, dessen `SubagentStart`-Hook verloren ging, meldet bis zu seinem `spawned` keinen Inaktiv-Vorfall (selten, Hook-Timeout 5 s) — bewusst in Kauf genommen.
 
 **Interfaces:**
 
-- Produces: `model.PHANTOM_AFTER: float = 600.0`; `Builder.unconfirmed(node) -> bool` (staticmethod).
-- Consumes: bestehende Felder `_started`, `_confirmed`, `started`, `self.now`.
+- Produces: `model.PHANTOM_AFTER: float = 600.0`; `_Builder.unconfirmed(node) -> bool` (staticmethod).
+- Consumes: `_Builder.is_start` (Zeile ~756), `started`, `self.now`.
 
 ## Schritt 1 · Tests zuerst (rot)
 
@@ -76,17 +76,13 @@ INACTIVE_DEFAULT = 300.0
 PHANTOM_AFTER = 600.0  # Knoten ohne agent_start und ohne spawned: danach ausgeblendet (REL-12 B2)
 ```
 
-In der Klasse `_Builder` (neben `hidden`; Planprobe per Monkeypatch: Phantom bei 300/400 s sichtbar ohne Vorfall, ab 1000 s ausgeblendet; bestätigter und gestarteter Agent unverändert):
+In der Klasse `_Builder` (nirgends `Builder`; neben `hidden`; Planprobe per Monkeypatch: Phantom bei 300/400 s sichtbar ohne Vorfall, ab 1000 s ausgeblendet; bestätigter und gestarteter Agent unverändert):
 
 ```python
     @staticmethod
     def unconfirmed(node: dict) -> bool:
         """Nie gestartet und nie bestätigt: z. B. Spawn eines Harness-Nebenagenten."""
-        return (
-            node["agent_id"] != "main"
-            and not node["_started"]
-            and not node["_confirmed"]
-        )
+        return node["agent_id"] != "main" and not _Builder.is_start(node)
 
     def hidden(self, key: str) -> bool:
         """stop-only-Knoten (P31) und unbestätigte Knoten nach PHANTOM_AFTER."""
@@ -107,7 +103,7 @@ In `view()`:
         )
 ```
 
-Prüfe, dass `self.now` gesetzt ist, bevor `hidden()` zum ersten Mal läuft (Konstruktor, Zeile mit `self.now = now`); sonst `hidden()` nur in `result()` mit `now` aufrufen. `inactive_keys` in `result()` filtert ausgeblendete Knoten mit: `[k for k, v in views.items() if v["inactive"] and not self.hidden(k)]`.
+Zusatzfall im Test (Klasse `PhantomSpawnerTest`): ein Knoten mit `_entry` (Spawn-Zuordnung, ohne `agent_start` und `spawned`) bleibt sichtbar und kann inaktiv werden. Prüfe, dass `self.now` gesetzt ist, bevor `hidden()` zum ersten Mal läuft (Konstruktor, Zeile mit `self.now = now`); sonst `hidden()` nur in `result()` mit `now` aufrufen. `inactive_keys` in `result()` filtert ausgeblendete Knoten mit: `[k for k, v in views.items() if v["inactive"] and not self.hidden(k)]`.
 
 ## Schritt 3 · Grün und Prüfungen
 

@@ -8,11 +8,11 @@ Strang `guard` · Worktree `.worktrees/buendel-guard` · Branch `tool/buendel-gu
 - Danach: [T02b](T02b-hook-eintrag.md) im selben Start (`main()`, Hook-Eintrag, Echtlauf)
 - Nie ändern: `tools/studio/guard.py` (Verfassung §1.3), `docs/studio/STUDIO.md`
 
-**Regel:** Basis = `model` im Persona-Frontmatter. Will der Aufruf ein stärkeres Modell (Rang = Zeilenreihenfolge der Tabelle `## Modellwahl` in `STUDIO.md`, oben = stark), braucht der Prompt die Kopfzeile `Modell: <alias> (<Einsatz>)`, deren Klammertext mit einem Einsatz aus der Tabellenzeile dieses Alias beginnt (ohne Backticks, Gross-/Kleinschreibung egal). Modelle ausserhalb der Tabelle → `deny`. Keine Prüfung: Typ ohne Persona-Datei, `fork`, Frontmatter `inherit`, gleiches oder schwächeres Modell, leere Tabelle.
+**Regel:** Basis = `model` im Persona-Frontmatter. Will der Aufruf ein stärkeres Modell (Rang = Zeilenreihenfolge der Tabelle `## Modellwahl` in `STUDIO.md`, oben = stark), braucht der Prompt die Kopfzeile `Modell: <alias> (<Einsatz>)`, deren Klammertext mit einem Einsatz aus der Tabellenzeile dieses Alias beginnt (ohne Backticks, Gross-/Kleinschreibung egal). Modell ausserhalb der Tabelle (unbekannter Alias) → **zulassen**, aber `unknown_alias` liefert einen Hinweis fürs Event (T02b). Keine Prüfung: Typ ohne Persona-Datei, `fork`, Frontmatter `inherit`, gleiches oder schwächeres Modell, leere Tabelle.
 
 **Interfaces:**
 
-- Produces: `modelguard.model_table(text: str) -> list[tuple[str, list[str]]]`, `modelguard.reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str | None`, `modelguard.MODE` (`"deny"` | `"warn"`), Event `{"kind": "model_guard", "source": "hook", "mode", "persona", "model", "summary"}`.
+- Produces: `modelguard.model_table(text: str) -> list[tuple[str, list[str]]]`, `modelguard.reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str | None`, `modelguard.MODE` (Start `"warn"`, R428; `"deny"` später), `modelguard.unknown_alias(tool_input, table) -> str | None`, Event `{"kind": "model_guard", "source": "hook", "mode", "persona", "model", "summary"}`.
 - Consumes: `studio_docs.persona_meta`, `studio_docs.read_text`, `paths.agents_dir`, `paths.docs_dir` (`STUDIO_DOCS`), `paths.append_event` (`STUDIO_HOME`).
 
 ## Schritt 1 · Tests zuerst (rot)
@@ -79,8 +79,11 @@ class ReasonTest(unittest.TestCase):
         self.assertIsNotNone(call("lead-qa", "Modell: sonnet (Final-Review)", "opus"))
         self.assertIsNotNone(call("lead-qa", "Modell: opus", "opus"))
 
-    def test_unknown_alias_is_denied(self):
-        self.assertIn("nicht in der Modelltabelle", call("lead-design", "", "fable"))
+    def test_unknown_alias_is_allowed_with_note(self):
+        self.assertIsNone(call("lead-design", "", "fable"))
+        data = {"subagent_type": "lead-design", "model": "fable"}
+        self.assertIn("nicht in der Modelltabelle", modelguard.unknown_alias(data, TABLE))
+        self.assertIsNone(modelguard.unknown_alias({"model": "opus"}, TABLE))
 
     def test_no_check_cases(self):
         self.assertIsNone(call("lead-design"))  # Frontmatter opus, kein model
@@ -116,7 +119,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping  # T02b ergänzt contextlib, json, sys
 
-MODE = "deny"  # "warn": nur Event, kein Block (Gate-Entscheid TOOL-BUENDEL)
+MODE = "warn"  # Startzustand (R428 E2): nur Event; "deny" setzt TOOL-AKTIVIERUNG
 AGENT_TOOLS = ("Agent", "Task")
 SKIP_TYPES = {"fork"}
 SECTION = "## Modellwahl"
@@ -173,7 +176,7 @@ def reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str |
     if base not in ranks:
         return None
     if wanted not in ranks:
-        return f"Modell `{wanted}` steht nicht in der Modelltabelle ({', '.join(ranks)})" + SUFFIX
+        return None  # unbekannter Alias: zulassen, Hinweis über unknown_alias()
     if ranks[wanted] >= ranks[base]:
         return None
     uses = dict(table)[wanted]
@@ -188,6 +191,13 @@ def reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str |
         f"Nur mit Kopfzeile `Modell: {wanted} (<Einsatz>)`, Einsatz aus: {', '.join(uses)}; "
         "sonst `model` weglassen" + SUFFIX
     )
+
+
+def unknown_alias(tool_input: Mapping, table) -> str | None:
+    alias = str(tool_input.get("model") or "")
+    if alias and table and alias not in {a for a, _ in table}:
+        return f"Modell `{alias}` nicht in der Modelltabelle" + SUFFIX
+    return None
 
 
 # main() und der Einstiegspunkt folgen in T02b.

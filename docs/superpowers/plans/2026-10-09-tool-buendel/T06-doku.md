@@ -1,6 +1,6 @@
 # T06 · Doku: ADR-014, arc42, README, Beobachtungen (D1, E-017)
 
-Strang `py` · Worktree `.worktrees/buendel-py` · Branch `tool/buendel-py` · Umsetzer `tech-sim-engineer` (sonnet) · AK-TB17 · blocked-by: Reviews OK von T02, T03, T04, T05 (Namen und Verhalten stehen fest)
+Strang `py` · Worktree `.worktrees/buendel-py` · Branch `tool/buendel-py` · Umsetzer `tech-sim-engineer` (sonnet) · AK-TB17 · blocked-by: Reviews OK von T02, T03, T04, T05 **und Merge REL-14 auf `main`** (L0 meldet ihn; vorher nur `main` in `tool/buendel-py` mergen, kein Rebase; R428 prod B4). Kein eigener Task-Reviewer, das Final-Review T07 prüft T06 mit (R428 prod B2)
 
 **Files (ausdrücklich erlaubt, E-017):**
 
@@ -16,7 +16,7 @@ Abschnitte wie die bestehenden ADRs (Status, Kontext, Entscheidung, Alternativen
 
 - **Kontext:** R417 V2 (Formatfehler in Doku-Commits), R420 V1 (10 von 13 Lead-/Coach-Starts über der Modelltabelle, Retro `docs/studio/retros/2026-10-09-session-fb37ceac-ende.md` B1), ADR-001 (keine Laufzeit-Abhängigkeit), Verfassung §1.3 (`guard.py` geschützt).
 - **Entscheidung 1 — Git-Hook:** Versionierter Ordner `tools/githooks/` und `git config core.hooksPath tools/githooks` (`make hooks`), relativer Pfad = Hook aus dem jeweiligen Worktree. Ein Prettier-Lauf über die gestagten Pfade (`tools/studio/precommit.py`), Ablehnung als Event `commit_rejected`. Grenzen: prüft den Arbeitsbaum (nicht den Index bei `git add -p`); `git commit --no-verify` umgeht ihn (Briefing-Regel, nicht technisch); CI prüft weiter mit `make lint`.
-- **Entscheidung 2 — Modell-Guard:** eigener PreToolUse-Hook `tools/studio/modelguard.py` statt Erweiterung von `guard.py`: Die Modellregel ist Handbuch-Recht und muss vom Team änderbar bleiben; `guard.py` schützt Verfassungsrecht. Basis Persona-Frontmatter, Ausnahmen nur aus der Tabelle `STUDIO.md` § Modellwahl (keine zweite Liste), Kopfzeile `Modell: <alias> (<Einsatz>)`. Modus laut Gate-Ruling (`deny` oder `warn`, Konstante `MODE`).
+- **Entscheidung 2 — Modell-Guard:** eigener PreToolUse-Hook `tools/studio/modelguard.py` statt Erweiterung von `guard.py`: Die Modellregel ist Handbuch-Recht und muss vom Team änderbar bleiben; `guard.py` schützt Verfassungsrecht. Basis Persona-Frontmatter, Ausnahmen nur aus der Tabelle `STUDIO.md` § Modellwahl (keine zweite Liste), Kopfzeile `Modell: <alias> (<Einsatz>)`. Startzustand `MODE = "warn"` (nur Event); Umschalten auf `deny` im Folgepaket TOOL-AKTIVIERUNG (Kopfzeilen-Syntax in `briefing.md`/`STUDIO.md` zuerst). **Rückweg:** `MODE = "warn"` zurücksetzen (eine Konstante), bei Fehlalarmen sofort; unbekannter Alias wird zugelassen und als Event geloggt.
 - **Alternativen:** husky/lint-staged (neue Abhängigkeit, ADR-001 ✗); Prettier je Datei aus dem Index (`git show :pfad | prettier --stdin-filepath`; ein Prozess je Datei, zu langsam); Check nur in `make lint` (kommt zu spät); `guard.py` erweitern (Verfassungsweg, Arbeiter können die Datei nicht schreiben); Modellliste je Persona im Code (Doppelpflege); nur warnen (erreicht den Aufrufer nicht).
 - **Konsequenzen:** `make hooks` einmal je Klon; die Testsuite pinnt das Tabellenformat (`test_modelguard.py`), eine Formatänderung der Tabelle macht `make studio-test` rot; abgelehnte Starts erscheinen als `spawn`-Event ohne Kind, wie bisher bei `guard.py`-Ablehnungen.
 
@@ -38,7 +38,7 @@ Im Abschnitt „Entwicklung“ nach `make install`: `make hooks     # Git-Hook a
 
 ## Schritt 4 · Beobachtungen
 
-`docs/beobachtungen.md` nach der Anleitung in der Datei selbst: Eintrag „Smoke-Etikett Save v9“ (`tools/render-qa/smoke.mjs:466`) und Paket-Kandidat „TOOL-STUDIO-HYGIENE (Erweiterung)“ als erledigt durch TOOL-BUENDEL austragen (Form wie andere erledigte Einträge). Neue Befunde aus T01–T05 (aus den Task-Berichten im Ledger `.superpowers/sdd/tool-buendel/ledger.md`) als neue Einträge.
+`docs/beobachtungen.md` nach der Anleitung in der Datei selbst: Eintrag „Smoke-Etikett Save v9“ (`tools/render-qa/smoke.mjs:466`) und Paket-Kandidat „TOOL-STUDIO-HYGIENE (Erweiterung)“ als erledigt durch TOOL-BUENDEL austragen (Form wie andere erledigte Einträge). Nachfolgepunkt „Ampelzeile mit bereinigtem Steuerungsanteil im Dashboard“ eintragen (R428 qa B3). Neue Befunde aus T01–T05 (aus den Task-Berichten im Ledger `.superpowers/sdd/tool-buendel/ledger.md`) als neue Einträge.
 
 ## Schritt 5 · Prüfung und Commit
 
