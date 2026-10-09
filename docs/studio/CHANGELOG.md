@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-09 · Handbuch 1.33
+
+- Anlass: Ad-hoc-Retro Push-Gate REL-10 (vierfacher Push-Anlauf) und Typcheck-Lücke
+- Datenbasis: `docs/studio/retros/2026-10-09-adhoc-pushgate-rel10.md`
+- Ruling: R395 (V1), R398 (3)
+- Änderungen: Briefing-Vorlage Punkt 5 und Gate Merge: Pflichtzeilen `npx tsc --noEmit` und Vorbedingungs-Fehlerrichtung; Push-Ablauf in STUDIO.md (tsc und lint vor `make test`, Last ≤ 4 vor `make zeitreserve-push`); lernen.md-Zeile
+
 ## 2026-10-09 · Handbuch 1.32
 
 - Anlass: Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, B8, B9, B12 c (V6, E-052)

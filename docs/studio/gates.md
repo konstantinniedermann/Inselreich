@@ -179,6 +179,7 @@ stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist
 3. Sind README (Bedienung, Spielwerte) und arc42 (Module, Tick-Ablauf, Persistenz) nachgeführt?
 4. Keine Secrets, OWASP-konform, Commit-Konvention eingehalten?
 5. Zeittests im Diff: lokale Laufzeit unter `CI=true` höchstens 50 % des Test-Timeouts, auch bei Änderungen aus Fix-Runden nach dem Final-Review (R270)?
+6. Jedes Paket mit `.ts`-Änderung: `npx tsc --noEmit` Exit 0 belegt (Vitest prüft keine Typen, R398)? Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt, dass das abhängige Gate erfüllbar bleibt (R395)?
 
 **Prüffragen `lead-art` (nur bei Assets; Grundlage [Verfassung §4](VERFASSUNG.md#4-asset--und-lizenzregeln)):**
 
