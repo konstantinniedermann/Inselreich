@@ -2,6 +2,7 @@ import { generateTerrain } from '../sim/mapgen';
 import { hash2, valueNoise } from '../sim/noise';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { seaLanes } from '../sim/islands';
+import { seaRoute } from '../sim/seaRoute';
 import type { Island, World } from '../sim/types';
 import { LIGHT, rotNoise } from './light';
 import { meadowWarmth } from './groundDecor';
@@ -959,6 +960,11 @@ export interface SeaContext {
    * wie D2 in L4): Meer-Stempel und ihr Schaum entfallen, solange eins < 4 Kacheln entfernt ist.
    */
   live: KontorRect[];
+  /**
+   * Alle Wasserrouten der Welt (`seaRoute` für jedes Paar a < b, wie `routeFar` in `fauna.ts`) als Kopien in Heimat-Kacheln.
+   * Nur für `seaPlanKeepOut` (Platzierung von Wrack, Eiland, Felsen); die Tönung (`seaClearance`) kennt sie nicht (R367).
+   */
+  routes?: Pos[][];
 }
 export interface KontorRect {
   x: number;
@@ -998,11 +1004,16 @@ export function seaContext(world: World): SeaContext {
     const pts = l.a === hi ? l.points : [...l.points].reverse();
     lanes.push(pts.map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
   }
+  const routes: Pos[][] = [];
+  for (let a = 0; a < world.islands.length; a++)
+    for (let b = a + 1; b < world.islands.length; b++)
+      routes.push(seaRoute(world.islands, a, b).map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
   const ctx: SeaContext = {
     lanes,
     anchor: { x: isl.anchor.x + 0.5, y: isl.anchor.y + 0.5 },
     kontors,
     live,
+    routes,
   };
   seaContexts.set(world, { sig, ctx });
   return ctx;
@@ -1024,6 +1035,20 @@ function distToSeg(px: number, py: number, a: Pos, b: Pos): number {
  */
 export function seaKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
   return seaClearance(ctx, x + 0.5, y + 0.5, pad) < 0;
+}
+
+/**
+ * Wie `seaKeepOut`, zusätzlich gesperrt, wenn die Kachelmitte < `SEA_LANE_GAP` + `pad` von einer Wasserroute (`ctx.routes`)
+ * liegt. Nur für Wrack, Eiland und Felsen; die Tönung bleibt auf `seaKeepOut`/`seaClearance`.
+ */
+export function seaPlanKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
+  if (seaKeepOut(ctx, x, y, pad)) return true;
+  const cx = x + 0.5,
+    cy = y + 0.5,
+    gap = SEA_LANE_GAP + pad;
+  for (const r of ctx.routes ?? [])
+    for (let i = 1; i < r.length; i++) if (distToSeg(cx, cy, r[i - 1]!, r[i]!) < gap) return true;
+  return false;
 }
 
 /**
@@ -1115,7 +1140,15 @@ const ctxKeys = new WeakMap<SeaContext, string>();
 const ctxKey = (c: SeaContext): string => {
   let k = ctxKeys.get(c);
   if (k === undefined)
-    ctxKeys.set(c, (k = JSON.stringify({ lanes: c.lanes, anchor: c.anchor, kontors: c.kontors })));
+    ctxKeys.set(
+      c,
+      (k = JSON.stringify({
+        lanes: c.lanes,
+        anchor: c.anchor,
+        kontors: c.kontors,
+        routes: c.routes,
+      })),
+    );
   return k;
 };
 

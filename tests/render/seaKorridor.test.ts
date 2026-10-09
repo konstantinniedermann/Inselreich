@@ -1,7 +1,14 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { seaRoute } from '../../src/sim/seaRoute';
 import { createWorld, home } from '../../src/sim/world';
-import { seaContext, seaPlan } from '../../src/render/decor';
+import {
+  SEA_LANE_GAP,
+  seaContext,
+  seaKeepOut,
+  seaClearance,
+  seaPlan,
+  seaPlanKeepOut,
+} from '../../src/render/decor';
 import { seaTintFor } from '../../src/render/seaFields';
 
 const routeCache = new WeakMap<object, { x: number; y: number }[][]>();
@@ -113,5 +120,85 @@ describe('SEE-F1-KORRIDOR K1', () => {
   it('AK-K1b Pin: Hash seaTintFor Seeds 1-40 (Flaechen bleiben bitgleich zu main)', () => {
     // Auf main aufgenommen; bleibt bis zum Ende von SEE-F1-KORRIDOR unveraendert.
     expect(tintHash()).toBe(683761494);
+  });
+});
+
+/** Hash ueber seaKeepOut (pad 0/1) und seaClearance (auf 1e-6) einer Kachelstichprobe, Seeds 1-5. */
+function clearanceHash(): number {
+  let h = 2166136261;
+  const mix = (v: number): void => {
+    h = Math.imul(h ^ (v | 0), 16777619) >>> 0;
+  };
+  for (let seed = 1; seed <= 5; seed++) {
+    const ctx = seaContext(worldOf(seed));
+    for (let y = 0; y < 120; y += 3)
+      for (let x = 0; x < 120; x += 3) {
+        mix(seaKeepOut(ctx, x, y) ? 1 : 0);
+        mix(seaKeepOut(ctx, x, y, 1) ? 1 : 0);
+        const c = seaClearance(ctx, x + 0.5, y + 0.5, 0.5);
+        mix(Number.isFinite(c) ? Math.round(c * 1e6) : 7);
+      }
+  }
+  return h;
+}
+
+describe('SEE-F1-KORRIDOR K2', () => {
+  it('AK-K2 seaContext.routes: alle Paare a<b, Heimat-Kachelraum, entspricht der Messmenge', () => {
+    for (let seed = 1; seed <= 5; seed++) {
+      const w = worldOf(seed);
+      expect(seaContext(w).routes).toEqual(allRoutes(w));
+    }
+  });
+
+  it('AK-K2 seaPlanKeepOut sperrt Kacheln <= GAP+pad an einer Route, davon unabhaengig bleibt seaKeepOut', () => {
+    let gesperrt = 0,
+      nurRoute = 0;
+    for (let seed = 1; seed <= 3; seed++) {
+      const w = worldOf(seed);
+      const ctx = seaContext(w);
+      const isl = home(w);
+      for (const pad of [0, 1])
+        for (let y = 0; y < isl.height; y += 2)
+          for (let x = 0; x < isl.width; x += 2) {
+            const d = Math.min(
+              ...(ctx.routes ?? []).map((r) => distToPolyline(x + 0.5, y + 0.5, r)),
+            );
+            const expected = seaKeepOut(ctx, x, y, pad) || d < SEA_LANE_GAP + pad;
+            expect(seaPlanKeepOut(ctx, x, y, pad)).toBe(expected);
+            if (d < SEA_LANE_GAP + pad) {
+              gesperrt++;
+              if (!seaKeepOut(ctx, x, y, pad)) nurRoute++;
+            }
+          }
+    }
+    expect(gesperrt).toBeGreaterThan(0);
+    expect(nurRoute).toBeGreaterThan(0); // die Route sperrt mehr als die Geraden
+  });
+
+  it('AK-K2 seaKeepOut und seaClearance bitgleich zu main (Stichprobe, Hash auf main aufgenommen)', () => {
+    expect(clearanceHash()).toBe(1496395851);
+  });
+
+  it('AK-K2 routes sind Kopien: Mutation wirkt nicht auf seaRoute', () => {
+    const w = createWorld(7);
+    const before = JSON.stringify(allRoutes(w));
+    const ctx = seaContext(w);
+    for (const r of ctx.routes ?? []) for (const q of r) q.x += 50;
+    ctx.routes?.splice(0);
+    expect(JSON.stringify(allRoutes(w))).toBe(before);
+    expect(JSON.stringify(seaRoute(w.islands, 0, 1))).toBe(
+      JSON.stringify(seaRoute(w.islands, 0, 1)),
+    );
+  });
+
+  it('AK-K2 Punktreihenfolge der Route aendert die Sperrmenge nicht', () => {
+    const w = worldOf(3);
+    const ctx = seaContext(w);
+    const rev = { ...ctx, routes: (ctx.routes ?? []).map((r) => [...r].reverse()) };
+    const isl = home(w);
+    for (let y = 0; y < isl.height; y += 2)
+      for (let x = 0; x < isl.width; x += 2)
+        for (const pad of [0, 1])
+          expect(seaPlanKeepOut(rev, x, y, pad)).toBe(seaPlanKeepOut(ctx, x, y, pad));
   });
 });
