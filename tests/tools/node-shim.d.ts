@@ -3,7 +3,7 @@ declare module 'node:child_process' {
   export function spawnSync(
     command: string,
     args: string[],
-    options?: { env?: Record<string, string | undefined>; encoding?: 'utf8' },
+    options?: { cwd?: string; env?: Record<string, string | undefined>; encoding?: 'utf8' },
   ): { status: number | null; stdout: string; stderr: string };
   export function spawn(
     command: string,
