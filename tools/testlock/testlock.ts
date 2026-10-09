@@ -8,14 +8,13 @@
 // Sperrdatei kann nur ein Wächterhalter löschen, daher kein ABA-Fenster.
 import { spawn, execFileSync } from 'node:child_process';
 import {
-  closeSync,
+  linkSync,
   mkdirSync,
-  openSync,
   readFileSync,
   rmdirSync,
   statSync,
   unlinkSync,
-  writeSync,
+  writeFileSync,
 } from 'node:fs';
 import { constants, loadavg } from 'node:os';
 import { resolve } from 'node:path';
@@ -111,15 +110,20 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
         /* schon weg */
       }
     } finally {
-      rmdirSync(guard);
+      try {
+        rmdirSync(guard);
+      } catch {
+        /* Wächter schon weg */
+      }
     }
   };
   let acquired = false;
   for (let attempt = 0; attempt < 5 && !acquired; attempt++) {
     try {
-      const fd = openSync(lockPath, 'wx');
-      writeSync(
-        fd,
+      // vollständig in Temp-Datei schreiben, dann atomar per link anlegen (nie eine leere Sperre sichtbar)
+      const tmp = `${lockPath}.${process.pid}.tmp`;
+      writeFileSync(
+        tmp,
         JSON.stringify({
           pid: process.pid,
           cwd: process.cwd(),
@@ -127,7 +131,11 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
           since: new Date().toISOString(),
         }),
       );
-      closeSync(fd);
+      try {
+        linkSync(tmp, lockPath);
+      } finally {
+        unlinkSync(tmp);
+      }
       acquired = true;
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
