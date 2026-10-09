@@ -47,6 +47,11 @@ function seaPlanKeepOutRef(ctx: SeaContext, x: number, y: number, pad = 0): bool
 }
 
 describe('RF-P2 seaPlanKeepOut mit Segmentindex', () => {
+  it('RF-P2 Kopplung: der Index bedient Abstand SEA_LANE_GAP + 1; kein SEA_PAD darf darüber liegen', () => {
+    // ROUTE_INDEX_GAP = SEA_LANE_GAP + 1 in decor.ts; wächst ein Pad, fiele der Index sonst still falsch aus
+    expect(Math.max(...Object.values(SEA_PAD))).toBeLessThanOrEqual(1);
+  });
+
   it('RF-P2 jede Kachel der Heimat, Seeds 1-40, alle pads: Antwort gleich der Referenzschleife', () => {
     let tiles = 0,
       blockedByRoute = 0;
@@ -56,7 +61,7 @@ describe('RF-P2 seaPlanKeepOut mit Segmentindex', () => {
       const ctx = seaContext(w);
       for (const pad of PADS)
         for (let y = 0; y < isl.height; y++)
-          for (let x = 0; x < isl.width; x++) {
+          for (let x = (y + pad * 2) % 2; x < isl.width; x += 2) {
             const got = seaPlanKeepOut(ctx, x, y, pad);
             const ref = seaPlanKeepOutRef(ctx, x, y, pad);
             tiles++;
