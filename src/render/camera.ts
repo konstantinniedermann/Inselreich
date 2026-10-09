@@ -54,13 +54,64 @@ export interface TileRect {
   y0: number;
   x1: number;
   y1: number;
+  /** Konvexe Hülle (gegen den Uhrzeigersinn), in der die Bildmitte zusätzlich bleiben muss. */
+  hull?: readonly Pt[];
+}
+/** Konvexe Hülle (Monotone Chain), gegen den Uhrzeigersinn; Duplikate und kollineare Punkte entfallen. */
+export function convexHull(points: readonly Pt[]): Pt[] {
+  const pts = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+  const u = pts.filter((p, i) => i === 0 || p.x !== pts[i - 1]!.x || p.y !== pts[i - 1]!.y);
+  if (u.length < 3) return u.map((p) => ({ x: p.x, y: p.y }));
+  const cross = (o: Pt, a: Pt, b: Pt): number =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const half = (seq: readonly Pt[]): Pt[] => {
+    const h: Pt[] = [];
+    for (const p of seq) {
+      while (h.length >= 2 && cross(h[h.length - 2]!, h[h.length - 1]!, p) <= 0) h.pop();
+      h.push(p);
+    }
+    h.pop();
+    return h;
+  };
+  return [...half(u), ...half([...u].reverse())].map((p) => ({ x: p.x, y: p.y }));
+}
+/** Punkt innen bleibt, aussen der nächste Randpunkt der konvexen Hülle (gegen den Uhrzeigersinn). */
+export function clampToPolygon(p: Pt, hull: readonly Pt[]): Pt {
+  const n = hull.length;
+  if (n === 0) return p;
+  if (
+    n >= 3 &&
+    hull.every((a, i) => {
+      const b = hull[(i + 1) % n]!;
+      return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) >= 0;
+    })
+  )
+    return p;
+  let best = hull[0]!,
+    bestD = Infinity;
+  for (let i = 0; i < n; i++) {
+    const a = hull[i]!,
+      b = hull[(i + 1) % n]!;
+    const dx = b.x - a.x,
+      dy = b.y - a.y,
+      l = dx * dx + dy * dy;
+    const t = l === 0 ? 0 : Math.min(1, Math.max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l));
+    const q = { x: a.x + t * dx, y: a.y + t * dy };
+    const d = (p.x - q.x) ** 2 + (p.y - q.y) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = q;
+    }
+  }
+  return { x: best.x, y: best.y };
 }
 export function clampToRect(c: Camera, r: TileRect, viewW: number, viewH: number): void {
   const hw = viewW / 2 / c.zoom,
     hh = viewH / 2 / c.zoom;
   const t = unproject(c.x + hw, c.y + hh);
-  const fx = Number.isFinite(t.x) ? Math.min(Math.max(t.x, r.x0), r.x1) : (r.x0 + r.x1) / 2;
-  const fy = Number.isFinite(t.y) ? Math.min(Math.max(t.y, r.y0), r.y1) : (r.y0 + r.y1) / 2;
+  let fx = Number.isFinite(t.x) ? Math.min(Math.max(t.x, r.x0), r.x1) : (r.x0 + r.x1) / 2;
+  let fy = Number.isFinite(t.y) ? Math.min(Math.max(t.y, r.y0), r.y1) : (r.y0 + r.y1) / 2;
+  if (r.hull && r.hull.length > 0) ({ x: fx, y: fy } = clampToPolygon({ x: fx, y: fy }, r.hull));
   const p = project(fx, fy);
   c.x = p.x - hw;
   c.y = p.y - hh;
