@@ -4090,3 +4090,16 @@ TOOL-TESTLOCK, Messläufe nur bei Load ≤ 4 (R329) und die Datei-Ownership je S
 (Load-Spitzen, Wartezeiten an der Testsperre, Konflikte).
 
 Entscheider: L0 · Anlass: Kurzdesign lead-design, Nutzerfrage · ADR: —
+
+## R425 · 2026-10-09 · REL-13 live; CLEANUP-WT-2 freigegeben
+
+Ruling: (1) **REL-13 live:** Push `3417346..46153c6` (25 Commits, gezielt der geprüfte Commit), CI 37984641871 grün,
+Pages 37985195805 grün; `make test` 103 s, `make check` 134 s, Load < 3. (2) **CLEANUP-WT-2:** `production-integrator` entfernt
+die gemergten Worktrees `art-meeresfels`, `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`,
+`steuer-je-stufe`, `ui-seekarte` und den Scratch-Worktree `…/e90e097e-…/scratchpad/mainwt` mit `git worktree remove`
+(ohne `--force`; Ausnahme nur, wenn `git status --porcelain` genau `?? .vitest/` zeigt — Testcache), danach `git worktree
+prune` und Löschen von `.worktrees/check2.log`. Vorbedingung je Worktree: sauber und Branch bzw. HEAD in `git branch
+--merged main` bzw. Vorfahre von main. **Branches bleiben** (lokales Löschen nur per eigenem Ruling); `.worktrees/integrate`
+bleibt. Alt-Branches, Remote `wip/r118a-…` und `stash@{0}` bleiben unberührt.
+
+Entscheider: L0 · Anlass: Push-Bericht lead-production, Fortsetzung 3 · ADR: —
