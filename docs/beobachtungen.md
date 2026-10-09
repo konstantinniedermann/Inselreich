@@ -4,7 +4,7 @@ Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschä
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
 ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
 
-Letzte Auswertung: 2026-10-08
+Letzte Auswertung: 2026-10-09
 
 **Marke (R287, R288):** Die Zeile „Letzte Auswertung: JJJJ-MM-TT“ ist die Zählmarke des SessionStart-Hooks. Als
 Eintrag zählt jede Überschrift der Ebene 2 oder 3 unter der Marke, ausser „Offen …“ und „Ausgewertet …“. Neue
@@ -19,6 +19,70 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 unverändert als Archiv.
 
 **Stand 2026-10-08** (`lead-production`, Paket BEOB-AUSW-02, gegen `c6e9b32`): 18 Einträge gesichtet. Bilanz und Paket-Kandidaten stehen in „Ausgewertet 2026-10-08“; die Auswertung vom 2026-10-06 steht darunter unverändert.
+
+**Stand 2026-10-09** (`lead-production`, Paket BEOB-AUSW, gegen `283b8ce`): 23 Einträge gesichtet. Bilanz und Paket-Kandidaten stehen in „Ausgewertet 2026-10-09“; die Auswertung vom 2026-10-08 steht darunter unverändert.
+
+---
+
+## Ausgewertet 2026-10-09
+
+**Bilanz** (11 Überschriften-Einträge und 12 datierte Zeilen, `lead-production`, Paket BEOB-AUSW, gegen `283b8ce`):
+7 erledigt/überholt, 10 abgehakt (mit Trigger), 3 Trivial-Fix-Kandidaten, 5 REL-11-/Paket-Kandidaten, 0 verworfen,
+0 Ideen, 0 ungesichtet. Einträge mit mehreren Teilbefunden sind nach dem Hauptausgang gezählt. Verifiziert per grep am
+Code (Fundstellen unten); Bildbefunde, Messwerte und CI-Zeiten aus Agentenberichten sind nicht neu gemessen.
+
+**Erledigt / überholt**
+
+| Eintrag                                                                                   | Beleg                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Importzyklus `inspect.ts` ↔ `panelView.ts`; UI-PANEL-AUFRAEUMEN (Bauleiste, Etiketten)    | `src/ui/panelView.ts` importiert nichts mehr aus `./inspect`; Punkt (a) mit UI-KAMERA-KLEMMUNG geschlossen                                                              |
+| `willReadFrequently`-Warnung (REL-08, SEE-F2-UX (d))                                      | `READBACK_CTX` in `src/render/terrain.ts`, Test `tests/render/terrainReadback.test.ts` (AK-T03a)                                                                        |
+| `zeitreserve-push` liest veraltete Messdatei                                              | `tools/zeitreserve/reporter.ts` stempelt `commit`, `tools/zeitreserve/rule.ts` verweigert fremden Commit; Rest (Last während des Laufs) → TOOL-GATES-2 (R392)           |
+| Geräte-DPR nur über `ResizeObserver` (PERF-L57) und `matchMedia`-Listener (SEE-F2-UX (c)) | `src/ui/app.ts` `watchDpr`/`onDprChange` mit `matchMedia('(resolution: …dppx)')`; nur der manuelle Browser-Zoom-Test fehlt (siehe Abgehakt)                             |
+| Totholz ohne Waldnachbar wechselt beim Roden die Art (ART-L8-SELTEN)                      | `src/render/decor.ts` `groundElementAt`: `G_KINDS[g - 1] !== 'deadwood' \|\| edge4`, Kommentar „B7 braucht jetzt Wald als Nachbarn“                                     |
+| Gischt am Wasserfall angeschlossen (Teil von ART-WALD-RAUTEN-Rest)                        | `drawFallSparks` wird in `src/render/renderer.ts` gerufen; nur die Bildprüfung fehlt (siehe Abgehakt)                                                                   |
+| Messskripte nach `tools/render-qa/` (Teil von TOOL-RENDERQA-NACHZUG)                      | `hitch.mjs`, `altwald.mjs`, `proben.mjs`, `perf-lauf.sh`, `kalt.mjs`, `korridor.mjs` liegen dort; Rest `trace.mjs`/`calls.mjs`/`incl.mjs` fehlt noch (siehe Kandidaten) |
+
+**Trivial-Fix-Kandidaten (L0 entscheidet; nicht umgesetzt)**
+
+| Eintrag                                         | Beleg                                                                                                                            | Vorschlag                                                        |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `noLoadableReason()` toter Code (SEE-F2-UX (b)) | `grep noLoadableReason src tests` → nur die Definition in `src/ui/storage.ts`                                                    | Funktion löschen (Minuten, kein Testaufwand)                     |
+| `favicon.ico` liefert 404 (REL-08)              | `index.html` ohne `<link rel="icon">`, `public/` enthält nur `audio`, `fonts`                                                    | `<link rel="icon" href="data:,">` oder kleines Icon in `public/` |
+| Kontrast `.needs`/`.reasons` Rand 2,3–2,7 : 1   | `src/style.css` `.needs .ok` `border-left: 4px solid var(--ok)`, `.bad` `var(--signal-red)`; `--tone-*` existieren (ab Zeile 31) | Randfarben auf `--tone-ok`/`--tone-bad`; Kontrast neu messen     |
+
+**Kandidaten für REL-11 / Pakete (L0 entscheidet)**
+
+| Paket-ID (Vorschlag)         | Inhalt                                                                                                                                                                | Beleg                                                                                   | Prio    | Owner     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------- | --------- |
+| ART-MEERESFELS               | Meeresfelsen bei Zoom ≤ 0,5 wirken wie Boote (Blindprobe, zweite Bildrunde L8)                                                                                        | R390 (Blindprobe), Eintrag Bildrunde 2026-10-09                                         | mittel  | lead-art  |
+| UI-KAMERA-RAND               | Rahmenecken zeigen nur Wasser (Rechteck um verstreute Inseln); Mittenklemmung schiebt bei Resize um halbe Änderung zurück                                             | `src/ui/input.ts` `clamp` → `clampToRect(…, cameraBounds(islands), …)`; R390            | niedrig | lead-tech |
+| SEE-F3-SCHIFFSKONTRAST       | schon in state.md Punkt 2 (aus Auswertung 2026-10-06, Urteil lead-art offen)                                                                                          | siehe „Ausgewertet 2026-10-06“                                                          | mittel  | lead-art  |
+| RENDER-SEEPLAN-KEEPOUT       | `seaPlanKeepOut` prüft alle ≈ 630 Routenpunkte je Element (≈ 9 ms statt 2,3 ms beim Neubau nach Kontor-Wechsel); Bounding-Box vorschalten                             | `src/render/decor.ts` `seaPlanKeepOut`: `for (const r of ctx.routes) for (…) distToSeg` | niedrig | lead-art  |
+| TOOL-RENDERQA-NACHZUG (Rest) | `trace.mjs`, `calls.mjs`, `incl.mjs` (Frame-Budget, Zeichenaufrufe) aus dem Scratchpad nach `tools/render-qa/`; Hinweis zur Frame-Reserve (~0,2–1 ms) für neue Ebenen | `ls tools/render-qa/` ohne die drei Skripte                                             | niedrig | lead-art  |
+
+Die Pakete passen als ein Render-Strang (ART-MEERESFELS, RENDER-SEEPLAN-KEEPOUT, SEE-F3-SCHIFFSKONTRAST, alle in
+`src/render/`) und ein UI-Strang (UI-KAMERA-RAND, `src/ui/input.ts`/`app.ts`); die drei Trivial-Fixes können in den UI-Strang.
+
+**Abgehakt (bewusst nichts tun, mit Reevaluations-Trigger)**
+
+| Eintrag                                                                                                                                       | Begründung / Beleg                                                                                                     | Trigger zurück                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `perf.test.ts` AK-E0-15a und `terrain.test.ts` AK-R1-06 rot unter Last (Load 7 bis 19)                                                        | Messartefakt, `tests/sim/perf.test.ts` `PERF_PIN = 2.5`, beide in ZEITTESTS (`vite.config.ts`); Wiederholung grün      | rot auf ruhiger Maschine (Load ≤ 3) oder nach TOOL-GATES-2 weiter rot               |
+| Zeitreserve-Runner-Prüfung läuft auf CI zusätzlich                                                                                            | `tools/zeitreserve/check.ts` ruft `checkRunnerEstimate` immer; kostet Sekunden                                         | nächste Arbeit an `tools/zeitreserve/` (mit TOOL-GATES-2 prüfen)                    |
+| Panel bei 800×600 unter dem Canvas; Glashütte im Brand läuft bei 1280×720 über die Panelhöhe                                                  | Desktop-first, schmale Fenster nur „stürzt nicht ab“; Glashütte per Scrollen erreichbar; nicht neu im Browser gemessen | Nutzer meldet schmale Fenster oder abgeschnittene Panelteile                        |
+| `fauna.ts` `massifHeightAt`/`sightFree` doppelt zu `massif.ts` (`heightAtF`, `sightFree`)                                                     | beide Stellen vorhanden (`fauna.ts` exportiert und getestet, `massif.ts` privat); Hygiene                              | nächster Eingriff in `massif.ts` oder `fauna.ts`                                    |
+| Fuchs: `alive` prüft nur die Ankerkachel, nicht den Laufweg                                                                                   | `fauna.ts` `alive: notBuilt(…)` je Anker; Optik-Detail                                                                 | Playtest meldet Fuchs über Wegen                                                    |
+| ART-WALD-RAUTEN-Rest (Fussring, Schaum ohne Objekt, Strand-Warp 3 px, Patch-Test ohne Aussenrand); Gischt-Bild bei Tag und Nacht ungesehen    | Galerie zeigt keine Rauten mehr; Bildprüfung nicht neu gemacht                                                         | nächster Galerie-Lauf (`tools/render-qa/galerie.mjs`) oder Nutzer sieht Rauten      |
+| Frame-Budget im Headless-Chrome (Reserve 0,2–1 ms, `DoUpdateLayers` ≈ 13 ms)                                                                  | Hinweis für künftige Render-Pakete, Bodencache `groundCache.ts` senkt auf ≈ 8 ms; Messung nicht wiederholt             | neue Ebene mit Zusatz-Zeichenaufrufen je Frame                                      |
+| Manueller Browser-Zoom-Test des DPR-Listeners                                                                                                 | Listener vorhanden (siehe Erledigt), CDP löst keine matchMedia-Events aus                                              | Nutzer zieht Fenster zwischen Monitoren und das Bild bleibt unscharf                |
+| SEE-F2-UX (a) Hinweistext «Nicht genug Holz auf <Insel>»; (e) I-019 bleibt eigenes Paket nach SEE-F1                                          | UX niedrig; (e) liegt in `docs/ideen.md` (I-019)                                                                       | Playtest-Verwirrung bei Kontor II oder Ideen-Runde zu I-019                         |
+| UI-PANEL-AUFRAEUMEN (b) Overlay deckt Ereignis-Log, (c) Klick auf Hauptleiste schliesst Overlay; REL-08 „Einwohner sinken ohne Weg“           | (b) vertretbar, (c) nicht gegen `main` verglichen, Einwohner vermutlich Sim-Absicht                                    | Playtest meldet Log-Verdeckung oder unerwartetes Schliessen                         |
+| CI-Laufzeit `make check` 276 s statt ≈ 81 s (Vitest 225 s)                                                                                    | Läufe vom 8.10. erneut ≈ 6 min (`gh run list`); R389 kürzte `trees-licht`; keine neue Zerlegung                        | Laufzeit über 8 min oder Actions-Minuten knapp: `--reporter=verbose` auf dem Runner |
+| SEE-F1-KORRIDOR Mehrzeit `waterSea`, `wildlife`, `decor` (je < 1 s)                                                                           | `seaRoute` kalt ≈ 14 ms und Durchgang B ≈ 9 ms je Welt, im Spiel einmalig; `decor`-Tests auf Seeds 1–40 gekürzt        | `waterSea`/`wildlife` im Zeitreserve-Push ohne Reserve: auf Seeds 1–40 kürzen       |
+| `rareBudget` zählt Lose statt sichtbarer Elemente; Band 3–6 nur auf Losen (3 von 200 Seeds < 3 Elemente); Strandkiefern und `STAMP_MAX` (300) | gewollt (AK5); `STAMP_MAX = 300` praktisch nicht erreichbar                                                            | Bildbefund „zu leere Insel“ oder Stempelzahl nahe 300                               |
+
+**Ideen:** keine.
 
 ---
 
@@ -316,90 +380,3 @@ RENDER-LOOK-01 erst danach.
 ---
 
 ## Offen (neue Einträge unten anhängen)
-
-### 2026-10-08 · `tests/sim/perf.test.ts` AK-E0-15a lastabhängig
-
-Fundort: Integrator-Lauf TOOL-ACTIONS-SPAR. Beobachtung: 2,62 ms/Schritt gegen Grenze 2,5 bei paralleler Last
-(1-min-Load ~7), Wiederholung allein grün. Ursprung: lokaler Merge-Check. Einschätzung: Perf-Grenze in `make check`
-falsch-rot unter Last; mit TOOL-RELEASE-CI (Lastabhängigkeit Zeitreserve) zusammen ansehen. Zweiter Fall: `tests/render/terrain.test.ts` AK-R1-06 1570 ms gegen 1500 ms bei Load ~19
-(Merge TASTEN-KOMFORT), Wiederholung grün.
-
-### 2026-10-08 · Zeitreserve-Runner-Modus läuft auf CI doppelt
-
-Fundort: Review TOOL-RELEASE-CI. Beobachtung: Auf GitHub Actions läuft die Runner-Prüfung zusätzlich zur Hauptprüfung.
-Ursprung: qa-code-reviewer. Einschätzung: niedrig, kostet CI-Sekunden; bei nächster Werkzeugarbeit bereinigen.
-
-### 2026-10-08 · Kontrast der Rand-Farben von `.needs`/`.reasons` unter 3:1
-
-Fundort: Spec PANEL-UEBERSICHT (OF-7). Beobachtung: Die Randfarben der Listen im Info-Panel erreichen auf Pergament nur 2,3 bis 2,7 : 1. Ursprung: design-spec-author. Einschätzung: niedrig; nicht im Paket PANEL-UEBERSICHT (Spec OF-7), eigenes Kleinst-Folgepaket mit den neuen `--tone-*`-Farben.
-
-### 2026-10-08 · Info-Panel bei 800×600 teils unter dem Karten-Canvas
-
-Fundort: Browser-Check PANEL-UEBERSICHT (AK-PU-31), auf `main` identisch. Beobachtung: Bei 800×600 liegt das Panel als untere Leiste; die oberen ca. 130 px (Titel, Zustands-Chip) liegen unter dem Canvas, weder klickbar noch per Scrollen erreichbar.
-Ursprung: qa-playtester. Einschätzung: niedrig bis mittel (Desktop-first, schmale Fenster nur „stürzt nicht ab"); Layout-Kleinpaket, falls schmale Fenster relevant werden.
-
-### 2026-10-08 · Info-Panel: Glashütte im Brand läuft bei 1280×720 über die Panelhöhe
-
-Fundort: Browser-Check PANEL-UEBERSICHT. Beobachtung: Vier Kacheln plus mehrzeiliger Brand-Chip schieben «Rückerstattung» unter die Panelkante (per Scrollen erreichbar); Auslastung zeigt im Brand weiter 43–82 %. Spec D-5 gilt nur für Fischerhütte.
-Ursprung: qa-playtester. Einschätzung: niedrig.
-
-- 2026-10-08 · `src/render/fauna.ts` `massifHeightAt`/`sightFree` (PERF-L57, Rest von ART-C7-ANSCHLUSS B6) · die Höhen- und Sichtprüfung gibt es doppelt (fauna.ts exportiert und getestet, massif.ts privat: `sightFree`, `heightAtF`, `heightAnywhere`). Zusammenführen braucht einen Export in `massif.ts`. Ursprung: PERF-L57 W2. Erste Einschätzung: niedrig; beim nächsten Eingriff in `massif.ts`.
-- 2026-10-08 · ART-WALD-RAUTEN (Branch `fix/wald-rauten`) · Rest nach Umsetzung: Gebirgs-Fussring und „Schaum ohne Objekt" nicht gesondert angefasst (Ursache nur für Wald/Wiese, Gras/Sand, Sand-Stufen belegt; im Galerie-Bild keine Rauten mehr sichtbar, Fussring unverändert beurteilt); Gischt (`drawFallSparks`, `renderer.ts:809` ist angeschlossen) im Galerie-Lauf nicht sichtbar geprüft; Warp-Randfall Strand (bis 3 px Kantenversatz) und Patch-Test ohne Aussenrand. Ursprung: Final-Review. Erste Einschätzung: niedrig.
-- 2026-10-08 · Meeresfelsen bei Zoom 0,5 (aus ART-C7-ANSCHLUSS, nicht bearbeitet) · wirken wie Boote; Bildbefund, braucht Blick im Browser. Ursprung: PERF-L57 (Auftrag nannte nur Gischt, Fauna-Aufräumen, Tag-Pin). Erste Einschätzung: niedrig; mit ART-L8-SELTEN oder ART-WALD-RAUTEN zusammen prüfen. Bildrunde ART-L8-SELTEN (2026-10-09, Zoom 0,5): graue Dreiecke im Wasser wirken weiter wie Segelboote; bei Zoom 1 als Fels mit Gischtring erkennbar. Nicht im Paket gelöst.
-- 2026-10-08 · Frame-Budget im Headless-Chrome (`.studio/qa/perf-l57/`) · Der Haupt-Thread-Frame besteht zu ~13 ms aus `LayerTreeHost::DoUpdateLayers` (Canvas-Rasterung) und zu 2–3 ms aus JS; die Reserve zum 16,7-ms-Takt war nur ~0,2–1 ms, deshalb kippte jede Zusatzarbeit (Waldscheibe, Cache-Aufbau im Leerlauf) einen Frame und der Kaltstart (Cache-Aufbau nur im Leerlauf) dauerte 21 s statt 15 s. Der Bildschirmcache des Bodens (`groundCache.ts`) senkt die Rasterung auf ~8 ms. Neue Ebenen sollten zusätzliche Zeichenaufrufe je Frame gegen diese Reserve prüfen (Spiegel: `trace.mjs`-Messung). Ursprung: PERF-L57. Erste Einschätzung: Hinweis für künftige Render-Pakete; ein Trace-Skript nach `tools/render-qa/` lohnt sich.
-- 2026-10-08 · Gischt am Wasserfall (PERF-L57, `fallGlitter`) · im Browser nur über Aufrufzahlen und Tests belegt, das Bild (Lesbarkeit der Funken bei Tag und Nacht) ist noch nicht von lead-art angesehen. Ursprung: PERF-L57. Erste Einschätzung: niedrig; beim nächsten Galerie-Lauf mitprüfen.
-- 2026-10-08 · `src/render/fauna.ts` Fuchs (`alive`, PERF-L57 Review) · der Sichtbarkeitsfilter prüft nur die Ankerkachel, nicht den Laufweg; der Fuchs kann über später gebaute Wege laufen. Ursprung: qa-code-reviewer. Erste Einschätzung: niedrig; mit dem nächsten Eingriff in `fauna.ts`.
-- 2026-10-08 · `tools/render-qa/` (PERF-L57) · die Trace- und Zählskripte (`trace.mjs` DoUpdateLayers je Frame, `calls.mjs` Zeichenaufrufe je Frame, `incl.mjs` inklusive JS-Zeit je Funktion) liegen nur im Session-Scratchpad. Ursprung: PERF-L57. Erste Einschätzung: mittel für künftige Perf-Pakete; nach `tools/render-qa/` übernehmen (Paket-Kandidat, Teil von TOOL-RENDERQA-NACHZUG).
-- 2026-10-08 · `src/ui/app.ts:1051` (PERF-L57 Re-Review) · die Geräte-DPR wird nur über den `ResizeObserver` nachgestellt; eine reine DPR-Änderung (Fenster auf anderen Monitor) löst ihn nicht aus. Betrifft das ganze Bild, nicht den Bodencache. Ursprung: qa-code-reviewer. Erste Einschätzung: niedrig; bei Arbeit an `app.ts`.
-
-### 2026-10-08 · Release-Check REL-08: kleine Befunde
-
-Fundort: Release-Smoke REL-08 (lead-qa). Beobachtung: Konsolen-Warnung `willReadFrequently` aus
-`src/render/terrain.ts`; `favicon.ico` liefert 404; die Bauleiste wächst bei Werkzeugwahl um eine Zeile, die Karte
-schrumpft um rund 36 px; Einwohner sinken bei Häusern ohne Weg (vermutlich Absicht der Sim). Ursprung: qa-playtester.
-Einschätzung: niedrig; die Bauleisten-Höhe bei der nächsten UI-Arbeit ansehen.
-
-### 2026-10-08 · `zeitreserve-push` liest veraltete Messdatei, Last zum falschen Zeitpunkt
-
-Fundort: Session-End-Push REL-08 (R348). Beobachtung: `make zeitreserve-push` misst nicht selbst, es liest
-`.studio/zeitreserve.json` aus dem letzten `make test` im selben Checkout. Laufen die Tests in `.worktrees/integrate`,
-bewertet das Gate im Hauptcheckout die alte Datei (falsches Exit 1 trotz Fix). Ausserdem prüft es die Last beim
-Aufruf, nicht während der Testläufe. Ursprung: L0-Diagnose. Einschätzung: mittel; im Werkzeug-Paket E-046/E-047
-mitnehmen: Datei mit Commit-Hash und Last während des Laufs stempeln, das Gate verweigert eine fremde oder alte Datei.
-
-Fundort: SEE-F2-UX (2026-10-08, `tech-ui-engineer`/`qa-playtester`). Beobachtungen: (a) Der Hinweis «Nicht genug Holz auf <Insel>» erklärt nicht, dass nur Kontor II aus der Heimat zahlt, das Wohnhaus aber aus dem Insellager; «Kein Bauland nach Kontor II» war nicht reproduzierbar (Ursache Wasserkachel Ost bzw. dieser Hinweis; Screenshots `.studio/qa/see-f2-ux/T5a-*.png`). Einschätzung: UX, niedrig. (b) `noLoadableReason()` in `src/ui/storage.ts` ist vermutlich toter Code und bildet «Unbekannte Version» nicht auf «neuer» ab. Einschätzung: niedrig, bei nächster Storage-Arbeit prüfen. (c) Der `matchMedia`-DPR-Listener in `app.ts` ist live nicht verifiziert: CDP löst keine matchMedia-Events aus, offen bleibt ein manueller Browser-Zoom-Test. (d) Canvas2D-Warnung `willReadFrequently` in `src/render/terrain.ts`; Einschätzung: in ART-WALD-RAUTEN mitnehmen. (e) I-019 Angebotsschiff bleibt eigenes Paket nach SEE-F1.
-
-### 2026-10-08 · CI-Laufzeit `make check`: 276 s statt ~81 s, fast alles im Vitest-Schritt
-
-Fundort: CI-Läufe 37799673425 (8.10., Check 4 min 36 s) gegen 37358278682 (5.10., ~81 s Wandzeit im Check-Schritt, Job 97 s).
-Beobachtung: Zerlegung aus den Logzeilen. lint 19 s → 30 s; Vitest 62 s (125 Dateien) → 225 s (176 Dateien, 3,6-fach bei
-1,4-fach mehr Dateien); Rest nach Vitest (zeitreserve, studio-test 11,5 s → 12 s, build, pages-limit) 16 s → 21 s.
-Wachstum 195 s insgesamt, davon rund 163 s allein Vitest. Ursprung: Messauftrag TOOL-E046-SESSION (R356).
-Einschätzung: Der Vitest-Schritt ist die einzige relevante Stelle; die pro Datei langsamsten Tests (Vitest-Reporter mit
-`--reporter=verbose` auf dem Runner) und die ZEITTESTS-Liste prüfen, bevor die Laufzeit Actions-Minuten frisst.
-
-### 2026-10-08 · Importzyklus `src/ui/inspect.ts` ↔ `src/ui/panelView.ts`
-
-Fundort: `inspect.ts:52` importiert `panelView`, `panelView.ts:11` importiert `progressPct, upgradeView` aus `inspect`. Ursprung: Board nach REL-08 (Paket 5), Ist-Prüfung lead-tech. Einschätzung: niedrig; `upgradeView` und `progressPct` nach `panelView.ts`, Test gegen Zyklen in `src/ui/` (Paket UI-PANEL-AUFRAEUMEN).
-
-### 2026-10-08 · UI-PANEL-AUFRAEUMEN: erledigt und neue kleine Befunde
-
-Erledigt (Branch `refactor/ui-panel`): Importzyklus `inspect` ↔ `panelView` aufgelöst, Etiketten-Duplikat zusammengeführt, Bauleisten-Höhe (Eintrag vom 2026-10-02 und Release-Check REL-08) als Overlay gelöst. Neu: (a) `src/ui/app.ts` (`resize`, `centerOn`/`jumpToIsland`) klemmt und zentriert mit voller Kartenhöhe, bei offener Kategorie liegt das Ziel um die Overlay-Höhe verschoben; (b) das Overlay deckt den Ereignis-Log unten links ab (niedrig, vertretbar); (c) ein Klick auf einen Hauptleisten-Knopf schliesst das offene Overlay (nicht gegen `main` verglichen). Ursprung: Review/Playtest UI-PANEL-AUFRAEUMEN. Einschätzung: niedrig; (a) bei Arbeit an `app.ts`.
-
-### 2026-10-08 · Kamerarahmen reicht weit über die Insel hinaus
-
-Fundort: `src/ui/input.ts` (`clamp`, Kamerarahmen). Beobachtung: Bei maximal südlicher Kamera zeigt die Karte nur
-Wasser; die Rahmen-Ecke liegt bei Kachel 72,121, die südlichste Inselkachel bei 35,106 (Playtest UI-PANEL-AUFRAEUMEN,
-1280×720). Ursprung: qa-playtester in UI-PANEL-AUFRAEUMEN, unabhängig vom Overlay. Einschätzung: niedrig, Bedienkomfort;
-Rahmen enger an die Inselgrenzen plus Rand legen, mit `cameraBounds`-Vitest.
-
-Erledigt (Branch `fix/ui-kamera`, UI-KAMERA-KLEMMUNG): Rahmen = Landausdehnung + 6 Kacheln, `app.ts` klemmt/zentriert mit sichtbarer Höhe (Punkt (a) des Eintrags UI-PANEL-AUFRAEUMEN geschlossen). Offen, niedrig: Der Rahmen ist ein Rechteck um alle Inseln; die Ecken liegen bei verstreuten Inseln im Wasser (Klemmung an die nächste Insel wäre die Abhilfe). Am Rahmenrand schiebt ein Resize/Overlay die Kamera um etwa die halbe Änderung zurück (Mittenklemmung, wie auf `main`).
-
-- 2026-10-08 · Boden-Deko `groundElementAt`/`tileKind` (`src/render/decor.ts`, aus ART-L8-SELTEN Final-Review) · Ein Totholz-Kandidat (`deadwood`) ohne Waldnachbar fällt in die Würfelkette; beim Roden wechselt die Kachel so die Art (3 Fälle in Seeds 1–10), D2 ist dort nicht ganz erfüllt. Vorschlag: Totholz ohne Waldnachbar gibt `null`. Ursprung: ART-L8-SELTEN, älter als das Paket. Erste Einschätzung: niedrig.
-- 2026-10-08 · `rareBudget` (`src/render/decor.ts`, aus ART-L8-SELTEN) · Er zählt bestandene Meer-Lose, nicht die sichtbaren Elemente (Felsnadel ohne Felsen, Kiste ohne nassen Sand); die sichtbare Zahl kann unter 3 fallen. Gewollt laut AK5 (kein Bezug zu `SeaContext`). Ursprung: ART-L8-SELTEN. Erste Einschätzung: niedrig; bei Bildbefund „zu leere Insel" Eignung nachziehen.
-- 2026-10-08 · Strandkiefern und `STAMP_MAX` (`src/render/decor.ts` Z. ~925, aus ART-L8-SELTEN T3-Review) · Kiefern liegen in `p.palms` und teilen sich mit Palmen und Meer-Stempeln die Kürzung `extra.slice(0, room)`; relevant nur am Limit von 300 Stempeln, praktisch nicht erreichbar. Ursprung: ART-L8-SELTEN. Erste Einschätzung: sehr niedrig.
-
-- 2026-10-09 · Voller Lauf in SEE-F1-KORRIDOR (R383 bis R385) · Der einmal rote Test war `tests/tools/testlock.test.ts` „zwei parallele Läufe auf toter Sperre: genau einer gewinnt“ (erwartet 1, erhalten 2), lastabhängig (Load 9–10); L0 setzt ihn als FIX-TESTLOCK-RACE an, `tools/testlock/` blieb unberührt. A/B-Altlast und Mehrzeit (Last 5,0, main gegen Branch, Tests > 500 ms): `waterSea` Riffschaum main < 500 ms, Branch 804/815 ms; `wildlife` E5 „nie im R4-Sperrbereich“ main < 500 ms, Branch 747/746 ms; `decor` „R4 Anker und Kontor“ main < 500 ms, Branch 3717/3865 ms (jetzt auf Seeds 1–40 gekürzt, 29 ms; Seeds 1–200 in `tools/render-qa/korridor.mjs`, 0 Verletzungen); „Lane-Abstand“ 881 ms auf main, jetzt Seeds 1–40. Gleich schnell: `wildlife` RF-4 (542/541 ms) und E5 Determinismus (537/545 ms). Ursache der Mehrzeit: je Welt `seaRoute` kalt (ca. 14 ms) und `seaPlan` mit Durchgang B (ca. 9 ms) zusätzlich; im Spiel einmalig, Kaltstart Seed 7 ohne Mehrzeit. Ursprung: art-rendering-engineer, SEE-F1-KORRIDOR. Einschätzung: niedrig; `waterSea` und `wildlife` (nicht im Besitz von KORRIDOR) bleiben unter 1 s, bei CI-Faktor knapp an der Reserve, bei Bedarf auf Seeds 1–40 kürzen.
-
-- 2026-10-09 · Seeplan-Neubau nach Kontor-Wechsel (`src/render/decor.ts` Z. 1046–1054, 1344–1356, aus Release-Review REL-10) · Der Neubau kostet ≈ 9 ms statt 2,3 ms, weil `seaPlanKeepOut` alle ~630 Routenpunkte prüft. Vorschlag: Bounding-Box oder Abstandsmaske vorschalten. Ursprung: SEE-F1-KORRIDOR. Erste Einschätzung: niedrig.
-- 2026-10-09 · Band 3–6 nur auf Losen (`src/render/decor.ts`, aus Release-Review REL-10) · Auf 3 von 200 Seeds sind weniger als 3 Elemente sichtbar (gewollt). Ursprung: SEE-F1-KORRIDOR. Erste Einschätzung: sehr niedrig.
