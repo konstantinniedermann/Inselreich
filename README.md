@@ -109,9 +109,9 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   und den Umriss der schon abgedeckten Fläche; Holzfäller, Jagdhütte, Rinderfarm, Schäferei und Zuckerrohrplantage
   zeigen den Standortkreis (Radius 2, bei Jagdhütte und Rinderfarm 3) mit den passenden Wald- bzw. Graskacheln.
 - **Fest feiern** (ab U4, Rum freigeschaltet): Im Panel einer Kapelle kostet «Fest feiern (10 Rum)» 10 Rum aus dem
-  Lager. Während des Fests (1 Minute Spielzeit) steigen Wohnhäuser im Wirkkreis der Kapelle schneller auf; im
+  Lager. Während des Fests (1 Minute Spielzeit) steigen Wohnhäuser im Wirkkreis der Kapelle auf derselben Insel schneller auf; im
   Haus-Panel steht dann «Fest: schnellerer Aufstieg». Danach sperrt eine Abklingzeit (3 Minuten ab Festbeginn), der Knopf zeigt «Nächstes
-  Fest in m:ss». Ohne Wirkung, wenn im Umkreis kein Haus mit Steuer «normal» wohnt; eine abgelehnte Aktion nennt den Grund.
+  Fest in m:ss». Ohne Wirkung, wenn im Umkreis auf der Insel der Kapelle kein Haus mit Steuer «normal» wohnt; eine abgelehnte Aktion nennt den Grund.
 - **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
   Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
   `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,
@@ -167,7 +167,7 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 - **Fortschrittsring und Marken:** Über jedem Betrieb zeigt ein Ring den Zyklus (grün, solange er läuft; grau
   bei Stillstand). Ein durchgestrichener Baum heisst «kein freier Wald in der Nähe».
 - **Bedarfssymbole:** Über einem Wohnhaus, dem etwas fehlt, steht ein Symbol für den wichtigsten
-  Mangel (Versorgung vor Ware vor Dienst), bei mehreren Mängeln mit einem Zusatzpunkt. Die Symbole
+  Mangel (ausserhalb der Versorgung vor Ware vor Dienst), bei mehreren Mängeln mit einem Zusatzpunkt. Die Symbole
   erscheinen ab Zoom 0.75. Signale (Symbole, roter Punkt, Auswahl, Umriss beim Überfahren) liegen immer
   über allen Gebäuden, auch über verdeckenden.
 - **Leben:** Auf den Wegen gehen Spaziergänger (etwa einer je 4 Einwohner, höchstens 40); über der Küste
@@ -443,9 +443,10 @@ Das Haus-Panel zeigt bei einem solchen Defizit eine Zeile mit dem Restvorrat («
 
 Beim Aufstieg wird von jeder neuen Ware eine Einheit aus dem Lager entnommen und direkt ans Haus geliefert.
 
-Die Einwohnerzahl bleibt beim Aufstieg erhalten. Das Info-Panel eines Wohnhauses zeigt Einwohner,
-Versorgung, Bedürfnisse mit ✓/✗, die Mängel («Mangel: …», in derselben Reihenfolge wie das
-Kartensymbol), jede noch fehlende Aufstiegsbedingung und die Kosten.
+Die Einwohnerzahl bleibt beim Aufstieg erhalten. Das Info-Panel eines Wohnhauses zeigt Einwohner, die Versorgung
+(«Im Versorgungsradius», wenn ein Kontor oder angebundener Marktplatz in Reichweite liegt, sonst «Ausserhalb der
+Versorgung»), Bedürfnisse mit ✓/✗, die Mängel («Mangel: Nahrung fehlt», «Mangel: Kapelle fehlt», in derselben
+Reihenfolge wie das Kartensymbol), jede noch fehlende Aufstiegsbedingung und die Kosten.
 
 ### Steuern und Steuerregler
 
