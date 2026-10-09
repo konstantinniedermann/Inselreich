@@ -18,6 +18,16 @@ import { taxEffect } from './guide';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { islandList } from './islandJump';
+import { createSilhouetteCache, drawSeaMap, mapLayout, type MapLayout } from '../render/seaMap';
+import {
+  SEA_MAP_H,
+  SEA_MAP_PAD,
+  SEA_MAP_W,
+  seaMapKey,
+  seaMapPick,
+  seaMapTip,
+  seaMapUnavailable,
+} from './seaMapView';
 import { iconChip } from './messages';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
@@ -202,7 +212,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
       '<span class="hud-islands" hidden><button class="btn" data-field="islands" type="button" aria-haspopup="true" aria-expanded="false">Inseln</button>' +
-      '<ul class="island-list" role="menu" hidden></ul></span>' +
+      '<div class="island-pop" hidden><canvas class="sea-map" aria-label="Seekarte"></canvas>' +
+      '<ul class="island-list" role="menu"></ul></div></span>' +
       '<span class="hud-speed"></span><span class="hud-sound"></span></div>' +
       '<div class="stock-row"><span class="island-name" data-field="island-name" hidden></span></div>';
     const popBox = header.querySelector('.pop-chips');
@@ -281,6 +292,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     const display = seafaring ? '' : 'none';
     if (islandsBox.style.display !== display) islandsBox.style.display = display;
     if (!seafaring) closeIslandMenu(islandsBox);
+    else seaMapRedraw.get(islandsBox)?.();
   }
   const balance = goodsBalance(world, island);
   for (const good of GOOD_IDS) {
@@ -310,25 +322,76 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
 }
 
 function closeIslandMenu(box: HTMLElement): void {
-  const list = box.querySelector<HTMLElement>('.island-list');
+  const pop = box.querySelector<HTMLElement>('.island-pop');
   const btn = box.querySelector<HTMLElement>('[data-field="islands"]');
-  if (list && !list.hidden) list.hidden = true;
+  if (pop && !pop.hidden) pop.hidden = true;
   btn?.setAttribute('aria-expanded', 'false');
 }
 
+/** Zeichnet die offene Seekarte neu, aber nur bei geändertem Anzeige-Schlüssel (je Box registriert). */
+const seaMapRedraw = new WeakMap<HTMLElement, () => void>();
+
 /**
- * Knopf „Inseln": Klick 1 baut die Liste beim Öffnen auf (nicht je Tick), Klick 2 auf einen Eintrag springt und
- * schliesst sie. Ein Klick daneben oder Esc schliesst ebenfalls.
+ * Knopf „Inseln": Klick 1 öffnet das Popover (Seekarte über der Liste, beides beim Öffnen aufgebaut, nicht je Tick),
+ * Klick auf Land der Karte oder auf einen Listeneintrag springt und schliesst. Wasser tut nichts; ein Klick daneben
+ * oder Esc schliesst. Die Karte hält keinen Sim-Zustand (nur offen/zu und Hover).
  */
 function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActions): void {
   const box = header.querySelector<HTMLElement>('.hud-islands');
   const btn = box?.querySelector<HTMLButtonElement>('[data-field="islands"]');
+  const pop = box?.querySelector<HTMLElement>('.island-pop');
   const list = box?.querySelector<HTMLElement>('.island-list');
-  if (!box || !btn || !list) return;
+  const canvas = box?.querySelector<HTMLCanvasElement>('canvas.sea-map');
+  if (!box || !btn || !pop || !list || !canvas) return;
   const close = (): void => closeIslandMenu(box);
+  const cache = createSilhouetteCache();
+  let layout: MapLayout | null = null;
+  let shownKey = '';
+  let hover: number | null = null;
+  const dpr = (): number => Math.max(1, window.devicePixelRatio || 1);
+  const redraw = (force: boolean): void => {
+    if (pop.hidden || !layout) return;
+    const key = `${seaMapKey(state.world, layout)}|${hover}`;
+    if (!force && key === shownKey) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    shownKey = key;
+    drawSeaMap(ctx, state.world, layout, cache, { hover });
+  };
+  seaMapRedraw.set(box, () => redraw(false));
+  const point = (ev: MouseEvent): { x: number; y: number } => {
+    const r = canvas.getBoundingClientRect();
+    const sx = r.width > 0 ? canvas.width / r.width : 1;
+    const sy = r.height > 0 ? canvas.height / r.height : 1;
+    return { x: (ev.clientX - r.left) * sx, y: (ev.clientY - r.top) * sy };
+  };
+  canvas.addEventListener('pointermove', (ev) => {
+    if (!layout) return;
+    const p = point(ev);
+    const next = seaMapPick(state.world, layout, p.x, p.y);
+    const tip = seaMapTip(state.world, layout, p.x, p.y) ?? '';
+    if (canvas.title !== tip) canvas.title = tip;
+    if (next !== hover) {
+      hover = next;
+      redraw(false);
+    }
+  });
+  canvas.addEventListener('pointerleave', () => {
+    if (hover === null) return;
+    hover = null;
+    redraw(false);
+  });
+  canvas.addEventListener('click', (ev) => {
+    if (!layout) return;
+    const p = point(ev);
+    const i = seaMapPick(state.world, layout, p.x, p.y);
+    if (i === null) return;
+    close();
+    actions.jumpToIsland(i);
+  });
   btn.addEventListener('click', (ev) => {
     if (blurAfterClick(ev.detail)) btn.blur();
-    if (!list.hidden) return close();
+    if (!pop.hidden) return close();
     list.replaceChildren(
       ...islandList(state.world).map((e) => {
         const li = document.createElement('li');
@@ -347,14 +410,25 @@ function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActio
         return li;
       }),
     );
-    list.hidden = false;
+    // Karte nur bei Seefahrt; sonst bleibt sie weg, die Liste funktioniert weiter
+    const off = seaMapUnavailable(state.world) !== null;
+    canvas.hidden = off;
+    if (!off) {
+      const d = dpr();
+      canvas.width = Math.round(SEA_MAP_W * d);
+      canvas.height = Math.round(SEA_MAP_H * d);
+      layout = mapLayout(state.world, canvas.width, canvas.height, SEA_MAP_PAD * d);
+    }
+    hover = null;
+    pop.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
+    if (!off) redraw(true);
   });
   document.addEventListener('pointerdown', (ev) => {
-    if (!list.hidden && ev.target instanceof Node && !box.contains(ev.target)) close();
+    if (!pop.hidden && ev.target instanceof Node && !box.contains(ev.target)) close();
   });
   document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && !list.hidden) close();
+    if (ev.key === 'Escape' && !pop.hidden) close();
   });
 }
 
