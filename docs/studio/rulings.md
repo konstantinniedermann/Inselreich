@@ -3492,3 +3492,14 @@ Load 9–13). Test-first nicht eingehalten → Retro. Beobachtung: Exit 1/2 von 
 unterscheidbar (immer 2). `.worktrees/testlock-probe` entfernt der Integrator ohne `--force`.
 
 Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
+
+## R379 · 2026-10-09 · SEE-F1-KORRIDOR: Plan frei mit Zwei-Durchgang-Verfahren
+
+Ruling: Zweitprüfung B1 BEDENKEN, nicht blockierend. Angenommen: **Durchgang A** setzt die Meer-Elemente wie auf main
+gegen die Geraden, daraus `blocked` und die Flächen (bitgleich zu main); **Durchgang B** wählt die endgültigen
+Positionen von Wrack, Eiland und Felsen mit `seaPlanKeepOut` neu (meiden Flächenkacheln samt Rand, Abstand ≥ 3) ohne
+Rückwirkung auf die Flächen; Zusatztest `seaTintFor` mit `ctx.routes = []` gleich wie mit Routen. B3: Messung und
+Freihaltung nutzen dieselbe Routenmenge, **alle Paare** wie `routeFar`. Der Planer trägt das als Satz in Entwurf und
+AK-K3 nach (ohne neue Prüfung). Umsetzung nach dem Merge von ART-L8-SELTEN, Budget 120 Tools.
+
+Entscheider: L0 · Anlass: Zweitprüfung GATE-REL10-W3 · ADR: —
