@@ -329,6 +329,11 @@ function launch(
   const map = { w: home(world).width, h: home(world).height };
   const bounds = cameraBounds(world.islands); // Kamera-Rahmen: Archipel + Rand
   const view = { w: 1, h: 1 };
+  /** Sichtfenster für Klemmung und Zentrierung: volle Breite, nur die sichtbare Höhe (ohne Bauleisten-Overlay). */
+  const clampView = (): { w: number; h: number } => ({
+    w: view.w,
+    h: input?.visibleHeight() ?? view.h,
+  });
 
   // Fremdinsel-Ebenen: Plan erst nach dem ersten Frame (Erstbild nur Heimat), je Leerlauf-Slot eine Scheibe
   let cachePlan: CachePlan | null = null;
@@ -413,7 +418,7 @@ function launch(
   const jumpToIsland = (i: number): void => {
     if (functionLock(world, 'seafaring') !== null || !world.islands[i]) return;
     const t = jumpTarget(world, i);
-    centerOn(state.cam, t.x, t.y, view, bounds);
+    centerOn(state.cam, t.x, t.y, clampView(), bounds);
     refresh();
   };
 
@@ -670,7 +675,7 @@ function launch(
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
       const r = resolveLogClick(t, world);
-      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, view, bounds);
+      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, clampView(), bounds);
       if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
     });
     updateBuildMenu(navEl, world, state.activeIsland);
@@ -1077,7 +1082,8 @@ function launch(
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     view.w = w;
     view.h = h;
-    clampToRect(state.cam, bounds, w, h);
+    const cv = clampView();
+    clampToRect(state.cam, bounds, cv.w, cv.h);
   };
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(gameEl);
@@ -1100,7 +1106,7 @@ function launch(
   watchDpr();
   if (kontor && !opts?.camera) {
     const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
-    centerOn(state.cam, c.cx, c.cy, view, bounds);
+    centerOn(state.cam, c.cx, c.cy, clampView(), bounds);
   }
 
   let acc = 0;
@@ -1127,20 +1133,24 @@ function launch(
         const r = canvas.getBoundingClientRect();
         return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
       },
-      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, view, bounds),
-      setZoom: (z) => zoomAt(state.cam, z / state.cam.zoom, view.w / 2, view.h / 2, view, bounds),
+      centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, clampView(), bounds),
+      setZoom: (z) => {
+        zoomAt(state.cam, z / state.cam.zoom, view.w / 2, view.h / 2, view, bounds);
+        const cv = clampView();
+        clampToRect(state.cam, bounds, cv.w, cv.h);
+      },
       focus: (kind) => {
         if (kind === 'archipel')
           centerOn(
             state.cam,
             (bounds.x0 + bounds.x1) / 2,
             (bounds.y0 + bounds.y1) / 2,
-            view,
+            clampView(),
             bounds,
           );
         else if (kontor) {
           const c = center(BUILDING_DEFS[kontor.defId], kontor.x, kontor.y);
-          centerOn(state.cam, c.cx, c.cy, view, bounds);
+          centerOn(state.cam, c.cx, c.cy, clampView(), bounds);
         }
       },
       cachesReady: () => layers.ready(),

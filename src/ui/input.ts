@@ -5,6 +5,7 @@ import type { World } from '../sim/types';
 import { HOME, tileAt } from '../sim/world';
 import { cameraBounds } from '../render/archipel';
 import { clampToRect, zoomAt } from '../render/camera';
+import { makeVisibleHeight } from './cameraView';
 import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
@@ -12,6 +13,8 @@ import { hotkeyAction, type HotkeyAction } from './hotkeys';
 import { isModalOpen } from './modal';
 import { pickTarget, type IslandTile } from './islandTools';
 import { createSpaceTap } from './spaceTap';
+
+export { visibleViewHeight } from './cameraView';
 
 export type InputAction =
   | { type: 'tile'; island: number; x: number; y: number; dragging: boolean }
@@ -118,16 +121,10 @@ export interface InputBinding {
   pointerClient(): { x: number; y: number } | null;
   /** Läuft gerade eine Zeigeraktion mit gedrückter Taste (Ziehen, Schwenken, Weg-Zug)? */
   isDragging(): boolean;
+  /** Sichtbare Kartenhöhe (ohne Bauleisten-Overlay), bei jedem Aufruf neu gelesen. */
+  visibleHeight(): number;
   /** Entfernt alle Listener, die `bindInput` registriert hat. */
   unbind(): void;
-}
-
-/**
- * Kartenhöhe, die der Kamera-Grenze zugrunde liegt: die Bauleisten-Einträge liegen als Overlay über dem unteren
- * Kartenrand und verdecken ihn, also zählt nur der freie Teil (die Overlay-Höhe kommt aus dem DOM).
- */
-export function visibleViewHeight(canvasH: number, overlayH: number): number {
-  return Math.max(1, canvasH - Math.max(0, overlayH));
 }
 
 /** Liegt der Zeiger (Fensterkoordinaten) in der Fläche `rect`? Ohne Zeiger oder Fläche: nein. */
@@ -201,7 +198,7 @@ export function bindInput(
     return { sx: e.clientX - r.left, sy: e.clientY - r.top };
   };
   /** Sichtbare Kartenhöhe: bei offener Kategorie ohne das Bauleisten-Overlay. */
-  const viewH = (): number => visibleViewHeight(canvas.clientHeight, lastOverlayH);
+  const viewH = makeVisibleHeight(canvas, () => lastOverlayH);
   const clamp = (): void => {
     clampToRect(state.cam, cameraBounds(state.world.islands), canvas.clientWidth, viewH());
   };
@@ -633,6 +630,7 @@ export function bindInput(
     refreshHover: updateHover,
     pointerClient: () => client,
     isDragging: () => drag !== null,
+    visibleHeight: viewH,
     unbind,
   };
 }
