@@ -785,7 +785,7 @@ function paintBoulder(
 function paintFarSeaRock(ctx: CanvasRenderingContext2D, v: number): void {
   const parts = farRockGeom(v);
   const xs = parts.flatMap((q) => q.outline.map((p) => p.x));
-  // hinten zuerst: der höchste Buckel zuletzt wäre verdeckt; kleinere stehen vorn seitlich, daher nach Höhe aufsteigend sortiert malen
+  // Reihenfolge: hohe Buckel zuerst (hinten), kleinere danach, sie stehen davor (vorn) und verdecken den Fuss der hohen
   for (const q of parts.slice().sort((a, b) => b.h - a.h)) {
     poly(ctx, DECOR_TONES.rockMid, q.outline);
     poly(ctx, DECOR_TONES.rockLight, q.lit);

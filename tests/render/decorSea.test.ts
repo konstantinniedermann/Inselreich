@@ -730,7 +730,6 @@ describe('ART-MEERESFELS M2 Fern-Silhouette der Meeresfelsen (Zoom ≤ 0,5)', ()
 
   it('AK-M2 Nahzoom (> 0,5) bitgleich zu main: Aufrufliste-Hash der 8 Varianten, Standard und far = false gleich', () => {
     const hs = Array.from({ length: 8 }, (_, v) => callHash(paint('seaRock', v)));
-    console.info('M2 Nah-Hash', hs.join(','));
     expect(hs.join(',')).toBe(MAIN_NEAR_HASH);
     for (let v = 0; v < 8; v++) {
       const f = fakeCtx();
@@ -755,6 +754,8 @@ describe('ART-MEERESFELS M2 Fern-Silhouette der Meeresfelsen (Zoom ≤ 0,5)', ()
       }
   });
 
+  // Das Fenster 1,271 (Schiff 1,059 × 1,2) bis 1,3 (T04a) ist absichtlich eng: Fels ≥ 20 % breiter als das Schiff, aber
+  // nicht breiter als T04a erlaubt. Feinjustierung der Fern-Form (`farRockGeom`) kippt beide Tests zugleich.
   it('AK-M2 Breite : Höhe hebt sich vom Schiff um ≥ 20 % ab und bleibt ≤ 1,3 (T04a), alle Varianten', () => {
     const ship = shipMetrics().ratio;
     for (const zoom of FAR_ZOOMS)
