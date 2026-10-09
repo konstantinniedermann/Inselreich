@@ -400,3 +400,10 @@ RENDER-LOOK-01 erst danach.
 - **Fundort:** Kamera, Seed 7, Zoom 1: Hüllenecke SW zeigt einen reinen Wasserbildschirm, NE nur einen Landstreifen (`.studio/qa/REL-11/B-z1-SW.png`, `B-z1-NE.png`). Ursprung: Release-Check, nach R401 akzeptiert. Einschätzung: niedrig; Korridore oder engere Hülle nur bei Spielerbefund.
 - **Fundort:** Meeresfels bei Zoom 0,25 nur ≈ 5 px, kaum auffindbar (`E-fels-z0.25.png`); keine Boot-Lesart mehr. Ursprung: Release-Check. Einschätzung: niedrig; als Orientierungsmarke kaum nutzbar, Mindestgrösse wie Wrack/Eiland (`FAR_MIN_CSS_PX`) prüfen.
 - **Fundort:** Inspektor-Panel zeigt „Versorgt ✓“ und zugleich „Mangel: Nahrung fehlt“ (`C-inspektor-unversorgt.png`). Ursprung: Release-Check, ergänzt den Eintrag „wirkt doppelt“ oben (Playtest REL-11 UI). Einschätzung: mittel (Spielerverwirrung); Kandidat für ein UI-Häppchen.
+
+### 2026-10-09 · UI-SEEKARTE (qa-code-reviewer): Befund ohne Blocker
+
+- **Fundort:** `src/ui/hud.ts` (Seekarte): `layout` und `cache` bleiben bei offenem Popover über einen Weltwechsel (Laden) bestehen, bis zum nächsten Öffnen. Ursprung: Task-Review T3-T5. Einschätzung: niedrig, unwahrscheinlich (Laden schliesst Popover meist über Klick daneben); Fix wäre Weltidentität in den Schlüssel.
+- **Fundort:** `src/render/seaMap.ts` (Z. 222-227, 247-257): Kontor-Marke (4 × 4) liegt auf `anchor+0.5` und wird vom Schiffspunkt im Hafen (Radius 3) verdeckt; Marke, Punktradius und Strichstärken sind feste Gerätepixel, nicht an `devicePixelRatio` gebunden. Ursprung: Final-Review UI-SEEKARTE. Einschätzung: niedrig, kosmetisch; Marke seitlich versetzen und mit dpr skalieren.
+- **Fundort:** `tests/render/seaMap.test.ts:221-227`: Zeitgrenze `< 50 ms` per Uhr (Fake-Rasterer). Ursprung: Final-Review. Einschätzung: niedrig; bei Flackern auf Zähler umstellen (Cache-Zähler besteht bereits).
+- **Fundort:** Seekarten-Popover: verdeckt solange offen Lager-Chips und Hinweiskarten rechts oben; Hover-Rahmen zeigt das Iso-Rechteck, nicht die Silhouette. Ursprung: Playtest T6. Einschätzung: niedrig, gewollt.

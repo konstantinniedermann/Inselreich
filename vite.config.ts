@@ -8,6 +8,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 export const ZEITTESTS = [
   'tests/render/bauRuckeln.test.ts',
   'tests/render/renderer.test.ts',
+  'tests/render/seaMap.test.ts',
   'tests/render/terrain.test.ts',
   'tests/sim/perf.test.ts',
   'tests/sim/save.test.ts',
