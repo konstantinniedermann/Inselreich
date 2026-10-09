@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hash2 } from '../../src/sim/noise';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
@@ -1146,10 +1146,18 @@ const polyDist = (p: Pos, pts: readonly Pos[]): number =>
   Math.min(...pts.slice(1).map((b, i) => segDist(p, pts[i]!, b)));
 
 describe('L5 Meer-Plan und R4', () => {
-  it('Seeds 1–200: kein Meer-Element < 3 Kacheln von einer Lane', () => {
+  // Gemeinsamer Aufbau (Welt, Kontext, Plan) ausserhalb der Testzeit; Seeds 1–200 prüft `tools/render-qa/korridor.mjs`.
+  beforeAll(() => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const w = W200[seed - 1]!.w;
+      seaPlan(seed, home(w), seaContext(w));
+    }
+  }, 30_000);
+
+  it('Seeds 1–40: kein Meer-Element < 3 Kacheln von einer Lane', () => {
     let elements = 0;
-    for (let seed = 1; seed <= 200; seed++) {
-      const w = createWorld(seed);
+    for (let seed = 1; seed <= 40; seed++) {
+      const w = W200[seed - 1]!.w;
       const isl = home(w);
       const ctx = seaContext(w);
       expect(ctx.lanes.length, `Seed ${seed}`).toBeGreaterThan(0);
@@ -1160,8 +1168,8 @@ describe('L5 Meer-Plan und R4', () => {
           expect(polyDist(c, l), `Seed ${seed} ${e.kind}@${e.x},${e.y}`).toBeGreaterThanOrEqual(3);
       }
     }
-    expect(elements).toBeGreaterThan(200);
-  }, 20_000);
+    expect(elements).toBeGreaterThan(40);
+  });
 
   const worlds = (n: number): { seed: number; w: World }[] =>
     Array.from({ length: n }, (_, i) => ({ seed: i + 1, w: createWorld(i + 1) }));
