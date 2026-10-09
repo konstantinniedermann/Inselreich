@@ -3852,3 +3852,15 @@ Zoom 0,25 klein, Inspektor „Versorgt ✓“ plus „Mangel“). **Push in der 
 Handbuch 1.33; UI-SEEKARTE (REL-12) bleibt bis dahin auf ihrem Branch, falls nicht vorher gemergt (dann eigenes Gate).
 
 Entscheider: L0 · Anlass: Release-Check REL-11 · ADR: —
+
+## R408 · 2026-10-09 · Gate Merge UI-SEEKARTE OK nach Konfliktlösung
+
+Ruling: **OK** für `feat/ui-seekarte` @ `6c7aa62` (REL-12): Task-Reviews OK (T1/T2 nach Fix-Runde mit Test-Commit vor
+Fix), Browser-Check AK-B1–B5 OK (erstes Rastern 0,3–0,4 ms gegen Ziel ≤ 5 ms), Final-Review `opus` OK, `tsc`/`lint`
+Exit 0, Testzeiten nach R392 bei Load 1,78 ohne Zuwachs. Die Wanduhr-Grenze `< 50 ms` in `seaMap.test.ts:226` bleibt
+(Messwert 0,3 ms, Faktor > 100 gegen Runner × 3). Konflikt-Probe: Konflikt nur in `docs/beobachtungen.md` (beide
+Seiten hängen an „Offen“ an) → Eigentümer lead-tech holt main per Merge, behält beide Blöcke, danach Merge durch den
+Integrator mit `make check`. R402-Beobachtung: Commit-Reihenfolge stimmt; Praxis „Code vor Test geschrieben, für den
+roten Lauf entfernt“ bei T1/T2 an die Session-Retro (zweiter Fall → R395 V2 bewerten). Gründungsfahrt bleibt im Pool.
+
+Entscheider: L0 · Anlass: Bericht UI-SEEKARTE · ADR: —
