@@ -424,3 +424,7 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · Plan I-028 (lead-tech): Befund ohne Blocker
 
 - **Fundort:** `src/sim/` `feastActive` (Fest in der Kapelle): prüft die Insel des Hauses nicht; ein Haus auf einer Fremdinsel mit passenden Koordinaten könnte als „im Radius der Kapelle“ zählen. Ursprung: Planung I-028 (Fest-Regel O5). Einschätzung: mittel, Sim-Logik im Archipel; Test mit zwei Inseln und gleichen Koordinaten klärt, ob es real auftritt; Kandidat für ein Fix-Häppchen.
+
+### 2026-10-09 · Push-Gate REL-11/12 (production-integrator): Befund ohne Blocker
+
+- **Fundort:** Doku-Commits der Design-Strecke (`bb86f7d`, I-028 Designvorschlag): ohne `make docs-check` committet; `make lint` im Push-Gate rot (Prettier), Integrator-Abbruch vor `make test`. Ursprung: Push-Gate REL-11/12. Einschätzung: niedrig, Prozess; die schnellen Prüfungen (R410) wirkten wie gedacht, aber Doku-Pakete ohne `.ts` haben die Pflichtzeile nicht. Vorschlag für die Retro: Pflichtzeile „`make docs-check` Exit 0 vor jedem Doku-Commit“ für Design-/Spec-/Plan-Pakete.
