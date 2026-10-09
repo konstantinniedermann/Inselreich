@@ -3480,3 +3480,15 @@ Abbruchregel in U3, messbares „kein Sprung“ ≤ 1 px mit DPR 1 und 2, Tests 
 frei, 150 Tools.
 
 Entscheider: L0 · Anlass: Gate GATE-REL10-W3 · ADR: —
+
+## R378 · 2026-10-09 · TOOL-TESTLOCK: Re-Review vor dem Merge; Fake-Schalter nur in Tests
+
+Ruling: `tool/testlock` @ ed1881d (Sperre in `<git-common-dir>/studio-testlock`, Abbruch bei belegter Sperre oder
+Load > 8, atomare Übernahme toter Sperren, Freigabe nur der eigenen; Echtprobe: zweiter Lauf bricht mit Grund ab).
+Weil die Review-Fixes die Korrektheit der Sperre betreffen (Wettlauf, fremde Freigabe) und kein Review sie gesehen
+hat, folgt ein kurzes Re-Review (sonnet) vor dem Merge. **Regel:** `TESTLOCK_FAKE_LOAD` und `ZEITRESERVE_FAKE_*` setzen
+Agenten nur in Tests, nie um eine echte Last- oder Sperrprüfung zu umgehen (der Lead nutzte ihn für `make check` bei
+Load 9–13). Test-first nicht eingehalten → Retro. Beobachtung: Exit 1/2 von `zeitreserve-push` ist über `make` nicht
+unterscheidbar (immer 2). `.worktrees/testlock-probe` entfernt der Integrator ohne `--force`.
+
+Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
