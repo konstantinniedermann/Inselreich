@@ -1372,6 +1372,65 @@ class PhantomBindTest(unittest.TestCase):
         self.assertNotIn("s1:log:lead-design", nodes)
 
 
+class PhantomSpawnerTest(unittest.TestCase):
+    """Spawn eines Agenten ohne agent_start (Harness-Nebenagent, Retro REL-12 B2)."""
+
+    def events(self):
+        return [
+            ev("turn_end", 0, status="idle"),
+            spawn(
+                1,
+                "P9",
+                "general-purpose",
+                description="Updating handoff",
+                prompt_head="no-op",
+            ),
+        ]
+
+    def test_spawner_without_start_never_inactive(self):
+        state = build(self.events(), now=400)
+        self.assertNotIn("inaktiv:s1:P9", [i["id"] for i in state["incidents"]])
+        self.assertEqual(state["counts"]["inactive"], 0)
+
+    def test_spawner_visible_within_grace(self):
+        self.assertIn("s1:P9", flat(build(self.events(), now=300)))
+
+    def test_spawner_hidden_after_grace(self):
+        state = build(self.events(), now=1 + model.PHANTOM_AFTER + 1)
+        self.assertNotIn("s1:P9", flat(state))
+        self.assertNotIn("inaktiv:s1:P9", [i["id"] for i in state["incidents"]])
+
+    def test_confirmed_child_without_start_stays_visible(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", "lead-qa", tool_use_id="t1"),
+            ev("spawned", 50, child_id="C1", tool_use_id="t1", status="completed"),
+        ]
+        self.assertIn("s1:C1", flat(build(events, now=2000)))
+
+    def test_started_agent_is_not_unconfirmed(self):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", "lead-design"),
+            start(2, "L1", "lead-design"),
+        ]
+        state = build(events, now=2000)
+        self.assertIn("s1:L1", flat(state))
+        self.assertIn("inaktiv:s1:L1", [i["id"] for i in state["incidents"]])
+
+    def test_entry_assigned_node_counts_as_confirmed(self):
+        node = {
+            "agent_id": "X1",
+            "_started": False,
+            "_confirmed": False,
+            "_entry": {"type": "lead-qa"},
+        }
+        self.assertFalse(model._Builder.unconfirmed(node))
+        node["_entry"] = None
+        self.assertTrue(model._Builder.unconfirmed(node))
+        self.assertFalse(model._Builder.unconfirmed(node | {"agent_id": "main"}))
+
+
 PERSONA_NAMES = {
     "lead-production": {
         "name": "Planungs-Paula",
