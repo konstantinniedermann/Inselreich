@@ -411,3 +411,7 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · I-028 Steuer je Stufe (design-economy-designer): Befund ohne Blocker
 
 - **Fundort:** `README.md`, Tabelle „Steuerregler“, Zeile «hoch»: Belegung nennt «Pioniere 3, Siedler 6, Bürger 11», die Kaufleute (15) fehlen. Ursprung: Bilanzrechnung I-028. Einschätzung: niedrig, Doku-Drift; mit der Umsetzung von I-028 (Tabelle ändert sich ohnehin) oder als Trivial-Fix im nächsten Doku-Paket.
+
+### 2026-10-09 · Release-Check REL-12 (qa-playtester): Befund ohne Blocker
+
+- **Fundort:** `tools/render-qa/`: Für die Seekarte (Kontor auf Insel 1, Schiffe, Route) gibt es keinen versionierten Szenen-Helfer; der Lauf auf main stellte die Szene mit dem ungetrackten Skript `.studio/qa/REL-12/seekarte.mjs` selbst her (wie schon T6 auf dem Branch). Ursprung: REL-12. Einschätzung: niedrig, Werkzeug; beim nächsten Seefahrt-UI-Paket den Szenenaufbau als Helfer in `tools/render-qa/` übernehmen, damit Seekarten-Checks wiederholbar sind. (Menü-Karte bei 1280 × 720 abgeschnitten: bereits erfasst, Ausgewertet 2026-09-30, „Menü-Karte höher als 1280 × 800“.)

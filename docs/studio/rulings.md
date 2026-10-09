@@ -3915,3 +3915,15 @@ nur abgelehnt, wenn es auf kein Haus wirkt. Save v10: wer zuerst merged, nimmt v
 Spec durch `design-spec-author` (Restbudget lead-design 1 Start), danach Gate Spec (lead-tech, lead-qa). Kein §5.3-Vorbehalt.
 
 Entscheider: L0 · Anlass: Gate Brainstorming · ADR: —
+
+## R413 · 2026-10-09 · Gate Merge Release REL-12 „Seekarte“ OK; Push-Zeitpunkt
+
+Ruling: **OK** für REL-12 = main @ `c97c225` (Code-Stand `f1057e2` + `1a38555`). Release-Check lead-qa
+(`.studio/qa/REL-12/`): `smoke.mjs` BESTANDEN (1280×720, 1920×1080, Konsole leer), Seekarte AK-B1–B4 BESTANDEN mit
+Screenshots; AK-B5 per Cache-Test erfüllt (R406, Browser-Messung unter Load 4,6–4,9 nur Orientierung, 0,4 ms). Delta-Prüfung
+nach R249 (1): `git diff 6c7aa62 main -- src/ tests/` leer, kein weiteres Review nötig; gezielt 32/32 Tests grün. Befund
+„kein versionierter Seekarten-Szenenhelfer unter `tools/render-qa/`“ in `docs/beobachtungen.md`. **Push REL-11 + REL-12** als
+letzter Schritt der Session (R335), nach Gate Spec I-028, damit die Doku-Commits mitgehen; Push-Gate nach Handbuch 1.34,
+Pages per `gh workflow run Pages --ref main`.
+
+Entscheider: L0 · Anlass: Gate Merge Release · ADR: —
