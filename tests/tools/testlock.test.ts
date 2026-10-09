@@ -125,7 +125,7 @@ describe('testlock (R378)', () => {
           },
         );
         let out = '';
-        sh.stdout.on('data', (d: Buffer) => (out += d.toString()));
+        sh.stdout.on('data', (d) => (out += d.toString()));
         sh.on('error', reject);
         sh.on('close', () =>
           resolve({ ran: out.split('RAN').length - 1, lockLeft: existsSync(lock) }),

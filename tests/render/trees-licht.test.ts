@@ -88,7 +88,7 @@ describe('H-R10 Kronen in 3 Tönen', () => {
         checked++;
       }
     expect(checked).toBeGreaterThan(100);
-  }, 10_000); // R389: ~430 ms einzeln, ~880 ms im vollen Lauf; Runner ≈ 3 × 880 = 2640 ms, Faktor 4 → 3,5 s; 10 s = 50-%-Regel mit Reserve (wie R328)
+  }, 10_000); // R389: ~430 ms einzeln, ~880 ms im vollen Lauf; Runner-Schätzung 3 × 880 = 2640 ms (ganzer Test, 3 Karten); Faktor 4 ergäbe 3,5 s; 10 s halten die 50-%-Regel (5 s) mit Reserve ein (wie R328)
   it('c) Kappe sitzt zum Licht (x < 0, y < 0 gegenüber ihrem Lappen), Schattenmond vom Licht weg', () => {
     for (const seed of [2, 3])
       for (const { shade, mid, cap } of perCrown(seed)) {
