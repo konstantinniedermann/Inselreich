@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { drawShip, shipShadow, shipTile } from '../../src/render/ship';
-import { PALETTE, mixHex } from '../../src/render/palette';
+import { drawShip, SAUM, SAUM_PX, shipShadow, shipTile } from '../../src/render/ship';
+import { PALETTE, mixHex, rgbOfCss } from '../../src/render/palette';
 import { fakeCtx } from './fakeCtx';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, adjacentOf, createWorld, tileAt } from '../../src/sim/world';
@@ -67,5 +67,74 @@ describe('Händlerschiff', () => {
     expect(new Set(log.fillSet)).toEqual(
       new Set([mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4), PALETTE.wallLime]),
     );
+  });
+
+  describe('SEE-F3 Schiffskontrast (R399: Kontrast >= 2,0 auf jeder Meeresfarbe)', () => {
+    const lin = (v: number): number => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const lum = (css: string): number => {
+      const [r, g, b] = rgbOfCss(css);
+      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    };
+    /** WCAG-Leuchtdichtekontrast zweier Farben (opak). */
+    const contrastRatio = (a: string, b: string): number => {
+      const x = lum(a),
+        y = lum(b);
+      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    };
+    const WATERS = [PALETTE.waterDeep, PALETTE.waterMid, PALETTE.waterShallow];
+    const far = { x: 0, y: 0, zoom: 0.5 };
+    const strokes = (zoom: number) => {
+      const { ctx, log } = fakeCtx();
+      drawShip(ctx, { x: 0, y: 0, zoom }, { x: 5, y: 5 }, 0);
+      return log.events.filter((e) => e.op === 'stroke' || e.op === 'fill');
+    };
+
+    it('AK-S1 contrastRatio: Schwarz/Weiss 21, gleiche Farbe 1', () => {
+      expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 5);
+      expect(contrastRatio('#336699', '#336699')).toBeCloseTo(1, 5);
+    });
+    it('AK-S1 Ausgangswert: Rumpf allein verschwindet auf Tief- und Mittelwasser (< 1,5)', () => {
+      const hull = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
+      expect(contrastRatio(hull, PALETTE.waterDeep)).toBeLessThan(1.5);
+      expect(contrastRatio(hull, PALETTE.waterMid)).toBeLessThan(1.5);
+    });
+    it('AK-S2 / R399 gemessen wird der Saumton SAUM (umgibt Rumpf und Segel) gegen jedes Wasser: >= 2,0', () => {
+      for (const w of WATERS) expect(contrastRatio(SAUM, w)).toBeGreaterThanOrEqual(2.0);
+    });
+    it('AK-S2 Saum ist ein Palettenton (foam), kein neuer Ton', () => {
+      expect(SAUM).toBe(PALETTE.foam);
+    });
+    it('AK-S2 Fernzoom (<= 0,5): Saum-Striche (Breite SAUM_PX in Bildpunkten) vor Rumpf und Segel, Aufrufzahl <= +3', () => {
+      const near = strokes(1);
+      const evs = strokes(far.zoom);
+      expect(evs.length - near.length).toBeLessThanOrEqual(3);
+      expect(evs.length - near.length).toBeGreaterThanOrEqual(1);
+      const saum = evs.filter((e) => e.op === 'stroke' && e.style === SAUM);
+      expect(saum.length).toBe(2);
+      for (const e of saum) expect(e.lineWidth).toBe(SAUM_PX);
+      // Rumpfsaum kommt vor dem ersten Rumpf-Fill, Segelsaum vor dem Segel-Fill
+      const fills = evs.map((e, i) => (e.op === 'fill' ? i : -1)).filter((i) => i >= 0);
+      expect(evs.indexOf(saum[0]!)).toBeLessThan(fills[0]!);
+      expect(evs.indexOf(saum[1]!)).toBeLessThan(fills[1]!);
+      expect(evs.indexOf(saum[1]!)).toBeGreaterThan(fills[0]!);
+    });
+    it('AK-S2 Saumbreite in Bildpunkten gleich bei Zoom 0,25 und 0,5 (nicht mit Schiffsgrösse skaliert)', () => {
+      const a = strokes(0.25).find((e) => e.style === SAUM)!;
+      const b = strokes(0.5).find((e) => e.style === SAUM)!;
+      expect(a.lineWidth).toBe(b.lineWidth);
+    });
+    it('AK-S2 Nahzoom (> 0,5): kein Saum, Striche nur in Umrissfarbe', () => {
+      for (const z of [0.51, 1, 2]) {
+        expect(strokes(z).some((e) => e.style === SAUM)).toBe(false);
+      }
+    });
+    it('AK-S2 save/restore ausgeglichen im Fernzoom', () => {
+      const { ctx, log } = fakeCtx();
+      drawShip(ctx, { x: 0, y: 0, zoom: 0.25 }, { x: 5, y: 5 }, 0);
+      expect(log.saves).toBe(log.restores);
+    });
   });
 });

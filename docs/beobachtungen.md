@@ -51,6 +51,12 @@ Code (Fundstellen unten); Bildbefunde, Messwerte und CI-Zeiten aus Agentenberich
 | `favicon.ico` liefert 404 (REL-08)              | `index.html` ohne `<link rel="icon">`, `public/` enthält nur `audio`, `fonts`                                                    | `<link rel="icon" href="data:,">` oder kleines Icon in `public/` |
 | Kontrast `.needs`/`.reasons` Rand 2,3–2,7 : 1   | `src/style.css` `.needs .ok` `border-left: 4px solid var(--ok)`, `.bad` `var(--signal-red)`; `--tone-*` existieren (ab Zeile 31) | Randfarben auf `--tone-ok`/`--tone-bad`; Kontrast neu messen     |
 
+**Umgesetzt in REL-11 UI (2026-10-09, R400):** UI-KAMERA-RAND (konvexe Hülle, `fix/rel11-kamera`), Kontrast `.needs`/`.reasons` (`--tone-*`, Test in `contrast.test.ts`) und `noLoadableReason` gelöscht (`fix/rel11-triv`). `favicon` war schon seit `a7e2192` erledigt (Data-URI in `index.html`); der Eintrag oben war veraltet.
+
+**Playtest REL-11 UI (2026-10-09, `.studio/qa/REL11-UI/`):** Hülle nie schlechter als das Rechteck (Seed 7, SW, Zoom 0,25: 78 gegen 0 Landkacheln im Bild, Abstand 366 gegen 878 px). Ein Rest bleibt: an einzelnen Hüllenecken zeigt das Bild bei Zoom 0,5/1 nur Wasser (Land-Box mit Rand 6 ≠ Land; Seed 7 SW Zoom 1: 1382 px Abstand statt 3472). Von R400 akzeptiert; Korridore oder engere Hülle nur bei Spielerbefund. Weitere Befunde: (a) Im Inspektor-Panel erscheint neben einer `.needs`-Zeile nur mit „✗“ zusätzlich „Fehlt: Nahrung“ (wirkt doppelt, UX niedrig). (b) Resize hält die Seitenposition einer Kachel, zentriert nicht nach (im Rahmeninnern gewollt, am Rand nicht gemessen).
+
+**Final-Review REL-11 UI (opus, OK):** `src/render/sprites.ts` hat eine eigene private `convexHull`, fast gleich der neuen in `src/render/camera.ts` (DRY, niedrig); zusammenlegen erst nach dem Merge des Render-Strangs. Trigger: nächster Eingriff in `sprites.ts` oder `camera.ts`.
+
 **Kandidaten für REL-11 / Pakete (L0 entscheidet)**
 
 | Paket-ID (Vorschlag)         | Inhalt                                                                                                                                                                | Beleg                                                                                   | Prio    | Owner     |
@@ -380,3 +386,11 @@ RENDER-LOOK-01 erst danach.
 ---
 
 ## Offen (neue Einträge unten anhängen)
+
+### 2026-10-09 · REL-11 Render-Strang (lead-art): Befunde aus Review und Sichtprobe
+
+- **Fundort:** `fix/see-f3-schiffskontrast`, `src/render/ship.ts`: Der Mast (1-px-Strich) hat keinen Saum und bleibt auf Tief- und Mittelwasser schwach; Kommentar `ship.ts:27` nennt "Kontrast >= 2,2", der kleinste Wert ist 2,21 (Flachwasser, ohne Puffer). Ursprung: Review SEE-F3. Einschätzung: niedrig; bei Bedarf in RENDER-LOOK-01.
+- **Fundort:** SEE-F3-Eintrag oben: Die "10 px" gelten für Wrack und Eiland (`FAR_MIN_CSS_PX`), das Schiff hat 16 px. Erledigt mit dem Merge von `fix/see-f3-schiffskontrast` (Saum 2,21 bis 6,63 gegen alle drei Wassertöne, Sichtprobe `.studio/qa/see-f3/bilder/`: Schiff bei Zoom 0,25 und 0,5 auf mittlerem und flachem Wasser klar lesbar).
+- **Fundort:** `tools/render-qa/blindprobe.mjs` (Branch `fix/art-meeresfels`) zeichnet ohne Schaumring und ohne Wassertönung; die Blindprobe (10 von 10 richtig) prüft nur die Stempel-Silhouette. Einschätzung: eine Browser-Sichtprobe im echten Spiel beim Release-Check ergänzen.
+- **Fundort:** Worktrees: `.vitest/` liegt untracked in Worktrees (`.gitignore`-Kandidat); ein Scratch-Worktree des Reviewers (Detached HEAD auf main) liegt unter dem Scratchpad, sein Entfernen blockte der Hook (Verfassung §6). Einschätzung: niedrig, Aufräumen durch L0/Integrator.
+- **Fundort:** `tests/render/seaPlanKeepOutIndex.test.ts`: neuer Vollvergleichstest braucht ≈ 2,3 s (neuer Test, nicht unter der 500-ms-Regel für bestehende Tests). Einschätzung: bei Suite-Laufzeitdruck ausdünnen.

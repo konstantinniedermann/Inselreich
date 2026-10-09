@@ -3755,3 +3755,42 @@ nur bei Load ≤ 4. Pins: Nahzoom bitgleich, sonst je Pin ein Ruling. Studioweit
 erhält höchstens 2 parallele Arbeiter.
 
 Entscheider: L0 · Anlass: Plan REL-11 Render · ADR: —
+
+## R400 · 2026-10-09 · Gate Spec/Plan REL-11 UI-Strang OK
+
+Ruling: **OK** für `docs/superpowers/plans/2026-10-09-rel11-ui.md` (`02b28a2`). UI-KAMERA-RAND als konvexe Hülle der
+Land-Boxen plus Rand 6 (optionales Feld `hull` in `TileRect`, `clampToRect` ohne Signaturänderung) — stetig, Reisen
+zwischen Inseln bleibt möglich; Rauten-Rahmen und Klemmung an Landflächen verworfen. Wasser entlang der Hüllenkanten
+bei wenigen Inseln ist akzeptiert; Variante mit Korridoren nur bei Spielerbefund. Trivial-Fixes: Kontrast
+`.needs`/`.reasons` mit Test, `noLoadableReason` löschen; **favicon entfällt** (seit `a7e2192` erledigt, Browser-Check
+prüft nur, dass kein `/favicon.ico` angefragt wird). Budget 12 Starts, Parallelität 2, Richtwert ≈ 100 Tools; zwei
+Worktrees. `cameraBounds`-Tests (AK-E1-12) dürfen am neuen Feld nicht brechen. Konflikte in `docs/arc42.md`/
+`docs/beobachtungen.md` mit dem Render-Strang löst der Integrator seriell nach Konflikt-Probe.
+
+Entscheider: L0 · Anlass: Plan REL-11 UI · ADR: —
+
+## R401 · 2026-10-09 · Gate Merge REL-11 UI-Strang OK
+
+Ruling: **OK** für `fix/rel11-kamera` @ `e0fcddb` (enthält `fix/rel11-triv`): Final-Review `opus` OK, Playtest
+BEDENKEN ohne Blocker, `tsc --noEmit` Exit 0, 116 gezielte Tests grün; Konflikt-Probe gegen main sauber. Ergänzung
+zu R400: **Hüllenecken**, die bei Zoom ≥ 0,5 nur Wasser zeigen, sind akzeptiert wie die Hüllenkanten (Hülle ist nie
+schlechter als das Rechteck, Seed 7 SW Zoom 0,25: 78 statt 0 Landkacheln); Korridore nur bei Spielerbefund.
+Prozessabweichung an die Session-Retro: Testzeiten nach R392 bei Load 5,8–6,6 statt ≤ 4 gemessen (A/B direkt
+nacheinander, ≤ +3,4 %; als relativer Vergleich angenommen, nicht als Messwert). Lint war nur an der Render-Plan-Datei
+rot, behoben (`175d74c`). Merge seriell durch den Integrator im Worktree `.worktrees/integrate`, `make check`, lokal.
+
+Entscheider: L0 · Anlass: Bericht REL11-UI · ADR: —
+
+## R402 · 2026-10-09 · Gate Merge REL-11 Render: Keepout und Schiff OK, Fels nach Fix-Runde
+
+Ruling: Final-Review `opus` (lead-qa) BEDENKEN gesamt. **OK** für `fix/render-seeplan-keepout` @ 7576f29 (Zähler
+11,6 % gegen main nachgemessen, Plan bitgleich) und `fix/see-f3-schiffskontrast` @ a0278db (Saum 6,63/4,02/2,21,
+Pins grün). **Fels** @ 9bcbbb1 fachlich OK (Blindprobe 10/10, Nahzoom-Hash identisch), aber Fix-Runde vor dem Merge:
+main nach dem Merge von Keepout und Schiff in den Branch holen, Konflikt in `docs/arc42.md` lösen, Zeile 222 (`|`
+escapen) und Kommentar `decorStamps.ts` (Verhältnisse 1,28/1,06) angleichen; kein neues Review, L0 prüft den Diff.
+Vor dem Merge: Zeitprüfung nach R392 für alle drei Branches bei Load ≤ 4 (A/B main/Branch direkt nacheinander, kein
+bestehender Test > 500 ms oder > +50 %). Nach dem Fels-Merge: gemeinsame Sichtprobe Schiff mit Saum und Fels bei
+Zoom 0,25 und 0,5 (Release-Check REL-11). An die Session-Retro: Rot-vor-Grün in der Historie bei Schiff, Fels-M2 und
+Keepout-Zähler nicht belegt (zweiter Fall nach TOOL-GATES-2 → R395 V2 wird fällig).
+
+Entscheider: L0 · Anlass: Final-Review REL11-RENDER · ADR: —

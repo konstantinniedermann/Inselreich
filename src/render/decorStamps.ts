@@ -666,8 +666,8 @@ export interface FarPart {
   h: number;
 }
 /**
- * Fern-Form (Zoom <= 0,5): gedrungene, abgerundete Buckel statt hoher Brocken und Nadel. Breite : Höhe ≈ 1,25 (das Schiff
- * liegt bei ≈ 1,0), kein spitzer Scheitel (Winkel an der Kuppe weit über 50 Grad), die Lichtfläche ist durch eine
+ * Fern-Form (Zoom <= 0,5): gedrungene, abgerundete Buckel statt hoher Brocken und Nadel. Breite : Höhe ≈ 1,28 (das Schiff
+ * liegt bei ≈ 1,06), kein spitzer Scheitel (Winkel an der Kuppe weit über 50 Grad), die Lichtfläche ist durch eine
  * unregelmässige Linie von der Schattenfläche getrennt (keine senkrechte Mittellinie). Rein, ohne Zufall.
  */
 export function farRockGeom(v: number): FarPart[] {
