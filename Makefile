@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push check-ci-perf messfenster check-run
+.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -61,13 +61,16 @@ studio-archive: ## Studio-Events archivieren (Dashboard startet leer)
 studio-metrics: ## Studio-Metriken der letzten Session verdichten
 	@python3 tools/studio/metrics.py --session latest
 
+conflicts: ## Git-Konfliktmarker (<<<<<<< / >>>>>>>) in versionierten Dateien suchen; erster Schritt von check
+	node tools/conflicts/check.ts
+
 pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle 50 %)
 	node tools/pages/check.ts dist
 
 messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
 	node tools/render-qa/messfenster.mjs $(ARGS)
 
-check: ## Gleich wie CI: lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
+check: ## Gleich wie CI: conflicts, lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
 	@node $(TESTLOCK) $(MAKE) check-run
 
-check-run: lint zeittests test zeitreserve studio-test build pages-limit
+check-run: conflicts lint zeittests test zeitreserve studio-test build pages-limit
