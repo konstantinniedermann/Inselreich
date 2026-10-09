@@ -3966,3 +3966,15 @@ keine Zweitprüfung. **Budget** nach dem Delta-Check: 11 Starts, Parallelität 1
 Session gehen mit dem nächsten Push).
 
 Entscheider: L0 · Anlass: Gate Plan · ADR: —
+
+## R416 · 2026-10-09 · Delta-Check Plan I-028 OK, Budget 11 Starts; Push-Neustart nach Lint-Abbruch
+
+Ruling: (1) Delta-Check nach R415: Plan-Nacharbeit `630ce91` erfüllt alle Punkte (Index + Task-Dateien T1a 9 960 B, T1b
+9 222 B, T2 9 673 B, T3, T4; AK-T42, `triggerTaxBlocked`, kleinste gesperrte Stufe, H-1–H-6, niedrige Punkte, 42 AK, 11
+Starts belegt; `make docs-check` Exit 0). Abweichung `taxPct` in `townhall.ts` (Import-Zyklus `tax → unlocks → population`)
+angenommen. **Plan freigegeben**; Budget **lead-tech 11 Starts, Parallelität 1**, Controller-Übergabe nach Start 6.
+Umsetzung startet nach dem Push (Last fürs Push-Gate). (2) Integrator-Abbruch Push-Gate: `make lint` rot durch
+unformatierten Doku-Commit `bb86f7d`; Trivial-Fix `4806006` (nur Prettier), Beobachtung zur fehlenden Pflichtzeile
+`make docs-check` für Doku-Pakete (Retro-Thema). Push-Neustart auf dem HEAD nach diesem Ruling.
+
+Entscheider: L0 · Anlass: Gate Plan Delta-Check, Push-Gate-Abbruch · ADR: —
