@@ -1133,6 +1133,13 @@ function launch(
         const r = canvas.getBoundingClientRect();
         return { x: r.left + (c[0].x + c[2].x) / 2, y: r.top + (c[0].y + c[2].y) / 2 };
       },
+      camera: () => ({
+        x: state.cam.x,
+        y: state.cam.y,
+        zoom: state.cam.zoom,
+        bounds: { ...bounds },
+        view: clampView(),
+      }),
       centerOn: (x, y) => centerOn(state.cam, x + 0.5, y + 0.5, clampView(), bounds),
       setZoom: (z) => {
         zoomAt(state.cam, z / state.cam.zoom, view.w / 2, view.h / 2, view, bounds);
