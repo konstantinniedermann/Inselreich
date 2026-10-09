@@ -4007,3 +4007,14 @@ Triage a und d) in `docs/beobachtungen.md`. Budget: 8 von 11 Starts. Merge lokal
 nächsten Session-Push (R335); I-028 geht dann als eigenes Release (REL-13 „Steuer je Stufe“, Save v10) mit Release-Check.
 
 Entscheider: L0 · Anlass: Gate Merge · ADR: —
+
+## R419 · 2026-10-09 · Gate Merge Release REL-13 „Steuer je Stufe“ OK; Push nächste Session
+
+Ruling: **OK** für REL-13 = main @ `d7291aa` (Merge I-028). Release-Check lead-qa (`.studio/qa/REL-13/`): Delta nach R249 (1)
+leer gegenüber dem Final-Review-Stand `5f14317` (`src/`, `tests/`, `index.html`, `src/style.css`, `public/`, `vite.config.ts`,
+package/tsconfig), nur Doku dazu; `smoke.mjs` BESTANDEN (1280×720, 1920×1080, Konsole leer); Amtsstube auf main 16/16 PASS;
+keine Browser-Leistungsmessung (Handbuch 1.35). Save v10 (Migration v9 → v10 durch Tests belegt). **Push REL-13** zusammen mit
+den Doku-Commits dieser Session in der nächsten Session (R335: der Push dieser Session war REL-11 + REL-12). Release-Notiz in
+`state.md`. Befund Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`) in `docs/beobachtungen.md`.
+
+Entscheider: L0 · Anlass: Gate Merge Release · ADR: —
