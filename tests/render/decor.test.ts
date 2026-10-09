@@ -1388,7 +1388,8 @@ describe('L5 Meer-Plan und R4', () => {
       pine: { palms: 0, suit: 0, n: 0 },
       dune: { palms: 0, suit: 0, n: 0 },
     };
-    for (const { seed, w } of W200) {
+    // Seeds 1–40 in der Suite; die Quote über Seeds 1–200 prüft `tools/render-qa/korridor.mjs` (Schwellen unverändert).
+    for (const { seed, w } of W200.slice(0, 40)) {
       const isl = home(w);
       const cls = staticClasses(isl);
       let suit = 0;
