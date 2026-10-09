@@ -200,9 +200,7 @@ describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
   });
 
   it('Eigenlast des Laufs (loadEnd/loadMax hoch) macht die Messung nicht unbrauchbar (R394)', () => {
-    expect(
-      measurementProblem({ ...meta, loadStart: 1, loadEnd: 9, loadMax: 9 }, 'abc'),
-    ).toBeNull();
+    expect(measurementProblem({ ...meta, loadStart: 1, loadEnd: 9, loadMax: 9 }, 'abc')).toBeNull();
   });
 
   it('alter Commit ist nicht belastbar und nennt beide Commits', () => {
@@ -217,8 +215,7 @@ describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
   });
 
   it('Messung ohne loadStart ist nicht belastbar (R394)', () => {
-    const { loadStart: _l, ...ohne } = meta;
-    expect(measurementProblem(ohne, 'abc')).toMatch(/alten Format/);
+    expect(measurementProblem({ ...meta, loadStart: undefined }, 'abc')).toMatch(/alten Format/);
   });
 
   it('altes Format ist nicht belastbar, ohne Absturz', () => {

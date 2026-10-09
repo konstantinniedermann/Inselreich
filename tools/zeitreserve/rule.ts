@@ -136,12 +136,16 @@ export function parseMeasurement(raw: unknown): Measurement {
   return { ...m, timings: Array.isArray(m?.timings) ? m.timings : [] };
 }
 
-/** Grund, warum die Messung für `--push` nicht belastbar ist, sonst null. */
+/**
+ * Grund, warum die Messung für `--push` nicht belastbar ist, sonst null.
+ * Bewertet wird die Last VOR dem Lauf (R394): Vitest lastet die Kerne selbst aus, `loadEnd`/`loadMax`
+ * enthalten diese Eigenlast und bleiben nur zum Nachrechnen in Messdatei und Meldung.
+ */
 export function measurementProblem(m: Measurement, head: string): string | null {
-  if (m.commit === undefined || m.loadMax === undefined)
-    return 'Messung im alten Format (Array) ohne Commit und Last; make test neu laufen lassen';
+  if (m.commit === undefined || m.loadStart === undefined)
+    return 'Messung im alten Format (Array) ohne Commit und Last vor dem Lauf; make test neu laufen lassen';
   if (m.commit !== head) return `Messung stammt von Commit ${m.commit}, HEAD ist ${head}`;
-  if (m.loadMax > LOAD_MAX)
-    return `Last ${m.loadMax.toFixed(1)} > ${LOAD_MAX} während der Messung (Start ${m.loadStart?.toFixed(1)}, Ende ${m.loadEnd?.toFixed(1)})`;
+  if (m.loadStart > LOAD_MAX)
+    return `Last vor dem Lauf ${m.loadStart.toFixed(1)} > ${LOAD_MAX} (Ende ${m.loadEnd?.toFixed(1)}, Max ${m.loadMax?.toFixed(1)})`;
   return null;
 }
