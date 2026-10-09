@@ -207,3 +207,8 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · Release-Check REL-13 (lead-qa): Befund ohne Blocker
 
 - **Fundort:** `tools/render-qa/smoke.mjs:466`: Schritt heisst „Speichern und Laden (Save v9)“, das Spiel speichert seit I-028 v10. Ursprung: REL-13. Einschätzung: niedrig, Kosmetik im Werkzeug; Etikett ohne feste Versionsnummer (Trivial-Fix im nächsten Werkzeug-Paket, z. B. TOOL-PRETTIER-HOOK).
+
+### 2026-10-09 · ART-FELS-FERNGROESSE abgehakt (R423)
+
+- **Fundort:** `src/render/decorStamps.ts` (Meeresfels, Zoom 0,25 ≈ 5–6 px). Urteil `lead-art` NEIN: Der Meeresfels bleibt massstabstreu (reine Deko ohne Sim-Bezug; Bildrangfolge Schiff 16 px vor Fels; Blindprobe bestanden). Ursprung: Release-Check REL-11, BEOB-AUSW-03. Einschätzung: abgehakt; der tote Fern-Code (`minStampScale`) ist in REL-14 entfernt.
+- **Trigger für eine Neubewertung:** (1) Felsen bekommen eine Spielwirkung; (2) ein Playtest vermisst Felsen in der Fernansicht; (3) die Schiffs-Mindestgrösse oder der kleinste Zoom ändert sich.
