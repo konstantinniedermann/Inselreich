@@ -3829,3 +3829,14 @@ von «hoch» bei Kaufleuten) als Kandidat nach REL-12. **I-029, I-030** geparkt 
 I-030 erst nach Rechnung der Zielwerte). Kein Nutzer-Vorbehalt (§5.3: kein Richtungswechsel).
 
 Entscheider: L0 · Anlass: Bericht IDEEN-04 · ADR: —
+
+## R406 · 2026-10-09 · Gate Spec/Plan UI-SEEKARTE OK
+
+Ruling: **OK** für `docs/superpowers/plans/2026-10-09-ui-seekarte.md` (`3085108`). Designfragen nach Empfehlung:
+(1) Iso-Ausrichtung wie die Hauptansicht (2×2-Matrix, Silhouette einmal gerastert); (2) Liste bleibt unter der Karte
+(Tastatur, Fallback); (3) Kamerarahmen in der Karte nicht jetzt (YAGNI); (4) Klick auf Schiffspunkte nicht im
+Umfang. Budget 10 Starts, Parallelität 1, Richtwert ≈ 70 Tools, Worktree `.worktrees/ui-seekarte`. Erstes Öffnen
+≤ 5 ms Rasterzeit ist AK (B5), bei Load ≤ 4 gemessen; sonst Zähler-/Cache-Treffer-Test als harte Abnahme.
+Umsetzung startet sofort (Paket des Release REL-12); kein Push in dieser Session.
+
+Entscheider: L0 · Anlass: Plan UI-SEEKARTE · ADR: —
