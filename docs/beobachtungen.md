@@ -203,3 +203,7 @@ Raster) ist bereits benannt (R327).
 ---
 
 ## Offen (neue Einträge unten anhängen)
+
+### 2026-10-09 · Release-Check REL-13 (lead-qa): Befund ohne Blocker
+
+- **Fundort:** `tools/render-qa/smoke.mjs:466`: Schritt heisst „Speichern und Laden (Save v9)“, das Spiel speichert seit I-028 v10. Ursprung: REL-13. Einschätzung: niedrig, Kosmetik im Werkzeug; Etikett ohne feste Versionsnummer (Trivial-Fix im nächsten Werkzeug-Paket, z. B. TOOL-PRETTIER-HOOK).
