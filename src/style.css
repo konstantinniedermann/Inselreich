@@ -1028,10 +1028,6 @@ body {
 .btn-category .icon-chip {
   margin-right: 0;
 }
-.panel-line[data-field='first-missing'] {
-  display: flex;
-  align-items: center;
-}
 .needs li {
   display: inline-flex;
   align-items: center;

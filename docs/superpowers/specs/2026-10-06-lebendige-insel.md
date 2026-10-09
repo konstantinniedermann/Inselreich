@@ -295,8 +295,9 @@ Fels (`ROCK_TONES`) bleibt in allen Varianten gleich, er ist die Referenz.
   gerastert, `MASSIF_CACHE_MAX_BYTES` bleibt.
 - **Culling:** Stempel und Fauna nur im sichtbaren Kachelbereich (`range` wie bei Bäumen bzw. `fishAnchors`). Die
   feste Stempelliste wird je `layoutKey` sortiert und je Frame nur gemischt (wie die Bäume).
-- **Fernansicht:** Bei Zoom ≤ 0,25 nur, was ins Bodenbild bzw. in die Viertel-Kopie gerastert ist, plus Wrack und
-  Meeresfelsen als Stempel (Orientierung). Kleinstempel (A9, A14) erst ab 0,75.
+- **Fernansicht:** Bei Zoom ≤ 0,25 nur, was ins Bodenbild bzw. in die Viertel-Kopie gerastert ist, plus
+  Meeresfelsen als Stempel (Orientierung). Wrack und Felseiland erscheinen erst ab Zoom 0,5 (`SEA_ELEMENT_MIN_ZOOM`,
+  Stand REL-07; ihre frühere Mindestbreite in der Fernansicht ist entfallen, R423). Kleinstempel (A9, A14) erst ab 0,75.
 - **Fauna-Obergrenzen** (neu in `CAPS`, [normal, reduziert]): butterflies [12, 0], hares [4, 1], fireflies [24, 0],
   deer [2, 1], fox [1, 0], forestBirds [6, 2], ibex [3, 1], eagle [1, 1], crabs [6, 0], turtle [1, 0], seals [3, 1],
   cormorants [3, 1], dolphins [3, 0]. Summe ≤ 69 Figuren normal bzw. ≤ 9 reduziert. Alle werden gemeinsam nur im

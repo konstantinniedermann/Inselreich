@@ -90,15 +90,19 @@ export function stateChip(world: World, b: Building): Chip {
   return { text, tone: stateTone(b), label: `Zustand: ${text}` };
 }
 
-/** Versorgungs-Chip des Wohnhauses (Anhang 01 A.2); sonst `null`. */
+/** Versorgungs-Chip des Wohnhauses (Radius von Kontor/angebundenem Markt, REL-14); sonst `null`. */
 export function supplyChip(world: World, b: Building): Chip | null {
   if (!b.house) return null;
   return isSupplied(world, b)
-    ? { text: 'Versorgt', tone: 'ok', label: 'Versorgung: ✓ im Radius' }
+    ? {
+        text: 'Im Versorgungsradius',
+        tone: 'ok',
+        label: 'Kontor oder Marktplatz in Reichweite: Waren kommen an',
+      }
     : {
-        text: 'Nicht versorgt',
+        text: 'Ausserhalb der Versorgung',
         tone: 'bad',
-        label: 'Versorgung: ✗ ausserhalb von Kontor/Markt',
+        label: 'Kein Kontor oder angebundener Marktplatz in Reichweite: keine Waren',
       };
 }
 

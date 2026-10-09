@@ -25,8 +25,6 @@ import {
   VARIANT_COUNT,
   decorShadow,
   needleGeom,
-  minStampScale,
-  stampWidthPx,
   FAR_ROCK_MAX_STEP,
   decorCacheKeys,
   decorStampFor,
@@ -256,19 +254,6 @@ describe('L5 Zeichner: Grenzen und Form', () => {
     expect(Math.abs(cy)).toBeLessThan(6); // am Fuss
     expect(cx, 'Schatten fällt nach rechts (−LIGHT.x > 0)').toBeGreaterThan(0);
     expect(decorShadow(item('palm'))).toBeNull();
-  });
-
-  it('T6 Wrack und Felseiland haben bei Zoom ≤ 0,25 mindestens ≈ 10 CSS-px Breite, aber weniger als das Schiff (16 px)', () => {
-    for (const k of ['wreck', 'islet'] as const)
-      for (let v = 0; v < 4; v++)
-        for (const z of [0.125, 0.25]) {
-          const px = stampWidthPx(k, v) * z * minStampScale(k, v, z);
-          expect(px, `${k}${v}@${z}`).toBeGreaterThanOrEqual(10 - 1e-6);
-          // die Mindestbreite greift nur, wo der Stempel kleiner wäre, und bleibt unter dem Schiff (16 px)
-          if (minStampScale(k, v, z) > 1) expect(px).toBeCloseTo(10, 6);
-        }
-    expect(minStampScale('wreck', 0, 1)).toBe(1);
-    expect(minStampScale('seaRock', 0, 0.25)).toBe(1);
   });
 
   it('Zoomschwellen und Fern-Pfad: Wrack, Felsen und Eiland ab 0,25, Palme ab 0,5', () => {

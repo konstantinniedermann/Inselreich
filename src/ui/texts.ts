@@ -11,7 +11,7 @@ import { formatGameTime } from './time';
 export function diagnosisText(d: Diagnosis): string {
   switch (d.kind) {
     case 'supply':
-      return 'nicht versorgt';
+      return 'ausserhalb der Versorgung';
     case 'good':
       return `${GOODS[d.good].name} fehlt`;
     case 'service':

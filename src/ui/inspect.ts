@@ -2,7 +2,7 @@ import { home, isKontor } from '../sim/world';
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
 import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
@@ -106,8 +106,6 @@ export interface LockRow {
   goods: { good: GoodId; locked: boolean }[];
 }
 
-const TIER_LIST: readonly Tier[] = [1, 2, 3, 4];
-
 /** Einwohner je Stufe (nur Anzeige-Zähler, keine Regel). */
 function inhabitantsOf(world: World, tier: Tier): number {
   let n = 0;
@@ -123,7 +121,7 @@ function inhabitantsOf(world: World, tier: Tier): number {
  */
 export function lockMatrix(world: World): LockRow[] {
   if (functionLock(world, 'goodLocks') !== null) return [];
-  return TIER_LIST.filter((t) => inhabitantsOf(world, t) > 0).map((tier) => ({
+  return TIER_IDS.filter((t) => inhabitantsOf(world, t) > 0).map((tier) => ({
     tier,
     goods: (Object.keys(TIERS[tier].needs) as GoodId[])
       .filter((good) => goodUnlocked(world, good))
@@ -136,7 +134,7 @@ export function lockMatrix(world: World): LockRow[] {
 
 /** Stufen mit Aufstieg und Einwohnern > 0 (Schalter „Häuser dieser Stufe steigen nicht auf", Kann K1). */
 function stopTiers(world: World): Tier[] {
-  return TIER_LIST.filter((t) => TIERS[t].upgradeCost !== null && inhabitantsOf(world, t) > 0);
+  return TIER_IDS.filter((t) => TIERS[t].upgradeCost !== null && inhabitantsOf(world, t) > 0);
 }
 
 /**
@@ -460,7 +458,6 @@ function renderHouse(panel: HTMLElement, b: Building): void {
   addRemedy(head);
   const stats = addStats(panel, ['inhabitants']);
   addList(stats, 'needs', 'needs');
-  addLine(stats, '', 'first-missing').hidden = true;
   const upgrade = cardNode('Aufstieg');
   const heading = document.createElement('h3');
   heading.dataset.field = 'upgrade-title';
@@ -471,18 +468,6 @@ function renderHouse(panel: HTMLElement, b: Building): void {
   addLine(upgrade, '', 'stone-hint').hidden = true;
   addLine(upgrade, '', 'upgrade-cost');
   panel.appendChild(upgrade);
-}
-
-/** Zeile unter den Bedarfen: Symbol und Name des ersten fehlenden Guts oder Dienstes; sonst verborgen. */
-function setFirstMissing(panel: HTMLElement, n: NeedIcon | undefined): void {
-  const line = panel.querySelector<HTMLElement>('[data-field="first-missing"]');
-  if (!line) return;
-  const key = n === undefined ? '' : `${n.icon}|${n.label}`;
-  if (line.dataset.key === key) return;
-  line.dataset.key = key;
-  line.hidden = n === undefined;
-  if (n === undefined) line.replaceChildren();
-  else line.replaceChildren(iconChip(n.icon), document.createTextNode(`Fehlt: ${n.label}`));
 }
 
 /** Defizit-Zeile (Spec 7): nur volles Haus mit möglichem Aufstieg und einem Defizitgut; sonst `null`. */
@@ -525,10 +510,6 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
       icon: n.icon,
       mark: n.met ? '✓' : '✗',
     })),
-  );
-  setFirstMissing(
-    panel,
-    icons.find((n) => !n.met),
   );
   // Reihenfolge wie beim Kartensymbol: das erste Element ist das dort gezeigte
   setList(
@@ -623,7 +604,7 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
   label('alle Stufen');
   for (const level of levels) taxBtn(level, { 'data-tax-all': level }, () => actions.setTax(level));
   grid.append(document.createElement('span'));
-  for (const t of TIER_LIST) {
+  for (const t of TIER_IDS) {
     label(TIERS[t].name);
     for (const level of levels)
       taxBtn(level, { 'data-tax-tier': String(t) }, () => actions.setTierTax(t, level));
@@ -678,7 +659,7 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     const tip = tier === null ? taxEffect(level) : tierTaxTooltip(tier, level);
     if (btn.title !== tip) btn.title = tip;
   }
-  for (const t of TIER_LIST) {
+  for (const t of TIER_IDS) {
     setField(panel, `tax-min-${t}`, `${tierTaxPerMinute(world, t)} / min`);
     const lockEl = panel.querySelector<HTMLElement>(`[data-field="tax-lock-${t}"]`);
     const text = taxLockText(world, t);

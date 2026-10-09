@@ -291,7 +291,7 @@ export function placementHint(
     const d = houseDiagnosis(world, b)[0];
     return {
       tone: 'info',
-      text: `${name} — ${TIERS[b.house.tier].name} · ${d ? diagnosisText(d) : 'versorgt'}`,
+      text: `${name} — ${TIERS[b.house.tier].name} · ${d ? diagnosisText(d) : 'zufrieden'}`,
     };
   }
   return { tone: 'info', text: `${name} · ${stateText(b, world.tick)}` };
