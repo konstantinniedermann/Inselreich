@@ -8,7 +8,9 @@ Dominanz §5, Umschalt-Ausbeute §5 D, Herleitung Anhang A), Ruling **R412** (Ga
 Empfehlung, Wertänderung Kaufleute «hoch» 115 % freigegeben), [Hauptspec](2026-09-29-inselreich-design.md).
 Code-Stand der Prüfung: `main` 89ece7c.
 
-Anhang: [01 Rechenbeispiele und Erwartungswerte](2026-10-09-steuer-je-stufe-design/anhang-01-rechenbeispiele.md).
+Anhang: [01 Rechenbeispiele und Erwartungswerte](2026-10-09-steuer-je-stufe-design/anhang-01-rechenbeispiele.md),
+[02 Gate-Auflagen R414](2026-10-09-steuer-je-stufe-design/anhang-02-gate-auflagen.md) (ergänzt die Spec, geht bei
+Widerspruch vor).
 
 Kennzeichnung: **Setzung Spec** (in dieser Spec ergänzt, im Vorschlag nicht festgelegt), **[Tech]**
 (Umsetzungsdetail; lead-tech entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest).
@@ -327,6 +329,9 @@ keinen Chronik-Eintrag.
 
 ## 8. Abnahmekriterien
 
+Ergänzungen aus R414 (AK-T13–T15, T17–T21, T23, T24, T29–T33, T36, neu AK-T42): [Anhang 02](2026-10-09-steuer-je-stufe-design/anhang-02-gate-auflagen.md);
+er geht bei Widerspruch vor.
+
 ### 8.1 Vitest Sim
 
 Neue Datei `tests/sim/taxTiers.test.ts`, sofern nicht anders genannt. Testwelten mit `createWorld(3, { unlockAll:
@@ -479,9 +484,9 @@ Screenshots unter `.studio/qa/steuer-je-stufe/`, Dateiname `<ak>-<breite>x<höhe
 
 Keine offenen Designfragen; O1–O5 sind mit R412 entschieden. Für Plan und Gate Spec markiert:
 
-- **P-1 Versionsnummer** (R8.5): lead-tech prüft beim Planen, ob E6 schon v10 belegt.
-- **P-2 Grund mit Stufe** (U-9, U-11): Die Sim-Gründe `'Sperrzeit'` und `'Steuer zu hoch'` bleiben wörtlich, damit
-  Bestandstests und Hinweis-Muster gelten; lead-tech wählt den Weg, wie die UI die Stufe erfährt.
+- **P-1 Versionsnummer** — entschieden (R414): Save v10 fest, R8.5 nur Notfallregel (Anhang 02 P-1).
+- **P-2 Grund mit Stufe** — entschieden (R414): Sim-Gründe wörtlich, `ReasonCtx.tier?`, `taxChangeSet` (Anhang 02
+  P-2, AK-T42).
 - **P-3 Feinwert nach Playtest:** 115 % liegt knapp an der Schwelle (Vorschlag §10); nachstellbar nur über
   `pctByTier` (110 % → g\* 15,4; 120 % → g\* 8,8, dann dominiert «hoch» wieder). Jede Änderung braucht ein Ruling.
 
