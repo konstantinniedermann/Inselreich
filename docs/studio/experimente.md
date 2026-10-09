@@ -470,11 +470,12 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R392 (Vorlagenzeile ohne Experimentplatz wie E-043/E-047; die Messgrösse gilt als Messauftrag des Coachs, Bewertung nach 3 Paketen)
 - Start: 2026-10-09, Handbuch 1.32
 
-## E-053 · entfallen (Vorbedingung nicht belegt, TOOL-GATES-2) · `zeitreserve` urteilt nach Fremdlast vor dem Lauf
+## E-053 · übernommen als Werkzeug (R394, TOOL-GATES-2b) · `zeitreserve` urteilt nach Fremdlast vor dem Lauf
 
 - Hypothese: Wenn `zeitreserve` `strict` urteilt, sobald die Last vor dem Lauf ≤ 4 ist und die Testsperre (E-051) gehalten wird, statt `max(loadStart, loadEnd) ≤ 4` zu verlangen, wird die Messung am Push-Gate auf ruhigem Rechner belastbar, ohne dass rote CI-Läufe wegen Zeittests zunehmen (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B10; R385 (3): Start 2,8 → Ende 9,8; `tools/zeitreserve/reporter.ts:54`, `rule.ts:116`).
 - Vorbedingung: lead-tech belegt, dass Faktor 4 und Runner ×3 (E-043) aus vollen Läufen mit Eigenlast kalibriert sind; sonst entfällt der Vorschlag.
 - Beleg (TOOL-GATES-2): nicht belegbar, Vorschlag entfällt. Faktor 4 stammt aus Einzeltests (R302: 2 s lokal, 8,1 s Runner; H-T4: 4,97 s), Faktor 3 aus Retro session-191cc1e4 und E-043 (Commit afb14a8, 2026-10-08 13:11). Die Last wird erst seit c69938d (R353, 18:54) mitgemessen; für beide Faktoren gibt es keine Lastangabe und keinen Beleg für volle Läufe mit Eigenlast. Ein Datenpunkt (Retro prozess-rel08) liegt bei 1,8.
+- Entscheid (R394): Vitest lastet die 10 Kerne selbst aus, `loadMax ≤ 4` ist mit vollem Lauf nicht erreichbar (Start 2,7 → Ende 10,3). Die Faktoren stammen aus Einzeltests ohne Eigenlast, Messungen unter Eigenlast überschätzen die Runner-Zeit: Fehlalarme möglich, verpasste Regressionen nicht (Einzellauf bei ruhiger Last klärt, R391); die Vorbedingung gilt damit als erfüllt (R393 hatte sie zu eng gelesen).
 - Messgrösse: 0 Urteile `unreliable` in den nächsten 3 Push-Gates mit `loadStart ≤ 4`. Gegenprobe: Messauftrag E-043 (0 rote CI-Läufe wegen `zeitreserve` in 3 Pushes mit Zeittest-Änderung).
 - Messbarkeit: `loadStart`, `loadEnd` und `loadMax` bleiben in der Ausgabe; die alte Regel bleibt je Lauf nachrechenbar.
 - Zeitraum: 3 Push-Gates, höchstens bis 2026-11-19.
