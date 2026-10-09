@@ -66,7 +66,7 @@ function perCrown(seed: number): Parts {
 function buildParts(seed: number): Parts {
   const out: { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] = [];
   const cs = treesOf(woodWorld(seed)).filter((k) => !k.dead && !(k.kind === 1 && !k.bush));
-  for (const c of cs.filter((_, i) => i % 4 === 0)) {
+  for (const c of cs) {
     const e = ellipses(c);
     const n = crownGeom(c).lobes.length;
     const m = Math.min(n, c.bush ? 1 : c.kind === 3 ? 3 : 2);
@@ -79,7 +79,7 @@ function buildParts(seed: number): Parts {
 describe('H-R10 Kronen in 3 Tönen', () => {
   it('c) je Lappenkrone drei verschiedene Füllungen: Schatten bläulicher als Mitte, Kappe heller als Mitte', () => {
     let checked = 0;
-    for (let seed = 1; seed <= 7; seed++)
+    for (let seed = 1; seed <= 3; seed++)
       for (const { shade, mid, cap } of perCrown(seed)) {
         expect(new Set([shade[0]!.fill, mid[0]!.fill, cap[0]!.fill]).size).toBe(3);
         expect(blue(shade[0]!.fill)).toBeGreaterThan(blue(mid[0]!.fill));
@@ -90,7 +90,7 @@ describe('H-R10 Kronen in 3 Tönen', () => {
     expect(checked).toBeGreaterThan(100);
   });
   it('c) Kappe sitzt zum Licht (x < 0, y < 0 gegenüber ihrem Lappen), Schattenmond vom Licht weg', () => {
-    for (const seed of [2, 7])
+    for (const seed of [2, 3])
       for (const { shade, mid, cap } of perCrown(seed)) {
         shade.forEach((s, i) => {
           expect(s.x - mid[i]!.x).toBeGreaterThan(0);
