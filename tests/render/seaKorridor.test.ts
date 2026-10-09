@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { deserialize, serialize } from '../../src/sim/save';
 import { seaRoute } from '../../src/sim/seaRoute';
 import { createWorld, home } from '../../src/sim/world';
 import {
@@ -8,6 +9,7 @@ import {
   seaClearance,
   seaPlan,
   seaPlanKeepOut,
+  seaElementTiles,
 } from '../../src/render/decor';
 import { seaTintFor } from '../../src/render/seaFields';
 
@@ -160,9 +162,7 @@ describe('SEE-F1-KORRIDOR K2', () => {
       for (const pad of [0, 1])
         for (let y = 0; y < isl.height; y += 2)
           for (let x = 0; x < isl.width; x += 2) {
-            const d = Math.min(
-              ...(ctx.routes ?? []).map((r) => distToPolyline(x + 0.5, y + 0.5, r)),
-            );
+            const d = Math.min(...ctx.routes.map((r) => distToPolyline(x + 0.5, y + 0.5, r)));
             const expected = seaKeepOut(ctx, x, y, pad) || d < SEA_LANE_GAP + pad;
             expect(seaPlanKeepOut(ctx, x, y, pad)).toBe(expected);
             if (d < SEA_LANE_GAP + pad) {
@@ -183,8 +183,8 @@ describe('SEE-F1-KORRIDOR K2', () => {
     const w = createWorld(7);
     const before = JSON.stringify(allRoutes(w));
     const ctx = seaContext(w);
-    for (const r of ctx.routes ?? []) for (const q of r) q.x += 50;
-    ctx.routes?.splice(0);
+    for (const r of ctx.routes) for (const q of r) q.x += 50;
+    ctx.routes.splice(0);
     expect(JSON.stringify(allRoutes(w))).toBe(before);
     expect(JSON.stringify(seaRoute(w.islands, 0, 1))).toBe(
       JSON.stringify(seaRoute(w.islands, 0, 1)),
@@ -194,11 +194,67 @@ describe('SEE-F1-KORRIDOR K2', () => {
   it('AK-K2 Punktreihenfolge der Route aendert die Sperrmenge nicht', () => {
     const w = worldOf(3);
     const ctx = seaContext(w);
-    const rev = { ...ctx, routes: (ctx.routes ?? []).map((r) => [...r].reverse()) };
+    const rev = { ...ctx, routes: ctx.routes.map((r) => [...r].reverse()) };
     const isl = home(w);
     for (let y = 0; y < isl.height; y += 2)
       for (let x = 0; x < isl.width; x += 2)
         for (const pad of [0, 1])
           expect(seaPlanKeepOut(rev, x, y, pad)).toBe(seaPlanKeepOut(ctx, x, y, pad));
+  });
+});
+
+const key = (p: { x: number; y: number }): string => `${p.x},${p.y}`;
+const flaechen = (plan: ReturnType<typeof seaPlan>): string =>
+  JSON.stringify({ s: plan.sandbanks, r: plan.reefs, k: plan.kelp });
+
+describe('SEE-F1-KORRIDOR K3 seaPlan Zwei-Durchgang', () => {
+  it('AK-K3 Elemente halten seaPlanKeepOut ein, meiden Flaechenkacheln samt Rand und halten Abstand >= 3', () => {
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const w = worldOf(seed);
+      const ctx = seaContext(w);
+      const plan = seaPlan(seed, home(w), ctx);
+      const area = new Set<string>();
+      for (const a of [...plan.sandbanks, ...plan.reefs, ...plan.kelp])
+        for (const t of a.tiles)
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) area.add(key({ x: t.x + dx, y: t.y + dy }));
+      const els = seaElementTiles(plan).filter((e) => ['wreck', 'rock', 'islet'].includes(e.kind));
+      els.forEach((e, i) => {
+        n++;
+        const pad = e.kind === 'wreck' ? 0.5 : e.kind === 'islet' ? 1 : 0;
+        expect(seaPlanKeepOut(ctx, e.x, e.y, pad), `Seed ${seed} ${e.kind}`).toBe(false);
+        expect(area.has(key(e)), `Seed ${seed} ${e.kind} auf Flaeche`).toBe(false);
+        for (const f of els.slice(i + 1))
+          expect(
+            Math.max(Math.abs(e.x - f.x), Math.abs(e.y - f.y)),
+            `Seed ${seed}`,
+          ).toBeGreaterThanOrEqual(3);
+      });
+    }
+    expect(n).toBeGreaterThan(200);
+  });
+
+  it('AK-K3 Flaechen sind unabhaengig von den Routen (seaPlan mit routes=[] gleich) und seaTintFor bleibt gleich', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const w = createWorld(seed);
+      const ctx = seaContext(w);
+      const full = seaPlan(seed, home(w), ctx);
+      const bare = { ...ctx, routes: [] };
+      const other = createWorld(seed);
+      const plan0 = seaPlan(seed, home(other), bare);
+      expect(flaechen(plan0), `Seed ${seed}`).toBe(flaechen(full));
+    }
+  });
+
+  it('AK-K3 Speichern -> Laden und kalter Cache geben denselben Plan', () => {
+    for (const seed of [3, 7, 21]) {
+      const w = worldOf(seed);
+      const plan = seaPlan(seed, home(w), seaContext(w));
+      const r = deserialize(serialize(w));
+      if (!r.ok) throw new Error(r.reason);
+      const plan2 = seaPlan(seed, home(r.world), seaContext(r.world));
+      expect(JSON.stringify(plan2)).toBe(JSON.stringify(plan));
+    }
   });
 });

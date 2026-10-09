@@ -964,7 +964,7 @@ export interface SeaContext {
    * Alle Wasserrouten der Welt (`seaRoute` für jedes Paar a < b, wie `routeFar` in `fauna.ts`) als Kopien in Heimat-Kacheln.
    * Nur für `seaPlanKeepOut` (Platzierung von Wrack, Eiland, Felsen); die Tönung (`seaClearance`) kennt sie nicht (R367).
    */
-  routes?: Pos[][];
+  routes: Pos[][];
 }
 export interface KontorRect {
   x: number;
@@ -1046,7 +1046,7 @@ export function seaPlanKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): 
   const cx = x + 0.5,
     cy = y + 0.5,
     gap = SEA_LANE_GAP + pad;
-  for (const r of ctx.routes ?? [])
+  for (const r of ctx.routes)
     for (let i = 1; i < r.length; i++) if (distToSeg(cx, cy, r[i - 1]!, r[i]!) < gap) return true;
   return false;
 }
@@ -1252,8 +1252,6 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
     plan.rocks.push({ x: c.x, y: c.y, needle: false });
     claim(c.x, c.y, 2);
   }
-  if (plan.rocks.length && hash2(seed + 567, -1, -1) < NEEDLE_P)
-    plan.rocks[Math.floor(hash2(seed + 567, -2, -2) * plan.rocks.length)]!.needle = true;
 
   // Flächen: wachsen aus einem Startpunkt über 4er-Nachbarn; jede Kachel prüft R4 und Belegung
   const grow = (
@@ -1320,6 +1318,62 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
   plan.reefs = areas(1, 6, 3, 4, 4, 9, true); // E2: Streifen im Mittelwasser, dicht an einer Tiefenlinie
   plan.sandbanks = areas(0, 6, 1, SEA_SHALLOW_MAX, 3, 8, false); // D11: Flachwasser
   plan.kelp = areas(2, 6, 1, SEA_SHALLOW_MAX, 4, 9, false, (i) => mtn[i]! <= 5); // E6: Flachwasser vor Felsküste
+
+  // Durchgang B: endgültige Positionen von Wrack, Eiland, Felsen mit `seaPlanKeepOut` (Routen) neu wählen. Gleiche Rang-Hashes,
+  // Salze und Zählregeln; sie meiden die Flächenkacheln samt Rand und halten Abstand ≥ 3. Findet B nichts, entfällt das
+  // Element (kein Rückfall auf die Position aus A). Keine Rückwirkung auf die Flächen.
+  const free = new Uint8Array(w * h);
+  const claimB = (x: number, y: number, r: number): void => {
+    for (let dy = -r; dy <= r; dy++)
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = x + dx,
+          ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h) free[ny * w + nx] = 1;
+      }
+  };
+  for (const a of [...plan.sandbanks, ...plan.reefs, ...plan.kelp])
+    for (const t of a.tiles) claimB(t.x, t.y, 1);
+  const rankedB = (salt: number, k: number, lo: number, hi: number, pad = 0): Pos[] => {
+    const c: { x: number; y: number; r: number }[] = [];
+    for (let y = 2; y < h - 2; y++)
+      for (let x = 2; x < w - 2; x++) {
+        const i = y * w + x;
+        if (
+          sea[i] &&
+          !free[i] &&
+          shore[i]! >= lo &&
+          shore[i]! <= hi &&
+          !seaPlanKeepOut(ctx, x, y, pad)
+        )
+          c.push({ x, y, r: hash2(seed + salt, x + 100 * k, y) });
+      }
+    return c.sort((a, b) => a.r - b.r);
+  };
+  plan.wreck = null;
+  plan.islet = null;
+  plan.rocks = [];
+  if (hash2(seed + 566, 0, 0) < WRECK_P) {
+    const c = rankedB(566, 1, 1, 5, SEA_PAD.wreck)[0];
+    if (c) {
+      plan.wreck = { x: c.x, y: c.y };
+      claimB(c.x, c.y, 2);
+    }
+  }
+  if (hash2(seed + 568, 0, 0) < ISLET_P) {
+    const c = rankedB(568, 2, 4, SEA_MID_MAX, SEA_PAD.islet)[0];
+    if (c) {
+      plan.islet = { x: c.x, y: c.y };
+      claimB(c.x, c.y, 2);
+    }
+  }
+  for (const c of rankedB(567, 3, 1, 5)) {
+    if (plan.rocks.length >= nRocks) break;
+    if (free[c.y * w + c.x]) continue;
+    plan.rocks.push({ x: c.x, y: c.y, needle: false });
+    claimB(c.x, c.y, 2);
+  }
+  if (plan.rocks.length && hash2(seed + 567, -1, -1) < NEEDLE_P)
+    plan.rocks[Math.floor(hash2(seed + 567, -2, -2) * plan.rocks.length)]!.needle = true;
   seaPlans.set(isl, { seed, key, plan });
   return plan;
 }

@@ -1216,6 +1216,7 @@ describe('L5 Meer-Plan und R4', () => {
       anchor: { x: 10.5, y: 10.5 },
       kontors: [{ x: 40, y: 40, w: 2, h: 2 }],
       live: [{ x: 40, y: 40, w: 2, h: 2 }],
+      routes: [],
     };
     expect(seaKeepOut(ctx, 12, 30)).toBe(true); // 2 Kacheln neben der Lane
     expect(seaKeepOut(ctx, 8, 30)).toBe(true); // 2 Kacheln links
