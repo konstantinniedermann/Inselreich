@@ -3618,3 +3618,16 @@ im Bericht; `make check` im Worktree grün. +15 Tools (Gesamt 220). An die Retro
 Tests, nicht bestehende, die das Paket verlangsamt.
 
 Entscheider: L0 · Anlass: Bericht Integrator · ADR: —
+
+## R389 · 2026-10-09 · REL-10 komplett in main; Release-Check und Push-Gate-Vorarbeit parallel
+
+Ruling: REL-10 = main @ c367f9c (ART-L8-SELTEN, UI-KAMERA-KLEMMUNG, SEE-F1-KORRIDOR; Werkzeug TOOL-TESTLOCK,
+FIX-TESTLOCK-RACE), `make check` grün (2664). Parallel: (1) **Release-Check REL-10** — Browser-Lauf (Smoke + je Paket
+ein Abschnitt) und `opus`-Review über `origin/main..main`; dazu die **Blindprobe Meeresfels** (R381, E-018): ein Rater
+bekommt zwei Ausschnitte bei Zoom 0,5 (Fels, Boot) ohne Beschriftung, urteilt schriftlich, erst danach Vergleich.
+(2) **FIX-ZEITRESERVE-REL10** (lead-tech, 25 Tools): `tests/render/trees-licht.test.ts` „H-R10 Kronen in 3 Tönen c)“
+(976 ms lokal, Runner ≈ 2,9 s) und `tests/tools/testlock.test.ts` „genau einer gewinnt“ (4,1 s × 4 gegen 30 s) so
+bereinigen, dass das Push-Gate (Faktor 4 und Runner ×3) bei ruhiger Last 0 meldet — zuerst billiger machen, sonst
+hergeleitete Timeouts wie R328; Aussage unverändert. Push erst in der nächsten Session (R335).
+
+Entscheider: L0 · Anlass: Merge SEE-F1-KORRIDOR · ADR: —
