@@ -16,7 +16,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
 Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
-E-050, E-049, E-044.
+E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044.
 
 ---
 
@@ -346,6 +346,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: erst nach Bewertung von E-037 (getrennte Wirkung); frühestens 2026-10-22 (E-027-Stichtag), spätestens beim nächsten freien Platz. Die Regel 1.25 „Ein-Umsetzer-Pakete“ gilt bereits; die Messung beginnt erst mit dem Start. Reihenfolge der Plätze: E-037, E-042, danach E-038 (R319).
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V1): Die Modelltabelle sieht sonnet für Controller, lead-qa-Gate-Urteile, lead-production und Kurz-Retro schon vor; in fb37ceac liefen 10 von 13 Lead-/Coach-Starts trotzdem auf opus. Mechanik neu: (a) `metriken/richtwerte.md` Spalte „Modell“ → „gemessen auf“; (b) Werkzeug TOOL-MODELL-GUARD prüft typisierte Persona-Starts gegen das Frontmatter (opus nur mit Tabellen-Ausnahme in der Kopfzeile `Modell:`), Ampelzeile zählt sie mit. Messgrösse zusätzlich: Starts über der Tabelle ≤ 1 je Session (Ausgang 10). Der Stichtag 2026-10-22 entfällt (E-027 abgeschlossen, R350). Status bis zum Ruling unverändert.
 - Start: 2026-10-09 (R420, Handbuch 1.36); der Stichtag 2026-10-22 entfällt. Werkzeug-Paket TOOL-MODELL-GUARD folgt; bis dahin zählt die Messung die Starts per Hand aus den Spawn-Events. Das Einsatzmodell bestimmt die Modelltabelle in STUDIO.md, nicht die Spalte in `richtwerte.md`.
+- Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B3): 0 von 40 Starts über der Tabelle (Ausgang 10 von 13); opus-Anteil 68,4 % (Schwelle ≤ 60 % verfehlt); Gegenprobe Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` ab Merge im Modus `warn`, die Wirkung kommt bisher von der Kopfzeile. Weiter beobachten.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
@@ -450,6 +451,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R410 (V3): startet, sobald E-046 bewertet ist (spätestens 2026-11-12; Hebel nach R316)
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V2): Der Namensfilter trifft in fb37ceac keine Instanz (alle Lead-Pakete heissen `I-028`, `REL-…`, `BEOB-…`). Herausgerechnet werden stattdessen Lead-Instanzen mit „Budget: keins“ in der Briefing-Kopfzeile (`prompt_head` im `spawn`-Event): 7 von 12, bereinigt ≈ 39–45 % gegen roh 58,8 %. Gegenprobe neu: roh = bereinigt + herausgerechnete Lead-Instanzen. Status bis zum Ruling unverändert.
 - Start: 2026-10-09 (R420, Handbuch 1.36): Bereinigung nach der Briefing-Zeile „Budget: keins“ statt nach Paketname; Gegenprobe roh = bereinigt + herausgerechnete Lead-Instanzen. Umsetzung in `efficiency.py` als eigenes Werkzeug-Paket.
+- Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2): roh 71,7 %, bereinigt 69,6 %, herausgerechnet 2,0 Punkte (2 von 14 Lead-Instanzen); Gegenprobe roh = bereinigt + herausgerechnet erfüllt. Der Filter trifft die Plan-Instanzen (35,4 %) nicht. Anpassung vorgeschlagen (Retro V2): Klassen und Bereinigung nach Freigabephase `plan-*`, `design-*`, `gate-*` plus „Budget: keins“; Ausgang bereinigt ≈ 30 %. Status bis zum Ruling unverändert.
 
 ## E-050 · laufend · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
@@ -461,6 +463,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
 - Ruling: –
 - Ruling: R420 (Start 2026-10-09, Handbuch 1.36)
+- Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md)): 0 Umsetzer-Neuschreibungen > 20k in 8 Umsetzer-Instanzen (Schwelle ≤ 0,2 erfüllt); Gegenprobe Review-Runden 1,00 erfüllt. Einschränkung: kurze Läufe (Kontext Mittel 38k) lassen die 40k-Schwelle kaum greifen; Fix-Runde T07 lief als frische Instanz.
 
 ## E-051 · übernommen als Werkzeug (R375, R380) · Werkzeug-Riegel für volle Testläufe
 
@@ -495,4 +498,14 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Push-Gates, höchstens bis 2026-11-19.
 - Rückfall: `git revert` der Änderung in `tools/zeitreserve/`.
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/reporter.ts`, `tests/tools/` (Paket lead-tech, ≈ 15 Tools)
+- Ruling: –
+
+## E-054 · vorgeschlagen (wartet auf Platz) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
+
+- Hypothese: Wenn Pläne für Stufe-leicht-Häppchen und Werkzeug-Bündel (kein Architekturentscheid, kein Save, kein neuer Spielwert) von `lead-tech` auf sonnet statt opus geschrieben werden, sinkt das Kostengewicht der Plan-Instanz um den Modellfaktor (0,6), ohne dass die Gate-Plan-Befunde zunehmen (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2; Ausgang `REL-14-PLAN` 1,38 M, `TOOL-BUENDEL` 2,01 M, zusammen 35,4 % der Session).
+- Messgrösse: Kostengewicht je Plan-Instanz ≤ 60 % des Ausgangs bei vergleichbarem Umfang und Steuerungsanteil bereinigt (E-049) ≤ 40 % über 3 Pläne; Gegenprobe: Gate-Plan-Befunde je Plan nicht über Ausgang (REL-14: 5, Bündel: 12, alle nicht blockierend) und 0 blockierende, Review-Runden im Mittel ≤ 2, Erstabnahme nicht unter 90 %.
+- Messbarkeit: `lead_stats.rows` und die Gate-Rulings bleiben unverändert lesbar.
+- Zeitraum: 3 Pläne, höchstens bis 2026-11-19; Start erst bei freiem Platz.
+- Rückfall: Modelltabelle (Zeile „Tech-Lead beim Plan“) und `lead-tech.md` auf die Fassung vor der Änderung.
+- Dateien: `docs/studio/STUDIO.md` (Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: –
