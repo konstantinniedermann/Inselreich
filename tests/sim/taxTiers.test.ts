@@ -268,7 +268,7 @@ describe('AK-T12 Gründe von setTierTaxLevel', () => {
   it('ungültige Stufe oder Stufenname', () => {
     const w = hallWorld();
     for (const t of [0, 5, 2.5])
-      expect(setTierTaxLevel(w, t, 'high').reason).toBe('Ungültige Stufe');
+      expect(setTierTaxLevel(w, t, 'high')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
     expect(setTierTaxLevel(w, 2, 'x')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
     expect(setTaxLevel(w, 'x')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
   });

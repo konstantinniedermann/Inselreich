@@ -4,6 +4,7 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, footprint, idx, home } from '../../src/sim/world';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { TIER_IDS } from '../../src/sim/defs/tiers';
+import { taxTarget } from '../../src/sim/tax';
 import type {
   Building,
   BuildingDefId,
@@ -266,7 +267,7 @@ const V9_WORLD_KEYS = [
 
 /** Setzt alle vier Steuerregler auf dieselbe Stufe (T1b: über `taxTarget`). */
 export function setAllTax(world: World, level: TaxLevel): void {
-  for (const t of TIER_IDS) world.taxLevels[t] = level;
+  for (const t of TIER_IDS) world.taxLevels[t] = taxTarget(level, t);
 }
 
 /**

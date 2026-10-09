@@ -19,6 +19,7 @@ import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } fro
 import { generateForeignIslands, homeAnchor, laneTicks, type LaneIsland } from './islands';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
+import { canRiseTier, taxTarget } from './tax';
 import { deriveUnlocks } from './unlocks';
 import type {
   BuildingState,
@@ -27,6 +28,8 @@ import type {
   GoodId,
   LoadResult,
   Terrain,
+  TaxLevel,
+  Tier,
   UnlockId,
   World,
 } from './types';
@@ -83,16 +86,19 @@ function isValidOrder(o: unknown, tick: unknown): boolean {
 }
 
 /** Objekt mit genau den Schlüsseln der Bevölkerungsstufen, dessen Werte `ok` erfüllen. */
-const isPerTier = (v: unknown, ok: (x: unknown) => boolean): boolean =>
+const isPerTier = (v: unknown, ok: (x: unknown, tier: Tier) => boolean): boolean =>
   isObject(v) &&
   Object.keys(v).length === TIER_IDS.length &&
-  TIER_IDS.every((t) => Object.hasOwn(v, String(t)) && ok(v[String(t)]));
+  TIER_IDS.every((t) => Object.hasOwn(v, String(t)) && ok(v[String(t)], t));
 
 /** Steuerfelder (v10): Stufe und Sperre je Bevölkerungsstufe. */
 function isValidTaxFields(raw: Record<string, unknown>): boolean {
   return (
-    isPerTier(raw.taxLevels, (l) => typeof l === 'string' && Object.hasOwn(TAX_LEVELS, l)) &&
-    isPerTier(raw.taxLockedUntil, (n) => isInt(n) && n >= 0)
+    isPerTier(
+      raw.taxLevels,
+      (l, t) =>
+        typeof l === 'string' && Object.hasOwn(TAX_LEVELS, l) && !(l === 'low' && !canRiseTier(t)),
+    ) && isPerTier(raw.taxLockedUntil, (n) => isInt(n) && n >= 0)
   );
 }
 
@@ -118,12 +124,16 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
 }
 
 /**
- * v9 → v10: ein Steuerregler wird zu vier (je Bevölkerungsstufe). Wirft nie; ungültige Werte werden
- * unverändert übernommen, die Ladeprüfung weist sie ab.
+ * v9 → v10: ein Steuerregler wird zu vier (je Bevölkerungsstufe); «niedrig» wird für Stufen ohne Aufstieg
+ * zu «normal» (`taxTarget`). Wirft nie; ungültige Werte werden unverändert übernommen, die Ladeprüfung weist
+ * sie ab. Nicht idempotent: ein zweiter Aufruf findet kein `taxLevel` mehr, läuft aber über das schon
+ * verteilte `taxLockedUntil` erneut und macht daraus Objekte in Objekten; er gehört nur zur Kette v9 → v10.
  */
 export function migrateV9ToV10(raw: Record<string, unknown>): void {
   if ('taxLevel' in raw) {
-    raw.taxLevels = Object.fromEntries(TIER_IDS.map((t) => [t, raw.taxLevel]));
+    raw.taxLevels = Object.fromEntries(
+      TIER_IDS.map((t) => [t, taxTarget(raw.taxLevel as TaxLevel, t)]),
+    );
     delete raw.taxLevel;
   }
   if ('taxLockedUntil' in raw) {

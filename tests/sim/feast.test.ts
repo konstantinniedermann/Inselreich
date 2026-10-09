@@ -416,6 +416,7 @@ describe('AK-T14 + QA-a Fest je Steuerstufe (I-028 R7.3)', () => {
   it('kein Haus im Radius und alle hoch: ok', () => {
     setup();
     expect(demolish(w, house.id).ok).toBe(true);
+    chapel.connected = true; // der Abriss berechnet die Anbindung neu
     setAllTax(w, 'high');
     expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
   });

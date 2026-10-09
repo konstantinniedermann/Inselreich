@@ -33,10 +33,10 @@ import {
   serialize,
 } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import { setTierTaxLevel } from '../../src/sim/tax';
+import { setTierTaxLevel, taxTarget } from '../../src/sim/tax';
 import { taxPct, townhallActive } from '../../src/sim/townhall';
 import { taxBaseByTier, taxUnits, tierCap } from '../../src/sim/population';
-import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
+import type { Building, BuildingDefId, Island, TaxLevel, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, home } from '../../src/sim/world';
 import { fixtureV6Run, locksV6Run, normalRunTo } from './fixtureV6';
@@ -108,6 +108,10 @@ const withTileIsland = (c: unknown): unknown => {
 
 /** Derselbe Wert für alle vier Bevölkerungsstufen (Steuerfelder ab v10). */
 const allTiers = (v: unknown): Record<string, unknown> => ({ 1: v, 2: v, 3: v, 4: v });
+
+/** Regler nach der Kette v9 → v10: «niedrig» gilt nicht für Stufen ohne Aufstieg (I-028 T1b, R4 und `taxTarget`). */
+const tiersFromV9 = (v: unknown): Record<string, unknown> =>
+  Object.fromEntries(TIER_IDS.map((t) => [t, taxTarget(v as TaxLevel, t)]));
 
 /** Wert eines alten Feldes nach der Migration: `sellPct` bekommt Gewürz 100, `crisis` das Insel-`tile`. */
 const expectedV9 = (key: string, old: unknown): unknown =>
@@ -416,7 +420,7 @@ describe('M6 Save v3', () => {
     expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0, spice: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
-    expect(loaded.taxLevels).toEqual(allTiers(before.taxLevel));
+    expect(loaded.taxLevels).toEqual(tiersFromV9(before.taxLevel));
     expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100, spice: 100 });
     expect(loaded.order).toEqual(before.order);
     expect(before.order).not.toBeNull();
@@ -575,7 +579,7 @@ describe('M8 Save v4', () => {
     expect(home(loaded).stock).toEqual({ ...before.stock, glass: 0, spice: 0 });
     expect(loaded.money).toBe(before.money);
     expect(loaded.tick).toBe(before.tick);
-    expect(loaded.taxLevels).toEqual(allTiers(before.taxLevel));
+    expect(loaded.taxLevels).toEqual(tiersFromV9(before.taxLevel));
     expect(loaded.sellPct).toEqual({ ...before.sellPct, glass: 100, spice: 100 });
     expect(loaded.order).toEqual(before.order);
     expect(loaded.crisisLevel).toBe(before.crisisLevel);
@@ -595,7 +599,7 @@ describe('M8 Save v4', () => {
       expect(r.world.crisisLevel).toBe('off');
       expect(r.world.crisis).toBeNull();
       expect(r.world.taxLevels).toEqual(
-        allTiers(before.version === 1 ? 'normal' : before.taxLevel),
+        tiersFromV9(before.version === 1 ? 'normal' : before.taxLevel),
       );
       expect(r.world.order).toEqual(before.version === 1 ? null : before.order);
     }
@@ -2036,6 +2040,7 @@ describe('I-028 Save v10', () => {
       ([1, 2, 3, 4] as const).forEach((t, i) => setHouse(houses[i]!, t, TIERS[t].maxInhabitants));
       placeTownhall(a);
       a.tick = 1000;
+      a.won = true; // Kaufleute-Häuser setzen das erste Ziel voraus
       a.taxLevels = { 1: 'low', 2: 'normal', 3: 'high', 4: 'high' };
       a.taxLockedUntil = { 1: 1300, 2: 0, 3: 900, 4: 0 };
       const r = deserialize(serialize(a));
