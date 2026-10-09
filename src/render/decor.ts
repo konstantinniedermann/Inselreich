@@ -35,7 +35,8 @@ import { meadowWarmth } from './groundDecor';
 //     Salz 598 (L8): Strandkiefern der Kiefernküste (`planPalms`: Zahl, Rang; die Form folgt der Seerichtung). Salz 599: reserviert für L8 (noch frei).
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
-//     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
+//     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements; Wrack, Eiland und Felsen meiden zusätzlich die Schiffsrouten
+//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
 //     NICHT über `RARE_POOL` (Land-Orte), sondern über eigene Lose; `rareBudget` (L8) zählt diese Lose (nicht ihre Eignung) und
 //     senkt die Land-Kappe von `planRare` auf `RARE_CAP − Meer-Lose`; das Budget hängt nie von `SeaContext` ab.
 
@@ -1186,6 +1187,11 @@ function seaMask(cls: Uint8Array, w: number, h: number): Uint8Array {
  * Meer-Plan der Heimat (statisch, D1): Wrack (E1), Meeresfelsen (E3, selten Felsnadel), Felseiland (E8) und die Flächen
  * Sandbank (D11), Riff (E2), Seetang (E6). Nur Gelände, Seed und `SeaContext`; jede Kachel besteht `seaKeepOut` (R4), kein Element
  * überlappt ein anderes (Punkt-Elemente halten Abstand ≥ 3, Flächen belegen ihre Kacheln samt Rand). Einmal je Insel gehalten.
+ *
+ * Zwei Durchgänge (SEE-F1-KORRIDOR): A setzt Wrack, Eiland und Felsen gegen die Geraden (`seaKeepOut`) und baut daraus die Flächen
+ * (bitgleich zu vor der Routen-Freihaltung, damit die Tönung der Heimat nicht von Fremdinseln abhängt, R367). B wählt die
+ * endgültigen Positionen von Wrack, Eiland, Felsen und Nadel mit `seaPlanKeepOut` (auch Abstand zu `ctx.routes`) neu, meidet
+ * Flächenkacheln samt Rand und hält Abstand ≥ 3; findet B nichts, entfällt das Element. B wirkt nicht auf die Flächen zurück.
  */
 export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPlan {
   const key = ctxKey(ctx);
