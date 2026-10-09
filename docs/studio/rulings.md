@@ -4046,3 +4046,18 @@ Testläufen des Werkzeug-Bündels. Ablauf nach Handbuch 1.36 durch `lead-product
 Push der nächsten Session. Das Werkzeug-Bündel startet erst nach grünem Push-Gate.
 
 Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R422 · 2026-10-09 · Auswahl REL-14 (Stufe leicht); Werkzeug-Bündel planen
+
+Ruling: **REL-14** = drei Häppchen aus BEOB-AUSW-03 nach der Empfehlung dort: **UI-INSPEKTOR-KLARTEXT** (lead-tech),
+**SIM-FEST-INSEL** (lead-tech; UI-INSELFILTER nicht dazu, eigener Scope), **ART-FELS-FERNGROESSE** (Designurteil lead-art,
+Umsetzung im Art-Strang). Dateien disjunkt (`src/ui/inspect.ts`/`panelView.ts`, `src/sim/feast.ts`,
+`src/render/decorStamps.ts`). Ablauf Stufe leicht: Kurzdesign `lead-design` (opus) für Inspektor und Fest, Urteil `lead-art`
+(opus) zum Fels, danach Plan `lead-tech` (opus), kombiniertes Gate. **Trivial-Fixes** gehen in den REL-14-Strang von
+lead-tech: `.vitest/` in `.gitignore`; arc42 `hud.ts`-Zeile ohne „Steuersperre“ (Sperre bei `taxView.ts`). Das AK-Muster in
+`gates.md` übernimmt der studio-coach im nächsten Handbuch-Minor. **Werkzeug-Bündel** (TOOL-PRETTIER-HOOK inkl.
+Smoke-Etikett, TOOL-MODELL-GUARD, TOOL-STUDIO-HYGIENE, `efficiency.py` auf E-049): Plan `lead-tech` (opus) jetzt; R421 gilt
+für die Umsetzung (erst nach grünem Push-Gate). UI-SEEKARTE-NACHZUG bleibt Kandidat für REL-15. Präzisierung zu R421: Design
+und Plan laufen parallel zum Push, weil sie keine Testläufe auslösen.
+
+Entscheider: L0 · Anlass: Session-Start, Fortsetzung 1–2 · ADR: —
