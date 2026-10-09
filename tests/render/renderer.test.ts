@@ -1173,7 +1173,11 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // verschieben sich (ART-STIL-02 L6).
   // REL-07 (+ L6): Farn auf WALD-02 übertragen, Büschel in der Tiefenfolge der Kronenzellen; HOME_ORDER neu, weil eine
   // Tiefenband-Zelle ohne Krone (Kachel 25/54) nur für zwei Farnbüschel als Wald-Objekt dazukommt (tree332).
-  const HOME_CALLS = { hash: 802371235, length: 19050 };
+  // SEE-F1-KORRIDOR K4 (R367/R369/R377): neu gesetzt (alt 802371235, gleiche Länge 19050). Wrack, Felseiland und Felsen der Heimat
+  // meiden jetzt die Schiffsrouten (`seaContext.routes`, `seaPlanKeepOut`) statt nur der Geraden; ihre Meer-Stempel stehen
+  // anderswo, daher ändern sich `at` und Stempel-Pose im Hash. Flächen (Sandbank, Riff, Tang) und Tönung sind bitgleich
+  // (Pin AK-K1b in seaKorridor.test.ts); HOME_ORDER (Art und Id ohne `at`) bleibt.
+  const HOME_CALLS = { hash: 2887272513, length: 19050 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3471626267, length: 5152 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
@@ -1242,8 +1246,12 @@ describe('M12 E1 Renderer', () => {
     const cam = camFor(world, 1);
     const a = run(world, cam);
     const b = run(homeOnly(world), cam);
-    expect(a.calls).toEqual(b.calls);
-    expect(a.log.events.length).toBe(b.log.events.length);
+    // SEE-F1-KORRIDOR (R367/R369/R377): Wrack, Eiland und Felsen meiden jetzt die Schiffsrouten (`seaContext.routes`), also hängt
+    // ihre Lage von den Fremdinseln ab; ohne Fremdinseln steht ein Meer-Stempel anderswo und verschiebt nur den Ereignisindex
+    // `at` (und die Ereigniszahl). Körper, Luft, Bäume, Schiff und Figuren bleiben gleich und werden ohne `at` verglichen.
+    const noAt = (l: typeof a.calls): unknown[] =>
+      l.map((c) => ({ kind: c.kind, id: c.id, pose: c.pose }));
+    expect(noAt(a.calls)).toEqual(noAt(b.calls));
     expect(renderStats.islandsDrawn).toBe(1);
   });
 
