@@ -3695,3 +3695,14 @@ Push-Gate REL-10 neu. Ad-hoc-Retro zum gescheiterten Integrator-Lauf durch den C
 Vorbedingung zu eng gelesen; Wirkung auf das Push-Gate nicht geprüft).
 
 Entscheider: L0 · Anlass: Integrator PUSH-REL-10 gescheitert · ADR: —
+
+## R395 · 2026-10-09 · TOOL-GATES-2b abgenommen; Ad-hoc-Retro Push-Gate: V1 angenommen, V2 zurückgestellt
+
+Ruling: TOOL-GATES-2b angenommen (`3d5c1af` rot 5/34, `ee1de69` grün 34/34, `84c4773`); `zeitreserve-push` wertet
+`loadStart ≤ 4`. Push-Gate REL-10 startet neu. Retro `docs/studio/retros/2026-10-09-adhoc-pushgate-rel10.md`: (V1)
+Briefing-Vorlage und Abnahme-Checkliste: „Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt,
+dass das abhängige Gate erfüllbar bleibt“ — Umsetzung durch den studio-coach nach dem Push (HEAD bleibt während des
+Gates stabil); Messgrösse 0 Gate-Abbrüche aus entfallenen Werkzeug-Paketen in 5 Push-Gates. (V2) zurückgestellt bis
+zum zweiten Fall. lernen.md-Zeile aus der Retro übernimmt der Coach mit V1.
+
+Entscheider: L0 · Anlass: Gate TOOL-GATES-2b, Ad-hoc-Retro · ADR: —
