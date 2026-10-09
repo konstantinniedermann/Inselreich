@@ -99,8 +99,11 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
       let now: { pid?: number } = {};
       try {
         now = JSON.parse(readFileSync(lockPath, 'utf8'));
-      } catch {
-        /* leer oder weg */
+      } catch (e) {
+        // Sperre weg: nicht löschen. Ein anderer Lauf kann sie jetzt (ohne Wächter) neu anlegen;
+        // unlink würde dessen lebende Sperre treffen (ABA). Der nächste Versuch legt sie selbst an.
+        if ((e as NodeJS.ErrnoException).code === 'ENOENT') return;
+        /* unlesbarer Inhalt: als veraltet behandeln */
       }
       if (now.pid && alive(now.pid)) return; // lebt doch (oder neu): nicht anfassen
       console.error(`testlock: veraltete Sperre (PID ${seen.pid ?? '?'} tot) übernommen.`);
