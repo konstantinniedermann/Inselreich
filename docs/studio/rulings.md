@@ -3794,3 +3794,13 @@ Zoom 0,25 und 0,5 (Release-Check REL-11). An die Session-Retro: Rot-vor-Grün in
 Keepout-Zähler nicht belegt (zweiter Fall nach TOOL-GATES-2 → R395 V2 wird fällig).
 
 Entscheider: L0 · Anlass: Final-Review REL11-RENDER · ADR: —
+
+## R403 · 2026-10-09 · Gate Merge ART-MEERESFELS OK
+
+Ruling: **OK** für `fix/art-meeresfels` @ `600050b` nach der Fix-Runde aus R402: main (`cb760c0`) per Merge geholt,
+arc42-Konflikt mit beiden Zeilen gelöst, `|` in Zeile 222 escaped, Kommentar `farRockGeom` an arc42 angeglichen
+(1,28/1,06); L0-Diffprüfung ohne Befund, `tsc`/`lint` Exit 0, 102/102 gezielte Tests, Konflikt-Probe sauber. Merge
+seriell durch den Integrator. Damit ist der REL-11-Kandidat vollständig in main; Release-Check (Smoke-Skript R368,
+Browser-Lauf mit gemeinsamer Sichtprobe Schiff/Fels bei Zoom 0,25 und 0,5) folgt vor dem Push der nächsten Session.
+
+Entscheider: L0 · Anlass: Fix-Runde ART-MEERESFELS · ADR: —
