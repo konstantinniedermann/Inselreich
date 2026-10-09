@@ -3514,3 +3514,16 @@ Werkzeug: `make check`/`make test`/`zeitreserve-push` brechen bei belegter Sperr
 Merge durch den Integrator; `.worktrees/testlock-probe` ohne `--force` entfernen. Ist ≈ 56 von 55.
 
 Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
+
+## R381 · 2026-10-09 · Gate Merge ART-L8-SELTEN OK; Widerspruch Meeresfels-Urteil
+
+Ruling: **OK** für `feat/l8-selten` @ 617acdc (Strandkiefern an der Kiefernküste, `rareBudget` mit Meer-Losen,
+weniger Lichtungen, Boden-Deko ohne Artwechsel neben Neubau; Quotenlauf Seeds 1–500 bestanden; Bildrunde 1 OK;
+Final-Review `opus` BEDENKEN niedrig, erledigt in 556908f; `make check` grün, `zeitreserve` 0 bei 2646 Tests). Kaltstart
+aus der Handoff-Messung (Median −0,2 %), seither nur ein Kommentar in `src/` geändert — akzeptiert. Abweichung AK5
+(Signaturtest statt Zwei-Kontext-Test) akzeptiert. Budget deutlich überzogen (≈ 240 gegen 170) — an die Retro.
+**Widerspruch:** Release-Check REL-09 (R374) sah den Meeresfels bei Zoom 0,5 als Fels, lead-art sieht ihn als Segelboot.
+Klärung im nächsten Release-Check als Blindprobe (Probe-Bild ohne Kontext, Urteil vor Öffnen der Vergleichsbilder,
+E-018); bis dahin bleibt die Beobachtung offen. Merge durch den Integrator; danach Start SEE-F1-KORRIDOR.
+
+Entscheider: L0 · Anlass: Bericht ART-L8-SELTEN · ADR: —
