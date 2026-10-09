@@ -38,7 +38,7 @@ import { fakeCtx } from './fakeCtx';
 
 /** Die L4-Stempel (Land, Gras); die L5-Stempel (Palme, Meer) haben eigene Tests weiter unten. */
 const KINDS: StampKind[] = ['solitaire', 'orchard', 'menhir', 'ruin'];
-const L5_KINDS: StampKind[] = ['palm', 'wreck', 'seaRock', 'islet'];
+const L5_KINDS: StampKind[] = ['palm', 'wreck', 'seaRock', 'islet', 'shorePine'];
 const ALL_KINDS: StampKind[] = [...KINDS, ...L5_KINDS];
 const lab = (css: string) => rgbToLab(rgbOfCss(css));
 const allDecorItems = (w: World): DecorItem[] =>
@@ -233,6 +233,7 @@ describe('Zeichnen, Zoomschwellen, Schatten', () => {
       wreck: 0.5, // L5 E1 (REL-07: erst ab 0,5)
       seaRock: 0.25, // L5 E3
       islet: 0.5, // L5 E8 (REL-07: erst ab 0,5)
+      shorePine: 0.5, // L8 Strandkiefer
     });
     for (const k of ALL_KINDS)
       for (const zoom of [0.125, 0.25, 0.5, 0.6, 0.75, 1, 2]) {

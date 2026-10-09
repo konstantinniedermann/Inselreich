@@ -28,6 +28,7 @@ export const DECOR_MIN_ZOOM: Record<StampKind, number> = {
   wreck: SEA_ELEMENT_MIN_ZOOM,
   seaRock: 0.25,
   islet: SEA_ELEMENT_MIN_ZOOM,
+  shorePine: 0.5,
 };
 
 /** Töne der Stempel (Mischungen aus `palette.ts`); Test: ΔE2000 ≥ 20 zu den Signalfarben. */
@@ -92,6 +93,7 @@ export const VARIANT_COUNT: Record<StampKind, number> = {
   wreck: 4,
   seaRock: 8,
   islet: 4,
+  shorePine: 4,
 };
 const variantOf = (kind: StampKind, variant: number): number => {
   const n = VARIANT_COUNT[kind];
@@ -212,6 +214,7 @@ export function minStampScale(kind: StampKind, variant: number, zoom: number): n
 export function stampHeight(kind: StampKind, variant: number): number {
   const v = variantOf(kind, variant);
   if (kind === 'palm') return -palmGeom(v >> 2, v & 3).top;
+  if (kind === 'shorePine') return -shorePineGeom(v).top;
   if (kind === 'wreck') return -wreckGeom(v).top;
   if (kind === 'seaRock') return v >= 6 ? NEEDLE_H : Math.max(...rockHeaps(v).map((b) => b.h));
   if (kind === 'islet') return ISLET_H;
@@ -319,6 +322,70 @@ export function palmGeom(shape: number, dir: number): PalmGeom {
   return g;
 }
 const mean = (ps: readonly Pt[]): number => ps.reduce((s, p) => s + p.y, 0) / ps.length;
+
+// ---------- L8: Strandkiefer ----------
+
+const PINE_TRUNK = 13;
+const PINE_CROWN_H = 11;
+export interface ShorePineGeom {
+  crown: Crown;
+  /** Krone: Mittelpunkt (Weltpixel, y nach unten) und halbe Masse; Stammkopf. */
+  cx: number;
+  cy: number;
+  hw: number;
+  hh: number;
+  /** Kleinstes y (negativ = Höhe über dem Boden). */
+  top: number;
+}
+const pineGeoms = new Map<string, ShorePineGeom>();
+/** Strandkiefer: schlanker, zur See geneigter Stamm mit schirmförmiger Pinienkrone (`crownGeom` Art 3 aus `trees.ts`). Rein. */
+export function shorePineGeom(dir: number): ShorePineGeom {
+  const shape = dir & 1;
+  const key = `${dir}`;
+  let g = pineGeoms.get(key);
+  if (g) return g;
+  const s = 0.2 + 0.5 * (shape % 2);
+  const g0 = crownGeom({ kind: 3, r: 0.3, s, bush: false });
+  const r = (0.3 * PINE_CROWN_H) / 2 / g0.hh;
+  const cg = crownGeom({ kind: 3, r, s, bush: false });
+  const crown: Crown = { kind: 3, cx: 0.5, cy: 0.5, r, h: 0, bush: false, s };
+  const lean = LEAN_SIGN[dir & 3]! * (4 + shape);
+  const cy = PINE_TRUNK + cg.hh * 0.6;
+  g = { crown, cx: lean, cy, hw: cg.hw, hh: cg.hh, top: -(cy + cg.hh) };
+  pineGeoms.set(key, g);
+  return g;
+}
+
+function paintShorePine(ctx: CanvasRenderingContext2D, dir: number): void {
+  const g = shorePineGeom(dir),
+    T = DECOR_STAMP_TONES;
+  const so = project(DIR.x * 0.2, DIR.y * 0.2);
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ell(ctx, T.palmShadow, so.x, so.y, 7, 2.8);
+  ctx.restore();
+  // Stamm: unten breit, nach oben schmal, zur See gebogen
+  const top = { x: g.cx, y: -PINE_TRUNK - 2 },
+    c = { x: g.cx * 0.1, y: -PINE_TRUNK * 0.6 };
+  const left: Pt[] = [],
+    right: Pt[] = [];
+  for (let i = 0; i <= 5; i++) {
+    const t = i / 5,
+      m = quadAt({ x: 0, y: 0 }, c, top, t),
+      hw = 2.4 - 1.2 * t;
+    left.push({ x: m.x - hw, y: m.y });
+    right.push({ x: m.x + hw, y: m.y });
+  }
+  poly(ctx, T.trunk, [...left, ...right.slice().reverse()]);
+  poly(ctx, T.palmTrunkShade, [
+    ...left.slice(0, 5),
+    ...left
+      .slice(0, 5)
+      .map((q) => ({ x: q.x + 1.4, y: q.y }))
+      .reverse(),
+  ]);
+  paintCrown(ctx, g.crown, g.cx, -g.cy);
+}
 
 function paintPalm(ctx: CanvasRenderingContext2D, shape: number, dir: number): void {
   const g = palmGeom(shape, dir),
@@ -837,6 +904,7 @@ export function paintDecorStamp(
   if (kind === 'solitaire' || kind === 'orchard') paintTree(ctx, kind, v);
   else if (kind === 'menhir') paintMenhir(ctx, v);
   else if (kind === 'palm') paintPalm(ctx, v >> 2, v & 3);
+  else if (kind === 'shorePine') paintShorePine(ctx, v);
   else if (kind === 'wreck') paintWreck(ctx, v);
   else if (kind === 'seaRock') paintSeaRock(ctx, v);
   else if (kind === 'islet') paintIslet(ctx, v);
