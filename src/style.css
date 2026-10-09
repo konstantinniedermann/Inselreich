@@ -394,14 +394,14 @@ body {
 .needs .ok,
 .reasons .ok {
   color: var(--ink);
-  border-left: 4px solid var(--ok);
+  border-left: 4px solid var(--tone-ok);
   padding-left: 6px;
 }
 .needs .bad,
 .reasons .bad {
   color: var(--ink);
   font-weight: 700;
-  border-left: 4px solid var(--signal-red);
+  border-left: 4px solid var(--tone-bad);
   padding-left: 6px;
 }
 .card .negative {
