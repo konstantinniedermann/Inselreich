@@ -3565,3 +3565,32 @@ Danach `zeitreserve` bei Load ≤ 4 (0 ohne Reserve), Sichtprobe offene See, kur
 und AK-E1-10 stehen in R383.
 
 Entscheider: L0 · Anlass: Mehrbedarf SEE-F1-KORRIDOR · ADR: —
+
+## R385 · 2026-10-09 · KORRIDOR: A/B der langsamen Tests; FIX-TESTLOCK-RACE
+
+Ruling: (1) **SEE-F1-KORRIDOR** +15 frei (Gesamt 195; zweimal rechtzeitig gemeldet). `korridor.mjs` Seeds 1–200: 0 von
+1297 Elementen nahe einer Route; Lane-Test Seeds 1–40 in 18 ms; Sichtprobe offene See OK. Offen: `zeitreserve` meldet
+`waterSea.test.ts`, `wildlife.test.ts`, `decor.test.ts` „R4 Anker und Kontor“ (5,5 s) ohne Reserve. Pflicht: A/B dieser
+drei Dateien gezielt (`npx vitest run <datei>`) auf main und Branch unmittelbar nacheinander bei gleicher Last, Zeiten
+je Test zitieren. Langsamer auf dem Branch → Ursache beheben (Cache/Vorberechnung) oder Seeds 1–40 + Werkzeug wie R384;
+gleich schnell → Altlast, Beobachtung, kein Paket-Blocker. Danach Review (sonnet). Die abschliessende `zeitreserve`-
+Messung bei Load ≤ 4 übernimmt das Push-Gate der nächsten Session. (2) Der rote Lauf von `tests/tools/testlock.test.ts`
+„genau einer gewinnt“ (erhalten 2) ist ein möglicher **echter Wettlauf** in der Sperre, kein blosses Lastartefakt:
+Paket **FIX-TESTLOCK-RACE** (frische lead-tech-Instanz, 30 Tools): Test unter Last reproduzieren (Schleife), Ursache
+belegen, beheben. (3) Beobachtung: `zeitreserve` misst `loadMax` inklusive der vom eigenen Vitest-Lauf erzeugten Last
+(Start 2,8 → Ende 9,8); die Bedingung Last ≤ 4 ist damit auf diesem Rechner nur knapp erreichbar → Kandidat für die
+nächste Retro (Last vor dem Lauf messen, eigene Last abziehen oder Grenze anpassen).
+
+Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
+
+## R386 · 2026-10-09 · SEE-F1-KORRIDOR: Trivial-Fix Testzeiten im Paket, dann Merge
+
+Ruling: A/B (Load 4,8–5,1): `waterSea` Riffschaum main < 500 → Branch ≈ 810 ms, `wildlife` E5 R4-Sperrbereich
+< 500 → ≈ 750 ms (Ursache kalte `seaRoute` + Durchgang B je Welt); `decor` R4 und Lane-Abstand auf Seeds 1–40 gekürzt
+(29/18 ms). Die zwei Mehrzeiten entstehen durch das Paket → **Trivial-Fix im Paket** (Ownership für
+`tests/render/waterSea.test.ts` und `tests/render/wildlife.test.ts` hiermit erteilt): Welten/Pläne in `beforeAll`
+teilen, ≤ 500 ms je Test, Aussage unverändert; +10 Tools (Gesamt 205). Danach Gate Merge **OK** ohne weitere Prüfung
+(Final-Review BEDENKEN ohne Blocker, Nachlauf-Review OK, Korridor 0/265 und 0/1297 über 200 Seeds, Tönungs-Pin
+unverändert, Kaltstart −2,7 %); Merge durch den Integrator mit `make check`, `zeitreserve` belastbar erst am Push-Gate.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
