@@ -72,3 +72,4 @@ Lokal, nicht Teil des Spiels.
 ## Befunde
 
 - [Beobachtungen](beobachtungen.md) — Posteingang für Befunde ausserhalb des Scopes
+- [Beobachtungen-Archiv](beobachtungen-archiv.md) — ausgewertete Altabschnitte des Posteingangs
