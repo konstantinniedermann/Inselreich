@@ -46,6 +46,7 @@ Lokal, nicht Teil des Spiels.
 - [ADR-011 Asset-Pipeline](adr/ADR-011-asset-pipeline.md) — vorgeschlagen
 - [ADR-012 Isometrische Darstellung](adr/ADR-012-isometrische-darstellung.md) — akzeptiert, ersetzt ADR-003
 - [ADR-013 Inselmodell im Weltzustand](adr/ADR-013-inselmodell-im-weltzustand.md) — angenommen
+- [ADR-014 Studio-Riegel ausserhalb des Verfassungs-Guards](adr/ADR-014-studio-riegel.md) — angenommen
 
 ## Specs
 

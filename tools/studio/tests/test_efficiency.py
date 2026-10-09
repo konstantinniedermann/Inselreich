@@ -8,6 +8,7 @@ from unittest import mock
 
 import actions
 import efficiency
+import effort
 import metrics
 
 
@@ -482,6 +483,95 @@ class IdleGapTest(unittest.TestCase):
 
     def test_render_without_data(self):
         self.assertIn("nicht gemessen", efficiency.render_idle([]))
+
+
+class AdjustedControlTest(unittest.TestCase):
+    def build(self, lead_prompts):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        for index, text in enumerate(lead_prompts):
+            agent(
+                root,
+                "s1",
+                f"l{index}",
+                {"agentType": "lead-tech"},
+                [prompt(text), assistant(f"x{index}", "claude-opus-4", out=200)],
+            )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "tech-sim-engineer"},
+            [
+                prompt(
+                    "Persona: tech-sim-engineer\nBudget: keins, keine Agenten starten"
+                ),
+                assistant("w", "claude-sonnet-5", out=500),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"], {})
+
+    def test_budget_keins_lead_is_removed(self):
+        data = self.build(
+            [
+                "Persona: lead-tech\nPaket: P\nModell: opus\nBudget: keins, keine Agenten starten",
+                "Persona: lead-tech\nPaket: Q\nBudget: 4 Starts / Parallelität 2",
+            ]
+        )
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+        self.assertGreater(data["steuerung_heraus"], 0)
+        self.assertLess(data["steuerung_bereinigt"], data["steuerung"])
+        self.assertAlmostEqual(
+            data["steuerung"],
+            data["steuerung_bereinigt"] + data["steuerung_heraus"],
+            places=9,
+        )
+
+    def test_markdown_header_and_case(self):
+        data = self.build(["- **Persona:** lead-tech\n- **Budget:** KEINS"])
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+
+    def test_budget_line_outside_header_block_counts_as_control(self):
+        text = "Persona: lead-tech\n" + "x\n" * 12 + "Budget: keins"
+        data = self.build([text])
+        self.assertEqual(data["steuerung_heraus_n"], 0)
+        self.assertEqual(data["steuerung_bereinigt"], data["steuerung"])
+
+    def test_other_budget_line_and_worker_stay_control(self):
+        # Umsetzer w1 hat in jedem Aufbau „Budget: keins“ und zählt nie mit
+        data = self.build(
+            ["Persona: lead-tech\nBudget: 1 Start (lead-tech, Phase plan-X)"]
+        )
+        self.assertEqual(data["steuerung_heraus_n"], 0)
+
+    def test_lead_rows_carry_flag(self):
+        data = self.build(["Persona: lead-tech\nBudget: keins"])
+        self.assertEqual([r["budget_none"] for r in data["lead_stats"]["rows"]], [True])
+
+    def test_render_line_without_ampel_prefix(self):
+        data = self.build(["Persona: lead-tech\nBudget: keins"])
+        text = efficiency.render_section(data)
+        line = next(x for x in text.splitlines() if "Steuerungsanteil bereinigt" in x)
+        self.assertTrue(line.startswith("- Steuerungsanteil bereinigt (E-049"))
+        self.assertIn("roh = bereinigt + herausgerechnet", line)
+        self.assertIn("Steuerungsanteil (L0 + Leads)", text)  # Rohzeile bleibt
+
+    def test_line_never_creates_ampel_incident(self):
+        data = self.build(["Persona: lead-tech\nBudget: keins"])
+        text = "- erzeugt: 2026-10-09T10:00:00Z\n" + efficiency.render_section(data)
+        self.assertIn("Steuerungsanteil bereinigt", text)  # rot vor der Umsetzung
+        red = text.replace("Bewertung grün", "Bewertung rot").replace(
+            "Bewertung gelb", "Bewertung rot"
+        )
+        keep = [x for x in red.splitlines() if "Steuerungsanteil bereinigt" not in x]
+        with_line = effort.parse_ampel_session("x", red)
+        without = effort.parse_ampel_session("x", "\n".join(keep))
+        self.assertIsNotNone(with_line)
+        self.assertEqual(
+            with_line["red"], without["red"]
+        )  # Zeile ändert die Rot-Menge nie
 
 
 if __name__ == "__main__":

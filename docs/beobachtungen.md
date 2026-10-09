@@ -36,13 +36,14 @@ steht unverändert im [Archiv](beobachtungen-archiv.md).
 
 **Erledigt / überholt**
 
-| Eintrag                                                                   | Beleg                                                                                                                                                                                          |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SEE-F3: „10 px“ gelten für Wrack/Eiland, Schiff hat 16 px                 | im Eintrag selbst als erledigt vermerkt (Merge `fix/see-f3-schiffskontrast`, `cb760c0`)                                                                                                        |
-| Blindprobe ohne Schaumring/Wassertönung, Sichtprobe im echten Spiel fehlt | `tools/render-qa/blindprobe.mjs` zeichnet nur Stempel auf Flächenwasser (belegt); Sichtprobe im Spiel danach im Release-Check REL-11 nachgeholt (`E-fels-z0.25.png`, „keine Boot-Lesart mehr“) |
-| README «hoch»: Kaufleute fehlen in der Belegung                           | `README.md` Steuertabelle, Zeile «hoch»: „Pioniere 3, Siedler 6, Bürger 11, Kaufleute 15“ (I-028, `5174971`)                                                                                   |
-| README: Steuerregler «in der Kopfzeile»                                   | `README.md` „Steuern und Steuerregler“: „stehen im Panel der **Amtsstube**“ (I-028, `5174971`)                                                                                                 |
-| Doku-Commits ohne `make docs-check` (Push-Gate REL-11/12)                 | R417 V2: Werkzeug-Paket TOOL-PRETTIER-HOOK nächste Session, bis dahin Pflichtzeile `make docs-check` im Briefing                                                                               |
+| Eintrag                                                                         | Beleg                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SEE-F3: „10 px“ gelten für Wrack/Eiland, Schiff hat 16 px                       | im Eintrag selbst als erledigt vermerkt (Merge `fix/see-f3-schiffskontrast`, `cb760c0`)                                                                                                        |
+| Blindprobe ohne Schaumring/Wassertönung, Sichtprobe im echten Spiel fehlt       | `tools/render-qa/blindprobe.mjs` zeichnet nur Stempel auf Flächenwasser (belegt); Sichtprobe im Spiel danach im Release-Check REL-11 nachgeholt (`E-fels-z0.25.png`, „keine Boot-Lesart mehr“) |
+| README «hoch»: Kaufleute fehlen in der Belegung                                 | `README.md` Steuertabelle, Zeile «hoch»: „Pioniere 3, Siedler 6, Bürger 11, Kaufleute 15“ (I-028, `5174971`)                                                                                   |
+| README: Steuerregler «in der Kopfzeile»                                         | `README.md` „Steuern und Steuerregler“: „stehen im Panel der **Amtsstube**“ (I-028, `5174971`)                                                                                                 |
+| Doku-Commits ohne `make docs-check` (Push-Gate REL-11/12)                       | R417 V2: Werkzeug-Paket TOOL-PRETTIER-HOOK nächste Session, bis dahin Pflichtzeile `make docs-check` im Briefing                                                                               |
+| Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`, Release-Check REL-13) | erledigt durch TOOL-BUENDEL: `tools/render-qa/saveVersion.mjs` liest die Version aus der Quelle (Commit `39239ba`, R419); der Eintrag in „Offen“ ist ausgetragen                               |
 
 **Trivial-Fix-Kandidaten (L0 entscheidet; nicht umgesetzt)**
 
@@ -54,14 +55,14 @@ steht unverändert im [Archiv](beobachtungen-archiv.md).
 
 **Paket-Kandidaten (L0 entscheidet, Auswahl REL-14)**
 
-| Kandidat                          | Grösse | Inhalt                                                                                                                                                                                                                      | Ursprung                                                | Beleg (gegen `d7291aa`)                                                                                                                                                                                                                   | Owner                                     |
-| --------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| UI-INSPEKTOR-KLARTEXT             | S      | Haus-Inspektor zeigt „Versorgt ✓“ (Radius) neben „Mangel: Nahrung fehlt“ (Gut) und „Fehlt: Nahrung“; Begriffe trennen (z. B. „Im Marktradius“), Doppelzeile zusammenlegen; `TIER_LIST` durch `TIER_IDS` ersetzen            | Release-Check REL-11, Playtest REL-11 UI (a), I-028 T4  | `src/ui/panelView.ts` `supplyChip`; `src/ui/inspect.ts` `setFirstMissing`, `houseDiagnosis`-Liste, `TIER_LIST`; `src/sim/defs/tiers.ts` `TIER_IDS`                                                                                        | lead-tech                                 |
-| SIM-FEST-INSEL                    | S      | `feastActive` prüft die Insel nicht: Hauskoordinaten sind inselbezogen, eine Kapelle wirkt auf Häuser einer Fremdinsel mit passenden Koordinaten; Test mit zwei Inseln, dann `b.island === house.island`                    | Plan I-028 (lead-tech)                                  | `src/sim/feast.ts` `feastActive`/`inChapelRadius` ohne Inselvergleich; `src/sim/types.ts` `Building.island`; `tileAt(islandOf(…), x, y)`                                                                                                  | lead-tech (bündelbar mit UI-INSELFILTER)  |
-| ART-FELS-FERNGROESSE              | S      | Meeresfels bei Zoom 0,25 nur ≈ 5 px; Mindestgrösse wie Wrack/Eiland prüfen (Designurteil lead-art)                                                                                                                          | Release-Check REL-11                                    | `src/render/decorStamps.ts` `minStampScale` gilt nur für `wreck`/`islet`                                                                                                                                                                  | lead-art                                  |
-| UI-SEEKARTE-NACHZUG               | S      | Layout und Silhouetten-Cache bleiben bei offenem Popover über einen Weltwechsel; Kontor-Marke unter dem Schiffspunkt und nicht an dpr gebunden; Zeittest `< 50 ms` auf Zähler; Szenen-Helfer Seekarte in `tools/render-qa/` | UI-SEEKARTE Reviews, Release-Check REL-12               | `src/ui/hud.ts` `layout` nur beim Öffnen gesetzt; `src/render/seaMap.ts` `fillRect(m.x - 2, …, 4, 4)`, `arc(…, 3, …)`; `tests/render/seaMap.test.ts` `performance.now`; kein Seekarten-Skript in `tools/render-qa/`                       | lead-tech (Helfer: lead-art)              |
-| TOOL-STUDIO-HYGIENE (Erweiterung) | S      | Spawn ohne `agent_start` meldet „Agent unbekannt ist inaktiv“ (Frist, dann ausblenden); Testsperre meldet verwaiste Vitest-Worker (PPID 1, älter als 30 min), nur melden                                                    | Release-Retro REL-12 (B-b), Session fb37ceac (L0)       | `tools/studio/effort.py` Vorfall `inaktiv` aus `inactive_keys`; `tools/testlock/testlock.ts`; Worker am 2026-10-09 beendet, jetzt keiner aktiv (`ps`)                                                                                     | lead-production (`production-studio-ops`) |
-| CLEANUP-WT-2                      | S      | Scratch-Worktree unter dem Scratchpad (Session e90e097e), sieben gemergte Worktrees, Datei `.worktrees/check2.log`                                                                                                          | REL-11 Review (lead-art); Nebenbefund dieser Auswertung | `git worktree list`: `…/e90e097e-…/scratchpad/mainwt` (detached), `art-meeresfels`, `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `steuer-je-stufe`, `ui-seekarte` alle in `git branch --merged main` | production-integrator (Ruling nötig, §6)  |
+| Kandidat                                                                     | Grösse | Inhalt                                                                                                                                                                                                                      | Ursprung                                                | Beleg (gegen `d7291aa`)                                                                                                                                                                                                                   | Owner                                     |
+| ---------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| UI-INSPEKTOR-KLARTEXT                                                        | S      | Haus-Inspektor zeigt „Versorgt ✓“ (Radius) neben „Mangel: Nahrung fehlt“ (Gut) und „Fehlt: Nahrung“; Begriffe trennen (z. B. „Im Marktradius“), Doppelzeile zusammenlegen; `TIER_LIST` durch `TIER_IDS` ersetzen            | Release-Check REL-11, Playtest REL-11 UI (a), I-028 T4  | `src/ui/panelView.ts` `supplyChip`; `src/ui/inspect.ts` `setFirstMissing`, `houseDiagnosis`-Liste, `TIER_LIST`; `src/sim/defs/tiers.ts` `TIER_IDS`                                                                                        | lead-tech                                 |
+| SIM-FEST-INSEL                                                               | S      | `feastActive` prüft die Insel nicht: Hauskoordinaten sind inselbezogen, eine Kapelle wirkt auf Häuser einer Fremdinsel mit passenden Koordinaten; Test mit zwei Inseln, dann `b.island === house.island`                    | Plan I-028 (lead-tech)                                  | `src/sim/feast.ts` `feastActive`/`inChapelRadius` ohne Inselvergleich; `src/sim/types.ts` `Building.island`; `tileAt(islandOf(…), x, y)`                                                                                                  | lead-tech (bündelbar mit UI-INSELFILTER)  |
+| ART-FELS-FERNGROESSE                                                         | S      | Meeresfels bei Zoom 0,25 nur ≈ 5 px; Mindestgrösse wie Wrack/Eiland prüfen (Designurteil lead-art)                                                                                                                          | Release-Check REL-11                                    | `src/render/decorStamps.ts` `minStampScale` gilt nur für `wreck`/`islet`                                                                                                                                                                  | lead-art                                  |
+| UI-SEEKARTE-NACHZUG                                                          | S      | Layout und Silhouetten-Cache bleiben bei offenem Popover über einen Weltwechsel; Kontor-Marke unter dem Schiffspunkt und nicht an dpr gebunden; Zeittest `< 50 ms` auf Zähler; Szenen-Helfer Seekarte in `tools/render-qa/` | UI-SEEKARTE Reviews, Release-Check REL-12               | `src/ui/hud.ts` `layout` nur beim Öffnen gesetzt; `src/render/seaMap.ts` `fillRect(m.x - 2, …, 4, 4)`, `arc(…, 3, …)`; `tests/render/seaMap.test.ts` `performance.now`; kein Seekarten-Skript in `tools/render-qa/`                       | lead-tech (Helfer: lead-art)              |
+| TOOL-STUDIO-HYGIENE (Erweiterung) — erledigt durch TOOL-BUENDEL (2026-10-09) | S      | Spawn ohne `agent_start` meldet „Agent unbekannt ist inaktiv“ (Frist, dann ausblenden); Testsperre meldet verwaiste Vitest-Worker (PPID 1, älter als 30 min), nur melden                                                    | Release-Retro REL-12 (B-b), Session fb37ceac (L0)       | `tools/studio/effort.py` Vorfall `inaktiv` aus `inactive_keys`; `tools/testlock/testlock.ts`; Worker am 2026-10-09 beendet, jetzt keiner aktiv (`ps`)                                                                                     | lead-production (`production-studio-ops`) |
+| CLEANUP-WT-2                                                                 | S      | Scratch-Worktree unter dem Scratchpad (Session e90e097e), sieben gemergte Worktrees, Datei `.worktrees/check2.log`                                                                                                          | REL-11 Review (lead-art); Nebenbefund dieser Auswertung | `git worktree list`: `…/e90e097e-…/scratchpad/mainwt` (detached), `art-meeresfels`, `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `steuer-je-stufe`, `ui-seekarte` alle in `git branch --merged main` | production-integrator (Ruling nötig, §6)  |
 
 Empfehlung für REL-14: UI-INSPEKTOR-KLARTEXT und SIM-FEST-INSEL (spielwirksam, mittel), dazu ART-FELS-FERNGROESSE als
 kleiner Render-Strang; die übrigen bei Gelegenheit. Dateien disjunkt: `src/ui/inspect.ts`/`panelView.ts`,
@@ -204,10 +205,6 @@ Raster) ist bereits benannt (R327).
 
 ## Offen (neue Einträge unten anhängen)
 
-### 2026-10-09 · Release-Check REL-13 (lead-qa): Befund ohne Blocker
-
-- **Fundort:** `tools/render-qa/smoke.mjs:466`: Schritt heisst „Speichern und Laden (Save v9)“, das Spiel speichert seit I-028 v10. Ursprung: REL-13. Einschätzung: niedrig, Kosmetik im Werkzeug; Etikett ohne feste Versionsnummer (Trivial-Fix im nächsten Werkzeug-Paket, z. B. TOOL-PRETTIER-HOOK).
-
 ### 2026-10-09 · ART-FELS-FERNGROESSE abgehakt (R423)
 
 - **Fundort:** `src/render/decorStamps.ts` (Meeresfels, Zoom 0,25 ≈ 5–6 px). Urteil `lead-art` NEIN: Der Meeresfels bleibt massstabstreu (reine Deko ohne Sim-Bezug; Bildrangfolge Schiff 16 px vor Fels; Blindprobe bestanden). Ursprung: Release-Check REL-11, BEOB-AUSW-03. Einschätzung: abgehakt; der tote Fern-Code (`minStampScale`) ist in REL-14 entfernt.
@@ -217,3 +214,51 @@ Raster) ist bereits benannt (R327).
 
 - **Fundort:** Haus-Panel (`src/ui/inspect.ts`), Playtest `.studio/qa/REL-14/z2-ware-fehlt.png`, `z2b-dienst.png`. Unter „Mangel: Nahrung fehlt“ steht die Hilfszeile „Nahrung fehlt: baue Fischerhütte (F)“ (bei Dienst: „Kapelle fehlt: baue Kapelle (K) in Reichweite“). Besteht schon vor REL-14; keine „Fehlt:“-Zeile, widerspricht dem Chip nicht.
 - **Einschätzung:** Mangel wird zweimal genannt (Liste und Hilfszeile). Nur bei Bedarf kürzen; Entscheid `lead-design`.
+
+### 2026-10-09 · TOOL-BUENDEL: `make studio-lint` auf main rot
+
+- **Fundort:** `make studio-lint` (`uvx ruff`, ungepinnt) meldet auf `main` 28 Ruff-Altfehler, z. B. UP017 (`timezone.utc`). Worker prüfen nur ihre eigenen Dateien. Ursprung: TOOL-BUENDEL T01–T05. Einschätzung: niedrig bis mittel; Ruff-Version pinnen und Altfehler in einem Werkzeug-Paket beheben.
+
+### 2026-10-09 · TOOL-BUENDEL: Testschalter in `paths.py` ohne Kommentar
+
+- **Fundort:** `tools/studio/paths.py` (Zeilen ca. 36 und 45): `STUDIO_HOME` und `STUDIO_DOCS` sind Testschalter ohne Kommentar «nur für Tests» (R378). Ursprung: TOOL-BUENDEL. Einschätzung: niedrig, Trivial-Fix (ein Kommentar je Schalter; studio-coach, da `tools/studio/`).
+
+### 2026-10-09 · TOOL-BUENDEL: Probe-Event `commit_rejected` im Haupt-Log
+
+- **Fundort:** `.studio/events.jsonl` im Hauptcheckout enthält ein Probe-Ereignis `commit_rejected` aus dem Echtlauf der Ablehnung. Ursprung: TOOL-BUENDEL T01. Einschätzung: niedrig; verfälscht höchstens die Zählung ablehnender Commits, beim nächsten `make studio-archive` erledigt.
+
+### 2026-10-09 · TOOL-BUENDEL: Ampelzeile mit bereinigtem Steuerungsanteil im Dashboard
+
+- **Fundort:** Dashboard (`tools/studio/dashboard/`); `tools/studio/efficiency.py` liefert `steuerung_bereinigt` bisher nur als Textzeile der Metriken (E-049). Ursprung: TOOL-BUENDEL T05 (Review R428 qa B3, E-038). Einschätzung: Nachfolgepunkt; Ampelzeile mit dem bereinigten Wert neben der Rohzeile, Paket-Kandidat für `lead-production`.
+
+### 2026-10-09 · TOOL-BUENDEL: `metrics.py --session latest` schreibt ins Hauptcheckout
+
+- **Fundort:** `tools/studio/metrics.py --session latest` schreibt nach `docs/studio/metriken/` des Hauptcheckouts, auch wenn es aus einem Worktree läuft. Ursprung: TOOL-BUENDEL T05. Einschätzung: niedrig bis mittel; Zielpfad aus dem Worktree ableiten (studio-coach, da `tools/studio/`).
+
+### 2026-10-09 · REL-14 (R430): Dienst-Mangel «fehlt in Reichweite» in der Aufstiegsliste
+
+- **Fundort:** `src/sim/population.ts:156`: die Aufstiegsliste nennt den Dienst-Mangel als «fehlt in Reichweite». Ursprung: REL-14 Merge (R430). Einschätzung: Urteil `lead-design`, ob der Wortlaut zum neuen Inspektor-Klartext passt.
+
+### 2026-10-09 · REL-14 (R430): Testtitel «ab 0,25» veraltet
+
+- **Fundort:** `tests/render/decorSea.test.ts:259`: der Testtitel nennt «ab 0,25», der Titel passt nicht mehr zum Verhalten nach REL-14 (Fern-Code entfernt). Ursprung: REL-14 (R430). Einschätzung: niedrig, Trivial-Fix (Titel anpassen, Test unverändert).
+
+### 2026-10-09 · REL-14 (R430): Hover-Karte verdeckt Cursor-Hinweis
+
+- **Fundort:** Playtest REL-14: die Hover-Karte verdeckt den Cursor-Hinweis. Ursprung: REL-14 Playtest. Einschätzung: niedrig bis mittel, Kosmetik der UI; Entscheid `lead-design`.
+
+### 2026-10-09 · R429-Risiko: `zeitreserve-push` verwirft die Messung bei Last > 4
+
+- **Fundort:** `make zeitreserve-push` / `make check`. Ist die Last beim Start von `make check` grösser als 4, verwirft `zeitreserve-push` die Messung (Exit 2 «nicht belastbar»); `make check` muss dann neu laufen. Ursprung: R429. Einschätzung: bekanntes Risiko, kein Fehler; vor dem Push `make messfenster` prüfen.
+
+### 2026-10-09 · TOOL-BUENDEL: Git-Hook blockiert den Commit ohne `python3`
+
+- **Fundort:** `tools/githooks/pre-commit:7`: fehlt `python3` im PATH, endet der Hook mit Exit 127 und blockiert den Commit, obwohl alle anderen Fehler den Commit zulassen. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; vor dem `exec` mit `command -v python3` prüfen und sonst mit Hinweis `exit 0`.
+
+### 2026-10-09 · TOOL-BUENDEL: Schein-Session «manual» im Dashboard
+
+- **Fundort:** `tools/studio/precommit.py:68`: ohne `CLAUDE_CODE_SESSION_ID` setzt `record` die session_id «manual» und legt im Dashboard eine Schein-Session an. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; Ereignis ohne Session führen oder Dashboard-Modell «manual» ausblenden (studio-coach).
+
+### 2026-10-09 · TOOL-BUENDEL: Testlücke bei `ps`-Fehler in der Testsperre
+
+- **Fundort:** `tests/tools/testlock.test.ts`: kein Test belegt, dass ein `ps`-Fehler (`TESTLOCK_PS_FIXTURE` zeigt auf eine fehlende Datei) nichts ändert. Ursprung: TOOL-BUENDEL T02 (Final-Review). Einschätzung: niedrig; ein Test ergänzt die Fehlerrichtung ab.

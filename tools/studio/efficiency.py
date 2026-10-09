@@ -84,6 +84,17 @@ STATUS_CMD = "tools/studio/log.py status"
 GUARD_DATE = datetime(2026, 10, 4, tzinfo=timezone.utc)  # Persona-Guard (R167) aktiv
 WAIT_TOOLS = {"Bash", "Agent", "Task"}
 PACKAGE = re.compile(r"^\s*Paket:\s*([\w.-]+)", re.MULTILINE)
+BUDGET_LINES = 10  # Kopfblock des Briefings (E-049, R420 V2)
+BUDGET_NONE = re.compile(
+    r"^[\s>*#-]*(?:\*\*)?Budget:(?:\*\*)?\s*keins\b", re.IGNORECASE | re.MULTILINE
+)
+
+
+def _budget_none(prompt: str | None) -> bool:
+    head = "\n".join((prompt or "").splitlines()[:BUDGET_LINES])
+    return bool(BUDGET_NONE.search(head))
+
+
 FAMILIES = (
     ("Grafik", ("ART", "WALD", "H-R")),
     ("Release", ("REL", "INT")),
@@ -333,7 +344,11 @@ def _rewrite_events(calls: list[dict], family: str) -> list[dict]:
 
 
 def _instance(
-    role: str, raw: dict, general_persona: bool, pkg: str | None = None
+    role: str,
+    raw: dict,
+    general_persona: bool,
+    pkg: str | None = None,
+    budget_none: bool = False,
 ) -> dict | None:
     calls = raw["calls"]
     if not calls:
@@ -359,6 +374,7 @@ def _instance(
         "start_ts": calls[0]["ts"],
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
         "package": pkg,
+        "budget_none": budget_none,
         "turns": len(calls),
         "status_turns": sum(
             1
@@ -425,7 +441,11 @@ def _compute(mains: list[Path], persona_models: dict[str, str]) -> dict | None:
             kind = (meta or {}).get("agentType") or "general-purpose"
             persona = _persona(raw["prompt"]) if kind == "general-purpose" else None
             built = _instance(
-                persona or kind, raw, persona is not None, _package(raw["prompt"])
+                persona or kind,
+                raw,
+                persona is not None,
+                _package(raw["prompt"]),
+                _budget_none(raw["prompt"]),
             )
             reads += raw["reads"]
             if built:
@@ -451,6 +471,10 @@ def _summary(
         if "opus" in (item["model"] or ""):
             opus += item["cost"]
     share = {k: _ratio(v, total) for k, v in by_class.items()}
+    removed = [
+        i for i in instances if role_class(i["role"]) == "Leads" and i["budget_none"]
+    ]
+    heraus = _ratio(sum(i["cost"] for i in removed), total)
     split = _persona_split(instances, persona_models)
     leads = [
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
@@ -473,6 +497,9 @@ def _summary(
         "kind_share": {k: _ratio(kinds[k], total) for k in KIND_LABEL},
         "opus_share": _ratio(opus, total),
         "steuerung": share["L0"] + share["Leads"],
+        "steuerung_bereinigt": share["L0"] + share["Leads"] - heraus,
+        "steuerung_heraus": heraus,
+        "steuerung_heraus_n": len(removed),
         "umsetzer": share["Umsetzer"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
@@ -556,6 +583,7 @@ def _lead_stats(instances: list[dict]) -> dict:
         {
             "role": i["role"],
             "package": i["package"],
+            "budget_none": i["budget_none"],
             "turns": i["turns"],
             "status_turns": i["status_turns"],
             "weight": i["cost"],
@@ -716,6 +744,16 @@ def _split_lines(split: dict | None) -> list[str]:
     return [f"- Persona-Starts (Modell gegen Frontmatter): {'; '.join(parts)}"]
 
 
+def _adjusted_line(data: dict) -> str:
+    value = data["steuerung_bereinigt"]
+    return (
+        f"- Steuerungsanteil bereinigt (E-049, ohne {data['steuerung_heraus_n']} "
+        f"Lead-Instanzen mit „Budget: keins“): {_pct(value)}, Bewertung "
+        f"{ampel('steuerung', value)} (Schwellen wie die Rohzeile; herausgerechnet "
+        f"{_pct(data['steuerung_heraus'])}; roh = bereinigt + herausgerechnet)"
+    )
+
+
 def render_section(data: dict | None) -> str:
     out = ["## Effizienz", ""]
     if data is None:
@@ -730,6 +768,7 @@ def render_section(data: dict | None) -> str:
         "Ampel:",
         "",
         *_lights(data),
+        _adjusted_line(data),
         "",
         *_table(
             ["Rollenklasse", "Kostenanteil"],

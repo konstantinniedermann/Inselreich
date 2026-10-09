@@ -579,6 +579,13 @@ flowchart LR
   fehlt oder nicht lädt.
 - **Entwicklung:** `make dev` startet den Vite-Dev-Server; `make check` entspricht der CI; lokal greift zusätzlich die Testsperre (Abbruch mit `testlock: ABBRUCH`, Exit 3, bei belegter Sperre oder Load > 8; auf CI aus). Dev-Vorschau und
   Sonden (`?wetter=`, `?perf=1`, `window.__inselAudio`, `window.__inselPerf`) gibt es nur im Dev-Build.
+- **Studio-Werkzeuge** (ADR-014): `make hooks` aktiviert den Git-Hook `pre-commit` (`tools/githooks/`,
+  `tools/studio/precommit.py`): Prettier-Check der gestagten Dateien, Ablehnung als Ereignis `commit_rejected`.
+  Der Modell-Guard `tools/studio/modelguard.py` ist ein zusätzlicher PreToolUse-Hook neben `guard.py` und meldet
+  Starts über der Modelltabelle als Ereignis `model_guard` (Startzustand nur Warnung). Die Testsperre weist auf
+  verwaiste Vitest-Prozesse hin (PPID 1, ab 30 min) und beendet nichts. Im Dashboard melden Knoten ohne
+  `agent_start` und ohne `spawned` keinen Inaktiv-Vorfall und werden nach 600 s ausgeblendet. Die Metriken
+  (`make studio-metrics`) führen zusätzlich die Zeile «Steuerungsanteil bereinigt» (E-049).
 - **CI:** `.github/workflows/ci.yml` führt `make check` bei Push auf `main` und bei Pull Requests aus.
 - **Deploy:** `.github/workflows/pages.yml` baut bei Push auf `main` (oder manuell) und veröffentlicht
   `dist/` auf GitHub Pages. Er greift erst, wenn Pages im Repo aktiviert ist (Quelle: GitHub Actions);
@@ -1020,6 +1027,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 | Asset-Pipeline: Ablage `public/`, Formate, Budget, Laden nach Bedarf, Manifest, Nachweis                                                     | [ADR-011](adr/ADR-011-asset-pipeline.md)                                |
 | Isometrische Darstellung, Kachelraum bleibt die Wahrheit, Picking über den Körper                                                            | [ADR-012](adr/ADR-012-isometrische-darstellung.md)                      |
 | Inselmodell im Weltzustand: Raster, Kontor und Lager je Insel, Gebäudeliste global, Save v7; Nachtrag E1: Darstellung des Archipels, Save v8 | [ADR-013](adr/ADR-013-inselmodell-im-weltzustand.md)                    |
+| Studio-Riegel ausserhalb des Verfassungs-Guards: Git-Hook (Prettier) und Modell-Guard                                                        | [ADR-014](adr/ADR-014-studio-riegel.md)                                 |
 | M6: Krisen, Feuerwache, Save v3                                                                                                              | [M6-Spec](superpowers/specs/2026-09-30-m6-krisen-design.md)             |
 | M7: Licht, Wetter, Leben, Ton mit Bussen, Einstellungen                                                                                      | [M7-Spec](superpowers/specs/2026-09-30-m7-stimmung-design.md)           |
 | M7: Isometrie im Detail (Projektion, Ebenen, Picking, Tests)                                                                                 | [Nachtrag M7-ISO](superpowers/specs/2026-10-01-m7-iso-design.md)        |

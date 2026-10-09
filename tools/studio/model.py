@@ -19,6 +19,7 @@ import studio_docs
 from graph import GRAPH_ROWS, MESSAGE_TEXT_MAX, PAUSE_GAP  # noqa: F401
 
 INACTIVE_DEFAULT = 300.0
+PHANTOM_AFTER = 600.0  # unbestätigte Knoten danach ausgeblendet (REL-12 B2)
 BIND_WINDOW = 30.0
 FEED_SIZE = 80
 HEARTBEAT_TOOLS = 4
@@ -370,10 +371,17 @@ class _Builder:
         if node is not None:
             node["_signal"] = True
 
+    @staticmethod
+    def unconfirmed(node: dict) -> bool:
+        """Nie gestartet und nie bestätigt: z. B. Spawn eines Harness-Nebenagenten."""
+        return node["agent_id"] != "main" and not _Builder.is_start(node)
+
     def hidden(self, key: str) -> bool:
-        """stop-only-Knoten: nur ein agent_stop ohne Rolle, sonst nichts (P31)."""
+        """stop-only-Knoten (P31) und unbestätigte Knoten nach PHANTOM_AFTER."""
         node = self.nodes[key]
-        return node["agent_id"] != "main" and not node["_signal"]
+        if node["agent_id"] != "main" and not node["_signal"]:
+            return True
+        return self.unconfirmed(node) and self.now - node["started"] > PHANTOM_AFTER
 
     def graph_record(self, record: dict) -> dict:
         if record["kind"] != "spawn":
@@ -1035,7 +1043,9 @@ class _Builder:
             for d in self.decisions.values()
             if d.get("for") == "l0" and d.get("session_id") in scope
         ] + [q for q in self.queue.values() if q["session_id"] in scope]
-        inactive_keys = [k for k, v in views.items() if v["inactive"]]
+        inactive_keys = [
+            k for k, v in views.items() if v["inactive"] and not self.hidden(k)
+        ]
         return {
             "now": self.now,
             "session": chosen,
@@ -1151,7 +1161,12 @@ class _Builder:
         if status == "active" and live_children:
             status = "delegated"
         quiet = self.now - node["last_seen"]
-        inactive = status in LIVE and not live_children and quiet > inactive_after
+        inactive = (
+            status in LIVE
+            and not live_children
+            and quiet > inactive_after
+            and not self.unconfirmed(node)
+        )
         view = {field: node[field] for field in PUBLIC}
         view.update(status=status, inactive=inactive, idle_seconds=round(max(quiet, 0)))
         return view

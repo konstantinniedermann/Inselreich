@@ -1,0 +1,7 @@
+#!/bin/sh
+# Prettier-Check der gestagten Dateien (R417 V2, TOOL-PRETTIER-HOOK); aktiv nach `make hooks`.
+# Grenzen: Prettier liest den Arbeitsbaum, nicht den Index (Teilstaging mit `git add -p`);
+# `git commit --no-verify` umgeht den Hook (Briefing-Regel, nicht technisch); CI prüft mit `make lint`.
+root=$(git rev-parse --show-toplevel) || exit 0
+[ -f "$root/tools/studio/precommit.py" ] || exit 0
+exec python3 "$root/tools/studio/precommit.py"
