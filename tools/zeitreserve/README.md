@@ -37,3 +37,5 @@ niedrig); Tests unter 1 s bleiben unbeachtet. Der Schritt prüft nur Tests, die 
 
 **Doku-Format:** `make lint` (`prettier --check .`) deckt `docs/` ab, solange es nicht in `.prettierignore`
 steht. Vor Doku-Commits genügt `make docs-check` (nur Prettier, schnell); beheben mit `npx prettier --write <Datei>`.
+
+**Testsperre (R375):** `make test`, `make check` und `make zeitreserve-push` laufen unter `tools/testlock/testlock.ts` (eine Sperre je Repo über alle Worktrees, Abbruch mit Exit 3 bei belegter Sperre oder 1-min-Load > 8, nicht auf CI). `TESTLOCK_FAKE_LOAD` und `TESTLOCK_PATH` gibt es nur für Tests, nie zum Umgehen echter Prüfungen (R378).

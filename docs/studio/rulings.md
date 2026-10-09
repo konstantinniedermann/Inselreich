@@ -3464,3 +3464,53 @@ Tools, `Makefile`, `tools/`); (3) Pläne **SEE-F1-KORRIDOR** und **UI-KAMERA-KLE
 leicht, Fehlerbehebung ohne Kurzdesign). Gate je Plan durch lead-qa gebündelt.
 
 Entscheider: L0 · Anlass: Nutzer „mach weiter“ · ADR: —
+
+## R377 · 2026-10-09 · Gate REL-10 Welle 3: KORRIDOR BEDENKEN (B1 blockierend), KAMERA BEDENKEN; Pin-Ruling
+
+Ruling: (1) **SEE-F1-KORRIDOR:** Die Routen-Freihaltung gilt nur für Wrack, Eiland und Felsen; die Flächen aus
+`seaPlan`, aus denen `seaTintFor` die Tönung baut, bleiben **bitgleich zu main** — neuer Pin: Hash von `seaTintFor`
+über Seeds 1–40, in K1 auf main aufgenommen, unverändert über K3–K5 (B1). Pin-Ruling vor K4 (B2, ergänzt R367):
+`HOME_CALLS` darf begründet neu gesetzt werden, wenn sich nur die Positionen der Meer-Elemente verschieben;
+`HOME_ORDER` und die `terrainSea`-Pins bleiben unverändert. AK-K1 mit genauer Messgrösse (Elemente inkl. Felsnadel?,
+Abstand Kachelmitte, alle Routenpaare wie `routeFar`, Ausgangswert auf main im Test; lead-qa maß 29/275 = 10,5 %,
+B3); Determinismus Speichern→Laden und kalter Cache, Indexreihenfolge `seaRoute(a < b)` (B4). Nach der Nacharbeit
+Zweitprüfung nur für B1 durch lead-qa; Umsetzung nach dem Merge von ART-L8-SELTEN. (2) **UI-KAMERA-KLEMMUNG:**
+Nacharbeit U1–U4 ohne Zweitprüfung (DOM-freier Helfer in eigener Datei unter `src/ui/`, Neu-Messen nach Resize,
+Abbruchregel in U3, messbares „kein Sprung“ ≤ 1 px mit DPR 1 und 2, Tests ≤ 500 ms, `zeitreserve` 0); danach Umsetzung
+frei, 150 Tools.
+
+Entscheider: L0 · Anlass: Gate GATE-REL10-W3 · ADR: —
+
+## R378 · 2026-10-09 · TOOL-TESTLOCK: Re-Review vor dem Merge; Fake-Schalter nur in Tests
+
+Ruling: `tool/testlock` @ ed1881d (Sperre in `<git-common-dir>/studio-testlock`, Abbruch bei belegter Sperre oder
+Load > 8, atomare Übernahme toter Sperren, Freigabe nur der eigenen; Echtprobe: zweiter Lauf bricht mit Grund ab).
+Weil die Review-Fixes die Korrektheit der Sperre betreffen (Wettlauf, fremde Freigabe) und kein Review sie gesehen
+hat, folgt ein kurzes Re-Review (sonnet) vor dem Merge. **Regel:** `TESTLOCK_FAKE_LOAD` und `ZEITRESERVE_FAKE_*` setzen
+Agenten nur in Tests, nie um eine echte Last- oder Sperrprüfung zu umgehen (der Lead nutzte ihn für `make check` bei
+Load 9–13). Test-first nicht eingehalten → Retro. Beobachtung: Exit 1/2 von `zeitreserve-push` ist über `make` nicht
+unterscheidbar (immer 2). `.worktrees/testlock-probe` entfernt der Integrator ohne `--force`.
+
+Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
+
+## R379 · 2026-10-09 · SEE-F1-KORRIDOR: Plan frei mit Zwei-Durchgang-Verfahren
+
+Ruling: Zweitprüfung B1 BEDENKEN, nicht blockierend. Angenommen: **Durchgang A** setzt die Meer-Elemente wie auf main
+gegen die Geraden, daraus `blocked` und die Flächen (bitgleich zu main); **Durchgang B** wählt die endgültigen
+Positionen von Wrack, Eiland und Felsen mit `seaPlanKeepOut` neu (meiden Flächenkacheln samt Rand, Abstand ≥ 3) ohne
+Rückwirkung auf die Flächen; Zusatztest `seaTintFor` mit `ctx.routes = []` gleich wie mit Routen. B3: Messung und
+Freihaltung nutzen dieselbe Routenmenge, **alle Paare** wie `routeFar`. Der Planer trägt das als Satz in Entwurf und
+AK-K3 nach (ohne neue Prüfung). Umsetzung nach dem Merge von ART-L8-SELTEN, Budget 120 Tools.
+
+Entscheider: L0 · Anlass: Zweitprüfung GATE-REL10-W3 · ADR: —
+
+## R380 · 2026-10-09 · Gate Merge TOOL-TESTLOCK OK
+
+Ruling: **OK** für `tool/testlock` @ bafa9ea. Übernahme toter Sperren nur über ein Wächterverzeichnis (`mkdir`), Test
+mit drei parallelen Prozessen (genau einer läuft); Sperre per Temp-Datei und `linkSync` atomar; `CI=false/0/leer` gilt
+nicht als CI; Signal-Exit 128 + Nummer; Fake-Schalter als nur für Tests markiert. Re-Review OK. `make check` grün ohne
+Fake-Schalter, Echtprobe zweier gleichzeitiger `make test`: zweiter bricht mit Grund ab. Ab dem Merge ist R357 ein
+Werkzeug: `make check`/`make test`/`zeitreserve-push` brechen bei belegter Sperre oder Load > 8 ab (nicht warten).
+Merge durch den Integrator; `.worktrees/testlock-probe` ohne `--force` entfernen. Ist ≈ 56 von 55.
+
+Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
