@@ -39,7 +39,7 @@ function spendRum(world: World, chapel: Building): Result {
   return ok;
 }
 
-/** Spec R7.3: Ein Fest wirkt auf Häuser mit Steuerstufe «normal»; ohne ein solches Haus im Radius lehnt die Steuer ab. */
+/** Spec R7.3: Ein Fest wirkt auf Häuser mit Steuerstufe «normal»; ohne ein solches Haus der Kapellen-Insel im Radius lehnt die Steuer ab. */
 function taxBlock(world: World, chapel: Building): string | null {
   const levels = Object.values(world.buildings)
     .filter((b) => b.house !== undefined && inChapelRadius(chapel, b))
@@ -78,8 +78,9 @@ export function holdFeast(world: World, id: number): Result {
   return ok;
 }
 
-/** Mittelpunktabstand des Hauses zur Kapelle liegt im Dienstradius. */
+/** Haus auf der Insel der Kapelle (Koordinaten sind inselbezogen) mit Mittelpunktabstand im Dienstradius. */
 function inChapelRadius(chapel: Building, house: Building): boolean {
+  if (chapel.island !== house.island) return false;
   const hc = center(BUILDING_DEFS[house.defId], house.x, house.y);
   const def = BUILDING_DEFS[chapel.defId];
   const c = center(def, chapel.x, chapel.y);
