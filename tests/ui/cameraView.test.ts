@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  centerOnVisible,
-  clampVisible,
-  makeVisibleHeight,
-  visibleViewHeight,
-} from '../../src/ui/cameraView';
+import { makeVisibleHeight, visibleViewHeight } from '../../src/ui/cameraView';
 import { project } from '../../src/render/iso';
-import { worldToScreen } from '../../src/render/camera';
+import { centerOn, clampToRect, worldToScreen } from '../../src/render/camera';
 
 const bounds = { x0: 10, y0: 20, x1: 70, y1: 90 };
 
@@ -33,9 +28,9 @@ describe('cameraView: sichtbare Kartenhöhe (UI-KAMERA U1)', () => {
 describe('cameraView: Klemmung und Zentrierung (UI-KAMERA U2)', () => {
   it('AK-U2a: zweimal klemmen = einmal klemmen', () => {
     const once = { x: 5000, y: -3000, zoom: 1 };
-    clampVisible(once, bounds, 1280, 720, 40);
+    clampToRect(once, bounds, 1280, visibleViewHeight(720, 40));
     const twice = { ...once };
-    clampVisible(twice, bounds, 1280, 720, 40);
+    clampToRect(twice, bounds, 1280, visibleViewHeight(720, 40));
     expect(twice).toEqual(once);
   });
 
@@ -46,7 +41,7 @@ describe('cameraView: Klemmung und Zentrierung (UI-KAMERA U2)', () => {
       const devW = cssW * dpr;
       const devH = cssH * dpr;
       const cam = { x: 9000, y: 9000, zoom: 1 };
-      clampVisible(cam, bounds, devW / dpr, devH / dpr, 36);
+      clampToRect(cam, bounds, devW / dpr, visibleViewHeight(devH / dpr, 36));
       return cam;
     };
     expect(run(2)).toEqual(run(1));
@@ -56,13 +51,13 @@ describe('cameraView: Klemmung und Zentrierung (UI-KAMERA U2)', () => {
     const mid = project(40, 55);
     const cam = { x: mid.x - 640, y: mid.y - 360, zoom: 1 };
     const before = { ...cam };
-    clampVisible(cam, bounds, 1280, 720, 36);
+    clampToRect(cam, bounds, 1280, visibleViewHeight(720, 36));
     expect(cam).toEqual(before);
   });
 
   it('AK-U2d: centerOn-Ziel liegt bei overlayH > 0 in der sichtbaren Mitte', () => {
     const cam = { x: 0, y: 0, zoom: 1 };
-    centerOnVisible(cam, 40, 55, 1280, 720, 100, bounds);
+    centerOn(cam, 40, 55, { w: 1280, h: visibleViewHeight(720, 100) }, bounds);
     const s = worldToScreen(cam, project(40, 55));
     expect(s.x).toBeCloseTo(640, 6);
     expect(s.y).toBeCloseTo((720 - 100) / 2, 6);
