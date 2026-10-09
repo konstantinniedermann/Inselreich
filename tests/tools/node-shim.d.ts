@@ -10,6 +10,7 @@ declare module 'node:child_process' {
 declare module 'node:fs' {
   export function mkdtempSync(prefix: string): string;
   export function writeFileSync(path: string, data: string): void;
+  export function existsSync(path: string): boolean;
 }
 declare module 'node:os' {
   export function tmpdir(): string;
