@@ -17,6 +17,7 @@ import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { currentLoad, LOAD_MAX } from './lastgate.mjs';
+import { saveVersionLabel } from './saveVersion.mjs';
 
 const USAGE =
   'Aufruf: smoke.mjs --paket <id> [--seed 7] [--size 1280x720,1920x1080] [--root <wurzel>] [--out <ordner>]\n' +
@@ -463,7 +464,7 @@ async function runSize(w, h) {
         rec.shots.push(await shot('m-menue'));
       });
 
-      await step('e', 'Speichern und Laden (Save v9)', async (rec) => {
+      await step('e', `Speichern und Laden (${saveVersionLabel()})`, async (rec) => {
         // Pausieren, damit Vorher/Nachher nicht durch laufende Ticks abweichen (Wirtschaft läuft sonst weiter)
         await clickText('⏸');
         await sleep(300);

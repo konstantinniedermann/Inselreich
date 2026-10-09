@@ -2,6 +2,8 @@
 // Die .mjs-Module werden dynamisch geladen, damit tsc ohne allowJs nicht über fehlende Typen stolpert.
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
+import saveSource from '../../src/sim/save.ts?raw';
+import { SAVE_VERSION } from '../../src/sim/save';
 
 const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
   .process.env;
@@ -112,5 +114,19 @@ describe('R365 smoke.mjs', () => {
   it('fehlendes --paket oder falsche Grösse endet mit Exit 2, ohne Browser', () => {
     expect(run([]).status).toBe(2);
     expect(run(['--paket', 'x', '--size', '10x10']).status).toBe(2);
+  });
+});
+
+const sv = await load('saveVersion.mjs');
+describe('R419 Smoke-Etikett Save-Version', () => {
+  it('liest SAVE_VERSION aus der Quelle', () => {
+    expect(sv.parseSaveVersion(saveSource)).toBe(SAVE_VERSION);
+  });
+  it('Etikett nennt die aktuelle Version', () => {
+    expect(sv.saveVersionLabel()).toBe(`Save v${SAVE_VERSION}`);
+  });
+  it('ohne Treffer: null bzw. v?', () => {
+    expect(sv.parseSaveVersion('const x = 1;')).toBeNull();
+    expect(sv.saveVersionLabel(new URL('file:///gibt/es/nicht.ts'))).toBe('Save v?');
   });
 });
