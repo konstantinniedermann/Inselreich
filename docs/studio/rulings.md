@@ -3717,3 +3717,14 @@ Session-Retro hinaus; der Integrator-Abbruch ist Gate-Erfolg, kein Prozessfehler
 nach `make test` liegt die Last ≈ 2 min über 4; der Integrator wartet zwischen `make test` und `zeitreserve-push`.
 
 Entscheider: L0 · Anlass: Bericht FIX-TIMEOUT-REL10 · ADR: —
+
+## R397 · 2026-10-09 · FIX-CONFLICTS-TSC abgenommen; vierter Push-Anlauf REL-10
+
+Ruling: Dritter Push-Anlauf: `make test`, `zeitreserve-push` (0 ohne Reserve), `check-ci-perf` grün; `make check`
+rot im Build-Typcheck (TS2353 `cwd` in `tests/tools/conflicts.test.ts`, eingeführt mit TOOL-GATES-2, `6e635a4`).
+Fix angenommen: `cwd?: string` im Shim `tests/tools/node-shim.d.ts` (ADR-001, kein `@types/node`), `tsc --noEmit`
+Exit 0. L0-Fund für die Session-Retro: Abnahme R393 ohne Typcheck (Vitest transpiliert ohne Typprüfung); Vorschlag
+an den Coach: DoD-Pflichtzeile `npx tsc --noEmit` für jedes Paket mit `.ts`-Änderung; Integrator führt `tsc --noEmit`
+vor `make test` aus (schneller Abbruch statt nach 8 min). Vierter Anlauf startet sofort.
+
+Entscheider: L0 · Anlass: Integrator PUSH-REL-10 (3) gescheitert · ADR: —
