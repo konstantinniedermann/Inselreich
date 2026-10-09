@@ -559,6 +559,7 @@ Voraussetzung: Node ≥ 22.
 ```bash
 make help      # Alle Befehle anzeigen
 make install   # Abhängigkeiten installieren
+make hooks     # Git-Hook aktivieren: Prettier-Check der gestagten Dateien beim Commit
 make dev       # Dev-Server starten
 make check     # Lint, Tests und Build wie in der CI (lokal mit Testsperre: Abbruch `testlock: ABBRUCH`, Exit 3, bei belegter Sperre oder Load > 8; auf CI aus)
 ```
