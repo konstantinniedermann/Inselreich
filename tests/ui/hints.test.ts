@@ -35,7 +35,14 @@ import { formatGameTime } from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
-import { placeTownhall, setAllTax } from '../sim/helpers';
+import {
+  houseFar,
+  placeTownhall,
+  setAllTax,
+  setHouse as setSimHouse,
+  village,
+} from '../sim/helpers';
+import { houseDiagnosis } from '../../src/sim/queries';
 import { perfBudget } from '../helpers/perfBudget';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -531,5 +538,21 @@ describe('AK-T31/T32 Zusatz (P-2): Stufe im Grund', () => {
     expect(upgradeStatus(w, house).reasons.filter((r) => r.startsWith('Steuer'))).toEqual([
       'Steuer zu hoch',
     ]);
+  });
+});
+
+describe('REL-14 Haus-Hinweis ohne „versorgt“ (A6)', () => {
+  it('ohne Mangel „zufrieden“, ausserhalb „ausserhalb der Versorgung“', () => {
+    const { w, houses } = village(1, { unlockAll: true });
+    const h = houses[0]!;
+    setSimHouse(h, 1, 4);
+    h.house!.supplied = true;
+    h.house!.satisfied = { food: true };
+    expect(houseDiagnosis(w, h)).toEqual([]); // Vorbedingung
+    expect(placementHint(w, { kind: 'select' }, h.x, h.y)?.text).toMatch(/ · zufrieden$/);
+    const far = houseFar(w);
+    expect(placementHint(w, { kind: 'select' }, far.x, far.y)?.text).toMatch(
+      / · ausserhalb der Versorgung$/,
+    );
   });
 });

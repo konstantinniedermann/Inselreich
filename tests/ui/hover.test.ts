@@ -17,6 +17,8 @@ import {
   type HoverState,
 } from '../../src/ui/hover';
 import { protectedCount } from '../../src/ui/inspect';
+import { diagnosisText } from '../../src/ui/texts';
+import { houseDiagnosis } from '../../src/sim/queries';
 import {
   forceGrass,
   forceRect,
@@ -273,13 +275,20 @@ describe('M10 Mouse-over (Spec 13)', () => {
     forceGrass(w, sea.x, sea.y - 1);
     expect(hoverInfo(w, { x: sea.x, y: sea.y - 1 }, 0, none)!.lines[0]).toMatch(/Fischerhütte/);
   });
-  it('Spec 13.2 Haus-Diagnose: Ausserhalb der Versorgung, Dienst fehlt in Reichweite', () => {
+  it('Spec 13.2 Haus-Diagnose: Ausserhalb der Versorgung, Dienst fehlt (gleich wie Inspektor)', () => {
+    const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
-    expect(hoverInfo(w, houseFar(w), 0, none)!.lines[1]).toBe('Ausserhalb der Versorgung');
+    const far = houseFar(w);
+    expect(hoverInfo(w, far, 0, none)!.lines[1]).toBe('Ausserhalb der Versorgung');
+    expect(hoverInfo(w, far, 0, none)!.lines[1]).toBe(
+      cap(diagnosisText(houseDiagnosis(w, far)[0]!)),
+    );
     const { w: w2, houses } = village(1, { unlockAll: true });
     setHouse(houses[0]!, 2, 8);
     houses[0]!.house!.satisfied = { food: true, cloth: true };
-    expect(hoverInfo(w2, houses[0]!, 0, none)!.lines[1]).toBe('Kapelle fehlt in Reichweite');
+    expect(hoverInfo(w2, houses[0]!, 0, none)!.lines[1]).toBe('Kapelle fehlt');
+    const h = houses[0]!;
+    expect(hoverInfo(w2, h, 0, none)!.lines[1]).toBe(cap(diagnosisText(houseDiagnosis(w2, h)[0]!)));
   });
   it('Spec 13.1 Vorrang: Schiff vor Gebäude, Tier vor Schiff', () => {
     const w = createWorld(3);

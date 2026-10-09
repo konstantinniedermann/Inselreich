@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   TILE_LAYOUT,
@@ -138,20 +139,20 @@ describe('AK-PU-04 Pips', () => {
 });
 
 describe('AK-PU-05 supplyChip', () => {
-  it('versorgt, unversorgt, kein Haus', () => {
+  it('im Radius, ausserhalb, kein Haus (Wortfamilie Versorgung, REL-14)', () => {
     const { w, house, fisher } = uxWorld();
     expect(isSupplied(w, house)).toBe(true);
     expect(supplyChip(w, house)).toEqual({
-      text: 'Versorgt',
+      text: 'Im Versorgungsradius',
       tone: 'ok',
-      label: 'Versorgung: ✓ im Radius',
+      label: 'Kontor oder Marktplatz in Reichweite: Waren kommen an',
     });
     const far = put(w, 'house', { x: 0, y: 0, house: { ...house.house! } });
     expect(isSupplied(w, far)).toBe(false);
     expect(supplyChip(w, far)).toEqual({
-      text: 'Nicht versorgt',
+      text: 'Ausserhalb der Versorgung',
       tone: 'bad',
-      label: 'Versorgung: ✗ ausserhalb von Kontor/Markt',
+      label: 'Kein Kontor oder angebundener Marktplatz in Reichweite: keine Waren',
     });
     expect(supplyChip(w, fisher)).toBeNull();
   });
@@ -370,5 +371,21 @@ describe('AK-PU-17 Struktur-Stabilität', () => {
                 expect(statTiles(b).map((t) => t.key)).toEqual(statKeys(defId));
               }
     }
+  });
+});
+
+describe('REL-14 Quelltext: alte Begriffe und Fehlt-Zeile entfernt', () => {
+  const ui = ['panelView', 'inspect', 'texts', 'hover', 'hints', 'hud'].map((f) =>
+    readFileSync(`src/ui/${f}.ts`, 'utf8'),
+  );
+  it('kein „Versorgt“/„Nicht versorgt“, kein first-missing, kein TIER_LIST', () => {
+    for (const src of ui) {
+      expect(src).not.toMatch(/\bVersorgt\b|Nicht versorgt/);
+      expect(src).not.toMatch(/first-missing|setFirstMissing|TIER_LIST/);
+      expect(src).not.toMatch(/const TIER_IDS/);
+    }
+    // A2 (R427): Rückfall des Haus-Hinweises ist „zufrieden“; „versorgt N Häuser“ (Dienstgebäude, hover.ts) bleibt.
+    expect(readFileSync('src/ui/hints.ts', 'utf8')).not.toContain("'versorgt'");
+    expect(readFileSync('src/style.css', 'utf8')).not.toContain('first-missing');
   });
 });
