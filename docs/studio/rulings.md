@@ -3565,3 +3565,20 @@ Danach `zeitreserve` bei Load ≤ 4 (0 ohne Reserve), Sichtprobe offene See, kur
 und AK-E1-10 stehen in R383.
 
 Entscheider: L0 · Anlass: Mehrbedarf SEE-F1-KORRIDOR · ADR: —
+
+## R385 · 2026-10-09 · KORRIDOR: A/B der langsamen Tests; FIX-TESTLOCK-RACE
+
+Ruling: (1) **SEE-F1-KORRIDOR** +15 frei (Gesamt 195; zweimal rechtzeitig gemeldet). `korridor.mjs` Seeds 1–200: 0 von
+1297 Elementen nahe einer Route; Lane-Test Seeds 1–40 in 18 ms; Sichtprobe offene See OK. Offen: `zeitreserve` meldet
+`waterSea.test.ts`, `wildlife.test.ts`, `decor.test.ts` „R4 Anker und Kontor“ (5,5 s) ohne Reserve. Pflicht: A/B dieser
+drei Dateien gezielt (`npx vitest run <datei>`) auf main und Branch unmittelbar nacheinander bei gleicher Last, Zeiten
+je Test zitieren. Langsamer auf dem Branch → Ursache beheben (Cache/Vorberechnung) oder Seeds 1–40 + Werkzeug wie R384;
+gleich schnell → Altlast, Beobachtung, kein Paket-Blocker. Danach Review (sonnet). Die abschliessende `zeitreserve`-
+Messung bei Load ≤ 4 übernimmt das Push-Gate der nächsten Session. (2) Der rote Lauf von `tests/tools/testlock.test.ts`
+„genau einer gewinnt“ (erhalten 2) ist ein möglicher **echter Wettlauf** in der Sperre, kein blosses Lastartefakt:
+Paket **FIX-TESTLOCK-RACE** (frische lead-tech-Instanz, 30 Tools): Test unter Last reproduzieren (Schleife), Ursache
+belegen, beheben. (3) Beobachtung: `zeitreserve` misst `loadMax` inklusive der vom eigenen Vitest-Lauf erzeugten Last
+(Start 2,8 → Ende 9,8); die Bedingung Last ≤ 4 ist damit auf diesem Rechner nur knapp erreichbar → Kandidat für die
+nächste Retro (Last vor dem Lauf messen, eigene Last abziehen oder Grenze anpassen).
+
+Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
