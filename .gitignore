@@ -10,4 +10,5 @@ NOTES.local.md
 .superpowers/
 .studio/
 .worktrees/
+.vitest/
 __pycache__/

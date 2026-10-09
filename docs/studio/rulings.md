@@ -4168,3 +4168,35 @@ Regelbezug: STUDIO.md Push-Ablauf (R335, R394/R396), gates.md Gate Merge Release
 Minor zurück.
 
 Entscheider: L0 · Anlass: Release-Retro REL-13 · ADR: —
+
+## R430 · 2026-10-09 · Gate Merge Release REL-14: OK
+
+Ruling: **OK** für REL-14 = Kandidat `a04b79d` (Basis `23e8b35`; Merges `90b87db` SIM-FEST-INSEL, `a04b79d`
+UI-INSPEKTOR-KLARTEXT inkl. Trivial-Fixes). Prüfliste: `make check` grün auf dem Kandidaten (131 s, 2855 Tests); Final-Review
+`qa-code-reviewer` opus OK über alle 20 Dateien (AK-R14-01…20 zugeordnet, Save/Balancing/`src/sim/defs` unverändert bis auf
+den Import `TIER_IDS`, deterministisch); Playtest am Kandidaten je UI-Task mit Screenshot (`.studio/qa/REL-14/kandidat/`
+z1, z2, z2b, z3, z4-wechsel-1…3), Smoke bei 1280×720 und 1920×1080 bestanden, Konsole leer; CI-Reserve `make
+check-ci-perf` grün (53 s). Fest ohne Browser-Check, belegt durch `tests/sim/feast.test.ts` (AK-R14-11…13). Merge nach
+`main` lokal durch `production-integrator` (`git merge --no-ff a04b79d`; main hat seit der Basis nur Doku unter
+`docs/studio/` dazubekommen). **Push in der nächsten Session** (R335: der Push dieser Session war REL-13). Drei niedrige
+Befunde (Dienst-Mangel „fehlt in Reichweite“ in der Aufstiegsliste `src/sim/population.ts:156`; Testtitel
+`decorSea.test.ts:259`; Hover-Karte verdeckt Cursor-Hinweis im Playtest) trägt T06 des Werkzeug-Bündels in
+`docs/beobachtungen.md` ein. Danach Meldung an TOOL-BUENDEL (T06/T07 frei).
+
+Regelbezug: gates.md Gate Merge Release; STUDIO.md Push-Ablauf (R335) · Kosten bei Irrtum: Fix-Häppchen vor dem Push der
+nächsten Session.
+
+Entscheider: L0 · Anlass: Release-Check lead-qa · ADR: —
+
+## R431 · 2026-10-09 · REL-14 lokal auf main; see-f3 bleibt; Werkzeug-Bündel T06/T07 frei
+
+Ruling: REL-14 lokal gemergt `ed547b0` (tsc, lint, conflicts Exit 0), REL-14-Worktrees entfernt. Die Annahme aus R426 war
+falsch: Der Worktree `see-f3-schiffskontrast` sieht die `.gitignore` seines eigenen Branches, nicht die von main; er bleibt
+mit `?? .vitest/` stehen (harmlos, kein `--force`, kein Löschen per Ruling in dieser Session). Nächste Session: Ruling, ob
+der Testcache `.vitest/` dort per `rm -r` gelöscht und der Worktree dann normal entfernt wird. **Werkzeug-Bündel:** T06
+(nach `git merge main` in `tool/buendel-py`) und T07 frei, eine dritte Controller-Instanz `lead-tech` (sonnet) zusätzlich
+zu R428; Arbeiter-Starts bleiben im Rahmen 15 (8 verbraucht). Ab jetzt bis zu 3 Arbeiter zugleich (REL-14 fertig).
+
+Regelbezug: STUDIO.md Worktrees aufräumen (R329), R428 · Kosten bei Irrtum: ein verwaister Worktree mehr.
+
+Entscheider: L0 · Anlass: Bericht production-integrator · ADR: —

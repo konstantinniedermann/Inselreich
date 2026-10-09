@@ -194,24 +194,6 @@ export function ruinBlocks(variant: number): Block[] {
     : out;
 }
 
-/** Breite des gezeichneten Stempels in Weltpixeln (nur die Arten mit Mindestbreite in der Fernansicht, sonst 0). */
-export function stampWidthPx(kind: StampKind, variant: number): number {
-  const v = variantOf(kind, variant);
-  if (kind === 'wreck') {
-    const xs = wreckGeom(v).hull.map((p) => p.x);
-    return Math.max(...xs) - Math.min(...xs);
-  }
-  if (kind === 'islet') return 50;
-  return 0;
-}
-/** Mindestbreite von Wrack und Felseiland bei Zoom ≤ 0,25 in CSS-Pixeln (kleiner als das Schiff mit 16 px). */
-export const FAR_MIN_CSS_PX = 10;
-/** Vergrösserungsfaktor (≥ 1) für Wrack und Eiland bei Zoom ≤ 0,25 (wie `shipScale`, aber kleiner); sonst 1. */
-export function minStampScale(kind: StampKind, variant: number, zoom: number): number {
-  if ((kind !== 'wreck' && kind !== 'islet') || zoom > 0.25) return 1;
-  return Math.max(1, FAR_MIN_CSS_PX / (stampWidthPx(kind, variant) * zoom));
-}
-
 /** Höhe des gezeichneten Stempels über dem Boden in Weltpixeln (aus der Formtabelle, ohne Rasterung). */
 export function stampHeight(kind: StampKind, variant: number): number {
   const v = variantOf(kind, variant);
@@ -1111,12 +1093,11 @@ export function drawDecorStamp(
   if (!stamp) return;
   const p = worldToScreen(cam, project(item.fp.x + 0.5, item.fp.y + 0.5));
   const f = z / step;
-  const k = minStampScale(item.stamp, item.variant, z); // vergrössert um den Fusspunkt
   ctx.drawImage(
     stamp,
-    p.x + STAMP_BOX.x0 * z * k,
-    p.y + STAMP_BOX.y0 * z * k,
-    stamp.width * f * k,
-    stamp.height * f * k,
+    p.x + STAMP_BOX.x0 * z,
+    p.y + STAMP_BOX.y0 * z,
+    stamp.width * f,
+    stamp.height * f,
   );
 }

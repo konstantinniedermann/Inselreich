@@ -8,7 +8,15 @@ import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from '../../src/sim/defs/ti
 import { TIERS } from '../../src/sim/defs/tiers';
 import { feastActive, feastBlockReason, feastState, holdFeast } from '../../src/sim/feast';
 import type { Building, TaxLevel, Tier, World } from '../../src/sim/types';
-import { houseFar, houseNearKontor, placeService, placeTownhall, setAllTax } from './helpers';
+import {
+  houseFar,
+  houseNearKontor,
+  placeService,
+  placeTownhall,
+  putBuilding,
+  setAllTax,
+  twoIslandWorld,
+} from './helpers';
 
 let w: World;
 let house: Building;
@@ -427,5 +435,63 @@ describe('AK-T14 + QA-a Fest je Steuerstufe (I-028 R7.3)', () => {
     expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
     expect(home(w).stock.rum).toBe(30 - FEAST_RUM);
     expect(chapel.feastAt).toBe(w.tick);
+  });
+});
+
+describe('SIM-FEST-INSEL: Fest wirkt nur auf der Kapellen-Insel', () => {
+  let tw: World;
+  let homeHouse: Building;
+  let colonyHouse: Building;
+  let homeChapel: Building;
+
+  beforeEach(() => {
+    tw = twoIslandWorld();
+    homeHouse = houseNearKontor(tw);
+    homeChapel = placeService(tw, 'chapel', homeHouse.x + 5, homeHouse.y);
+    // Insel 1 liegt im Kachelraster deckungsgleich zur Heimat: gleiche Koordinaten, andere Insel
+    colonyHouse = putBuilding(tw, 1, 'house', homeHouse.x, homeHouse.y);
+    tw.tick = 1000;
+    home(tw).stock.rum = 30;
+  });
+
+  it('B1 feastActive: Heimathaus wahr, Kolonie-Haus mit gleichen Koordinaten falsch', () => {
+    expect([colonyHouse.island, colonyHouse.x, colonyHouse.y]).toEqual([
+      1,
+      homeHouse.x,
+      homeHouse.y,
+    ]);
+    expect(holdFeast(tw, homeChapel.id)).toEqual({ ok: true });
+    expect(feastActive(tw, homeHouse)).toBe(true);
+    expect(feastActive(tw, colonyHouse)).toBe(false);
+  });
+
+  it('B3 Kolonie-Kapelle wirkt auf das Kolonie-Haus, nicht auf die Heimat; Rum aus der Kolonie', () => {
+    const colonyChapel = putBuilding(tw, 1, 'chapel', homeHouse.x + 5, homeHouse.y);
+    tw.islands[1]!.stock.rum = 30;
+    expect(holdFeast(tw, colonyChapel.id)).toEqual({ ok: true });
+    expect(tw.islands[1]!.stock.rum).toBe(30 - FEAST_RUM);
+    expect(home(tw).stock.rum).toBe(30);
+    expect(feastActive(tw, colonyHouse)).toBe(true);
+    expect(feastActive(tw, homeHouse)).toBe(false);
+  });
+
+  it('B2 Steuerprüfung zählt nur Häuser der Kapellen-Insel', () => {
+    placeTownhall(tw);
+    homeChapel.connected = true; // placeTownhall berechnet die Anbindung neu
+    colonyHouse.house!.tier = 2;
+    tw.taxLevels = { 1: 'high', 2: 'normal', 3: 'high', 4: 'high' };
+    expect(feastBlockReason(tw, homeChapel)).toBe('Steuer «hoch»: kein Aufstieg');
+    const r = holdFeast(tw, homeChapel.id);
+    expect(reasonOf(r)).toBe('Steuer «hoch»: kein Aufstieg');
+    expect(homeChapel.feastAt).toBeUndefined();
+    expect(home(tw).stock.rum).toBe(30);
+  });
+
+  it('B2 Gegenprobe: daheim «normal», Kolonie «hoch» → kein Sperrgrund', () => {
+    placeTownhall(tw);
+    homeChapel.connected = true;
+    colonyHouse.house!.tier = 2;
+    tw.taxLevels = { 1: 'normal', 2: 'high', 3: 'normal', 4: 'normal' };
+    expect(feastBlockReason(tw, homeChapel)).toBeNull();
   });
 });
