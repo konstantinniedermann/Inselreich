@@ -42,7 +42,9 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 Keine Nutzer-Aufträge offen.
 
-1. **Session-End-Push REL-10** gleich zu Beginn (neue Session, ein Push, R335): Push-Gate `make test` +
+0. **TOOL-GATES-2** (R392, lead-tech, ≈ 25 Tools) vor dem Push: `zeitreserve` wertet nur die Last vor dem Lauf
+   (Vorbedingung: Herkunft der E-043-Faktoren belegen), `make check` bricht bei Konfliktmarkern ab.
+1. **Session-End-Push REL-10** gleich danach (neue Session, ein Push, R335): Push-Gate `make test` +
    `make zeitreserve-push` bei Load ≤ 3. Bekannte Kandidaten ohne Reserve: `tests/render/decorSea.test.ts` „L5-T1 Zoom ≤ 0,25
    … Seeds 1–50" (3978 ms / 25 s) und `tests/render/decorStamps.test.ts` „L4-T3 R5 Solitär … Seeds 1–50" (5266 ms / 40 s);
    melden sie bei Load ≤ 4, Trivial-Fix vor dem Push (R391). Danach CI, `gh workflow run Pages --ref main`, `ci.py`.
