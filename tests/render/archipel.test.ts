@@ -16,6 +16,7 @@ import {
   visibleTileRange,
   worldToScreen,
 } from '../../src/render/camera';
+import { convexHull } from '../../src/render/camera';
 import { H_TOWER, project } from '../../src/render/iso';
 import { createWorld } from '../../src/sim/world';
 import { serialize } from '../../src/sim/save';
@@ -98,7 +99,7 @@ describe('M12 E1 Archipel', () => {
   it('cameraBounds sea: Rahmen ± CAMERA_MARGIN', () => {
     const r = archipelRect(ISLANDS);
     expect(r).toEqual({ x0: 0, y0: 0, x1: 114, y1: 136 });
-    expect(cameraBounds(ISLANDS)).toEqual({
+    expect(cameraBounds(ISLANDS)).toMatchObject({
       x0: -CAMERA_MARGIN,
       y0: -CAMERA_MARGIN,
       x1: 114 + CAMERA_MARGIN,
@@ -194,5 +195,70 @@ describe('M12 E2 Render Fremdinseln', () => {
     expect(Object.keys(islandView(w, 2).buildings).map(Number)).toEqual([lj.id]);
     delete w.buildings[lj.id];
     expect(Object.keys(islandView(w, 2).buildings)).toEqual([]);
+  });
+});
+
+describe('REL11 cameraBounds Hülle', () => {
+  const polyArea = (h: readonly { x: number; y: number }[]): number => {
+    let a = 0;
+    h.forEach((p, i) => {
+      const q = h[(i + 1) % h.length]!;
+      a += p.x * q.y - q.x * p.y;
+    });
+    return a / 2;
+  };
+  const inHull = (p: { x: number; y: number }, h: readonly { x: number; y: number }[]): boolean =>
+    h.every((a, i) => {
+      const b = h[(i + 1) % h.length]!;
+      return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) >= -1e-9;
+    });
+  const land = (isl: Placed) => {
+    let x0 = Infinity,
+      y0 = Infinity,
+      x1 = -Infinity,
+      y1 = -Infinity;
+    isl.tiles!.forEach((t, k) => {
+      if (t.terrain === 'water') return;
+      const x = isl.ox + (k % isl.width),
+        y = isl.oy + Math.floor(k / isl.width);
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x + 1);
+      y1 = Math.max(y1, y + 1);
+    });
+    return { x0, y0, x1, y1 };
+  };
+  it('AK-K3 Hülle: Land drin, Ecken nahe Land, Fläche <= Rechteck, Mitte innen, Seeds 1-10', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const isl = createWorld(seed).islands;
+      const b = cameraBounds(isl);
+      const hull = b.hull!;
+      expect(hull, `Seed ${seed}`).toBeDefined();
+      expect(convexHull(hull)).toEqual(hull);
+      const boxes = isl.map(land);
+      for (const r of boxes)
+        for (const p of [
+          { x: r.x0, y: r.y0 },
+          { x: r.x1, y: r.y0 },
+          { x: r.x1, y: r.y1 },
+          { x: r.x0, y: r.y1 },
+        ])
+          expect(inHull(p, hull), `Seed ${seed} Land`).toBe(true);
+      for (const p of hull) {
+        const d = Math.min(
+          ...boxes.map((r) =>
+            Math.hypot(Math.max(r.x0 - p.x, 0, p.x - r.x1), Math.max(r.y0 - p.y, 0, p.y - r.y1)),
+          ),
+        );
+        expect(d, `Seed ${seed} Ecke`).toBeLessThanOrEqual(CAMERA_MARGIN * Math.SQRT2 + 0.01);
+      }
+      const rectArea = (b.x1 - b.x0) * (b.y1 - b.y0);
+      expect(polyArea(hull), `Seed ${seed}`).toBeLessThanOrEqual(rectArea + 1e-6);
+      expect(polyArea(hull), `Seed ${seed} spart Fläche`).toBeLessThanOrEqual(rectArea * 0.95);
+      expect(inHull({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 }, hull)).toBe(true);
+    }
+  });
+  it('AK-K5 Modus jump ohne Hülle', () => {
+    expect(cameraBounds(ISLANDS, 1, 'jump').hull).toBeUndefined();
   });
 });

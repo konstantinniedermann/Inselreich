@@ -4,7 +4,9 @@ import {
   type Camera,
   centerOn,
   clampToMap,
+  clampToPolygon,
   clampToRect,
+  convexHull,
   groundMatrix,
   screenToTile,
   screenToTileF,
@@ -331,5 +333,114 @@ describe('M12 E1 Zoom 0,125 und clampToRect', () => {
     const c: Camera = { x: 0, y: 0, zoom: 1 };
     zoomAt(c, 0.5, 600, 300, VIEW, { x0: -8, y0: -8, x1: 120, y1: 140 });
     expect(c.zoom).toBe(0.5);
+  });
+});
+
+describe('REL11 Kamerahülle', () => {
+  const area = (h: readonly Pt[]): number => {
+    let a = 0;
+    for (let i = 0; i < h.length; i++) {
+      const p = h[i]!,
+        q = h[(i + 1) % h.length]!;
+      a += p.x * q.y - q.x * p.y;
+    }
+    return a / 2;
+  };
+  const SQ = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+  ];
+  const TRI = [
+    { x: 0, y: 0 },
+    { x: 40, y: 0 },
+    { x: 0, y: 40 },
+  ];
+  const dSeg = (p: Pt, a: Pt, b: Pt): number => {
+    const dx = b.x - a.x,
+      dy = b.y - a.y;
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  };
+  const inside = (p: Pt, h: readonly Pt[]): boolean =>
+    h.every((a, i) => {
+      const b = h[(i + 1) % h.length]!;
+      return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) >= -1e-9;
+    });
+
+  it('AK-K1 Rechteck-Ecken ergeben das Rechteck, gegen den Uhrzeigersinn', () => {
+    const h = convexHull([SQ[2]!, SQ[0]!, SQ[3]!, SQ[1]!]);
+    expect(h).toEqual(SQ);
+    expect(area(h)).toBeGreaterThan(0);
+  });
+  it('AK-K1 innere, doppelte und kollineare Punkte fallen weg; deterministisch', () => {
+    const pts = [
+      ...SQ,
+      { x: 5, y: 5 },
+      { x: 0, y: 0 },
+      { x: 5, y: 0 },
+      { x: 10, y: 5 },
+      { x: 3, y: 7 },
+    ];
+    expect(convexHull(pts)).toEqual(SQ);
+    expect(convexHull([...pts].reverse())).toEqual(SQ);
+  });
+  it('AK-K1 Randfälle: leer, ein Punkt', () => {
+    expect(convexHull([])).toEqual([]);
+    expect(convexHull([{ x: 1, y: 2 }])).toEqual([{ x: 1, y: 2 }]);
+  });
+  it('AK-K2 innen unverändert, aussen nächster Randpunkt (Brute Force), idempotent', () => {
+    for (const hull of [SQ, TRI]) {
+      for (let i = 0; i < 200; i++) {
+        const p = { x: ((i * 37) % 97) - 30, y: ((i * 53) % 89) - 25 };
+        const q = clampToPolygon(p, hull);
+        if (inside(p, hull)) {
+          expect(q).toEqual(p);
+          continue;
+        }
+        let best = Infinity;
+        hull.forEach((a, k) => {
+          const b = hull[(k + 1) % hull.length]!;
+          for (let s = 0; s <= 1000; s++)
+            best = Math.min(
+              best,
+              Math.hypot(
+                p.x - (a.x + (b.x - a.x) * (s / 1000)),
+                p.y - (a.y + (b.y - a.y) * (s / 1000)),
+              ),
+            );
+        });
+        expect(Math.hypot(p.x - q.x, p.y - q.y)).toBeLessThanOrEqual(best + 1e-6);
+        expect(
+          Math.min(...hull.map((a, k) => dSeg(q, a, hull[(k + 1) % hull.length]!))),
+        ).toBeLessThan(1e-6);
+        expect(clampToPolygon(q, hull)).toEqual(q);
+      }
+    }
+  });
+  it('AK-K4 clampToRect mit hull: Eck-Wasser landet auf dem Hüllenrand, innen bleibt', () => {
+    const rect = { x0: 0, y0: 0, x1: 40, y1: 40, hull: TRI };
+    const mid = (c: Camera, v = VIEW) => {
+      const t = screenToTileF(c, v.w / 2, v.h / 2);
+      return t;
+    };
+    for (const zoom of [0.5, 1, 2]) {
+      const p = project(35, 35);
+      const c: Camera = { x: p.x - VIEW.w / 2 / zoom, y: p.y - VIEW.h / 2 / zoom, zoom };
+      clampToRect(c, rect, VIEW.w, VIEW.h);
+      const t = mid(c);
+      expect(inside(t, TRI)).toBe(true);
+      expect(Math.min(...TRI.map((a, k) => dSeg(t, a, TRI[(k + 1) % 3]!)))).toBeLessThan(1e-6);
+      const before = { ...c };
+      clampToRect(c, rect, VIEW.w, VIEW.h);
+      expect(c.x).toBeCloseTo(before.x, 6);
+      const q = project(8, 8);
+      const inner: Camera = { x: q.x - VIEW.w / 2 / zoom, y: q.y - VIEW.h / 2 / zoom, zoom };
+      const copy = { ...inner };
+      clampToRect(inner, rect, VIEW.w, VIEW.h);
+      expect(inner.x).toBeCloseTo(copy.x, 6);
+      expect(inner.y).toBeCloseTo(copy.y, 6);
+    }
   });
 });

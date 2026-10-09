@@ -1,7 +1,7 @@
 // archipel.ts — Archipel-Mathematik (Spec M12 Anhang 02 D/F). Darstellungswerte, keine Spielwerte; rein, ohne Weltzugriff.
 import { HOME } from '../sim/world';
 import type { Island, World } from '../sim/types';
-import { screenToTileF, type Camera, type TileRect, type View } from './camera';
+import { convexHull, screenToTileF, type Camera, type TileRect, type View } from './camera';
 import { H_TOWER, project } from './iso';
 
 export type ArchipelView = 'sea' | 'jump';
@@ -127,11 +127,21 @@ export function cameraBounds(
     x1: Math.max(...rs.map((q) => q.x1)),
     y1: Math.max(...rs.map((q) => q.y1)),
   };
+  // Hülle der erweiterten Land-Boxen: die leeren Rahmenecken (nur Wasser) fallen weg, Land bleibt im Bild
+  const hull = convexHull(
+    rs.flatMap((q) => [
+      { x: q.x0 - CAMERA_MARGIN, y: q.y0 - CAMERA_MARGIN },
+      { x: q.x1 + CAMERA_MARGIN, y: q.y0 - CAMERA_MARGIN },
+      { x: q.x1 + CAMERA_MARGIN, y: q.y1 + CAMERA_MARGIN },
+      { x: q.x0 - CAMERA_MARGIN, y: q.y1 + CAMERA_MARGIN },
+    ]),
+  );
   return {
     x0: r.x0 - CAMERA_MARGIN,
     y0: r.y0 - CAMERA_MARGIN,
     x1: r.x1 + CAMERA_MARGIN,
     y1: r.y1 + CAMERA_MARGIN,
+    hull,
   };
 }
 
