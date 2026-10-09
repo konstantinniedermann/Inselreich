@@ -396,8 +396,10 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 
 - Echtzeit-Proben höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
 - **Lastregel (R249 (3), R250, E-030):** Rote Zeittests (`perfBudget`) und Browser-Messungen gelten
-  nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees (Prüfung per `ps`, sonst
-  warten oder allein wiederholen); der Bericht nennt den Last-Zustand. **Lastgrenze (R329, E-045):** Perf- und
+  nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees; das erzwingt seit R375/R376 das Werkzeug
+  `tools/testlock/testlock.ts`: `make check`, `make test` und `make zeitreserve-push` nehmen eine repo-weite Sperre
+  (`<git-common-dir>/studio-testlock`) und brechen bei belegter Sperre oder 1-min-Load > 8 mit Exit 3 und Grund ab
+  (kein Warten; gezielte `npx vitest run <datei>` bleiben frei, auf CI inaktiv); der Bericht nennt den Last-Zustand. **Lastgrenze (R329, E-045):** Perf- und
   Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4; `uptime` vor und nach dem Lauf steht im Beleg. Eine Schwelle wird erst
   gelockert, wenn ein Lauf ohne Last rot ist. Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`
   (R303); nie per `pkill -f` beenden, nur per PID.
