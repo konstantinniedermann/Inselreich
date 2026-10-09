@@ -4061,3 +4061,15 @@ für die Umsetzung (erst nach grünem Push-Gate). UI-SEEKARTE-NACHZUG bleibt Kan
 und Plan laufen parallel zum Push, weil sie keine Testläufe auslösen.
 
 Entscheider: L0 · Anlass: Session-Start, Fortsetzung 1–2 · ADR: —
+
+## R423 · 2026-10-09 · ART-FELS-FERNGROESSE abgehakt; toter Fern-Code als Trivial-Fix
+
+Ruling: Urteil `lead-art` **NEIN** angenommen (Übergabe `.studio/handoffs/2026-10-09-lead-art-lead-art.md`): Meeresfels
+bleibt massstabstreu (reine Deko ohne Sim-Bezug, Bildrangfolge Schiff 16 px vor Fels ≈ 6 px bei Zoom 0,25, Blindprobe
+bestanden). Reevaluations-Trigger: Felsen bekommen Spielwirkung · Playtest vermisst Felsen in der Fernansicht · Schiffs-
+Mindestgrösse oder kleinster Zoom ändert sich. REL-14 hat damit zwei Häppchen. Als Trivial-Fixes in den REL-14-Strang von
+`lead-tech`: toter Code `minStampScale`/`FAR_MIN_CSS_PX`/`stampWidthPx` in `src/render/decorStamps.ts` samt Test entfernen
+(bildneutral), Spec `2026-10-06-lebendige-insel.md` §5 „Fernansicht“ (Wrack als Stempel) auf den Stand REL-07 bringen, und den
+Abhaken-Eintrag mit Triggern in `docs/beobachtungen.md` anlegen.
+
+Entscheider: L0 · Anlass: Designurteil lead-art · ADR: —
