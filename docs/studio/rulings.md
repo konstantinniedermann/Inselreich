@@ -4200,3 +4200,20 @@ zu R428; Arbeiter-Starts bleiben im Rahmen 15 (8 verbraucht). Ab jetzt bis zu 3 
 Regelbezug: STUDIO.md Worktrees aufräumen (R329), R428 · Kosten bei Irrtum: ein verwaister Worktree mehr.
 
 Entscheider: L0 · Anlass: Bericht production-integrator · ADR: —
+
+## R432 · 2026-10-09 · Gate Merge Werkzeug-Bündel: OK; Retro REL-14 in die Session-Retro
+
+Ruling: **OK** für TOOL-BUENDEL: `tool/buendel-py` @ `7d2c189`, `tool/buendel-guard` @ `2b3d1fa`, `tool/buendel-ts` @
+`39239ba`; `make check` je Strang grün; Final-Review opus (T07): guard OK, ts OK, py BEDENKEN mit vier behobenen Punkten
+(Fix `7d2c189`, Rot-Belege) und einem als Beobachtung; AK-TB01…17 belegt; `guard.py`/`VERFASSUNG.md` unverändert;
+`.claude/settings.json` nur ein zusätzlicher PreToolUse-Eintrag `Agent|Task` → `modelguard.py`, fail-open (`|| true`),
+Modus `warn`. Konfliktprobe gegen main für alle drei sauber. Merge lokal seriell durch `production-integrator` (py, guard,
+ts; je `--no-ff`), danach einmal `make check`; kein Push (nächste Session, zusammen mit REL-14). **TOOL-AKTIVIERUNG** bleibt
+für die nächste Session (studio-coach: Kopfzeilen-Syntax, `make hooks`, `deny`), damit der Modus-Wechsel nicht ungeprüft
+ans Session-Ende fällt. Die fällige Retro zu REL-14 und der Budget-Hinweis „lead-tech 3 von 1“ (Zählung der
+Controller-Freigaben je Instanz, kein Überzug der Arbeiter-Starts: 11 von 15) gehen in die Kurz-Retro am Session-Ende; die
+Prozess-Aussensicht zu REL-14 startet nach dem Push.
+
+Regelbezug: gates.md Gate Merge; STUDIO.md Release-Retro (R127/R316) · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-3 · ADR: ADR-014
