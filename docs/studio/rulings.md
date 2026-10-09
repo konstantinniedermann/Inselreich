@@ -3901,3 +3901,17 @@ dateidisjunkt (nur `docs/`): **Wirtschafts-Brainstorming I-028** (Steuer je Stuf
 aus `docs/beobachtungen.md` starten erst nach dem Push (Last ≤ 4 fürs Push-Gate, R396).
 
 Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R412 · 2026-10-09 · Gate Brainstorming I-028 „Steuer je Stufe“ OK; O1–O5 nach Empfehlung
+
+Ruling: **OK** für den Designvorschlag `docs/superpowers/specs/2026-10-09-steuer-je-stufe-vorschlag.md` (`bb86f7d`).
+Prüffragen: stärkt die Säule Wirtschaft (Steuern) und den Aufstieg, Zweck in einem Satz und in 15 Minuten spürbar, Umfang
+begrenzt (§8 des Vorschlags), nur Mechanik (ADR-006); einfachere Variante (Belegung 0,6) geprüft und wegen Umschalt-Gewinn
+verworfen. Offene Punkte: **O1** Kaufleute «hoch» = 115 % (`TAX_LEVELS.high.pctByTier = { 4: 115 }`) ist eine bewusste
+Wertänderung, hiermit freigegeben; Balancing-Test bleibt unverändert grün, betroffene Bestandstests werden im Plan
+angepasst. **O2** «niedrig» für Kaufleute gesperrt (Hinweis im Tooltip; Migration: alter Stand «niedrig» → Kaufleute
+«normal»). **O3** Sperre je Regler. **O4** Kopfzeilen-Knöpfe bleiben als «alle Stufen», Anzeige «gemischt». **O5** Fest
+nur abgelehnt, wenn es auf kein Haus wirkt. Save v10: wer zuerst merged, nimmt v10 (E6 ist geparkt). Nächster Schritt:
+Spec durch `design-spec-author` (Restbudget lead-design 1 Start), danach Gate Spec (lead-tech, lead-qa). Kein §5.3-Vorbehalt.
+
+Entscheider: L0 · Anlass: Gate Brainstorming · ADR: —
