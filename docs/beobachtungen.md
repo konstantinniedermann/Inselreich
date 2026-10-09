@@ -392,3 +392,5 @@ Fundort: `src/ui/input.ts` (`clamp`, Kamerarahmen). Beobachtung: Bei maximal sü
 Wasser; die Rahmen-Ecke liegt bei Kachel 72,121, die südlichste Inselkachel bei 35,106 (Playtest UI-PANEL-AUFRAEUMEN,
 1280×720). Ursprung: qa-playtester in UI-PANEL-AUFRAEUMEN, unabhängig vom Overlay. Einschätzung: niedrig, Bedienkomfort;
 Rahmen enger an die Inselgrenzen plus Rand legen, mit `cameraBounds`-Vitest.
+
+Erledigt (Branch `fix/ui-kamera`, UI-KAMERA-KLEMMUNG): Rahmen = Landausdehnung + 6 Kacheln, `app.ts` klemmt/zentriert mit sichtbarer Höhe (Punkt (a) des Eintrags UI-PANEL-AUFRAEUMEN geschlossen). Offen, niedrig: Der Rahmen ist ein Rechteck um alle Inseln; die Ecken liegen bei verstreuten Inseln im Wasser (Klemmung an die nächste Insel wäre die Abhilfe). Am Rahmenrand schiebt ein Resize/Overlay die Kamera um etwa die halbe Änderung zurück (Mittenklemmung, wie auf `main`).
