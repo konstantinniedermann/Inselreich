@@ -394,3 +394,9 @@ RENDER-LOOK-01 erst danach.
 - **Fundort:** `tools/render-qa/blindprobe.mjs` (Branch `fix/art-meeresfels`) zeichnet ohne Schaumring und ohne Wassertönung; die Blindprobe (10 von 10 richtig) prüft nur die Stempel-Silhouette. Einschätzung: eine Browser-Sichtprobe im echten Spiel beim Release-Check ergänzen.
 - **Fundort:** Worktrees: `.vitest/` liegt untracked in Worktrees (`.gitignore`-Kandidat); ein Scratch-Worktree des Reviewers (Detached HEAD auf main) liegt unter dem Scratchpad, sein Entfernen blockte der Hook (Verfassung §6). Einschätzung: niedrig, Aufräumen durch L0/Integrator.
 - **Fundort:** `tests/render/seaPlanKeepOutIndex.test.ts`: neuer Vollvergleichstest braucht ≈ 2,3 s (neuer Test, nicht unter der 500-ms-Regel für bestehende Tests). Einschätzung: bei Suite-Laufzeitdruck ausdünnen.
+
+### 2026-10-09 · Release-Check REL-11 (qa-playtester): Befunde ohne Blocker
+
+- **Fundort:** Kamera, Seed 7, Zoom 1: Hüllenecke SW zeigt einen reinen Wasserbildschirm, NE nur einen Landstreifen (`.studio/qa/REL-11/B-z1-SW.png`, `B-z1-NE.png`). Ursprung: Release-Check, nach R401 akzeptiert. Einschätzung: niedrig; Korridore oder engere Hülle nur bei Spielerbefund.
+- **Fundort:** Meeresfels bei Zoom 0,25 nur ≈ 5 px, kaum auffindbar (`E-fels-z0.25.png`); keine Boot-Lesart mehr. Ursprung: Release-Check. Einschätzung: niedrig; als Orientierungsmarke kaum nutzbar, Mindestgrösse wie Wrack/Eiland (`FAR_MIN_CSS_PX`) prüfen.
+- **Fundort:** Inspektor-Panel zeigt „Versorgt ✓“ und zugleich „Mangel: Nahrung fehlt“ (`C-inspektor-unversorgt.png`). Ursprung: Release-Check, ergänzt den Eintrag „wirkt doppelt“ oben (Playtest REL-11 UI). Einschätzung: mittel (Spielerverwirrung); Kandidat für ein UI-Häppchen.

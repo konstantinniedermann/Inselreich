@@ -3840,3 +3840,15 @@ Umfang. Budget 10 Starts, Parallelität 1, Richtwert ≈ 70 Tools, Worktree `.wo
 Umsetzung startet sofort (Paket des Release REL-12); kein Push in dieser Session.
 
 Entscheider: L0 · Anlass: Plan UI-SEEKARTE · ADR: —
+
+## R407 · 2026-10-09 · Gate Merge Release REL-11 OK
+
+Ruling: **OK** für REL-11 = main @ `2a66c27` (+ Doku): Browser-Lauf BEDENKEN ohne Blocker (`.studio/qa/REL-11/`):
+smoke.mjs BESTANDEN (1280×720, 1920×1080, Konsole leer), Kamera-Rand BESTANDEN (Zoom 0,25 an allen Ecken Land, Resize
+ohne Sprung, Inselsprung mittig), Kontrast lesbar, Schiff mit Saum auf allen Wasserstufen lesbar, Fels wirkt nicht wie
+ein Boot (Urteil vor Vergleich), Routenfahrt ohne Frames > 25 ms (headless, Hinweis), kein `/favicon.ico`. Review-
+Schritt nach R404 erfüllt. Drei niedrige/mittlere Befunde in `docs/beobachtungen.md` (Hüllenecke Zoom 1, Fels bei
+Zoom 0,25 klein, Inspektor „Versorgt ✓“ plus „Mangel“). **Push in der nächsten Session** (R335) mit dem Push-Gate nach
+Handbuch 1.33; UI-SEEKARTE (REL-12) bleibt bis dahin auf ihrem Branch, falls nicht vorher gemergt (dann eigenes Gate).
+
+Entscheider: L0 · Anlass: Release-Check REL-11 · ADR: —
