@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-09 · Handbuch 1.32
+
+- Anlass: Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, B8, B9, B12 c (V6, E-052)
+- Datenbasis: `docs/studio/metriken/S-2026-10-08-29c3791b.md`, Rulings R363, R370, R383–R386, R388; Plan `docs/superpowers/plans/2026-10-09-see-f1-korridor.md`
+- Ruling: R392
+- Änderungen: Briefing-Vorlage Punkt 5 um zwei Pflichtzeilen ergänzt: Pakete mit `src/`-Änderung messen vor Task 1 die berührten bestehenden Tests auf main (`vitest related`) und vergleichen bei der Abnahme main/Branch unmittelbar nacheinander; Pakete mit Plan streichen keine Prüfschritte zur Budgetersparnis, sondern melden Mehrbedarf. E-052 in `experimente.md` als Vorlagenzeile übernommen
+
 ## 2026-10-08 · Handbuch 1.31
 
 - Anlass: Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B3, B5 (V3, V4)

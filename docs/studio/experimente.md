@@ -459,7 +459,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R375 (als Werkzeug ohne Experimentplatz), R380 (Merge TOOL-TESTLOCK), R387 (FIX-TESTLOCK-RACE)
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B11): Echtprobe zweier `make test` — zweiter bricht ab (R380); eigener ABA-Wettlauf ≈ 3 von 100 Runden gefunden und behoben (R385, R387).
 
-## E-052 · vorgeschlagen · Testzeit-Ausgang vor Task 1
+## E-052 · übernommen als Vorlagenzeile (R392) · Testzeit-Ausgang vor Task 1
 
 - Hypothese: Wenn das Briefing für Pakete mit `src/`-Änderung vor Task 1 die Zeiten der berührten Tests auf main verlangt (`npx vitest related --run <geplante src-Dateien>`, Tests > 200 ms in den Plan) und die Abnahme dieselben Dateien A/B main/Branch unmittelbar nacheinander vergleicht, werden Testzeit-Regressionen bestehender Tests im Plan geschätzt und vor dem Merge-Stand gefunden (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2 B8, B9; R370, R385, R386, R388).
 - Messgrösse: In den nächsten 3 Paketen mit `src/`-Änderung 0 Merge-Abbrüche und 0 Mehrbedarfs-Freigaben wegen Testzeiten bestehender Tests (Ausgang S-2026-10-08-29c3791b: 3 Pakete, KORRIDOR 40 Tools und 3 Merge-Abbrüche). Gegenprobe: Mehraufwand der Messung ≤ 5 Tools je Paket; keine gestrichenen Prüfschritte des Plans.
@@ -467,7 +467,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Pakete mit `src/`-Änderung, höchstens bis 2026-11-19.
 - Rückfall: Briefing-Vorlage und Handbuch 1.31. Stufe 2 bei Misserfolg: `zeitreserve` gegen main-Baseline je Test (Werkzeug, nach E-053).
 - Dateien: `docs/studio/templates/briefing.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R392 (Vorlagenzeile ohne Experimentplatz wie E-043/E-047; die Messgrösse gilt als Messauftrag des Coachs, Bewertung nach 3 Paketen)
+- Start: 2026-10-09, Handbuch 1.32
 
 ## E-053 · vorgeschlagen · `zeitreserve` urteilt nach Fremdlast vor dem Lauf
 

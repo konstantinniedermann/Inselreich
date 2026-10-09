@@ -56,7 +56,7 @@ Keine Nutzer-Aufträge offen.
 ## Aktuelles Projekt und Phase
 
 - Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-09 (REL-10 in main, Push offen), M1–M8, M10, M11,
-  M9-Häppchen, M12. Verfassung **1.2**, Handbuch **1.31**.
+  M9-Häppchen, M12. Verfassung **1.2**, Handbuch **1.32**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit ≤ 5 Arbeiter
   (R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats prüfen (R329); Messungen nur bei 1-min-Load
   ≤ 4 (R329).

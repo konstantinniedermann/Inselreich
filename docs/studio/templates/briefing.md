@@ -23,7 +23,9 @@ Prozessstufe: <leicht|voll>
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
    Pflichtzeilen je Paketart (R375): jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
    Werkzeug-Paket „make studio-test grün; Echtlauf gegen jede externe API (gh, CI, Pages), Ausgabe im Bericht“;
-   Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“
+   Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“;
+   Paket mit `src/`-Änderung (R392, E-052) „vor Task 1 die Zeiten der berührten bestehenden Tests auf main messen (`npx vitest related --run <geplante src-Dateien>`), Tests > 200 ms mit Zeit in den Plan; Abnahme: dieselben Dateien auf main und Branch unmittelbar nacheinander, kein bestehender Test > 500 ms oder > +50 %, Zeiten vorher/nachher im Bericht“;
+   jedes Paket mit Plan „Prüfschritte des Plans (z. B. Task-Reviews) nicht zur Budgetersparnis streichen — Mehrbedarf melden“
 6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>; Umsetzer: Doku-Dateien (D1: README, arc42, ADR, Spec-Verweise) des Plan-Tasks sind ausdrücklich erlaubt (E-017)
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>
 8. Logging-Pflicht: siehe Block „Logging"
