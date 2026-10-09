@@ -428,3 +428,7 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · Push-Gate REL-11/12 (production-integrator): Befund ohne Blocker
 
 - **Fundort:** Doku-Commits der Design-Strecke (`bb86f7d`, I-028 Designvorschlag): ohne `make docs-check` committet; `make lint` im Push-Gate rot (Prettier), Integrator-Abbruch vor `make test`. Ursprung: Push-Gate REL-11/12. Einschätzung: niedrig, Prozess; die schnellen Prüfungen (R410) wirkten wie gedacht, aber Doku-Pakete ohne `.ts` haben die Pflichtzeile nicht. Vorschlag für die Retro: Pflichtzeile „`make docs-check` Exit 0 vor jedem Doku-Commit“ für Design-/Spec-/Plan-Pakete.
+
+### 2026-10-09 · Release-Retro REL-12 (studio-process-coach): Befund ohne Blocker
+
+- **Fundort:** `tools/studio/model.py` (Inaktiv-Erkennung, `pending_incidents`): Ein Spawn-Event ohne folgendes `agent_start` (Auftrag „no-op“, agent_id `adf27249890570d9f`) erzeugt den Vorfall „Agent unbekannt ist inaktiv“, obwohl kein Agent lief. Ursprung: Release-Retro REL-12 (B-b). Einschätzung: niedrig, Werkzeug; Spawns ohne `agent_start` nach einer Frist als „nicht gestartet“ ausblenden statt als inaktiv melden.

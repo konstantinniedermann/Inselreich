@@ -3978,3 +3978,17 @@ unformatierten Doku-Commit `bb86f7d`; Trivial-Fix `4806006` (nur Prettier), Beob
 `make docs-check` für Doku-Pakete (Retro-Thema). Push-Neustart auf dem HEAD nach diesem Ruling.
 
 Entscheider: L0 · Anlass: Gate Plan Delta-Check, Push-Gate-Abbruch · ADR: —
+
+## R417 · 2026-10-09 · Release-Retro REL-12: V1 und V3 angenommen, V2 als Werkzeug-Paket nächste Session
+
+Ruling: Retro `docs/studio/retros/2026-10-09-release-rel12-prozess.md` (`af375d1`) angenommen. **V1** feste Formatzeile
+(E-010: Index + Task-Dateien ≤ 10 KB) in jedem Plan-Briefing; neue AK-Nummern vergibt L0 im Gate-Spec-Ruling; Messgrösse 0
+Gate-Plan-Punkte dieser Klasse in 3 Gates. **V3** Leistungs-AK mit deterministischem Test: Browser-Messung im Release-Check
+entfällt; sonst nur ohne paralleles Lastpaket; Messgrösse 0 Urteile „unter Last ungültig“ in 3 Release-Checks. V1 + V3 setzt
+der studio-coach jetzt um (Handbuch-Minor). **V2** (Prettier-Check geänderter Dateien beim `git commit`, vorhandenes
+Prettier, Ziel < 3 s, Ablehnung ins Event-Log) im Grundsatz angenommen; Umsetzung als Werkzeug-Paket **TOOL-PRETTIER-HOOK**
+in der nächsten Session (Werkzeug-Pflichtzeilen R375); bis dahin `make docs-check` vor Doku-Commits im Briefing. B-b
+(Inaktiv-Vorfall) war ein Phantom ohne Budgetverstoss; Filter-Idee in `docs/beobachtungen.md`. Messauftrag Archivierung
+`docs/beobachtungen.md` (110 KB) an lead-production, Frist nächste Session.
+
+Entscheider: L0 · Anlass: Release-Retro · ADR: —
