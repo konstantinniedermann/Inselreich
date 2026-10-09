@@ -3645,3 +3645,13 @@ Rechteck um verstreute Inseln) → Paket **UI-KAMERA-RAND** (lead-tech, REL-11):
 bzw. Rauten-Rahmen. Push von REL-10 erst in der nächsten Session (R335), nach dem Merge von FIX-ZEITRESERVE-REL10.
 
 Entscheider: L0 · Anlass: Release-Check REL-10 · ADR: —
+
+## R391 · 2026-10-09 · Gate Merge FIX-ZEITRESERVE-REL10 OK
+
+Ruling: **OK** für `test/zeitreserve-rel10` @ 649802d: `testlock`-Test parallelisiert mit 1500 ms Haltezeit (≈ 1,7 s
+statt 4 s, 5/5 grün), `trees-licht` c) mit geteiltem Aufbau und hergeleitetem Timeout 10 s; Doku zur Testsperre in
+README/arc42, Zweitlos-Satz korrigiert, zwei Beobachtungen; Kurz-Review OK, `make check` grün. Offen: `zeitreserve`
+meldete 2 weitere Tests ohne Reserve bei unbekannter Last — Abnahme am Push-Gate der nächsten Session; meldet es dort
+bei Load ≤ 4 Tests, folgt ein Trivial-Fix vor dem Push. Merge lokal durch den Integrator.
+
+Entscheider: L0 · Anlass: Bericht FIX-ZEITRESERVE-REL10 · ADR: —
