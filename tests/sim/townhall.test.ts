@@ -14,7 +14,7 @@ import { effectiveTaxLevel, townhallActive } from '../../src/sim/townhall';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
 import { nextUnlocks } from '../../src/sim/unlocks';
 import { createWorld, home } from '../../src/sim/world';
-import { forceRect, placeService, placeTownhall, prepareEast, village } from './helpers';
+import { forceRect, placeService, placeTownhall, prepareEast, setAllTax, village } from './helpers';
 
 const placeRoadOk = (w: World, x: number, y: number): boolean => placeRoad(w, x, y).ok;
 
@@ -88,23 +88,23 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
   it('AK-S2-04 wirksame Steuer: ohne Amtsstube normal (56, Belegung 8); hoch 72 / 6; niedrig 39; Brand → 56', () => {
     const { w, houses } = village(1, { unlockAll: true });
     fill(w, houses[0]!, 2, 8);
-    w.taxLevel = 'high';
-    expect(effectiveTaxLevel(w)).toBe('normal');
+    setAllTax(w, 'high');
+    expect(effectiveTaxLevel(w, 2)).toBe('normal');
     expect(totalTaxes(w)).toBe(56);
     expect(houseCap(w, houses[0]!.house!)).toBe(8);
     const t = placeTownhall(w);
-    expect(effectiveTaxLevel(w)).toBe('high');
+    expect(effectiveTaxLevel(w, 2)).toBe('high');
     expect(totalTaxes(w)).toBe(72);
     expect(houseCap(w, houses[0]!.house!)).toBe(6);
-    w.taxLevel = 'low';
+    setAllTax(w, 'low');
     expect(totalTaxes(w)).toBe(39);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     t.outageUntil = w.tick + 10;
     expect(totalTaxes(w)).toBe(56);
   });
   it('AK-S2-05 setTaxLevel: Gründe in Spec-Reihenfolge, nichts geändert; mit Amtsstube wie M5; unlockAll ohne Amtsstube', () => {
     const w = createWorld(3, { unlockAll: true });
-    const keep = (): unknown[] => [w.taxLevel, w.taxLockedUntil];
+    const keep = (): unknown[] => [{ ...w.taxLevels }, { ...w.taxLockedUntil }];
     const s0 = keep();
     expect(setTaxLevel(w, 'foo')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
     expect(setTaxLevel(w, 'high')).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
@@ -129,14 +129,14 @@ describe('M10 Amtsstube: Abriss, Sperren, Werkzeugmacher, Stopp (Spec 5.2–5.5)
     fill(w, houses[0]!, 2, 8);
     const t = placeTownhall(w);
     expect(setTaxLevel(w, 'high').ok).toBe(true);
-    const lock = w.taxLockedUntil;
+    const lock = { ...w.taxLockedUntil };
     expect(demolish(w, t.id).ok).toBe(true);
     step(w);
-    expect(effectiveTaxLevel(w)).toBe('normal');
-    expect(w.taxLevel).toBe('high');
+    expect(effectiveTaxLevel(w, 2)).toBe('normal');
+    expect(w.taxLevels).toEqual({ 1: 'high', 2: 'high', 3: 'high', 4: 'high' });
     placeTownhall(w);
-    expect(effectiveTaxLevel(w)).toBe('high');
-    expect(w.taxLockedUntil).toBe(lock);
+    expect(effectiveTaxLevel(w, 2)).toBe('high');
+    expect(w.taxLockedUntil).toEqual(lock);
   });
   it('AK-S2-07 setGoodLock: Gründe, Sortierung, idempotent, Entfernen; unlockAll ohne Amtsstube', () => {
     const w = createWorld(3);
@@ -290,13 +290,13 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     const w = createWorld(3, { crisisLevel: 'normal' });
     w.unlocked = ['U0', 'U2', 'U3'];
     placeTownhall(w);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     const n = nextUnlocks(w);
     expect(n.find((e) => e.id === 'U4')!.taxBlocks).toBe(true);
     expect(n.find((e) => e.id === 'U1')!.taxBlocks).toBe(false);
     const v = createWorld(3, { crisisLevel: 'normal' });
     v.unlocked = ['U0', 'U2', 'U3'];
-    v.taxLevel = 'high';
+    setAllTax(v, 'high');
     expect(nextUnlocks(v).every((e) => !e.taxBlocks)).toBe(true);
   });
   it('AK-S2-13 Aufstiegsstopp (K1): angehalten nur mit aktiver Amtsstube; Gründe (M11 S10)', () => {
@@ -342,17 +342,20 @@ describe('M10 taxBlocks, Aufstiegsstopp, Determinismus mit Speichern (Spec 12.2,
     home(w).stock.cloth = 50;
     home(w).stock.food = 50;
     expect(setGoodLock(w, 2, 'cloth', true).ok).toBe(true);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     t.outageUntil = w.tick + 1000;
     houses[0]!.house!.demand.cloth = 1;
     step(w);
     expect(home(w).stock.cloth).toBe(49);
-    expect(effectiveTaxLevel(w)).toBe('normal');
+    expect(effectiveTaxLevel(w, 2)).toBe('normal');
     t.outageUntil = undefined;
     houses[0]!.house!.demand.cloth = 1;
     step(w);
     expect(home(w).stock.cloth).toBe(49);
-    expect(effectiveTaxLevel(w)).toBe('high');
-    expect([w.goodLocks, w.taxLevel]).toEqual([[{ tier: 2, good: 'cloth' }], 'high']);
+    expect(effectiveTaxLevel(w, 2)).toBe('high');
+    expect([w.goodLocks, w.taxLevels]).toEqual([
+      [{ tier: 2, good: 'cloth' }],
+      { 1: 'high', 2: 'high', 3: 'high', 4: 'high' },
+    ]);
   });
 });

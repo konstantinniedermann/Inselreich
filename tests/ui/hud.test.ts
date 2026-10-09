@@ -28,7 +28,7 @@ import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
-import { houseNearKontor, placeTownhall } from '../sim/helpers';
+import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -147,7 +147,7 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
   });
   it('AK-U1-13 Bilanz-Tooltip ohne aktive Amtsstube mit „Steuer: normal (keine Amtsstube)"', () => {
     const w = createWorld(3);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(balanceTooltip(w)).toContain('Steuer: normal (keine Amtsstube)');
   });
 });
@@ -169,6 +169,20 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
   it('AK-U4-01 jedes Gut hat ein Symbol gleicher Kennung', () => {
     const w = createWorld(3);
     for (const g of GOOD_IDS) expect(chipView(w, g).icon).toBe(g);
+  });
+});
+
+describe('I-028 Steuer-Chip bei gemischtem Stand (U-7)', () => {
+  it('taxView: Text «gemischt», Label «Steuer gemischt»; Bilanz-Tooltip ohne Amtsstube «normal»', () => {
+    const w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    w.taxLevels = { 1: 'low', 2: 'normal', 3: 'normal', 4: 'high' };
+    expect(taxView(w)).toEqual({ icon: 'tax', text: 'gemischt', label: 'Steuer gemischt' });
+    setAllTax(w, 'high');
+    expect(taxView(w)!.text).toBe('hoch');
+    const v = createWorld(3);
+    v.taxLevels = { 1: 'high', 2: 'normal', 3: 'low', 4: 'high' };
+    expect(balanceTooltip(v)).toContain('Steuer: normal (keine Amtsstube)');
   });
 });
 

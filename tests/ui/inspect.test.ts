@@ -33,7 +33,7 @@ import { home, createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
 import { setGoodLock } from '../../src/sim/tax';
-import { placeTownhall, setHouse as setHouseTo, village } from '../sim/helpers';
+import { placeTownhall, setAllTax, setHouse as setHouseTo, village } from '../sim/helpers';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -239,8 +239,23 @@ describe('M10 noService', () => {
 describe('M10 Ruhe-Ansicht Steuer', () => {
   it('AK-U1-13 rest-tax: wirksame Stufe, ohne aktive Amtsstube mit Zusatz', () => {
     const w = createWorld(3);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
+  });
+  it('AK-T33 (U-8, QA-d) gemischt, alle hoch, ohne Amtsstube gemischt', () => {
+    const w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    w.taxLevels = { 1: 'low', 2: 'normal', 3: 'normal', 4: 'high' };
+    expect(restView(w).tax).toBe('Steuer gemischt: P niedrig · S normal · B normal · K hoch');
+    setAllTax(w, 'high');
+    expect(restView(w).tax).toBe(
+      'hoch: 130 % Steuer (Kaufleute 115 %) · kein Aufstieg · Häuser nur zu 75 % belegt',
+    );
+    const v = createWorld(3);
+    v.taxLevels = { 1: 'low', 2: 'normal', 3: 'normal', 4: 'high' };
+    expect(restView(v).tax).toBe(
+      'normal: 100 % Steuer · Aufstieg nach 30 s Zufriedenheit · Häuser voll belegt (keine Amtsstube)',
+    );
   });
 });
 

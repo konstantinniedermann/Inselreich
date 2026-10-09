@@ -1,4 +1,5 @@
 import { FUNCTION_ENTRY } from './defs/unlocks';
+import { TAX_LEVELS } from './defs/tiers';
 import type { Building, GoodId, TaxLevel, Tier, World } from './types';
 
 const townhalls = (w: World): Building[] =>
@@ -12,9 +13,13 @@ export function townhallActive(w: World): boolean {
 export function townhallReason(w: World): 'Braucht eine Amtsstube' | 'Amtsstube wirkt nicht' {
   return townhalls(w).length === 0 ? 'Braucht eine Amtsstube' : 'Amtsstube wirkt nicht';
 }
-/** Spec 5.2: gespeicherte Stufe nur mit aktiver Amtsstube, sonst „normal". */
-export function effectiveTaxLevel(w: World): TaxLevel {
-  return townhallActive(w) ? w.taxLevel : 'normal';
+/** Spec 5.2: gespeicherte Stufe der Bevölkerungsstufe nur mit aktiver Amtsstube, sonst „normal". */
+export function effectiveTaxLevel(w: World, tier: Tier): TaxLevel {
+  return townhallActive(w) ? w.taxLevels[tier] : 'normal';
+}
+/** Steuersatz in % der Grundsteuer für eine Bevölkerungsstufe: `pctByTier` vor `pct`. */
+export function taxPct(level: TaxLevel, tier: Tier): number {
+  return TAX_LEVELS[level].pctByTier?.[tier] ?? TAX_LEVELS[level].pct;
 }
 /** Spec 5.3: wirkt nur mit freier Ausgabesperre (U5) und aktiver Amtsstube; leer → sofort false (bitgleich). */
 export function goodLockActive(w: World, tier: Tier, good: GoodId): boolean {

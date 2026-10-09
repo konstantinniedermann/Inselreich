@@ -4,7 +4,7 @@ import { UNLOCKS } from '../../src/sim/defs/unlocks';
 import type { CrisisLevel } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { nextStep } from '../../src/ui/guide';
-import { placeTownhall, setHouse, village } from '../sim/helpers';
+import { placeTownhall, setAllTax, setHouse, village } from '../sim/helpers';
 import { nameSegments } from '../../src/ui/messages';
 import {
   STORAGE_NOTES,
@@ -97,7 +97,7 @@ describe('M10 Hilfe-Karte (Spec 12.1)', () => {
     const t = createWorld(3, { crisisLevel: 'normal' });
     t.unlocked = ['U0', 'U2', 'U3'];
     placeTownhall(t);
-    t.taxLevel = 'high';
+    setAllTax(t, 'high');
     const next = helpSections(t).find((x) => x.field === 'help-next')!.lines;
     expect(
       next

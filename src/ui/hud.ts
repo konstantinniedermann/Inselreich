@@ -6,7 +6,7 @@ import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, populationByTier } from '../sim/population';
 import { crisisView, goalView, goodsBalance } from '../sim/queries';
-import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
+import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked, isUnlocked } from '../sim/unlocks';
 import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
@@ -15,6 +15,7 @@ import type { Settings } from './settings';
 import { renderOrder, updateOrder } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
+import { taxButtonTitle, taxSummaryText } from './taxView';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { islandList } from './islandJump';
@@ -102,9 +103,7 @@ export function balanceView(world: World): ChipView {
 /** Steuer-Knopf: Steuer-Symbol und Stufenname, oder `null` ohne aktive Amtsstube. */
 export function taxView(world: World): ChipView | null {
   const label = taxButtonText(world);
-  return label === null
-    ? null
-    : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world)].name, label };
+  return label === null ? null : { icon: 'tax', text: taxSummaryText(world), label };
 }
 
 /** Rolle eines Chips: ein Knopf bleibt Knopf (sein `aria-label` ist gültig), alles andere braucht `img`. */
@@ -314,7 +313,11 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     // `.hud-tax` setzt `display: flex`; das Attribut allein verbirgt es nicht (style.css gehört nicht zu U1)
     const display = hide ? 'none' : '';
     if (taxBox.style.display !== display) taxBox.style.display = display;
-    if (tax !== null) setChip(header, 'tax', tax);
+    if (tax !== null) {
+      const btn = setChip(header, 'tax', tax);
+      const tip = taxButtonTitle(world);
+      if (btn && btn.title !== tip) btn.title = tip;
+    }
   }
   for (const btn of header.querySelectorAll<HTMLButtonElement>('.hud-speed .btn')) {
     btn.classList.toggle('active', btn.dataset.speed === String(state.speed));
@@ -515,7 +518,7 @@ export function stockPrefix(world: World, island: number): string | null {
 
 /** Steuer-Knopf der Kopfzeile (wirksame Stufe) oder `null` ohne aktive Amtsstube (Spec 11.8). */
 export function taxButtonText(world: World): string | null {
-  return townhallActive(world) ? `Steuer ${TAX_LEVELS[effectiveTaxLevel(world)].name}` : null;
+  return townhallActive(world) ? `Steuer ${taxSummaryText(world)}` : null;
 }
 
 /** Tooltip der Bilanz: Steuern und Unterhalt; ohne aktive Amtsstube die Zeile zur Steuer (Spec 11.8). */
@@ -523,7 +526,7 @@ export function balanceTooltip(world: World): string {
   const base = balanceText(world.stats).title;
   return townhallActive(world)
     ? base
-    : `${base}\nSteuer: ${TAX_LEVELS[effectiveTaxLevel(world)].name} (keine Amtsstube)`;
+    : `${base}\nSteuer: ${TAX_LEVELS.normal.name} (keine Amtsstube)`;
 }
 
 export function balanceText(stats: { taxes: number; upkeep: number }): {

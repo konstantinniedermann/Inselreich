@@ -3,10 +3,11 @@ import { home } from '../sim/world';
 import { PALETTE } from '../render/palette';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { GOOD_IDS, GOODS } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS, WIN_SPICE_MERCHANTS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS, WIN_SPICE_MERCHANTS } from '../sim/defs/tiers';
+import { taxTarget } from '../sim/tax';
 import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
-import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
+import { effectiveTaxLevel, taxPct, townhallActive } from '../sim/townhall';
 import { entryOfBuilding, isUnlocked, unlockText } from '../sim/unlocks';
 import { houseDiagnosis, missingInputs } from '../sim/queries';
 import type {
@@ -162,9 +163,13 @@ export function nextStep(w: World): string {
   if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
     return 'Gründe ein Kontor auf einer Insel mit Gewürz';
   if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
-  const tax = effectiveTaxLevel(w);
-  if (TAX_LEVELS[tax].upgradeWait === null && houses.some(canRise))
-    return `Steuer ‚${TAX_LEVELS[tax].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
+  const blocked = TIER_IDS.find(
+    (t) =>
+      TAX_LEVELS[effectiveTaxLevel(w, t)].upgradeWait === null &&
+      houses.some((h) => h.house!.tier === t && canRise(h)),
+  );
+  if (blocked !== undefined)
+    return `Steuer ‚${TAX_LEVELS.high.name}' für ${TIERS[blocked].name} verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
   return 'Baue weitere Wohnhäuser und versorge sie';
 }
 
@@ -178,7 +183,16 @@ export function taxEffect(level: TaxLevel): string {
     t.occupancy === 1
       ? 'Häuser voll belegt'
       : `Häuser nur zu ${Math.round(t.occupancy * 100)} % belegt`;
-  return `${t.name}: ${t.pct} % Steuer · ${up} · ${occ}`;
+  const pct = `${t.pct} %`;
+  const extra = TIER_IDS.flatMap((tier) => {
+    const parts: string[] = [];
+    if (taxPct(level, tier) !== t.pct) parts.push(`${TIERS[tier].name} ${taxPct(level, tier)} %`);
+    if (taxTarget(level, tier) !== level)
+      parts.push(`${TIERS[tier].name} ${TAX_LEVELS.normal.name}`);
+    return parts;
+  });
+  const extras = extra.map((e) => ` (${e})`).join('');
+  return `${t.name}: ${pct} Steuer${extras} · ${up} · ${occ}`;
 }
 
 export function remedyText(w: World, b: Building): string | null {

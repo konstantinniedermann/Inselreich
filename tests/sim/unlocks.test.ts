@@ -15,7 +15,7 @@ import {
   UNLOCK_IDS,
   UNLOCKS,
 } from '../../src/sim/defs/unlocks';
-import { deserialize, serialize } from '../../src/sim/save';
+import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { UnlockId, World } from '../../src/sim/types';
 import {
@@ -126,7 +126,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
 
   it('AK-S1-02 createWorld: version 5, v5-Felder; unlockAll ändert nur unlocked', () => {
     const w = createWorld(3);
-    expect(w.version).toBe(9);
+    expect(w.version).toBe(SAVE_VERSION);
     expect(w.unlocked).toEqual(['U0']);
     expect(w.goodLocks).toEqual([]);
     expect(w.upgradeStops).toEqual([]);

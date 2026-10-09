@@ -13,12 +13,13 @@ import {
   UPKEEP_INTERVAL,
 } from './defs/timing';
 import { LEVELS } from './defs/levels';
-import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS } from './defs/tiers';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import { generateForeignIslands, homeAnchor, laneTicks, type LaneIsland } from './islands';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
+import { canRiseTier, taxTarget } from './tax';
 import { deriveUnlocks } from './unlocks';
 import type {
   BuildingState,
@@ -27,11 +28,13 @@ import type {
   GoodId,
   LoadResult,
   Terrain,
+  TaxLevel,
+  Tier,
   UnlockId,
   World,
 } from './types';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export type { LoadResult };
 
@@ -82,11 +85,27 @@ function isValidOrder(o: unknown, tick: unknown): boolean {
   return o.due === offered + ORDER_DURATION && tick >= offered && tick <= o.due;
 }
 
-/** Felder von Save v2: Steuerstufe, Sperre, Verkaufsanteile, Auftrag. */
+/** Objekt mit genau den Schlüsseln der Bevölkerungsstufen, dessen Werte `ok` erfüllen. */
+const isPerTier = (v: unknown, ok: (x: unknown, tier: Tier) => boolean): boolean =>
+  isObject(v) &&
+  Object.keys(v).length === TIER_IDS.length &&
+  TIER_IDS.every((t) => Object.hasOwn(v, String(t)) && ok(v[String(t)], t));
+
+/** Steuerfelder (v10): Stufe und Sperre je Bevölkerungsstufe. */
+function isValidTaxFields(raw: Record<string, unknown>): boolean {
+  return (
+    isPerTier(
+      raw.taxLevels,
+      (l, t) =>
+        typeof l === 'string' && Object.hasOwn(TAX_LEVELS, l) && !(l === 'low' && !canRiseTier(t)),
+    ) && isPerTier(raw.taxLockedUntil, (n) => isInt(n) && n >= 0)
+  );
+}
+
+/** Felder von Save v2: Steuerstufen, Verkaufsanteile, Auftrag. */
 function isValidV2Fields(raw: Record<string, unknown>): boolean {
-  const { taxLevel, sellPct } = raw;
-  if (typeof taxLevel !== 'string' || !Object.hasOwn(TAX_LEVELS, taxLevel)) return false;
-  if (!isInt(raw.taxLockedUntil) || raw.taxLockedUntil < 0) return false;
+  const { sellPct } = raw;
+  if (!isValidTaxFields(raw)) return false;
   if (
     !isObject(sellPct) ||
     !GOOD_IDS.every((g) => isInt(sellPct[g]) && sellPct[g] >= SELL_FLOOR && sellPct[g] <= 100)
@@ -102,6 +121,26 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
   raw.taxLockedUntil = 0;
   raw.sellPct = Object.fromEntries(GOOD_IDS.map((g) => [g, 100]));
   raw.order = null;
+}
+
+/**
+ * v9 → v10: ein Steuerregler wird zu vier (je Bevölkerungsstufe); «niedrig» wird für Stufen ohne Aufstieg
+ * zu «normal» (`taxTarget`). Wirft nie; ungültige Werte werden unverändert übernommen, die Ladeprüfung weist
+ * sie ab. Nicht idempotent: ein zweiter Aufruf findet kein `taxLevel` mehr, läuft aber über das schon
+ * verteilte `taxLockedUntil` erneut und macht daraus Objekte in Objekten; er gehört nur zur Kette v9 → v10.
+ */
+export function migrateV9ToV10(raw: Record<string, unknown>): void {
+  if ('taxLevel' in raw) {
+    raw.taxLevels = Object.fromEntries(
+      TIER_IDS.map((t) => [t, taxTarget(raw.taxLevel as TaxLevel, t)]),
+    );
+    delete raw.taxLevel;
+  }
+  if ('taxLockedUntil' in raw) {
+    const old = raw.taxLockedUntil;
+    raw.taxLockedUntil = Object.fromEntries(TIER_IDS.map((t) => [t, old]));
+  }
+  raw.version = 10;
 }
 
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
@@ -629,6 +668,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 6) migrateV6ToV7(raw);
   if (raw.version === 7) migrateV7ToV8(raw);
   const grace = raw.version === 8 ? migrateV8ToV9(raw) : 0;
+  if (raw.version === 9) migrateV9ToV10(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

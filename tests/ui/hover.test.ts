@@ -17,7 +17,15 @@ import {
   type HoverState,
 } from '../../src/ui/hover';
 import { protectedCount } from '../../src/ui/inspect';
-import { forceGrass, forceRect, houseFar, placeService, setHouse, village } from '../sim/helpers';
+import {
+  forceGrass,
+  forceRect,
+  houseFar,
+  placeService,
+  placeTownhall,
+  setHouse,
+  village,
+} from '../sim/helpers';
 
 const rainWeather = (): Weather => ({ kind: 'rain', w: 1 });
 
@@ -122,6 +130,23 @@ describe('M10 Mouse-over (Spec 13)', () => {
       'Sperren: 0',
       'Klicken zum Einstellen',
     ]);
+  });
+  it('AK-T33 (QA-d) Haus: Steuerzeile der Stufe nur mit aktiver Amtsstube; Amtsstube gemischt', () => {
+    const { w, houses } = village(1, { unlockAll: true });
+    const h = houses[0]!;
+    setHouse(h, 3, 6);
+    h.house!.supplied = true;
+    const lines = (): string[] => hoverInfo(w, h, 0, none)!.lines;
+    const before = lines();
+    expect(before.some((l) => l.startsWith('Steuer:'))).toBe(false);
+    const hall = placeTownhall(w);
+    expect(lines()).toEqual([...before, 'Steuer: normal']);
+    w.taxLevels[3] = 'high';
+    expect(lines().at(-1)).toBe('Steuer: hoch');
+    w.taxLevels[1] = 'low';
+    expect(hoverInfo(w, hall, 0, none)!.lines[0]).toBe('Steuer: gemischt');
+    w.taxLevels = { 1: 'high', 2: 'high', 3: 'high', 4: 'high' };
+    expect(hoverInfo(w, hall, 0, none)!.lines[0]).toBe('Steuer: hoch');
   });
   it('AK-U3-03 Gelände, Schiff, Tier', () => {
     const w = createWorld(3);

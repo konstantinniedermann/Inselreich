@@ -369,7 +369,7 @@ describe('M8 Szenarien', () => {
       [3, 15],
     ]);
     expect(citizens(w)).toBe(45);
-    expect(w.taxLevel).toBe('normal');
+    expect(w.taxLevels).toEqual({ 1: 'normal', 2: 'normal', 3: 'normal', 4: 'normal' });
     for (const id of ['chapel', 'school'] as const)
       expect(buildingsOfType(w, id)[0]!.connected, id).toBe(true);
     expect(buildingsOfType(w, 'bathhouse')).toHaveLength(0);
@@ -511,7 +511,7 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       const r = deserialize(serialize(w));
       expect(r.ok, name).toBe(true);
       if (!r.ok) continue;
-      expect(r.world.version).toBe(9);
+      expect(r.world.version).toBe(SAVE_VERSION);
       expect(r.world.unlocked, name).toEqual(
         name === 'm10-start' ? ['U0'] : deriveUnlocks(r.world),
       );

@@ -39,6 +39,17 @@ function spendRum(world: World, chapel: Building): Result {
   return ok;
 }
 
+/** Spec R7.3: Ein Fest wirkt auf Häuser mit Steuerstufe «normal»; ohne ein solches Haus im Radius lehnt die Steuer ab. */
+function taxBlock(world: World, chapel: Building): string | null {
+  const levels = Object.values(world.buildings)
+    .filter((b) => b.house !== undefined && inChapelRadius(chapel, b))
+    .map((b) => effectiveTaxLevel(world, b.house!.tier));
+  if (levels.length === 0 || levels.includes('normal')) return null;
+  if (levels.every((l) => l === 'high')) return `Steuer «${TAX_LEVELS.high.name}»: kein Aufstieg`;
+  if (levels.every((l) => l === 'low')) return `Steuer «${TAX_LEVELS.low.name}»: Fest ohne Wirkung`;
+  return 'Steuer: Fest wirkt auf kein Haus';
+}
+
 /** Sperrgrund für ein Fest ohne Rumprüfung, sonst null. */
 function feastBlock(world: World, chapel: Building): string | null {
   const { phase } = feastState(world, chapel);
@@ -46,11 +57,7 @@ function feastBlock(world: World, chapel: Building): string | null {
   if (phase === 'cooldown') return 'Abklingzeit';
   if (chapel.outageUntil !== undefined) return 'Kapelle brennt';
   if (!chapelWorks(chapel)) return 'Kapelle nicht angebunden';
-  const level = effectiveTaxLevel(world);
-  if (TAX_LEVELS[level].upgradeWait === null)
-    return `Steuer «${TAX_LEVELS[level].name}»: kein Aufstieg`;
-  if (level === 'low') return `Steuer «${TAX_LEVELS[level].name}»: Fest ohne Wirkung`;
-  return null;
+  return taxBlock(world, chapel);
 }
 
 /** Sperrgrund für ein Fest an dieser Kapelle (inkl. Rum-Bestand, ohne Abbuchung), sonst null. Rein lesend. */
@@ -71,14 +78,19 @@ export function holdFeast(world: World, id: number): Result {
   return ok;
 }
 
+/** Mittelpunktabstand des Hauses zur Kapelle liegt im Dienstradius. */
+function inChapelRadius(chapel: Building, house: Building): boolean {
+  const hc = center(BUILDING_DEFS[house.defId], house.x, house.y);
+  const def = BUILDING_DEFS[chapel.defId];
+  const c = center(def, chapel.x, chapel.y);
+  return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (def.serviceRadius ?? 0);
+}
+
 /** Wirkt ein Fest auf das Haus: eine laufende, arbeitende Kapelle mit dem Haus im Dienstradius (Id-Reihenfolge, einmal). */
 export function feastActive(world: World, house: Building): boolean {
-  const hc = center(BUILDING_DEFS[house.defId], house.x, house.y);
   return Object.values(world.buildings).some((b) => {
     if (b.feastAt === undefined || !chapelWorks(b)) return false;
     if (feastState(world, b).phase !== 'active') return false;
-    const def = BUILDING_DEFS[b.defId];
-    const c = center(def, b.x, b.y);
-    return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (def.serviceRadius ?? 0);
+    return inChapelRadius(b, house);
   });
 }

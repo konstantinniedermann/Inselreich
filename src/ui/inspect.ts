@@ -11,7 +11,7 @@ import { LEVELS } from '../sim/defs/levels';
 import { upkeepOf, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
-import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
+import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
 import { feastView, houseFeastLine } from './feast';
@@ -20,6 +20,14 @@ import type { Building, BuildingDefId, GoodId, TaxLevel, Tier, World } from '../
 import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
+import {
+  taxLockText,
+  taxStatusLine,
+  taxSummary,
+  tierTaxPerMinute,
+  tierTaxTooltip,
+} from './taxView';
+import { taxTarget } from '../sim/tax';
 import { friendlyReason } from './hints';
 import { renderShipSection, updateShipSection, type ShipActions } from './ships';
 import { goalTexts } from './goal';
@@ -79,6 +87,8 @@ export interface InspectActions {
   upgrade(id: number): void;
   /** Amtsstube: Steuerstufe, Ausgabesperre und Aufstiegsstopp setzen; die Ablehnung zeigt der Aufrufer. */
   setTax(level: TaxLevel): void;
+  /** Amtsstube: Regler einer Bevölkerungsstufe setzen; die Ablehnung zeigt der Aufrufer. */
+  setTierTax(tier: Tier, level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
@@ -164,7 +174,7 @@ export function upgradeOkText(): string {
 export function upgradeReasonTexts(world: World, b: Building): string[] {
   const cost = TIERS[b.house!.tier].upgradeCost!;
   return upgradeStatus(world, b).reasons.map(
-    (r) => `✗ ${friendlyReason(world, r, { cost, island: b.island })}`,
+    (r) => `✗ ${friendlyReason(world, r, { cost, island: b.island, tier: b.house!.tier })}`,
   );
 }
 
@@ -587,23 +597,49 @@ function toggleButton(
 /** Gerüst des Amtsstuben-Panels (Spec 11.8): Zustand, Steuer, Sperr-Matrix, Aufstiegsstopp. */
 function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
   addLine(panel, '', 'townhall-state').classList.add('negative');
-  const taxes = document.createElement('div');
-  taxes.className = 'panel-actions';
-  for (const level of Object.keys(TAX_LEVELS) as TaxLevel[]) {
+  const grid = document.createElement('div');
+  grid.className = 'tax-grid';
+  const taxBtn = (level: TaxLevel, attrs: Record<string, string>, onClick: () => void): void => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn';
     btn.textContent = TAX_LEVELS[level].name;
     btn.dataset.tax = level;
+    for (const [k, v] of Object.entries(attrs)) btn.setAttribute(k, v);
+    btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
       btn.blur();
-      actions.setTax(level);
+      onClick();
     });
-    taxes.append(btn);
+    grid.append(btn);
+  };
+  const label = (text: string): void => {
+    const s = document.createElement('span');
+    s.className = 'tax-tier';
+    s.textContent = text;
+    grid.append(s);
+  };
+  const levels = Object.keys(TAX_LEVELS) as TaxLevel[];
+  label('alle Stufen');
+  for (const level of levels) taxBtn(level, { 'data-tax-all': level }, () => actions.setTax(level));
+  grid.append(document.createElement('span'));
+  for (const t of TIER_LIST) {
+    label(TIERS[t].name);
+    for (const level of levels)
+      taxBtn(level, { 'data-tax-tier': String(t) }, () => actions.setTierTax(t, level));
+    const min = document.createElement('span');
+    min.className = 'tax-min';
+    min.dataset.field = `tax-min-${t}`;
+    grid.append(min);
+    const lock = document.createElement('span');
+    lock.className = 'tax-lock';
+    lock.dataset.field = `tax-lock-${t}`;
+    lock.hidden = true;
+    lock.style.gridColumn = '1 / -1';
+    grid.append(lock);
   }
-  panel.append(taxes);
+  panel.append(grid);
   addLine(panel, '', 'tax-effect');
-  addLine(panel, '', 'tax-lock').classList.add('tax-lock');
   const matrix = document.createElement('div');
   matrix.dataset.field = 'lock-matrix';
   panel.append(matrix);
@@ -629,14 +665,27 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     state.hidden = text === '';
     setField(panel, 'townhall-state', text);
   }
-  for (const btn of panel.querySelectorAll<HTMLElement>('[data-tax]')) {
-    const on = btn.dataset.tax === world.taxLevel;
+  const summary = taxSummary(world);
+  for (const btn of panel.querySelectorAll<HTMLButtonElement>('[data-tax]')) {
+    const level = btn.dataset.tax as TaxLevel;
+    const tier = btn.dataset.taxTier === undefined ? null : (Number(btn.dataset.taxTier) as Tier);
+    const on = tier === null ? summary === level : world.taxLevels[tier] === level;
     btn.classList.toggle('active', on);
-    btn.setAttribute('aria-pressed', String(on));
+    const pressed = String(on);
+    if (btn.getAttribute('aria-pressed') !== pressed) btn.setAttribute('aria-pressed', pressed);
+    const disabled = tier !== null && taxTarget(level, tier) !== level;
+    if (btn.disabled !== disabled) btn.disabled = disabled;
+    const tip = tier === null ? taxEffect(level) : tierTaxTooltip(tier, level);
+    if (btn.title !== tip) btn.title = tip;
   }
-  setField(panel, 'tax-effect', taxEffect(effectiveTaxLevel(world)));
-  const left = world.taxLockedUntil - world.tick;
-  setField(panel, 'tax-lock', left > 0 ? `Steuer wieder änderbar in ${formatGameTime(left)}` : '');
+  for (const t of TIER_LIST) {
+    setField(panel, `tax-min-${t}`, `${tierTaxPerMinute(world, t)} / min`);
+    const lockEl = panel.querySelector<HTMLElement>(`[data-field="tax-lock-${t}"]`);
+    const text = taxLockText(world, t);
+    if (lockEl) lockEl.hidden = text === '';
+    setField(panel, `tax-lock-${t}`, text);
+  }
+  setField(panel, 'tax-effect', taxStatusLine(world));
 
   const matrixEl = panel.querySelector<HTMLElement>('[data-field="lock-matrix"]');
   const rows = lockMatrix(world);
@@ -986,8 +1035,7 @@ export function restView(world: World): {
   const phase = phaseAt(world.tick);
   let inhabitants = 0;
   for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
-  const tax =
-    taxEffect(effectiveTaxLevel(world)) + (townhallActive(world) ? '' : ' (keine Amtsstube)');
+  const tax = taxStatusLine(world) + (townhallActive(world) ? '' : ' (keine Amtsstube)');
   return { phase, ...PHASE_VIEW[phase], inhabitants, tax };
 }
 

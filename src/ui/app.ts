@@ -89,7 +89,8 @@ import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActio
 import { targetTile } from './target';
 import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
-import { setGoodLock, setTaxLevel, setUpgradeStop } from '../sim/tax';
+import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
+import { lockedTierFor } from './taxView';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
@@ -584,8 +585,14 @@ function launch(
         upgrade: (id) => upgradeSelected(id),
         buildSame: (defId) => pipette(defId),
         setTax: (level) => {
+          const tier = lockedTierFor(world, level);
           const r = setTaxLevel(world, level);
-          if (!r.ok) showError(friendlyReason(world, r.reason));
+          if (!r.ok) showError(friendlyReason(world, r.reason, { tier }));
+          refresh();
+        },
+        setTierTax: (tier, level) => {
+          const r = setTierTaxLevel(world, tier, level);
+          if (!r.ok) showError(friendlyReason(world, r.reason, { tier }));
           refresh();
         },
         setGoodLock: (tier, good, locked) => {

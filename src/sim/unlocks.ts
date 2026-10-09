@@ -153,6 +153,15 @@ function progress(w: World, t: UnlockTrigger): { now: number | null; need: numbe
   return { now: null, need: null };
 }
 
+/** Spec R7.4: Auslöser einer Stufe t ≥ 2, deren Vorstufe t − 1 wirksam «hoch» steht (kein Aufstieg möglich). */
+export function triggerTaxBlocked(world: World, trigger: UnlockTrigger): boolean {
+  return (
+    (trigger.kind === 'tierWish' || trigger.kind === 'tierReached') &&
+    trigger.tier >= 2 &&
+    effectiveTaxLevel(world, (trigger.tier - 1) as Tier) === 'high'
+  );
+}
+
 /** Spec 12.2: erster nicht freier Ketteneintrag und U1 (falls nicht frei), UNLOCKS-Reihenfolge. */
 export function nextUnlocks(w: World): NextUnlock[] {
   const chainNext = UNLOCK_CHAIN.find((id) => !isUnlocked(w, id));
@@ -168,8 +177,6 @@ export function nextUnlocks(w: World): NextUnlock[] {
     ],
     when: unlockText(u, 'whenText'),
     ...progress(w, u.trigger),
-    taxBlocks:
-      effectiveTaxLevel(w) === 'high' &&
-      (u.trigger.kind === 'tierWish' || u.trigger.kind === 'tierReached'),
+    taxBlocks: triggerTaxBlocked(w, u.trigger),
   }));
 }

@@ -48,6 +48,8 @@ export const TIERS: Record<Tier, TierDef> = {
     unlockCitizens: null,
   },
 };
+/** Alle Bevölkerungsstufen in aufsteigender Reihenfolge. */
+export const TIER_IDS: readonly Tier[] = [1, 2, 3, 4];
 export const WIN_CITIZENS = 50;
 /** Zweites Ziel „Handelsstadt“: so viele Einwohner der Stufe 4 (M8 7; Rückfallwert 40). */
 export const WIN_MERCHANTS = 60;
@@ -58,6 +60,6 @@ export const WIN_SPICE_HOLD = 600;
 export const TAX_LEVELS: Record<TaxLevel, TaxLevelDef> = {
   low: { name: 'niedrig', pct: 70, upgradeWait: 150, occupancy: 1 },
   normal: { name: 'normal', pct: 100, upgradeWait: UPGRADE_WAIT, occupancy: 1 },
-  high: { name: 'hoch', pct: 130, upgradeWait: null, occupancy: 0.75 },
+  high: { name: 'hoch', pct: 130, upgradeWait: null, occupancy: 0.75, pctByTier: { 4: 115 } },
 };
 export const DEFAULT_TAX_LEVEL: TaxLevel = 'normal';
