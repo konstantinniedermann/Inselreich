@@ -212,3 +212,8 @@ Raster) ist bereits benannt (R327).
 
 - **Fundort:** `src/render/decorStamps.ts` (Meeresfels, Zoom 0,25 ≈ 5–6 px). Urteil `lead-art` NEIN: Der Meeresfels bleibt massstabstreu (reine Deko ohne Sim-Bezug; Bildrangfolge Schiff 16 px vor Fels; Blindprobe bestanden). Ursprung: Release-Check REL-11, BEOB-AUSW-03. Einschätzung: abgehakt; der tote Fern-Code (`minStampScale`) ist in REL-14 entfernt.
 - **Trigger für eine Neubewertung:** (1) Felsen bekommen eine Spielwirkung; (2) ein Playtest vermisst Felsen in der Fernansicht; (3) die Schiffs-Mindestgrösse oder der kleinste Zoom ändert sich.
+
+### 2026-10-09 · UI-INSPEKTOR-HILFSZEILE Mangel doppelt (REL-14 Playtest)
+
+- **Fundort:** Haus-Panel (`src/ui/inspect.ts`), Playtest `.studio/qa/REL-14/z2-ware-fehlt.png`, `z2b-dienst.png`. Unter „Mangel: Nahrung fehlt“ steht die Hilfszeile „Nahrung fehlt: baue Fischerhütte (F)“ (bei Dienst: „Kapelle fehlt: baue Kapelle (K) in Reichweite“). Besteht schon vor REL-14; keine „Fehlt:“-Zeile, widerspricht dem Chip nicht.
+- **Einschätzung:** Mangel wird zweimal genannt (Liste und Hilfszeile). Nur bei Bedarf kürzen; Entscheid `lead-design`.
