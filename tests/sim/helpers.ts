@@ -3,11 +3,13 @@ import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld, footprint, idx, home } from '../../src/sim/world';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
+import { TIER_IDS } from '../../src/sim/defs/tiers';
 import type {
   Building,
   BuildingDefId,
   CrisisLevel,
   ServiceId,
+  TaxLevel,
   Tier,
   World,
 } from '../../src/sim/types';
@@ -261,6 +263,35 @@ const V9_WORLD_KEYS = [
   'upkeepCarry',
   ...V9_ADDED_WORLD_KEYS,
 ] as const;
+
+/** Setzt alle vier Steuerregler auf dieselbe Stufe (T1b: über `taxTarget`). */
+export function setAllTax(world: World, level: TaxLevel): void {
+  for (const t of TIER_IDS) world.taxLevels[t] = level;
+}
+
+/**
+ * Formt ein v10-JSON-Objekt in die v9-Form zurück (I-028): ein `taxLevel` und eine `taxLockedUntil` statt je vier,
+ * Schlüsselfolge `V9_WORLD_KEYS`, `version 9`. Unbekannter Schlüssel (auch `taxLevel`) oder nicht zusammenfassbare
+ * Regler (Stufen 1 bis 3 ungleich, oder Stufe 4 weder gleich noch `normal` bei `low`) → Fehler im Test.
+ */
+export function foldBackToV9(v10: Record<string, unknown>): Record<string, unknown> {
+  const allowed = V9_WORLD_KEYS.map((k) => (k === 'taxLevel' ? 'taxLevels' : k)) as string[];
+  for (const k of Object.keys(v10))
+    if (!allowed.includes(k)) throw new Error(`foldBackToV9: unbekannter Schlüssel ${k}`);
+  const levels = v10.taxLevels as Record<string, string>;
+  const [a, b, c, d] = TIER_IDS.map((t) => levels[t]);
+  if (!(a === b && b === c && (d === a || (a === 'low' && d === 'normal'))))
+    throw new Error('foldBackToV9: Regler nicht zusammenfassbar');
+  const locks = Object.values(v10.taxLockedUntil as Record<string, number>);
+  const out: Record<string, unknown> = {};
+  for (const k of V9_WORLD_KEYS) {
+    if (k === 'taxLevel') out[k] = a;
+    else if (k === 'taxLockedUntil') out[k] = Math.max(...locks);
+    else if (k in v10) out[k] = v10[k];
+  }
+  out.version = 9;
+  return out;
+}
 
 /**
  * Formt ein v9-JSON-Objekt in die v8-Form zurück (M12 Seefahrt): ohne `ships`, `nextShipId`, `wonSpice`,

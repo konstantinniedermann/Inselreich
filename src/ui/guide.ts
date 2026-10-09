@@ -162,7 +162,7 @@ export function nextStep(w: World): string {
   if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
     return 'Gründe ein Kontor auf einer Insel mit Gewürz';
   if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
-  const tax = effectiveTaxLevel(w);
+  const tax = effectiveTaxLevel(w, 1);
   if (TAX_LEVELS[tax].upgradeWait === null && houses.some(canRise))
     return `Steuer ‚${TAX_LEVELS[tax].name}' verhindert den Aufstieg: stelle sie auf ‚${TAX_LEVELS.normal.name}' oder ‚${TAX_LEVELS.low.name}'`;
   return 'Baue weitere Wohnhäuser und versorge sie';

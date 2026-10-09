@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
-import { DEFAULT_TAX_LEVEL } from './defs/tiers';
+import { DEFAULT_TAX_LEVEL, TIER_IDS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { generateForeignIslands, homeAnchor } from './islands';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
@@ -12,6 +12,8 @@ import type {
   CrisisLevel,
   GoodId,
   Island,
+  TaxLevel,
+  Tier,
   Tile,
   World,
 } from './types';
@@ -115,7 +117,7 @@ export function createWorld(
     anchor,
   };
   const world: World = {
-    version: 9,
+    version: 10,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -125,8 +127,11 @@ export function createWorld(
     stats: { taxes: 0, upkeep: 0 },
     won: false,
     wonMerchants: false,
-    taxLevel: DEFAULT_TAX_LEVEL,
-    taxLockedUntil: 0,
+    taxLevels: Object.fromEntries(TIER_IDS.map((t) => [t, DEFAULT_TAX_LEVEL])) as Record<
+      Tier,
+      TaxLevel
+    >,
+    taxLockedUntil: Object.fromEntries(TIER_IDS.map((t) => [t, 0])) as Record<Tier, number>,
     sellPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
     order: null,
     crisisLevel: opts.crisisLevel ?? DEFAULT_WORLD_CRISIS_LEVEL,

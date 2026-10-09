@@ -139,6 +139,8 @@ export interface TaxLevelDef {
   upgradeWait: number | null;
   /** Anteil der Höchstbelegung, auf den ein Haus zielt. */
   occupancy: number;
+  /** Abweichender Steuersatz in % für einzelne Stufen; fehlt eine Stufe, gilt `pct`. */
+  pctByTier?: Partial<Record<Tier, number>>;
 }
 export interface Order {
   period: number;
@@ -221,7 +223,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 9;
+  version: 10;
   seed: number;
   islands: Island[];
   tick: number;
@@ -232,8 +234,10 @@ export interface World {
   won: boolean;
   /** Zweites Ziel „Handelsstadt“ erreicht (M8 7); wird nie zurückgesetzt. */
   wonMerchants: boolean;
-  taxLevel: TaxLevel;
-  taxLockedUntil: number;
+  /** Steuerstufe je Bevölkerungsstufe (Schlüssel 1 bis 4). */
+  taxLevels: Record<Tier, TaxLevel>;
+  /** Je Bevölkerungsstufe: bis zu diesem Tick ist der Regler gesperrt. */
+  taxLockedUntil: Record<Tier, number>;
   sellPct: Record<GoodId, number>;
   order: Order | null;
   crisisLevel: CrisisLevel;

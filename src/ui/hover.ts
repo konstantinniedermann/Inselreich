@@ -163,7 +163,7 @@ function townhallInfo(world: World, b: Building): HoverInfo {
   return {
     title: BUILDING_DEFS[b.defId].name,
     lines: [
-      `Steuer: ${TAX_LEVELS[effectiveTaxLevel(world)].name}`,
+      `Steuer: ${TAX_LEVELS[effectiveTaxLevel(world, 1)].name}`,
       `Sperren: ${world.goodLocks.length}`,
       trouble ? `Wirkt nicht: ${trouble}` : 'Klicken zum Einstellen',
     ],

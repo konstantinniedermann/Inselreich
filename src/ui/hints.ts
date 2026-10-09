@@ -141,7 +141,8 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   {
     source: 'tax',
     pattern: /^Sperrzeit$/,
-    show: (_m, w) => `Steuer erst in ${formatGameTime(w.taxLockedUntil - w.tick)} wieder änderbar`,
+    show: (_m, w) =>
+      `Steuer erst in ${formatGameTime(w.taxLockedUntil[1] - w.tick)} wieder änderbar`,
   },
   { source: 'orders', pattern: /^Kein Auftrag$/, show: () => 'Gerade gibt es keinen Auftrag' },
   {

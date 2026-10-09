@@ -630,12 +630,12 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     setField(panel, 'townhall-state', text);
   }
   for (const btn of panel.querySelectorAll<HTMLElement>('[data-tax]')) {
-    const on = btn.dataset.tax === world.taxLevel;
+    const on = btn.dataset.tax === world.taxLevels[1];
     btn.classList.toggle('active', on);
     btn.setAttribute('aria-pressed', String(on));
   }
-  setField(panel, 'tax-effect', taxEffect(effectiveTaxLevel(world)));
-  const left = world.taxLockedUntil - world.tick;
+  setField(panel, 'tax-effect', taxEffect(effectiveTaxLevel(world, 1)));
+  const left = world.taxLockedUntil[1] - world.tick;
   setField(panel, 'tax-lock', left > 0 ? `Steuer wieder änderbar in ${formatGameTime(left)}` : '');
 
   const matrixEl = panel.querySelector<HTMLElement>('[data-field="lock-matrix"]');
@@ -987,7 +987,7 @@ export function restView(world: World): {
   let inhabitants = 0;
   for (const b of Object.values(world.buildings)) inhabitants += b.house?.inhabitants ?? 0;
   const tax =
-    taxEffect(effectiveTaxLevel(world)) + (townhallActive(world) ? '' : ' (keine Amtsstube)');
+    taxEffect(effectiveTaxLevel(world, 1)) + (townhallActive(world) ? '' : ' (keine Amtsstube)');
   return { phase, ...PHASE_VIEW[phase], inhabitants, tax };
 }
 

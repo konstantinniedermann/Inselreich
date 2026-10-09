@@ -48,6 +48,8 @@ export const TIERS: Record<Tier, TierDef> = {
     unlockCitizens: null,
   },
 };
+/** Alle Bevölkerungsstufen in aufsteigender Reihenfolge. */
+export const TIER_IDS: readonly Tier[] = [1, 2, 3, 4];
 export const WIN_CITIZENS = 50;
 /** Zweites Ziel „Handelsstadt“: so viele Einwohner der Stufe 4 (M8 7; Rückfallwert 40). */
 export const WIN_MERCHANTS = 60;

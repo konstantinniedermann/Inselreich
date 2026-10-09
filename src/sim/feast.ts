@@ -46,7 +46,7 @@ function feastBlock(world: World, chapel: Building): string | null {
   if (phase === 'cooldown') return 'Abklingzeit';
   if (chapel.outageUntil !== undefined) return 'Kapelle brennt';
   if (!chapelWorks(chapel)) return 'Kapelle nicht angebunden';
-  const level = effectiveTaxLevel(world);
+  const level = effectiveTaxLevel(world, 1);
   if (TAX_LEVELS[level].upgradeWait === null)
     return `Steuer «${TAX_LEVELS[level].name}»: kein Aufstieg`;
   if (level === 'low') return `Steuer «${TAX_LEVELS[level].name}»: Fest ohne Wirkung`;

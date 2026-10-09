@@ -169,7 +169,7 @@ export function nextUnlocks(w: World): NextUnlock[] {
     when: unlockText(u, 'whenText'),
     ...progress(w, u.trigger),
     taxBlocks:
-      effectiveTaxLevel(w) === 'high' &&
+      effectiveTaxLevel(w, 1) === 'high' &&
       (u.trigger.kind === 'tierWish' || u.trigger.kind === 'tierReached'),
   }));
 }

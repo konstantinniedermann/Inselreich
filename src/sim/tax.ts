@@ -1,19 +1,26 @@
 import { GOOD_IDS } from './defs/goods';
-import { TAX_LEVELS, TIERS } from './defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { TAX_SWITCH_LOCK } from './defs/timing';
 import { townhallActive, townhallReason } from './townhall';
 import { functionLock } from './unlocks';
 import { fail, ok } from './types';
 import type { GoodId, Tier, Result, TaxLevel, World } from './types';
 
+/** Der Regler der Bevölkerungsstufe ist noch gesperrt. */
+export function taxLocked(world: World, tier: Tier): boolean {
+  return world.tick < world.taxLockedUntil[tier];
+}
+
 /** Schaltet die Steuerstufe um; wirkt ab dem nächsten Tick. Braucht eine wirksame Amtsstube (Spec 5.2). Kostet nichts. */
 export function setTaxLevel(world: World, level: string): Result {
   if (!Object.hasOwn(TAX_LEVELS, level)) return fail('Ungültige Stufe');
   if (!townhallActive(world)) return fail(townhallReason(world));
-  if (level === world.taxLevel) return fail('Stufe bereits aktiv');
-  if (world.tick < world.taxLockedUntil) return fail('Sperrzeit');
-  world.taxLevel = level as TaxLevel;
-  world.taxLockedUntil = world.tick + TAX_SWITCH_LOCK;
+  if (TIER_IDS.every((t) => world.taxLevels[t] === level)) return fail('Stufe bereits aktiv');
+  if (TIER_IDS.some((t) => taxLocked(world, t))) return fail('Sperrzeit');
+  for (const t of TIER_IDS) {
+    world.taxLevels[t] = level as TaxLevel;
+    world.taxLockedUntil[t] = world.tick + TAX_SWITCH_LOCK;
+  }
   return ok;
 }
 

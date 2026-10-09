@@ -1,5 +1,5 @@
 import { BUILDING_DEFS } from './defs/buildings';
-import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS } from './defs/tiers';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS, TIER_IDS } from './defs/tiers';
 import { GOODS } from './defs/goods';
 import { GROWTH_INTERVAL, UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
 import { feastActive } from './feast';
@@ -10,6 +10,7 @@ import type {
   GoodId,
   HouseState,
   ServiceId,
+  TaxLevel,
   Tier,
   TierDef,
   World,
@@ -17,7 +18,7 @@ import type {
 import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
-import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
+import { effectiveTaxLevel, goodLockActive, taxPct, upgradeStopActive } from './townhall';
 import { center, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
@@ -136,7 +137,7 @@ export function upgradeStatus(
   if (lock !== null) reasons.push(lock);
   if (upgradeStopActive(world, house.tier)) reasons.push('Aufstieg in der Amtsstube angehalten');
   if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
-  const base = TAX_LEVELS[effectiveTaxLevel(world)].upgradeWait;
+  const base = TAX_LEVELS[effectiveTaxLevel(world, house.tier)].upgradeWait;
   const damped =
     base !== null &&
     deficitGood(
@@ -190,12 +191,14 @@ export function tryUpgrade(world: World, b: Building, budget?: Budget, cov?: Cov
   return true;
 }
 
-/** Zielbelegung eines Hauses: Höchstbelegung × Belegungsanteil der Steuerstufe, mindestens 1. */
+/** Höchstbelegung einer Bevölkerungsstufe × Belegungsanteil der Steuerstufe, abgerundet. */
+export function tierCap(tier: Tier, level: TaxLevel): number {
+  return Math.floor(TIERS[tier].maxInhabitants * TAX_LEVELS[level].occupancy);
+}
+
+/** Zielbelegung eines Hauses: `tierCap` der Steuerstufe seiner Stufe, mindestens 1. */
 export function houseCap(world: World, house: HouseState): number {
-  return Math.max(
-    1,
-    Math.floor(TIERS[house.tier].maxInhabitants * TAX_LEVELS[effectiveTaxLevel(world)].occupancy),
-  );
+  return Math.max(1, tierCap(house.tier, effectiveTaxLevel(world, house.tier)));
 }
 
 /** Je Wachstumstakt einmal das Budget je Insel (`goodsBalance`, nur Inseln mit Häusern), danach je Haus in Id-Reihenfolge. */
@@ -227,16 +230,28 @@ export function tickPopulation(world: World): void {
   }
 }
 
-/** Steuereinheiten je Schritt (ganzzahlig): Einwohner × Steuersatz × (erfüllt ? TAX_UNIT : 1), dann × Steuerstufe in Prozent. */
-export function taxUnits(world: World): number {
-  let sum = 0;
+/** Steuerbasis je Bevölkerungsstufe: Σ Einwohner × Steuersatz × (erfüllt ? TAX_UNIT : 1), in Id-Reihenfolge der Häuser. */
+export function taxBaseByTier(world: World): Record<Tier, number> {
+  const base = Object.fromEntries(TIER_IDS.map((t) => [t, 0])) as Record<Tier, number>;
   for (const b of Object.values(world.buildings)) {
     const house = b.house;
     if (!house) continue;
     const tier = TIERS[house.tier];
-    sum += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? TAX_UNIT : 1);
+    base[house.tier] += house.inhabitants * tier.tax * (allNeedsMet(house, tier) ? TAX_UNIT : 1);
   }
-  return sum * TAX_LEVELS[effectiveTaxLevel(world)].pct;
+  return base;
+}
+
+/**
+ * Steuereinheiten je Schritt (ganzzahlig): Σ je Stufe Basis × Steuersatz der Stufe in Prozent.
+ * Bitgleich zu einem gemeinsamen Regler: alle Größen sind ganze Zahlen, die Summe ist exakt, und
+ * (Σ Sₜ) × p = Σ (Sₜ × p), solange alle vier Stufen dasselbe p haben (Spec §6 b).
+ */
+export function taxUnits(world: World): number {
+  const base = taxBaseByTier(world);
+  let units = 0;
+  for (const t of TIER_IDS) units += base[t] * taxPct(effectiveTaxLevel(world, t), t);
+  return units;
 }
 
 /** Steuern als Nominalwert je 100 Ticks (Anzeige). Erst summieren, dann einmal abrunden. */

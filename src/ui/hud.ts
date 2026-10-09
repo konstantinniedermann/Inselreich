@@ -104,7 +104,7 @@ export function taxView(world: World): ChipView | null {
   const label = taxButtonText(world);
   return label === null
     ? null
-    : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world)].name, label };
+    : { icon: 'tax', text: TAX_LEVELS[effectiveTaxLevel(world, 1)].name, label };
 }
 
 /** Rolle eines Chips: ein Knopf bleibt Knopf (sein `aria-label` ist gültig), alles andere braucht `img`. */
@@ -515,7 +515,7 @@ export function stockPrefix(world: World, island: number): string | null {
 
 /** Steuer-Knopf der Kopfzeile (wirksame Stufe) oder `null` ohne aktive Amtsstube (Spec 11.8). */
 export function taxButtonText(world: World): string | null {
-  return townhallActive(world) ? `Steuer ${TAX_LEVELS[effectiveTaxLevel(world)].name}` : null;
+  return townhallActive(world) ? `Steuer ${TAX_LEVELS[effectiveTaxLevel(world, 1)].name}` : null;
 }
 
 /** Tooltip der Bilanz: Steuern und Unterhalt; ohne aktive Amtsstube die Zeile zur Steuer (Spec 11.8). */
@@ -523,7 +523,7 @@ export function balanceTooltip(world: World): string {
   const base = balanceText(world.stats).title;
   return townhallActive(world)
     ? base
-    : `${base}\nSteuer: ${TAX_LEVELS[effectiveTaxLevel(world)].name} (keine Amtsstube)`;
+    : `${base}\nSteuer: ${TAX_LEVELS[effectiveTaxLevel(world, 1)].name} (keine Amtsstube)`;
 }
 
 export function balanceText(stats: { taxes: number; upkeep: number }): {
