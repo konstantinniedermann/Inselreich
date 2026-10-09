@@ -4,7 +4,7 @@
 // prüft den 1-min-Load und startet den Befehl. Belegt oder Load > LOAD_MAX: Exit 3, kein Warten.
 // Auf CI (CI/GITHUB_ACTIONS) und in verschachtelten Läufen (STUDIO_TESTLOCK_HELD) läuft der Befehl direkt.
 import { spawn, execFileSync } from 'node:child_process';
-import { closeSync, openSync, readFileSync, unlinkSync, writeSync } from 'node:fs';
+import { closeSync, openSync, readFileSync, renameSync, unlinkSync, writeSync } from 'node:fs';
 import { loadavg } from 'node:os';
 import { resolve } from 'node:path';
 
@@ -80,21 +80,30 @@ if (env.CI || env.GITHUB_ACTIONS || env.STUDIO_TESTLOCK_HELD) {
       acquired = true;
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
-      let holder: { pid?: number; cwd?: string; cmd?: string; since?: string } = {};
-      try {
-        holder = JSON.parse(readFileSync(lockPath, 'utf8'));
-      } catch {
-        /* halb geschrieben oder unlesbar: wie veraltet behandeln, wenn nach kurzer Zeit noch so */
+      const read = (): { pid?: number; cwd?: string; cmd?: string; since?: string } => {
+        try {
+          return JSON.parse(readFileSync(lockPath, 'utf8'));
+        } catch {
+          return {};
+        }
+      };
+      let holder = read();
+      if (!holder.pid) {
+        // Inhaber hat die Datei evtl. gerade erst angelegt: kurz warten, dann neu lesen
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+        holder = read();
       }
       if (holder.pid && alive(holder.pid)) {
         console.error(
-          `testlock: ABBRUCH, voller Testlauf läuft bereits (PID ${holder.pid}, seit ${holder.since}, in ${holder.cwd}: ${holder.cmd}). Nicht warten; später erneut oder gezielt per "npx vitest run <datei>".`,
+          `testlock: ABBRUCH, voller Testlauf läuft bereits (PID ${holder.pid}, seit ${holder.since}, in ${holder.cwd}: ${holder.cmd}). Sperrdatei: ${lockPath}. Nicht warten; später erneut oder gezielt per "npx vitest run <datei>".`,
         );
         process.exit(EXIT_BLOCKED);
       }
       console.error(`testlock: veraltete Sperre (PID ${holder.pid ?? '?'} tot) übernommen.`);
       try {
-        unlinkSync(lockPath);
+        // atomar übernehmen: nur ein Prozess kann die Datei umbenennen; Verlierer versucht es neu
+        renameSync(lockPath, `${lockPath}.stale.${process.pid}`);
+        unlinkSync(`${lockPath}.stale.${process.pid}`);
       } catch {
         /* anderer Prozess war schneller; nächster Versuch entscheidet */
       }
@@ -106,7 +115,8 @@ if (env.CI || env.GITHUB_ACTIONS || env.STUDIO_TESTLOCK_HELD) {
   }
   release = () => {
     try {
-      unlinkSync(lockPath);
+      // nur die eigene Sperre löschen
+      if (JSON.parse(readFileSync(lockPath, 'utf8')).pid === process.pid) unlinkSync(lockPath);
     } catch {
       /* schon weg */
     }
