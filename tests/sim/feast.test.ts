@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs';
 import { createWorld, home, islandOf } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
 import { deserialize, serialize } from '../../src/sim/save';
-import { upgradeStatus } from '../../src/sim/population';
+import { newHouseState, upgradeStatus } from '../../src/sim/population';
 import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { feastActive, feastBlockReason, feastState, holdFeast } from '../../src/sim/feast';
-import type { Building, World } from '../../src/sim/types';
+import type { Building, TaxLevel, Tier, World } from '../../src/sim/types';
 import { houseFar, houseNearKontor, placeService, placeTownhall, setAllTax } from './helpers';
 
 let w: World;
@@ -337,5 +337,94 @@ describe('M12 E1 Fest bei mehreren Inseln', () => {
     expect(reasonOf(r)).toContain('Zu wenig Rum');
     expect(home(w).stock.rum).toBe(99);
     expect(c.feastAt).toBeUndefined();
+  });
+});
+
+describe('AK-T14 + QA-a Fest je Steuerstufe (I-028 R7.3)', () => {
+  const lv = (a: TaxLevel, b: TaxLevel, c: TaxLevel, d: TaxLevel): World['taxLevels'] => ({
+    1: a,
+    2: b,
+    3: c,
+    4: d,
+  });
+  /** Wohnhaus roh neben der Kapelle (im Dienstradius), ohne Kacheln. */
+  const addNear = (tier: Tier, dy: number): Building => {
+    const id = w.nextBuildingId++;
+    const b: Building = {
+      id,
+      defId: 'house',
+      x: chapel.x + 1,
+      y: chapel.y + dy,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+      house: { ...newHouseState(w), tier },
+    };
+    w.buildings[id] = b;
+    return b;
+  };
+  const setup = (): void => {
+    placeTownhall(w);
+    chapel.connected = true; // placeTownhall berechnet die Anbindung neu
+  };
+  const refused = (reason: string): void => {
+    const r = holdFeast(w, chapel.id);
+    expect(r).toEqual({ ok: false, reason });
+    expect(home(w).stock.rum).toBe(30);
+    expect(chapel.feastAt).toBeUndefined();
+  };
+
+  it('Siedler normal + Bürger hoch: Fest ok, Siedler 150, Bürger Steuer zu hoch', () => {
+    setup();
+    house.house!.tier = 2;
+    const citizen = addNear(3, 1);
+    w.taxLevels = lv('high', 'normal', 'high', 'normal'); // Stufe 1 hoch zählt nicht
+    expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
+    waited(house, 149);
+    expect(waitReason(house, NO_DEFICIT)).toBe('Bedürfnisse noch nicht 150 Ticks erfüllt');
+    waited(house, 150);
+    expect(waitReason(house, NO_DEFICIT)).toBeUndefined();
+    expect(upgradeStatus(w, citizen, NO_DEFICIT).reasons).toContain('Steuer zu hoch');
+  });
+  it('nur hoch im Radius: kein Aufstieg', () => {
+    setup();
+    house.house!.tier = 2;
+    w.taxLevels = lv('normal', 'high', 'normal', 'normal');
+    refused('Steuer «hoch»: kein Aufstieg');
+  });
+  it('nur niedrig im Radius: ohne Wirkung', () => {
+    setup();
+    house.house!.tier = 2;
+    w.taxLevels = lv('normal', 'low', 'normal', 'normal');
+    refused('Steuer «niedrig»: Fest ohne Wirkung');
+  });
+  it('niedrig + hoch: Fest wirkt auf kein Haus', () => {
+    setup();
+    addNear(3, 1);
+    w.taxLevels = lv('low', 'normal', 'high', 'normal');
+    refused('Steuer: Fest wirkt auf kein Haus');
+  });
+  it('Haus normal ausserhalb des Radius ändert nichts', () => {
+    setup();
+    house.house!.tier = 2;
+    const far = houseFar(w); // Pioniere, normal, ausserhalb des Radius
+    expect(feastActive(w, far)).toBe(false);
+    w.taxLevels = lv('normal', 'high', 'normal', 'normal');
+    refused('Steuer «hoch»: kein Aufstieg');
+  });
+  it('kein Haus im Radius und alle hoch: ok', () => {
+    setup();
+    expect(demolish(w, house.id).ok).toBe(true);
+    setAllTax(w, 'high');
+    expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
+  });
+  it('QA-a: ein Kaufleute-Haus normal im Radius, Stufen 1-3 hoch: Fest ok', () => {
+    setup();
+    house.house!.tier = 4;
+    w.taxLevels = lv('high', 'high', 'high', 'normal');
+    expect(holdFeast(w, chapel.id)).toEqual({ ok: true });
+    expect(home(w).stock.rum).toBe(30 - FEAST_RUM);
+    expect(chapel.feastAt).toBe(w.tick);
   });
 });

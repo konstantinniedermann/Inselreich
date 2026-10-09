@@ -33,6 +33,8 @@ import {
   serialize,
 } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
+import { setTierTaxLevel } from '../../src/sim/tax';
+import { taxPct, townhallActive } from '../../src/sim/townhall';
 import { taxBaseByTier, taxUnits, tierCap } from '../../src/sim/population';
 import type { Building, BuildingDefId, Island, World } from '../../src/sim/types';
 import { buildLock, deriveUnlocks } from '../../src/sim/unlocks';
@@ -2026,6 +2028,69 @@ describe('I-028 Save v10', () => {
       const r = deserialize(json);
       expect(r.ok).toBe(true);
       if (r.ok) expect(JSON.stringify(foldBackToV9(raw10(r.world)))).toBe(json);
+    });
+  });
+  describe('T1b Regeln je Stufe', () => {
+    it('AK-T17 + QA-h: Weiterlauf nach dem Laden bleibt gleich (Textvergleich)', () => {
+      const { w: a, houses } = village(4, { unlockAll: true });
+      ([1, 2, 3, 4] as const).forEach((t, i) => setHouse(houses[i]!, t, TIERS[t].maxInhabitants));
+      placeTownhall(a);
+      a.tick = 1000;
+      a.taxLevels = { 1: 'low', 2: 'normal', 3: 'high', 4: 'high' };
+      a.taxLockedUntil = { 1: 1300, 2: 0, 3: 900, 4: 0 };
+      const r = deserialize(serialize(a));
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      const b = r.world;
+      for (let i = 0; i < 600; i++) {
+        step(a);
+        step(b);
+        if (a.tick === 1300) {
+          expect(setTierTaxLevel(a, 1, 'normal').ok).toBe(true);
+          expect(setTierTaxLevel(b, 1, 'normal').ok).toBe(true);
+        }
+      }
+      expect(serialize(b)).toBe(serialize(a));
+      expect(b.tick).toBe(1600);
+    });
+
+    it('AK-T18 Fall low: Kaufleute normal, alle Sperren 450', () => {
+      const v = createWorld(3, { unlockAll: true });
+      v.taxLevels = { 1: 'low', 2: 'low', 3: 'low', 4: 'normal' };
+      v.taxLockedUntil = { 1: 450, 2: 450, 3: 450, 4: 450 };
+      const r = deserialize(JSON.stringify({ ...foldBackToV9(raw10(v)), taxLevel: 'low' }));
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(r.world.taxLevels).toEqual({ 1: 'low', 2: 'low', 3: 'low', 4: 'normal' });
+      expect(r.world.taxLockedUntil).toEqual(ALL(450));
+    });
+
+    it('AK-T19 Kaufleute low im Spielstand: abgewiesen', () => {
+      const json = tampered(createWorld(3), (r) => ((r as Loose).taxLevels['4'] = 'low'));
+      expect(deserialize(json)).toEqual(BAD);
+    });
+
+    it('AK-T21 + TECH-H-§6 save-v2: Kaufleute normal, Sperren 1300', () => {
+      const r = deserialize(readFileSync(`${FIX_DIR}save-v2.json`, 'utf8'));
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.world.taxLevels).toEqual({ 1: 'low', 2: 'low', 3: 'low', 4: 'normal' });
+        expect(r.world.taxLockedUntil).toEqual(ALL(1300));
+      }
+    });
+
+    it.each([
+      ['save-v2.json', 'low'],
+      ['save-v4.json', 'high'],
+    ] as const)('AK-T21 %s: keine Kaufleute, taxUnits nach Formel', (file, level) => {
+      const r = deserialize(readFileSync(`${FIX_DIR}${file}`, 'utf8'));
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      const w = r.world;
+      expect(Object.values(w.buildings).filter((b) => b.house?.tier === 4)).toHaveLength(0);
+      const sum = TIER_IDS.reduce((a, t) => a + taxBaseByTier(w)[t], 0);
+      const pct = townhallActive(w) ? taxPct(level, 1) : 100;
+      expect(taxUnits(w)).toBe(pct * sum);
     });
   });
 });
