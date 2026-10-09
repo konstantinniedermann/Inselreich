@@ -3804,3 +3804,15 @@ seriell durch den Integrator. Damit ist der REL-11-Kandidat vollständig in main
 Browser-Lauf mit gemeinsamer Sichtprobe Schiff/Fels bei Zoom 0,25 und 0,5) folgt vor dem Push der nächsten Session.
 
 Entscheider: L0 · Anlass: Fix-Runde ART-MEERESFELS · ADR: —
+
+## R404 · 2026-10-09 · Release-Check REL-11 jetzt; Ideen-Runde IDEEN-04
+
+Ruling: (1) REL-11-Kandidat = main @ `2a66c27` (REL11-UI R401, Keepout und Schiff R402, Fels R403). Release-Check
+in dieser Session, Push in der nächsten (R335): Browser-Lauf `qa-playtester` mit `smoke.mjs` (R368) plus
+paketspezifischen Abschnitten. Schritt 4 aus „Gate Merge Release“ (ein `opus`-Review über den Kandidaten) gilt als
+erfüllt: Beide Stränge hatten ein `opus`-Final-Review über ihren vollständigen Diff (UI R401, Render R402), die
+Fels-Fix-Runde ist von L0 diffgeprüft (R403); Merge-Zusammenspiel ist durch `make check` je Merge belegt. (2) Ideen-
+Runde **IDEEN-04** (lead-design, ≤ 2 Starts, ≤ 80 Tools, E-027) ist überfällig (letzte IDEEN-03, seither REL-08 bis
+REL-10): parallel zum Browser-Lauf, nur `docs/ideen.md`.
+
+Entscheider: L0 · Anlass: REL-11 vollständig in main · ADR: —
