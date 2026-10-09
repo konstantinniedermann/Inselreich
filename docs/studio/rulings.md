@@ -4129,3 +4129,24 @@ vor seinem Gate Merge `main` in seine Branch (kein Rebase) und löst Anhänge an
 Release-Kandidaten (eigene Freigabe).
 
 Entscheider: L0 · Anlass: Kombiniertes Gate REL-14 · ADR: —
+
+## R428 · 2026-10-09 · Gate Plan Werkzeug-Bündel: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Urteile `lead-qa` (B1–B7) und `lead-production` (B1–B5) BEDENKEN, nichts blockierend; Plan `21cbbe2`. Nacharbeit
+durch den Controller vor T00, ohne Zweitprüfung. **Entscheide:** E1 ja — eigenes Modul `tools/studio/modelguard.py` als
+zusätzlicher Hook, `guard.py` und `VERFASSUNG.md` bleiben unberührt (§1.3); den Eintrag in `.claude/settings.json` setzt
+der Arbeiter, blockt die Umgebung, meldet er den Diff und L0 setzt ihn. E2 **zunächst `MODE="warn"`** (qa B1/B2, prod B5):
+`deny` erst mit dem Folgepaket **TOOL-AKTIVIERUNG** (studio-coach, blocked-by Merge des Bündels): Kopfzeilen-Syntax
+`Modell: <alias> (<Einsatz>)` in `templates/briefing.md` und `STUDIO.md`, `make hooks` im Hauptcheckout, Umschalten auf
+`deny` als Trivial-Fix, Rückweg (`warn`) in ADR-014 beschrieben. E3 → TOOL-AKTIVIERUNG. E4 angenommen: Plan- und
+Gate-Instanzen ohne Arbeiter bekommen `Budget: keins`. E5 (studio-coach auf sonnet) geht an die nächste Session-Retro.
+qa B3: unbekannter Alias → zulassen mit Event, Testfall pinnen; Fall `tool_name == "Task"` ergänzen; Ampelzeile als
+Nachfolgepunkt in `docs/beobachtungen.md`. qa B4: `_entry` zählt als Bestätigung, Namen wie im Code (`_Builder`). qa B5,
+B6, B7 wie vorgeschlagen (Hook-Kommentar, `make -n hooks` im Protokoll, echter Rot-Test T05, Worktrees auf aktuellem
+`main`). prod B2: T06 ohne eigenen Reviewer, vom Final-Review mitgeprüft. prod B4: T06 ist blocked-by Merge REL-14; vorher
+`main` nur in `tool/buendel-py` mergen (kein Rebase), Integrator mergt die drei Branches danach seriell. **AK-Nummern:**
+AK-TB01…17 wie im Index. **Budget:** 15 Arbeiter-Starts plus 2 Controller-Instanzen `lead-tech` (sonnet). **Parallelität**
+(prod B1): höchstens 2 Arbeiter zugleich, solange REL-14 läuft, danach 3; zwei Controller zugleich nur, wenn die Studio-
+Obergrenze ≤ 8 (R424) das zulässt. Final-Review T07 auf `opus`.
+
+Entscheider: L0 · Anlass: Gate Plan TOOL-BUENDEL · ADR: —
