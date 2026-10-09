@@ -5,6 +5,7 @@ import {
   SEA_PAD,
   seaContext,
   seaKeepOut,
+  seaPlan,
   seaPlanKeepOut,
   type SeaContext,
 } from '../../src/render/decor';
@@ -18,6 +19,7 @@ import {
  *   Summe über Seeds 1-40: 19 182 059
  * Entscheid: P2 (räumlicher Index) ja, P3 nein.
  */
+const OLD_HYPOT_TOTAL = 19_182_059; // Summe Math.hypot-Aufrufe je Plan-Neubau auf main, Seeds 1-40
 const PADS = [...new Set([0, SEA_PAD.wreck, SEA_PAD.rock, SEA_PAD.islet])]; // rock = 0 fällt mit 0 zusammen
 
 function segDist(
@@ -74,5 +76,20 @@ describe('RF-P2 seaPlanKeepOut mit Segmentindex', () => {
       for (let y = -20; y < home(w).height + 20; y += 3)
         for (let x = -20; x < home(w).width + 20; x += 3)
           expect(seaPlanKeepOut(ctx, x, y, pad)).toBe(seaPlanKeepOutRef(ctx, x, y, pad));
+  });
+
+  it('RF-P2 Zählgrösse: Math.hypot-Aufrufe je Plan-Neubau (Seeds 1-40) <= 20 % des Ausgangswerts', () => {
+    const orig = Math.hypot;
+    let n = 0;
+    Math.hypot = (...a: number[]): number => (n++, orig(...a));
+    try {
+      for (let seed = 1; seed <= 40; seed++) {
+        const w = createWorld(seed);
+        seaPlan(seed, home(w), seaContext(w));
+      }
+    } finally {
+      Math.hypot = orig;
+    }
+    expect(n).toBeLessThanOrEqual(OLD_HYPOT_TOTAL * 0.2);
   });
 });
