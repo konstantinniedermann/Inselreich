@@ -751,7 +751,11 @@ class SettingsTest(unittest.TestCase):
         path = Path(__file__).resolve().parents[3] / ".claude" / "settings.json"
         hooks = json.loads(path.read_text())["hooks"]
         self.assertEqual(set(hooks), set(self.EVENTS))
-        scripts = ("tools/studio/hook.py", "tools/studio/guard.py")
+        scripts = (
+            "tools/studio/hook.py",
+            "tools/studio/guard.py",
+            "tools/studio/modelguard.py",
+        )
         for event, groups in hooks.items():
             commands = [h["command"] for group in groups for h in group["hooks"]]
             with self.subTest(event=event):
