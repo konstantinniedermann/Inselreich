@@ -103,16 +103,14 @@ function isLand(s: Island, tx: number, ty: number): boolean {
 /** Insel unter dem Kartenpunkt: Rechteck-Treffer, bei Überlappung gewinnt die Insel mit Land darunter; sonst `null`. */
 export function hitIsland(world: World, l: MapLayout, px: number, py: number): number | null {
   const t = mapToTile(l, px, py);
-  let rectHit: number | null = null;
   for (let i = 0; i < world.islands.length; i++) {
     const s = world.islands[i]!;
     const lx = t.x - s.ox,
       ly = t.y - s.oy;
     if (lx < 0 || ly < 0 || lx >= s.width || ly >= s.height) continue;
     if (isLand(s, Math.floor(lx), Math.floor(ly))) return i;
-    if (rectHit === null) rectHit = i;
   }
-  return rectHit;
+  return null;
 }
 
 /** Schiffspunkte (Archipel-Kacheln), nach `id`; Schiffe ohne Route fehlen. */
