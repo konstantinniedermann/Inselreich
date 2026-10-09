@@ -4073,3 +4073,20 @@ Mindestgrösse oder kleinster Zoom ändert sich. REL-14 hat damit zwei Häppchen
 Abhaken-Eintrag mit Triggern in `docs/beobachtungen.md` anlegen.
 
 Entscheider: L0 · Anlass: Designurteil lead-art · ADR: —
+
+## R424 · 2026-10-09 · Kurzdesign REL-14 angenommen; Obergrenze 8 gleichzeitige Agenten
+
+Ruling: (1) Kurzdesign `lead-design` REL-14 angenommen (Selbstprüfung OK): Wortfamilie **„Versorgung“** (Chip „Im
+Versorgungsradius“ / „Ausserhalb der Versorgung“, Mangel nur „Mangel: … fehlt“, Zeile „Fehlt: X“ entfällt,
+`diagnosisText` „ausserhalb der Versorgung“); Fest wirkt nur auf Häuser der Kapellen-Insel, Inselvergleich in
+`inChapelRadius` (gilt für `feastActive` und `taxBlock`), keine Migration, kein neuer Spielwert. Als Trivial-Fix dazu: Dienst-
+Mangel im Inspektor und im Hover gleich benennen. AK-Vorschläge gehen in den Plan; Nummern vergibt L0 im kombinierten Gate.
+(2) **Nutzerfrage zur Obergrenze:** Die Grenze „studioweit ≤ 5 gleichzeitig laufende Arbeiter“ (R241) entstand als
+Risiko-Bedenken von lead-production im Gate des Seefahrt-Bündels (Koordination, Ownership, Rechnerlast; R357: Load 57 auf
+10 Kernen durch parallele volle Testläufe). Die Lastursache ist seit R380 (TOOL-TESTLOCK: ein voller Lauf zugleich, Abbruch
+bei Load > 8) technisch gebremst. Neue Obergrenze: **≤ 8 gleichzeitig laufende Agenten** (Leads und Arbeiter zusammen),
+davon höchstens **2 Browser-Läufe** (Headless-Chrome, `qa-playtester`/Release-Check) zugleich; unverändert gelten
+TOOL-TESTLOCK, Messläufe nur bei Load ≤ 4 (R329) und die Datei-Ownership je Strang. Prüfung in der nächsten Session-Retro
+(Load-Spitzen, Wartezeiten an der Testsperre, Konflikte).
+
+Entscheider: L0 · Anlass: Kurzdesign lead-design, Nutzerfrage · ADR: —
