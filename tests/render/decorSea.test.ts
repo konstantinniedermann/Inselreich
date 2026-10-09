@@ -38,8 +38,9 @@ import {
   type DecorItem,
 } from '../../src/render/decorStamps';
 import { ISO_H, ISO_W, sortedObjects } from '../../src/render/iso';
+import { DECOR_TONES } from '../../src/render/groundDecor';
 import { PALETTE, rgbOfCss } from '../../src/render/palette';
-import { HULL } from '../../src/render/ship';
+import { HULL, drawShip } from '../../src/render/ship';
 import { lanePoints, shipAt, shipPose } from '../../src/render/shipLane';
 import { worldToScreen } from '../../src/render/camera';
 import { TREE_H } from '../../src/render/trees';
@@ -577,5 +578,130 @@ describe('SEE-F1 T3 Meeresdeko folgt der Wasserroute', () => {
     }
     expect(whales).toBeGreaterThan(0);
     expect(dolphins).toBeGreaterThan(0);
+  });
+});
+
+// ---------- ART-MEERESFELS (REL-11): Silhouettenmass Fels gegen Schiff ----------
+
+type XY = { x: number; y: number };
+const polyArea = (p: readonly XY[]): number => {
+  let a = 0;
+  for (let i = 0; i < p.length; i++) {
+    const q = p[(i + 1) % p.length]!;
+    a += p[i]!.x * q.y - q.x * p[i]!.y;
+  }
+  return Math.abs(a) / 2;
+};
+/** Obere Hüllkurve (kleinstes y je x, Schritt 0,25) über alle Polygone, Kanten linear interpoliert. */
+const upperEnvelope = (polys: readonly (readonly XY[])[]): XY[] => {
+  const best = new Map<number, number>();
+  for (const p of polys)
+    for (let i = 0; i < p.length; i++) {
+      const a = p[i]!,
+        b = p[(i + 1) % p.length]!;
+      const lo = Math.ceil(Math.min(a.x, b.x) * 4),
+        hi = Math.floor(Math.max(a.x, b.x) * 4);
+      for (let k = lo; k <= hi; k++) {
+        const x = k / 4,
+          t = a.x === b.x ? 0 : (x - a.x) / (b.x - a.x);
+        const y = a.x === b.x ? Math.min(a.y, b.y) : a.y + (b.y - a.y) * t;
+        best.set(k, Math.min(best.get(k) ?? Infinity, y));
+      }
+    }
+  return [...best.entries()].sort((p, q) => p[0] - q[0]).map(([k, y]) => ({ x: k / 4, y }));
+};
+/** Winkel (Grad) an der höchsten Stelle: zwischen den Richtungen zu den Hüllpunkten 25 % der Silhouettenhöhe tiefer. */
+const tipAngleDeg = (env: readonly XY[]): number => {
+  const top = Math.min(...env.map((p) => p.y)),
+    bot = Math.max(...env.map((p) => p.y));
+  const peak = env.filter((p) => p.y <= top + 0.05);
+  const ax = peak.reduce((s, p) => s + p.x, 0) / peak.length;
+  const d = 0.25 * (bot - top);
+  const deep = (p: XY) => p.y >= top + d;
+  const l = env.filter((p) => p.x < ax && deep(p)).pop() ?? env[0]!;
+  const r = env.find((p) => p.x > ax && deep(p)) ?? env[env.length - 1]!;
+  const u = { x: l.x - ax, y: l.y - top },
+    w = { x: r.x - ax, y: r.y - top };
+  return (
+    (Math.acos((u.x * w.x + u.y * w.y) / (Math.hypot(u.x, u.y) * Math.hypot(w.x, w.y))) * 180) /
+    Math.PI
+  );
+};
+export interface SilMetrics {
+  /** Breite : Höhe der Gesamtsilhouette. */
+  ratio: number;
+  /** Spitzenwinkel der Kontur in Grad. */
+  tipDeg: number;
+  /** Fläche der helleren Teilfläche / Summe beider Teilflächen (Licht gegen Schatten bzw. Segel gegen Rumpf). */
+  lightShare: number;
+}
+const metricsOf = (
+  polys: readonly (readonly XY[])[],
+  light: readonly XY[][],
+  dark: readonly XY[][],
+): SilMetrics => {
+  const env = upperEnvelope(polys);
+  const xs = polys.flat().map((p) => p.x),
+    ys = polys.flat().map((p) => p.y);
+  const la = light.reduce((s, p) => s + polyArea(p), 0),
+    da = dark.reduce((s, p) => s + polyArea(p), 0);
+  return {
+    ratio: (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys)),
+    tipDeg: tipAngleDeg(env),
+    lightShare: la / (la + da),
+  };
+};
+const fills = (f: ReturnType<typeof fakeCtx>) =>
+  f.log.events.filter((e) => e.op === 'fill' && e.points.length >= 3);
+/** Silhouettenmass eines Meeresfelsen (Variante, Zoom): Zoom bestimmt die Form (Fern-Form bis 0,5). */
+function silhouetteMetrics(variant: number, zoom: number): SilMetrics {
+  void zoom;
+  const ev = fills(paint('seaRock', variant));
+  const pick = (c: string) => ev.filter((e) => e.style === c).map((e) => e.points);
+  return metricsOf(
+    ev.map((e) => e.points),
+    pick(DECOR_TONES.rockLight),
+    pick(DECOR_TONES.rockShade),
+  );
+}
+/** Schiff (ship.ts, Zoom 1, ohne Schaukeln und Neigung): Rumpf und Segel. */
+function shipMetrics(): SilMetrics {
+  const f = fakeCtx();
+  const t = ((2 * Math.PI - 1) / (2 * Math.PI)) * 2600; // sin(phase + 1) = 0: keine Neigung
+  drawShip(f.ctx, { x: 0, y: 0, zoom: 1 }, { x: 0, y: 0 }, t);
+  const ev = fills(f);
+  return metricsOf(
+    ev.map((e) => e.points),
+    ev.filter((e) => e.style === SAIL_FILL).map((e) => e.points),
+    ev.filter((e) => e.style === HULL).map((e) => e.points),
+  );
+}
+const SAIL_FILL = PALETTE.wallLime;
+
+/**
+ * Ausgangswerte auf main (Stand 3f87f0b, gemessen mit `silhouetteMetrics`): Schiff Breite : Höhe 1,059, Spitzenwinkel 39,3 Grad,
+ * Segelanteil 0,25. Fels je Variante 0…7 (Breite : Höhe) 0,708 · 0,996 · 1,195 · 0,708 · 0,996 · 1,195 · 1,041 · 1,041;
+ * Spitzenwinkel 82,2 Grad (Haufen) bzw. 63,5 Grad (Nadel); Lichtanteil 0,51…0,52 (Haufen), 0,50 (Nadel): die Lichtfläche
+ * halbiert die Silhouette, die Breite liegt bei 0,7…1,2 der Höhe (Einzelbrocken schmaler als das Schiff).
+ */
+const MAIN_FELS_RATIO = [0.708, 0.996, 1.195, 0.708, 0.996, 1.195, 1.041, 1.041] as const;
+
+describe('ART-MEERESFELS M1 Ausgangswerte Silhouettenmass (Stand main)', () => {
+  it('AK-M1 Schiff-Referenz: Breite : Höhe ≈ 1,06, Spitzenwinkel (Segel) < 50 Grad', () => {
+    const s = shipMetrics();
+    expect(s.ratio).toBeCloseTo(1.059, 2);
+    expect(s.tipDeg).toBeLessThan(50);
+    expect(s.tipDeg).toBeGreaterThan(30);
+    expect(s.lightShare).toBeCloseTo(0.25, 1);
+  });
+
+  it('AK-M1 Fels heute: Ausgangswerte aller 8 Varianten (Zoom 0,5, 0,25 und 1 gleich), Lichtanteil um 0,5', () => {
+    for (const zoom of [0.5, 0.25, 1])
+      for (let v = 0; v < 8; v++) {
+        const m = silhouetteMetrics(v, zoom);
+        expect(m.ratio, `Variante ${v}`).toBeCloseTo(MAIN_FELS_RATIO[v]!, 2);
+        expect(m.lightShare, `Variante ${v}`).toBeGreaterThan(0.45);
+        expect(m.lightShare, `Variante ${v}`).toBeLessThan(0.55);
+      }
   });
 });
