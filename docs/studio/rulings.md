@@ -3888,3 +3888,16 @@ Release-Check REL-12 (`smoke.mjs` auf main plus Seekarten-Abschnitt; T6 lief nur
 nach Handbuch 1.34.
 
 Entscheider: L0 · Anlass: Session-Retro · ADR: —
+
+## R411 · 2026-10-09 · Session-Plan: Release-Check REL-12, I-028-Brainstorming parallel; Vorfälle e90e097e verknüpft
+
+Ruling: (1) Die drei offenen Vorfälle „production-integrator gescheitert“ (Session e90e097e) sind durch die Session-Retro
+`docs/studio/retros/2026-10-09-session-e90e097e-ende.md` (B1, B2, V1) abgedeckt; nachträglich per `log.py retro --triggers`
+verknüpft, keine neue Retro. (2) **REL-12 Release-Check** an `lead-qa` (Budget 3 Starts, Parallelität 2): `smoke.mjs` auf
+main @ `48bec29` plus Seekarten-Abschnitt (AK-B1–B5), Delta-Prüfung nach R249 (1), soweit das Final-Review auf dem Branch
+vorliegt; danach Gate Merge Release durch L0 und **ein Push REL-11 + REL-12** nach Handbuch 1.34 (R410). (3) Parallel und
+dateidisjunkt (nur `docs/`): **Wirtschafts-Brainstorming I-028** (Steuer je Stufe) an `lead-design` mit
+`design-economy-designer` (Budget 2 Starts, Parallelität 1), Deliverable Designvorschlag, keine Spec ohne Gate. Code-Pakete
+aus `docs/beobachtungen.md` starten erst nach dem Push (Last ≤ 4 fürs Push-Gate, R396).
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
