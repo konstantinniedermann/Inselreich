@@ -2,7 +2,7 @@ import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, populationByTier } from '../sim/population';
 import { crisisView, goalView, goodsBalance } from '../sim/queries';
@@ -31,8 +31,6 @@ import {
 } from './seaMapView';
 import { iconChip } from './messages';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
-
-const TIER_IDS = Object.keys(TIERS).map(Number) as Tier[];
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 0, label: '⏸' },

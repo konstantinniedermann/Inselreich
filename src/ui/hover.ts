@@ -20,7 +20,7 @@ import { costLine } from './dom';
 import { friendlyReason } from './hints';
 import { islandCard } from './islandCard';
 import { levelText, protectedCount, utilizationText } from './inspect';
-import { goodList, stateInfo } from './texts';
+import { diagnosisText, goodList, stateInfo } from './texts';
 import { formatGameTime, perMinute } from './time';
 
 /** Inhalt der Mouse-over-Karte (Spec M10 13): Titel und höchstens drei Zeilen. */
@@ -83,15 +83,10 @@ const TERRAIN_TITLES: Record<Terrain, string> = {
   water: 'Wasser',
 };
 
+/** Diagnosezeile des Hovers: derselbe Text wie im Inspektor, Anfangsbuchstabe gross. */
 function diagnosisLine(d: Diagnosis): string {
-  switch (d.kind) {
-    case 'supply':
-      return 'Ausserhalb der Versorgung';
-    case 'good':
-      return `${GOODS[d.good].name} fehlt`;
-    case 'service':
-      return `${BUILDING_DEFS[SERVICE_BUILDING[d.service]].name} fehlt in Reichweite`;
-  }
+  const t = diagnosisText(d);
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 function houseInfo(world: World, b: Building): HoverInfo {

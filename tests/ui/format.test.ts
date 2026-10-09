@@ -49,7 +49,7 @@ describe('taxTooltip (Spec 10.7)', () => {
 
 describe('diagnosisText (AK-U3-02)', () => {
   it('bildet jede Diagnose auf einen Text ab', () => {
-    expect(diagnosisText({ kind: 'supply' })).toBe('nicht versorgt');
+    expect(diagnosisText({ kind: 'supply' })).toBe('ausserhalb der Versorgung');
     expect(diagnosisText({ kind: 'good', good: 'wood' })).toBe('Holz fehlt');
     expect(diagnosisText({ kind: 'service', service: 'faith' })).toBe('Kapelle fehlt');
     expect(diagnosisText({ kind: 'service', service: 'school' })).toBe('Schule fehlt');
