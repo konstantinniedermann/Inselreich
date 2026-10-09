@@ -3780,3 +3780,17 @@ nacheinander, ≤ +3,4 %; als relativer Vergleich angenommen, nicht als Messwert
 rot, behoben (`175d74c`). Merge seriell durch den Integrator im Worktree `.worktrees/integrate`, `make check`, lokal.
 
 Entscheider: L0 · Anlass: Bericht REL11-UI · ADR: —
+
+## R402 · 2026-10-09 · Gate Merge REL-11 Render: Keepout und Schiff OK, Fels nach Fix-Runde
+
+Ruling: Final-Review `opus` (lead-qa) BEDENKEN gesamt. **OK** für `fix/render-seeplan-keepout` @ 7576f29 (Zähler
+11,6 % gegen main nachgemessen, Plan bitgleich) und `fix/see-f3-schiffskontrast` @ a0278db (Saum 6,63/4,02/2,21,
+Pins grün). **Fels** @ 9bcbbb1 fachlich OK (Blindprobe 10/10, Nahzoom-Hash identisch), aber Fix-Runde vor dem Merge:
+main nach dem Merge von Keepout und Schiff in den Branch holen, Konflikt in `docs/arc42.md` lösen, Zeile 222 (`|`
+escapen) und Kommentar `decorStamps.ts` (Verhältnisse 1,28/1,06) angleichen; kein neues Review, L0 prüft den Diff.
+Vor dem Merge: Zeitprüfung nach R392 für alle drei Branches bei Load ≤ 4 (A/B main/Branch direkt nacheinander, kein
+bestehender Test > 500 ms oder > +50 %). Nach dem Fels-Merge: gemeinsame Sichtprobe Schiff mit Saum und Fels bei
+Zoom 0,25 und 0,5 (Release-Check REL-11). An die Session-Retro: Rot-vor-Grün in der Historie bei Schiff, Fels-M2 und
+Keepout-Zähler nicht belegt (zweiter Fall nach TOOL-GATES-2 → R395 V2 wird fällig).
+
+Entscheider: L0 · Anlass: Final-Review REL11-RENDER · ADR: —
