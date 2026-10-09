@@ -36,7 +36,7 @@ import { meadowWarmth } from './groundDecor';
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements; Wrack, Eiland und Felsen meiden zusätzlich die Schiffsrouten
-//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
+//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`; Segmentindex im 8er-Gitter je `routes`-Array, WeakMap, gleiche Antwort wie die Schleife über alle Segmente). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
 //     NICHT über `RARE_POOL` (Land-Orte), sondern über eigene Lose; `rareBudget` (L8) zählt diese Lose (nicht ihre Eignung) und
 //     senkt die Land-Kappe von `planRare` auf `RARE_CAP − Meer-Lose`; das Budget hängt nie von `SeaContext` ab.
 
