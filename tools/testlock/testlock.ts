@@ -3,9 +3,21 @@
 // Nimmt eine Lockdatei im gemeinsamen Git-Verzeichnis (alle Worktrees sehen sie),
 // prüft den 1-min-Load und startet den Befehl. Belegt oder Load > LOAD_MAX: Exit 3, kein Warten.
 // Auf CI (CI/GITHUB_ACTIONS) und in verschachtelten Läufen (STUDIO_TESTLOCK_HELD) läuft der Befehl direkt.
+// TESTLOCK_FAKE_LOAD und TESTLOCK_PATH gibt es nur für Tests, nie zum Umgehen echter Prüfungen (R378).
+// Übernahme toter Sperren: nur unter einem Wächterverzeichnis (<lock>.takeover, mkdir ist atomar); die tote
+// Sperrdatei kann nur ein Wächterhalter löschen, daher kein ABA-Fenster.
 import { spawn, execFileSync } from 'node:child_process';
-import { closeSync, openSync, readFileSync, renameSync, unlinkSync, writeSync } from 'node:fs';
-import { loadavg } from 'node:os';
+import {
+  closeSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  rmdirSync,
+  statSync,
+  unlinkSync,
+  writeSync,
+} from 'node:fs';
+import { constants, loadavg } from 'node:os';
 import { resolve } from 'node:path';
 
 export const LOAD_MAX = 8;
@@ -23,7 +35,7 @@ function run(): void {
     stdio: 'inherit',
     env: { ...env, STUDIO_TESTLOCK_HELD: '1' },
   });
-  child.on('exit', (code, sig) => finish(code ?? (sig ? 128 : 1)));
+  child.on('exit', (code, sig) => finish(code ?? (sig ? 128 + (constants.signals[sig] ?? 0) : 1)));
   child.on('error', (e) => {
     console.error(`testlock: Start fehlgeschlagen: ${e.message}`);
     finish(127);
@@ -37,7 +49,8 @@ function finish(code: number): never {
   process.exit(code);
 }
 
-if (env.CI || env.GITHUB_ACTIONS || env.STUDIO_TESTLOCK_HELD) {
+const isSet = (v: string | undefined): boolean => !!v && v !== 'false' && v !== '0';
+if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
   run();
 } else {
   const load = env.TESTLOCK_FAKE_LOAD !== undefined ? Number(env.TESTLOCK_FAKE_LOAD) : loadavg()[0];
@@ -63,8 +76,46 @@ if (env.CI || env.GITHUB_ACTIONS || env.STUDIO_TESTLOCK_HELD) {
       return (e as NodeJS.ErrnoException).code === 'EPERM';
     }
   };
+  const guard = `${lockPath}.takeover`;
+  const takeOver = (seen: { pid?: number }): void => {
+    try {
+      mkdirSync(guard);
+    } catch {
+      let age = 0;
+      try {
+        age = Date.now() - statSync(guard).mtimeMs;
+      } catch {
+        /* Wächter schon weg */
+      }
+      if (age > 10_000) {
+        try {
+          rmdirSync(guard); // verwaister Wächter eines abgestürzten Prozesses
+        } catch {
+          /* egal */
+        }
+      }
+      return; // anderer übernimmt gerade; nächster Versuch prüft neu
+    }
+    try {
+      let now: { pid?: number } = {};
+      try {
+        now = JSON.parse(readFileSync(lockPath, 'utf8'));
+      } catch {
+        /* leer oder weg */
+      }
+      if (now.pid && alive(now.pid)) return; // lebt doch (oder neu): nicht anfassen
+      console.error(`testlock: veraltete Sperre (PID ${seen.pid ?? '?'} tot) übernommen.`);
+      try {
+        unlinkSync(lockPath);
+      } catch {
+        /* schon weg */
+      }
+    } finally {
+      rmdirSync(guard);
+    }
+  };
   let acquired = false;
-  for (let attempt = 0; attempt < 3 && !acquired; attempt++) {
+  for (let attempt = 0; attempt < 5 && !acquired; attempt++) {
     try {
       const fd = openSync(lockPath, 'wx');
       writeSync(
@@ -99,14 +150,7 @@ if (env.CI || env.GITHUB_ACTIONS || env.STUDIO_TESTLOCK_HELD) {
         );
         process.exit(EXIT_BLOCKED);
       }
-      console.error(`testlock: veraltete Sperre (PID ${holder.pid ?? '?'} tot) übernommen.`);
-      try {
-        // atomar übernehmen: nur ein Prozess kann die Datei umbenennen; Verlierer versucht es neu
-        renameSync(lockPath, `${lockPath}.stale.${process.pid}`);
-        unlinkSync(`${lockPath}.stale.${process.pid}`);
-      } catch {
-        /* anderer Prozess war schneller; nächster Versuch entscheidet */
-      }
+      takeOver(holder);
     }
   }
   if (!acquired) {

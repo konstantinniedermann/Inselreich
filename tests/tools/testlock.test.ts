@@ -98,3 +98,46 @@ describe('testlock', () => {
     expect(run({ STUDIO_TESTLOCK_HELD: '1' }, 'node', '-e', '0').status).toBe(0);
   });
 });
+
+describe('testlock (R378)', () => {
+  it('zwei parallele Läufe auf toter Sperre: genau einer gewinnt', () => {
+    for (let round = 0; round < 4; round++) {
+      const { lock } = setup();
+      writeFileSync(lock, holder(2147483646, 'alt'));
+
+      const sh = spawnSync(
+        'sh',
+        [
+          '-c',
+          `for i in 1 2 3; do node "${script}" node -e 'console.log("RAN");setTimeout(()=>{},800)' & done; wait`,
+        ],
+        {
+          encoding: 'utf8',
+          env: {
+            ...nodeEnv,
+            CI: undefined,
+            GITHUB_ACTIONS: undefined,
+            STUDIO_TESTLOCK_HELD: undefined,
+            TESTLOCK_PATH: lock,
+            TESTLOCK_FAKE_LOAD: '1',
+          },
+        },
+      );
+      expect(sh.stdout.split('RAN').length - 1).toBe(1);
+      expect(existsSync(lock)).toBe(false);
+    }
+  }, 30_000);
+
+  it('CI=false, CI=0 und leeres CI gelten nicht als CI', () => {
+    const { lock, run } = setup();
+    writeFileSync(lock, holder(1, 'x'));
+    for (const ci of ['false', '0', '']) {
+      expect(run({ CI: ci }, 'node', '-e', '0').status).toBe(3);
+    }
+  });
+
+  it('Signal-Ende des Befehls: Exit 128 + Signalnummer', () => {
+    const { run } = setup();
+    expect(run({}, 'node', '-e', 'process.kill(process.pid,"SIGTERM")').status).toBe(143);
+  });
+});
