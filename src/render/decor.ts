@@ -31,7 +31,7 @@ import { meadowWarmth } from './groundDecor';
 //  D5 Salze 540–559 (L4) und 560–569 (L5, Meer und Palmen: 560 Palmen, 566 Wrack, 567 Meeresfels und Felsnadel, 568 Felseiland,
 //     569 Wasserflächen Sandbank/Riff/Tang); Zufall nur über `hash2`/`valueNoise`.
 //     Salze 595–597 (L8): Zweitlos der Land-Arten (`planRare`), wenn Land-Orte plus Meer-Lose unter `RARE_MIN` bleiben.
-//     Salz 598 (L8): Strandkiefern der Kiefernküste (`planPalms`: Zahl, Rang, Form). Salz 599: reserviert für L8 (noch frei).
+//     Salz 598 (L8): Strandkiefern der Kiefernküste (`planPalms`: Zahl, Rang; die Form folgt der Seerichtung). Salz 599: reserviert für L8 (noch frei).
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
 //     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
@@ -713,7 +713,7 @@ function planPalms(p: StaticPlan, w: number, h: number): void {
   p.palms.sort((a, b) => a.id - b.id);
 }
 
-/** Strandkiefern (L8, Salz 598): Zahl, Rang und Form nur aus Seed und Gelände (D1). */
+/** Strandkiefern (L8, Salz 598): Zahl und Rang nur aus Seed und Gelände (D1); die Form folgt der Seerichtung. */
 export const SHORE_PINE_MIN = 2;
 export const SHORE_PINE_MAX = 5;
 /** Mindestabstand (Chebyshev) der Strandkiefern zueinander in Kacheln. */
