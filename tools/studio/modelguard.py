@@ -8,8 +8,11 @@ Fehler lassen zu.
 
 from __future__ import annotations
 
+import contextlib
+import json
 import re
-from collections.abc import Mapping  # T02b ergänzt contextlib, json, sys
+import sys
+from collections.abc import Mapping
 
 MODE = "warn"  # Startzustand (R428 E2): nur Event; "deny" setzt TOOL-AKTIVIERUNG
 AGENT_TOOLS = ("Agent", "Task")
@@ -98,4 +101,50 @@ def unknown_alias(tool_input: Mapping, table) -> str | None:
     return None
 
 
-# main() und der Einstiegspunkt folgen in T02b.
+def main() -> int:
+    try:
+        from paths import agents_dir, append_event, docs_dir, now_iso
+        from studio_docs import persona_meta, read_text
+
+        payload = json.loads(sys.stdin.read() or "null")
+        if (
+            not isinstance(payload, dict)
+            or payload.get("hook_event_name") != "PreToolUse"
+        ):
+            return 0
+        data = payload.get("tool_input")
+        if payload.get("tool_name") not in AGENT_TOOLS or not isinstance(data, dict):
+            return 0
+        table = model_table(read_text(docs_dir() / "STUDIO.md"))
+        found = reason(data, persona_meta(agents_dir()), table)
+        note = unknown_alias(data, table)  # unbekannter Alias: nur Event, nie deny
+        if not found and not note:
+            return 0
+        with contextlib.suppress(Exception):
+            append_event(
+                {
+                    "ts": now_iso(),
+                    "session_id": str(payload.get("session_id") or ""),
+                    "agent_id": str(payload.get("agent_id") or "main"),
+                    "source": "hook",
+                    "kind": "model_guard",
+                    "mode": MODE,
+                    "persona": _persona(data),
+                    "model": str(data.get("model") or ""),
+                    "summary": (found or note or "")[:160],
+                }
+            )
+        if found and MODE == "deny":
+            out = {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": found,
+            }
+            print(json.dumps({"hookSpecificOutput": out}, ensure_ascii=False))
+    except Exception:  # noqa: BLE001 - Hooks werfen nie
+        return 0
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
