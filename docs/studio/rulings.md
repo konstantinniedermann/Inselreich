@@ -3582,3 +3582,15 @@ belegen, beheben. (3) Beobachtung: `zeitreserve` misst `loadMax` inklusive der v
 nächste Retro (Last vor dem Lauf messen, eigene Last abziehen oder Grenze anpassen).
 
 Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
+
+## R386 · 2026-10-09 · SEE-F1-KORRIDOR: Trivial-Fix Testzeiten im Paket, dann Merge
+
+Ruling: A/B (Load 4,8–5,1): `waterSea` Riffschaum main < 500 → Branch ≈ 810 ms, `wildlife` E5 R4-Sperrbereich
+< 500 → ≈ 750 ms (Ursache kalte `seaRoute` + Durchgang B je Welt); `decor` R4 und Lane-Abstand auf Seeds 1–40 gekürzt
+(29/18 ms). Die zwei Mehrzeiten entstehen durch das Paket → **Trivial-Fix im Paket** (Ownership für
+`tests/render/waterSea.test.ts` und `tests/render/wildlife.test.ts` hiermit erteilt): Welten/Pläne in `beforeAll`
+teilen, ≤ 500 ms je Test, Aussage unverändert; +10 Tools (Gesamt 205). Danach Gate Merge **OK** ohne weitere Prüfung
+(Final-Review BEDENKEN ohne Blocker, Nachlauf-Review OK, Korridor 0/265 und 0/1297 über 200 Seeds, Tönungs-Pin
+unverändert, Kaltstart −2,7 %); Merge durch den Integrator mit `make check`, `zeitreserve` belastbar erst am Push-Gate.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
