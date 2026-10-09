@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-08 · Handbuch 1.31
+
+- Anlass: Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B3, B5 (V3, V4)
+- Datenbasis: `docs/studio/metriken/S-2026-10-08-29c3791b.md`, Rulings R350, R354, R358, R367, R369, R303
+- Ruling: R375
+- Änderungen: Briefing-Vorlage Punkt 5 um Pflichtzeilen je Paketart ergänzt (Mehrbedarf vorab melden; Werkzeug: `make studio-test` und Echtlauf gegen externe APIs; Experiment-/Handbuch-/Persona-Änderungen: `make studio-test`); `gates.md` an R303 angeglichen (kein `merge=union` für `docs/beobachtungen.md`, Konflikt löst der Eigentümer des späteren Branches per Merge); Reihenfolge der Wartenden in `experimente.md` (E-038, E-048, E-050, E-049, E-044)
+
 ## 2026-10-08 · Persona qa-playtester 1.7
 
 - Anlass: Prozess-Retro REL-08, Vorschlag P3 (Wegwerf-Skripte im Release-Smoke)

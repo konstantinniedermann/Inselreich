@@ -215,7 +215,9 @@ rot, Absturz, defekter Spielstand) geht einzeln.
 **Konflikte:** Konflikt im Kandidaten → Integrator stoppt und meldet (§6); der Eigentümer des späteren
 Häppchens holt den Kandidaten per Merge (kein Rebase), Delta-Review. Fällt ein Häppchen durch: Fix auf
 seiner Branch mit Review oder raus; der Kandidat wird frisch aufgebaut (`git worktree add --detach`
-auf origin/main), nie zurückgesetzt. `docs/beobachtungen.md` hat `merge=union` (E-022).
+auf origin/main), nie zurückgesetzt. `docs/beobachtungen.md` hat kein `merge=union` (entfernt mit R303, E-031):
+einen Konflikt dort löst der Eigentümer des späteren Branches per Merge von main, gestrichene Zeilen
+bleiben gestrichen.
 
 **Pipelining:** Das nächste Häppchen startet nach Review-OK des vorigen, nicht nach dem Merge;
 Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).

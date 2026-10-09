@@ -15,6 +15,9 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
+Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
+E-050, E-049, E-044.
+
 ---
 
 ## E-022 · angepasst (übernommen, R319) · Merge-Hygiene
@@ -76,6 +79,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 - Ruling: R319
 - Start: 2026-10-08 (Handbuch 1.27, Leads 1.10/1.6/1.8); V2-Vorbedingung geprüft (Dashboard und Modell brauchen `active`/`done` nicht, siehe Retro-Nachtrag und Coach-Bericht)
 - Bewertung: –
+- Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): V1 ≈ 1,0 Neuschreibungen nach Turn-Ende je Lead-Instanz (13 in 13, nicht erreicht); V2 0,38 Status-Turns je Instanz (erreicht); Review-Runden 1,00.
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -319,6 +323,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`, `.claude/agents/tech-*.md` (nur nach Ruling)
 - Ruling: R314
 - Start: 2026-10-08, Platz frei durch Rotation R319 (E-022, E-030 abgeschlossen); Handbuch 1.25 gilt seit 2026-10-08, Zählung der 3 Sessions ab Handbuch 1.27
+- Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): 27,2 %; nur 7 von 27 Neuschreibungen > 20k nach Bash, 20 nach Turn-Ende (≈ 80 % Gewicht) — der mögliche Effekt von E-037 ist gedeckelt.
 - Hinweis: Der frühere kombinierte E-037 (Hebel 1 und 5) war doppelt eingetragen; Hebel 5 steht unverändert als E-038.
 
 ## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
@@ -358,7 +363,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Release-Lauf), `.claude/agents/lead-qa.md`
 - Ruling: R315
 
-## E-043 · vorgeschlagen · Zeitreserve lokal gegen geschätzte Runner-Zeit
+## E-043 · übernommen als Werkzeug (R356) · Zeitreserve lokal gegen geschätzte Runner-Zeit
 
 - Hypothese: Wenn `make zeitreserve` lokal die gemessene Laufzeit mit dem beobachteten Runner-Faktor 3 hochrechnet und dann die Runner-Regel (Faktor 1, Schwelle 2000 ms) anwendet, fallen Zeittests ohne CI-Reserve vor dem Push auf (Retro [session-191cc1e4-ende](retros/2026-10-08-session-191cc1e4-ende.md) B2).
 - Messgrösse: 0 rote CI-Läufe wegen `zeitreserve` in den nächsten 3 Pushes mit neuen oder geänderten Zeittests (Ausgang: 1 Fall in dieser Session, davor R318/R322). Gegenprobe: höchstens 2 lokale Meldungen, die der Runner nicht bestätigt (Vorabzählung: 4 Meldungen im Bestand).
@@ -366,7 +371,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Pushes mit Zeittest-Änderung, höchstens bis 2026-11-05.
 - Rückfall: Zusatzmodus in `tools/zeitreserve/` und Makefile entfernen (`git revert`).
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/check.ts`, `Makefile` (Paket TOOL-ZEITRESERVE-RUNNER, lead-tech)
-- Ruling: R329 (Werkzeug-Paket TOOL-ZEITRESERVE-RUNNER aufs Board; Start in späterer Session; bis dahin `make zeitreserve` vor jedem Push)
+- Ruling: R329 (Werkzeug-Paket TOOL-ZEITRESERVE-RUNNER aufs Board; Start in späterer Session; bis dahin `make zeitreserve` vor jedem Push), R356 (gebaut mit TOOL-ZEITRESERVE-RUNNER, `make zeitreserve` rechnet × 3 hoch; übernommen als Werkzeug, kein Experimentplatz)
+- Messauftrag (R356, Coach je Session-Retro): die Messgrösse oben läuft weiter. Datenpunkt 1 ist der REL-09-Push (CI-Ergebnis stand bei der Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) aus); vor dem Merge zwei echte Funde (R363, R370).
 
 ## E-044 · vorgeschlagen · Worktree-Belegung vor jedem Agent-Start
 
@@ -396,6 +402,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Änderung in `tools/studio/efficiency.py` bzw. `metrics.py` zurücknehmen (`git revert`).
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
 - Ruling: R344, R349
+- Datenpunkt 1 von 3, S-2026-10-08-29c3791b: Monat 918, Konto 1182, Session 0 mit Wert; kein Verbrauch erst durch den Nutzer entdeckt.
 
 ## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 
@@ -425,4 +432,24 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
 - Rückfall: Zeile in `tools/studio/efficiency.py` entfernen (`git revert`).
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
+- Ruling: –
+
+## E-050 · vorgeschlagen · Fortsetzung nach Pause als frische Instanz (Umsetzer)
+
+- Hypothese: Wenn ein Lead einen Umsetzer, dessen letzter Turn mehr als 5 min zurückliegt und dessen Kontext über 40k liegt, für Fix-Runde oder Folge-Task nicht per `SendMessage` fortsetzt, sondern eine neue Instanz mit Review-Befund, Commit-Stand und Dateiliste als Briefing startet, sinken die 5-min-Neuschreibungen der Umsetzer nach Turn-Ende, ohne dass Review-Runden steigen (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B2; Pflicht-Hebel Cache-Write, Dauer-Rot).
+- Messgrösse: Umsetzer-Neuschreibungen > 20k nach Turn-Ende je Umsetzer-Instanz ≤ 0,2 über 3 Sessions mit Umsetzern (Ausgang S-2026-10-08-29c3791b: 7 in 12 Instanzen von art-rendering-engineer, tech-ui-engineer, tech-sim-engineer ≈ 0,58, Gewicht ≈ 350k). Gegenprobe: Cache-Write der Folgeinstanz gesamt kleiner als die ersetzte Neuschreibung (Stichprobe 3 Fälle aus `rewrite_stats` und Instanzdaten), Review-Runden im Mittel ≤ 2, Erstabnahme nicht schlechter.
+- Messbarkeit: `rewrite_stats.by_role` zählt je Rolle; E-042 zählt nur Leads, E-037 nur Neuschreibungen nach Bash — die drei Wirkungen bleiben getrennt lesbar. Der Cache-Write-Anteil der Ampel bleibt unverändert.
+- Zeitraum: 3 Sessions mit Umsetzern, höchstens bis 2026-11-19; Start erst bei freiem Platz.
+- Rückfall: Satz in `STUDIO.md` (Delegation, Fix-Runden) und in den Lead-Personas entfernen; Fortsetzung per `SendMessage` wie bisher.
+- Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
+- Ruling: –
+
+## E-051 · vorgeschlagen · Werkzeug-Riegel für volle Testläufe
+
+- Hypothese: Wenn `make check`, `make test` und `make zeitreserve-push` vor dem vollen Vitest-Lauf eine Sperre `.studio/locks/vitest` atomar nehmen (`mkdir`, darin PID, Paket, Zeit; Sperre eines toten PID gilt als frei) und bei belegter Sperre oder 1-min-Load > 8 mit Hinweis abbrechen statt zu blockieren, laufen nie zwei volle Läufe zugleich und kein Gate-Urteil entsteht unter Fremdlast (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B4; R357, R369).
+- Messgrösse: 0 Fälle zweier gleichzeitiger voller Vitest-Läufe und 0 Gate-Läufe bei Load > 8 in 3 Sessions mit ≥ 3 parallelen Strängen (Ausgang S-2026-10-08-29c3791b: Load 57 (R357), `make check` bei Load 12,7 mit fremdem Lauf (R369), Playtester gegen R329 (R369), Echtprobe wegen Last ausgefallen (R362)). Gegenprobe: 0 hängende Sperren; Abbrüche je Session sichtbar und Wartezeit bis zum erfolgreichen Lauf im Median ≤ 10 min.
+- Messbarkeit: Sperr-Ereignisse (genommen, abgebrochen, verwaist freigegeben) als Event in `.studio/events.jsonl`, so bleibt zählbar, wie oft der Riegel griff. Abbruch statt Blockieren hält Bash-Aufrufe kurz (keine neue Cache-Pause, E-037).
+- Zeitraum: 3 Sessions mit Parallelität, höchstens bis 2026-11-19. Werkzeug ohne offene Hypothese zur Regel selbst: L0 kann es wie E-043/E-047 als Werkzeug-Paket führen (Messauftrag statt Platz).
+- Rückfall: Sperre in `Makefile` entfernen (`git revert`); R357 gilt weiter als Handbuchsatz.
+- Dateien: `Makefile`, `tools/studio/` (kleines Sperr-Skript), `tools/studio/tests/` (Paket TOOL-TESTLOCK, lead-tech, ≈ 40 Tools)
 - Ruling: –
