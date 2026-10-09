@@ -550,7 +550,7 @@ Voraussetzung: Node ≥ 22.
 make help      # Alle Befehle anzeigen
 make install   # Abhängigkeiten installieren
 make dev       # Dev-Server starten
-make check     # Lint, Tests und Build wie in der CI
+make check     # Lint, Tests und Build wie in der CI (lokal mit Testsperre: Abbruch `testlock: ABBRUCH`, Exit 3, bei belegter Sperre oder Load > 8; auf CI aus)
 ```
 
 Der Testlauf (`make test`, `make check`) hat zwei Gruppen: erst alle Tests parallel, danach die

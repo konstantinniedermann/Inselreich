@@ -55,10 +55,18 @@ const blue = (c: string): number => {
 };
 
 /** Ellipsen je Lappenkrone einer echten Karte (WALD-02) zerlegt: n Schattenlappen, n Mittenlappen, 1–3 Kappen. */
-function perCrown(seed: number): { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] {
+type Parts = { shade: Ell[]; mid: Ell[]; cap: Ell[] }[];
+const memo = new Map<number, Parts>();
+/** Je Seed nur einmal aufgebaut (Weltaufbau dominiert die Zeit; R389 Zeitreserve), beide Tests teilen sich das Ergebnis. */
+function perCrown(seed: number): Parts {
+  let r = memo.get(seed);
+  if (!r) memo.set(seed, (r = buildParts(seed)));
+  return r;
+}
+function buildParts(seed: number): Parts {
   const out: { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] = [];
   const cs = treesOf(woodWorld(seed)).filter((k) => !k.dead && !(k.kind === 1 && !k.bush));
-  for (const c of cs.filter((_, i) => i % 4 === 0)) {
+  for (const c of cs) {
     const e = ellipses(c);
     const n = crownGeom(c).lobes.length;
     const m = Math.min(n, c.bush ? 1 : c.kind === 3 ? 3 : 2);
@@ -71,7 +79,7 @@ function perCrown(seed: number): { shade: Ell[]; mid: Ell[]; cap: Ell[] }[] {
 describe('H-R10 Kronen in 3 Tönen', () => {
   it('c) je Lappenkrone drei verschiedene Füllungen: Schatten bläulicher als Mitte, Kappe heller als Mitte', () => {
     let checked = 0;
-    for (let seed = 1; seed <= 6; seed++)
+    for (let seed = 1; seed <= 3; seed++)
       for (const { shade, mid, cap } of perCrown(seed)) {
         expect(new Set([shade[0]!.fill, mid[0]!.fill, cap[0]!.fill]).size).toBe(3);
         expect(blue(shade[0]!.fill)).toBeGreaterThan(blue(mid[0]!.fill));
@@ -80,9 +88,9 @@ describe('H-R10 Kronen in 3 Tönen', () => {
         checked++;
       }
     expect(checked).toBeGreaterThan(100);
-  });
+  }, 10_000); // R389: ~430 ms einzeln, ~880 ms im vollen Lauf; Runner-Schätzung 3 × 880 = 2640 ms (ganzer Test, 3 Karten); Faktor 4 ergäbe 3,5 s; 10 s halten die 50-%-Regel (5 s) mit Reserve ein (wie R328)
   it('c) Kappe sitzt zum Licht (x < 0, y < 0 gegenüber ihrem Lappen), Schattenmond vom Licht weg', () => {
-    for (const seed of [2, 7])
+    for (const seed of [2, 3])
       for (const { shade, mid, cap } of perCrown(seed)) {
         shade.forEach((s, i) => {
           expect(s.x - mid[i]!.x).toBeGreaterThan(0);

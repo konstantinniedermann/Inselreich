@@ -5,6 +5,15 @@ declare module 'node:child_process' {
     args: string[],
     options?: { env?: Record<string, string | undefined>; encoding?: 'utf8' },
   ): { status: number | null; stdout: string; stderr: string };
+  export function spawn(
+    command: string,
+    args: string[],
+    options?: { env?: Record<string, string | undefined> },
+  ): {
+    stdout: { on(ev: 'data', cb: (d: { toString(): string }) => void): void };
+    on(ev: 'error', cb: (e: Error) => void): void;
+    on(ev: 'close', cb: () => void): void;
+  };
 }
 
 declare module 'node:fs' {
