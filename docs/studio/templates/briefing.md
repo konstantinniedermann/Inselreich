@@ -46,12 +46,12 @@ Feste Regeln (unverändert, gelten immer):
 Git: kein Rebase (auch kein `pull --rebase`), kein reset --hard, kein Force-Push; main per Merge holen (Verfassung §6.3).
 
 Logging (jeweils als eigener Bash-Aufruf):
-- Start:     python3 tools/studio/log.py status --role <rolle> --status active --task "<auftrag>" --package <id>
+- Start:     python3 tools/studio/log.py status --role <rolle> --status active --task "<auftrag>" --package <id>   (nur Arbeiter, nicht Leads; E-042)
 - Delegiert: python3 tools/studio/log.py status --role <rolle> --status delegated --package <id>   (nur Leads)
 - Ergebnis:  python3 tools/studio/log.py result --role <rolle> --package <id> --worker <arbeiter> --outcome <angenommen|nacharbeit|verworfen> --review-rounds <n>   (nur Leads, einmal je abgenommenem Arbeitsergebnis)
 - Wartet:    python3 tools/studio/log.py status --role <rolle> --status waiting --task "<worauf>" --package <id>
 - Blockiert: python3 tools/studio/log.py status --role <rolle> --status blocked --task "<grund>" --package <id>
-- Fertig:    python3 tools/studio/log.py status --role <rolle> --status done --summary "<ergebnis>" --package <id>
+- Fertig:    python3 tools/studio/log.py status --role <rolle> --status done --summary "<ergebnis>" --package <id>   (nur Arbeiter, nicht Leads; E-042)
 - Abbruch:   python3 tools/studio/log.py status --role <rolle> --status failed --summary "<grund>" --package <id>
 
 Bericht (≤ 15 Zeilen, docs/studio/templates/bericht.md):

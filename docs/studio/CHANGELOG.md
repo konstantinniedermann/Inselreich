@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-09 · Persona qa-code-reviewer 1.5
+
+- Anlass: Session-Retro fb37ceac V3
+- Datenbasis: `docs/studio/retros/2026-10-09-session-fb37ceac-ende.md`
+- Ruling: R420
+- Änderungen: Final-Review liest den Diff je Datei, nicht als Gesamtdatei
+
+## 2026-10-09 · Handbuch 1.36
+
+- Anlass: Session-Retro fb37ceac (10 von 13 Lead-/Coach-Starts über der Modelltabelle)
+- Datenbasis: `docs/studio/retros/2026-10-09-session-fb37ceac-ende.md`, `docs/studio/metriken/richtwerte.md`
+- Ruling: R420 (V1–V3, Experiment-Urteile)
+- Änderungen: richtwerte.md Spalte „gemessen auf“, Modelltabelle bestimmt das Einsatzmodell; E-038 und E-049 angepasst und gestartet, E-050 gestartet; E-037 und E-042 angepasst, E-046 behalten, E-048 wartet; Briefing-Vorlage: Start/Fertig-Logging nur für Arbeiter
+
 ## 2026-10-09 · Handbuch 1.35
 
 - Anlass: Release-Retro REL-12 (Plan-Nacharbeit, ungültige Messungen unter Last)

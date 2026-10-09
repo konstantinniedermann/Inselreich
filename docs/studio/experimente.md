@@ -68,7 +68,7 @@ E-050, E-049, E-044.
 - Ruling: –
 - Ersetzt: V1 und M1 der Retro [ampel-steuerung](retros/2026-10-08-ampel-steuerung.md), Ruling R319; die Aufschlüsselung liefert M1 (lead-tech), die Übergabe-Regel E-042.
 
-## E-042 · laufend · Lead-Ablösung per Handoff, Statusturns der Leads entfallen
+## E-042 · angepasst (R420) · Lead-Ablösung per Handoff, Statusturns der Leads entfallen
 
 - Hypothese: Wenn ein Lead nach dem Abschlussbericht nicht fortgesetzt, sondern per Handoff durch einen neuen Lead abgelöst wird (V1), und die Leads `active`/`done` nicht mehr melden, weil Hook-Events sie ersetzen (V2), sinken die Neuschreibungen des Lead-Kontexts nach Turn-Ende und die Turn-Zahl der Leads, ohne dass Übergabe oder Dashboard leiden (Retro [ampel-steuerung](retros/2026-10-08-ampel-steuerung.md) B3, V1, V2; ersetzt E-029).
 - Messgrösse: (V1) Lead-Neuschreibungen ≥ 20k nach Turn-Ende je Lead-Instanz ≤ 0,6 (Ausgang 1,2; 91 in 78 Instanzen, 6 Sessions); (V2) alleinstehende `log.py status`-Turns je Lead-Instanz ≤ 1 (Ausgang 3,2). Beide über 3 Sessions mit zusammen ≥ 10 Lead-Starts. Gegenprobe: Starts je Paket höchstens +1 gegenüber Ausgang, Review-Runden im Mittel ≤ 2, Briefing-Rückfragen nicht häufiger, Dashboard zeigt jeden Lead mit Paket (Stichprobe aus `.studio/events.jsonl`). Getrennt von E-037: dort zählen Umsetzer-Instanzen und Bash-Vorgänger.
@@ -83,6 +83,7 @@ E-050, E-049, E-044.
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, ersetzt den Datenpunkt oben, Session zählt einmal): V1 18 in 22 Lead-Instanzen = 0,82 (nicht erreicht; Teil 2 allein ≈ 0,56, abgeleitet); V2 14 in 22 = 0,64 (erreicht); Review-Runden 1,00.
 - Datenpunkt S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): V1 5 Neuschreibungen > 20k in 11 Lead-Instanzen = 0,45 (obere Schranke, erreicht); V2 nicht erhoben (Messauftrag nächste Session); Review-Runden 1,29. Zweite von drei Sessions.
 - Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): V1 9 in 12 = 0,75; V2 23 in 12 = 1,92 (Briefing-Vorlage führt „Start“/„Fertig“ ohne Ausnahme für Leads, B5); Review-Runden 1,40. Gepoolt V1 0,71 (Schwelle ≤ 0,6 verfehlt), V2 1,09 (≤ 1 verfehlt). Empfehlung Coach: **angepasst** (Handoff und „kein `active`/`done`“ bleiben, Vorlagenzeile „(nicht Leads)“, V2-Messung endet); Urteil per Ruling offen.
+- Bewertung (R420): **angepasst**. Handoff und „kein `active`/`done` für Leads“ bleiben; die Briefing-Vorlage führt Start/Fertig nur noch für Arbeiter (Handbuch 1.36); die V2-Messung endet.
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -318,7 +319,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: –
 - Urteil R319 (Coach 2026-10-08): **abschliessen**. Die Auswertung ist als Tabelle „Neuschreibungen nach Pause > 5 min“ in `metrics.py --efficiency` Dauerbestandteil (TOOL-AMPEL); die Hypothese ist durch Retro ampel-steuerung B3 für Leads gestützt (91 von 125 Fällen nach Turn-Ende). Kein Slot nötig.
 
-## E-037 · laufend · Lange Bash-Läufe im Hintergrund (Hebel 1)
+## E-037 · angepasst (R420) · Lange Bash-Läufe im Hintergrund (Hebel 1)
 
 - Hypothese: Wenn Umsetzer und Leads lange Bash-Läufe im Hintergrund starten und spätestens alle 4 min abfragen, läuft die 5-min-Cache-Frist seltener ab und der Cache-Write-5-min-Anteil sinkt (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). ADR-007 bleibt: Arbeiter-Starts bleiben im Vordergrund.
 - Messgrösse: Cache-Write-5-min-Anteil laut Session-Datei (`metrics.py`, Abschnitt „Effizienz“), Ausgang 29,2 % (Historie) bzw. 21,7 % (8ef9d27f); Schwelle ≤ 20 % im Mittel über 3 Sessions mit Umsetzern, ohne Anstieg der Review-Runden.
@@ -332,17 +333,19 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): 24,3 %; 35 Neuschreibungen > 20k, 90 % des Gewichts nach Turn-Ende, davon eine L0-Neuschreibung nach 620 min Pause mit 25 % des Gewichts.
 - Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): 24,1 % (Schwelle ≤ 20 % nicht erreicht).
 - Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): 31,7 %; Mittel 26,7 % (Schwelle ≤ 20 % verfehlt); Neuschreibungen nach Bash 31 % des Gewichts, davon der Grossteil unter Fremdlast (verwaister Vitest-Worker). Empfehlung Coach: **angepasst** (Regel bleibt als Hygiene, kein Cache-Write-Hebel; Platz an E-050); Urteil per Ruling offen.
+- Bewertung (R420): **angepasst**. Die Regel „lange Bash-Läufe im Hintergrund“ bleibt als Hygiene, ist aber kein Cache-Write-Hebel mehr; der Platz geht an E-050.
 
-## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
+## E-038 · laufend (angepasst R420) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
 
 - Hypothese: Wenn Leads bei Ein-Umsetzer-Paketen auf sonnet laufen oder die Lead-Schicht entfällt, sinken opus- und Steuerungsanteil ohne mehr Nacharbeit (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). Hebel 2–4 erst nach Messung von E-037.
-- Messgrösse: Steuerungsanteil (Ausgang 49,8 % Historie) ≤ 40 % und opus-Anteil (74,1 %) ≤ 60 % über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 2 und Erstabnahme-Quote nicht schlechter.
+- Messgrösse (R420): Starts über der Modelltabelle (STUDIO.md, Abschnitt Modelle) ≤ 1 je Session (Ausgang 10 von 13 in fb37ceac) und opus-Anteil (Ausgang 74,1 %) ≤ 60 % über 3 Sessions; Steuerungsanteil (Ausgang 49,8 % Historie) ≤ 40 % weiter beobachtet; Gegenprobe: Review-Runden im Mittel ≤ 2 und Erstabnahme-Quote nicht schlechter.
 - Zeitraum: 3 Sessions mit Ein-Umsetzer-Paketen.
 - Rückfall: Handbuch und Lead-Personas auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`
 - Ruling: R314
 - Start: erst nach Bewertung von E-037 (getrennte Wirkung); frühestens 2026-10-22 (E-027-Stichtag), spätestens beim nächsten freien Platz. Die Regel 1.25 „Ein-Umsetzer-Pakete“ gilt bereits; die Messung beginnt erst mit dem Start. Reihenfolge der Plätze: E-037, E-042, danach E-038 (R319).
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V1): Die Modelltabelle sieht sonnet für Controller, lead-qa-Gate-Urteile, lead-production und Kurz-Retro schon vor; in fb37ceac liefen 10 von 13 Lead-/Coach-Starts trotzdem auf opus. Mechanik neu: (a) `metriken/richtwerte.md` Spalte „Modell“ → „gemessen auf“; (b) Werkzeug TOOL-MODELL-GUARD prüft typisierte Persona-Starts gegen das Frontmatter (opus nur mit Tabellen-Ausnahme in der Kopfzeile `Modell:`), Ampelzeile zählt sie mit. Messgrösse zusätzlich: Starts über der Tabelle ≤ 1 je Session (Ausgang 10). Der Stichtag 2026-10-22 entfällt (E-027 abgeschlossen, R350). Status bis zum Ruling unverändert.
+- Start: 2026-10-09 (R420, Handbuch 1.36); der Stichtag 2026-10-22 entfällt. Werkzeug-Paket TOOL-MODELL-GUARD folgt; bis dahin zählt die Messung die Starts per Hand aus den Spawn-Events. Das Einsatzmodell bestimmt die Modelltabelle in STUDIO.md, nicht die Spalte in `richtwerte.md`.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
@@ -401,7 +404,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Lastregel), `.claude/agents/lead-art.md`, `.claude/agents/lead-qa.md` (nur nach Ruling)
 - Ruling: R329
 
-## E-046 · laufend · Ampelzeile „Actions-Minuten“
+## E-046 · behalten (R420) · Ampelzeile „Actions-Minuten“
 
 - Hypothese: Wenn `metrics.py --efficiency` den Monatsverbrauch an Actions-Minuten (Konto und Repo Inselreich) aus `gh api "/users/<login>/settings/billing/usage?year=…&month=…"` als Ampelzeile ausweist, fällt ein Verbrauchsanstieg in der nächsten Retro statt erst durch den Nutzer auf (Retro [session-56d273bd-ende](retros/2026-10-08-session-56d273bd-ende.md) B1; R333).
 - Messgrösse: Zwei Zeilen: Inselreich-Minuten im Monat (grün ≤ 150, gelb > 150, rot > 400; Erwartung nach R334: 50–150) und Konto-Minuten (gelb > 1000, rot > 1600 von 2000). Die Zeile ist wirksam, wenn jede Session-Datei in den nächsten 3 Sessions sie mit Wert nennt (0 × „nicht erfasst“, ausser bei fehlendem `gh`) und kein Verbrauchsstand mehr erst durch den Nutzer entdeckt wird.
@@ -414,6 +417,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Datenpunkt 1 ergänzt (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): Session-Minuten 8 (REL-09-Push), Monat 926, Konto 1192.
 - Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): Monat 934, Konto 1201, Session 8; kein Verbrauch erst durch den Nutzer entdeckt.
 - Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): Monat 942, Konto 1210, Session 8 (Wert in `metrics.py --efficiency`, Abschnitt „Actions-Minuten“, nicht in der Session-Datei); kein Verbrauch erst durch den Nutzer entdeckt. Empfehlung Coach: **behalten**; Urteil per Ruling offen.
+- Bewertung (R420): **behalten**. Die Zeile steht in allen 3 Session-Dateien mit Wert.
 
 ## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 
@@ -435,7 +439,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Budget-Zählung, Gate Merge; nur nach Ruling)
 - Ruling: R344, R349 (angenommen; wartet auf Platz, höchstens 3 laufend, R350; Handbuch-Sätze und Version 1.31 zurückgenommen)
 
-## E-049 · vorgeschlagen · Steuerungsanteil bereinigt um Plan- und Messpakete
+## E-049 · laufend (angepasst R420) · Steuerungsanteil bereinigt um Plan- und Messpakete
 
 - Hypothese: Wenn `metrics.py --efficiency` neben dem Steuerungsanteil eine Zeile „Steuerungsanteil bereinigt“ ausweist, die Lead-Instanzen mit Plan-, Spec-, Brainstorm- oder Messpaketen (Paketname enthält `PLAN`, `SPEC`, `BRAIN`, `PERF` oder `MESS`; Liste in `efficiency.py`) herausrechnet, lässt sich die Wirkung von E-042 und E-038 auf die eigentliche Steuerung getrennt lesen (Retro [m12](retros/2026-10-08-m12.md) B4; Messauftrag R344).
 - Messgrösse: In 3 Session-Dateien steht die Zeile mit Wert (0 × „nicht erfasst“); Gegenprobe: bereinigt plus herausgerechnete Lead-Pakete plus L0 ergibt den Rohwert auf 0,1 Prozentpunkte. Ausgang M12: roh 59,3 %, bereinigt ≈ 41,7 % (Handrechnung aus `lead_stats.rows`). Schwellen wie die Rohzeile (gelb > 40 %, rot > 50 %).
@@ -445,8 +449,9 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
 - Ruling: R410 (V3): startet, sobald E-046 bewertet ist (spätestens 2026-11-12; Hebel nach R316)
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V2): Der Namensfilter trifft in fb37ceac keine Instanz (alle Lead-Pakete heissen `I-028`, `REL-…`, `BEOB-…`). Herausgerechnet werden stattdessen Lead-Instanzen mit „Budget: keins“ in der Briefing-Kopfzeile (`prompt_head` im `spawn`-Event): 7 von 12, bereinigt ≈ 39–45 % gegen roh 58,8 %. Gegenprobe neu: roh = bereinigt + herausgerechnete Lead-Instanzen. Status bis zum Ruling unverändert.
+- Start: 2026-10-09 (R420, Handbuch 1.36): Bereinigung nach der Briefing-Zeile „Budget: keins“ statt nach Paketname; Gegenprobe roh = bereinigt + herausgerechnete Lead-Instanzen. Umsetzung in `efficiency.py` als eigenes Werkzeug-Paket.
 
-## E-050 · vorgeschlagen · Fortsetzung nach Pause als frische Instanz (Umsetzer)
+## E-050 · laufend · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
 - Hypothese: Wenn ein Lead einen Umsetzer, dessen letzter Turn mehr als 5 min zurückliegt und dessen Kontext über 40k liegt, für Fix-Runde oder Folge-Task nicht per `SendMessage` fortsetzt, sondern eine neue Instanz mit Review-Befund, Commit-Stand und Dateiliste als Briefing startet, sinken die 5-min-Neuschreibungen der Umsetzer nach Turn-Ende, ohne dass Review-Runden steigen (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B2; Pflicht-Hebel Cache-Write, Dauer-Rot).
 - Messgrösse: Umsetzer-Neuschreibungen > 20k nach Turn-Ende je Umsetzer-Instanz ≤ 0,2 über 3 Sessions mit Umsetzern (Ausgang S-2026-10-08-29c3791b: 7 in 12 Instanzen von art-rendering-engineer, tech-ui-engineer, tech-sim-engineer ≈ 0,58, Gewicht ≈ 350k). Gegenprobe: Cache-Write der Folgeinstanz gesamt kleiner als die ersetzte Neuschreibung (Stichprobe 3 Fälle aus `rewrite_stats` und Instanzdaten), Review-Runden im Mittel ≤ 2, Erstabnahme nicht schlechter.
@@ -455,6 +460,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Satz in `STUDIO.md` (Delegation, Fix-Runden) und in den Lead-Personas entfernen; Fortsetzung per `SendMessage` wie bisher.
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
 - Ruling: –
+- Ruling: R420 (Start 2026-10-09, Handbuch 1.36)
 
 ## E-051 · übernommen als Werkzeug (R375, R380) · Werkzeug-Riegel für volle Testläufe
 
