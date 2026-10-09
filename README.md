@@ -55,7 +55,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
   Kartenschwenken; mit `Tab` springt der Fokus nur zwischen den Elementen der Karte.
 - **Inselchronik:** Ist nichts ausgewählt, zeigt das Panel rechts die Chronik: Ziel mit Fortschritt und
   Stufenpfad, den **nächsten Schritt** («Baue ein Wohnhaus (H) nahe dem Kontor», «Verbinde … per Weg …»),
-  die Wirkung der Steuerstufe und aufklappbar die **Kartenzeichen** (Bedeutung der Symbole auf der Karte).
+  die Wirkung der Steuerstufe (bei unterschiedlichen Reglern «Steuer gemischt: P niedrig · S normal · …») und aufklappbar die **Kartenzeichen** (Bedeutung der Symbole auf der Karte).
 - **Cursor-Hinweis:** Beim Bauen, Wegbauen, Abreissen und Auswählen hängt ein kleines Schild am Zeiger. Es
   sagt, ob der Standort passt («Baubar · wird an den Kontor angebunden», «Baubar · danach mit Weg (R) zum
   Kontor verbinden») oder warum nicht, was ein Abriss zurückgibt und — bei der Auswahl — den Zustand des
@@ -111,7 +111,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 - **Fest feiern** (ab U4, Rum freigeschaltet): Im Panel einer Kapelle kostet «Fest feiern (10 Rum)» 10 Rum aus dem
   Lager. Während des Fests (1 Minute Spielzeit) steigen Wohnhäuser im Wirkkreis der Kapelle schneller auf; im
   Haus-Panel steht dann «Fest: schnellerer Aufstieg». Danach sperrt eine Abklingzeit (3 Minuten ab Festbeginn), der Knopf zeigt «Nächstes
-  Fest in m:ss». Ohne Wirkung bei Steuer «niedrig», ohne Aufstieg bei «hoch»; eine abgelehnte Aktion nennt den Grund.
+  Fest in m:ss». Ohne Wirkung, wenn im Umkreis kein Haus mit Steuer «normal» wohnt; eine abgelehnte Aktion nennt den Grund.
 - **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
   Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
   `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,
@@ -237,8 +237,8 @@ Die Feuerwache erscheint bei der Krisenstufe «aus» nicht in der Bauleiste (in 
 Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei (Test- und Übungsmodus).
 
 - **Amtsstube** (Taste `I`, 200 Geld · 15 Holz · 2 Werkzeug · 5 Stein, Unterhalt 120 / min, höchstens eine): In
-  ihrem Panel stellst du Steuer und Ausgabesperre ein. Beides wirkt nur mit **angebundener** Amtsstube; ohne sie
-  gilt die Steuerstufe «normal». Die Kopfzeile zeigt den Steuerknopf erst, wenn die Amtsstube wirkt.
+  ihrem Panel stellst du die Steuer je Bevölkerungsstufe und die Ausgabesperre ein. Beides wirkt nur mit **angebundener**
+  Amtsstube; ohne sie gilt die Steuerstufe «normal». Die Kopfzeile zeigt den Steuerknopf erst, wenn die Amtsstube wirkt.
 - **Werkzeugmacher** arbeitet nur mit einer **Schule** in Reichweite.
 - **Roden** (`C`, 10 Geld, kein Holz) macht aus Wald Weide, **Aufforsten** (`Q`, 20 Geld) aus Weide wieder
   Wald. Schäferei und Zuckerrohrplantage brauchen Weide im Umkreis. Beides lässt sich ziehen (mehrere
@@ -408,7 +408,7 @@ Button «Abreissen» zeigt den tatsächlichen Betrag und was am Lagerlimit verf�
 | Kaufleute | 20             | Nahrung 0.5, Stoff 0.2, Rum 0.2, Glas 0.1, Gewürz 0.1 | Kapelle, Schule, Badehaus | 22                           | —                                                          |
 
 Ein neues Wohnhaus startet mit einem Pionier. Die Kopfzeile zeigt die Einwohner je Stufe. Die
-Steuer und die Wartezeit vor dem Aufstieg hängen zusätzlich vom Steuerregler ab (unten).
+Steuer und die Wartezeit vor dem Aufstieg hängen zusätzlich vom Regler der Stufe ab (unten).
 
 ### Versorgung
 
@@ -423,14 +423,14 @@ unerfüllt.
 - **Dienste:** Kapelle, Schule und Badehaus wirken im Radius 10 und nur, wenn sie per Weg angebunden sind.
 - **Wachstum:** Alle 5 Sekunden wächst ein Haus um einen Einwohner, wenn alle Bedürfnisse und Dienste
   seiner Stufe erfüllt sind; sonst schrumpft es um einen (mindestens einer bleibt). Liegt es über der
-  Belegung der Steuerstufe (nur bei «hoch»), zieht je Takt ein Einwohner aus.
+  Belegung der Steuerstufe ihrer Stufe (nur bei «hoch»), zieht je Takt ein Einwohner aus.
 
 ### Aufstieg
 
 Ein Haus steigt beim nächsten Wachstumstakt auf, wenn
 
 - es voll belegt ist,
-- seine Bedürfnisse seit mindestens 30 Sekunden ununterbrochen erfüllt sind (Steuerstufe «niedrig»:
+- seine Bedürfnisse seit mindestens 30 Sekunden ununterbrochen erfüllt sind (Regler der Stufe «niedrig»:
   15 Sekunden; «hoch»: kein Aufstieg),
 - die Dienste der nächsten Stufe in Reichweite sind,
 - von jeder neuen Ware der nächsten Stufe mindestens eine Einheit im Lager liegt und
@@ -451,19 +451,25 @@ Kartensymbol), jede noch fehlende Aufstiegsbedingung und die Kosten.
 
 Jedes Haus zahlt Einwohner × Steuersatz seiner Stufe, gerechnet als Rate je 10 Sekunden und laufend verbucht. Sind nicht alle Bedürfnisse und
 Dienste erfüllt, zahlt es nur die Hälfte. Die Summe aller Häuser wird mit dem Prozentsatz der
-Steuerstufe verrechnet; Bruchteile eines Geldstücks bleiben als Übertrag stehen und gehen nicht verloren.
+Steuerstufe ihrer Bevölkerungsstufe verrechnet; Bruchteile eines Geldstücks bleiben als Übertrag stehen und gehen nicht verloren.
 
-Der **Steuerregler** in der Kopfzeile (jeder Knopf nennt im Tooltip Steuersatz, Aufstiegszeit und Belegung) gilt für die ganze Insel:
+Die **Steuerregler** stehen im Panel der **Amtsstube** (Klick auf die Amtsstube); die Kopfzeile zeigt nur den Stand («Steuer
+gemischt», wenn die Regler verschieden stehen). Es gibt je Bevölkerungsstufe einen Regler (Pioniere, Siedler, Bürger,
+Kaufleute) und eine Zeile «alle Stufen», die alle Regler auf einmal setzt. Jeder Knopf nennt im Tooltip Steuersatz,
+Aufstiegszeit und Belegung; rechts steht die Steuer der Gruppe je Minute.
 
-| Stufe   | Steuer | Aufstieg nach | Belegung der Häuser                     |
-| ------- | ------ | ------------- | --------------------------------------- |
-| niedrig | 70 %   | 15 s          | voll                                    |
-| normal  | 100 %  | 30 s          | voll                                    |
-| hoch    | 130 %  | kein Aufstieg | 75 % (Pioniere 3, Siedler 6, Bürger 11) |
+| Stufe   | Steuer                 | Aufstieg nach | Belegung der Häuser                                   |
+| ------- | ---------------------- | ------------- | ----------------------------------------------------- |
+| niedrig | 70 % (nicht Kaufleute) | 15 s          | voll                                                  |
+| normal  | 100 %                  | 30 s          | voll                                                  |
+| hoch    | 130 %, Kaufleute 115 % | kein Aufstieg | 75 % (Pioniere 3, Siedler 6, Bürger 11, Kaufleute 15) |
 
-- Start ist «normal». Nach jedem Umschalten ist der Regler 30 Sekunden gesperrt (Kopfzeile: «Steuer wieder änderbar in
-  m:ss»); ein Klick in der Sperre nennt den Grund. Umschalten kostet nichts und geht auch bei
-  negativem Geld; die neue Stufe wirkt sofort für die nächste Auszahlung.
+Kaufleute steigen nicht auf; für sie gibt es kein ‹niedrig›. ‹hoch› lohnt bei Kaufleuten nur, wenn ihre Waren knapp sind.
+
+- Start ist «normal». Nach jedem Umschalten ist der geänderte Regler 30 Sekunden gesperrt (Anzeige: «wieder änderbar in
+  m:ss» bei der Gruppe); die anderen Regler bleiben frei. «Alle Stufen» scheitert, solange einer der zu ändernden Regler
+  gesperrt ist, und nennt die Gruppe. Umschalten kostet nichts und geht auch bei negativem Geld; die neue Stufe wirkt sofort
+  für die nächste Auszahlung.
 - «Hoch» bringt kurzfristig Geld, verfehlt auf Dauer aber das Ziel (weniger Einwohner, kein
   Aufstieg). «Niedrig» kostet Geld, lässt Häuser aber schneller aufsteigen.
 
