@@ -3540,3 +3540,16 @@ Beobachtung. Commit `564e7c2` (`test:` mit `src/`-Anteil) an die Retro. Merge se
 Integrator (Konflikte in `docs/arc42.md`/`docs/beobachtungen.md` löst der Lead per `git merge main`).
 
 Entscheider: L0 · Anlass: Bericht UI-KAMERA-KLEMMUNG · ADR: —
+
+## R383 · 2026-10-09 · SEE-F1-KORRIDOR: Pins bestätigt, Nachlauf vor dem Merge
+
+Ruling: Stand `fix/see-f1-korridor` @ 6d545bf: Korridor main 31/265 (11,7 %) → 0/265; Tönungs-Pin `seaTintFor`
+(683761494) und `terrainSea`-Pins unverändert, Flächen bitgleich (Final-Review). Bestätigt nach R377: `HOME_CALLS`
+802371235 → 2887272513 (nur Positionen der Meer-Elemente), `HOME_ORDER` unverändert. AK-E1-10 wird nicht pauschal
+abgeschwächt: Der Test vergleicht weiter die Ereigniszahl **ohne** Meer-Stempel-Ereignisse und ohne `at` (Vorschlag
+Final-Review). Nachlauf vor dem Merge (+35 Tools, Gesamt 155): `make test` + `node tools/zeitreserve/check.ts` bei Load
+≤ 4 (0 ohne Reserve), Kaltstart-A/B Seed 7 `--runs 3` (≤ +3 %), Sichtprobe offene See auf der Route bei Zoom 0,5 und 1,
+Test mit ausdrücklich kaltem `shared`-Cache, die drei Kommentar-/Titel-Korrekturen; den einmal roten Test aus dem vollen
+Lauf benennen (erneut laufen lassen, als Beobachtung eintragen). Task-Reviews durch ein Final-Review ersetzt → Retro.
+
+Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
