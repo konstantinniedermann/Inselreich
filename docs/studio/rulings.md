@@ -4150,3 +4150,21 @@ AK-TB01…17 wie im Index. **Budget:** 15 Arbeiter-Starts plus 2 Controller-Inst
 Obergrenze ≤ 8 (R424) das zulässt. Final-Review T07 auf `opus`.
 
 Entscheider: L0 · Anlass: Gate Plan TOOL-BUENDEL · ADR: —
+
+## R429 · 2026-10-09 · Release-Retro REL-13: V1–V3 angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-09-release-rel13-prozess.md` (`5eafc58`) angenommen. **V1** Ruling-Vorlage mit
+Pflichtfeldern „Regelbezug“ und „Kosten bei Irrtum“; weicht ein Ruling vom Handbuch ab, folgt im selben Zug ein
+Handbuch-Minor (erster Fall: Auslegung R421 „Push nach Abschluss des zu pushenden Stands, gezielt per `git push origin
+<Hash>:main`“). **V2** Push-Gate ohne separates `make test`, unter der Vorbedingung, dass der Umsetzer im Code belegt, dass
+`make check` die Messdatei für `make zeitreserve-push` schreibt (Commit = HEAD, `loadStart`); Reihenfolge dann `tsc`, `lint`,
+`zeittests`, `conflicts`, `make check`, warten bis Last ≤ 4, `make zeitreserve-push`, `make check-ci-perf`; Push immer per
+Hash. Ist die Vorbedingung nicht belegt, bleibt der Ablauf und V2 geht als Messauftrag an die nächste Retro. Verfassung §7.2
+(`make check` vor dem Push) bleibt erfüllt. **V3** Ein-Paket-Release: Gate Merge und Release-Check in einem `lead-qa`-Start.
+Dazu das AK-Muster in `gates.md` (R422) und `state.md`-Fehler bleiben bei L0 (Session-Ende). Umsetzung als Handbuch 1.37
+durch `studio-coach` (sonnet) jetzt.
+
+Regelbezug: STUDIO.md Push-Ablauf (R335, R394/R396), gates.md Gate Merge Release (R249) · Kosten bei Irrtum: ein Handbuch-
+Minor zurück.
+
+Entscheider: L0 · Anlass: Release-Retro REL-13 · ADR: —
