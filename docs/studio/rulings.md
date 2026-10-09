@@ -3553,3 +3553,15 @@ Test mit ausdrücklich kaltem `shared`-Cache, die drei Kommentar-/Titel-Korrektu
 Lauf benennen (erneut laufen lassen, als Beobachtung eintragen). Task-Reviews durch ein Final-Review ersetzt → Retro.
 
 Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
+
+## R384 · 2026-10-09 · SEE-F1-KORRIDOR: Mehrbedarf +25 frei; 200-Seeds-Test als Werkzeug
+
+Ruling: Mehrbedarf rechtzeitig gemeldet (Briefing-Vorlage 1.31 wirkt) — **+25 frei** (Gesamt 180). Kaltstart-A/B
+Seed 7: main 8872 ms, Branch 8632 ms (−2,7 %). Der Test „Seeds 1–200: kein Meer-Element < 3 Kacheln von einer Lane“
+(`tests/render/decor.test.ts`) braucht 5,0 s statt 0,9 s (kalte `seaRoute` je Welt). Kein blosses Aufteilen (spart
+keine CI-Minuten, R356/R361): Die Suite prüft **Seeds 1–40** (≤ 500 ms je Test, gemeinsamer Aufbau), die
+200-Seeds-Prüfung läuft als Werkzeug unter `tools/render-qa/` (wie `quoten.mjs`, R366) mit Ergebnis im Bericht.
+Danach `zeitreserve` bei Load ≤ 4 (0 ohne Reserve), Sichtprobe offene See, kurzes Review. Die Rulings zu `HOME_CALLS`
+und AK-E1-10 stehen in R383.
+
+Entscheider: L0 · Anlass: Mehrbedarf SEE-F1-KORRIDOR · ADR: —
