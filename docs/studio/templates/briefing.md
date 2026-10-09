@@ -28,6 +28,8 @@ Prozessstufe: <leicht|voll>
    jedes Paket mit `.ts`-Änderung „schnelle Make-Prüfungen ohne Testlauf: `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts` Exit 0 (Vitest prüft keine Typen, R398, R410)“;
    jedes Paket mit neuen Tests „Rot-Beleg: je neuem Testfall die rote Ausgabe vor dem Fix im Task-Bericht; Commit-Reihenfolge allein genügt nicht (R395, R410)“;
    „Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt, dass das abhängige Gate erfüllbar bleibt (R395)“;
+   Plan-Paket „Format nach E-010: Index plus Task-Dateien ≤ 10 KB (R417)“;
+   jedes Paket mit Doku-Commit „`make docs-check` Exit 0 vor dem Commit (Übergang bis TOOL-PRETTIER-HOOK, R417)“;
    jedes Paket mit Plan „Prüfschritte des Plans (z. B. Task-Reviews) nicht zur Budgetersparnis streichen — Mehrbedarf melden“
 6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>; Umsetzer: Doku-Dateien (D1: README, arc42, ADR, Spec-Verweise) des Plan-Tasks sind ausdrücklich erlaubt (E-017)
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>

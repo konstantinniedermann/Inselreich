@@ -85,6 +85,8 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
    Jeder Verweis auf ein altes AK trägt den Meilenstein (`M7:AK-U2-02`); alte Specs werden nicht
    umnummeriert. Widerspricht ein AK-Wortlaut der Prosa derselben Spec?
 
+Neue AK-Nummern vergibt L0 im Gate-Spec-Ruling (R417), nicht der Design-Lead.
+
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling.
 
 ## Gate Plan
@@ -226,6 +228,8 @@ Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 **Prüfliste (Pflicht, L0 prüft sie im Gate):** jede Zeile ein UI-Task → Pfad des Screenshots
 (`.studio/qa/REL-nn/…`) und Playtest-Abschnitt. **Fehlt ein Eintrag, gibt es keinen Merge.** Zusätzlich
 `make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt, CI-Reserve aller Zeittests im Diff (lokal unter `CI=true` ≤ 50 % des Timeouts, auch Fix-Runden nach dem Final-Review, R270).
+
+**Leistungs-AK (R417):** Hat das AK einen deterministischen Test, entfällt die Browser-Messung; sonst wird nur ohne paralleles Lastpaket gemessen, damit die Messung gültig ist.
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Ruling, danach Push durch den Integrator.
 

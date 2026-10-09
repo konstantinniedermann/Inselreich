@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-09 · Handbuch 1.35
+
+- Anlass: Release-Retro REL-12 (Plan-Nacharbeit, ungültige Messungen unter Last)
+- Datenbasis: `docs/studio/retros/2026-10-09-release-rel12-prozess.md`
+- Ruling: R417 (V1, V3; V2 Werkzeug-Paket)
+- Änderungen: Briefing-Vorlage Punkt 5: Pflichtzeilen Plan-Format (E-010, ≤ 10 KB) und `make docs-check` vor Doku-Commit; Gate Spec: neue AK-Nummern vergibt L0; Gate Merge Release: Leistungs-AK mit deterministischem Test ohne Browser-Messung, sonst nur ohne paralleles Lastpaket
+
 ## 2026-10-09 · Handbuch 1.34
 
 - Anlass: Session-Retro e90e097e (drei Integrator-Abbrüche an schnellen Prüfungen, dritter Fall unbelegter Rot-Phase)
