@@ -420,3 +420,7 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · Gate Spec I-028 (lead-qa): Befund ohne Blocker
 
 - **Fundort:** `docs/studio/gates.md`, Gate Spec, Prüffrage lead-qa 4: Der AK-Eindeutigkeits-Einzeiler sucht `AK-[A-Z0-9]*-[0-9]*` (zwei Bindestriche) und erfasst Kennungen mit einem Bindestrich wie `AK-T01` nicht; er gibt dann leer aus, obwohl nichts geprüft wurde. Ursprung: Gate Spec I-028. Einschätzung: niedrig, Werkzeug/Handbuch; Muster auf `AK-[A-Z0-9-]*[0-9]` erweitern (studio-coach, nächster Handbuch-Minor).
+
+### 2026-10-09 · Plan I-028 (lead-tech): Befund ohne Blocker
+
+- **Fundort:** `src/sim/` `feastActive` (Fest in der Kapelle): prüft die Insel des Hauses nicht; ein Haus auf einer Fremdinsel mit passenden Koordinaten könnte als „im Radius der Kapelle“ zählen. Ursprung: Planung I-028 (Fest-Regel O5). Einschätzung: mittel, Sim-Logik im Archipel; Test mit zwei Inseln und gleichen Koordinaten klärt, ob es real auftritt; Kandidat für ein Fix-Häppchen.
