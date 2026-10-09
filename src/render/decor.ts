@@ -2,6 +2,7 @@ import { generateTerrain } from '../sim/mapgen';
 import { hash2, valueNoise } from '../sim/noise';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { seaLanes } from '../sim/islands';
+import { seaRoute } from '../sim/seaRoute';
 import type { Island, World } from '../sim/types';
 import { LIGHT, rotNoise } from './light';
 import { meadowWarmth } from './groundDecor';
@@ -34,7 +35,8 @@ import { meadowWarmth } from './groundDecor';
 //     Salz 598 (L8): Strandkiefern der Kiefernküste (`planPalms`: Zahl, Rang; die Form folgt der Seerichtung). Salz 599: reserviert für L8 (noch frei).
 //     Salze 9100 und 9101: terrain.ts, Abtastverwerfung WARP, ART-WALD-RAUTEN (hier nur eingetragen, nicht benutzt).
 //  D6 Meer (L5): `seaPlan` ist wie alles Statische eine reine Funktion von Seed, Gelände und `SeaContext` (Lanes, Anker, Kontor);
-//     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements. Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
+//     R4 (`seaKeepOut`) gilt für jede Kachel jedes Meer-Elements; Wrack, Eiland und Felsen meiden zusätzlich die Schiffsrouten
+//     (`SeaContext.routes`, `seaPlanKeepOut`, Zwei-Durchgang in `seaPlan`). Flächen und Tönung bleiben auf den Lanes (R367, R379). Die seltenen Meer-Elemente (Wrack, Eiland, Felsnadel) laufen
 //     NICHT über `RARE_POOL` (Land-Orte), sondern über eigene Lose; `rareBudget` (L8) zählt diese Lose (nicht ihre Eignung) und
 //     senkt die Land-Kappe von `planRare` auf `RARE_CAP − Meer-Lose`; das Budget hängt nie von `SeaContext` ab.
 
@@ -959,6 +961,11 @@ export interface SeaContext {
    * wie D2 in L4): Meer-Stempel und ihr Schaum entfallen, solange eins < 4 Kacheln entfernt ist.
    */
   live: KontorRect[];
+  /**
+   * Alle Wasserrouten der Welt (`seaRoute` für jedes Paar a < b, wie `routeFar` in `fauna.ts`) als Kopien in Heimat-Kacheln.
+   * Nur für `seaPlanKeepOut` (Platzierung von Wrack, Eiland, Felsen); die Tönung (`seaClearance`) kennt sie nicht (R367).
+   */
+  routes: Pos[][];
 }
 export interface KontorRect {
   x: number;
@@ -972,7 +979,8 @@ const seaContexts = new WeakMap<World, { sig: string; ctx: SeaContext }>();
 /**
  * Seekontext der Heimat (rein lesend): `seaLanes` mit Heimat-Index in Heimat-Kacheln (minus `ox`/`oy`), Anker, Kontore. Je
  * Welt einmal gehalten (WeakMap, fällt mit der Welt weg); neu gebildet nur, wenn sich die Kontorliste ändert (Inseln sind ab
- * Weltbau fest).
+ * Weltbau fest). `routes` sind Kopien von `seaRoute(a, b)` für alle Paare a < b (wie `routeFar`, `fauna.ts`) in Heimat-Kacheln,
+ * nur für `seaPlanKeepOut`; Lanes und damit die Tönung kennen sie nicht (R367).
  */
 export function seaContext(world: World): SeaContext {
   const hi = Math.max(
@@ -998,11 +1006,16 @@ export function seaContext(world: World): SeaContext {
     const pts = l.a === hi ? l.points : [...l.points].reverse();
     lanes.push(pts.map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
   }
+  const routes: Pos[][] = [];
+  for (let a = 0; a < world.islands.length; a++)
+    for (let b = a + 1; b < world.islands.length; b++)
+      routes.push(seaRoute(world.islands, a, b).map((q) => ({ x: q.x - isl.ox, y: q.y - isl.oy })));
   const ctx: SeaContext = {
     lanes,
     anchor: { x: isl.anchor.x + 0.5, y: isl.anchor.y + 0.5 },
     kontors,
     live,
+    routes,
   };
   seaContexts.set(world, { sig, ctx });
   return ctx;
@@ -1024,6 +1037,20 @@ function distToSeg(px: number, py: number, a: Pos, b: Pos): number {
  */
 export function seaKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
   return seaClearance(ctx, x + 0.5, y + 0.5, pad) < 0;
+}
+
+/**
+ * Wie `seaKeepOut`, zusätzlich gesperrt, wenn die Kachelmitte < `SEA_LANE_GAP` + `pad` von einer Wasserroute (`ctx.routes`)
+ * liegt. Nur für Wrack, Eiland und Felsen; die Tönung bleibt auf `seaKeepOut`/`seaClearance`.
+ */
+export function seaPlanKeepOut(ctx: SeaContext, x: number, y: number, pad = 0): boolean {
+  if (seaKeepOut(ctx, x, y, pad)) return true;
+  const cx = x + 0.5,
+    cy = y + 0.5,
+    gap = SEA_LANE_GAP + pad;
+  for (const r of ctx.routes)
+    for (let i = 1; i < r.length; i++) if (distToSeg(cx, cy, r[i - 1]!, r[i]!) < gap) return true;
+  return false;
 }
 
 /**
@@ -1115,7 +1142,15 @@ const ctxKeys = new WeakMap<SeaContext, string>();
 const ctxKey = (c: SeaContext): string => {
   let k = ctxKeys.get(c);
   if (k === undefined)
-    ctxKeys.set(c, (k = JSON.stringify({ lanes: c.lanes, anchor: c.anchor, kontors: c.kontors })));
+    ctxKeys.set(
+      c,
+      (k = JSON.stringify({
+        lanes: c.lanes,
+        anchor: c.anchor,
+        kontors: c.kontors,
+        routes: c.routes,
+      })),
+    );
   return k;
 };
 
@@ -1153,6 +1188,11 @@ function seaMask(cls: Uint8Array, w: number, h: number): Uint8Array {
  * Meer-Plan der Heimat (statisch, D1): Wrack (E1), Meeresfelsen (E3, selten Felsnadel), Felseiland (E8) und die Flächen
  * Sandbank (D11), Riff (E2), Seetang (E6). Nur Gelände, Seed und `SeaContext`; jede Kachel besteht `seaKeepOut` (R4), kein Element
  * überlappt ein anderes (Punkt-Elemente halten Abstand ≥ 3, Flächen belegen ihre Kacheln samt Rand). Einmal je Insel gehalten.
+ *
+ * Zwei Durchgänge (SEE-F1-KORRIDOR): A setzt Wrack, Eiland und Felsen gegen die Geraden (`seaKeepOut`) und baut daraus die Flächen
+ * (bitgleich zu vor der Routen-Freihaltung, damit die Tönung der Heimat nicht von Fremdinseln abhängt, R367). B wählt die
+ * endgültigen Positionen von Wrack, Eiland, Felsen und Nadel mit `seaPlanKeepOut` (auch Abstand zu `ctx.routes`) neu, meidet
+ * Flächenkacheln samt Rand und hält Abstand ≥ 3; findet B nichts, entfällt das Element. B wirkt nicht auf die Flächen zurück.
  */
 export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPlan {
   const key = ctxKey(ctx);
@@ -1219,8 +1259,6 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
     plan.rocks.push({ x: c.x, y: c.y, needle: false });
     claim(c.x, c.y, 2);
   }
-  if (plan.rocks.length && hash2(seed + 567, -1, -1) < NEEDLE_P)
-    plan.rocks[Math.floor(hash2(seed + 567, -2, -2) * plan.rocks.length)]!.needle = true;
 
   // Flächen: wachsen aus einem Startpunkt über 4er-Nachbarn; jede Kachel prüft R4 und Belegung
   const grow = (
@@ -1287,6 +1325,62 @@ export function seaPlan(seed: number, isl: DecorIsland, ctx: SeaContext): SeaPla
   plan.reefs = areas(1, 6, 3, 4, 4, 9, true); // E2: Streifen im Mittelwasser, dicht an einer Tiefenlinie
   plan.sandbanks = areas(0, 6, 1, SEA_SHALLOW_MAX, 3, 8, false); // D11: Flachwasser
   plan.kelp = areas(2, 6, 1, SEA_SHALLOW_MAX, 4, 9, false, (i) => mtn[i]! <= 5); // E6: Flachwasser vor Felsküste
+
+  // Durchgang B: endgültige Positionen von Wrack, Eiland, Felsen mit `seaPlanKeepOut` (Routen) neu wählen. Gleiche Rang-Hashes,
+  // Salze und Zählregeln; sie meiden die Flächenkacheln samt Rand und halten Abstand ≥ 3. Findet B nichts, entfällt das
+  // Element (kein Rückfall auf die Position aus A). Keine Rückwirkung auf die Flächen.
+  const free = new Uint8Array(w * h);
+  const claimB = (x: number, y: number, r: number): void => {
+    for (let dy = -r; dy <= r; dy++)
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = x + dx,
+          ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h) free[ny * w + nx] = 1;
+      }
+  };
+  for (const a of [...plan.sandbanks, ...plan.reefs, ...plan.kelp])
+    for (const t of a.tiles) claimB(t.x, t.y, 1);
+  const rankedB = (salt: number, k: number, lo: number, hi: number, pad = 0): Pos[] => {
+    const c: { x: number; y: number; r: number }[] = [];
+    for (let y = 2; y < h - 2; y++)
+      for (let x = 2; x < w - 2; x++) {
+        const i = y * w + x;
+        if (
+          sea[i] &&
+          !free[i] &&
+          shore[i]! >= lo &&
+          shore[i]! <= hi &&
+          !seaPlanKeepOut(ctx, x, y, pad)
+        )
+          c.push({ x, y, r: hash2(seed + salt, x + 100 * k, y) });
+      }
+    return c.sort((a, b) => a.r - b.r);
+  };
+  plan.wreck = null;
+  plan.islet = null;
+  plan.rocks = [];
+  if (hash2(seed + 566, 0, 0) < WRECK_P) {
+    const c = rankedB(566, 1, 1, 5, SEA_PAD.wreck)[0];
+    if (c) {
+      plan.wreck = { x: c.x, y: c.y };
+      claimB(c.x, c.y, 2);
+    }
+  }
+  if (hash2(seed + 568, 0, 0) < ISLET_P) {
+    const c = rankedB(568, 2, 4, SEA_MID_MAX, SEA_PAD.islet)[0];
+    if (c) {
+      plan.islet = { x: c.x, y: c.y };
+      claimB(c.x, c.y, 2);
+    }
+  }
+  for (const c of rankedB(567, 3, 1, 5)) {
+    if (plan.rocks.length >= nRocks) break;
+    if (free[c.y * w + c.x]) continue;
+    plan.rocks.push({ x: c.x, y: c.y, needle: false });
+    claimB(c.x, c.y, 2);
+  }
+  if (plan.rocks.length && hash2(seed + 567, -1, -1) < NEEDLE_P)
+    plan.rocks[Math.floor(hash2(seed + 567, -2, -2) * plan.rocks.length)]!.needle = true;
   seaPlans.set(isl, { seed, key, plan });
   return plan;
 }
