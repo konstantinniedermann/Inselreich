@@ -3594,3 +3594,14 @@ teilen, ≤ 500 ms je Test, Aussage unverändert; +10 Tools (Gesamt 205). Danach
 unverändert, Kaltstart −2,7 %); Merge durch den Integrator mit `make check`, `zeitreserve` belastbar erst am Push-Gate.
 
 Entscheider: L0 · Anlass: Bericht SEE-F1-KORRIDOR · ADR: —
+
+## R387 · 2026-10-09 · Gate Merge FIX-TESTLOCK-RACE OK
+
+Ruling: **OK** für `fix/testlock-race` @ 2d3cfb7. Echter Wettlauf belegt (≈ 3 von 100 Runden zwei gleichzeitige Läufe,
+auch ohne Last 2 von 20 Testläufen rot): `takeOver` löschte bei bereits verschwundener Sperre (`ENOENT`) eine
+inzwischen frisch angelegte, lebende Sperre (ABA ausserhalb des Wächters). Fix: bei `ENOENT` ohne Löschen abbrechen,
+nächster Versuch legt selbst an. Nachher 0 von 200 Runden, 20/20 unter CPU-Last; Review OK. Der Test braucht ≈ 4 s
+(Haltezeit für Überlappung) — akzeptiert, weil eine kürzere Haltezeit die Prüfung schwächt; als Altlast-Kandidat
+für die Zeitreserve beobachten. Merge seriell nach SEE-F1-KORRIDOR.
+
+Entscheider: L0 · Anlass: Bericht FIX-TESTLOCK-RACE · ADR: —
