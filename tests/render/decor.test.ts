@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
+import { hash2 } from '../../src/sim/noise';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { createWorld, footprint, home } from '../../src/sim/world';
@@ -481,9 +482,17 @@ describe('L4 D2/D3 Fussabdruck, Seltenheit', () => {
       for (const d of RARE_POOL) {
         const n = sites.filter((s) => s.id === d.id).length;
         expect(n).toBeLessThanOrEqual(d.max);
-        if (n > 0) expect(rareLot(seed, d), `${d.id} ohne Los`).toBe(true);
         if (n > 0) seen.add(d.id);
-        expect(n).toBeLessThanOrEqual(rareLot(seed, d) ? rareCount(seed, d) : 0);
+        if (rareLot(seed, d)) expect(n).toBeLessThanOrEqual(rareCount(seed, d));
+        else if (n > 0) {
+          // L8: ohne Erstlos nur über das Zweitlos (Salze 595–597, Losgrenze p der Art), dann genau ein Exemplar
+          const di = RARE_POOL.indexOf(d);
+          expect(n).toBe(1);
+          expect(
+            [595, 596, 597].some((salt) => hash2(seed + salt, di + 1, 0) < d.p),
+            `${d.id} ohne Erstlos und ohne Zweitlos`,
+          ).toBe(true);
+        }
       }
     }
     expect(seen.size).toBe(RARE_POOL.length);

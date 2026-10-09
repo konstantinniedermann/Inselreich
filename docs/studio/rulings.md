@@ -3492,3 +3492,51 @@ Load 9–13). Test-first nicht eingehalten → Retro. Beobachtung: Exit 1/2 von 
 unterscheidbar (immer 2). `.worktrees/testlock-probe` entfernt der Integrator ohne `--force`.
 
 Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
+
+## R379 · 2026-10-09 · SEE-F1-KORRIDOR: Plan frei mit Zwei-Durchgang-Verfahren
+
+Ruling: Zweitprüfung B1 BEDENKEN, nicht blockierend. Angenommen: **Durchgang A** setzt die Meer-Elemente wie auf main
+gegen die Geraden, daraus `blocked` und die Flächen (bitgleich zu main); **Durchgang B** wählt die endgültigen
+Positionen von Wrack, Eiland und Felsen mit `seaPlanKeepOut` neu (meiden Flächenkacheln samt Rand, Abstand ≥ 3) ohne
+Rückwirkung auf die Flächen; Zusatztest `seaTintFor` mit `ctx.routes = []` gleich wie mit Routen. B3: Messung und
+Freihaltung nutzen dieselbe Routenmenge, **alle Paare** wie `routeFar`. Der Planer trägt das als Satz in Entwurf und
+AK-K3 nach (ohne neue Prüfung). Umsetzung nach dem Merge von ART-L8-SELTEN, Budget 120 Tools.
+
+Entscheider: L0 · Anlass: Zweitprüfung GATE-REL10-W3 · ADR: —
+
+## R380 · 2026-10-09 · Gate Merge TOOL-TESTLOCK OK
+
+Ruling: **OK** für `tool/testlock` @ bafa9ea. Übernahme toter Sperren nur über ein Wächterverzeichnis (`mkdir`), Test
+mit drei parallelen Prozessen (genau einer läuft); Sperre per Temp-Datei und `linkSync` atomar; `CI=false/0/leer` gilt
+nicht als CI; Signal-Exit 128 + Nummer; Fake-Schalter als nur für Tests markiert. Re-Review OK. `make check` grün ohne
+Fake-Schalter, Echtprobe zweier gleichzeitiger `make test`: zweiter bricht mit Grund ab. Ab dem Merge ist R357 ein
+Werkzeug: `make check`/`make test`/`zeitreserve-push` brechen bei belegter Sperre oder Load > 8 ab (nicht warten).
+Merge durch den Integrator; `.worktrees/testlock-probe` ohne `--force` entfernen. Ist ≈ 56 von 55.
+
+Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
+
+## R381 · 2026-10-09 · Gate Merge ART-L8-SELTEN OK; Widerspruch Meeresfels-Urteil
+
+Ruling: **OK** für `feat/l8-selten` @ 617acdc (Strandkiefern an der Kiefernküste, `rareBudget` mit Meer-Losen,
+weniger Lichtungen, Boden-Deko ohne Artwechsel neben Neubau; Quotenlauf Seeds 1–500 bestanden; Bildrunde 1 OK;
+Final-Review `opus` BEDENKEN niedrig, erledigt in 556908f; `make check` grün, `zeitreserve` 0 bei 2646 Tests). Kaltstart
+aus der Handoff-Messung (Median −0,2 %), seither nur ein Kommentar in `src/` geändert — akzeptiert. Abweichung AK5
+(Signaturtest statt Zwei-Kontext-Test) akzeptiert. Budget deutlich überzogen (≈ 240 gegen 170) — an die Retro.
+**Widerspruch:** Release-Check REL-09 (R374) sah den Meeresfels bei Zoom 0,5 als Fels, lead-art sieht ihn als Segelboot.
+Klärung im nächsten Release-Check als Blindprobe (Probe-Bild ohne Kontext, Urteil vor Öffnen der Vergleichsbilder,
+E-018); bis dahin bleibt die Beobachtung offen. Merge durch den Integrator; danach Start SEE-F1-KORRIDOR.
+
+Entscheider: L0 · Anlass: Bericht ART-L8-SELTEN · ADR: —
+
+## R382 · 2026-10-09 · Gate Merge UI-KAMERA-KLEMMUNG OK; Auslegung AK-U4
+
+Ruling: **OK** für `fix/ui-kamera` @ 239adbe (`app.ts` klemmt und zentriert mit `visibleViewHeight`, DOM-freier Helfer
+`src/ui/cameraView.ts`; `cameraBounds` = Landausdehnung + `CAMERA_MARGIN` 6 statt 12–20 Kacheln Rand; Dev-Probe
+`__inselDev.camera()`; arc42 nachgeführt; Final-Review `opus` BEDENKEN ohne Blocker; Playtest Konsole leer, an allen
+Rändern Land sichtbar). **Auslegung AK-U4:** „kein Sprung“ gilt innerhalb des Kamerarahmens (gemessen 0 px); am
+Rahmenrand ist Nachklemmen um die halbe Resize- bzw. Overlay-Änderung gewollt (`clampToRect` klemmt die Mitte der
+sichtbaren Fläche; gemessen Nord 23–25 px, West 89 px bei Resize). Rahmenecken bei verstreuten Inseln im Wasser →
+Beobachtung. Commit `564e7c2` (`test:` mit `src/`-Anteil) an die Retro. Merge seriell nach ART-L8-SELTEN durch den
+Integrator (Konflikte in `docs/arc42.md`/`docs/beobachtungen.md` löst der Lead per `git merge main`).
+
+Entscheider: L0 · Anlass: Bericht UI-KAMERA-KLEMMUNG · ADR: —

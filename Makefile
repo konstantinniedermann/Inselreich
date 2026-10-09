@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push check-ci-perf messfenster
+TESTLOCK := tools/testlock/testlock.ts
+.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push check-ci-perf messfenster check-run
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -18,14 +19,14 @@ zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) st
 	  test -f "$$f" || { echo "ZEITTESTS-Eintrag ohne Datei (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
-test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json)
-	npm test
+test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375)
+	@node $(TESTLOCK) npm test
 
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
 
-zeitreserve-push: ## Streng vor dem Session-End-Push (R338): Last > 4 = Exit 2 "nicht belastbar", sonst harte Prüfung; nach make test
-	node tools/zeitreserve/check.ts --push
+zeitreserve-push: ## Streng vor dem Session-End-Push (R338): Last > 4 = Exit 2 "nicht belastbar", sonst harte Prüfung; nach make test; mit Testsperre
+	@node $(TESTLOCK) node tools/zeitreserve/check.ts --push
 
 check-ci-perf: ## Nur die Perf-Budget-Tests mit CI=true (ersetzt den zweiten vollen Lauf CI=true make check, R353); schreibt kein zeitreserve.json
 	CI=true npx vitest run $$(grep -rl perfBudget tests --include='*.test.ts')
@@ -66,4 +67,7 @@ pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle
 messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
 	node tools/render-qa/messfenster.mjs $(ARGS)
 
-check: lint zeittests test zeitreserve studio-test build pages-limit ## Gleich wie CI: lint, zeittests, test, zeitreserve, studio-test, build, pages-limit
+check: ## Gleich wie CI: lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
+	@node $(TESTLOCK) $(MAKE) check-run
+
+check-run: lint zeittests test zeitreserve studio-test build pages-limit

@@ -40,7 +40,7 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
      nach L0-Freigabe), machst du einen **eigenen Fix-Commit**, nie `git commit --amend` (R224).
   4. Merges nach main bleiben **lokal**; kein Push je Merge (N-98, R335). Der Push erfolgt höchstens einmal je
      Session, am Session-Ende, nur auf ausdrücklichen L0-Auftrag im Briefing (`git push origin HEAD:main`, aus dem
-     Integrations-Worktree); davor `make test` und `make zeitreserve-push; echo EXIT=$?` (R338): Exit 0 nötig; Exit 2 ("nicht belastbar, Last > 4") heisst warten, bis der 1-min-Load <= 4 ist, und erneut laufen, nicht pushen; Exit 1 melden. Danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
+     Integrations-Worktree); davor `make test` und `make zeitreserve-push; echo EXIT=$?` (R338): Exit 0 nötig; Meldung `testlock: ABBRUCH` (Testsperre belegt oder Load > 8, R375; `make` meldet dabei selbst Exit 2) heisst später erneut, nicht pushen; Exit 2 ("nicht belastbar, Last > 4") heisst warten, bis der 1-min-Load <= 4 ist, und erneut laufen, nicht pushen; Exit 1 melden. Danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
   5. Nach dem gebündelten Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
      `gh run watch <id>` verfolgen. CI läuft nur bei Code-Pushes (reine Doku-/Studio-Pushes erzeugen
      bewusst keinen Lauf, N-98). Pages startet nicht mehr automatisch: enthält der Push ein Release,
