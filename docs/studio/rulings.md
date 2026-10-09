@@ -3992,3 +3992,18 @@ in der nächsten Session (Werkzeug-Pflichtzeilen R375); bis dahin `make docs-che
 `docs/beobachtungen.md` (110 KB) an lead-production, Frist nächste Session.
 
 Entscheider: L0 · Anlass: Release-Retro · ADR: —
+
+## R418 · 2026-10-09 · Gate Merge I-028 „Steuer je Stufe“ OK (BEDENKEN durch Einträge erledigt); AK-T39 und QA-Ablage
+
+Ruling: **OK** für den lokalen Merge von `feat/steuer-je-stufe` @ `5f14317` nach main. lead-qa BEDENKEN nur formal (Rulings
+und Beobachtungen nachzutragen), hiermit erledigt: `make check` EXIT=0 auf `aee3c6b` (2850 Tests), danach nur Doku-Commit
+`5f14317` (docs-check, conflicts Exit 0); `tsc`, lint, zeittests Exit 0; Final-Review opus OK über 42/42 AK und alle Auflagen
+aus Anhang 02; Balancing-Test, Pins und Fixtures unverändert; Zeittests ≤ 668 ms bei 15 s Timeout; Konfliktprobe
+`git merge-tree` Exit 0. Einzige Wertänderung Kaufleute «hoch» 115 % (R412). **AK-T39 (Klarstellung, keine Abweichung):** Der
+Steuergrund im Mouse-over erscheint nur, wenn die vorrangigen Aufstiegsgründe nicht greifen (Ziel erreicht `won=true`, Haus voll
+belegt, kein Aufstiegsstopp); Reihenfolge wie auf main, Sim-Grund durch AK-T07 belegt. **QA-Ablage:** Screenshots I-028 unter
+`.studio/qa/I-028/` (Paket-ID statt Plan-Ordnername) gilt. Fünf Befunde (arc42:265, `inspect.ts:109`, Kopfzeile 800 × 600,
+Triage a und d) in `docs/beobachtungen.md`. Budget: 8 von 11 Starts. Merge lokal durch `production-integrator`; Push mit dem
+nächsten Session-Push (R335); I-028 geht dann als eigenes Release (REL-13 „Steuer je Stufe“, Save v10) mit Release-Check.
+
+Entscheider: L0 · Anlass: Gate Merge · ADR: —

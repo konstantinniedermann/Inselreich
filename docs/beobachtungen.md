@@ -436,3 +436,11 @@ RENDER-LOOK-01 erst danach.
 ### 2026-10-09 · Session fb37ceac (L0): Befund ohne Blocker
 
 - **Fundort:** Prozessliste: verwaister Vitest-Fork-Worker (`vitest/dist/workers/forks.js`, PPID 1, cwd `.worktrees/ui-seekarte`) lief seit 14:26 (Session e90e097e) über 6 h mit ~95 % CPU und trieb die Last bis 20; L0 hat ihn per `kill <PID>` beendet (kein pkill/killall). Ursprung: Lastspitze während I-028. Einschätzung: mittel, Werkzeug; abgebrochene Testläufe hinterlassen Worker; Vorschlag: TOOL-TESTLOCK meldet beim Start Vitest-Worker mit PPID 1 älter als 30 min (nur melden, nicht beenden). Ausserdem lebt die Claude-Session „anno-clone #3“ (seit 2026-10-08) weiter; ob sie aktiv arbeitet, ist ungeklärt (R324).
+
+### 2026-10-09 · I-028 Steuer je Stufe (lead-tech, Final-Review T4): Befunde ohne Blocker
+
+- **Fundort:** `docs/arc42.md:265` nennt „Steuersperre in Spielzeit“; schon auf main ungenau. Ursprung: I-028 T4. Einschätzung: niedrig, Doku-Drift; Trivial-Fix im nächsten Doku-Paket.
+- **Fundort:** `src/ui/inspect.ts:109`: `TIER_LIST` doppelt `TIER_IDS`. Ursprung: I-028 T4. Einschätzung: niedrig, DRY; beim nächsten UI-Paket im Inspektor zusammenführen.
+- **Fundort:** Kopfzeile bei 800 × 600 teilweise abgeschnitten. Ursprung: I-028 T3. Einschätzung: niedrig, ausserhalb der Zielplattform (Desktop-first ab 1280 px), nur „stürzt nicht ab“ gefordert.
+- **Fundort:** I-028 T1a: Rot-Belege teils nur formal (Sammel-Rot durch Importfehler). Ursprung: Triage T4 (a). Einschätzung: niedrig, Prozess; Messgrösse R410 V2 in der Session-Retro auswerten.
+- **Fundort:** AK-T17 (`tests/sim/`): prüft die Versorgung der vier Häuser nicht ausdrücklich. Ursprung: Triage T4 (d). Einschätzung: niedrig, Testtiefe; Ergänzung beim nächsten Sim-Paket an Steuern.
