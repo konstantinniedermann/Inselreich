@@ -29,6 +29,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 - Ruling: R420
 - Änderungen: Final-Review liest den Diff je Datei, nicht als Gesamtdatei
 
+## 2026-10-09 · Handbuch 1.37
+
+- Anlass: Release-Retro REL-13 (Push-Ablauf, Ruling-Abweichungen vom Handbuch)
+- Datenbasis: `docs/studio/retros/2026-10-09-release-rel13-prozess.md`
+- Ruling: R429 (V1–V3; AK-Muster R422)
+- Änderungen: Ruling-Vorlage mit Pflichtfeldern „Regelbezug“ und „Kosten bei Irrtum“, Regel „Abweichung → Handbuch-Minor“; Push nach Abschluss des Stands, immer `git push origin <Hash>:main`; Push-Ablauf ohne separates `make test` (Vorbedingung belegt: `package.json` Z. 10, `tools/zeitreserve/reporter.ts` Z. 51–52, `tools/zeitreserve/rule.ts` Z. 144–149, Makefile `check-run`); Gate Merge Release: Ein-Paket-Release in einem `lead-qa`-Start; AK-Muster `AK-[A-Z0-9-]*[0-9]`
+
 ## 2026-10-09 · Handbuch 1.36
 
 - Anlass: Session-Retro fb37ceac (10 von 13 Lead-/Coach-Starts über der Modelltabelle)

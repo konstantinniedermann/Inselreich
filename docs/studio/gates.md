@@ -81,7 +81,7 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
 2. Welche Kriterien berühren den Balancing-Test? Sind bewusste Wertänderungen als Ruling vorgesehen?
 3. Sind Randfälle genannt (leeres Lager, Abriss während Produktion, Laden alter Spielstände)?
 4. Sind die AK eindeutig (R136)? Kennungen, die auch in anderen Specs vorkommen, listet
-   `s=<spec>; for k in $(grep -o 'AK-[A-Z0-9]*-[0-9]*' "$s" | sort -u); do n=$(grep -lw -- "$k" docs/superpowers/specs/*.md | wc -l); [ "$n" -gt 1 ] && echo "$k $n"; done`.
+   `s=<spec>; for k in $(grep -o 'AK-[A-Z0-9-]*[0-9]' "$s" | sort -u); do n=$(grep -lw -- "$k" docs/superpowers/specs/*.md | wc -l); [ "$n" -gt 1 ] && echo "$k $n"; done`.
    Jeder Verweis auf ein altes AK trägt den Meilenstein (`M7:AK-U2-02`); alte Specs werden nicht
    umnummeriert. Widerspricht ein AK-Wortlaut der Prosa derselben Spec?
 
@@ -211,7 +211,8 @@ rot, Absturz, defekter Spielstand) geht einzeln.
 2. `production-integrator` baut den Kandidaten im Worktree `.worktrees/integrate`: je Häppchen
    `git merge --no-ff --no-commit`, `make check`, grün committen (Verfassung §9.2).
 3. Ein Browser-Lauf `qa-playtester` am Kandidaten, je UI-Task eigener Abschnitt mit Screenshots (§9.3).
-4. Ein `opus`-Review über den Kandidaten-Diff (ersetzt den Schlussreview je Häppchen).
+4. Ein `opus`-Review über den Kandidaten-Diff (ersetzt den Schlussreview je Häppchen). Bei einem
+   Ein-Paket-Release laufen Gate Merge und Release-Check in einem `lead-qa`-Start (R429).
 5. Gate (L0, ein Ruling), ein Push, CI und Pages; Release-Notiz in [state.md](state.md) („Neu“,
    „Bitte testen“, ≤ 10 Zeilen, Studio-Ideen als „vom Studio vorgeschlagen“).
 
