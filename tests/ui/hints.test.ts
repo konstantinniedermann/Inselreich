@@ -35,6 +35,7 @@ import { formatGameTime } from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
+import { setAllTax } from '../sim/helpers';
 import { perfBudget } from '../helpers/perfBudget';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -66,7 +67,7 @@ describe('friendlyReason (AK-UX-03)', () => {
 
   it('AK-UX-03 jede Tabellenzeile: Anzeigetext bzw. unverändert', () => {
     const { w } = uxWorld();
-    w.taxLockedUntil = w.tick + TAX_SWITCH_LOCK;
+    w.taxLockedUntil[1] = w.tick + TAX_SWITCH_LOCK;
     const d = BUILDING_DEFS;
     const site = (id: BuildingDefId) =>
       d[id].site.find((r) => r.kind === 'radius')! as { min: number; radius: number };
@@ -188,7 +189,7 @@ describe('friendlyReason (AK-UX-03)', () => {
     push(demolish(w, 99999));
     push(demolish(w, home(w).kontorId));
     push(setTaxLevel(w, 'x' as TaxLevel));
-    push(setTaxLevel(w, w.taxLevel));
+    push(setTaxLevel(w, w.taxLevels[1]));
     push(setTaxLevel(w, 'high'));
     push(setTaxLevel(w, 'low')); // Sperrzeit
     reasons.push('Es gibt schon eine Amtsstube', 'Braucht eine Amtsstube');
@@ -207,7 +208,7 @@ describe('friendlyReason (AK-UX-03)', () => {
     push(deliverOrder(w)); // Nicht genug Ware
     reasons.push(...upgradeStatus(w, fisher).reasons); // Kein Wohnhaus
     reasons.push(...upgradeStatus(w, house).reasons); // Haus nicht voll, Steuer zu hoch, Kein Geld …
-    w.taxLevel = 'normal'; // direkt gesetzt: Sperrzeit läuft noch
+    setAllTax(w, 'normal'); // direkt gesetzt: Sperrzeit läuft noch
     for (const tier of [1, 2, 3, 4] as const) {
       setHouse(house, tier, TIERS[tier].maxInhabitants, []);
       reasons.push(...upgradeStatus(w, house).reasons); // Bedürfnisse noch nicht …, Kapelle fehlt …, Kein … im Lager, Höchste Stufe

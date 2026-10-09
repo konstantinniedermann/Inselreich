@@ -8,6 +8,7 @@ import type { World } from '../../src/sim/types';
 import { home } from '../../src/sim/world';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
 import { SEED_D37 } from './seePins';
+import { foldBackToV9 } from './helpers';
 
 const TICKS = 2000;
 
@@ -188,6 +189,8 @@ describe('SEE-F1 T0 Goldwerte Seeweg', () => {
     const gold = GOLD[seed]!;
     expect(JSON.parse(JSON.stringify(lanes))).toEqual(gold.lanes);
     expect(ticks).toEqual(gold.ticks);
-    expect(fnv1a(JSON.stringify(run.world))).toBe(gold.hash);
+    expect(fnv1a(JSON.stringify(foldBackToV9(JSON.parse(JSON.stringify(run.world)))))).toBe(
+      gold.hash,
+    );
   });
 });

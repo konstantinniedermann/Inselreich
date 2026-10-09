@@ -28,7 +28,7 @@ import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
-import { houseNearKontor, placeTownhall } from '../sim/helpers';
+import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -147,7 +147,7 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
   });
   it('AK-U1-13 Bilanz-Tooltip ohne aktive Amtsstube mit „Steuer: normal (keine Amtsstube)"', () => {
     const w = createWorld(3);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(balanceTooltip(w)).toContain('Steuer: normal (keine Amtsstube)');
   });
 });

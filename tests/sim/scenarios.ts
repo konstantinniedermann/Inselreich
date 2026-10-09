@@ -31,7 +31,7 @@ import type {
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx, home } from '../../src/sim/world';
 import { prepareLayout, runColony, startColony, type Layout } from './controller';
-import { forceGrass, forceRect } from './helpers';
+import { forceGrass, forceRect, setAllTax } from './helpers';
 import { verdeckung } from './scenarios-iso';
 
 const SEED = 3;
@@ -623,7 +623,7 @@ function m10Amtsstube(townhallAt: [number, number], level: 'normal' | 'high'): W
   put(w, 'toolmaker', kx + 17, ky + 6);
   put(w, 'townhall', kx + townhallAt[0], ky + townhallAt[1]);
   home(w).stock.cloth = 2;
-  w.taxLevel = level === 'high' ? 'high' : w.taxLevel;
+  if (level === 'high') setAllTax(w, 'high');
   return w;
 }
 

@@ -8,7 +8,7 @@ import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from '../../src/sim/defs/ti
 import { TIERS } from '../../src/sim/defs/tiers';
 import { feastActive, feastBlockReason, feastState, holdFeast } from '../../src/sim/feast';
 import type { Building, World } from '../../src/sim/types';
-import { houseFar, houseNearKontor, placeService, placeTownhall } from './helpers';
+import { houseFar, houseNearKontor, placeService, placeTownhall, setAllTax } from './helpers';
 
 let w: World;
 let house: Building;
@@ -63,19 +63,19 @@ describe('AK-I007-05 Sperren', () => {
   it('Steuer hoch', () => {
     placeTownhall(w);
     chapel.connected = true; // placeTownhall berechnet die Anbindung neu
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     blocked('Steuer «hoch»: kein Aufstieg');
     expect(home(w).stock.rum).toBe(30);
   });
   it('Steuer niedrig', () => {
     placeTownhall(w);
     chapel.connected = true; // placeTownhall berechnet die Anbindung neu
-    w.taxLevel = 'low';
+    setAllTax(w, 'low');
     blocked('Steuer «niedrig»: Fest ohne Wirkung');
     expect(home(w).stock.rum).toBe(30);
   });
   it('Steuerstufe ohne Amtsstube gilt als normal', () => {
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(holdFeast(w, chapel.id).ok).toBe(true);
   });
   it('Kapelle nicht angebunden', () => {
@@ -171,9 +171,9 @@ describe('Steuer nach Festbeginn', () => {
     holdFeast(w, chapel.id);
     placeTownhall(w);
     chapel.connected = true; // placeTownhall berechnet die Anbindung neu
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(upgradeStatus(w, house, NO_DEFICIT).reasons).toContain('Steuer zu hoch');
-    w.taxLevel = 'low';
+    setAllTax(w, 'low');
     waited(house, 149);
     expect(waitReason(house, NO_DEFICIT)).toBe('Bedürfnisse noch nicht 150 Ticks erfüllt');
   });

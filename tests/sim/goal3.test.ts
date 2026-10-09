@@ -6,6 +6,7 @@ import { WIN_SPICE_HOLD, WIN_SPICE_MERCHANTS } from '../../src/sim/defs/tiers';
 import { spiceLoop, spiceMerchants } from '../../src/sim/goal3';
 import { goalView } from '../../src/sim/queries';
 import { deserialize, serialize } from '../../src/sim/save';
+import { foldBackToV9 } from './helpers';
 import { step } from '../../src/sim/tick';
 import { buy } from '../../src/sim/trade';
 import type { World } from '../../src/sim/types';
@@ -136,7 +137,9 @@ describe('M12 Z3 Gewürzstadt', () => {
   it('AK-Z3-02 Fixture z3-scenario-v9 ist ladbar und gleicht dem Browser-Rezept', () => {
     const json = readFileSync('tests/sim/fixtures/z3-scenario-v9.json', 'utf8');
     expect(deserialize(json).ok).toBe(true);
-    expect(json).toBe(serialize(spiceGoalScenario({ forBrowser: true })));
+    expect(json).toBe(
+      JSON.stringify(foldBackToV9(JSON.parse(serialize(spiceGoalScenario({ forBrowser: true }))))),
+    );
   });
 
   it('forBrowser: erreicht das Ziel ohne Nachfüllen', () => {

@@ -7,7 +7,7 @@ import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { UnlockId } from '../../src/sim/types';
 import { MAP_SIGNS, nextStep, remedyText, taxEffect } from '../../src/ui/guide';
 import { home, createWorld, idx } from '../../src/sim/world';
-import { houseFar, placeTownhall, village } from '../sim/helpers';
+import { houseFar, placeTownhall, setAllTax, village } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
 type Extra = 'chapel' | 'weaver' | 'sheepfarm';
@@ -28,7 +28,7 @@ function world(tier: 1 | 2, inhabitants: number, extras: Extra[]): World {
   setHouse(house, tier, inhabitants, ['food']);
   home(w).stock.food = 50;
   w.money = 1000;
-  w.taxLevel = 'normal';
+  setAllTax(w, 'normal');
   w.stats = { taxes: 10, upkeep: 5 };
   return w;
 }
@@ -87,7 +87,7 @@ describe('nextStep (AK-UX-08)', () => {
     const w = world(1, 2, []);
     placeTownhall(w); // M10: gespeicherte Stufe wirkt nur mit aktiver Amtsstube
     connectAll(w);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(nextStep(w)).toMatch(/^Steuer ‚hoch' verhindert den Aufstieg: /);
   });
   it('AK-UX-08 R7 sonst', () => {
@@ -186,7 +186,7 @@ function citizenWorld(): World {
   for (const h of [house, ...more])
     setHouse(h, 3, TIERS[3].maxInhabitants, ['food', 'cloth', 'rum']);
   w.money = 1000;
-  w.taxLevel = 'normal';
+  setAllTax(w, 'normal');
   w.stats = { taxes: 10, upkeep: 5 };
   return w;
 }
@@ -199,7 +199,7 @@ describe('M8 nextStep vor dem Sieg (AK-S1-19)', () => {
   });
   it('AK-S1-19 (e) Steuer hoch, nur Bürgerhäuser, won false → nicht der Steuer-Satz', () => {
     const w = citizenWorld();
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expectStep(w, 'Baue weitere Wohnhäuser und versorge sie');
   });
 });
@@ -410,7 +410,7 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
       'Deine Kasse schrumpft: versorge mehr Wohnhäuser, verkaufe Waren am Kontor oder erhöhe die Steuer',
     );
     const high = createWorld(3);
-    high.taxLevel = 'high';
+    setAllTax(high, 'high');
     expect(nextStep(high)).not.toMatch(/Steuer/);
     // Werkzeugmacher noService: Schule gesperrt (Stand AK-S1-14 c) bzw. frei
     const tm = toolmakerWorld();

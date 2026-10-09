@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
-import { houseNearKontor, placeService, placeTownhall } from '../sim/helpers';
+import { houseNearKontor, placeService, placeTownhall, setAllTax } from '../sim/helpers';
 import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
 import { feastView, houseFeastLine } from '../../src/ui/feast';
@@ -54,7 +54,7 @@ describe('feastView (AK-I007-11)', () => {
       home(w).stock.rum = 30;
       placeTownhall(w);
       chapel.connected = true;
-      w.taxLevel = level;
+      setAllTax(w, level);
       const r = reasonOf(w, chapel);
       expect(r).toContain(`«${TAX_LEVELS[level].name}»`);
       expect(feastView(w, chapel)!.disabled).toBe(true);

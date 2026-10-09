@@ -33,7 +33,7 @@ import { home, createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
 import { setGoodLock } from '../../src/sim/tax';
-import { placeTownhall, setHouse as setHouseTo, village } from '../sim/helpers';
+import { placeTownhall, setAllTax, setHouse as setHouseTo, village } from '../sim/helpers';
 
 describe('refundText (AK-U1b-02)', () => {
   it('nennt den tatsächlichen Betrag und den Verfall bei vollem Lager', () => {
@@ -239,7 +239,7 @@ describe('M10 noService', () => {
 describe('M10 Ruhe-Ansicht Steuer', () => {
   it('AK-U1-13 rest-tax: wirksame Stufe, ohne aktive Amtsstube mit Zusatz', () => {
     const w = createWorld(3);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(restView(w).tax).toBe(`${taxEffect('normal')} (keine Amtsstube)`);
   });
 });

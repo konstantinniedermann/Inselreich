@@ -21,7 +21,7 @@ import {
 } from '../../src/sim/defs/timing';
 import { setTaxLevel } from '../../src/sim/tax';
 import type { Building, GoodId, Tier, World } from '../../src/sim/types';
-import { forceGrass, placeService, placeTownhall } from './helpers';
+import { forceGrass, placeService, placeTownhall, setAllTax } from './helpers';
 
 let w: World;
 let nextTestId = 9000;
@@ -186,20 +186,20 @@ describe('setTaxLevel', () => {
   it('AK-S1-07 sperrt das Umschalten 300 Ticks lang', () => {
     w.tick = 1000;
     expect(setTaxLevel(w, 'low')).toEqual({ ok: true });
-    expect(w.taxLockedUntil).toBe(1000 + TAX_SWITCH_LOCK);
+    expect(w.taxLockedUntil[1]).toBe(1000 + TAX_SWITCH_LOCK);
     w.tick = 1299;
     expect(setTaxLevel(w, 'high')).toEqual({ ok: false, reason: 'Sperrzeit' });
-    expect(w.taxLevel).toBe('low');
+    expect(w.taxLevels[1]).toBe('low');
     w.tick = 1300;
     expect(setTaxLevel(w, 'high')).toEqual({ ok: true });
-    expect(w.taxLevel).toBe('high');
+    expect(w.taxLevels[1]).toBe('high');
   });
   it('AK-S1-07 gleiche Stufe und ungültige Stufe lassen die Sperre unverändert', () => {
     expect(setTaxLevel(w, 'normal')).toEqual({ ok: false, reason: 'Stufe bereits aktiv' });
-    expect(w.taxLockedUntil).toBe(0);
+    expect(w.taxLockedUntil[1]).toBe(0);
     expect(setTaxLevel(w, 'extrem')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
     expect(setTaxLevel(w, 'toString')).toEqual({ ok: false, reason: 'Ungültige Stufe' });
-    expect(w.taxLockedUntil).toBe(0);
+    expect(w.taxLockedUntil[1]).toBe(0);
   });
   it('RF-3a setTaxLevel ist bei negativem Geld erlaubt', () => {
     w.money = -50;
@@ -211,7 +211,7 @@ describe('houseCap', () => {
   it('AK-S1-05 Zielbelegung hoch: Pionier 3, Siedler 6, Bürger 11; sonst Höchstbelegung', () => {
     const caps = ([1, 2, 3] as Tier[]).map((t) => houseCap(w, readyHouse(w, t, 1, t).house!));
     expect(caps).toEqual([4, 8, 15]);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     const high = ([1, 2, 3] as Tier[]).map((t) => houseCap(w, readyHouse(w, t, 1, t + 3).house!));
     expect(high).toEqual([3, 6, 11]);
     expect(TAX_LEVELS.low.occupancy).toBe(1);
@@ -233,7 +233,7 @@ describe('tax levels', () => {
     const pioneer = readyHouse(w, 1, 4, 0);
     w.tick = UPGRADE_WAIT * UPGRADE_DEFICIT_WAIT_FACTOR; // Defizitwelt: doppelte Wartezeit
     expect(upgradeStatus(w, pioneer)).toEqual({ ok: true, reasons: [] });
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     const status = upgradeStatus(w, pioneer);
     expect(status.ok).toBe(false);
     expect(status.reasons).toEqual(['Steuer zu hoch']);
@@ -260,9 +260,9 @@ describe('tax levels', () => {
   it('AK-S1-08 Steuerprobe: 4 Siedlerhäuser à 8', () => {
     for (let i = 0; i < 4; i++) addHouse(w, 2, 8, true);
     expect(totalTaxes(w)).toBe(224);
-    w.taxLevel = 'low';
+    setAllTax(w, 'low');
     expect(totalTaxes(w)).toBe(156);
-    w.taxLevel = 'high';
+    setAllTax(w, 'high');
     expect(totalTaxes(w)).toBe(291);
   });
   it('AK-S1-09 hoch drückt ein volles Siedlerhaus auf 6, zurück auf normal wächst es wieder (M11 S10)', () => {
