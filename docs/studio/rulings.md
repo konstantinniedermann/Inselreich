@@ -3631,3 +3631,17 @@ bereinigen, dass das Push-Gate (Faktor 4 und Runner ×3) bei ruhiger Last 0 meld
 hergeleitete Timeouts wie R328; Aussage unverändert. Push erst in der nächsten Session (R335).
 
 Entscheider: L0 · Anlass: Merge SEE-F1-KORRIDOR · ADR: —
+
+## R390 · 2026-10-09 · Gate Merge Release REL-10 OK; Folgepakete REL-11
+
+Ruling: **OK** für REL-10 = main @ c367f9c (+ Doku). `opus`-Review OK (Tönung unabhängig von Fremdinseln, Pin
+683761494; Determinismus über 200 Seeds; Kappe mit `rareBudget` korrekt; Save v9, `balance.test.ts` ohne Diff).
+Browser-Lauf BEDENKEN ohne Blocker: Smoke BESTANDEN, ART-L8-SELTEN OK, SEE-F1-KORRIDOR OK (Mindestabstand ≥ 14,2
+Kacheln, Tönung identisch zu REL-09), Konsole leer. Zwei Befunde, beide **kein Rückschritt** gegenüber REL-09:
+(1) **Blindprobe Meeresfels** (E-018): Rater urteilte bei Zoom 0,5 „Boot“ für den Fels — der Widerspruch aus R381 ist
+damit entschieden → Paket **ART-MEERESFELS** (lead-art, REL-11): Silhouette bei Zoom ≤ 0,5 ohne Segel-Lesart, Abnahme
+per Blindprobe mit ≥ 3 Fels- und ≥ 3 Bootsbildern; (2) bei langem Scrollen zeigen die Rahmenecken nur Wasser (iso-
+Rechteck um verstreute Inseln) → Paket **UI-KAMERA-RAND** (lead-tech, REL-11): Klemmung an die nächste Landfläche
+bzw. Rauten-Rahmen. Push von REL-10 erst in der nächsten Session (R335), nach dem Merge von FIX-ZEITRESERVE-REL10.
+
+Entscheider: L0 · Anlass: Release-Check REL-10 · ADR: —
