@@ -194,17 +194,31 @@ describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
     expect(parseMeasurement(timings)).toEqual({ timings });
   });
 
-  it('belastbar bei gleichem Commit und Last <= LOAD_MAX', () => {
+  it('belastbar bei gleichem Commit und Last vor dem Lauf <= LOAD_MAX (R394)', () => {
     expect(measurementProblem(meta, 'abc')).toBeNull();
-    expect(measurementProblem({ ...meta, loadMax: LOAD_MAX }, 'abc')).toBeNull();
+    expect(measurementProblem({ ...meta, loadStart: LOAD_MAX }, 'abc')).toBeNull();
+  });
+
+  it('Eigenlast des Laufs (loadEnd/loadMax hoch) macht die Messung nicht unbrauchbar (R394)', () => {
+    expect(
+      measurementProblem({ ...meta, loadStart: 1, loadEnd: 9, loadMax: 9 }, 'abc'),
+    ).toBeNull();
   });
 
   it('alter Commit ist nicht belastbar und nennt beide Commits', () => {
     expect(measurementProblem(meta, 'def')).toMatch(/Commit abc.*HEAD ist def/);
   });
 
-  it('zu hohe Last während der Messung ist nicht belastbar', () => {
-    expect(measurementProblem({ ...meta, loadMax: 6.5 }, 'abc')).toMatch(/Last 6\.5 > 4/);
+  it('zu hohe Last vor dem Lauf ist nicht belastbar und nennt Ende/Max (R394)', () => {
+    const p = measurementProblem({ ...meta, loadStart: 5, loadEnd: 9, loadMax: 9 }, 'abc');
+    expect(p).toMatch(/Last vor dem Lauf 5\.0 > 4/);
+    expect(p).toMatch(/Ende 9\.0/);
+    expect(p).toMatch(/Max 9\.0/);
+  });
+
+  it('Messung ohne loadStart ist nicht belastbar (R394)', () => {
+    const { loadStart: _l, ...ohne } = meta;
+    expect(measurementProblem(ohne, 'abc')).toMatch(/alten Format/);
   });
 
   it('altes Format ist nicht belastbar, ohne Absturz', () => {
@@ -243,10 +257,15 @@ describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
     expect(p.stderr).toContain('nicht belastbar');
   });
 
-  it('hohe Last während der Messung: Exit 2', () => {
-    const p = run(file('load.json', { ...meta, loadMax: 9 }), '--push');
+  it('hohe Last vor dem Lauf: Exit 2', () => {
+    const p = run(file('load.json', { ...meta, loadStart: 9, loadMax: 9 }), '--push');
     expect(p.status).toBe(2);
-    expect(p.stderr).toContain('Last 9');
+    expect(p.stderr).toContain('Last vor dem Lauf 9');
+  });
+
+  it('hohe Eigenlast bei ruhigem Start: Exit 0 (R394)', () => {
+    const p = run(file('eigen.json', { ...meta, loadEnd: 9, loadMax: 9 }), '--push');
+    expect(p.status).toBe(0);
   });
 
   it('Array-Format: Exit 2 statt Absturz', () => {
