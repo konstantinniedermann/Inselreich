@@ -1,7 +1,7 @@
 // seaMap.ts — Seekarte (UI-SEEKARTE T1/T2): Layout, Treffer, Schiffspunkte, Silhouetten-Cache, Zeichner.
 // Rein und nur lesend: schreibt nie in die Welt. Ausrichtung wie die Hauptansicht (`project`, Iso).
 import type { Island, World } from '../sim/types';
-import { shipPose } from './shipLane';
+import { lanePoints, shipPose } from './shipLane';
 import { project, unproject } from './iso';
 
 /** Abbildung Archipel-Kacheln -> Karten-Pixel: `project(x, y) * scale + (ox, oy)`. */
@@ -175,4 +175,86 @@ export function createSilhouetteCache(factory: RasterFactory = domRaster): Silho
     },
   };
   return cache;
+}
+
+/** Zeichnet die Karte: Wasser, Fahrlinien, Silhouetten, Kontor-Marken, Hover-Rahmen, Schiffspunkte. Schreibt nie in die Welt. */
+export function drawSeaMap(
+  ctx: CanvasRenderingContext2D,
+  world: World,
+  l: MapLayout,
+  cache: SilhouetteCache,
+  ui: MapUi,
+): void {
+  ctx.fillStyle = COLORS.water;
+  ctx.fillRect(0, 0, l.w, l.h);
+
+  // Fahrlinien: je verschiedener Route genau ein Linienzug
+  const seen = new Set<string>();
+  ctx.strokeStyle = COLORS.lane;
+  ctx.lineWidth = 1;
+  for (const ship of world.ships) {
+    const r = ship.route;
+    if (!r) continue;
+    const key = `${Math.min(r.a, r.b)}-${Math.max(r.a, r.b)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const pts = lanePoints(world, r.a, r.b);
+    if (pts.length < 2) continue;
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const m = tileToMap(l, p.x, p.y);
+      if (i === 0) ctx.moveTo(m.x, m.y);
+      else ctx.lineTo(m.x, m.y);
+    });
+    ctx.stroke();
+  }
+
+  // Silhouetten: ein drawImage je Insel, Draufsicht-Raster per 2x2-Matrix in die Iso-Lage
+  for (const isl of world.islands) {
+    const sil = cache.get(isl, l.scale);
+    const o = tileToMap(l, isl.ox, isl.oy);
+    const k = (32 * l.scale) / sil.r;
+    ctx.save();
+    ctx.transform(k, k / 2, -k, k / 2, o.x, o.y);
+    ctx.drawImage(sil.image, 0, 0, sil.w, sil.h);
+    ctx.restore();
+  }
+
+  // Kontor-Marke am Anker
+  ctx.fillStyle = COLORS.kontor;
+  for (const isl of world.islands) {
+    if (isl.kontorId === null) continue;
+    const m = tileToMap(l, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
+    ctx.fillRect(m.x - 2, m.y - 2, 4, 4);
+  }
+
+  // Hover: Rahmen um das Inselrechteck
+  const hv = ui.hover !== null ? world.islands[ui.hover] : undefined;
+  if (hv) {
+    ctx.strokeStyle = COLORS.hover;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const c = [
+      tileToMap(l, hv.ox, hv.oy),
+      tileToMap(l, hv.ox + hv.width, hv.oy),
+      tileToMap(l, hv.ox + hv.width, hv.oy + hv.height),
+      tileToMap(l, hv.ox, hv.oy + hv.height),
+    ];
+    ctx.moveTo(c[0]!.x, c[0]!.y);
+    for (let i = 1; i < 4; i++) ctx.lineTo(c[i]!.x, c[i]!.y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // Schiffspunkte
+  ctx.fillStyle = COLORS.dot;
+  ctx.strokeStyle = COLORS.dotEdge;
+  ctx.lineWidth = 1;
+  for (const d of mapDots(world)) {
+    const m = tileToMap(l, d.x, d.y);
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
 }
