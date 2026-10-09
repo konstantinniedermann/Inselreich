@@ -3503,3 +3503,14 @@ Freihaltung nutzen dieselbe Routenmenge, **alle Paare** wie `routeFar`. Der Plan
 AK-K3 nach (ohne neue Prüfung). Umsetzung nach dem Merge von ART-L8-SELTEN, Budget 120 Tools.
 
 Entscheider: L0 · Anlass: Zweitprüfung GATE-REL10-W3 · ADR: —
+
+## R380 · 2026-10-09 · Gate Merge TOOL-TESTLOCK OK
+
+Ruling: **OK** für `tool/testlock` @ bafa9ea. Übernahme toter Sperren nur über ein Wächterverzeichnis (`mkdir`), Test
+mit drei parallelen Prozessen (genau einer läuft); Sperre per Temp-Datei und `linkSync` atomar; `CI=false/0/leer` gilt
+nicht als CI; Signal-Exit 128 + Nummer; Fake-Schalter als nur für Tests markiert. Re-Review OK. `make check` grün ohne
+Fake-Schalter, Echtprobe zweier gleichzeitiger `make test`: zweiter bricht mit Grund ab. Ab dem Merge ist R357 ein
+Werkzeug: `make check`/`make test`/`zeitreserve-push` brechen bei belegter Sperre oder Load > 8 ab (nicht warten).
+Merge durch den Integrator; `.worktrees/testlock-probe` ohne `--force` entfernen. Ist ≈ 56 von 55.
+
+Entscheider: L0 · Anlass: Bericht TOOL-TESTLOCK · ADR: —
