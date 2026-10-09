@@ -20,19 +20,19 @@ Quelle: R374, `docs/beobachtungen.md` (Kamerarahmen reicht weit über die Insel 
 
 ## Tasks
 
-| ID  | Titel                                              | AK (testbar)                                                                                                                                                                                                                      | blocked-by |
-| --- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| U1  | `visibleHeight()` im Input-Handle                  | AK-U1: Vitest `tests/ui/`: Handle liefert `visibleViewHeight(canvasH, overlayH)` nach Overlay-Änderung; vorher rot                                                                                                                | -          |
-| U2  | `app.ts`: Klemmung/Zentrierung mit sichtbarer Höhe | AK-U2: Vitest (reine Helferfunktion `clampView`/Zentrierung, DOM-frei): bei overlayH > 0 liegt das `centerOn`-Ziel in der sichtbaren Mitte und `resize` verschiebt die Kamera nicht (gleiche Kamera vor/nach, auch DPR-Wechsel)   | U1         |
-| U3  | Engerer Kamerarahmen                               | AK-U3: Vitest `tests/render/archipel.test.ts`: `cameraBounds.y1 <= südlichste Landkachel + Rand` und `x0/x1/y0` analog, für Seeds 1-10; mit dem Playtest-Fall (vorher 121 gegen 106) rot                                          | -          |
-| U4  | Browser-Abnahme                                    | AK-U4: 1280x720 und 1920x1080: Kategorie offen + Resize = kein Sprung (Kamera-Soll gleich); maximal südliche Kamera zeigt noch Insel; Screenshots `.studio/qa/UI-KAMERA/`; Konsole leer                                           | U2, U3     |
-| U5  | Doku                                               | AK-U5: `docs/arc42.md` nennt Overlay und `visibleViewHeight` (die zwei Sätze aus dem REL-09-Review) und den neuen Kamerarahmen; Beobachtungen (Rahmen, Punkt a) geschlossen; README nur falls Bedienung betroffen (nein erwartet) | U4         |
+| ID  | Titel                                              | AK (testbar)                                                                                                                                                                                                                                                                                                                                                                                                             | blocked-by |
+| --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| U1  | DOM-freier Helfer + `visibleHeight()`              | AK-U1: Vitest ohne DOM: der Helfer (in `src/ui/cameraView.ts`) liefert `visibleViewHeight(canvasH, overlayH)`; `visibleHeight()` im Handle misst nach einem Resize (neue `clientHeight`) neu, nicht zwischengespeichert (Test mit Fake-Canvas); vorher rot                                                                                                                                                               | -          |
+| U2  | `app.ts`: Klemmung/Zentrierung mit sichtbarer Höhe | AK-U2 (Eigenschaften, Vitest gegen `cameraView.ts`): (a) Fixpunkt: zweimal klemmen = einmal klemmen; (b) DPR 1 und DPR 2 geben dieselbe Kamera (Klemmung in CSS-Pixeln); (c) der Overlay-Callback lässt eine Kamera, die schon im Rahmen liegt, unverändert; (d) bei overlayH > 0 liegt das `centerOn`-Ziel in der sichtbaren Mitte                                                                                      | U1         |
+| U3  | Engerer Kamerarahmen                               | AK-U3: Vitest `tests/render/archipel.test.ts`: `cameraBounds` <= Landausdehnung + Rand an allen vier Seiten, Seeds 1-10; Playtest-Fall (121 gegen 106) vorher rot. **Abbruchregel:** zeigt die Messung eine andere Ursache als den Platzrahmen (z. B. Rand schon <= 8), Stopp, Meldung an den Lead, keine Änderung an `cameraBounds`. Modus `jump` bleibt unverändert: AK-E1-12 (`renderer.test.ts` ~1374) grün          | -          |
+| U4  | Browser-Abnahme                                    | AK-U4: „kein Sprung“ = `__inselDev.tileCenter` einer festen Kachel vor/nach Resize (und Kategorie öffnen) um <= 1 px verschoben; Läufe 1280x720 und 1920x1080, einer mit DPR 2, und an allen vier Rahmenrändern (Kamera dorthin, dann Resize); maximal südliche Kamera zeigt noch Insel; Screenshots `.studio/qa/UI-KAMERA/`; Konsole leer. Braucht es eine Kamera-Abfrage, kommt sie in `src/ui/devProbes.ts` (nur Dev) | U2, U3     |
+| U5  | Doku                                               | AK-U5: `docs/arc42.md` nennt Overlay und `visibleViewHeight` (die zwei Sätze aus dem REL-09-Review) und den neuen Rahmen; Beobachtungen (Rahmen, Punkt a) geschlossen; je Test <= 500 ms, `zeitreserve` 0                                                                                                                                                                                                                | U4         |
 
 U1/U2 (`src/ui/`) und U3 (`src/render/archipel.ts`) haben getrennte Dateien und könnten parallel laufen; wegen `bounds` in `app.ts` (U2) seriell U1, U2, dann U3 empfohlen (ein Umsetzer `tech-ui-engineer`).
 
 ## Datei-Ownership
 
-- `src/ui/input.ts` (Handle, Z. ~126-135, 182, 204), `src/ui/app.ts` (Z. ~331, 416, 673, 1080, 1103, 1130-1143), `src/render/archipel.ts` (`cameraBounds`, `CAMERA_MARGIN`), `tests/ui/…` (neue Datei `cameraClamp.test.ts`), `tests/render/archipel.test.ts`
+- `src/ui/input.ts` (Handle, Z. ~126-135, 182, 204), `src/ui/app.ts` (Z. ~331, 416, 673, 1080, 1103, 1130-1143), `src/render/archipel.ts` (`cameraBounds`, `CAMERA_MARGIN`), `tests/ui/…` (neu `src/ui/cameraView.ts` als DOM-freier Helfer und `tests/ui/cameraView.test.ts`; `src/ui/devProbes.ts` nur falls U4 eine Kamera-Abfrage braucht), `tests/render/archipel.test.ts`
 - `docs/arc42.md`, `docs/beobachtungen.md`, Abnahme-Screenshots `.studio/qa/UI-KAMERA/`
 
 ## Überschneidungen
@@ -43,7 +43,7 @@ U1/U2 (`src/ui/`) und U3 (`src/render/archipel.ts`) haben getrennte Dateien und 
 
 ## Budgetantrag
 
-Pakete 5 (U1-U5; U1+U2 zusammen 4) x 2 = 8 Starts + Playtester 2 (je Grösse zusammen in einem Lauf, plus Wiederholung nach Fix) + 1 Final-Review `opus` = 11, + 30 % = 15 Starts. Parallelität 1-2. Tools: Richtwert 150 (UI mit Browser-Abnahme).
+Pakete 5 (U1-U5; U1+U2 zusammen 4) x 2 = 8 Starts + Playtester 2 (je Grösse zusammen in einem Lauf, plus Wiederholung nach Fix) + 1 Final-Review `opus` = 11, + 30 % = 15 Starts. Parallelität 1-2. Tools: Richtwert 170 (150 + 20 nach Gate R377) (UI mit Browser-Abnahme).
 
 ## Review
 
