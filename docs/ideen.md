@@ -314,7 +314,7 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 - Randfälle: Kaufleute haben keinen Aufstieg (`upgradeCost: null`), „hoch" kostet dort nur Belegung → Dominanz möglich, Belegung oder Versorgung muss dort greifen (mit `design-economy-designer` prüfen); Sperre von 30 s nach dem Umschalten je Regler oder gemeinsam; Kopfzeilen-Knopf zeigt Mischung («gemischt»); Tooltip und Chronik müssen die Wirkung je Stufe nennen.
 - Doppelung: keine; I-007 (Fest) beschleunigt Aufstieg lokal und warenbasiert, diese Idee ist global und geldbasiert je Stufe; zusammen testen, damit „niedrig" für Siedler plus Fest nicht dominiert.
 - Bewertung lead-design (IDEEN-04): Stärkste neue Entscheidung der Runde und schon in der ersten Stunde spürbar (Pioniere und Siedler niedrig für schnellen Aufstieg gegen Steuer, Kaufleute ohne Aufstieg anders). Risiko 1: Save und Baseline zugleich. **Entartung:** Kaufleute ohne Aufstieg machen «hoch» dort dominant (nur Belegung als Preis); die Stufe «hoch» braucht für Kaufleute einen echten Preis (Abwanderung oder Versorgungsschwelle), sonst ist es ein versteckter Pflichtregler. Der Controller fährt global; bei vier gleichen Werten bleibt die Baseline bitgleich. Werte und Bilanz je Einwohner mit `design-economy-designer`. M (Reglerlogik, Panel, Kopfzeile, Migration, Balancing): Baustein fürs Wirtschafts-Brainstorming, nicht in den S-Platz.
-- Entscheid: Empfehlung einplanen als Baustein fürs Wirtschafts-Brainstorming; Ruling IDEEN-04 offen
+- Entscheid: R405 → Baustein Wirtschafts-Brainstorming; Designvorschlag `docs/superpowers/specs/2026-10-09-steuer-je-stufe-vorschlag.md` (Kaufleute «hoch» 115 %, «niedrig» für Kaufleute gesperrt), Gate Spec-Vorschlag offen
 
 ### I-029 · bewertet · Gefragte Ware
 

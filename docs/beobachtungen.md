@@ -407,3 +407,7 @@ RENDER-LOOK-01 erst danach.
 - **Fundort:** `src/render/seaMap.ts` (Z. 222-227, 247-257): Kontor-Marke (4 × 4) liegt auf `anchor+0.5` und wird vom Schiffspunkt im Hafen (Radius 3) verdeckt; Marke, Punktradius und Strichstärken sind feste Gerätepixel, nicht an `devicePixelRatio` gebunden. Ursprung: Final-Review UI-SEEKARTE. Einschätzung: niedrig, kosmetisch; Marke seitlich versetzen und mit dpr skalieren.
 - **Fundort:** `tests/render/seaMap.test.ts:221-227`: Zeitgrenze `< 50 ms` per Uhr (Fake-Rasterer). Ursprung: Final-Review. Einschätzung: niedrig; bei Flackern auf Zähler umstellen (Cache-Zähler besteht bereits).
 - **Fundort:** Seekarten-Popover: verdeckt solange offen Lager-Chips und Hinweiskarten rechts oben; Hover-Rahmen zeigt das Iso-Rechteck, nicht die Silhouette. Ursprung: Playtest T6. Einschätzung: niedrig, gewollt.
+
+### 2026-10-09 · I-028 Steuer je Stufe (design-economy-designer): Befund ohne Blocker
+
+- **Fundort:** `README.md`, Tabelle „Steuerregler“, Zeile «hoch»: Belegung nennt «Pioniere 3, Siedler 6, Bürger 11», die Kaufleute (15) fehlen. Ursprung: Bilanzrechnung I-028. Einschätzung: niedrig, Doku-Drift; mit der Umsetzung von I-028 (Tabelle ändert sich ohnehin) oder als Trivial-Fix im nächsten Doku-Paket.
