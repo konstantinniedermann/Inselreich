@@ -22,6 +22,12 @@ const TILT_MAX = 0.06; // rad
 export const HULL = mixHex(PALETTE.roofWood, PALETTE.wallTimber, 0.4);
 const SAIL = PALETTE.wallLime;
 export const OUTLINE = rgbaOfCss(toInk(HULL, 0.75), 0.75); // S4: dunkler Eigenton des Rumpfs, nie Schwarz
+/** Fernsicht (Zoom <= 0,5): heller Saum um Rumpf und Segel, damit das Schiff auf jeder Meeresfarbe lesbar bleibt (SEE-F3). */
+export const SAUM_MAX_ZOOM = 0.5;
+/** Saumton: bestehender Palettenton `foam` (Kontrast >= 2,2 gegen Tief-, Mittel- und Flachwasser). */
+export const SAUM = PALETTE.foam;
+/** Strichbreite des Saums in Bildpunkten (konstant, nicht mit der Schiffsgrösse skaliert; die Hälfte ragt über den Umriss). */
+export const SAUM_PX = 4;
 const SHADOW_SHIFT = 0.15; // Kachelraum, Richtung (+3, +1) normiert (D-11)
 const SHADOW_A = 0.5,
   SHADOW_B = 0.22; // Halbachsen des Rumpfschattens (Kachelraum)
@@ -80,6 +86,7 @@ export function drawShip(
   ctx.lineTo(w * 0.26, h * 0.2);
   ctx.lineTo(-w * 0.26, h * 0.2);
   ctx.closePath();
+  if (cam.zoom <= SAUM_MAX_ZOOM) strokeSaum(ctx);
   ctx.fillStyle = HULL;
   ctx.fill();
   ctx.stroke();
@@ -94,8 +101,20 @@ export function drawShip(
   ctx.lineTo(w * 0.34, -h * 0.12);
   ctx.lineTo(w * 0.04, -h * 0.12);
   ctx.closePath();
+  if (cam.zoom <= SAUM_MAX_ZOOM) strokeSaum(ctx);
   ctx.fillStyle = SAIL;
   ctx.fill();
   ctx.stroke();
   ctx.restore();
+}
+
+/** Streicht den aktuellen Pfad mit dem hellen Saum und stellt Breite und Farbe der Kontur wieder her. */
+function strokeSaum(ctx: CanvasRenderingContext2D): void {
+  ctx.lineWidth = SAUM_PX;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = SAUM;
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.lineJoin = 'miter';
+  ctx.strokeStyle = OUTLINE;
 }
