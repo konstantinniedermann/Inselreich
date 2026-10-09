@@ -3668,3 +3668,14 @@ Beginn der nächsten Session vor dem Push-Gate** von REL-10. Steuerungsanteil 56
 bleibt (R375).
 
 Entscheider: L0 · Anlass: Retro-Nachtrag · ADR: —
+
+## R393 · 2026-10-09 · TOOL-GATES-2 abgenommen; V7 (E-053) entfällt
+
+Ruling: TOOL-GATES-2 angenommen (`6e635a4`, `bd1c8e3`). (V8) `make conflicts` ist erster Schritt von `check-run` und
+bricht bei Zeilen ab, die mit `<<<<<<< ` oder `>>>>>>> ` beginnen (versionierte Textdateien, `=======` bewusst nicht);
+Test `tests/tools/conflicts.test.ts`. (V7) entfällt nach der Vorbedingung aus R392: Faktor 4 stammt aus Einzeltests
+(R302), Faktor 3 aus E-043 (`afb14a8`); Last wird erst seit `c69938d` (R353) mitgemessen — Kalibrierung mit Eigenlast
+nicht belegbar. `zeitreserve-push` bleibt unverändert (Load ≤ 4). Prozessabweichung an die Session-Retro: Test und
+Skript in einem Schritt angelegt, vier von fünf Fällen ohne Rot-Phase. Voller `make check` läuft im Push-Gate REL-10.
+
+Entscheider: L0 · Anlass: Gate TOOL-GATES-2 · ADR: —
