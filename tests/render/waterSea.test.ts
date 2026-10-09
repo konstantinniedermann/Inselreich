@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { PALETTE, rgbOf } from '../../src/render/palette';
 import {
   FOAM_ALPHA,
@@ -63,11 +63,22 @@ describe('L5-T4 Schaum an Riff, Wrack, Fels und Eiland', () => {
     }
   });
 
+  // Gemeinsamer Aufbau (Welten, Plan, Schaum) ausserhalb der Testzeit; Aussage, Seeds und Schwellen unverändert.
+  const reefWorlds = new Map<number, ReturnType<typeof createWorld>>();
+  beforeAll(() => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const wo = createWorld(seed);
+      reefWorlds.set(seed, wo);
+      seaFoam(wo);
+      seaPlan(seed, home(wo), seaContext(wo));
+    }
+  }, 30_000);
+
   it('Riffschaum: gebogene Sicheln (nie gerade), gestreute Längen, weiche Lage an der Seeseite je Riffkachel', () => {
     let n = 0;
     const lens: number[] = [];
     for (let seed = 1; seed <= 30; seed++) {
-      const wo = createWorld(seed);
+      const wo = reefWorlds.get(seed)!;
       const f = seaFoam(wo);
       const plan = seaPlan(seed, home(wo), seaContext(wo));
       const tiles = plan.reefs.reduce((k, a) => k + a.tiles.length, 0);
