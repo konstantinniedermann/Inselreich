@@ -51,6 +51,8 @@ Code (Fundstellen unten); Bildbefunde, Messwerte und CI-Zeiten aus Agentenberich
 | `favicon.ico` liefert 404 (REL-08)              | `index.html` ohne `<link rel="icon">`, `public/` enthält nur `audio`, `fonts`                                                    | `<link rel="icon" href="data:,">` oder kleines Icon in `public/` |
 | Kontrast `.needs`/`.reasons` Rand 2,3–2,7 : 1   | `src/style.css` `.needs .ok` `border-left: 4px solid var(--ok)`, `.bad` `var(--signal-red)`; `--tone-*` existieren (ab Zeile 31) | Randfarben auf `--tone-ok`/`--tone-bad`; Kontrast neu messen     |
 
+**Umgesetzt in REL-11 UI (2026-10-09, R400):** UI-KAMERA-RAND (konvexe Hülle, `fix/rel11-kamera`), Kontrast `.needs`/`.reasons` (`--tone-*`, Test in `contrast.test.ts`) und `noLoadableReason` gelöscht (`fix/rel11-triv`). `favicon` war schon seit `a7e2192` erledigt (Data-URI in `index.html`); der Eintrag oben war veraltet.
+
 **Kandidaten für REL-11 / Pakete (L0 entscheidet)**
 
 | Paket-ID (Vorschlag)         | Inhalt                                                                                                                                                                | Beleg                                                                                   | Prio    | Owner     |
