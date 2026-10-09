@@ -3679,3 +3679,19 @@ nicht belegbar. `zeitreserve-push` bleibt unverändert (Load ≤ 4). Prozessabwe
 Skript in einem Schritt angelegt, vier von fünf Fällen ohne Rot-Phase. Voller `make check` läuft im Push-Gate REL-10.
 
 Entscheider: L0 · Anlass: Gate TOOL-GATES-2 · ADR: —
+
+## R394 · 2026-10-09 · V7 doch umsetzen (revidiert R393 Teil V7); Push-Gate REL-10 gestoppt
+
+Ruling: Das Push-Gate REL-10 brach bei `make zeitreserve-push` mit „nicht belastbar“ ab, obwohl `make test` zweimal
+grün war (Last Start 2,7 → Ende 10,3; Start 1,3 → Ende 7,1): Vitest lastet die 10 Kerne selbst aus, `loadMax ≤ 4`
+ist mit vollem Lauf nicht erreichbar (B10 bestätigt). Auslegung der Vorbedingung aus R392: Die Faktoren von E-043
+stammen aus Einzeltests ohne Eigenlast (R393). Unter Eigenlast gemessene Zeiten sind länger, lokal × 4 bzw. × 3
+überschätzt die Runner-Zeit also — das Urteil wird strenger, nie lascher. Fehlalarme sind möglich, verpasste
+Regressionen nicht; ein Fehlalarm wird wie bisher per Einzellauf des Tests bei ruhiger Last bestätigt oder entkräftet
+(R391). Damit ist das Ziel der Vorbedingung erfüllt. **TOOL-GATES-2b** (lead-tech, ≈ 15 Tools): `measurementProblem`
+prüft `loadStart ≤ 4` statt `loadMax`; `loadEnd`/`loadMax` bleiben in Messdatei und Ausgabe; Tests angepasst;
+E-053 in `experimente.md` von „entfallen“ auf „übernommen als Werkzeug (R394)“ mit Messgrösse aus R392. Danach
+Push-Gate REL-10 neu. Ad-hoc-Retro zum gescheiterten Integrator-Lauf durch den Coach (kurz, L0-Fund: R393 hat die
+Vorbedingung zu eng gelesen; Wirkung auf das Push-Gate nicht geprüft).
+
+Entscheider: L0 · Anlass: Integrator PUSH-REL-10 gescheitert · ADR: —
