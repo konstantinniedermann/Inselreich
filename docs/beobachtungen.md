@@ -53,6 +53,8 @@ Code (Fundstellen unten); Bildbefunde, Messwerte und CI-Zeiten aus Agentenberich
 
 **Umgesetzt in REL-11 UI (2026-10-09, R400):** UI-KAMERA-RAND (konvexe Hülle, `fix/rel11-kamera`), Kontrast `.needs`/`.reasons` (`--tone-*`, Test in `contrast.test.ts`) und `noLoadableReason` gelöscht (`fix/rel11-triv`). `favicon` war schon seit `a7e2192` erledigt (Data-URI in `index.html`); der Eintrag oben war veraltet.
 
+**Playtest REL-11 UI (2026-10-09, `.studio/qa/REL11-UI/`):** Hülle nie schlechter als das Rechteck (Seed 7, SW, Zoom 0,25: 78 gegen 0 Landkacheln im Bild, Abstand 366 gegen 878 px). Ein Rest bleibt: an einzelnen Hüllenecken zeigt das Bild bei Zoom 0,5/1 nur Wasser (Land-Box mit Rand 6 ≠ Land; Seed 7 SW Zoom 1: 1382 px Abstand statt 3472). Von R400 akzeptiert; Korridore oder engere Hülle nur bei Spielerbefund. Weitere Befunde: (a) Im Inspektor-Panel erscheint neben einer `.needs`-Zeile nur mit „✗“ zusätzlich „Fehlt: Nahrung“ (wirkt doppelt, UX niedrig). (b) Resize hält die Seitenposition einer Kachel, zentriert nicht nach (im Rahmeninnern gewollt, am Rand nicht gemessen).
+
 **Kandidaten für REL-11 / Pakete (L0 entscheidet)**
 
 | Paket-ID (Vorschlag)         | Inhalt                                                                                                                                                                | Beleg                                                                                   | Prio    | Owner     |
