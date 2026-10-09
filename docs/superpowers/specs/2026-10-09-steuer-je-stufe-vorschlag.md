@@ -58,6 +58,7 @@ auf dem Ziel, `Stufe bereits aktiv`. Geänderte Stufen werden gesperrt. Neu:
 `setTierTaxLevel(world, tier, level)` mit denselben Gründen plus R4.
 
 R7. **Folgeregeln je Stufe.**
+
 - Fest (I-007, `feast.ts`): Wirkung und Ablehnungsgrund richten sich nach der Steuerstufe des **Hauses**;
   ein Fest wirkt auf Häuser einer Stufe mit «normal» und nicht auf «niedrig» (schon kürzer) oder «hoch».
   Das Fest wird nur abgelehnt, wenn es auf **kein** Haus im Radius wirken kann.
@@ -81,21 +82,21 @@ V1 Verkauf ungesättigt, V2 gesättigt (Boden 30 %), V3 Herstellkosten (Kettenun
 Netto je volles Haus und 10 s (Einwohner × (Steuer/Einw. − g)); je Minute = × 6. Dienste-Unterhalt ist bei
 jeder Steuerstufe gleich und nicht enthalten.
 
-| Stufe     | Steuerstufe       | Einw. | Steuer/Einw. | Steuer/Haus | netto V1 | netto V2 | netto V3 | netto V4 |
-| --------- | ----------------- | ----- | ------------ | ----------- | -------- | -------- | -------- | -------- |
-| Pioniere  | niedrig           | 4     | 1,40         | 5,6         | −0,4     | 3,8      | 1,6      | −10,4    |
-| Pioniere  | normal            | 4     | 2,00         | 8,0         | 2,0      | 6,2      | 4,0      | −8,0     |
-| Pioniere  | hoch              | 3     | 2,60         | 7,8         | 3,3      | 6,5      | 4,8      | −4,2     |
-| Siedler   | niedrig           | 8     | 4,90         | 39,2        | 8,0      | 29,8     | 11,2     | −40,8    |
-| Siedler   | normal            | 8     | 7,00         | 56,0        | 24,8     | 46,6     | 28,0     | −24,0    |
-| Siedler   | hoch              | 6     | 9,10         | 54,6        | 31,2     | 47,6     | 33,6     | −5,4     |
-| Bürger    | niedrig           | 15    | 9,80         | 147,0       | 34,5     | 113,3    | 49,5     | −123,0   |
-| Bürger    | normal            | 15    | 14,00        | 210,0       | 97,5     | 176,2    | 112,5    | −60,0    |
-| Bürger    | hoch              | 11    | 18,20        | 200,2       | 117,7    | 175,4    | 128,7    | 2,2      |
-| Kaufleute | niedrig (gesperrt) | 20   | 15,40        | 308,0       | 94,0     | 243,8    | 116,8    | −232,0   |
-| Kaufleute | normal            | 20    | 22,00        | 440,0       | **226,0** | **375,8** | **248,8** | −100,0 |
-| Kaufleute | hoch heute 130 %  | 15    | 28,60        | 429,0       | 268,5    | 380,9    | 285,6    | 24,0     |
-| Kaufleute | **hoch neu 115 %** | 15   | 25,30        | 379,5       | 219,0    | 331,4    | 236,1    | **−25,5** |
+| Stufe     | Steuerstufe        | Einw. | Steuer/Einw. | Steuer/Haus | netto V1  | netto V2  | netto V3  | netto V4  |
+| --------- | ------------------ | ----- | ------------ | ----------- | --------- | --------- | --------- | --------- |
+| Pioniere  | niedrig            | 4     | 1,40         | 5,6         | −0,4      | 3,8       | 1,6       | −10,4     |
+| Pioniere  | normal             | 4     | 2,00         | 8,0         | 2,0       | 6,2       | 4,0       | −8,0      |
+| Pioniere  | hoch               | 3     | 2,60         | 7,8         | 3,3       | 6,5       | 4,8       | −4,2      |
+| Siedler   | niedrig            | 8     | 4,90         | 39,2        | 8,0       | 29,8      | 11,2      | −40,8     |
+| Siedler   | normal             | 8     | 7,00         | 56,0        | 24,8      | 46,6      | 28,0      | −24,0     |
+| Siedler   | hoch               | 6     | 9,10         | 54,6        | 31,2      | 47,6      | 33,6      | −5,4      |
+| Bürger    | niedrig            | 15    | 9,80         | 147,0       | 34,5      | 113,3     | 49,5      | −123,0    |
+| Bürger    | normal             | 15    | 14,00        | 210,0       | 97,5      | 176,2     | 112,5     | −60,0     |
+| Bürger    | hoch               | 11    | 18,20        | 200,2       | 117,7     | 175,4     | 128,7     | 2,2       |
+| Kaufleute | niedrig (gesperrt) | 20    | 15,40        | 308,0       | 94,0      | 243,8     | 116,8     | −232,0    |
+| Kaufleute | normal             | 20    | 22,00        | 440,0       | **226,0** | **375,8** | **248,8** | −100,0    |
+| Kaufleute | hoch heute 130 %   | 15    | 28,60        | 429,0       | 268,5     | 380,9     | 285,6     | 24,0      |
+| Kaufleute | **hoch neu 115 %** | 15    | 25,30        | 379,5       | 219,0     | 331,4     | 236,1     | **−25,5** |
 
 Kein endloser Überschuss: «hoch» bringt bei Kaufleuten nie mehr Steuer je Haus als «normal» (379,5 < 440),
 nur mehr Steuer je verbrauchter Ware. Kein zwingender Bankrott: «normal» bleibt bei V1–V3 in allen Stufen
@@ -107,12 +108,12 @@ Annahmen: «niedrig»-Nutzen = Zeitvorsprung des Aufstiegs × (netto Folgestufe 
 Kosten = 30 % der Gruppensteuer über die Verweildauer. W\* = Wartezeit, ab der Parken mit «hoch» lohnt.
 Füllzeiten: Pioniere 150, Siedler 200, Bürger 350 Ticks.
 
-| Stufe     | niedrig | normal | hoch |
-| --------- | ------- | ------ | ---- |
-| Pioniere  | richtig, sobald Siedler gewollt und die Wartezeit der Engpass ist: Vorsprung 150 Ticks, Nutzen 34,2, Kosten 1,8 je Haus | richtig, wenn Kapelle oder Stoff der Engpass sind (dann bringt «niedrig» nichts) und sie in < 880 Ticks kommen | richtig, wenn der Aufstieg > 880 Ticks blockiert ist: +1,3 je Haus und 10 s |
-| Siedler   | richtig, wenn Bürger gewollt und die Rum-Kette reicht: Nutzen 72,7, Kosten 23,1; bei Defizit Nutzen 218, Kosten 39,9 | richtig für gedrosselten Aufstieg im Takt der Rum-Kette; oder Schule kommt in < 1140 Ticks | richtig, wenn Rum oder Schule > 1140 Ticks fehlen: +6,4 je Haus und 10 s |
-| Bürger    | richtig nach Versorgungsbruch bei vollem Haus (Nutzen 193, Kosten 94,5) oder bei Glas-/Gewürz-Defizit (321 gegen 161,7); im normalen Schub Verlust (−161,7, Füllzeit 350 ≥ 300) | richtig im Aufstiegsschub und fürs Ziel 50 Bürger (15 statt 11 Köpfe) | richtig nach dem Ziel, wenn die Kaufleute-Kette > 1270 Ticks fehlt: +20,2 je Haus und 10 s |
-| Kaufleute | **nie richtig** (−132 je Haus und 10 s) → gesperrt (R4) | richtig bei reichlich Waren (V1 226 > 219, V2 375,8 > 331,4, V3 248,8 > 236,1) und für die Kopfziele 60 / 80 | richtig bei knappen Waren: Gewürz zugekauft g = 13,5 → 177 > 170; alles zugekauft −25,5 > −100 |
+| Stufe     | niedrig                                                                                                                                                                         | normal                                                                                                         | hoch                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Pioniere  | richtig, sobald Siedler gewollt und die Wartezeit der Engpass ist: Vorsprung 150 Ticks, Nutzen 34,2, Kosten 1,8 je Haus                                                         | richtig, wenn Kapelle oder Stoff der Engpass sind (dann bringt «niedrig» nichts) und sie in < 880 Ticks kommen | richtig, wenn der Aufstieg > 880 Ticks blockiert ist: +1,3 je Haus und 10 s                    |
+| Siedler   | richtig, wenn Bürger gewollt und die Rum-Kette reicht: Nutzen 72,7, Kosten 23,1; bei Defizit Nutzen 218, Kosten 39,9                                                            | richtig für gedrosselten Aufstieg im Takt der Rum-Kette; oder Schule kommt in < 1140 Ticks                     | richtig, wenn Rum oder Schule > 1140 Ticks fehlen: +6,4 je Haus und 10 s                       |
+| Bürger    | richtig nach Versorgungsbruch bei vollem Haus (Nutzen 193, Kosten 94,5) oder bei Glas-/Gewürz-Defizit (321 gegen 161,7); im normalen Schub Verlust (−161,7, Füllzeit 350 ≥ 300) | richtig im Aufstiegsschub und fürs Ziel 50 Bürger (15 statt 11 Köpfe)                                          | richtig nach dem Ziel, wenn die Kaufleute-Kette > 1270 Ticks fehlt: +20,2 je Haus und 10 s     |
+| Kaufleute | **nie richtig** (−132 je Haus und 10 s) → gesperrt (R4)                                                                                                                         | richtig bei reichlich Waren (V1 226 > 219, V2 375,8 > 331,4, V3 248,8 > 236,1) und für die Kopfziele 60 / 80   | richtig bei knappen Waren: Gewürz zugekauft g = 13,5 → 177 > 170; alles zugekauft −25,5 > −100 |
 
 Ergebnis: Keine Steuerstufe ist für eine Gruppe immer richtig; die einzige «nie»-Zelle wird gesperrt.
 Grenzfall Pioniere «niedrig»: In der Aufbauphase fast immer richtig, aber nur, wenn die Wartezeit der
@@ -121,14 +122,14 @@ Entartung, Kosten absolut klein).
 
 **D. Umschalt-Ausbeute** (Zyklus normal → hoch → normal im Takt der Sperre 300/300, je Haus und Zyklus = Minute):
 
-| Stufe                 | V1      | V2      |
-| --------------------- | ------- | ------- |
-| Pioniere              | +4,2    | +1,0    |
-| Siedler               | +22,3   | +5,9    |
-| Bürger                | +81,4   | +18,4   |
-| Kaufleute heute 130 % | +176,7  | +64,3   |
-| Kaufleute Belegung 0,6 (verworfen) | +142,7 | +7,9 |
-| **Kaufleute 115 %**   | **+3,6** | **−108,8** |
+| Stufe                              | V1       | V2         |
+| ---------------------------------- | -------- | ---------- |
+| Pioniere                           | +4,2     | +1,0       |
+| Siedler                            | +22,3    | +5,9       |
+| Bürger                             | +81,4    | +18,4      |
+| Kaufleute heute 130 %              | +176,7   | +64,3      |
+| Kaufleute Belegung 0,6 (verworfen) | +142,7   | +7,9       |
+| **Kaufleute 115 %**                | **+3,6** | **−108,8** |
 
 Für Stufen 1–3 ist Dauer-«hoch» besser als jeder Zyklus; dort entsteht durch Umschalten keine neue
 Strategie. Rechenweg Kaufleute 115 % (V1): Phase hoch 5250 Einwohner-Ticks × 0,253 = 1328,25 (+8,25 gegen
@@ -183,13 +184,13 @@ mit gemischten Steuern, sichtbare Animation. Keine Wertänderung für Stufen 1�
 
 ## 9. Offene Punkte mit Empfehlung (fürs Gate markiert)
 
-| Nr. | Frage | Empfehlung | Entscheider |
-| --- | ----- | ---------- | ----------- |
-| O1 | Entartung über Satz (115 %) oder Belegung (0,6)? | Satz 115 % (R3): löst Dauerzustand und Umschalten, ein Def-Wert | L0 (Ruling Wertänderung) |
-| O2 | Kaufleute «niedrig» sperren oder einheitlich zulassen? | sperren (R4); Kosten: eine Migrationsausnahme | L0 |
-| O3 | Sperre je Regler oder gemeinsam? | je Regler (R5) | L0 |
-| O4 | Kopfzeile: «alle»-Knöpfe behalten oder nur Anzeige + Sprung zur Amtsstube? | behalten (R6): schneller Hebel in Geldnot, API bleibt für Tests | L0 |
-| O5 | Fest-Ablehnung, wenn Häuser im Radius gemischte Steuerstufen haben | nur ablehnen, wenn es auf kein Haus wirkt (R7) | L0 |
+| Nr. | Frage                                                                      | Empfehlung                                                      | Entscheider              |
+| --- | -------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------ |
+| O1  | Entartung über Satz (115 %) oder Belegung (0,6)?                           | Satz 115 % (R3): löst Dauerzustand und Umschalten, ein Def-Wert | L0 (Ruling Wertänderung) |
+| O2  | Kaufleute «niedrig» sperren oder einheitlich zulassen?                     | sperren (R4); Kosten: eine Migrationsausnahme                   | L0                       |
+| O3  | Sperre je Regler oder gemeinsam?                                           | je Regler (R5)                                                  | L0                       |
+| O4  | Kopfzeile: «alle»-Knöpfe behalten oder nur Anzeige + Sprung zur Amtsstube? | behalten (R6): schneller Hebel in Geldnot, API bleibt für Tests | L0                       |
+| O5  | Fest-Ablehnung, wenn Häuser im Radius gemischte Steuerstufen haben         | nur ablehnen, wenn es auf kein Haus wirkt (R7)                  | L0                       |
 
 Kein Nutzer-Vorbehalt (§5.3): kein Richtungswechsel, Säule und Genre unverändert.
 
