@@ -3655,3 +3655,16 @@ meldete 2 weitere Tests ohne Reserve bei unbekannter Last — Abnahme am Push-Ga
 bei Load ≤ 4 Tests, folgt ein Trivial-Fix vor dem Push. Merge lokal durch den Integrator.
 
 Entscheider: L0 · Anlass: Bericht FIX-ZEITRESERVE-REL10 · ADR: —
+
+## R392 · 2026-10-09 · Retro-Nachtrag Teil 2: V6–V8 angenommen
+
+Ruling: Nachtrag in `docs/studio/retros/2026-10-08-session-29c3791b-ende.md` angenommen. (V6, E-052) Briefing-Vorlage:
+`src/`-Pakete messen vor Task 1 die Zeiten der berührten bestehenden Tests auf main (`vitest related`), die Abnahme
+vergleicht dieselben Dateien main/Branch direkt nacheinander; „Prüfschritte nicht zur Budgetersparnis streichen,
+Mehrbedarf melden“ — sofort durch den studio-coach, Handbuch 1.32. (V7, E-053) `zeitreserve` wertet nur die Last vor
+dem Lauf (≤ 4, Sperre gehalten); Vorbedingung: lead-tech belegt, aus welchen Läufen die Faktoren von E-043 stammen.
+(V8) `make check` bricht bei Konfliktmarkern ab. V7 + V8 als Paket **TOOL-GATES-2** (lead-tech, ≈ 25 Tools) **zu
+Beginn der nächsten Session vor dem Push-Gate** von REL-10. Steuerungsanteil 56,5 % (rot): Hebel E-038 ab 2026-10-22
+bleibt (R375).
+
+Entscheider: L0 · Anlass: Retro-Nachtrag · ADR: —
