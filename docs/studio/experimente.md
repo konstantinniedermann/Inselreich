@@ -81,6 +81,7 @@ E-050, E-049, E-044.
 - Bewertung: –
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): V1 ≈ 1,0 Neuschreibungen nach Turn-Ende je Lead-Instanz (13 in 13, nicht erreicht); V2 0,38 Status-Turns je Instanz (erreicht); Review-Runden 1,00.
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, ersetzt den Datenpunkt oben, Session zählt einmal): V1 18 in 22 Lead-Instanzen = 0,82 (nicht erreicht; Teil 2 allein ≈ 0,56, abgeleitet); V2 14 in 22 = 0,64 (erreicht); Review-Runden 1,00.
+- Datenpunkt S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): V1 5 Neuschreibungen > 20k in 11 Lead-Instanzen = 0,45 (obere Schranke, erreicht); V2 nicht erhoben (Messauftrag nächste Session); Review-Runden 1,29. Zweite von drei Sessions.
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -328,6 +329,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): 27,2 %; nur 7 von 27 Neuschreibungen > 20k nach Bash, 20 nach Turn-Ende (≈ 80 % Gewicht) — der mögliche Effekt von E-037 ist gedeckelt.
 - Hinweis: Der frühere kombinierte E-037 (Hebel 1 und 5) war doppelt eingetragen; Hebel 5 steht unverändert als E-038.
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): 24,3 %; 35 Neuschreibungen > 20k, 90 % des Gewichts nach Turn-Ende, davon eine L0-Neuschreibung nach 620 min Pause mit 25 % des Gewichts.
+- Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): 24,1 % (Schwelle ≤ 20 % nicht erreicht).
 
 ## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
 
@@ -407,6 +409,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R344, R349
 - Datenpunkt 1 von 3, S-2026-10-08-29c3791b: Monat 918, Konto 1182, Session 0 mit Wert; kein Verbrauch erst durch den Nutzer entdeckt.
 - Datenpunkt 1 ergänzt (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): Session-Minuten 8 (REL-09-Push), Monat 926, Konto 1192.
+- Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): Monat 934, Konto 1201, Session 8; kein Verbrauch erst durch den Nutzer entdeckt.
 
 ## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 

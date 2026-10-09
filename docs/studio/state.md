@@ -4,22 +4,27 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-09 (Session 29c3791b / Entwurf lead-production: REL-10 in main, Push in der nächsten Session)
+Stand: 2026-10-09 (Session e90e097e, Ende: REL-10 live, REL-11 bereit, UI-SEEKARTE in main)
 
 ## Release-Notizen
 
-**REL-10 „Kiefernküste, ruhige Kamera, freie Fahrrinnen" (bereit, Push in der nächsten Session; R389–R391)** —
-ART-L8-SELTEN + UI-KAMERA-KLEMMUNG + SEE-F1-KORRIDOR (+ Werkzeug TOOL-TESTLOCK). Lokal in main (80 Commits vor
-`origin/main`), nicht gepusht: der Push dieser Session ist verbraucht (R335). Save v9, Sim-Regeln unverändert.
+**REL-12 „Seekarte“ (UI-SEEKARTE in main, Release-Check offen; R405, R406, R408, R409)** — Karte der Inseln mit
+Silhouetten, Fahrlinien und Schiffspunkten; Klick springt zur Insel. Lokal in main (Teil des nächsten Pushes), Browser-
+Check AK-B1–B5 OK (erstes Rastern 0,3–0,4 ms), Playtest T6 ohne Blocker. Kein Sim-Zustand, nicht im Save.
 
-- **Neu:** Strandkiefern an der Kiefernküste, weniger Lichtungen, Bodendeko wechselt neben Neubau nicht mehr die Art;
-  Kamera springt bei Fenstergrösse und Bauleiste nicht, Kamerarahmen enger um das Land, Inselsprung zentriert über der
-  Bauleiste; Wracks, Felsen und Eilande liegen nicht mehr auf Schiffsrouten.
-- **Bitte testen:** (1) Neues Spiel mit Kiefernküste: Strandkiefern sichtbar, Wald mit weniger Lichtungen? (2) Neben
-  Neubau wechselt die Bodendeko nicht die Art? (3) Fenster auf 1280×720 ändern, Bauleiste öffnen: Karte springt nicht?
-  (4) Scrollen an die Ränder: Land bleibt sichtbar (Rahmenecken bei verstreuten Inseln zeigen noch Wasser, REL-11)?
-  (5) Inselsprung `9`/`0`: Insel mittig über der Bauleiste? (6) Schiffsroute anlegen: Wracks, Felsen, Eilande
-  nicht auf der Fahrlinie?
+**REL-11 „Ruhiger Rand, lesbarer Seeweg, Meeresfels“ (bereit, Gate OK R407, Push offen)** — Kamerarand, Schiffssaum,
+Meeresfels, Seeplan-Keepout, Kontrast. Lokal in main (61 Commits vor `origin/main`). Save v9, Sim-Regeln unverändert.
+
+- **Neu:** Kamera bleibt über Land (konvexe Hülle um die Inseln, Zoom 0,25 an allen Ecken Land, Inselsprung mittig);
+  Schiffe mit hellem Saum auf allen Wasserstufen; Meeresfels wirkt nicht mehr wie ein Boot; Seeplan-Neubau schneller;
+  Kontrast in Bedarfs- und Gründe-Listen.
+- **Bitte testen:** (1) Scrollen an die Ränder bei Zoom 0,25: Land bleibt sichtbar? (2) Schiff auf Tief-, Mittel-,
+  Flachwasser gut zu sehen? (3) Meeresfels: eher Fels als Boot? (4) Fenster auf 1280×720 ändern: Karte springt nicht?
+  (5) Seekarte öffnen: Inseln, Fahrlinien, Schiffspunkte; Klick springt zur Insel? (6) Hüllenecken bei Zoom 1 zeigen
+  teils nur Wasser (bekannt, R401).
+
+**REL-10 „Kiefernküste, ruhige Kamera, freie Fahrrinnen“ (live, R398)** — Strandkiefern, Kamera-Klemmung,
+Fahrrinnen frei von Wracks, Felsen und Eilanden. Save v9.
 
 **REL-09 „Sichere Seewege, klarere Küsten, ruhigere Bauleiste" (live, R374)** — Schiffe fahren um Inseln, Küsten ohne
 Rautenmuster, Bauleiste als Overlay, Klick aufs Kontor zeigt Schiffe. Save v9.
@@ -42,23 +47,24 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 Keine Nutzer-Aufträge offen.
 
-0. **TOOL-GATES-2** (R392, lead-tech, ≈ 25 Tools) vor dem Push: `zeitreserve` wertet nur die Last vor dem Lauf
-   (Vorbedingung: Herkunft der E-043-Faktoren belegen), `make check` bricht bei Konfliktmarkern ab.
-1. **Session-End-Push REL-10** gleich danach (neue Session, ein Push, R335): Push-Gate `make test` +
-   `make zeitreserve-push` bei Load ≤ 3. Bekannte Kandidaten ohne Reserve: `tests/render/decorSea.test.ts` „L5-T1 Zoom ≤ 0,25
-   … Seeds 1–50" (3978 ms / 25 s) und `tests/render/decorStamps.test.ts` „L4-T3 R5 Solitär … Seeds 1–50" (5266 ms / 40 s);
-   melden sie bei Load ≤ 4, Trivial-Fix vor dem Push (R391). Danach CI, `gh workflow run Pages --ref main`, `ci.py`.
-2. **REL-11-Kandidaten:** ART-MEERESFELS (Blindprobe, R390), UI-KAMERA-RAND (R390), SEE-F3-SCHIFFSKONTRAST,
-   Beobachtung Seeplan-Neubau 9 ms.
-3. **Retro-Vorschläge** der Session-Retro (inkl. Nachtrag) per Ruling entscheiden:
-   `docs/studio/retros/2026-10-08-session-29c3791b-ende.md`.
-4. **Experimente** in der Reihenfolge E-038 (ab 2026-10-22), E-048, E-050, E-049, E-044.
-5. **Beobachtungen:** BEOB-AUSW fällig (`docs/beobachtungen.md`).
+0. **Push-Gate nach Handbuch 1.33** für main mit REL-11 und UI-SEEKARTE (R335: ein Push). Variante A: REL-11 allein,
+   UI-SEEKARTE „vorab in main“; Variante B: Release-Check REL-12 vor dem Push. Empfehlung: Der Release-Check
+   UI-SEEKARTE ist mit T6 erledigt, also beide zusammen als REL-11 + REL-12 pushen. L0 entscheidet in der nächsten
+   Session. Ablauf: `tsc` und `lint`, `make test`, warten bis Last ≤ 4, `make zeitreserve-push`, `make check`,
+   `make check-ci-perf`; danach CI, `gh workflow run Pages --ref main`, `ci.py`.
+1. **Retro-Vorschläge entscheiden:** V1 schnelle Make-Prüfungen in DoD und Vorlauf, V2 Rot-Beleg, V3 E-049 starten
+   (`docs/studio/retros/2026-10-09-session-e90e097e-ende.md`). Umsetzung durch den studio-coach nach Ruling.
+2. **Kandidaten aus `docs/beobachtungen.md`:** Inspektor „Versorgt ✓“ plus „Mangel“, Fels-Mindestgrösse bei Zoom 0,25
+   (`FAR_MIN_CSS_PX`), TOOL-RENDERQA-NACHZUG-Rest.
+3. **Wirtschafts-Brainstorming I-028** (Steuer je Stufe, R405; lead-design mit design-economy-designer).
+4. **Experimente:** E-038 ab 2026-10-22, E-048 wartet auf Platz. Laufend: E-037, E-042, E-046.
+5. **Aufräumen** (Ruling nötig, sofern der Guard es erlaubt): Scratch-Worktree unter dem Scratchpad, erledigte
+   Worktrees und Branches.
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-09 (REL-10 in main, Push offen), M1–M8, M10, M11,
-  M9-Häppchen, M12. Verfassung **1.2**, Handbuch **1.32**.
+- Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-10, M1–M8, M10, M11, M9-Häppchen, M12; REL-11 und
+  REL-12 in main, Push offen. Verfassung **1.2**, Handbuch **1.33**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit ≤ 5 Arbeiter
   (R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats prüfen (R329); Messungen nur bei 1-min-Load
   ≤ 4 (R329).
@@ -68,7 +74,7 @@ Keine Nutzer-Aufträge offen.
 - **GitHub Actions mit Sparregeln (R334):** `CI` ignoriert Doku-Pushes, `Pages` nur per
   `gh workflow run Pages --ref main` beim Release, `CI` mit `cancel-in-progress`.
 - **Höchstens ein Push pro Session (R335)**, am Session-Ende durch den Integrator. **Push-Gate mit Messdatei (R362,
-  ersetzt R348):** `make test` bei Load ≤ 3, `make zeitreserve-push` (Commit = HEAD, Load ≤ 4), `make check`,
+  ersetzt R348):** `tsc` und `lint`, `make test` bei Load ≤ 3, danach warten bis Last ≤ 4 (R396), `make zeitreserve-push` (Commit = HEAD, `loadStart` ≤ 4, R394), `make check`,
   `make check-ci-perf` (statt `CI=true make check`). Merges nach Gate bleiben lokal.
 - **Release-Check mit Smoke-Skript (R368)** vor dem Browser-Lauf. **Konflikt-Probe** `git merge-tree` vor jedem
   Integrator-Start (Handbuch 1.30).
@@ -79,27 +85,29 @@ Keine.
 
 ## Seit letzter Session erledigt
 
-- REL-10 komplett in main und freigegeben (R390): ART-L8-SELTEN (R381), UI-KAMERA-KLEMMUNG (R382), SEE-F1-KORRIDOR
-  (R383–R388), TOOL-TESTLOCK (R380), FIX-TESTLOCK-RACE (R387), FIX-ZEITRESERVE-REL10 (R391). Release-Check REL-10 mit
-  Blindprobe Meeresfels: Fels wirkt als Boot (R390).
-- Davor: REL-09 live (R374), M12 abgeschlossen (R352), Retro M12 (R356), Prozess-Retro REL-08 (R353).
+- REL-10 live (R398): Push `7812eb0..5d14854` nach vier Anläufen (R394, R396, R397); TOOL-GATES-2 und 2b (R393–R395),
+  FIX-TIMEOUT-REL10, FIX-CONFLICTS-TSC. Handbuch 1.33 (DoD-Zeile `tsc`, Integrator-Vorlauf).
+- REL-11 komplett in main, Release-Check OK (R407): UI-Strang (R401), Render-Strang (R402, R403), Ideen-Runde IDEEN-04
+  (R405).
+- UI-SEEKARTE in main (R408, R409). Retro-Datei: `docs/studio/retros/2026-10-09-session-e90e097e-ende.md`.
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: nur Hauptcheckout und `.worktrees/integrate` (detached @ 246b491).
+- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached), erledigt und löschbar: `art-meeresfels`,
+  `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `ui-seekarte`, dazu ein
+  Scratch-Worktree unter dem Scratchpad (Detached HEAD auf main). Aufräumen nur per Ruling.
 - Branch `int/rel-07` (lokal; Guard sperrt `-D`, erledigt sich mit Löschen von `origin/int/rel-07` per Ruling),
   nicht gemergte Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`), Remote `wip/r118a-render-aufraeumen` und
   `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 
-Kein freigegebenes Budget offen. Überzüge dieser Session gehen an die Session-Retro: ART-L8-SELTEN ≈ 240 gegen 170
-(R381), SEE-F1-KORRIDOR bis 220 freigegeben (R388), TOOL-TESTLOCK ≈ 56 von 55 (R380). Neue Pakete brauchen eigene
-Freigabe.
+Kein freigegebenes Budget offen: alle Freigaben dieser Session sind verbraucht oder abgeschlossen (REL-11 Render
+12 Starts, REL-11 UI 12 Starts, UI-SEEKARTE 10 Starts, IDEEN-04 1 von 2 Starts). Neue Pakete brauchen eigene Freigabe.
 
 ## Offene Entscheide
 
 - Nutzer: keine; Warteschlange leer.
-- L0: Retro-Vorschläge der Session-Retro; Planung ART-MEERESFELS, UI-KAMERA-RAND, SEE-F3-SCHIFFSKONTRAST (REL-11);
-  Ruling zum Löschen von `origin/int/rel-07` und Alt-Branches.
-- Info: Actions-Minuten-Hochrechnung des Kontos steht in den Retros (R356); E-044 wartet auf freien Experiment-Platz.
+- L0: Push-Variante (Fortsetzung 0); Retro-Vorschläge V1–V3; Kandidaten REL-13 (Fortsetzung 2, 3); Ruling zum
+  Aufräumen von Worktrees, `origin/int/rel-07` und Alt-Branches.
+- Info: Actions-Minuten Monat 934, Konto 1201 von 2000 (Retro e90e097e); E-044 wartet auf freien Experiment-Platz.
