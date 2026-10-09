@@ -4113,3 +4113,19 @@ Trivial-Fix `.vitest/` in `.gitignore` auf main ist (dann ist der Baum sauber); 
 geht als Befund an die Release-Retro REL-13.
 
 Entscheider: L0 · Anlass: Bericht production-integrator CLEANUP-WT-2 · ADR: —
+
+## R427 · 2026-10-09 · Kombiniertes Gate REL-14: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Urteil `lead-qa` BEDENKEN B1–B5, nichts blockierend; Nacharbeit durch den Controller im Plan vor T01, ohne
+Zweitprüfung: A8/A2 auf Haus-Panel und Hover/Hinweis eines **Wohnhauses** eingrenzen („versorgt N Häuser“ bei
+Dienstgebäuden bleibt), A2 ergänzt `hints.ts` ohne `'versorgt'`; je Doku-AK ein benannter grep mit erwartetem Treffer im
+T03-Reviewer-Briefing; Auswahlwechsel als eigenes AK; B5 gilt durch B2 als abgedeckt. L0-Prüfung: Ownership eindeutig,
+Stränge disjunkt, Budget nach Formel, Stufe leicht bleibt (2 Häppchen + Trivial-Fixes, kein Save, keine Architektur).
+**Entscheide:** E1 „Kapelle fehlt“ überall (Hover über `diagnosisText`); E2 ja (Hinweis „zufrieden“, Voraussetzung für A8);
+E3 ja (zwei Worktrees); E4 ja; E5 ja. **AK-Nummern:** A1–A9 → AK-R14-01…09, Auswahlwechsel → AK-R14-10, B1–B4 →
+AK-R14-11…14, C1–C6 → AK-R14-15…20. **Merge-Reihenfolge:** REL-14 vor dem Werkzeug-Bündel; das Werkzeug-Bündel merged
+vor seinem Gate Merge `main` in seine Branch (kein Rebase) und löst Anhänge an `docs/beobachtungen.md`/`.gitignore` dort.
+**Budget:** `lead-tech` 10 Arbeiter-Starts (geplant 5), Controller `sonnet`; das `opus`-Review läuft über den
+Release-Kandidaten (eigene Freigabe).
+
+Entscheider: L0 · Anlass: Kombiniertes Gate REL-14 · ADR: —
