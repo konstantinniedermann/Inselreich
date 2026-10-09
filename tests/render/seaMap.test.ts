@@ -100,6 +100,26 @@ describe('hitIsland (AK-S3)', () => {
     expect(hitIsland(w, l, 0, 0)).toBeNull();
     expect(hitIsland(w, l, W - 1, H - 1)).toBeNull();
   });
+  it('liefert null für eine Wasserkachel innerhalb eines Inselrechtecks, Seeds 1-10', () => {
+    let found = 0;
+    for (const seed of SEEDS) {
+      const w = createWorld(seed);
+      const l = mapLayout(w, W, H, PAD);
+      w.islands.forEach((s, i) => {
+        const k = s.tiles.findIndex((t) => t.terrain === 'water');
+        if (k < 0) return;
+        const x = k % s.width,
+          y = Math.floor(k / s.width);
+        const m = tileToMap(l, s.ox + x + 0.5, s.oy + y + 0.5);
+        // nur prüfen, wenn keine andere Insel dort Land hat
+        const other = hitIsland(w, l, m.x, m.y);
+        if (other !== null && other !== i) return;
+        found++;
+        expect(hitIsland(w, l, m.x, m.y)).toBeNull();
+      });
+    }
+    expect(found).toBeGreaterThan(0);
+  });
   it('bei überlappenden Rechtecken gewinnt die Insel mit Land unter dem Punkt', () => {
     const w = createWorld(2);
     const a = w.islands[0]!,
