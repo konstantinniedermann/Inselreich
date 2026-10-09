@@ -3755,3 +3755,16 @@ nur bei Load ≤ 4. Pins: Nahzoom bitgleich, sonst je Pin ein Ruling. Studioweit
 erhält höchstens 2 parallele Arbeiter.
 
 Entscheider: L0 · Anlass: Plan REL-11 Render · ADR: —
+
+## R400 · 2026-10-09 · Gate Spec/Plan REL-11 UI-Strang OK
+
+Ruling: **OK** für `docs/superpowers/plans/2026-10-09-rel11-ui.md` (`02b28a2`). UI-KAMERA-RAND als konvexe Hülle der
+Land-Boxen plus Rand 6 (optionales Feld `hull` in `TileRect`, `clampToRect` ohne Signaturänderung) — stetig, Reisen
+zwischen Inseln bleibt möglich; Rauten-Rahmen und Klemmung an Landflächen verworfen. Wasser entlang der Hüllenkanten
+bei wenigen Inseln ist akzeptiert; Variante mit Korridoren nur bei Spielerbefund. Trivial-Fixes: Kontrast
+`.needs`/`.reasons` mit Test, `noLoadableReason` löschen; **favicon entfällt** (seit `a7e2192` erledigt, Browser-Check
+prüft nur, dass kein `/favicon.ico` angefragt wird). Budget 12 Starts, Parallelität 2, Richtwert ≈ 100 Tools; zwei
+Worktrees. `cameraBounds`-Tests (AK-E1-12) dürfen am neuen Feld nicht brechen. Konflikte in `docs/arc42.md`/
+`docs/beobachtungen.md` mit dem Render-Strang löst der Integrator seriell nach Konflikt-Probe.
+
+Entscheider: L0 · Anlass: Plan REL-11 UI · ADR: —
