@@ -82,6 +82,7 @@ E-050, E-049, E-044.
 - Datenpunkt S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md)): V1 ≈ 1,0 Neuschreibungen nach Turn-Ende je Lead-Instanz (13 in 13, nicht erreicht); V2 0,38 Status-Turns je Instanz (erreicht); Review-Runden 1,00.
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2, ersetzt den Datenpunkt oben, Session zählt einmal): V1 18 in 22 Lead-Instanzen = 0,82 (nicht erreicht; Teil 2 allein ≈ 0,56, abgeleitet); V2 14 in 22 = 0,64 (erreicht); Review-Runden 1,00.
 - Datenpunkt S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): V1 5 Neuschreibungen > 20k in 11 Lead-Instanzen = 0,45 (obere Schranke, erreicht); V2 nicht erhoben (Messauftrag nächste Session); Review-Runden 1,29. Zweite von drei Sessions.
+- Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): V1 9 in 12 = 0,75; V2 23 in 12 = 1,92 (Briefing-Vorlage führt „Start“/„Fertig“ ohne Ausnahme für Leads, B5); Review-Runden 1,40. Gepoolt V1 0,71 (Schwelle ≤ 0,6 verfehlt), V2 1,09 (≤ 1 verfehlt). Empfehlung Coach: **angepasst** (Handoff und „kein `active`/`done`“ bleiben, Vorlagenzeile „(nicht Leads)“, V2-Messung endet); Urteil per Ruling offen.
 
 ## E-018 · vorgeschlagen · Blindtest-Prüflinge erst nach dem Urteil
 
@@ -330,6 +331,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Hinweis: Der frühere kombinierte E-037 (Hebel 1 und 5) war doppelt eingetragen; Hebel 5 steht unverändert als E-038.
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): 24,3 %; 35 Neuschreibungen > 20k, 90 % des Gewichts nach Turn-Ende, davon eine L0-Neuschreibung nach 620 min Pause mit 25 % des Gewichts.
 - Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): 24,1 % (Schwelle ≤ 20 % nicht erreicht).
+- Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): 31,7 %; Mittel 26,7 % (Schwelle ≤ 20 % verfehlt); Neuschreibungen nach Bash 31 % des Gewichts, davon der Grossteil unter Fremdlast (verwaister Vitest-Worker). Empfehlung Coach: **angepasst** (Regel bleibt als Hygiene, kein Cache-Write-Hebel; Platz an E-050); Urteil per Ruling offen.
 
 ## E-038 · vorgeschlagen (angenommen R314, wartet, Start frühestens 2026-10-22) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
 
@@ -340,6 +342,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md`, `.claude/agents/lead-*.md`
 - Ruling: R314
 - Start: erst nach Bewertung von E-037 (getrennte Wirkung); frühestens 2026-10-22 (E-027-Stichtag), spätestens beim nächsten freien Platz. Die Regel 1.25 „Ein-Umsetzer-Pakete“ gilt bereits; die Messung beginnt erst mit dem Start. Reihenfolge der Plätze: E-037, E-042, danach E-038 (R319).
+- Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V1): Die Modelltabelle sieht sonnet für Controller, lead-qa-Gate-Urteile, lead-production und Kurz-Retro schon vor; in fb37ceac liefen 10 von 13 Lead-/Coach-Starts trotzdem auf opus. Mechanik neu: (a) `metriken/richtwerte.md` Spalte „Modell“ → „gemessen auf“; (b) Werkzeug TOOL-MODELL-GUARD prüft typisierte Persona-Starts gegen das Frontmatter (opus nur mit Tabellen-Ausnahme in der Kopfzeile `Modell:`), Ampelzeile zählt sie mit. Messgrösse zusätzlich: Starts über der Tabelle ≤ 1 je Session (Ausgang 10). Der Stichtag 2026-10-22 entfällt (E-027 abgeschlossen, R350). Status bis zum Ruling unverändert.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
@@ -410,6 +413,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Datenpunkt 1 von 3, S-2026-10-08-29c3791b: Monat 918, Konto 1182, Session 0 mit Wert; kein Verbrauch erst durch den Nutzer entdeckt.
 - Datenpunkt 1 ergänzt (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): Session-Minuten 8 (REL-09-Push), Monat 926, Konto 1192.
 - Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): Monat 934, Konto 1201, Session 8; kein Verbrauch erst durch den Nutzer entdeckt.
+- Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): Monat 942, Konto 1210, Session 8 (Wert in `metrics.py --efficiency`, Abschnitt „Actions-Minuten“, nicht in der Session-Datei); kein Verbrauch erst durch den Nutzer entdeckt. Empfehlung Coach: **behalten**; Urteil per Ruling offen.
 
 ## E-047 · übernommen als Werkzeug (R350) · `log.py queue` formatiert selbst
 
@@ -440,6 +444,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Zeile in `tools/studio/efficiency.py` entfernen (`git revert`).
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/tests/`, `docs/studio/verbesserung.md` (Schwellen; nur nach Ruling)
 - Ruling: R410 (V3): startet, sobald E-046 bewertet ist (spätestens 2026-11-12; Hebel nach R316)
+- Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V2): Der Namensfilter trifft in fb37ceac keine Instanz (alle Lead-Pakete heissen `I-028`, `REL-…`, `BEOB-…`). Herausgerechnet werden stattdessen Lead-Instanzen mit „Budget: keins“ in der Briefing-Kopfzeile (`prompt_head` im `spawn`-Event): 7 von 12, bereinigt ≈ 39–45 % gegen roh 58,8 %. Gegenprobe neu: roh = bereinigt + herausgerechnete Lead-Instanzen. Status bis zum Ruling unverändert.
 
 ## E-050 · vorgeschlagen · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
