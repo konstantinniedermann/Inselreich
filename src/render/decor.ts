@@ -979,7 +979,8 @@ const seaContexts = new WeakMap<World, { sig: string; ctx: SeaContext }>();
 /**
  * Seekontext der Heimat (rein lesend): `seaLanes` mit Heimat-Index in Heimat-Kacheln (minus `ox`/`oy`), Anker, Kontore. Je
  * Welt einmal gehalten (WeakMap, fällt mit der Welt weg); neu gebildet nur, wenn sich die Kontorliste ändert (Inseln sind ab
- * Weltbau fest).
+ * Weltbau fest). `routes` sind Kopien von `seaRoute(a, b)` für alle Paare a < b (wie `routeFar`, `fauna.ts`) in Heimat-Kacheln,
+ * nur für `seaPlanKeepOut`; Lanes und damit die Tönung kennen sie nicht (R367).
  */
 export function seaContext(world: World): SeaContext {
   const hi = Math.max(

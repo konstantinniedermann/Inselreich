@@ -1175,7 +1175,7 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // Tiefenband-Zelle ohne Krone (Kachel 25/54) nur für zwei Farnbüschel als Wald-Objekt dazukommt (tree332).
   // SEE-F1-KORRIDOR K4 (R367/R369/R377): neu gesetzt (alt 802371235, gleiche Länge 19050). Wrack, Felseiland und Felsen der Heimat
   // meiden jetzt die Schiffsrouten (`seaContext.routes`, `seaPlanKeepOut`) statt nur der Geraden; ihre Meer-Stempel stehen
-  // anderswo, daher ändern sich `at` und Stempel-Pose im Hash. Flächen (Sandbank, Riff, Tang) und Tönung sind bitgleich
+  // anderswo, daher ändert sich der Ereignisindex `at` im Hash. Flächen (Sandbank, Riff, Tang) und Tönung sind bitgleich
   // (Pin AK-K1b in seaKorridor.test.ts); HOME_ORDER (Art und Id ohne `at`) bleibt.
   const HOME_CALLS = { hash: 2887272513, length: 19050 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
@@ -1233,7 +1233,10 @@ describe('M12 E1 Renderer', () => {
     h.decorShadows.length = 0;
     const f = fakeCtx();
     render(f.ctx, world, cam, layers, null, null, V, { timeMs: 5000, dayNight: true, ...fx });
-    return { calls: h.calls.slice(), log: f.log };
+    const seaStamps = h.decorCalls.filter((c) =>
+      ['wreck', 'islet', 'seaRock'].includes(c.stamp),
+    ).length;
+    return { calls: h.calls.slice(), log: f.log, seaStamps };
   };
   const homeOnly = (w: World): World => ({ ...w, islands: [w.islands[0]!] });
 
@@ -1248,10 +1251,12 @@ describe('M12 E1 Renderer', () => {
     const b = run(homeOnly(world), cam);
     // SEE-F1-KORRIDOR (R367/R369/R377): Wrack, Eiland und Felsen meiden jetzt die Schiffsrouten (`seaContext.routes`), also hängt
     // ihre Lage von den Fremdinseln ab; ohne Fremdinseln steht ein Meer-Stempel anderswo und verschiebt nur den Ereignisindex
-    // `at` (und die Ereigniszahl). Körper, Luft, Bäume, Schiff und Figuren bleiben gleich und werden ohne `at` verglichen.
+    // `at` (und die Zahl der Meer-Stempel-Ereignisse, sie wird herausgerechnet). Körper, Luft, Bäume, Schiff und Figuren bleiben gleich und werden ohne `at` verglichen.
     const noAt = (l: typeof a.calls): unknown[] =>
       l.map((c) => ({ kind: c.kind, id: c.id, pose: c.pose }));
     expect(noAt(a.calls)).toEqual(noAt(b.calls));
+    // Ereigniszahl ohne die Meer-Stempel-Ereignisse gleich
+    expect(a.log.events.length - a.seaStamps).toBe(b.log.events.length - b.seaStamps);
     expect(renderStats.islandsDrawn).toBe(1);
   });
 

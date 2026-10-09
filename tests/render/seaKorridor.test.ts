@@ -235,7 +235,7 @@ describe('SEE-F1-KORRIDOR K3 seaPlan Zwei-Durchgang', () => {
     expect(n).toBeGreaterThan(200);
   });
 
-  it('AK-K3 Flaechen sind unabhaengig von den Routen (seaPlan mit routes=[] gleich) und seaTintFor bleibt gleich', () => {
+  it('AK-K3 Flaechen (Sandbank, Riff, Tang) von seaPlan sind unabhaengig von den Routen (routes=[] gleich)', () => {
     for (let seed = 1; seed <= 10; seed++) {
       const w = createWorld(seed);
       const ctx = seaContext(w);
@@ -255,6 +255,18 @@ describe('SEE-F1-KORRIDOR K3 seaPlan Zwei-Durchgang', () => {
       if (!r.ok) throw new Error(r.reason);
       const plan2 = seaPlan(seed, home(r.world), seaContext(r.world));
       expect(JSON.stringify(plan2)).toBe(JSON.stringify(plan));
+    }
+  });
+
+  it('AK-K3 kalter Cache: frische Insel und frischer Kontext geben denselben Plan wie der gehaltene (voll)', () => {
+    for (const seed of [2, 9, 33]) {
+      const w = worldOf(seed);
+      const ctx = seaContext(w);
+      const voll = seaPlan(seed, home(w), ctx);
+      expect(seaPlan(seed, home(w), ctx)).toBe(voll); // gehalten
+      const frisch = createWorld(seed);
+      const ctx2 = { ...ctx, routes: ctx.routes.map((r) => r.map((q) => ({ ...q }))) }; // neues Objekt: leerer ctxKey-Cache
+      expect(JSON.stringify(seaPlan(seed, home(frisch), ctx2))).toBe(JSON.stringify(voll));
     }
   });
 });
