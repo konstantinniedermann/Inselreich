@@ -1,12 +1,15 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help install dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run
+.PHONY: help install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 install: ## Dev-Abhängigkeiten installieren (npm ci)
 	npm ci
+
+hooks: ## Git-Hooks aktivieren (core.hooksPath=tools/githooks: Prettier-Check beim Commit, R417)
+	git config core.hooksPath tools/githooks
 
 dev: ## Vite-Dev-Server starten
 	npm run dev
