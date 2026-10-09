@@ -3454,3 +3454,13 @@ Session rot): E-038 bekommt den ersten freien Platz ab 2026-10-22; Reihenfolge d
 E-050, E-049, E-044.
 
 Entscheider: L0 · Anlass: Session-Retro · ADR: —
+
+## R376 · 2026-10-09 · Fortsetzung nach REL-09: drei Stränge, alles lokal bis zum nächsten Session-Push
+
+Ruling: Der Push dieser Session ist erfolgt (R335: höchstens einer); weitere Merges bleiben lokal und gehen mit dem
+nächsten Session-End-Push live. Parallel, getrennte Dateien: (1) **ART-L8-SELTEN** fortsetzen über Handoff (frische
+lead-art-Instanz, Restbudget aus dem Handoff, Mehrbedarf vorab); (2) **TOOL-TESTLOCK** (E-051, R375; lead-tech, 40
+Tools, `Makefile`, `tools/`); (3) Pläne **SEE-F1-KORRIDOR** und **UI-KAMERA-KLEMMUNG** (lead-tech, je 20 Tools, Stufe
+leicht, Fehlerbehebung ohne Kurzdesign). Gate je Plan durch lead-qa gebündelt.
+
+Entscheider: L0 · Anlass: Nutzer „mach weiter“ · ADR: —
