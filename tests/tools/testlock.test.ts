@@ -101,7 +101,7 @@ describe('testlock', () => {
 
 describe('testlock (R378)', () => {
   it('zwei parallele Läufe auf toter Sperre: genau einer gewinnt', async () => {
-    // R389: die 4 Runden laufen gleichzeitig (je eigene Sperre); die 800-ms-Haltezeit je Runde
+    // R389: die 4 Runden laufen gleichzeitig (je eigene Sperre); die 1500-ms-Haltezeit (Startversatz der 12 Prozesse unter Last) je Runde
     // bleibt, sie sichert die Überlappung der 3 Läufe (R387). Wandzeit ≈ 1 Runde statt 4.
     const round = () =>
       new Promise<{ ran: number; lockLeft: boolean }>((resolve, reject) => {
@@ -111,7 +111,7 @@ describe('testlock (R378)', () => {
           'sh',
           [
             '-c',
-            `for i in 1 2 3; do node "${script}" node -e 'console.log("RAN");setTimeout(()=>{},800)' & done; wait`,
+            `for i in 1 2 3; do node "${script}" node -e 'console.log("RAN");setTimeout(()=>{},1500)' & done; wait`,
           ],
           {
             env: {
