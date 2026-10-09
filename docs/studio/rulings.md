@@ -3864,3 +3864,13 @@ Integrator mit `make check`. R402-Beobachtung: Commit-Reihenfolge stimmt; Praxis
 roten Lauf entfernt“ bei T1/T2 an die Session-Retro (zweiter Fall → R395 V2 bewerten). Gründungsfahrt bleibt im Pool.
 
 Entscheider: L0 · Anlass: Bericht UI-SEEKARTE · ADR: —
+
+## R409 · 2026-10-09 · UI-SEEKARTE Trivial-Fix ZEITTESTS; R408 gilt für 1a38555
+
+Ruling: Merge-Lauf brach in `make zeittests` ab: `tests/render/seaMap.test.ts` (Wanduhr-Grenze) fehlte in
+`ZEITTESTS` (`vite.config.ts`). Trivial-Fix `1a38555` (ein Eintrag) angenommen; R408 gilt für `feat/ui-seekarte` @
+`1a38555` (enthält `c07923f`, main-Merge mit beiden Beobachtungs-Blöcken). Vorschlag an die Session-Retro: Pflichtzeile
+„schnelle Make-Prüfungen ohne Testlauf (`make zeittests`, `make conflicts`, `tsc`, `lint`) in jeder Task-DoD“ — drei
+Integrator-Abbrüche dieser Session (TSC, ZEITTESTS) wären damit vor dem Integrator gefunden worden.
+
+Entscheider: L0 · Anlass: Integrator MERGE-UI-SEEKARTE gescheitert · ADR: —
