@@ -395,6 +395,12 @@ RENDER-LOOK-01 erst danach.
 - **Fundort:** Worktrees: `.vitest/` liegt untracked in Worktrees (`.gitignore`-Kandidat); ein Scratch-Worktree des Reviewers (Detached HEAD auf main) liegt unter dem Scratchpad, sein Entfernen blockte der Hook (Verfassung §6). Einschätzung: niedrig, Aufräumen durch L0/Integrator.
 - **Fundort:** `tests/render/seaPlanKeepOutIndex.test.ts`: neuer Vollvergleichstest braucht ≈ 2,3 s (neuer Test, nicht unter der 500-ms-Regel für bestehende Tests). Einschätzung: bei Suite-Laufzeitdruck ausdünnen.
 
+### 2026-10-09 · Release-Check REL-11 (qa-playtester): Befunde ohne Blocker
+
+- **Fundort:** Kamera, Seed 7, Zoom 1: Hüllenecke SW zeigt einen reinen Wasserbildschirm, NE nur einen Landstreifen (`.studio/qa/REL-11/B-z1-SW.png`, `B-z1-NE.png`). Ursprung: Release-Check, nach R401 akzeptiert. Einschätzung: niedrig; Korridore oder engere Hülle nur bei Spielerbefund.
+- **Fundort:** Meeresfels bei Zoom 0,25 nur ≈ 5 px, kaum auffindbar (`E-fels-z0.25.png`); keine Boot-Lesart mehr. Ursprung: Release-Check. Einschätzung: niedrig; als Orientierungsmarke kaum nutzbar, Mindestgrösse wie Wrack/Eiland (`FAR_MIN_CSS_PX`) prüfen.
+- **Fundort:** Inspektor-Panel zeigt „Versorgt ✓“ und zugleich „Mangel: Nahrung fehlt“ (`C-inspektor-unversorgt.png`). Ursprung: Release-Check, ergänzt den Eintrag „wirkt doppelt“ oben (Playtest REL-11 UI). Einschätzung: mittel (Spielerverwirrung); Kandidat für ein UI-Häppchen.
+
 ### 2026-10-09 · UI-SEEKARTE (qa-code-reviewer): Befund ohne Blocker
 
 - **Fundort:** `src/ui/hud.ts` (Seekarte): `layout` und `cache` bleiben bei offenem Popover über einen Weltwechsel (Laden) bestehen, bis zum nächsten Öffnen. Ursprung: Task-Review T3-T5. Einschätzung: niedrig, unwahrscheinlich (Laden schliesst Popover meist über Klick daneben); Fix wäre Weltidentität in den Schlüssel.

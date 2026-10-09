@@ -3840,3 +3840,27 @@ Umfang. Budget 10 Starts, Parallelität 1, Richtwert ≈ 70 Tools, Worktree `.wo
 Umsetzung startet sofort (Paket des Release REL-12); kein Push in dieser Session.
 
 Entscheider: L0 · Anlass: Plan UI-SEEKARTE · ADR: —
+
+## R407 · 2026-10-09 · Gate Merge Release REL-11 OK
+
+Ruling: **OK** für REL-11 = main @ `2a66c27` (+ Doku): Browser-Lauf BEDENKEN ohne Blocker (`.studio/qa/REL-11/`):
+smoke.mjs BESTANDEN (1280×720, 1920×1080, Konsole leer), Kamera-Rand BESTANDEN (Zoom 0,25 an allen Ecken Land, Resize
+ohne Sprung, Inselsprung mittig), Kontrast lesbar, Schiff mit Saum auf allen Wasserstufen lesbar, Fels wirkt nicht wie
+ein Boot (Urteil vor Vergleich), Routenfahrt ohne Frames > 25 ms (headless, Hinweis), kein `/favicon.ico`. Review-
+Schritt nach R404 erfüllt. Drei niedrige/mittlere Befunde in `docs/beobachtungen.md` (Hüllenecke Zoom 1, Fels bei
+Zoom 0,25 klein, Inspektor „Versorgt ✓“ plus „Mangel“). **Push in der nächsten Session** (R335) mit dem Push-Gate nach
+Handbuch 1.33; UI-SEEKARTE (REL-12) bleibt bis dahin auf ihrem Branch, falls nicht vorher gemergt (dann eigenes Gate).
+
+Entscheider: L0 · Anlass: Release-Check REL-11 · ADR: —
+
+## R408 · 2026-10-09 · Gate Merge UI-SEEKARTE OK nach Konfliktlösung
+
+Ruling: **OK** für `feat/ui-seekarte` @ `6c7aa62` (REL-12): Task-Reviews OK (T1/T2 nach Fix-Runde mit Test-Commit vor
+Fix), Browser-Check AK-B1–B5 OK (erstes Rastern 0,3–0,4 ms gegen Ziel ≤ 5 ms), Final-Review `opus` OK, `tsc`/`lint`
+Exit 0, Testzeiten nach R392 bei Load 1,78 ohne Zuwachs. Die Wanduhr-Grenze `< 50 ms` in `seaMap.test.ts:226` bleibt
+(Messwert 0,3 ms, Faktor > 100 gegen Runner × 3). Konflikt-Probe: Konflikt nur in `docs/beobachtungen.md` (beide
+Seiten hängen an „Offen“ an) → Eigentümer lead-tech holt main per Merge, behält beide Blöcke, danach Merge durch den
+Integrator mit `make check`. R402-Beobachtung: Commit-Reihenfolge stimmt; Praxis „Code vor Test geschrieben, für den
+roten Lauf entfernt“ bei T1/T2 an die Session-Retro (zweiter Fall → R395 V2 bewerten). Gründungsfahrt bleibt im Pool.
+
+Entscheider: L0 · Anlass: Bericht UI-SEEKARTE · ADR: —
