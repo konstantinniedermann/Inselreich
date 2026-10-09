@@ -416,3 +416,7 @@ RENDER-LOOK-01 erst danach.
 
 - **Fundort:** `tools/render-qa/`: Für die Seekarte (Kontor auf Insel 1, Schiffe, Route) gibt es keinen versionierten Szenen-Helfer; der Lauf auf main stellte die Szene mit dem ungetrackten Skript `.studio/qa/REL-12/seekarte.mjs` selbst her (wie schon T6 auf dem Branch). Ursprung: REL-12. Einschätzung: niedrig, Werkzeug; beim nächsten Seefahrt-UI-Paket den Szenenaufbau als Helfer in `tools/render-qa/` übernehmen, damit Seekarten-Checks wiederholbar sind. (Menü-Karte bei 1280 × 720 abgeschnitten: bereits erfasst, Ausgewertet 2026-09-30, „Menü-Karte höher als 1280 × 800“.)
 - **Fundort:** `README.md` Abschnitt „Steuern und Steuerregler“ (um Z. 456/464): nennt den Steuerregler «in der Kopfzeile»; er sitzt seit M10 in der Amtsstube, die Kopfzeile hat nur einen Steuer-Knopf, der die Amtsstube öffnet (`src/ui/hud.ts` `taxView`). Ursprung: Spec I-028 (design-spec-author). Einschätzung: niedrig, Doku-Drift; die Spec I-028 §9 schreibt den Abschnitt bei der Umsetzung ohnehin um.
+
+### 2026-10-09 · Gate Spec I-028 (lead-qa): Befund ohne Blocker
+
+- **Fundort:** `docs/studio/gates.md`, Gate Spec, Prüffrage lead-qa 4: Der AK-Eindeutigkeits-Einzeiler sucht `AK-[A-Z0-9]*-[0-9]*` (zwei Bindestriche) und erfasst Kennungen mit einem Bindestrich wie `AK-T01` nicht; er gibt dann leer aus, obwohl nichts geprüft wurde. Ursprung: Gate Spec I-028. Einschätzung: niedrig, Werkzeug/Handbuch; Muster auf `AK-[A-Z0-9-]*[0-9]` erweitern (studio-coach, nächster Handbuch-Minor).
