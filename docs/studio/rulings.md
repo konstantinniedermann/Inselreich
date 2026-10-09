@@ -3768,3 +3768,15 @@ Worktrees. `cameraBounds`-Tests (AK-E1-12) dürfen am neuen Feld nicht brechen. 
 `docs/beobachtungen.md` mit dem Render-Strang löst der Integrator seriell nach Konflikt-Probe.
 
 Entscheider: L0 · Anlass: Plan REL-11 UI · ADR: —
+
+## R401 · 2026-10-09 · Gate Merge REL-11 UI-Strang OK
+
+Ruling: **OK** für `fix/rel11-kamera` @ `e0fcddb` (enthält `fix/rel11-triv`): Final-Review `opus` OK, Playtest
+BEDENKEN ohne Blocker, `tsc --noEmit` Exit 0, 116 gezielte Tests grün; Konflikt-Probe gegen main sauber. Ergänzung
+zu R400: **Hüllenecken**, die bei Zoom ≥ 0,5 nur Wasser zeigen, sind akzeptiert wie die Hüllenkanten (Hülle ist nie
+schlechter als das Rechteck, Seed 7 SW Zoom 0,25: 78 statt 0 Landkacheln); Korridore nur bei Spielerbefund.
+Prozessabweichung an die Session-Retro: Testzeiten nach R392 bei Load 5,8–6,6 statt ≤ 4 gemessen (A/B direkt
+nacheinander, ≤ +3,4 %; als relativer Vergleich angenommen, nicht als Messwert). Lint war nur an der Render-Plan-Datei
+rot, behoben (`175d74c`). Merge seriell durch den Integrator im Worktree `.worktrees/integrate`, `make check`, lokal.
+
+Entscheider: L0 · Anlass: Bericht REL11-UI · ADR: —
