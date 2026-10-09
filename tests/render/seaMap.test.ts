@@ -88,8 +88,8 @@ describe('hitIsland (AK-S3)', () => {
       const w = createWorld(seed);
       const l = mapLayout(w, W, H, PAD);
       w.islands.forEach((s, i) => {
-        const a = s.anchor;
-        const m = tileToMap(l, s.ox + a.x + 0.5, s.oy + a.y + 0.5);
+        const k = s.tiles.findIndex((t) => t.terrain !== 'water');
+        const m = tileToMap(l, s.ox + (k % s.width) + 0.5, s.oy + Math.floor(k / s.width) + 0.5);
         expect(hitIsland(w, l, m.x, m.y)).toBe(i);
       });
     }
