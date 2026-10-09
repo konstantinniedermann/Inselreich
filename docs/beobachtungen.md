@@ -386,3 +386,11 @@ RENDER-LOOK-01 erst danach.
 ---
 
 ## Offen (neue Einträge unten anhängen)
+
+### 2026-10-09 · REL-11 Render-Strang (lead-art): Befunde aus Review und Sichtprobe
+
+- **Fundort:** `fix/see-f3-schiffskontrast`, `src/render/ship.ts`: Der Mast (1-px-Strich) hat keinen Saum und bleibt auf Tief- und Mittelwasser schwach; Kommentar `ship.ts:27` nennt "Kontrast >= 2,2", der kleinste Wert ist 2,21 (Flachwasser, ohne Puffer). Ursprung: Review SEE-F3. Einschätzung: niedrig; bei Bedarf in RENDER-LOOK-01.
+- **Fundort:** SEE-F3-Eintrag oben: Die "10 px" gelten für Wrack und Eiland (`FAR_MIN_CSS_PX`), das Schiff hat 16 px. Erledigt mit dem Merge von `fix/see-f3-schiffskontrast` (Saum 2,21 bis 6,63 gegen alle drei Wassertöne, Sichtprobe `.studio/qa/see-f3/bilder/`: Schiff bei Zoom 0,25 und 0,5 auf mittlerem und flachem Wasser klar lesbar).
+- **Fundort:** `tools/render-qa/blindprobe.mjs` (Branch `fix/art-meeresfels`) zeichnet ohne Schaumring und ohne Wassertönung; die Blindprobe (10 von 10 richtig) prüft nur die Stempel-Silhouette. Einschätzung: eine Browser-Sichtprobe im echten Spiel beim Release-Check ergänzen.
+- **Fundort:** Worktrees: `.vitest/` liegt untracked in Worktrees (`.gitignore`-Kandidat); ein Scratch-Worktree des Reviewers (Detached HEAD auf main) liegt unter dem Scratchpad, sein Entfernen blockte der Hook (Verfassung §6). Einschätzung: niedrig, Aufräumen durch L0/Integrator.
+- **Fundort:** `tests/render/seaPlanKeepOutIndex.test.ts`: neuer Vollvergleichstest braucht ≈ 2,3 s (neuer Test, nicht unter der 500-ms-Regel für bestehende Tests). Einschätzung: bei Suite-Laufzeitdruck ausdünnen.
