@@ -227,10 +227,6 @@ Raster) ist bereits benannt (R327).
 
 - **Fundort:** `.studio/events.jsonl` im Hauptcheckout enthält ein Probe-Ereignis `commit_rejected` aus dem Echtlauf der Ablehnung. Ursprung: TOOL-BUENDEL T01. Einschätzung: niedrig; verfälscht höchstens die Zählung ablehnender Commits, beim nächsten `make studio-archive` erledigt.
 
-### 2026-10-09 · TOOL-BUENDEL: `?raw`-Import in `renderqa.test.ts` fragil
-
-- **Fundort:** `tests/tools/renderqa.test.ts` liest die Quelle per `?raw`-Import. Ursprung: TOOL-BUENDEL T03. Einschätzung: niedrig; bricht bei einer Änderung der Vite-Importregeln oder des Dateipfads, dann auf `readFileSync` umstellen.
-
 ### 2026-10-09 · TOOL-BUENDEL: Ampelzeile mit bereinigtem Steuerungsanteil im Dashboard
 
 - **Fundort:** Dashboard (`tools/studio/dashboard/`); `tools/studio/efficiency.py` liefert `steuerung_bereinigt` bisher nur als Textzeile der Metriken (E-049). Ursprung: TOOL-BUENDEL T05 (Review R428 qa B3, E-038). Einschätzung: Nachfolgepunkt; Ampelzeile mit dem bereinigten Wert neben der Rohzeile, Paket-Kandidat für `lead-production`.
@@ -254,3 +250,15 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · R429-Risiko: `zeitreserve-push` verwirft die Messung bei Last > 4
 
 - **Fundort:** `make zeitreserve-push` / `make check`. Ist die Last beim Start von `make check` grösser als 4, verwirft `zeitreserve-push` die Messung (Exit 2 «nicht belastbar»); `make check` muss dann neu laufen. Ursprung: R429. Einschätzung: bekanntes Risiko, kein Fehler; vor dem Push `make messfenster` prüfen.
+
+### 2026-10-09 · TOOL-BUENDEL: Git-Hook blockiert den Commit ohne `python3`
+
+- **Fundort:** `tools/githooks/pre-commit:7`: fehlt `python3` im PATH, endet der Hook mit Exit 127 und blockiert den Commit, obwohl alle anderen Fehler den Commit zulassen. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; vor dem `exec` mit `command -v python3` prüfen und sonst mit Hinweis `exit 0`.
+
+### 2026-10-09 · TOOL-BUENDEL: Schein-Session «manual» im Dashboard
+
+- **Fundort:** `tools/studio/precommit.py:68`: ohne `CLAUDE_CODE_SESSION_ID` setzt `record` die session_id «manual» und legt im Dashboard eine Schein-Session an. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; Ereignis ohne Session führen oder Dashboard-Modell «manual» ausblenden (studio-coach).
+
+### 2026-10-09 · TOOL-BUENDEL: Testlücke bei `ps`-Fehler in der Testsperre
+
+- **Fundort:** `tests/tools/testlock.test.ts`: kein Test belegt, dass ein `ps`-Fehler (`TESTLOCK_PS_FIXTURE` zeigt auf eine fehlende Datei) nichts ändert. Ursprung: TOOL-BUENDEL T02 (Final-Review). Einschätzung: niedrig; ein Test ergänzt die Fehlerrichtung ab.

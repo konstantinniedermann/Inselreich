@@ -105,6 +105,25 @@ class MainTest(unittest.TestCase):
             self.assertEqual(precommit.main(broken, {}), 0)
         self.assertIn("übersprungen", stderr.getvalue())
 
+    def test_unexpected_error_allows_commit(self):
+        def broken(args):
+            raise RuntimeError("unerwartet")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(precommit.main(broken, {}), 0)
+        self.assertIn("übersprungen", stderr.getvalue())
+
+    def test_git_failure_warns_on_stderr_and_allows(self):
+        def failing(args):
+            return subprocess.CompletedProcess(args, 128, "", "fatal: kaputt")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(precommit.main(failing, {}), 0)
+        self.assertIn("git", stderr.getvalue())
+        self.assertIn("kaputt", stderr.getvalue())
+
     def test_event_does_not_break_dashboard_model(self):
         run = FakeRunner("a.ts\0", prettier_code=1, prettier_out="a.ts\n")
         precommit.main(run, {"CLAUDE_CODE_SESSION_ID": "s1"})

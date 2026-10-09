@@ -2,8 +2,8 @@
 
 Aufruf über tools/githooks/pre-commit (aktiv nach `make hooks`). Ein Prettier-Lauf über
 alle gestagten Pfade; Ablehnung mit Exit 1 und Event `commit_rejected`. Grenze: Prettier
-liest den Arbeitsbaum, nicht den Index-Stand (`git add -p`). Fehlt Prettier oder scheitert
-git, lässt der Hook den Commit zu.
+liest den Arbeitsbaum, nicht den Index-Stand (`git add -p`). Fehlt Prettier, scheitert
+git oder tritt ein unerwarteter Fehler auf, lässt der Hook den Commit zu (Hinweis auf stderr).
 """
 
 from __future__ import annotations
@@ -13,8 +13,6 @@ import subprocess
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-
-from paths import append_event, now_iso, repo_root
 
 FILES_MAX = 20
 Runner = Callable[[Sequence[str]], subprocess.CompletedProcess]
@@ -29,6 +27,11 @@ def staged_files(runner: Runner = run) -> list[str]:
         ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]
     )
     if done.returncode != 0:
+        detail = done.stderr.strip() or f"Exit {done.returncode}"
+        print(
+            f"pre-commit: git scheiterte, Check übersprungen ({detail}).",
+            file=sys.stderr,
+        )
         return []
     return [name for name in done.stdout.split("\0") if name]
 
@@ -63,6 +66,8 @@ def message(files: list[str], detail: str) -> str:
 
 
 def record(files: list[str], top: Path, env: Mapping[str, str]) -> None:
+    from paths import append_event, now_iso
+
     event = {
         "ts": now_iso(),
         "session_id": env.get("CLAUDE_CODE_SESSION_ID", "manual"),
@@ -75,12 +80,14 @@ def record(files: list[str], top: Path, env: Mapping[str, str]) -> None:
     }
     try:
         append_event(event)
-    except OSError:
-        pass  # Ablehnung gilt auch ohne Log
+    except Exception as exc:  # noqa: BLE001 - Ablehnung gilt auch ohne Log
+        print(f"pre-commit: Ereignis nicht geloggt ({exc}).", file=sys.stderr)
 
 
 def main(runner: Runner = run, env: Mapping[str, str] = os.environ) -> int:
     try:
+        from paths import repo_root
+
         files = staged_files(runner)
         if not files:
             return 0
@@ -95,7 +102,7 @@ def main(runner: Runner = run, env: Mapping[str, str] = os.environ) -> int:
             )
             return 0
         code, failing, detail = check(files, prettier, runner)
-    except (OSError, ValueError) as exc:
+    except Exception as exc:  # noqa: BLE001 - jeder Fehler lässt den Commit zu
         print(f"pre-commit: Check übersprungen ({exc}).", file=sys.stderr)
         return 0
     if code == 0:
