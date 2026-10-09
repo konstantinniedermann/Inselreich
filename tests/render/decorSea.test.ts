@@ -302,7 +302,7 @@ describe('L5-T1 Fernansicht und Stempelzahl', () => {
     expect([...seen].sort()).toEqual(['seaRock']);
     expect(max).toBeGreaterThan(0);
     expect(maxAll).toBeLessThanOrEqual(300);
-  }, 35_000); // lokal bis 4,1 s im Gesamtlauf (REL-10, SEE-F1-KORRIDOR), Timeout >= 8 x (R270)
+  }, 40_000); // lokal bis 4,1 s im Gesamtlauf (REL-10, SEE-F1-KORRIDOR), Timeout >= 8 x (R270)
 
   it('die Meer-Stempel stehen in sortedObjects auf Wasserkacheln der Heimat und folgen dem Plan', () => {
     const w = createWorld(7);
