@@ -4018,3 +4018,19 @@ den Doku-Commits dieser Session in der nächsten Session (R335: der Push dieser 
 `state.md`. Befund Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`) in `docs/beobachtungen.md`.
 
 Entscheider: L0 · Anlass: Gate Merge Release · ADR: —
+
+## R420 · 2026-10-09 · Session-Retro fb37ceac: V1–V3 angenommen; Experiment-Urteile; Modelltabelle gilt
+
+Ruling: Retro `docs/studio/retros/2026-10-09-session-fb37ceac-ende.md` (`00e12f2`) angenommen. Befund A1 bestätigt: 10 von 13
+Lead-/Coach-Starts dieser Session liefen auf `opus` gegen die Modelltabelle (`STUDIO.md`, Abschnitt Modelle: `sonnet` für
+Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Kurz-Retro); Ursache L0-Briefing (Modell aus der
+Spalte von `richtwerte.md` übernommen). Ab sofort wählt L0 das Modell nur nach der Modelltabelle. **V1** E-038 angepasst und
+gestartet: Spalte in `richtwerte.md` heisst „gemessen auf“; Werkzeug-Paket **TOOL-MODELL-GUARD** (Guard prüft auch typisierte
+Starts gegen die Tabelle); Ziel ≤ 1 Start über der Tabelle je Session, `opus`-Anteil ≤ 60 %. **V2** E-049 angepasst und
+gestartet: Bereinigung des Steuerungsanteils nach der Briefing-Zeile „Budget“ statt Paketname. **V3** Final-Review liest den
+Diff je Datei (Persona-Zeile `qa-code-reviewer`, ohne Experiment-Platz). **Experimente:** E-037 angepasst, E-042 angepasst
+(Briefing-Vorlage: Start/Fertig-Logging für Leads entfällt, E-042), E-046 behalten; E-050 startet; E-048 wartet. Umsetzung
+durch den studio-coach (sonnet) jetzt, TOOL-MODELL-GUARD als Werkzeug-Paket nächste Session zusammen mit TOOL-PRETTIER-HOOK
+und TOOL-STUDIO-HYGIENE (Phantom-Vorfälle, verwaiste Vitest-Worker).
+
+Entscheider: L0 · Anlass: Session-Retro · ADR: —

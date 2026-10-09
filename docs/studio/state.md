@@ -4,24 +4,25 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-09 (Session e90e097e, Ende: REL-10 live, REL-11 bereit, UI-SEEKARTE in main)
+Stand: 2026-10-09 (Session fb37ceac, Ende: REL-11 + REL-12 live, REL-13 „Steuer je Stufe“ in main, Gate OK, Push offen)
 
 ## Release-Notizen
 
-**REL-12 „Seekarte“ (UI-SEEKARTE in main, Release-Check offen; R405, R406, R408, R409)** — Karte der Inseln mit
-Silhouetten, Fahrlinien und Schiffspunkten; Klick springt zur Insel. Lokal in main (Teil des nächsten Pushes), Browser-
-Check AK-B1–B5 OK (erstes Rastern 0,3–0,4 ms), Playtest T6 ohne Blocker. Kein Sim-Zustand, nicht im Save.
+**REL-13 „Steuer je Stufe“ (I-028 in main @ `d7291aa`, Gate Merge Release OK R419, Push offen)** — Steuer in der
+Amtsstube getrennt für Pioniere, Siedler, Bürger und Kaufleute; Save **v10** (Migration aus v9: alle vier = bisheriger
+Wert, «niedrig» → Kaufleute «normal»). Wertänderung Kaufleute «hoch» 115 % statt 130 % (R412). Balancing-Test unverändert.
 
-**REL-11 „Ruhiger Rand, lesbarer Seeweg, Meeresfels“ (bereit, Gate OK R407, Push offen)** — Kamerarand, Schiffssaum,
-Meeresfels, Seeplan-Keepout, Kontrast. Lokal in main (61 Commits vor `origin/main`). Save v9, Sim-Regeln unverändert.
+- **Neu:** Raster in der Amtsstube (vier Stufen × niedrig/normal/hoch plus Zeile «alle Stufen»); Sperre nach dem
+  Umschalten je Regler; Kaufleute «niedrig» gesperrt (Tooltip); Kopfzeilen-Knopf zeigt «gemischt»; Hinweise nennen die Stufe.
+- **Bitte testen:** (1) Pioniere auf «niedrig», Kaufleute auf «hoch»: Steigen Pioniere schneller auf, Einnahmen plausibel?
+  (2) Kopfzeile zeigt «gemischt» und im Tooltip die vier Stufen? (3) Alten Spielstand (v9) laden: Regler stehen auf dem
+  bisherigen Wert? (4) Kaufleute-«niedrig» ist ausgegraut und erklärt?
 
-- **Neu:** Kamera bleibt über Land (konvexe Hülle um die Inseln, Zoom 0,25 an allen Ecken Land, Inselsprung mittig);
-  Schiffe mit hellem Saum auf allen Wasserstufen; Meeresfels wirkt nicht mehr wie ein Boot; Seeplan-Neubau schneller;
-  Kontrast in Bedarfs- und Gründe-Listen.
-- **Bitte testen:** (1) Scrollen an die Ränder bei Zoom 0,25: Land bleibt sichtbar? (2) Schiff auf Tief-, Mittel-,
-  Flachwasser gut zu sehen? (3) Meeresfels: eher Fels als Boot? (4) Fenster auf 1280×720 ändern: Karte springt nicht?
-  (5) Seekarte öffnen: Inseln, Fahrlinien, Schiffspunkte; Klick springt zur Insel? (6) Hüllenecken bei Zoom 1 zeigen
-  teils nur Wasser (bekannt, R401).
+**REL-12 „Seekarte“ (live, R413)** — Karte der Inseln mit Silhouetten, Fahrlinien und Schiffspunkten; Klick springt zur
+Insel. Push `5d14854..3417346`, CI 37949164666, Pages 37949941925.
+
+**REL-11 „Ruhiger Rand, lesbarer Seeweg, Meeresfels“ (live, R407)** — Kamera bleibt über Land, Schiffe mit hellem Saum,
+Meeresfels wie Fels, Seeplan-Neubau schneller, Kontrast in Listen. Save v9.
 
 **REL-10 „Kiefernküste, ruhige Kamera, freie Fahrrinnen“ (live, R398)** — Strandkiefern, Kamera-Klemmung,
 Fahrrinnen frei von Wracks, Felsen und Eilanden. Save v9.
@@ -47,21 +48,22 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 Keine Nutzer-Aufträge offen.
 
-0. **Release-Check REL-12 kurz** (`smoke.mjs` auf main plus Seekarten-Abschnitt; T6 lief nur auf dem Branch), dann
-   **ein Push für REL-11 + REL-12** nach Handbuch 1.34 (R410, R335). Ablauf: `tsc`, `lint`, `zeittests`, `conflicts`,
-   `make test`, warten bis Last ≤ 4, `make zeitreserve-push`, `make check`, `make check-ci-perf`; danach CI,
-   `gh workflow run Pages --ref main`, `ci.py`.
-1. **Kandidaten aus `docs/beobachtungen.md`:** Inspektor „Versorgt ✓“ plus „Mangel“, Fels-Mindestgrösse bei Zoom 0,25
-   (`FAR_MIN_CSS_PX`), TOOL-RENDERQA-NACHZUG-Rest.
-2. **Wirtschafts-Brainstorming I-028** (Steuer je Stufe, R405; lead-design mit design-economy-designer).
-3. **Experimente:** E-038 ab 2026-10-22, E-048 wartet auf Platz. Laufend: E-037, E-042, E-046.
-4. **Aufräumen** (Ruling nötig, sofern der Guard es erlaubt): Scratch-Worktree unter dem Scratchpad, erledigte
-   Worktrees und Branches.
+0. **Push REL-13** (plus Doku-Commits dieser Session) nach Handbuch 1.35: `tsc`, `lint`, `zeittests`, `conflicts`,
+   `make test`, warten bis Last ≤ 4, `make zeitreserve-push`, `make check`, `make check-ci-perf`; CI, `gh workflow run
+Pages --ref main`, `ci.py`. Vorher prüfen: keine verwaisten Vitest-Worker (`ps`, PPID 1), Session „anno-clone #3“.
+1. **TOOL-PRETTIER-HOOK** (R417 V2): Prettier-Check geänderter Dateien beim `git commit`, < 3 s, Ablehnung ins Event-Log;
+   Werkzeug-Pflichtzeilen R375; dabei Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`) mitnehmen.
+2. **REL-14-Kandidaten** (BEOB-AUSW-03, `docs/beobachtungen.md` „Ausgewertet 2026-10-09 (2)“): UI-INSPEKTOR-KLARTEXT (S),
+   SIM-FEST-INSEL (S, mit UI-INSELFILTER bündelbar), ART-FELS-FERNGROESSE (S, Urteil lead-art); Trivial-Fixes `.vitest/`
+   in `.gitignore`, arc42 `hud.ts`-Zeile „Steuersperre“.
+3. **Aufräumen CLEANUP-WT-2** (Ruling nötig): gemergte Worktrees inkl. `steuer-je-stufe`, Scratch-Worktree aus e90e097e,
+   `.worktrees/check2.log`.
+4. **Experimente:** E-038 ab 2026-10-22, E-049 nach Bewertung E-046 (spätestens 2026-11-12). Laufend: E-037, E-042, E-046.
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-10, M1–M8, M10, M11, M9-Häppchen, M12; REL-11 und
-  REL-12 in main, Push offen. Verfassung **1.2**, Handbuch **1.34**.
+- Projekt: **Inselreich**. **M12 abgeschlossen** (R352, E5/E6 als Ideen). Live: REL-01…REL-12, M1–M8, M10, M11, M9-Häppchen, M12; REL-13 (I-028)
+  in main, Push offen. Verfassung **1.2**, Handbuch **1.35**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit ≤ 5 Arbeiter
   (R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats prüfen (R329); Messungen nur bei 1-min-Load
   ≤ 4 (R329).
@@ -75,36 +77,37 @@ Keine Nutzer-Aufträge offen.
   `make check-ci-perf` (statt `CI=true make check`). Merges nach Gate bleiben lokal.
 - **Release-Check mit Smoke-Skript (R368)** vor dem Browser-Lauf. **Konflikt-Probe** `git merge-tree` vor jedem
   Integrator-Start (Handbuch 1.30).
+- **Handbuch 1.35 (R417):** Plan-Briefings mit Formatzeile E-010; neue AK-Nummern vergibt L0 im Gate-Spec-Ruling;
+  Leistungs-AK mit deterministischem Test ohne Browser-Messung; `make docs-check` Exit 0 vor jedem Doku-Commit (bis
+  TOOL-PRETTIER-HOOK).
 
 ## Parallele Sessions
 
-Keine.
+Keine aktive L0-Session ausser dieser. Prozess „claude --name anno-clone #3“ (seit 2026-10-08) lebt noch; beim Start
+prüfen, ob er arbeitet (R324), nicht beenden.
 
 ## Seit letzter Session erledigt
 
-- REL-10 live (R398): Push `7812eb0..5d14854` nach vier Anläufen (R394, R396, R397); TOOL-GATES-2 und 2b (R393–R395),
-  FIX-TIMEOUT-REL10, FIX-CONFLICTS-TSC. Handbuch 1.33 (DoD-Zeile `tsc`, Integrator-Vorlauf); Handbuch 1.34 (R410: schnelle Make-Prüfungen, Rot-Beleg).
-- REL-11 komplett in main, Release-Check OK (R407): UI-Strang (R401), Render-Strang (R402, R403), Ideen-Runde IDEEN-04
-  (R405).
-- UI-SEEKARTE in main (R408, R409). Retro-Datei: `docs/studio/retros/2026-10-09-session-e90e097e-ende.md`.
+- REL-11 + REL-12 live (R413, R416): Push `5d14854..3417346` nach einem Lint-Abbruch (Prettier, Trivial-Fix `4806006`).
+- I-028 „Steuer je Stufe“ komplett: Brainstorming (R412), Spec mit 42 AK (R414), Plan nach E-010 (R415, R416), Umsetzung
+  T1a/T1b/T2 mit Reviews, Playtest, Final-Review opus, Merge lokal `d7291aa` (R418), Release-Check REL-13 OK (R419).
+- Release-Retro REL-12 (R417) → Handbuch 1.35. Beobachtungen ausgewertet und archiviert (BEOB-AUSW-03,
+  `docs/beobachtungen-archiv.md`). Verwaister Vitest-Worker beendet (Beobachtung).
 
 ## Pausierte Pakete
 
 - Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached), erledigt und löschbar: `art-meeresfels`,
-  `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `ui-seekarte`, dazu ein
-  Scratch-Worktree unter dem Scratchpad (Detached HEAD auf main). Aufräumen nur per Ruling.
-- Branch `int/rel-07` (lokal; Guard sperrt `-D`, erledigt sich mit Löschen von `origin/int/rel-07` per Ruling),
-  nicht gemergte Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`), Remote `wip/r118a-render-aufraeumen` und
+  `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `ui-seekarte`, `steuer-je-stufe`,
+  Scratch-Worktree aus e90e097e. Aufräumen nur per Ruling (CLEANUP-WT-2).
+- Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`), Remote `wip/r118a-render-aufraeumen` und
   `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 
-Kein freigegebenes Budget offen: alle Freigaben dieser Session sind verbraucht oder abgeschlossen (REL-11 Render
-12 Starts, REL-11 UI 12 Starts, UI-SEEKARTE 10 Starts, IDEEN-04 1 von 2 Starts). Neue Pakete brauchen eigene Freigabe.
+Offen: lead-tech I-028 3 Puffer-Starts (verfallen mit Session-Ende), lead-qa REL-13 1 Start (verfällt). Neue Pakete
+brauchen eigene Freigabe.
 
 ## Offene Entscheide
 
 - Nutzer: keine; Warteschlange leer.
-- L0: Kandidaten REL-13 (Fortsetzung 1, 2); Ruling zum
-  Aufräumen von Worktrees, `origin/int/rel-07` und Alt-Branches.
-- Info: Actions-Minuten Monat 934, Konto 1201 von 2000 (Retro e90e097e); E-044 wartet auf freien Experiment-Platz.
+- L0: Auswahl REL-14 (Fortsetzung 2); Ruling CLEANUP-WT-2; Vorschläge der Session-Retro fb37ceac.
