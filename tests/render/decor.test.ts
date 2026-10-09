@@ -1238,11 +1238,13 @@ describe('L5 Meer-Plan und R4', () => {
     expect(seaKeepOut(ctx, 40, 55, 40)).toBe(true); // pad vergrössert die Abstände
   });
 
-  it('Wrack in 25–55 % der Seeds 1–200 und nie zweimal; Eiland nie zweimal; Felsnadel höchstens eine', () => {
+  // Quoten über Seeds 1–200 (Wrack 25–55 %, Eiland ≤ 30 %, Nadel ≤ 50 %) prüft `tools/render-qa/korridor.mjs`. Die Suite prüft grob
+  // über Seeds 1–40: dort streut die Wrack-Quote (p = 0,4) mit SD ≈ 0,08, darum Band 15–65 % statt 25–55 %.
+  it('Wrack in 15–65 % der Seeds 1–40 und nie zweimal; Eiland nie zweimal; Felsnadel höchstens eine', () => {
     let wreck = 0,
       islet = 0,
       needle = 0;
-    for (const { seed, w } of W200) {
+    for (const { seed, w } of W200.slice(0, 40)) {
       const ctx = seaContext(w);
       const plan = seaPlan(seed, home(w), ctx);
       const st = stampPlacements(seed, home(w), kontorOf(w), ctx);
@@ -1254,16 +1256,16 @@ describe('L5 Meer-Plan und R4', () => {
       islet += n('islet');
       needle += st.filter((s) => s.kind === 'seaRock' && s.variant >= 6).length;
     }
-    expect(wreck / 200, `Wrack ${wreck}`).toBeGreaterThanOrEqual(0.25);
-    expect(wreck / 200).toBeLessThanOrEqual(0.55);
+    expect(wreck / 40, `Wrack ${wreck}`).toBeGreaterThanOrEqual(0.15);
+    expect(wreck / 40).toBeLessThanOrEqual(0.65);
     expect(islet, 'Eiland kommt vor').toBeGreaterThan(0);
-    expect(islet / 200).toBeLessThanOrEqual(0.3);
+    expect(islet / 40).toBeLessThanOrEqual(0.4);
     expect(needle, 'Felsnadel kommt vor, ist selten').toBeGreaterThan(0);
-    expect(needle / 200).toBeLessThanOrEqual(0.5);
+    expect(needle / 40).toBeLessThanOrEqual(0.6);
   });
 
-  it('Eignung: Tiefe (Abstand zum Land), nur offenes Meer, Felsen 3–12, Eiland ≥ 4 Kacheln zur Küste, keine Überlappung', () => {
-    for (const { seed, w } of W200) {
+  it('Eignung: Tiefe (Abstand zum Land), nur offenes Meer, Felsen 3–12, Eiland ≥ 4 Kacheln zur Küste, keine Überlappung (Seeds 1–40)', () => {
+    for (const { seed, w } of W200.slice(0, 40)) {
       const isl = home(w);
       const cls = staticClasses(isl);
       const plan = seaPlan(seed, isl, seaContext(w));

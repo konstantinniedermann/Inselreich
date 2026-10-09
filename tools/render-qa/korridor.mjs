@@ -1,7 +1,7 @@
 /* global process, console, URL */
 // korridor.mjs — Meer-Korridor (SEE-F1-KORRIDOR): reine Platzierung ohne Canvas und Browser.
 // Lädt `decor.ts` über Vite (SSR-Modul) und prüft je Seed (1) kein Meer-Element (auch Flächen) < 3 Kacheln von einer Lane und R4 (Anker, Kontor, Kegel, `seaKeepOut`) und
-// (2) Wrack, Eiland und Felsen <= 2 Kacheln von einer Route (alle Paare a<b, Heimat-Kachelraum, Anteil <= 5 %).
+// (2) Wrack, Eiland und Felsen <= 2 Kacheln von einer Route (alle Paare a<b, Heimat-Kachelraum, Anteil <= 5 %) und (3) die Quoten von Wrack, Eiland und Felsnadel (Seeds 1–200).
 // Läuft nicht in `make check` (Dauer); die Suite `tests/render/decor.test.ts` und `seaKorridor.test.ts` prüft Seeds 1–40.
 import { parseArgs } from 'node:util';
 import { resolve } from 'node:path';
@@ -58,7 +58,10 @@ try {
   const t0 = Date.now();
   const d = await srv.ssrLoadModule('/src/render/decor.ts');
   const wm = await srv.ssrLoadModule('/src/sim/world.ts');
-  let laneBad = 0,
+  let wreck = 0,
+    islet = 0,
+    needle = 0,
+    laneBad = 0,
     r4Bad = 0,
     near = 0,
     total = 0,
@@ -68,6 +71,9 @@ try {
     const ctx = d.seaContext(w);
     const plan = d.seaPlan(s, wm.home(w), ctx);
     worlds++;
+    if (plan.wreck) wreck++;
+    if (plan.islet) islet++;
+    if (plan.rocks.some((r) => r.needle)) needle++;
     for (const e of d.seaElementTiles(plan)) {
       const c = { x: e.x + 0.5, y: e.y + 0.5 };
       if (ctx.lanes.some((l) => dist(c, l) < 3)) laneBad++;
@@ -79,11 +85,22 @@ try {
       if (ctx.routes.some((r) => dist(c, r) <= 2)) near++;
     }
   }
+  const q = (n) => n / worlds;
+  const quoteOk =
+    q(wreck) >= 0.25 &&
+    q(wreck) <= 0.55 &&
+    q(islet) <= 0.3 &&
+    islet > 0 &&
+    q(needle) <= 0.5 &&
+    needle > 0;
   const anteil = total ? near / total : 0;
   console.log(
     `korridor: Welten ${worlds}, Lane-Verletzungen ${laneBad}, R4-Verletzungen ${r4Bad}, Elemente nahe Route ${near}/${total} (${(anteil * 100).toFixed(1)} %), ${Date.now() - t0} ms`,
   );
-  process.exitCode = laneBad > 0 || r4Bad > 0 || anteil > Number(v.max) ? 1 : 0;
+  console.log(
+    `korridor: Quoten Wrack ${wreck}/${worlds} (Soll 25–55 %), Eiland ${islet}/${worlds} (≤ 30 %, kommt vor), Felsnadel ${needle}/${worlds} (≤ 50 %, kommt vor): ${quoteOk ? 'ok' : 'VERFEHLT'}`,
+  );
+  process.exitCode = !quoteOk || laneBad > 0 || r4Bad > 0 || anteil > Number(v.max) ? 1 : 0;
 } finally {
   await srv.close();
 }
