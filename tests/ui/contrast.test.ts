@@ -93,3 +93,17 @@ describe('Info-Panel Töne und Regeln (AK-PU-19, AK-PU-20)', () => {
     expect(css).toMatch(/\.pv-card \[hidden\],\s*\.pv-gain\[hidden\]\s*\{[^}]*display:\s*none/);
   });
 });
+
+describe('Bedarfs- und Grundkanten (AK-C1)', () => {
+  it('AK-C1 Randfarben von .needs/.reasons .ok/.bad ≥ 3 : 1 auf Pergament', () => {
+    const rule = /(\.needs \.(ok|bad),\s*\.reasons \.\2)\s*\{([^}]*)\}/g;
+    let found = 0;
+    for (const m of css.matchAll(rule)) {
+      const v = /border-left:\s*\d+px solid var\((--[\w-]+)\)/.exec(m[3]!)?.[1];
+      expect(v, m[1]).toBeDefined();
+      expect(contrast(vars[v!]!, vars['--parchment']!), `${m[1]} ${v}`).toBeGreaterThanOrEqual(3);
+      found++;
+    }
+    expect(found).toBe(2);
+  });
+});
