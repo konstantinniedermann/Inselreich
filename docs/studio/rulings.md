@@ -3706,3 +3706,14 @@ Gates stabil); Messgrösse 0 Gate-Abbrüche aus entfallenen Werkzeug-Paketen in 
 zum zweiten Fall. lernen.md-Zeile aus der Retro übernimmt der Coach mit V1.
 
 Entscheider: L0 · Anlass: Gate TOOL-GATES-2b, Ad-hoc-Retro · ADR: —
+
+## R396 · 2026-10-09 · FIX-TIMEOUT-REL10 abgenommen; dritter Push-Anlauf REL-10
+
+Ruling: Zweiter Push-Anlauf (gültig, `loadStart` 2,3) meldete zwei echte Überschreitungen ohne Reserve —
+`decorSea` „L5-T1 … Seeds 1–50“ 4,1 s und `decorStamps` „R5 Solitär … Seeds 1–50“ 5,9 s im Gesamtlauf (einzeln 3,1 s
+und 4,3 s). Trivial-Fix nach R391 angenommen (`c851782`, `2430b73`): Timeouts 40 s und 60 s (R270 ≥ 8 × plus ≈ 20 %
+Reserve gegen die heute gemessene Laufschwankung bis +12 %). Das Gate hat gewirkt (keine Retro-Pflicht über die
+Session-Retro hinaus; der Integrator-Abbruch ist Gate-Erfolg, kein Prozessfehler). Messwert für die Session-Retro:
+nach `make test` liegt die Last ≈ 2 min über 4; der Integrator wartet zwischen `make test` und `zeitreserve-push`.
+
+Entscheider: L0 · Anlass: Bericht FIX-TIMEOUT-REL10 · ADR: —
