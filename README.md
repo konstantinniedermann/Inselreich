@@ -357,7 +357,10 @@ Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen zwei weitere Ins
 Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor zu 40 Geld kaufen (Verkauf 12).
 
 - **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` zur nächsten Insel; der Knopf «Inseln» in der Kopfzeile
-  öffnet die Liste. Die Kamera zeigt die Insel, die in der Bildmitte liegt; die Lagerleiste in der Kopfzeile zeigt das
+  öffnet ein Fenster mit einer kleinen **Seekarte** über der Liste: Silhouetten aller Inseln, die Fahrlinien der Routen und
+  je ein Punkt für jedes Schiff mit Route (ein Schiff ohne Route fehlt; im Hafen liegt der Punkt am Anker der Insel).
+  Ein Klick auf das Land einer Insel springt dorthin wie die Tasten `0`/`9` und schliesst das Fenster; ein Klick ins
+  Wasser tut nichts, `Esc` oder ein Klick daneben schliesst. Die Liste darunter bleibt als Tastaturweg. Die Kamera zeigt die Insel, die in der Bildmitte liegt; die Lagerleiste in der Kopfzeile zeigt das
   Lager **dieser** Insel, mit dem Inselnamen davor. Jede Insel hat ihr eigenes Lager.
 - **Kontor II:** Ein zweites **Kontor** (2×2, Küste, 800 Geld, 20 Holz, 8 Werkzeug, 10 Stein, Unterhalt 60 / min, Versorgungsradius 8) gründest du an der Küste einer Fremdinsel. Seine Baukosten zahlst du aus dem **Heimatlager**.
   Auf jeder Fremdinsel ist ein Kontor erlaubt; ohne Kontor lässt sich dort nichts bauen, und Handel, Aufträge und
