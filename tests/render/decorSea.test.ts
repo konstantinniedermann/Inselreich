@@ -27,7 +27,11 @@ import {
   needleGeom,
   minStampScale,
   stampWidthPx,
+  FAR_ROCK_MAX_STEP,
+  decorCacheKeys,
+  decorStampFor,
   drawDecorStamp,
+  farRockGeom,
   paintDecorStamp,
   palmGeom,
   rockHeaps,
@@ -460,7 +464,9 @@ describe('L5-Review Kontor-Abhängigkeit und Tönung an der Lane', () => {
 
 describe('T04 Meeresfels bei Zoom 0,5 und Schaum nur an Objekten', () => {
   const sil = (v: number, zoom: number) => {
-    const pts = paint('seaRock', v).log.allPoints.map((p) => ({ x: p.x, y: p.y }));
+    const f = fakeCtx();
+    paintDecorStamp(f.ctx, 'seaRock', v, 1, 0, 0, zoom <= FAR_ROCK_MAX_STEP);
+    const pts = f.log.allPoints.map((p) => ({ x: p.x, y: p.y }));
     // Schaumring (nur wenn bei diesem Zoom gezeichnet), projiziert um den Stempelfuss
     const w = createWorld(3);
     const ring = seaFoamVisible(w).rings.find((r) => r.kind === 'rock');
@@ -655,8 +661,9 @@ const fills = (f: ReturnType<typeof fakeCtx>) =>
   f.log.events.filter((e) => e.op === 'fill' && e.points.length >= 3);
 /** Silhouettenmass eines Meeresfelsen (Variante, Zoom): Zoom bestimmt die Form (Fern-Form bis 0,5). */
 function silhouetteMetrics(variant: number, zoom: number): SilMetrics {
-  void zoom;
-  const ev = fills(paint('seaRock', variant));
+  const f = fakeCtx();
+  paintDecorStamp(f.ctx, 'seaRock', variant, 1, 0, 0, zoom <= FAR_ROCK_MAX_STEP);
+  const ev = fills(f);
   const pick = (c: string) => ev.filter((e) => e.style === c).map((e) => e.points);
   return metricsOf(
     ev.map((e) => e.points),
@@ -695,13 +702,141 @@ describe('ART-MEERESFELS M1 Ausgangswerte Silhouettenmass (Stand main)', () => {
     expect(s.lightShare).toBeCloseTo(0.25, 1);
   });
 
-  it('AK-M1 Fels heute: Ausgangswerte aller 8 Varianten (Zoom 0,5, 0,25 und 1 gleich), Lichtanteil um 0,5', () => {
-    for (const zoom of [0.5, 0.25, 1])
+  it('AK-M1 Fels heute: Ausgangswerte aller 8 Varianten (Nahzoom 1, bleibt bitgleich), Lichtanteil um 0,5', () => {
+    for (const zoom of [1])
       for (let v = 0; v < 8; v++) {
         const m = silhouetteMetrics(v, zoom);
         expect(m.ratio, `Variante ${v}`).toBeCloseTo(MAIN_FELS_RATIO[v]!, 2);
         expect(m.lightShare, `Variante ${v}`).toBeGreaterThan(0.45);
         expect(m.lightShare, `Variante ${v}`).toBeLessThan(0.55);
       }
+  });
+});
+
+/** FNV-1a über die Aufrufliste (Art, Stil, Matrix, Punkte) eines Stempels. */
+const callHash = (f: ReturnType<typeof fakeCtx>): string => {
+  let h = 2166136261;
+  const s = JSON.stringify(
+    f.log.events.map((e) => [e.op, e.style, e.alpha, e.lineWidth, e.matrix, e.points]),
+  );
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  return h.toString(16);
+};
+/** Aufrufliste-Hashes der 8 Meeresfelsen bei Zoom 1 auf main (3f87f0b); die Nahform darf sich nicht ändern. */
+const MAIN_NEAR_HASH = '93fc05a6,a4d4cea9,fb11e4f1,93fc05a6,bcd1daee,4c8bcc60,d4b3d00f,a08396ee';
+
+describe('ART-MEERESFELS M2 Fern-Silhouette der Meeresfelsen (Zoom ≤ 0,5)', () => {
+  const FAR_ZOOMS = [0.5, 0.25];
+
+  it('AK-M2 Nahzoom (> 0,5) bitgleich zu main: Aufrufliste-Hash der 8 Varianten, Standard und far = false gleich', () => {
+    const hs = Array.from({ length: 8 }, (_, v) => callHash(paint('seaRock', v)));
+    console.info('M2 Nah-Hash', hs.join(','));
+    expect(hs.join(',')).toBe(MAIN_NEAR_HASH);
+    for (let v = 0; v < 8; v++) {
+      const f = fakeCtx();
+      paintDecorStamp(f.ctx, 'seaRock', v, 1, 0, 0, false);
+      expect(callHash(f), `Variante ${v}`).toBe(hs[v]);
+    }
+  });
+
+  it('AK-M2 Spitzenwinkel der Kontur ≥ 50 Grad und keine einzelne Spitze > 1,25 × Breite (alle Varianten, Zoom 0,5 und 0,25)', () => {
+    for (const zoom of FAR_ZOOMS)
+      for (let v = 0; v < 8; v++) {
+        expect(silhouetteMetrics(v, zoom).tipDeg, `Variante ${v}@${zoom}`).toBeGreaterThanOrEqual(
+          50,
+        );
+        for (const q of farRockGeom(v)) {
+          const xs = q.outline.map((p) => p.x);
+          const width = Math.max(...xs) - Math.min(...xs);
+          expect(-Math.min(...q.outline.map((p) => p.y)), `Buckel ${v}`).toBeLessThanOrEqual(
+            1.25 * width,
+          );
+        }
+      }
+  });
+
+  it('AK-M2 Breite : Höhe hebt sich vom Schiff um ≥ 20 % ab und bleibt ≤ 1,3 (T04a), alle Varianten', () => {
+    const ship = shipMetrics().ratio;
+    for (const zoom of FAR_ZOOMS)
+      for (let v = 0; v < 8; v++) {
+        const r = silhouetteMetrics(v, zoom).ratio;
+        expect(
+          Math.abs(r - ship) / ship,
+          `Variante ${v}@${zoom}: ${r.toFixed(3)}`,
+        ).toBeGreaterThanOrEqual(0.2);
+        expect(r, `Variante ${v}`).toBeLessThanOrEqual(1.3);
+      }
+  });
+
+  it('AK-M2 keine hell/dunkel-Zweiteilung durch eine senkrechte Mittellinie: gestaffelte, wechselnde Trennlinie', () => {
+    for (let v = 0; v < 8; v++)
+      for (const q of farRockGeom(v)) {
+        const xs = q.seam.map((p) => p.x);
+        const width =
+          Math.max(...q.outline.map((p) => p.x)) - Math.min(...q.outline.map((p) => p.x));
+        expect(q.seam.length, `Variante ${v}`).toBeGreaterThanOrEqual(4);
+        expect(Math.max(...xs) - Math.min(...xs), `Variante ${v}: Spanne`).toBeGreaterThanOrEqual(
+          0.2 * width,
+        );
+        const dx = xs.slice(1).map((x, i) => Math.sign(x - xs[i]!));
+        expect(new Set(dx).size, `Variante ${v}: Richtungswechsel`).toBeGreaterThan(1);
+        // die Trennlinie liegt im Umriss: Licht- und Schattenfläche zusammen decken den Buckel
+        expect(polyArea(q.lit) + polyArea(q.shade)).toBeCloseTo(polyArea(q.outline), 0);
+      }
+  });
+
+  it('AK-M2 Nadel (Varianten 6/7) wird im Fern-Zeichner ein gedrungener Pfeiler mit gebrochener Kuppe (≥ 3 Punkte oben, Höhe < Breite)', () => {
+    for (const v of [6, 7]) {
+      const [q] = farRockGeom(v);
+      const o = q!.outline;
+      const top = Math.min(...o.map((p) => p.y));
+      const xs = o.map((p) => p.x);
+      expect(farRockGeom(v).length).toBe(1);
+      expect(o.filter((p) => p.y < top + 4).length, 'gebrochene Kuppe').toBeGreaterThanOrEqual(3);
+      expect(-top, 'gedrungen').toBeLessThan(Math.max(...xs) - Math.min(...xs));
+      expect(-top).toBeLessThan(stampHeight('seaRock', v));
+    }
+  });
+
+  it('AK-M2 Fern-Form: ≤ TREE_H hoch, in der Stempelbox, Farben aus DECOR_TONES, save/restore ausgeglichen, Matrix unverändert', () => {
+    for (let v = 0; v < 8; v++) {
+      const f = fakeCtx();
+      paintDecorStamp(f.ctx, 'seaRock', v, 1, 0, 0, true);
+      const ys = f.log.allPoints.map((p) => p.y),
+        xs = f.log.allPoints.map((p) => p.x);
+      expect(-Math.min(...ys), `Variante ${v}`).toBeLessThanOrEqual(TREE_H);
+      expect(Math.min(...xs)).toBeGreaterThanOrEqual(STAMP_BOX.x0);
+      expect(Math.max(...xs)).toBeLessThanOrEqual(STAMP_BOX.x1);
+      expect(f.log.saves).toBe(f.log.restores);
+      expect(f.log.matrix).toEqual([1, 0, 0, 1, 0, 0]);
+      const styles = new Set(f.log.events.map((e) => e.style));
+      for (const t of [DECOR_TONES.rockLight, DECOR_TONES.rockShade, DECOR_STAMP_TONES.rockWet])
+        expect(styles.has(t)).toBe(true);
+    }
+  });
+
+  it('AK-M2 Cache: Fern-Form hat eigenen Schlüssel (nur seaRock, nur Zoomstufe ≤ 0,5), STAMP_VARIANTS unverändert, Nahform unverändert', () => {
+    expect(VARIANT_COUNT.seaRock).toBe(8);
+    const mk = () =>
+      ({ width: 0, height: 0, getContext: () => fakeCtx().ctx }) as unknown as HTMLCanvasElement;
+    setDecorCanvasFactory(mk);
+    resetDecorCache();
+    for (const step of [0.25, 0.5, 0.75, 1]) {
+      decorStampFor(5, 'seaRock', 0, step);
+      decorStampFor(5, 'palm', 0, step);
+    }
+    expect(decorCacheKeys()).toEqual([
+      'seaRock|0|1|far',
+      'palm|0|1',
+      'seaRock|0|2|far',
+      'palm|0|2',
+      'seaRock|0|3',
+      'palm|0|3',
+      'seaRock|0|4',
+      'palm|0|4',
+    ]);
+    resetDecorCache();
+    setDecorCanvasFactory(null);
+    expect(FAR_ROCK_MAX_STEP).toBe(0.5);
   });
 });
