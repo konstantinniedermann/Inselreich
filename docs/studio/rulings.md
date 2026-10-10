@@ -4371,3 +4371,16 @@ versehentlich committete `*-E`-Sicherungsdateien (entfernt, Historie bleibt).
 Regelbezug: gates.md Gate Merge; R335/R434 · Kosten bei Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-2 · ADR: —
+
+## R443 · 2026-10-10 · Kurz-Retro 2026-10-10 angenommen; Ampel Steuerung ohne eigene Ad-hoc-Retro
+
+Ruling: Retro `docs/studio/retros/2026-10-10-session-c64c0775-b-ende.md` (`42be7b7f`) angenommen. **V1/E-055** Spawn-Hook
+warnt, wenn ein Lead mit „Budget: n“ ohne `budget`-Zeile startet — als Werkzeug ohne Experiment-Platz (wie E-051), Paket
+TOOL-BUDGET-WARN (lead-tech, ≈ 20 Tools) nächste Studio-Session. **V2** Messauftrag L0-Start-Kontext ≤ 60k in einem neuen
+Gespräch (Frist 2026-10-23). Die vom Hook gemeldete Ad-hoc-Retro „Steuerungsanteil zwei Sessions rot“ ist durch diese
+Retro abgedeckt: roh 68,7 % rot, nach E-049-Phase bereinigt 37,6 % grün; Hebel E-054 (Pläne auf sonnet) bleibt eingereiht
+und ist der erste Kandidat für den nächsten freien Platz.
+
+Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung · Kosten bei Irrtum: eine Ad-hoc-Retro nachholen.
+
+Entscheider: L0 · Anlass: Kurz-Retro, Ampel-Hinweis · ADR: —
