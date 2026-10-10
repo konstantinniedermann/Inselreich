@@ -5019,3 +5019,15 @@ Budget **21 Starts** (Phase `i049-reserve`) gilt ab Start.
 Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R475, R477 · Kosten bei Irrtum: I-049 rutscht ein Release später.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-i049-reserve · ADR: —
+
+## R482 · 2026-10-10 · TOOL-BUENDEL-5 T01: 1,3 s akzeptiert, Fortsetzung frei
+
+Ruling: Entscheid D-tb5-t01 nach Empfehlung: `build_state` 3,62 s → 1,28–1,40 s (Faktor ≈ 2,7, State-JSON bitgleich, 160
+`test_model`-Tests grün) wird **akzeptiert**, das Ziel ≤ 1,0 s aus B5 entfällt für dieses Bündel. T02, T04 und Umsetzer B
+laufen weiter. Weitere Beschleunigung (`apply`, `result`) bleibt ein Werkzeug-Kandidat in `docs/beobachtungen.md`, kein
+Folgepaket ohne neuen Anlass. T04: Drosselung nach R478 (bleibt 30-fach, ausser CPU im Leerlauf ≤ 10 % gemessen). Das
+Review prüft die Annahme von `compute_claims` (Knotenfelder ändern sich nur in `apply`) an allen Aufrufern.
+
+Regelbezug: R478, R465 B3 (Stopp-Regel) · Kosten bei Irrtum: Dashboard bleibt einige Sekunden träger als geplant.
+
+Entscheider: L0 · Anlass: Stopp-Meldung Controller TOOL-BUENDEL-5 · ADR: —
