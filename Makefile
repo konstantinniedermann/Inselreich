@@ -14,12 +14,13 @@ hooks: ## Git-Hooks aktivieren (core.hooksPath=tools/githooks: Prettier-Check be
 dev: ## Vite-Dev-Server starten
 	npm run dev
 
-zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) steht
+zeittests: ## ZEITTESTS (vite.config.ts) = genau die Tests mit Wandzeit-Aufruf (beide Richtungen)
 	@fail=0; for f in $$(grep -rlE 'performance\.now\(|Date\.now\(' tests --include='*.ts' | sort); do \
 	  grep -qF "'$$f'" vite.config.ts || { echo "Zeittest nicht in ZEITTESTS (vite.config.ts): $$f"; fail=1; }; \
 	done; \
-	for f in $$(grep -oE "'tests/[^']+\.test\.ts'" vite.config.ts | tr -d "'"); do \
+	for f in $$(sed -n '/^export const ZEITTESTS/,/^];/p' vite.config.ts | grep -oE "'tests/[^']+\.test\.ts'" | tr -d "'"); do \
 	  test -f "$$f" || { echo "ZEITTESTS-Eintrag ohne Datei (vite.config.ts): $$f"; fail=1; }; \
+	  grep -qE 'performance\.now\(|Date\.now\(' "$$f" || { echo "ZEITTESTS-Eintrag ohne Wandzeit-Aufruf (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
 test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375)
